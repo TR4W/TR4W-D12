@@ -188,7 +188,7 @@
   TC_GAGARIN                            = 'special two char ID';
   {UTELNET}
 
-  TC_TELNET                             = 'Connect'#0'Disconnect'#0'Commands'#0'Freeze'#0'Clear'#0'100'#0#0;
+  TC_TELNET                             = 'Connect'#0'Disconnect'#0'Commands'#0'Freeze'#0'Clear'#0'SH/50'#0#0;
   TC_YOURNOTCONNECTEDTOTHEINTERNET      = 'YOU ARE NOT CONNECTED TO THE INTERNET!';
   TC_GETHOST                            = 'GET HOST..';
   TC_SERVER                             = 'SERVER: %s';

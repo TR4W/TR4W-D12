@@ -537,8 +537,15 @@ uses
   uStateBridge,        // InstallStateBridge -- the domain/UI crossing
   uMainThreadWork,     // mtMainWindowElementColors
   uStationsForm,       // CreateTR4WStationsWindow -- the stations tool window
+  uTelnetForm,         // CreateTR4WTelnetWindow -- the DX cluster tool window
   uDupeSheetForm,      // CreateTR4WDupeSheetWindow -- both dupe sheets
-  uMasterForm,         // CreateTR4WMasterWindow -- the SCP window
+  uMasterForm,             // CreateTR4WMasterWindow -- the SCP window
+  uPostScoresForm,         // CreateTR4WPostScoresWindow
+  uHamScoreForm,           // CreateTR4WHamScoreWindow
+  uIntercomForm,           // CreateTR4WIntercomWindow
+  uMP3RecorderForm,        // CreateTR4WMP3RecorderWindow
+  uRadioPanelForm,         // CreateTR4WRadioPanelWindow -- both radios
+  uNetworkForm,            // CreateTR4WNetworkWindow
   uRemMultsForm,       // CreateTR4WRemMultsWindow -- all five mult windows
   uFunctionKeysForm,   // CreateTR4WFunctionKeysWindow -- the first LCL tool window a TForm now -- CreateTR4WMainForm
   uPrefsForm,       // the PREF command -- the radio Preferences window
@@ -2439,19 +2446,22 @@ begin
   // No WndProcAdr for the SCP window: it is an LCL form as of 2026-08-24.
   // No WndProcAdr for any of the five remaining-multiplier windows: they are
   // LCL forms as of 2026-08-24.
-  tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndProcAdr := @TelnetWndDlgProc;
-  tr4w_WindowsArray[tw_RADIOINTERFACEWINDOW1_INDEX].WndProcAdr :=
-    @RadioInterfaceWindowDlgProc;
-  tr4w_WindowsArray[tw_RADIOINTERFACEWINDOW2_INDEX].WndProcAdr :=
-    @RadioInterfaceWindowDlgProc;
-  tr4w_WindowsArray[tw_NETWINDOW_INDEX].WndProcAdr := @NetDlgProc;
-  tr4w_WindowsArray[tw_INTERCOMWINDOW_INDEX].WndProcAdr := @IntercomDlgProc;
-  tr4w_WindowsArray[tw_POSTSCORESWINDOW_INDEX].WndProcAdr := @GetScoresDlgProc;
+  // Neither radio panel has a WndProcAdr: they are two instances of one LCL
+  // form (uRadioPanelForm) and OpenTR4WWindow reaches them directly.
+  // tw_NETWINDOW_INDEX has no WndProcAdr: it is an LCL form (uNetworkForm).
+  // It could not be one until the multi-op socket stopped being delivered to
+  // this window by WSAAsyncSelect.
+  // tw_INTERCOMWINDOW_INDEX has no WndProcAdr: it is an LCL form
+  // (uIntercomForm) and OpenTR4WWindow reaches it directly.
+  // tw_POSTSCORESWINDOW_INDEX has no WndProcAdr: it is an LCL form
+  // (uPostScoresForm) and OpenTR4WWindow reaches it directly.
   // Issue #783 Phase 4 -- HamScore RTC status window dialog
-  tr4w_WindowsArray[tw_HAMSCOREWINDOW_INDEX].WndProcAdr := @HamScoreDlgProc;
+  // tw_HAMSCOREWINDOW_INDEX has no WndProcAdr: it is an LCL form
+  // (uHamScoreForm) and OpenTR4WWindow reaches it directly.
   // No WndProcAdr for the stations window either: it is an LCL form as of
   // 2026-08-24 and OpenTR4WWindow's seam builds it.
-  tr4w_WindowsArray[tw_MP3RECORDER].WndProcAdr := @MP3RecDlgProc;
+  // tw_MP3RECORDER has no WndProcAdr: it is an LCL form (uMP3RecorderForm)
+  // and OpenTR4WWindow reaches it directly.
   tr4w_WindowsArray[tw_MMTTYWINDOW_INDEX].WndProcAdr := @MMTTYDlgProc;
 
 end;
@@ -2677,7 +2687,23 @@ begin
      begin
      TempBool := Windows.GetWindowRect(tr4w_WindowsArray[tipos].WndHandle,
        temprect);
-     tr4w_WindowsArray[tipos].WndVisible := TempBool;
+
+     // VISIBILITY IS ITS OWN QUESTION, asked of Windows rather than inferred
+     // from whether a rectangle could be read.
+     //
+     // The two used to be the same answer, and correctly so: every one of these
+     // was a dialog whose HWND existed only between CreateDialogIndirectParam
+     // and DestroyWindow, so a rect that could be read WAS an open window.  An
+     // LCL form's handle outlives its visibility -- it survives being hidden,
+     // and the widget set may recreate it on its own -- so the old rule now
+     // reads "hidden" as "visible".
+     //
+     // WndVisible is what OpenOtherWindows replays at startup, so getting it
+     // wrong means a window the operator closed comes back on the next run.
+     // IsWindowVisible answers for a zero handle too (False), which is the
+     // closed case.
+     tr4w_WindowsArray[tipos].WndVisible :=
+       Windows.IsWindowVisible(tr4w_WindowsArray[tipos].WndHandle);
      if not TempBool then
         begin
         if logger.IsTraceEnabled then
@@ -4388,34 +4414,22 @@ begin
 
     menu_ctrl_cursorintelnet:
       begin
-        if TelnetListBox = 0 then
+        { WAS: SetFocus on a raw handle, then LB_GETCURSEL / LB_GETTOPINDEX /
+          LB_GETCOUNT / LB_SETCURSEL to work out where to put the selection.
+          The view says what those four were asking for. }
+        if not TelnetConsoleHasFocus then
            begin
-           Exit;
-           end;
-
-        // if tr4w_CallWindowActive or tr4w_ExchangeWindowActive then
-        {?}
-        // if ActiveMainWindow in [awExchangeWindow, awCallWindow] then
-        if Windows.GetFocus <> TelnetListBox then
-           begin
-           Windows.SetFocus(TelnetListBox);
-           LowordWparam := Windows.SendMessage(TelnetListBox, LB_GETCURSEL, 0,
-             0);
-           if (LowordWparam = LB_ERR) or (LowordWparam <
-             Windows.SendMessage(TelnetListBox, LB_GETTOPINDEX, 0, 0)) then
+           TelnetFocusConsole;
+           if TelnetConsoleSelectForEntry then
               begin
-              LowordWparam := Windows.SendMessage(TelnetListBox, LB_GETCOUNT, 0, 0)
-                - 1;
-              Windows.SendMessage(TelnetListBox, LB_SETCURSEL, LowordWparam, 0);
               ActiveMainWindow := awUnknown;
               end;
            end
         else
            begin
            FrmSetFocus;
-           Exit;
            end;
-
+        Exit;
       end;
 
     menu_ctrl_incAQSLinterval:
@@ -5035,14 +5049,17 @@ label
 begin
   tDispalyOnAirTime;
   TempHWND := Windows.GetFocus;
-  if {TempHWND}Windows.GetParent(TempHWND) = TelnetCommandWindow then
+
+  // ENTER IN THE TELNET COMMAND BOX SENDS.  Was a GetParent comparison against
+  // the combo's raw handle -- a combo box being two windows is why the parent
+  // and not the handle itself -- followed by a synthesised WM_COMMAND 104.
+  if TelnetCommandHasFocus then
      begin
      // Was `TelnetSock <> 0`.  The raw socket handle is gone; ask uTelnet
      // whether the cluster link is up (uDXClusterClient owns the socket).
-     if TelnetIsConnected then
+     if TelnetIsConnected and Assigned(TelnetFormOnSend) then
         begin
-        PostMessage(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle,
-          WM_COMMAND, 104, TempHWND);
+        TelnetFormOnSend;
         end;
      Exit;
      end;
@@ -5060,10 +5077,18 @@ begin
      Exit;
      end;
 
-  if TempHWND = TelnetListBox then
+  // ENTER ON A CONSOLE LINE TUNES TO IT, and it is the same action the double
+  // click runs.  This used to PostMessage a hand-assembled WM_COMMAND -- 131173
+  // is LBN_DBLCLK in the high word over the list box's control id -- to reach
+  // the dialog procedure's double-click arm.  Same idiom the band map shed just
+  // above, and for the same reason: synthesising a notification in order to
+  // reach a routine means there was no way to call it.
+  if TelnetConsoleHasFocus then
      begin
-     PostMessage(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle, WM_COMMAND,
-       131173, TempHWND);
+     if (TelnetConsoleSelected >= 0) and Assigned(TelnetFormOnConsoleDblClick) then
+        begin
+        TelnetFormOnConsoleDblClick(TelnetConsoleSelected);
+        end;
      Exit;
      end;
 
@@ -5515,6 +5540,11 @@ begin
      h := CreateTR4WStationsWindow;
      lclForm := TR4WStationsForm;
      end
+  else if ID = tw_TELNETWINDOW_INDEX then
+     begin
+     h := CreateTR4WTelnetWindow;
+     lclForm := TR4WTelnetForm;
+     end
   else if (ID = tw_REMMULTSWINDOW_INDEX)  or
           (ID = tw_STATIONS_RM_DX)        or
           (ID = tw_STATIONS_RM_DOM)       or
@@ -5524,6 +5554,38 @@ begin
      // FIVE INSTANCES of one form -- the widest of the converted windows.
      h := CreateTR4WRemMultsWindow(ID);
      lclForm := RemMultsForm(ID);
+     end
+  else if ID = tw_NETWINDOW_INDEX then
+     begin
+     h := CreateTR4WNetworkWindow;
+     lclForm := TR4WNetworkForm;
+     end
+  else if (ID = tw_RADIOINTERFACEWINDOW1_INDEX) or
+          (ID = tw_RADIOINTERFACEWINDOW2_INDEX) then
+     begin
+     // TWO INSTANCES of one form -- an SO2R station has both open.
+     h := CreateTR4WRadioPanelWindow(ID);
+     lclForm := RadioPanelForm(ID);
+     end
+  else if ID = tw_MP3RECORDER then
+     begin
+     h := CreateTR4WMP3RecorderWindow;
+     lclForm := TR4WMP3RecorderForm;
+     end
+  else if ID = tw_INTERCOMWINDOW_INDEX then
+     begin
+     h := CreateTR4WIntercomWindow;
+     lclForm := TR4WIntercomForm;
+     end
+  else if ID = tw_HAMSCOREWINDOW_INDEX then
+     begin
+     h := CreateTR4WHamScoreWindow;
+     lclForm := TR4WHamScoreForm;
+     end
+  else if ID = tw_POSTSCORESWINDOW_INDEX then
+     begin
+     h := CreateTR4WPostScoresWindow;
+     lclForm := TR4WPostScoresForm;
      end
   else if ID = tw_MASTERWINDOW_INDEX then
      begin
@@ -5613,17 +5675,25 @@ begin
   if Radio <> nil then
      begin
      Radio.tRadioInterfaceWndHandle := h;
-     Radio.RITWndHandle := Windows.GetDlgItem(h, 121);
-     Radio.XITWndHandle := Windows.GetDlgItem(h, 122);
-     Radio.SplitWndHandle := Windows.GetDlgItem(h, 123);
+
+     // NO CONTROL HANDLES ARE TAKEN HERE ANY MORE.  They were GetDlgItem(h,
+     // 121..123) and GetDlgItem(h, 105..106), handed to uRadioPolling so it
+     // could post against them.  The panel is an LCL form now and its labels
+     // are TGraphicControls, which HAVE NO WINDOW HANDLE -- so every update
+     // travels as (panel, control id) instead, the way the text always did.
 
      // The mode labels (Issue #566) are 105 and 106, and they are built by
      // uRadio12 alongside every other control on this panel. They used to be
      // created HERE instead -- thirty lines of GetWindowRect / ScreenToClient
      // arithmetic against controls another unit had just placed, inside the
      // generic opener that has no other business knowing what a radio is.
-     Radio.ModeVFOAWndHandle := Windows.GetDlgItem(h, 105);
-     Radio.ModeVFOBWndHandle := Windows.GetDlgItem(h, 106);
+     // Still assigned, because uRadioPolling tests them for zero as its "is
+     // the panel open" guard.  They are no longer the route to the controls.
+     Radio.RITWndHandle      := h;
+     Radio.XITWndHandle      := h;
+     Radio.SplitWndHandle    := h;
+     Radio.ModeVFOAWndHandle := h;
+     Radio.ModeVFOBWndHandle := h;
 
      // CAPTION: the localized label plus the rig, e.g. "Radio 1 K4" (NY4I,
      // 2026-08-20). The generic caption a few lines up is the MENU text, which
@@ -5667,12 +5737,35 @@ begin
   // if ID in [tw_RADIOINTERFACEWINDOW1_INDEX, tw_RADIOINTERFACEWINDOW2_INDEX, tw_MP3RECORDER, tw_GETSCORESWINDOW_INDEX]
   // then TempFlag := NORESIZEEDWINDOW;
 
-  Windows.SetWindowPos(tr4w_WindowsArray[ID].WndHandle, HWND_TOP,
-    tr4w_WindowsArray[ID].WndRect.Left,
-    tr4w_WindowsArray[ID].WndRect.Top,
-    tr4w_WindowsArray[ID].WndRect.Right - tr4w_WindowsArray[ID].WndRect.Left,
-    tr4w_WindowsArray[ID].WndRect.Bottom - tr4w_WindowsArray[ID].WndRect.Top,
-    TempFlag);
+  // THROUGH THE FORM WHEN IT IS ONE.  SetWindowPos moves the WINDOW; it does
+  // not tell the LCL, whose own Left/Top/Width/Height still hold the DESIGNED
+  // values from the .lfm.  Showing the form then pushes those cached bounds
+  // back down to the handle and the window snaps to (0,0) at its designed size,
+  // silently undoing the restore.
+  //
+  // That is why NY4I's band map would not come back where he left it
+  // (2026-08-25): the layout was saved correctly and loaded correctly -- the
+  // exit trace shows savedWndRect=(68,408,544,747), his moved position -- and
+  // then the window was drawn at (0,0,476,339) anyway.  The NEXT exit saved
+  // THAT, so one restart was enough to lose the real position for good.  Both
+  // converted windows showed it; every unconverted one reports hWnd=0 and keeps
+  // its saved rect, which is why only these two were affected.
+  //
+  // Same shape as the caption fix a few lines below: write the PROPERTY and let
+  // the LCL do the Win32 call, or the two disagree and the widget set wins.
+  if lclForm <> nil then
+     begin
+     lclForm.BoundsRect := tr4w_WindowsArray[ID].WndRect;
+     end
+  else
+     begin
+     Windows.SetWindowPos(tr4w_WindowsArray[ID].WndHandle, HWND_TOP,
+       tr4w_WindowsArray[ID].WndRect.Left,
+       tr4w_WindowsArray[ID].WndRect.Top,
+       tr4w_WindowsArray[ID].WndRect.Right - tr4w_WindowsArray[ID].WndRect.Left,
+       tr4w_WindowsArray[ID].WndRect.Bottom - tr4w_WindowsArray[ID].WndRect.Top,
+       TempFlag);
+     end;
 
   if Config.NoCaption then
     if TempFlag = NORESIZEEDWINDOW then

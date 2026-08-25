@@ -2084,7 +2084,22 @@ type
 
   TSpotRecord = record
     {04}FFrequency: LONGINT; { LONGINT of spotted frequency }
-    {04}FSysTime: Cardinal {SYSTEMTIME};
+    { WHEN THE SPOT WAS MADE, IN UTC.  A real TDateTime, so the age is a
+      subtraction and DateUtils can do it.
+
+      It used to be a Cardinal holding an invented scalar --
+      wMinute + wHour*60 + wDay*1440 + wMonth*43200 -- which discarded the
+      SECONDS at capture.  Two spots arriving in the same clock minute then
+      carried the same stamp and expired on the same tick, so with a short
+      BAND MAP DECAY TIME the whole map emptied at once instead of spots
+      falling off one by one (NY4I, 2026-08-25: "after 1 minute the entire
+      window clears").  It also only worked because 30-day months made the
+      subtraction cancel: across a 31-day month end a spot read as 0 minutes
+      old, and across February it jumped about three days.
+
+      EIGHT BYTES, NOT FOUR, so SizeOf(TSpotRecord) changed and the band map
+      file's version byte went to '2' with it. }
+    {08}FSysTime: TDateTime;
     {04}FQSXFrequency: LONGINT; { Any QSX frequency }
 
     {14}FCall: CallString;
@@ -2099,7 +2114,12 @@ type
 
     {12}FFreqString: array[0..11] of AnsiChar; //Str10;
 
-    {04}FMinutesLeft: integer;
+    { AGE IN SECONDS -- elapsed, despite what the old name said.
+
+      Was FMinutesLeft, which held minutes ELAPSED rather than remaining, so
+      the name was wrong in both halves.  Seconds now, because that is what
+      gives the colour ramp anything to work with below half an hour. }
+    {04}FAgeSeconds: integer;
 
     {01}FDupe: boolean;
 //    {01}FLoudSignal: boolean;

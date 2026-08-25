@@ -169,7 +169,14 @@ begin
    // Through the window manager, exactly as WM_CLOSE was, so the saved
    // rectangle, the menu check mark and WndHandle stay in step.  caFree would
    // tear the form down behind CloseTR4WWindow's back.
-   CloseAction := caNone;
+   // caHIDE, NOT caNone.  caNone leaves the form VISIBLE as far as the LCL is
+   // concerned, and CloseTR4WWindow then destroys the handle underneath it --
+   // so the widget set recreates it and the window will not go away.  NY4I:
+   // "Clicking on the X on the Stations window does not close it. Nor does
+   // hitting the accelerator key again" (bench queue, 2026-08).  The six
+   // windows converted later all use caHide and close correctly; these five
+   // were the early ones.
+   CloseAction := caHide;
    if Assigned(DupeSheetOnClose) then
       begin
       DupeSheetOnClose(FIndex);

@@ -2723,7 +2723,7 @@
         Width = 160
         Height = 17
         AutoSize = False
-        Caption = 'seconds'
+        Caption = 'minutes'
         ParentFont = False
         Font.Color = clGrayText
       end

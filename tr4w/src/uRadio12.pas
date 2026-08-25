@@ -31,7 +31,6 @@ uses
   LogRadio,
   Tree;
 
-function RadioInterfaceWindowDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 
 implementation
 uses
@@ -59,87 +58,5 @@ begin
       Windows.SendMessage(aParent, WM_GETFONT, 0, 0), 1);
 end;
 
-function RadioInterfaceWindowDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-var
-//  p                                     : PChar;
-  i                                     : integer;
-const
-  l                                     : array[0..3] of PAnsiChar = (nil, 'RIT', 'XIT', 'SPLIT');
-begin
-  Result := False;
-  case Msg of
-    WM_LBUTTONDOWN, WM_WINDOWPOSCHANGING, WM_EXITSIZEMOVE: DefTR4WProc(Msg, lParam, hwnddlg);
-    WM_INITDIALOG:
-      begin
-        CreateStatic('VFO A', 5, 5, 45, hwnddlg, 101);
-        CreateStatic('VFO B', 5, 30, 45, hwnddlg, 103);
-
-        tWM_SETFONT(CreateStatic(nil, 50, 5, 135, hwnddlg, 102), CATWindowFont);
-        tWM_SETFONT(CreateStatic(nil, 50, 30, 135, hwnddlg, 104), CATWindowFont);
-
-        // The MODE labels, one to the right of each VFO frequency (Issue #566).
-        //
-        // THESE USED TO BE BUILT IN MainUnit.OpenTR4WWindow -- thirty lines of
-        // GetWindowRect / ScreenToClient arithmetic against the two controls
-        // created immediately above, sitting inside the GENERIC window opener
-        // that knows nothing else about radios. Two units owned one panel, and
-        // the geometry was derived at runtime from coordinates written
-        // literally on the previous lines.
-        //
-        // Same window, same style, same font, same place. 50 + 135 is the right
-        // edge of the VFO static and CreateStatic's height is a fixed 23, so the
-        // arithmetic collapses to constants.
-        //
-        // DELIBERATELY NOT CreateStatic: that would add SS_SUNKEN, SS_CENTER and
-        // the MS Sans Serif font. These are flat, left-aligned and in the
-        // dialog's own font, and that is how they have always looked.
-        CreateModeLabel(hwnddlg, 105, 5);
-        CreateModeLabel(hwnddlg, 106, 30);
-
-        for i := 0 to 3 do
-           begin
-           tWM_SETFONT(CreateStatic(l[i], 5 + i * 45, 55, 45, hwnddlg, 120 + i), MainFixedFont);
-           end;
-
-        // Status line for connection status messages (auth failures, etc.)
-        tWM_SETFONT(CreateStatic(nil, 5, 75, 180, hwnddlg, 130), MainFixedFont);
-
-//        if lParam = tr4w_RADIOINTERFACEWINDOW1_INDEX then p := Radio1AsPchar else p := Radio2AsPchar;
-//        Windows.SetWindowTextA(hwnddlg, p);
-      end;
-
-    WM_CLOSE:
-      begin
-        if hwnddlg = Radio1.tRadioInterfaceWndHandle then
-           begin
-           CloseTR4WWindow(tw_RADIOINTERFACEWINDOW1_INDEX)
-           end
-        else
-           begin
-           CloseTR4WWindow(tw_RADIOINTERFACEWINDOW2_INDEX);
-           end;
-      end;
-
-    WM_CTLCOLORSTATIC, WM_CTLCOLORDLG:
-      begin
-        SetBkMode(HDC(wParam), TRANSPARENT);
-        if hwnddlg = ActiveRadioPtr.tRadioInterfaceWndHandle then
-           begin
-           Result := BOOL(tr4wBrushArray[trLightBlue]);
-           end;
-        if Windows.GetDlgCtrlID(lParam) in [121..123] then
-           begin
-           if Windows.IsWindowEnabled(lParam) then
-              begin
-              Result := BOOL(tr4wBrushArray[trYellow]);
-              end;
-           end;
-        if Windows.GetDlgCtrlID(lParam) = 130 then
-           begin
-           SetTextColor(HDC(wParam), RGB(255, 0, 0));
-           end;
-      end;
-  end;
-end;
 end.
 

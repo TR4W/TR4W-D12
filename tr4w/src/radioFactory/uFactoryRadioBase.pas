@@ -143,6 +143,21 @@ Type
                        // THAT radio, so it belongs in its SpectrumAvailable
                        // override -- never in this flag, and never in a base
                        // class asking which model it is.
+      ,
+      rcSplitClearedByModeChange
+                       // Setting a VFO's MODE clears SPLIT on this radio, and does
+                       // so LATE -- as a side effect the rig finishes after it has
+                       // already accepted the split command.  Wire order therefore
+                       // does not save you: TR4W sends the mode and then the split,
+                       // the rig acknowledges the split, and ~145 ms later reports
+                       // split off again with nothing further sent.
+                       //
+                       // Bench-proven on the Elecraft K4 (NY4I, 2026-08-25, two
+                       // sessions, log at 11:17 and 14:01).  HamLib carries the same
+                       // workaround for the K3/KX2/KX3 as well (rigs/kenwood/k3.c:
+                       // "split can get turned off when modes are changing"), so
+                       // those very likely share it -- but only the K4 has been
+                       // watched, so only the K4 declares it.
    );
    TRadioCapabilitySet = set of TRadioCapability;
 
@@ -390,6 +405,16 @@ Type TFactoryRadioBase = class(TObject)
       localMode: TRadioMode;
       localDataMode: TRadioMode;
       localSplitEnabled: boolean;
+      // COMMANDED, not reported.  localSplitEnabled above is what the radio last
+      // SAID; this is what TR4W last ASKED FOR.  They are the same fact on a
+      // well-behaved rig and briefly disagree on one that clears split as a side
+      // effect of something else -- which is the whole reason both exist.
+      splitCommandedOn: boolean;
+      // How many times we may re-assert a commanded split against a contradicting
+      // report.  Bounded, and spent per command, so a rig that genuinely refuses
+      // split cannot become a command loop and the OPERATOR can always win by
+      // switching split off at the front panel a moment later.
+      splitReassertBudget: integer;
       localRITOffset: integer;
       localXITOffset: integer;
       bandIndependence: boolean;
@@ -641,6 +666,20 @@ Type TFactoryRadioBase = class(TObject)
       procedure SetXITOffset(value: integer);
       procedure SetSplitOn(value: boolean);
       procedure SetTransmitting(value: boolean);
+      // True when this VFO is ALREADY known to be in this mode, so commanding it
+      // again would put a redundant frame on the wire.  On most radios that is
+      // merely wasteful; on some it has a SIDE EFFECT (see
+      // rcSplitClearedByModeChange), which is why this is a guard and not a
+      // micro-optimisation.
+      function ModeAlreadySet(aMode: TRadioMode; aVFO: TVFO): boolean;
+      // Record that TR4W has commanded split on or off, and refresh the
+      // re-assert budget.  Called by drivers whose Split() can be undone by the
+      // radio itself.
+      procedure NoteSplitCommanded(aOn: boolean);
+      // True when a reported split state contradicts one we commanded, on a radio
+      // that declares rcSplitClearedByModeChange, and budget remains.  SPENDS the
+      // budget when it returns True, so one call is one re-assert.
+      function SplitNeedsReassert(aReportedOn: boolean): boolean;
       function ModeToString(mode: TRadioMode): string;
       property radioPort: integer read GetRadioPort write SetRadioPort;
       property radioAddress: string read GetRadioAddress write SetRadioAddress;
@@ -2223,7 +2262,7 @@ const
    CapabilityNames: array[TRadioCapability] of string =
       ('ReadVFOB', 'ReadRIT', 'ReadSplit', 'ReadTXStatus', 'DataMode', 'CWByCAT',
        'PlayDVK', 'CWSpeedSync',
-       'SharedRITXITOffset', 'Spectrum');
+       'SharedRITXITOffset', 'Spectrum', 'SplitClearedByModeChange');
 var
    c: TRadioCapability;
 begin
@@ -2316,6 +2355,58 @@ end;
 procedure TFactoryRadioBase.SetSplitOn(value: boolean);
 begin
    Self.localSplitEnabled := value;
+end;
+
+{ A DATA mode is never treated as already-set.  MD alone does not describe it --
+  the sub-mode arrives separately (DT on Elecraft) -- so two QSOs that are both
+  "data" can still need different frames.  Comparing only the mode would skip a
+  command that mattered, and a skipped command is far worse than a redundant one. }
+function TFactoryRadioBase.ModeAlreadySet(aMode: TRadioMode; aVFO: TVFO): boolean;
+const
+   DATA_MODES = [rmData, rmDataRev, rmFSK, rmFSKRev,
+                 rmPSK, rmPSKRev, rmAFSK, rmAFSKRev];
+begin
+   Result := False;
+
+   if (aMode = rmNone) or (aMode in DATA_MODES) then
+      begin
+      Exit;
+      end;
+
+   if Self.vfo[aVFO] = nil then
+      begin
+      Exit;
+      end;
+
+   Result := Self.vfo[aVFO].mode = aMode;
+end;
+
+procedure TFactoryRadioBase.NoteSplitCommanded(aOn: boolean);
+begin
+   Self.splitCommandedOn := aOn;
+   { ONE. Enough to survive a single side effect, not enough to argue with the
+     operator or to loop against a radio that will not go into split at all. }
+   if aOn then
+      begin
+      Self.splitReassertBudget := 1;
+      end
+   else
+      begin
+      Self.splitReassertBudget := 0;
+      end;
+end;
+
+function TFactoryRadioBase.SplitNeedsReassert(aReportedOn: boolean): boolean;
+begin
+   Result := (not aReportedOn)                                  and
+             Self.splitCommandedOn                              and
+             (Self.splitReassertBudget > 0)                     and
+             (rcSplitClearedByModeChange in Self.FCapabilities.Flags);
+
+   if Result then
+      begin
+      Dec(Self.splitReassertBudget);
+      end;
 end;
 
 procedure TFactoryRadioBase.SetTransmitting(value: boolean);

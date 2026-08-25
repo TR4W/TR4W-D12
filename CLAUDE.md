@@ -197,7 +197,7 @@ It links only leaf `src` units, so **the TRDOS contest engine is not unit-covere
 
 **2. Golden-master corpus** — the regression oracle for the contest engine.
 `bash tr4w/test/corpus/export-d12-corpus.sh` runs the app's headless export mode
-(`tr4w.exe "<contest>.CFG" /EXPORT`, `tr4w.dpr:903`) over 13 real D7-written binary logs and
+(`tr4w.exe "<contest>.CFG" /EXPORT`, `src/uProgramMain.pas`) over 13 real D7-written binary logs and
 byte-diffs both artifacts — ADIF and Cabrillo — against frozen D7 references (13 sets × 2 = 26
 comparisons).
 
@@ -232,21 +232,49 @@ strong net, not a proof.
 
 ### Framework
 
-- **Direct Win32 API** — no VCL forms. `program tr4w;` runs its own `GetMessage` /
-  `TranslateMessage` / `DispatchMessage` loop (`tr4w.dpr:1063`) and creates windows with
-  `CreateWindow`. There is no VCL `MainForm` and `Application.Run` is never called.
+**THE UI IS LCL FORMS. ~~Direct Win32 API, no VCL forms~~ — that was true until
+2026-08 and is not now.** The program runs `Application.Run`; the hand-rolled
+`GetMessage` / `TranslateMessage` / `DispatchMessage` loop is gone.
+
+**Every tool window is a designed form except TWO: Telnet and MMTTY.** Converted
+2026-08-24/25: function keys, band map, stations, SCP/master, both dupe sheets,
+the five remaining-multiplier windows, PostScores, HamScore, Intercom, MP3
+Recorder, both radio panels, and Network. `Lint-Win32Dialogs[ui]` fell 991 → 878.
+
+The seam is `OpenTR4WWindow` (`MainUnit.pas`): an arm returning the form's
+`Handle` and setting `lclForm`, and that window's `WndProcAdr` line deleted. A
+form is positioned through `lclForm.BoundsRect`, **never** `SetWindowPos` — the
+LCL holds its own bounds and pushes the designed ones back down when it shows,
+which silently undid a restored position until 2026-08-25.
+
+Read [`docs/BANDMAP_LCL_DESIGN.md`](docs/BANDMAP_LCL_DESIGN.md) and the notes at
+the top of any `src/ui/lcl/` unit before converting another window; several
+record traps that no compiler catches (colour used as state, a `TLabel` having
+no window handle, a `TPanel` caption not wrapping).
+
 - A **proof-of-concept** for hosting VCL forms alongside the Win32 loop exists on branch
   `Add-VCL-to-Program`; the technique is preserved in
-  [`docs/VCL_WIN32_COEXISTENCE.md`](docs/VCL_WIN32_COEXISTENCE.md). It is the intended bridge for
-  incrementally converting painful hand-built windows (Band Map, Telnet) to designed forms.
+  [`docs/VCL_WIN32_COEXISTENCE.md`](docs/VCL_WIN32_COEXISTENCE.md). Historical now that the
+  conversion is nearly done.
 - Heavy use of **global variables** for state; Pascal **records** for most data structures; manual
   resource management.
 
 ### Key entry points
 
-**`tr4w/tr4w.dpr`** — program entry and the startup sequence: single-instance mutex, logger,
-optional WSJT-X and external-logger servers, `CreateMainWindow`, WinKeyer thread, then the main
-`GetMessage` loop. Grep for the step you need; the order above is what matters, not the offsets.
+**`tr4w/src/uProgramMain.pas`** — the startup sequence: single-instance mutex, logger, optional
+WSJT-X and external-logger servers, `CreateMainWindow`, WinKeyer thread, then `Application.Run`.
+Grep for the step you need; the order above is what matters, not the offsets.
+
+**It moved out of `tr4w.dpr` on 2026-08-25 and that was the point of the exercise.** A `.dpr` is
+invisible to a search of `src/`, so the most order-sensitive code in the program lived in the one
+file nobody greps — and "where does X happen at startup" had the answer "in no unit at all". The
+`.dpr` is now 441 lines: the uses clause, the resource directives, and `begin RunTR4W; end.`
+
+**The uses clause stays in the `.dpr`**, so "which units are compiled" and "who references this" are
+still `.dpr` questions — that is what the `enforce-pascal-glob` hook is warning about, and it is
+still right. `uProgramMain`'s own uses clause is a copy of it in the same order: this program relies
+on use-order for name resolution (`SysUtils.SysErrorMessage` vs `TF`'s), so do not tidy it as a side
+effect of something else.
 
 Two facts about that sequence that grep will not tell you: **headless `/EXPORT` mode boots the
 contest, writes the files and `Halt(0)`s before any GUI or network init**, and config load
@@ -431,7 +459,23 @@ multi-op stations: centralised log, multipliers, dupe
 checking, serial-number lockout, time sync. Binary packet protocol with CRC32
 (`src/utils/networkmessageutils.pas`).
 
-Client side: `src/uNet.pas`, `src/trdos/LogNet.pas`, `src/uGetServerLog.pas`.
+Client side: `src/uNetClient.pas`, `src/uNet.pas`, `src/trdos/LogNet.pas`,
+`src/uGetServerLog.pas`.
+
+**THE CLIENT LINK IS INDY, NOT WINSOCK (2026-08-25).** `uNet` used to drive a raw
+socket and have Windows deliver its events as a WINDOW MESSAGE —
+`WSAAsyncSelect(NetSocket, <network window HWND>, WM_SOCK_NET, ...)` — so the
+network window *was* part of the transport and could not become a form.
+`TNetClient` (`src/uNetClient.pas`) owns the socket and the password handshake,
+modelled on `TDXClusterClient` but byte-oriented. `NetSocket` is gone; ask
+`NetIsConnected`.
+
+Parsing still runs on the **main thread**: the reader appends bytes under a lock
+and `Application.QueueAsyncCall`s a drain, so every message arm is unchanged. The
+short tail is now KEPT between reads — which is why an unrecognised message id
+must **not** be, or the same bytes re-parse forever and the link wedges in
+silence. `ConsumeNetBuffer` reports that case and the drainer resynchronises
+loudly.
 
 ### 7. External logger integration
 
@@ -462,7 +506,14 @@ extending the `case`.
 
 ### 9. DX tools
 
-- **Band map** (`uBandmap.pas`) — spots by frequency, click-to-tune, colour-coded, filterable.
+- **Band map** (`uBandmap.pas`, `src/ui/lcl/uBandMapForm.pas`) — spots by frequency,
+  click-to-tune, colour-coded, filterable. **A spot's age is a UTC `TDateTime`
+  stamped WHEN IT ARRIVED** (`FSysTime`), and `FAgeSeconds` is elapsed seconds;
+  the arithmetic is `src/uSpotAge.pas`, a leaf with 11 pin tests. Never age a
+  spot from the time in the cluster line — that carries only HHMM, so every spot
+  of a clock minute shared a timestamp and they all expired on the same tick.
+  `BAND MAP DECAY TIME` is in **minutes** (the help file says so) and is compared
+  in seconds. `BandMapFileVersion` is `'2'`.
 - **DX cluster** (`uTelnet.pas`, `uDXClusterClient.pas`, `uDXSpotParse.pas`, `uSpots.pas`) — the
   Telnet client is now Indy-based (`TDXClusterClient`, fixing lines lost at TCP segment boundaries),
   spot parsing is extracted and unit-tested, and auto-reconnect is on by default (5s doubling to a
@@ -665,8 +716,9 @@ Two silent-corruption traps live here, and neither produces a compiler diagnosti
 
 ### Threading
 Radio threads (one per radio), external logger threads (`TReadingThread` / `TSenderThread`), WinKey
-thread, network threads, CW/DVP playback. Event objects are created via inline assembly in `tr4w.dpr`
-(`tCW_Event`, `tCWPaddle_Event`, `tDVP_Event`, `tNet_Event`).
+thread, network threads, CW/DVP playback. The event objects (`tCW_Event`, `tCWPaddle_Event`,
+`tDVP_Event`, `tNet_Event`) are created in `src/uProgramMain.pas` — plain `CreateEvent` calls now, not
+the inline assembly this used to describe.
 
 Threads hand results back through `TProcessMsgRef` callbacks — synchronize before touching UI state.
 Radio disconnection is handled via the `radioWasDisconnected` flag rather than by tearing the object

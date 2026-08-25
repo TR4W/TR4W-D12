@@ -48,7 +48,6 @@ uses
   LogGrid,              // Issue #930 -- MyGrid
   Tree
   ;
-function GetScoresDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 procedure CreateConnectionAndSendReportToGetScores;
 procedure RunPOSTGetScoresThread;
 //function MakePOSTRequest: integer;
@@ -89,57 +88,8 @@ implementation
 uses
   MainUnit,
   uAnsiStr,
+  uPostScoresForm,   // PostScoresShowStatus -- the window is an LCL form
   uCabrilloHeader;   // the Cabrillo header, from settings\tr4w.json
-
-function GetScoresDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-label
-  1;
-begin
-  Result := False;
-  case Msg of
-    WM_LBUTTONDOWN, WM_WINDOWPOSCHANGING, WM_EXITSIZEMOVE: DefTR4WProc(Msg, lParam, hwnddlg);
-    WM_INITDIALOG:
-      begin
-
-        CreateButton(0, RC_POSTNOW, 5, 35, 200, hwnddlg, 101);
-        CreateButton(0, RC_GOTOGS, 5, 35 + 30, 200, hwnddlg, 106);
-        CreateStatic(nil, 5, 5, 200, hwnddlg, 105);
-
-        SetTimer(hwnddlg, 1, 1000 * 60 * 5 {minutes}, nil);
-        TF.Format(GetScoresAnswerFileName, '%sscoresserveranswer.html', TR4W_LOG_PATH_NAME);
-
-//        windows.SetWindowTextA(hwnddlg,'asdasd')
-
-      end;
-    WM_TIMER: RunPOSTGetScoresThread;
-
-    WM_COMMAND:
-      begin
-        if wParam = 101 then
-           begin
-           RunPOSTGetScoresThread;
-           end;
-        if wParam = 106 then
-           begin
-           OpenUrl(string(Config.GetScoresSeverReadingAddress));
-           end;
-
-{$IFDEF LANG_RUS}
-//        if wParam = 104 then ShowHelp('ru_getscores');
-{$ENDIF}
-
-        if HiWord(wParam) = BN_CLICKED then
-           begin
-           FrmSetFocus;
-           end;
-      end;
-    WM_CLOSE: 1:
-      begin
-        KillTimer(hwnddlg, 1);
-        CloseTR4WWindow(tw_POSTSCORESWINDOW_INDEX);
-      end;
-  end;
-end;
 
 procedure RunPOSTGetScoresThread;
 begin
@@ -219,12 +169,17 @@ begin
    CloseHandle(GetScoresThreadHandle);
 end;
 
+{ CALLED FROM THE UPLOAD WORKER THREAD as well as from the main one --
+  CreateConnectionAndSendReportToGetScores runs under tCreateThread and reports
+  every stage through here.
+
+  It used to be SetDlgItemTextA against the dialog's static, which was safe from
+  a worker BY ACCIDENT: SetDlgItemText is a kernel call and Windows marshals it
+  to the window's thread.  The window is an LCL form now and assigning a Caption
+  marshals nothing, so the hop is explicit and lives with the form. }
 procedure ShowGetScoresStatus(Status: PAnsiChar);
-var
-  tempbuffer                            : array[0..255] of AnsiChar;
 begin
-  TF.Format(tempbuffer, '%s : %s', GetTimeString, Status);
-  Windows.SetDlgItemTextA(tr4w_WindowsArray[tw_POSTSCORESWINDOW_INDEX].WndHandle, 105, tempbuffer);
+  PostScoresShowStatus(string(GetTimeString) + ' : ' + string(AnsiString(Status)));
 end;
 
 procedure CheckServerAnswer(AnswerLength: integer);

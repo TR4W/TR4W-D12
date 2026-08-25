@@ -167,7 +167,8 @@ begin
    // answered by SpectrumAvailable below.  A constructor could not answer it
    // anyway: serialPort is assigned by TRadioFactory after this runs.
    FCapabilities.Flags := FCapabilities.Flags +
-                          [rcCWByCAT, rcCWSpeedSync, rcPlayDVK, rcSpectrum];
+                          [rcCWByCAT, rcCWSpeedSync, rcPlayDVK, rcSpectrum,
+                           rcSplitClearedByModeChange];
    // ---- CW-by-CAT framing --------------------------------------------------
    // Same 22-and-pad rule as the serial Elecrafts: a short KY is swallowed when
    // it follows the keyer abort TR4W sends before every message, and padding
@@ -355,7 +356,17 @@ begin
          end;
       end;
    Self.SendToRadio(Format('%2s%.11d;',[sCmd,freq]));
-   if mode <> rmNone then
+
+   { DO NOT COMMAND A MODE THE RADIO IS ALREADY IN.  This used to send MD
+     unconditionally after every frequency set, which on a K4 costs a SPLIT: the
+     rig answers a sub-VFO mode command with its whole sub-receiver state and
+     resets the transmit VFO while doing it, ~145 ms after it has already
+     accepted the split TR4W asked for.  See rcSplitClearedByModeChange.
+
+     This is also simply what the program did before 6f89fd80 (2026-01-05), and
+     what the D7 tree does: SetRadioFreq's Kenwood/Elecraft arm writes FA/FB and
+     nothing else. }
+   if not Self.ModeAlreadySet(mode, vfo) then
       begin
       Self.SetMode(mode, vfo);
       end;
@@ -446,6 +457,13 @@ end;
 
 procedure TK4Radio.Split(splitOn: boolean);
 begin
+   { RECORD THE INTENT BEFORE SENDING.  The K4 can undo this by itself -- a mode
+     change clears split as a late side effect -- so the FT arm below needs to
+     know whether an incoming "split off" is the radio answering the operator or
+     the radio contradicting us.  localSplitEnabled cannot answer that: it is
+     what the rig SAID, which is exactly the value in dispute. }
+   Self.NoteSplitCommanded(splitOn);
+
    if splitOn then
       begin
       Self.SendToRadio('FT1;');
@@ -726,6 +744,23 @@ begin
       6: begin             // FT
          Self.localSplitEnabled := AnsiLeftStr(sData,1) = '1';
          logger.trace('[ProcessMessage] FT (Split) received - Split is %s - localSplitEnabled = %s',[AnsiLeftStr(sData,1),BoolToString(Self.localSplitEnabled)]);
+
+         { THE RADIO JUST CONTRADICTED US.  A mode change clears split on this
+           rig, and it does so LATE -- after the split command has been accepted
+           and acknowledged -- so wire order cannot prevent it and only a
+           re-assert can. HamLib carries the same workaround (rigs/kenwood/k3.c).
+
+           Budgeted to ONE per commanded split, so an operator switching split
+           off at the front panel wins, and a rig that will not go into split at
+           all cannot turn this into a command loop.
+
+           Logged at WARN, not silently: if this fires every time, the guard in
+           SetFrequency has stopped doing its job and somebody should know. }
+         if Self.SplitNeedsReassert(Self.localSplitEnabled) then
+            begin
+            logger.Warn('[ProcessMessage] radio reported split OFF after TR4W commanded it ON -- re-asserting once');
+            Self.SendToRadio('FT1;');
+            end;
          end;
       7: begin             // IF
          Self.ParseIFCommand(sData);

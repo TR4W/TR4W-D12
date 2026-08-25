@@ -253,7 +253,26 @@ procedure StartRecorder;
 procedure CheckMMError(ErrorCode: Cardinal);
 procedure mp3recSetProgressBarPosition(NewPosition: integer);
 
-function mp3recDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
+{ WHAT THE WINDOW READS, published as plain integers.
+
+  waveInProc runs on the MULTIMEDIA CALLBACK THREAD and used to write the
+  elapsed time and the peak level straight into the dialog's controls, once per
+  captured buffer.  SetDlgItemText and SendMessage are kernel calls that Windows
+  marshals, so it worked by accident; an LCL control assignment would not, and a
+  QueueAsyncCall per buffer would post work many times a second whether or not
+  anything changed.  The form polls these on a 100 ms timer instead.
+
+  Integers, deliberately: an aligned 32-bit read or write is atomic on i386, so
+  a value that is only ever DISPLAYED needs no lock.  A string would. }
+function MP3RecorderElapsedMS: cardinal;
+function MP3RecorderPeakLevel: integer;
+function MP3RecorderIsRecording: boolean;
+
+{ What WM_INITDIALOG and WM_NCDESTROY did beyond building and destroying
+  controls -- loading and freeing lame_enc.dll, and stopping the recorder. }
+procedure MP3RecorderWindowOpened;
+procedure MP3RecorderWindowClosed;
+
 function InitStrem: boolean;
 function SaveLastQSOToMP3File(CE: ContestExchangePtr): boolean;
 function MakeMP3Filename(CE: ContestExchangePtr): PAnsiChar;
@@ -308,7 +327,10 @@ var
 
   Address                               : pWaveHdr;
 
-  MP3RECWNDHND                          : HWND;
+  { Written by the waveIn callback thread, read by the window's timer.  See the
+    note on MP3RecorderElapsedMS. }
+  gElapsedMS                            : cardinal = 0;
+  gPeakLevel                            : integer = 0;
 {
   TempWavHeader                    : WavHeader =
     (
@@ -349,83 +371,6 @@ implementation
 uses
    uConfigValues, uCFG,
   MainUnit;
-
-function mp3recDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-label
-  1;
-begin
-  Result := False;
-  case Msg of
-    WM_SIZE, WM_WINDOWPOSCHANGING, WM_EXITSIZEMOVE: DefTR4WProc(Msg, lParam, hwnddlg);
-
-    WM_INITDIALOG:
-      begin
-
-        CreateStatic(nil, 5, 5, 50, hwnddlg, 102);
-        Createmsctls_progress32(5, 30, 50, 22, hwnddlg, 103);
-
-        CreateButton(BS_AUTOCHECKBOX, RC_MP3_RECENABLE, 60, 5, 60, hwnddlg, 100);
-        CreateButton(0, '...', 60, 30, 60, hwnddlg, 104);
-
-        tr4w_WindowsArray[tw_MP3RECORDER].WndHandle := hwnddlg;
-        LAMEENCDLL := LoadLibrary('lame_enc.dll');
-        if LAMEENCDLL <> 0 then
-           begin
-           @beInitStream := GetProcAddress(LAMEENCDLL, 'beInitStream');
-           @beEncodeChunk := GetProcAddress(LAMEENCDLL, 'beEncodeChunk');
-           @beCloseStream := GetProcAddress(LAMEENCDLL, 'beCloseStream');
-           end
-        else
-           begin
-           // Issue #997 (asm push/wsprintf/add esp -> StrPCopy + SysUtils.Format)
-           uAnsiStr.StrPCopy(TR4W_TEMP_MP3_FILENAME,
-             SysUtils.Format('LAME_ENC.DLL: %s ' + TC_LAME_ERROR + ':' + #13#10#13#10' http://www.tr4w.com/files/',
-               [SysErrorMessage(GetLastError)]));
-           showwarning(TR4W_TEMP_MP3_FILENAME);
-           goto 1;
-           end;
-
-        MP3RECWNDHND := hwnddlg;
-
-        TF.Format(TR4W_TEMP_MP3_FILENAME, 'MP3 Recorder (%ukbps)', RecorderBitrate);
-
-        Windows.SetWindowTextA(hwnddlg, TR4W_TEMP_MP3_FILENAME);
-
-        Windows.CreateDirectoryA(Config.MP3Path, nil);
-
-        if Config.MP3RecorderEnable then
-           begin
-           SwapRecorderStatus;
-           Windows.SendDlgItemMessage(hwnddlg, 100, BM_SETCHECK, BST_CHECKED, 0);
-           end;
-
-        SendDlgItemMessage(hwnddlg, 103, PBM_SETSTEP, 1, 0);
-        SendDlgItemMessage(hwnddlg, 103, PBM_SETRANGE, 0, 0 or PeakProgressBarMaxValue shl 16);
-      end;
-
-    WM_COMMAND:
-      case wParam of
-        100: SwapRecorderStatus;
-        104: ProcessMenu(menu_recording_control);
-      end;
-
-    WM_NCDESTROY:
-      begin
-        StopRecorder;
-        if LAMEENCDLL <> 0 then
-           begin
-           FreeLibrary(LAMEENCDLL);
-           end;
-      end;
-
-    WM_CLOSE:
-      begin
-        1:
-        CloseTR4WWindow(tw_MP3RECORDER);
-      end;
-
-  end;
-end;
 
 function InitStrem: boolean;
 begin
@@ -533,7 +478,8 @@ begin
    //              Windows.SetDlgItemInt(tr4whandle, 88, Temp576BufferPos, False);
                end;
 
-            Windows.SetDlgItemTextW(MP3RECWNDHND, 102, PChar(MillisecondsToFormattedString(Windows.GetTickCount - RecorderStartTime, False)));
+            // PUBLISHED, NOT PAINTED -- this is the multimedia callback thread.
+            gElapsedMS := Windows.GetTickCount - RecorderStartTime;
             MaxAmplitude := 0;
 
             for t := 0 to Freq - 1 do
@@ -577,8 +523,8 @@ begin
      waveinunprepareheader(hwi, @whead[i], SizeOf(whead[i]));
      end;
   waveinclose(hwi);
-  Windows.SetDlgItemTextA(MP3RECWNDHND, 102, nil);
-  SendDlgItemMessage(MP3RECWNDHND, 103, PBM_SETPOS, 0, 0);
+  gElapsedMS := 0;
+  gPeakLevel := 0;
   mp3recProgressBarPosition := 0;
 end;
 
@@ -664,9 +610,67 @@ end;
 
 procedure mp3recSetProgressBarPosition(NewPosition: integer);
 begin
+  // The 5-step deadband stays: it was there to stop a SendMessage per buffer,
+  // and it still stops the published value jittering between timer ticks.
   if Abs(mp3recProgressBarPosition - NewPosition) < 5 then Exit;
-  SendDlgItemMessage(MP3RECWNDHND, 103, PBM_SETPOS, NewPosition, 0);
+  gPeakLevel := NewPosition;
   mp3recProgressBarPosition := NewPosition;
+end;
+
+function MP3RecorderElapsedMS: cardinal;
+begin
+  Result := gElapsedMS;
+end;
+
+function MP3RecorderPeakLevel: integer;
+begin
+  Result := gPeakLevel;
+end;
+
+function MP3RecorderIsRecording: boolean;
+begin
+  Result := MP3RecorderMode = mprRec;
+end;
+
+procedure MP3RecorderWindowOpened;
+begin
+  if LAMEENCDLL = 0 then
+     begin
+     LAMEENCDLL := LoadLibrary('lame_enc.dll');
+     end;
+
+  if LAMEENCDLL <> 0 then
+     begin
+     @beInitStream  := GetProcAddress(LAMEENCDLL, 'beInitStream');
+     @beEncodeChunk := GetProcAddress(LAMEENCDLL, 'beEncodeChunk');
+     @beCloseStream := GetProcAddress(LAMEENCDLL, 'beCloseStream');
+     end
+  else
+     begin
+     // Issue #997 (asm push/wsprintf/add esp -> StrPCopy + SysUtils.Format)
+     uAnsiStr.StrPCopy(TR4W_TEMP_MP3_FILENAME,
+       SysUtils.Format('LAME_ENC.DLL: %s ' + TC_LAME_ERROR + ':' + #13#10#13#10' http://www.tr4w.com/files/',
+         [SysErrorMessage(GetLastError)]));
+     showwarning(TR4W_TEMP_MP3_FILENAME);
+     Exit;
+     end;
+
+  Windows.CreateDirectoryA(Config.MP3Path, nil);
+
+  if Config.MP3RecorderEnable and (MP3RecorderMode <> mprRec) then
+     begin
+     SwapRecorderStatus;
+     end;
+end;
+
+procedure MP3RecorderWindowClosed;
+begin
+  StopRecorder;
+  if LAMEENCDLL <> 0 then
+     begin
+     FreeLibrary(LAMEENCDLL);
+     LAMEENCDLL := 0;
+     end;
 end;
 
 end.

@@ -234,7 +234,14 @@ begin
    // Route the close through the window manager exactly as WM_CLOSE did, so the
    // saved rectangle, the menu check mark and WndHandle stay in step.  caFree
    // would tear the form down behind CloseTR4WWindow's back.
-   CloseAction := caNone;
+   // caHIDE, NOT caNone.  caNone leaves the form VISIBLE as far as the LCL is
+   // concerned, and CloseTR4WWindow then destroys the handle underneath it --
+   // so the widget set recreates it and the window will not go away.  NY4I:
+   // "Clicking on the X on the Stations window does not close it. Nor does
+   // hitting the accelerator key again" (bench queue, 2026-08).  The six
+   // windows converted later all use caHide and close correctly; these five
+   // were the early ones.
+   CloseAction := caHide;
    CloseTR4WWindow(tw_BANDMAPWINDOW_INDEX);
 end;
 
@@ -394,7 +401,9 @@ begin
       end;
 
    sbSpot.Panels[SB_CALL].Text   := string(spot.FCall);
-   sbSpot.Panels[SB_AGE].Text    := SysUtils.Format(TC_MIN, [spot.FMinutesLeft]);
+   // MINUTES TO THE OPERATOR, seconds underneath.  TC_MIN is '%u min.'.
+   sbSpot.Panels[SB_AGE].Text    := SysUtils.Format(TC_MIN,
+                                                    [spot.FAgeSeconds div 60]);
    sbSpot.Panels[SB_SOURCE].Text := SysUtils.Format(TC_SOURCE,
                                                     [string(spot.FSourceCall)]);
 
@@ -452,30 +461,64 @@ end;
 
 { --------------------------------------------------------------- painting -- }
 
+{ THE AGE RAMP, CONTINUOUS RATHER THAN FIVE STEPS.
+
+  The owner-draw had steps at 2, 10, 20 and 30 MINUTES, which was all the
+  resolution a minute-granular age could support -- and at a short decay time
+  meant every spot spent its whole life in the freshest step, so the map showed
+  no ageing at all before emptying.
+
+  With a real age in seconds the colour can simply follow it.  The shape is
+  kept: blue while the spot is worth chasing, then fading through grey to
+  near-invisible.  FRESH_SECONDS matches the old 2-minute step, and is the
+  band handled by the caller as a black fill with white text.
+
+  Expressed against the OPERATOR'S decay time rather than fixed minutes, so a
+  15-minute map and a 60-minute map both show a spot half-faded halfway
+  through its life.  That is the part the fixed thresholds could not do. }
 function TfrmBandMap.AgeColor(const aSpot: TSpotRecord): TColor;
+const
+   FRESH_SECONDS = 120;
+var
+   life: integer;
+   frac: double;
+   grey: integer;
 begin
-   // The five-step ramp the owner-draw used, unchanged.  The freshest step is a
-   // black FILL with white text; the caller applies the fill.
-   if aSpot.FMinutesLeft <= 2 then
+   life := BandMapDecayTime * 60;
+   if life <= FRESH_SECONDS then
+      begin
+      // A decay time inside the fresh band leaves nothing to ramp over.
+      Result := clBlue;
+      Exit;
+      end;
+
+   if aSpot.FAgeSeconds <= FRESH_SECONDS then
       begin
       Result := clWhite;
-      end
-   else if aSpot.FMinutesLeft <= 10 then
+      Exit;
+      end;
+
+   // 0 at the end of the fresh band, 1 at expiry.
+   frac := (aSpot.FAgeSeconds - FRESH_SECONDS) / (life - FRESH_SECONDS);
+   if frac < 0 then
+      begin
+      frac := 0;
+      end;
+   if frac > 1 then
+      begin
+      frac := 1;
+      end;
+
+   // The first fifth stays blue -- the old <= 10 minute step of a 60 minute
+   // map -- and the rest fades $50 -> $C0 grey, the range the steps covered.
+   if frac <= 0.2 then
       begin
       Result := clBlue;
-      end
-   else if aSpot.FMinutesLeft <= 20 then
-      begin
-      Result := TColor($505050);
-      end
-   else if aSpot.FMinutesLeft <= 30 then
-      begin
-      Result := TColor($808080);
-      end
-   else
-      begin
-      Result := TColor($C0C0C0);
+      Exit;
       end;
+
+   grey := $50 + Round(((frac - 0.2) / 0.8) * ($C0 - $50));
+   Result := TColor(grey or (grey shl 8) or (grey shl 16));
 end;
 
 procedure TfrmBandMap.DrawSpotCell(const aSpot: TSpotRecord; const aRect: TRect;
@@ -618,7 +661,7 @@ begin
       grdSpots.Canvas.Brush.Color := clHighlight;
       callColor := clHighlightText;
       end
-   else if aSpot.FMinutesLeft <= 2 then
+   else if aSpot.FAgeSeconds <= 120 then
       begin
       grdSpots.Canvas.Brush.Color := clBlack;
       callColor := clWhite;

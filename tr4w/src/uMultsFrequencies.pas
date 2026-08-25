@@ -179,7 +179,7 @@ var
   TempNetMultsFrequencies     : NetMultsFrequencies;
 begin
 {
-  if NetSocket = 0 then Exit;
+  if not NetIsConnected then Exit;
   if MF[CW, Band160] = 0 then Exit;
   TempFreq := ActiveRadioPtr^.FilteredStatus.Freq;
   if TempFreq = 0 then Exit;

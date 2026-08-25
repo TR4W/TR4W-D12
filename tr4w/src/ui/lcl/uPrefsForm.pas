@@ -750,6 +750,11 @@ type
       { Controls bound to settings by KEY -- see uSettingsBinding.  Anything
         bound needs no load/save code of its own. }
       FBindings: TSettingBindings;
+
+      { WHAT EACH COMMAND READ WHEN THE PAGE LOADED (name=value).  A command
+        absent from here was never loaded through CommandText, and ApplyIfChanged
+        then writes it unconditionally -- the old behaviour. }
+      FLoaded: TStringList;
       // The keyer library, sharing settings\tr4w.json with the radios.
       // uTR4WConfigFile owns the root; neither store knows about the other.
       //
@@ -926,6 +931,11 @@ type
       procedure LoadExternalSoftwarePanels;
       procedure SaveExternalSoftwarePanels;
       function  CommandBool(const aCommand: string): boolean;
+      { A command's STORED value -- the startup default the page edits. }
+      function  CommandText(const aCommand: string): string;
+
+      { Apply and store, but ONLY if this differs from what the page loaded. }
+      function  ApplyIfChanged(const aCommand, aValue: string): boolean;
       function  SetCommandBool(const aCommand: string; const aValue: boolean): boolean;
       procedure LoadStationPanel;
       function  SaveStationPanel: boolean;
@@ -1538,6 +1548,7 @@ begin
    uSettingsLegacy.ActiveStoreProvider := nil;
 
    FreeAndNil(FBindings);
+   FreeAndNil(FLoaded);
    FreeAndNil(FColorElements);
    FreeAndNil(FPalette);
    FreeAndNil(FEditClone);
@@ -2170,6 +2181,16 @@ begin
       // convincing "profile combos 4138 ms" that way on the first run, which is
       // exactly the sort of number that sends someone optimising nothing.
       FTiming := TStopwatch.StartNew;
+
+      // BEFORE THE FIRST PANEL LOADS, not with the bindings.  BuildBindings runs
+      // AFTER the hand-written panels, so clearing there threw away the very
+      // snapshot they had just taken and every one of their settings looked
+      // dirty -- which is the clobber this exists to stop.
+      if FLoaded = nil then
+         begin
+         FLoaded := TStringList.Create;
+         end;
+      FLoaded.Clear;
 
       chkAutoConnect.Checked := FStore.AutoConnectOnStartup;
       LogPhase(FTiming, '  profile combos');
@@ -4492,15 +4513,62 @@ end;
 // Boolean CFGCA rows are text: BA[] is the table CheckCommand itself matches
 // against, so reading and writing through it means the two cannot disagree
 // about how TRUE is spelled.
+{ THE STORED VALUE -- WHICH IS THE STARTUP DEFAULT, NOT THE LIVE ONE.
+
+  This page EDITS the default.  For most settings the two are the same and the
+  distinction never shows; for the ones whose live value legitimately moves
+  during operation -- CODE SPEED by keystroke, the band map filters from their
+  own menu -- showing the live value here would present a transient as if it
+  were the configured default, and one save would make it one.
+
+  What stops a save from clobbering the live value is not this function but
+  ApplyIfChanged, which writes only the commands the operator actually edited.
+
+  Live is still the fallback: a row the store has never held (and the handful
+  with no single global to render) has nowhere else to come from. }
+function TPrefsForm.CommandText(const aCommand: string): string;
+begin
+   Result := FStore.CommandValue(aCommand, CFGCommandValueAsString(aCommand));
+
+   // THE SNAPSHOT, taken here because this is what every hand-written panel
+   // loads through -- one place rather than twenty-eight call sites.
+   if FLoaded <> nil then
+      begin
+      FLoaded.Values[aCommand] := Result;
+      end;
+end;
+
+{ WRITE WHAT CHANGED.  See the long note on TSettingBinding.Save for why an
+  untouched control must not be written: the same Preferences save that raised
+  NY4I's band map display limit switched his All bands and All modes filters
+  back on, because Save wrote every control on the page. }
+function TPrefsForm.ApplyIfChanged(const aCommand, aValue: string): boolean;
+begin
+   if (FLoaded <> nil) and (FLoaded.IndexOfName(aCommand) >= 0) and
+      (FLoaded.Values[aCommand] = aValue) then
+      begin
+      Result := True;
+      Exit;
+      end;
+
+   // THE REAL WRITE.  Not ApplyIfChanged -- calling itself here is what a
+   // careless global rename did on 2026-08-25, and it recursed until the stack
+   // gave out the first time NY4I changed CW speed.
+   Result := ApplyAndStoreCommand(FStore, aCommand, aValue);
+   if Result and (FLoaded <> nil) then
+      begin
+      FLoaded.Values[aCommand] := aValue;
+      end;
+end;
+
 function TPrefsForm.CommandBool(const aCommand: string): boolean;
 begin
-   Result := SameText(Trim(FStore.CommandValue(aCommand,
-                           CFGCommandValueAsString(aCommand))), string(BA[True]));
+   Result := SameText(Trim(CommandText(aCommand)), string(BA[True]));
 end;
 
 function TPrefsForm.SetCommandBool(const aCommand: string; const aValue: boolean): boolean;
 begin
-   Result := ApplyAndStoreCommand(FStore, aCommand, string(BA[aValue]));
+   Result := ApplyIfChanged(aCommand, string(BA[aValue]));
 end;
 
 
@@ -4520,7 +4588,7 @@ begin
    // populated combo bakes itself into the .fmx resource, so a hand-entered
    // list becomes a permanent second copy that keeps working while it drifts
    // from the values the program actually accepts.
-   current := FStore.CommandValue(aCommand, CFGCommandValueAsString(aCommand));
+   current := CommandText(aCommand);
 
    aCombo.Items.BeginUpdate;
    try
@@ -5639,8 +5707,8 @@ begin
    edtRadioTCPPort.Text  := FStore.CommandValue('RADIO TCP SERVER PORT',
                                CFGCommandValueAsString('RADIO TCP SERVER PORT'));
 
-   edtMainFont.Text := FStore.CommandValue('MAIN FONT', CFGCommandValueAsString('MAIN FONT'));
-   edtFontSize.Text := FStore.CommandValue('FONT SIZE', CFGCommandValueAsString('FONT SIZE'));
+   edtMainFont.Text := CommandText('MAIN FONT');
+   edtFontSize.Text := CommandText('FONT SIZE');
    chkBoldFont.Checked       := CommandBool('BOLD FONT');
    chkDupeSheetColor.Checked := CommandBool('COLUMN DUPESHEET COLOR');
 
@@ -5654,27 +5722,27 @@ procedure TPrefsForm.SaveRemainingPanels;
 begin
    if cbxSCPMinLetters.ItemIndex >= 0 then
       begin
-      ApplyAndStoreCommand(FStore, 'SCP MINIMUM LETTERS',
+      ApplyIfChanged('SCP MINIMUM LETTERS',
                            cbxSCPMinLetters.Items[cbxSCPMinLetters.ItemIndex]);
       end;
-   ApplyAndStoreCommand(FStore, 'SCP COUNTRY STRING',  Trim(edtSCPCountry.Text));
+   ApplyIfChanged('SCP COUNTRY STRING',  Trim(edtSCPCountry.Text));
 
-   ApplyAndStoreCommand(FStore, 'SERVER ADDRESS',  Trim(edtNetAddress.Text));
-   ApplyAndStoreCommand(FStore, 'SERVER PORT',     Trim(edtNetPort.Text));
+   ApplyIfChanged('SERVER ADDRESS',  Trim(edtNetAddress.Text));
+   ApplyIfChanged('SERVER PORT',     Trim(edtNetPort.Text));
    // NOT trimmed: a password may legitimately begin or end with a space, and
    // silently removing one turns "wrong password" into an unsolvable puzzle.
-   ApplyAndStoreCommand(FStore, 'SERVER PASSWORD', edtNetPassword.Text);
-   ApplyAndStoreCommand(FStore, 'COMPUTER ID',     Trim(edtNetComputerID.Text));
+   ApplyIfChanged('SERVER PASSWORD', edtNetPassword.Text);
+   ApplyIfChanged('COMPUTER ID',     Trim(edtNetComputerID.Text));
    SetCommandBool('SERVER AUTO SYNCHRONIZE LOG ON CONNECT', chkNetAutoSync.Checked);
-   ApplyAndStoreCommand(FStore, 'RADIO TCP SERVER PORT', Trim(edtRadioTCPPort.Text));
+   ApplyIfChanged('RADIO TCP SERVER PORT', Trim(edtRadioTCPPort.Text));
 
-   ApplyAndStoreCommand(FStore, 'MAIN FONT', Trim(edtMainFont.Text));
-   ApplyAndStoreCommand(FStore, 'FONT SIZE', Trim(edtFontSize.Text));
+   ApplyIfChanged('MAIN FONT', Trim(edtMainFont.Text));
+   ApplyIfChanged('FONT SIZE', Trim(edtFontSize.Text));
    SetCommandBool('BOLD FONT',              chkBoldFont.Checked);
    SetCommandBool('COLUMN DUPESHEET COLOR', chkDupeSheetColor.Checked);
 
-   ApplyAndStoreCommand(FStore, 'BACKUP LOG FREQUENCY', Trim(edtBackupEvery.Text));
-   ApplyAndStoreCommand(FStore, 'BACKUP LOG FILE NAME', Trim(edtBackupFile.Text));
+   ApplyIfChanged('BACKUP LOG FREQUENCY', Trim(edtBackupEvery.Text));
+   ApplyIfChanged('BACKUP LOG FILE NAME', Trim(edtBackupFile.Text));
 end;
 
 procedure TPrefsForm.btnBrowseBackupClick(Sender: TObject);
@@ -5739,9 +5807,9 @@ begin
    ApplyActiveCluster(FStore);
    SetCommandBool('SPOT COLLECTOR ENABLED', chkSpotCollector.Checked);
 
-   ApplyAndStoreCommand(FStore, 'BAND MAP DECAY TIME',    Trim(edtBandMapDecay.Text));
-   ApplyAndStoreCommand(FStore, 'BAND MAP GUARD BAND',    Trim(edtBandMapGuard.Text));
-   ApplyAndStoreCommand(FStore, 'BAND MAP DISPLAY LIMIT', Trim(edtBandMapLimit.Text));
+   ApplyIfChanged('BAND MAP DECAY TIME',    Trim(edtBandMapDecay.Text));
+   ApplyIfChanged('BAND MAP GUARD BAND',    Trim(edtBandMapGuard.Text));
+   ApplyIfChanged('BAND MAP DISPLAY LIMIT', Trim(edtBandMapLimit.Text));
 
    SetCommandBool('BAND MAP DUPE DISPLAY',       chkBandMapDupes.Checked);
    SetCommandBool('BAND MAP MULTS ONLY',         chkBandMapMultsOnly.Checked);
@@ -5915,11 +5983,11 @@ begin
    n := PtrInt(aCombo.Items.Objects[aCombo.ItemIndex]);
    if n = 0 then
       begin
-      ApplyAndStoreCommand(FStore, aCommand, 'NONE');
+      ApplyIfChanged(aCommand, 'NONE');
       end
    else
       begin
-      ApplyAndStoreCommand(FStore, aCommand, IntToStr(n));
+      ApplyIfChanged(aCommand, IntToStr(n));
       end;
 end;
 
@@ -5993,19 +6061,19 @@ begin
    SetCommandBool('WSJT-X ENABLED',               chkWSJTXEnabled.Checked);
    SetCommandBool('WSJT-X RADIO CONTROL ENABLED', chkWSJTXRadioControl.Checked);
    SetCommandBool('WSJT-X SEND HIGHLIGHTS',       chkWSJTXHighlights.Checked);
-   ApplyAndStoreCommand(FStore, 'WSJT-X BROADCAST PORT',  Trim(edtWSJTXPort.Text));
-   ApplyAndStoreCommand(FStore, 'WSJT-X MULTICAST GROUP', Trim(edtWSJTXMulticast.Text));
+   ApplyIfChanged('WSJT-X BROADCAST PORT',  Trim(edtWSJTXPort.Text));
+   ApplyIfChanged('WSJT-X MULTICAST GROUP', Trim(edtWSJTXMulticast.Text));
 
    if cbxLoggerType.ItemIndex >= 0 then
       begin
-      ApplyAndStoreCommand(FStore, 'EXTERNAL LOGGER',
+      ApplyIfChanged('EXTERNAL LOGGER',
                            cbxLoggerType.Items[cbxLoggerType.ItemIndex]);
       end;
    SetCommandBool('EXTERNAL LOGGER ENABLED', chkLoggerEnabled.Checked);
-   ApplyAndStoreCommand(FStore, 'EXTERNAL LOGGER ADDRESS', Trim(edtLoggerAddress.Text));
-   ApplyAndStoreCommand(FStore, 'EXTERNAL LOGGER PORT',    Trim(edtLoggerPort.Text));
+   ApplyIfChanged('EXTERNAL LOGGER ADDRESS', Trim(edtLoggerAddress.Text));
+   ApplyIfChanged('EXTERNAL LOGGER PORT',    Trim(edtLoggerPort.Text));
 
-   ApplyAndStoreCommand(FStore, 'MMTTY ENGINE', Trim(edtMMTTYEngine.Text));
+   ApplyIfChanged('MMTTY ENGINE', Trim(edtMMTTYEngine.Text));
 end;
 
 procedure TPrefsForm.btnBrowseMMTTYClick(Sender: TObject);
@@ -6198,7 +6266,7 @@ begin
    // to land, which is its own piece of work.
    for f in StationFields do
       begin
-      if not ApplyAndStoreCommand(FStore, f.Command, Trim(f.Edit.Text)) then
+      if not ApplyIfChanged(f.Command, Trim(f.Edit.Text)) then
          begin
          bad := bad + f.Command + ' = "' + Trim(f.Edit.Text) + '"' + sLineBreak;
          Result := False;
@@ -6207,7 +6275,7 @@ begin
 
    if cbxMyContinent.ItemIndex >= 0 then
       begin
-      if not ApplyAndStoreCommand(FStore, 'MY CONTINENT',
+      if not ApplyIfChanged('MY CONTINENT',
                                   cbxMyContinent.Items[cbxMyContinent.ItemIndex]) then
          begin
          bad := bad + 'MY CONTINENT' + sLineBreak;

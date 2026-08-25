@@ -111,7 +111,7 @@ begin
 
         st_window_handle := hwnddlg;
         Windows.SetTimer(hwnddlg, local_time_timer_handle, 1000, nil);
-        if NetSocket = 0 then
+        if not NetIsConnected then
            begin
            EnableWindowFalse(hwnddlg, 202);
            end;

@@ -25,6 +25,7 @@ unit uTelnet;
 interface
 
 uses
+  Menus,           // TMenuItem -- the commands popup is an LCL menu now
   uConfigValues,   // Config -- migrated settings
   // ClipBrd (Vcl.ClipBrd) was listed here and never referenced -- there is no
   // Clipboard use anywhere in this unit.  Removed with the rest of the VCL.
@@ -43,6 +44,7 @@ uses
   //Country9,
   LogRadio,
   uSpots,
+  uSpotAge,   // UTCNow
   Windows,
   LogEdit,
   LogDupe,
@@ -76,8 +78,6 @@ var
   first: boolean;
 {$ENDIF}
 procedure SendClientStatus;
-function TelnetWndDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam:
-  lParam): BOOL; stdcall;
 function TelnetThreadProc(Param: Pointer): DWORD; stdcall;   // Issue #23 -- DX cluster I/O thread
 procedure StartTelnetConnect;                                // Issue #23 -- main-thread launcher
 procedure Disconnect;
@@ -114,95 +114,6 @@ var
   TelnetServer: Str50; //n4af 04-11-2013
   TempSpot: TSpotRecord;
 
-  tbButtons: array[0..TELNETBUTTONS - 1] of TTBButton = (
-    (iBitmap: VIEW_NETCONNECT;
-    idCommand: 200;
-    fsState: TBSTATE_ENABLED;
-    fsStyle: TBSTYLE_BUTTON or TBSTYLE_AUTOSIZE;
-    dwData: 0;
-    iString: 0;
-    ),
-    (iBitmap: VIEW_NETDISCONNECT;
-    idCommand: 201;
-    fsState: TBSTATE_ENABLED;
-    fsStyle: TBSTYLE_BUTTON or TBSTYLE_AUTOSIZE;
-    dwData: 0;
-    iString: 1;
-    ),
-    (iBitmap: VIEW_SORTTYPE;
-    idCommand: 203;
-    fsState: TBSTATE_ENABLED;
-    fsStyle: TBSTYLE_CHECK or TBSTYLE_AUTOSIZE;
-    dwData: 0;
-    iString: 3;
-    ),
-    //CLEAR
-    (iBitmap: VIEW_NEWFOLDER;
-    idCommand: 204;
-    fsState: TBSTATE_ENABLED;
-    fsStyle: TBSTYLE_BUTTON or TBSTYLE_AUTOSIZE;
-    dwData: 0;
-    iString: 4;
-    ),
-    //COMMANDS
-    (iBitmap: VIEW_DETAILS;
-    idCommand: 202;
-    fsState: TBSTATE_ENABLED;
-    fsStyle: TBSTYLE_BUTTON or TBSTYLE_AUTOSIZE;
-    dwData: 0;
-    iString: 2;
-    ),
-    {
-        (iBitmap: VIEW_PARENTFOLDER;
-        idCommand: 205;
-        fsState: TBSTATE_ENABLED;
-        fsStyle: TBSTYLE_BUTTON or TBSTYLE_AUTOSIZE;
-        dwData: 0;
-        iString: 5;
-        ),
-     }
-
-         //SH/FDX 100
-    (iBitmap: VIEW_PARENTFOLDER;
-    idCommand: 206;
-    fsState: TBSTATE_ENABLED;
-    fsStyle: TBSTYLE_BUTTON or TBSTYLE_AUTOSIZE;
-    dwData: 0;
-    iString: 5;
-    )
-{$IFDEF LANG_RUS}
-    ,
-    (iBitmap: - 1; //VIEW_SORTNAME;
-    idCommand: 207;
-    fsState: TBSTATE_ENABLED;
-    fsStyle: TBSTYLE_BUTTON or TBSTYLE_AUTOSIZE;
-    dwData: 0;
-    iString: 6;
-    )
-
-{$ENDIF}
-    {
-        (iBitmap: VIEW_PARENTFOLDER;
-        idCommand: 207;
-        fsState: TBSTATE_ENABLED;
-        fsStyle: TBSTYLE_BUTTON or TBSTYLE_AUTOSIZE;
-        dwData: 0;
-        iString: 7;
-        ),
-    }
-
-         //FILTER
-    {
-        (iBitmap: VIEW_SORTSIZE;
-        idCommand: 208;
-        fsState: TBSTATE_ENABLED;
-        fsStyle: TBSTYLE_BUTTON or TBSTYLE_AUTOSIZE;
-        dwData: 0;
-        iString: 6;
-        )
-    }
-    );
-
 const
   SOCK_IDLE = 0;
   SOCK_CLIENT = 3;
@@ -221,18 +132,20 @@ var
   // "are we connected" is ClusterClient.IsConnected.  It was doubling as a
   // connected-flag in four places, which is exactly the two-sources-of-truth
   // shape that lets a stale handle read as a live link.
-  TelToolbar: HWND;
-  TelnetListBox: HWND;
-  TelnetCommandWindow: HWND;
-  TelnetListBoxOldProc: Pointer;
-
-  TelPopMemu: HMENU;
-  TelLastPopMemu: HMENU;
+  { The submenu currently being filled, nil at the top level.  Replaces the
+    TelLastPopMemu HMENU: the item that owns a submenu and the submenu itself
+    are ONE object now, so they cannot disagree. }
+  TelLastMenuParent: TMenuItem;
 
   telnet_callsign_alert_list_loaded: boolean;
   TelnetCallsignAlertList: HWND;
 implementation
 uses uNet,
+  Forms,             // Application.QueueAsyncCall -- the event transport
+  ExtCtrls,          // TTimer -- the retry and login timers, off the dialog's WM_TIMER
+  uTelnetForm,       // the window itself, a designed form since 2026-08-25
+  SyncObjs,          // the queue lock, shared with the cluster reader thread
+  uClusterTokens,    // the braced-token parser, a leaf so it can be tested
   uDXClusterClient,   // the socket half, extracted so it can be tested headless
   uDXSpotParse,       // the decode half, likewise -- ProcessDX keeps only APPLY
   uBandmap,
@@ -244,23 +157,30 @@ uses uNet,
               // TF-qualified (see TelnetConnectionError / WinSock error display).
   MainUnit;
 
-// Issue #23 -- DX cluster I/O thread <-> main-thread message protocol.  The
+// Issue #23 -- DX cluster I/O thread -> main-thread event protocol.  The
 // cluster thread does ALL blocking network I/O (connect + recv) and never
-// touches UI or shared spot/bandmap state; it only posts these to the telnet
-// window, which does that work on the main (UI) thread.  Declared here so both
-// TelnetWndDlgProc (handler) and TelnetThreadProc (sender) see them.
-const
-  WM_TELNET_MSG         = WM_USER + 250;
-  TELNET_CONNECTED      = 1;   // lParam = 0
-  TELNET_CONNECT_FAILED = 2;   // lParam = WSA error code
-  TELNET_DATA           = 3;   // lParam = PTelnetChunk (handler disposes it)
-  TELNET_CLOSED         = 4;   // lParam = WSA error code (0 = graceful close)
-  // Unterminated text sitting in the receive buffer -- a login prompt, in
-  // practice.  Same chunk ownership as TELNET_DATA.  NOT fed to the spot
-  // decoder: it is by definition an incomplete line, and the complete one will
-  // arrive later through TELNET_DATA.
-  TELNET_PENDING        = 5;   // lParam = PTelnetChunk (handler disposes it)
+// touches UI or shared spot/bandmap state; it hands each piece of news to the
+// main thread, which does that work there.
+//
+// IT USED TO BE A WINDOW MESSAGE.  WM_TELNET_MSG was PostMessage'd to the
+// telnet window's HWND, which made that window part of the TRANSPORT -- the
+// same shape that stopped uNet's network window becoming a form until the
+// socket moved to Indy.  Nothing about "a line arrived from the cluster"
+// needs a window, and a handle of 0 (the window closed, or not yet created)
+// silently DROPPED the news and LEAKED the heap block carrying it.
+//
+// Application.QueueAsyncCall instead, for the reason uPanelUpdate and uNet
+// both document: TThread.Queue purges by the calling thread's id when that
+// thread dies, and a cluster reader dies exactly when a disconnect needs
+// reporting.
+//
+// ONE ORDERED QUEUE FOR ALL FIVE KINDS, not a queue for data and direct calls
+// for lifecycle.  A window message queue is FIFO, and the handler relied on
+// that: CLOSED must not overtake the DATA lines that preceded it, or the last
+// thing the node said before hanging up is lost -- which on a login failure is
+// the only line that explains why.
 
+const
   // Auto-reconnect: WM_TIMER id on the telnet window, and the backoff bounds.
   // First retry is quick because the common case is a node bouncing; the cap
   // keeps a node that is down for hours to one attempt a minute.
@@ -276,31 +196,58 @@ const
   LOGIN_PROMPT_WAIT  = 4000;
 
 type
-  PTelnetChunk = ^TTelnetChunk;
-  TTelnetChunk = record
-    Len:  integer;
-    Data: array[0..8192] of AnsiChar;
+  TClusterEventKind = (
+    cekConnected,       // Code unused
+    cekConnectFailed,   // Code = WSA error code (0 = none reported)
+    cekData,            // Text = one complete line, terminator already stripped
+    cekPending,         // Text = an UNTERMINATED line, in practice a login prompt
+    cekClosed);         // Code = WSA error code (0 = graceful close)
+
+  // THE TEXT IS AN AnsiString, not the 8 KB fixed buffer this used to carry.
+  // New/Dispose managed that buffer by hand and the HANDLER owned the free, so
+  // any path that did not reach the handler leaked it -- a window handle of 0
+  // being exactly such a path.  It also capped a line at 8192 characters for no
+  // reason the cluster protocol requires.
+  TClusterEvent = record
+    Kind: TClusterEventKind;
+    Code: Integer;
+    Text: AnsiString;
   end;
 
   // Cluster events arrive on the client's READER THREAD.  Every one of these
-  // does nothing but package the news and PostMessage it -- identical
-  // marshaling to the old recv loop, and for the same reason: the handler
-  // touches the bandmap, the log and the UI, none of which is thread-safe.
+  // does nothing but append to the queue and ask the main thread to drain it:
+  // the handlers touch the bandmap, the log and the UI, none of which is
+  // thread-safe.
   //
-  // A class only because the event types are `of object`; it holds no state.
+  // A class because the event methods are `of object` and QueueAsyncCall needs
+  // a method; it holds no state of its own.  The queue is a unit global under a
+  // lock, so a drain already scheduled still finds work queued after it.
   TClusterEvents = class
     procedure Line(const L: AnsiString);
     procedure PendingText(const L: AnsiString);
     procedure Connected;
     procedure Disconnected(const Text: string; Code: Integer);
+    procedure Drain(Data: PtrInt);
   end;
 
 var
   // Declared HERE, above the window procedure, because Pascal needs the
-  // declaration before the first use and the WM_TELNET_MSG handler asks
-  // IsConnected long before the event methods are implemented.
+  // declaration before the first use and the toolbar arms ask IsConnected
+  // long before the event methods are implemented.
   ClusterClient: TDXClusterClient;
   ClusterEvents: TClusterEvents;
+
+  // THE QUEUE, and the lock that is the ONLY thing shared with the reader
+  // thread.  SyncObjs-QUALIFIED for the reason uNet records: a long uses
+  // clause can put a RECORD named TCriticalSection in scope, and FPC then
+  // reads `= nil` as a record initialiser and asks for a '('.
+  GClusterLock: SyncObjs.TCriticalSection = nil;
+  GClusterQueue: array of TClusterEvent;
+  // Reentrancy guard.  A handler can call Disconnect, which blocks; nothing
+  // in that path pumps messages today, but a nested drain would hand the
+  // same event to two handlers, and that is not a failure anyone would
+  // diagnose from a log.
+  GClusterDraining: boolean = False;
   // Scratch for one received line, main thread only (the window procedure and
   // the list-box re-decode).  Replaces the 20 KB TelnetBuffer global in TF.pas.
   TelnetLine: AnsiString;
@@ -330,7 +277,7 @@ var
 procedure ArmTelnetRetry; forward;
 procedure CancelTelnetRetry; forward;
 
-// The login sequence, forward-declared for the same reason: the WM_TELNET_MSG
+// The login sequence, forward-declared for the same reason: the cluster-event
 // handler runs it and it needs SendViaTelnetSocket, which is declared later.
 procedure ArmClusterLogin; forward;
 procedure CancelClusterLogin; forward;
@@ -341,7 +288,7 @@ var
   // Armed on connect, disarmed when the callsign goes out. See ArmClusterLogin.
   ClusterLoginArmed: boolean;
   // ---- the login sequence --------------------------------------------------
-  // Main thread only: everything here runs from the WM_TELNET_MSG handler.
+  // Main thread only: everything here runs from HandleClusterEvent.
   //
   // Armed on connect when the active cluster has a password, and disarmed the
   // moment one is sent OR the budget below runs out.  A password is a secret
@@ -375,846 +322,559 @@ var
   TelCmdTooltip: HWND = 0;                   // tracking tooltip for the preview
   ClusterTooltipText: array[0..511] of AnsiChar; // stable storage for the tip text
 
-// Trim surrounding spaces and upper-case A..Z so token matching is
-// case-insensitive and tolerant of '{ MY_CALL }'.
-function NormalizeClusterToken(const S: AnsiString): AnsiString;
-var
-   i, First, Last: integer;
-   c: AnsiChar;
-begin
-   First := 1;
-   Last := Length(S);
-   while (First <= Last) and (S[First] = ' ') do
-      begin
-      Inc(First);
-      end;
-   while (Last >= First) and (S[Last] = ' ') do
-      begin
-      Dec(Last);
-      end;
-   Result := '';
-   for i := First to Last do
-      begin
-      c := S[i];
-      if (c >= 'a') and (c <= 'z') then
-         begin
-         c := AnsiChar(Ord(c) - 32);
-         end;
-      Result := Result + c;
-      end;
-end;
-
-{ Returns the live value for a single (already normalized) token name.        }
-{ Found is set False for an unrecognized token so the caller can leave it      }
-{ verbatim. This is the single source of truth for the token vocabulary.       }
-function ClusterTokenValue(const Token: AnsiString; var Found: boolean): AnsiString;
+// THE TOKEN VOCABULARY -- the half that needs the application's state.
+//
+// The parser itself now lives in uClusterTokens, which links without the
+// socket, the spot model or this dialog procedure and is therefore under unit
+// test.  What stays here is the part that could never move: knowing that
+// MY_CALL means the MyCall global.
+//
+// Result is False for an unrecognised token so the parser can leave it
+// verbatim.  This is the single source of truth for the token vocabulary.
+function TelnetClusterTokenValue(const Token: string; out Value: string): boolean;
 var
    RealFreq: Real;
    FreqStr: ShortString;
 begin
-   Found := True;
+   Result := True;
+   Value := '';
+
    if Token = 'MY_CALL' then
       begin
-      Result := MyCall
+      Value := string(MyCall)
       end
    else if Token = 'MY_STATE' then
       begin
-      Result := MyState
+      Value := string(MyState)
       end
    else if Token = 'MY_SECTION' then
       begin
-      Result := MySection
+      Value := string(MySection)
       end
    else if Token = 'MY_NAME' then
       begin
-      Result := MyName
+      Value := string(MyName)
       end
    else if Token = 'MY_GRID' then
       begin
-      Result := MyGrid
+      Value := string(MyGrid)
       end
    else if Token = 'MY_ZONE' then
       begin
-      Result := MyZone
+      Value := string(MyZone)
       end
    else if Token = 'MY_CHECK' then
       begin
-      Result := MyCheck
+      Value := string(MyCheck)
       end
    else if Token = 'MY_PREC' then
       begin
-      Result := MyPrec
+      Value := string(MyPrec)
       end
    else if Token = 'MY_CLASS' then
       begin
-      Result := MyFDClass
+      Value := string(MyFDClass)
       end
    else if Token = 'MY_PARK' then
       begin
-      Result := MyPark
+      Value := string(MyPark)
       end
    else if Token = 'MY_POSTALCODE' then
       begin
-      Result := MyPostalCode
+      Value := string(MyPostalCode)
       end
    else if Token = 'CALL' then
       begin
-      Result := CallWindowString
+      Value := string(CallWindowString)
       end
    else if Token = 'DATE' then
       begin
-      Result := GetDateString
+      Value := string(GetDateString)
       end
    else if Token = 'TIME' then
       begin
-      Result := GetTimeString
+      Value := string(GetTimeString)
       end
    else if Token = 'BAND' then
       begin
-      Result := BandStringsArrayWithOutSpaces[ActiveBand]
+      Value := string(BandStringsArrayWithOutSpaces[ActiveBand])
       end
    else if Token = 'FREQ' then
       begin
       RealFreq := Radio1.FilteredStatus.Freq / 1000.0;   { Hz -> kHz }
       Str(RealFreq: 0: 1, FreqStr);
-      Result := FreqStr;
+      Value := string(FreqStr);
       end
    else
       begin
-      Found := False;
+      Result := False;
       end;
 end;
 
-// Expands every {TOKEN} in Src. Pure transform - no global state is mutated -
-// so it is safe to call both from the send path and from the menu-hover proc.
-function ExpandClusterTokens(Src: PAnsiChar): AnsiString;
-var
-   S, Token, Value: AnsiString;
-   i, Len, j: integer;
-   Found: boolean;
+// The expansion, keeping the boundary between literal text and substituted
+// values so a caller can SHOW the operator which parts came from a token.
+function TelnetClusterSegments(const Src: string): TClusterSegments;
 begin
-   S := Src;
-   Result := '';
-   i := 1;
-   Len := Length(S);
-   while i <= Len do
+   Result := ExpandClusterSegments(Src, TelnetClusterTokenValue);
+end;
+
+// The finished command text, for callers that do not need the boundaries.
+function ExpandClusterTokens(Src: PAnsiChar): AnsiString;
+begin
+   Result := AnsiString(SegmentsToText(TelnetClusterSegments(string(AnsiString(Src)))));
+end;
+
+{ ---------------------------------------------------------------------------
+  WHAT THE DIALOG PROCEDURE USED TO DO.
+
+  TelnetWndDlgProc is GONE and so is the tracking tooltip it drove.  Everything
+  below is the same work, reached the same way, with the WM_ dispatch replaced
+  by the form calling back.  The button ids are deliberately unchanged so the
+  arms can be read against the originals.
+
+  THE PREVIEW TOOLTIP IS NOT REPLACED HERE.  It was a TTF_TRACK tooltip driven
+  from WM_MENUSELECT, and it existed to show a command's expanded value on
+  hover.  A Win32 tooltip is plain text, so it could never show WHICH part was
+  substituted -- which is what NY4I asked for.  uClusterTokens already returns
+  that as segments, and a TPopupMenu can draw them; that is the next step, not
+  a reimplementation of the tooltip.
+  --------------------------------------------------------------------------- }
+
+{ THE TWO TIMERS.  Both were SetTimer against the dialog's HWND with the tick
+  handled in its WM_TIMER arm, so both had to convert with it.
+
+  TTimer, not uWinTimer: these are the form's behaviour and the LCL owns its own
+  hidden timer window, so neither depends on the telnet window having a handle.
+  The window GUARD is kept regardless -- see ArmTelnetRetry, which still refuses
+  to arm when the window is gone, because that is the behaviour that shipped and
+  changing it is a separate decision. }
+var
+  TelnetRetryTimer: TTimer = nil;
+  ClusterLoginTimer: TTimer = nil;
+
+type
+  TTelnetTimers = class
+    procedure RetryTick(Sender: TObject);
+    procedure LoginTick(Sender: TObject);
+  end;
+
+var
+  TelnetTimers: TTelnetTimers = nil;
+
+procedure TTelnetTimers.RetryTick(Sender: TObject);
+begin
+  // One-shot: stop it first, then try.  If the attempt fails, cekConnectFailed
+  // arms the next one with a longer delay, so the loop continues without this
+  // handler knowing how many have gone by.
+  TelnetRetryTimer.Enabled := False;
+  TelnetRetryArmed := False;
+  AddStringToTelnetConsole('Reconnecting...', tstTR4W);
+  StartTelnetConnect;
+end;
+
+procedure TTelnetTimers.LoginTick(Sender: TObject);
+begin
+  // No `login:` arrived in time.  Send the callsign anyway: the node may prompt
+  // in prose we deliberately do not match, or not prompt at all.
+  ClusterLoginTimer.Enabled := False;
+  if ClusterLoginArmed then
+     begin
+     logger.Info('[Telnet] No login prompt within %d ms -- sending the callsign anyway',
+                 [LOGIN_PROMPT_WAIT]);
+     end;
+  SendClusterLogin;
+end;
+
+{ WM_INITDIALOG.  A dialog was rebuilt every time it opened; a form is created
+  once and reshown, so this runs on every show and must be idempotent -- which
+  is why the menu and the host list are CLEARED first.  The Win32 version could
+  not get this wrong because its controls did not survive a close. }
+procedure TelnetFormShowHandler;
+var
+  i: integer;
+begin
+  telnet_callsign_alert_list_loaded := False;
+  ItemsInTelnetPopupMenu := 0;
+  TelLastMenuParent := nil;
+
+  EnumerateLinesInFile('DXCLUSTER_ALERT_LIST.TXT',
+    EmunDXCLUSTERALERTLISTTXT, True);
+
+  // Issue 392: a cluster named in the config but absent from TRCLUSTER.DAT must
+  // still be selectable, so it is added to the list after the file is read.
+  EnumerateLinesInFile('TRCLUSTER.DAT', EmunTRCLUSTERDAT, False);
+  EmunTRCLUSTERDAT(@TelnetServer);
+  TelnetSelectHostItem(string(TelnetServer));
+
+  TelnetMenuClear;
+  AppendTelnetPopupMenu('HELP');
+  AppendTelnetPopupMenu('SHOW/USERS');
+  AppendTelnetPopupMenu('SHOW/WWV');
+  AppendTelnetPopupMenu('SHOW/FILTER');
+  EnumerateLinesInFile('CLUSTER_COMMANDS.TXT', EnumCLUSTERCOMMANDSTXT, True);
+
+  TelnetSetConnected(TelnetIsConnected);
+  TelnetSetFreezePressed(TelnetFreezeMode);
+
+  // CONNECT ON OPEN, and only when nothing is connected yet -- reshowing the
+  // window must not dial a second time.
+  if Config.tConnectionAtStartup and (not TelnetIsConnected) and
+     (TelThreadID = 0) then
+     begin
+     StartTelnetConnect;
+     end;
+
+  i := 0;   // silences the unused-variable note when the block above compiles out
+  if i <> 0 then
+     begin
+     Exit;
+     end;
+end;
+
+{ The toolbar.  Same ids the Win32 WM_COMMAND carried. }
+procedure TelnetFormCommandHandler(const aId: integer);
+begin
+  case aId of
+    TELNET_CMD_CONNECT:
       begin
-      if (S[i] = '{') and (i < Len) and (S[i + 1] = '{') then
+      StartTelnetConnect;   // Issue #23 -- launch the DX cluster I/O thread
+      end;
+
+    // Operator clicked Disconnect: cancel FIRST, so a retry armed by an earlier
+    // drop cannot fire and drag the link back up against their wishes.  This is
+    // the one place that must beat the timer.
+    TELNET_CMD_DISCONNECT:
+      begin
+      CancelTelnetRetry;
+      Disconnect;
+      end;
+
+    TELNET_CMD_COMMANDS:
+      begin
+      TelnetShowCommandMenu;
+      end;
+
+    TELNET_CMD_FREEZE:
+      begin
+      InvertBoolean(TelnetFreezeMode);
+      TelnetSetFreezePressed(TelnetFreezeMode);
+      if not TelnetFreezeMode then
          begin
-         Result := Result + '{';
-         Inc(i, 2);
-         end
-      else if (S[i] = '}') and (i < Len) and (S[i + 1] = '}') then
-         begin
-         Result := Result + '}';
-         Inc(i, 2);
-         end
-      else if S[i] = '{' then
-         begin
-         j := i + 1;
-         while (j <= Len) and (S[j] <> '}') do
-            begin
-            Inc(j);
-            end;
-         if j > Len then
-            begin
-            { Unterminated brace - emit the remainder literally. }
-            Result := Result + Copy(S, i, Len - i + 1);
-            i := Len + 1;
-            end
-         else
-            begin
-            Token := NormalizeClusterToken(Copy(S, i + 1, j - i - 1));
-            Value := ClusterTokenValue(Token, Found);
-            if Found then
-               begin
-               Result := Result + Value;
-               end
-            else
-               begin
-               Result := Result + Copy(S, i, j - i + 1);   // leave {TOKEN} verbatim
-               end;
-            i := j + 1;
-            end;
-         end
-      else
-         begin
-         Result := Result + S[i];
-         Inc(i);
+         TelnetConsoleScrollToEnd;   // catch up with what arrived while frozen
          end;
       end;
-end;
 
-{ Creates the once-per-window tracking tooltip used to preview expanded        }
-{ command values. TrackPopupMenu has no native tooltips, so a manually         }
-{ positioned TTF_TRACK tooltip is driven from WM_MENUSELECT.                   }
-function CreateClusterCommandTooltip(Owner: HWND): HWND;
-const
-   TTF_TRACK = $0020;
-   TTF_ABSOLUTE = $0080;
-var
-   ti: TOOLINFO;
-begin
-   Result := CreateWindowExA(0, 'tooltips_class32', nil,
-      WS_POPUP or TTS_NOPREFIX or TTS_ALWAYSTIP,
-      0, 0, 0, 0, Owner, 0, hInstance, nil);
-   if Result = 0 then
+    TELNET_CMD_CLEAR:
       begin
-      Exit;
-      end;
-   SetWindowPos(Result, HWND_TOPMOST, 0, 0, 0, 0,
-      SWP_NOACTIVATE or SWP_NOMOVE or SWP_NOSIZE);
-   Windows.ZeroMemory(@ti, SizeOf(ti));
-   ti.cbSize := SizeOf(ti);
-   ti.uFlags := TTF_TRACK or TTF_ABSOLUTE;
-   ti.HWND := Owner;
-   ti.uId := 0;
-   ti.lpszText := nil;
-   SendMessage(Result, TTM_ADDTOOL, 0, Integer(@ti));
-   SendMessage(Result, TTM_SETMAXTIPWIDTH, 0, 600);
-end;
-
-{ Hides the preview tooltip (menu closed, or item carries no tokens). }
-procedure HideClusterCommandTooltip;
-var
-   ti: TOOLINFO;
-begin
-   if TelCmdTooltip = 0 then
-      begin
-      Exit;
-      end;
-   Windows.ZeroMemory(@ti, SizeOf(ti));
-   ti.cbSize := SizeOf(ti);
-   ti.HWND := tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle;
-   ti.uId := 0;
-   SendMessage(TelCmdTooltip, TTM_TRACKACTIVATE, 0, Integer(@ti));
-end;
-
-{ Shows the expanded value of the highlighted command item near the cursor.    }
-{ Only real command items (id 1000..) that actually contain a token produce a   }
-{ preview; everything else hides the tooltip to avoid noise.                    }
-procedure ShowClusterCommandTooltip(ItemId, Flags: word);
-var
-   Expanded: AnsiString;
-   ti: TOOLINFO;
-   pt: TPoint;
-begin
-   if TelCmdTooltip = 0 then
-      begin
-      Exit;
-      end;
-   if (ItemId < 1000)                            or
-      (ItemId > 1000 + MAXITEMSINTELNETPOPUPMENU) or
-      ((Flags and MF_POPUP) <> 0)                 then
-      begin
-      HideClusterCommandTooltip;
-      Exit;
-      end;
-   GetMenuStringA(TelPopMemu, ItemId, wsprintfBuffer, 256, MF_BYCOMMAND);
-   Expanded := ExpandClusterTokens(wsprintfBuffer);
-   if Expanded = AnsiString(wsprintfBuffer) then
-      begin
-      { No substitution occurred - nothing useful to preview. }
-      HideClusterCommandTooltip;
-      Exit;
-      end;
-   lstrcpynA(ClusterTooltipText, PAnsiChar(Expanded), SizeOf(ClusterTooltipText));
-   Windows.ZeroMemory(@ti, SizeOf(ti));
-   ti.cbSize := SizeOf(ti);
-   ti.HWND := tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle;
-   ti.uId := 0;
-   ti.lpszText := ClusterTooltipText;
-   SendMessage(TelCmdTooltip, TTM_UPDATETIPTEXT, 0, Integer(@ti));
-   GetCursorPos(pt);
-   SendMessage(TelCmdTooltip, TTM_TRACKPOSITION, 0,
-      MakeLong(pt.X + 16, pt.Y + 16));
-   SendMessage(TelCmdTooltip, TTM_TRACKACTIVATE, Integer(True), Integer(@ti));
-   // The popup menu is itself a top-most window and re-asserts its z-order on
-   // every mouse move (which is what drives WM_MENUSELECT), so lift the tooltip
-   // back above the menu after each activation - otherwise it renders behind it.
-   SetWindowPos(TelCmdTooltip, HWND_TOPMOST, 0, 0, 0, 0,
-      SWP_NOACTIVATE or SWP_NOMOVE or SWP_NOSIZE);
-end;
-
-function TelnetWndDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam:
-  lParam): BOOL; stdcall;
-label
-  1, DrawSpot;
-var
-
-  temprect: TRect;
-
-  i : integer;
-  TempTextColor: Cardinal;
-  TempPoint: TPoint;
-  TDIS: PDrawItemStruct;
-  InfoBuffer: array[0..1023] of AnsiChar;   // Issue #23 -- LB_GETTEXT has no size limit; must hold the
-                                        // longest list item (error messages run ~230 chars, far past
-                                        // the old 128, overrunning the stack).  AddStringToTelnetConsole
-                                        // caps items to this size so this read can never overrun.
-  StringType: TelnetStringType;
-  ExpandedClusterCommand: AnsiString;   { Issue #973 }
-const
-  // Issue #23 -- tstTR4W (status messages) was green for no real reason; show it
-  // as normal black text.  Errors stay red.
-  TelnetStringColor: array[TelnetStringType] of tr4wColors = (trBlack, trBlue,
-    trBlack, trLightGray, trRed, trRed, trBlack);
-  //  TelnetStringOffset                    : array[TelnetStringType] of integer = (15, 2, 15, 15, 15, 20, 15);
-begin
-  Result := False;
-  case Msg of
-
-    WM_MEASUREITEM:
-      begin
-        PMeasureItemStruct(lParam).itemHeight := 13;
+      TelnetConsoleClear;
       end;
 
-    WM_DRAWITEM:
-
+    TELNET_CMD_SHOW50:
       begin
-        TDIS := Pointer(lParam);
-
-        if TDIS^.itemAction = ODA_DRAWENTIRE then
-           begin
-           i := SendMessageA(TDIS^.hwndItem, LB_GETTEXT, TDIS^.ItemID,
-             integer(@InfoBuffer));
-
-           StringType := TelnetStringType(SendMessage(TDIS^.hwndItem,
-             LB_GETITEMDATA, TDIS^.ItemID, 0));
-
-           if StringType = tstAlert then
-              begin
-              GradientRect(TDIS^.HDC, TDIS^.rcItem, tr4wColorsArray[trYellow],
-                tr4wColorsArray[trYellow], gdHorizontal);
-              end;
-
-           Windows.SetTextColor(TDIS^.HDC,
-             tr4wColorsArray[TelnetStringColor[StringType]]);
-           SetBkMode(TDIS^.HDC, TRANSPARENT);
-           Windows.TextOutA(TDIS^.HDC, TDIS^.rcItem.Left + 5
-             {TelnetStringOffset[StringType]}, TDIS^.rcItem.Top, InfoBuffer, i);
-           Result := True;
-           end;
+      SendViaTelnetSocket('SH/DX 50');   //n4af 04-11-2014
       end;
-
-    WM_WINDOWPOSCHANGING, WM_EXITSIZEMOVE: DefTR4WProc(Msg, lParam, hwnddlg);
-
-    // Issue #23 -- messages from the DX cluster I/O thread (TelnetThreadProc).
-    // All UI and spot/bandmap processing happen here, on the main thread.
-    WM_TELNET_MSG:
-      begin
-        case wParam of
-          TELNET_CONNECTED:
-            begin
-              if TR4W_TELNET_DEBUG then
-                 begin
-                 logger.Info('[Telnet] Connected to %s:%d', [PAnsiChar(@PendingTelnetHost[0]), PendingTelnetPort]);
-                 end;
-              TelnetSessionActive := True;   // there is now something to tear down
-              // We are back: forget any pending retry and reset the backoff, so
-              // the NEXT outage starts at 5 s again rather than inheriting the
-              // 60 s this one may have crept up to.
-              CancelTelnetRetry;
-              TF.Format(wsprintfBuffer, '%s%s:%u', TC_CONNECTEDTO,
-                @PendingTelnetHost[0], PendingTelnetPort);
-              AddStringToTelnetConsole(wsprintfBuffer, tstTR4W);
-              // (The TelnetBuffer clear that stood here is gone with the buffer
-              // -- there is no shared receive state to reset between sessions.)
-              // LOG IN.  Until 2026-08-11 this branch sent ConnectionCommand
-              // INSTEAD of the callsign when one was configured -- so anybody
-              // who set a connection command never logged in at all -- and
-              // otherwise merely PRE-FILLED the input box with MyCall and waited
-              // for the operator to press Enter.
-              //
-              // WAIT FOR THE PROMPT, with a timeout.  The first version of this
-              // sent the callsign the instant the socket opened, on the argument
-              // that TR4W had always effectively done so.  It had not: the old
-              // code only PRE-FILLED the input box and the operator pressed
-              // Enter after seeing the prompt.  HamAlert discarded a callsign
-              // that arrived before its banner and then sat at `login:` waiting
-              // (NY4I, 2026-08-12).  See ArmClusterLogin.
-              ArmClusterLogin;
-              SendClientStatus;
-              EnableTelnetToolbatButtons(True);
-              EnableWindowTrue(hwnddlg, 104);
-            end;
-
-          TELNET_CONNECT_FAILED:
-            begin
-              // Issue #23 -- keep the detailed WinSock reason in the log for
-              // diagnostics, but show the operator a short message naming the
-              // host they tried to reach (the raw message is long and unwrapped).
-              // CODE 0 MEANS NO SOCKET ERROR, so SysErrorMessage(0) renders as
-              // "The operation completed successfully" -- a failure line that
-              // says nothing failed, which is exactly how the already-connected
-              // refusal disguised itself.  The real reason came through
-              // OnDisconnected; do not overwrite it with a lie.
-              if lParam = 0 then
-                 begin
-                 logger.Error('[Telnet] Could not connect to %s:%d -- no socket error reported ' +
-                              '(see the preceding reason)',
-                   [PAnsiChar(@PendingTelnetHost[0]), PendingTelnetPort]);
-                 end
-              else
-                 begin
-                 logger.Error('[Telnet] Could not connect to %s:%d -- WinSock %d: %s',
-                   [PAnsiChar(@PendingTelnetHost[0]), PendingTelnetPort, lParam,
-                    SysUtils.SysErrorMessage(lParam)]);
-                 end;
-
-              // TEARDOWN BEFORE COSMETICS.  Disconnect used to sit after the
-              // console formatting, and the whole log shows it NEVER RAN across
-              // three failures -- leaving the session up and wedging every
-              // later attempt.  Whatever aborted the handler did so before this
-              // line; putting the state change first means a formatting problem
-              // can no longer cost the teardown.
-              Disconnect;
-
-              TF.Format(wsprintfBuffer, '%s%s:%u', TC_FAILEDTOCONNECTTO,
-                @PendingTelnetHost[0], PendingTelnetPort);
-              AddStringToTelnetConsole(wsprintfBuffer, tstError);
-              // Keep trying, with a longer gap each time.  A failed RETRY comes
-              // back through here, which is what makes the backoff advance --
-              // and a first connect that fails is retried too, so a TR4W
-              // started before the network is up still ends up connected.
-              ArmTelnetRetry;
-            end;
-
-          TELNET_DATA:
-            begin
-              if lParam <> 0 then
-                 begin
-                 // The chunk now carries exactly ONE complete line, terminator
-                 // already stripped by the transport.  No shared receive
-                 // buffer, no NUL bookkeeping, no re-scanning for line breaks.
-                 SetString(TelnetLine, PAnsiChar(@PTelnetChunk(lParam)^.Data[0]),
-                           PTelnetChunk(lParam)^.Len);
-                 Dispose(PTelnetChunk(lParam));
-                 // BEFORE the spot decoder, and unconditionally: a login prompt
-                 // is not a spot, and the answer must go out before anything
-                 // else this line might trigger.  Costs one Pos() per line and
-                 // only while the window is open -- it returns immediately once
-                 // the password has gone or the budget has run out.
-                 AnswerClusterLoginPrompts(TelnetLine);
-                 ProcessTelnetLine(TelnetLine);
-                 end;
-            end;
-
-          // AN UNTERMINATED PROMPT. Answered, but NOT decoded and NOT displayed:
-          // it is an incomplete line by definition, and the complete one arrives
-          // later through TELNET_DATA. Feeding it to ProcessDX would decode the
-          // same text twice.
-          TELNET_PENDING:
-            begin
-              if lParam <> 0 then
-                 begin
-                 SetString(TelnetLine, PAnsiChar(@PTelnetChunk(lParam)^.Data[0]),
-                           PTelnetChunk(lParam)^.Len);
-                 Dispose(PTelnetChunk(lParam));
-                 AnswerClusterLoginPrompts(TelnetLine);
-                 end;
-            end;
-
-          TELNET_CLOSED:
-            begin
-              // Guard on the SESSION, not on the socket.  This asks "is there a
-              // session still to tear down", which is exactly what the old
-              // `TelnetSock <> 0` meant -- that handle was cleared only by our
-              // own Disconnect.
-              //
-              // Asking ClusterClient.IsConnected here was WRONG and shipped
-              // broken: on a SERVER-initiated close the socket is already down
-              // by the time this posted message is handled, so the guard was
-              // False precisely in the case it exists to handle.  Disconnect
-              // never ran, so the toolbar kept showing a live session -- Connect
-              // greyed, Disconnect enabled -- and TelThreadID was never cleared,
-              // which also blocked reconnecting.  (NY4I: sent `bye` to the
-              // simulator, 2026-08-04.)
-              if TelnetSessionActive then
-                 begin
-                 if lParam <> 0 then
-                    begin
-                    TelnetConnectionError(lParam);
-                    end;
-                 Disconnect;
-                 // We did not ask for this -- the node hung up or the link
-                 // died -- so start trying to get it back.  Disconnect has
-                 // already restored the toolbar, so the operator can still
-                 // take over at any point and CancelTelnetRetry will stop us.
-                 ArmTelnetRetry;
-                 end;
-            end;
-        end;
-      end;
-
-    // Auto-reconnect tick.  One-shot: kill it first, then try.  If the attempt
-    // fails, TELNET_CONNECT_FAILED arms the next one with a longer delay, so
-    // the loop continues without this handler knowing how many have gone by.
-    WM_TIMER:
-      begin
-        if wParam = TELNET_RETRY_TIMER then
-           begin
-           KillTimer(hwnddlg, TELNET_RETRY_TIMER);
-           TelnetRetryArmed := False;
-           AddStringToTelnetConsole('Reconnecting...', tstTR4W);
-           StartTelnetConnect;
-           end;
-
-        // No `login:` arrived in time. Send the callsign anyway: the node may
-        // prompt in prose we deliberately do not match, or not prompt at all.
-        // SendClusterLogin kills this timer and is a no-op if the prompt won
-        // the race.
-        if wParam = TELNET_LOGIN_TIMER then
-           begin
-           if ClusterLoginArmed then
-              begin
-              logger.Info('[Telnet] No login prompt within %d ms -- sending the callsign anyway',
-                          [LOGIN_PROMPT_WAIT]);
-              end;
-           SendClusterLogin;
-           end;
-      end;
-
-    WM_INITDIALOG:
-      begin
-
-        CreateComboBox(hwnddlg, 102);
-        CreateComboBox(hwnddlg, 106);
-        CreateButton(BS_DEFPUSHBUTTON or BS_CENTER or WS_DISABLED, RC_SEND, 0,
-          0, 60, hwnddlg, 104);
-        CreateOwnerDrawListBox(LBS_NOTIFY or LBS_OWNERDRAWFIXED or LBS_HASSTRINGS
-          or LBS_NOINTEGRALHEIGHT or WS_CHILD or WS_VISIBLE or WS_VSCROLL or
-          WS_HSCROLL or WS_TABSTOP, hwnddlg);
-        //
-
-        tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle := hwnddlg;
-        telnet_callsign_alert_list_loaded := False;
-        ItemsInTelnetPopupMenu := 0;
-
-        EnumerateLinesInFile('DXCLUSTER_ALERT_LIST.TXT',
-          EmunDXCLUSTERALERTLISTTXT, True);
-
-        // Issue 392
-        // If the cluster in the config file is not in TRCLUSTER.DAT, this does not connect.
-        // We could add it to the EnumTRClusterDAT or just take it as a host and connect.
-        // We should check the hosts is valid too but we can see that in the connect.
-        // Also, ensure we get a useful error message when we cannot connect.
-        // Currently it just says Operation Successful which is false and not helpful.
-        EnumerateLinesInFile('TRCLUSTER.DAT', EmunTRCLUSTERDAT, False);
-        EmunTRCLUSTERDAT(@TelnetServer);
-        // Issue 392 ny4i - This adds the value in the config for telnet server to the drop-down
-        i := SendDlgItemMessageA(hwnddlg, 102, CB_FINDSTRING, Cardinal(-1),
-          integer(@TelnetServer[1])); //n4af 4.35.1
-        //     i := SendDlgItemMessage(hwnddlg, 102, CB_FINDSTRINGEXACT, -1,integer(@TelnetServer[1]));
-        if i <> CB_ERR then
-           begin
-           tCB_SETCURSEL(hwnddlg, 102, i);
-           end;
-
-        TelToolbar := uCommctrl.CreateToolBarEx(hwnddlg,
-          WS_CHILD or
-          WS_VISIBLE or
-          TBSTYLE_TOOLTIPS or
-          TBSTYLE_LIST or
-          TBSTYLE_TRANSPARENT or
-          TBSTYLE_AUTOSIZE or
-          TBSTYLE_FLAT,
-          0, 13, HINST_COMMCTRL, IDB_VIEW_SMALL_COLOR, @tbButtons,
-          TELNETBUTTONS, 0, 0, 0, 0, SizeOf(TTBButton));
-
-        SendMessage(TelToolbar, TB_ADDSTRING, 0,
-          integer(PAnsiChar(TC_TELNET{$IFDEF LANG_RUS} + '?'#0#0{$ENDIF})));
-        EnableTelnetToolbatButtons(False);
-
-        TelnetListBox := Get101Window(hwnddlg);
-        // Issue #997: asm tWM_SETFONT -> call the existing TF helper directly
-        tWM_SETFONT(TelnetListBox, LucidaConsoleFont);
-
-        TelnetCommandWindow := GetDlgItem(hwnddlg, 106);
-
-        //        TelnetListBoxOldProc := Pointer(Windows.SetWindowLong(TelnetListBox, GWL_WNDPROC, integer(@TelnetListBoxNewProc)));
-                //        SendMessage(hwnddlg, WM_SETICON, ICON_SMALL, DisconnectedIcon);
-        //            SendMessage(TelnetConnectionStatus, STM_SETICON, 0, 0);
-
-        if Config.tConnectionAtStartup then
-           begin
-           SendMessage(hwnddlg, WM_COMMAND, 200, 0);
-           end;
-
-        TelPopMemu := CreatePopupMenu;
-        TelLastPopMemu := TelPopMemu;
-        AppendTelnetPopupMenu('HELP');
-        AppendTelnetPopupMenu('SHOW/USERS');
-        AppendTelnetPopupMenu('SHOW/WWV');
-        AppendTelnetPopupMenu('SHOW/FILTER');
-
-        EnumerateLinesInFile('CLUSTER_COMMANDS.TXT', EnumCLUSTERCOMMANDSTXT,
-          True);
-
-        // Issue #973: tooltip that previews each command's expanded value.
-        TelCmdTooltip := CreateClusterCommandTooltip(hwnddlg);
-
-        //tLB_ADDSTRING(TelnetListBox,'DX DE SM6WET:    28025.0  G0ORH        SRI, THIS IS CORRECT           0953Z JO68  ');
-        //tLB_ADDSTRING(TelnetListBox,'DX DE G4MJS:     14180.0  2DONCG       YOUR TURN TO MAKE A BREW       0953Z JO01  ');
-        //tLB_ADDSTRING(TelnetListBox,'DX DE LU6FL:      1845.0  LU6FL        CQ CQ TEST SSB                 0953Z FF97  ');
-        //tLB_ADDSTRING(TelnetListBox,'DX DE RZ3DSD:    14258.9  RA3RGQ/1                                    0953Z  ');
-        //tLB_ADDSTRING(TelnetListBox,'DX DE F5PPO:     18135.0  CQ9U                                        0953Z  ');
-        //tLB_ADDSTRING(TelnetListBox,'DX DE PA3C:      24897.2  LZ1PJ                                       0954Z JO33  ');
-
-      end;
-    //    WM_HELP: tWinHelp(7);
-
-    // Issue #973: preview the highlighted command's expanded value in a tooltip.
-    WM_MENUSELECT:
-      begin
-        if (HiWord(wParam) = $FFFF) and (lParam = 0) then
-           begin
-           HideClusterCommandTooltip   // menu closed
-           end
-        else
-           begin
-           ShowClusterCommandTooltip(LoWord(wParam), HiWord(wParam));
-           end;
-      end;
-
-    WM_EXITMENULOOP:
-      begin
-        HideClusterCommandTooltip;
-      end;
-
-    WM_COMMAND:
-      begin
-        if HiWord(wParam) = LBN_SELCHANGE then
-           begin
-           DlgDirSelectExA(hwnddlg, wsprintfBuffer, SizeOf(wsprintfBuffer), 101);
-           end;
-
-        if HiWord(wParam) = LBN_DBLCLK then
-           begin
-           //      DlgDirSelectEx(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle, wsprintfBuffer, SizeOf(wsprintfBuffer), 101);  //n4af
-           //    DlgDirList(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle, wsprintfBuffer, 101, 106, DDL_ARCHIVE or DDL_DIRECTORY);       //n4af
-           //   ShowMessage(SysErrorMessage(GetLastError));
-           i := SendMessage(TelnetListBox, LB_GETCURSEL, 0, 0);
-           if i = LB_ERR then
-              begin
-              Exit;
-              end;
-           // Re-decode the line the operator clicked, straight from the list box
-           // -- no shared buffer in the middle any more.
-           SendMessageA(TelnetListBox, LB_GETTEXT, i, integer(@TempBuffer1[0]));
-           TelnetLine := AnsiString(PAnsiChar(@TempBuffer1[0]));
-           if Copy(TelnetLine, 1, 6) = 'DX de ' then
-              begin
-              if ProcessDX(TelnetLine, True, StringType) then
-                 begin
-                 TuneRadioToSpot(TempSpot, RadioOne);
-                 end;
-              end;
-
-           end;
-
-        if (wParam >= 1000) then
-          if (wParam <= 1000 + MAXITEMSINTELNETPOPUPMENU) then
-             begin
-             GetMenuStringA(TelPopMemu, wParam, wsprintfBuffer, 256,
-               MF_BYCOMMAND);
-             //n4af    4.51.1
-             // Issue #973: expand {TOKEN} fields to live values before sending.
-             // Cap to 250 so SendViaTelnetSocket's CRLF append cannot overflow
-             // its 256-byte wsprintfBuffer when expansion grows the string.
-             ExpandedClusterCommand := ExpandClusterTokens(wsprintfBuffer);
-             if Length(ExpandedClusterCommand) > 250 then
-                begin
-                SetLength(ExpandedClusterCommand, 250);
-                end;
-             SendViaTelnetSocket(PAnsiChar(ExpandedClusterCommand));
-             end;
-
-        case wParam of
-          // Operator clicked Disconnect: cancel FIRST, so a retry armed by an
-          // earlier drop cannot fire and drag the link back up against their
-          // wishes.  This is the one place that must beat the timer.
-          201:
-            begin
-            CancelTelnetRetry;
-            Disconnect;
-            end;
-
-          202:
-            begin
-              GetCursorPos(TempPoint);
-              TrackPopupMenu(TelPopMemu, TPM_TOPALIGN, TempPoint.X, TempPoint.Y
-                + 10, 0, hwnddlg, nil);
-            end;
-
-          203: InvertBoolean(TelnetFreezeMode);
-          //            PostMessage(hwnddlg, WM_SYSCOMMAND, SC_MOVE, 0);
-          204: SendDlgItemMessage(hwnddlg, 101, LB_RESETCONTENT, 0, 0);
-
-          //            ScrollWindowEx(TelnetListBox, 0, -50, 0, 0, 0, 0, SW_SMOOTHSCROLL);
-//          205: SendViaSocket('SH/USERS');
-          206: SendViaTelnetSocket('SH/DX 50'); //n4af 04-11-2014
-
-{$IFDEF LANG_RUS}
-          207: ShowHelp('ru_dxcluster');
-{$ENDIF}
-
-          //          DialogBox(hInstance, MAKEINTRESOURCE(44), hwnddlg, @SpotsFilterDlgProc);
-          200: StartTelnetConnect;   // Issue #23 -- launch the DX cluster I/O thread
-
-          104:
-            begin
-              SendMessage(TelnetCommandWindow, CB_SHOWDROPDOWN, 0, 0);
-              Windows.GetWindowTextA(TelnetCommandWindow, TempBuffer1,
-                SizeOf(TempBuffer1));
-              if TempBuffer1[0] = #0 then
-                 begin
-                 Exit;
-                 end;
-              SendViaTelnetSocket(TempBuffer1);
-              Windows.SetWindowTextA(TelnetCommandWindow, nil);
-              if
-                SendMessageA(TelnetCommandWindow, CB_FINDSTRING, -1,
-                integer(PAnsiChar(@TempBuffer1))) = CB_ERR then
-                //  SendMessage(TelnetCommandWindow, CB_FINDSTRINGEXACT, -1, integer(PChar(@TempBuffer1))) = CB_ERR then
-                 begin
-                 tCB_ADDSTRING_PCHAR(hwnddlg, 106, TempBuffer1);
-                 end;
-
-            end
-
-        end;
-        {
-                if HiWord(wParam) = LBN_KILLFOCUS then TelnetFreezeMode := OldTelnetFreezeMode;
-
-                if HiWord(wParam) = LBN_SETFOCUS then
-                  begin
-                    OldTelnetFreezeMode := TelnetFreezeMode;
-                    TelnetFreezeMode := True;
-                  end;
-         }
-      end;
-
-    //    WM_NCHITTEST:      if TelnetHint <> 0 then PostMessage(TelnetHint, WM_CLOSE, 0, 0);
-
-    WM_LBUTTONDOWN: DragWindow(hwnddlg);
-
-    WM_CLOSE: 1:
-      begin
-        CloseTR4WWindow(tw_TELNETWINDOW_INDEX);
-      end;
-
-    WM_DESTROY:
-      begin
-        Disconnect;
-        TelnetCommandWindow := 0;
-        TelnetListBox := 0;
-        SaveTelnetWindowSpots;
-        DestroyMenu(TelPopMemu);
-      end;
-    {
-        WM_NCLBUTTONDBLCLK:
-          begin
-            if IsIconic(hwnddlg) = False then
-              PostMessage(hwnddlg, WM_SYSCOMMAND, SC_MINIMIZE, 10000);
-          end;
-    }
-    WM_SIZE:
-      begin
-
-        Windows.GetClientRect(hwnddlg, temprect);
-        TempTextColor := temprect.Top + 28;
-
-        Windows.SetWindowPos(Windows.GetDlgItem(hwnddlg, 102), HWND_TOP, 0,
-          TempTextColor, 160, 300, SWP_SHOWWINDOW);
-
-        Windows.SetWindowPos(Windows.GetDlgItem(hwnddlg, 106), HWND_TOP, 165,
-          TempTextColor, temprect.Right - temprect.Left - 210 - 25, 300,
-          SWP_SHOWWINDOW);
-        Windows.SetWindowPos(Windows.GetDlgItem(hwnddlg, 104), HWND_TOP,
-          temprect.Right - temprect.Left - 40 - 25, TempTextColor, 0, 0,
-          SWP_NOSIZE
-          or SWP_SHOWWINDOW);
-
-        Windows.SetWindowPos(TelnetListBox, HWND_TOP, 0, 27 + 25, temprect.Right
-          - temprect.Left, temprect.Bottom - temprect.Top - 55,
-          {SWP_NOSIZE or }SWP_SHOWWINDOW);
-        MoveWindow(TelToolbar, 0, 0, LoWord(lParam), 0, True);
-        SendMessage(TelnetListBox, WM_VSCROLL, SB_BOTTOM, 0);
-
-      end;
-
   end;
 end;
 
-// Runs on the DX cluster I/O thread.  Connects (blocking), then loops on
-// blocking recv, posting each chunk to the telnet window.  Posts CONNECTED /
-// CONNECT_FAILED / CLOSED for lifecycle.  Does NO UI and touches NO shared
-// contest/bandmap state -- that all happens on the main thread in the handler.
-procedure TClusterEvents.Line(const L: AnsiString);
+{ The Send button, and Enter in the command box. }
+procedure TelnetFormSendHandler;
 var
-  chunk: PTelnetChunk;
-  n:     integer;
+  Text: string;
 begin
-  n := Length(L);
-  if n > SizeOf(chunk^.Data) - 1 then
+  Text := Trim(TelnetCommandText);
+  if Text = '' then
      begin
-     n := SizeOf(chunk^.Data) - 1;   // room for the NUL
+     Exit;
      end;
-  New(chunk);
-  if n > 0 then
+
+  SendViaTelnetSocket(PAnsiChar(AnsiString(Text)));
+  TelnetRememberCommand(Text);
+  TelnetSetCommandText('');
+end;
+
+{ A cluster command chosen from the popup. }
+procedure TelnetFormMenuHandler(const aId: integer);
+var
+  Expanded: AnsiString;
+  Item: string;
+begin
+  Item := TelnetMenuCaption(aId);
+  if Item = '' then
      begin
-     Move(L[1], chunk^.Data[0], n);
+     Exit;
      end;
-  chunk^.Data[n] := #0;
-  chunk^.Len := n;
+
+  // Issue #973: expand braced tokens to live values before sending.  Capped at
+  // 250 so SendViaTelnetSocket's CRLF append cannot overflow its 256-byte
+  // buffer when expansion GROWS the string.
+  Expanded := AnsiString(SegmentsToText(TelnetClusterSegments(Item)));
+  if Length(Expanded) > 250 then
+     begin
+     SetLength(Expanded, 250);
+     end;
+  SendViaTelnetSocket(PAnsiChar(Expanded));
+end;
+
+{ A console line was double-clicked: if it is a spot, tune to it.  Re-decoded
+  from the line itself, exactly as the LBN_DBLCLK arm did. }
+procedure TelnetFormConsoleDblClickHandler(const aIndex: integer);
+var
+  StringType: TelnetStringType;
+begin
+  TelnetLine := AnsiString(TelnetConsoleLine(aIndex));
+  if Copy(TelnetLine, 1, 6) = 'DX de ' then
+     begin
+     if ProcessDX(TelnetLine, True, StringType) then
+        begin
+        TuneRadioToSpot(TempSpot, RadioOne);
+        end;
+     end;
+end;
+
+// ON THE MAIN THREAD.  One event, handled exactly as the WM_TELNET_MSG arms
+// handled it -- this is a move, not a rewrite.  What changed is how it got
+// here, and that the text arrived with it instead of on the heap.
+procedure HandleClusterEvent(const aEvent: TClusterEvent);
+begin
+  case aEvent.Kind of
+    cekConnected:
+      begin
+        if TR4W_TELNET_DEBUG then
+           begin
+           logger.Info('[Telnet] Connected to %s:%d', [PAnsiChar(@PendingTelnetHost[0]), PendingTelnetPort]);
+           end;
+        TelnetSessionActive := True;   // there is now something to tear down
+        // We are back: forget any pending retry and reset the backoff, so
+        // the NEXT outage starts at 5 s again rather than inheriting the
+        // 60 s this one may have crept up to.
+        CancelTelnetRetry;
+        TF.Format(wsprintfBuffer, '%s%s:%u', TC_CONNECTEDTO,
+          @PendingTelnetHost[0], PendingTelnetPort);
+        AddStringToTelnetConsole(wsprintfBuffer, tstTR4W);
+        // (The TelnetBuffer clear that stood here is gone with the buffer
+        // -- there is no shared receive state to reset between sessions.)
+        // LOG IN.  Until 2026-08-11 this branch sent ConnectionCommand
+        // INSTEAD of the callsign when one was configured -- so anybody
+        // who set a connection command never logged in at all -- and
+        // otherwise merely PRE-FILLED the input box with MyCall and waited
+        // for the operator to press Enter.
+        //
+        // WAIT FOR THE PROMPT, with a timeout.  The first version of this
+        // sent the callsign the instant the socket opened, on the argument
+        // that TR4W had always effectively done so.  It had not: the old
+        // code only PRE-FILLED the input box and the operator pressed
+        // Enter after seeing the prompt.  HamAlert discarded a callsign
+        // that arrived before its banner and then sat at `login:` waiting
+        // (NY4I, 2026-08-12).  See ArmClusterLogin.
+        ArmClusterLogin;
+        SendClientStatus;
+        EnableTelnetToolbatButtons(True);
+        // The send box is ungreyed by TelnetSetConnected above -- one call for
+        // one fact.  This used to be a separate EnableWindow against control
+        // 104, which is how the toolbar and the send box got out of step.
+      end;
+
+    cekConnectFailed:
+      begin
+        // Issue #23 -- keep the detailed WinSock reason in the log for
+        // diagnostics, but show the operator a short message naming the
+        // host they tried to reach (the raw message is long and unwrapped).
+        // CODE 0 MEANS NO SOCKET ERROR, so SysErrorMessage(0) renders as
+        // "The operation completed successfully" -- a failure line that
+        // says nothing failed, which is exactly how the already-connected
+        // refusal disguised itself.  The real reason came through
+        // OnDisconnected; do not overwrite it with a lie.
+        if aEvent.Code = 0 then
+           begin
+           logger.Error('[Telnet] Could not connect to %s:%d -- no socket error reported ' +
+                        '(see the preceding reason)',
+             [PAnsiChar(@PendingTelnetHost[0]), PendingTelnetPort]);
+           end
+        else
+           begin
+           logger.Error('[Telnet] Could not connect to %s:%d -- WinSock %d: %s',
+             [PAnsiChar(@PendingTelnetHost[0]), PendingTelnetPort, aEvent.Code,
+              SysUtils.SysErrorMessage(aEvent.Code)]);
+           end;
+
+        // TEARDOWN BEFORE COSMETICS.  Disconnect used to sit after the
+        // console formatting, and the whole log shows it NEVER RAN across
+        // three failures -- leaving the session up and wedging every
+        // later attempt.  Whatever aborted the handler did so before this
+        // line; putting the state change first means a formatting problem
+        // can no longer cost the teardown.
+        Disconnect;
+
+        TF.Format(wsprintfBuffer, '%s%s:%u', TC_FAILEDTOCONNECTTO,
+          @PendingTelnetHost[0], PendingTelnetPort);
+        AddStringToTelnetConsole(wsprintfBuffer, tstError);
+        // Keep trying, with a longer gap each time.  A failed RETRY comes
+        // back through here, which is what makes the backoff advance --
+        // and a first connect that fails is retried too, so a TR4W
+        // started before the network is up still ends up connected.
+        ArmTelnetRetry;
+      end;
+
+    cekData:
+      begin
+        // Exactly ONE complete line, terminator already stripped by the
+        // transport.  No shared receive buffer, no NUL bookkeeping, no
+        // re-scanning for line breaks -- and no heap block to dispose of:
+        // the text travelled on the event and dies with it.
+        TelnetLine := aEvent.Text;
+        // BEFORE the spot decoder, and unconditionally: a login prompt
+        // is not a spot, and the answer must go out before anything
+        // else this line might trigger.  Costs one Pos() per line and
+        // only while the window is open -- it returns immediately once
+        // the password has gone or the budget has run out.
+        AnswerClusterLoginPrompts(TelnetLine);
+        ProcessTelnetLine(TelnetLine);
+      end;
+
+    // AN UNTERMINATED PROMPT. Answered, but NOT decoded and NOT displayed:
+    // it is an incomplete line by definition, and the complete one arrives
+    // later through TELNET_DATA. Feeding it to ProcessDX would decode the
+    // same text twice.
+    cekPending:
+      begin
+        TelnetLine := aEvent.Text;
+        AnswerClusterLoginPrompts(TelnetLine);
+      end;
+
+    cekClosed:
+      begin
+        // Guard on the SESSION, not on the socket.  This asks "is there a
+        // session still to tear down", which is exactly what the old
+        // `TelnetSock <> 0` meant -- that handle was cleared only by our
+        // own Disconnect.
+        //
+        // Asking ClusterClient.IsConnected here was WRONG and shipped
+        // broken: on a SERVER-initiated close the socket is already down
+        // by the time this posted message is handled, so the guard was
+        // False precisely in the case it exists to handle.  Disconnect
+        // never ran, so the toolbar kept showing a live session -- Connect
+        // greyed, Disconnect enabled -- and TelThreadID was never cleared,
+        // which also blocked reconnecting.  (NY4I: sent `bye` to the
+        // simulator, 2026-08-04.)
+        if TelnetSessionActive then
+           begin
+           if aEvent.Code <> 0 then
+              begin
+              TelnetConnectionError(aEvent.Code);
+              end;
+           Disconnect;
+           // We did not ask for this -- the node hung up or the link
+           // died -- so start trying to get it back.  Disconnect has
+           // already restored the toolbar, so the operator can still
+           // take over at any point and CancelTelnetRetry will stop us.
+           ArmTelnetRetry;
+           end;
+      end;
+  end;
+end;
+
+// ON THE MAIN THREAD, from the LCL's async queue.  Takes ONE event at a time
+// and releases the lock before handling it: a handler calls Disconnect, which
+// joins the reader thread, and holding the lock across that would deadlock
+// against a reader trying to report its own exit.
+procedure TClusterEvents.Drain(Data: PtrInt);
+var
+  ev: TClusterEvent;
+  n: integer;
+begin
+  if GClusterDraining then
+     begin
+     Exit;
+     end;
+
+  GClusterDraining := True;
+  try
+    while True do
+       begin
+       GClusterLock.Acquire;
+       try
+         n := Length(GClusterQueue);
+         if n = 0 then
+            begin
+            Exit;
+            end;
+         ev := GClusterQueue[0];
+         Move(GClusterQueue[1], GClusterQueue[0], (n - 1) * SizeOf(TClusterEvent));
+         // The moved-from slot still holds a counted reference to the string
+         // that is now ALSO in the first slot.  Blank it without finalising,
+         // or SetLength frees a string the caller is about to read.
+         FillChar(GClusterQueue[n - 1], SizeOf(TClusterEvent), 0);
+         SetLength(GClusterQueue, n - 1);
+       finally
+         GClusterLock.Release;
+       end;
+
+       HandleClusterEvent(ev);
+       end;
+  finally
+    GClusterDraining := False;
+  end;
+end;
+
+// ON THE READER THREAD (and, for the connect failure, on the connect thread).
+// Appends one event and asks the main thread to drain.  Everything the handler
+// needs travels IN the event; nothing here reads UI or contest state.
+procedure QueueClusterEvent(aKind: TClusterEventKind; aCode: Integer;
+                            const aText: AnsiString);
+var
+  n: integer;
+begin
+  GClusterLock.Acquire;
+  try
+    n := Length(GClusterQueue);
+    SetLength(GClusterQueue, n + 1);
+    GClusterQueue[n].Kind := aKind;
+    GClusterQueue[n].Code := aCode;
+    GClusterQueue[n].Text := aText;
+  finally
+    GClusterLock.Release;
+  end;
+
+  // Queue first, THEN schedule.  A drain already running picks up what we just
+  // added; one that is not gets scheduled here.  The reverse order can leave an
+  // event sitting with no drain pending.
+  if (Application = nil) or Application.Terminated then
+     begin
+     Exit;
+     end;
+  Application.QueueAsyncCall(ClusterEvents.Drain, 0);
+end;
+
+procedure TClusterEvents.Line(const L: AnsiString);
+begin
   if TR4W_TELNET_DEBUG then
      begin
-     logger.Info('[Telnet RX %d] %s', [n, PAnsiChar(@chunk^.Data[0])]);
+     logger.Info('[Telnet RX %d] %s', [Length(L), string(L)]);
      end;
-  PostMessage(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle,
-              WM_TELNET_MSG, TELNET_DATA, LPARAM(chunk));
+  QueueClusterEvent(cekData, 0, L);
 end;
 
 // Same marshalling as Line, and for the same reason -- this fires on the reader
 // thread and the handler answers prompts and touches UI state.
 procedure TClusterEvents.PendingText(const L: AnsiString);
-var
-  chunk: PTelnetChunk;
-  n:     integer;
 begin
-  n := Length(L);
-  if n > SizeOf(chunk^.Data) - 1 then
-     begin
-     n := SizeOf(chunk^.Data) - 1;
-     end;
-  New(chunk);
-  if n > 0 then
-     begin
-     Move(L[1], chunk^.Data[0], n);
-     end;
-  chunk^.Data[n] := #0;
-  chunk^.Len := n;
   if TR4W_TELNET_DEBUG then
      begin
-     logger.Info('[Telnet RX pending %d] %s', [n, PAnsiChar(@chunk^.Data[0])]);
+     logger.Info('[Telnet RX pending %d] %s', [Length(L), string(L)]);
      end;
-  PostMessage(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle,
-              WM_TELNET_MSG, TELNET_PENDING, LPARAM(chunk));
+  QueueClusterEvent(cekPending, 0, L);
 end;
 
 procedure TClusterEvents.Connected;
 begin
-  PostMessage(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle,
-              WM_TELNET_MSG, TELNET_CONNECTED, 0);
+  QueueClusterEvent(cekConnected, 0, '');
 end;
 
 procedure TClusterEvents.Disconnected(const Text: string; Code: Integer);
 begin
   // Connect failure and mid-session close are the same message to the user; the
-  // handler distinguishes them, as before, by which one it receives.
-  PostMessage(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle,
-              WM_TELNET_MSG, TELNET_CLOSED, Code);
+  // handler distinguishes them, as before, by which KIND it receives.
+  QueueClusterEvent(cekClosed, Code, '');
 end;
 
 // Runs on its own thread purely because Connect BLOCKS (10 s timeout) and must
@@ -1232,10 +892,9 @@ begin
   if not ClusterClient.Connect(string(AnsiString(PAnsiChar(@PendingTelnetHost[0]))),
                                PendingTelnetPort) then
      begin
-     // Reason already reported through OnDisconnected; tell the window the
-     // ATTEMPT failed so it prints "failed to connect" rather than "closed".
-     PostMessage(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle,
-                 WM_TELNET_MSG, TELNET_CONNECT_FAILED, 0);
+     // Reason already reported through OnDisconnected; say the ATTEMPT failed
+     // so the console prints "failed to connect" rather than "closed".
+     QueueClusterEvent(cekConnectFailed, 0, '');
      Exit;
      end;
 
@@ -1251,8 +910,8 @@ end;
 // (UI access stays on the UI thread), then spawns the I/O thread.
 procedure StartTelnetConnect;
 var
-  StackTelHandle: HWND;
   i: integer;
+  Host: string;
 begin
   if TelThreadID <> 0 then
      begin
@@ -1273,28 +932,43 @@ begin
      Disconnect;
      end;
 
-  StackTelHandle := tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle;
   PendingTelnetPort := 23;
-  i := Windows.GetDlgItemTextA(StackTelHandle, 102, TempBuffer1, SizeOf(TempBuffer1));
 
-  // TempBuffer1 is 0-based; scan [length-1 .. 0].  ':' splits host:port; ' '
-  // terminates the host.
-  dec(i);
-  while i >= 0 do
+  { HOST[:PORT] FOLLOWED BY AN OPTIONAL DESCRIPTION, which is the TRCLUSTER.DAT
+    line format -- "dxc.example.com:7300  Some Node".
+
+    Was GetDlgItemTextA(hwnd, 102, ...) plus a backwards scan for ':' and ' '.
+    THE CONTROL ID IS WHAT MADE THIS DANGEROUS: 102 stopped existing when the
+    window became a form, and nothing failed to compile -- it simply read an
+    empty string and TR4W dialled ":23" forever, retrying on the backoff with a
+    perfectly healthy-looking log.  A number is not a name and the compiler
+    cannot check it. }
+  Host := TelnetHostText;
+
+  i := Pos(' ', Host);
+  if i > 0 then
      begin
-     if TempBuffer1[i] = ':' then
-        begin
-        PendingTelnetPort := pchartoint(@TempBuffer1[i + 1]);
-        TempBuffer1[i] := #0;
-        end;
-     if TempBuffer1[i] = ' ' then
-        begin
-        TempBuffer1[i] := #0;
-        end;
-     dec(i);
+     Host := Copy(Host, 1, i - 1);
      end;
 
-  Windows.lstrcpynA(PendingTelnetHost, TempBuffer1, SizeOf(PendingTelnetHost));
+  i := Pos(':', Host);
+  if i > 0 then
+     begin
+     PendingTelnetPort := StrToIntDef(Copy(Host, i + 1, MaxInt), 23);
+     Host := Copy(Host, 1, i - 1);
+     end;
+
+  if Host = '' then
+     begin
+     { REPORTED, not dialled.  The empty-host case used to be indistinguishable
+       from a node being down. }
+     AddStringToTelnetConsole('No cluster host selected -- choose one from the list.', tstError);
+     logger.Error('[Telnet] Connect requested with no host selected');
+     Exit;
+     end;
+
+  Windows.lstrcpynA(PendingTelnetHost, PAnsiChar(AnsiString(Host)),
+                    SizeOf(PendingTelnetHost));
 
   // Issue #23 -- immediate visual feedback so connect is not a black box:
   // show the attempt in the window and switch the toolbar to the connected
@@ -1309,7 +983,7 @@ begin
   // the cluster is dead.  Clear the mode and un-press the Freeze toolbar button.
   TelnetFreezeMode := False;
   OldTelnetFreezeMode := False;
-  SendMessage(TelToolbar, TB_CHECKBUTTON, 203, 0);
+  TelnetSetFreezePressed(False);
 
   TelnetStopRequested := False;
   logger.Debug('Starting DX cluster I/O thread');
@@ -1371,8 +1045,9 @@ begin
   // must not run this teardown a second time.
   TelnetSessionActive := False;
 
-  EnableWindowFalse(StackTelHandle, 104);
-  EnableWindowTrue(StackTelHandle, 102);
+  { One call, one fact -- see the note in the connected handler.  The two
+    EnableWindow calls against control ids 104 and 102 that stood here are part
+    of TelnetSetConnected now. }
   EnableTelnetToolbatButtons(False);
   //  tEnableMenuItem(menu_ctrl_sendspot, MF_BYCOMMAND + MF_GRAYED);
   SendClientStatus;
@@ -1506,8 +1181,7 @@ procedure CancelClusterLogin;
 begin
    if ClusterLoginArmed then
       begin
-      KillTimer(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle,
-                TELNET_LOGIN_TIMER);
+      ClusterLoginTimer.Enabled := False;
       ClusterLoginArmed := False;
       end;
    ClusterPasswordArmed := False;
@@ -1526,8 +1200,8 @@ begin
    ClusterPasswordArmed := False;
    ClusterPasswordLinesLeft := 0;
 
-   SetTimer(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle,
-            TELNET_LOGIN_TIMER, LOGIN_PROMPT_WAIT, nil);
+   ClusterLoginTimer.Interval := LOGIN_PROMPT_WAIT;
+   ClusterLoginTimer.Enabled := True;
 end;
 
 procedure SendClusterLogin;
@@ -1543,7 +1217,7 @@ begin
       end;
 
    ClusterLoginArmed := False;
-   KillTimer(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle, TELNET_LOGIN_TIMER);
+   ClusterLoginTimer.Enabled := False;
 
    // BLANK MEANS MY CALL, which is what the Preferences field promises. Resolved
    // HERE and not at config-apply time, because MyCall can change between
@@ -1626,56 +1300,52 @@ begin
 end;
 
 procedure AddStringToTelnetConsole(p: string; c: TelnetStringType);
-var
-  Handle: HWND;
-  buf: array[0..1023] of AnsiChar;   // Issue #23 -- bound the list item to InfoBuffer's size
 begin
   if TR4W_TELNET_DEBUG then   // Issue #23 -- every line written to the telnet window
      begin
      logger.Info('[Telnet WINDOW t=%d] %s', [Ord(c), p]);
      end;
 
-  Handle := TelnetListBox;
-
-  // Issue #23 -- copy into a bounded buffer first.  The owner-draw handler reads
-  // each item back via LB_GETTEXT (which has no size limit) into a same-sized
-  // stack buffer; capping here guarantees that read can never overrun the stack.
-  // boundary: the telnet console listbox is ANSI (LB_ADDSTRING via SendMessageA).
-  Windows.lstrcpynA(buf, PAnsiChar(AnsiString(p)), SizeOf(buf));
-
-  SendMessage(Handle, LB_SETITEMDATA, SendMessageA(Handle, LB_ADDSTRING, 0,
-    integer(@buf)), integer(c));
+  // The 1023-character cap that stood here is GONE with the reason for it.  It
+  // existed because the owner-draw handler read each item back through
+  // LB_GETTEXT into a fixed stack buffer, so an over-long item was a stack
+  // overrun; the view holds strings now and draws them without copying.
+  TelnetConsoleAdd(p, c);
 
   if TelnetFreezeMode then
      begin
      Exit;
      end;
-  SendMessage(Handle, WM_HSCROLL, SB_BOTTOM, 0);
-  SendMessage(Handle, WM_VSCROLL, SB_BOTTOM, 0);
+  TelnetConsoleScrollToEnd;
 end;
 
+{ THE SESSION LOG.  Written on the way out, and only when there is enough to be
+  worth keeping.
+
+  Reads the console through the view rather than through LB_GETTEXT into
+  wsprintfBuffer, which is why the 256-byte truncation is gone: a long spot
+  comment used to be cut off in the saved file and nowhere else, so the file
+  disagreed with what the operator had been looking at. }
 procedure SaveTelnetWindowSpots;
 var
-
   i, Lines: integer;
-  LineLength: longword;
   TimeString: PAnsiChar;
   TelnetLogHandle: HWND;
+  Line: AnsiString;
 begin
   if not tWindowsExist(tw_TELNETWINDOW_INDEX) then
      begin
      Exit;
      end;
-  Lines :=
-    SendDlgItemMessage(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle, 101,
-    LB_GETCOUNT, 0, 0);
+
+  Lines := TelnetConsoleCount;
   if Lines < 10 then
      begin
      Exit;
      end;
+
   TimeString := GetTimeString;
   TimeString[2] := '-';
-  // Issue #997: asm wsprintf -> Format
   StrPCopy(wsprintfBuffer, SysUtils.Format('%sDXCluster\dxcluster %s %s.txt',
     [string(PAnsiChar(@TR4W_PATH_NAME)), string(GetDateString), string(TimeString)]));
 
@@ -1686,40 +1356,22 @@ begin
      begin
      for i := 0 to Lines - 1 do
         begin
-        LineLength :=
-          SendDlgItemMessageA(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle,
-          101, LB_GETTEXT, i, lParam(@wsprintfBuffer));
-        wsprintfBuffer[LineLength + 0] := #13;
-        wsprintfBuffer[LineLength + 1] := #10;
-        sWriteFile(TelnetLogHandle, wsprintfBuffer, LineLength + 2);
+        Line := AnsiString(TelnetConsoleLine(i)) + #13#10;
+        sWriteFile(TelnetLogHandle, Line[1], Length(Line));
         end;
      CloseHandle(TelnetLogHandle);
      end;
-
 end;
 
+{ "b" MEANS CONNECTED.  Kept as a one-liner over the view's own routine rather
+  than deleted, because six call sites pass it and the name says what those
+  sites mean.  The Win32 body reached into the toolbar with TB_ENABLEBUTTON per
+  button and INVERTED the sense for Connect by hand; the view owns that now,
+  along with the send box the old code enabled somewhere else entirely -- which
+  is how the two got out of step when a teardown path missed one. }
 procedure EnableTelnetToolbatButtons(b: boolean);
-
-  procedure SetToolButSt(Control: Byte);
-  var
-    State: boolean;
-  begin
-    State := b;
-    if Control = 200 then
-       begin
-       InvertBoolean(State);
-       end;
-    SendMessage(TelToolbar, TB_ENABLEBUTTON, integer(Control), integer(State));
-  end;
 begin
-
-  SetToolButSt(200);
-  SetToolButSt(201);
-  SetToolButSt(202);
-  //  SetToolButSt(205);
-   // SetToolButSt(206);
-  //  SetToolButSt(207);
-  //  SetToolButSt(208);
+  TelnetSetConnected(b);
 end;
 
 // Handle ONE complete cluster line: show it, and if it is a spot, decode it.
@@ -1808,8 +1460,7 @@ end;
 function ProcessDX(const Line: AnsiString; InListBox: boolean; var Stringtype:
   TelnetStringType): boolean;
 var
-  MinuteOfDay: integer;
-  ct: Cardinal;
+  ct: TDateTime;   { now, UTC -- see the stamping block below }
   { Held across the SendMessageA below -- see the note there. }
   alertCall: AnsiString;
 begin
@@ -1855,26 +1506,29 @@ begin
 
      end;
 
-  // The spot's own age.  `ct` is "now" in the same made-up unit the stamp is
-  // converted into -- minutes, with the day and month folded in as fixed-size
-  // blocks (30-day months).  It is only ever used as a difference against a
-  // stamp from the same run, so the calendar being wrong does not matter; this
-  // is unchanged.
-  ct := UTC.wMinute + UTC.wHour * 60 + UTC.wDay * 60 * 24 + UTC.wMonth * 60 * 24
-    * 30;
-  if ParseDXSpotTimeUTC(Line, MinuteOfDay) then
-     begin
-     TempSpot.FSysTime := Cardinal(MinuteOfDay) +
-       UTC.wDay * 60 * 24 + UTC.wMonth * 60 * 24 * 30;
-     if ct >= TempSpot.FSysTime then
-        begin
-        TempSpot.FMinutesLeft := ct - TempSpot.FSysTime;
-        end;
-     end
-  else
-     begin
-     TempSpot.FSysTime := ct;
-     end;
+  // WHEN IT ARRIVED, NOT WHEN THE SPOTTER SAYS IT WAS MADE.
+  //
+  // The cluster line carries HHMM and nothing finer, so stamping from it put
+  // EVERY spot of a given clock minute on the same timestamp -- and they then
+  // all expired on the same tick, which is the chunking NY4I was still seeing
+  // after the TDateTime change (2026-08-25).  Moving to a TDateTime fixed the
+  // arithmetic and left this, because ParseDXSpotTimeUTC simply has no seconds
+  // to give:
+  //
+  //     EncodeTime(MinuteOfDay div 60, MinuteOfDay mod 60, 0, 0)
+  //                                                        ^ always
+  //
+  // UTCNow has milliseconds, so two spots a second apart now differ by a second
+  // and fall off a second apart.
+  //
+  // WHAT THIS GIVES UP, said plainly: a spot RELAYED late -- made ten minutes
+  // ago and only reaching us now -- is treated as new and lives a full decay
+  // time from arrival.  That is the trade NY4I asked for, and it is the right
+  // way round: the map is a picture of what is workable now, and a stale spot
+  // arriving late is still news to this station.  ParseDXSpotTimeUTC keeps its
+  // other callers; it is only the AGE that stops using it.
+  TempSpot.FSysTime := UTCNow;
+  TempSpot.FAgeSeconds := SpotAgeSeconds(TempSpot);
 
   if TempSpot.FCall = MyCall then
      begin
@@ -1993,12 +1647,11 @@ begin
   TempSpot.FQSXFrequency := 0;
   TempSpot.FDupe := Dupe;
   TempSpot.FMult := Mult;
-  TempSpot.FMinutesLeft := 0;
+  TempSpot.FAgeSeconds := 0;
   TempSpot.FSourceCall := MyCall + '-' + ComputerID;
   TempSpot.FNotes[0] := #0;
-  //  Windows.GetSystemTime(TempSpot.FSysTime);
-  TempSpot.FSysTime := UTC.wMinute + UTC.wHour * 60 + UTC.wDay * 60 * 24 +
-    UTC.wMonth * 60 * 24 * 30;
+  // OUR OWN spot: made now, by definition.
+  TempSpot.FSysTime := UTCNow;
   SpotsList.AddSpot(TempSpot, True);
 
   DisplayBandMap;
@@ -2016,8 +1669,7 @@ procedure CancelTelnetRetry;
 begin
   if TelnetRetryArmed then
      begin
-     KillTimer(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle,
-               TELNET_RETRY_TIMER);
+     TelnetRetryTimer.Enabled := False;
      TelnetRetryArmed := False;
      end;
   TelnetRetryDelay := 0;
@@ -2059,7 +1711,8 @@ begin
          @PendingTelnetHost[0], PendingTelnetPort, TelnetRetryDelay div 1000);
   AddStringToTelnetConsole(wsprintfBuffer, tstTR4W);
 
-  SetTimer(wnd, TELNET_RETRY_TIMER, TelnetRetryDelay, nil);
+  TelnetRetryTimer.Interval := TelnetRetryDelay;
+  TelnetRetryTimer.Enabled := True;
   TelnetRetryArmed := True;
 end;
 
@@ -2069,9 +1722,26 @@ begin
   SendToNet(ClientStatus, SizeOf(ClientStatus));
 end;
 
+{ ONE LINE OF CLUSTER_COMMANDS.TXT -> ONE MENU ITEM.
+
+  The prefix characters are the file format and are unchanged:
+     -  a separator
+     .  return to the top level
+     >  start a submenu, titled by the rest of the line
+     #  present but greyed
+     !  present and ticked
+     =  a plain item (an explicit escape, so a command may start with a prefix
+        character)
+
+  WHAT CHANGED IS THE PARENT.  The Win32 version tracked TelLastPopMemu, a bare
+  HMENU, and appended to whichever menu it happened to be pointing at; here it
+  is a TMenuItem and nil means top level.  Same shape, but the item that owns
+  the submenu and the submenu itself are now ONE object rather than two that
+  could disagree. }
 procedure AppendTelnetPopupMenu(MenuText: PAnsiChar);
 var
-  Flag: Cardinal;
+  Text: string;
+  Enabled: boolean;
   Offset: integer;
 begin
   if ItemsInTelnetPopupMenu > MAXITEMSINTELNETPOPUPMENU - 1 then
@@ -2083,57 +1753,48 @@ begin
      Exit;
      end;
 
-  Flag := MF_STRING;
-  Offset := 0;
+  Text := string(AnsiString(MenuText));
+  Enabled := True;
+  Offset := 1;
 
-  if MenuText[0] = '-' then
+  if Text[1] = '-' then
      begin
-     Flag := MF_SEPARATOR;
-     end;
-
-  if MenuText[0] = '.' then
-     begin
-     TelLastPopMemu := TelPopMemu;
+     TelnetMenuAddItem(TelLastMenuParent, '-', -1, True);
+     Inc(ItemsInTelnetPopupMenu);
      Exit;
      end;
 
-  if MenuText[0] = '#' then
+  if Text[1] = '.' then
      begin
-     Flag := MF_STRING + MF_DISABLED + MF_GRAYED;
-     Offset := 1;
-     end;
-
-  if MenuText[0] = '!' then
-     begin
-     Flag := MF_STRING + MF_CHECKED;
-     Offset := 1;
-     end;
-
-  if MenuText[0] = '>' then
-     begin
-     TelLastPopMemu := CreatePopupMenu;
-     Windows.AppendMenuA(TelPopMemu, MF_STRING + MF_POPUP, TelLastPopMemu,
-       @MenuText[1]);
-     inc(ItemsInTelnetPopupMenu);
+     TelLastMenuParent := nil;
      Exit;
      end;
 
-  if MenuText[0] = '=' then
+  if Text[1] = '>' then
      begin
-     Flag := MF_STRING;
-     Offset := 1;
+     TelLastMenuParent := TelnetMenuAddItem(nil, Copy(Text, 2, MaxInt), -1, True);
+     Inc(ItemsInTelnetPopupMenu);
+     Exit;
      end;
 
-  Windows.AppendMenuA(TelLastPopMemu, Flag, 1000 + ItemsInTelnetPopupMenu,
-    @MenuText[Offset]);
+  if Text[1] = '#' then
+     begin
+     Enabled := False;
+     Offset := 2;
+     end
+  else if (Text[1] = '!') or (Text[1] = '=') then
+     begin
+     Offset := 2;
+     end;
 
-  inc(ItemsInTelnetPopupMenu);
+  TelnetMenuAddItem(TelLastMenuParent, Copy(Text, Offset, MaxInt),
+                    1000 + ItemsInTelnetPopupMenu, Enabled);
+  Inc(ItemsInTelnetPopupMenu);
 end;
 
 procedure EmunTRCLUSTERDAT(FileString: PShortString);
 begin
-  tCB_ADDSTRING_PCHAR(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle, 102,
-    string(FileString^));
+  TelnetAddHostItem(string(FileString^));
 end;
 
 procedure EmunDXCLUSTERALERTLISTTXT(FileString: PShortString);
@@ -2158,7 +1819,27 @@ begin
 end;
 
 initialization
+  GClusterLock := SyncObjs.TCriticalSection.Create;
   ClusterEvents := TClusterEvents.Create;
+
+  { THE TIMERS, off the dialog's WM_TIMER.  Created disabled; nothing starts
+    until a session is attempted, so the headless export path never runs one. }
+  TelnetTimers := TTelnetTimers.Create;
+  TelnetRetryTimer := TTimer.Create(nil);
+  TelnetRetryTimer.Enabled := False;
+  TelnetRetryTimer.OnTimer := TelnetTimers.RetryTick;
+  ClusterLoginTimer := TTimer.Create(nil);
+  ClusterLoginTimer.Enabled := False;
+  ClusterLoginTimer.OnTimer := TelnetTimers.LoginTick;
+
+  { THE VIEW'S CALLBACKS.  Assigned rather than called directly because
+    uTelnetForm's interface uses THIS unit for TelnetStringType -- see its
+    header.  This is the only place the two are tied together. }
+  TelnetFormOnShow            := @TelnetFormShowHandler;
+  TelnetFormOnCommand         := @TelnetFormCommandHandler;
+  TelnetFormOnSend            := @TelnetFormSendHandler;
+  TelnetFormOnMenu            := @TelnetFormMenuHandler;
+  TelnetFormOnConsoleDblClick := @TelnetFormConsoleDblClickHandler;
   ClusterClient := TDXClusterClient.Create;
   ClusterClient.OnLine         := ClusterEvents.Line;
   ClusterClient.OnPendingText  := ClusterEvents.PendingText;
@@ -2169,7 +1850,19 @@ finalization
   // Destroy stops the reader and closes the socket; do it before the events
   // object goes, or a line arriving during teardown would call into freed code.
   ClusterClient.Free;
+  // AND BEFORE THE OBJECT IS FREED, drop any drain still queued against it --
+  // the reader can have queued one on its way out, and an async call into a
+  // freed method is a crash with no useful stack.
+  if Application <> nil then
+     begin
+     Application.RemoveAsyncCalls(ClusterEvents);
+     end;
   ClusterEvents.Free;
+  GClusterQueue := nil;
+  FreeAndNil(GClusterLock);
+  FreeAndNil(TelnetRetryTimer);
+  FreeAndNil(ClusterLoginTimer);
+  FreeAndNil(TelnetTimers);
 
 end.
 

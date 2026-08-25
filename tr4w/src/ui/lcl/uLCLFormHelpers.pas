@@ -438,7 +438,38 @@ begin
       CentreOverMainWindow(aForm);
       end;
 
+   { HAND-ROLLED MODALITY IS FOR A RAW WIN32 PARENT ONLY, AND DEFEATS THE LCL
+     ON ITS OWN FORMS.
+
+     NY4I, 2026-08-25: after entering a split frequency the main window lost
+     focus -- no visible owner, and the call field had to be clicked before '-'
+     worked again.
+
+     Disabling a window that HAS focus makes Windows drop that focus at once.
+     TCustomForm.ShowModal then records what to restore --
+
+         ActiveWindow    := GetActiveWindow;
+         SavedFocusState := SaveFocusState;        (customform.inc:3013)
+
+     -- and by then there was nothing focused to record, so the matching
+     RestoreFocusState in its finally put nothing back.  Re-activating the
+     top-level window afterwards does not focus a CHILD, which is why the call
+     field stayed dead.
+
+     It was redundant as well as harmful.  The Win32 widgetset reports
+     lcModalWindow = LCL_CAPABILITY_NO (win32object.inc:591), so ShowModal calls
+     Screen.DisableForms itself, disables every other form, re-enables them on
+     the way out and restores the focused control.  We were doing its job badly.
+
+     BUT NOT FOR EVERY CALLER.  Screen.DisableForms walks CustomForms -- LCL
+     forms ONLY (screen.inc).  Telnet and MMTTY are still raw Win32 dialogs and
+     the LCL does not know they exist, so a modal raised over one genuinely
+     needs the manual disable.  That is what the aParent HWND has been for.
+
+     THIS BRANCH SELF-DELETES.  When those two windows become forms it has no
+     callers left, and the aParent parameter goes with it. }
    reEnable := (aParent <> 0) and
+               (Controls.FindControl(aParent) = nil) and
                Windows.IsWindow(aParent) and
                Windows.IsWindowEnabled(aParent);
 
@@ -457,7 +488,9 @@ begin
          begin
          Windows.EnableWindow(aParent, True);
          // Windows gives focus to nothing in particular after re-enabling, so
-         // put it back where the dialog manager would have left it.
+         // put it back where the dialog manager would have left it.  A raw Win32
+         // dialog has no LCL focus state to restore, so window granularity is
+         // all there is here.
          Windows.SetActiveWindow(aParent);
          end;
    end;

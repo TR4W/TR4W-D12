@@ -532,7 +532,11 @@ var
   BandMapDecayMultiplier                : integer = 1; {KK1L: 6.65}
   BandMapDupeDisplay                    : boolean = True;
   BandMapEntryInCallWindow              : boolean;
-  BandMapFileVersion                    : AnsiChar = '1';
+  // '2' since 2026-08-25: TSpotRecord.FSysTime became a TDateTime, which
+  // changed SizeOf(TSpotRecord).  LoadBandMap rejects a file whose first byte
+  // does not match, so an older band map is IGNORED rather than read as
+  // garbage -- which is exactly what the version byte is for.
+  BandMapFileVersion                    : AnsiChar = '2';
   {KK1L: 6.65 Expanded array to cover all cases to keep BM from going whacko when tuning out of band}
   BandMapFirstEntryList                 : array[Band160..NoBand, CW..FM] of BandMapEntryPointer;
   BandMapGuardBand                      : integer; // = 200;

@@ -1,0 +1,27 @@
+object frmIntercom: TfrmIntercom
+  Left = 0
+  Top = 0
+  BorderStyle = bsSizeToolWin
+  Caption = 'Intercom'
+  ClientHeight = 240
+  ClientWidth = 460
+  KeyPreview = True
+  OnClose = HandleClose
+  OnCreate = HandleCreate
+  OnKeyDown = HandleKeyDown
+  object lstMessages: TListBox
+    Left = 0
+    Height = 240
+    Top = 0
+    Width = 460
+    Align = alClient
+    Font.Height = -12
+    Font.Name = 'Courier New'
+    Font.Pitch = fpFixed
+    ItemHeight = 0
+    MultiSelect = True
+    OnDblClick = MessagesDblClick
+    ParentFont = False
+    TabOrder = 0
+  end
+end

@@ -1,0 +1,45 @@
+object frmPostScores: TfrmPostScores
+  Left = 0
+  Top = 0
+  BorderStyle = bsSizeToolWin
+  Caption = 'Post scores'
+  ClientHeight = 105
+  ClientWidth = 224
+  KeyPreview = True
+  OnClose = HandleClose
+  OnCreate = HandleCreate
+  OnKeyDown = HandleKeyDown
+  object lblStatus: TLabel
+    Left = 8
+    Height = 17
+    Top = 8
+    Width = 208
+    Anchors = [akTop, akLeft, akRight]
+    AutoSize = False
+  end
+  object btnPostNow: TButton
+    Left = 8
+    Height = 25
+    Top = 36
+    Width = 208
+    Anchors = [akTop, akLeft, akRight]
+    Caption = 'Post now'
+    OnClick = PostNowClick
+    TabOrder = 0
+  end
+  object btnShowScores: TButton
+    Left = 8
+    Height = 25
+    Top = 68
+    Width = 208
+    Anchors = [akTop, akLeft, akRight]
+    Caption = 'Show scores'
+    OnClick = ShowScoresClick
+    TabOrder = 1
+  end
+  object tmrPost: TTimer
+    Enabled = False
+    Interval = 300000
+    OnTimer = PostTick
+  end
+end

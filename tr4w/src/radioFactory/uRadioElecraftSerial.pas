@@ -272,7 +272,17 @@ begin
          end;
       end;
    Self.SendToRadio(Format('%2s%.11d;',[sCmd,freq]));
-   if mode <> rmNone then
+
+   { DO NOT COMMAND A MODE THE RADIO IS ALREADY IN.  This used to send MD
+     unconditionally after every frequency set, which on a K4 costs a SPLIT: the
+     rig answers a sub-VFO mode command with its whole sub-receiver state and
+     resets the transmit VFO while doing it, ~145 ms after it has already
+     accepted the split TR4W asked for.  See rcSplitClearedByModeChange.
+
+     This is also simply what the program did before 6f89fd80 (2026-01-05), and
+     what the D7 tree does: SetRadioFreq's Kenwood/Elecraft arm writes FA/FB and
+     nothing else. }
+   if not Self.ModeAlreadySet(mode, vfo) then
       begin
       Self.SetMode(mode, vfo);
       end;

@@ -1,0 +1,113 @@
+object frmRadioPanel: TfrmRadioPanel
+  Left = 0
+  Top = 0
+  BorderStyle = bsSizeToolWin
+  Caption = 'Radio'
+  ClientHeight = 100
+  ClientWidth = 195
+  KeyPreview = True
+  OnClose = HandleClose
+  OnKeyDown = HandleKeyDown
+  object lblVFOACaption: TPanel
+    Left = 5
+    Height = 23
+    Top = 5
+    Width = 45
+    Alignment = taCenter
+    BevelOuter = bvLowered
+    Caption = 'VFO A'
+  end
+  object lblVFOBCaption: TPanel
+    Left = 5
+    Height = 23
+    Top = 30
+    Width = 45
+    Alignment = taCenter
+    BevelOuter = bvLowered
+    Caption = 'VFO B'
+  end
+  object lblVFOA: TPanel
+    Left = 50
+    Height = 23
+    Top = 5
+    Width = 100
+    Alignment = taCenter
+    BevelOuter = bvLowered
+    Font.Height = -16
+    Font.Style = [fsBold]
+    ParentFont = False
+  end
+  object lblVFOB: TPanel
+    Left = 50
+    Height = 23
+    Top = 30
+    Width = 100
+    Alignment = taCenter
+    BevelOuter = bvLowered
+    Font.Height = -16
+    Font.Style = [fsBold]
+    ParentFont = False
+  end
+  object lblModeA: TPanel
+    Left = 150
+    Height = 23
+    Top = 5
+    Width = 40
+    Alignment = taCenter
+    BevelOuter = bvLowered
+  end
+  object lblModeB: TPanel
+    Left = 150
+    Height = 23
+    Top = 30
+    Width = 40
+    Alignment = taCenter
+    BevelOuter = bvLowered
+  end
+  object lblRITFreq: TPanel
+    Left = 5
+    Height = 20
+    Top = 55
+    Width = 45
+    Alignment = taCenter
+    BevelOuter = bvLowered
+  end
+  object lblRIT: TPanel
+    Left = 50
+    Height = 20
+    Top = 55
+    Width = 45
+    Alignment = taCenter
+    BevelOuter = bvLowered
+    Caption = 'RIT'
+  end
+  object lblXIT: TPanel
+    Left = 95
+    Height = 20
+    Top = 55
+    Width = 45
+    Alignment = taCenter
+    BevelOuter = bvLowered
+    Caption = 'XIT'
+  end
+  object lblSplit: TPanel
+    Left = 140
+    Height = 20
+    Top = 55
+    Width = 50
+    Alignment = taCenter
+    BevelOuter = bvLowered
+    Caption = 'SPLIT'
+  end
+  object lblStatus: TPanel
+    Left = 5
+    Height = 20
+    Top = 78
+    Width = 185
+    Anchors = [akTop, akLeft, akRight]
+    Alignment = taCenter
+    BevelOuter = bvLowered
+    Font.Color = clRed
+    ParentFont = False
+  end
+end

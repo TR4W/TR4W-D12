@@ -179,7 +179,6 @@ uses
    uCWFraming in '..\..\src\radioFactory\uCWFraming.pas',
    uRadioKYBase in '..\..\src\radioFactory\uRadioKYBase.pas',
    uRadioElecraftBase in '..\..\src\radioFactory\uRadioElecraftBase.pas',
-   uRadioElecraftK4 in '..\..\src\radioFactory\uRadioElecraftK4.pas',
    uRadioKenwoodBase in '..\..\src\radioFactory\uRadioKenwoodBase.pas',
    uTestPrefsSearch in 'uTestPrefsSearch.pas',
    uAccelerators in '..\..\src\uAccelerators.pas',
@@ -254,7 +253,11 @@ uses
    uNetFraming in '..\..\src\uNetFraming.pas',
    uTestNetFraming in 'uTestNetFraming.pas',
    uDXSpotParse         in '..\..\src\uDXSpotParse.pas',
+   uSpotAge             in '..\..\src\uSpotAge.pas',
+   uClusterTokens       in '..\..\src\uClusterTokens.pas',
    uTestDXSpotParse     in 'uTestDXSpotParse.pas',
+   uTestSpotAge         in 'uTestSpotAge.pas',
+   uTestClusterTokens   in 'uTestClusterTokens.pas',
    // Kenwood + Elecraft model units: listed so their initialization sections
    // self-register here, which is what puts them under the base-constructor
    // and registry coverage tests.
@@ -283,7 +286,9 @@ uses
    uRadioElecraftSerial in '..\..\src\radioFactory\uRadioElecraftSerial.pas',
    uRadioElecraftK3     in '..\..\src\radioFactory\uRadioElecraftK3.pas',
    uRadioElecraftK2     in '..\..\src\radioFactory\uRadioElecraftK2.pas',
-   uRadioElecraftKX3    in '..\..\src\radioFactory\uRadioElecraftKX3.pas';
+   uRadioElecraftKX3    in '..\..\src\radioFactory\uRadioElecraftKX3.pas',
+   uRadioElecraftK4     in '..\..\src\radioFactory\uRadioElecraftK4.pas',
+   uTestSplitReassert   in 'uTestSplitReassert.pas';
 
 begin
    IsMultiThread := True;  // Match main application setting
@@ -354,6 +359,9 @@ begin
    RegisterSuite(TRotatorFactoryTests.Create('RotatorFactory'));
    RegisterSuite(TDXClusterClientTests.Create('DXClusterClient'));
    RegisterSuite(TDXSpotParseTests.Create('DXSpotParse'));
+   RegisterSuite(TSpotAgeTests.Create('SpotAge'));
+   RegisterSuite(TClusterTokensTests.Create('ClusterTokens'));
+   RegisterSuite(TSplitReassertTests.Create('SplitReassert'));
    RegisterSuite(TWinTimerTests.Create('WinTimer'));
    RegisterSuite(TRadioConfigStoreTests.Create('RadioConfigStore'));
    RegisterSuite(TRadioConfigLegacyMapTests.Create('RadioConfigLegacyMap'));
