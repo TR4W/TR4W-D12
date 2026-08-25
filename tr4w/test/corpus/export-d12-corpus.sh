@@ -44,6 +44,54 @@ ONLY="${1:-}"
 SKIP=" "
 [ -f "$EXE" ] || { echo "ERROR: no $EXE -- rebuild the D12 app first."; exit 1; }
 
+# ---------------------------------------------------------------------------
+# PRE-FLIGHT: the corpus needs the operator's Cabrillo header tags.
+#
+# WHY THIS EXISTS.  tr4w/target/* is gitignored, so a FRESH CLONE has no
+# settings/tr4w.json -- and LOCATION is read from there
+# (PostUnit.PAS:2552).  Two things then happen, and neither says so:
+#
+#   * Winter Field Day and ARRL10 REFUSE to export at all.  The guard at
+#     PostUnit.PAS:2567 warns "LOCATION field is empty." and Exits, the program
+#     returns 0, and no cand.cbr is written.  The sweep below reports "export
+#     aborted or produced no output", which reads as a defect in the EXPORTER.
+#   * Every other Cabrillo carries `LOCATION: <value>` in its header, so a
+#     DIFFERENT value than the refs were frozen with is a byte diff on sets
+#     that have nothing to do with the change under test.
+#
+# So a missing or blank tag is not a test result, it is an unrunnable test, and
+# it is reported as one -- before 26 exports run and one of them gets blamed.
+#
+# THIS IS A GUARD, NOT THE FIX.  The real fix is for the corpus to own its
+# header tags rather than read the operator's -- see
+# docs/CORPUS_FRESH_CLONE_DEFECT.md.
+SETTINGS="tr4w/target/settings/tr4w.json"
+if [ ! -f "$SETTINGS" ]; then
+   echo "ERROR: $SETTINGS is missing."
+   echo "  The corpus reads the Cabrillo LOCATION tag from it, and tr4w/target/*"
+   echo "  is gitignored -- so a fresh clone or worktree has no settings at all."
+   echo "  Winter Field Day and ARRL10 will REFUSE to export, and every other"
+   echo "  Cabrillo will carry a LOCATION that does not match the frozen refs."
+   echo "  Run TR4W once to seed it, or copy one from a working tree."
+   echo "  See docs/CORPUS_FRESH_CLONE_DEFECT.md."
+   exit 1
+fi
+if ! grep -q '"_LOCATION"[[:space:]]*:[[:space:]]*"[^"]\+"' "$SETTINGS"; then
+   echo "ERROR: $SETTINGS has no non-empty _LOCATION tag."
+   echo "  Winter Field Day and ARRL10 refuse to export without it"
+   echo "  (PostUnit.PAS:2567), and the sweep would blame the exporter."
+   echo "  See docs/CORPUS_FRESH_CLONE_DEFECT.md."
+   exit 1
+fi
+
+# The app's own last complaint, for a set that exported nothing.  It already
+# said what was wrong; the harness simply was not looking.
+last_app_warning(){
+   local log="tr4w/target/tr4w.log"
+   [ -f "$log" ] || return 0
+   tail -400 "$log" 2>/dev/null       | grep -iE 'warn|error|fatal'       | tail -1       | sed 's/^[0-9]\{2\} [A-Za-z]\{3\} [0-9]\{4\} [0-9:.]* *//'
+}
+
 # /c/foo/bar -> C:\foo\bar  (the app needs a native Windows path)
 towin(){ cygpath -d "$1"; }   # DOS 8.3 short path -- NO spaces, so Git-Bash->exe
                               # arg passing can't split the contest dir name.
@@ -75,6 +123,17 @@ for m in "$here"/*/manifest.json; do
    # MSYS_NO_PATHCONV: stop Git Bash from mangling the /EXPORT flag into a path.
    # per-set timeout: a stray load dialog can't hang the whole run
    ( cd tr4w/target && MSYS_NO_PATHCONV=1 timeout 45 "./$EXE_NAME" "$(towin "$cfg")" /EXPORT >/dev/null 2>&1 )
+
+   # SAY WHY, HERE, WHERE THE SET IS STILL KNOWN.  A set that wrote nothing
+   # surfaces 26 exports later as a bare "no fresh candidate", by which point
+   # the reason is a log entry nobody thought to read.
+   if ! ls "$d12"/*.ADI "$d12"/*.adi >/dev/null 2>&1; then
+      why=$(last_app_warning)
+      printf '  ^^^^^^ %-26s wrote NO ADIF' "$slug"
+      [ -n "$why" ] && printf ' -- the app said: %s' "$why"
+      printf '
+'
+   fi
    n=$((n+1))
 done
 echo "exported $n set(s)"; echo
