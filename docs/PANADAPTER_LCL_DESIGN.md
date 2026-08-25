@@ -550,3 +550,75 @@ Whether `#SPN` is a front-panel zoom over a wider capture, a different unit, or
 something else is **not established**, and it should be before anything relies
 on it. Note it does not apply to the mini-pan at all: `#SPN$` reads 100000
 while pan Y streams a 3 kHz span.
+
+## 12. Handoff: what lands on `fpc`, not here
+
+Decided with NY4I on 2026-08-25 while merging this branch down. None of it is
+started; all of it belongs on the main branch because it touches files the
+panadapter deliberately does not.
+
+### 12.1 Two ways in, and the button should come first
+
+**A button on the radio panel, then a Windows-menu item.** The panel is an LCL
+form since `8bd9560e`, so a button there is pure LCL -- no `.rc` resource, and
+therefore no collision with the `resourcestring` I18N work arriving from the
+other worktree. That is the whole reason to do it first; the menu is blocked on
+I18N and the button is not.
+
+The button is also the better control on its merits: it belongs to the radio
+whose spectrum it is, so with two radios there is no question which one a click
+means, and it can HIDE ITSELF when `SpectrumAvailable` is False rather than
+offering an option that silently does nothing. A greyed menu item cannot say
+"this K4 is on serial, so there is no stream" -- a button that is simply absent
+on a serial K4 and present on a network one says it without words.
+
+The Windows-menu item follows once I18N settles, for operators who work from
+the menu and for keyboard access.
+
+### 12.2 The program-layer gate goes with them
+
+Three things must agree before a window opens: `rcSpectrum` (the model can),
+`SpectrumAvailable` (this connection can), and the operator's setting (we
+want to). The radio answers the first two. The third needs an
+`IsSpectrumActive` in `MainUnit`, beside the existing `IsCWByCATActive`, so the
+question is asked in ONE place rather than at each entry point -- otherwise the
+button and the menu item will eventually disagree.
+
+### 12.3 Configuration: one item, and two things that are not config
+
+**Wanted: an enable/disable per radio.** `csJSON` from the start, since the
+radio stores are all JSON already. An operator on a slow link, or one who does
+not want a second socket open, needs to be able to say no. This is the third
+gate above.
+
+**Not config: palette and dB scale.** They are per-display preferences and
+belong with the window layout, not with the radio.
+
+**Not config, and worth refusing: the port.** It is CAT port + 1 by PROTOCOL,
+not by convention. Exposing it buys nothing and invites a support case that
+opens with someone having typed 9202.
+
+Note that nothing here is required for the stream to work: it is unsolicited,
+and the display scales off the packet's own noise floor with no CAT query at
+all. The enable flag is about operator choice, not about making it function.
+
+### 12.4 The spot provider still needs its threading re-derived
+
+`uPanadapterView` is nil and the real provider is unwritten. The agreed shape
+is to lift the band map's display filters out of `BuildVisibleSpots` into a
+shared `SpotPassesDisplayFilters`, with each window keeping its OWN scope test
+(the band map by band, the panadapter by the frequency range of the current
+frame) -- so a spot outside the displayed span is excluded by the range, and
+mode/dupe/CQ/WARC/mults-only follow the band map's settings unconditionally.
+
+**Do not couple that to whether the band map window is open.** Those settings
+are globals kept live by the radio poller regardless of any window, so
+"follow it when open" and "always follow it" are the same behaviour today --
+and only the second one is defined when it is closed. Making a closed window
+silently change what a different window shows is a hidden mode.
+
+**The threading evidence expired during this merge.** The analysis that every
+`AddSpot` caller runs on the main thread rested on `uTelnet` posting a window
+message and `uNet` using `WSAAsyncSelect`; `70e6bedf`, `05ff356f` and
+`00e9a987` removed all three. The conclusion may well still hold -- re-derive
+it on merged code before writing the provider, do not carry it forward.
