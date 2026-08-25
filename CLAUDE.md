@@ -197,7 +197,7 @@ It links only leaf `src` units, so **the TRDOS contest engine is not unit-covere
 
 **2. Golden-master corpus** — the regression oracle for the contest engine.
 `bash tr4w/test/corpus/export-d12-corpus.sh` runs the app's headless export mode
-(`tr4w.exe "<contest>.CFG" /EXPORT`, `tr4w.dpr:903`) over 13 real D7-written binary logs and
+(`tr4w.exe "<contest>.CFG" /EXPORT`, `src/uProgramMain.pas`) over 13 real D7-written binary logs and
 byte-diffs both artifacts — ADIF and Cabrillo — against frozen D7 references (13 sets × 2 = 26
 comparisons).
 
@@ -261,9 +261,20 @@ no window handle, a `TPanel` caption not wrapping).
 
 ### Key entry points
 
-**`tr4w/tr4w.dpr`** — program entry and the startup sequence: single-instance mutex, logger,
-optional WSJT-X and external-logger servers, `CreateMainWindow`, WinKeyer thread, then the main
-`GetMessage` loop. Grep for the step you need; the order above is what matters, not the offsets.
+**`tr4w/src/uProgramMain.pas`** — the startup sequence: single-instance mutex, logger, optional
+WSJT-X and external-logger servers, `CreateMainWindow`, WinKeyer thread, then `Application.Run`.
+Grep for the step you need; the order above is what matters, not the offsets.
+
+**It moved out of `tr4w.dpr` on 2026-08-25 and that was the point of the exercise.** A `.dpr` is
+invisible to a search of `src/`, so the most order-sensitive code in the program lived in the one
+file nobody greps — and "where does X happen at startup" had the answer "in no unit at all". The
+`.dpr` is now 441 lines: the uses clause, the resource directives, and `begin RunTR4W; end.`
+
+**The uses clause stays in the `.dpr`**, so "which units are compiled" and "who references this" are
+still `.dpr` questions — that is what the `enforce-pascal-glob` hook is warning about, and it is
+still right. `uProgramMain`'s own uses clause is a copy of it in the same order: this program relies
+on use-order for name resolution (`SysUtils.SysErrorMessage` vs `TF`'s), so do not tidy it as a side
+effect of something else.
 
 Two facts about that sequence that grep will not tell you: **headless `/EXPORT` mode boots the
 contest, writes the files and `Halt(0)`s before any GUI or network init**, and config load
@@ -705,8 +716,9 @@ Two silent-corruption traps live here, and neither produces a compiler diagnosti
 
 ### Threading
 Radio threads (one per radio), external logger threads (`TReadingThread` / `TSenderThread`), WinKey
-thread, network threads, CW/DVP playback. Event objects are created via inline assembly in `tr4w.dpr`
-(`tCW_Event`, `tCWPaddle_Event`, `tDVP_Event`, `tNet_Event`).
+thread, network threads, CW/DVP playback. The event objects (`tCW_Event`, `tCWPaddle_Event`,
+`tDVP_Event`, `tNet_Event`) are created in `src/uProgramMain.pas` — plain `CreateEvent` calls now, not
+the inline assembly this used to describe.
 
 Threads hand results back through `TProcessMsgRef` callbacks — synchronize before touching UI state.
 Radio disconnection is handled via the `radioWasDisconnected` flag rather than by tearing the object
