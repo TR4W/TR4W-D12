@@ -8,6 +8,7 @@ object frmBandMap: TfrmBandMap
   Color = clWindow
   DoubleBuffered = True
   KeyPreview = True
+  OnKeyUp = SpotsKeyUp
   OnClose = HandleClose
   OnCreate = HandleCreate
   OnResize = HandleResize

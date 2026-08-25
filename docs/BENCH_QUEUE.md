@@ -25,9 +25,9 @@ at what they cover; this is the list of what they cannot see.
 
 ## Waiting now (as of 2026-08-24)
 
-**Sections 31-42 were added 2026-08-24 and are UNRUN.**  Section 37 is the
+**Sections 31-43 were added 2026-08-24 and are UNRUN.**  Section 37 is the
 biggest of them: the entire main window display changed. NY4I confirmed
-the dupe sheet window, the stations window and the entry-field colours on the
+the dupe sheet window, the  [AGENT: Clicking on the X onm the Stations window doe snot close it.. Nor does hitting the accelertator key again like the other windows work] window and the entry-field colours on the
 bench that day, but was remote when the captions, the resize behaviours and
 the band-change message landed -- so those are recorded here rather than
 counted as tested.
@@ -1006,7 +1006,6 @@ showed nothing at all.** Three separate things, and the log settled all of them.
   window is simply sitting on top of the band map, TR4W still repaints it.
   Windows will not answer "am I covered" reliably and guessing would trade
   a real repaint for a maybe-saved one.
-  
 
 - [ ] **DX cluster logging was never broken** -- 56 `[Telnet RX]` lines were in
   that log, buried under the flood above. Nothing to fix; noted so it is
@@ -1094,7 +1093,7 @@ rather than a crash.
   an `AddOnKeyDownBeforeHandler` instead of by `TranslateAccelerator`. Work
   down the menus and try the ones you actually use -- Alt+X, Ctrl+J,
   Ctrl+Alt+B, Ctrl+W, the Ctrl+Shift+digit window shortcuts. A shortcut that
-  does nothing is the signature failure of this change.
+  does nothing is the signature failure of this change. [AGENT: CTRL-Shift-0 is supposed tobring up the MP3 recorder. I do not see that happen at all]
 - [ ] **The same shortcuts with a TOOL WINDOW focused.** The handler is
   application-wide by design, so Ctrl+Shift+1 should open the dupe sheet
   whether the callsign field or the band map has focus.
@@ -1172,25 +1171,25 @@ of it has been seen.**
 Two DIFFERENT resize behaviours, deliberately, and the pair is worth one look
 side by side because getting them backwards would be easy to miss:
 
-- [ ] **Stations SCALES.** Fixed columns; the font grows with the window and the
+- [x] **Stations SCALES.** Fixed columns; the font grows with the window and the
   columns are sized from the font that was applied, floor 7pt, ceiling 28pt.
   Widen it and the text gets bigger; there must be no grey strip to the
   right of the last band column at any width.
-- [ ] **The dupe sheet REFLOWS.** Widening it gives MORE COLUMNS of the same
+- [x] **The dupe sheet REFLOWS.** Widening it gives MORE COLUMNS of the same
   size, not bigger cells -- which is what `LB_SETCOLUMNWIDTH` did, and what
   scanning for a callsign wants.
-- [ ] **The 28pt ceiling is mine, not NY4I's** (he asked only for a minimum).
+- [x] **The 28pt ceiling is mine, not NY4I's** (he asked only for a minimum).
   Maximise the stations window and say whether 28pt is the right stopping
   point.
 
 ### 33. Band change now says why it refused  (`TC_BANDCHANGEDISABLED`)
 
-- [ ] With `MULTIPLE BANDS = FALSE` and at least one QSO logged, Alt-B / Alt-V
+- [x] With `MULTIPLE BANDS = FALSE` and at least one QSO logged, Alt-B / Alt-V
   and the Band Up / Band Down menu items must show
   "Band change requires MULTIPLE BANDS = TRUE once the log has QSOs"
   instead of doing nothing in silence. Same for anything that reaches
   `GoToBand` -- a band map click, for instance.
-- [ ] With `MULTIPLE BANDS = TRUE`, no message and band change works as before.
+- [x] With `MULTIPLE BANDS = TRUE`, no message and band change works as before.
 
 The CAUSE of NY4I hitting this is not fixed here and is not meant to be: a
 `csJSON` stored setting outlives contest selection, so `FCONTEST.PAS`'s
@@ -1346,9 +1345,9 @@ First slice of the domain layer -- one boolean, one writer, one indicator,
 chosen because it proves the whole path with almost nothing to get wrong. The
 listener thread no longer names a widget.
 
-- [ ] **Start WSJT-X: the indicator appears and goes green.**
+- [x] **Start WSJT-X: the indicator appears and goes green.**
 - [ ] **Stop WSJT-X: it goes red and then hides** when the link is declared
-  dead.
+  dead. [ Agent: It doe snot go to red. It just goes away entirely when I quit WSJT-X with the enabled option still true.]
 - [x] **Start TR4W with WSJT-X ALREADY RUNNING.** A heartbeat can arrive before
   the main form exists; InstallStateBridge brings the view into line once at
   install for exactly that case, and it is the half most likely to be wrong.
@@ -1368,6 +1367,7 @@ listener thread no longer names a widget.
   `JoinMulticastGroup called but UDP server not active`.** It fired on every
   Save. A warning that appears during correct operation is one people learn
   to ignore. [AGENT - Note it would help if we ar erunning DEBUG or higher to log when a command is changed. with the registry and .AsText, I presume that is possible.]
+- [ ] [AGENT: The WSJTX letters are too big for the field. See attached image: ]![](data:image/png;base64,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)
 
 ### 40. Two multi-op message-loop defects fixed, and the silent drop now reports
 
@@ -1431,7 +1431,6 @@ refactoring one.
 Neither is a regression -- both predate today and are unchanged by the
 extraction, which the corpus confirms byte-for-byte across all 13 ADIF fixtures.
 
-
 ### 42. Accelerators no longer reach past a modal dialog
 
 Found on the bench 2026-08-24 (NY4I): with a dialog open, ESC did not close it
@@ -1445,16 +1444,57 @@ a dialog's controls, posted `WM_COMMAND` to the main window, and swallowed the
 key. Suppressed now while a modal form is active.
 
 - [ ] **ESC closes a dialog** and the main window does NOT react. Try several:
-      Preferences, Edit QSO, Send Spot, the message editor.
+  Preferences, Edit QSO, Send Spot, the message editor.
 - [ ] **TAB moves between controls inside a dialog** and does NOT put the main
-      window into search-and-pounce.
+  window into search-and-pounce.
 - [ ] **ACCELERATORS STILL WORK FROM A MODELESS TOOL WINDOW.** This is the half
-      that must not have been broken by the fix: with focus in the band map,
-      stations, a dupe sheet, SCP or a remaining-mults window, Alt-B / Alt-V and
-      the other accelerators must still fire. The guard is on MODAL forms
-      specifically, not on "any form that is not the main window", because tool
-      windows are separate forms too.
+  that must not have been broken by the fix: with focus in the band map,
+  stations, a dupe sheet, SCP or a remaining-mults window, Alt-B / Alt-V and
+  the other accelerators must still fire. The guard is on MODAL forms
+  specifically, not on "any form that is not the main window", because tool
+  windows are separate forms too.
 - [ ] **And they still work from the main window itself.**
+
+
+### 43. Band map, checked against D7 side by side
+
+NY4I put the two band maps next to each other on the bench, 2026-08-24. Three
+differences and one open question.
+
+- [ ] **The flag letters are back: `M`, `S` and `D`.** The conversion kept the
+      FILLS and dropped two of the three letters -- a multiplier was a red block
+      with nothing in it, a dupe a yellow block. Restored against
+      `C:\TR4W uBandmap.pas:284-305`, including D7's precedence: mult sets the
+      red-to-white gradient and `M`; QSX overrides the LETTER to `S` and leaves
+      the fill; dupe overrides BOTH with yellow and `D`. **A dupe that is also
+      split must show `D`, not `S`.**
+- [ ] **The one-pixel gap between cells.** D7 insets every spot by
+      `Shift = 1` on all four sides after filling the item with window
+      background, so a callsign's black block never touches the next column's
+      red flag.
+- [ ] **D, M and B toggle from the band map window** without having to click
+      into the grid first. They were on the grid's own OnKeyUp, and the window
+      does not take focus when it opens (`OpenTR4WWindow` ends with
+      `FrmSetFocus`). Now on the form, which has KeyPreview.
+      **Also confirm the letters still TYPE normally into the callsign field
+      when the main window is active** -- that is the half a key-scope change
+      breaks.
+
+**Open question for NY4I -- callsign cell width.** NY4I: "You have fixed width
+calls. D7 has dynamic width calls." **D7's code does not appear to support
+that**: `CallsignRect` runs from just past the flag strip to the item's right
+edge (`uBandmap.pas:214-225`), and the item width is the fixed
+`BandMapItemWidth` (135) pushed through `LB_SETCOLUMNWIDTH` at `:367`. The one
+dynamic measurement is `FreqRectWidth`, computed once from
+`GetTextExtentPoint32('28888.8')` at `:198`. There is a commented-out
+`BandMapItemWidth := FreqRectWidth + 1 + CheckRectWidth + 1 + 65` at `:172`.
+The screenshot does show `GT8B...` ellipsised, which means the rect really is
+narrower than the text there -- so something is going on that the read did not
+find. **Worth settling before changing the layout.**
+
+**And a dead flag, found while looking:** `TfrmBandMap.FFrozen` is set by
+SpotsEnter and cleared by SpotsExit and **never read**. It was presumably meant
+to hold the refresh still while the operator browses the list. Not wired.
 
 ---
 

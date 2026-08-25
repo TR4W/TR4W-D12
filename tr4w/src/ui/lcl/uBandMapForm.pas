@@ -188,6 +188,9 @@ const
     question. }
   FLAG_WIDTH = 17;
   CELL_PAD   = 2;
+  { D7's `Shift`: every spot is drawn inside a one-pixel border of window
+    background, which is what visually separates one from the next. }
+  CELL_INSET = 1;
 
 { -------------------------------------------------------------- lifecycle -- }
 
@@ -478,24 +481,42 @@ end;
 procedure TfrmBandMap.DrawSpotCell(const aSpot: TSpotRecord; const aRect: TRect;
                                    const aSelected: boolean);
 var
-   freqRect, flagRect, callRect: TRect;
+   cellRect, freqRect, flagRect, callRect: TRect;
    freqText: string;
+   flagText: string;
    bandColor: TColor;
    callColor: TColor;
    y: integer;
 begin
-   freqRect := aRect;
+   { THE ONE-PIXEL INSET, WHICH IS WHAT SEPARATES ONE SPOT FROM THE NEXT.
+
+     D7 fills the whole item with the window background and then insets every
+     rect by Shift = 1 on all four sides (uBandmap.pas:142, applied at
+     :208-212), so each spot sits inside a hairline of background.  The
+     conversion filled edge to edge, so a callsign's black block ran straight
+     into the next column's red flag with nothing between them -- NY4I put the
+     two band maps side by side and saw it, 2026-08-24. }
+   cellRect := aRect;
+   Inc(cellRect.Left,   CELL_INSET);
+   Inc(cellRect.Top,    CELL_INSET);
+   Dec(cellRect.Right,  CELL_INSET);
+   Dec(cellRect.Bottom, CELL_INSET);
+
+   grdSpots.Canvas.Brush.Color := grdSpots.Color;
+   grdSpots.Canvas.FillRect(aRect);
+
+   freqRect := cellRect;
    freqRect.Right := freqRect.Left +
                      grdSpots.Canvas.TextWidth('28888.8') + CELL_PAD * 3;
 
-   flagRect := aRect;
+   flagRect := cellRect;
    flagRect.Left  := freqRect.Right;
    flagRect.Right := flagRect.Left + FLAG_WIDTH;
 
-   callRect := aRect;
+   callRect := cellRect;
    callRect.Left := flagRect.Right + CELL_PAD;
 
-   y := aRect.Top + ((aRect.Bottom - aRect.Top -
+   y := cellRect.Top + ((cellRect.Bottom - cellRect.Top -
                       grdSpots.Canvas.TextHeight('X')) div 2);
 
    // --- the frequency, on a band-coloured field -------------------------
@@ -532,27 +553,62 @@ begin
                            grdSpots.Canvas.TextWidth(freqText), y, freqText);
    grdSpots.Canvas.Brush.Style := bsSolid;
 
-   // --- the flags: two facts in the fill, one in the letter -------------
+   { --- the flags: A FILL AND A LETTER, and the letter had gone missing ---
+
+     Restored against the D7 source (C:\TR4W uBandmap.pas:284-305) after NY4I
+     put the two band maps side by side, 2026-08-24.  The conversion kept the
+     FILLS and dropped two of the three LETTERS: a multiplier showed as a red
+     block with nothing in it, and a dupe as a yellow block, where D7 writes M
+     and D.  Only S survived.
+
+     THE PRECEDENCE IS D7'S AND IT IS NOT A SIMPLE else-if.  D7 assigns the
+     letter three times in order, so each stage overrides the last:
+
+       mult -> red-to-white gradient, letter 'M'
+       QSX  -> letter becomes 'S'   -- THE FILL IS NOT TOUCHED, so a multiplier
+               worked split stays red and shows S
+       dupe -> yellow fill, letter 'D'  -- overrides BOTH
+
+     The previous version had `if dupe else if mult` for the fill and an
+     unconditional S for the letter, which gave a dupe-and-split spot a yellow
+     block with 'S' where D7 shows 'D'.
+
+     The gradient is red-to-WHITE, not flat red.  TCanvas.Handle is the HDC
+     uGradient wants, so this is the same call D7 made. }
+   grdSpots.Canvas.Brush.Color := grdSpots.Color;
+   grdSpots.Canvas.FillRect(flagRect);
+
+   flagText := '';
+
+   if aSpot.FMult then
+      begin
+      { THE LCL'S OWN GRADIENT, NOT uGradient's.  That unit declares its own
+        `tcolor` (uGradient.pas:25) and an implementation uses clause wins over
+        the interface's, so pulling it in here silently redefined TColor for the
+        whole unit and AgeColor's header stopped matching its declaration.
+        TCanvas.GradientFill is native, needs no HDC, and has no type to clash. }
+      grdSpots.Canvas.GradientFill(flagRect, clRed, clWhite, gdHorizontal);
+      flagText := 'M';
+      end;
+
+   if aSpot.FQSXFrequency <> 0 then
+      begin
+      flagText := 'S';
+      end;
+
    if aSpot.FDupe then
       begin
       grdSpots.Canvas.Brush.Color := clYellow;
-      end
-   else if aSpot.FMult then
-      begin
-      grdSpots.Canvas.Brush.Color := clRed;
-      end
-   else
-      begin
-      grdSpots.Canvas.Brush.Color := grdSpots.Color;
+      grdSpots.Canvas.FillRect(flagRect);
+      flagText := 'D';
       end;
-   grdSpots.Canvas.FillRect(flagRect);
 
-   if aSpot.FQSXFrequency <> 0 then
+   if flagText <> '' then
       begin
       grdSpots.Canvas.Brush.Style := bsClear;
       grdSpots.Canvas.Font.Color  := clBlack;
       grdSpots.Canvas.TextOut(flagRect.Left +
-         ((FLAG_WIDTH - grdSpots.Canvas.TextWidth('S')) div 2), y, 'S');
+         ((FLAG_WIDTH - grdSpots.Canvas.TextWidth(flagText)) div 2), y, flagText);
       grdSpots.Canvas.Brush.Style := bsSolid;
       end;
 
@@ -645,6 +701,18 @@ begin
    tCallWindowSetFocus;
 end;
 
+{ ON THE FORM, NOT ONLY ON THE GRID.
+
+  These were wired to grdSpots.OnKeyUp, so they fired only while the GRID
+  itself had focus.  The window does not get focus when it opens --
+  OpenTR4WWindow ends with FrmSetFocus, which returns the keyboard to the main
+  window -- so opening the band map and pressing D sent a 'D' to the callsign
+  field instead.  NY4I on the bench, 2026-08-24: "I pressed D, M, etc but it did
+  not change those options."
+
+  KeyPreview is already True on this form, so a form-level handler sees the key
+  first whichever child has focus.  Still scoped to this window: with the main
+  window active these letters type into the entry fields, which is correct. }
 procedure TfrmBandMap.SpotsKeyUp(Sender: TObject; var Key: word;
                                  Shift: TShiftState);
 begin
