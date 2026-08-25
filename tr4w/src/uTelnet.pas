@@ -1811,7 +1811,6 @@ end;
 function ProcessDX(const Line: AnsiString; InListBox: boolean; var Stringtype:
   TelnetStringType): boolean;
 var
-  MinuteOfDay: integer;
   ct: TDateTime;   { now, UTC -- see the stamping block below }
   { Held across the SendMessageA below -- see the note there. }
   alertCall: AnsiString;
@@ -1858,27 +1857,28 @@ begin
 
      end;
 
-  // THE SPOT'S OWN TIME WHEN THE CLUSTER GAVE US ONE, otherwise arrival.
+  // WHEN IT ARRIVED, NOT WHEN THE SPOTTER SAYS IT WAS MADE.
   //
-  // ParseDXSpotTimeUTC yields a minute of the UTC day, with no date -- so the
-  // date is today's, and a spot whose time is still AHEAD of now belongs to
-  // yesterday: the cluster line crossed midnight between being sent and being
-  // read.  Subtracting the day is what the old `if ct >= FSysTime` guard was
-  // groping at; it simply dropped the age instead.
-  ct := UTCNow;
-  if ParseDXSpotTimeUTC(Line, MinuteOfDay) then
-     begin
-     TempSpot.FSysTime := Trunc(ct) +
-       EncodeTime(MinuteOfDay div 60, MinuteOfDay mod 60, 0, 0);
-     if TempSpot.FSysTime > ct then
-        begin
-        TempSpot.FSysTime := TempSpot.FSysTime - 1;
-        end;
-     end
-  else
-     begin
-     TempSpot.FSysTime := ct;
-     end;
+  // The cluster line carries HHMM and nothing finer, so stamping from it put
+  // EVERY spot of a given clock minute on the same timestamp -- and they then
+  // all expired on the same tick, which is the chunking NY4I was still seeing
+  // after the TDateTime change (2026-08-25).  Moving to a TDateTime fixed the
+  // arithmetic and left this, because ParseDXSpotTimeUTC simply has no seconds
+  // to give:
+  //
+  //     EncodeTime(MinuteOfDay div 60, MinuteOfDay mod 60, 0, 0)
+  //                                                        ^ always
+  //
+  // UTCNow has milliseconds, so two spots a second apart now differ by a second
+  // and fall off a second apart.
+  //
+  // WHAT THIS GIVES UP, said plainly: a spot RELAYED late -- made ten minutes
+  // ago and only reaching us now -- is treated as new and lives a full decay
+  // time from arrival.  That is the trade NY4I asked for, and it is the right
+  // way round: the map is a picture of what is workable now, and a stale spot
+  // arriving late is still news to this station.  ParseDXSpotTimeUTC keeps its
+  // other callers; it is only the AGE that stops using it.
+  TempSpot.FSysTime := UTCNow;
   TempSpot.FAgeSeconds := SpotAgeSeconds(TempSpot);
 
   if TempSpot.FCall = MyCall then

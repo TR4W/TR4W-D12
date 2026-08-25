@@ -34,7 +34,7 @@ unit uFunctionKeysForm;
 interface
 
 uses
-  Forms, Controls, ExtCtrls, Classes, Graphics,
+  Forms, Controls, ExtCtrls, StdCtrls, Classes, Graphics,
   LCLType;   // HWND -- the LCL's own declaration, not the Windows unit's, so
              // this unit stays free of a Windows uses clause
 
@@ -62,6 +62,19 @@ type
       caller never has to convert.  Filled in HandleShow from the designed
       panels, so adding a key is an edit to the .lfm and this array. }
     FKeys: array[112..123] of TPanel;
+
+    { THE WRAPPING LABEL ON EACH PANEL.
+
+      A TPanel's Caption is ONE LINE and clips: NY4I's screenshots show it next
+      to D7's, where every key wraps its message under the key name across two
+      or three centred lines.  There is no WordWrap on a TPanel caption, so the
+      text belongs to a TLabel that has one.
+
+      Built in code rather than twelve times in the .lfm.  Twelve identical
+      property blocks is exactly the shape NY4I flagged as easy to get wrong in
+      one of them -- one helper cannot drift from itself. }
+    FCaptions: array[112..123] of TLabel;
+    procedure BuildCaptionLabels;
     procedure LayOutKeys;
   public
     { Caption and colour for one key, addressed the way the rest of the program
@@ -103,6 +116,9 @@ uses
 
 procedure TfrmFunctionKeys.HandleShow(Sender: TObject);
 begin
+   // The panels are found in HandleShow, so the labels can only be built
+   // after it -- and only once, which BuildCaptionLabels checks for itself.
+   BuildCaptionLabels;
    LayOutKeys;
 end;
 
@@ -137,13 +153,58 @@ begin
       end;
 end;
 
+{ ONE LABEL PER PANEL, so the message can wrap.
+
+  The label covers the panel and is TRANSPARENT, so SetKeyColor still works by
+  colouring the panel underneath -- the yellow keys in NY4I's screenshot are the
+  panel showing through.
+
+  IT ALSO HAS TO PASS THE MOUSE THROUGH.  A label sits in front of its panel and
+  would otherwise swallow every click, so it carries the same Tag and the same
+  handlers; those read Sender's Tag rather than casting to TPanel. }
+procedure TfrmFunctionKeys.BuildCaptionLabels;
+var
+   k: integer;
+   lab: TLabel;
+begin
+   for k := Low(FKeys) to High(FKeys) do
+      begin
+      if (FKeys[k] = nil) or (FCaptions[k] <> nil) then
+         begin
+         Continue;
+         end;
+
+      lab := TLabel.Create(Self);
+      lab.Parent      := FKeys[k];
+      lab.Align       := alClient;
+      lab.Alignment   := taCenter;
+      lab.Layout      := tlCenter;
+      lab.WordWrap    := True;
+      lab.Transparent := True;
+      lab.ParentColor := True;
+      lab.Tag         := FKeys[k].Tag;
+      lab.OnClick     := KeyPanelClick;
+      lab.OnMouseDown := KeyPanelMouseDown;
+
+      // SMALLER THAN THE FORM'S FONT.  D7's keys carry up to three lines in the
+      // height of one button; at the inherited size two words fill the width and
+      // the rest is clipped, which is what NY4I saw.
+      lab.ParentFont := False;
+      lab.Font.Height := -11;
+
+      FCaptions[k] := lab;
+      FKeys[k].Caption := '';   // the panel no longer draws its own text
+      end;
+end;
+
 procedure TfrmFunctionKeys.SetKeyCaption(const aKey: integer; const aText: string);
 begin
-   if (aKey < Low(FKeys)) or (aKey > High(FKeys)) or (FKeys[aKey] = nil) then
+   if (aKey < Low(FCaptions)) or (aKey > High(FCaptions)) or
+      (FCaptions[aKey] = nil) then
       begin
       Exit;
       end;
-   FKeys[aKey].Caption := aText;
+   FCaptions[aKey].Caption := aText;
 end;
 
 procedure TfrmFunctionKeys.SetKeyColor(const aKey: integer; const aColor: TColor);
@@ -161,7 +222,7 @@ begin
    // WM_COMMAND / BN_CLICKED with LoWord(wParam) as the control id.
    if Assigned(FunctionKeyClicked) then
       begin
-      FunctionKeyClicked(TPanel(Sender).Tag);
+      FunctionKeyClicked(TComponent(Sender).Tag);
       end;
 end;
 
@@ -183,14 +244,14 @@ begin
       begin
       if Assigned(FunctionKeyRightDoubleClicked) then
          begin
-         FunctionKeyRightDoubleClicked(TPanel(Sender).Tag);
+         FunctionKeyRightDoubleClicked(TComponent(Sender).Tag);
          end;
       end
    else
       begin
       if Assigned(FunctionKeyRightClicked) then
          begin
-         FunctionKeyRightClicked(TPanel(Sender).Tag);
+         FunctionKeyRightClicked(TComponent(Sender).Tag);
          end;
       end;
 end;
