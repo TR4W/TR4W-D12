@@ -98,8 +98,17 @@ uses
 procedure PostPanelText(const aPanel: HWND; const aControlId: integer;
   const aText: string);
 
-// Enable or disable one control from ANY thread, by its window handle.
-procedure PostControlEnable(const aControl: HWND; const aEnabled: boolean);
+{ Enable or disable one panel control from ANY thread.
+
+  BY (PANEL, CONTROL ID), exactly like PostPanelText.  It used to take the
+  CONTROL's own window handle, which the caller got from GetDlgItem -- and that
+  cannot survive the panel becoming a form, because the LCL's TLabel is a
+  TGraphicControl and HAS NO HANDLE AT ALL.  There is nothing to pass.
+
+  Addressing both kinds the same way also means the coalescing cache is keyed
+  the same way for both, which it was not before. }
+procedure PostPanelEnable(const aPanel: HWND; const aControlId: integer;
+  const aEnabled: boolean);
 
 { Sets one main-window element's text FROM A WORKER THREAD.  Coalesced and
   marshalled exactly like a panel update -- see TPanelUpdateKind.puElement for
@@ -110,6 +119,31 @@ procedure PostElementText(const aElement: TMainWindowElement; const aText: strin
 // panel closes: a window handle can be REUSED by Windows, and a stale cache
 // entry would then suppress the first update to a different window.
 procedure ForgetPanel(const aPanel: HWND);
+
+type
+  { WHERE A MARSHALLED UPDATE LANDS WHEN THE PANEL IS A FORM.
+
+    Everything above this line is unchanged: the radio threads still post
+    (panel handle, control id) and the coalescing is still keyed on that pair.
+    What changed is the LAST STEP.  SetDlgItemTextA and EnableWindow only work
+    on a Win32 control; a form's label paints from a property, and writing its
+    window behind the LCL's back leaves the property holding the old text --
+    the same stale-property trap as the tool-window captions.
+
+    A HOOK RATHER THAN A uses CLAUSE, because uPanelUpdate is below the forms:
+    it is used by uRadioPolling, which the form unit must be free to reference.
+    uRadioPanelForm installs these in its initialization.
+
+    Returning False means "not mine" and the Win32 path runs, so a panel that
+    has not been converted is unaffected. }
+  TPanelTextHook = function(const aPanel: HWND; const aControlId: integer;
+                            const aText: string): boolean;
+  TPanelEnableHook = function(const aPanel: HWND; const aControlId: integer;
+                              const aEnabled: boolean): boolean;
+
+var
+  PanelTextHook: TPanelTextHook = nil;
+  PanelEnableHook: TPanelEnableHook = nil;
 
 implementation
 
@@ -288,30 +322,29 @@ begin
    end;
 end;
 
-procedure PostControlEnable(const aControl: HWND; const aEnabled: boolean);
+procedure PostPanelEnable(const aPanel: HWND; const aControlId: integer;
+  const aEnabled: boolean);
 var
-  i: integer;
   upd: TPanelUpdate;
+  idx: integer;
 begin
-   if aControl = 0 then
-      begin
-      Exit;
-      end;
-
    gLock.Acquire;
    try
-      i := IndexOf(puEnable, aControl, 0);
-      if (i >= 0) and (gLast[i].Enabled = aEnabled) then
+      idx := IndexOf(puEnable, aPanel, aControlId);
+      if (idx >= 0) and (gLast[idx].Enabled = aEnabled) then
          begin
+         // Unchanged since the last successful hand-over: drop it. This is what
+         // makes a 10 ms poll rate cost nothing in the steady state.
          Exit;
          end;
 
       upd := TPanelUpdate.Create;
-      upd.Kind    := puEnable;
-      upd.Target  := aControl;
+      upd.Kind := puEnable;
+      upd.Target := aPanel;
+      upd.ControlId := aControlId;
       upd.Enabled := aEnabled;
 
-      SendAndRemember(upd, i);
+      SendAndRemember(upd, idx);
    finally
       gLock.Release;
    end;
@@ -336,15 +369,27 @@ begin
          case upd.Kind of
            puText:
               begin
-              // SetDlgItemTextA explicitly, not the generic name: under FPC the
-              // generic binds to the W variant and would write UTF-16 into a
-              // control expecting ANSI. See CLAUDE.md on 1bea7af4.
-              ansi := AnsiString(upd.Text);
-              Windows.SetDlgItemTextA(upd.Target, upd.ControlId, PAnsiChar(ansi));
+              // THE FORM FIRST.  See TPanelTextHook: a converted panel takes
+              // the update through its own control, and False means this is
+              // still a Win32 dialog.
+              if (not Assigned(PanelTextHook)) or
+                 (not PanelTextHook(upd.Target, upd.ControlId, upd.Text)) then
+                 begin
+                 // SetDlgItemTextA explicitly, not the generic name: under FPC
+                 // the generic binds to the W variant and would write UTF-16
+                 // into a control expecting ANSI. See CLAUDE.md on 1bea7af4.
+                 ansi := AnsiString(upd.Text);
+                 Windows.SetDlgItemTextA(upd.Target, upd.ControlId, PAnsiChar(ansi));
+                 end;
               end;
            puEnable:
               begin
-              Windows.EnableWindow(upd.Target, upd.Enabled);
+              if (not Assigned(PanelEnableHook)) or
+                 (not PanelEnableHook(upd.Target, upd.ControlId, upd.Enabled)) then
+                 begin
+                 Windows.EnableWindow(Windows.GetDlgItem(upd.Target, upd.ControlId),
+                                      upd.Enabled);
+                 end;
               end;
            end;
          end;

@@ -1167,30 +1167,38 @@ begin
          end;
       if rig.CurrentStatus.VFOStatus = VFOA then
          begin
-         PostControlEnable(GetDlgItem(h, 102), True);
-         PostControlEnable(GetDlgItem(h, 104), False);
+         PostPanelEnable(h, 102, True);
+         PostPanelEnable(h, 104, False);
          end;
       if rig.CurrentStatus.VFOStatus = VFOB then
          begin
-         PostControlEnable(GetDlgItem(h, 104), True);
-         PostControlEnable(GetDlgItem(h, 102), False);
+         PostPanelEnable(h, 104, True);
+         PostPanelEnable(h, 102, False);
          end;
       if rig.CurrentStatus.VFOStatus = vfoUnknown then
          begin
-         PostControlEnable(GetDlgItem(h, 104), True);
-         PostControlEnable(GetDlgItem(h, 102), True);
+         PostPanelEnable(h, 104, True);
+         PostPanelEnable(h, 102, True);
          end;
       rig.CurrentStatus.PrevVFOStatus := rig.CurrentStatus.VFOStatus;
       end;
 
    // THESE RUN ON EVERY POLL -- rates go down to 10 ms -- and they were three
    // unconditional cross-thread EnableWindow calls, each of which blocked this
-   // radio thread until the UI serviced it. PostControlEnable coalesces: a
-   // value equal to the last one posted is dropped, so a steady state costs
-   // nothing and only a real RIT/XIT/SPLIT change reaches the main thread.
-   PostControlEnable(rig.RITWndHandle, rig.CurrentStatus.RIT);
-   PostControlEnable(rig.XITWndHandle, rig.CurrentStatus.XIT);
-   PostControlEnable(rig.SplitWndHandle, rig.CurrentStatus.Split);
+   // radio thread until the UI serviced it. PostPanelEnable coalesces: a value
+   // equal to the last one posted is dropped, so a steady state costs nothing
+   // and only a real RIT/XIT/SPLIT change reaches the main thread.
+   //
+   // BY CONTROL ID (121/122/123), not by the handles in rig.RITWndHandle and
+   // friends: the panel is an LCL form and its labels have no window handle to
+   // pass.  Same three controls, addressed the way the text updates already
+   // were.
+   if h <> 0 then
+      begin
+      PostPanelEnable(h, 121, rig.CurrentStatus.RIT);
+      PostPanelEnable(h, 122, rig.CurrentStatus.XIT);
+      PostPanelEnable(h, 123, rig.CurrentStatus.Split);
+      end;
 
    // Drive the split warning from confirmed radio state, not from CallWindowChange.
    // CallWindowChange fires before CurrentStatus.Split is updated, causing the

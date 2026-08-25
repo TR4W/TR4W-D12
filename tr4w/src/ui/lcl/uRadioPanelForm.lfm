@@ -1,0 +1,108 @@
+object frmRadioPanel: TfrmRadioPanel
+  Left = 0
+  Top = 0
+  BorderStyle = bsSizeToolWin
+  Caption = 'Radio'
+  ClientHeight = 100
+  ClientWidth = 195
+  KeyPreview = True
+  OnClose = HandleClose
+  OnKeyDown = HandleKeyDown
+  object lblVFOACaption: TLabel
+    Left = 5
+    Height = 23
+    Top = 5
+    Width = 45
+    AutoSize = False
+    Caption = 'VFO A'
+  end
+  object lblVFOBCaption: TLabel
+    Left = 5
+    Height = 23
+    Top = 30
+    Width = 45
+    AutoSize = False
+    Caption = 'VFO B'
+  end
+  object lblVFOA: TLabel
+    Left = 50
+    Height = 23
+    Top = 5
+    Width = 100
+    Alignment = taCenter
+    AutoSize = False
+    Font.Height = -16
+    Font.Style = [fsBold]
+    ParentFont = False
+  end
+  object lblVFOB: TLabel
+    Left = 50
+    Height = 23
+    Top = 30
+    Width = 100
+    Alignment = taCenter
+    AutoSize = False
+    Font.Height = -16
+    Font.Style = [fsBold]
+    ParentFont = False
+  end
+  object lblModeA: TLabel
+    Left = 152
+    Height = 23
+    Top = 5
+    Width = 40
+    AutoSize = False
+  end
+  object lblModeB: TLabel
+    Left = 152
+    Height = 23
+    Top = 30
+    Width = 40
+    AutoSize = False
+  end
+  object lblRITFreq: TLabel
+    Left = 5
+    Height = 20
+    Top = 55
+    Width = 45
+    Alignment = taCenter
+    AutoSize = False
+  end
+  object lblRIT: TLabel
+    Left = 50
+    Height = 20
+    Top = 55
+    Width = 45
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'RIT'
+  end
+  object lblXIT: TLabel
+    Left = 95
+    Height = 20
+    Top = 55
+    Width = 45
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'XIT'
+  end
+  object lblSplit: TLabel
+    Left = 140
+    Height = 20
+    Top = 55
+    Width = 50
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'SPLIT'
+  end
+  object lblStatus: TLabel
+    Left = 5
+    Height = 20
+    Top = 78
+    Width = 185
+    Anchors = [akTop, akLeft, akRight]
+    AutoSize = False
+    Font.Color = clRed
+    ParentFont = False
+  end
+end

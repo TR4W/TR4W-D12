@@ -81,6 +81,7 @@ implementation
 
 uses
   uMainForm,   { the main window's elements are LCL controls }
+  uRadioPanelForm,   { RadioPanelsRefreshActive -- the panels are forms }
   uRadioPolling,
   uRadioRegistry,   // the rc* capability members (re-exported for using units)
   LOGSUBS2,
@@ -666,14 +667,11 @@ begin
   DisplayRadio(ActiveRadio);
   DisplayBandMode(ActiveBand, ActiveMode, False);
   UpdateTotals2;
-  if Radio1.tRadioInterfaceWndHandle <> 0 then
-     begin
-     InvalidateRect(Radio1.tRadioInterfaceWndHandle, nil, True);
-     end;
-  if Radio2.tRadioInterfaceWndHandle <> 0 then
-     begin
-     InvalidateRect(Radio2.tRadioInterfaceWndHandle, nil, True);
-     end;
+  // THE ACTIVE-RADIO TINT.  These were two InvalidateRects, which worked
+  // because the panels were dialogs and repainting re-ran WM_CTLCOLORDLG.  The
+  // panels are LCL forms now and the tint is a property, so the form is asked
+  // to recompute it instead.
+  RadioPanelsRefreshActive;
 
   wkSetKeyerOutput(ActiveRadioPtr);
   if ycccActive then

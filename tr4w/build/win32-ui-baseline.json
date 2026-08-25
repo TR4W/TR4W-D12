@@ -1,5 +1,5 @@
 ﻿{
-    "type.HWND":  627,
+    "type.HWND":  632,
     "array.wh":  45,
     "CreateModalDialog":  12,
     "tDialogBox":  8,
@@ -7,7 +7,7 @@
     "CreateDialogIndirectParam":  2,
     "CreateDialogParam":  0,
     "CreateWindowEx":  20,
-    "TF.CreateStatic":  16,
+    "TF.CreateStatic":  10,
     "TF.CreateButton":  16,
     "TF.CreateEdit":  8,
     "TF.CreateComboBox":  4,

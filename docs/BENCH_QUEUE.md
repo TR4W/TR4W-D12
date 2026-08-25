@@ -1457,6 +1457,42 @@ key. Suppressed now while a modal form is active.
 
 ---
 
+
+### 44. The radio panels are LCL forms -- and colour used to mean state
+
+Converted 2026-08-25.  Everything here needs a rig on the bench; none of it is
+provable by the unit tests, the lints or the corpus.
+
+- [ ] **Both VFO rows track the rig**, on Radio 1 and Radio 2, and the
+      **RIT figure** and **both mode labels** with them.  These five writes were
+      raw cross-thread `SetDlgItemText` / `SetWindowText` until the commit
+      before this one; they now travel through `uPanelUpdate`.
+- [ ] **The INACTIVE VFO row is greyed.**  102/104 really do mean
+      enabled/disabled, and a `TLabel` greys natively.
+- [ ] **RIT / XIT / SPLIT go YELLOW when the rig has them on.**  THIS IS THE
+      ONE TO WATCH.  The dialog got the colour by returning a yellow brush from
+      `WM_CTLCOLORSTATIC` for an ENABLED control, so `EnableWindow` was doing
+      two jobs at once -- recording the rig state AND colouring the label.  An
+      LCL label has no such coupling, so the flag is explicit state now and the
+      colour follows from it.  Behaviour-preserving, and no compiler can check
+      that claim.
+- [ ] **The ACTIVE radio's panel is tinted light blue**, and the tint MOVES when
+      the active radio changes.  That was two `InvalidateRect` calls in
+      `LOGSUBS1` making `WM_CTLCOLORDLG` run again; it is
+      `RadioPanelsRefreshActive` now.
+- [ ] **The status line still shows connection failures in red** -- the
+      `AUTH FAILED` path in `uRadioPolling`.
+- [ ] **Both panels remember their position** across a close and reopen, and
+      across a restart (the `BoundsRect` fix, section 43).
+- [ ] **Escape closes each panel**, which a `DialogBox` gave away free.
+
+**Watch the poll cost.**  `PostPanelEnable` coalesces on (panel, control id) and
+the RIT/XIT/SPLIT posts run on EVERY poll, at rates down to 10 ms.  A steady
+state should cost nothing.  If the UI feels heavy with two rigs polling fast,
+that is the first place to look.
+
+---
+
 ## Findings — bench run 2026-08-20 (NY4I)
 
 Defects found while working the list above. **A finding is not a checklist item.** They

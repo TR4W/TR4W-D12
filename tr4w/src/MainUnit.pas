@@ -543,6 +543,7 @@ uses
   uHamScoreForm,           // CreateTR4WHamScoreWindow
   uIntercomForm,           // CreateTR4WIntercomWindow
   uMP3RecorderForm,        // CreateTR4WMP3RecorderWindow
+  uRadioPanelForm,         // CreateTR4WRadioPanelWindow -- both radios
   uRemMultsForm,       // CreateTR4WRemMultsWindow -- all five mult windows
   uFunctionKeysForm,   // CreateTR4WFunctionKeysWindow -- the first LCL tool window a TForm now -- CreateTR4WMainForm
   uPrefsForm,       // the PREF command -- the radio Preferences window
@@ -2444,10 +2445,8 @@ begin
   // No WndProcAdr for any of the five remaining-multiplier windows: they are
   // LCL forms as of 2026-08-24.
   tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndProcAdr := @TelnetWndDlgProc;
-  tr4w_WindowsArray[tw_RADIOINTERFACEWINDOW1_INDEX].WndProcAdr :=
-    @RadioInterfaceWindowDlgProc;
-  tr4w_WindowsArray[tw_RADIOINTERFACEWINDOW2_INDEX].WndProcAdr :=
-    @RadioInterfaceWindowDlgProc;
+  // Neither radio panel has a WndProcAdr: they are two instances of one LCL
+  // form (uRadioPanelForm) and OpenTR4WWindow reaches them directly.
   tr4w_WindowsArray[tw_NETWINDOW_INDEX].WndProcAdr := @NetDlgProc;
   // tw_INTERCOMWINDOW_INDEX has no WndProcAdr: it is an LCL form
   // (uIntercomForm) and OpenTR4WWindow reaches it directly.
@@ -5549,6 +5548,13 @@ begin
      h := CreateTR4WRemMultsWindow(ID);
      lclForm := RemMultsForm(ID);
      end
+  else if (ID = tw_RADIOINTERFACEWINDOW1_INDEX) or
+          (ID = tw_RADIOINTERFACEWINDOW2_INDEX) then
+     begin
+     // TWO INSTANCES of one form -- an SO2R station has both open.
+     h := CreateTR4WRadioPanelWindow(ID);
+     lclForm := RadioPanelForm(ID);
+     end
   else if ID = tw_MP3RECORDER then
      begin
      h := CreateTR4WMP3RecorderWindow;
@@ -5657,17 +5663,25 @@ begin
   if Radio <> nil then
      begin
      Radio.tRadioInterfaceWndHandle := h;
-     Radio.RITWndHandle := Windows.GetDlgItem(h, 121);
-     Radio.XITWndHandle := Windows.GetDlgItem(h, 122);
-     Radio.SplitWndHandle := Windows.GetDlgItem(h, 123);
+
+     // NO CONTROL HANDLES ARE TAKEN HERE ANY MORE.  They were GetDlgItem(h,
+     // 121..123) and GetDlgItem(h, 105..106), handed to uRadioPolling so it
+     // could post against them.  The panel is an LCL form now and its labels
+     // are TGraphicControls, which HAVE NO WINDOW HANDLE -- so every update
+     // travels as (panel, control id) instead, the way the text always did.
 
      // The mode labels (Issue #566) are 105 and 106, and they are built by
      // uRadio12 alongside every other control on this panel. They used to be
      // created HERE instead -- thirty lines of GetWindowRect / ScreenToClient
      // arithmetic against controls another unit had just placed, inside the
      // generic opener that has no other business knowing what a radio is.
-     Radio.ModeVFOAWndHandle := Windows.GetDlgItem(h, 105);
-     Radio.ModeVFOBWndHandle := Windows.GetDlgItem(h, 106);
+     // Still assigned, because uRadioPolling tests them for zero as its "is
+     // the panel open" guard.  They are no longer the route to the controls.
+     Radio.RITWndHandle      := h;
+     Radio.XITWndHandle      := h;
+     Radio.SplitWndHandle    := h;
+     Radio.ModeVFOAWndHandle := h;
+     Radio.ModeVFOBWndHandle := h;
 
      // CAPTION: the localized label plus the rig, e.g. "Radio 1 K4" (NY4I,
      // 2026-08-20). The generic caption a few lines up is the MENU text, which
