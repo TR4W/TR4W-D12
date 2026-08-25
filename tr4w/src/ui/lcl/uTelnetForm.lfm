@@ -1,0 +1,147 @@
+object frmTelnet: TfrmTelnet
+  Left = 0
+  Top = 0
+  BorderStyle = bsSizeToolWin
+  Caption = 'Telnet'
+  ClientHeight = 344
+  ClientWidth = 977
+  KeyPreview = True
+  OnClose = HandleClose
+  OnResize = HandleResize
+  OnShow = HandleShow
+  OnKeyDown = HandleKeyDown
+  object pnlToolbar: TPanel
+    Left = 0
+    Height = 30
+    Top = 0
+    Width = 977
+    Align = alTop
+    BevelOuter = bvNone
+    ClientHeight = 30
+    ClientWidth = 977
+    TabOrder = 0
+    object btnConnect: TButton
+      Left = 4
+      Height = 24
+      Top = 3
+      Width = 78
+      Caption = 'Connect'
+      OnClick = ConnectClick
+      TabOrder = 0
+    end
+    object btnDisconnect: TButton
+      Left = 86
+      Height = 24
+      Top = 3
+      Width = 88
+      Caption = 'Disconnect'
+      OnClick = DisconnectClick
+      TabOrder = 1
+    end
+    object btnFreeze: TButton
+      Left = 178
+      Height = 24
+      Top = 3
+      Width = 70
+      Caption = 'Freeze'
+      OnClick = FreezeClick
+      TabOrder = 2
+    end
+    object btnClear: TButton
+      Left = 252
+      Height = 24
+      Top = 3
+      Width = 62
+      Caption = 'Clear'
+      OnClick = ClearClick
+      TabOrder = 3
+    end
+    object btnCommands: TButton
+      Left = 318
+      Height = 24
+      Top = 3
+      Width = 88
+      Caption = 'Commands'
+      OnClick = CommandsClick
+      TabOrder = 4
+    end
+    object btnShow50: TButton
+      Left = 410
+      Height = 24
+      Top = 3
+      Width = 70
+      Caption = 'SH/50'
+      OnClick = Show50Click
+      TabOrder = 5
+    end
+  end
+  object pnlEntry: TPanel
+    Left = 0
+    Height = 30
+    Top = 30
+    Width = 977
+    Align = alTop
+    BevelOuter = bvNone
+    ClientHeight = 30
+    ClientWidth = 977
+    TabOrder = 1
+    object cboHost: TComboBox
+      Left = 4
+      Height = 23
+      Top = 3
+      Width = 160
+      ItemHeight = 15
+      TabOrder = 0
+      Text = ''
+    end
+    object cboCommand: TComboBox
+      Left = 170
+      Height = 23
+      Top = 3
+      Width = 740
+      Anchors = [akTop, akLeft, akRight]
+      Enabled = False
+      ItemHeight = 15
+      OnKeyDown = CommandKeyDown
+      TabOrder = 1
+      Text = ''
+    end
+    object btnSend: TButton
+      Left = 916
+      Height = 23
+      Top = 3
+      Width = 57
+      Anchors = [akTop, akRight]
+      Caption = 'Send'
+      Default = True
+      Enabled = False
+      OnClick = SendClick
+      TabOrder = 2
+    end
+  end
+  object lstConsole: TListBox
+    Left = 0
+    Height = 284
+    Top = 60
+    Width = 977
+    Align = alClient
+    DoubleBuffered = True
+    Font.Height = -12
+    Font.Name = 'Lucida Console'
+    Font.Pitch = fpFixed
+    ItemHeight = 15
+    OnDblClick = ConsoleDblClick
+    OnDrawItem = ConsoleDrawItem
+    ParentFont = False
+    ScrollWidth = 2000
+    Style = lbOwnerDrawFixed
+    TabOrder = 2
+  end
+  object popCommands: TPopupMenu
+  end
+  object tmrResize: TTimer
+    Enabled = False
+    Interval = 80
+    OnTimer = ResizeSettled
+  end
+end

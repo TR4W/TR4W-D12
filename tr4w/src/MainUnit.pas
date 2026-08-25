@@ -537,6 +537,7 @@ uses
   uStateBridge,        // InstallStateBridge -- the domain/UI crossing
   uMainThreadWork,     // mtMainWindowElementColors
   uStationsForm,       // CreateTR4WStationsWindow -- the stations tool window
+  uTelnetForm,         // CreateTR4WTelnetWindow -- the DX cluster tool window
   uDupeSheetForm,      // CreateTR4WDupeSheetWindow -- both dupe sheets
   uMasterForm,             // CreateTR4WMasterWindow -- the SCP window
   uPostScoresForm,         // CreateTR4WPostScoresWindow
@@ -2445,7 +2446,6 @@ begin
   // No WndProcAdr for the SCP window: it is an LCL form as of 2026-08-24.
   // No WndProcAdr for any of the five remaining-multiplier windows: they are
   // LCL forms as of 2026-08-24.
-  tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndProcAdr := @TelnetWndDlgProc;
   // Neither radio panel has a WndProcAdr: they are two instances of one LCL
   // form (uRadioPanelForm) and OpenTR4WWindow reaches them directly.
   // tw_NETWINDOW_INDEX has no WndProcAdr: it is an LCL form (uNetworkForm).
@@ -4414,34 +4414,22 @@ begin
 
     menu_ctrl_cursorintelnet:
       begin
-        if TelnetListBox = 0 then
+        { WAS: SetFocus on a raw handle, then LB_GETCURSEL / LB_GETTOPINDEX /
+          LB_GETCOUNT / LB_SETCURSEL to work out where to put the selection.
+          The view says what those four were asking for. }
+        if not TelnetConsoleHasFocus then
            begin
-           Exit;
-           end;
-
-        // if tr4w_CallWindowActive or tr4w_ExchangeWindowActive then
-        {?}
-        // if ActiveMainWindow in [awExchangeWindow, awCallWindow] then
-        if Windows.GetFocus <> TelnetListBox then
-           begin
-           Windows.SetFocus(TelnetListBox);
-           LowordWparam := Windows.SendMessage(TelnetListBox, LB_GETCURSEL, 0,
-             0);
-           if (LowordWparam = LB_ERR) or (LowordWparam <
-             Windows.SendMessage(TelnetListBox, LB_GETTOPINDEX, 0, 0)) then
+           TelnetFocusConsole;
+           if TelnetConsoleSelectForEntry then
               begin
-              LowordWparam := Windows.SendMessage(TelnetListBox, LB_GETCOUNT, 0, 0)
-                - 1;
-              Windows.SendMessage(TelnetListBox, LB_SETCURSEL, LowordWparam, 0);
               ActiveMainWindow := awUnknown;
               end;
            end
         else
            begin
            FrmSetFocus;
-           Exit;
            end;
-
+        Exit;
       end;
 
     menu_ctrl_incAQSLinterval:
@@ -5061,14 +5049,17 @@ label
 begin
   tDispalyOnAirTime;
   TempHWND := Windows.GetFocus;
-  if {TempHWND}Windows.GetParent(TempHWND) = TelnetCommandWindow then
+
+  // ENTER IN THE TELNET COMMAND BOX SENDS.  Was a GetParent comparison against
+  // the combo's raw handle -- a combo box being two windows is why the parent
+  // and not the handle itself -- followed by a synthesised WM_COMMAND 104.
+  if TelnetCommandHasFocus then
      begin
      // Was `TelnetSock <> 0`.  The raw socket handle is gone; ask uTelnet
      // whether the cluster link is up (uDXClusterClient owns the socket).
-     if TelnetIsConnected then
+     if TelnetIsConnected and Assigned(TelnetFormOnSend) then
         begin
-        PostMessage(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle,
-          WM_COMMAND, 104, TempHWND);
+        TelnetFormOnSend;
         end;
      Exit;
      end;
@@ -5086,10 +5077,18 @@ begin
      Exit;
      end;
 
-  if TempHWND = TelnetListBox then
+  // ENTER ON A CONSOLE LINE TUNES TO IT, and it is the same action the double
+  // click runs.  This used to PostMessage a hand-assembled WM_COMMAND -- 131173
+  // is LBN_DBLCLK in the high word over the list box's control id -- to reach
+  // the dialog procedure's double-click arm.  Same idiom the band map shed just
+  // above, and for the same reason: synthesising a notification in order to
+  // reach a routine means there was no way to call it.
+  if TelnetConsoleHasFocus then
      begin
-     PostMessage(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle, WM_COMMAND,
-       131173, TempHWND);
+     if (TelnetConsoleSelected >= 0) and Assigned(TelnetFormOnConsoleDblClick) then
+        begin
+        TelnetFormOnConsoleDblClick(TelnetConsoleSelected);
+        end;
      Exit;
      end;
 
@@ -5540,6 +5539,11 @@ begin
      begin
      h := CreateTR4WStationsWindow;
      lclForm := TR4WStationsForm;
+     end
+  else if ID = tw_TELNETWINDOW_INDEX then
+     begin
+     h := CreateTR4WTelnetWindow;
+     lclForm := TR4WTelnetForm;
      end
   else if (ID = tw_REMMULTSWINDOW_INDEX)  or
           (ID = tw_STATIONS_RM_DX)        or
