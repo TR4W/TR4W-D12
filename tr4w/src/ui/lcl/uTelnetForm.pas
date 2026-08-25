@@ -53,18 +53,19 @@ interface
 
 uses
    Classes, SysUtils, LCLType, Forms, Controls, StdCtrls, ExtCtrls, Menus,
-   Graphics,
+   Buttons, ImgList, Graphics,
+   LResources,   { LazarusResources -- the toolbar glyphs, compiled in by lazres }
    uTelnet;   { TelnetStringType -- see the unit header }
 
 type
    TfrmTelnet = class(TForm)
       pnlToolbar: TPanel;
-      btnConnect: TButton;
-      btnDisconnect: TButton;
-      btnFreeze: TButton;
-      btnClear: TButton;
-      btnCommands: TButton;
-      btnShow50: TButton;
+      btnConnect: TBitBtn;
+      btnDisconnect: TBitBtn;
+      btnFreeze: TBitBtn;
+      btnClear: TBitBtn;
+      btnCommands: TBitBtn;
+      btnShow50: TBitBtn;
       pnlEntry: TPanel;
       cboHost: TComboBox;
       cboCommand: TComboBox;
@@ -72,6 +73,7 @@ type
       lstConsole: TListBox;
       popCommands: TPopupMenu;
       tmrResize: TTimer;
+      procedure HandleCreate(Sender: TObject);
       procedure HandleClose(Sender: TObject; var CloseAction: TCloseAction);
       procedure HandleShow(Sender: TObject);
       procedure HandleResize(Sender: TObject);
@@ -91,6 +93,13 @@ type
       procedure ConsoleDblClick(Sender: TObject);
       procedure MenuItemClick(Sender: TObject);
       procedure AttachCommandHandler(const aItem: TMenuItem);
+   private
+      { BUILT IN CODE, NOT DESIGNED.  It carries no designed content -- the
+        glyphs are added from the compiled-in resource at create -- so putting
+        it in the .lfm would only add a component the designer cannot show and
+        the lfm lint cannot check.  Private, so it is not a published field
+        without a component. }
+      FToolbarImages: TImageList;
    end;
 
 { The toolbar command ids.  DELIBERATELY the same numbers the Win32 toolbar
@@ -221,6 +230,54 @@ begin
 
    OwnFormByMainWindow(TR4WTelnetForm);
    Result := TR4WTelnetForm.Handle;
+end;
+
+{ THE TOOLBAR GLYPHS.
+
+  NY4I drew these; they arrive as 24x24 PNGs with alpha, compiled into the
+  binary by lazres (tr4w/res/telnet -> telneticons.lrs, included below).  NO
+  RUNTIME FILES: a missing glyph would be a silently blank button on somebody
+  else's machine.
+
+  24 PIXELS AND THE FRAMES CROPPED OFF, both deliberate.  At 16 px Connect and
+  Disconnect are the same grey blob -- the whole difference between them is a
+  green arrow pointing right versus a red one pointing left, which is about
+  three pixels at that size, and "am I connected" is exactly what the icon has
+  to answer at a glance.  The source art also drew its own rounded-rect button
+  face, which inside a real button reads as a button drawn in a button.
+
+  TImageList AND NOT Glyph, because Glyph is a TBitmap and assigning a PNG to
+  one loses the alpha.  TBitBtn.Images/ImageIndex composites it properly.
+
+  SH/50 HAS NO GLYPH -- only five were drawn.  It keeps its caption alone, which
+  is legitimate: the label IS the whole meaning of that button, unlike a plug or
+  a snowflake.  Add a sixth to res	elnet and one line here if that changes. }
+procedure TfrmTelnet.HandleCreate(Sender: TObject);
+
+   procedure AddGlyph(const aName: string; const aButton: TBitBtn);
+   var
+      png: TPortableNetworkGraphic;
+   begin
+      png := TPortableNetworkGraphic.Create;
+      try
+         png.LoadFromLazarusResource(aName);
+         aButton.Images := FToolbarImages;
+         aButton.ImageIndex := FToolbarImages.Add(png, nil);
+      finally
+         png.Free;
+      end;
+   end;
+
+begin
+   FToolbarImages := TImageList.Create(Self);
+   FToolbarImages.Width := 24;
+   FToolbarImages.Height := 24;
+
+   AddGlyph('connect',    btnConnect);
+   AddGlyph('disconnect', btnDisconnect);
+   AddGlyph('freeze',     btnFreeze);
+   AddGlyph('clear',      btnClear);
+   AddGlyph('commands',   btnCommands);
 end;
 
 procedure TfrmTelnet.HandleClose(Sender: TObject; var CloseAction: TCloseAction);
@@ -843,5 +900,9 @@ begin
             Point(0, TR4WTelnetForm.btnCommands.Height));
    TR4WTelnetForm.popCommands.PopUp(pt.X, pt.Y);
 end;
+
+initialization
+
+{$I telneticons.lrs}
 
 end.

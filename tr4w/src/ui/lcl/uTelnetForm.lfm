@@ -7,69 +7,70 @@ object frmTelnet: TfrmTelnet
   ClientWidth = 977
   KeyPreview = True
   OnClose = HandleClose
+  OnCreate = HandleCreate
   OnResize = HandleResize
   OnShow = HandleShow
   OnKeyDown = HandleKeyDown
   object pnlToolbar: TPanel
     Left = 0
-    Height = 30
+    Height = 32
     Top = 0
     Width = 977
     Align = alTop
     BevelOuter = bvNone
-    ClientHeight = 30
+    ClientHeight = 32
     ClientWidth = 977
     TabOrder = 0
-    object btnConnect: TButton
+    object btnConnect: TBitBtn
       Left = 4
-      Height = 24
-      Top = 3
-      Width = 78
+      Height = 28
+      Top = 2
+      Width = 104
       Caption = 'Connect'
       OnClick = ConnectClick
       TabOrder = 0
     end
-    object btnDisconnect: TButton
-      Left = 86
-      Height = 24
-      Top = 3
-      Width = 88
+    object btnDisconnect: TBitBtn
+      Left = 108
+      Height = 28
+      Top = 2
+      Width = 116
       Caption = 'Disconnect'
       OnClick = DisconnectClick
       TabOrder = 1
     end
-    object btnFreeze: TButton
-      Left = 178
-      Height = 24
-      Top = 3
-      Width = 70
+    object btnFreeze: TBitBtn
+      Left = 224
+      Height = 28
+      Top = 2
+      Width = 98
       Caption = 'Freeze'
       OnClick = FreezeClick
       TabOrder = 2
     end
-    object btnClear: TButton
-      Left = 252
-      Height = 24
-      Top = 3
-      Width = 62
+    object btnClear: TBitBtn
+      Left = 322
+      Height = 28
+      Top = 2
+      Width = 90
       Caption = 'Clear'
       OnClick = ClearClick
       TabOrder = 3
     end
-    object btnCommands: TButton
-      Left = 318
-      Height = 24
-      Top = 3
-      Width = 88
+    object btnCommands: TBitBtn
+      Left = 412
+      Height = 28
+      Top = 2
+      Width = 116
       Caption = 'Commands'
       OnClick = CommandsClick
       TabOrder = 4
     end
-    object btnShow50: TButton
-      Left = 410
-      Height = 24
-      Top = 3
-      Width = 70
+    object btnShow50: TBitBtn
+      Left = 528
+      Height = 28
+      Top = 2
+      Width = 92
       Caption = 'SH/50'
       OnClick = Show50Click
       TabOrder = 5
@@ -78,7 +79,7 @@ object frmTelnet: TfrmTelnet
   object pnlEntry: TPanel
     Left = 0
     Height = 30
-    Top = 30
+    Top = 32
     Width = 977
     Align = alTop
     BevelOuter = bvNone
@@ -121,8 +122,8 @@ object frmTelnet: TfrmTelnet
   end
   object lstConsole: TListBox
     Left = 0
-    Height = 284
-    Top = 60
+    Height = 282
+    Top = 62
     Width = 977
     Align = alClient
     DoubleBuffered = True
