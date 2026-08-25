@@ -320,7 +320,7 @@ begin
          end;
       end;
 
-   RunProgram(string(PAnsiChar(@Config.DVKRecorder[1])), [path]);
+   RunProgram(string(Config.DVKRecorder), [path]);
 end;
 
 procedure TfrmEditMessage.SaveToConfig;

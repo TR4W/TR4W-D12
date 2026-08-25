@@ -1512,6 +1512,10 @@ type
    // through a typed cast instead of inline asm.
    TAdditionalProc = function: Boolean;
 var
+   { The command as a STRING, so the tests below are Pos() on a value with a
+     length rather than StrPos() on a pointer that runs to the first NUL.  See
+     the window/colour block for why the pointer form had to go. }
+   cmdText: string;
    i: integer;
    TempInteger: integer;
    TempInteger2: integer;
@@ -1554,24 +1558,34 @@ begin
       Exit;
       end;
 
-   // D12: @Command[1] is an untyped Pointer ({$TYPEDADDRESS OFF}), which makes
-   // StrPos resolve to the WIDE (PWideChar) overload and misread the ANSI bytes
-   // as UTF-16 -- so it never matches.  Cast to PAnsiChar to force the ANSI
-   // overload (same guard GetValueFromArray already uses for @CMD[1]).
-   if uAnsiStr.StrPos(PAnsiChar(@Command[1]), ' WINDOW ') <> nil then
+   { WAS StrPos(PAnsiChar(@Command[1]), ...), AND THE CAST WAS ITSELF A FIX.
+
+     The comment that used to be here explained that @Command[1] is an untyped
+     Pointer, so StrPos resolved to the WIDE overload and read the ANSI bytes as
+     UTF-16 -- it never matched, and PAnsiChar forced the right overload.  True,
+     and it fixed the symptom while leaving the shape: the address of a
+     ShortString's first character, read until a NUL that the string does not
+     carry.  NY4I, 2026-08-24: "this type of typecasting has no place in this
+     code base any longer."
+
+     A string has a length, Pos takes one, and there is no overload to pick
+     wrong.  Note StrPos(a, b) = a -- "b starts at the beginning of a" -- is
+     Pos(b, a) = 1. }
+   cmdText := string(pshortstring(Command)^);
+
+   if Pos(' WINDOW ', cmdText) > 0 then
       begin
       for TempElement := Low(TMainWindowElement) to High(TMainWindowElement)
          do
          begin
 
-         if uAnsiStr.StrPos(PAnsiChar(@Command[1]), TWindows[TempElement].mweName) =
-            PAnsiChar(@Command[1]) then
+         if Pos(string(TWindows[TempElement].mweName), cmdText) = 1 then
             begin
             TempByte := GetValueFromArray(@tr4wColorsSA,
                Byte(High(tr4wColors)), CustomCMD);
             if TempByte <> UNKNOWNTYPE then
                begin
-               if uAnsiStr.StrPos(PAnsiChar(@Command[1]), ' COLOR') <> nil then
+               if Pos(' COLOR', cmdText) > 0 then
                   begin
                   TWindows[TempElement].mweColor :=
                      tr4wColors(TempByte)
@@ -1594,7 +1608,7 @@ begin
          end;
       end;
 
-   if uAnsiStr.StrPos(PAnsiChar(@Command[1]), 'COLUMN WIDTH ') = PAnsiChar(@Command[1]) then
+   if Pos('COLUMN WIDTH ', cmdText) = 1 then
       begin
       // Match against the canonical (language-neutral) column name first.
       // Fall back to UpperCase(Text) so CFGs written before the canonical

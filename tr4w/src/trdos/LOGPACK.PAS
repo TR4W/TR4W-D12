@@ -771,7 +771,7 @@ begin
           else
             QuickDisplay(PacketString);
       }
-     QuickDisplay(string(PAnsiChar(@PacketString[1])));
+     QuickDisplay(string(PacketString));
      Exit;
 
      end;

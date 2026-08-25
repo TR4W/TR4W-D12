@@ -372,7 +372,7 @@ end;
 procedure scWINEXEC;
 begin
    logger.Info('[scWINEXEC] Calling WinExec with %s',[scFileName]);
-   if not RunWindowsUtility(string(PAnsiChar(@scFileName[1])), lwMinimised) then
+   if not RunWindowsUtility(string(scFileName), lwMinimised) then
       begin
       ShowSysErrorMessage('WINEXEC');
       end;
@@ -684,7 +684,7 @@ var
   cmdName                               : string;
   newValue                              : boolean;
 begin
-  cmdName := string(PAnsiChar(@scFileName[1]));
+  cmdName := string(scFileName);
 
   for i := 1 to CommandsArraySize do
     begin

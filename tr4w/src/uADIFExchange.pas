@@ -111,13 +111,13 @@ function FormatADIFMyExchange(
         cMyZone: integer;
         cMyState: string;
         cMyPark: string;
-        cMyName: PAnsiChar;
+        cMyName: string;
         // csName                                : PChar;
-        cMyFOCNumber: PAnsiChar;
-        cMyCheck: PAnsiChar;
+        cMyFOCNumber: string;
+        cMyCheck: string;
         // csCheck                               : integer {PChar};
         crFOCNr: PAnsiChar;
-        cMyGrid: PAnsiChar;
+        cMyGrid: string;
         csPower: PAnsiChar;
         // hisAge                                : Integer;
         csQTHString: PAnsiChar;
@@ -131,7 +131,6 @@ function FormatADIFMyExchange(
         // T3                                    : PChar;
         // T4                                    : PChar;      // 4.73.6
         // cKids                                 : PChar;
-        TempGrid: Str20;
         previousqsonr: integer;
         contacts: integer;
         PreviousQTHString: Str10;
@@ -162,32 +161,18 @@ function FormatADIFMyExchange(
         TempRXData: ContestExchange;
         GoodLookingQSO: boolean;
       begin
-      { ZEROED FIRST, AND THIS IS NOT DEFENSIVE PADDING.
+      { NO FillChar, BECAUSE NOTHING TAKES A POINTER INTO THESE ANY MORE.
 
-        Three arms take PAnsiChar(@MyName[1]) / @MyCheck[1] / @MyFOCNumber[1] of
-        a SHORTSTRING, which has no terminator -- the read runs to the first
-        zero byte after the text.  As unit-scope globals these were zero-filled
-        once at startup and stayed that way, so it worked.  As LOCALS they would
-        start as whatever was on the stack, and the arm would append stale bytes
-        to a name.
+        The first version of this unit zeroed every ShortString shadow, because
+        three arms took PAnsiChar(@MyName[1]) of one -- a ShortString has no
+        terminator, so the read ran to the first zero byte AFTER the text, and
+        as locals they would have started as stack garbage.  That is the defect
+        that once showed a radio called K3S as "K3Sio 2".
 
-        That is the exact defect this tree has already paid for once: a radio
-        called K3S displayed as "K3Sio 2", because PAnsiChar(@RadioName[1]) read
-        past its length into a longer previous value.  Moving these globals to
-        locals would have reintroduced it, silently, in an extraction whose
-        whole claim is that it changes nothing. }
-      FillChar(MyGrid, SizeOf(MyGrid), 0);
-      FillChar(MyName, SizeOf(MyName), 0);
-      FillChar(MyState, SizeOf(MyState), 0);
-      FillChar(MyPark, SizeOf(MyPark), 0);
-      FillChar(MyZone, SizeOf(MyZone), 0);
-      FillChar(MyCheck, SizeOf(MyCheck), 0);
-      FillChar(MyFDClass, SizeOf(MyFDClass), 0);
-      FillChar(MySection, SizeOf(MySection), 0);
-      FillChar(MyPrec, SizeOf(MyPrec), 0);
-      FillChar(MyFOCNumber, SizeOf(MyFOCNumber), 0);
-      FillChar(MyPostalCode, SizeOf(MyPostalCode), 0);
-
+        NY4I, 2026-08-24: "this type of typecasting has no place in this code
+        base any longer".  The casts are gone, so the hazard is gone, so the
+        zeroing is unnecessary -- which is the difference between removing a bug
+        and containing one. }
       MyGrid       := GridString(my.MyGrid);
       MyName       := Str20(my.MyName);
       MyState      := Str20(my.MyState);
@@ -203,14 +188,16 @@ function FormatADIFMyExchange(
       GoodLookingQSO := aGoodQSO;
       Result := 'Error generating my exchange';
       try
-        TempGrid := MyGrid;
-        // Issue #902 -- null-terminate after the actual grid length.
-        // Old code wrote #0 at byte 5 unconditionally; that silently truncated
-        // 6-char grids (e.g. EL88AA -> EL88) in the exported exchange field.
-        TempGrid[ length( MyGrid ) + 1 ] := #0;
-        cMyGrid                          := @TempGrid[ 1 ];
+        { NO NULL TERMINATOR, BECAUSE NOTHING READS ONE ANY MORE.
 
-        cMyName := @MyName[ 1 ];
+          This used to be: copy MyGrid to a scratch ShortString, poke #0 after
+          it, and take PAnsiChar(@TempGrid[1]).  Issue #902 was a bug INSIDE
+          that idiom -- the #0 went at byte 5 unconditionally, so EL88AA
+          exported as EL88.  A string has a length; the whole terminator dance,
+          and the class of bug that lives in it, goes with it. }
+        cMyGrid := string( MyGrid );
+
+        cMyName := string(MyName);
 
         cMyZone  := StrToIntDef( MyZone, 0 );
         cMyState := MyState;
@@ -314,9 +301,9 @@ function FormatADIFMyExchange(
                CID_TWO_BYTES[ 0 ] := TempRXData.Precedence;
                // csName := CID_TWO_BYTES;
 
-               cMyName := @MyPrec[ 1 ];
+               cMyName := string(MyPrec);
                // csCheck := {inttopchar}(TempRXData.Check);
-               cMyCheck := @MyCheck[ 1 ];
+               cMyCheck := string(MyCheck);
                // cMyState := @MySection[1];
 
                Result := sysutils.Format( '%-4d %s %s %-3s ',
@@ -326,7 +313,7 @@ function FormatADIFMyExchange(
              QSONumberNameDomesticOrDXQTHExchange:
                begin
                // csName := @TempRXData.Name[1];
-               cMyName := @MyName[ 1 ];
+               cMyName := string(MyName);
                if MyState = '' then
                   begin
                   cMyState := 'DX';
@@ -363,7 +350,7 @@ function FormatADIFMyExchange(
                csPower := @TempRXData.Power[ 1 ];
                if Contest = FOCMARATHON then
                   begin
-                  cMyFOCNumber := @MyFOCNumber[ 1 ];
+                  cMyFOCNumber := string(MyFOCNumber);
                   crFOCNr      := @TempRXData.Power[ 1 ];
                   Result       := sysutils.Format( '%-3d %-7s',
                      [ TempRXData.RSTSent, cMyFOCNumber ] );

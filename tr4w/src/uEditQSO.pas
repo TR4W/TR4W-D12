@@ -375,7 +375,7 @@ begin
 
    // The operator's own player, with the file as an ARGUMENT rather than
    // pasted into a command line -- see uPlatformProcess on quoting.
-   RunProgram(string(PAnsiChar(@Config.MP3Player[1])),
+   RunProgram(string(Config.MP3Player),
               [string(PAnsiChar(DeleteSlashes(MakeMP3Filename(@EditableQSORXData))))]);
 end;
 

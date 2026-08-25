@@ -120,6 +120,35 @@ foreach ($file in $Path) {
          continue
       }
 
+      # Rule C: PAnsiChar(@X[1]) -- the address of a ShortString's first
+      # character, handed to something that expects a terminator.
+      #
+      # A SHORTSTRING HAS NO TERMINATOR. The reader runs to the first zero byte
+      # AFTER the text, which is whatever happens to follow in memory. It works
+      # only by accident, when the source is a long-lived zero-filled global --
+      # and it stops working the moment that variable becomes a local, which is
+      # to say the moment somebody refactors near it.
+      #
+      # This tree has paid for it twice: a radio called K3S displayed as
+      # "K3Sio 2" (PAnsiChar(@RadioName[1]) reading past its length), and issue
+      # #902, which was a bug INSIDE the workaround for it -- code that copied a
+      # grid to a scratch ShortString and poked #0 after it put the zero at byte
+      # 5 unconditionally, so EL88AA exported as EL88.
+      #
+      # NY4I, 2026-08-24: "this type of typecasting has no place in this code
+      # base any longer". The fix is string(TheShortString); Format takes it
+      # directly. A genuine BYTE boundary takes its PAnsiChar from an AnsiString
+      # local held across the call, never from a ShortString.
+      #
+      # [1] specifically, not [0]: that index is the ShortString idiom. Byte
+      # arrays start at 0 and are not what this rule is about.
+      if ($code -match '\bPAnsiChar\s*\(\s*@[A-Za-z_][A-Za-z0-9_.\^]*\s*\[\s*1\s*\]') {
+         Write-Output ("{0}:{1}: PAnsiChar(@X[1]) of a ShortString has no terminator and reads past the length; use string(X), or '// lint:wide-ok' at a real byte boundary (line: {2})" -f $file, ($i + 1), $code.Trim())
+         $violations++
+         continue
+      }
+
+
       # Rule B: PChar(@...) -- casting an address to a (now wide) PChar.
       if ($code -match '\bPChar\s*\(\s*@') {
          Write-Output ("{0}:{1}: PChar(@...) casts an ANSI buffer to a 2-byte wide pointer; use PAnsiChar (or PByte), or add '// lint:wide-ok' if genuinely wide (line: {2})" -f $file, ($i + 1), $code.Trim())

@@ -121,7 +121,7 @@ begin
            end;
         if wParam = 106 then
            begin
-           OpenUrl(string(PAnsiChar(@Config.GetScoresSeverReadingAddress[1])));
+           OpenUrl(string(Config.GetScoresSeverReadingAddress));
            end;
 
 {$IFDEF LANG_RUS}

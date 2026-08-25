@@ -1810,6 +1810,8 @@ function ProcessDX(const Line: AnsiString; InListBox: boolean; var Stringtype:
 var
   MinuteOfDay: integer;
   ct: Cardinal;
+  { Held across the SendMessageA below -- see the note there. }
+  alertCall: AnsiString;
 begin
   Result := False;
   Stringtype := tstReceived;
@@ -1885,9 +1887,20 @@ begin
      SpotsList.AddSpot(TempSpot, True);
      end;
 
+  { A REAL Win32 BOUNDARY -- LB_FINDSTRINGEXACT wants a null-terminated
+    PAnsiChar -- BUT THE SOURCE WAS A SHORTSTRING, which has no terminator.  The
+    search therefore ran past the callsign into whatever followed FCall in the
+    spot record, and matched or missed accordingly.
+
+    An AnsiString HELD IN A LOCAL across the call is the supported way to reach
+    that boundary: it is terminated, and the local keeps it alive -- PAnsiChar of
+    a temporary would dangle under FPC, which this tree has already been bitten
+    by (see the radio-name note in uCallsigns.DisplayDupeSheet). }
   if telnet_callsign_alert_list_loaded then
+    begin
+    alertCall := AnsiString(TempSpot.FCall);
     if Windows.SendMessageA(TelnetCallsignAlertList, LB_FINDSTRINGEXACT, -1,
-      integer(PAnsiChar(@TempSpot.FCall[1]))) <> LB_ERR then
+      LPARAM(PAnsiChar(alertCall))) <> LB_ERR then
        begin
        Stringtype := tstAlert;
 
@@ -1898,6 +1911,7 @@ begin
 
        Tree.QuickBeep;
        end;
+    end;
 
   Result := True;
 end;
@@ -1933,7 +1947,7 @@ begin
        Call[length(Call) + 1] := #0;
        // Issue #997: asm wsprintf -> Format
        StrPCopy(wsprintfBuffer, SysUtils.Format(TC_FREQUENCYFORCALLINKHZ,
-         [string(PAnsiChar(@Call[1]))]));
+         [string(Call)]));
        TempFrequency := QuickEditFreq(wsprintfBuffer, 10);
        end;
   if TempFrequency <= 0 then
@@ -2119,7 +2133,7 @@ end;
 procedure EmunTRCLUSTERDAT(FileString: PShortString);
 begin
   tCB_ADDSTRING_PCHAR(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle, 102,
-    string(PAnsiChar(@FileString^[1])));
+    string(FileString^));
 end;
 
 procedure EmunDXCLUSTERALERTLISTTXT(FileString: PShortString);

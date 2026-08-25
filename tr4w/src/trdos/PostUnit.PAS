@@ -2090,8 +2090,8 @@ procedure ExportToEDIByBand( Band: BandType );
      sysutils.Format( '[REG1TEST;1]'#13#10 + 'TName=%s'#13#10 + 'PCall=%s'#13#10
      + 'PWWLo=%s'#13#10 + 'PBand=%s'#13#10 + 'RName=%s'#13#10 + 'PAdr1=%s'#13#10
      + 'PSect=%s'#13#10 + '[QSORecords;%u]'#13#10,
-     [ string( PAnsiChar( @ContestName[ 1 ] ) ),
-     string( PAnsiChar( @MyCall[ 1 ] ) ), string( PAnsiChar( @MyGrid[ 1 ] ) ),
+     [ string(ContestName),
+     string(MyCall), string(MyGrid),
      string( EDIFBANDSTRINGSARRAY[ Band ] ), string( PAnsiChar( @TempBuffer1 )
      ), string( PAnsiChar( @wsprintfBuffer ) ),
      string( PAnsiChar( @TempBuffer2 ) ), QSOTotals[ Band, Both ] ] ) );
@@ -2137,12 +2137,12 @@ procedure ExportToEDIByBand( Band: BandType );
            #13#10, [ TempRXData.tSysTime.qtYear, TempRXData.tSysTime.qtMonth,
            TempRXData.tSysTime.qtDay, TempRXData.tSysTime.qtHour,
            TempRXData.tSysTime.qtMinute,
-           string( PAnsiChar( @TempRXData.Callsign[ 1 ] ) ),
+           string(TempRXData.Callsign),
            EDI_ModeCodes[ TempRXData.Mode ], TempRXData.RSTSent,
            3 - Ord( TempRXData.NumberSent < 0 ), TempRXData.NumberSent,
            TempRXData.RSTReceived, 3 - Ord( TempRXData.NumberReceived < 0 ),
            TempRXData.NumberReceived,
-           string( PAnsiChar( @TempRXData.QTHString[ 1 ] ) ),
+           string(TempRXData.QTHString),
            TempRXData.QSOPoints, string( EDI_NewArray[ TempRXData.DomesticMult ]
            ), string( EDI_NewArray[ TempRXData.DXMult ] ),
            string( EDI_DupeArray[ TempRXData.ceDupe ] ) ] ) );
@@ -2486,7 +2486,7 @@ procedure ExportToCSV; // n4af 04/18/14 new procedure added
         // hour, minute, second, rst-sent, rst-rcvd, contest name.  %02d -> %.2d.
         sWriteFileFromString( tReportFileWrite,
            sysutils.Format( '%s,%s,%s,%u%.2d%.2d,%.2d%.2d%.2d,%u,%u,%s'#13#10,
-           [ string( PAnsiChar( @TempRXData.Callsign[ 1 ] ) ),
+           [ string(TempRXData.Callsign),
            string( ADIFBANDSTRINGSARRAY[ TempRXData.Band ] ),
            string( ADIFModeString[ TempRXData.Mode ] ), TempRXData.tSysTime.qtYear
            + 2000, TempRXData.tSysTime.qtMonth, TempRXData.tSysTime.qtDay,
@@ -2975,7 +2975,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                    TempRXData.tSysTime.qtYear + 2000, TempRXData.tSysTime.qtMonth,
                    TempRXData.tSysTime.qtDay, TempRXData.tSysTime.qtHour,
                    TempRXData.tSysTime.qtMinute,
-                   string( PAnsiChar( @MyCall[ 1 ] ) ) ] );
+                   string(MyCall) ] );
                 {
                 ActiveExchange := RSTQSONumberExchange;
                 nrReceived := StrToIntDef(TempRXData.ceClass, 0);
@@ -3000,7 +3000,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 FormatCabrilloExchange( ActiveExchange, Contest, ContestTitle,
                    ContestName, TempRXData, myStationEx, RSTSent,
                    RSTReceived, string( csQTHString ),
-                   string( PAnsiChar( @PreviousQTHString[ 1 ] ) ), contacts, pnr,
+                   string(PreviousQTHString), contacts, pnr,
                    CABRILLO_MYEX, CABRILLO_HISEX );
                 // ----------------------------
 
@@ -3058,13 +3058,13 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 // %02d -> %.2d (date/time), %04u -> %.4u (sent number).
                 if TempRXData.ceRecordKind = rkQTCR then
                    begin
-                   sCall1 := string( PAnsiChar( @MyCall[ 1 ] ) );
+                   sCall1 := string(MyCall);
                    sCall2 := string( HisCallsign );
                    end
                 else
                    begin
                    sCall1 := string( HisCallsign );
-                   sCall2 := string( PAnsiChar( @MyCall[ 1 ] ) );
+                   sCall2 := string(MyCall);
                    end;
                 sWriteFileFromString( tReportFileWrite,
                    sysutils.Format

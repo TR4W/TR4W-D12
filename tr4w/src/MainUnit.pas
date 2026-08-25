@@ -3601,7 +3601,7 @@ begin
      // tWM_SETFONT handed the control an HFONT; an LCL control paints from its
      // own TFont, so the SHAPE goes across instead.  These are the same three
      // numbers tCreateFont was given for MainFont.
-     SetElementFont(e, string(PAnsiChar(@MainFontName[1])),
+     SetElementFont(e, string(MainFontName),
                     ws - 2 + FontSize, BoldFont);
 
      SetElementColors(e,
@@ -3701,7 +3701,7 @@ begin
   wh[mwePossibleCall] := CreateTR4WPossibleCallList(
     0, EditableLogHeight + ws * 13 {line6}, MainWindowChildsWidth, ws,
     MainWindowPCLID, ws, 5 * ws {the old LB_SETCOLUMNWIDTH});
-  SetPossibleCallFont(string(PAnsiChar(@MainFontName[1])),
+  SetPossibleCallFont(string(MainFontName),
                       ws - 2 + FontSize, BoldFont);
 
   // The drawing is attached HERE, not in uMainForm: it reads PossibleCallList
@@ -4614,7 +4614,7 @@ begin
       begin
         // Windows ping: -w and -n are its spelling of timeout and count.
         RunWindowsUtility(SysUtils.Format('ping %s -w 2000 -n 10',
-                                          [string(PAnsiChar(@ServerAddress[1]))]));
+                                          [string(ServerAddress)]));
       end;
 
     menu_runserver:

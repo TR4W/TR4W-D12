@@ -2003,7 +2003,18 @@ begin
    // TLogger.GetInstance.Debug('Entering AddCommandToBuffer');
    if not PollingEnable then
       begin
-      WriteToCATPort(PAnsiChar(@CommandsTempBuffer[1])^, Ord(CommandsTempBuffer[0]) - 1);
+      { A REAL BYTE BOUNDARY, AND THE ONE SHAPE THE RULE ALLOWS.
+
+        This is NOT the banned idiom even though it matches its spelling.  The
+        pointer is DEREFERENCED (`^`) and handed to an untyped `var` parameter
+        together with an EXPLICIT LENGTH from the ShortString's own length byte,
+        so nothing ever looks for a terminator -- which is the entire hazard the
+        rule exists to remove.
+
+        Serial CAT framing must be byte-exact: a CI-V or Yaesu-binary command
+        corrupted by a string conversion fails silently.  Converting this to a
+        `string` would be the wrong direction. }
+      WriteToCATPort(PAnsiChar(@CommandsTempBuffer[1])^, Ord(CommandsTempBuffer[0]) - 1);   // lint:wide-ok
       // TLogger.GetInstance.Debug('Entering sleep(250)');
       Sleep(250);
       // TLogger.GetInstance.Debug('Returning from sleep(250)');
