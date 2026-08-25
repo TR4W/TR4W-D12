@@ -1338,7 +1338,11 @@ listener thread no longer names a widget.
       install for exactly that case, and it is the half most likely to be wrong.
 - [ ] **It does not flicker.** A heartbeat arrives every few seconds and setting
       the state to what it already holds must notify nobody.
-- [ ] **DISABLE WSJT-X IN PREFERENCES AND THE BOX GOES OUT.** Found on the bench
+- [x] **DISABLE WSJT-X IN PREFERENCES AND THE BOX GOES OUT. CONFIRMED
+      2026-08-24 (NY4I): "restarted it, box goes out now."** First bench
+      confirmation of the domain layer -- state object, notification, bridge and
+      view, end to end.
+      Original report and fix: Found on the bench
       2026-08-24 and fixed the same evening: `Stop` closed the sockets without
       telling `WSJTXState`, so the indicator stayed GREEN with nothing behind
       it. The state is cleared in `Stop` now, before the sockets close and
