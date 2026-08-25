@@ -25,7 +25,7 @@ at what they cover; this is the list of what they cannot see.
 
 ## Waiting now (as of 2026-08-24)
 
-**Sections 31-43 were added 2026-08-24 and are UNRUN.**  Section 37 is the
+**Sections 31-42 were added 2026-08-24 and are UNRUN.**  Section 37 is the
 biggest of them: the entire main window display changed. NY4I confirmed
 the dupe sheet window, the  [AGENT: Clicking on the X onm the Stations window doe snot close it.. Nor does hitting the accelertator key again like the other windows work] window and the entry-field colours on the
 bench that day, but was remote when the captions, the resize behaviours and
@@ -929,7 +929,7 @@ separate, deliberate step.
 underneath it. Design at `docs/BANDMAP_LCL_DESIGN.md` -- these are the three
 defects that were provable by reading and did not need the new form.
 
-- [ ] **THE BIG ONE -- spots no longer vanish while the band map has focus.**
+- [x] **THE BIG ONE -- spots no longer vanish while the band map has focus.**
   Connect to a cluster, click INTO the band map list and leave it focused
   for a minute or two on a busy node, then click away (or into the callsign
   window). **Every spot that arrived while you were looking should now be
@@ -938,16 +938,16 @@ defects that were provable by reading and did not need the new form.
   never filled by anything -- `InsertSpotBuffer` was declared, defined and
   never called. Cross-check against the telnet console, which always showed
   the lines.
-- [ ] **The rows still hold still while you have focus.** That half was
+- [x] **The rows still hold still while you have focus.** That half was
   deliberate and is kept -- the freeze now applies to the VIEW only. If the
   list starts re-sorting under the mouse, that is a regression.
-- [ ] **Ordinary spot flow is unchanged** -- new spots appear within about a
+- [x] **Ordinary spot flow is unchanged** -- new spots appear within about a
   quarter second, no more flashing than before, no less.
-- [ ] **The VFO cursor line still tracks the radio.** `uRadioPolling` used to
+- [x] **The VFO cursor line still tracks the radio.** `uRadioPolling` used to
   set a global flag; it now calls `SpotsList.RequestRepaint`.
 - [ ] **A logged QSO still turns its spot into a dupe**, and clearing the dupe
   sheet still un-dupes them.
-- [ ] **Deleting a spot** from the band map's context menu still works and the
+- [x] **Deleting a spot** from the band map's context menu still works and the
   list is intact afterwards -- `Delete` had `try ... finally
   CriticalSection.Leave` with **no matching `Enter`**, so it released a lock
   it never took. Fixed here. This is the one item where a latent
@@ -1007,7 +1007,7 @@ showed nothing at all.** Three separate things, and the log settled all of them.
   Windows will not answer "am I covered" reliably and guessing would trade
   a real repaint for a maybe-saved one.
 
-- [ ] **DX cluster logging was never broken** -- 56 `[Telnet RX]` lines were in
+- [x] **DX cluster logging was never broken** -- 56 `[Telnet RX]` lines were in
   that log, buried under the flood above. Nothing to fix; noted so it is
   not re-reported.
 
@@ -1038,7 +1038,7 @@ was visible to a lint or a unit test.
   form the seam built -- so the next tool window to convert inherits it.
   **The same note already existed on ShowTR4WMainForm**; it is the second
   time this has been discovered.
-- [ ] **Re-test the band map end to end** now those are fixed: resize wide and
+- [x] **Re-test the band map end to end** now those are fixed: resize wide and
   narrow (the columns reflow -- it is a newspaper layout, widening shows
   MORE spots), a spot arriving while a row is selected, a split spot that
   is also a dupe, double-click and Enter both tuning, Ctrl-End landing
@@ -1089,7 +1089,7 @@ it.** Four things that used to be answered by one loop are now answered by four
 different LCL mechanisms, and the failure mode of each is "a key does nothing"
 rather than a crash.
 
-- [ ] **EVERY MENU SHORTCUT.** All 101 rows of `ACCELERATORS` are now matched in
+- [x] **EVERY MENU SHORTCUT.** All 101 rows of `ACCELERATORS` are now matched in
   an `AddOnKeyDownBeforeHandler` instead of by `TranslateAccelerator`. Work
   down the menus and try the ones you actually use -- Alt+X, Ctrl+J,
   Ctrl+Alt+B, Ctrl+W, the Ctrl+Shift+digit window shortcuts. A shortcut that
@@ -1454,47 +1454,6 @@ key. Suppressed now while a modal form is active.
   specifically, not on "any form that is not the main window", because tool
   windows are separate forms too.
 - [ ] **And they still work from the main window itself.**
-
-
-### 43. Band map, checked against D7 side by side
-
-NY4I put the two band maps next to each other on the bench, 2026-08-24. Three
-differences and one open question.
-
-- [ ] **The flag letters are back: `M`, `S` and `D`.** The conversion kept the
-      FILLS and dropped two of the three letters -- a multiplier was a red block
-      with nothing in it, a dupe a yellow block. Restored against
-      `C:\TR4W uBandmap.pas:284-305`, including D7's precedence: mult sets the
-      red-to-white gradient and `M`; QSX overrides the LETTER to `S` and leaves
-      the fill; dupe overrides BOTH with yellow and `D`. **A dupe that is also
-      split must show `D`, not `S`.**
-- [ ] **The one-pixel gap between cells.** D7 insets every spot by
-      `Shift = 1` on all four sides after filling the item with window
-      background, so a callsign's black block never touches the next column's
-      red flag.
-- [ ] **D, M and B toggle from the band map window** without having to click
-      into the grid first. They were on the grid's own OnKeyUp, and the window
-      does not take focus when it opens (`OpenTR4WWindow` ends with
-      `FrmSetFocus`). Now on the form, which has KeyPreview.
-      **Also confirm the letters still TYPE normally into the callsign field
-      when the main window is active** -- that is the half a key-scope change
-      breaks.
-
-**Open question for NY4I -- callsign cell width.** NY4I: "You have fixed width
-calls. D7 has dynamic width calls." **D7's code does not appear to support
-that**: `CallsignRect` runs from just past the flag strip to the item's right
-edge (`uBandmap.pas:214-225`), and the item width is the fixed
-`BandMapItemWidth` (135) pushed through `LB_SETCOLUMNWIDTH` at `:367`. The one
-dynamic measurement is `FreqRectWidth`, computed once from
-`GetTextExtentPoint32('28888.8')` at `:198`. There is a commented-out
-`BandMapItemWidth := FreqRectWidth + 1 + CheckRectWidth + 1 + 65` at `:172`.
-The screenshot does show `GT8B...` ellipsised, which means the rect really is
-narrower than the text there -- so something is going on that the read did not
-find. **Worth settling before changing the layout.**
-
-**And a dead flag, found while looking:** `TfrmBandMap.FFrozen` is set by
-SpotsEnter and cleared by SpotsExit and **never read**. It was presumably meant
-to hold the refresh still while the operator browses the list. Not wired.
 
 ---
 

@@ -538,7 +538,9 @@ uses
   uMainThreadWork,     // mtMainWindowElementColors
   uStationsForm,       // CreateTR4WStationsWindow -- the stations tool window
   uDupeSheetForm,      // CreateTR4WDupeSheetWindow -- both dupe sheets
-  uMasterForm,         // CreateTR4WMasterWindow -- the SCP window
+  uMasterForm,             // CreateTR4WMasterWindow -- the SCP window
+  uPostScoresForm,         // CreateTR4WPostScoresWindow
+  uHamScoreForm,           // CreateTR4WHamScoreWindow
   uRemMultsForm,       // CreateTR4WRemMultsWindow -- all five mult windows
   uFunctionKeysForm,   // CreateTR4WFunctionKeysWindow -- the first LCL tool window a TForm now -- CreateTR4WMainForm
   uPrefsForm,       // the PREF command -- the radio Preferences window
@@ -2446,9 +2448,11 @@ begin
     @RadioInterfaceWindowDlgProc;
   tr4w_WindowsArray[tw_NETWINDOW_INDEX].WndProcAdr := @NetDlgProc;
   tr4w_WindowsArray[tw_INTERCOMWINDOW_INDEX].WndProcAdr := @IntercomDlgProc;
-  tr4w_WindowsArray[tw_POSTSCORESWINDOW_INDEX].WndProcAdr := @GetScoresDlgProc;
+  // tw_POSTSCORESWINDOW_INDEX has no WndProcAdr: it is an LCL form
+  // (uPostScoresForm) and OpenTR4WWindow reaches it directly.
   // Issue #783 Phase 4 -- HamScore RTC status window dialog
-  tr4w_WindowsArray[tw_HAMSCOREWINDOW_INDEX].WndProcAdr := @HamScoreDlgProc;
+  // tw_HAMSCOREWINDOW_INDEX has no WndProcAdr: it is an LCL form
+  // (uHamScoreForm) and OpenTR4WWindow reaches it directly.
   // No WndProcAdr for the stations window either: it is an LCL form as of
   // 2026-08-24 and OpenTR4WWindow's seam builds it.
   tr4w_WindowsArray[tw_MP3RECORDER].WndProcAdr := @MP3RecDlgProc;
@@ -2677,7 +2681,23 @@ begin
      begin
      TempBool := Windows.GetWindowRect(tr4w_WindowsArray[tipos].WndHandle,
        temprect);
-     tr4w_WindowsArray[tipos].WndVisible := TempBool;
+
+     // VISIBILITY IS ITS OWN QUESTION, asked of Windows rather than inferred
+     // from whether a rectangle could be read.
+     //
+     // The two used to be the same answer, and correctly so: every one of these
+     // was a dialog whose HWND existed only between CreateDialogIndirectParam
+     // and DestroyWindow, so a rect that could be read WAS an open window.  An
+     // LCL form's handle outlives its visibility -- it survives being hidden,
+     // and the widget set may recreate it on its own -- so the old rule now
+     // reads "hidden" as "visible".
+     //
+     // WndVisible is what OpenOtherWindows replays at startup, so getting it
+     // wrong means a window the operator closed comes back on the next run.
+     // IsWindowVisible answers for a zero handle too (False), which is the
+     // closed case.
+     tr4w_WindowsArray[tipos].WndVisible :=
+       Windows.IsWindowVisible(tr4w_WindowsArray[tipos].WndHandle);
      if not TempBool then
         begin
         if logger.IsTraceEnabled then
@@ -5525,6 +5545,16 @@ begin
      h := CreateTR4WRemMultsWindow(ID);
      lclForm := RemMultsForm(ID);
      end
+  else if ID = tw_HAMSCOREWINDOW_INDEX then
+     begin
+     h := CreateTR4WHamScoreWindow;
+     lclForm := TR4WHamScoreForm;
+     end
+  else if ID = tw_POSTSCORESWINDOW_INDEX then
+     begin
+     h := CreateTR4WPostScoresWindow;
+     lclForm := TR4WPostScoresForm;
+     end
   else if ID = tw_MASTERWINDOW_INDEX then
      begin
      h := CreateTR4WMasterWindow;
@@ -5667,12 +5697,35 @@ begin
   // if ID in [tw_RADIOINTERFACEWINDOW1_INDEX, tw_RADIOINTERFACEWINDOW2_INDEX, tw_MP3RECORDER, tw_GETSCORESWINDOW_INDEX]
   // then TempFlag := NORESIZEEDWINDOW;
 
-  Windows.SetWindowPos(tr4w_WindowsArray[ID].WndHandle, HWND_TOP,
-    tr4w_WindowsArray[ID].WndRect.Left,
-    tr4w_WindowsArray[ID].WndRect.Top,
-    tr4w_WindowsArray[ID].WndRect.Right - tr4w_WindowsArray[ID].WndRect.Left,
-    tr4w_WindowsArray[ID].WndRect.Bottom - tr4w_WindowsArray[ID].WndRect.Top,
-    TempFlag);
+  // THROUGH THE FORM WHEN IT IS ONE.  SetWindowPos moves the WINDOW; it does
+  // not tell the LCL, whose own Left/Top/Width/Height still hold the DESIGNED
+  // values from the .lfm.  Showing the form then pushes those cached bounds
+  // back down to the handle and the window snaps to (0,0) at its designed size,
+  // silently undoing the restore.
+  //
+  // That is why NY4I's band map would not come back where he left it
+  // (2026-08-25): the layout was saved correctly and loaded correctly -- the
+  // exit trace shows savedWndRect=(68,408,544,747), his moved position -- and
+  // then the window was drawn at (0,0,476,339) anyway.  The NEXT exit saved
+  // THAT, so one restart was enough to lose the real position for good.  Both
+  // converted windows showed it; every unconverted one reports hWnd=0 and keeps
+  // its saved rect, which is why only these two were affected.
+  //
+  // Same shape as the caption fix a few lines below: write the PROPERTY and let
+  // the LCL do the Win32 call, or the two disagree and the widget set wins.
+  if lclForm <> nil then
+     begin
+     lclForm.BoundsRect := tr4w_WindowsArray[ID].WndRect;
+     end
+  else
+     begin
+     Windows.SetWindowPos(tr4w_WindowsArray[ID].WndHandle, HWND_TOP,
+       tr4w_WindowsArray[ID].WndRect.Left,
+       tr4w_WindowsArray[ID].WndRect.Top,
+       tr4w_WindowsArray[ID].WndRect.Right - tr4w_WindowsArray[ID].WndRect.Left,
+       tr4w_WindowsArray[ID].WndRect.Bottom - tr4w_WindowsArray[ID].WndRect.Top,
+       TempFlag);
+     end;
 
   if Config.NoCaption then
     if TempFlag = NORESIZEEDWINDOW then

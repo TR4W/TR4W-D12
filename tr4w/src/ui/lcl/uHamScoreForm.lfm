@@ -1,0 +1,97 @@
+object frmHamScore: TfrmHamScore
+  Left = 0
+  Top = 0
+  BorderStyle = bsSizeToolWin
+  Caption = 'HamScore'
+  ClientHeight = 270
+  ClientWidth = 410
+  KeyPreview = True
+  OnClose = HandleClose
+  OnCreate = HandleCreate
+  OnKeyDown = HandleKeyDown
+  OnShow = HandleShow
+  object lblURL: TLabel
+    Left = 8
+    Height = 17
+    Top = 8
+    Width = 394
+    Anchors = [akTop, akLeft, akRight]
+    AutoSize = False
+  end
+  object lblUser: TLabel
+    Left = 8
+    Height = 17
+    Top = 29
+    Width = 394
+    Anchors = [akTop, akLeft, akRight]
+    AutoSize = False
+  end
+  object lblQueueTitle: TLabel
+    Left = 8
+    Height = 17
+    Top = 58
+    Width = 120
+    AutoSize = False
+    Caption = 'Queued contacts:'
+  end
+  object lblQueueValue: TLabel
+    Left = 134
+    Height = 17
+    Top = 58
+    Width = 80
+    AutoSize = False
+    Caption = '--'
+  end
+  object lblLastRun: TLabel
+    Left = 8
+    Height = 17
+    Top = 79
+    Width = 394
+    Anchors = [akTop, akLeft, akRight]
+    AutoSize = False
+  end
+  object lblStatusTitle: TLabel
+    Left = 8
+    Height = 17
+    Top = 108
+    Width = 120
+    AutoSize = False
+    Caption = 'Last status:'
+  end
+  object memStatus: TMemo
+    Left = 8
+    Height = 88
+    Top = 129
+    Width = 394
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    ReadOnly = True
+    ScrollBars = ssAutoVertical
+    TabOrder = 0
+    WordWrap = True
+  end
+  object btnPushNow: TButton
+    Left = 8
+    Height = 25
+    Top = 233
+    Width = 130
+    Anchors = [akLeft, akBottom]
+    Caption = 'Push Now'
+    OnClick = PushNowClick
+    TabOrder = 1
+  end
+  object btnResync: TButton
+    Left = 148
+    Height = 25
+    Top = 233
+    Width = 130
+    Anchors = [akLeft, akBottom]
+    Caption = 'Resync from log'
+    OnClick = ResyncClick
+    TabOrder = 2
+  end
+  object tmrRefresh: TTimer
+    Enabled = False
+    Interval = 1000
+    OnTimer = RefreshTick
+  end
+end

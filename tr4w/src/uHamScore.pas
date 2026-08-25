@@ -161,9 +161,34 @@ procedure HamScoreOnDelete(const RXData: ContestExchange);
 // every QSO from the current binary log file.
 procedure HamScoreResyncFromScratch;
 
-// Phase 4 -- HamScore status window dialog procedure.  Wired into
-// tr4w_WindowsArray[tw_HAMSCOREWINDOW_INDEX].WndProcAdr by MainUnit.
-function HamScoreDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
+// WHAT THE STATUS WINDOW SHOWS, as text, in one read.
+//
+// The window is an LCL form (uHamScoreForm) and asks for this once a second.
+// A RECORD rather than six getters because the six fields are one observation:
+// read separately, the queue depth can come from a cycle the "last cycle" line
+// does not yet mention, and the window shows a state that never existed.
+type
+   THamScoreStatus = record
+      URL:     string;
+      User:    string;
+      Queue:   string;
+      LastRun: string;
+      Status:  string;
+   end;
+
+function HamScoreStatusSnapshot: THamScoreStatus;
+
+// The two buttons.  Each returns the line to show the operator, so the caller
+// does not have to know what the uploader did with the request.
+function HamScorePushNow: string;
+function HamScoreResyncQueued: string;
+
+const
+  HAMSCORE_REFRESH_MS = 1000;   // the window's tick -- queue depth moves fast
+
+  // Below this the buttons clip off the bottom and the status field collapses.
+  HAMSCORE_MIN_WIDTH  = 410;
+  HAMSCORE_MIN_HEIGHT = 270;
 
 implementation
 
@@ -958,279 +983,71 @@ begin
 end;
 
 // ===========================================================================
-// Phase 4 -- HamScore status dialog
+// Phase 4 -- what the status window reads
 // ===========================================================================
-
-const
-  HAMSCORE_TIMER_ID         = 1;
-  HAMSCORE_REFRESH_MS       = 1000;   // refresh queued count + status every 1s
-  HAMSCORE_BTN_PUSH_NOW     = 101;
-  HAMSCORE_BTN_RESYNC       = 102;
-  HAMSCORE_LBL_URL          = 110;
-  HAMSCORE_LBL_USERNAME     = 111;
-  HAMSCORE_LBL_QUEUE_TITLE  = 112;
-  HAMSCORE_LBL_QUEUE_VAL    = 113;
-  HAMSCORE_LBL_LASTRUN_VAL  = 114;
-  HAMSCORE_LBL_STATUS_TITLE = 115;
-  HAMSCORE_EDIT_STATUS_VAL  = 116;    // Multi-line read-only edit (was static, too narrow)
-
-  // Read-only multi-line status edit.  CreateEdit (TF.pas) already adds
-  // WS_CHILD / WS_VISIBLE / WS_TABSTOP and WS_EX_CLIENTEDGE, so we only
-  // need the multi-line + read-only bits + a vertical scrollbar.
-  HAMSCORE_STATUS_STYLE = ES_LEFT or ES_MULTILINE or ES_READONLY or
-                          ES_AUTOVSCROLL or WS_VSCROLL;
-
-  // Minimum draggable size for the dialog -- below this the buttons clip
-  // off the bottom and the status field collapses.
-  HAMSCORE_MIN_WIDTH  = 410;
-  HAMSCORE_MIN_HEIGHT = 270;
-
-procedure SetTextSafe(hwnddlg: HWND; ctrlId: Integer; const s: string);
-begin
-  Windows.SetDlgItemTextW(hwnddlg, ctrlId, PChar(s));
-end;
-
-// Anchor-based layout for the HamScore status dialog.  Called from
-// WM_INITDIALOG (after the controls are created) and from WM_SIZE.
 //
-// Layout rules:
-//   URL           - full width, top
-//   User          - full width
-//   Queued title + value  - fixed-width pair, left side
-//   Last cycle    - full width
-//   "Last status" - fixed-width label
-//   Status edit   - FILLS remaining space (full width, grows to bottom strip)
-//   Push Now      - fixed size, anchored bottom-left
-//   Resync        - fixed size, immediately right of Push Now
-procedure HamScoreLayoutControls(hwnddlg: HWND);
-const
-  PAD            = 5;
-  ROW_H          = 18;
-  BTN_H          = 24;
-  BTN_W_PUSH     = 100;
-  BTN_W_RESYNC   = 130;
-  BTN_GAP        = 5;
-  ROW_GAP        = 4;
-  GROUP_GAP      = 10;
-  MIN_STATUS_H   = 40;
+// The dialog procedure, its control-id constants, HamScoreLayoutControls,
+// SetTextSafe, SetTextIfChanged and HamScoreRefreshStatus all lived here.  They
+// are gone with the window's conversion to an LCL form: anchors replaced the
+// hand-written layout, Constraints replaced WM_GETMINMAXINFO, a TTimer replaced
+// SetTimer, and TControl.SetCaption already does what SetTextIfChanged did.
+
+function HamScoreStatusSnapshot: THamScoreStatus;
 var
-  rc:           TRect;
-  cw, ch:       Integer;
-  y:            Integer;
-  statusTop:    Integer;
-  statusHeight: Integer;
-
-  // Move with bRepaint=False so we don't get per-control repaints
-  // (which leave artifacts at old positions when controls shrink or
-  // shift up-left).  After all moves, the caller does ONE
-  // RedrawWindow(RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN) on the
-  // dialog so every artifact is cleared in a single paint cycle.
-  procedure Move(ctrlId, x, yy, w, h: Integer);
-  var hCtrl: HWND;
-  begin
-    hCtrl := GetDlgItem(hwnddlg, ctrlId);
-    if hCtrl <> 0 then
-       begin
-       Windows.MoveWindow(hCtrl, x, yy, w, h, False);
-       end;
-  end;
-
-begin
-  Windows.GetClientRect(hwnddlg, rc);
-  cw := rc.Right - rc.Left;
-  ch := rc.Bottom - rc.Top;
-
-  // Suspend dialog repainting while we shuffle controls -- avoids flicker
-  // and the per-MoveWindow partial-invalidate behaviour that left ghost
-  // text at old control positions.
-  Windows.SendMessage(hwnddlg, WM_SETREDRAW, 0, 0);
-  try
-    // Top labels stretch to the full client width.
-    y := PAD;
-    Move(HAMSCORE_LBL_URL,        PAD, y, cw - 2*PAD, ROW_H);   y := y + ROW_H + ROW_GAP;
-    Move(HAMSCORE_LBL_USERNAME,   PAD, y, cw - 2*PAD, ROW_H);   y := y + ROW_H + GROUP_GAP;
-
-    Move(HAMSCORE_LBL_QUEUE_TITLE, PAD,           y, 130, ROW_H);
-    Move(HAMSCORE_LBL_QUEUE_VAL,   PAD + 130 + 5, y,  60, ROW_H);
-    y := y + ROW_H + ROW_GAP;
-
-    Move(HAMSCORE_LBL_LASTRUN_VAL, PAD, y, cw - 2*PAD, ROW_H);
-    y := y + ROW_H + GROUP_GAP;
-
-    Move(HAMSCORE_LBL_STATUS_TITLE, PAD, y, 130, ROW_H);
-    y := y + ROW_H + 2;
-
-    // Status edit fills the remainder vertically, leaving a bottom strip
-    // for the buttons.  Min height keeps the field usable when the window
-    // is dragged very small.
-    statusTop    := y;
-    statusHeight := ch - statusTop - PAD - BTN_H - GROUP_GAP;
-    if statusHeight < MIN_STATUS_H then
-       begin
-       statusHeight := MIN_STATUS_H;
-       end;
-    Move(HAMSCORE_EDIT_STATUS_VAL, PAD, statusTop, cw - 2*PAD, statusHeight);
-
-    // Buttons anchored to bottom-left.
-    y := ch - PAD - BTN_H;
-    Move(HAMSCORE_BTN_PUSH_NOW, PAD,                                 y, BTN_W_PUSH,   BTN_H);
-    Move(HAMSCORE_BTN_RESYNC,   PAD + BTN_W_PUSH + BTN_GAP,          y, BTN_W_RESYNC, BTN_H);
-  finally
-    Windows.SendMessage(hwnddlg, WM_SETREDRAW, 1, 0);
-    // Force a full erase+repaint of the client area and all child controls
-    // so leftover pixels from the previous layout are cleared.
-    Windows.RedrawWindow(hwnddlg, nil, 0,
-      RDW_INVALIDATE or RDW_ERASE or RDW_ALLCHILDREN);
-  end;
-end;
-
-// Update a control's text only when it has actually changed.  Important for
-// the multi-line status edit -- SetDlgItemText resets the scroll position
-// and clears the user's text selection, so we don't want to do it 1 Hz when
-// nothing has changed.
-procedure SetTextIfChanged(hwnddlg: HWND; ctrlId: Integer; const s: string);
-var
-  buf: array[0..1023] of AnsiChar;
-begin
-  Windows.GetDlgItemTextA(hwnddlg, ctrlId, buf, SizeOf(buf));
-  if string(buf) = s then Exit;
-  Windows.SetDlgItemTextW(hwnddlg, ctrlId, PChar(s));
-end;
-
-procedure HamScoreRefreshStatus(hwnddlg: HWND);
-var
-  pendCount: Integer;
-  status:    string;
-  lastTime:  TDateTime;
-  url:       string;
-  user:      string;
+  lastTime: TDateTime;
 begin
   if Uploader = nil then
      begin
-     SetTextIfChanged(hwnddlg, HAMSCORE_LBL_URL,        'URL: (uploader not running -- HAMSCORE ENABLE = FALSE or password missing)');
-     SetTextIfChanged(hwnddlg, HAMSCORE_LBL_USERNAME,   'User: --');
-     SetTextIfChanged(hwnddlg, HAMSCORE_LBL_QUEUE_VAL,  '--');
-     SetTextIfChanged(hwnddlg, HAMSCORE_EDIT_STATUS_VAL,'Disabled');
-     SetTextIfChanged(hwnddlg, HAMSCORE_LBL_LASTRUN_VAL,'');
+     Result.URL     := 'URL: (uploader not running -- HAMSCORE ENABLE = FALSE or password missing)';
+     Result.User    := 'User: --';
+     Result.Queue   := '--';
+     Result.Status  := 'Disabled';
+     Result.LastRun := '';
      Exit;
      end;
 
-  pendCount := Uploader.GetPendingCount;
-  status    := Uploader.GetLastCycleStatus;
-  lastTime  := Uploader.GetLastCycleTime;
-  url       := Uploader.URL;
-  user      := Uploader.Username;
-  if user = '' then
+  Result.URL   := 'URL: ' + Uploader.URL;
+  Result.User  := Uploader.Username;
+  if Result.User = '' then
      begin
-     user := string(MyCall) + ' (default; HAMSCORE USERNAME empty)';
+     Result.User := string(MyCall) + ' (default; HAMSCORE USERNAME empty)';
      end;
+  Result.User := 'User: ' + Result.User;
 
-  SetTextIfChanged(hwnddlg, HAMSCORE_LBL_URL,         'URL: ' + url);
-  SetTextIfChanged(hwnddlg, HAMSCORE_LBL_USERNAME,    'User: ' + user);
-  SetTextIfChanged(hwnddlg, HAMSCORE_LBL_QUEUE_VAL,   IntToStr(pendCount));
-  SetTextIfChanged(hwnddlg, HAMSCORE_EDIT_STATUS_VAL, status);
+  Result.Queue  := IntToStr(Uploader.GetPendingCount);
+  Result.Status := Uploader.GetLastCycleStatus;
+
+  lastTime := Uploader.GetLastCycleTime;
   if lastTime = 0 then
      begin
-     SetTextIfChanged(hwnddlg, HAMSCORE_LBL_LASTRUN_VAL, 'Last cycle: never')
+     Result.LastRun := 'Last cycle: never';
      end
   else
      begin
-     SetTextIfChanged(hwnddlg, HAMSCORE_LBL_LASTRUN_VAL,
-       'Last cycle: ' + FormatDateTime('yyyy-mm-dd hh:nn:ss', lastTime));
+     Result.LastRun := 'Last cycle: ' +
+                       FormatDateTime('yyyy-mm-dd hh:nn:ss', lastTime);
      end;
 end;
 
-function HamScoreDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-label
-  Done;
+function HamScorePushNow: string;
 begin
-  Result := False;
-  case Msg of
-    WM_LBUTTONDOWN, WM_WINDOWPOSCHANGING, WM_EXITSIZEMOVE:
-      DefTR4WProc(Msg, lParam, hwnddlg);
+  if Uploader = nil then
+     begin
+     Result := 'Disabled';
+     Exit;
+     end;
+  Uploader.PushNow;
+  Result := 'Push Now signaled -- cycle will run shortly';
+end;
 
-    WM_INITDIALOG:
-      begin
-        // Create controls with placeholder geometry; HamScoreLayoutControls
-        // (called immediately after, and again on every WM_SIZE) sets the
-        // real positions from the current client rect.
-        CreateStatic(nil,                 0, 0, 1, hwnddlg, HAMSCORE_LBL_URL);
-        CreateStatic(nil,                 0, 0, 1, hwnddlg, HAMSCORE_LBL_USERNAME);
-        CreateStatic('Queued contacts:',  0, 0, 1, hwnddlg, HAMSCORE_LBL_QUEUE_TITLE);
-        CreateStatic('--',                0, 0, 1, hwnddlg, HAMSCORE_LBL_QUEUE_VAL);
-        CreateStatic('',                  0, 0, 1, hwnddlg, HAMSCORE_LBL_LASTRUN_VAL);
-        CreateStatic('Last status:',      0, 0, 1, hwnddlg, HAMSCORE_LBL_STATUS_TITLE);
-        // Multi-line read-only edit so long server error responses wrap
-        // and stay readable; user can also select + copy the text.
-        CreateEdit(HAMSCORE_STATUS_STYLE, 0, 0, 1, 1, hwnddlg, HAMSCORE_EDIT_STATUS_VAL);
-        CreateButton(0, 'Push Now',       0, 0, 1, hwnddlg, HAMSCORE_BTN_PUSH_NOW);
-        CreateButton(0, 'Resync from log',0, 0, 1, hwnddlg, HAMSCORE_BTN_RESYNC);
-
-        HamScoreLayoutControls(hwnddlg);
-        SetTimer(hwnddlg, HAMSCORE_TIMER_ID, HAMSCORE_REFRESH_MS, nil);
-        HamScoreRefreshStatus(hwnddlg);
-      end;
-
-    WM_SIZE:
-      // Re-anchor controls whenever the operator resizes the window.
-      // No-op when the window is being minimized (we don't have valid
-      // client dimensions then).
-      if wParam <> SIZE_MINIMIZED then
-         begin
-         HamScoreLayoutControls(hwnddlg);
-         end;
-
-    WM_GETMINMAXINFO:
-      // Stop the operator from dragging the window so small that the
-      // buttons clip off the bottom or the status field collapses.
-      // PMinMaxInfo is the standard Win32 struct; ptMinTrackSize is the
-      // smallest size the window manager will accept during a drag.
-      begin
-        PMinMaxInfo(lParam)^.ptMinTrackSize.x := HAMSCORE_MIN_WIDTH;
-        PMinMaxInfo(lParam)^.ptMinTrackSize.y := HAMSCORE_MIN_HEIGHT;
-        Result := True;
-      end;
-
-    WM_TIMER:
-      HamScoreRefreshStatus(hwnddlg);
-
-    WM_COMMAND:
-      begin
-        case wParam of
-          HAMSCORE_BTN_PUSH_NOW:
-            begin
-              if Uploader <> nil then
-                 begin
-                 Uploader.PushNow;
-                 SetTextSafe(hwnddlg, HAMSCORE_EDIT_STATUS_VAL, 'Push Now signaled -- cycle will run shortly');
-                 end;
-            end;
-
-          HAMSCORE_BTN_RESYNC:
-            begin
-              // Tools-menu equivalent inline; calls into the same helpers.
-              // (We cannot pull SendFullLogToHamScore from here without a
-              // circular reference, so the resync button only enqueues the
-              // <deletelog>; user should also use Tools menu Resync to
-              // walk the full log.  Documented in the help dialog later.)
-              HamScoreResyncFromScratch;
-              SetTextSafe(hwnddlg, HAMSCORE_EDIT_STATUS_VAL,
-                '<deletelog> queued -- use Tools menu Resync to enqueue all QSOs');
-            end;
-        end;
-        if HiWord(wParam) = BN_CLICKED then
-           begin
-           FrmSetFocus;
-           end;
-      end;
-
-    WM_CLOSE:
-      begin
-        Done:
-        KillTimer(hwnddlg, HAMSCORE_TIMER_ID);
-        CloseTR4WWindow(tw_HAMSCOREWINDOW_INDEX);
-      end;
-  end;
+function HamScoreResyncQueued: string;
+begin
+  // UNCHANGED LIMITATION, carried over with its explanation: this only enqueues
+  // the <deletelog>.  Walking the full log lives behind the Tools menu, because
+  // SendFullLogToHamScore cannot be reached from here without a circular
+  // reference.
+  HamScoreResyncFromScratch;
+  Result := '<deletelog> queued -- use Tools menu Resync to enqueue all QSOs';
 end;
 
 end.
