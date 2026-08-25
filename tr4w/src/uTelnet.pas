@@ -163,7 +163,9 @@ var
         ),
      }
 
-         //SH/FDX 100
+         // Labelled SH/50, and it sends SH/DX 50.  The caption said 100 while
+         // the command sent 50 -- changed in 2014, caption not (NY4I settled it
+         // 2026-08-25: the caption follows the command).
     (iBitmap: VIEW_PARENTFOLDER;
     idCommand: 206;
     fsState: TBSTATE_ENABLED;
