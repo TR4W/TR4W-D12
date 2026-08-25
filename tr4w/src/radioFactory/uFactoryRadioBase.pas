@@ -22,7 +22,8 @@ interface
 uses
    Windows, IdTCPClient, IdComponent, IdTCPConnection,IdThreadComponent, IdExceptionCore, SysUtils,
    Classes, StrUtils, Log4D, uLogConfig, VC, Tree, IdException, IdStack, SyncObjs, uSerialPort, uRadioBand,
-   uCWFraming;   // TCWFrameRule / TCWProsign -- the CW traits a radio declares
+   uCWFraming,   // TCWFrameRule / TCWProsign -- the CW traits a radio declares
+   uSpectrumTypes;  // TSpectrumFrame / TSpectrumFrameProc -- the panadapter seam
 
 Type TProcessMsgRef = procedure (sMessage: string) of Object;
 // Optional per-radio frame check for FIXED-LENGTH framing.  Returns True if the
@@ -103,7 +104,7 @@ Type
                        //   rcCWByCAT: a radio can accept a speed without being
                        //   able to key text (the older Icoms and the FTDX
                        //   family), so the two are independent flags.
-      rcSharedRITXITOffset
+      rcSharedRITXITOffset,
                        // ONE offset register shared by RIT and XIT (Yaesu FT-1000MP
                        // "RIT offset"): the two on/off states are still independent,
                        // but there is a single offset value -- setting RIT's offset
@@ -122,6 +123,26 @@ Type
                        // once), and HamLib models every rig it implements as shared
                        // (65 of 65 classified -- its Kenwood set_xit literally just
                        // calls set_rit).  Nothing consumes this flag yet.
+
+      rcSpectrum       // can produce a panadapter / waterfall data stream.
+                       //
+                       // WHAT THE RADIO CAN DO, not what TR4W will do with it --
+                       // the same split as rcCWByCAT.  Whether a spectrum window
+                       // actually opens is the PROGRAM's decision (NY4I,
+                       // 2026-08-25), and three things have to agree: this flag,
+                       // SpectrumAvailable for the connection in hand, and the
+                       // operator's setting.  The radio declares the first and
+                       // knows the second; only TR4W knows the third.
+                       //
+                       // SAYS NOTHING ABOUT THE TRANSPORT, deliberately.  The K4
+                       // serves its stream on a second TCP port and so offers it
+                       // over Ethernet only, while Icom pushes $27 bandscope
+                       // frames down plain CI-V, which is a serial link
+                       // (uRadioIcomBase.pas:1635 already receives and discards
+                       // them).  Which links a radio offers it on is a fact about
+                       // THAT radio, so it belongs in its SpectrumAvailable
+                       // override -- never in this flag, and never in a base
+                       // class asking which model it is.
    );
    TRadioCapabilitySet = set of TRadioCapability;
 
@@ -356,6 +377,12 @@ Type TFactoryRadioBase = class(TObject)
       // every driver now resolves to this one.
       logger: TLogLogger;
       FCapabilities: TRadioCapabilities;   // what this rig can do (see TRadioCapabilities); set in the subclass ctor
+
+      // Panadapter subscriber, surfaced as the OnSpectrumFrame property.  Held
+      // on the base so that every spectrum-capable radio publishes the same
+      // way and the nil check lives in exactly one place.
+      FOnSpectrumFrame: TSpectrumFrameProc;
+
       RITState: boolean;
       XITState: boolean;
       vfo: array[Low(TVFO)..High(TVFO)] of TRadioVFO;
@@ -414,6 +441,15 @@ Type TFactoryRadioBase = class(TObject)
       // so the two queries are published below.
       procedure ClearCoverage;
       procedure AddCoverageRange(lowHz, highHz: LongInt);
+
+      // Hand a finished spectrum frame to whoever is listening (the subscriber
+      // is the OnSpectrumFrame property, published below).  Does nothing when
+      // no one is: a radio may stream spectrum with no window open, which is
+      // the normal case and not an error worth logging 36 times a second.
+      //
+      // Protected -- PRODUCING frames is the driver's business, subscribing is
+      // everyone's, the same split as the coverage queries above.
+      procedure PublishSpectrumFrame(const AFrame: TSpectrumFrame);
 
 
 
@@ -538,6 +574,58 @@ Type TFactoryRadioBase = class(TObject)
       function Supports(cap: TRadioCapability): Boolean;   // = cap in FCapabilities.Flags
       function SupportsCWByCAT: Boolean;                    // named facade (the user-facing example)
       function CapabilitiesAsText: string;                 // HamLib `rigctl -u`-style dump for the log
+
+      // ---- Panadapter / spectrum ----------------------------------------
+      // TWO QUESTIONS, KEPT APART.  `Supports(rcSpectrum)` is the MODEL fact --
+      // this radio can produce a spectrum stream at all -- declared in the
+      // driver's constructor like every other capability, and dumped by
+      // CapabilitiesAsText.
+      //
+      // SpectrumAvailable is the INSTANCE answer: can we actually get frames
+      // from THIS radio as it is connected right now.  It is separate because a
+      // constructor cannot answer it -- TRadioFactory assigns serialPort
+      // (uRadioFactory.pas:154, :206) AFTER the instance exists, so anything
+      // decided in the constructor would still be reading the default NoPort.
+      //
+      // Neither of these decides whether a panadapter window opens.  That is
+      // the PROGRAM's call (NY4I, 2026-08-25) and belongs beside
+      // IsCWByCATActive in MainUnit, where the operator's setting can be ANDed
+      // in -- exactly the capability-versus-config split rcCWByCAT documents.
+      //
+      // Base: available whenever the model declares the capability.  A radio
+      // whose stream is restricted to one transport overrides and says so.
+      function SpectrumAvailable: Boolean; virtual;
+
+      // Start and stop producing frames.  EXPLICIT, not implied by assigning
+      // OnSpectrumFrame: the K4's stream is ~150 KB/s and a second socket, and
+      // paying that whenever a radio happens to be connected -- with no window
+      // open to look at it -- would be a cost nobody asked for.  So the window
+      // subscribes and calls StartSpectrum, and calls StopSpectrum when it
+      // closes.
+      //
+      // Both are safe to call repeatedly and in either order; a radio with no
+      // spectrum ignores them.  Calling Start on a radio whose
+      // SpectrumAvailable is False does nothing -- the caller does not have to
+      // check first.
+      procedure StartSpectrum; virtual;
+      procedure StopSpectrum; virtual;
+
+      // Has StartSpectrum taken effect -- is a reader alive and trying?
+      function SpectrumStreaming: Boolean; virtual;
+
+      // Is the stream's link actually up right now?  DISTINCT from Streaming:
+      // between a start and a successful connect, and throughout a reconnect
+      // backoff, the reader is alive with no link.  That difference is exactly
+      // the "Connecting..." versus "Connected" a panadapter window shows, and
+      // collapsing the two would make a rig that is switched off look connected.
+      function SpectrumLinkUp: Boolean; virtual;
+
+      // Where finished frames go.  The window subscribes through a
+      // TFactoryRadioBase reference and never learns which radio it has, which
+      // is the rule this factory is built on.  Raised on the producer's
+      // thread -- see TSpectrumFrameProc.
+      property OnSpectrumFrame: TSpectrumFrameProc
+               read FOnSpectrumFrame write FOnSpectrumFrame;
 
       constructor Create(ProcRef: TProcessMsgRef); overload;
       constructor Create(address: string; port: integer;ProcRef: TProcessMsgRef); overload;
@@ -2089,6 +2177,42 @@ begin
    Result := rcCWByCAT in FCapabilities.Flags;
 end;
 
+// A radio that declares the capability and states no transport restriction is
+// available on whatever link it has.  Restrictions are the subclass's business:
+// see TK4Radio.SpectrumAvailable, which is network-only.
+function TFactoryRadioBase.SpectrumAvailable: Boolean;
+begin
+   Result := Supports(rcSpectrum);
+end;
+
+// No-ops for every radio that cannot produce spectrum, so a caller may drive
+// these unconditionally.
+procedure TFactoryRadioBase.StartSpectrum;
+begin
+end;
+
+procedure TFactoryRadioBase.StopSpectrum;
+begin
+end;
+
+function TFactoryRadioBase.SpectrumStreaming: Boolean;
+begin
+   Result := False;
+end;
+
+function TFactoryRadioBase.SpectrumLinkUp: Boolean;
+begin
+   Result := False;
+end;
+
+procedure TFactoryRadioBase.PublishSpectrumFrame(const AFrame: TSpectrumFrame);
+begin
+   if Assigned(FOnSpectrumFrame) then
+      begin
+      FOnSpectrumFrame(AFrame);
+      end;
+end;
+
 // HamLib `rigctl -m <model> -u`-style one-line dump of what this rig can do.
 function TFactoryRadioBase.CapabilitiesAsText: string;
 const
@@ -2099,7 +2223,7 @@ const
    CapabilityNames: array[TRadioCapability] of string =
       ('ReadVFOB', 'ReadRIT', 'ReadSplit', 'ReadTXStatus', 'DataMode', 'CWByCAT',
        'PlayDVK', 'CWSpeedSync',
-       'SharedRITXITOffset');
+       'SharedRITXITOffset', 'Spectrum');
 var
    c: TRadioCapability;
 begin

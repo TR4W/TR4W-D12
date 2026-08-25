@@ -68,6 +68,11 @@ uses
    uTestCabrilloExchange in 'uTestCabrilloExchange.pas',
    uCRC32               in '..\..\src\uCRC32.pas',
    uTestCRC32           in 'uTestCRC32.pas',
+   uCRC16               in '..\..\src\uCRC16.pas',
+   uSpectrumTypes       in '..\..\src\uSpectrumTypes.pas',
+   uK4Spectrum          in '..\..\src\radioFactory\uK4Spectrum.pas',
+   uK4SpectrumThread    in '..\..\src\radioFactory\uK4SpectrumThread.pas',
+   uTestK4Spectrum      in 'uTestK4Spectrum.pas',
    utils_math           in '..\..\src\utils\utils_math.pas',
    uTestUtilsMath       in 'uTestUtilsMath.pas',
    uGridDistance        in '..\..\src\uGridDistance.pas',
@@ -174,6 +179,7 @@ uses
    uCWFraming in '..\..\src\radioFactory\uCWFraming.pas',
    uRadioKYBase in '..\..\src\radioFactory\uRadioKYBase.pas',
    uRadioElecraftBase in '..\..\src\radioFactory\uRadioElecraftBase.pas',
+   uRadioElecraftK4 in '..\..\src\radioFactory\uRadioElecraftK4.pas',
    uRadioKenwoodBase in '..\..\src\radioFactory\uRadioKenwoodBase.pas',
    uTestPrefsSearch in 'uTestPrefsSearch.pas',
    uAccelerators in '..\..\src\uAccelerators.pas',
@@ -310,6 +316,7 @@ begin
    RegisterSuite(TCabrilloFormatTests.Create('CabrilloFormat'));
    RegisterSuite(TCabrilloExchangeTests.Create('CabrilloExchange'));
    RegisterSuite(TCRC32Tests.Create('CRC32'));
+   RegisterSuite(TK4SpectrumTests.Create('K4Spectrum'));
    RegisterSuite(TUtilsMathTests.Create('UtilsMath'));
    RegisterSuite(TGridDistanceTests.Create('GridDistance'));
    RegisterSuite(TUtilsFileTests.Create('UtilsFile'));

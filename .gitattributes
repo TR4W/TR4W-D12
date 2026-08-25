@@ -95,3 +95,9 @@ status_trace_baseline.jsonl  -text
 *.jpg           binary
 *.zip           binary
 *.resources     binary
+
+# Raw radio-stream captures (tr4w/test/unit/fixtures/*.bin) -- recorded off the
+# wire by tools/k4panwatch.py and fed to the decoder byte for byte.  A capture
+# is full of 0xFF/0x0D/0x0A bytes that mean SAMPLE DATA, so leaving it to the
+# NUL-byte heuristic is precisely the risk the section above exists to remove.
+*.bin           binary

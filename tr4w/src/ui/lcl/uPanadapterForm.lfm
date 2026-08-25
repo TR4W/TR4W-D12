@@ -1,0 +1,120 @@
+object frmPanadapter: TfrmPanadapter
+  Left = 0
+  Top = 0
+  BorderStyle = bsSizeToolWin
+  Caption = 'Panadapter'
+  ClientHeight = 380
+  ClientWidth = 700
+  Color = clBlack
+  DoubleBuffered = True
+  KeyPreview = True
+  OnClose = HandleClose
+  OnCreate = HandleCreate
+  OnDestroy = HandleDestroy
+  OnKeyDown = HandleKeyDown
+  object pnlTop: TPanel
+    Left = 0
+    Top = 0
+    Width = 700
+    Height = 28
+    Align = alTop
+    BevelOuter = bvNone
+    Caption = ''
+    Color = clBlack
+    ParentColor = False
+    TabOrder = 0
+    object lblSource: TLabel
+      Left = 6
+      Top = 7
+      Width = 90
+      Height = 15
+      AutoSize = False
+      Caption = 'Pan A'
+      Font.Color = clYellow
+      ParentColor = False
+      ParentFont = False
+      Transparent = True
+    end
+    object lblStatus: TLabel
+      Left = 520
+      Top = 7
+      Width = 172
+      Height = 15
+      Alignment = taRightJustify
+      Anchors = [akTop, akRight]
+      AutoSize = False
+      Caption = 'Disconnected'
+      Font.Color = clSilver
+      ParentColor = False
+      ParentFont = False
+      Transparent = True
+    end
+    object cboPalette: TComboBox
+      Left = 104
+      Top = 2
+      Width = 112
+      Height = 23
+      ItemIndex = 0
+      Items.Strings = (
+        'Heat Map'
+        'Grayscale'
+        'Sepia'
+        'Blue-Green'
+        'Fire-Ice'
+      )
+      Style = csDropDownList
+      TabOrder = 0
+      OnChange = HandlePaletteChange
+    end
+    object btnPause: TButton
+      Left = 224
+      Top = 2
+      Width = 64
+      Height = 23
+      Caption = 'Pause'
+      TabOrder = 1
+      OnClick = HandlePauseClick
+    end
+    object lblScale: TLabel
+      Left = 300
+      Top = 7
+      Width = 60
+      Height = 15
+      AutoSize = False
+      Caption = '80 dB'
+      Font.Color = clSilver
+      ParentColor = False
+      ParentFont = False
+      Transparent = True
+    end
+    object trkScale: TTrackBar
+      Left = 360
+      Top = 2
+      Width = 140
+      Height = 24
+      Max = 150
+      Min = 10
+      Position = 80
+      ShowSelRange = False
+      TabOrder = 2
+      TickStyle = tsNone
+      OnChange = HandleScaleChange
+    end
+  end
+  object pbSpectrum: TPaintBox
+    Left = 0
+    Top = 28
+    Width = 700
+    Height = 352
+    Align = alClient
+    OnMouseDown = HandleSpectrumMouseDown
+    OnMouseLeave = HandleSpectrumMouseLeave
+    OnMouseMove = HandleSpectrumMouseMove
+    OnPaint = HandleSpectrumPaint
+  end
+  object tmrRefresh: TTimer
+    Enabled = False
+    Interval = 50
+    OnTimer = HandleRefreshTimer
+  end
+end

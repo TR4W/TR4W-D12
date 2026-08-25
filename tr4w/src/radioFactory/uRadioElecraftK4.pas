@@ -20,7 +20,8 @@ unit uRadioElecraftK4;
 interface
 uses
    uRadioElecraftBase, uFactoryRadioBase, uRadioBand, StrUtils, SysUtils, Math, TF, Log4D, VC, uRadioRegistry, uCWFraming,
-     uElecraftIF;   // shared IF decode -- the K3 uses the same one
+     uElecraftIF,   // shared IF decode -- the K3 uses the same one
+     uSpectrumTypes, uK4SpectrumThread;   // the panadapter stream on CAT port + 1
 
 
 Type TK4Radio = class(TElecraftRadio)
@@ -31,6 +32,16 @@ Type TK4Radio = class(TElecraftRadio)
       // CONFIGURABLE -- see ApplyAutoInfoLevel for why the two transports are
       // deliberately not unified.
       FAutoInfoLevel: integer;
+
+      // The panadapter socket's reading thread.  nil whenever the stream is
+      // stopped, which is also how StartSpectrum/StopSpectrum stay idempotent.
+      FSpectrumThread: TK4SpectrumThread;
+
+      // Handed to the thread as its callback so the Assigned check on
+      // OnSpectrumFrame happens per frame -- a window that unsubscribes stops
+      // being called immediately, rather than the thread holding a handler it
+      // captured at construction.  RAISED ON THE SPECTRUM THREAD.
+      procedure HandleSpectrumFrame(const AFrame: TSpectrumFrame);
    protected
       procedure SelectOperatingVFO(rxVFOIsB: boolean); override;
    private
@@ -47,6 +58,21 @@ Type TK4Radio = class(TElecraftRadio)
       procedure ProcessMsg(msg: string); override;
       procedure StopCW; override;
       function CWIsFactoryOwned: Boolean; override;   // The K4 keys CW itself: StopCW sends Chr(4)+";RX;".
+
+      // The K4 serves its panadapter on a SECOND TCP port, CAT port + 1, so a
+      // serial-connected K4 has no spectrum stream at all.  The capability
+      // (rcSpectrum, declared in the constructor) says the MODEL has a
+      // panadapter; this says whether THIS connection can deliver it.
+      // Measured protocol and method: docs/PANADAPTER_LCL_DESIGN.md.
+      function SpectrumAvailable: Boolean; override;
+      procedure StartSpectrum; override;
+      procedure StopSpectrum; override;
+      function SpectrumStreaming: Boolean; override;
+      function SpectrumLinkUp: Boolean; override;
+
+      // Stops the spectrum thread, so it cannot outlive the radio whose
+      // method it calls back into.
+      Destructor Destroy; override;
 
       // Base class overrides with VFO parameters
       procedure SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode); override;
@@ -135,7 +161,13 @@ begin
    // Capabilities from LOGRADIO's RadioSupports* lists.  These say what the
    // RADIO can do; the operator's config setting says what they WANT.  Both
    // are required -- a user can enable CW-by-CAT on a radio that cannot do it.
-   FCapabilities.Flags := FCapabilities.Flags + [rcCWByCAT, rcCWSpeedSync, rcPlayDVK];
+   // rcSpectrum is the MODEL fact -- a K4 has a panadapter.  It is declared
+   // unconditionally here even though the stream is reachable only over the
+   // network, because which transport carries it is a separate question and is
+   // answered by SpectrumAvailable below.  A constructor could not answer it
+   // anyway: serialPort is assigned by TRadioFactory after this runs.
+   FCapabilities.Flags := FCapabilities.Flags +
+                          [rcCWByCAT, rcCWSpeedSync, rcPlayDVK, rcSpectrum];
    // ---- CW-by-CAT framing --------------------------------------------------
    // Same 22-and-pad rule as the serial Elecrafts: a short KY is swallowed when
    // it follows the keyer abort TR4W sends before every message, and padding
@@ -144,6 +176,86 @@ begin
    // is deliberately NOT a TElecraftSerial -- it is a network+serial radio with
    // an AI push model (see this unit's header).
    FCapabilities.CWFrame := CWFrameRule(22, True);
+end;
+
+function TK4Radio.SpectrumAvailable: Boolean;
+begin
+   // Capability first, so removing rcSpectrum from the constructor disables the
+   // feature in one edit rather than leaving this override contradicting it.
+   //
+   // serialPort is NoPort exactly when TRadioFactory built this instance for a
+   // network link (CreateRadioNetwork* sets radioAddress/radioPort and leaves
+   // serialPort alone; NoPort is portType's first value, VC.pas:46).  It is the
+   // same discriminator Connect uses below, deliberately -- two different tests
+   // for "am I on the network" would be free to disagree.
+   Result := Supports(rcSpectrum) and (Self.serialPort = NoPort);
+end;
+
+procedure TK4Radio.HandleSpectrumFrame(const AFrame: TSpectrumFrame);
+begin
+   // Straight through to the base, which does the Assigned check.  The
+   // indirection exists so that check happens per frame -- see the field.
+   PublishSpectrumFrame(AFrame);
+end;
+
+procedure TK4Radio.StartSpectrum;
+begin
+   if Assigned(FSpectrumThread) then
+      begin
+      Exit;                       // already streaming; idempotent by contract
+      end;
+
+   if not SpectrumAvailable then
+      begin
+      // Not an error worth raising: a caller is entitled to drive Start
+      // unconditionally, and a serial K4 simply has nothing to offer.
+      Exit;
+      end;
+
+   if Self.radioAddress = '' then
+      begin
+      logger.Warn('[K4 spectrum] no address; not starting');
+      Exit;
+      end;
+
+   // CAT port + 1.  Derived from the live radioPort rather than a constant, so
+   // an operator who moved the K4's CAT port keeps a working panadapter.
+   FSpectrumThread := TK4SpectrumThread.Create(
+      Self.radioAddress,
+      Self.radioPort + K4_SPECTRUM_PORT_OFFSET,
+      HandleSpectrumFrame,
+      logger,
+      Self.radioModel);
+end;
+
+procedure TK4Radio.StopSpectrum;
+begin
+   if not Assigned(FSpectrumThread) then
+      begin
+      Exit;
+      end;
+
+   // The destructor terminates, breaks the blocking read and waits, so once
+   // this returns no further callback into this object can be in flight.
+   FreeAndNil(FSpectrumThread);
+end;
+
+function TK4Radio.SpectrumStreaming: Boolean;
+begin
+   Result := Assigned(FSpectrumThread);
+end;
+
+function TK4Radio.SpectrumLinkUp: Boolean;
+begin
+   Result := Assigned(FSpectrumThread) and FSpectrumThread.LinkUp;
+end;
+
+Destructor TK4Radio.Destroy;
+begin
+   // BEFORE inherited.  The thread calls HandleSpectrumFrame on this object,
+   // so it has to be stopped while the object is still whole.
+   StopSpectrum;
+   inherited Destroy;
 end;
 
 function TK4Radio.Connect: integer;
