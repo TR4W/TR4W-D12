@@ -49,6 +49,7 @@ uses
   PostUnit in 'src\trdos\PostUnit.PAS',
   uCabrilloFormat in 'src\uCabrilloFormat.pas',
   uCabrilloExchange in 'src\uCabrilloExchange.pas',
+  uADIFExchange in 'src\uADIFExchange.pas',
   uInputQuery in 'src\uInputQuery.pas',
   uNewContest in 'src\uNewContest.pas',
   uRadioPolling in 'src\uRadioPolling.pas',

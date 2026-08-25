@@ -25,7 +25,7 @@ at what they cover; this is the list of what they cannot see.
 
 ## Waiting now (as of 2026-08-24)
 
-**Sections 31-40 were added 2026-08-24 and are UNRUN.**  Section 37 is the
+**Sections 31-41 were added 2026-08-24 and are UNRUN.**  Section 37 is the
 biggest of them: the entire main window display changed. NY4I confirmed
 the dupe sheet window, the stations window and the entry-field colours on the
 bench that day, but was remote when the captions, the resize behaviours and
@@ -1376,6 +1376,32 @@ this session and that was wrong: the `SetTimer` that would arm it is inside the
 same conditional (`uCWKeyerCPU.pas:87`). The residual hazard is cross-build
 only -- `tr4wserver` relays the id ungated, so a client compiled WITH the switch
 would feed standard clients something they cannot advance past.
+
+
+### 41. Two ADIF export defects, found by pinning and NOT fixed
+
+Both surfaced while extracting `GetMyExchangeForExport` into `uADIFExchange` and
+pinning its arms. Both are pinned as-is, because that commit's whole claim is
+that it changed nothing, and both need a CONTEST answer rather than a
+refactoring one.
+
+- [ ] **`AgeAndQSONumberExchange` exports `Error generating my exchange`.** The
+      arm is `Format('%-3d %-2s %03d      ', [cMyState, nrSent])` -- **three
+      format specifiers, two arguments**, and the first specifier is `%d` while
+      the first argument is a PAnsiChar. `Format` raises, the routine's own
+      `try/except` swallows it, and the caller gets the initialisation string.
+      Every contest using that exchange has been exporting the error text in
+      that ADIF field. **What should it say?**
+- [ ] **Serial numbers are not zero-padded, though the format looks like they
+      would be.** `RSTQSONumberExchange` is `'%-3d %03d '`. In C `%03d` of 7 is
+      `007`; in Object Pascal the leading zero is part of the WIDTH, so it is
+      right-justified with spaces -- serial 7 exports as `  7`. The arm carries
+      the comment "issue 177", which suggests somebody wanted `007` and wrote
+      the C spelling. **Should it be `007`?** If so it is `Format('%.3d', ...)`
+      or explicit padding, and it changes every affected log.
+
+Neither is a regression -- both predate today and are unchanged by the
+extraction, which the corpus confirms byte-for-byte across all 13 ADIF fixtures.
 
 ---
 

@@ -63,6 +63,8 @@ uses
    uCabrilloFormat      in '..\..\src\uCabrilloFormat.pas',
    uTestCabrilloFormat  in 'uTestCabrilloFormat.pas',
    uCabrilloExchange    in '..\..\src\uCabrilloExchange.pas',
+   uADIFExchange        in '..\..\src\uADIFExchange.pas',
+   uTestADIFExchange    in 'uTestADIFExchange.pas',
    uTestCabrilloExchange in 'uTestCabrilloExchange.pas',
    uCRC32               in '..\..\src\uCRC32.pas',
    uTestCRC32           in 'uTestCRC32.pas',
@@ -318,6 +320,7 @@ begin
    RegisterSuite(TCTYDATTests.Create('CTYDAT'));
    RegisterSuite(TMultsTests.Create('Mults'));
    RegisterSuite(TTestNetFraming.Create('NetFraming'));
+   RegisterSuite(TTestADIFExchange.Create('ADIFExchange'));
    RegisterSuite(TCallSignRoutinesTests.Create('CallSignRoutines'));
    RegisterSuite(TYaesuASCIITests.Create('YaesuASCII'));
    RegisterSuite(TYaesuBinaryTests.Create('YaesuBinary'));

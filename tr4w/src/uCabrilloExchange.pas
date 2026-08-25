@@ -57,6 +57,10 @@ type
     MyPrec      : string;
     MyFOCNumber : string;
     MyPostalCode: string;
+    { Added 2026-08-24 for uADIFExchange, which shares this record rather
+      than declaring a near-identical one.  The Cabrillo arms do not read
+      it; two records that differ by one field are two records that drift. }
+    MyPark      : string;
   end;
 
 // Builds the MY-EXCHANGE (MyEx) and HIS-EXCHANGE (HisEx) Cabrillo columns for
