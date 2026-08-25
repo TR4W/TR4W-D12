@@ -1338,6 +1338,16 @@ listener thread no longer names a widget.
       install for exactly that case, and it is the half most likely to be wrong.
 - [ ] **It does not flicker.** A heartbeat arrives every few seconds and setting
       the state to what it already holds must notify nobody.
+- [ ] **DISABLE WSJT-X IN PREFERENCES AND THE BOX GOES OUT.** Found on the bench
+      2026-08-24 and fixed the same evening: `Stop` closed the sockets without
+      telling `WSJTXState`, so the indicator stayed GREEN with nothing behind
+      it. The state is cleared in `Stop` now, before the sockets close and
+      outside the `started` guard. **Re-enable and confirm it comes back green
+      when the first heartbeat arrives -- not the moment the server binds.**
+- [ ] **Saving Preferences with WSJT-X disabled no longer logs
+      `JoinMulticastGroup called but UDP server not active`.** It fired on every
+      Save. A warning that appears during correct operation is one people learn
+      to ignore.
 
 
 ### 40. Two multi-op message-loop defects fixed, and the silent drop now reports

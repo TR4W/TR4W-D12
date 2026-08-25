@@ -82,6 +82,9 @@ type
     constructor Create; overload;
     constructor Create(nUDPPort: integer; nTCPPort: integer); overload;
     //constructor Create(radio: radioObject); overload;
+    { Is the UDP server actually listening?  `started` is private and callers
+      outside had no way to ask -- see F_UpdateWSJTXMulticastGroup. }
+    function  Running: boolean;
     procedure Start;
       // May want to add the port number to a constructor - for now use default
     procedure Stop;
@@ -280,8 +283,17 @@ begin
       end;
 end;
 
+function TWSJTXServer.Running: boolean;
+begin
+   Result := started;
+end;
+
 procedure TWSJTXServer.Start;
 begin
+   { DELIBERATELY NOT SETTING WSJTXState.Connected HERE.  Binding a socket is
+     not a link -- only a heartbeat from WSJT-X proves one, and that is where it
+     is set.  A green indicator the moment the server starts would be the same
+     lie in the other direction. }
    if not started then
       begin
       try
@@ -322,6 +334,19 @@ end;
 
 procedure TWSJTXServer.Stop;
 begin
+  { THE LINK IS GONE BECAUSE WE STOPPED LISTENING, AND THAT COUNTS.
+
+    WSJTXState was only ever cleared by WSJT-X's own disconnect path, so turning
+    the server off left Connected True -- and the indicator on the main window
+    stayed GREEN with nothing behind it.  NY4I found that on the bench,
+    2026-08-24: "I disabled WSJT-X in the program but the WSJT-X box is still
+    green."
+
+    Set BEFORE the sockets close, not after, so the state is already right if
+    closing raises.  Outside the `started` guard for the same reason: a Stop
+    that finds nothing to stop must still leave the indicator correct. }
+  WSJTXState.Connected := False;
+
   if started then
      begin
      udpServ.Active := false;

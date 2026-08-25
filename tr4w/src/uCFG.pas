@@ -2474,6 +2474,21 @@ begin
       // wsjtx not created yet — JoinMulticastGroup will be called in Start
       exit;
       end;
+   { ONLY WHEN THERE IS A SERVER TO JOIN WITH.
+
+     Every Preferences save re-applies every command, so with WSJT-X disabled
+     this logged "[WSJT-X] JoinMulticastGroup called but UDP server not active"
+     on each Save -- twice in NY4I's bench session (22:21:06 and 22:25:10).  A
+     warning that fires during correct operation is a warning people learn to
+     ignore, which is how the real one gets missed.
+
+     Nothing is lost by skipping: Start joins the group itself once the socket
+     is up. }
+   if not wsjtx.Running then
+      begin
+      Exit;
+      end;
+
    if WSJTXMulticastGroup <> '' then
       begin
       wsjtx.JoinMulticastGroup(WSJTXMulticastGroup);
