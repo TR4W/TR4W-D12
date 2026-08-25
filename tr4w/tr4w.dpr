@@ -59,6 +59,7 @@ uses
   uBeacons in 'src\uBeacons.pas',
   uNetFraming in 'src\uNetFraming.pas',
   uNet in 'src\uNet.pas',
+  uNetClient in 'src\uNetClient.pas',
   uTotal in 'src\uTotal.pas',
   uMaster in 'src\uMaster.pas',
   uRemMults in 'src\uRemMults.pas',

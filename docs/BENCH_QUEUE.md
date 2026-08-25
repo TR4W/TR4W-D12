@@ -1457,39 +1457,71 @@ key. Suppressed now while a modal form is active.
 
 ---
 
-
 ### 44. The radio panels are LCL forms -- and colour used to mean state
 
 Converted 2026-08-25.  Everything here needs a rig on the bench; none of it is
 provable by the unit tests, the lints or the corpus.
 
 - [ ] **Both VFO rows track the rig**, on Radio 1 and Radio 2, and the
-      **RIT figure** and **both mode labels** with them.  These five writes were
-      raw cross-thread `SetDlgItemText` / `SetWindowText` until the commit
-      before this one; they now travel through `uPanelUpdate`.
+  **RIT figure** and **both mode labels** with them.  These five writes were
+  raw cross-thread `SetDlgItemText` / `SetWindowText` until the commit
+  before this one; they now travel through `uPanelUpdate`.
 - [ ] **The INACTIVE VFO row is greyed.**  102/104 really do mean
-      enabled/disabled, and a `TLabel` greys natively.
+  enabled/disabled, and a `TLabel` greys natively.
 - [ ] **RIT / XIT / SPLIT go YELLOW when the rig has them on.**  THIS IS THE
-      ONE TO WATCH.  The dialog got the colour by returning a yellow brush from
-      `WM_CTLCOLORSTATIC` for an ENABLED control, so `EnableWindow` was doing
-      two jobs at once -- recording the rig state AND colouring the label.  An
-      LCL label has no such coupling, so the flag is explicit state now and the
-      colour follows from it.  Behaviour-preserving, and no compiler can check
-      that claim.
+  ONE TO WATCH.  The dialog got the colour by returning a yellow brush from
+  `WM_CTLCOLORSTATIC` for an ENABLED control, so `EnableWindow` was doing
+  two jobs at once -- recording the rig state AND colouring the label.  An
+  LCL label has no such coupling, so the flag is explicit state now and the
+  colour follows from it.  Behaviour-preserving, and no compiler can check
+  that claim.
 - [ ] **The ACTIVE radio's panel is tinted light blue**, and the tint MOVES when
-      the active radio changes.  That was two `InvalidateRect` calls in
-      `LOGSUBS1` making `WM_CTLCOLORDLG` run again; it is
-      `RadioPanelsRefreshActive` now.
+  the active radio changes.  That was two `InvalidateRect` calls in
+  `LOGSUBS1` making `WM_CTLCOLORDLG` run again; it is
+  `RadioPanelsRefreshActive` now.
 - [ ] **The status line still shows connection failures in red** -- the
-      `AUTH FAILED` path in `uRadioPolling`.
+  `AUTH FAILED` path in `uRadioPolling`.
 - [ ] **Both panels remember their position** across a close and reopen, and
-      across a restart (the `BoundsRect` fix, section 43).
+  across a restart (the `BoundsRect` fix, section 43).
 - [ ] **Escape closes each panel**, which a `DialogBox` gave away free.
 
 **Watch the poll cost.**  `PostPanelEnable` coalesces on (panel, control id) and
 the RIT/XIT/SPLIT posts run on EVERY poll, at rates down to 10 ms.  A steady
 state should cost nothing.  If the UI feels heavy with two rigs polling fast,
 that is the first place to look.
+
+---
+
+### 45. The multi-op link runs on Indy -- NEEDS A SECOND STATION
+
+Converted 2026-08-25.  **This is the one section in this file that cannot be
+tested solo**, and the one where a regression costs somebody else's log.
+
+- [ ] **Connect to TR4WServer**, with the right password.  The handshake moved
+  into TNetClient.Connect: ten bytes of password, then a four-byte
+  acknowledgement.  The `Sleep(200)` that used to sit between them is gone --
+  a blocking read waits properly.
+- [ ] **A WRONG password still says so.**  The server answers 'PASS' and the
+  operator gets TC_CONNECTTOTR4WSERVERFAILED, as before.
+- [ ] **Two stations logging at once**: QSOs, mults, serial numbers, the station
+  status list, intercom messages and spot forwarding.  Every message arm is
+  byte-for-byte the code that ran before; what changed underneath is only how
+  the bytes arrive.
+- [ ] **Pull the network cable.**  The link drop now arrives as an EVENT from the
+  reader thread rather than as a zero-length recv, and auto-reconnect still
+  runs off the window's WM_TIMER.  Confirm it reconnects.
+- [ ] **Close the network WINDOW while connected, and keep logging.**  This is
+  the whole point of the change: the window used to BE the socket's event
+  sink (WSAAsyncSelect posted WM_SOCK_NET to it), so it could not be closed
+  or converted.  The link must now be entirely independent of it.
+- [ ] **Watch tr4w.log for `[Net] stream desynchronised`.**  It should never
+  appear.  If it does, the buffer was discarded to resynchronise and
+  something upstream sent an id this build does not know.
+
+**What to watch hardest: partial records.**  A read can end mid-message, and the
+tail is now KEPT and completed by the next read instead of being logged and
+dropped (bench queue 40 asked for exactly this).  That is a fix, but it is the
+kind of fix that shows up as a rare, weird QSO if it is wrong.
 
 ---
 

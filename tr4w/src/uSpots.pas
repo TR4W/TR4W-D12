@@ -277,7 +277,7 @@ begin
 
   if SendToNetwork then
     if PInteger(@Spot.FCall[1])^ <> tCQAsInteger then
-      if NetSocket <> 0 then
+      if NetIsConnected then
          begin
          NetDXSpot.dsSpot := Spot;
          SendToNet(NetDXSpot, SizeOf(NetDXSpot));

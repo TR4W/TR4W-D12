@@ -27,6 +27,11 @@ interface
 
 uses
   SysUtils,
+  Classes,       { TBytes }
+  SyncObjs,      { the reader/main-thread handover }
+  Forms,         { Application.QueueAsyncCall -- the transport }
+  IdGlobal,      { TIdBytes }
+  uNetClient,    { the multi-op link, over Indy }
 
   VC,
   TF,
@@ -110,6 +115,10 @@ procedure SendMessageStatus;
 procedure TryConnectToNetwork;
 function InitListViewImageLists(hwndLV: HWND): boolean;
 function SendToNet(var buf; Len: integer): integer;
+
+{ IS THE MULTI-OP LINK UP?  Replaces `NetSocket <> 0`, which three other units
+  were reading directly. }
+function NetIsConnected: boolean;
 procedure CommitChangesInLocalLog;
 function SendRecordToServer(RecordType: Word; var rec: ContestExchange): boolean;
 function NewNetWndProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): UINT; stdcall;
@@ -161,7 +170,9 @@ var
   ServerPassword                        : Str20 = 'TR4WSERVER';
   ServerPort                            : integer = 1061;
   ServerAutoSynchronizeLogOnConnect     : boolean = False;  // Issue #912
-  NetSocket                             : Cardinal;
+  { THE LINK, over Indy.  Was `NetSocket: Cardinal` -- a raw Winsock handle
+    that three other units tested for zero; ask NetIsConnected instead. }
+  NetClient                             : TNetClient = nil;
   LogSyncSocket                         : Cardinal;
   ConnectedwithServer                   : boolean;
 //  NetworkListViewhandle                 : HWND;
@@ -241,7 +252,7 @@ begin
 
     WM_TIMER:
       begin
-        if NetSocket <> 0 then
+        if NetIsConnected then
            begin
            //          SendStationStatus;
            {
@@ -260,28 +271,76 @@ begin
 
       end;
 
-    WM_SOCK_NET:
-      begin
-        i := recv(NetSocket, NetBuffer, SizeOf(NetBuffer), 0);
-//        if DifferentContests then Exit;
-        if i <= 0 then
-           begin
-           NetDisconnect;
-           Windows.ZeroMemory(@StatusArray, SizeOf(StatusArray));
-           for i := 1 to 26 do
-              begin
-              DisplayClientStatus(i);
-              end;
-           // Issue #910: replaced modal dialog (showwarning) with non-blocking
-           // QuickDisplay toast + title-bar update.  Auto-reconnect is handled
-           // by the existing WM_TIMER path which calls TryConnectToNetwork
-           // every tNetStatusUpdateInterval ms while NetSocket = 0.
-           ShowConnectionStatus(TC_DISCONNECTEDFROM);
-           TF.Format(wsprintfBuffer, TC_CONNECTIONTOTR4WSERVERLOST, @ServerAddress[1], ServerPort);
-           QuickDisplay(wsprintfBuffer);
-           Exit;
-           end;
 
+    WM_DESTROY:
+      begin
+        KillTimer(hwnddlg, NETSTATUS_TIMER_HANDLE);
+        // ShutDown(NetSocket, SD_BOTH) stood here.  TNetClient.Disconnect
+        // closes the IOHandler, which is what unblocks its reader.
+        NetDisconnect;
+      end;
+
+    WM_CLOSE:
+      begin
+        wh[mweNetwork] := 0;
+        CloseTR4WWindow(tw_NETWINDOW_INDEX);
+      end;
+//    WM_HELP: tWinHelp(8);
+    WM_SIZE, WM_WINDOWPOSCHANGING, WM_EXITSIZEMOVE: DefTR4WProc(Msg, lp, hwnddlg);
+
+  end;
+end;
+
+{ CONSUME WHOLE MESSAGES FROM NetBuffer AND SAY HOW MANY BYTES WENT.
+
+  THIS IS THE WM_SOCK_NET ARM, MOVED AND OTHERWISE UNTOUCHED.  It used to run
+  inside the network window's dialog procedure, because WSAAsyncSelect posted
+  WM_SOCK_NET there whenever the socket became readable -- which is what tied
+  the multi-op transport to a window.  The bytes arrive over Indy now and this
+  runs on the MAIN THREAD, which is where it always ran, so every arm still
+  touches the log, the mult sheet and the display exactly as before.
+
+  THE NESTED Walk IS WHY THE BODY COULD BE MOVED VERBATIM.  Its arms leave
+  through `Exit` when the buffer is spent; wrapping them means Exit ends the
+  walk rather than the whole routine, and Bufindex is still standing afterwards
+  to say how far it got.
+
+  RETURNS BYTES CONSUMED, so the caller can keep a short tail.  That is new and
+  it matters: recv() and Indy both hand over whatever has arrived, which may cut
+  a record in half, and uNetFraming's nwPartial arm used to log the remainder
+  and drop it.  A caller that carries the tail forward turns that into nothing
+  at all -- the same class of defect as the DX cluster's lost lines. }
+function ConsumeNetBuffer(const i: integer; out aDesync: boolean): integer;
+var
+  { AN UNRECOGNISED ID IS NOT THE SAME AS A SHORT TAIL, and telling them apart
+    is what stops the link WEDGING.
+
+    Both used to leave the same way, because the whole recv buffer was thrown
+    away afterwards either way.  Now that the caller keeps what was not
+    consumed, a short tail must be kept -- the next read completes it -- while
+    an unrecognised id must NOT be, or the same bytes are re-examined forever
+    and no message ever gets through again, in silence. }
+  Desync: boolean;
+  { COPIED FROM NetDlgProc's OWN var BLOCK, which is where the walk used to
+    live.  Nothing added and nothing renamed; `i` became the parameter. }
+  Bufindex                              : integer;
+  ClientID                              : integer;
+  DisconnectedClient                    : integer;
+  MsgId                                 : word;
+  MsgSize                               : integer;
+  StationStPtr                          : TStationStatePtr;
+  NetQSOInfoPtr                         : NetQSOInformationPtr;
+  ServerMessagePtr                      : TServerMessagePtr;
+  NetDXSpotPtr                          : TNetDXSpotPtr;
+  NetTimeSyncPtr                        : TNetTimeSyncPtr;
+  ParameterToNetworkPtr                 : TParameterToNetworkPtr;
+  IntercomMessagePtr                    : TIntercomMessagePtr;
+
+   { The label lives HERE: a goto may not cross a procedure boundary. }
+   procedure Walk;
+   label
+     CheckBuffer;
+   begin
         Bufindex := 1;
 
         //        i-���-�� �� ����������� ����
@@ -306,6 +365,7 @@ begin
           while the connection still said "connected". }
         if MsgSize = 0 then
            begin
+           Desync := True;
            logger.Warn('[Net] Unrecognised message id %d at offset %d of %d ' +
                        'bytes -- the rest of this buffer is discarded',
                        [MsgId, Bufindex, i]);
@@ -568,35 +628,186 @@ begin
            end;
 
         goto CheckBuffer;
+   end;
 
-      end;
-
-    WM_DESTROY:
+begin
+   Desync := False;
+   Walk;
+   aDesync := Desync;
+   Result := Bufindex - 1;
+   if Result < 0 then
       begin
-        KillTimer(hwnddlg, NETSTATUS_TIMER_HANDLE);
-        ShutDown(NetSocket, SD_BOTH);
-        NetDisconnect;
+      Result := 0;
       end;
+end;
 
-    WM_CLOSE:
+{ ---------------------------------------------- bytes off the reader thread -- }
+
+{ WHAT ARRIVES, AND WHERE IT IS ALLOWED TO BE HANDLED.
+
+  TNetClient's reader is a THREAD.  Every arm of ConsumeNetBuffer writes the
+  log, the mult sheet, the status list and the display -- all main-thread
+  things -- so nothing here parses on the reader.  The bytes are appended to a
+  buffer under a lock and the main thread is asked to drain it.
+
+  Application.QueueAsyncCall, for the reason uPanelUpdate documents at length:
+  TThread.Queue purges by the calling thread's id when that thread dies, and a
+  network reader dies exactly when a disconnect needs reporting.
+
+  THE TAIL IS KEPT.  A read can end mid-record -- that is ordinary TCP, and it
+  is the same defect class that lost DX cluster lines at segment boundaries.
+  ConsumeNetBuffer says how many bytes it used and whatever is left waits for
+  the rest to arrive. }
+
+type
+   TNetDrainer = class(TObject)
+   public
+      procedure Drain(Data: PtrInt);
+      procedure ReportDropped(Data: PtrInt);
+   end;
+
+var
+   { SyncObjs-QUALIFIED.  uPanelUpdate declares this exact line unqualified
+     and compiles, because its uses clause is five units long.  uNet's is
+     forty, and something in it redeclares TCriticalSection as a RECORD --
+     FPC then reads `= nil` as a record initialiser and asks for a '('. }
+   GNetLock: SyncObjs.TCriticalSection = nil;
+   GNetDrainer: TNetDrainer = nil;
+   GNetPending: TBytes;   { nil to begin with -- a dynamic array is }
+
+procedure TNetDrainer.Drain(Data: PtrInt);
+var
+   take, used: integer;
+   desync: boolean;
+begin
+   while True do
       begin
-        wh[mweNetwork] := 0;
-        CloseTR4WWindow(tw_NETWINDOW_INDEX);
+      GNetLock.Acquire;
+      try
+         take := Length(GNetPending);
+         if take > SizeOf(NetBuffer) then
+            begin
+            take := SizeOf(NetBuffer);
+            end;
+         if take <= 0 then
+            begin
+            Exit;
+            end;
+         Move(GNetPending[0], NetBuffer, take);
+      finally
+         GNetLock.Release;
       end;
-//    WM_HELP: tWinHelp(8);
-    WM_SIZE, WM_WINDOWPOSCHANGING, WM_EXITSIZEMOVE: DefTR4WProc(Msg, lp, hwnddlg);
 
-  end;
+      used := ConsumeNetBuffer(take, desync);
+
+      if desync then
+         begin
+         // THE STREAM IS NO LONGER ON A MESSAGE BOUNDARY and there is no way to
+         // find the next one: the protocol has no framing marker to hunt for,
+         // only a table of sizes by id.  Throwing the buffer away is what the
+         // old code did implicitly on every unrecognised id, and it is still
+         // the only recovery -- but it says so now instead of looking like an
+         // ordinary read.
+         GNetLock.Acquire;
+         try
+            GNetPending := nil;
+         finally
+            GNetLock.Release;
+         end;
+         logger.Error('[Net] stream desynchronised -- %d byte(s) discarded to resynchronise',
+                      [take - used]);
+         Exit;
+         end;
+
+      if used <= 0 then
+         begin
+         // A short tail: nothing whole yet.  Wait for the rest rather than
+         // spinning, and do NOT drop it -- dropping it is what lost DX cluster
+         // lines at segment boundaries.
+         Exit;
+         end;
+
+      GNetLock.Acquire;
+      try
+         if used >= Length(GNetPending) then
+            begin
+            GNetPending := nil;
+            end
+         else
+            begin
+            Move(GNetPending[used], GNetPending[0], Length(GNetPending) - used);
+            SetLength(GNetPending, Length(GNetPending) - used);
+            end;
+      finally
+         GNetLock.Release;
+      end;
+      end;
+end;
+
+{ THE OLD `i <= 0` ARM OF WM_SOCK_NET, unchanged except that it now runs
+  because the reader said the link dropped rather than because recv returned
+  nothing.  Auto-reconnect still comes from the WM_TIMER path, which retries
+  while the link is down. }
+procedure TNetDrainer.ReportDropped(Data: PtrInt);
+var
+   i: integer;
+begin
+   NetDisconnect;
+   Windows.ZeroMemory(@StatusArray, SizeOf(StatusArray));
+   for i := 1 to 26 do
+      begin
+      DisplayClientStatus(i);
+      end;
+   ShowConnectionStatus(TC_DISCONNECTEDFROM);
+   TF.Format(wsprintfBuffer, TC_CONNECTIONTOTR4WSERVERLOST,
+             @ServerAddress[1], ServerPort);
+   QuickDisplay(wsprintfBuffer);
+end;
+
+{ ON THE READER THREAD. }
+procedure NetDataArrived(const aData: TIdBytes);
+var
+   have: integer;
+begin
+   if Length(aData) = 0 then
+      begin
+      Exit;
+      end;
+
+   GNetLock.Acquire;
+   try
+      have := Length(GNetPending);
+      SetLength(GNetPending, have + Length(aData));
+      Move(aData[0], GNetPending[have], Length(aData));
+   finally
+      GNetLock.Release;
+   end;
+
+   if (Application = nil) or Application.Terminated then
+      begin
+      Exit;
+      end;
+   Application.QueueAsyncCall(GNetDrainer.Drain, 0);
+end;
+
+{ ON THE READER THREAD.  Reports the drop the way the old `i <= 0` arm of
+  WM_SOCK_NET did -- it is the same event, arriving as an event instead of as a
+  zero-length read. }
+procedure NetLinkDropped(const aText: string);
+begin
+   logger.Warn('[Net] link to TR4WServer lost: %s', [aText]);
+   Application.QueueAsyncCall(GNetDrainer.ReportDropped, 0);
 end;
 
 procedure NetDisconnect;
 begin
-  if NetSocket <> 0 then
+  // The WSAAsyncSelect(..., 0, 0) that stood here was cancelling the socket's
+  // window notifications before closing it.  There are none to cancel now.
+  if NetClient <> nil then
      begin
-     WSAAsyncSelect(NetSocket, tr4w_WindowsArray[tw_NETWINDOW_INDEX].WndHandle, 0, 0);
-     closesocket(NetSocket);
+     NetClient.Disconnect;
      end;
-  NetSocket := 0;
+  GNetPending := nil;
   ServerSerialNumber := 0;
   EnableNetworkMenuItem(MF_GRAYED + MF_BYPOSITION);
   Windows.ZeroMemory(@MF, SizeOf(MultsFrequencies));
@@ -609,7 +820,7 @@ var
   callLen: integer;
 begin
 //  Exit;
-  if NetSocket = 0 then Exit;
+  if not NetIsConnected then Exit;
 
   MyStationState.ssID := NET_STATIONSTATUS_ID;
 
@@ -686,7 +897,7 @@ var
   MyMessageState                        : TMessageState;
   i                                     : integer;
 begin
-  if NetSocket = 0 then Exit;
+  if not NetIsConnected then Exit;
   MyMessageState.msComputerId := ComputerID;
   MyMessageState.msID := NET_MESSAGESTATE_ID;
   if CWMessageToNetwork <> '' then
@@ -715,10 +926,10 @@ begin
 end;
 
 type
-  TNetConnectLogState = (nclsInitial, nclsTrying, nclsConnected, nclsFailed);
+  TConnectToTR4WServerLogState = (nclsInitial, nclsTrying, nclsConnected, nclsFailed);
 
 const
-  FConnectLogStateLabel : array[TNetConnectLogState] of string =
+  FConnectLogStateLabel : array[TConnectToTR4WServerLogState] of string =
     ('initial', 'trying', 'connected', 'failed');
 
 var
@@ -727,7 +938,7 @@ var
   // with four debug lines per retry (TryConnectToNetwork enter, tCreateThread
   // create, Network thread create, ConnectThread exit) drowning out anything
   // else.  We log only on transitions: first attempt, recover, fail.
-  FConnectLogState : TNetConnectLogState = nclsInitial;
+  FConnectLogState : TConnectToTR4WServerLogState = nclsInitial;
 
   // Issue #1041: was THIS connect attempt an announced one (first / after a
   // recovery) rather than a silent retry?  ConnectThread reads it at exit to
@@ -761,17 +972,50 @@ begin
      end;
 end;
 
+{ CONNECT AND SHAKE HANDS, reporting the password case the way the dialog did.
+
+  Returns False for every failure; the caller shows TC_FAILEDTOCONNECTTO, which
+  is what it did before. }
+function ConnectToTR4WServer: boolean;
+var
+   err: string;
+   wrongPassword: boolean;
+begin
+   if NetClient = nil then
+      begin
+      NetClient := TNetClient.Create;
+      NetClient.OnData := @NetDataArrived;
+      NetClient.OnDisconnected := @NetLinkDropped;
+      end;
+
+   Result := NetClient.Connect(string(ServerAddress), ServerPort,
+                               AnsiString(ServerPassword), err, wrongPassword);
+   if Result then
+      begin
+      Exit;
+      end;
+
+   if wrongPassword then
+      begin
+      showwarning(TC_CONNECTTOTR4WSERVERFAILED);
+      end
+   else
+      begin
+      logger.Debug('[Net] connect to %s:%d failed: %s',
+                   [string(ServerAddress), ServerPort, err]);
+      end;
+end;
+
 procedure ConnectThread;
 label
   1, 2;
 var
   i                                     : integer;
-  TempSocket                            : TSocket;
 begin
   DifferentContests := False;
   ShowConnectionStatus(TC_CONNECTINGTO);
 
-  if GetConnection(TempSocket, @ServerAddress[1], ServerPort, SOCK_STREAM) then
+  if ConnectToTR4WServer then
 {
   TempSocket := GetSocket; // socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   tr4w_saddr.sin_addr.S_addr := inet_addr(tgethostbyname(@ServerAddress[1]));
@@ -783,17 +1027,11 @@ begin
   if i = 0 then
 }
      begin
-     NetSocket := TempSocket;
-
-     SendToNet(ServerPassword[1], 10);
-     Sleep(200);
-     ACK := 0;
-     recv(NetSocket, ACK, SizeOf(ACK), 0);
-     if ACK = $53534150 {PASS} then showwarning(TC_CONNECTTOTR4WSERVERFAILED);
-     if ACK <> $57345254 {TR4W} then goto 1;
-     i := 1;
-     WinSock2.setsockopt(NetSocket, IPPROTO_TCP, TCP_NODELAY, @i, SizeOf(integer));
-     WinSock2.WSAAsyncSelect(NetSocket, tr4w_WindowsArray[tw_NETWINDOW_INDEX].WndHandle, WM_SOCK_NET, FD_READ or FD_CLOSE);
+     // The socket, the ten-byte password, the four-byte acknowledgement, the
+     // Sleep(200) waiting for it, TCP_NODELAY and the WSAAsyncSelect that made
+     // the network WINDOW the socket's event sink -- all of that is TNetClient's
+     // now, and the handshake happens inside Connect because a link the server
+     // has not acknowledged is not a link.
      ZeroMemory(@StatusArray, SizeOf(StatusArray));
      NetQSOInfoToSend.qiComputerID := Windows.GetTickCount;
 
@@ -815,7 +1053,6 @@ begin
      end
   else
      begin
-     closesocket(TempSocket);
      1:
      ShowConnectionStatus(TC_FAILEDTOCONNECTTO);
      NetDisconnect;
@@ -1125,10 +1362,15 @@ end;
 function SendToNet(var buf; Len: integer): integer;
 begin
   Result := 0;
-  if NetSocket <> 0 then
+  if NetIsConnected then
      begin
-     Result := WinSock2.Send(NetSocket, buf, Len, 0);
+     Result := NetClient.Send(buf, Len);
      end;
+end;
+
+function NetIsConnected: boolean;
+begin
+  Result := (NetClient <> nil) and NetClient.IsConnected;
 end;
 
 procedure CommitChangesInLocalLog;
@@ -1194,7 +1436,7 @@ var
   SendToServerAE                        : boolean;
 begin
   Result := False;
-  if NetSocket = 0 then Exit;
+  if not NetIsConnected then Exit;
 
   SendToServer := rec.ceSendToServer;
   SendToServerAE := rec.ceNeedSendToServerAE;
@@ -1305,7 +1547,7 @@ end;
 
 procedure SendSerialNumberChange(Status: TSerialNumberType);
 begin
-  if NetSocket = 0 then Exit;
+  if not NetIsConnected then Exit;
   if ServerSerialNumber = 0 then Exit; // no serial number lockout
   if PreviousSerialNumberType = Status then Exit;
   ServerMessage.smMessage := SM_SERIAL_NUMBER_CHANGED;

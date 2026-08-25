@@ -4229,7 +4229,7 @@ var
 begin
   Result := False;
   if Config.PTTLockout then
-    if NetSocket <> 0 then
+    if NetIsConnected then
        begin
        for c := 1 to 26 do
          if ((StatusArray[c].ssStatusByte and (1 shl 0)) <> 0) //PTT
