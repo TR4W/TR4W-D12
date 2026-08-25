@@ -541,6 +541,8 @@ uses
   uMasterForm,             // CreateTR4WMasterWindow -- the SCP window
   uPostScoresForm,         // CreateTR4WPostScoresWindow
   uHamScoreForm,           // CreateTR4WHamScoreWindow
+  uIntercomForm,           // CreateTR4WIntercomWindow
+  uMP3RecorderForm,        // CreateTR4WMP3RecorderWindow
   uRemMultsForm,       // CreateTR4WRemMultsWindow -- all five mult windows
   uFunctionKeysForm,   // CreateTR4WFunctionKeysWindow -- the first LCL tool window a TForm now -- CreateTR4WMainForm
   uPrefsForm,       // the PREF command -- the radio Preferences window
@@ -2447,7 +2449,8 @@ begin
   tr4w_WindowsArray[tw_RADIOINTERFACEWINDOW2_INDEX].WndProcAdr :=
     @RadioInterfaceWindowDlgProc;
   tr4w_WindowsArray[tw_NETWINDOW_INDEX].WndProcAdr := @NetDlgProc;
-  tr4w_WindowsArray[tw_INTERCOMWINDOW_INDEX].WndProcAdr := @IntercomDlgProc;
+  // tw_INTERCOMWINDOW_INDEX has no WndProcAdr: it is an LCL form
+  // (uIntercomForm) and OpenTR4WWindow reaches it directly.
   // tw_POSTSCORESWINDOW_INDEX has no WndProcAdr: it is an LCL form
   // (uPostScoresForm) and OpenTR4WWindow reaches it directly.
   // Issue #783 Phase 4 -- HamScore RTC status window dialog
@@ -2455,7 +2458,8 @@ begin
   // (uHamScoreForm) and OpenTR4WWindow reaches it directly.
   // No WndProcAdr for the stations window either: it is an LCL form as of
   // 2026-08-24 and OpenTR4WWindow's seam builds it.
-  tr4w_WindowsArray[tw_MP3RECORDER].WndProcAdr := @MP3RecDlgProc;
+  // tw_MP3RECORDER has no WndProcAdr: it is an LCL form (uMP3RecorderForm)
+  // and OpenTR4WWindow reaches it directly.
   tr4w_WindowsArray[tw_MMTTYWINDOW_INDEX].WndProcAdr := @MMTTYDlgProc;
 
 end;
@@ -5544,6 +5548,16 @@ begin
      // FIVE INSTANCES of one form -- the widest of the converted windows.
      h := CreateTR4WRemMultsWindow(ID);
      lclForm := RemMultsForm(ID);
+     end
+  else if ID = tw_MP3RECORDER then
+     begin
+     h := CreateTR4WMP3RecorderWindow;
+     lclForm := TR4WMP3RecorderForm;
+     end
+  else if ID = tw_INTERCOMWINDOW_INDEX then
+     begin
+     h := CreateTR4WIntercomWindow;
+     lclForm := TR4WIntercomForm;
      end
   else if ID = tw_HAMSCOREWINDOW_INDEX then
      begin

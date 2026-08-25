@@ -1,0 +1,53 @@
+object frmMP3Recorder: TfrmMP3Recorder
+  Left = 0
+  Top = 0
+  BorderStyle = bsSizeToolWin
+  Caption = 'MP3 Recorder'
+  ClientHeight = 92
+  ClientWidth = 260
+  KeyPreview = True
+  OnClose = HandleClose
+  OnCreate = HandleCreate
+  OnKeyDown = HandleKeyDown
+  OnShow = HandleShow
+  object lblElapsed: TLabel
+    Left = 8
+    Height = 17
+    Top = 10
+    Width = 90
+    AutoSize = False
+  end
+  object chkRecord: TCheckBox
+    Left = 108
+    Height = 21
+    Top = 8
+    Width = 140
+    Anchors = [akTop, akLeft, akRight]
+    Caption = 'Record'
+    OnClick = RecordClick
+    TabOrder = 0
+  end
+  object pbPeak: TProgressBar
+    Left = 8
+    Height = 20
+    Top = 38
+    Width = 90
+    Smooth = True
+    TabOrder = 1
+  end
+  object btnControl: TButton
+    Left = 108
+    Height = 25
+    Top = 36
+    Width = 140
+    Anchors = [akTop, akLeft, akRight]
+    Caption = '...'
+    OnClick = ControlClick
+    TabOrder = 2
+  end
+  object tmrMeter: TTimer
+    Enabled = False
+    Interval = 100
+    OnTimer = MeterTick
+  end
+end

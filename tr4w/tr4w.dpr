@@ -83,6 +83,8 @@ uses
   uMasterForm in 'src\ui\lcl\uMasterForm.pas',
   uPostScoresForm in 'src\ui\lcl\uPostScoresForm.pas',
   uHamScoreForm in 'src\ui\lcl\uHamScoreForm.pas',
+  uIntercomForm in 'src\ui\lcl\uIntercomForm.pas',
+  uMP3RecorderForm in 'src\ui\lcl\uMP3RecorderForm.pas',
   uRemMultsForm in 'src\ui\lcl\uRemMultsForm.pas',
   uAppInputHooks in 'src\ui\lcl\uAppInputHooks.pas',
   uFileView in 'src\uFileView.pas',

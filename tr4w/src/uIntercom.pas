@@ -35,60 +35,28 @@ uses
   LogStuff,
   Messages;
 
-function IntercomDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 procedure AddMessageToIntercomWindow(mes: PAnsiChar; Sender: AnsiChar);
 procedure FlashIntercomListBox;
 procedure EnumINTERCOMTXT(FileString: PShortString);
 
+{ THE BACKLOG FROM INTERCOM.TXT.
+
+  Ran inside WM_INITDIALOG, so it happened exactly once per opening of the
+  window.  The form calls it from OnCreate, which is also once -- the form
+  object is reused across opens, so loading on every OnShow would append the
+  whole file again each time. }
+procedure LoadIntercomHistory;
+
 var
-  IntercomListBoxHandle            : HWND;
+  { IntercomListBoxHandle is gone with the dialog: the list box is a TListBox on
+    uIntercomForm and there is no raw handle to keep. }
   LastItemInIntercomListBox        : integer;
 
 implementation
 uses MainUnit,
   uFlasher,    { the intercom flash is a timer now }
+  uIntercomForm,   { the window is a form -- the list box lives there }
    uConfigValues;
-
-function IntercomDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-label
-  1;
-
-begin
-  Result := False;
-  case Msg of
-    WM_WINDOWPOSCHANGING, WM_EXITSIZEMOVE: DefTR4WProc(Msg, lParam, hwnddlg);
-
-    WM_SIZE:
-      begin
-        tListBoxClientAlign(hwnddlg);
-        SendMessage(IntercomListBoxHandle, WM_VSCROLL, SB_BOTTOM, 0);
-      end;
-
-    WM_INITDIALOG:
-      begin
-        IntercomListBoxHandle := CreateOwnerDrawListBox(LB_STYLE_3,hwnddlg);
-        // Issue #997: asm tWM_SETFONT -> TF helper (EAX = IntercomListBoxHandle above).
-        tWM_SETFONT(IntercomListBoxHandle, MainFixedFont);
-
-        EnumerateLinesInFile('INTERCOM.TXT', EnumINTERCOMTXT, false);
-      end;
-
-    WM_COMMAND:
-      begin
-        if HiWord(wParam) = LBN_DBLCLK then
-           begin
-           ProcessMenu(menu_send_message);
-           end;
-      end;
-
-    WM_CLOSE: 1:
-      begin
-        IntercomListBoxHandle := 0;
-        CloseTR4WWindow(tw_INTERCOMWINDOW_INDEX);
-      end;
-
-  end;
-end;
 
 procedure AddMessageToIntercomWindow(mes: PAnsiChar; Sender: AnsiChar);
 var
@@ -119,10 +87,18 @@ begin
         CloseHandle(h);
         end;
      end;
-  h := IntercomListBoxHandle;
-  if h = 0 then Exit;
-  LastItemInIntercomListBox := tLB_ADDSTRING(h, @wsprintfBuffer);
-  SendMessage(h, WM_VSCROLL, SB_BOTTOM, 0);
+  // THROUGH THE FORM.  The window is an LCL form (uIntercomForm) and the raw
+  // HWND the list box used to be is gone; TopIndex scrolls to the end, which is
+  // what the WM_VSCROLL/SB_BOTTOM did.
+  if TR4WIntercomForm = nil then
+     begin
+     Exit;
+     end;
+  with TR4WIntercomForm.lstMessages do
+     begin
+     LastItemInIntercomListBox := Items.Add(string(AnsiString(PAnsiChar(@wsprintfBuffer))));
+     TopIndex := Items.Count - 1;
+     end;
   FlashIntercomListBox;
 end;
 
@@ -145,36 +121,50 @@ end;
 { One phase of the intercom flash.  Was a thread that ran 49 x Sleep(150) --
   SEVEN AND A HALF SECONDS it could not be told to stop.  See uFlasher.
 
-  Still flashes by toggling SELECTION, which is a state, not a highlight; the
-  listbox is a raw Win32 window and there is nothing else to set.  Same note as
-  the quick display. }
+  STILL FLASHES BY TOGGLING SELECTION, which is a state and not a highlight.
+  That was excused before by the list box being a raw Win32 window with nothing
+  else to set; it is a TListBox now, so the excuse is gone even though the
+  behaviour is unchanged.  Left alone deliberately: changing what the flash
+  LOOKS like is a visual decision for NY4I, not a side effect of a conversion. }
 procedure IntercomFlashPhase(const aOn: boolean);
 begin
-  if IntercomListBoxHandle = 0 then
+  if TR4WIntercomForm = nil then
      begin
      Exit;
      end;
-  SendMessage(IntercomListBoxHandle, LB_SETSEL, WPARAM(Ord(aOn)),
-     LastItemInIntercomListBox);
+  if (LastItemInIntercomListBox < 0) or
+     (LastItemInIntercomListBox >= TR4WIntercomForm.lstMessages.Items.Count) then
+     begin
+     Exit;
+     end;
+  TR4WIntercomForm.lstMessages.Selected[LastItemInIntercomListBox] := aOn;
 end;
 
 procedure FlashIntercomListBox;
 begin
-  if IntercomListBoxHandle = 0 then
+  if TR4WIntercomForm = nil then
      begin
      Exit;
      end;
 
   // Clear any existing selection first, as the loop did before its first pass.
-  SendMessage(IntercomListBoxHandle, LB_SETSEL, 0, -1);
+  TR4WIntercomForm.lstMessages.ClearSelection;
 
   // 49 phases at 150 ms -- the same flash, now cancellable and off no thread.
   IntercomFlasher.Start(@IntercomFlashPhase, 49, 150);
 end;
 
+procedure LoadIntercomHistory;
+begin
+  EnumerateLinesInFile('INTERCOM.TXT', EnumINTERCOMTXT, false);
+end;
+
 procedure EnumINTERCOMTXT(FileString: PShortString);
 begin
-  tLB_ADDSTRING(IntercomListBoxHandle, @FileString^[1]);
+  if TR4WIntercomForm <> nil then
+     begin
+     TR4WIntercomForm.lstMessages.Items.Add(string(FileString^));
+     end;
 end;
 
 end.
