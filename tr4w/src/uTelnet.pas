@@ -236,6 +236,8 @@ var
   TelnetCallsignAlertList: HWND;
 implementation
 uses uNet,
+  Forms,             // Application.QueueAsyncCall -- the event transport
+  SyncObjs,          // the queue lock, shared with the cluster reader thread
   uClusterTokens,    // the braced-token parser, a leaf so it can be tested
   uDXClusterClient,   // the socket half, extracted so it can be tested headless
   uDXSpotParse,       // the decode half, likewise -- ProcessDX keeps only APPLY
@@ -248,23 +250,30 @@ uses uNet,
               // TF-qualified (see TelnetConnectionError / WinSock error display).
   MainUnit;
 
-// Issue #23 -- DX cluster I/O thread <-> main-thread message protocol.  The
+// Issue #23 -- DX cluster I/O thread -> main-thread event protocol.  The
 // cluster thread does ALL blocking network I/O (connect + recv) and never
-// touches UI or shared spot/bandmap state; it only posts these to the telnet
-// window, which does that work on the main (UI) thread.  Declared here so both
-// TelnetWndDlgProc (handler) and TelnetThreadProc (sender) see them.
-const
-  WM_TELNET_MSG         = WM_USER + 250;
-  TELNET_CONNECTED      = 1;   // lParam = 0
-  TELNET_CONNECT_FAILED = 2;   // lParam = WSA error code
-  TELNET_DATA           = 3;   // lParam = PTelnetChunk (handler disposes it)
-  TELNET_CLOSED         = 4;   // lParam = WSA error code (0 = graceful close)
-  // Unterminated text sitting in the receive buffer -- a login prompt, in
-  // practice.  Same chunk ownership as TELNET_DATA.  NOT fed to the spot
-  // decoder: it is by definition an incomplete line, and the complete one will
-  // arrive later through TELNET_DATA.
-  TELNET_PENDING        = 5;   // lParam = PTelnetChunk (handler disposes it)
+// touches UI or shared spot/bandmap state; it hands each piece of news to the
+// main thread, which does that work there.
+//
+// IT USED TO BE A WINDOW MESSAGE.  WM_TELNET_MSG was PostMessage'd to the
+// telnet window's HWND, which made that window part of the TRANSPORT -- the
+// same shape that stopped uNet's network window becoming a form until the
+// socket moved to Indy.  Nothing about "a line arrived from the cluster"
+// needs a window, and a handle of 0 (the window closed, or not yet created)
+// silently DROPPED the news and LEAKED the heap block carrying it.
+//
+// Application.QueueAsyncCall instead, for the reason uPanelUpdate and uNet
+// both document: TThread.Queue purges by the calling thread's id when that
+// thread dies, and a cluster reader dies exactly when a disconnect needs
+// reporting.
+//
+// ONE ORDERED QUEUE FOR ALL FIVE KINDS, not a queue for data and direct calls
+// for lifecycle.  A window message queue is FIFO, and the handler relied on
+// that: CLOSED must not overtake the DATA lines that preceded it, or the last
+// thing the node said before hanging up is lost -- which on a login failure is
+// the only line that explains why.
 
+const
   // Auto-reconnect: WM_TIMER id on the telnet window, and the backoff bounds.
   // First retry is quick because the common case is a node bouncing; the cap
   // keeps a node that is down for hours to one attempt a minute.
@@ -280,31 +289,58 @@ const
   LOGIN_PROMPT_WAIT  = 4000;
 
 type
-  PTelnetChunk = ^TTelnetChunk;
-  TTelnetChunk = record
-    Len:  integer;
-    Data: array[0..8192] of AnsiChar;
+  TClusterEventKind = (
+    cekConnected,       // Code unused
+    cekConnectFailed,   // Code = WSA error code (0 = none reported)
+    cekData,            // Text = one complete line, terminator already stripped
+    cekPending,         // Text = an UNTERMINATED line, in practice a login prompt
+    cekClosed);         // Code = WSA error code (0 = graceful close)
+
+  // THE TEXT IS AN AnsiString, not the 8 KB fixed buffer this used to carry.
+  // New/Dispose managed that buffer by hand and the HANDLER owned the free, so
+  // any path that did not reach the handler leaked it -- a window handle of 0
+  // being exactly such a path.  It also capped a line at 8192 characters for no
+  // reason the cluster protocol requires.
+  TClusterEvent = record
+    Kind: TClusterEventKind;
+    Code: Integer;
+    Text: AnsiString;
   end;
 
   // Cluster events arrive on the client's READER THREAD.  Every one of these
-  // does nothing but package the news and PostMessage it -- identical
-  // marshaling to the old recv loop, and for the same reason: the handler
-  // touches the bandmap, the log and the UI, none of which is thread-safe.
+  // does nothing but append to the queue and ask the main thread to drain it:
+  // the handlers touch the bandmap, the log and the UI, none of which is
+  // thread-safe.
   //
-  // A class only because the event types are `of object`; it holds no state.
+  // A class because the event methods are `of object` and QueueAsyncCall needs
+  // a method; it holds no state of its own.  The queue is a unit global under a
+  // lock, so a drain already scheduled still finds work queued after it.
   TClusterEvents = class
     procedure Line(const L: AnsiString);
     procedure PendingText(const L: AnsiString);
     procedure Connected;
     procedure Disconnected(const Text: string; Code: Integer);
+    procedure Drain(Data: PtrInt);
   end;
 
 var
   // Declared HERE, above the window procedure, because Pascal needs the
-  // declaration before the first use and the WM_TELNET_MSG handler asks
-  // IsConnected long before the event methods are implemented.
+  // declaration before the first use and the toolbar arms ask IsConnected
+  // long before the event methods are implemented.
   ClusterClient: TDXClusterClient;
   ClusterEvents: TClusterEvents;
+
+  // THE QUEUE, and the lock that is the ONLY thing shared with the reader
+  // thread.  SyncObjs-QUALIFIED for the reason uNet records: a long uses
+  // clause can put a RECORD named TCriticalSection in scope, and FPC then
+  // reads `= nil` as a record initialiser and asks for a '('.
+  GClusterLock: SyncObjs.TCriticalSection = nil;
+  GClusterQueue: array of TClusterEvent;
+  // Reentrancy guard.  A handler can call Disconnect, which blocks; nothing
+  // in that path pumps messages today, but a nested drain would hand the
+  // same event to two handlers, and that is not a failure anyone would
+  // diagnose from a log.
+  GClusterDraining: boolean = False;
   // Scratch for one received line, main thread only (the window procedure and
   // the list-box re-decode).  Replaces the 20 KB TelnetBuffer global in TF.pas.
   TelnetLine: AnsiString;
@@ -334,7 +370,7 @@ var
 procedure ArmTelnetRetry; forward;
 procedure CancelTelnetRetry; forward;
 
-// The login sequence, forward-declared for the same reason: the WM_TELNET_MSG
+// The login sequence, forward-declared for the same reason: the cluster-event
 // handler runs it and it needs SendViaTelnetSocket, which is declared later.
 procedure ArmClusterLogin; forward;
 procedure CancelClusterLogin; forward;
@@ -345,7 +381,7 @@ var
   // Armed on connect, disarmed when the callsign goes out. See ArmClusterLogin.
   ClusterLoginArmed: boolean;
   // ---- the login sequence --------------------------------------------------
-  // Main thread only: everything here runs from the WM_TELNET_MSG handler.
+  // Main thread only: everything here runs from HandleClusterEvent.
   //
   // Armed on connect when the active cluster has a password, and disarmed the
   // moment one is sent OR the budget below runs out.  A password is a secret
@@ -398,63 +434,63 @@ begin
 
    if Token = 'MY_CALL' then
       begin
-      Value := MyCall
+      Value := string(MyCall)
       end
    else if Token = 'MY_STATE' then
       begin
-      Value := MyState
+      Value := string(MyState)
       end
    else if Token = 'MY_SECTION' then
       begin
-      Value := MySection
+      Value := string(MySection)
       end
    else if Token = 'MY_NAME' then
       begin
-      Value := MyName
+      Value := string(MyName)
       end
    else if Token = 'MY_GRID' then
       begin
-      Value := MyGrid
+      Value := string(MyGrid)
       end
    else if Token = 'MY_ZONE' then
       begin
-      Value := MyZone
+      Value := string(MyZone)
       end
    else if Token = 'MY_CHECK' then
       begin
-      Value := MyCheck
+      Value := string(MyCheck)
       end
    else if Token = 'MY_PREC' then
       begin
-      Value := MyPrec
+      Value := string(MyPrec)
       end
    else if Token = 'MY_CLASS' then
       begin
-      Value := MyFDClass
+      Value := string(MyFDClass)
       end
    else if Token = 'MY_PARK' then
       begin
-      Value := MyPark
+      Value := string(MyPark)
       end
    else if Token = 'MY_POSTALCODE' then
       begin
-      Value := MyPostalCode
+      Value := string(MyPostalCode)
       end
    else if Token = 'CALL' then
       begin
-      Value := CallWindowString
+      Value := string(CallWindowString)
       end
    else if Token = 'DATE' then
       begin
-      Value := GetDateString
+      Value := string(GetDateString)
       end
    else if Token = 'TIME' then
       begin
-      Value := GetTimeString
+      Value := string(GetTimeString)
       end
    else if Token = 'BAND' then
       begin
-      Value := BandStringsArrayWithOutSpaces[ActiveBand]
+      Value := string(BandStringsArrayWithOutSpaces[ActiveBand])
       end
    else if Token = 'FREQ' then
       begin
@@ -635,156 +671,8 @@ begin
 
     WM_WINDOWPOSCHANGING, WM_EXITSIZEMOVE: DefTR4WProc(Msg, lParam, hwnddlg);
 
-    // Issue #23 -- messages from the DX cluster I/O thread (TelnetThreadProc).
-    // All UI and spot/bandmap processing happen here, on the main thread.
-    WM_TELNET_MSG:
-      begin
-        case wParam of
-          TELNET_CONNECTED:
-            begin
-              if TR4W_TELNET_DEBUG then
-                 begin
-                 logger.Info('[Telnet] Connected to %s:%d', [PAnsiChar(@PendingTelnetHost[0]), PendingTelnetPort]);
-                 end;
-              TelnetSessionActive := True;   // there is now something to tear down
-              // We are back: forget any pending retry and reset the backoff, so
-              // the NEXT outage starts at 5 s again rather than inheriting the
-              // 60 s this one may have crept up to.
-              CancelTelnetRetry;
-              TF.Format(wsprintfBuffer, '%s%s:%u', TC_CONNECTEDTO,
-                @PendingTelnetHost[0], PendingTelnetPort);
-              AddStringToTelnetConsole(wsprintfBuffer, tstTR4W);
-              // (The TelnetBuffer clear that stood here is gone with the buffer
-              // -- there is no shared receive state to reset between sessions.)
-              // LOG IN.  Until 2026-08-11 this branch sent ConnectionCommand
-              // INSTEAD of the callsign when one was configured -- so anybody
-              // who set a connection command never logged in at all -- and
-              // otherwise merely PRE-FILLED the input box with MyCall and waited
-              // for the operator to press Enter.
-              //
-              // WAIT FOR THE PROMPT, with a timeout.  The first version of this
-              // sent the callsign the instant the socket opened, on the argument
-              // that TR4W had always effectively done so.  It had not: the old
-              // code only PRE-FILLED the input box and the operator pressed
-              // Enter after seeing the prompt.  HamAlert discarded a callsign
-              // that arrived before its banner and then sat at `login:` waiting
-              // (NY4I, 2026-08-12).  See ArmClusterLogin.
-              ArmClusterLogin;
-              SendClientStatus;
-              EnableTelnetToolbatButtons(True);
-              EnableWindowTrue(hwnddlg, 104);
-            end;
-
-          TELNET_CONNECT_FAILED:
-            begin
-              // Issue #23 -- keep the detailed WinSock reason in the log for
-              // diagnostics, but show the operator a short message naming the
-              // host they tried to reach (the raw message is long and unwrapped).
-              // CODE 0 MEANS NO SOCKET ERROR, so SysErrorMessage(0) renders as
-              // "The operation completed successfully" -- a failure line that
-              // says nothing failed, which is exactly how the already-connected
-              // refusal disguised itself.  The real reason came through
-              // OnDisconnected; do not overwrite it with a lie.
-              if lParam = 0 then
-                 begin
-                 logger.Error('[Telnet] Could not connect to %s:%d -- no socket error reported ' +
-                              '(see the preceding reason)',
-                   [PAnsiChar(@PendingTelnetHost[0]), PendingTelnetPort]);
-                 end
-              else
-                 begin
-                 logger.Error('[Telnet] Could not connect to %s:%d -- WinSock %d: %s',
-                   [PAnsiChar(@PendingTelnetHost[0]), PendingTelnetPort, lParam,
-                    SysUtils.SysErrorMessage(lParam)]);
-                 end;
-
-              // TEARDOWN BEFORE COSMETICS.  Disconnect used to sit after the
-              // console formatting, and the whole log shows it NEVER RAN across
-              // three failures -- leaving the session up and wedging every
-              // later attempt.  Whatever aborted the handler did so before this
-              // line; putting the state change first means a formatting problem
-              // can no longer cost the teardown.
-              Disconnect;
-
-              TF.Format(wsprintfBuffer, '%s%s:%u', TC_FAILEDTOCONNECTTO,
-                @PendingTelnetHost[0], PendingTelnetPort);
-              AddStringToTelnetConsole(wsprintfBuffer, tstError);
-              // Keep trying, with a longer gap each time.  A failed RETRY comes
-              // back through here, which is what makes the backoff advance --
-              // and a first connect that fails is retried too, so a TR4W
-              // started before the network is up still ends up connected.
-              ArmTelnetRetry;
-            end;
-
-          TELNET_DATA:
-            begin
-              if lParam <> 0 then
-                 begin
-                 // The chunk now carries exactly ONE complete line, terminator
-                 // already stripped by the transport.  No shared receive
-                 // buffer, no NUL bookkeeping, no re-scanning for line breaks.
-                 SetString(TelnetLine, PAnsiChar(@PTelnetChunk(lParam)^.Data[0]),
-                           PTelnetChunk(lParam)^.Len);
-                 Dispose(PTelnetChunk(lParam));
-                 // BEFORE the spot decoder, and unconditionally: a login prompt
-                 // is not a spot, and the answer must go out before anything
-                 // else this line might trigger.  Costs one Pos() per line and
-                 // only while the window is open -- it returns immediately once
-                 // the password has gone or the budget has run out.
-                 AnswerClusterLoginPrompts(TelnetLine);
-                 ProcessTelnetLine(TelnetLine);
-                 end;
-            end;
-
-          // AN UNTERMINATED PROMPT. Answered, but NOT decoded and NOT displayed:
-          // it is an incomplete line by definition, and the complete one arrives
-          // later through TELNET_DATA. Feeding it to ProcessDX would decode the
-          // same text twice.
-          TELNET_PENDING:
-            begin
-              if lParam <> 0 then
-                 begin
-                 SetString(TelnetLine, PAnsiChar(@PTelnetChunk(lParam)^.Data[0]),
-                           PTelnetChunk(lParam)^.Len);
-                 Dispose(PTelnetChunk(lParam));
-                 AnswerClusterLoginPrompts(TelnetLine);
-                 end;
-            end;
-
-          TELNET_CLOSED:
-            begin
-              // Guard on the SESSION, not on the socket.  This asks "is there a
-              // session still to tear down", which is exactly what the old
-              // `TelnetSock <> 0` meant -- that handle was cleared only by our
-              // own Disconnect.
-              //
-              // Asking ClusterClient.IsConnected here was WRONG and shipped
-              // broken: on a SERVER-initiated close the socket is already down
-              // by the time this posted message is handled, so the guard was
-              // False precisely in the case it exists to handle.  Disconnect
-              // never ran, so the toolbar kept showing a live session -- Connect
-              // greyed, Disconnect enabled -- and TelThreadID was never cleared,
-              // which also blocked reconnecting.  (NY4I: sent `bye` to the
-              // simulator, 2026-08-04.)
-              if TelnetSessionActive then
-                 begin
-                 if lParam <> 0 then
-                    begin
-                    TelnetConnectionError(lParam);
-                    end;
-                 Disconnect;
-                 // We did not ask for this -- the node hung up or the link
-                 // died -- so start trying to get it back.  Disconnect has
-                 // already restored the toolbar, so the operator can still
-                 // take over at any point and CancelTelnetRetry will stop us.
-                 ArmTelnetRetry;
-                 end;
-            end;
-        end;
-      end;
-
     // Auto-reconnect tick.  One-shot: kill it first, then try.  If the attempt
-    // fails, TELNET_CONNECT_FAILED arms the next one with a longer delay, so
+    // fails, cekConnectFailed arms the next one with a longer delay, so
     // the loop continues without this handler knowing how many have gone by.
     WM_TIMER:
       begin
@@ -1083,74 +971,252 @@ begin
   end;
 end;
 
-// Runs on the DX cluster I/O thread.  Connects (blocking), then loops on
-// blocking recv, posting each chunk to the telnet window.  Posts CONNECTED /
-// CONNECT_FAILED / CLOSED for lifecycle.  Does NO UI and touches NO shared
-// contest/bandmap state -- that all happens on the main thread in the handler.
-procedure TClusterEvents.Line(const L: AnsiString);
-var
-  chunk: PTelnetChunk;
-  n:     integer;
+// ON THE MAIN THREAD.  One event, handled exactly as the WM_TELNET_MSG arms
+// handled it -- this is a move, not a rewrite.  What changed is how it got
+// here, and that the text arrived with it instead of on the heap.
+procedure HandleClusterEvent(const aEvent: TClusterEvent);
 begin
-  n := Length(L);
-  if n > SizeOf(chunk^.Data) - 1 then
+  case aEvent.Kind of
+    cekConnected:
+      begin
+        if TR4W_TELNET_DEBUG then
+           begin
+           logger.Info('[Telnet] Connected to %s:%d', [PAnsiChar(@PendingTelnetHost[0]), PendingTelnetPort]);
+           end;
+        TelnetSessionActive := True;   // there is now something to tear down
+        // We are back: forget any pending retry and reset the backoff, so
+        // the NEXT outage starts at 5 s again rather than inheriting the
+        // 60 s this one may have crept up to.
+        CancelTelnetRetry;
+        TF.Format(wsprintfBuffer, '%s%s:%u', TC_CONNECTEDTO,
+          @PendingTelnetHost[0], PendingTelnetPort);
+        AddStringToTelnetConsole(wsprintfBuffer, tstTR4W);
+        // (The TelnetBuffer clear that stood here is gone with the buffer
+        // -- there is no shared receive state to reset between sessions.)
+        // LOG IN.  Until 2026-08-11 this branch sent ConnectionCommand
+        // INSTEAD of the callsign when one was configured -- so anybody
+        // who set a connection command never logged in at all -- and
+        // otherwise merely PRE-FILLED the input box with MyCall and waited
+        // for the operator to press Enter.
+        //
+        // WAIT FOR THE PROMPT, with a timeout.  The first version of this
+        // sent the callsign the instant the socket opened, on the argument
+        // that TR4W had always effectively done so.  It had not: the old
+        // code only PRE-FILLED the input box and the operator pressed
+        // Enter after seeing the prompt.  HamAlert discarded a callsign
+        // that arrived before its banner and then sat at `login:` waiting
+        // (NY4I, 2026-08-12).  See ArmClusterLogin.
+        ArmClusterLogin;
+        SendClientStatus;
+        EnableTelnetToolbatButtons(True);
+        // The handler no longer NEEDS a window -- that is the point of this
+        // change -- but it still ungreys the input box on one.  A closed
+        // window is handle 0, GetDlgItem(0, n) is 0 and EnableWindow(0, ...)
+        // does nothing, so this is a no-op rather than a crash.
+        EnableWindowTrue(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle, 104);
+      end;
+
+    cekConnectFailed:
+      begin
+        // Issue #23 -- keep the detailed WinSock reason in the log for
+        // diagnostics, but show the operator a short message naming the
+        // host they tried to reach (the raw message is long and unwrapped).
+        // CODE 0 MEANS NO SOCKET ERROR, so SysErrorMessage(0) renders as
+        // "The operation completed successfully" -- a failure line that
+        // says nothing failed, which is exactly how the already-connected
+        // refusal disguised itself.  The real reason came through
+        // OnDisconnected; do not overwrite it with a lie.
+        if aEvent.Code = 0 then
+           begin
+           logger.Error('[Telnet] Could not connect to %s:%d -- no socket error reported ' +
+                        '(see the preceding reason)',
+             [PAnsiChar(@PendingTelnetHost[0]), PendingTelnetPort]);
+           end
+        else
+           begin
+           logger.Error('[Telnet] Could not connect to %s:%d -- WinSock %d: %s',
+             [PAnsiChar(@PendingTelnetHost[0]), PendingTelnetPort, aEvent.Code,
+              SysUtils.SysErrorMessage(aEvent.Code)]);
+           end;
+
+        // TEARDOWN BEFORE COSMETICS.  Disconnect used to sit after the
+        // console formatting, and the whole log shows it NEVER RAN across
+        // three failures -- leaving the session up and wedging every
+        // later attempt.  Whatever aborted the handler did so before this
+        // line; putting the state change first means a formatting problem
+        // can no longer cost the teardown.
+        Disconnect;
+
+        TF.Format(wsprintfBuffer, '%s%s:%u', TC_FAILEDTOCONNECTTO,
+          @PendingTelnetHost[0], PendingTelnetPort);
+        AddStringToTelnetConsole(wsprintfBuffer, tstError);
+        // Keep trying, with a longer gap each time.  A failed RETRY comes
+        // back through here, which is what makes the backoff advance --
+        // and a first connect that fails is retried too, so a TR4W
+        // started before the network is up still ends up connected.
+        ArmTelnetRetry;
+      end;
+
+    cekData:
+      begin
+        // Exactly ONE complete line, terminator already stripped by the
+        // transport.  No shared receive buffer, no NUL bookkeeping, no
+        // re-scanning for line breaks -- and no heap block to dispose of:
+        // the text travelled on the event and dies with it.
+        TelnetLine := aEvent.Text;
+        // BEFORE the spot decoder, and unconditionally: a login prompt
+        // is not a spot, and the answer must go out before anything
+        // else this line might trigger.  Costs one Pos() per line and
+        // only while the window is open -- it returns immediately once
+        // the password has gone or the budget has run out.
+        AnswerClusterLoginPrompts(TelnetLine);
+        ProcessTelnetLine(TelnetLine);
+      end;
+
+    // AN UNTERMINATED PROMPT. Answered, but NOT decoded and NOT displayed:
+    // it is an incomplete line by definition, and the complete one arrives
+    // later through TELNET_DATA. Feeding it to ProcessDX would decode the
+    // same text twice.
+    cekPending:
+      begin
+        TelnetLine := aEvent.Text;
+        AnswerClusterLoginPrompts(TelnetLine);
+      end;
+
+    cekClosed:
+      begin
+        // Guard on the SESSION, not on the socket.  This asks "is there a
+        // session still to tear down", which is exactly what the old
+        // `TelnetSock <> 0` meant -- that handle was cleared only by our
+        // own Disconnect.
+        //
+        // Asking ClusterClient.IsConnected here was WRONG and shipped
+        // broken: on a SERVER-initiated close the socket is already down
+        // by the time this posted message is handled, so the guard was
+        // False precisely in the case it exists to handle.  Disconnect
+        // never ran, so the toolbar kept showing a live session -- Connect
+        // greyed, Disconnect enabled -- and TelThreadID was never cleared,
+        // which also blocked reconnecting.  (NY4I: sent `bye` to the
+        // simulator, 2026-08-04.)
+        if TelnetSessionActive then
+           begin
+           if aEvent.Code <> 0 then
+              begin
+              TelnetConnectionError(aEvent.Code);
+              end;
+           Disconnect;
+           // We did not ask for this -- the node hung up or the link
+           // died -- so start trying to get it back.  Disconnect has
+           // already restored the toolbar, so the operator can still
+           // take over at any point and CancelTelnetRetry will stop us.
+           ArmTelnetRetry;
+           end;
+      end;
+  end;
+end;
+
+// ON THE MAIN THREAD, from the LCL's async queue.  Takes ONE event at a time
+// and releases the lock before handling it: a handler calls Disconnect, which
+// joins the reader thread, and holding the lock across that would deadlock
+// against a reader trying to report its own exit.
+procedure TClusterEvents.Drain(Data: PtrInt);
+var
+  ev: TClusterEvent;
+  n: integer;
+begin
+  if GClusterDraining then
      begin
-     n := SizeOf(chunk^.Data) - 1;   // room for the NUL
+     Exit;
      end;
-  New(chunk);
-  if n > 0 then
+
+  GClusterDraining := True;
+  try
+    while True do
+       begin
+       GClusterLock.Acquire;
+       try
+         n := Length(GClusterQueue);
+         if n = 0 then
+            begin
+            Exit;
+            end;
+         ev := GClusterQueue[0];
+         Move(GClusterQueue[1], GClusterQueue[0], (n - 1) * SizeOf(TClusterEvent));
+         // The moved-from slot still holds a counted reference to the string
+         // that is now ALSO in the first slot.  Blank it without finalising,
+         // or SetLength frees a string the caller is about to read.
+         FillChar(GClusterQueue[n - 1], SizeOf(TClusterEvent), 0);
+         SetLength(GClusterQueue, n - 1);
+       finally
+         GClusterLock.Release;
+       end;
+
+       HandleClusterEvent(ev);
+       end;
+  finally
+    GClusterDraining := False;
+  end;
+end;
+
+// ON THE READER THREAD (and, for the connect failure, on the connect thread).
+// Appends one event and asks the main thread to drain.  Everything the handler
+// needs travels IN the event; nothing here reads UI or contest state.
+procedure QueueClusterEvent(aKind: TClusterEventKind; aCode: Integer;
+                            const aText: AnsiString);
+var
+  n: integer;
+begin
+  GClusterLock.Acquire;
+  try
+    n := Length(GClusterQueue);
+    SetLength(GClusterQueue, n + 1);
+    GClusterQueue[n].Kind := aKind;
+    GClusterQueue[n].Code := aCode;
+    GClusterQueue[n].Text := aText;
+  finally
+    GClusterLock.Release;
+  end;
+
+  // Queue first, THEN schedule.  A drain already running picks up what we just
+  // added; one that is not gets scheduled here.  The reverse order can leave an
+  // event sitting with no drain pending.
+  if (Application = nil) or Application.Terminated then
      begin
-     Move(L[1], chunk^.Data[0], n);
+     Exit;
      end;
-  chunk^.Data[n] := #0;
-  chunk^.Len := n;
+  Application.QueueAsyncCall(ClusterEvents.Drain, 0);
+end;
+
+procedure TClusterEvents.Line(const L: AnsiString);
+begin
   if TR4W_TELNET_DEBUG then
      begin
-     logger.Info('[Telnet RX %d] %s', [n, PAnsiChar(@chunk^.Data[0])]);
+     logger.Info('[Telnet RX %d] %s', [Length(L), string(L)]);
      end;
-  PostMessage(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle,
-              WM_TELNET_MSG, TELNET_DATA, LPARAM(chunk));
+  QueueClusterEvent(cekData, 0, L);
 end;
 
 // Same marshalling as Line, and for the same reason -- this fires on the reader
 // thread and the handler answers prompts and touches UI state.
 procedure TClusterEvents.PendingText(const L: AnsiString);
-var
-  chunk: PTelnetChunk;
-  n:     integer;
 begin
-  n := Length(L);
-  if n > SizeOf(chunk^.Data) - 1 then
-     begin
-     n := SizeOf(chunk^.Data) - 1;
-     end;
-  New(chunk);
-  if n > 0 then
-     begin
-     Move(L[1], chunk^.Data[0], n);
-     end;
-  chunk^.Data[n] := #0;
-  chunk^.Len := n;
   if TR4W_TELNET_DEBUG then
      begin
-     logger.Info('[Telnet RX pending %d] %s', [n, PAnsiChar(@chunk^.Data[0])]);
+     logger.Info('[Telnet RX pending %d] %s', [Length(L), string(L)]);
      end;
-  PostMessage(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle,
-              WM_TELNET_MSG, TELNET_PENDING, LPARAM(chunk));
+  QueueClusterEvent(cekPending, 0, L);
 end;
 
 procedure TClusterEvents.Connected;
 begin
-  PostMessage(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle,
-              WM_TELNET_MSG, TELNET_CONNECTED, 0);
+  QueueClusterEvent(cekConnected, 0, '');
 end;
 
 procedure TClusterEvents.Disconnected(const Text: string; Code: Integer);
 begin
   // Connect failure and mid-session close are the same message to the user; the
-  // handler distinguishes them, as before, by which one it receives.
-  PostMessage(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle,
-              WM_TELNET_MSG, TELNET_CLOSED, Code);
+  // handler distinguishes them, as before, by which KIND it receives.
+  QueueClusterEvent(cekClosed, Code, '');
 end;
 
 // Runs on its own thread purely because Connect BLOCKS (10 s timeout) and must
@@ -1168,10 +1234,9 @@ begin
   if not ClusterClient.Connect(string(AnsiString(PAnsiChar(@PendingTelnetHost[0]))),
                                PendingTelnetPort) then
      begin
-     // Reason already reported through OnDisconnected; tell the window the
-     // ATTEMPT failed so it prints "failed to connect" rather than "closed".
-     PostMessage(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle,
-                 WM_TELNET_MSG, TELNET_CONNECT_FAILED, 0);
+     // Reason already reported through OnDisconnected; say the ATTEMPT failed
+     // so the console prints "failed to connect" rather than "closed".
+     QueueClusterEvent(cekConnectFailed, 0, '');
      Exit;
      end;
 
@@ -2095,6 +2160,7 @@ begin
 end;
 
 initialization
+  GClusterLock := SyncObjs.TCriticalSection.Create;
   ClusterEvents := TClusterEvents.Create;
   ClusterClient := TDXClusterClient.Create;
   ClusterClient.OnLine         := ClusterEvents.Line;
@@ -2106,7 +2172,16 @@ finalization
   // Destroy stops the reader and closes the socket; do it before the events
   // object goes, or a line arriving during teardown would call into freed code.
   ClusterClient.Free;
+  // AND BEFORE THE OBJECT IS FREED, drop any drain still queued against it --
+  // the reader can have queued one on its way out, and an async call into a
+  // freed method is a crash with no useful stack.
+  if Application <> nil then
+     begin
+     Application.RemoveAsyncCalls(ClusterEvents);
+     end;
   ClusterEvents.Free;
+  GClusterQueue := nil;
+  FreeAndNil(GClusterLock);
 
 end.
 
