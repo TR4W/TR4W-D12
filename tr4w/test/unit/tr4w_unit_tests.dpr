@@ -281,7 +281,9 @@ uses
    uRadioElecraftSerial in '..\..\src\radioFactory\uRadioElecraftSerial.pas',
    uRadioElecraftK3     in '..\..\src\radioFactory\uRadioElecraftK3.pas',
    uRadioElecraftK2     in '..\..\src\radioFactory\uRadioElecraftK2.pas',
-   uRadioElecraftKX3    in '..\..\src\radioFactory\uRadioElecraftKX3.pas';
+   uRadioElecraftKX3    in '..\..\src\radioFactory\uRadioElecraftKX3.pas',
+   uRadioElecraftK4     in '..\..\src\radioFactory\uRadioElecraftK4.pas',
+   uTestSplitReassert   in 'uTestSplitReassert.pas';
 
 begin
    IsMultiThread := True;  // Match main application setting
@@ -353,6 +355,7 @@ begin
    RegisterSuite(TDXSpotParseTests.Create('DXSpotParse'));
    RegisterSuite(TSpotAgeTests.Create('SpotAge'));
    RegisterSuite(TClusterTokensTests.Create('ClusterTokens'));
+   RegisterSuite(TSplitReassertTests.Create('SplitReassert'));
    RegisterSuite(TWinTimerTests.Create('WinTimer'));
    RegisterSuite(TRadioConfigStoreTests.Create('RadioConfigStore'));
    RegisterSuite(TRadioConfigLegacyMapTests.Create('RadioConfigLegacyMap'));
