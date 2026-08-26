@@ -182,7 +182,8 @@ def convert(text, path):
     def opens_multiline(v):
         v = v.strip()
         return v.endswith('<') or v.endswith('(')
-    for raw in text.split('\r\n'):
+
+    for raw in text.split('\r\n'):
         line = raw.rstrip('\r')
         if swallow:
             s = line.strip()
