@@ -88,7 +88,7 @@ const
   //{
     (mrText: 'ADIF'; mrId: menu_adif),
     (mrText: 'CSV'; mrId: menu_csv),
-    (mrText: 'Cabrillo'#9'Ctrl+Alt+B'; mrId: menu_cabrillo),
+    (mrText: 'Cabrillo'; mrId: menu_cabrillo),
     (mrText: 'EDI'; mrId: menu_export_edi),
     (mrText: RC_INIEXLIST; mrId: menu_initial_ex_list),
 //    (mrText: RC_TRLOGFORM; mrId: menu_trlog),
@@ -124,7 +124,7 @@ const
     // Appearance page, which the Ctrl-J entry above reaches. menu_appearance
     // itself is kept in VC.pas and still handled in ProcessMenu, because the
     // id may arrive from an accelerator or a saved menu state.
-    (mrText: 'Winkeyer'#9'Ctrl+W'; mrId: menu_winkeyer2),
+    (mrText: 'Winkeyer'; mrId: menu_winkeyer2),
 
     // One item, not a submenu: the Preferences window owns BOTH radio slots
     // plus the radio library and the profiles, so a per-slot entry would open
@@ -136,7 +136,7 @@ const
     (mrText: '-'; mrId: 0),
     (mrText: RC_PROGRAMMES; mrId: menu_messages),
 
-    (mrText: 'LPT'#9'Ctrl+Alt+L'; mrId: menu_lpt),
+    (mrText: 'LPT'; mrId: menu_lpt),
 
  //}
 
@@ -429,6 +429,13 @@ begin
      // vice versa -- Alt+P on two commands, a bare '-' for Ctrl+-, Alt+- for
      // nothing at all.  One row now produces both the binding and the label, so
      // they cannot disagree.  See docs\ACCELERATOR_AUDIT.md.
+     { AND THE ROW MUST NOT SPELL THE SHORTCUT ITSELF.  Three did --
+       'Cabrillo'#9'Ctrl+Alt+B', 'Winkeyer'#9'Ctrl+W', 'LPT'#9'Ctrl+Alt+L' --
+       so the operator saw the key TWICE: the row's copy and this one.
+       Found 2026-08-26 by test\ui\Dump-Menu.ps1 on its first run.  The
+       2026-08-17 sweep that removed 77 `RC_x + RC_x_HK` concatenations
+       missed them because they carried a literal tab inside a quoted
+       string rather than an _HK constant. }
      Caption := TempMenuRecord.mrText;
      if uFlags = MF_STRING then
         begin
