@@ -27,6 +27,7 @@
 #   .\FullBuild.ps1                    # lints + tests + app + server
 #   .\FullBuild.ps1 -BuildInstaller    # + NSIS installer
 #   .\FullBuild.ps1 -SkipTests         # app only; prints a warning
+#   .\FullBuild.ps1 -SkipServer        # skip tr4wserver; prints a warning
 #
 # Exit code 0 only if every requested step succeeded.
 
@@ -38,6 +39,11 @@ param(
    # shipping them a second download. Pass this for a public release.
    [switch] $ExcludeSymbols,
    [switch] $SkipTests,
+   # tr4wserver is being converted to the LCL (NY4I, 2026-08-26). Until it is,
+   # it cannot link: TF -> uCrashLog -> Forms drags the LCL into a console
+   # program whose search paths deliberately exclude it. Skipping is LOUD and
+   # marks the build unshippable -- it must not become the silent default.
+   [switch] $SkipServer,
    [switch] $SkipLints,
    [string] $Repo = (Split-Path $PSScriptRoot -Parent),
    # Empty by default: Find-Toolchain discovers FPC and Lazarus and honours
@@ -445,18 +451,28 @@ if ($LASTEXITCODE -ne 0)
 # ---------------------------------------------------------------------------
 # TR4WServer.
 # ---------------------------------------------------------------------------
-Phase 'TR4WServer'
+if ($SkipServer)
+   {
+   $serverExe = $null
+   Write-Host ''
+   Write-Host 'TR4WServer SKIPPED (-SkipServer) -- pending its LCL conversion.' -ForegroundColor Yellow
+   Write-Host '  the multi-op server is NOT in this build; do not ship it.' -ForegroundColor Yellow
+   }
+else
+   {
+   Phase 'TR4WServer'
 
-$serverExe = Join-Path $SERVER_DIR 'tr4wserver.exe'
+   $serverExe = Join-Path $SERVER_DIR 'tr4wserver.exe'
 
-& (Join-Path $BUILD_DIR 'Build-Server.ps1') `
-      -Cpu $Cpu -Os $Os -Fpc $tc.FpcExe -Laz $tc.LazDir `
-      -OutExe $serverExe | Out-Host
+   & (Join-Path $BUILD_DIR 'Build-Server.ps1') `
+         -Cpu $Cpu -Os $Os -Fpc $tc.FpcExe -Laz $tc.LazDir `
+         -OutExe $serverExe | Out-Host
 
-if ($LASTEXITCODE -ne 0) { Fail 'tr4wserver build failed' }
-if (-not (Test-Path $serverExe)) { Fail "tr4wserver binary missing at $serverExe" }
+   if ($LASTEXITCODE -ne 0) { Fail 'tr4wserver build failed' }
+   if (-not (Test-Path $serverExe)) { Fail "tr4wserver binary missing at $serverExe" }
 
-Write-Host "  tr4wserver.exe ($([int]((Get-Item $serverExe).Length / 1KB)) KB)"
+   Write-Host "  tr4wserver.exe ($([int]((Get-Item $serverExe).Length / 1KB)) KB)"
+   }
 
 # ---------------------------------------------------------------------------
 # Installer.
@@ -512,8 +528,9 @@ if ($BuildInstaller)
 Write-Host ''
 Write-Host "=== BUILD SUCCESSFUL -- TR4W $TR4W_VERSION ===" -ForegroundColor Green
 Write-Host "  app    : $appExe"
-Write-Host "  server : $serverExe"
-if ($SkipTests -or $SkipLints)
+if ($serverExe) { Write-Host "  server : $serverExe" }
+else            { Write-Host '  server : SKIPPED (-SkipServer)' -ForegroundColor Yellow }
+if ($SkipTests -or $SkipLints -or $SkipServer)
    {
    Write-Host '  NOTE   : gates were skipped -- not a shippable build.' -ForegroundColor Yellow
    }

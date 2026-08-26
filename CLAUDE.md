@@ -48,7 +48,8 @@ reproduced by checking out a commit before that. **DCC32 was retired earlier and
 `tr4w/build/Test-FreshClone.ps1`. Out of scope, unchanged: 64-bit, SQLite, the contest factory.
 
 Done: the build system, the lints, the unit tests (3978/0), the golden corpus (22/0/4), the LCL
-port of all four designed forms, `tr4wserver`, the NSIS installer, and `release.yml`.
+port of all four designed forms, ~~`tr4wserver`~~ (**regressed 2026-08-23, see below**), the NSIS
+installer, and `release.yml`.
 **The largest open block is still live/bench verification, and nothing in it is provable by code
 review.** Next in line: attaching a `win-ci` runner.
 
@@ -82,6 +83,7 @@ FPC build passes the unit tests (3978/0) and the golden corpus (22/0/4), runs th
 
 ```powershell
 .\FullBuild.ps1                    # lints + unit tests + app + tr4wserver
+.\FullBuild.ps1 -SkipServer        # tr4wserver cannot link -- see Multi-user networking
 .\FullBuild.ps1 -BuildInstaller    # + the NSIS installer
 ```
 
@@ -119,7 +121,10 @@ units for i386. It lists every location it tried when it fails.
 
 **The unit search paths are defined once**, in `build/Get-SearchPaths.ps1`, for three targets that
 genuinely differ (App / Tests / Server). They previously existed in three copies and had already
-drifted. `Server` deliberately gets no LCL: `tr4wserver` is a console program.
+drifted. `Server` deliberately gets no LCL: `tr4wserver` is a console program. **That exclusion is
+also the only thing guarding the boundary**, which is why a unit that quietly grew a `Forms`
+dependency broke the server build and nothing else noticed — see [Multi-user
+networking](#6-multi-user-networking).
 
 **`spike/` is gone** (2026-08-13). It answered "can FPC do this", the answer was yes, and its probes
 are in git history. UI harnesses live in `tr4w/test/ui/`.
@@ -453,11 +458,28 @@ ready: gate post-connect sends on link *stability*, not presence.
 
 ### 6. Multi-user networking
 
-**TR4WServer** (`tr4w/tr4wserver/`, its own `.dpr`, built by `FullBuild.ps1` as a normal step — it
-compiles under FPC unchanged and links no LCL, being a console program) is the TCP/IP server for
-multi-op stations: centralised log, multipliers, dupe
-checking, serial-number lockout, time sync. Binary packet protocol with CRC32
-(`src/utils/networkmessageutils.pas`).
+**TR4WServer** (`tr4w/tr4wserver/`, its own `.dpr`) is the TCP/IP server for multi-op stations:
+centralised log, multipliers, dupe checking, serial-number lockout, time sync. Binary packet
+protocol with CRC32 (`src/utils/networkmessageutils.pas`).
+
+~~built by `FullBuild.ps1` as a normal step — it compiles under FPC unchanged and links no LCL~~
+**IT HAS NOT COMPILED SINCE 2026-08-23, AND `FullBuild.ps1` NOW SKIPS IT.** `a3c671cc` added a
+`TF` → `uCrashLog` edge so a fault on a worker thread would not be silent; `uCrashLog` uses
+`Forms`. So the chain
+
+    tr4wserver.dpr → tr4wserverUnit → TF → uCrashLog → Forms
+
+drags the LCL into a console program whose search paths deliberately exclude it. **Nothing
+surfaced it for three days**, because the server's LCL-free search path is the only guard and it
+fires only when someone runs a full build. Use `-SkipServer` until the LCL conversion lands (NY4I
+is taking it, 2026-08-26); the switch is loud and stamps the build unshippable.
+
+The `{$IFDEF FPC}` guard in `uCrashLog` is on the **wrong axis**: it asks which *compiler*, when
+the question is whether this *program* has an LCL. Both programs are FPC; only `tr4w.exe` has
+Forms. The layering fix is to split `uCrashLog` — the RTL reporter (`LogCaughtException`,
+`EarlyTrace`, `OnMainThread`, the `ExceptProc` hook) links anywhere; only `Application.OnException`
+and `Application.ShowException` need the LCL. Two statements move, and the server would then get
+crash logging, which today it has none of.
 
 Client side: `src/uNetClient.pas`, `src/uNet.pas`, `src/trdos/LogNet.pas`,
 `src/uGetServerLog.pas`.
