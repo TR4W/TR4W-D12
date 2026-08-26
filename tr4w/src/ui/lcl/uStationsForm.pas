@@ -247,7 +247,12 @@ begin
    if Key = VK_ESCAPE then
       begin
       Key := 0;
-      CloseTR4WWindow(tw_STATIONS_INDEX);
+      { Close, NOT CloseTR4WWindow.  Going straight to the primitive
+        destroys the handle while the LCL still believes the form is
+        shown, so the widget set recreates it and Escape appears to do
+        nothing.  Close runs HandleClose, which sets caHide and calls
+        CloseTR4WWindow itself -- every other converted form does this. }
+      Close;
       end;
 end;
 

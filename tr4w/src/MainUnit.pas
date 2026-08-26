@@ -388,6 +388,23 @@ procedure RepeatLastCWMessage;
 procedure OpenTR4WWindow(ID: WindowsType);
 procedure OpenOtherWindows;
 procedure CloseTR4WWindow(ID: WindowsType);
+
+{ CLOSE A WINDOW FROM OUTSIDE IT -- the door for anything that is not the
+  window's own OnClose.
+
+  CloseTR4WWindow is the PRIMITIVE: it destroys the handle and updates the
+  table, and a form's OnClose is expected to have already decided to hide.
+  Calling it on an LCL form that is still Visible destroys the handle behind
+  the framework's back, and the widget set simply RECREATES it -- the window
+  does not go away, and WndHandle is left 0, so the next request opens it
+  again. That is the caNone failure reached through a different door, and it is
+  why the Windows-menu entry and the accelerator would not close the Stations
+  window (NY4I, bench queue). Measured 2026-08-26: open -> 11 windows, command
+  again -> still 11.
+
+  So: if this ID is an LCL form, ask the FORM to close. Its OnClose sets
+  caHide and calls CloseTR4WWindow itself. }
+procedure RequestCloseTR4WWindow(ID: WindowsType);
 function CreateTR4WStaticWindow(X: Word; Y: Word; w: Word; Style: Cardinal):
   HWND;
 function CreateTR4WStaticWindowID(X: Word; Y: Word; w: Word; Style: Cardinal;
@@ -4434,7 +4451,7 @@ begin
           end
        else
           begin
-          CloseTR4WWindow(ID);
+          RequestCloseTR4WWindow(ID);
           end;
        Exit;
        end;
@@ -6158,6 +6175,28 @@ begin
        PutCallToCallWindow(CallWindowString);
        end;
 
+end;
+
+procedure RequestCloseTR4WWindow(ID: WindowsType);
+var
+  // TCustomForm, matching LclFormFor -- Close is declared there, and a
+  // TForm variable would not accept every form this can be handed.
+  form: TCustomForm;
+begin
+  if not tWindowsExist(ID) then
+     begin
+     Exit;
+     end;
+
+  form := LclFormFor(ID);
+  if (form <> nil) and form.Visible then
+     begin
+     // The framework's own way out. OnClose -> caHide -> CloseTR4WWindow.
+     form.Close;
+     Exit;
+     end;
+
+  CloseTR4WWindow(ID);
 end;
 
 procedure CloseTR4WWindow(ID: WindowsType);
