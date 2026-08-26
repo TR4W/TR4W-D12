@@ -91,6 +91,19 @@ tr4w/tr4w.log
 *.TRW
 *.LOG
 
+# ADIF exports. The program writes these constantly -- /EXPORT mode, the Post
+# menu, and every corpus run -- and they are operating data, not source. A
+# 375 KB log.ADI sat untracked in a corpus set on 2026-08-26 because the root
+# had no rule at all and the corpus subtree re-includes *.ADI wholesale.
+#
+# THE CURATED FIXTURES ARE THE EXCEPTION, and they re-include themselves in
+# their own subtree: tr4w/test/corpus/.gitignore (the 13 ref.adi golden
+# masters) and tr4w/test/unit/fixtures/.gitignore (the 11 parser fixtures).
+# Add a new one there and it is tracked normally; drop a stray export
+# anywhere and it stays out.
+*.adi
+*.ADI
+
 # Build output text files
 tr4w/build_*.txt
 tr4w/COMPILATION_RESULTS.txt

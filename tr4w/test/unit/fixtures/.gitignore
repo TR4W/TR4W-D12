@@ -1,0 +1,9 @@
+# Curated ADIF parser fixtures -- the sanctioned exception to the root's *.adi
+# ignore, in the same spirit as tr4w/test/corpus/.gitignore.
+#
+# These 11 files are INPUTS to the unit tests (uTestADIF and friends resolve
+# them from ParamStr(0), not the working directory), so they are source, not
+# operating data. Without this re-include a new fixture would need `git add -f`
+# and would otherwise be committed as a test that silently reads nothing.
+!*.adi
+!*.ADI

@@ -17,3 +17,13 @@
 # run from the D12 build -- outputs to compare, not fixtures to track.
 cand.adi
 cand.cbr
+
+# So is the export named after the log itself. The !*.adi/!*.ADI above is a
+# BLANKET re-include: it readmits every ADIF in this subtree, artifacts
+# included, which is how a 375 KB log.ADI came to be sitting beside a ref.adi
+# as an untracked file nobody had noticed (2026-08-26). Only ref.* is a
+# fixture here; everything else an export run drops is transient.
+log.adi
+log.ADI
+log.cbr
+log.CBR
