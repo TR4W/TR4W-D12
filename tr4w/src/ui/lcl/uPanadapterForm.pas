@@ -115,6 +115,9 @@ type
       btnPause: TButton;
       trkScale: TTrackBar;
       pbSpectrum: TPaintBox;
+      lblSpan: TLabel;
+      btnSpanNarrow: TButton;
+      btnSpanWide: TButton;
       tmrRefresh: TTimer;
 
       procedure HandleCreate(Sender: TObject);
@@ -126,6 +129,8 @@ type
       procedure HandlePaletteChange(Sender: TObject);
       procedure HandlePauseClick(Sender: TObject);
       procedure HandleScaleChange(Sender: TObject);
+      procedure HandleSpanNarrow(Sender: TObject);
+      procedure HandleSpanWide(Sender: TObject);
       procedure HandleSpectrumMouseDown(Sender: TObject; Button: TMouseButton;
                                         Shift: TShiftState; X, Y: Integer);
       procedure HandleSpectrumMouseMove(Sender: TObject; Shift: TShiftState;
@@ -189,9 +194,15 @@ type
       function FormatMHz(AHz: Int64): string;
       function RenderFrame: TSpectrumFrame;
       function FreqAtPixel(AX: Integer): Int64;
-      procedure PlotLayout(out ASpecH, AWfH, AAxisTop: Integer);
+      procedure PlotLayout(out ASpecH, AAxisTop, AWfTop, AWfH: Integer);
       function FormatAxis(AHz, AStepHz: Int64): string;
       procedure DrawAxis(ACanvas: TCanvas; AWidth, AAxisTop: Integer);
+      procedure DrawDbScale(ACanvas: TCanvas; AWidth, ASpecH: Integer;
+                            AMinDb, ARangeDb: Single);
+      procedure StepSpan(const aWider: boolean);
+      procedure ShowSpan;
+      procedure RestoreBounds;
+      procedure SaveCurrentBounds;
       function PixelForFreq(AHz: Int64; AWidth: Integer): Integer;
       function VfoDisplayHz(AVfo: TVFO): Int64;
       procedure DrawVfoPassband(ACanvas: TCanvas; AVfo: TVFO; APassband: TColor;
@@ -248,15 +259,22 @@ type
 
 var
    TR4WPanadapterForm: TfrmPanadapter = nil;
+   { Restored ONCE per run.  Reshowing must not drag the window back to
+     where it sat when TR4W started. }
+   FBoundsRestored: boolean = False;
 
-procedure ShowPanadapterWindow(ARadio: TFactoryRadioBase; const ASourceId: string);
+procedure ShowPanadapterWindow(ARadio: TFactoryRadioBase; const ASourceId: string;
+                               const ACaption: string = '');
 procedure ClosePanadapterWindow;
 function PanadapterWindowVisible: Boolean;
 
 implementation
 
 uses
-   uLCLFormHelpers;   // OwnFormByMainWindow -- LCL PopupParent, not GWL_HWNDPARENT
+   uLCLFormHelpers,     // OwnFormByMainWindow -- LCL PopupParent, not GWL_HWNDPARENT
+   Types,               // IntersectRect -- the RTL one, not Windows
+   uWindowLayoutStore,  // the bounds, keyed by name
+   uTR4WConfigFile;     // TR4WConfigFileName, Load/SaveWindowLayout
 
 {$R *.lfm}
 
@@ -376,6 +394,8 @@ end;
 
 procedure TfrmPanadapter.HandleClose(Sender: TObject; var CloseAction: TCloseAction);
 begin
+   SaveCurrentBounds;
+
    // Closing STOPS THE STREAM.  It is a second TCP socket and ~150 KB/s; a
    // hidden window quietly consuming that would be a cost nobody asked for.
    DetachRadio;
@@ -865,7 +885,7 @@ end;
 procedure TfrmPanadapter.HandleRefreshTimer(Sender: TObject);
 var
    fresh: Boolean;
-   w, specH, wfH, axisTop: Integer;
+   w, specH, wfH, wfTop, axisTop: Integer;
 begin
    fresh := False;
    FLock.Acquire;
@@ -914,7 +934,7 @@ begin
       end;
 
    w := pbSpectrum.Width;
-   PlotLayout(specH, wfH, axisTop);
+   PlotLayout(specH, axisTop, wfTop, wfH);
 
    if (w > 0) and (wfH > 0) and (Length(FRenderBins) > 0) then
       begin
@@ -934,7 +954,7 @@ end;
 // definition, used by both the paint path and the timer -- when the timer sized
 // the waterfall with its own copy of this arithmetic, the two could disagree
 // about how tall the bitmap was.
-procedure TfrmPanadapter.PlotLayout(out ASpecH, AWfH, AAxisTop: Integer);
+procedure TfrmPanadapter.PlotLayout(out ASpecH, AAxisTop, AWfTop, AWfH: Integer);
 var
    plotH: Integer;
 begin
@@ -947,7 +967,15 @@ begin
 
    AWfH := Round(plotH * WATERFALL_FRACTION);
    ASpecH := plotH - AWfH;
-   AAxisTop := plotH;
+
+   { THE SCALE SITS BETWEEN THE TWO, which is where the K4 puts it (NY4I,
+     2026-08-26).  It reads as a shared axis that both halves hang off, rather
+     than as a caption under the whole picture -- and the numbers end up next to
+     the trace, which is what an operator is reading them against.
+
+     It used to be at the very bottom, below the waterfall. }
+   AAxisTop := ASpecH;
+   AWfTop := ASpecH + AXIS_HEIGHT;
 end;
 
 // Enough decimals to tell one tick from the next, and no more: at a 3 kHz span
@@ -982,6 +1010,15 @@ begin
       decimals := 5;
       end;
 
+   { NEVER FEWER THAN THREE.  A step of 10 kHz gives two by the rule above, so
+     the band read 7.04, 7.05 while the K4 beside it read 7.040, 7.050 -- and a
+     kHz digit is the one an operator is actually tuning by (NY4I, 2026-08-26).
+     Wider steps still get three, which is what the K4 shows on a full band. }
+   if decimals < 3 then
+      begin
+      decimals := 3;
+      end;
+
    if decimals = 0 then
       begin
       Result := FormatFloat('0', AHz / 1000000.0);
@@ -989,6 +1026,232 @@ begin
    else
       begin
       Result := FormatFloat('0.' + StringOfChar('0', decimals), AHz / 1000000.0);
+      end;
+end;
+
+{ THE VERTICAL SCALE, and the horizontal grid it labels.
+
+  dB, NOT dBm, and that is deliberate.  The K4's own display says dBm; the
+  numbers IN THE PACKET are not those numbers.  Measured over 902 packets
+  (docs/PANADAPTER_LCL_DESIGN.md 1.1): pan A runs -150.0..-106.6 dB with its
+  floor near -126, while the 3 kHz mini-pan Y runs -2.0..+19.4 with a floor near
+  zero -- the same radio, the same field, scales 150 dB apart.  Printing "dBm"
+  against that would claim a calibration this stream does not carry.
+
+  The scale is anchored to the FRAME'S OWN noise floor (DisplayRange), so the
+  numbers move with the reference rather than being absolute.  That is what
+  makes one display work for both pans. }
+{ WHERE THE WINDOW WAS LEFT.  Keyed by NAME in settings\tr4w.json, the same way
+  the band plan does it -- this is not a tw_ window, so it has no entry in
+  tr4w_WindowsArray and FindAndSaveRectOfAllWindows never sees it.  NY4I: "the
+  position of the panadapter window is not being saved."
+
+  Making it a tw_ window would give position, the Windows menu and the
+  accelerator in one move, but a tw_ window's caption is read back from its MENU
+  ITEM -- so that route is blocked behind the I18N work, and this is not. }
+const
+   LAYOUT_NAME = 'Panadapter';
+
+procedure TfrmPanadapter.RestoreBounds;
+var
+   store: TWindowLayoutStore;
+   saved, desktop, overlap: TRect;
+   visible: boolean;
+begin
+   store := TWindowLayoutStore.Create;
+   try
+      if not LoadWindowLayout(TR4WConfigFileName, store) then
+         begin
+         Exit;
+         end;
+
+      if not store.TryGetLayout(LAYOUT_NAME, saved, visible) then
+         begin
+         Exit;
+         end;
+
+      // A monitor that is no longer attached leaves a well-formed rect that
+      // puts the window where nobody can reach it.  Any overlap with the
+      // virtual desktop is enough; Windows nudges a partly-off window back.
+      desktop := Rect(Screen.DesktopLeft, Screen.DesktopTop,
+                      Screen.DesktopLeft + Screen.DesktopWidth,
+                      Screen.DesktopTop  + Screen.DesktopHeight);
+
+      if not IntersectRect(overlap, saved, desktop) then
+         begin
+         Exit;
+         end;
+
+      // poDesigned FIRST, or the LCL re-applies its own rule when the form is
+      // shown and throws the restored position away.
+      Position := poDesigned;
+      SetBounds(saved.Left, saved.Top,
+                saved.Right - saved.Left, saved.Bottom - saved.Top);
+   finally
+      store.Free;
+   end;
+end;
+
+procedure TfrmPanadapter.SaveCurrentBounds;
+var
+   store: TWindowLayoutStore;
+begin
+   // Minimised or maximised bounds are not what to restore.
+   if WindowState <> wsNormal then
+      begin
+      Exit;
+      end;
+
+   store := TWindowLayoutStore.Create;
+   try
+      // SetLayout on an EMPTY store: SaveWindowLayout re-reads the file and
+      // overlays these entries, so every other window's row survives without
+      // this one having to know they exist.
+      store.SetLayout(LAYOUT_NAME,
+                      Rect(Left, Top, Left + Width, Top + Height), True);
+      SaveWindowLayout(TR4WConfigFileName, store);
+   finally
+      store.Free;
+   end;
+end;
+
+{ SPAN STEPPING, THE WAY QK4 DOES IT.
+
+  NY4I: "in qk4, pressing + increases the K4 span by 1" -- a FINE ADJUSTMENT,
+  not a zoom.  The first version stepped a ladder of round numbers
+  (2/5/10/20/50/100/200/500 kHz) and that was the wrong model twice over:
+
+    * the radio is streaming 192 kHz, which is on no such rung, so every press
+      jumped somewhere unrelated to where it already was; and
+    * asking for 500 kHz got #SPN368000 back -- the K4 CLAMPED it to its
+      maximum, so '+' looked dead when it had in fact worked.
+
+  ONE kHz PER PRESS, in one constant, because whether this should be a fine trim
+  or a doubling zoom is a judgement about how the control FEELS and is meant to
+  be easy to change.
+
+  THE RADIO IS THE AUTHORITY ON WHAT IT WILL ACCEPT.  It clamps and reports the
+  value it settled on (#SPN), and the display always follows the FRAME, so an
+  out-of-range request costs a rejected command and nothing else -- there is no
+  need to know the rig's limits here. }
+const
+   SPAN_STEP_HZ = 1000;
+
+procedure TfrmPanadapter.StepSpan(const aWider: boolean);
+var
+   current, want: Integer;
+begin
+   { A BUTTON THAT DOES NOTHING MUST SAY WHY.  Both of these used to Exit in
+     silence, which is indistinguishable from a dead control -- the reason was
+     only findable by reading the CAT log for a command never sent. }
+   if FRadio = nil then
+      begin
+      lblSpan.Caption := 'Span: no radio';
+      Exit;
+      end;
+
+   { FROM THE RADIO'S OWN SETTING, not the drawn width.  They are different
+     numbers: the frame reported 384 kHz while the radio reported 368 kHz for
+     the same moment, so stepping from the frame asked for a value derived from
+     something the radio never had -- and the result looked random.
+
+     NY4I: "it seems like you should read the span from the radio and set your
+     initial span to that value."  StartSpectrum now asks #SPN at connect, and
+     the driver keeps it current from the radio's own pushes. }
+   current := FRadio.SpectrumSpanHz;
+
+   if current <= 0 then
+      begin
+      lblSpan.Caption := 'Span: radio has not reported one';
+      Exit;
+      end;
+
+   if aWider then
+      begin
+      want := current + SPAN_STEP_HZ;
+      end
+   else
+      begin
+      want := current - SPAN_STEP_HZ;
+      end;
+
+   FRadio.SetSpectrumSpan(want);
+end;
+
+procedure TfrmPanadapter.HandleSpanNarrow(Sender: TObject);
+begin
+   StepSpan(False);
+end;
+
+procedure TfrmPanadapter.HandleSpanWide(Sender: TObject);
+begin
+   StepSpan(True);
+end;
+
+{ What the RADIO is sending, not what was asked for -- see StepSpan. }
+procedure TfrmPanadapter.ShowSpan;
+var
+   frame: TSpectrumFrame;
+begin
+   { THE RADIO'S SETTING WHEN IT HAS GIVEN ONE, because that is what the buttons
+     act on -- a readout showing the drawn width while the buttons stepped
+     something else is how the last round of confusion started. }
+   if (FRadio <> nil) and (FRadio.SpectrumSpanHz > 0) then
+      begin
+      lblSpan.Caption := Format('Span %.0f kHz', [FRadio.SpectrumSpanHz / 1000.0]);
+      Exit;
+      end;
+
+   frame := RenderFrame;
+
+   if frame.SpanHz <= 0 then
+      begin
+      lblSpan.Caption := 'Span --';
+      Exit;
+      end;
+
+   if frame.SpanHz >= 1000 then
+      begin
+      lblSpan.Caption := Format('Span %.0f kHz', [frame.SpanHz / 1000.0]);
+      end
+   else
+      begin
+      lblSpan.Caption := Format('Span %d Hz', [frame.SpanHz]);
+      end;
+end;
+
+procedure TfrmPanadapter.DrawDbScale(ACanvas: TCanvas;
+                                     AWidth, ASpecH: Integer;
+                                     AMinDb, ARangeDb: Single);
+const
+   DB_STEP = 10;
+var
+   db, y: Integer;
+begin
+   if (ASpecH <= 0) or (ARangeDb <= 0) or (AWidth <= 0) then
+      begin
+      Exit;
+      end;
+
+   // The first multiple of the step at or above the bottom of the range.
+   db := Ceil(AMinDb / DB_STEP) * DB_STEP;
+
+   ACanvas.Brush.Style := bsClear;
+
+   while db <= (AMinDb + ARangeDb) do
+      begin
+      y := ASpecH - Round(((db - AMinDb) / ARangeDb) * ASpecH);
+
+      if (y >= 0) and (y < ASpecH) then
+         begin
+         ACanvas.Pen.Color := GRID_COLOR;
+         ACanvas.Line(0, y, AWidth, y);
+
+         ACanvas.Font.Color := AXIS_COLOR;
+         ACanvas.TextOut(2, y + 1, IntToStr(db) + ' dB');
+         end;
+
+      Inc(db, DB_STEP);
       end;
 end;
 
@@ -1061,6 +1324,16 @@ begin
    while f <= endHz do
       begin
       x := Round(((f - startHz) / frame.SpanHz) * AWidth);
+
+      { THE GRID LINE FIRST, then the tick.  It runs UP through the trace from
+        the scale, so a peak can be read against a frequency without counting
+        pixels -- the K4 draws the same lines.  Not over the waterfall: that is
+        picture, and a grid across it hides the very detail it is there for. }
+      if AAxisTop > 0 then
+         begin
+         ACanvas.Pen.Color := GRID_COLOR;
+         ACanvas.Line(x, 0, x, AAxisTop);
+         end;
 
       ACanvas.Pen.Color := AXIS_TICK_COLOR;
       ACanvas.Line(x, AAxisTop, x, AAxisTop + 4);
@@ -1365,6 +1638,11 @@ end;
 
 procedure TfrmPanadapter.UpdateLabels;
 begin
+   { The span the frames are actually carrying -- refreshed with the rest of the
+     labels, so a change made at the RIG'S front panel shows here too and not
+     only one made with the buttons. }
+   ShowSpan;
+
    if FRadio = nil then
       begin
       lblStatus.Caption := 'No radio';
@@ -1398,7 +1676,7 @@ procedure TfrmPanadapter.HandleSpectrumPaint(Sender: TObject);
 var
    cv: TCanvas;
    w, h, specH, wfH: Integer;
-   x, y, centreX, axisTop: Integer;
+   x, y, centreX, axisTop, wfTop: Integer;
    peak: Single;
    minDb, rangeDb: Single;
    binsPerPixel: Double;
@@ -1430,7 +1708,7 @@ begin
       Exit;
       end;
 
-   PlotLayout(specH, wfH, axisTop);
+   PlotLayout(specH, axisTop, wfTop, wfH);
    DrawAxis(cv, w, axisTop);
 
    DisplayRange(minDb, rangeDb);
@@ -1440,13 +1718,17 @@ begin
       Exit;
       end;
 
+   // Behind the trace and the markers: a grid drawn over them would compete
+   // with the data it exists to measure.
+   DrawDbScale(cv, w, specH, minDb, rangeDb);
+
    // ---- waterfall, below the trace ------------------------------------
    // Just a blit.  The bitmap is kept current by PushWaterfallRow (one row) and
    // by RenderWaterfall (palette/scale changes only), so paint does no
    // per-pixel work at all.
    if (FWaterfall <> nil) and (wfH > 0) then
       begin
-      cv.Draw(0, specH, FWaterfall);
+      cv.Draw(0, wfTop, FWaterfall);
       end;
 
    if specH <= 0 then
@@ -1507,8 +1789,11 @@ begin
    DrawSpots(cv, w, specH);
 
    // ---- VFO markers, OVER the trace -------------------------------------
-   DrawVfoMarker(cv, nrVFOA, VFOA_COLOR, 'A', w, axisTop);
-   DrawVfoMarker(cv, nrVFOB, VFOB_COLOR, 'B', w, axisTop);
+   { THE FULL PICTURE, not just to the scale.  A VFO marker that stopped at the
+     axis would leave the waterfall -- the half showing where a signal has BEEN
+     -- with no reference line at all. }
+   DrawVfoMarker(cv, nrVFOA, VFOA_COLOR, 'A', w, wfTop + wfH);
+   DrawVfoMarker(cv, nrVFOB, VFOB_COLOR, 'B', w, wfTop + wfH);
 
    // ---- cursor and readout ----------------------------------------------
    // Drawn rather than made a control: a label would need layout space in a
@@ -1517,7 +1802,7 @@ begin
    if (FCursorX >= 0) and (FCursorX < w) then
       begin
       cv.Pen.Color := CURSOR_COLOR;
-      cv.Line(FCursorX, 0, FCursorX, axisTop);
+      cv.Line(FCursorX, 0, FCursorX, wfTop + wfH);
 
       readout := FormatMHz(FreqAtPixel(FCursorX)) + '    ' +
                  Format('%.0f dB', [PeakForPixel(FCursorX, binsPerPixel)]);
@@ -1684,7 +1969,8 @@ end;
 // Open / close.  No handle, no window table, no SetWindowPos.
 // ---------------------------------------------------------------------------
 
-procedure ShowPanadapterWindow(ARadio: TFactoryRadioBase; const ASourceId: string);
+procedure ShowPanadapterWindow(ARadio: TFactoryRadioBase; const ASourceId: string;
+                               const ACaption: string);
 begin
    if TR4WPanadapterForm = nil then
       begin
@@ -1697,7 +1983,24 @@ begin
       OwnFormByMainWindow(TR4WPanadapterForm);
       end;
 
+   { NAME THE RADIO, the way the radio panel does -- "Panadapter - Radio 1
+     K4D-278".  On an SO2R station a bare "Panadapter" cannot say whose spectrum
+     it is, which is the one thing the title has to answer (NY4I, 2026-08-26). }
+   if ACaption <> '' then
+      begin
+      TR4WPanadapterForm.Caption := 'Panadapter - ' + ACaption;
+      end;
+
    TR4WPanadapterForm.AttachRadio(ARadio, ASourceId);
+
+   { BOUNDS BEFORE Show, and only the first time.  Reshowing must not drag the
+     window back to where it was when TR4W started. }
+   if not FBoundsRestored then
+      begin
+      FBoundsRestored := True;
+      TR4WPanadapterForm.RestoreBounds;
+      end;
+
    TR4WPanadapterForm.Show;
 end;
 

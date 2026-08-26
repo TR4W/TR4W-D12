@@ -634,6 +634,23 @@ Type TFactoryRadioBase = class(TObject)
       // check first.
       procedure StartSpectrum; virtual;
       procedure StopSpectrum; virtual;
+      { Ask the radio to change the width of the spectrum it is sending.
+
+        A REQUEST, NOT A SETTING.  The span the display uses always comes from
+        the FRAME (TSpectrumFrame.SpanHz) -- the radio may clamp, round, or
+        ignore this entirely, and a display that trusted its own request would
+        draw the wrong frequencies against real data.  Does nothing on a radio
+        that cannot do it, which is every one but the K4 today. }
+      procedure SetSpectrumSpan(const aSpanHz: Integer); virtual;
+      { The span the RADIO says it is set to, or 0 when it has not said.
+
+        NOT the same number as TSpectrumFrame.SpanHz.  Measured on a K4: the
+        frame reported 384 kHz while the radio reported 368 kHz for the same
+        moment.  The frame's span is what is being DRAWN; this is the rig's
+        SETTING, and it is the one to step from when asking for a change --
+        stepping from the drawn width sends a request derived from a number the
+        radio never had. }
+      function SpectrumSpanHz: Integer; virtual;
 
       // Has StartSpectrum taken effect -- is a reader alive and trying?
       function SpectrumStreaming: Boolean; virtual;
@@ -2232,6 +2249,15 @@ end;
 
 procedure TFactoryRadioBase.StopSpectrum;
 begin
+end;
+
+procedure TFactoryRadioBase.SetSpectrumSpan(const aSpanHz: Integer);
+begin
+end;
+
+function TFactoryRadioBase.SpectrumSpanHz: Integer;
+begin
+   Result := 0;   { unknown -- a radio that reports its span overrides this }
 end;
 
 function TFactoryRadioBase.SpectrumStreaming: Boolean;

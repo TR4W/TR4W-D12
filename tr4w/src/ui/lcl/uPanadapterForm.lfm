@@ -4,7 +4,7 @@ object frmPanadapter: TfrmPanadapter
   BorderStyle = bsSizeToolWin
   Caption = 'Panadapter'
   ClientHeight = 380
-  ClientWidth = 700
+  ClientWidth = 840
   Color = clBlack
   DoubleBuffered = True
   KeyPreview = True
@@ -15,7 +15,7 @@ object frmPanadapter: TfrmPanadapter
   object pnlTop: TPanel
     Left = 0
     Top = 0
-    Width = 700
+    Width = 840
     Height = 28
     Align = alTop
     BevelOuter = bvNone
@@ -36,7 +36,7 @@ object frmPanadapter: TfrmPanadapter
       Transparent = True
     end
     object lblStatus: TLabel
-      Left = 520
+      Left = 660
       Top = 7
       Width = 172
       Height = 15
@@ -100,11 +100,46 @@ object frmPanadapter: TfrmPanadapter
       TickStyle = tsNone
       OnChange = HandleScaleChange
     end
+    object lblSpan: TLabel
+      Left = 500
+      Top = 7
+      Width = 92
+      Height = 15
+      Alignment = taRightJustify
+      AutoSize = False
+      Caption = 'Span --'
+      Font.Color = clSilver
+      ParentColor = False
+      ParentFont = False
+      Transparent = True
+    end
+    object btnSpanNarrow: TButton
+      Left = 598
+      Height = 23
+      Top = 2
+      Width = 26
+      Caption = '-'
+      Hint = 'Narrower span (zoom in)'
+      ShowHint = True
+      OnClick = HandleSpanNarrow
+      TabOrder = 3
+    end
+    object btnSpanWide: TButton
+      Left = 626
+      Height = 23
+      Top = 2
+      Width = 26
+      Caption = '+'
+      Hint = 'Wider span (zoom out)'
+      ShowHint = True
+      OnClick = HandleSpanWide
+      TabOrder = 4
+    end
   end
   object pbSpectrum: TPaintBox
     Left = 0
     Top = 28
-    Width = 700
+    Width = 840
     Height = 352
     Align = alClient
     OnMouseDown = HandleSpectrumMouseDown

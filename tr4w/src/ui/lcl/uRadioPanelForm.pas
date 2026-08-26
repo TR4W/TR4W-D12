@@ -164,6 +164,7 @@ end;
 procedure TfrmRadioPanel.SpectrumClick(Sender: TObject);
 var
    rig: RadioPtr;
+   caption, rigName: string;
 begin
    if FSlot = 2 then
       begin
@@ -191,7 +192,28 @@ begin
 
      RADIO 1 AND RADIO 2 ARE DIFFERENT RADIOS, not the two pans of one K4, so
      both ask for 'A' -- each rig's own main pan, on its own socket. }
-   ShowPanadapterWindow(rig^.tFactoryObject, K4_MAIN_PAN_SOURCE);
+   { THE SAME NAME THE PANEL ITSELF CARRIES -- "Radio 1 K4D-278" -- so the
+     panadapter title reads "Panadapter - Radio 1 K4D-278".  Built the same way
+     as the panel's caption (MainUnit, OpenTR4WWindow): the localized label,
+     plus the rig name ONLY when it differs, because RadioName is initialised to
+     that same label and would otherwise read "Radio 1 Radio 1" on a station
+     with no radio configured. }
+   if FSlot = 2 then
+      begin
+      caption := TC_RADIO2;
+      end
+   else
+      begin
+      caption := TC_RADIO1;
+      end;
+
+   rigName := Trim(string(rig^.RadioName));
+   if (rigName <> '') and (not SameText(rigName, caption)) then
+      begin
+      caption := caption + ' ' + rigName;
+      end;
+
+   ShowPanadapterWindow(rig^.tFactoryObject, K4_MAIN_PAN_SOURCE, caption);
 end;
 
 procedure TfrmRadioPanel.HandleClose(Sender: TObject; var CloseAction: TCloseAction);

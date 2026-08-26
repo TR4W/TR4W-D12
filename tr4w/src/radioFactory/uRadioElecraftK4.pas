@@ -67,6 +67,12 @@ Type TK4Radio = class(TElecraftRadio)
       function SpectrumAvailable: Boolean; override;
       procedure StartSpectrum; override;
       procedure StopSpectrum; override;
+      procedure SetSpectrumSpan(const aSpanHz: Integer); override;
+      function SpectrumSpanHz: Integer; override;
+   private
+      { What the radio last said #SPN is.  0 until it has answered. }
+      FSpectrumSpanHz: Integer;
+   public
       function SpectrumStreaming: Boolean; override;
       function SpectrumLinkUp: Boolean; override;
 
@@ -227,6 +233,43 @@ begin
       HandleSpectrumFrame,
       logger,
       Self.radioModel);
+
+   { ASK WHAT THE SPAN IS.  The radio pushes #SPN whenever it changes, but not
+     unprompted at connect -- so without this the first press of the span
+     buttons would have nothing to step from until the operator happened to
+     change it at the rig. }
+   Self.SendToRadio('#SPN;');
+end;
+
+{ #SPN -- the display span in Hz, 1..999999, captured from a real K4 and
+  documented in docs/PANADAPTER_LCL_DESIGN.md section 11.  #SPN$ is the SUB
+  receiver's; this window follows the main pan, so it sends the plain form.
+
+  Clamped to the radio's own range rather than trusted: a value outside it is
+  a command the K4 rejects, and a rejected command looks exactly like a broken
+  button. }
+function TK4Radio.SpectrumSpanHz: Integer;
+begin
+   Result := FSpectrumSpanHz;
+end;
+
+procedure TK4Radio.SetSpectrumSpan(const aSpanHz: Integer);
+var
+   want: Integer;
+begin
+   want := aSpanHz;
+
+   if want < 1 then
+      begin
+      want := 1;
+      end;
+
+   if want > 999999 then
+      begin
+      want := 999999;
+      end;
+
+   Self.SendToRadio(Format('#SPN%d;', [want]));
 end;
 
 procedure TK4Radio.StopSpectrum;
@@ -658,6 +701,19 @@ begin
 // sends RX;DT5;, this procedure is called once with RX; and once with DT5;
    logger.Trace('[ProcessMessage] Received from radio: (%s)',[sMessage]);
    UpdateLastValidResponse;  // Any message from the radio means it's connected
+   { EXTENDED COMMANDS ARE INVISIBLE TO THE DISPATCH BELOW, which keys on the
+     first TWO characters -- '#SPN368000' arrives as '#S' and matches nothing.
+     That is why the radio's own span reports were being logged and dropped. }
+   if (Length(sMessage) >= 5) and (sMessage[1] = '#') then
+      begin
+      // #SPN<n> is the MAIN pan, #SPN$<n> the sub.  This display follows main.
+      if AnsiStartsText('#SPN', sMessage) and (sMessage[5] <> '$') then
+         begin
+         FSpectrumSpanHz := StrToIntDef(Copy(sMessage, 5, MaxInt), FSpectrumSpanHz);
+         logger.Trace('[K4] radio reports spectrum span %d Hz', [FSpectrumSpanHz]);
+         end;
+      end;
+
    sCommand := AnsiLeftStr(sMessage,2);
    if AnsiMidStr(sMessage,3,1) = '$' then
       begin
