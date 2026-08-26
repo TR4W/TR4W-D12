@@ -106,6 +106,12 @@ $lints = @(
    # them since the day the marshalling seam was built.
    @{ Name = 'Lint-AppMessages';     Arg = $src;     NeedsFpc = $false }
    @{ Name = 'Lint-LFMProperties';   Arg = $src;     NeedsFpc = $true  }
+   # Every menu row must have a handler in ProcessMenu. 180 numeric ids wired
+   # to a 920-line case, and nothing checked that the two agreed -- a row with
+   # no arm is a menu item that does nothing when clicked, silently. Added as
+   # Phase 0 of the TMainMenu migration, so anything it finds later is
+   # attributable to that work rather than pre-existing.
+   @{ Name = 'Lint-MenuDispatch';    Arg = $src;     NeedsFpc = $false }
 )
 
 $failed  = 0

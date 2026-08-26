@@ -1,0 +1,1478 @@
+﻿[
+    {
+        "Path":  "File",
+        "Kind":  "popup",
+        "Caption":  "File",
+        "Shortcut":  "",
+        "Id":  null,
+        "Enabled":  true,
+        "Checked":  false,
+        "Children":  [
+                         {
+                             "Path":  "File \u003e Clear log",
+                             "Kind":  "item",
+                             "Caption":  "Clear log",
+                             "Shortcut":  "",
+                             "Id":  10016,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "File \u003e Open log directory",
+                             "Kind":  "item",
+                             "Caption":  "Open log directory",
+                             "Shortcut":  "",
+                             "Id":  10001,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "File \u003e Import",
+                             "Kind":  "popup",
+                             "Caption":  "Import",
+                             "Shortcut":  "",
+                             "Id":  null,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+                                              {
+                                                  "Path":  "File \u003e Import \u003e ADIF",
+                                                  "Kind":  "item",
+                                                  "Caption":  "ADIF",
+                                                  "Shortcut":  "",
+                                                  "Id":  10018,
+                                                  "Enabled":  true,
+                                                  "Checked":  false,
+                                                  "Children":  [
+
+                                                               ]
+                                              }
+                                          ]
+                         },
+                         {
+                             "Path":  "File \u003e Export",
+                             "Kind":  "popup",
+                             "Caption":  "Export",
+                             "Shortcut":  "",
+                             "Id":  null,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+                                              {
+                                                  "Path":  "File \u003e Export \u003e ADIF",
+                                                  "Kind":  "item",
+                                                  "Caption":  "ADIF",
+                                                  "Shortcut":  "",
+                                                  "Id":  10008,
+                                                  "Enabled":  true,
+                                                  "Checked":  false,
+                                                  "Children":  [
+
+                                                               ]
+                                              },
+                                              {
+                                                  "Path":  "File \u003e Export \u003e CSV",
+                                                  "Kind":  "item",
+                                                  "Caption":  "CSV",
+                                                  "Shortcut":  "",
+                                                  "Id":  10020,
+                                                  "Enabled":  true,
+                                                  "Checked":  false,
+                                                  "Children":  [
+
+                                                               ]
+                                              },
+                                              {
+                                                  "Path":  "File \u003e Export \u003e Cabrillo",
+                                                  "Kind":  "item",
+                                                  "Caption":  "Cabrillo",
+                                                  "Shortcut":  "Ctrl+Alt+B",
+                                                  "Id":  10003,
+                                                  "Enabled":  true,
+                                                  "Checked":  false,
+                                                  "Children":  [
+
+                                                               ]
+                                              },
+                                              {
+                                                  "Path":  "File \u003e Export \u003e EDI",
+                                                  "Kind":  "item",
+                                                  "Caption":  "EDI",
+                                                  "Shortcut":  "",
+                                                  "Id":  10019,
+                                                  "Enabled":  true,
+                                                  "Checked":  false,
+                                                  "Children":  [
+
+                                                               ]
+                                              },
+                                              {
+                                                  "Path":  "File \u003e Export \u003e Initial exchanges list",
+                                                  "Kind":  "item",
+                                                  "Caption":  "Initial exchanges list",
+                                                  "Shortcut":  "",
+                                                  "Id":  10014,
+                                                  "Enabled":  true,
+                                                  "Checked":  false,
+                                                  "Children":  [
+
+                                                               ]
+                                              },
+                                              {
+                                                  "Path":  "File \u003e Export \u003e Notes",
+                                                  "Kind":  "item",
+                                                  "Caption":  "Notes",
+                                                  "Shortcut":  "",
+                                                  "Id":  10017,
+                                                  "Enabled":  true,
+                                                  "Checked":  false,
+                                                  "Children":  [
+
+                                                               ]
+                                              }
+                                          ]
+                         },
+                         {
+                             "Path":  "File \u003e Reports",
+                             "Kind":  "separator",
+                             "Caption":  "Reports",
+                             "Shortcut":  "",
+                             "Id":  null,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "File \u003e ",
+                             "Kind":  "separator",
+                             "Caption":  "",
+                             "Shortcut":  "",
+                             "Id":  null,
+                             "Enabled":  false,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "File \u003e E\u0026xit",
+                             "Kind":  "item",
+                             "Caption":  "E\u0026xit",
+                             "Shortcut":  "Alt+X",
+                             "Id":  10002,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         }
+                     ]
+    },
+    {
+        "Path":  "Settings",
+        "Kind":  "popup",
+        "Caption":  "Settings",
+        "Shortcut":  "",
+        "Id":  null,
+        "Enabled":  true,
+        "Checked":  false,
+        "Children":  [
+                         {
+                             "Path":  "Settings \u003e ",
+                             "Kind":  "separator",
+                             "Caption":  "",
+                             "Shortcut":  "",
+                             "Id":  null,
+                             "Enabled":  false,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Settings \u003e Colors",
+                             "Kind":  "item",
+                             "Caption":  "Colors",
+                             "Shortcut":  "",
+                             "Id":  10108,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Settings \u003e Winkeyer",
+                             "Kind":  "item",
+                             "Caption":  "Winkeyer",
+                             "Shortcut":  "Ctrl+W",
+                             "Id":  10107,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Settings \u003e CAT and CW Keying",
+                             "Kind":  "item",
+                             "Caption":  "CAT and CW Keying",
+                             "Shortcut":  "",
+                             "Id":  10111,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Settings \u003e ",
+                             "Kind":  "separator",
+                             "Caption":  "",
+                             "Shortcut":  "",
+                             "Id":  null,
+                             "Enabled":  false,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Settings \u003e Program messages",
+                             "Kind":  "item",
+                             "Caption":  "Program messages",
+                             "Shortcut":  "",
+                             "Id":  10101,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Settings \u003e LPT",
+                             "Kind":  "item",
+                             "Caption":  "LPT",
+                             "Shortcut":  "Ctrl+Alt+L",
+                             "Id":  10104,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         }
+                     ]
+    },
+    {
+        "Path":  "Windows",
+        "Kind":  "popup",
+        "Caption":  "Windows",
+        "Shortcut":  "",
+        "Id":  null,
+        "Enabled":  true,
+        "Checked":  false,
+        "Children":  [
+                         {
+                             "Path":  "Windows \u003e Bandmap",
+                             "Kind":  "item",
+                             "Caption":  "Bandmap",
+                             "Shortcut":  "Ctrl+Shift+`",
+                             "Id":  10200,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Windows \u003e Dupesheet",
+                             "Kind":  "popup",
+                             "Caption":  "Dupesheet",
+                             "Shortcut":  "",
+                             "Id":  null,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+                                              {
+                                                  "Path":  "Windows \u003e Dupesheet \u003e Radio 1",
+                                                  "Kind":  "item",
+                                                  "Caption":  "Radio 1",
+                                                  "Shortcut":  "Ctrl+Shift+1",
+                                                  "Id":  10201,
+                                                  "Enabled":  true,
+                                                  "Checked":  false,
+                                                  "Children":  [
+
+                                                               ]
+                                              },
+                                              {
+                                                  "Path":  "Windows \u003e Dupesheet \u003e Radio 2",
+                                                  "Kind":  "item",
+                                                  "Caption":  "Radio 2",
+                                                  "Shortcut":  "",
+                                                  "Id":  10218,
+                                                  "Enabled":  true,
+                                                  "Checked":  false,
+                                                  "Children":  [
+
+                                                               ]
+                                              }
+                                          ]
+                         },
+                         {
+                             "Path":  "Windows \u003e Function keys",
+                             "Kind":  "item",
+                             "Caption":  "Function keys",
+                             "Shortcut":  "Ctrl+Shift+2",
+                             "Id":  10202,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Windows \u003e SCP",
+                             "Kind":  "item",
+                             "Caption":  "SCP",
+                             "Shortcut":  "Ctrl+Shift+3",
+                             "Id":  10203,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Windows \u003e Mults",
+                             "Kind":  "popup",
+                             "Caption":  "Mults",
+                             "Shortcut":  "",
+                             "Id":  null,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+                                              {
+                                                  "Path":  "Windows \u003e Mults \u003e Default",
+                                                  "Kind":  "item",
+                                                  "Caption":  "Default",
+                                                  "Shortcut":  "Ctrl+Shift+4",
+                                                  "Id":  10204,
+                                                  "Enabled":  true,
+                                                  "Checked":  false,
+                                                  "Children":  [
+
+                                                               ]
+                                              },
+                                              {
+                                                  "Path":  "Windows \u003e Mults \u003e ",
+                                                  "Kind":  "separator",
+                                                  "Caption":  "",
+                                                  "Shortcut":  "",
+                                                  "Id":  null,
+                                                  "Enabled":  false,
+                                                  "Checked":  false,
+                                                  "Children":  [
+
+                                                               ]
+                                              },
+                                              {
+                                                  "Path":  "Windows \u003e Mults \u003e DX",
+                                                  "Kind":  "item",
+                                                  "Caption":  "DX",
+                                                  "Shortcut":  "",
+                                                  "Id":  10213,
+                                                  "Enabled":  true,
+                                                  "Checked":  false,
+                                                  "Children":  [
+
+                                                               ]
+                                              },
+                                              {
+                                                  "Path":  "Windows \u003e Mults \u003e Domestic",
+                                                  "Kind":  "item",
+                                                  "Caption":  "Domestic",
+                                                  "Shortcut":  "",
+                                                  "Id":  10214,
+                                                  "Enabled":  true,
+                                                  "Checked":  false,
+                                                  "Children":  [
+
+                                                               ]
+                                              },
+                                              {
+                                                  "Path":  "Windows \u003e Mults \u003e Zones",
+                                                  "Kind":  "item",
+                                                  "Caption":  "Zones",
+                                                  "Shortcut":  "",
+                                                  "Id":  10215,
+                                                  "Enabled":  true,
+                                                  "Checked":  false,
+                                                  "Children":  [
+
+                                                               ]
+                                              },
+                                              {
+                                                  "Path":  "Windows \u003e Mults \u003e Prefixes",
+                                                  "Kind":  "item",
+                                                  "Caption":  "Prefixes",
+                                                  "Shortcut":  "",
+                                                  "Id":  10217,
+                                                  "Enabled":  true,
+                                                  "Checked":  false,
+                                                  "Children":  [
+
+                                                               ]
+                                              }
+                                          ]
+                         },
+                         {
+                             "Path":  "Windows \u003e Radio 1",
+                             "Kind":  "item",
+                             "Caption":  "Radio 1",
+                             "Shortcut":  "Ctrl+Shift+5",
+                             "Id":  10205,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Windows \u003e Radio 2",
+                             "Kind":  "item",
+                             "Caption":  "Radio 2",
+                             "Shortcut":  "Ctrl+Shift+6",
+                             "Id":  10206,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Windows \u003e ",
+                             "Kind":  "separator",
+                             "Caption":  "",
+                             "Shortcut":  "",
+                             "Id":  null,
+                             "Enabled":  false,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Windows \u003e DX Cluster",
+                             "Kind":  "item",
+                             "Caption":  "DX Cluster",
+                             "Shortcut":  "",
+                             "Id":  10207,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Windows \u003e Network",
+                             "Kind":  "item",
+                             "Caption":  "Network",
+                             "Shortcut":  "",
+                             "Id":  10208,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Windows \u003e ",
+                             "Kind":  "separator",
+                             "Caption":  "",
+                             "Shortcut":  "",
+                             "Id":  null,
+                             "Enabled":  false,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Windows \u003e Intercom",
+                             "Kind":  "item",
+                             "Caption":  "Intercom",
+                             "Shortcut":  "Ctrl+Shift+7",
+                             "Id":  10210,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Windows \u003e Post score",
+                             "Kind":  "item",
+                             "Caption":  "Post score",
+                             "Shortcut":  "Ctrl+Shift+8",
+                             "Id":  10211,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Windows \u003e HamScore RTC Status",
+                             "Kind":  "item",
+                             "Caption":  "HamScore RTC Status",
+                             "Shortcut":  "",
+                             "Id":  10219,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Windows \u003e Stations",
+                             "Kind":  "item",
+                             "Caption":  "Stations",
+                             "Shortcut":  "Ctrl+Shift+9",
+                             "Id":  10212,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Windows \u003e MP3 Recorder",
+                             "Kind":  "item",
+                             "Caption":  "MP3 Recorder",
+                             "Shortcut":  "Ctrl+Shift+0",
+                             "Id":  10216,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Windows \u003e MMTTY",
+                             "Kind":  "item",
+                             "Caption":  "MMTTY",
+                             "Shortcut":  "",
+                             "Id":  10209,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         }
+                     ]
+    },
+    {
+        "Path":  "Alt-",
+        "Kind":  "separator",
+        "Caption":  "Alt-",
+        "Shortcut":  "",
+        "Id":  null,
+        "Enabled":  true,
+        "Checked":  false,
+        "Children":  [
+
+                     ]
+    },
+    {
+        "Path":  "Ctrl-",
+        "Kind":  "popup",
+        "Caption":  "Ctrl-",
+        "Shortcut":  "",
+        "Id":  null,
+        "Enabled":  true,
+        "Checked":  false,
+        "Children":  [
+                         {
+                             "Path":  "Ctrl- \u003e Send Keyboard Input",
+                             "Kind":  "item",
+                             "Caption":  "Send Keyboard Input",
+                             "Shortcut":  "Ctrl+A",
+                             "Id":  10400,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Ctrl- \u003e Clear multsheet",
+                             "Kind":  "item",
+                             "Caption":  "Clear multsheet",
+                             "Shortcut":  "Ctrl+C",
+                             "Id":  10424,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Ctrl- \u003e Configuration commands",
+                             "Kind":  "item",
+                             "Caption":  "Configuration commands",
+                             "Shortcut":  "Ctrl+J",
+                             "Id":  10100,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Ctrl- \u003e Clear dupesheet",
+                             "Kind":  "item",
+                             "Caption":  "Clear dupesheet",
+                             "Shortcut":  "Ctrl+K",
+                             "Id":  10402,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Ctrl- \u003e View / Edit log",
+                             "Kind":  "item",
+                             "Caption":  "View / Edit log",
+                             "Shortcut":  "Ctrl+L",
+                             "Id":  10403,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Ctrl- \u003e Note",
+                             "Kind":  "item",
+                             "Caption":  "Note",
+                             "Shortcut":  "Ctrl+N",
+                             "Id":  10404,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Ctrl- \u003e Rotor control",
+                             "Kind":  "item",
+                             "Caption":  "Rotor control",
+                             "Shortcut":  "Ctrl+P",
+                             "Id":  10406,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Ctrl- \u003e QTC functions",
+                             "Kind":  "item",
+                             "Caption":  "QTC functions",
+                             "Shortcut":  "Ctrl+Q",
+                             "Id":  10407,
+                             "Enabled":  false,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Ctrl- \u003e Recall last entry",
+                             "Kind":  "item",
+                             "Caption":  "Recall last entry",
+                             "Shortcut":  "Ctrl+R",
+                             "Id":  10408,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Ctrl- \u003e SH/DX [callsign]",
+                             "Kind":  "item",
+                             "Caption":  "SH/DX [callsign]",
+                             "Shortcut":  "Ctrl+S",
+                             "Id":  10425,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Ctrl- \u003e Execute configuration file",
+                             "Kind":  "item",
+                             "Caption":  "Execute configuration file",
+                             "Shortcut":  "Ctrl+V",
+                             "Id":  10426,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Ctrl- \u003e Refresh bandmap",
+                             "Kind":  "item",
+                             "Caption":  "Refresh bandmap",
+                             "Shortcut":  "Ctrl+Y",
+                             "Id":  10410,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Ctrl- \u003e Cursor in bandmap window",
+                             "Kind":  "item",
+                             "Caption":  "Cursor in bandmap window",
+                             "Shortcut":  "Ctrl+End",
+                             "Id":  10413,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Ctrl- \u003e QSO with no CW",
+                             "Kind":  "item",
+                             "Caption":  "QSO with no CW",
+                             "Shortcut":  "Ctrl+Enter",
+                             "Id":  10414,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Ctrl- \u003e Cursor in DX Cluster window",
+                             "Kind":  "item",
+                             "Caption":  "Cursor in DX Cluster window",
+                             "Shortcut":  "Ctrl+Home",
+                             "Id":  10417,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Ctrl- \u003e Add bandmap place holder",
+                             "Kind":  "item",
+                             "Caption":  "Add bandmap place holder",
+                             "Shortcut":  "Ctrl+Ins",
+                             "Id":  10415,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Ctrl- \u003e CT1BOH info screen",
+                             "Kind":  "item",
+                             "Caption":  "CT1BOH info screen",
+                             "Shortcut":  "Ctrl+]",
+                             "Id":  10416,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Ctrl- \u003e Additional information",
+                             "Kind":  "popup",
+                             "Caption":  "Additional information",
+                             "Shortcut":  "",
+                             "Id":  null,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+                                              {
+                                                  "Path":  "Ctrl- \u003e Additional information \u003e QSO number",
+                                                  "Kind":  "item",
+                                                  "Caption":  "QSO number",
+                                                  "Shortcut":  "Ctrl+1",
+                                                  "Id":  10423,
+                                                  "Enabled":  true,
+                                                  "Checked":  false,
+                                                  "Children":  [
+
+                                                               ]
+                                              },
+                                              {
+                                                  "Path":  "Ctrl- \u003e Additional information \u003e Callsign",
+                                                  "Kind":  "item",
+                                                  "Caption":  "Callsign",
+                                                  "Shortcut":  "Ctrl+2",
+                                                  "Id":  10420,
+                                                  "Enabled":  true,
+                                                  "Checked":  false,
+                                                  "Children":  [
+
+                                                               ]
+                                              },
+                                              {
+                                                  "Path":  "Ctrl- \u003e Additional information \u003e CW Speed",
+                                                  "Kind":  "item",
+                                                  "Caption":  "CW Speed",
+                                                  "Shortcut":  "Ctrl+3",
+                                                  "Id":  10421,
+                                                  "Enabled":  true,
+                                                  "Checked":  false,
+                                                  "Children":  [
+
+                                                               ]
+                                              },
+                                              {
+                                                  "Path":  "Ctrl- \u003e Additional information \u003e Band",
+                                                  "Kind":  "item",
+                                                  "Caption":  "Band",
+                                                  "Shortcut":  "Ctrl+4",
+                                                  "Id":  10422,
+                                                  "Enabled":  true,
+                                                  "Checked":  false,
+                                                  "Children":  [
+
+                                                               ]
+                                              }
+                                          ]
+                         }
+                     ]
+    },
+    {
+        "Path":  "Commands",
+        "Kind":  "popup",
+        "Caption":  "Commands",
+        "Shortcut":  "",
+        "Id":  null,
+        "Enabled":  true,
+        "Checked":  false,
+        "Children":  [
+                         {
+                             "Path":  "Commands \u003e Set Split Mode Tx",
+                             "Kind":  "item",
+                             "Caption":  "Set Split Mode Tx",
+                             "Shortcut":  "Ctrl+-",
+                             "Id":  10411,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Commands \u003e Focus in main window",
+                             "Kind":  "item",
+                             "Caption":  "Focus in main window",
+                             "Shortcut":  "Pause",
+                             "Id":  10500,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Commands \u003e Toggle insert mode",
+                             "Kind":  "item",
+                             "Caption":  "Toggle insert mode",
+                             "Shortcut":  "Ins",
+                             "Id":  10501,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Commands \u003e Escape",
+                             "Kind":  "item",
+                             "Caption":  "Escape",
+                             "Shortcut":  "Esc",
+                             "Id":  10502,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Commands \u003e ",
+                             "Kind":  "separator",
+                             "Caption":  "",
+                             "Shortcut":  "",
+                             "Id":  null,
+                             "Enabled":  false,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Commands \u003e CW Speed Up",
+                             "Kind":  "item",
+                             "Caption":  "CW Speed Up",
+                             "Shortcut":  "PgUp",
+                             "Id":  10503,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Commands \u003e CW Speed Down",
+                             "Kind":  "item",
+                             "Caption":  "CW Speed Down",
+                             "Shortcut":  "PgDn",
+                             "Id":  10504,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Commands \u003e ",
+                             "Kind":  "separator",
+                             "Caption":  "",
+                             "Shortcut":  "",
+                             "Id":  null,
+                             "Enabled":  false,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Commands \u003e CW Speed Up for the inactive radio",
+                             "Kind":  "item",
+                             "Caption":  "CW Speed Up for the inactive radio",
+                             "Shortcut":  "Ctrl+PgUp",
+                             "Id":  10513,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Commands \u003e CW Speed Down for the inactive radio",
+                             "Kind":  "item",
+                             "Caption":  "CW Speed Down for the inactive radio",
+                             "Shortcut":  "Ctrl+PgDn",
+                             "Id":  10514,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Commands \u003e ",
+                             "Kind":  "separator",
+                             "Caption":  "",
+                             "Shortcut":  "",
+                             "Id":  null,
+                             "Enabled":  false,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Commands \u003e CQ Mode",
+                             "Kind":  "item",
+                             "Caption":  "CQ Mode",
+                             "Shortcut":  "Shift+Tab",
+                             "Id":  10505,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Commands \u003e Search \u0026\u0026 pounce mode",
+                             "Kind":  "item",
+                             "Caption":  "Search \u0026\u0026 pounce mode",
+                             "Shortcut":  "Tab",
+                             "Id":  10506,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Commands \u003e ",
+                             "Kind":  "separator",
+                             "Caption":  "",
+                             "Shortcut":  "",
+                             "Id":  null,
+                             "Enabled":  false,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Commands \u003e Log in",
+                             "Kind":  "item",
+                             "Caption":  "Log in",
+                             "Shortcut":  "Ctrl+Alt+I",
+                             "Id":  10517,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Commands \u003e ",
+                             "Kind":  "separator",
+                             "Caption":  "",
+                             "Shortcut":  "",
+                             "Id":  null,
+                             "Enabled":  false,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Commands \u003e Send spot",
+                             "Kind":  "item",
+                             "Caption":  "Send spot",
+                             "Shortcut":  "`",
+                             "Id":  10507,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Commands \u003e Rescore",
+                             "Kind":  "item",
+                             "Caption":  "Rescore",
+                             "Shortcut":  "",
+                             "Id":  10508,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         }
+                     ]
+    },
+    {
+        "Path":  "Tools",
+        "Kind":  "popup",
+        "Caption":  "Tools",
+        "Shortcut":  "",
+        "Id":  null,
+        "Enabled":  true,
+        "Checked":  false,
+        "Children":  [
+                         {
+                             "Path":  "Tools \u003e Beacons monitor",
+                             "Kind":  "item",
+                             "Caption":  "Beacons monitor",
+                             "Shortcut":  "",
+                             "Id":  10551,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Tools \u003e Windows control",
+                             "Kind":  "item",
+                             "Caption":  "Windows control",
+                             "Shortcut":  "Ctrl+Alt+M",
+                             "Id":  10557,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Tools \u003e Set time zone",
+                             "Kind":  "item",
+                             "Caption":  "Set time zone",
+                             "Shortcut":  "",
+                             "Id":  10559,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Tools \u003e Device Manager",
+                             "Kind":  "item",
+                             "Caption":  "Device Manager",
+                             "Shortcut":  "",
+                             "Id":  10566,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Tools \u003e ",
+                             "Kind":  "separator",
+                             "Caption":  "",
+                             "Shortcut":  "",
+                             "Id":  null,
+                             "Enabled":  false,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Tools \u003e Ping [SERVER ADDRESS]",
+                             "Kind":  "item",
+                             "Caption":  "Ping [SERVER ADDRESS]",
+                             "Shortcut":  "",
+                             "Id":  10563,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Tools \u003e Run TR4WSERVER",
+                             "Kind":  "item",
+                             "Caption":  "Run TR4WSERVER",
+                             "Shortcut":  "",
+                             "Id":  10564,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Tools \u003e ",
+                             "Kind":  "separator",
+                             "Caption":  "",
+                             "Shortcut":  "",
+                             "Id":  null,
+                             "Enabled":  false,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Tools \u003e DVK volume control",
+                             "Kind":  "item",
+                             "Caption":  "DVK volume control",
+                             "Shortcut":  "",
+                             "Id":  10558,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Tools \u003e Recording control",
+                             "Kind":  "item",
+                             "Caption":  "Recording control",
+                             "Shortcut":  "",
+                             "Id":  10561,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Tools \u003e ",
+                             "Kind":  "separator",
+                             "Caption":  "",
+                             "Shortcut":  "",
+                             "Id":  null,
+                             "Enabled":  false,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Tools \u003e Rules for CQ-WW-SSB contest at WA7BNM Contest Calendar",
+                             "Kind":  "item",
+                             "Caption":  "Rules for CQ-WW-SSB contest at WA7BNM Contest Calendar",
+                             "Shortcut":  "",
+                             "Id":  10565,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Tools \u003e Rules for CQ-WW-SSB contest at QRZ.RU",
+                             "Kind":  "item",
+                             "Caption":  "Rules for CQ-WW-SSB contest at QRZ.RU",
+                             "Shortcut":  "",
+                             "Id":  10560,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Tools \u003e ",
+                             "Kind":  "separator",
+                             "Caption":  "",
+                             "Shortcut":  "",
+                             "Id":  null,
+                             "Enabled":  false,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Tools \u003e Calculator",
+                             "Kind":  "item",
+                             "Caption":  "Calculator",
+                             "Shortcut":  "",
+                             "Id":  10555,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Tools \u003e ",
+                             "Kind":  "separator",
+                             "Caption":  "",
+                             "Shortcut":  "",
+                             "Id":  null,
+                             "Enabled":  false,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Tools \u003e Reset Radio Ports",
+                             "Kind":  "item",
+                             "Caption":  "Reset Radio Ports",
+                             "Shortcut":  "",
+                             "Id":  10571,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Tools \u003e HamScore: Resync log from scratch",
+                             "Kind":  "item",
+                             "Caption":  "HamScore: Resync log from scratch",
+                             "Shortcut":  "",
+                             "Id":  10609,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Tools \u003e Edit Cabrillo Summary...",
+                             "Kind":  "item",
+                             "Caption":  "Edit Cabrillo Summary...",
+                             "Shortcut":  "",
+                             "Id":  10022,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Tools \u003e ",
+                             "Kind":  "separator",
+                             "Caption":  "",
+                             "Shortcut":  "",
+                             "Id":  null,
+                             "Enabled":  false,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Tools \u003e 3830 Score posting",
+                             "Kind":  "item",
+                             "Caption":  "3830 Score posting",
+                             "Shortcut":  "",
+                             "Id":  10569,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Tools \u003e Submit ARRL Log",
+                             "Kind":  "item",
+                             "Caption":  "Submit ARRL Log",
+                             "Shortcut":  "",
+                             "Id":  10570,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Tools \u003e ",
+                             "Kind":  "separator",
+                             "Caption":  "",
+                             "Shortcut":  "",
+                             "Id":  null,
+                             "Enabled":  false,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         }
+                     ]
+    },
+    {
+        "Path":  "Net",
+        "Kind":  "separator",
+        "Caption":  "Net",
+        "Shortcut":  "",
+        "Id":  null,
+        "Enabled":  false,
+        "Checked":  false,
+        "Children":  [
+
+                     ]
+    },
+    {
+        "Path":  "Help",
+        "Kind":  "popup",
+        "Caption":  "Help",
+        "Shortcut":  "",
+        "Id":  null,
+        "Enabled":  true,
+        "Checked":  false,
+        "Children":  [
+                         {
+                             "Path":  "Help \u003e TR4W Home Page",
+                             "Kind":  "item",
+                             "Caption":  "TR4W Home Page",
+                             "Shortcut":  "",
+                             "Id":  10606,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Help \u003e Download the latest CTY.DAT",
+                             "Kind":  "item",
+                             "Caption":  "Download the latest CTY.DAT",
+                             "Shortcut":  "Alt+O",
+                             "Id":  10603,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Help \u003e Download TRMASTER.DTA",
+                             "Kind":  "item",
+                             "Caption":  "Download TRMASTER.DTA",
+                             "Shortcut":  "",
+                             "Id":  10610,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Help \u003e Download POTA Parks",
+                             "Kind":  "item",
+                             "Caption":  "Download POTA Parks",
+                             "Shortcut":  "",
+                             "Id":  10607,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Help \u003e Check for Updates",
+                             "Kind":  "item",
+                             "Caption":  "Check for Updates",
+                             "Shortcut":  "",
+                             "Id":  10611,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         },
+                         {
+                             "Path":  "Help \u003e About",
+                             "Kind":  "item",
+                             "Caption":  "About",
+                             "Shortcut":  "",
+                             "Id":  10601,
+                             "Enabled":  true,
+                             "Checked":  false,
+                             "Children":  [
+
+                                          ]
+                         }
+                     ]
+    }
+]
