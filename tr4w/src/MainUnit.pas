@@ -2674,6 +2674,54 @@ begin
 end;
 }
 
+{ THE FORM BEHIND A WINDOW INDEX, or nil for one that is still a Win32 dialog
+  or has not been created yet.
+
+  ONE MAPPING, USED BY BOTH THE OPEN PATH AND THE SAVE PATH, and that is the
+  whole point of it existing.  They must agree about what a window's bounds
+  MEAN, and this is exactly the defect that came of them disagreeing:
+
+    FindAndSaveRectOfAllWindows saved Windows.GetWindowRect -- the OUTER
+    rectangle, frame included.  OpenTR4WWindow restored into
+    lclForm.BoundsRect.  On a form whose LCL Height is its CLIENT height, the
+    saved outer height became the new client height and THE WINDOW GREW BY THE
+    FRAME EVERY TIME.  NY4I's function-key window: resize it shorter, quit,
+    restart, and it is back where it started -- 39 pixels taller per cycle,
+    measured (BoundsRect 42 against GetWindowRect 81 on the same window).
+
+  So the save asks the FORM when there is one, and Windows only when there is
+  not.  Two lists of which windows are forms would drift; there is one. }
+function LclFormFor(const ID: WindowsType): TCustomForm;
+begin
+   case ID of
+     tw_FUNCTIONKEYSWINDOW_INDEX:   Result := TR4WFunctionKeysForm;
+     tw_BANDMAPWINDOW_INDEX:        Result := TR4WBandMapForm;
+     tw_STATIONS_INDEX:             Result := TR4WStationsForm;
+     tw_TELNETWINDOW_INDEX:         Result := TR4WTelnetForm;
+     tw_MMTTYWINDOW_INDEX:          Result := TR4WMMTTYForm;
+     tw_NETWINDOW_INDEX:            Result := TR4WNetworkForm;
+     tw_MP3RECORDER:                Result := TR4WMP3RecorderForm;
+     tw_INTERCOMWINDOW_INDEX:       Result := TR4WIntercomForm;
+     tw_HAMSCOREWINDOW_INDEX:       Result := TR4WHamScoreForm;
+     tw_POSTSCORESWINDOW_INDEX:     Result := TR4WPostScoresForm;
+     tw_MASTERWINDOW_INDEX:         Result := TR4WMasterForm;
+
+     tw_REMMULTSWINDOW_INDEX,
+     tw_STATIONS_RM_DX,
+     tw_STATIONS_RM_DOM,
+     tw_STATIONS_RM_ZONE,
+     tw_STATIONS_RM_PREFIX:         Result := RemMultsForm(ID);
+
+     tw_RADIOINTERFACEWINDOW1_INDEX,
+     tw_RADIOINTERFACEWINDOW2_INDEX: Result := RadioPanelForm(ID);
+
+     tw_DUPESHEETWINDOW1_INDEX,
+     tw_DUPESHEETWINDOW2_INDEX:     Result := DupeSheetForm(ID);
+   else
+     Result := nil;
+   end;
+end;
+
 procedure FindAndSaveRectOfAllWindows;
 label
   1;
@@ -2682,11 +2730,42 @@ var
   temprect: TRect;
   TempBool: boolean;
   iconic: boolean;
+  lclForm: TCustomForm;
 begin
   for tipos := tw_MAINWINDOW_INDEX to tw_HAMSCOREWINDOW_INDEX do
      begin
-     TempBool := Windows.GetWindowRect(tr4w_WindowsArray[tipos].WndHandle,
-       temprect);
+     { SAVE WHAT THE RESTORE WILL READ -- see LclFormFor.  Windows only for a
+       window that is still a Win32 dialog. }
+     { SAVE WHAT THE RESTORE WILL CONSUME.
+
+       MEASURED, in one call, on NY4I's bench (2026-08-26):
+
+         GetWindowRect = (1708,837,2500,919)   792 x 82   the real window
+         BoundsRect    = (1708,837,2484,880)   776 x 43   what the LCL holds
+         L/T = 1708,837   W/H = 776,43   client = 776,43
+
+       LEFT AND TOP AGREE EXACTLY.  Width and Height DO NOT: the LCL's are the
+       CLIENT dimensions, and the real window is bigger by the frame -- 16 and
+       39 here.
+
+       So saving GetWindowRect and restoring through BoundsRect fed an OUTER
+       size in as a CLIENT size, and the window grew by the frame EVERY restart:
+       792x82 -> 808x121 in the very next sample.  NY4I: resize it shorter, quit,
+       restart, and it is back where it started.
+
+       Both sides now speak the LCL's units.  Which measure is "right" does not
+       matter -- only that one object answers both questions. }
+     lclForm := LclFormFor(tipos);
+     if (lclForm <> nil) and lclForm.HandleAllocated then
+        begin
+        temprect := lclForm.BoundsRect;
+        TempBool := True;
+        end
+     else
+        begin
+        TempBool := Windows.GetWindowRect(tr4w_WindowsArray[tipos].WndHandle,
+          temprect);
+        end;
 
      // VISIBILITY IS ITS OWN QUESTION, asked of Windows rather than inferred
      // from whether a rectangle could be read.
@@ -5750,6 +5829,7 @@ begin
   if lclForm <> nil then
      begin
      lclForm.BoundsRect := tr4w_WindowsArray[ID].WndRect;
+
      end
   else
      begin
