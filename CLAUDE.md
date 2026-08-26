@@ -241,10 +241,27 @@ strong net, not a proof.
 2026-08 and is not now.** The program runs `Application.Run`; the hand-rolled
 `GetMessage` / `TranslateMessage` / `DispatchMessage` loop is gone.
 
-**Every tool window is a designed form except TWO: Telnet and MMTTY.** Converted
-2026-08-24/25: function keys, band map, stations, SCP/master, both dupe sheets,
-the five remaining-multiplier windows, PostScores, HamScore, Intercom, MP3
-Recorder, both radio panels, and Network. `Lint-Win32Dialogs[ui]` fell 991 → 878.
+**EVERY tool window is a designed form.** Converted 2026-08-24/25: function keys,
+band map, stations, SCP/master, both dupe sheets, the five remaining-multiplier
+windows, PostScores, HamScore, Intercom, MP3 Recorder, both radio panels, and
+Network — then **Telnet and MMTTY**, which this file listed as the last two
+holdouts until 2026-08-26. `uTelnetForm` and `uMMTTYForm` are in `tr4w.dpr`;
+the DX cluster window landed in `00e9a987`. `Lint-Win32Dialogs[ui]` is at 853.
+
+**A CONVERTED WINDOW LOSES ITS TRANSLATIONS, SILENTLY, AND EVERY CONVERSION SO
+FAR HAS.** The Win32 code assigned captions from `TC_`/`RC_` constants, which
+are what the 16 `.po` catalogues translate. A designed form carries its caption
+in the `.lfm`, and every conversion has re-typed the English there and left the
+constant behind. Telnet is the clearest case: the `.lfm` says
+`Caption = 'Connect'` while `TC_TELNET_CONNECT` sits in the catalogues with
+`es='Conectar'`, translated by a native speaker and now unreachable.
+
+Measured 2026-08-26: **469 `.lfm` captions ship as English and only 45 of 545
+are assigned at run time.** Nothing warns; nothing fails; the English simply
+shows in every language. When you convert a window, check whether the text you
+are typing already exists as a `TC_`/`RC_` constant — see
+[`docs/I18N_TS_EVALUATION.md`](../tr4w-i18n/docs/I18N_TS_EVALUATION.md) and the
+tooling in `c:/tr4w-i18n/tools/i18n`.
 
 The seam is `OpenTR4WWindow` (`MainUnit.pas`): an arm returning the form's
 `Handle` and setting `lclForm`, and that window's `WndProcAdr` line deleted. A
