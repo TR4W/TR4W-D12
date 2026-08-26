@@ -111,9 +111,13 @@ uses
    uLCLTranslate,
    uUDPBroadcaster;
 
-const
+resourcestring
    // Said at the point of use, because it CHANGES -- the designer owns the
    // static captions, this owns the ones that depend on what happened.
+   //
+   // `resourcestring`, not `const`: as consts these were in no catalogue in any
+   // language, because nothing extracts a const. See uLCLFormHelpers for the
+   // same lift and the reasoning.
    TC_UDPEDIT_NOTIMPLEMENTED = ' (not implemented yet)';
    TC_UDPEDIT_TESTSENT       = 'Test packet sent to %s:%d.  UDP cannot confirm ' +
                                'it arrived -- check the receiving program.';

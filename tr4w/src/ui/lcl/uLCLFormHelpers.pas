@@ -49,9 +49,20 @@ uses
    LCLType,    // HWND
    Dialogs;    // InputQuery -- see AskForText
 
-const
+resourcestring
    // --- captions ------------------------------------------------------------
    // ONE place, so the i18n lift is mechanical.  See the unit header.
+   //
+   // AND THIS IS THAT LIFT: `resourcestring`, not `const`. As consts these 90
+   // strings were in NO catalogue in ANY language -- not in src/lang, so
+   // pas2po never saw them, and not in a resource string table, so rstconv
+   // could not either. The TC_ prefix made them look translated. They never
+   // were.
+   //
+   // The compiler now emits them to uLCLFormHelpers.rsj, which is what makes a
+   // string extractable and replaceable at run time. The names are unchanged:
+   // they have no translations yet, so a rename would cost nothing today, but
+   // it would also buy nothing and every call site would have to move.
    TC_PREFS_TITLE            = 'TR4W Preferences';
    TC_PREFS_HARDWARE         = 'Hardware';
    TC_PREFS_CONTEST          = 'Contest';
@@ -184,10 +195,15 @@ const
    TC_RADIOEDIT_NAMEREQUIRED = 'The radio needs a name.';
    TC_RADIOEDIT_TYPEREQUIRED = 'Choose a radio type.';
 
+const
    // --- layout metrics ------------------------------------------------------
    // Shared while these forms are built in code.  A form that converts to a
-   // designed .fmx stops needing them -- position and size become properties
+   // designed .lfm stops needing them -- position and size become properties
    // in the resource -- so this block should shrink to nothing over time.
+   //
+   // `const` DELIBERATELY, and this is why the block is split: these are
+   // numbers, and resourcestring takes strings only. They are also not
+   // user-facing, so there is nothing here to translate.
    ROWHEIGHT  = 30;
    LEFTMARGIN = 12;
    // A TGroupBox draws its caption INSIDE the top of the frame, so content
