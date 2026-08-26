@@ -80,38 +80,57 @@ uses
 
 var
   frmWinManager: TfrmWinManager = nil;
-  GFillTarget: TListBox = nil;   // the list being filled by the callback below
 
-{ EnumWindows hands its callback no context, so the target is a unit variable
-  set immediately before the call and cleared immediately after.  The Win32
-  version did the same thing with a `Manager` HWND. }
-function EnumTR4WWindowsProc(wnd: HWND; l: LPARAM): BOOL; stdcall;
+{ THE LIST IS Screen.Forms, NOT EnumWindows.
+
+  IT LISTED ONLY THE MAIN WINDOW (NY4I, 2026-08-26: "I have many windows open
+  but just one appears") and the reason is conversion damage of the quietest
+  kind.  The filter was
+
+      if (GetParent(wnd) <> tr4whandle) and (wnd <> tr4whandle) then Exit;
+
+  which was correct while every tool window was a CreateDialogParam child of the
+  main window: GetParent returned tr4whandle and the row went in.  They are LCL
+  FORMS now, OWNED through PopupParent rather than parented, so GetParent stops
+  answering tr4whandle and every one of them fails the test.  Only the main
+  window itself still matched -- which is exactly the one row that showed.
+
+  Nothing warned.  The test still compiled, still ran, and still returned a
+  perfectly good list of length one.
+
+  So this now asks the FRAMEWORK which forms exist instead of asking Windows
+  which HWNDs are children.  That is the fix and it is also the portable answer:
+  Screen.Forms is the same on every widget set, and this unit's own header
+  claimed the Win32 enumeration could only go when the windows stopped being raw
+  HWNDs.  They have. }
+procedure FillWindowList(const aList: TListBox);
 var
-  buf: array[0..255] of AnsiChar;
+  i: integer;
+  f: TForm;
 begin
-   Result := True;
-
-   if GFillTarget = nil then
+   for i := 0 to Screen.FormCount - 1 do
       begin
-      Exit;
+      f := Screen.Forms[i];
+
+      // Hidden forms are not windows the operator can be shown or move, and
+      // every converted tool window is caHide when closed -- so without this
+      // the list would name windows that are not on screen.
+      if not f.Visible then
+         begin
+         Continue;
+         end;
+
+      // This dialog itself has no business being in its own list.
+      if f = frmWinManager then
+         begin
+         Continue;
+         end;
+
+      // The HANDLE travels with the row, as it did in the listbox's item data:
+      // the caller moves the chosen window by HWND.  Items.Objects is
+      // pointer-sized and an HWND fits.
+      aList.Items.AddObject(f.Caption, TObject(PtrUInt(f.Handle)));
       end;
-
-   if (Windows.GetParent(wnd) <> tr4whandle) and (wnd <> tr4whandle) then
-      begin
-      Exit;
-      end;
-
-   if not Windows.IsWindowVisible(wnd) then
-      begin
-      Exit;
-      end;
-
-   Windows.ZeroMemory(@buf, SizeOf(buf));
-   Windows.GetWindowTextA(wnd, buf, SizeOf(buf) - 1);
-
-   // The HANDLE travels with the row, as it did in the listbox's item data.
-   // Items.Objects is pointer-sized and an HWND fits; this is a 32-bit target.
-   GFillTarget.Items.AddObject(string(PAnsiChar(@buf[0])), TObject(PtrUInt(wnd)));
 end;
 
 function TfrmWinManager.SelectedHandle: HWND;
@@ -133,12 +152,7 @@ begin
    lstWindows.Items.BeginUpdate;
    try
       lstWindows.Items.Clear;
-      GFillTarget := lstWindows;
-      try
-         Windows.EnumWindows(@EnumTR4WWindowsProc, 0);
-      finally
-         GFillTarget := nil;
-      end;
+      FillWindowList(lstWindows);
    finally
       lstWindows.Items.EndUpdate;
    end;
