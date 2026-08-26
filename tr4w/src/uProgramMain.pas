@@ -772,6 +772,52 @@ begin
 
   CommandLine:
 
+  { FULLY QUALIFY THE CONTEST .cfg PATH -- EVERY WRITER DEPENDS ON IT.
+
+    TR4W_CFG_FILENAME is ParamStr(1) VERBATIM, so `tr4w.exe uitest.cfg` leaves
+    it RELATIVE. Every READER is fine: the config parser opens it with the
+    ordinary file API, which resolves a relative name against the CURRENT
+    DIRECTORY. Every WRITER is not. WritePrivateProfileString does NOT use the
+    current directory -- given a name that is not fully qualified it looks in
+    the WINDOWS directory, and creating a file there is denied.
+
+    Measured 2026-08-26, CWD tr4w/target:
+       relative name -> returns False, GetLastError=5 (ACCESS_DENIED), no file
+       absolute path -> returns True, file written
+
+    So the function-key memories an operator edited in Alt-P went nowhere and
+    were gone on restart (NY4I: "they are supposed to still be written to the
+    contest CFG file ... hence they are not restored"), and COLUMN WIDTH in
+    MainUnit failed exactly the same way. ONE CAUSE, TWO SYMPTOMS -- which is
+    why it is fixed HERE, where the path enters the program, and not at either
+    call site. Any future .cfg writer inherits the fix.
+
+    It is silent at both ends: the API reports failure through a BOOL that
+    both call sites discarded, and a read-back still succeeds because the
+    reader resolves the relative name differently. }
+  if TR4W_CFG_FILENAME[0] <> #0 then
+     begin
+     s := ExpandFileName(string(PAnsiChar(@TR4W_CFG_FILENAME[0])));
+
+     // Room for the terminator: FileNameType is MAX_PATH bytes. A path too
+     // long to hold is left as it was rather than truncated into a different
+     // file -- and said so, because silence is the defect being fixed.
+     if Length(s) < SizeOf(FileNameType) then
+        begin
+        Windows.lstrcpyA(TR4W_CFG_FILENAME, PAnsiChar(AnsiString(s)));
+        end
+     else
+        begin
+        logger.Warn('Contest .cfg path is too long to fully qualify (%d bytes); ' +
+                    'settings written back to it will not be saved: %s',
+                    [Length(s), s]);
+        end;
+
+     // WHICH .cfg AM I ACTUALLY EDITING -- the question this defect turned
+     // on, and nothing in the log answered it.
+     logger.Info('Contest configuration file: ' + StrPas(@TR4W_CFG_FILENAME[0]));
+     end;
+
 
 
   InitializeStrings;

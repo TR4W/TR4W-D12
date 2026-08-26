@@ -351,8 +351,25 @@ var
      // overrun (56a8ae97); the Win32 original avoided it only by accident,
      // because GetDlgItemTextA null-terminates what it writes.
      k := ShortString(aKey);
-     Windows.WritePrivateProfileStringA(MESSAGES_SECTION, PAnsiChar(aKey), aValue,
-                                        @TR4W_CFG_FILENAME);
+
+     { CHECKED, AND IT NEVER WAS -- the same omission as the column-width
+       writer in MainUnit, and the reason this defect was invisible.
+       WritePrivateProfileString reports failure through this BOOL and
+       nothing else; CheckCommand below still applies the value to the
+       RUNNING program, so the edit appeared to work and was simply gone
+       on restart.
+
+       The cause is normally a .cfg path that is not fully qualified, now
+       fixed at the source in uProgramMain -- but a read-only or missing
+       .cfg fails here too, and the operator cannot guess either. }
+     if not Windows.WritePrivateProfileStringA(MESSAGES_SECTION, PAnsiChar(aKey),
+                                              aValue, @TR4W_CFG_FILENAME) then
+        begin
+        logger.Warn('[EditMessage] "%s" could NOT be saved to "%s" (error %d) -- ' +
+                    'it will not survive a restart',
+                    [aKey, StrPas(@TR4W_CFG_FILENAME[0]), Windows.GetLastError]);
+        end;
+
      CheckCommand(@k, aCheckValue);
   end;
 
