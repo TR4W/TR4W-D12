@@ -1365,7 +1365,29 @@ listener thread no longer names a widget.
 
 - [x] **Start WSJT-X: the indicator appears and goes green.**
 - [ ] **Stop WSJT-X: it goes red and then hides** when the link is declared
-  dead. [ Agent: It doe snot go to red. It just goes away entirely when I quit WSJT-X with the enabled option still true.]
+  dead.
+
+  **NY4I 2026-08-26: it does NOT go red -- it just disappears** when WSJT-X
+  is quit with the enabled option still true.
+
+  **Diagnosed 2026-08-26, deliberately NOT fixed -- it needs a decision.**
+  The behaviour cannot happen as things stand, and no amount of bench time
+  will produce it: `TWSJTXState` carries a single BOOLEAN, `Connected`, so
+  the model has no way to say "was live, now dead" as distinct from "never
+  connected". `ApplyWSJTX` therefore has exactly two arms -- captioned and
+  shown, or blank and hidden (`uStateBridge.pas:98`). Red has nowhere to
+  come from.
+
+  The fix is in the DOMAIN layer, not the view: a three-valued state
+  (never / live / dead) rather than a boolean, and the view paints dead
+  red. That is a small change and squarely the shape the domain layer was
+  built for -- which is the argument for doing it here rather than special
+  casing a colour in the bridge.
+
+  **The open question is what "and then hides" means**: how long does red
+  show before it goes, or does it stay red until WSJT-X returns or the
+  operator disables it? Nothing in the tree specifies a duration, and
+  inventing one would be inventing product behaviour. NY4I's call.
 - [x] **Start TR4W with WSJT-X ALREADY RUNNING.** A heartbeat can arrive before
   the main form exists; InstallStateBridge brings the view into line once at
   install for exactly that case, and it is the half most likely to be wrong.
