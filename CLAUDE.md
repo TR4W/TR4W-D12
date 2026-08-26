@@ -654,6 +654,7 @@ Read the specific doc before acting in its area — these are current and this f
 | **Roadmap (what's next)** | **`docs/ROADMAP.md`** |
 | **The order the three big pieces go in** | **`docs/DOMAIN_LAYER_SEQUENCE.md`** |
 | **Band map -> LCL (read before touching `uBandmap`/`uSpots`)** | **`docs/BANDMAP_LCL_DESIGN.md`** |
+| **I18N: resourcestrings, .po and where every string lives** | **`docs/I18N_PLAN.md`** |
 | **Restyling the converted grids (PARKED until conversions finish)** | **`docs/GRID_RESTYLE_PLAN.md`** |
 | **Display state as a model (PARKED; successor to the conversions)** | **`docs/DISPLAY_STATE_MODEL_PLAN.md`** |
 | ~~D12 migration roadmap~~ | ~~`docs/D12_MIGRATION_ROADMAP.md`, `tr4w/docs/D12_RELEASE_READINESS.md`~~ — superseded, read for *why* not *status* |
