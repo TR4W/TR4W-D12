@@ -1403,30 +1403,29 @@ chosen because it proves the whole path with almost nothing to get wrong. The
 listener thread no longer names a widget.
 
 - [x] **Start WSJT-X: the indicator appears and goes green.**
-- [ ] **Stop WSJT-X: it goes red and then hides** when the link is declared
-  dead.
+- [x] **Stop WSJT-X and the box stays RED. FIXED 2026-08-26, wants a look.**
+  It used to disappear entirely, which NY4I reported and which was the same
+  defect as the box staying red while the link was up: the indicator tracked
+  the LINK when it should track the SETTING.
 
-  **NY4I 2026-08-26: it does NOT go red -- it just disappears** when WSJT-X
-  is quit with the enabled option still true.
+  **The rule now: `WSJT-X ENABLED = TRUE` shows the box, always. Its COLOUR
+  says whether the link is live -- green connected, red not.** Disabled
+  hides it. NY4I settled it: *"the normal user is not in development mode --
+  wouldn't the red indicator show that. We should put WSJTX in that box
+  regardless if it is red or green."*
 
-  **Diagnosed 2026-08-26, deliberately NOT fixed -- it needs a decision.**
-  The behaviour cannot happen as things stand, and no amount of bench time
-  will produce it: `TWSJTXState` carries a single BOOLEAN, `Connected`, so
-  the model has no way to say "was live, now dead" as distinct from "never
-  connected". `ApplyWSJTX` therefore has exactly two arms -- captioned and
-  shown, or blank and hidden (`uStateBridge.pas:98`). Red has nowhere to
-  come from.
+  That also closes the old open question of how long red shows before it
+  hides: while enabled, it does not hide.
 
-  The fix is in the DOMAIN layer, not the view: a three-valued state
-  (never / live / dead) rather than a boolean, and the view paints dead
-  red. That is a small change and squarely the shape the domain layer was
-  built for -- which is the argument for doing it here rather than special
-  casing a colour in the bridge.
+  **It earns its keep immediately.** A wrong multicast group in WSJT-X
+  reaches TR4W as complete silence -- the join succeeds and nothing ever
+  arrives (this is exactly what happened on 2026-08-26). Under the old
+  behaviour the only sign was a box that was not there, which is
+  indistinguishable from the feature being off. Red says it.
 
-  **The open question is what "and then hides" means**: how long does red
-  show before it goes, or does it stay red until WSJT-X returns or the
-  operator disables it? Nothing in the tree specifies a duration, and
-  inventing one would be inventing product behaviour. NY4I's call.
+  **Check:** enabled with WSJT-X down -> red box; start WSJT-X -> green
+  within a heartbeat (~15 s) with no radios needed; untick WSJT-X ENABLED
+  in Preferences -> box goes immediately, not at the next heartbeat.
 - [x] **Start TR4W with WSJT-X ALREADY RUNNING.** A heartbeat can arrive before
   the main form exists; InstallStateBridge brings the view into line once at
   install for exactly that case, and it is the half most likely to be wrong.

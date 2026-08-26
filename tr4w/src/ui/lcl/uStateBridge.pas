@@ -72,6 +72,16 @@ interface
 { Call once, after the main form exists.  Idempotent. }
 procedure InstallStateBridge;
 
+{ Repaint the WSJT-X indicator NOW.
+
+  The bridge is driven by WSJTXState, but the box also tracks the SETTING --
+  enabled shows it, disabled hides it -- and turning the setting off is not a
+  state change the bridge would otherwise hear about.  Called from uCFG's
+  WSJT-X ENABLED hook so the box answers the operator immediately rather
+  than at the next heartbeat, which for a setting just turned off would
+  never come. }
+procedure RefreshWSJTXIndicator;
+
 implementation
 
 uses
@@ -80,6 +90,7 @@ uses
    TF,             // SetMainWindowText
    uCrashLog,      // OnMainThread, LogCaughtException
    MainUnit,       // WSJTXIndicatorBack -- the one colour rule
+   uCFG,           // WSJTXEnabled -- the box tracks the SETTING, not the link
    uMainForm,      // ShowElement, SetElementColors
    uWSJTXState;
 
@@ -113,22 +124,42 @@ begin
    //
    // The view paints from the state it was handed. That is the whole point of
    // the bridge.
-   if WSJTXState.Connected then
-      begin
-      SetMainWindowText(mweWSJTX, 'WSJTX');
-      { THE SAME RULE THE SWEEP USES -- MainUnit.WSJTXIndicatorBack.  Not a
-        second copy of "green means connected": two writers for one
-        property is how they come to disagree. }
-      SetElementColors(mweWSJTX,
-                       tr4wColorsArray[WSJTXIndicatorBack],
-                       tr4wColorsArray[TWindows[mweWSJTX].mweColor]);
-      ShowElement(mweWSJTX, True);
-      end
-   else
+   { WHAT THE BOX MEANS: "you asked for WSJT-X", and its COLOUR says whether
+     you are getting it.  Enabled and not connected is RED AND VISIBLE, not
+     hidden.
+
+     NY4I settled this, 2026-08-26: "the normal user is not in development mode
+     -- wouldn't the red indicator show that. We should put WSJTX in that box
+     regardless if it is red or green (again if WSJT-X ENABLED is true)."
+
+     It is the right rule and it is worth more than it looks.  A wrong
+     multicast group in WSJT-X presents to TR4W as complete silence: the join
+     succeeds and nothing ever arrives.  Under the old behaviour the box simply
+     was not there, which is indistinguishable from "the feature is off" -- so
+     the one visible sign that something was misconfigured was a box the
+     operator had to know was MISSING.  Red says it.
+
+     It also answers the older bench-queue item, "it does not go to red, it
+     just goes away entirely when I quit WSJT-X with the enabled option still
+     true".  Same defect, and this is the fix -- so the open question there
+     (how long does red show before it hides) is moot: while it is enabled, it
+     does not hide. }
+   if not WSJTXEnabled then
       begin
       SetMainWindowText(mweWSJTX, '');
       ShowElement(mweWSJTX, False);
+      Exit;
       end;
+
+   SetMainWindowText(mweWSJTX, 'WSJTX');
+
+   { THE SAME RULE THE SWEEP USES -- MainUnit.WSJTXIndicatorBack.  Not a second
+     copy of "green means connected": two writers for one property is how they
+     come to disagree. }
+   SetElementColors(mweWSJTX,
+                    tr4wColorsArray[WSJTXIndicatorBack],
+                    tr4wColorsArray[TWindows[mweWSJTX].mweColor]);
+   ShowElement(mweWSJTX, True);
 end;
 
 procedure TStateBridge.WSJTXChanged;
@@ -149,6 +180,16 @@ begin
 end;
 
 { ------------------------------------------------------------- install ----- }
+
+procedure RefreshWSJTXIndicator;
+begin
+   { Through the same hop as a state change -- it must run on the main thread,
+     and a config hook can be reached from either. }
+   if GBridge <> nil then
+      begin
+      GBridge.WSJTXChanged;
+      end;
+end;
 
 procedure InstallStateBridge;
 begin

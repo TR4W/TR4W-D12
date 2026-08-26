@@ -1023,6 +1023,7 @@ var
 
 implementation
 uses MainUnit, SysUtils,   // Issue #997 -- SysUtils for Format/StrPCopy (asm-to-Pascal conversion)
+     uStateBridge,         // RefreshWSJTXIndicator -- the box tracks WSJT-X ENABLED
      uRadioRegistry;       // RegisteredCIVAddress -- the per-model Icom CI-V default
 
 var
@@ -2473,6 +2474,12 @@ begin
          logger.Error('In F_UpdateWSJTXEnabled, wsjtx variable was not assigned');
          end;
       end;
+
+   { The main-window box tracks this SETTING, not just the link -- enabled
+     shows it (red until a heartbeat arrives), disabled hides it.  Repaint
+     it here so it answers the operator immediately rather than at the next
+     state change, which for a setting just turned OFF would never come. }
+   RefreshWSJTXIndicator;
 end;
 
 function F_UpdateWSJTXSendColorizations: boolean; // We do this because we cannot see the wsjtx object in the commandArray declaration
