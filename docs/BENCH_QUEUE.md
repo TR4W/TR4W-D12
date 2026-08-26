@@ -40,7 +40,8 @@ are diagnostics that cost nothing to leave on.
   Cabrillo, Settings > Winkeyer, Settings > LPT. They read `Ctrl+Alt+B
   Ctrl+Alt+B` and so on. Check the keys still WORK as well as reading right.
 
-- [ ] **The WSJT-X indicator is wider** -- see the item in section 40.
+- [ ] **The WSJT-X indicator's font is smaller** so its text fits its cell --
+  see the item in section 40. The layout is unchanged.
 
 - [ ] **`DEBUG LOG LEVEL = DEBUG` now logs every configuration change**, both
   storage paths, and logs REJECTED values too. Change a few settings in
@@ -1469,16 +1470,21 @@ listener thread no longer names a widget.
   text written into it is the literal `'WSJTX'`, five characters
   (`uStateBridge.pas:106`). It never fitted.
 
-  Widened to 5, and `mweQSOB4Status` moved from x=11 to x=13 to make room.
-  Row 9 is now `RadioOne 00-03 | RadioTwo 04-07 | WSJTX 08-12 |
-  QSO B4 13-16 | ... | HourRate 28`, so nothing overlaps and the change
-  stops well short of the next element -- there were 13 free cells to the
-  right of QSO B4.
+  **SMALLER FONT, NOT A WIDER CELL** -- NY4I's call, 2026-08-26. Widening it
+  (tried first, reverted) pushed `QSO B4` from x=11 to x=13, and moving a
+  row of the main window that is otherwise exactly where it has always been
+  is a bigger change than the defect. **The geometry is untouched.**
 
-  **Confirm by eye**: start with WSJT-X running so the indicator shows, and
-  check that QSO B4 still reads correctly in its new position. No automated
-  gate covers main-window element geometry -- `Lint-FormOverlap` only sees
-  designed `.lfm` forms, and these elements are a table in `VC.pas`.
+  The size is DERIVED, not picked: the same base every other element gets,
+  scaled by cells-over-characters (3/5), with a floor of 8. So it tracks
+  the operator's FONT SIZE setting and the window scale rather than being
+  right at one size and wrong at every other.
+
+  **Confirm by eye**: start with WSJT-X running so the indicator shows.
+  Check it fits, that it is still readable, and that it still looks right
+  at a different FONT SIZE. No automated gate covers main-window element
+  geometry -- `Lint-FormOverlap` only sees designed `.lfm` forms, and these
+  elements are a table in `VC.pas`.
 
 ### 40. Two multi-op message-loop defects fixed, and the silent drop now reports
 

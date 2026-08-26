@@ -3908,6 +3908,12 @@ begin
       end;
 end;
 
+{ See the WSJT-X note inside CreateMainWindow. }
+const
+  WSJTX_CELLS = 3;               // mweWSJTX's mweiWidth
+  WSJTX_CHARS = 5;               // Length('WSJTX'), written by uStateBridge
+  WSJTX_MIN_FONT_HEIGHT = 8;     // below this it stops being readable
+
 procedure CreateMainWindow;
 //var PanelWidth : array[0..1] of Integer;
 var
@@ -3980,6 +3986,25 @@ begin
         SetMainWindowText(e, TWindows[e].mweText)
         end
      end;
+
+  { THE WSJT-X INDICATOR IS THREE CELLS WIDE AND ITS TEXT IS FIVE
+    CHARACTERS.  It has never fitted -- mweWSJTX is mweiWidth 3 and
+    uStateBridge writes the literal 'WSJTX' (NY4I, 2026-08-26: "the WSJTX
+    letters are too big for the field").
+
+    A SMALLER FONT, NOT A WIDER CELL, and that is NY4I's call: widening it
+    would push QSO B4 along and move a row of the main window that is
+    otherwise exactly where it has always been.
+
+    The size is DERIVED from the mismatch rather than picked -- the same
+    base every other element gets, scaled by cells-over-characters -- so it
+    tracks the operator's FONT SIZE setting and the window scale instead of
+    being right at one size and wrong at the others.  The floor keeps it
+    legible if that arithmetic ever lands somewhere silly. }
+  SetElementFont(mweWSJTX, string(MainFontName),
+                 Max(WSJTX_MIN_FONT_HEIGHT,
+                     Round((ws - 2 + FontSize) * WSJTX_CELLS / WSJTX_CHARS)),
+                 BoldFont);
 
   // THE AUTO-SEND ARROW: a real code point in the main font, not byte 175 in
   // the Symbol font.

@@ -820,7 +820,7 @@ var
 {mwePossibleCall}         (mweName: 'POSSIBLE CALL';           mweiStyle: 0;                 mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 23; mweiY: 07; mweiWidth: 02; mweiHeight: 1 ),
 {mweQSOsWithThisStation}  (mweName: 'PREVIOUS QSOS';           mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:1; mweB: 1; mweiX: 23; mweiY: 07; mweiWidth: 02; mweiHeight: 1 ),
 {mwePTTStatus}            (mweName: 'PTT';                     mweiStyle: defStyle;          mweText:'OFF'       ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 25; mweiY: 11; mweiWidth: 03; mweiHeight: 1 ),
-{mweQSOB4Status}          (mweName: 'QSO B4';                  mweiStyle: uVisStyle;         mweText:'QSOB4'     ; mweColor: trWhite; mweBackG: trRed;     mweI:0; mweB: 1; mweiX: 13; mweiY: 09; mweiWidth: 04; mweiHeight: 1 ),
+{mweQSOB4Status}          (mweName: 'QSO B4';                  mweiStyle: uVisStyle;         mweText:'QSOB4'     ; mweColor: trWhite; mweBackG: trRed;     mweI:0; mweB: 1; mweiX: 11; mweiY: 09; mweiWidth: 04; mweiHeight: 1 ),
 {mweQSONeedsHeader}       (mweName: 'QSO INFORMATION';         mweiStyle: LeftVisNoSunStyle; mweText:nil         ; mweColor: trBlack; mweBackG: trWhite;   mweI:0; mweB: 0; mweiX: 32; mweiY: 00; mweiWidth: 14; mweiHeight: 1 ),
 {mweQSONumber}            (mweName: 'QSO NUMBER';              mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trWhite;   mweI:0; mweB: 1; mweiX: 11; mweiY: 07; mweiWidth: 04; mweiHeight: 2 ),
 {mweQuickCommand}         (mweName: 'QUICK COMMAND';           mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 00; mweiY: 12; mweiWidth: 46; mweiHeight: 1 ),
@@ -837,7 +837,7 @@ var
 {mweUserInfo}             (mweName: 'USER INFO';               mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:1; mweB: 1; mweiX: 15; mweiY: 11; mweiWidth: 10; mweiHeight: 1 ),
 {mweWholeScreen}          (mweName: 'WHOLE SCREEN';            mweiStyle: 0;                 mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 15; mweiY: 11; mweiWidth: 10; mweiHeight: 1 ),
 {mweWinKey}               (mweName: 'WINKEYER';                mweiStyle: DefStyleDis;       mweText:'WK'        ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 38; mweiY: 11; mweiWidth: 04; mweiHeight: 1 ),
-{mweWSJTX   }             (mweName: 'WSJTX';                   mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 08; mweiY: 09; mweiWidth: 05; mweiHeight: 1 )
+{mweWSJTX   }             (mweName: 'WSJTX';                   mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 08; mweiY: 09; mweiWidth: 03; mweiHeight: 1 )
 
 
 {*)}
