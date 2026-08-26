@@ -502,8 +502,15 @@ begin
 
   // Issue 392: a cluster named in the config but absent from TRCLUSTER.DAT must
   // still be selectable, so it is added to the list after the file is read.
+  //
+  // BATCHED.  726 hosts added one at a time blocked the main thread for 1.7 s
+  // on every open -- and start-up opens this window before the message loop
+  // runs, so that was 1.7 s of unpainted main window.  See TelnetBeginHostList.
+  TelnetBeginHostList;
   EnumerateLinesInFile('TRCLUSTER.DAT', EmunTRCLUSTERDAT, False);
   EmunTRCLUSTERDAT(@TelnetServer);
+  TelnetEndHostList;
+
   TelnetSelectHostItem(string(TelnetServer));
 
   TelnetMenuClear;

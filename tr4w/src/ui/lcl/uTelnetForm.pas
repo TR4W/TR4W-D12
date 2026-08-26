@@ -166,7 +166,24 @@ procedure TelnetSetConnected(const aConnected: boolean);
 procedure TelnetSetFreezePressed(const aPressed: boolean);
 
 function  TelnetHostText: string;
+{ THE HOST LIST IS FILLED AS A BATCH, and it has to be.
+
+  TRCLUSTER.DAT is 726 lines.  Adding them one at a time cost 1741 ms of
+  BLOCKED MAIN THREAD at start-up (measured 2026-08-26) -- and because
+  OpenOtherWindows runs before Application.Run, that time is the main window
+  sitting unpainted.
+
+  Two multipliers, both invisible in the source: on the Win32 widget set a
+  TComboBox's Items PROXY THE NATIVE CONTROL, so every IndexOf is a sweep of
+  CB_GETLBTEXT round trips and every Add relays the control out; and the
+  duplicate check made it O(n^2).  Roughly a quarter of a million messages to
+  fill one drop-down.
+
+  So the de-duplication happens in MEMORY, against a sorted list, and the
+  control is written ONCE.  Begin/Add*/End -- End is what actually fills it. }
+procedure TelnetBeginHostList;
 procedure TelnetAddHostItem(const aHost: string);
+procedure TelnetEndHostList;
 procedure TelnetSelectHostItem(const aHost: string);
 
 function  TelnetCommandText: string;
@@ -191,6 +208,12 @@ uses
    VC,                { tw_TELNETWINDOW_INDEX, tr4wColorsArray }
    MainUnit,          { CloseTR4WWindow }
    uLCLFormHelpers;   { OwnFormByMainWindow -- the LCL way to parent a tool window }
+
+var
+   { Staging for the batched host list -- see TelnetBeginHostList.  Nil
+     except between Begin and End. }
+   GHostStaging: TStringList = nil;
+   GHostSeen: TStringList = nil;
 
 { THE COLOUR OF A CONSOLE LINE.
 
@@ -734,16 +757,76 @@ begin
    Result := Trim(TR4WTelnetForm.cboHost.Text);
 end;
 
-procedure TelnetAddHostItem(const aHost: string);
+procedure TelnetBeginHostList;
 begin
-   if (not FormUsable) or (Trim(aHost) = '') then
+   { Recreated per pass: this runs on every show, and a stale staging list
+     would accumulate. }
+   FreeAndNil(GHostStaging);
+   FreeAndNil(GHostSeen);
+
+   GHostStaging := TStringList.Create;      { file order, which is what shows }
+   GHostSeen := TStringList.Create;         { the SET -- sorted, so IndexOf
+                                              binary-searches }
+   GHostSeen.Sorted := True;
+   GHostSeen.CaseSensitive := False;
+   GHostSeen.Duplicates := dupIgnore;
+end;
+
+procedure TelnetAddHostItem(const aHost: string);
+var
+   host: string;
+begin
+   host := Trim(aHost);
+   if host = '' then
       begin
       Exit;
       end;
-   if TR4WTelnetForm.cboHost.Items.IndexOf(aHost) < 0 then
+
+   { Called outside a Begin/End pair -- one host added on its own.  Still goes
+     through the control directly, because there is nothing to batch. }
+   if GHostStaging = nil then
       begin
-      TR4WTelnetForm.cboHost.Items.Add(aHost);
+      if FormUsable and (TR4WTelnetForm.cboHost.Items.IndexOf(host) < 0) then
+         begin
+         TR4WTelnetForm.cboHost.Items.Add(host);
+         end;
+      Exit;
       end;
+
+   if GHostSeen.IndexOf(host) >= 0 then
+      begin
+      Exit;
+      end;
+
+   GHostSeen.Add(host);
+   GHostStaging.Add(host);
+end;
+
+procedure TelnetEndHostList;
+begin
+   if GHostStaging = nil then
+      begin
+      Exit;
+      end;
+
+   try
+      if not FormUsable then
+         begin
+         Exit;
+         end;
+
+      { ONE write to the control.  BeginUpdate/EndUpdate so the widget set
+        relays out once rather than per item. }
+      TR4WTelnetForm.cboHost.Items.BeginUpdate;
+      try
+         TR4WTelnetForm.cboHost.Items.Assign(GHostStaging);
+      finally
+         TR4WTelnetForm.cboHost.Items.EndUpdate;
+      end;
+   finally
+      FreeAndNil(GHostStaging);
+      FreeAndNil(GHostSeen);
+   end;
 end;
 
 procedure TelnetSelectHostItem(const aHost: string);
