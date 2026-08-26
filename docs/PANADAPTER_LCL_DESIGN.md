@@ -414,15 +414,21 @@ span changes.
 
 ## 11. What is NOT done
 
-* **The menu item**, and with it the program-layer decision from §3.1. The
-  window is reachable only from `tr4w/test/bench/bench_panadapter.dpr`. Step 4
-  records why the Win32 menu resource is its own change.
+* ~~**The menu item.**~~ **Partly done, 2026-08-26.** The window is reachable
+  from the **Spectrum button on the radio panel** (`OpenPanadapterForSlot`), and
+  reopened at start-up if it was open at shutdown (§13.1). What is still missing
+  is the **Windows-menu entry and an accelerator**, and that is blocked on the
+  menu work rather than on this: a `tw_` window reads its caption back out of
+  its menu item, so it cannot become one until that coupling goes. See
+  `docs/MENU_ACTIONLIST_PLAN.md` §3.
 * **The real spot provider** behind `uPanadapterView`.
 * **CW pitch.** There is none anywhere in the radio factory, and `Config.CWTone`
   is TR4W's SIDETONE, not the receiver's pitch. Until that is settled
   click-to-tune is exact on SSB/data and a pitch off on CW. NY4I's call: leave
   it at 0 rather than guess.
-* **The golden-master corpus has not been run** on this branch.
+* ~~**The golden-master corpus has not been run** on this branch.~~ Run
+  repeatedly since, green (22/0/4) — it is one of the four gates every
+  panadapter commit passes.
 * **Outside this work:** freeing a radio whose CAT link is still open
   access-violates; `Disconnect` first and it does not. That is in
   `TFactoryRadioBase`, which all 100 radios inherit.
@@ -458,8 +464,14 @@ NY4I asked whether the waterfall colours should come from the radio. They do
 not, and that is now a decision rather than an oversight.
 
 The K4 **does** publish its display settings on the CAT port as `#` commands.
-TR4QT sees them and discards them (`K4Radio.cpp:249`); TR4W's driver handles
-none of them.
+TR4QT sees them and discards them (`K4Radio.cpp:249`).
+
+**UPDATED 2026-08-26: TR4W's driver now handles exactly one of them, `#SPN`,
+and the rest are still dropped.** See section 14 -- the span had to be read
+because the +/- buttons must step from what the RIG is set to, not from what
+the frame happens to be drawing. The title of this section still holds for the
+other 24: the waterfall colours, reference level and dB scale remain TR4W's,
+deliberately.
 
 **QK4 is the better reference here, and by a distance.** NY4I pointed at
 `c:\projects\qk4\src\models\radiostate\spectrumdisplaystate.cpp`, which parses
@@ -542,14 +554,27 @@ centre, span and noise floor, so nothing is blocked. Revisit after the
 waterfall and the ref controls exist, when we will know what is actually
 missing rather than guessing.
 
-**One genuinely open discrepancy.** `#SPN` reports **100 kHz** while the stream
-reports **192 kHz**, measured within seconds of each other, for both main pans
-and not explained by anyone touching the radio. So the TR4W window currently
-shows about 1.9× more spectrum than the K4's own screen — as does TR4QT.
-Whether `#SPN` is a front-panel zoom over a wider capture, a different unit, or
-something else is **not established**, and it should be before anything relies
-on it. Note it does not apply to the mini-pan at all: `#SPN$` reads 100000
-while pan Y streams a 3 kHz span.
+**~~One genuinely open discrepancy.~~ RESOLVED 2026-08-26.** `#SPN` reported
+**100 kHz** while the stream reported **192 kHz**, measured within seconds of
+each other, and this section called it unexplained.
+
+The two are simply **different quantities**, and both are correct:
+
+| | |
+|---|---|
+| `TSpectrumFrame.SpanHz` | what is being **drawn** — the width of the data in this packet |
+| `#SPN` | what the rig's display is **set to** |
+
+So **step from `#SPN`, draw from the frame.** Getting that backwards is what
+made the span buttons behave randomly on 2026-08-26: they stepped from the
+frame's 384 kHz while the rig sat at 368 kHz, so the first press appeared to
+jump. It also explains the mini-pan, which this section flagged as odd: `#SPN$`
+reads 100000 while pan Y streams 3 kHz because the sub-receiver's *display
+setting* and the mini-pan's *stream* were never the same number.
+
+**And the rig CLAMPS and tells you.** Asking `#SPN500000` returns `#SPN368000`
+— a request outside range is not an error, it is a different answer, so read
+the reply rather than assuming the request took.
 
 ## 12. Handoff: what lands on `fpc`, not here
 
@@ -622,6 +647,71 @@ silently change what a different window shows is a hidden mode.
 message and `uNet` using `WSAAsyncSelect`; `70e6bedf`, `05ff356f` and
 `00e9a987` removed all three. The conclusion may well still hold -- re-derive
 it on merged code before writing the provider, do not carry it forward.
+
+## 14. The display controls (2026-08-26)
+
+Added after the first bench session and NOT covered above; recorded here
+because none of it is visible from the sections that describe the wire format
+and the rendering.
+
+### 14.1 Span, and the radio API behind it
+
+`+` and `-` step the K4's span, as QK4's do. Measured on QK4 first rather than
+invented: **each press changes the rig's span by one step**, and the rig's
+display follows -- this is not a zoom of the received data, it is a command to
+the radio.
+
+Two things on `TFactoryRadioBase` carry it, so no caller has to know it is a K4:
+
+| | |
+|---|---|
+| `SetSpectrumSpan(aHz)` | virtual; the base does nothing |
+| `SpectrumSpanHz` | virtual; the base returns 0 |
+
+`TK4Radio` sends `#SPN%d;` clamped to the documented 1..999999, and
+`SpectrumSpanHz` returns what the rig last reported. `StartSpectrum` asks
+`#SPN;` at connect, because **the radio pushes on change but not on connect** --
+without that ask, nothing knows the span until the operator happens to touch the
+rig.
+
+`StepSpan` steps from `FRadio.SpectrumSpanHz`, never from the frame. See §10.2
+for why that distinction is the whole ballgame.
+
+**The `#` branch in `ProcessMessage` is a prerequisite, not a detail.**
+`TK4Radio.ProcessMessage` dispatches on the first TWO characters, and every K4
+extended command is `#` plus a THREE-letter name -- so `#SPN`, `#REF`, `#SCL`
+and the rest all arrived as `#S`, `#R`, `#A` and matched no arm. They were not
+failing loudly; they were logged as "VFO A message received #SPN368000" and
+discarded. An explicit `#` branch now sits above the two-character dispatch,
+which is where any future one hangs off.
+
+**A control that cannot act says why.** Both buttons used to `Exit` in silence
+when there was no radio or no known span, which is indistinguishable from a dead
+control -- the reason was findable only by grepping the CAT log for a command
+never sent. They write the reason into the span label instead.
+
+### 14.2 Where the axis sits, and the dB scale
+
+The frequency axis is drawn **between the spectrum and the waterfall**, as QK4
+does it (NY4I, 2026-08-26: "notice on QK4 how the frequencies are listed between
+the panadapter and the waterfall"). It was at the bottom. `PlotLayout` is the
+one place that decides the four bands -- spectrum height, axis top, waterfall
+top, waterfall height -- so the three drawing routines cannot disagree about
+where they are.
+
+The spectrum carries **horizontal grid lines and a dBm scale** down its left
+edge (`DrawDbScale`), from the same `NoiseFloorDb`-relative range §6 describes.
+Decimals on the frequency labels follow the tick step and are floored at three,
+so a 3 kHz mini-pan still reads.
+
+### 14.3 The caption names the radio
+
+`Panadapter - Radio 1 K4D-278`, built the same way the radio panel builds its
+own: the localized label, plus the rig name **only when it differs** -- because
+`RadioName` is initialised to that same label and would otherwise read
+"Radio 1 Radio 1" on a station with no radio configured. On an SO2R station a
+bare "Panadapter" cannot say whose spectrum it is, which is the one thing the
+title has to answer.
 
 ## 13. One panadapter per radio (2026-08-26)
 
