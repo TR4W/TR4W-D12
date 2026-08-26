@@ -23,6 +23,44 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-08-26 (overnight) -- UNRUN
+
+Five changes landed while NY4I was away. Three are visible and want an eye; two
+are diagnostics that cost nothing to leave on.
+
+- [ ] **The Windows menu and its accelerator now CLOSE a converted window.**
+  Previously the second press did nothing: the toggle called
+  `CloseTR4WWindow` directly, which destroys the handle behind the LCL's back
+  on a form that is still Visible, so the widget set recreated it. Try it on
+  **every** converted window, not just Stations -- the fix is shared
+  (`RequestCloseTR4WWindow`). Also **Escape in the Stations window**, which had
+  the same bug and appeared to do nothing.
+
+- [ ] **Three menu items no longer show their shortcut twice** -- File > Export >
+  Cabrillo, Settings > Winkeyer, Settings > LPT. They read `Ctrl+Alt+B
+  Ctrl+Alt+B` and so on. Check the keys still WORK as well as reading right.
+
+- [ ] **The WSJT-X indicator is wider** -- see the item in section 40.
+
+- [ ] **`DEBUG LOG LEVEL = DEBUG` now logs every configuration change**, both
+  storage paths, and logs REJECTED values too. Change a few settings in
+  Preferences and confirm the lines match what you did:
+
+        [Config] BAND MAP DECAY TIME = 20 (stored in tr4w.json)
+
+- [ ] **`DEBUG LOG LEVEL = TRACE` now logs every MODIFIED keystroke the
+  accelerator hook sees.** This is the instrument for the Ctrl+Shift+0
+  question in section 34 -- press it and look for
+  `[InputHooks] key $30 ctrl=1 alt=0 shift=1`. **No line means Windows took the
+  key before TR4W saw it.**
+
+**Not in the bench queue because a gate now covers it:** the menu itself.
+`test\ui\Dump-Menu.ps1` captures the live menu and `baselines\menu.json` is the
+committed reference, so a menu row that changes caption, shortcut, position or
+id shows up as a diff rather than needing to be noticed by eye.
+
+---
+
 ## Waiting now (as of 2026-08-24)
 
 **Sections 31-42 were added 2026-08-24 and are UNRUN.**  Section 37 is the
