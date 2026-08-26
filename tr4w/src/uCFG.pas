@@ -1466,6 +1466,31 @@ begin
       Windows.WritePrivateProfileStringA(_COMMANDS, @keyShort[1], @valueShort[1],
                                          TR4W_INI_FILENAME);
       end;
+
+   { SAY WHAT CHANGED.  NY4I asked for this (bench queue): a configuration
+     that behaves differently after a session gives no account of itself,
+     and "which setting moved, and did it take" is the first question
+     every support case asks.
+
+     AT DEBUG, not INFO -- a Preferences page can write dozens of rows in
+     one OK, and that volume belongs behind a level the operator turns on
+     deliberately.
+
+     THE REJECTION IS LOGGED TOO, and is the more valuable half: today a
+     value CheckCommand refuses is simply discarded, so a setting the
+     operator typed can vanish with nothing anywhere to say why. }
+   if logger.IsDebugEnabled then
+      begin
+      if Result then
+         begin
+         logger.Debug('[Config] %s = %s (stored in tr4w.ini)', [aCommand, aValue]);
+         end
+      else
+         begin
+         logger.Debug('[Config] %s = %s REJECTED by CheckCommand -- not applied, not stored',
+                      [aCommand, aValue]);
+         end;
+      end;
 end;
 var
    TempBand: BandType;

@@ -97,6 +97,7 @@ implementation
 
 uses
    SysUtils,
+   MainUnit,               // logger -- see the config-change lines below
    uCFG,
    uRadioConfigStore,     // TRadioConfigStore -- the cast in TStoredSetting
    uRadioConfigApply;     // ApplyAndStoreCommand
@@ -240,6 +241,28 @@ begin
    // row accept the value at all -- and only records it in the store if CFGCA
    // took it. A rejected value never reaches the file.
    Result := ApplyAndStoreCommand(TRadioConfigStore(store), Command, aText);
+
+   { SAY WHAT CHANGED, the same as the ini path does in
+     SetCFGCommandValue.  NY4I asked for both (bench queue): with 226
+     settings in the JSON store and 3 left on the ini, a log that covered
+     only one of the two would answer 'which setting moved' for the
+     smaller half and say nothing about the rest.
+
+     DEBUG, not INFO: one OK on a Preferences page can write dozens of
+     rows. And the REJECTION is the half worth having -- a refused value
+     is otherwise discarded with nothing anywhere to say why. }
+   if logger.IsDebugEnabled then
+      begin
+      if Result then
+         begin
+         logger.Debug('[Config] %s = %s (stored in tr4w.json)', [Command, aText]);
+         end
+      else
+         begin
+         logger.Debug('[Config] %s = %s REJECTED -- not applied, not stored', [Command, aText]);
+         end;
+      end;
+
    if not Result then
       begin
       aError := Format('%s does not accept "%s"', [Command, aText]);

@@ -42,7 +42,7 @@ procedure InstallTR4WInputHooks;
 implementation
 
 uses
-  Classes, SysUtils, Forms, Controls, LCLType, LMessages,
+  Classes, SysUtils, StrUtils, Forms, Controls, LCLType, LMessages,
   Windows,          { GetKeyState, PostMessage -- see the note on TelnetHasFocus }
   uAccelerators,    { ACCELERATORS -- the one table }
   uConfigValues,    { Config.KeypadCWMemories }
@@ -200,6 +200,29 @@ begin
      end;
 
   id := AcceleratorFor(Key, Shift);
+
+  { SAY WHAT THIS HOOK SAW, at TRACE.
+
+    "The accelerator does nothing" has two completely different causes and
+    no way to tell them apart from outside: either the keystroke reached
+    this hook and matched no row, or WINDOWS TOOK IT FIRST and the program
+    never saw it at all.  Ctrl+Shift+<digit> is a standard Windows
+    keyboard-layout hotkey, so the second is a real possibility rather than
+    a theoretical one -- NY4I reports Ctrl+Shift+0 (MP3 recorder) doing
+    nothing while Ctrl+Shift+9 (Stations) works, and the two rows are
+    identical in shape.
+
+    A line here separates them in one run: if the key is not logged, it
+    never arrived.  Only modified keys are logged -- an unmodified
+    keystroke is ordinary typing and would bury the log during a contest. }
+  if logger.IsTraceEnabled and (Shift * [ssCtrl, ssAlt, ssShift] <> []) then
+     begin
+     logger.Trace('[InputHooks] key $%.2x ctrl=%d alt=%d shift=%d -> %s',
+                  [Key,
+                   Ord(ssCtrl in Shift), Ord(ssAlt in Shift), Ord(ssShift in Shift),
+                   IfThen(id = 0, 'no accelerator', SysUtils.Format('command %d', [id]))]);
+     end;
+
   if id = 0 then
      begin
      Exit;
