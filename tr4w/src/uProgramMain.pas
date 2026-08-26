@@ -39,6 +39,7 @@ uses
   MMSystem,
   Windows,
   SysUtils,
+  LCLTranslator,
   MainUnit,
   BeepUnit,
   CFGCMD,
@@ -573,6 +574,7 @@ var
    // S1                                   : String; //n4af
 {$IF not tDebugMode}
   s                                     : string;
+  loadedLang                            : string;
 {$IFEND}
  // logBuffer                             : string;
   tempStickyKey                         : STICKYKEYS;
@@ -741,6 +743,46 @@ begin
 
 
   TR4W_PATH_NAME[Windows.GetCurrentDirectoryA(SizeOf(TR4W_PATH_NAME), @TR4W_PATH_NAME)] := '\';
+
+  { LOAD THE UI LANGUAGE, IF THERE IS ONE.
+
+    TR4W has translated by COMPILING A DIFFERENT BINARY per language -- a TC_
+    constant per string, selected by a LANG_xxx define. The replacement is one
+    binary whose resourcestrings are REPLACED AT RUN TIME from a .po (NY4I,
+    2026-08-13).
+
+    LCLTranslator, NOT DefaultTranslator. The latter is a 24-line unit whose
+    entire body is SetDefaultLang('', '', '', false) in its initialization --
+    it takes the choice away and hides where it happens. This calls the real
+    entry point, in the startup sequence, where it can be read and logged.
+
+    The file name is PINNED to tr4w.po. Defaulted, it is the EXECUTABLE's name,
+    and this program ships as tr4w.exe but builds as tr4w_fpc.exe -- the
+    developer binary would silently find nothing and look like a translation
+    bug. Searched under languages/<lang>/ and locale/<lang>/ beside the exe.
+
+    ForceUpdate is False: no form exists yet, and the LCL's own note says to
+    pass False when calling before the interface is up.
+
+    LANGUAGE SELECTION IS NOT FINISHED. SetDefaultLang with an empty Lang
+    honours a --lang switch and then the OS locale. TR4W should choose from its
+    own setting instead -- an operator running a Spanish Windows does not
+    necessarily want a Spanish contest log -- so this is the seam that setting
+    plugs into, not the final answer.
+
+    IT IS LOGGED because "it ran" and "it took effect" are different claims and
+    only one is visible. An absent .po is not an error, English being the
+    compiled-in default, so without this line a missing or misnamed catalogue
+    is indistinguishable from a working English build. }
+  loadedLang := SetDefaultLang('', '', 'tr4w.po', False);
+  if loadedLang <> '' then
+     begin
+     logger.Info('UI language: loaded translations for "' + loadedLang + '"');
+     end
+  else
+     begin
+     logger.Info('UI language: no translation loaded; using the compiled-in English');
+     end;
 
  Format(TR4W_INI_FILENAME, '%ssettings\tr4w.ini', TR4W_PATH_NAME);
   LuconSZLoadded := AddFontResourceW(TR4W_LC_FILENAME) <> 0;
