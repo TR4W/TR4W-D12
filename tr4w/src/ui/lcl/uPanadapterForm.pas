@@ -166,6 +166,19 @@ type
       FPaused: Boolean;
       FLUT: array[0..255] of LongWord;
 
+      { Which radio this window belongs to, 1 or 2.  Set by
+        ShowPanadapterWindow; it is what makes the layout key distinct. }
+      FSlot: integer;
+      { Restored ONCE per run -- reshowing must not drag the window back to
+        where it sat at start-up. }
+      FBoundsRestored: boolean;
+      { WHAT IS BELIEVED TO BE ON DISK, so a move can be detected without
+        rewriting settings/tr4w.json every tick.  Same shape as MainUnit's
+        GSavedLayout, and for the same reason. }
+      FSavedBounds: TRect;
+      FSavedVisible: boolean;
+      FHaveSaved: boolean;
+
       // ---- waterfall: dB history plus the bitmap rendered from it ----------
       FWaterfall: TBitmap;
       FWfDb: array of Single;      // FWfW * FWfH, row 0 = newest
@@ -201,8 +214,11 @@ type
                             AMinDb, ARangeDb: Single);
       procedure StepSpan(const aWider: boolean);
       procedure ShowSpan;
+      function  LayoutName: string;
       procedure RestoreBounds;
-      procedure SaveCurrentBounds;
+      procedure SaveCurrentBounds(const aVisible: boolean);
+      function  LiveBounds: TRect;
+      function  LayoutDiffersFromDisk: boolean;
       function PixelForFreq(AHz: Int64; AWidth: Integer): Integer;
       function VfoDisplayHz(AVfo: TVFO): Int64;
       procedure DrawVfoPassband(ACanvas: TCanvas; AVfo: TVFO; APassband: TColor;
@@ -257,16 +273,40 @@ type
       property MsInPaint: Int64 read FMsInPaint;
    end;
 
-var
-   TR4WPanadapterForm: TfrmPanadapter = nil;
-   { Restored ONCE per run.  Reshowing must not drag the window back to
-     where it sat when TR4W started. }
-   FBoundsRestored: boolean = False;
+{ ONE PANADAPTER PER RADIO.  Slot 1 is Radio 1, slot 2 is Radio 2 -- the same
+  shape the dupe sheets and the radio panels already use, and for the same
+  reason: an SO2R station with two K4s wants both spectra at once, and a single
+  global made opening the second STEAL the first, because AttachRadio detaches
+  whatever was there.
 
-procedure ShowPanadapterWindow(ARadio: TFactoryRadioBase; const ASourceId: string;
+  NOTHING ABOUT THE RENDERING HAD TO CHANGE.  Every one of the form's sixty-odd
+  fields -- the waterfall bitmap, the lock, the palette, the frame buffers --
+  was already per-instance, and each TK4Radio already owns its own spectrum
+  thread on its own port (CAT + 1, derived from that radio's radioPort).  Only
+  three things were singletons: the form, the restore-once flag and the layout
+  key. }
+function PanadapterForm(const aSlot: integer): TfrmPanadapter;
+
+procedure ShowPanadapterWindow(const aSlot: integer;
+                               ARadio: TFactoryRadioBase; const ASourceId: string;
                                const ACaption: string = '');
-procedure ClosePanadapterWindow;
-function PanadapterWindowVisible: Boolean;
+procedure ClosePanadapterWindow(const aSlot: integer);
+function PanadapterWindowVisible(const aSlot: integer): Boolean;
+{ Frees the instance AND clears the slot.  A bench harness that freed the
+  form itself would leave a dangling pointer in GPanForms. }
+procedure FreePanadapterWindow(const aSlot: integer);
+
+{ WINDOW LAYOUT.  The panadapter is NOT a tw_ window, so
+  FindAndSaveRectOfAllWindows never sees it and it has to answer for itself.
+  These two are driven by MainUnit's EXISTING 5-second autosave and its
+  save-at-exit backstop -- deliberately not a second timer with its own
+  cadence, because two mechanisms writing one file is how drift starts. }
+function PanadapterLayoutChanged: boolean;
+procedure SavePanadapterLayout;
+
+{ Was this slot's window open when TR4W last shut down?  Read straight from
+  the layout store, so it can be asked before any form exists. }
+function PanadapterWasOpen(const aSlot: integer): boolean;
 
 implementation
 
@@ -277,6 +317,24 @@ uses
    uTR4WConfigFile;     // TR4WConfigFileName, Load/SaveWindowLayout
 
 {$R *.lfm}
+
+var
+   { Indexed by SLOT: 1 is Radio 1, 2 is Radio 2. }
+   GPanForms: array[1..2] of TfrmPanadapter = (nil, nil);
+
+function SlotIsValid(const aSlot: integer): boolean;
+begin
+   Result := (aSlot >= Low(GPanForms)) and (aSlot <= High(GPanForms));
+end;
+
+function PanadapterForm(const aSlot: integer): TfrmPanadapter;
+begin
+   Result := nil;
+   if SlotIsValid(aSlot) then
+      begin
+      Result := GPanForms[aSlot];
+      end;
+end;
 
 type
    // Indexing a raw scan line.  Range checking is off in this tree, which is
@@ -394,7 +452,10 @@ end;
 
 procedure TfrmPanadapter.HandleClose(Sender: TObject; var CloseAction: TCloseAction);
 begin
-   SaveCurrentBounds;
+   { visible=FALSE: closing IS the operator saying they do not want this
+     window next time.  True here would reopen, next run, a window they
+     had just dismissed. }
+   SaveCurrentBounds(False);
 
    // Closing STOPS THE STREAM.  It is a second TCP socket and ~150 KB/s; a
    // hidden window quietly consuming that would be a cost nobody asked for.
@@ -1049,8 +1110,12 @@ end;
   Making it a tw_ window would give position, the Windows menu and the
   accelerator in one move, but a tw_ window's caption is read back from its MENU
   ITEM -- so that route is blocked behind the I18N work, and this is not. }
-const
-   LAYOUT_NAME = 'Panadapter';
+{ ONE KEY PER SLOT.  Two windows sharing 'Panadapter' would each overwrite the
+  other's row on close, and whichever closed last would win. }
+function TfrmPanadapter.LayoutName: string;
+begin
+   Result := SysUtils.Format('Panadapter%d', [FSlot]);
+end;
 
 procedure TfrmPanadapter.RestoreBounds;
 var
@@ -1065,9 +1130,15 @@ begin
          Exit;
          end;
 
-      if not store.TryGetLayout(LAYOUT_NAME, saved, visible) then
+      { LEGACY KEY.  Before 2026-08-26 there was one panadapter and one row,
+        'Panadapter'.  Slot 1 inherits it rather than silently losing the
+        operator's saved position on the upgrade. }
+      if not store.TryGetLayout(LayoutName, saved, visible) then
          begin
-         Exit;
+         if (FSlot <> 1) or (not store.TryGetLayout('Panadapter', saved, visible)) then
+            begin
+            Exit;
+            end;
          end;
 
       // A monitor that is no longer attached leaves a well-formed rect that
@@ -1092,7 +1163,22 @@ begin
    end;
 end;
 
-procedure TfrmPanadapter.SaveCurrentBounds;
+{ THE LIVE RECTANGLE, in the LCL's own units.  Left/Top/Width/Height, never
+  GetWindowRect -- mixing the two is what made the function-key window grow by
+  its frame height on every restart (2026-08-25). }
+function TfrmPanadapter.LiveBounds: TRect;
+begin
+   Result := Rect(Left, Top, Left + Width, Top + Height);
+end;
+
+function TfrmPanadapter.LayoutDiffersFromDisk: boolean;
+begin
+   Result := (not FHaveSaved)
+             or (FSavedVisible <> Visible)
+             or (not EqualRect(FSavedBounds, LiveBounds));
+end;
+
+procedure TfrmPanadapter.SaveCurrentBounds(const aVisible: boolean);
 var
    store: TWindowLayoutStore;
 begin
@@ -1107,9 +1193,12 @@ begin
       // SetLayout on an EMPTY store: SaveWindowLayout re-reads the file and
       // overlays these entries, so every other window's row survives without
       // this one having to know they exist.
-      store.SetLayout(LAYOUT_NAME,
-                      Rect(Left, Top, Left + Width, Top + Height), True);
+      store.SetLayout(LayoutName, LiveBounds, aVisible);
       SaveWindowLayout(TR4WConfigFileName, store);
+
+      FSavedBounds := LiveBounds;
+      FSavedVisible := aVisible;
+      FHaveSaved := True;
    finally
       store.Free;
    end;
@@ -1969,18 +2058,25 @@ end;
 // Open / close.  No handle, no window table, no SetWindowPos.
 // ---------------------------------------------------------------------------
 
-procedure ShowPanadapterWindow(ARadio: TFactoryRadioBase; const ASourceId: string;
+procedure ShowPanadapterWindow(const aSlot: integer;
+                               ARadio: TFactoryRadioBase; const ASourceId: string;
                                const ACaption: string);
 begin
-   if TR4WPanadapterForm = nil then
+   if not SlotIsValid(aSlot) then
       begin
-      TR4WPanadapterForm := TfrmPanadapter.Create(nil);
+      Exit;
+      end;
+
+   if GPanForms[aSlot] = nil then
+      begin
+      GPanForms[aSlot] := TfrmPanadapter.Create(nil);
+      GPanForms[aSlot].FSlot := aSlot;   { before RestoreBounds -- it keys on it }
 
       // Parents through the LCL's PopupParent, NOT GWL_HWNDPARENT.  This is
       // the one helper in uLCLFormHelpers that is HWND-free;
       // ShowModalOverWin32Parent is not, and is not wanted here anyway --
       // the panadapter is modeless.
-      OwnFormByMainWindow(TR4WPanadapterForm);
+      OwnFormByMainWindow(GPanForms[aSlot]);
       end;
 
    { NAME THE RADIO, the way the radio panel does -- "Panadapter - Radio 1
@@ -1988,35 +2084,120 @@ begin
      it is, which is the one thing the title has to answer (NY4I, 2026-08-26). }
    if ACaption <> '' then
       begin
-      TR4WPanadapterForm.Caption := 'Panadapter - ' + ACaption;
+      GPanForms[aSlot].Caption := 'Panadapter - ' + ACaption;
       end;
 
-   TR4WPanadapterForm.AttachRadio(ARadio, ASourceId);
+   GPanForms[aSlot].AttachRadio(ARadio, ASourceId);
 
    { BOUNDS BEFORE Show, and only the first time.  Reshowing must not drag the
      window back to where it was when TR4W started. }
-   if not FBoundsRestored then
+   if not GPanForms[aSlot].FBoundsRestored then
       begin
-      FBoundsRestored := True;
-      TR4WPanadapterForm.RestoreBounds;
+      GPanForms[aSlot].FBoundsRestored := True;
+      GPanForms[aSlot].RestoreBounds;
       end;
 
-   TR4WPanadapterForm.Show;
+   GPanForms[aSlot].Show;
 end;
 
-procedure ClosePanadapterWindow;
+procedure ClosePanadapterWindow(const aSlot: integer);
 begin
-   if TR4WPanadapterForm = nil then
+   if PanadapterForm(aSlot) = nil then
       begin
       Exit;
       end;
 
-   TR4WPanadapterForm.Close;      // HandleClose detaches and hides
+   GPanForms[aSlot].Close;      // HandleClose detaches and hides
 end;
 
-function PanadapterWindowVisible: Boolean;
+function PanadapterWindowVisible(const aSlot: integer): Boolean;
 begin
-   Result := (TR4WPanadapterForm <> nil) and TR4WPanadapterForm.Visible;
+   Result := (PanadapterForm(aSlot) <> nil) and GPanForms[aSlot].Visible;
+end;
+
+procedure FreePanadapterWindow(const aSlot: integer);
+begin
+   if PanadapterForm(aSlot) = nil then
+      begin
+      Exit;
+      end;
+
+   FreeAndNil(GPanForms[aSlot]);
+end;
+
+{ ---------------------------------------------------- the layout seam --- }
+
+{ ANY live window whose bounds or open state no longer match what was written.
+
+  MainUnit's autosave already owns the cadence, the dirty check and the
+  save-at-exit backstop for every tw_ window; this lets the panadapter ride
+  the same tick instead of growing a second timer. }
+function PanadapterLayoutChanged: boolean;
+var
+   slot: integer;
+begin
+   Result := False;
+   for slot := Low(GPanForms) to High(GPanForms) do
+      begin
+      if (GPanForms[slot] <> nil) and GPanForms[slot].LayoutDiffersFromDisk then
+         begin
+         Result := True;
+         Exit;
+         end;
+      end;
+end;
+
+procedure SavePanadapterLayout;
+var
+   slot: integer;
+begin
+   for slot := Low(GPanForms) to High(GPanForms) do
+      begin
+      if GPanForms[slot] <> nil then
+         begin
+         { The LIVE visibility, so quitting with the window open records it as
+           open -- which is the whole point.  Before this, bounds were written
+           in HandleClose alone, so an operator who moved the window and then
+           quit saved nothing at all (NY4I, 2026-08-26). }
+         GPanForms[slot].SaveCurrentBounds(GPanForms[slot].Visible);
+         end;
+      end;
+end;
+
+function PanadapterWasOpen(const aSlot: integer): boolean;
+var
+   store: TWindowLayoutStore;
+   saved: TRect;
+   visible: boolean;
+begin
+   Result := False;
+   if not SlotIsValid(aSlot) then
+      begin
+      Exit;
+      end;
+
+   store := TWindowLayoutStore.Create;
+   try
+      if not LoadWindowLayout(TR4WConfigFileName, store) then
+         begin
+         Exit;
+         end;
+
+      if store.TryGetLayout(SysUtils.Format('Panadapter%d', [aSlot]),
+                            saved, visible) then
+         begin
+         Result := visible;
+         end
+      else if (aSlot = 1) and store.TryGetLayout('Panadapter', saved, visible) then
+         begin
+         { The pre-2026-08-26 single-window row -- slot 1 inherits it, here as
+           well as in RestoreBounds, so the upgrade keeps both the position and
+           the open state the operator last had. }
+         Result := visible;
+         end;
+   finally
+      store.Free;
+   end;
 end;
 
 end.

@@ -72,6 +72,11 @@ function RadioPanelForm(const aID: WindowsType): TfrmRadioPanel;
   calls that made WM_CTLCOLORDLG run again. }
 procedure RadioPanelsRefreshActive;
 
+{ Open one radio's panadapter, by SLOT.  Public because the start-up restore
+  must be able to reopen a window whose radio panel is not itself open.  False
+  means the radio cannot supply a spectrum right now. }
+function OpenPanadapterForSlot(const aSlot: integer): boolean;
+
 implementation
 
 {$R *.lfm}
@@ -161,12 +166,18 @@ begin
    btnSpectrum.Visible := obj.Supports(rcSpectrum) and obj.SpectrumAvailable;
 end;
 
-procedure TfrmRadioPanel.SpectrumClick(Sender: TObject);
+{ OPEN ONE RADIO'S PANADAPTER.  Takes the SLOT rather than reading it off a
+  form, because the start-up restore has to be able to reopen a window whose
+  radio panel is not itself open.  Returns False when the radio cannot supply a
+  spectrum, so the caller can say so rather than doing nothing visible. }
+function OpenPanadapterForSlot(const aSlot: integer): boolean;
 var
    rig: RadioPtr;
    caption, rigName: string;
 begin
-   if FSlot = 2 then
+   Result := False;
+
+   if aSlot = 2 then
       begin
       rig := @Radio2;
       end
@@ -176,6 +187,12 @@ begin
       end;
 
    if rig^.tFactoryObject = nil then
+      begin
+      Exit;
+      end;
+
+   if not (rig^.tFactoryObject.Supports(rcSpectrum)
+           and rig^.tFactoryObject.SpectrumAvailable) then
       begin
       Exit;
       end;
@@ -198,7 +215,7 @@ begin
      plus the rig name ONLY when it differs, because RadioName is initialised to
      that same label and would otherwise read "Radio 1 Radio 1" on a station
      with no radio configured. }
-   if FSlot = 2 then
+   if aSlot = 2 then
       begin
       caption := TC_RADIO2;
       end
@@ -213,7 +230,17 @@ begin
       caption := caption + ' ' + rigName;
       end;
 
-   ShowPanadapterWindow(rig^.tFactoryObject, K4_MAIN_PAN_SOURCE, caption);
+   { ONE PANADAPTER PER RADIO -- this panel's own slot.  Two K4s on an SO2R
+     station get two windows; before 2026-08-26 the second STOLE the first,
+     because a single global form was re-attached to whichever radio asked
+     last. }
+   ShowPanadapterWindow(aSlot, rig^.tFactoryObject, K4_MAIN_PAN_SOURCE, caption);
+   Result := True;
+end;
+
+procedure TfrmRadioPanel.SpectrumClick(Sender: TObject);
+begin
+   OpenPanadapterForSlot(FSlot);
 end;
 
 procedure TfrmRadioPanel.HandleClose(Sender: TObject; var CloseAction: TCloseAction);

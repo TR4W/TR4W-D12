@@ -106,6 +106,7 @@ uses
   uIntercomForm,
   uMP3RecorderForm,
   uRadioPanelForm,
+  uPanadapterRestore,
   uNetworkForm,
   uRemMultsForm,
   uAppInputHooks,
@@ -1283,6 +1284,12 @@ begin
     created and placed from the saved layout by now, so its first tick sees no
     change and does not rewrite the file it just read.  See MainUnit. }
   StartLayoutAutosave;
+
+  { AND THE PANADAPTERS THAT WERE OPEN LAST TIME.  After the autosave for the
+    same reason -- the layout on disk is what it reads -- but it does its own
+    waiting, because a panadapter needs a radio that is CONNECTED and
+    streaming, which start-up cannot promise.  See uRadioPanelForm. }
+  StartPanadapterRestore;
 
   RunLCLApplication;
 end;

@@ -622,3 +622,127 @@ silently change what a different window shows is a hidden mode.
 message and `uNet` using `WSAAsyncSelect`; `70e6bedf`, `05ff356f` and
 `00e9a987` removed all three. The conclusion may well still hold -- re-derive
 it on merged code before writing the provider, do not carry it forward.
+
+## 13. One panadapter per radio (2026-08-26)
+
+An SO2R station with two K4s gets **two windows**, indexed by the radio panel's
+own slot: `ShowPanadapterWindow(FSlot, ...)`. Before this, a single global form
+meant opening the second panadapter **silently stole the first** -- `AttachRadio`
+detaches whatever is already attached, so Radio 1's window would simply start
+drawing Radio 2.
+
+**Almost nothing had to change, and that is the point.** All ~61 form fields --
+the waterfall bitmap, the frame lock, the palette LUT, the dB history -- were
+already per-instance, and each `TK4Radio` already owns its own spectrum thread
+on its own socket (CAT port + 1, derived from *that* radio's `radioPort`). Only
+three things were singletons:
+
+| was | now |
+|---|---|
+| `TR4WPanadapterForm: TfrmPanadapter` | `GPanForms: array[1..2]` + `PanadapterForm(aSlot)` |
+| `FBoundsRestored: boolean` (unit global) | a form field, restored once per window |
+| `LAYOUT_NAME = 'Panadapter'` | `LayoutName` -> `'Panadapter1'` / `'Panadapter2'` |
+
+The layout key is the one that would have failed quietly: two windows writing
+the same row in `settings/tr4w.json` means the last to close wins, and the
+other window's position is lost every run.
+
+Slot numbering is deliberately the **same 1/2 as the radio panels and the dupe
+sheets** (`uRadioPanelForm.SlotOf`), not a new scheme.
+
+`FreePanadapterWindow(aSlot)` exists so the bench harness cannot free a form
+and leave a dangling pointer in `GPanForms`.
+
+**Not proven by code review, and the reason to bench it:** two 4162-byte-packet
+streams at ~150 KB/s each, two render threads' worth of repaint on one UI
+thread, and whether a second K4 is reachable on its own address at all. Neither
+CPU cost nor reachability is a code question.
+
+### 13.1 Window layout and open state
+
+Bounds used to be written in **`HandleClose` alone**. An operator who moved the
+window and then quit TR4W with it open saved *nothing* -- which is how a
+carefully placed panadapter came back in the top-left corner every run (NY4I,
+2026-08-26).
+
+The panadapter is not a `tw_` window, so `FindAndSaveRectOfAllWindows` cannot
+see it and it has to answer for itself. It does that by **riding MainUnit's
+existing autosave** rather than growing a timer of its own:
+
+- `PanadapterLayoutChanged` joins the 5-second tick's dirty check.
+- `SavePanadapterLayout` is called from `SaveTR4WPOSFILE`, which gives it the
+  save-at-exit backstop for free.
+
+Two mechanisms writing one file is how drift starts, so there is only one.
+
+**`visible` is real state, not a formality.** `SaveCurrentBounds` takes it
+explicitly: `HandleClose` passes `False`, because closing the window *is* the
+operator saying they do not want it next time; the autosave passes the live
+`Visible`.
+
+`uPanadapterRestore` reads that back at start-up and reopens what was open.
+It is **its own unit**, not a corner of `uRadioPanelForm`: a helper class with
+an `OnTimer` handler inside a designed form's unit reads to `Lint-FormEvents`
+as an unwired form handler, and more to the point this is a start-up policy,
+not a window.
+
+**Why it retries rather than firing once.** "Was it open last time" is answered
+from disk instantly; "can this radio stream spectrum yet" is not --
+`SpectrumAvailable` stays False until the polling thread has connected and the
+K4 has answered, which on a cold start is seconds away and on a rig that is
+switched off never comes. So it tries immediately, then every 2 s, stops the
+moment both slots resolve, and **expires after 60 s saying so in the log**. A
+silent expiry would be indistinguishable from a broken feature.
+
+**The legacy key.** Slot 1 falls back to the old single `Panadapter` row for
+both position and open state, so upgrading does not quietly discard what the
+operator had.
+
+### 13.2 Start-up ordering: the main window goes first
+
+`OpenOtherWindows` used to restore every tool window and only then show the
+main one -- all **before `Application.Run`**. A window does not paint until
+something pumps its messages, so every millisecond spent constructing a
+restored tool window was a millisecond the main window sat unpainted. The
+tool windows appeared; the main window trailed them.
+
+Measured 2026-08-26, per window:
+
+| window | ms |
+|---|---:|
+| BandMap / FunctionKeys / Master / RemMults / Radio1 / Radio2 | 14-27 each |
+| **Telnet** | **1741** |
+
+Telnet's cost was `TelnetAddHostItem` doing an `Items.IndexOf` before every
+`Items.Add` over the 726 lines of `TRCLUSTER.DAT`. Two multipliers, neither
+visible in the source: the duplicate check made it O(n^2), and on the Win32
+widget set a `TComboBox`'s `Items` **proxy the native control**, so each
+`IndexOf` is a sweep of `CB_GETLBTEXT` round trips and each `Add` relays the
+control out -- roughly a quarter-million control messages to fill one
+drop-down. The pre-conversion dialog did a bare `CB_ADDSTRING` with no dedupe;
+this was conversion damage (`00e9a987`). It now de-duplicates in memory against
+a sorted list and writes the control once inside `BeginUpdate`/`EndUpdate`.
+
+**But the slow window was the symptom.** The ordering made *any* future slow
+window a main-window delay, silently -- so the ordering changed too. NY4I:
+*"wouldn't you create the window then have the telnet thread run after the
+window is up?"*
+
+- `OpenOtherWindows` now shows the main window and **queues** the rest through
+  `Application.QueueAsyncCall`, which runs them on the main thread at the first
+  idle inside `Application.Run` -- after the main window has painted.
+- Not a worker thread: these are windows, and windows belong to the thread that
+  owns the loop. The Telnet *connect* was already off-thread and never blocked
+  (thread created in ~1 ms); only the UI work was slow.
+- `RestoreToolWindows` re-asserts `tCallWindowSetFocus` when it finishes,
+  because showing a window can take focus and the restore now runs *after* the
+  caret was placed.
+- `StartPanadapterRestore` queues its first attempt for the same reason.
+- Both queued calls are dropped with `Application.RemoveAsyncCalls` before their
+  owner object is freed, so an exit before the first idle cannot leave the LCL
+  holding a method pointer into freed memory.
+
+**The loop now reports itself.** `OpenOtherWindows` logged nothing, which is
+why a 1.7 s stall showed up as a silent gap that could not be attributed
+without a rebuild. Each window is timed: `>= 200 ms` at Info, the rest at
+Trace.

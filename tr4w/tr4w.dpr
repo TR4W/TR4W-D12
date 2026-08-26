@@ -76,6 +76,7 @@ uses
   uBandMapView in 'src\uBandMapView.pas',
   uBandMapForm in 'src\ui\lcl\uBandMapForm.pas',
   uPanadapterForm in 'src\ui\lcl\uPanadapterForm.pas',
+  uPanadapterRestore in 'src\uPanadapterRestore.pas',
   uStationsForm in 'src\ui\lcl\uStationsForm.pas',
   uDomainState in 'src\domain\uDomainState.pas',
   uWSJTXState in 'src\domain\uWSJTXState.pas',

@@ -571,8 +571,10 @@ uses
   uTRMasterUpdate,  // Download TRMASTER.DTA (Super Check Partial)
   uWin32Compat,   // AnimateWindow -- see that unit for the whole FPC gap list
   ExtCtrls,           // TTimer -- the window-layout autosave
+  DateUtils,          // MilliSecondsBetween -- the start-up timing
   uWindowLayoutStore, // the window layout, keyed by name
-  uTR4WConfigFile;   // TR4WConfigFileName / Save- LoadWindowLayout
+  uTR4WConfigFile,   // TR4WConfigFileName / Save- LoadWindowLayout
+  uPanadapterForm;   // it is not a tw_ window, so it saves its own row
 
 
 
@@ -2022,6 +2024,12 @@ begin
   finally
      store.Free;
   end;
+
+  // The panadapters are NOT tw_ windows -- they have no entry in
+  // tr4w_WindowsArray, so the loop above cannot see them.  Riding this call
+  // gives them the 5-second autosave AND the save-at-exit backstop without a
+  // second mechanism writing the same file.
+  SavePanadapterLayout;
 end;
 
 // Issue #739: a saved window rectangle can land off-screen when the monitor it
@@ -2102,17 +2110,55 @@ end;
 const
    LAYOUT_AUTOSAVE_MS = 5000;
 
+{ Defined below, beside the window table it walks. }
+procedure RestoreToolWindows; forward;
+
 type
    TLayoutAutosave = class
       procedure Tick(Sender: TObject);
    end;
 
+   { Exists only to give QueueAsyncCall a method to call.  Queue is a method so
+     the @ resolves against Self -- taking a method pointer off a variable at
+     the call site does not parse. }
+   TDeferredWindowRestore = class
+      procedure Queue;
+      procedure Run(Data: PtrInt);
+   end;
+
 var
    GLayoutTimer: TTimer = nil;
    GLayoutAutosave: TLayoutAutosave = nil;
+   GDeferredRestore: TDeferredWindowRestore = nil;
    { What is believed to be ON DISK.  Compared against the live rects; without
      it this would rewrite the file every tick. }
    GSavedLayout: array[WindowsType] of TRect;
+
+procedure TDeferredWindowRestore.Queue;
+begin
+   { NO @ -- this unit compiles in Delphi mode, where a bare method name in
+     a procedural-type context IS the method pointer.  ObjFPC's @Run does
+     not parse here.  (And a brace comment cannot spell the mode directive
+     out: Pascal comments do not nest, so it would end the comment and the
+     rest would compile as code.) }
+   Application.QueueAsyncCall(Self.Run, 0);
+end;
+
+procedure TDeferredWindowRestore.Run(Data: PtrInt);
+begin
+   RestoreToolWindows;
+end;
+
+{ Show the main window first and let the loop restore the rest -- see
+  OpenOtherWindows. }
+procedure QueueToolWindowRestore;
+begin
+   if GDeferredRestore = nil then
+      begin
+      GDeferredRestore := TDeferredWindowRestore.Create;
+      end;
+   GDeferredRestore.Queue;
+end;
 
 procedure SnapshotSavedLayout;
 var
@@ -2155,6 +2201,18 @@ begin
          end;
       end;
 
+   { The panadapter answers for itself -- see SavePanadapterLayout.  Asked
+     AFTER the tw_ loop so that loop's Break-on-first-change logging is
+     unaffected. }
+   if (not changed) and PanadapterLayoutChanged then
+      begin
+      changed := True;
+      if logger.IsTraceEnabled then
+         begin
+         logger.Trace('[Layout] a panadapter moved, resized or changed open state -- saving');
+         end;
+      end;
+
    if not changed then
       begin
       Exit;
@@ -2190,6 +2248,16 @@ begin
       end;
    FreeAndNil(GLayoutTimer);
    FreeAndNil(GLayoutAutosave);
+
+   { The deferred window restore lives on the same start-up-to-shutdown scale.
+     REMOVE THE QUEUED CALL FIRST: a program that exits before the loop ever
+     idles would otherwise leave the LCL holding a method pointer into a freed
+     object. }
+   if GDeferredRestore <> nil then
+      begin
+      Application.RemoveAsyncCalls(GDeferredRestore);
+      FreeAndNil(GDeferredRestore);
+      end;
 end;
 
 
@@ -4071,15 +4139,67 @@ begin
   ApplyDWMRoundedCorners;
 end;
 
-procedure OpenOtherWindows;
+{ Loud above this, trace below it.  A window that takes a fifth of a second
+  to restore is worth a line in an ordinary log. }
+const
+  SLOW_WINDOW_OPEN_MS = 200;
+
+{ THE TOOL WINDOWS.  Runs from the MESSAGE LOOP, not before it -- see
+  OpenOtherWindows. }
+procedure RestoreToolWindows;
 var
   i: WindowsType;
+  startedAt: TDateTime;
+  tookMs: Int64;
 begin
   for i := tw_BANDMAPWINDOW_INDEX to tw_HAMSCOREWINDOW_INDEX do  // Issue #783 -- include HamScore in restore
     if tr4w_WindowsArray[i].WndVisible then
        begin
+       // TIME EACH ONE.  This whole loop logs nothing of its own, so a slow
+       // start-up shows up in the log as a silent gap of seconds between the
+       // band map and whatever runs next -- and "which window" then cannot be
+       // answered without a rebuild.  A restored window that connects to
+       // something (Telnet, a radio panel asking a rig whether it has a
+       // spectrum) is exactly the kind that can block, so the loop is asked to
+       // account for itself.
+       startedAt := Now;
        OpenTR4WWindow(i);
+       tookMs := MilliSecondsBetween(Now, startedAt);
+       if tookMs >= SLOW_WINDOW_OPEN_MS then
+          begin
+          logger.Info('[Startup] restoring the %s window took %d ms', [WindowNames[i], tookMs]);
+          end
+       else if logger.IsTraceEnabled then
+          begin
+          logger.Trace('[Startup] restored %s in %d ms', [WindowNames[i], tookMs]);
+          end;
        end;
+
+  // THE OPERATOR TYPES IN THE CALL WINDOW, not in whatever opened last.  A
+  // restored tool window is Shown, and showing a window can take the focus --
+  // harmless when this ran before the message loop, but this now runs after
+  // tCallWindowSetFocus has already put the caret where it belongs.
+  tCallWindowSetFocus;
+end;
+
+{ THE MAIN WINDOW FIRST, THE TOOL WINDOWS AFTER THE LOOP IS RUNNING.
+
+  This used to restore every tool window and only then show the main one, all
+  before Application.Run -- so a window doing real work at open held the main
+  window unpainted for exactly that long.  Telnet was measured at 1741 ms on
+  2026-08-26 (726 cluster hosts into a combo box, since fixed), and the log
+  showed it as a silent gap with nothing to name the cause.
+
+  THE POINT IS NOT THAT TELNET WAS SLOW.  It is that the ordering made every
+  future slow window a main-window delay, invisibly.  NY4I: "wouldn't you
+  create the window then have the telnet thread run after the window is up?"
+
+  So: show the main window NOW, and queue the rest.  QueueAsyncCall runs the
+  restore on the main thread at the first idle moment inside Application.Run,
+  which is after the main window has painted.  Not a thread -- these are
+  windows, and windows belong to the thread that owns the loop. }
+procedure OpenOtherWindows;
+begin
   Windows.SetWindowPos(tr4whandle, HWND_TOP,
     tr4w_WindowsArray[tw_MAINWINDOW_INDEX].WndRect.Left,
     tr4w_WindowsArray[tw_MAINWINDOW_INDEX].WndRect.Top, 0, 0, SWP_NOSIZE or
@@ -4091,6 +4211,8 @@ begin
   ShowTR4WMainForm;
      { DWM rounding is compositor-managed; no reapplication needed after move }
     ApplyDWMRoundedCorners;
+
+  QueueToolWindowRestore;
 end;
 
 function tCreateFont(nHeight, fnWeight: integer; lpszFace: PChar): HFONT;

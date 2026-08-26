@@ -60,6 +60,8 @@ const
    DEFAULT_SECONDS = 8;
    DEFAULT_SOURCE = 'A';
    DEFAULT_OUT = 'panadapter.png';
+   { The harness drives one radio, so it uses panadapter slot 1. }
+   BENCH_SLOT = 1;
 
 { A stand-in spot provider, installed into the uPanadapterView seam.
 
@@ -117,6 +119,8 @@ var
    closedByUser: Boolean;
    wantWidth: Integer;
    wantSpots: Boolean;
+   { The bench drives ONE radio, so it drives panadapter slot 1. }
+   pan: TfrmPanadapter;
    i: Integer;
    origFreq, f1, f2: Integer;
    centre, span: Int64;
@@ -193,9 +197,10 @@ begin
 
       // The real entry point, not a hand-built form: what is being tested
       // includes the open path.
-      ShowPanadapterWindow(radio, source);
+      ShowPanadapterWindow(BENCH_SLOT, radio, source);
+      pan := PanadapterForm(BENCH_SLOT);
 
-      if not PanadapterWindowVisible then
+      if not PanadapterWindowVisible(BENCH_SLOT) then
          begin
          WriteLn('FAIL: the window did not become visible');
          Halt(1);
@@ -203,7 +208,7 @@ begin
 
       if wantWidth > 0 then
          begin
-         TR4WPanadapterForm.Width := wantWidth;
+         pan.Width := wantWidth;
          Application.ProcessMessages;
          WriteLn(Format('  window widened to %d px', [wantWidth]));
          end;
@@ -224,15 +229,15 @@ begin
          // across the middle of the image, and the snapshot would show it.
          if (not switched) and (seconds > 0) and (elapsed >= seconds / 2) then
             begin
-            TR4WPanadapterForm.cboPalette.ItemIndex := palette;
-            TR4WPanadapterForm.HandlePaletteChange(nil);
+            pan.cboPalette.ItemIndex := palette;
+            pan.HandlePaletteChange(nil);
             switched := True;
             WriteLn(Format('  switched to palette %d at t=%.1f s', [palette, elapsed]));
             end;
-      until (not PanadapterWindowVisible) or
+      until (not PanadapterWindowVisible(BENCH_SLOT)) or
             ((seconds > 0) and (elapsed >= seconds));
 
-      closedByUser := not PanadapterWindowVisible;
+      closedByUser := not PanadapterWindowVisible(BENCH_SLOT);
 
       if closedByUser then
          begin
@@ -246,31 +251,31 @@ begin
       WriteLn;
       WriteLn('Performance over the run:');
       WriteLn(Format('  frames from radio : %d  (%.1f/s, all pans)',
-                     [TR4WPanadapterForm.FramesIn,
-                      TR4WPanadapterForm.FramesIn / elapsed]));
+                     [pan.FramesIn,
+                      pan.FramesIn / elapsed]));
       WriteLn(Format('  waterfall rows    : %d  (%.1f/s)',
-                     [TR4WPanadapterForm.RowsPushed,
-                      TR4WPanadapterForm.RowsPushed / elapsed]));
+                     [pan.RowsPushed,
+                      pan.RowsPushed / elapsed]));
       WriteLn(Format('  paints            : %d  (%.1f/s)',
-                     [TR4WPanadapterForm.Paints,
-                      TR4WPanadapterForm.Paints / elapsed]));
+                     [pan.Paints,
+                      pan.Paints / elapsed]));
 
-      if TR4WPanadapterForm.RowsPushed > 0 then
+      if pan.RowsPushed > 0 then
          begin
          WriteLn(Format('  ms in row push    : %d total, %.2f ms each',
-                        [TR4WPanadapterForm.MsInRows,
-                         TR4WPanadapterForm.MsInRows / TR4WPanadapterForm.RowsPushed]));
+                        [pan.MsInRows,
+                         pan.MsInRows / pan.RowsPushed]));
          end;
 
-      if TR4WPanadapterForm.Paints > 0 then
+      if pan.Paints > 0 then
          begin
          WriteLn(Format('  ms in paint       : %d total, %.2f ms each',
-                        [TR4WPanadapterForm.MsInPaint,
-                         TR4WPanadapterForm.MsInPaint / TR4WPanadapterForm.Paints]));
+                        [pan.MsInPaint,
+                         pan.MsInPaint / pan.Paints]));
          end;
 
       WriteLn(Format('  CPU busy in draw  : %.1f%% of wall clock',
-                     [((TR4WPanadapterForm.MsInRows + TR4WPanadapterForm.MsInPaint)
+                     [((pan.MsInRows + pan.MsInPaint)
                        / (elapsed * 1000.0)) * 100.0]));
       WriteLn;
       WriteLn(Format('  link up   : %s', [BoolToStr(radio.SpectrumLinkUp, True)]));
@@ -317,8 +322,8 @@ begin
                end;
 
             origFreq := radio.frequency[nrVFOA];
-            centre := TR4WPanadapterForm.DisplayedCentreHz;
-            span := TR4WPanadapterForm.DisplayedSpanHz;
+            centre := pan.DisplayedCentreHz;
+            span := pan.DisplayedSpanHz;
             WriteLn(Format('  VFO A now %d Hz;  pan centre %d, span %d',
                            [origFreq, centre, span]));
 
@@ -334,8 +339,8 @@ begin
                   // land a quarter span either side of centre.  Two points,
                   // because ONE would pass even with the frequency axis
                   // mirrored.
-                  TR4WPanadapterForm.HandleSpectrumMouseDown(
-                     nil, mbLeft, [], TR4WPanadapterForm.pbSpectrum.Width div 4, 10);
+                  pan.HandleSpectrumMouseDown(
+                     nil, mbLeft, [], pan.pbSpectrum.Width div 4, 10);
                   Sleep(700);
                   Application.ProcessMessages;
                   radio.SendToRadio('FA;');
@@ -348,11 +353,11 @@ begin
                   // Predicting the second click from the ORIGINAL centre made
                   // this test fail against a radio that was behaving perfectly
                   // -- the reading, not the code, was wrong.
-                  centre := TR4WPanadapterForm.DisplayedCentreHz;
-                  span := TR4WPanadapterForm.DisplayedSpanHz;
+                  centre := pan.DisplayedCentreHz;
+                  span := pan.DisplayedSpanHz;
 
-                  TR4WPanadapterForm.HandleSpectrumMouseDown(
-                     nil, mbLeft, [], (TR4WPanadapterForm.pbSpectrum.Width * 3) div 4, 10);
+                  pan.HandleSpectrumMouseDown(
+                     nil, mbLeft, [], (pan.pbSpectrum.Width * 3) div 4, 10);
                   Sleep(700);
                   Application.ProcessMessages;
                   radio.SendToRadio('FA;');
@@ -418,7 +423,7 @@ begin
       // field means the snapshot exercises the same path a mouse does.
       if (cursorX >= 0) and (not closedByUser) then
          begin
-         TR4WPanadapterForm.HandleSpectrumMouseMove(nil, [], cursorX, 0);
+         pan.HandleSpectrumMouseMove(nil, [], cursorX, 0);
          Application.ProcessMessages;
          end;
 
@@ -432,7 +437,7 @@ begin
          end
       else
          begin
-         shot := TR4WPanadapterForm.GetFormImage;
+         shot := pan.GetFormImage;
 
          try
             png := TPortableNetworkGraphic.Create;
@@ -449,9 +454,9 @@ begin
          end;
          end;
 
-      ClosePanadapterWindow;
+      ClosePanadapterWindow(BENCH_SLOT);
 
-      if PanadapterWindowVisible then
+      if PanadapterWindowVisible(BENCH_SLOT) then
          begin
          WriteLn('FAIL: the window did not close');
          failed := True;
@@ -467,7 +472,8 @@ begin
       // touches the radio.  Narrated because a fault in here is otherwise an
       // address with no context.
       WriteLn('  teardown: freeing the window ...');
-      FreeAndNil(TR4WPanadapterForm);
+      pan := nil;
+      FreePanadapterWindow(BENCH_SLOT);
       WriteLn('  teardown: window freed');
 
       if doConnect then

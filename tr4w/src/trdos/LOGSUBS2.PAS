@@ -157,7 +157,8 @@ uses
   uHamScore,        // Issue #783 -- HamScoreOnLog hook
   uExchangeBuilder, // Canonical SentExchange builder for UDP broadcast
   uUDPBroadcastConfig, // TUDPStream / usContact, usScore, usLookup
-  uUDPBroadcaster;
+  uUDPBroadcaster,
+  uPanadapterRestore;   { StopPanadapterRestore -- the start-up retry timer }
 procedure PutContactIntoLogFile(LogString: string {Str80});
 
 begin
@@ -715,6 +716,10 @@ begin
   { Stop the autosave BEFORE the final save, so a tick cannot fire while the
     program is tearing down and read half-destroyed windows. }
   StopLayoutAutosave;
+
+  { And the start-up panadapter retry, for the same reason: it can open a
+    window, and nothing should be opening windows during teardown. }
+  StopPanadapterRestore;
 
   logger.Info('[ExitProgram] SaveTR4WPOSFILE');
   SaveTR4WPOSFILE;
