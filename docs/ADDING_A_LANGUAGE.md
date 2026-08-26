@@ -120,7 +120,36 @@ no --lang   SIniRetireTitle = Old settings file
 469 of 545 `.lfm` captions ship as English, so this is the largest block of untranslated
 text in the program, and the mechanism below is the intended route to it.
 
-### What is established
+### THE MECHANISM WORKS. THE PROBLEM IS TR4W-SPECIFIC.
+
+Proven 2026-08-26 in a minimal LCL application — one form, one button, the *same*
+`SetDefaultLang('', '', '<name>.po', False)` call before any form exists, and a `.po` at
+`languages/es/<name>.po`:
+
+```
+--lang es -> lang=es  form.caption=Hola Espanol  button.caption=Pulsame
+```
+
+Both the form's own caption and a child control's, from keys spelled exactly
+`tform1.caption` and `tform1.button1.caption`. **So the format, the file layout, the call
+and the LCL are all correct**, and the reason TR4W does not translate is something TR4W
+does differently. Candidates, in the order worth checking:
+
+1. **When its forms are created.** The minimal app calls `Application.CreateForm`
+   immediately after `SetDefaultLang`, in the program body. TR4W creates its tool windows
+   much later, queued onto the message loop after `Application.Run` — see the deferred
+   restore in `MainUnit`. A form streamed after the translator is installed *should* still
+   pick it up, but that is the biggest structural difference and it is untested.
+2. **Whether something overwrites the caption after streaming.** `OpenTR4WWindow` and the
+   window manager came from the Win32 era, where titles were set with `SetWindowText`.
+   A caption assigned after the form is streamed defeats translation silently.
+3. **Whether `LRSTranslator` is still assigned** at the moment the form is created.
+
+The isolation project is the tool for all three: add to it whatever TR4W does differently,
+one thing at a time, until it stops translating. That is a much cheaper loop than probing
+the real program.
+
+### What else is established
 
 * The runtime path **exists and is installed**. `SetDefaultLang`'s `.po` branch does
   `LocalTranslator := TPOTranslator.Create(lcfn)` and then `LRSTranslator := LocalTranslator`
@@ -157,19 +186,33 @@ form caption does **not**. Tried against `TfrmFunctionKeys`, whose title comes f
 | a second `SetDefaultLang(..., ForceUpdate := True)` after the windows are open | no change |
 | clean single-entry file, no duplicate msgids, no BOM | no change |
 
+### lazbuild does NOT generate the catalogue
+
+Worth knowing before you try: **`lazbuild` does not run the i18n step.** With
+`<EnableI18N Value="True"/>` and `<OutDir Value="languages"/>` set exactly as Lazarus's own
+sample project has them, `lazbuild -B` compiled cleanly and produced **no `.lrj` and no
+`.po`**. That generation is IDE-only.
+
+`.lrj` is the same JSON as `.rsj` — `{"name":"tmainform.caption","value":"Translation demo"}`
+— and Lazarus checks the generated files into its own tree beside the `.lfm`. So a
+command-line pipeline has to produce them itself. TR4W already has the parsing half of that
+(`pas2res.py` walks `.lfm` files today for the caption census), so extending `pas2po.py` to
+emit `.lfm` captions is the practical route, not chasing `lazbuild`.
+
 ### What to try next, in this order
 
-1. **Isolate the mechanism from TR4W.** Build a minimal LCL application — one form, one
-   caption, the same `SetDefaultLang` call — and translate its caption. If it works there
-   and not here, the difference is in how TR4W creates its forms, and that is the thing to
-   look at. If it fails there too, the assumption that `.po` translates `.lfm` captions
-   without an IDE build step is wrong.
-2. **Let Lazarus generate the catalogue** rather than hand-writing keys: enable i18n in
-   `tr4w.lpi` (`EnableI18N`, `POOutputDirectory`) and build through `lazbuild`. That
-   produces `.lrj` per form and merges them, which is the supported path and yields the
-   authoritative keys for *this* project. It also answers whether `lazbuild` can drive a
-   project whose real build is FPC-direct with custom search paths.
-3. Only then consider moving captions into resourcestrings assigned at run time. It is the
+1. ~~Isolate the mechanism from TR4W.~~ **DONE — it works.** See above. The format, the
+   file layout, the call and the LCL are all correct.
+2. ~~Let Lazarus generate the catalogue through `lazbuild`.~~ **DONE — it cannot.** The
+   i18n step is IDE-only; `lazbuild -B` produces no `.lrj` and no `.po`.
+3. **Find what TR4W does differently**, using the isolation project rather than the real
+   program: add one difference at a time until it stops translating. Start with *when* the
+   form is created — TR4W queues its tool windows onto the message loop, long after
+   `SetDefaultLang` — then look for a caption assigned after streaming.
+4. **Extend `pas2po.py` to emit `.lfm` captions** once step 3 explains the failure. TR4W
+   already parses `.lfm` files for the caption census, and `lazbuild` will not do it for
+   us, so this is the practical route to the 469.
+5. Only then consider moving captions into resourcestrings assigned at run time. It is the
    hand-rolled alternative to what the framework already does, it means touching every
    form, and it is what [`I18N_PLAN.md`](I18N_PLAN.md) argues against.
 
