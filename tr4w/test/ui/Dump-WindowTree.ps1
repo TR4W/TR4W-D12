@@ -174,14 +174,17 @@ else
    try { Assert-NoRunningTR4W }
    catch { Write-Output "Dump-WindowTree: $_"; exit 1 }
 
-   if (-not $Config)
+   # Shared with every other driving script -- see UiDriver.psm1.  It reports
+   # a missing corpus set instead of dying on a raw Copy-Item error, which
+   # this script did on a fresh clone until 2026-08-26.
+   $cfg = Resolve-TR4WHarnessConfig -Repo $Repo -TargetDir $target -Config $Config -Caller 'Dump-WindowTree'
+   if ($cfg.Message) { Write-Output "Dump-WindowTree: $($cfg.Message)" }
+   if ($cfg.Failure)
       {
-      $set = Join-Path $Repo 'tr4w\test\corpus\cqww_ssb_2025_ny4i'
-      Copy-Item (Join-Path $set 'log.cfg') (Join-Path $target 'uitest.cfg') -Force
-      Copy-Item (Join-Path $set 'log.trw') (Join-Path $target 'uitest.trw') -Force
-      $Config = 'uitest.cfg'
+      Write-Output "Dump-WindowTree: $($cfg.Failure)"
+      exit 1
       }
-   $configPath = Join-Path $target $Config
+   $configPath = $cfg.Path
 
    $launched = Start-TR4WForDriving -Exe $Exe -TargetDir $target -ConfigPath $configPath -SettleMs $SettleMs
    if ($launched.Failure)

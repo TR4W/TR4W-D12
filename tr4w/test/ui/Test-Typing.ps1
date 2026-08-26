@@ -101,12 +101,16 @@ function Get-VisibleChildCount
 $target = Join-Path $Repo 'tr4w\target'
 if (-not $Exe) { $Exe = Join-Path $target 'tr4w.exe' }
 
-if (-not $Config) {
-   $set = Join-Path $Repo 'tr4w\test\corpus\cqww_ssb_2025_ny4i'
-   Copy-Item (Join-Path $set 'log.cfg') (Join-Path $target 'uitest.cfg') -Force
-   Copy-Item (Join-Path $set 'log.trw') (Join-Path $target 'uitest.trw') -Force
-   $Config = 'uitest.cfg'
-}
+# Shared -- see UiDriver.psm1.  This copy had no guard for a missing corpus
+# set and died on a raw Copy-Item error; the shared one reports it.
+$cfg = Resolve-TR4WHarnessConfig -Repo $Repo -TargetDir $target -Config $Config -Caller 'Test-Typing'
+if ($cfg.Message) { Write-Output "Test-Typing: $($cfg.Message)" }
+if ($cfg.Failure)
+   {
+   Write-Output "Test-Typing: $($cfg.Failure)"
+   exit 1
+   }
+$Config = $cfg.Config
 
 try { Assert-NoRunningTR4W } catch { Write-Output "Test-Typing: $_"; exit 1 }
 

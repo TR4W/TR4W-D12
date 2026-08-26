@@ -112,26 +112,17 @@ if (-not (Test-Path -LiteralPath $Exe))
 # Stage a config from the corpus rather than asking the caller to do it by hand.
 # The corpus sets are the only contest data guaranteed present in a fresh clone,
 # which is what makes this runnable on a CI runner as well as on the bench.
-if (-not $Config)
+# This script's guard is now the SHARED one -- see UiDriver.psm1.  It was the
+# only copy that had it; lifting it out is what gave the other two scripts a
+# readable failure on a fresh clone.
+$cfg = Resolve-TR4WHarnessConfig -Repo $Repo -TargetDir $target -Config $Config -Caller 'Invoke-MenuSmoke'
+if ($cfg.Message) { Write-Output "Invoke-MenuSmoke: $($cfg.Message)" }
+if ($cfg.Failure)
    {
-   $set = Join-Path $Repo 'tr4w\test\corpus\cqww_ssb_2025_ny4i'
-   if (-not (Test-Path -LiteralPath (Join-Path $set 'log.cfg')))
-      {
-      Write-Output "Invoke-MenuSmoke: no corpus set at $set to stage a config from -- pass -Config"
-      exit 1
-      }
-   Copy-Item (Join-Path $set 'log.cfg') (Join-Path $target 'uitest.cfg') -Force
-   Copy-Item (Join-Path $set 'log.trw') (Join-Path $target 'uitest.trw') -Force
-   $Config = 'uitest.cfg'
-   Write-Output "staged $Config from the corpus set cqww_ssb_2025_ny4i"
-   }
-
-$configPath = Join-Path $target $Config
-if (-not (Test-Path -LiteralPath $configPath))
-   {
-   Write-Output "Invoke-MenuSmoke: no config at $configPath"
+   Write-Output "Invoke-MenuSmoke: $($cfg.Failure)"
    exit 1
    }
+$configPath = $cfg.Path
 
 try { Assert-NoRunningTR4W }
 catch { Write-Output "Invoke-MenuSmoke: $_"; exit 1 }

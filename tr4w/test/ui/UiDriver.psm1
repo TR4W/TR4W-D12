@@ -175,6 +175,69 @@ function Get-TR4WLogSince
       }
 }
 
+# THE HARNESS CONFIG, in one place.
+#
+# TR4W cannot create its main window without a contest open -- it stops on the
+# "Open configuration file or start a new contest" dialog -- and the main window
+# is what owns the menu and every control these scripts look at. So every
+# driving script needs a .cfg, and they all staged one the same way.
+#
+# THEY HAD THREE COPIES OF THAT, AND THE COPIES HAD DRIFTED (found 2026-08-26).
+# Invoke-MenuSmoke had grown a guard for "the corpus set is not there" that
+# reported the problem and exited; Dump-WindowTree and Test-Typing never got it
+# and died on a raw Copy-Item error instead -- on a fresh clone, which is
+# precisely where a harness has to explain itself. The guard is kept here, so
+# the fix reaches every caller.
+#
+# Returns Failure rather than throwing, matching Start-TR4WForDriving.  It emits
+# NOTHING to the pipeline: a PowerShell function returns everything it writes, so
+# a progress line here comes back as PART OF THE RESULT, and the caller's
+# $cfg.Failure then fails with "property cannot be found on this object".  The
+# progress line is returned as .Message for the caller to print.
+function Resolve-TR4WHarnessConfig
+{
+   param(
+      [Parameter(Mandatory = $true)][string] $Repo,
+      [Parameter(Mandatory = $true)][string] $TargetDir,
+      # An existing .cfg name in tr4w\target. Empty stages one from the corpus.
+      [string] $Config,
+      [string] $Caller = 'harness'
+   )
+
+   $staged = $false
+   $message = $null
+
+   if (-not $Config)
+      {
+      # The corpus sets are the only contest data guaranteed present in a fresh
+      # clone, which is what makes these runnable on a CI runner as well as on
+      # the bench.
+      $set = Join-Path $Repo 'tr4w\test\corpus\cqww_ssb_2025_ny4i'
+      if (-not (Test-Path -LiteralPath (Join-Path $set 'log.cfg')))
+         {
+         return [pscustomobject]@{ Config = $null; Path = $null; Staged = $false; Message = $null
+                                   Failure = "no corpus set at $set to stage a config from -- pass -Config" }
+         }
+
+      Copy-Item (Join-Path $set 'log.cfg') (Join-Path $TargetDir 'uitest.cfg') -Force
+      Copy-Item (Join-Path $set 'log.trw') (Join-Path $TargetDir 'uitest.trw') -Force
+      $Config = 'uitest.cfg'
+      $staged = $true
+      $message = "staged $Config from the corpus set cqww_ssb_2025_ny4i"
+      }
+
+   $path = Join-Path $TargetDir $Config
+   if (-not (Test-Path -LiteralPath $path))
+      {
+      return [pscustomobject]@{ Config = $null; Path = $null; Staged = $false; Message = $null
+                                Failure = "no config at $path" }
+      }
+
+   return [pscustomobject]@{ Config = $Config; Path = $path; Staged = $staged
+                             Message = $message; Failure = $null }
+}
+
 Export-ModuleMember -Function Find-TR4WMainWindow, Assert-NoRunningTR4W,
                               Start-TR4WForDriving, Send-TR4WMenuCommand,
-                              Stop-TR4WForDriving, Get-TR4WLogMark, Get-TR4WLogSince
+                              Stop-TR4WForDriving, Get-TR4WLogMark, Get-TR4WLogSince,
+                              Resolve-TR4WHarnessConfig
