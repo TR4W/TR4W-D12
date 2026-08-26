@@ -30,21 +30,20 @@ uses
   TF,
 //  tr4wutils,
 utils_net,
-  Windows,
+  Windows,        { GetSystemTime for T1/T4 -- see the note on NTPStartupCheck }
   Tree,
   uNet,
-  WinSock2,
+  IdUDPClient,    { the NTP query -- Indy, not WinSock }
+  IdGlobal,       { TIdBytes }
+  Forms,          { Application.QueueAsyncCall -- the warning is main-thread work }
+  Dialogs,        { MessageDlg }
   Messages,
   SysUtils,
   Registry
   ;
 
-function SynchronizeTimeDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-procedure ShowTime(Control: integer; LocalTime: SYSTEMTIME);
-procedure GetServerAnswerOffset;
 procedure GetInt64AndSysTimeFromBuffer(BufPtr: Byte; var St: SYSTEMTIME);
 
-procedure ConnectToNTPServer;
 procedure CheckNTPAtStartup;
 
 
@@ -55,7 +54,6 @@ procedure CheckNTPAtStartup;
 // When the dialog becomes an LCL form, this body changes and nothing else
 // does. Deliberately here, in the unit that owns the DlgProc, rather than at
 // the call site.
-procedure ShowSynchronizeTime;
 
 implementation
 uses
@@ -63,149 +61,16 @@ uses
   uTelnet;
 
 var
-  st_window_handle                      : HWND;
 //  ST_saddr                              : sockaddr_in = (sin_family: AF_INET; sin_port: 31488);
-  ST_SOCKET                             : Cardinal = INVALID_SOCKET;
   ST_Buffer                             : array[1..48] of Byte;
-  T1                                    : SYSTEMTIME; //����� �������� ������� �������
-  T2                                    : SYSTEMTIME; //����� ��������� ������� ��������
-  T3                                    : SYSTEMTIME; //����� ������� ������� ��������
-  T4                                    : SYSTEMTIME; //����� ��������� ������� ��������
   Offset                                : int64;
   local_time_timer_handle               : HWND;
-  NTPThreadID                           : Cardinal;
   NTPStartupThreadID                    : Cardinal;
 const
   NTP_SERVER                            = 'pool.ntp.org';
 
-function SynchronizeTimeDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-label
-  ExitAndClose, ShowCurrentTime;
-var
-  LocalTime                             : SYSTEMTIME;
-  i                                     : integer;
-const
-  l                                     : array[0..5] of PAnsiChar = (RC_NTPSERVER, RC_LOCALTIME, 'PC UTC', 'Server UTC', RC_SERVERANSWER, RC_LOCALOFFSET);
-  b                                     : array[0..3] of PAnsiChar = (RC_GETOFFSET, RC_SYNCLOCK, RC_TIMESYN, EXIT_WORD);
-begin
-  Result := False;
-  case Msg of
 
-    WM_INITDIALOG:
-      begin
-        Windows.SetWindowTextA(hwnddlg, RC_SYNPCTIME);
-        for i := 0 to 3 do
-           begin
-           CreateButton(0, b[i], 270, 5 + i * 35, 190, hwnddlg, 200 + i);
-           end;
 
-        for i := 0 to 5 do
-           begin
-           CreateStatic(l[i], 5, 5 + i * 23, 100 + 10, hwnddlg, 0);
-           CreateEdit(ES_READONLY or ES_CENTER, 120, 5 + i * 23, 140, 20, hwnddlg, 100 + i);
-           end;
-
-        CreateStatic(nil, 0, 157, 470, hwnddlg, 106);
-
-        Windows.SetDlgItemTextA(hwnddlg, 100, NTP_SERVER);
-
-        st_window_handle := hwnddlg;
-        Windows.SetTimer(hwnddlg, local_time_timer_handle, 1000, nil);
-        if not NetIsConnected then
-           begin
-           EnableWindowFalse(hwnddlg, 202);
-           end;
-        EnableWindowFalse(hwnddlg, 201);
-        goto ShowCurrentTime;
-      end;
-
-//    WM_HELP: tWinHelp(48);
-
-{$IFDEF LANG_RUS}
-    WM_HELP: ShowHelp('ru_synchronizepctime');
-{$ENDIF}
-
-    WM_TIMER:
-      begin
-        ShowCurrentTime:
-        Windows.GetLocalTime(LocalTime);
-        ShowTime(101, LocalTime);
-      end;
-
-    WM_SOCK_SYNC_TIME:
-      begin
-        Windows.GetSystemTime(T4);
-        if recv(ST_SOCKET, ST_Buffer, 48, 0) <> 48 then Exit;
-        GetServerAnswerOffset;
-        GetInt64AndSysTimeFromBuffer(41, T3); ////����� ������� ������� ��������
-        GetInt64AndSysTimeFromBuffer(41 - 8, T2);
-        ShowTime(103, T3); //server
-        ShowTime(102, T4); //local
-
-        //t = ((T2 - T1) + (T3 - T4)) / 2.
-        Offset := round((STToInt64(T2) - STToInt64(T1) + STToInt64(T3) - STToInt64(T4)) / 2);
-
-        TF.Format(wsprintfBuffer, '%d ' + TC_MS, integer(Offset));
-        SetDlgItemTextA(hwnddlg, 105, wsprintfBuffer);
-
-//        TR4W_WM_SetTest(hwnddlg, 123, _StrInt64(Offset, 1) + TC_MS);
-
-        EnableWindowTrue(hwnddlg, 201);
-      end;
-    WM_COMMAND:
-      begin
-
-        case wParam of
-          201:
-            begin
-              Windows.GetSystemTime(T2);
-              IncSystemTime(T2, Offset);
-              if not Windows.SetSystemTime(T2) then
-                 begin
-                 SetDlgItemTextW(st_window_handle, 106, PChar(string(SysUtils.SysErrorMessage(GetLastError))));
-                 end;
-              EnableWindowFalse(hwnddlg, 201);
-            end;
-
-          203, 2: goto ExitAndClose;
-
-          200: {Get Time}
-            begin
-              if NTPThreadID <> 0 then Exit;
-              logger.Info('Calling tCreateThread from NTP');
-              tCreateThread(@ConnectToNTPServer, NTPThreadID);
-              logger.Info('Created NTP thread with threadid of %d',[NTPThreadID] );
-
-            end;
-
-          202: ProcessMenu(menu_alt_setnettime);
-        end;
-
-      end;
-    WM_CLOSE:
-      begin
-        ExitAndClose:
-        Windows.KillTimer(hwnddlg, local_time_timer_handle);
-        closesocket(ST_SOCKET);
-        ST_SOCKET := INVALID_SOCKET;
-        EndDialog(hwnddlg, 0);
-      end;
-
-  end;
-
-end;
-
-procedure ShowTime(Control: integer; LocalTime: SYSTEMTIME);
-begin
-  SetDlgItemTextW(st_window_handle, Control, PChar(string(TF.SystemTimeToString(LocalTime))));
-end;
-
-procedure GetServerAnswerOffset;
-begin
-//  TR4W_WM_SetTest(st_window_handle, 122, IntToStr(STToInt64(T4) - STToInt64(T1)) + TC_MS);
-  TF.Format(wsprintfBuffer, '%d ' + TC_MS, integer(STToInt64(T4) - STToInt64(T1)));
-  SetDlgItemTextA(st_window_handle, 104, wsprintfBuffer);
-end;
 
 procedure GetInt64AndSysTimeFromBuffer(BufPtr: Byte; var St: SYSTEMTIME);
 const
@@ -239,54 +104,6 @@ begin
 
 end;
 
-procedure ConnectToNTPServer;
-label
-  1, Unsuccessful;
-var
-  i                                     : integer;
-begin
-
-  EnableWindowFalse(st_window_handle, 201);
-  for i := 102 to 106 do
-     begin
-     Windows.SetDlgItemTextA(st_window_handle, i, nil);
-     end;
-  Windows.ZeroMemory(@ST_Buffer, SizeOf(ST_Buffer));
-  ST_Buffer[1] := 27;
-  if ST_SOCKET = INVALID_SOCKET then
-     begin
-
-     //    InitiatesUseOfTheWindowsSockets;
-     //    ST_SOCKET := socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
-
-         if not GetConnection(ST_SOCKET, NTP_SERVER, 123, SOCK_DGRAM) then
-            begin
-            goto Unsuccessful;
-            end;
-     {
-    InitiatesUseOfTheWindowsSockets;
-
-    ST_SOCKET := socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
-    ST_saddr.sin_addr.S_addr := inet_addr(tgethostbyname(TempBuffer1));
-    if ST_saddr.sin_addr.S_addr = INADDR_NONE then goto Unsuccessful;
-
-    if ST_SOCKET = INVALID_SOCKET then goto Unsuccessful;
-    if tConnect(ST_SOCKET, @ST_saddr) <> 0 then goto Unsuccessful;
-}
-         if WinSock2.WSAAsyncSelect(ST_SOCKET, st_window_handle, WM_SOCK_SYNC_TIME, FD_READ or FD_CLOSE or FD_CONNECT) <> 0 then
-            begin
-            goto Unsuccessful;
-            end;
-     end;
-  Windows.GetSystemTime(T1);
-  WinSock2.Send(ST_SOCKET, ST_Buffer, 48, 0);
-  goto 1;
-  Unsuccessful:
-  ST_SOCKET := INVALID_SOCKET;
-  1:
-  SetDlgItemTextW(st_window_handle, 106, PChar(string(SysUtils.SysErrorMessage(WSAGetLastError))));
-  NTPThreadID := 0;
-end;
 
 // Returns the NTP server configured for Windows W32Time (from registry),
 // falling back to pool.ntp.org if not set.
@@ -329,61 +146,136 @@ begin
       end;
 end;
 
-// Background thread proc: queries NTP, warns if clock offset exceeds 2 seconds.
+{ THE WARNING, ON THE MAIN THREAD.
+
+  THIS IS A CORRECTNESS FIX, NOT A STYLE ONE.  NTPStartupCheck runs on a worker
+  thread (tCreateThread, see CheckNTPAtStartup), and the MessageBoxW this
+  replaces was called from there.  Win32 tolerates that; THE LCL DOES NOT --
+  showing a form from a non-main thread is undefined, and this one is a modal
+  dialog raised while the main window is still starting up.
+
+  Application.QueueAsyncCall and not TThread.Queue, for the reason uPanelUpdate
+  and uNet both record: TThread.Queue purges by the calling thread's id when
+  that thread dies, and this thread's whole job finishes the moment it has
+  asked for the warning. }
+type
+   TClockWarning = class
+      Text: string;
+      procedure Show(Data: PtrInt);
+   end;
+
+procedure TClockWarning.Show(Data: PtrInt);
+begin
+   try
+      MessageDlg('TR4W Time Warning', Text, mtWarning, [mbOK], 0);
+   finally
+      Free;   { queued once, shown once, gone }
+   end;
+end;
+
+procedure WarnAboutClockOffset(const aSeconds: int64; const aServer: string);
+var
+   w: TClockWarning;
+begin
+   if (Application = nil) or Application.Terminated then
+      begin
+      Exit;
+      end;
+
+   w := TClockWarning.Create;
+   w.Text := Format('Warning: PC clock is %d seconds off from NTP server (%s).'
+                    + sLineBreak + sLineBreak
+                    + 'Please synchronize your Windows time.',
+                    [aSeconds, aServer]);
+   Application.QueueAsyncCall(w.Show, 0);
+end;
+
+{ THE STARTUP CLOCK CHECK.  Reads the offset against an NTP server and WARNS;
+  it has never set the clock, and that is why it survived the removal of the
+  Synchronize-PC-time dialog on 2026-08-25 -- setting needs UAC elevation, and
+  checking does not.
+
+  INDY, NOT WINSOCK.  This was raw WinSock2 -- GetConnection, setsockopt,
+  Send, recv, closesocket -- which is the same transport the DX cluster and the
+  multi-op link already left behind.  TIdUDPClient carries its own receive
+  timeout, closes itself, and is the one socket API this program still keeps.
+
+  WHAT IS DELIBERATELY STILL WIN32, so the next reader does not "finish the
+  job" and break it:
+
+    Windows.GetSystemTime for T1/T4.  These feed STToInt64 alongside the two
+    SERVER timestamps decoded from the packet, and the whole offset is computed
+    in that one representation.  SysUtils.TSystemTime and Windows.SYSTEMTIME
+    are SEPARATE DECLARATIONS that merely happen to share a layout
+    (docs/PLATFORM_CLOCK_ABSTRACTION.md), so substituting one for the other is
+    exactly the swap that compiles and quietly changes meaning.  Moving this to
+    TDateTime means moving the epoch arithmetic with it, and that deserves pin
+    tests of its own rather than being folded into a cleanup. }
 procedure NTPStartupCheck;
-const
-   SOL_SOCKET_C  = $FFFF;  // from winsock.h — not defined in this project's WinSock2.pas
 var
    ntpServer: string;
-   sock: TSocket;
-   recvBuf: array[1..48] of Byte;
+   udp: TIdUDPClient;
+   pkt: TIdBytes;
+   got: integer;
    t1, t4: SYSTEMTIME;
    t2Time, t3Time: SYSTEMTIME;
    offset: int64;
-   timeoutMs: DWORD;
-   msg: string;
    i: integer;
 begin
-   // Wait for main window to finish initialising before touching the network.
-   // gethostbyname can block for 10-15s on DNS failure; we must not delay startup.
+   // Wait for the main window to finish initialising before touching the
+   // network: a DNS failure can block for 10-15 s and must not delay startup.
    Sleep(3000);
 
    ntpServer := GetWindowsNTPServer;
    logger.Info('[NTP] Startup time check against %s', [ntpServer]);
 
-   if not GetConnection(sock, PAnsiChar(AnsiString(ntpServer)), 123, SOCK_DGRAM) then
-      begin
-      logger.Warn('[NTP] Could not connect to NTP server %s', [ntpServer]);
-      NTPStartupThreadID := 0;
-      Exit;
+   udp := TIdUDPClient.Create(nil);
+   try
+      udp.Host := ntpServer;
+      udp.Port := 123;
+      // Two seconds, so an unreachable server cannot hold up the check.
+      udp.ReceiveTimeout := 2000;
+
+      SetLength(pkt, 48);
+      FillChar(pkt[0], 48, 0);
+      pkt[0] := 27;   // LI=0, VN=3, Mode=3 -- an NTP client request
+
+      try
+         Windows.GetSystemTime(t1);
+         udp.SendBuffer(pkt);
+         got := udp.ReceiveBuffer(pkt, 2000);
+         Windows.GetSystemTime(t4);
+      except
+         on E: Exception do
+            begin
+            // One handler for resolve and send alike: the answer is the same,
+            // and a station with no network is the ordinary case here.
+            logger.Warn('[NTP] Could not reach %s: %s', [ntpServer, E.Message]);
+            NTPStartupThreadID := 0;
+            Exit;
+            end;
       end;
 
-   // 2-second receive timeout — avoids blocking startup if server is unreachable
-   timeoutMs := 2000;
-   setsockopt(sock, SOL_SOCKET_C, SO_RCVTIMEO, PAnsiChar(@timeoutMs), SizeOf(timeoutMs));
+      if got <> 48 then
+         begin
+         logger.Warn('[NTP] No usable response from %s (got %d bytes, wanted 48)',
+                     [ntpServer, got]);
+         NTPStartupThreadID := 0;
+         Exit;
+         end;
+   finally
+      udp.Free;
+   end;
 
-   ZeroMemory(@recvBuf, SizeOf(recvBuf));
-   recvBuf[1] := 27;  // LI=0, VN=3, Mode=3 (NTP client request)
-   Windows.GetSystemTime(t1);
-   WinSock2.Send(sock, recvBuf, 48, 0);
-
-   if recv(sock, recvBuf, 48, 0) <> 48 then
-      begin
-      logger.Warn('[NTP] No response from %s (timeout or error)', [ntpServer]);
-      closesocket(sock);
-      NTPStartupThreadID := 0;
-      Exit;
-      end;
-   Windows.GetSystemTime(t4);
-   closesocket(sock);
-
-   // Copy into ST_Buffer to reuse existing timestamp parser
+   // ST_Buffer is 1-based and TIdBytes is 0-based -- the decoder below indexes
+   // by the NTP packet's own byte numbering, so the copy keeps that.
    for i := 1 to 48 do
       begin
-      ST_Buffer[i] := recvBuf[i];
+      ST_Buffer[i] := pkt[i - 1];
       end;
-   GetInt64AndSysTimeFromBuffer(33, t2Time);  // T2: server receive timestamp (bytes 33-40)
-   GetInt64AndSysTimeFromBuffer(41, t3Time);  // T3: server transmit timestamp (bytes 41-48)
+
+   GetInt64AndSysTimeFromBuffer(33, t2Time);  // T2: server receive timestamp
+   GetInt64AndSysTimeFromBuffer(41, t3Time);  // T3: server transmit timestamp
 
    // NTP offset = ((T2-T1) + (T3-T4)) / 2, in milliseconds
    offset := Round((STToInt64(t2Time) - STToInt64(t1) +
@@ -391,12 +283,9 @@ begin
 
    if Abs(offset) > 2000 then
       begin
-      logger.Warn('[NTP] Clock offset %d ms from %s - time sync needed', [offset, ntpServer]);
-      msg := 'Warning: PC clock is ' + IntToStr(Abs(offset) div 1000) +
-             ' seconds off from NTP server (' + ntpServer +
-             '). Please synchronize your Windows time.';
-      MessageBoxW(0, PChar(msg), 'TR4W Time Warning',
-         MB_OK or MB_ICONWARNING or MB_TOPMOST);
+      logger.Warn('[NTP] Clock offset %d ms from %s - time sync needed',
+                  [offset, ntpServer]);
+      WarnAboutClockOffset(Abs(offset) div 1000, ntpServer);
       end
    else
       begin
@@ -413,9 +302,5 @@ begin
 end;
 
 
-procedure ShowSynchronizeTime;
-begin
-   CreateModalDialog(235, 90, tr4whandle, @SynchronizeTimeDlgProc, 0);
-end;
 end.
 

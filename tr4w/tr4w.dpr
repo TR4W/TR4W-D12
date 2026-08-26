@@ -423,6 +423,7 @@ uses
   // THE PROGRAM BODY.  Everything this file used to run lives in here, where
   // a search of src\ can find it.  See the unit header for why.
   uTelnetForm in 'src\ui\lcl\uTelnetForm.pas',
+  uMMTTYForm in 'src\ui\lcl\uMMTTYForm.pas',
   uProgramMain in 'src\uProgramMain.pas';
   //cty in 'src\cty.pas';  // Excluded: unit name 'cty' conflicts with global variable 'CTY' from uCTYDAT
 

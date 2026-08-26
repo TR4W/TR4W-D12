@@ -538,6 +538,7 @@ uses
   uMainThreadWork,     // mtMainWindowElementColors
   uStationsForm,       // CreateTR4WStationsWindow -- the stations tool window
   uTelnetForm,         // CreateTR4WTelnetWindow -- the DX cluster tool window
+  uMMTTYForm,          // CreateTR4WMMTTYWindow -- the LAST Win32 tool window
   uDupeSheetForm,      // CreateTR4WDupeSheetWindow -- both dupe sheets
   uMasterForm,             // CreateTR4WMasterWindow -- the SCP window
   uPostScoresForm,         // CreateTR4WPostScoresWindow
@@ -2462,7 +2463,6 @@ begin
   // 2026-08-24 and OpenTR4WWindow's seam builds it.
   // tw_MP3RECORDER has no WndProcAdr: it is an LCL form (uMP3RecorderForm)
   // and OpenTR4WWindow reaches it directly.
-  tr4w_WindowsArray[tw_MMTTYWINDOW_INDEX].WndProcAdr := @MMTTYDlgProc;
 
 end;
 
@@ -4577,17 +4577,6 @@ begin
            end;
       end;
 
-    menu_syncpctime:
-      begin
-        //tDialogBox(48, @SynchronizeTimeDlgProc);
-        ShowSynchronizeTime;
-        {
-        WinExec('w32tm /config /syncfromflags:manual,domhier /manualpeerlist:pool.ntp.org', SW_NORMAL);
-        WinExec('w32tm /config /update', SW_NORMAL);
-        WinExec('w32tm /resync', SW_NORMAL);
-        }
-      end;
-
     //C:\>w32tm /config /syncfromflags:manual /manualpeerlist:ntp5.tamu.edu
     //C:\>w32tm /config /update
 
@@ -5544,6 +5533,11 @@ begin
      begin
      h := CreateTR4WTelnetWindow;
      lclForm := TR4WTelnetForm;
+     end
+  else if ID = tw_MMTTYWINDOW_INDEX then
+     begin
+     h := CreateTR4WMMTTYWindow;
+     lclForm := TR4WMMTTYForm;
      end
   else if (ID = tw_REMMULTSWINDOW_INDEX)  or
           (ID = tw_STATIONS_RM_DX)        or

@@ -82,7 +82,7 @@ type
   end;
 
 const
-  ACCELERATORS: array[0..100] of TAcceleratorRow = (
+  ACCELERATORS: array[0..99] of TAcceleratorRow = (
     (acId: 10002; acCtrl: false; acAlt: true ; acShift: false; acKey: $58; acDisplay: 'Alt+X'; acInstall: true),   // menu_exit
     (acId: 10003; acCtrl: true ; acAlt: true ; acShift: false; acKey: $42; acDisplay: 'Ctrl+Alt+B'; acInstall: true),   // menu_cabrillo
     (acId: 10100; acCtrl: true ; acAlt: false; acShift: false; acKey: $4A; acDisplay: 'Ctrl+J'; acInstall: true),   // menu_options
@@ -178,7 +178,6 @@ const
     (acId: 10513; acCtrl: true ; acAlt: false; acShift: false; acKey: $21; acDisplay: 'Ctrl+PgUp'; acInstall: true),   // menu_inactiveradio_cwspeedup
     (acId: 10514; acCtrl: true ; acAlt: false; acShift: false; acKey: $22; acDisplay: 'Ctrl+PgDn'; acInstall: true),   // menu_inactiveradio_cwspeeddown
     (acId: 10517; acCtrl: true ; acAlt: true ; acShift: false; acKey: $49; acDisplay: 'Ctrl+Alt+I'; acInstall: true),   // menu_login
-    (acId: 10550; acCtrl: true ; acAlt: true ; acShift: false; acKey: $4E; acDisplay: 'Ctrl+Alt+N'; acInstall: true),   // menu_syncpctime
     (acId: 10557; acCtrl: true ; acAlt: true ; acShift: false; acKey: $4D; acDisplay: 'Ctrl+Alt+M'; acInstall: true),   // menu_windowsmanager
     (acId: 10602; acCtrl: false; acAlt: true ; acShift: false; acKey: $48; acDisplay: 'Alt+H'; acInstall: true),   // menu_contents
     (acId: 10603; acCtrl: false; acAlt: true ; acShift: false; acKey: $4F; acDisplay: 'Alt+O'; acInstall: true),   // menu_download_latest_cty_dat

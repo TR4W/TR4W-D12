@@ -1,0 +1,13 @@
+object frmMMTTY: TfrmMMTTY
+  Left = 0
+  Top = 0
+  BorderStyle = bsSizeToolWin
+  Caption = 'MMTTY'
+  ClientHeight = 300
+  ClientWidth = 640
+  KeyPreview = True
+  OnClose = HandleClose
+  OnResize = HandleResize
+  OnShow = HandleShow
+  OnKeyDown = HandleKeyDown
+end

@@ -143,7 +143,6 @@ type
     mmttyCurrentPos: integer;
   end;
 
-function MMTTYDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 procedure mmttyProcessMessage(wp: integer; lp: integer);
 procedure PostMmttyMessage(Command: integer; lParam: integer);
 function NewMMTTYRichEditProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): integer; stdcall;
@@ -169,109 +168,9 @@ uses
   SysUtils,           // Format -- the RTL one, not TF's buffer shim
   LogEdit,
   uFileView,
+  uMMTTYForm,         // the window is a form -- set its Caption, not its HWND
   MainUnit;
 
-function MMTTYDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-label
-  1;
-begin
-  Result := False;
-  case Msg of
-    {
-        WM_MOUSEACTIVATE:
-          begin
-            tCleareCallWindow;
-            PostMessage(MMTTYRichEdit, WM_COPY, 0, 0);
-            PostMessage(CallWindowHandle, WM_PASTE, 0, 0);
-            Windows.SetFocus(CallWindowHandle);
-          end;
-    }
-    WM_WINDOWPOSCHANGING: WINDOWPOSCHANGINGPROC(PWindowPos(lParam));
-    WM_EXITSIZEMOVE: FrmSetFocus;
-
-    WM_INITDIALOG:
-      begin
-
-        tr4w_WindowsArray[tw_MMTTYWINDOW_INDEX].WndHandle := hwnddlg;
-
-//        if TR4W_MMTTYPATH[0] = #0 then SetCommand('MMTTY ENGINE');
-
-        // MMTTY is a Windows program and out-of-process, so it stays on the
-        // Windows-utility route rather than pretending to be portable. The
-        // path is quoted because this IS a command line -- the one shape
-        // RunProgram's argument list cannot express.
-{
--t FFT spectrum, Waterfall, and XY scope are displayed.
--s Control menus are displayed in addition to the above components.
--u Control buttons are displayed.
--r Control menus are also displayed in addition to the above components.
-}
-        RunWindowsUtility(SysUtils.Format('"%s" -t -s -u -r',
-                                          [string(PAnsiChar(TR4W_MMTTYPATH))]));
-{
-        if WinExec(wsprintfBuffer, SW_SHOW) < 31 then
-        begin
-
-          asm
-          push p
-          call SysErrorMessage
-          push eax
-          end;
-          wsprintf(wsprintfBuffer, '%s'#13'MMTTY PATH = %s');
-          asm add esp,16
-          end;
-          showwarning(wsprintfBuffer);
-          goto 1;
-        end;
-}
-        MMTTY.mmttyMSG := RegisterWindowMessage('MMTTY');
-        MMTTY.MMTTYRichEdit := CreateRichEdit(hwnddlg);
-        tListBoxClientAlign(hwnddlg);
-
-        MMTTY.mmttyCallProcess.cpEnable := True;
-
-        MMTTY.mmttyCF.cbSize := SizeOf(TCharFormatA);
-        //MMTTY.mmttyCF.yHeight :=20;
-        MMTTY.mmttyCF.szFaceName := 'Lucida Console'; //}'Courier New';
-        MMTTY.mmttyCF.dwMask := CFM_COLOR + CFM_FACE + CFM_BOLD;
-        SendMessage(MMTTY.MMTTYRichEdit, EM_SETCHARFORMAT, SCF_SELECTION, integer(@MMTTY.mmttyCF));
-//        OldMMTTYRichEditProc := Pointer(Windows.SetWindowLong(MMTTYRichEdit, GWL_WNDPROC, integer(@NewMMTTYRichEditProc)));
-      end;
-    WM_COMMAND:
-      begin
-        case LoWord(wParam) of
-          100:
-
-            begin
-              //              PostMessage(MMTTY_Handle, MSG_MMTTY, RXM_SHOWSETUP, 0);
-
-            end;
-        end;
-      end;
-    WM_LBUTTONDOWN: DragWindow(hwnddlg);
-    WM_DESTROY:
-      begin
-        PostMmttyMessage(RXM_EXIT, 0);
-        Windows.ZeroMemory(@MMTTY, SizeOf(MMTTY));
-      end;
-
-    WM_NCDESTROY:
-      begin
-        RichEditOperation(False);
-{
-        if RichEditViewer = INVALID_HANDLE_VALUE then
-        begin
-          FreeLibrary(RICHED32DLLHANDLE);
-          RICHED32DLLHANDLE := 0;
-        end;
-      }end;
-
-    WM_CLOSE:
-      1: CloseTR4WWindow(tw_MMTTYWINDOW_INDEX);
-    WM_SIZE: tListBoxClientAlign(hwnddlg);
-  end;
-
-end;
 
 procedure mmttyUpdateCharFormat();
 begin
@@ -292,7 +191,18 @@ begin
          if MMTTY.mmttyCallProcess.cpContainN then
            if MMTTY.mmttyCallProcess.cpContainA then
               begin
-              Windows.SetWindowTextA(tr4w_WindowsArray[tw_MMTTYWINDOW_INDEX].WndHandle, MMTTY.mmttyCallProcess.cpBuffer);
+              { THE DECODED CALLSIGN GOES IN THE TITLE BAR.
+
+                WAS SetWindowTextA against the window's raw HWND.  That is the
+                hand-rolled route now the window is a form: the LCL CACHES
+                Caption and repaints from its own copy, so a title set behind
+                its back survives only until the next repaint -- and this fires
+                on every decoded callsign, so it would have looked intermittent
+                rather than broken. }
+              if TR4WMMTTYForm <> nil then
+                 begin
+                 TR4WMMTTYForm.Caption := string(AnsiString(PAnsiChar(@MMTTY.mmttyCallProcess.cpBuffer[0])));
+                 end;
 
               Windows.ZeroMemory(@MMTTY.mmttyLastCallsign, SizeOf(MMTTY.mmttyLastCallsign));
               Windows.CopyMemory(@MMTTY.mmttyLastCallsign[1], @MMTTY.mmttyCallProcess.cpBuffer, MMTTY.mmttyCallProcess.cpPos);

@@ -109,7 +109,7 @@ begin
    // A FLOOR.  A table that shrank to nothing would pass every other test here
    // while the program silently lost its keyboard.
    CheckTrue(Length(ACCELERATORS) >= 90,
-             'the table holds at least 90 bindings (97 when written)');
+             'the table holds at least 90 bindings (96 as of 2026-08-25)');
 end;
 
 procedure TAcceleratorTests.Test_NoDuplicateKeystroke;
@@ -187,7 +187,7 @@ begin
    CheckEquals('Alt+P', AcceleratorDisplayFor(10317), 'menu_alt_p owns Alt+P');
    CheckEquals('', AcceleratorDisplayFor(10101), 'menu_messages has no accelerator');
    CheckEquals('', AcceleratorDisplayFor(0), 'an unknown id has no accelerator');
-   // A binding no menu row displays -- 25 of the 97 are like this, and they are
+   // A binding no menu row displays -- 25 of the 96 are like this, and they are
    // exactly what a transcription of the captions would have lost.
    CheckEquals('Ctrl+T', AcceleratorDisplayFor(10608), 'POTA repeat kept its key');
 end;
@@ -219,7 +219,10 @@ begin
          end;
       end;
 
-   CheckEquals(97, installed, 'installed bindings (the table read out of the binary)');
+   { 97 until 2026-08-25, when Ctrl+Alt+N went with the Synchronize-PC-time
+     menu item -- setting the clock needs UAC elevation TR4W never asked for.
+     The startup NTP CHECK is unaffected: it warns, it never set the clock. }
+   CheckEquals(96, installed, 'installed bindings (the table read out of the binary)');
    CheckEquals(4, displayOnly, 'display-only rows');
 
    // Named individually: each is here for a DIFFERENT reason and losing any one

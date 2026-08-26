@@ -2453,7 +2453,11 @@ const
 
   {menu items & accelerators}
 
-  menu_syncpctime                       = 10550;
+  { menu_syncpctime (10550) is GONE.  Setting the system clock needed UAC
+    elevation TR4W never requested, so the menu item could not work on a
+    normal account.  The STARTUP NTP CHECK stays -- it reads the offset and
+    warns; it never set the clock.  NY4I, 2026-08-25.  The number is left
+    unused rather than reassigned: 10551 and 10555 are live either side. }
   menu_beaconsmonitor                   = 10551;
   item_calculator                       = 10555;
 {
