@@ -422,6 +422,9 @@ procedure RefreshEntryFieldColors;
   colour depends on live state.  See the implementation. }
 procedure RefreshMainWindowElementColors;
 
+{ See the implementation: the one rule both the sweep and uStateBridge use. }
+function WSJTXIndicatorBack: tr4wColors;
+
 procedure ProcessFuntionKeys(Key: integer);
 procedure CreateDirectoryIfNotExist;
 procedure CheckAndSetInitialExchangeCursorPos;
@@ -591,6 +594,7 @@ uses
   DateUtils,          // MilliSecondsBetween -- the start-up timing
   uWindowLayoutStore, // the window layout, keyed by name
   uTR4WConfigFile,   // TR4WConfigFileName / Save- LoadWindowLayout
+  uWSJTXState,       // the state the WSJT-X indicator paints from
   uPanadapterForm;   // it is not a tw_ window, so it saves its own row
 
 
@@ -1408,6 +1412,28 @@ begin
      end;
 end;
 
+{ THE WSJT-X INDICATOR'S BACKGROUND, DECIDED ONCE.
+
+  Two places need this answer -- the sweep below, which repaints every element
+  from the table and would otherwise reset the indicator to trBtnFace, and
+  uStateBridge, which repaints it the moment the link comes up. Two copies of
+  the RULE is how they drift; one function with two callers is not duplication.
+
+  It reads WSJTXState, not wsjtx.Connected: the domain state is what the rest of
+  the view already reads for this element's text and visibility, and appearance
+  disagreeing with visibility is exactly the class of defect this replaces. }
+function WSJTXIndicatorBack: tr4wColors;
+begin
+   if (WSJTXState <> nil) and WSJTXState.Connected then
+      begin
+      Result := trGreen;
+      end
+   else
+      begin
+      Result := trRed;
+      end;
+end;
+
 procedure RefreshMainWindowElementColors;
 const
    { Hoisted out of DrawWindows, which is the only place it used to be needed. }
@@ -1449,16 +1475,9 @@ begin
             end;
          end;
 
-      if (e = mweWSJTX) and Assigned(wsjtx) then
+      if e = mweWSJTX then
          begin
-         if wsjtx.Connected then
-            begin
-            back := trGreen;
-            end
-         else
-            begin
-            back := trRed;
-            end;
+         back := WSJTXIndicatorBack;
          end;
 
       if ((e = mweRadioOneFreq) or (e = mweRadioOne)) and Radio1.RadioDisconnected then

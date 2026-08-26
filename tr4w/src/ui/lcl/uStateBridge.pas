@@ -79,7 +79,8 @@ uses
    VC,             // TMainWindowElement, tr4wColorsArray -- the APPEARANCE side
    TF,             // SetMainWindowText
    uCrashLog,      // OnMainThread, LogCaughtException
-   uMainForm,      // ShowElement
+   MainUnit,       // WSJTXIndicatorBack -- the one colour rule
+   uMainForm,      // ShowElement, SetElementColors
    uWSJTXState;
 
 type
@@ -97,13 +98,30 @@ var
 
 procedure TStateBridge.ApplyWSJTX(Data: PtrInt);
 begin
-   // THE APPEARANCE DECISIONS, all three of them, in the layer that owns them:
-   // a live link is captioned, a dead one is blank, and the indicator is hidden
-   // when there is nothing to say.  The COLOUR is decided by
-   // RefreshMainWindowElementColors, which reads the same state.
+   // THE APPEARANCE DECISIONS -- ALL FOUR OF THEM -- in the layer that owns
+   // them: a live link is captioned and GREEN, a dead one is blank and hidden.
+   //
+   // THE COLOUR USED TO BE LEFT TO RefreshMainWindowElementColors, and that was
+   // wrong.  Nothing calls it when the WSJT-X state changes: its callers are a
+   // band/mode change in LOGWIND and a job on the RADIO POLLING thread.  So the
+   // indicator kept whatever colour it was last painted -- red, from before the
+   // link came up -- and only went green if a radio happened to repaint it.
+   //
+   // With the radios switched off it never went green at all.  NY4I,
+   // 2026-08-26: "wsjtx is up but the box remains red."  An indicator whose
+   // colour depends on an unrelated subsystem being busy is not an indicator.
+   //
+   // The view paints from the state it was handed. That is the whole point of
+   // the bridge.
    if WSJTXState.Connected then
       begin
       SetMainWindowText(mweWSJTX, 'WSJTX');
+      { THE SAME RULE THE SWEEP USES -- MainUnit.WSJTXIndicatorBack.  Not a
+        second copy of "green means connected": two writers for one
+        property is how they come to disagree. }
+      SetElementColors(mweWSJTX,
+                       tr4wColorsArray[WSJTXIndicatorBack],
+                       tr4wColorsArray[TWindows[mweWSJTX].mweColor]);
       ShowElement(mweWSJTX, True);
       end
    else
