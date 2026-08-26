@@ -1543,3 +1543,4 @@
   TC_DISCOVER_MULTI_FOUND               = 'More than one %s found; filled in the first.  All found:';
 TC_PORT_NOT_CONNECTED = '(no conectado)';
 TC_SHOW_ALL_SERIAL_PORTS = 'Mostrar todos los puertos serie';
+TC_BANDCHANGEDISABLED = 'Band change requires MULTIPLE BANDS = TRUE once the log has QSOs';

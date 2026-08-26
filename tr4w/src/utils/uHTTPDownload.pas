@@ -16,7 +16,7 @@ unit uHTTPDownload;
 interface
 
 function DownloadFileToPath(const AURL, ATargetFile: string;
-                            const AAllowInsecure: boolean = False): boolean;
+                            const AAllowInsecure: boolean = False): boolean; overload;
 // Downloads AURL to ATargetFile.  Returns True only if the file is on disk
 // under its final name.
 //
@@ -46,6 +46,22 @@ function DownloadFileToPath(const AURL, ATargetFile: string;
 // Failures are logged here (the reason is only visible here) and reported to
 // the caller as False.  It does not raise.
 
+function DownloadFileToPath(const AURL, ATargetFile: string;
+                            out AFailReason: string;
+                            const AAllowInsecure: boolean = False): boolean; overload;
+// The same download, but it HANDS BACK WHY IT FAILED.
+//
+// The two-argument form logs the reason and returns False, and the header
+// above called that the design -- "the reason is only visible here". It is not
+// a design, it is a defect: the one caller with no log in front of the
+// operator is the STARTUP country-file fetch, which then advised checking the
+// network and the folder while the log said EIdOSSLCouldNotLoadSSLLibrary
+// (NY4I, 2026-08-26). Wrong advice is worse than none -- it sends the operator
+// to inspect two things that are both fine.
+//
+// AFailReason is a SENTENCE FRAGMENT for a "Reason: %s" slot, not a class
+// name, and it is '' when the function returns True.
+
 implementation
 
 uses
@@ -53,6 +69,7 @@ uses
    Classes,
    IdHTTP,
    IdSSLOpenSSL,
+   uAppStrings,
    Log4D;
 
 var
@@ -62,6 +79,7 @@ var
    logger: TLogLogger;
 
 function DownloadFileToPath(const AURL, ATargetFile: string;
+                            out AFailReason: string;
                             const AAllowInsecure: boolean = False): boolean;
 var
    http:    TIdHTTP;
@@ -70,8 +88,9 @@ var
    tmpFile: string;
    useTLS:  boolean;
 begin
-   Result  := False;
-   tmpFile := ATargetFile + '.tmp';
+   Result      := False;
+   AFailReason := '';
+   tmpFile     := ATargetFile + '.tmp';
 
    // Scheme first, and refuse before opening anything: the .tmp file must not
    // be created for a request that is never going to be made.
@@ -86,6 +105,7 @@ begin
          begin
          logger.Error('[Download] refusing plaintext %s -- the caller must pass ' +
                       'AAllowInsecure to accept an http:// URL', [AURL]);
+         AFailReason := SDownloadCouldNotStart;
          Exit;
          end;
       logger.Warn('[Download] %s is PLAINTEXT (caller allowed it)', [AURL]);
@@ -93,6 +113,7 @@ begin
    else
       begin
       logger.Error('[Download] %s has no http:// or https:// scheme', [AURL]);
+      AFailReason := SDownloadCouldNotStart;
       Exit;
       end;
 
@@ -138,6 +159,7 @@ begin
             begin
             logger.Error('[Download] %s fetched but could not be renamed to %s',
                          [tmpFile, ATargetFile]);
+            AFailReason := SDownloadRenameFailed;
             end;
       except
          on E: Exception do
@@ -148,6 +170,19 @@ begin
             // to an unreachable host from the outside.
             logger.Error('[Download] %s -> %s failed: %s: %s',
                          [AURL, ATargetFile, E.ClassName, E.Message]);
+
+            { THE ONE FAILURE AN OPERATOR CAN ACT ON, so it gets its own
+              sentence rather than Indy's class name. Everything else reports
+              E.Message: that is the library's own diagnostic, untranslatable,
+              and still far better than the advice this dialog used to give. }
+            if E is EIdOSSLCouldNotLoadSSLLibrary then
+               begin
+               AFailReason := SDownloadNoSSLLibrary;
+               end
+            else
+               begin
+               AFailReason := E.Message;
+               end;
             SysUtils.DeleteFile(tmpFile);
             end;
       end;
@@ -156,6 +191,17 @@ begin
       http.Free;
       ssl.Free;   // nil for a plaintext fetch; TObject.Free tolerates that
    end;
+end;
+
+function DownloadFileToPath(const AURL, ATargetFile: string;
+                            const AAllowInsecure: boolean = False): boolean;
+// Delegates -- ONE implementation, not two. The reason reaches only the log
+// here, which is right for a caller that has a window and a log open, and
+// wrong for the startup fetch, which is why the other form exists.
+var
+   ignored: string;
+begin
+   Result := DownloadFileToPath(AURL, ATargetFile, ignored, AAllowInsecure);
 end;
 
 initialization

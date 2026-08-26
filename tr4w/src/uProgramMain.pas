@@ -470,6 +470,7 @@ function EnsureCountryFile: boolean;
 var
   ctyPath                               : string;
   prompt                                : string;
+  failReason                            : string;
 begin
   Result := ctyLoadInCountryFile(TR4W_CTY_FILENAME, False, True);
 
@@ -523,14 +524,14 @@ begin
 
   logger.Info('CTY.DAT not loaded; downloading to ' + ctyPath);
 
-  if not DownloadCTYFile(ctyPath) then
+  if not DownloadCTYFile(ctyPath, failReason) then
      begin
-     // uCTYUpdate has already logged the underlying exception.
-     showwarning('Could not download CTY.DAT to:' + #13#10#13#10 +
-                 ctyPath + #13#10#13#10 +
-                 'Check the network connection, and that the folder above is ' +
-                 'writable, then start TR4W again.' + #13#10 +
-                 'tr4w.log records the reason.');
+     { SAY WHY. This used to advise checking the network and the folder
+       permissions -- and in the one case anybody hit, both were fine and the
+       real reason (the OpenSSL pair missing, because tr4w.exe had been copied
+       out on its own) was sitting in the log the operator had not been given
+       a reason to open. Wrong advice is worse than none. }
+     showwarning(SysUtils.Format(SCtyDownloadFailed, [ctyPath, failReason]));
      logger.Fatal('CTY.DAT download failed; cannot continue');
      Exit;
      end;

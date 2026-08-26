@@ -37,7 +37,7 @@ procedure DownloadCTYAsync(const ATargetFile: string; ANotifyWnd: HWND);
 // Starts a background thread that downloads cty.dat to ATargetFile.
 // Posts WM_CTY_DOWNLOAD_DONE on completion.
 
-function DownloadCTYFile(const ATargetFile: string): boolean;
+function DownloadCTYFile(const ATargetFile: string): boolean; overload;
 // Downloads cty.dat to ATargetFile and returns True on success. SYNCHRONOUS:
 // it runs on the calling thread. This is exactly what DownloadCTYAsync's
 // thread does, minus the thread and the completion PostMessage.
@@ -48,6 +48,12 @@ function DownloadCTYFile(const ATargetFile: string): boolean;
 //
 // PREFER DownloadCTYAsync EVERYWHERE ELSE. Blocking on a network fetch is
 // only acceptable at startup because there is no UI yet to freeze.
+
+function DownloadCTYFile(const ATargetFile: string;
+                         out AFailReason: string): boolean; overload;
+// As above, and hands back WHY it failed so the caller can say so. The startup
+// caller has no log in front of the operator; without this it could only guess,
+// and it guessed wrong.
 
 function GetInstalledCTYVersion: integer;
 // Scans the installed CTY.DAT for the embedded =VER\d{8} version marker
@@ -380,8 +386,16 @@ end;
 // The URL stays private: callers name the FILE they want, never the site it
 // comes from. TCTYDownloadThread.Execute above is the same one line.
 function DownloadCTYFile(const ATargetFile: string): boolean;
+var
+   ignored: string;
 begin
-   Result := DownloadFileToPath(CTY_DOWNLOAD_URL, ATargetFile);
+   Result := DownloadCTYFile(ATargetFile, ignored);
+end;
+
+function DownloadCTYFile(const ATargetFile: string;
+                         out AFailReason: string): boolean;
+begin
+   Result := DownloadFileToPath(CTY_DOWNLOAD_URL, ATargetFile, AFailReason);
 end;
 
 end.

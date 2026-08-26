@@ -64,6 +64,36 @@ resourcestring
    SIniRetireFailed   = 'Could not remove %s -- %s.' + sLineBreak +
                         'It is ignored regardless, so nothing is broken.';
 
+   { ------------------------------------------------- downloads that fail --- }
+
+   { WHY THIS NAMES THE INSTALLER.  A missing OpenSSL pair almost always means
+     tr4w.exe was copied somewhere on its own -- the installer ships
+     libeay32.dll and ssleay32.dll beside it (buildull.nsi). The operator
+     cannot deduce that from "download failed", so ASK THE QUESTION (NY4I,
+     2026-08-26: "They should be asked if they ran the INSTALLER"). }
+   SDownloadNoSSLLibrary =
+      'the OpenSSL libraries could not be loaded.' + sLineBreak + sLineBreak +
+      'libeay32.dll and ssleay32.dll must sit in the same folder as tr4w.exe. ' +
+      'The TR4W installer puts them there -- was this folder installed, or is ' +
+      'it a copy of tr4w.exe on its own?';
+
+   { The reason is the POINT of this dialog. It used to advise checking the
+     network and the folder permissions -- neither of which was ever the
+     problem in the one case anybody hit, and the real reason was sitting in
+     the log the whole time. }
+   SCtyDownloadFailedTitle = 'CTY.DAT';
+
+   { The refusal paths. Rare and close to programmer error, but they reach the
+     same dialog, so they are text like any other -- not literals. }
+   SDownloadCouldNotStart = 'the download was refused before it began (bad URL).';
+   SDownloadRenameFailed  = 'the file downloaded but could not be saved under its final name.';
+
+   SCtyDownloadFailed =
+      'Could not download CTY.DAT to:' + sLineBreak + sLineBreak +
+      '    %s' + sLineBreak + sLineBreak +
+      'Reason: %s' + sLineBreak + sLineBreak +
+      'tr4w.log records the full detail.';
+
 implementation
 
 end.
