@@ -653,10 +653,32 @@ sheets** (`uRadioPanelForm.SlotOf`), not a new scheme.
 `FreePanadapterWindow(aSlot)` exists so the bench harness cannot free a form
 and leave a dangling pointer in `GPanForms`.
 
-**Not proven by code review, and the reason to bench it:** two 4162-byte-packet
-streams at ~150 KB/s each, two render threads' worth of repaint on one UI
-thread, and whether a second K4 is reachable on its own address at all. Neither
-CPU cost nor reachability is a code question.
+**MEASURED 2026-08-26** -- this section previously parked the cost as "not
+provable by code review". It has now been measured on NY4I's station: two K4s,
+both panadapters open, a local mock DX cluster running, sampled with `pslist -d`
+over a 433 s window.
+
+| | CPU over 433 s | share of TR4W |
+|---|---:|---:|
+| main / UI thread | 52.8 s -- 12.2% of one core | **93%** |
+| both K4 spectrum receivers (port 9201) | 2.67 s | 4.7% |
+| both radio pollers | 0.81 s | 1.4% |
+| **total** | **56.8 s -- 13.1% of one core** | ~0.8% of a 16-core machine |
+
+**Receiving and decoding two spectrum streams is nearly free.** The whole
+budget is DRAWING, and it sits on the one thread that also has to stay
+responsive for typing and keying -- which is the argument for
+`docs/DISPLAY_STATE_MODEL_PLAN.md`, not against a second panadapter.
+
+**The 13% is an UPPER BOUND.** The sample was taken with trace logging on: the
+UI thread wrote ~9,500 log lines in those seven minutes (~22/s), and its kernel
+time runs 2:1 over user (35.3 s vs 17.5 s) -- log file I/O is kernel time.
+Painting and logging cannot be separated from that dump. The cheap next
+measurement is the same window with `DEBUG LOG LEVEL = INFO`.
+
+**Still not measured:** whether a second K4 is reachable on its own address on
+a station that has not been set up that way. That is not a code question
+either.
 
 ### 13.1 Window layout and open state
 
