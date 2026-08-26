@@ -1330,7 +1330,7 @@ rows -- was a Win32 STATIC painted by TR4W's own WM_CTLCOLORSTATIC handler.
 They are LCL TPanels now and they paint from their own properties. **Nothing
 below has been seen.**
 
-**If something on the main window is the wrong colour, blank, mispositioned or
+**If something on the main window is the wrong color, blank, mispositioned or
 the wrong size, this is the change that did it.**
 
 - [ ] **Everything is there, in the right place, at the right size.** Compare
