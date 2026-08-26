@@ -1279,6 +1279,11 @@ begin
   // rather than staying in a finally here.
   InstallTR4WInputHooks;
 
+  { THE LAYOUT AUTOSAVE, started HERE and not earlier: the windows have been
+    created and placed from the saved layout by now, so its first tick sees no
+    change and does not rewrite the file it just read.  See MainUnit. }
+  StartLayoutAutosave;
+
   RunLCLApplication;
 end;
 

@@ -290,6 +290,8 @@ procedure OneSecTimerProc(uTimerID, uMessage: UINT; dwUser, dw1, dw2: DWORD)
   stdcall;
 
 procedure SaveTR4WPOSFILE;
+procedure StartLayoutAutosave;
+procedure StopLayoutAutosave;
 procedure LoadTR4WPOSFILE;
 procedure RevalidateOpenWindowsOnScreen;
 
@@ -568,6 +570,7 @@ uses
   uCTYUpdate,
   uTRMasterUpdate,  // Download TRMASTER.DTA (Super Check Partial)
   uWin32Compat,   // AnimateWindow -- see that unit for the whole FPC gap list
+  ExtCtrls,           // TTimer -- the window-layout autosave
   uWindowLayoutStore, // the window layout, keyed by name
   uTR4WConfigFile;   // TR4WConfigFileName / Save- LoadWindowLayout
 
@@ -2055,12 +2058,140 @@ type
 var
   RelocState: array[WindowsType] of TRelocInfo;
 
-function PositionsMatch(const A, B: TRect): boolean;
+{ Are these the same window placement -- POSITION AND SIZE?
+
+  It compared Left and Top ONLY and was called PositionsMatch, so a window the
+  operator had RESIZED but not moved read as untouched.  Both callers are really
+  asking "has the operator touched this since we relocated it", and resizing it
+  is touching it; the autosave below asks the same question and needs the size
+  to count.
+
+  The tolerance stays, and now applies to the size too: a placement that lands a
+  pixel or two out is the same placement, not a change worth writing to disk. }
+function BoundsMatch(const A, B: TRect): boolean;
 const
-  TOL = 5;  // px; SetWindowPos lands exactly -- allow a little slack
+  TOL = 5;  // px; SetBounds lands exactly -- allow a little slack
 begin
-  Result := (Abs(A.Left - B.Left) <= TOL) and (Abs(A.Top - B.Top) <= TOL);
+  Result := (Abs(A.Left   - B.Left)   <= TOL) and
+            (Abs(A.Top    - B.Top)    <= TOL) and
+            (Abs(A.Right  - B.Right)  <= TOL) and
+            (Abs(A.Bottom - B.Bottom) <= TOL);
 end;
+
+{ THE WINDOW LAYOUT AUTOSAVE.
+
+  NY4I: "you do want to save on moving the window or resizing in case the
+  program crashed but the save at the end can be an extra check."  Nothing
+  reached disk until ExitProgram, so a crash -- or a power cut mid-contest --
+  lost every move and resize made since start-up.
+
+  POLLED, NOT EVENT-DRIVEN, and that was the choice:
+
+    * No per-form wiring, so nothing is missed when the next window converts and
+      there is nothing to remember to add.
+    * It covers the windows that are STILL WIN32 DIALOGS, which an OnChangeBounds
+      hook could not.
+    * It cannot miss a change.  A move made by the WINDOW MANAGER -- a snap, a
+      monitor going away, a DPI change -- may raise no event at all.
+
+  The cost is one rectangle comparison per window every few seconds, and it
+  WRITES ONLY WHEN SOMETHING ACTUALLY MOVED: a station whose windows are sitting
+  still writes nothing at all.
+
+  The exit save stays as the backstop NY4I asked for. }
+const
+   LAYOUT_AUTOSAVE_MS = 5000;
+
+type
+   TLayoutAutosave = class
+      procedure Tick(Sender: TObject);
+   end;
+
+var
+   GLayoutTimer: TTimer = nil;
+   GLayoutAutosave: TLayoutAutosave = nil;
+   { What is believed to be ON DISK.  Compared against the live rects; without
+     it this would rewrite the file every tick. }
+   GSavedLayout: array[WindowsType] of TRect;
+
+procedure SnapshotSavedLayout;
+var
+   i: WindowsType;
+begin
+   for i := Low(WindowsType) to High(WindowsType) do
+      begin
+      GSavedLayout[i] := tr4w_WindowsArray[i].WndRect;
+      end;
+end;
+
+procedure TLayoutAutosave.Tick(Sender: TObject);
+var
+   i: WindowsType;
+   changed: boolean;
+begin
+   FindAndSaveRectOfAllWindows;
+
+   changed := False;
+   for i := Low(WindowsType) to High(WindowsType) do
+      begin
+      if not BoundsMatch(tr4w_WindowsArray[i].WndRect, GSavedLayout[i]) then
+         begin
+         changed := True;
+         { NAME THE WINDOW, not just the fact.  This fired every tick on its
+           first outing -- a closed form reporting hidden bounds -- and "a
+           window moved" could not say which, so the cause had to be guessed
+           at.  A feature that writes to disk on a timer should be able to
+           justify every write it makes. }
+         if logger.IsTraceEnabled then
+            begin
+            logger.Trace('[Layout] %s moved or resized: (%d,%d,%d,%d) -> (%d,%d,%d,%d) -- saving',
+                         [WindowNames[i],
+                          GSavedLayout[i].Left, GSavedLayout[i].Top,
+                          GSavedLayout[i].Right, GSavedLayout[i].Bottom,
+                          tr4w_WindowsArray[i].WndRect.Left, tr4w_WindowsArray[i].WndRect.Top,
+                          tr4w_WindowsArray[i].WndRect.Right, tr4w_WindowsArray[i].WndRect.Bottom]);
+            end;
+         Break;
+         end;
+      end;
+
+   if not changed then
+      begin
+      Exit;
+      end;
+
+   SaveTR4WPOSFILE;
+   SnapshotSavedLayout;
+end;
+
+{ Called once the layout has been LOADED and the windows placed, so the first
+  tick does not report the load itself as a change and rewrite the file. }
+procedure StartLayoutAutosave;
+begin
+   if GLayoutTimer <> nil then
+      begin
+      Exit;
+      end;
+
+   SnapshotSavedLayout;
+
+   GLayoutAutosave := TLayoutAutosave.Create;
+   GLayoutTimer := TTimer.Create(nil);
+   GLayoutTimer.Interval := LAYOUT_AUTOSAVE_MS;
+   GLayoutTimer.OnTimer := GLayoutAutosave.Tick;
+   GLayoutTimer.Enabled := True;
+end;
+
+procedure StopLayoutAutosave;
+begin
+   if GLayoutTimer <> nil then
+      begin
+      GLayoutTimer.Enabled := False;
+      end;
+   FreeAndNil(GLayoutTimer);
+   FreeAndNil(GLayoutAutosave);
+end;
+
 
 /// <summary>True if R is meaningfully visible on the nearest monitor's work area.</summary>
 function RectIsOnScreen(const R: TRect): boolean;
@@ -2085,9 +2216,21 @@ begin
       Result := True;   // can't validate -> treat as on-screen and leave it alone
       Exit;
       end;
-   Result := IntersectRect(Inter, R, MI.rcWork)             and
-             ((Inter.Right - Inter.Left)   >= MIN_VISIBLE_W) and
-             ((Inter.Bottom - Inter.Top)   >= MIN_VISIBLE_H);
+   { ENOUGH OF IT VISIBLE TO GRAB -- OR ALL OF IT, IF IT IS SMALLER THAN THAT.
+
+     The bare thresholds asked "are at least 100x60 pixels showing", which fails
+     any window that is legitimately SMALLER than 100x60 however completely it
+     is on screen.  The function-key bar is about forty pixels tall, so a
+     correctly saved rect was judged off-screen and relocated to the corner --
+     NY4I: "still opened in upper left", every restart (2026-08-26).
+
+     The question is VISIBILITY, not size: a 780x38 window with all 780x38 on
+     the work area is fully visible and must be left alone. }
+   Result := IntersectRect(Inter, R, MI.rcWork) and
+             ((Inter.Right - Inter.Left) >=
+                Min(MIN_VISIBLE_W, R.Right - R.Left)) and
+             ((Inter.Bottom - Inter.Top) >=
+                Min(MIN_VISIBLE_H, R.Bottom - R.Top));
 end;
 
 /// <summary>
@@ -2253,7 +2396,7 @@ begin
       if RelocState[i].Relocated then
          begin
          // Rescued on an earlier change and still flagged relocated.
-         if not PositionsMatch(live, tr4w_WindowsArray[i].WndRect) then
+         if not BoundsMatch(live, tr4w_WindowsArray[i].WndRect) then
             begin
             // The user moved it since the rescue -> adopt the new spot.
             RelocState[i].Relocated := False;
@@ -2755,8 +2898,18 @@ begin
 
        Both sides now speak the LCL's units.  Which measure is "right" does not
        matter -- only that one object answers both questions. }
+     { AND ONLY WHEN THE WINDOW IS ACTUALLY OPEN.
+
+       WndHandle is zeroed by CloseTR4WWindow, which is how this routine has
+       always known a window is shut -- GetWindowRect then failed and the saved
+       rect was kept.  A CLOSED LCL FORM STILL HAS AN OBJECT AND STILL HAS A
+       HANDLE, so asking the form instead threw that guard away: every closed
+       window reported its hidden bounds, which differ from the saved ones, so
+       the autosave saw a change EVERY TICK and rewrote the file every five
+       seconds -- overwriting good saved positions with a hidden form's. }
      lclForm := LclFormFor(tipos);
-     if (lclForm <> nil) and lclForm.HandleAllocated then
+     if (tr4w_WindowsArray[tipos].WndHandle <> 0) and
+        (lclForm <> nil) and lclForm.HandleAllocated then
         begin
         temprect := lclForm.BoundsRect;
         TempBool := True;
@@ -2805,7 +2958,7 @@ begin
      // monitor was absent, and the user did not move it this session, keep the
      // ORIGINAL saved rect so reconnecting that display restores the layout.
      if RelocState[tipos].Relocated and
-        PositionsMatch(temprect, tr4w_WindowsArray[tipos].WndRect) then
+        BoundsMatch(temprect, tr4w_WindowsArray[tipos].WndRect) then
         begin
         if logger.IsTraceEnabled then
            begin

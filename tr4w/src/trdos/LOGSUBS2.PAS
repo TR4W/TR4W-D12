@@ -712,6 +712,10 @@ begin
 
   ntBeepClose;
 
+  { Stop the autosave BEFORE the final save, so a tick cannot fire while the
+    program is tearing down and read half-destroyed windows. }
+  StopLayoutAutosave;
+
   logger.Info('[ExitProgram] SaveTR4WPOSFILE');
   SaveTR4WPOSFILE;
 
