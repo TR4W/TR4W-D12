@@ -85,7 +85,7 @@ procedure RefreshWSJTXIndicator;
 implementation
 
 uses
-   SysUtils, Forms,
+   SysUtils, StrUtils, Forms,
    VC,             // TMainWindowElement, tr4wColorsArray -- the APPEARANCE side
    TF,             // SetMainWindowText
    uCrashLog,      // OnMainThread, LogCaughtException
@@ -144,6 +144,28 @@ begin
      true".  Same defect, and this is the fix -- so the open question there
      (how long does red show before it hides) is moot: while it is enabled, it
      does not hide. }
+   { THIS INDICATOR HAS NOW HAD FIVE DEFECTS, every one of them silent: the
+     colour never repainted; the box hidden instead of red; a raw
+     ShowWindow fighting the framework; the install-time pass writing into
+     controls with no handle yet; and the sweep and the bridge each
+     deciding the colour for themselves.  None produced a diagnostic, and
+     the last one cost six rounds because 'it ran' and 'it took effect'
+     are different claims and only one of them was being checked.
+
+     `handle` is in the line for exactly that reason: an element accessor
+     guards on ControlUsable, so a write before the message loop has
+     realised the form is a silent no-op. }
+   if logger.IsTraceEnabled then
+      begin
+      logger.Trace('[WSJTX view] enabled=%s connected=%s panel=%s handle=%s -> %s',
+                   [BoolToStr(WSJTXEnabled, True),
+                    BoolToStr((WSJTXState <> nil) and WSJTXState.Connected, True),
+                    BoolToStr(MainElement(mweWSJTX) <> nil, True),
+                    BoolToStr((MainElement(mweWSJTX) <> nil) and
+                              MainElement(mweWSJTX).HandleAllocated, True),
+                    IfThen(WSJTXEnabled, 'show', 'hide')]);
+      end;
+
    if not WSJTXEnabled then
       begin
       SetMainWindowText(mweWSJTX, '');
@@ -201,10 +223,29 @@ begin
 
    WSJTXState.Subscribe(GBridge.WSJTXChanged);
 
-   // The state may already be set -- WSJT-X can heartbeat before the main form
-   // is up -- so the view is brought into line once at install rather than
-   // waiting for the next change.
-   GBridge.WSJTXChanged;
+   { BRING THE VIEW INTO LINE ONCE -- BUT QUEUED, NOT NOW.
+
+     The state may already be set: WSJT-X can heartbeat before the main form
+     is up. But a direct call here writes into controls that CANNOT TAKE A
+     VALUE YET. Every element accessor guards on ControlUsable, which
+     requires HandleAllocated, and an LCL control has no handle until the
+     message loop has realised its form -- setting Form.Visible before
+     Application.Run is not enough.
+
+     So the install-time pass had NEVER done anything, in any of its
+     positions. Invisible until the WSJT-X indicator had to appear at
+     start-up rather than on the first state change: then it showed as an
+     empty red box -- visible and coloured by the sweep, with a caption
+     nothing had been able to write (NY4I, 2026-08-26: "the letters WSJT-X
+     are not in the red box"). The trace line in ApplyWSJTX said
+     `enabled=True connected=False -> show` while the panel's caption stayed
+     empty, which is what finally separated "did not run" from "ran and was
+     ignored".
+
+     QueueAsyncCall runs it at the first idle inside Application.Run, by
+     which time the handles exist. Same rule as the tool-window restore in
+     MainUnit: work that touches controls belongs on the loop. }
+   Application.QueueAsyncCall(GBridge.ApplyWSJTX, 0);
 end;
 
 finalization

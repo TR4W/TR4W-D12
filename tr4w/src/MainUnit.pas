@@ -3954,9 +3954,6 @@ begin
   // TF writes every element's text through this; see SetMainWindowText there.
   MainWindowTextWriter := @WriteMainWindowText;
 
-  // The domain layer's one crossing into the UI.  After the form exists: it
-  // brings the view into line with state that may already be set.
-  InstallStateBridge;
   wh[mweWholeScreen] := tr4whandle;
   wh[mweEditableLog] := CreateEditableLog(tr4whandle, 0, ws * 7,
     MainWindowChildsWidth, 0 {EditableLogWindowHeight}, False);
@@ -4024,6 +4021,7 @@ begin
                  Max(WSJTX_MIN_FONT_HEIGHT,
                      Round((ws - 2 + FontSize) * WSJTX_CELLS / WSJTX_CHARS)),
                  BoldFont);
+
 
   // THE AUTO-SEND ARROW: a real code point in the main font, not byte 175 in
   // the Symbol font.

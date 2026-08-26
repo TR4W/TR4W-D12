@@ -992,7 +992,6 @@ begin
   CreateMultsWindows;
   CreateQSONeedWindows;
 
-  Windows.ShowWindow(wh[mweWSJTX], SW_HIDE);
   SetUpGlobalsAndInitialize;
 
   // Golden-master automation: launched as  tr4w.exe "<contest>.CFG" /EXPORT
@@ -1038,6 +1037,27 @@ begin
 
   ntBeepInit;
   OpenOtherWindows;
+
+  { THE DOMAIN LAYER'S ONE CROSSING INTO THE UI, and it has to be AFTER the
+    main window is SHOWN -- not merely after the form or the elements exist.
+
+    Its whole job is to bring the view into line with state that may already be
+    set, and for four months it did nothing at all: every element accessor
+    guards on ControlUsable, which requires HandleAllocated, and an LCL control
+    has no handle until its form is realised.  Installed beside
+    CreateTR4WMainForm, the install-time pass wrote into controls that could not
+    take a value and returned quietly.
+
+    Invisible until the WSJT-X indicator had to appear at START-UP rather than
+    on the first state change -- then it showed as an empty red box painted by
+    the colour sweep, with a caption nothing had been able to write (NY4I,
+    2026-08-26: "the letters WSJT-X are not in the red box").
+
+    The raw `ShowWindow(wh[mweWSJTX], SW_HIDE)` that used to sit here is gone
+    with it: the indicator's visibility belongs to the bridge now, and hiding it
+    behind the widget set's back left the panel's Visible True while the window
+    was hidden, so the next property change made it reappear -- empty. }
+  InstallStateBridge;
 
   tLoadKeyboardLayout;
 
