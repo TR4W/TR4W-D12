@@ -137,6 +137,8 @@ msgstr "s"
 #. Section: General
 #: utr4wstrings:tc_radio1
 #: tr4w/src/lang/tr4w_consts_eng.pas:26
+#: tprefsform.lblradio1.caption
+#: ulclformhelpers.tc_prefs_radio1
 #, fuzzy
 msgctxt "TC_RADIO1"
 msgid "Radio 1"
@@ -145,6 +147,8 @@ msgstr "Radio 1"
 #. Section: General
 #: utr4wstrings:tc_radio2
 #: tr4w/src/lang/tr4w_consts_eng.pas:27
+#: tprefsform.lblradio2.caption
+#: ulclformhelpers.tc_prefs_radio2
 #, fuzzy
 msgctxt "TC_RADIO2"
 msgid "Radio 2"
@@ -433,6 +437,7 @@ msgstr "Wymóg SPRINT QSY!!!"
 #. Section: MAIN
 #: utr4wstrings:tc_paddle
 #: tr4w/src/lang/tr4w_consts_eng.pas:74
+#: tprefsform.lblpaddlegroup.caption
 msgctxt "TC_PADDLE"
 msgid "Paddle"
 msgstr "Dźwignia"
@@ -977,8 +982,11 @@ msgid "Texas"
 msgstr "Texas"
 
 #. Section: NEW CONTEST
+#. Section: COUNTRY9
 #: utr4wstrings:tc_northamerica
 #: tr4w/src/lang/tr4w_consts_eng.pas:160
+#: utr4wstrings:tc_c9_northamerica
+#: tr4w/src/lang/tr4w_consts_eng.pas:283
 msgctxt "TC_NORTHAMERICA"
 msgid "North America"
 msgstr "Ameryka Północna"
@@ -1582,13 +1590,6 @@ msgid "Waiting for you enter strength of RST (Single digit)!!"
 msgstr "Oczekuję na wprowadzenie siły RST (jedna cyfra)!"
 
 #. Section: COUNTRY9
-#: utr4wstrings:tc_c9_northamerica
-#: tr4w/src/lang/tr4w_consts_eng.pas:283
-msgctxt "TC_C9_NORTHAMERICA"
-msgid "North America"
-msgstr "Ameryka Północna"
-
-#. Section: COUNTRY9
 #: utr4wstrings:tc_c9_southamerica
 #: tr4w/src/lang/tr4w_consts_eng.pas:284
 msgctxt "TC_C9_SOUTHAMERICA"
@@ -2062,6 +2063,7 @@ msgstr "port Winkeyer-a"
 #. Section: UWINKEY
 #: utr4wstrings:tc_keyermode
 #: tr4w/src/lang/tr4w_consts_eng.pas:391
+#: tfrmkeyeredit.lblwkkeyermode.caption
 msgctxt "TC_KEYERMODE"
 msgid "Keyer mode"
 msgstr "Tryb pracy klucza"
@@ -2143,6 +2145,7 @@ msgstr "Odstęp tylny (*10 ms)"
 #. Section: UWINKEY
 #: utr4wstrings:tc_firstextension
 #: tr4w/src/lang/tr4w_consts_eng.pas:404
+#: tfrmkeyeredit.lblwkfirstext.caption
 msgctxt "TC_FIRSTEXTENSION"
 msgid "First extension"
 msgstr "Pierwsze wydłużenie"
@@ -2273,6 +2276,7 @@ msgstr "Połączony"
 #. Section: UMIXW
 #: utr4wstrings:tc_mixw_disconnected
 #: tr4w/src/lang/tr4w_consts_eng.pas:434
+#: tfrmpanadapter.lblstatus.caption
 msgctxt "TC_MIXW_DISCONNECTED"
 msgid "Disconnected"
 msgstr "Rozłączony"
@@ -2646,6 +2650,8 @@ msgstr "Czy pobrać ostatnią wersję?"
 #. Section: UCHECKLATESTVERSION
 #: utr4wstrings:tc_list_of_command
 #: tr4w/src/lang/tr4w_consts_eng.pas:551
+#: tfrmeditmessage.btnlist.caption
+#: tfrmmessageslist.caption
 msgctxt "TC_LIST_OF_COMMAND"
 msgid "List of commands"
 msgstr "&List of commands"
@@ -2761,6 +2767,16 @@ msgid "Show all serial ports"
 msgstr "Show all serial ports"
 
 #: tfrmabout.btnok.caption
+#: tfrmaltd.btnok.caption
+#: tfrmautocq.btnok.caption
+#: tfrmbandplan.btnok.caption
+#: tfrmeditmessage.btnok.caption
+#: tfrminputquery.btnok.caption
+#: tfrmlpt.btnok.caption
+#: tfrmmessageslist.btnok.caption
+#: tfrmsendspot.btnok.caption
+#: tfrmudpdestinationedit.btnok.caption
+#: tfrmwinmanager.btnok.caption
 #, fuzzy
 msgctxt "tfrmabout.btnok.caption"
 msgid "OK"
@@ -2777,16 +2793,24 @@ msgid "http://www.tr4w.net"
 msgstr ""
 
 #: tfrmaltd.btncancel.caption
+#: tfrmautocq.btncancel.caption
+#: tfrmbandplan.btncancel.caption
+#: tfrmeditmessage.btncancel.caption
+#: tfrmeditqso.btncancel.caption
+#: tfrminputquery.btncancel.caption
+#: tfrmkeyeredit.btncancel.caption
+#: tfrmlpt.btncancel.caption
+#: tfrmmessageslist.btncancel.caption
+#: tfrmsendspot.btncancel.caption
+#: tfrmudpdestinationedit.btncancel.caption
+#: tfrmwinmanager.btncancel.caption
+#: tprefsform.btncancel.caption
+#: tradioeditform.btncancel.caption
+#: ulclformhelpers.tc_prefs_cancel
 #, fuzzy
 msgctxt "tfrmaltd.btncancel.caption"
 msgid "Cancel"
 msgstr "Anuluj"
-
-#: tfrmaltd.btnok.caption
-#, fuzzy
-msgctxt "tfrmaltd.btnok.caption"
-msgid "OK"
-msgstr "OK"
 
 #: tfrmaltd.caption
 #, fuzzy
@@ -2797,18 +2821,6 @@ msgstr "Sprawdź dupe w nieaktywnym radiu"
 #, fuzzy
 msgid "Enter call to be checked on:"
 msgstr "Wprowadź wywołanie do sprawdzenia:"
-
-#: tfrmautocq.btncancel.caption
-#, fuzzy
-msgctxt "tfrmautocq.btncancel.caption"
-msgid "Cancel"
-msgstr "Anuluj"
-
-#: tfrmautocq.btnok.caption
-#, fuzzy
-msgctxt "tfrmautocq.btnok.caption"
-msgid "OK"
-msgstr "OK"
 
 #: tfrmautocq.caption
 #, fuzzy
@@ -2826,6 +2838,7 @@ msgid "Press the memory key you want to repeat:"
 msgstr "Naciśnij klawisz pamięci, który chcesz powtórzyć:"
 
 #: tfrmbandmap.caption
+#: tprefsform.lblbandmapheading.caption
 #, fuzzy
 msgctxt "tfrmbandmap.caption"
 msgid "Band map"
@@ -2876,18 +2889,6 @@ msgstr "Usuń wszystkie miejsca"
 msgid "BAND MAP SO2R DISPLAY"
 msgstr "BAND MAP SO2R DISPLAY"
 
-#: tfrmbandplan.btncancel.caption
-#, fuzzy
-msgctxt "tfrmbandplan.btncancel.caption"
-msgid "Cancel"
-msgstr "Anuluj"
-
-#: tfrmbandplan.btnok.caption
-#, fuzzy
-msgctxt "tfrmbandplan.btnok.caption"
-msgid "OK"
-msgstr "OK"
-
 #: tfrmbandplan.caption
 #, fuzzy
 msgid "Band plan"
@@ -2908,28 +2909,10 @@ msgstr "Informacje o CT1BOH"
 msgid "Dupe sheet"
 msgstr "Blacha cienka"
 
-#: tfrmeditmessage.btncancel.caption
-#, fuzzy
-msgctxt "tfrmeditmessage.btncancel.caption"
-msgid "Cancel"
-msgstr "Anuluj"
-
 #: tfrmeditmessage.btneditwav.caption
 #, fuzzy
 msgid "&Edit"
 msgstr "& Edycja"
-
-#: tfrmeditmessage.btnlist.caption
-#, fuzzy
-msgctxt "tfrmeditmessage.btnlist.caption"
-msgid "List of commands"
-msgstr "&List of commands"
-
-#: tfrmeditmessage.btnok.caption
-#, fuzzy
-msgctxt "tfrmeditmessage.btnok.caption"
-msgid "OK"
-msgstr "OK"
 
 #: tfrmeditmessage.caption
 #, fuzzy
@@ -2946,12 +2929,6 @@ msgstr "Podpis"
 msgctxt "tfrmeditmessage.lblmessage.caption"
 msgid "Message"
 msgstr "Wiadomość"
-
-#: tfrmeditqso.btncancel.caption
-#, fuzzy
-msgctxt "tfrmeditqso.btncancel.caption"
-msgid "Cancel"
-msgstr "Anuluj"
 
 #: tfrmeditqso.btnplay.caption
 #, fuzzy
@@ -3034,6 +3011,7 @@ msgid "Band"
 msgstr "Band"
 
 #: tfrmeditqso.lblcallsign.caption
+#: tfrmsendspot.lblcallsign.caption
 #, fuzzy
 msgctxt "tfrmeditqso.lblcallsign.caption"
 msgid "Callsign"
@@ -3085,6 +3063,9 @@ msgid "Mode"
 msgstr "Tryb"
 
 #: tfrmeditqso.lblname.caption
+#: tfrmkeyeredit.lblname.caption
+#: tradioeditform.lblname.caption
+#: ulclformhelpers.tc_radioedit_name
 #, fuzzy
 msgctxt "tfrmeditqso.lblname.caption"
 msgid "Name"
@@ -3271,6 +3252,7 @@ msgid "&Yes"
 msgstr "& Tak"
 
 #: tfrminiretire.caption
+#: uappstrings.siniretiretitle
 #, fuzzy
 msgctxt "tfrminiretire.caption"
 msgid "Old settings file"
@@ -3286,19 +3268,9 @@ msgstr "chkDontAsk"
 msgid "lblPrompt"
 msgstr "lblPrompt"
 
-#: tfrminputquery.btncancel.caption
-#, fuzzy
-msgctxt "tfrminputquery.btncancel.caption"
-msgid "Cancel"
-msgstr "Anuluj"
-
-#: tfrminputquery.btnok.caption
-#, fuzzy
-msgctxt "tfrminputquery.btnok.caption"
-msgid "OK"
-msgstr "OK"
-
 #: tfrminputquery.caption
+#: ttr4wmainform.caption
+#: uappstrings.salreadyrunningtitle
 #, fuzzy
 msgctxt "tfrminputquery.caption"
 msgid "TR4W"
@@ -3314,13 +3286,10 @@ msgstr "Wprowadź wartość:"
 msgid "Intercom"
 msgstr "Intercom"
 
-#: tfrmkeyeredit.btncancel.caption
-#, fuzzy
-msgctxt "tfrmkeyeredit.btncancel.caption"
-msgid "Cancel"
-msgstr "Anuluj"
-
 #: tfrmkeyeredit.btnok.caption
+#: tprefsform.btnok.caption
+#: tradioeditform.btnok.caption
+#: ulclformhelpers.tc_prefs_ok
 #, fuzzy
 msgctxt "tfrmkeyeredit.btnok.caption"
 msgid "Save and close"
@@ -3371,13 +3340,10 @@ msgstr "Ustawienia WinKeyer"
 msgid "Keyer type"
 msgstr "Typ Keyer"
 
-#: tfrmkeyeredit.lblname.caption
-#, fuzzy
-msgctxt "tfrmkeyeredit.lblname.caption"
-msgid "Name"
-msgstr "Name"
-
 #: tfrmkeyeredit.lblport.caption
+#: tfrmudpdestinationedit.lblport.caption
+#: tradioeditform.lblport.caption
+#: ulclformhelpers.tc_radioedit_port
 #, fuzzy
 msgctxt "tfrmkeyeredit.lblport.caption"
 msgid "Port"
@@ -3387,16 +3353,6 @@ msgstr "Port"
 #, fuzzy
 msgid "Compensation"
 msgstr "Rekompensata"
-
-#: tfrmkeyeredit.lblwkfirstext.caption
-#, fuzzy
-msgid "First extension"
-msgstr "Pierwsze wydłużenie"
-
-#: tfrmkeyeredit.lblwkkeyermode.caption
-#, fuzzy
-msgid "Keyer mode"
-msgstr "Tryb pracy klucza"
 
 #: tfrmkeyeredit.lblwkleadin.caption
 #, fuzzy
@@ -3448,18 +3404,6 @@ msgstr "Synchronizuj"
 msgid "Differences in the log"
 msgstr "Różnice w dzienniku"
 
-#: tfrmlpt.btncancel.caption
-#, fuzzy
-msgctxt "tfrmlpt.btncancel.caption"
-msgid "Cancel"
-msgstr "Anuluj"
-
-#: tfrmlpt.btnok.caption
-#, fuzzy
-msgctxt "tfrmlpt.btnok.caption"
-msgid "OK"
-msgstr "OK"
-
 #: tfrmlpt.caption
 #, fuzzy
 msgid "LPT"
@@ -3470,25 +3414,8 @@ msgstr "LPT"
 msgid "Super check partial"
 msgstr "Super sprawdzić częściowy"
 
-#: tfrmmessageslist.btncancel.caption
-#, fuzzy
-msgctxt "tfrmmessageslist.btncancel.caption"
-msgid "Cancel"
-msgstr "Anuluj"
-
-#: tfrmmessageslist.btnok.caption
-#, fuzzy
-msgctxt "tfrmmessageslist.btnok.caption"
-msgid "OK"
-msgstr "OK"
-
-#: tfrmmessageslist.caption
-#, fuzzy
-msgctxt "tfrmmessageslist.caption"
-msgid "List of commands"
-msgstr "&List of commands"
-
 #: tfrmmmtty.caption
+#: tprefsform.lblmmttyheading.caption
 #, fuzzy
 msgctxt "tfrmmmtty.caption"
 msgid "MMTTY"
@@ -3510,6 +3437,8 @@ msgid "Record"
 msgstr "Zapis"
 
 #: tfrmnetwork.caption
+#: tradioeditform.tabnetwork.caption
+#: ulclformhelpers.tc_radioedit_network
 #, fuzzy
 msgctxt "tfrmnetwork.caption"
 msgid "Network"
@@ -3560,11 +3489,6 @@ msgstr "Pan A"
 msgid "Span --"
 msgstr "Span.."
 
-#: tfrmpanadapter.lblstatus.caption
-#, fuzzy
-msgid "Disconnected"
-msgstr "Rozłączony"
-
 #: tfrmpostscores.btnpostnow.caption
 #, fuzzy
 msgid "Post now"
@@ -3606,6 +3530,8 @@ msgid "Spectrum"
 msgstr "Widmo"
 
 #: tfrmradiopanel.caption
+#: tradioeditform.caption
+#: ulclformhelpers.tc_radioedit_title
 #, fuzzy
 msgctxt "tfrmradiopanel.caption"
 msgid "Radio"
@@ -3651,18 +3577,6 @@ msgstr "Zamknij"
 msgid "Sending CW"
 msgstr "Wysyłanie CW"
 
-#: tfrmsendspot.btncancel.caption
-#, fuzzy
-msgctxt "tfrmsendspot.btncancel.caption"
-msgid "Cancel"
-msgstr "Anuluj"
-
-#: tfrmsendspot.btnok.caption
-#, fuzzy
-msgctxt "tfrmsendspot.btnok.caption"
-msgid "OK"
-msgstr "OK"
-
 #: tfrmsendspot.caption
 #, fuzzy
 msgid "Send spot"
@@ -3672,12 +3586,6 @@ msgstr "Wyślij miejsce"
 #, fuzzy
 msgid "Contest name in comment"
 msgstr "Nazwa konkursu w komentarzu"
-
-#: tfrmsendspot.lblcallsign.caption
-#, fuzzy
-msgctxt "tfrmsendspot.lblcallsign.caption"
-msgid "Callsign"
-msgstr "Znak wywoławczy"
 
 #: tfrmsendspot.lblcomment.caption
 #, fuzzy
@@ -3734,19 +3642,8 @@ msgstr "SH / 50"
 msgid "Telnet"
 msgstr "Telnet"
 
-#: tfrmudpdestinationedit.btncancel.caption
-#, fuzzy
-msgctxt "tfrmudpdestinationedit.btncancel.caption"
-msgid "Cancel"
-msgstr "Anuluj"
-
-#: tfrmudpdestinationedit.btnok.caption
-#, fuzzy
-msgctxt "tfrmudpdestinationedit.btnok.caption"
-msgid "OK"
-msgstr "OK"
-
 #: tfrmudpdestinationedit.btntest.caption
+#: tprefsform.btnudptest.caption
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.btntest.caption"
 msgid "Test"
@@ -3758,36 +3655,42 @@ msgid "UDP Destination"
 msgstr "Miejsce przeznaczenia UDP"
 
 #: tfrmudpdestinationedit.chkstreamappinfo.caption
+#: ulclformhelpers.tc_prefs_udpstream_appinfo
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamappinfo.caption"
 msgid "App info"
 msgstr "Informacje o aplikacji"
 
 #: tfrmudpdestinationedit.chkstreamcontact.caption
+#: ulclformhelpers.tc_prefs_udpstream_contact
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamcontact.caption"
 msgid "Contact info"
 msgstr "Informacje kontaktowe"
 
 #: tfrmudpdestinationedit.chkstreamlookup.caption
+#: ulclformhelpers.tc_prefs_udpstream_lookup
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamlookup.caption"
 msgid "Callsign lookup"
 msgstr "Sprawdzanie znaku wywoławczego"
 
 #: tfrmudpdestinationedit.chkstreamradio.caption
+#: ulclformhelpers.tc_prefs_udpstream_radio
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamradio.caption"
 msgid "Radio info"
 msgstr "Informacje radiowe"
 
 #: tfrmudpdestinationedit.chkstreamrotor.caption
+#: ulclformhelpers.tc_prefs_udpstream_rotor
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamrotor.caption"
 msgid "Rotor"
 msgstr "Rotor"
 
 #: tfrmudpdestinationedit.chkstreamscore.caption
+#: ulclformhelpers.tc_prefs_udpstream_score
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamscore.caption"
 msgid "Score"
@@ -3803,24 +3706,6 @@ msgstr "Wyślij ten cel"
 msgid "Address"
 msgstr "Adres"
 
-#: tfrmudpdestinationedit.lblport.caption
-#, fuzzy
-msgctxt "tfrmudpdestinationedit.lblport.caption"
-msgid "Port"
-msgstr "Port"
-
-#: tfrmwinmanager.btncancel.caption
-#, fuzzy
-msgctxt "tfrmwinmanager.btncancel.caption"
-msgid "Cancel"
-msgstr "Anuluj"
-
-#: tfrmwinmanager.btnok.caption
-#, fuzzy
-msgctxt "tfrmwinmanager.btnok.caption"
-msgid "OK"
-msgstr "OK"
-
 #: tfrmwinmanager.caption
 #, fuzzy
 msgid "Window control"
@@ -3832,118 +3717,64 @@ msgid "Activate this profile now"
 msgstr "Uruchom ten profil teraz"
 
 #: tprefsform.btnadd.caption
+#: tprefsform.btnaddcluster.caption
+#: tprefsform.btnaddkeyer.caption
+#: tprefsform.btnaddrotator.caption
+#: tprefsform.btnudpadd.caption
+#: ulclformhelpers.tc_prefs_add
 #, fuzzy
 msgctxt "tprefsform.btnadd.caption"
 msgid "Add..."
 msgstr "Dodaj..."
 
-#: tprefsform.btnaddcluster.caption
-#, fuzzy
-msgctxt "tprefsform.btnaddcluster.caption"
-msgid "Add..."
-msgstr "Dodaj..."
-
-#: tprefsform.btnaddkeyer.caption
-#, fuzzy
-msgctxt "tprefsform.btnaddkeyer.caption"
-msgid "Add..."
-msgstr "Dodaj..."
-
-#: tprefsform.btnaddrotator.caption
-#, fuzzy
-msgctxt "tprefsform.btnaddrotator.caption"
-msgid "Add..."
-msgstr "Dodaj..."
-
 #: tprefsform.btnapply.caption
+#: ulclformhelpers.tc_prefs_apply
 #, fuzzy
 msgctxt "tprefsform.btnapply.caption"
 msgid "Save"
 msgstr "Zapisz"
 
 #: tprefsform.btnbrowsebackup.caption
+#: tprefsform.btnbrowsedvkpath.caption
+#: tprefsform.btnbrowsedvkrecorder.caption
+#: tprefsform.btnbrowsemmtty.caption
+#: tprefsform.btnbrowsemp3path.caption
+#: tprefsform.btnbrowsemp3player.caption
 #, fuzzy
 msgctxt "tprefsform.btnbrowsebackup.caption"
 msgid "Browse..."
 msgstr "Przeglądaj..."
 
-#: tprefsform.btnbrowsedvkpath.caption
-#, fuzzy
-msgctxt "tprefsform.btnbrowsedvkpath.caption"
-msgid "Browse..."
-msgstr "Przeglądaj..."
-
-#: tprefsform.btnbrowsedvkrecorder.caption
-#, fuzzy
-msgctxt "tprefsform.btnbrowsedvkrecorder.caption"
-msgid "Browse..."
-msgstr "Przeglądaj..."
-
-#: tprefsform.btnbrowsemmtty.caption
-#, fuzzy
-msgctxt "tprefsform.btnbrowsemmtty.caption"
-msgid "Browse..."
-msgstr "Przeglądaj..."
-
-#: tprefsform.btnbrowsemp3path.caption
-#, fuzzy
-msgctxt "tprefsform.btnbrowsemp3path.caption"
-msgid "Browse..."
-msgstr "Przeglądaj..."
-
-#: tprefsform.btnbrowsemp3player.caption
-#, fuzzy
-msgctxt "tprefsform.btnbrowsemp3player.caption"
-msgid "Browse..."
-msgstr "Przeglądaj..."
-
-#: tprefsform.btncancel.caption
-#, fuzzy
-msgctxt "tprefsform.btncancel.caption"
-msgid "Cancel"
-msgstr "Anuluj"
-
 #: tprefsform.btndeleteprofile.caption
+#: ulclformhelpers.tc_prefs_deleteprofile
 #, fuzzy
 msgctxt "tprefsform.btndeleteprofile.caption"
 msgid "Delete"
 msgstr "Usuń"
 
 #: tprefsform.btnduplicate.caption
+#: tprefsform.btnduplicatekeyer.caption
+#: ulclformhelpers.tc_prefs_duplicate
 #, fuzzy
 msgctxt "tprefsform.btnduplicate.caption"
 msgid "Duplicate"
 msgstr "Powielanie"
 
-#: tprefsform.btnduplicatekeyer.caption
-#, fuzzy
-msgctxt "tprefsform.btnduplicatekeyer.caption"
-msgid "Duplicate"
-msgstr "Powielanie"
-
 #: tprefsform.btnedit.caption
+#: tprefsform.btneditkeyer.caption
+#: tprefsform.btnudpedit.caption
+#: ulclformhelpers.tc_prefs_edit
 #, fuzzy
 msgctxt "tprefsform.btnedit.caption"
 msgid "Edit..."
 msgstr "Edytuj..."
 
-#: tprefsform.btneditkeyer.caption
-#, fuzzy
-msgctxt "tprefsform.btneditkeyer.caption"
-msgid "Edit..."
-msgstr "Edytuj..."
-
 #: tprefsform.btnnewprofile.caption
+#: ulclformhelpers.tc_prefs_newprofile
 #, fuzzy
 msgctxt "tprefsform.btnnewprofile.caption"
 msgid "New..."
 msgstr "Nowy..."
-
-#: tprefsform.btnok.caption
-#, fuzzy
-msgctxt "tprefsform.btnok.caption"
-msgid "Save and close"
-msgstr "Zapisz i zamknij"
 
 #: tprefsform.btnopenlogfile.caption
 #, fuzzy
@@ -3951,72 +3782,33 @@ msgid "Open log file"
 msgstr "Otwórz plik dziennika"
 
 #: tprefsform.btnremove.caption
+#: tprefsform.btnremovecluster.caption
+#: tprefsform.btnremovekeyer.caption
+#: tprefsform.btnremoverotator.caption
+#: tprefsform.btnudpremove.caption
+#: ulclformhelpers.tc_prefs_remove
 #, fuzzy
 msgctxt "tprefsform.btnremove.caption"
 msgid "Remove"
 msgstr "Usuń"
 
-#: tprefsform.btnremovecluster.caption
-#, fuzzy
-msgctxt "tprefsform.btnremovecluster.caption"
-msgid "Remove"
-msgstr "Usuń"
-
-#: tprefsform.btnremovekeyer.caption
-#, fuzzy
-msgctxt "tprefsform.btnremovekeyer.caption"
-msgid "Remove"
-msgstr "Usuń"
-
-#: tprefsform.btnremoverotator.caption
-#, fuzzy
-msgctxt "tprefsform.btnremoverotator.caption"
-msgid "Remove"
-msgstr "Usuń"
-
 #: tprefsform.btnrenameprofile.caption
+#: ulclformhelpers.tc_prefs_renameprofile
 #, fuzzy
 msgctxt "tprefsform.btnrenameprofile.caption"
 msgid "Rename..."
 msgstr "Zmień nazwę..."
 
-#: tprefsform.btnudpadd.caption
-#, fuzzy
-msgctxt "tprefsform.btnudpadd.caption"
-msgid "Add..."
-msgstr "Dodaj..."
-
-#: tprefsform.btnudpedit.caption
-#, fuzzy
-msgctxt "tprefsform.btnudpedit.caption"
-msgid "Edit..."
-msgstr "Edytuj..."
-
-#: tprefsform.btnudpremove.caption
-#, fuzzy
-msgctxt "tprefsform.btnudpremove.caption"
-msgid "Remove"
-msgstr "Usuń"
-
-#: tprefsform.btnudptest.caption
-#, fuzzy
-msgctxt "tprefsform.btnudptest.caption"
-msgid "Test"
-msgstr "Badanie"
-
 #: tprefsform.btnusecluster.caption
+#: tprefsform.btnuserotator.caption
 #, fuzzy
 msgctxt "tprefsform.btnusecluster.caption"
 msgid "Use this"
 msgstr "Użyj tego"
 
-#: tprefsform.btnuserotator.caption
-#, fuzzy
-msgctxt "tprefsform.btnuserotator.caption"
-msgid "Use this"
-msgstr "Użyj tego"
-
 #: tprefsform.caption
+#: ulclformhelpers.tc_prefs_title
+#: ulclformhelpers.tc_prefs_unsavedtitle
 #, fuzzy
 msgctxt "tprefsform.caption"
 msgid "TR4W Preferences"
@@ -4043,6 +3835,7 @@ msgid "Stop sending when the call window changes"
 msgstr "Zatrzymaj wysyłanie po zmianie okna wywołania"
 
 #: tprefsform.chkautoconnect.caption
+#: ulclformhelpers.tc_prefs_autoconnect
 #, fuzzy
 msgctxt "tprefsform.chkautoconnect.caption"
 msgid "Connect radios at startup"
@@ -4319,6 +4112,7 @@ msgid "Skip the band the other radio is on"
 msgstr "Pomiń zespół inne radio jest włączone"
 
 #: tprefsform.chkso2r.caption
+#: ulclformhelpers.tc_prefs_so2r
 #, fuzzy
 msgctxt "tprefsform.chkso2r.caption"
 msgid "SO2R enabled"
@@ -4330,14 +4124,10 @@ msgid "Space bar performs a dupe check"
 msgstr "Pasek przestrzeni wykonuje kontrolę dupe"
 
 #: tprefsform.chkspeedsync1.caption
+#: tprefsform.chkspeedsync2.caption
+#: ulclformhelpers.tc_prefs_speedsync
 #, fuzzy
 msgctxt "tprefsform.chkspeedsync1.caption"
-msgid "Speed sync"
-msgstr "Synchronizacja prędkości"
-
-#: tprefsform.chkspeedsync2.caption
-#, fuzzy
-msgctxt "tprefsform.chkspeedsync2.caption"
 msgid "Speed sync"
 msgstr "Synchronizacja prędkości"
 
@@ -4467,6 +4257,7 @@ msgid "Search settings"
 msgstr "Ustawienia wyszukiwania"
 
 #: tprefsform.grpprofile.caption
+#: ulclformhelpers.tc_prefs_profiles
 #, fuzzy
 msgctxt "tprefsform.grpprofile.caption"
 msgid "Station profile"
@@ -4478,6 +4269,7 @@ msgid "Saving stores your changes. It does not switch the radios over - use this
 msgstr "Zapisywanie twoich zmian. Nie przełącza radia - użyj tego przycisku."
 
 #: tprefsform.lblactive.caption
+#: ulclformhelpers.tc_prefs_activelabel
 #, fuzzy
 msgctxt "tprefsform.lblactive.caption"
 msgid "Active profile: "
@@ -4494,6 +4286,7 @@ msgid "Window colors are still on the Settings menu.  They belong here and will 
 msgstr "Kolory okien są nadal w menu Ustawienia. Należą tutaj i będą przesuwać się, gdy główne okno zostanie przesunięte, co jest zmianą, która decyduje, jakie opcje układu muszą być."
 
 #: tprefsform.lblappearheading.caption
+#: tprefsform.lblmainwindowheading.caption
 #, fuzzy
 msgctxt "tprefsform.lblappearheading.caption"
 msgid "Main window"
@@ -4565,16 +4358,11 @@ msgid "Guard band:"
 msgstr "Zespół straży:"
 
 #: tprefsform.lblbandmapguardunits.caption
+#: tprefsform.lblpaddletoneunits.caption
 #, fuzzy
 msgctxt "tprefsform.lblbandmapguardunits.caption"
 msgid "Hz"
 msgstr "Hz"
-
-#: tprefsform.lblbandmapheading.caption
-#, fuzzy
-msgctxt "tprefsform.lblbandmapheading.caption"
-msgid "Band map"
-msgstr "Mapa pasma"
 
 #: tprefsform.lblbandmaplimit.caption
 #, fuzzy
@@ -4642,6 +4430,7 @@ msgid "blank = my station callsign"
 msgstr "puste = mój sygnał wywoławczy stacji"
 
 #: tprefsform.lblclustername.caption
+#: tprefsform.lblrotatorname.caption
 #, fuzzy
 msgctxt "tprefsform.lblclustername.caption"
 msgid "Name:"
@@ -4653,12 +4442,15 @@ msgid "The cluster reconnects on its own after a drop.  Telnet logging is on the
 msgstr "Klaster po kropli ponownie się łączy. Rejestrowanie teleskopów jest na stronie Logging; wyświetlanie spot i starzenie są na mapie bandy."
 
 #: tprefsform.lblclusterpassword.caption
+#: tprefsform.lblhamscorepass.caption
+#: tprefsform.lblnetpassword.caption
 #, fuzzy
 msgctxt "tprefsform.lblclusterpassword.caption"
 msgid "Password:"
 msgstr "Hasło:"
 
 #: tprefsform.lblclusterserver.caption
+#: tprefsform.lblnetaddress.caption
 #, fuzzy
 msgctxt "tprefsform.lblclusterserver.caption"
 msgid "Server:"
@@ -4675,12 +4467,14 @@ msgid "Contest exchange"
 msgstr "Wymiana konkursów"
 
 #: tprefsform.lblcwoutput1.caption
+#: ulclformhelpers.tc_prefs_cwoutput1
 #, fuzzy
 msgctxt "tprefsform.lblcwoutput1.caption"
 msgid "CW output 1"
 msgstr "CW wyjście 1"
 
 #: tprefsform.lblcwoutput2.caption
+#: ulclformhelpers.tc_prefs_cwoutput2
 #, fuzzy
 msgctxt "tprefsform.lblcwoutput2.caption"
 msgid "CW output 2"
@@ -4771,12 +4565,6 @@ msgstr "Rozmiar:"
 msgid "The three HamLib settings take effect when TR4W next starts.  They are very verbose and are for diagnosing a radio problem - leave them off otherwise."
 msgstr "Trzy ustawienia HamLib stają się skuteczne po rozpoczęciu TR4W. Są bardzo werbalne i są do diagnozowania problemu radiowego - zostaw je w przeciwnym razie."
 
-#: tprefsform.lblhamscorepass.caption
-#, fuzzy
-msgctxt "tprefsform.lblhamscorepass.caption"
-msgid "Password:"
-msgstr "Hasło:"
-
 #: tprefsform.lblhamscoreurl.caption
 #, fuzzy
 msgid "Service URL:"
@@ -4788,6 +4576,7 @@ msgid "Username:"
 msgstr "Nazwa użytkownika:"
 
 #: tprefsform.lblhardwareheading.caption
+#: ulclformhelpers.tc_prefs_hardware
 #, fuzzy
 msgctxt "tprefsform.lblhardwareheading.caption"
 msgid "Hardware"
@@ -4834,12 +4623,16 @@ msgid "External logger"
 msgstr "Zewnętrzny logger"
 
 #: tprefsform.lblloggerport.caption
+#: tprefsform.lblnetport.caption
+#: tprefsform.lblrotatorport.caption
+#: tprefsform.lbltciport.caption
 #, fuzzy
 msgctxt "tprefsform.lblloggerport.caption"
 msgid "Port:"
 msgstr "Port:"
 
 #: tprefsform.lblloggerrestart.caption
+#: tprefsform.lblscorerestart.caption
 #, fuzzy
 msgctxt "tprefsform.lblloggerrestart.caption"
 msgid "These take effect when TR4W next starts."
@@ -4870,22 +4663,10 @@ msgstr "Działa natychmiast - nie ma ponownego uruchomienia. INFO jest normalnym
 msgid "Font:"
 msgstr "Czcionka:"
 
-#: tprefsform.lblmainwindowheading.caption
-#, fuzzy
-msgctxt "tprefsform.lblmainwindowheading.caption"
-msgid "Main window"
-msgstr "Główne okno"
-
 #: tprefsform.lblmmttyengine.caption
 #, fuzzy
 msgid "Engine:"
 msgstr "Silnik:"
-
-#: tprefsform.lblmmttyheading.caption
-#, fuzzy
-msgctxt "tprefsform.lblmmttyheading.caption"
-msgid "MMTTY"
-msgstr "MMTTY"
 
 #: tprefsform.lblmmttyhint.caption
 #, fuzzy
@@ -4978,6 +4759,7 @@ msgid "Precedence:"
 msgstr "Dokładność:"
 
 #: tprefsform.lblmyradios.caption
+#: ulclformhelpers.tc_prefs_myradios
 #, fuzzy
 msgctxt "tprefsform.lblmyradios.caption"
 msgid "My radios"
@@ -5003,12 +4785,6 @@ msgstr "Państwo / prowincja:"
 msgid "CQ zone:"
 msgstr "Strefa CQ:"
 
-#: tprefsform.lblnetaddress.caption
-#, fuzzy
-msgctxt "tprefsform.lblnetaddress.caption"
-msgid "Server:"
-msgstr "Serwer:"
-
 #: tprefsform.lblnetcomputerid.caption
 #, fuzzy
 msgid "This station:"
@@ -5029,18 +4805,6 @@ msgstr "Sieć wielooperatorska"
 msgid "TR4WServer runs on one machine and every operating position connects to it.  It holds the shared log, the multipliers and the serial numbers."
 msgstr "TR4WServer działa na jednej maszynie i każda pozycja operacyjna łączy się z nią. Posiada wspólny dziennik, mnożniki i numery seryjne."
 
-#: tprefsform.lblnetpassword.caption
-#, fuzzy
-msgctxt "tprefsform.lblnetpassword.caption"
-msgid "Password:"
-msgstr "Hasło:"
-
-#: tprefsform.lblnetport.caption
-#, fuzzy
-msgctxt "tprefsform.lblnetport.caption"
-msgid "Port:"
-msgstr "Port:"
-
 #: tprefsform.lblopcwheading.caption
 #, fuzzy
 msgid "CW while operating"
@@ -5055,11 +4819,6 @@ msgstr "Działanie"
 #, fuzzy
 msgid "How the log behaves while you are running the contest. Band map, bands, CW, scoring and two-radio settings are on the pages below."
 msgstr "Jak dziennik zachowuje się podczas prowadzenia konkursu. Na poniższych stronach znajduje się mapa band, bandy, CW, punktacja i two-radio."
-
-#: tprefsform.lblpaddlegroup.caption
-#, fuzzy
-msgid "Paddle"
-msgstr "Dźwignia"
 
 #: tprefsform.lblpaddlehold.caption
 #, fuzzy
@@ -5101,13 +4860,8 @@ msgstr "WPM (0 następuje po prędkości klawiatury)"
 msgid "Paddle sidetone"
 msgstr "Sideton wiosła"
 
-#: tprefsform.lblpaddletoneunits.caption
-#, fuzzy
-msgctxt "tprefsform.lblpaddletoneunits.caption"
-msgid "Hz"
-msgstr "Hz"
-
 #: tprefsform.lblplaceholder.caption
+#: ulclformhelpers.tc_prefs_notmigrated
 #, fuzzy
 msgctxt "tprefsform.lblplaceholder.caption"
 msgid ""
@@ -5131,18 +4885,6 @@ msgstr "x 1,7 ms (0 wyłączników)"
 #, fuzzy
 msgid "PTT"
 msgstr "PTT"
-
-#: tprefsform.lblradio1.caption
-#, fuzzy
-msgctxt "tprefsform.lblradio1.caption"
-msgid "Radio 1"
-msgstr "Radio 1"
-
-#: tprefsform.lblradio2.caption
-#, fuzzy
-msgctxt "tprefsform.lblradio2.caption"
-msgid "Radio 2"
-msgstr "Radio 2"
 
 #: tprefsform.lblradiotcpheading.caption
 #, fuzzy
@@ -5194,22 +4936,10 @@ msgstr "puste lub 0 = wartość domyślna dla tego typu"
 msgid "IP address:"
 msgstr "Adres IP:"
 
-#: tprefsform.lblrotatorname.caption
-#, fuzzy
-msgctxt "tprefsform.lblrotatorname.caption"
-msgid "Name:"
-msgstr "Nazwa:"
-
 #: tprefsform.lblrotatornote.caption
 #, fuzzy
 msgid "PstRotator is reached over UDP and has no serial port; the others use one.  A blank baud rate lets each type use what it expects - the DCU-1 wants 4800 where the rest want 9600."
 msgstr "PstRotator jest osiągany przez UDP i nie ma portu szeregowego; inne używają jednego. Pusty wskaźnik baud pozwala każdemu typowi używać tego, czego oczekuje - DCU-1 chce 4800 gdzie reszta chce 9600."
-
-#: tprefsform.lblrotatorport.caption
-#, fuzzy
-msgctxt "tprefsform.lblrotatorport.caption"
-msgid "Port:"
-msgstr "Port:"
 
 #: tprefsform.lblrotatortype.caption
 #, fuzzy
@@ -5255,12 +4985,6 @@ msgstr "Wysyłanie URL:"
 #, fuzzy
 msgid "Reading URL:"
 msgstr "Czytanie URL:"
-
-#: tprefsform.lblscorerestart.caption
-#, fuzzy
-msgctxt "tprefsform.lblscorerestart.caption"
-msgid "These take effect when TR4W next starts."
-msgstr "Są one skuteczne, gdy TR4W rozpocznie się następny."
 
 #: tprefsform.lblscpcountry.caption
 #, fuzzy
@@ -5352,12 +5076,6 @@ msgstr "Sieć bezpieczeństwa, a nie zegar do normalnego użytku: jeśli klient 
 msgid "seconds  (0 = no limit)"
 msgstr "sekundy (0 = brak limitu)"
 
-#: tprefsform.lbltciport.caption
-#, fuzzy
-msgctxt "tprefsform.lbltciport.caption"
-msgid "Port:"
-msgstr "Port:"
-
 #: tprefsform.lbltciserverscope.caption
 #, fuzzy
 msgid "- this computer only (127.0.0.1), until you tick the box below"
@@ -5423,49 +5141,36 @@ msgstr "Aby pozwolić WSJT- X przekierować radio przez TCI, zobacz sekcję TCI 
 msgid "Station controllers will get a factory of their own, as radios and keyers did. This checkbox is the interim home for the setting."
 msgstr "Kontrolerzy stacji dostaną własną fabrykę, tak jak radiotelefony i Keyers. To pole jest tymczasowym domem dla ustawienia."
 
-#: tradioeditform.btncancel.caption
-#, fuzzy
-msgctxt "tradioeditform.btncancel.caption"
-msgid "Cancel"
-msgstr "Anuluj"
-
 #: tradioeditform.btndiscover.caption
+#: ulclformhelpers.tc_radioedit_discover
 #, fuzzy
 msgctxt "tradioeditform.btndiscover.caption"
 msgid "Discover"
 msgstr "Odkryj"
 
-#: tradioeditform.btnok.caption
-#, fuzzy
-msgctxt "tradioeditform.btnok.caption"
-msgid "Save and close"
-msgstr "Zapisz i zamknij"
-
-#: tradioeditform.caption
-#, fuzzy
-msgctxt "tradioeditform.caption"
-msgid "Radio"
-msgstr "Radio"
-
 #: tradioeditform.chkft1000mpreverse.caption
+#: ulclformhelpers.tc_radioedit_ft1000mprev
 #, fuzzy
 msgctxt "tradioeditform.chkft1000mpreverse.caption"
 msgid "FT-1000MP CW reverse"
 msgstr "FT- 1000MP CW reverse"
 
 #: tradioeditform.chkpolling.caption
+#: ulclformhelpers.tc_radioedit_polling
 #, fuzzy
 msgctxt "tradioeditform.chkpolling.caption"
 msgid "Poll this radio"
 msgstr "Prześlij to radio"
 
 #: tradioeditform.chkusehamlib.caption
+#: ulclformhelpers.tc_radioedit_usehamlib
 #, fuzzy
 msgctxt "tradioeditform.chkusehamlib.caption"
 msgid "Drive through HamLib"
 msgstr "Przejedź przez HamLib"
 
 #: tradioeditform.chkwidecw.caption
+#: ulclformhelpers.tc_radioedit_widecw
 #, fuzzy
 msgctxt "tradioeditform.chkwidecw.caption"
 msgid "Wide CW filter"
@@ -5482,48 +5187,56 @@ msgid "Auto-info level"
 msgstr "Poziom Auto- info"
 
 #: tradioeditform.lblbaud.caption
+#: ulclformhelpers.tc_radioedit_baud
 #, fuzzy
 msgctxt "tradioeditform.lblbaud.caption"
 msgid "Baud rate"
 msgstr "Stopa swapu"
 
 #: tradioeditform.lblcatdtr.caption
+#: ulclformhelpers.tc_radioedit_catdtr
 #, fuzzy
 msgctxt "tradioeditform.lblcatdtr.caption"
 msgid "CAT DTR"
 msgstr "CAT DTR"
 
 #: tradioeditform.lblcatrts.caption
+#: ulclformhelpers.tc_radioedit_catrts
 #, fuzzy
 msgctxt "tradioeditform.lblcatrts.caption"
 msgid "CAT RTS"
 msgstr "RTS CAT"
 
 #: tradioeditform.lblciv.caption
+#: ulclformhelpers.tc_radioedit_civaddress
 #, fuzzy
 msgctxt "tradioeditform.lblciv.caption"
 msgid "CI-V address (hex)"
 msgstr "Adres CI- V (hex)"
 
 #: tradioeditform.lbldatabits.caption
+#: ulclformhelpers.tc_radioedit_databits
 #, fuzzy
 msgctxt "tradioeditform.lbldatabits.caption"
 msgid "Data bits"
 msgstr "Bity danych"
 
 #: tradioeditform.lbldatamode.caption
+#: ulclformhelpers.tc_radioedit_datamodeid
 #, fuzzy
 msgctxt "tradioeditform.lbldatamode.caption"
 msgid "Icom data mode ID"
 msgstr "Identyfikator trybu danych Icom"
 
 #: tradioeditform.lblfilterbyte.caption
+#: ulclformhelpers.tc_radioedit_filterbyte
 #, fuzzy
 msgctxt "tradioeditform.lblfilterbyte.caption"
 msgid "Icom filter byte"
 msgstr "Filtr icom bajt"
 
 #: tradioeditform.lblfound.caption
+#: ulclformhelpers.tc_radioedit_found
 #, fuzzy
 msgctxt "tradioeditform.lblfound.caption"
 msgid "Found"
@@ -5535,90 +5248,86 @@ msgid "Frequency offset (transverter), Hz"
 msgstr "Offset częstotliwości (przetwornik), Hz"
 
 #: tradioeditform.lblhamlibid.caption
+#: ulclformhelpers.tc_radioedit_hamlibid
 #, fuzzy
 msgctxt "tradioeditform.lblhamlibid.caption"
 msgid "HamLib model ID"
 msgstr "Identyfikator modelu HamLib"
 
 #: tradioeditform.lblip.caption
+#: ulclformhelpers.tc_radioedit_ipaddress
 #, fuzzy
 msgctxt "tradioeditform.lblip.caption"
 msgid "IP address"
 msgstr "Adres IP"
 
 #: tradioeditform.lblkeyerdtr.caption
+#: ulclformhelpers.tc_radioedit_keyerdtr
 #, fuzzy
 msgctxt "tradioeditform.lblkeyerdtr.caption"
 msgid "Keyer DTR line"
 msgstr "Linia DTR Keyer"
 
 #: tradioeditform.lblkeyerport.caption
+#: ulclformhelpers.tc_radioedit_keyerport
 #, fuzzy
 msgctxt "tradioeditform.lblkeyerport.caption"
 msgid "Keyer output port"
 msgstr "Port wyjściowy Keyer"
 
 #: tradioeditform.lblkeyerrts.caption
+#: ulclformhelpers.tc_radioedit_keyerrts
 #, fuzzy
 msgctxt "tradioeditform.lblkeyerrts.caption"
 msgid "Keyer RTS line"
 msgstr "Linia RTS Keyer"
 
 #: tradioeditform.lblkeyerstopbits.caption
+#: tradioeditform.lblstopbits.caption
+#: ulclformhelpers.tc_radioedit_keyerstopbits
+#: ulclformhelpers.tc_radioedit_stopbits
 #, fuzzy
 msgctxt "tradioeditform.lblkeyerstopbits.caption"
 msgid "Stop bits"
 msgstr "Zatrzymaj bity"
 
-#: tradioeditform.lblname.caption
-#, fuzzy
-msgctxt "tradioeditform.lblname.caption"
-msgid "Name"
-msgstr "Name"
-
 #: tradioeditform.lblparity.caption
+#: ulclformhelpers.tc_radioedit_parity
 #, fuzzy
 msgctxt "tradioeditform.lblparity.caption"
 msgid "Parity"
 msgstr "Parity"
 
 #: tradioeditform.lblpassword.caption
+#: ulclformhelpers.tc_radioedit_password
 #, fuzzy
 msgctxt "tradioeditform.lblpassword.caption"
 msgid "Password"
 msgstr "Hasło"
 
-#: tradioeditform.lblport.caption
-#, fuzzy
-msgctxt "tradioeditform.lblport.caption"
-msgid "Port"
-msgstr "Port"
-
 #: tradioeditform.lblstartup.caption
+#: ulclformhelpers.tc_radioedit_startup
 #, fuzzy
 msgctxt "tradioeditform.lblstartup.caption"
 msgid "Startup command"
 msgstr "Polecenie uruchamiania"
 
-#: tradioeditform.lblstopbits.caption
-#, fuzzy
-msgctxt "tradioeditform.lblstopbits.caption"
-msgid "Stop bits"
-msgstr "Zatrzymaj bity"
-
 #: tradioeditform.lbltcpport.caption
+#: ulclformhelpers.tc_radioedit_tcpport
 #, fuzzy
 msgctxt "tradioeditform.lbltcpport.caption"
 msgid "TCP port"
 msgstr "Port TCP"
 
 #: tradioeditform.lbltype.caption
+#: ulclformhelpers.tc_radioedit_type
 #, fuzzy
 msgctxt "tradioeditform.lbltype.caption"
 msgid "Radio type"
 msgstr "Typ radia"
 
 #: tradioeditform.lbluser.caption
+#: ulclformhelpers.tc_radioedit_username
 #, fuzzy
 msgctxt "tradioeditform.lbluser.caption"
 msgid "User name"
@@ -5635,18 +5344,21 @@ msgid "8"
 msgstr ""
 
 #: tradioeditform.optparityeven.caption
+#: ulclformhelpers.tc_radioedit_parityeven
 #, fuzzy
 msgctxt "tradioeditform.optparityeven.caption"
 msgid "Even"
 msgstr "Nawet"
 
 #: tradioeditform.optparitynone.caption
+#: ulclformhelpers.tc_radioedit_paritynone
 #, fuzzy
 msgctxt "tradioeditform.optparitynone.caption"
 msgid "None"
 msgstr "Brak"
 
 #: tradioeditform.optparityodd.caption
+#: ulclformhelpers.tc_radioedit_parityodd
 #, fuzzy
 msgctxt "tradioeditform.optparityodd.caption"
 msgid "Odd"
@@ -5663,34 +5375,18 @@ msgid "2"
 msgstr ""
 
 #: tradioeditform.tabadvanced.caption
+#: ulclformhelpers.tc_radioedit_advanced
 #, fuzzy
 msgctxt "tradioeditform.tabadvanced.caption"
 msgid "Advanced"
 msgstr "Zaawansowane"
 
-#: tradioeditform.tabnetwork.caption
-#, fuzzy
-msgctxt "tradioeditform.tabnetwork.caption"
-msgid "Network"
-msgstr "Sieć"
-
 #: tradioeditform.tabserial.caption
+#: ulclformhelpers.tc_radioedit_serial
 #, fuzzy
 msgctxt "tradioeditform.tabserial.caption"
 msgid "Serial"
 msgstr "Seria"
-
-#: ttr4wmainform.caption
-#, fuzzy
-msgctxt "ttr4wmainform.caption"
-msgid "TR4W"
-msgstr "TR4W"
-
-#: uappstrings.salreadyrunningtitle
-#, fuzzy
-msgctxt "uappstrings.salreadyrunningtitle"
-msgid "TR4W"
-msgstr "TR4W"
 
 #: uappstrings.sctydownloadfailed
 #, fuzzy
@@ -5779,51 +5475,15 @@ msgstr ""
 msgid "Removed %s."
 msgstr "Usunięto %s."
 
-#: uappstrings.siniretiretitle
-#, fuzzy
-msgctxt "uappstrings.siniretiretitle"
-msgid "Old settings file"
-msgstr "Stary plik ustawień"
-
 #: ulclformhelpers.tc_prefs_activate
 #, fuzzy
 msgid "Save and activate this profile"
 msgstr "Zapisz i aktywuj ten profil"
 
-#: ulclformhelpers.tc_prefs_activelabel
-#, fuzzy
-msgctxt "ulclformhelpers.tc_prefs_activelabel"
-msgid "Active profile: "
-msgstr "Profil aktywny: "
-
-#: ulclformhelpers.tc_prefs_add
-#, fuzzy
-msgctxt "ulclformhelpers.tc_prefs_add"
-msgid "Add..."
-msgstr "Dodaj..."
-
 #: ulclformhelpers.tc_prefs_applied
 #, fuzzy
 msgid "Profile \"%s\" is active."
 msgstr "Profil \"%s\" aktywny."
-
-#: ulclformhelpers.tc_prefs_apply
-#, fuzzy
-msgctxt "ulclformhelpers.tc_prefs_apply"
-msgid "Save"
-msgstr "Zapisz"
-
-#: ulclformhelpers.tc_prefs_autoconnect
-#, fuzzy
-msgctxt "ulclformhelpers.tc_prefs_autoconnect"
-msgid "Connect radios at startup"
-msgstr "Połącz radia przy starcie"
-
-#: ulclformhelpers.tc_prefs_cancel
-#, fuzzy
-msgctxt "ulclformhelpers.tc_prefs_cancel"
-msgid "Cancel"
-msgstr "Anuluj"
 
 #: ulclformhelpers.tc_prefs_cluster
 #, fuzzy
@@ -5845,54 +5505,6 @@ msgstr "Konkurs"
 msgid "CW"
 msgstr "CW"
 
-#: ulclformhelpers.tc_prefs_cwoutput1
-#, fuzzy
-msgctxt "ulclformhelpers.tc_prefs_cwoutput1"
-msgid "CW output 1"
-msgstr "CW wyjście 1"
-
-#: ulclformhelpers.tc_prefs_cwoutput2
-#, fuzzy
-msgctxt "ulclformhelpers.tc_prefs_cwoutput2"
-msgid "CW output 2"
-msgstr "CW wyjście 2"
-
-#: ulclformhelpers.tc_prefs_deleteprofile
-#, fuzzy
-msgctxt "ulclformhelpers.tc_prefs_deleteprofile"
-msgid "Delete"
-msgstr "Usuń"
-
-#: ulclformhelpers.tc_prefs_duplicate
-#, fuzzy
-msgctxt "ulclformhelpers.tc_prefs_duplicate"
-msgid "Duplicate"
-msgstr "Powielanie"
-
-#: ulclformhelpers.tc_prefs_edit
-#, fuzzy
-msgctxt "ulclformhelpers.tc_prefs_edit"
-msgid "Edit..."
-msgstr "Edytuj..."
-
-#: ulclformhelpers.tc_prefs_hardware
-#, fuzzy
-msgctxt "ulclformhelpers.tc_prefs_hardware"
-msgid "Hardware"
-msgstr "Sprzęt"
-
-#: ulclformhelpers.tc_prefs_myradios
-#, fuzzy
-msgctxt "ulclformhelpers.tc_prefs_myradios"
-msgid "My radios"
-msgstr "Moje radia"
-
-#: ulclformhelpers.tc_prefs_newprofile
-#, fuzzy
-msgctxt "ulclformhelpers.tc_prefs_newprofile"
-msgid "New..."
-msgstr "Nowy..."
-
 #: ulclformhelpers.tc_prefs_none
 #, fuzzy
 msgid "(none)"
@@ -5902,22 +5514,6 @@ msgstr "(brak)"
 #, fuzzy
 msgid "Select or create a station profile first."
 msgstr "Najpierw wybierz lub utwórz profil stacji."
-
-#: ulclformhelpers.tc_prefs_notmigrated
-#, fuzzy
-msgctxt "ulclformhelpers.tc_prefs_notmigrated"
-msgid ""
-"This section has not been migrated yet.\n"
-"Use the existing configuration screens for it."
-msgstr ""
-"Sekcja ta nie została jeszcze wyemigrowana.\n"
-"Użyj istniejących ekranów konfiguracyjnych."
-
-#: ulclformhelpers.tc_prefs_ok
-#, fuzzy
-msgctxt "ulclformhelpers.tc_prefs_ok"
-msgid "Save and close"
-msgstr "Zapisz i zamknij"
 
 #: ulclformhelpers.tc_prefs_portconflict
 #, fuzzy
@@ -5934,58 +5530,10 @@ msgstr ""
 "\n"
 "I tak złożysz wniosek?"
 
-#: ulclformhelpers.tc_prefs_profiles
-#, fuzzy
-msgctxt "ulclformhelpers.tc_prefs_profiles"
-msgid "Station profile"
-msgstr "Profil stacji"
-
-#: ulclformhelpers.tc_prefs_radio1
-#, fuzzy
-msgctxt "ulclformhelpers.tc_prefs_radio1"
-msgid "Radio 1"
-msgstr "Radio 1"
-
-#: ulclformhelpers.tc_prefs_radio2
-#, fuzzy
-msgctxt "ulclformhelpers.tc_prefs_radio2"
-msgid "Radio 2"
-msgstr "Radio 2"
-
 #: ulclformhelpers.tc_prefs_radioinuse
 #, fuzzy
 msgid "%s  (in use as %s)"
 msgstr "%s (stosowany jako %s)"
-
-#: ulclformhelpers.tc_prefs_remove
-#, fuzzy
-msgctxt "ulclformhelpers.tc_prefs_remove"
-msgid "Remove"
-msgstr "Usuń"
-
-#: ulclformhelpers.tc_prefs_renameprofile
-#, fuzzy
-msgctxt "ulclformhelpers.tc_prefs_renameprofile"
-msgid "Rename..."
-msgstr "Zmień nazwę..."
-
-#: ulclformhelpers.tc_prefs_so2r
-#, fuzzy
-msgctxt "ulclformhelpers.tc_prefs_so2r"
-msgid "SO2R enabled"
-msgstr "Włączony SO2R"
-
-#: ulclformhelpers.tc_prefs_speedsync
-#, fuzzy
-msgctxt "ulclformhelpers.tc_prefs_speedsync"
-msgid "Speed sync"
-msgstr "Synchronizacja prędkości"
-
-#: ulclformhelpers.tc_prefs_title
-#, fuzzy
-msgctxt "ulclformhelpers.tc_prefs_title"
-msgid "TR4W Preferences"
-msgstr "Preferencje TR4W"
 
 #: ulclformhelpers.tc_prefs_udpconfirmremove
 #, fuzzy
@@ -6011,42 +5559,6 @@ msgstr "(nie wybrano nic)"
 msgid "Select a destination to test."
 msgstr "Wybierz cel do przetestowania."
 
-#: ulclformhelpers.tc_prefs_udpstream_appinfo
-#, fuzzy
-msgctxt "ulclformhelpers.tc_prefs_udpstream_appinfo"
-msgid "App info"
-msgstr "Informacje o aplikacji"
-
-#: ulclformhelpers.tc_prefs_udpstream_contact
-#, fuzzy
-msgctxt "ulclformhelpers.tc_prefs_udpstream_contact"
-msgid "Contact info"
-msgstr "Informacje kontaktowe"
-
-#: ulclformhelpers.tc_prefs_udpstream_lookup
-#, fuzzy
-msgctxt "ulclformhelpers.tc_prefs_udpstream_lookup"
-msgid "Callsign lookup"
-msgstr "Sprawdzanie znaku wywoławczego"
-
-#: ulclformhelpers.tc_prefs_udpstream_radio
-#, fuzzy
-msgctxt "ulclformhelpers.tc_prefs_udpstream_radio"
-msgid "Radio info"
-msgstr "Informacje radiowe"
-
-#: ulclformhelpers.tc_prefs_udpstream_rotor
-#, fuzzy
-msgctxt "ulclformhelpers.tc_prefs_udpstream_rotor"
-msgid "Rotor"
-msgstr "Rotor"
-
-#: ulclformhelpers.tc_prefs_udpstream_score
-#, fuzzy
-msgctxt "ulclformhelpers.tc_prefs_udpstream_score"
-msgid "Score"
-msgstr "Wynik"
-
 #: ulclformhelpers.tc_prefs_udptestsent
 #, fuzzy
 msgid ""
@@ -6060,18 +5572,6 @@ msgstr ""
 #, fuzzy
 msgid "Save your changes before closing?"
 msgstr "Zapisać zmiany przed zamknięciem?"
-
-#: ulclformhelpers.tc_prefs_unsavedtitle
-#, fuzzy
-msgctxt "ulclformhelpers.tc_prefs_unsavedtitle"
-msgid "TR4W Preferences"
-msgstr "Preferencje TR4W"
-
-#: ulclformhelpers.tc_radioedit_advanced
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_advanced"
-msgid "Advanced"
-msgstr "Zaawansowane"
 
 #: ulclformhelpers.tc_radioedit_autoinfowarn
 #, fuzzy
@@ -6097,216 +5597,30 @@ msgstr ""
 msgid "The CI-V address must be a hex value, e.g. 88 or $88."
 msgstr "Adres CI- V musi być wartością szesnastkową, np. 88 lub 88 dolarów."
 
-#: ulclformhelpers.tc_radioedit_baud
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_baud"
-msgid "Baud rate"
-msgstr "Stopa swapu"
-
-#: ulclformhelpers.tc_radioedit_catdtr
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_catdtr"
-msgid "CAT DTR"
-msgstr "CAT DTR"
-
-#: ulclformhelpers.tc_radioedit_catrts
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_catrts"
-msgid "CAT RTS"
-msgstr "RTS CAT"
-
-#: ulclformhelpers.tc_radioedit_civaddress
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_civaddress"
-msgid "CI-V address (hex)"
-msgstr "Adres CI- V (hex)"
-
-#: ulclformhelpers.tc_radioedit_databits
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_databits"
-msgid "Data bits"
-msgstr "Bity danych"
-
-#: ulclformhelpers.tc_radioedit_datamodeid
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_datamodeid"
-msgid "Icom data mode ID"
-msgstr "Identyfikator trybu danych Icom"
-
 #: ulclformhelpers.tc_radioedit_defaulthint
 #, fuzzy
 msgid "%s (default)"
 msgstr "%s (domyślnie)"
-
-#: ulclformhelpers.tc_radioedit_discover
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_discover"
-msgid "Discover"
-msgstr "Odkryj"
-
-#: ulclformhelpers.tc_radioedit_filterbyte
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_filterbyte"
-msgid "Icom filter byte"
-msgstr "Filtr icom bajt"
-
-#: ulclformhelpers.tc_radioedit_found
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_found"
-msgid "Found"
-msgstr "Znaleziono"
-
-#: ulclformhelpers.tc_radioedit_ft1000mprev
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_ft1000mprev"
-msgid "FT-1000MP CW reverse"
-msgstr "FT- 1000MP CW reverse"
-
-#: ulclformhelpers.tc_radioedit_hamlibid
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_hamlibid"
-msgid "HamLib model ID"
-msgstr "Identyfikator modelu HamLib"
-
-#: ulclformhelpers.tc_radioedit_ipaddress
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_ipaddress"
-msgid "IP address"
-msgstr "Adres IP"
-
-#: ulclformhelpers.tc_radioedit_keyerdtr
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_keyerdtr"
-msgid "Keyer DTR line"
-msgstr "Linia DTR Keyer"
-
-#: ulclformhelpers.tc_radioedit_keyerport
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_keyerport"
-msgid "Keyer output port"
-msgstr "Port wyjściowy Keyer"
-
-#: ulclformhelpers.tc_radioedit_keyerrts
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_keyerrts"
-msgid "Keyer RTS line"
-msgstr "Linia RTS Keyer"
-
-#: ulclformhelpers.tc_radioedit_keyerstopbits
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_keyerstopbits"
-msgid "Stop bits"
-msgstr "Zatrzymaj bity"
-
-#: ulclformhelpers.tc_radioedit_name
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_name"
-msgid "Name"
-msgstr "Name"
 
 #: ulclformhelpers.tc_radioedit_namerequired
 #, fuzzy
 msgid "The radio needs a name."
 msgstr "Radio potrzebuje nazwiska."
 
-#: ulclformhelpers.tc_radioedit_network
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_network"
-msgid "Network"
-msgstr "Sieć"
-
 #: ulclformhelpers.tc_radioedit_nonefound
 #, fuzzy
 msgid "No radios answered."
 msgstr "Nie odebrano radia."
-
-#: ulclformhelpers.tc_radioedit_parity
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_parity"
-msgid "Parity"
-msgstr "Parity"
-
-#: ulclformhelpers.tc_radioedit_parityeven
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_parityeven"
-msgid "Even"
-msgstr "Nawet"
-
-#: ulclformhelpers.tc_radioedit_paritynone
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_paritynone"
-msgid "None"
-msgstr "Brak"
-
-#: ulclformhelpers.tc_radioedit_parityodd
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_parityodd"
-msgid "Odd"
-msgstr "Odd"
-
-#: ulclformhelpers.tc_radioedit_password
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_password"
-msgid "Password"
-msgstr "Hasło"
-
-#: ulclformhelpers.tc_radioedit_polling
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_polling"
-msgid "Poll this radio"
-msgstr "Prześlij to radio"
-
-#: ulclformhelpers.tc_radioedit_port
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_port"
-msgid "Port"
-msgstr "Port"
 
 #: ulclformhelpers.tc_radioedit_searching
 #, fuzzy
 msgid "Searching..."
 msgstr "Szukam..."
 
-#: ulclformhelpers.tc_radioedit_serial
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_serial"
-msgid "Serial"
-msgstr "Seria"
-
-#: ulclformhelpers.tc_radioedit_startup
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_startup"
-msgid "Startup command"
-msgstr "Polecenie uruchamiania"
-
-#: ulclformhelpers.tc_radioedit_stopbits
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_stopbits"
-msgid "Stop bits"
-msgstr "Zatrzymaj bity"
-
-#: ulclformhelpers.tc_radioedit_tcpport
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_tcpport"
-msgid "TCP port"
-msgstr "Port TCP"
-
-#: ulclformhelpers.tc_radioedit_title
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_title"
-msgid "Radio"
-msgstr "Radio"
-
 #: ulclformhelpers.tc_radioedit_transport
 #, fuzzy
 msgid "Connection"
 msgstr "Połączenie"
-
-#: ulclformhelpers.tc_radioedit_type
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_type"
-msgid "Radio type"
-msgstr "Typ radia"
 
 #: ulclformhelpers.tc_radioedit_typerequired
 #, fuzzy
@@ -6317,24 +5631,6 @@ msgstr "Wybierz typ radia."
 #, fuzzy
 msgid "Save your changes to this radio?"
 msgstr "Zapisać zmiany w tym radiu?"
-
-#: ulclformhelpers.tc_radioedit_usehamlib
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_usehamlib"
-msgid "Drive through HamLib"
-msgstr "Przejedź przez HamLib"
-
-#: ulclformhelpers.tc_radioedit_username
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_username"
-msgid "User name"
-msgstr "Nazwa użytkownika"
-
-#: ulclformhelpers.tc_radioedit_widecw
-#, fuzzy
-msgctxt "ulclformhelpers.tc_radioedit_widecw"
-msgid "Wide CW filter"
-msgstr "Szeroki filtr CW"
 
 #: uudpdestinationeditform.tc_udpedit_badport
 #, fuzzy
