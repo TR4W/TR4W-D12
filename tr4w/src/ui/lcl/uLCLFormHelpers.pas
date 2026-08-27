@@ -64,43 +64,21 @@ resourcestring
    // string extractable and replaceable at run time. The names are unchanged:
    // they have no translations yet, so a rename would cost nothing today, but
    // it would also buy nothing and every call site would have to move.
-   TC_PREFS_TITLE            = 'TR4W Preferences';
    TC_PREFS_HARDWARE         = 'Hardware';
-   TC_PREFS_CONTEST          = 'Contest';
-   TC_PREFS_CW               = 'CW';
-   TC_PREFS_CLUSTER          = 'DX Cluster';
-   TC_PREFS_NOTMIGRATED      = 'This section has not been migrated yet.' + sLineBreak +
-                               'Use the existing configuration screens for it.';
 
-   TC_PREFS_MYRADIOS         = 'My radios';
-   TC_PREFS_ADD              = 'Add...';
-   TC_PREFS_EDIT             = 'Edit...';
-   TC_PREFS_DUPLICATE        = 'Duplicate';
-   TC_PREFS_REMOVE           = 'Remove';
 
    TC_PREFS_PROFILES         = 'Station profile';
    TC_PREFS_NEWPROFILE       = 'New...';
    TC_PREFS_RENAMEPROFILE    = 'Rename...';
-   TC_PREFS_DELETEPROFILE    = 'Delete';
    TC_PREFS_RADIO1           = 'Radio 1';
    TC_PREFS_RADIO2           = 'Radio 2';
    TC_PREFS_NONE             = '(none)';
-   TC_PREFS_CWOUTPUT1        = 'CW output 1';
-   TC_PREFS_CWOUTPUT2        = 'CW output 2';
-   TC_PREFS_SPEEDSYNC        = 'Speed sync';
-   TC_PREFS_SO2R             = 'SO2R enabled';
-   TC_PREFS_AUTOCONNECT      = 'Connect radios at startup';
-   TC_PREFS_ACTIVATE         = 'Save and activate this profile';
    TC_PREFS_ACTIVELABEL      = 'Active profile: ';
 
    // Named for what they DO.  'OK' and 'Apply' gave no clue that they save,
    // which left "how do I save this profile?" as a fair question (NY4I).
-   TC_PREFS_OK               = 'Save and close';
-   TC_PREFS_CANCEL           = 'Cancel';
-   TC_PREFS_APPLY            = 'Save';
    TC_PREFS_UNSAVED          = 'Save your changes before closing?';
    TC_PREFS_UNSAVEDTITLE     = 'TR4W Preferences';
-   TC_RADIOEDIT_UNSAVED      = 'Save your changes to this radio?';
 
    // Shown when an auto-info level is typed rather than left blank.  Names
    // what blank MEANS, because "leave it empty" is not obvious advice, and
@@ -151,48 +129,13 @@ resourcestring
                                 'destination instead of listing it twice.';
 
    // --- radio editor --------------------------------------------------------
-   TC_RADIOEDIT_TITLE        = 'Radio';
-   TC_RADIOEDIT_NAME         = 'Name';
-   TC_RADIOEDIT_TYPE         = 'Radio type';
-   TC_RADIOEDIT_TRANSPORT    = 'Connection';
-   TC_RADIOEDIT_SERIAL       = 'Serial';
-   TC_RADIOEDIT_NETWORK      = 'Network';
-   TC_RADIOEDIT_ADVANCED     = 'Advanced';
    TC_RADIOEDIT_DISCOVER     = 'Discover';
    TC_RADIOEDIT_SEARCHING    = 'Searching...';
-   TC_RADIOEDIT_FOUND        = 'Found';
    TC_RADIOEDIT_NONEFOUND    = 'No radios answered.';
-   TC_RADIOEDIT_PORT         = 'Port';
-   TC_RADIOEDIT_BAUD         = 'Baud rate';
-   TC_RADIOEDIT_DATABITS     = 'Data bits';
-   TC_RADIOEDIT_PARITY       = 'Parity';
-   TC_RADIOEDIT_STOPBITS     = 'Stop bits';
-   TC_RADIOEDIT_PARITYNONE   = 'None';
-   TC_RADIOEDIT_PARITYODD    = 'Odd';
-   TC_RADIOEDIT_PARITYEVEN   = 'Even';
-   TC_RADIOEDIT_IPADDRESS    = 'IP address';
-   TC_RADIOEDIT_TCPPORT      = 'TCP port';
-   TC_RADIOEDIT_USERNAME     = 'User name';
-   TC_RADIOEDIT_PASSWORD     = 'Password';
-   TC_RADIOEDIT_KEYERPORT    = 'Keyer output port';
-   TC_RADIOEDIT_KEYERRTS     = 'Keyer RTS line';
-   TC_RADIOEDIT_KEYERDTR     = 'Keyer DTR line';
-   TC_RADIOEDIT_CATRTS       = 'CAT RTS';
-   TC_RADIOEDIT_CATDTR       = 'CAT DTR';
-   TC_RADIOEDIT_KEYERSTOPBITS = 'Stop bits';
-   TC_RADIOEDIT_CIVADDRESS   = 'CI-V address (hex)';
    TC_RADIOEDIT_BADCIV       = 'The CI-V address must be a hex value, e.g. 88 or $88.';
    // Shown greyed INSIDE an empty field, so "blank" reads as "using this"
    // rather than as "you forgot something".
    TC_RADIOEDIT_DEFAULTHINT  = '%s (default)';
-   TC_RADIOEDIT_HAMLIBID     = 'HamLib model ID';
-   TC_RADIOEDIT_STARTUP      = 'Startup command';
-   TC_RADIOEDIT_FILTERBYTE   = 'Icom filter byte';
-   TC_RADIOEDIT_DATAMODEID   = 'Icom data mode ID';
-   TC_RADIOEDIT_WIDECW       = 'Wide CW filter';
-   TC_RADIOEDIT_FT1000MPREV  = 'FT-1000MP CW reverse';
-   TC_RADIOEDIT_POLLING      = 'Poll this radio';
-   TC_RADIOEDIT_USEHAMLIB    = 'Drive through HamLib';
    TC_RADIOEDIT_NAMEREQUIRED = 'The radio needs a name.';
    TC_RADIOEDIT_TYPEREQUIRED = 'Choose a radio type.';
 
