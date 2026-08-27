@@ -32,7 +32,8 @@ uses
   uEditMessage,
   Windows,
   Messages,
-  LogWind;
+  LogWind,
+  uTR4WStrings;
 
 type
   TOtherMessageType = packed record
@@ -129,7 +130,7 @@ begin
         AltWnd := hwnddlg;
 //        AltPListView := Get101Window(hwnddlg);
 
-        Windows.SetWindowTextA(hwnddlg, RC_LISTOFMESS);
+        Windows.SetWindowTextW(hwnddlg, PWideChar(RC_LISTOFMESS));
         AltPListView := CreateListView2(0, 0, 790, 350, hwnddlg);
 
         // Issue #997: asm tWM_SETFONT (EAX = AltPListView above).

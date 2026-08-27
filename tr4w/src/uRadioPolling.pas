@@ -51,7 +51,8 @@ uses
    DateUtils,
    uFactoryRadioBase,
    uRadioElecraftK4,
-   uRadioHamLibDirect;
+   uRadioHamLibDirect,
+  uTR4WStrings;
 
 type
    DebugFileMessagetype = (dfmTX, dfmRX, dfmError);

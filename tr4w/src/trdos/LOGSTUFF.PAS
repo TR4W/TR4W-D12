@@ -60,7 +60,8 @@ uses {Dos, Printer,}Tree,
   uRegex,
   uMults,
   Windows
-  ;
+  ,
+  uTR4WStrings;
 
 var
   MRC: Str10;
@@ -427,7 +428,10 @@ var
   EscapeDeletedCallEntry: CallString;
   EscapeDeletedExchangeEntry: Str40;
   ExchangeHasBeenSent: boolean;
-  ExchangeErrorMessage: PAnsiChar;
+  { string, not PAnsiChar: its 22 assignments are all TC_ constants, which
+    are resourcestrings now. Its one reader tested it against nil and now
+    tests for empty -- see MainUnit. }
+  ExchangeErrorMessage: string;
   ExchangeErrorToken: Str40;   // Issue #1010: the offending exchange token, so the caller can place the caret right after it
   ExchangeMemoryFileEnable: boolean;
   ExchangeWindowString: Str40;
@@ -5343,7 +5347,7 @@ begin
            RXData.Zone := StrToIntDef(FirstString, 0);
            //        if length(RXData.Zone) = 1 then          Insert('0', RXData.Zone, 1);
            ProcessRSTAndZoneExchange := True;
-           ExchangeErrorMessage := nil;
+           ExchangeErrorMessage := '';
            Exit;
            end;
         end;
@@ -5360,7 +5364,7 @@ begin
       begin
         RXData.Zone := StrToIntDef(Exchange, 0);
         ProcessRSTAndZoneExchange := True;
-        ExchangeErrorMessage := nil;
+        ExchangeErrorMessage := '';
       end;
 
     2:
@@ -5374,7 +5378,7 @@ begin
               Exit;
               end;
            ProcessRSTAndZoneExchange := True;
-           ExchangeErrorMessage := nil;
+           ExchangeErrorMessage := '';
            Exit;
            end;
 
@@ -5394,7 +5398,7 @@ begin
              end;
 
         ProcessRSTAndZoneExchange := True;
-        ExchangeErrorMessage := nil;
+        ExchangeErrorMessage := '';
       end;
 
   end;
@@ -5409,7 +5413,7 @@ begin
      Exit;
      end;
 
-  TF.Format(QuickDisplayBuffer, TC_SAVINGTO, TR4W_LOG_FILENAME, TR4W_FLOPPY_FILENAME);
+  TF.Format(QuickDisplayBuffer, PAnsiChar(AnsiString(TC_SAVINGTO)), TR4W_LOG_FILENAME, TR4W_FLOPPY_FILENAME);
   QuickDisplay(QuickDisplayBuffer);
 
   if not Windows.CopyFileA(TR4W_LOG_FILENAME, TR4W_FLOPPY_FILENAME, False) then
@@ -5421,7 +5425,7 @@ begin
      end
   else
      begin
-     TF.Format(QuickDisplayBuffer, TC_FILESAVEDTOSUCCESSFULLY, TR4W_FLOPPY_FILENAME);
+     TF.Format(QuickDisplayBuffer, PAnsiChar(AnsiString(TC_FILESAVEDTOSUCCESSFULLY)), TR4W_FLOPPY_FILENAME);
      QuickDisplay(QuickDisplayBuffer);
      end;
 end;

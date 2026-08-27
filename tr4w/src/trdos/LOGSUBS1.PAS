@@ -65,7 +65,8 @@ uses
   SlowTree,}
   Tree,
   ZoneCont
-  ;
+  ,
+  uTR4WStrings;
 
 procedure RememberFrequency;
 procedure PutUpExchangeMenu;

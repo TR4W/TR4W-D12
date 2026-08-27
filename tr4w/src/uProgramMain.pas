@@ -436,7 +436,8 @@ uses
   uK4Discovery,
   uFlexDiscovery,
   uStrSearch,
-  NetworkMessageUtils;
+  NetworkMessageUtils,
+  uTR4WStrings;
 
 // ---------------------------------------------------------------------------
 // EnsureCountryFile
@@ -844,6 +845,8 @@ begin
     has to follow the translation load and precede the main window: the window
     is built from captions these tables hold. }
   InitializeStringTables;
+  uNet.InitializeNetworkColumnTitles;
+  uMenu.InitializeMenuText;
 
  Format(TR4W_INI_FILENAME, '%ssettings\tr4w.ini', TR4W_PATH_NAME);
   LuconSZLoadded := AddFontResourceW(TR4W_LC_FILENAME) <> 0;

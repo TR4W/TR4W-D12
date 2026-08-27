@@ -52,7 +52,8 @@ unit uAccelerators;
 interface
 
 uses
-  Windows;
+  Windows,
+  uTR4WStrings;
 
 type
   { One binding. acDisplay is what the menu shows, so the keystroke and the text

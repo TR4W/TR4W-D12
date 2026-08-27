@@ -32,7 +32,8 @@ uses
   utils_file,
   TF,
   Tree
-  ;
+  ,
+  uTR4WStrings;
 
 function wkOpen: boolean;
 function wkOpenPort: boolean;
@@ -272,7 +273,10 @@ const
   wkMINWPM                              = 10;
   wkWPMRANGE                            = 40;
 
+
 implementation
+
+
 uses
   uMainForm,   { the main window's elements are LCL controls }
   SysUtils,
@@ -642,12 +646,12 @@ const
     4000, 2000, 1333, 1000, 0800, 0666, 0571, 0500, 0444, 0400 //wk2
     );
 
-//  WK2HangTimeArray                      : array[1..4] of PChar = ('1.0', '1.33', '1.66', '2.0');
-  WK2SettingsNamesArray                 : array[1..wkBool] of PAnsiChar = (TC_WINKEYERENABLE, TC_AUTOSPACE, TC_CTSPACING, TC_SIDETONE, TC_PADDLESWAP, TC_IGNORESPEEDPOT, TC_PADDLEONLYSIDETONE);
-  WK2ComboSettingsNamesArray            : array[1..wkCombo] of PAnsiChar = (TC_WINKEYERPORT, TC_KEYERMODE, TC_SIDETONEFREQ {, TC_HANGTIME});
-  WK2KeyerModesArray                    : array[1..4] of PAnsiChar = (TC_IAMBICB, TC_IAMBICA, TC_ULTIMATIC, TC_BUGMODE);
 
-  WK2SliderLabelArray                   : array[1..wkRange] of PAnsiChar = (TC_WEIGHTING, TC_DITDAHRATIO, TC_LEADIN, TC_TAIL, TC_FIRSTEXTENSION, TC_KEYCOMP, TC_PADDLESWITCHPOINT);
+  { The four label tables below are FILLED IN WM_INITDIALOG, not here. They
+    were PAnsiChar initialised from TC_ constants, which folds the English
+    in at compile time and no catalogue can reach. }
+//  WK2HangTimeArray                      : array[1..4] of PChar = ('1.0', '1.33', '1.66', '2.0');
+
 
   WK2UpDownValue                        : array[1..wkRange] of PByte = (
     @WinKeySettings.wksValueList.vlWeight,
@@ -672,6 +676,21 @@ const
   WK2UpDownUpperValue                   : array[1..wkRange] of integer = (090, 066, 250, 250, 250, 250, 090);
   WK2UpDownLowerValue                   : array[1..wkRange] of integer = (010, 033, 000, 000, 000, 000, 010);
 
+var
+  { Between the two const groups, and it has to be here.
+
+    They are sized by wkBool / wkCombo / wkRange above, so they cannot come
+    earlier; and PORT_CB / MODE_CB below are consts computed from High() of
+    them, so they cannot come later.
+
+    Filled in WM_INITDIALOG. They were PAnsiChar typed constants initialised
+    from TC_ names -- a compile-time fold no catalogue can reach. }
+  WK2SettingsNamesArray                 : array[1..wkBool] of string;
+  WK2ComboSettingsNamesArray            : array[1..wkCombo] of string;
+  WK2KeyerModesArray                    : array[1..4] of string;
+  WK2SliderLabelArray                   : array[1..wkRange] of string;
+
+const
   CC                                    = 24;
   PORT_CB                               = 100 + High(WK2ComboSettingsNamesArray) + High(WK2SettingsNamesArray) + 1;
   MODE_CB                               = 100 + High(WK2ComboSettingsNamesArray) + High(WK2SettingsNamesArray) + 2;
@@ -701,6 +720,29 @@ begin
 
     WM_INITDIALOG:
       begin
+        // The translated labels, once per dialog rather than per message.
+        WK2SettingsNamesArray[1] := TC_WINKEYERENABLE;
+        WK2SettingsNamesArray[2] := TC_AUTOSPACE;
+        WK2SettingsNamesArray[3] := TC_CTSPACING;
+        WK2SettingsNamesArray[4] := TC_SIDETONE;
+        WK2SettingsNamesArray[5] := TC_PADDLESWAP;
+        WK2SettingsNamesArray[6] := TC_IGNORESPEEDPOT;
+        WK2SettingsNamesArray[7] := TC_PADDLEONLYSIDETONE;
+        WK2ComboSettingsNamesArray[1] := TC_WINKEYERPORT;
+        WK2ComboSettingsNamesArray[2] := TC_KEYERMODE;
+        WK2ComboSettingsNamesArray[3] := TC_SIDETONEFREQ;
+        WK2KeyerModesArray[1] := TC_IAMBICB;
+        WK2KeyerModesArray[2] := TC_IAMBICA;
+        WK2KeyerModesArray[3] := TC_ULTIMATIC;
+        WK2KeyerModesArray[4] := TC_BUGMODE;
+        WK2SliderLabelArray[1] := TC_WEIGHTING;
+        WK2SliderLabelArray[2] := TC_DITDAHRATIO;
+        WK2SliderLabelArray[3] := TC_LEADIN;
+        WK2SliderLabelArray[4] := TC_TAIL;
+        WK2SliderLabelArray[5] := TC_FIRSTEXTENSION;
+        WK2SliderLabelArray[6] := TC_KEYCOMP;
+        WK2SliderLabelArray[7] := TC_PADDLESWITCHPOINT;
+
 //        Windows.SendDlgItemMessage(hwnddlg, 300, TBM_SETTHUMBLENGTH , 10, 0);
         Top := 0;
         for c := 1 to length(WK2SettingsNamesArray) do
@@ -872,6 +914,7 @@ begin
 
   end;
 end;
+
 
 procedure wkReadThreadProc;
 label

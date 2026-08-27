@@ -34,7 +34,8 @@ uses
   LogDupe,
   LogEdit,
   Tree
-  ;
+  ,
+  uTR4WStrings;
 
 var
   TotWinCurrrentColumn             : integer;
@@ -106,7 +107,10 @@ begin
   TotWinHandlesFilled[X, Y] := s <> '';
 end;
 
-procedure WriteLeftColumnText(Text: PAnsiChar);
+procedure WriteLeftColumnText(Text: string);
+{ string, not PAnsiChar: every caller passes a TC_ constant, and those are
+  resourcestrings now. TotalTextOut below has taken a string all along, so
+  this parameter was converting one to a pointer and straight back. }
 begin
   inc(Row);
   TotalTextOut(Text, 0, Row);

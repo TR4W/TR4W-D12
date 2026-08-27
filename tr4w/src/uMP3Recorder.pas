@@ -38,7 +38,8 @@ uses
   Windows,
   Tree,
   Messages
-  ;
+  ,
+  uTR4WStrings;
 type
   TMP3RecorderDuration = (rdEachQSO, rdEachHour, rdNonStop);
   {(*}

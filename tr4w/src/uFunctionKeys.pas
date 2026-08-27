@@ -36,7 +36,8 @@ utils_text,
   uAltP,
   LogWind,
   LogCW,
-  Tree;
+  Tree,
+  uTR4WStrings;
 
 function FunctionKeysWindowDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 procedure ShowFMessages(VirtualKey: Byte);

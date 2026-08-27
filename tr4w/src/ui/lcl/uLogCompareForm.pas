@@ -49,7 +49,8 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, StdCtrls, ComCtrls, LCLType,
-  VC;   // PLogFileInformation -- named in the class declaration below, so it
+  VC,   // PLogFileInformation -- named in the class declaration below, so it
+  uTR4WStrings;
         // belongs in the INTERFACE uses, not the implementation one
 
 type

@@ -41,7 +41,8 @@ utils_text,
   LogRadio,
   LogK1EA,
   classes
-  ;
+  ,
+  uTR4WStrings;
 
 type
   KeyStatusType = (NormalKeys, AltKeys, ControlKeys);

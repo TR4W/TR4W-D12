@@ -90,7 +90,8 @@ uses
    uKeyerEditForm,   // the CW keying-device editor
    uUDPDestinationEditForm,   // one UDP destination, edited in isolation
    uUDPBroadcastConfig,       // the settings this panel edits
-   uSettingsBinding;          // TSettingBindings -- a field on the form below
+   uSettingsBinding,          // TSettingBindings -- a field on the form below
+  uTR4WStrings;
 
 
 const

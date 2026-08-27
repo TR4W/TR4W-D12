@@ -40,7 +40,8 @@ unit uWinManagerForm;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, StdCtrls, LCLType;
+  Classes, SysUtils, Forms, Controls, StdCtrls, LCLType,
+  uTR4WStrings;
 
 type
   TfrmWinManager = class(TForm)

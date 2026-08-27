@@ -161,7 +161,8 @@ uses
   uRadioBand,
   uExternalLogger,
   IdURI
-  ;
+  ,
+  uTR4WStrings;
 
 var
   Begin_QSO: boolean = False; // 4.115.3
@@ -198,7 +199,7 @@ var
   Inact_Freq: Cardinal = 0;
   Inact_Band: BandType;
   so2r_swap: boolean = false;
-function CreateToolTip(Control: HWND; Text: PAnsiChar): HWND;
+function CreateToolTip(Control: HWND; Text: string): HWND;
 
 function IsWin64: Boolean;
 function ConvertPortTypeToCOMString(port: PortType): string;
@@ -282,7 +283,7 @@ procedure InitializeQSO;
 function CreateCallOrExchangeWin(Top, ID: integer; const aField: TTR4WEntryField): HWND;
 procedure TimeApplet(i: Cardinal);
 
-function YesOrNo(h: HWND; Text: PAnsiChar): integer;
+function YesOrNo(h: HWND; Text: string): integer;
 function YesOrNo2(h: HWND; Text: PAnsiChar): integer;
 procedure PTTOffWhenStopWAV(uTimerID, uMessage: UINT; dwUser, dw1, dw2: DWORD)
   stdcall;
@@ -2772,11 +2773,11 @@ begin
     MB_ICONERROR or MB_TASKMODAL);
 end;
 
-function YesOrNo(h: HWND; Text: PAnsiChar): integer;
+function YesOrNo(h: HWND; Text: string): integer;
 begin
   // DoABeep(PromptBeep);
   // Windows.MessageBeep(MB_ICONASTERISK);
-  Result := MessageBoxA(h, Text, 'TR4W', MB_YESNO or MB_ICONQUESTION or
+  Result := MessageBoxW(h, PWideChar(Text), 'TR4W', MB_YESNO or MB_ICONQUESTION or
     MB_TOPMOST or MB_DEFBUTTON2);
 end;
 
@@ -4127,11 +4128,11 @@ begin
 
   CreateTotalWindow;
 
-  TF.Format(wsprintfBuffer, TC_RULESONQRZRU, ContestTypeSA[Contest]);
+  TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_RULESONQRZRU)), ContestTypeSA[Contest]);
   ModifyMenuA(tr4w_main_menu, menu_qrzru_calendar, MF_BYCOMMAND + MF_STRING,
     menu_qrzru_calendar, wsprintfBuffer);
 
-  TF.Format(wsprintfBuffer, TC_RULESONSM3CER, ContestTypeSA[Contest]);
+  TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_RULESONSM3CER)), ContestTypeSA[Contest]);
   ModifyMenuA(tr4w_main_menu, menu_WA7BNM_calendar, MF_BYCOMMAND + MF_STRING,
     menu_WA7BNM_calendar, wsprintfBuffer);
   if (pos('CQ-WW', ContestTypeSA[Contest]) <> 0) or (pos('IARU-HF',
@@ -5363,8 +5364,8 @@ begin
 
     menu_ctrl_execute_config: // 4.67.5
       begin
-        if OpenFileDlg(nil, tr4whandle, TC_CONFIGURATION_FILE +
-          ' (*.cfg)'#0'*.cfg'#0#0, TR4W_EXECONFIGFILE_FILENAME, OFN_HIDEREADONLY
+        if OpenFileDlg(nil, tr4whandle, PAnsiChar(AnsiString(TC_CONFIGURATION_FILE +
+          ' (*.cfg)'#0'*.cfg'#0#0)), TR4W_EXECONFIGFILE_FILENAME, OFN_HIDEREADONLY
           or
           OFN_ENABLESIZING) then
           // TR4W_EXECONFIGFILE_FILENAME is a NUL-terminated AnsiChar array, NOT
@@ -6517,7 +6518,7 @@ begin
 
   LookForOnDeckCall(ExchangeString);
 
-  ExchangeErrorMessage := nil;
+  ExchangeErrorMessage := '';
   ExchangeErrorToken := '';   // Issue #1010
 
   if NoLog then
@@ -6627,7 +6628,7 @@ begin
 
   if not IsAGoodCall(RData.Callsign) then
      begin
-     TF.Format(QuickDisplayBuffer, TC_HASIMPROPERSYNTAX, @RData.Callsign[1]);
+     TF.Format(QuickDisplayBuffer, PAnsiChar(AnsiString(TC_HASIMPROPERSYNTAX)), @RData.Callsign[1]);
      QuickDisplay(QuickDisplayBuffer);
      DoABeep(Warning);
      Exit;
@@ -6719,7 +6720,7 @@ begin
   logger.debug('Calling ProcessExchange from ParametersOkay');
   ParametersOkay := ProcessExchange(ExchangeString, RData);
 
-  if ExchangeErrorMessage <> nil then
+  if ExchangeErrorMessage <> '' then
      begin
      QuickDisplayError(ExchangeErrorMessage);
      PositionExchangeCursorAtErrorToken;   // Issue #1010: caret after the offending token
@@ -7408,7 +7409,7 @@ begin
            Halt;
            end;
  
-        TF.Format(wsprintfBuffer, TC_DIFVERSION, _LOGFILE, LogHeader.lhVersionString,
+        TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_DIFVERSION)), _LOGFILE, LogHeader.lhVersionString,
           TempBuffer1);
         showwarning(wsprintfBuffer);
         CloseLogFile;
@@ -7737,6 +7738,7 @@ var
   Mults: Cardinal;
   MultString: array[0..7] of AnsiChar;
   FreqAnsi: AnsiString;   // D12: persistent buffer for pszText (see freq column below)
+  RowTextAnsi: AnsiString;   // the same, for the rkNote and deleted-QSO captions
 begin
 
   elvi.Mask := LVIF_TEXT;
@@ -7757,7 +7759,7 @@ begin
 
   if RXData.ceRecordKind = rkNote then
      begin
-     elvi.pszText := RC_NOTE;
+     RowTextAnsi := RC_NOTE;   elvi.pszText := PAnsiChar(RowTextAnsi);
      ListView_InsertItem(ListViewHandle, elvi);
      elvi.iSubItem := ColumnsArray[logColCallsign].pos; //(logColCallsign);
      elvi.pszText := @RXData.Prefix;
@@ -7773,7 +7775,7 @@ begin
 
   if RXData.ceQSO_Deleted then
      begin
-     elvi.pszText := RC_DELETED;
+     RowTextAnsi := RC_DELETED;   elvi.pszText := PAnsiChar(RowTextAnsi);
      ListView_InsertItem(ListViewHandle, elvi);
      Exit;
      end;
@@ -9743,7 +9745,7 @@ var
 
   procedure DisplayLoadedQSOs;
   begin
-    TF.Format(QuickDisplayBuffer, '%u ' + TC_QSO_IMPORTED, QSOCounter);
+    TF.Format(QuickDisplayBuffer, PAnsiChar(AnsiString('%u ' + TC_QSO_IMPORTED)), QSOCounter);
     SetTextInQuickCommandWindow(QuickDisplayBuffer);
   end;
 begin
@@ -9941,7 +9943,7 @@ var
   idx: integer;
   ownedElsewhere: boolean;
 begin
-  TF.Format(TempBuffer1, TC_SET_VALUE_OF_SET_NOW, c);
+  TF.Format(TempBuffer1, PAnsiChar(AnsiString(TC_SET_VALUE_OF_SET_NOW)), c);
   if YesOrNo(tr4whandle, TempBuffer1) = IDno then
      begin
      Exit;
@@ -10237,7 +10239,7 @@ end;
 // Actual LPT access in TR4W goes through DLPortIO / inpout32.dll, which is a
 // real driver. That path is untouched.
 
-function CreateToolTip(Control: HWND; Text: PAnsiChar): HWND;
+function CreateToolTip(Control: HWND; Text: string): HWND;
 const
   TOOLTIPS_CLASS = 'tooltips_class32';
   TTS_ALWAYSTIP = $01;
@@ -10254,6 +10256,7 @@ const
 
 var
   ti: TOOLINFO;
+  TextAnsi: AnsiString;   // must outlive the SendMessage below
 begin
   Result := CreateWindowW(TOOLTIPS_CLASS, nil, WS_POPUP or TTS_NOPREFIX
     {or TTS_BALLOON } or TTS_ALWAYSTIP, 100, 100, 100, 100, Control, 0,
@@ -10268,7 +10271,11 @@ begin
      //ti.uFlags := 0;//TTF_ABSOLUTE or TTF_TRACK;
      ti.uFlags := {TTF_CENTERTIP or }TTF_TRANSPARENT or TTF_SUBCLASS;
      ti.HWND := Control;
-     ti.lpszText := Text;
+     // STAYS ON THE ANSI PAIRING -- TOOLINFO here is the A struct and
+     // TTM_ADDTOOL above is TTM_ADDTOOLA; see the note on that constant. So
+     // the conversion happens here, into a variable that outlives the call.
+     TextAnsi := AnsiString(Text);
+     ti.lpszText := PAnsiChar(TextAnsi);
      Windows.GetClientRect(Control, ti.rect);
      SendMessage(Result, TTM_ADDTOOL, 0, integer(@ti));
      end;

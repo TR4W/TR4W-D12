@@ -45,7 +45,8 @@ unit uCT1BOHForm;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, ComCtrls, LCLType;
+  Classes, SysUtils, Forms, Controls, ComCtrls, LCLType,
+  uTR4WStrings;
 
 type
   TfrmCT1BOH = class(TForm)

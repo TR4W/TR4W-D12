@@ -43,7 +43,8 @@ unit uAltDForm;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, StdCtrls, Graphics;
+  Classes, SysUtils, Forms, Controls, StdCtrls, Graphics,
+  uTR4WStrings;
 
 type
   TfrmAltD = class(TForm)

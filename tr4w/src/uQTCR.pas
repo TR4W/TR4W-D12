@@ -38,7 +38,8 @@ uCallSignRoutines,
   Tree,
   Windows,
   Messages
-  ;
+  ,
+  uTR4WStrings;
 
 function QTCRDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 function PutQTCSignInExchangeField(s: string): boolean;
@@ -116,17 +117,17 @@ begin
 
     WM_INITDIALOG:
       begin
-        Windows.SetWindowTextA(hwnddlg, RC_RECVQTC);
-  //      CreateStatic(nil, 5, 285, 325, hwnddlg, 106);
- //  CreateStatic(nil, 5, 325, 325, hwnddlg, 106);
- CreateStatic(nil, 5, 325, 325, hwnddlg, 106);
+        Windows.SetWindowTextW(hwnddlg, PWideChar(RC_RECVQTC));
+  //      CreateStatic('', 5, 285, 325, hwnddlg, 106);
+ //  CreateStatic('', 5, 325, 325, hwnddlg, 106);
+ CreateStatic('', 5, 325, 325, hwnddlg, 106);
         QTCRWindow := hwnddlg;
         SendStringAndStop('QTC?');
         tCreateStaticWindow(TC_QTC_CALLSIGN, WS_CHILD or SS_SUNKEN or SS_NOTIFY or SS_CENTER or WS_VISIBLE, QTCLEFT, 5, QTCWIDTHARRAY[1] + QTCROWSDIS + QTCWIDTHARRAY[2], 18, hwnddlg, 10);
         QTCRCallsignWndHandle := tCreateEditWindow(WS_EX_STATICEDGE, QTCCallsign, WS_CHILD or SS_SUNKEN or SS_NOTIFY or SS_CENTER or WS_VISIBLE or ES_UPPERCASE, QTCLEFT + QTCWIDTHARRAY[1] + QTCROWSDIS + QTCWIDTHARRAY[2] + QTCROWSDIS, 5, 120, 18, hwnddlg, 88);
         OldQTCREditProc := Pointer(Windows.SetWindowLong(QTCRCallsignWndHandle, GWL_WNDPROC, integer(@NewQTCREditProc)));
         // Issue #997: asm wsprintf-push -> TF.Format (MaxQTCsThisStation is integer).
-        TF.Format(wsprintfBuffer, TC_ENTERQTCMAXOF, MaxQTCsThisStation);
+        TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_ENTERQTCMAXOF)), MaxQTCsThisStation);
         tCreateStaticWindow(wsprintfBuffer, WS_CHILD or SS_SUNKEN or SS_NOTIFY or SS_CENTER or WS_VISIBLE, 212, 5, 140, 18, hwnddlg, 10);
         QTCNrWndHandle := tCreateEditWindow(WS_EX_STATICEDGE, '', WS_CHILD or SS_SUNKEN or SS_NOTIFY or SS_CENTER or WS_VISIBLE, 355, 5, 90, 18, hwnddlg, 73);
         OldQTCREditProc := Pointer(Windows.SetWindowLong(QTCNrWndHandle, GWL_WNDPROC, integer(@NewQTCREditProc)));
@@ -384,7 +385,7 @@ begin
                  end
               else
                  begin
-                 Windows.SetDlgItemTextA(QTCRWindow, 106, TC_CHECKQTCNUMBER);
+                 Windows.SetDlgItemTextW(QTCRWindow, 106, PWideChar(TC_CHECKQTCNUMBER));
                  end;
               Exit;
               end;
@@ -509,7 +510,7 @@ begin
   Time := Windows.GetDlgItemInt(QTCRWindow, 200 + Item, lpTranslated, False);
   if (lpTranslated = False) or ((Time mod 100) > 59) or (Time div 100 > 23) {or ((Item = 1) and (Time < 100))} then
      begin
-     Windows.SetDlgItemTextA(QTCRWindow, 106, TC_CHECKTIME);
+     Windows.SetDlgItemTextW(QTCRWindow, 106, PWideChar(TC_CHECKTIME));
      Windows.SetFocus(Windows.GetDlgItem(QTCRWindow, 200 + Item));
      Exit;
      end;
@@ -518,7 +519,7 @@ begin
      begin
      if Call <> '' then
         begin
-        Windows.SetDlgItemTextA(QTCRWindow, 106, TC_CHECKCALLSIGN);
+        Windows.SetDlgItemTextW(QTCRWindow, 106, PWideChar(TC_CHECKCALLSIGN));
         end;
      Windows.SetFocus(Windows.GetDlgItem(QTCRWindow, 300 + Item));
      Exit;

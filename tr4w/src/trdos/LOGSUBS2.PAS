@@ -91,7 +91,8 @@ uses
   DateUtils,
   Tree,
   ZoneCont
-  ;
+  ,
+  uTR4WStrings;
   var TimeLastScoreBroadcast : TDateTime;
   const BandTypeToUDPContactBand  : array[Band160..BandLight] of PAnsiChar =
     (
@@ -543,7 +544,7 @@ procedure DeleteLastContact;
 var
   TempRXData                            : ContestExchange;
   lpNumberOfBytesRead                   : Cardinal;
-  p                                     : PAnsiChar;
+  p                                     : string;   // was PAnsiChar; holds a resourcestring now
 
 begin
   if not OpenLogFile then Exit;
@@ -1508,7 +1509,7 @@ begin
                 RXData.QSOPoints := 0;
                       //                              if ReminderPostedCount = 0 then
                 begin
-                  TF.Format(QuickDisplayBuffer, TC_YOUALREADYWORKEDIN, @RXData.Callsign[1], @RXData.DomMultQTH[1]);
+                  TF.Format(QuickDisplayBuffer, PAnsiChar(AnsiString(TC_YOUALREADYWORKEDIN)), @RXData.Callsign[1], @RXData.DomMultQTH[1]);
                   QuickDisplay(QuickDisplayBuffer);
                   if DupeCheckSound <> DupeCheckNoSound then
                      begin
@@ -1524,7 +1525,7 @@ begin
         begin
         //                  if ReminderPostedCount = 0 then
     begin
-      TF.Format(QuickDisplayBuffer, TC_ISADUPEANDWILLBELOGGEDWITHZERO, @RXData.Callsign[1]);
+      TF.Format(QuickDisplayBuffer, PAnsiChar(AnsiString(TC_ISADUPEANDWILLBELOGGEDWITHZERO)), @RXData.Callsign[1]);
       QuickDisplay(QuickDisplayBuffer);
       if DupeCheckSound <> DupeCheckNoSound then
          begin

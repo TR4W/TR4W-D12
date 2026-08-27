@@ -66,7 +66,8 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Buttons, Grids, ExtCtrls,
-  LCLType;
+  LCLType,
+  uTR4WStrings;
 
 type
   TfrmBeacons = class(TForm)

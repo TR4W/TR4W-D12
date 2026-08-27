@@ -60,7 +60,8 @@ uses
    StdCtrls,
    ExtCtrls,
    ComCtrls,
-   uRadioConfigStore;
+   uRadioConfigStore,
+  uTR4WStrings;
 
 type
    // Reports the editor's outcome.  A callback rather than a modal result,

@@ -47,7 +47,8 @@ interface
 
 uses
    Classes, SysUtils, LCLType, Forms, Controls, Grids, Graphics,
-   VC, LogWind, LogDom, LogDupe, uFlowGrid;
+   VC, LogWind, LogDom, LogDupe, uFlowGrid,
+  uTR4WStrings;
 
 type
    TfrmRemMults = class(TForm)

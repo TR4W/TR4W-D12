@@ -26,7 +26,8 @@ uses
   Windows,
   Messages,
   Log4D,
-  Version;
+  Version,
+  uTR4WStrings;
 
 {$INCLUDE w.pas}
 
@@ -260,17 +261,20 @@ const
 // constants DO resolve, which is why only the LANG family is affected.
 // The LANG_<xxx> symbols are real compiler defines and mean the same thing to
 // both compilers.  See src\tr4w.inc.
-{$IFDEF LANG_ENG}{$INCLUDE lang\tr4w_consts_eng.pas}{$ENDIF}
-{$IFDEF LANG_RUS}{$INCLUDE lang\tr4w_consts_rus.pas} {$ENDIF}
-{$IFDEF LANG_SER}{$INCLUDE lang\tr4w_consts_ser.pas}{$ENDIF}
-{$IFDEF LANG_ESP}{$INCLUDE lang\tr4w_consts_esp.pas}{$ENDIF}
-{$IFDEF LANG_MNG}{$INCLUDE lang\tr4w_consts_mng.pas}{$ENDIF}
-{$IFDEF LANG_POL}{$INCLUDE lang\tr4w_consts_pol.pas}{$ENDIF}
-{$IFDEF LANG_CZE}{$INCLUDE lang\tr4w_consts_cze.pas}{$ENDIF}
-{$IFDEF LANG_ROM}{$INCLUDE lang\tr4w_consts_rom.pas}{$ENDIF}
-{$IFDEF LANG_CHN}{$INCLUDE lang\tr4w_consts_chn.pas}{$ENDIF}
-{$IFDEF LANG_GER}{$INCLUDE lang\tr4w_consts_ger.pas}{$ENDIF}
-{$IFDEF LANG_UKR}{$INCLUDE lang\tr4w_consts_ukr.pas}{$ENDIF}
+{ THE TC_/RC_ CONSTANTS USED TO BE DECLARED HERE.
+
+  Eleven INCLUDE lines, one per language, selected by a LANG_xxx define -- so
+  the language was chosen by COMPILING A DIFFERENT BINARY. They are
+  resourcestrings in uTR4WStrings now, and one binary carries every language,
+  replaced at run time from a .po catalogue.
+
+  This is why 68 units gained uTR4WStrings in their uses clause. While the
+  constants were included HERE they were VC's own identifiers, so every unit
+  that used VC saw them; Pascal's uses is not transitive, so each unit that
+  names one now has to say so itself.
+
+  src/lang/tr4w_consts_<lang>.pas remain on disk as the source the catalogues
+  were built from. Nothing compiles them any more. }
 
 // These five were declared INSIDE {$IF tDebugMode}, and tDebugMode is False --
 // so in every shipping build they did not exist at all, while LOGK1EA, uWinKey,

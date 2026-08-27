@@ -58,7 +58,8 @@ uses
   Windows,
   WinSvc,
   Messages
-  ;
+  ,
+  uTR4WStrings;
 
 type
   PByte = ^Byte;

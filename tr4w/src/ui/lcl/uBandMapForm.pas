@@ -55,7 +55,8 @@ interface
 uses
   Forms, Controls, Grids, ComCtrls, Menus, ExtCtrls, Classes, Graphics,
   LCLType,      { HWND, VK_* -- the LCL's own, so this unit needs no Windows }
-  VC;           { TSpotRecord, CallString }
+  VC,           { TSpotRecord, CallString }
+  uTR4WStrings;
 
 type
   TfrmBandMap = class(TForm)

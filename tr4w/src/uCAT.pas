@@ -40,7 +40,8 @@ uses
   uK4Discovery,
   uFlexDiscovery,
   uIcomNetworkDiscovery,
-  uIcomNetworkTypes;
+  uIcomNetworkTypes,
+  uTR4WStrings;
 
 procedure CloseCATAndKeyerForThisRadio;
 function CATDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
@@ -1298,7 +1299,7 @@ begin
   // radios with LAN auto-discovery: K4, the network Icoms, FLEX).
   if not TRadioFactory.IsDiscoverable(rt) then
      begin
-     TF.Format(wsprintfBuffer, TC_DISCOVER_NOT_AVAILABLE, PAnsiChar(radioName));
+     TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_DISCOVER_NOT_AVAILABLE)), PAnsiChar(radioName));
      showwarning(wsprintfBuffer);
      Exit;
      end;
@@ -1316,7 +1317,7 @@ begin
 
      if found.Count = 0 then
         begin
-        TF.Format(wsprintfBuffer, TC_DISCOVER_NONE_FOUND, PAnsiChar(radioName));
+        TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_DISCOVER_NONE_FOUND)), PAnsiChar(radioName));
         showwarning(wsprintfBuffer);
         end
      else
@@ -1328,7 +1329,7 @@ begin
         ApplyDefaultNetworkPort(hwnddlg);
         if found.Count > 1 then
            begin
-           TF.Format(wsprintfBuffer, TC_DISCOVER_MULTI_FOUND, PAnsiChar(radioName));
+           TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_DISCOVER_MULTI_FOUND)), PAnsiChar(radioName));
            msg := string(wsprintfBuffer) + #13#10;
            for i := 0 to found.Count - 1 do
               begin
@@ -1431,7 +1432,7 @@ var
         begin
         Exit;
         end;
-     case MessageBox(hwnddlg, TC_SAVECHANGES, tr4w_ClassName,
+     case MessageBoxW(hwnddlg, PWideChar(TC_SAVECHANGES), tr4w_ClassName,
              MB_YESNOCANCEL or MB_ICONQUESTION or MB_TOPMOST or MB_DEFBUTTON3) of
         IDYES:
            begin
@@ -1875,7 +1876,7 @@ begin
         // OK/Apply call RestartPollingThread), so the new label simply makes the
         // edit-commit semantics explicit.  Done at runtime to cover all
         // languages without touching the per-language resources.
-        Windows.SetDlgItemTextA(hwnddlg, 119, CANCEL_WORD);
+        Windows.SetDlgItemTextW(hwnddlg, 119, PWideChar(CANCEL_WORD));
 
         // Everything above moved, resized or recreated controls at runtime (the
         // credential rows, the Show-all row, the widening for port names, the

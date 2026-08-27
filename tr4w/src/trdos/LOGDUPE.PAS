@@ -43,7 +43,8 @@ utils_text,
   LogWind,
   LogRadio,
   LogSCP
-  ;
+  ,
+  uTR4WStrings;
 
 const
   MaxGridSquaresInList                  = 40;
@@ -1313,7 +1314,7 @@ begin
   //TempInteger := TF.Format(wsprintfBuffer, '%s:'#13#10 + TC_THEREWERECALLS, TR4W_INITIALEX_FILENAME, InitialExCallsigns, InitialExDupes);
   if InitialExCallsigns > 0 then
      begin
-     TF.Format(wsprintfBuffer, '%s:' + TC_THEREWERECALLS, TR4W_INITIALEX_FILENAME, InitialExCallsigns, InitialExDupes);
+     TF.Format(wsprintfBuffer, PAnsiChar(AnsiString('%s:' + TC_THEREWERECALLS)), TR4W_INITIALEX_FILENAME, InitialExCallsigns, InitialExDupes);
      QuickDisplay(wsprintfBuffer);
      end;
  // ShowMessage(wsprintfBuffer);
@@ -1567,7 +1568,7 @@ begin
      begin
      CloseHandle(h);
 
-     TF.Format(wsprintfBuffer, TC_DIFVERSION, _RESTARTBIN, @RestartVersionNumber[1], @RestartVersion[1]);
+     TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_DIFVERSION)), _RESTARTBIN, @RestartVersionNumber[1], @RestartVersion[1]);
 
      ShowMessage(wsprintfBuffer);
      Exit;

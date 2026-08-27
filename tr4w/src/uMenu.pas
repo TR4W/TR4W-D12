@@ -26,7 +26,8 @@ interface
 uses
   VC,
   uAccelerators,   // AcceleratorDisplayFor -- the shortcut text a menu item shows
-  Windows;
+  Windows,
+  uTR4WStrings;
 
 type
 
@@ -52,6 +53,8 @@ type
 
   PMenuRecord = ^MenuRecord;
 
+{ Fill the menu captions from the resourcestrings. See the implementation. }
+procedure InitializeMenuText;
 function CreateTR4WMenu(m: PMenuRecord; s: integer; popup: boolean): HMENU;
 const
   // GONE 2026-08-17: menu_messages no longer owns Alt+P.  NY4I -- "menu alt p
@@ -74,282 +77,303 @@ const
     // the MAXWORD-1 submenu marker, the two Radio entries and the MAXWORD-2
     // terminator, and adding one item (net -3).
     T_MENU_ARRAY_SIZE                     = 176 + 1 + 1 {Check for Updates, 2026-08-22} {MMTTY window}{$IFDEF LANG_RUS} + 3{$ENDIF} + 2 {RC_RESET_RADIO_PORTS, separator, Repeat POTA Parks} + 2 {HamScore Resync (Tools) + HamScore Status (Windows menu), Issue #783} + 1 {3830 Score under File-Reports} + 1 {Edit Cabrillo Summary under Tools, Issue #914} + 1 {Download TRMASTER.DTA, 2026-08-16} - 1 {Appearance removed, 2026-08-16} - 1 {Synchronize PC time removed, 2026-08-25 -- setting the clock needs UAC};
+
+var
+  { A var, and every mrText is BLANK here -- InitializeMenuText fills them.
+
+    The captions were TC_/RC_ constants written straight into this typed
+    constant, which folds them at COMPILE time. That is exactly what a
+    resourcestring cannot do, and FPC says so rather than folding English in
+    silently:
+
+      Unicodechar/string constants cannot be converted to ansi/shortstring
+      at compile-time
+
+    The fill walks the rows with a running index rather than naming numbers,
+    and carries the LANG_RUS conditionals with it, so the two stay aligned in
+    every configuration by construction. Insert a row in one and the other
+    follows only if you insert it there too -- which is the point: numbered
+    assignments would drift silently. }
   T_MENU_ARRAY                          : array[0..T_MENU_ARRAY_SIZE] of MenuRecord = (
-    (mrText: RC_FILE; mrId: MAXWORD),
+    (mrText: ''; mrId: MAXWORD),
  //{
-    (mrText: RC_CLEARLOG; mrId: menu_clear_log),
-    (mrText: RC_OPENLOGDIR; mrId: menu_log_file_properties),
-    (mrText: RC_IMPORT; mrId: MAXWORD - 1),
+    (mrText: ''; mrId: menu_clear_log),
+    (mrText: ''; mrId: menu_log_file_properties),
+    (mrText: ''; mrId: MAXWORD - 1),
   //{
-    (mrText: 'ADIF'; mrId: menu_import_adif),
+    (mrText: ''; mrId: menu_import_adif),
   //}
 
-    (mrText: RC_EXPORT; mrId: MAXWORD - 1),
+    (mrText: ''; mrId: MAXWORD - 1),
   //{
-    (mrText: 'ADIF'; mrId: menu_adif),
-    (mrText: 'CSV'; mrId: menu_csv),
-    (mrText: 'Cabrillo'; mrId: menu_cabrillo),
-    (mrText: 'EDI'; mrId: menu_export_edi),
-    (mrText: RC_INIEXLIST; mrId: menu_initial_ex_list),
+    (mrText: ''; mrId: menu_adif),
+    (mrText: ''; mrId: menu_csv),
+    (mrText: ''; mrId: menu_cabrillo),
+    (mrText: ''; mrId: menu_export_edi),
+    (mrText: ''; mrId: menu_initial_ex_list),
 //    (mrText: RC_TRLOGFORM; mrId: menu_trlog),
-    (mrText: RC_NOTES; mrId: menu_export_notes),
+    (mrText: ''; mrId: menu_export_notes),
   //}
 
-    (mrText: RC_REPORTS; mrId: MAXWORD - 1),
+    (mrText: ''; mrId: MAXWORD - 1),
   //{
-    (mrText: RC_ALLCALLS; mrId: menu_allcallsigns_list),
-    (mrText: RC_BANDCHANGES; mrId: menu_band_changes),
-    (mrText: RC_CONTLIST; mrId: menu_continentlist),
-    (mrText: RC_FCC; mrId: menu_first_call_work_ineachcountry),
-    (mrText: RC_FCZ; mrId: menu_first_call_work_InEachZone),
-    (mrText: RC_QSOBYCOUNTRY; mrId: menu_qsobycountry),
-    (mrText: RC_SCOREBYHOUR; mrId: menu_scorebyhour),
-    (mrText: RC_SUMMARY; mrId: menu_summary),
-    (mrText: '3830 Score'; mrId: menu_3830scores),
+    (mrText: ''; mrId: menu_allcallsigns_list),
+    (mrText: ''; mrId: menu_band_changes),
+    (mrText: ''; mrId: menu_continentlist),
+    (mrText: ''; mrId: menu_first_call_work_ineachcountry),
+    (mrText: ''; mrId: menu_first_call_work_InEachZone),
+    (mrText: ''; mrId: menu_qsobycountry),
+    (mrText: ''; mrId: menu_scorebyhour),
+    (mrText: ''; mrId: menu_summary),
+    (mrText: ''; mrId: menu_3830scores),
   //}
     (mrText: ''; mrId: MAXWORD - 2),
-    (mrText: '-'; mrId: 0),
-    (mrText: RC_EXIT; mrId: menu_exit),
+    (mrText: ''; mrId: 0),
+    (mrText: ''; mrId: menu_exit),
  //}
 
-    (mrText: RC_SETTINGS; mrId: MAXWORD),
+    (mrText: ''; mrId: MAXWORD),
  //{
 
-    (mrText: '-'; mrId: 0),
+    (mrText: ''; mrId: 0),
 
-    (mrText: RC_COLORS; mrId: menu_colors),
+    (mrText: ''; mrId: menu_colors),
     // APPEARANCE REMOVED 2026-08-16 (NY4I). It opened RunOptionsDialog with the
     // cfAppearance filter, and every row that filter selected is now csOwned --
     // so it opened an empty list. Its settings live on the Preferences
     // Appearance page, which the Ctrl-J entry above reaches. menu_appearance
     // itself is kept in VC.pas and still handled in ProcessMenu, because the
     // id may arrive from an accelerator or a saved menu state.
-    (mrText: 'Winkeyer'; mrId: menu_winkeyer2),
+    (mrText: ''; mrId: menu_winkeyer2),
 
     // One item, not a submenu: the Preferences window owns BOTH radio slots
     // plus the radio library and the profiles, so a per-slot entry would open
     // the same window twice.  The legacy per-slot dialog (uCAT.CATDlgProc) is
     // still reachable with the CATLEGACY call-window command while the new
     // path is being proven on the bench.
-    (mrText: RC_CATANDCW; mrId: menu_radio_preferences),
+    (mrText: ''; mrId: menu_radio_preferences),
 
-    (mrText: '-'; mrId: 0),
-    (mrText: RC_PROGRAMMES; mrId: menu_messages),
+    (mrText: ''; mrId: 0),
+    (mrText: ''; mrId: menu_messages),
 
-    (mrText: 'LPT'; mrId: menu_lpt),
+    (mrText: ''; mrId: menu_lpt),
 
  //}
 
-    (mrText: RC_WINDOWS; mrId: MAXWORD),
+    (mrText: ''; mrId: MAXWORD),
  //{
-    (mrText: RC_BANDMAP; mrId: menu_windows_bandmap),
+    (mrText: ''; mrId: menu_windows_bandmap),
 
-    (mrText: RC_DUPESHEET; mrId: MAXWORD - 1),
+    (mrText: ''; mrId: MAXWORD - 1),
   //{
-    (mrText: TC_RADIO1; mrId: menu_windows_dupesheet1),
-    (mrText: TC_RADIO2; mrId: menu_windows_dupesheet2),
+    (mrText: ''; mrId: menu_windows_dupesheet1),
+    (mrText: ''; mrId: menu_windows_dupesheet2),
   //}
     (mrText: ''; mrId: MAXWORD - 2),
-    (mrText: RC_FKEYS; mrId: menu_windows_funckeys),
-    (mrText: RC_TRMASTER; mrId: menu_windows_trmasterdta),
-    (mrText: RC_REMMULTS; mrId: MAXWORD - 1),
-    (mrText: RC_RM_DEFAULT; mrId: menu_windows_remmults),
+    (mrText: ''; mrId: menu_windows_funckeys),
+    (mrText: ''; mrId: menu_windows_trmasterdta),
+    (mrText: ''; mrId: MAXWORD - 1),
+    (mrText: ''; mrId: menu_windows_remmults),
 
-    (mrText: '-'; mrId: 0),
-    (mrText: 'DX'; mrId: menu_rm_dx),
-    (mrText: 'Domestic'; mrId: menu_rm_domestic),
-    (mrText: 'Zones'; mrId: menu_rm_zone),
-    (mrText: 'Prefixes'; mrId: menu_rm_prefix),
+    (mrText: ''; mrId: 0),
+    (mrText: ''; mrId: menu_rm_dx),
+    (mrText: ''; mrId: menu_rm_domestic),
+    (mrText: ''; mrId: menu_rm_zone),
+    (mrText: ''; mrId: menu_rm_prefix),
     (mrText: ''; mrId: MAXWORD - 2),
   //}
 
-    (mrText: TC_RADIO1; mrId: menu_windows_radiointerface1),
-    (mrText: TC_RADIO2; mrId: menu_windows_radiointerface2),
-    (mrText: '-'; mrId: 0),
-    (mrText: RC_TELNET; mrId: menu_windows_telnet),
-    (mrText: RC_NETWORK; mrId: menu_windows_network),
-    (mrText: '-'; mrId: 0),
-    (mrText: RC_INTERCOM; mrId: menu_windows_intercom),
-    (mrText: RC_POSTSCORETOGS; mrId: menu_windows_getscores),
-    (mrText: 'HamScore RTC Status'; mrId: menu_windows_hamscore),  // Issue #783 Phase 4
-    (mrText: RC_STATIONS; mrId: menu_windows_stations),
-    (mrText: RC_MP3REC; mrId: menu_windows_mp3recorder),
-    (mrText: 'MMTTY'; mrId: menu_windows_mmtty),
+    (mrText: ''; mrId: menu_windows_radiointerface1),
+    (mrText: ''; mrId: menu_windows_radiointerface2),
+    (mrText: ''; mrId: 0),
+    (mrText: ''; mrId: menu_windows_telnet),
+    (mrText: ''; mrId: menu_windows_network),
+    (mrText: ''; mrId: 0),
+    (mrText: ''; mrId: menu_windows_intercom),
+    (mrText: ''; mrId: menu_windows_getscores),
+    (mrText: ''; mrId: menu_windows_hamscore),  // Issue #783 Phase 4
+    (mrText: ''; mrId: menu_windows_stations),
+    (mrText: ''; mrId: menu_windows_mp3recorder),
+    (mrText: ''; mrId: menu_windows_mmtty),
  //}
 
-    (mrText: 'Alt-'; mrId: MAXWORD),
+    (mrText: ''; mrId: MAXWORD),
  //{
-    (mrText: RC_INC_TIME; mrId: MAXWORD - 1),
+    (mrText: ''; mrId: MAXWORD - 1),
   //{
-    (mrText: '+1'#9'Alt+1'; mrId: menu_alt_increment_time_1),
-    (mrText: '+2'#9'Alt+2'; mrId: menu_alt_increment_time_2),
-    (mrText: '+3'#9'Alt+3'; mrId: menu_alt_increment_time_3),
-    (mrText: '+4'#9'Alt+4'; mrId: menu_alt_increment_time_4),
-    (mrText: '+5'#9'Alt+5'; mrId: menu_alt_increment_time_5),
-    (mrText: '+6'#9'Alt+6'; mrId: menu_alt_increment_time_6),
-    (mrText: '+7'#9'Alt+7'; mrId: menu_alt_increment_time_7),
-    (mrText: '+8'#9'Alt+8'; mrId: menu_alt_increment_time_8),
-    (mrText: '+9'#9'Alt+9'; mrId: menu_alt_increment_time_9),
-    (mrText: '+10'#9'Alt+0'; mrId: menu_alt_increment_time_0),
+    (mrText: ''; mrId: menu_alt_increment_time_1),
+    (mrText: ''; mrId: menu_alt_increment_time_2),
+    (mrText: ''; mrId: menu_alt_increment_time_3),
+    (mrText: ''; mrId: menu_alt_increment_time_4),
+    (mrText: ''; mrId: menu_alt_increment_time_5),
+    (mrText: ''; mrId: menu_alt_increment_time_6),
+    (mrText: ''; mrId: menu_alt_increment_time_7),
+    (mrText: ''; mrId: menu_alt_increment_time_8),
+    (mrText: ''; mrId: menu_alt_increment_time_9),
+    (mrText: ''; mrId: menu_alt_increment_time_0),
   //}
 
-    (mrText: '-'; mrId: MAXWORD - 2),
-    (mrText: RC_wkMode; mrId: menu_alt_wkmode),    // 4.60.1
-    (mrText: RC_BANDUP; mrId: menu_alt_bandup),
-    (mrText: RC_AUTOCQRESUME; mrId: menu_alt_autocqresume),
-    (mrText: RC_DUPECHECK; mrId: menu_alt_dupecheck),
-    (mrText: RC_EDIT; mrId: menu_alt_SO2R_edit),
-    (mrText:  RC_BACKUPLOG;mrId: menu_alt_savetofloppy),
-    (mrText: RC_SWAPMULTVIEW; mrId: menu_alt_swapmults),
-    (mrText: RC_INCNUMBER; mrId: menu_alt_incnumber),
-    (mrText: RC_TOOGLEMB; mrId: menu_alt_multbell),
-    (mrText: RC_KILLCW; mrID: menu_alt_killcw),
-    (mrText: RC_SEARCHLOG; mrId: menu_alt_searchlog),
-    (mrText: RC_SSBCWMODE; mrId: menu_alt_ssbcwmode),
+    (mrText: ''; mrId: MAXWORD - 2),
+    (mrText: ''; mrId: menu_alt_wkmode),    // 4.60.1
+    (mrText: ''; mrId: menu_alt_bandup),
+    (mrText: ''; mrId: menu_alt_autocqresume),
+    (mrText: ''; mrId: menu_alt_dupecheck),
+    (mrText: ''; mrId: menu_alt_SO2R_edit),
+    (mrText:  '';mrId: menu_alt_savetofloppy),
+    (mrText: ''; mrId: menu_alt_swapmults),
+    (mrText: ''; mrId: menu_alt_incnumber),
+    (mrText: ''; mrId: menu_alt_multbell),
+    (mrText: ''; mrID: menu_alt_killcw),
+    (mrText: ''; mrId: menu_alt_searchlog),
+    (mrText: ''; mrId: menu_alt_ssbcwmode),
 
-    (mrText: RC_Download; mrId: menu_download_latest_cty_dat), // 4.75.3
+    (mrText: ''; mrId: menu_download_latest_cty_dat), // 4.75.3
 //    (mrText: RC_TRANSFREQ; mrId: menu_alt_transfreq),     // 4.68.11
-    (mrText: RC_ALTP; mrId: menu_alt_p),
-    (mrText: RC_AUTOCQ; mrId: menu_alt_autocq),
-    (mrText: RC_TOOGLERIGS; mrId: menu_alt_tooglerigs),
-    (mrText: RC_CWSPEED; mrId: menu_alt_cwspeed),
-    (mrText: RC_SETSYSDT; mrId: menu_alt_settime),
-    (mrText: RC_BANDDOWN; mrId: menu_alt_banddown),
-    (mrText: RC_INITIALIZE; mrId: menu_alt_init_qso),
-    (mrText: RC_ALTX;         mrId: menu_alt_x),
-    (mrText: RC_DELETELASTQSO; mrId: menu_alt_deleteqso),
-    (mrText: RC_INITIALEX; mrId: menu_alt_initialexhange),
-    (mrText: RC_TOOGLEST; mrId: menu_alt_tooglesidetone),
-    (mrText: RC_TOOGLEAS; mrId: menu_alt_toogleautosend),
-    (mrText: '-'; mrId: 0),
+    (mrText: ''; mrId: menu_alt_p),
+    (mrText: ''; mrId: menu_alt_autocq),
+    (mrText: ''; mrId: menu_alt_tooglerigs),
+    (mrText: ''; mrId: menu_alt_cwspeed),
+    (mrText: ''; mrId: menu_alt_settime),
+    (mrText: ''; mrId: menu_alt_banddown),
+    (mrText: ''; mrId: menu_alt_init_qso),
+    (mrText: '';         mrId: menu_alt_x),
+    (mrText: ''; mrId: menu_alt_deleteqso),
+    (mrText: ''; mrId: menu_alt_initialexhange),
+    (mrText: ''; mrId: menu_alt_tooglesidetone),
+    (mrText: ''; mrId: menu_alt_toogleautosend),
+    (mrText: ''; mrId: 0),
 
 
 
  //
 
-    (mrText: 'Ctrl-'; mrId: MAXWORD),
+    (mrText: ''; mrId: MAXWORD),
  //{
-    (mrText: RC_SENDKEYBOARD; mrId: menu_ctrl_sendkeyboardinput),
-    (mrText: RC_CLEARMSHEET; mrId: menu_ctrl_clearmultsheet),
+    (mrText: ''; mrId: menu_ctrl_sendkeyboardinput),
+    (mrText: ''; mrId: menu_ctrl_clearmultsheet),
 //    (mrText: RC_DAQSLINT; mrId: menu_ctrl_decAQSLinterval),  //n4af 04.37.10
  //   (mrText: RC_IAQSLINT; mrId: menu_ctrl_incAQSLinterval),   //n4af 04.37.10
-    (mrText: RC_OPTIONS; mrId: menu_options),
-    (mrText: RC_CLEARDUPES; mrId: menu_ctrl_cleardupesheet),
-    (mrText: RC_VIEWEDITLOG; mrId: menu_ctrl_viewlogdat),
-    (mrText: RC_NOTE; mrId: menu_ctrl_note),
+    (mrText: ''; mrId: menu_options),
+    (mrText: ''; mrId: menu_ctrl_cleardupesheet),
+    (mrText: ''; mrId: menu_ctrl_viewlogdat),
+    (mrText: ''; mrId: menu_ctrl_note),
 //    (mrText: RC_MISSMULTSREP; mrId: menu_ctrl_missmultsreport),  //n4af 04/37.10
 //    (mrText:  'PTT'; mrId: menu_ctrl_ptt),
-    (mrText:  'Rotor control'; mrId: menu_ctrl_redoposscalls),  // 4.54.5
-    (mrText: RC_QTCFUNCTIONS; mrId: menu_ctrl_qtcfunctions),
-    (mrText: RC_RECALLLASTENT; mrId: menu_ctrl_recalllastentry),
-    (mrText: RC_SHDX_CALLSIGN; mrId: menu_ctrl_shdxcallsign),
+    (mrText:  ''; mrId: menu_ctrl_redoposscalls),  // 4.54.5
+    (mrText: ''; mrId: menu_ctrl_qtcfunctions),
+    (mrText: ''; mrId: menu_ctrl_recalllastentry),
+    (mrText: ''; mrId: menu_ctrl_shdxcallsign),
 //    (mrText: RC_VIEWPAKSPOTS; mrId: menu_ctrl_viewpacketspots),
-    (mrText: RC_EXECONFIGFILE; mrId: menu_ctrl_execute_config),
-    (mrText: RC_REFRESHBM; mrId: menu_ctrl_refreshbandmap),
-    (mrText: RC_CURSORINBM; mrId: menu_ctrl_cursorinbandmap),
-    (mrText: RC_QSOWITHNOCW; mrId: menu_ctrl_logqsowithoutcw),
-    (mrText: RC_CURSORTELNET; mrId: menu_ctrl_cursorintelnet),
-    (mrText: RC_ADDBANDMAPPH; mrId: menu_ctrl_PlaceHolder),
+    (mrText: ''; mrId: menu_ctrl_execute_config),
+    (mrText: ''; mrId: menu_ctrl_refreshbandmap),
+    (mrText: ''; mrId: menu_ctrl_cursorinbandmap),
+    (mrText: ''; mrId: menu_ctrl_logqsowithoutcw),
+    (mrText: ''; mrId: menu_ctrl_cursorintelnet),
+    (mrText: ''; mrId: menu_ctrl_PlaceHolder),
 
-    (mrText: RC_CT1BOHIS; mrId: menu_ctrl_ct1bohscreen),
-    (mrText: RC_ADDINFO; mrId: MAXWORD - 1),
+    (mrText: ''; mrId: menu_ctrl_ct1bohscreen),
+    (mrText: ''; mrId: MAXWORD - 1),
   //{
-    (mrText: RC_AI_QSONUMBER; mrId: menu_ctrl_showQSONumber),
-    (mrText: RC_CALLSIGN; mrId: menu_ctrl_showCallsign),
-    (mrText: RC_AI_CWSPEED; mrId: menu_ctrl_showSpeed),
-    (mrText: RC_BAND; mrId: menu_ctrl_showBand),
+    (mrText: ''; mrId: menu_ctrl_showQSONumber),
+    (mrText: ''; mrId: menu_ctrl_showCallsign),
+    (mrText: ''; mrId: menu_ctrl_showSpeed),
+    (mrText: ''; mrId: menu_ctrl_showBand),
   //}
 
  //}
 
-    (mrText: RC_COMMANDS; mrId: MAXWORD),
+    (mrText: ''; mrId: MAXWORD),
  //{
 
-    (mrText: RC_SPLITOFF; mrId: menu_ctrl_SplitOff),      // n4af 4.47.3
+    (mrText: ''; mrId: menu_ctrl_SplitOff),      // n4af 4.47.3
 
-    (mrText: RC_FOCUSINMW; mrId: menu_mainwindow_setfocus),
-    (mrText: RC_TOGGLEINSERT; mrId: menu_insertmode),
-    (mrText: RC_ESCAPE; mrId: menu_escape),
-    (mrText: '-'; mrId: 0),
-    (mrText: RC_CWSPEEDUP; mrId: menu_cwspeedup),
-    (mrText: RC_CWSPEEDDOWN; mrId: menu_cwspeeddown),
-    (mrText: '-'; mrId: 0),
-    (mrText: RC_CWSPUPIR; mrId: menu_inactiveradio_cwspeedup),
-    (mrText: RC_CWSPDNIR; mrId: menu_inactiveradio_cwspeeddown),
-    (mrText: '-'; mrId: 0),
-    (mrText: RC_CQMODE; mrId: menu_cqmode),
-    (mrText: RC_SEARCHPOUNCE; mrId: menu_spmode_ortab),
-    (mrText: '-'; mrId: 0),
-    (mrText: RC_LOGIN; mrId: menu_login),
-    (mrText: '-'; mrId: 0),
-    (mrText: RC_SENDSPOT; mrId: menu_ctrl_sendspot),
-    (mrText: RC_RESCORE; mrId: menu_rescore),
+    (mrText: ''; mrId: menu_mainwindow_setfocus),
+    (mrText: ''; mrId: menu_insertmode),
+    (mrText: ''; mrId: menu_escape),
+    (mrText: ''; mrId: 0),
+    (mrText: ''; mrId: menu_cwspeedup),
+    (mrText: ''; mrId: menu_cwspeeddown),
+    (mrText: ''; mrId: 0),
+    (mrText: ''; mrId: menu_inactiveradio_cwspeedup),
+    (mrText: ''; mrId: menu_inactiveradio_cwspeeddown),
+    (mrText: ''; mrId: 0),
+    (mrText: ''; mrId: menu_cqmode),
+    (mrText: ''; mrId: menu_spmode_ortab),
+    (mrText: ''; mrId: 0),
+    (mrText: ''; mrId: menu_login),
+    (mrText: ''; mrId: 0),
+    (mrText: ''; mrId: menu_ctrl_sendspot),
+    (mrText: ''; mrId: menu_rescore),
  //}
 
-    (mrText: RC_TOOLS; mrId: MAXWORD),
+    (mrText: ''; mrId: MAXWORD),
  //{
-    (mrText: RC_BEACONSM; mrId: menu_beaconsmonitor),
-    (mrText: RC_WINCONTROL; mrId: menu_windowsmanager),
-    (mrText: RC_SETTIMEZONE; mrId: menu_settimezone),
-    (mrText: RC_DEVICEMANAGER; mrId: menu_run_devicemanager),
-    (mrText: '-'; mrId: 0),
-    (mrText: RC_PING; mrId: menu_pingserver),
-    (mrText: RC_RUNSERVER; mrId: menu_runserver),
-    (mrText: '-'; mrId: 0),
-    (mrText: RC_DVKVOLCONTROL; mrId: menu_volume_control),
-    (mrText: RC_RECCONTROL; mrId: menu_recording_control),
-    (mrText: '-'; mrId: 0),
+    (mrText: ''; mrId: menu_beaconsmonitor),
+    (mrText: ''; mrId: menu_windowsmanager),
+    (mrText: ''; mrId: menu_settimezone),
+    (mrText: ''; mrId: menu_run_devicemanager),
+    (mrText: ''; mrId: 0),
+    (mrText: ''; mrId: menu_pingserver),
+    (mrText: ''; mrId: menu_runserver),
+    (mrText: ''; mrId: 0),
+    (mrText: ''; mrId: menu_volume_control),
+    (mrText: ''; mrId: menu_recording_control),
+    (mrText: ''; mrId: 0),
     (mrText: ''; mrId: menu_WA7BNM_calendar),
     (mrText: ''; mrId: menu_qrzru_calendar),
-    (mrText: '-'; mrId: 0),
-    (mrText: RC_CALCULATOR; mrId: item_calculator),
-    (mrText: '-'; mrId: 0),
-    (mrText: RC_RESET_RADIO_PORTS; mrId: menu_reset_radio_ports),
-    (mrText: 'Download POTA Parks'; mrId: menu_download_pota_parks),  // issue #864
-    (mrText: 'Repeat POTA Parks (2nd Op)'; mrId: menu_repeat_pota_parks),
-    (mrText: 'HamScore: Resync log from scratch'; mrId: menu_hamscore_resync),  // Issue #783
-    (mrText: 'Edit Cabrillo Summary...'; mrId: menu_edit_cabrillo_summary),     // Issue #914
+    (mrText: ''; mrId: 0),
+    (mrText: ''; mrId: item_calculator),
+    (mrText: ''; mrId: 0),
+    (mrText: ''; mrId: menu_reset_radio_ports),
+    (mrText: ''; mrId: menu_download_pota_parks),  // issue #864
+    (mrText: ''; mrId: menu_repeat_pota_parks),
+    (mrText: ''; mrId: menu_hamscore_resync),  // Issue #783
+    (mrText: ''; mrId: menu_edit_cabrillo_summary),     // Issue #914
  //}
-    (mrText: '-'; mrId: 0),
-    (mrText: RC_3830; mrId: menu_3830_scores_posting),
-    (mrText: RC_3830_arrl; mrId: menu_arrl_submit),    // 4.53.3
-    (mrText: '-'; mrId: 0),
-    (mrText: RC_NET; mrId: MAXWORD),
+    (mrText: ''; mrId: 0),
+    (mrText: ''; mrId: menu_3830_scores_posting),
+    (mrText: ''; mrId: menu_arrl_submit),    // 4.53.3
+    (mrText: ''; mrId: 0),
+    (mrText: ''; mrId: MAXWORD),
  //{
-    (mrText: RC_TIMESYN; mrId: menu_alt_setnettime),
-    (mrText: RC_SENDMESSAGE; mrId: menu_send_message),
-    (mrText: RC_SYNLOG; mrId: menu_getserverlog),
-    (mrText: '-'; mrId: 0),
-    (mrText: RC_CLEARALLLOGS; mrId: menu_clearserverlog),
-    (mrText: '-'; mrId: 0),
-    (mrText: RC_NET_CLDUPE; mrId: menu_clear_dupesheet_in_network),
-    (mrText: RC_NET_CLMULT; mrId: menu_clear_multsheet_in_network),
+    (mrText: ''; mrId: menu_alt_setnettime),
+    (mrText: ''; mrId: menu_send_message),
+    (mrText: ''; mrId: menu_getserverlog),
+    (mrText: ''; mrId: 0),
+    (mrText: ''; mrId: menu_clearserverlog),
+    (mrText: ''; mrId: 0),
+    (mrText: ''; mrId: menu_clear_dupesheet_in_network),
+    (mrText: ''; mrId: menu_clear_multsheet_in_network),
  //}
 
-    (mrText: HELP_WORD; mrId: MAXWORD),        // n4af 4.42.5
+    (mrText: ''; mrId: MAXWORD),        // n4af 4.42.5
  //{
 {$IFDEF LANG_RUS}
-    (mrText: RC_CONTENTS; mrId: menu_contents),
-    (mrText: '-'; mrId: 0),
+    (mrText: ''; mrId: menu_contents),
+    (mrText: ''; mrId: 0),
 {$ENDIF}
 //    (mrText: RC_SEND_BUG; mrId: menu_send_bug),
 //    (mrText: '-'; mrId: 0),
-    (mrText: RC_HOMEPAGE; mrId: menu_home_page),
-    (mrText: RC_Download; mrID: menu_download_latest_cty_dat), // 4.75.3
-    (mrText: 'Download TRMASTER.DTA'; mrId: menu_download_trmaster),  // 2026-08-16
-    (mrText: 'Download POTA Parks'; mrId: menu_download_pota_parks),  // issue #864
+    (mrText: ''; mrId: menu_home_page),
+    (mrText: ''; mrID: menu_download_latest_cty_dat), // 4.75.3
+    (mrText: ''; mrId: menu_download_trmaster),  // 2026-08-16
+    (mrText: ''; mrId: menu_download_pota_parks),  // issue #864
     // A LITERAL caption, like the two above it.  A new RC_ would mean editing
     // eleven per-language ANSI files -- NY4I's by hand, and the thing
     // resourcestring is replacing anyway; a resourcestring also cannot appear
     // in this typed-constant array.  These belong together in the i18n sweep.
-    (mrText: 'Check for Updates'; mrId: menu_check_latest_version),  // 2026-08-22
+    (mrText: ''; mrId: menu_check_latest_version),  // 2026-08-22
     {$IFDEF LANG_RUS}
-    (mrText: RC_WIKI; mrId: menu_wiki_rus),
+    (mrText: ''; mrId: menu_wiki_rus),
 {$ENDIF}
 //    (mrText: 'History.txt'; mrId: menu_historytxt),
-    (mrText: RC_ABOUT; mrId: menu_about)
+    (mrText: ''; mrId: menu_about)
 
     );
+
+const
+  { Back to const: only T_MENU_ARRAY above had to become a var, because only
+    its captions come from resourcestrings. E_MENU_ARRAY's are literals. }
 
   // B_MENU_ARRAY -- the band map context menu -- was here.  It is a TPopupMenu
   // in uBandMapForm.lfm now, so the items can be seen and edited in the form
@@ -368,7 +392,208 @@ const
 
 implementation
 
+procedure InitializeMenuText;
+{ Menu captions, assigned at RUN time so a translated resourcestring reaches
+  them. Call after the translation is loaded and before the menu is built. }
+var
+   i: integer;
+begin
+   i := -1;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_FILE;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_CLEARLOG;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_OPENLOGDIR;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_IMPORT;
+   Inc(i); T_MENU_ARRAY[i].mrText := 'ADIF';
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_EXPORT;
+   Inc(i); T_MENU_ARRAY[i].mrText := 'ADIF';
+   Inc(i); T_MENU_ARRAY[i].mrText := 'CSV';
+   Inc(i); T_MENU_ARRAY[i].mrText := 'Cabrillo';
+   Inc(i); T_MENU_ARRAY[i].mrText := 'EDI';
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_INIEXLIST;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_NOTES;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_REPORTS;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_ALLCALLS;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_BANDCHANGES;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_CONTLIST;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_FCC;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_FCZ;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_QSOBYCOUNTRY;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_SCOREBYHOUR;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_SUMMARY;
+   Inc(i); T_MENU_ARRAY[i].mrText := '3830 Score';
+   Inc(i); T_MENU_ARRAY[i].mrText := '';
+   Inc(i); T_MENU_ARRAY[i].mrText := '-';
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_EXIT;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_SETTINGS;
+   Inc(i); T_MENU_ARRAY[i].mrText := '-';
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_COLORS;
+   Inc(i); T_MENU_ARRAY[i].mrText := 'Winkeyer';
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_CATANDCW;
+   Inc(i); T_MENU_ARRAY[i].mrText := '-';
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_PROGRAMMES;
+   Inc(i); T_MENU_ARRAY[i].mrText := 'LPT';
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_WINDOWS;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_BANDMAP;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_DUPESHEET;
+   Inc(i); T_MENU_ARRAY[i].mrText := TC_RADIO1;
+   Inc(i); T_MENU_ARRAY[i].mrText := TC_RADIO2;
+   Inc(i); T_MENU_ARRAY[i].mrText := '';
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_FKEYS;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_TRMASTER;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_REMMULTS;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_RM_DEFAULT;
+   Inc(i); T_MENU_ARRAY[i].mrText := '-';
+   Inc(i); T_MENU_ARRAY[i].mrText := 'DX';
+   Inc(i); T_MENU_ARRAY[i].mrText := 'Domestic';
+   Inc(i); T_MENU_ARRAY[i].mrText := 'Zones';
+   Inc(i); T_MENU_ARRAY[i].mrText := 'Prefixes';
+   Inc(i); T_MENU_ARRAY[i].mrText := '';
+   Inc(i); T_MENU_ARRAY[i].mrText := TC_RADIO1;
+   Inc(i); T_MENU_ARRAY[i].mrText := TC_RADIO2;
+   Inc(i); T_MENU_ARRAY[i].mrText := '-';
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_TELNET;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_NETWORK;
+   Inc(i); T_MENU_ARRAY[i].mrText := '-';
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_INTERCOM;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_POSTSCORETOGS;
+   Inc(i); T_MENU_ARRAY[i].mrText := 'HamScore RTC Status';
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_STATIONS;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_MP3REC;
+   Inc(i); T_MENU_ARRAY[i].mrText := 'MMTTY';
+   Inc(i); T_MENU_ARRAY[i].mrText := 'Alt-';
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_INC_TIME;
+   Inc(i); T_MENU_ARRAY[i].mrText := '+1'#9'Alt+1';
+   Inc(i); T_MENU_ARRAY[i].mrText := '+2'#9'Alt+2';
+   Inc(i); T_MENU_ARRAY[i].mrText := '+3'#9'Alt+3';
+   Inc(i); T_MENU_ARRAY[i].mrText := '+4'#9'Alt+4';
+   Inc(i); T_MENU_ARRAY[i].mrText := '+5'#9'Alt+5';
+   Inc(i); T_MENU_ARRAY[i].mrText := '+6'#9'Alt+6';
+   Inc(i); T_MENU_ARRAY[i].mrText := '+7'#9'Alt+7';
+   Inc(i); T_MENU_ARRAY[i].mrText := '+8'#9'Alt+8';
+   Inc(i); T_MENU_ARRAY[i].mrText := '+9'#9'Alt+9';
+   Inc(i); T_MENU_ARRAY[i].mrText := '+10'#9'Alt+0';
+   Inc(i); T_MENU_ARRAY[i].mrText := '-';
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_wkMode;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_BANDUP;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_AUTOCQRESUME;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_DUPECHECK;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_EDIT;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_BACKUPLOG;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_SWAPMULTVIEW;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_INCNUMBER;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_TOOGLEMB;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_KILLCW;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_SEARCHLOG;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_SSBCWMODE;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_Download;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_ALTP;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_AUTOCQ;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_TOOGLERIGS;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_CWSPEED;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_SETSYSDT;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_BANDDOWN;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_INITIALIZE;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_ALTX;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_DELETELASTQSO;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_INITIALEX;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_TOOGLEST;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_TOOGLEAS;
+   Inc(i); T_MENU_ARRAY[i].mrText := '-';
+   Inc(i); T_MENU_ARRAY[i].mrText := 'Ctrl-';
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_SENDKEYBOARD;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_CLEARMSHEET;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_OPTIONS;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_CLEARDUPES;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_VIEWEDITLOG;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_NOTE;
+   Inc(i); T_MENU_ARRAY[i].mrText := 'Rotor control';
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_QTCFUNCTIONS;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_RECALLLASTENT;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_SHDX_CALLSIGN;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_EXECONFIGFILE;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_REFRESHBM;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_CURSORINBM;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_QSOWITHNOCW;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_CURSORTELNET;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_ADDBANDMAPPH;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_CT1BOHIS;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_ADDINFO;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_AI_QSONUMBER;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_CALLSIGN;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_AI_CWSPEED;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_BAND;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_COMMANDS;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_SPLITOFF;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_FOCUSINMW;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_TOGGLEINSERT;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_ESCAPE;
+   Inc(i); T_MENU_ARRAY[i].mrText := '-';
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_CWSPEEDUP;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_CWSPEEDDOWN;
+   Inc(i); T_MENU_ARRAY[i].mrText := '-';
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_CWSPUPIR;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_CWSPDNIR;
+   Inc(i); T_MENU_ARRAY[i].mrText := '-';
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_CQMODE;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_SEARCHPOUNCE;
+   Inc(i); T_MENU_ARRAY[i].mrText := '-';
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_LOGIN;
+   Inc(i); T_MENU_ARRAY[i].mrText := '-';
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_SENDSPOT;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_RESCORE;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_TOOLS;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_BEACONSM;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_WINCONTROL;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_SETTIMEZONE;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_DEVICEMANAGER;
+   Inc(i); T_MENU_ARRAY[i].mrText := '-';
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_PING;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_RUNSERVER;
+   Inc(i); T_MENU_ARRAY[i].mrText := '-';
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_DVKVOLCONTROL;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_RECCONTROL;
+   Inc(i); T_MENU_ARRAY[i].mrText := '-';
+   Inc(i); T_MENU_ARRAY[i].mrText := '';
+   Inc(i); T_MENU_ARRAY[i].mrText := '';
+   Inc(i); T_MENU_ARRAY[i].mrText := '-';
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_CALCULATOR;
+   Inc(i); T_MENU_ARRAY[i].mrText := '-';
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_RESET_RADIO_PORTS;
+   Inc(i); T_MENU_ARRAY[i].mrText := 'Download POTA Parks';
+   Inc(i); T_MENU_ARRAY[i].mrText := 'Repeat POTA Parks (2nd Op)';
+   Inc(i); T_MENU_ARRAY[i].mrText := 'HamScore: Resync log from scratch';
+   Inc(i); T_MENU_ARRAY[i].mrText := 'Edit Cabrillo Summary...';
+   Inc(i); T_MENU_ARRAY[i].mrText := '-';
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_3830;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_3830_arrl;
+   Inc(i); T_MENU_ARRAY[i].mrText := '-';
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_NET;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_TIMESYN;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_SENDMESSAGE;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_SYNLOG;
+   Inc(i); T_MENU_ARRAY[i].mrText := '-';
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_CLEARALLLOGS;
+   Inc(i); T_MENU_ARRAY[i].mrText := '-';
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_NET_CLDUPE;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_NET_CLMULT;
+   Inc(i); T_MENU_ARRAY[i].mrText := HELP_WORD;
+{$IFDEF LANG_RUS}
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_CONTENTS;
+   Inc(i); T_MENU_ARRAY[i].mrText := '-';
+{$ENDIF}
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_HOMEPAGE;
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_Download;
+   Inc(i); T_MENU_ARRAY[i].mrText := 'Download TRMASTER.DTA';
+   Inc(i); T_MENU_ARRAY[i].mrText := 'Download POTA Parks';
+   Inc(i); T_MENU_ARRAY[i].mrText := 'Check for Updates';
+{$IFDEF LANG_RUS}
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_WIKI;
+{$ENDIF}
+   Inc(i); T_MENU_ARRAY[i].mrText := RC_ABOUT;
+end;
+
 function CreateTR4WMenu(m: PMenuRecord; s: integer; popup: boolean): HMENU;
+
 var
   i                                     : integer;
   uFlags                                : UINT;

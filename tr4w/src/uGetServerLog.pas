@@ -38,7 +38,8 @@ uses
   uNet,
   LogDupe,
   Tree
-  ;
+  ,
+  uTR4WStrings;
 procedure ReplaceLogByServerLog(Replace: boolean);
 function GetServerLogDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 procedure RunSyncThread;

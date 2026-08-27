@@ -46,7 +46,8 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, StdCtrls,
   LCLType,   // VK_ESCAPE
-  VC;   // MesWindowType -- named in the class declaration below, so it belongs
+  VC,   // MesWindowType -- named in the class declaration below, so it belongs
+  uTR4WStrings;
         // in the INTERFACE uses, not the implementation one
 
 type

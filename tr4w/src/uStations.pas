@@ -34,7 +34,8 @@ uses
   LogDupe,
   LogWind,
   Messages
-  ;
+  ,
+  uTR4WStrings;
 
 procedure FillStationsColumn;
 function AddCallsignToStationColumn(Call: CallString): integer;
@@ -280,7 +281,7 @@ begin
      end;
   StationsEndUpdate;
 
-  TF.Format(wsprintfBuffer, TC_STATIONSINMODE, ModeStringArray[ActiveMode]);
+  TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_STATIONSINMODE)), ModeStringArray[ActiveMode]);
   StationsSetCaption(string(PAnsiChar(@wsprintfBuffer)));
 end;
 

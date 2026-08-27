@@ -19,7 +19,8 @@ unit uPostScoresForm;
 interface
 
 uses
-   Classes, SysUtils, LCLType, Forms, Controls, StdCtrls, ExtCtrls;
+   Classes, SysUtils, LCLType, Forms, Controls, StdCtrls, ExtCtrls,
+  uTR4WStrings;
 
 type
    TfrmPostScores = class(TForm)

@@ -205,8 +205,8 @@ function tSetDlgItemIntFalse(hDlg: HWND; nIDDlgItem: integer; uValue: UINT): BOO
 function tSetDlgItemIntSigned(hDlg: HWND; nIDDlgItem: integer; uValue: integer): BOOL; stdcall;
 function CreateModalDialog(Width, Height: integer; ParentHWND: HWND; lpDialogFunc: TFNDlgProc; dwInitParam: lParam): integer;
 function CreateListBox(X, Y, nWidth, nHeight: Word; hwndParent: HWND; HMENU: HMENU): HWND;
-function CreateButton(dwStyle: Cardinal; lpWindowName: PAnsiChar; X, Y, nWidth: integer; hwndParent: HWND; HMENU: HMENU): HWND;
-function CreateStatic(lpWindowName: PAnsiChar; X, Y, nWidth: integer; hwndParent: HWND; HMENU: HMENU): HWND;
+function CreateButton(dwStyle: Cardinal; lpWindowName: string; X, Y, nWidth: integer; hwndParent: HWND; HMENU: HMENU): HWND;
+function CreateStatic(lpWindowName: string; X, Y, nWidth: integer; hwndParent: HWND; HMENU: HMENU): HWND;
 function CreateEdit(dwStyle: Cardinal; X, Y, Width, Height: integer; hwndParent: HWND; HMENU: HMENU): HWND;
 function CreateListView2(X, Y, nWidth, nHeight: Word; hwndParent: HWND): HWND;
 function CreateComboBox(hwndParent: HWND; HMENU: HMENU): HWND;
@@ -218,6 +218,19 @@ procedure GetTime(var Hour, Minute, Second, Sec100: Word);
 procedure GetDate(var Year, Month, Day, DayOfWeek: Word);
 
 {$EXTERNALSYM Format}
+{ THESE ARE cdecl wsprintf WRAPPERS, and every parameter is 8-bit.
+
+  So a caller passing a TC_/RC_ constant as the format string has to write
+  PAnsiChar(AnsiString(TC_WHATEVER)) since 2026-08-27, when those constants
+  became resourcestrings. There are 38 such call sites and the cast is on the
+  FORMAT STRING only -- the buffers being written are AnsiChar arrays, so the
+  whole path is 8-bit and the conversion changes nothing that was not already
+  8-bit. It does mean a non-Latin format string is degraded here, which is a
+  real limit of the Win32 display path and goes away with it.
+
+  Prefer SysUtils.Format in new code: it takes a string, takes its arguments
+  as an array of const rather than by cdecl varargs, and cannot be handed the
+  wrong argument type without the compiler noticing. }
 function Format(Output: PAnsiChar; Format: PAnsiChar; c: AnsiChar): integer; overload; cdecl; overload;
 
 function Format(Output: PAnsiChar; Format: PAnsiChar; s1: PAnsiChar; u1: integer; u2: integer; u3: integer; u4: integer; u5: integer; u6: integer; s2: PAnsiChar; s3: PAnsiChar): integer; overload; cdecl; overload;
@@ -1305,15 +1318,21 @@ begin
   tWM_SETFONT(Result, MSSansSerifFont);
 end;
 
-function CreateStatic(lpWindowName: PAnsiChar; X, Y, nWidth: integer; hwndParent: HWND; HMENU: HMENU): HWND;
+function CreateStatic(lpWindowName: string; X, Y, nWidth: integer; hwndParent: HWND; HMENU: HMENU): HWND;
 begin
-  Result := CreateWindowA('Static', lpWindowName, SS_SUNKEN or SS_center or WS_CHILD or WS_VISIBLE, X, Y, nWidth, 23 {nHeight}, hwndParent, HMENU, hInstance, nil);
+  // W, matching CreateButton and CreateEdit. lpWindowName is a string, and
+  // the A entry point would cost a lossy trip through the machine codepage.
+  Result := CreateWindowW('Static', PWideChar(lpWindowName), SS_SUNKEN or SS_center or WS_CHILD or WS_VISIBLE, X, Y, nWidth, 23 {nHeight}, hwndParent, HMENU, hInstance, nil);
   tWM_SETFONT(Result, MSSansSerifFont);
 end;
 
-function CreateButton(dwStyle: Cardinal; lpWindowName: PAnsiChar; X, Y, nWidth: integer; hwndParent: HWND; HMENU: HMENU): HWND;
+function CreateButton(dwStyle: Cardinal; lpWindowName: string; X, Y, nWidth: integer; hwndParent: HWND; HMENU: HMENU): HWND;
 begin
-  Result := CreateWindowExA(0, 'Button', lpWindowName, dwStyle or WS_CHILD or BS_TEXT or WS_VISIBLE or WS_TABSTOP, X, Y, nWidth, 23 {nHeight}, hwndParent, HMENU, hInstance, nil);
+  // CreateWindowExW, matching CreateEdit below. lpWindowName is a string --
+  // UnicodeString here -- and the A entry point would need a lossy round trip
+  // through the machine codepage, which is precisely what would mangle an
+  // accented button caption in the languages this is all for.
+  Result := CreateWindowExW(0, 'Button', PWideChar(lpWindowName), dwStyle or WS_CHILD or BS_TEXT or WS_VISIBLE or WS_TABSTOP, X, Y, nWidth, 23 {nHeight}, hwndParent, HMENU, hInstance, nil);
   tWM_SETFONT(Result, MSSansSerifFont);
 end;
 

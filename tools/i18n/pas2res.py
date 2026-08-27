@@ -43,6 +43,50 @@ import pasconsts
 
 UNIT_NAME = "uTR4WStrings"
 
+# THESE SIXTEEN CANNOT BE resourcestring, AND THE COMPILER SAYS SO.
+#
+# A resourcestring is a VARIABLE the run time replaces; a typed constant is
+# folded at compile time. So a string used to initialise one cannot be a
+# resourcestring:
+#
+#     tContinentArray : array[ContinentType] of PAnsiChar = (TC_C9_UNKNOWN, ...)
+#     (mweName: 'FOOT SWITCH'; ... mweText: TC_FOOTSW; ...)
+#     ( Text: RC_BAND; Width: 4; ... )
+#
+# FPC reports "Incompatible types: got AnsiString expected PChar", which is
+# accurate and reads like a cast problem rather than a lifetime one.
+#
+# They are emitted as `const` in the same unit, under the same names, so every
+# call site is unchanged and nothing else in the cut-over has to care. The cost
+# is that these sixteen are NOT TRANSLATABLE until the three tables that hold
+# them are filled at run time instead of being typed constants -- two main-window
+# labels, six column headings and the eight continent names.
+#
+# THE LIST IS SELF-POLICING. Add a seventeenth use in a constant table and the
+# build fails on that exact line; it cannot rot silently.
+MUST_STAY_CONST = set()   # EMPTY, and that is the point -- see below.
+#
+# It held sixteen names until 2026-08-27. Each initialised a TYPED CONSTANT
+# of PAnsiChar -- the continent array, two main-window element rows, six log
+# column headings -- and a typed constant is folded at compile time, where a
+# resourcestring is a variable replaced at run time. So those sixteen could
+# not move, and the compiler said so rather than shipping English silently.
+#
+# All four such tables are filled at run time now (VC.InitializeStringTables
+# and uNet.InitializeNetworkColumnTitles), so nothing has to stay behind.
+#
+# TWO WARNINGS FOR WHOEVER ADDS THE NEXT ONE.
+#
+# The list was an UNDERCOUNT while it stood, because it was written from a
+# build that stopped at the first unit with errors. MainUnit's PCharDayTags
+# had the same defect and never appeared here. A partial build is a partial
+# list; walk the tables, do not trust the last error log.
+#
+# And PAnsiChar is only the half the compiler catches. A table whose field
+# is `string` accepts a resourcestring, folds the English in, and TRANSLATES
+# NOTHING -- no error, no warning. uMenu holds 206 such rows. Silence there
+# means the fold happened, not that it worked.
+
 HEADER = """unit {unit};
 
 {{
@@ -71,8 +115,6 @@ HEADER = """unit {unit};
 }}
 
 interface
-
-resourcestring
 """
 
 FOOTER = """
@@ -111,12 +153,57 @@ def build(eng_path, src_root, lang_dir):
    keep = code_referenced_rc(src_root, lang_dir, {d.name for d in rc})
    rc_kept = [d for d in rc if d.name in keep]
 
-   return tc, rc_kept, len(rc) - len(rc_kept)
+   # THE FIVE THAT CARRY NEITHER PREFIX, and were silently dropped until
+   # 2026-08-27 because this tool only ever asked for TC_ and RC_:
+   #
+   #   uMenu.pas(581,38) Error: Identifier not found "HELP_WORD"
+   #
+   # CANCEL_WORD, CLOSE_WORD, EXIT_WORD, HELP_WORD and OK_WORD are as
+   # user-facing as anything with a prefix -- they are the button captions --
+   # and a naming convention is not a reason to leave them untranslated. Taken
+   # by suffix rather than by a hardcoded list, so a sixth is picked up too;
+   # RC_EDIT_WORD already comes through the RC_ pass and must not be doubled.
+   allsyms, _lines, _form = pasconsts.parse_lang_file(eng_path, prefix="")
+   words = [d for d in allsyms
+            if d.name and d.name.endswith("_WORD")
+            and not d.name.upper().startswith(("TC_", "RC_"))]
+
+   return tc, rc_kept, len(rc) - len(rc_kept), words
 
 
 def emit(decls_groups):
    out = [HEADER.format(unit=UNIT_NAME, unitlower=UNIT_NAME.lower())]
+
+   # The const block first -- see MUST_STAY_CONST for why these sixteen cannot
+   # be resourcestrings. Same unit and same names, so no call site knows.
+   fixed = [d for _t, decls in decls_groups for d in decls
+            if d.name.upper() in MUST_STAY_CONST]
+   if fixed:
+      out.append("const\n"
+                 "   { NOT TRANSLATABLE YET, and the compiler is what says so.\n"
+                 "     Each of these initialises a TYPED CONSTANT -- the continent\n"
+                 "     array, two main-window element rows, six column headings --\n"
+                 "     and a typed constant is folded at compile time, where a\n"
+                 "     resourcestring is a variable replaced at run time.\n"
+                 "\n"
+                 "     They become translatable when those three tables are filled\n"
+                 "     at run time instead. That also retires the PAnsiChar they are\n"
+                 "     declared as. }\n")
+      width = max(len(d.name) for d in fixed)
+      for d in fixed:
+         out.append("   %-*s = %s;\n" % (width, d.name,
+                                         pasconsts.encode_string_expr(d.value)))
+      out.append("\nresourcestring\n")
+   else:
+      # NOT optional just because the const block above is empty. This used to
+      # be emitted only inside that branch, so emptying MUST_STAY_CONST left a
+      # unit whose declarations followed `interface` with no section keyword:
+      #   uTR4WStrings.pas(34,4) Fatal: Syntax error, "IMPLEMENTATION" expected
+      #   but "identifier TC_TRANSLATION_LANGUAGE" found
+      out.append("\nresourcestring\n")
+
    for title, decls in decls_groups:
+      decls = [d for d in decls if d.name.upper() not in MUST_STAY_CONST]
       out.append("\n   { %s }\n\n" % title)
       width = max((len(d.name) for d in decls), default=0)
       last_context = None
@@ -150,14 +237,16 @@ def main():
       print("no English table at " + eng)
       return 2
 
-   tc, rc, dropped = build(eng, src_root, lang_dir)
+   tc, rc, dropped, words = build(eng, src_root, lang_dir)
    print("  TC_ emitted            : %4d" % len(tc))
    print("  RC_ emitted (code-used): %4d" % len(rc))
    print("  RC_ left behind (.rc)  : %4d" % dropped)
-   print("  total resourcestrings  : %4d" % (len(tc) + len(rc)))
+   print("  unprefixed *_WORD      : %4d" % len(words))
+   print("  total resourcestrings  : %4d" % (len(tc) + len(rc) + len(words)))
 
    text = emit([("TC_ -- messages, prompts and labels", tc),
-                ("RC_ -- reachable from Pascal code", rc)])
+                ("RC_ -- reachable from Pascal code", rc),
+                ("Unprefixed -- the shared button captions", words)])
 
    nonascii = sorted({c for c in text if ord(c) > 127})
    if nonascii:

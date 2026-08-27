@@ -47,7 +47,8 @@ uses
    ComCtrls,   // TTreeView / TTreeNode -- see TNavNode below
    Forms,      // TCustomForm -- see ShowModalOverWin32Parent
    LCLType,    // HWND
-   Dialogs;    // InputQuery -- see AskForText
+   Dialogs,    // InputQuery -- see AskForText
+  uTR4WStrings;
 
 resourcestring
    // --- captions ------------------------------------------------------------

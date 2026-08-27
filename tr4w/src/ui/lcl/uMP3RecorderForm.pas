@@ -23,7 +23,8 @@ unit uMP3RecorderForm;
 interface
 
 uses
-   Classes, SysUtils, LCLType, Forms, Controls, StdCtrls, ComCtrls, ExtCtrls;
+   Classes, SysUtils, LCLType, Forms, Controls, StdCtrls, ComCtrls, ExtCtrls,
+  uTR4WStrings;
 
 type
    TfrmMP3Recorder = class(TForm)

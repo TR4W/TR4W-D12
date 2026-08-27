@@ -52,7 +52,8 @@ uses
   LogEdit,
   LogWind,
   Messages
-  ;
+  ,
+  uTR4WStrings;
 
 procedure OpenEditQSOWindow(Parent: HWND);
 
@@ -773,7 +774,7 @@ end;
 
 procedure ShowNote(CE: ContestExchange);
 begin
-  TF.Format(wsprintfBuffer, RC_NOTE + ' :'#13#10#13#10'%s',
+  TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(RC_NOTE + ' :'#13#10#13#10'%s')),
     @EditableQSORXData.Prefix);
   ShowMessageParent(wsprintfBuffer, EditQSOFormHandle);
 end;

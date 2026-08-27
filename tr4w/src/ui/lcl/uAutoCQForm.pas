@@ -53,7 +53,8 @@ unit uAutoCQForm;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, StdCtrls, Spin;
+  Classes, SysUtils, Forms, Controls, StdCtrls, Spin,
+  uTR4WStrings;
 
 type
   TfrmAutoCQ = class(TForm)

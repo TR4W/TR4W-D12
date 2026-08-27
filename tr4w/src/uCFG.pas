@@ -68,7 +68,8 @@ uses
    idGlobal,
    Log4D,
    uExternalLoggerBase
-   ;
+   ,
+  uTR4WStrings;
 
 type
    ArrayRecord = record
@@ -1876,7 +1877,7 @@ begin
                      // Val check below, so the defensive catch for typos is preserved.
                      if CustomCMD = '' then
                         begin
-                        TF.Format(wsprintfBuffer, TC_PARAMETERHASNOVALUE, @Command[1]);
+                        TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_PARAMETERHASNOVALUE)), @Command[1]);
                         showwarning(wsprintfBuffer);
                         logger.Warn('[CheckCommand] %s has no value -- left at its default', [pshortstring(Command)^]);
                         Result := True;

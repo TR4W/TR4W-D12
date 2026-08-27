@@ -34,7 +34,8 @@ uses
   utils_text,
   utils_math,
   uGridDistance
-  ;
+  ,
+  uTR4WStrings;
 
 type
   DistanceDisplayType = (NoDistanceDisplay, DistanceMiles, DistanceKM);

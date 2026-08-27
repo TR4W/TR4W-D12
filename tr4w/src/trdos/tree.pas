@@ -38,7 +38,8 @@ uses
   TF,
   Messages,
   Windows,
-  uBandLookup;  // CalculateBandMode now lives here so it can be unit-tested without tree.pas's dependency cone
+  uBandLookup,  // CalculateBandMode now lives here so it can be unit-tested without tree.pas's dependency cone
+  uTR4WStrings;
 
 var
   tempshowcty                           : Cardinal;
@@ -2834,7 +2835,7 @@ end;
 
 function OkayToDeleteExistingFile(FileName: PAnsiChar): boolean;
 begin
-  TF.Format(wsprintfBuffer, TC_ALREADYEXISTSOKAYTODELETE, FileName);
+  TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_ALREADYEXISTSOKAYTODELETE)), FileName);
   Result := MessageBoxA(0, wsprintfBuffer, 'TR4W', MB_YESNO or MB_ICONWARNING) = IDYES;
 end;
 

@@ -29,7 +29,8 @@ unit uRadioPanelForm;
 interface
 
 uses
-   Classes, SysUtils, LCLType, Forms, Controls, StdCtrls, ExtCtrls, Graphics, VC;
+   Classes, SysUtils, LCLType, Forms, Controls, StdCtrls, ExtCtrls, Graphics, VC,
+  uTR4WStrings;
 
 type
    TfrmRadioPanel = class(TForm)

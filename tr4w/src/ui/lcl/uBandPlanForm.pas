@@ -61,7 +61,8 @@ unit uBandPlanForm;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, StdCtrls, Grids, LCLType;
+  Classes, SysUtils, Forms, Controls, StdCtrls, Grids, LCLType,
+  uTR4WStrings;
 
 const
   // IN THE INTERFACE because FMinColWidth's RANGE is written in terms of

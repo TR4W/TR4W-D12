@@ -44,7 +44,8 @@ uses
    uFactoryRadioBase,
    uRadioElecraftK4,
    uRadioFactory,
-   uRadioRegistry;
+   uRadioRegistry,
+  uTR4WStrings;
 
 var
    Icom_Filter_Width: integer;     // n4af 4.43.4

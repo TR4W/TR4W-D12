@@ -31,7 +31,8 @@ uses
   Messages,
   Tree,
   LogRadio,
-  LogSCP;
+  LogSCP,
+  uTR4WStrings;
 
 const
   MAXCALLSIGNSINLIST                    = 100000;           // 4.115.6
@@ -576,7 +577,7 @@ begin
   // Composed from TC_DUPESHEET rather than a new literal, so the only English
   // here is still the one that was already translated.
   rn := AnsiString(Radio.RadioName);
-  TF.Format(wsprintfBuffer, '%s ' + TC_DUPESHEET,
+  TF.Format(wsprintfBuffer, PAnsiChar(AnsiString('%s ' + TC_DUPESHEET)),
     PAnsiChar(rn), BandStringsArray[Band], ModeStringArray[Mode]);
 //  asm add esp,16  end;
   frm.Caption := string(PAnsiChar(@wsprintfBuffer));

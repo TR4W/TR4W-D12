@@ -36,7 +36,8 @@ uses
   uCallSignRoutines,
   utils_file,
   Messages
-  ;
+  ,
+  uTR4WStrings;
 type
   InitialCommands =
     (icmyCheck, icmyFDClass, icmyGrid, icmyFOC, icmyIOTA, icmyName, icmyPark, icmyPrec, icmyQTH, icmySection, icmyState, icmyZone, icmyPostalCode);
@@ -45,9 +46,9 @@ function NewContestDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lPa
 procedure BeginNewContest(h: HWND);
 procedure ClearFields;
 procedure SaveNewContest(h: HWND);
-procedure DisplayCheckBox(Text: PAnsiChar);
-procedure SetCommentAndEnableEditControl(comment: PAnsiChar; EditControl: InitialCommands);
-procedure EnterCountyOrState(State: PAnsiChar);
+procedure DisplayCheckBox(Text: string);
+procedure SetCommentAndEnableEditControl(comment: string; EditControl: InitialCommands);
+procedure EnterCountyOrState(State: string);
 procedure StartContestFromListbox();
 function NewSelectContestListBoxProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): integer; stdcall;
 procedure ChangeDir;
@@ -189,7 +190,7 @@ begin
 
                   Windows.CopyMemory(@TempBuffer1, @TR4W_LATESTCFG_FILENAME, SizeOf(FileNameType));
                   Windows.CharLowerA(TempBuffer1);
-                  TF.Format(wsprintfBuffer, TC_LATEST_CONFIG_FILE + ' (Alt+&A):'#13#10'%s', TempBuffer1);
+                  TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_LATEST_CONFIG_FILE + ' (Alt+&A):'#13#10'%s')), TempBuffer1);
                   //i := GetDlgItem(hwnddlg, NC_BUTTON_LATEST_CONFIG);
 
                   Windows.SetWindowTextA(TempCardinal, wsprintfBuffer);
@@ -210,9 +211,9 @@ begin
         {CONTEST}
         tCreateComboBoxWindow(WS_VSCROLL + CBS_SORT + CBS_UPPERCASE + CBS_DROPDOWNLIST or CBS_AUTOHSCROLL or WS_CHILD or WS_VISIBLE or WS_TABSTOP, 455, 30, 150, hwnddlg, NC_CONTEST_COMBOBOX);
         {I AM IN}
-         Windows.ShowWindow(CreateButton(BS_AUTOCHECKBOX or BS_LEFT or BS_TOP or BS_MULTILINE or WS_CHILD or WS_TABSTOP, nil, 420, 60, 430, hwnddlg, NC_CHECKBOX_IAMIN), SW_HIDE); // 4.76.3
+         Windows.ShowWindow(CreateButton(BS_AUTOCHECKBOX or BS_LEFT or BS_TOP or BS_MULTILINE or WS_CHILD or WS_TABSTOP, '', 420, 60, 430, hwnddlg, NC_CHECKBOX_IAMIN), SW_HIDE); // 4.76.3
 
-        Windows.SetWindowTextA(hwnddlg, TR4W_CURRENTVERSION + TC_OPENCONFIGURATIONFILE);
+        Windows.SetWindowTextW(hwnddlg, PWideChar(TR4W_CURRENTVERSION + TC_OPENCONFIGURATIONFILE));
 
         NewContestListBoxHandle := GetDlgItem(hwnddlg, NC_LISTBOX);
 
@@ -401,7 +402,7 @@ begin
                 RDA: SetCommentAndEnableEditControl(TC_ENTERYOURRDAID, icmyState);
 
                 BSCI, IARU:
-                  SetCommentAndEnableEditControl(nil, icmyState);
+                  SetCommentAndEnableEditControl('', icmyState);
 
                 IOTA:
                   SetCommentAndEnableEditControl(TC_ENTERYOURIOTAREFERENCEDESIGNATOR, icmyState);
@@ -519,7 +520,7 @@ begin
                BSCI, IARU: DisplayCheckBox(TC_HQ_OR_MEMBER);
                IOTA:
                  begin
-                   Windows.SetWindowTextA(NewContestCheckBox, TC_ISLANDSTATION);
+                   Windows.SetWindowTextW(NewContestCheckBox, PWideChar(TC_ISLANDSTATION));
                    Windows.ShowWindow(NewContestCheckBox, SW_SHOW);
                  end;
 
@@ -711,7 +712,7 @@ begin
 
   if FileExists(TR4W_CFG_FILENAME) then
      begin
-     TF.Format(SYSERRORBUFFER, TC_FOLDERALREADYEXISTSOVERWRITE, TR4W_CFG_FILENAME);
+     TF.Format(SYSERRORBUFFER, PAnsiChar(AnsiString(TC_FOLDERALREADYEXISTSOVERWRITE)), TR4W_CFG_FILENAME);
      if YesOrNo(h, SYSERRORBUFFER) = IDno then Exit;
      end;
 
@@ -770,27 +771,28 @@ begin
 
 end;
 
-procedure DisplayCheckBox(Text: PAnsiChar);
+procedure DisplayCheckBox(Text: string);
 begin
   // Issue #997: asm-push wsprintf -> Format (TC_IAMIN = '&I am in %s').
-  TF.Format(wsprintfBuffer, TC_IAMIN, Text);
+  TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_IAMIN)), PAnsiChar(AnsiString(Text)));
   Windows.SetWindowTextA(NewContestCheckBox, wsprintfBuffer);
   Windows.ShowWindow(NewContestCheckBox, SW_SHOW);
 end;
 
-procedure SetCommentAndEnableEditControl(comment: PAnsiChar; EditControl: InitialCommands);
+procedure SetCommentAndEnableEditControl(comment: string; EditControl: InitialCommands);
 begin
   DisplayInitialCommand(EditControl);
-  Windows.SetWindowTextA(NewContestCommentWndHandle, comment);
+  Windows.SetWindowTextW(NewContestCommentWndHandle, PWideChar(comment));
 end;
 
 
-procedure EnterCountyOrState(State: PAnsiChar);
+procedure EnterCountyOrState(State: string);
 begin
   DisplayInitialCommand(icmyState);
   // Issue #997: asm-push wsprintf -> Format. TC_ENTERYOURCOUNTYORSTATEPOROVINCEDX
   // has two %s, both = State.
-  TF.Format(wsprintfBuffer, TC_ENTERYOURCOUNTYORSTATEPOROVINCEDX, State, State);
+  TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_ENTERYOURCOUNTYORSTATEPOROVINCEDX)),
+     PAnsiChar(AnsiString(State)), PAnsiChar(AnsiString(State)));
   Windows.SetWindowTextA(NewContestCommentWndHandle, wsprintfBuffer);
 end;
 

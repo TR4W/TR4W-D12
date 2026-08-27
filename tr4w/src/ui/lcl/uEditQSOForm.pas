@@ -79,7 +79,8 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, DateTimePicker,
-  LCLType, Windows;
+  LCLType, Windows,
+  uTR4WStrings;
 
 type
   TfrmEditQSO = class(TForm)

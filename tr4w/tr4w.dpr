@@ -144,6 +144,7 @@ uses
   uMainWindowProc in 'src\uMainWindowProc.pas',
   uDialogs in 'src\uDialogs.pas',
   Version in 'src\Version.pas',
+  uTR4WStrings in 'src\uTR4WStrings.pas',
   VC in 'src\VC.pas',
   uCommctrl in 'src\uCommctrl.pas',
   uGradient in 'src\uGradient.pas',

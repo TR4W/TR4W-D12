@@ -48,7 +48,8 @@ uses
   LogDupe,
   LOGSUBS1,
   Tree
-  ;
+  ,
+  uTR4WStrings;
 
 {
 const

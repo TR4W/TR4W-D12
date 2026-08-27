@@ -36,7 +36,8 @@ uses
   uEditQSO,
 utils_text,
   Messages
-  ;
+  ,
+  uTR4WStrings;
 
 function LogSearchDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 procedure EditLogInSearch;
@@ -74,16 +75,21 @@ var
   Index                                 : integer;
   TempOperator                          : OperatorType;
   i                                     : integer;
-const
-  l                                     : array[0..3] of PAnsiChar = (RC_CALLSIGN, RC_MODE, RC_BAND, RC_OPERATOR);
+  l                                     : array[0..3] of string;
 begin
+  // Filled here rather than at the declaration: these are resourcestrings
+  // now, and a typed constant would fold whatever English the compiler saw.
+  l[0] := RC_CALLSIGN;
+  l[1] := RC_MODE;
+  l[2] := RC_BAND;
+  l[3] := RC_OPERATOR;
   Result := False;
   case Msg of
 
     WM_INITDIALOG:
       begin
 
-        Windows.SetWindowTextA(hwnddlg, RC_SEARCHLOG);
+        Windows.SetWindowTextW(hwnddlg, PWideChar(RC_SEARCHLOG));
 
         for i := 0 to 3 do
            begin
@@ -100,7 +106,7 @@ begin
 
         CreateButton(BS_DEFPUSHBUTTON, RC_SEARCH, 690, 5, 60, hwnddlg, 103);
 
-        CreateStatic(nil, 0, 280, 775, hwnddlg, 104);
+        CreateStatic('', 0, 280, 775, hwnddlg, 104);
 
         LogSearchWndHandle := hwnddlg;
         LogSearchListView := CreateEditableLog(hwnddlg, 1, 35, 770, 245, True);

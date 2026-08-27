@@ -51,7 +51,8 @@ uses
    Forms,
    StdCtrls,
    ExtCtrls,
-   uUDPBroadcastConfig;
+   uUDPBroadcastConfig,
+  uTR4WStrings;
 
 type
    TUDPDestinationEditDone = procedure(const aAccepted: boolean) of object;

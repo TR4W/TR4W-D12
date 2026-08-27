@@ -59,7 +59,8 @@ uses
   uCabrilloExchange,
   uADIFExchange,      { the ADIF twin -- see GetMyExchangeForExport }
   // #998 capstone: FormatCabrilloExchange (the case ActiveExchange MYEX/HISEX builder, extracted + unit-tested)
-  uSuperCheckPartialFileUpload;
+  uSuperCheckPartialFileUpload,
+  uTR4WStrings;
 
 type
   RateSheetType = array [ 1 .. 3, 0 .. 23, BandType, CW .. Both ] of integer;

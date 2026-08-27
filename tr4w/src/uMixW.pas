@@ -36,7 +36,8 @@ uses
   ActiveX,
 {$ENDIF}
   Tree
-  ;
+  ,
+  uTR4WStrings;
 
 function MixW2DlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 {$IFDEF MIXWMODE}

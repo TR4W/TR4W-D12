@@ -23,7 +23,8 @@ uses
    Windows, IdTCPClient, IdComponent, IdTCPConnection,IdThreadComponent, IdExceptionCore, SysUtils,
    Classes, StrUtils, Log4D, uLogConfig, VC, Tree, IdException, IdStack, SyncObjs, uSerialPort, uRadioBand,
    uCWFraming,   // TCWFrameRule / TCWProsign -- the CW traits a radio declares
-   uSpectrumTypes;  // TSpectrumFrame / TSpectrumFrameProc -- the panadapter seam
+   uSpectrumTypes,  // TSpectrumFrame / TSpectrumFrameProc -- the panadapter seam
+  uTR4WStrings;
 
 Type TProcessMsgRef = procedure (sMessage: string) of Object;
 // Optional per-radio frame check for FIXED-LENGTH framing.  Returns True if the

@@ -60,12 +60,13 @@ uses
   Messages,
   Tree
 
-  ;
+  ,
+  uTR4WStrings;
 
 type
   TNetWindowColumnsInfo = record
     Width: integer;
-    Text: PAnsiChar;
+    Text: string;
     fmt: integer;
   end;
 
@@ -75,17 +76,27 @@ const
 {$ELSE}
   NetColumns                            = 10;
 {$IFEND}
+
+var
+  { A var, and the four translatable titles are BLANK until
+    InitializeNetworkColumnTitles fills them.
+
+    They used to be PAnsiChar initialised from RC_/TC_ constants, which is a
+    compile-time fold and therefore untranslatable however good the catalogue
+    is. Filling them cannot happen in this unit's initialization either: unit
+    initialization runs BEFORE the translation is loaded, so it would capture
+    English just as surely. uProgramMain calls it at the right moment. }
   NetColumnsArray                       : array[0..NetColumns - 1] of TNetWindowColumnsInfo =
     (
-    (Width: 62; Text: RC_NAME; fmt: LVCFMT_CENTER),
+    (Width: 62; Text: ''; fmt: LVCFMT_CENTER),
     (Width: 25; Text: 'Id'; fmt: LVCFMT_CENTER),
-    (Width: 60; Text: RC_BAND; fmt: LVCFMT_CENTER),
+    (Width: 60; Text: ''; fmt: LVCFMT_CENTER),
 //    (Width: 47; Text: 'Mode'; fmt: LVCFMT_CENTER),
-    (Width: 60; Text: TC_FREQ; fmt: LVCFMT_CENTER),
+    (Width: 60; Text: ''; fmt: LVCFMT_CENTER),
     (Width: 30; Text: 'St.'; fmt: LVCFMT_CENTER),
     (Width: 37; Text: 'PTT'; fmt: LVCFMT_CENTER),
     (Width: 40; Text: 'Qs'; fmt: LVCFMT_CENTER),
-    (Width: 70; Text: RC_CALLSIGN; fmt: LVCFMT_LEFT),
+    (Width: 70; Text: ''; fmt: LVCFMT_LEFT),
     (Width: 25; Text: 'D'; fmt: LVCFMT_CENTER),
     (Width: 70; Text: 'Op'; fmt: LVCFMT_LEFT)
 //,    (Width: 50; Text: 'LN'; fmt: LVCFMT_LEFT)
@@ -95,6 +106,10 @@ const
     (Width: 150; Text: 'CW Message'; fmt: LVCFMT_CENTER)
 {$IFEND}
     );
+
+{ Fill the translatable station-list column titles. Call AFTER the translation
+  is loaded and BEFORE the network window is built. }
+procedure InitializeNetworkColumnTitles;
 procedure SetComputerName;
 procedure ShowServerMessage(ServMess: TServerMessage);
 { ONE CELL of the station list -- see the implementation.  Exported because
@@ -102,7 +117,7 @@ procedure ShowServerMessage(ServMess: TServerMessage);
 procedure SetClientCell(const aRow, aCol: integer; const aText: string);
 function FindAndUpdateQSOInLog(var RXData: ContestExchange): boolean;
 //procedure SendEditedQSOToNetwork(var CE: ContestExchange);
-procedure ShowConnectionStatus(Operation: PAnsiChar);
+procedure ShowConnectionStatus(Operation: string);
 procedure AddNewClient(ClientID: integer);
 procedure ConnectThread;
 procedure DisplayClientStatus(Index: integer);
@@ -198,6 +213,18 @@ uses
   uGetServerLog,
   MainUnit,
    uConfigValues;
+
+procedure InitializeNetworkColumnTitles;
+{ Indices, not names: the array is positional and the four translatable
+  titles sit at 0, 2, 3 and 7. Kept next to the declaration deliberately --
+  inserting a column without updating these would silently retitle the wrong
+  ones, and nothing would fail. }
+begin
+   NetColumnsArray[0].Text := RC_NAME;
+   NetColumnsArray[2].Text := RC_BAND;
+   NetColumnsArray[3].Text := TC_FREQ;
+   NetColumnsArray[7].Text := RC_CALLSIGN;
+end;
 
 { CONSUME WHOLE MESSAGES FROM NetBuffer AND SAY HOW MANY BYTES WENT.
 
@@ -667,7 +694,7 @@ begin
       DisplayClientStatus(i);
       end;
    ShowConnectionStatus(TC_DISCONNECTEDFROM);
-   TF.Format(wsprintfBuffer, TC_CONNECTIONTOTR4WSERVERLOST,
+   TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_CONNECTIONTOTR4WSERVERLOST)),
              @ServerAddress[1], ServerPort);
    QuickDisplay(wsprintfBuffer);
 end;
@@ -1240,9 +1267,9 @@ begin
   Result := True;
 end;
 
-procedure ShowConnectionStatus(Operation: PAnsiChar);
+procedure ShowConnectionStatus(Operation: string);
 begin
-  TF.Format(@NetBuffer, TC_NETWORK, Operation, @ServerAddress[1], ServerPort);
+  TF.Format(@NetBuffer, PAnsiChar(AnsiString(TC_NETWORK)), PAnsiChar(AnsiString(Operation)), @ServerAddress[1], ServerPort);
   Windows.SetWindowTextA(tr4w_WindowsArray[tw_NETWINDOW_INDEX].WndHandle, @NetBuffer);
 end;
 
@@ -1376,7 +1403,7 @@ begin
   case ServMess.smMessage of
     SM_SERVERLOG_CHANGED_MESSAGE:
       begin
-        TF.Format(QuickDisplayBuffer, TC_SERVER_LOG_CHANGED, ServMess.smParam);
+        TF.Format(QuickDisplayBuffer, PAnsiChar(AnsiString(TC_SERVER_LOG_CHANGED)), ServMess.smParam);
         QuickDisplay(QuickDisplayBuffer);
       end;
     SM_CLEARALLLOGS_MESSAGE: QuickDisplay(TC_ALL_LOGS_NETWORK_CLEARED);

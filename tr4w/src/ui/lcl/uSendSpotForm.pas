@@ -40,7 +40,8 @@ unit uSendSpotForm;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, StdCtrls;
+  Classes, SysUtils, Forms, Controls, StdCtrls,
+  uTR4WStrings;
 
 type
   TfrmSendSpot = class(TForm)

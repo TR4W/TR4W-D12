@@ -47,13 +47,14 @@ uses
   uCTYDAT,              // Issue #930 -- ctyGetCountryID / ctyGetCQZone / ctyGetITUZone (native Pascal, no cty.dll)
   LogGrid,              // Issue #930 -- MyGrid
   Tree
-  ;
+  ,
+  uTR4WStrings;
 procedure CreateConnectionAndSendReportToGetScores;
 procedure RunPOSTGetScoresThread;
 //function MakePOSTRequest: integer;
 //function MakePOSTRequestForRDXC2010: integer;
 function MakePOSTRequestNew: integer;
-procedure ShowGetScoresStatus(Status: PAnsiChar);
+procedure ShowGetScoresStatus(Status: string);
 procedure CheckServerAnswer(AnswerLength: integer);
 
 // Issue #783 -- HamScore RTC support reuses the dynamicresults fragment
@@ -177,9 +178,9 @@ end;
   a worker BY ACCIDENT: SetDlgItemText is a kernel call and Windows marshals it
   to the window's thread.  The window is an LCL form now and assigning a Caption
   marshals nothing, so the hop is explicit and lives with the form. }
-procedure ShowGetScoresStatus(Status: PAnsiChar);
+procedure ShowGetScoresStatus(Status: string);
 begin
-  PostScoresShowStatus(string(GetTimeString) + ' : ' + string(AnsiString(Status)));
+  PostScoresShowStatus(string(GetTimeString) + ' : ' + Status);
 end;
 
 procedure CheckServerAnswer(AnswerLength: integer);
@@ -187,9 +188,9 @@ label
   1;
 var
   i                                     : integer;
-  p                                     : PAnsiChar;
+  p                                     : string;   // was PAnsiChar; holds a resourcestring now
 begin
-  p := nil;
+  p := '';
   if AnswerLength < 1 then
      begin
      p := TC_NOANSWERFROMSERVER;
@@ -200,7 +201,7 @@ begin
     if GetScoresBuffer[i] in [#13, #10] then
        begin
        GetScoresBuffer[i] := #0;
-       p := @GetScoresBuffer[13];
+       p := string(PAnsiChar(@GetScoresBuffer[13]));
        Break;
        end;
 

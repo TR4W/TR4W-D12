@@ -46,7 +46,8 @@ uses
   LogDom,
   PostUnit,
   LogEdit
-  ;
+  ,
+  uTR4WStrings;
 
 type
   QTCActionType = (NoQTCAction, AbortThisQTC, SaveThisQTC);
@@ -140,7 +141,7 @@ begin
      DoABeep(Warning);
      p := @QTCCallsign[1];
      // Issue #997: asm wsprintf-push -> TF.Format.
-     TF.Format(wsprintfBuffer, TC_SORRYYOUALREADYHAVE10QTCSWITH, p);
+     TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_SORRYYOUALREADYHAVE10QTCSWITH)), p);
      QuickDisplay(wsprintfBuffer);
      Exit;
      end;
@@ -227,7 +228,7 @@ begin
 
      // Issue #997: asm wsprintf-push -> TF.Format. TC_ISQRVFOR = 'Is %s QRV for %s?';
      // cdecl-reverse pushes -> arg1=QTCCallsign, arg2=QRVString.
-     TF.Format(wsprintfBuffer, TC_ISQRVFOR, @QTCCallsign[1], @QRVString[1]);
+     TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_ISQRVFOR)), @QTCCallsign[1], @QRVString[1]);
 
      if YesOrNo2(tr4whandle, wsprintfBuffer) <> IDOK then Exit;
      //tDialogBox(63, @QTCSDlgProc);

@@ -44,7 +44,8 @@ unit uMessagesListForm;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, StdCtrls, LCLType;
+  Classes, SysUtils, Forms, Controls, StdCtrls, LCLType,
+  uTR4WStrings;
 
 type
   TfrmMessagesList = class(TForm)

@@ -48,7 +48,8 @@ utils_text,
   BeepUnit,
   uWinKey,
   SysUtils
-  ;
+  ,
+  uTR4WStrings;
 
 procedure SendCrypticDVPString(SendString: ShortString);
 procedure SendCrypticCWString(SendString: Str160);

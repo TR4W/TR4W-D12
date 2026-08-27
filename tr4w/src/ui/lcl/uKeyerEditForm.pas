@@ -48,7 +48,8 @@ uses
    Forms,
    StdCtrls,
    ExtCtrls,
-   uKeyerConfigStore;
+   uKeyerConfigStore,
+  uTR4WStrings;
 
 type
    TKeyerEditDone = procedure(const aAccepted: boolean) of object;

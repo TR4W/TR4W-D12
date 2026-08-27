@@ -33,7 +33,8 @@ uses
   PostUnit,
   LogWind,
   Windows,
-  Messages;
+  Messages,
+  uTR4WStrings;
 
 function CreateCabrilloDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 
@@ -212,7 +213,7 @@ begin
         CreateCabrilloWindow := hwnddlg;
         FormatSpecification := CABRILLOSECTION;
 
-        Windows.SetWindowTextA(hwnddlg, RC_STATIONINFO);
+        Windows.SetWindowTextW(hwnddlg, PWideChar(RC_STATIONINFO));
         CreateOKCancelButtons(hwnddlg);
 
         if ErmakSpecification then
