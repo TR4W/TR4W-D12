@@ -32,6 +32,9 @@ if (-not (Test-Path $out)) {
 
 $exe = Join-Path $bench "$Program.exe"
 
+# Always a full build here, so always clear first -- see Clear-Tr4wUnitOutput.
+$cleared = Clear-Tr4wUnitOutput -OutDir $out
+if ($cleared -gt 0) { Write-Host "  cleared $cleared stale artifact(s) from $out" }
 $fpcArgs = @('-Mdelphi', "-P$($tc.Cpu)", "-T$($tc.Os)", '-Sc', '-B', "-FU$out", "-o$exe")
 foreach ($p in (Get-Tr4wSearchPaths -Tr4wDir $TR4W_DIR -Toolchain $tc -For Tests -TestDir $test)) {
    $fpcArgs += "-Fu$p"

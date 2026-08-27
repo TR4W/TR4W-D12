@@ -40,6 +40,49 @@
 # ONE LIST FOR EVERY TARGET, deliberately: unlike the unit paths, App, Tests and
 # Server have no reason to disagree about where an .inc lives, and giving them
 # three chances to drift would repeat the mistake the header above describes.
+# MAKE "FULL REBUILD" MEAN WHAT EVERYONE ALREADY ASSUMES IT MEANS.
+#
+# -B rebuilds the modules FPC decides to compile. It does not make FPC decide to
+# compile a module whose .ppu looks current, and staleness is judged on MTIME --
+# which is not a valid test across a rename.
+#
+# That is how a broken tree passed every gate on 2026-08-26. `git mv` moved
+# Log4D.pas from src\ to include\ and, being a rename, KEPT ITS MTIME: the source
+# read Aug 13, the .ppu from an earlier build read Aug 26. Newer artifact than
+# source, so FPC reused it and never compiled the file from its new home. App,
+# tests, lints and the corpus were all green against a unit that could not
+# actually compile -- `Log4D.pas(2,2) Fatal: Cannot open include file "tr4w.inc"`.
+#
+# The same commit failed loudly in another worktree, because a CHECKOUT writes
+# the file and resets its mtime where a rename does not. Same source, same
+# compiler, opposite results, decided entirely by how the file arrived.
+#
+# CLAUDE.md already warns FPC's mtime rule cannot see a changed switch, a changed
+# .inc or a define flip. This is the fourth case and the worst of them, because
+# the stale artifact is USABLE -- the others fail, this one succeeds and lies.
+#
+# So a full build clears the compiled artifacts first. It costs nothing (-B was
+# going to recompile them anyway) and it closes moves, renames and deletions
+# together rather than needing a rule for each.
+#
+# THE LINKED BINARY IS LEFT ALONE, deliberately. It is not an input to the
+# compile, and NY4I runs build-out\app-i386-win32\tr4w_fpc.exe directly -- if a
+# build fails he should still have the last one that worked, rather than nothing.
+function Clear-Tr4wUnitOutput
+   {
+   param(
+      [Parameter(Mandatory = $true)][string] $OutDir
+   )
+
+   if (-not (Test-Path $OutDir)) { return 0 }
+
+   $stale = @(Get-ChildItem -Path $OutDir -File -ErrorAction SilentlyContinue |
+      Where-Object { $_.Extension -in '.ppu', '.o', '.a', '.rsj', '.rst', '.lfm' })
+   foreach ($f in $stale) { Remove-Item -LiteralPath $f.FullName -Force -ErrorAction SilentlyContinue }
+   return $stale.Count
+   }
+
+
 function Get-Tr4wIncludePaths
    {
    param(

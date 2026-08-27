@@ -55,7 +55,15 @@ if (-not (Test-Path $out)) { New-Item -ItemType Directory -Path $out | Out-Null 
 # program whose users report crashes by email, a bigger binary that says WHERE is
 # the right trade.
 $fpcArgs = @("-Mdelphi", "-P$Cpu", "-T$Os", '-Sc', '-WG', '-gl', '-gw2', '-Xg', "-FU$out", "-o$exe")
-if (-not $Incremental) { $fpcArgs += '-B' }
+if (-not $Incremental)
+   {
+   $fpcArgs += '-B'
+   # -B alone is not a full rebuild: it cannot see a unit whose .ppu merely
+   # LOOKS current, and a renamed file keeps its old mtime. See
+   # Clear-Tr4wUnitOutput for the day that cost.
+   $cleared = Clear-Tr4wUnitOutput -OutDir $out
+   if ($cleared -gt 0) { Write-Host "  cleared $cleared stale artifact(s) from $out" }
+   }
 foreach ($d in $Defines) { $fpcArgs += "-d$d" }
 foreach ($p in (Get-Tr4wSearchPaths -Tr4wDir $TR4W_DIR -Toolchain $tc -For App)) { $fpcArgs += "-Fu$p" }
 foreach ($p in (Get-Tr4wIncludePaths -Tr4wDir $TR4W_DIR)) { $fpcArgs += "-Fi$p" }

@@ -39,6 +39,9 @@ $exe = Join-Path $test 'tr4w_unit_tests_fpc.exe'
 
 if (-not (Test-Path $out)) { New-Item -ItemType Directory -Path $out | Out-Null }
 
+# Always a full build here, so always clear first -- see Clear-Tr4wUnitOutput.
+$cleared = Clear-Tr4wUnitOutput -OutDir $out
+if ($cleared -gt 0) { Write-Host "  cleared $cleared stale artifact(s) from $out" }
 $fpcArgs = @("-Mdelphi", "-P$Cpu", "-T$Os", '-Sc', '-B', "-FU$out", "-o$exe")
 foreach ($p in (Get-Tr4wSearchPaths -Tr4wDir $TR4W_DIR -Toolchain $tc -For Tests -TestDir $test))
    {
