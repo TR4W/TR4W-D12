@@ -218,12 +218,38 @@ attempt failed with the catalogue in `target/` while the dev binary ran from `bu
 | 2 | rekey the catalogues | **done** — 6,656 refs, 16 languages, no translation changed |
 | 3 | generate `uTR4WStrings.pas` | **done** — 546 strings, compiles, `.rsj` verified |
 | 4 | load a `.po` at run time | **done** — `5d7f449f`, proven above |
-| 5 | switch to embedded catalogues | open — `TPOFile.Create(TResourceStream)` |
-| 6 | language as a TR4W setting | open |
-| 7 | cut `VC.pas` over to `uTR4WStrings` | open — **see the hazard below** |
-| 8 | `.lfm` captions → `.po` via Lazarus i18n | open — 469 strings, the largest block |
+| 5 | switch to embedded catalogues | **done** — `fe88ad0f`, 514 KB for 16 languages, exe 5.62 → 6.13 MB |
+| 6 | language as a TR4W setting | open — the seam is in `uEmbeddedTranslations.ResolveLang` |
+| 7 | cut `VC.pas` over to `uTR4WStrings` | open — **see the hazard below**; this is what makes the 383 `TC_` strings translatable |
+| 8 | `.lfm` captions → `.po` | **done** — 561 harvested, merged into all 16 |
 | 9 | help `.po` + a help pane on settings leaves | open — greenfield; INI housekeeping first |
 | 10 | a lint so new English cannot get in | open |
+| 11 | catalogue validation | **done** — `tools/i18n/po_lint.py`, found 9 defects in the inherited translations |
+| 12 | translator handoff documented | **done** — `TRANSLATOR_GUIDE.md`, `TRANSLATION_HANDOFF.md` |
+
+### Line breaks inside translatable strings — decided, and against the first instinct
+
+21 English strings carry a `\r` or `\n` in the middle: 11 legacy `TC_` and 10 modern.
+NY4I's first preference (2026-08-27) was to **split** them, so a translator cannot
+delete a line break: *"all it takes is a translator to mis-edit and delete that and the
+message does not display correctly."* The risk is real — one had already been lost
+before any human touched the file.
+
+**They are NOT split, and the reasoning is worth keeping.**
+
+* **Splitting the 11 legacy ones re-keys them**, orphaning finished translations in 16
+  languages. That is the one thing the whole pipeline is built to avoid.
+* **Fragments translate badly.** A message cut into three resourcestrings joined in
+  code gives the translator three pieces with no context, and word order, agreement and
+  gender do not survive being assembled by `+`. This is a well-known gettext
+  anti-pattern, and it makes the *translation* worse in order to make one *editing
+  mistake* harder.
+* **The mistake is detectable instead.** `po_lint.py` compares control characters
+  between the English and the translation and fails on any difference. That catches the
+  exact failure without changing a single string.
+
+So: whole messages stay whole, and the check is what protects them. Revisit only if a
+translator actually loses a break that the lint does not catch.
 
 ### The cut-over hazard (step 7)
 
