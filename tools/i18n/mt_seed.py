@@ -1,0 +1,364 @@
+"""Seed a .po catalogue with machine translation from a local LibreTranslate.
+
+Usage:
+   python tools/i18n/mt_seed.py --lang ITA
+   python tools/i18n/mt_seed.py --lang ITA --dry-run
+   python tools/i18n/mt_seed.py --lang ALL --fix-spacing
+   python tools/i18n/mt_seed.py --lang ITA --catalog help
+
+A STARTING POINT FOR A REVIEWER, never a finished translation. Three properties
+enforce that:
+
+  1. Every seeded string stays FUZZY -- "Needs work" in Poedit. po2pas.py skips
+     fuzzy entries, so machine output cannot reach a .pas or a build until a
+     human clears the flag.
+  2. Format specifiers are validated against the English and the string is
+     DROPPED rather than seeded on mismatch. TR4W formats through wsprintfA --
+     unchecked varargs -- so a %d turned into %s dereferences an integer as a
+     pointer. An empty entry is a visible to-do; a corrupted one is a crash.
+  3. Leading/trailing whitespace is mirrored from the source. Sixteen values
+     carry it as a concatenation seam ('Failed to connect to ' is followed
+     straight by the host), and engines strip it.
+
+Only entries that are BOTH fuzzy and empty are touched, so re-running is safe
+and incremental: reviewed work and earlier seeding are left alone.
+"""
+
+import argparse
+import glob
+import json
+import os
+import re
+import sys
+import urllib.request
+
+import pasconsts as pc
+import pofile
+
+# ONE STRING PER REQUEST by default. Batching maps results back BY POSITION, so
+# it trusts the engine to return the array in request order -- and a reordered
+# batch would pair translations with the wrong keys silently. Measured against
+# the local engine:
+#
+#     --batch 1     2.04 s/string   ~15 min per language
+#     --batch 40    0.12 s/string   ~52 s  per language
+#
+# The cost is per-request model inference, not transport, so it does not vanish
+# on localhost. NY4I's call (2026-08-13) is to pay it: seeding a catalogue is
+# rare, and because only fuzzy-and-empty entries are touched, every later run
+# handles just the delta -- a handful of new strings, not 400.
+#
+# --batch >1 is still available and is then automatically alignment-checked: a
+# sample is re-translated one at a time and compared. That check is meaningful
+# because translation here is deterministic and batch output was verified
+# byte-identical to individual output.
+DEFAULT_BATCH = 1
+DEFAULT_VERIFY = 25
+
+# LibreTranslate mangles bare printf specifiers -- "%s needs %s for %d" comes
+# back as "% delle esigenze % per %". Masking survives, and restoration is BY
+# INDEX so the original width/precision (%-8s) is exact.
+#
+# Token style matters per model: @0@ works for it/fr/nl/ja/ko but the pt model
+# rewrites it as "@ 0@", which cost 47 Portuguese strings. {0} survives every
+# model tested and cannot collide -- no ENG value contains a brace. The matcher
+# tolerates inserted whitespace anyway, because that is how @0@ failed.
+TOKEN_RE = re.compile(r"\{\s*(\d+)\s*\}")
+
+LANGUAGE_KEY = "TC_TRANSLATION_LANGUAGE"
+SKIP_KEYS = {"TC_TRANSLATION_AUTHOR", "TC_TRANSLATOR_EMAIL"}
+
+# Sources that are an AUTHORING TO-DO rather than help text. Translating
+# "TO BE COMPLETED" into ten languages produces ten to-dos nobody can act on and
+# hides the fact that the English was never written. Matched on the WHOLE
+# string: 'DEPRECATED - Use NETWORK PASSWORD' carries real information and is
+# translated normally; a bare 'DEPRECATED' does not.
+PLACEHOLDER_SOURCES = {
+   "TO BE COMPLETED", "DEPRECATED", "TBD", "N/A", "NOT IMPLEMENTED",
+   "PENDING RE-IMPLEMENTATION",
+}
+
+
+def protect(text):
+   originals = []
+
+   def sub(m):
+      originals.append(m.group(0))
+      return "{%d}" % (len(originals) - 1)
+
+   return pc.PLACEHOLDER_RE.sub(sub, text), originals
+
+
+def unprotect(text, originals):
+   """Restore specifiers. Returns (text, problem); problem is None if sound.
+
+   wsprintf maps arguments BY POSITION and has no %1$s syntax, so a translation
+   that reorders the tokens would pair the wrong argument with the wrong slot.
+   Japanese does exactly that -- it is SOV and genuinely wants a different
+   order -- so insist the tokens come back complete AND ascending.
+   """
+   found = [int(n) for n in TOKEN_RE.findall(text)]
+   if found != list(range(len(originals))):
+      return text, "tokens %s, expected %s" % (found,
+                                               list(range(len(originals))))
+   return TOKEN_RE.sub(lambda m: originals[int(m.group(1))], text), None
+
+
+def mirror_edge_space(src, text):
+   lead = src[:len(src) - len(src.lstrip())]
+   trail = src[len(src.rstrip()):]
+   return lead + text.strip() + trail
+
+
+def check_target(url, target, source="en"):
+   """Fail early and legibly if the engine has no model for this pair."""
+   try:
+      with urllib.request.urlopen(url.rstrip("/") + "/languages",
+                                  timeout=30) as fh:
+         langs = json.loads(fh.read().decode("utf-8"))
+   except Exception as exc:                 # noqa: BLE001 - reported, not hidden
+      raise SystemExit("cannot reach LibreTranslate at %s: %s" % (url, exc))
+   src = next((x for x in langs if x.get("code") == source), None)
+   if src is None:
+      raise SystemExit("engine does not offer %r as a source" % source)
+   if target not in src.get("targets", []):
+      raise SystemExit(
+         "engine has no %s->%s model. Available: %s\n"
+         "Install that model, or translate by hand -- the catalogue is usable "
+         "without any engine."
+         % (source, target, ", ".join(sorted(src.get("targets", [])))))
+
+
+def translate(url, texts, target, source="en", batch=DEFAULT_BATCH):
+   out = []
+   for i in range(0, len(texts), batch):
+      chunk = texts[i:i + batch]
+      payload = json.dumps({"q": chunk, "source": source, "target": target,
+                            "format": "text"}).encode("utf-8")
+      req = urllib.request.Request(url.rstrip("/") + "/translate", data=payload,
+                                   headers={"Content-Type": "application/json"})
+      with urllib.request.urlopen(req, timeout=120) as fh:
+         got = json.loads(fh.read().decode("utf-8"))["translatedText"]
+      if isinstance(got, str):
+         got = [got]
+      if len(got) != len(chunk):
+         raise SystemExit("engine returned %d results for %d inputs"
+                          % (len(got), len(chunk)))
+      out.extend(got)
+      if batch > 1 or (i + 1) % 50 == 0 or i + 1 == len(texts):
+         print("   %d/%d" % (min(i + batch, len(texts)), len(texts)))
+   return out
+
+
+def seed(po_path, url, target, lang, dry_run, batch=DEFAULT_BATCH,
+         reseed=False, verify=DEFAULT_VERIFY):
+   entries = pofile.read_po(po_path)
+
+   if reseed:
+      # Discard previous MACHINE output so it can be regenerated. Only fuzzy
+      # entries are cleared -- a cleared-fuzzy entry carries a human's review
+      # decision and is never touched.
+      wiped = 0
+      for e in entries:
+         if e.fuzzy and e.target.strip() and not e.obsolete:
+            e.target = ""
+            wiped += 1
+      print("--reseed: cleared %d unreviewed entr%s"
+            % (wiped, "y" if wiped == 1 else "ies"))
+
+   candidates = [e for e in entries
+                 if e.fuzzy and not e.target.strip() and not e.obsolete
+                 and e.key not in SKIP_KEYS]
+   no_source = [e for e in candidates if not e.source.strip()]
+   placeholder = [e for e in candidates
+                  if e.source.strip().upper() in PLACEHOLDER_SOURCES]
+   todo = [e for e in candidates
+           if e.source.strip()
+           and e.source.strip().upper() not in PLACEHOLDER_SOURCES]
+
+   if no_source:
+      print("%d entr%s have NO English source -- nothing to translate; the "
+            "English has to be written first"
+            % (len(no_source), "y" if len(no_source) == 1 else "ies"))
+   if placeholder:
+      print("%d entr%s are an English authoring to-do (%s) -- skipped"
+            % (len(placeholder), "y" if len(placeholder) == 1 else "ies",
+               ", ".join(sorted({e.source.strip() for e in placeholder}))))
+   print("%d entr%s to seed" % (len(todo), "y" if len(todo) == 1 else "ies"))
+   if dry_run:
+      for e in todo[:10]:
+         print("   %-38s %r" % (e.key, e.source[:60]))
+      return 0
+   if not todo:
+      return 0
+
+   check_target(url, target)
+
+   # Flatten to line segments so embedded #13 structure survives, masking the
+   # specifiers in each.
+   segments, index, masks = [], [], []
+   for e in todo:
+      parts = e.source.split("\r")
+      index.append((e, len(parts)))
+      for part in parts:
+         masked, originals = protect(part)
+         segments.append(masked)
+         masks.append(originals)
+
+   done = translate(url, segments, target, batch=batch)
+
+   if batch > 1 and verify and segments:
+      # Evenly spaced rather than random: a systematic offset shows up wherever
+      # it starts, and the spread covers the whole request sequence.
+      n = min(verify, len(segments))
+      step = max(1, len(segments) // n)
+      picks = list(range(0, len(segments), step))[:n]
+      print("verifying %d of %d segment(s) one at a time..." % (len(picks),
+                                                                len(segments)))
+      solo = translate(url, [segments[i] for i in picks], target, batch=1)
+      bad = [(i, segments[i], done[i], s)
+             for i, s in zip(picks, solo) if s != done[i]]
+      if bad:
+         print()
+         print("ALIGNMENT CHECK FAILED -- batched results do not match "
+               "individual ones. Nothing was written.")
+         for i, src, got, want in bad[:5]:
+            print("   segment %d  %r" % (i, src[:50]))
+            print("      batched:    %r" % got[:60])
+            print("      individual: %r" % want[:60])
+         raise SystemExit("re-run with --batch 1")
+      print("alignment OK (%d/%d sampled segments identical)" % (len(picks),
+                                                                 len(picks)))
+
+   restored, problems = [], {}
+   for i, text in enumerate(done):
+      text, problem = unprotect(text, masks[i])
+      restored.append(text)
+      if problem:
+         problems[i] = problem
+
+   seeded, dropped = 0, []
+   pos = 0
+   for e, count in index:
+      bad = [problems[j] for j in range(pos, pos + count) if j in problems]
+      chunk = "\r".join(restored[pos:pos + count])
+      pos += count
+      if bad:
+         dropped.append((e.key, bad[0]))
+         continue
+      if not chunk.strip():
+         dropped.append((e.key, "engine returned nothing"))
+         continue
+      text = mirror_edge_space(e.source, chunk)
+      if pc.specifier_types(e.source) != pc.specifier_types(text):
+         dropped.append((e.key, "specifiers %s -> %s"
+                                % (pc.specifier_types(e.source),
+                                   pc.specifier_types(text))))
+         continue
+      e.target = text          # stays fuzzy
+      seeded += 1
+
+   if lang in pc.LANGUAGE_NAMES:
+      for e in entries:
+         if e.key == LANGUAGE_KEY:
+            e.target = pc.LANGUAGE_NAMES[lang]
+
+   pofile.write_po(po_path, entries, pc.LANG_CODES[lang],
+                   pc.LANG_CODES[pc.SOURCE_LANG])
+   print()
+   print("seeded  %d" % seeded)
+   print("dropped %d" % len(dropped))
+   for key, why in dropped:
+      print("   %-40s %s" % (key, why))
+   print()
+   print("Every seeded entry is FUZZY. po2pas.py will not apply them until a")
+   print("reviewer clears 'Needs work' in Poedit.")
+   return 0
+
+
+def fix_spacing(po_path, dry_run):
+   """Restore concatenation-seam whitespace in an already-seeded catalogue.
+
+   Only touches fuzzy entries: a cleared one carries a human's decision.
+   """
+   entries = pofile.read_po(po_path)
+   fixed = []
+   for e in entries:
+      if e.obsolete or not e.fuzzy or not e.target.strip():
+         continue
+      want = mirror_edge_space(e.source, e.target)
+      if want != e.target:
+         fixed.append((e.key, e.target, want))
+         e.target = want
+   name = os.path.basename(po_path)
+   print("%-16s %d entr%s need edge whitespace restored"
+         % (name, len(fixed), "y" if len(fixed) == 1 else "ies"))
+   if fixed and not dry_run:
+      lang_tag = name[:-3].split("_", 1)[1]
+      pofile.write_po(po_path, entries, lang_tag,
+                      pc.LANG_CODES[pc.SOURCE_LANG])
+   return len(fixed)
+
+
+def main(argv=None):
+   for stream in (sys.stdout, sys.stderr):
+      if hasattr(stream, "reconfigure"):
+         stream.reconfigure(encoding="utf-8", errors="replace")
+
+   ap = argparse.ArgumentParser(description=__doc__)
+   ap.add_argument("--lang", required=True, help="LANG code, or ALL for "
+                                                 "--fix-spacing")
+   ap.add_argument("--catalog", default="tr4w", choices=("tr4w", "help"),
+                   help="which catalogue: the TC_ constants (default) or the "
+                        "config-command help")
+   ap.add_argument("--url", default="http://localhost:5000")
+   ap.add_argument("--dry-run", action="store_true")
+   ap.add_argument("--fix-spacing", action="store_true")
+   ap.add_argument("--batch", type=int, default=DEFAULT_BATCH,
+                   help="strings per request (default %d). 1 removes all "
+                        "positional trust; raise it only for a remote engine."
+                        % DEFAULT_BATCH)
+   ap.add_argument("--verify", type=int, default=DEFAULT_VERIFY,
+                   help="segments to re-translate individually as an "
+                        "alignment check (default %d; 0 disables)"
+                        % DEFAULT_VERIFY)
+   ap.add_argument("--reseed", action="store_true",
+                   help="discard previous machine output and regenerate it. "
+                        "Reviewed (non-fuzzy) entries are never touched.")
+   args = ap.parse_args(argv)
+
+   paths = pc.repo_paths()
+   pc.load_language_registry(paths["i18n"])
+
+   if args.fix_spacing:
+      if args.lang.upper() == "ALL":
+         targets = sorted(glob.glob(os.path.join(paths["i18n"], "*.po")))
+      else:
+         code = pc.LANG_CODES.get(args.lang.upper())
+         if code is None:
+            raise SystemExit("unknown LANG %r" % args.lang)
+         targets = [os.path.join(paths["i18n"],
+                                 "%s_%s.po" % (args.catalog, code))]
+      total = sum(fix_spacing(p, args.dry_run) for p in targets
+                  if os.path.exists(p))
+      print()
+      print("%d entr%s %s" % (total, "y" if total == 1 else "ies",
+                              "would change" if args.dry_run else "repaired"))
+      return 0
+
+   lang = args.lang.upper()
+   code = pc.LANG_CODES.get(lang)
+   if code is None:
+      raise SystemExit("unknown LANG %r -- register it with "
+                       "`pas2po.py --new-lang %s --code <iso639-1>`"
+                       % (lang, lang))
+   prefix = "tr4w" if args.catalog == "tr4w" else "help"
+   po_path = os.path.join(paths["i18n"], "%s_%s.po" % (prefix, code))
+   if not os.path.exists(po_path):
+      raise SystemExit("no %s" % po_path)
+   return seed(po_path, args.url, code.split("_")[0], lang,
+               args.dry_run, args.batch, args.reseed, args.verify)
+
+
+if __name__ == "__main__":
+   sys.exit(main())
