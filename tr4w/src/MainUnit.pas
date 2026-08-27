@@ -4006,7 +4006,7 @@ begin
                       tr4wColorsArray[TWindows[e].mweBackG],
                       tr4wColorsArray[TWindows[e].mweColor]);
 
-     if TWindows[e].mweText <> nil then
+     if TWindows[e].mweText <> '' then
         begin
         SetMainWindowText(e, TWindows[e].mweText)
         end
@@ -7638,7 +7638,7 @@ begin
     if ColumnsArray[Column].Enable then
        begin
        elvc.fmt := ColumnsArray[Column].Align;
-       elvc.pszText := ColumnsArray[Column].Text;
+       elvc.pszText := PAnsiChar(ColumnsArray[Column].Text);   // LVCOLUMN is a real Win32 boundary; retires with the log listview
        elvc.cx := ColumnsArray[Column].Width * Factor;
        uCommctrl.ListView_InsertColumnA(Result, ColumnsArray[Column].pos, elvc);
        end;

@@ -840,6 +840,11 @@ begin
      logger.Info('UI language: none loaded; using the compiled-in English');
      end;
 
+  { The string tables that cannot be initialised where they are declared. This
+    has to follow the translation load and precede the main window: the window
+    is built from captions these tables hold. }
+  InitializeStringTables;
+
  Format(TR4W_INI_FILENAME, '%ssettings\tr4w.ini', TR4W_PATH_NAME);
   LuconSZLoadded := AddFontResourceW(TR4W_LC_FILENAME) <> 0;
   MainFixedFont := tCreateFont(15, FW_BOLD * Ord(BoldFont), @MainFontName[1]);

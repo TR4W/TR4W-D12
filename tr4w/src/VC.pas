@@ -624,7 +624,7 @@ type
 {(*}
     mweName   : PAnsiChar;
     mweiStyle : Cardinal;
-    mweText   : PAnsiChar;
+    mweText   : string;
 
     mweColor  : tr4wColors;
     mweBackG  : tr4wColors;
@@ -655,18 +655,17 @@ type
     Antartica
     );
 
-const
-  tContinentArray                       : array[ContinentType] of PAnsiChar =
-    (
-    TC_C9_UNKNOWN,
-    TC_C9_NORTHAMERICA,
-    TC_C9_SOUTHAMERICA,
-    TC_C9_EUROPE,
-    TC_C9_AFRICA,
-    TC_C9_ASIA,
-    TC_C9_OCEANIA,
-    TC_C9_ANTARTICA
-    );
+var
+  { tContinentArray is FILLED AT RUN TIME by InitializeStringTables.
+
+    It used to be a const array of PAnsiChar initialised from the TC_C9_*
+    constants, and that is exactly what stopped those constants becoming
+    resourcestring: a typed constant is folded at compile time, where a
+    resourcestring is a variable the translation loader replaces at run time.
+
+    Blank until InitializeStringTables runs, which uProgramMain calls before
+    the main window is created. }
+  tContinentArray                       : array[ContinentType] of string;
 
 type
 
@@ -782,62 +781,62 @@ var
     (
 {(*}
 
-{mweAutoSendCount}        (mweName: 'ARROW';                   mweiStyle: DefStyleNoSun;     mweText:nil         ; mweColor: trRed;   mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 16; mweiY: 07; mweiWidth: 01; mweiHeight: 1 ),
-{mweBandMode}             (mweName: 'BAND MODE';               mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 00; mweiY: 07; mweiWidth: 04; mweiHeight: 1 ),
-{mweBeamHeading}          (mweName: 'BEAM HEADING';            mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:1; mweB: 0; mweiX: 32; mweiY: 06; mweiWidth: 14; mweiHeight: 1 ),
-{mweCall}                 (mweName: 'CALL';                    mweiStyle: 0;                 mweText:nil         ; mweColor: trBlack; mweBackG: trWhite;   mweI:0; mweB: 1; mweiX: 08; mweiY: 07; mweiWidth: 03; mweiHeight: 1 ),
-{mweClock}                (mweName: 'CLOCK';                   mweiStyle: defStyle;          mweText:'nil'         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 08; mweiY: 07; mweiWidth: 03; mweiHeight: 1 ),
-{mweCodeSpeed}            (mweName: 'CODE SPEED';              mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 00; mweiY: 10; mweiWidth: 04; mweiHeight: 1 ),
-{mweComputerID}           (mweName: 'COMPUTER ID';             mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 08; mweiY: 08; mweiWidth: 03; mweiHeight: 1 ),
-{mweCountryName}          (mweName: 'COUNTRY NAME';            mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:1; mweB: 1; mweiX: 28; mweiY: 07; mweiWidth: 10; mweiHeight: 1 ),
-{mweCQQSOCounter}         (mweName: 'CQ COUNTER';              mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 38; mweiY: 08; mweiWidth: 04; mweiHeight: 1 ),
-{mweCQTotal}              (mweName: 'CQ TOTAL';                mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 38; mweiY: 09; mweiWidth: 08; mweiHeight: 1 ),
-{mweCurrentOperator}      (mweName: 'OPERATOR';                mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 42; mweiY: 11; mweiWidth: 04; mweiHeight: 1 ),
-{mweDate}                 (mweName: 'DATE';                    mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 04; mweiY: 07; mweiWidth: 04; mweiHeight: 1 ),
-{mweDupeInfoCall}         (mweName: 'DUPE INFO CALL';          mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 0; mweiX: 23; mweiY: 01; mweiWidth: 09; mweiHeight: 2 ),
-{mweEditableLog}          (mweName: 'EDITABLE LOG';            mweiStyle: 1;                 mweText:nil         ; mweColor: trBlack; mweBackG: trWhite;   mweI:0; mweB: 0; mweiX: 23; mweiY: 01; mweiWidth: 09; mweiHeight: 2 ),
-{mweExchange}             (mweName: 'EXCHANGE';                mweiStyle: 0;                 mweText:nil         ; mweColor: trBlack; mweBackG: trWhite;   mweI:0; mweB: 1; mweiX: 08; mweiY: 07; mweiWidth: 03; mweiHeight: 1 ),
-{mweFootSwitch}           (mweName: 'FOOT SWITCH';             mweiStyle: DefStyleDis;       mweText:TC_FOOTSW   ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 42; mweiY: 10; mweiWidth: 04; mweiHeight: 1 ),
-{mweFullTime}             (mweName: 'FULL TIME';               mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 0; mweiX: 00; mweiY: 00; mweiWidth: 05; mweiHeight: 1 ),
+{mweAutoSendCount}        (mweName: 'ARROW';                   mweiStyle: DefStyleNoSun;     mweText:''          ; mweColor: trRed;   mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 16; mweiY: 07; mweiWidth: 01; mweiHeight: 1 ),
+{mweBandMode}             (mweName: 'BAND MODE';               mweiStyle: defStyle;          mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 00; mweiY: 07; mweiWidth: 04; mweiHeight: 1 ),
+{mweBeamHeading}          (mweName: 'BEAM HEADING';            mweiStyle: defStyle;          mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:1; mweB: 0; mweiX: 32; mweiY: 06; mweiWidth: 14; mweiHeight: 1 ),
+{mweCall}                 (mweName: 'CALL';                    mweiStyle: 0;                 mweText:''          ; mweColor: trBlack; mweBackG: trWhite;   mweI:0; mweB: 1; mweiX: 08; mweiY: 07; mweiWidth: 03; mweiHeight: 1 ),
+{mweClock}                (mweName: 'CLOCK';                   mweiStyle: defStyle;          mweText:''            ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 08; mweiY: 07; mweiWidth: 03; mweiHeight: 1 ),
+{mweCodeSpeed}            (mweName: 'CODE SPEED';              mweiStyle: defStyle;          mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 00; mweiY: 10; mweiWidth: 04; mweiHeight: 1 ),
+{mweComputerID}           (mweName: 'COMPUTER ID';             mweiStyle: defStyle;          mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 08; mweiY: 08; mweiWidth: 03; mweiHeight: 1 ),
+{mweCountryName}          (mweName: 'COUNTRY NAME';            mweiStyle: defStyle;          mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:1; mweB: 1; mweiX: 28; mweiY: 07; mweiWidth: 10; mweiHeight: 1 ),
+{mweCQQSOCounter}         (mweName: 'CQ COUNTER';              mweiStyle: defStyle;          mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 38; mweiY: 08; mweiWidth: 04; mweiHeight: 1 ),
+{mweCQTotal}              (mweName: 'CQ TOTAL';                mweiStyle: defStyle;          mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 38; mweiY: 09; mweiWidth: 08; mweiHeight: 1 ),
+{mweCurrentOperator}      (mweName: 'OPERATOR';                mweiStyle: defStyle;          mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 42; mweiY: 11; mweiWidth: 04; mweiHeight: 1 ),
+{mweDate}                 (mweName: 'DATE';                    mweiStyle: defStyle;          mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 04; mweiY: 07; mweiWidth: 04; mweiHeight: 1 ),
+{mweDupeInfoCall}         (mweName: 'DUPE INFO CALL';          mweiStyle: defStyle;          mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 0; mweiX: 23; mweiY: 01; mweiWidth: 09; mweiHeight: 2 ),
+{mweEditableLog}          (mweName: 'EDITABLE LOG';            mweiStyle: 1;                 mweText:''          ; mweColor: trBlack; mweBackG: trWhite;   mweI:0; mweB: 0; mweiX: 23; mweiY: 01; mweiWidth: 09; mweiHeight: 2 ),
+{mweExchange}             (mweName: 'EXCHANGE';                mweiStyle: 0;                 mweText:''          ; mweColor: trBlack; mweBackG: trWhite;   mweI:0; mweB: 1; mweiX: 08; mweiY: 07; mweiWidth: 03; mweiHeight: 1 ),
+{mweFootSwitch}           (mweName: 'FOOT SWITCH';             mweiStyle: DefStyleDis;       mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 42; mweiY: 10; mweiWidth: 04; mweiHeight: 1 ),
+{mweFullTime}             (mweName: 'FULL TIME';               mweiStyle: defStyle;          mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 0; mweiX: 00; mweiY: 00; mweiWidth: 05; mweiHeight: 1 ),
 
-{mweLocator}              (mweName: 'GRID LOCATOR';            mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:1; mweB: 1; mweiX: 33; mweiY: 11; mweiWidth: 05; mweiHeight: 1 ),
+{mweLocator}              (mweName: 'GRID LOCATOR';            mweiStyle: defStyle;          mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:1; mweB: 1; mweiX: 33; mweiY: 11; mweiWidth: 05; mweiHeight: 1 ),
 
-{mweHourRate}             (mweName: 'HOUR RATE';               mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 28; mweiY: 09; mweiWidth: 05; mweiHeight: 1 ),
-{mweInsert}               (mweName: 'INSERT';                  mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 42; mweiY: 07; mweiWidth: 04; mweiHeight: 1 ),
-{mweLastQSOTime}          (mweName: 'LAST QSO TIME';           mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 33; mweiY: 08; mweiWidth: 05; mweiHeight: 1 ),
-{mweLocalTime}            (mweName: 'LOCAL TIME';              mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:1; mweB: 1; mweiX: 38; mweiY: 07; mweiWidth: 04; mweiHeight: 1 ),
+{mweHourRate}             (mweName: 'HOUR RATE';               mweiStyle: defStyle;          mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 28; mweiY: 09; mweiWidth: 05; mweiHeight: 1 ),
+{mweInsert}               (mweName: 'INSERT';                  mweiStyle: defStyle;          mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 42; mweiY: 07; mweiWidth: 04; mweiHeight: 1 ),
+{mweLastQSOTime}          (mweName: 'LAST QSO TIME';           mweiStyle: defStyle;          mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 33; mweiY: 08; mweiWidth: 05; mweiHeight: 1 ),
+{mweLocalTime}            (mweName: 'LOCAL TIME';              mweiStyle: defStyle;          mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:1; mweB: 1; mweiX: 38; mweiY: 07; mweiWidth: 04; mweiHeight: 1 ),
 
 {mweMasterStatus}         (mweName: 'MASTER';                  mweiStyle: uVisStyle;         mweText:'MASTER'    ; mweColor: trWhite; mweBackG: trBlue;    mweI:0; mweB: 1; mweiX: 11; mweiY: 10; mweiWidth: 04; mweiHeight: 1 ),
 {mweNewMultStatus}        (mweName: 'MULT';                    mweiStyle: uVisStyle;         mweText:'MULT'      ; mweColor: trBlack; mweBackG: trYellow;  mweI:0; mweB: 1; mweiX: 11; mweiY: 11; mweiWidth: 04; mweiHeight: 1 ),
-{mweMultNeedsHeader}      (mweName: 'MULTIPLIER INFORMATION';  mweiStyle: LeftVisNoSunStyle; mweText:nil         ; mweColor: trBlack; mweBackG: trWhite;   mweI:0; mweB: 0; mweiX: 32; mweiY: 03; mweiWidth: 14; mweiHeight: 1 ),
-{mweName}                 (mweName: 'NAME';                    mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:1; mweB: 1; mweiX: 25; mweiY: 07; mweiWidth: 03; mweiHeight: 1 ),
+{mweMultNeedsHeader}      (mweName: 'MULTIPLIER INFORMATION';  mweiStyle: LeftVisNoSunStyle; mweText:''          ; mweColor: trBlack; mweBackG: trWhite;   mweI:0; mweB: 0; mweiX: 32; mweiY: 03; mweiWidth: 14; mweiHeight: 1 ),
+{mweName}                 (mweName: 'NAME';                    mweiStyle: defStyle;          mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:1; mweB: 1; mweiX: 25; mweiY: 07; mweiWidth: 03; mweiHeight: 1 ),
 
-{mweNetwork}              (mweName: 'NETWORK';                 mweiStyle: 1;                 mweText:nil         ; mweColor: trBlack; mweBackG: trWhite;   mweI:1; mweB: 1; mweiX: 25; mweiY: 07; mweiWidth: 03; mweiHeight: 1 ),
+{mweNetwork}              (mweName: 'NETWORK';                 mweiStyle: 1;                 mweText:''          ; mweColor: trBlack; mweBackG: trWhite;   mweI:1; mweB: 1; mweiX: 25; mweiY: 07; mweiWidth: 03; mweiHeight: 1 ),
 
-{mweOnAirTimeCounter}     (mweName: 'ON AIR TIME';             mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 28; mweiY: 08; mweiWidth: 05; mweiHeight: 1 ),
+{mweOnAirTimeCounter}     (mweName: 'ON AIR TIME';             mweiStyle: defStyle;          mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 28; mweiY: 08; mweiWidth: 05; mweiHeight: 1 ),
 {mweOpMode}               (mweName: 'OP MODE';                 mweiStyle: defStyle;          mweText:'CQ'        ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 28; mweiY: 11; mweiWidth: 05; mweiHeight: 1 ),
-{mwePaddle}               (mweName: 'PADDLE';                  mweiStyle: DefStyleDis;       mweText:TC_PADDLE   ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 38; mweiY: 10; mweiWidth: 04; mweiHeight: 1 ),
-{mwePossibleCall}         (mweName: 'POSSIBLE CALL';           mweiStyle: 0;                 mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 23; mweiY: 07; mweiWidth: 02; mweiHeight: 1 ),
-{mweQSOsWithThisStation}  (mweName: 'PREVIOUS QSOS';           mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:1; mweB: 1; mweiX: 23; mweiY: 07; mweiWidth: 02; mweiHeight: 1 ),
+{mwePaddle}               (mweName: 'PADDLE';                  mweiStyle: DefStyleDis;       mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 38; mweiY: 10; mweiWidth: 04; mweiHeight: 1 ),
+{mwePossibleCall}         (mweName: 'POSSIBLE CALL';           mweiStyle: 0;                 mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 23; mweiY: 07; mweiWidth: 02; mweiHeight: 1 ),
+{mweQSOsWithThisStation}  (mweName: 'PREVIOUS QSOS';           mweiStyle: defStyle;          mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:1; mweB: 1; mweiX: 23; mweiY: 07; mweiWidth: 02; mweiHeight: 1 ),
 {mwePTTStatus}            (mweName: 'PTT';                     mweiStyle: defStyle;          mweText:'OFF'       ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 25; mweiY: 11; mweiWidth: 03; mweiHeight: 1 ),
 {mweQSOB4Status}          (mweName: 'QSO B4';                  mweiStyle: uVisStyle;         mweText:'QSOB4'     ; mweColor: trWhite; mweBackG: trRed;     mweI:0; mweB: 1; mweiX: 11; mweiY: 09; mweiWidth: 04; mweiHeight: 1 ),
-{mweQSONeedsHeader}       (mweName: 'QSO INFORMATION';         mweiStyle: LeftVisNoSunStyle; mweText:nil         ; mweColor: trBlack; mweBackG: trWhite;   mweI:0; mweB: 0; mweiX: 32; mweiY: 00; mweiWidth: 14; mweiHeight: 1 ),
-{mweQSONumber}            (mweName: 'QSO NUMBER';              mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trWhite;   mweI:0; mweB: 1; mweiX: 11; mweiY: 07; mweiWidth: 04; mweiHeight: 2 ),
-{mweQuickCommand}         (mweName: 'QUICK COMMAND';           mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 00; mweiY: 12; mweiWidth: 46; mweiHeight: 1 ),
-{mweRadioOneFreq}         (mweName: 'RADIO ONE FREQ';          mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 00; mweiY: 08; mweiWidth: 04; mweiHeight: 1 ),
-{mweRadioOne}             (mweName: 'RADIO ONE NAME';          mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 00; mweiY: 09; mweiWidth: 04; mweiHeight: 1 ),
-{mweRadioTwoFreq}         (mweName: 'RADIO TWO FREQ';          mweiStyle: DefStyleDis;       mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 04; mweiY: 08; mweiWidth: 04; mweiHeight: 1 ),
-{mweRadioTwo}             (mweName: 'RADIO TWO NAME';          mweiStyle: DefStyleDis;       mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 04; mweiY: 09; mweiWidth: 04; mweiHeight: 1 ),
-{mweRate}                 (mweName: 'RATE';                    mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 33; mweiY: 09; mweiWidth: 05; mweiHeight: 1 ),
-{mweSPQSOCounter}         (mweName: 'S&P COUNTER';             mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 42; mweiY: 08; mweiWidth: 04; mweiHeight: 1 ),
-{mweStations}             (mweName: 'STATIONS';                mweiStyle: 1;                 mweText:nil         ; mweColor: trBlack; mweBackG: trWhite;   mweI:0; mweB: 0; mweiX: 23; mweiY: 01; mweiWidth: 09; mweiHeight: 2 ),
+{mweQSONeedsHeader}       (mweName: 'QSO INFORMATION';         mweiStyle: LeftVisNoSunStyle; mweText:''          ; mweColor: trBlack; mweBackG: trWhite;   mweI:0; mweB: 0; mweiX: 32; mweiY: 00; mweiWidth: 14; mweiHeight: 1 ),
+{mweQSONumber}            (mweName: 'QSO NUMBER';              mweiStyle: defStyle;          mweText:''          ; mweColor: trBlack; mweBackG: trWhite;   mweI:0; mweB: 1; mweiX: 11; mweiY: 07; mweiWidth: 04; mweiHeight: 2 ),
+{mweQuickCommand}         (mweName: 'QUICK COMMAND';           mweiStyle: defStyle;          mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 00; mweiY: 12; mweiWidth: 46; mweiHeight: 1 ),
+{mweRadioOneFreq}         (mweName: 'RADIO ONE FREQ';          mweiStyle: defStyle;          mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 00; mweiY: 08; mweiWidth: 04; mweiHeight: 1 ),
+{mweRadioOne}             (mweName: 'RADIO ONE NAME';          mweiStyle: defStyle;          mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 00; mweiY: 09; mweiWidth: 04; mweiHeight: 1 ),
+{mweRadioTwoFreq}         (mweName: 'RADIO TWO FREQ';          mweiStyle: DefStyleDis;       mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 04; mweiY: 08; mweiWidth: 04; mweiHeight: 1 ),
+{mweRadioTwo}             (mweName: 'RADIO TWO NAME';          mweiStyle: DefStyleDis;       mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 04; mweiY: 09; mweiWidth: 04; mweiHeight: 1 ),
+{mweRate}                 (mweName: 'RATE';                    mweiStyle: defStyle;          mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 33; mweiY: 09; mweiWidth: 05; mweiHeight: 1 ),
+{mweSPQSOCounter}         (mweName: 'S&P COUNTER';             mweiStyle: defStyle;          mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 42; mweiY: 08; mweiWidth: 04; mweiHeight: 1 ),
+{mweStations}             (mweName: 'STATIONS';                mweiStyle: 1;                 mweText:''          ; mweColor: trBlack; mweBackG: trWhite;   mweI:0; mweB: 0; mweiX: 23; mweiY: 01; mweiWidth: 09; mweiHeight: 2 ),
 
-{mweTenMinuts}            (mweName: 'TEN MINUTES';             mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 0; mweiX: 00; mweiY: 01; mweiWidth: 05; mweiHeight: 1 ),
-{mweTotalScore}           (mweName: 'TOTAL SCORE';             mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 0; mweiX: 23; mweiY: 00; mweiWidth: 09; mweiHeight: 1 ),
-{mweUserInfo}             (mweName: 'USER INFO';               mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:1; mweB: 1; mweiX: 15; mweiY: 11; mweiWidth: 10; mweiHeight: 1 ),
-{mweWholeScreen}          (mweName: 'WHOLE SCREEN';            mweiStyle: 0;                 mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 15; mweiY: 11; mweiWidth: 10; mweiHeight: 1 ),
+{mweTenMinuts}            (mweName: 'TEN MINUTES';             mweiStyle: defStyle;          mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 0; mweiX: 00; mweiY: 01; mweiWidth: 05; mweiHeight: 1 ),
+{mweTotalScore}           (mweName: 'TOTAL SCORE';             mweiStyle: defStyle;          mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 0; mweiX: 23; mweiY: 00; mweiWidth: 09; mweiHeight: 1 ),
+{mweUserInfo}             (mweName: 'USER INFO';               mweiStyle: defStyle;          mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:1; mweB: 1; mweiX: 15; mweiY: 11; mweiWidth: 10; mweiHeight: 1 ),
+{mweWholeScreen}          (mweName: 'WHOLE SCREEN';            mweiStyle: 0;                 mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 15; mweiY: 11; mweiWidth: 10; mweiHeight: 1 ),
 {mweWinKey}               (mweName: 'WINKEYER';                mweiStyle: DefStyleDis;       mweText:'WK'        ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 38; mweiY: 11; mweiWidth: 04; mweiHeight: 1 ),
-{mweWSJTX   }             (mweName: 'WSJTX';                   mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 08; mweiY: 09; mweiWidth: 03; mweiHeight: 1 )
+{mweWSJTX   }             (mweName: 'WSJTX';                   mweiStyle: defStyle;          mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 08; mweiY: 09; mweiWidth: 03; mweiHeight: 1 )
 
 
 {*)}
@@ -2340,7 +2339,7 @@ type
 
 type
   TLogColumnsInfo = record
-    Text: PAnsiChar;
+    Text: string;
     Width: Byte;
     Align: Byte;
     Enable: boolean;
@@ -2359,11 +2358,11 @@ var
   ColumnsArray                          : array[LogColumnsType] of TLogColumnsInfo =
     (
 {(*}
-    ( Text:RC_BAND ;      Width: 4; Align: LVCFMT_CENTER; Enable: True;  Pos: 0),
-    ( Text: RC_DATE;      Width: 4; Align: LVCFMT_CENTER; Enable: True;  Pos: 0),
+    ( Text: '';           Width: 4; Align: LVCFMT_CENTER; Enable: True;  Pos: 0),
+    ( Text: '';           Width: 4; Align: LVCFMT_CENTER; Enable: True;  Pos: 0),
     ( Text: 'UTC';        Width: 3; Align: LVCFMT_CENTER; Enable: True;  Pos: 0),
     ( Text: 'QsS';        Width: 4; Align: LVCFMT_RIGHT;  Enable: True;  Pos: 0),
-    ( Text: RC_CALLSIGN;  Width: 8; Align: LVCFMT_LEFT;   Enable: True;  Pos: 0),
+    ( Text: '';           Width: 8; Align: LVCFMT_LEFT;   Enable: True;  Pos: 0),
     ( Text: 'QTC';        Width: 7; Align: LVCFMT_LEFT;   Enable: False; Pos: 0),
     ( Text: 'QsR';        Width: 3; Align: LVCFMT_RIGHT;  Enable: False; Pos: 0),
     ( Text: 'DX';         Width: 3; Align: LVCFMT_CENTER; Enable: False; Pos: 0),
@@ -2384,15 +2383,15 @@ var
 
 //    ( Text: 'PC';         Width: 4; Align: LVCFMT_CENTER; Enable: False; Pos: 0),
 
-    ( Text: TC_POINTS;    Width: 2; Align: LVCFMT_CENTER; Enable: True;  Pos: 0),
+    ( Text: '';           Width: 2; Align: LVCFMT_CENTER; Enable: True;  Pos: 0),
     ( Text: 'M';          Width: 2; Align: LVCFMT_CENTER; Enable: True;  Pos: 0),
 
     ( Text: 'Id';         Width: 2; Align: LVCFMT_CENTER; Enable: True;  Pos: 0),
     ( Text: '$';          Width: 2; Align: LVCFMT_CENTER; Enable: True;  Pos: 0),
 
     ( Text: 'D';          Width: 2; Align: LVCFMT_CENTER; Enable: True;  Pos: 0),
-    ( Text: TC_FREQ;      Width: 4; Align: LVCFMT_CENTER; Enable: True;  Pos: 0),
-    ( Text: TC_OP;        Width: 4; Align: LVCFMT_LEFT;   Enable: True;  Pos: 0)
+    ( Text: '';           Width: 4; Align: LVCFMT_CENTER; Enable: True;  Pos: 0),
+    ( Text: '';           Width: 4; Align: LVCFMT_LEFT;   Enable: True;  Pos: 0)
 {*)}
     );
 
@@ -4291,7 +4290,48 @@ QSOPartiesCount = 20;
     // zero-initialized to NoDXMults (its first value), matching the old default.
     ActiveDXMult                        : DXMultType;
 
+  { Fills the string tables that cannot be initialised where they are declared.
+    uProgramMain calls this after the translation loads and before the main
+    window is built. The body says why these three tables are special. }
+  procedure InitializeStringTables;
+
 implementation
+
+procedure InitializeStringTables;
+   { WHY THESE THREE TABLES ARE FILLED HERE AND NOT AT THEIR DECLARATION.
+
+     A typed constant is folded at COMPILE time; a resourcestring is a variable
+     the translation loader replaces at RUN time. A table initialised from TC_ or
+     RC_ text therefore pins whatever English the compiler saw, and no
+     translation can ever reach it.
+
+     That is exactly what blocked those constants from becoming resourcestring,
+     and the compiler said so rather than shipping English silently: it rejects
+     an AnsiString where the table declared PChar. The tables hold string now
+     and are filled here instead.
+
+     The only ordering requirement is that this runs AFTER the translation is
+     loaded and BEFORE anything reads a caption from these tables. }
+begin
+   tContinentArray[UnknownContinent] := TC_C9_UNKNOWN;
+   tContinentArray[NorthAmerica]     := TC_C9_NORTHAMERICA;
+   tContinentArray[SouthAmerica]     := TC_C9_SOUTHAMERICA;
+   tContinentArray[Europe]           := TC_C9_EUROPE;
+   tContinentArray[Africa]           := TC_C9_AFRICA;
+   tContinentArray[Asia]             := TC_C9_ASIA;
+   tContinentArray[Oceania]          := TC_C9_OCEANIA;
+   tContinentArray[Antartica]        := TC_C9_ANTARTICA;
+
+   TWindows[mweFootSwitch].mweText := TC_FOOTSW;
+   TWindows[mwePaddle].mweText     := TC_PADDLE;
+
+   ColumnsArray[logColBand].Text     := RC_BAND;
+   ColumnsArray[logColDate].Text     := RC_DATE;
+   ColumnsArray[logColCallsign].Text := RC_CALLSIGN;
+   ColumnsArray[logColPoints].Text   := TC_POINTS;
+   ColumnsArray[logColFreq].Text     := TC_FREQ;
+   ColumnsArray[logColOperator].Text := TC_OP;
+end;
 //rd4wa -
 begin
   tr4wColorsArray[trBtnFace] := GetSysColor(COLOR_BTNFACE);
