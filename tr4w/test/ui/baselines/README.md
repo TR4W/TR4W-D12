@@ -104,3 +104,43 @@ against a baseline captured under different conditions.
 So when this diffs, **read what changed before assuming a regression**. A
 control that moved, resized, vanished or changed `Visible` is the signal. A
 counter that went from 1 to 21 is the operator having used the program.
+
+## Comparing against a baseline (2026-08-27)
+
+Reading two JSON files side by side works once and gets skipped by the fifth
+window, so the diff is a script now:
+
+```powershell
+# YOU start TR4W (see below -- this matters), then:
+..\Compare-WindowTree.ps1 -Baseline .\main-window.json -ProcessId (Get-Process tr4w_fpc).Id
+```
+
+It exits non-zero on any difference and sorts them into four kinds. **CAPTION**
+rows a conversion is allowed to produce; **MISSING**, **ADDED**, **GEOMETRY**
+and **STATE** mean a control was lost, gained, moved or greyed, and each one
+has to be explained before the commit. `-IgnoreText` compares placement only,
+which is what a translated build needs. `-Tolerance <px>` allows for a capture
+made at a different font-size setting.
+
+Nodes are keyed by class, control id and sibling ordinal -- deliberately **not**
+by caption, because the caption is the thing under test. Keying on it would
+report a renamed button as one control removed and another added.
+
+### TR4W has to be started INTERACTIVELY, and the harness attaches to it
+
+Measured 2026-08-27, twice, with a control experiment: a process started from a
+non-interactive agent shell gets `MainWindowHandle = 0` and never acquires a
+visible window, even after three seconds, while a process the logged-on user
+started in the **same session and window station** enumerates fine from that
+same shell. So an agent, a service-mode CI runner, or anything else without a
+real desktop can RUN the comparer but cannot LAUNCH the subject. Start TR4W by
+hand (or from a logon-triggered task) and pass `-ProcessId`.
+
+That is a property of the desktop, not of TR4W, and it is why the window-tree
+gate cannot simply be bolted onto the existing `win-ci` job as it stands.
+
+### What it does not catch
+
+Colour, font, z-order, and anything drawn rather than placed in a window. A
+converted grid that renders its own cells is a single node here. A pass means
+the controls survived, not that the window looks right.
