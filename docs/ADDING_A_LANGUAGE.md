@@ -113,110 +113,106 @@ no --lang   SIniRetireTitle = Old settings file
 
 ---
 
-## 6. Form captions — DOES NOT WORK YET
+## 6. Form captions
 
-**Read this before spending a day on it. It has already cost one.**
+**They translate. The child controls translate today; the tool-window TITLES do not, and the
+reason is not the translation mechanism.**
 
-469 of 545 `.lfm` captions ship as English, so this is the largest block of untranslated
-text in the program, and the mechanism below is the intended route to it.
+### What works
 
-### THE MECHANISM WORKS. THE PROBLEM IS TR4W-SPECIFIC.
-
-Proven 2026-08-26 in a minimal LCL application — one form, one button, the *same*
-`SetDefaultLang('', '', '<name>.po', False)` call before any form exists, and a `.po` at
-`languages/es/<name>.po`:
+Everything the LCL does. Proven 2026-08-26 in TR4W itself, with the real generated catalogue
+and a probe either side of form construction:
 
 ```
---lang es -> lang=es  form.caption=Hola Espanol  button.caption=Pulsame
+at form creation : LRSTranslator = True, caption = PROBE-CAPTION-OK   <- translated
+after OwnForm    : caption = PROBE-CAPTION-OK
+after Handle     : caption = PROBE-CAPTION-OK
+at OnShow        : caption = Function keys                            <- overwritten
 ```
 
-Both the form's own caption and a child control's, from keys spelled exactly
-`tform1.caption` and `tform1.button1.caption`. **So the format, the file layout, the call
-and the LCL are all correct**, and the reason TR4W does not translate is something TR4W
-does differently. Candidates, in the order worth checking:
+So the `.po` loads, `LRSTranslator` is installed, the key matches, the LFM streams and the
+caption comes out **in Spanish**. Buttons, labels, tab captions and list items all keep it —
+that is the bulk of the 561 strings, and nothing further is needed for them.
 
-1. **When its forms are created.** The minimal app calls `Application.CreateForm`
-   immediately after `SetDefaultLang`, in the program body. TR4W creates its tool windows
-   much later, queued onto the message loop after `Application.Run` — see the deferred
-   restore in `MainUnit`. A form streamed after the translator is installed *should* still
-   pick it up, but that is the biggest structural difference and it is untested.
-2. **Whether something overwrites the caption after streaming.** `OpenTR4WWindow` and the
-   window manager came from the Win32 era, where titles were set with `SetWindowText`.
-   A caption assigned after the form is streamed defeats translation silently.
-3. **Whether `LRSTranslator` is still assigned** at the moment the form is created.
+### What overwrites the title, and why
 
-The isolation project is the tool for all three: add to it whatever TR4W does differently,
-one thing at a time, until it stops translating. That is a much cheaper loop than probing
-the real program.
+`MainUnit.pas`, in `OpenTR4WWindow`, immediately after the form is built:
 
-### What else is established
-
-* The runtime path **exists and is installed**. `SetDefaultLang`'s `.po` branch does
-  `LocalTranslator := TPOTranslator.Create(lcfn)` and then `LRSTranslator := LocalTranslator`
-  (`lcl/lcltranslator.pas`). One catalogue covers resourcestrings *and* form properties;
-  no extra wiring is needed.
-* Captions **qualify for translation**: `GetIdentifierPath` gates on
-  `PropInfo^.PropType = TypeInfo(TTranslateString)`, and `TCaption = TTranslateString`.
-* The **key format is confirmed** from Lazarus's own shipped catalogues
-  (`components/lazreport/samples/editor/languages/calleditorwithpkg.es.po`):
-
-```
-#: tfrmmain.caption                <- the form's own caption
-#: tfrmmain.accclose.caption       <- a child control
-msgctxt "TFRMMAIN.ACCCOMPOSITE.CAPTION"   <- some entries also carry this, uppercase
+```pascal
+if lclForm <> nil then
+   begin
+   lclForm.Caption := string(PWideChar(@menuText[0]));
+   end
 ```
 
-  That is `t<formclass>.<component>.<property>`, lowercased. `translations.pas` reads the
-  `#:` line, **normalises a colon to a dot** ("the RTL creates identifier paths with point
-  instead of colons") and matches on `IdentifierLow`.
+where `menuText` came from
 
-### What does not work
+```pascal
+GetMenuStringW(tr4w_main_menu, 10199 + Ord(ID), menuText, ...)
+```
 
-With the `.po` demonstrably loaded — the resourcestring in the same file translates — a
-form caption does **not**. Tried against `TfrmFunctionKeys`, whose title comes from its
-`.lfm` and is not reassigned in code:
+**Every tool window is titled from its MENU ITEM**, and the menu is a Win32 `HMENU` built in
+`uMenu.pas` from the legacy per-language constants — `(mrText: RC_FKEYS; mrId:
+menu_windows_funckeys)`. So the translated caption is replaced by `RC_FKEYS`, which is compiled
+in and never translated at run time.
 
-| tried | result |
+**That assignment is not a bug and should not simply be deleted.** Its own comment records the
+defect it fixes: a window that later sets its own caption assigns the same string it assigned
+last time, `TControl.SetCaption` compares and does nothing, and the native title keeps whatever
+was written before -- so the operator saw "Radio 1" on every reopen. Title and menu item are
+meant to stay in step.
+
+### The fix is already in the plan
+
+**Convert `RC_FKEYS` and its siblings to resourcestrings.** They are among the 163
+code-reachable `RC_` constants listed in [`I18N_PLAN.md`](I18N_PLAN.md). Once the menu text is
+translated, the title inherits it and the sync is preserved. No change to `OpenTR4WWindow`.
+
+**The menu conversion is a different job and is NOT on this path.** `tr4w_main_menu` is still an
+`HMENU`, there is no `TMainMenu` or `TActionList` in the tree, and the `10199 + Ord(ID)`
+arithmetic works because the IDs are still real. Replacing that with a `TActionList` is
+recorded, worthwhile, and much larger -- and doing it *after* the constants are resourcestrings
+means it inherits translated captions instead of having to redo them.
+
+**Consequence for translators:** the `.lfm` caption of a tool window is dead text. It is in the
+catalogue because Lazarus extracted it, and translating it changes nothing until the `RC_`
+conversion lands. Roughly twenty entries.
+
+### What was eliminated getting here
+
+Recorded so nobody repeats it. None of these was the cause:
+
+| tested | result |
 |---|---|
-| `#: tfrmfunctionkeys.caption` | no change |
-| `#: frmfunctionkeys.caption` | no change |
-| `#: tfrmfunctionkeys.frmfunctionkeys.caption` | no change |
-| `#: ufunctionkeysform.tfrmfunctionkeys.caption` | no change |
-| the correct key plus `msgctxt "TFRMFUNCTIONKEYS.CAPTION"` | no change |
-| a second `SetDefaultLang(..., ForceUpdate := True)` after the windows are open | no change |
-| clean single-entry file, no duplicate msgids, no BOM | no change |
+| Late form creation, queued onto the loop as TR4W does | still translates |
+| `Application.Initialize` before `SetDefaultLang`, TR4W's order | still translates |
+| `TForm.Create(nil)` instead of `Application.CreateForm` | still translates |
+| Four candidate identifier spellings | the first was right all along |
+| An uppercase `msgctxt` beside the `#:` line | no effect either way |
+| A second `SetDefaultLang` with `ForceUpdate := True` | no effect |
+| Hand-written vs tool-generated catalogue | same result |
 
-### lazbuild does NOT generate the catalogue
+Two process notes worth more than the list:
 
-Worth knowing before you try: **`lazbuild` does not run the i18n step.** With
-`<EnableI18N Value="True"/>` and `<OutDir Value="languages"/>` set exactly as Lazarus's own
-sample project has them, `lazbuild -B` compiled cleanly and produced **no `.lrj` and no
-`.po`**. That generation is IDE-only.
+* **The isolation project found in minutes what a day of probing the real program did not.**
+  Build a minimal LCL app, add ONE TR4W difference at a time, and stop when it breaks.
+* **Every run needs a positive control.** The run that finally located this had a
+  resourcestring and a caption translated in the SAME catalogue: the resourcestring changed and
+  the caption did not, which is what proved the catalogue was applied and narrowed the search to
+  the form path. Earlier runs had no control and could not distinguish "not applied" from
+  "applied and overwritten".
 
-`.lrj` is the same JSON as `.rsj` — `{"name":"tmainform.caption","value":"Translation demo"}`
-— and Lazarus checks the generated files into its own tree beside the `.lfm`. So a
-command-line pipeline has to produce them itself. TR4W already has the parsing half of that
-(`pas2res.py` walks `.lfm` files today for the caption census), so extending `pas2po.py` to
-emit `.lfm` captions is the practical route, not chasing `lazbuild`.
+### lazbuild does not generate the catalogue
 
-### What to try next, in this order
+`lazbuild -B` compiles clean and writes no `.lrj` and no `.po`, with `EnableI18N` and `OutDir`
+set exactly as Lazarus's own sample project has them. The step is IDE-only:
+`ide/sourcefilemanager.pas` writes the `.lrj` inside `SaveUnitComponent`, i.e. when a form is
+**saved**, never when one is built.
 
-1. ~~Isolate the mechanism from TR4W.~~ **DONE — it works.** See above. The format, the
-   file layout, the call and the LCL are all correct.
-2. ~~Let Lazarus generate the catalogue through `lazbuild`.~~ **DONE — it cannot.** The
-   i18n step is IDE-only; `lazbuild -B` produces no `.lrj` and no `.po`.
-3. **Find what TR4W does differently**, using the isolation project rather than the real
-   program: add one difference at a time until it stops translating. Start with *when* the
-   form is created — TR4W queues its tool windows onto the message loop, long after
-   `SetDefaultLang` — then look for a caption assigned after streaming.
-4. **Extend `pas2po.py` to emit `.lfm` captions** once step 3 explains the failure. TR4W
-   already parses `.lfm` files for the caption census, and `lazbuild` will not do it for
-   us, so this is the practical route to the 469.
-5. Only then consider moving captions into resourcestrings assigned at run time. It is the
-   hand-rolled alternative to what the framework already does, it means touching every
-   form, and it is what [`I18N_PLAN.md`](I18N_PLAN.md) argues against.
-
----
+Three clean builds produced nothing. What does it is the project option **"Resave forms with
+enabled i18n"**, which saves every form once. All 37 units must also carry
+`ComponentName`/`ResourceBaseClass` in the `.lpi` first -- only 19 did, and the IDE extracts
+captions only from units it knows are forms.
 
 ## Gotchas
 
