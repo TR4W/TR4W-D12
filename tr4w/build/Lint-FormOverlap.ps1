@@ -65,6 +65,13 @@ function Get-FmxControls {
          $node = [pscustomobject]@{
             Name = $Matches[1]; Type = $Matches[2]; Parent = $parent
             X = 0.0; Y = 0.0; W = 0.0; H = 0.0
+            # CW/CH are the CLIENT area -- what a child is actually laid inside.
+            # They differ from W/H by the border and any caption, and on a form
+            # ClientWidth is streamed AFTER Width, so it is the one that wins.
+            CW = 0.0; CH = 0.0
+            # A control the LCL positions itself. Its designed coordinates are
+            # overwritten at run time, so measuring them means nothing.
+            Align = 'alNone'
          }
          $nodes += $node
          $stack.Add($node) | Out-Null
@@ -92,6 +99,9 @@ function Get-FmxControls {
       elseif ($line -match '^Top\s*=\s*(-?[\d.]+)')       { $top.Y = [double]$Matches[1] }
       elseif ($line -match '^Width\s*=\s*(-?[\d.]+)')     { $top.W = [double]$Matches[1] }
       elseif ($line -match '^Height\s*=\s*(-?[\d.]+)')    { $top.H = [double]$Matches[1] }
+      elseif ($line -match '^ClientWidth\s*=\s*(-?[\d.]+)')  { $top.CW = [double]$Matches[1] }
+      elseif ($line -match '^ClientHeight\s*=\s*(-?[\d.]+)') { $top.CH = [double]$Matches[1] }
+      elseif ($line -match '^Align\s*=\s*(al[A-Za-z]+)')     { $top.Align = $Matches[1] }
    }
 
    return $nodes
@@ -119,6 +129,87 @@ function Test-Overlaps {
                   $DisplayPath, $a.Name, $a.X, $a.Y, $a.W, $a.H, $b.Name, $b.X, $b.Y, $b.W, $b.H, $group.Name)
             }
          }
+      }
+   }
+
+   return $violations
+}
+
+function Test-OutOfBounds {
+   <#
+      A control whose right or bottom edge lies outside its PARENT'S CLIENT AREA
+      is clipped.
+
+      THE .lfm IS THE SHIPPED DEFAULT (NY4I, 2026-08-26): "the form is displayed
+      with the height, width, left and top we set in the form editor, and that's
+      the default. If the user resizes it, great." So a first run, with nothing
+      saved, shows exactly what is in the file -- and on a modal dialog the
+      operator may never think to resize it away.
+
+      FOUND BY THIS, THE DAY IT WAS WRITTEN. A Lazarus "resave forms with i18n"
+      pass rewrote all 37 .lfm files and left uAboutForm with ClientWidth = 320
+      holding a memo, a URL label and an OK button that all end at x=384. All 23
+      lints passed, including the sibling-overlap half of this one: the controls
+      did not overlap EACH OTHER, they hung off the edge of the form.
+
+      MEASURED AGAINST THE CLIENT AREA, NOT Width. They differ by the border and
+      the caption, and on a form ClientWidth is streamed after Width and wins.
+      Where a parent declares no client size -- most panels -- W/H is the best
+      available and is what a child is laid inside anyway.
+
+      ALIGNED CONTROLS ARE SKIPPED. alClient, alTop and friends are positioned
+      by the LCL at run time; their designed coordinates are overwritten, so
+      measuring them reports noise. That is the same lesson the sibling check
+      learned from flattening the tree -- 22 false positives out of 23.
+   #>
+   param([string] $DisplayPath, [object[]] $Nodes)
+
+   $violations = @()
+   $byName = @{}
+   foreach ($n in $Nodes) { $byName[$n.Name] = $n }
+
+   # THE FORM'S OWN CHILDREN ONLY, and that restriction is the difference between
+   # a lint and noise. A nested container is SIZED BY ITS PARENT AT RUN TIME: a
+   # TTabSheet declares ClientHeight = 26 in the .lfm -- that is the tab strip --
+   # and is then stretched to fill its page control. Measuring against declared
+   # nested sizes reported 175 violations where the real count was 3.
+   #
+   # The form is the one container whose declared size IS what ships, which is
+   # exactly what the canon covers.
+   $root = $Nodes | Where-Object { $_.Parent -eq '(form)' } | Select-Object -First 1
+   if (-not $root) { return $violations }
+
+   foreach ($n in $Nodes) {
+      if ($n.W -le 0 -or $n.H -le 0) { continue }
+      if ($n.Align -ne 'alNone') { continue }
+      if ($n.Parent -ne $root.Name) { continue }
+      if (-not $byName.ContainsKey($n.Parent)) { continue }   # the root itself
+
+      # THE LARGER OF THE TWO, AND THAT IS NOT A FUDGE -- IT IS MEASURED.
+      #
+      # A .lfm can carry both Width and ClientWidth, and they can disagree:
+      # uAboutForm says Width = 400 and ClientWidth = 320. Reading the stream
+      # order, ClientWidth comes last and looks like the winner, so the first
+      # version of this check reported three controls hanging off that form.
+      #
+      # It is wrong. Built into a minimal LCL application with that exact
+      # property sequence, the form reports ClientWidth = 400 at run time: the
+      # declared 320 does not survive. So the effective area is the larger
+      # value, and measuring against the smaller one condemns a form that
+      # renders correctly.
+      #
+      # Which is the whole reason this is measured rather than reasoned about.
+      $p = $byName[$n.Parent]
+      $pw = [Math]::Max($p.CW, $p.W)
+      $ph = [Math]::Max($p.CH, $p.H)
+
+      if ($pw -gt 0 -and ($n.X + $n.W) -gt $pw) {
+         $violations += ("{0}: '{1}' right edge {2} is outside '{3}' (client width {4})" -f `
+            $DisplayPath, $n.Name, ($n.X + $n.W), $p.Name, $pw)
+      }
+      if ($ph -gt 0 -and ($n.Y + $n.H) -gt $ph) {
+         $violations += ("{0}: '{1}' bottom edge {2} is outside '{3}' (client height {4})" -f `
+            $DisplayPath, $n.Name, ($n.Y + $n.H), $p.Name, $ph)
       }
    }
 
@@ -276,11 +367,30 @@ if (-not $SourceDir) {
 # .fmx alone meant that as each form was ported to the LCL it silently dropped
 # out of this gate, which is how a designed-form defect gets shipped.
 $totalLaid = 0
-$files = @(Get-ChildItem -Path $SourceDir -Recurse -File | Where-Object { $_.Extension -in '.fmx', '.lfm' })
+# NOT the IDE's backup copies. Lazarus writes a previous revision into
+# src/ui/lcl/backup/ every time it saves a form, so those are STALE BY
+# DEFINITION -- and a stale layout failing the build is a false alarm about a
+# file nothing compiles. Found when the bounds check reported 175 violations
+# and most of them were in backup/.
+$files = @(Get-ChildItem -Path $SourceDir -Recurse -File |
+   Where-Object { $_.Extension -in '.fmx', '.lfm' -and $_.FullName -notmatch '\\backup\\' })
 $violations = @()
+$bounds = @()
 foreach ($f in $files) {
    $nodes = Get-FmxControls -Lines (Get-Content -LiteralPath $f.FullName)
    $violations += Test-Overlaps -DisplayPath $f.FullName -Nodes $nodes
+   $bounds   += Test-OutOfBounds -DisplayPath $f.FullName -Nodes $nodes
+}
+
+# Reported separately: they are different defects with different fixes. An
+# overlap means two controls were placed on the same spot; out-of-bounds means
+# the container is too small for what it holds.
+if ($bounds.Count -gt 0) {
+   $bounds | ForEach-Object { Write-Output $_ }
+   Write-Output ("Lint-FormOverlap: {0} control(s) outside their parent's client area." -f $bounds.Count)
+   Write-Output "  Resize the container in the form editor -- the .lfm is the shipped default,"
+   Write-Output "  so a first run with nothing saved displays exactly this."
+   exit 1
 }
 
 if ($violations.Count -gt 0) {
