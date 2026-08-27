@@ -34,7 +34,6 @@ msgstr "tr4w@qrz.ru"
 #. Section: General
 #: utr4wstrings:tc_wagwarn
 #: tr4w/src/lang/tr4w_consts_eng.pas:10
-#, fuzzy
 msgctxt "TC_WAGWarn"
 msgid "Warning: Out of WAG allowed frequency range"
 msgstr "Advertencia: Fuera del rango de frecuencia permitido de WAG"
@@ -1770,7 +1769,7 @@ msgstr "Otros estados de la memoria de mensajes SSB"
 #: tr4w/src/lang/tr4w_consts_eng.pas:338
 msgctxt "TC_PRESSCQFUNCTIONKEYTOPROGRAM"
 msgid " Press CQ function key to program (F1, AltF1, CtrlF1), or ESCAPE to exit) : "
-msgstr "Pulsa la tecla de función CQ para programar (F1, AltF1, CtrlF1), o ESCAPE para salir:"
+msgstr "Pulsa la tecla de función CQ para programar (F1, AltF1, CtrlF1), o ESCAPE para salir: "
 
 #. Section: LOGCW
 #: utr4wstrings:tc_pressexfunctionkeytoprogram
@@ -2684,7 +2683,6 @@ msgid "Show all serial ports"
 msgstr "Mostrar todos los puertos serie"
 
 #: tfrmabout.btnok.caption
-#, fuzzy
 msgctxt "tfrmabout.btnok.caption"
 msgid "OK"
 msgstr "OK"
@@ -3628,7 +3626,6 @@ msgid "Commands"
 msgstr "Comandos"
 
 #: tfrmtelnet.btnconnect.caption
-#, fuzzy
 msgid "Connect"
 msgstr "Conectar"
 
@@ -4127,9 +4124,8 @@ msgid "Show the key number on the function-key buttons"
 msgstr "Mostrar el número de clave en los botones función-key"
 
 #: tprefsform.chkintercomfile.caption
-#, fuzzy
 msgid "Log network messages to INTERCOM.TXT"
-msgstr "Lograr mensajes de red a INTERCOM. TXT"
+msgstr "Lograr mensajes de red a INTERCOM.TXT"
 
 #: tprefsform.chkkeypadcwmemories.caption
 #, fuzzy
@@ -4540,9 +4536,8 @@ msgid "After connecting:"
 msgstr "Después de conectarse:"
 
 #: tprefsform.lblclustercommandhint.caption
-#, fuzzy
 msgid "Sent once the login is accepted - filters, set/name, sh/dx.  Separate several with a semicolon."
-msgstr "Enviado una vez que se acepta el login - filtros, set/name, sh/dx. Separar varios con un ymicolon."
+msgstr "Enviado una vez que se acepta el iniciar sesión - filtros, set/name, sh/dx.  Separar varios con un punto y coma."
 
 #: tprefsform.lblclusterglobalheading.caption
 #, fuzzy
