@@ -58,7 +58,49 @@ function StrPos(const Str1, Str2: PAnsiChar): PAnsiChar;
 function StrPCopy(Dest: PAnsiChar; const Source: AnsiString): PAnsiChar;
 function StrPLCopy(Dest: PAnsiChar; const Source: AnsiString; MaxLen: Cardinal): PAnsiChar;
 
+{ TEXT FOR A WIN32 ...A ENTRY POINT, in the machine's ANSI code page.
+
+  NOT AnsiString(s). tr4w.inc makes `string` UTF-16 and the LCL sets
+  DefaultSystemCodePage to 65001, so a plain AnsiString cast yields UTF-8
+  BYTES, which an ...A entry point reads as cp1252. That is how the New
+  Contest dialog showed 'Ultimo archivo de configuracion' with each accented
+  letter doubled, in Spanish (NY4I, 2026-08-27).
+
+  AnsiString(CP_ACP) does NOT help: CP_ACP is 0, and 0 means
+  DefaultSystemCodePage -- the value that is wrong here. The code page must
+  be named to the conversion, hence WideCharToMultiByte.
+
+  RawByteString so the bytes carry no code-page tag and cannot be converted
+  a second time on the way out. Use it AT the call, PAnsiChar(WinAnsi(s)),
+  so the temporary outlives the statement.
+
+  26 units still run a Win32 dialog proc, so this is not a corner case. It
+  retires with the last of them -- an LCL form needs none of it. }
+function WinAnsi(const s: string): RawByteString;
+
 implementation
+
+uses
+   Windows;   // WideCharToMultiByte, CP_ACP
+
+function WinAnsi(const s: string): RawByteString;
+var
+   n: integer;
+begin
+   Result := '';
+   if s = '' then
+      begin
+      Exit;
+      end;
+   n := WideCharToMultiByte(CP_ACP, 0, PWideChar(s), Length(s), nil, 0, nil, nil);
+   if n <= 0 then
+      begin
+      Exit;
+      end;
+   SetLength(Result, n);
+   WideCharToMultiByte(CP_ACP, 0, PWideChar(s), Length(s),
+                       PAnsiChar(Result), n, nil, nil);
+end;
 
 function StrLen(const Str: PAnsiChar): Cardinal;
 var

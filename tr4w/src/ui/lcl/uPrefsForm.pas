@@ -91,7 +91,8 @@ uses
    uUDPDestinationEditForm,   // one UDP destination, edited in isolation
    uUDPBroadcastConfig,       // the settings this panel edits
    uSettingsBinding,          // TSettingBindings -- a field on the form below
-  uTR4WStrings;
+  uTR4WStrings,
+  uAnsiStr;
 
 
 const
@@ -4098,7 +4099,7 @@ begin
       end;
 
    if MessageBoxA(Self.Handle,
-                  PAnsiChar(AnsiString(Format(TC_PREFS_CONFIRMREMOVE, [radio.Name]))),
+                  PAnsiChar(WinAnsi(Format(TC_PREFS_CONFIRMREMOVE, [radio.Name]))),
                   'TR4W', MB_YESNO or MB_ICONQUESTION) <> IDYES then
       begin
       Exit;
@@ -6898,7 +6899,7 @@ begin
    if conflicts <> '' then
       begin
       if MessageBoxA(Self.Handle,
-                     PAnsiChar(AnsiString(Format(TC_PREFS_PORTCONFLICT, [conflicts]))),
+                     PAnsiChar(WinAnsi(Format(TC_PREFS_PORTCONFLICT, [conflicts]))),
                      'TR4W', MB_YESNO or MB_ICONWARNING or MB_DEFBUTTON2) <> IDYES then
          begin
          Exit;
@@ -7053,8 +7054,8 @@ begin
    if FDirty then
       begin
       answer := MessageBoxA(Self.Handle,
-                            PAnsiChar(AnsiString(TC_PREFS_UNSAVED)),
-                            PAnsiChar(AnsiString(TC_PREFS_UNSAVEDTITLE)),
+                            PAnsiChar(WinAnsi(TC_PREFS_UNSAVED)),
+                            PAnsiChar(WinAnsi(TC_PREFS_UNSAVEDTITLE)),
                             MB_YESNOCANCEL or MB_ICONQUESTION);
       if answer = IDCANCEL then
          begin

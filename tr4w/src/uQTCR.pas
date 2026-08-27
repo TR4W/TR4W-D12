@@ -39,7 +39,8 @@ uCallSignRoutines,
   Windows,
   Messages
   ,
-  uTR4WStrings;
+  uTR4WStrings,
+  uAnsiStr;
 
 function QTCRDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 function PutQTCSignInExchangeField(s: string): boolean;
@@ -127,7 +128,7 @@ begin
         QTCRCallsignWndHandle := tCreateEditWindow(WS_EX_STATICEDGE, QTCCallsign, WS_CHILD or SS_SUNKEN or SS_NOTIFY or SS_CENTER or WS_VISIBLE or ES_UPPERCASE, QTCLEFT + QTCWIDTHARRAY[1] + QTCROWSDIS + QTCWIDTHARRAY[2] + QTCROWSDIS, 5, 120, 18, hwnddlg, 88);
         OldQTCREditProc := Pointer(Windows.SetWindowLong(QTCRCallsignWndHandle, GWL_WNDPROC, integer(@NewQTCREditProc)));
         // Issue #997: asm wsprintf-push -> TF.Format (MaxQTCsThisStation is integer).
-        TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_ENTERQTCMAXOF)), MaxQTCsThisStation);
+        TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_ENTERQTCMAXOF)), MaxQTCsThisStation);
         tCreateStaticWindow(wsprintfBuffer, WS_CHILD or SS_SUNKEN or SS_NOTIFY or SS_CENTER or WS_VISIBLE, 212, 5, 140, 18, hwnddlg, 10);
         QTCNrWndHandle := tCreateEditWindow(WS_EX_STATICEDGE, '', WS_CHILD or SS_SUNKEN or SS_NOTIFY or SS_CENTER or WS_VISIBLE, 355, 5, 90, 18, hwnddlg, 73);
         OldQTCREditProc := Pointer(Windows.SetWindowLong(QTCNrWndHandle, GWL_WNDPROC, integer(@NewQTCREditProc)));

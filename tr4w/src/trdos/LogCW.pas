@@ -42,7 +42,8 @@ utils_text,
   LogK1EA,
   classes
   ,
-  uTR4WStrings;
+  uTR4WStrings,
+  uAnsiStr;
 
 type
   KeyStatusType = (NormalKeys, AltKeys, ControlKeys);
@@ -849,7 +850,7 @@ begin
               begin
               TempString                                      := Copy(TempString, 1, 78) + '+';
               end;
- //          Windows.SetWindowTextA(MessagesValues[Ord(Key)], PAnsiChar(AnsiString(TempString)));
+ //          Windows.SetWindowTextA(MessagesValues[Ord(Key)], PAnsiChar(WinAnsi(TempString)));
              //                ClrEol;
              //                WriteLn (TempString);
            end;
@@ -873,7 +874,7 @@ begin
               begin
               TempString                                      := Copy(TempString, 1, 78) + '+';
               end;
- //          Windows.SetWindowTextA(MessagesValues[Ord(Key) - 24], PAnsiChar(AnsiString(TempString)));
+ //          Windows.SetWindowTextA(MessagesValues[Ord(Key) - 24], PAnsiChar(WinAnsi(TempString)));
              //                ClrEol;
              //                WriteLn (TempString);
            end;
@@ -897,7 +898,7 @@ begin
               begin
               TempString                                      := Copy(TempString, 1, 78) + '+';
               end;
- //          Windows.SetWindowTextA(MessagesValues[Ord(Key) - 12], PAnsiChar(AnsiString(TempString)));
+ //          Windows.SetWindowTextA(MessagesValues[Ord(Key) - 12], PAnsiChar(WinAnsi(TempString)));
              //                ClrEol;
              //                WriteLn (TempString);
            end;
@@ -945,7 +946,7 @@ begin
                            begin
                            TempString                                    := Copy(TempString, 1, 78) + '+';
                            end;
-            //            Windows.SetWindowTextA(MessagesValues[Ord(Key)], PAnsiChar(AnsiString(TempString)));
+            //            Windows.SetWindowTextA(MessagesValues[Ord(Key)], PAnsiChar(WinAnsi(TempString)));
                             //                    ClrEol;
                             //                    WriteLn (TempString);
                         end;
@@ -967,7 +968,7 @@ begin
                  begin
                  TempString                                    := Copy(TempString, 1, 78) + '+';
                  end;
-  //            Windows.SetWindowTextA(MessagesValues[Ord(Key)], PAnsiChar(AnsiString(TempString)));
+  //            Windows.SetWindowTextA(MessagesValues[Ord(Key)], PAnsiChar(WinAnsi(TempString)));
                 //                    ClrEol;
                 //                    WriteLn (TempString);
               end;
@@ -1043,57 +1044,57 @@ begin
 //         TempString                                       := ' 1. Call Okay Now - ' + CorrectedCallMessage;
 //         if length(TempString) > 79 then TempString       := Copy(TempString, 1, 78) + '+';
 //         WriteLn(TempString);
-//    Windows.SetWindowTextA(MessagesValues[112], PAnsiChar(AnsiString('Call Okay Now - ' + CorrectedCallMessage)));
+//    Windows.SetWindowTextA(MessagesValues[112], PAnsiChar(WinAnsi('Call Okay Now - ' + CorrectedCallMessage)));
       //         ClrEol;
       //         TempString                                 := ' 2. CQ Exchange   - ' + CQExchange;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowTextA(MessagesValues[113], PAnsiChar(AnsiString('CQ Exchange   - ' + CQExchange)));
+//    Windows.SetWindowTextA(MessagesValues[113], PAnsiChar(WinAnsi('CQ Exchange   - ' + CQExchange)));
 
       //         ClrEol;
       //         TempString                                 := ' 3. CQ Ex Name    - ' + CQExchangeNameKnown;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowTextA(MessagesValues[114], PAnsiChar(AnsiString('CQ Ex Name    - ' + CQExchangeNameKnown)));
+//    Windows.SetWindowTextA(MessagesValues[114], PAnsiChar(WinAnsi('CQ Ex Name    - ' + CQExchangeNameKnown)));
 
       //         ClrEol;
       //         TempString                                 := ' 4. QSL Message   - ' + QSLMessage;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowTextA(MessagesValues[115], PAnsiChar(AnsiString('QSL Message   - ' + QSLMessage)));
+//    Windows.SetWindowTextA(MessagesValues[115], PAnsiChar(WinAnsi('QSL Message   - ' + QSLMessage)));
       //         ClrEol;
       //         TempString                                 := ' 5. QSO Before    - ' + QSOBeforeMessage;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowTextA(MessagesValues[116], PAnsiChar(AnsiString('QSO Before    - ' + QSOBeforeMessage)));
+//    Windows.SetWindowTextA(MessagesValues[116], PAnsiChar(WinAnsi('QSO Before    - ' + QSOBeforeMessage)));
 
       //         ClrEol;
       //         TempString                                 := ' 6. Quick QSL     - ' + QuickQSLMessage1;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowTextA(MessagesValues[117], PAnsiChar(AnsiString('Quick QSL     - ' + QuickQSLMessage1)));
+//    Windows.SetWindowTextA(MessagesValues[117], PAnsiChar(WinAnsi('Quick QSL     - ' + QuickQSLMessage1)));
 
       //         ClrEol;
       //         TempString                                 := ' 7. Repeat S&P Ex - ' + RepeatSearchAndPounceExchange;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowTextA(MessagesValues[118], PAnsiChar(AnsiString('Repeat S&P Ex - ' + RepeatSearchAndPounceExchange)));
+//    Windows.SetWindowTextA(MessagesValues[118], PAnsiChar(WinAnsi('Repeat S&P Ex - ' + RepeatSearchAndPounceExchange)));
 
       //         ClrEol;
       //         TempString                                 := ' 8. S&P Exchange  - ' + SearchAndPounceExchange;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowTextA(MessagesValues[119], PAnsiChar(AnsiString('S&P Exchange  - ' + SearchAndPounceExchange)));
+//    Windows.SetWindowTextA(MessagesValues[119], PAnsiChar(WinAnsi('S&P Exchange  - ' + SearchAndPounceExchange)));
 
       //         ClrEol;
       //         TempString                                 := ' 9. Tail end msg  - ' + TailEndMessage;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowTextA(MessagesValues[120], PAnsiChar(AnsiString('Tail end msg  - ' + TailEndMessage)));
+//    Windows.SetWindowTextA(MessagesValues[120], PAnsiChar(WinAnsi('Tail end msg  - ' + TailEndMessage)));
 
-//    Windows.SetWindowTextA(MessagesValues[121], PAnsiChar(AnsiString('Short 0       - ' + Short0)));
-//    Windows.SetWindowTextA(MessagesValues[122], PAnsiChar(AnsiString('Short 1       - ' + Short1)));
-//    Windows.SetWindowTextA(MessagesValues[123], PAnsiChar(AnsiString('Short 9       - ' + Short9)));
+//    Windows.SetWindowTextA(MessagesValues[121], PAnsiChar(WinAnsi('Short 0       - ' + Short0)));
+//    Windows.SetWindowTextA(MessagesValues[122], PAnsiChar(WinAnsi('Short 1       - ' + Short1)));
+//    Windows.SetWindowTextA(MessagesValues[123], PAnsiChar(WinAnsi('Short 9       - ' + Short9)));
 
       //         ClrEol;
       //         Write('A. Short 0 = ', Short0, '   ',
@@ -1110,7 +1111,7 @@ begin
       //         TempString                                 := ' 1. Call Okay Now - ' + DVPPath + CorrectedCallPhoneMessage;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowTextA(MessagesValues[112], PAnsiChar(AnsiString('Call Okay Now - ' + CorrectedCallPhoneMessage)));
+//    Windows.SetWindowTextA(MessagesValues[112], PAnsiChar(WinAnsi('Call Okay Now - ' + CorrectedCallPhoneMessage)));
 
   end;
 end;

@@ -871,7 +871,7 @@ begin
     // FileNameType buffer using a CHARACTER count -> "C",#0,":",#0,... ->
     // the cfg path was truncated to "C", config never loaded, and startup
     // died with "No callsign specified".  Copy the ANSI form instead.
-    Windows.lstrcpyA(TR4W_CFG_FILENAME, PAnsiChar(AnsiString(s)));
+    Windows.lstrcpyA(TR4W_CFG_FILENAME, PAnsiChar(WinAnsi(s)));
     goto CommandLine;
   end;
 
@@ -915,7 +915,7 @@ begin
      // file -- and said so, because silence is the defect being fixed.
      if Length(s) < SizeOf(FileNameType) then
         begin
-        Windows.lstrcpyA(TR4W_CFG_FILENAME, PAnsiChar(AnsiString(s)));
+        Windows.lstrcpyA(TR4W_CFG_FILENAME, PAnsiChar(WinAnsi(s)));
         end
      else
         begin

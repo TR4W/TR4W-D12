@@ -61,7 +61,8 @@ uses {Dos, Printer,}Tree,
   uMults,
   Windows
   ,
-  uTR4WStrings;
+  uTR4WStrings,
+  uAnsiStr;
 
 var
   MRC: Str10;
@@ -5413,7 +5414,7 @@ begin
      Exit;
      end;
 
-  TF.Format(QuickDisplayBuffer, PAnsiChar(AnsiString(TC_SAVINGTO)), TR4W_LOG_FILENAME, TR4W_FLOPPY_FILENAME);
+  TF.Format(QuickDisplayBuffer, PAnsiChar(WinAnsi(TC_SAVINGTO)), TR4W_LOG_FILENAME, TR4W_FLOPPY_FILENAME);
   QuickDisplay(QuickDisplayBuffer);
 
   if not Windows.CopyFileA(TR4W_LOG_FILENAME, TR4W_FLOPPY_FILENAME, False) then
@@ -5425,7 +5426,7 @@ begin
      end
   else
      begin
-     TF.Format(QuickDisplayBuffer, PAnsiChar(AnsiString(TC_FILESAVEDTOSUCCESSFULLY)), TR4W_FLOPPY_FILENAME);
+     TF.Format(QuickDisplayBuffer, PAnsiChar(WinAnsi(TC_FILESAVEDTOSUCCESSFULLY)), TR4W_FLOPPY_FILENAME);
      QuickDisplay(QuickDisplayBuffer);
      end;
 end;

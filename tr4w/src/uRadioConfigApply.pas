@@ -72,7 +72,8 @@ uses
    IniFiles,
    uRadioConfigStore,
    uKeyerConfigStore,
-   uRadioConfigLegacyMap;
+   uRadioConfigLegacyMap,
+  uAnsiStr;
 
 // Resolve what the registry says about a definition's identity, so the pure
 // renderer does not have to know the registry exists.
@@ -841,7 +842,7 @@ begin
    // counterpart of the WritePrivateProfileSectionA that used to write it.
    Windows.ZeroMemory(@buf, SizeOf(buf));
    n := Windows.GetPrivateProfileSectionA('BAND PLAN', @buf[0], SizeOf(buf),
-                                          PAnsiChar(AnsiString(TR4W_INI_FILENAME)));
+                                          PAnsiChar(WinAnsi(TR4W_INI_FILENAME)));
    if n = 0 then
       begin
       Exit;

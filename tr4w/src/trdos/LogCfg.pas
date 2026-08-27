@@ -568,7 +568,7 @@ begin
       FileString[length(FileString) + 1] := #0;
       // Issue #997: asm wsprintf-push -> TF.Format. Args pushed cdecl-reverse;
       // format is %s(FileName) / %u(LineNumber) / %s(FileString).
-      TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_INVALIDSTATEMENTIN)), @FileName[1], LineNumber, @FileString[1]);
+      TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_INVALIDSTATEMENTIN)), @FileName[1], LineNumber, @FileString[1]);
       showwarning(wsprintfBuffer);
       Exit;
             end;
@@ -584,7 +584,7 @@ begin
      begin
      FileName[Ord(FileName[0]) + 1] := #0;
      // Issue #997: asm wsprintf-push -> TF.Format.
-     TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_UNABLETOFIND)), @FileName[1]);
+     TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_UNABLETOFIND)), @FileName[1]);
      showwarning(wsprintfBuffer);
      Exit;
      end;
@@ -981,7 +981,7 @@ var
         end
      else
         begin
-        TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_INVALIDSTATEMENTINCONFIGFILE)), CFGFilesArray[CurrentConfigFile], LineNumberInConfigFile, @FileString^[1]);
+        TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_INVALIDSTATEMENTINCONFIGFILE)), CFGFilesArray[CurrentConfigFile], LineNumberInConfigFile, @FileString^[1]);
         showwarning(wsprintfBuffer);
  //    halt;
         end;

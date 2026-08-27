@@ -53,7 +53,8 @@ uses
   LogRadio,
   Windows
   ,
-  uTR4WStrings;
+  uTR4WStrings,
+  uAnsiStr;
 
 const
   MULT_DX = 1;
@@ -789,7 +790,7 @@ begin
      end;
   DomesticQTHtemp := DomesticQTH;
 
-  TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_MULTNEEDSFOR)), PAnsiChar(AnsiString(DomesticQTHtemp)));
+  TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_MULTNEEDSFOR)), PAnsiChar(WinAnsi(DomesticQTHtemp)));
 
   logger.debug('[ShowDomesticMultiplierStatus] MultNeedsHeader field set to %s',[DomesticQTHtemp]);
   SetMainWindowText(mweMultNeedsHeader, wsprintfBuffer);
@@ -812,7 +813,7 @@ begin
       push eax
     end;
   }
-  TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_MULTNEEDSFOR)), PAnsiChar(integer(Call) + 1));
+  TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_MULTNEEDSFOR)), PAnsiChar(integer(Call) + 1));
   logger.debug('[ShowMultiplierStatus] MultNeedsHeader field set to %s',[Call^]);
   SetMainWindowText(mweMultNeedsHeader, wsprintfBuffer);
   SetMultStatus(Call^, '');
@@ -1146,7 +1147,7 @@ begin
      Exit;
      end;
 
-  TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_QSONEEDSFOR)), PAnsiChar(AnsiString(Call)));
+  TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_QSONEEDSFOR)), PAnsiChar(WinAnsi(Call)));
   SetMainWindowText(mweQSONeedsHeader, wsprintfBuffer);
   //  tSetWindowText(QIHeaderWindowHandle, ' QSO needs for ' + Call);
 
@@ -1195,7 +1196,7 @@ begin
      Exit;
      end;
 
-  TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_QSONEEDSFOR)), PAnsiChar(integer(Call) + 1));
+  TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_QSONEEDSFOR)), PAnsiChar(integer(Call) + 1));
   SetMainWindowText(mweQSONeedsHeader, wsprintfBuffer);
   //  tSetWindowText(QIHeaderWindowHandle, ' QSO needs for ' + Call);
 
@@ -1734,7 +1735,7 @@ begin
         end;
      end;
 
-  TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_MISSINGMULTSREPORT)), NumberCountriesDisplayed,
+  TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_MISSINGMULTSREPORT)), NumberCountriesDisplayed,
     MultReportMinimumBands);
 
   Windows.SetWindowTextA(h, wsprintfBuffer);

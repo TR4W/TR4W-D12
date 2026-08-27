@@ -51,7 +51,8 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, SyncObjs, StrUtils,
   IdUDPServer, IdSocketHandle, IdGlobal, IdComponent,
-  uIcomNetworkTypes, uFactoryRadioBase, Log4D;
+  uIcomNetworkTypes, uFactoryRadioBase, Log4D,
+  uAnsiStr;
 
 // Direct WinSock sendto declaration using const/untyped params to avoid
 // type conflicts with Windows unit's TSockAddr vs WinSock2.TSockAddr.
@@ -629,7 +630,7 @@ begin
     Sock := WinSock.socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if Sock = INVALID_SOCKET then Exit;
     try
-      DestIP := WinSock.inet_addr(PAnsiChar(AnsiString(FRadioAddress)));
+      DestIP := WinSock.inet_addr(PAnsiChar(WinAnsi(FRadioAddress)));
       if DestIP = INADDR_NONE then Exit;
 
       FillChar(DestAddr, SizeOf(DestAddr), 0);
@@ -1595,7 +1596,7 @@ begin
   FillChar(Addr, SizeOf(Addr), 0);
   Addr.sin_family := 2;  // AF_INET
   Addr.sin_port   := (TargetPort shr 8) or ((TargetPort and $FF) shl 8);  // htons
-  Addr.sin_addr   := LongWord(inet_addr(PAnsiChar(AnsiString(TargetAddr))));
+  Addr.sin_addr   := LongWord(inet_addr(PAnsiChar(WinAnsi(TargetAddr))));
 
   Ret := ws2_sendto(SockHandle, Data, DataLen, 0, Addr, SizeOf(Addr));
   if Ret < 0 then

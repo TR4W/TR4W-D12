@@ -41,7 +41,8 @@ uses
   uFlexDiscovery,
   uIcomNetworkDiscovery,
   uIcomNetworkTypes,
-  uTR4WStrings;
+  uTR4WStrings,
+  uAnsiStr;
 
 procedure CloseCATAndKeyerForThisRadio;
 function CATDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
@@ -933,7 +934,7 @@ begin
    // The choices are all exactly 3 characters, so CB_SELECTSTRING's prefix
    // match is an exact match here.
    SendDlgItemMessageA(hwnddlg, SERIALFMT_COMBO_ID, CB_SELECTSTRING,
-      WPARAM(-1), LPARAM(PAnsiChar(AnsiString(fmt))));
+      WPARAM(-1), LPARAM(PAnsiChar(WinAnsi(fmt))));
 end;
 
 // Push every control below the BAUD RATE row down by one row pitch, grow the
@@ -1299,7 +1300,7 @@ begin
   // radios with LAN auto-discovery: K4, the network Icoms, FLEX).
   if not TRadioFactory.IsDiscoverable(rt) then
      begin
-     TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_DISCOVER_NOT_AVAILABLE)), PAnsiChar(radioName));
+     TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_DISCOVER_NOT_AVAILABLE)), PAnsiChar(radioName));
      showwarning(wsprintfBuffer);
      Exit;
      end;
@@ -1317,7 +1318,7 @@ begin
 
      if found.Count = 0 then
         begin
-        TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_DISCOVER_NONE_FOUND)), PAnsiChar(radioName));
+        TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_DISCOVER_NONE_FOUND)), PAnsiChar(radioName));
         showwarning(wsprintfBuffer);
         end
      else
@@ -1329,7 +1330,7 @@ begin
         ApplyDefaultNetworkPort(hwnddlg);
         if found.Count > 1 then
            begin
-           TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_DISCOVER_MULTI_FOUND)), PAnsiChar(radioName));
+           TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_DISCOVER_MULTI_FOUND)), PAnsiChar(radioName));
            msg := string(wsprintfBuffer) + #13#10;
            for i := 0 to found.Count - 1 do
               begin
@@ -2358,7 +2359,7 @@ begin
       end;
    logger.Warn('[ConfirmPortConflicts] ' + conflicts);
    Result := MessageBoxA(hwnddlg,
-      PAnsiChar(AnsiString(conflicts + #13#10#13#10 + TC_PORT_CONFLICT_PROCEED)),
+      PAnsiChar(WinAnsi(conflicts + #13#10#13#10 + TC_PORT_CONFLICT_PROCEED)),
       'TR4W',
       MB_YESNO or MB_ICONWARNING or MB_DEFBUTTON2) = IDYES;
 end;

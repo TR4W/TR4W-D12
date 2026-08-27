@@ -58,7 +58,8 @@ implementation
 
 uses
    SysUtils
-   {$IFDEF WINDOWS}, Windows{$ENDIF};
+   {$IFDEF WINDOWS}, Windows{$ENDIF},
+  uAnsiStr;
 
 {$IFDEF WINDOWS}
 function PresentViaDosDevice(aNumber: integer): boolean;
@@ -70,7 +71,7 @@ begin
    // else is using it -- which matters, because TR4W itself may already hold the
    // port for keying when Preferences opens.
    FillChar(buf, SizeOf(buf), 0);
-   Result := Windows.QueryDosDeviceA(PAnsiChar(AnsiString('LPT' + IntToStr(aNumber))),
+   Result := Windows.QueryDosDeviceA(PAnsiChar(WinAnsi('LPT' + IntToStr(aNumber))),
                                      buf, Length(buf)) <> 0;
 end;
 

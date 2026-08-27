@@ -233,7 +233,7 @@ var
    sBody: AnsiString;
    begin
    sBody := AnsiString('xml=<?xml version="1.0"?>') + BuildDynamicResultsXml;
-   lstrcpyA(GetScoresBuffer, PAnsiChar(AnsiString(sBody)));
+   lstrcpyA(GetScoresBuffer, PAnsiChar(WinAnsi(sBody)));
    logger.Debug('[MakePOSTRequestNew] %s', [GetScoresBuffer]);
    Result := Windows.lstrlenA(GetScoresBuffer);
    end;

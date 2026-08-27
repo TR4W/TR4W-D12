@@ -65,7 +65,8 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, StdCtrls, LCLType,
-  uTR4WStrings;
+  uTR4WStrings,
+  uAnsiStr;
 
 type
   TfrmEditMessage = class(TForm)
@@ -301,7 +302,7 @@ begin
       Exit;
       end;
 
-   path := AnsiString(GetRealPath(Config.DVKPath, PAnsiChar(AnsiString(msg)), nil));
+   path := AnsiString(GetRealPath(Config.DVKPath, PAnsiChar(WinAnsi(msg)), nil));
 
    // utils_file.FileExists takes a PAnsiChar; SysUtils' string overload is also
    // in scope, so the cast says which is meant rather than leaving it to the

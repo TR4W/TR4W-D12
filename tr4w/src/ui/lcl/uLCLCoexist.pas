@@ -123,7 +123,8 @@ uses
    Interfaces,
    Forms,
    LCLType,      { MB_OK, MB_ICONWARNING }
-   uAppStrings;  { SAlreadyRunningTitle }
+   uAppStrings,
+  uAnsiStr;  { SAlreadyRunningTitle }
 
 var
    gInitialised: boolean = False;
@@ -134,8 +135,8 @@ begin
    // takes PChar meaning PAnsiChar, while this unit compiles with
    // {$MODESWITCH UnicodeStrings} so a bare PChar cast would hand it UTF-16 and
    // it would render the first letter and stop.
-   Application.MessageBox(PAnsiChar(AnsiString(aMessage)),
-                          PAnsiChar(AnsiString(SAlreadyRunningTitle)),
+   Application.MessageBox(PAnsiChar(WinAnsi(aMessage)),
+                          PAnsiChar(WinAnsi(SAlreadyRunningTitle)),
                           MB_OK or MB_ICONWARNING);
 end;
 

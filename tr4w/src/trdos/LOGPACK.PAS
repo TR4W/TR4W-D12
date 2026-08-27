@@ -41,7 +41,8 @@ uCallSignRoutines,
   Tree,
   LogWind,
   LogNet,
-  LogGrid;
+  LogGrid,
+  uAnsiStr;
 
 const
   PacketSpotListLength                  = 10;
@@ -1045,7 +1046,7 @@ begin
         //wli            if PacketBeep then Write(Beep);
 
 //      QuickDisplay(SourceCall + ' says ' + Call + ' is on ' + FrequencyString + '  ' + Notes);
-//      SendMessage(QuickCommandWindowHandle, SB_SETTEXT, 1, lParam(PAnsiChar(AnsiString(SourceCall + ' says ' + Call + ' is on ' + FrequencyString + '  ' + Notes))));
+//      SendMessage(QuickCommandWindowHandle, SB_SETTEXT, 1, lParam(PAnsiChar(WinAnsi(SourceCall + ' says ' + Call + ' is on ' + FrequencyString + '  ' + Notes))));
 
         //            ReminderPostedCount := 60;
     end;

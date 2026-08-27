@@ -40,7 +40,8 @@ uses
   LogRadio,
   Messages
   ,
-  uTR4WStrings;
+  uTR4WStrings,
+  uAnsiStr;
 
 function QTCSDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 procedure SendQTC(QTC: integer);
@@ -114,10 +115,10 @@ begin
   case Msg of
     WM_INITDIALOG:
       begin
-//        P2 := PAnsiChar(AnsiString(QTCCallsign));
+//        P2 := PAnsiChar(WinAnsi(QTCCallsign));
         // Issue #997: asm wsprintf-push -> TF.Format. TC_QTC_FOR = '%s for %s';
         // cdecl-reverse pushes -> arg1=QRVString, arg2=QTCCallsign.
-        TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_QTC_FOR)), @QRVString[1], @QTCCallsign[1]);
+        TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_QTC_FOR)), @QRVString[1], @QTCCallsign[1]);
 
         Windows.SetWindowTextA(hwnddlg, wsprintfBuffer);
         QTCTXButtonsPChar[1] := @QRVString[1];
@@ -330,7 +331,7 @@ begin
                  end;
 
               // Issue #997: asm wsprintf-push -> TF.Format.
-              TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_WASMESSAGENUMBERCONFIRMED)), QTCWasSend);
+              TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_WASMESSAGENUMBERCONFIRMED)), QTCWasSend);
 
               if YesOrNo(hwnddlg, wsprintfBuffer) = IDno then
                  begin

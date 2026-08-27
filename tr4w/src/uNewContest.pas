@@ -37,7 +37,8 @@ uses
   utils_file,
   Messages
   ,
-  uTR4WStrings;
+  uTR4WStrings,
+  uAnsiStr;
 type
   InitialCommands =
     (icmyCheck, icmyFDClass, icmyGrid, icmyFOC, icmyIOTA, icmyName, icmyPark, icmyPrec, icmyQTH, icmySection, icmyState, icmyZone, icmyPostalCode);
@@ -174,7 +175,7 @@ begin
         // the ordinary first-run state and simply hides the button below.
         Windows.ZeroMemory(@TR4W_LATESTCFG_FILENAME, SizeOf(FileNameType));
         Windows.lstrcpynA(TR4W_LATESTCFG_FILENAME,
-                          PAnsiChar(AnsiString(GetLatestConfigFile)),
+                          PAnsiChar(WinAnsi(GetLatestConfigFile)),
                           SizeOf(FileNameType));
         if TR4W_LATESTCFG_FILENAME[0] <> #0 then
            begin
@@ -190,7 +191,7 @@ begin
 
                   Windows.CopyMemory(@TempBuffer1, @TR4W_LATESTCFG_FILENAME, SizeOf(FileNameType));
                   Windows.CharLowerA(TempBuffer1);
-                  TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_LATEST_CONFIG_FILE + ' (Alt+&A):'#13#10'%s')), TempBuffer1);
+                  TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_LATEST_CONFIG_FILE + ' (Alt+&A):'#13#10'%s')), TempBuffer1);
                   //i := GetDlgItem(hwnddlg, NC_BUTTON_LATEST_CONFIG);
 
                   Windows.SetWindowTextA(TempCardinal, wsprintfBuffer);
@@ -712,7 +713,7 @@ begin
 
   if FileExists(TR4W_CFG_FILENAME) then
      begin
-     TF.Format(SYSERRORBUFFER, PAnsiChar(AnsiString(TC_FOLDERALREADYEXISTSOVERWRITE)), TR4W_CFG_FILENAME);
+     TF.Format(SYSERRORBUFFER, PAnsiChar(WinAnsi(TC_FOLDERALREADYEXISTSOVERWRITE)), TR4W_CFG_FILENAME);
      if YesOrNo(h, SYSERRORBUFFER) = IDno then Exit;
      end;
 
@@ -774,7 +775,7 @@ end;
 procedure DisplayCheckBox(Text: string);
 begin
   // Issue #997: asm-push wsprintf -> Format (TC_IAMIN = '&I am in %s').
-  TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_IAMIN)), PAnsiChar(AnsiString(Text)));
+  TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_IAMIN)), PAnsiChar(WinAnsi(Text)));
   Windows.SetWindowTextA(NewContestCheckBox, wsprintfBuffer);
   Windows.ShowWindow(NewContestCheckBox, SW_SHOW);
 end;
@@ -791,8 +792,8 @@ begin
   DisplayInitialCommand(icmyState);
   // Issue #997: asm-push wsprintf -> Format. TC_ENTERYOURCOUNTYORSTATEPOROVINCEDX
   // has two %s, both = State.
-  TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_ENTERYOURCOUNTYORSTATEPOROVINCEDX)),
-     PAnsiChar(AnsiString(State)), PAnsiChar(AnsiString(State)));
+  TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_ENTERYOURCOUNTYORSTATEPOROVINCEDX)),
+     PAnsiChar(WinAnsi(State)), PAnsiChar(WinAnsi(State)));
   Windows.SetWindowTextA(NewContestCommentWndHandle, wsprintfBuffer);
 end;
 

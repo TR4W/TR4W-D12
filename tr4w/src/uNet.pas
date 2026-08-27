@@ -61,7 +61,8 @@ uses
   Tree
 
   ,
-  uTR4WStrings;
+  uTR4WStrings,
+  uAnsiStr;
 
 type
   TNetWindowColumnsInfo = record
@@ -694,7 +695,7 @@ begin
       DisplayClientStatus(i);
       end;
    ShowConnectionStatus(TC_DISCONNECTEDFROM);
-   TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_CONNECTIONTOTR4WSERVERLOST)),
+   TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_CONNECTIONTOTR4WSERVERLOST)),
              @ServerAddress[1], ServerPort);
    QuickDisplay(wsprintfBuffer);
 end;
@@ -1081,7 +1082,7 @@ begin
         SetClientCell(i, 2, string(PAnsiChar(@TempBuffer)));
 
         // D12: FreqToPChar returns native string; flows straight through tLVSetText
-        // (this replaced an earlier PAnsiChar(AnsiString(...)) LV_ITEMA hack).
+        // (this replaced an earlier PAnsiChar(WinAnsi(...)) LV_ITEMA hack).
         SetClientCell(i, 3, FreqToPChar{WithoutHZ}(StatusArray[Index].ssFreq));        // 4.61.7
 {
         ListView_SetItemText(h, i, 2, BandStringsArray[StatusArray[Index].ssCurrentBand]);
@@ -1269,7 +1270,7 @@ end;
 
 procedure ShowConnectionStatus(Operation: string);
 begin
-  TF.Format(@NetBuffer, PAnsiChar(AnsiString(TC_NETWORK)), PAnsiChar(AnsiString(Operation)), @ServerAddress[1], ServerPort);
+  TF.Format(@NetBuffer, PAnsiChar(WinAnsi(TC_NETWORK)), PAnsiChar(WinAnsi(Operation)), @ServerAddress[1], ServerPort);
   Windows.SetWindowTextA(tr4w_WindowsArray[tw_NETWINDOW_INDEX].WndHandle, @NetBuffer);
 end;
 
@@ -1403,7 +1404,7 @@ begin
   case ServMess.smMessage of
     SM_SERVERLOG_CHANGED_MESSAGE:
       begin
-        TF.Format(QuickDisplayBuffer, PAnsiChar(AnsiString(TC_SERVER_LOG_CHANGED)), ServMess.smParam);
+        TF.Format(QuickDisplayBuffer, PAnsiChar(WinAnsi(TC_SERVER_LOG_CHANGED)), ServMess.smParam);
         QuickDisplay(QuickDisplayBuffer);
       end;
     SM_CLEARALLLOGS_MESSAGE: QuickDisplay(TC_ALL_LOGS_NETWORK_CLEARED);

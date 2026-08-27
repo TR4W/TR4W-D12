@@ -222,7 +222,7 @@ procedure GetDate(var Year, Month, Day, DayOfWeek: Word);
 { THESE ARE cdecl wsprintf WRAPPERS, and every parameter is 8-bit.
 
   So a caller passing a TC_/RC_ constant as the format string has to write
-  PAnsiChar(AnsiString(TC_WHATEVER)) since 2026-08-27, when those constants
+  PAnsiChar(WinAnsi(TC_WHATEVER)) since 2026-08-27, when those constants
   became resourcestrings. There are 38 such call sites and the cast is on the
   FORMAT STRING only -- the buffers being written are AnsiChar arrays, so the
   whole path is 8-bit and the conversion changes nothing that was not already
@@ -689,7 +689,7 @@ begin
     (W1057).  Same bytes reach Windows either way; making it explicit says the
     narrowing is intended and compiles under FPC, whose RTL offers only the
     LPCSTR form. }
-  Windows.SetWindowTextA(WindowHandle, PAnsiChar(AnsiString(s)));
+  Windows.SetWindowTextA(WindowHandle, PAnsiChar(WinAnsi(s)));
 end;
 
 procedure tSetWindowRedraw(wnd: HWND; Redraw: boolean);

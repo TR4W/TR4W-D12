@@ -80,7 +80,8 @@ uses
 {$IFDEF WINDOWS}
    , Windows
 {$ENDIF}
-   ;
+   ,
+  uAnsiStr;
 
 var
    logger: TLogLogger = nil;
@@ -156,9 +157,9 @@ begin
       show := SW_SHOWNORMAL;
       end;
 
-   // THE LAST WinExec IN TR4W. PAnsiChar(AnsiString(...)) is a genuine boundary
+   // THE LAST WinExec IN TR4W. PAnsiChar(WinAnsi(...)) is a genuine boundary
    // conversion -- WinExec takes LPCSTR -- and is the kind CLAUDE.md allows.
-   rc := Windows.WinExec(PAnsiChar(AnsiString(aCommandLine)), show);
+   rc := Windows.WinExec(PAnsiChar(WinAnsi(aCommandLine)), show);
 
    // "Less than 32" is WinExec's own error convention, and it was checked at
    // two of the seventeen sites this replaced.

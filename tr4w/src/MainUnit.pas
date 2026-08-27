@@ -162,7 +162,8 @@ uses
   uExternalLogger,
   IdURI
   ,
-  uTR4WStrings;
+  uTR4WStrings,
+  uAnsiStr;
 
 var
   Begin_QSO: boolean = False; // 4.115.3
@@ -4128,11 +4129,11 @@ begin
 
   CreateTotalWindow;
 
-  TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_RULESONQRZRU)), ContestTypeSA[Contest]);
+  TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_RULESONQRZRU)), ContestTypeSA[Contest]);
   ModifyMenuA(tr4w_main_menu, menu_qrzru_calendar, MF_BYCOMMAND + MF_STRING,
     menu_qrzru_calendar, wsprintfBuffer);
 
-  TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_RULESONSM3CER)), ContestTypeSA[Contest]);
+  TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_RULESONSM3CER)), ContestTypeSA[Contest]);
   ModifyMenuA(tr4w_main_menu, menu_WA7BNM_calendar, MF_BYCOMMAND + MF_STRING,
     menu_WA7BNM_calendar, wsprintfBuffer);
   if (pos('CQ-WW', ContestTypeSA[Contest]) <> 0) or (pos('IARU-HF',
@@ -5364,7 +5365,7 @@ begin
 
     menu_ctrl_execute_config: // 4.67.5
       begin
-        if OpenFileDlg(nil, tr4whandle, PAnsiChar(AnsiString(TC_CONFIGURATION_FILE +
+        if OpenFileDlg(nil, tr4whandle, PAnsiChar(WinAnsi(TC_CONFIGURATION_FILE +
           ' (*.cfg)'#0'*.cfg'#0#0)), TR4W_EXECONFIGFILE_FILENAME, OFN_HIDEREADONLY
           or
           OFN_ENABLESIZING) then
@@ -6628,7 +6629,7 @@ begin
 
   if not IsAGoodCall(RData.Callsign) then
      begin
-     TF.Format(QuickDisplayBuffer, PAnsiChar(AnsiString(TC_HASIMPROPERSYNTAX)), @RData.Callsign[1]);
+     TF.Format(QuickDisplayBuffer, PAnsiChar(WinAnsi(TC_HASIMPROPERSYNTAX)), @RData.Callsign[1]);
      QuickDisplay(QuickDisplayBuffer);
      DoABeep(Warning);
      Exit;
@@ -7409,7 +7410,7 @@ begin
            Halt;
            end;
  
-        TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_DIFVERSION)), _LOGFILE, LogHeader.lhVersionString,
+        TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_DIFVERSION)), _LOGFILE, LogHeader.lhVersionString,
           TempBuffer1);
         showwarning(wsprintfBuffer);
         CloseLogFile;
@@ -7759,7 +7760,7 @@ begin
 
   if RXData.ceRecordKind = rkNote then
      begin
-     RowTextAnsi := RC_NOTE;   elvi.pszText := PAnsiChar(RowTextAnsi);
+     RowTextAnsi := WinAnsi(RC_NOTE);   elvi.pszText := PAnsiChar(RowTextAnsi);
      ListView_InsertItem(ListViewHandle, elvi);
      elvi.iSubItem := ColumnsArray[logColCallsign].pos; //(logColCallsign);
      elvi.pszText := @RXData.Prefix;
@@ -7775,7 +7776,7 @@ begin
 
   if RXData.ceQSO_Deleted then
      begin
-     RowTextAnsi := RC_DELETED;   elvi.pszText := PAnsiChar(RowTextAnsi);
+     RowTextAnsi := WinAnsi(RC_DELETED);   elvi.pszText := PAnsiChar(RowTextAnsi);
      ListView_InsertItem(ListViewHandle, elvi);
      Exit;
      end;
@@ -9745,7 +9746,7 @@ var
 
   procedure DisplayLoadedQSOs;
   begin
-    TF.Format(QuickDisplayBuffer, PAnsiChar(AnsiString('%u ' + TC_QSO_IMPORTED)), QSOCounter);
+    TF.Format(QuickDisplayBuffer, PAnsiChar(WinAnsi('%u ' + TC_QSO_IMPORTED)), QSOCounter);
     SetTextInQuickCommandWindow(QuickDisplayBuffer);
   end;
 begin
@@ -9943,7 +9944,7 @@ var
   idx: integer;
   ownedElsewhere: boolean;
 begin
-  TF.Format(TempBuffer1, PAnsiChar(AnsiString(TC_SET_VALUE_OF_SET_NOW)), c);
+  TF.Format(TempBuffer1, PAnsiChar(WinAnsi(TC_SET_VALUE_OF_SET_NOW)), c);
   if YesOrNo(tr4whandle, TempBuffer1) = IDno then
      begin
      Exit;
@@ -10274,7 +10275,7 @@ begin
      // STAYS ON THE ANSI PAIRING -- TOOLINFO here is the A struct and
      // TTM_ADDTOOL above is TTM_ADDTOOLA; see the note on that constant. So
      // the conversion happens here, into a variable that outlives the call.
-     TextAnsi := AnsiString(Text);
+     TextAnsi := WinAnsi(Text);
      ti.lpszText := PAnsiChar(TextAnsi);
      Windows.GetClientRect(Control, ti.rect);
      SendMessage(Result, TTM_ADDTOOL, 0, integer(@ti));
@@ -10928,7 +10929,7 @@ begin
         end;
      end;
 
-  if not CopyFileA(TR4W_LOG_FILENAME, PAnsiChar(AnsiString(NewFile)), false) then
+  if not CopyFileA(TR4W_LOG_FILENAME, PAnsiChar(WinAnsi(NewFile)), false) then
      begin
      ShowMessage(PAnsiChar(TC_CANNOTBACKUPLOG + StrPas(TR4W_LOG_FILENAME)));
      Exit;

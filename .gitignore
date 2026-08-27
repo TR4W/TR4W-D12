@@ -186,3 +186,5 @@ tr4w/src/ui/lcl/backup/
 # Defuzzed test catalogues (tools/i18n/po_defuzz.py). They carry UNREVIEWED
 # machine translation for layout testing and must never be shipped or committed.
 build-out/**/languages/
+tr4w/src/*.tmp
+tr4w/res/RCa*

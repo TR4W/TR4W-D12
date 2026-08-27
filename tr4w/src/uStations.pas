@@ -35,7 +35,8 @@ uses
   LogWind,
   Messages
   ,
-  uTR4WStrings;
+  uTR4WStrings,
+  uAnsiStr;
 
 procedure FillStationsColumn;
 function AddCallsignToStationColumn(Call: CallString): integer;
@@ -281,7 +282,7 @@ begin
      end;
   StationsEndUpdate;
 
-  TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_STATIONSINMODE)), ModeStringArray[ActiveMode]);
+  TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_STATIONSINMODE)), ModeStringArray[ActiveMode]);
   StationsSetCaption(string(PAnsiChar(@wsprintfBuffer)));
 end;
 

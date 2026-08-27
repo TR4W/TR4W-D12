@@ -67,7 +67,8 @@ uses
    LResources,        // LRSTranslator -- the hook the LFM reader consults
    LCLTranslator,     // TPOTranslator, SetDefaultLang
    MainUnit,          // logger
-  uTR4WStrings;
+  uTR4WStrings,
+  uAnsiStr;
 
 { The two-letter code the LCL would pick, without loading anything.
 
@@ -270,7 +271,7 @@ begin
       end;
 
    resName := 'TR4W_' + UpperCase(lang);
-   if FindResourceA(HInstance, PAnsiChar(AnsiString(resName)), RT_RCDATA) = 0 then
+   if FindResourceA(HInstance, PAnsiChar(WinAnsi(resName)), RT_RCDATA) = 0 then
       begin
       logger.Info('UI language: "' + lang + '" selected by ' + source +
                   ', but no catalogue for it is embedded; using the ' +

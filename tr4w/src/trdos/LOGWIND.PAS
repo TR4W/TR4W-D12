@@ -49,7 +49,8 @@ utils_text,
   BeepUnit,
   uGradient
   ,
-  uTR4WStrings;
+  uTR4WStrings,
+  uAnsiStr;
 
 const
   tBaseFrequencys                       : array[Band160..Band12] of integer =
@@ -1516,7 +1517,7 @@ end;
 
 procedure DisplayQTCNumber(QTCNumber: integer);
 begin
-  TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_HAVEQTCS)), QTCNumber);
+  TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_HAVEQTCS)), QTCNumber);
   SetMainWindowText(mweUserInfo, wsprintfBuffer);
 end;
 
@@ -1587,17 +1588,17 @@ begin
     ThisHour:
       begin
         TempInteger := TotalThisHour;
-        TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_THISHR)), TotalThisHour);
+        TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_THISHR)), TotalThisHour);
       end;
     LastSixtyMins:
       begin
         TempInteger := TotalLastSixty;
-        TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_LAST60)), TotalLastSixty);
+        TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_LAST60)), TotalLastSixty);
       end;
     BandChanges, BandChangesThisComputer:
       begin
         TempInteger := tThisHourBandChanges;
-        TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_BAND_CHANGES)), tThisHourBandChanges);
+        TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_BAND_CHANGES)), tThisHourBandChanges);
       end;
   end;
   SetMainWindowText(mweHourRate, wsprintfBuffer);
@@ -1629,7 +1630,7 @@ begin
       }
      //    tSetWindowText(RateWindowHandle, 'Rate = ' + IntToStr(Rate));
 
-   TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_RATE)), Rate);
+   TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_RATE)), Rate);
 
    SetMainWindowText(mweRate, wsprintfBuffer);
    SendMessage(RateProgressBar, PBM_SETPOS, Rate, 0);
@@ -1655,7 +1656,7 @@ begin
   // note below).  The old code relied on `Score := TotalScore` leaving the value
   // in EAX for the `push eax` -- a fragile Delphi-7 codegen assumption that 64-bit
   // would break.  TC_PTS = '%d Pts'.
-  TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_PTS)), Score);
+  TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_PTS)), Score);
   SetMainWindowText(mweTotalScore, wsprintfBuffer);
 
   //  tSetWindowText(TotalScoreWindowHandle, IntToStr(Score) + ' Pts');
@@ -1721,7 +1722,7 @@ var
   h                                     : HWND;
  // Window                                : Byte;
 begin
-  TF.Format(IQPrompt, PAnsiChar(AnsiString(TC_ENTER)), PAnsiChar(AnsiString(Prompt)));
+  TF.Format(IQPrompt, PAnsiChar(WinAnsi(TC_ENTER)), PAnsiChar(WinAnsi(Prompt)));
   IQMaxInputLength := MaxInputLength;
   // ALWAYS the main window.  This used to prefer settingswindowhandle, which
   // was non-zero only while the old Win32 settings dialog was open so that a
@@ -3411,7 +3412,7 @@ end;
 
 procedure DispalayDupe;
 begin
-  TF.Format(QuickDisplayBuffer, PAnsiChar(AnsiString(TC_ISADUPE)), @CallWindowString[1]);
+  TF.Format(QuickDisplayBuffer, PAnsiChar(WinAnsi(TC_ISADUPE)), @CallWindowString[1]);
 
 //  DispalayB4(SW_HIDE);
   QuickDisplay(QuickDisplayBuffer);
@@ -3664,7 +3665,7 @@ var
 begin
   Windows.ZeroMemory(@ID, SizeOf(ID));
   ID := KeyId(AutoCQMemory);
-  TF.Format(QuickDisplayBuffer, PAnsiChar(AnsiString(TC_REPEATING)), @ID[1], AutoCQDelayTime);
+  TF.Format(QuickDisplayBuffer, PAnsiChar(WinAnsi(TC_REPEATING)), @ID[1], AutoCQDelayTime);
   SetTextInQuickCommandWindow(QuickDisplayBuffer);
 end;
 
@@ -3753,7 +3754,7 @@ end;
 
 procedure tDisplayCQTotal;
 begin
-  TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_CQTOTAL)), tRestartInfo.riCQTotalCounter);
+  TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_CQTOTAL)), tRestartInfo.riCQTotalCounter);
   SetMainWindowText(mweCQTotal, wsprintfBuffer);
 end;
 
@@ -3875,7 +3876,7 @@ begin
   IntegerTime := UTC.wMinute mod TourDuration;
   Windows.SendMessage(TorDurationPrBarWindow, PBM_SETPOS, IntegerTime, 0);
 
-  TF.Format(TempBuffer2, PAnsiChar(AnsiString(TC_NEWTOUR)), IntegerTime, TourDuration);
+  TF.Format(TempBuffer2, PAnsiChar(WinAnsi(TC_NEWTOUR)), IntegerTime, TourDuration);
 
 //  Windows.SetDlgItemTextA(ReminderDlgHandle, 102, TempBuffer2);
   Windows.SetWindowTextA(TorDurationWindow, TempBuffer2);
