@@ -14,6 +14,10 @@
       <UseAppBundle Value="False"/>
       <ResourceType Value="res"/>
     </General>
+    <i18n>
+      <EnableI18N Value="True"/>
+      <OutDir Value="languages"/>
+    </i18n>
     <BuildModes Count="1">
       <Item1 Name="Debug" Default="True"/>
     </BuildModes>
@@ -38,7 +42,7 @@
         <PackageName Value="LCL"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="325">
+    <Units Count="369">
       <Unit0>
         <Filename Value="tr4w.dpr"/>
         <IsPartOfProject Value="True"/>
@@ -57,98 +61,6 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
       </Unit2>
-      <Unit311>
-        <Filename Value="src/ui/lcl/uSendSpotForm.pas"/>
-        <IsPartOfProject Value="True"/>
-        <ComponentName Value="frmSendSpot"/>
-        <HasResources Value="True"/>
-        <ResourceBaseClass Value="Form"/>
-      </Unit311>
-      <Unit312>
-        <Filename Value="src/ui/lcl/uAutoCQForm.pas"/>
-        <IsPartOfProject Value="True"/>
-        <ComponentName Value="frmAutoCQ"/>
-        <HasResources Value="True"/>
-        <ResourceBaseClass Value="Form"/>
-      </Unit312>
-      <Unit313>
-        <Filename Value="src/ui/lcl/uSendKeyboardForm.pas"/>
-        <IsPartOfProject Value="True"/>
-        <ComponentName Value="frmSendKeyboard"/>
-        <HasResources Value="True"/>
-        <ResourceBaseClass Value="Form"/>
-      </Unit313>
-      <Unit314>
-        <Filename Value="src/ui/lcl/uEditMessageForm.pas"/>
-        <IsPartOfProject Value="True"/>
-        <ComponentName Value="frmEditMessage"/>
-        <HasResources Value="True"/>
-        <ResourceBaseClass Value="Form"/>
-      </Unit314>
-      <Unit315>
-        <Filename Value="src/ui/lcl/uMessagesListForm.pas"/>
-        <IsPartOfProject Value="True"/>
-        <ComponentName Value="frmMessagesList"/>
-        <HasResources Value="True"/>
-        <ResourceBaseClass Value="Form"/>
-      </Unit315>
-      <Unit316>
-        <Filename Value="src/ui/lcl/uWinManagerForm.pas"/>
-        <IsPartOfProject Value="True"/>
-        <ComponentName Value="frmWinManager"/>
-        <HasResources Value="True"/>
-        <ResourceBaseClass Value="Form"/>
-      </Unit316>
-      <Unit317>
-        <Filename Value="src/ui/lcl/uBandPlanForm.pas"/>
-        <IsPartOfProject Value="True"/>
-        <ComponentName Value="frmBandPlan"/>
-        <HasResources Value="True"/>
-        <ResourceBaseClass Value="Form"/>
-      </Unit317>
-      <Unit318>
-        <Filename Value="src/ui/lcl/uLPTForm.pas"/>
-        <IsPartOfProject Value="True"/>
-        <ComponentName Value="frmLPT"/>
-        <HasResources Value="True"/>
-        <ResourceBaseClass Value="Form"/>
-      </Unit318>
-      <Unit319>
-        <Filename Value="src/ui/lcl/uCT1BOHForm.pas"/>
-        <IsPartOfProject Value="True"/>
-        <ComponentName Value="frmCT1BOH"/>
-        <HasResources Value="True"/>
-        <ResourceBaseClass Value="Form"/>
-      </Unit319>
-      <Unit320>
-        <Filename Value="src/ui/lcl/uLogCompareForm.pas"/>
-        <IsPartOfProject Value="True"/>
-        <ComponentName Value="frmLogCompare"/>
-        <HasResources Value="True"/>
-        <ResourceBaseClass Value="Form"/>
-      </Unit320>
-      <Unit321>
-        <Filename Value="src/ui/lcl/uBeaconsForm.pas"/>
-        <IsPartOfProject Value="True"/>
-        <ComponentName Value="frmBeacons"/>
-        <HasResources Value="True"/>
-        <ResourceBaseClass Value="Form"/>
-      </Unit321>
-      <Unit322>
-        <Filename Value="src/ui/lcl/uEditQSOForm.pas"/>
-        <IsPartOfProject Value="True"/>
-        <ComponentName Value="frmEditQSO"/>
-        <HasResources Value="True"/>
-        <ResourceBaseClass Value="Form"/>
-      </Unit322>
-      <Unit323>
-        <Filename Value="src/uPanelUpdate.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit323>
-      <Unit324>
-        <Filename Value="src/uWindowLayoutStore.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit324>
       <Unit3>
         <Filename Value="src/ui/lcl/uKeyerEditForm.pas"/>
         <IsPartOfProject Value="True"/>
@@ -1396,6 +1308,292 @@
         <Filename Value="src/uCabrilloHeader.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit310>
+      <Unit311>
+        <Filename Value="src/ui/lcl/uSendSpotForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmSendSpot"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit311>
+      <Unit312>
+        <Filename Value="src/ui/lcl/uAutoCQForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmAutoCQ"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit312>
+      <Unit313>
+        <Filename Value="src/ui/lcl/uSendKeyboardForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmSendKeyboard"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit313>
+      <Unit314>
+        <Filename Value="src/ui/lcl/uEditMessageForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmEditMessage"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit314>
+      <Unit315>
+        <Filename Value="src/ui/lcl/uMessagesListForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmMessagesList"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit315>
+      <Unit316>
+        <Filename Value="src/ui/lcl/uWinManagerForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmWinManager"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit316>
+      <Unit317>
+        <Filename Value="src/ui/lcl/uBandPlanForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmBandPlan"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit317>
+      <Unit318>
+        <Filename Value="src/ui/lcl/uLPTForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmLPT"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit318>
+      <Unit319>
+        <Filename Value="src/ui/lcl/uCT1BOHForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmCT1BOH"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit319>
+      <Unit320>
+        <Filename Value="src/ui/lcl/uLogCompareForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmLogCompare"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit320>
+      <Unit321>
+        <Filename Value="src/ui/lcl/uBeaconsForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmBeacons"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit321>
+      <Unit322>
+        <Filename Value="src/ui/lcl/uEditQSOForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmEditQSO"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit322>
+      <Unit323>
+        <Filename Value="src/uPanelUpdate.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit323>
+      <Unit324>
+        <Filename Value="src/uWindowLayoutStore.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit324>
+      <Unit325>
+        <Filename Value="src/uADIFExchange.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit325>
+      <Unit326>
+        <Filename Value="src/uNetFraming.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit326>
+      <Unit327>
+        <Filename Value="src/uNetClient.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit327>
+      <Unit328>
+        <Filename Value="src/uBandMapView.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit328>
+      <Unit329>
+        <Filename Value="src/ui/lcl/uBandMapForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+      </Unit329>
+      <Unit330>
+        <Filename Value="src/ui/lcl/uPanadapterForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+      </Unit330>
+      <Unit331>
+        <Filename Value="src/uPanadapterRestore.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit331>
+      <Unit332>
+        <Filename Value="src/ui/lcl/uStationsForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+      </Unit332>
+      <Unit333>
+        <Filename Value="src/domain/uDomainState.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit333>
+      <Unit334>
+        <Filename Value="src/domain/uWSJTXState.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit334>
+      <Unit335>
+        <Filename Value="src/ui/lcl/uStateBridge.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit335>
+      <Unit336>
+        <Filename Value="src/ui/lcl/uFlowGrid.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit336>
+      <Unit337>
+        <Filename Value="src/ui/lcl/uDupeSheetForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+      </Unit337>
+      <Unit338>
+        <Filename Value="src/ui/lcl/uMasterForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+      </Unit338>
+      <Unit339>
+        <Filename Value="src/ui/lcl/uPostScoresForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+      </Unit339>
+      <Unit340>
+        <Filename Value="src/ui/lcl/uHamScoreForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+      </Unit340>
+      <Unit341>
+        <Filename Value="src/ui/lcl/uIntercomForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+      </Unit341>
+      <Unit342>
+        <Filename Value="src/ui/lcl/uMP3RecorderForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+      </Unit342>
+      <Unit343>
+        <Filename Value="src/ui/lcl/uRadioPanelForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+      </Unit343>
+      <Unit344>
+        <Filename Value="src/ui/lcl/uNetworkForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+      </Unit344>
+      <Unit345>
+        <Filename Value="src/ui/lcl/uRemMultsForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+      </Unit345>
+      <Unit346>
+        <Filename Value="src/ui/lcl/uAppInputHooks.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit346>
+      <Unit347>
+        <Filename Value="src/uSpotAge.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit347>
+      <Unit348>
+        <Filename Value="src/uClusterTokens.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit348>
+      <Unit349>
+        <Filename Value="src/uCRC16.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit349>
+      <Unit350>
+        <Filename Value="src/uSpectrumTypes.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit350>
+      <Unit351>
+        <Filename Value="src/uPanadapterView.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit351>
+      <Unit352>
+        <Filename Value="src/utils/uPlatformProcess.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit352>
+      <Unit353>
+        <Filename Value="src/ui/lcl/uLCLCoexist.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit353>
+      <Unit354>
+        <Filename Value="src/ui/lcl/uLCLTranslate.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit354>
+      <Unit355>
+        <Filename Value="src/ui/lcl/uSettingsBinding.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit355>
+      <Unit356>
+        <Filename Value="src/uMainThreadWork.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit356>
+      <Unit357>
+        <Filename Value="src/ui/lcl/uFlasher.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit357>
+      <Unit358>
+        <Filename Value="src/ui/lcl/uAboutForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+      </Unit358>
+      <Unit359>
+        <Filename Value="src/ui/lcl/uFunctionKeysForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+      </Unit359>
+      <Unit360>
+        <Filename Value="src/ui/lcl/uLegacyIniPrompt.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit360>
+      <Unit361>
+        <Filename Value="src/ui/lcl/uIniRetireForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+      </Unit361>
+      <Unit362>
+        <Filename Value="src/ui/lcl/uMainForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+      </Unit362>
+      <Unit363>
+        <Filename Value="src/radioFactory/uK4Spectrum.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit363>
+      <Unit364>
+        <Filename Value="src/radioFactory/uK4SpectrumThread.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit364>
+      <Unit365>
+        <Filename Value="src/uAppStrings.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit365>
+      <Unit366>
+        <Filename Value="src/ui/lcl/uTelnetForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+      </Unit366>
+      <Unit367>
+        <Filename Value="src/ui/lcl/uMMTTYForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+      </Unit367>
+      <Unit368>
+        <Filename Value="src/uProgramMain.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit368>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -1404,8 +1602,8 @@
       <Filename Value="target/tr4w_laz.exe"/>
     </Target>
     <SearchPaths>
-      <IncludeFiles Value="src;src/trdos;Include;include/Core;include/System;include/Protocols"/>
-      <OtherUnitFiles Value="src;src/trdos;src/utils;src/lang;src/radioFactory;src/rotatorFactory;src/ui/lcl;Include;include/Core;include/System;include/Protocols;C:/FPC/3.2.2/units/i386-win32/regexpr/;C:/FPC/3.2.2/units/i386-win32/fcl-json/"/>
+      <IncludeFiles Value="src;src/trdos;Include;include/Core;include/System;include/Protocols;$(ProjOutDir)"/>
+      <OtherUnitFiles Value="src;src/trdos;src/utils;src/lang;src/radioFactory;src/rotatorFactory;src/ui/lcl;Include;include/Core;include/System;include/Protocols;C:/FPC/3.2.2/units/i386-win32/regexpr/;C:/FPC/3.2.2/units/i386-win32/fcl-json/;$(LazarusDir)/components/datetimectrls"/>
       <UnitOutputDirectory Value="../build-out/laz-$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Parsing>
