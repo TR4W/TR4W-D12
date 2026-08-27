@@ -277,7 +277,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "$(MSBuildProjectDirectory)\
         <DCCReference Include="src\uHamScore.pas"/>
         <DCCReference Include="src\uExchangeBuilder.pas"/>
         <DCCReference Include="src\uGridLookup.pas"/>
-        <DCCReference Include="src\Log4D.pas"/>
+        <DCCReference Include="include\Log4D.pas"/>
         <DCCReference Include="src\radioFactory\uFactoryRadioBase.pas"/>
         <DCCReference Include="src\uSerialPort.pas"/>
         <DCCReference Include="src\radioFactory\uRadioFactory.pas"/>

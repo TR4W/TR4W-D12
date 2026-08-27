@@ -234,7 +234,7 @@ uses
   uHamScore in 'src\uHamScore.pas',
   uExchangeBuilder in 'src\uExchangeBuilder.pas',
   uGridLookup in 'src\uGridLookup.pas',
-  Log4D in 'src\Log4D.pas',
+  Log4D in 'include\Log4D.pas',
   uFactoryRadioBase in 'src\radioFactory\uFactoryRadioBase.pas',
   uSerialPort in 'src\uSerialPort.pas',
   uRadioFactory in 'src\radioFactory\uRadioFactory.pas',

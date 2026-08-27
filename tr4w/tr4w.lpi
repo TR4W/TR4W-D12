@@ -636,7 +636,7 @@
         <IsPartOfProject Value="True"/>
       </Unit144>
       <Unit145>
-        <Filename Value="src/Log4D.pas"/>
+        <Filename Value="include/Log4D.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit145>
       <Unit146>

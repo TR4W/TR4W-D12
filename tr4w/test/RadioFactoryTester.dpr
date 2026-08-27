@@ -16,7 +16,7 @@ uses
   uRadioElecraftK4 in 'src\radioFactory\uRadioElecraftK4.pas',
   uRadioIcomBase in 'src\radioFactory\uRadioIcomBase.pas',
   uRadioIcom9700 in 'src\radioFactory\uRadioIcom9700.pas',
-  Log4D in 'src\Log4D.pas';
+  Log4D in '..\include\Log4D.pas';
 
 // {$R *.res}  // Resource file not needed for testing
 

@@ -3344,2097 +3344,2595 @@ msgid "Show all serial ports"
 msgstr "모든 직렬 포트 표시"
 
 #: log4d.addingloggermsg
-msgid "Adding logger \"%s\" in error handler"
-msgstr ""
+#, fuzzy
+#~ msgid "Adding logger \"%s\" in error handler"
+#~ msgstr ""
 
 #: log4d.appenderdefinedmsg
-msgid "Appender \"%s\" was already parsed"
-msgstr ""
+#, fuzzy
+#~ msgid "Appender \"%s\" was already parsed"
+#~ msgstr ""
 
 #: log4d.badconfigfilemsg
-msgid "Couldn't read configuration file \"%s\" - %s"
-msgstr ""
+#, fuzzy
+#~ msgid "Couldn't read configuration file \"%s\" - %s"
+#~ msgstr ""
 
 #: log4d.closedappendermsg
-msgid "Not allowed to write to a closed appender"
-msgstr ""
+#, fuzzy
+#~ msgid "Not allowed to write to a closed appender"
+#~ msgstr ""
 
 #: log4d.converterrormsg
-msgid "Could not convert \"%s\" to level"
-msgstr ""
+#, fuzzy
+#~ msgid "Could not convert \"%s\" to level"
+#~ msgstr ""
 
 #: log4d.endappendermsg
-msgid "Parsed \"%s\" options"
-msgstr ""
+#, fuzzy
+#~ msgid "Parsed \"%s\" options"
+#~ msgstr ""
 
 #: log4d.enderrorhandlermsg
-msgid "End of parsing for \"%s\" error handler"
-msgstr ""
+#, fuzzy
+#~ msgid "End of parsing for \"%s\" error handler"
+#~ msgstr ""
 
 #: log4d.endfiltersmsg
-msgid "End of parsing for \"%s\" filter"
-msgstr ""
+#, fuzzy
+#~ msgid "End of parsing for \"%s\" filter"
+#~ msgstr ""
 
 #: log4d.endlayoutmsg
-msgid "End of parsing for \"%s\" layout"
-msgstr ""
+#, fuzzy
+#~ msgid "End of parsing for \"%s\" layout"
+#~ msgstr ""
 
 #: log4d.fallbackmsg
-msgid "Fallback on error %s"
-msgstr ""
+#, fuzzy
+#~ msgid "Fallback on error %s"
+#~ msgstr ""
 
 #: log4d.fallbackreplacemsg
-msgid "Fallback replacing \"%s\" with \"%s\" in logger \"%s\""
-msgstr ""
+#, fuzzy
+#~ msgid "Fallback replacing \"%s\" with \"%s\" in logger \"%s\""
+#~ msgstr ""
 
 #: log4d.finishedconfigmsg
-msgid "Finished configuring with %s"
-msgstr ""
+#, fuzzy
+#~ msgid "Finished configuring with %s"
+#~ msgstr ""
 
 #: log4d.handlingadditivitymsg
-msgid "Handling %s=\"%s\""
-msgstr ""
+#, fuzzy
+#~ msgid "Handling %s=\"%s\""
+#~ msgstr ""
 
 #: log4d.ignoreconfigmsg
-msgid "Ignoring configuration file \"%s\""
-msgstr ""
+#, fuzzy
+#~ msgid "Ignoring configuration file \"%s\""
+#~ msgstr ""
 
 #: log4d.interfacenotimplmsg
-msgid "%s doesn't implement %s"
-msgstr ""
+#, fuzzy
+#~ msgid "%s doesn't implement %s"
+#~ msgstr ""
 
 #: log4d.layoutrequiredmsg
-msgid "Appender \"%s\" requires a layout"
-msgstr ""
+#, fuzzy
+#~ msgid "Appender \"%s\" requires a layout"
+#~ msgstr ""
 
 #: log4d.levelhdr
-msgid "Level"
-msgstr ""
+#, fuzzy
+#~ msgid "Level"
+#~ msgstr ""
 
 #: log4d.leveltokenmsg
-msgid "Level token is \"%s\""
-msgstr ""
+#, fuzzy
+#~ msgid "Level token is \"%s\""
+#~ msgstr ""
 
 #: log4d.loggerfactorymsg
-msgid "Setting logger factory to \"%s\""
-msgstr ""
+#, fuzzy
+#~ msgid "Setting logger factory to \"%s\""
+#~ msgstr ""
 
 #: log4d.loggerhdr
-msgid "Logger"
-msgstr ""
+#, fuzzy
+#~ msgid "Logger"
+#~ msgstr ""
 
 #: log4d.messagehdr
-msgctxt "log4d.messagehdr"
-msgid "Message"
-msgstr ""
+#, fuzzy
+#~ msgctxt "log4d.messagehdr"
+#~ msgid "Message"
+#~ msgstr ""
 
 #: log4d.ndchdr
-msgid "NDC"
-msgstr ""
+#, fuzzy
+#~ msgid "NDC"
+#~ msgstr ""
 
 #: log4d.nilerrorhandlermsg
-msgid "An appender cannot have a nil error handler"
-msgstr ""
+#, fuzzy
+#~ msgid "An appender cannot have a nil error handler"
+#~ msgstr ""
 
 #: log4d.nillevelmsg
-msgid "The root can't have a nil level"
-msgstr ""
+#, fuzzy
+#~ msgid "The root can't have a nil level"
+#~ msgstr ""
 
 #: log4d.noappendercreatedmsg
-msgid "Couldn't create appender named \"%s\""
-msgstr ""
+#, fuzzy
+#~ msgid "Couldn't create appender named \"%s\""
+#~ msgstr ""
 
 #: log4d.noappendersmsg
-msgid "No appenders could be found for logger \"%s\""
-msgstr ""
+#, fuzzy
+#~ msgid "No appenders could be found for logger \"%s\""
+#~ msgstr ""
 
 #: log4d.noclassmsg
-msgid "Couldn't find class %s"
-msgstr ""
+#, fuzzy
+#~ msgid "Couldn't find class %s"
+#~ msgstr ""
 
 #: log4d.nolayoutmsg
-msgid "No layout set for appender named \"%s\""
-msgstr ""
+#, fuzzy
+#~ msgid "No layout set for appender named \"%s\""
+#~ msgstr ""
 
 #: log4d.norenderedcreatedmsg
-msgid "Couldn't find rendered class \"%s\""
-msgstr ""
+#, fuzzy
+#~ msgid "Couldn't find rendered class \"%s\""
+#~ msgstr ""
 
 #: log4d.norenderercreatedmsg
-msgid "Couldn't create renderer \"%s\""
-msgstr ""
+#, fuzzy
+#~ msgid "Couldn't create renderer \"%s\""
+#~ msgstr ""
 
 #: log4d.norenderermsg
-msgid "No renderer found for class %s"
-msgstr ""
+#, fuzzy
+#~ msgid "No renderer found for class %s"
+#~ msgstr ""
 
 #: log4d.norootloggermsg
-msgid "Couldn't find root logger information. Is this OK?"
-msgstr ""
+#, fuzzy
+#~ msgid "Couldn't find root logger information. Is this OK?"
+#~ msgstr ""
 
 #: log4d.parsingappendermsg
-msgid "Parsing appender named \"%s\""
-msgstr ""
+#, fuzzy
+#~ msgid "Parsing appender named \"%s\""
+#~ msgstr ""
 
 #: log4d.parsingerrorhandlermsg
-msgid "Parsing error handler options for \"%s\""
-msgstr ""
+#, fuzzy
+#~ msgid "Parsing error handler options for \"%s\""
+#~ msgstr ""
 
 #: log4d.parsingfiltersmsg
-msgid "Parsing filter options for \"%s\""
-msgstr ""
+#, fuzzy
+#~ msgid "Parsing filter options for \"%s\""
+#~ msgstr ""
 
 #: log4d.parsinglayoutmsg
-msgid "Parsing layout options for \"%s\""
-msgstr ""
+#, fuzzy
+#~ msgid "Parsing layout options for \"%s\""
+#~ msgstr ""
 
 #: log4d.parsingloggermsg
-msgid "Parsing for logger \"%s\" with value=\"%s\""
-msgstr ""
+#, fuzzy
+#~ msgid "Parsing for logger \"%s\" with value=\"%s\""
+#~ msgstr ""
 
 #: log4d.pleaseinitmsg
-msgid "Please initialise the Log4D system properly"
-msgstr ""
+#, fuzzy
+#~ msgid "Please initialise the Log4D system properly"
+#~ msgstr ""
 
 #: log4d.renderermsg
-msgid "Rendering class: \"%s\", Rendered class: \"%s\""
-msgstr ""
+#, fuzzy
+#~ msgid "Rendering class: \"%s\", Rendered class: \"%s\""
+#~ msgstr ""
 
 #: log4d.sessionstartmsg
-msgid "Log session start time"
-msgstr ""
+#, fuzzy
+#~ msgid "Log session start time"
+#~ msgstr ""
 
 #: log4d.settingadditivitymsg
-msgid "Setting additivity for \"%s\" to \"%s\""
-msgstr ""
+#, fuzzy
+#~ msgid "Setting additivity for \"%s\" to \"%s\""
+#~ msgstr ""
 
 #: log4d.settingappendermsg
-msgid "Setting appender \"%s\" in error handler"
-msgstr ""
+#, fuzzy
+#~ msgid "Setting appender \"%s\" in error handler"
+#~ msgstr ""
 
 #: log4d.settingbackupmsg
-msgid "Setting backup appender \"%s\" in error handler"
-msgstr ""
+#, fuzzy
+#~ msgid "Setting backup appender \"%s\" in error handler"
+#~ msgstr ""
 
 #: log4d.settinglevelmsg
-msgid "Logger \"%s\" set to level \"%s\""
-msgstr ""
+#, fuzzy
+#~ msgid "Logger \"%s\" set to level \"%s\""
+#~ msgstr ""
 
 #: log4d.settingloggermsg
-msgid "Setting logger \"%s\" in error handler"
-msgstr ""
+#, fuzzy
+#~ msgid "Setting logger \"%s\" in error handler"
+#~ msgstr ""
 
 #: log4d.threadhdr
-msgid "Thread"
-msgstr ""
+#, fuzzy
+#~ msgid "Thread"
+#~ msgstr ""
 
 #: log4d.timehdr
-msgid "Time"
-msgstr ""
+#, fuzzy
+#~ msgid "Time"
+#~ msgstr ""
 
 #: log4d.valueunknownmsg
-msgid "Unknown"
-msgstr ""
+#, fuzzy
+#~ msgid "Unknown"
+#~ msgstr ""
 
 #: tfrmabout.btnok.caption
+#, fuzzy
 msgctxt "tfrmabout.btnok.caption"
 msgid "OK"
 msgstr ""
 
 #: tfrmabout.caption
+#, fuzzy
 msgid "About TR4W"
 msgstr ""
 
 #: tfrmabout.lblurl.caption
+#, fuzzy
 msgid "http://www.tr4w.net"
 msgstr ""
 
 #: tfrmaltd.btncancel.caption
+#, fuzzy
 msgctxt "tfrmaltd.btncancel.caption"
 msgid "Cancel"
 msgstr ""
 
 #: tfrmaltd.btnok.caption
+#, fuzzy
 msgctxt "tfrmaltd.btnok.caption"
 msgid "OK"
 msgstr ""
 
 #: tfrmaltd.caption
+#, fuzzy
 msgid "Dupe Check On Inactive Radio"
 msgstr ""
 
 #: tfrmaltd.lblprompt.caption
+#, fuzzy
 msgid "Enter call to be checked on:"
 msgstr ""
 
 #: tfrmautocq.btncancel.caption
+#, fuzzy
 msgctxt "tfrmautocq.btncancel.caption"
 msgid "Cancel"
 msgstr ""
 
 #: tfrmautocq.btnok.caption
+#, fuzzy
 msgctxt "tfrmautocq.btnok.caption"
 msgid "OK"
 msgstr ""
 
 #: tfrmautocq.caption
+#, fuzzy
 msgid "Auto-CQ"
 msgstr ""
 
 #: tfrmautocq.lbldelay.caption
+#, fuzzy
 msgid "Number of milliseconds of listening time:"
 msgstr ""
 
 #: tfrmautocq.lblmemorykey.caption
+#, fuzzy
 msgid "Press the memory key you want to repeat:"
 msgstr ""
 
 #: tfrmbandmap.caption
+#, fuzzy
 msgctxt "tfrmbandmap.caption"
 msgid "Band map"
 msgstr ""
 
 #: tfrmbandmap.miallbands.caption
+#, fuzzy
 msgid "BAND MAP ALL BANDS"
 msgstr ""
 
 #: tfrmbandmap.miallmodes.caption
+#, fuzzy
 msgid "BAND MAP ALL MODES"
 msgstr ""
 
 #: tfrmbandmap.mideletespot.caption
+#, fuzzy
 msgid "Delete selected spot"
 msgstr ""
 
 #: tfrmbandmap.midisplaycq.caption
+#, fuzzy
 msgid "BAND MAP DISPLAY CQ"
 msgstr ""
 
 #: tfrmbandmap.midupedisplay.caption
+#, fuzzy
 msgid "BAND MAP DUPE DISPLAY"
 msgstr ""
 
 #: tfrmbandmap.mimultsonly.caption
+#, fuzzy
 msgid "BAND MAP MULTS ONLY"
 msgstr ""
 
 #: tfrmbandmap.miqsyinactive.caption
+#, fuzzy
 msgid "Send spot to inactive radio"
 msgstr ""
 
 #: tfrmbandmap.miremoveall.caption
+#, fuzzy
 msgid "Remove all spots"
 msgstr ""
 
 #: tfrmbandmap.miso2rdisplay.caption
+#, fuzzy
 msgid "BAND MAP SO2R DISPLAY"
 msgstr ""
 
 #: tfrmbandplan.btncancel.caption
+#, fuzzy
 msgctxt "tfrmbandplan.btncancel.caption"
 msgid "Cancel"
 msgstr ""
 
 #: tfrmbandplan.btnok.caption
+#, fuzzy
 msgctxt "tfrmbandplan.btnok.caption"
 msgid "OK"
 msgstr ""
 
 #: tfrmbandplan.caption
+#, fuzzy
 msgid "Band plan"
 msgstr ""
 
 #: tfrmbeacons.caption
+#, fuzzy
 msgid "Beacons  Monitor"
 msgstr ""
 
 #: tfrmct1boh.caption
+#, fuzzy
 msgid "CT1BOH information"
 msgstr ""
 
 #: tfrmdupesheet.caption
+#, fuzzy
 msgid "Dupe sheet"
 msgstr ""
 
 #: tfrmeditmessage.btncancel.caption
+#, fuzzy
 msgctxt "tfrmeditmessage.btncancel.caption"
 msgid "Cancel"
 msgstr ""
 
 #: tfrmeditmessage.btneditwav.caption
+#, fuzzy
 msgid "&Edit"
 msgstr ""
 
 #: tfrmeditmessage.btnlist.caption
+#, fuzzy
 msgctxt "tfrmeditmessage.btnlist.caption"
 msgid "List of commands"
 msgstr ""
 
 #: tfrmeditmessage.btnok.caption
+#, fuzzy
 msgctxt "tfrmeditmessage.btnok.caption"
 msgid "OK"
 msgstr ""
 
 #: tfrmeditmessage.caption
+#, fuzzy
 msgid "Program message"
 msgstr ""
 
 #: tfrmeditmessage.lblcaption.caption
+#, fuzzy
 msgid "Caption"
 msgstr ""
 
 #: tfrmeditmessage.lblmessage.caption
+#, fuzzy
 msgctxt "tfrmeditmessage.lblmessage.caption"
 msgid "Message"
 msgstr ""
 
 #: tfrmeditqso.btncancel.caption
+#, fuzzy
 msgctxt "tfrmeditqso.btncancel.caption"
 msgid "Cancel"
 msgstr ""
 
 #: tfrmeditqso.btnplay.caption
+#, fuzzy
 msgid "&Play"
 msgstr ""
 
 #: tfrmeditqso.btnsave.caption
+#, fuzzy
 msgid "&Save"
 msgstr ""
 
 #: tfrmeditqso.caption
+#, fuzzy
 msgid "Edit QSO"
 msgstr ""
 
 #: tfrmeditqso.chkdeleted.caption
+#, fuzzy
 msgid "&Deleted"
 msgstr ""
 
 #: tfrmeditqso.chkdomesticmult.caption
+#, fuzzy
 msgid "Domestic Mult"
 msgstr ""
 
 #: tfrmeditqso.chkdupe.caption
+#, fuzzy
 msgid "Dupe"
 msgstr ""
 
 #: tfrmeditqso.chkdxmult.caption
+#, fuzzy
 msgid "DX Mult"
 msgstr ""
 
 #: tfrmeditqso.chkinhibitmults.caption
+#, fuzzy
 msgid "Inhibit Mults"
 msgstr ""
 
 #: tfrmeditqso.chknamesent.caption
+#, fuzzy
 msgid "Name Sent"
 msgstr ""
 
 #: tfrmeditqso.chkprefixmult.caption
+#, fuzzy
 msgid "Prefix Mult"
 msgstr ""
 
 #: tfrmeditqso.chksap.caption
+#, fuzzy
 msgid "S&P"
 msgstr ""
 
 #: tfrmeditqso.chkxqso.caption
+#, fuzzy
 msgid "X-QSO"
 msgstr ""
 
 #: tfrmeditqso.chkzonemult.caption
+#, fuzzy
 msgid "Zone Mult"
 msgstr ""
 
 #: tfrmeditqso.dtpdatetime.textfornulldate
+#, fuzzy
 msgid "NULL"
 msgstr ""
 
 #: tfrmeditqso.lblage.caption
+#, fuzzy
 msgid "Age"
 msgstr ""
 
 #: tfrmeditqso.lblband.caption
+#, fuzzy
 msgid "Band"
 msgstr ""
 
 #: tfrmeditqso.lblcallsign.caption
+#, fuzzy
 msgctxt "tfrmeditqso.lblcallsign.caption"
 msgid "Callsign"
 msgstr ""
 
 #: tfrmeditqso.lblchapter.caption
+#, fuzzy
 msgid "Chapter"
 msgstr ""
 
 #: tfrmeditqso.lblcheck.caption
+#, fuzzy
 msgid "Check"
 msgstr ""
 
 #: tfrmeditqso.lblclass.caption
+#, fuzzy
 msgid "Class"
 msgstr ""
 
 #: tfrmeditqso.lblcomputerid.caption
+#, fuzzy
 msgid "Computer ID"
 msgstr ""
 
 #: tfrmeditqso.lbldate.caption
+#, fuzzy
 msgid "Date"
 msgstr ""
 
 #: tfrmeditqso.lbldomestic.caption
+#, fuzzy
 msgid "Domestic"
 msgstr ""
 
 #: tfrmeditqso.lbldx.caption
+#, fuzzy
 msgid "DX"
 msgstr ""
 
 #: tfrmeditqso.lblfrequency.caption
+#, fuzzy
 msgid "Frequency, Hz"
 msgstr ""
 
 #: tfrmeditqso.lblmode.caption
+#, fuzzy
 msgid "Mode"
 msgstr ""
 
 #: tfrmeditqso.lblname.caption
+#, fuzzy
 msgctxt "tfrmeditqso.lblname.caption"
 msgid "Name"
 msgstr ""
 
 #: tfrmeditqso.lblnumberrcvd.caption
+#, fuzzy
 msgid "Number Rcvd"
 msgstr ""
 
 #: tfrmeditqso.lblnumbersent.caption
+#, fuzzy
 msgid "Number Sent"
 msgstr ""
 
 #: tfrmeditqso.lbloperator.caption
+#, fuzzy
 msgid "Operator"
 msgstr ""
 
 #: tfrmeditqso.lblpostalcode.caption
+#, fuzzy
 msgid "Postal Code"
 msgstr ""
 
 #: tfrmeditqso.lblpower.caption
+#, fuzzy
 msgid "Power"
 msgstr ""
 
 #: tfrmeditqso.lblprecedence.caption
+#, fuzzy
 msgid "Precedence"
 msgstr ""
 
 #: tfrmeditqso.lblprefecture.caption
+#, fuzzy
 msgid "Prefecture"
 msgstr ""
 
 #: tfrmeditqso.lblprefix.caption
+#, fuzzy
 msgid "Prefix"
 msgstr ""
 
 #: tfrmeditqso.lblqsopoints.caption
+#, fuzzy
 msgid "QSO points"
 msgstr ""
 
 #: tfrmeditqso.lblqth.caption
+#, fuzzy
 msgid "QTH"
 msgstr ""
 
 #: tfrmeditqso.lblradio.caption
+#, fuzzy
 msgid "RADIO ONE"
 msgstr ""
 
 #: tfrmeditqso.lblrstreceived.caption
+#, fuzzy
 msgid "RST received"
 msgstr ""
 
 #: tfrmeditqso.lblrstsent.caption
+#, fuzzy
 msgid "RST sent"
 msgstr ""
 
 #: tfrmeditqso.lbltenten.caption
+#, fuzzy
 msgid "Ten Ten Number"
 msgstr ""
 
 #: tfrmeditqso.lblzone.caption
+#, fuzzy
 msgid "Zone"
 msgstr ""
 
 #: tfrmfunctionkeys.caption
+#, fuzzy
 msgid "Function keys"
 msgstr ""
 
 #: tfrmfunctionkeys.pnlf1.caption
+#, fuzzy
 msgid "F1"
 msgstr ""
 
 #: tfrmfunctionkeys.pnlf10.caption
+#, fuzzy
 msgid "F10"
 msgstr ""
 
 #: tfrmfunctionkeys.pnlf11.caption
+#, fuzzy
 msgid "F11"
 msgstr ""
 
 #: tfrmfunctionkeys.pnlf12.caption
+#, fuzzy
 msgid "F12"
 msgstr ""
 
 #: tfrmfunctionkeys.pnlf2.caption
+#, fuzzy
 msgid "F2"
 msgstr ""
 
 #: tfrmfunctionkeys.pnlf3.caption
+#, fuzzy
 msgid "F3"
 msgstr ""
 
 #: tfrmfunctionkeys.pnlf4.caption
+#, fuzzy
 msgid "F4"
 msgstr ""
 
 #: tfrmfunctionkeys.pnlf5.caption
+#, fuzzy
 msgid "F5"
 msgstr ""
 
 #: tfrmfunctionkeys.pnlf6.caption
+#, fuzzy
 msgid "F6"
 msgstr ""
 
 #: tfrmfunctionkeys.pnlf7.caption
+#, fuzzy
 msgid "F7"
 msgstr ""
 
 #: tfrmfunctionkeys.pnlf8.caption
+#, fuzzy
 msgid "F8"
 msgstr ""
 
 #: tfrmfunctionkeys.pnlf9.caption
+#, fuzzy
 msgid "F9"
 msgstr ""
 
 #: tfrmhamscore.btnpushnow.caption
+#, fuzzy
 msgid "Push Now"
 msgstr ""
 
 #: tfrmhamscore.btnresync.caption
+#, fuzzy
 msgid "Resync from log"
 msgstr ""
 
 #: tfrmhamscore.caption
+#, fuzzy
 msgid "HamScore"
 msgstr ""
 
 #: tfrmhamscore.lblqueuetitle.caption
+#, fuzzy
 msgid "Queued contacts:"
 msgstr ""
 
 #: tfrmhamscore.lblqueuevalue.caption
+#, fuzzy
 msgid "--"
 msgstr ""
 
 #: tfrmhamscore.lblstatustitle.caption
+#, fuzzy
 msgid "Last status:"
 msgstr ""
 
 #: tfrminiretire.btnno.caption
+#, fuzzy
 msgid "&No"
 msgstr ""
 
 #: tfrminiretire.btnyes.caption
+#, fuzzy
 msgid "&Yes"
 msgstr ""
 
 #: tfrminiretire.caption
+#, fuzzy
 msgctxt "tfrminiretire.caption"
 msgid "Old settings file"
 msgstr ""
 
 #: tfrminiretire.chkdontask.caption
+#, fuzzy
 msgid "chkDontAsk"
 msgstr ""
 
 #: tfrminiretire.lblprompt.caption
+#, fuzzy
 msgid "lblPrompt"
 msgstr ""
 
 #: tfrminputquery.btncancel.caption
+#, fuzzy
 msgctxt "tfrminputquery.btncancel.caption"
 msgid "Cancel"
 msgstr ""
 
 #: tfrminputquery.btnok.caption
+#, fuzzy
 msgctxt "tfrminputquery.btnok.caption"
 msgid "OK"
 msgstr ""
 
 #: tfrminputquery.caption
+#, fuzzy
 msgctxt "tfrminputquery.caption"
 msgid "TR4W"
 msgstr ""
 
 #: tfrminputquery.lblprompt.caption
+#, fuzzy
 msgid "Enter value:"
 msgstr ""
 
 #: tfrmintercom.caption
+#, fuzzy
 msgid "Intercom"
 msgstr ""
 
 #: tfrmkeyeredit.btncancel.caption
+#, fuzzy
 msgctxt "tfrmkeyeredit.btncancel.caption"
 msgid "Cancel"
 msgstr ""
 
 #: tfrmkeyeredit.btnok.caption
+#, fuzzy
 msgctxt "tfrmkeyeredit.btnok.caption"
 msgid "Save and close"
 msgstr ""
 
 #: tfrmkeyeredit.caption
+#, fuzzy
 msgid "CW keying device"
 msgstr ""
 
 #: tfrmkeyeredit.chkwkautospace.caption
+#, fuzzy
 msgid "Auto space"
 msgstr ""
 
 #: tfrmkeyeredit.chkwkctspacing.caption
+#, fuzzy
 msgid "CT spacing"
 msgstr ""
 
 #: tfrmkeyeredit.chkwkignorespeedpot.caption
+#, fuzzy
 msgid "Ignore speed pot"
 msgstr ""
 
 #: tfrmkeyeredit.chkwkpaddleonlysidetone.caption
+#, fuzzy
 msgid "Paddle-only sidetone"
 msgstr ""
 
 #: tfrmkeyeredit.chkwkpaddleswap.caption
+#, fuzzy
 msgid "Swap paddles"
 msgstr ""
 
 #: tfrmkeyeredit.chkwksidetoneenable.caption
+#, fuzzy
 msgid "Sidetone on"
 msgstr ""
 
 #: tfrmkeyeredit.grpwinkeyer.caption
+#, fuzzy
 msgid "WinKeyer settings"
 msgstr ""
 
 #: tfrmkeyeredit.lblkind.caption
+#, fuzzy
 msgid "Keyer type"
 msgstr ""
 
 #: tfrmkeyeredit.lblname.caption
+#, fuzzy
 msgctxt "tfrmkeyeredit.lblname.caption"
 msgid "Name"
 msgstr ""
 
 #: tfrmkeyeredit.lblport.caption
+#, fuzzy
 msgctxt "tfrmkeyeredit.lblport.caption"
 msgid "Port"
 msgstr ""
 
 #: tfrmkeyeredit.lblwkcomp.caption
+#, fuzzy
 msgid "Compensation"
 msgstr ""
 
 #: tfrmkeyeredit.lblwkfirstext.caption
+#, fuzzy
 msgid "First extension"
 msgstr ""
 
 #: tfrmkeyeredit.lblwkkeyermode.caption
+#, fuzzy
 msgid "Keyer mode"
 msgstr ""
 
 #: tfrmkeyeredit.lblwkleadin.caption
+#, fuzzy
 msgid "Lead-in"
 msgstr ""
 
 #: tfrmkeyeredit.lblwkratio.caption
+#, fuzzy
 msgid "Dit/dah ratio"
 msgstr ""
 
 #: tfrmkeyeredit.lblwksidetone.caption
+#, fuzzy
 msgid "Sidetone"
 msgstr ""
 
 #: tfrmkeyeredit.lblwkswitchpoint.caption
+#, fuzzy
 msgid "Switchpoint"
 msgstr ""
 
 #: tfrmkeyeredit.lblwktail.caption
+#, fuzzy
 msgid "Tail"
 msgstr ""
 
 #: tfrmkeyeredit.lblwkweight.caption
+#, fuzzy
 msgid "Weight"
 msgstr ""
 
 #: tfrmlogcompare.btnclearalllogs.caption
+#, fuzzy
 msgid "Clear all logs"
 msgstr ""
 
 #: tfrmlogcompare.btnexit.caption
+#, fuzzy
 msgid "Exit"
 msgstr ""
 
 #: tfrmlogcompare.btnsynchronize.caption
+#, fuzzy
 msgid "Synchronize"
 msgstr ""
 
 #: tfrmlogcompare.caption
+#, fuzzy
 msgid "Differences in the log"
 msgstr ""
 
 #: tfrmlpt.btncancel.caption
+#, fuzzy
 msgctxt "tfrmlpt.btncancel.caption"
 msgid "Cancel"
 msgstr ""
 
 #: tfrmlpt.btnok.caption
+#, fuzzy
 msgctxt "tfrmlpt.btnok.caption"
 msgid "OK"
 msgstr ""
 
 #: tfrmlpt.caption
+#, fuzzy
 msgid "LPT"
 msgstr ""
 
 #: tfrmmaster.caption
+#, fuzzy
 msgid "Super check partial"
 msgstr ""
 
 #: tfrmmessageslist.btncancel.caption
+#, fuzzy
 msgctxt "tfrmmessageslist.btncancel.caption"
 msgid "Cancel"
 msgstr ""
 
 #: tfrmmessageslist.btnok.caption
+#, fuzzy
 msgctxt "tfrmmessageslist.btnok.caption"
 msgid "OK"
 msgstr ""
 
 #: tfrmmessageslist.caption
+#, fuzzy
 msgctxt "tfrmmessageslist.caption"
 msgid "List of commands"
 msgstr ""
 
 #: tfrmmmtty.caption
+#, fuzzy
 msgctxt "tfrmmmtty.caption"
 msgid "MMTTY"
 msgstr ""
 
 #: tfrmmp3recorder.btncontrol.caption
+#, fuzzy
 msgid "..."
 msgstr ""
 
 #: tfrmmp3recorder.caption
+#, fuzzy
 msgid "MP3 Recorder"
 msgstr ""
 
 #: tfrmmp3recorder.chkrecord.caption
+#, fuzzy
 msgid "Record"
 msgstr ""
 
 #: tfrmnetwork.caption
+#, fuzzy
 msgctxt "tfrmnetwork.caption"
 msgid "Network"
 msgstr ""
 
 #: tfrmpanadapter.btnpause.caption
+#, fuzzy
 msgid "Pause"
 msgstr ""
 
 #: tfrmpanadapter.btnspannarrow.caption
+#, fuzzy
 msgid "-"
 msgstr ""
 
 #: tfrmpanadapter.btnspannarrow.hint
+#, fuzzy
 msgid "Narrower span (zoom in)"
 msgstr ""
 
 #: tfrmpanadapter.btnspanwide.caption
+#, fuzzy
 msgid "+"
 msgstr ""
 
 #: tfrmpanadapter.btnspanwide.hint
+#, fuzzy
 msgid "Wider span (zoom out)"
 msgstr ""
 
 #: tfrmpanadapter.caption
+#, fuzzy
 msgid "Panadapter"
 msgstr ""
 
 #: tfrmpanadapter.lblscale.caption
+#, fuzzy
 msgid "80 dB"
 msgstr ""
 
 #: tfrmpanadapter.lblsource.caption
+#, fuzzy
 msgid "Pan A"
 msgstr ""
 
 #: tfrmpanadapter.lblspan.caption
+#, fuzzy
 msgid "Span --"
 msgstr ""
 
 #: tfrmpanadapter.lblstatus.caption
+#, fuzzy
 msgid "Disconnected"
 msgstr ""
 
 #: tfrmpostscores.btnpostnow.caption
+#, fuzzy
 msgid "Post now"
 msgstr ""
 
 #: tfrmpostscores.btnshowscores.caption
+#, fuzzy
 msgid "Show scores"
 msgstr ""
 
 #: tfrmpostscores.caption
+#, fuzzy
 msgid "Post scores"
 msgstr ""
 
 #: tfrmprogrammessage.btncq.caption
+#, fuzzy
 msgid "Press &C to program a CQ function key."
 msgstr ""
 
 #: tfrmprogrammessage.btnexchange.caption
+#, fuzzy
 msgid "Press &E to program an exchange/search and pounce function key."
 msgstr ""
 
 #: tfrmprogrammessage.btnother.caption
+#, fuzzy
 msgid "Press &O to program the other non function key messages."
 msgstr ""
 
 #: tfrmprogrammessage.caption
+#, fuzzy
 msgid "Memory program function"
 msgstr ""
 
 #: tfrmradiopanel.btnspectrum.caption
+#, fuzzy
 msgid "Spectrum"
 msgstr ""
 
 #: tfrmradiopanel.caption
+#, fuzzy
 msgctxt "tfrmradiopanel.caption"
 msgid "Radio"
 msgstr ""
 
 #: tfrmradiopanel.lblrit.caption
+#, fuzzy
 msgid "RIT"
 msgstr ""
 
 #: tfrmradiopanel.lblsplit.caption
+#, fuzzy
 msgid "SPLIT"
 msgstr ""
 
 #: tfrmradiopanel.lblvfoacaption.caption
+#, fuzzy
 msgid "VFO A"
 msgstr ""
 
 #: tfrmradiopanel.lblvfobcaption.caption
+#, fuzzy
 msgid "VFO B"
 msgstr ""
 
 #: tfrmradiopanel.lblxit.caption
+#, fuzzy
 msgid "XIT"
 msgstr ""
 
 #: tfrmremmults.caption
+#, fuzzy
 msgid "Remaining mults"
 msgstr ""
 
 #: tfrmsendkeyboard.btnclose.caption
+#, fuzzy
 msgid "Close"
 msgstr ""
 
 #: tfrmsendkeyboard.caption
+#, fuzzy
 msgid "Sending CW"
 msgstr ""
 
 #: tfrmsendspot.btncancel.caption
+#, fuzzy
 msgctxt "tfrmsendspot.btncancel.caption"
 msgid "Cancel"
 msgstr ""
 
 #: tfrmsendspot.btnok.caption
+#, fuzzy
 msgctxt "tfrmsendspot.btnok.caption"
 msgid "OK"
 msgstr ""
 
 #: tfrmsendspot.caption
+#, fuzzy
 msgid "Send spot"
 msgstr ""
 
 #: tfrmsendspot.chkcontestname.caption
+#, fuzzy
 msgid "Contest name in comment"
 msgstr ""
 
 #: tfrmsendspot.lblcallsign.caption
+#, fuzzy
 msgctxt "tfrmsendspot.lblcallsign.caption"
 msgid "Callsign"
 msgstr ""
 
 #: tfrmsendspot.lblcomment.caption
+#, fuzzy
 msgid "Comment"
 msgstr ""
 
 #: tfrmsendspot.lblfrequency.caption
+#, fuzzy
 msgid "Frequency"
 msgstr ""
 
 #: tfrmstations.caption
+#, fuzzy
 msgid "Stations"
 msgstr ""
 
 #: tfrmtelnet.btnclear.caption
+#, fuzzy
 msgid "Clear"
 msgstr ""
 
 #: tfrmtelnet.btncommands.caption
+#, fuzzy
 msgid "Commands"
 msgstr ""
 
 #: tfrmtelnet.btnconnect.caption
+#, fuzzy
 msgid "Connect"
 msgstr ""
 
 #: tfrmtelnet.btndisconnect.caption
+#, fuzzy
 msgid "Disconnect"
 msgstr ""
 
 #: tfrmtelnet.btnfreeze.caption
+#, fuzzy
 msgid "Freeze"
 msgstr ""
 
 #: tfrmtelnet.btnsend.caption
+#, fuzzy
 msgid "Send"
 msgstr ""
 
 #: tfrmtelnet.btnshow50.caption
+#, fuzzy
 msgid "SH/50"
 msgstr ""
 
 #: tfrmtelnet.caption
+#, fuzzy
 msgid "Telnet"
 msgstr ""
 
 #: tfrmudpdestinationedit.btncancel.caption
+#, fuzzy
 msgctxt "tfrmudpdestinationedit.btncancel.caption"
 msgid "Cancel"
 msgstr ""
 
 #: tfrmudpdestinationedit.btnok.caption
+#, fuzzy
 msgctxt "tfrmudpdestinationedit.btnok.caption"
 msgid "OK"
 msgstr ""
 
 #: tfrmudpdestinationedit.btntest.caption
+#, fuzzy
 msgctxt "tfrmudpdestinationedit.btntest.caption"
 msgid "Test"
 msgstr ""
 
 #: tfrmudpdestinationedit.caption
+#, fuzzy
 msgid "UDP Destination"
 msgstr ""
 
 #: tfrmudpdestinationedit.chkstreamappinfo.caption
+#, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamappinfo.caption"
 msgid "App info"
 msgstr ""
 
 #: tfrmudpdestinationedit.chkstreamcontact.caption
+#, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamcontact.caption"
 msgid "Contact info"
 msgstr ""
 
 #: tfrmudpdestinationedit.chkstreamlookup.caption
+#, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamlookup.caption"
 msgid "Callsign lookup"
 msgstr ""
 
 #: tfrmudpdestinationedit.chkstreamradio.caption
+#, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamradio.caption"
 msgid "Radio info"
 msgstr ""
 
 #: tfrmudpdestinationedit.chkstreamrotor.caption
+#, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamrotor.caption"
 msgid "Rotor"
 msgstr ""
 
 #: tfrmudpdestinationedit.chkstreamscore.caption
+#, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamscore.caption"
 msgid "Score"
 msgstr ""
 
 #: tfrmudpdestinationedit.grpstreams.caption
+#, fuzzy
 msgid "Send this destination"
 msgstr ""
 
 #: tfrmudpdestinationedit.lbladdress.caption
+#, fuzzy
 msgid "Address"
 msgstr ""
 
 #: tfrmudpdestinationedit.lblport.caption
+#, fuzzy
 msgctxt "tfrmudpdestinationedit.lblport.caption"
 msgid "Port"
 msgstr ""
 
 #: tfrmwinmanager.btncancel.caption
+#, fuzzy
 msgctxt "tfrmwinmanager.btncancel.caption"
 msgid "Cancel"
 msgstr ""
 
 #: tfrmwinmanager.btnok.caption
+#, fuzzy
 msgctxt "tfrmwinmanager.btnok.caption"
 msgid "OK"
 msgstr ""
 
 #: tfrmwinmanager.caption
+#, fuzzy
 msgid "Window control"
 msgstr ""
 
 #: tprefsform.btnactivate.caption
+#, fuzzy
 msgid "Activate this profile now"
 msgstr ""
 
 #: tprefsform.btnadd.caption
+#, fuzzy
 msgctxt "tprefsform.btnadd.caption"
 msgid "Add..."
 msgstr ""
 
 #: tprefsform.btnaddcluster.caption
+#, fuzzy
 msgctxt "tprefsform.btnaddcluster.caption"
 msgid "Add..."
 msgstr ""
 
 #: tprefsform.btnaddkeyer.caption
+#, fuzzy
 msgctxt "tprefsform.btnaddkeyer.caption"
 msgid "Add..."
 msgstr ""
 
 #: tprefsform.btnaddrotator.caption
+#, fuzzy
 msgctxt "tprefsform.btnaddrotator.caption"
 msgid "Add..."
 msgstr ""
 
 #: tprefsform.btnapply.caption
+#, fuzzy
 msgctxt "tprefsform.btnapply.caption"
 msgid "Save"
 msgstr ""
 
 #: tprefsform.btnbrowsebackup.caption
+#, fuzzy
 msgctxt "tprefsform.btnbrowsebackup.caption"
 msgid "Browse..."
 msgstr ""
 
 #: tprefsform.btnbrowsedvkpath.caption
+#, fuzzy
 msgctxt "tprefsform.btnbrowsedvkpath.caption"
 msgid "Browse..."
 msgstr ""
 
 #: tprefsform.btnbrowsedvkrecorder.caption
+#, fuzzy
 msgctxt "tprefsform.btnbrowsedvkrecorder.caption"
 msgid "Browse..."
 msgstr ""
 
 #: tprefsform.btnbrowsemmtty.caption
+#, fuzzy
 msgctxt "tprefsform.btnbrowsemmtty.caption"
 msgid "Browse..."
 msgstr ""
 
 #: tprefsform.btnbrowsemp3path.caption
+#, fuzzy
 msgctxt "tprefsform.btnbrowsemp3path.caption"
 msgid "Browse..."
 msgstr ""
 
 #: tprefsform.btnbrowsemp3player.caption
+#, fuzzy
 msgctxt "tprefsform.btnbrowsemp3player.caption"
 msgid "Browse..."
 msgstr ""
 
 #: tprefsform.btncancel.caption
+#, fuzzy
 msgctxt "tprefsform.btncancel.caption"
 msgid "Cancel"
 msgstr ""
 
 #: tprefsform.btndeleteprofile.caption
+#, fuzzy
 msgctxt "tprefsform.btndeleteprofile.caption"
 msgid "Delete"
 msgstr ""
 
 #: tprefsform.btnduplicate.caption
+#, fuzzy
 msgctxt "tprefsform.btnduplicate.caption"
 msgid "Duplicate"
 msgstr ""
 
 #: tprefsform.btnduplicatekeyer.caption
+#, fuzzy
 msgctxt "tprefsform.btnduplicatekeyer.caption"
 msgid "Duplicate"
 msgstr ""
 
 #: tprefsform.btnedit.caption
+#, fuzzy
 msgctxt "tprefsform.btnedit.caption"
 msgid "Edit..."
 msgstr ""
 
 #: tprefsform.btneditkeyer.caption
+#, fuzzy
 msgctxt "tprefsform.btneditkeyer.caption"
 msgid "Edit..."
 msgstr ""
 
 #: tprefsform.btnnewprofile.caption
+#, fuzzy
 msgctxt "tprefsform.btnnewprofile.caption"
 msgid "New..."
 msgstr ""
 
 #: tprefsform.btnok.caption
+#, fuzzy
 msgctxt "tprefsform.btnok.caption"
 msgid "Save and close"
 msgstr ""
 
 #: tprefsform.btnopenlogfile.caption
+#, fuzzy
 msgid "Open log file"
 msgstr ""
 
 #: tprefsform.btnremove.caption
+#, fuzzy
 msgctxt "tprefsform.btnremove.caption"
 msgid "Remove"
 msgstr ""
 
 #: tprefsform.btnremovecluster.caption
+#, fuzzy
 msgctxt "tprefsform.btnremovecluster.caption"
 msgid "Remove"
 msgstr ""
 
 #: tprefsform.btnremovekeyer.caption
+#, fuzzy
 msgctxt "tprefsform.btnremovekeyer.caption"
 msgid "Remove"
 msgstr ""
 
 #: tprefsform.btnremoverotator.caption
+#, fuzzy
 msgctxt "tprefsform.btnremoverotator.caption"
 msgid "Remove"
 msgstr ""
 
 #: tprefsform.btnrenameprofile.caption
+#, fuzzy
 msgctxt "tprefsform.btnrenameprofile.caption"
 msgid "Rename..."
 msgstr ""
 
 #: tprefsform.btnudpadd.caption
+#, fuzzy
 msgctxt "tprefsform.btnudpadd.caption"
 msgid "Add..."
 msgstr ""
 
 #: tprefsform.btnudpedit.caption
+#, fuzzy
 msgctxt "tprefsform.btnudpedit.caption"
 msgid "Edit..."
 msgstr ""
 
 #: tprefsform.btnudpremove.caption
+#, fuzzy
 msgctxt "tprefsform.btnudpremove.caption"
 msgid "Remove"
 msgstr ""
 
 #: tprefsform.btnudptest.caption
+#, fuzzy
 msgctxt "tprefsform.btnudptest.caption"
 msgid "Test"
 msgstr ""
 
 #: tprefsform.btnusecluster.caption
+#, fuzzy
 msgctxt "tprefsform.btnusecluster.caption"
 msgid "Use this"
 msgstr ""
 
 #: tprefsform.btnuserotator.caption
+#, fuzzy
 msgctxt "tprefsform.btnuserotator.caption"
 msgid "Use this"
 msgstr ""
 
 #: tprefsform.caption
+#, fuzzy
 msgctxt "tprefsform.caption"
 msgid "TR4W Preferences"
 msgstr ""
 
 #: tprefsform.chkaltdbuffer.caption
+#, fuzzy
 msgid "Alt-D remembers what you typed"
 msgstr ""
 
 #: tprefsform.chkaltdcq.caption
+#, fuzzy
 msgid "Alt-D can start a CQ on the second radio"
 msgstr ""
 
 #: tprefsform.chkalwaysblindcq.caption
+#, fuzzy
 msgid "Always call a blind CQ"
 msgstr ""
 
 #: tprefsform.chkautocallterminate.caption
+#, fuzzy
 msgid "Stop sending when the call window changes"
 msgstr ""
 
 #: tprefsform.chkautoconnect.caption
+#, fuzzy
 msgctxt "tprefsform.chkautoconnect.caption"
 msgid "Connect radios at startup"
 msgstr ""
 
 #: tprefsform.chkautoqsonumberdecrement.caption
+#, fuzzy
 msgid "Give the serial number back when a QSO is abandoned"
 msgstr ""
 
 #: tprefsform.chkautoreturntocq.caption
+#, fuzzy
 msgid "Return to CQ mode after logging a QSO"
 msgstr ""
 
 #: tprefsform.chkbandmapallbands.caption
+#, fuzzy
 msgid "All bands"
 msgstr ""
 
 #: tprefsform.chkbandmapallmodes.caption
+#, fuzzy
 msgid "All modes"
 msgstr ""
 
 #: tprefsform.chkbandmapcallwindow.caption
+#, fuzzy
 msgid "Show the call window entry"
 msgstr ""
 
 #: tprefsform.chkbandmapcq.caption
+#, fuzzy
 msgid "Show CQ spots"
 msgstr ""
 
 #: tprefsform.chkbandmapdupes.caption
+#, fuzzy
 msgid "Show duplicates"
 msgstr ""
 
 #: tprefsform.chkbandmapghz.caption
+#, fuzzy
 msgid "Show GHz"
 msgstr ""
 
 #: tprefsform.chkbandmapmultsonly.caption
+#, fuzzy
 msgid "Multipliers only"
 msgstr ""
 
 #: tprefsform.chkbandmapso2r.caption
+#, fuzzy
 msgid "SO2R display"
 msgstr ""
 
 #: tprefsform.chkboldfont.caption
+#, fuzzy
 msgid "Bold"
 msgstr ""
 
 #: tprefsform.chkcallwindowshowallspots.caption
+#, fuzzy
 msgid "Show every spot in the call window"
 msgstr ""
 
 #: tprefsform.chkchecklogfilesize.caption
+#, fuzzy
 msgid "Warn when the log file grows unexpectedly"
 msgstr ""
 
 #: tprefsform.chkclusteratstartup.caption
+#, fuzzy
 msgid "Connect at startup"
 msgstr ""
 
 #: tprefsform.chkconfirmeditchanges.caption
+#, fuzzy
 msgid "Confirm before saving an edited QSO"
 msgstr ""
 
 #: tprefsform.chkcwenable.caption
+#, fuzzy
 msgid "Send CW"
 msgstr ""
 
 #: tprefsform.chkcwmessageschainable.caption
+#, fuzzy
 msgid "Any CW message may chain into the next"
 msgstr ""
 
 #: tprefsform.chkcwspeedfromdatabase.caption
+#, fuzzy
 msgid "Match the speed a station was worked at before"
 msgstr ""
 
 #: tprefsform.chkdupesheetcolor.caption
+#, fuzzy
 msgid "Color the dupe sheet columns"
 msgstr ""
 
 #: tprefsform.chkdvkenable.caption
+#, fuzzy
 msgid "Use the digital voice keyer"
 msgstr ""
 
 #: tprefsform.chkdvklocalizedmessages.caption
+#, fuzzy
 msgid "Use localized DVK message files"
 msgstr ""
 
 #: tprefsform.chkescapeexitssap.caption
+#, fuzzy
 msgid "Escape leaves search and pounce"
 msgstr ""
 
 #: tprefsform.chkfarnsworth.caption
+#, fuzzy
 msgid "Farnsworth spacing"
 msgstr ""
 
 #: tprefsform.chkhamlibasynconly.caption
+#, fuzzy
 msgid "HamLib - async callbacks only, no heartbeat (testing)"
 msgstr ""
 
 #: tprefsform.chkhamlibdebug.caption
+#, fuzzy
 msgid "HamLib - debug logging"
 msgstr ""
 
 #: tprefsform.chkhamlibtrace.caption
+#, fuzzy
 msgid "HamLib - internal trace to hamlib_trace.log"
 msgstr ""
 
 #: tprefsform.chkhamscorecontact.caption
+#, fuzzy
 msgid "Include contact information"
 msgstr ""
 
 #: tprefsform.chkhamscoreenable.caption
+#, fuzzy
 msgid "Post my score while the contest runs"
 msgstr ""
 
 #: tprefsform.chkhfbands.caption
+#, fuzzy
 msgid "HF (160 - 10 m)"
 msgstr ""
 
 #: tprefsform.chkinbandlockout.caption
+#, fuzzy
 msgid "Stop both radios landing on one band"
 msgstr ""
 
 #: tprefsform.chkincludefkeynumber.caption
+#, fuzzy
 msgid "Show the key number on the function-key buttons"
 msgstr ""
 
 #: tprefsform.chkintercomfile.caption
+#, fuzzy
 msgid "Log network messages to INTERCOM.TXT"
 msgstr ""
 
 #: tprefsform.chkkeypadcwmemories.caption
+#, fuzzy
 msgid "Number keypad sends CW memories"
 msgstr ""
 
 #: tprefsform.chkleavecursorincall.caption
+#, fuzzy
 msgid "Leave the cursor in the call window"
 msgstr ""
 
 #: tprefsform.chkloggerenabled.caption
+#, fuzzy
 msgid "Send QSOs to it as they are logged"
 msgstr ""
 
 #: tprefsform.chklogwithsingleenter.caption
+#, fuzzy
 msgid "Log with a single Enter"
 msgstr ""
 
 #: tprefsform.chkmp3recorderenable.caption
+#, fuzzy
 msgid "Record each QSO to MP3"
 msgstr ""
 
 #: tprefsform.chkmultimultsonly.caption
+#, fuzzy
 msgid "Pass only new multipliers around the network"
 msgstr ""
 
 #: tprefsform.chknameflag.caption
+#, fuzzy
 msgid "Flag a station whose name is already known"
 msgstr ""
 
 #: tprefsform.chknetautosync.caption
+#, fuzzy
 msgid "Synchronize the log when connecting"
 msgstr ""
 
 #: tprefsform.chknoborder.caption
+#, fuzzy
 msgid "Main window has no border"
 msgstr ""
 
 #: tprefsform.chknocaption.caption
+#, fuzzy
 msgid "Main window has no title bar"
 msgstr ""
 
 #: tprefsform.chknocolumnheader.caption
+#, fuzzy
 msgid "Hide the log column headings"
 msgstr ""
 
 #: tprefsform.chknopollduringptt.caption
+#, fuzzy
 msgid "Stop polling the radio while transmitting"
 msgstr ""
 
 #: tprefsform.chkpartialcall.caption
+#, fuzzy
 msgid "Match on a partial callsign"
 msgstr ""
 
 #: tprefsform.chkpossiblecalls.caption
+#, fuzzy
 msgid "Offer possible calls"
 msgstr ""
 
 #: tprefsform.chkpttenable.caption
+#, fuzzy
 msgid "Assert PTT when transmitting"
 msgstr ""
 
 #: tprefsform.chkpttlockout.caption
+#, fuzzy
 msgid "Lock out PTT"
 msgstr ""
 
 #: tprefsform.chkpttviacommands.caption
+#, fuzzy
 msgid "Key the transmitter with a CAT command instead of a hardware line"
 msgstr ""
 
 #: tprefsform.chkqsyinactive.caption
+#, fuzzy
 msgid "QSY the inactive radio when I change band"
 msgstr ""
 
 #: tprefsform.chksayhienable.caption
+#, fuzzy
 msgid "Send a greeting to stations worked before"
 msgstr ""
 
 #: tprefsform.chksendfourlettercall.caption
+#, fuzzy
 msgid "Always send all four letters of a four-letter call"
 msgstr ""
 
 #: tprefsform.chkshowgridlines.caption
+#, fuzzy
 msgid "Draw gridlines in the log"
 msgstr ""
 
 #: tprefsform.chkskipactiveband.caption
+#, fuzzy
 msgid "Skip the band the other radio is on"
 msgstr ""
 
 #: tprefsform.chkso2r.caption
+#, fuzzy
 msgctxt "tprefsform.chkso2r.caption"
 msgid "SO2R enabled"
 msgstr ""
 
 #: tprefsform.chkspacebardupecheck.caption
+#, fuzzy
 msgid "Space bar performs a dupe check"
 msgstr ""
 
 #: tprefsform.chkspeedsync1.caption
+#, fuzzy
 msgctxt "tprefsform.chkspeedsync1.caption"
 msgid "Speed sync"
 msgstr ""
 
 #: tprefsform.chkspeedsync2.caption
+#, fuzzy
 msgctxt "tprefsform.chkspeedsync2.caption"
 msgid "Speed sync"
 msgstr ""
 
 #: tprefsform.chkspotcollector.caption
+#, fuzzy
 msgid "Collect spots from the cluster"
 msgstr ""
 
 #: tprefsform.chkswappacketspotradios.caption
+#, fuzzy
 msgid "Send spots to the other radio"
 msgstr ""
 
 #: tprefsform.chkswappaddles.caption
+#, fuzzy
 msgid "Swap dit and dah"
 msgstr ""
 
 #: tprefsform.chkswaprelaysense.caption
+#, fuzzy
 msgid "Invert the radio relay sense"
 msgstr ""
 
 #: tprefsform.chktcibindall.caption
+#, fuzzy
 msgid "Also listen on the network (other computers can connect)"
 msgstr ""
 
 #: tprefsform.chktcidebug.caption
+#, fuzzy
 msgid "TCI server - log every command, both directions"
 msgstr ""
 
 #: tprefsform.chktciserver.caption
+#, fuzzy
 msgid "Enable the TCI server"
 msgstr ""
 
 #: tprefsform.chktelnetdebug.caption
+#, fuzzy
 msgid "DX cluster - log all telnet traffic"
 msgstr ""
 
 #: tprefsform.chktunewithdits.caption
+#, fuzzy
 msgid "Tune with dits rather than a solid carrier"
 msgstr ""
 
 #: tprefsform.chktworadiomode.caption
+#, fuzzy
 msgid "Two radio mode"
 msgstr ""
 
 #: tprefsform.chkudpallqsos.caption
+#, fuzzy
 msgid "Also broadcast edited and previously logged QSOs"
 msgstr ""
 
 #: tprefsform.chkudpenabled.caption
+#, fuzzy
 msgid "Broadcast UDP data"
 msgstr ""
 
 #: tprefsform.chkunknowncountryfile.caption
+#, fuzzy
 msgid "Record callsigns with no country match"
 msgstr ""
 
 #: tprefsform.chkupdaterestartfile.caption
+#, fuzzy
 msgid "Keep the restart file up to date"
 msgstr ""
 
 #: tprefsform.chkusecontrolport.caption
+#, fuzzy
 msgid "Use the radio control port for paddle and foot switch"
 msgstr ""
 
 #: tprefsform.chkuserecordedsigns.caption
+#, fuzzy
 msgid "Send recorded audio for callsign characters"
 msgstr ""
 
 #: tprefsform.chkvhfbands.caption
+#, fuzzy
 msgid "VHF and up (6 m and above)"
 msgstr ""
 
 #: tprefsform.chkwaitforstrength.caption
+#, fuzzy
 msgid "Wait for a signal strength reading before switching"
 msgstr ""
 
 #: tprefsform.chkwarcbands.caption
+#, fuzzy
 msgid "WARC (30, 17, 12 m)"
 msgstr ""
 
 #: tprefsform.chkwildcardpartials.caption
+#, fuzzy
 msgid "Allow wildcards in a partial"
 msgstr ""
 
 #: tprefsform.chkwsjtxenabled.caption
+#, fuzzy
 msgid "Exchange data with WSJT-X"
 msgstr ""
 
 #: tprefsform.chkwsjtxhighlights.caption
+#, fuzzy
 msgid "Send callsign highlighting to WSJT-X"
 msgstr ""
 
 #: tprefsform.chkwsjtxradiocontrol.caption
+#, fuzzy
 msgid "Let WSJT-X control the radio"
 msgstr ""
 
 #: tprefsform.chkycccso2r.caption
+#, fuzzy
 msgid "YCCC SO2R Plus box connected"
 msgstr ""
 
 #: tprefsform.edtsearch.texthint
+#, fuzzy
 msgid "Search settings"
 msgstr ""
 
 #: tprefsform.grpprofile.caption
+#, fuzzy
 msgctxt "tprefsform.grpprofile.caption"
 msgid "Station profile"
 msgstr ""
 
 #: tprefsform.lblactivatehint.caption
+#, fuzzy
 msgid "Saving stores your changes. It does not switch the radios over - use this button for that."
 msgstr ""
 
 #: tprefsform.lblactive.caption
+#, fuzzy
 msgctxt "tprefsform.lblactive.caption"
 msgid "Active profile: "
 msgstr ""
 
 #: tprefsform.lblactivecluster.caption
+#, fuzzy
 msgid "Connecting to: (none chosen)"
 msgstr ""
 
 #: tprefsform.lblappearcolorshint.caption
+#, fuzzy
 msgid "Window colors are still on the Settings menu.  They belong here and will move once the main window is resizable, which is the change that decides what the layout options need to be."
 msgstr ""
 
 #: tprefsform.lblappearheading.caption
+#, fuzzy
 msgctxt "tprefsform.lblappearheading.caption"
 msgid "Main window"
 msgstr ""
 
 #: tprefsform.lblappearhint.caption
+#, fuzzy
 msgid "The font applies to the main contest window.  All four take effect when TR4W next starts."
 msgstr ""
 
 #: tprefsform.lblappearmenunote.caption
+#, fuzzy
 msgid "These were on the Appearance item of the Settings menu. That window goes away once ROW COUNT and WINDOW SIZE join them here."
 msgstr ""
 
 #: tprefsform.lblaudioheading.caption
+#, fuzzy
 msgid "Audio"
 msgstr ""
 
 #: tprefsform.lblaudioinfo.caption
+#, fuzzy
 msgid "Voice keying and QSO recording. CW keying is on the CW Settings page."
 msgstr ""
 
 #: tprefsform.lblaudionote.caption
+#, fuzzy
 msgid "Bit rate and recording length are not here yet: both are stored through a lookup table rather than directly, and move separately."
 msgstr ""
 
 #: tprefsform.lblbackupevery.caption
+#, fuzzy
 msgid "Back up every:"
 msgstr ""
 
 #: tprefsform.lblbackupeveryunits.caption
+#, fuzzy
 msgid "QSOs  (0 = never)"
 msgstr ""
 
 #: tprefsform.lblbackupfile.caption
+#, fuzzy
 msgid "Copy to:"
 msgstr ""
 
 #: tprefsform.lblbackupheading.caption
+#, fuzzy
 msgid "Log backup"
 msgstr ""
 
 #: tprefsform.lblbackuphint.caption
+#, fuzzy
 msgid "A second copy of the log, written as you go.  Put it somewhere that is not the same disk as the log itself, or it protects against nothing worth protecting against."
 msgstr ""
 
 #: tprefsform.lblbandmapdecay.caption
+#, fuzzy
 msgid "Spot expiry:"
 msgstr ""
 
 #: tprefsform.lblbandmapdecayunits.caption
+#, fuzzy
 msgid "minutes"
 msgstr ""
 
 #: tprefsform.lblbandmapguard.caption
+#, fuzzy
 msgid "Guard band:"
 msgstr ""
 
 #: tprefsform.lblbandmapguardunits.caption
+#, fuzzy
 msgctxt "tprefsform.lblbandmapguardunits.caption"
 msgid "Hz"
 msgstr ""
 
 #: tprefsform.lblbandmapheading.caption
+#, fuzzy
 msgctxt "tprefsform.lblbandmapheading.caption"
 msgid "Band map"
 msgstr ""
 
 #: tprefsform.lblbandmaplimit.caption
+#, fuzzy
 msgid "Display limit:"
 msgstr ""
 
 #: tprefsform.lblbandmaplimitunits.caption
+#, fuzzy
 msgid "spots"
 msgstr ""
 
 #: tprefsform.lblbandmapnote.caption
+#, fuzzy
 msgid "A band map does not need a DX cluster: it also holds spots you make yourself and anything the SO2R radio hears.  Cluster settings are on the DX Cluster page."
 msgstr ""
 
 #: tprefsform.lblbandoutput1.caption
+#, fuzzy
 msgid "Radio 1 band output port"
 msgstr ""
 
 #: tprefsform.lblbandoutput2.caption
+#, fuzzy
 msgid "Radio 2 band output port"
 msgstr ""
 
 #: tprefsform.lblbandsheading.caption
+#, fuzzy
 msgid "Bands in use"
 msgstr ""
 
 #: tprefsform.lblbandshint.caption
+#, fuzzy
 msgid "Which bands TR4W offers when you change band, and which appear in the multiplier and band-map displays.  WARC bands are off by default because most contests do not allow them."
 msgstr ""
 
 #: tprefsform.lblclustercommand.caption
+#, fuzzy
 msgid "After connecting:"
 msgstr ""
 
 #: tprefsform.lblclustercommandhint.caption
+#, fuzzy
 msgid "Sent once the login is accepted - filters, set/name, sh/dx.  Separate several with a semicolon."
 msgstr ""
 
 #: tprefsform.lblclusterglobalheading.caption
+#, fuzzy
 msgid "For every cluster"
 msgstr ""
 
 #: tprefsform.lblclusterheading.caption
+#, fuzzy
 msgid "My DX clusters"
 msgstr ""
 
 #: tprefsform.lblclusterlogin.caption
+#, fuzzy
 msgid "Log in as:"
 msgstr ""
 
 #: tprefsform.lblclusterloginhint.caption
+#, fuzzy
 msgid "blank = my station callsign"
 msgstr ""
 
 #: tprefsform.lblclustername.caption
+#, fuzzy
 msgctxt "tprefsform.lblclustername.caption"
 msgid "Name:"
 msgstr ""
 
 #: tprefsform.lblclusternote.caption
+#, fuzzy
 msgid "The cluster reconnects on its own after a drop.  Telnet logging is on the Logging page; spot display and ageing are on Band Map."
 msgstr ""
 
 #: tprefsform.lblclusterpassword.caption
+#, fuzzy
 msgctxt "tprefsform.lblclusterpassword.caption"
 msgid "Password:"
 msgstr ""
 
 #: tprefsform.lblclusterserver.caption
+#, fuzzy
 msgctxt "tprefsform.lblclusterserver.caption"
 msgid "Server:"
 msgstr ""
 
 #: tprefsform.lblclusterserverhint.caption
+#, fuzzy
 msgid "host:port, for example dxc.nc7j.com:7373.  The drop-down lists the servers in TRCLUSTER.DAT; you can also type one that is not on it."
 msgstr ""
 
 #: tprefsform.lblcontestheading.caption
+#, fuzzy
 msgid "Contest exchange"
 msgstr ""
 
 #: tprefsform.lblcwoutput1.caption
+#, fuzzy
 msgctxt "tprefsform.lblcwoutput1.caption"
 msgid "CW output 1"
 msgstr ""
 
 #: tprefsform.lblcwoutput2.caption
+#, fuzzy
 msgctxt "tprefsform.lblcwoutput2.caption"
 msgid "CW output 2"
 msgstr ""
 
 #: tprefsform.lblcwsendheading.caption
+#, fuzzy
 msgid "Sending"
 msgstr ""
 
 #: tprefsform.lblcwspeedincrement.caption
+#, fuzzy
 msgid "Speed step:"
 msgstr ""
 
 #: tprefsform.lblcwspeedincrementunits.caption
+#, fuzzy
 msgid "WPM per PageUp / PageDown"
 msgstr ""
 
 #: tprefsform.lblcwtone.caption
+#, fuzzy
 msgid "Sidetone:"
 msgstr ""
 
 #: tprefsform.lblcwtoneunits.caption
+#, fuzzy
 msgid "Hz  (0 = the radios own sidetone)"
 msgstr ""
 
 #: tprefsform.lbldetaillogs.caption
+#, fuzzy
 msgid "Detailed logging for one subsystem"
 msgstr ""
 
 #: tprefsform.lblditdah.caption
+#, fuzzy
 msgid "Dit/dah ratio:"
 msgstr ""
 
 #: tprefsform.lbldvkheading.caption
+#, fuzzy
 msgid "Digital voice keyer"
 msgstr ""
 
 #: tprefsform.lbldvkpath.caption
+#, fuzzy
 msgid "DVK recording folder"
 msgstr ""
 
 #: tprefsform.lbldvkrecorder.caption
+#, fuzzy
 msgid "DVK recorder program"
 msgstr ""
 
 #: tprefsform.lbldxlabheading.caption
+#, fuzzy
 msgid "DXLab"
 msgstr ""
 
 #: tprefsform.lbldxlabinfo.caption
+#, fuzzy
 msgid "DXLab needs no settings of its own.  TR4W offers a DX Commander compatible interface on TCP port 52002 whenever the WSJT-X support is running, and DXLab programs connect to that."
 msgstr ""
 
 #: tprefsform.lbldxlabinfo2.caption
+#, fuzzy
 msgid "The port is not configurable today.  If you want it to be, say so and it becomes a setting here."
 msgstr ""
 
 #: tprefsform.lblfarnsworthspeed.caption
+#, fuzzy
 msgid "Character speed:"
 msgstr ""
 
 #: tprefsform.lblfarnsworthunits.caption
+#, fuzzy
 msgid "WPM"
 msgstr ""
 
 #: tprefsform.lblfontsize.caption
+#, fuzzy
 msgid "Size:"
 msgstr ""
 
 #: tprefsform.lblhamlibrestart.caption
+#, fuzzy
 msgid "The three HamLib settings take effect when TR4W next starts.  They are very verbose and are for diagnosing a radio problem - leave them off otherwise."
 msgstr ""
 
 #: tprefsform.lblhamscorepass.caption
+#, fuzzy
 msgctxt "tprefsform.lblhamscorepass.caption"
 msgid "Password:"
 msgstr ""
 
 #: tprefsform.lblhamscoreurl.caption
+#, fuzzy
 msgid "Service URL:"
 msgstr ""
 
 #: tprefsform.lblhamscoreuser.caption
+#, fuzzy
 msgid "Username:"
 msgstr ""
 
 #: tprefsform.lblhardwareheading.caption
+#, fuzzy
 msgctxt "tprefsform.lblhardwareheading.caption"
 msgid "Hardware"
 msgstr ""
 
 #: tprefsform.lblhardwareinfo.caption
+#, fuzzy
 msgid "Station-wide hardware. Settings that belong to one radio are under Radios; rotators are under Rotators."
 msgstr ""
 
 #: tprefsform.lblkeyerhint.caption
+#, fuzzy
 msgid "Only devices with their own settings live here - a WinKeyer or a YCCC SO2R+ box.  Keying on a radio's own port, or by CAT, is part of that radio's setup; a station profile then chooses which method each slot uses."
 msgstr ""
 
 #: tprefsform.lblleadingzerochar.caption
+#, fuzzy
 msgid "Sent as:"
 msgstr ""
 
 #: tprefsform.lblleadingzerohint.caption
+#, fuzzy
 msgid "Serial numbers are padded to that many digits.  T for a zero is the usual cut-number choice; leave it as 0 to send them plainly."
 msgstr ""
 
 #: tprefsform.lblleadingzeros.caption
+#, fuzzy
 msgid "Leading zeros:"
 msgstr ""
 
 #: tprefsform.lbllogfilesheading.caption
+#, fuzzy
 msgid "Log files"
 msgstr ""
 
 #: tprefsform.lblloggeraddress.caption
+#, fuzzy
 msgid "Address:"
 msgstr ""
 
 #: tprefsform.lblloggerheading.caption
+#, fuzzy
 msgid "External logger"
 msgstr ""
 
 #: tprefsform.lblloggerport.caption
+#, fuzzy
 msgctxt "tprefsform.lblloggerport.caption"
 msgid "Port:"
 msgstr ""
 
 #: tprefsform.lblloggerrestart.caption
+#, fuzzy
 msgctxt "tprefsform.lblloggerrestart.caption"
 msgid "These take effect when TR4W next starts."
 msgstr ""
 
 #: tprefsform.lblloggerstatus.caption
+#, fuzzy
 msgid "DXKEEPER is complete.  ACLOG and HRD are not finished - selecting one logs a warning and no QSOs are sent."
 msgstr ""
 
 #: tprefsform.lblloggertype.caption
+#, fuzzy
 msgid "Program:"
 msgstr ""
 
 #: tprefsform.lblloglevel.caption
+#, fuzzy
 msgid "Log level:"
 msgstr ""
 
 #: tprefsform.lblloglevelhint.caption
+#, fuzzy
 msgid "Takes effect immediately - no restart.  INFO is the normal setting; DEBUG and TRACE make the log much larger and are for diagnosing a problem."
 msgstr ""
 
 #: tprefsform.lblmainfont.caption
+#, fuzzy
 msgid "Font:"
 msgstr ""
 
 #: tprefsform.lblmainwindowheading.caption
+#, fuzzy
 msgctxt "tprefsform.lblmainwindowheading.caption"
 msgid "Main window"
 msgstr ""
 
 #: tprefsform.lblmmttyengine.caption
+#, fuzzy
 msgid "Engine:"
 msgstr ""
 
 #: tprefsform.lblmmttyheading.caption
+#, fuzzy
 msgctxt "tprefsform.lblmmttyheading.caption"
 msgid "MMTTY"
 msgstr ""
 
 #: tprefsform.lblmmttyhint.caption
+#, fuzzy
 msgid "The full path to MMTTY.EXE.  TR4W starts it for RTTY and talks to it directly."
 msgstr ""
 
 #: tprefsform.lblmp3heading.caption
+#, fuzzy
 msgid "QSO recording"
 msgstr ""
 
 #: tprefsform.lblmp3path.caption
+#, fuzzy
 msgid "MP3 folder"
 msgstr ""
 
 #: tprefsform.lblmp3player.caption
+#, fuzzy
 msgid "MP3 player program"
 msgstr ""
 
 #: tprefsform.lblmycall.caption
+#, fuzzy
 msgid "Callsign:"
 msgstr ""
 
 #: tprefsform.lblmycheck.caption
+#, fuzzy
 msgid "Check:"
 msgstr ""
 
 #: tprefsform.lblmycontinent.caption
+#, fuzzy
 msgid "Continent:"
 msgstr ""
 
 #: tprefsform.lblmycountry.caption
+#, fuzzy
 msgid "Country:"
 msgstr ""
 
 #: tprefsform.lblmyfdclass.caption
+#, fuzzy
 msgid "FD class:"
 msgstr ""
 
 #: tprefsform.lblmyfocnumber.caption
+#, fuzzy
 msgid "FOC number:"
 msgstr ""
 
 #: tprefsform.lblmygrid.caption
+#, fuzzy
 msgid "Grid square:"
 msgstr ""
 
 #: tprefsform.lblmyiota.caption
+#, fuzzy
 msgid "IOTA:"
 msgstr ""
 
 #: tprefsform.lblmyituzone.caption
+#, fuzzy
 msgid "ITU zone:"
 msgstr ""
 
 #: tprefsform.lblmykeyers.caption
+#, fuzzy
 msgid "CW keying devices"
 msgstr ""
 
 #: tprefsform.lblmyname.caption
+#, fuzzy
 msgid "First name:"
 msgstr ""
 
 #: tprefsform.lblmypark.caption
+#, fuzzy
 msgid "Park:"
 msgstr ""
 
 #: tprefsform.lblmypostalcode.caption
+#, fuzzy
 msgid "Postal code:"
 msgstr ""
 
 #: tprefsform.lblmyprec.caption
+#, fuzzy
 msgid "Precedence:"
 msgstr ""
 
 #: tprefsform.lblmyradios.caption
+#, fuzzy
 msgctxt "tprefsform.lblmyradios.caption"
 msgid "My radios"
 msgstr ""
 
 #: tprefsform.lblmyrotators.caption
+#, fuzzy
 msgid "My rotators"
 msgstr ""
 
 #: tprefsform.lblmysection.caption
+#, fuzzy
 msgid "ARRL section:"
 msgstr ""
 
 #: tprefsform.lblmystate.caption
+#, fuzzy
 msgid "State/Province:"
 msgstr ""
 
 #: tprefsform.lblmyzone.caption
+#, fuzzy
 msgid "CQ zone:"
 msgstr ""
 
 #: tprefsform.lblnetaddress.caption
+#, fuzzy
 msgctxt "tprefsform.lblnetaddress.caption"
 msgid "Server:"
 msgstr ""
 
 #: tprefsform.lblnetcomputerid.caption
+#, fuzzy
 msgid "This station:"
 msgstr ""
 
 #: tprefsform.lblnetcomputeridhint.caption
+#, fuzzy
 msgid "a single letter, unique in the network"
 msgstr ""
 
 #: tprefsform.lblnetheading.caption
+#, fuzzy
 msgid "Multi-operator network"
 msgstr ""
 
 #: tprefsform.lblnethint.caption
+#, fuzzy
 msgid "TR4WServer runs on one machine and every operating position connects to it.  It holds the shared log, the multipliers and the serial numbers."
 msgstr ""
 
 #: tprefsform.lblnetpassword.caption
+#, fuzzy
 msgctxt "tprefsform.lblnetpassword.caption"
 msgid "Password:"
 msgstr ""
 
 #: tprefsform.lblnetport.caption
+#, fuzzy
 msgctxt "tprefsform.lblnetport.caption"
 msgid "Port:"
 msgstr ""
 
 #: tprefsform.lblopcwheading.caption
+#, fuzzy
 msgid "CW while operating"
 msgstr ""
 
 #: tprefsform.lbloperatingheading.caption
+#, fuzzy
 msgid "Operating"
 msgstr ""
 
 #: tprefsform.lbloperatinginfo.caption
+#, fuzzy
 msgid "How the log behaves while you are running the contest. Band map, bands, CW, scoring and two-radio settings are on the pages below."
 msgstr ""
 
 #: tprefsform.lblpaddlegroup.caption
+#, fuzzy
 msgid "Paddle"
 msgstr ""
 
 #: tprefsform.lblpaddlehold.caption
+#, fuzzy
 msgid "Hold PTT after the last element"
 msgstr ""
 
 #: tprefsform.lblpaddleholdunits.caption
+#, fuzzy
 msgid "dit counts"
 msgstr ""
 
 #: tprefsform.lblpaddleportnote.caption
+#, fuzzy
 msgid "The parallel port a paddle or foot switch is wired to is not here. Whether TR4W keeps supporting LPT at all is an open question, so PADDLE PORT stays on the Ctrl-J command list until that is settled rather than being given a home it may not keep."
 msgstr ""
 
 #: tprefsform.lblpaddlepttheading.caption
+#, fuzzy
 msgid "Paddle and PTT"
 msgstr ""
 
 #: tprefsform.lblpaddlepttinfo.caption
+#, fuzzy
 msgid "The paddle keyer TR4W runs itself, and the PTT line it asserts. A WinKeyer or YCCC box keeps its own paddle timing, so these do not apply to it."
 msgstr ""
 
 #: tprefsform.lblpaddlespeed.caption
+#, fuzzy
 msgid "Paddle speed"
 msgstr ""
 
 #: tprefsform.lblpaddlespeedunits.caption
+#, fuzzy
 msgid "WPM  (0 follows the keyboard speed)"
 msgstr ""
 
 #: tprefsform.lblpaddletone.caption
+#, fuzzy
 msgid "Paddle sidetone"
 msgstr ""
 
 #: tprefsform.lblpaddletoneunits.caption
+#, fuzzy
 msgctxt "tprefsform.lblpaddletoneunits.caption"
 msgid "Hz"
 msgstr ""
 
 #: tprefsform.lblplaceholder.caption
+#, fuzzy
 msgctxt "tprefsform.lblplaceholder.caption"
 msgid ""
 "This section has not been migrated yet.\n"
@@ -5442,475 +5940,582 @@ msgid ""
 msgstr ""
 
 #: tprefsform.lblpttdelay.caption
+#, fuzzy
 msgid "Delay after PTT before sending"
 msgstr ""
 
 #: tprefsform.lblpttdelayunits.caption
+#, fuzzy
 msgid "x 1.7 ms  (0 disables)"
 msgstr ""
 
 #: tprefsform.lblpttgroup.caption
+#, fuzzy
 msgid "PTT"
 msgstr ""
 
 #: tprefsform.lblradio1.caption
+#, fuzzy
 msgctxt "tprefsform.lblradio1.caption"
 msgid "Radio 1"
 msgstr ""
 
 #: tprefsform.lblradio2.caption
+#, fuzzy
 msgctxt "tprefsform.lblradio2.caption"
 msgid "Radio 2"
 msgstr ""
 
 #: tprefsform.lblradiotcpheading.caption
+#, fuzzy
 msgid "Radio sharing"
 msgstr ""
 
 #: tprefsform.lblradiotcphint.caption
+#, fuzzy
 msgid "Lets another position read this station's radio.  Takes effect when TR4W next starts."
 msgstr ""
 
 #: tprefsform.lblradiotcpport.caption
+#, fuzzy
 msgid "TCP port:"
 msgstr ""
 
 #: tprefsform.lblrelayport.caption
+#, fuzzy
 msgid "Relay control port"
 msgstr ""
 
 #: tprefsform.lblrelayportinfo.caption
+#, fuzzy
 msgid "Parallel (LPT) port wiring for this station: relay switching, band data out to a decoder per operating position, and stereo audio control. These follow the DESK, not the radio, so they stay put when you activate a different radio. Leave them None unless you have such an interface - whether TR4W keeps supporting LPT at all is still an open question, which the greyed box below is a placeholder for."
 msgstr ""
 
 #: tprefsform.lblrotatorbands.caption
+#, fuzzy
 msgid "Bands:"
 msgstr ""
 
 #: tprefsform.lblrotatorbandshint.caption
+#, fuzzy
 msgid "Leave blank and this rotator turns for every band, which is what a station with one antenna wants.  List bands - 20 15 10 - to have TR4W choose between several rotators by band."
 msgstr ""
 
 #: tprefsform.lblrotatorbaud.caption
+#, fuzzy
 msgid "Baud rate:"
 msgstr ""
 
 #: tprefsform.lblrotatorbaudhint.caption
+#, fuzzy
 msgid "blank or 0 = the default for this type"
 msgstr ""
 
 #: tprefsform.lblrotatorip.caption
+#, fuzzy
 msgid "IP address:"
 msgstr ""
 
 #: tprefsform.lblrotatorname.caption
+#, fuzzy
 msgctxt "tprefsform.lblrotatorname.caption"
 msgid "Name:"
 msgstr ""
 
 #: tprefsform.lblrotatornote.caption
+#, fuzzy
 msgid "PstRotator is reached over UDP and has no serial port; the others use one.  A blank baud rate lets each type use what it expects - the DCU-1 wants 4800 where the rest want 9600."
 msgstr ""
 
 #: tprefsform.lblrotatorport.caption
+#, fuzzy
 msgctxt "tprefsform.lblrotatorport.caption"
 msgid "Port:"
 msgstr ""
 
 #: tprefsform.lblrotatortype.caption
+#, fuzzy
 msgid "Type:"
 msgstr ""
 
 #: tprefsform.lblrotatorudp.caption
+#, fuzzy
 msgid "UDP port:"
 msgstr ""
 
 #: tprefsform.lblsayhicutoff.caption
+#, fuzzy
 msgid "Stop above a rate of:"
 msgstr ""
 
 #: tprefsform.lblsayhicutoffunits.caption
+#, fuzzy
 msgid "QSOs per hour"
 msgstr ""
 
 #: tprefsform.lblscoreboardheading.caption
+#, fuzzy
 msgid "Score board"
 msgstr ""
 
 #: tprefsform.lblscoreboardhint.caption
+#, fuzzy
 msgid "Where TR4W posts its score and where it reads other stations' scores from.  The two are separate so a club board can be read while posting elsewhere."
 msgstr ""
 
 #: tprefsform.lblscoreheading.caption
+#, fuzzy
 msgid "Online scoring"
 msgstr ""
 
 #: tprefsform.lblscoreposturl.caption
+#, fuzzy
 msgid "Posting URL:"
 msgstr ""
 
 #: tprefsform.lblscorereadurl.caption
+#, fuzzy
 msgid "Reading URL:"
 msgstr ""
 
 #: tprefsform.lblscorerestart.caption
+#, fuzzy
 msgctxt "tprefsform.lblscorerestart.caption"
 msgid "These take effect when TR4W next starts."
 msgstr ""
 
 #: tprefsform.lblscpcountry.caption
+#, fuzzy
 msgid "Restrict to countries:"
 msgstr ""
 
 #: tprefsform.lblscpfilehint.caption
+#, fuzzy
 msgid "Matches come from TRMASTER.DTA in the program folder.  Without that file Super Check Partial simply shows nothing; it is not an error."
 msgstr ""
 
 #: tprefsform.lblscpheading.caption
+#, fuzzy
 msgid "Super Check Partial"
 msgstr ""
 
 #: tprefsform.lblscphint.caption
+#, fuzzy
 msgid "Blank shows matches from everywhere.  A list of country prefixes narrows it, which is useful in a domestic contest where the whole world is not workable."
 msgstr ""
 
 #: tprefsform.lblscpmatchheading.caption
+#, fuzzy
 msgid "Matching"
 msgstr ""
 
 #: tprefsform.lblscpminletters.caption
+#, fuzzy
 msgid "Start matching after:"
 msgstr ""
 
 #: tprefsform.lblscpminlettersunits.caption
+#, fuzzy
 msgid "letters typed"
 msgstr ""
 
 #: tprefsform.lblserialkeyheading.caption
+#, fuzzy
 msgid "Radio serial keying  (DTR/RTS keying only)"
 msgstr ""
 
 #: tprefsform.lblserialkeyintro.caption
+#, fuzzy
 msgid "These shape the CW that TR4W generates itself by toggling a serial line.  They do nothing for a WinKeyer, a YCCC box, or CW sent by CAT - those devices keep their own timing."
 msgstr ""
 
 #: tprefsform.lblstationheading.caption
+#, fuzzy
 msgid "Station information"
 msgstr ""
 
 #: tprefsform.lblstationhint.caption
+#, fuzzy
 msgid "These are sent to the other stations in a multi-operator network when you change them, so all positions agree on the exchange."
 msgstr ""
 
 #: tprefsform.lblstereoport.caption
+#, fuzzy
 msgid "Stereo control port"
 msgstr ""
 
 #: tprefsform.lbltcibindallwarning.caption
+#, fuzzy
 msgid "Off by default, and worth leaving off.  This is an unauthenticated radio-control socket: anything that can reach the port can move your VFO and key your transmitter."
 msgstr ""
 
 #: tprefsform.lbltciintro.caption
+#, fuzzy
 msgid "Lets other programs - WSJT-X, JTDX, a skimmer - control whichever radio TR4W has the port open on, even a radio with no TCI of its own.  Radio 1 is trx 0 and radio 2 is trx 1."
 msgstr ""
 
 #: tprefsform.lbltciloghint.caption
+#, fuzzy
 msgid "To log every TCI command in both directions, see the Logging section."
 msgstr ""
 
 #: tprefsform.lbltcimaxtx.caption
+#, fuzzy
 msgid "Stop transmitting after:"
 msgstr ""
 
 #: tprefsform.lbltcimaxtxhint.caption
+#, fuzzy
 msgid "A safety net, not a timer for normal use: if a client keys the radio and then stops answering - it crashed, or the network went away - this is what puts the transmitter back into receive."
 msgstr ""
 
 #: tprefsform.lbltcimaxtxunits.caption
+#, fuzzy
 msgid "seconds  (0 = no limit)"
 msgstr ""
 
 #: tprefsform.lbltciport.caption
+#, fuzzy
 msgctxt "tprefsform.lbltciport.caption"
 msgid "Port:"
 msgstr ""
 
 #: tprefsform.lbltciserverscope.caption
+#, fuzzy
 msgid "- this computer only (127.0.0.1), until you tick the box below"
 msgstr ""
 
 #: tprefsform.lbltworadioheading.caption
+#, fuzzy
 msgid "Two radio operating"
 msgstr ""
 
 #: tprefsform.lbltworadiohint.caption
+#, fuzzy
 msgid "Skipping the other radio's band is what stops a band change on one radio landing you on top of the other."
 msgstr ""
 
 #: tprefsform.lbltworadiointro.caption
+#, fuzzy
 msgid "Everything below applies only while two radio mode is on."
 msgstr ""
 
 #: tprefsform.lbludpdestinations.caption
+#, fuzzy
 msgid "Destinations"
 msgstr ""
 
 #: tprefsform.lbludphint.caption
+#, fuzzy
 msgid "Each destination is one program listening.  Add a second row for the same address when it expects different data on a different port."
 msgstr ""
 
 #: tprefsform.lblweight.caption
+#, fuzzy
 msgid "Weight:"
 msgstr ""
 
 #: tprefsform.lblwsjtxheading.caption
+#, fuzzy
 msgid "WSJT-X / JTDX"
 msgstr ""
 
 #: tprefsform.lblwsjtxmulticast.caption
+#, fuzzy
 msgid "Multicast group:"
 msgstr ""
 
 #: tprefsform.lblwsjtxport.caption
+#, fuzzy
 msgid "Broadcast port:"
 msgstr ""
 
 #: tprefsform.lblwsjtxrestart.caption
+#, fuzzy
 msgid "These take effect when TR4W next starts.  Leave the multicast group blank unless WSJT-X is configured to use one."
 msgstr ""
 
 #: tprefsform.lblwsjtxtcihint.caption
+#, fuzzy
 msgid "To let WSJT-X drive the radio over TCI instead, see the TCI Server section - that works with any radio TR4W controls, not only one with TCI of its own."
 msgstr ""
 
 #: tprefsform.lblycccinfo.caption
+#, fuzzy
 msgid "Station controllers will get a factory of their own, as radios and keyers did. This checkbox is the interim home for the setting."
 msgstr ""
 
 #: tradioeditform.btncancel.caption
+#, fuzzy
 msgctxt "tradioeditform.btncancel.caption"
 msgid "Cancel"
 msgstr ""
 
 #: tradioeditform.btndiscover.caption
+#, fuzzy
 msgctxt "tradioeditform.btndiscover.caption"
 msgid "Discover"
 msgstr ""
 
 #: tradioeditform.btnok.caption
+#, fuzzy
 msgctxt "tradioeditform.btnok.caption"
 msgid "Save and close"
 msgstr ""
 
 #: tradioeditform.caption
+#, fuzzy
 msgctxt "tradioeditform.caption"
 msgid "Radio"
 msgstr ""
 
 #: tradioeditform.chkft1000mpreverse.caption
+#, fuzzy
 msgctxt "tradioeditform.chkft1000mpreverse.caption"
 msgid "FT-1000MP CW reverse"
 msgstr ""
 
 #: tradioeditform.chkpolling.caption
+#, fuzzy
 msgctxt "tradioeditform.chkpolling.caption"
 msgid "Poll this radio"
 msgstr ""
 
 #: tradioeditform.chkusehamlib.caption
+#, fuzzy
 msgctxt "tradioeditform.chkusehamlib.caption"
 msgid "Drive through HamLib"
 msgstr ""
 
 #: tradioeditform.chkwidecw.caption
+#, fuzzy
 msgctxt "tradioeditform.chkwidecw.caption"
 msgid "Wide CW filter"
 msgstr ""
 
 #: tradioeditform.edtfreqoffset.texthint
+#, fuzzy
 msgid "0 = none, e.g. 116000000"
 msgstr ""
 
 #: tradioeditform.lblautoinfo.caption
+#, fuzzy
 msgid "Auto-info level"
 msgstr ""
 
 #: tradioeditform.lblbaud.caption
+#, fuzzy
 msgctxt "tradioeditform.lblbaud.caption"
 msgid "Baud rate"
 msgstr ""
 
 #: tradioeditform.lblcatdtr.caption
+#, fuzzy
 msgctxt "tradioeditform.lblcatdtr.caption"
 msgid "CAT DTR"
 msgstr ""
 
 #: tradioeditform.lblcatrts.caption
+#, fuzzy
 msgctxt "tradioeditform.lblcatrts.caption"
 msgid "CAT RTS"
 msgstr ""
 
 #: tradioeditform.lblciv.caption
+#, fuzzy
 msgctxt "tradioeditform.lblciv.caption"
 msgid "CI-V address (hex)"
 msgstr ""
 
 #: tradioeditform.lbldatabits.caption
+#, fuzzy
 msgctxt "tradioeditform.lbldatabits.caption"
 msgid "Data bits"
 msgstr ""
 
 #: tradioeditform.lbldatamode.caption
+#, fuzzy
 msgctxt "tradioeditform.lbldatamode.caption"
 msgid "Icom data mode ID"
 msgstr ""
 
 #: tradioeditform.lblfilterbyte.caption
+#, fuzzy
 msgctxt "tradioeditform.lblfilterbyte.caption"
 msgid "Icom filter byte"
 msgstr ""
 
 #: tradioeditform.lblfound.caption
+#, fuzzy
 msgctxt "tradioeditform.lblfound.caption"
 msgid "Found"
 msgstr ""
 
 #: tradioeditform.lblfreqoffset.caption
+#, fuzzy
 msgid "Frequency offset (transverter), Hz"
 msgstr ""
 
 #: tradioeditform.lblhamlibid.caption
+#, fuzzy
 msgctxt "tradioeditform.lblhamlibid.caption"
 msgid "HamLib model ID"
 msgstr ""
 
 #: tradioeditform.lblip.caption
+#, fuzzy
 msgctxt "tradioeditform.lblip.caption"
 msgid "IP address"
 msgstr ""
 
 #: tradioeditform.lblkeyerdtr.caption
+#, fuzzy
 msgctxt "tradioeditform.lblkeyerdtr.caption"
 msgid "Keyer DTR line"
 msgstr ""
 
 #: tradioeditform.lblkeyerport.caption
+#, fuzzy
 msgctxt "tradioeditform.lblkeyerport.caption"
 msgid "Keyer output port"
 msgstr ""
 
 #: tradioeditform.lblkeyerrts.caption
+#, fuzzy
 msgctxt "tradioeditform.lblkeyerrts.caption"
 msgid "Keyer RTS line"
 msgstr ""
 
 #: tradioeditform.lblkeyerstopbits.caption
+#, fuzzy
 msgctxt "tradioeditform.lblkeyerstopbits.caption"
 msgid "Stop bits"
 msgstr ""
 
 #: tradioeditform.lblname.caption
+#, fuzzy
 msgctxt "tradioeditform.lblname.caption"
 msgid "Name"
 msgstr ""
 
 #: tradioeditform.lblparity.caption
+#, fuzzy
 msgctxt "tradioeditform.lblparity.caption"
 msgid "Parity"
 msgstr ""
 
 #: tradioeditform.lblpassword.caption
+#, fuzzy
 msgctxt "tradioeditform.lblpassword.caption"
 msgid "Password"
 msgstr ""
 
 #: tradioeditform.lblport.caption
+#, fuzzy
 msgctxt "tradioeditform.lblport.caption"
 msgid "Port"
 msgstr ""
 
 #: tradioeditform.lblstartup.caption
+#, fuzzy
 msgctxt "tradioeditform.lblstartup.caption"
 msgid "Startup command"
 msgstr ""
 
 #: tradioeditform.lblstopbits.caption
+#, fuzzy
 msgctxt "tradioeditform.lblstopbits.caption"
 msgid "Stop bits"
 msgstr ""
 
 #: tradioeditform.lbltcpport.caption
+#, fuzzy
 msgctxt "tradioeditform.lbltcpport.caption"
 msgid "TCP port"
 msgstr ""
 
 #: tradioeditform.lbltype.caption
+#, fuzzy
 msgctxt "tradioeditform.lbltype.caption"
 msgid "Radio type"
 msgstr ""
 
 #: tradioeditform.lbluser.caption
+#, fuzzy
 msgctxt "tradioeditform.lbluser.caption"
 msgid "User name"
 msgstr ""
 
 #: tradioeditform.optdata7.caption
+#, fuzzy
 msgid "7"
 msgstr ""
 
 #: tradioeditform.optdata8.caption
+#, fuzzy
 msgid "8"
 msgstr ""
 
 #: tradioeditform.optparityeven.caption
+#, fuzzy
 msgctxt "tradioeditform.optparityeven.caption"
 msgid "Even"
 msgstr ""
 
 #: tradioeditform.optparitynone.caption
+#, fuzzy
 msgctxt "tradioeditform.optparitynone.caption"
 msgid "None"
 msgstr ""
 
 #: tradioeditform.optparityodd.caption
+#, fuzzy
 msgctxt "tradioeditform.optparityodd.caption"
 msgid "Odd"
 msgstr ""
 
 #: tradioeditform.optstop1.caption
+#, fuzzy
 msgid "1"
 msgstr ""
 
 #: tradioeditform.optstop2.caption
+#, fuzzy
 msgid "2"
 msgstr ""
 
 #: tradioeditform.tabadvanced.caption
+#, fuzzy
 msgctxt "tradioeditform.tabadvanced.caption"
 msgid "Advanced"
 msgstr ""
 
 #: tradioeditform.tabnetwork.caption
+#, fuzzy
 msgctxt "tradioeditform.tabnetwork.caption"
 msgid "Network"
 msgstr ""
 
 #: tradioeditform.tabserial.caption
+#, fuzzy
 msgctxt "tradioeditform.tabserial.caption"
 msgid "Serial"
 msgstr ""
 
 #: ttr4wmainform.caption
+#, fuzzy
 msgctxt "ttr4wmainform.caption"
 msgid "TR4W"
 msgstr ""
 
 #: uappstrings.salreadyrunningtitle
+#, fuzzy
 msgctxt "uappstrings.salreadyrunningtitle"
 msgid "TR4W"
 msgstr ""
 
 #: uappstrings.sctydownloadfailed
+#, fuzzy
 msgid ""
 "Could not download CTY.DAT to:\n"
 "\n"
@@ -5922,14 +6527,17 @@ msgid ""
 msgstr ""
 
 #: uappstrings.sctydownloadfailedtitle
+#, fuzzy
 msgid "CTY.DAT"
 msgstr ""
 
 #: uappstrings.sdownloadcouldnotstart
+#, fuzzy
 msgid "the download was refused before it began (bad URL)."
 msgstr ""
 
 #: uappstrings.sdownloadnossllibrary
+#, fuzzy
 msgid ""
 "the OpenSSL libraries could not be loaded.\n"
 "\n"
@@ -5937,20 +6545,24 @@ msgid ""
 msgstr ""
 
 #: uappstrings.sdownloadrenamefailed
+#, fuzzy
 msgid "the file downloaded but could not be saved under its final name."
 msgstr ""
 
 #: uappstrings.siniretiredontask
+#, fuzzy
 msgid "Do not ask me about this file again"
 msgstr ""
 
 #: uappstrings.siniretirefailed
+#, fuzzy
 msgid ""
 "Could not remove %s -- %s.\n"
 "It is ignored regardless, so nothing is broken."
 msgstr ""
 
 #: uappstrings.siniretireprompt
+#, fuzzy
 msgid ""
 "Your settings have been moved to:\n"
 "    %s\n"
@@ -5964,112 +6576,136 @@ msgid ""
 msgstr ""
 
 #: uappstrings.siniretireremoved
+#, fuzzy
 msgid "Removed %s."
 msgstr ""
 
 #: uappstrings.siniretiretitle
+#, fuzzy
 msgctxt "uappstrings.siniretiretitle"
 msgid "Old settings file"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_activate
+#, fuzzy
 msgid "Save and activate this profile"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_activelabel
+#, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_activelabel"
 msgid "Active profile: "
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_add
+#, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_add"
 msgid "Add..."
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_applied
+#, fuzzy
 msgid "Profile \"%s\" is active."
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_apply
+#, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_apply"
 msgid "Save"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_autoconnect
+#, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_autoconnect"
 msgid "Connect radios at startup"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_cancel
+#, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_cancel"
 msgid "Cancel"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_cluster
+#, fuzzy
 msgid "DX Cluster"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_confirmremove
+#, fuzzy
 msgid "Remove radio \"%s\"?"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_contest
+#, fuzzy
 msgid "Contest"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_cw
+#, fuzzy
 msgid "CW"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_cwoutput1
+#, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_cwoutput1"
 msgid "CW output 1"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_cwoutput2
+#, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_cwoutput2"
 msgid "CW output 2"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_deleteprofile
+#, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_deleteprofile"
 msgid "Delete"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_duplicate
+#, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_duplicate"
 msgid "Duplicate"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_edit
+#, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_edit"
 msgid "Edit..."
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_hardware
+#, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_hardware"
 msgid "Hardware"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_myradios
+#, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_myradios"
 msgid "My radios"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_newprofile
+#, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_newprofile"
 msgid "New..."
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_none
+#, fuzzy
 msgid "(none)"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_noprofile
+#, fuzzy
 msgid "Select or create a station profile first."
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_notmigrated
+#, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_notmigrated"
 msgid ""
 "This section has not been migrated yet.\n"
@@ -6077,11 +6713,13 @@ msgid ""
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_ok
+#, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_ok"
 msgid "Save and close"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_portconflict
+#, fuzzy
 msgid ""
 "Port conflicts:\n"
 "\n"
@@ -6091,118 +6729,142 @@ msgid ""
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_profiles
+#, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_profiles"
 msgid "Station profile"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_radio1
+#, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_radio1"
 msgid "Radio 1"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_radio2
+#, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_radio2"
 msgid "Radio 2"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_radioinuse
+#, fuzzy
 msgid "%s  (in use as %s)"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_remove
+#, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_remove"
 msgid "Remove"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_renameprofile
+#, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_renameprofile"
 msgid "Rename..."
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_so2r
+#, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_so2r"
 msgid "SO2R enabled"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_speedsync
+#, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_speedsync"
 msgid "Speed sync"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_title
+#, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_title"
 msgid "TR4W Preferences"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_udpconfirmremove
+#, fuzzy
 msgid "Remove the destination %s:%d?"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_udpduplicate
+#, fuzzy
 msgid ""
 "%s:%d is already in the list.\n"
 "Add the extra kinds of data to that destination instead of listing it twice."
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_udpnostreams
+#, fuzzy
 msgid "(nothing selected)"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_udpselectfirst
+#, fuzzy
 msgid "Select a destination to test."
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_udpstream_appinfo
+#, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_udpstream_appinfo"
 msgid "App info"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_udpstream_contact
+#, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_udpstream_contact"
 msgid "Contact info"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_udpstream_lookup
+#, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_udpstream_lookup"
 msgid "Callsign lookup"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_udpstream_radio
+#, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_udpstream_radio"
 msgid "Radio info"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_udpstream_rotor
+#, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_udpstream_rotor"
 msgid "Rotor"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_udpstream_score
+#, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_udpstream_score"
 msgid "Score"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_udptestsent
+#, fuzzy
 msgid ""
 "Test packet sent to %s:%d.\n"
 "UDP cannot confirm it arrived -- check the receiving program."
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_unsaved
+#, fuzzy
 msgid "Save your changes before closing?"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_unsavedtitle
+#, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_unsavedtitle"
 msgid "TR4W Preferences"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_advanced
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_advanced"
 msgid "Advanced"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_autoinfowarn
+#, fuzzy
 msgid ""
 "Setting an auto-info level by hand is a non-standard configuration.\n"
 "\n"
@@ -6214,224 +6876,271 @@ msgid ""
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_badciv
+#, fuzzy
 msgid "The CI-V address must be a hex value, e.g. 88 or $88."
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_baud
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_baud"
 msgid "Baud rate"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_catdtr
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_catdtr"
 msgid "CAT DTR"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_catrts
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_catrts"
 msgid "CAT RTS"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_civaddress
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_civaddress"
 msgid "CI-V address (hex)"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_databits
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_databits"
 msgid "Data bits"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_datamodeid
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_datamodeid"
 msgid "Icom data mode ID"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_defaulthint
+#, fuzzy
 msgid "%s (default)"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_discover
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_discover"
 msgid "Discover"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_filterbyte
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_filterbyte"
 msgid "Icom filter byte"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_found
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_found"
 msgid "Found"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_ft1000mprev
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_ft1000mprev"
 msgid "FT-1000MP CW reverse"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_hamlibid
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_hamlibid"
 msgid "HamLib model ID"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_ipaddress
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_ipaddress"
 msgid "IP address"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_keyerdtr
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_keyerdtr"
 msgid "Keyer DTR line"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_keyerport
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_keyerport"
 msgid "Keyer output port"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_keyerrts
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_keyerrts"
 msgid "Keyer RTS line"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_keyerstopbits
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_keyerstopbits"
 msgid "Stop bits"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_name
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_name"
 msgid "Name"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_namerequired
+#, fuzzy
 msgid "The radio needs a name."
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_network
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_network"
 msgid "Network"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_nonefound
+#, fuzzy
 msgid "No radios answered."
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_parity
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_parity"
 msgid "Parity"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_parityeven
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_parityeven"
 msgid "Even"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_paritynone
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_paritynone"
 msgid "None"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_parityodd
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_parityodd"
 msgid "Odd"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_password
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_password"
 msgid "Password"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_polling
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_polling"
 msgid "Poll this radio"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_port
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_port"
 msgid "Port"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_searching
+#, fuzzy
 msgid "Searching..."
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_serial
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_serial"
 msgid "Serial"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_startup
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_startup"
 msgid "Startup command"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_stopbits
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_stopbits"
 msgid "Stop bits"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_tcpport
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_tcpport"
 msgid "TCP port"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_title
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_title"
 msgid "Radio"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_transport
+#, fuzzy
 msgid "Connection"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_type
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_type"
 msgid "Radio type"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_typerequired
+#, fuzzy
 msgid "Choose a radio type."
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_unsaved
+#, fuzzy
 msgid "Save your changes to this radio?"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_usehamlib
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_usehamlib"
 msgid "Drive through HamLib"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_username
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_username"
 msgid "User name"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_widecw
+#, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_widecw"
 msgid "Wide CW filter"
 msgstr ""
 
 #: uudpdestinationeditform.tc_udpedit_badport
+#, fuzzy
 msgid "The port must be a number between 1 and 65535."
 msgstr ""
 
 #: uudpdestinationeditform.tc_udpedit_noaddress
+#, fuzzy
 msgid "Enter an address."
 msgstr ""
 
 #: uudpdestinationeditform.tc_udpedit_nostreams
+#, fuzzy
 msgid "Choose at least one kind of data to send, or cancel and remove this destination."
 msgstr ""
 
 #: uudpdestinationeditform.tc_udpedit_notimplemented
+#, fuzzy
 msgid " (not implemented yet)"
 msgstr ""
 
 #: uudpdestinationeditform.tc_udpedit_testsent
+#, fuzzy
 msgid "Test packet sent to %s:%d.  UDP cannot confirm it arrived -- check the receiving program."
 msgstr ""
 
