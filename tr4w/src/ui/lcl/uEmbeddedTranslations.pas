@@ -53,6 +53,7 @@ implementation
 
 uses
    SysUtils, Classes, Windows,
+   gettext,           // GetLanguageIDs -- the locale, the platform's own way
    Translations,      // TPOFile, TranslateResourceStrings
    LResources,        // LRSTranslator -- the hook the LFM reader consults
    LCLTranslator,     // TPOTranslator, SetDefaultLang
@@ -66,20 +67,28 @@ uses
   still an open question (a TR4W setting should override both -- an operator on
   Spanish Windows does not necessarily want a Spanish contest log) and this is
   the seam that setting plugs into. }
-function ResolveLang(const aLang: string): string;
+function ResolveLang(const aLang: string; out aSource: string): string;
 var
    i:   integer;
    arg: string;
-   { AnsiChar and the ...A entry point EXPLICITLY. PChar binds to PAnsiChar in
-     this project, so a plain `array of Char` is wide and will not pass -- and a
-     bare @buffer handed to a GENERIC Win32 name compiles silently even with
-     warnings on, which is the class of defect that made TR4WServer reject every
-     client (CLAUDE.md, 1bea7af4). Name the variant. }
-   buf: array[0..15] of AnsiChar;
+   { GetLanguageIDs yields the full id and a fallback -- 'es_ES' and 'es' for a
+     Spanish (Spain) machine. The catalogues are keyed on the two-letter code,
+     so the fallback is normally the one wanted.
+
+     AnsiString EXPLICITLY, and the compiler is what says so: gettext is RTL
+     code compiled with 8-bit strings and takes these by VAR, while string in
+     this unit is UnicodeString (tr4w.inc). A var parameter has to match
+     exactly -- no conversion is possible through one. }
+   fullId, shortId: AnsiString;
 begin
+   { WHERE the code came from is reported alongside WHICH it was. "Spanish did
+     not appear" has two completely different causes -- the switch was not read,
+     or it was read and the catalogue did nothing -- and without the source in
+     the log the two look identical from the outside. }
    if aLang <> '' then
       begin
-      Result := LowerCase(aLang);
+      aSource := 'the caller';
+      Result  := LowerCase(aLang);
       Exit;
       end;
 
@@ -88,21 +97,42 @@ begin
       arg := ParamStr(i);
       if (SameText(arg, '--lang') or SameText(arg, '-l')) and (i < ParamCount) then
          begin
-         Result := LowerCase(ParamStr(i + 1));
+         aSource := 'the ' + arg + ' command-line switch';
+         Result  := LowerCase(ParamStr(i + 1));
          Exit;
          end;
       if SameText(Copy(arg, 1, 7), '--lang=') then
          begin
-         Result := LowerCase(Copy(arg, 8, MaxInt));
+         aSource := 'the --lang= command-line switch';
+         Result  := LowerCase(Copy(arg, 8, MaxInt));
          Exit;
          end;
       end;
 
-   Result := '';
-   if GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO639LANGNAME,
-                    buf, Length(buf)) > 0 then
+   { FPC'S OWN, rather than a GetLocaleInfoA call and an AnsiChar buffer.
+     gettext.GetLanguageIDs reads the locale the way the platform states it --
+     GetLocaleInfo on Windows, the LC_ALL / LC_MESSAGES / LANG environment on
+     Unix -- so this line does not have to know which platform it is on, and
+     the Windows-only call and its buffer are gone. }
+   fullId  := '';
+   shortId := '';
+   GetLanguageIDs(fullId, shortId);
+
+   if shortId <> '' then
       begin
-      Result := LowerCase(StrPas(buf));
+      aSource := 'the operating system locale (' + fullId + ')';
+      Result  := LowerCase(shortId);
+      end
+   else if fullId <> '' then
+      begin
+      // No fallback offered: take the language half of 'xx_YY' ourselves.
+      aSource := 'the operating system locale (' + fullId + ')';
+      Result  := LowerCase(Copy(fullId, 1, 2));
+      end
+   else
+      begin
+      aSource := 'nothing -- no switch given and the locale could not be read';
+      Result  := '';
       end;
 end;
 
@@ -162,17 +192,32 @@ end;
 function LoadEmbeddedTranslation(const aLang: string): string;
 var
    lang:   string;
+   source: string;
    resName: string;
    rs:     TResourceStream;
    po:     TPOFile;
    fileCandidate: string;
 begin
    Result := '';
-   lang := ResolveLang(aLang);
+   lang := ResolveLang(aLang, source);
    if (lang = '') or SameText(lang, 'en') then
       begin
       // English is what the binary already holds; loading a catalogue to
       // replace English with English would be work to no effect.
+      //
+      // Reported rather than passed over in silence: this is the COMMONEST
+      // outcome, and an operator who expected a translation needs to see
+      // that the code resolved to English and where that came from.
+      if lang = '' then
+         begin
+         logger.Info('UI language: no code could be determined from ' +
+                     source + '; using the compiled-in English');
+         end
+      else
+         begin
+         logger.Info('UI language: "' + lang + '" from ' + source +
+                     '; that is the compiled-in language, so no catalogue is loaded');
+         end;
       Exit;
       end;
 
@@ -190,7 +235,8 @@ begin
          if ApplyCatalogue(po) then
             begin
             Result := lang;
-            logger.Info('UI language: "' + lang + '" from ' + fileCandidate +
+            logger.Info('UI language: "' + lang + '" selected by ' + source +
+                        ', loaded from ' + fileCandidate +
                         ' (overriding the embedded catalogue)');
             Exit;
             end;
@@ -208,8 +254,9 @@ begin
    resName := 'TR4W_' + UpperCase(lang);
    if FindResourceA(HInstance, PAnsiChar(AnsiString(resName)), RT_RCDATA) = 0 then
       begin
-      logger.Info('UI language: no catalogue for "' + lang +
-                  '" is embedded; using the compiled-in English');
+      logger.Info('UI language: "' + lang + '" selected by ' + source +
+                  ', but no catalogue for it is embedded; using the ' +
+                  'compiled-in English');
       Exit;
       end;
 
@@ -225,7 +272,8 @@ begin
          if ApplyCatalogue(po) then
             begin
             Result := lang;
-            logger.Info('UI language: "' + lang + '" from the embedded catalogue');
+            logger.Info('UI language: "' + lang + '" selected by ' + source +
+                        ', loaded from the embedded catalogue');
             end;
       finally
          rs.Free;
