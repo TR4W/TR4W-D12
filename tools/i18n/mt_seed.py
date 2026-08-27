@@ -78,6 +78,35 @@ PLACEHOLDER_SOURCES = {
    "PENDING RE-IMPLEMENTATION",
 }
 
+# STRINGS THAT ARE NOT LANGUAGE, so there is nothing to translate and a machine
+# will return something anyway.
+#
+# Measured on the 640 Spanish entries awaiting a seed: 1 URL, 12 function-key
+# labels F1..F12, 21 with no two consecutive letters at all -- 'S&P', '599',
+# '--'. A translator then has to notice that 'http://www.tr4w.net' came back
+# altered, which is a worse job than translating it would have been.
+#
+# Neither of the existing guards covers this shape: format validation only fires
+# when a %-specifier changes, and PLACEHOLDER_SOURCES matches whole known
+# strings.
+#
+# THE SECOND RULE IS THE GENERAL ONE. Two consecutive letters is what makes a
+# word; without them there is no language to translate, and it catches F1, 599,
+# -- and S&P in one test rather than a list that grows.
+_NOT_LANGUAGE = re.compile(r"^\s*(https?://|www\.|mailto:|ftp://|[a-z]+://)", re.I)
+
+
+def is_translatable(source):
+   """False for text that is not language: a URL, a key name, a bare number."""
+   s = source.strip()
+   if not s:
+      return False
+   if _NOT_LANGUAGE.match(s):
+      return False
+   if not re.search(r"[A-Za-z]{2}", s):
+      return False
+   return True
+
 
 def protect(text):
    originals = []
@@ -172,9 +201,14 @@ def seed(po_path, url, target, lang, dry_run, batch=DEFAULT_BATCH,
    no_source = [e for e in candidates if not e.source.strip()]
    placeholder = [e for e in candidates
                   if e.source.strip().upper() in PLACEHOLDER_SOURCES]
+   not_language = [e for e in candidates
+                   if e.source.strip()
+                   and e.source.strip().upper() not in PLACEHOLDER_SOURCES
+                   and not is_translatable(e.source)]
    todo = [e for e in candidates
            if e.source.strip()
-           and e.source.strip().upper() not in PLACEHOLDER_SOURCES]
+           and e.source.strip().upper() not in PLACEHOLDER_SOURCES
+           and is_translatable(e.source)]
 
    if no_source:
       print("%d entr%s have NO English source -- nothing to translate; the "
@@ -184,6 +218,11 @@ def seed(po_path, url, target, lang, dry_run, batch=DEFAULT_BATCH,
       print("%d entr%s are an English authoring to-do (%s) -- skipped"
             % (len(placeholder), "y" if len(placeholder) == 1 else "ies",
                ", ".join(sorted({e.source.strip() for e in placeholder}))))
+   if not_language:
+      sample = sorted({e.source.strip() for e in not_language})[:6]
+      print("%d entr%s are not language (URL, key name, bare number) -- skipped: %s"
+            % (len(not_language), "y" if len(not_language) == 1 else "ies",
+               ", ".join(repr(s) for s in sample)))
    print("%d entr%s to seed" % (len(todo), "y" if len(todo) == 1 else "ies"))
    if dry_run:
       for e in todo[:10]:
