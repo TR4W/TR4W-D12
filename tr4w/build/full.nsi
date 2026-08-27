@@ -152,6 +152,36 @@ Section "tr4w.exe" secexe
 File ..\target\commands_help_eng.ini
  !endif
 
+; ---------------------------------------------------------------------------
+; HELP TEXT, ONE CATALOGUE PER LANGUAGE.
+;
+; The UI strings are carried INSIDE tr4w.exe (res\tr4w_languages.res, built by
+; build\Make-LanguageRes.ps1). The HELP text is not, and deliberately: it is
+; 2.2 MB against ~500 KB for every UI string in sixteen languages, it is read on
+; demand rather than at start-up, and a wording fix should not need a rebuild.
+; That split is NY4I's (2026-08-26).
+;
+; NOTHING READS THESE YET. uOption.pas -- the Ctrl-J dialog that displayed
+; per-command help from commands_help_<LANG>.ini -- was deleted in 4321ce1d, and
+; Preferences has no help pane. The catalogues are installed so the pane can be
+; built without waiting on a release, and so a translator's work has somewhere
+; to land. Delete this block and the SetOutPath below to stop shipping them.
+;
+; The .ini above is the same story one step further back: it is still installed,
+; still unread, and retires when the pane arrives reading these instead.
+SetOutPath "$INSTDIR\help"
+   File ..\..\i18n\help_cs.po
+   File ..\..\i18n\help_de.po
+   File ..\..\i18n\help_en.po
+   File ..\..\i18n\help_es.po
+   File ..\..\i18n\help_fr.po
+   File ..\..\i18n\help_it.po
+   File ..\..\i18n\help_nl.po
+   File ..\..\i18n\help_ro.po
+   File ..\..\i18n\help_ru.po
+   File ..\..\i18n\help_uk.po
+SetOutPath "$INSTDIR"
+
 
 ;File commands_help_rom.ini
 ;File commands_help_eng.ini
