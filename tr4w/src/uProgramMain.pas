@@ -557,6 +557,47 @@ begin
      end;
 end;
 
+{ The first command-line argument that is not a switch, or '' if there is none.
+
+  TR4W's one positional argument is the contest file, and it used to be read as
+  ParamStr(1) because it was the only thing anyone passed. --lang broke that:
+  `tr4w.exe --lang es` made "--lang" the contest name, so the New Contest dialog
+  never opened and TR4W tried to load a contest called --lang. An operator who
+  wanted a Spanish UI had to name a contest to get one (NY4I, 2026-08-27).
+
+  A SWITCH THAT TAKES A VALUE SWALLOWS IT. Otherwise `--lang es` leaves "es"
+  standing in the next position, looking exactly like a contest file -- the same
+  bug moved along by one. The --lang=es form carries its own value.
+
+  Anything starting with - or / is a switch. TR4W's own /EXPORT uses the slash
+  form and takes no value. }
+function FirstNonSwitchArgument: string;
+var
+   i:   integer;
+   arg: string;
+begin
+   Result := '';
+   i := 1;
+   while i <= ParamCount do
+      begin
+      arg := ParamStr(i);
+
+      if (arg <> '') and ((arg[1] = '-') or (arg[1] = '/')) then
+         begin
+         if SameText(arg, '--lang') or SameText(arg, '-l') then
+            begin
+            Inc(i);        // the switch consumes the value after it
+            end;
+         Inc(i);
+         Continue;
+         end;
+
+      Result := arg;
+      Exit;
+      end;
+end;
+
+
 procedure RunTR4W;
 // NoTransMess and TransMess were declared here and never used -- FPC says so
 // ("Label not defined"), and it has presumably said so for years into a .dpr
@@ -810,7 +851,11 @@ begin
   TR4W_CFG_FILENAME := 'c:\TR4W\debug.cfg';
 {$ELSE}
 
-  s := ParamStr(1);
+  { THE CONTEST FILE IS THE FIRST ARGUMENT THAT IS NOT A SWITCH -- see
+    FirstNonSwitchArgument. Reading ParamStr(1) directly was right while a
+    contest file was the only thing anyone passed, and stopped being right the
+    moment --lang existed. }
+  s := FirstNonSwitchArgument;
   if s <> '' then
   begin
     // D12: ParamStr returns a wide UnicodeString.  The old
