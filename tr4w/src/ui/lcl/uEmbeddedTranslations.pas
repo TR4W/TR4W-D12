@@ -49,6 +49,15 @@ interface
   --lang switch and then the OS locale. }
 function LoadEmbeddedTranslation(const aLang: string): string;
 
+{ The catalogue actually in force, or '' for none -- which is what an English
+  run reports, since English loads no catalogue.
+
+  Asked by the About box, which credits the translator only when there is one.
+  It answers from what the loader DID, not by testing whether some string looks
+  translated: a catalogue that happens to leave TC_TRANSLATION_LANGUAGE alone is
+  still a loaded catalogue. }
+function ActiveUILanguage: string;
+
 implementation
 
 uses
@@ -158,6 +167,12 @@ var
 
      Released in finalization, as a PAIR and translator-first. }
    GActiveCatalogue: TPOFile;
+   GActiveLang:      string;
+
+function ActiveUILanguage: string;
+begin
+   Result := GActiveLang;
+end;
 
 function ApplyCatalogue(po: TPOFile): boolean;
 { TAKES OWNERSHIP of po, on every path. The caller must not free it: an earlier
@@ -199,6 +214,7 @@ var
    fileCandidate: string;
 begin
    Result := '';
+   GActiveLang := '';
    lang := ResolveLang(aLang, source);
    if (lang = '') or SameText(lang, 'en') then
       begin
@@ -235,6 +251,7 @@ begin
          if ApplyCatalogue(po) then
             begin
             Result := lang;
+            GActiveLang := lang;
             logger.Info('UI language: "' + lang + '" selected by ' + source +
                         ', loaded from ' + fileCandidate +
                         ' (overriding the embedded catalogue)');
@@ -272,6 +289,7 @@ begin
          if ApplyCatalogue(po) then
             begin
             Result := lang;
+            GActiveLang := lang;
             logger.Info('UI language: "' + lang + '" selected by ' + source +
                         ', loaded from the embedded catalogue');
             end;

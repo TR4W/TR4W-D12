@@ -182,3 +182,7 @@ corpus_test_data/local_test_data/
 # 74 of them were committed by accident on 2026-08-26 by staging the directory
 # rather than the files.
 tr4w/src/ui/lcl/backup/
+
+# Defuzzed test catalogues (tools/i18n/po_defuzz.py). They carry UNREVIEWED
+# machine translation for layout testing and must never be shipped or committed.
+build-out/**/languages/

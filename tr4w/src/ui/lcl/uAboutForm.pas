@@ -49,8 +49,11 @@ implementation
 {$R *.lfm}
 
 uses
+  SysUtils,       // Format
   LCLIntf,        // OpenURL -- the cross-platform launcher
   uLCLFormHelpers,
+  uEmbeddedTranslations,   // ActiveUILanguage -- is there a translator to credit
+  uTR4WStrings,   // TC_TRANSLATION_* -- per-language, so they name the right person
   Version;        // TR4W_CURRENTVERSION and friends
 
 const
@@ -81,6 +84,20 @@ begin
       memAbout.Lines.Add('TR4WSERVER version - ' + TR4WSERVER_CURRENTVERSION);
       memAbout.Lines.Add('');
       memAbout.Lines.Add('Current development team = N4AF, NY4I, Claude Code');
+
+      // THE TRANSLATOR, AND ONLY WHEN THERE IS ONE. An English run loads no
+      // catalogue, so ActiveUILanguage is empty and this adds nothing -- the
+      // English build credits nobody for translating it into English.
+      //
+      // All three constants are per-language and already translated, so they
+      // name whoever did THIS catalogue: es gives 'Jose L. Rami EB2CYQ'. They
+      // have been declared since the D7 tree and referenced nowhere until now.
+      if ActiveUILanguage <> '' then
+         begin
+         memAbout.Lines.Add('');
+         memAbout.Lines.Add(SysUtils.Format(TC_TRANSLATION_CREDIT,
+                            [TC_TRANSLATION_LANGUAGE, TC_TRANSLATION_AUTHOR]));
+         end;
    finally
       memAbout.Lines.EndUpdate;
    end;

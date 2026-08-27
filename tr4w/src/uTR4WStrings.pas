@@ -36,6 +36,7 @@ resourcestring
    TC_TRANSLATION_LANGUAGE               = 'ENGLISH';
    TC_TRANSLATION_AUTHOR                 = 'N4AF';
    TC_TRANSLATOR_EMAIL                   = 'ny4i@ny4i.com';
+   TC_TRANSLATION_CREDIT                 = '%s translation by %s';
    TC_WAGWarn                            = 'Warning: Out of WAG allowed frequency range';
    TC_FREQ                               = 'Freq';
    TC_POINTS                             = 'Pts';

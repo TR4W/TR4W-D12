@@ -7,6 +7,10 @@
   TC_TRANSLATION_LANGUAGE               = 'ENGLISH';
   TC_TRANSLATION_AUTHOR                 = 'N4AF';
   TC_TRANSLATOR_EMAIL                   = 'ny4i@ny4i.com';
+  { The About box credit, shown ONLY when a catalogue is loaded -- the English
+    build credits nobody. First %s is TC_TRANSLATION_LANGUAGE, second is
+    TC_TRANSLATION_AUTHOR; a translation may reorder them with %1:s / %0:s. }
+  TC_TRANSLATION_CREDIT                 = '%s translation by %s';
   TC_WAGWarn                            = 'Warning: Out of WAG allowed frequency range';
   TC_FREQ                               = 'Freq';
   TC_POINTS                             = 'Pts';
