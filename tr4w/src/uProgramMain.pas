@@ -210,6 +210,7 @@ uses
   // Delphi cannot compile the LCL, just as FPC cannot compile FMX.
   uLCLCoexist,
   uLCLTranslate,
+  uEmbeddedTranslations,
   uLCLFormHelpers,
   uSettingsBinding,
   uUDPDestinationEditForm,
@@ -775,14 +776,27 @@ begin
     only one is visible. An absent .po is not an error, English being the
     compiled-in default, so without this line a missing or misnamed catalogue
     is indistinguishable from a working English build. }
-  loadedLang := SetDefaultLang('', '', 'tr4w.po', False);
-  if loadedLang <> '' then
+  { FROM THE BINARY, NOT FROM A FILE BESIDE IT.
+
+    This called SetDefaultLang, which only ever searches the disk. It worked and
+    it was the wrong shape: NY4I chose an EMBEDDED catalogue (2026-08-26),
+    because the language data is already carried inside the exe today via
+    an $R on res\tr4w_<lang>.res -- written without braces, since a brace
+    comment ends at the first closing brace -- and a loose file is one more
+    thing to lose, forget to install, or let go stale against the binary
+    beside it.
+
+    LoadEmbeddedTranslation still prefers a file if one is present -- same
+    layout SetDefaultLang searched -- so a corrected translation can be dropped
+    onto an installation without a rebuild. The embedded copy is the floor.
+
+    It reports what it did in every case, including the absent one: English is
+    the compiled-in default, so a missing or misnamed catalogue is otherwise
+    indistinguishable from a working English build. }
+  loadedLang := LoadEmbeddedTranslation('');
+  if loadedLang = '' then
      begin
-     logger.Info('UI language: loaded translations for "' + loadedLang + '"');
-     end
-  else
-     begin
-     logger.Info('UI language: no translation loaded; using the compiled-in English');
+     logger.Info('UI language: none loaded; using the compiled-in English');
      end;
 
  Format(TR4W_INI_FILENAME, '%ssettings\tr4w.ini', TR4W_PATH_NAME);

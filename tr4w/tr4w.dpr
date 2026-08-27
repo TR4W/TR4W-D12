@@ -14,6 +14,22 @@ program tr4w;
 {$R tr4w_versioninfo.res}
 {$ENDIF}
 
+{ EVERY LANGUAGE, IN THE BINARY.
+
+  Built by build\Make-LanguageRes.ps1 from i18n\tr4w_<lang>.po, one RCDATA
+  resource named TR4W_<LANG> per language, read back by uEmbeddedTranslations.
+
+  514 KB for sixteen languages, because only entries a HUMAN HAS REVIEWED are
+  shipped: the run time refuses a fuzzy entry anyway, so they are dropped before
+  they are ever embedded and the binary cannot carry unreviewed text.
+
+  OUTSIDE THE VERSIONINFO_RES BLOCK, deliberately. It was written inside it
+  first, and Build-App does not pass that define -- so the resource silently was
+  not linked, FindResource returned 0, and the log said "none loaded" exactly as
+  it would for a language nobody had translated. The language a build speaks has
+  nothing to do with whether it carries version information. }
+{$R res\tr4w_languages.res}
+
 //https://groups.google.com/group/tr4w/feeds?hl=ru
 uses
   Messages,
@@ -194,6 +210,7 @@ uses
   // Delphi cannot compile the LCL, just as FPC cannot compile FMX.
   uLCLCoexist in 'src\ui\lcl\uLCLCoexist.pas',
   uLCLTranslate in 'src\ui\lcl\uLCLTranslate.pas',
+  uEmbeddedTranslations in 'src\ui\lcl\uEmbeddedTranslations.pas',
   uLCLFormHelpers in 'src\ui\lcl\uLCLFormHelpers.pas',
   uSettingsBinding in 'src\ui\lcl\uSettingsBinding.pas',
   uUDPDestinationEditForm in 'src\ui\lcl\uUDPDestinationEditForm.pas',
