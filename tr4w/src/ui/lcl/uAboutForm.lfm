@@ -1,19 +1,19 @@
 object frmAbout: TfrmAbout
   Left = 0
-  Height = 240
+  Height = 300
   Top = 0
   Width = 400
   BorderIcons = [biSystemMenu]
   BorderStyle = bsDialog
   Caption = 'About TR4W'
-  ClientHeight = 240
+  ClientHeight = 300
   ClientWidth = 400
   Position = poScreenCenter
   LCLVersion = '4.8.0.0'
   OnShow = HandleShow
   object memAbout: TMemo
     Left = 16
-    Height = 150
+    Height = 210
     Top = 16
     Width = 368
     BorderStyle = bsNone
@@ -27,7 +27,7 @@ object frmAbout: TfrmAbout
     Cursor = crHandPoint
     Left = 16
     Height = 18
-    Top = 178
+    Top = 238
     Width = 368
     AutoSize = False
     Caption = 'http://www.tr4w.net'
@@ -39,7 +39,7 @@ object frmAbout: TfrmAbout
   object btnOK: TButton
     Left = 304
     Height = 25
-    Top = 204
+    Top = 264
     Width = 80
     Cancel = True
     Caption = 'OK'

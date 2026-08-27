@@ -32,7 +32,8 @@ uses
   Tree,
   LogWind,
   PostUnit,
-  Messages;
+  Messages,
+  uTR4WStrings;
 
 const
   MAPI_DIALOG                           = $00000008; { Display a send note UI       }
@@ -220,7 +221,7 @@ begin
            Menu := GetMenu(hwnddlg);
            if ContestsArray[Contest].Email <> nil then
               begin
-              TF.Format(wsprintfBuffer, 'Send log to %s', ContestsArray[Contest].Email);
+              TF.Format(wsprintfBuffer, PAnsiChar(AnsiString(TC_EDITOR_SENDLOGTO)), ContestsArray[Contest].Email);
               AppendMenuA(Menu, MF_CHECKED + MF_STRING, 105, wsprintfBuffer);
               end;
 

@@ -5173,7 +5173,7 @@ begin
 
     menu_download_latest_cty_dat:
       begin
-      QuickDisplay(PAnsiChar('Downloading CTY.DAT...'));
+      QuickDisplay(PAnsiChar(TC_DOWNLOADINGCTYDAT));
       DownloadCTYAsync(string(PAnsiChar(@TR4W_CTY_FILENAME)), tr4whandle);
       end;
 
@@ -5196,13 +5196,13 @@ begin
 
     menu_download_trmaster:
       begin
-      QuickDisplay('Downloading TRMASTER.DTA...');
+      QuickDisplay(TC_DOWNLOADINGTRMASTERDTA);
       DownloadTRMasterAsync(TRMasterDownloadTarget, tr4whandle);
       end;
 
     menu_download_pota_parks:
       begin
-      QuickDisplay('Downloading POTA parks...');
+      QuickDisplay(TC_DOWNLOADINGPOTAPARKS);
       DownloadPOTAParksAsync(POTAParksFilePath, tr4whandle);
       end;
 
@@ -5211,7 +5211,7 @@ begin
 
     menu_hamscore_resync:                 // Issue #783 Phase 3
       begin
-      QuickDisplay('HamScore: queueing full log resync...');
+      QuickDisplay(TC_HAMSCOREQUEUEINGFULLLOGRESYNC);
       HamScoreResyncFromScratch;       // enqueue <deletelog>
       SendFullLogToHamScore;           // enqueue every QSO from the binary log
       end;
@@ -5260,7 +5260,7 @@ begin
                  end
               else
                  begin
-                 ShowMessage('Login call does not look like a callsign');
+                 ShowMessage(TC_LOGINCALLDOESLOOKLIKECALLSIGN);
                  end;
               end
            else if IsAGoodCall(TempCallString) then
@@ -5272,7 +5272,7 @@ begin
               end
            else
               begin
-              ShowMessage('Login call does not look like a callsign');
+              ShowMessage(TC_LOGINCALLDOESLOOKLIKECALLSIGN);
               end;
            end;
         // ShowMessage(CurrentOperator);
@@ -7102,7 +7102,7 @@ begin
   ExchStr := GetLastPOTAExchange;
   if ExchStr = '' then
      begin
-     QuickDisplay('No POTA parks logged yet this session');
+     QuickDisplay(TC_NOPOTAPARKSLOGGEDYETSESSION);
      Exit;
      end;
 
@@ -9293,7 +9293,7 @@ begin
       begin
         if CWEnabled or Config.CWEnable then
            begin
-           QuickDisplay('CW Off');
+           QuickDisplay(TC_CWOFF);
            FlushCWBufferAndClearPTT('MainUnit: CW turned Off');
            CWEnabled := False;
            Config.CWEnable := false;
@@ -9787,7 +9787,7 @@ begin
 
   if not OpenLogFile then
      begin
-     ShowMessage({TC_CANNOTOPENLOG} 'Cannot open log file');
+     ShowMessage({TC_CANNOTOPENLOG} TC_CANNOTOPENLOGFILE);
 
      exit;
      end;
@@ -9975,7 +9975,7 @@ begin
   // rather than open a window that cannot show it.
   logger.Warn('[SetCommand] "%s" is not a setting any editor shows -- ' +
               'it is neither owned by Preferences nor a live CFGCA row', [cmd]);
-  ShowMessage(Format('%s cannot be edited here.', [cmd]));
+  ShowMessage(Format(TC_SCANNOTEDITEDHERE, [cmd]));
 end;
 
 function Get101Window(h: HWND): HWND;

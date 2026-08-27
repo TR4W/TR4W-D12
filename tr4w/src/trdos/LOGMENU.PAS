@@ -28,7 +28,8 @@ uses
   VC,
   LogWind,
   FCONTEST,
-  Tree;
+  Tree,
+  uTR4WStrings;
 
 //PROCEDURE MakeListOfAvailableContestFiles;
 {WLI}
@@ -139,7 +140,7 @@ begin
            else
               begin
               Close(FileRead);
-              ShowMessage('I found a contest name I do no understand in your LOGCFG.DAT file.');
+              ShowMessage(TC_IFOUNDCONTESTNAMEIDONOUNDERSTANDLO);
                       //{WLI}                        WaitForKeyPressed;
               Exit;
               end;
@@ -147,7 +148,7 @@ begin
 
       Close(FileRead);
 
-      ShowMessage('I did not fine a contest name in your LOGCFG.DAT file.');
+      ShowMessage(TC_IDIDFINECONTESTNAMELOGCFGDATFILE);
           //{WLI}            WaitForKeyPressed;
       end;
      end;

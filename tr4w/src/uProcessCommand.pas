@@ -51,7 +51,8 @@ utils_text,
   LogK1EA,
   CFGCMD,
   LogStuff,
-  SysUtils;
+  SysUtils,
+  uTR4WStrings;
 
 type
   TsCommandsArrayType = packed record
@@ -517,7 +518,7 @@ begin
          end;
       if bError then
          begin
-         QuickDisplay('Error playing voice memory');
+         QuickDisplay(TC_ERRORPLAYINGVOICEMEMORY);
          end;
       end
    else
@@ -534,7 +535,7 @@ begin
 
       if bError then
          begin
-         QuickDisplay('Error playing voice memory');
+         QuickDisplay(TC_ERRORPLAYINGVOICEMEMORY);
          end;
       end;
 end;
@@ -556,7 +557,7 @@ begin
          end;
       if bError then
          begin
-         QuickDisplay('Error playing voice memory');
+         QuickDisplay(TC_ERRORPLAYINGVOICEMEMORY);
          end;
       end
    else
@@ -573,7 +574,7 @@ begin
 
       if bError then
          begin
-         QuickDisplay('Error playing voice memory');
+         QuickDisplay(TC_ERRORPLAYINGVOICEMEMORY);
          end;
       end;
 end;
@@ -600,7 +601,7 @@ end;
 procedure scFLUSHINITIALEX;
 begin
   GenerateCallsignsList(TR4W_INITIALEX_FILENAME);
-  QuickDisplay('FLUSHINITIALEX command is executed.');
+  QuickDisplay(TC_FLUSHINITIALEXCOMMANDEXECUTED);
 end;
 
 procedure scSNLOCKOUT;

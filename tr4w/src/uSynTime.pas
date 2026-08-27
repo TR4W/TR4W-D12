@@ -40,7 +40,8 @@ utils_net,
   Messages,
   SysUtils,
   Registry
-  ;
+  ,
+  uTR4WStrings;
 
 procedure GetInt64AndSysTimeFromBuffer(BufPtr: Byte; var St: SYSTEMTIME);
 
@@ -167,7 +168,7 @@ type
 procedure TClockWarning.Show(Data: PtrInt);
 begin
    try
-      MessageDlg('TR4W Time Warning', Text, mtWarning, [mbOK], 0);
+      MessageDlg(TC_TR4WTIMEWARNING, Text, mtWarning, [mbOK], 0);
    finally
       Free;   { queued once, shown once, gone }
    end;

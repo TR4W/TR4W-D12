@@ -1313,7 +1313,7 @@ begin
          begin
          logger.Error(Format('[Prefs] FAILED during %s: %s: %s',
                              [phase, E.ClassName, E.Message]));
-         ShowMessage(Format('Preferences could not be opened (%s).'#13#10 +
+         ShowMessage(Format(TC_PREFERENCESCOULDOPENEDS + #13#10 +
                             '%s: %s'#13#10#13#10 +
                             'Logging continues normally; see tr4w.log.',
                             [phase, E.ClassName, E.Message]));
@@ -1665,7 +1665,7 @@ begin
       begin
       if not FBindings.SaveAll(bindErrors) then
          begin
-         ShowMessage('These entries were not accepted and have not been saved:'
+         ShowMessage(TC_THESEENTRIESWEREACCEPTEDBEENSAVED
                      + sLineBreak + sLineBreak + bindErrors);
          end;
       end;
@@ -1742,7 +1742,7 @@ begin
                begin
                // Reported, not swallowed.  A port already in use is the
                // common case and the operator cannot diagnose silence.
-               ShowMessage(Format('The TCI server could not open port %d: %s',
+               ShowMessage(Format(TC_TCISERVERCOULDOPENPORTDS,
                                   [tciPort, TCIServer.LastError]));
                end;
             end
@@ -2045,7 +2045,7 @@ begin
       begin
       if FKeyerStore.FindKeyer(FKeyerEditClone.Name) <> nil then
          begin
-         ShowMessage(Format('A keyer named "%s" already exists.', [FKeyerEditClone.Name]));
+         ShowMessage(Format(TC_KEYERNAMEDSALREADYEXISTS, [FKeyerEditClone.Name]));
          Exit;
          end;
       FKeyerStore.AddKeyer(FKeyerEditClone.Name, FKeyerEditClone.Kind).Assign(FKeyerEditClone);
@@ -2106,7 +2106,7 @@ begin
    used := ProfilesUsingKeyer(target.Name);
    if used <> '' then
       begin
-      ShowMessage(Format('"%s" is still used by: %s', [target.Name, used]));
+      ShowMessage(Format(TC_SSTILLUSEDBYS, [target.Name, used]));
       Exit;
       end;
 
@@ -5178,7 +5178,7 @@ begin
       Exit;
       end;
 
-   if MessageDlg(Format('Remove the cluster "%s"?', [FStore.Cluster(i).Name]),
+   if MessageDlg(Format(TC_REMOVECLUSTERS, [FStore.Cluster(i).Name]),
                  TMsgDlgType.mtConfirmation,
                  [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0) <> mrYes then
       begin
@@ -5675,7 +5675,7 @@ begin
       Exit;
       end;
 
-   if MessageDlg(Format('Remove the rotator "%s"?', [FStore.Rotator(i).Name]),
+   if MessageDlg(Format(TC_REMOVEROTATORS, [FStore.Rotator(i).Name]),
                  TMsgDlgType.mtConfirmation,
                  [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0) <> mrYes then
       begin
@@ -6289,7 +6289,7 @@ begin
       // REPORTED, not swallowed.  A refused value means the operator's typing
       // did not take, and the only thing worse than a rejection is a silent
       // one -- they would close Preferences believing the station was set.
-      ShowMessage('These entries were not accepted and have not been saved:'
+      ShowMessage(TC_THESEENTRIESWEREACCEPTEDBEENSAVED
                   + sLineBreak + sLineBreak + bad);
       end;
 end;
@@ -6461,14 +6461,14 @@ var
 begin
    if not Assigned(appender) then
       begin
-      ShowMessage('Logging is not running, so there is no file to open.');
+      ShowMessage(TC_LOGGINGRUNNINGSOTHERENOFILEOPEN);
       Exit;
       end;
 
    fileName := ExpandFileName(appender.FileName);
    if not FileTextExists(fileName) then
       begin
-      ShowMessage(Format('There is no log file yet at %s.', [fileName]));
+      ShowMessage(Format(TC_THERENOLOGFILEYETS, [fileName]));
       Exit;
       end;
 

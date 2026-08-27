@@ -33,7 +33,8 @@ uses
   utils_text,
   utils_file,
   SysUtils    // Issue #1033: StrPas for the RTL Val that replaces TF.ValExt
-  ;
+  ,
+  uTR4WStrings;
 {
 type
   DXMultiplierString = string[5];
@@ -770,7 +771,7 @@ begin
   Windows.ZeroMemory(@CTY.ctyMaxLengthIndexArray, SizeOf(CTY.ctyMaxLengthIndexArray));
 
 {$IF tDebugMode}
-  MessageBox(0, 'debug mode created prefixes.txt', 'debug mode', MB_OK or MB_ICONINFORMATION {or MB_RTLREADING } or MB_TASKMODAL);
+  MessageBox(0, TC_DEBUGMODECREATEDPREFIXESTXT, 'debug mode', MB_OK or MB_ICONINFORMATION {or MB_RTLREADING } or MB_TASKMODAL);
   utils_file.tOpenFileForWrite(h, 'prefixes.txt');
 {$IFEND}
 

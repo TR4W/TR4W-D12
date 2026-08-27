@@ -241,7 +241,7 @@ begin
   if ActivePaddlePort <> NoPort then
     if ActivePaddlePort = RelayControlPort then
        begin
-       showwarning('RELAY CONTROL PORT = PADDLE PORT');
+       showwarning(TC_RELAYCONTROLPORTPADDLEPORT);
  //      Exit;
        end;
 

@@ -820,3 +820,82 @@ TC_DISCOVER_NONE_FOUND = 'No radio of type %s found on the network';
 TC_DISCOVER_MULTI_FOUND = 'More than one %s found; filled in the first.  All found:';
 TC_PORT_NOT_CONNECTED = '(not connected)';
 TC_SHOW_ALL_SERIAL_PORTS = 'Show all serial ports';
+
+  { Lifted from hardcoded call sites 2026-08-27. These were passed
+    straight to a message call as literals, so no harvest could see them
+    and no language could translate them. }
+  TC_DOWNLOADINGCTYDAT                  = 'Downloading CTY.DAT...';
+  TC_DOWNLOADINGTRMASTERDTA             = 'Downloading TRMASTER.DTA...';
+  TC_DOWNLOADINGPOTAPARKS               = 'Downloading POTA parks...';
+  TC_HAMSCOREQUEUEINGFULLLOGRESYNC      = 'HamScore: queueing full log resync...';
+  TC_LOGINCALLDOESLOOKLIKECALLSIGN      = 'Login call does not look like a callsign';
+  TC_NOPOTAPARKSLOGGEDYETSESSION        = 'No POTA parks logged yet this session';
+  TC_CWOFF                              = 'CW Off';
+  TC_CANNOTOPENLOGFILE                  = 'Cannot open log file';
+  TC_SCANNOTEDITEDHERE                  = '%s cannot be edited here.';
+  TC_DEBUGMODECREATEDPREFIXESTXT        = 'debug mode created prefixes.txt';
+  TC_POTAPARKSLOADED                    = 'POTA parks loaded';
+  TC_POTAPARKSFILECOULDLOADED           = 'POTA parks file could not be loaded';
+  TC_POTAPARKSDOWNLOADFAILED            = 'POTA parks download failed';
+  TC_TRMASTERDTADOWNLOADEDRESTARTTR4WUS = 'TRMASTER.DTA downloaded -- restart TR4W to use it';
+  TC_TRMASTERDTADOWNLOADFAILED          = 'TRMASTER.DTA download failed';
+  TC_CTYDATDOWNLOADEDRELOADING          = 'CTY.DAT downloaded. Reloading...';
+  TC_CTYDATRELOADEDSUCCESSFULLY         = 'CTY.DAT reloaded successfully.';
+  TC_CTYDATDOWNLOADFAILED               = 'CTY.DAT download failed.';
+  TC_ERRORPLAYINGVOICEMEMORY            = 'Error playing voice memory';
+  TC_FLUSHINITIALEXCOMMANDEXECUTED      = 'FLUSHINITIALEX command is executed.';
+  TC_AUTOSPOTENABLEDTESTMODEONLY        = 'AUTOSPOT is enabled - Test Mode Only';
+  TC_HANDLOGMODETRUE                    = 'HAND LOG MODE = TRUE';
+  TC_TRMASTERDTAS                       = 'TRMASTER.DTA : %s';
+  TC_TR4WTIMEWARNING                    = 'TR4W Time Warning';
+  TC_ERROROFFERINGCOMMANDERPROXYTCPPORT = 'Error offering Commander proxy TCP Port';
+  TC_PTTVIACOMMANDSCTRLJOPTIONMUSTTRUEW = 'PTT VIA COMMANDS (CTRL-J) option must be true for WSJT-X use - Setting to true';
+  TC_CANNOTDISABLESPLITTRANSMITSLICECRE = 'Cannot disable split -- the transmit slice was created on the radio. Turn it off in the SDR.';
+  TC_SORRYUSEDUPALLREMINDERS            = 'Sorry, you have used up all your reminders!!';
+  TC_INVALIDDATE                        = 'Invalid date!!';
+  TC_ENOUGHMEMORYINITIALEXCHANGEARRAY   = 'Not enough memory for initial exchange array!!';
+  TC_FINDINGZEROENDVISIBLEDUPESHEETLIST = 'Not finding zero at end visible dupesheet list!!';
+  TC_QTCPROCESSTERMINATED               = 'QTC process terminated.';
+  TC_QTCNUMBERILLEGALCHARACTERS         = 'QTC Number has illegal characters.';
+  TC_NUMBERMESSAGESILLEGALCHARACTERS    = 'Number of messages has illegal characters.';
+  TC_QTCPROCESSTERMINATEDINVALIDNUMBERM = 'QTC process terminated.  Invalid number of messages.';
+  TC_IFOUNDCONTESTNAMEIDONOUNDERSTANDLO = 'I found a contest name I do no understand in your LOGCFG.DAT file.';
+  TC_IDIDFINECONTESTNAMELOGCFGDATFILE   = 'I did not fine a contest name in your LOGCFG.DAT file.';
+  TC_ARENEWENGLAND                      = 'Are you in New England?';
+  TC_CWTIMERFIRED                       = 'CW Timer fired';
+  TC_TESTRADIOINTERFACE                 = 'TEST RADIO INTERFACE';
+  TC_UNABLESAVEDTAASCIIFILE             = 'Unable to save .DTA to ASCII file.';
+  TC_SAVINGDTAFILEASCIIFILEPROCESSINGCE = 'Saving .DTA file to ASCII file.  Processing cell   ';
+  TC_DATASUCCESSFULLYSAVEDASCIIFILE     = 'Data successfully saved to ASCII file.';
+  TC_NOTRMASTERDTAFILEFOUND             = 'No TRMASTER.DTA file found.';
+  TC_HITCOUNTHISTOGRAM050               = 'Hit count histogram for 0 to 50+ : ';
+  TC_PLEASECHECKMULTINETWORK            = 'Please check multi network';
+  TC_POSSIBLEDATALOSSMULTINETWORK       = 'Possible data loss on multi network.';
+  TC_SELECTSPOTRETURNLEFTORRIGHTARROWSE = 'Select spot.  RETURN, left or right arrow to select.  ESCAPE to exit.';
+  TC_ENTERCALLSIGNSPACEDUPECHECKALTHHEL = 'ENTER a callsign.  SPACE for dupecheck.  Alt-H for help.';
+  TC_CONTINUEENTERINGCHARACTERSAUTOTERM = 'Continue entering characters.  Auto terminate active!!';
+  TC_CONTINUEENTERINGCHARACTERSPRESSRET = 'Continue entering characters and press RETURN when done.';
+  TC_ENTEREXCHANGEPRESSENTERLOGESCAPEAB = 'Enter exchange.  Press ENTER to log, ESCAPE to abort QSO.';
+  TC_RELAYCONTROLPORTPADDLEPORT         = 'RELAY CONTROL PORT = PADDLE PORT';
+  TC_LOCATIONFIELDEMPTY                 = 'LOCATION field is empty.';
+  TC_PTTLOCKOUTTRUE                     = 'PTT LOCKOUT=TRUE';
+  TC_PREFERENCESCOULDOPENEDS            = 'Preferences could not be opened (%s).';
+  TC_THESEENTRIESWEREACCEPTEDBEENSAVED  = 'These entries were not accepted and have not been saved:';
+  TC_TCISERVERCOULDOPENPORTDS           = 'The TCI server could not open port %d: %s';
+  TC_KEYERNAMEDSALREADYEXISTS           = 'A keyer named "%s" already exists.';
+  TC_SSTILLUSEDBYS                      = '"%s" is still used by: %s';
+  TC_REMOVECLUSTERS                     = 'Remove the cluster "%s"?';
+  TC_REMOVEROTATORS                     = 'Remove the rotator "%s"?';
+  TC_LOGGINGRUNNINGSOTHERENOFILEOPEN    = 'Logging is not running, so there is no file to open.';
+  TC_THERENOLOGFILEYETS                 = 'There is no log file yet at %s.';
+
+  { The file viewer menu and the SCP upload prompt, lifted 2026-08-27.
+    RC_FILE and RC_EXIT already exist and are reused rather than
+    duplicated. }
+  TC_EDITOR_EDIT         = '&Edit';
+  TC_EDITOR_OPENINEDITOR = 'Open in text &editor';
+  TC_EDITOR_EXPLORE      = 'Explore';
+  TC_EDITOR_COPY         = '&Copy';
+  TC_EDITOR_SELECTALL    = 'Select &all';
+  TC_EDITOR_SENDLOGTO    = 'Send log to %s';
+  TC_UPLOADCABRILLOTOSCP = 'Do you want to upload your Cabrillo file to SuperChecklPartial?';

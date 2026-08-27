@@ -492,7 +492,7 @@ begin
      {        ELSE
                   BEGIN
                   DoABeep (Single);
-                  QuickDisplay ('Not enough memory for initial exchange array!!');
+                  QuickDisplay (TC_ENOUGHMEMORYINITIALEXCHANGEARRAY);
                   ReminderPostedCount := 30;
                   END;
 
@@ -1117,7 +1117,7 @@ begin
         begin
         //      SetWindow(WholeScreenWindow);
              //{WLI}            ClrScr;
-    ShowMessage('Not finding zero at end visible dupesheet list!!');
+    ShowMessage(TC_FINDINGZEROENDVISIBLEDUPESHEETLIST);
     logger.Fatal('Not finding zero at end visible dupesheet list!!');
     halt;
         end;

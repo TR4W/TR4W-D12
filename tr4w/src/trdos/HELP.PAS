@@ -69,7 +69,8 @@ uses
   LogWind,
   LogNet,
   LogRadio,
-   uConfigValues;
+   uConfigValues,
+  uTR4WStrings;
 
 type
   HelpSubject = (NoSubject);
@@ -631,7 +632,7 @@ begin
   if NumberReminderRecords >= MaximumReminderRecords then
      begin
      //    SaveSetAndClearActiveWindow(QuickCommandWindow);
-     QuickDisplay('Sorry, you have used up all your reminders!!');
+     QuickDisplay(TC_SORRYUSEDUPALLREMINDERS);
      //    Delay(2000);
      //    RemoveAndRestorePreviousWindow;
      Exit;
@@ -673,7 +674,7 @@ begin
        8: if (DateString[2] <> '-') or (DateString[6] <> '-') then
              begin
              //          SaveSetAndClearActiveWindow(QuickCommandWindow);
-             QuickDisplay('Invalid date!!');
+             QuickDisplay(TC_INVALIDDATE);
              //          Delay(1000);
              //          RestorePreviousWindow;
              Exit;
@@ -686,7 +687,7 @@ begin
        9: if (DateString[3] <> '-') or (DateString[7] <> '-') then
              begin
              //          SaveSetAndClearActiveWindow(QuickCommandWindow);
-             QuickDisplay('Invalid date!!');
+             QuickDisplay(TC_INVALIDDATE);
              //          Delay(1000);
              //          RestorePreviousWindow;
              Exit;
@@ -695,7 +696,7 @@ begin
        else
          begin
            //        SaveSetAndClearActiveWindow(QuickCommandWindow);
-           QuickDisplay('Invalid date!!');
+           QuickDisplay(TC_INVALIDDATE);
            //        Delay(1000);
            //        RestorePreviousWindow;
            Exit;
@@ -740,7 +741,7 @@ begin
      if (DayString <> 'DAY') and (DateString <> 'ALL') and (DateString <> 'TMW') then
         begin
         //      SaveSetAndClearActiveWindow(QuickCommandWindow);
-        QuickDisplay('Invalid date!!');
+        QuickDisplay(TC_INVALIDDATE);
         //      Delay(1000);
         //      RestorePreviousWindow;
         Exit;

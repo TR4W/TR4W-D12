@@ -34,7 +34,8 @@ uses
   LOGMENU, {Crt, }
   FCONTEST, {SlowTree,}
   Windows,
-  Tree;
+  Tree,
+  uTR4WStrings;
 
 procedure PullLogCfgInformationOutOfThisPerson;
 procedure ManualConfigFileGenerator;
@@ -804,7 +805,7 @@ begin
   if UpperCase(ContestName) = 'NEW ENGLAND QSO' then
      begin
       //    repeat
-    if YesOrNo(0, 'Are you in New England?') = IDYES then
+    if YesOrNo(0, TC_ARENEWENGLAND) = IDYES then
         {
               if Key = EscapeKey then
               begin

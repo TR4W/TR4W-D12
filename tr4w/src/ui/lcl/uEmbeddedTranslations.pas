@@ -66,7 +66,8 @@ uses
    Translations,      // TPOFile, TranslateResourceStrings
    LResources,        // LRSTranslator -- the hook the LFM reader consults
    LCLTranslator,     // TPOTranslator, SetDefaultLang
-   MainUnit;          // logger
+   MainUnit,          // logger
+  uTR4WStrings;
 
 { The two-letter code the LCL would pick, without loading anything.
 

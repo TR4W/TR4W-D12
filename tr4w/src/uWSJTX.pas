@@ -27,7 +27,8 @@ uses
     IdContext,
   IdBaseComponent, IdSocketHandle, IdGlobal, IdStackConsts,
   NetworkMessageUtils, DateUtils, StrUtils, LOGRADIO, IdThreadSafe, IdThread
-  ;
+  ,
+  uTR4WStrings;
 
 type
   TColorRec = record
@@ -325,7 +326,7 @@ begin
             on E: Exception do
                begin
                logger.Error('Exception when making TCP server active - Is DX Commander running?: exception=%s', [E.Message]);
-               QuickDisplay('Error offering Commander proxy TCP Port');
+               QuickDisplay(TC_ERROROFFERINGCOMMANDERPROXYTCPPORT);
                end;
           end;
       end;
@@ -1270,7 +1271,7 @@ begin
           begin
           if not Config.PTTViaCommand then
              begin
-             QuickDisplay('PTT VIA COMMANDS (CTRL-J) option must be true for WSJT-X use - Setting to true');
+             QuickDisplay(TC_PTTVIACOMMANDSCTRLJOPTIONMUSTTRUEW);
              Config.PTTViaCommand := true;
              end;
           logger.Debug('[uWSJTX] <<<<<<<<<<<<<<<<<<<<< PTT OFF *********************');
@@ -1283,7 +1284,7 @@ begin
           begin
           if not Config.PTTViaCommand then
              begin
-             QuickDisplay('PTT VIA COMMANDS (CTRL-J) option must be true for WSJT-X use - Setting to true');
+             QuickDisplay(TC_PTTVIACOMMANDSCTRLJOPTIONMUSTTRUEW);
              logger.Info('[uWSJTX] Set tPTTViaCommand for user');
              Config.PTTViaCommand := true;
              end;

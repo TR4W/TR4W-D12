@@ -1789,7 +1789,7 @@ begin
   repeat
     //      PutUpCQMenu;
     //      if ReminderPostedCount = 0 then
-    QuickDisplay('ENTER a callsign.  SPACE for dupecheck.  Alt-H for help.');
+    QuickDisplay(TC_ENTERCALLSIGNSPACEDUPECHECKALTHHEL);
 //    DDX(MaybeSendANewCall);
 {
     if DebugFlag and (DDXState = CallSentInResponseToACQ) then
@@ -1816,11 +1816,11 @@ begin
            //                  if ReminderPostedCount = 0 then
          if Config.AutoCallTerminate then
             begin
-            QuickDisplay('Continue entering characters.  Auto terminate active!!')
+            QuickDisplay(TC_CONTINUEENTERINGCHARACTERSAUTOTERM)
             end
          else
             begin
-            QuickDisplay('Continue entering characters and press RETURN when done.');
+            QuickDisplay(TC_CONTINUEENTERINGCHARACTERSPRESSRET);
             end;
          if length(CallWindowString) > 0 then
             begin
@@ -2185,7 +2185,7 @@ begin
   //    TailEnding  := False;
   LookingForCQExchange := True;
   //   if ReminderPostedCount = 0 then
-  QuickDisplay('Enter exchange.  Press ENTER to log, ESCAPE to abort QSO.');
+  QuickDisplay(TC_ENTEREXCHANGEPRESSENTERLOGESCAPEAB);
   if ActiveMode = CW then
      begin
      PutUpExchangeMenu;

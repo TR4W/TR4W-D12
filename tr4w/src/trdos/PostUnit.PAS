@@ -416,6 +416,7 @@ const
 implementation
 
 uses
+  uEmbeddedTranslations,   // ActiveUILanguage -- see CabrilloLanguageTag
   uCabrilloHeader,   // the Cabrillo header, from settings\tr4w.json not tr4w.ini
   uAnsiStr,
   // uAnsiStr.StrPCopy for ANSI (PAnsiChar) buffers under D12
@@ -523,7 +524,7 @@ procedure CreateCabrilloFile;
   // Ask if user wants to upload the Cabrillo file to SCP
   If ( not tSilentExport ) and
      ( YesOrNo( 0,
-     'Do you want to upload your Cabrillo file to SuperChecklPartial?' { TC_WANTTOCONVERTLOG } )
+     TC_UPLOADCABRILLOTOSCP )
      = IDYES ) then
      begin
      scp := TSCPUpload.Create( true, logger );
@@ -2504,6 +2505,22 @@ procedure ExportToCSV; // n4af 04/18/14 new procedure added
   FilePreview;
   end;
 
+function CabrilloLanguageTag: string;
+{ ' (language: es)' when a translation is loaded, empty otherwise.
+
+  A Cabrillo file is read by contest robots and by humans checking a log,
+  so when the operator ran a translated UI it is worth saying which
+  catalogue produced it -- it explains any non-English text further down
+  (NY4I, 2026-08-27). English adds nothing: an absent tag is the default
+  build. }
+begin
+   Result := '';
+   if ActiveUILanguage <> '' then
+      begin
+      Result := ' (language: ' + ActiveUILanguage + ')';
+      end;
+end;
+
 function tGenerateSummaryPortionOfCabrilloFile: boolean;
   var
     T2: PAnsiChar;
@@ -2568,7 +2585,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       if ( Contest = ARRL10 ) or ( Contest = WINTERFIELDDAY ) then
         if GetCabrilloTagText( ctLocation ) = 0 then
            begin
-           showwarning( 'LOCATION field is empty.' );
+           showwarning( TC_LOCATIONFIELDEMPTY );
            Exit;
            end;
 
@@ -2603,7 +2620,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       // %s=CALLSIGN(T2), %s=CONTEST(T3), %d=CLAIMED-SCORE(TotalScore).
       sWriteFileFromString( tReportFileWrite,
          sysutils.Format( 'START-OF-LOG: 3.0'#13#10'CREATED-BY: ' +
-         TR4W_CURRENTVERSION + '-D12' +
+         TR4W_CURRENTVERSION + '-D12' + CabrilloLanguageTag +
          #13#10'CALLSIGN: %s'#13#10'CONTEST: %s'#13#10'CLAIMED-SCORE: %d'#13#10,
          [ string( T2 ), T3, TotalScore ] ) );
 

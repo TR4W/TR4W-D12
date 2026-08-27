@@ -1966,7 +1966,7 @@ begin
       begin
       if Self.CWBYCAT_Sending then
          begin
-         QuickDisplay('CW Timer fired');
+         QuickDisplay(TC_CWTIMERFIRED);
          Self.tmrCWByCat.enabled := false;
          end;
       end;
@@ -2765,7 +2765,7 @@ begin
    //{WLI}    TextBackground (Black);
    //{WLI}    NoCursor;
 
-   ShowMessage('TEST RADIO INTERFACE');
+   ShowMessage(TC_TESTRADIOINTERFACE);
 
    //{WLI}    WriteLn ('This procedure will display the data coming back from the interfaced radios');
    //{WLI}    WriteLn ('Press the ESCAPE key to exit and halt TR.');

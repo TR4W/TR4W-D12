@@ -1121,7 +1121,7 @@ begin
      //    NoCursor;
      end;
 
-  QuickDisplay('Select spot.  RETURN, left or right arrow to select.  ESCAPE to exit.');
+  QuickDisplay(TC_SELECTSPOTRETURNLEFTORRIGHTARROWSE);
 end;
 
 procedure SetUpRadioFromPacketSpot(Radio: RadioType;

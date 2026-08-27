@@ -1119,7 +1119,7 @@ begin
   tr4w_main_menu := CreateTR4WMenu(@T_MENU_ARRAY, T_MENU_ARRAY_SIZE, False);
 
 {$IFDEF AUTOSPOT}
-   ShowMessage('AUTOSPOT is enabled - Test Mode Only'); // Hard on relays - be careful
+   ShowMessage(TC_AUTOSPOTENABLEDTESTMODEONLY); // Hard on relays - be careful
 {$ENDIF}
   // ONE Pascal table, not the 'T' resource -- and not the ELEVEN copies of it
   // that had drifted apart across the language .RES files (see
@@ -1314,7 +1314,7 @@ begin
      end
   else
      begin
-     showwarning('HAND LOG MODE = TRUE');
+     showwarning(TC_HANDLOGMODETRUE);
      end;
 
 //  wkLoadSettings;
@@ -1340,7 +1340,7 @@ begin
 
   if not CD.MasterFileExists then
   begin
-    QuickDisplay(SysUtils.Format('TRMASTER.DTA : %s', [SysUtils.SysErrorMessage(GetLastError)]));
+    QuickDisplay(SysUtils.Format(TC_TRMASTERDTAS, [SysUtils.SysErrorMessage(GetLastError)]));
   end;
 
 {$IF not tDebugMode}

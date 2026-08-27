@@ -29,7 +29,8 @@ uses
   Windows,
   SysUtils,
   ActiveX,
-  Messages;
+  Messages,
+  uTR4WStrings;
 
 type
   TServerBrowseDialogA0 = function(HWND: HWND; pchBuffer: Pointer; cchBufSize: DWORD): BOOL; stdcall;

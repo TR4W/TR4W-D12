@@ -5537,7 +5537,7 @@ begin
           if (RetryCount >= 5) and (Warnings = 0) then
              begin
              DoABeep(Warning);
-             QuickDisplay('Please check multi network');
+             QuickDisplay(TC_PLEASECHECKMULTINETWORK);
              //                        ReminderPostedCount := 60;
              Warnings := 1;
              end;
@@ -5545,7 +5545,7 @@ begin
           if (RetryCount > 10) and (Warnings = 1) then
              begin
              DoABeep(Warning);
-             QuickDisplay('Possible data loss on multi network.');
+             QuickDisplay(TC_POSSIBLEDATALOSSMULTINETWORK);
              //                        ReminderPostedCount := 60;
              Warnings := 2;
              end;

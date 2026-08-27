@@ -380,15 +380,20 @@ const
   // designer instead of being numeric ids matched against a WM_COMMAND case.
 
   E_MENU_ARRAY_SIZE                     = 7;
+
+var
+  { A var, filled by InitializeMenuText -- the captions are resourcestrings
+    now and a typed constant would fold the English in at compile time. This
+    is the file viewer menu NY4I saw untranslated (2026-08-27). }
   E_MENU_ARRAY                          : array[0..E_MENU_ARRAY_SIZE] of MenuRecord = (
-    (mrText: '&File'; mrId: MAXWORD),
-    (mrText: 'Open in text &editor'; mrId: 101),
-    (mrText: 'Explore'; mrId: 107),
-    (mrText: '-'; mrId: 0),
-    (mrText: 'E&xit'; mrId: 102),
-    (mrText: '&Edit'; mrId: MAXWORD),
-    (mrText: '&Copy '#9'Ctrl+C'; mrId: 103),
-    (mrText: 'Select &all '#9'Ctrl+A'; mrId: 104));
+    (mrText: ''; mrId: MAXWORD),
+    (mrText: ''; mrId: 101),
+    (mrText: ''; mrId: 107),
+    (mrText: ''; mrId: 0),
+    (mrText: ''; mrId: 102),
+    (mrText: ''; mrId: MAXWORD),
+    (mrText: ''; mrId: 103),
+    (mrText: ''; mrId: 104));
 
 implementation
 
@@ -590,6 +595,17 @@ begin
    Inc(i); T_MENU_ARRAY[i].mrText := RC_WIKI;
 {$ENDIF}
    Inc(i); T_MENU_ARRAY[i].mrText := RC_ABOUT;
+
+   { the file viewer menu -- same reason, same mechanism }
+   i := -1;
+   Inc(i); E_MENU_ARRAY[i].mrText := RC_FILE;
+   Inc(i); E_MENU_ARRAY[i].mrText := TC_EDITOR_OPENINEDITOR;
+   Inc(i); E_MENU_ARRAY[i].mrText := TC_EDITOR_EXPLORE;
+   Inc(i); E_MENU_ARRAY[i].mrText := '-';
+   Inc(i); E_MENU_ARRAY[i].mrText := RC_EXIT;
+   Inc(i); E_MENU_ARRAY[i].mrText := TC_EDITOR_EDIT;
+   Inc(i); E_MENU_ARRAY[i].mrText := TC_EDITOR_COPY + #9'Ctrl+C';
+   Inc(i); E_MENU_ARRAY[i].mrText := TC_EDITOR_SELECTALL + #9'Ctrl+A';
 end;
 
 function CreateTR4WMenu(m: PMenuRecord; s: integer; popup: boolean): HMENU;

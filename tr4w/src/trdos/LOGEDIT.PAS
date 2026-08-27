@@ -2189,7 +2189,7 @@ begin
   if (QTCNumberString = '') or (NumberMessagesString = '') then
      begin
      DoABeep(Beepsingle);
-     showwarning('QTC process terminated.');
+     showwarning(TC_QTCPROCESSTERMINATED);
      Exit;
      end;
 
@@ -2198,7 +2198,7 @@ begin
   if Result1 <> 0 then
      begin
      DoABeep(Warning);
-     showwarning('QTC Number has illegal characters.');
+     showwarning(TC_QTCNUMBERILLEGALCHARACTERS);
      Exit;
      end;
 
@@ -2207,14 +2207,14 @@ begin
   if Result1 <> 0 then
      begin
      DoABeep(Warning);
-     showwarning('Number of messages has illegal characters.');
+     showwarning(TC_NUMBERMESSAGESILLEGALCHARACTERS);
      Exit;
      end;
 
   if (Quantity < 1) or (Quantity > 10) then
      begin
      DoABeep(Warning);
-     showwarning('QTC process terminated.  Invalid number of messages.');
+     showwarning(TC_QTCPROCESSTERMINATEDINVALIDNUMBERM);
      Exit;
      end;
 

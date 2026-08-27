@@ -34,7 +34,8 @@ uses
   uCallSignRoutines,
   uCTYDAT,
   //Country9,
-  Tree {, Crt, DOS};
+  Tree {, Crt, DOS},
+  uTR4WStrings;
 
 const
   ua4wliscpconst                        = 4;
@@ -2340,14 +2341,14 @@ var
 begin
   if not LoadInIndexArray then
      begin
-     ShowMessage('Unable to save .DTA to ASCII file.');
+     ShowMessage(TC_UNABLESAVEDTAASCIIFILE);
      Exit;
      end;
 
   OpenFileForWrite(FileWrite, { WorkingDirectory + } ActiveASCIIFileName);
 
   //{WLI}    GoToXY (1, WhereY);
-  ShowMessage('Saving .DTA file to ASCII file.  Processing cell   ');
+  ShowMessage(TC_SAVINGDTAFILEASCIIFILEPROCESSINGCE);
 
   New(CallsAlreadySaved);
 
@@ -2443,7 +2444,7 @@ begin
   Closefile(FileRead);
 
   ASCIIFileIsCurrent := True;
-  ShowMessage('Data successfully saved to ASCII file.');
+  ShowMessage(TC_DATASUCCESSFULLYSAVEDASCIIFILE);
 
 end;
 
@@ -2981,7 +2982,7 @@ begin
        begin
        //{WLI}            GoToXY (1, WhereY);
        //{WLI}            ClrEol;
-     ShowMessage('No TRMASTER.DTA file found.');
+     ShowMessage(TC_NOTRMASTERDTAFILEFOUND);
        //{WLI}            WaitForKeyPressed;
      Exit;
        end;
@@ -3162,7 +3163,7 @@ begin
         end;
      end;
 
-  ShowMessage('Hit count histogram for 0 to 50+ : ');
+  ShowMessage(TC_HITCOUNTHISTOGRAM050);
   {
       FOR Entry := 0 TO 51 DO
           BEGIN

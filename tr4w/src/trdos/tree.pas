@@ -4238,7 +4238,7 @@ begin
            then
            if Ord(ComputerID) - 64 <> c then
               begin
-              QuickDisplay('PTT LOCKOUT=TRUE');
+              QuickDisplay(TC_PTTLOCKOUTTRUE);
               Result := True;
               end;
        end;

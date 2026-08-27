@@ -23,7 +23,8 @@ interface
 
 uses
   Windows,
-  Classes;   // TShiftState, TObject -- the LCL event signatures
+  Classes,   // TShiftState, TObject -- the LCL event signatures
+  uTR4WStrings;
 
 type
    { WHICH entry field a handler belongs to. Passed EXPLICITLY from a named
@@ -655,12 +656,12 @@ begin
       if wParam = 1 then
          begin
          if LoadPOTAParks(POTAParksFilePath) > 0 then
-            QuickDisplay(PAnsiChar('POTA parks loaded'))
+            QuickDisplay(PAnsiChar(TC_POTAPARKSLOADED))
          else
-            QuickDisplay(PAnsiChar('POTA parks file could not be loaded'));
+            QuickDisplay(PAnsiChar(TC_POTAPARKSFILECOULDLOADED));
          end
       else
-         QuickDisplay(PAnsiChar('POTA parks download failed'));
+         QuickDisplay(PAnsiChar(TC_POTAPARKSDOWNLOADFAILED));
       end;
 
     WM_TRMASTER_DOWNLOAD_DONE:
@@ -683,11 +684,11 @@ begin
       // A proper CD.ReloadTRMaster belongs with the SQLite log work, not here.
       if wParam = 1 then
          begin
-         QuickDisplay(PAnsiChar('TRMASTER.DTA downloaded -- restart TR4W to use it'));
+         QuickDisplay(PAnsiChar(TC_TRMASTERDTADOWNLOADEDRESTARTTR4WUS));
          end
       else
          begin
-         QuickDisplay(PAnsiChar('TRMASTER.DTA download failed'));
+         QuickDisplay(PAnsiChar(TC_TRMASTERDTADOWNLOADFAILED));
          end;
       end;
 
@@ -725,15 +726,15 @@ begin
       begin
       if wParam = 1 then
          begin
-         QuickDisplay(PAnsiChar('CTY.DAT downloaded. Reloading...'));
+         QuickDisplay(PAnsiChar(TC_CTYDATDOWNLOADEDRELOADING));
          // Reload on main thread — CTY tables have no locking, so background
          // reload would race with callsign lookups. Message handler is a safe
          // quiescent point.
          ctyLoadInCountryFile(TR4W_CTY_FILENAME, False, True);
-         QuickDisplay(PAnsiChar('CTY.DAT reloaded successfully.'));
+         QuickDisplay(PAnsiChar(TC_CTYDATRELOADEDSUCCESSFULLY));
          end
       else
-         QuickDisplay(PAnsiChar('CTY.DAT download failed.'));
+         QuickDisplay(PAnsiChar(TC_CTYDATDOWNLOADFAILED));
       end;
 
     WM_CTLCOLORLISTBOX, WM_CTLCOLOREDIT, WM_CTLCOLORSTATIC:

@@ -50,7 +50,8 @@ interface
 uses
    Windows, SysUtils, Classes, StrUtils, Math, DateUtils,
    uFactoryRadioBase, uRadioBand, uRadioRegistry, uWebSocketClient, Log4D, VC,
-   uCWFraming;
+   uCWFraming,
+  uTR4WStrings;
 
 type
    TTCIRadio = class(TFactoryRadioBase)
@@ -770,7 +771,7 @@ begin
       begin
       logger.Warn('[TCI] cannot leave split: transmit receiver is trx %d, a slice created on the radio. ' +
                   'split_enable addresses only VFO A/B split within trx %d.', [FTxTrx, opTrx]);
-      QuickDisplayError('Cannot disable split -- the transmit slice was created on the radio. Turn it off in the SDR.');
+      QuickDisplayError(TC_CANNOTDISABLESPLITTRANSMITSLICECRE);
       Exit;   // do NOT send a command that would silently do nothing
       end;
 
