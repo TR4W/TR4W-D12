@@ -667,6 +667,14 @@ var
     the main window is created. }
   tContinentArray                       : array[ContinentType] of string;
 
+  { The three-letter weekday tags, indexed by SYSTEMTIME.wDayOfWeek (0 = Sunday).
+
+    Lived in MainUnit as a const array of PAnsiChar until 2026-08-27, which put
+    it in the same trap as the tables above and one worse: MainUnit is not where
+    the other translated tables live, so nothing connected it to them. Filled
+    by InitializeStringTables with the rest. }
+  DayTagArray                           : array[0..6] of string;
+
 type
 
   CabrilloExtantionType = (ceCBR, ceLOG);
@@ -4321,6 +4329,14 @@ begin
    tContinentArray[Asia]             := TC_C9_ASIA;
    tContinentArray[Oceania]          := TC_C9_OCEANIA;
    tContinentArray[Antartica]        := TC_C9_ANTARTICA;
+
+   DayTagArray[0] := TC_SUN;
+   DayTagArray[1] := TC_MON;
+   DayTagArray[2] := TC_TUE;
+   DayTagArray[3] := TC_WED;
+   DayTagArray[4] := TC_THU;
+   DayTagArray[5] := TC_FRI;
+   DayTagArray[6] := TC_SAT;
 
    TWindows[mweFootSwitch].mweText := TC_FOOTSW;
    TWindows[mwePaddle].mweText     := TC_PADDLE;

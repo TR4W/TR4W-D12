@@ -3447,63 +3447,48 @@ begin
 end;
 
 procedure DisplayLocalTime(Country: Word);
-label
-  1;
+   { Local time for the country under the cursor: HH:MM plus a weekday tag.
+
+     Was a cdecl wsprintf call through TF.Format into wsprintfBuffer -- a 4096
+     byte AnsiChar buffer global to TF and shared by every routine that formats
+     anything -- with the day tag read from a PAnsiChar table over in MainUnit.
+     It is a plain string now, the tag lives in VC.DayTagArray beside the other
+     translated tables, and this routine no longer touches the shared buffer.
+
+     The label and goto went with it: the unknown-country case just leaves the
+     string empty and falls through to the same assignment. }
 var
-//  i                                     : integer;
-  UTC, LOCAL                            : SYSTEMTIME;
-  //Offset                                : LONGINT;
-//  p                                     : PChar;
- // SummerTimeIncrementation              : integer;
- // r                                     : integer;
-  TZ                                    : TIME_ZONE_INFORMATION;
+   UTC, LOCAL                            : SYSTEMTIME;
+   TZ                                    : TIME_ZONE_INFORMATION;
+   s                                     : string;
 begin
+   if tLocalTimePrevState = Country then
+      begin
+      Exit;
+      end;
+   tLocalTimePrevState := Country;
 
+   s := '';
+   if Country <> UNKNOWN_COUNTRY then
+      begin
+      GetSystemTime(UTC);
+      Windows.ZeroMemory(@TZ, SizeOf(TZ));
+      TZ.Bias := ctyGetCountryUTCOffset(Country);
+      Windows.ZeroMemory(@LOCAL, SizeOf(LOCAL));
 
-  if tLocalTimePrevState = Country then Exit;
-  tLocalTimePrevState := Country;
+      { On failure LOCAL stays zeroed and the display reads 00:00 with the
+        Sunday tag. That is what it did before; kept deliberately rather than
+        quietly showing the previous country's time. }
+      SystemTimeToTzSpecificLocalTime(@TZ, UTC, LOCAL);
 
-  if Country = UNKNOWN_COUNTRY then
-     begin
-     wsprintfBuffer[0] := #0;
-     goto 1;
-     end;
-  GetSystemTime(UTC);
-  Windows.ZeroMemory(@tz, SizeOf(tz));
-  TZ.Bias := ctyGetCountryUTCOffset(Country);
-  Windows.ZeroMemory(@LOCAL, SizeOf(LOCAL));
-  if not SystemTimeToTzSpecificLocalTime(@tz, UTC, LOCAL) then
-     begin
-     //    ShowSysErrorMessage('TZ');
-     end;
+      { SysUtils.Format QUALIFIED: TF exports Format too, as a set of cdecl
+        wsprintf overloads taking PAnsiChar, and which one a bare call binds to
+        depends on use-order. }
+      s := SysUtils.Format('%.2d:%.2d %s',
+                           [LOCAL.wHour, LOCAL.wMinute, DayTagArray[LOCAL.wDayOfWeek]]);
+      end;
 
-//  SummerTimeIncrementation := 0;
-//  if (UTC.wMonth > 3) and (UTC.wMonth < 11) then SummerTimeIncrementation := 1000;
-//  r := round(ctyGetCountryUTCOffset(Country));
-//  i := round(ctyGetCountryUTCOffset(Country) * -1000) + SummerTimeIncrementation;
-//  IncSystemTime(UTC, 1 {const} * 6 {minuts} * 6 {hours/10} * i); //1 sec = 1000
-{
-  asm
-  movzx eax,word ptr LOCAL.wDayOfWeek
-  mov   eax,[eax*4+PCharDayTags]
-  push  eax
-
-  xor  eax ,eax
-
-  mov ax,word ptr LOCAL.wMinute
-  push eax
-
-  mov ax,word ptr LOCAL.wHour
-  push eax
-  end;
-  wsprintf(wsprintfBuffer, '%02u:%02u %s');
-
-  asm add esp,20
-  end;
-}
-  TF.Format(wsprintfBuffer, '%02u:%02u %s', integer(LOCAL.wHour), integer(LOCAL.wMinute), PCharDayTags[LOCAL.wDayOfWeek]);
-  1:
-  SetMainWindowText(mweLocalTime, wsprintfBuffer);
+   SetMainWindowText(mweLocalTime, s);
 end;
 
 

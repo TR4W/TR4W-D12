@@ -514,8 +514,6 @@ type
 var
   debugstr: string;
 const
-  PCharDayTags: array[0..6] of PAnsiChar = (TC_SUN, TC_MON, TC_TUE, TC_WED, TC_THU,
-    TC_FRI, TC_SAT);
   CWByCATBufferTerminator = Chr(242);
   tAboutText =
     TR4W_CURRENTVERSION +
@@ -7599,7 +7597,11 @@ end;
 function CreateEditableLog(Parent: HWND; X, Y, Width, Height: integer;
   DefaultSize: boolean): HWND;
 var
-  elvc: tagLVCOLUMNA;
+  { tagLVCOLUMNW: the list view is created with CreateWindowExW and
+    ColumnsArray[].Text is a UnicodeString (tr4w.inc sets MODESWITCH
+    UnicodeStrings for all 426 units), so the W path carries the header
+    through with no conversion and no temporary to keep alive. }
+  elvc: tagLVCOLUMNW;
   Column: LogColumnsType;
   Factor: integer;
   Style: Cardinal;
@@ -7638,9 +7640,21 @@ begin
     if ColumnsArray[Column].Enable then
        begin
        elvc.fmt := ColumnsArray[Column].Align;
-       elvc.pszText := PAnsiChar(ColumnsArray[Column].Text);   // LVCOLUMN is a real Win32 boundary; retires with the log listview
+       // PWideChar, NOT PAnsiChar. Text is a UnicodeString; casting it to
+       // PAnsiChar reinterprets UTF-16 bytes as ANSI, so 'Band' (42 00 61 00
+       // ...) reads as 'B' followed by a terminator. That is what every
+       // header did on 2026-08-27 when this field stopped being a PAnsiChar.
+       elvc.pszText := PWideChar(ColumnsArray[Column].Text);
        elvc.cx := ColumnsArray[Column].Width * Factor;
-       uCommctrl.ListView_InsertColumnA(Result, ColumnsArray[Column].pos, elvc);
+       uCommctrl.ListView_InsertColumnW(Result, ColumnsArray[Column].pos, elvc);
+
+       // The header text AS INSERTED, with its length. A header that renders
+       // as one letter is either a one-letter string or a terminator landing
+       // in the wrong place, and those two have completely different causes;
+       // reading the string here separates them without a debugger.
+       logger.Debug('EditableLog column: idx=%d pos=%d cx=%d len=%d text="%s"',
+          [Ord(Column), ColumnsArray[Column].pos, elvc.cx,
+           Length(ColumnsArray[Column].Text), ColumnsArray[Column].Text]);
        end;
 
   Windows.SendMessage(Result, LVM_SETSELECTEDCOLUMN,

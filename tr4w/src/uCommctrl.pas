@@ -4966,7 +4966,11 @@ end;
 
 function ListView_InsertColumnW(HWND: HWND; iCol: integer; const pcol: TLVColumnW): integer;
 begin
-  Result := SendMessage(HWND, LVM_INSERTCOLUMN, iCol, LONGINT(@pcol));
+  // LVM_INSERTCOLUMNW, not the LVM_INSERTCOLUMN alias: that alias IS
+  // LVM_INSERTCOLUMNA, so this function used to hand a UTF-16 struct to the
+  // ANSI message and the control read pszText a byte at a time -- a header of
+  // 'Band' arriving as 'B'. Nothing called it, so nothing found it.
+  Result := SendMessage(HWND, LVM_INSERTCOLUMNW, iCol, LONGINT(@pcol));
 end;
 
 function ListView_InsertColumn(HWND: HWND; iCol: integer; const pcol: TLVColumn): integer;
