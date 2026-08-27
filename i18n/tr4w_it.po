@@ -3048,6 +3048,7 @@ msgctxt "TC_SHOW_ALL_SERIAL_PORTS"
 msgid "Show all serial ports"
 msgstr "Mostra tutte le porte seriali"
 
+#. Section: UEDITMESSAGE
 #: tfrmabout.btnok.caption
 #: tfrmaltd.btnok.caption
 #: tfrmautocq.btnok.caption
@@ -3059,8 +3060,10 @@ msgstr "Mostra tutte le porte seriali"
 #: tfrmsendspot.btnok.caption
 #: tfrmudpdestinationedit.btnok.caption
 #: tfrmwinmanager.btnok.caption
+#: utr4wstrings:ok_word
+#: tr4w/src/lang/tr4w_consts_eng.pas:530
 #, fuzzy
-msgctxt "tfrmabout.btnok.caption"
+msgctxt "OK_WORD"
 msgid "OK"
 msgstr ""
 
@@ -3074,6 +3077,7 @@ msgstr ""
 msgid "http://www.tr4w.net"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmaltd.btncancel.caption
 #: tfrmautocq.btncancel.caption
 #: tfrmbandplan.btncancel.caption
@@ -3088,13 +3092,19 @@ msgstr ""
 #: tfrmwinmanager.btncancel.caption
 #: tprefsform.btncancel.caption
 #: tradioeditform.btncancel.caption
+#: utr4wstrings:cancel_word
+#: tr4w/src/lang/tr4w_consts_eng.pas:528
 #, fuzzy
-msgctxt "tfrmaltd.btncancel.caption"
+msgctxt "CANCEL_WORD"
 msgid "Cancel"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmaltd.caption
+#: utr4wstrings:rc_dupecheckoar
+#: tr4w/src/lang/tr4w_consts_eng.pas:534
 #, fuzzy
+msgctxt "RC_DUPECHECKOAR"
 msgid "Dupe Check On Inactive Radio"
 msgstr ""
 
@@ -3103,18 +3113,32 @@ msgstr ""
 msgid "Enter call to be checked on:"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmautocq.caption
+#: utr4wstrings:rc_autocq2
+#: tr4w/src/lang/tr4w_consts_eng.pas:544
+#: utr4wstrings:rc_autocq
+#: tr4w/src/lang/tr4w_consts_eng.pas:650
 #, fuzzy
+msgctxt "RC_AUTOCQ2"
 msgid "Auto-CQ"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmautocq.lbldelay.caption
+#: utr4wstrings:rc_numberosolt
+#: tr4w/src/lang/tr4w_consts_eng.pas:546
 #, fuzzy
+msgctxt "RC_NUMBEROSOLT"
 msgid "Number of milliseconds of listening time:"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmautocq.lblmemorykey.caption
+#: utr4wstrings:rc_pressmkywtr
+#: tr4w/src/lang/tr4w_consts_eng.pas:545
 #, fuzzy
+msgctxt "RC_PRESSMKYWTR"
 msgid "Press the memory key you want to repeat:"
 msgstr ""
 
@@ -3135,8 +3159,12 @@ msgstr ""
 msgid "BAND MAP ALL MODES"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmbandmap.mideletespot.caption
+#: utr4wstrings:rc_deleteselspot
+#: tr4w/src/lang/tr4w_consts_eng.pas:577
 #, fuzzy
+msgctxt "RC_DELETESELSPOT"
 msgid "Delete selected spot"
 msgstr ""
 
@@ -3160,8 +3188,12 @@ msgstr ""
 msgid "Send spot to inactive radio"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmbandmap.miremoveall.caption
+#: utr4wstrings:rc_removeallsp
+#: tr4w/src/lang/tr4w_consts_eng.pas:578
 #, fuzzy
+msgctxt "RC_REMOVEALLSP"
 msgid "Remove all spots"
 msgstr ""
 
@@ -3170,8 +3202,12 @@ msgstr ""
 msgid "BAND MAP SO2R DISPLAY"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmbandplan.caption
+#: utr4wstrings:rc_bandplan
+#: tr4w/src/lang/tr4w_consts_eng.pas:525
 #, fuzzy
+msgctxt "RC_BANDPLAN"
 msgid "Band plan"
 msgstr ""
 
@@ -3190,24 +3226,39 @@ msgstr ""
 msgid "Dupe sheet"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmeditmessage.btneditwav.caption
+#: utr4wstrings:rc_edit_word
+#: tr4w/src/lang/tr4w_consts_eng.pas:595
 #, fuzzy
+msgctxt "RC_EDIT_WORD"
 msgid "&Edit"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmeditmessage.caption
+#: utr4wstrings:rc_progrmess
+#: tr4w/src/lang/tr4w_consts_eng.pas:772
 #, fuzzy
+msgctxt "RC_PROGRMESS"
 msgid "Program message"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmeditmessage.lblcaption.caption
+#: utr4wstrings:rc_caption
+#: tr4w/src/lang/tr4w_consts_eng.pas:774
 #, fuzzy
+msgctxt "RC_CAPTION"
 msgid "Caption"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmeditmessage.lblmessage.caption
+#: utr4wstrings:rc_message
+#: tr4w/src/lang/tr4w_consts_eng.pas:773
 #, fuzzy
-msgctxt "tfrmeditmessage.lblmessage.caption"
+msgctxt "RC_MESSAGE"
 msgid "Message"
 msgstr ""
 
@@ -3286,15 +3337,22 @@ msgstr ""
 msgid "Age"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmeditqso.lblband.caption
+#: utr4wstrings:rc_band
+#: tr4w/src/lang/tr4w_consts_eng.pas:588
 #, fuzzy
+msgctxt "RC_BAND"
 msgid "Band"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmeditqso.lblcallsign.caption
 #: tfrmsendspot.lblcallsign.caption
+#: utr4wstrings:rc_callsign
+#: tr4w/src/lang/tr4w_consts_eng.pas:586
 #, fuzzy
-msgctxt "tfrmeditqso.lblcallsign.caption"
+msgctxt "RC_CALLSIGN"
 msgid "Callsign"
 msgstr ""
 
@@ -3318,8 +3376,12 @@ msgstr ""
 msgid "Computer ID"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmeditqso.lbldate.caption
+#: utr4wstrings:rc_date
+#: tr4w/src/lang/tr4w_consts_eng.pas:759
 #, fuzzy
+msgctxt "RC_DATE"
 msgid "Date"
 msgstr ""
 
@@ -3338,16 +3400,23 @@ msgstr ""
 msgid "Frequency, Hz"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmeditqso.lblmode.caption
+#: utr4wstrings:rc_mode
+#: tr4w/src/lang/tr4w_consts_eng.pas:587
 #, fuzzy
+msgctxt "RC_MODE"
 msgid "Mode"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmeditqso.lblname.caption
 #: tfrmkeyeredit.lblname.caption
 #: tradioeditform.lblname.caption
+#: utr4wstrings:rc_name
+#: tr4w/src/lang/tr4w_consts_eng.pas:769
 #, fuzzy
-msgctxt "tfrmeditqso.lblname.caption"
+msgctxt "RC_NAME"
 msgid "Name"
 msgstr ""
 
@@ -3361,8 +3430,12 @@ msgstr ""
 msgid "Number Sent"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmeditqso.lbloperator.caption
+#: utr4wstrings:rc_operator
+#: tr4w/src/lang/tr4w_consts_eng.pas:585
 #, fuzzy
+msgctxt "RC_OPERATOR"
 msgid "Operator"
 msgstr ""
 
@@ -3426,8 +3499,12 @@ msgstr ""
 msgid "Zone"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmfunctionkeys.caption
+#: utr4wstrings:rc_fkeys
+#: tr4w/src/lang/tr4w_consts_eng.pas:622
 #, fuzzy
+msgctxt "RC_FKEYS"
 msgid "Function keys"
 msgstr ""
 
@@ -3561,8 +3638,12 @@ msgstr ""
 msgid "Enter value:"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmintercom.caption
+#: utr4wstrings:rc_intercom
+#: tr4w/src/lang/tr4w_consts_eng.pas:628
 #, fuzzy
+msgctxt "RC_INTERCOM"
 msgid "Intercom"
 msgstr ""
 
@@ -3672,8 +3753,12 @@ msgstr ""
 msgid "Exit"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmlogcompare.btnsynchronize.caption
+#: utr4wstrings:rc_synchronize
+#: tr4w/src/lang/tr4w_consts_eng.pas:794
 #, fuzzy
+msgctxt "RC_SYNCHRONIZE"
 msgid "Synchronize"
 msgstr ""
 
@@ -3704,8 +3789,12 @@ msgstr ""
 msgid "..."
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmmp3recorder.caption
+#: utr4wstrings:rc_mp3rec
+#: tr4w/src/lang/tr4w_consts_eng.pas:631
 #, fuzzy
+msgctxt "RC_MP3REC"
 msgid "MP3 Recorder"
 msgstr ""
 
@@ -3714,10 +3803,13 @@ msgstr ""
 msgid "Record"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmnetwork.caption
 #: tradioeditform.tabnetwork.caption
+#: utr4wstrings:rc_network
+#: tr4w/src/lang/tr4w_consts_eng.pas:627
 #, fuzzy
-msgctxt "tfrmnetwork.caption"
+msgctxt "RC_NETWORK"
 msgid "Network"
 msgstr ""
 
@@ -3766,13 +3858,21 @@ msgstr ""
 msgid "Span --"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmpostscores.btnpostnow.caption
+#: utr4wstrings:rc_postnow
+#: tr4w/src/lang/tr4w_consts_eng.pas:573
 #, fuzzy
+msgctxt "RC_POSTNOW"
 msgid "Post now"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmpostscores.btnshowscores.caption
+#: utr4wstrings:rc_gotogs
+#: tr4w/src/lang/tr4w_consts_eng.pas:574
 #, fuzzy
+msgctxt "RC_GOTOGS"
 msgid "Show scores"
 msgstr ""
 
@@ -3781,23 +3881,39 @@ msgstr ""
 msgid "Post scores"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmprogrammessage.btncq.caption
+#: utr4wstrings:rc_press_c
+#: tr4w/src/lang/tr4w_consts_eng.pas:538
 #, fuzzy
+msgctxt "RC_PRESS_C"
 msgid "Press &C to program a CQ function key."
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmprogrammessage.btnexchange.caption
+#: utr4wstrings:rc_press_e
+#: tr4w/src/lang/tr4w_consts_eng.pas:539
 #, fuzzy
+msgctxt "RC_PRESS_E"
 msgid "Press &E to program an exchange/search and pounce function key."
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmprogrammessage.btnother.caption
+#: utr4wstrings:rc_press_o
+#: tr4w/src/lang/tr4w_consts_eng.pas:540
 #, fuzzy
+msgctxt "RC_PRESS_O"
 msgid "Press &O to program the other non function key messages."
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmprogrammessage.caption
+#: utr4wstrings:rc_memprogfunc
+#: tr4w/src/lang/tr4w_consts_eng.pas:536
 #, fuzzy
+msgctxt "RC_MEMPROGFUNC"
 msgid "Memory program function"
 msgstr ""
 
@@ -3843,8 +3959,12 @@ msgstr ""
 msgid "Remaining mults"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmsendkeyboard.btnclose.caption
+#: utr4wstrings:close_word
+#: tr4w/src/lang/tr4w_consts_eng.pas:527
 #, fuzzy
+msgctxt "CLOSE_WORD"
 msgid "Close"
 msgstr ""
 
@@ -3853,8 +3973,12 @@ msgstr ""
 msgid "Sending CW"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmsendspot.caption
+#: utr4wstrings:rc_sendspot
+#: tr4w/src/lang/tr4w_consts_eng.pas:691
 #, fuzzy
+msgctxt "RC_SENDSPOT"
 msgid "Send spot"
 msgstr ""
 
@@ -3863,18 +3987,30 @@ msgstr ""
 msgid "Contest name in comment"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmsendspot.lblcomment.caption
+#: utr4wstrings:rc_comment
+#: tr4w/src/lang/tr4w_consts_eng.pas:713
 #, fuzzy
+msgctxt "RC_COMMENT"
 msgid "Comment"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmsendspot.lblfrequency.caption
+#: utr4wstrings:rc_frequency
+#: tr4w/src/lang/tr4w_consts_eng.pas:802
 #, fuzzy
+msgctxt "RC_FREQUENCY"
 msgid "Frequency"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmstations.caption
+#: utr4wstrings:rc_stations
+#: tr4w/src/lang/tr4w_consts_eng.pas:630
 #, fuzzy
+msgctxt "RC_STATIONS"
 msgid "Stations"
 msgstr ""
 
@@ -3883,8 +4019,12 @@ msgstr ""
 msgid "Clear"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmtelnet.btncommands.caption
+#: utr4wstrings:rc_commands
+#: tr4w/src/lang/tr4w_consts_eng.pas:681
 #, fuzzy
+msgctxt "RC_COMMANDS"
 msgid "Commands"
 msgstr ""
 
@@ -5291,8 +5431,12 @@ msgstr ""
 msgid "These shape the CW that TR4W generates itself by toggling a serial line.  They do nothing for a WinKeyer, a YCCC box, or CW sent by CAT - those devices keep their own timing."
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tprefsform.lblstationheading.caption
+#: utr4wstrings:rc_stationinfo
+#: tr4w/src/lang/tr4w_consts_eng.pas:533
 #, fuzzy
+msgctxt "RC_STATIONINFO"
 msgid "Station information"
 msgstr ""
 
@@ -5818,5 +5962,1049 @@ msgstr ""
 #: uudpdestinationeditform.tc_udpedit_testsent
 #, fuzzy
 msgid "Test packet sent to %s:%d.  UDP cannot confirm it arrived -- check the receiving program."
+msgstr ""
+
+#. Section: General
+#: utr4wstrings:tc_translation_credit
+#: tr4w/src/lang/tr4w_consts_eng.pas:13
+#, fuzzy
+msgctxt "TC_TRANSLATION_CREDIT"
+msgid "%s translation by %s"
+msgstr ""
+
+#. Section: UTELNET
+#: utr4wstrings:tc_telnet
+#: tr4w/src/lang/tr4w_consts_eng.pas:195
+#, fuzzy
+msgctxt "TC_TELNET"
+msgid "Connect\000Disconnect\000Commands\000Freeze\000Clear\000SH/50\000\000"
+msgstr ""
+
+#. Section: LOGSUBS2
+#: utr4wstrings:tc_bandchangedisabled
+#: tr4w/src/lang/tr4w_consts_eng.pas:365
+#, fuzzy
+msgctxt "TC_BANDCHANGEDISABLED"
+msgid "Band change requires MULTIPLE BANDS = TRUE once the log has QSOs"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. 4.51.8
+#: utr4wstrings:rc_3830
+#: tr4w/src/lang/tr4w_consts_eng.pas:521
+#, fuzzy
+msgctxt "RC_3830"
+msgid "3830 Score posting"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. 4.53.3
+#: utr4wstrings:rc_3830_arrl
+#: tr4w/src/lang/tr4w_consts_eng.pas:522
+#, fuzzy
+msgctxt "RC_3830_ARRL"
+msgid "Submit ARRL Log"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_vieweditlog2
+#: tr4w/src/lang/tr4w_consts_eng.pas:523
+#: utr4wstrings:rc_vieweditlog
+#: tr4w/src/lang/tr4w_consts_eng.pas:666
+#, fuzzy
+msgctxt "RC_VIEWEDITLOG2"
+msgid "View / Edit log"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_ct1bohis2
+#: tr4w/src/lang/tr4w_consts_eng.pas:524
+#: utr4wstrings:rc_ct1bohis
+#: tr4w/src/lang/tr4w_consts_eng.pas:679
+#, fuzzy
+msgctxt "RC_CT1BOHIS2"
+msgid "CT1BOH info screen"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:help_word
+#: tr4w/src/lang/tr4w_consts_eng.pas:529
+#, fuzzy
+msgctxt "HELP_WORD"
+msgid "Help"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:exit_word
+#: tr4w/src/lang/tr4w_consts_eng.pas:531
+#: utr4wstrings:rc_exit
+#: tr4w/src/lang/tr4w_consts_eng.pas:613
+#, fuzzy
+msgctxt "EXIT_WORD"
+msgid "E&xit"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_listofmess
+#: tr4w/src/lang/tr4w_consts_eng.pas:532
+#, fuzzy
+msgctxt "RC_LISTOFMESS"
+msgid "List of messages"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_sendingcw
+#: tr4w/src/lang/tr4w_consts_eng.pas:542
+#, fuzzy
+msgctxt "RC_SENDINGCW"
+msgid "Sending CW from the keyboard. Use ENTER/Escape/F10 to exit."
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_wincontrol2
+#: tr4w/src/lang/tr4w_consts_eng.pas:547
+#: utr4wstrings:rc_wincontrol
+#: tr4w/src/lang/tr4w_consts_eng.pas:552
+#, fuzzy
+msgctxt "RC_WINCONTROL2"
+msgid "Windows control"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_tools
+#: tr4w/src/lang/tr4w_consts_eng.pas:549
+#, fuzzy
+msgctxt "RC_TOOLS"
+msgid "Tools"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_beaconsm
+#: tr4w/src/lang/tr4w_consts_eng.pas:551
+#, fuzzy
+msgctxt "RC_BEACONSM"
+msgid "Beacons monitor"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_settimezone
+#: tr4w/src/lang/tr4w_consts_eng.pas:553
+#, fuzzy
+msgctxt "RC_SETTIMEZONE"
+msgid "Set time zone"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_ping
+#: tr4w/src/lang/tr4w_consts_eng.pas:554
+#, fuzzy
+msgctxt "RC_PING"
+msgid "Ping [SERVER ADDRESS]"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_runserver
+#: tr4w/src/lang/tr4w_consts_eng.pas:555
+#, fuzzy
+msgctxt "RC_RUNSERVER"
+msgid "Run TR4WSERVER"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_dvkvolcontrol
+#: tr4w/src/lang/tr4w_consts_eng.pas:556
+#, fuzzy
+msgctxt "RC_DVKVOLCONTROL"
+msgid "DVK volume control"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_reccontrol
+#: tr4w/src/lang/tr4w_consts_eng.pas:557
+#, fuzzy
+msgctxt "RC_RECCONTROL"
+msgid "Recording control"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_calculator
+#: tr4w/src/lang/tr4w_consts_eng.pas:561
+#, fuzzy
+msgctxt "RC_CALCULATOR"
+msgid "Calculator"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_reset_radio_ports
+#: tr4w/src/lang/tr4w_consts_eng.pas:563
+#, fuzzy
+msgctxt "RC_RESET_RADIO_PORTS"
+msgid "Reset Radio Ports"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_timesyn
+#: tr4w/src/lang/tr4w_consts_eng.pas:571
+#, fuzzy
+msgctxt "RC_TIMESYN"
+msgid "Synchronize time on &all computers"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_mp3_recenable
+#: tr4w/src/lang/tr4w_consts_eng.pas:575
+#, fuzzy
+msgctxt "RC_MP3_RECENABLE"
+msgid "Enable"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_sendinrig
+#: tr4w/src/lang/tr4w_consts_eng.pas:579
+#, fuzzy
+msgctxt "RC_SENDINRIG"
+msgid "QSY Inactive Radio"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_file
+#: tr4w/src/lang/tr4w_consts_eng.pas:580
+#, fuzzy
+msgctxt "RC_FILE"
+msgid "File"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_clearlog
+#: tr4w/src/lang/tr4w_consts_eng.pas:581
+#, fuzzy
+msgctxt "RC_CLEARLOG"
+msgid "Clear log"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_import
+#: tr4w/src/lang/tr4w_consts_eng.pas:582
+#, fuzzy
+msgctxt "RC_IMPORT"
+msgid "Import"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_openlogdir
+#: tr4w/src/lang/tr4w_consts_eng.pas:583
+#, fuzzy
+msgctxt "RC_OPENLOGDIR"
+msgid "Open log directory"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_postscoretogs
+#: tr4w/src/lang/tr4w_consts_eng.pas:596
+#, fuzzy
+msgctxt "RC_POSTSCORETOGS"
+msgid "Post score"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_export
+#: tr4w/src/lang/tr4w_consts_eng.pas:600
+#, fuzzy
+msgctxt "RC_EXPORT"
+msgid "Export"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_iniexlist
+#: tr4w/src/lang/tr4w_consts_eng.pas:601
+#, fuzzy
+msgctxt "RC_INIEXLIST"
+msgid "Initial exchanges list"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_trlogform
+#: tr4w/src/lang/tr4w_consts_eng.pas:602
+#, fuzzy
+msgctxt "RC_TRLOGFORM"
+msgid "TR Log format"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_reports
+#: tr4w/src/lang/tr4w_consts_eng.pas:603
+#, fuzzy
+msgctxt "RC_REPORTS"
+msgid "Reports"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_allcalls
+#: tr4w/src/lang/tr4w_consts_eng.pas:604
+#, fuzzy
+msgctxt "RC_ALLCALLS"
+msgid "All callsigns"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_bandchanges
+#: tr4w/src/lang/tr4w_consts_eng.pas:605
+#, fuzzy
+msgctxt "RC_BANDCHANGES"
+msgid "Band changes"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_contlist
+#: tr4w/src/lang/tr4w_consts_eng.pas:606
+#, fuzzy
+msgctxt "RC_CONTLIST"
+msgid "Continent List"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_fcc
+#: tr4w/src/lang/tr4w_consts_eng.pas:607
+#, fuzzy
+msgctxt "RC_FCC"
+msgid "First callsign worked in each country"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_fcz
+#: tr4w/src/lang/tr4w_consts_eng.pas:608
+#, fuzzy
+msgctxt "RC_FCZ"
+msgid "First callsign worked in each zone"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_qsobycountry
+#: tr4w/src/lang/tr4w_consts_eng.pas:610
+#, fuzzy
+msgctxt "RC_QSOBYCOUNTRY"
+msgid "QSOs by country by band"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_scorebyhour
+#: tr4w/src/lang/tr4w_consts_eng.pas:611
+#, fuzzy
+msgctxt "RC_SCOREBYHOUR"
+msgid "Score by hour"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_summary
+#: tr4w/src/lang/tr4w_consts_eng.pas:612
+#, fuzzy
+msgctxt "RC_SUMMARY"
+msgid "Summary"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_settings
+#: tr4w/src/lang/tr4w_consts_eng.pas:614
+#, fuzzy
+msgctxt "RC_SETTINGS"
+msgid "Settings"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_options
+#: tr4w/src/lang/tr4w_consts_eng.pas:616
+#, fuzzy
+msgctxt "RC_OPTIONS"
+msgid "Configuration commands"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_programmes
+#: tr4w/src/lang/tr4w_consts_eng.pas:617
+#, fuzzy
+msgctxt "RC_PROGRAMMES"
+msgid "Program messages"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_catandcw
+#: tr4w/src/lang/tr4w_consts_eng.pas:618
+#, fuzzy
+msgctxt "RC_CATANDCW"
+msgid "CAT and CW Keying"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_windows
+#: tr4w/src/lang/tr4w_consts_eng.pas:619
+#, fuzzy
+msgctxt "RC_WINDOWS"
+msgid "Windows"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_bandmap
+#: tr4w/src/lang/tr4w_consts_eng.pas:620
+#, fuzzy
+msgctxt "RC_BANDMAP"
+msgid "Bandmap"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_dupesheet
+#: tr4w/src/lang/tr4w_consts_eng.pas:621
+#, fuzzy
+msgctxt "RC_DUPESHEET"
+msgid "Dupesheet"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_trmaster
+#: tr4w/src/lang/tr4w_consts_eng.pas:623
+#, fuzzy
+msgctxt "RC_TRMASTER"
+msgid "SCP"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. 4.72.3
+#: utr4wstrings:rc_remmults
+#: tr4w/src/lang/tr4w_consts_eng.pas:624
+#, fuzzy
+msgctxt "RC_REMMULTS"
+msgid "Mults"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_rm_default
+#: tr4w/src/lang/tr4w_consts_eng.pas:625
+#, fuzzy
+msgctxt "RC_RM_DEFAULT"
+msgid "Default"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_telnet
+#: tr4w/src/lang/tr4w_consts_eng.pas:626
+#, fuzzy
+msgctxt "RC_TELNET"
+msgid "DX Cluster"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_altp
+#: tr4w/src/lang/tr4w_consts_eng.pas:635
+#, fuzzy
+msgctxt "RC_ALTP"
+msgid "Open Fkeys"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_altx
+#: tr4w/src/lang/tr4w_consts_eng.pas:636
+#, fuzzy
+msgctxt "RC_ALTX"
+msgid "Exit Program"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_autocqresume
+#: tr4w/src/lang/tr4w_consts_eng.pas:638
+#, fuzzy
+msgctxt "RC_AUTOCQRESUME"
+msgid "Auto-CQ resume"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_dupecheck
+#: tr4w/src/lang/tr4w_consts_eng.pas:639
+#, fuzzy
+msgctxt "RC_DUPECHECK"
+msgid "Dupe check"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_edit
+#: tr4w/src/lang/tr4w_consts_eng.pas:640
+#, fuzzy
+msgctxt "RC_EDIT"
+msgid "SO1R-Edit or SO2R-SWAP"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_backuplog
+#: tr4w/src/lang/tr4w_consts_eng.pas:641
+#, fuzzy
+msgctxt "RC_BACKUPLOG"
+msgid "Backup Log"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_swapmultview
+#: tr4w/src/lang/tr4w_consts_eng.pas:643
+#, fuzzy
+msgctxt "RC_SWAPMULTVIEW"
+msgid "Swap mult view"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_incnumber
+#: tr4w/src/lang/tr4w_consts_eng.pas:644
+#, fuzzy
+msgctxt "RC_INCNUMBER"
+msgid "Increment number"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_tooglemb
+#: tr4w/src/lang/tr4w_consts_eng.pas:645
+#, fuzzy
+msgctxt "RC_TOOGLEMB"
+msgid "Toogle multiplier bell"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_killcw
+#: tr4w/src/lang/tr4w_consts_eng.pas:646
+#, fuzzy
+msgctxt "RC_KILLCW"
+msgid "Toggle CW"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_searchlog
+#: tr4w/src/lang/tr4w_consts_eng.pas:647
+#, fuzzy
+msgctxt "RC_SEARCHLOG"
+msgid "Search log"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_transfreq
+#: tr4w/src/lang/tr4w_consts_eng.pas:648
+#, fuzzy
+msgctxt "RC_TRANSFREQ"
+msgid "Transmit frequency"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_tooglerigs
+#: tr4w/src/lang/tr4w_consts_eng.pas:651
+#, fuzzy
+msgctxt "RC_TOOGLERIGS"
+msgid "Toggle rigs"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_cwspeed
+#: tr4w/src/lang/tr4w_consts_eng.pas:652
+#, fuzzy
+msgctxt "RC_CWSPEED"
+msgid "CW speed"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_setsysdt
+#: tr4w/src/lang/tr4w_consts_eng.pas:653
+#, fuzzy
+msgctxt "RC_SETSYSDT"
+msgid "Set system date/time"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_initialize
+#: tr4w/src/lang/tr4w_consts_eng.pas:654
+#, fuzzy
+msgctxt "RC_INITIALIZE"
+msgid "Initialize QSO"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_deletelastqso
+#: tr4w/src/lang/tr4w_consts_eng.pas:656
+#, fuzzy
+msgctxt "RC_DELETELASTQSO"
+msgid "Delete the last QSO"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_initialex
+#: tr4w/src/lang/tr4w_consts_eng.pas:657
+#, fuzzy
+msgctxt "RC_INITIALEX"
+msgid "Initial exchange"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_tooglest
+#: tr4w/src/lang/tr4w_consts_eng.pas:658
+#, fuzzy
+msgctxt "RC_TOOGLEST"
+msgid "Toggle sidetone"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_toogleas
+#: tr4w/src/lang/tr4w_consts_eng.pas:659
+#, fuzzy
+msgctxt "RC_TOOGLEAS"
+msgid "Toggle autosend"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_bandup
+#: tr4w/src/lang/tr4w_consts_eng.pas:660
+#, fuzzy
+msgctxt "RC_BANDUP"
+msgid "Band Up"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_banddown
+#: tr4w/src/lang/tr4w_consts_eng.pas:661
+#, fuzzy
+msgctxt "RC_BANDDOWN"
+msgid "Band Down"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_ssbcwmode
+#: tr4w/src/lang/tr4w_consts_eng.pas:662
+#, fuzzy
+msgctxt "RC_SSBCWMODE"
+msgid "SSB/CW mode"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_sendkeyboard
+#: tr4w/src/lang/tr4w_consts_eng.pas:663
+#, fuzzy
+msgctxt "RC_SENDKEYBOARD"
+msgid "Send Keyboard Input"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_cleardupes
+#: tr4w/src/lang/tr4w_consts_eng.pas:665
+#, fuzzy
+msgctxt "RC_CLEARDUPES"
+msgid "Clear dupesheet"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_note
+#: tr4w/src/lang/tr4w_consts_eng.pas:667
+#, fuzzy
+msgctxt "RC_NOTE"
+msgid "Note"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_missmultsrep
+#: tr4w/src/lang/tr4w_consts_eng.pas:668
+#, fuzzy
+msgctxt "RC_MISSMULTSREP"
+msgid "Missing mults report"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_qtcfunctions
+#: tr4w/src/lang/tr4w_consts_eng.pas:670
+#, fuzzy
+msgctxt "RC_QTCFUNCTIONS"
+msgid "QTC functions"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_recalllastent
+#: tr4w/src/lang/tr4w_consts_eng.pas:671
+#, fuzzy
+msgctxt "RC_RECALLLASTENT"
+msgid "Recall last entry"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_viewpakspots
+#: tr4w/src/lang/tr4w_consts_eng.pas:672
+#, fuzzy
+msgctxt "RC_VIEWPAKSPOTS"
+msgid "View packet spots"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_execonfigfile
+#: tr4w/src/lang/tr4w_consts_eng.pas:673
+#, fuzzy
+msgctxt "RC_EXECONFIGFILE"
+msgid "Execute configuration file"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_refreshbm
+#: tr4w/src/lang/tr4w_consts_eng.pas:674
+#, fuzzy
+msgctxt "RC_REFRESHBM"
+msgid "Refresh bandmap"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_cursorinbm
+#: tr4w/src/lang/tr4w_consts_eng.pas:676
+#, fuzzy
+msgctxt "RC_CURSORINBM"
+msgid "Cursor in bandmap window"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_cursortelnet
+#: tr4w/src/lang/tr4w_consts_eng.pas:677
+#, fuzzy
+msgctxt "RC_CURSORTELNET"
+msgid "Cursor in DX Cluster window"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_qsowithnocw
+#: tr4w/src/lang/tr4w_consts_eng.pas:678
+#, fuzzy
+msgctxt "RC_QSOWITHNOCW"
+msgid "QSO with no CW"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_addbandmapph
+#: tr4w/src/lang/tr4w_consts_eng.pas:680
+#, fuzzy
+msgctxt "RC_ADDBANDMAPPH"
+msgid "Add bandmap place holder"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_focusinmw
+#: tr4w/src/lang/tr4w_consts_eng.pas:682
+#, fuzzy
+msgctxt "RC_FOCUSINMW"
+msgid "Focus in main window"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_toggleinsert
+#: tr4w/src/lang/tr4w_consts_eng.pas:683
+#, fuzzy
+msgctxt "RC_TOGGLEINSERT"
+msgid "Toggle insert mode"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_escape
+#: tr4w/src/lang/tr4w_consts_eng.pas:684
+#, fuzzy
+msgctxt "RC_ESCAPE"
+msgid "Escape"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_cwspeedup
+#: tr4w/src/lang/tr4w_consts_eng.pas:685
+#, fuzzy
+msgctxt "RC_CWSPEEDUP"
+msgid "CW Speed Up"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_cwspeeddown
+#: tr4w/src/lang/tr4w_consts_eng.pas:686
+#, fuzzy
+msgctxt "RC_CWSPEEDDOWN"
+msgid "CW Speed Down"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_cwspupir
+#: tr4w/src/lang/tr4w_consts_eng.pas:687
+#, fuzzy
+msgctxt "RC_CWSPUPIR"
+msgid "CW Speed Up for the inactive radio"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_cwspdnir
+#: tr4w/src/lang/tr4w_consts_eng.pas:688
+#, fuzzy
+msgctxt "RC_CWSPDNIR"
+msgid "CW Speed Down for the inactive radio"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_cqmode
+#: tr4w/src/lang/tr4w_consts_eng.pas:689
+#, fuzzy
+msgctxt "RC_CQMODE"
+msgid "CQ Mode"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_searchpounce
+#: tr4w/src/lang/tr4w_consts_eng.pas:690
+#, fuzzy
+msgctxt "RC_SEARCHPOUNCE"
+msgid "Search && pounce mode"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_rescore
+#: tr4w/src/lang/tr4w_consts_eng.pas:692
+#, fuzzy
+msgctxt "RC_RESCORE"
+msgid "Rescore"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_net
+#: tr4w/src/lang/tr4w_consts_eng.pas:694
+#, fuzzy
+msgctxt "RC_NET"
+msgid "Net"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_sendmessage
+#: tr4w/src/lang/tr4w_consts_eng.pas:696
+#, fuzzy
+msgctxt "RC_SENDMESSAGE"
+msgid "Send message"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_synlog
+#: tr4w/src/lang/tr4w_consts_eng.pas:697
+#, fuzzy
+msgctxt "RC_SYNLOG"
+msgid "Compare and synchronize logs"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_clearalllogs
+#: tr4w/src/lang/tr4w_consts_eng.pas:698
+#, fuzzy
+msgctxt "RC_CLEARALLLOGS"
+msgid "Clear all logs in network"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_download
+#: tr4w/src/lang/tr4w_consts_eng.pas:699
+#, fuzzy
+msgctxt "RC_DOWNLOAD"
+msgid "Download the latest CTY.DAT"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_contents
+#: tr4w/src/lang/tr4w_consts_eng.pas:700
+#, fuzzy
+msgctxt "RC_CONTENTS"
+msgid "Contents"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_about
+#: tr4w/src/lang/tr4w_consts_eng.pas:701
+#, fuzzy
+msgctxt "RC_ABOUT"
+msgid "About"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_deleted
+#: tr4w/src/lang/tr4w_consts_eng.pas:705
+#, fuzzy
+msgctxt "RC_DELETED"
+msgid "Deleted"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_search
+#: tr4w/src/lang/tr4w_consts_eng.pas:708
+#, fuzzy
+msgctxt "RC_SEARCH"
+msgid "&Search"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_contestnameic
+#: tr4w/src/lang/tr4w_consts_eng.pas:712
+#, fuzzy
+msgctxt "RC_CONTESTNAMEIC"
+msgid "C&ontest name in comment"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_recvqtc
+#: tr4w/src/lang/tr4w_consts_eng.pas:735
+#, fuzzy
+msgctxt "RC_RECVQTC"
+msgid "Receiving QTCs"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_diffinlog
+#: tr4w/src/lang/tr4w_consts_eng.pas:749
+#, fuzzy
+msgctxt "RC_DIFFINLOG"
+msgid "Difference in logs"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_iaqslint
+#: tr4w/src/lang/tr4w_consts_eng.pas:775
+#, fuzzy
+msgctxt "RC_IAQSLINT"
+msgid "Auto QSL Interval (Increase)"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_daqslint
+#: tr4w/src/lang/tr4w_consts_eng.pas:776
+#, fuzzy
+msgctxt "RC_DAQSLINT"
+msgid "Auto QSL Interval (Decrease)"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_addinfo
+#: tr4w/src/lang/tr4w_consts_eng.pas:777
+#, fuzzy
+msgctxt "RC_ADDINFO"
+msgid "Additional information"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_ai_qsonumber
+#: tr4w/src/lang/tr4w_consts_eng.pas:778
+#, fuzzy
+msgctxt "RC_AI_QSONUMBER"
+msgid "QSO number"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_ai_cwspeed
+#: tr4w/src/lang/tr4w_consts_eng.pas:779
+#, fuzzy
+msgctxt "RC_AI_CWSPEED"
+msgid "CW Speed"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_clearmsheet
+#: tr4w/src/lang/tr4w_consts_eng.pas:780
+#, fuzzy
+msgctxt "RC_CLEARMSHEET"
+msgid "Clear multsheet"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_wiki
+#: tr4w/src/lang/tr4w_consts_eng.pas:781
+#, fuzzy
+msgctxt "RC_WIKI"
+msgid "On-line documentation (in Russian)"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_net_cldupe
+#: tr4w/src/lang/tr4w_consts_eng.pas:782
+#, fuzzy
+msgctxt "RC_NET_CLDUPE"
+msgid "Clear dupesheet in all logs"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_net_clmult
+#: tr4w/src/lang/tr4w_consts_eng.pas:783
+#, fuzzy
+msgctxt "RC_NET_CLMULT"
+msgid "Clear multsheet in all logs"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_inc_time
+#: tr4w/src/lang/tr4w_consts_eng.pas:784
+#, fuzzy
+msgctxt "RC_INC_TIME"
+msgid "Increment time"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_notes
+#: tr4w/src/lang/tr4w_consts_eng.pas:785
+#, fuzzy
+msgctxt "RC_NOTES"
+msgid "Notes"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_devicemanager
+#: tr4w/src/lang/tr4w_consts_eng.pas:788
+#, fuzzy
+msgctxt "RC_DEVICEMANAGER"
+msgid "Device Manager"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_shdx_callsign
+#: tr4w/src/lang/tr4w_consts_eng.pas:789
+#, fuzzy
+msgctxt "RC_SHDX_CALLSIGN"
+msgid "SH/DX [callsign]"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_login
+#: tr4w/src/lang/tr4w_consts_eng.pas:793
+#, fuzzy
+msgctxt "RC_LOGIN"
+msgid "Log in"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_colors
+#: tr4w/src/lang/tr4w_consts_eng.pas:796
+#, fuzzy
+msgctxt "RC_COLORS"
+msgid "Colors"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_send_bug
+#: tr4w/src/lang/tr4w_consts_eng.pas:800
+#, fuzzy
+msgctxt "RC_SEND_BUG"
+msgid "Send bug report"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_homepage
+#: tr4w/src/lang/tr4w_consts_eng.pas:801
+#, fuzzy
+msgctxt "RC_HOMEPAGE"
+msgid "TR4W Home Page"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: utr4wstrings:rc_splitoff
+#: tr4w/src/lang/tr4w_consts_eng.pas:811
+#, fuzzy
+msgctxt "RC_SPLITOFF"
+msgid "Set Split Mode Tx"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#. 4.60.1
+#: utr4wstrings:rc_wkmode
+#: tr4w/src/lang/tr4w_consts_eng.pas:813
+#, fuzzy
+msgctxt "RC_wkMode"
+msgid "Re-initialize WinKeyer"
 msgstr ""
 

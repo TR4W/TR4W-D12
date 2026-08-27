@@ -22,22 +22,57 @@ a false "done" means the string is invisible and never gets translated.
 """
 
 import argparse
+import io
 import os
+import re
 import sys
 
 import pasconsts as pc
 import pofile
 
 
-def build_catalog(lang_dir):
+def live_resourcestrings(repo):
+   """The names uTR4WStrings actually declares -- the catalogue's true scope.
+
+   THIS FUNCTION IS THE FIX FOR A 170-STRING HOLE. Until 2026-08-27 this tool
+   harvested with parse_lang_file's default prefix, TC_, because that is all the
+   constants were when it was written. RC_ constants became resourcestrings in
+   the binary during the cut-over, so they were live, on screen, and in NO
+   catalogue in ANY language: 170 of 550 for Spanish, of which 169 already had a
+   Spanish translation sitting unused in TR4W_CONSTS_ESP.PAS.
+
+   That is how RC_WINDOWS -- the main menu's `Window` -- had no entry to fill in
+   (NY4I, 2026-08-27), while 'Ventanas' sat in the language table all along.
+
+   Scoping to the GENERATED UNIT rather than to a prefix is what stops it
+   happening again: whatever pas2res emits is what a translator sees, so the two
+   cannot drift. A new prefix needs no change here.
+   """
+   path = os.path.join(repo, "tr4w", "src", "uTR4WStrings.pas")
+   with io.open(path, encoding="utf-8", errors="replace") as fh:
+      text = fh.read()
+   return {m.group(1).lower()
+           for m in re.finditer(r"^\s{3}([A-Za-z_]\w*)\s+=", text, re.M)}
+
+
+def build_catalog(lang_dir, live=None):
    files = pc.find_lang_files(lang_dir)
    if pc.SOURCE_LANG not in files:
       raise SystemExit("no %s lang file under %s" % (pc.SOURCE_LANG, lang_dir))
 
-   eng_decls, _, _ = pc.parse_lang_file(files[pc.SOURCE_LANG])
+   # prefix="" takes every constant in the table; `live` then narrows it to the
+   # ones the program actually ships. Passing a prefix here is what created the
+   # hole -- see live_resourcestrings.
+   def take(path):
+      decls, _lines, form = pc.parse_lang_file(path, prefix="")
+      if live is not None:
+         decls = [d for d in decls if d.name and d.name.lower() in live]
+      return decls, form
+
+   eng_decls, _ = take(files[pc.SOURCE_LANG])
    others, lossy = {}, set()
    for lang, path in sorted(files.items()):
-      decls, _, form = pc.parse_lang_file(path)
+      decls, form = take(path)
       if form.lossy:
          lossy.add(lang)
       by_name = {}
@@ -179,7 +214,8 @@ def main(argv=None):
 
    paths = pc.repo_paths()
    pc.load_language_registry(paths["i18n"])
-   eng_decls, others, files, lossy = build_catalog(paths["lang"])
+   live = live_resourcestrings(paths["root"])
+   eng_decls, others, files, lossy = build_catalog(paths["lang"], live)
 
    if args.check:
       return check(eng_decls, others, files)

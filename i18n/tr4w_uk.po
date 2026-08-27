@@ -2727,6 +2727,7 @@ msgctxt "TC_SHOW_ALL_SERIAL_PORTS"
 msgid "Show all serial ports"
 msgstr "Показати всі COM-порти"
 
+#. Section: UEDITMESSAGE
 #: tfrmabout.btnok.caption
 #: tfrmaltd.btnok.caption
 #: tfrmautocq.btnok.caption
@@ -2738,10 +2739,11 @@ msgstr "Показати всі COM-порти"
 #: tfrmsendspot.btnok.caption
 #: tfrmudpdestinationedit.btnok.caption
 #: tfrmwinmanager.btnok.caption
-#, fuzzy
-msgctxt "tfrmabout.btnok.caption"
+#: utr4wstrings:ok_word
+#: tr4w/src/lang/tr4w_consts_eng.pas:530
+msgctxt "OK_WORD"
 msgid "OK"
-msgstr ""
+msgstr "ОК"
 
 #: tfrmabout.caption
 #, fuzzy
@@ -2753,6 +2755,7 @@ msgstr ""
 msgid "http://www.tr4w.net"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmaltd.btncancel.caption
 #: tfrmautocq.btncancel.caption
 #: tfrmbandplan.btncancel.caption
@@ -2767,35 +2770,50 @@ msgstr ""
 #: tfrmwinmanager.btncancel.caption
 #: tprefsform.btncancel.caption
 #: tradioeditform.btncancel.caption
-#, fuzzy
-msgctxt "tfrmaltd.btncancel.caption"
+#: utr4wstrings:cancel_word
+#: tr4w/src/lang/tr4w_consts_eng.pas:528
+msgctxt "CANCEL_WORD"
 msgid "Cancel"
-msgstr ""
+msgstr "Скасування"
 
+#. Section: UEDITMESSAGE
 #: tfrmaltd.caption
-#, fuzzy
+#: utr4wstrings:rc_dupecheckoar
+#: tr4w/src/lang/tr4w_consts_eng.pas:534
+msgctxt "RC_DUPECHECKOAR"
 msgid "Dupe Check On Inactive Radio"
-msgstr ""
+msgstr "Перевірка на повторення на неактивному радіо"
 
 #: tfrmaltd.lblprompt.caption
 #, fuzzy
 msgid "Enter call to be checked on:"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmautocq.caption
-#, fuzzy
+#: utr4wstrings:rc_autocq2
+#: tr4w/src/lang/tr4w_consts_eng.pas:544
+#: utr4wstrings:rc_autocq
+#: tr4w/src/lang/tr4w_consts_eng.pas:650
+msgctxt "RC_AUTOCQ2"
 msgid "Auto-CQ"
-msgstr ""
+msgstr "Авто-CQ"
 
+#. Section: UEDITMESSAGE
 #: tfrmautocq.lbldelay.caption
-#, fuzzy
+#: utr4wstrings:rc_numberosolt
+#: tr4w/src/lang/tr4w_consts_eng.pas:546
+msgctxt "RC_NUMBEROSOLT"
 msgid "Number of milliseconds of listening time:"
-msgstr ""
+msgstr "Пауза, мс."
 
+#. Section: UEDITMESSAGE
 #: tfrmautocq.lblmemorykey.caption
-#, fuzzy
+#: utr4wstrings:rc_pressmkywtr
+#: tr4w/src/lang/tr4w_consts_eng.pas:545
+msgctxt "RC_PRESSMKYWTR"
 msgid "Press the memory key you want to repeat:"
-msgstr ""
+msgstr "Функц. клавіша, яку потрібно повторювати"
 
 #: tfrmbandmap.caption
 #: tprefsform.lblbandmapheading.caption
@@ -2814,10 +2832,13 @@ msgstr ""
 msgid "BAND MAP ALL MODES"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmbandmap.mideletespot.caption
-#, fuzzy
+#: utr4wstrings:rc_deleteselspot
+#: tr4w/src/lang/tr4w_consts_eng.pas:577
+msgctxt "RC_DELETESELSPOT"
 msgid "Delete selected spot"
-msgstr ""
+msgstr "Видалити виділений спот"
 
 #: tfrmbandmap.midisplaycq.caption
 #, fuzzy
@@ -2839,20 +2860,26 @@ msgstr ""
 msgid "Send spot to inactive radio"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmbandmap.miremoveall.caption
-#, fuzzy
+#: utr4wstrings:rc_removeallsp
+#: tr4w/src/lang/tr4w_consts_eng.pas:578
+msgctxt "RC_REMOVEALLSP"
 msgid "Remove all spots"
-msgstr ""
+msgstr "Видалити всі споти"
 
 #: tfrmbandmap.miso2rdisplay.caption
 #, fuzzy
 msgid "BAND MAP SO2R DISPLAY"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmbandplan.caption
-#, fuzzy
+#: utr4wstrings:rc_bandplan
+#: tr4w/src/lang/tr4w_consts_eng.pas:525
+msgctxt "RC_BANDPLAN"
 msgid "Band plan"
-msgstr ""
+msgstr "Частотний план"
 
 #: tfrmbeacons.caption
 #, fuzzy
@@ -2869,26 +2896,37 @@ msgstr ""
 msgid "Dupe sheet"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmeditmessage.btneditwav.caption
-#, fuzzy
+#: utr4wstrings:rc_edit_word
+#: tr4w/src/lang/tr4w_consts_eng.pas:595
+msgctxt "RC_EDIT_WORD"
 msgid "&Edit"
-msgstr ""
+msgstr "Редагувати"
 
+#. Section: UEDITMESSAGE
 #: tfrmeditmessage.caption
-#, fuzzy
+#: utr4wstrings:rc_progrmess
+#: tr4w/src/lang/tr4w_consts_eng.pas:772
+msgctxt "RC_PROGRMESS"
 msgid "Program message"
-msgstr ""
+msgstr "Редагування повідомлення"
 
+#. Section: UEDITMESSAGE
 #: tfrmeditmessage.lblcaption.caption
-#, fuzzy
+#: utr4wstrings:rc_caption
+#: tr4w/src/lang/tr4w_consts_eng.pas:774
+msgctxt "RC_CAPTION"
 msgid "Caption"
-msgstr ""
+msgstr "Напис на кнопці"
 
+#. Section: UEDITMESSAGE
 #: tfrmeditmessage.lblmessage.caption
-#, fuzzy
-msgctxt "tfrmeditmessage.lblmessage.caption"
+#: utr4wstrings:rc_message
+#: tr4w/src/lang/tr4w_consts_eng.pas:773
+msgctxt "RC_MESSAGE"
 msgid "Message"
-msgstr ""
+msgstr "Повідомлення"
 
 #: tfrmeditqso.btnplay.caption
 #, fuzzy
@@ -2965,17 +3003,22 @@ msgstr ""
 msgid "Age"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmeditqso.lblband.caption
-#, fuzzy
+#: utr4wstrings:rc_band
+#: tr4w/src/lang/tr4w_consts_eng.pas:588
+msgctxt "RC_BAND"
 msgid "Band"
-msgstr ""
+msgstr "Діап."
 
+#. Section: UEDITMESSAGE
 #: tfrmeditqso.lblcallsign.caption
 #: tfrmsendspot.lblcallsign.caption
-#, fuzzy
-msgctxt "tfrmeditqso.lblcallsign.caption"
+#: utr4wstrings:rc_callsign
+#: tr4w/src/lang/tr4w_consts_eng.pas:586
+msgctxt "RC_CALLSIGN"
 msgid "Callsign"
-msgstr ""
+msgstr "Позивний"
 
 #: tfrmeditqso.lblchapter.caption
 #, fuzzy
@@ -2997,10 +3040,13 @@ msgstr ""
 msgid "Computer ID"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmeditqso.lbldate.caption
-#, fuzzy
+#: utr4wstrings:rc_date
+#: tr4w/src/lang/tr4w_consts_eng.pas:759
+msgctxt "RC_DATE"
 msgid "Date"
-msgstr ""
+msgstr "Дата"
 
 #: tfrmeditqso.lbldomestic.caption
 #, fuzzy
@@ -3017,18 +3063,23 @@ msgstr ""
 msgid "Frequency, Hz"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmeditqso.lblmode.caption
-#, fuzzy
+#: utr4wstrings:rc_mode
+#: tr4w/src/lang/tr4w_consts_eng.pas:587
+msgctxt "RC_MODE"
 msgid "Mode"
-msgstr ""
+msgstr "Вид випром."
 
+#. Section: UEDITMESSAGE
 #: tfrmeditqso.lblname.caption
 #: tfrmkeyeredit.lblname.caption
 #: tradioeditform.lblname.caption
-#, fuzzy
-msgctxt "tfrmeditqso.lblname.caption"
+#: utr4wstrings:rc_name
+#: tr4w/src/lang/tr4w_consts_eng.pas:769
+msgctxt "RC_NAME"
 msgid "Name"
-msgstr ""
+msgstr "Ім`я"
 
 #: tfrmeditqso.lblnumberrcvd.caption
 #, fuzzy
@@ -3040,10 +3091,13 @@ msgstr ""
 msgid "Number Sent"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmeditqso.lbloperator.caption
-#, fuzzy
+#: utr4wstrings:rc_operator
+#: tr4w/src/lang/tr4w_consts_eng.pas:585
+msgctxt "RC_OPERATOR"
 msgid "Operator"
-msgstr ""
+msgstr "Оператор"
 
 #: tfrmeditqso.lblpostalcode.caption
 #, fuzzy
@@ -3105,10 +3159,13 @@ msgstr ""
 msgid "Zone"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmfunctionkeys.caption
-#, fuzzy
+#: utr4wstrings:rc_fkeys
+#: tr4w/src/lang/tr4w_consts_eng.pas:622
+msgctxt "RC_FKEYS"
 msgid "Function keys"
-msgstr ""
+msgstr "Функціональні клавіші"
 
 #: tfrmfunctionkeys.pnlf1.caption
 #, fuzzy
@@ -3240,10 +3297,13 @@ msgstr ""
 msgid "Enter value:"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmintercom.caption
-#, fuzzy
+#: utr4wstrings:rc_intercom
+#: tr4w/src/lang/tr4w_consts_eng.pas:628
+msgctxt "RC_INTERCOM"
 msgid "Intercom"
-msgstr ""
+msgstr "Внутрішній зв`язок"
 
 #: tfrmkeyeredit.btnok.caption
 #: tprefsform.btnok.caption
@@ -3351,10 +3411,13 @@ msgstr ""
 msgid "Exit"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmlogcompare.btnsynchronize.caption
-#, fuzzy
+#: utr4wstrings:rc_synchronize
+#: tr4w/src/lang/tr4w_consts_eng.pas:794
+msgctxt "RC_SYNCHRONIZE"
 msgid "Synchronize"
-msgstr ""
+msgstr "Синхронізувати"
 
 #: tfrmlogcompare.caption
 #, fuzzy
@@ -3383,22 +3446,27 @@ msgstr ""
 msgid "..."
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmmp3recorder.caption
-#, fuzzy
+#: utr4wstrings:rc_mp3rec
+#: tr4w/src/lang/tr4w_consts_eng.pas:631
+msgctxt "RC_MP3REC"
 msgid "MP3 Recorder"
-msgstr ""
+msgstr "MP3 рекордер"
 
 #: tfrmmp3recorder.chkrecord.caption
 #, fuzzy
 msgid "Record"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmnetwork.caption
 #: tradioeditform.tabnetwork.caption
-#, fuzzy
-msgctxt "tfrmnetwork.caption"
+#: utr4wstrings:rc_network
+#: tr4w/src/lang/tr4w_consts_eng.pas:627
+msgctxt "RC_NETWORK"
 msgid "Network"
-msgstr ""
+msgstr "Мережа"
 
 #: tfrmpanadapter.btnpause.caption
 #, fuzzy
@@ -3445,40 +3513,58 @@ msgstr ""
 msgid "Span --"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmpostscores.btnpostnow.caption
-#, fuzzy
+#: utr4wstrings:rc_postnow
+#: tr4w/src/lang/tr4w_consts_eng.pas:573
+msgctxt "RC_POSTNOW"
 msgid "Post now"
-msgstr ""
+msgstr "Надіслати зараз"
 
+#. Section: UEDITMESSAGE
 #: tfrmpostscores.btnshowscores.caption
-#, fuzzy
+#: utr4wstrings:rc_gotogs
+#: tr4w/src/lang/tr4w_consts_eng.pas:574
+msgctxt "RC_GOTOGS"
 msgid "Show scores"
-msgstr ""
+msgstr "Показати результати"
 
 #: tfrmpostscores.caption
 #, fuzzy
 msgid "Post scores"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmprogrammessage.btncq.caption
-#, fuzzy
+#: utr4wstrings:rc_press_c
+#: tr4w/src/lang/tr4w_consts_eng.pas:538
+msgctxt "RC_PRESS_C"
 msgid "Press &C to program a CQ function key."
-msgstr ""
+msgstr "Натисніть C для програмування CQ повідомлень"
 
+#. Section: UEDITMESSAGE
 #: tfrmprogrammessage.btnexchange.caption
-#, fuzzy
+#: utr4wstrings:rc_press_e
+#: tr4w/src/lang/tr4w_consts_eng.pas:539
+msgctxt "RC_PRESS_E"
 msgid "Press &E to program an exchange/search and pounce function key."
-msgstr ""
+msgstr "Натисніть E для програмування S&P повідомлень"
 
+#. Section: UEDITMESSAGE
 #: tfrmprogrammessage.btnother.caption
-#, fuzzy
+#: utr4wstrings:rc_press_o
+#: tr4w/src/lang/tr4w_consts_eng.pas:540
+msgctxt "RC_PRESS_O"
 msgid "Press &O to program the other non function key messages."
-msgstr ""
+msgstr "Натисніть O, щоб програмувати інші повідомлення"
 
+#. Section: UEDITMESSAGE
 #: tfrmprogrammessage.caption
-#, fuzzy
+#: utr4wstrings:rc_memprogfunc
+#: tr4w/src/lang/tr4w_consts_eng.pas:536
+msgctxt "RC_MEMPROGFUNC"
 msgid "Memory program function"
-msgstr ""
+msgstr "Програмування повідомлень"
 
 #: tfrmradiopanel.btnspectrum.caption
 #, fuzzy
@@ -3522,50 +3608,68 @@ msgstr ""
 msgid "Remaining mults"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmsendkeyboard.btnclose.caption
-#, fuzzy
+#: utr4wstrings:close_word
+#: tr4w/src/lang/tr4w_consts_eng.pas:527
+msgctxt "CLOSE_WORD"
 msgid "Close"
-msgstr ""
+msgstr "Закрити"
 
 #: tfrmsendkeyboard.caption
 #, fuzzy
 msgid "Sending CW"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmsendspot.caption
-#, fuzzy
+#: utr4wstrings:rc_sendspot
+#: tr4w/src/lang/tr4w_consts_eng.pas:691
+msgctxt "RC_SENDSPOT"
 msgid "Send spot"
-msgstr ""
+msgstr "Надіслати спот"
 
 #: tfrmsendspot.chkcontestname.caption
 #, fuzzy
 msgid "Contest name in comment"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmsendspot.lblcomment.caption
-#, fuzzy
+#: utr4wstrings:rc_comment
+#: tr4w/src/lang/tr4w_consts_eng.pas:713
+msgctxt "RC_COMMENT"
 msgid "Comment"
-msgstr ""
+msgstr "Коментар"
 
+#. Section: UEDITMESSAGE
 #: tfrmsendspot.lblfrequency.caption
-#, fuzzy
+#: utr4wstrings:rc_frequency
+#: tr4w/src/lang/tr4w_consts_eng.pas:802
+msgctxt "RC_FREQUENCY"
 msgid "Frequency"
-msgstr ""
+msgstr "Частота"
 
+#. Section: UEDITMESSAGE
 #: tfrmstations.caption
-#, fuzzy
+#: utr4wstrings:rc_stations
+#: tr4w/src/lang/tr4w_consts_eng.pas:630
+msgctxt "RC_STATIONS"
 msgid "Stations"
-msgstr ""
+msgstr "Станції"
 
 #: tfrmtelnet.btnclear.caption
 #, fuzzy
 msgid "Clear"
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tfrmtelnet.btncommands.caption
-#, fuzzy
+#: utr4wstrings:rc_commands
+#: tr4w/src/lang/tr4w_consts_eng.pas:681
+msgctxt "RC_COMMANDS"
 msgid "Commands"
-msgstr ""
+msgstr "Команди"
 
 #: tfrmtelnet.btnconnect.caption
 #, fuzzy
@@ -4970,10 +5074,13 @@ msgstr ""
 msgid "These shape the CW that TR4W generates itself by toggling a serial line.  They do nothing for a WinKeyer, a YCCC box, or CW sent by CAT - those devices keep their own timing."
 msgstr ""
 
+#. Section: UEDITMESSAGE
 #: tprefsform.lblstationheading.caption
-#, fuzzy
+#: utr4wstrings:rc_stationinfo
+#: tr4w/src/lang/tr4w_consts_eng.pas:533
+msgctxt "RC_STATIONINFO"
 msgid "Station information"
-msgstr ""
+msgstr "Інформація про станцію"
 
 #: tprefsform.lblstationhint.caption
 #, fuzzy
@@ -5498,4 +5605,922 @@ msgstr ""
 #, fuzzy
 msgid "Test packet sent to %s:%d.  UDP cannot confirm it arrived -- check the receiving program."
 msgstr ""
+
+#. Section: General
+#: utr4wstrings:tc_translation_credit
+#: tr4w/src/lang/tr4w_consts_eng.pas:13
+#, fuzzy
+msgctxt "TC_TRANSLATION_CREDIT"
+msgid "%s translation by %s"
+msgstr ""
+
+#. Section: UTELNET
+#: utr4wstrings:tc_telnet
+#: tr4w/src/lang/tr4w_consts_eng.pas:195
+msgctxt "TC_TELNET"
+msgid "Connect\000Disconnect\000Commands\000Freeze\000Clear\000SH/50\000\000"
+msgstr "Connect\000Disconnect\000Commands\000Freeze\000Clear\000100\000\000"
+
+#. Section: LOGSUBS2
+#: utr4wstrings:tc_bandchangedisabled
+#: tr4w/src/lang/tr4w_consts_eng.pas:365
+#, fuzzy
+msgctxt "TC_BANDCHANGEDISABLED"
+msgid "Band change requires MULTIPLE BANDS = TRUE once the log has QSOs"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. 4.51.8
+#: utr4wstrings:rc_3830
+#: tr4w/src/lang/tr4w_consts_eng.pas:521
+msgctxt "RC_3830"
+msgid "3830 Score posting"
+msgstr "Надіслати результат на 3830"
+
+#. Section: UEDITMESSAGE
+#. 4.53.3
+#: utr4wstrings:rc_3830_arrl
+#: tr4w/src/lang/tr4w_consts_eng.pas:522
+msgctxt "RC_3830_ARRL"
+msgid "Submit ARRL Log"
+msgstr "Надіслати лог ARRL"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_vieweditlog2
+#: tr4w/src/lang/tr4w_consts_eng.pas:523
+#: utr4wstrings:rc_vieweditlog
+#: tr4w/src/lang/tr4w_consts_eng.pas:666
+msgctxt "RC_VIEWEDITLOG2"
+msgid "View / Edit log"
+msgstr "Перегляд / Редагування лога"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_ct1bohis2
+#: tr4w/src/lang/tr4w_consts_eng.pas:524
+#: utr4wstrings:rc_ct1bohis
+#: tr4w/src/lang/tr4w_consts_eng.pas:679
+msgctxt "RC_CT1BOHIS2"
+msgid "CT1BOH info screen"
+msgstr "Інформаційне вікно CT1BOH"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:help_word
+#: tr4w/src/lang/tr4w_consts_eng.pas:529
+msgctxt "HELP_WORD"
+msgid "Help"
+msgstr "Допомога"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:exit_word
+#: tr4w/src/lang/tr4w_consts_eng.pas:531
+#: utr4wstrings:rc_exit
+#: tr4w/src/lang/tr4w_consts_eng.pas:613
+msgctxt "EXIT_WORD"
+msgid "E&xit"
+msgstr "Вихід"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_listofmess
+#: tr4w/src/lang/tr4w_consts_eng.pas:532
+msgctxt "RC_LISTOFMESS"
+msgid "List of messages"
+msgstr "Лист повідомлень"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_sendingcw
+#: tr4w/src/lang/tr4w_consts_eng.pas:542
+msgctxt "RC_SENDINGCW"
+msgid "Sending CW from the keyboard. Use ENTER/Escape/F10 to exit."
+msgstr "Передача CW із клавіатури. Використовуйте ENTER/Escape/F10 для виходу."
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_wincontrol2
+#: tr4w/src/lang/tr4w_consts_eng.pas:547
+#: utr4wstrings:rc_wincontrol
+#: tr4w/src/lang/tr4w_consts_eng.pas:552
+msgctxt "RC_WINCONTROL2"
+msgid "Windows control"
+msgstr "Управління вікнами"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_tools
+#: tr4w/src/lang/tr4w_consts_eng.pas:549
+msgctxt "RC_TOOLS"
+msgid "Tools"
+msgstr "Інструменти"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_beaconsm
+#: tr4w/src/lang/tr4w_consts_eng.pas:551
+msgctxt "RC_BEACONSM"
+msgid "Beacons monitor"
+msgstr "Монітор маяків"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_settimezone
+#: tr4w/src/lang/tr4w_consts_eng.pas:553
+msgctxt "RC_SETTIMEZONE"
+msgid "Set time zone"
+msgstr "Встановлення часового поясу"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_ping
+#: tr4w/src/lang/tr4w_consts_eng.pas:554
+msgctxt "RC_PING"
+msgid "Ping [SERVER ADDRESS]"
+msgstr "Пропінгувати TR4WSERVER"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_runserver
+#: tr4w/src/lang/tr4w_consts_eng.pas:555
+msgctxt "RC_RUNSERVER"
+msgid "Run TR4WSERVER"
+msgstr "Запуск TR4WSERVER"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_dvkvolcontrol
+#: tr4w/src/lang/tr4w_consts_eng.pas:556
+msgctxt "RC_DVKVOLCONTROL"
+msgid "DVK volume control"
+msgstr "Контроль рівня відтворення DVK"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_reccontrol
+#: tr4w/src/lang/tr4w_consts_eng.pas:557
+msgctxt "RC_RECCONTROL"
+msgid "Recording control"
+msgstr "Контроль рівня запису"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_calculator
+#: tr4w/src/lang/tr4w_consts_eng.pas:561
+msgctxt "RC_CALCULATOR"
+msgid "Calculator"
+msgstr "Калькулятор"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_reset_radio_ports
+#: tr4w/src/lang/tr4w_consts_eng.pas:563
+msgctxt "RC_RESET_RADIO_PORTS"
+msgid "Reset Radio Ports"
+msgstr "Скинути порти трансиверів"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_timesyn
+#: tr4w/src/lang/tr4w_consts_eng.pas:571
+msgctxt "RC_TIMESYN"
+msgid "Synchronize time on &all computers"
+msgstr "Сінхр. час на всіх комп`ютерах"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_mp3_recenable
+#: tr4w/src/lang/tr4w_consts_eng.pas:575
+msgctxt "RC_MP3_RECENABLE"
+msgid "Enable"
+msgstr "Увімк."
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_sendinrig
+#: tr4w/src/lang/tr4w_consts_eng.pas:579
+msgctxt "RC_SENDINRIG"
+msgid "QSY Inactive Radio"
+msgstr "Налаштувати неактивне радіо на цю частоту"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_file
+#: tr4w/src/lang/tr4w_consts_eng.pas:580
+msgctxt "RC_FILE"
+msgid "File"
+msgstr "Файл"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_clearlog
+#: tr4w/src/lang/tr4w_consts_eng.pas:581
+msgctxt "RC_CLEARLOG"
+msgid "Clear log"
+msgstr "Очистити лог"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_import
+#: tr4w/src/lang/tr4w_consts_eng.pas:582
+msgctxt "RC_IMPORT"
+msgid "Import"
+msgstr "Імпорт"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_openlogdir
+#: tr4w/src/lang/tr4w_consts_eng.pas:583
+msgctxt "RC_OPENLOGDIR"
+msgid "Open log directory"
+msgstr "Відкрити папку контесту"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_postscoretogs
+#: tr4w/src/lang/tr4w_consts_eng.pas:596
+msgctxt "RC_POSTSCORETOGS"
+msgid "Post score"
+msgstr "Надіслати результат"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_export
+#: tr4w/src/lang/tr4w_consts_eng.pas:600
+msgctxt "RC_EXPORT"
+msgid "Export"
+msgstr "Експорт"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_iniexlist
+#: tr4w/src/lang/tr4w_consts_eng.pas:601
+msgctxt "RC_INIEXLIST"
+msgid "Initial exchanges list"
+msgstr "Список обмінних номерів"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_trlogform
+#: tr4w/src/lang/tr4w_consts_eng.pas:602
+msgctxt "RC_TRLOGFORM"
+msgid "TR Log format"
+msgstr "Формат TR Log"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_reports
+#: tr4w/src/lang/tr4w_consts_eng.pas:603
+msgctxt "RC_REPORTS"
+msgid "Reports"
+msgstr "Статистика"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_allcalls
+#: tr4w/src/lang/tr4w_consts_eng.pas:604
+msgctxt "RC_ALLCALLS"
+msgid "All callsigns"
+msgstr "Всі позивні"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_bandchanges
+#: tr4w/src/lang/tr4w_consts_eng.pas:605
+msgctxt "RC_BANDCHANGES"
+msgid "Band changes"
+msgstr "Зміни діапазонів"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_contlist
+#: tr4w/src/lang/tr4w_consts_eng.pas:606
+msgctxt "RC_CONTLIST"
+msgid "Continent List"
+msgstr "Список континентів"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_fcc
+#: tr4w/src/lang/tr4w_consts_eng.pas:607
+msgctxt "RC_FCC"
+msgid "First callsign worked in each country"
+msgstr "Перший позивний у кожній країні"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_fcz
+#: tr4w/src/lang/tr4w_consts_eng.pas:608
+msgctxt "RC_FCZ"
+msgid "First callsign worked in each zone"
+msgstr "Перший позивний у кожній зоні"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_qsobycountry
+#: tr4w/src/lang/tr4w_consts_eng.pas:610
+msgctxt "RC_QSOBYCOUNTRY"
+msgid "QSOs by country by band"
+msgstr "Зв`язки по країнах та діапазонах"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_scorebyhour
+#: tr4w/src/lang/tr4w_consts_eng.pas:611
+msgctxt "RC_SCOREBYHOUR"
+msgid "Score by hour"
+msgstr "Очки по годинам"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_summary
+#: tr4w/src/lang/tr4w_consts_eng.pas:612
+msgctxt "RC_SUMMARY"
+msgid "Summary"
+msgstr "Підсумковий результат"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_settings
+#: tr4w/src/lang/tr4w_consts_eng.pas:614
+msgctxt "RC_SETTINGS"
+msgid "Settings"
+msgstr "Налаштування"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_options
+#: tr4w/src/lang/tr4w_consts_eng.pas:616
+msgctxt "RC_OPTIONS"
+msgid "Configuration commands"
+msgstr "Команди конфігурації"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_programmes
+#: tr4w/src/lang/tr4w_consts_eng.pas:617
+msgctxt "RC_PROGRAMMES"
+msgid "Program messages"
+msgstr "Програмування повідомлень"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_catandcw
+#: tr4w/src/lang/tr4w_consts_eng.pas:618
+msgctxt "RC_CATANDCW"
+msgid "CAT and CW Keying"
+msgstr "CAT та CW маніпуляція"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_windows
+#: tr4w/src/lang/tr4w_consts_eng.pas:619
+msgctxt "RC_WINDOWS"
+msgid "Windows"
+msgstr "Вікна"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_bandmap
+#: tr4w/src/lang/tr4w_consts_eng.pas:620
+msgctxt "RC_BANDMAP"
+msgid "Bandmap"
+msgstr "Карта діапазону"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_dupesheet
+#: tr4w/src/lang/tr4w_consts_eng.pas:621
+msgctxt "RC_DUPESHEET"
+msgid "Dupesheet"
+msgstr "Аркуш повторів"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_trmaster
+#: tr4w/src/lang/tr4w_consts_eng.pas:623
+#, fuzzy
+msgctxt "RC_TRMASTER"
+msgid "SCP"
+msgstr "SCP"
+
+#. Section: UEDITMESSAGE
+#. 4.72.3
+#: utr4wstrings:rc_remmults
+#: tr4w/src/lang/tr4w_consts_eng.pas:624
+msgctxt "RC_REMMULTS"
+msgid "Mults"
+msgstr "Залишилися множники"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_rm_default
+#: tr4w/src/lang/tr4w_consts_eng.pas:625
+msgctxt "RC_RM_DEFAULT"
+msgid "Default"
+msgstr "За замовчуванням"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_telnet
+#: tr4w/src/lang/tr4w_consts_eng.pas:626
+msgctxt "RC_TELNET"
+msgid "DX Cluster"
+msgstr "DX Кластер"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_altp
+#: tr4w/src/lang/tr4w_consts_eng.pas:635
+msgctxt "RC_ALTP"
+msgid "Open Fkeys"
+msgstr "Відкрити вікно програмування макросів"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_altx
+#: tr4w/src/lang/tr4w_consts_eng.pas:636
+msgctxt "RC_ALTX"
+msgid "Exit Program"
+msgstr "Вийти з програми"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_autocqresume
+#: tr4w/src/lang/tr4w_consts_eng.pas:638
+msgctxt "RC_AUTOCQRESUME"
+msgid "Auto-CQ resume"
+msgstr "Продовжити Авто-CQ"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_dupecheck
+#: tr4w/src/lang/tr4w_consts_eng.pas:639
+msgctxt "RC_DUPECHECK"
+msgid "Dupe check"
+msgstr "Перевірка повторів"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_edit
+#: tr4w/src/lang/tr4w_consts_eng.pas:640
+msgctxt "RC_EDIT"
+msgid "SO1R-Edit or SO2R-SWAP"
+msgstr "Редагування"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_backuplog
+#: tr4w/src/lang/tr4w_consts_eng.pas:641
+msgctxt "RC_BACKUPLOG"
+msgid "Backup Log"
+msgstr "Резервне копіювання логу"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_swapmultview
+#: tr4w/src/lang/tr4w_consts_eng.pas:643
+msgctxt "RC_SWAPMULTVIEW"
+msgid "Swap mult view"
+msgstr "Переключити вид множників"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_incnumber
+#: tr4w/src/lang/tr4w_consts_eng.pas:644
+msgctxt "RC_INCNUMBER"
+msgid "Increment number"
+msgstr "Збільшити номер"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_tooglemb
+#: tr4w/src/lang/tr4w_consts_eng.pas:645
+msgctxt "RC_TOOGLEMB"
+msgid "Toogle multiplier bell"
+msgstr "Переключити звук при новому множнику"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_killcw
+#: tr4w/src/lang/tr4w_consts_eng.pas:646
+msgctxt "RC_KILLCW"
+msgid "Toggle CW"
+msgstr "Переключення CW"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_searchlog
+#: tr4w/src/lang/tr4w_consts_eng.pas:647
+msgctxt "RC_SEARCHLOG"
+msgid "Search log"
+msgstr "Пошук з логу"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_transfreq
+#: tr4w/src/lang/tr4w_consts_eng.pas:648
+msgctxt "RC_TRANSFREQ"
+msgid "Transmit frequency"
+msgstr "Введення частоти передачі"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_tooglerigs
+#: tr4w/src/lang/tr4w_consts_eng.pas:651
+msgctxt "RC_TOOGLERIGS"
+msgid "Toggle rigs"
+msgstr "Переключення радіо"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_cwspeed
+#: tr4w/src/lang/tr4w_consts_eng.pas:652
+msgctxt "RC_CWSPEED"
+msgid "CW speed"
+msgstr "Швидкість CW"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_setsysdt
+#: tr4w/src/lang/tr4w_consts_eng.pas:653
+msgctxt "RC_SETSYSDT"
+msgid "Set system date/time"
+msgstr "Встановити системну дату/час"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_initialize
+#: tr4w/src/lang/tr4w_consts_eng.pas:654
+msgctxt "RC_INITIALIZE"
+msgid "Initialize QSO"
+msgstr "Очистити дані про зв`язок"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_deletelastqso
+#: tr4w/src/lang/tr4w_consts_eng.pas:656
+msgctxt "RC_DELETELASTQSO"
+msgid "Delete the last QSO"
+msgstr "Видалити останній зв`язок"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_initialex
+#: tr4w/src/lang/tr4w_consts_eng.pas:657
+msgctxt "RC_INITIALEX"
+msgid "Initial exchange"
+msgstr "Підстановка обмінного номера"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_tooglest
+#: tr4w/src/lang/tr4w_consts_eng.pas:658
+msgctxt "RC_TOOGLEST"
+msgid "Toggle sidetone"
+msgstr "ВКЛ./ВИМК. передачу тону"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_toogleas
+#: tr4w/src/lang/tr4w_consts_eng.pas:659
+msgctxt "RC_TOOGLEAS"
+msgid "Toggle autosend"
+msgstr "ВКЛ./ВИМК. автопередачу"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_bandup
+#: tr4w/src/lang/tr4w_consts_eng.pas:660
+msgctxt "RC_BANDUP"
+msgid "Band Up"
+msgstr "Діапазон вгору"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_banddown
+#: tr4w/src/lang/tr4w_consts_eng.pas:661
+msgctxt "RC_BANDDOWN"
+msgid "Band Down"
+msgstr "Діапазон вниз"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_ssbcwmode
+#: tr4w/src/lang/tr4w_consts_eng.pas:662
+msgctxt "RC_SSBCWMODE"
+msgid "SSB/CW mode"
+msgstr "Переключити вид випромінювання"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_sendkeyboard
+#: tr4w/src/lang/tr4w_consts_eng.pas:663
+msgctxt "RC_SENDKEYBOARD"
+msgid "Send Keyboard Input"
+msgstr "Передача з клавіатури"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_cleardupes
+#: tr4w/src/lang/tr4w_consts_eng.pas:665
+msgctxt "RC_CLEARDUPES"
+msgid "Clear dupesheet"
+msgstr "Очистити аркуш повторів"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_note
+#: tr4w/src/lang/tr4w_consts_eng.pas:667
+msgctxt "RC_NOTE"
+msgid "Note"
+msgstr "Замітка"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_missmultsrep
+#: tr4w/src/lang/tr4w_consts_eng.pas:668
+msgctxt "RC_MISSMULTSREP"
+msgid "Missing mults report"
+msgstr "Звіт про відсутні множники"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_qtcfunctions
+#: tr4w/src/lang/tr4w_consts_eng.pas:670
+msgctxt "RC_QTCFUNCTIONS"
+msgid "QTC functions"
+msgstr "Функція QTC"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_recalllastent
+#: tr4w/src/lang/tr4w_consts_eng.pas:671
+msgctxt "RC_RECALLLASTENT"
+msgid "Recall last entry"
+msgstr "Повернути видалене по ESC"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_viewpakspots
+#: tr4w/src/lang/tr4w_consts_eng.pas:672
+msgctxt "RC_VIEWPAKSPOTS"
+msgid "View packet spots"
+msgstr "Показати пакетні повідомлення"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_execonfigfile
+#: tr4w/src/lang/tr4w_consts_eng.pas:673
+msgctxt "RC_EXECONFIGFILE"
+msgid "Execute configuration file"
+msgstr "Завантажити файл конфігурації"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_refreshbm
+#: tr4w/src/lang/tr4w_consts_eng.pas:674
+msgctxt "RC_REFRESHBM"
+msgid "Refresh bandmap"
+msgstr "Відновити карту діапазону"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_cursorinbm
+#: tr4w/src/lang/tr4w_consts_eng.pas:676
+msgctxt "RC_CURSORINBM"
+msgid "Cursor in bandmap window"
+msgstr "Курсор у вікно \"Карта діапазона\""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_cursortelnet
+#: tr4w/src/lang/tr4w_consts_eng.pas:677
+msgctxt "RC_CURSORTELNET"
+msgid "Cursor in DX Cluster window"
+msgstr "Курсор у вікно \"DX Кластер\""
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_qsowithnocw
+#: tr4w/src/lang/tr4w_consts_eng.pas:678
+msgctxt "RC_QSOWITHNOCW"
+msgid "QSO with no CW"
+msgstr "Введення зв`язку без передачі"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_addbandmapph
+#: tr4w/src/lang/tr4w_consts_eng.pas:680
+msgctxt "RC_ADDBANDMAPPH"
+msgid "Add bandmap place holder"
+msgstr "Додати в карту порожній спот"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_focusinmw
+#: tr4w/src/lang/tr4w_consts_eng.pas:682
+msgctxt "RC_FOCUSINMW"
+msgid "Focus in main window"
+msgstr "Фокус у головне вікно програми"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_toggleinsert
+#: tr4w/src/lang/tr4w_consts_eng.pas:683
+msgctxt "RC_TOGGLEINSERT"
+msgid "Toggle insert mode"
+msgstr "Режим вставки/заміни"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_escape
+#: tr4w/src/lang/tr4w_consts_eng.pas:684
+msgctxt "RC_ESCAPE"
+msgid "Escape"
+msgstr "Вихід"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_cwspeedup
+#: tr4w/src/lang/tr4w_consts_eng.pas:685
+msgctxt "RC_CWSPEEDUP"
+msgid "CW Speed Up"
+msgstr "Збільшення швидкості передачі CW"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_cwspeeddown
+#: tr4w/src/lang/tr4w_consts_eng.pas:686
+msgctxt "RC_CWSPEEDDOWN"
+msgid "CW Speed Down"
+msgstr "Зменшення швидкості передачі CW"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_cwspupir
+#: tr4w/src/lang/tr4w_consts_eng.pas:687
+msgctxt "RC_CWSPUPIR"
+msgid "CW Speed Up for the inactive radio"
+msgstr "Збільшення швидкості на неактивному радіо"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_cwspdnir
+#: tr4w/src/lang/tr4w_consts_eng.pas:688
+msgctxt "RC_CWSPDNIR"
+msgid "CW Speed Down for the inactive radio"
+msgstr "Зменшення швидкості на неактивному радіо"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_cqmode
+#: tr4w/src/lang/tr4w_consts_eng.pas:689
+msgctxt "RC_CQMODE"
+msgid "CQ Mode"
+msgstr "Режим CQ"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_searchpounce
+#: tr4w/src/lang/tr4w_consts_eng.pas:690
+msgctxt "RC_SEARCHPOUNCE"
+msgid "Search && pounce mode"
+msgstr "Режим пошуку (S&P)"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_rescore
+#: tr4w/src/lang/tr4w_consts_eng.pas:692
+msgctxt "RC_RESCORE"
+msgid "Rescore"
+msgstr "Перерахунок очок"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_net
+#: tr4w/src/lang/tr4w_consts_eng.pas:694
+msgctxt "RC_NET"
+msgid "Net"
+msgstr "Мережа"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_sendmessage
+#: tr4w/src/lang/tr4w_consts_eng.pas:696
+msgctxt "RC_SENDMESSAGE"
+msgid "Send message"
+msgstr "Надіслати повідомлення"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_synlog
+#: tr4w/src/lang/tr4w_consts_eng.pas:697
+msgctxt "RC_SYNLOG"
+msgid "Compare and synchronize logs"
+msgstr "Порівняти та синхронізувати логи"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_clearalllogs
+#: tr4w/src/lang/tr4w_consts_eng.pas:698
+msgctxt "RC_CLEARALLLOGS"
+msgid "Clear all logs in network"
+msgstr "Очистити всі логи в мережі"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_download
+#: tr4w/src/lang/tr4w_consts_eng.pas:699
+msgctxt "RC_DOWNLOAD"
+msgid "Download the latest CTY.DAT"
+msgstr "Перевірити останню версію на сервері"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_contents
+#: tr4w/src/lang/tr4w_consts_eng.pas:700
+msgctxt "RC_CONTENTS"
+msgid "Contents"
+msgstr "Посібник користувача"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_about
+#: tr4w/src/lang/tr4w_consts_eng.pas:701
+msgctxt "RC_ABOUT"
+msgid "About"
+msgstr "Про програму"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_deleted
+#: tr4w/src/lang/tr4w_consts_eng.pas:705
+msgctxt "RC_DELETED"
+msgid "Deleted"
+msgstr "&Видалена"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_search
+#: tr4w/src/lang/tr4w_consts_eng.pas:708
+msgctxt "RC_SEARCH"
+msgid "&Search"
+msgstr "Пошук"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_contestnameic
+#: tr4w/src/lang/tr4w_consts_eng.pas:712
+msgctxt "RC_CONTESTNAMEIC"
+msgid "C&ontest name in comment"
+msgstr "Назва контесту в коментарі"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_recvqtc
+#: tr4w/src/lang/tr4w_consts_eng.pas:735
+msgctxt "RC_RECVQTC"
+msgid "Receiving QTCs"
+msgstr "Приймання QTC"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_diffinlog
+#: tr4w/src/lang/tr4w_consts_eng.pas:749
+msgctxt "RC_DIFFINLOG"
+msgid "Difference in logs"
+msgstr "Відмінність у логах"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_iaqslint
+#: tr4w/src/lang/tr4w_consts_eng.pas:775
+msgctxt "RC_IAQSLINT"
+msgid "Auto QSL Interval (Increase)"
+msgstr "Збільшити Auto QSL Interval"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_daqslint
+#: tr4w/src/lang/tr4w_consts_eng.pas:776
+msgctxt "RC_DAQSLINT"
+msgid "Auto QSL Interval (Decrease)"
+msgstr "Зменшити Auto QSL Interval"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_addinfo
+#: tr4w/src/lang/tr4w_consts_eng.pas:777
+msgctxt "RC_ADDINFO"
+msgid "Additional information"
+msgstr "Додаткова інформація"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_ai_qsonumber
+#: tr4w/src/lang/tr4w_consts_eng.pas:778
+msgctxt "RC_AI_QSONUMBER"
+msgid "QSO number"
+msgstr "Номер QSO"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_ai_cwspeed
+#: tr4w/src/lang/tr4w_consts_eng.pas:779
+msgctxt "RC_AI_CWSPEED"
+msgid "CW Speed"
+msgstr "Швидкість CW"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_clearmsheet
+#: tr4w/src/lang/tr4w_consts_eng.pas:780
+msgctxt "RC_CLEARMSHEET"
+msgid "Clear multsheet"
+msgstr "Очистити таблицю множників"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_wiki
+#: tr4w/src/lang/tr4w_consts_eng.pas:781
+msgctxt "RC_WIKI"
+msgid "On-line documentation (in Russian)"
+msgstr "Документація до програми на сайті TR4W"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_net_cldupe
+#: tr4w/src/lang/tr4w_consts_eng.pas:782
+msgctxt "RC_NET_CLDUPE"
+msgid "Clear dupesheet in all logs"
+msgstr "Скинути таблиці повторів на всіх комп`ютерах"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_net_clmult
+#: tr4w/src/lang/tr4w_consts_eng.pas:783
+msgctxt "RC_NET_CLMULT"
+msgid "Clear multsheet in all logs"
+msgstr "Скинути таблиці множників на всіх комп`ютерах"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_inc_time
+#: tr4w/src/lang/tr4w_consts_eng.pas:784
+msgctxt "RC_INC_TIME"
+msgid "Increment time"
+msgstr "Збільшити час"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_notes
+#: tr4w/src/lang/tr4w_consts_eng.pas:785
+msgctxt "RC_NOTES"
+msgid "Notes"
+msgstr "Нотатки"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_devicemanager
+#: tr4w/src/lang/tr4w_consts_eng.pas:788
+msgctxt "RC_DEVICEMANAGER"
+msgid "Device Manager"
+msgstr "Диспетчер пристроїв"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_shdx_callsign
+#: tr4w/src/lang/tr4w_consts_eng.pas:789
+msgctxt "RC_SHDX_CALLSIGN"
+msgid "SH/DX [callsign]"
+msgstr "SH/DX [позивний]"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_login
+#: tr4w/src/lang/tr4w_consts_eng.pas:793
+msgctxt "RC_LOGIN"
+msgid "Log in"
+msgstr "Залогінитись"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_colors
+#: tr4w/src/lang/tr4w_consts_eng.pas:796
+msgctxt "RC_COLORS"
+msgid "Colors"
+msgstr "Кольори"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_send_bug
+#: tr4w/src/lang/tr4w_consts_eng.pas:800
+msgctxt "RC_SEND_BUG"
+msgid "Send bug report"
+msgstr "Надіслати повідомлення про помилку в програмі"
+
+#. Section: UEDITMESSAGE
+#: utr4wstrings:rc_homepage
+#: tr4w/src/lang/tr4w_consts_eng.pas:801
+msgctxt "RC_HOMEPAGE"
+msgid "TR4W Home Page"
+msgstr "Домашня сторінка TR4W"
+
+#. Section: FD Additions NY4I
+#: utr4wstrings:rc_splitoff
+#: tr4w/src/lang/tr4w_consts_eng.pas:811
+msgctxt "RC_SPLITOFF"
+msgid "Set Split Mode Tx"
+msgstr "Режим роботи на частотах ВКЛ/ВИКЛ"
+
+#. Section: FD Additions NY4I
+#. 4.60.1
+#: utr4wstrings:rc_wkmode
+#: tr4w/src/lang/tr4w_consts_eng.pas:813
+msgctxt "RC_wkMode"
+msgid "Re-initialize WinKeyer"
+msgstr "Реініціалізація WinKeyer"
 
