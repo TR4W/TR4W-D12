@@ -1,0 +1,37 @@
+{
+   "DAN": {
+      "code": "da",
+      "name": "DANSK"
+   },
+   "DUT": {
+      "code": "nl",
+      "name": "NEDERLANDS"
+   },
+   "FIN": {
+      "code": "fi"
+   },
+   "GRE": {
+      "code": "el",
+      "name": "ELLINIKA"
+   },
+   "JPN": {
+      "code": "ja",
+      "name": "NIHONGO"
+   },
+   "KOR": {
+      "code": "ko",
+      "name": "HANGUGEO"
+   },
+   "POR": {
+      "code": "pt",
+      "name": "PORTUGUES"
+   },
+   "PTB": {
+      "code": "pt_BR",
+      "name": "PORTUGUES DO BRASIL"
+   },
+   "SWE": {
+      "code": "sv",
+      "name": "SVENSKA"
+   }
+}
