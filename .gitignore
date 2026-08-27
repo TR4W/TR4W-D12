@@ -188,3 +188,6 @@ tr4w/src/ui/lcl/backup/
 build-out/**/languages/
 tr4w/src/*.tmp
 tr4w/res/RCa*
+
+# Poedit compiles a .mo beside the .po; the binary is build output, not source.
+i18n/*.mo

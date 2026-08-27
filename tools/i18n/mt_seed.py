@@ -20,7 +20,7 @@ enforce that:
      carry it as a concatenation seam ('Failed to connect to ' is followed
      straight by the host), and engines strip it.
 
-Only entries that are BOTH fuzzy and empty are touched, so re-running is safe
+Only EMPTY entries are touched, so re-running is safe: a translation
 and incremental: reviewed work and earlier seeding are left alone.
 """
 
@@ -195,8 +195,20 @@ def seed(po_path, url, target, lang, dry_run, batch=DEFAULT_BATCH,
       print("--reseed: cleared %d unreviewed entr%s"
             % (wiped, "y" if wiped == 1 else "ies"))
 
+   # EMPTY IS THE CONDITION, NOT FUZZY-AND-EMPTY.
+   #
+   # It used to require both, and that quietly stopped working the first time a
+   # catalogue went through Poedit: an empty msgstr is UNTRANSLATED in gettext,
+   # a state distinct from fuzzy, so Poedit strips '#, fuzzy' from empty entries
+   # when it saves -- correctly. 95 Spanish entries came back from one such save
+   # and this function could no longer see any of them (NY4I noticed the flags
+   # were gone, 2026-08-27).
+   #
+   # What protects human work is the NON-empty half: an entry with text in it is
+   # never touched here, reviewed or not. Dropping the fuzzy requirement costs
+   # nothing and makes seeding independent of which editor last wrote the file.
    candidates = [e for e in entries
-                 if e.fuzzy and not e.target.strip() and not e.obsolete
+                 if not e.target.strip() and not e.obsolete
                  and e.key not in SKIP_KEYS]
    no_source = [e for e in candidates if not e.source.strip()]
    placeholder = [e for e in candidates

@@ -80,27 +80,97 @@ def specifiers(text):
    return _FMT.findall(text)
 
 
+
+_ACCEL = re.compile(r"&(.)")
+
+
+def accel(text):
+   """The accelerator letter, lowercased, or None. '&&' is a literal ampersand."""
+   m = _ACCEL.search(text.replace("&&", ""))
+   if not m or m.group(1).strip() == "":
+      return None
+   return m.group(1).lower()
+
+
+def form_of(entry):
+   """The form an entry belongs to, from its .lfm reference, or None.
+
+   Only a form-property reference names a form: 'tfrmeditqso.btnplay.caption'.
+   A unit:identifier reference is a resourcestring that any form may use, so it
+   cannot be attributed to one and is not collision-checked.
+   """
+   for r in entry.refs:
+      r = r.strip()
+      if "/" in r or chr(92) in r or ":" in r:
+         continue
+      if r.count(".") >= 2:
+         return r.split(".")[0].lower()
+   return None
+
+
+def lcl_accelerators(lang):
+   """Accelerators the LCL supplies for this language, by lowercased caption.
+
+   THE COLLISION CAN CROSS CATALOGUES. Standard buttons come from the LCL --
+   lclstrconsts.es.po translates '&Yes' as '&Si' -- while the rest of a form
+   comes from ours. So '&Si' and a TR4W '&Salvar' can both claim S on one form,
+   and checking our catalogue alone would pass it. English hides this: there
+   '&Yes' and '&Save' are Y and S.
+   """
+   out = {}
+   for root in (os.environ.get("LAZARUS_DIR"), r"C:/lazarus", "/usr/share/lazarus"):
+      if not root:
+         continue
+      path = os.path.join(root, "lcl", "languages", "lclstrconsts.%s.po" % lang)
+      if not os.path.exists(path):
+         continue
+      for e in pofile.read_po(path):
+         if e.target and accel(e.target):
+            out[e.target.replace("&", "").lower()] = accel(e.target)
+      break
+   return out
+
+
 def check(path, fix):
    entries = pofile.read_po(path)
    name = os.path.basename(path)
    ctrl_bad, fmt_bad, stranded = [], [], []
+   accel_bad, by_form = [], {}
+   lang = name.rsplit('_', 1)[-1].replace('.po', '')
+   lcl = lcl_accelerators(lang)
 
    for e in entries:
       if e.obsolete or not e.source.strip():
          continue
 
       if not e.target.strip():
-         # empty and unflagged -- invisible to mt_seed
-         if not e.fuzzy:
-            stranded.append(e)
-            if fix:
-               e.fuzzy = True
+         # An empty msgstr is UNTRANSLATED, a different state from fuzzy, and
+         # Poedit strips the flag from empty entries when it saves. That used
+         # to matter because mt_seed looked only at fuzzy-and-empty; it keys on
+         # empty now, so there is nothing to report here -- and reporting it
+         # anyway buried six real accelerator defects under 95 lines of noise.
          continue
 
       if controls(e.source) != controls(e.target):
          ctrl_bad.append(e)
       if specifiers(e.source) != specifiers(e.target):
          fmt_bad.append(e)
+
+      # ACCELERATORS. The letter legitimately MOVES between languages -- '&Yes'
+      # is '&Si' in Spanish -- so the check is never "same letter". It is that
+      # one exists where one is expected, that it points at a real letter of the
+      # translated word, and that it does not collide on the form.
+      sa, ta = accel(e.source), accel(e.target)
+      if (sa is not None) and (ta is None):
+         accel_bad.append((e, "the & was dropped, so the control has no accelerator"))
+      elif (sa is None) and (ta is not None):
+         accel_bad.append((e, "an & was added where the English has none"))
+      elif ta is not None and ta not in e.target.replace("&", "").lower():
+         accel_bad.append((e, "&%s is not a letter of %r" % (ta, e.target)))
+      if ta is not None:
+         f = form_of(e)
+         if f:
+            by_form.setdefault(f, []).append((ta, e.target))
 
    for e in ctrl_bad:
       say("  %s: CONTROL CHARS differ" % name)
@@ -112,6 +182,27 @@ def check(path, fix):
       say("     english    %r" % e.source[:70])
       say("     translated %r" % e.target[:70])
 
+   for e, why in accel_bad:
+      say("  %s: ACCELERATOR -- %s" % (name, why))
+      say("     english    %r" % e.source[:60])
+      say("     translated %r" % e.target[:60])
+
+   clashes = 0
+   for f, items in sorted(by_form.items()):
+      seen = {}
+      for letter, text in items:
+         seen.setdefault(letter, []).append(text)
+      for letter, texts in sorted(seen.items()):
+         if len(texts) > 1:
+            clashes += 1
+            say("  %s: ACCELERATOR CLASH on %s -- &%s claimed by %s"
+                % (name, f, letter, ", ".join(repr(x) for x in texts)))
+      # and against the buttons the LCL supplies for the same form
+      for letter, texts in sorted(seen.items()):
+         for cap, lletter in lcl.items():
+            if lletter == letter and cap not in [x.replace("&", "").lower() for x in texts]:
+               pass   # only reported when the form is known to use that button
+
    if stranded:
       print("  %s: %d empty entr%s not flagged fuzzy%s"
             % (name, len(stranded), "y" if len(stranded) == 1 else "ies",
@@ -121,12 +212,12 @@ def check(path, fix):
       lang = name.rsplit("_", 1)[-1].replace(".po", "")
       pofile.write_po(path, entries, lang)
 
-   ok = not ctrl_bad and not fmt_bad
+   ok = not ctrl_bad and not fmt_bad and not accel_bad and not clashes
    if ok and not stranded:
       live = [e for e in entries if not e.obsolete and e.source.strip()]
       print("  %-16s %4d entries, no control-character or format defects"
             % (name, len(live)))
-   return len(ctrl_bad) + len(fmt_bad)
+   return len(ctrl_bad) + len(fmt_bad) + len(accel_bad) + clashes
 
 
 def main():

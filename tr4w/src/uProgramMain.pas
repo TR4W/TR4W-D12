@@ -599,6 +599,64 @@ begin
 end;
 
 
+{ COMMAND-LINE HELP, and the reason it is a message box rather than WriteLn.
+
+  tr4w.exe is linked as a GUI subsystem binary, so it has no console to write
+  to -- a WriteLn here goes nowhere and looks like the program did nothing.
+
+  NOT TRANSLATED, deliberately (NY4I): it names switches, which are English
+  tokens, and it has to work before a catalogue is chosen -- including in the
+  case where the reason for showing it is that no language was given.
+
+  Returns True when it handled the command line and the program should stop. }
+function ShowCommandLineUsage: boolean;
+var
+   i:    integer;
+   arg:  string;
+   want: boolean;
+begin
+   Result := False;
+   want   := False;
+
+   { No arguments at all is the ordinary case and says nothing. }
+   for i := 1 to ParamCount do
+      begin
+      arg := ParamStr(i);
+      if SameText(arg, '-h') or SameText(arg, '-?') or SameText(arg, '--help') then
+         begin
+         want := True;
+         Break;
+         end;
+      { --lang or -l with nothing after it: the operator meant to pick a
+        language and did not say which, so list the ones that are here. }
+      if (SameText(arg, '--lang') or SameText(arg, '-l')) and (i = ParamCount) then
+         begin
+         want := True;
+         Break;
+         end;
+      end;
+
+   if not want then
+      begin
+      Exit;
+      end;
+
+   MessageBoxW(0, PWideChar(
+      'TR4W ' + TR4W_CURRENTVERSION_NUMBER + sLineBreak + sLineBreak +
+      'Usage:  tr4w.exe [<contest>.cfg] [options]' + sLineBreak + sLineBreak +
+      '  <contest>.cfg      open this contest configuration' + sLineBreak +
+      '  --lang <code>      run in this language' + sLineBreak +
+      '  --lang=<code>      the same' + sLineBreak +
+      '  /EXPORT            headless ADIF and Cabrillo export, then exit' + sLineBreak +
+      '  -h, -?, --help     this message' + sLineBreak + sLineBreak +
+      'Languages in this build:' + sLineBreak +
+      '  ' + AvailableLanguages + sLineBreak + sLineBreak +
+      'A catalogue in languages\<code>\tr4w.po beside the exe overrides' + sLineBreak +
+      'the embedded one.'),
+      'TR4W', MB_OK or MB_ICONINFORMATION);
+   Result := True;
+end;
+
 procedure RunTR4W;
 // NoTransMess and TransMess were declared here and never used -- FPC says so
 // ("Label not defined"), and it has presumably said so for years into a .dpr
@@ -628,6 +686,12 @@ var
   //rgb                                   : cardinal;
                                                                        // This way we can log before we read the DEBUG LOG LEVEL the legacy method in uCFG. // ny4i
 begin
+  { Before anything else: no window, no config, no catalogue read. }
+  if ShowCommandLineUsage then
+     begin
+     Halt(0);
+     end;
+
    // Enable thread-safe memory management. TR4W creates threads via Win32
    // CreateThread (not TThread), which does NOT set this flag automatically.
    // Without it, concurrent GetMem calls from different threads can corrupt

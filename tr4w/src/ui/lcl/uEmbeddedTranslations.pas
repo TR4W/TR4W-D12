@@ -58,6 +58,13 @@ function LoadEmbeddedTranslation(const aLang: string): string;
   still a loaded catalogue. }
 function ActiveUILanguage: string;
 
+{ The language codes this binary actually carries, space separated, e.g.
+  'cs da de el en es fi fr ...'.
+
+  Read from the RCDATA names rather than from a list, so it cannot disagree
+  with what Make-LanguageRes embedded. Used by the --lang usage text. }
+function AvailableLanguages: string;
+
 implementation
 
 uses
@@ -170,6 +177,41 @@ var
      Released in finalization, as a PAIR and translator-first. }
    GActiveCatalogue: TPOFile;
    GActiveLang:      string;
+
+
+function EnumLangProc(hModule: HMODULE; lpType, lpName: PAnsiChar;
+                      lParam: PtrInt): LongBool; stdcall;
+{ EnumResourceNamesA hands an ordinal in the low word when a resource is
+  numbered rather than named; ours are all named TR4W_<CODE>. }
+var
+   s: string;
+begin
+   Result := True;
+   if PtrUInt(lpName) <= $FFFF then
+      begin
+      Exit;
+      end;
+   s := string(AnsiString(lpName));
+   if Copy(s, 1, 5) = 'TR4W_' then
+      begin
+      TStringList(lParam).Add(LowerCase(Copy(s, 6, MaxInt)));
+      end;
+end;
+
+function AvailableLanguages: string;
+var
+   list: TStringList;
+begin
+   list := TStringList.Create;
+   try
+      list.Sorted := True;
+      list.Duplicates := dupIgnore;
+      EnumResourceNamesA(HInstance, RT_RCDATA, @EnumLangProc, PtrInt(list));
+      Result := Trim(StringReplace(list.Text, sLineBreak, ' ', [rfReplaceAll]));
+   finally
+      list.Free;
+   end;
+end;
 
 function ActiveUILanguage: string;
 begin
