@@ -132,15 +132,43 @@ def merge(path, template, ours, apply_changes):
       if e.source.strip() and e.target.strip() and not e.fuzzy:
          by_source.setdefault(e.source, e.target)
 
-   # RETIRE what an earlier merge let through. The rule changed once -- Log4D
-   # moved out of tr4w/src -- and 48 of its strings were already in every
-   # catalogue by then. Marked obsolete, not deleted: gettext keeps an obsolete
-   # entry with whatever text it has, Poedit hides it, and mt_seed skips it.
-   retired = 0
-   for e in existing:
-      if not e.obsolete and is_third_party(e, ours):
-         e.obsolete = True
-         retired += 1
+   # REMOVE what an earlier merge let through -- 48 Log4D strings per catalogue,
+   # before the rule read the project file.
+   #
+   # DELETED, NOT MARKED OBSOLETE, and the difference is the point. Obsolete is
+   # for OUR strings that have left the source: the key may come back, so the
+   # translation is kept against that day -- which is why the 84 drifted TC_/RC_
+   # entries stay, all 84 of them carrying real Spanish. A DEPENDENCY's string is
+   # not coming back into our catalogue, because it was never ours to hold. It is
+   # 5% of the file, invisible to Poedit but present in every diff and every
+   # review, for text nobody will ever translate (NY4I, 2026-08-26: "that was a
+   # mistake. no need for them to be there").
+   #
+   # Measured before deleting: 1 of the 48 had any text at all.
+   before = len(existing)
+   existing = [e for e in existing if not is_third_party(e, ours)]
+   retired = before - len(existing)
+
+   # AND DROP THE OBSOLETE ENTRIES TOO, for the same reason one step further out.
+   #
+   # gettext keeps an obsolete entry so its translation survives until the key
+   # returns. That is sound in principle and was worth nothing here: measured
+   # across the 84 in Spanish, 8 had the same English already translated in a
+   # live entry, 0 were recoverable into a live entry that needed one, and 76
+   # named text that exists nowhere in the program.
+   #
+   # What they cost is real. NY4I, 2026-08-26: "inert or not, an editor will
+   # think they have to translate them." Poedit hides them; a text editor does
+   # not, and a reviewer opening the file sees 84 blocks that look like work.
+   # 349 lines, 5% of the file, in every diff forever.
+   #
+   # The translations they held are not lost: po_merge carries a matching
+   # English into the new entry as it adds it, which is how 'Connect' ->
+   # 'Conectar' moved from TC_TELNET_CONNECT to tfrmtelnet.btnconnect.caption.
+   before = len(existing)
+   existing = [e for e in existing if not e.obsolete]
+   dropped = before - len(existing)
+   retired += dropped
 
    added = carried = skipped = 0
    for t in template:
