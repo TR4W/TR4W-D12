@@ -178,17 +178,71 @@ begin
       end;
 end;
 
+const
+   { WHAT THIS BOUNDS, AND WHY IT IS A CLOCK AND NOT AN ADDRESS RANGE.
+
+     Resolving an address that HAS line info costs about a millisecond. One that
+     does not costs about 790, because FPC's DWARF reader scans the debug
+     section to exhaustion before giving up and TR4W's .dbg is 59.6 MB. A real
+     crash on 2026-08-27 carried ten such frames and spent EIGHT SECONDS writing
+     its own backtrace -- measured off the timestamps in the log, which show the
+     resolved frames 1 ms apart and the unresolved ones 790 ms apart.
+
+     An address range cannot separate the two. The Lazarus LCL ships compiled
+     without line info and is STATICALLY LINKED into the same image
+     (0x00400000-0x00AC0000 for this build), so its code sits interleaved above
+     TR4W's by link order alone. Every expensive frame in that crash was inside
+     the image; only the three ntdll frames were outside it. Hardcoding "TR4W's
+     code ends at 0x0058" would encode a link-order accident that the next unit
+     added anywhere would invalidate, silently, in the one code path nobody
+     exercises until it matters.
+
+     So the budget is on time. Resolve until it is spent, then print raw
+     addresses -- which are still usable against the .dbg afterwards. A bounded
+     report that arrives beats a perfect one that stalls a dying program. }
+   FRAME_RESOLVE_BUDGET_MS = 1500;
+
 procedure WriteCrashReport(const aSource: string; aObj: TObject;
                            aAddr: CodePointer;
                            aFrameCount: Longint; aFrames: PCodePointer);
 var
    i: integer;
    cls, msg: string;
+   startTick: QWord;
+   budgetSpent: boolean;
+
+   { One frame, resolved if the budget allows and raw if it does not. Says so
+     once, on the frame that crossed the line, so a reader can tell "no symbols
+     for this unit" from "we stopped asking". }
+   function Frame(p: CodePointer): string;
+   begin
+      if budgetSpent then
+         begin
+         Result := SysUtils.Format('$%.8x', [PtrUInt(p)]);
+         Exit;
+         end;
+
+      if (GetTickCount64 - startTick) <= FRAME_RESOLVE_BUDGET_MS then
+         begin
+         Result := BackTraceStrFunc(p);
+         Exit;
+         end;
+
+      budgetSpent := True;
+      Result := SysUtils.Format('$%.8x  -- line-info lookups stopped here after '
+                                + '%d ms; the frames below are raw addresses, '
+                                + 'resolvable against the .dbg for this build',
+                                [PtrUInt(p), Int64(GetTickCount64 - startTick)]);
+   end;
+
 begin
    // NEVER let the reporter raise.  It runs while the program is already dying,
    // and a fault in here would replace a diagnosable crash with a silent one --
    // precisely the failure this unit exists to remove.
    try
+      startTick   := GetTickCount64;
+      budgetSpent := False;
+
       cls := 'unknown';
       msg := '';
       if aObj <> nil then
@@ -208,11 +262,11 @@ begin
                     TR4W_CURRENTVERSION_NUMBER, msg]);
       if aAddr <> nil then
          begin
-         CrashLogger.Fatal('[CRASH]   at %s', [BackTraceStrFunc(aAddr)]);
+         CrashLogger.Fatal('[CRASH]   at %s', [Frame(aAddr)]);
          end;
       for i := 0 to aFrameCount - 1 do
          begin
-         CrashLogger.Fatal('[CRASH]   %s', [BackTraceStrFunc(aFrames[i])]);
+         CrashLogger.Fatal('[CRASH]   %s', [Frame(aFrames[i])]);
          end;
    except
       // Deliberately empty: there is nothing left to report it to.
