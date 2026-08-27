@@ -92,11 +92,6 @@ uses
 var
    GForms: array[1..2] of TfrmRadioPanel = (nil, nil);
 
-const
-   { The K4's main pan.  Named rather than spelled 'A' at the call site so the
-     next reader sees that it is a protocol value, not a caption. }
-   K4_MAIN_PAN_SOURCE = 'A';
-
 function SlotOf(const aID: WindowsType): integer;
 begin
    if aID = tw_RADIOINTERFACEWINDOW2_INDEX then
@@ -197,18 +192,6 @@ begin
       Exit;
       end;
 
-   { 'A' IS THE MAIN PAN, and this is NOT a label -- the window filters frames
-     on equality against it (TfrmPanadapter.AcceptFrame).
-
-     A K4 streams several pans down ONE socket at once and stamps each frame
-     with its own id: 'A' and 'B' are the main pans, 'Y' the 3 kHz mini-pan.
-     uSpectrumTypes is explicit that this is OPAQUE -- not a "pan id", not a
-     character to parse -- so the only correct values are ones the producer
-     actually emits.  Anything else is not a wrong label, it is a filter that
-     matches nothing and a window that waits forever.
-
-     RADIO 1 AND RADIO 2 ARE DIFFERENT RADIOS, not the two pans of one K4, so
-     both ask for 'A' -- each rig's own main pan, on its own socket. }
    { THE SAME NAME THE PANEL ITSELF CARRIES -- "Radio 1 K4D-278" -- so the
      panadapter title reads "Panadapter - Radio 1 K4D-278".  Built the same way
      as the panel's caption (MainUnit, OpenTR4WWindow): the localized label,
@@ -234,7 +217,22 @@ begin
      station get two windows; before 2026-08-26 the second STOLE the first,
      because a single global form was re-attached to whichever radio asked
      last. }
-   ShowPanadapterWindow(aSlot, rig^.tFactoryObject, K4_MAIN_PAN_SOURCE, caption);
+   { THE RADIO NAMES ITS OWN SOURCE, and this is NOT a label -- the window
+     filters frames on equality against it (TfrmPanadapter.AcceptFrame).  A
+     mismatch is not a wrong caption, it is a filter that matches nothing and a
+     window that waits forever with nothing logged.
+
+     THIS USED TO BE THE LITERAL 'A' and that was correct for exactly as long
+     as the K4 was the only producer.  A K4 streams several pans down one
+     socket and stamps each 'A', 'B' or 'Y'; a network Icom stamps its scope id,
+     which is a NUMBER.  So the constant that worked for one family would have
+     opened an Icom panadapter that connected, streamed, decoded, and drew
+     nothing at all -- the worst shape of failure this seam can produce.
+
+     RADIO 1 AND RADIO 2 ARE DIFFERENT RADIOS, not two sources of one rig, so
+     each asks its own object for its own primary source. }
+   ShowPanadapterWindow(aSlot, rig^.tFactoryObject,
+                        rig^.tFactoryObject.PrimarySpectrumSourceId, caption);
    Result := True;
 end;
 

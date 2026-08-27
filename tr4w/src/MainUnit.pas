@@ -3533,6 +3533,15 @@ begin
      FreeAndNil(externalLogger);
      end;
 
+  { A PANADAPTER MAY STILL HOLD EITHER RADIO.  Release it before the object
+    goes, while StopSpectrum can still join the reading thread -- the same
+    contract RadioObject.ShutDownRadioInterface honours on a profile change.
+
+    DETACH, DO NOT CLOSE.  Closing records visible=False, which at exit would
+    quietly discard "this window was open" and stop it reopening next run. }
+  PanadapterRadioGoingAway(Radio1.tFactoryObject, False);
+  PanadapterRadioGoingAway(Radio2.tFactoryObject, False);
+
   if Radio1.tFactoryObject <> nil then
      begin
      FreeAndNil(Radio1.tFactoryObject);

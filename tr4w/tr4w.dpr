@@ -331,6 +331,7 @@ uses
   uCWFraming in 'src\radioFactory\uCWFraming.pas',
   uK4Spectrum in 'src\radioFactory\uK4Spectrum.pas',
   uK4SpectrumThread in 'src\radioFactory\uK4SpectrumThread.pas',
+  uIcomScope in 'src\radioFactory\uIcomScope.pas',
   uRadioKYBase in 'src\radioFactory\uRadioKYBase.pas',
   uRadioElecraftBase in 'src\radioFactory\uRadioElecraftBase.pas',
   uRadioKenwoodBase in 'src\radioFactory\uRadioKenwoodBase.pas',

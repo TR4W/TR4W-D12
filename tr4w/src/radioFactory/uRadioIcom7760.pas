@@ -58,7 +58,42 @@ begin
    // Capabilities from LOGRADIO's RadioSupports* lists.  These say what the
    // RADIO can do; the operator's config setting says what they WANT.  Both
    // are required -- a user can enable CW-by-CAT on a radio that cannot do it.
-   FCapabilities.Flags := FCapabilities.Flags + [rcCWByCAT, rcCWSpeedSync, rcPlayDVK];
+   FCapabilities.Flags := FCapabilities.Flags + [rcCWByCAT, rcCWSpeedSync, rcPlayDVK, rcSpectrum];
+
+   { THE BANDSCOPE GEOMETRY.  Declared HERE because it is a per-model hardware
+     fact that nothing else the radio says implies -- see
+     TIcomRadio.DeclareScopeGeometry for why it is not in TRadioCapabilities.
+
+     MEASURED ON THE RADIO, 2026-08-26, AND IT IS THE ONLY SOURCE THERE IS.
+     HamLib carries no spectrum caps for the IC-7760 and AetherSDR's model
+     table does not list it, so nothing published anywhere states this
+     geometry.  It was read off NY4I's rig with
+     tr4w/test/bench/bench_icomscope.dpr:
+
+       LAN payload            704 bytes  =  15-byte header + 689 levels
+       points                 689
+       scope ids seen         0 only
+       divisions              1 of 1     (whole sweep in one frame, as LAN does)
+       mode                   00 = centre
+       header cross-check     centre 1.816195 MHz, span +/-2.5 kHz -- which is
+                              where the rig was tuned and what it displayed
+
+     SO IT IS A 689-POINT RADIO, like the IC-7610 and the IC-785x, and NOT the
+     475 the rest of the family uses.  The first run declared 475 and the bench
+     REFUSED it -- "this radio sends 689 points, not 475" -- which is the whole
+     reason that check exists.
+
+     THE LEVEL RANGE IS INFERRED, NOT MEASURED.  Every sample in the capture
+     was zero (the rig's scope was not showing signal), so the bench could only
+     report a lower bound of 0.  200 is taken from the fact that both other
+     689-point radios use it in both HamLib and AetherSDR -- a pairing, not an
+     observation.  Re-run the bench with the scope live to settle it; the
+     number to watch is "highest level seen".
+
+     rcSpectrum above says the MODEL has a scope; whether THIS connection can
+     deliver it is SpectrumAvailable's question, and it answers no on a serial
+     link until someone has watched the divided path work. }
+   DeclareScopeGeometry(689, 200);
 end;
 
 // NAMED unit-level constructors, not anonymous functions.  None of these

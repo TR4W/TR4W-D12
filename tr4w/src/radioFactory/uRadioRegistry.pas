@@ -128,6 +128,13 @@ const
    rcPlayDVK            = uFactoryRadioBase.rcPlayDVK;
    rcCWSpeedSync        = uFactoryRadioBase.rcCWSpeedSync;
    rcSharedRITXITOffset = uFactoryRadioBase.rcSharedRITXITOffset;
+   // ADDED 2026-08-26, WITH THE SECOND SPECTRUM RADIO.  rcSpectrum existed from
+   // the K4 work but never reached this list, because uRadioElecraftK4 is one of
+   // the few model units that uses uFactoryRadioBase directly.  The network
+   // Icoms do not, so declaring it there failed with exactly the E2003 the block
+   // above describes -- the same trap, eight months later, which is the argument
+   // for the block rather than for 25 edited headers.
+   rcSpectrum           = uFactoryRadioBase.rcSpectrum;
 
 // Reads as SerialParams(4800, 8, PARITY_NONE, 2) at each registration.
 function SerialParams(baud: Integer; dataBits, parity, stopBits: Byte): TSerialParams;

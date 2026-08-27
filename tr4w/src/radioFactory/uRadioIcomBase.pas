@@ -54,7 +54,8 @@ interface
 
 uses
   Windows, uFactoryRadioBase, uRadioBand, uIcomNetworkTransport, uIcomNetworkTypes, SysUtils, StrUtils, VC, Log4D,
-  uIcomCIV, Classes, SyncObjs, uCWFraming;
+  uIcomCIV, Classes, SyncObjs, uCWFraming,
+  uSpectrumTypes, uIcomScope;   // the panadapter seam and the $27 bandscope decoder
 
 const
   // CI-V Sub-commands for TX/RX
@@ -81,6 +82,20 @@ type
   TIcomRadio = class; // forward — TCIVSendThread holds a back-reference
 
   TCIVPriority = (civpNormal, civpUrgent);
+
+  { A RAW COPY OF EVERY $27 $00 PAYLOAD, for capturing a fixture.
+
+    nil in normal operation and never assigned by the program.  It exists
+    because the ONLY way to establish an Icom's scope geometry is to watch a
+    rig send one: the IC-7760's point count is published nowhere, and even the
+    IC-9700's is one person's capture rather than a guide.  Freezing real
+    payloads is also how the K4 decoder got its regression fixture
+    (test/unit/fixtures/k4pan-sample.bin), and the three claims that capture
+    overturned are the argument for doing it again here.
+
+    RAW, DELIBERATELY -- upstream of the decoder, so a fixture cannot inherit a
+    decoder bug and then be used to prove that decoder right. }
+  TIcomScopePayloadProc = procedure(const APayload: TBytes) of object;
 
   // Serializes all outbound CI-V commands through a single thread with a minimum
   // inter-command delay. Prevents any combination of callers (poll, user actions,
@@ -136,6 +151,17 @@ type
     FPollPhase: Integer;            // Rotates through query groups to avoid flooding radio
     FLastSetCWSpeedTick: DWORD;   // GetTickCount at last SetCWSpeed call — suppresses stale echoes
     FDataModeID: Byte;            // Icom data sub-mode: $01=D1 (default), $02=D2, $03=D3 — configurable via RADIO x ICOM DATA MODE ID
+
+    // ---- Bandscope ($27) ----------------------------------------------------
+    FScopeGeometry: TIcomScopeGeometry;  // declared by the model -- DeclareScopeGeometry
+    FScopeDecoder: TIcomScopeDecoder;    // nil until StartSpectrum; owns the assembly state
+    FScopeSpanHz: Integer;               // TOTAL width the RIG reports ($27 $15 x 2); 0 = not yet said
+    FScopeStreaming: Boolean;            // StartSpectrum sent the enables and has not stopped them
+    FOnScopePayload: TIcomScopePayloadProc;   // capture hook -- see TIcomScopePayloadProc
+    procedure ApplyScopeEnables;   // $27 $10 + $27 $11; see OnNetworkStateChange
+    procedure ProcessScopeWaveData(const data: string);
+    procedure ProcessScopeSpanReply(const data: string);
+    function ScopeSelector: string;      // the selector byte $27 $15 and friends carry
 
     // Actual UDP send — only called by TCIVSendThread.DrainQueues
     procedure DoSendDirect(const s: string);
@@ -201,6 +227,28 @@ type
     // radios override to declare fewer. Called from TIcomRadio.Create (virtual dispatch).
     procedure DefineCapabilities; virtual;
 
+    { ---- Bandscope -----------------------------------------------------------
+
+      DECLARED BY THE MODEL, GUARDED BY THE BASE.  Scope geometry is a per-model
+      hardware fact that cannot be inferred from anything else the radio says:
+      the IC-7610 differs from the IC-7300 in BOTH point count (689 vs 475) and
+      level range (0..200 vs 0..160), and a wrong point count truncates every
+      sweep so the right-hand third of the display goes flat.
+
+      DELIBERATELY NOT IN TRadioCapabilities.  Every Icom subclass replaces that
+      record's Flags wholesale in DefineCapabilities, and the family has already
+      been bitten twice by a value written there being silently wiped -- all
+      fourteen keying Icoms came out with CW frame maxLen 0, a legal and silent
+      "no limit".  A field here cannot be wiped by an override that does not
+      mention it.
+
+      A radio that declares rcSpectrum and never calls this has a geometry of
+      zeroes, which IS a legal-looking answer -- so uTestIcomScopeSeam asserts
+      exhaustively that the two agree, per CLAUDE.md's rule on
+      silently-defaulted fields. }
+    procedure DeclareScopeGeometry(APoints, AMaxLevel: Integer);
+
+
   public
     constructor Create; reintroduce;
     destructor Destroy; override;
@@ -261,16 +309,114 @@ type
     property NetworkUsername: string read FNetworkUsername write FNetworkUsername;
     property NetworkPassword: string read FNetworkPassword write FNetworkPassword;
     property DataModeID: Byte read FDataModeID write FDataModeID;
+    // ---- Bandscope: the panadapter seam ------------------------------------
+    // The second implementer of TFactoryRadioBase's spectrum seam, after the
+    // K4.  Nothing above the radio layer learns that this one is an Icom --
+    // see uIcomScope for how the wire format is turned into TSpectrumFrame.
+    function SpectrumAvailable: Boolean; override;
+    procedure StartSpectrum; override;
+    procedure StopSpectrum; override;
+    procedure SetSpectrumSpan(const aSpanHz: Integer); override;
+    function SpectrumSpanHz: Integer; override;
+    procedure StepSpectrumSpan(const aDirection: Integer); override;
+    function PrimarySpectrumSourceId: string; override;
+    function SpectrumStreaming: Boolean; override;
+    function SpectrumLinkUp: Boolean; override;
+
+    { WHAT THIS RADIO SAYS ITS SCOPE IS, and WHAT IT ACTUALLY SENT.
+
+      READ-ONLY AND PUBLIC, while DeclareScopeGeometry stays protected: only a
+      subclass may STATE a geometry, but anyone may ask what was stated -- and
+      the bench harness has to, because comparing the two is the only way to
+      find a wrong declaration.  That is not hypothetical: the IC-7760's point
+      count is published nowhere and its driver carries a provisional guess.
+
+      ScopeMeasuredPoints is the level-byte count of the last completed sweep,
+      taken BEFORE truncation to the declared geometry -- so it disagrees with
+      ScopeGeometryPoints exactly when the declaration is wrong.  0 before any
+      sweep has completed.
+
+      ScopeMeasuredMaxLevel is a LOWER BOUND on the level range, reached only
+      if something strong was in the passband.  It can disprove a declared
+      maximum; it cannot confirm one. }
+    { Which scope this radio's panadapter follows.  Main on every model today;
+      a subclass whose Sub scope is the interesting one overrides it.  Used
+      both as the SourceId filter and as the selector byte on $27 $15.
+
+      PUBLIC because it is read-only information a caller legitimately wants --
+      the seam test asserts that PrimarySpectrumSourceId is exactly what the
+      decoder stamps for this id, and nothing else can check that. }
+    function ScopeIdToFollow: Byte; virtual;
+    function ScopeGeometry: TIcomScopeGeometry;
+    function ScopeGeometryPoints: Integer;
+    function ScopeGeometryMaxLevel: Integer;
+    function ScopeMeasuredPoints: Integer;
+    function ScopeMeasuredMaxLevel: Integer;
+
     // E-2: LOGRADIO used to type-test this class and poke the properties above.
     procedure ApplyNetworkCredentials(const user, pass: string); override;
     procedure ApplyDataModeID(id: integer); override;
     property NetworkTransport: TIcomNetworkTransport read FNetworkTransport;
+
+    // Capture hook for tr4w/test/bench/bench_icomscope.dpr.  See
+    // TIcomScopePayloadProc; nothing in the program assigns it.
+    property OnScopePayload: TIcomScopePayloadProc
+             read FOnScopePayload write FOnScopePayload;
   end;
 
 implementation
 
 var
   logger: TLogLogger;
+
+(* ONE CI-V BYTE AS ONE Char, WITHOUT THE CODEPAGE.
+
+  USE THIS AND NEVER Chr() FOR A CI-V BYTE.  Chr() is WRONG here, and wrong in
+  a way that no compiler diagnostic and no reading of the source can show:
+
+    * tr4w.inc sets {$MODESWITCH UnicodeStrings}, so `string` is UTF-16;
+    * FPC's Chr() returns an ANSI char, so putting one in a `string` runs
+      DefaultSystemCodePage -- which the LCL sets to 65001 (UTF-8);
+    * a lone byte >= $80 is not valid UTF-8, so it decodes to U+FFFD, and the
+      transport's Byte(Ord(...)) then puts $FD on the wire.
+
+  THIS COMMENT USES PAREN-STAR DELIMITERS ON PURPOSE.  A brace comment cannot
+  quote a compiler directive: braces do not nest, so the closing brace of the
+  MODESWITCH directive above would end the comment early and everything after
+  it would be compiled as code.  NY4I, 2026-08-26: "this has bitten us before".
+  (Paren-star does not nest either -- so do not write its delimiters inside
+  one, which is exactly the mistake this line replaces.)
+
+  AND CONSTANTS HIDE IT.  FPC folds Chr($A2) at compile time into a UTF-16
+  literal, which is correct -- so every Chr() with a literal argument works and
+  only the ones with a VARIABLE argument are broken.  Measured, both forms in
+  one program:
+
+      Chr($A2)  literal        ->  U+00A2   correct
+      Chr(b)    b: Byte = $A2  ->  U+FFFD   corrupt
+
+  WHAT IT COST: every CI-V frame TR4W built carried $FD in BOTH address bytes,
+  because a radio address ($A2 on an IC-9700, $94 on an IC-7300, $98 on an
+  IC-7610, $A4 on an IC-705) and the controller address ($E0) are variables and
+  are all >= $80.  $FD is also the CI-V terminator, so the radio saw
+  `FE FE FD` -- a frame that ends before it begins -- and answered nothing.
+  Found 2026-08-26 on NY4I's IC-9700 while bringing up the bandscope; the scope
+  was the first thing that NEEDED a reply rather than merely sending.
+
+  THE RECEIVE SIDE HAD THE MIRROR IMAGE OF THIS -- see CIV_PREAMBLE1, where it
+  is the CONSTANTS that break and runtime casts that work.  Same root cause,
+  opposite symptom, which is why fixing one did not reveal the other.
+
+  A TYPECAST, NOT A CONVERSION.  Char(b) reinterprets the ordinal as a UTF-16
+  code unit, so codepoint == byte by construction and no codepage is consulted.
+  It is the same thing CivRawToStr already does per character, and that
+  routine's comment already warned about this hazard for BCD payloads -- the
+  address bytes simply never got the same treatment. *)
+function CivChr(b: Byte): Char; inline;
+begin
+   Result := Char(b);
+end;
+
 
 // CI-V send queue tuning
 const
@@ -394,9 +540,42 @@ end;
 
 // ---- CI-V Protocol Constants -----------------------------------------------
 const
-  CIV_PREAMBLE1 = #$FE;
-  CIV_PREAMBLE2 = #$FE;
-  CIV_EOM = #$FD;
+  (* TYPED Char CONSTANTS, AND THE TYPE IS THE WHOLE POINT.
+
+     These were untyped character constants -- `CIV_PREAMBLE1 = #$FE;` -- and
+     that spelling made every CI-V frame TR4W received UNPARSEABLE.  Measured
+     on a buffer holding FE FE A2 E0 27 11 01 FD, built the same way
+     ExtractCivFrames builds one:
+
+         Pos(CIV_PREAMBLE1 + CIV_PREAMBLE2, buf)  =  0     <-- untyped
+         Pos(CIV_EOM, buf)                        =  0     <-- untyped
+         Pos(Char($FE) + Char($FE), buf)          =  1
+
+     WHY.  tr4w.inc turns on the UnicodeStrings modeswitch, so `string` is
+     UTF-16.  An UNTYPED character constant is still 8-bit, so passing one as a
+     string PARAMETER converts it through DefaultSystemCodePage -- which the
+     LCL sets to 65001 (UTF-8) -- and a lone byte >= $80 is not valid UTF-8, so
+     the needle became U+FFFD and matched nothing.  Declaring the type makes
+     them UTF-16 by construction and no overload can pick an 8-bit one.
+
+     COMPARISONS WERE NEVER AFFECTED, WHICH IS WHY THIS SURVIVED REVIEW.
+     `frame[1] <> CIV_PREAMBLE1` and `frame[Length(frame)] <> CIV_EOM` work
+     with either spelling -- the compiler widens the constant in a comparison.
+     Only PARAMETER PASSING breaks, so the three Pos() calls in
+     ProcessCIVMessage failed while every hand-written check around them
+     succeeded.  ProcessCIVMessage therefore reported "N byte(s) in the buffer
+     with no preamble" for buffers that visibly began FE FE.
+
+     `readTerminator := CIV_EOM` (the SERIAL frame terminator) was corrupted by
+     the same conversion, so this is not a network-only fault.
+
+     Found 2026-08-26 on NY4I's IC-9700 while bringing up the bandscope.  It is
+     a migration defect, not a new one: docs record Icom as verified UNDER
+     DELPHI and never re-confirmed under FPC, and this is what that gap was
+     hiding. *)
+  CIV_PREAMBLE1: Char = #$FE;
+  CIV_PREAMBLE2: Char = #$FE;
+  CIV_EOM: Char = #$FD;
 
   // CI-V Commands
   CIV_CMD_BAND_EDGES = #$02;   // read band edge frequencies -- see QueryBandEdgesOnce
@@ -487,6 +666,19 @@ begin
   FMainBandProcessingOnly   := False;  // Override True for IC-9700, IC-9100 (satellite-mode $25 returns FA)
   FActiveVFOInverted        := False;  // Override True for IC-9700 ($00=$B active, $01=$A active)
   FPollPhase := 0;
+
+  // ---- Bandscope ----------------------------------------------------------
+  // ZEROES ARE THE HONEST DEFAULT.  A model that has a scope declares its
+  // geometry in its own constructor (DeclareScopeGeometry); one that does not
+  // is left with a geometry SpectrumAvailable refuses, so a radio cannot half
+  // advertise a panadapter.  The decoder is not built until StartSpectrum --
+  // most stations never open the window, and an idle decoder is 475 or 689
+  // bytes per scope of nothing.
+  FScopeGeometry := IcomScopeGeometry(0, 0);
+  FScopeDecoder := nil;
+  FScopeSpanHz := 0;
+  FScopeStreaming := False;
+  FOnScopePayload := nil;
   FTransceiveMenuBytes := #$01 + #$50;  // Default: IC-7610/IC-7760 menu item; IC-9700 overrides to $01 $28
   FSupportsActiveVFOQuery := False;       // Overridden True by radios that support $07 $D2 (e.g. IC-7760)
   FActiveVFO := nrVFOA;                  // Safe default; updated by $07 $D2 response on connect
@@ -555,6 +747,13 @@ end;
 
 destructor TIcomRadio.Destroy;
 begin
+  // BEFORE the transport goes.  StopSpectrum sends $27 $11 $00 to turn the
+  // radio's data output back off, and a send after the transport is freed is a
+  // call through a nil pointer.  (StopSpectrum is safe to call when nothing was
+  // started -- see its own guard.)
+  StopSpectrum;
+  FreeAndNil(FScopeDecoder);
+
   if FNetworkTransport <> nil then
      begin
      FNetworkTransport.Disconnect;
@@ -709,7 +908,7 @@ begin
          for ix := 1 to count do
             begin
             SendToRadio(BuildCIVCommand(Ord(CIV_CMD_TX_BANDS),
-                                        #$01 + Chr(((ix div 10) shl 4) or (ix mod 10))));
+                                        #$01 + CivChr(((ix div 10) shl 4) or (ix mod 10))));
             end;
          logger.Info('[%s] %s -> requested edges for bands 1..%d',
                      [radioModel, tag, count]);
@@ -1192,6 +1391,28 @@ begin
         SendToRadio(BuildCIVCommand($1A, #$06));                       // Data mode on/off
         end;
      SendToRadio(BuildCIVCommand($14, CIV_SUBCMD_CW_SPEED));          // CW speed ($14 $0C)
+
+     (* THE BANDSCOPE ENABLES BELONG HERE, NOT IN StartSpectrum.
+
+        A command sent before the CI-V stream is open is DROPPED -- the
+        transport logs "SendCivData called while CI-V stream not open" and
+        returns -- and StartSpectrum can easily run first: the window opens
+        whenever the operator presses the button, and uPanadapterRestore fires
+        it at start-up while the radio is still handshaking.
+
+        THIS COST A WHOLE BENCH SESSION.  On NY4I's IC-9700 the first enable
+        ($27 $10, the scope FUNCTION) was dropped this way while the second
+        ($27 $11, the CI-V wave output) went out 32 ms later and succeeded.  The
+        result is the worst possible symptom: the radio streams perfectly
+        well-formed 490-byte sweeps at 30 frames a second, every field correct,
+        and every level ZERO.  Nothing errors, nothing is missing, and the
+        display is simply flat -- which reads as "the band is dead" rather than
+        as a command that never arrived.
+
+        Re-sending unconditionally on every connect is deliberate: these are
+        idempotent set commands, a reconnect loses them anyway, and the cost is
+        two frames. *)
+     ApplyScopeEnables;
      end;
 end;
 
@@ -1199,8 +1420,8 @@ end;
 function TIcomRadio.BuildCIVCommand(command: Byte; data: string): string;
 begin
   Result := CIV_PREAMBLE1 + CIV_PREAMBLE2 +
-            Chr(FRadioAddress) + Chr(FControllerAddress) +
-            Chr(command) + data + CIV_EOM;
+            CivChr(FRadioAddress) + CivChr(FControllerAddress) +
+            CivChr(command) + data + CIV_EOM;
 end;
 
 // Byte-faithful conversions between a CI-V byte carried in a `string` (each Char's
@@ -1632,9 +1853,35 @@ begin
            end;
       end;
 
-    $27:  // Bandscope data — pushed unsolicited by radio, not used
+    $27:  // Bandscope.  Wave data is PUSHED unsolicited once enabled; the rest
+          // are replies to what StartSpectrum asked for.
       begin
-        // Silently discard — frames can be hundreds of bytes
+        // Length 1 is the sub-command alone.  A $27 with no sub-command at all
+        // is not something a radio sends, so it is dropped rather than guessed.
+        if Length(data) >= 1 then
+           begin
+           case Ord(data[1]) of
+             ICOM_SCOPE_SUB_WAVEDATA:
+               begin
+                 ProcessScopeWaveData(data);
+               end;
+
+             ICOM_SCOPE_SUB_SPAN:
+               begin
+                 ProcessScopeSpanReply(data);
+               end;
+             else
+               begin
+                 // Every other scope setting -- reference level, waterfall
+                 // colour, sweep speed, attenuator.  DELIBERATELY NOT PARSED:
+                 // the sweep carries its own edges and TR4W scales from the
+                 // sweep's own levels, so nothing here is blocked by ignoring
+                 // them.  The K4 work reached the same conclusion about its 25
+                 // '#' commands and revisited it later with evidence rather
+                 // than guessing up front (docs/PANADAPTER_LCL_DESIGN.md 10).
+               end;
+           end;
+           end;
       end;
 
     $07:  // VFO selection response or transceive push
@@ -2492,7 +2739,7 @@ begin
         end;
      logger.Debug('[%s.SetMode] Sending $26 $01 modeCmd=$%.2x dataMode=$%.2x filterCmd=$%.2x',
         [radioModel, modeCmd, dataMode, filterCmd]);
-     SendToRadio(BuildCIVCommand($26, #$01 + Chr(modeCmd) + Chr(dataMode) + Chr(filterCmd)));
+     SendToRadio(BuildCIVCommand($26, #$01 + CivChr(modeCmd) + CivChr(dataMode) + CivChr(filterCmd)));
      end
   else
      begin
@@ -2506,13 +2753,13 @@ begin
      if FModeSetIncludesFilter then
         begin
         logger.Debug('[%s.SetMode] Sending $06 modeCmd=$%.2x filterCmd=$%.2x', [radioModel, modeCmd, filterCmd]);
-        SendToRadio(BuildCIVCommand($06, Chr(modeCmd) + Chr(filterCmd)));
+        SendToRadio(BuildCIVCommand($06, CivChr(modeCmd) + CivChr(filterCmd)));
         end
      else
         begin
         // Old Icoms (IC-718) take the mode byte only; a trailing filter byte makes them NAK the frame.
         logger.Debug('[%s.SetMode] Sending $06 modeCmd=$%.2x (no filter byte)', [radioModel, modeCmd]);
-        SendToRadio(BuildCIVCommand($06, Chr(modeCmd)));
+        SendToRadio(BuildCIVCommand($06, CivChr(modeCmd)));
         end;
 
      // Set or clear the Icom data sub-mode flag ($1A $06):
@@ -2528,7 +2775,7 @@ begin
         if mode in [rmAFSK, rmData, rmDataRev] then
            begin
            logger.Debug('[%s.SetMode] Sending $1A $06 $%.2x (data mode ON, D%d)', [radioModel, FDataModeID, FDataModeID]);
-           SendToRadio(BuildCIVCommand($1A, #$06 + Chr(FDataModeID)));
+           SendToRadio(BuildCIVCommand($1A, #$06 + CivChr(FDataModeID)));
            end
         else if (mode in [rmUSB, rmLSB, rmAM, rmFM]) and
                 (Self.vfo[vfo].Mode in [rmData, rmDataRev, rmAFSK]) then
@@ -2618,7 +2865,7 @@ begin
       end
    else if (mem >= 1) and (mem <= 8) then
       begin
-      SendToRadio(BuildCIVCommand($28, #$00 + Chr(mem)));
+      SendToRadio(BuildCIVCommand($28, #$00 + CivChr(mem)));
       logger.debug('[%s.MemoryKeyer] Playing DVK memory %d', [radioModel, mem]);
       Result := False;
       end
@@ -2699,7 +2946,7 @@ begin
   bcdHigh := IcomByteToBCD(icomValue div 100);    // 0-2
   bcdLow  := IcomByteToBCD(icomValue mod 100);    // 0-99
   FLastSetCWSpeedTick := GetTickCount;  // Start debounce window before sending
-  SendToRadio(BuildCIVCommand($14, CIV_SUBCMD_CW_SPEED + Chr(bcdHigh) + Chr(bcdLow)));
+  SendToRadio(BuildCIVCommand($14, CIV_SUBCMD_CW_SPEED + CivChr(bcdHigh) + CivChr(bcdLow)));
   localCWSpeed := speed;
   logger.debug('[%s.SetCWSpeed] %d WPM -> icomValue=%d -> BCD $%s $%s',
                [radioModel, speed, icomValue,
@@ -2895,7 +3142,7 @@ begin
     filterNum := $01;  // Default filter
   end;
 
-  SendToRadio(BuildCIVCommand($1A, CIV_SUBCMD_FILTER_WIDTH + Chr(filterNum)));
+  SendToRadio(BuildCIVCommand($1A, CIV_SUBCMD_FILTER_WIDTH + CivChr(filterNum)));
   logger.debug('[%s.SetFilter] Set filter to %d', [radioModel, filterNum]);
 end;
 
@@ -2936,6 +3183,456 @@ begin
   // would run the next two characters together, which is not what TR4W means
   // by it.
   FCapabilities.CWProsigns := CWProsigns(' ', '^SN', '^AR', '^SK', '^BT');
+end;
+
+// ===========================================================================
+// Bandscope ($27) -- the panadapter seam
+//
+// The SECOND implementer of TFactoryRadioBase's spectrum seam.  Read
+// uIcomScope's header for the wire format and for where the three references
+// disagree; what follows is only the wiring.
+//
+// THE DIFFERENCE FROM THE K4 THAT SHAPES ALL OF IT: there is no side channel.
+// The K4 opens a second TCP socket on CAT port + 1 and owns a dedicated
+// reading thread; an Icom pushes $27 $00 down the SAME CI-V link that carries
+// frequency and mode, so this code runs on whatever thread already delivers
+// CI-V and adds no thread of its own.  Two consequences worth stating:
+//
+//   * PublishSpectrumFrame is raised on the CI-V receive thread, which is
+//     exactly the contract TSpectrumFrameProc already declares.  The
+//     panadapter window parks the frame under a lock and repaints on a timer,
+//     so it needs no change for this.
+//   * the scope competes with tuning commands for the link.  That is a real
+//     cost and it is why StopSpectrum turns the radio's data output back OFF
+//     rather than leaving it running for a window nobody has open.
+//
+// FRAMING IS SAFE, and not by luck: a scope frame can contain neither $FD nor
+// $FE.  Levels top out at 200, BCD digits at $99, the sign nibble makes at most
+// $F9, and the mode, division and flag bytes are all small.  So the CI-V framer
+// -- which splits on $FD and resyncs on $FE $FE -- cannot be desynchronised by
+// a 490-byte payload, and neither the serial reading thread's terminator split
+// nor ProcessCIVMessage needed changing.
+// ===========================================================================
+
+procedure TIcomRadio.DeclareScopeGeometry(APoints, AMaxLevel: Integer);
+begin
+   FScopeGeometry := IcomScopeGeometry(APoints, AMaxLevel);
+
+   // A geometry that arrives after the decoder exists must reach it, or the
+   // decoder would keep sizing sweeps to the old point count.  In practice this
+   // is called from a model constructor long before StartSpectrum; the branch
+   // is here so that ordering is not load-bearing.
+   if Assigned(FScopeDecoder) then
+      begin
+      FScopeDecoder.Geometry := FScopeGeometry;
+      end;
+end;
+
+function TIcomRadio.ScopeGeometry: TIcomScopeGeometry;
+begin
+   Result := FScopeGeometry;
+end;
+
+function TIcomRadio.ScopeGeometryPoints: Integer;
+begin
+   Result := FScopeGeometry.Points;
+end;
+
+function TIcomRadio.ScopeGeometryMaxLevel: Integer;
+begin
+   Result := FScopeGeometry.MaxLevel;
+end;
+
+function TIcomRadio.ScopeMeasuredPoints: Integer;
+begin
+   // 0 when nothing has decoded yet, which the caller must distinguish from a
+   // disagreement -- "no sweep arrived" and "the declaration is wrong" have
+   // very different fixes.
+   if not Assigned(FScopeDecoder) then
+      begin
+      Result := 0;
+      Exit;
+      end;
+
+   Result := FScopeDecoder.LastSweepLevelBytes;
+end;
+
+function TIcomRadio.ScopeMeasuredMaxLevel: Integer;
+begin
+   if not Assigned(FScopeDecoder) then
+      begin
+      Result := 0;
+      Exit;
+      end;
+
+   Result := FScopeDecoder.MaxLevelSeen;
+end;
+
+function TIcomRadio.ScopeIdToFollow: Byte;
+begin
+   // Main.  HamLib documents 0 = Main, 1 = Sub, and that is the only claim
+   // anyone makes about which is which -- it has NOT been confirmed on a rig
+   // here.  Nothing breaks if it is backwards on some model: the window would
+   // follow the other scope, which a bench session sees immediately.
+   Result := 0;
+end;
+
+function TIcomRadio.ScopeSelector: string;
+begin
+   Result := CivChr(ScopeIdToFollow);
+end;
+
+function TIcomRadio.PrimarySpectrumSourceId: string;
+begin
+   { A RADIO WITH NO SCOPE NAMES NO SOURCE, and the guard is not decoration --
+     uTestIcomScopeSeam caught this override answering '0' for an IC-7600, a
+     radio that streams nothing at all.  A plausible id on a radio with no
+     spectrum is worse than an empty one: it makes a caller's "did this radio
+     give me a source" test pass, so the failure moves from the place that can
+     report it to a window that simply never draws.
+
+     GATED ON THE CAPABILITY, NOT ON SpectrumAvailable.  Which scope the
+     panadapter follows is a fact about the MODEL and does not stop being true
+     because this particular rig is on a serial cable today. }
+   if not Supports(rcSpectrum) then
+      begin
+      Result := '';
+      Exit;
+      end;
+
+   // The SAME spelling the decoder stamps on every frame.  One function owns
+   // it (uIcomScope.IcomScopeSourceId) precisely because the window filters by
+   // string equality and a mismatch produces a window that draws nothing with
+   // nothing logged anywhere.
+   Result := IcomScopeSourceId(ScopeIdToFollow);
+end;
+
+function TIcomRadio.SpectrumAvailable: Boolean;
+begin
+   { THREE THINGS, AND THE ORDER MATTERS.
+
+     rcSpectrum first, so deleting the capability from a model's constructor
+     disables the feature in ONE edit rather than leaving this contradicting it
+     -- the same reasoning TK4Radio.SpectrumAvailable gives.
+
+     NETWORK ONLY, for now.  Icom pushes $27 down plain CI-V, so unlike the K4
+     this is not a transport the protocol forces -- a serial Icom really can
+     stream spectrum, in 11 or 15 divisions, and uIcomScope decodes that path
+     and has tests for it.  What has NOT happened is anyone watching it work on
+     a wire, and 30 sweeps a second on a shared serial bus alongside tuning
+     commands is exactly the kind of thing that behaves differently in a
+     contest than on a bench.  So the decoder is ready and the gate is shut;
+     opening it is a one-line change behind a bench session.
+
+     GEOMETRY LAST, and it is not a formality.  A model that declares
+     rcSpectrum and forgets DeclareScopeGeometry has points = 0, which decodes
+     every sweep into nothing at all and produces no diagnostic -- CLAUDE.md's
+     "a silently-defaulted field reads as a legal zero".  Refusing here turns
+     that into an absent button instead of an empty window, and
+     uTestIcomScopeSeam asserts the two can never disagree. }
+   Result := Supports(rcSpectrum) and
+             IsNetworkConnection and
+             IcomScopeGeometryIsValid(FScopeGeometry);
+end;
+
+procedure TIcomRadio.ProcessScopeWaveData(const data: string);
+var
+   payload: TBytes;
+   i: Integer;
+   status: TIcomScopeStatus;
+   sweep: TIcomScopeSweep;
+   frame: TSpectrumFrame;
+begin
+   if not Assigned(FScopeDecoder) then
+      begin
+      // Frames arriving with no window open.  Normal: the radio keeps pushing
+      // for a moment after StopSpectrum, and an operator can have the scope's
+      // data output on from a previous session.  Dropped in silence because
+      // logging it would write a line 30 times a second.
+      Exit;
+      end;
+
+   // `data` is the CI-V payload INCLUDING the sub-command at [1]; the decoder
+   // takes what follows it.  Copied byte-faithfully -- each Char's codepoint IS
+   // the CI-V byte, which is the convention BuildCIVCommand's Chr() sets and
+   // the one an AnsiString assignment would silently break by running the ANSI
+   // codepage over it.
+   SetLength(payload, Length(data) - 1);
+
+   for i := 0 to Length(payload) - 1 do
+      begin
+      payload[i] := Byte(Ord(data[i + 2]));
+      end;
+
+   // UPSTREAM OF THE DECODER, so a captured fixture is evidence about the RADIO
+   // rather than a record of what this decoder made of it.
+   if Assigned(FOnScopePayload) then
+      begin
+      FOnScopePayload(payload);
+      end;
+
+   status := FScopeDecoder.Feed(payload, Length(payload), sweep);
+
+   if status <> issComplete then
+      begin
+      // NOT AN ERROR IN THE COMMON CASES: issAssembling is every division but
+      // the last over a serial link, and a continuation with no header is
+      // normal when joining a stream mid-sweep.  The decoder counts the ones
+      // that are real (Rejected, Abandoned) so the bench can read one number
+      // instead of a flood of lines.
+      Exit;
+      end;
+
+   frame := IcomSweepToSpectrumFrame(sweep, FScopeGeometry,
+                                     IcomScopeSourceId(sweep.ScopeId));
+
+   // EVERY scope is published, not just the one the window follows.  Filtering
+   // here would make adding a Sub-scope window a rework rather than a setting
+   // -- the same mistake TR4QT makes by discarding two of the K4's three pans
+   // at the parser (docs/PANADAPTER_LCL_DESIGN.md section 7).  The window
+   // filters on SourceId and the cost of a frame nobody wants is one compare.
+   PublishSpectrumFrame(frame);
+end;
+
+procedure TIcomRadio.ProcessScopeSpanReply(const data: string);
+var
+   raw: AnsiString;
+   halfHz: LongInt;
+   i: Integer;
+begin
+   { The reply to $27 $15 <selector>: the selector echoed, then the span as a
+     5-byte little-endian BCD frequency.  So the payload here is
+     [1]=$15 [2]=selector [3..7]=span.
+
+     A HALF-WIDTH ON THE WIRE.  The rig carries what the front panel shows --
+     "+/-100k" -- while SpectrumSpanHz is a TOTAL, so it is doubled exactly
+     once, here.  HamLib does the same in one place for the same reason
+     (spectrum_span_freq = from_bcd(...) * 2). }
+   if Length(data) < (2 + 5) then
+      begin
+      Exit;
+      end;
+
+   // Only the scope this radio follows.  A dual-scope rig answers for whichever
+   // selector was asked, and taking the Sub scope's span as the Main scope's is
+   // how the span buttons start stepping from a number that has nothing to do
+   // with what is on screen.
+   if Ord(data[2]) <> ScopeIdToFollow then
+      begin
+      Exit;
+      end;
+
+   SetLength(raw, 5);
+
+   for i := 1 to 5 do
+      begin
+      raw[i] := AnsiChar(Ord(data[2 + i]));
+      end;
+
+   // The STRICT decoder, on purpose: a span is never negative, so this is an
+   // ordinary frequency field and gets the ordinary refusal on corruption.
+   // (uIcomScope's signed variant exists only for a scope EDGE.)
+   halfHz := IcomBCDToFreq(raw);
+
+   if halfHz = FREQ_INVALID then
+      begin
+      logger.Warn('[%s] scope span reply was not valid BCD: %s',
+                  [radioModel, CIVDataToHex(data)]);
+      Exit;
+      end;
+
+   FScopeSpanHz := IcomScopeHalfToTotalHz(halfHz);
+   logger.Trace('[%s] radio reports scope span %d Hz total (+/-%d)',
+                [radioModel, FScopeSpanHz, halfHz]);
+end;
+
+procedure TIcomRadio.ApplyScopeEnables;
+begin
+   if not FScopeStreaming then
+      begin
+      Exit;
+      end;
+
+   (* BOTH SWITCHES, AND IN THIS ORDER.
+
+      $27 $10 turns the scope FUNCTION on; $27 $11 turns the CI-V wave OUTPUT
+      on.  They fail in opposite and equally silent ways, and this driver has
+      now seen both:
+
+        only $10  -- the scope lights up on the RADIO'S screen and not one byte
+                     reaches us.  AetherSDR names this the number-one "my
+                     panadapter is black" cause.
+        only $11  -- the radio streams structurally perfect sweeps whose levels
+                     are all ZERO.  Measured on NY4I's IC-9700, 2026-08-26:
+                     588 sweeps, 475 bins each, every bin at the floor.
+
+      Neither produces an error, a NAK, or a missing frame. *)
+   SendToRadio(BuildCIVCommand(ICOM_SCOPE_CMD,
+                               CivChr(ICOM_SCOPE_SUB_ONOFF) + #$01));
+   SendToRadio(BuildCIVCommand(ICOM_SCOPE_CMD,
+                               CivChr(ICOM_SCOPE_SUB_DATAOUTPUT) + #$01));
+end;
+
+procedure TIcomRadio.StartSpectrum;
+begin
+   if FScopeStreaming then
+      begin
+      Exit;                       // idempotent by contract
+      end;
+
+   if not SpectrumAvailable then
+      begin
+      // Said out loud.  A window that opens and never draws is the failure this
+      // seam is most able to produce, and the reason is always one of the three
+      // gates in SpectrumAvailable -- none of which the operator can see.
+      logger.Info('[%s] spectrum not available (capability=%s network=%s geometry=%s); not starting',
+                  [radioModel,
+                   BoolToStr(Supports(rcSpectrum), True),
+                   BoolToStr(IsNetworkConnection, True),
+                   BoolToStr(IcomScopeGeometryIsValid(FScopeGeometry), True)]);
+      Exit;
+      end;
+
+   if not Assigned(FScopeDecoder) then
+      begin
+      FScopeDecoder := TIcomScopeDecoder.Create(FScopeGeometry);
+      end
+   else
+      begin
+      // A restart must not resume a sweep half-assembled before the last stop.
+      FScopeDecoder.Reset;
+      end;
+
+   FScopeStreaming := True;
+
+   (* SENT NOW *AND* ON EVERY CONNECT.  If the CI-V stream is not open yet the
+      transport drops these silently, so OnNetworkStateChange re-sends them the
+      moment it is -- see the note there for what that cost on the bench. *)
+   ApplyScopeEnables;
+
+   { ASK WHAT THE SPAN IS.  The rig pushes $27 $15 when the operator changes it
+     but not on connect, so without this ask nothing knows the span until they
+     happen to touch the radio -- and the span buttons report "radio has not
+     reported one" in the meantime.  The K4 needs the identical ask for the
+     identical reason (#SPN at connect).
+
+     WITH THE SELECTOR.  A read of a scope sub-command carries the scope byte
+     just as a set does; omitting it is a frame the rig ignores in silence. }
+   SendToRadio(BuildCIVCommand(ICOM_SCOPE_CMD,
+                               CivChr(ICOM_SCOPE_SUB_SPAN) + ScopeSelector));
+
+   logger.Info('[%s] bandscope started: %d points, levels 0..%d, scope %d',
+               [radioModel, FScopeGeometry.Points, FScopeGeometry.MaxLevel,
+                ScopeIdToFollow]);
+end;
+
+procedure TIcomRadio.StopSpectrum;
+begin
+   if not FScopeStreaming then
+      begin
+      Exit;                       // idempotent, and safe from the destructor
+      end;
+
+   FScopeStreaming := False;
+
+   { THE DATA OUTPUT GOES OFF; THE SCOPE ITSELF STAYS ON.
+
+     $11 is TR4W's own switch -- nobody else wants CI-V wave data -- so leaving
+     it on would keep a 30-frame-a-second stream competing with tuning commands
+     for a window that is closed.  $10 is the operator's: it is what puts the
+     scope on the RADIO'S screen, and turning that off because a TR4W window
+     closed would reach out and change the rig in a way nobody asked for. }
+   SendToRadio(BuildCIVCommand(ICOM_SCOPE_CMD,
+                               CivChr(ICOM_SCOPE_SUB_DATAOUTPUT) + #$00));
+
+   // The decoder is kept, not freed: a stop/start pair is cheap and the buffers
+   // are a few hundred bytes.  Reset, so a restart cannot splice onto a sweep
+   // that was in flight when the window closed.
+   if Assigned(FScopeDecoder) then
+      begin
+      FScopeDecoder.Reset;
+      end;
+
+   logger.Info('[%s] bandscope stopped', [radioModel]);
+end;
+
+function TIcomRadio.SpectrumSpanHz: Integer;
+begin
+   Result := FScopeSpanHz;
+end;
+
+procedure TIcomRadio.SetSpectrumSpan(const aSpanHz: Integer);
+var
+   want: Integer;
+   halfHz: Integer;
+begin
+   if not SpectrumAvailable then
+      begin
+      Exit;
+      end;
+
+   { SNAPPED HERE, BECAUSE THE RIG SNAPS ANYWAY AND WILL NOT SAY SO.  A request
+     off the ladder is not rejected -- it is quietly rounded, so the caller
+     cannot tell an accepted request from an adjusted one by watching for an NG.
+     Snapping first means the value sent is the value expected, and the reply
+     confirms it. }
+   want := IcomScopeNearestSpanHz(aSpanHz);
+   halfHz := IcomScopeTotalToHalfHz(want);
+
+   { SIX DATA BYTES: the selector, then the HALF-width as a 5-byte BCD
+     frequency.  AetherSDR reports that without the leading selector the radio
+     ignores the frame outright -- no NG, no error, the span simply does not
+     change, which reads as "zoom does nothing" and sends you hunting through
+     the UI.  HamLib builds it the same way. }
+   SendToRadio(BuildCIVCommand(ICOM_SCOPE_CMD,
+                               CivChr(ICOM_SCOPE_SUB_SPAN) + ScopeSelector +
+                               CivRawToStr(IcomFreqToBCD(halfHz))));
+
+   { AND THEN ASK.  The value is NOT recorded locally: the rig is the authority
+     on what it settled on, and a driver that believed its own request would
+     step from a number the radio never had.  This is the same lesson the K4's
+     span buttons taught (docs/PANADAPTER_LCL_DESIGN.md section 10.2). }
+   SendToRadio(BuildCIVCommand(ICOM_SCOPE_CMD,
+                               CivChr(ICOM_SCOPE_SUB_SPAN) + ScopeSelector));
+end;
+
+procedure TIcomRadio.StepSpectrumSpan(const aDirection: Integer);
+begin
+   if (aDirection = 0) or (FScopeSpanHz <= 0) then
+      begin
+      // Nothing to step FROM; the caller tells the operator.
+      Exit;
+      end;
+
+   { ONE RUNG OF THE LADDER, NOT A NUMBER OF Hz -- which is the whole reason
+     this virtual exists.  An Icom offers eight spans and snaps to the nearest,
+     and the rungs are spaced by ratios of 2 and 2.5, so any fine trim lands
+     back on the rung it started from and the button is inert.  AetherSDR
+     measured that as zoom-out dead at all eight spans.
+
+     ANCHORED ON WHAT THE RIG REPORTS, not on what is being drawn: the ladder
+     walk needs a rung to start from, and the sweep's width and the rig's
+     setting are different quantities. }
+   SetSpectrumSpan(IcomScopeAdjacentSpanHz(FScopeSpanHz, aDirection));
+end;
+
+function TIcomRadio.SpectrumStreaming: Boolean;
+begin
+   Result := FScopeStreaming;
+end;
+
+function TIcomRadio.SpectrumLinkUp: Boolean;
+begin
+   { DISTINCT FROM Streaming, and here the distinction is nearly free: the
+     scope rides the CI-V link, so "is the stream's link up" is "is the radio
+     answering CI-V at all", which the transport already tracks for the
+     frequency display's alert colour.
+
+     On the K4 these two are genuinely separate objects -- a second socket with
+     its own reconnect backoff.  Here they are the same link, and saying so is
+     more honest than inventing a second liveness signal that could disagree
+     with the one the rest of the program uses. }
+   Result := FScopeStreaming and GetIsOperational;
 end;
 
 initialization

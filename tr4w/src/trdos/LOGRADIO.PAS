@@ -842,7 +842,9 @@ uses
    uRadioIcomBase,
    uRadioKenwoodLAN,  // Issue #436 -- TKenwoodLAN base (TS-890S / TS-990S)
    uCWFraming,        // per-model CW length/padding rules (shared with the factory)
-   uCWKeyerBase;      // KeyerCAT -- owns the cross-radio CW-by-CAT interlock
+   uCWKeyerBase,      // KeyerCAT -- owns the cross-radio CW-by-CAT interlock
+   uPanadapterForm,   // PanadapterRadioGoingAway -- a window may hold this radio
+   uRadioPanelForm;   // RadioPanelsRefreshActive -- the Spectrum button follows the radio
 
 // ---------------------------------------------------------------------------
 // IMPLEMENTATION-ONLY SURFACE
@@ -2141,6 +2143,19 @@ begin
       end;
    Self.PollingStopRequested := False;
 
+   { A PANADAPTER MAY BE HOLDING THIS RADIO, and it does not own it.
+
+     BEFORE Disconnect and before Free, while the object is still alive: the
+     window's teardown calls StopSpectrum, which terminates and JOINS its
+     reading thread, and neither is possible against freed memory.
+
+     The comment at the top of SetUpRadioInterface already warns about "the old
+     thread accessing freed memory (dangling pointer AV)".  The panadapter is a
+     second holder of exactly that kind, added long after that comment was
+     written, and it crashed for exactly that reason on 2026-08-26 when NY4I
+     switched a K4 profile to FT1000/K3 -- see PanadapterRadioGoingAway. }
+   PanadapterRadioGoingAway(Self.tFactoryObject);
+
    logger.Info('[%s.ShutDownRadioInterface] Freeing radio object', [Self.RadioName]);
    Self.tFactoryObject.Disconnect;
    Self.tFactoryObject.Free;
@@ -2562,6 +2577,24 @@ begin
    { Enable polling }
 
    //  PollingEnable := True;
+
+   { THE SPECTRUM BUTTON FOLLOWS THE RADIO.
+
+     A new radio object means a new answer to "can this produce a spectrum",
+     and the panel's button is the only way an operator reaches the panadapter.
+     UpdateSpectrumButton already re-reads tFactoryObject and asks BOTH gates
+     (Supports(rcSpectrum) and SpectrumAvailable), so it needs no argument --
+     it just has to be CALLED, and nothing called it on a profile change.
+
+     NY4I, 2026-08-26: "when changing to an active profile the capability
+     should indicate the radio window add or removes the spectrum button as the
+     case may be."
+
+     Cheap and idempotent: two forms, two property writes.  It runs here rather
+     than at each of CATDlgProc's several apply paths, because this is the one
+     routine every one of them goes through. }
+   RadioPanelsRefreshActive;
+
 end;
 
 //------------------------------------------------------------------------------

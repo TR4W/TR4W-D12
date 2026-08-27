@@ -69,6 +69,8 @@ Type TK4Radio = class(TElecraftRadio)
       procedure StopSpectrum; override;
       procedure SetSpectrumSpan(const aSpanHz: Integer); override;
       function SpectrumSpanHz: Integer; override;
+      procedure StepSpectrumSpan(const aDirection: Integer); override;
+      function PrimarySpectrumSourceId: string; override;
    private
       { What the radio last said #SPN is.  0 until it has answered. }
       FSpectrumSpanHz: Integer;
@@ -270,6 +272,55 @@ begin
       end;
 
    Self.SendToRadio(Format('#SPN%d;', [want]));
+end;
+
+{ ONE kHz PER PRESS, from the RADIO'S setting and never from the drawn width.
+
+  This is the rule uPanadapterForm applied itself until the second
+  spectrum-capable family arrived; it moved here unchanged, because it is a
+  fact about a K4 rather than about a panadapter.  NY4I: "in qk4, pressing +
+  increases the K4 span by 1" -- a fine trim, not a zoom.
+
+  Whether a kHz is the right feel is a judgement, which is why it is one named
+  constant.  What is NOT a judgement is stepping from FSpectrumSpanHz: the
+  frame reported 384 kHz while the rig reported 368 kHz at the same moment, so
+  stepping from the frame asks for a value derived from a number the radio
+  never had, and the first press appears to jump (docs/PANADAPTER_LCL_DESIGN.md
+  section 10.2).
+
+  A request outside the rig's range costs nothing: the K4 CLAMPS and reports
+  what it settled on, so there is no need to know its limits here. }
+const
+   K4_SPAN_STEP_HZ = 1000;
+
+procedure TK4Radio.StepSpectrumSpan(const aDirection: Integer);
+begin
+   if (aDirection = 0) or (FSpectrumSpanHz <= 0) then
+      begin
+      // Nothing to step FROM.  The caller reports that to the operator; saying
+      // it twice would put the same sentence in two places.
+      Exit;
+      end;
+
+   if aDirection > 0 then
+      begin
+      SetSpectrumSpan(FSpectrumSpanHz + K4_SPAN_STEP_HZ);
+      end
+   else
+      begin
+      SetSpectrumSpan(FSpectrumSpanHz - K4_SPAN_STEP_HZ);
+      end;
+end;
+
+function TK4Radio.PrimarySpectrumSourceId: string;
+begin
+   { Pan A -- the main receiver.  The K4 interleaves A, B and the Y mini-pan
+     down ONE socket, so this is a genuine choice among several and not a
+     formality; the window filters on it by string equality.
+
+     This value used to live in uRadioPanelForm as K4_MAIN_PAN_SOURCE, where it
+     was handed to every radio regardless of make. }
+   Result := 'A';
 end;
 
 procedure TK4Radio.StopSpectrum;

@@ -122,6 +122,30 @@ that is already roughly right.
 Icom network radios and Flex both have spectrum, neither is in scope today, and
 neither format is verified. Build the joint, not the machinery.
 
+> **UPDATE 2026-08-26 -- THE SEAM HAS A SECOND IMPLEMENTER, AND IT HELD.**
+> Network Icoms now produce spectrum through this same joint; see
+> [`ICOM_SPECTRUM_DESIGN.md`](ICOM_SPECTRUM_DESIGN.md). `uPanadapterForm`
+> needed **no Icom code at all**, which is the only real test of whether a seam
+> was drawn in the right place. Two things did move out of the window and into
+> the radio, because both were K4 rules living one layer too high and both
+> would have been silently wrong for the second radio:
+>
+> * **`PrimarySpectrumSourceId`** -- `uRadioPanelForm` held
+>   `K4_MAIN_PAN_SOURCE = 'A'` and handed it to every radio. An Icom's scope id
+>   is a number, so that constant would have opened a panadapter that connected,
+>   streamed, decoded and drew nothing, with no error anywhere.
+> * **`StepSpectrumSpan(direction)`** -- section 14.1's one-kHz trim is a K4
+>   rule. An Icom snaps to one of eight rungs, so a kHz step never crosses a gap
+>   midpoint and both buttons are inert. The window now asks for a detent and
+>   the radio decides what one is.
+>
+> The Icom differs from everything in section 1 in three ways worth knowing
+> before reading on: it rides the **ordinary CI-V link** with no side channel
+> and no new thread; it sends **uncalibrated display units, not dB**, so
+> section 2.3's noise-floor reference has to be *synthesised* from the sweep's
+> own levels; and its sweep is **divided into 11 or 15 segments over a serial
+> link**.
+
 Two hooks already exist in the tree marking where the others would land:
 `uRadioIcomBase.pas:1635` — `$27: // Bandscope data — pushed unsolicited by
 radio, not used` — and `uRadioFlexAPI.pas:43`, which already tracks `FPanHandle`

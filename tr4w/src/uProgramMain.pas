@@ -392,6 +392,7 @@ uses
   uRadioKenwoodTS950,
   uRadioKenwoodTS2000,
   uIcomCIV,
+  uIcomScope,
   // uRadioManager uses Generics.Collections (Delphi 2009+) - not Delphi 7 IDE compatible
   //uRadioManager in 'src\radioFactory\uRadioManager.pas',
   // uDXSSpotsFilter and uSpotsFilter reference SendViaSocket which is not defined - unfinished code

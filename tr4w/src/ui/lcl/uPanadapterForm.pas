@@ -291,6 +291,46 @@ procedure ShowPanadapterWindow(const aSlot: integer;
                                ARadio: TFactoryRadioBase; const ASourceId: string;
                                const ACaption: string = '');
 procedure ClosePanadapterWindow(const aSlot: integer);
+
+{ A RADIO OBJECT IS ABOUT TO BE FREED.  Closes any panadapter bound to it.
+
+  CALL THIS WHILE THE RADIO IS STILL ALIVE -- that is the whole contract.  The
+  window has to run its normal teardown (StopSpectrum, which terminates and
+  JOINS the reading thread, then unsubscribe), and none of that is possible
+  against a freed object.
+
+  WHY IT EXISTS.  A panadapter holds a raw TFactoryRadioBase it does not own,
+  and until now nothing told it when that object died.  Changing the active
+  profile frees every radio and builds new ones
+  (RadioObject.ShutDownRadioInterface), so the window was left holding a
+  dangling pointer -- and every nil guard in this unit passed, because the
+  pointer was not nil, it was DEAD.  Measured on NY4I's station 2026-08-26,
+  switching a K4 profile to "FT1000/K3":
+
+      [CRASH] unhandled EAccessViolation in thread (main)
+        at  SHOWSPAN,           line 1288 of uPanadapterForm.pas
+            UPDATELABELS,       line 1733
+            HANDLEREFRESHTIMER, line 980
+
+  -- the refresh timer reaching FRadio.SpectrumSpanHz on freed memory.  The
+  same run also logged "[Elecraft K4 spectrum] link lost: Access violation"
+  from TWO K4 spectrum threads still reconnecting to the old profile's radios a
+  second after the switch.
+
+  CLOSES RATHER THAN HIDES.  NY4I, 2026-08-26: "if the radio does not support a
+  spectrum scope, those windows should be closed."  A window whose radio has
+  gone can show nothing, and leaving it up as an empty frame is worse than
+  removing it.  The operator gets it back from the panel's Spectrum button,
+  which reappears exactly when the new radio can feed one.
+
+  ACloseWindow=False FOR SHUTDOWN, AND THE DIFFERENCE IS NOT COSMETIC.
+  Closing runs HandleClose, which records visible=False -- that is right for
+  a profile change (the operator's radio really did go away) and WRONG at
+  program exit, where it would silently discard "this window was open" and
+  the panadapter would not come back next run.  Shutdown wants the radio
+  released and the saved state left exactly as it stands. }
+procedure PanadapterRadioGoingAway(ARadio: TFactoryRadioBase;
+                                   const ACloseWindow: Boolean = True);
 function PanadapterWindowVisible(const aSlot: integer): Boolean;
 { Frees the instance AND clears the slot.  A bench harness that freed the
   form itself would leave a dangling pointer in GPanForms. }
@@ -314,7 +354,8 @@ uses
    uLCLFormHelpers,     // OwnFormByMainWindow -- LCL PopupParent, not GWL_HWNDPARENT
    Types,               // IntersectRect -- the RTL one, not Windows
    uWindowLayoutStore,  // the bounds, keyed by name
-   uTR4WConfigFile;     // TR4WConfigFileName, Load/SaveWindowLayout
+   uTR4WConfigFile,     // TR4WConfigFileName, Load/SaveWindowLayout
+   Log4D;               // a window that vanishes on its own must say why
 
 {$R *.lfm}
 
@@ -322,9 +363,63 @@ var
    { Indexed by SLOT: 1 is Radio 1, 2 is Radio 2. }
    GPanForms: array[1..2] of TfrmPanadapter = (nil, nil);
 
+var
+   { NOT MainUnit's global `logger`.  This form deliberately depends on
+     nothing but the LCL, the spectrum seam and its own helpers, and pulling
+     MainUnit in for one log line would undo that.  Log4D's own registry
+     gives the same appender without the coupling -- the same thing
+     uRadioIcomBase does. }
+   panLogger: TLogLogger;
+
 function SlotIsValid(const aSlot: integer): boolean;
 begin
    Result := (aSlot >= Low(GPanForms)) and (aSlot <= High(GPanForms));
+end;
+
+procedure PanadapterRadioGoingAway(ARadio: TFactoryRadioBase;
+                                   const ACloseWindow: Boolean = True);
+var
+   i: integer;
+   what: string;
+begin
+   if ACloseWindow then
+      begin
+      what := 'closed';
+      end
+   else
+      begin
+      what := 'detached';
+      end;
+
+   if ARadio = nil then
+      begin
+      Exit;
+      end;
+
+   for i := Low(GPanForms) to High(GPanForms) do
+      begin
+      if (GPanForms[i] = nil) or (GPanForms[i].FRadio <> ARadio) then
+         begin
+         Continue;
+         end;
+
+      { ORDER MATTERS, and it is the order HandleDestroy already relies on.
+        DetachRadio calls StopSpectrum, which joins the reading thread -- so
+        after it returns no AcceptFrame can still be in flight.  Doing this
+        AFTER the free, or not at all, is what produced the crash quoted on the
+        declaration. }
+      GPanForms[i].DetachRadio;
+
+      if ACloseWindow then
+         begin
+         GPanForms[i].Close;
+         end;
+
+      if Assigned(panLogger) then
+         begin
+         panLogger.Info('[Panadapter %d] %s -- its radio is being freed', [i, what]);
+         end;
+      end;
 end;
 
 function PanadapterForm(const aSlot: integer): TfrmPanadapter;
@@ -1204,35 +1299,38 @@ begin
    end;
 end;
 
-{ SPAN STEPPING, THE WAY QK4 DOES IT.
+{ SPAN STEPPING: THE WINDOW ASKS FOR A DETENT, THE RADIO DECIDES WHAT ONE IS.
 
-  NY4I: "in qk4, pressing + increases the K4 span by 1" -- a FINE ADJUSTMENT,
-  not a zoom.  The first version stepped a ladder of round numbers
-  (2/5/10/20/50/100/200/500 kHz) and that was the wrong model twice over:
+  This used to hold the rule itself -- one kHz per press, the way QK4 steps a
+  K4 (NY4I: "in qk4, pressing + increases the K4 span by 1", a fine trim rather
+  than a zoom).  That was right while the K4 was the only spectrum radio and is
+  wrong now, because the two families differ in KIND and not merely in step
+  size:
 
-    * the radio is streaming 192 kHz, which is on no such rung, so every press
-      jumped somewhere unrelated to where it already was; and
-    * asking for 500 kHz got #SPN368000 back -- the K4 CLAMPED it to its
-      maximum, so '+' looked dead when it had in fact worked.
+    * the K4 accepts any span in Hz and CLAMPS what it cannot do, so a kHz at a
+      time is meaningful and the rig reports back what it settled on;
+    * a network Icom offers EIGHT discrete spans and SNAPS a request to the
+      nearest.  A 1 kHz step never crosses the midpoint of a gap, so the rig
+      snaps straight back to where it was and the button is INERT -- at every
+      span, in the widening direction.  AetherSDR measured exactly that: zoom
+      out dead at all eight spans, zoom in working at seven, an asymmetry that
+      reads as "zoom is broken" rather than "zoom is quantised", and which no
+      amount of clicking can escape.
 
-  ONE kHz PER PRESS, in one constant, because whether this should be a fine trim
-  or a doubling zoom is a judgement about how the control FEELS and is meant to
-  be easy to change.
+  So the rule moved onto TFactoryRadioBase.StepSpectrumSpan.  A per-radio STEP
+  SIZE would not have been enough: it cannot express snapping, and a window
+  that chose between the two would be asking which radio it has.
 
-  THE RADIO IS THE AUTHORITY ON WHAT IT WILL ACCEPT.  It clamps and reports the
-  value it settled on (#SPN), and the display always follows the FRAME, so an
-  out-of-range request costs a rejected command and nothing else -- there is no
-  need to know the rig's limits here. }
-const
-   SPAN_STEP_HZ = 1000;
-
+  WHAT STAYS HERE is the part that belongs to the window: telling the operator
+  why a press did nothing.  Both buttons used to Exit in silence, which is
+  indistinguishable from a dead control -- the reason was findable only by
+  grepping the CAT log for a command never sent. }
 procedure TfrmPanadapter.StepSpan(const aWider: boolean);
 var
-   current, want: Integer;
+   current: Integer;
+   direction: Integer;
 begin
-   { A BUTTON THAT DOES NOTHING MUST SAY WHY.  Both of these used to Exit in
-     silence, which is indistinguishable from a dead control -- the reason was
-     only findable by reading the CAT log for a command never sent. }
+   { A BUTTON THAT DOES NOTHING MUST SAY WHY. }
    if FRadio = nil then
       begin
       lblSpan.Caption := 'Span: no radio';
@@ -1245,8 +1343,12 @@ begin
      something the radio never had -- and the result looked random.
 
      NY4I: "it seems like you should read the span from the radio and set your
-     initial span to that value."  StartSpectrum now asks #SPN at connect, and
-     the driver keeps it current from the radio's own pushes. }
+     initial span to that value."  Each driver's StartSpectrum asks the rig at
+     connect and keeps the value current from the radio's own pushes.
+
+     ASKED HERE ONLY TO REPORT A FAILURE.  The step itself reads the same value
+     inside the radio object; this window needs it solely to distinguish "the
+     rig has not told us yet" from a press that really did go out. }
    current := FRadio.SpectrumSpanHz;
 
    if current <= 0 then
@@ -1257,14 +1359,14 @@ begin
 
    if aWider then
       begin
-      want := current + SPAN_STEP_HZ;
+      direction := 1;
       end
    else
       begin
-      want := current - SPAN_STEP_HZ;
+      direction := -1;
       end;
 
-   FRadio.SetSpectrumSpan(want);
+   FRadio.StepSpectrumSpan(direction);
 end;
 
 procedure TfrmPanadapter.HandleSpanNarrow(Sender: TObject);
@@ -2199,5 +2301,8 @@ begin
       store.Free;
    end;
 end;
+
+initialization
+   panLogger := TLogLogger.GetLogger('Panadapter');
 
 end.

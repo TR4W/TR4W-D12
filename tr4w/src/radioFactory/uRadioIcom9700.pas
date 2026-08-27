@@ -102,7 +102,25 @@ begin
    // Capabilities from LOGRADIO's RadioSupports* lists.  These say what the
    // RADIO can do; the operator's config setting says what they WANT.  Both
    // are required -- a user can enable CW-by-CAT on a radio that cannot do it.
-   FCapabilities.Flags := FCapabilities.Flags + [rcCWByCAT, rcCWSpeedSync, rcPlayDVK];
+   FCapabilities.Flags := FCapabilities.Flags + [rcCWByCAT, rcCWSpeedSync, rcPlayDVK, rcSpectrum];
+
+   { THE BANDSCOPE GEOMETRY.  Declared HERE because it is a per-model hardware
+     fact that nothing else the radio says implies -- see
+     TIcomRadio.DeclareScopeGeometry for why it is not in TRadioCapabilities.
+
+     MEASURED ON A LIVE RADIO, not read from a guide -- 618 consecutive scope
+     frames off an IC-9700 through the RS-BA1 CI-V stream, every one 475 points
+     wide, with the frame's own bounds cross-checking (centre 439.864060 MHz at
+     a 500 kHz span = 1052.6 Hz per pixel).  HamLib has no spectrum caps for
+     this model, so that capture is the only evidence there is.
+
+     Worth recording precisely BECAUSE it could not be assumed: the IC-7610
+     below is the counter-example, and it differs in both numbers.
+
+     rcSpectrum above says the MODEL has a scope; whether THIS connection can
+     deliver it is SpectrumAvailable's question, and it answers no on a serial
+     link until someone has watched the divided path work. }
+   DeclareScopeGeometry(475, 160);
 end;
 
 procedure TIcom9700Radio.QueryActiveVFO;

@@ -651,6 +651,51 @@ Type TFactoryRadioBase = class(TObject)
         stepping from the drawn width sends a request derived from a number the
         radio never had. }
       function SpectrumSpanHz: Integer; virtual;
+      { Step the span ONE DETENT, in the direction this radio understands.
+        aDirection < 0 narrows, > 0 widens; 0 does nothing.
+
+        WHY THIS IS NOT JUST SetSpectrumSpan(current +/- something).  The step
+        is a fact about the radio, and the two families do not merely differ in
+        size -- they differ in KIND:
+
+          * the K4 takes any span in Hz and CLAMPS what it cannot do, so a fine
+            trim of a kHz at a time is meaningful and the rig reports back what
+            it settled on;
+          * an Icom offers EIGHT discrete spans (2.5 kHz .. 500 kHz) and SNAPS
+            a request to the nearest.  A 1 kHz step never crosses the midpoint
+            of a gap, so nearest-snapping returns the span it started from and
+            the button is INERT -- at every span, in the widening direction.
+            AetherSDR measured exactly that: zoom-out dead at all eight spans
+            and zoom-in working at seven, an asymmetry that reads as "zoom is
+            broken" rather than "zoom is quantised".
+
+        So the caller asks for a detent and the radio decides what a detent is.
+        The alternative -- a per-radio step size the window applies itself --
+        cannot express snapping, and putting the choice in the window would
+        make it ask which radio it has, which is the one thing this factory
+        forbids.
+
+        Does nothing on a radio with no span control, which is every one but
+        the K4 and the network Icoms. }
+      procedure StepSpectrumSpan(const aDirection: Integer); virtual;
+
+      { Which source this radio's panadapter should show by default.
+
+        OPAQUE, and matched against TSpectrumFrame.SourceId by string equality
+        -- see uSpectrumTypes.  A radio that streams several sources down one
+        link names its primary one here; a radio with one source still has to
+        answer, because the window filters unconditionally and a mismatch is a
+        window that never draws with nothing logged anywhere.
+
+        THIS EXISTS BECAUSE THE CALL SITE USED TO SPELL IT.  uRadioPanelForm
+        held `K4_MAIN_PAN_SOURCE = 'A'` and passed it to every radio, which was
+        correct while the K4 was the only producer and silently wrong for the
+        second one: an Icom's scope id is a number, so an Icom panadapter would
+        have opened, streamed, and drawn nothing at all.
+
+        Empty on a radio with no spectrum, which is the honest answer -- not a
+        guess that happens to match one vendor. }
+      function PrimarySpectrumSourceId: string; virtual;
 
       // Has StartSpectrum taken effect -- is a reader alive and trying?
       function SpectrumStreaming: Boolean; virtual;
@@ -2258,6 +2303,20 @@ end;
 function TFactoryRadioBase.SpectrumSpanHz: Integer;
 begin
    Result := 0;   { unknown -- a radio that reports its span overrides this }
+end;
+
+procedure TFactoryRadioBase.StepSpectrumSpan(const aDirection: Integer);
+begin
+   { No span control.  Deliberately NOT a default of "SetSpectrumSpan(current
+     +/- 1 kHz)": that is the K4's rule, and a base class that applied one
+     radio's rule to every radio is the shape this factory exists to avoid. }
+end;
+
+function TFactoryRadioBase.PrimarySpectrumSourceId: string;
+begin
+   { Empty, not 'A'.  A radio with no spectrum has no source, and guessing one
+     vendor's spelling would make a mismatch look like a working default. }
+   Result := '';
 end;
 
 function TFactoryRadioBase.SpectrumStreaming: Boolean;

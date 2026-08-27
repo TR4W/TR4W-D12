@@ -57,6 +57,24 @@ begin
    // RADIO can do; the operator's config setting says what they WANT.  Both
    // are required -- a user can enable CW-by-CAT on a radio that cannot do it.
    FCapabilities.Flags := FCapabilities.Flags + [rcCWByCAT, rcCWSpeedSync];
+
+   { NO rcSpectrum, AND THAT IS A FINDING RATHER THAN AN OMISSION.
+
+     This radio has a spectrum scope on its own front panel.  What no source
+     says is that it streams one over CI-V: HamLib carries spectrum caps for
+     the IC-7300 family, the IC-7610, the IC-785x and the IC-R8600 and none for
+     this model, and AetherSDR's table does not list it either.  CI-V wave
+     output ($27 $00) arrived with the IC-7300 generation; this rig predates
+     it.
+
+     DECLARING IT ANYWAY WOULD COST MORE THAN IT SAVES.  The Spectrum button
+     would appear, StartSpectrum would enable a data output the rig does not
+     implement, and the window would sit empty -- the exact silent failure this
+     seam is most able to produce.  An absent button says "not on this radio"
+     without words.
+
+     If someone shows this rig answering $27 $00, the change is two lines:
+     rcSpectrum above and a DeclareScopeGeometry with the measured numbers. }
 end;
 
 // NAMED unit-level constructors, not anonymous functions.  None of these

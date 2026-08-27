@@ -69,7 +69,23 @@ begin
    // Capabilities from LOGRADIO's RadioSupports* lists.  These say what the
    // RADIO can do; the operator's config setting says what they WANT.  Both
    // are required -- a user can enable CW-by-CAT on a radio that cannot do it.
-   FCapabilities.Flags := FCapabilities.Flags + [rcCWByCAT, rcCWSpeedSync, rcPlayDVK];
+   FCapabilities.Flags := FCapabilities.Flags + [rcCWByCAT, rcCWSpeedSync, rcPlayDVK, rcSpectrum];
+
+   { THE BANDSCOPE GEOMETRY.  Declared HERE because it is a per-model hardware
+     fact that nothing else the radio says implies -- see
+     TIcomRadio.DeclareScopeGeometry for why it is not in TRadioCapabilities.
+
+     689 POINTS AND 0..200 -- BOTH different from the IC-7300 family, which is
+     the whole reason geometry is per-model data and not a constant.  HamLib
+     publishes it (rigs/icom/ic7610.c: 689 / 200 / -100..0 dBm) and AetherSDR
+     carries the same numbers; NEITHER has verified them against this model's
+     own CI-V guide, so this is two agreeing secondary sources rather than a
+     primary one.
+
+     rcSpectrum above says the MODEL has a scope; whether THIS connection can
+     deliver it is SpectrumAvailable's question, and it answers no on a serial
+     link until someone has watched the divided path work. }
+   DeclareScopeGeometry(689, 200);
 end;
 
 // NAMED unit-level constructors, not anonymous functions.  None of these

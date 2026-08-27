@@ -73,6 +73,9 @@ uses
    uK4Spectrum          in '..\..\src\radioFactory\uK4Spectrum.pas',
    uK4SpectrumThread    in '..\..\src\radioFactory\uK4SpectrumThread.pas',
    uTestK4Spectrum      in 'uTestK4Spectrum.pas',
+   uIcomScope           in '..\..\src\radioFactory\uIcomScope.pas',
+   uTestIcomScope       in 'uTestIcomScope.pas',
+   uTestIcomScopeSeam   in 'uTestIcomScopeSeam.pas',
    utils_math           in '..\..\src\utils\utils_math.pas',
    uTestUtilsMath       in 'uTestUtilsMath.pas',
    uGridDistance        in '..\..\src\uGridDistance.pas',
@@ -322,6 +325,8 @@ begin
    RegisterSuite(TCabrilloExchangeTests.Create('CabrilloExchange'));
    RegisterSuite(TCRC32Tests.Create('CRC32'));
    RegisterSuite(TK4SpectrumTests.Create('K4Spectrum'));
+   RegisterSuite(TIcomScopeTests.Create('IcomScope'));
+   RegisterSuite(TIcomScopeSeamTests.Create('IcomScopeSeam'));
    RegisterSuite(TUtilsMathTests.Create('UtilsMath'));
    RegisterSuite(TGridDistanceTests.Create('GridDistance'));
    RegisterSuite(TUtilsFileTests.Create('UtilsFile'));

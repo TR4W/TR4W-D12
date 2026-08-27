@@ -57,7 +57,26 @@ begin
    // Capabilities from LOGRADIO's RadioSupports* lists.  These say what the
    // RADIO can do; the operator's config setting says what they WANT.  Both
    // are required -- a user can enable CW-by-CAT on a radio that cannot do it.
-   FCapabilities.Flags := FCapabilities.Flags + [rcCWByCAT, rcCWSpeedSync, rcPlayDVK];
+   FCapabilities.Flags := FCapabilities.Flags + [rcCWByCAT, rcCWSpeedSync, rcPlayDVK, rcSpectrum];
+
+   { THE BANDSCOPE GEOMETRY.  Declared HERE because it is a per-model hardware
+     fact that nothing else the radio says implies -- see
+     TIcomRadio.DeclareScopeGeometry for why it is not in TRadioCapabilities.
+
+     PROVISIONAL.  AetherSDR lists 475/160 and marks the model unverified;
+     HamLib has no spectrum caps for it.  Nobody has watched this rig stream.
+
+     AND IT IS THE ONE MODEL WHERE THE FREQUENCY WIDTH MATTERS: the IC-905 uses
+     SIX-byte frequencies above 10 GHz, and a scope header decoded with five
+     misaligns by two bytes and yields a plausible-looking wrong centre.
+     TIcomScopeGeometry.FreqBytes exists for that, and this radio does not set
+     it yet -- so the scope is right below 10 GHz and must be re-checked above
+     it.  See uIcomScope.
+
+     rcSpectrum above says the MODEL has a scope; whether THIS connection can
+     deliver it is SpectrumAvailable's question, and it answers no on a serial
+     link until someone has watched the divided path work. }
+   DeclareScopeGeometry(475, 160);
 end;
 
 // NAMED unit-level constructors, not anonymous functions.  None of these

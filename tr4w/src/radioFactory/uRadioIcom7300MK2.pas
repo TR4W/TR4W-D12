@@ -63,7 +63,23 @@ begin
    // Capabilities from LOGRADIO's RadioSupports* lists.  These say what the
    // RADIO can do; the operator's config setting says what they WANT.  Both
    // are required -- a user can enable CW-by-CAT on a radio that cannot do it.
-   FCapabilities.Flags := FCapabilities.Flags + [rcCWByCAT, rcCWSpeedSync, rcPlayDVK];
+   FCapabilities.Flags := FCapabilities.Flags + [rcCWByCAT, rcCWSpeedSync, rcPlayDVK, rcSpectrum];
+
+   { THE BANDSCOPE GEOMETRY.  Declared HERE because it is a per-model hardware
+     fact that nothing else the radio says implies -- see
+     TIcomRadio.DeclareScopeGeometry for why it is not in TRadioCapabilities.
+
+     TIER 1 -- confirmed against Icom's own IC-7300MK2 CI-V Reference Guide.
+     That guide states the LAN data length as 490 bytes, which independently
+     confirms the 15-byte header this decoder computes: 15 + 475 = 490.  Its
+     own words for the two transports are "it is sent all at once" over LAN and
+     "divided into 11 segments" over USB.  HamLib's five IC-7300-family rows
+     agree on 475/160.
+
+     rcSpectrum above says the MODEL has a scope; whether THIS connection can
+     deliver it is SpectrumAvailable's question, and it answers no on a serial
+     link until someone has watched the divided path work. }
+   DeclareScopeGeometry(475, 160);
 end;
 
 // NAMED unit-level constructors, not anonymous functions.  None of these
