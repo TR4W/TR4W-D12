@@ -58,6 +58,7 @@ $fpcArgs = @("-Mdelphi", "-P$Cpu", "-T$Os", '-Sc', '-WG', '-gl', '-gw2', '-Xg', 
 if (-not $Incremental) { $fpcArgs += '-B' }
 foreach ($d in $Defines) { $fpcArgs += "-d$d" }
 foreach ($p in (Get-Tr4wSearchPaths -Tr4wDir $TR4W_DIR -Toolchain $tc -For App)) { $fpcArgs += "-Fu$p" }
+foreach ($p in (Get-Tr4wIncludePaths -Tr4wDir $TR4W_DIR)) { $fpcArgs += "-Fi$p" }
 $fpcArgs += 'tr4w.dpr'
 
 # A DESIGNED FORM IS TWO FILES AND FPC ONLY WATCHES ONE. uPrefsForm.lfm is pulled

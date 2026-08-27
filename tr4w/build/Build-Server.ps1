@@ -33,6 +33,7 @@ if (-not (Test-Path $out)) { New-Item -ItemType Directory -Path $out | Out-Null 
 
 $fpcArgs = @("-Mdelphi", "-P$Cpu", "-T$Os", '-Sc', '-B', "-FU$out", "-o$exe")
 foreach ($p in (Get-Tr4wSearchPaths -Tr4wDir $TR4W_DIR -Toolchain $tc -For Server)) { $fpcArgs += "-Fu$p" }
+foreach ($p in (Get-Tr4wIncludePaths -Tr4wDir $TR4W_DIR)) { $fpcArgs += "-Fi$p" }
 $fpcArgs += 'tr4wserver.dpr'
 
 Push-Location $SERVER_DIR

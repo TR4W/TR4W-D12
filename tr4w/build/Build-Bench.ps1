@@ -36,6 +36,7 @@ $fpcArgs = @('-Mdelphi', "-P$($tc.Cpu)", "-T$($tc.Os)", '-Sc', '-B', "-FU$out", 
 foreach ($p in (Get-Tr4wSearchPaths -Tr4wDir $TR4W_DIR -Toolchain $tc -For Tests -TestDir $test)) {
    $fpcArgs += "-Fu$p"
 }
+foreach ($p in (Get-Tr4wIncludePaths -Tr4wDir $TR4W_DIR)) { $fpcArgs += "-Fi$p" }
 $fpcArgs += "$Program.dpr"
 
 Push-Location $bench

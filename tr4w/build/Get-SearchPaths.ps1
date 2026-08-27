@@ -19,6 +19,41 @@
 #   Server -- no LCL and no ui\ at all. tr4wserver is a console program; adding
 #             the LCL would link a widgetset into something with no UI.
 
+# ---------------------------------------------------------------------------
+# INCLUDE paths -- a SEPARATE list from the unit paths, and it has to be.
+#
+# FPC resolves {$I foo.inc} from the INCLUDING FILE'S OWN DIRECTORY and then
+# from -Fi.  It does NOT search -Fu.  So a unit that lives in one directory and
+# includes a file from another needs -Fi, and no amount of unit path fixes it.
+#
+# WHY IT APPEARED.  Log4D.pas moved from src\ to include\ (e3e44888).  Its
+# second line is {$I tr4w.inc}, and tr4w.inc is in src\ -- so from its new home
+# the include stopped resolving and every FPC build through these scripts died
+# with:
+#
+#     Log4D.pas(2,2) Fatal: Cannot open include file "tr4w.inc"
+#
+# That commit updated tr4w.dpr, tr4w.dproj and tr4w.lpi -- the IDE and Delphi
+# paths -- and no build\*.ps1, which is the PACKAGING path.  The Lazarus project
+# kept working, so nothing surfaced it until the next command-line build.
+#
+# ONE LIST FOR EVERY TARGET, deliberately: unlike the unit paths, App, Tests and
+# Server have no reason to disagree about where an .inc lives, and giving them
+# three chances to drift would repeat the mistake the header above describes.
+function Get-Tr4wIncludePaths
+   {
+   param(
+      [Parameter(Mandatory = $true)] [string] $Tr4wDir
+   )
+
+   $paths = [System.Collections.Generic.List[string]]::new()
+   # src holds tr4w.inc, which every unit in the tree includes.
+   $paths.Add((Join-Path $Tr4wDir 'src'))
+   # include\ holds the vendored Indy .inc files, beside the units that use them.
+   $paths.Add((Join-Path $Tr4wDir 'include'))
+   return $paths
+   }
+
 function Get-Tr4wSearchPaths
    {
    param(
