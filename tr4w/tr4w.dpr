@@ -67,6 +67,7 @@ uses
   uCabrilloExchange in 'src\uCabrilloExchange.pas',
   uADIFExchange in 'src\uADIFExchange.pas',
   uInputQuery in 'src\uInputQuery.pas',
+  uNewContestForm in 'src\ui\lcl\uNewContestForm.pas' {frmNewContest},
   uNewContest in 'src\uNewContest.pas',
   uRadioPolling in 'src\uRadioPolling.pas',
   uMissingMults in 'src\uMissingMults.pas',
