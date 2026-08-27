@@ -107,17 +107,54 @@ begin
 end;
 
 
+var
+   { THE CATALOGUE HAS TO OUTLIVE THE TRANSLATOR, and this variable is what
+     makes it. TPOTranslator does not copy the TPOFile -- it keeps the pointer
+     and dereferences it for every translatable property the LFM reader streams,
+     for as long as the program runs.
+
+     Freeing the catalogue once the hook was installed left that pointer
+     dangling, and the first form property to ask a question of it was
+     TR4WMainForm.Caption, which is the first thing CreateTR4WMainForm streams:
+
+       unhandled EReadError -- Error reading TR4WMainForm.Caption:
+       Access violation
+
+     English never reached it, because LoadEmbeddedTranslation exits before
+     installing anything when the language is English. So the crash appeared
+     only under --lang, and looked like a translation-data problem rather than a
+     lifetime one. LCLTranslator.SetDefaultLang, which this replaced, keeps its
+     own TPOFile in a global for exactly this reason.
+
+     Released in finalization, as a PAIR and translator-first. }
+   GActiveCatalogue: TPOFile;
+
 function ApplyCatalogue(po: TPOFile): boolean;
+{ TAKES OWNERSHIP of po, on every path. The caller must not free it: an earlier
+  version left ownership with the caller and that is the whole of the bug
+  described above. }
 begin
    // BOTH HALVES FROM ONE CATALOGUE, and the order does not matter: the first
    // rewrites the resource string table, the second installs the hook the LFM
    // reader asks on every translatable property as a form streams.
+   //
+   // Only the FIRST is reported. TranslateResourceStrings says nothing about
+   // whether form properties will translate, and the hook is installed either
+   // way -- a catalogue that carries .lfm captions but no resourcestrings is a
+   // legitimate catalogue.
    Result := Translations.TranslateResourceStrings(po);
 
+   // Translator first, then the catalogue it was reading. The reverse order
+   // would leave the outgoing translator pointing at freed memory for as long
+   // as it took to reach the next statement.
    if Assigned(LRSTranslator) then
       begin
       LRSTranslator.Free;
+      LRSTranslator := nil;
       end;
+   FreeAndNil(GActiveCatalogue);
+
+   GActiveCatalogue := po;
    LRSTranslator := TPOTranslator.Create(po);
 end;
 
@@ -146,18 +183,17 @@ begin
    if FileExists(fileCandidate) then
       begin
       try
+         // No try..finally around po: ApplyCatalogue owns it from here, and the
+         // translator it installs goes on reading it for the life of the
+         // program. Freeing it here is what crashed the first form load.
          po := TPOFile.Create(fileCandidate, True);
-         try
-            if ApplyCatalogue(po) then
-               begin
-               Result := lang;
-               logger.Info('UI language: "' + lang + '" from ' + fileCandidate +
-                           ' (overriding the embedded catalogue)');
-               Exit;
-               end;
-         finally
-            po.Free;
-         end;
+         if ApplyCatalogue(po) then
+            begin
+            Result := lang;
+            logger.Info('UI language: "' + lang + '" from ' + fileCandidate +
+                        ' (overriding the embedded catalogue)');
+            Exit;
+            end;
       except
          on E: Exception do
             begin
@@ -182,16 +218,15 @@ begin
       try
          // Full=False is what LazUtils' own comment prescribes when loading
          // from an internal resource.
+         // Owned by ApplyCatalogue from here -- see the comment on the file
+         // path above. rs may be freed straight after: TPOFile reads the whole
+         // stream during construction.
          po := TPOFile.Create(rs, False);
-         try
-            if ApplyCatalogue(po) then
-               begin
-               Result := lang;
-               logger.Info('UI language: "' + lang + '" from the embedded catalogue');
-               end;
-         finally
-            po.Free;
-         end;
+         if ApplyCatalogue(po) then
+            begin
+            Result := lang;
+            logger.Info('UI language: "' + lang + '" from the embedded catalogue');
+            end;
       finally
          rs.Free;
       end;
@@ -203,5 +238,16 @@ begin
       end;
    end;
 end;
+
+finalization
+   { Translator first, then the catalogue it reads -- the same order and the
+     same reason as in ApplyCatalogue. Guarded because a program that never
+     loaded a catalogue (English, or any failure path) has neither. }
+   if Assigned(LRSTranslator) then
+      begin
+      LRSTranslator.Free;
+      LRSTranslator := nil;
+      end;
+   FreeAndNil(GActiveCatalogue);
 
 end.
