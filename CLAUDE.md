@@ -656,6 +656,8 @@ Read the specific doc before acting in its area — these are current and this f
 | **Band map -> LCL (read before touching `uBandmap`/`uSpots`)** | **`docs/BANDMAP_LCL_DESIGN.md`** |
 | **I18N: resourcestrings, .po and where every string lives** | **`docs/I18N_PLAN.md`** |
 | **Adding a language (recipe; step 6 is a known gap)** | **`docs/ADDING_A_LANGUAGE.md`** |
+| **Sending a language to a translator / taking it back** | **`docs/TRANSLATION_HANDOFF.md`** |
+| **What the translator receives** | `docs/TRANSLATOR_GUIDE.md` |
 | **Panadapter / spectrum seam** | **`docs/PANADAPTER_LCL_DESIGN.md`** |
 | **Restyling the converted grids (PARKED until conversions finish)** | **`docs/GRID_RESTYLE_PLAN.md`** |
 | **Display state as a model (PARKED; successor to the conversions)** | **`docs/DISPLAY_STATE_MODEL_PLAN.md`** |
