@@ -9,6 +9,7 @@ object frmEditMessage: TfrmEditMessage
   ClientHeight = 145
   ClientWidth = 505
   Position = poMainFormCenter
+  LCLVersion = '4.8.0.0'
   OnClose = HandleClose
   OnShow = HandleShow
   object lblKeyName: TLabel
@@ -44,10 +45,10 @@ object frmEditMessage: TfrmEditMessage
     Width = 425
     AutoSize = False
     MaxLength = 255
+    TabOrder = 0
     OnEnter = edtMessageEnter
     OnExit = edtMessageExit
     OnKeyDown = edtMessageKeyDown
-    TabOrder = 0
   end
   object edtCaption: TEdit
     Left = 70
@@ -56,50 +57,46 @@ object frmEditMessage: TfrmEditMessage
     Width = 425
     AutoSize = False
     MaxLength = 255
+    TabOrder = 1
     OnEnter = edtCaptionEnter
     OnExit = edtCaptionExit
-    TabOrder = 1
   end
   object btnEditWav: TButton
     Left = 5
     Height = 25
     Top = 105
     Width = 110
-    AutoSize = False
     Caption = '&Edit'
-    OnClick = btnEditWavClick
     TabOrder = 2
+    OnClick = btnEditWavClick
   end
   object btnOK: TButton
     Left = 165
     Height = 25
     Top = 105
     Width = 80
-    AutoSize = False
     Caption = 'OK'
     Default = True
-    OnClick = btnOKClick
     TabOrder = 3
+    OnClick = btnOKClick
   end
   object btnCancel: TButton
     Left = 255
     Height = 25
     Top = 105
     Width = 80
-    AutoSize = False
     Cancel = True
     Caption = 'Cancel'
-    OnClick = btnCancelClick
     TabOrder = 4
+    OnClick = btnCancelClick
   end
   object btnList: TButton
     Left = 385
     Height = 25
     Top = 105
     Width = 110
-    AutoSize = False
     Caption = 'List of commands'
-    OnClick = btnListClick
     TabOrder = 5
+    OnClick = btnListClick
   end
 end

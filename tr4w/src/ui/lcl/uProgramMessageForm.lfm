@@ -1,4 +1,4 @@
-﻿object frmProgramMessage: TfrmProgramMessage
+object frmProgramMessage: TfrmProgramMessage
   Left = 0
   Height = 116
   Top = 0
@@ -10,6 +10,7 @@
   ClientWidth = 410
   KeyPreview = True
   Position = poMainFormCenter
+  LCLVersion = '4.8.0.0'
   OnClose = HandleClose
   OnKeyDown = HandleKeyDown
   OnShow = HandleShow
@@ -18,29 +19,26 @@
     Height = 26
     Top = 20
     Width = 350
-    AutoSize = False
     Caption = 'Press &C to program a CQ function key.'
-    OnClick = btnCQClick
     TabOrder = 0
+    OnClick = btnCQClick
   end
   object btnExchange: TButton
     Left = 30
     Height = 26
     Top = 50
     Width = 350
-    AutoSize = False
     Caption = 'Press &E to program an exchange/search and pounce function key.'
-    OnClick = btnExchangeClick
     TabOrder = 1
+    OnClick = btnExchangeClick
   end
   object btnOther: TButton
     Left = 30
     Height = 26
     Top = 80
     Width = 350
-    AutoSize = False
     Caption = 'Press &O to program the other non function key messages.'
-    OnClick = btnOtherClick
     TabOrder = 2
+    OnClick = btnOtherClick
   end
 end

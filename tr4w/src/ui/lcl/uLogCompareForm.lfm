@@ -9,6 +9,7 @@ object frmLogCompare: TfrmLogCompare
   ClientHeight = 265
   ClientWidth = 460
   Position = poMainFormCenter
+  LCLVersion = '4.8.0.0'
   OnClose = HandleClose
   OnShow = HandleShow
   object lvCompare: TListView
@@ -28,31 +29,28 @@ object frmLogCompare: TfrmLogCompare
     Height = 25
     Top = 180
     Width = 160
-    AutoSize = False
     Caption = 'Synchronize'
     Default = True
-    OnClick = btnSynchronizeClick
     TabOrder = 1
+    OnClick = btnSynchronizeClick
   end
   object btnClearAllLogs: TButton
     Left = 55
     Height = 25
     Top = 215
     Width = 160
-    AutoSize = False
     Caption = 'Clear all logs'
-    OnClick = btnClearAllLogsClick
     TabOrder = 2
+    OnClick = btnClearAllLogsClick
   end
   object btnExit: TButton
     Left = 240
     Height = 25
     Top = 180
     Width = 160
-    AutoSize = False
     Cancel = True
     Caption = 'Exit'
-    OnClick = btnExitClick
     TabOrder = 3
+    OnClick = btnExitClick
   end
 end

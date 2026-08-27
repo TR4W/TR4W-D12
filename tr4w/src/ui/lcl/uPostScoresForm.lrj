@@ -1,0 +1,5 @@
+{"version":1,"strings":[
+{"hash":131007139,"name":"tfrmpostscores.caption","sourcebytes":[80,111,115,116,32,115,99,111,114,101,115],"value":"Post scores"},
+{"hash":111571479,"name":"tfrmpostscores.btnpostnow.caption","sourcebytes":[80,111,115,116,32,110,111,119],"value":"Post now"},
+{"hash":130129491,"name":"tfrmpostscores.btnshowscores.caption","sourcebytes":[83,104,111,119,32,115,99,111,114,101,115],"value":"Show scores"}
+]}

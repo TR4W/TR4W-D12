@@ -1,0 +1,5 @@
+{"version":1,"strings":[
+{"hash":72602355,"name":"tfrmmessageslist.caption","sourcebytes":[76,105,115,116,32,111,102,32,99,111,109,109,97,110,100,115],"value":"List of commands"},
+{"hash":1339,"name":"tfrmmessageslist.btnok.caption","sourcebytes":[79,75],"value":"OK"},
+{"hash":77089212,"name":"tfrmmessageslist.btncancel.caption","sourcebytes":[67,97,110,99,101,108],"value":"Cancel"}
+]}

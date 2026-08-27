@@ -1,16 +1,19 @@
 object frmTelnet: TfrmTelnet
   Left = 0
+  Height = 344
   Top = 0
+  Width = 977
   BorderStyle = bsSizeToolWin
   Caption = 'Telnet'
   ClientHeight = 344
   ClientWidth = 977
   KeyPreview = True
+  LCLVersion = '4.8.0.0'
   OnClose = HandleClose
   OnCreate = HandleCreate
+  OnKeyDown = HandleKeyDown
   OnResize = HandleResize
   OnShow = HandleShow
-  OnKeyDown = HandleKeyDown
   object pnlToolbar: TPanel
     Left = 0
     Height = 32
@@ -27,8 +30,8 @@ object frmTelnet: TfrmTelnet
       Top = 2
       Width = 104
       Caption = 'Connect'
-      OnClick = ConnectClick
       TabOrder = 0
+      OnClick = ConnectClick
     end
     object btnDisconnect: TBitBtn
       Left = 108
@@ -36,8 +39,8 @@ object frmTelnet: TfrmTelnet
       Top = 2
       Width = 116
       Caption = 'Disconnect'
-      OnClick = DisconnectClick
       TabOrder = 1
+      OnClick = DisconnectClick
     end
     object btnFreeze: TBitBtn
       Left = 224
@@ -45,8 +48,8 @@ object frmTelnet: TfrmTelnet
       Top = 2
       Width = 98
       Caption = 'Freeze'
-      OnClick = FreezeClick
       TabOrder = 2
+      OnClick = FreezeClick
     end
     object btnClear: TBitBtn
       Left = 322
@@ -54,8 +57,8 @@ object frmTelnet: TfrmTelnet
       Top = 2
       Width = 90
       Caption = 'Clear'
-      OnClick = ClearClick
       TabOrder = 3
+      OnClick = ClearClick
     end
     object btnCommands: TBitBtn
       Left = 412
@@ -63,8 +66,8 @@ object frmTelnet: TfrmTelnet
       Top = 2
       Width = 116
       Caption = 'Commands'
-      OnClick = CommandsClick
       TabOrder = 4
+      OnClick = CommandsClick
     end
     object btnShow50: TBitBtn
       Left = 528
@@ -72,8 +75,8 @@ object frmTelnet: TfrmTelnet
       Top = 2
       Width = 92
       Caption = 'SH/50'
-      OnClick = Show50Click
       TabOrder = 5
+      OnClick = Show50Click
     end
   end
   object pnlEntry: TPanel
@@ -93,7 +96,6 @@ object frmTelnet: TfrmTelnet
       Width = 160
       ItemHeight = 15
       TabOrder = 0
-      Text = ''
     end
     object cboCommand: TComboBox
       Left = 170
@@ -103,9 +105,8 @@ object frmTelnet: TfrmTelnet
       Anchors = [akTop, akLeft, akRight]
       Enabled = False
       ItemHeight = 15
-      OnKeyDown = CommandKeyDown
       TabOrder = 1
-      Text = ''
+      OnKeyDown = CommandKeyDown
     end
     object btnSend: TButton
       Left = 916
@@ -116,8 +117,8 @@ object frmTelnet: TfrmTelnet
       Caption = 'Send'
       Default = True
       Enabled = False
-      OnClick = SendClick
       TabOrder = 2
+      OnClick = SendClick
     end
   end
   object lstConsole: TListBox
@@ -131,12 +132,13 @@ object frmTelnet: TfrmTelnet
     Font.Name = 'Lucida Console'
     Font.Pitch = fpFixed
     ItemHeight = 15
-    OnDblClick = ConsoleDblClick
-    OnDrawItem = ConsoleDrawItem
+    ParentDoubleBuffered = False
     ParentFont = False
     ScrollWidth = 2000
     Style = lbOwnerDrawFixed
     TabOrder = 2
+    OnDblClick = ConsoleDblClick
+    OnDrawItem = ConsoleDrawItem
   end
   object popCommands: TPopupMenu
   end

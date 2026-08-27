@@ -74,13 +74,13 @@ begin
       memAbout.Lines.Clear;
       memAbout.Lines.Add(TR4W_CURRENTVERSION + ' - ' + TR4W_CURRENTVERSIONDATE);
       memAbout.Lines.Add('');
-      memAbout.Lines.Add('2006 - 2012 Dmitriy Gulyaev UA4WLI');
+      memAbout.Lines.Add('(C) 2013 - 2026 TR4W Development Team');
+      memAbout.Lines.Add('Original Win32 Port by Dmitriy Gulyaev UA4WLI (2006-2012)');
+      memAbout.Lines.Add('Original TRLOG DOS (v 6.80) code by Larry Tyree N6TR');
+      memAbout.Lines.Add('');
       memAbout.Lines.Add('TR4WSERVER version - ' + TR4WSERVER_CURRENTVERSION);
       memAbout.Lines.Add('');
-      memAbout.Lines.Add('On basis of the source code of the TRLog v.6.80');
-      memAbout.Lines.Add('UA4WLI + Larry Tyree N6TR');
-      memAbout.Lines.Add('');
-      memAbout.Lines.Add('Current development team = N4AF, NY4I, UR7QM');
+      memAbout.Lines.Add('Current development team = N4AF, NY4I, Claude Code');
    finally
       memAbout.Lines.EndUpdate;
    end;

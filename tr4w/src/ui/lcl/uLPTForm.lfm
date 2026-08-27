@@ -9,6 +9,7 @@ object frmLPT: TfrmLPT
   ClientHeight = 325
   ClientWidth = 300
   Position = poMainFormCenter
+  LCLVersion = '4.8.0.0'
   OnClose = HandleClose
   OnShow = HandleShow
   object lblBase1: TLabel
@@ -119,6 +120,7 @@ object frmLPT: TfrmLPT
     Top = 103
     Width = 80
     AutoSize = False
+    ItemHeight = 0
     Style = csDropDownList
     TabOrder = 3
   end
@@ -128,6 +130,7 @@ object frmLPT: TfrmLPT
     Top = 128
     Width = 80
     AutoSize = False
+    ItemHeight = 0
     Style = csDropDownList
     TabOrder = 4
   end
@@ -137,6 +140,7 @@ object frmLPT: TfrmLPT
     Top = 153
     Width = 80
     AutoSize = False
+    ItemHeight = 0
     Style = csDropDownList
     TabOrder = 5
   end
@@ -146,6 +150,7 @@ object frmLPT: TfrmLPT
     Top = 178
     Width = 80
     AutoSize = False
+    ItemHeight = 0
     Style = csDropDownList
     TabOrder = 6
   end
@@ -155,6 +160,7 @@ object frmLPT: TfrmLPT
     Top = 203
     Width = 80
     AutoSize = False
+    ItemHeight = 0
     Style = csDropDownList
     TabOrder = 7
   end
@@ -164,6 +170,7 @@ object frmLPT: TfrmLPT
     Top = 228
     Width = 80
     AutoSize = False
+    ItemHeight = 0
     Style = csDropDownList
     TabOrder = 8
   end
@@ -172,21 +179,19 @@ object frmLPT: TfrmLPT
     Height = 25
     Top = 275
     Width = 80
-    AutoSize = False
     Caption = 'OK'
     Default = True
-    OnClick = btnOKClick
     TabOrder = 9
+    OnClick = btnOKClick
   end
   object btnCancel: TButton
     Left = 160
     Height = 25
     Top = 275
     Width = 80
-    AutoSize = False
     Cancel = True
     Caption = 'Cancel'
-    OnClick = btnCancelClick
     TabOrder = 10
+    OnClick = btnCancelClick
   end
 end

@@ -1,11 +1,14 @@
 object frmRadioPanel: TfrmRadioPanel
   Left = 0
+  Height = 100
   Top = 0
+  Width = 195
   BorderStyle = bsSizeToolWin
   Caption = 'Radio'
   ClientHeight = 100
   ClientWidth = 195
   KeyPreview = True
+  LCLVersion = '4.8.0.0'
   OnClose = HandleClose
   OnKeyDown = HandleKeyDown
   object lblVFOACaption: TPanel
@@ -13,91 +16,91 @@ object frmRadioPanel: TfrmRadioPanel
     Height = 23
     Top = 5
     Width = 45
-    Alignment = taCenter
     BevelOuter = bvLowered
     Caption = 'VFO A'
+    TabOrder = 1
   end
   object lblVFOBCaption: TPanel
     Left = 5
     Height = 23
     Top = 30
     Width = 45
-    Alignment = taCenter
     BevelOuter = bvLowered
     Caption = 'VFO B'
+    TabOrder = 2
   end
   object lblVFOA: TPanel
     Left = 50
     Height = 23
     Top = 5
     Width = 100
-    Alignment = taCenter
     BevelOuter = bvLowered
     Font.Height = -16
     Font.Style = [fsBold]
     ParentFont = False
+    TabOrder = 3
   end
   object lblVFOB: TPanel
     Left = 50
     Height = 23
     Top = 30
     Width = 100
-    Alignment = taCenter
     BevelOuter = bvLowered
     Font.Height = -16
     Font.Style = [fsBold]
     ParentFont = False
+    TabOrder = 4
   end
   object lblModeA: TPanel
     Left = 150
     Height = 23
     Top = 5
     Width = 40
-    Alignment = taCenter
     BevelOuter = bvLowered
+    TabOrder = 5
   end
   object lblModeB: TPanel
     Left = 150
     Height = 23
     Top = 30
     Width = 40
-    Alignment = taCenter
     BevelOuter = bvLowered
+    TabOrder = 6
   end
   object lblRITFreq: TPanel
     Left = 5
     Height = 20
     Top = 55
     Width = 45
-    Alignment = taCenter
     BevelOuter = bvLowered
+    TabOrder = 7
   end
   object lblRIT: TPanel
     Left = 50
     Height = 20
     Top = 55
     Width = 45
-    Alignment = taCenter
     BevelOuter = bvLowered
     Caption = 'RIT'
+    TabOrder = 8
   end
   object lblXIT: TPanel
     Left = 95
     Height = 20
     Top = 55
     Width = 45
-    Alignment = taCenter
     BevelOuter = bvLowered
     Caption = 'XIT'
+    TabOrder = 9
   end
   object lblSplit: TPanel
     Left = 140
     Height = 20
     Top = 55
     Width = 50
-    Alignment = taCenter
     BevelOuter = bvLowered
     Caption = 'SPLIT'
+    TabOrder = 10
   end
   object btnSpectrum: TButton
     Left = 5
@@ -105,9 +108,9 @@ object frmRadioPanel: TfrmRadioPanel
     Top = 78
     Width = 80
     Caption = 'Spectrum'
-    OnClick = SpectrumClick
     TabOrder = 0
     Visible = False
+    OnClick = SpectrumClick
   end
   object lblStatus: TPanel
     Left = 90
@@ -115,9 +118,9 @@ object frmRadioPanel: TfrmRadioPanel
     Top = 78
     Width = 100
     Anchors = [akTop, akLeft, akRight]
-    Alignment = taCenter
     BevelOuter = bvLowered
     Font.Color = clRed
     ParentFont = False
+    TabOrder = 11
   end
 end

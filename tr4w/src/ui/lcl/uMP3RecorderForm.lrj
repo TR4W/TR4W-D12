@@ -1,0 +1,5 @@
+{"version":1,"strings":[
+{"hash":247848770,"name":"tfrmmp3recorder.caption","sourcebytes":[77,80,51,32,82,101,99,111,114,100,101,114],"value":"MP3 Recorder"},
+{"hash":93038212,"name":"tfrmmp3recorder.chkrecord.caption","sourcebytes":[82,101,99,111,114,100],"value":"Record"},
+{"hash":12558,"name":"tfrmmp3recorder.btncontrol.caption","sourcebytes":[46,46,46],"value":"..."}
+]}

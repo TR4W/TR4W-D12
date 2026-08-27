@@ -172,3 +172,13 @@ tr4w/build/release/symbols/
 # uTestDXSpotParse carries its sample lines inline, so this directory can be
 # absent and the corpus still runs 22/0/4 from a fresh clone.
 corpus_test_data/local_test_data/
+
+# Lazarus form backups. The IDE writes the PREVIOUS revision of a form into a
+# backup/ folder beside it on every save, so these are stale by definition and
+# nothing compiles them. Lint-FormOverlap already skips the directory for the
+# same reason -- a stale layout failing the build is a false alarm about a file
+# nothing builds.
+#
+# 74 of them were committed by accident on 2026-08-26 by staging the directory
+# rather than the files.
+tr4w/src/ui/lcl/backup/

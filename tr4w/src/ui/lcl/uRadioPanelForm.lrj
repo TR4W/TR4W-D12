@@ -1,0 +1,9 @@
+{"version":1,"strings":[
+{"hash":5798655,"name":"tfrmradiopanel.caption","sourcebytes":[82,97,100,105,111],"value":"Radio"},
+{"hash":5943617,"name":"tfrmradiopanel.lblvfoacaption.caption","sourcebytes":[86,70,79,32,65],"value":"VFO A"},
+{"hash":5943618,"name":"tfrmradiopanel.lblvfobcaption.caption","sourcebytes":[86,70,79,32,66],"value":"VFO B"},
+{"hash":22244,"name":"tfrmradiopanel.lblrit.caption","sourcebytes":[82,73,84],"value":"RIT"},
+{"hash":23780,"name":"tfrmradiopanel.lblxit.caption","sourcebytes":[88,73,84],"value":"XIT"},
+{"hash":5787876,"name":"tfrmradiopanel.lblsplit.caption","sourcebytes":[83,80,76,73,84],"value":"SPLIT"},
+{"hash":112901149,"name":"tfrmradiopanel.btnspectrum.caption","sourcebytes":[83,112,101,99,116,114,117,109],"value":"Spectrum"}
+]}

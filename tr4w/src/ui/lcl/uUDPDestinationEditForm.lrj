@@ -1,0 +1,15 @@
+{"version":1,"strings":[
+{"hash":235027822,"name":"tfrmudpdestinationedit.caption","sourcebytes":[85,68,80,32,68,101,115,116,105,110,97,116,105,111,110],"value":"UDP Destination"},
+{"hash":128683235,"name":"tfrmudpdestinationedit.lbladdress.caption","sourcebytes":[65,100,100,114,101,115,115],"value":"Address"},
+{"hash":358036,"name":"tfrmudpdestinationedit.lblport.caption","sourcebytes":[80,111,114,116],"value":"Port"},
+{"hash":256220734,"name":"tfrmudpdestinationedit.grpstreams.caption","sourcebytes":[83,101,110,100,32,116,104,105,115,32,100,101,115,116,105,110,97,116,105,111,110],"value":"Send this destination"},
+{"hash":247512767,"name":"tfrmudpdestinationedit.chkstreamcontact.caption","sourcebytes":[67,111,110,116,97,99,116,32,105,110,102,111],"value":"Contact info"},
+{"hash":1278847,"name":"tfrmudpdestinationedit.chkstreamradio.caption","sourcebytes":[82,97,100,105,111,32,105,110,102,111],"value":"Radio info"},
+{"hash":5875333,"name":"tfrmudpdestinationedit.chkstreamscore.caption","sourcebytes":[83,99,111,114,101],"value":"Score"},
+{"hash":5860194,"name":"tfrmudpdestinationedit.chkstreamrotor.caption","sourcebytes":[82,111,116,111,114],"value":"Rotor"},
+{"hash":103675712,"name":"tfrmudpdestinationedit.chkstreamlookup.caption","sourcebytes":[67,97,108,108,115,105,103,110,32,108,111,111,107,117,112],"value":"Callsign lookup"},
+{"hash":119996495,"name":"tfrmudpdestinationedit.chkstreamappinfo.caption","sourcebytes":[65,112,112,32,105,110,102,111],"value":"App info"},
+{"hash":371876,"name":"tfrmudpdestinationedit.btntest.caption","sourcebytes":[84,101,115,116],"value":"Test"},
+{"hash":1339,"name":"tfrmudpdestinationedit.btnok.caption","sourcebytes":[79,75],"value":"OK"},
+{"hash":77089212,"name":"tfrmudpdestinationedit.btncancel.caption","sourcebytes":[67,97,110,99,101,108],"value":"Cancel"}
+]}

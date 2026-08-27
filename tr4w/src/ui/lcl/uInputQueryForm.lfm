@@ -9,6 +9,7 @@ object frmInputQuery: TfrmInputQuery
   ClientHeight = 116
   ClientWidth = 420
   Position = poMainFormCenter
+  LCLVersion = '4.8.0.0'
   OnClose = HandleClose
   OnShow = HandleShow
   object imgIcon: TImage
@@ -35,7 +36,7 @@ object frmInputQuery: TfrmInputQuery
     Width = 370
     Alignment = taCenter
     AutoSize = False
-    CharCase = ecUpperCase
+    CharCase = ecUppercase
     TabOrder = 0
   end
   object btnOK: TButton
@@ -43,21 +44,19 @@ object frmInputQuery: TfrmInputQuery
     Height = 25
     Top = 80
     Width = 80
-    AutoSize = False
     Caption = 'OK'
     Default = True
-    OnClick = btnOKClick
     TabOrder = 1
+    OnClick = btnOKClick
   end
   object btnCancel: TButton
     Left = 215
     Height = 25
     Top = 80
     Width = 80
-    AutoSize = False
     Cancel = True
     Caption = 'Cancel'
-    OnClick = btnCancelClick
     TabOrder = 2
+    OnClick = btnCancelClick
   end
 end

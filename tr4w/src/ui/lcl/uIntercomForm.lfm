@@ -1,11 +1,14 @@
 object frmIntercom: TfrmIntercom
   Left = 0
+  Height = 240
   Top = 0
+  Width = 460
   BorderStyle = bsSizeToolWin
   Caption = 'Intercom'
   ClientHeight = 240
   ClientWidth = 460
   KeyPreview = True
+  LCLVersion = '4.8.0.0'
   OnClose = HandleClose
   OnCreate = HandleCreate
   OnKeyDown = HandleKeyDown
@@ -20,8 +23,8 @@ object frmIntercom: TfrmIntercom
     Font.Pitch = fpFixed
     ItemHeight = 0
     MultiSelect = True
-    OnDblClick = MessagesDblClick
     ParentFont = False
     TabOrder = 0
+    OnDblClick = MessagesDblClick
   end
 end

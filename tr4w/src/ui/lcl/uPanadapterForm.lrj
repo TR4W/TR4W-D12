@@ -1,0 +1,12 @@
+{"version":1,"strings":[
+{"hash":128782978,"name":"tfrmpanadapter.caption","sourcebytes":[80,97,110,97,100,97,112,116,101,114],"value":"Panadapter"},
+{"hash":5668929,"name":"tfrmpanadapter.lblsource.caption","sourcebytes":[80,97,110,32,65],"value":"Pan A"},
+{"hash":33239252,"name":"tfrmpanadapter.lblstatus.caption","sourcebytes":[68,105,115,99,111,110,110,101,99,116,101,100],"value":"Disconnected"},
+{"hash":5672085,"name":"tfrmpanadapter.btnpause.caption","sourcebytes":[80,97,117,115,101],"value":"Pause"},
+{"hash":3876482,"name":"tfrmpanadapter.lblscale.caption","sourcebytes":[56,48,32,100,66],"value":"80 dB"},
+{"hash":174588589,"name":"tfrmpanadapter.lblspan.caption","sourcebytes":[83,112,97,110,32,45,45],"value":"Span --"},
+{"hash":89624137,"name":"tfrmpanadapter.btnspannarrow.hint","sourcebytes":[78,97,114,114,111,119,101,114,32,115,112,97,110,32,40,122,111,111,109,32,105,110,41],"value":"Narrower span (zoom in)"},
+{"hash":45,"name":"tfrmpanadapter.btnspannarrow.caption","sourcebytes":[45],"value":"-"},
+{"hash":187794617,"name":"tfrmpanadapter.btnspanwide.hint","sourcebytes":[87,105,100,101,114,32,115,112,97,110,32,40,122,111,111,109,32,111,117,116,41],"value":"Wider span (zoom out)"},
+{"hash":43,"name":"tfrmpanadapter.btnspanwide.caption","sourcebytes":[43],"value":"+"}
+]}

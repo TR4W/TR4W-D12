@@ -9,6 +9,7 @@ object frmWinManager: TfrmWinManager
   ClientHeight = 245
   ClientWidth = 310
   Position = poMainFormCenter
+  LCLVersion = '4.8.0.0'
   OnClose = HandleClose
   OnShow = HandleShow
   object lstWindows: TListBox
@@ -17,31 +18,29 @@ object frmWinManager: TfrmWinManager
     Top = 5
     Width = 300
     ItemHeight = 0
-    OnDblClick = lstWindowsDblClick
-    OnSelectionChange = lstWindowsSelectionChange
     ScrollWidth = 298
     TabOrder = 0
+    OnDblClick = lstWindowsDblClick
+    OnSelectionChange = lstWindowsSelectionChange
   end
   object btnOK: TButton
     Left = 70
     Height = 25
     Top = 212
     Width = 80
-    AutoSize = False
     Caption = 'OK'
     Default = True
-    OnClick = btnOKClick
     TabOrder = 1
+    OnClick = btnOKClick
   end
   object btnCancel: TButton
     Left = 160
     Height = 25
     Top = 212
     Width = 80
-    AutoSize = False
     Cancel = True
     Caption = 'Cancel'
-    OnClick = btnCancelClick
     TabOrder = 2
+    OnClick = btnCancelClick
   end
 end

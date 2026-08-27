@@ -1,11 +1,14 @@
 object frmHamScore: TfrmHamScore
   Left = 0
+  Height = 270
   Top = 0
+  Width = 410
   BorderStyle = bsSizeToolWin
   Caption = 'HamScore'
   ClientHeight = 270
   ClientWidth = 410
   KeyPreview = True
+  LCLVersion = '4.8.0.0'
   OnClose = HandleClose
   OnCreate = HandleCreate
   OnKeyDown = HandleKeyDown
@@ -67,7 +70,6 @@ object frmHamScore: TfrmHamScore
     ReadOnly = True
     ScrollBars = ssAutoVertical
     TabOrder = 0
-    WordWrap = True
   end
   object btnPushNow: TButton
     Left = 8
@@ -76,8 +78,8 @@ object frmHamScore: TfrmHamScore
     Width = 130
     Anchors = [akLeft, akBottom]
     Caption = 'Push Now'
-    OnClick = PushNowClick
     TabOrder = 1
+    OnClick = PushNowClick
   end
   object btnResync: TButton
     Left = 148
@@ -86,12 +88,11 @@ object frmHamScore: TfrmHamScore
     Width = 130
     Anchors = [akLeft, akBottom]
     Caption = 'Resync from log'
-    OnClick = ResyncClick
     TabOrder = 2
+    OnClick = ResyncClick
   end
   object tmrRefresh: TTimer
     Enabled = False
-    Interval = 1000
     OnTimer = RefreshTick
   end
 end

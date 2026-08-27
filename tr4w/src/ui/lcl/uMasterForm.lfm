@@ -1,12 +1,15 @@
 object frmMaster: TfrmMaster
   Left = 0
+  Height = 200
   Top = 0
+  Width = 340
   BorderStyle = bsSizeToolWin
   Caption = 'Super check partial'
   ClientHeight = 200
   ClientWidth = 340
   Color = clWindow
   KeyPreview = True
+  LCLVersion = '4.8.0.0'
   OnClose = HandleClose
   OnCreate = HandleCreate
   OnDestroy = HandleDestroy

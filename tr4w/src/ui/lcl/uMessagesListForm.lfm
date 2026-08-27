@@ -9,6 +9,7 @@ object frmMessagesList: TfrmMessagesList
   ClientHeight = 330
   ClientWidth = 460
   Position = poMainFormCenter
+  LCLVersion = '4.8.0.0'
   OnClose = HandleClose
   OnShow = HandleShow
   object lstCommands: TListBox
@@ -17,31 +18,29 @@ object frmMessagesList: TfrmMessagesList
     Top = 5
     Width = 450
     ItemHeight = 0
-    OnDblClick = lstCommandsDblClick
     ScrollWidth = 448
     Sorted = True
     TabOrder = 0
+    OnDblClick = lstCommandsDblClick
   end
   object btnOK: TButton
     Left = 145
     Height = 25
     Top = 295
     Width = 80
-    AutoSize = False
     Caption = 'OK'
     Default = True
-    OnClick = btnOKClick
     TabOrder = 1
+    OnClick = btnOKClick
   end
   object btnCancel: TButton
     Left = 235
     Height = 25
     Top = 295
     Width = 80
-    AutoSize = False
     Cancel = True
     Caption = 'Cancel'
-    OnClick = btnCancelClick
     TabOrder = 2
+    OnClick = btnCancelClick
   end
 end

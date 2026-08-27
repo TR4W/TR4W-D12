@@ -1,11 +1,14 @@
 object frmMP3Recorder: TfrmMP3Recorder
   Left = 0
+  Height = 92
   Top = 0
+  Width = 260
   BorderStyle = bsSizeToolWin
   Caption = 'MP3 Recorder'
   ClientHeight = 92
   ClientWidth = 260
   KeyPreview = True
+  LCLVersion = '4.8.0.0'
   OnClose = HandleClose
   OnCreate = HandleCreate
   OnKeyDown = HandleKeyDown
@@ -24,8 +27,8 @@ object frmMP3Recorder: TfrmMP3Recorder
     Width = 140
     Anchors = [akTop, akLeft, akRight]
     Caption = 'Record'
-    OnClick = RecordClick
     TabOrder = 0
+    OnClick = RecordClick
   end
   object pbPeak: TProgressBar
     Left = 8
@@ -42,8 +45,8 @@ object frmMP3Recorder: TfrmMP3Recorder
     Width = 140
     Anchors = [akTop, akLeft, akRight]
     Caption = '...'
-    OnClick = ControlClick
     TabOrder = 2
+    OnClick = ControlClick
   end
   object tmrMeter: TTimer
     Enabled = False

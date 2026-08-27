@@ -1,0 +1,3173 @@
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8"
+
+#: log4d.addingloggermsg
+#, object-pascal-format
+msgid "Adding logger \"%s\" in error handler"
+msgstr ""
+
+#: log4d.appenderdefinedmsg
+#, object-pascal-format
+msgid "Appender \"%s\" was already parsed"
+msgstr ""
+
+#: log4d.badconfigfilemsg
+#, object-pascal-format
+msgid "Couldn't read configuration file \"%s\" - %s"
+msgstr ""
+
+#: log4d.closedappendermsg
+msgid "Not allowed to write to a closed appender"
+msgstr ""
+
+#: log4d.converterrormsg
+#, object-pascal-format
+msgid "Could not convert \"%s\" to level"
+msgstr ""
+
+#: log4d.endappendermsg
+#, object-pascal-format
+msgid "Parsed \"%s\" options"
+msgstr ""
+
+#: log4d.enderrorhandlermsg
+#, object-pascal-format
+msgid "End of parsing for \"%s\" error handler"
+msgstr ""
+
+#: log4d.endfiltersmsg
+#, object-pascal-format
+msgid "End of parsing for \"%s\" filter"
+msgstr ""
+
+#: log4d.endlayoutmsg
+#, object-pascal-format
+msgid "End of parsing for \"%s\" layout"
+msgstr ""
+
+#: log4d.fallbackmsg
+#, object-pascal-format
+msgid "Fallback on error %s"
+msgstr ""
+
+#: log4d.fallbackreplacemsg
+#, object-pascal-format
+msgid "Fallback replacing \"%s\" with \"%s\" in logger \"%s\""
+msgstr ""
+
+#: log4d.finishedconfigmsg
+#, object-pascal-format
+msgid "Finished configuring with %s"
+msgstr ""
+
+#: log4d.handlingadditivitymsg
+#, object-pascal-format
+msgid "Handling %s=\"%s\""
+msgstr ""
+
+#: log4d.ignoreconfigmsg
+#, object-pascal-format
+msgid "Ignoring configuration file \"%s\""
+msgstr ""
+
+#: log4d.interfacenotimplmsg
+#, object-pascal-format
+msgid "%s doesn't implement %s"
+msgstr ""
+
+#: log4d.layoutrequiredmsg
+#, object-pascal-format
+msgid "Appender \"%s\" requires a layout"
+msgstr ""
+
+#: log4d.levelhdr
+msgid "Level"
+msgstr ""
+
+#: log4d.leveltokenmsg
+#, object-pascal-format
+msgid "Level token is \"%s\""
+msgstr ""
+
+#: log4d.loggerfactorymsg
+#, object-pascal-format
+msgid "Setting logger factory to \"%s\""
+msgstr ""
+
+#: log4d.loggerhdr
+msgid "Logger"
+msgstr ""
+
+#: log4d.messagehdr
+msgctxt "log4d.messagehdr"
+msgid "Message"
+msgstr ""
+
+#: log4d.ndchdr
+msgid "NDC"
+msgstr ""
+
+#: log4d.nilerrorhandlermsg
+msgid "An appender cannot have a nil error handler"
+msgstr ""
+
+#: log4d.nillevelmsg
+msgid "The root can't have a nil level"
+msgstr ""
+
+#: log4d.noappendercreatedmsg
+#, object-pascal-format
+msgid "Couldn't create appender named \"%s\""
+msgstr ""
+
+#: log4d.noappendersmsg
+#, object-pascal-format
+msgid "No appenders could be found for logger \"%s\""
+msgstr ""
+
+#: log4d.noclassmsg
+#, object-pascal-format
+msgid "Couldn't find class %s"
+msgstr ""
+
+#: log4d.nolayoutmsg
+#, object-pascal-format
+msgid "No layout set for appender named \"%s\""
+msgstr ""
+
+#: log4d.norenderedcreatedmsg
+#, object-pascal-format
+msgid "Couldn't find rendered class \"%s\""
+msgstr ""
+
+#: log4d.norenderercreatedmsg
+#, object-pascal-format
+msgid "Couldn't create renderer \"%s\""
+msgstr ""
+
+#: log4d.norenderermsg
+#, object-pascal-format
+msgid "No renderer found for class %s"
+msgstr ""
+
+#: log4d.norootloggermsg
+msgid "Couldn't find root logger information. Is this OK?"
+msgstr ""
+
+#: log4d.parsingappendermsg
+#, object-pascal-format
+msgid "Parsing appender named \"%s\""
+msgstr ""
+
+#: log4d.parsingerrorhandlermsg
+#, object-pascal-format
+msgid "Parsing error handler options for \"%s\""
+msgstr ""
+
+#: log4d.parsingfiltersmsg
+#, object-pascal-format
+msgid "Parsing filter options for \"%s\""
+msgstr ""
+
+#: log4d.parsinglayoutmsg
+#, object-pascal-format
+msgid "Parsing layout options for \"%s\""
+msgstr ""
+
+#: log4d.parsingloggermsg
+#, object-pascal-format
+msgid "Parsing for logger \"%s\" with value=\"%s\""
+msgstr ""
+
+#: log4d.pleaseinitmsg
+msgid "Please initialise the Log4D system properly"
+msgstr ""
+
+#: log4d.renderermsg
+#, object-pascal-format
+msgid "Rendering class: \"%s\", Rendered class: \"%s\""
+msgstr ""
+
+#: log4d.sessionstartmsg
+msgid "Log session start time"
+msgstr ""
+
+#: log4d.settingadditivitymsg
+#, object-pascal-format
+msgid "Setting additivity for \"%s\" to \"%s\""
+msgstr ""
+
+#: log4d.settingappendermsg
+#, object-pascal-format
+msgid "Setting appender \"%s\" in error handler"
+msgstr ""
+
+#: log4d.settingbackupmsg
+#, object-pascal-format
+msgid "Setting backup appender \"%s\" in error handler"
+msgstr ""
+
+#: log4d.settinglevelmsg
+#, object-pascal-format
+msgid "Logger \"%s\" set to level \"%s\""
+msgstr ""
+
+#: log4d.settingloggermsg
+#, object-pascal-format
+msgid "Setting logger \"%s\" in error handler"
+msgstr ""
+
+#: log4d.threadhdr
+msgid "Thread"
+msgstr ""
+
+#: log4d.timehdr
+msgid "Time"
+msgstr ""
+
+#: log4d.valueunknownmsg
+msgid "Unknown"
+msgstr ""
+
+#: tfrmabout.btnok.caption
+msgctxt "tfrmabout.btnok.caption"
+msgid "OK"
+msgstr ""
+
+#: tfrmabout.caption
+msgid "About TR4W"
+msgstr ""
+
+#: tfrmabout.lblurl.caption
+msgid "http://www.tr4w.net"
+msgstr ""
+
+#: tfrmaltd.btncancel.caption
+msgctxt "tfrmaltd.btncancel.caption"
+msgid "Cancel"
+msgstr ""
+
+#: tfrmaltd.btnok.caption
+msgctxt "tfrmaltd.btnok.caption"
+msgid "OK"
+msgstr ""
+
+#: tfrmaltd.caption
+msgid "Dupe Check On Inactive Radio"
+msgstr ""
+
+#: tfrmaltd.lblprompt.caption
+msgid "Enter call to be checked on:"
+msgstr ""
+
+#: tfrmautocq.btncancel.caption
+msgctxt "tfrmautocq.btncancel.caption"
+msgid "Cancel"
+msgstr ""
+
+#: tfrmautocq.btnok.caption
+msgctxt "tfrmautocq.btnok.caption"
+msgid "OK"
+msgstr ""
+
+#: tfrmautocq.caption
+msgid "Auto-CQ"
+msgstr ""
+
+#: tfrmautocq.lbldelay.caption
+msgid "Number of milliseconds of listening time:"
+msgstr ""
+
+#: tfrmautocq.lblmemorykey.caption
+msgid "Press the memory key you want to repeat:"
+msgstr ""
+
+#: tfrmbandmap.caption
+msgctxt "tfrmbandmap.caption"
+msgid "Band map"
+msgstr ""
+
+#: tfrmbandmap.miallbands.caption
+msgid "BAND MAP ALL BANDS"
+msgstr ""
+
+#: tfrmbandmap.miallmodes.caption
+msgid "BAND MAP ALL MODES"
+msgstr ""
+
+#: tfrmbandmap.mideletespot.caption
+msgid "Delete selected spot"
+msgstr ""
+
+#: tfrmbandmap.midisplaycq.caption
+msgid "BAND MAP DISPLAY CQ"
+msgstr ""
+
+#: tfrmbandmap.midupedisplay.caption
+msgid "BAND MAP DUPE DISPLAY"
+msgstr ""
+
+#: tfrmbandmap.mimultsonly.caption
+msgid "BAND MAP MULTS ONLY"
+msgstr ""
+
+#: tfrmbandmap.miqsyinactive.caption
+msgid "Send spot to inactive radio"
+msgstr ""
+
+#: tfrmbandmap.miremoveall.caption
+msgid "Remove all spots"
+msgstr ""
+
+#: tfrmbandmap.miso2rdisplay.caption
+msgid "BAND MAP SO2R DISPLAY"
+msgstr ""
+
+#: tfrmbandmap.sbspot.panels[0].text
+msgctxt "tfrmbandmap.sbspot.panels[0].text"
+msgid " "
+msgstr ""
+
+#: tfrmbandmap.sbspot.panels[1].text
+msgctxt "tfrmbandmap.sbspot.panels[1].text"
+msgid " "
+msgstr ""
+
+#: tfrmbandmap.sbspot.panels[2].text
+msgctxt "tfrmbandmap.sbspot.panels[2].text"
+msgid " "
+msgstr ""
+
+#: tfrmbandmap.sbspot.panels[3].text
+msgctxt "tfrmbandmap.sbspot.panels[3].text"
+msgid " "
+msgstr ""
+
+#: tfrmbandmap.sbspot.panels[4].text
+msgctxt "tfrmbandmap.sbspot.panels[4].text"
+msgid " "
+msgstr ""
+
+#: tfrmbandmap.sbspot.panels[5].text
+msgctxt "tfrmbandmap.sbspot.panels[5].text"
+msgid " "
+msgstr ""
+
+#: tfrmbandplan.btncancel.caption
+msgctxt "tfrmbandplan.btncancel.caption"
+msgid "Cancel"
+msgstr ""
+
+#: tfrmbandplan.btnok.caption
+msgctxt "tfrmbandplan.btnok.caption"
+msgid "OK"
+msgstr ""
+
+#: tfrmbandplan.caption
+msgid "Band plan"
+msgstr ""
+
+#: tfrmbeacons.caption
+msgid "Beacons  Monitor"
+msgstr ""
+
+#: tfrmct1boh.caption
+msgid "CT1BOH information"
+msgstr ""
+
+#: tfrmdupesheet.caption
+msgid "Dupe sheet"
+msgstr ""
+
+#: tfrmeditmessage.btncancel.caption
+msgctxt "tfrmeditmessage.btncancel.caption"
+msgid "Cancel"
+msgstr ""
+
+#: tfrmeditmessage.btneditwav.caption
+msgid "&Edit"
+msgstr ""
+
+#: tfrmeditmessage.btnlist.caption
+msgctxt "tfrmeditmessage.btnlist.caption"
+msgid "List of commands"
+msgstr ""
+
+#: tfrmeditmessage.btnok.caption
+msgctxt "tfrmeditmessage.btnok.caption"
+msgid "OK"
+msgstr ""
+
+#: tfrmeditmessage.caption
+msgid "Program message"
+msgstr ""
+
+#: tfrmeditmessage.lblcaption.caption
+msgid "Caption"
+msgstr ""
+
+#: tfrmeditmessage.lblmessage.caption
+msgctxt "tfrmeditmessage.lblmessage.caption"
+msgid "Message"
+msgstr ""
+
+#: tfrmeditqso.btncancel.caption
+msgctxt "tfrmeditqso.btncancel.caption"
+msgid "Cancel"
+msgstr ""
+
+#: tfrmeditqso.btnplay.caption
+msgid "&Play"
+msgstr ""
+
+#: tfrmeditqso.btnsave.caption
+msgid "&Save"
+msgstr ""
+
+#: tfrmeditqso.caption
+msgid "Edit QSO"
+msgstr ""
+
+#: tfrmeditqso.chkdeleted.caption
+msgid "&Deleted"
+msgstr ""
+
+#: tfrmeditqso.chkdomesticmult.caption
+msgid "Domestic Mult"
+msgstr ""
+
+#: tfrmeditqso.chkdupe.caption
+msgid "Dupe"
+msgstr ""
+
+#: tfrmeditqso.chkdxmult.caption
+msgid "DX Mult"
+msgstr ""
+
+#: tfrmeditqso.chkinhibitmults.caption
+msgid "Inhibit Mults"
+msgstr ""
+
+#: tfrmeditqso.chknamesent.caption
+msgid "Name Sent"
+msgstr ""
+
+#: tfrmeditqso.chkprefixmult.caption
+msgid "Prefix Mult"
+msgstr ""
+
+#: tfrmeditqso.chksap.caption
+msgid "S&P"
+msgstr ""
+
+#: tfrmeditqso.chkxqso.caption
+msgid "X-QSO"
+msgstr ""
+
+#: tfrmeditqso.chkzonemult.caption
+msgid "Zone Mult"
+msgstr ""
+
+#: tfrmeditqso.dtpdatetime.textfornulldate
+msgid "NULL"
+msgstr ""
+
+#: tfrmeditqso.lblage.caption
+msgid "Age"
+msgstr ""
+
+#: tfrmeditqso.lblband.caption
+msgid "Band"
+msgstr ""
+
+#: tfrmeditqso.lblcallsign.caption
+msgctxt "tfrmeditqso.lblcallsign.caption"
+msgid "Callsign"
+msgstr ""
+
+#: tfrmeditqso.lblchapter.caption
+msgid "Chapter"
+msgstr ""
+
+#: tfrmeditqso.lblcheck.caption
+msgid "Check"
+msgstr ""
+
+#: tfrmeditqso.lblclass.caption
+msgid "Class"
+msgstr ""
+
+#: tfrmeditqso.lblcomputerid.caption
+msgid "Computer ID"
+msgstr ""
+
+#: tfrmeditqso.lbldate.caption
+msgid "Date"
+msgstr ""
+
+#: tfrmeditqso.lbldomestic.caption
+msgid "Domestic"
+msgstr ""
+
+#: tfrmeditqso.lbldx.caption
+msgid "DX"
+msgstr ""
+
+#: tfrmeditqso.lblfrequency.caption
+msgid "Frequency, Hz"
+msgstr ""
+
+#: tfrmeditqso.lblmode.caption
+msgid "Mode"
+msgstr ""
+
+#: tfrmeditqso.lblname.caption
+msgctxt "tfrmeditqso.lblname.caption"
+msgid "Name"
+msgstr ""
+
+#: tfrmeditqso.lblnumberrcvd.caption
+msgid "Number Rcvd"
+msgstr ""
+
+#: tfrmeditqso.lblnumbersent.caption
+msgid "Number Sent"
+msgstr ""
+
+#: tfrmeditqso.lbloperator.caption
+msgid "Operator"
+msgstr ""
+
+#: tfrmeditqso.lblpostalcode.caption
+msgid "Postal Code"
+msgstr ""
+
+#: tfrmeditqso.lblpower.caption
+msgid "Power"
+msgstr ""
+
+#: tfrmeditqso.lblprecedence.caption
+msgid "Precedence"
+msgstr ""
+
+#: tfrmeditqso.lblprefecture.caption
+msgid "Prefecture"
+msgstr ""
+
+#: tfrmeditqso.lblprefix.caption
+msgid "Prefix"
+msgstr ""
+
+#: tfrmeditqso.lblqsopoints.caption
+msgid "QSO points"
+msgstr ""
+
+#: tfrmeditqso.lblqth.caption
+msgid "QTH"
+msgstr ""
+
+#: tfrmeditqso.lblradio.caption
+msgid "RADIO ONE"
+msgstr ""
+
+#: tfrmeditqso.lblrstreceived.caption
+msgid "RST received"
+msgstr ""
+
+#: tfrmeditqso.lblrstsent.caption
+msgid "RST sent"
+msgstr ""
+
+#: tfrmeditqso.lbltenten.caption
+msgid "Ten Ten Number"
+msgstr ""
+
+#: tfrmeditqso.lblzone.caption
+msgid "Zone"
+msgstr ""
+
+#: tfrmfunctionkeys.caption
+msgid "Function keys"
+msgstr ""
+
+#: tfrmfunctionkeys.pnlf1.caption
+msgid "F1"
+msgstr ""
+
+#: tfrmfunctionkeys.pnlf10.caption
+msgid "F10"
+msgstr ""
+
+#: tfrmfunctionkeys.pnlf11.caption
+msgid "F11"
+msgstr ""
+
+#: tfrmfunctionkeys.pnlf12.caption
+msgid "F12"
+msgstr ""
+
+#: tfrmfunctionkeys.pnlf2.caption
+msgid "F2"
+msgstr ""
+
+#: tfrmfunctionkeys.pnlf3.caption
+msgid "F3"
+msgstr ""
+
+#: tfrmfunctionkeys.pnlf4.caption
+msgid "F4"
+msgstr ""
+
+#: tfrmfunctionkeys.pnlf5.caption
+msgid "F5"
+msgstr ""
+
+#: tfrmfunctionkeys.pnlf6.caption
+msgid "F6"
+msgstr ""
+
+#: tfrmfunctionkeys.pnlf7.caption
+msgid "F7"
+msgstr ""
+
+#: tfrmfunctionkeys.pnlf8.caption
+msgid "F8"
+msgstr ""
+
+#: tfrmfunctionkeys.pnlf9.caption
+msgid "F9"
+msgstr ""
+
+#: tfrmhamscore.btnpushnow.caption
+msgid "Push Now"
+msgstr ""
+
+#: tfrmhamscore.btnresync.caption
+msgid "Resync from log"
+msgstr ""
+
+#: tfrmhamscore.caption
+msgid "HamScore"
+msgstr ""
+
+#: tfrmhamscore.lblqueuetitle.caption
+msgid "Queued contacts:"
+msgstr ""
+
+#: tfrmhamscore.lblqueuevalue.caption
+msgid "--"
+msgstr ""
+
+#: tfrmhamscore.lblstatustitle.caption
+msgid "Last status:"
+msgstr ""
+
+#: tfrminiretire.btnno.caption
+msgid "&No"
+msgstr ""
+
+#: tfrminiretire.btnyes.caption
+msgid "&Yes"
+msgstr ""
+
+#: tfrminiretire.caption
+msgctxt "tfrminiretire.caption"
+msgid "Old settings file"
+msgstr ""
+
+#: tfrminiretire.chkdontask.caption
+msgid "chkDontAsk"
+msgstr ""
+
+#: tfrminiretire.lblprompt.caption
+msgid "lblPrompt"
+msgstr ""
+
+#: tfrminputquery.btncancel.caption
+msgctxt "tfrminputquery.btncancel.caption"
+msgid "Cancel"
+msgstr ""
+
+#: tfrminputquery.btnok.caption
+msgctxt "tfrminputquery.btnok.caption"
+msgid "OK"
+msgstr ""
+
+#: tfrminputquery.caption
+msgctxt "tfrminputquery.caption"
+msgid "TR4W"
+msgstr ""
+
+#: tfrminputquery.lblprompt.caption
+msgid "Enter value:"
+msgstr ""
+
+#: tfrmintercom.caption
+msgid "Intercom"
+msgstr ""
+
+#: tfrmkeyeredit.btncancel.caption
+msgctxt "tfrmkeyeredit.btncancel.caption"
+msgid "Cancel"
+msgstr ""
+
+#: tfrmkeyeredit.btnok.caption
+msgctxt "tfrmkeyeredit.btnok.caption"
+msgid "Save and close"
+msgstr ""
+
+#: tfrmkeyeredit.caption
+msgid "CW keying device"
+msgstr ""
+
+#: tfrmkeyeredit.chkwkautospace.caption
+msgid "Auto space"
+msgstr ""
+
+#: tfrmkeyeredit.chkwkctspacing.caption
+msgid "CT spacing"
+msgstr ""
+
+#: tfrmkeyeredit.chkwkignorespeedpot.caption
+msgid "Ignore speed pot"
+msgstr ""
+
+#: tfrmkeyeredit.chkwkpaddleonlysidetone.caption
+msgid "Paddle-only sidetone"
+msgstr ""
+
+#: tfrmkeyeredit.chkwkpaddleswap.caption
+msgid "Swap paddles"
+msgstr ""
+
+#: tfrmkeyeredit.chkwksidetoneenable.caption
+msgid "Sidetone on"
+msgstr ""
+
+#: tfrmkeyeredit.grpwinkeyer.caption
+msgid "WinKeyer settings"
+msgstr ""
+
+#: tfrmkeyeredit.lblkind.caption
+msgid "Keyer type"
+msgstr ""
+
+#: tfrmkeyeredit.lblname.caption
+msgctxt "tfrmkeyeredit.lblname.caption"
+msgid "Name"
+msgstr ""
+
+#: tfrmkeyeredit.lblport.caption
+msgctxt "tfrmkeyeredit.lblport.caption"
+msgid "Port"
+msgstr ""
+
+#: tfrmkeyeredit.lblwkcomp.caption
+msgid "Compensation"
+msgstr ""
+
+#: tfrmkeyeredit.lblwkfirstext.caption
+msgid "First extension"
+msgstr ""
+
+#: tfrmkeyeredit.lblwkkeyermode.caption
+msgid "Keyer mode"
+msgstr ""
+
+#: tfrmkeyeredit.lblwkleadin.caption
+msgid "Lead-in"
+msgstr ""
+
+#: tfrmkeyeredit.lblwkratio.caption
+msgid "Dit/dah ratio"
+msgstr ""
+
+#: tfrmkeyeredit.lblwksidetone.caption
+msgid "Sidetone"
+msgstr ""
+
+#: tfrmkeyeredit.lblwkswitchpoint.caption
+msgid "Switchpoint"
+msgstr ""
+
+#: tfrmkeyeredit.lblwktail.caption
+msgid "Tail"
+msgstr ""
+
+#: tfrmkeyeredit.lblwkweight.caption
+msgid "Weight"
+msgstr ""
+
+#: tfrmlogcompare.btnclearalllogs.caption
+msgid "Clear all logs"
+msgstr ""
+
+#: tfrmlogcompare.btnexit.caption
+msgid "Exit"
+msgstr ""
+
+#: tfrmlogcompare.btnsynchronize.caption
+msgid "Synchronize"
+msgstr ""
+
+#: tfrmlogcompare.caption
+msgid "Differences in the log"
+msgstr ""
+
+#: tfrmlpt.btncancel.caption
+msgctxt "tfrmlpt.btncancel.caption"
+msgid "Cancel"
+msgstr ""
+
+#: tfrmlpt.btnok.caption
+msgctxt "tfrmlpt.btnok.caption"
+msgid "OK"
+msgstr ""
+
+#: tfrmlpt.caption
+msgid "LPT"
+msgstr ""
+
+#: tfrmmaster.caption
+msgid "Super check partial"
+msgstr ""
+
+#: tfrmmessageslist.btncancel.caption
+msgctxt "tfrmmessageslist.btncancel.caption"
+msgid "Cancel"
+msgstr ""
+
+#: tfrmmessageslist.btnok.caption
+msgctxt "tfrmmessageslist.btnok.caption"
+msgid "OK"
+msgstr ""
+
+#: tfrmmessageslist.caption
+msgctxt "tfrmmessageslist.caption"
+msgid "List of commands"
+msgstr ""
+
+#: tfrmmmtty.caption
+msgctxt "tfrmmmtty.caption"
+msgid "MMTTY"
+msgstr ""
+
+#: tfrmmp3recorder.btncontrol.caption
+msgid "..."
+msgstr ""
+
+#: tfrmmp3recorder.caption
+msgid "MP3 Recorder"
+msgstr ""
+
+#: tfrmmp3recorder.chkrecord.caption
+msgid "Record"
+msgstr ""
+
+#: tfrmnetwork.caption
+msgctxt "tfrmnetwork.caption"
+msgid "Network"
+msgstr ""
+
+#: tfrmpanadapter.btnpause.caption
+msgid "Pause"
+msgstr ""
+
+#: tfrmpanadapter.btnspannarrow.caption
+msgid "-"
+msgstr ""
+
+#: tfrmpanadapter.btnspannarrow.hint
+msgid "Narrower span (zoom in)"
+msgstr ""
+
+#: tfrmpanadapter.btnspanwide.caption
+msgid "+"
+msgstr ""
+
+#: tfrmpanadapter.btnspanwide.hint
+msgid "Wider span (zoom out)"
+msgstr ""
+
+#: tfrmpanadapter.caption
+msgid "Panadapter"
+msgstr ""
+
+#: tfrmpanadapter.lblscale.caption
+msgid "80 dB"
+msgstr ""
+
+#: tfrmpanadapter.lblsource.caption
+msgid "Pan A"
+msgstr ""
+
+#: tfrmpanadapter.lblspan.caption
+msgid "Span --"
+msgstr ""
+
+#: tfrmpanadapter.lblstatus.caption
+msgid "Disconnected"
+msgstr ""
+
+#: tfrmpostscores.btnpostnow.caption
+msgid "Post now"
+msgstr ""
+
+#: tfrmpostscores.btnshowscores.caption
+msgid "Show scores"
+msgstr ""
+
+#: tfrmpostscores.caption
+msgid "Post scores"
+msgstr ""
+
+#: tfrmprogrammessage.btncq.caption
+msgid "Press &C to program a CQ function key."
+msgstr ""
+
+#: tfrmprogrammessage.btnexchange.caption
+msgid "Press &E to program an exchange/search and pounce function key."
+msgstr ""
+
+#: tfrmprogrammessage.btnother.caption
+msgid "Press &O to program the other non function key messages."
+msgstr ""
+
+#: tfrmprogrammessage.caption
+msgid "Memory program function"
+msgstr ""
+
+#: tfrmradiopanel.btnspectrum.caption
+msgid "Spectrum"
+msgstr ""
+
+#: tfrmradiopanel.caption
+msgctxt "tfrmradiopanel.caption"
+msgid "Radio"
+msgstr ""
+
+#: tfrmradiopanel.lblrit.caption
+msgid "RIT"
+msgstr ""
+
+#: tfrmradiopanel.lblsplit.caption
+msgid "SPLIT"
+msgstr ""
+
+#: tfrmradiopanel.lblvfoacaption.caption
+msgid "VFO A"
+msgstr ""
+
+#: tfrmradiopanel.lblvfobcaption.caption
+msgid "VFO B"
+msgstr ""
+
+#: tfrmradiopanel.lblxit.caption
+msgid "XIT"
+msgstr ""
+
+#: tfrmremmults.caption
+msgid "Remaining mults"
+msgstr ""
+
+#: tfrmsendkeyboard.btnclose.caption
+msgid "Close"
+msgstr ""
+
+#: tfrmsendkeyboard.caption
+msgid "Sending CW"
+msgstr ""
+
+#: tfrmsendspot.btncancel.caption
+msgctxt "tfrmsendspot.btncancel.caption"
+msgid "Cancel"
+msgstr ""
+
+#: tfrmsendspot.btnok.caption
+msgctxt "tfrmsendspot.btnok.caption"
+msgid "OK"
+msgstr ""
+
+#: tfrmsendspot.caption
+msgid "Send spot"
+msgstr ""
+
+#: tfrmsendspot.chkcontestname.caption
+msgid "Contest name in comment"
+msgstr ""
+
+#: tfrmsendspot.lblcallsign.caption
+msgctxt "tfrmsendspot.lblcallsign.caption"
+msgid "Callsign"
+msgstr ""
+
+#: tfrmsendspot.lblcomment.caption
+msgid "Comment"
+msgstr ""
+
+#: tfrmsendspot.lblfrequency.caption
+msgid "Frequency"
+msgstr ""
+
+#: tfrmstations.caption
+msgid "Stations"
+msgstr ""
+
+#: tfrmtelnet.btnclear.caption
+msgid "Clear"
+msgstr ""
+
+#: tfrmtelnet.btncommands.caption
+msgid "Commands"
+msgstr ""
+
+#: tfrmtelnet.btnconnect.caption
+msgid "Connect"
+msgstr ""
+
+#: tfrmtelnet.btndisconnect.caption
+msgid "Disconnect"
+msgstr ""
+
+#: tfrmtelnet.btnfreeze.caption
+msgid "Freeze"
+msgstr ""
+
+#: tfrmtelnet.btnsend.caption
+msgid "Send"
+msgstr ""
+
+#: tfrmtelnet.btnshow50.caption
+msgid "SH/50"
+msgstr ""
+
+#: tfrmtelnet.caption
+msgid "Telnet"
+msgstr ""
+
+#: tfrmudpdestinationedit.btncancel.caption
+msgctxt "tfrmudpdestinationedit.btncancel.caption"
+msgid "Cancel"
+msgstr ""
+
+#: tfrmudpdestinationedit.btnok.caption
+msgctxt "tfrmudpdestinationedit.btnok.caption"
+msgid "OK"
+msgstr ""
+
+#: tfrmudpdestinationedit.btntest.caption
+msgctxt "tfrmudpdestinationedit.btntest.caption"
+msgid "Test"
+msgstr ""
+
+#: tfrmudpdestinationedit.caption
+msgid "UDP Destination"
+msgstr ""
+
+#: tfrmudpdestinationedit.chkstreamappinfo.caption
+msgctxt "tfrmudpdestinationedit.chkstreamappinfo.caption"
+msgid "App info"
+msgstr ""
+
+#: tfrmudpdestinationedit.chkstreamcontact.caption
+msgctxt "tfrmudpdestinationedit.chkstreamcontact.caption"
+msgid "Contact info"
+msgstr ""
+
+#: tfrmudpdestinationedit.chkstreamlookup.caption
+msgctxt "tfrmudpdestinationedit.chkstreamlookup.caption"
+msgid "Callsign lookup"
+msgstr ""
+
+#: tfrmudpdestinationedit.chkstreamradio.caption
+msgctxt "tfrmudpdestinationedit.chkstreamradio.caption"
+msgid "Radio info"
+msgstr ""
+
+#: tfrmudpdestinationedit.chkstreamrotor.caption
+msgctxt "tfrmudpdestinationedit.chkstreamrotor.caption"
+msgid "Rotor"
+msgstr ""
+
+#: tfrmudpdestinationedit.chkstreamscore.caption
+msgctxt "tfrmudpdestinationedit.chkstreamscore.caption"
+msgid "Score"
+msgstr ""
+
+#: tfrmudpdestinationedit.grpstreams.caption
+msgid "Send this destination"
+msgstr ""
+
+#: tfrmudpdestinationedit.lbladdress.caption
+msgid "Address"
+msgstr ""
+
+#: tfrmudpdestinationedit.lblport.caption
+msgctxt "tfrmudpdestinationedit.lblport.caption"
+msgid "Port"
+msgstr ""
+
+#: tfrmwinmanager.btncancel.caption
+msgctxt "tfrmwinmanager.btncancel.caption"
+msgid "Cancel"
+msgstr ""
+
+#: tfrmwinmanager.btnok.caption
+msgctxt "tfrmwinmanager.btnok.caption"
+msgid "OK"
+msgstr ""
+
+#: tfrmwinmanager.caption
+msgid "Window control"
+msgstr ""
+
+#: tprefsform.btnactivate.caption
+msgid "Activate this profile now"
+msgstr ""
+
+#: tprefsform.btnadd.caption
+msgctxt "tprefsform.btnadd.caption"
+msgid "Add..."
+msgstr ""
+
+#: tprefsform.btnaddcluster.caption
+msgctxt "tprefsform.btnaddcluster.caption"
+msgid "Add..."
+msgstr ""
+
+#: tprefsform.btnaddkeyer.caption
+msgctxt "tprefsform.btnaddkeyer.caption"
+msgid "Add..."
+msgstr ""
+
+#: tprefsform.btnaddrotator.caption
+msgctxt "tprefsform.btnaddrotator.caption"
+msgid "Add..."
+msgstr ""
+
+#: tprefsform.btnapply.caption
+msgctxt "tprefsform.btnapply.caption"
+msgid "Save"
+msgstr ""
+
+#: tprefsform.btnbrowsebackup.caption
+msgctxt "tprefsform.btnbrowsebackup.caption"
+msgid "Browse..."
+msgstr ""
+
+#: tprefsform.btnbrowsedvkpath.caption
+msgctxt "tprefsform.btnbrowsedvkpath.caption"
+msgid "Browse..."
+msgstr ""
+
+#: tprefsform.btnbrowsedvkrecorder.caption
+msgctxt "tprefsform.btnbrowsedvkrecorder.caption"
+msgid "Browse..."
+msgstr ""
+
+#: tprefsform.btnbrowsemmtty.caption
+msgctxt "tprefsform.btnbrowsemmtty.caption"
+msgid "Browse..."
+msgstr ""
+
+#: tprefsform.btnbrowsemp3path.caption
+msgctxt "tprefsform.btnbrowsemp3path.caption"
+msgid "Browse..."
+msgstr ""
+
+#: tprefsform.btnbrowsemp3player.caption
+msgctxt "tprefsform.btnbrowsemp3player.caption"
+msgid "Browse..."
+msgstr ""
+
+#: tprefsform.btncancel.caption
+msgctxt "tprefsform.btncancel.caption"
+msgid "Cancel"
+msgstr ""
+
+#: tprefsform.btndeleteprofile.caption
+msgctxt "tprefsform.btndeleteprofile.caption"
+msgid "Delete"
+msgstr ""
+
+#: tprefsform.btnduplicate.caption
+msgctxt "tprefsform.btnduplicate.caption"
+msgid "Duplicate"
+msgstr ""
+
+#: tprefsform.btnduplicatekeyer.caption
+msgctxt "tprefsform.btnduplicatekeyer.caption"
+msgid "Duplicate"
+msgstr ""
+
+#: tprefsform.btnedit.caption
+msgctxt "tprefsform.btnedit.caption"
+msgid "Edit..."
+msgstr ""
+
+#: tprefsform.btneditkeyer.caption
+msgctxt "tprefsform.btneditkeyer.caption"
+msgid "Edit..."
+msgstr ""
+
+#: tprefsform.btnnewprofile.caption
+msgctxt "tprefsform.btnnewprofile.caption"
+msgid "New..."
+msgstr ""
+
+#: tprefsform.btnok.caption
+msgctxt "tprefsform.btnok.caption"
+msgid "Save and close"
+msgstr ""
+
+#: tprefsform.btnopenlogfile.caption
+msgid "Open log file"
+msgstr ""
+
+#: tprefsform.btnremove.caption
+msgctxt "tprefsform.btnremove.caption"
+msgid "Remove"
+msgstr ""
+
+#: tprefsform.btnremovecluster.caption
+msgctxt "tprefsform.btnremovecluster.caption"
+msgid "Remove"
+msgstr ""
+
+#: tprefsform.btnremovekeyer.caption
+msgctxt "tprefsform.btnremovekeyer.caption"
+msgid "Remove"
+msgstr ""
+
+#: tprefsform.btnremoverotator.caption
+msgctxt "tprefsform.btnremoverotator.caption"
+msgid "Remove"
+msgstr ""
+
+#: tprefsform.btnrenameprofile.caption
+msgctxt "tprefsform.btnrenameprofile.caption"
+msgid "Rename..."
+msgstr ""
+
+#: tprefsform.btnudpadd.caption
+msgctxt "tprefsform.btnudpadd.caption"
+msgid "Add..."
+msgstr ""
+
+#: tprefsform.btnudpedit.caption
+msgctxt "tprefsform.btnudpedit.caption"
+msgid "Edit..."
+msgstr ""
+
+#: tprefsform.btnudpremove.caption
+msgctxt "tprefsform.btnudpremove.caption"
+msgid "Remove"
+msgstr ""
+
+#: tprefsform.btnudptest.caption
+msgctxt "tprefsform.btnudptest.caption"
+msgid "Test"
+msgstr ""
+
+#: tprefsform.btnusecluster.caption
+msgctxt "tprefsform.btnusecluster.caption"
+msgid "Use this"
+msgstr ""
+
+#: tprefsform.btnuserotator.caption
+msgctxt "tprefsform.btnuserotator.caption"
+msgid "Use this"
+msgstr ""
+
+#: tprefsform.caption
+msgctxt "tprefsform.caption"
+msgid "TR4W Preferences"
+msgstr ""
+
+#: tprefsform.chkaltdbuffer.caption
+msgid "Alt-D remembers what you typed"
+msgstr ""
+
+#: tprefsform.chkaltdcq.caption
+msgid "Alt-D can start a CQ on the second radio"
+msgstr ""
+
+#: tprefsform.chkalwaysblindcq.caption
+msgid "Always call a blind CQ"
+msgstr ""
+
+#: tprefsform.chkautocallterminate.caption
+msgid "Stop sending when the call window changes"
+msgstr ""
+
+#: tprefsform.chkautoconnect.caption
+msgctxt "tprefsform.chkautoconnect.caption"
+msgid "Connect radios at startup"
+msgstr ""
+
+#: tprefsform.chkautoqsonumberdecrement.caption
+msgid "Give the serial number back when a QSO is abandoned"
+msgstr ""
+
+#: tprefsform.chkautoreturntocq.caption
+msgid "Return to CQ mode after logging a QSO"
+msgstr ""
+
+#: tprefsform.chkbandmapallbands.caption
+msgid "All bands"
+msgstr ""
+
+#: tprefsform.chkbandmapallmodes.caption
+msgid "All modes"
+msgstr ""
+
+#: tprefsform.chkbandmapcallwindow.caption
+msgid "Show the call window entry"
+msgstr ""
+
+#: tprefsform.chkbandmapcq.caption
+msgid "Show CQ spots"
+msgstr ""
+
+#: tprefsform.chkbandmapdupes.caption
+msgid "Show duplicates"
+msgstr ""
+
+#: tprefsform.chkbandmapghz.caption
+msgid "Show GHz"
+msgstr ""
+
+#: tprefsform.chkbandmapmultsonly.caption
+msgid "Multipliers only"
+msgstr ""
+
+#: tprefsform.chkbandmapso2r.caption
+msgid "SO2R display"
+msgstr ""
+
+#: tprefsform.chkboldfont.caption
+msgid "Bold"
+msgstr ""
+
+#: tprefsform.chkcallwindowshowallspots.caption
+msgid "Show every spot in the call window"
+msgstr ""
+
+#: tprefsform.chkchecklogfilesize.caption
+msgid "Warn when the log file grows unexpectedly"
+msgstr ""
+
+#: tprefsform.chkclusteratstartup.caption
+msgid "Connect at startup"
+msgstr ""
+
+#: tprefsform.chkconfirmeditchanges.caption
+msgid "Confirm before saving an edited QSO"
+msgstr ""
+
+#: tprefsform.chkcwenable.caption
+msgid "Send CW"
+msgstr ""
+
+#: tprefsform.chkcwmessageschainable.caption
+msgid "Any CW message may chain into the next"
+msgstr ""
+
+#: tprefsform.chkcwspeedfromdatabase.caption
+msgid "Match the speed a station was worked at before"
+msgstr ""
+
+#: tprefsform.chkdupesheetcolor.caption
+msgid "Color the dupe sheet columns"
+msgstr ""
+
+#: tprefsform.chkdvkenable.caption
+msgid "Use the digital voice keyer"
+msgstr ""
+
+#: tprefsform.chkdvklocalizedmessages.caption
+msgid "Use localized DVK message files"
+msgstr ""
+
+#: tprefsform.chkescapeexitssap.caption
+msgid "Escape leaves search and pounce"
+msgstr ""
+
+#: tprefsform.chkfarnsworth.caption
+msgid "Farnsworth spacing"
+msgstr ""
+
+#: tprefsform.chkhamlibasynconly.caption
+msgid "HamLib - async callbacks only, no heartbeat (testing)"
+msgstr ""
+
+#: tprefsform.chkhamlibdebug.caption
+msgid "HamLib - debug logging"
+msgstr ""
+
+#: tprefsform.chkhamlibtrace.caption
+msgid "HamLib - internal trace to hamlib_trace.log"
+msgstr ""
+
+#: tprefsform.chkhamscorecontact.caption
+msgid "Include contact information"
+msgstr ""
+
+#: tprefsform.chkhamscoreenable.caption
+msgid "Post my score while the contest runs"
+msgstr ""
+
+#: tprefsform.chkhfbands.caption
+msgid "HF (160 - 10 m)"
+msgstr ""
+
+#: tprefsform.chkinbandlockout.caption
+msgid "Stop both radios landing on one band"
+msgstr ""
+
+#: tprefsform.chkincludefkeynumber.caption
+msgid "Show the key number on the function-key buttons"
+msgstr ""
+
+#: tprefsform.chkintercomfile.caption
+msgid "Log network messages to INTERCOM.TXT"
+msgstr ""
+
+#: tprefsform.chkkeypadcwmemories.caption
+msgid "Number keypad sends CW memories"
+msgstr ""
+
+#: tprefsform.chkleavecursorincall.caption
+msgid "Leave the cursor in the call window"
+msgstr ""
+
+#: tprefsform.chkloggerenabled.caption
+msgid "Send QSOs to it as they are logged"
+msgstr ""
+
+#: tprefsform.chklogwithsingleenter.caption
+msgid "Log with a single Enter"
+msgstr ""
+
+#: tprefsform.chkmp3recorderenable.caption
+msgid "Record each QSO to MP3"
+msgstr ""
+
+#: tprefsform.chkmultimultsonly.caption
+msgid "Pass only new multipliers around the network"
+msgstr ""
+
+#: tprefsform.chknameflag.caption
+msgid "Flag a station whose name is already known"
+msgstr ""
+
+#: tprefsform.chknetautosync.caption
+msgid "Synchronize the log when connecting"
+msgstr ""
+
+#: tprefsform.chknoborder.caption
+msgid "Main window has no border"
+msgstr ""
+
+#: tprefsform.chknocaption.caption
+msgid "Main window has no title bar"
+msgstr ""
+
+#: tprefsform.chknocolumnheader.caption
+msgid "Hide the log column headings"
+msgstr ""
+
+#: tprefsform.chknopollduringptt.caption
+msgid "Stop polling the radio while transmitting"
+msgstr ""
+
+#: tprefsform.chkpartialcall.caption
+msgid "Match on a partial callsign"
+msgstr ""
+
+#: tprefsform.chkpossiblecalls.caption
+msgid "Offer possible calls"
+msgstr ""
+
+#: tprefsform.chkpttenable.caption
+msgid "Assert PTT when transmitting"
+msgstr ""
+
+#: tprefsform.chkpttlockout.caption
+msgid "Lock out PTT"
+msgstr ""
+
+#: tprefsform.chkpttviacommands.caption
+msgid "Key the transmitter with a CAT command instead of a hardware line"
+msgstr ""
+
+#: tprefsform.chkqsyinactive.caption
+msgid "QSY the inactive radio when I change band"
+msgstr ""
+
+#: tprefsform.chksayhienable.caption
+msgid "Send a greeting to stations worked before"
+msgstr ""
+
+#: tprefsform.chksendfourlettercall.caption
+msgid "Always send all four letters of a four-letter call"
+msgstr ""
+
+#: tprefsform.chkshowgridlines.caption
+msgid "Draw gridlines in the log"
+msgstr ""
+
+#: tprefsform.chkskipactiveband.caption
+msgid "Skip the band the other radio is on"
+msgstr ""
+
+#: tprefsform.chkso2r.caption
+msgctxt "tprefsform.chkso2r.caption"
+msgid "SO2R enabled"
+msgstr ""
+
+#: tprefsform.chkspacebardupecheck.caption
+msgid "Space bar performs a dupe check"
+msgstr ""
+
+#: tprefsform.chkspeedsync1.caption
+msgctxt "tprefsform.chkspeedsync1.caption"
+msgid "Speed sync"
+msgstr ""
+
+#: tprefsform.chkspeedsync2.caption
+msgctxt "tprefsform.chkspeedsync2.caption"
+msgid "Speed sync"
+msgstr ""
+
+#: tprefsform.chkspotcollector.caption
+msgid "Collect spots from the cluster"
+msgstr ""
+
+#: tprefsform.chkswappacketspotradios.caption
+msgid "Send spots to the other radio"
+msgstr ""
+
+#: tprefsform.chkswappaddles.caption
+msgid "Swap dit and dah"
+msgstr ""
+
+#: tprefsform.chkswaprelaysense.caption
+msgid "Invert the radio relay sense"
+msgstr ""
+
+#: tprefsform.chktcibindall.caption
+msgid "Also listen on the network (other computers can connect)"
+msgstr ""
+
+#: tprefsform.chktcidebug.caption
+msgid "TCI server - log every command, both directions"
+msgstr ""
+
+#: tprefsform.chktciserver.caption
+msgid "Enable the TCI server"
+msgstr ""
+
+#: tprefsform.chktelnetdebug.caption
+msgid "DX cluster - log all telnet traffic"
+msgstr ""
+
+#: tprefsform.chktunewithdits.caption
+msgid "Tune with dits rather than a solid carrier"
+msgstr ""
+
+#: tprefsform.chktworadiomode.caption
+msgid "Two radio mode"
+msgstr ""
+
+#: tprefsform.chkudpallqsos.caption
+msgid "Also broadcast edited and previously logged QSOs"
+msgstr ""
+
+#: tprefsform.chkudpenabled.caption
+msgid "Broadcast UDP data"
+msgstr ""
+
+#: tprefsform.chkunknowncountryfile.caption
+msgid "Record callsigns with no country match"
+msgstr ""
+
+#: tprefsform.chkupdaterestartfile.caption
+msgid "Keep the restart file up to date"
+msgstr ""
+
+#: tprefsform.chkusecontrolport.caption
+msgid "Use the radio control port for paddle and foot switch"
+msgstr ""
+
+#: tprefsform.chkuserecordedsigns.caption
+msgid "Send recorded audio for callsign characters"
+msgstr ""
+
+#: tprefsform.chkvhfbands.caption
+msgid "VHF and up (6 m and above)"
+msgstr ""
+
+#: tprefsform.chkwaitforstrength.caption
+msgid "Wait for a signal strength reading before switching"
+msgstr ""
+
+#: tprefsform.chkwarcbands.caption
+msgid "WARC (30, 17, 12 m)"
+msgstr ""
+
+#: tprefsform.chkwildcardpartials.caption
+msgid "Allow wildcards in a partial"
+msgstr ""
+
+#: tprefsform.chkwsjtxenabled.caption
+msgid "Exchange data with WSJT-X"
+msgstr ""
+
+#: tprefsform.chkwsjtxhighlights.caption
+msgid "Send callsign highlighting to WSJT-X"
+msgstr ""
+
+#: tprefsform.chkwsjtxradiocontrol.caption
+msgid "Let WSJT-X control the radio"
+msgstr ""
+
+#: tprefsform.chkycccso2r.caption
+msgid "YCCC SO2R Plus box connected"
+msgstr ""
+
+#: tprefsform.edtsearch.texthint
+msgid "Search settings"
+msgstr ""
+
+#: tprefsform.grpprofile.caption
+msgctxt "tprefsform.grpprofile.caption"
+msgid "Station profile"
+msgstr ""
+
+#: tprefsform.lblactivatehint.caption
+msgid "Saving stores your changes. It does not switch the radios over - use this button for that."
+msgstr ""
+
+#: tprefsform.lblactive.caption
+msgctxt "tprefsform.lblactive.caption"
+msgid "Active profile: "
+msgstr ""
+
+#: tprefsform.lblactivecluster.caption
+msgid "Connecting to: (none chosen)"
+msgstr ""
+
+#: tprefsform.lblappearcolorshint.caption
+msgid "Window colors are still on the Settings menu.  They belong here and will move once the main window is resizable, which is the change that decides what the layout options need to be."
+msgstr ""
+
+#: tprefsform.lblappearheading.caption
+msgctxt "tprefsform.lblappearheading.caption"
+msgid "Main window"
+msgstr ""
+
+#: tprefsform.lblappearhint.caption
+msgid "The font applies to the main contest window.  All four take effect when TR4W next starts."
+msgstr ""
+
+#: tprefsform.lblappearmenunote.caption
+msgid "These were on the Appearance item of the Settings menu. That window goes away once ROW COUNT and WINDOW SIZE join them here."
+msgstr ""
+
+#: tprefsform.lblaudioheading.caption
+msgid "Audio"
+msgstr ""
+
+#: tprefsform.lblaudioinfo.caption
+msgid "Voice keying and QSO recording. CW keying is on the CW Settings page."
+msgstr ""
+
+#: tprefsform.lblaudionote.caption
+msgid "Bit rate and recording length are not here yet: both are stored through a lookup table rather than directly, and move separately."
+msgstr ""
+
+#: tprefsform.lblbackupevery.caption
+msgid "Back up every:"
+msgstr ""
+
+#: tprefsform.lblbackupeveryunits.caption
+msgid "QSOs  (0 = never)"
+msgstr ""
+
+#: tprefsform.lblbackupfile.caption
+msgid "Copy to:"
+msgstr ""
+
+#: tprefsform.lblbackupheading.caption
+msgid "Log backup"
+msgstr ""
+
+#: tprefsform.lblbackuphint.caption
+msgid "A second copy of the log, written as you go.  Put it somewhere that is not the same disk as the log itself, or it protects against nothing worth protecting against."
+msgstr ""
+
+#: tprefsform.lblbandmapdecay.caption
+msgid "Spot expiry:"
+msgstr ""
+
+#: tprefsform.lblbandmapdecayunits.caption
+msgid "minutes"
+msgstr ""
+
+#: tprefsform.lblbandmapguard.caption
+msgid "Guard band:"
+msgstr ""
+
+#: tprefsform.lblbandmapguardunits.caption
+msgctxt "tprefsform.lblbandmapguardunits.caption"
+msgid "Hz"
+msgstr ""
+
+#: tprefsform.lblbandmapheading.caption
+msgctxt "tprefsform.lblbandmapheading.caption"
+msgid "Band map"
+msgstr ""
+
+#: tprefsform.lblbandmaplimit.caption
+msgid "Display limit:"
+msgstr ""
+
+#: tprefsform.lblbandmaplimitunits.caption
+msgid "spots"
+msgstr ""
+
+#: tprefsform.lblbandmapnote.caption
+msgid "A band map does not need a DX cluster: it also holds spots you make yourself and anything the SO2R radio hears.  Cluster settings are on the DX Cluster page."
+msgstr ""
+
+#: tprefsform.lblbandoutput1.caption
+msgid "Radio 1 band output port"
+msgstr ""
+
+#: tprefsform.lblbandoutput2.caption
+msgid "Radio 2 band output port"
+msgstr ""
+
+#: tprefsform.lblbandsheading.caption
+msgid "Bands in use"
+msgstr ""
+
+#: tprefsform.lblbandshint.caption
+msgid "Which bands TR4W offers when you change band, and which appear in the multiplier and band-map displays.  WARC bands are off by default because most contests do not allow them."
+msgstr ""
+
+#: tprefsform.lblclustercommand.caption
+msgid "After connecting:"
+msgstr ""
+
+#: tprefsform.lblclustercommandhint.caption
+msgid "Sent once the login is accepted - filters, set/name, sh/dx.  Separate several with a semicolon."
+msgstr ""
+
+#: tprefsform.lblclusterglobalheading.caption
+msgid "For every cluster"
+msgstr ""
+
+#: tprefsform.lblclusterheading.caption
+msgid "My DX clusters"
+msgstr ""
+
+#: tprefsform.lblclusterlogin.caption
+msgid "Log in as:"
+msgstr ""
+
+#: tprefsform.lblclusterloginhint.caption
+msgid "blank = my station callsign"
+msgstr ""
+
+#: tprefsform.lblclustername.caption
+msgctxt "tprefsform.lblclustername.caption"
+msgid "Name:"
+msgstr ""
+
+#: tprefsform.lblclusternote.caption
+msgid "The cluster reconnects on its own after a drop.  Telnet logging is on the Logging page; spot display and ageing are on Band Map."
+msgstr ""
+
+#: tprefsform.lblclusterpassword.caption
+msgctxt "tprefsform.lblclusterpassword.caption"
+msgid "Password:"
+msgstr ""
+
+#: tprefsform.lblclusterserver.caption
+msgctxt "tprefsform.lblclusterserver.caption"
+msgid "Server:"
+msgstr ""
+
+#: tprefsform.lblclusterserverhint.caption
+msgid "host:port, for example dxc.nc7j.com:7373.  The drop-down lists the servers in TRCLUSTER.DAT; you can also type one that is not on it."
+msgstr ""
+
+#: tprefsform.lblcontestheading.caption
+msgid "Contest exchange"
+msgstr ""
+
+#: tprefsform.lblcwoutput1.caption
+msgctxt "tprefsform.lblcwoutput1.caption"
+msgid "CW output 1"
+msgstr ""
+
+#: tprefsform.lblcwoutput2.caption
+msgctxt "tprefsform.lblcwoutput2.caption"
+msgid "CW output 2"
+msgstr ""
+
+#: tprefsform.lblcwsendheading.caption
+msgid "Sending"
+msgstr ""
+
+#: tprefsform.lblcwspeedincrement.caption
+msgid "Speed step:"
+msgstr ""
+
+#: tprefsform.lblcwspeedincrementunits.caption
+msgid "WPM per PageUp / PageDown"
+msgstr ""
+
+#: tprefsform.lblcwtone.caption
+msgid "Sidetone:"
+msgstr ""
+
+#: tprefsform.lblcwtoneunits.caption
+msgid "Hz  (0 = the radios own sidetone)"
+msgstr ""
+
+#: tprefsform.lbldetaillogs.caption
+msgid "Detailed logging for one subsystem"
+msgstr ""
+
+#: tprefsform.lblditdah.caption
+msgid "Dit/dah ratio:"
+msgstr ""
+
+#: tprefsform.lbldvkheading.caption
+msgid "Digital voice keyer"
+msgstr ""
+
+#: tprefsform.lbldvkpath.caption
+msgid "DVK recording folder"
+msgstr ""
+
+#: tprefsform.lbldvkrecorder.caption
+msgid "DVK recorder program"
+msgstr ""
+
+#: tprefsform.lbldxlabheading.caption
+msgid "DXLab"
+msgstr ""
+
+#: tprefsform.lbldxlabinfo.caption
+msgid "DXLab needs no settings of its own.  TR4W offers a DX Commander compatible interface on TCP port 52002 whenever the WSJT-X support is running, and DXLab programs connect to that."
+msgstr ""
+
+#: tprefsform.lbldxlabinfo2.caption
+msgid "The port is not configurable today.  If you want it to be, say so and it becomes a setting here."
+msgstr ""
+
+#: tprefsform.lblfarnsworthspeed.caption
+msgid "Character speed:"
+msgstr ""
+
+#: tprefsform.lblfarnsworthunits.caption
+msgid "WPM"
+msgstr ""
+
+#: tprefsform.lblfontsize.caption
+msgid "Size:"
+msgstr ""
+
+#: tprefsform.lblhamlibrestart.caption
+msgid "The three HamLib settings take effect when TR4W next starts.  They are very verbose and are for diagnosing a radio problem - leave them off otherwise."
+msgstr ""
+
+#: tprefsform.lblhamscorepass.caption
+msgctxt "tprefsform.lblhamscorepass.caption"
+msgid "Password:"
+msgstr ""
+
+#: tprefsform.lblhamscoreurl.caption
+msgid "Service URL:"
+msgstr ""
+
+#: tprefsform.lblhamscoreuser.caption
+msgid "Username:"
+msgstr ""
+
+#: tprefsform.lblhardwareheading.caption
+msgctxt "tprefsform.lblhardwareheading.caption"
+msgid "Hardware"
+msgstr ""
+
+#: tprefsform.lblhardwareinfo.caption
+msgid "Station-wide hardware. Settings that belong to one radio are under Radios; rotators are under Rotators."
+msgstr ""
+
+#: tprefsform.lblkeyerhint.caption
+msgid "Only devices with their own settings live here - a WinKeyer or a YCCC SO2R+ box.  Keying on a radio's own port, or by CAT, is part of that radio's setup; a station profile then chooses which method each slot uses."
+msgstr ""
+
+#: tprefsform.lblleadingzerochar.caption
+msgid "Sent as:"
+msgstr ""
+
+#: tprefsform.lblleadingzerohint.caption
+msgid "Serial numbers are padded to that many digits.  T for a zero is the usual cut-number choice; leave it as 0 to send them plainly."
+msgstr ""
+
+#: tprefsform.lblleadingzeros.caption
+msgid "Leading zeros:"
+msgstr ""
+
+#: tprefsform.lbllogfilesheading.caption
+msgid "Log files"
+msgstr ""
+
+#: tprefsform.lblloggeraddress.caption
+msgid "Address:"
+msgstr ""
+
+#: tprefsform.lblloggerheading.caption
+msgid "External logger"
+msgstr ""
+
+#: tprefsform.lblloggerport.caption
+msgctxt "tprefsform.lblloggerport.caption"
+msgid "Port:"
+msgstr ""
+
+#: tprefsform.lblloggerrestart.caption
+msgctxt "tprefsform.lblloggerrestart.caption"
+msgid "These take effect when TR4W next starts."
+msgstr ""
+
+#: tprefsform.lblloggerstatus.caption
+msgid "DXKEEPER is complete.  ACLOG and HRD are not finished - selecting one logs a warning and no QSOs are sent."
+msgstr ""
+
+#: tprefsform.lblloggertype.caption
+msgid "Program:"
+msgstr ""
+
+#: tprefsform.lblloglevel.caption
+msgid "Log level:"
+msgstr ""
+
+#: tprefsform.lblloglevelhint.caption
+msgid "Takes effect immediately - no restart.  INFO is the normal setting; DEBUG and TRACE make the log much larger and are for diagnosing a problem."
+msgstr ""
+
+#: tprefsform.lblmainfont.caption
+msgid "Font:"
+msgstr ""
+
+#: tprefsform.lblmainwindowheading.caption
+msgctxt "tprefsform.lblmainwindowheading.caption"
+msgid "Main window"
+msgstr ""
+
+#: tprefsform.lblmmttyengine.caption
+msgid "Engine:"
+msgstr ""
+
+#: tprefsform.lblmmttyheading.caption
+msgctxt "tprefsform.lblmmttyheading.caption"
+msgid "MMTTY"
+msgstr ""
+
+#: tprefsform.lblmmttyhint.caption
+msgid "The full path to MMTTY.EXE.  TR4W starts it for RTTY and talks to it directly."
+msgstr ""
+
+#: tprefsform.lblmp3heading.caption
+msgid "QSO recording"
+msgstr ""
+
+#: tprefsform.lblmp3path.caption
+msgid "MP3 folder"
+msgstr ""
+
+#: tprefsform.lblmp3player.caption
+msgid "MP3 player program"
+msgstr ""
+
+#: tprefsform.lblmycall.caption
+msgid "Callsign:"
+msgstr ""
+
+#: tprefsform.lblmycheck.caption
+msgid "Check:"
+msgstr ""
+
+#: tprefsform.lblmycontinent.caption
+msgid "Continent:"
+msgstr ""
+
+#: tprefsform.lblmycountry.caption
+msgid "Country:"
+msgstr ""
+
+#: tprefsform.lblmyfdclass.caption
+msgid "FD class:"
+msgstr ""
+
+#: tprefsform.lblmyfocnumber.caption
+msgid "FOC number:"
+msgstr ""
+
+#: tprefsform.lblmygrid.caption
+msgid "Grid square:"
+msgstr ""
+
+#: tprefsform.lblmyiota.caption
+msgid "IOTA:"
+msgstr ""
+
+#: tprefsform.lblmyituzone.caption
+msgid "ITU zone:"
+msgstr ""
+
+#: tprefsform.lblmykeyers.caption
+msgid "CW keying devices"
+msgstr ""
+
+#: tprefsform.lblmyname.caption
+msgid "First name:"
+msgstr ""
+
+#: tprefsform.lblmypark.caption
+msgid "Park:"
+msgstr ""
+
+#: tprefsform.lblmypostalcode.caption
+msgid "Postal code:"
+msgstr ""
+
+#: tprefsform.lblmyprec.caption
+msgid "Precedence:"
+msgstr ""
+
+#: tprefsform.lblmyradios.caption
+msgctxt "tprefsform.lblmyradios.caption"
+msgid "My radios"
+msgstr ""
+
+#: tprefsform.lblmyrotators.caption
+msgid "My rotators"
+msgstr ""
+
+#: tprefsform.lblmysection.caption
+msgid "ARRL section:"
+msgstr ""
+
+#: tprefsform.lblmystate.caption
+msgid "State/Province:"
+msgstr ""
+
+#: tprefsform.lblmyzone.caption
+msgid "CQ zone:"
+msgstr ""
+
+#: tprefsform.lblnetaddress.caption
+msgctxt "tprefsform.lblnetaddress.caption"
+msgid "Server:"
+msgstr ""
+
+#: tprefsform.lblnetcomputerid.caption
+msgid "This station:"
+msgstr ""
+
+#: tprefsform.lblnetcomputeridhint.caption
+msgid "a single letter, unique in the network"
+msgstr ""
+
+#: tprefsform.lblnetheading.caption
+msgid "Multi-operator network"
+msgstr ""
+
+#: tprefsform.lblnethint.caption
+msgid "TR4WServer runs on one machine and every operating position connects to it.  It holds the shared log, the multipliers and the serial numbers."
+msgstr ""
+
+#: tprefsform.lblnetpassword.caption
+msgctxt "tprefsform.lblnetpassword.caption"
+msgid "Password:"
+msgstr ""
+
+#: tprefsform.lblnetport.caption
+msgctxt "tprefsform.lblnetport.caption"
+msgid "Port:"
+msgstr ""
+
+#: tprefsform.lblopcwheading.caption
+msgid "CW while operating"
+msgstr ""
+
+#: tprefsform.lbloperatingheading.caption
+msgid "Operating"
+msgstr ""
+
+#: tprefsform.lbloperatinginfo.caption
+msgid "How the log behaves while you are running the contest. Band map, bands, CW, scoring and two-radio settings are on the pages below."
+msgstr ""
+
+#: tprefsform.lblpaddlegroup.caption
+msgid "Paddle"
+msgstr ""
+
+#: tprefsform.lblpaddlehold.caption
+msgid "Hold PTT after the last element"
+msgstr ""
+
+#: tprefsform.lblpaddleholdunits.caption
+msgid "dit counts"
+msgstr ""
+
+#: tprefsform.lblpaddleportnote.caption
+msgid "The parallel port a paddle or foot switch is wired to is not here. Whether TR4W keeps supporting LPT at all is an open question, so PADDLE PORT stays on the Ctrl-J command list until that is settled rather than being given a home it may not keep."
+msgstr ""
+
+#: tprefsform.lblpaddlepttheading.caption
+msgid "Paddle and PTT"
+msgstr ""
+
+#: tprefsform.lblpaddlepttinfo.caption
+msgid "The paddle keyer TR4W runs itself, and the PTT line it asserts. A WinKeyer or YCCC box keeps its own paddle timing, so these do not apply to it."
+msgstr ""
+
+#: tprefsform.lblpaddlespeed.caption
+msgid "Paddle speed"
+msgstr ""
+
+#: tprefsform.lblpaddlespeedunits.caption
+msgid "WPM  (0 follows the keyboard speed)"
+msgstr ""
+
+#: tprefsform.lblpaddletone.caption
+msgid "Paddle sidetone"
+msgstr ""
+
+#: tprefsform.lblpaddletoneunits.caption
+msgctxt "tprefsform.lblpaddletoneunits.caption"
+msgid "Hz"
+msgstr ""
+
+#: tprefsform.lblplaceholder.caption
+msgctxt "tprefsform.lblplaceholder.caption"
+msgid ""
+"This section has not been migrated yet.\n"
+"Use the existing configuration screens for it."
+msgstr ""
+
+#: tprefsform.lblpttdelay.caption
+msgid "Delay after PTT before sending"
+msgstr ""
+
+#: tprefsform.lblpttdelayunits.caption
+msgid "x 1.7 ms  (0 disables)"
+msgstr ""
+
+#: tprefsform.lblpttgroup.caption
+msgid "PTT"
+msgstr ""
+
+#: tprefsform.lblradio1.caption
+msgctxt "tprefsform.lblradio1.caption"
+msgid "Radio 1"
+msgstr ""
+
+#: tprefsform.lblradio2.caption
+msgctxt "tprefsform.lblradio2.caption"
+msgid "Radio 2"
+msgstr ""
+
+#: tprefsform.lblradiotcpheading.caption
+msgid "Radio sharing"
+msgstr ""
+
+#: tprefsform.lblradiotcphint.caption
+msgid "Lets another position read this station's radio.  Takes effect when TR4W next starts."
+msgstr ""
+
+#: tprefsform.lblradiotcpport.caption
+msgid "TCP port:"
+msgstr ""
+
+#: tprefsform.lblrelayport.caption
+msgid "Relay control port"
+msgstr ""
+
+#: tprefsform.lblrelayportinfo.caption
+msgid "Parallel (LPT) port wiring for this station: relay switching, band data out to a decoder per operating position, and stereo audio control. These follow the DESK, not the radio, so they stay put when you activate a different radio. Leave them None unless you have such an interface - whether TR4W keeps supporting LPT at all is still an open question, which the greyed box below is a placeholder for."
+msgstr ""
+
+#: tprefsform.lblrotatorbands.caption
+msgid "Bands:"
+msgstr ""
+
+#: tprefsform.lblrotatorbandshint.caption
+msgid "Leave blank and this rotator turns for every band, which is what a station with one antenna wants.  List bands - 20 15 10 - to have TR4W choose between several rotators by band."
+msgstr ""
+
+#: tprefsform.lblrotatorbaud.caption
+msgid "Baud rate:"
+msgstr ""
+
+#: tprefsform.lblrotatorbaudhint.caption
+msgid "blank or 0 = the default for this type"
+msgstr ""
+
+#: tprefsform.lblrotatorip.caption
+msgid "IP address:"
+msgstr ""
+
+#: tprefsform.lblrotatorname.caption
+msgctxt "tprefsform.lblrotatorname.caption"
+msgid "Name:"
+msgstr ""
+
+#: tprefsform.lblrotatornote.caption
+msgid "PstRotator is reached over UDP and has no serial port; the others use one.  A blank baud rate lets each type use what it expects - the DCU-1 wants 4800 where the rest want 9600."
+msgstr ""
+
+#: tprefsform.lblrotatorport.caption
+msgctxt "tprefsform.lblrotatorport.caption"
+msgid "Port:"
+msgstr ""
+
+#: tprefsform.lblrotatortype.caption
+msgid "Type:"
+msgstr ""
+
+#: tprefsform.lblrotatorudp.caption
+msgid "UDP port:"
+msgstr ""
+
+#: tprefsform.lblsayhicutoff.caption
+msgid "Stop above a rate of:"
+msgstr ""
+
+#: tprefsform.lblsayhicutoffunits.caption
+msgid "QSOs per hour"
+msgstr ""
+
+#: tprefsform.lblscoreboardheading.caption
+msgid "Score board"
+msgstr ""
+
+#: tprefsform.lblscoreboardhint.caption
+msgid "Where TR4W posts its score and where it reads other stations' scores from.  The two are separate so a club board can be read while posting elsewhere."
+msgstr ""
+
+#: tprefsform.lblscoreheading.caption
+msgid "Online scoring"
+msgstr ""
+
+#: tprefsform.lblscoreposturl.caption
+msgid "Posting URL:"
+msgstr ""
+
+#: tprefsform.lblscorereadurl.caption
+msgid "Reading URL:"
+msgstr ""
+
+#: tprefsform.lblscorerestart.caption
+msgctxt "tprefsform.lblscorerestart.caption"
+msgid "These take effect when TR4W next starts."
+msgstr ""
+
+#: tprefsform.lblscpcountry.caption
+msgid "Restrict to countries:"
+msgstr ""
+
+#: tprefsform.lblscpfilehint.caption
+msgid "Matches come from TRMASTER.DTA in the program folder.  Without that file Super Check Partial simply shows nothing; it is not an error."
+msgstr ""
+
+#: tprefsform.lblscpheading.caption
+msgid "Super Check Partial"
+msgstr ""
+
+#: tprefsform.lblscphint.caption
+msgid "Blank shows matches from everywhere.  A list of country prefixes narrows it, which is useful in a domestic contest where the whole world is not workable."
+msgstr ""
+
+#: tprefsform.lblscpmatchheading.caption
+msgid "Matching"
+msgstr ""
+
+#: tprefsform.lblscpminletters.caption
+msgid "Start matching after:"
+msgstr ""
+
+#: tprefsform.lblscpminlettersunits.caption
+msgid "letters typed"
+msgstr ""
+
+#: tprefsform.lblserialkeyheading.caption
+msgid "Radio serial keying  (DTR/RTS keying only)"
+msgstr ""
+
+#: tprefsform.lblserialkeyintro.caption
+msgid "These shape the CW that TR4W generates itself by toggling a serial line.  They do nothing for a WinKeyer, a YCCC box, or CW sent by CAT - those devices keep their own timing."
+msgstr ""
+
+#: tprefsform.lblstationheading.caption
+msgid "Station information"
+msgstr ""
+
+#: tprefsform.lblstationhint.caption
+msgid "These are sent to the other stations in a multi-operator network when you change them, so all positions agree on the exchange."
+msgstr ""
+
+#: tprefsform.lblstereoport.caption
+msgid "Stereo control port"
+msgstr ""
+
+#: tprefsform.lbltcibindallwarning.caption
+msgid "Off by default, and worth leaving off.  This is an unauthenticated radio-control socket: anything that can reach the port can move your VFO and key your transmitter."
+msgstr ""
+
+#: tprefsform.lbltciintro.caption
+msgid "Lets other programs - WSJT-X, JTDX, a skimmer - control whichever radio TR4W has the port open on, even a radio with no TCI of its own.  Radio 1 is trx 0 and radio 2 is trx 1."
+msgstr ""
+
+#: tprefsform.lbltciloghint.caption
+msgid "To log every TCI command in both directions, see the Logging section."
+msgstr ""
+
+#: tprefsform.lbltcimaxtx.caption
+msgid "Stop transmitting after:"
+msgstr ""
+
+#: tprefsform.lbltcimaxtxhint.caption
+msgid "A safety net, not a timer for normal use: if a client keys the radio and then stops answering - it crashed, or the network went away - this is what puts the transmitter back into receive."
+msgstr ""
+
+#: tprefsform.lbltcimaxtxunits.caption
+msgid "seconds  (0 = no limit)"
+msgstr ""
+
+#: tprefsform.lbltciport.caption
+msgctxt "tprefsform.lbltciport.caption"
+msgid "Port:"
+msgstr ""
+
+#: tprefsform.lbltciserverscope.caption
+msgid "- this computer only (127.0.0.1), until you tick the box below"
+msgstr ""
+
+#: tprefsform.lbltworadioheading.caption
+msgid "Two radio operating"
+msgstr ""
+
+#: tprefsform.lbltworadiohint.caption
+msgid "Skipping the other radio's band is what stops a band change on one radio landing you on top of the other."
+msgstr ""
+
+#: tprefsform.lbltworadiointro.caption
+msgid "Everything below applies only while two radio mode is on."
+msgstr ""
+
+#: tprefsform.lbludpdestinations.caption
+msgid "Destinations"
+msgstr ""
+
+#: tprefsform.lbludphint.caption
+msgid "Each destination is one program listening.  Add a second row for the same address when it expects different data on a different port."
+msgstr ""
+
+#: tprefsform.lblweight.caption
+msgid "Weight:"
+msgstr ""
+
+#: tprefsform.lblwsjtxheading.caption
+msgid "WSJT-X / JTDX"
+msgstr ""
+
+#: tprefsform.lblwsjtxmulticast.caption
+msgid "Multicast group:"
+msgstr ""
+
+#: tprefsform.lblwsjtxport.caption
+msgid "Broadcast port:"
+msgstr ""
+
+#: tprefsform.lblwsjtxrestart.caption
+msgid "These take effect when TR4W next starts.  Leave the multicast group blank unless WSJT-X is configured to use one."
+msgstr ""
+
+#: tprefsform.lblwsjtxtcihint.caption
+msgid "To let WSJT-X drive the radio over TCI instead, see the TCI Server section - that works with any radio TR4W controls, not only one with TCI of its own."
+msgstr ""
+
+#: tprefsform.lblycccinfo.caption
+msgid "Station controllers will get a factory of their own, as radios and keyers did. This checkbox is the interim home for the setting."
+msgstr ""
+
+#: tradioeditform.btncancel.caption
+msgctxt "tradioeditform.btncancel.caption"
+msgid "Cancel"
+msgstr ""
+
+#: tradioeditform.btndiscover.caption
+msgctxt "tradioeditform.btndiscover.caption"
+msgid "Discover"
+msgstr ""
+
+#: tradioeditform.btnok.caption
+msgctxt "tradioeditform.btnok.caption"
+msgid "Save and close"
+msgstr ""
+
+#: tradioeditform.caption
+msgctxt "tradioeditform.caption"
+msgid "Radio"
+msgstr ""
+
+#: tradioeditform.chkft1000mpreverse.caption
+msgctxt "tradioeditform.chkft1000mpreverse.caption"
+msgid "FT-1000MP CW reverse"
+msgstr ""
+
+#: tradioeditform.chkpolling.caption
+msgctxt "tradioeditform.chkpolling.caption"
+msgid "Poll this radio"
+msgstr ""
+
+#: tradioeditform.chkusehamlib.caption
+msgctxt "tradioeditform.chkusehamlib.caption"
+msgid "Drive through HamLib"
+msgstr ""
+
+#: tradioeditform.chkwidecw.caption
+msgctxt "tradioeditform.chkwidecw.caption"
+msgid "Wide CW filter"
+msgstr ""
+
+#: tradioeditform.edtfreqoffset.texthint
+msgid "0 = none, e.g. 116000000"
+msgstr ""
+
+#: tradioeditform.lblautoinfo.caption
+msgid "Auto-info level"
+msgstr ""
+
+#: tradioeditform.lblbaud.caption
+msgctxt "tradioeditform.lblbaud.caption"
+msgid "Baud rate"
+msgstr ""
+
+#: tradioeditform.lblcatdtr.caption
+msgctxt "tradioeditform.lblcatdtr.caption"
+msgid "CAT DTR"
+msgstr ""
+
+#: tradioeditform.lblcatrts.caption
+msgctxt "tradioeditform.lblcatrts.caption"
+msgid "CAT RTS"
+msgstr ""
+
+#: tradioeditform.lblciv.caption
+msgctxt "tradioeditform.lblciv.caption"
+msgid "CI-V address (hex)"
+msgstr ""
+
+#: tradioeditform.lbldatabits.caption
+msgctxt "tradioeditform.lbldatabits.caption"
+msgid "Data bits"
+msgstr ""
+
+#: tradioeditform.lbldatamode.caption
+msgctxt "tradioeditform.lbldatamode.caption"
+msgid "Icom data mode ID"
+msgstr ""
+
+#: tradioeditform.lblfilterbyte.caption
+msgctxt "tradioeditform.lblfilterbyte.caption"
+msgid "Icom filter byte"
+msgstr ""
+
+#: tradioeditform.lblfound.caption
+msgctxt "tradioeditform.lblfound.caption"
+msgid "Found"
+msgstr ""
+
+#: tradioeditform.lblfreqoffset.caption
+msgid "Frequency offset (transverter), Hz"
+msgstr ""
+
+#: tradioeditform.lblhamlibid.caption
+msgctxt "tradioeditform.lblhamlibid.caption"
+msgid "HamLib model ID"
+msgstr ""
+
+#: tradioeditform.lblip.caption
+msgctxt "tradioeditform.lblip.caption"
+msgid "IP address"
+msgstr ""
+
+#: tradioeditform.lblkeyerdtr.caption
+msgctxt "tradioeditform.lblkeyerdtr.caption"
+msgid "Keyer DTR line"
+msgstr ""
+
+#: tradioeditform.lblkeyerport.caption
+msgctxt "tradioeditform.lblkeyerport.caption"
+msgid "Keyer output port"
+msgstr ""
+
+#: tradioeditform.lblkeyerrts.caption
+msgctxt "tradioeditform.lblkeyerrts.caption"
+msgid "Keyer RTS line"
+msgstr ""
+
+#: tradioeditform.lblkeyerstopbits.caption
+msgctxt "tradioeditform.lblkeyerstopbits.caption"
+msgid "Stop bits"
+msgstr ""
+
+#: tradioeditform.lblname.caption
+msgctxt "tradioeditform.lblname.caption"
+msgid "Name"
+msgstr ""
+
+#: tradioeditform.lblparity.caption
+msgctxt "tradioeditform.lblparity.caption"
+msgid "Parity"
+msgstr ""
+
+#: tradioeditform.lblpassword.caption
+msgctxt "tradioeditform.lblpassword.caption"
+msgid "Password"
+msgstr ""
+
+#: tradioeditform.lblport.caption
+msgctxt "tradioeditform.lblport.caption"
+msgid "Port"
+msgstr ""
+
+#: tradioeditform.lblstartup.caption
+msgctxt "tradioeditform.lblstartup.caption"
+msgid "Startup command"
+msgstr ""
+
+#: tradioeditform.lblstopbits.caption
+msgctxt "tradioeditform.lblstopbits.caption"
+msgid "Stop bits"
+msgstr ""
+
+#: tradioeditform.lbltcpport.caption
+msgctxt "tradioeditform.lbltcpport.caption"
+msgid "TCP port"
+msgstr ""
+
+#: tradioeditform.lbltype.caption
+msgctxt "tradioeditform.lbltype.caption"
+msgid "Radio type"
+msgstr ""
+
+#: tradioeditform.lbluser.caption
+msgctxt "tradioeditform.lbluser.caption"
+msgid "User name"
+msgstr ""
+
+#: tradioeditform.optdata7.caption
+msgid "7"
+msgstr ""
+
+#: tradioeditform.optdata8.caption
+msgid "8"
+msgstr ""
+
+#: tradioeditform.optparityeven.caption
+msgctxt "tradioeditform.optparityeven.caption"
+msgid "Even"
+msgstr ""
+
+#: tradioeditform.optparitynone.caption
+msgctxt "tradioeditform.optparitynone.caption"
+msgid "None"
+msgstr ""
+
+#: tradioeditform.optparityodd.caption
+msgctxt "tradioeditform.optparityodd.caption"
+msgid "Odd"
+msgstr ""
+
+#: tradioeditform.optstop1.caption
+msgid "1"
+msgstr ""
+
+#: tradioeditform.optstop2.caption
+msgid "2"
+msgstr ""
+
+#: tradioeditform.tabadvanced.caption
+msgctxt "tradioeditform.tabadvanced.caption"
+msgid "Advanced"
+msgstr ""
+
+#: tradioeditform.tabnetwork.caption
+msgctxt "tradioeditform.tabnetwork.caption"
+msgid "Network"
+msgstr ""
+
+#: tradioeditform.tabserial.caption
+msgctxt "tradioeditform.tabserial.caption"
+msgid "Serial"
+msgstr ""
+
+#: ttr4wmainform.caption
+msgctxt "ttr4wmainform.caption"
+msgid "TR4W"
+msgstr ""
+
+#: uappstrings.salreadyrunningtitle
+msgctxt "uappstrings.salreadyrunningtitle"
+msgid "TR4W"
+msgstr ""
+
+#: uappstrings.sctydownloadfailed
+#, object-pascal-format
+msgid ""
+"Could not download CTY.DAT to:\n"
+"\n"
+"    %s\n"
+"\n"
+"Reason: %s\n"
+"\n"
+"tr4w.log records the full detail."
+msgstr ""
+
+#: uappstrings.sctydownloadfailedtitle
+msgid "CTY.DAT"
+msgstr ""
+
+#: uappstrings.sdownloadcouldnotstart
+msgid "the download was refused before it began (bad URL)."
+msgstr ""
+
+#: uappstrings.sdownloadnossllibrary
+msgid ""
+"the OpenSSL libraries could not be loaded.\n"
+"\n"
+"libeay32.dll and ssleay32.dll must sit in the same folder as tr4w.exe. The TR4W installer puts them there -- was this folder installed, or is it a copy of tr4w.exe on its own?"
+msgstr ""
+
+#: uappstrings.sdownloadrenamefailed
+msgid "the file downloaded but could not be saved under its final name."
+msgstr ""
+
+#: uappstrings.siniretiredontask
+msgid "Do not ask me about this file again"
+msgstr ""
+
+#: uappstrings.siniretirefailed
+#, object-pascal-format
+msgid ""
+"Could not remove %s -- %s.\n"
+"It is ignored regardless, so nothing is broken."
+msgstr ""
+
+#: uappstrings.siniretireprompt
+#, object-pascal-format
+msgid ""
+"Your settings have been moved to:\n"
+"    %s\n"
+"\n"
+"The old file is no longer read:\n"
+"    %s\n"
+"\n"
+"Remove it now?\n"
+"\n"
+"The file is ignored either way."
+msgstr ""
+
+#: uappstrings.siniretireremoved
+#, object-pascal-format
+msgid "Removed %s."
+msgstr ""
+
+#: uappstrings.siniretiretitle
+msgctxt "uappstrings.siniretiretitle"
+msgid "Old settings file"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_activate
+msgid "Save and activate this profile"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_activelabel
+msgctxt "ulclformhelpers.tc_prefs_activelabel"
+msgid "Active profile: "
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_add
+msgctxt "ulclformhelpers.tc_prefs_add"
+msgid "Add..."
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_applied
+#, object-pascal-format
+msgid "Profile \"%s\" is active."
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_apply
+msgctxt "ulclformhelpers.tc_prefs_apply"
+msgid "Save"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_autoconnect
+msgctxt "ulclformhelpers.tc_prefs_autoconnect"
+msgid "Connect radios at startup"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_cancel
+msgctxt "ulclformhelpers.tc_prefs_cancel"
+msgid "Cancel"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_cluster
+msgid "DX Cluster"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_confirmremove
+#, object-pascal-format
+msgid "Remove radio \"%s\"?"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_contest
+msgid "Contest"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_cw
+msgid "CW"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_cwoutput1
+msgctxt "ulclformhelpers.tc_prefs_cwoutput1"
+msgid "CW output 1"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_cwoutput2
+msgctxt "ulclformhelpers.tc_prefs_cwoutput2"
+msgid "CW output 2"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_deleteprofile
+msgctxt "ulclformhelpers.tc_prefs_deleteprofile"
+msgid "Delete"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_duplicate
+msgctxt "ulclformhelpers.tc_prefs_duplicate"
+msgid "Duplicate"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_edit
+msgctxt "ulclformhelpers.tc_prefs_edit"
+msgid "Edit..."
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_hardware
+msgctxt "ulclformhelpers.tc_prefs_hardware"
+msgid "Hardware"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_myradios
+msgctxt "ulclformhelpers.tc_prefs_myradios"
+msgid "My radios"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_newprofile
+msgctxt "ulclformhelpers.tc_prefs_newprofile"
+msgid "New..."
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_none
+msgid "(none)"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_noprofile
+msgid "Select or create a station profile first."
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_notmigrated
+msgctxt "ulclformhelpers.tc_prefs_notmigrated"
+msgid ""
+"This section has not been migrated yet.\n"
+"Use the existing configuration screens for it."
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_ok
+msgctxt "ulclformhelpers.tc_prefs_ok"
+msgid "Save and close"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_portconflict
+#, object-pascal-format
+msgid ""
+"Port conflicts:\n"
+"\n"
+"%s\n"
+"\n"
+"Apply anyway?"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_profiles
+msgctxt "ulclformhelpers.tc_prefs_profiles"
+msgid "Station profile"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_radio1
+msgctxt "ulclformhelpers.tc_prefs_radio1"
+msgid "Radio 1"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_radio2
+msgctxt "ulclformhelpers.tc_prefs_radio2"
+msgid "Radio 2"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_radioinuse
+#, object-pascal-format
+msgid "%s  (in use as %s)"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_remove
+msgctxt "ulclformhelpers.tc_prefs_remove"
+msgid "Remove"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_renameprofile
+msgctxt "ulclformhelpers.tc_prefs_renameprofile"
+msgid "Rename..."
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_so2r
+msgctxt "ulclformhelpers.tc_prefs_so2r"
+msgid "SO2R enabled"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_speedsync
+msgctxt "ulclformhelpers.tc_prefs_speedsync"
+msgid "Speed sync"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_title
+msgctxt "ulclformhelpers.tc_prefs_title"
+msgid "TR4W Preferences"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_udpconfirmremove
+#, object-pascal-format
+msgid "Remove the destination %s:%d?"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_udpduplicate
+#, object-pascal-format
+msgid ""
+"%s:%d is already in the list.\n"
+"Add the extra kinds of data to that destination instead of listing it twice."
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_udpnostreams
+msgid "(nothing selected)"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_udpselectfirst
+msgid "Select a destination to test."
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_udpstream_appinfo
+msgctxt "ulclformhelpers.tc_prefs_udpstream_appinfo"
+msgid "App info"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_udpstream_contact
+msgctxt "ulclformhelpers.tc_prefs_udpstream_contact"
+msgid "Contact info"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_udpstream_lookup
+msgctxt "ulclformhelpers.tc_prefs_udpstream_lookup"
+msgid "Callsign lookup"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_udpstream_radio
+msgctxt "ulclformhelpers.tc_prefs_udpstream_radio"
+msgid "Radio info"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_udpstream_rotor
+msgctxt "ulclformhelpers.tc_prefs_udpstream_rotor"
+msgid "Rotor"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_udpstream_score
+msgctxt "ulclformhelpers.tc_prefs_udpstream_score"
+msgid "Score"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_udptestsent
+#, object-pascal-format
+msgid ""
+"Test packet sent to %s:%d.\n"
+"UDP cannot confirm it arrived -- check the receiving program."
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_unsaved
+msgid "Save your changes before closing?"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_unsavedtitle
+msgctxt "ulclformhelpers.tc_prefs_unsavedtitle"
+msgid "TR4W Preferences"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_advanced
+msgctxt "ulclformhelpers.tc_radioedit_advanced"
+msgid "Advanced"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_autoinfowarn
+msgid ""
+"Setting an auto-info level by hand is a non-standard configuration.\n"
+"\n"
+"Leave this box EMPTY unless you have a specific reason: the radio then uses the level TR4W knows works for it, and TR4W polls it as little as possible.\n"
+"\n"
+"A value you type here overrides that, and it affects operating - entering 0 returns the radio to being polled for everything, which noticeably delays the change from transmit back to receive.\n"
+"\n"
+"Use this value anyway?"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_badciv
+msgid "The CI-V address must be a hex value, e.g. 88 or $88."
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_baud
+msgctxt "ulclformhelpers.tc_radioedit_baud"
+msgid "Baud rate"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_catdtr
+msgctxt "ulclformhelpers.tc_radioedit_catdtr"
+msgid "CAT DTR"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_catrts
+msgctxt "ulclformhelpers.tc_radioedit_catrts"
+msgid "CAT RTS"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_civaddress
+msgctxt "ulclformhelpers.tc_radioedit_civaddress"
+msgid "CI-V address (hex)"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_databits
+msgctxt "ulclformhelpers.tc_radioedit_databits"
+msgid "Data bits"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_datamodeid
+msgctxt "ulclformhelpers.tc_radioedit_datamodeid"
+msgid "Icom data mode ID"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_defaulthint
+#, object-pascal-format
+msgid "%s (default)"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_discover
+msgctxt "ulclformhelpers.tc_radioedit_discover"
+msgid "Discover"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_filterbyte
+msgctxt "ulclformhelpers.tc_radioedit_filterbyte"
+msgid "Icom filter byte"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_found
+msgctxt "ulclformhelpers.tc_radioedit_found"
+msgid "Found"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_ft1000mprev
+msgctxt "ulclformhelpers.tc_radioedit_ft1000mprev"
+msgid "FT-1000MP CW reverse"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_hamlibid
+msgctxt "ulclformhelpers.tc_radioedit_hamlibid"
+msgid "HamLib model ID"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_ipaddress
+msgctxt "ulclformhelpers.tc_radioedit_ipaddress"
+msgid "IP address"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_keyerdtr
+msgctxt "ulclformhelpers.tc_radioedit_keyerdtr"
+msgid "Keyer DTR line"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_keyerport
+msgctxt "ulclformhelpers.tc_radioedit_keyerport"
+msgid "Keyer output port"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_keyerrts
+msgctxt "ulclformhelpers.tc_radioedit_keyerrts"
+msgid "Keyer RTS line"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_keyerstopbits
+msgctxt "ulclformhelpers.tc_radioedit_keyerstopbits"
+msgid "Stop bits"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_name
+msgctxt "ulclformhelpers.tc_radioedit_name"
+msgid "Name"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_namerequired
+msgid "The radio needs a name."
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_network
+msgctxt "ulclformhelpers.tc_radioedit_network"
+msgid "Network"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_nonefound
+msgid "No radios answered."
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_parity
+msgctxt "ulclformhelpers.tc_radioedit_parity"
+msgid "Parity"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_parityeven
+msgctxt "ulclformhelpers.tc_radioedit_parityeven"
+msgid "Even"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_paritynone
+msgctxt "ulclformhelpers.tc_radioedit_paritynone"
+msgid "None"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_parityodd
+msgctxt "ulclformhelpers.tc_radioedit_parityodd"
+msgid "Odd"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_password
+msgctxt "ulclformhelpers.tc_radioedit_password"
+msgid "Password"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_polling
+msgctxt "ulclformhelpers.tc_radioedit_polling"
+msgid "Poll this radio"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_port
+msgctxt "ulclformhelpers.tc_radioedit_port"
+msgid "Port"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_searching
+msgid "Searching..."
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_serial
+msgctxt "ulclformhelpers.tc_radioedit_serial"
+msgid "Serial"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_startup
+msgctxt "ulclformhelpers.tc_radioedit_startup"
+msgid "Startup command"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_stopbits
+msgctxt "ulclformhelpers.tc_radioedit_stopbits"
+msgid "Stop bits"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_tcpport
+msgctxt "ulclformhelpers.tc_radioedit_tcpport"
+msgid "TCP port"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_title
+msgctxt "ulclformhelpers.tc_radioedit_title"
+msgid "Radio"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_transport
+msgid "Connection"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_type
+msgctxt "ulclformhelpers.tc_radioedit_type"
+msgid "Radio type"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_typerequired
+msgid "Choose a radio type."
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_unsaved
+msgid "Save your changes to this radio?"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_usehamlib
+msgctxt "ulclformhelpers.tc_radioedit_usehamlib"
+msgid "Drive through HamLib"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_username
+msgctxt "ulclformhelpers.tc_radioedit_username"
+msgid "User name"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_widecw
+msgctxt "ulclformhelpers.tc_radioedit_widecw"
+msgid "Wide CW filter"
+msgstr ""
+
+#: uudpdestinationeditform.tc_udpedit_badport
+msgid "The port must be a number between 1 and 65535."
+msgstr ""
+
+#: uudpdestinationeditform.tc_udpedit_noaddress
+msgid "Enter an address."
+msgstr ""
+
+#: uudpdestinationeditform.tc_udpedit_nostreams
+msgid "Choose at least one kind of data to send, or cancel and remove this destination."
+msgstr ""
+
+#: uudpdestinationeditform.tc_udpedit_notimplemented
+msgid " (not implemented yet)"
+msgstr ""
+
+#: uudpdestinationeditform.tc_udpedit_testsent
+#, object-pascal-format
+msgid "Test packet sent to %s:%d.  UDP cannot confirm it arrived -- check the receiving program."
+msgstr ""
+

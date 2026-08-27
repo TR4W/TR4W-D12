@@ -1,6 +1,8 @@
 object frmBandMap: TfrmBandMap
   Left = 0
+  Height = 300
   Top = 0
+  Width = 460
   BorderStyle = bsSizeToolWin
   Caption = 'Band map'
   ClientHeight = 300
@@ -8,16 +10,18 @@ object frmBandMap: TfrmBandMap
   Color = clWindow
   DoubleBuffered = True
   KeyPreview = True
-  OnKeyUp = SpotsKeyUp
+  ParentDoubleBuffered = False
+  LCLVersion = '4.8.0.0'
   OnClose = HandleClose
   OnCreate = HandleCreate
-  OnResize = HandleResize
   OnDestroy = HandleDestroy
+  OnKeyUp = SpotsKeyUp
+  OnResize = HandleResize
   object grdSpots: TDrawGrid
     Left = 0
+    Height = 281
     Top = 0
     Width = 460
-    Height = 281
     Align = alClient
     BorderStyle = bsNone
     ColCount = 1
@@ -40,30 +44,30 @@ object frmBandMap: TfrmBandMap
   end
   object sbSpot: TStatusBar
     Left = 0
+    Height = 19
     Top = 281
     Width = 460
-    Height = 19
-    Panels = <
+    Panels = <    
       item
         Text = ' '
         Width = 90
-      end
+      end    
       item
         Text = ' '
         Width = 60
-      end
+      end    
       item
         Text = ' '
         Width = 160
-      end
+      end    
       item
         Text = ' '
         Width = 150
-      end
+      end    
       item
         Text = ' '
         Width = 260
-      end
+      end    
       item
         Text = ' '
         Width = 90

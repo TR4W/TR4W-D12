@@ -1,0 +1,6 @@
+{"version":1,"strings":[
+{"hash":176003703,"name":"tfrmlogcompare.caption","sourcebytes":[68,105,102,102,101,114,101,110,99,101,115,32,105,110,32,116,104,101,32,108,111,103],"value":"Differences in the log"},
+{"hash":267343253,"name":"tfrmlogcompare.btnsynchronize.caption","sourcebytes":[83,121,110,99,104,114,111,110,105,122,101],"value":"Synchronize"},
+{"hash":6256387,"name":"tfrmlogcompare.btnclearalllogs.caption","sourcebytes":[67,108,101,97,114,32,97,108,108,32,108,111,103,115],"value":"Clear all logs"},
+{"hash":315140,"name":"tfrmlogcompare.btnexit.caption","sourcebytes":[69,120,105,116],"value":"Exit"}
+]}

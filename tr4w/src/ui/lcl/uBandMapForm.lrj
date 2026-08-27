@@ -1,0 +1,18 @@
+{"version":1,"strings":[
+{"hash":138835712,"name":"tfrmbandmap.caption","sourcebytes":[66,97,110,100,32,109,97,112],"value":"Band map"},
+{"hash":32,"name":"tfrmbandmap.sbspot.panels[0].text","sourcebytes":[32],"value":" "},
+{"hash":32,"name":"tfrmbandmap.sbspot.panels[1].text","sourcebytes":[32],"value":" "},
+{"hash":32,"name":"tfrmbandmap.sbspot.panels[2].text","sourcebytes":[32],"value":" "},
+{"hash":32,"name":"tfrmbandmap.sbspot.panels[3].text","sourcebytes":[32],"value":" "},
+{"hash":32,"name":"tfrmbandmap.sbspot.panels[4].text","sourcebytes":[32],"value":" "},
+{"hash":32,"name":"tfrmbandmap.sbspot.panels[5].text","sourcebytes":[32],"value":" "},
+{"hash":188892867,"name":"tfrmbandmap.miallbands.caption","sourcebytes":[66,65,78,68,32,77,65,80,32,65,76,76,32,66,65,78,68,83],"value":"BAND MAP ALL BANDS"},
+{"hash":190209267,"name":"tfrmbandmap.miallmodes.caption","sourcebytes":[66,65,78,68,32,77,65,80,32,65,76,76,32,77,79,68,69,83],"value":"BAND MAP ALL MODES"},
+{"hash":88104785,"name":"tfrmbandmap.midisplaycq.caption","sourcebytes":[66,65,78,68,32,77,65,80,32,68,73,83,80,76,65,89,32,67,81],"value":"BAND MAP DISPLAY CQ"},
+{"hash":236414825,"name":"tfrmbandmap.midupedisplay.caption","sourcebytes":[66,65,78,68,32,77,65,80,32,68,85,80,69,32,68,73,83,80,76,65,89],"value":"BAND MAP DUPE DISPLAY"},
+{"hash":152342617,"name":"tfrmbandmap.mimultsonly.caption","sourcebytes":[66,65,78,68,32,77,65,80,32,77,85,76,84,83,32,79,78,76,89],"value":"BAND MAP MULTS ONLY"},
+{"hash":248102932,"name":"tfrmbandmap.mideletespot.caption","sourcebytes":[68,101,108,101,116,101,32,115,101,108,101,99,116,101,100,32,115,112,111,116],"value":"Delete selected spot"},
+{"hash":146315987,"name":"tfrmbandmap.miremoveall.caption","sourcebytes":[82,101,109,111,118,101,32,97,108,108,32,115,112,111,116,115],"value":"Remove all spots"},
+{"hash":17939551,"name":"tfrmbandmap.miqsyinactive.caption","sourcebytes":[83,101,110,100,32,115,112,111,116,32,116,111,32,105,110,97,99,116,105,118,101,32,114,97,100,105,111],"value":"Send spot to inactive radio"},
+{"hash":265253993,"name":"tfrmbandmap.miso2rdisplay.caption","sourcebytes":[66,65,78,68,32,77,65,80,32,83,79,50,82,32,68,73,83,80,76,65,89],"value":"BAND MAP SO2R DISPLAY"}
+]}

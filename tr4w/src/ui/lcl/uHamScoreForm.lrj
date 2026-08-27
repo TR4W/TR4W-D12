@@ -1,0 +1,8 @@
+{"version":1,"strings":[
+{"hash":136946277,"name":"tfrmhamscore.caption","sourcebytes":[72,97,109,83,99,111,114,101],"value":"HamScore"},
+{"hash":236210378,"name":"tfrmhamscore.lblqueuetitle.caption","sourcebytes":[81,117,101,117,101,100,32,99,111,110,116,97,99,116,115,58],"value":"Queued contacts:"},
+{"hash":765,"name":"tfrmhamscore.lblqueuevalue.caption","sourcebytes":[45,45],"value":"--"},
+{"hash":260053530,"name":"tfrmhamscore.lblstatustitle.caption","sourcebytes":[76,97,115,116,32,115,116,97,116,117,115,58],"value":"Last status:"},
+{"hash":211440151,"name":"tfrmhamscore.btnpushnow.caption","sourcebytes":[80,117,115,104,32,78,111,119],"value":"Push Now"},
+{"hash":73104711,"name":"tfrmhamscore.btnresync.caption","sourcebytes":[82,101,115,121,110,99,32,102,114,111,109,32,108,111,103],"value":"Resync from log"}
+]}

@@ -1,12 +1,15 @@
 object frmRemMults: TfrmRemMults
   Left = 0
+  Height = 200
   Top = 0
+  Width = 300
   BorderStyle = bsSizeToolWin
   Caption = 'Remaining mults'
   ClientHeight = 200
   ClientWidth = 300
   Color = clWindow
   KeyPreview = True
+  LCLVersion = '4.8.0.0'
   OnClose = HandleClose
   OnCreate = HandleCreate
   OnDestroy = HandleDestroy

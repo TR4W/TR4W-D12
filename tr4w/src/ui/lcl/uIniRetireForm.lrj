@@ -1,0 +1,7 @@
+{"version":1,"strings":[
+{"hash":130762261,"name":"tfrminiretire.caption","sourcebytes":[79,108,100,32,115,101,116,116,105,110,103,115,32,102,105,108,101],"value":"Old settings file"},
+{"hash":24721124,"name":"tfrminiretire.lblprompt.caption","sourcebytes":[108,98,108,80,114,111,109,112,116],"value":"lblPrompt"},
+{"hash":191043179,"name":"tfrminiretire.chkdontask.caption","sourcebytes":[99,104,107,68,111,110,116,65,115,107],"value":"chkDontAsk"},
+{"hash":180163,"name":"tfrminiretire.btnyes.caption","sourcebytes":[38,89,101,115],"value":"&Yes"},
+{"hash":11087,"name":"tfrminiretire.btnno.caption","sourcebytes":[38,78,111],"value":"&No"}
+]}

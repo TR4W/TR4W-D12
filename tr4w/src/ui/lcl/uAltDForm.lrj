@@ -1,0 +1,6 @@
+{"version":1,"strings":[
+{"hash":154958127,"name":"tfrmaltd.caption","sourcebytes":[68,117,112,101,32,67,104,101,99,107,32,79,110,32,73,110,97,99,116,105,118,101,32,82,97,100,105,111],"value":"Dupe Check On Inactive Radio"},
+{"hash":82238650,"name":"tfrmaltd.lblprompt.caption","sourcebytes":[69,110,116,101,114,32,99,97,108,108,32,116,111,32,98,101,32,99,104,101,99,107,101,100,32,111,110,58],"value":"Enter call to be checked on:"},
+{"hash":1339,"name":"tfrmaltd.btnok.caption","sourcebytes":[79,75],"value":"OK"},
+{"hash":77089212,"name":"tfrmaltd.btncancel.caption","sourcebytes":[67,97,110,99,101,108],"value":"Cancel"}
+]}

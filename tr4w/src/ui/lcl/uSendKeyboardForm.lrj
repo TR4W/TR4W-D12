@@ -1,0 +1,4 @@
+{"version":1,"strings":[
+{"hash":184617159,"name":"tfrmsendkeyboard.caption","sourcebytes":[83,101,110,100,105,110,103,32,67,87],"value":"Sending CW"},
+{"hash":4863637,"name":"tfrmsendkeyboard.btnclose.caption","sourcebytes":[67,108,111,115,101],"value":"Close"}
+]}

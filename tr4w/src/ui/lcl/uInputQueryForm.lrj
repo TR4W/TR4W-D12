@@ -1,0 +1,6 @@
+{"version":1,"strings":[
+{"hash":365975,"name":"tfrminputquery.caption","sourcebytes":[84,82,52,87],"value":"TR4W"},
+{"hash":50567114,"name":"tfrminputquery.lblprompt.caption","sourcebytes":[69,110,116,101,114,32,118,97,108,117,101,58],"value":"Enter value:"},
+{"hash":1339,"name":"tfrminputquery.btnok.caption","sourcebytes":[79,75],"value":"OK"},
+{"hash":77089212,"name":"tfrminputquery.btncancel.caption","sourcebytes":[67,97,110,99,101,108],"value":"Cancel"}
+]}

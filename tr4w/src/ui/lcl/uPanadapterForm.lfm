@@ -1,6 +1,8 @@
 object frmPanadapter: TfrmPanadapter
   Left = 0
+  Height = 380
   Top = 0
+  Width = 840
   BorderStyle = bsSizeToolWin
   Caption = 'Panadapter'
   ClientHeight = 380
@@ -8,38 +10,41 @@ object frmPanadapter: TfrmPanadapter
   Color = clBlack
   DoubleBuffered = True
   KeyPreview = True
+  ParentDoubleBuffered = False
+  LCLVersion = '4.8.0.0'
   OnClose = HandleClose
   OnCreate = HandleCreate
   OnDestroy = HandleDestroy
   OnKeyDown = HandleKeyDown
   object pnlTop: TPanel
     Left = 0
+    Height = 28
     Top = 0
     Width = 840
-    Height = 28
     Align = alTop
     BevelOuter = bvNone
-    Caption = ''
+    ClientHeight = 28
+    ClientWidth = 840
     Color = clBlack
+    ParentBackground = False
     ParentColor = False
     TabOrder = 0
     object lblSource: TLabel
       Left = 6
+      Height = 15
       Top = 7
       Width = 90
-      Height = 15
       AutoSize = False
       Caption = 'Pan A'
       Font.Color = clYellow
       ParentColor = False
       ParentFont = False
-      Transparent = True
     end
     object lblStatus: TLabel
       Left = 660
+      Height = 15
       Top = 7
       Width = 172
-      Height = 15
       Alignment = taRightJustify
       Anchors = [akTop, akRight]
       AutoSize = False
@@ -47,13 +52,13 @@ object frmPanadapter: TfrmPanadapter
       Font.Color = clSilver
       ParentColor = False
       ParentFont = False
-      Transparent = True
     end
     object cboPalette: TComboBox
       Left = 104
+      Height = 23
       Top = 2
       Width = 112
-      Height = 23
+      ItemHeight = 0
       ItemIndex = 0
       Items.Strings = (
         'Heat Map'
@@ -68,79 +73,79 @@ object frmPanadapter: TfrmPanadapter
     end
     object btnPause: TButton
       Left = 224
+      Height = 23
       Top = 2
       Width = 64
-      Height = 23
       Caption = 'Pause'
       TabOrder = 1
       OnClick = HandlePauseClick
     end
     object lblScale: TLabel
       Left = 300
+      Height = 15
       Top = 7
       Width = 60
-      Height = 15
       AutoSize = False
       Caption = '80 dB'
       Font.Color = clSilver
       ParentColor = False
       ParentFont = False
-      Transparent = True
     end
     object trkScale: TTrackBar
       Left = 360
+      Height = 24
       Top = 2
       Width = 140
-      Height = 24
       Max = 150
       Min = 10
       Position = 80
       ShowSelRange = False
-      TabOrder = 2
       TickStyle = tsNone
       OnChange = HandleScaleChange
+      TabOrder = 2
     end
     object lblSpan: TLabel
       Left = 500
+      Height = 15
       Top = 7
       Width = 92
-      Height = 15
       Alignment = taRightJustify
       AutoSize = False
       Caption = 'Span --'
       Font.Color = clSilver
       ParentColor = False
       ParentFont = False
-      Transparent = True
     end
     object btnSpanNarrow: TButton
       Left = 598
       Height = 23
+      Hint = 'Narrower span (zoom in)'
       Top = 2
       Width = 26
       Caption = '-'
-      Hint = 'Narrower span (zoom in)'
+      ParentShowHint = False
       ShowHint = True
-      OnClick = HandleSpanNarrow
       TabOrder = 3
+      OnClick = HandleSpanNarrow
     end
     object btnSpanWide: TButton
       Left = 626
       Height = 23
+      Hint = 'Wider span (zoom out)'
       Top = 2
       Width = 26
       Caption = '+'
-      Hint = 'Wider span (zoom out)'
+      ParentShowHint = False
       ShowHint = True
-      OnClick = HandleSpanWide
       TabOrder = 4
+      OnClick = HandleSpanWide
     end
   end
   object pbSpectrum: TPaintBox
     Left = 0
+    Height = 352
     Top = 28
     Width = 840
-    Height = 352
     Align = alClient
     OnMouseDown = HandleSpectrumMouseDown
     OnMouseLeave = HandleSpectrumMouseLeave

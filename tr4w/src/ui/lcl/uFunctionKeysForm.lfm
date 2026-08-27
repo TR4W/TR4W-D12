@@ -1,154 +1,157 @@
-﻿object frmFunctionKeys: TfrmFunctionKeys
+object frmFunctionKeys: TfrmFunctionKeys
   Left = 0
+  Height = 40
   Top = 0
+  Width = 600
   BorderStyle = bsSizeToolWin
   Caption = 'Function keys'
   ClientHeight = 40
   ClientWidth = 600
   Color = clBtnFace
+  LCLVersion = '4.8.0.0'
   OnResize = HandleResize
   OnShow = HandleShow
   object pnlF1: TPanel
+    Tag = 112
     Left = 0
+    Height = 40
     Top = 0
     Width = 48
-    Height = 40
-    Tag = 112
-    BevelOuter = bvRaised
     Caption = 'F1'
     ParentColor = False
+    TabOrder = 0
     OnClick = KeyPanelClick
     OnMouseDown = KeyPanelMouseDown
   end
   object pnlF2: TPanel
+    Tag = 113
     Left = 50
+    Height = 40
     Top = 0
     Width = 48
-    Height = 40
-    Tag = 113
-    BevelOuter = bvRaised
     Caption = 'F2'
     ParentColor = False
+    TabOrder = 1
     OnClick = KeyPanelClick
     OnMouseDown = KeyPanelMouseDown
   end
   object pnlF3: TPanel
+    Tag = 114
     Left = 100
+    Height = 40
     Top = 0
     Width = 48
-    Height = 40
-    Tag = 114
-    BevelOuter = bvRaised
     Caption = 'F3'
     ParentColor = False
+    TabOrder = 2
     OnClick = KeyPanelClick
     OnMouseDown = KeyPanelMouseDown
   end
   object pnlF4: TPanel
+    Tag = 115
     Left = 150
+    Height = 40
     Top = 0
     Width = 48
-    Height = 40
-    Tag = 115
-    BevelOuter = bvRaised
     Caption = 'F4'
     ParentColor = False
+    TabOrder = 3
     OnClick = KeyPanelClick
     OnMouseDown = KeyPanelMouseDown
   end
   object pnlF5: TPanel
+    Tag = 116
     Left = 200
+    Height = 40
     Top = 0
     Width = 48
-    Height = 40
-    Tag = 116
-    BevelOuter = bvRaised
     Caption = 'F5'
     ParentColor = False
+    TabOrder = 4
     OnClick = KeyPanelClick
     OnMouseDown = KeyPanelMouseDown
   end
   object pnlF6: TPanel
+    Tag = 117
     Left = 250
+    Height = 40
     Top = 0
     Width = 48
-    Height = 40
-    Tag = 117
-    BevelOuter = bvRaised
     Caption = 'F6'
     ParentColor = False
+    TabOrder = 5
     OnClick = KeyPanelClick
     OnMouseDown = KeyPanelMouseDown
   end
   object pnlF7: TPanel
+    Tag = 118
     Left = 300
+    Height = 40
     Top = 0
     Width = 48
-    Height = 40
-    Tag = 118
-    BevelOuter = bvRaised
     Caption = 'F7'
     ParentColor = False
+    TabOrder = 6
     OnClick = KeyPanelClick
     OnMouseDown = KeyPanelMouseDown
   end
   object pnlF8: TPanel
+    Tag = 119
     Left = 350
+    Height = 40
     Top = 0
     Width = 48
-    Height = 40
-    Tag = 119
-    BevelOuter = bvRaised
     Caption = 'F8'
     ParentColor = False
+    TabOrder = 7
     OnClick = KeyPanelClick
     OnMouseDown = KeyPanelMouseDown
   end
   object pnlF9: TPanel
+    Tag = 120
     Left = 400
+    Height = 40
     Top = 0
     Width = 48
-    Height = 40
-    Tag = 120
-    BevelOuter = bvRaised
     Caption = 'F9'
     ParentColor = False
+    TabOrder = 8
     OnClick = KeyPanelClick
     OnMouseDown = KeyPanelMouseDown
   end
   object pnlF10: TPanel
+    Tag = 121
     Left = 450
+    Height = 40
     Top = 0
     Width = 48
-    Height = 40
-    Tag = 121
-    BevelOuter = bvRaised
     Caption = 'F10'
     ParentColor = False
+    TabOrder = 9
     OnClick = KeyPanelClick
     OnMouseDown = KeyPanelMouseDown
   end
   object pnlF11: TPanel
+    Tag = 122
     Left = 500
+    Height = 40
     Top = 0
     Width = 48
-    Height = 40
-    Tag = 122
-    BevelOuter = bvRaised
     Caption = 'F11'
     ParentColor = False
+    TabOrder = 10
     OnClick = KeyPanelClick
     OnMouseDown = KeyPanelMouseDown
   end
   object pnlF12: TPanel
+    Tag = 123
     Left = 550
+    Height = 40
     Top = 0
     Width = 48
-    Height = 40
-    Tag = 123
-    BevelOuter = bvRaised
     Caption = 'F12'
     ParentColor = False
+    TabOrder = 11
     OnClick = KeyPanelClick
     OnMouseDown = KeyPanelMouseDown
   end

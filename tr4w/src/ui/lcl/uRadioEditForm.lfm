@@ -1,586 +1,589 @@
-﻿object RadioEditForm: TRadioEditForm
+object RadioEditForm: TRadioEditForm
   Left = 0
+  Height = 470
   Top = 0
+  Width = 520
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
   Caption = 'Radio'
   ClientHeight = 470
   ClientWidth = 520
   Position = poScreenCenter
+  LCLVersion = '4.8.0.0'
   OnClose = HandleClose
   OnShow = HandleShow
   object lblName: TLabel
     Left = 12
+    Height = 17
     Top = 16
     Width = 120
-    Height = 17
     AutoSize = False
     Caption = 'Name'
   end
   object edtName: TEdit
-    TabOrder = 1
     Left = 140
+    Height = 22
     Top = 12
     Width = 340
-    Height = 22
     AutoSize = False
+    TabOrder = 0
   end
   object lblType: TLabel
     Left = 12
+    Height = 17
     Top = 46
     Width = 120
-    Height = 17
     AutoSize = False
     Caption = 'Radio type'
   end
   object cbxType: TComboBox
     Left = 140
+    Height = 22
     Top = 42
     Width = 340
-    Height = 22
     AutoSize = False
-    TabOrder = 3
+    ItemHeight = 0
+    TabOrder = 1
     OnChange = HandleTypeChange
   end
   object tbcTransport: TPageControl
     Left = 12
+    Height = 202
     Top = 72
     Width = 480
-    Height = 202
-    AutoSize = False
+    ActivePage = tabSerial
     TabIndex = 0
-    TabOrder = 4
+    TabOrder = 2
     OnChange = HandleTransportChange
     object tabSerial: TTabSheet
-      Width = 49
-      Height = 26
-      AutoSize = False
       Caption = 'Serial'
+      ClientHeight = 26
+      ClientWidth = 49
       object lblPort: TLabel
         Left = 10
+        Height = 17
         Top = 16
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'Port'
       end
       object cbxPort: TComboBox
         Left = 140
+        Height = 22
         Top = 12
         Width = 320
-        Height = 22
         AutoSize = False
-        TabOrder = 1
+        ItemHeight = 0
+        TabOrder = 0
       end
       object lblBaud: TLabel
         Left = 10
+        Height = 17
         Top = 46
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'Baud rate'
       end
       object edtBaud: TEdit
-        TabOrder = 3
         Left = 140
+        Height = 22
         Top = 42
         Width = 120
-        Height = 22
         AutoSize = False
+        TabOrder = 2
       end
       object lblDataBits: TLabel
         Left = 10
+        Height = 17
         Top = 76
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'Data bits'
       end
       object pnlDataBits: TPanel
         Left = 140
+        Height = 19
         Top = 72
         Width = 125
-        Height = 19
-        AutoSize = False
         BevelOuter = bvNone
-        ParentColor = True
-        Caption = ''
+        ClientHeight = 19
+        ClientWidth = 125
         TabOrder = 5
         object optData7: TRadioButton
           Left = 0
+          Height = 19
           Top = 0
           Width = 60
-          Height = 19
           AutoSize = False
-          TabOrder = 0
           Caption = '7'
+          TabOrder = 0
         end
         object optData8: TRadioButton
           Left = 65
+          Height = 19
           Top = 0
           Width = 60
-          Height = 19
           AutoSize = False
-          TabOrder = 1
           Caption = '8'
+          TabOrder = 1
         end
       end
       object lblCatRTS: TLabel
         Left = 285
+        Height = 17
         Top = 76
         Width = 70
-        Height = 17
         AutoSize = False
         Caption = 'CAT RTS'
       end
       object cbxCatRTS: TComboBox
         Left = 360
+        Height = 22
         Top = 72
         Width = 100
-        Height = 22
         AutoSize = False
-        TabOrder = 21
+        ItemHeight = 0
+        TabOrder = 1
       end
       object lblCatDTR: TLabel
         Left = 285
+        Height = 17
         Top = 136
         Width = 70
-        Height = 17
         AutoSize = False
         Caption = 'CAT DTR'
       end
       object cbxCatDTR: TComboBox
         Left = 360
+        Height = 22
         Top = 132
         Width = 100
-        Height = 22
         AutoSize = False
-        TabOrder = 23
+        ItemHeight = 0
+        TabOrder = 3
       end
       object lblParity: TLabel
         Left = 10
+        Height = 17
         Top = 106
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'Parity'
       end
       object pnlParity: TPanel
         Left = 140
+        Height = 19
         Top = 102
         Width = 220
-        Height = 19
-        AutoSize = False
         BevelOuter = bvNone
-        ParentColor = True
-        Caption = ''
-        TabOrder = 8
+        ClientHeight = 19
+        ClientWidth = 220
+        TabOrder = 4
         object optParityNone: TRadioButton
           Left = 0
+          Height = 19
           Top = 0
           Width = 75
-          Height = 19
           AutoSize = False
-          TabOrder = 0
           Caption = 'None'
+          TabOrder = 0
         end
         object optParityOdd: TRadioButton
           Left = 80
+          Height = 19
           Top = 0
           Width = 65
-          Height = 19
           AutoSize = False
-          TabOrder = 1
           Caption = 'Odd'
+          TabOrder = 1
         end
         object optParityEven: TRadioButton
           Left = 150
+          Height = 19
           Top = 0
           Width = 70
-          Height = 19
           AutoSize = False
-          TabOrder = 2
           Caption = 'Even'
+          TabOrder = 2
         end
       end
       object lblStopBits: TLabel
         Left = 10
+        Height = 17
         Top = 136
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'Stop bits'
       end
       object pnlStopBits: TPanel
         Left = 140
+        Height = 19
         Top = 132
         Width = 125
-        Height = 19
-        AutoSize = False
         BevelOuter = bvNone
-        ParentColor = True
-        Caption = ''
-        TabOrder = 12
+        ClientHeight = 19
+        ClientWidth = 125
+        TabOrder = 6
         object optStop1: TRadioButton
           Left = 0
+          Height = 19
           Top = 0
           Width = 60
-          Height = 19
           AutoSize = False
-          TabOrder = 0
           Caption = '1'
+          TabOrder = 0
         end
         object optStop2: TRadioButton
           Left = 65
+          Height = 19
           Top = 0
           Width = 60
-          Height = 19
           AutoSize = False
-          TabOrder = 1
           Caption = '2'
+          TabOrder = 1
         end
       end
     end
     object tabNetwork: TTabSheet
-      Width = 66
-      Height = 26
-      AutoSize = False
       Caption = 'Network'
+      ClientHeight = 26
+      ClientWidth = 66
       object lblIP: TLabel
         Left = 10
+        Height = 17
         Top = 16
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'IP address'
       end
       object edtIP: TEdit
-        TabOrder = 1
         Left = 140
+        Height = 22
         Top = 12
         Width = 200
-        Height = 22
         AutoSize = False
+        TabOrder = 0
       end
       object btnDiscover: TButton
         Left = 350
+        Height = 25
         Top = 12
         Width = 110
-        Height = 25
-        AutoSize = False
-        TabOrder = 2
         Caption = 'Discover'
+        TabOrder = 1
         OnClick = HandleDiscover
       end
       object lblFound: TLabel
         Left = 10
+        Height = 17
         Top = 136
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'Found'
       end
       object cbxFound: TComboBox
         Left = 140
+        Height = 22
         Top = 132
         Width = 320
-        Height = 22
         AutoSize = False
+        ItemHeight = 0
         TabOrder = 4
         OnChange = HandleFoundSelect
       end
       object lblTCPPort: TLabel
         Left = 10
+        Height = 17
         Top = 46
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'TCP port'
       end
       object edtTCPPort: TEdit
-        TabOrder = 6
         Left = 140
+        Height = 22
         Top = 42
         Width = 120
-        Height = 22
         AutoSize = False
+        TabOrder = 2
       end
       object lblUser: TLabel
         Left = 10
+        Height = 17
         Top = 76
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'User name'
       end
       object edtUser: TEdit
-        TabOrder = 8
         Left = 140
+        Height = 22
         Top = 72
         Width = 200
-        Height = 22
         AutoSize = False
+        TabOrder = 3
       end
       object lblPassword: TLabel
         Left = 10
+        Height = 17
         Top = 106
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'Password'
       end
       object edtPassword: TEdit
-        TabOrder = 10
-        PasswordChar = '*'
         Left = 140
+        Height = 22
         Top = 102
         Width = 200
-        Height = 22
         AutoSize = False
+        EchoMode = emPassword
+        PasswordChar = '*'
+        TabOrder = 5
       end
     end
     object tabAdvanced: TTabSheet
-      Width = 73
-      Height = 26
-      AutoSize = False
       Caption = 'Advanced'
+      ClientHeight = 26
+      ClientWidth = 73
       object lblStartup: TLabel
         Left = 10
+        Height = 17
         Top = 16
         Width = 130
-        Height = 17
         AutoSize = False
         Caption = 'Startup command'
       end
       object edtStartup: TEdit
-        TabOrder = 1
         Left = 150
+        Height = 22
         Top = 12
         Width = 310
-        Height = 22
         AutoSize = False
+        TabOrder = 0
       end
       object lblFilterByte: TLabel
         Left = 10
+        Height = 17
         Top = 46
         Width = 130
-        Height = 17
         AutoSize = False
         Caption = 'Icom filter byte'
       end
       object edtFilterByte: TEdit
-        TabOrder = 3
         Left = 150
+        Height = 22
         Top = 42
         Width = 70
-        Height = 22
         AutoSize = False
+        TabOrder = 2
       end
       object lblDataMode: TLabel
         Left = 240
+        Height = 17
         Top = 46
         Width = 140
-        Height = 17
         AutoSize = False
         Caption = 'Icom data mode ID'
       end
       object edtDataMode: TEdit
-        TabOrder = 5
         Left = 390
+        Height = 22
         Top = 42
         Width = 70
-        Height = 22
         AutoSize = False
+        TabOrder = 3
       end
       object lblAutoInfo: TLabel
         Left = 240
+        Height = 17
         Top = 140
         Width = 130
-        Height = 17
         AutoSize = False
         Caption = 'Auto-info level'
       end
       object edtAutoInfo: TEdit
-        TabOrder = 7
         Left = 380
+        Height = 22
         Top = 136
         Width = 70
-        Height = 22
         AutoSize = False
+        TabOrder = 1
       end
       object lblHamLibID: TLabel
         Left = 10
+        Height = 17
         Top = 76
         Width = 130
-        Height = 17
         AutoSize = False
         Caption = 'HamLib model ID'
       end
       object edtHamLibID: TEdit
-        TabOrder = 7
         Left = 150
+        Height = 22
         Top = 72
         Width = 70
-        Height = 22
         AutoSize = False
+        TabOrder = 5
       end
       object chkUseHamLib: TCheckBox
         Left = 240
+        Height = 19
         Top = 76
         Width = 220
-        Height = 19
         AutoSize = False
-        TabOrder = 8
         Caption = 'Drive through HamLib'
+        TabOrder = 7
       end
       object chkWideCW: TCheckBox
         Left = 10
+        Height = 19
         Top = 106
         Width = 200
-        Height = 19
         AutoSize = False
-        TabOrder = 9
         Caption = 'Wide CW filter'
+        TabOrder = 9
       end
       object chkFT1000MPReverse: TCheckBox
         Left = 240
+        Height = 19
         Top = 106
         Width = 230
-        Height = 19
         AutoSize = False
-        TabOrder = 10
         Caption = 'FT-1000MP CW reverse'
+        TabOrder = 4
       end
       object lblFreqOffset: TLabel
         Left = 10
+        Height = 17
         Top = 170
         Width = 220
-        Height = 17
         AutoSize = False
         Caption = 'Frequency offset (transverter), Hz'
       end
       object edtFreqOffset: TEdit
         Left = 240
+        Height = 22
         Top = 166
         Width = 130
-        Height = 22
-        TabOrder = 12
+        TabOrder = 6
         TextHint = '0 = none, e.g. 116000000'
       end
       object chkPolling: TCheckBox
         Left = 10
+        Height = 19
         Top = 136
         Width = 220
-        Height = 19
         AutoSize = False
-        TabOrder = 11
         Caption = 'Poll this radio'
+        TabOrder = 8
       end
     end
   end
   object lblKeyerPort: TLabel
     Left = 12
+    Height = 17
     Top = 288
     Width = 130
-    Height = 17
     AutoSize = False
     Caption = 'Keyer output port'
   end
   object cbxKeyerPort: TComboBox
     Left = 150
+    Height = 22
     Top = 284
     Width = 200
-    Height = 22
     AutoSize = False
-    TabOrder = 6
+    ItemHeight = 0
+    TabOrder = 5
   end
   object lblCIV: TLabel
     Left = 12
+    Height = 17
     Top = 318
     Width = 130
-    Height = 17
     AutoSize = False
     Caption = 'CI-V address (hex)'
   end
   object edtCIV: TEdit
-    TabOrder = 8
     Left = 150
+    Height = 22
     Top = 314
     Width = 80
-    Height = 22
     AutoSize = False
+    TabOrder = 7
   end
   object lblKeyerRTS: TLabel
     Left = 12
+    Height = 17
     Top = 348
     Width = 130
-    Height = 17
     AutoSize = False
     Caption = 'Keyer RTS line'
   end
   object cbxKeyerRTS: TComboBox
     Left = 150
+    Height = 22
     Top = 344
     Width = 200
-    Height = 22
     AutoSize = False
-    TabOrder = 12
+    ItemHeight = 0
+    TabOrder = 3
   end
   object lblKeyerStopBits: TLabel
     Left = 360
+    Height = 17
     Top = 348
     Width = 70
-    Height = 17
     AutoSize = False
     Caption = 'Stop bits'
   end
   object cbxKeyerStopBits: TComboBox
     Left = 435
+    Height = 22
     Top = 344
     Width = 70
-    Height = 22
     AutoSize = False
-    TabOrder = 16
+    ItemHeight = 0
+    TabOrder = 4
   end
   object lblKeyerDTR: TLabel
     Left = 12
+    Height = 17
     Top = 378
     Width = 130
-    Height = 17
     AutoSize = False
     Caption = 'Keyer DTR line'
   end
   object cbxKeyerDTR: TComboBox
     Left = 150
+    Height = 22
     Top = 374
     Width = 200
-    Height = 22
     AutoSize = False
-    TabOrder = 14
+    ItemHeight = 0
+    TabOrder = 6
   end
   object btnOK: TButton
-    Default = True
-    Anchors = [akRight, akBottom]
     Left = 320
+    Height = 25
     Top = 432
     Width = 90
-    Height = 25
-    AutoSize = False
-    TabOrder = 9
+    Anchors = [akRight, akBottom]
     Caption = 'Save and close'
+    Default = True
+    TabOrder = 9
     OnClick = HandleOK
   end
   object btnCancel: TButton
-    Cancel = True
-    Anchors = [akRight, akBottom]
     Left = 420
+    Height = 25
     Top = 432
     Width = 90
-    Height = 25
-    AutoSize = False
-    TabOrder = 10
+    Anchors = [akRight, akBottom]
+    Cancel = True
     Caption = 'Cancel'
+    TabOrder = 8
     OnClick = HandleCancel
   end
 end
-

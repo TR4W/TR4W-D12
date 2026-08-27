@@ -9,6 +9,7 @@ object frmSendSpot: TfrmSendSpot
   ClientHeight = 175
   ClientWidth = 300
   Position = poMainFormCenter
+  LCLVersion = '4.8.0.0'
   OnClose = HandleClose
   OnShow = HandleShow
   object lblCallsign: TLabel
@@ -44,7 +45,7 @@ object frmSendSpot: TfrmSendSpot
     Top = 10
     Width = 160
     AutoSize = False
-    CharCase = ecUpperCase
+    CharCase = ecUppercase
     TabOrder = 0
   end
   object edtFrequency: TEdit
@@ -69,29 +70,27 @@ object frmSendSpot: TfrmSendSpot
     Top = 104
     Width = 200
     Caption = 'Contest name in comment'
-    OnChange = chkContestNameChange
     TabOrder = 3
+    OnChange = chkContestNameChange
   end
   object btnOK: TButton
     Left = 65
     Height = 25
     Top = 138
     Width = 80
-    AutoSize = False
     Caption = 'OK'
     Default = True
-    OnClick = btnOKClick
     TabOrder = 4
+    OnClick = btnOKClick
   end
   object btnCancel: TButton
     Left = 155
     Height = 25
     Top = 138
     Width = 80
-    AutoSize = False
     Cancel = True
     Caption = 'Cancel'
-    OnClick = btnCancelClick
     TabOrder = 5
+    OnClick = btnCancelClick
   end
 end

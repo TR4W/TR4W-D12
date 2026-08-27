@@ -1,21 +1,24 @@
-﻿object PrefsForm: TPrefsForm
+object PrefsForm: TPrefsForm
   Left = 0
+  Height = 620
   Top = 0
+  Width = 860
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
   Caption = 'TR4W Preferences'
   ClientHeight = 620
   ClientWidth = 860
-  Position = poScreenCenter
-  Font.Name = 'Segoe UI'
   Font.Height = -12
+  Font.Name = 'Segoe UI'
+  Position = poScreenCenter
+  LCLVersion = '4.8.0.0'
   OnClose = FormClose
   OnShow = FormShow
   object edtSearch: TEdit
     Left = 4
+    Height = 23
     Top = 4
     Width = 162
-    Height = 23
     TabOrder = 0
     TextHint = 'Search settings'
     OnChange = edtSearchChange
@@ -23,4000 +26,3969 @@
   end
   object tvNav: TTreeView
     Left = 0
+    Height = 541
     Top = 31
     Width = 170
-    Height = 541
-    Align = alNone
-    TabOrder = 1
+    BackgroundColor = clBtnFace
     BorderStyle = bsNone
     Color = clBtnFace
     DefaultItemHeight = 26
-    Options = [tvoShowButtons, tvoShowRoot, tvoKeepCollapsedNodes, tvoToolTips, tvoThemedDraw, tvoRowSelect, tvoHotTrack, tvoNoDoubleClickExpand]
+    HideSelection = False
+    HotTrack = True
     ReadOnly = True
+    RowSelect = True
     ScrollBars = ssAutoVertical
+    ShowLines = False
+    TabOrder = 5
+    Options = [tvoHotTrack, tvoKeepCollapsedNodes, tvoReadOnly, tvoRowSelect, tvoShowButtons, tvoShowRoot, tvoToolTips, tvoNoDoubleClickExpand, tvoThemedDraw]
     OnChange = tvNavChange
     OnExpanded = tvNavExpanded
     OnMouseDown = tvNavMouseDown
   end
   object layContent: TPanel
-    Color = clWindow
-    ParentColor = False
-    BevelOuter = bvNone
-    Caption = ''
     Left = 175
-    Width = 675
     Height = 572
-    AutoSize = False
+    Top = 0
+    Width = 675
+    BevelOuter = bvNone
+    ClientHeight = 572
+    ClientWidth = 675
+    Color = clWindow
+    ParentBackground = False
+    ParentColor = False
     TabOrder = 1
     object lblPlaceholder: TLabel
       Left = 12
+      Height = 60
       Top = 20
       Width = 500
-      Height = 60
       AutoSize = False
-      WordWrap = True
-      Caption = 
-        'This section has not been migrated yet.'#13#10'Use the existing config' +
-        'uration screens for it.'
+      Caption = 'This section has not been migrated yet.'#13#10'Use the existing configuration screens for it.'
       Visible = False
+      WordWrap = True
     end
     object layCW: TPanel
-      Color = clWindow
-      ParentColor = False
-      BevelOuter = bvNone
-      Caption = ''
       Tag = 11
-      Width = 675
+      Left = 0
       Height = 572
-      AutoSize = False
-      Visible = False
+      Top = 0
+      Width = 675
+      BevelOuter = bvNone
+      ClientHeight = 572
+      ClientWidth = 675
+      Color = clWindow
+      ParentBackground = False
+      ParentColor = False
       TabOrder = 2
+      Visible = False
       object lblMyKeyers: TLabel
         Left = 12
+        Height = 17
         Top = 8
         Width = 300
-        Height = 17
         AutoSize = False
         Caption = 'CW keying devices'
       end
       object lstKeyers: TListBox
         Left = 12
+        Height = 150
         Top = 30
         Width = 420
-        Height = 150
-        TabOrder = 1
+        ItemHeight = 0
+        TabOrder = 0
         OnDblClick = lstKeyersDblClick
       end
       object btnAddKeyer: TButton
         Left = 445
+        Height = 25
         Top = 30
         Width = 95
-        Height = 25
-        AutoSize = False
-        TabOrder = 2
         Caption = 'Add...'
+        TabOrder = 1
         OnClick = btnAddKeyerClick
       end
       object btnEditKeyer: TButton
         Left = 445
+        Height = 25
         Top = 62
         Width = 95
-        Height = 25
-        AutoSize = False
-        TabOrder = 3
         Caption = 'Edit...'
+        TabOrder = 2
         OnClick = btnEditKeyerClick
       end
       object btnDuplicateKeyer: TButton
         Left = 445
+        Height = 25
         Top = 94
         Width = 95
-        Height = 25
-        AutoSize = False
-        TabOrder = 4
         Caption = 'Duplicate'
+        TabOrder = 3
         OnClick = btnDuplicateKeyerClick
       end
       object btnRemoveKeyer: TButton
         Left = 445
+        Height = 25
         Top = 126
         Width = 95
-        Height = 25
-        AutoSize = False
-        TabOrder = 5
         Caption = 'Remove'
+        TabOrder = 4
         OnClick = btnRemoveKeyerClick
       end
       object lblKeyerHint: TLabel
         Left = 12
+        Height = 51
         Top = 195
         Width = 540
-        Height = 51
         AutoSize = False
-        WordWrap = True
-        Caption = 
-          'Only devices with their own settings live here - a WinKeyer or a' +
-          ' YCCC SO2R+ box.  Keying on a radio'#39's own port, or by CAT, is pa' +
-          'rt of that radio'#39's setup; a station profile then chooses which m' +
-          'ethod each slot uses.'
-        ParentFont = False
+        Caption = 'Only devices with their own settings live here - a WinKeyer or a YCCC SO2R+ box.  Keying on a radio''s own port, or by CAT, is part of that radio''s setup; a station profile then chooses which method each slot uses.'
         Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
       object lblCWSendHeading: TLabel
         Left = 12
+        Height = 17
         Top = 262
         Width = 400
-        Height = 17
         AutoSize = False
         Caption = 'Sending'
-        ParentFont = False
         Font.Style = [fsBold]
+        ParentFont = False
       end
       object chkCWEnable: TCheckBox
         Left = 12
+        Height = 22
         Top = 288
         Width = 460
-        Height = 22
         AutoSize = False
-        TabOrder = 8
         Caption = 'Send CW'
+        TabOrder = 6
       end
       object chkCWSpeedFromDatabase: TCheckBox
         Left = 12
+        Height = 22
         Top = 314
         Width = 460
-        Height = 22
         AutoSize = False
-        TabOrder = 9
         Caption = 'Match the speed a station was worked at before'
+        TabOrder = 8
       end
       object lblCWSpeedIncrement: TLabel
         Left = 12
+        Height = 17
         Top = 352
         Width = 180
-        Height = 17
         AutoSize = False
         Caption = 'Speed step:'
       end
       object cbxCWSpeedIncrement: TComboBox
         Left = 200
+        Height = 22
         Top = 348
         Width = 80
-        Height = 22
         AutoSize = False
+        ItemHeight = 0
         TabOrder = 11
       end
       object lblCWSpeedIncrementUnits: TLabel
         Left = 290
+        Height = 17
         Top = 352
         Width = 280
-        Height = 17
         AutoSize = False
         Caption = 'WPM per PageUp / PageDown'
-        ParentFont = False
         Font.Color = clGrayText
+        ParentFont = False
       end
       object lblCWTone: TLabel
         Left = 12
+        Height = 17
         Top = 384
         Width = 180
-        Height = 17
         AutoSize = False
         Caption = 'Sidetone:'
       end
       object edtCWTone: TEdit
         Left = 200
+        Height = 22
         Top = 380
         Width = 80
-        Height = 22
         AutoSize = False
-        TabOrder = 14
+        TabOrder = 5
       end
       object lblCWToneUnits: TLabel
         Left = 290
+        Height = 17
         Top = 384
         Width = 300
-        Height = 17
         AutoSize = False
         Caption = 'Hz  (0 = the radios own sidetone)'
-        ParentFont = False
         Font.Color = clGrayText
+        ParentFont = False
       end
       object chkCWMessagesChainable: TCheckBox
         Left = 12
+        Height = 22
         Top = 416
         Width = 460
-        Height = 22
         Caption = 'Any CW message may chain into the next'
-        TabOrder = 40
+        TabOrder = 7
       end
       object chkTuneWithDits: TCheckBox
         Left = 12
+        Height = 22
         Top = 442
         Width = 460
-        Height = 22
         Caption = 'Tune with dits rather than a solid carrier'
-        TabOrder = 41
+        TabOrder = 9
       end
       object chkSendFourLetterCall: TCheckBox
         Left = 12
+        Height = 22
         Top = 468
         Width = 460
-        Height = 22
         Caption = 'Always send all four letters of a four-letter call'
-        TabOrder = 42
+        TabOrder = 10
       end
       object chkIncludeFKeyNumber: TCheckBox
         Left = 12
+        Height = 22
         Top = 494
         Width = 460
-        Height = 22
         Caption = 'Show the key number on the function-key buttons'
-        TabOrder = 43
+        TabOrder = 12
       end
     end
     object layRadios: TPanel
-      Color = clWindow
-      ParentColor = False
-      BevelOuter = bvNone
-      Caption = ''
       Tag = 26
-      Width = 675
+      Left = 0
       Height = 572
-      AutoSize = False
+      Top = 0
+      Width = 675
+      BevelOuter = bvNone
+      ClientHeight = 572
+      ClientWidth = 675
+      Color = clWindow
+      ParentBackground = False
+      ParentColor = False
+      TabOrder = 0
       Visible = False
-      TabOrder = 1
       object lblMyRadios: TLabel
         Left = 12
+        Height = 17
         Top = 8
         Width = 200
-        Height = 17
         AutoSize = False
         Caption = 'My radios'
       end
       object lstRadios: TListBox
         Left = 12
+        Height = 150
         Top = 30
         Width = 420
-        Height = 150
-        TabOrder = 1
+        ItemHeight = 0
+        TabOrder = 0
         OnDblClick = lstRadiosDblClick
       end
       object btnAdd: TButton
         Left = 445
+        Height = 25
         Top = 30
         Width = 95
-        Height = 25
-        AutoSize = False
-        TabOrder = 2
         Caption = 'Add...'
+        TabOrder = 1
         OnClick = btnAddClick
       end
       object btnEdit: TButton
         Left = 445
+        Height = 25
         Top = 62
         Width = 95
-        Height = 25
-        AutoSize = False
-        TabOrder = 3
         Caption = 'Edit...'
+        TabOrder = 2
         OnClick = btnEditClick
       end
       object btnDuplicate: TButton
         Left = 445
+        Height = 25
         Top = 94
         Width = 95
-        Height = 25
-        AutoSize = False
-        TabOrder = 4
         Caption = 'Duplicate'
+        TabOrder = 3
         OnClick = btnDuplicateClick
       end
       object btnRemove: TButton
         Left = 445
+        Height = 25
         Top = 126
         Width = 95
-        Height = 25
-        AutoSize = False
-        TabOrder = 5
         Caption = 'Remove'
+        TabOrder = 4
         OnClick = btnRemoveClick
       end
       object grpProfile: TGroupBox
         Left = 12
+        Height = 260
         Top = 195
         Width = 540
-        Height = 260
-        AutoSize = False
         Caption = 'Station profile'
+        ClientHeight = 260
+        ClientWidth = 540
+        ParentBackground = False
         TabOrder = 6
         object cbxProfile: TComboBox
           Left = 12
+          Height = 22
           Top = 26
           Width = 200
-          Height = 22
           AutoSize = False
-          TabOrder = 38
+          ItemHeight = 0
+          TabOrder = 0
           OnChange = cbxProfileChange
         end
         object btnNewProfile: TButton
           Left = 220
+          Height = 25
           Top = 26
           Width = 80
-          Height = 25
-          AutoSize = False
-          TabOrder = 39
           Caption = 'New...'
+          TabOrder = 1
           OnClick = btnNewProfileClick
         end
         object btnRenameProfile: TButton
           Left = 305
+          Height = 25
           Top = 26
           Width = 90
-          Height = 25
-          AutoSize = False
-          TabOrder = 40
           Caption = 'Rename...'
+          TabOrder = 2
           OnClick = btnRenameProfileClick
         end
         object btnDeleteProfile: TButton
           Left = 400
+          Height = 25
           Top = 26
           Width = 80
-          Height = 25
-          AutoSize = False
-          TabOrder = 41
           Caption = 'Delete'
+          TabOrder = 3
           OnClick = btnDeleteProfileClick
         end
         object lblRadio1: TLabel
           Left = 12
+          Height = 17
           Top = 66
           Width = 70
-          Height = 17
           AutoSize = False
           Caption = 'Radio 1'
         end
         object cbxRadio1: TComboBox
           Left = 90
+          Height = 22
           Top = 62
           Width = 190
-          Height = 22
           AutoSize = False
-          TabOrder = 43
+          ItemHeight = 0
+          TabOrder = 4
           OnChange = cbxRadio1Change
         end
         object lblCWOutput1: TLabel
           Left = 290
+          Height = 17
           Top = 66
           Width = 90
-          Height = 17
           AutoSize = False
           Caption = 'CW output 1'
         end
         object cbxCW1: TComboBox
           Left = 385
+          Height = 22
           Top = 62
           Width = 140
-          Height = 22
           AutoSize = False
-          TabOrder = 45
+          ItemHeight = 0
+          TabOrder = 5
           OnChange = cbxCW1Change
         end
         object chkSpeedSync1: TCheckBox
           Left = 385
+          Height = 19
           Top = 92
           Width = 140
-          Height = 19
           AutoSize = False
-          TabOrder = 46
           Caption = 'Speed sync'
+          TabOrder = 6
           OnChange = chkSpeedSync1Change
         end
         object lblRadio2: TLabel
           Left = 12
+          Height = 17
           Top = 126
           Width = 70
-          Height = 17
           AutoSize = False
           Caption = 'Radio 2'
         end
         object cbxRadio2: TComboBox
           Left = 90
+          Height = 22
           Top = 122
           Width = 190
-          Height = 22
           AutoSize = False
-          TabOrder = 48
+          ItemHeight = 0
+          TabOrder = 7
           OnChange = cbxRadio2Change
         end
         object lblCWOutput2: TLabel
           Left = 290
+          Height = 17
           Top = 126
           Width = 90
-          Height = 17
           AutoSize = False
           Caption = 'CW output 2'
         end
         object cbxCW2: TComboBox
           Left = 385
+          Height = 22
           Top = 122
           Width = 140
-          Height = 22
           AutoSize = False
-          TabOrder = 50
+          ItemHeight = 0
+          TabOrder = 8
           OnChange = cbxCW2Change
         end
         object chkSpeedSync2: TCheckBox
           Left = 385
+          Height = 19
           Top = 152
           Width = 140
-          Height = 19
           AutoSize = False
-          TabOrder = 51
           Caption = 'Speed sync'
+          TabOrder = 9
           OnChange = chkSpeedSync2Change
         end
         object chkSO2R: TCheckBox
           Left = 12
+          Height = 19
           Top = 182
           Width = 200
-          Height = 19
           AutoSize = False
-          TabOrder = 52
           Caption = 'SO2R enabled'
+          TabOrder = 10
           OnChange = chkSO2RChange
         end
         object lblActive: TLabel
           Left = 12
+          Height = 17
           Top = 216
           Width = 260
-          Height = 17
           AutoSize = False
           Caption = 'Active profile: '
         end
         object btnActivate: TButton
           Left = 300
+          Height = 25
           Top = 212
           Width = 225
-          Height = 25
-          AutoSize = False
-          TabOrder = 54
           Caption = 'Activate this profile now'
+          TabOrder = 11
           OnClick = btnActivateClick
         end
         object lblActivateHint: TLabel
           Left = 300
+          Height = 32
           Top = 240
           Width = 300
-          Height = 32
           AutoSize = False
-          WordWrap = True
-          Caption = 
-            'Saving stores your changes. It does not switch the radios over -' +
-            ' use this button for that.'
-          ParentFont = False
+          Caption = 'Saving stores your changes. It does not switch the radios over - use this button for that.'
           Font.Color = clGrayText
+          ParentFont = False
+          WordWrap = True
         end
       end
       object chkAutoConnect: TCheckBox
         Left = 12
+        Height = 19
         Top = 458
         Width = 300
-        Height = 19
         AutoSize = False
-        TabOrder = 7
         Caption = 'Connect radios at startup'
+        TabOrder = 5
         OnChange = chkAutoConnectChange
       end
     end
     object layRotators: TPanel
-      Color = clWindow
-      ParentColor = False
-      BevelOuter = bvNone
-      Caption = ''
       Tag = 27
-      Width = 675
+      Left = 0
       Height = 572
-      AutoSize = False
+      Top = 0
+      Width = 675
+      BevelOuter = bvNone
+      ClientHeight = 572
+      ClientWidth = 675
+      Color = clWindow
+      ParentBackground = False
+      ParentColor = False
+      TabOrder = 1
       Visible = False
-      TabOrder = 21
       object lblMyRotators: TLabel
         Left = 12
+        Height = 17
         Top = 8
         Width = 300
-        Height = 17
         AutoSize = False
         Caption = 'My rotators'
       end
       object lstRotators: TListBox
         Left = 12
+        Height = 130
         Top = 30
         Width = 420
-        Height = 130
-        TabOrder = 1
+        ItemHeight = 0
+        TabOrder = 0
         OnSelectionChange = lstRotatorsChange
       end
       object btnAddRotator: TButton
         Left = 445
+        Height = 25
         Top = 30
         Width = 95
-        Height = 25
-        AutoSize = False
-        TabOrder = 2
         Caption = 'Add...'
+        TabOrder = 1
         OnClick = btnAddRotatorClick
       end
       object btnRemoveRotator: TButton
         Left = 445
+        Height = 25
         Top = 62
         Width = 95
-        Height = 25
-        AutoSize = False
-        TabOrder = 3
         Caption = 'Remove'
+        TabOrder = 2
         OnClick = btnRemoveRotatorClick
       end
       object btnUseRotator: TButton
         Left = 445
+        Height = 25
         Top = 94
         Width = 95
-        Height = 25
-        AutoSize = False
-        TabOrder = 4
         Caption = 'Use this'
+        TabOrder = 3
         OnClick = btnUseRotatorClick
       end
       object lblActiveRotator: TLabel
         Left = 12
+        Height = 14
         Top = 161
         Width = 520
-        Height = 14
         AutoSize = False
-        Caption = ''
       end
       object lblRotatorName: TLabel
         Left = 12
+        Height = 17
         Top = 180
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'Name:'
       end
       object edtRotatorName: TEdit
         Left = 140
+        Height = 22
         Top = 176
         Width = 240
-        Height = 22
         AutoSize = False
-        TabOrder = 5
+        TabOrder = 4
         OnChange = edtRotatorNameChange
       end
       object lblRotatorType: TLabel
         Left = 12
+        Height = 17
         Top = 212
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'Type:'
       end
       object cbxRotatorType: TComboBox
         Left = 140
+        Height = 22
         Top = 208
         Width = 240
-        Height = 22
         AutoSize = False
-        TabOrder = 7
+        ItemHeight = 0
+        TabOrder = 6
         OnChange = cbxRotatorTypeChange
       end
       object lblRotatorPort: TLabel
         Left = 12
+        Height = 17
         Top = 244
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'Port:'
       end
       object cbxRotatorPort: TComboBox
         Left = 140
+        Height = 22
         Top = 240
         Width = 160
-        Height = 22
         AutoSize = False
+        ItemHeight = 0
         TabOrder = 9
         OnChange = cbxRotatorPortChange
       end
       object lblRotatorBaud: TLabel
         Left = 12
+        Height = 17
         Top = 276
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'Baud rate:'
       end
       object edtRotatorBaud: TEdit
         Left = 140
+        Height = 22
         Top = 272
         Width = 90
-        Height = 22
         AutoSize = False
-        TabOrder = 11
+        TabOrder = 5
         OnChange = edtRotatorBaudChange
       end
       object lblRotatorBaudHint: TLabel
         Left = 240
+        Height = 17
         Top = 276
         Width = 320
-        Height = 17
         AutoSize = False
         Caption = 'blank or 0 = the default for this type'
-        ParentFont = False
         Font.Color = clGrayText
+        ParentFont = False
       end
       object lblRotatorIP: TLabel
         Left = 12
+        Height = 17
         Top = 308
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'IP address:'
       end
       object edtRotatorIP: TEdit
         Left = 140
+        Height = 22
         Top = 304
         Width = 200
-        Height = 22
         AutoSize = False
-        TabOrder = 14
+        TabOrder = 7
         OnChange = edtRotatorIPChange
       end
       object lblRotatorUDP: TLabel
         Left = 12
+        Height = 17
         Top = 340
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'UDP port:'
       end
       object edtRotatorUDP: TEdit
         Left = 140
+        Height = 22
         Top = 336
         Width = 90
-        Height = 22
         AutoSize = False
-        TabOrder = 16
+        TabOrder = 8
         OnChange = edtRotatorUDPChange
       end
       object lblRotatorBands: TLabel
         Left = 12
+        Height = 17
         Top = 372
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'Bands:'
       end
       object edtRotatorBands: TEdit
         Left = 140
+        Height = 22
         Top = 368
         Width = 300
-        Height = 22
         AutoSize = False
-        TabOrder = 18
+        TabOrder = 10
         OnChange = edtRotatorBandsChange
       end
       object lblRotatorBandsHint: TLabel
         Left = 12
+        Height = 51
         Top = 398
         Width = 620
-        Height = 51
         AutoSize = False
-        WordWrap = True
-        Caption = 
-          'Leave blank and this rotator turns for every band, which is what' +
-          ' a station with one antenna wants.  List bands - 20 15 10 - to h' +
-          'ave TR4W choose between several rotators by band.'
-        ParentFont = False
+        Caption = 'Leave blank and this rotator turns for every band, which is what a station with one antenna wants.  List bands - 20 15 10 - to have TR4W choose between several rotators by band.'
         Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
       object lblRotatorNote: TLabel
         Left = 12
+        Height = 51
         Top = 456
         Width = 620
-        Height = 51
         AutoSize = False
-        WordWrap = True
-        Caption = 
-          'PstRotator is reached over UDP and has no serial port; the other' +
-          's use one.  A blank baud rate lets each type use what it expects' +
-          ' - the DCU-1 wants 4800 where the rest want 9600.'
-        ParentFont = False
+        Caption = 'PstRotator is reached over UDP and has no serial port; the others use one.  A blank baud rate lets each type use what it expects - the DCU-1 wants 4800 where the rest want 9600.'
         Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
     end
     object layUDP: TPanel
-      Color = clWindow
-      ParentColor = False
-      BevelOuter = bvNone
-      Caption = ''
       Tag = 5
-      Width = 675
+      Left = 0
       Height = 572
-      AutoSize = False
+      Top = 0
+      Width = 675
+      BevelOuter = bvNone
+      ClientHeight = 572
+      ClientWidth = 675
+      Color = clWindow
+      ParentBackground = False
+      ParentColor = False
       TabOrder = 3
       object chkUDPEnabled: TCheckBox
         Left = 12
+        Height = 22
         Top = 10
         Width = 300
-        Height = 22
         AutoSize = False
-        TabOrder = 0
         Caption = 'Broadcast UDP data'
+        TabOrder = 0
         OnChange = chkUDPEnabledChange
       end
       object lblUDPDestinations: TLabel
         Left = 12
+        Height = 17
         Top = 44
         Width = 300
-        Height = 17
         AutoSize = False
         Caption = 'Destinations'
       end
       object lstUDPDestinations: TListBox
         Left = 12
+        Height = 150
         Top = 66
         Width = 420
-        Height = 150
-        TabOrder = 2
+        ItemHeight = 0
+        TabOrder = 1
         OnDblClick = lstUDPDestinationsDblClick
       end
       object btnUDPAdd: TButton
         Left = 445
+        Height = 25
         Top = 66
         Width = 100
-        Height = 25
-        AutoSize = False
-        TabOrder = 3
         Caption = 'Add...'
+        TabOrder = 2
         OnClick = btnUDPAddClick
       end
       object btnUDPEdit: TButton
         Left = 445
+        Height = 25
         Top = 98
         Width = 100
-        Height = 25
-        AutoSize = False
-        TabOrder = 4
         Caption = 'Edit...'
+        TabOrder = 3
         OnClick = btnUDPEditClick
       end
       object btnUDPRemove: TButton
         Left = 445
+        Height = 25
         Top = 130
         Width = 100
-        Height = 25
-        AutoSize = False
-        TabOrder = 5
         Caption = 'Remove'
+        TabOrder = 4
         OnClick = btnUDPRemoveClick
       end
       object btnUDPTest: TButton
         Left = 445
+        Height = 25
         Top = 162
         Width = 100
-        Height = 25
-        AutoSize = False
-        TabOrder = 6
         Caption = 'Test'
+        TabOrder = 6
         OnClick = btnUDPTestClick
       end
       object chkUDPAllQSOs: TCheckBox
         Left = 12
+        Height = 22
         Top = 230
         Width = 420
-        Height = 22
         AutoSize = False
-        TabOrder = 7
         Caption = 'Also broadcast edited and previously logged QSOs'
+        TabOrder = 5
         OnChange = chkUDPAllQSOsChange
       end
       object lblUDPHint: TLabel
         Left = 12
+        Height = 51
         Top = 262
         Width = 540
-        Height = 51
         AutoSize = False
-        WordWrap = True
-        Caption = 
-          'Each destination is one program listening.  Add a second row for' +
-          ' the same address when it expects different data on a different ' +
-          'port.'
-        ParentFont = False
+        Caption = 'Each destination is one program listening.  Add a second row for the same address when it expects different data on a different port.'
         Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
     end
     object layLogging: TPanel
-      Color = clWindow
-      ParentColor = False
-      BevelOuter = bvNone
-      Caption = ''
       Tag = 8
-      Width = 675
+      Left = 0
       Height = 572
-      AutoSize = False
-      Visible = False
+      Top = 0
+      Width = 675
+      BevelOuter = bvNone
+      ClientHeight = 572
+      ClientWidth = 675
+      Color = clWindow
+      ParentBackground = False
+      ParentColor = False
       TabOrder = 4
+      Visible = False
       object lblLogLevel: TLabel
         Left = 12
+        Height = 17
         Top = 14
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'Log level:'
       end
       object cbxLogLevel: TComboBox
         Left = 140
+        Height = 22
         Top = 10
         Width = 180
-        Height = 22
         AutoSize = False
-        TabOrder = 1
+        ItemHeight = 0
+        TabOrder = 0
         OnChange = cbxLogLevelChange
       end
       object lblLogLevelHint: TLabel
         Left = 12
+        Height = 34
         Top = 40
         Width = 620
-        Height = 34
         AutoSize = False
-        WordWrap = True
-        Caption = 
-          'Takes effect immediately - no restart.  INFO is the normal settin' +
-          'g; DEBUG and TRACE make the log much larger and are for diagnosin' +
-          'g a problem.'
-        ParentFont = False
+        Caption = 'Takes effect immediately - no restart.  INFO is the normal setting; DEBUG and TRACE make the log much larger and are for diagnosing a problem.'
         Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
       object lblDetailLogs: TLabel
         Left = 12
+        Height = 17
         Top = 90
         Width = 400
-        Height = 17
         AutoSize = False
         Caption = 'Detailed logging for one subsystem'
       end
       object chkTelnetDebug: TCheckBox
         Left = 24
+        Height = 22
         Top = 114
         Width = 420
-        Height = 22
         AutoSize = False
-        TabOrder = 4
         Caption = 'DX cluster - log all telnet traffic'
+        TabOrder = 1
       end
       object chkTCIDebug: TCheckBox
         Left = 24
+        Height = 22
         Top = 140
         Width = 420
-        Height = 22
         AutoSize = False
-        TabOrder = 5
         Caption = 'TCI server - log every command, both directions'
+        TabOrder = 2
       end
       object chkHamLibDebug: TCheckBox
         Left = 24
+        Height = 22
         Top = 166
         Width = 420
-        Height = 22
         AutoSize = False
-        TabOrder = 6
         Caption = 'HamLib - debug logging'
+        TabOrder = 4
       end
       object chkHamLibTrace: TCheckBox
         Left = 24
+        Height = 22
         Top = 192
         Width = 420
-        Height = 22
         AutoSize = False
-        TabOrder = 7
         Caption = 'HamLib - internal trace to hamlib_trace.log'
+        TabOrder = 6
       end
       object chkHamLibAsyncOnly: TCheckBox
         Left = 24
+        Height = 22
         Top = 218
         Width = 420
-        Height = 22
         AutoSize = False
-        TabOrder = 8
         Caption = 'HamLib - async callbacks only, no heartbeat (testing)'
+        TabOrder = 8
       end
       object lblHamLibRestart: TLabel
         Left = 24
+        Height = 34
         Top = 244
         Width = 620
-        Height = 34
         AutoSize = False
+        Caption = 'The three HamLib settings take effect when TR4W next starts.  They are very verbose and are for diagnosing a radio problem - leave them off otherwise.'
         WordWrap = True
-        Caption = 
-          'The three HamLib settings take effect when TR4W next starts.  The' +
-          'y are very verbose and are for diagnosing a radio problem - leave' +
-          ' them off otherwise.'
       end
       object btnOpenLogFile: TButton
         Left = 12
+        Height = 25
         Top = 296
         Width = 130
-        Height = 25
-        AutoSize = False
-        TabOrder = 10
         Caption = 'Open log file'
+        TabOrder = 3
         OnClick = btnOpenLogFileClick
       end
       object lblLogFilePath: TLabel
         Left = 152
+        Height = 17
         Top = 301
         Width = 500
-        Height = 17
         AutoSize = False
       end
       object lblLogFilesHeading: TLabel
         Left = 12
+        Height = 17
         Top = 344
         Width = 400
-        Height = 17
         AutoSize = False
         Caption = 'Log files'
-        ParentFont = False
         Font.Style = [fsBold]
+        ParentFont = False
       end
       object chkCheckLogFileSize: TCheckBox
         Left = 12
+        Height = 22
         Top = 372
         Width = 540
-        Height = 22
         Caption = 'Warn when the log file grows unexpectedly'
-        TabOrder = 30
+        TabOrder = 5
       end
       object chkUnknownCountryFile: TCheckBox
         Left = 12
+        Height = 22
         Top = 398
         Width = 540
-        Height = 22
         Caption = 'Record callsigns with no country match'
-        TabOrder = 31
+        TabOrder = 7
       end
       object chkUpdateRestartFile: TCheckBox
         Left = 12
+        Height = 22
         Top = 424
         Width = 540
-        Height = 22
         Caption = 'Keep the restart file up to date'
-        TabOrder = 32
+        TabOrder = 9
       end
     end
     object layTCIServer: TPanel
-      Color = clWindow
-      ParentColor = False
-      BevelOuter = bvNone
-      Caption = ''
       Tag = 15
-      Width = 675
+      Left = 0
       Height = 572
-      AutoSize = False
-      Visible = False
+      Top = 0
+      Width = 675
+      BevelOuter = bvNone
+      ClientHeight = 572
+      ClientWidth = 675
+      Color = clWindow
+      ParentBackground = False
+      ParentColor = False
       TabOrder = 5
+      Visible = False
       object chkTCIServer: TCheckBox
         Left = 12
+        Height = 22
         Top = 12
         Width = 185
-        Height = 22
         AutoSize = False
-        TabOrder = 0
         Caption = 'Enable the TCI server'
+        TabOrder = 0
         OnChange = chkTCIServerChange
       end
       object lblTCIServerScope: TLabel
         Left = 200
+        Height = 17
         Top = 15
         Width = 450
-        Height = 17
         AutoSize = False
         Caption = '- this computer only (127.0.0.1), until you tick the box below'
       end
       object lblTCIIntro: TLabel
         Left = 12
+        Height = 51
         Top = 40
         Width = 640
-        Height = 51
         AutoSize = False
+        Caption = 'Lets other programs - WSJT-X, JTDX, a skimmer - control whichever radio TR4W has the port open on, even a radio with no TCI of its own.  Radio 1 is trx 0 and radio 2 is trx 1.'
         WordWrap = True
-        Caption =
-          'Lets other programs - WSJT-X, JTDX, a skimmer - control whichever' +
-          ' radio TR4W has the port open on, even a radio with no TCI of its' +
-          ' own.  Radio 1 is trx 0 and radio 2 is trx 1.'
       end
       object lblTCIPort: TLabel
         Left = 12
+        Height = 17
         Top = 104
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'Port:'
       end
       object edtTCIPort: TEdit
         Left = 140
+        Height = 22
         Top = 100
         Width = 90
-        Height = 22
         AutoSize = False
         TabOrder = 3
       end
       object chkTCIBindAll: TCheckBox
         Left = 12
+        Height = 22
         Top = 134
         Width = 480
-        Height = 22
         AutoSize = False
-        TabOrder = 4
         Caption = 'Also listen on the network (other computers can connect)'
+        TabOrder = 1
       end
       object lblTCIBindAllWarning: TLabel
         Left = 30
+        Height = 51
         Top = 158
         Width = 620
-        Height = 51
         AutoSize = False
+        Caption = 'Off by default, and worth leaving off.  This is an unauthenticated radio-control socket: anything that can reach the port can move your VFO and key your transmitter.'
         WordWrap = True
-        Caption = 
-          'Off by default, and worth leaving off.  This is an unauthenticate' +
-          'd radio-control socket: anything that can reach the port can move' +
-          ' your VFO and key your transmitter.'
       end
       object lblTCIMaxTx: TLabel
         Left = 12
+        Height = 17
         Top = 224
         Width = 200
-        Height = 17
         AutoSize = False
         Caption = 'Stop transmitting after:'
       end
       object edtTCIMaxTx: TEdit
         Left = 220
+        Height = 22
         Top = 220
         Width = 70
-        Height = 22
         AutoSize = False
-        TabOrder = 7
+        TabOrder = 2
       end
       object lblTCIMaxTxUnits: TLabel
         Left = 298
+        Height = 17
         Top = 224
         Width = 340
-        Height = 17
         AutoSize = False
         Caption = 'seconds  (0 = no limit)'
-        ParentFont = False
         Font.Color = clGrayText
+        ParentFont = False
       end
       object lblTCIMaxTxHint: TLabel
         Left = 30
+        Height = 51
         Top = 248
         Width = 620
-        Height = 51
         AutoSize = False
-        WordWrap = True
-        Caption = 
-          'A safety net, not a timer for normal use: if a client keys the ra' +
-          'dio and then stops answering - it crashed, or the network went aw' +
-          'ay - this is what puts the transmitter back into receive.'
-        ParentFont = False
+        Caption = 'A safety net, not a timer for normal use: if a client keys the radio and then stops answering - it crashed, or the network went away - this is what puts the transmitter back into receive.'
         Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
       object lblTCILogHint: TLabel
         Left = 12
+        Height = 34
         Top = 314
         Width = 620
-        Height = 34
         AutoSize = False
-        WordWrap = True
-        Caption = 
-          'To log every TCI command in both directions, see the Logging sect' +
-          'ion.'
-        ParentFont = False
+        Caption = 'To log every TCI command in both directions, see the Logging section.'
         Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
     end
     object layStation: TPanel
-      Color = clWindow
-      ParentColor = False
-      BevelOuter = bvNone
-      Caption = ''
       Tag = 1
-      Width = 675
+      Left = 0
       Height = 572
-      AutoSize = False
-      Visible = False
+      Top = 0
+      Width = 675
+      BevelOuter = bvNone
+      ClientHeight = 572
+      ClientWidth = 675
+      Color = clWindow
+      ParentBackground = False
+      ParentColor = False
       TabOrder = 6
+      Visible = False
       object lblStationHeading: TLabel
         Left = 12
+        Height = 21
         Top = 8
         Width = 340
-        Height = 21
         AutoSize = False
         Caption = 'Station information'
-        ParentFont = False
         Font.Height = -15
         Font.Style = [fsBold]
+        ParentFont = False
       end
       object lblMyCall: TLabel
         Left = 12
+        Height = 17
         Top = 38
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'Callsign:'
       end
       object edtMyCall: TEdit
         Left = 140
+        Height = 22
         Top = 34
         Width = 200
-        Height = 22
         AutoSize = False
-        TabOrder = 2
+        TabOrder = 0
       end
       object lblMyName: TLabel
         Left = 12
+        Height = 17
         Top = 68
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'First name:'
       end
       object edtMyName: TEdit
         Left = 140
+        Height = 22
         Top = 64
         Width = 200
-        Height = 22
         AutoSize = False
-        TabOrder = 4
+        TabOrder = 1
       end
       object lblMyGrid: TLabel
         Left = 12
+        Height = 17
         Top = 98
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'Grid square:'
       end
       object edtMyGrid: TEdit
         Left = 140
+        Height = 22
         Top = 94
         Width = 200
-        Height = 22
         AutoSize = False
-        TabOrder = 6
+        TabOrder = 2
       end
       object lblMyContinent: TLabel
         Left = 12
+        Height = 17
         Top = 128
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'Continent:'
       end
       object cbxMyContinent: TComboBox
         Left = 140
+        Height = 22
         Top = 124
         Width = 200
-        Height = 22
         AutoSize = False
-        TabOrder = 8
+        ItemHeight = 0
+        TabOrder = 5
       end
       object lblMyZone: TLabel
         Left = 12
+        Height = 17
         Top = 158
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'CQ zone:'
       end
       object edtMyZone: TEdit
         Left = 140
+        Height = 22
         Top = 154
         Width = 200
-        Height = 22
         AutoSize = False
-        TabOrder = 10
+        TabOrder = 8
       end
       object lblMyITUZone: TLabel
         Left = 12
+        Height = 17
         Top = 188
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'ITU zone:'
       end
       object edtMyITUZone: TEdit
         Left = 140
+        Height = 22
         Top = 184
         Width = 200
-        Height = 22
         AutoSize = False
-        TabOrder = 12
+        TabOrder = 11
       end
       object lblMyState: TLabel
         Left = 12
+        Height = 17
         Top = 218
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'State/Province:'
       end
       object edtMyState: TEdit
         Left = 140
+        Height = 22
         Top = 214
         Width = 200
-        Height = 22
         AutoSize = False
         TabOrder = 14
       end
       object lblMySection: TLabel
         Left = 12
+        Height = 17
         Top = 248
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'ARRL section:'
       end
       object edtMySection: TEdit
         Left = 140
+        Height = 22
         Top = 244
         Width = 200
-        Height = 22
         AutoSize = False
-        TabOrder = 16
+        TabOrder = 3
       end
       object lblMyCountry: TLabel
         Left = 12
+        Height = 17
         Top = 278
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'Country:'
       end
       object edtMyCountry: TEdit
         Left = 140
+        Height = 22
         Top = 274
         Width = 200
-        Height = 22
         AutoSize = False
-        TabOrder = 18
+        TabOrder = 4
       end
       object lblMyPostalCode: TLabel
         Left = 12
+        Height = 17
         Top = 308
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'Postal code:'
       end
       object edtMyPostalCode: TEdit
         Left = 140
+        Height = 22
         Top = 304
         Width = 200
-        Height = 22
         AutoSize = False
-        TabOrder = 20
+        TabOrder = 6
       end
       object lblContestHeading: TLabel
         Left = 380
+        Height = 21
         Top = 8
         Width = 280
-        Height = 21
         AutoSize = False
         Caption = 'Contest exchange'
-        ParentFont = False
         Font.Height = -15
         Font.Style = [fsBold]
+        ParentFont = False
       end
       object lblMyCheck: TLabel
         Left = 380
+        Height = 17
         Top = 38
         Width = 110
-        Height = 17
         AutoSize = False
         Caption = 'Check:'
       end
       object edtMyCheck: TEdit
         Left = 496
+        Height = 22
         Top = 34
         Width = 150
-        Height = 22
         AutoSize = False
-        TabOrder = 23
+        TabOrder = 7
       end
       object lblMyPrec: TLabel
         Left = 380
+        Height = 17
         Top = 68
         Width = 110
-        Height = 17
         AutoSize = False
         Caption = 'Precedence:'
       end
       object edtMyPrec: TEdit
         Left = 496
+        Height = 22
         Top = 64
         Width = 150
-        Height = 22
         AutoSize = False
-        TabOrder = 25
+        TabOrder = 9
       end
       object lblMyFDClass: TLabel
         Left = 380
+        Height = 17
         Top = 98
         Width = 110
-        Height = 17
         AutoSize = False
         Caption = 'FD class:'
       end
       object edtMyFDClass: TEdit
         Left = 496
+        Height = 22
         Top = 94
         Width = 150
-        Height = 22
         AutoSize = False
-        TabOrder = 27
+        TabOrder = 10
       end
       object lblMyFOCNumber: TLabel
         Left = 380
+        Height = 17
         Top = 128
         Width = 110
-        Height = 17
         AutoSize = False
         Caption = 'FOC number:'
       end
       object edtMyFOCNumber: TEdit
         Left = 496
+        Height = 22
         Top = 124
         Width = 150
-        Height = 22
         AutoSize = False
-        TabOrder = 29
+        TabOrder = 12
       end
       object lblMyIOTA: TLabel
         Left = 380
+        Height = 17
         Top = 158
         Width = 110
-        Height = 17
         AutoSize = False
         Caption = 'IOTA:'
       end
       object edtMyIOTA: TEdit
         Left = 496
+        Height = 22
         Top = 154
         Width = 150
-        Height = 22
         AutoSize = False
-        TabOrder = 31
+        TabOrder = 13
       end
       object lblMyPark: TLabel
         Left = 380
+        Height = 17
         Top = 188
         Width = 110
-        Height = 17
         AutoSize = False
         Caption = 'Park:'
       end
       object edtMyPark: TEdit
         Left = 496
+        Height = 22
         Top = 184
         Width = 150
-        Height = 22
         AutoSize = False
-        TabOrder = 33
+        TabOrder = 15
       end
       object lblStationHint: TLabel
         Left = 12
+        Height = 51
         Top = 360
         Width = 640
-        Height = 51
         AutoSize = False
-        WordWrap = True
-        Caption = 
-          'These are sent to the other stations in a multi-operator network w' +
-          'hen you change them, so all positions agree on the exchange.'
-        ParentFont = False
+        Caption = 'These are sent to the other stations in a multi-operator network when you change them, so all positions agree on the exchange.'
         Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
     end
     object layWSJTX: TPanel
-      Color = clWindow
-      ParentColor = False
-      BevelOuter = bvNone
-      Caption = ''
       Tag = 16
-      Width = 675
+      Left = 0
       Height = 572
-      AutoSize = False
-      Visible = False
+      Top = 0
+      Width = 675
+      BevelOuter = bvNone
+      ClientHeight = 572
+      ClientWidth = 675
+      Color = clWindow
+      ParentBackground = False
+      ParentColor = False
       TabOrder = 7
+      Visible = False
       object lblWSJTXHeading: TLabel
         Left = 12
+        Height = 21
         Top = 8
         Width = 400
-        Height = 21
         AutoSize = False
         Caption = 'WSJT-X / JTDX'
-        ParentFont = False
         Font.Height = -15
         Font.Style = [fsBold]
+        ParentFont = False
       end
       object chkWSJTXEnabled: TCheckBox
         Left = 12
+        Height = 22
         Top = 34
         Width = 420
-        Height = 22
         AutoSize = False
-        TabOrder = 1
         Caption = 'Exchange data with WSJT-X'
+        TabOrder = 0
       end
       object chkWSJTXRadioControl: TCheckBox
         Left = 12
+        Height = 22
         Top = 60
         Width = 420
-        Height = 22
         AutoSize = False
-        TabOrder = 2
         Caption = 'Let WSJT-X control the radio'
+        TabOrder = 1
       end
       object chkWSJTXHighlights: TCheckBox
         Left = 12
+        Height = 22
         Top = 86
         Width = 420
-        Height = 22
         AutoSize = False
-        TabOrder = 3
         Caption = 'Send callsign highlighting to WSJT-X'
+        TabOrder = 3
       end
       object lblWSJTXPort: TLabel
         Left = 12
+        Height = 17
         Top = 120
         Width = 140
-        Height = 17
         AutoSize = False
         Caption = 'Broadcast port:'
       end
       object edtWSJTXPort: TEdit
         Left = 160
+        Height = 22
         Top = 116
         Width = 90
-        Height = 22
         AutoSize = False
-        TabOrder = 5
+        TabOrder = 2
       end
       object lblWSJTXMulticast: TLabel
         Left = 12
+        Height = 17
         Top = 152
         Width = 140
-        Height = 17
         AutoSize = False
         Caption = 'Multicast group:'
       end
       object edtWSJTXMulticast: TEdit
         Left = 160
+        Height = 22
         Top = 148
         Width = 200
-        Height = 22
         AutoSize = False
-        TabOrder = 7
+        TabOrder = 4
       end
       object lblWSJTXRestart: TLabel
         Left = 12
+        Height = 51
         Top = 184
         Width = 620
-        Height = 51
         AutoSize = False
+        Caption = 'These take effect when TR4W next starts.  Leave the multicast group blank unless WSJT-X is configured to use one.'
         WordWrap = True
-        Caption = 
-          'These take effect when TR4W next starts.  Leave the multicast gr' +
-          'oup blank unless WSJT-X is configured to use one.'
       end
       object lblWSJTXTCIHint: TLabel
         Left = 12
+        Height = 51
         Top = 240
         Width = 620
-        Height = 51
         AutoSize = False
-        WordWrap = True
-        Caption = 
-          'To let WSJT-X drive the radio over TCI instead, see the TCI Serv' +
-          'er section - that works with any radio TR4W controls, not only o' +
-          'ne with TCI of its own.'
-        ParentFont = False
+        Caption = 'To let WSJT-X drive the radio over TCI instead, see the TCI Server section - that works with any radio TR4W controls, not only one with TCI of its own.'
         Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
     end
     object layExternalLogger: TPanel
-      Color = clWindow
-      ParentColor = False
-      BevelOuter = bvNone
-      Caption = ''
       Tag = 17
-      Width = 675
+      Left = 0
       Height = 572
-      AutoSize = False
-      Visible = False
+      Top = 0
+      Width = 675
+      BevelOuter = bvNone
+      ClientHeight = 572
+      ClientWidth = 675
+      Color = clWindow
+      ParentBackground = False
+      ParentColor = False
       TabOrder = 8
+      Visible = False
       object lblLoggerHeading: TLabel
         Left = 12
+        Height = 21
         Top = 8
         Width = 400
-        Height = 21
         AutoSize = False
         Caption = 'External logger'
-        ParentFont = False
         Font.Height = -15
         Font.Style = [fsBold]
+        ParentFont = False
       end
       object lblLoggerType: TLabel
         Left = 12
+        Height = 17
         Top = 38
         Width = 140
-        Height = 17
         AutoSize = False
         Caption = 'Program:'
       end
       object cbxLoggerType: TComboBox
         Left = 160
+        Height = 22
         Top = 34
         Width = 200
-        Height = 22
         AutoSize = False
-        TabOrder = 2
+        ItemHeight = 0
+        TabOrder = 1
       end
       object chkLoggerEnabled: TCheckBox
         Left = 12
+        Height = 22
         Top = 68
         Width = 420
-        Height = 22
         AutoSize = False
-        TabOrder = 3
         Caption = 'Send QSOs to it as they are logged'
+        TabOrder = 3
       end
       object lblLoggerAddress: TLabel
         Left = 12
+        Height = 17
         Top = 102
         Width = 140
-        Height = 17
         AutoSize = False
         Caption = 'Address:'
       end
       object edtLoggerAddress: TEdit
         Left = 160
+        Height = 22
         Top = 98
         Width = 200
-        Height = 22
         AutoSize = False
-        TabOrder = 5
+        TabOrder = 0
       end
       object lblLoggerPort: TLabel
         Left = 12
+        Height = 17
         Top = 134
         Width = 140
-        Height = 17
         AutoSize = False
         Caption = 'Port:'
       end
       object edtLoggerPort: TEdit
         Left = 160
+        Height = 22
         Top = 130
         Width = 90
-        Height = 22
         AutoSize = False
-        TabOrder = 7
+        TabOrder = 2
       end
       object lblLoggerRestart: TLabel
         Left = 12
+        Height = 34
         Top = 166
         Width = 620
-        Height = 34
         AutoSize = False
+        Caption = 'These take effect when TR4W next starts.'
         WordWrap = True
-        Caption = 
-          'These take effect when TR4W next starts.'
       end
       object lblLoggerStatus: TLabel
         Left = 12
+        Height = 51
         Top = 208
         Width = 620
-        Height = 51
         AutoSize = False
+        Caption = 'DXKEEPER is complete.  ACLOG and HRD are not finished - selecting one logs a warning and no QSOs are sent.'
         WordWrap = True
-        Caption = 
-          'DXKEEPER is complete.  ACLOG and HRD are not finished - selectin' +
-          'g one logs a warning and no QSOs are sent.'
       end
     end
     object layHardware: TPanel
-      Color = clWindow
-      ParentColor = False
-      BevelOuter = bvNone
-      Caption = ''
       Tag = 2
-      Width = 675
+      Left = 0
       Height = 572
-      AutoSize = False
-      Visible = False
+      Top = 0
+      Width = 675
+      BevelOuter = bvNone
+      ClientHeight = 572
+      ClientWidth = 675
+      Color = clWindow
+      ParentBackground = False
+      ParentColor = False
       TabOrder = 21
+      Visible = False
       object lblHardwareHeading: TLabel
         Left = 12
+        Height = 21
         Top = 8
         Width = 400
-        Height = 21
         AutoSize = False
         Caption = 'Hardware'
-        ParentFont = False
         Font.Height = -15
         Font.Style = [fsBold]
+        ParentFont = False
       end
       object lblHardwareInfo: TLabel
         Left = 12
+        Height = 40
         Top = 34
         Width = 620
-        Height = 40
         AutoSize = False
-        WordWrap = True
-        Caption = 
-          'Station-wide hardware. Settings that belong to one radio are und' +
-          'er Radios; rotators are under Rotators.'
-        ParentFont = False
+        Caption = 'Station-wide hardware. Settings that belong to one radio are under Radios; rotators are under Rotators.'
         Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
       object lblRelayPort: TLabel
         Left = 12
+        Height = 17
         Top = 92
         Width = 200
-        Height = 17
         AutoSize = False
         Caption = 'Relay control port'
       end
       object cbxRelayPort: TComboBox
         Left = 220
+        Height = 25
         Top = 88
         Width = 140
-        Height = 25
+        ItemHeight = 0
         Style = csDropDownList
         TabOrder = 0
         OnChange = cbxRelayPortChange
       end
       object lblBandOutput1: TLabel
         Left = 12
+        Height = 17
         Top = 124
         Width = 200
-        Height = 17
         AutoSize = False
         Caption = 'Radio 1 band output port'
       end
       object cbxBandOutput1: TComboBox
         Left = 220
+        Height = 25
         Top = 120
         Width = 140
-        Height = 25
+        ItemHeight = 0
         Style = csDropDownList
         TabOrder = 1
       end
       object lblBandOutput2: TLabel
         Left = 12
+        Height = 17
         Top = 156
         Width = 200
-        Height = 17
         AutoSize = False
         Caption = 'Radio 2 band output port'
       end
       object cbxBandOutput2: TComboBox
         Left = 220
+        Height = 25
         Top = 152
         Width = 140
-        Height = 25
+        ItemHeight = 0
         Style = csDropDownList
         TabOrder = 2
       end
       object lblStereoPort: TLabel
         Left = 12
+        Height = 17
         Top = 188
         Width = 200
-        Height = 17
         AutoSize = False
         Caption = 'Stereo control port'
       end
       object cbxStereoPort: TComboBox
         Left = 220
+        Height = 25
         Top = 184
         Width = 140
-        Height = 25
+        ItemHeight = 0
         Style = csDropDownList
         TabOrder = 3
       end
       object lblRelayPortInfo: TLabel
         Left = 12
+        Height = 54
         Top = 216
         Width = 620
-        Height = 54
         AutoSize = False
-        WordWrap = True
-        Caption = 
-          'Parallel (LPT) port wiring for this station: relay switchi' +
-          'ng, band data out to a decoder per operating position, and' +
-          ' stereo audio control. These follow the DESK, not the radi' +
-          'o, so they stay put when you activate a different radio. L' +
-          'eave them None unless you have such an interface - whether' +
-          ' TR4W keeps supporting LPT at all is still an open questio' +
-          'n, which the greyed box below is a placeholder for.'
-        ParentFont = False
+        Caption = 'Parallel (LPT) port wiring for this station: relay switching, band data out to a decoder per operating position, and stereo audio control. These follow the DESK, not the radio, so they stay put when you activate a different radio. Leave them None unless you have such an interface - whether TR4W keeps supporting LPT at all is still an open question, which the greyed box below is a placeholder for.'
         Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
       object chkUseControlPort: TCheckBox
         Left = 12
+        Height = 19
         Top = 282
         Width = 400
-        Height = 19
         Caption = 'Use the radio control port for paddle and foot switch'
         Enabled = False
         TabOrder = 5
       end
       object chkYCCCSO2R: TCheckBox
         Left = 12
+        Height = 19
         Top = 316
         Width = 400
-        Height = 19
         Caption = 'YCCC SO2R Plus box connected'
         TabOrder = 4
       end
       object lblYCCCInfo: TLabel
         Left = 12
+        Height = 34
         Top = 340
         Width = 620
-        Height = 34
         AutoSize = False
-        WordWrap = True
-        Caption = 
-          'Station controllers will get a factory of their own, as ra' +
-          'dios and keyers did. This checkbox is the interim home for' +
-          ' the setting.'
-        ParentFont = False
+        Caption = 'Station controllers will get a factory of their own, as radios and keyers did. This checkbox is the interim home for the setting.'
         Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
     end
     object layPaddlePTT: TPanel
-      Color = clWindow
-      ParentColor = False
-      BevelOuter = bvNone
-      Caption = ''
       Tag = 28
-      Width = 675
+      Left = 0
       Height = 572
-      AutoSize = False
-      Visible = False
+      Top = 0
+      Width = 675
+      BevelOuter = bvNone
+      ClientHeight = 572
+      ClientWidth = 675
+      Color = clWindow
+      ParentBackground = False
+      ParentColor = False
       TabOrder = 22
+      Visible = False
       object lblPaddlePTTHeading: TLabel
         Left = 12
+        Height = 21
         Top = 8
         Width = 400
-        Height = 21
         AutoSize = False
         Caption = 'Paddle and PTT'
-        ParentFont = False
         Font.Height = -15
         Font.Style = [fsBold]
+        ParentFont = False
       end
       object lblPaddlePTTInfo: TLabel
         Left = 12
+        Height = 40
         Top = 34
         Width = 620
-        Height = 40
         AutoSize = False
-        WordWrap = True
-        Caption = 
-          'The paddle keyer TR4W runs itself, and the PTT line it ass' +
-          'erts. A WinKeyer or YCCC box keeps its own paddle timing, ' +
-          'so these do not apply to it.'
-        ParentFont = False
+        Caption = 'The paddle keyer TR4W runs itself, and the PTT line it asserts. A WinKeyer or YCCC box keeps its own paddle timing, so these do not apply to it.'
         Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
       object lblPaddleGroup: TLabel
         Left = 12
+        Height = 17
         Top = 88
         Width = 400
-        Height = 17
         AutoSize = False
         Caption = 'Paddle'
-        ParentFont = False
         Font.Style = [fsBold]
+        ParentFont = False
       end
       object lblPaddleSpeed: TLabel
         Left = 12
+        Height = 17
         Top = 120
         Width = 240
-        Height = 17
         AutoSize = False
         Caption = 'Paddle speed'
       end
       object edtPaddleSpeed: TEdit
         Left = 260
+        Height = 25
         Top = 116
         Width = 70
-        Height = 25
         TabOrder = 0
       end
       object lblPaddleSpeedUnits: TLabel
         Left = 340
+        Height = 17
         Top = 120
         Width = 300
-        Height = 17
         AutoSize = False
         Caption = 'WPM  (0 follows the keyboard speed)'
-        ParentFont = False
         Font.Color = clGrayText
+        ParentFont = False
       end
       object lblPaddleTone: TLabel
         Left = 12
+        Height = 17
         Top = 152
         Width = 240
-        Height = 17
         AutoSize = False
         Caption = 'Paddle sidetone'
       end
       object edtPaddleTone: TEdit
         Left = 260
+        Height = 25
         Top = 148
         Width = 70
-        Height = 25
         TabOrder = 1
       end
       object lblPaddleToneUnits: TLabel
         Left = 340
+        Height = 17
         Top = 152
         Width = 300
-        Height = 17
         AutoSize = False
         Caption = 'Hz'
-        ParentFont = False
         Font.Color = clGrayText
+        ParentFont = False
       end
       object lblPaddleHold: TLabel
         Left = 12
+        Height = 17
         Top = 184
         Width = 240
-        Height = 17
         AutoSize = False
         Caption = 'Hold PTT after the last element'
       end
       object edtPaddleHold: TEdit
         Left = 260
+        Height = 25
         Top = 180
         Width = 70
-        Height = 25
         TabOrder = 2
       end
       object lblPaddleHoldUnits: TLabel
         Left = 340
+        Height = 17
         Top = 184
         Width = 300
-        Height = 17
         AutoSize = False
         Caption = 'dit counts'
-        ParentFont = False
         Font.Color = clGrayText
+        ParentFont = False
       end
       object chkSwapPaddles: TCheckBox
         Left = 12
+        Height = 22
         Top = 214
         Width = 460
-        Height = 22
         Caption = 'Swap dit and dah'
         TabOrder = 3
       end
       object lblPTTGroup: TLabel
         Left = 12
+        Height = 17
         Top = 256
         Width = 400
-        Height = 17
         AutoSize = False
         Caption = 'PTT'
-        ParentFont = False
         Font.Style = [fsBold]
+        ParentFont = False
       end
       object chkPTTEnable: TCheckBox
         Left = 12
+        Height = 22
         Top = 284
         Width = 460
-        Height = 22
         Caption = 'Assert PTT when transmitting'
         TabOrder = 4
       end
       object lblPTTDelay: TLabel
         Left = 12
+        Height = 17
         Top = 320
         Width = 240
-        Height = 17
         AutoSize = False
         Caption = 'Delay after PTT before sending'
       end
       object edtPTTDelay: TEdit
         Left = 260
+        Height = 25
         Top = 316
         Width = 70
-        Height = 25
         TabOrder = 5
       end
       object lblPTTDelayUnits: TLabel
         Left = 340
+        Height = 17
         Top = 320
         Width = 300
-        Height = 17
         AutoSize = False
         Caption = 'x 1.7 ms  (0 disables)'
-        ParentFont = False
         Font.Color = clGrayText
+        ParentFont = False
       end
       object chkNoPollDuringPTT: TCheckBox
         Left = 12
+        Height = 22
         Top = 350
         Width = 460
-        Height = 22
         Caption = 'Stop polling the radio while transmitting'
         TabOrder = 6
       end
       object chkPTTViaCommands: TCheckBox
         Left = 12
+        Height = 22
         Top = 376
         Width = 540
-        Height = 22
         Caption = 'Key the transmitter with a CAT command instead of a hardware line'
         TabOrder = 7
       end
       object chkPTTLockout: TCheckBox
         Left = 12
+        Height = 22
         Top = 402
         Width = 540
-        Height = 22
         Caption = 'Lock out PTT'
         TabOrder = 8
       end
       object lblPaddlePortNote: TLabel
         Left = 12
+        Height = 54
         Top = 434
         Width = 620
-        Height = 54
         AutoSize = False
-        WordWrap = True
-        Caption = 
-          'The parallel port a paddle or foot switch is wired to is n' +
-          'ot here. Whether TR4W keeps supporting LPT at all is an op' +
-          'en question, so PADDLE PORT stays on the Ctrl-J command li' +
-          'st until that is settled rather than being given a home it' +
-          ' may not keep.'
-        ParentFont = False
+        Caption = 'The parallel port a paddle or foot switch is wired to is not here. Whether TR4W keeps supporting LPT at all is an open question, so PADDLE PORT stays on the Ctrl-J command list until that is settled rather than being given a home it may not keep.'
         Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
     end
     object layOperating: TPanel
-      Color = clWindow
-      ParentColor = False
-      BevelOuter = bvNone
-      Caption = ''
       Tag = 21
-      Width = 675
+      Left = 0
       Height = 572
-      AutoSize = False
-      Visible = False
+      Top = 0
+      Width = 675
+      BevelOuter = bvNone
+      ClientHeight = 572
+      ClientWidth = 675
+      Color = clWindow
+      ParentBackground = False
+      ParentColor = False
       TabOrder = 23
+      Visible = False
       object lblOperatingHeading: TLabel
         Left = 12
+        Height = 21
         Top = 8
         Width = 620
-        Height = 21
         AutoSize = False
         Caption = 'Operating'
-        ParentFont = False
         Font.Height = -15
         Font.Style = [fsBold]
+        ParentFont = False
       end
       object lblOperatingInfo: TLabel
         Left = 12
+        Height = 40
         Top = 34
         Width = 620
-        Height = 40
         AutoSize = False
-        WordWrap = True
         Caption = 'How the log behaves while you are running the contest. Band map, bands, CW, scoring and two-radio settings are on the pages below.'
-        ParentFont = False
         Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
       object chkAutoReturnToCQ: TCheckBox
         Left = 12
+        Height = 22
         Top = 88
         Width = 540
-        Height = 22
         Caption = 'Return to CQ mode after logging a QSO'
         TabOrder = 0
       end
       object chkAutoCallTerminate: TCheckBox
         Left = 12
+        Height = 22
         Top = 114
         Width = 540
-        Height = 22
         Caption = 'Stop sending when the call window changes'
         TabOrder = 1
       end
       object chkEscapeExitsSAP: TCheckBox
         Left = 12
+        Height = 22
         Top = 140
         Width = 540
-        Height = 22
         Caption = 'Escape leaves search and pounce'
         TabOrder = 2
       end
       object chkLeaveCursorInCall: TCheckBox
         Left = 12
+        Height = 22
         Top = 166
         Width = 540
-        Height = 22
         Caption = 'Leave the cursor in the call window'
         TabOrder = 3
       end
       object chkLogWithSingleEnter: TCheckBox
         Left = 12
+        Height = 22
         Top = 192
         Width = 540
-        Height = 22
         Caption = 'Log with a single Enter'
         TabOrder = 4
       end
       object chkSpaceBarDupeCheck: TCheckBox
         Left = 12
+        Height = 22
         Top = 218
         Width = 540
-        Height = 22
         Caption = 'Space bar performs a dupe check'
         TabOrder = 5
       end
       object chkConfirmEditChanges: TCheckBox
         Left = 12
+        Height = 22
         Top = 244
         Width = 540
-        Height = 22
         Caption = 'Confirm before saving an edited QSO'
         TabOrder = 6
       end
       object chkAutoQSONumberDecrement: TCheckBox
         Left = 12
+        Height = 22
         Top = 270
         Width = 540
-        Height = 22
         Caption = 'Give the serial number back when a QSO is abandoned'
         TabOrder = 7
       end
     end
     object layAudio: TPanel
-      Color = clBtnFace
-      ParentColor = False
-      BevelOuter = bvNone
-      Caption = ''
       Tag = 29
-      Width = 675
+      Left = 0
       Height = 572
-      AutoSize = False
-      Visible = False
+      Top = 0
+      Width = 675
+      BevelOuter = bvNone
+      ClientHeight = 572
+      ClientWidth = 675
+      Color = clBtnFace
+      ParentBackground = False
+      ParentColor = False
       TabOrder = 24
+      Visible = False
       object lblAudioHeading: TLabel
-          Left = 12
+        Left = 12
+        Height = 21
         Top = 8
-          Width = 620
-          Height = 21
-          AutoSize = False
-          Caption = 'Audio'
-          ParentFont = False
-          Font.Height = -15
-          Font.Style = [fsBold]
+        Width = 620
+        AutoSize = False
+        Caption = 'Audio'
+        Font.Height = -15
+        Font.Style = [fsBold]
+        ParentFont = False
       end
       object lblAudioInfo: TLabel
-          Left = 12
+        Left = 12
+        Height = 20
         Top = 34
-          Width = 620
-          Height = 20
-          AutoSize = False
-          WordWrap = True
-          Caption = 'Voice keying and QSO recording. CW keying is on the CW Settings page.'
-          ParentFont = False
-          Font.Color = clGrayText
+        Width = 620
+        AutoSize = False
+        Caption = 'Voice keying and QSO recording. CW keying is on the CW Settings page.'
+        Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
       object cardDVK: TPanel
-        Color = $00E5E5E5
-        ParentColor = False
-        BevelOuter = bvNone
-        Caption = ''
         Left = 12
+        Height = 194
         Top = 84
         Width = 640
-        Height = 194
-        AutoSize = False
+        BevelOuter = bvNone
+        ClientHeight = 194
+        ClientWidth = 640
+        Color = 15066597
+        ParentBackground = False
+        ParentColor = False
+        TabOrder = 0
         object cardDVKInner: TPanel
-          Color = clWindow
-          ParentColor = False
-          BevelOuter = bvNone
-          Caption = ''
           Left = 1
+          Height = 192
           Top = 1
           Width = 638
-          Height = 192
-          AutoSize = False
-        object lblDVKHeading: TLabel
-          Left = 16
-          Top = 16
-            Width = 620
+          BevelOuter = bvNone
+          ClientHeight = 192
+          ClientWidth = 638
+          Color = clWindow
+          ParentBackground = False
+          ParentColor = False
+          TabOrder = 0
+          object lblDVKHeading: TLabel
+            Left = 16
             Height = 17
+            Top = 16
+            Width = 620
             AutoSize = False
             Caption = 'Digital voice keyer'
-            ParentFont = False
             Font.Style = [fsBold]
-        end
-        object chkDVKEnable: TCheckBox
-          Left = 16
-          Top = 44
-            Width = 540
+            ParentFont = False
+          end
+          object chkDVKEnable: TCheckBox
+            Left = 16
             Height = 22
+            Top = 44
+            Width = 540
             Caption = 'Use the digital voice keyer'
             TabOrder = 0
-        end
-        object chkDVKLocalizedMessages: TCheckBox
-          Left = 16
-          Top = 70
-            Width = 540
+          end
+          object chkDVKLocalizedMessages: TCheckBox
+            Left = 16
             Height = 22
+            Top = 70
+            Width = 540
             Caption = 'Use localized DVK message files'
             TabOrder = 1
-        end
-        object chkUseRecordedSigns: TCheckBox
-          Left = 16
-          Top = 96
-            Width = 540
+          end
+          object chkUseRecordedSigns: TCheckBox
+            Left = 16
             Height = 22
+            Top = 96
+            Width = 540
             Caption = 'Send recorded audio for callsign characters'
             TabOrder = 2
-        end
-        object lblDVKPath: TLabel
-          Left = 16
-          Top = 130
-            Width = 200
+          end
+          object lblDVKPath: TLabel
+            Left = 16
             Height = 17
+            Top = 130
+            Width = 200
             AutoSize = False
             Caption = 'DVK recording folder'
-        end
-        object edtDVKPath: TEdit
-          Left = 220
-          Top = 126
-          Width = 316
+          end
+          object edtDVKPath: TEdit
+            Left = 220
             Height = 25
+            Top = 126
+            Width = 316
             TabOrder = 3
-        end
-        object btnBrowseDVKPath: TButton
-          Left = 544
-          Top = 126
-            Width = 70
+          end
+          object btnBrowseDVKPath: TButton
+            Left = 544
             Height = 25
+            Top = 126
+            Width = 70
             Caption = 'Browse...'
-            TabOrder = 20
+            TabOrder = 5
             OnClick = btnBrowseDVKPathClick
-        end
-        object lblDVKRecorder: TLabel
-          Left = 16
-          Top = 162
-            Width = 200
+          end
+          object lblDVKRecorder: TLabel
+            Left = 16
             Height = 17
+            Top = 162
+            Width = 200
             AutoSize = False
             Caption = 'DVK recorder program'
-        end
-        object edtDVKRecorder: TEdit
-          Left = 220
-          Top = 158
-          Width = 316
+          end
+          object edtDVKRecorder: TEdit
+            Left = 220
             Height = 25
+            Top = 158
+            Width = 316
             TabOrder = 4
-        end
-        object btnBrowseDVKRecorder: TButton
-          Left = 544
-          Top = 158
-            Width = 70
+          end
+          object btnBrowseDVKRecorder: TButton
+            Left = 544
             Height = 25
+            Top = 158
+            Width = 70
             Caption = 'Browse...'
-            TabOrder = 21
+            TabOrder = 6
             OnClick = btnBrowseDVKRecorderClick
-        end
+          end
         end
       end
       object cardMP3: TPanel
-        Color = $00E5E5E5
-        ParentColor = False
-        BevelOuter = bvNone
-        Caption = ''
         Left = 12
+        Height = 142
         Top = 302
         Width = 640
-        Height = 142
-        AutoSize = False
+        BevelOuter = bvNone
+        ClientHeight = 142
+        ClientWidth = 640
+        Color = 15066597
+        ParentBackground = False
+        ParentColor = False
+        TabOrder = 1
         object cardMP3Inner: TPanel
-          Color = clWindow
-          ParentColor = False
-          BevelOuter = bvNone
-          Caption = ''
           Left = 1
+          Height = 140
           Top = 1
           Width = 638
-          Height = 140
-          AutoSize = False
-        object lblMP3Heading: TLabel
-          Left = 16
-          Top = 16
-            Width = 620
+          BevelOuter = bvNone
+          ClientHeight = 140
+          ClientWidth = 638
+          Color = clWindow
+          ParentBackground = False
+          ParentColor = False
+          TabOrder = 0
+          object lblMP3Heading: TLabel
+            Left = 16
             Height = 17
+            Top = 16
+            Width = 620
             AutoSize = False
             Caption = 'QSO recording'
-            ParentFont = False
             Font.Style = [fsBold]
-        end
-        object chkMP3RecorderEnable: TCheckBox
-          Left = 16
-          Top = 44
-            Width = 540
+            ParentFont = False
+          end
+          object chkMP3RecorderEnable: TCheckBox
+            Left = 16
             Height = 22
+            Top = 44
+            Width = 540
             Caption = 'Record each QSO to MP3'
-            TabOrder = 5
-        end
-        object lblMP3Path: TLabel
-          Left = 16
-          Top = 78
-            Width = 200
+            TabOrder = 0
+          end
+          object lblMP3Path: TLabel
+            Left = 16
             Height = 17
+            Top = 78
+            Width = 200
             AutoSize = False
             Caption = 'MP3 folder'
-        end
-        object edtMP3Path: TEdit
-          Left = 220
-          Top = 74
-          Width = 316
+          end
+          object edtMP3Path: TEdit
+            Left = 220
             Height = 25
-            TabOrder = 6
-        end
-        object btnBrowseMP3Path: TButton
-          Left = 544
-          Top = 74
+            Top = 74
+            Width = 316
+            TabOrder = 1
+          end
+          object btnBrowseMP3Path: TButton
+            Left = 544
+            Height = 25
+            Top = 74
             Width = 70
-            Height = 25
             Caption = 'Browse...'
-            TabOrder = 22
+            TabOrder = 2
             OnClick = btnBrowseMP3PathClick
-        end
-        object lblMP3Player: TLabel
-          Left = 16
-          Top = 110
-            Width = 200
+          end
+          object lblMP3Player: TLabel
+            Left = 16
             Height = 17
+            Top = 110
+            Width = 200
             AutoSize = False
             Caption = 'MP3 player program'
-        end
-        object edtMP3Player: TEdit
-          Left = 220
-          Top = 106
-          Width = 316
+          end
+          object edtMP3Player: TEdit
+            Left = 220
             Height = 25
-            TabOrder = 7
-        end
-        object btnBrowseMP3Player: TButton
-          Left = 544
-          Top = 106
+            Top = 106
+            Width = 316
+            TabOrder = 3
+          end
+          object btnBrowseMP3Player: TButton
+            Left = 544
+            Height = 25
+            Top = 106
             Width = 70
-            Height = 25
             Caption = 'Browse...'
-            TabOrder = 23
+            TabOrder = 4
             OnClick = btnBrowseMP3PlayerClick
-        end
+          end
         end
       end
       object lblAudioNote: TLabel
-          Left = 12
+        Left = 12
+        Height = 34
         Top = 460
-          Width = 620
-          Height = 34
-          AutoSize = False
-          WordWrap = True
-          Caption = 'Bit rate and recording length are not here yet: both are stored through a lookup table rather than directly, and move separately.'
-          ParentFont = False
-          Font.Color = clGrayText
+        Width = 620
+        AutoSize = False
+        Caption = 'Bit rate and recording length are not here yet: both are stored through a lookup table rather than directly, and move separately.'
+        Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
     end
     object layDXLab: TPanel
-      Color = clWindow
-      ParentColor = False
-      BevelOuter = bvNone
-      Caption = ''
       Tag = 18
-      Width = 675
+      Left = 0
       Height = 572
-      AutoSize = False
-      Visible = False
+      Top = 0
+      Width = 675
+      BevelOuter = bvNone
+      ClientHeight = 572
+      ClientWidth = 675
+      Color = clWindow
+      ParentBackground = False
+      ParentColor = False
       TabOrder = 9
+      Visible = False
       object lblDXLabHeading: TLabel
         Left = 12
+        Height = 21
         Top = 8
         Width = 400
-        Height = 21
         AutoSize = False
         Caption = 'DXLab'
-        ParentFont = False
         Font.Height = -15
         Font.Style = [fsBold]
+        ParentFont = False
       end
       object lblDXLabInfo: TLabel
         Left = 12
+        Height = 68
         Top = 34
         Width = 620
-        Height = 68
         AutoSize = False
-        WordWrap = True
-        Caption = 
-          'DXLab needs no settings of its own.  TR4W offers a DX Commander ' +
-          'compatible interface on TCP port 52002 whenever the WSJT-X suppo' +
-          'rt is running, and DXLab programs connect to that.'
-        ParentFont = False
+        Caption = 'DXLab needs no settings of its own.  TR4W offers a DX Commander compatible interface on TCP port 52002 whenever the WSJT-X support is running, and DXLab programs connect to that.'
         Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
       object lblDXLabInfo2: TLabel
         Left = 12
+        Height = 34
         Top = 112
         Width = 620
-        Height = 34
         AutoSize = False
+        Caption = 'The port is not configurable today.  If you want it to be, say so and it becomes a setting here.'
         WordWrap = True
-        Caption = 
-          'The port is not configurable today.  If you want it to be, say s' +
-          'o and it becomes a setting here.'
       end
     end
     object layMMTTY: TPanel
-      Color = clWindow
-      ParentColor = False
-      BevelOuter = bvNone
-      Caption = ''
       Tag = 19
-      Width = 675
+      Left = 0
       Height = 572
-      AutoSize = False
-      Visible = False
+      Top = 0
+      Width = 675
+      BevelOuter = bvNone
+      ClientHeight = 572
+      ClientWidth = 675
+      Color = clWindow
+      ParentBackground = False
+      ParentColor = False
       TabOrder = 10
+      Visible = False
       object lblMMTTYHeading: TLabel
         Left = 12
+        Height = 21
         Top = 8
         Width = 400
-        Height = 21
         AutoSize = False
         Caption = 'MMTTY'
-        ParentFont = False
         Font.Height = -15
         Font.Style = [fsBold]
+        ParentFont = False
       end
       object lblMMTTYEngine: TLabel
         Left = 12
+        Height = 17
         Top = 42
         Width = 140
-        Height = 17
         AutoSize = False
         Caption = 'Engine:'
       end
       object edtMMTTYEngine: TEdit
         Left = 160
+        Height = 22
         Top = 38
         Width = 380
-        Height = 22
         AutoSize = False
-        TabOrder = 2
+        TabOrder = 0
       end
       object btnBrowseMMTTY: TButton
         Left = 548
+        Height = 25
         Top = 37
         Width = 95
-        Height = 25
-        AutoSize = False
-        TabOrder = 3
         Caption = 'Browse...'
+        TabOrder = 1
         OnClick = btnBrowseMMTTYClick
       end
       object lblMMTTYHint: TLabel
         Left = 12
+        Height = 34
         Top = 74
         Width = 620
-        Height = 34
         AutoSize = False
-        WordWrap = True
-        Caption = 
-          'The full path to MMTTY.EXE.  TR4W starts it for RTTY and talks t' +
-          'o it directly.'
-        ParentFont = False
+        Caption = 'The full path to MMTTY.EXE.  TR4W starts it for RTTY and talks to it directly.'
         Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
     end
     object layCluster: TPanel
-      Color = clWindow
-      ParentColor = False
-      BevelOuter = bvNone
-      Caption = ''
       Tag = 3
-      Width = 675
+      Left = 0
       Height = 572
-      AutoSize = False
-      Visible = False
+      Top = 0
+      Width = 675
+      BevelOuter = bvNone
+      ClientHeight = 572
+      ClientWidth = 675
+      Color = clWindow
+      ParentBackground = False
+      ParentColor = False
       TabOrder = 11
+      Visible = False
       object lblClusterHeading: TLabel
         Left = 12
+        Height = 21
         Top = 8
         Width = 300
-        Height = 21
         AutoSize = False
         Caption = 'My DX clusters'
-        ParentFont = False
         Font.Height = -15
         Font.Style = [fsBold]
+        ParentFont = False
       end
       object lstClusters: TListBox
         Left = 12
+        Height = 110
         Top = 30
         Width = 420
-        Height = 110
-        TabOrder = 1
+        ItemHeight = 0
+        TabOrder = 0
         OnSelectionChange = lstClustersChange
       end
       object btnAddCluster: TButton
         Left = 445
+        Height = 25
         Top = 30
         Width = 95
-        Height = 25
-        AutoSize = False
-        TabOrder = 2
         Caption = 'Add...'
+        TabOrder = 1
         OnClick = btnAddClusterClick
       end
       object btnRemoveCluster: TButton
         Left = 445
+        Height = 25
         Top = 62
         Width = 95
-        Height = 25
-        AutoSize = False
-        TabOrder = 3
         Caption = 'Remove'
+        TabOrder = 2
         OnClick = btnRemoveClusterClick
       end
       object btnUseCluster: TButton
         Left = 445
+        Height = 25
         Top = 94
         Width = 95
-        Height = 25
-        AutoSize = False
-        TabOrder = 4
         Caption = 'Use this'
+        TabOrder = 3
         OnClick = btnUseClusterClick
       end
       object lblActiveCluster: TLabel
         Left = 12
+        Height = 17
         Top = 148
         Width = 420
-        Height = 17
         AutoSize = False
         Caption = 'Connecting to: (none chosen)'
       end
       object lblClusterName: TLabel
         Left = 12
+        Height = 17
         Top = 182
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'Name:'
       end
       object edtClusterName: TEdit
         Left = 140
+        Height = 22
         Top = 178
         Width = 240
-        Height = 22
         AutoSize = False
-        TabOrder = 7
+        TabOrder = 6
         OnChange = edtClusterNameChange
       end
       object lblClusterServer: TLabel
         Left = 12
+        Height = 17
         Top = 214
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'Server:'
       end
       object cbxClusterServer: TComboBox
-        Style = csDropDown
         Left = 140
+        Height = 22
         Top = 210
         Width = 300
-        Height = 22
         AutoSize = False
+        ItemHeight = 0
         TabOrder = 9
         OnChange = cbxClusterServerChange
         OnEnter = cbxClusterServerEnter
       end
       object lblClusterServerHint: TLabel
         Left = 12
+        Height = 34
         Top = 238
         Width = 620
-        Height = 34
         AutoSize = False
-        WordWrap = True
-        Caption = 
-          'host:port, for example dxc.nc7j.com:7373.  The drop-down lists t' +
-          'he servers in TRCLUSTER.DAT; you can also type one that is not o' +
-          'n it.'
-        ParentFont = False
+        Caption = 'host:port, for example dxc.nc7j.com:7373.  The drop-down lists the servers in TRCLUSTER.DAT; you can also type one that is not on it.'
         Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
       object lblClusterLogin: TLabel
         Left = 12
+        Height = 17
         Top = 286
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'Log in as:'
       end
       object edtClusterLogin: TEdit
         Left = 140
+        Height = 22
         Top = 282
         Width = 160
-        Height = 22
         AutoSize = False
-        TabOrder = 12
+        TabOrder = 4
         OnChange = edtClusterLoginChange
       end
       object lblClusterLoginHint: TLabel
         Left = 310
+        Height = 17
         Top = 286
         Width = 320
-        Height = 17
         AutoSize = False
         Caption = 'blank = my station callsign'
-        ParentFont = False
         Font.Color = clGrayText
+        ParentFont = False
       end
       object lblClusterPassword: TLabel
         Left = 12
+        Height = 17
         Top = 318
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'Password:'
       end
       object edtClusterPassword: TEdit
         Left = 140
+        Height = 22
         Top = 314
         Width = 200
-        Height = 22
         AutoSize = False
-        TabOrder = 15
+        EchoMode = emPassword
         PasswordChar = '*'
+        TabOrder = 5
         OnChange = edtClusterPasswordChange
       end
       object lblClusterCommand: TLabel
         Left = 12
+        Height = 17
         Top = 350
         Width = 120
-        Height = 17
         AutoSize = False
         Caption = 'After connecting:'
       end
       object edtClusterCommand: TEdit
         Left = 140
+        Height = 22
         Top = 346
         Width = 420
-        Height = 22
         AutoSize = False
-        TabOrder = 17
+        TabOrder = 7
         OnChange = edtClusterCommandChange
       end
       object lblClusterCommandHint: TLabel
         Left = 12
+        Height = 34
         Top = 374
         Width = 620
-        Height = 34
         AutoSize = False
-        WordWrap = True
-        Caption = 
-          'Sent once the login is accepted - filters, set/name, sh/dx.  Sep' +
-          'arate several with a semicolon.'
-        ParentFont = False
+        Caption = 'Sent once the login is accepted - filters, set/name, sh/dx.  Separate several with a semicolon.'
         Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
       object lblClusterGlobalHeading: TLabel
         Left = 12
+        Height = 17
         Top = 424
         Width = 400
-        Height = 17
         AutoSize = False
         Caption = 'For every cluster'
-        ParentFont = False
         Font.Style = [fsBold]
+        ParentFont = False
       end
       object chkClusterAtStartup: TCheckBox
         Left = 12
+        Height = 22
         Top = 450
         Width = 460
-        Height = 22
         AutoSize = False
-        TabOrder = 20
         Caption = 'Connect at startup'
+        TabOrder = 8
       end
       object chkSpotCollector: TCheckBox
         Left = 12
+        Height = 22
         Top = 476
         Width = 460
-        Height = 22
         AutoSize = False
-        TabOrder = 21
         Caption = 'Collect spots from the cluster'
+        TabOrder = 10
       end
       object lblClusterNote: TLabel
         Left = 12
+        Height = 51
         Top = 506
         Width = 620
-        Height = 51
         AutoSize = False
-        WordWrap = True
-        Caption = 
-          'The cluster reconnects on its own after a drop.  Telnet logging ' +
-          'is on the Logging page; spot display and ageing are on Band Map.'
-        ParentFont = False
+        Caption = 'The cluster reconnects on its own after a drop.  Telnet logging is on the Logging page; spot display and ageing are on Band Map.'
         Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
     end
     object layBandMap: TPanel
-      Color = clWindow
-      ParentColor = False
-      BevelOuter = bvNone
-      Caption = ''
       Tag = 20
-      Width = 675
+      Left = 0
       Height = 572
-      AutoSize = False
-      Visible = False
+      Top = 0
+      Width = 675
+      BevelOuter = bvNone
+      ClientHeight = 572
+      ClientWidth = 675
+      Color = clWindow
+      ParentBackground = False
+      ParentColor = False
       TabOrder = 12
+      Visible = False
       object lblBandMapHeading: TLabel
         Left = 12
+        Height = 21
         Top = 8
         Width = 400
-        Height = 21
         AutoSize = False
         Caption = 'Band map'
-        ParentFont = False
         Font.Height = -15
         Font.Style = [fsBold]
+        ParentFont = False
       end
       object lblBandMapDecay: TLabel
         Left = 12
+        Height = 17
         Top = 34
         Width = 140
-        Height = 17
         AutoSize = False
         Caption = 'Spot expiry:'
       end
       object edtBandMapDecay: TEdit
         Left = 160
+        Height = 22
         Top = 30
         Width = 80
-        Height = 22
         AutoSize = False
-        TabOrder = 3
+        TabOrder = 0
       end
       object lblBandMapDecayUnits: TLabel
         Left = 248
+        Height = 17
         Top = 34
         Width = 160
-        Height = 17
         AutoSize = False
         Caption = 'minutes'
-        ParentFont = False
         Font.Color = clGrayText
+        ParentFont = False
       end
       object lblBandMapGuard: TLabel
         Left = 12
+        Height = 17
         Top = 64
         Width = 140
-        Height = 17
         AutoSize = False
         Caption = 'Guard band:'
       end
       object edtBandMapGuard: TEdit
         Left = 160
+        Height = 22
         Top = 60
         Width = 80
-        Height = 22
         AutoSize = False
-        TabOrder = 6
+        TabOrder = 3
       end
       object lblBandMapGuardUnits: TLabel
         Left = 248
+        Height = 17
         Top = 64
         Width = 160
-        Height = 17
         AutoSize = False
         Caption = 'Hz'
-        ParentFont = False
         Font.Color = clGrayText
+        ParentFont = False
       end
       object lblBandMapLimit: TLabel
         Left = 12
+        Height = 17
         Top = 94
         Width = 140
-        Height = 17
         AutoSize = False
         Caption = 'Display limit:'
       end
       object edtBandMapLimit: TEdit
         Left = 160
+        Height = 22
         Top = 90
         Width = 80
-        Height = 22
         AutoSize = False
-        TabOrder = 9
+        TabOrder = 7
       end
       object lblBandMapLimitUnits: TLabel
         Left = 248
+        Height = 17
         Top = 94
         Width = 160
-        Height = 17
         AutoSize = False
         Caption = 'spots'
-        ParentFont = False
         Font.Color = clGrayText
+        ParentFont = False
       end
       object chkBandMapDupes: TCheckBox
         Left = 12
+        Height = 22
         Top = 132
         Width = 460
-        Height = 22
         AutoSize = False
-        TabOrder = 11
         Caption = 'Show duplicates'
+        TabOrder = 10
       end
       object chkBandMapMultsOnly: TCheckBox
         Left = 12
+        Height = 22
         Top = 158
         Width = 460
-        Height = 22
         AutoSize = False
-        TabOrder = 12
         Caption = 'Multipliers only'
+        TabOrder = 12
       end
       object chkBandMapAllBands: TCheckBox
         Left = 12
+        Height = 22
         Top = 184
         Width = 460
-        Height = 22
         AutoSize = False
-        TabOrder = 13
         Caption = 'All bands'
+        TabOrder = 1
       end
       object chkBandMapAllModes: TCheckBox
         Left = 12
+        Height = 22
         Top = 210
         Width = 460
-        Height = 22
         AutoSize = False
-        TabOrder = 14
         Caption = 'All modes'
+        TabOrder = 2
       end
       object chkBandMapCQ: TCheckBox
         Left = 12
+        Height = 22
         Top = 236
         Width = 460
-        Height = 22
         AutoSize = False
-        TabOrder = 15
         Caption = 'Show CQ spots'
+        TabOrder = 4
       end
       object chkBandMapCallWindow: TCheckBox
         Left = 12
+        Height = 22
         Top = 262
         Width = 460
-        Height = 22
         AutoSize = False
-        TabOrder = 16
         Caption = 'Show the call window entry'
+        TabOrder = 5
       end
       object chkBandMapSO2R: TCheckBox
         Left = 12
+        Height = 22
         Top = 288
         Width = 460
-        Height = 22
         AutoSize = False
-        TabOrder = 17
         Caption = 'SO2R display'
+        TabOrder = 6
       end
       object chkBandMapGHz: TCheckBox
         Left = 12
+        Height = 22
         Top = 314
         Width = 460
-        Height = 22
         AutoSize = False
-        TabOrder = 18
         Caption = 'Show GHz'
+        TabOrder = 8
       end
       object lblBandMapNote: TLabel
         Left = 12
+        Height = 51
         Top = 350
         Width = 620
-        Height = 51
         AutoSize = False
-        WordWrap = True
-        Caption = 
-          'A band map does not need a DX cluster: it also holds spots you m' +
-          'ake yourself and anything the SO2R radio hears.  Cluster setting' +
-          's are on the DX Cluster page.'
-        ParentFont = False
+        Caption = 'A band map does not need a DX cluster: it also holds spots you make yourself and anything the SO2R radio hears.  Cluster settings are on the DX Cluster page.'
         Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
       object chkCallWindowShowAllSpots: TCheckBox
         Left = 12
+        Height = 22
         Top = 410
         Width = 540
-        Height = 22
         Caption = 'Show every spot in the call window'
-        TabOrder = 20
+        TabOrder = 9
       end
       object chkSwapPacketSpotRadios: TCheckBox
         Left = 12
+        Height = 22
         Top = 436
         Width = 540
-        Height = 22
         Caption = 'Send spots to the other radio'
-        TabOrder = 21
+        TabOrder = 11
       end
     end
     object laySCP: TPanel
-      Color = clWindow
-      ParentColor = False
-      BevelOuter = bvNone
-      Caption = ''
       Tag = 4
-      Width = 675
+      Left = 0
       Height = 572
-      AutoSize = False
-      Visible = False
+      Top = 0
+      Width = 675
+      BevelOuter = bvNone
+      ClientHeight = 572
+      ClientWidth = 675
+      Color = clWindow
+      ParentBackground = False
+      ParentColor = False
       TabOrder = 13
+      Visible = False
       object lblSCPHeading: TLabel
         Left = 12
+        Height = 21
         Top = 8
         Width = 400
-        Height = 21
         AutoSize = False
         Caption = 'Super Check Partial'
-        ParentFont = False
         Font.Height = -15
         Font.Style = [fsBold]
+        ParentFont = False
       end
       object lblSCPMinLetters: TLabel
         Left = 12
+        Height = 17
         Top = 42
         Width = 180
-        Height = 17
         AutoSize = False
         Caption = 'Start matching after:'
       end
       object cbxSCPMinLetters: TComboBox
         Left = 200
+        Height = 22
         Top = 38
         Width = 60
-        Height = 22
         AutoSize = False
-        TabOrder = 2
+        ItemHeight = 0
+        TabOrder = 1
       end
       object lblSCPMinLettersUnits: TLabel
         Left = 270
+        Height = 17
         Top = 42
         Width = 200
-        Height = 17
         AutoSize = False
         Caption = 'letters typed'
-        ParentFont = False
         Font.Color = clGrayText
+        ParentFont = False
       end
       object lblSCPCountry: TLabel
         Left = 12
+        Height = 17
         Top = 76
         Width = 180
-        Height = 17
         AutoSize = False
         Caption = 'Restrict to countries:'
       end
       object edtSCPCountry: TEdit
         Left = 200
+        Height = 22
         Top = 72
         Width = 300
-        Height = 22
         AutoSize = False
         TabOrder = 5
       end
       object lblSCPHint: TLabel
         Left = 12
+        Height = 51
         Top = 106
         Width = 620
-        Height = 51
         AutoSize = False
-        WordWrap = True
-        Caption = 
-          'Blank shows matches from everywhere.  A list of country prefixes' +
-          ' narrows it, which is useful in a domestic contest where the who' +
-          'le world is not workable.'
-        ParentFont = False
+        Caption = 'Blank shows matches from everywhere.  A list of country prefixes narrows it, which is useful in a domestic contest where the whole world is not workable.'
         Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
       object lblSCPFileHint: TLabel
         Left = 12
+        Height = 51
         Top = 160
         Width = 620
-        Height = 51
         AutoSize = False
-        WordWrap = True
-        Caption = 
-          'Matches come from TRMASTER.DTA in the program folder.  Without t' +
-          'hat file Super Check Partial simply shows nothing; it is not an ' +
-          'error.'
-        ParentFont = False
+        Caption = 'Matches come from TRMASTER.DTA in the program folder.  Without that file Super Check Partial simply shows nothing; it is not an error.'
         Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
       object lblSCPMatchHeading: TLabel
         Left = 12
+        Height = 17
         Top = 222
         Width = 400
-        Height = 17
         AutoSize = False
         Caption = 'Matching'
-        ParentFont = False
         Font.Style = [fsBold]
+        ParentFont = False
       end
       object chkPossibleCalls: TCheckBox
         Left = 12
+        Height = 22
         Top = 250
         Width = 540
-        Height = 22
         Caption = 'Offer possible calls'
-        TabOrder = 10
+        TabOrder = 0
       end
       object chkPartialCall: TCheckBox
         Left = 12
+        Height = 22
         Top = 276
         Width = 540
-        Height = 22
         Caption = 'Match on a partial callsign'
-        TabOrder = 11
+        TabOrder = 2
       end
       object chkWildcardPartials: TCheckBox
         Left = 12
+        Height = 22
         Top = 302
         Width = 540
-        Height = 22
         Caption = 'Allow wildcards in a partial'
-        TabOrder = 12
+        TabOrder = 3
       end
       object chkNameFlag: TCheckBox
         Left = 12
+        Height = 22
         Top = 328
         Width = 540
-        Height = 22
         Caption = 'Flag a station whose name is already known'
-        TabOrder = 13
+        TabOrder = 4
       end
     end
     object layNetwork: TPanel
-      Color = clWindow
-      ParentColor = False
-      BevelOuter = bvNone
-      Caption = ''
       Tag = 6
-      Width = 675
+      Left = 0
       Height = 572
-      AutoSize = False
-      Visible = False
+      Top = 0
+      Width = 675
+      BevelOuter = bvNone
+      ClientHeight = 572
+      ClientWidth = 675
+      Color = clWindow
+      ParentBackground = False
+      ParentColor = False
       TabOrder = 14
+      Visible = False
       object lblNetHeading: TLabel
         Left = 12
+        Height = 21
         Top = 8
         Width = 400
-        Height = 21
         AutoSize = False
         Caption = 'Multi-operator network'
-        ParentFont = False
         Font.Height = -15
         Font.Style = [fsBold]
+        ParentFont = False
       end
       object lblNetAddress: TLabel
         Left = 12
+        Height = 17
         Top = 42
         Width = 140
-        Height = 17
         AutoSize = False
         Caption = 'Server:'
       end
       object edtNetAddress: TEdit
         Left = 160
+        Height = 22
         Top = 38
         Width = 240
-        Height = 22
         AutoSize = False
-        TabOrder = 2
+        TabOrder = 0
       end
       object lblNetPort: TLabel
         Left = 12
+        Height = 17
         Top = 74
         Width = 140
-        Height = 17
         AutoSize = False
         Caption = 'Port:'
       end
       object edtNetPort: TEdit
         Left = 160
+        Height = 22
         Top = 70
         Width = 90
-        Height = 22
         AutoSize = False
-        TabOrder = 4
+        TabOrder = 3
       end
       object lblNetPassword: TLabel
         Left = 12
+        Height = 17
         Top = 106
         Width = 140
-        Height = 17
         AutoSize = False
         Caption = 'Password:'
       end
       object edtNetPassword: TEdit
         Left = 160
+        Height = 22
         Top = 102
         Width = 240
-        Height = 22
         AutoSize = False
-        TabOrder = 6
+        EchoMode = emPassword
         PasswordChar = '*'
+        TabOrder = 6
       end
       object lblNetComputerID: TLabel
         Left = 12
+        Height = 17
         Top = 138
         Width = 140
-        Height = 17
         AutoSize = False
         Caption = 'This station:'
       end
       object edtNetComputerID: TEdit
         Left = 160
+        Height = 22
         Top = 134
         Width = 60
-        Height = 22
         AutoSize = False
-        TabOrder = 8
+        TabOrder = 1
       end
       object lblNetComputerIDHint: TLabel
         Left = 230
+        Height = 17
         Top = 138
         Width = 300
-        Height = 17
         AutoSize = False
         Caption = 'a single letter, unique in the network'
-        ParentFont = False
         Font.Color = clGrayText
+        ParentFont = False
       end
       object chkNetAutoSync: TCheckBox
         Left = 12
+        Height = 22
         Top = 170
         Width = 500
-        Height = 22
         AutoSize = False
-        TabOrder = 10
         Caption = 'Synchronize the log when connecting'
+        TabOrder = 2
       end
       object chkMultiMultsOnly: TCheckBox
         Left = 12
+        Height = 22
         Top = 196
         Width = 520
-        Height = 22
         Caption = 'Pass only new multipliers around the network'
-        TabOrder = 20
+        TabOrder = 4
       end
       object chkIntercomFile: TCheckBox
         Left = 12
+        Height = 22
         Top = 222
         Width = 520
-        Height = 22
         Caption = 'Log network messages to INTERCOM.TXT'
-        TabOrder = 21
+        TabOrder = 5
       end
       object lblNetHint: TLabel
         Left = 12
+        Height = 51
         Top = 256
         Width = 620
-        Height = 51
         AutoSize = False
-        WordWrap = True
-        Caption = 
-          'TR4WServer runs on one machine and every operating position conn' +
-          'ects to it.  It holds the shared log, the multipliers and the se' +
-          'rial numbers.'
-        ParentFont = False
+        Caption = 'TR4WServer runs on one machine and every operating position connects to it.  It holds the shared log, the multipliers and the serial numbers.'
         Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
       object lblRadioTCPHeading: TLabel
         Left = 12
+        Height = 17
         Top = 320
         Width = 400
-        Height = 17
         AutoSize = False
         Caption = 'Radio sharing'
-        ParentFont = False
         Font.Style = [fsBold]
+        ParentFont = False
       end
       object lblRadioTCPPort: TLabel
         Left = 12
+        Height = 17
         Top = 354
         Width = 140
-        Height = 17
         AutoSize = False
         Caption = 'TCP port:'
       end
       object edtRadioTCPPort: TEdit
         Left = 160
+        Height = 22
         Top = 350
         Width = 90
-        Height = 22
         AutoSize = False
-        TabOrder = 14
+        TabOrder = 7
       end
       object lblRadioTCPHint: TLabel
         Left = 12
+        Height = 51
         Top = 382
         Width = 620
-        Height = 51
         AutoSize = False
-        WordWrap = True
-        Caption = 
-          'Lets another position read this station''s radio.  Takes effect w' +
-          'hen TR4W next starts.'
-        ParentFont = False
+        Caption = 'Lets another position read this station''s radio.  Takes effect when TR4W next starts.'
         Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
     end
     object layAppearance: TPanel
-      Color = clWindow
-      ParentColor = False
-      BevelOuter = bvNone
-      Caption = ''
       Tag = 7
-      Width = 675
+      Left = 0
       Height = 572
-      AutoSize = False
-      Visible = False
+      Top = 0
+      Width = 675
+      BevelOuter = bvNone
+      ClientHeight = 572
+      ClientWidth = 675
+      Color = clWindow
+      ParentBackground = False
+      ParentColor = False
       TabOrder = 15
+      Visible = False
       object lblAppearHeading: TLabel
         Left = 12
+        Height = 21
         Top = 8
         Width = 400
-        Height = 21
         AutoSize = False
         Caption = 'Main window'
-        ParentFont = False
         Font.Height = -15
         Font.Style = [fsBold]
+        ParentFont = False
       end
       object lblMainFont: TLabel
         Left = 12
+        Height = 17
         Top = 42
         Width = 140
-        Height = 17
         AutoSize = False
         Caption = 'Font:'
       end
       object edtMainFont: TEdit
         Left = 160
+        Height = 22
         Top = 38
         Width = 240
-        Height = 22
         AutoSize = False
-        TabOrder = 2
+        TabOrder = 0
       end
       object lblFontSize: TLabel
         Left = 12
+        Height = 17
         Top = 74
         Width = 140
-        Height = 17
         AutoSize = False
         Caption = 'Size:'
       end
       object edtFontSize: TEdit
         Left = 160
+        Height = 22
         Top = 70
         Width = 60
-        Height = 22
         AutoSize = False
-        TabOrder = 4
+        TabOrder = 2
       end
       object chkBoldFont: TCheckBox
         Left = 12
+        Height = 22
         Top = 104
         Width = 400
-        Height = 22
         AutoSize = False
-        TabOrder = 5
         Caption = 'Bold'
+        TabOrder = 4
       end
       object chkDupeSheetColor: TCheckBox
         Left = 12
+        Height = 22
         Top = 134
         Width = 400
-        Height = 22
         AutoSize = False
-        TabOrder = 6
         Caption = 'Color the dupe sheet columns'
+        TabOrder = 6
       end
       object lblAppearHint: TLabel
         Left = 12
+        Height = 51
         Top = 168
         Width = 620
-        Height = 51
         AutoSize = False
-        WordWrap = True
-        Caption = 
-          'The font applies to the main contest window.  All four take effe' +
-          'ct when TR4W next starts.'
-        ParentFont = False
+        Caption = 'The font applies to the main contest window.  All four take effect when TR4W next starts.'
         Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
       object lblAppearColorsHint: TLabel
         Left = 12
+        Height = 51
         Top = 222
         Width = 620
-        Height = 51
         AutoSize = False
-        WordWrap = True
-        Caption = 
-          'Window colors are still on the Settings menu.  They belong here' +
-          ' and will move once the main window is resizable, which is the c' +
-          'hange that decides what the layout options need to be.'
-        ParentFont = False
+        Caption = 'Window colors are still on the Settings menu.  They belong here and will move once the main window is resizable, which is the change that decides what the layout options need to be.'
         Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
       object lblMainWindowHeading: TLabel
         Left = 12
+        Height = 17
         Top = 292
         Width = 400
-        Height = 17
         AutoSize = False
         Caption = 'Main window'
-        ParentFont = False
         Font.Style = [fsBold]
+        ParentFont = False
       end
       object chkNoBorder: TCheckBox
         Left = 12
+        Height = 22
         Top = 320
         Width = 540
-        Height = 22
         Caption = 'Main window has no border'
-        TabOrder = 20
+        TabOrder = 1
       end
       object chkNoCaption: TCheckBox
         Left = 12
+        Height = 22
         Top = 346
         Width = 540
-        Height = 22
         Caption = 'Main window has no title bar'
-        TabOrder = 21
+        TabOrder = 3
       end
       object chkNoColumnHeader: TCheckBox
         Left = 12
+        Height = 22
         Top = 372
         Width = 540
-        Height = 22
         Caption = 'Hide the log column headings'
-        TabOrder = 22
+        TabOrder = 5
       end
       object chkShowGridlines: TCheckBox
         Left = 12
+        Height = 22
         Top = 398
         Width = 540
-        Height = 22
         Caption = 'Draw gridlines in the log'
-        TabOrder = 23
+        TabOrder = 7
       end
       object lblAppearMenuNote: TLabel
         Left = 12
+        Height = 51
         Top = 428
         Width = 620
-        Height = 51
         AutoSize = False
-        WordWrap = True
-        Caption = 
-          'These were on the Appearance item of the Settings menu. That' +
-          ' window goes away once ROW COUNT and WINDOW SIZE join them he' +
-          're.'
-        ParentFont = False
+        Caption = 'These were on the Appearance item of the Settings menu. That window goes away once ROW COUNT and WINDOW SIZE join them here.'
         Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
     end
     object layBackup: TPanel
-      Color = clWindow
-      ParentColor = False
-      BevelOuter = bvNone
-      Caption = ''
       Tag = 9
-      Width = 675
+      Left = 0
       Height = 572
-      AutoSize = False
-      Visible = False
+      Top = 0
+      Width = 675
+      BevelOuter = bvNone
+      ClientHeight = 572
+      ClientWidth = 675
+      Color = clWindow
+      ParentBackground = False
+      ParentColor = False
       TabOrder = 16
+      Visible = False
       object lblBackupHeading: TLabel
         Left = 12
+        Height = 21
         Top = 8
         Width = 400
-        Height = 21
         AutoSize = False
         Caption = 'Log backup'
-        ParentFont = False
         Font.Height = -15
         Font.Style = [fsBold]
+        ParentFont = False
       end
       object lblBackupEvery: TLabel
         Left = 12
+        Height = 17
         Top = 42
         Width = 180
-        Height = 17
         AutoSize = False
         Caption = 'Back up every:'
       end
       object edtBackupEvery: TEdit
         Left = 200
+        Height = 22
         Top = 38
         Width = 60
-        Height = 22
         AutoSize = False
         TabOrder = 2
       end
       object lblBackupEveryUnits: TLabel
         Left = 270
+        Height = 17
         Top = 42
         Width = 220
-        Height = 17
         AutoSize = False
         Caption = 'QSOs  (0 = never)'
-        ParentFont = False
         Font.Color = clGrayText
+        ParentFont = False
       end
       object lblBackupFile: TLabel
         Left = 12
+        Height = 17
         Top = 76
         Width = 180
-        Height = 17
         AutoSize = False
         Caption = 'Copy to:'
       end
       object edtBackupFile: TEdit
         Left = 200
+        Height = 22
         Top = 72
         Width = 340
-        Height = 22
         AutoSize = False
-        TabOrder = 5
+        TabOrder = 0
       end
       object btnBrowseBackup: TButton
         Left = 548
+        Height = 25
         Top = 71
         Width = 95
-        Height = 25
-        AutoSize = False
-        TabOrder = 6
         Caption = 'Browse...'
+        TabOrder = 1
         OnClick = btnBrowseBackupClick
       end
       object lblBackupHint: TLabel
         Left = 12
+        Height = 51
         Top = 106
         Width = 620
-        Height = 51
         AutoSize = False
-        WordWrap = True
-        Caption = 
-          'A second copy of the log, written as you go.  Put it somewhere t' +
-          'hat is not the same disk as the log itself, or it protects again' +
-          'st nothing worth protecting against.'
-        ParentFont = False
+        Caption = 'A second copy of the log, written as you go.  Put it somewhere that is not the same disk as the log itself, or it protects against nothing worth protecting against.'
         Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
     end
     object layOnlineScoring: TPanel
-      Color = clWindow
-      ParentColor = False
-      BevelOuter = bvNone
-      Caption = ''
       Tag = 22
-      Width = 675
+      Left = 0
       Height = 572
-      AutoSize = False
-      Visible = False
+      Top = 0
+      Width = 675
+      BevelOuter = bvNone
+      ClientHeight = 572
+      ClientWidth = 675
+      Color = clWindow
+      ParentBackground = False
+      ParentColor = False
       TabOrder = 17
+      Visible = False
       object lblScoreHeading: TLabel
         Left = 12
+        Height = 21
         Top = 8
         Width = 400
-        Height = 21
         AutoSize = False
         Caption = 'Online scoring'
-        ParentFont = False
         Font.Height = -15
         Font.Style = [fsBold]
+        ParentFont = False
       end
       object chkHamScoreEnable: TCheckBox
         Left = 12
+        Height = 22
         Top = 34
         Width = 460
-        Height = 22
         AutoSize = False
-        TabOrder = 1
         Caption = 'Post my score while the contest runs'
+        TabOrder = 0
       end
       object lblHamScoreURL: TLabel
         Left = 12
+        Height = 17
         Top = 72
         Width = 140
-        Height = 17
         AutoSize = False
         Caption = 'Service URL:'
       end
       object edtHamScoreURL: TEdit
         Left = 160
+        Height = 22
         Top = 68
         Width = 420
-        Height = 22
         AutoSize = False
-        TabOrder = 3
+        TabOrder = 2
       end
       object lblHamScoreUser: TLabel
         Left = 12
+        Height = 17
         Top = 104
         Width = 140
-        Height = 17
         AutoSize = False
         Caption = 'Username:'
       end
       object edtHamScoreUser: TEdit
         Left = 160
+        Height = 22
         Top = 100
         Width = 240
-        Height = 22
         AutoSize = False
         TabOrder = 5
       end
       object lblHamScorePass: TLabel
         Left = 12
+        Height = 17
         Top = 136
         Width = 140
-        Height = 17
         AutoSize = False
         Caption = 'Password:'
       end
       object edtHamScorePass: TEdit
         Left = 160
+        Height = 22
         Top = 132
         Width = 240
-        Height = 22
         AutoSize = False
-        TabOrder = 7
+        EchoMode = emPassword
         PasswordChar = '*'
+        TabOrder = 1
       end
       object chkHamScoreContact: TCheckBox
         Left = 12
+        Height = 22
         Top = 166
         Width = 460
-        Height = 22
         AutoSize = False
-        TabOrder = 8
         Caption = 'Include contact information'
+        TabOrder = 3
       end
       object lblScoreRestart: TLabel
         Left = 12
+        Height = 34
         Top = 196
         Width = 620
-        Height = 34
         AutoSize = False
+        Caption = 'These take effect when TR4W next starts.'
         WordWrap = True
-        Caption = 
-          'These take effect when TR4W next starts.'
       end
       object lblScoreBoardHeading: TLabel
         Left = 12
+        Height = 17
         Top = 244
         Width = 400
-        Height = 17
         AutoSize = False
         Caption = 'Score board'
-        ParentFont = False
         Font.Style = [fsBold]
+        ParentFont = False
       end
       object lblScorePostURL: TLabel
         Left = 12
+        Height = 17
         Top = 278
         Width = 140
-        Height = 17
         AutoSize = False
         Caption = 'Posting URL:'
       end
       object edtScorePostURL: TEdit
         Left = 160
+        Height = 22
         Top = 274
         Width = 420
-        Height = 22
         AutoSize = False
-        TabOrder = 12
+        TabOrder = 4
       end
       object lblScoreReadURL: TLabel
         Left = 12
+        Height = 17
         Top = 310
         Width = 140
-        Height = 17
         AutoSize = False
         Caption = 'Reading URL:'
       end
       object edtScoreReadURL: TEdit
         Left = 160
+        Height = 22
         Top = 306
         Width = 420
-        Height = 22
         AutoSize = False
-        TabOrder = 14
+        TabOrder = 6
       end
       object lblScoreBoardHint: TLabel
         Left = 12
+        Height = 51
         Top = 340
         Width = 620
-        Height = 51
         AutoSize = False
-        WordWrap = True
-        Caption = 
-          'Where TR4W posts its score and where it reads other stations'' sc' +
-          'ores from.  The two are separate so a club board can be read whi' +
-          'le posting elsewhere.'
-        ParentFont = False
+        Caption = 'Where TR4W posts its score and where it reads other stations'' scores from.  The two are separate so a club board can be read while posting elsewhere.'
         Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
     end
     object layOperatingCW: TPanel
-      Color = clWindow
-      ParentColor = False
-      BevelOuter = bvNone
-      Caption = ''
       Tag = 23
-      Width = 675
+      Left = 0
       Height = 572
-      AutoSize = False
-      Visible = False
+      Top = 0
+      Width = 675
+      BevelOuter = bvNone
+      ClientHeight = 572
+      ClientWidth = 675
+      Color = clWindow
+      ParentBackground = False
+      ParentColor = False
       TabOrder = 18
+      Visible = False
       object lblOpCWHeading: TLabel
         Left = 12
+        Height = 21
         Top = 8
         Width = 400
-        Height = 21
         AutoSize = False
         Caption = 'CW while operating'
-        ParentFont = False
         Font.Height = -15
         Font.Style = [fsBold]
+        ParentFont = False
       end
       object chkSayHiEnable: TCheckBox
         Left = 12
+        Height = 22
         Top = 34
         Width = 460
-        Height = 22
         AutoSize = False
-        TabOrder = 1
         Caption = 'Send a greeting to stations worked before'
+        TabOrder = 0
       end
       object lblSayHiCutoff: TLabel
         Left = 12
+        Height = 17
         Top = 68
         Width = 180
-        Height = 17
         AutoSize = False
         Caption = 'Stop above a rate of:'
       end
       object edtSayHiCutoff: TEdit
         Left = 200
+        Height = 22
         Top = 64
         Width = 60
-        Height = 22
         AutoSize = False
-        TabOrder = 3
+        TabOrder = 1
       end
       object lblSayHiCutoffUnits: TLabel
         Left = 270
+        Height = 17
         Top = 68
         Width = 220
-        Height = 17
         AutoSize = False
         Caption = 'QSOs per hour'
-        ParentFont = False
         Font.Color = clGrayText
+        ParentFont = False
       end
       object chkKeypadCWMemories: TCheckBox
         Left = 12
+        Height = 22
         Top = 100
         Width = 460
-        Height = 22
         AutoSize = False
-        TabOrder = 5
         Caption = 'Number keypad sends CW memories'
+        TabOrder = 4
       end
       object lblLeadingZeros: TLabel
         Left = 12
+        Height = 17
         Top = 138
         Width = 180
-        Height = 17
         AutoSize = False
         Caption = 'Leading zeros:'
       end
       object cbxLeadingZeros: TComboBox
         Left = 200
+        Height = 22
         Top = 134
         Width = 80
-        Height = 22
         AutoSize = False
+        ItemHeight = 0
         TabOrder = 7
       end
       object lblLeadingZeroChar: TLabel
         Left = 12
+        Height = 17
         Top = 170
         Width = 180
-        Height = 17
         AutoSize = False
         Caption = 'Sent as:'
       end
       object edtLeadingZeroChar: TEdit
         Left = 200
+        Height = 22
         Top = 166
         Width = 60
-        Height = 22
         AutoSize = False
-        TabOrder = 9
+        TabOrder = 2
       end
       object lblLeadingZeroHint: TLabel
         Left = 12
+        Height = 51
         Top = 198
         Width = 620
-        Height = 51
         AutoSize = False
-        WordWrap = True
-        Caption = 
-          'Serial numbers are padded to that many digits.  T for a zero is ' +
-          'the usual cut-number choice; leave it as 0 to send them plainly.'
-        ParentFont = False
+        Caption = 'Serial numbers are padded to that many digits.  T for a zero is the usual cut-number choice; leave it as 0 to send them plainly.'
         Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
       object lblSerialKeyHeading: TLabel
         Left = 12
+        Height = 17
         Top = 258
         Width = 500
-        Height = 17
         AutoSize = False
         Caption = 'Radio serial keying  (DTR/RTS keying only)'
-        ParentFont = False
         Font.Style = [fsBold]
+        ParentFont = False
       end
       object lblSerialKeyIntro: TLabel
         Left = 12
+        Height = 51
         Top = 282
         Width = 620
-        Height = 51
         AutoSize = False
+        Caption = 'These shape the CW that TR4W generates itself by toggling a serial line.  They do nothing for a WinKeyer, a YCCC box, or CW sent by CAT - those devices keep their own timing.'
         WordWrap = True
-        Caption = 
-          'These shape the CW that TR4W generates itself by toggling a seri' +
-          'al line.  They do nothing for a WinKeyer, a YCCC box, or CW sent' +
-          ' by CAT - those devices keep their own timing.'
       end
       object lblDitDah: TLabel
         Left = 12
+        Height = 17
         Top = 340
         Width = 180
-        Height = 17
         AutoSize = False
         Caption = 'Dit/dah ratio:'
       end
       object cbxDitDah: TComboBox
         Left = 200
+        Height = 22
         Top = 336
         Width = 80
-        Height = 22
         AutoSize = False
-        TabOrder = 14
+        ItemHeight = 0
+        TabOrder = 3
       end
       object lblWeight: TLabel
         Left = 12
+        Height = 17
         Top = 372
         Width = 180
-        Height = 17
         AutoSize = False
         Caption = 'Weight:'
       end
       object edtWeight: TEdit
         Left = 200
+        Height = 22
         Top = 368
         Width = 80
-        Height = 22
         AutoSize = False
-        TabOrder = 16
+        TabOrder = 5
       end
       object chkFarnsworth: TCheckBox
         Left = 12
+        Height = 22
         Top = 402
         Width = 460
-        Height = 22
         AutoSize = False
-        TabOrder = 17
         Caption = 'Farnsworth spacing'
+        TabOrder = 6
       end
       object lblFarnsworthSpeed: TLabel
         Left = 12
+        Height = 17
         Top = 436
         Width = 180
-        Height = 17
         AutoSize = False
         Caption = 'Character speed:'
       end
       object edtFarnsworthSpeed: TEdit
         Left = 200
+        Height = 22
         Top = 432
         Width = 60
-        Height = 22
         AutoSize = False
-        TabOrder = 19
+        TabOrder = 8
       end
       object lblFarnsworthUnits: TLabel
         Left = 270
+        Height = 17
         Top = 436
         Width = 220
-        Height = 17
         AutoSize = False
         Caption = 'WPM'
-        ParentFont = False
         Font.Color = clGrayText
+        ParentFont = False
       end
     end
     object layBands: TPanel
-      Color = clWindow
-      ParentColor = False
-      BevelOuter = bvNone
-      Caption = ''
       Tag = 24
-      Width = 675
+      Left = 0
       Height = 572
-      AutoSize = False
-      Visible = False
+      Top = 0
+      Width = 675
+      BevelOuter = bvNone
+      ClientHeight = 572
+      ClientWidth = 675
+      Color = clWindow
+      ParentBackground = False
+      ParentColor = False
       TabOrder = 19
+      Visible = False
       object lblBandsHeading: TLabel
         Left = 12
+        Height = 21
         Top = 8
         Width = 400
-        Height = 21
         AutoSize = False
         Caption = 'Bands in use'
-        ParentFont = False
         Font.Height = -15
         Font.Style = [fsBold]
+        ParentFont = False
       end
       object chkHFBands: TCheckBox
         Left = 12
+        Height = 22
         Top = 34
         Width = 460
-        Height = 22
         AutoSize = False
-        TabOrder = 1
         Caption = 'HF (160 - 10 m)'
+        TabOrder = 0
       end
       object chkWARCBands: TCheckBox
         Left = 12
+        Height = 22
         Top = 60
         Width = 460
-        Height = 22
         AutoSize = False
-        TabOrder = 2
         Caption = 'WARC (30, 17, 12 m)'
+        TabOrder = 2
       end
       object chkVHFBands: TCheckBox
         Left = 12
+        Height = 22
         Top = 86
         Width = 460
-        Height = 22
         AutoSize = False
-        TabOrder = 3
         Caption = 'VHF and up (6 m and above)'
+        TabOrder = 1
       end
       object lblBandsHint: TLabel
         Left = 12
+        Height = 51
         Top = 120
         Width = 620
-        Height = 51
         AutoSize = False
-        WordWrap = True
-        Caption = 
-          'Which bands TR4W offers when you change band, and which appear i' +
-          'n the multiplier and band-map displays.  WARC bands are off by d' +
-          'efault because most contests do not allow them.'
-        ParentFont = False
+        Caption = 'Which bands TR4W offers when you change band, and which appear in the multiplier and band-map displays.  WARC bands are off by default because most contests do not allow them.'
         Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
     end
     object layTwoRadio: TPanel
-      Color = clWindow
-      ParentColor = False
-      BevelOuter = bvNone
-      Caption = ''
       Tag = 25
-      Width = 675
+      Left = 0
       Height = 572
-      AutoSize = False
-      Visible = False
+      Top = 0
+      Width = 675
+      BevelOuter = bvNone
+      ClientHeight = 572
+      ClientWidth = 675
+      Color = clWindow
+      ParentBackground = False
+      ParentColor = False
       TabOrder = 20
+      Visible = False
       object lblTwoRadioHeading: TLabel
         Left = 12
+        Height = 21
         Top = 8
         Width = 400
-        Height = 21
         AutoSize = False
         Caption = 'Two radio operating'
-        ParentFont = False
         Font.Height = -15
         Font.Style = [fsBold]
+        ParentFont = False
       end
       object chkTwoRadioMode: TCheckBox
         Left = 12
+        Height = 22
         Top = 34
         Width = 460
-        Height = 22
         AutoSize = False
-        TabOrder = 1
         Caption = 'Two radio mode'
+        TabOrder = 0
       end
       object lblTwoRadioIntro: TLabel
         Left = 12
+        Height = 34
         Top = 64
         Width = 620
-        Height = 34
         AutoSize = False
+        Caption = 'Everything below applies only while two radio mode is on.'
         WordWrap = True
-        Caption = 
-          'Everything below applies only while two radio mode is on.'
       end
       object chkAltDBuffer: TCheckBox
         Left = 12
+        Height = 22
         Top = 110
         Width = 460
-        Height = 22
         AutoSize = False
-        TabOrder = 3
         Caption = 'Alt-D remembers what you typed'
+        TabOrder = 2
       end
       object chkAltDCQ: TCheckBox
         Left = 12
+        Height = 22
         Top = 136
         Width = 460
-        Height = 22
         AutoSize = False
-        TabOrder = 4
         Caption = 'Alt-D can start a CQ on the second radio'
+        TabOrder = 4
       end
       object chkAlwaysBlindCQ: TCheckBox
         Left = 12
+        Height = 22
         Top = 162
         Width = 460
-        Height = 22
         AutoSize = False
-        TabOrder = 5
         Caption = 'Always call a blind CQ'
+        TabOrder = 1
       end
       object chkSkipActiveBand: TCheckBox
         Left = 12
+        Height = 22
         Top = 188
         Width = 460
-        Height = 22
         AutoSize = False
-        TabOrder = 6
         Caption = 'Skip the band the other radio is on'
+        TabOrder = 3
       end
       object chkInBandLockout: TCheckBox
         Left = 12
+        Height = 22
         Top = 214
         Width = 520
-        Height = 22
         Caption = 'Stop both radios landing on one band'
         TabOrder = 5
       end
       object chkQSYInactive: TCheckBox
         Left = 12
+        Height = 22
         Top = 240
         Width = 520
-        Height = 22
         Caption = 'QSY the inactive radio when I change band'
         TabOrder = 6
       end
       object chkSwapRelaySense: TCheckBox
         Left = 12
+        Height = 22
         Top = 266
         Width = 520
-        Height = 22
         Caption = 'Invert the radio relay sense'
         TabOrder = 7
       end
       object chkWaitForStrength: TCheckBox
         Left = 12
+        Height = 22
         Top = 292
         Width = 520
-        Height = 22
         Caption = 'Wait for a signal strength reading before switching'
         TabOrder = 8
       end
       object lblTwoRadioHint: TLabel
         Left = 12
+        Height = 51
         Top = 326
         Width = 620
-        Height = 51
         AutoSize = False
-        WordWrap = True
-        Caption = 
-          'Skipping the other radio''s band is what stops a band change on o' +
-          'ne radio landing you on top of the other.'
-        ParentFont = False
+        Caption = 'Skipping the other radio''s band is what stops a band change on one radio landing you on top of the other.'
         Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
       end
     end
   end
   object btnOK: TButton
-    Anchors = [akRight, akBottom]
     Left = 570
+    Height = 25
     Top = 582
     Width = 85
-    Height = 25
-    AutoSize = False
-    TabOrder = 2
-    Default = True
+    Anchors = [akRight, akBottom]
     Caption = 'Save and close'
+    Default = True
+    TabOrder = 2
     OnClick = btnOKClick
   end
   object btnCancel: TButton
-    Anchors = [akRight, akBottom]
     Left = 665
+    Height = 25
     Top = 582
     Width = 85
-    Height = 25
-    AutoSize = False
-    TabOrder = 3
+    Anchors = [akRight, akBottom]
     Cancel = True
     Caption = 'Cancel'
+    TabOrder = 3
     OnClick = btnCancelClick
   end
   object btnApply: TButton
-    Anchors = [akRight, akBottom]
     Left = 760
+    Height = 25
     Top = 582
     Width = 85
-    Height = 25
-    AutoSize = False
-    TabOrder = 4
+    Anchors = [akRight, akBottom]
     Caption = 'Save'
+    TabOrder = 4
     OnClick = btnApplyClick
   end
 end
-

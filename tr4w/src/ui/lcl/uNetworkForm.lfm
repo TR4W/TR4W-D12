@@ -1,11 +1,14 @@
 object frmNetwork: TfrmNetwork
   Left = 0
+  Height = 240
   Top = 0
+  Width = 500
   BorderStyle = bsSizeToolWin
   Caption = 'Network'
   ClientHeight = 240
   ClientWidth = 500
   KeyPreview = True
+  LCLVersion = '4.8.0.0'
   OnClose = HandleClose
   OnCreate = HandleCreate
   OnKeyDown = HandleKeyDown
@@ -17,7 +20,6 @@ object frmNetwork: TfrmNetwork
     Width = 500
     Align = alClient
     Columns = <>
-    OwnerDraw = False
     ReadOnly = True
     RowSelect = True
     TabOrder = 0

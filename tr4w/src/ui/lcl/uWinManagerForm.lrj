@@ -1,0 +1,5 @@
+{"version":1,"strings":[
+{"hash":170841564,"name":"tfrmwinmanager.caption","sourcebytes":[87,105,110,100,111,119,32,99,111,110,116,114,111,108],"value":"Window control"},
+{"hash":1339,"name":"tfrmwinmanager.btnok.caption","sourcebytes":[79,75],"value":"OK"},
+{"hash":77089212,"name":"tfrmwinmanager.btncancel.caption","sourcebytes":[67,97,110,99,101,108],"value":"Cancel"}
+]}

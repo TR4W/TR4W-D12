@@ -1,0 +1,10 @@
+{"version":1,"strings":[
+{"hash":95171780,"name":"tfrmtelnet.caption","sourcebytes":[84,101,108,110,101,116],"value":"Telnet"},
+{"hash":174410724,"name":"tfrmtelnet.btnconnect.caption","sourcebytes":[67,111,110,110,101,99,116],"value":"Connect"},
+{"hash":174193460,"name":"tfrmtelnet.btndisconnect.caption","sourcebytes":[68,105,115,99,111,110,110,101,99,116],"value":"Disconnect"},
+{"hash":81313029,"name":"tfrmtelnet.btnfreeze.caption","sourcebytes":[70,114,101,101,122,101],"value":"Freeze"},
+{"hash":4860802,"name":"tfrmtelnet.btnclear.caption","sourcebytes":[67,108,101,97,114],"value":"Clear"},
+{"hash":105086995,"name":"tfrmtelnet.btncommands.caption","sourcebytes":[67,111,109,109,97,110,100,115],"value":"Commands"},
+{"hash":5747328,"name":"tfrmtelnet.btnshow50.caption","sourcebytes":[83,72,47,53,48],"value":"SH/50"},
+{"hash":367684,"name":"tfrmtelnet.btnsend.caption","sourcebytes":[83,101,110,100],"value":"Send"}
+]}

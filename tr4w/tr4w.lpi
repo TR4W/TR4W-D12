@@ -64,14 +64,14 @@
       <Unit3>
         <Filename Value="src/ui/lcl/uKeyerEditForm.pas"/>
         <IsPartOfProject Value="True"/>
-        <ComponentName Value="KeyerEditForm"/>
+        <ComponentName Value="frmKeyerEdit"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
       </Unit3>
       <Unit4>
         <Filename Value="src/ui/lcl/uUDPDestinationEditForm.pas"/>
         <IsPartOfProject Value="True"/>
-        <ComponentName Value="UDPDestinationEditForm"/>
+        <ComponentName Value="frmUDPDestinationEdit"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
       </Unit4>
@@ -1420,15 +1420,15 @@
         <Filename Value="src/ui/lcl/uBandMapForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmBandMap"/>
-        <ResourceBaseClass Value="Form"/>
         <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
       </Unit329>
       <Unit330>
         <Filename Value="src/ui/lcl/uPanadapterForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmPanadapter"/>
-        <ResourceBaseClass Value="Form"/>
         <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
       </Unit330>
       <Unit331>
         <Filename Value="src/uPanadapterRestore.pas"/>
@@ -1438,8 +1438,8 @@
         <Filename Value="src/ui/lcl/uStationsForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmStations"/>
-        <ResourceBaseClass Value="Form"/>
         <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
       </Unit332>
       <Unit333>
         <Filename Value="src/domain/uDomainState.pas"/>
@@ -1461,64 +1461,64 @@
         <Filename Value="src/ui/lcl/uDupeSheetForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmDupeSheet"/>
-        <ResourceBaseClass Value="Form"/>
         <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
       </Unit337>
       <Unit338>
         <Filename Value="src/ui/lcl/uMasterForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmMaster"/>
-        <ResourceBaseClass Value="Form"/>
         <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
       </Unit338>
       <Unit339>
         <Filename Value="src/ui/lcl/uPostScoresForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmPostScores"/>
-        <ResourceBaseClass Value="Form"/>
         <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
       </Unit339>
       <Unit340>
         <Filename Value="src/ui/lcl/uHamScoreForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmHamScore"/>
-        <ResourceBaseClass Value="Form"/>
         <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
       </Unit340>
       <Unit341>
         <Filename Value="src/ui/lcl/uIntercomForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmIntercom"/>
-        <ResourceBaseClass Value="Form"/>
         <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
       </Unit341>
       <Unit342>
         <Filename Value="src/ui/lcl/uMP3RecorderForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmMP3Recorder"/>
-        <ResourceBaseClass Value="Form"/>
         <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
       </Unit342>
       <Unit343>
         <Filename Value="src/ui/lcl/uRadioPanelForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmRadioPanel"/>
-        <ResourceBaseClass Value="Form"/>
         <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
       </Unit343>
       <Unit344>
         <Filename Value="src/ui/lcl/uNetworkForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmNetwork"/>
-        <ResourceBaseClass Value="Form"/>
         <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
       </Unit344>
       <Unit345>
         <Filename Value="src/ui/lcl/uRemMultsForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmRemMults"/>
-        <ResourceBaseClass Value="Form"/>
         <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
       </Unit345>
       <Unit346>
         <Filename Value="src/ui/lcl/uAppInputHooks.pas"/>
@@ -1572,15 +1572,15 @@
         <Filename Value="src/ui/lcl/uAboutForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmAbout"/>
-        <ResourceBaseClass Value="Form"/>
         <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
       </Unit358>
       <Unit359>
         <Filename Value="src/ui/lcl/uFunctionKeysForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmFunctionKeys"/>
-        <ResourceBaseClass Value="Form"/>
         <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
       </Unit359>
       <Unit360>
         <Filename Value="src/ui/lcl/uLegacyIniPrompt.pas"/>
@@ -1590,15 +1590,15 @@
         <Filename Value="src/ui/lcl/uIniRetireForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmIniRetire"/>
-        <ResourceBaseClass Value="Form"/>
         <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
       </Unit361>
       <Unit362>
         <Filename Value="src/ui/lcl/uMainForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="TR4WMainForm"/>
-        <ResourceBaseClass Value="Form"/>
         <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
       </Unit362>
       <Unit363>
         <Filename Value="src/radioFactory/uK4Spectrum.pas"/>
@@ -1616,15 +1616,15 @@
         <Filename Value="src/ui/lcl/uTelnetForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmTelnet"/>
-        <ResourceBaseClass Value="Form"/>
         <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
       </Unit366>
       <Unit367>
         <Filename Value="src/ui/lcl/uMMTTYForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmMMTTY"/>
-        <ResourceBaseClass Value="Form"/>
         <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
       </Unit367>
       <Unit368>
         <Filename Value="src/uProgramMain.pas"/>
@@ -1665,4 +1665,17 @@
       <CompilerPath Value="C:/FPC/3.2.2/bin/i386-win32/fpc.exe"/>
     </Other>
   </CompilerOptions>
+  <Debugging>
+    <Exceptions Count="3">
+      <Item1>
+        <Name Value="EIdSocketError"/>
+      </Item1>
+      <Item2>
+        <Name Value="EIdNotConnected"/>
+      </Item2>
+      <Item3>
+        <Name Value="EAbort"/>
+      </Item3>
+    </Exceptions>
+  </Debugging>
 </CONFIG>

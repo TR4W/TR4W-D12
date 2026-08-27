@@ -1,19 +1,21 @@
 object TR4WMainForm: TTR4WMainForm
   Left = 0
+  Height = 200
   Top = 30
+  Width = 400
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
   Caption = 'TR4W'
   ClientHeight = 200
   ClientWidth = 400
   Color = clBtnFace
-  Position = poDesigned
   ShowInTaskBar = stAlways
+  LCLVersion = '4.8.0.0'
   object lstPossibleCall: TListBox
     Left = 0
+    Height = 18
     Top = 160
     Width = 400
-    Height = 18
     Columns = 4
     ItemHeight = 18
     Style = lbOwnerDrawFixed

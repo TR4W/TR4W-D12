@@ -1,0 +1,5 @@
+{"version":1,"strings":[
+{"hash":73874174,"name":"tfrmbandplan.caption","sourcebytes":[66,97,110,100,32,112,108,97,110],"value":"Band plan"},
+{"hash":1339,"name":"tfrmbandplan.btnok.caption","sourcebytes":[79,75],"value":"OK"},
+{"hash":77089212,"name":"tfrmbandplan.btncancel.caption","sourcebytes":[67,97,110,99,101,108],"value":"Cancel"}
+]}

@@ -1,0 +1,7 @@
+{"version":1,"strings":[
+{"hash":147530177,"name":"tfrmautocq.caption","sourcebytes":[65,117,116,111,45,67,81],"value":"Auto-CQ"},
+{"hash":131944250,"name":"tfrmautocq.lblmemorykey.caption","sourcebytes":[80,114,101,115,115,32,116,104,101,32,109,101,109,111,114,121,32,107,101,121,32,121,111,117,32,119,97,110,116,32,116,111,32,114,101,112,101,97,116,58],"value":"Press the memory key you want to repeat:"},
+{"hash":16473850,"name":"tfrmautocq.lbldelay.caption","sourcebytes":[78,117,109,98,101,114,32,111,102,32,109,105,108,108,105,115,101,99,111,110,100,115,32,111,102,32,108,105,115,116,101,110,105,110,103,32,116,105,109,101,58],"value":"Number of milliseconds of listening time:"},
+{"hash":1339,"name":"tfrmautocq.btnok.caption","sourcebytes":[79,75],"value":"OK"},
+{"hash":77089212,"name":"tfrmautocq.btncancel.caption","sourcebytes":[67,97,110,99,101,108],"value":"Cancel"}
+]}

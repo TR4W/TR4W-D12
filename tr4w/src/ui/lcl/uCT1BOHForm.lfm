@@ -10,6 +10,7 @@ object frmCT1BOH: TfrmCT1BOH
   ClientWidth = 690
   KeyPreview = True
   Position = poMainFormCenter
+  LCLVersion = '4.8.0.0'
   OnClose = HandleClose
   OnKeyDown = HandleKeyDown
   OnShow = HandleShow

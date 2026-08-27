@@ -9,6 +9,7 @@ object frmAutoCQ: TfrmAutoCQ
   ClientHeight = 140
   ClientWidth = 330
   Position = poMainFormCenter
+  LCLVersion = '4.8.0.0'
   OnClose = HandleClose
   OnShow = HandleShow
   object lblMemoryKey: TLabel
@@ -29,8 +30,8 @@ object frmAutoCQ: TfrmAutoCQ
     Alignment = taCenter
     AutoSize = False
     ReadOnly = True
-    OnKeyDown = edtHotKeyKeyDown
     TabOrder = 0
+    OnKeyDown = edtHotKeyKeyDown
   end
   object lblDelay: TLabel
     Left = 10
@@ -59,21 +60,19 @@ object frmAutoCQ: TfrmAutoCQ
     Height = 25
     Top = 100
     Width = 80
-    AutoSize = False
     Caption = 'OK'
     Default = True
-    OnClick = btnOKClick
     TabOrder = 2
+    OnClick = btnOKClick
   end
   object btnCancel: TButton
     Left = 170
     Height = 25
     Top = 100
     Width = 80
-    AutoSize = False
     Cancel = True
     Caption = 'Cancel'
-    OnClick = btnCancelClick
     TabOrder = 3
+    OnClick = btnCancelClick
   end
 end

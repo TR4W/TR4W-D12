@@ -5,11 +5,12 @@ object frmBeacons: TfrmBeacons
   Width = 347
   BorderIcons = [biSystemMenu]
   BorderStyle = bsDialog
-  Caption = 'Beacons monitor'
+  Caption = 'Beacons Monitor'
   ClientHeight = 350
   ClientWidth = 347
   KeyPreview = True
   Position = poMainFormCenter
+  LCLVersion = '4.8.0.0'
   OnClose = HandleClose
   OnKeyDown = HandleKeyDown
   OnShow = HandleShow
@@ -19,9 +20,8 @@ object frmBeacons: TfrmBeacons
     Height = 20
     Top = 5
     Width = 62
-    AllowAllUp = False
-    GroupIndex = 1
     Down = True
+    GroupIndex = 1
     OnClick = FrequencyClick
   end
   object sbFreq2: TSpeedButton
@@ -30,7 +30,6 @@ object frmBeacons: TfrmBeacons
     Height = 20
     Top = 5
     Width = 62
-    AllowAllUp = False
     GroupIndex = 1
     OnClick = FrequencyClick
   end
@@ -40,7 +39,6 @@ object frmBeacons: TfrmBeacons
     Height = 20
     Top = 5
     Width = 62
-    AllowAllUp = False
     GroupIndex = 1
     OnClick = FrequencyClick
   end
@@ -50,7 +48,6 @@ object frmBeacons: TfrmBeacons
     Height = 20
     Top = 5
     Width = 62
-    AllowAllUp = False
     GroupIndex = 1
     OnClick = FrequencyClick
   end
@@ -60,7 +57,6 @@ object frmBeacons: TfrmBeacons
     Height = 20
     Top = 5
     Width = 62
-    AllowAllUp = False
     GroupIndex = 1
     OnClick = FrequencyClick
   end
@@ -69,7 +65,6 @@ object frmBeacons: TfrmBeacons
     Height = 290
     Top = 30
     Width = 327
-    ColCount = 5
     DefaultColWidth = 65
     DefaultRowHeight = 16
     FixedCols = 0
@@ -77,6 +72,7 @@ object frmBeacons: TfrmBeacons
     Options = [goVertLine, goHorzLine, goSmoothScroll]
     RowCount = 18
     ScrollBars = ssNone
+    TabOrder = 0
     TabStop = False
     OnPrepareCanvas = GridPrepareCanvas
   end
@@ -86,7 +82,6 @@ object frmBeacons: TfrmBeacons
     Height = 20
     Top = 322
     Width = 62
-    AllowAllUp = False
     GroupIndex = 1
     OnClick = FrequencyClick
   end
@@ -96,7 +91,6 @@ object frmBeacons: TfrmBeacons
     Height = 20
     Top = 322
     Width = 62
-    AllowAllUp = False
     GroupIndex = 1
     OnClick = FrequencyClick
   end
@@ -106,7 +100,6 @@ object frmBeacons: TfrmBeacons
     Height = 20
     Top = 322
     Width = 62
-    AllowAllUp = False
     GroupIndex = 1
     OnClick = FrequencyClick
   end
@@ -116,7 +109,6 @@ object frmBeacons: TfrmBeacons
     Height = 20
     Top = 322
     Width = 62
-    AllowAllUp = False
     GroupIndex = 1
     OnClick = FrequencyClick
   end
@@ -126,12 +118,10 @@ object frmBeacons: TfrmBeacons
     Height = 20
     Top = 322
     Width = 62
-    AllowAllUp = False
     GroupIndex = 1
     OnClick = FrequencyClick
   end
   object tmrSlot: TTimer
-    Interval = 1000
     Enabled = False
     OnTimer = HandleSlotTimer
   end

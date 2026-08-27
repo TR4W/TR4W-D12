@@ -1,0 +1,6 @@
+{"version":1,"strings":[
+{"hash":220849598,"name":"tfrmprogrammessage.caption","sourcebytes":[77,101,109,111,114,121,32,112,114,111,103,114,97,109,32,102,117,110,99,116,105,111,110],"value":"Memory program function"},
+{"hash":159052398,"name":"tfrmprogrammessage.btncq.caption","sourcebytes":[80,114,101,115,115,32,38,67,32,116,111,32,112,114,111,103,114,97,109,32,97,32,67,81,32,102,117,110,99,116,105,111,110,32,107,101,121,46],"value":"Press &C to program a CQ function key."},
+{"hash":107323966,"name":"tfrmprogrammessage.btnexchange.caption","sourcebytes":[80,114,101,115,115,32,38,69,32,116,111,32,112,114,111,103,114,97,109,32,97,110,32,101,120,99,104,97,110,103,101,47,115,101,97,114,99,104,32,97,110,100,32,112,111,117,110,99,101,32,102,117,110,99,116,105,111,110,32,107,101,121,46],"value":"Press &E to program an exchange/search and pounce function key."},
+{"hash":173613086,"name":"tfrmprogrammessage.btnother.caption","sourcebytes":[80,114,101,115,115,32,38,79,32,116,111,32,112,114,111,103,114,97,109,32,116,104,101,32,111,116,104,101,114,32,110,111,110,32,102,117,110,99,116,105,111,110,32,107,101,121,32,109,101,115,115,97,103,101,115,46],"value":"Press &O to program the other non function key messages."}
+]}

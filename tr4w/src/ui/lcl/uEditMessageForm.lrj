@@ -1,0 +1,9 @@
+{"version":1,"strings":[
+{"hash":102940373,"name":"tfrmeditmessage.caption","sourcebytes":[80,114,111,103,114,97,109,32,109,101,115,115,97,103,101],"value":"Program message"},
+{"hash":63608709,"name":"tfrmeditmessage.lblmessage.caption","sourcebytes":[77,101,115,115,97,103,101],"value":"Message"},
+{"hash":159887390,"name":"tfrmeditmessage.lblcaption.caption","sourcebytes":[67,97,112,116,105,111,110],"value":"Caption"},
+{"hash":2800388,"name":"tfrmeditmessage.btneditwav.caption","sourcebytes":[38,69,100,105,116],"value":"&Edit"},
+{"hash":1339,"name":"tfrmeditmessage.btnok.caption","sourcebytes":[79,75],"value":"OK"},
+{"hash":77089212,"name":"tfrmeditmessage.btncancel.caption","sourcebytes":[67,97,110,99,101,108],"value":"Cancel"},
+{"hash":72602355,"name":"tfrmeditmessage.btnlist.caption","sourcebytes":[76,105,115,116,32,111,102,32,99,111,109,109,97,110,100,115],"value":"List of commands"}
+]}

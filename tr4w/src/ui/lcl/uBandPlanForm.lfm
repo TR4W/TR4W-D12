@@ -4,11 +4,11 @@ object frmBandPlan: TfrmBandPlan
   Top = 0
   Width = 420
   BorderIcons = [biSystemMenu]
-  BorderStyle = bsSizeable
   Caption = 'Band plan'
   ClientHeight = 330
   ClientWidth = 420
   Position = poMainFormCenter
+  LCLVersion = '4.8.0.0'
   OnClose = HandleClose
   OnResize = HandleResize
   OnShow = HandleShow
@@ -20,8 +20,7 @@ object frmBandPlan: TfrmBandPlan
     Anchors = [akTop, akLeft, akRight, akBottom]
     ColCount = 4
     DefaultColWidth = 110
-    FixedCols = 1
-    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goSmoothScroll, goAlwaysShowEditor]
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor, goSmoothScroll]
     RowCount = 12
     TabOrder = 0
   end
@@ -31,11 +30,10 @@ object frmBandPlan: TfrmBandPlan
     Top = 295
     Width = 80
     Anchors = [akRight, akBottom]
-    AutoSize = False
     Caption = 'OK'
     Default = True
-    OnClick = btnOKClick
     TabOrder = 1
+    OnClick = btnOKClick
   end
   object btnCancel: TButton
     Left = 332
@@ -43,10 +41,9 @@ object frmBandPlan: TfrmBandPlan
     Top = 295
     Width = 80
     Anchors = [akRight, akBottom]
-    AutoSize = False
     Cancel = True
     Caption = 'Cancel'
-    OnClick = btnCancelClick
     TabOrder = 2
+    OnClick = btnCancelClick
   end
 end

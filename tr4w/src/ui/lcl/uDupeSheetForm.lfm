@@ -1,12 +1,15 @@
 object frmDupeSheet: TfrmDupeSheet
   Left = 0
+  Height = 200
   Top = 0
+  Width = 420
   BorderStyle = bsSizeToolWin
   Caption = 'Dupe sheet'
   ClientHeight = 200
   ClientWidth = 420
   Color = clWindow
   KeyPreview = True
+  LCLVersion = '4.8.0.0'
   OnClose = HandleClose
   OnCreate = HandleCreate
   OnDestroy = HandleDestroy

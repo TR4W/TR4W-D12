@@ -9,6 +9,7 @@ object frmEditQSO: TfrmEditQSO
   ClientHeight = 413
   ClientWidth = 584
   Position = poMainFormCenter
+  LCLVersion = '4.8.0.0'
   OnClose = HandleClose
   OnCloseQuery = HandleCloseQuery
   OnShow = HandleShow
@@ -26,11 +27,10 @@ object frmEditQSO: TfrmEditQSO
     Height = 21
     Top = 16
     Width = 135
-    CharCase = ecUpperCase
+    CharCase = ecUppercase
     MaxLength = 12
-    OnChange = CallsignChanged
     TabOrder = 0
-    Text = ''
+    OnChange = CallsignChanged
   end
   object lblCountryName: TLabel
     Left = 240
@@ -38,7 +38,6 @@ object frmEditQSO: TfrmEditQSO
     Top = 16
     Width = 232
     AutoSize = False
-    Caption = ''
     Layout = tlCenter
   end
   object lblRadio: TLabel
@@ -46,9 +45,9 @@ object frmEditQSO: TfrmEditQSO
     Height = 17
     Top = 16
     Width = 90
+    Alignment = taCenter
     AutoSize = False
     Caption = 'RADIO ONE'
-    Alignment = taCenter
     Layout = tlCenter
   end
   object lblBand: TLabel
@@ -66,10 +65,10 @@ object frmEditQSO: TfrmEditQSO
     Top = 41
     Width = 135
     ItemHeight = 15
-    OnChange = FieldChanged
     ReadOnly = True
     Style = csDropDownList
     TabOrder = 1
+    OnChange = FieldChanged
   end
   object lblDX: TLabel
     Left = 240
@@ -86,9 +85,8 @@ object frmEditQSO: TfrmEditQSO
     Top = 41
     Width = 135
     ReadOnly = True
-    OnChange = FieldChanged
     TabOrder = 2
-    Text = ''
+    OnChange = FieldChanged
   end
   object chkDXMult: TCheckBox
     Left = 480
@@ -114,10 +112,10 @@ object frmEditQSO: TfrmEditQSO
     Top = 65
     Width = 135
     ItemHeight = 15
-    OnChange = FieldChanged
     ReadOnly = True
     Style = csDropDownList
     TabOrder = 4
+    OnChange = FieldChanged
   end
   object lblDomestic: TLabel
     Left = 240
@@ -134,9 +132,8 @@ object frmEditQSO: TfrmEditQSO
     Top = 65
     Width = 135
     ReadOnly = True
-    OnChange = FieldChanged
     TabOrder = 5
-    Text = ''
+    OnChange = FieldChanged
   end
   object chkDomesticMult: TCheckBox
     Left = 480
@@ -162,9 +159,8 @@ object frmEditQSO: TfrmEditQSO
     Top = 89
     Width = 135
     NumbersOnly = True
-    OnChange = FieldChanged
     TabOrder = 7
-    Text = ''
+    OnChange = FieldChanged
   end
   object lblPrefix: TLabel
     Left = 240
@@ -181,9 +177,8 @@ object frmEditQSO: TfrmEditQSO
     Top = 89
     Width = 135
     Enabled = False
-    OnChange = FieldChanged
     TabOrder = 8
-    Text = ''
+    OnChange = FieldChanged
   end
   object chkPrefixMult: TCheckBox
     Left = 480
@@ -208,9 +203,23 @@ object frmEditQSO: TfrmEditQSO
     Height = 21
     Top = 114
     Width = 135
-    Kind = dtkDateTime
-    OnChange = FieldChanged
+    CenturyFrom = 1941
+    MaxDate = 2958465
+    MinDate = -53780
     TabOrder = 10
+    TrailingSeparator = False
+    TextForNullDate = 'NULL'
+    LeadingZeros = True
+    Kind = dtkDateTime
+    TimeFormat = tf24
+    TimeDisplay = tdHMS
+    DateMode = dmComboBox
+    Date = 46260
+    Time = 0.852624120372639
+    UseDefaultSeparators = True
+    HideDateTimeParts = []
+    MonthNames = 'Long'
+    OnChange = FieldChanged
   end
   object lblZone: TLabel
     Left = 240
@@ -226,11 +235,10 @@ object frmEditQSO: TfrmEditQSO
     Height = 21
     Top = 114
     Width = 135
-    NumbersOnly = True
     MaxLength = 2
-    OnChange = FieldChanged
+    NumbersOnly = True
     TabOrder = 11
-    Text = ''
+    OnChange = FieldChanged
   end
   object chkZoneMult: TCheckBox
     Left = 480
@@ -255,9 +263,8 @@ object frmEditQSO: TfrmEditQSO
     Height = 21
     Top = 138
     Width = 135
-    OnChange = FieldChanged
     TabOrder = 13
-    Text = ''
+    OnChange = FieldChanged
   end
   object chkNameSent: TCheckBox
     Left = 480
@@ -282,11 +289,10 @@ object frmEditQSO: TfrmEditQSO
     Height = 21
     Top = 162
     Width = 135
-    CharCase = ecUpperCase
+    CharCase = ecUppercase
     MaxLength = 1
-    OnChange = FieldChanged
     TabOrder = 15
-    Text = ''
+    OnChange = FieldChanged
   end
   object lblQTH: TLabel
     Left = 240
@@ -302,10 +308,9 @@ object frmEditQSO: TfrmEditQSO
     Height = 21
     Top = 162
     Width = 135
-    CharCase = ecUpperCase
-    OnChange = FieldChanged
+    CharCase = ecUppercase
     TabOrder = 16
-    Text = ''
+    OnChange = FieldChanged
   end
   object chkInhibitMults: TCheckBox
     Left = 480
@@ -330,11 +335,10 @@ object frmEditQSO: TfrmEditQSO
     Height = 21
     Top = 187
     Width = 135
-    NumbersOnly = True
     Enabled = False
-    OnChange = FieldChanged
+    NumbersOnly = True
     TabOrder = 18
-    Text = ''
+    OnChange = FieldChanged
   end
   object lblPostalCode: TLabel
     Left = 240
@@ -350,9 +354,8 @@ object frmEditQSO: TfrmEditQSO
     Height = 21
     Top = 187
     Width = 135
-    OnChange = FieldChanged
     TabOrder = 19
-    Text = ''
+    OnChange = FieldChanged
   end
   object chkDupe: TCheckBox
     Left = 480
@@ -377,11 +380,10 @@ object frmEditQSO: TfrmEditQSO
     Height = 21
     Top = 211
     Width = 135
-    NumbersOnly = True
     MaxLength = 3
-    OnChange = FieldChanged
+    NumbersOnly = True
     TabOrder = 21
-    Text = ''
+    OnChange = FieldChanged
   end
   object lblPower: TLabel
     Left = 240
@@ -397,9 +399,8 @@ object frmEditQSO: TfrmEditQSO
     Height = 21
     Top = 211
     Width = 135
-    OnChange = FieldChanged
     TabOrder = 22
-    Text = ''
+    OnChange = FieldChanged
   end
   object chkDeleted: TCheckBox
     Left = 480
@@ -407,8 +408,8 @@ object frmEditQSO: TfrmEditQSO
     Top = 211
     Width = 90
     Caption = '&Deleted'
-    OnChange = FieldChanged
     TabOrder = 23
+    OnChange = FieldChanged
   end
   object lblChapter: TLabel
     Left = 8
@@ -424,9 +425,8 @@ object frmEditQSO: TfrmEditQSO
     Height = 21
     Top = 236
     Width = 135
-    OnChange = FieldChanged
     TabOrder = 24
-    Text = ''
+    OnChange = FieldChanged
   end
   object lblPrecedence: TLabel
     Left = 240
@@ -442,11 +442,10 @@ object frmEditQSO: TfrmEditQSO
     Height = 21
     Top = 236
     Width = 135
-    CharCase = ecUpperCase
+    CharCase = ecUppercase
     MaxLength = 1
-    OnChange = FieldChanged
     TabOrder = 25
-    Text = ''
+    OnChange = FieldChanged
   end
   object chkSAP: TCheckBox
     Left = 480
@@ -454,8 +453,8 @@ object frmEditQSO: TfrmEditQSO
     Top = 236
     Width = 90
     Caption = 'S&P'
-    OnChange = FieldChanged
     TabOrder = 26
+    OnChange = FieldChanged
   end
   object chkXQSO: TCheckBox
     Left = 480
@@ -463,8 +462,8 @@ object frmEditQSO: TfrmEditQSO
     Top = 258
     Width = 56
     Caption = 'X-QSO'
-    OnChange = FieldChanged
     TabOrder = 27
+    OnChange = FieldChanged
   end
   object lblCheck: TLabel
     Left = 8
@@ -480,11 +479,10 @@ object frmEditQSO: TfrmEditQSO
     Height = 21
     Top = 260
     Width = 135
-    NumbersOnly = True
     MaxLength = 2
-    OnChange = FieldChanged
+    NumbersOnly = True
     TabOrder = 28
-    Text = ''
+    OnChange = FieldChanged
   end
   object lblPrefecture: TLabel
     Left = 240
@@ -500,11 +498,10 @@ object frmEditQSO: TfrmEditQSO
     Height = 21
     Top = 260
     Width = 135
-    NumbersOnly = True
     MaxLength = 3
-    OnChange = FieldChanged
+    NumbersOnly = True
     TabOrder = 29
-    Text = ''
+    OnChange = FieldChanged
   end
   object lblClass: TLabel
     Left = 8
@@ -520,9 +517,8 @@ object frmEditQSO: TfrmEditQSO
     Height = 21
     Top = 284
     Width = 135
-    OnChange = FieldChanged
     TabOrder = 30
-    Text = ''
+    OnChange = FieldChanged
   end
   object lblTenTen: TLabel
     Left = 240
@@ -538,11 +534,10 @@ object frmEditQSO: TfrmEditQSO
     Height = 21
     Top = 284
     Width = 135
-    NumbersOnly = True
     MaxLength = 5
-    OnChange = FieldChanged
+    NumbersOnly = True
     TabOrder = 31
-    Text = ''
+    OnChange = FieldChanged
   end
   object lblNumberSent: TLabel
     Left = 8
@@ -559,9 +554,8 @@ object frmEditQSO: TfrmEditQSO
     Top = 309
     Width = 135
     NumbersOnly = True
-    OnChange = FieldChanged
     TabOrder = 32
-    Text = ''
+    OnChange = FieldChanged
   end
   object lblRSTSent: TLabel
     Left = 240
@@ -577,22 +571,20 @@ object frmEditQSO: TfrmEditQSO
     Height = 21
     Top = 309
     Width = 135
-    NumbersOnly = True
     MaxLength = 3
-    OnChange = FieldChanged
+    NumbersOnly = True
     TabOrder = 33
-    Text = ''
+    OnChange = FieldChanged
   end
   object btnPlay: TButton
     Left = 483
     Height = 23
     Top = 323
     Width = 90
-    AutoSize = False
     Caption = '&Play'
     Enabled = False
-    OnClick = btnPlayClick
     TabOrder = 34
+    OnClick = btnPlayClick
   end
   object lblNumberRcvd: TLabel
     Left = 8
@@ -609,9 +601,8 @@ object frmEditQSO: TfrmEditQSO
     Top = 333
     Width = 135
     NumbersOnly = True
-    OnChange = FieldChanged
     TabOrder = 35
-    Text = ''
+    OnChange = FieldChanged
   end
   object lblRSTReceived: TLabel
     Left = 240
@@ -627,23 +618,21 @@ object frmEditQSO: TfrmEditQSO
     Height = 21
     Top = 333
     Width = 135
-    NumbersOnly = True
     MaxLength = 3
-    OnChange = FieldChanged
+    NumbersOnly = True
     TabOrder = 36
-    Text = ''
+    OnChange = FieldChanged
   end
   object btnSave: TButton
     Left = 483
     Height = 23
     Top = 353
     Width = 90
-    AutoSize = False
     Caption = '&Save'
     Default = True
     Enabled = False
-    OnClick = btnSaveClick
     TabOrder = 37
+    OnClick = btnSaveClick
   end
   object lblOperator: TLabel
     Left = 8
@@ -659,19 +648,17 @@ object frmEditQSO: TfrmEditQSO
     Height = 21
     Top = 356
     Width = 135
-    OnChange = FieldChanged
     TabOrder = 38
-    Text = ''
+    OnChange = FieldChanged
   end
   object btnCancel: TButton
     Left = 483
     Height = 23
     Top = 380
     Width = 90
-    AutoSize = False
-    Caption = 'Cancel'
     Cancel = True
-    OnClick = btnCancelClick
+    Caption = 'Cancel'
     TabOrder = 39
+    OnClick = btnCancelClick
   end
 end
