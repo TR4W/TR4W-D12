@@ -94,11 +94,16 @@ function Start-TR4WForDriving
       [Parameter(Mandatory = $true)][string] $Exe,
       [Parameter(Mandatory = $true)][string] $TargetDir,
       [Parameter(Mandatory = $true)][string] $ConfigPath,
-      [int] $SettleMs = 8000
+      [int] $SettleMs = 8000,
+      # Anything else the run needs, such as --lang es. The config path stays
+      # first: uProgramMain takes the first NON-SWITCH argument as the contest
+      # file, so a switch may follow it but must not precede it.
+      [string[]] $ExtraArgs = @()
    )
 
+   $argv = @($ConfigPath) + $ExtraArgs
    $proc = Start-Process -FilePath $Exe -WorkingDirectory $TargetDir `
-                         -ArgumentList $ConfigPath -PassThru
+                         -ArgumentList $argv -PassThru
 
    # Poll rather than sleep a fixed time -- startup cost varies with CTY.DAT and
    # the log size, and a fixed wait either wastes time or posts into a window

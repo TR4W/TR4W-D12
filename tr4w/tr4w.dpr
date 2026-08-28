@@ -68,6 +68,7 @@ uses
   uADIFExchange in 'src\uADIFExchange.pas',
   uInputQuery in 'src\uInputQuery.pas',
   uNewContestForm in 'src\ui\lcl\uNewContestForm.pas' {frmNewContest},
+  uTextFitAudit in 'src\ui\lcl\uTextFitAudit.pas',
   uNewContest in 'src\uNewContest.pas',
   uRadioPolling in 'src\uRadioPolling.pas',
   uMissingMults in 'src\uMissingMults.pas',

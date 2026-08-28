@@ -72,6 +72,7 @@ uses
   uADIFExchange,
   uInputQuery,
   uNewContest,
+  uTextFitAudit,
   uRadioPolling,
   uMissingMults,
   uEditQSO,
@@ -1530,6 +1531,15 @@ begin
     waiting, because a panadapter needs a radio that is CONNECTED and
     streaming, which start-up cannot promise.  See uRadioPanelForm. }
   StartPanadapterRestore;
+
+  (* --textfit: measure every caption against the room it has, then leave.
+     Here because the forms must EXIST to be measured, and before the loop
+     because the answer does not need one. uTextFitAudit records why this
+     cannot be done from outside the process. *)
+  if TextFitAuditRequested then
+     begin
+     InstallTextFitAudit;
+     end;
 
   RunLCLApplication;
 end;
