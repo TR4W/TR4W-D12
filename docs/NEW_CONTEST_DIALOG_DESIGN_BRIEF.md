@@ -5,6 +5,10 @@
 **Status:** Feature analysis complete; awaiting implementation after TR4W port
 **Reference implementation:** TR4QT (Qt/C++) "Contest Chooser"
 
+> **NOTE.** References to Delphi 12 throughout this brief are superseded by
+> FreePascal and the Lazarus LCL (2026-08-13). The DESIGN is unaffected --
+> read the toolchain names as historical.
+
 ---
 
 ## 1. Purpose
@@ -71,41 +75,41 @@ Legend: **✓** present · **◐** partial · **✗** absent but relevant · **�
 dialog's scope (the competitor dialogs are config-only and handle "resume an existing log"
 elsewhere).
 
-| Feature | TR4W | TR4QT | N1MM | Win-Test | DXLog |
-|---|---|---|---|---|---|
-| **— List / selection —** | | | | | |
-| Database-backed list (not filesystem) | ✗ | ✓ | ✓ | — | — |
-| Columned existing-contest grid (Name/Type/Date/Ver) | ✗ | ✓ | — | — | — |
-| Resume-vs-Create clearly separated | ◐ | ✓ | — | — | — |
-| Delete / manage existing contests | ◐ | ✓ | — | — | — |
-| One-click "resume **last**" (no selection step) | ◐ | ✗ | ✗ | ✗ | ✗ |
-| Rolling "next contest first" sort | ✗ | ✓ | ✗ | ✗ | ✗ |
-| Date filter ("this month only") | ✗ | ✗ | ✗ | ✓ | ✗ |
-| Type-ahead search on contest list | ✗ | ✗ | ✗ | ✗ | ✗ |
-| Native date/time picker for start | ✗ | ✓ | ✓ | — | — |
-| **— Contest metadata —** | | | | | |
-| Human-readable schedule shown | ✗ | ✗ | ✗ | ✗ | ✗ |
-| Description shown in dialog | ✗ | ✗ | ✗ | ✗ | ✗ |
-| Website / rules link | ✗ | ✗ | ✓ | ✗ | ✗ |
-| Contest-driven exchange/category fields | ◐ | ✓ | ✓ | ◐ | ◐ |
-| Per-contest field guidance | ◐ | ✓ | ✓ | ✗ | ✗ |
-| Dialog resizes to fit dynamic fields | ✗ | ✓ | ✗ | ✗ | ✗ |
-| Auto-filled, editable contest name | ✗ | ✓ | ✗ | ✗ | ✗ |
-| **— Setup / entry —** | | | | | |
-| Category dropdowns (band/mode/power/etc.) | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Per-contest MY CALL override | ✓ | ✗ | ◐ | ◐ | ◐ |
-| Sent exchange field | ✗ | ✗ | ✓ | ✓ | ✓ |
-| Operators field | ✗ | ✗ | ✓ | ✓ | ✓ |
-| Soapbox field | ✗ | ✗ | ✓ | ✗ | ✗ |
-| Populate from last log/contest | ✗ | ✗ | ✓ | ✗ | ✗ |
-| **— Station —** | | | | | |
-| Station identity fields (grid, zones, address) | ✗ | ✗ (in Prefs) | ◐ | ✓ | ✓ |
-| Multiple station profiles (Load/Save) | ✗ | ✗ | ✗ | ✓ | ◐ |
-| Network / multi-op setup in dialog | ✗ | ✗ | ✗ | ✓ | ✗ |
-| **— Platform / UX —** | | | | | |
-| Win11-native styling & DPI awareness | ✗ | ✓ | ✗ | ✗ | ◐ |
-| Resizable dialog | ✗ | ◐ | ✗ | ✗ | ✗ |
-| Filesystem paths hidden from user | ✗ | ✓ | ✓ | ✓ | ✓ |
+| Feature                                             | TR4W | TR4QT        | N1MM | Win-Test | DXLog |
+| --------------------------------------------------- | ---- | ------------ | ---- | -------- | ----- |
+| **— List / selection —**                            |      |              |      |          |       |
+| Database-backed list (not filesystem)               | ✗    | ✓            | ✓    | —        | —     |
+| Columned existing-contest grid (Name/Type/Date/Ver) | ✗    | ✓            | —    | —        | —     |
+| Resume-vs-Create clearly separated                  | ◐    | ✓            | —    | —        | —     |
+| Delete / manage existing contests                   | ◐    | ✓            | —    | —        | —     |
+| One-click "resume **last**" (no selection step)     | ◐    | ✗            | ✗    | ✗        | ✗     |
+| Rolling "next contest first" sort                   | ✗    | ✓            | ✗    | ✗        | ✗     |
+| Date filter ("this month only")                     | ✗    | ✗            | ✗    | ✓        | ✗     |
+| Type-ahead search on contest list                   | ✗    | ✗            | ✗    | ✗        | ✗     |
+| Native date/time picker for start                   | ✗    | ✓            | ✓    | —        | —     |
+| **— Contest metadata —**                            |      |              |      |          |       |
+| Human-readable schedule shown                       | ✗    | ✗            | ✗    | ✗        | ✗     |
+| Description shown in dialog                         | ✗    | ✗            | ✗    | ✗        | ✗     |
+| Website / rules link                                | ✗    | ✗            | ✓    | ✗        | ✗     |
+| Contest-driven exchange/category fields             | ◐    | ✓            | ✓    | ◐        | ◐     |
+| Per-contest field guidance                          | ◐    | ✓            | ✓    | ✗        | ✗     |
+| Dialog resizes to fit dynamic fields                | ✗    | ✓            | ✗    | ✗        | ✗     |
+| Auto-filled, editable contest name                  | ✗    | ✓            | ✗    | ✗        | ✗     |
+| **— Setup / entry —**                               |      |              |      |          |       |
+| Category dropdowns (band/mode/power/etc.)           | ✓    | ✓            | ✓    | ✓        | ✓     |
+| Per-contest MY CALL override                        | ✓    | ✗            | ◐    | ◐        | ◐     |
+| Sent exchange field                                 | ✗    | ✗            | ✓    | ✓        | ✓     |
+| Operators field                                     | ✗    | ✗            | ✓    | ✓        | ✓     |
+| Soapbox field                                       | ✗    | ✗            | ✓    | ✗        | ✗     |
+| Populate from last log/contest                      | ✗    | ✗            | ✓    | ✗        | ✗     |
+| **— Station —**                                     |      |              |      |          |       |
+| Station identity fields (grid, zones, address)      | ✗    | ✗ (in Prefs) | ◐    | ✓        | ✓     |
+| Multiple station profiles (Load/Save)               | ✗    | ✗            | ✗    | ✓        | ◐     |
+| Network / multi-op setup in dialog                  | ✗    | ✗            | ✗    | ✓        | ✗     |
+| **— Platform / UX —**                               |      |              |      |          |       |
+| Win11-native styling & DPI awareness                | ✗    | ✓            | ✗    | ✗        | ◐     |
+| Resizable dialog                                    | ✗    | ◐            | ✗    | ✗        | ✗     |
+| Filesystem paths hidden from user                   | ✗    | ✓            | ✓    | ✓        | ✓     |
 
 ### How to read the matrix
 
@@ -149,43 +153,43 @@ schedule, website, description, exchange definitions) from Qt/C++ into Delphi 12
 - **Tier 1** = available at the TR4W port, no factory needed.
 - **Tier 2** = requires the ported contest factory.
 
-| Feature | Target | Tier | Note |
-|---|---|---|---|
-| **— List / selection —** | | | |
-| Database-backed list (no filesystem browser) | ✓ | 1 | Kill `[..]` and absolute paths |
-| Columned existing-contest grid (Name/Type/Date/Ver) | ✓ | 1 | From TR4QT |
-| Clickable sortable columns | ✓ | 1 | Enables "recent" |
-| "Last Opened" column / sort key | ✓ | 1 | Recent activity floats up, not start date |
-| Resume-vs-Create clearly separated | ✓ | 1 | Fixes the core two-tools flaw |
-| Delete / manage existing contests | ✓ | 1 | From TR4QT |
-| One-click "Resume last" button (Alt+A) | ✓ | 1 | Caption = friendly name, not file path |
-| Rolling "next contest first" sort (Create list) | ✓ | 2 | Needs floating-date resolver |
-| Type-ahead search on contest list | ✓ | 1 | Nobody else has it |
-| Native date/time picker for start | ✓ | 1 | |
-| **— Contest metadata —** | | | |
-| Human-readable schedule shown | ✓ | 2 | e.g. "Fourth full weekend of June" |
-| Description shown | ✓ | 2 | factory `meta.description` |
-| Website / rules link | ✓ | 2 | factory `meta.website` |
-| Contest-driven exchange fields | ✓ | 2 | Factory declares fields |
-| Per-contest field guidance (inline placeholders) | ✓ | 2 | TR4QT-style, not a detached gray panel |
-| Dialog resizes to fit dynamic fields | ✓ | 1 | Resize mechanism Tier 1; triggering fields Tier 2 |
-| Auto-filled, editable contest name | ✓ | 2 | Derived from type + year |
-| **— Setup / entry —** | | | |
-| Category dropdowns (band/mode/power/etc.) | ✓ | 1 | Already present |
-| Per-contest **MY CALL** override | ✓ | 1 | Default from Station Info, editable |
-| Sent exchange field | ✓ | 2 | Driven by contest |
-| Populate from last contest | ✓ | 1 | From N1MM idea |
-| Soapbox field | ✗ | — | Not in this dialog |
-| **— Station —** | | | |
-| Full station identity fields on dialog | ✗ | — | Stays in Preferences > Station Info |
-| Multiple station profiles (Load/Save) | ✗ | — | Not adopting Win-Test model |
-| Network / multi-op setup in dialog | ✗ | — | Out of scope (separate) |
-| **— Platform / UX —** | | | |
-| Per-monitor DPI awareness | ✓ | 1 | Fixes XP-era blur/clip at 150 %+ |
-| Win11 theme + accent + dark mode | ✓ | 1 | |
-| Segoe UI Variable font | ✓ | 1 | |
-| Resizable window | ✓ | 1 | Also serves dynamic fields |
-| Filesystem paths hidden from UI | ✓ | 1 | "Show Database Folder" escape hatch only |
+| Feature                                             | Target | Tier | Note                                              |
+| --------------------------------------------------- | ------ | ---- | ------------------------------------------------- |
+| **— List / selection —**                            |        |      |                                                   |
+| Database-backed list (no filesystem browser)        | ✓      | 1    | Kill `[..]` and absolute paths                    |
+| Columned existing-contest grid (Name/Type/Date/Ver) | ✓      | 1    | From TR4QT                                        |
+| Clickable sortable columns                          | ✓      | 1    | Enables "recent"                                  |
+| "Last Opened" column / sort key                     | ✓      | 1    | Recent activity floats up, not start date         |
+| Resume-vs-Create clearly separated                  | ✓      | 1    | Fixes the core two-tools flaw                     |
+| Delete / manage existing contests                   | ✓      | 1    | From TR4QT                                        |
+| One-click "Resume last" button (Alt+A)              | ✓      | 1    | Caption = friendly name, not file path            |
+| Rolling "next contest first" sort (Create list)     | ✓      | 2    | Needs floating-date resolver                      |
+| Type-ahead search on contest list                   | ✓      | 1    | Nobody else has it                                |
+| Native date/time picker for start                   | ✓      | 1    |                                                   |
+| **— Contest metadata —**                            |        |      |                                                   |
+| Human-readable schedule shown                       | ✓      | 2    | e.g. "Fourth full weekend of June"                |
+| Description shown                                   | ✓      | 2    | factory `meta.description`                        |
+| Website / rules link                                | ✓      | 2    | factory `meta.website`                            |
+| Contest-driven exchange fields                      | ✓      | 2    | Factory declares fields                           |
+| Per-contest field guidance (inline placeholders)    | ✓      | 2    | TR4QT-style, not a detached gray panel            |
+| Dialog resizes to fit dynamic fields                | ✓      | 1    | Resize mechanism Tier 1; triggering fields Tier 2 |
+| Auto-filled, editable contest name                  | ✓      | 2    | Derived from type + year                          |
+| **— Setup / entry —**                               |        |      |                                                   |
+| Category dropdowns (band/mode/power/etc.)           | ✓      | 1    | Already present                                   |
+| Per-contest **MY CALL** override                    | ✓      | 1    | Default from Station Info, editable               |
+| Sent exchange field                                 | ✓      | 2    | Driven by contest                                 |
+| Populate from last contest                          | ✓      | 1    | From N1MM idea                                    |
+| Soapbox field                                       | ✗      | —    | Not in this dialog                                |
+| **— Station —**                                     |        |      |                                                   |
+| Full station identity fields on dialog              | ✗      | —    | Stays in Preferences > Station Info               |
+| Multiple station profiles (Load/Save)               | ✗      | —    | Not adopting Win-Test model                       |
+| Network / multi-op setup in dialog                  | ✗      | —    | Out of scope (separate)                           |
+| **— Platform / UX —**                               |        |      |                                                   |
+| Per-monitor DPI awareness                           | ✓      | 1    | Fixes XP-era blur/clip at 150 %+                  |
+| Win11 theme + accent + dark mode                    | ✓      | 1    |                                                   |
+| Segoe UI Variable font                              | ✓      | 1    |                                                   |
+| Resizable window                                    | ✓      | 1    | Also serves dynamic fields                        |
+| Filesystem paths hidden from UI                     | ✓      | 1    | "Show Database Folder" escape hatch only          |
 
 ---
 
