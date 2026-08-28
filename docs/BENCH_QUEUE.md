@@ -23,6 +23,40 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## What the agent can check without you  (audit, 2026-08-28)
+
+NY4I asked: "confirm there are not any of the steps you added to this document
+for me to check that you could have checked."
+
+**The honest answer is that some of them were.** The harness in `test/ui` can
+launch TR4W, enumerate every window and control, drive menu commands, type into
+fields and read the log back. Anything in the list below should be run by the
+agent BEFORE it reaches this file.
+
+| Question | Tool | Verified tonight |
+|---|---|---|
+| Does a dialog open at all? | `Invoke-MenuSmoke.ps1` | 8 commands, 7 windows |
+| Do Edit QSO's fields round-trip? | `Invoke-FieldCheck.ps1` | 69/69 |
+| Is a menu caption, id or shortcut right? | `Dump-Menu.ps1` | caught About reading "Check for Updates" |
+| Do accelerators collide? | `Dump-Accelerators.ps1` | -- |
+| Did a window lose a control, or its size? | `Dump-WindowTree.ps1` + `Compare-WindowTree.ps1` | -- |
+| Does a translated caption still fit? | `Test-TextFit.ps1` | -- |
+| Does typing reach the right field? | `Test-Typing.ps1` | -- |
+| Does Preferences show every section? | `Test-PreferencesSections.ps1` | -- |
+| Did the program write what it claims? | read `target/tr4w.log` | proved the Spanish menu is not ours |
+
+**What the agent still cannot do**, and what therefore belongs here: judge a
+COLOUR or a layout by eye; confirm a caret is visible; see flicker or timing;
+anything needing a radio (`tools/radiosim` or the TCI simulator can stand in for
+some of it); anything needing a second station; and any question about whether
+what appeared is CORRECT rather than merely present.
+
+That distinction is the point. `Invoke-MenuSmoke` proves a window OPENS and says
+so in its own output -- "Still NOT a check that any window is CORRECT" -- and
+that gap is exactly what the rest of this file is for.
+
+---
+
 ## Added 2026-08-28 (overnight) -- UNRUN
 
 Everything below was built, linted, unit-tested and corpus-checked. None of it
@@ -121,16 +155,17 @@ are diagnostics that cost nothing to leave on.
   Cabrillo, Settings > Winkeyer, Settings > LPT. They read `Ctrl+Alt+B
   Ctrl+Alt+B` and so on. Check the keys still WORK as well as reading right.
 
-- [ ] **The WSJT-X indicator's font is smaller** so its text fits its cell --
-  see the item in section 40. The layout is unchanged.
+- [x] **The WSJT-X indicator's font is smaller** so its text fits its cell --
+  see the item in section 40. The layout is unchanged. [AGENT: But after that change, the font size of the call window is now smaller. That should be the same size as other items on the form like band, date, time, etc.]
 
-- [ ] **`DEBUG LOG LEVEL = DEBUG` now logs every configuration change**, both
+- [x] **`DEBUG LOG LEVEL = DEBUG` now logs every configuration change**, both
   storage paths, and logs REJECTED values too. Change a few settings in
-  Preferences and confirm the lines match what you did:
-
+  Preferences and confirm the lines match what you did: [AGENT: Note this worked but I see two messages in the log as if we are going through this code twice: `28 Aug 2026 13:49:23.846 700244 [27180] debug TR4WDebugLog  - [Config] BAND MAP SIZE = 4 (stored in tr4w.json)`
+  `28 Aug 2026 13:49:23.846 700244 [27180] debug TR4WDebugLog  - [Config] BAND MAP SIZE = 4 (stored in tr4w.json)`
+  
         [Config] BAND MAP DECAY TIME = 20 (stored in tr4w.json)
-
-- [ ] **`DEBUG LOG LEVEL = TRACE` now logs every MODIFIED keystroke the
+  
+- [x] **`DEBUG LOG LEVEL = TRACE` now logs every MODIFIED keystroke the
   accelerator hook sees.** This is the instrument for the Ctrl+Shift+0
   question in section 34 -- press it and look for
   `[InputHooks] key $30 ctrl=1 alt=0 shift=1`. **No line means Windows took the
@@ -170,7 +205,7 @@ Ctrl+P / Ctrl+A / Ctrl+C / Ctrl+D all insert their control characters, the saved
 **Still open:**
 
 - [ ] **&Edit** is enabled only in Phone mode, and only acts on a message naming
-  a `.WAV`.
+  a `.WAV`. [AGENT: Given the comment below, is this still a viable task to test. Also, you headline has test steps rather than a tasklist under the heading. This needs some more explanation.]
 
 ~~An empty Caption REMOVES the key.~~ **Struck 2026-08-20 (NY4I):** "I see no
 evidence of this nor would I want it to work that way." It was written from
@@ -186,11 +221,19 @@ answered: the system menu NY4I saw is the accept path doing what it was always
 meant to do, and it is the mechanism behind the item still open below. Still
 open:
 
-- [ ] **OK** then lets you move the chosen window -- it pops the chosen window's
+- [x] **OK** then lets you move the chosen window -- it pops the chosen window's
   SYSTEM MENU at its top-left corner (`WM_POPUPSYSTEMMENU`), and Move from that
-  menu is how the repositioning happens. That is the design, in D7 too.
+  menu is how the repositioning happens. That is the design, in D7 too. ~~[AGENT - There is a weird artifact from Spanish. The move menu (or if I click on any TR4W top-left icon, shows me the choices in Spanish. I am NOT running in Spanish mode)]~~
+  **RESOLVED 2026-08-28 -- not TR4W.** That is the WINDOWS system menu, and the
+  log proves TR4W translated nothing on that run: `UI language: "en" from the
+  operating system locale (en_US); that is the compiled-in language, so no
+  catalogue is loaded`, then `UI language: none loaded`. With no catalogue
+  applied the program cannot be the source of a Spanish word. Move / Size /
+  Close come from Windows and follow the WINDOWS DISPLAY LANGUAGE, so the place
+  to look is Settings > Language, not us.
+
 - [ ] Moving the selection with the ARROW KEYS, without accepting, flashes the
-  window and does nothing else. This is the half of F2 that is still a question.
+  window and does nothing else. This is the half of F2 that is still a question. [AGENT: There is no way to move with arrow keys as when I press OK, the window control daughter menu appears and the arrow keys navigate in that menu (up and down).]
 
 ### 4. Band plan editor — Preferences, More settings, the Edit... button  (`uBandPlanForm`)
 
@@ -207,8 +250,17 @@ headings are readable, the grid fills the window, and the position is remembered
 across openings. **What is still unrun is everything that WRITES:**
 
 - [x] It **opens** and shows one row per band with the three current values.
-- [ ] Editing a cell and pressing **OK** writes `[BAND PLAN]` in `tr4w.ini` and
-  the new values survive a restart.
+- [ ] ~~Editing a cell and pressing **OK** writes `[BAND PLAN]` in `tr4w.ini` and
+  the new values survive a restart.~~[AGENT: Nothing is suppose to write to the .ini so validate this is meant to be .json. You should also consider if this is something you can automatically test now that we figured out how you can run the program to test. IN fact, confirm there are not any  of the steps you added to this document for me to check that you could have checked.]~~
+
+  **ANSWERED 2026-08-28 -- it is JSON, and this step is out of date.** The band
+  plan lives in `uRadioConfigStore` (`settings/tr4w.json`); the ini's
+  `[BAND PLAN]` section is READ once, by `uRadioConfigApply`, to migrate a
+  station upgrading from an older build, and `uBandPlanForm` guards against
+  falling back to writing it. So the check is: edit a cell, OK, and confirm the
+  values land in **tr4w.json** and survive a restart -- nothing should appear in
+  tr4w.ini.
+
 - [ ] **Cancel changes nothing.**
 - [ ] A cell left **empty or non-numeric is skipped** — that band keeps its old
   value rather than becoming 0.
@@ -278,11 +330,11 @@ server's. To provoke it, connect a client whose `.dat` differs from the server's
 The NCDXF/IBP schedule window. **Opening it QSYs Radio 1 to 14100 kHz CW.**
 
 The grid, the stepping diagonal, the ten mutually-exclusive buttons, the 14100
-default and Escape all confirmed. **Still open -- both need a radio:**
+default and Escape all confirmed. **Still open -- both need a radio:** [AGENT - Simply the act of opening the beacons monitor window changes the radio frequency to the first monitor. That should not work that way--even though it may have in D7 too). I should have to take an overt act to start changing the radio frequency]
 
-- [ ] The highlighted beacon should agree with the schedule table at the foot of
+- [x] The highlighted beacon should agree with the schedule table at the foot of
   `src/uBeacons.pas` for the current UTC time.
-- [ ] **Pressing a button tunes Radio 1** to that frequency in CW.
+- [x] **Pressing a button tunes Radio 1** to that frequency in CW.
 
 ### 9. Edit QSO  (`uEditQSOForm`) -- THE ONE THAT WRITES TO THE LOG
 
@@ -294,6 +346,18 @@ field carries a full date and time, every field edits and lands, the four mult
 flags / Name Sent / Inhibit Mults / Dupe are greyed, S&P / Deleted / X-QSO edit
 and save, X-QSO still exports with its Cabrillo prefix, callsign typing updates
 country / prefix / DX QTH, and note and skipped records behave.
+
+~~[AGENT - Editing a QSO is changing the Operator field to just the first character.]~~ We have to add a mechanism to check the fields in the qso record upon entry to the edit field is the exact same as when we leave except for the dirty field. In  the test log, I changed the contact for W1SSB and it updated operator to just N. The sanctity of a QSO is paramount] 
+**FIXED 2026-08-28 (`1e53f410`).** `ceOperator` is `array[0..10] of AnsiChar`,
+and the save did `Move(tempOperator[1], ..., length * sizeof(char))` with `char`
+two bytes wide under `{$MODESWITCH UnicodeStrings}` -- so 'NY4I' was written as
+`N`,#0,`Y`,#0,... and read back at the first #0 as `N`. Two more faults in the
+same three lines: the zero-fill measured the value ALREADY in the record, so a
+shorter name left the old tail behind, and nothing bounded the copy, so an
+11-character operator wrote past the field. Worth knowing:
+`Invoke-FieldCheck.ps1` reported 69/69 both before and after -- it proves a
+value survives the CONTROL, and this was the write to the RECORD.
+
 
 **Two defects came out of that pass -- F4 (the dialog is dirty before you touch
 it) and F5 (a bad callsign is accepted). Still open:**
@@ -310,13 +374,14 @@ it) and F5 (a bad callsign is accepted). Still open:**
   `VP2E/W1ABCDE` from the main window if that field allows it, or edit one into
   a scratch `.dat` and open it. Open the QSO, press Save, reopen, and confirm
   it is not shortened. Worth the trouble because it was silent log corruption.
-- [ ] **Deleted still sends a contactdelete** to UDP / the external logger.
+- [x] **Deleted still sends a contactdelete** to UDP / the external logger.
 - [x] **Cancel and Escape discard everything.** See F6 -- NY4I found Escape
   after a change does not prompt, and whether it SHOULD depends on the
   `CONFIRM EDIT CHANGES` question below, so treat these two as one item.
 - [x] `CONFIRM EDIT CHANGES = TRUE` still prompts before saving.
 - [ ] **Play** is enabled only when the QSO has an MP3 and the file exists; with
-  no MP3 player configured it prompts to set one.
+  no MP3 player configured it prompts to set one. [AGENT: I can confirm Play is not enabled as there is no MP3 file. We have to work on the recording system to get an MP3 file. I do not even know where these would go or the name of one to test it.]
+- [ ] [AGENT: The Tab order on the edit QSO dialog is a bit off. The check boxes for Deleted and X-QSO should be entered after tabbing out of Operator. And after RST received, the next in the tab order should be Operator.]
 
 **Not a defect, do not report:** the RST fields still refuse a minus sign. That
 is deliberate and now has a written reason -- a negative "RST" is a WSJT-X dB
@@ -333,23 +398,23 @@ posts to the main thread, and identical consecutive values are dropped.
 Everything below should look exactly as it did. The point of the list is that
 "looks the same" is the pass condition, and any DIFFERENCE is the finding.
 
-- [ ] Open the Radio 1 panel (and Radio 2 on an SO2R setup). **VFO A and VFO B
+- [x] Open the Radio 1 panel (and Radio 2 on an SO2R setup). **VFO A and VFO B
   read the right frequencies and keep up while you tune.**
-- [ ] **RIT, XIT and SPLIT light up and go out as you toggle them on the rig**,
+- [x] **RIT, XIT and SPLIT light up and go out as you toggle them on the rig**,
   with no lag you did not have before. These are the three that used to be
   written on every single poll; they are now only written when they change,
   so a stuck indicator is the thing to report.
-- [ ] **The active VFO highlight follows the radio** when you switch VFO A/B.
-- [ ] **Disconnect the radio** (pull the cable or stop the network rig): both VFO
+- [x] **The active VFO highlight follows the radio** when you switch VFO A/B.
+- [x] **Disconnect the radio** (pull the cable or stop the network rig): both VFO
   fields should clear.
 - [ ] **A network radio with wrong credentials still shows `AUTH FAILED`** in the
   status line.
-- [ ] **Close the panel and reopen it.** Everything should repopulate. This is
+- [x] **Close the panel and reopen it.** Everything should repopulate. This is
   the one genuinely new failure mode: the coalescing cache remembers what it
   last sent, and a panel that reopens BLANK and stays blank would mean the
   cache was not cleared with the window. It is cleared in `CloseTR4WWindow`.
-- [ ] Leave it open for a while with the rig idle. Nothing should flicker.
-- [ ] **THE PANEL'S TITLE NAMES THE RIG** -- "Radio 1 K4", not just "Radio 1"
+- [x] Leave it open for a while with the rig idle. Nothing should flicker.
+- [x] **THE PANEL'S TITLE NAMES THE RIG** -- "Radio 1 K4", not just "Radio 1"
   (NY4I, 2026-08-20). The label is `TC_RADIO1`/`TC_RADIO2` so it follows the
   UI language; the rig comes from `RadioName`, which the radio library sets
   when a definition is applied. **With NO radio configured it must read just
@@ -359,8 +424,8 @@ Everything below should look exactly as it did. The point of the list is that
 - [ ] **Known limitation, not a defect:** the title is set when the panel OPENS.
   Changing the radio in the CAT dialog while the panel is up leaves the old
   caption until it is closed and reopened. Say so if that is worth fixing --
-  `RestartPollingThread` is where a refresh would go.
-- [ ] **The MODE labels beside each VFO still show the mode** (CW / USB / …).
+  `RestartPollingThread` is where a refresh would go. [AGENT: While testing, I ran into an issue here... I changed the name of the K4Z to K40 in My radios. When I did that, the radio was removed from the active profile. I then selected the new name K4) from the drop-down for Radio 2, but received this error message - ![image-20260828141727836](C:\Users\toms\AppData\Roaming\Typora\typora-user-images\image-20260828141727836.png) So there are at least two issues. First, when I change the name of a radio in MY radios, that name should also be updated in the saved (and active profile). It would appear you are using the radio name as an id when it would make more sense to say use a GUID and reference it by index so these changes will just flow through once you just do an update on the profile drop-downs.  The second issue of course is the error dialog but the prior statement about a guid or some index besides the name could address that. On the subject of what this item discussed specifically, stale data is never good and should be updated as we change it so yes the name in the radio window and the main window should change.]
+- [x] **The MODE labels beside each VFO still show the mode** (CW / USB / …).
   They moved house in the same sitting: they used to be created by the
   generic window opener in `MainUnit` with runtime geometry arithmetic, and
   are now built by `uRadio12` with the rest of the panel and found by
@@ -439,16 +504,25 @@ all along.
   for an option that did not exist.
 
   - [ ] It should reach `www.tr4w.net`, compare versions, and either say you have
-    the latest or offer the download link. **It dialled `tr4w.com` while sending
+    the latest or offer the download link. **It dialed `tr4w.com` while sending
     `Host: www.tr4w.net`** -- corrected to `www.tr4w.net`, and since the routine
     had never run, nothing had ever exercised that mismatch. If the check fails,
-    the host is the first thing to suspect.
+    the host is the first thing to suspect. ~~[AGENT: ;I tested this but we still have the issue of implementing a good pattern where our website can give you the latest version info so the program can decide if it needs to offer a download. I also need to get a static link that redirects to the latest. SO for now, let's disable that menu item. This is the error I received: ![image-20260828142557318](C:\Users\toms\AppData\Roaming\Typora\typora-user-images\image-20260828142557318.png)]~~
+    **DONE 2026-08-28 (`2366f099`) -- the item is off the Help menu.** The unit,
+    handler and id all stay; restoring it is one line once the site serves a
+    version STRING rather than a web page. Removing the row also required
+    removing its caption line: captions are assigned POSITIONALLY, so the first
+    attempt left About reading "Check for Updates". Verified by dumping the
+    live menu.
+    **Still open, and yours:** a documented endpoint, and a static link that
+    redirects to the latest.
+
   - [ ] **EXPECT THE UI TO FREEZE for about two seconds.** It does its socket
     work on the main thread and sleeps 2s waiting for the reply. That breaks
     NY4I's own no-I/O-on-the-UI-thread rule and is a KNOWN follow-up: wiring it
     up was the request, and rewriting it in the same change would have meant a
-    bench failure could not be attributed to either.
-  - [ ] Confirm the menu item sits in **Help**, after "Download POTA Parks".
+    bench failure could not be attributed to either. [ AGENT: You know how I feel about I/O on the main thread]
+  - [x] Confirm the menu item sits in **Help**, after "Download POTA Parks".
 
   **DEFERRED, and the client side is only half the question (NY4I, 2026-08-22).**
   This routine expects `GET /include_pages/version.txt` from `www.tr4w.net` to
@@ -464,11 +538,11 @@ all along.
   a GitHub releases API call, the socket code and the 2-second freeze both go
   away with it rather than needing the threading rewrite.
 
-- [ ] **Preferences -> Logging -> the "Open log file" BUTTON** (bottom of the
+- [x] **Preferences -> Logging -> the "Open log file" BUTTON** (bottom of the
   Logging page, below the trace check boxes) opens `tr4w.log` in whatever
   editor the operator has associated with `.txt`. It is a button, not a menu
   item -- the original wording read like a menu path, which is why it could
-  not be found.
+  not be found. 
 
 ### 13. Nothing should have changed -- 7,187 lines of commented-out code are gone
 
@@ -479,9 +553,9 @@ a normal session rather than a checklist.** The app, `tr4wserver`, 16 lints and
 9558 unit tests are green, and the golden corpus has NOT been run (it needs a
 deploy into `target\`, which is yours).
 
-- [ ] **Run a short contest normally** -- log a few QSOs, work a dupe, change
+- [x] **Run a short contest normally** -- log a few QSOs, work a dupe, change
   band and mode, send CW from the function keys, and exit cleanly.
-- [ ] **Then run the golden corpus** once you have deployed, since the sweep
+- [x] **Then run the golden corpus** once you have deployed, since the sweep
   touched `LOGSTUFF`, `LOGSUBS2`, `LOGDUPE`, `PostUnit` and `tree` -- the units
   the corpus is built to protect. That is the real regression gate here.
 
@@ -533,7 +607,7 @@ as an argument, so quoting is no longer their problem:
 
 **The rest should be unremarkable:**
 
-- [ ] **Run server** starts `tr4wserver.exe`; **Ping server** pings it.
+- [ ] **Run server** starts `tr4wserver.exe`; **Ping server** pings it. [ AGENT: Confirm how you are pinging the server. When I did it, it tried ::1 so it grabbed the IPv6 address. We should ping the address set in the server address in the config.]
 - [x] Calculator, Volume control, Recording control, Device manager, the
   date/time applet, a command prompt, and "show the log folder" all still open.
 - [x] **MMTTY** starts with its `-t -s -u -r` switches. It stays Windows-only by
@@ -569,7 +643,12 @@ refused, none the other way). 254 of those callsigns are now a test fixture.
   where a difference would show.
 - [ ] **DX spots and packet spots** -- the heaviest users of `IsAGoodCall`. The
   tell would be a spot that used to be filtered out and now is not, or the
-  reverse.
+  reverse. ~~[AGENT - We do not have the concept of a filter in spots.]~~
+  **CONFIRMED 2026-08-28 -- correct, and the code agrees.** `uSpotsFilter` and
+  `uDXSSpotsFilter` were commented out of `tr4w.dpr` since the initial commit,
+  never compiled, and are now deleted (`96d2f2c2`). There is no spot filter to
+  test; the item is struck rather than pending.
+
 
 **If something looks wrong, the benchmark diagnoses it faster than a symptom
 will:** `build\Build-Bench.ps1`, then run `test\bench\bench_callsign.exe` over
@@ -680,7 +759,7 @@ immediately when changed, and wrote `tr4w.ini` -- which on your station is empty
 and read-only, so they silently reverted on restart. `DE ENABLE` was the one you
 noticed. 112 of them now write `settings\tr4w.json`.
 
-- [ ] **`DE ENABLE`, the worked example.** Change it in Preferences, close TR4W,
+- [x] **`DE ENABLE`, the worked example.** Change it in Preferences, close TR4W,
   reopen. It should still be what you set. Before tonight it would not have been.
 - [ ] **Two or three others from different panels** -- say `ROW COUNT` (a
   drop-down, `ckArray`), `AUTO-CQ DELAY TIME` (an integer), and any check box.
@@ -717,7 +796,7 @@ now, and 21 of them store to `settings\tr4w.json` instead of `tr4w.ini`.
 
 - [ ] **Three station settings, set and restart:** `HOUR DISPLAY`,
   `RATE DISPLAY`, `DUPE CHECK SOUND`. Each should be a drop-down, take effect,
-  and still be what you set after a restart. Before today none of that was true.
+  and still be what you set after a restart. Before today none of that was true. [AGENT - I am changing these but do not see any evidence of a change on the main window]
 - [ ] **`MP3 RECORDER DURATION` and `BAND MAP SPLIT MODE`** -- same test, and
   the second one has a redraw handler (`crP: 1`), so the band map should change
   WITHOUT a restart.
@@ -968,20 +1047,20 @@ seed describes the device on the desk and nothing more.
 Everything below is built, green (9803 unit tests, 21 lints, corpus 22/0/4) and
 committed but **not pushed**.
 
-- [ ] **The main window still looks and behaves as it did.** It is a designed
+- [x] **The main window still looks and behaves as it did.** It is a designed
   `TForm` now (`uMainForm.lfm`) rather than one built in code. Border, minimise
   box, taskbar button, background colour all moved from Pascal into the designer,
   so this is the check that nothing was dropped in the move.
-- [ ] **The possible-call list.** Type a partial callsign and watch the row of
+- [x] **The possible-call list.** Type a partial callsign and watch the row of
   suggestions below the entry fields: same font, same column width, dupes still
   red, the selected one still outlined. It is an LCL `TListBox` now, drawn
   through `OnDrawItem` instead of `WM_DRAWITEM`.
-- [ ] **A specific thing to watch on that list, recorded honestly:** TR4W fills
+- [x] **A specific thing to watch on that list, recorded honestly:** TR4W fills
   it with raw `LB_ADDSTRING`, so the LCL's own `Items` are empty. Nothing
   recreates the control's handle today, but if it ever DOES the list would go
   blank and refill on the next keystroke. If you see that once, that is what it
   was.
-- [ ] **Help > About** opens a designed form instead of a system message box, with
+- [x] **Help > About** opens a designed form instead of a system message box, with
   the same content and the website as a clickable link. Check the version and
   date read correctly -- they are composed from the same constants, not typed
   into the form.
@@ -1007,32 +1086,32 @@ committed but **not pushed**.
 three message-loop arms blocking `Application.Run` went with it, and none of it
 is provable by build. Please give it a real session.
 
-- [ ] **F1 through F12 send.** Click each button and confirm the right message
+- [x] **F1 through F12 send.** Click each button and confirm the right message
   goes out -- this replaced `WM_COMMAND` / `BN_CLICKED` with `OnClick`, and the
   key code now comes from the panel's `Tag` rather than the control id.
-- [ ] **The CQ and S&P banks both show the right text.** Toggle mode and watch
+- [x] **The CQ and S&P banks both show the right text.** Toggle mode and watch
   the captions change. `ShowFMessages` drives them now by setting `Caption`
   instead of invalidating an owner-draw.
 - [ ] **Ctrl and Alt banks.** Hold Ctrl, then Alt, and confirm the captions
-  switch to those banks and back on release.
+  switch to those banks and back on release. [AGENT - When I press CTRL in the main window, the function key labels do change but when I unkey CTRL, they do not restore to their original non-CTRL setting. Same for ALT.]
 - [ ] **AN AMPERSAND IN A CW MESSAGE.** Put `&` in an F-key message and check it
   shows as one `&`, not none and not two. `ShowFMessages` deliberately doubles
   it; a `TPanel` caption treats `&` the same way the owner-draw did, so the
   doubling had to stay. This is the single most likely thing to be wrong.
-- [ ] **Right-click a key** -> the one-item context menu, opening the editor on
+- [x] **Right-click a key** -> the one-item context menu, opening the editor on
   the RIGHT row. Do it while holding Ctrl and again holding Alt: the bank is read
   before the menu pops, precisely so releasing the modifier to click the menu
   does not change the answer (Issue #1001).
-- [ ] **Right-DOUBLE-click a key** -> the Alt-P editor straight to that row.
-- [ ] **The layout.** Twelve buttons across the width, with a wider gap after F4
+- [x] **Right-DOUBLE-click a key** -> the Alt-P editor straight to that row.
+- [x] **The layout.** Twelve buttons across the width, with a wider gap after F4
   and after F8, resizing with the window. That arithmetic was copied unchanged
   from the Win32 `WM_SIZE` handler.
-- [ ] **Colours.** F1-F4 white, F5-F8 yellow, F9-F12 as before -- straight from
+- [x] **Colours.** F1-F4 white, F5-F8 yellow, F9-F12 as before -- straight from
   the same `ButtonsColor` table the owner-draw read.
-- [ ] **The window still docks and remembers its place**, and closing it from the
+- [x] **The window still docks and remembers its place**, and closing it from the
   menu still works. It goes through the same `WndRect` / `WndVisible` /
   `CloseTR4WWindow` path as before; only the creation changed.
-- [ ] **Escape still belongs to the callsign field** while this window is open --
+- [x] **Escape still belongs to the callsign field** while this window is open --
   it must NOT close the F-key row.
 
 **What is left before `Application.Run` can replace the message loop:** the band
@@ -1078,7 +1157,7 @@ defects that were provable by reading and did not need the new form.
 **Added after the first bench attempt (NY4I, 2026-08-22 evening) -- the band map
 showed nothing at all.** Three separate things, and the log settled all of them.
 
-- [ ] **BAND MAP ENABLE is RETIRED. Opening the window is what enables it.**
+- [x] **BAND MAP ENABLE is RETIRED. Opening the window is what enables it.**
   `settings\tr4w.json` held `"BAND MAP ENABLE" : "FALSE"`, so
   `DisplayBandMap` refused every spot at the gate -- the log showed
   `BandMapEnable=0, BandMapWindowExists=1, FCount=49`: the spots were
@@ -1094,7 +1173,7 @@ showed nothing at all.** Three separate things, and the log settled all of them.
   Preferences in between. It must never go dead again.** The stale FALSE
   still in your json is now ignored rather than obeyed.
 
-- [ ] **The Preferences band map page lost a row.** "Show the band map" is gone
+- [x] **The Preferences band map page lost a row.** "Show the band map" is gone
   and everything below it moved up 38px. Check the page still reads
   properly and nothing is clipped or overlapping.
 
@@ -1108,7 +1187,7 @@ showed nothing at all.** Three separate things, and the log settled all of them.
   run for a few minutes with the band map CLOSED and confirm `tr4w.log` is
   not full of `[DisplayBandMap]` lines.**
 
-- [ ] **Minimise TR4W with the band map open and a busy cluster running.** The
+- [x] **Minimise TR4W with the band map open and a busy cluster running.** The
   tool windows are owned popups, so Windows hides the band map with its
   owner -- and until now that hidden window still cost a full render four
   times a second. The refresh timer now skips a window that is not visible.
@@ -1237,7 +1316,7 @@ rather than a crash.
   whether the callsign field or the band map has focus.
 - [ ] **Ctrl-C / V / X / A / Z in the DX cluster command field** must still
   paste and copy, NOT fire Execute Config File or Clear Mult Sheet
-  (issue #23). This is now a focus test rather than a message test.
+  (issue #23). This is now a focus test rather than a message test. [AGENT - ESCAPE closes the dxcluster without confirmation - That is too drastic a step. We should confirm. Also note that after this, when I selected the now unchecked DX Cluster from the Windows menu, the window did not appear. But looking at the menu again, it was checked. I had to select a now-checked DX cluster option for it to appear. Selecting the unchecked DX cluster in the window should ALWAYS show the window - goes for all others too]
 - [ ] **The numeric keypad as CW memories**, if you use them
   (`KEYPAD CW MEMORIES`). They fire whatever has focus.
 - [ ] **F10 does nothing**, as before -- it must not open the menu bar.
@@ -1264,7 +1343,7 @@ rather than a crash.
   exits through `ExitProcess`. So this is the first build in which the
   HamScore uploader is actually stopped cleanly -- watch for a hang or a
   delay on exit that was not there before.
-- [ ] **Long soak.** Leave it running for a session with a cluster connected.
+- [x] **Long soak.** Leave it running for a session with a cluster connected.
   The loop had its own fault recovery for a reason.
 
 **Still Win32, deliberately, and not blocked by any of this:** the main menu is
@@ -1338,9 +1417,9 @@ owns that -- the contest factory harvests those states.
 
 Confirmed by NY4I on 2026-08-24 for search-and-pounce green, overtype with
 Insert off, and a palette change. Left here for ONE case that sitting did not
-cover:
+cover: [AGENT - Is it possible to arrange this dialog to show in the table a sample of the text and background?]
 
-- [ ] **A colour change made while the program is running, from Preferences,
+- [x] **A colour change made while the program is running, from Preferences,
   with the operator IN search-and-pounce.** The exchange field must stay
   green rather than snapping to the new normal background, and must take the
   new background when S&P is left.
@@ -1351,11 +1430,11 @@ cover:
 2026-08-24 (section 31) and was then refactored onto the shared `TCallGrid` --
 so its confirmation no longer covers the code that runs. Re-check both.
 
-- [ ] **SCP fills as you type.** Type three or more characters of a callsign
+- [x] **SCP fills as you type.** Type three or more characters of a callsign
   with the SCP window open; partial matches appear. Fewer than
   `SCP MINIMUM LETTERS` shows nothing, and the window hides itself when the
   callsign is too short, exactly as before.
-- [ ] **Dupes are painted and the text inverts.** A partial match already
+- [x] **Dupes are painted and the text inverts.** A partial match already
   worked on this band and mode must show in `SCP DUPE COLOR` with white
   text; everything else plain on the window background.
 - [ ] **IT STOPS AT WHAT FITS AND DOES NOT SCROLL.** That is the old behaviour
@@ -1378,7 +1457,7 @@ so its confirmation no longer covers the code that runs. Re-check both.
 One dialog procedure served `tw_REMMULTSWINDOW_INDEX` and the four fixed-type
 windows; there are five instances of one form class now. **None seen.**
 
-- [ ] **Open all five.** Remaining mults, and the DX / zone / domestic / prefix
+- [x] **Open all five.** Remaining mults, and the DX / zone / domestic / prefix
   windows. Each must show ITS OWN multiplier type, and the generic one must
   follow `RemainingMultDisplay` when you swap it (Alt-M or the menu).
 - [ ] **Worked multipliers fade, needed ones are plain.** In `HILIGHT` mode all
@@ -1398,7 +1477,7 @@ windows; there are five instances of one form class now. **None seen.**
   **It does NOT on the other four** -- they were given the base width once
   at creation and never followed the setting. That inconsistency is
   preserved; tell me if it should not be.
-- [ ] **Work a multiplier and watch it fade without reopening the window.** The
+- [x] **Work a multiplier and watch it fade without reopening the window.** The
   text and the worked flag are resolved at PAINT time, not at rebuild, so
   this is the check that the resolution seam is wired.
 - [ ] **The zone window numbers from 1, except EUHFC which numbers from 0.**
@@ -1425,9 +1504,9 @@ the wrong size, this is the change that did it.**
 - [ ] **The QSO number's bigger font.** It is the one element with its own --
   Lucida Console, ws+3. FW_EXTRABOLD has no LCL counterpart and is now
   fsBold; say if it reads lighter.
-- [ ] **The auto-send arrow.** Down arrow, and it MOVES as the character count
+- [x] **The auto-send arrow.** Down arrow, and it MOVES as the character count
   changes. Set `AUTO SEND CHARACTER COUNT` above 0 in CW.
-- [ ] **THE FIVE LIVE COLOURS.** These were re-evaluated on every repaint by
+- [x] **THE FIVE LIVE COLOURS.** These were re-evaluated on every repaint by
   DrawWindows and are now pushed when the state changes. Each needs
   exercising:
   - **PTT** goes red on radio 1, yellow on radio 2, while transmitting.
@@ -1439,14 +1518,14 @@ the wrong size, this is the change that did it.**
     disconnects and back when it reconnects. **This one has no text write
     behind it** -- it rides on a new main-thread job (mtRadioAlertColors),
     so it is the most likely of the five to be missed.
-- [ ] **The frequency display tracks the radio.** It is written from the
+- [x] **The frequency display tracks the radio.** It is written from the
   POLLING THREAD and now travels through uPanelUpdate's coalescing queue
   (puElement) rather than SetWindowTextW on a handle -- because an LCL
   control paints from a property and a handle write would leave it stale.
   Watch it follow the VFO continuously, and go blank on disconnect.
-- [ ] **Colour scheme changes still reach the main window** (Preferences ->
+- [x] **Colour scheme changes still reach the main window** (Preferences ->
   colours). RefreshMainWindowColors pushes the elements now.
-- [ ] **THE INITIAL EXCHANGE FILLS.** With `INITIAL EXCHANGE` set to Zone, type
+- [x] **THE INITIAL EXCHANGE FILLS.** With `INITIAL EXCHANGE` set to Zone, type
   a callsign and the zone must appear in the exchange field. Found broken on
   the bench 2026-08-24 (NY4I: "I enter AF4O, the zone in the exchange is
   not displayed... That was working earlier") and fixed the same evening:
@@ -1457,7 +1536,7 @@ the wrong size, this is the change that did it.**
   between CQ and S&P with something typed in it).
 - [ ] **WAE QTC puts the callsign into the call field** (`LOGWAE:177`), if you
   run WAE.
-- [ ] **Greying still works:** the inactive radio's row in two-radio mode, the
+- [x] **Greying still works:** the inactive radio's row in two-radio mode, the
   foot switch and WinKey indicators, and the quick-display FLASH (which is
   still an enable/disable toggle -- see LOGWIND).
 
