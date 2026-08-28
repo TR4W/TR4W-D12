@@ -76,7 +76,8 @@ const
     // per-slot entries to ONE item opening the Preferences window, removing
     // the MAXWORD-1 submenu marker, the two Radio entries and the MAXWORD-2
     // terminator, and adding one item (net -3).
-    T_MENU_ARRAY_SIZE                     = 176 + 1 + 1 {Check for Updates, 2026-08-22} {MMTTY window}{$IFDEF LANG_RUS} + 3{$ENDIF} + 2 {RC_RESET_RADIO_PORTS, separator, Repeat POTA Parks} + 2 {HamScore Resync (Tools) + HamScore Status (Windows menu), Issue #783} + 1 {3830 Score under File-Reports} + 1 {Edit Cabrillo Summary under Tools, Issue #914} + 1 {Download TRMASTER.DTA, 2026-08-16} - 1 {Appearance removed, 2026-08-16} - 1 {Synchronize PC time removed, 2026-08-25 -- setting the clock needs UAC};
+    T_MENU_ARRAY_SIZE                     = 176 + 1 {MMTTY window}{$IFDEF LANG_RUS} + 3{$ENDIF} + 2 {RC_RESET_RADIO_PORTS, separator, Repeat POTA Parks} + 2 {HamScore Resync (Tools) + HamScore Status (Windows menu), Issue #783} + 1 {3830 Score under File-Reports} + 1 {Edit Cabrillo Summary under Tools, Issue #914} + 1 {Download TRMASTER.DTA, 2026-08-16} - 1 {Appearance removed, 2026-08-16} - 1 {Synchronize PC time removed, 2026-08-25 -- setting the clock needs UAC}
+                                            - 0 {Check for Updates taken OFF the menu 2026-08-28 -- see the row below};
 
 var
   { A var, and every mrText is BLANK here -- InitializeMenuText fills them.
@@ -362,7 +363,28 @@ var
     // eleven per-language ANSI files -- NY4I's by hand, and the thing
     // resourcestring is replacing anyway; a resourcestring also cannot appear
     // in this typed-constant array.  These belong together in the i18n sweep.
-    (mrText: ''; mrId: menu_check_latest_version),  // 2026-08-22
+    // CHECK FOR UPDATES -- OFF THE MENU 2026-08-28, at NY4I's request.
+    //
+    // There is no endpoint to ask. The check fetches a page and shows whatever
+    // comes back as "the last version on server", so when tr4w.net answered
+    // with a Cloudflare error the operator was shown raw HTML and invited to
+    // download it:
+    //
+    //    The last version on server: <html><head><title>400 Bad Request</title>
+    //    ... This version: TR4W v.5.0.2. Would you like to download the latest
+    //    version?
+    //
+    // NY4I: "we still have the issue of implementing a good pattern where our
+    // website can give you the latest version info... I also need to get a
+    // static link that redirects to the latest. So for now, let's disable that
+    // menu item."
+    //
+    // The unit, the handler and the id all stay: this is one line to restore
+    // once the site serves a version string rather than a web page. The real
+    // fix is a documented endpoint and a response this can PARSE, plus moving
+    // its socket work off the main thread -- it sleeps 2 seconds on the UI
+    // thread today, which is its own bench-queue item.
+    // (mrText: ''; mrId: menu_check_latest_version),  // 2026-08-22
     {$IFDEF LANG_RUS}
     (mrText: ''; mrId: menu_wiki_rus),
 {$ENDIF}
@@ -590,7 +612,10 @@ begin
    Inc(i); T_MENU_ARRAY[i].mrText := RC_Download;
    Inc(i); T_MENU_ARRAY[i].mrText := 'Download TRMASTER.DTA';
    Inc(i); T_MENU_ARRAY[i].mrText := 'Download POTA Parks';
-   Inc(i); T_MENU_ARRAY[i].mrText := 'Check for Updates';
+   { The row this captioned was taken off the menu 2026-08-28; the caption
+     goes with it, because these are assigned BY POSITION and leaving it
+     would shift every caption after it -- About came out reading
+     "Check for Updates". }
 {$IFDEF LANG_RUS}
    Inc(i); T_MENU_ARRAY[i].mrText := RC_WIKI;
 {$ENDIF}
