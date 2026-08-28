@@ -131,12 +131,25 @@ def lcl_accelerators(lang):
    return out
 
 
+def same_text(a, b):
+   """Is this the English wearing a hat?
+
+   Accelerators move or vanish between languages, a trailing ellipsis is
+   punctuation rather than words, and case is not a translation. Comparing with
+   those stripped is what catches '&List of commands' as the Polish for 'List of
+   commands'; comparing exactly, as pas2po does, does not."""
+   def norm(s):
+      return s.replace("&", "").replace("...", "").replace("…", "").strip().lower()
+   return norm(a) == norm(b) and norm(a) != ""
+
+
 def check(path, fix):
    entries = pofile.read_po(path)
    name = os.path.basename(path)
    ctrl_bad, fmt_bad, stranded = [], [], []
-   accel_bad, by_form = [], {}
+   accel_bad, by_form, english = [], {}, []
    lang = name.rsplit('_', 1)[-1].replace('.po', '')
+   is_source = lang == 'en'
    lcl = lcl_accelerators(lang)
 
    for e in entries:
@@ -150,6 +163,24 @@ def check(path, fix):
          # empty now, so there is nothing to report here -- and reporting it
          # anyway buried six real accelerator defects under 95 lines of noise.
          continue
+
+      # ENGLISH IN THE TRANSLATION SLOT, AND NOT FLAGGED.
+      #
+      # pas2po marks a translation fuzzy when it is byte-identical to the
+      # English, because "deliberately the same" and "nobody has translated
+      # this" cannot be told apart. That test is EXACT, so English that differs
+      # only by an accelerator, an ellipsis or capitalisation slips past it and
+      # is counted as finished work.
+      #
+      # NY4I found one in Polish, 2026-08-28: msgid 'List of commands' with
+      # msgstr '&List of commands' and no fuzzy flag, which Make-LanguageRes
+      # would embed as the Polish. Measured across the catalogues: 106 of these
+      # outside the English one -- 81 Spanish, 17 German.
+      #
+      # The English catalogue is EXEMPT and must stay so: msgstr == msgid is
+      # what tr4w_en.po is for, and flagging its 378 entries would be nonsense.
+      if (not is_source) and (not e.fuzzy) and same_text(e.source, e.target):
+         english.append(e)
 
       if controls(e.source) != controls(e.target):
          ctrl_bad.append(e)
@@ -203,21 +234,40 @@ def check(path, fix):
             if lletter == letter and cap not in [x.replace("&", "").lower() for x in texts]:
                pass   # only reported when the form is known to use that button
 
+   for e in english:
+      say("  %s: ENGLISH IN THE TRANSLATION, not flagged -- would ship as %s"
+          % (name, lang))
+      say("     english    %r" % e.source[:60])
+      say("     translated %r" % e.target[:60])
+
+   if english:
+      print("  %s: %d %s the English text unflagged%s"
+            % (name, len(english),
+               "entry holds" if len(english) == 1 else "entries hold",
+               " -- marked for review" if fix else " (run with --fix)"))
+
    if stranded:
       print("  %s: %d empty entr%s not flagged fuzzy%s"
             % (name, len(stranded), "y" if len(stranded) == 1 else "ies",
                " -- re-flagged" if fix else " (run with --fix)"))
 
-   if fix and stranded:
+   if fix and (stranded or english):
+      # ONLY EVER ADDS A FLAG. The text is left exactly as it is -- a fuzzy
+      # entry still carries its translation, Poedit shows it as "Needs work",
+      # and po2pas refuses it, so nothing wrong can reach a build while a person
+      # decides. Clearing the msgstr instead would destroy the one case this
+      # cannot distinguish: a word that is genuinely the same in both languages.
+      for e in english:
+         e.fuzzy = True
       lang = name.rsplit("_", 1)[-1].replace(".po", "")
       pofile.write_po(path, entries, lang)
 
-   ok = not ctrl_bad and not fmt_bad and not accel_bad and not clashes
+   ok = not ctrl_bad and not fmt_bad and not accel_bad and not clashes and not english
    if ok and not stranded:
       live = [e for e in entries if not e.obsolete and e.source.strip()]
       print("  %-16s %4d entries, no control-character or format defects"
             % (name, len(live)))
-   return len(ctrl_bad) + len(fmt_bad) + len(accel_bad) + clashes
+   return len(ctrl_bad) + len(fmt_bad) + len(accel_bad) + clashes + len(english)
 
 
 def main():

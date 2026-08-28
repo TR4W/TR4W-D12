@@ -6919,3 +6919,1177 @@ msgstr "с"
 msgid "S&P"
 msgstr ""
 
+#: tfrmabout.btnok.caption
+#, fuzzy
+msgctxt "tfrmabout.btnok.caption"
+msgid "OK"
+msgstr ""
+
+#: tfrmabout.lblurl.caption
+#, fuzzy
+msgid "http://www.tr4w.net"
+msgstr ""
+
+#: tfrmaltd.btncancel.caption
+#, fuzzy
+msgctxt "tfrmaltd.btncancel.caption"
+msgid "Cancel"
+msgstr ""
+
+#: tfrmaltd.btnok.caption
+#, fuzzy
+msgctxt "tfrmaltd.btnok.caption"
+msgid "OK"
+msgstr ""
+
+#: tfrmaltd.caption
+#, fuzzy
+msgid "Dupe Check On Inactive Radio"
+msgstr "Проверка на повтор на неактивном радио"
+
+#: tfrmautocq.btncancel.caption
+#, fuzzy
+msgctxt "tfrmautocq.btncancel.caption"
+msgid "Cancel"
+msgstr ""
+
+#: tfrmautocq.btnok.caption
+#, fuzzy
+msgctxt "tfrmautocq.btnok.caption"
+msgid "OK"
+msgstr ""
+
+#: tfrmautocq.caption
+#, fuzzy
+msgid "Auto-CQ"
+msgstr "Авто-CQ"
+
+#: tfrmautocq.lbldelay.caption
+#, fuzzy
+msgid "Number of milliseconds of listening time:"
+msgstr "Пауза, мс."
+
+#: tfrmautocq.lblmemorykey.caption
+#, fuzzy
+msgid "Press the memory key you want to repeat:"
+msgstr "Функц. клавиша, которую нужно повторять"
+
+#: tfrmbandmap.mideletespot.caption
+#, fuzzy
+msgid "Delete selected spot"
+msgstr "Удалить выделенный спот"
+
+#: tfrmbandmap.miremoveall.caption
+#, fuzzy
+msgid "Remove all spots"
+msgstr "Удалить все споты"
+
+#: tfrmbandplan.btncancel.caption
+#, fuzzy
+msgctxt "tfrmbandplan.btncancel.caption"
+msgid "Cancel"
+msgstr ""
+
+#: tfrmbandplan.btnok.caption
+#, fuzzy
+msgctxt "tfrmbandplan.btnok.caption"
+msgid "OK"
+msgstr ""
+
+#: tfrmbandplan.caption
+#, fuzzy
+msgid "Band plan"
+msgstr "Частотный план"
+
+#: tfrmeditmessage.btncancel.caption
+#, fuzzy
+msgctxt "tfrmeditmessage.btncancel.caption"
+msgid "Cancel"
+msgstr ""
+
+#: tfrmeditmessage.btneditwav.caption
+#, fuzzy
+msgid "&Edit"
+msgstr "Редактировать"
+
+#: tfrmeditmessage.btnlist.caption
+#, fuzzy
+msgctxt "tfrmeditmessage.btnlist.caption"
+msgid "List of commands"
+msgstr "Список команд"
+
+#: tfrmeditmessage.btnok.caption
+#, fuzzy
+msgctxt "tfrmeditmessage.btnok.caption"
+msgid "OK"
+msgstr ""
+
+#: tfrmeditmessage.caption
+#, fuzzy
+msgid "Program message"
+msgstr "Редактирование сообщения"
+
+#: tfrmeditmessage.lblcaption.caption
+#, fuzzy
+msgid "Caption"
+msgstr "Надпись на кнопке"
+
+#: tfrmeditmessage.lblmessage.caption
+#, fuzzy
+msgctxt "tfrmeditmessage.lblmessage.caption"
+msgid "Message"
+msgstr "Сообщение"
+
+#: tfrmeditqso.btncancel.caption
+#, fuzzy
+msgctxt "tfrmeditqso.btncancel.caption"
+msgid "Cancel"
+msgstr ""
+
+#: tfrmeditqso.lblband.caption
+#, fuzzy
+msgid "Band"
+msgstr "Диап."
+
+#: tfrmeditqso.lblcallsign.caption
+#, fuzzy
+msgctxt "tfrmeditqso.lblcallsign.caption"
+msgid "Callsign"
+msgstr "Позывной"
+
+#: tfrmeditqso.lbldate.caption
+#, fuzzy
+msgid "Date"
+msgstr "Дата"
+
+#: tfrmeditqso.lbldx.caption
+#, fuzzy
+msgid "DX"
+msgstr ""
+
+#: tfrmeditqso.lblmode.caption
+#, fuzzy
+msgid "Mode"
+msgstr "Вид изл."
+
+#: tfrmeditqso.lblname.caption
+#, fuzzy
+msgctxt "tfrmeditqso.lblname.caption"
+msgid "Name"
+msgstr "Имя"
+
+#: tfrmeditqso.lbloperator.caption
+#, fuzzy
+msgid "Operator"
+msgstr "Оператор"
+
+#: tfrmeditqso.lblqth.caption
+#, fuzzy
+msgid "QTH"
+msgstr ""
+
+#: tfrmfunctionkeys.caption
+#, fuzzy
+msgid "Function keys"
+msgstr "Функциональные клавиши"
+
+#: tfrmfunctionkeys.pnlf1.caption
+#, fuzzy
+msgid "F1"
+msgstr ""
+
+#: tfrmfunctionkeys.pnlf10.caption
+#, fuzzy
+msgid "F10"
+msgstr ""
+
+#: tfrmfunctionkeys.pnlf11.caption
+#, fuzzy
+msgid "F11"
+msgstr ""
+
+#: tfrmfunctionkeys.pnlf12.caption
+#, fuzzy
+msgid "F12"
+msgstr ""
+
+#: tfrmfunctionkeys.pnlf2.caption
+#, fuzzy
+msgid "F2"
+msgstr ""
+
+#: tfrmfunctionkeys.pnlf3.caption
+#, fuzzy
+msgid "F3"
+msgstr ""
+
+#: tfrmfunctionkeys.pnlf4.caption
+#, fuzzy
+msgid "F4"
+msgstr ""
+
+#: tfrmfunctionkeys.pnlf5.caption
+#, fuzzy
+msgid "F5"
+msgstr ""
+
+#: tfrmfunctionkeys.pnlf6.caption
+#, fuzzy
+msgid "F6"
+msgstr ""
+
+#: tfrmfunctionkeys.pnlf7.caption
+#, fuzzy
+msgid "F7"
+msgstr ""
+
+#: tfrmfunctionkeys.pnlf8.caption
+#, fuzzy
+msgid "F8"
+msgstr ""
+
+#: tfrmfunctionkeys.pnlf9.caption
+#, fuzzy
+msgid "F9"
+msgstr ""
+
+#: tfrmhamscore.lblqueuevalue.caption
+#, fuzzy
+msgid "--"
+msgstr ""
+
+#: tfrminputquery.btncancel.caption
+#, fuzzy
+msgctxt "tfrminputquery.btncancel.caption"
+msgid "Cancel"
+msgstr ""
+
+#: tfrminputquery.btnok.caption
+#, fuzzy
+msgctxt "tfrminputquery.btnok.caption"
+msgid "OK"
+msgstr ""
+
+#: tfrmintercom.caption
+#, fuzzy
+msgid "Intercom"
+msgstr "Внутренняя связь"
+
+#: tfrmkeyeredit.btncancel.caption
+#, fuzzy
+msgctxt "tfrmkeyeredit.btncancel.caption"
+msgid "Cancel"
+msgstr ""
+
+#: tfrmkeyeredit.lblname.caption
+#, fuzzy
+msgctxt "tfrmkeyeredit.lblname.caption"
+msgid "Name"
+msgstr "Имя"
+
+#: tfrmkeyeredit.lblwkfirstext.caption
+#, fuzzy
+msgid "First extension"
+msgstr "Увеличение первого элемента"
+
+#: tfrmkeyeredit.lblwkkeyermode.caption
+#, fuzzy
+msgid "Keyer mode"
+msgstr "Режим работы ключа"
+
+#: tfrmlogcompare.btnsynchronize.caption
+#, fuzzy
+msgid "Synchronize"
+msgstr "Синхронизировать"
+
+#: tfrmlpt.btncancel.caption
+#, fuzzy
+msgctxt "tfrmlpt.btncancel.caption"
+msgid "Cancel"
+msgstr ""
+
+#: tfrmlpt.btnok.caption
+#, fuzzy
+msgctxt "tfrmlpt.btnok.caption"
+msgid "OK"
+msgstr ""
+
+#: tfrmmessageslist.btncancel.caption
+#, fuzzy
+msgctxt "tfrmmessageslist.btncancel.caption"
+msgid "Cancel"
+msgstr ""
+
+#: tfrmmessageslist.btnok.caption
+#, fuzzy
+msgctxt "tfrmmessageslist.btnok.caption"
+msgid "OK"
+msgstr ""
+
+#: tfrmmessageslist.caption
+#, fuzzy
+msgctxt "tfrmmessageslist.caption"
+msgid "List of commands"
+msgstr "Список команд"
+
+#: tfrmmp3recorder.btncontrol.caption
+#, fuzzy
+msgid "..."
+msgstr ""
+
+#: tfrmmp3recorder.caption
+#, fuzzy
+msgid "MP3 Recorder"
+msgstr "MP3 рекордер"
+
+#: tfrmnetwork.caption
+#, fuzzy
+msgctxt "tfrmnetwork.caption"
+msgid "Network"
+msgstr "Сеть"
+
+#: tfrmpanadapter.btnspannarrow.caption
+#, fuzzy
+msgid "-"
+msgstr ""
+
+#: tfrmpanadapter.btnspanwide.caption
+#, fuzzy
+msgid "+"
+msgstr ""
+
+#: tfrmpanadapter.lblstatus.caption
+#, fuzzy
+msgid "Disconnected"
+msgstr "Отключен"
+
+#: tfrmpostscores.btnpostnow.caption
+#, fuzzy
+msgid "Post now"
+msgstr "Отправить сейчас"
+
+#: tfrmpostscores.btnshowscores.caption
+#, fuzzy
+msgid "Show scores"
+msgstr "Показать результаты"
+
+#: tfrmprogrammessage.btncq.caption
+#, fuzzy
+msgid "Press &C to program a CQ function key."
+msgstr "Нажмите &C для программирования CQ сообщений"
+
+#: tfrmprogrammessage.btnexchange.caption
+#, fuzzy
+msgid "Press &E to program an exchange/search and pounce function key."
+msgstr "Нажмите &E для программирования S&&P сообщений"
+
+#: tfrmprogrammessage.btnother.caption
+#, fuzzy
+msgid "Press &O to program the other non function key messages."
+msgstr "Нажмите &O для программирования других сообщений"
+
+#: tfrmprogrammessage.caption
+#, fuzzy
+msgid "Memory program function"
+msgstr "Программирование сообщений"
+
+#: tfrmsendkeyboard.btnclose.caption
+#, fuzzy
+msgid "Close"
+msgstr "Закрыть"
+
+#: tfrmsendspot.btncancel.caption
+#, fuzzy
+msgctxt "tfrmsendspot.btncancel.caption"
+msgid "Cancel"
+msgstr ""
+
+#: tfrmsendspot.btnok.caption
+#, fuzzy
+msgctxt "tfrmsendspot.btnok.caption"
+msgid "OK"
+msgstr ""
+
+#: tfrmsendspot.caption
+#, fuzzy
+msgid "Send spot"
+msgstr "Отправить спот"
+
+#: tfrmsendspot.lblcallsign.caption
+#, fuzzy
+msgctxt "tfrmsendspot.lblcallsign.caption"
+msgid "Callsign"
+msgstr "Позывной"
+
+#: tfrmsendspot.lblcomment.caption
+#, fuzzy
+msgid "Comment"
+msgstr "Комментарий"
+
+#: tfrmsendspot.lblfrequency.caption
+#, fuzzy
+msgid "Frequency"
+msgstr "Частота"
+
+#: tfrmstations.caption
+#, fuzzy
+msgid "Stations"
+msgstr "Станции"
+
+#: tfrmtelnet.btncommands.caption
+#, fuzzy
+msgid "Commands"
+msgstr "Команды"
+
+#: tfrmudpdestinationedit.btncancel.caption
+#, fuzzy
+msgctxt "tfrmudpdestinationedit.btncancel.caption"
+msgid "Cancel"
+msgstr ""
+
+#: tfrmudpdestinationedit.btnok.caption
+#, fuzzy
+msgctxt "tfrmudpdestinationedit.btnok.caption"
+msgid "OK"
+msgstr ""
+
+#: tfrmudpdestinationedit.lblport.caption
+#, fuzzy
+msgctxt "tfrmudpdestinationedit.lblport.caption"
+msgid "Port"
+msgstr ""
+
+#: tfrmwinmanager.btncancel.caption
+#, fuzzy
+msgctxt "tfrmwinmanager.btncancel.caption"
+msgid "Cancel"
+msgstr ""
+
+#: tfrmwinmanager.btnok.caption
+#, fuzzy
+msgctxt "tfrmwinmanager.btnok.caption"
+msgid "OK"
+msgstr ""
+
+#: tprefsform.btnaddcluster.caption
+#, fuzzy
+msgctxt "tprefsform.btnaddcluster.caption"
+msgid "Add..."
+msgstr ""
+
+#: tprefsform.btnaddkeyer.caption
+#, fuzzy
+msgctxt "tprefsform.btnaddkeyer.caption"
+msgid "Add..."
+msgstr ""
+
+#: tprefsform.btnaddrotator.caption
+#, fuzzy
+msgctxt "tprefsform.btnaddrotator.caption"
+msgid "Add..."
+msgstr ""
+
+#: tprefsform.btnbrowsedvkpath.caption
+#, fuzzy
+msgctxt "tprefsform.btnbrowsedvkpath.caption"
+msgid "Browse..."
+msgstr ""
+
+#: tprefsform.btnbrowsedvkrecorder.caption
+#, fuzzy
+msgctxt "tprefsform.btnbrowsedvkrecorder.caption"
+msgid "Browse..."
+msgstr ""
+
+#: tprefsform.btnbrowsemmtty.caption
+#, fuzzy
+msgctxt "tprefsform.btnbrowsemmtty.caption"
+msgid "Browse..."
+msgstr ""
+
+#: tprefsform.btnbrowsemp3path.caption
+#, fuzzy
+msgctxt "tprefsform.btnbrowsemp3path.caption"
+msgid "Browse..."
+msgstr ""
+
+#: tprefsform.btnbrowsemp3player.caption
+#, fuzzy
+msgctxt "tprefsform.btnbrowsemp3player.caption"
+msgid "Browse..."
+msgstr ""
+
+#: tprefsform.btncancel.caption
+#, fuzzy
+msgctxt "tprefsform.btncancel.caption"
+msgid "Cancel"
+msgstr ""
+
+#: tprefsform.btnduplicatekeyer.caption
+#, fuzzy
+msgctxt "tprefsform.btnduplicatekeyer.caption"
+msgid "Duplicate"
+msgstr ""
+
+#: tprefsform.btneditkeyer.caption
+#, fuzzy
+msgctxt "tprefsform.btneditkeyer.caption"
+msgid "Edit..."
+msgstr ""
+
+#: tprefsform.btnok.caption
+#, fuzzy
+msgctxt "tprefsform.btnok.caption"
+msgid "Save and close"
+msgstr ""
+
+#: tprefsform.btnremovecluster.caption
+#, fuzzy
+msgctxt "tprefsform.btnremovecluster.caption"
+msgid "Remove"
+msgstr ""
+
+#: tprefsform.btnremovekeyer.caption
+#, fuzzy
+msgctxt "tprefsform.btnremovekeyer.caption"
+msgid "Remove"
+msgstr ""
+
+#: tprefsform.btnremoverotator.caption
+#, fuzzy
+msgctxt "tprefsform.btnremoverotator.caption"
+msgid "Remove"
+msgstr ""
+
+#: tprefsform.btnudpadd.caption
+#, fuzzy
+msgctxt "tprefsform.btnudpadd.caption"
+msgid "Add..."
+msgstr ""
+
+#: tprefsform.btnudpedit.caption
+#, fuzzy
+msgctxt "tprefsform.btnudpedit.caption"
+msgid "Edit..."
+msgstr ""
+
+#: tprefsform.btnudpremove.caption
+#, fuzzy
+msgctxt "tprefsform.btnudpremove.caption"
+msgid "Remove"
+msgstr ""
+
+#: tprefsform.btnudptest.caption
+#, fuzzy
+msgctxt "tprefsform.btnudptest.caption"
+msgid "Test"
+msgstr ""
+
+#: tprefsform.btnuserotator.caption
+#, fuzzy
+msgctxt "tprefsform.btnuserotator.caption"
+msgid "Use this"
+msgstr ""
+
+#: tprefsform.chkspeedsync2.caption
+#, fuzzy
+msgctxt "tprefsform.chkspeedsync2.caption"
+msgid "Speed sync"
+msgstr ""
+
+#: tprefsform.lblbandmapheading.caption
+#, fuzzy
+msgctxt "tprefsform.lblbandmapheading.caption"
+msgid "Band map"
+msgstr ""
+
+#: tprefsform.lblhamscorepass.caption
+#, fuzzy
+msgctxt "tprefsform.lblhamscorepass.caption"
+msgid "Password:"
+msgstr ""
+
+#: tprefsform.lblmainwindowheading.caption
+#, fuzzy
+msgctxt "tprefsform.lblmainwindowheading.caption"
+msgid "Main window"
+msgstr ""
+
+#: tprefsform.lblmmttyheading.caption
+#, fuzzy
+msgctxt "tprefsform.lblmmttyheading.caption"
+msgid "MMTTY"
+msgstr ""
+
+#: tprefsform.lblnetaddress.caption
+#, fuzzy
+msgctxt "tprefsform.lblnetaddress.caption"
+msgid "Server:"
+msgstr ""
+
+#: tprefsform.lblnetpassword.caption
+#, fuzzy
+msgctxt "tprefsform.lblnetpassword.caption"
+msgid "Password:"
+msgstr ""
+
+#: tprefsform.lblnetport.caption
+#, fuzzy
+msgctxt "tprefsform.lblnetport.caption"
+msgid "Port:"
+msgstr ""
+
+#: tprefsform.lblpaddlegroup.caption
+#, fuzzy
+msgid "Paddle"
+msgstr "Манипулятор"
+
+#: tprefsform.lblpaddletoneunits.caption
+#, fuzzy
+msgctxt "tprefsform.lblpaddletoneunits.caption"
+msgid "Hz"
+msgstr ""
+
+#: tprefsform.lblradio1.caption
+#, fuzzy
+msgctxt "tprefsform.lblradio1.caption"
+msgid "Radio 1"
+msgstr "Радио 1"
+
+#: tprefsform.lblradio2.caption
+#, fuzzy
+msgctxt "tprefsform.lblradio2.caption"
+msgid "Radio 2"
+msgstr "Радио 2"
+
+#: tprefsform.lblrotatorname.caption
+#, fuzzy
+msgctxt "tprefsform.lblrotatorname.caption"
+msgid "Name:"
+msgstr ""
+
+#: tprefsform.lblrotatorport.caption
+#, fuzzy
+msgctxt "tprefsform.lblrotatorport.caption"
+msgid "Port:"
+msgstr ""
+
+#: tprefsform.lblscorerestart.caption
+#, fuzzy
+msgctxt "tprefsform.lblscorerestart.caption"
+msgid "These take effect when TR4W next starts."
+msgstr ""
+
+#: tprefsform.lblstationheading.caption
+#, fuzzy
+msgid "Station information"
+msgstr "Информация о станции"
+
+#: tprefsform.lbltciport.caption
+#, fuzzy
+msgctxt "tprefsform.lbltciport.caption"
+msgid "Port:"
+msgstr ""
+
+#: tradioeditform.btncancel.caption
+#, fuzzy
+msgctxt "tradioeditform.btncancel.caption"
+msgid "Cancel"
+msgstr ""
+
+#: tradioeditform.btnok.caption
+#, fuzzy
+msgctxt "tradioeditform.btnok.caption"
+msgid "Save and close"
+msgstr ""
+
+#: tradioeditform.caption
+#, fuzzy
+msgctxt "tradioeditform.caption"
+msgid "Radio"
+msgstr ""
+
+#: tradioeditform.lblname.caption
+#, fuzzy
+msgctxt "tradioeditform.lblname.caption"
+msgid "Name"
+msgstr "Имя"
+
+#: tradioeditform.lblport.caption
+#, fuzzy
+msgctxt "tradioeditform.lblport.caption"
+msgid "Port"
+msgstr ""
+
+#: tradioeditform.lblstopbits.caption
+#, fuzzy
+msgctxt "tradioeditform.lblstopbits.caption"
+msgid "Stop bits"
+msgstr ""
+
+#: tradioeditform.optdata7.caption
+#, fuzzy
+msgid "7"
+msgstr ""
+
+#: tradioeditform.optdata8.caption
+#, fuzzy
+msgid "8"
+msgstr ""
+
+#: tradioeditform.optstop1.caption
+#, fuzzy
+msgid "1"
+msgstr ""
+
+#: tradioeditform.optstop2.caption
+#, fuzzy
+msgid "2"
+msgstr ""
+
+#: tradioeditform.tabnetwork.caption
+#, fuzzy
+msgctxt "tradioeditform.tabnetwork.caption"
+msgid "Network"
+msgstr "Сеть"
+
+#: ttr4wmainform.caption
+#, fuzzy
+msgctxt "ttr4wmainform.caption"
+msgid "TR4W"
+msgstr ""
+
+#: uappstrings.salreadyrunningtitle
+#, fuzzy
+msgctxt "uappstrings.salreadyrunningtitle"
+msgid "TR4W"
+msgstr ""
+
+#: uappstrings.siniretiretitle
+#, fuzzy
+msgctxt "uappstrings.siniretiretitle"
+msgid "Old settings file"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_activate
+#, fuzzy
+msgid "Save and activate this profile"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_activelabel
+#, fuzzy
+msgctxt "ulclformhelpers.tc_prefs_activelabel"
+msgid "Active profile: "
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_add
+#, fuzzy
+msgctxt "ulclformhelpers.tc_prefs_add"
+msgid "Add..."
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_apply
+#, fuzzy
+msgctxt "ulclformhelpers.tc_prefs_apply"
+msgid "Save"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_autoconnect
+#, fuzzy
+msgctxt "ulclformhelpers.tc_prefs_autoconnect"
+msgid "Connect radios at startup"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_cancel
+#, fuzzy
+msgctxt "ulclformhelpers.tc_prefs_cancel"
+msgid "Cancel"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_cluster
+#, fuzzy
+msgid "DX Cluster"
+msgstr "DX Кластер"
+
+#: ulclformhelpers.tc_prefs_contest
+#, fuzzy
+msgid "Contest"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_cw
+#, fuzzy
+msgid "CW"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_cwoutput1
+#, fuzzy
+msgctxt "ulclformhelpers.tc_prefs_cwoutput1"
+msgid "CW output 1"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_cwoutput2
+#, fuzzy
+msgctxt "ulclformhelpers.tc_prefs_cwoutput2"
+msgid "CW output 2"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_deleteprofile
+#, fuzzy
+msgctxt "ulclformhelpers.tc_prefs_deleteprofile"
+msgid "Delete"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_duplicate
+#, fuzzy
+msgctxt "ulclformhelpers.tc_prefs_duplicate"
+msgid "Duplicate"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_edit
+#, fuzzy
+msgctxt "ulclformhelpers.tc_prefs_edit"
+msgid "Edit..."
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_hardware
+#, fuzzy
+msgctxt "ulclformhelpers.tc_prefs_hardware"
+msgid "Hardware"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_myradios
+#, fuzzy
+msgctxt "ulclformhelpers.tc_prefs_myradios"
+msgid "My radios"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_newprofile
+#, fuzzy
+msgctxt "ulclformhelpers.tc_prefs_newprofile"
+msgid "New..."
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_notmigrated
+#, fuzzy
+msgctxt "ulclformhelpers.tc_prefs_notmigrated"
+msgid ""
+"This section has not been migrated yet.\n"
+"Use the existing configuration screens for it."
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_ok
+#, fuzzy
+msgctxt "ulclformhelpers.tc_prefs_ok"
+msgid "Save and close"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_profiles
+#, fuzzy
+msgctxt "ulclformhelpers.tc_prefs_profiles"
+msgid "Station profile"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_radio1
+#, fuzzy
+msgctxt "ulclformhelpers.tc_prefs_radio1"
+msgid "Radio 1"
+msgstr "Радио 1"
+
+#: ulclformhelpers.tc_prefs_radio2
+#, fuzzy
+msgctxt "ulclformhelpers.tc_prefs_radio2"
+msgid "Radio 2"
+msgstr "Радио 2"
+
+#: ulclformhelpers.tc_prefs_remove
+#, fuzzy
+msgctxt "ulclformhelpers.tc_prefs_remove"
+msgid "Remove"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_renameprofile
+#, fuzzy
+msgctxt "ulclformhelpers.tc_prefs_renameprofile"
+msgid "Rename..."
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_so2r
+#, fuzzy
+msgctxt "ulclformhelpers.tc_prefs_so2r"
+msgid "SO2R enabled"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_speedsync
+#, fuzzy
+msgctxt "ulclformhelpers.tc_prefs_speedsync"
+msgid "Speed sync"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_title
+#, fuzzy
+msgctxt "ulclformhelpers.tc_prefs_title"
+msgid "TR4W Preferences"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_udpstream_appinfo
+#, fuzzy
+msgctxt "ulclformhelpers.tc_prefs_udpstream_appinfo"
+msgid "App info"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_udpstream_contact
+#, fuzzy
+msgctxt "ulclformhelpers.tc_prefs_udpstream_contact"
+msgid "Contact info"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_udpstream_lookup
+#, fuzzy
+msgctxt "ulclformhelpers.tc_prefs_udpstream_lookup"
+msgid "Callsign lookup"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_udpstream_radio
+#, fuzzy
+msgctxt "ulclformhelpers.tc_prefs_udpstream_radio"
+msgid "Radio info"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_udpstream_rotor
+#, fuzzy
+msgctxt "ulclformhelpers.tc_prefs_udpstream_rotor"
+msgid "Rotor"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_udpstream_score
+#, fuzzy
+msgctxt "ulclformhelpers.tc_prefs_udpstream_score"
+msgid "Score"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_unsavedtitle
+#, fuzzy
+msgctxt "ulclformhelpers.tc_prefs_unsavedtitle"
+msgid "TR4W Preferences"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_advanced
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_advanced"
+msgid "Advanced"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_baud
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_baud"
+msgid "Baud rate"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_catdtr
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_catdtr"
+msgid "CAT DTR"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_catrts
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_catrts"
+msgid "CAT RTS"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_civaddress
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_civaddress"
+msgid "CI-V address (hex)"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_databits
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_databits"
+msgid "Data bits"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_datamodeid
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_datamodeid"
+msgid "Icom data mode ID"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_discover
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_discover"
+msgid "Discover"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_filterbyte
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_filterbyte"
+msgid "Icom filter byte"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_found
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_found"
+msgid "Found"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_ft1000mprev
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_ft1000mprev"
+msgid "FT-1000MP CW reverse"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_hamlibid
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_hamlibid"
+msgid "HamLib model ID"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_ipaddress
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_ipaddress"
+msgid "IP address"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_keyerdtr
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_keyerdtr"
+msgid "Keyer DTR line"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_keyerport
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_keyerport"
+msgid "Keyer output port"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_keyerrts
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_keyerrts"
+msgid "Keyer RTS line"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_keyerstopbits
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_keyerstopbits"
+msgid "Stop bits"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_name
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_name"
+msgid "Name"
+msgstr "Имя"
+
+#: ulclformhelpers.tc_radioedit_network
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_network"
+msgid "Network"
+msgstr "Сеть"
+
+#: ulclformhelpers.tc_radioedit_parity
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_parity"
+msgid "Parity"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_parityeven
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_parityeven"
+msgid "Even"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_paritynone
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_paritynone"
+msgid "None"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_parityodd
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_parityodd"
+msgid "Odd"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_password
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_password"
+msgid "Password"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_polling
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_polling"
+msgid "Poll this radio"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_port
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_port"
+msgid "Port"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_serial
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_serial"
+msgid "Serial"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_startup
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_startup"
+msgid "Startup command"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_stopbits
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_stopbits"
+msgid "Stop bits"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_tcpport
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_tcpport"
+msgid "TCP port"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_title
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_title"
+msgid "Radio"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_transport
+#, fuzzy
+msgid "Connection"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_type
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_type"
+msgid "Radio type"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_unsaved
+#, fuzzy
+msgid "Save your changes to this radio?"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_usehamlib
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_usehamlib"
+msgid "Drive through HamLib"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_username
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_username"
+msgid "User name"
+msgstr ""
+
+#: ulclformhelpers.tc_radioedit_widecw
+#, fuzzy
+msgctxt "ulclformhelpers.tc_radioedit_widecw"
+msgid "Wide CW filter"
+msgstr ""
+

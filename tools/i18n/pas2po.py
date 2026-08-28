@@ -82,6 +82,16 @@ def build_catalog(lang_dir, live=None):
    return eng_decls, others, files, lossy
 
 
+def same_as_english(translated, english):
+   """Is the 'translation' the English wearing a hat?
+
+   The accelerator moves or vanishes between languages, a trailing ellipsis is
+   punctuation and not words, and case is not a translation."""
+   def norm(s):
+      return s.replace("&", "").replace("...", "").replace(u"…", "").strip().lower()
+   return norm(translated) == norm(english) and norm(english) != ""
+
+
 def emit(eng_decls, translations, lang, out_path, reflag_identical=False):
    """Write one .po, preserving any review decision already in the file."""
    prior = pofile.by_key(pofile.read_po(out_path))
@@ -106,7 +116,12 @@ def emit(eng_decls, translations, lang, out_path, reflag_identical=False):
          continue
 
       fuzzy = False
-      if t.value == d.value:
+      # NOT ==. English differing only by an accelerator, an ellipsis or case is
+      # still the English, and an exact test let 106 of them through as finished
+      # translations -- 81 Spanish, 17 German (NY4I found one in Polish,
+      # 2026-08-28: 'List of commands' translated as '&List of commands').
+      # po_lint carries the same comparison for catalogues that already exist.
+      if same_as_english(t.value, d.value):
          old = prior.get(d.name)
          reviewed = old is not None and not old.fuzzy and old.target == t.value
          fuzzy = reflag_identical or not reviewed
