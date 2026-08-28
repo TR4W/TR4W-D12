@@ -2231,11 +2231,35 @@ end;
 
 procedure TPrefsForm.RefreshAll;
 begin
-   RefreshRadioList;
-   RefreshKeyerList;
-   RefreshProfileCombo;
-   RefreshProfileFields;
-   RefreshUDPList;
+   { THE WHOLE SEQUENCE IS A REFILL, so nothing in it may be mistaken for the
+     operator editing something.
+
+     RefreshProfileFields already guarded itself, and that was not enough: the
+     refills BEFORE it -- the radio list, the keyer list, the profile combo --
+     each fire their own OnChange, and CaptureProfileFields answers those by
+     writing prof.Radio1Name/Radio2Name FROM THE COMBO BOXES. During RefreshAll
+     those combos still hold the previous state, so a model change made just
+     before it could be written straight back out.
+
+     That is how renaming a radio emptied the ACTIVE profile's second radio
+     (NY4I, 2026-08-28). RenameRadio had correctly updated every profile --
+     measured in his settings/tr4w.json, where the non-active profile "K4Z/K3"
+     kept radio1 = "K40" while the active "K4D/K4Z" had lost its radio2 key
+     entirely. Only the active one is written back from controls, which is
+     exactly the one that lost it, and the next apply then reported the profile
+     referring to a radio that no longer existed.
+
+     BeginLoading counts depth, so the inner guards still work. }
+   BeginLoading;
+   try
+      RefreshRadioList;
+      RefreshKeyerList;
+      RefreshProfileCombo;
+      RefreshProfileFields;
+      RefreshUDPList;
+   finally
+      EndLoading;
+   end;
 end;
 
 // "Save" is the only button whose effect is invisible: nothing on screen moves
