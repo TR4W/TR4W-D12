@@ -66,15 +66,9 @@ type
   private
     FFaults: integer;
     FLastFault: Int64;
-    { Whether Ctrl or Alt was down at the previous key event.  The loop watched
-      for a WM_KEYUP whose key WAS Ctrl or Alt; OnUserInput does not say which
-      key, so the transition is tracked instead.  Same result, and it does not
-      repaint twelve labels on every ordinary key release. }
-    FModifierWasDown: boolean;
     function  AcceleratorFor(const aKey: word; const aShift: TShiftState): word;
   public
     procedure KeyDownBefore(Sender: TObject; var Key: word; Shift: TShiftState);
-    procedure UserInput(Sender: TObject; Msg: cardinal);
     procedure AppException(Sender: TObject; E: Exception);
   end;
 
@@ -235,56 +229,22 @@ begin
   Key := VK_UNKNOWN;
 end;
 
-procedure TTR4WInputHooks.UserInput(Sender: TObject; Msg: cardinal);
-var
-  down: boolean;
-begin
-  if (Msg <> LM_KEYUP) and (Msg <> LM_KEYDOWN) and
-     (Msg <> LM_SYSKEYUP) and (Msg <> LM_SYSKEYDOWN) then
-     begin
-     Exit;
-     end;
+{ THE MODIFIER TRACKING THAT USED TO LIVE HERE IS GONE, AND SO IS THIS
+  HANDLER'S REASON TO EXIST.
 
-  // THE F-KEY LABELS FOLLOW THE MODIFIERS.  Holding Ctrl or Alt shows that
-  // bank's messages; releasing shows the plain one.  The loop watched for a
-  // WM_KEYUP whose key WAS Ctrl or Alt; OnUserInput reports the message but not
-  // the key, so this watches the TRANSITION instead -- which also stops it
-  // repainting twelve labels on every ordinary key release.
-  down := ((Windows.GetKeyState(VK_CONTROL) and $8000) <> 0) or
-          ((Windows.GetKeyState(VK_MENU) and $8000) <> 0);
+  It watched a GetKeyState transition and called ShowFMessages(0) to put the
+  plain function-key bank back when Ctrl or Alt was released. It never ran.
+  Measured on NY4I's machine with TRACE on, 2026-08-28: KeyDownBefore logged
+  every key -- `[InputHooks] key $11 ctrl=1` for Ctrl -- while a log line at the
+  top of this handler produced NOTHING at all.
 
-  { WHY THIS IS INSTRUMENTED RATHER THAN GUESSED AT. NY4I, 2026-08-28: "When I
-    press CTRL in the main window, the function key labels do change but when I
-    unkey CTRL, they do not restore to their original non-CTRL setting. Same for
-    ALT." The press and the release are handled in two different places -- the
-    press by the entry field's OnKeyDown (uMainWindowProc), the release here,
-    application-wide -- so which half is missing decides the fix, and the two
-    look identical from outside.
+  So AddOnKeyDownBeforeHandler delivers and AddOnUserInputHandler does not, in
+  this program. Rather than keep a subscription that answers nothing, the
+  release is handled where the events demonstrably arrive: the entry fields'
+  OnKeyUp, in uMainWindowProc.RestoreBankOnModifierRelease.
 
-    It cannot be reproduced from the harness: Test-Typing drives keys with
-    PostMessage, which does not move the real keyboard state GetKeyState reads,
-    so a modifier hold cannot be simulated that way.
-
-    DEBUG level, and only on a TRANSITION, so it costs nothing unless the
-    operator has asked for it. }
-  if logger.IsDebugEnabled and (FModifierWasDown <> down) then
-     begin
-     logger.Debug('[Modifiers] %s -- ctrl=%s alt=%s',
-                  [BoolToStr(down, 'down', 'up'),
-                   BoolToStr((Windows.GetKeyState(VK_CONTROL) and $8000) <> 0, True),
-                   BoolToStr((Windows.GetKeyState(VK_MENU) and $8000) <> 0, True)]);
-     end;
-
-  if FModifierWasDown and (not down) then
-     begin
-     if logger.IsDebugEnabled then
-        begin
-        logger.Debug('[Modifiers] restoring the plain function-key bank');
-        end;
-     ShowFMessages(0);
-     end;
-  FModifierWasDown := down;
-end;
+  Removed rather than left in place, because a handler that cannot fire is worse
+  than no handler: it reads as the feature being implemented. }
 
 procedure TTR4WInputHooks.AppException(Sender: TObject; E: Exception);
 begin
@@ -324,7 +284,6 @@ begin
   // AsFirst: the accelerators must be answered before anything else looks at
   // the key, which is what TranslateAccelerator's position in the loop meant.
   Application.AddOnKeyDownBeforeHandler(gHooks.KeyDownBefore, True);
-  Application.AddOnUserInputHandler(gHooks.UserInput, True);
   Application.AddOnExceptionHandler(gHooks.AppException, True);
 
   logger.Info('[InputHooks] accelerators, keypad CW memories, modifier tracking '

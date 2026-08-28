@@ -1044,6 +1044,7 @@ begin
       begin
       edit.OnKeyPress := EntryEvents.ExchangeKeyPress;
       edit.OnKeyDown  := EntryEvents.ExchangeKeyDown;
+      edit.OnKeyUp    := EntryEvents.ExchangeKeyUp;
       edit.OnChange   := EntryEvents.ExchangeChange;
       edit.OnEnter    := EntryEvents.ExchangeEnter;
       TR4WExchangeEdit := edit;

@@ -61,7 +61,9 @@ type
    public
       procedure CallKeyPress(Sender: TObject; var Key: AnsiChar);
       procedure CallKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
+      procedure RestoreBankOnModifierRelease(const aKey: word);
       procedure CallKeyUp(Sender: TObject; var Key: word; Shift: TShiftState);
+      procedure ExchangeKeyUp(Sender: TObject; var Key: word; Shift: TShiftState);
       procedure ExchangeKeyPress(Sender: TObject; var Key: AnsiChar);
       procedure ExchangeKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
 
@@ -403,12 +405,42 @@ begin
    EntryKeyDown(Key, efExchange);
 end;
 
-{ Only the callsign field had a WM_KEYUP arm. The loop's other two KEYUP lines
-  stay in the loop: ShowFMessages(0) on the Ctrl/Alt keyup is global, and the
-  band map's list box is a raw Win32 control in a different window, which will
-  move when that window converts. }
+{ The exchange field had no key-up arm at all. It needs this one for the same
+  reason the callsign field does: the operator can be in either when they let
+  go of Ctrl. }
+procedure TTR4WEntryEvents.ExchangeKeyUp(Sender: TObject; var Key: word; Shift: TShiftState);
+begin
+   RestoreBankOnModifierRelease(Key);
+end;
+
+{ RELEASING Ctrl OR Alt PUTS THE PLAIN FUNCTION-KEY BANK BACK.
+
+  This lived in uAppInputHooks on Application.OnUserInput, and it never ran.
+  Measured on NY4I's machine, 2026-08-28: with TRACE on, the KeyDownBefore
+  handler logs every key -- `[InputHooks] key $11 ctrl=1` for Ctrl -- while the
+  OnUserInput handler beside it produced NOTHING, so the restore was never
+  reached and the labels stayed on the Ctrl bank ("when I unpress Ctrl, the
+  labels did not change back", reported three times).
+
+  AddOnKeyDownBeforeHandler delivers; AddOnUserInputHandler does not. So the
+  release is handled where the events demonstrably arrive: the entry fields,
+  which have been LCL controls since Phase 3b and raise real key events. That is
+  also where the operator is when they hold Ctrl to look at a bank.
+
+  The old comment here said this line "stays in the loop" because it was global.
+  The loop is gone, and global turned out to mean nowhere. }
+procedure TTR4WEntryEvents.RestoreBankOnModifierRelease(const aKey: word);
+begin
+   if (aKey = VK_CONTROL) or (aKey = VK_MENU) then
+      begin
+      ShowFMessages(0);
+      end;
+end;
+
 procedure TTR4WEntryEvents.CallKeyUp(Sender: TObject; var Key: word; Shift: TShiftState);
 begin
+   RestoreBankOnModifierRelease(Key);
+
    if Key = 222 {apostrophe} then
       begin
       if StartSendingNowKey = '''' then
