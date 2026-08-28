@@ -751,11 +751,9 @@ resourcestring
 
 
    // UEDITMESSAGE
-   CLOSE_WORD  = 'Close';
-   CANCEL_WORD = 'Cancel';
-   HELP_WORD   = 'Help';
-   OK_WORD     = 'OK';
-   EXIT_WORD   = 'E&xit';
+   CLOSE_WORD = 'Close';
+   HELP_WORD  = 'Help';
+   EXIT_WORD  = 'E&xit';
 
 implementation
 

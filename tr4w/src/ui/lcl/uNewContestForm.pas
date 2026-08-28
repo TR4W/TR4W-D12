@@ -40,7 +40,8 @@ interface
 
 uses
   Classes, Controls, Forms, StdCtrls, ExtCtrls,
-  uTR4WStrings;   // RC_/TC_ captions -- see the note on SetRowLabels
+  uTR4WStrings,
+  LCLStrConsts;   // RC_/TC_ captions -- see the note on SetRowLabels
 
 type
   { The nine dynamic rows: three free-text fields then six CATEGORY-* choices.
@@ -174,8 +175,8 @@ begin
    // run time shows the operator's language.
    Caption          := TC_OPENCONFIGURATIONFILE;
    lblMyCall.Caption := RC_CALLSIGN;
-   btnOK.Caption    := OK_WORD;
-   btnCancel.Caption := CANCEL_WORD;
+   btnOK.Caption    := rsMbOK;
+   btnCancel.Caption := rsMbCancel;
 end;
 
 procedure TfrmNewContest.SetComment(const aText: string);

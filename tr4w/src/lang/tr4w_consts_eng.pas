@@ -525,9 +525,7 @@
   RC_BANDPLAN                           = 'Band plan';
   RC_DOWNLOAD_CTY_DAT                   = 'Download latest cty.dat';  // 4.75.3
   CLOSE_WORD                            = 'Close';
-  CANCEL_WORD                           = 'Cancel';
   HELP_WORD                             = 'Help';
-  OK_WORD                               = 'OK';
   EXIT_WORD                             = 'E&xit';
   RC_LISTOFMESS                         = 'List of messages';
   RC_STATIONINFO                        = 'Station information';

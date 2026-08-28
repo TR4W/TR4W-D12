@@ -38,7 +38,8 @@ uses
   Messages
   ,
   uTR4WStrings,
-  uAnsiStr;
+  uAnsiStr,
+  LCLStrConsts;
 type
   InitialCommands =
     (icmyCheck, icmyFDClass, icmyGrid, icmyFOC, icmyIOTA, icmyName, icmyPark, icmyPrec, icmyQTH, icmySection, icmyState, icmyZone, icmyPostalCode);
@@ -305,10 +306,10 @@ begin
            end;
 
         {OK}
-        CreateButton(BS_DEFPUSHBUTTON, OK_WORD, 350, 430, 80, hwnddlg, NC_BUTTON_OK);
+        CreateButton(BS_DEFPUSHBUTTON, rsMbOK, 350, 430, 80, hwnddlg, NC_BUTTON_OK);
         SendMessage(hwnddlg, DM_SETDEFID, NC_BUTTON_OK, 0);
         {CANCEL}
-        CreateButton(0, CANCEL_WORD, 350 + 90, 430, 80, hwnddlg, NC_BUTTON_CANCEL);
+        CreateButton(0, rsMbCancel, 350 + 90, 430, 80, hwnddlg, NC_BUTTON_CANCEL);
 
       end;
 

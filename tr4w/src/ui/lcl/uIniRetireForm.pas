@@ -47,6 +47,7 @@ implementation
 
 uses
   uAppStrings,
+  LCLStrConsts,      { rsMbYes / rsMbNo -- see the captions below }
   uLCLFormHelpers;   { OwnFormByMainWindow }
 
 function AskToRetireLegacyIni(const aPrompt: string;
@@ -58,6 +59,18 @@ begin
    aDontAskAgain  := False;
 
    f := TfrmIniRetire.Create(nil);
+
+   { THE BUTTON CAPTIONS COME FROM THE LCL, NOT FROM US.
+
+     The .lfm carries '&Yes' and '&No' as the designer defaults, and those used
+     to be ours to translate. We did it worse than Lazarus already had: our
+     Spanish was 'Si' with the accelerator dropped, while lclstrconsts.es.po
+     says '&Si' with the letter correctly moved from Y to S.
+
+     Taking them from the LCL means never owning the string, never translating
+     it, and inheriting a correct accelerator in every language it ships. }
+   f.btnYes.Caption := rsMbYes;
+   f.btnNo.Caption  := rsMbNo;
    try
       OwnFormByMainWindow(f);
       f.Caption          := SIniRetireTitle;

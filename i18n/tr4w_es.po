@@ -11,175 +11,135 @@ msgstr ""
 "X-Source-Language: en\n"
 
 #. Section: General
-#: utr4wstrings:tc_translation_language
-#: tr4w/src/lang/tr4w_consts_eng.pas:7
+#: utr4wstrings:tc_translation_language tr4w/src/lang/tr4w_consts_eng.pas:7
 msgctxt "TC_TRANSLATION_LANGUAGE"
 msgid "ENGLISH"
 msgstr "ESPAÑOL"
 
 #. Section: General
-#: utr4wstrings:tc_translation_author
-#: tr4w/src/lang/tr4w_consts_eng.pas:8
+#: utr4wstrings:tc_translation_author tr4w/src/lang/tr4w_consts_eng.pas:8
 msgctxt "TC_TRANSLATION_AUTHOR"
 msgid "N4AF"
 msgstr "Jose L. Rami EB2CYQ"
 
 #. Section: General
-#: utr4wstrings:tc_translator_email
-#: tr4w/src/lang/tr4w_consts_eng.pas:9
+#: utr4wstrings:tc_translator_email tr4w/src/lang/tr4w_consts_eng.pas:9
 msgctxt "TC_TRANSLATOR_EMAIL"
 msgid "ny4i@ny4i.com"
-msgstr "tr4w@qrz.ru"
+msgstr "tr4w-translation@ny4i.com"
 
 #. Section: General
-#: utr4wstrings:tc_wagwarn
-#: tr4w/src/lang/tr4w_consts_eng.pas:10
+#: utr4wstrings:tc_wagwarn tr4w/src/lang/tr4w_consts_eng.pas:10
 msgctxt "TC_WAGWarn"
 msgid "Warning: Out of WAG allowed frequency range"
 msgstr "Advertencia: Fuera del rango de frecuencia permitido de WAG"
 
 #. Section: General
-#: utr4wstrings:tc_freq
-#: tr4w/src/lang/tr4w_consts_eng.pas:11
+#: utr4wstrings:tc_freq tr4w/src/lang/tr4w_consts_eng.pas:11
 msgctxt "TC_FREQ"
 msgid "Freq"
 msgstr "Freq"
 
 #. Section: General
-#: utr4wstrings:tc_points
-#: tr4w/src/lang/tr4w_consts_eng.pas:12
+#: utr4wstrings:tc_points tr4w/src/lang/tr4w_consts_eng.pas:12
 msgctxt "TC_POINTS"
 msgid "Pts"
 msgstr "Pts"
 
 #. Section: General
-#: utr4wstrings:tc_op
-#: tr4w/src/lang/tr4w_consts_eng.pas:13
+#: utr4wstrings:tc_op tr4w/src/lang/tr4w_consts_eng.pas:13
 msgctxt "TC_OP"
 msgid "Op"
 msgstr "Op"
 
 #. Section: General
-#: utr4wstrings:tc_invalid
-#: tr4w/src/lang/tr4w_consts_eng.pas:14
+#: utr4wstrings:tc_invalid tr4w/src/lang/tr4w_consts_eng.pas:14
 msgctxt "TC_INVALID"
 msgid "Invalid Entry"
 msgstr "Entrada inválida"
 
 #. Section: General
-#: utr4wstrings:tc_freq_zero
-#: tr4w/src/lang/tr4w_consts_eng.pas:15
+#: utr4wstrings:tc_freq_zero tr4w/src/lang/tr4w_consts_eng.pas:15
 msgctxt "TC_FREQ_ZERO"
 msgid "ERROR: Invalid Frequency logged"
 msgstr "ERROR: Frecuencia registrada inválida"
 
 #. Section: General
-#: utr4wstrings:tc_freq_off
-#: tr4w/src/lang/tr4w_consts_eng.pas:16
+#: utr4wstrings:tc_freq_off tr4w/src/lang/tr4w_consts_eng.pas:16
 msgctxt "TC_FREQ_OFF"
 msgid "SHOW FREQUENCY IN LOG is turned off"
 msgstr "SHOW FREQUENCY IN LOG está desactivado"
 
 #. Section: General
-#: utr4wstrings:tc_checkcallsign
-#: tr4w/src/lang/tr4w_consts_eng.pas:17
+#: utr4wstrings:tc_checkcallsign tr4w/src/lang/tr4w_consts_eng.pas:17
 msgctxt "TC_CHECKCALLSIGN"
 msgid "Check callsign"
 msgstr "Comprueba indicativo"
 
 #. Section: General
-#: utr4wstrings:tc_2radio_warn
-#: tr4w/src/lang/tr4w_consts_eng.pas:18
+#: utr4wstrings:tc_2radio_warn tr4w/src/lang/tr4w_consts_eng.pas:18
 msgctxt "TC_2RADIO_WARN"
 msgid "ERROR: 2 Radios on single band"
 msgstr "ERROR: 2 radios en la misma banda"
 
 #. Section: General
-#: utr4wstrings:tc_frequencyforcallinkhz
-#: tr4w/src/lang/tr4w_consts_eng.pas:19
+#: utr4wstrings:tc_frequencyforcallinkhz tr4w/src/lang/tr4w_consts_eng.pas:19
 msgctxt "TC_FREQUENCYFORCALLINKHZ"
 msgid "frequency for %s in kHz"
 msgstr "frecuencia para %s en kHz"
 
 #. Section: General
-#: utr4wstrings:tc_difversion
-#: tr4w/src/lang/tr4w_consts_eng.pas:20
+#: utr4wstrings:tc_difversion tr4w/src/lang/tr4w_consts_eng.pas:20
 msgctxt "TC_DIFVERSION"
 msgid "%s is from a different program version.\rTR4W is expecting version %s.\rThe file you are trying to read version %s."
 msgstr "%s es de una version diferente.\rTR4W esperaba version %s.\rEl fichero que intenta leer es de la version %s."
 
 #. Section: General
-#. minute
-#: utr4wstrings:tc_m
-#: tr4w/src/lang/tr4w_consts_eng.pas:23
-msgctxt "TC_M"
-msgid "m"
-msgstr "m"
-
-#. Section: General
-#. second
-#: utr4wstrings:tc_s
-#: tr4w/src/lang/tr4w_consts_eng.pas:24
-msgctxt "TC_S"
-msgid "s"
-msgstr "s"
-
-#. Section: General
-#: utr4wstrings:tc_radio1
-#: tr4w/src/lang/tr4w_consts_eng.pas:26
-#: tprefsform.lblradio1.caption
-#: ulclformhelpers.tc_prefs_radio1
+#: utr4wstrings:tc_radio1 tr4w/src/lang/tr4w_consts_eng.pas:26
+#: tprefsform.lblradio1.caption ulclformhelpers.tc_prefs_radio1
 msgctxt "TC_RADIO1"
 msgid "Radio 1"
 msgstr "Radio 1"
 
 #. Section: General
-#: utr4wstrings:tc_radio2
-#: tr4w/src/lang/tr4w_consts_eng.pas:27
-#: tprefsform.lblradio2.caption
-#: ulclformhelpers.tc_prefs_radio2
+#: utr4wstrings:tc_radio2 tr4w/src/lang/tr4w_consts_eng.pas:27
+#: tprefsform.lblradio2.caption ulclformhelpers.tc_prefs_radio2
 msgctxt "TC_RADIO2"
 msgid "Radio 2"
 msgstr "Radio 2"
 
 #. Section: General
-#: utr4wstrings:tc_disbale_civ
-#: tr4w/src/lang/tr4w_consts_eng.pas:29
+#: utr4wstrings:tc_disbale_civ tr4w/src/lang/tr4w_consts_eng.pas:29
 msgctxt "TC_DISBALE_CIV"
 msgid "Disable \"CI-V Transceive\" mode in your ICOM rig. Refer to instruction manual of your radio."
 msgstr "Disable \"CI-V Transceive\" mode in your ICOM rig."
 
 #. Section: General
-#: utr4wstrings:tc_serial_format_label
-#: tr4w/src/lang/tr4w_consts_eng.pas:30
+#: utr4wstrings:tc_serial_format_label tr4w/src/lang/tr4w_consts_eng.pas:30
 msgctxt "TC_SERIAL_FORMAT_LABEL"
 msgid "DATA/PARITY/STOP"
 msgstr "DATA/PARITY/STOP"
 
 #. Section: General
-#: utr4wstrings:tc_hamlib_id_label
-#: tr4w/src/lang/tr4w_consts_eng.pas:31
+#: utr4wstrings:tc_hamlib_id_label tr4w/src/lang/tr4w_consts_eng.pas:31
 msgctxt "TC_HAMLIB_ID_LABEL"
 msgid "HAMLIB ID"
 msgstr "HAMLIB ID"
 
 #. Section: General
-#: utr4wstrings:tc_port_conflict_startup
-#: tr4w/src/lang/tr4w_consts_eng.pas:32
+#: utr4wstrings:tc_port_conflict_startup tr4w/src/lang/tr4w_consts_eng.pas:32
 msgctxt "TC_PORT_CONFLICT_STARTUP"
 msgid "RADIO ONE and RADIO TWO are both configured to use %s. RADIO ONE keeps the port; RADIO TWO CAT control is disabled until one radio's CONTROL PORT is changed."
 msgstr "RADIO ONE y RADIO TWO están configuradas para usar %s. RADIO ONE mantiene el puerto; El control RADIO DOS CAT está desactivado hasta que se cambie el PUERTO DE CONTROL de una radio."
 
 #. Section: General
-#: utr4wstrings:tc_port_conflict_dialog
-#: tr4w/src/lang/tr4w_consts_eng.pas:33
+#: utr4wstrings:tc_port_conflict_dialog tr4w/src/lang/tr4w_consts_eng.pas:33
 msgctxt "TC_PORT_CONFLICT_DIALOG"
 msgid "%s is already configured as %s. Two devices cannot share a serial port."
 msgstr "%s ya está configurado como %s. Dos dispositivos no pueden compartir un puerto serial."
 
 #. Section: General
-#: utr4wstrings:tc_port_conflict_proceed
-#: tr4w/src/lang/tr4w_consts_eng.pas:34
+#: utr4wstrings:tc_port_conflict_proceed tr4w/src/lang/tr4w_consts_eng.pas:34
 msgctxt "TC_PORT_CONFLICT_PROCEED"
 msgid "Apply anyway?"
 msgstr "¿Aplicar igualmente?"
@@ -192,15 +152,13 @@ msgid "You are using the latest version"
 msgstr "Está usando la versión más reciente"
 
 #. Section: MAIN
-#: utr4wstrings:tc_set_value_of_set_now
-#: tr4w/src/lang/tr4w_consts_eng.pas:38
+#: utr4wstrings:tc_set_value_of_set_now tr4w/src/lang/tr4w_consts_eng.pas:38
 msgctxt "TC_SET_VALUE_OF_SET_NOW"
 msgid "Set value of %s. Set now?"
 msgstr "Establecer valor de %s. ¿Establecer ahora?"
 
 #. Section: MAIN
-#: utr4wstrings:tc_configuration_file
-#: tr4w/src/lang/tr4w_consts_eng.pas:39
+#: utr4wstrings:tc_configuration_file tr4w/src/lang/tr4w_consts_eng.pas:39
 msgctxt "TC_CONFIGURATION_FILE"
 msgid "Configuration file"
 msgstr "Archivo de configuración"
@@ -221,127 +179,109 @@ msgstr "¿Añadir QSOs importados al log actual?"
 
 #. Section: MAIN
 #. - '345 Qs imported.'
-#: utr4wstrings:tc_qso_imported
-#: tr4w/src/lang/tr4w_consts_eng.pas:42
+#: utr4wstrings:tc_qso_imported tr4w/src/lang/tr4w_consts_eng.pas:42
 msgctxt "TC_QSO_IMPORTED"
 msgid "Qs imported."
 msgstr "QSOs importados."
 
 #. Section: MAIN
-#: utr4wstrings:tc_isadupe
-#: tr4w/src/lang/tr4w_consts_eng.pas:43
+#: utr4wstrings:tc_isadupe tr4w/src/lang/tr4w_consts_eng.pas:43
 msgctxt "TC_ISADUPE"
 msgid "%s is a dupe!!"
 msgstr "%s es un dupli!!"
 
 #. Section: MAIN
-#: utr4wstrings:tc_errorinlogfile
-#: tr4w/src/lang/tr4w_consts_eng.pas:44
+#: utr4wstrings:tc_errorinlogfile tr4w/src/lang/tr4w_consts_eng.pas:44
 msgctxt "TC_ERRORINLOGFILE"
 msgid "Error in log file!"
 msgstr "Error en  fichero log!"
 
 #. Section: MAIN
-#: utr4wstrings:tc_hasimpropersyntax
-#: tr4w/src/lang/tr4w_consts_eng.pas:45
+#: utr4wstrings:tc_hasimpropersyntax tr4w/src/lang/tr4w_consts_eng.pas:45
 msgctxt "TC_HASIMPROPERSYNTAX"
 msgid "%s has improper syntax!!"
 msgstr "%s sintaxis impropia!!"
 
 #. Section: MAIN
-#: utr4wstrings:tc_pref_or_cqzone
-#: tr4w/src/lang/tr4w_consts_eng.pas:46
+#: utr4wstrings:tc_pref_or_cqzone tr4w/src/lang/tr4w_consts_eng.pas:46
 msgctxt "TC_PREF_OR_CQZONE"
 msgid "Enter your CQ ZONE or JA PREFECTURE"
 msgstr "Introduzca su CQ ZONE o PREFECTURA JA"
 
 #. Section: MAIN
-#: utr4wstrings:tc_sorrynolog
-#: tr4w/src/lang/tr4w_consts_eng.pas:47
+#: utr4wstrings:tc_sorrynolog tr4w/src/lang/tr4w_consts_eng.pas:47
 msgctxt "TC_SORRYNOLOG"
 msgid "Sorry!! NO LOG = TRUE which prohibits logging QSOs on this computer"
 msgstr "Mal!! NO LOG = TRUE que prohibe guardar QSOs en este PC"
 
 #. Section: MAIN
-#: utr4wstrings:tc_setcomputeridvalue
-#: tr4w/src/lang/tr4w_consts_eng.pas:48
+#: utr4wstrings:tc_setcomputeridvalue tr4w/src/lang/tr4w_consts_eng.pas:48
 msgctxt "TC_SETCOMPUTERIDVALUE"
 msgid "Set COMPUTER ID value."
 msgstr "Elija valor COMPUTER ID."
 
 #. Section: MAIN
-#: utr4wstrings:tc_wanttoconvertlog
-#: tr4w/src/lang/tr4w_consts_eng.pas:50
+#: utr4wstrings:tc_wanttoconvertlog tr4w/src/lang/tr4w_consts_eng.pas:50
 msgctxt "TC_WANTTOCONVERTLOG"
 msgid "Would you like to convert this log to the latest format?"
 msgstr "¿Desea convertir este log al formato más reciente?"
 
 #. Section: MAIN
-#: utr4wstrings:tc_logfilenotfound
-#: tr4w/src/lang/tr4w_consts_eng.pas:51
+#: utr4wstrings:tc_logfilenotfound tr4w/src/lang/tr4w_consts_eng.pas:51
 msgctxt "TC_LOGFILENOTFOUND"
 msgid "Log file not found"
 msgstr "Archivo de log no encontrado"
 
 #. Section: MAIN
-#: utr4wstrings:tc_cannotbackuplog
-#: tr4w/src/lang/tr4w_consts_eng.pas:52
+#: utr4wstrings:tc_cannotbackuplog tr4w/src/lang/tr4w_consts_eng.pas:52
 msgctxt "TC_CANNOTBACKUPLOG"
 msgid "Could not make a backup copy of "
 msgstr "No se pudo hacer una copia de seguridad de "
 
 #. Section: MAIN
-#: utr4wstrings:tc_cannotcopylogreadonly
-#: tr4w/src/lang/tr4w_consts_eng.pas:53
+#: utr4wstrings:tc_cannotcopylogreadonly tr4w/src/lang/tr4w_consts_eng.pas:53
 msgctxt "TC_CANNOTCOPYLOGREADONLY"
 msgid "Cannot copy log file -- target exists and is read-only"
 msgstr "No se puede copiar el archivo de log -- el destino existe y es de solo lectura"
 
 #. Section: MAIN
-#: utr4wstrings:tc_backupcreated
-#: tr4w/src/lang/tr4w_consts_eng.pas:54
+#: utr4wstrings:tc_backupcreated tr4w/src/lang/tr4w_consts_eng.pas:54
 msgctxt "TC_BACKUPCREATED"
 msgid "Log file backup created"
 msgstr "Copia de seguridad del log creada"
 
 #. Section: MAIN
-#: utr4wstrings:tc_cannotrename
-#: tr4w/src/lang/tr4w_consts_eng.pas:55
+#: utr4wstrings:tc_cannotrename tr4w/src/lang/tr4w_consts_eng.pas:55
 msgctxt "TC_CANNOTRENAME"
 msgid "Can not rename"
 msgstr "No se puede renombrar"
 
 #. Section: MAIN
-#: utr4wstrings:tc_clearalllogs
-#: tr4w/src/lang/tr4w_consts_eng.pas:57
+#: utr4wstrings:tc_clearalllogs tr4w/src/lang/tr4w_consts_eng.pas:57
 msgctxt "TC_CLEARALLLOGS"
 msgid "\"CLEARALLLOGS\" to clear all logs in network"
 msgstr "\"CLEARALLLOGS\" para borrar todos los logs de la red"
 
 #. Section: MAIN
-#: utr4wstrings:tc_clear_dupesheet_net
-#: tr4w/src/lang/tr4w_consts_eng.pas:58
+#: utr4wstrings:tc_clear_dupesheet_net tr4w/src/lang/tr4w_consts_eng.pas:58
 msgctxt "TC_CLEAR_DUPESHEET_NET"
 msgid "\"CLEARDUPESHEET\" to clear all dupesheets in network"
 msgstr "\"CLEARDUPESHEET\" para borrar todas las hojas de duplicados en red"
 
 #. Section: MAIN
-#: utr4wstrings:tc_clear_multsheet_net
-#: tr4w/src/lang/tr4w_consts_eng.pas:59
+#: utr4wstrings:tc_clear_multsheet_net tr4w/src/lang/tr4w_consts_eng.pas:59
 msgctxt "TC_CLEAR_MULTSHEET_NET"
 msgid "\"CLEARMULTSHEET\" to clear all multsheets in network"
 msgstr "\"CLEARMULTSHEET\" para borrar todas las hojas de multiplicadores en red"
 
 #. Section: MAIN
-#: utr4wstrings:tc_reallywanttoclearthelog
-#: tr4w/src/lang/tr4w_consts_eng.pas:61
+#: utr4wstrings:tc_reallywanttoclearthelog tr4w/src/lang/tr4w_consts_eng.pas:61
 msgctxt "TC_REALLYWANTTOCLEARTHELOG"
 msgid "Do you really want to clear the current log?"
 msgstr "¿Quiere borrar el actual log?"
 
 #. Section: MAIN
-#: utr4wstrings:tc_messagetosendvianetwork
-#: tr4w/src/lang/tr4w_consts_eng.pas:62
+#: utr4wstrings:tc_messagetosendvianetwork tr4w/src/lang/tr4w_consts_eng.pas:62
 msgctxt "TC_MESSAGETOSENDVIANETWORK"
 msgid "message to send via network"
 msgstr "mensaje a enviar via red"
@@ -354,43 +294,37 @@ msgid "Do you really want to send time to computers on the network?"
 msgstr "¿Quiere enviar hora a los demas PCs de la red?"
 
 #. Section: MAIN
-#: utr4wstrings:tc_rulesonsm3cer
-#: tr4w/src/lang/tr4w_consts_eng.pas:64
+#: utr4wstrings:tc_rulesonsm3cer tr4w/src/lang/tr4w_consts_eng.pas:64
 msgctxt "TC_RULESONSM3CER"
 msgid "Rules for %s contest at WA7BNM Contest Calendar"
 msgstr "Reglas for %s concurso en WA7BNM calendario del consurso"
 
 #. Section: MAIN
-#: utr4wstrings:tc_rulesonqrzru
-#: tr4w/src/lang/tr4w_consts_eng.pas:65
+#: utr4wstrings:tc_rulesonqrzru tr4w/src/lang/tr4w_consts_eng.pas:65
 msgctxt "TC_RULESONQRZRU"
 msgid "Rules for %s contest at QRZ.RU"
 msgstr "Reglas del %s concurso en QRZ.RU"
 
 #. Section: MAIN
-#: utr4wstrings:tc_note
-#: tr4w/src/lang/tr4w_consts_eng.pas:66
+#: utr4wstrings:tc_note tr4w/src/lang/tr4w_consts_eng.pas:66
 msgctxt "TC_NOTE"
 msgid "note"
 msgstr "nota"
 
 #. Section: MAIN
-#: utr4wstrings:tc_dupesheetcleared
-#: tr4w/src/lang/tr4w_consts_eng.pas:67
+#: utr4wstrings:tc_dupesheetcleared tr4w/src/lang/tr4w_consts_eng.pas:67
 msgctxt "TC_DUPESHEETCLEARED"
 msgid "Dupe sheet cleared!"
 msgstr "Hoja de duplicados borrada!"
 
 #. Section: MAIN
-#: utr4wstrings:tc_multsheetcleared
-#: tr4w/src/lang/tr4w_consts_eng.pas:68
+#: utr4wstrings:tc_multsheetcleared tr4w/src/lang/tr4w_consts_eng.pas:68
 msgctxt "TC_MULTSHEETCLEARED"
 msgid "Mult sheet cleared!"
 msgstr "¡Hoja de multiplicadores borrada!"
 
 #. Section: MAIN
-#: utr4wstrings:tc_yestoclearthedupesheet
-#: tr4w/src/lang/tr4w_consts_eng.pas:69
+#: utr4wstrings:tc_yestoclearthedupesheet tr4w/src/lang/tr4w_consts_eng.pas:69
 msgctxt "TC_YESTOCLEARTHEDUPESHEET"
 msgid "\"YES\" to clear the dupesheet"
 msgstr "\"Si\" para borrar la hoja de duplicados"
@@ -410,93 +344,80 @@ msgid "transmit frequency (kiloHertz): "
 msgstr "frecuencia transmision (kiloHertz): "
 
 #. Section: MAIN
-#: utr4wstrings:tc_sprintqsyrule
-#: tr4w/src/lang/tr4w_consts_eng.pas:73
+#: utr4wstrings:tc_sprintqsyrule tr4w/src/lang/tr4w_consts_eng.pas:73
 msgctxt "TC_SPRINTQSYRULE"
 msgid "SPRINT QSY RULE!!!"
 msgstr "SPRINT QSY RULE!!!"
 
 #. Section: MAIN
-#: utr4wstrings:tc_paddle
-#: tr4w/src/lang/tr4w_consts_eng.pas:74
+#: utr4wstrings:tc_paddle tr4w/src/lang/tr4w_consts_eng.pas:74
 #: tprefsform.lblpaddlegroup.caption
 msgctxt "TC_PADDLE"
 msgid "Paddle"
 msgstr "Paddle"
 
 #. Section: MAIN
-#: utr4wstrings:tc_footsw
-#: tr4w/src/lang/tr4w_consts_eng.pas:75
+#: utr4wstrings:tc_footsw tr4w/src/lang/tr4w_consts_eng.pas:75
 msgctxt "TC_FOOTSW"
 msgid "Footsw."
 msgstr "Footsw."
 
 #. Section: MAIN
-#: utr4wstrings:tc_sun
-#: tr4w/src/lang/tr4w_consts_eng.pas:79
+#: utr4wstrings:tc_sun tr4w/src/lang/tr4w_consts_eng.pas:79
 msgctxt "TC_SUN"
 msgid "Sun"
 msgstr "Dom"
 
 #. Section: MAIN
-#: utr4wstrings:tc_mon
-#: tr4w/src/lang/tr4w_consts_eng.pas:80
+#: utr4wstrings:tc_mon tr4w/src/lang/tr4w_consts_eng.pas:80
 msgctxt "TC_MON"
 msgid "Mon"
 msgstr "Lun"
 
 #. Section: MAIN
-#: utr4wstrings:tc_tue
-#: tr4w/src/lang/tr4w_consts_eng.pas:81
+#: utr4wstrings:tc_tue tr4w/src/lang/tr4w_consts_eng.pas:81
 msgctxt "TC_TUE"
 msgid "Tue"
 msgstr "Mar"
 
 #. Section: MAIN
-#: utr4wstrings:tc_wed
-#: tr4w/src/lang/tr4w_consts_eng.pas:82
+#: utr4wstrings:tc_wed tr4w/src/lang/tr4w_consts_eng.pas:82
 msgctxt "TC_WED"
 msgid "Wed"
 msgstr "Mie"
 
 #. Section: MAIN
-#: utr4wstrings:tc_thu
-#: tr4w/src/lang/tr4w_consts_eng.pas:83
+#: utr4wstrings:tc_thu tr4w/src/lang/tr4w_consts_eng.pas:83
 msgctxt "TC_THU"
 msgid "Thu"
 msgstr "Jue"
 
 #. Section: MAIN
-#: utr4wstrings:tc_fri
-#: tr4w/src/lang/tr4w_consts_eng.pas:84
+#: utr4wstrings:tc_fri tr4w/src/lang/tr4w_consts_eng.pas:84
 msgctxt "TC_FRI"
 msgid "Fri"
 msgstr "Vie"
 
 #. Section: MAIN
-#: utr4wstrings:tc_sat
-#: tr4w/src/lang/tr4w_consts_eng.pas:85
+#: utr4wstrings:tc_sat tr4w/src/lang/tr4w_consts_eng.pas:85
 msgctxt "TC_SAT"
 msgid "Sat"
 msgstr "Sab"
 
 #. Section: uMP3Recorder
-#: utr4wstrings:tc_lame_error
-#: tr4w/src/lang/tr4w_consts_eng.pas:89
+#: utr4wstrings:tc_lame_error tr4w/src/lang/tr4w_consts_eng.pas:89
 msgctxt "TC_LAME_ERROR"
 msgid "You may download it from"
 msgstr "Puede descargarlo desde"
 
 #. Section: uMP3Recorder
-#: utr4wstrings:tc_thisversion
-#: tr4w/src/lang/tr4w_consts_eng.pas:92
+#: utr4wstrings:tc_thisversion tr4w/src/lang/tr4w_consts_eng.pas:92
 msgctxt "TC_THISVERSION"
 msgid "You have "
 msgstr "Esta version "
 
 #. Section: uMP3Recorder
-#: utr4wstrings:tc_wasbuildin
-#: tr4w/src/lang/tr4w_consts_eng.pas:93
+#: utr4wstrings:tc_wasbuildin tr4w/src/lang/tr4w_consts_eng.pas:93
 msgctxt "TC_WASBUILDIN"
 msgid " installed (build date "
 msgstr " se compilo en "
@@ -509,36 +430,31 @@ msgid "Would you like to check for a possible newer version of  TR4W ?"
 msgstr "¿Quieres buscar la ultima version?"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_labre
-#: tr4w/src/lang/tr4w_consts_eng.pas:97
+#: utr4wstrings:tc_labre tr4w/src/lang/tr4w_consts_eng.pas:97
 msgctxt "TC_LABRE"
 msgid "Enter 2 char QTH ID"
 msgstr "Introduzca ID de QTH de 2 caracteres"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_eudx
-#: tr4w/src/lang/tr4w_consts_eng.pas:98
+#: utr4wstrings:tc_eudx tr4w/src/lang/tr4w_consts_eng.pas:98
 msgctxt "TC_EUDX"
 msgid "EU country, enter your four character country code"
 msgstr "País europeo, introduzca su código de país de cuatro caracteres"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_irts
-#: tr4w/src/lang/tr4w_consts_eng.pas:99
+#: utr4wstrings:tc_irts tr4w/src/lang/tr4w_consts_eng.pas:99
 msgctxt "TC_IRTS"
 msgid "EI/GI, enter your County"
 msgstr "EI/GI, introduzca su condado"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_latest_config_file
-#: tr4w/src/lang/tr4w_consts_eng.pas:100
+#: utr4wstrings:tc_latest_config_file tr4w/src/lang/tr4w_consts_eng.pas:100
 msgctxt "TC_LATEST_CONFIG_FILE"
 msgid "Latest config file"
 msgstr "Último archivo de configuración"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_openconfigurationfile
-#: tr4w/src/lang/tr4w_consts_eng.pas:101
+#: utr4wstrings:tc_openconfigurationfile tr4w/src/lang/tr4w_consts_eng.pas:101
 msgctxt "TC_OPENCONFIGURATIONFILE"
 msgid " - Open configuration file or start a new contest"
 msgstr " - Abrir fichero configuración o inciar un nuevo concurso"
@@ -551,15 +467,13 @@ msgid "Folder \"%s\" already exists.\rOverwrite ?"
 msgstr "¿El directorio \"%s\" ya existe.\rsobreescribir?"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_iamin
-#: tr4w/src/lang/tr4w_consts_eng.pas:103
+#: utr4wstrings:tc_iamin tr4w/src/lang/tr4w_consts_eng.pas:103
 msgctxt "TC_IAMIN"
 msgid "&I am in %s"
 msgstr "&Estoy en %s"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_croat
-#: tr4w/src/lang/tr4w_consts_eng.pas:104
+#: utr4wstrings:tc_croat tr4w/src/lang/tr4w_consts_eng.pas:104
 msgctxt "TC_CROAT"
 msgid "I am in Croatia"
 msgstr "Estoy en Croacia"
@@ -586,29 +500,25 @@ msgid "Enter state for U.S., province for Canada:"
 msgstr "Enter estado de U.S., provincia para Canada:"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_enteryouroblastid
-#: tr4w/src/lang/tr4w_consts_eng.pas:109
+#: utr4wstrings:tc_enteryouroblastid tr4w/src/lang/tr4w_consts_eng.pas:109
 msgctxt "TC_ENTERYOUROBLASTID"
 msgid "Enter your oblast ID:"
 msgstr "Entre su oblast ID:"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_enteryourprovinceid
-#: tr4w/src/lang/tr4w_consts_eng.pas:110
+#: utr4wstrings:tc_enteryourprovinceid tr4w/src/lang/tr4w_consts_eng.pas:110
 msgctxt "TC_ENTERYOURPROVINCEID"
 msgid "Enter your province ID:"
 msgstr "Entre su provincia ID:"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_enteryourcountycode
-#: tr4w/src/lang/tr4w_consts_eng.pas:111
+#: utr4wstrings:tc_enteryourcountycode tr4w/src/lang/tr4w_consts_eng.pas:111
 msgctxt "TC_ENTERYOURCOUNTYCODE"
 msgid "Enter your county code:"
 msgstr "Entre su codigo pais:"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_enteryourdok
-#: tr4w/src/lang/tr4w_consts_eng.pas:112
+#: utr4wstrings:tc_enteryourdok tr4w/src/lang/tr4w_consts_eng.pas:112
 msgctxt "TC_ENTERYOURDOK"
 msgid "Enter your DOK:"
 msgstr "Entre su DOK:"
@@ -621,15 +531,13 @@ msgid "Enter your district abbreviation:"
 msgstr "Entre su distrito abreviacion:"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_enteryourfocnumber
-#: tr4w/src/lang/tr4w_consts_eng.pas:114
+#: utr4wstrings:tc_enteryourfocnumber tr4w/src/lang/tr4w_consts_eng.pas:114
 msgctxt "TC_ENTERYOURFOCNUMBER"
 msgid "Enter your FOC number:"
 msgstr "Introduzca su número FOC:"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_enteryourrdaid
-#: tr4w/src/lang/tr4w_consts_eng.pas:115
+#: utr4wstrings:tc_enteryourrdaid tr4w/src/lang/tr4w_consts_eng.pas:115
 msgctxt "TC_ENTERYOURRDAID"
 msgid "Enter your RDA ID:"
 msgstr "Entre su RDA ID:"
@@ -656,8 +564,7 @@ msgid "Enter your city identifier:"
 msgstr "Entre su identificador ciudad:"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_enteryourname
-#: tr4w/src/lang/tr4w_consts_eng.pas:119
+#: utr4wstrings:tc_enteryourname tr4w/src/lang/tr4w_consts_eng.pas:119
 msgctxt "TC_ENTERYOURNAME"
 msgid "Enter your name:"
 msgstr "Entre su nombre:"
@@ -670,8 +577,7 @@ msgid "Enter the last two digits of the year of your first official amateur radi
 msgstr "Entre los dos ultimos digitos del año de su primera licencia:"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_enteryourzone
-#: tr4w/src/lang/tr4w_consts_eng.pas:121
+#: utr4wstrings:tc_enteryourzone tr4w/src/lang/tr4w_consts_eng.pas:121
 msgctxt "TC_ENTERYOURZONE"
 msgid "Enter your zone:"
 msgstr "Entre su zona:"
@@ -691,15 +597,13 @@ msgid "Enter sum of your age and amount of years elapsed since your first QSO (e
 msgstr "Enter suma de su edad y los años trancurridos desde su primer QSO (e.j. 28+14=42):"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_ozcr
-#: tr4w/src/lang/tr4w_consts_eng.pas:124
+#: utr4wstrings:tc_ozcr tr4w/src/lang/tr4w_consts_eng.pas:124
 msgctxt "TC_OZCR"
 msgid "Enter three-letters number:"
 msgstr "Enter tres letras:"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_enteryourstatecode
-#: tr4w/src/lang/tr4w_consts_eng.pas:125
+#: utr4wstrings:tc_enteryourstatecode tr4w/src/lang/tr4w_consts_eng.pas:125
 msgctxt "TC_ENTERYOURSTATECODE"
 msgid "Enter your state code:"
 msgstr "Entre su codigo estado:"
@@ -712,8 +616,7 @@ msgid "Enter your four digit grid square:"
 msgstr "Entre sus cuatro digitos de su locator:"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_rfas
-#: tr4w/src/lang/tr4w_consts_eng.pas:127
+#: utr4wstrings:tc_rfas tr4w/src/lang/tr4w_consts_eng.pas:127
 msgctxt "TC_RFAS"
 msgid "Enter your geographical coordinates:"
 msgstr "Entre sus coordenadas geograficas:"
@@ -726,15 +629,13 @@ msgid "Enter your six digit grid square:"
 msgstr "Entre sus seis digitos del locator:"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_enteryournameandstate
-#: tr4w/src/lang/tr4w_consts_eng.pas:129
+#: utr4wstrings:tc_enteryournameandstate tr4w/src/lang/tr4w_consts_eng.pas:129
 msgctxt "TC_ENTERYOURNAMEANDSTATE"
 msgid "Enter your name (and state if you are in North America):"
 msgstr "Entre su name (y estado US si esta en norteamerica):"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_enteryournameandqth
-#: tr4w/src/lang/tr4w_consts_eng.pas:130
+#: utr4wstrings:tc_enteryournameandqth tr4w/src/lang/tr4w_consts_eng.pas:130
 msgctxt "TC_ENTERYOURNAMEANDQTH"
 msgid "Enter your name and QTH (US state, Canadian Province or DX country) or member number:"
 msgstr "Entre su nombre y QTH (estado US, provincia canadiense o pais DX):"
@@ -747,8 +648,7 @@ msgid "Enter your precedence, your check\r(last two digits of year licensed) and
 msgstr "Entre su precedence, su check\r(last dos numeros de ano licensed) y ARRL section:"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_enteryourqthandthename
-#: tr4w/src/lang/tr4w_consts_eng.pas:132
+#: utr4wstrings:tc_enteryourqthandthename tr4w/src/lang/tr4w_consts_eng.pas:132
 msgctxt "TC_ENTERYOURQTHANDTHENAME"
 msgid "Enter your QTH that you want to send\rand the name you want to use:"
 msgstr "Entre su QTH que quiere enviar\ry el nombre que quiere usar:"
@@ -768,8 +668,7 @@ msgid "Enter your age in MY STATE field:"
 msgstr "Entre su edad en el campo MY STATE:"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_enteryourqthorpower
-#: tr4w/src/lang/tr4w_consts_eng.pas:135
+#: utr4wstrings:tc_enteryourqthorpower tr4w/src/lang/tr4w_consts_eng.pas:135
 msgctxt "TC_ENTERYOURQTHORPOWER"
 msgid "Enter your QTH that you want to send if you are in North America or your power as MY STATE if outside:"
 msgstr "Entre su QTH que quiere enviar si estña en norteamerica o su potencia como MY STATE si es de fuera:"
@@ -782,8 +681,7 @@ msgid "Enter first two letters of your grid square:"
 msgstr "Entre las dos primeras letras de su locator:"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_enteryoursquareid
-#: tr4w/src/lang/tr4w_consts_eng.pas:137
+#: utr4wstrings:tc_enteryoursquareid tr4w/src/lang/tr4w_consts_eng.pas:137
 msgctxt "TC_ENTERYOURSQUAREID"
 msgid "Enter your square ID:"
 msgstr "Entre su square ID:"
@@ -796,8 +694,7 @@ msgid "Enter your membership number:"
 msgstr "Entre su membership number:"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_enteryourcontinent
-#: tr4w/src/lang/tr4w_consts_eng.pas:139
+#: utr4wstrings:tc_enteryourcontinent tr4w/src/lang/tr4w_consts_eng.pas:139
 msgctxt "TC_ENTERYOURCONTINENT"
 msgid "Enter your continent (and possible additional ID, i.e. SA or NAQ)"
 msgstr "Entre su continent (and possible additional ID, i.e. SAYL or NAQRP)"
@@ -818,151 +715,129 @@ msgid "Enter your federal district if in British Columbia, or your State/Provinc
 msgstr "Introduzca su distrito federal si está en Columbia Británica, o su Estado/Provincia"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_prefecture
-#: tr4w/src/lang/tr4w_consts_eng.pas:142
+#: utr4wstrings:tc_prefecture tr4w/src/lang/tr4w_consts_eng.pas:142
 msgctxt "TC_PREFECTURE"
 msgid "Enter your prefecture:"
 msgstr "Entre su prefecture:"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_stationclass
-#: tr4w/src/lang/tr4w_consts_eng.pas:143
+#: utr4wstrings:tc_stationclass tr4w/src/lang/tr4w_consts_eng.pas:143
 msgctxt "TC_STATIONCLASS"
 msgid "Enter your station class:"
 msgstr "Entre su station class:"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_agecallsignage
-#: tr4w/src/lang/tr4w_consts_eng.pas:144
+#: utr4wstrings:tc_agecallsignage tr4w/src/lang/tr4w_consts_eng.pas:144
 msgctxt "TC_AGECALLSIGNAGE"
 msgid "Enter your age (and Silent Key callsign and age):"
 msgstr "Entre su edad (and Silent Key callsign y edad):"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_department
-#: tr4w/src/lang/tr4w_consts_eng.pas:145
+#: utr4wstrings:tc_department tr4w/src/lang/tr4w_consts_eng.pas:145
 msgctxt "TC_DEPARTMENT"
 msgid "Enter your department:"
 msgstr "Entre su department:"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_enteryourrdaidorgrid
-#: tr4w/src/lang/tr4w_consts_eng.pas:146
+#: utr4wstrings:tc_enteryourrdaidorgrid tr4w/src/lang/tr4w_consts_eng.pas:146
 msgctxt "TC_ENTERYOURRDAIDORGRID"
 msgid "Enter your RDA ID (for UA1A stations) or four digit grid square:"
 msgstr "Entre su RDA ID (for UA1A stations) or cuatro digit locator:"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_enteryourbranchnumber
-#: tr4w/src/lang/tr4w_consts_eng.pas:147
+#: utr4wstrings:tc_enteryourbranchnumber tr4w/src/lang/tr4w_consts_eng.pas:147
 msgctxt "TC_ENTERYOURBRANCHNUMBER"
 msgid "Enter your Branch number:"
 msgstr "Introduzca su número de sucursal:"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_enteryourpostcode
-#: tr4w/src/lang/tr4w_consts_eng.pas:148
+#: utr4wstrings:tc_enteryourpostcode tr4w/src/lang/tr4w_consts_eng.pas:148
 msgctxt "TC_ENTERYOURPOSTCODE"
 msgid "Enter your postcode:"
 msgstr "Introduzca su código postal:"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_enteryourdistrictcode
-#: tr4w/src/lang/tr4w_consts_eng.pas:149
+#: utr4wstrings:tc_enteryourdistrictcode tr4w/src/lang/tr4w_consts_eng.pas:149
 msgctxt "TC_ENTERYOURDISTRICTCODE"
 msgid "If in UK/EI, enter your 2 digit district code"
 msgstr "Si está en UK/EI, introduzca su código de distrito de 2 dígitos"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_islandstation
-#: tr4w/src/lang/tr4w_consts_eng.pas:150
+#: utr4wstrings:tc_islandstation tr4w/src/lang/tr4w_consts_eng.pas:150
 msgctxt "TC_ISLANDSTATION"
 msgid "Island station"
 msgstr "Estacion de isla"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_newengland
-#: tr4w/src/lang/tr4w_consts_eng.pas:151
+#: utr4wstrings:tc_newengland tr4w/src/lang/tr4w_consts_eng.pas:151
 msgctxt "TC_NEWENGLAND"
 msgid "New England"
 msgstr "Nueva Inglaterra"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_california
-#: tr4w/src/lang/tr4w_consts_eng.pas:152
+#: utr4wstrings:tc_california tr4w/src/lang/tr4w_consts_eng.pas:152
 msgctxt "TC_CALIFORNIA"
 msgid "California"
 msgstr "California"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_florida
-#: tr4w/src/lang/tr4w_consts_eng.pas:153
+#: utr4wstrings:tc_florida tr4w/src/lang/tr4w_consts_eng.pas:153
 msgctxt "TC_FLORIDA"
 msgid "Florida"
 msgstr "Florida"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_michigan
-#: tr4w/src/lang/tr4w_consts_eng.pas:154
+#: utr4wstrings:tc_michigan tr4w/src/lang/tr4w_consts_eng.pas:154
 msgctxt "TC_MICHIGAN"
 msgid "Michigan"
 msgstr "Michigan"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_minnesota
-#: tr4w/src/lang/tr4w_consts_eng.pas:155
+#: utr4wstrings:tc_minnesota tr4w/src/lang/tr4w_consts_eng.pas:155
 msgctxt "TC_MINNESOTA"
 msgid "Minnesota"
 msgstr "Minnesota"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_ohio
-#: tr4w/src/lang/tr4w_consts_eng.pas:156
+#: utr4wstrings:tc_ohio tr4w/src/lang/tr4w_consts_eng.pas:156
 msgctxt "TC_OHIO"
 msgid "Ohio"
 msgstr "Ohio"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_washington
-#: tr4w/src/lang/tr4w_consts_eng.pas:157
+#: utr4wstrings:tc_washington tr4w/src/lang/tr4w_consts_eng.pas:157
 msgctxt "TC_WASHINGTON"
 msgid "Washington"
 msgstr "Washington"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_wisconsin
-#: tr4w/src/lang/tr4w_consts_eng.pas:158
+#: utr4wstrings:tc_wisconsin tr4w/src/lang/tr4w_consts_eng.pas:158
 msgctxt "TC_WISCONSIN"
 msgid "Wisconsin"
 msgstr "Wisconsin"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_texas
-#: tr4w/src/lang/tr4w_consts_eng.pas:159
+#: utr4wstrings:tc_texas tr4w/src/lang/tr4w_consts_eng.pas:159
 msgctxt "TC_TEXAS"
 msgid "Texas"
 msgstr "Texas"
 
 #. Section: NEW CONTEST
 #. Section: COUNTRY9
-#: utr4wstrings:tc_northamerica
-#: tr4w/src/lang/tr4w_consts_eng.pas:160
-#: utr4wstrings:tc_c9_northamerica
-#: tr4w/src/lang/tr4w_consts_eng.pas:283
+#: utr4wstrings:tc_northamerica tr4w/src/lang/tr4w_consts_eng.pas:160
+#: utr4wstrings:tc_c9_northamerica tr4w/src/lang/tr4w_consts_eng.pas:283
 msgctxt "TC_NORTHAMERICA"
 msgid "North America"
 msgstr "Norteamérica"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_russia
-#: tr4w/src/lang/tr4w_consts_eng.pas:161
+#: utr4wstrings:tc_russia tr4w/src/lang/tr4w_consts_eng.pas:161
 msgctxt "TC_RUSSIA"
 msgid "Russia"
 msgstr "Rusia"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_ukraine
-#: tr4w/src/lang/tr4w_consts_eng.pas:162
+#: utr4wstrings:tc_ukraine tr4w/src/lang/tr4w_consts_eng.pas:162
 msgctxt "TC_UKRAINE"
 msgid "Ukraine"
 msgstr "Ucrania"
@@ -975,176 +850,151 @@ msgid "Czech Republic or in Slovakia"
 msgstr "Czech Republic o en Slovakia"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_bulgaria
-#: tr4w/src/lang/tr4w_consts_eng.pas:164
+#: utr4wstrings:tc_bulgaria tr4w/src/lang/tr4w_consts_eng.pas:164
 msgctxt "TC_BULGARIA"
 msgid "Bulgaria"
 msgstr "Bulgaria"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_romania
-#: tr4w/src/lang/tr4w_consts_eng.pas:165
+#: utr4wstrings:tc_romania tr4w/src/lang/tr4w_consts_eng.pas:165
 msgctxt "TC_ROMANIA"
 msgid "Romania"
 msgstr "Rumania"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_hungary
-#: tr4w/src/lang/tr4w_consts_eng.pas:166
+#: utr4wstrings:tc_hungary tr4w/src/lang/tr4w_consts_eng.pas:166
 msgctxt "TC_HUNGARY"
 msgid "Hungary"
 msgstr "Hungria"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_yugoslavia
-#: tr4w/src/lang/tr4w_consts_eng.pas:167
+#: utr4wstrings:tc_yugoslavia tr4w/src/lang/tr4w_consts_eng.pas:167
 msgctxt "TC_YUGOSLAVIA"
 msgid "Yugoslavia"
 msgstr "Yugoslavia"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_ukei
-#: tr4w/src/lang/tr4w_consts_eng.pas:168
+#: utr4wstrings:tc_ukei tr4w/src/lang/tr4w_consts_eng.pas:168
 msgctxt "TC_UKEI"
 msgid "If in Uk/EI enter your 2 digit district code"
 msgstr "Si está en UK/EI, introduzca su código de distrito de 2 dígitos"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_belgium
-#: tr4w/src/lang/tr4w_consts_eng.pas:169
+#: utr4wstrings:tc_belgium tr4w/src/lang/tr4w_consts_eng.pas:169
 msgctxt "TC_BELGIUM"
 msgid "Belgium"
 msgstr "Belgica"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_netherlands
-#: tr4w/src/lang/tr4w_consts_eng.pas:170
+#: utr4wstrings:tc_netherlands tr4w/src/lang/tr4w_consts_eng.pas:170
 msgctxt "TC_NETHERLANDS"
 msgid "Netherlands"
 msgstr "Holanda"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_stpetersburgoblast
-#: tr4w/src/lang/tr4w_consts_eng.pas:171
+#: utr4wstrings:tc_stpetersburgoblast tr4w/src/lang/tr4w_consts_eng.pas:171
 msgctxt "TC_STPETERSBURGOBLAST"
 msgid "St.Petersburg / oblast"
 msgstr "St.Petersburg / oblast"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_germany
-#: tr4w/src/lang/tr4w_consts_eng.pas:172
+#: utr4wstrings:tc_germany tr4w/src/lang/tr4w_consts_eng.pas:172
 msgctxt "TC_GERMANY"
 msgid "Germany"
 msgstr "Alemania"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_uk
-#: tr4w/src/lang/tr4w_consts_eng.pas:173
+#: utr4wstrings:tc_uk tr4w/src/lang/tr4w_consts_eng.pas:173
 msgctxt "TC_UK"
 msgid "UK"
 msgstr "UK"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_arktikaclub
-#: tr4w/src/lang/tr4w_consts_eng.pas:174
+#: utr4wstrings:tc_arktikaclub tr4w/src/lang/tr4w_consts_eng.pas:174
 msgctxt "TC_ARKTIKACLUB"
 msgid "club"
 msgstr "club"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_poland
-#: tr4w/src/lang/tr4w_consts_eng.pas:175
+#: utr4wstrings:tc_poland tr4w/src/lang/tr4w_consts_eng.pas:175
 msgctxt "TC_POLAND"
 msgid "Poland"
 msgstr "Polonia"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_kazakhstan
-#: tr4w/src/lang/tr4w_consts_eng.pas:176
+#: utr4wstrings:tc_kazakhstan tr4w/src/lang/tr4w_consts_eng.pas:176
 msgctxt "TC_KAZAKHSTAN"
 msgid "Kazakhstan"
 msgstr "Kazajistán"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_italy
-#: tr4w/src/lang/tr4w_consts_eng.pas:177
+#: utr4wstrings:tc_italy tr4w/src/lang/tr4w_consts_eng.pas:177
 msgctxt "TC_ITALY"
 msgid "Italy"
 msgstr "Italia"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_switzerland
-#: tr4w/src/lang/tr4w_consts_eng.pas:178
+#: utr4wstrings:tc_switzerland tr4w/src/lang/tr4w_consts_eng.pas:178
 msgctxt "TC_SWITZERLAND"
 msgid "Switzerland"
 msgstr "Suiza"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_hq
-#: tr4w/src/lang/tr4w_consts_eng.pas:179
+#: utr4wstrings:tc_hq tr4w/src/lang/tr4w_consts_eng.pas:179
 msgctxt "TC_HQ"
 msgid "HQ (HQ station)"
 msgstr "HQ (HQ station)"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_cis
-#: tr4w/src/lang/tr4w_consts_eng.pas:180
+#: utr4wstrings:tc_cis tr4w/src/lang/tr4w_consts_eng.pas:180
 msgctxt "TC_CIS"
 msgid "CIS"
 msgstr "CIS"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_spain
-#: tr4w/src/lang/tr4w_consts_eng.pas:181
+#: utr4wstrings:tc_spain tr4w/src/lang/tr4w_consts_eng.pas:181
 msgctxt "TC_SPAIN"
 msgid "Spain"
 msgstr "España"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_japan
-#: tr4w/src/lang/tr4w_consts_eng.pas:182
+#: utr4wstrings:tc_japan tr4w/src/lang/tr4w_consts_eng.pas:182
 msgctxt "TC_JAPAN"
 msgid "Japan"
 msgstr "Japón"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_canada
-#: tr4w/src/lang/tr4w_consts_eng.pas:183
+#: utr4wstrings:tc_canada tr4w/src/lang/tr4w_consts_eng.pas:183
 msgctxt "TC_CANADA"
 msgid "Canada"
 msgstr "Canadá"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_france
-#: tr4w/src/lang/tr4w_consts_eng.pas:184
+#: utr4wstrings:tc_france tr4w/src/lang/tr4w_consts_eng.pas:184
 msgctxt "TC_FRANCE"
 msgid "France"
 msgstr "Francia"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_hq_or_member
-#: tr4w/src/lang/tr4w_consts_eng.pas:185
+#: utr4wstrings:tc_hq_or_member tr4w/src/lang/tr4w_consts_eng.pas:185
 msgctxt "TC_HQ_OR_MEMBER"
 msgid "HQ or member"
 msgstr "HQ o miembro"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_ireland
-#: tr4w/src/lang/tr4w_consts_eng.pas:186
+#: utr4wstrings:tc_ireland tr4w/src/lang/tr4w_consts_eng.pas:186
 msgctxt "TC_IRELAND"
 msgid "Ireland"
 msgstr "Irlanda"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_gc
-#: tr4w/src/lang/tr4w_consts_eng.pas:187
+#: utr4wstrings:tc_gc tr4w/src/lang/tr4w_consts_eng.pas:187
 msgctxt "TC_GC"
 msgid "special two character designator"
 msgstr "designador especial de dos caracteres"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_gagarin
-#: tr4w/src/lang/tr4w_consts_eng.pas:188
+#: utr4wstrings:tc_gagarin tr4w/src/lang/tr4w_consts_eng.pas:188
 msgctxt "TC_GAGARIN"
 msgid "special two char ID"
 msgstr "ID especial de dos caracteres"
@@ -1157,36 +1007,31 @@ msgid "YOU ARE NOT CONNECTED TO THE INTERNET!"
 msgstr "NO ESTA CONECTADO A INTERNET!"
 
 #. Section: UTELNET
-#: utr4wstrings:tc_gethost
-#: tr4w/src/lang/tr4w_consts_eng.pas:197
+#: utr4wstrings:tc_gethost tr4w/src/lang/tr4w_consts_eng.pas:197
 msgctxt "TC_GETHOST"
 msgid "GET HOST.."
 msgstr "ELIJA HOST.."
 
 #. Section: UTELNET
-#: utr4wstrings:tc_server
-#: tr4w/src/lang/tr4w_consts_eng.pas:198
+#: utr4wstrings:tc_server tr4w/src/lang/tr4w_consts_eng.pas:198
 msgctxt "TC_SERVER"
 msgid "SERVER: %s"
 msgstr "Servidor: %s"
 
 #. Section: UTELNET
-#: utr4wstrings:tc_host
-#: tr4w/src/lang/tr4w_consts_eng.pas:199
+#: utr4wstrings:tc_host tr4w/src/lang/tr4w_consts_eng.pas:199
 msgctxt "TC_HOST"
 msgid "HOST  : %s"
 msgstr "HOST  : %s"
 
 #. Section: UTELNET
-#: utr4wstrings:tc_connect
-#: tr4w/src/lang/tr4w_consts_eng.pas:200
+#: utr4wstrings:tc_connect tr4w/src/lang/tr4w_consts_eng.pas:200
 msgctxt "TC_CONNECT"
 msgid "CONNECT.."
 msgstr "CONECTAR.."
 
 #. Section: UTELNET
-#: utr4wstrings:tc_connected
-#: tr4w/src/lang/tr4w_consts_eng.pas:201
+#: utr4wstrings:tc_connected tr4w/src/lang/tr4w_consts_eng.pas:201
 msgctxt "TC_CONNECTED"
 msgid "CONNECTED"
 msgstr "CONECTADO"
@@ -1213,8 +1058,7 @@ msgid "Computer clock is synchronized."
 msgstr "Reloj del PC esta sincronizado."
 
 #. Section: UNET
-#: utr4wstrings:tc_connectingto
-#: tr4w/src/lang/tr4w_consts_eng.pas:208
+#: utr4wstrings:tc_connectingto tr4w/src/lang/tr4w_consts_eng.pas:208
 msgctxt "TC_CONNECTINGTO"
 msgid "Connecting to "
 msgstr "Conectando a "
@@ -1227,29 +1071,25 @@ msgid "Connect to TR4WSERVER failed. Check SERVER PASSWORD value!!"
 msgstr "Conexion a TR4WSERVER fallida. Compruebe valor SERVER PASSWORD!!"
 
 #. Section: UNET
-#: utr4wstrings:tc_connectedto
-#: tr4w/src/lang/tr4w_consts_eng.pas:210
+#: utr4wstrings:tc_connectedto tr4w/src/lang/tr4w_consts_eng.pas:210
 msgctxt "TC_CONNECTEDTO"
 msgid "Connected to "
 msgstr "Conectando a "
 
 #. Section: UNET
-#: utr4wstrings:tc_disconnectedfrom
-#: tr4w/src/lang/tr4w_consts_eng.pas:211
+#: utr4wstrings:tc_disconnectedfrom tr4w/src/lang/tr4w_consts_eng.pas:211
 msgctxt "TC_DISCONNECTEDFROM"
 msgid "** DISCONNECTED from "
 msgstr "** Desconectado de "
 
 #. Section: UNET
-#: utr4wstrings:tc_autosynchronizinglog
-#: tr4w/src/lang/tr4w_consts_eng.pas:212
+#: utr4wstrings:tc_autosynchronizinglog tr4w/src/lang/tr4w_consts_eng.pas:212
 msgctxt "TC_AUTOSYNCHRONIZINGLOG"
 msgid "Auto-synchronizing log from server."
 msgstr "Sincronizando log desde el servidor automaticamente."
 
 #. Section: UNET
-#: utr4wstrings:tc_failedtoconnectto
-#: tr4w/src/lang/tr4w_consts_eng.pas:213
+#: utr4wstrings:tc_failedtoconnectto tr4w/src/lang/tr4w_consts_eng.pas:213
 msgctxt "TC_FAILEDTOCONNECTTO"
 msgid "Failed to connect to "
 msgstr "Fallo al conectar a "
@@ -1262,15 +1102,13 @@ msgid "Server and local logs are identical."
 msgstr "SERVER y LOCAL logs son identicos."
 
 #. Section: UNET
-#: utr4wstrings:tc_network
-#: tr4w/src/lang/tr4w_consts_eng.pas:215
+#: utr4wstrings:tc_network tr4w/src/lang/tr4w_consts_eng.pas:215
 msgctxt "TC_NETWORK"
 msgid "Network : %s %s:%d"
 msgstr "Redes de contact : %s %s:%d"
 
 #. Section: UNET
-#: utr4wstrings:tc_server_log_changed
-#: tr4w/src/lang/tr4w_consts_eng.pas:216
+#: utr4wstrings:tc_server_log_changed tr4w/src/lang/tr4w_consts_eng.pas:216
 msgctxt "TC_SERVER_LOG_CHANGED"
 msgid "Server log changed. %u QSO(s) updated. Do logs synchronizing (Ctrl+Alt+S)."
 msgstr "Server El registro del servidor cambió. %u QSO(s) actualizado. Haz la sincronización de logs (Ctrl+Alt+S)."
@@ -1290,162 +1128,139 @@ msgid "Failed to connect"
 msgstr "Fallo al conectar"
 
 #. Section: UGETSCORES
-#: utr4wstrings:tc_noanswerfromserver
-#: tr4w/src/lang/tr4w_consts_eng.pas:222
+#: utr4wstrings:tc_noanswerfromserver tr4w/src/lang/tr4w_consts_eng.pas:222
 msgctxt "TC_NOANSWERFROMSERVER"
 msgid "No answer from server"
 msgstr "Sin respuesta del server"
 
 #. Section: UGETSCORES
-#: utr4wstrings:tc_uploadedsuccessfully
-#: tr4w/src/lang/tr4w_consts_eng.pas:223
+#: utr4wstrings:tc_uploadedsuccessfully tr4w/src/lang/tr4w_consts_eng.pas:223
 msgctxt "TC_UPLOADEDSUCCESSFULLY"
 msgid "Uploaded successfully."
 msgstr "Envio correcto."
 
 #. Section: UGETSCORES
-#: utr4wstrings:tc_failedtoload
-#: tr4w/src/lang/tr4w_consts_eng.pas:224
+#: utr4wstrings:tc_failedtoload tr4w/src/lang/tr4w_consts_eng.pas:224
 msgctxt "TC_FAILEDTOLOAD"
 msgid "Failed to load. View getscoresanswer.html for details."
 msgstr "FALLO AL LEER. Ver GETSCORESANSWER.HTML para detalles."
 
 #. Section: UBANDMAP
-#: utr4wstrings:tc_source
-#: tr4w/src/lang/tr4w_consts_eng.pas:228
+#: utr4wstrings:tc_source tr4w/src/lang/tr4w_consts_eng.pas:228
 msgctxt "TC_SOURCE"
 msgid "Source: %s"
 msgstr "Origen: %s"
 
 #. Section: UBANDMAP
-#: utr4wstrings:tc_min
-#: tr4w/src/lang/tr4w_consts_eng.pas:229
+#: utr4wstrings:tc_min tr4w/src/lang/tr4w_consts_eng.pas:229
 msgctxt "TC_MIN"
 msgid "%u min."
 msgstr "%u min."
 
 #. Section: LOGWIND
-#: utr4wstrings:tc_cqtotal
-#: tr4w/src/lang/tr4w_consts_eng.pas:233
+#: utr4wstrings:tc_cqtotal tr4w/src/lang/tr4w_consts_eng.pas:233
 msgctxt "TC_CQTOTAL"
 msgid "CQ total: %u"
 msgstr "CQ total: %u"
 
 #. Section: LOGWIND
-#: utr4wstrings:tc_repeating
-#: tr4w/src/lang/tr4w_consts_eng.pas:234
+#: utr4wstrings:tc_repeating tr4w/src/lang/tr4w_consts_eng.pas:234
 msgctxt "TC_REPEATING"
 msgid "Repeating %s  Listen time = %u msec - PgUp/Dn to adjust or ESCAPE"
-msgstr "Repitiendo %s  Tiempo escucha = %u msec - PgUp/Dn para ajustar o ESCAPE"
+msgstr "Repitiendo %s  Tiempo escucha = %u msec - AvPàg/RePàg para ajustar o ESCAPE"
 
 #. Section: LOGWIND
-#: utr4wstrings:tc_newtour
-#: tr4w/src/lang/tr4w_consts_eng.pas:235
+#: utr4wstrings:tc_newtour tr4w/src/lang/tr4w_consts_eng.pas:235
 msgctxt "TC_NEWTOUR"
 msgid "New tour %d/%d"
 msgstr "Nueva vuelta %d/%d"
 
 #. Section: LOGWIND
-#: utr4wstrings:tc_enter
-#: tr4w/src/lang/tr4w_consts_eng.pas:236
+#: utr4wstrings:tc_enter tr4w/src/lang/tr4w_consts_eng.pas:236
 msgctxt "TC_ENTER"
 msgid "Enter %s :"
 msgstr "Entre %s :"
 
 #. Section: LOGWIND
-#: utr4wstrings:tc_pts
-#: tr4w/src/lang/tr4w_consts_eng.pas:237
+#: utr4wstrings:tc_pts tr4w/src/lang/tr4w_consts_eng.pas:237
 msgctxt "TC_PTS"
 msgid "%d Pts"
 msgstr "%d Pts"
 
 #. Section: LOGWIND
-#: utr4wstrings:tc_rate
-#: tr4w/src/lang/tr4w_consts_eng.pas:238
+#: utr4wstrings:tc_rate tr4w/src/lang/tr4w_consts_eng.pas:238
 msgctxt "TC_RATE"
 msgid "Rate = %u"
 msgstr "Ratio = %u"
 
 #. Section: LOGWIND
-#: utr4wstrings:tc_last60
-#: tr4w/src/lang/tr4w_consts_eng.pas:239
+#: utr4wstrings:tc_last60 tr4w/src/lang/tr4w_consts_eng.pas:239
 msgctxt "TC_LAST60"
 msgid "Last 60 = %d"
 msgstr "Ult 60 = %d"
 
 #. Section: LOGWIND
-#: utr4wstrings:tc_thishr
-#: tr4w/src/lang/tr4w_consts_eng.pas:240
+#: utr4wstrings:tc_thishr tr4w/src/lang/tr4w_consts_eng.pas:240
 msgctxt "TC_THISHR"
 msgid "This hr = %d"
 msgstr "Esta hr = %d"
 
 #. Section: LOGWIND
-#: utr4wstrings:tc_band_changes
-#: tr4w/src/lang/tr4w_consts_eng.pas:241
+#: utr4wstrings:tc_band_changes tr4w/src/lang/tr4w_consts_eng.pas:241
 msgctxt "TC_BAND_CHANGES"
 msgid "Bn. ch. = %d"
 msgstr "Bn. ch. = %d"
 
 #. Section: LOGWIND
-#: utr4wstrings:tc_haveqtcs
-#: tr4w/src/lang/tr4w_consts_eng.pas:243
+#: utr4wstrings:tc_haveqtcs tr4w/src/lang/tr4w_consts_eng.pas:243
 msgctxt "TC_HAVEQTCS"
 msgid "Have %u QTCs"
 msgstr "Tiene %u QTCs"
 
 #. Section: LOGWIND
-#: utr4wstrings:tc_insert
-#: tr4w/src/lang/tr4w_consts_eng.pas:244
+#: utr4wstrings:tc_insert tr4w/src/lang/tr4w_consts_eng.pas:244
 msgctxt "TC_INSERT"
 msgid "INSERT"
 msgstr "INSERTA"
 
 #. Section: LOGWIND
-#: utr4wstrings:tc_override
-#: tr4w/src/lang/tr4w_consts_eng.pas:245
+#: utr4wstrings:tc_override tr4w/src/lang/tr4w_consts_eng.pas:245
 msgctxt "TC_OVERRIDE"
 msgid "OVERRIDE"
 msgstr "SOBRESCRIBE"
 
 #. Section: LOGWIND
-#: utr4wstrings:tc_unknowncountry
-#: tr4w/src/lang/tr4w_consts_eng.pas:246
+#: utr4wstrings:tc_unknowncountry tr4w/src/lang/tr4w_consts_eng.pas:246
 msgctxt "TC_UNKNOWNCOUNTRY"
 msgid "Unknown country"
 msgstr "Pais desconocido"
 
 #. Section: UCALLSIGNS
-#: utr4wstrings:tc_dupesheet
-#: tr4w/src/lang/tr4w_consts_eng.pas:250
+#: utr4wstrings:tc_dupesheet tr4w/src/lang/tr4w_consts_eng.pas:250
 msgctxt "TC_DUPESHEET"
 msgid "Dupesheet - %sm-%s"
 msgstr "Hoja duplicados - %sm-%s"
 
 #. Section: LOGEDIT
-#: utr4wstrings:tc_qsoneedsfor
-#: tr4w/src/lang/tr4w_consts_eng.pas:254
+#: utr4wstrings:tc_qsoneedsfor tr4w/src/lang/tr4w_consts_eng.pas:254
 msgctxt "TC_QSONEEDSFOR"
 msgid " QSO needs for %s :"
 msgstr " QSO necesario para %s :"
 
 #. Section: LOGEDIT
-#: utr4wstrings:tc_multneedsfor
-#: tr4w/src/lang/tr4w_consts_eng.pas:255
+#: utr4wstrings:tc_multneedsfor tr4w/src/lang/tr4w_consts_eng.pas:255
 msgctxt "TC_MULTNEEDSFOR"
 msgid " Mult needs for %s :"
 msgstr " Multi necesario para %s :"
 
 #. Section: LOGEDIT
-#: utr4wstrings:tc_missingmultsreport
-#: tr4w/src/lang/tr4w_consts_eng.pas:256
+#: utr4wstrings:tc_missingmultsreport tr4w/src/lang/tr4w_consts_eng.pas:256
 msgctxt "TC_MISSINGMULTSREPORT"
 msgid "Missing mults report: %u countries on at least %u but not all bands."
 msgstr "Informe multip.ausente: %u entidades en al menos %u pero no todas las bandas."
 
 #. Section: LOGDUPE
-#: utr4wstrings:tc_therewerecalls
-#: tr4w/src/lang/tr4w_consts_eng.pas:260
+#: utr4wstrings:tc_therewerecalls tr4w/src/lang/tr4w_consts_eng.pas:260
 msgctxt "TC_THEREWERECALLS"
 msgid "There were %u calls found in initial exchange file.\r+%u dupe(s)"
 msgstr "Se encontraron llamadas %u en el archivo de intercambio inicial.+%u duplicado(s)"
@@ -1465,8 +1280,7 @@ msgid "Not enough info in exchange!!"
 msgstr "Insuficiente info en intercambio!!"
 
 #. Section: LOGSTUFF
-#: utr4wstrings:tc_improperdomesitcqth
-#: tr4w/src/lang/tr4w_consts_eng.pas:266
+#: utr4wstrings:tc_improperdomesitcqth tr4w/src/lang/tr4w_consts_eng.pas:266
 msgctxt "TC_IMPROPERDOMESITCQTH"
 msgid "Improper domestic QTH!!"
 msgstr "Impropìo QTH domertico!!"
@@ -1479,36 +1293,31 @@ msgid "Improper domestic QTH or missing name!!"
 msgstr "Improper domesitc QTH or missing name!!"
 
 #. Section: LOGSTUFF
-#: utr4wstrings:tc_missingqthandorname
-#: tr4w/src/lang/tr4w_consts_eng.pas:268
+#: utr4wstrings:tc_missingqthandorname tr4w/src/lang/tr4w_consts_eng.pas:268
 msgctxt "TC_MISSINGQTHANDORNAME"
 msgid "Missing QTH and/or name!!"
 msgstr "Falta QTH y/o nombre!!"
 
 #. Section: LOGSTUFF
-#: utr4wstrings:tc_noqsonumberfound
-#: tr4w/src/lang/tr4w_consts_eng.pas:269
+#: utr4wstrings:tc_noqsonumberfound tr4w/src/lang/tr4w_consts_eng.pas:269
 msgctxt "TC_NOQSONUMBERFOUND"
 msgid "No QSO number found!!"
 msgstr "No encuentro numero QSO!!"
 
 #. Section: LOGSTUFF
-#: utr4wstrings:tc_improperzonenumber
-#: tr4w/src/lang/tr4w_consts_eng.pas:270
+#: utr4wstrings:tc_improperzonenumber tr4w/src/lang/tr4w_consts_eng.pas:270
 msgctxt "TC_IMPROPERZONENUMBER"
 msgid "Improper zone number!!"
 msgstr "¡¡Número de zona incorrecto!!"
 
 #. Section: LOGSTUFF
-#: utr4wstrings:tc_impropercontinent
-#: tr4w/src/lang/tr4w_consts_eng.pas:271
+#: utr4wstrings:tc_impropercontinent tr4w/src/lang/tr4w_consts_eng.pas:271
 msgctxt "TC_IMPROPERCONTINENT"
 msgid "Improper continent!!"
 msgstr "¡Continente incorrecto!"
 
 #. Section: LOGSTUFF
-#: utr4wstrings:tc_savingto
-#: tr4w/src/lang/tr4w_consts_eng.pas:272
+#: utr4wstrings:tc_savingto tr4w/src/lang/tr4w_consts_eng.pas:272
 msgctxt "TC_SAVINGTO"
 msgid "Saving %s to %s"
 msgstr "Guardar %s en %s"
@@ -1535,71 +1344,61 @@ msgid "Waiting for you enter strength of RST (Single digit)!!"
 msgstr "Esperando la entrada de intensidad RST (Un solo digito)!!"
 
 #. Section: COUNTRY9
-#: utr4wstrings:tc_c9_southamerica
-#: tr4w/src/lang/tr4w_consts_eng.pas:284
+#: utr4wstrings:tc_c9_southamerica tr4w/src/lang/tr4w_consts_eng.pas:284
 msgctxt "TC_C9_SOUTHAMERICA"
 msgid "South America"
 msgstr "Sudamerica"
 
 #. Section: COUNTRY9
-#: utr4wstrings:tc_c9_europe
-#: tr4w/src/lang/tr4w_consts_eng.pas:285
+#: utr4wstrings:tc_c9_europe tr4w/src/lang/tr4w_consts_eng.pas:285
 msgctxt "TC_C9_EUROPE"
 msgid "Europe"
 msgstr "Europa"
 
 #. Section: COUNTRY9
-#: utr4wstrings:tc_c9_africa
-#: tr4w/src/lang/tr4w_consts_eng.pas:286
+#: utr4wstrings:tc_c9_africa tr4w/src/lang/tr4w_consts_eng.pas:286
 msgctxt "TC_C9_AFRICA"
 msgid "Africa"
 msgstr "África"
 
 #. Section: COUNTRY9
-#: utr4wstrings:tc_c9_oceania
-#: tr4w/src/lang/tr4w_consts_eng.pas:287
+#: utr4wstrings:tc_c9_oceania tr4w/src/lang/tr4w_consts_eng.pas:287
 msgctxt "TC_C9_OCEANIA"
 msgid "Oceania"
 msgstr "Oceanía"
 
 #. Section: COUNTRY9
-#: utr4wstrings:tc_c9_antartica
-#: tr4w/src/lang/tr4w_consts_eng.pas:288
+#: utr4wstrings:tc_c9_antartica tr4w/src/lang/tr4w_consts_eng.pas:288
 msgctxt "TC_C9_ANTARTICA"
 msgid "Antartica"
 msgstr "Antártida"
 
 #. Section: COUNTRY9
-#: utr4wstrings:tc_c9_asia
-#: tr4w/src/lang/tr4w_consts_eng.pas:289
+#: utr4wstrings:tc_c9_asia tr4w/src/lang/tr4w_consts_eng.pas:289
 msgctxt "TC_C9_ASIA"
 msgid "Asia"
 msgstr "Asia"
 
 #. Section: COUNTRY9
-#: utr4wstrings:tc_c9_unknown
-#: tr4w/src/lang/tr4w_consts_eng.pas:290
+#: utr4wstrings:tc_c9_unknown tr4w/src/lang/tr4w_consts_eng.pas:290
 msgctxt "TC_C9_UNKNOWN"
 msgid "Unknown"
 msgstr "Desconocido"
 
 #. Section: USTATIONS
-#: utr4wstrings:tc_stationsinmode
-#: tr4w/src/lang/tr4w_consts_eng.pas:294
+#: utr4wstrings:tc_stationsinmode tr4w/src/lang/tr4w_consts_eng.pas:294
 msgctxt "TC_STATIONSINMODE"
 msgid "Stations in %s mode"
 msgstr "Estaciones en %s modo"
 
 #. Section: USPOTS
-#: utr4wstrings:tc_spots
-#: tr4w/src/lang/tr4w_consts_eng.pas:298
+#: utr4wstrings:tc_spots tr4w/src/lang/tr4w_consts_eng.pas:298
 msgctxt "TC_SPOTS"
 msgid "%d spots"
 msgstr "%d spots"
 
 #. Section: uSendKeyboard
-#: utr4wstrings:tc_sendingssbwavfilename
-#: tr4w/src/lang/tr4w_consts_eng.pas:302
+#: utr4wstrings:tc_sendingssbwavfilename tr4w/src/lang/tr4w_consts_eng.pas:302
 msgctxt "TC_SENDINGSSBWAVFILENAME"
 msgid "Sending SSB .wav filename. Use ENTER to play, Escape/F10 to exit."
 msgstr "Enviando fichero SSB .wav. Use ENTER para reproducir, Escape/F10 para salir."
@@ -1612,15 +1411,13 @@ msgid "Was message number %u confirmed?"
 msgstr "Es mensaje numero %u confirmado?"
 
 #. Section: QTC
-#: utr4wstrings:tc_doyoureallywantstopnow
-#: tr4w/src/lang/tr4w_consts_eng.pas:307
+#: utr4wstrings:tc_doyoureallywantstopnow tr4w/src/lang/tr4w_consts_eng.pas:307
 msgctxt "TC_DOYOUREALLYWANTSTOPNOW"
 msgid "Do you really want stop now?"
 msgstr "Quiere pararlo ahora?"
 
 #. Section: QTC
-#: utr4wstrings:tc_qtcabortedbyoperator
-#: tr4w/src/lang/tr4w_consts_eng.pas:308
+#: utr4wstrings:tc_qtcabortedbyoperator tr4w/src/lang/tr4w_consts_eng.pas:308
 msgctxt "TC_QTCABORTEDBYOPERATOR"
 msgid "QTC aborted by operator."
 msgstr "QTC abortado por operador."
@@ -1633,29 +1430,25 @@ msgid "Do you really want to abort this QTC?"
 msgstr "Quiere abortar este QTC?"
 
 #. Section: QTC
-#: utr4wstrings:tc_next
-#: tr4w/src/lang/tr4w_consts_eng.pas:310
+#: utr4wstrings:tc_next tr4w/src/lang/tr4w_consts_eng.pas:310
 msgctxt "TC_NEXT"
 msgid "< Next"
 msgstr "< Prox"
 
 #. Section: QTC
-#: utr4wstrings:tc_qtc_for
-#: tr4w/src/lang/tr4w_consts_eng.pas:311
+#: utr4wstrings:tc_qtc_for tr4w/src/lang/tr4w_consts_eng.pas:311
 msgctxt "TC_QTC_FOR"
 msgid "%s for %s"
 msgstr "%s para %s"
 
 #. Section: QTC
-#: utr4wstrings:tc_qtc_callsign
-#: tr4w/src/lang/tr4w_consts_eng.pas:312
+#: utr4wstrings:tc_qtc_callsign tr4w/src/lang/tr4w_consts_eng.pas:312
 msgctxt "TC_QTC_CALLSIGN"
 msgid "Callsign :"
 msgstr "Indicativo :"
 
 #. Section: QTC
-#: utr4wstrings:tc_enterqtcmaxof
-#: tr4w/src/lang/tr4w_consts_eng.pas:313
+#: utr4wstrings:tc_enterqtcmaxof tr4w/src/lang/tr4w_consts_eng.pas:313
 msgctxt "TC_ENTERQTCMAXOF"
 msgid "Enter QTC #/# (max of %d) :"
 msgstr "Entre QTC #/# (max de %d) :"
@@ -1675,36 +1468,31 @@ msgid "Edit QTC? Press Yes to edit QTC or  No to log "
 msgstr "Editar QTC? Pulse SI para editar QTC o No para log "
 
 #. Section: QTC
-#: utr4wstrings:tc_checkqtcnumber
-#: tr4w/src/lang/tr4w_consts_eng.pas:316
+#: utr4wstrings:tc_checkqtcnumber tr4w/src/lang/tr4w_consts_eng.pas:316
 msgctxt "TC_CHECKQTCNUMBER"
 msgid "Check QTC number"
 msgstr "Comprobar numero QTC"
 
 #. Section: QTC
-#: utr4wstrings:tc_checktime
-#: tr4w/src/lang/tr4w_consts_eng.pas:317
+#: utr4wstrings:tc_checktime tr4w/src/lang/tr4w_consts_eng.pas:317
 msgctxt "TC_CHECKTIME"
 msgid "Check time"
 msgstr "Comprobar hora"
 
 #. Section: UOPTION
-#: utr4wstrings:tc_command
-#: tr4w/src/lang/tr4w_consts_eng.pas:321
+#: utr4wstrings:tc_command tr4w/src/lang/tr4w_consts_eng.pas:321
 msgctxt "TC_COMMAND"
 msgid "Command"
 msgstr "Comando"
 
 #. Section: UOPTION
-#: utr4wstrings:tc_value
-#: tr4w/src/lang/tr4w_consts_eng.pas:322
+#: utr4wstrings:tc_value tr4w/src/lang/tr4w_consts_eng.pas:322
 msgctxt "TC_VALUE"
 msgid "Value"
 msgstr "Valor"
 
 #. Section: UOPTION
-#: utr4wstrings:tc_info
-#: tr4w/src/lang/tr4w_consts_eng.pas:323
+#: utr4wstrings:tc_info tr4w/src/lang/tr4w_consts_eng.pas:323
 msgctxt "TC_INFO"
 msgid "Info"
 msgstr "Información"
@@ -1717,22 +1505,19 @@ msgid "You can only change this in your config file."
 msgstr "Quire cambiar esto en su fichero de configuracion."
 
 #. Section: UEDITQSO
-#: utr4wstrings:tc_checkdatetime
-#: tr4w/src/lang/tr4w_consts_eng.pas:328
+#: utr4wstrings:tc_checkdatetime tr4w/src/lang/tr4w_consts_eng.pas:328
 msgctxt "TC_CHECKDATETIME"
 msgid "Check Date/Time !!"
 msgstr "Compruebe Fecha/Hora !!"
 
 #. Section: UEDITQSO
-#: utr4wstrings:tc_savechanges
-#: tr4w/src/lang/tr4w_consts_eng.pas:329
+#: utr4wstrings:tc_savechanges tr4w/src/lang/tr4w_consts_eng.pas:329
 msgctxt "TC_SAVECHANGES"
 msgid "Save changes?"
 msgstr "Salvar cambios?"
 
 #. Section: LOGCW
-#: utr4wstrings:tc_wpmcodespeed
-#: tr4w/src/lang/tr4w_consts_eng.pas:333
+#: utr4wstrings:tc_wpmcodespeed tr4w/src/lang/tr4w_consts_eng.pas:333
 msgctxt "TC_WPMCODESPEED"
 msgid "WPM code speed"
 msgstr "Velocidad WPM"
@@ -1770,7 +1555,7 @@ msgstr "Otros estados de la memoria de mensajes SSB"
 #: tr4w/src/lang/tr4w_consts_eng.pas:338
 msgctxt "TC_PRESSCQFUNCTIONKEYTOPROGRAM"
 msgid " Press CQ function key to program (F1, AltF1, CtrlF1), or ESCAPE to exit) : "
-msgstr "Pulsa la tecla de función CQ para programar (F1, AltF1, CtrlF1), o ESCAPE para salir: "
+msgstr " Pulsa la tecla de función CQ para programar (F1, AltF1, CtrlF1), o ESCAPE para salir: "
 
 #. Section: LOGCW
 #: utr4wstrings:tc_pressexfunctionkeytoprogram
@@ -1787,8 +1572,7 @@ msgid "Number or letter of message to be programmed (1-9, A-C, or ESCAPE to exit
 msgstr "Número o letra del mensaje a programar (1-9, A-C o ESCAPE para salir):"
 
 #. Section: LOGCW
-#: utr4wstrings:tc_cwdisabledwithaltk
-#: tr4w/src/lang/tr4w_consts_eng.pas:341
+#: utr4wstrings:tc_cwdisabledwithaltk tr4w/src/lang/tr4w_consts_eng.pas:341
 msgctxt "TC_CWDISABLEDWITHALTK"
 msgid "CW disabled with Alt-K!!  Use Alt-K again to enable."
 msgstr "CW deshabilitado con Alt-K!! Usa Alt-K otra vez para activar."
@@ -1801,8 +1585,7 @@ msgid "Voice keyer disabled with Alt-K!!  Use Alt-K again to enable."
 msgstr "¡Teclado de voz deshabilitado con Alt-K! Usa Alt-K otra vez para activar."
 
 #. Section: LOGCFG
-#: utr4wstrings:tc_nocallsignspecified
-#: tr4w/src/lang/tr4w_consts_eng.pas:346
+#: utr4wstrings:tc_nocallsignspecified tr4w/src/lang/tr4w_consts_eng.pas:346
 msgctxt "TC_NOCALLSIGNSPECIFIED"
 msgid "No callsign specified!!"
 msgstr "Indicativo no especificado!!"
@@ -1815,22 +1598,19 @@ msgid "No floppy file save name specified."
 msgstr "Nombre para salvar no especificado."
 
 #. Section: LOGCFG
-#: utr4wstrings:tc_unabletofind
-#: tr4w/src/lang/tr4w_consts_eng.pas:348
+#: utr4wstrings:tc_unabletofind tr4w/src/lang/tr4w_consts_eng.pas:348
 msgctxt "TC_UNABLETOFIND"
 msgid "Unable to find %s ."
 msgstr "Icapaz de encontrar %s."
 
 #. Section: LOGCFG
-#: utr4wstrings:tc_invalidstatementin
-#: tr4w/src/lang/tr4w_consts_eng.pas:349
+#: utr4wstrings:tc_invalidstatementin tr4w/src/lang/tr4w_consts_eng.pas:349
 msgctxt "TC_INVALIDSTATEMENTIN"
 msgid "Invalid statement in %s !!\r\rLine %u\r%s"
 msgstr "INVALID STATEMENT IN %s !!\r\rLine %u\r%s"
 
 #. Section: LOGCFG
-#: utr4wstrings:tc_unabletofindctydat
-#: tr4w/src/lang/tr4w_consts_eng.pas:350
+#: utr4wstrings:tc_unabletofindctydat tr4w/src/lang/tr4w_consts_eng.pas:350
 msgctxt "TC_UNABLETOFINDCTYDAT"
 msgid "Unable to find CTY.DAT country file!!\rMake sure this file is in the same directory as the program."
 msgstr "No encuentro fichero paises CTY.DAT!!\rAsegurese de que esta en el mismo directorio del programa."
@@ -1843,8 +1623,7 @@ msgid "%s:\rInvalid statement in config file.\r\rLine %u\r%s"
 msgstr "%s:\rINVALID STATEMENT IN CONFIG FILE!!\r\rLine %u\r%s"
 
 #. Section: LOGCFG
-#: utr4wstrings:tc_parameterhasnovalue
-#: tr4w/src/lang/tr4w_consts_eng.pas:352
+#: utr4wstrings:tc_parameterhasnovalue tr4w/src/lang/tr4w_consts_eng.pas:352
 msgctxt "TC_PARAMETERHASNOVALUE"
 msgid "Parameter \"%s\" has no value in the config file -- left at its default."
 msgstr "El parámetro \"%s\" no tiene valor en el archivo de configuración; se ha dejado en su valor predeterminado."
@@ -1857,8 +1636,7 @@ msgid "Recording DVP. Press ESCAPE or RETURN to stop."
 msgstr "Grabando DVP. Pulse ESCAPE o RETURN para parar."
 
 #. Section: LOGSUBS1
-#: utr4wstrings:tc_altrcommanddisabled
-#: tr4w/src/lang/tr4w_consts_eng.pas:357
+#: utr4wstrings:tc_altrcommanddisabled tr4w/src/lang/tr4w_consts_eng.pas:357
 msgctxt "TC_ALTRCOMMANDDISABLED"
 msgid "Alt-R command requires TWO RADIO MODE = TRUE"
 msgstr "El comando Alt-R requiere TWO RADIO MODE = TRUE"
@@ -1878,8 +1656,7 @@ msgid "This file does not exist. Create an empty file for editing?"
 msgstr "Este archivo no existe. ¿Crear un archivo vacío para edición?"
 
 #. Section: LOGSUBS2
-#: utr4wstrings:tc_altdcommanddisabled
-#: tr4w/src/lang/tr4w_consts_eng.pas:364
+#: utr4wstrings:tc_altdcommanddisabled tr4w/src/lang/tr4w_consts_eng.pas:364
 msgctxt "TC_ALTDCOMMANDDISABLED"
 msgid "Alt-D command requires TWO RADIO MODE = TRUE"
 msgstr "El comando Alt-D requiere TWO RADIO MODE = TRUE"
@@ -1913,8 +1690,7 @@ msgid "You are now talking to your packet port.  Use Control-B to exit."
 msgstr "Esta usando el puerto packet.  Use Control-B para salir."
 
 #. Section: LOGSUBS2
-#: utr4wstrings:tc_youalreadyworkedin
-#: tr4w/src/lang/tr4w_consts_eng.pas:369
+#: utr4wstrings:tc_youalreadyworkedin tr4w/src/lang/tr4w_consts_eng.pas:369
 msgctxt "TC_YOUALREADYWORKEDIN"
 msgid "You already worked %s in %s!!"
 msgstr "Ya ha trabado %s en %s!!"
@@ -1927,15 +1703,13 @@ msgid "%s is a dupe and will be logged with zero QSO points."
 msgstr "%s es un duplicado y se grabara como QSO de 0 puntos."
 
 #. Section: LOGSUBS2
-#: utr4wstrings:tc_logfilesizecheckfailed
-#: tr4w/src/lang/tr4w_consts_eng.pas:371
+#: utr4wstrings:tc_logfilesizecheckfailed tr4w/src/lang/tr4w_consts_eng.pas:371
 msgctxt "TC_LOGFILESIZECHECKFAILED"
 msgid "LOG FILE SIZE CHECK FAILED!!!!"
 msgstr "FALLO EN TAMAÑO DEL FICHERO DE LOG!!!!"
 
 #. Section: JCTRL2
-#: utr4wstrings:tc_newvalue
-#: tr4w/src/lang/tr4w_consts_eng.pas:374
+#: utr4wstrings:tc_newvalue tr4w/src/lang/tr4w_consts_eng.pas:374
 msgctxt "TC_NEWVALUE"
 msgid "new value"
 msgstr "nuevo valor"
@@ -1948,269 +1722,231 @@ msgid "%s already exists.\r\rOkay to delete?"
 msgstr "%s ya existe.\r\rLo borro?"
 
 #. Section: UWINKEY
-#: utr4wstrings:tc_winkeyerenable
-#: tr4w/src/lang/tr4w_consts_eng.pas:382
+#: utr4wstrings:tc_winkeyerenable tr4w/src/lang/tr4w_consts_eng.pas:382
 msgctxt "TC_WINKEYERENABLE"
 msgid "&Winkeyer enable"
 msgstr "&Winkeyer enable"
 
 #. Section: UWINKEY
-#: utr4wstrings:tc_autospace
-#: tr4w/src/lang/tr4w_consts_eng.pas:383
+#: utr4wstrings:tc_autospace tr4w/src/lang/tr4w_consts_eng.pas:383
 msgctxt "TC_AUTOSPACE"
 msgid "&Autospace"
 msgstr "&Autospace"
 
 #. Section: UWINKEY
-#: utr4wstrings:tc_ctspacing
-#: tr4w/src/lang/tr4w_consts_eng.pas:384
+#: utr4wstrings:tc_ctspacing tr4w/src/lang/tr4w_consts_eng.pas:384
 msgctxt "TC_CTSPACING"
 msgid "C&T spacing"
 msgstr "C&T spacing"
 
 #. Section: UWINKEY
-#: utr4wstrings:tc_sidetone
-#: tr4w/src/lang/tr4w_consts_eng.pas:385
+#: utr4wstrings:tc_sidetone tr4w/src/lang/tr4w_consts_eng.pas:385
 msgctxt "TC_SIDETONE"
 msgid "&Sidetone"
 msgstr "&Sidetone"
 
 #. Section: UWINKEY
-#: utr4wstrings:tc_paddleswap
-#: tr4w/src/lang/tr4w_consts_eng.pas:386
+#: utr4wstrings:tc_paddleswap tr4w/src/lang/tr4w_consts_eng.pas:386
 msgctxt "TC_PADDLESWAP"
 msgid "Paddle swa&p"
 msgstr "Palanca swa&p"
 
 #. Section: UWINKEY
-#: utr4wstrings:tc_ignorespeedpot
-#: tr4w/src/lang/tr4w_consts_eng.pas:387
+#: utr4wstrings:tc_ignorespeedpot tr4w/src/lang/tr4w_consts_eng.pas:387
 msgctxt "TC_IGNORESPEEDPOT"
 msgid "&Ignore speed pot"
 msgstr "&Ignore speed pot"
 
 #. Section: UWINKEY
-#: utr4wstrings:tc_paddleonlysidetone
-#: tr4w/src/lang/tr4w_consts_eng.pas:388
+#: utr4wstrings:tc_paddleonlysidetone tr4w/src/lang/tr4w_consts_eng.pas:388
 msgctxt "TC_PADDLEONLYSIDETONE"
 msgid "Paddle &only sidetone"
 msgstr "Paddle &only sidetone"
 
 #. Section: UWINKEY
-#: utr4wstrings:tc_winkeyerport
-#: tr4w/src/lang/tr4w_consts_eng.pas:390
+#: utr4wstrings:tc_winkeyerport tr4w/src/lang/tr4w_consts_eng.pas:390
 msgctxt "TC_WINKEYERPORT"
 msgid "Winkeyer port"
 msgstr "Winkeyer port"
 
 #. Section: UWINKEY
-#: utr4wstrings:tc_keyermode
-#: tr4w/src/lang/tr4w_consts_eng.pas:391
+#: utr4wstrings:tc_keyermode tr4w/src/lang/tr4w_consts_eng.pas:391
 #: tfrmkeyeredit.lblwkkeyermode.caption
 msgctxt "TC_KEYERMODE"
 msgid "Keyer mode"
 msgstr "Keyer mode"
 
 #. Section: UWINKEY
-#: utr4wstrings:tc_sidetonefreq
-#: tr4w/src/lang/tr4w_consts_eng.pas:392
+#: utr4wstrings:tc_sidetonefreq tr4w/src/lang/tr4w_consts_eng.pas:392
 msgctxt "TC_SIDETONEFREQ"
 msgid "Sidetone freq."
 msgstr "Sidetone freq."
 
 #. Section: UWINKEY
-#: utr4wstrings:tc_hangtime
-#: tr4w/src/lang/tr4w_consts_eng.pas:393
+#: utr4wstrings:tc_hangtime tr4w/src/lang/tr4w_consts_eng.pas:393
 msgctxt "TC_HANGTIME"
 msgid "Hang time"
 msgstr "Hang time"
 
 #. Section: UWINKEY
-#: utr4wstrings:tc_iambicb
-#: tr4w/src/lang/tr4w_consts_eng.pas:395
+#: utr4wstrings:tc_iambicb tr4w/src/lang/tr4w_consts_eng.pas:395
 msgctxt "TC_IAMBICB"
 msgid "Iambic B"
 msgstr "Iambic B"
 
 #. Section: UWINKEY
-#: utr4wstrings:tc_iambica
-#: tr4w/src/lang/tr4w_consts_eng.pas:396
+#: utr4wstrings:tc_iambica tr4w/src/lang/tr4w_consts_eng.pas:396
 msgctxt "TC_IAMBICA"
 msgid "Iambic A"
 msgstr "Iambic A"
 
 #. Section: UWINKEY
-#: utr4wstrings:tc_ultimatic
-#: tr4w/src/lang/tr4w_consts_eng.pas:397
+#: utr4wstrings:tc_ultimatic tr4w/src/lang/tr4w_consts_eng.pas:397
 msgctxt "TC_ULTIMATIC"
 msgid "Ultimatic"
 msgstr "Ultimatic"
 
 #. Section: UWINKEY
-#: utr4wstrings:tc_bugmode
-#: tr4w/src/lang/tr4w_consts_eng.pas:398
+#: utr4wstrings:tc_bugmode tr4w/src/lang/tr4w_consts_eng.pas:398
 msgctxt "TC_BUGMODE"
 msgid "Bug mode"
 msgstr "Bug mode"
 
 #. Section: UWINKEY
-#: utr4wstrings:tc_weighting
-#: tr4w/src/lang/tr4w_consts_eng.pas:400
+#: utr4wstrings:tc_weighting tr4w/src/lang/tr4w_consts_eng.pas:400
 msgctxt "TC_WEIGHTING"
 msgid "Weighting"
 msgstr "Ponderación"
 
 #. Section: UWINKEY
-#: utr4wstrings:tc_ditdahratio
-#: tr4w/src/lang/tr4w_consts_eng.pas:401
+#: utr4wstrings:tc_ditdahratio tr4w/src/lang/tr4w_consts_eng.pas:401
 msgctxt "TC_DITDAHRATIO"
 msgid "Dit/Dah ratio"
 msgstr "Dit/Dah ratio"
 
 #. Section: UWINKEY
-#: utr4wstrings:tc_leadin
-#: tr4w/src/lang/tr4w_consts_eng.pas:402
+#: utr4wstrings:tc_leadin tr4w/src/lang/tr4w_consts_eng.pas:402
 msgctxt "TC_LEADIN"
 msgid "Lead-in time (*10 ms)"
 msgstr "Tiempo de entrada (*10 ms)"
 
 #. Section: UWINKEY
-#: utr4wstrings:tc_tail
-#: tr4w/src/lang/tr4w_consts_eng.pas:403
+#: utr4wstrings:tc_tail tr4w/src/lang/tr4w_consts_eng.pas:403
 msgctxt "TC_TAIL"
 msgid "Tail time (*10 ms)"
 msgstr "Tiempo de cola (*10 ms)"
 
 #. Section: UWINKEY
-#: utr4wstrings:tc_firstextension
-#: tr4w/src/lang/tr4w_consts_eng.pas:404
+#: utr4wstrings:tc_firstextension tr4w/src/lang/tr4w_consts_eng.pas:404
 #: tfrmkeyeredit.lblwkfirstext.caption
 msgctxt "TC_FIRSTEXTENSION"
 msgid "First extension"
 msgstr "Primera ampliación"
 
 #. Section: UWINKEY
-#: utr4wstrings:tc_keycomp
-#: tr4w/src/lang/tr4w_consts_eng.pas:405
+#: utr4wstrings:tc_keycomp tr4w/src/lang/tr4w_consts_eng.pas:405
 msgctxt "TC_KEYCOMP"
 msgid "Keyer compensation"
 msgstr "Compensación por keyer"
 
 #. Section: UWINKEY
-#: utr4wstrings:tc_paddleswitchpoint
-#: tr4w/src/lang/tr4w_consts_eng.pas:406
+#: utr4wstrings:tc_paddleswitchpoint tr4w/src/lang/tr4w_consts_eng.pas:406
 msgctxt "TC_PADDLESWITCHPOINT"
 msgid "Paddle switchpoint"
 msgstr "Palanca switchpoint"
 
 #. Section: UTOTAL
-#: utr4wstrings:tc_qtcpending
-#: tr4w/src/lang/tr4w_consts_eng.pas:410
+#: utr4wstrings:tc_qtcpending tr4w/src/lang/tr4w_consts_eng.pas:410
 msgctxt "TC_QTCPENDING"
 msgid "QTC Pending"
 msgstr "QTC Pendiente"
 
 #. Section: UTOTAL
-#: utr4wstrings:tc_zone
-#: tr4w/src/lang/tr4w_consts_eng.pas:411
+#: utr4wstrings:tc_zone tr4w/src/lang/tr4w_consts_eng.pas:411
 msgctxt "TC_ZONE"
 msgid "Zones"
 msgstr "Zona"
 
 #. Section: UTOTAL
-#: utr4wstrings:tc_prefix
-#: tr4w/src/lang/tr4w_consts_eng.pas:412
+#: utr4wstrings:tc_prefix tr4w/src/lang/tr4w_consts_eng.pas:412
 msgctxt "TC_PREFIX"
 msgid "Prefixes"
 msgstr "Prefijo"
 
 #. Section: UTOTAL
-#: utr4wstrings:tc_dxmults
-#: tr4w/src/lang/tr4w_consts_eng.pas:413
+#: utr4wstrings:tc_dxmults tr4w/src/lang/tr4w_consts_eng.pas:413
 msgctxt "TC_DXMULTS"
 msgid "DX Mults"
 msgstr "DX Mults"
 
 #. Section: UTOTAL
-#: utr4wstrings:tc_oblasts
-#: tr4w/src/lang/tr4w_consts_eng.pas:414
+#: utr4wstrings:tc_oblasts tr4w/src/lang/tr4w_consts_eng.pas:414
 msgctxt "TC_OBLASTS"
 msgid "Oblasts"
 msgstr "Oblasts"
 
 #. Section: UTOTAL
-#: utr4wstrings:tc_hqmults
-#: tr4w/src/lang/tr4w_consts_eng.pas:415
+#: utr4wstrings:tc_hqmults tr4w/src/lang/tr4w_consts_eng.pas:415
 msgctxt "TC_HQMULTS"
 msgid "HQ Mults"
 msgstr "HQ Mults"
 
 #. Section: UTOTAL
-#: utr4wstrings:tc_dommults
-#: tr4w/src/lang/tr4w_consts_eng.pas:416
+#: utr4wstrings:tc_dommults tr4w/src/lang/tr4w_consts_eng.pas:416
 msgctxt "TC_DOMMULTS"
 msgid "Dom Mults"
 msgstr "Dom Mults"
 
 #. Section: UTOTAL
-#: utr4wstrings:tc_qsos
-#: tr4w/src/lang/tr4w_consts_eng.pas:417
+#: utr4wstrings:tc_qsos tr4w/src/lang/tr4w_consts_eng.pas:417
 msgctxt "TC_QSOS"
 msgid "QSOs"
 msgstr "QSOs"
 
 #. Section: UTOTAL
-#: utr4wstrings:tc_cwqsos
-#: tr4w/src/lang/tr4w_consts_eng.pas:418
+#: utr4wstrings:tc_cwqsos tr4w/src/lang/tr4w_consts_eng.pas:418
 msgctxt "TC_CWQSOS"
 msgid "CW QSOs"
 msgstr "CW QSOs"
 
 #. Section: UTOTAL
-#: utr4wstrings:tc_ssbqsos
-#: tr4w/src/lang/tr4w_consts_eng.pas:419
+#: utr4wstrings:tc_ssbqsos tr4w/src/lang/tr4w_consts_eng.pas:419
 msgctxt "TC_SSBQSOS"
 msgid "SSB QSOs"
 msgstr "SSB QSOs"
 
 #. Section: UTOTAL
-#: utr4wstrings:tc_digqsos
-#: tr4w/src/lang/tr4w_consts_eng.pas:420
+#: utr4wstrings:tc_digqsos tr4w/src/lang/tr4w_consts_eng.pas:420
 msgctxt "TC_DIGQSOS"
 msgid "DIG QSOs"
 msgstr "DIG QSOs"
 
 #. Section: UALTD
-#: utr4wstrings:tc_entercalltobecheckedon
-#: tr4w/src/lang/tr4w_consts_eng.pas:424
+#: utr4wstrings:tc_entercalltobecheckedon tr4w/src/lang/tr4w_consts_eng.pas:424
 msgctxt "TC_ENTERCALLTOBECHECKEDON"
 msgid "Enter call to be checked on %s%s:"
 msgstr "Entre indicativo a comprobar en %s%s:"
 
 #. Section: LOGGRID
-#: utr4wstrings:tc_allsun
-#: tr4w/src/lang/tr4w_consts_eng.pas:428
+#: utr4wstrings:tc_allsun tr4w/src/lang/tr4w_consts_eng.pas:428
 msgctxt "TC_ALLSUN"
 msgid "All sun"
 msgstr "Todo sol"
 
 #. Section: LOGGRID
-#: utr4wstrings:tc_alldark
-#: tr4w/src/lang/tr4w_consts_eng.pas:429
+#: utr4wstrings:tc_alldark tr4w/src/lang/tr4w_consts_eng.pas:429
 msgctxt "TC_ALLDARK"
 msgid "All dark"
 msgstr "Todo oscuro"
 
 #. Section: UMIXW
-#: utr4wstrings:tc_mixw_connected
-#: tr4w/src/lang/tr4w_consts_eng.pas:433
+#: utr4wstrings:tc_mixw_connected tr4w/src/lang/tr4w_consts_eng.pas:433
 msgctxt "TC_MIXW_CONNECTED"
 msgid "Connected"
 msgstr "Conectado"
 
 #. Section: UMIXW
-#: utr4wstrings:tc_mixw_disconnected
-#: tr4w/src/lang/tr4w_consts_eng.pas:434
+#: utr4wstrings:tc_mixw_disconnected tr4w/src/lang/tr4w_consts_eng.pas:434
 #: tfrmpanadapter.lblstatus.caption
 msgctxt "TC_MIXW_DISCONNECTED"
 msgid "Disconnected"
@@ -2231,15 +1967,13 @@ msgid "Sorry, you already have 10 QTCs with %s"
 msgstr "Ya tiene 10 QTCs con %s"
 
 #. Section: LOGWAE
-#: utr4wstrings:tc_noqtcspendingqru
-#: tr4w/src/lang/tr4w_consts_eng.pas:440
+#: utr4wstrings:tc_noqtcspendingqru tr4w/src/lang/tr4w_consts_eng.pas:440
 msgctxt "TC_NOQTCSPENDINGQRU"
 msgid "No QTCs pending, QRU."
 msgstr "Sin QTCs pendientes, QRU."
 
 #. Section: LOGWAE
-#: utr4wstrings:tc_isqrvfor
-#: tr4w/src/lang/tr4w_consts_eng.pas:441
+#: utr4wstrings:tc_isqrvfor tr4w/src/lang/tr4w_consts_eng.pas:441
 msgctxt "TC_ISQRVFOR"
 msgid "Is %s QRV for %s?"
 msgstr "Es %s QRV para %s?"
@@ -2252,8 +1986,7 @@ msgid "CLEAN SWEEP!! CONGRATULATIONS!!"
 msgstr "¡¡BARRIDO COMPLETO!! ¡¡FELICITACIONES!!"
 
 #. Section: CFGCMD
-#: utr4wstrings:tc_networktest
-#: tr4w/src/lang/tr4w_consts_eng.pas:449
+#: utr4wstrings:tc_networktest tr4w/src/lang/tr4w_consts_eng.pas:449
 msgctxt "TC_NETWORKTEST"
 msgid "Network Test"
 msgstr "Prueba red"
@@ -2266,15 +1999,13 @@ msgid "Maximum number of reminders exceeded!!"
 msgstr "¡¡Se excedió el número máximo de recordatorios!!"
 
 #. Section: CFGCMD
-#: utr4wstrings:tc_invalidremindertime
-#: tr4w/src/lang/tr4w_consts_eng.pas:451
+#: utr4wstrings:tc_invalidremindertime tr4w/src/lang/tr4w_consts_eng.pas:451
 msgctxt "TC_INVALIDREMINDERTIME"
 msgid "Invalid reminder time!!"
 msgstr "¡¡Hora de recordatorio inválida!!"
 
 #. Section: CFGCMD
-#: utr4wstrings:tc_invalidreminderdate
-#: tr4w/src/lang/tr4w_consts_eng.pas:452
+#: utr4wstrings:tc_invalidreminderdate tr4w/src/lang/tr4w_consts_eng.pas:452
 msgctxt "TC_INVALIDREMINDERDATE"
 msgid "Invalid reminder date!!"
 msgstr "¡¡Fecha de recordatorio inválida!!"
@@ -2295,43 +2026,37 @@ msgstr "The first command in config file must be the MY CALL statement!!"
 
 #. Section: USYNTIME
 #. milliseconds
-#: utr4wstrings:tc_ms
-#: tr4w/src/lang/tr4w_consts_eng.pas:457
+#: utr4wstrings:tc_ms tr4w/src/lang/tr4w_consts_eng.pas:457
 msgctxt "TC_MS"
 msgid " ms"
 msgstr " ms"
 
 #. Section: ULOGSEARCH
-#: utr4wstrings:tc_entriesperms
-#: tr4w/src/lang/tr4w_consts_eng.pas:460
+#: utr4wstrings:tc_entriesperms tr4w/src/lang/tr4w_consts_eng.pas:460
 msgctxt "TC_ENTRIESPERMS"
 msgid "%u entries per %u ms"
 msgstr "%u entradas por %u ms"
 
 #. Section: ULOGCOMPARE
-#: utr4wstrings:tc_sizebytes
-#: tr4w/src/lang/tr4w_consts_eng.pas:463
+#: utr4wstrings:tc_sizebytes tr4w/src/lang/tr4w_consts_eng.pas:463
 msgctxt "TC_SIZEBYTES"
 msgid "Size, bytes"
 msgstr "Tamaño, bytes"
 
 #. Section: ULOGCOMPARE
-#: utr4wstrings:tc_records
-#: tr4w/src/lang/tr4w_consts_eng.pas:464
+#: utr4wstrings:tc_records tr4w/src/lang/tr4w_consts_eng.pas:464
 msgctxt "TC_RECORDS"
 msgid "Records"
 msgstr "Registros"
 
 #. Section: ULOGCOMPARE
-#: utr4wstrings:tc_modified
-#: tr4w/src/lang/tr4w_consts_eng.pas:465
+#: utr4wstrings:tc_modified tr4w/src/lang/tr4w_consts_eng.pas:465
 msgctxt "TC_MODIFIED"
 msgid "Modified"
 msgstr "Modificado"
 
 #. Section: ULOGCOMPARE
-#: utr4wstrings:tc_timediff
-#: tr4w/src/lang/tr4w_consts_eng.pas:466
+#: utr4wstrings:tc_timediff tr4w/src/lang/tr4w_consts_eng.pas:466
 msgctxt "TC_TIMEDIFF"
 msgid "Time diff."
 msgstr "Dif. tiempo."
@@ -2344,8 +2069,7 @@ msgid "More than 50 different hours in this log!!"
 msgstr "Mas de 50 horas diferenes en este log!!"
 
 #. Section: POSTUNIT
-#: utr4wstrings:tc_toomanycontestdates
-#: tr4w/src/lang/tr4w_consts_eng.pas:470
+#: utr4wstrings:tc_toomanycontestdates tr4w/src/lang/tr4w_consts_eng.pas:470
 msgctxt "TC_TOOMANYCONTESTDATES"
 msgid "Too many contest dates!!"
 msgstr "Muchas fechas de concurso!!"
@@ -2365,148 +2089,127 @@ msgid "DLPortIO error"
 msgstr "DLPortIO driver no instalado"
 
 #. Section: UCT1BOH
-#: utr4wstrings:tc_timeon
-#: tr4w/src/lang/tr4w_consts_eng.pas:479
+#: utr4wstrings:tc_timeon tr4w/src/lang/tr4w_consts_eng.pas:479
 msgctxt "TC_TIMEON"
 msgid "Time on"
 msgstr "Tiempo activo"
 
 #. Section: ULOGCOMPARE
-#: utr4wstrings:tc_serverlog
-#: tr4w/src/lang/tr4w_consts_eng.pas:482
+#: utr4wstrings:tc_serverlog tr4w/src/lang/tr4w_consts_eng.pas:482
 msgctxt "TC_SERVERLOG"
 msgid "SERVER LOG"
 msgstr "LOG DEL SERVIDOR"
 
 #. Section: ULOGCOMPARE
-#: utr4wstrings:tc_locallog
-#: tr4w/src/lang/tr4w_consts_eng.pas:483
+#: utr4wstrings:tc_locallog tr4w/src/lang/tr4w_consts_eng.pas:483
 msgctxt "TC_LOCALLOG"
 msgid "LOCAL LOG"
 msgstr "LOG LOCAL"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:tc_ctrl_a
-#: tr4w/src/lang/tr4w_consts_eng.pas:487
+#: utr4wstrings:tc_ctrl_a tr4w/src/lang/tr4w_consts_eng.pas:487
 msgctxt "TC_CTRL_A"
 msgid "Send this message on inactive radio"
 msgstr "Enviar este mensaje por la radio inactiva"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:tc_ctrl_b
-#: tr4w/src/lang/tr4w_consts_eng.pas:488
+#: utr4wstrings:tc_ctrl_b tr4w/src/lang/tr4w_consts_eng.pas:488
 msgctxt "TC_CTRL_B"
 msgid "Identify ctrl-A message as a CQ"
 msgstr "Identificar mensaje ctrl-A como CQ"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:tc_ctrl_c
-#: tr4w/src/lang/tr4w_consts_eng.pas:489
+#: utr4wstrings:tc_ctrl_c tr4w/src/lang/tr4w_consts_eng.pas:489
 msgctxt "TC_CTRL_C"
 msgid "Start special command"
 msgstr "Iniciar comando especial"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:tc_ctrl_d
-#: tr4w/src/lang/tr4w_consts_eng.pas:490
+#: utr4wstrings:tc_ctrl_d tr4w/src/lang/tr4w_consts_eng.pas:490
 msgctxt "TC_CTRL_D"
 msgid "Do not interrupt"
 msgstr "No interrumpir"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:tc_ctrl_e
-#: tr4w/src/lang/tr4w_consts_eng.pas:491
+#: utr4wstrings:tc_ctrl_e tr4w/src/lang/tr4w_consts_eng.pas:491
 msgctxt "TC_CTRL_E"
 msgid "Dah 73% of normal duration"
 msgstr "Raya al 73% de la duración normal"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:tc_ctrl_f
-#: tr4w/src/lang/tr4w_consts_eng.pas:492
+#: utr4wstrings:tc_ctrl_f tr4w/src/lang/tr4w_consts_eng.pas:492
 msgctxt "TC_CTRL_F"
 msgid "Increase speed by 6%"
 msgstr "Aumentar velocidad un 6%"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:tc_ctrl_k
-#: tr4w/src/lang/tr4w_consts_eng.pas:493
+#: utr4wstrings:tc_ctrl_k tr4w/src/lang/tr4w_consts_eng.pas:493
 msgctxt "TC_CTRL_K"
 msgid "Normal dah"
 msgstr "Raya normal"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:tc_ctrl_l
-#: tr4w/src/lang/tr4w_consts_eng.pas:494
+#: utr4wstrings:tc_ctrl_l tr4w/src/lang/tr4w_consts_eng.pas:494
 msgctxt "TC_CTRL_L"
 msgid "Dit 140% of normal duration"
 msgstr "Punto al 140% de la duración normal"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:tc_ctrl_n
-#: tr4w/src/lang/tr4w_consts_eng.pas:495
+#: utr4wstrings:tc_ctrl_n tr4w/src/lang/tr4w_consts_eng.pas:495
 msgctxt "TC_CTRL_N"
 msgid "Dah 113% of normal duration"
 msgstr "Raya al 113% de la duración normal"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:tc_ctrl_o
-#: tr4w/src/lang/tr4w_consts_eng.pas:496
+#: utr4wstrings:tc_ctrl_o tr4w/src/lang/tr4w_consts_eng.pas:496
 msgctxt "TC_CTRL_O"
 msgid "Dah 127% of normal duration"
 msgstr "Raya al 127% de la duración normal"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:tc_ctrl_p
-#: tr4w/src/lang/tr4w_consts_eng.pas:497
+#: utr4wstrings:tc_ctrl_p tr4w/src/lang/tr4w_consts_eng.pas:497
 msgctxt "TC_CTRL_P"
 msgid "Dit 60% of normal duration"
 msgstr "Punto al 60% de la duración normal"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:tc_ctrl_q
-#: tr4w/src/lang/tr4w_consts_eng.pas:498
+#: utr4wstrings:tc_ctrl_q tr4w/src/lang/tr4w_consts_eng.pas:498
 msgctxt "TC_CTRL_Q"
 msgid "Dit 80% of normal duration"
 msgstr "Punto al 80% de la duración normal"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:tc_ctrl_s
-#: tr4w/src/lang/tr4w_consts_eng.pas:499
+#: utr4wstrings:tc_ctrl_s tr4w/src/lang/tr4w_consts_eng.pas:499
 msgctxt "TC_CTRL_S"
 msgid "Decrease speed by 6%"
 msgstr "Reducir velocidad un 6%"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:tc_ctrl_v
-#: tr4w/src/lang/tr4w_consts_eng.pas:500
+#: utr4wstrings:tc_ctrl_v tr4w/src/lang/tr4w_consts_eng.pas:500
 msgctxt "TC_CTRL_V"
 msgid "Dit 120% of normal duration"
 msgstr "Punto al 120% de la duración normal"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:tc_ctrl_x
-#: tr4w/src/lang/tr4w_consts_eng.pas:501
+#: utr4wstrings:tc_ctrl_x tr4w/src/lang/tr4w_consts_eng.pas:501
 msgctxt "TC_CTRL_X"
 msgid "Decrease weight by 0.03"
 msgstr "Reducir peso en 0.03"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:tc_ctrl_y
-#: tr4w/src/lang/tr4w_consts_eng.pas:502
+#: utr4wstrings:tc_ctrl_y tr4w/src/lang/tr4w_consts_eng.pas:502
 msgctxt "TC_CTRL_Y"
 msgid "Increase weight by 0.03"
 msgstr "Aumentar peso en 0.03"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:tc_ctrl_sl
-#: tr4w/src/lang/tr4w_consts_eng.pas:503
+#: utr4wstrings:tc_ctrl_sl tr4w/src/lang/tr4w_consts_eng.pas:503
 msgctxt "TC_CTRL_SL"
 msgid "Normal dit"
 msgstr "Punto normal"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:tc_qso_number
-#: tr4w/src/lang/tr4w_consts_eng.pas:504
+#: utr4wstrings:tc_qso_number tr4w/src/lang/tr4w_consts_eng.pas:504
 msgctxt "TC_QSO_NUMBER"
 msgid "QSO Number"
 msgstr "Número de QSO"
@@ -2533,15 +2236,13 @@ msgid "Send characters from keyboard"
 msgstr "Enviar caracteres desde el teclado"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:tc_call_in_call_window
-#: tr4w/src/lang/tr4w_consts_eng.pas:509
+#: utr4wstrings:tc_call_in_call_window tr4w/src/lang/tr4w_consts_eng.pas:509
 msgctxt "TC_CALL_IN_CALL_WINDOW"
 msgid "Call in Call Window"
 msgstr "Indicativo en ventana de llamada"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:tc_rst_prompt
-#: tr4w/src/lang/tr4w_consts_eng.pas:510
+#: utr4wstrings:tc_rst_prompt tr4w/src/lang/tr4w_consts_eng.pas:510
 msgctxt "TC_RST_PROMPT"
 msgid "RST prompt"
 msgstr "Solicitud de RST"
@@ -2554,52 +2255,44 @@ msgid "Send call as set by MY CALL command"
 msgstr "Enviar indicativo configurado por el comando MY CALL"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:tc_repeatrstsent
-#: tr4w/src/lang/tr4w_consts_eng.pas:512
+#: utr4wstrings:tc_repeatrstsent tr4w/src/lang/tr4w_consts_eng.pas:512
 msgctxt "TC_REPEATRSTSENT"
 msgid "Repeat RST sent"
 msgstr "Repetir RST enviado"
 
 #. Section: UCHECKLATESTVERSION
-#: utr4wstrings:tc_versiononserver
-#: tr4w/src/lang/tr4w_consts_eng.pas:546
+#: utr4wstrings:tc_versiononserver tr4w/src/lang/tr4w_consts_eng.pas:546
 msgctxt "TC_VERSIONONSERVER"
 msgid "The last version on server"
 msgstr "Version on server"
 
 #. Section: UCHECKLATESTVERSION
-#: utr4wstrings:tc_thisversion2
-#: tr4w/src/lang/tr4w_consts_eng.pas:547
+#: utr4wstrings:tc_thisversion2 tr4w/src/lang/tr4w_consts_eng.pas:547
 msgctxt "TC_THISVERSION2"
 msgid "This version"
 msgstr "Esta versión"
 
 #. Section: UCHECKLATESTVERSION
-#: utr4wstrings:tc_downloadit
-#: tr4w/src/lang/tr4w_consts_eng.pas:548
+#: utr4wstrings:tc_downloadit tr4w/src/lang/tr4w_consts_eng.pas:548
 msgctxt "TC_DOWNLOADIT"
 msgid "Would you like to download the latest version?"
 msgstr "Download last version?"
 
 #. Section: UCHECKLATESTVERSION
-#: utr4wstrings:tc_list_of_command
-#: tr4w/src/lang/tr4w_consts_eng.pas:551
-#: tfrmeditmessage.btnlist.caption
-#: tfrmmessageslist.caption
+#: utr4wstrings:tc_list_of_command tr4w/src/lang/tr4w_consts_eng.pas:551
+#: tfrmeditmessage.btnlist.caption tfrmmessageslist.caption
 msgctxt "TC_LIST_OF_COMMAND"
 msgid "List of commands"
 msgstr "&List of commands"
 
 #. Section: UCHECKLATESTVERSION
-#: utr4wstrings:tc_editfunctionkey
-#: tr4w/src/lang/tr4w_consts_eng.pas:736
+#: utr4wstrings:tc_editfunctionkey tr4w/src/lang/tr4w_consts_eng.pas:736
 msgctxt "TC_EDITFUNCTIONKEY"
 msgid "Edit %s message"
 msgstr "Editar %s Mensaje"
 
 #. Section: UCHECKLATESTVERSION
-#: utr4wstrings:tc_split_warn
-#: tr4w/src/lang/tr4w_consts_eng.pas:835
+#: utr4wstrings:tc_split_warn tr4w/src/lang/tr4w_consts_eng.pas:835
 msgctxt "TC_SPLIT_WARN"
 msgid "Warning: You are in SPLIT MODE !!!"
 msgstr "Aviso: Está en modo Split !!!"
@@ -2633,113 +2326,70 @@ msgid "DX Station exchange must be \"DX\"."
 msgstr "El intercambio de la estación DX debe ser \"DX\"."
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_runwarn
-#: tr4w/src/lang/tr4w_consts_eng.pas:844
+#: utr4wstrings:tc_runwarn tr4w/src/lang/tr4w_consts_eng.pas:844
 msgctxt "TC_RUNWARN"
 msgid "Another instance of TR4W is already running"
 msgstr "Otra instancia de TR4W ya está en ejecución"
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_show_passwords
-#: tr4w/src/lang/tr4w_consts_eng.pas:847
+#: utr4wstrings:tc_show_passwords tr4w/src/lang/tr4w_consts_eng.pas:847
 msgctxt "TC_SHOW_PASSWORDS"
 msgid "Show passwords"
 msgstr "Mostrar contraseñas"
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_tooltip_discovery
-#: tr4w/src/lang/tr4w_consts_eng.pas:849
+#: utr4wstrings:tc_tooltip_discovery tr4w/src/lang/tr4w_consts_eng.pas:849
 msgctxt "TC_TOOLTIP_DISCOVERY"
 msgid "Discover radios on the network"
 msgstr "Descubre radios en la red"
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_discover_not_available
-#: tr4w/src/lang/tr4w_consts_eng.pas:850
+#: utr4wstrings:tc_discover_not_available tr4w/src/lang/tr4w_consts_eng.pas:850
 msgctxt "TC_DISCOVER_NOT_AVAILABLE"
 msgid "Network discovery is not available for radio %s"
 msgstr "El descubrimiento de red no está disponible para los porcentajes de radio %s"
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_discover_none_found
-#: tr4w/src/lang/tr4w_consts_eng.pas:851
+#: utr4wstrings:tc_discover_none_found tr4w/src/lang/tr4w_consts_eng.pas:851
 msgctxt "TC_DISCOVER_NONE_FOUND"
 msgid "No radio of type %s found on the network"
 msgstr "No se encuentran porcentajes de radio %s en la red"
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_discover_multi_found
-#: tr4w/src/lang/tr4w_consts_eng.pas:852
+#: utr4wstrings:tc_discover_multi_found tr4w/src/lang/tr4w_consts_eng.pas:852
 msgctxt "TC_DISCOVER_MULTI_FOUND"
 msgid "More than one %s found; filled in the first.  All found:"
 msgstr "More than one %s found; filled in the first.  All found:"
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_port_not_connected
-#: tr4w/src/lang/tr4w_consts_eng.pas:853
+#: utr4wstrings:tc_port_not_connected tr4w/src/lang/tr4w_consts_eng.pas:853
 msgctxt "TC_PORT_NOT_CONNECTED"
 msgid "(not connected)"
 msgstr "(no conectado)"
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_show_all_serial_ports
-#: tr4w/src/lang/tr4w_consts_eng.pas:854
+#: utr4wstrings:tc_show_all_serial_ports tr4w/src/lang/tr4w_consts_eng.pas:854
 msgctxt "TC_SHOW_ALL_SERIAL_PORTS"
 msgid "Show all serial ports"
 msgstr "Mostrar todos los puertos serie"
 
 #. Section: UEDITMESSAGE
-#: tfrmabout.btnok.caption
-#: tfrmaltd.btnok.caption
-#: tfrmautocq.btnok.caption
-#: tfrmbandplan.btnok.caption
-#: tfrmeditmessage.btnok.caption
-#: tfrminputquery.btnok.caption
-#: tfrmlpt.btnok.caption
-#: tfrmmessageslist.btnok.caption
-#: tfrmsendspot.btnok.caption
-#: tfrmudpdestinationedit.btnok.caption
-#: tfrmwinmanager.btnok.caption
-#: utr4wstrings:ok_word
-#: tr4w/src/lang/tr4w_consts_eng.pas:530
+#: tfrmabout.btnok.caption tfrmaltd.btnok.caption tfrmautocq.btnok.caption
+#: tfrmbandplan.btnok.caption tfrmeditmessage.btnok.caption
+#: tfrminputquery.btnok.caption tfrmlpt.btnok.caption
+#: tfrmmessageslist.btnok.caption tfrmsendspot.btnok.caption
+#: tfrmudpdestinationedit.btnok.caption tfrmwinmanager.btnok.caption
+#: utr4wstrings:ok_word tr4w/src/lang/tr4w_consts_eng.pas:530
 msgctxt "tfrmabout.btnok.caption"
 msgid "OK"
 msgstr "OK"
 
 #: tfrmabout.caption
-#, fuzzy
 msgid "About TR4W"
 msgstr "Acerca de TR4W"
 
-#: tfrmabout.lblurl.caption
-#, fuzzy
-msgid "http://www.tr4w.net"
-msgstr ""
-
 #. Section: UEDITMESSAGE
-#: tfrmaltd.btncancel.caption
-#: tfrmautocq.btncancel.caption
-#: tfrmbandplan.btncancel.caption
-#: tfrmeditmessage.btncancel.caption
-#: tfrmeditqso.btncancel.caption
-#: tfrminputquery.btncancel.caption
-#: tfrmkeyeredit.btncancel.caption
-#: tfrmlpt.btncancel.caption
-#: tfrmmessageslist.btncancel.caption
-#: tfrmsendspot.btncancel.caption
-#: tfrmudpdestinationedit.btncancel.caption
-#: tfrmwinmanager.btncancel.caption
-#: tprefsform.btncancel.caption
-#: tradioeditform.btncancel.caption
-#: utr4wstrings:cancel_word
-#: tr4w/src/lang/tr4w_consts_eng.pas:528
-msgctxt "CANCEL_WORD"
-msgid "Cancel"
-msgstr "Cancelar"
-
-#. Section: UEDITMESSAGE
-#: tfrmaltd.caption
-#: utr4wstrings:rc_dupecheckoar
+#: tfrmaltd.caption utr4wstrings:rc_dupecheckoar
 #: tr4w/src/lang/tr4w_consts_eng.pas:534
 msgctxt "RC_DUPECHECKOAR"
 msgid "Dupe Check On Inactive Radio"
@@ -2751,35 +2401,28 @@ msgid "Enter call to be checked on:"
 msgstr "Ingrese la llamada para comprobar:"
 
 #. Section: UEDITMESSAGE
-#: tfrmautocq.caption
-#: utr4wstrings:rc_autocq2
-#: tr4w/src/lang/tr4w_consts_eng.pas:544
-#: utr4wstrings:rc_autocq
+#: tfrmautocq.caption utr4wstrings:rc_autocq2
+#: tr4w/src/lang/tr4w_consts_eng.pas:544 utr4wstrings:rc_autocq
 #: tr4w/src/lang/tr4w_consts_eng.pas:650
-#, fuzzy
 msgctxt "RC_AUTOCQ2"
 msgid "Auto-CQ"
 msgstr "Auto-CQ"
 
 #. Section: UEDITMESSAGE
-#: tfrmautocq.lbldelay.caption
-#: utr4wstrings:rc_numberosolt
+#: tfrmautocq.lbldelay.caption utr4wstrings:rc_numberosolt
 #: tr4w/src/lang/tr4w_consts_eng.pas:546
 msgctxt "RC_NUMBEROSOLT"
 msgid "Number of milliseconds of listening time:"
-msgstr "Numero de segundos tiempo de escucha:"
+msgstr "Numero de milisegundos tiempo de escucha:"
 
 #. Section: UEDITMESSAGE
-#: tfrmautocq.lblmemorykey.caption
-#: utr4wstrings:rc_pressmkywtr
+#: tfrmautocq.lblmemorykey.caption utr4wstrings:rc_pressmkywtr
 #: tr4w/src/lang/tr4w_consts_eng.pas:545
 msgctxt "RC_PRESSMKYWTR"
 msgid "Press the memory key you want to repeat:"
 msgstr "Pulse la tecla de memoria que quiere repetir:"
 
-#: tfrmbandmap.caption
-#: tprefsform.lblbandmapheading.caption
-#, fuzzy
+#: tfrmbandmap.caption tprefsform.lblbandmapheading.caption
 msgctxt "tfrmbandmap.caption"
 msgid "Band map"
 msgstr "Mapa de la banda"
@@ -2795,8 +2438,7 @@ msgid "BAND MAP ALL MODES"
 msgstr "BAND MAP ALL MODES"
 
 #. Section: UEDITMESSAGE
-#: tfrmbandmap.mideletespot.caption
-#: utr4wstrings:rc_deleteselspot
+#: tfrmbandmap.mideletespot.caption utr4wstrings:rc_deleteselspot
 #: tr4w/src/lang/tr4w_consts_eng.pas:577
 msgctxt "RC_DELETESELSPOT"
 msgid "Delete selected spot"
@@ -2818,13 +2460,11 @@ msgid "BAND MAP MULTS ONLY"
 msgstr "BAND MAP MULTS ONLY"
 
 #: tfrmbandmap.miqsyinactive.caption
-#, fuzzy
 msgid "Send spot to inactive radio"
 msgstr "Enviar lugar a radio inactiva"
 
 #. Section: UEDITMESSAGE
-#: tfrmbandmap.miremoveall.caption
-#: utr4wstrings:rc_removeallsp
+#: tfrmbandmap.miremoveall.caption utr4wstrings:rc_removeallsp
 #: tr4w/src/lang/tr4w_consts_eng.pas:578
 msgctxt "RC_REMOVEALLSP"
 msgid "Remove all spots"
@@ -2836,8 +2476,7 @@ msgid "BAND MAP SO2R DISPLAY"
 msgstr "BAND MAP SO2R DISPLAY"
 
 #. Section: UEDITMESSAGE
-#: tfrmbandplan.caption
-#: utr4wstrings:rc_bandplan
+#: tfrmbandplan.caption utr4wstrings:rc_bandplan
 #: tr4w/src/lang/tr4w_consts_eng.pas:525
 msgctxt "RC_BANDPLAN"
 msgid "Band plan"
@@ -2849,9 +2488,8 @@ msgid "Beacons  Monitor"
 msgstr "Beacons Monitor"
 
 #: tfrmct1boh.caption
-#, fuzzy
 msgid "CT1BOH information"
-msgstr "CT1BOH"
+msgstr "Informacion de CT1BOH"
 
 #: tfrmdupesheet.caption
 #, fuzzy
@@ -2860,48 +2498,41 @@ msgstr "Hoja de trabajo"
 
 #. Section: UEDITMESSAGE
 #. Section: FD Additions NY4I
-#: tfrmeditmessage.btneditwav.caption
-#: utr4wstrings:rc_edit_word
-#: tr4w/src/lang/tr4w_consts_eng.pas:595
-#: utr4wstrings:tc_editor_edit
+#: tfrmeditmessage.btneditwav.caption utr4wstrings:rc_edit_word
+#: tr4w/src/lang/tr4w_consts_eng.pas:595 utr4wstrings:tc_editor_edit
 #: tr4w/src/lang/tr4w_consts_eng.pas:895
 msgctxt "RC_EDIT_WORD"
 msgid "&Edit"
 msgstr "Edit"
 
 #. Section: UEDITMESSAGE
-#: tfrmeditmessage.caption
-#: utr4wstrings:rc_progrmess
+#: tfrmeditmessage.caption utr4wstrings:rc_progrmess
 #: tr4w/src/lang/tr4w_consts_eng.pas:772
 msgctxt "RC_PROGRMESS"
 msgid "Program message"
 msgstr "Mensaje de programa"
 
 #. Section: UEDITMESSAGE
-#: tfrmeditmessage.lblcaption.caption
-#: utr4wstrings:rc_caption
+#: tfrmeditmessage.lblcaption.caption utr4wstrings:rc_caption
 #: tr4w/src/lang/tr4w_consts_eng.pas:774
 msgctxt "RC_CAPTION"
 msgid "Caption"
 msgstr "Título"
 
 #. Section: UEDITMESSAGE
-#: tfrmeditmessage.lblmessage.caption
-#: utr4wstrings:rc_message
+#: tfrmeditmessage.lblmessage.caption utr4wstrings:rc_message
 #: tr4w/src/lang/tr4w_consts_eng.pas:773
 msgctxt "RC_MESSAGE"
 msgid "Message"
 msgstr "Mensaje"
 
 #: tfrmeditqso.btnplay.caption
-#, fuzzy
 msgid "&Play"
-msgstr "\" Play \""
+msgstr "&Play"
 
 #: tfrmeditqso.btnsave.caption
-#, fuzzy
 msgid "&Save"
-msgstr "\" Salvar \""
+msgstr "&Salvar"
 
 #: tfrmeditqso.caption
 #, fuzzy
@@ -2943,13 +2574,7 @@ msgstr "Nombre"
 msgid "Prefix Mult"
 msgstr "Prefijo Mult"
 
-#: tfrmeditqso.chksap.caption
-#, fuzzy
-msgid "S&P"
-msgstr ""
-
 #: tfrmeditqso.chkxqso.caption
-#, fuzzy
 msgid "X-QSO"
 msgstr "X-QSO"
 
@@ -2969,18 +2594,15 @@ msgid "Age"
 msgstr "Edad"
 
 #. Section: UEDITMESSAGE
-#: tfrmeditqso.lblband.caption
-#: utr4wstrings:rc_band
+#: tfrmeditqso.lblband.caption utr4wstrings:rc_band
 #: tr4w/src/lang/tr4w_consts_eng.pas:588
 msgctxt "RC_BAND"
 msgid "Band"
 msgstr "Banda"
 
 #. Section: UEDITMESSAGE
-#: tfrmeditqso.lblcallsign.caption
-#: tfrmsendspot.lblcallsign.caption
-#: utr4wstrings:rc_callsign
-#: tr4w/src/lang/tr4w_consts_eng.pas:586
+#: tfrmeditqso.lblcallsign.caption tfrmsendspot.lblcallsign.caption
+#: utr4wstrings:rc_callsign tr4w/src/lang/tr4w_consts_eng.pas:586
 msgctxt "RC_CALLSIGN"
 msgid "Callsign"
 msgstr "Indicativo"
@@ -3006,8 +2628,7 @@ msgid "Computer ID"
 msgstr "ID de computadora"
 
 #. Section: UEDITMESSAGE
-#: tfrmeditqso.lbldate.caption
-#: utr4wstrings:rc_date
+#: tfrmeditqso.lbldate.caption utr4wstrings:rc_date
 #: tr4w/src/lang/tr4w_consts_eng.pas:759
 msgctxt "RC_DATE"
 msgid "Date"
@@ -3029,18 +2650,15 @@ msgid "Frequency, Hz"
 msgstr "Frecuencia, Hz"
 
 #. Section: UEDITMESSAGE
-#: tfrmeditqso.lblmode.caption
-#: utr4wstrings:rc_mode
+#: tfrmeditqso.lblmode.caption utr4wstrings:rc_mode
 #: tr4w/src/lang/tr4w_consts_eng.pas:587
 msgctxt "RC_MODE"
 msgid "Mode"
 msgstr "Modo"
 
 #. Section: UEDITMESSAGE
-#: tfrmeditqso.lblname.caption
-#: tfrmkeyeredit.lblname.caption
-#: tradioeditform.lblname.caption
-#: utr4wstrings:rc_name
+#: tfrmeditqso.lblname.caption tfrmkeyeredit.lblname.caption
+#: tradioeditform.lblname.caption utr4wstrings:rc_name
 #: tr4w/src/lang/tr4w_consts_eng.pas:769
 msgctxt "RC_NAME"
 msgid "Name"
@@ -3057,8 +2675,7 @@ msgid "Number Sent"
 msgstr "Número enviado"
 
 #. Section: UEDITMESSAGE
-#: tfrmeditqso.lbloperator.caption
-#: utr4wstrings:rc_operator
+#: tfrmeditqso.lbloperator.caption utr4wstrings:rc_operator
 #: tr4w/src/lang/tr4w_consts_eng.pas:585
 msgctxt "RC_OPERATOR"
 msgid "Operator"
@@ -3125,72 +2742,11 @@ msgid "Zone"
 msgstr "Zona"
 
 #. Section: UEDITMESSAGE
-#: tfrmfunctionkeys.caption
-#: utr4wstrings:rc_fkeys
+#: tfrmfunctionkeys.caption utr4wstrings:rc_fkeys
 #: tr4w/src/lang/tr4w_consts_eng.pas:622
 msgctxt "RC_FKEYS"
 msgid "Function keys"
 msgstr "Teclas de funcion"
-
-#: tfrmfunctionkeys.pnlf1.caption
-#, fuzzy
-msgid "F1"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf10.caption
-#, fuzzy
-msgid "F10"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf11.caption
-#, fuzzy
-msgid "F11"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf12.caption
-#, fuzzy
-msgid "F12"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf2.caption
-#, fuzzy
-msgid "F2"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf3.caption
-#, fuzzy
-msgid "F3"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf4.caption
-#, fuzzy
-msgid "F4"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf5.caption
-#, fuzzy
-msgid "F5"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf6.caption
-#, fuzzy
-msgid "F6"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf7.caption
-#, fuzzy
-msgid "F7"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf8.caption
-#, fuzzy
-msgid "F8"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf9.caption
-#, fuzzy
-msgid "F9"
-msgstr ""
 
 #: tfrmhamscore.btnpushnow.caption
 #, fuzzy
@@ -3212,11 +2768,6 @@ msgstr "HamScore"
 msgid "Queued contacts:"
 msgstr "Contactos solicitados:"
 
-#: tfrmhamscore.lblqueuevalue.caption
-#, fuzzy
-msgid "--"
-msgstr ""
-
 #: tfrmhamscore.lblstatustitle.caption
 #, fuzzy
 msgid "Last status:"
@@ -3232,8 +2783,7 @@ msgstr "No"
 msgid "&Yes"
 msgstr "Sí"
 
-#: tfrminiretire.caption
-#: uappstrings.siniretiretitle
+#: tfrminiretire.caption uappstrings.siniretiretitle
 #, fuzzy
 msgctxt "tfrminiretire.caption"
 msgid "Old settings file"
@@ -3249,8 +2799,7 @@ msgstr "chkDontAsk"
 msgid "lblPrompt"
 msgstr "lblPrompt"
 
-#: tfrminputquery.caption
-#: ttr4wmainform.caption
+#: tfrminputquery.caption ttr4wmainform.caption
 #: uappstrings.salreadyrunningtitle
 #, fuzzy
 msgctxt "tfrminputquery.caption"
@@ -3263,16 +2812,14 @@ msgid "Enter value:"
 msgstr "Valor de entrada:"
 
 #. Section: UEDITMESSAGE
-#: tfrmintercom.caption
-#: utr4wstrings:rc_intercom
+#: tfrmintercom.caption utr4wstrings:rc_intercom
 #: tr4w/src/lang/tr4w_consts_eng.pas:628
 #, fuzzy
 msgctxt "RC_INTERCOM"
 msgid "Intercom"
 msgstr "Intercom"
 
-#: tfrmkeyeredit.btnok.caption
-#: tprefsform.btnok.caption
+#: tfrmkeyeredit.btnok.caption tprefsform.btnok.caption
 #: tradioeditform.btnok.caption
 #, fuzzy
 msgctxt "tfrmkeyeredit.btnok.caption"
@@ -3324,8 +2871,7 @@ msgstr "Ajustes de WinKeyer"
 msgid "Keyer type"
 msgstr "Tipo de llavero"
 
-#: tfrmkeyeredit.lblport.caption
-#: tfrmudpdestinationedit.lblport.caption
+#: tfrmkeyeredit.lblport.caption tfrmudpdestinationedit.lblport.caption
 #: tradioeditform.lblport.caption
 #, fuzzy
 msgctxt "tfrmkeyeredit.lblport.caption"
@@ -3378,8 +2924,7 @@ msgid "Exit"
 msgstr "Exit"
 
 #. Section: UEDITMESSAGE
-#: tfrmlogcompare.btnsynchronize.caption
-#: utr4wstrings:rc_synchronize
+#: tfrmlogcompare.btnsynchronize.caption utr4wstrings:rc_synchronize
 #: tr4w/src/lang/tr4w_consts_eng.pas:794
 msgctxt "RC_SYNCHRONIZE"
 msgid "Synchronize"
@@ -3400,21 +2945,14 @@ msgstr "LPT"
 msgid "Super check partial"
 msgstr "Super cheque parcial"
 
-#: tfrmmmtty.caption
-#: tprefsform.lblmmttyheading.caption
+#: tfrmmmtty.caption tprefsform.lblmmttyheading.caption
 #, fuzzy
 msgctxt "tfrmmmtty.caption"
 msgid "MMTTY"
 msgstr "MMTTY"
 
-#: tfrmmp3recorder.btncontrol.caption
-#, fuzzy
-msgid "..."
-msgstr ""
-
 #. Section: UEDITMESSAGE
-#: tfrmmp3recorder.caption
-#: utr4wstrings:rc_mp3rec
+#: tfrmmp3recorder.caption utr4wstrings:rc_mp3rec
 #: tr4w/src/lang/tr4w_consts_eng.pas:631
 #, fuzzy
 msgctxt "RC_MP3REC"
@@ -3427,10 +2965,8 @@ msgid "Record"
 msgstr "Record"
 
 #. Section: UEDITMESSAGE
-#: tfrmnetwork.caption
-#: tradioeditform.tabnetwork.caption
-#: utr4wstrings:rc_network
-#: tr4w/src/lang/tr4w_consts_eng.pas:627
+#: tfrmnetwork.caption tradioeditform.tabnetwork.caption
+#: utr4wstrings:rc_network tr4w/src/lang/tr4w_consts_eng.pas:627
 msgctxt "RC_NETWORK"
 msgid "Network"
 msgstr "Red-Network"
@@ -3440,20 +2976,10 @@ msgstr "Red-Network"
 msgid "Pause"
 msgstr "Pausa"
 
-#: tfrmpanadapter.btnspannarrow.caption
-#, fuzzy
-msgid "-"
-msgstr ""
-
 #: tfrmpanadapter.btnspannarrow.hint
 #, fuzzy
 msgid "Narrower span (zoom in)"
 msgstr "Lazo más estrecho (zoom in)"
-
-#: tfrmpanadapter.btnspanwide.caption
-#, fuzzy
-msgid "+"
-msgstr ""
 
 #: tfrmpanadapter.btnspanwide.hint
 #, fuzzy
@@ -3481,16 +3007,14 @@ msgid "Span --"
 msgstr "Span.."
 
 #. Section: UEDITMESSAGE
-#: tfrmpostscores.btnpostnow.caption
-#: utr4wstrings:rc_postnow
+#: tfrmpostscores.btnpostnow.caption utr4wstrings:rc_postnow
 #: tr4w/src/lang/tr4w_consts_eng.pas:573
 msgctxt "RC_POSTNOW"
 msgid "Post now"
 msgstr "Publicar ahora"
 
 #. Section: UEDITMESSAGE
-#: tfrmpostscores.btnshowscores.caption
-#: utr4wstrings:rc_gotogs
+#: tfrmpostscores.btnshowscores.caption utr4wstrings:rc_gotogs
 #: tr4w/src/lang/tr4w_consts_eng.pas:574
 msgctxt "RC_GOTOGS"
 msgid "Show scores"
@@ -3502,71 +3026,60 @@ msgid "Post scores"
 msgstr "Puntuaciones"
 
 #. Section: UEDITMESSAGE
-#: tfrmprogrammessage.btncq.caption
-#: utr4wstrings:rc_press_c
+#: tfrmprogrammessage.btncq.caption utr4wstrings:rc_press_c
 #: tr4w/src/lang/tr4w_consts_eng.pas:538
 msgctxt "RC_PRESS_C"
 msgid "Press &C to program a CQ function key."
 msgstr "Pulse  &C  para programar la tecla funcion CQ."
 
 #. Section: UEDITMESSAGE
-#: tfrmprogrammessage.btnexchange.caption
-#: utr4wstrings:rc_press_e
+#: tfrmprogrammessage.btnexchange.caption utr4wstrings:rc_press_e
 #: tr4w/src/lang/tr4w_consts_eng.pas:539
 msgctxt "RC_PRESS_E"
 msgid "Press &E to program an exchange/search and pounce function key."
 msgstr "Pulse  &E  para programar la tecla intercambio/buscar y trabajar S&P."
 
 #. Section: UEDITMESSAGE
-#: tfrmprogrammessage.btnother.caption
-#: utr4wstrings:rc_press_o
+#: tfrmprogrammessage.btnother.caption utr4wstrings:rc_press_o
 #: tr4w/src/lang/tr4w_consts_eng.pas:540
 msgctxt "RC_PRESS_O"
 msgid "Press &O to program the other non function key messages."
 msgstr "Pulse  &O  para programar otra tecla de no funcion."
 
 #. Section: UEDITMESSAGE
-#: tfrmprogrammessage.caption
-#: utr4wstrings:rc_memprogfunc
+#: tfrmprogrammessage.caption utr4wstrings:rc_memprogfunc
 #: tr4w/src/lang/tr4w_consts_eng.pas:536
 msgctxt "RC_MEMPROGFUNC"
 msgid "Memory program function"
 msgstr "Funcion de Memorias"
 
 #: tfrmradiopanel.btnspectrum.caption
-#, fuzzy
 msgid "Spectrum"
-msgstr "Spectrum"
+msgstr "Espectro"
 
-#: tfrmradiopanel.caption
-#: tradioeditform.caption
+#: tfrmradiopanel.caption tradioeditform.caption
 #, fuzzy
 msgctxt "tfrmradiopanel.caption"
 msgid "Radio"
 msgstr "Radio"
 
 #: tfrmradiopanel.lblrit.caption
-#, fuzzy
 msgid "RIT"
 msgstr "RIT"
 
 #: tfrmradiopanel.lblsplit.caption
-#, fuzzy
 msgid "SPLIT"
 msgstr "SPLIT"
 
 #: tfrmradiopanel.lblvfoacaption.caption
-#, fuzzy
 msgid "VFO A"
 msgstr "VFO A"
 
 #: tfrmradiopanel.lblvfobcaption.caption
-#, fuzzy
 msgid "VFO B"
 msgstr "VFO B"
 
 #: tfrmradiopanel.lblxit.caption
-#, fuzzy
 msgid "XIT"
 msgstr "XIT"
 
@@ -3576,8 +3089,7 @@ msgid "Remaining mults"
 msgstr "Permaneces"
 
 #. Section: UEDITMESSAGE
-#: tfrmsendkeyboard.btnclose.caption
-#: utr4wstrings:close_word
+#: tfrmsendkeyboard.btnclose.caption utr4wstrings:close_word
 #: tr4w/src/lang/tr4w_consts_eng.pas:527
 msgctxt "CLOSE_WORD"
 msgid "Close"
@@ -3589,8 +3101,7 @@ msgid "Sending CW"
 msgstr "Enviar CW"
 
 #. Section: UEDITMESSAGE
-#: tfrmsendspot.caption
-#: utr4wstrings:rc_sendspot
+#: tfrmsendspot.caption utr4wstrings:rc_sendspot
 #: tr4w/src/lang/tr4w_consts_eng.pas:691
 msgctxt "RC_SENDSPOT"
 msgid "Send spot"
@@ -3602,24 +3113,21 @@ msgid "Contest name in comment"
 msgstr "Nombre del concurso en comentario"
 
 #. Section: UEDITMESSAGE
-#: tfrmsendspot.lblcomment.caption
-#: utr4wstrings:rc_comment
+#: tfrmsendspot.lblcomment.caption utr4wstrings:rc_comment
 #: tr4w/src/lang/tr4w_consts_eng.pas:713
 msgctxt "RC_COMMENT"
 msgid "Comment"
 msgstr "Comentario"
 
 #. Section: UEDITMESSAGE
-#: tfrmsendspot.lblfrequency.caption
-#: utr4wstrings:rc_frequency
+#: tfrmsendspot.lblfrequency.caption utr4wstrings:rc_frequency
 #: tr4w/src/lang/tr4w_consts_eng.pas:802
 msgctxt "RC_FREQUENCY"
 msgid "Frequency"
 msgstr "Frequencia"
 
 #. Section: UEDITMESSAGE
-#: tfrmstations.caption
-#: utr4wstrings:rc_stations
+#: tfrmstations.caption utr4wstrings:rc_stations
 #: tr4w/src/lang/tr4w_consts_eng.pas:630
 msgctxt "RC_STATIONS"
 msgid "Stations"
@@ -3631,8 +3139,7 @@ msgid "Clear"
 msgstr "Limpiar"
 
 #. Section: UEDITMESSAGE
-#: tfrmtelnet.btncommands.caption
-#: utr4wstrings:rc_commands
+#: tfrmtelnet.btncommands.caption utr4wstrings:rc_commands
 #: tr4w/src/lang/tr4w_consts_eng.pas:681
 msgctxt "RC_COMMANDS"
 msgid "Commands"
@@ -3667,8 +3174,7 @@ msgstr "SH/50"
 msgid "Telnet"
 msgstr "Telnet"
 
-#: tfrmudpdestinationedit.btntest.caption
-#: tprefsform.btnudptest.caption
+#: tfrmudpdestinationedit.btntest.caption tprefsform.btnudptest.caption
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.btntest.caption"
 msgid "Test"
@@ -3741,10 +3247,8 @@ msgstr "Control de ventana"
 msgid "Activate this profile now"
 msgstr "Activar este perfil ahora"
 
-#: tprefsform.btnadd.caption
-#: tprefsform.btnaddcluster.caption
-#: tprefsform.btnaddkeyer.caption
-#: tprefsform.btnaddrotator.caption
+#: tprefsform.btnadd.caption tprefsform.btnaddcluster.caption
+#: tprefsform.btnaddkeyer.caption tprefsform.btnaddrotator.caption
 #: tprefsform.btnudpadd.caption
 #, fuzzy
 msgctxt "tprefsform.btnadd.caption"
@@ -3757,12 +3261,9 @@ msgctxt "tprefsform.btnapply.caption"
 msgid "Save"
 msgstr "Guardar"
 
-#: tprefsform.btnbrowsebackup.caption
-#: tprefsform.btnbrowsedvkpath.caption
-#: tprefsform.btnbrowsedvkrecorder.caption
-#: tprefsform.btnbrowsemmtty.caption
-#: tprefsform.btnbrowsemp3path.caption
-#: tprefsform.btnbrowsemp3player.caption
+#: tprefsform.btnbrowsebackup.caption tprefsform.btnbrowsedvkpath.caption
+#: tprefsform.btnbrowsedvkrecorder.caption tprefsform.btnbrowsemmtty.caption
+#: tprefsform.btnbrowsemp3path.caption tprefsform.btnbrowsemp3player.caption
 #, fuzzy
 msgctxt "tprefsform.btnbrowsebackup.caption"
 msgid "Browse..."
@@ -3774,23 +3275,20 @@ msgctxt "tprefsform.btndeleteprofile.caption"
 msgid "Delete"
 msgstr "Suprimir"
 
-#: tprefsform.btnduplicate.caption
-#: tprefsform.btnduplicatekeyer.caption
+#: tprefsform.btnduplicate.caption tprefsform.btnduplicatekeyer.caption
 #, fuzzy
 msgctxt "tprefsform.btnduplicate.caption"
 msgid "Duplicate"
 msgstr "Duplicar"
 
-#: tprefsform.btnedit.caption
-#: tprefsform.btneditkeyer.caption
+#: tprefsform.btnedit.caption tprefsform.btneditkeyer.caption
 #: tprefsform.btnudpedit.caption
 #, fuzzy
 msgctxt "tprefsform.btnedit.caption"
 msgid "Edit..."
 msgstr "Edita..."
 
-#: tprefsform.btnnewprofile.caption
-#: ulclformhelpers.tc_prefs_newprofile
+#: tprefsform.btnnewprofile.caption ulclformhelpers.tc_prefs_newprofile
 #, fuzzy
 msgctxt "tprefsform.btnnewprofile.caption"
 msgid "New..."
@@ -3801,32 +3299,27 @@ msgstr "Nuevo..."
 msgid "Open log file"
 msgstr "Archivo de registro abierto"
 
-#: tprefsform.btnremove.caption
-#: tprefsform.btnremovecluster.caption
-#: tprefsform.btnremovekeyer.caption
-#: tprefsform.btnremoverotator.caption
+#: tprefsform.btnremove.caption tprefsform.btnremovecluster.caption
+#: tprefsform.btnremovekeyer.caption tprefsform.btnremoverotator.caption
 #: tprefsform.btnudpremove.caption
 #, fuzzy
 msgctxt "tprefsform.btnremove.caption"
 msgid "Remove"
 msgstr "Retirar"
 
-#: tprefsform.btnrenameprofile.caption
-#: ulclformhelpers.tc_prefs_renameprofile
+#: tprefsform.btnrenameprofile.caption ulclformhelpers.tc_prefs_renameprofile
 #, fuzzy
 msgctxt "tprefsform.btnrenameprofile.caption"
 msgid "Rename..."
 msgstr "Renombre..."
 
-#: tprefsform.btnusecluster.caption
-#: tprefsform.btnuserotator.caption
+#: tprefsform.btnusecluster.caption tprefsform.btnuserotator.caption
 #, fuzzy
 msgctxt "tprefsform.btnusecluster.caption"
 msgid "Use this"
 msgstr "Usa esto"
 
-#: tprefsform.caption
-#: ulclformhelpers.tc_prefs_unsavedtitle
+#: tprefsform.caption ulclformhelpers.tc_prefs_unsavedtitle
 #, fuzzy
 msgctxt "tprefsform.caption"
 msgid "TR4W Preferences"
@@ -3999,7 +3492,6 @@ msgid "Post my score while the contest runs"
 msgstr "Pon mi puntuación mientras el concurso se ejecuta"
 
 #: tprefsform.chkhfbands.caption
-#, fuzzy
 msgid "HF (160 - 10 m)"
 msgstr "HF (160 - 10 m)"
 
@@ -4138,8 +3630,7 @@ msgstr "SO2R habilitado"
 msgid "Space bar performs a dupe check"
 msgstr "Barra de espacio realiza un cheque de dupe"
 
-#: tprefsform.chkspeedsync1.caption
-#: tprefsform.chkspeedsync2.caption
+#: tprefsform.chkspeedsync1.caption tprefsform.chkspeedsync2.caption
 #, fuzzy
 msgctxt "tprefsform.chkspeedsync1.caption"
 msgid "Speed sync"
@@ -4270,8 +3761,7 @@ msgstr "YCCC SO2R Más caja conectada"
 msgid "Search settings"
 msgstr "Ajustes de búsqueda"
 
-#: tprefsform.grpprofile.caption
-#: ulclformhelpers.tc_prefs_profiles
+#: tprefsform.grpprofile.caption ulclformhelpers.tc_prefs_profiles
 #, fuzzy
 msgctxt "tprefsform.grpprofile.caption"
 msgid "Station profile"
@@ -4282,8 +3772,7 @@ msgstr "Perfil de la estación"
 msgid "Saving stores your changes. It does not switch the radios over - use this button for that."
 msgstr "Salvar almacena tus cambios. No cambia las radios - use este botón para eso."
 
-#: tprefsform.lblactive.caption
-#: ulclformhelpers.tc_prefs_activelabel
+#: tprefsform.lblactive.caption ulclformhelpers.tc_prefs_activelabel
 #, fuzzy
 msgctxt "tprefsform.lblactive.caption"
 msgid "Active profile: "
@@ -4299,8 +3788,7 @@ msgstr "Conexión a: (ninguno elegido)"
 msgid "Window colors are still on the Settings menu.  They belong here and will move once the main window is resizable, which is the change that decides what the layout options need to be."
 msgstr "Los colores de ventana siguen en el menú Ajustes. Pertenecen aquí y se moverán una vez que la ventana principal sea reizable, que es el cambio que decide cuáles son las opciones de diseño."
 
-#: tprefsform.lblappearheading.caption
-#: tprefsform.lblmainwindowheading.caption
+#: tprefsform.lblappearheading.caption tprefsform.lblmainwindowheading.caption
 #, fuzzy
 msgctxt "tprefsform.lblappearheading.caption"
 msgid "Main window"
@@ -4373,7 +3861,6 @@ msgstr "Banda de guardia:"
 
 #: tprefsform.lblbandmapguardunits.caption
 #: tprefsform.lblpaddletoneunits.caption
-#, fuzzy
 msgctxt "tprefsform.lblbandmapguardunits.caption"
 msgid "Hz"
 msgstr "Hz"
@@ -4394,9 +3881,8 @@ msgid "A band map does not need a DX cluster: it also holds spots you make yours
 msgstr "Un mapa de banda no necesita un clúster DX: también tiene puntos que usted hace y cualquier cosa que la radio SO2R oye. La configuración de la lista está en la página de la lista DX."
 
 #: tprefsform.lblbandoutput1.caption
-#, fuzzy
 msgid "Radio 1 band output port"
-msgstr "Puerto de salida de banda 1"
+msgstr "Puerto de salida de banda Radio 1"
 
 #: tprefsform.lblbandoutput2.caption
 #, fuzzy
@@ -4442,8 +3928,7 @@ msgstr "Inicia sesión como:"
 msgid "blank = my station callsign"
 msgstr "blanco = mi llamada de la estación"
 
-#: tprefsform.lblclustername.caption
-#: tprefsform.lblrotatorname.caption
+#: tprefsform.lblclustername.caption tprefsform.lblrotatorname.caption
 #, fuzzy
 msgctxt "tprefsform.lblclustername.caption"
 msgid "Name:"
@@ -4454,16 +3939,14 @@ msgstr "Nombre:"
 msgid "The cluster reconnects on its own after a drop.  Telnet logging is on the Logging page; spot display and ageing are on Band Map."
 msgstr "El clúster se conecta por sí solo después de una gota. La tala de Telnet está en la página Logging; la visualización de manchas y el envejecimiento están en Band Map."
 
-#: tprefsform.lblclusterpassword.caption
-#: tprefsform.lblhamscorepass.caption
+#: tprefsform.lblclusterpassword.caption tprefsform.lblhamscorepass.caption
 #: tprefsform.lblnetpassword.caption
 #, fuzzy
 msgctxt "tprefsform.lblclusterpassword.caption"
 msgid "Password:"
 msgstr "Contraseña:"
 
-#: tprefsform.lblclusterserver.caption
-#: tprefsform.lblnetaddress.caption
+#: tprefsform.lblclusterserver.caption tprefsform.lblnetaddress.caption
 #, fuzzy
 msgctxt "tprefsform.lblclusterserver.caption"
 msgid "Server:"
@@ -4586,8 +4069,7 @@ msgstr "URL del servicio:"
 msgid "Username:"
 msgstr "Nombre de usuario:"
 
-#: tprefsform.lblhardwareheading.caption
-#: ulclformhelpers.tc_prefs_hardware
+#: tprefsform.lblhardwareheading.caption ulclformhelpers.tc_prefs_hardware
 #, fuzzy
 msgctxt "tprefsform.lblhardwareheading.caption"
 msgid "Hardware"
@@ -4633,17 +4115,14 @@ msgstr "Dirección:"
 msgid "External logger"
 msgstr "Logger externo"
 
-#: tprefsform.lblloggerport.caption
-#: tprefsform.lblnetport.caption
-#: tprefsform.lblrotatorport.caption
-#: tprefsform.lbltciport.caption
+#: tprefsform.lblloggerport.caption tprefsform.lblnetport.caption
+#: tprefsform.lblrotatorport.caption tprefsform.lbltciport.caption
 #, fuzzy
 msgctxt "tprefsform.lblloggerport.caption"
 msgid "Port:"
 msgstr "Puerto:"
 
-#: tprefsform.lblloggerrestart.caption
-#: tprefsform.lblscorerestart.caption
+#: tprefsform.lblloggerrestart.caption tprefsform.lblscorerestart.caption
 #, fuzzy
 msgctxt "tprefsform.lblloggerrestart.caption"
 msgid "These take effect when TR4W next starts."
@@ -5041,8 +4520,7 @@ msgid "These shape the CW that TR4W generates itself by toggling a serial line. 
 msgstr "Esta forma el CW que TR4W genera a sí mismo toggling una línea de serie. No hacen nada por un WinKeyer, una caja YCCC, o CW enviado por CAT - esos dispositivos mantienen su propio tiempo."
 
 #. Section: UEDITMESSAGE
-#: tprefsform.lblstationheading.caption
-#: utr4wstrings:rc_stationinfo
+#: tprefsform.lblstationheading.caption utr4wstrings:rc_stationinfo
 #: tr4w/src/lang/tr4w_consts_eng.pas:533
 msgctxt "RC_STATIONINFO"
 msgid "Station information"
@@ -5153,8 +4631,7 @@ msgstr "Para permitir que WSJT-X conduzca la radio sobre TCI en su lugar, vea la
 msgid "Station controllers will get a factory of their own, as radios and keyers did. This checkbox is the interim home for the setting."
 msgstr "Los controladores de estación obtendrán una fábrica propia, como lo hicieron las radios y los llaveros. Esta casilla es la casa provisional para el ajuste."
 
-#: tradioeditform.btndiscover.caption
-#: ulclformhelpers.tc_radioedit_discover
+#: tradioeditform.btndiscover.caption ulclformhelpers.tc_radioedit_discover
 #, fuzzy
 msgctxt "tradioeditform.btndiscover.caption"
 msgid "Discover"
@@ -5277,8 +4754,7 @@ msgctxt "tradioeditform.lblkeyerrts.caption"
 msgid "Keyer RTS line"
 msgstr "Línea de RTS más clave"
 
-#: tradioeditform.lblkeyerstopbits.caption
-#: tradioeditform.lblstopbits.caption
+#: tradioeditform.lblkeyerstopbits.caption tradioeditform.lblstopbits.caption
 #, fuzzy
 msgctxt "tradioeditform.lblkeyerstopbits.caption"
 msgid "Stop bits"
@@ -5320,16 +4796,6 @@ msgctxt "tradioeditform.lbluser.caption"
 msgid "User name"
 msgstr "Nombre de usuario"
 
-#: tradioeditform.optdata7.caption
-#, fuzzy
-msgid "7"
-msgstr ""
-
-#: tradioeditform.optdata8.caption
-#, fuzzy
-msgid "8"
-msgstr ""
-
 #: tradioeditform.optparityeven.caption
 #, fuzzy
 msgctxt "tradioeditform.optparityeven.caption"
@@ -5347,16 +4813,6 @@ msgstr "Ninguno"
 msgctxt "tradioeditform.optparityodd.caption"
 msgid "Odd"
 msgstr "Odd"
-
-#: tradioeditform.optstop1.caption
-#, fuzzy
-msgid "1"
-msgstr ""
-
-#: tradioeditform.optstop2.caption
-#, fuzzy
-msgid "2"
-msgstr ""
 
 #: tradioeditform.tabadvanced.caption
 #, fuzzy
@@ -5421,7 +4877,6 @@ msgid "Do not ask me about this file again"
 msgstr "No me pregunte sobre este archivo de nuevo"
 
 #: uappstrings.siniretirefailed
-#, fuzzy
 msgid ""
 "Could not remove %s -- %s.\n"
 "It is ignored regardless, so nothing is broken."
@@ -5451,7 +4906,6 @@ msgstr ""
 "El archivo es ignorado de cualquier manera."
 
 #: uappstrings.siniretireremoved
-#, fuzzy
 msgid "Removed %s."
 msgstr ""
 
@@ -5461,7 +4915,6 @@ msgid "Profile \"%s\" is active."
 msgstr "Perfil \"%s\" está activo."
 
 #: ulclformhelpers.tc_prefs_confirmremove
-#, fuzzy
 msgid "Remove radio \"%s\"?"
 msgstr ""
 
@@ -5608,23 +5061,19 @@ msgid "Test packet sent to %s:%d.  UDP cannot confirm it arrived -- check the re
 msgstr "Paquete de prueba enviado a %s:%d. UDP no puede confirmar que llegó - comprobar el programa de recepción."
 
 #. Section: General
-#: utr4wstrings:tc_translation_credit
-#: tr4w/src/lang/tr4w_consts_eng.pas:13
-#, fuzzy
+#: utr4wstrings:tc_translation_credit tr4w/src/lang/tr4w_consts_eng.pas:13
 msgctxt "TC_TRANSLATION_CREDIT"
 msgid "%s translation by %s"
 msgstr ""
 
 #. Section: UTELNET
-#: utr4wstrings:tc_telnet
-#: tr4w/src/lang/tr4w_consts_eng.pas:195
+#: utr4wstrings:tc_telnet tr4w/src/lang/tr4w_consts_eng.pas:195
 msgctxt "TC_TELNET"
-msgid "Connect\000Disconnect\000Commands\000Freeze\000Clear\000SH/50\000\000"
-msgstr "Conectar\000Desconectar\000Comandos\000Congelar\000Limpiar\000100\000\000"
+msgid "Connect\\000Disconnect\\000Commands\\000Freeze\\000Clear\\000SH/50\\000\\000"
+msgstr "Conectar\\000Desconectar\\000Comandos\\000Congelar\\000Limpiar\\000100\\000\\000"
 
 #. Section: LOGSUBS2
-#: utr4wstrings:tc_bandchangedisabled
-#: tr4w/src/lang/tr4w_consts_eng.pas:365
+#: utr4wstrings:tc_bandchangedisabled tr4w/src/lang/tr4w_consts_eng.pas:365
 #, fuzzy
 msgctxt "TC_BANDCHANGEDISABLED"
 msgid "Band change requires MULTIPLE BANDS = TRUE once the log has QSOs"
@@ -5632,332 +5081,282 @@ msgstr "Band change requires MULTIPLE BANDS = TRUE once the log has QSOs"
 
 #. Section: UEDITMESSAGE
 #. 4.51.8
-#: utr4wstrings:rc_3830
-#: tr4w/src/lang/tr4w_consts_eng.pas:521
+#: utr4wstrings:rc_3830 tr4w/src/lang/tr4w_consts_eng.pas:521
 msgctxt "RC_3830"
 msgid "3830 Score posting"
 msgstr "Publicar puntuación en 3830"
 
 #. Section: UEDITMESSAGE
 #. 4.53.3
-#: utr4wstrings:rc_3830_arrl
-#: tr4w/src/lang/tr4w_consts_eng.pas:522
+#: utr4wstrings:rc_3830_arrl tr4w/src/lang/tr4w_consts_eng.pas:522
 msgctxt "RC_3830_ARRL"
 msgid "Submit ARRL Log"
 msgstr "Enviar log a ARRL"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_vieweditlog2
-#: tr4w/src/lang/tr4w_consts_eng.pas:523
-#: utr4wstrings:rc_vieweditlog
-#: tr4w/src/lang/tr4w_consts_eng.pas:666
+#: utr4wstrings:rc_vieweditlog2 tr4w/src/lang/tr4w_consts_eng.pas:523
+#: utr4wstrings:rc_vieweditlog tr4w/src/lang/tr4w_consts_eng.pas:666
 msgctxt "RC_VIEWEDITLOG2"
 msgid "View / Edit log"
 msgstr "Ver / Editar log"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_ct1bohis2
-#: tr4w/src/lang/tr4w_consts_eng.pas:524
-#: utr4wstrings:rc_ct1bohis
-#: tr4w/src/lang/tr4w_consts_eng.pas:679
+#: utr4wstrings:rc_ct1bohis2 tr4w/src/lang/tr4w_consts_eng.pas:524
+#: utr4wstrings:rc_ct1bohis tr4w/src/lang/tr4w_consts_eng.pas:679
 msgctxt "RC_CT1BOHIS2"
 msgid "CT1BOH info screen"
 msgstr "Pantalla de información CT1BOH"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:help_word
-#: tr4w/src/lang/tr4w_consts_eng.pas:529
+#: utr4wstrings:help_word tr4w/src/lang/tr4w_consts_eng.pas:529
 msgctxt "HELP_WORD"
 msgid "Help"
 msgstr "Ayuda"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:exit_word
-#: tr4w/src/lang/tr4w_consts_eng.pas:531
-#: utr4wstrings:rc_exit
-#: tr4w/src/lang/tr4w_consts_eng.pas:613
+#: utr4wstrings:exit_word tr4w/src/lang/tr4w_consts_eng.pas:531
+#: utr4wstrings:rc_exit tr4w/src/lang/tr4w_consts_eng.pas:613
 msgctxt "EXIT_WORD"
 msgid "E&xit"
 msgstr "&Salir"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_listofmess
-#: tr4w/src/lang/tr4w_consts_eng.pas:532
+#: utr4wstrings:rc_listofmess tr4w/src/lang/tr4w_consts_eng.pas:532
 msgctxt "RC_LISTOFMESS"
 msgid "List of messages"
 msgstr "Lista de mensajes"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_sendingcw
-#: tr4w/src/lang/tr4w_consts_eng.pas:542
+#: utr4wstrings:rc_sendingcw tr4w/src/lang/tr4w_consts_eng.pas:542
 msgctxt "RC_SENDINGCW"
 msgid "Sending CW from the keyboard. Use ENTER/Escape/F10 to exit."
 msgstr "Enviar CW desde el teclado. Use ENTER/Escape/F10 para salir."
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_wincontrol2
-#: tr4w/src/lang/tr4w_consts_eng.pas:547
-#: utr4wstrings:rc_wincontrol
-#: tr4w/src/lang/tr4w_consts_eng.pas:552
+#: utr4wstrings:rc_wincontrol2 tr4w/src/lang/tr4w_consts_eng.pas:547
+#: utr4wstrings:rc_wincontrol tr4w/src/lang/tr4w_consts_eng.pas:552
 msgctxt "RC_WINCONTROL2"
 msgid "Windows control"
 msgstr "Ventana de control"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_tools
-#: tr4w/src/lang/tr4w_consts_eng.pas:549
+#: utr4wstrings:rc_tools tr4w/src/lang/tr4w_consts_eng.pas:549
 msgctxt "RC_TOOLS"
 msgid "Tools"
 msgstr "Herramientas"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_beaconsm
-#: tr4w/src/lang/tr4w_consts_eng.pas:551
+#: utr4wstrings:rc_beaconsm tr4w/src/lang/tr4w_consts_eng.pas:551
 msgctxt "RC_BEACONSM"
 msgid "Beacons monitor"
 msgstr "Monitor balizas"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_settimezone
-#: tr4w/src/lang/tr4w_consts_eng.pas:553
+#: utr4wstrings:rc_settimezone tr4w/src/lang/tr4w_consts_eng.pas:553
 msgctxt "RC_SETTIMEZONE"
 msgid "Set time zone"
 msgstr "Elegir zona horaria"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_ping
-#: tr4w/src/lang/tr4w_consts_eng.pas:554
+#: utr4wstrings:rc_ping tr4w/src/lang/tr4w_consts_eng.pas:554
 msgctxt "RC_PING"
 msgid "Ping [SERVER ADDRESS]"
 msgstr "Ping [DIRECCIÓN DEL SERVIDOR]"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_runserver
-#: tr4w/src/lang/tr4w_consts_eng.pas:555
+#: utr4wstrings:rc_runserver tr4w/src/lang/tr4w_consts_eng.pas:555
 msgctxt "RC_RUNSERVER"
 msgid "Run TR4WSERVER"
 msgstr "Ejecutar TR4WSERVER"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_dvkvolcontrol
-#: tr4w/src/lang/tr4w_consts_eng.pas:556
+#: utr4wstrings:rc_dvkvolcontrol tr4w/src/lang/tr4w_consts_eng.pas:556
 msgctxt "RC_DVKVOLCONTROL"
 msgid "DVK volume control"
 msgstr "Control de volumen del DVK"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_reccontrol
-#: tr4w/src/lang/tr4w_consts_eng.pas:557
+#: utr4wstrings:rc_reccontrol tr4w/src/lang/tr4w_consts_eng.pas:557
 msgctxt "RC_RECCONTROL"
 msgid "Recording control"
 msgstr "Control grabacion"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_calculator
-#: tr4w/src/lang/tr4w_consts_eng.pas:561
+#: utr4wstrings:rc_calculator tr4w/src/lang/tr4w_consts_eng.pas:561
 msgctxt "RC_CALCULATOR"
 msgid "Calculator"
 msgstr "Calculadora"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_reset_radio_ports
-#: tr4w/src/lang/tr4w_consts_eng.pas:563
+#: utr4wstrings:rc_reset_radio_ports tr4w/src/lang/tr4w_consts_eng.pas:563
 msgctxt "RC_RESET_RADIO_PORTS"
 msgid "Reset Radio Ports"
 msgstr "Restablecer puertos de radio"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_timesyn
-#: tr4w/src/lang/tr4w_consts_eng.pas:571
+#: utr4wstrings:rc_timesyn tr4w/src/lang/tr4w_consts_eng.pas:571
 msgctxt "RC_TIMESYN"
 msgid "Synchronize time on &all computers"
 msgstr "Sincronizacion tiempo"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_mp3_recenable
-#: tr4w/src/lang/tr4w_consts_eng.pas:575
+#: utr4wstrings:rc_mp3_recenable tr4w/src/lang/tr4w_consts_eng.pas:575
 msgctxt "RC_MP3_RECENABLE"
 msgid "Enable"
 msgstr "Habilitar"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_sendinrig
-#: tr4w/src/lang/tr4w_consts_eng.pas:579
+#: utr4wstrings:rc_sendinrig tr4w/src/lang/tr4w_consts_eng.pas:579
 msgctxt "RC_SENDINRIG"
 msgid "QSY Inactive Radio"
 msgstr "Enviar emisora inactiva a la frecuencia"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_file
-#: tr4w/src/lang/tr4w_consts_eng.pas:580
+#: utr4wstrings:rc_file tr4w/src/lang/tr4w_consts_eng.pas:580
 msgctxt "RC_FILE"
 msgid "File"
 msgstr "Archivo"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_clearlog
-#: tr4w/src/lang/tr4w_consts_eng.pas:581
+#: utr4wstrings:rc_clearlog tr4w/src/lang/tr4w_consts_eng.pas:581
 msgctxt "RC_CLEARLOG"
 msgid "Clear log"
 msgstr "Limpiar log"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_import
-#: tr4w/src/lang/tr4w_consts_eng.pas:582
+#: utr4wstrings:rc_import tr4w/src/lang/tr4w_consts_eng.pas:582
 msgctxt "RC_IMPORT"
 msgid "Import"
 msgstr "Importar"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_openlogdir
-#: tr4w/src/lang/tr4w_consts_eng.pas:583
+#: utr4wstrings:rc_openlogdir tr4w/src/lang/tr4w_consts_eng.pas:583
 msgctxt "RC_OPENLOGDIR"
 msgid "Open log directory"
 msgstr "Abrir directorio log"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_postscoretogs
-#: tr4w/src/lang/tr4w_consts_eng.pas:596
+#: utr4wstrings:rc_postscoretogs tr4w/src/lang/tr4w_consts_eng.pas:596
 msgctxt "RC_POSTSCORETOGS"
 msgid "Post score"
 msgstr "Publica puntuacion"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_export
-#: tr4w/src/lang/tr4w_consts_eng.pas:600
+#: utr4wstrings:rc_export tr4w/src/lang/tr4w_consts_eng.pas:600
 msgctxt "RC_EXPORT"
 msgid "Export"
 msgstr "Exportar"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_iniexlist
-#: tr4w/src/lang/tr4w_consts_eng.pas:601
+#: utr4wstrings:rc_iniexlist tr4w/src/lang/tr4w_consts_eng.pas:601
 msgctxt "RC_INIEXLIST"
 msgid "Initial exchanges list"
 msgstr "Lista intercambios inciales"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_trlogform
-#: tr4w/src/lang/tr4w_consts_eng.pas:602
+#: utr4wstrings:rc_trlogform tr4w/src/lang/tr4w_consts_eng.pas:602
 msgctxt "RC_TRLOGFORM"
 msgid "TR Log format"
 msgstr "Formato TR Log"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_reports
-#: tr4w/src/lang/tr4w_consts_eng.pas:603
+#: utr4wstrings:rc_reports tr4w/src/lang/tr4w_consts_eng.pas:603
 msgctxt "RC_REPORTS"
 msgid "Reports"
 msgstr "I"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_allcalls
-#: tr4w/src/lang/tr4w_consts_eng.pas:604
+#: utr4wstrings:rc_allcalls tr4w/src/lang/tr4w_consts_eng.pas:604
 msgctxt "RC_ALLCALLS"
 msgid "All callsigns"
 msgstr "Todos los indicativos"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_bandchanges
-#: tr4w/src/lang/tr4w_consts_eng.pas:605
+#: utr4wstrings:rc_bandchanges tr4w/src/lang/tr4w_consts_eng.pas:605
 msgctxt "RC_BANDCHANGES"
 msgid "Band changes"
 msgstr "Cambios de banda"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_contlist
-#: tr4w/src/lang/tr4w_consts_eng.pas:606
+#: utr4wstrings:rc_contlist tr4w/src/lang/tr4w_consts_eng.pas:606
 msgctxt "RC_CONTLIST"
 msgid "Continent List"
 msgstr "Lista Continentes"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_fcc
-#: tr4w/src/lang/tr4w_consts_eng.pas:607
+#: utr4wstrings:rc_fcc tr4w/src/lang/tr4w_consts_eng.pas:607
 msgctxt "RC_FCC"
 msgid "First callsign worked in each country"
 msgstr "Primer indicativo trabajado en cada entidad"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_fcz
-#: tr4w/src/lang/tr4w_consts_eng.pas:608
+#: utr4wstrings:rc_fcz tr4w/src/lang/tr4w_consts_eng.pas:608
 msgctxt "RC_FCZ"
 msgid "First callsign worked in each zone"
 msgstr "Primer indicativo trabajado en cada zona"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_qsobycountry
-#: tr4w/src/lang/tr4w_consts_eng.pas:610
+#: utr4wstrings:rc_qsobycountry tr4w/src/lang/tr4w_consts_eng.pas:610
 msgctxt "RC_QSOBYCOUNTRY"
 msgid "QSOs by country by band"
 msgstr "QSOs con entidad por banda"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_scorebyhour
-#: tr4w/src/lang/tr4w_consts_eng.pas:611
+#: utr4wstrings:rc_scorebyhour tr4w/src/lang/tr4w_consts_eng.pas:611
 msgctxt "RC_SCOREBYHOUR"
 msgid "Score by hour"
 msgstr "Puntos por hora"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_summary
-#: tr4w/src/lang/tr4w_consts_eng.pas:612
+#: utr4wstrings:rc_summary tr4w/src/lang/tr4w_consts_eng.pas:612
 msgctxt "RC_SUMMARY"
 msgid "Summary"
 msgstr "Resumen"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_settings
-#: tr4w/src/lang/tr4w_consts_eng.pas:614
+#: utr4wstrings:rc_settings tr4w/src/lang/tr4w_consts_eng.pas:614
 msgctxt "RC_SETTINGS"
 msgid "Settings"
 msgstr "Ajustes"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_options
-#: tr4w/src/lang/tr4w_consts_eng.pas:616
+#: utr4wstrings:rc_options tr4w/src/lang/tr4w_consts_eng.pas:616
 msgctxt "RC_OPTIONS"
 msgid "Configuration commands"
 msgstr "Comandos de configuración"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_programmes
-#: tr4w/src/lang/tr4w_consts_eng.pas:617
+#: utr4wstrings:rc_programmes tr4w/src/lang/tr4w_consts_eng.pas:617
 msgctxt "RC_PROGRAMMES"
 msgid "Program messages"
 msgstr "Mensajes del programa"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_catandcw
-#: tr4w/src/lang/tr4w_consts_eng.pas:618
+#: utr4wstrings:rc_catandcw tr4w/src/lang/tr4w_consts_eng.pas:618
 msgctxt "RC_CATANDCW"
 msgid "CAT and CW Keying"
 msgstr "CAT y CW Keying"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_windows
-#: tr4w/src/lang/tr4w_consts_eng.pas:619
+#: utr4wstrings:rc_windows tr4w/src/lang/tr4w_consts_eng.pas:619
 msgctxt "RC_WINDOWS"
 msgid "Windows"
 msgstr "Ventanas"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_bandmap
-#: tr4w/src/lang/tr4w_consts_eng.pas:620
+#: utr4wstrings:rc_bandmap tr4w/src/lang/tr4w_consts_eng.pas:620
 msgctxt "RC_BANDMAP"
 msgid "Bandmap"
 msgstr "Mada de banda"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_dupesheet
-#: tr4w/src/lang/tr4w_consts_eng.pas:621
+#: utr4wstrings:rc_dupesheet tr4w/src/lang/tr4w_consts_eng.pas:621
 msgctxt "RC_DUPESHEET"
 msgid "Dupesheet"
 msgstr "Hoja duplicados"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_trmaster
-#: tr4w/src/lang/tr4w_consts_eng.pas:623
+#: utr4wstrings:rc_trmaster tr4w/src/lang/tr4w_consts_eng.pas:623
 #, fuzzy
 msgctxt "RC_TRMASTER"
 msgid "SCP"
@@ -5965,592 +5364,505 @@ msgstr "SCP"
 
 #. Section: UEDITMESSAGE
 #. 4.72.3
-#: utr4wstrings:rc_remmults
-#: tr4w/src/lang/tr4w_consts_eng.pas:624
+#: utr4wstrings:rc_remmults tr4w/src/lang/tr4w_consts_eng.pas:624
 msgctxt "RC_REMMULTS"
 msgid "Mults"
 msgstr "Multis restantes"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_rm_default
-#: tr4w/src/lang/tr4w_consts_eng.pas:625
+#: utr4wstrings:rc_rm_default tr4w/src/lang/tr4w_consts_eng.pas:625
 msgctxt "RC_RM_DEFAULT"
 msgid "Default"
 msgstr "Defecto"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_telnet
-#: tr4w/src/lang/tr4w_consts_eng.pas:626
+#: utr4wstrings:rc_telnet tr4w/src/lang/tr4w_consts_eng.pas:626
 #, fuzzy
 msgctxt "RC_TELNET"
 msgid "DX Cluster"
 msgstr "DX Cluster"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_altp
-#: tr4w/src/lang/tr4w_consts_eng.pas:635
+#: utr4wstrings:rc_altp tr4w/src/lang/tr4w_consts_eng.pas:635
 msgctxt "RC_ALTP"
 msgid "Open Fkeys"
 msgstr "Abrir teclas de función"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_altx
-#: tr4w/src/lang/tr4w_consts_eng.pas:636
+#: utr4wstrings:rc_altx tr4w/src/lang/tr4w_consts_eng.pas:636
 msgctxt "RC_ALTX"
 msgid "Exit Program"
 msgstr "Salir del programa"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_autocqresume
-#: tr4w/src/lang/tr4w_consts_eng.pas:638
+#: utr4wstrings:rc_autocqresume tr4w/src/lang/tr4w_consts_eng.pas:638
 msgctxt "RC_AUTOCQRESUME"
 msgid "Auto-CQ resume"
 msgstr "Reanudar Auto-CQ"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_dupecheck
-#: tr4w/src/lang/tr4w_consts_eng.pas:639
+#: utr4wstrings:rc_dupecheck tr4w/src/lang/tr4w_consts_eng.pas:639
 msgctxt "RC_DUPECHECK"
 msgid "Dupe check"
 msgstr "Comprobar duplicados"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_edit
-#: tr4w/src/lang/tr4w_consts_eng.pas:640
+#: utr4wstrings:rc_edit tr4w/src/lang/tr4w_consts_eng.pas:640
 msgctxt "RC_EDIT"
 msgid "SO1R-Edit or SO2R-SWAP"
 msgstr "Editar"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_backuplog
-#: tr4w/src/lang/tr4w_consts_eng.pas:641
+#: utr4wstrings:rc_backuplog tr4w/src/lang/tr4w_consts_eng.pas:641
 msgctxt "RC_BACKUPLOG"
 msgid "Backup Log"
 msgstr "Copia de seguridad del log"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_swapmultview
-#: tr4w/src/lang/tr4w_consts_eng.pas:643
+#: utr4wstrings:rc_swapmultview tr4w/src/lang/tr4w_consts_eng.pas:643
 msgctxt "RC_SWAPMULTVIEW"
 msgid "Swap mult view"
 msgstr "Cambiar vista multiplicadores"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_incnumber
-#: tr4w/src/lang/tr4w_consts_eng.pas:644
+#: utr4wstrings:rc_incnumber tr4w/src/lang/tr4w_consts_eng.pas:644
 msgctxt "RC_INCNUMBER"
 msgid "Increment number"
 msgstr "Numero incremental"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_tooglemb
-#: tr4w/src/lang/tr4w_consts_eng.pas:645
+#: utr4wstrings:rc_tooglemb tr4w/src/lang/tr4w_consts_eng.pas:645
 msgctxt "RC_TOOGLEMB"
 msgid "Toogle multiplier bell"
 msgstr "Intercambiar alerta multiplicador"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_killcw
-#: tr4w/src/lang/tr4w_consts_eng.pas:646
+#: utr4wstrings:rc_killcw tr4w/src/lang/tr4w_consts_eng.pas:646
 msgctxt "RC_KILLCW"
 msgid "Toggle CW"
 msgstr "Alternar CW"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_searchlog
-#: tr4w/src/lang/tr4w_consts_eng.pas:647
+#: utr4wstrings:rc_searchlog tr4w/src/lang/tr4w_consts_eng.pas:647
 msgctxt "RC_SEARCHLOG"
 msgid "Search log"
 msgstr "Buscar log"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_transfreq
-#: tr4w/src/lang/tr4w_consts_eng.pas:648
+#: utr4wstrings:rc_transfreq tr4w/src/lang/tr4w_consts_eng.pas:648
 msgctxt "RC_TRANSFREQ"
 msgid "Transmit frequency"
 msgstr "Frecuencia transmisor"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_tooglerigs
-#: tr4w/src/lang/tr4w_consts_eng.pas:651
+#: utr4wstrings:rc_tooglerigs tr4w/src/lang/tr4w_consts_eng.pas:651
 msgctxt "RC_TOOGLERIGS"
 msgid "Toggle rigs"
 msgstr "Intercambiar emisoras"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_cwspeed
-#: tr4w/src/lang/tr4w_consts_eng.pas:652
+#: utr4wstrings:rc_cwspeed tr4w/src/lang/tr4w_consts_eng.pas:652
 msgctxt "RC_CWSPEED"
 msgid "CW speed"
 msgstr "Velocidad CW"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_setsysdt
-#: tr4w/src/lang/tr4w_consts_eng.pas:653
+#: utr4wstrings:rc_setsysdt tr4w/src/lang/tr4w_consts_eng.pas:653
 msgctxt "RC_SETSYSDT"
 msgid "Set system date/time"
 msgstr "Elige fecha/hora del sistema"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_initialize
-#: tr4w/src/lang/tr4w_consts_eng.pas:654
+#: utr4wstrings:rc_initialize tr4w/src/lang/tr4w_consts_eng.pas:654
 msgctxt "RC_INITIALIZE"
 msgid "Initialize QSO"
 msgstr "Inicializar QSO"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_deletelastqso
-#: tr4w/src/lang/tr4w_consts_eng.pas:656
+#: utr4wstrings:rc_deletelastqso tr4w/src/lang/tr4w_consts_eng.pas:656
 msgctxt "RC_DELETELASTQSO"
 msgid "Delete the last QSO"
 msgstr "Borrar el ultimo QSO"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_initialex
-#: tr4w/src/lang/tr4w_consts_eng.pas:657
+#: utr4wstrings:rc_initialex tr4w/src/lang/tr4w_consts_eng.pas:657
 msgctxt "RC_INITIALEX"
 msgid "Initial exchange"
 msgstr "Intercambio incial"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_tooglest
-#: tr4w/src/lang/tr4w_consts_eng.pas:658
+#: utr4wstrings:rc_tooglest tr4w/src/lang/tr4w_consts_eng.pas:658
 msgctxt "RC_TOOGLEST"
 msgid "Toggle sidetone"
 msgstr "Intercambiar sidetone"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_toogleas
-#: tr4w/src/lang/tr4w_consts_eng.pas:659
+#: utr4wstrings:rc_toogleas tr4w/src/lang/tr4w_consts_eng.pas:659
 msgctxt "RC_TOOGLEAS"
 msgid "Toggle autosend"
 msgstr "Intercambiar autosend"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_bandup
-#: tr4w/src/lang/tr4w_consts_eng.pas:660
+#: utr4wstrings:rc_bandup tr4w/src/lang/tr4w_consts_eng.pas:660
 msgctxt "RC_BANDUP"
 msgid "Band Up"
 msgstr "Banda arriba"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_banddown
-#: tr4w/src/lang/tr4w_consts_eng.pas:661
+#: utr4wstrings:rc_banddown tr4w/src/lang/tr4w_consts_eng.pas:661
 msgctxt "RC_BANDDOWN"
 msgid "Band Down"
 msgstr "Banda abajo"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_ssbcwmode
-#: tr4w/src/lang/tr4w_consts_eng.pas:662
+#: utr4wstrings:rc_ssbcwmode tr4w/src/lang/tr4w_consts_eng.pas:662
 msgctxt "RC_SSBCWMODE"
 msgid "SSB/CW mode"
 msgstr "SSB/CW modo"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_sendkeyboard
-#: tr4w/src/lang/tr4w_consts_eng.pas:663
+#: utr4wstrings:rc_sendkeyboard tr4w/src/lang/tr4w_consts_eng.pas:663
 msgctxt "RC_SENDKEYBOARD"
 msgid "Send Keyboard Input"
 msgstr "Entrada con teclado"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_cleardupes
-#: tr4w/src/lang/tr4w_consts_eng.pas:665
+#: utr4wstrings:rc_cleardupes tr4w/src/lang/tr4w_consts_eng.pas:665
 msgctxt "RC_CLEARDUPES"
 msgid "Clear dupesheet"
 msgstr "Limpiar hoja duplicados"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_note
-#: tr4w/src/lang/tr4w_consts_eng.pas:667
+#: utr4wstrings:rc_note tr4w/src/lang/tr4w_consts_eng.pas:667
 msgctxt "RC_NOTE"
 msgid "Note"
 msgstr "Nota"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_missmultsrep
-#: tr4w/src/lang/tr4w_consts_eng.pas:668
+#: utr4wstrings:rc_missmultsrep tr4w/src/lang/tr4w_consts_eng.pas:668
 msgctxt "RC_MISSMULTSREP"
 msgid "Missing mults report"
 msgstr "Informe multiplicadores ausente"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_qtcfunctions
-#: tr4w/src/lang/tr4w_consts_eng.pas:670
+#: utr4wstrings:rc_qtcfunctions tr4w/src/lang/tr4w_consts_eng.pas:670
 msgctxt "RC_QTCFUNCTIONS"
 msgid "QTC functions"
 msgstr "Funciones QTCs"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_recalllastent
-#: tr4w/src/lang/tr4w_consts_eng.pas:671
+#: utr4wstrings:rc_recalllastent tr4w/src/lang/tr4w_consts_eng.pas:671
 msgctxt "RC_RECALLLASTENT"
 msgid "Recall last entry"
 msgstr "Recupera ultima entrada"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_viewpakspots
-#: tr4w/src/lang/tr4w_consts_eng.pas:672
+#: utr4wstrings:rc_viewpakspots tr4w/src/lang/tr4w_consts_eng.pas:672
 msgctxt "RC_VIEWPAKSPOTS"
 msgid "View packet spots"
 msgstr "Ver anuncios/spots packet"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_execonfigfile
-#: tr4w/src/lang/tr4w_consts_eng.pas:673
+#: utr4wstrings:rc_execonfigfile tr4w/src/lang/tr4w_consts_eng.pas:673
 msgctxt "RC_EXECONFIGFILE"
 msgid "Execute configuration file"
 msgstr "Ejecutar archivo de configuración"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_refreshbm
-#: tr4w/src/lang/tr4w_consts_eng.pas:674
+#: utr4wstrings:rc_refreshbm tr4w/src/lang/tr4w_consts_eng.pas:674
 msgctxt "RC_REFRESHBM"
 msgid "Refresh bandmap"
 msgstr "Redibuja mapa de banda"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_cursorinbm
-#: tr4w/src/lang/tr4w_consts_eng.pas:676
+#: utr4wstrings:rc_cursorinbm tr4w/src/lang/tr4w_consts_eng.pas:676
 msgctxt "RC_CURSORINBM"
 msgid "Cursor in bandmap window"
 msgstr "Cursor en ventana mapa de banda"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_cursortelnet
-#: tr4w/src/lang/tr4w_consts_eng.pas:677
+#: utr4wstrings:rc_cursortelnet tr4w/src/lang/tr4w_consts_eng.pas:677
 msgctxt "RC_CURSORTELNET"
 msgid "Cursor in DX Cluster window"
 msgstr "Cursor en ventana de DX Cluster"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_qsowithnocw
-#: tr4w/src/lang/tr4w_consts_eng.pas:678
+#: utr4wstrings:rc_qsowithnocw tr4w/src/lang/tr4w_consts_eng.pas:678
 msgctxt "RC_QSOWITHNOCW"
 msgid "QSO with no CW"
 msgstr "QSO con no CW"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_addbandmapph
-#: tr4w/src/lang/tr4w_consts_eng.pas:680
+#: utr4wstrings:rc_addbandmapph tr4w/src/lang/tr4w_consts_eng.pas:680
 msgctxt "RC_ADDBANDMAPPH"
 msgid "Add bandmap place holder"
 msgstr "Añadir marcador de bandmap"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_focusinmw
-#: tr4w/src/lang/tr4w_consts_eng.pas:682
+#: utr4wstrings:rc_focusinmw tr4w/src/lang/tr4w_consts_eng.pas:682
 msgctxt "RC_FOCUSINMW"
 msgid "Focus in main window"
 msgstr "Foco en ventana principal"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_toggleinsert
-#: tr4w/src/lang/tr4w_consts_eng.pas:683
+#: utr4wstrings:rc_toggleinsert tr4w/src/lang/tr4w_consts_eng.pas:683
 msgctxt "RC_TOGGLEINSERT"
 msgid "Toggle insert mode"
 msgstr "Intercambio modo insertar"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_escape
-#: tr4w/src/lang/tr4w_consts_eng.pas:684
+#: utr4wstrings:rc_escape tr4w/src/lang/tr4w_consts_eng.pas:684
 #, fuzzy
 msgctxt "RC_ESCAPE"
 msgid "Escape"
 msgstr "Escape"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_cwspeedup
-#: tr4w/src/lang/tr4w_consts_eng.pas:685
+#: utr4wstrings:rc_cwspeedup tr4w/src/lang/tr4w_consts_eng.pas:685
 msgctxt "RC_CWSPEEDUP"
 msgid "CW Speed Up"
 msgstr "Velocidad CW +"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_cwspeeddown
-#: tr4w/src/lang/tr4w_consts_eng.pas:686
+#: utr4wstrings:rc_cwspeeddown tr4w/src/lang/tr4w_consts_eng.pas:686
 msgctxt "RC_CWSPEEDDOWN"
 msgid "CW Speed Down"
 msgstr "Velocidad CW -"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_cwspupir
-#: tr4w/src/lang/tr4w_consts_eng.pas:687
+#: utr4wstrings:rc_cwspupir tr4w/src/lang/tr4w_consts_eng.pas:687
 msgctxt "RC_CWSPUPIR"
 msgid "CW Speed Up for the inactive radio"
 msgstr "Velocidad CW + para radio inactiva"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_cwspdnir
-#: tr4w/src/lang/tr4w_consts_eng.pas:688
+#: utr4wstrings:rc_cwspdnir tr4w/src/lang/tr4w_consts_eng.pas:688
 msgctxt "RC_CWSPDNIR"
 msgid "CW Speed Down for the inactive radio"
 msgstr "Velocidad CW - para radio inactiva"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_cqmode
-#: tr4w/src/lang/tr4w_consts_eng.pas:689
+#: utr4wstrings:rc_cqmode tr4w/src/lang/tr4w_consts_eng.pas:689
 msgctxt "RC_CQMODE"
 msgid "CQ Mode"
 msgstr "Modo CQ"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_searchpounce
-#: tr4w/src/lang/tr4w_consts_eng.pas:690
+#: utr4wstrings:rc_searchpounce tr4w/src/lang/tr4w_consts_eng.pas:690
 msgctxt "RC_SEARCHPOUNCE"
 msgid "Search && pounce mode"
 msgstr "Modo Buscar && trabajar"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_rescore
-#: tr4w/src/lang/tr4w_consts_eng.pas:692
+#: utr4wstrings:rc_rescore tr4w/src/lang/tr4w_consts_eng.pas:692
 msgctxt "RC_RESCORE"
 msgid "Rescore"
 msgstr "Recalcular puntos"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_net
-#: tr4w/src/lang/tr4w_consts_eng.pas:694
+#: utr4wstrings:rc_net tr4w/src/lang/tr4w_consts_eng.pas:694
 msgctxt "RC_NET"
 msgid "Net"
 msgstr "Red"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_sendmessage
-#: tr4w/src/lang/tr4w_consts_eng.pas:696
+#: utr4wstrings:rc_sendmessage tr4w/src/lang/tr4w_consts_eng.pas:696
 msgctxt "RC_SENDMESSAGE"
 msgid "Send message"
 msgstr "Enviar mensaje"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_synlog
-#: tr4w/src/lang/tr4w_consts_eng.pas:697
+#: utr4wstrings:rc_synlog tr4w/src/lang/tr4w_consts_eng.pas:697
 msgctxt "RC_SYNLOG"
 msgid "Compare and synchronize logs"
 msgstr "Sincronizar log"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_clearalllogs
-#: tr4w/src/lang/tr4w_consts_eng.pas:698
+#: utr4wstrings:rc_clearalllogs tr4w/src/lang/tr4w_consts_eng.pas:698
 msgctxt "RC_CLEARALLLOGS"
 msgid "Clear all logs in network"
 msgstr "Limpiar todos los logs de la red"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_download
-#: tr4w/src/lang/tr4w_consts_eng.pas:699
+#: utr4wstrings:rc_download tr4w/src/lang/tr4w_consts_eng.pas:699
 msgctxt "RC_DOWNLOAD"
 msgid "Download the latest CTY.DAT"
 msgstr "Descargar la última version"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_contents
-#: tr4w/src/lang/tr4w_consts_eng.pas:700
+#: utr4wstrings:rc_contents tr4w/src/lang/tr4w_consts_eng.pas:700
 msgctxt "RC_CONTENTS"
 msgid "Contents"
 msgstr "Contenidos"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_about
-#: tr4w/src/lang/tr4w_consts_eng.pas:701
+#: utr4wstrings:rc_about tr4w/src/lang/tr4w_consts_eng.pas:701
 msgctxt "RC_ABOUT"
 msgid "About"
 msgstr "Acerca de"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_deleted
-#: tr4w/src/lang/tr4w_consts_eng.pas:705
+#: utr4wstrings:rc_deleted tr4w/src/lang/tr4w_consts_eng.pas:705
 msgctxt "RC_DELETED"
 msgid "Deleted"
 msgstr "&Borrados"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_search
-#: tr4w/src/lang/tr4w_consts_eng.pas:708
+#: utr4wstrings:rc_search tr4w/src/lang/tr4w_consts_eng.pas:708
 msgctxt "RC_SEARCH"
 msgid "&Search"
 msgstr "Buscar"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_contestnameic
-#: tr4w/src/lang/tr4w_consts_eng.pas:712
+#: utr4wstrings:rc_contestnameic tr4w/src/lang/tr4w_consts_eng.pas:712
 msgctxt "RC_CONTESTNAMEIC"
 msgid "C&ontest name in comment"
 msgstr "Nombre C&oncurso en comentario"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_recvqtc
-#: tr4w/src/lang/tr4w_consts_eng.pas:735
+#: utr4wstrings:rc_recvqtc tr4w/src/lang/tr4w_consts_eng.pas:735
 msgctxt "RC_RECVQTC"
 msgid "Receiving QTCs"
 msgstr "Recibiendo QTCs"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_diffinlog
-#: tr4w/src/lang/tr4w_consts_eng.pas:749
+#: utr4wstrings:rc_diffinlog tr4w/src/lang/tr4w_consts_eng.pas:749
 msgctxt "RC_DIFFINLOG"
 msgid "Difference in logs"
 msgstr "Diferencia en logs"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_iaqslint
-#: tr4w/src/lang/tr4w_consts_eng.pas:775
+#: utr4wstrings:rc_iaqslint tr4w/src/lang/tr4w_consts_eng.pas:775
 msgctxt "RC_IAQSLINT"
 msgid "Auto QSL Interval (Increase)"
 msgstr "Intervalo Auto QSL (Aumentar)"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_daqslint
-#: tr4w/src/lang/tr4w_consts_eng.pas:776
+#: utr4wstrings:rc_daqslint tr4w/src/lang/tr4w_consts_eng.pas:776
 msgctxt "RC_DAQSLINT"
 msgid "Auto QSL Interval (Decrease)"
 msgstr "Intervalo Auto QSL (Disminuir)"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_addinfo
-#: tr4w/src/lang/tr4w_consts_eng.pas:777
+#: utr4wstrings:rc_addinfo tr4w/src/lang/tr4w_consts_eng.pas:777
 msgctxt "RC_ADDINFO"
 msgid "Additional information"
 msgstr "Información adicional"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_ai_qsonumber
-#: tr4w/src/lang/tr4w_consts_eng.pas:778
+#: utr4wstrings:rc_ai_qsonumber tr4w/src/lang/tr4w_consts_eng.pas:778
 msgctxt "RC_AI_QSONUMBER"
 msgid "QSO number"
 msgstr "Número de QSO"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_ai_cwspeed
-#: tr4w/src/lang/tr4w_consts_eng.pas:779
+#: utr4wstrings:rc_ai_cwspeed tr4w/src/lang/tr4w_consts_eng.pas:779
 #, fuzzy
 msgctxt "RC_AI_CWSPEED"
 msgid "CW Speed"
 msgstr "CW Speed"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_clearmsheet
-#: tr4w/src/lang/tr4w_consts_eng.pas:780
+#: utr4wstrings:rc_clearmsheet tr4w/src/lang/tr4w_consts_eng.pas:780
 msgctxt "RC_CLEARMSHEET"
 msgid "Clear multsheet"
 msgstr "Borrar hoja de multiplicadores"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_wiki
-#: tr4w/src/lang/tr4w_consts_eng.pas:781
+#: utr4wstrings:rc_wiki tr4w/src/lang/tr4w_consts_eng.pas:781
 msgctxt "RC_WIKI"
 msgid "On-line documentation (in Russian)"
 msgstr "Documentación en línea (en ruso)"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_net_cldupe
-#: tr4w/src/lang/tr4w_consts_eng.pas:782
+#: utr4wstrings:rc_net_cldupe tr4w/src/lang/tr4w_consts_eng.pas:782
 msgctxt "RC_NET_CLDUPE"
 msgid "Clear dupesheet in all logs"
 msgstr "Borrar hoja de duplicados en todos los logs"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_net_clmult
-#: tr4w/src/lang/tr4w_consts_eng.pas:783
+#: utr4wstrings:rc_net_clmult tr4w/src/lang/tr4w_consts_eng.pas:783
 msgctxt "RC_NET_CLMULT"
 msgid "Clear multsheet in all logs"
 msgstr "Borrar hoja de multiplicadores en todos los logs"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_inc_time
-#: tr4w/src/lang/tr4w_consts_eng.pas:784
+#: utr4wstrings:rc_inc_time tr4w/src/lang/tr4w_consts_eng.pas:784
 msgctxt "RC_INC_TIME"
 msgid "Increment time"
 msgstr "Incrementar tiempo"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_notes
-#: tr4w/src/lang/tr4w_consts_eng.pas:785
+#: utr4wstrings:rc_notes tr4w/src/lang/tr4w_consts_eng.pas:785
 msgctxt "RC_NOTES"
 msgid "Notes"
 msgstr "Notas"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_devicemanager
-#: tr4w/src/lang/tr4w_consts_eng.pas:788
+#: utr4wstrings:rc_devicemanager tr4w/src/lang/tr4w_consts_eng.pas:788
 msgctxt "RC_DEVICEMANAGER"
 msgid "Device Manager"
 msgstr "Administrador de dispositivos"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_shdx_callsign
-#: tr4w/src/lang/tr4w_consts_eng.pas:789
+#: utr4wstrings:rc_shdx_callsign tr4w/src/lang/tr4w_consts_eng.pas:789
 #, fuzzy
 msgctxt "RC_SHDX_CALLSIGN"
 msgid "SH/DX [callsign]"
 msgstr "SH/DX [callsign]"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_login
-#: tr4w/src/lang/tr4w_consts_eng.pas:793
+#: utr4wstrings:rc_login tr4w/src/lang/tr4w_consts_eng.pas:793
 #, fuzzy
 msgctxt "RC_LOGIN"
 msgid "Log in"
 msgstr "Log in"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_colors
-#: tr4w/src/lang/tr4w_consts_eng.pas:796
+#: utr4wstrings:rc_colors tr4w/src/lang/tr4w_consts_eng.pas:796
 msgctxt "RC_COLORS"
 msgid "Colors"
 msgstr "Colores"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_send_bug
-#: tr4w/src/lang/tr4w_consts_eng.pas:800
+#: utr4wstrings:rc_send_bug tr4w/src/lang/tr4w_consts_eng.pas:800
 msgctxt "RC_SEND_BUG"
 msgid "Send bug report"
 msgstr "Enviar informe de error"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_homepage
-#: tr4w/src/lang/tr4w_consts_eng.pas:801
+#: utr4wstrings:rc_homepage tr4w/src/lang/tr4w_consts_eng.pas:801
 msgctxt "RC_HOMEPAGE"
 msgid "TR4W Home Page"
 msgstr "Página principal de TR4W"
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:rc_splitoff
-#: tr4w/src/lang/tr4w_consts_eng.pas:811
+#: utr4wstrings:rc_splitoff tr4w/src/lang/tr4w_consts_eng.pas:811
 msgctxt "RC_SPLITOFF"
 msgid "Set Split Mode Tx"
 msgstr "Desactivar modo Split TX"
 
 #. Section: FD Additions NY4I
 #. 4.60.1
-#: utr4wstrings:rc_wkmode
-#: tr4w/src/lang/tr4w_consts_eng.pas:813
-#, fuzzy
+#: utr4wstrings:rc_wkmode tr4w/src/lang/tr4w_consts_eng.pas:813
 msgctxt "RC_wkMode"
 msgid "Re-initialize WinKeyer"
 msgstr ""
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_downloadingctydat
-#: tr4w/src/lang/tr4w_consts_eng.pas:827
-#, fuzzy
+#: utr4wstrings:tc_downloadingctydat tr4w/src/lang/tr4w_consts_eng.pas:827
 msgctxt "TC_DOWNLOADINGCTYDAT"
 msgid "Downloading CTY.DAT..."
 msgstr ""
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_downloadingtrmasterdta
-#: tr4w/src/lang/tr4w_consts_eng.pas:828
-#, fuzzy
+#: utr4wstrings:tc_downloadingtrmasterdta tr4w/src/lang/tr4w_consts_eng.pas:828
 msgctxt "TC_DOWNLOADINGTRMASTERDTA"
 msgid "Downloading TRMASTER.DTA..."
 msgstr ""
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_downloadingpotaparks
-#: tr4w/src/lang/tr4w_consts_eng.pas:829
-#, fuzzy
+#: utr4wstrings:tc_downloadingpotaparks tr4w/src/lang/tr4w_consts_eng.pas:829
 msgctxt "TC_DOWNLOADINGPOTAPARKS"
 msgid "Downloading POTA parks..."
 msgstr ""
@@ -6558,7 +5870,6 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_hamscorequeueingfulllogresync
 #: tr4w/src/lang/tr4w_consts_eng.pas:830
-#, fuzzy
 msgctxt "TC_HAMSCOREQUEUEINGFULLLOGRESYNC"
 msgid "HamScore: queueing full log resync..."
 msgstr ""
@@ -6566,7 +5877,6 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_logincalldoeslooklikecallsign
 #: tr4w/src/lang/tr4w_consts_eng.pas:831
-#, fuzzy
 msgctxt "TC_LOGINCALLDOESLOOKLIKECALLSIGN"
 msgid "Login call does not look like a callsign"
 msgstr ""
@@ -6574,31 +5884,24 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_nopotaparksloggedyetsession
 #: tr4w/src/lang/tr4w_consts_eng.pas:832
-#, fuzzy
 msgctxt "TC_NOPOTAPARKSLOGGEDYETSESSION"
 msgid "No POTA parks logged yet this session"
 msgstr ""
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_cwoff
-#: tr4w/src/lang/tr4w_consts_eng.pas:833
-#, fuzzy
+#: utr4wstrings:tc_cwoff tr4w/src/lang/tr4w_consts_eng.pas:833
 msgctxt "TC_CWOFF"
 msgid "CW Off"
 msgstr ""
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_cannotopenlogfile
-#: tr4w/src/lang/tr4w_consts_eng.pas:834
-#, fuzzy
+#: utr4wstrings:tc_cannotopenlogfile tr4w/src/lang/tr4w_consts_eng.pas:834
 msgctxt "TC_CANNOTOPENLOGFILE"
 msgid "Cannot open log file"
 msgstr ""
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_scannoteditedhere
-#: tr4w/src/lang/tr4w_consts_eng.pas:835
-#, fuzzy
+#: utr4wstrings:tc_scannoteditedhere tr4w/src/lang/tr4w_consts_eng.pas:835
 msgctxt "TC_SCANNOTEDITEDHERE"
 msgid "%s cannot be edited here."
 msgstr ""
@@ -6606,15 +5909,12 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_debugmodecreatedprefixestxt
 #: tr4w/src/lang/tr4w_consts_eng.pas:836
-#, fuzzy
 msgctxt "TC_DEBUGMODECREATEDPREFIXESTXT"
 msgid "debug mode created prefixes.txt"
 msgstr ""
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_potaparksloaded
-#: tr4w/src/lang/tr4w_consts_eng.pas:837
-#, fuzzy
+#: utr4wstrings:tc_potaparksloaded tr4w/src/lang/tr4w_consts_eng.pas:837
 msgctxt "TC_POTAPARKSLOADED"
 msgid "POTA parks loaded"
 msgstr ""
@@ -6622,7 +5922,6 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_potaparksfilecouldloaded
 #: tr4w/src/lang/tr4w_consts_eng.pas:838
-#, fuzzy
 msgctxt "TC_POTAPARKSFILECOULDLOADED"
 msgid "POTA parks file could not be loaded"
 msgstr ""
@@ -6630,7 +5929,6 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_potaparksdownloadfailed
 #: tr4w/src/lang/tr4w_consts_eng.pas:839
-#, fuzzy
 msgctxt "TC_POTAPARKSDOWNLOADFAILED"
 msgid "POTA parks download failed"
 msgstr ""
@@ -6638,7 +5936,6 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_trmasterdtadownloadedrestarttr4wus
 #: tr4w/src/lang/tr4w_consts_eng.pas:840
-#, fuzzy
 msgctxt "TC_TRMASTERDTADOWNLOADEDRESTARTTR4WUS"
 msgid "TRMASTER.DTA downloaded -- restart TR4W to use it"
 msgstr ""
@@ -6646,7 +5943,6 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_trmasterdtadownloadfailed
 #: tr4w/src/lang/tr4w_consts_eng.pas:841
-#, fuzzy
 msgctxt "TC_TRMASTERDTADOWNLOADFAILED"
 msgid "TRMASTER.DTA download failed"
 msgstr ""
@@ -6654,7 +5950,6 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_ctydatdownloadedreloading
 #: tr4w/src/lang/tr4w_consts_eng.pas:842
-#, fuzzy
 msgctxt "TC_CTYDATDOWNLOADEDRELOADING"
 msgid "CTY.DAT downloaded. Reloading..."
 msgstr ""
@@ -6662,15 +5957,12 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_ctydatreloadedsuccessfully
 #: tr4w/src/lang/tr4w_consts_eng.pas:843
-#, fuzzy
 msgctxt "TC_CTYDATRELOADEDSUCCESSFULLY"
 msgid "CTY.DAT reloaded successfully."
 msgstr ""
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_ctydatdownloadfailed
-#: tr4w/src/lang/tr4w_consts_eng.pas:844
-#, fuzzy
+#: utr4wstrings:tc_ctydatdownloadfailed tr4w/src/lang/tr4w_consts_eng.pas:844
 msgctxt "TC_CTYDATDOWNLOADFAILED"
 msgid "CTY.DAT download failed."
 msgstr ""
@@ -6678,7 +5970,6 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_errorplayingvoicememory
 #: tr4w/src/lang/tr4w_consts_eng.pas:845
-#, fuzzy
 msgctxt "TC_ERRORPLAYINGVOICEMEMORY"
 msgid "Error playing voice memory"
 msgstr ""
@@ -6686,7 +5977,6 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_flushinitialexcommandexecuted
 #: tr4w/src/lang/tr4w_consts_eng.pas:846
-#, fuzzy
 msgctxt "TC_FLUSHINITIALEXCOMMANDEXECUTED"
 msgid "FLUSHINITIALEX command is executed."
 msgstr ""
@@ -6694,31 +5984,24 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_autospotenabledtestmodeonly
 #: tr4w/src/lang/tr4w_consts_eng.pas:847
-#, fuzzy
 msgctxt "TC_AUTOSPOTENABLEDTESTMODEONLY"
 msgid "AUTOSPOT is enabled - Test Mode Only"
 msgstr ""
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_handlogmodetrue
-#: tr4w/src/lang/tr4w_consts_eng.pas:848
-#, fuzzy
+#: utr4wstrings:tc_handlogmodetrue tr4w/src/lang/tr4w_consts_eng.pas:848
 msgctxt "TC_HANDLOGMODETRUE"
 msgid "HAND LOG MODE = TRUE"
 msgstr ""
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_trmasterdtas
-#: tr4w/src/lang/tr4w_consts_eng.pas:849
-#, fuzzy
+#: utr4wstrings:tc_trmasterdtas tr4w/src/lang/tr4w_consts_eng.pas:849
 msgctxt "TC_TRMASTERDTAS"
 msgid "TRMASTER.DTA : %s"
 msgstr ""
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_tr4wtimewarning
-#: tr4w/src/lang/tr4w_consts_eng.pas:850
-#, fuzzy
+#: utr4wstrings:tc_tr4wtimewarning tr4w/src/lang/tr4w_consts_eng.pas:850
 msgctxt "TC_TR4WTIMEWARNING"
 msgid "TR4W Time Warning"
 msgstr ""
@@ -6726,7 +6009,6 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_errorofferingcommanderproxytcpport
 #: tr4w/src/lang/tr4w_consts_eng.pas:851
-#, fuzzy
 msgctxt "TC_ERROROFFERINGCOMMANDERPROXYTCPPORT"
 msgid "Error offering Commander proxy TCP Port"
 msgstr ""
@@ -6734,7 +6016,6 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_pttviacommandsctrljoptionmusttruew
 #: tr4w/src/lang/tr4w_consts_eng.pas:852
-#, fuzzy
 msgctxt "TC_PTTVIACOMMANDSCTRLJOPTIONMUSTTRUEW"
 msgid "PTT VIA COMMANDS (CTRL-J) option must be true for WSJT-X use - Setting to true"
 msgstr ""
@@ -6742,7 +6023,6 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_cannotdisablesplittransmitslicecre
 #: tr4w/src/lang/tr4w_consts_eng.pas:853
-#, fuzzy
 msgctxt "TC_CANNOTDISABLESPLITTRANSMITSLICECRE"
 msgid "Cannot disable split -- the transmit slice was created on the radio. Turn it off in the SDR."
 msgstr ""
@@ -6750,15 +6030,12 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_sorryusedupallreminders
 #: tr4w/src/lang/tr4w_consts_eng.pas:854
-#, fuzzy
 msgctxt "TC_SORRYUSEDUPALLREMINDERS"
 msgid "Sorry, you have used up all your reminders!!"
 msgstr ""
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_invaliddate
-#: tr4w/src/lang/tr4w_consts_eng.pas:855
-#, fuzzy
+#: utr4wstrings:tc_invaliddate tr4w/src/lang/tr4w_consts_eng.pas:855
 msgctxt "TC_INVALIDDATE"
 msgid "Invalid date!!"
 msgstr ""
@@ -6766,7 +6043,6 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_enoughmemoryinitialexchangearray
 #: tr4w/src/lang/tr4w_consts_eng.pas:856
-#, fuzzy
 msgctxt "TC_ENOUGHMEMORYINITIALEXCHANGEARRAY"
 msgid "Not enough memory for initial exchange array!!"
 msgstr ""
@@ -6774,15 +6050,12 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_findingzeroendvisibledupesheetlist
 #: tr4w/src/lang/tr4w_consts_eng.pas:857
-#, fuzzy
 msgctxt "TC_FINDINGZEROENDVISIBLEDUPESHEETLIST"
 msgid "Not finding zero at end visible dupesheet list!!"
 msgstr ""
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_qtcprocessterminated
-#: tr4w/src/lang/tr4w_consts_eng.pas:858
-#, fuzzy
+#: utr4wstrings:tc_qtcprocessterminated tr4w/src/lang/tr4w_consts_eng.pas:858
 msgctxt "TC_QTCPROCESSTERMINATED"
 msgid "QTC process terminated."
 msgstr ""
@@ -6790,7 +6063,6 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_qtcnumberillegalcharacters
 #: tr4w/src/lang/tr4w_consts_eng.pas:859
-#, fuzzy
 msgctxt "TC_QTCNUMBERILLEGALCHARACTERS"
 msgid "QTC Number has illegal characters."
 msgstr ""
@@ -6798,7 +6070,6 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_numbermessagesillegalcharacters
 #: tr4w/src/lang/tr4w_consts_eng.pas:860
-#, fuzzy
 msgctxt "TC_NUMBERMESSAGESILLEGALCHARACTERS"
 msgid "Number of messages has illegal characters."
 msgstr ""
@@ -6806,7 +6077,6 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_qtcprocessterminatedinvalidnumberm
 #: tr4w/src/lang/tr4w_consts_eng.pas:861
-#, fuzzy
 msgctxt "TC_QTCPROCESSTERMINATEDINVALIDNUMBERM"
 msgid "QTC process terminated.  Invalid number of messages."
 msgstr ""
@@ -6814,7 +6084,6 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_ifoundcontestnameidonounderstandlo
 #: tr4w/src/lang/tr4w_consts_eng.pas:862
-#, fuzzy
 msgctxt "TC_IFOUNDCONTESTNAMEIDONOUNDERSTANDLO"
 msgid "I found a contest name I do no understand in your LOGCFG.DAT file."
 msgstr ""
@@ -6822,39 +6091,30 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_ididfinecontestnamelogcfgdatfile
 #: tr4w/src/lang/tr4w_consts_eng.pas:863
-#, fuzzy
 msgctxt "TC_IDIDFINECONTESTNAMELOGCFGDATFILE"
 msgid "I did not fine a contest name in your LOGCFG.DAT file."
 msgstr ""
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_arenewengland
-#: tr4w/src/lang/tr4w_consts_eng.pas:864
-#, fuzzy
+#: utr4wstrings:tc_arenewengland tr4w/src/lang/tr4w_consts_eng.pas:864
 msgctxt "TC_ARENEWENGLAND"
 msgid "Are you in New England?"
 msgstr ""
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_cwtimerfired
-#: tr4w/src/lang/tr4w_consts_eng.pas:865
-#, fuzzy
+#: utr4wstrings:tc_cwtimerfired tr4w/src/lang/tr4w_consts_eng.pas:865
 msgctxt "TC_CWTIMERFIRED"
 msgid "CW Timer fired"
 msgstr ""
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_testradiointerface
-#: tr4w/src/lang/tr4w_consts_eng.pas:866
-#, fuzzy
+#: utr4wstrings:tc_testradiointerface tr4w/src/lang/tr4w_consts_eng.pas:866
 msgctxt "TC_TESTRADIOINTERFACE"
 msgid "TEST RADIO INTERFACE"
 msgstr ""
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_unablesavedtaasciifile
-#: tr4w/src/lang/tr4w_consts_eng.pas:867
-#, fuzzy
+#: utr4wstrings:tc_unablesavedtaasciifile tr4w/src/lang/tr4w_consts_eng.pas:867
 msgctxt "TC_UNABLESAVEDTAASCIIFILE"
 msgid "Unable to save .DTA to ASCII file."
 msgstr ""
@@ -6862,7 +6122,6 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_savingdtafileasciifileprocessingce
 #: tr4w/src/lang/tr4w_consts_eng.pas:868
-#, fuzzy
 msgctxt "TC_SAVINGDTAFILEASCIIFILEPROCESSINGCE"
 msgid "Saving .DTA file to ASCII file.  Processing cell   "
 msgstr ""
@@ -6870,23 +6129,18 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_datasuccessfullysavedasciifile
 #: tr4w/src/lang/tr4w_consts_eng.pas:869
-#, fuzzy
 msgctxt "TC_DATASUCCESSFULLYSAVEDASCIIFILE"
 msgid "Data successfully saved to ASCII file."
 msgstr ""
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_notrmasterdtafilefound
-#: tr4w/src/lang/tr4w_consts_eng.pas:870
-#, fuzzy
+#: utr4wstrings:tc_notrmasterdtafilefound tr4w/src/lang/tr4w_consts_eng.pas:870
 msgctxt "TC_NOTRMASTERDTAFILEFOUND"
 msgid "No TRMASTER.DTA file found."
 msgstr ""
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_hitcounthistogram050
-#: tr4w/src/lang/tr4w_consts_eng.pas:871
-#, fuzzy
+#: utr4wstrings:tc_hitcounthistogram050 tr4w/src/lang/tr4w_consts_eng.pas:871
 msgctxt "TC_HITCOUNTHISTOGRAM050"
 msgid "Hit count histogram for 0 to 50+ : "
 msgstr ""
@@ -6894,7 +6148,6 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_pleasecheckmultinetwork
 #: tr4w/src/lang/tr4w_consts_eng.pas:872
-#, fuzzy
 msgctxt "TC_PLEASECHECKMULTINETWORK"
 msgid "Please check multi network"
 msgstr ""
@@ -6902,7 +6155,6 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_possibledatalossmultinetwork
 #: tr4w/src/lang/tr4w_consts_eng.pas:873
-#, fuzzy
 msgctxt "TC_POSSIBLEDATALOSSMULTINETWORK"
 msgid "Possible data loss on multi network."
 msgstr ""
@@ -6910,7 +6162,6 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_selectspotreturnleftorrightarrowse
 #: tr4w/src/lang/tr4w_consts_eng.pas:874
-#, fuzzy
 msgctxt "TC_SELECTSPOTRETURNLEFTORRIGHTARROWSE"
 msgid "Select spot.  RETURN, left or right arrow to select.  ESCAPE to exit."
 msgstr ""
@@ -6918,7 +6169,6 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_entercallsignspacedupecheckalthhel
 #: tr4w/src/lang/tr4w_consts_eng.pas:875
-#, fuzzy
 msgctxt "TC_ENTERCALLSIGNSPACEDUPECHECKALTHHEL"
 msgid "ENTER a callsign.  SPACE for dupecheck.  Alt-H for help."
 msgstr ""
@@ -6926,7 +6176,6 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_continueenteringcharactersautoterm
 #: tr4w/src/lang/tr4w_consts_eng.pas:876
-#, fuzzy
 msgctxt "TC_CONTINUEENTERINGCHARACTERSAUTOTERM"
 msgid "Continue entering characters.  Auto terminate active!!"
 msgstr ""
@@ -6934,7 +6183,6 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_continueenteringcharacterspressret
 #: tr4w/src/lang/tr4w_consts_eng.pas:877
-#, fuzzy
 msgctxt "TC_CONTINUEENTERINGCHARACTERSPRESSRET"
 msgid "Continue entering characters and press RETURN when done."
 msgstr ""
@@ -6942,7 +6190,6 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_enterexchangepressenterlogescapeab
 #: tr4w/src/lang/tr4w_consts_eng.pas:878
-#, fuzzy
 msgctxt "TC_ENTEREXCHANGEPRESSENTERLOGESCAPEAB"
 msgid "Enter exchange.  Press ENTER to log, ESCAPE to abort QSO."
 msgstr ""
@@ -6950,23 +6197,18 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_relaycontrolportpaddleport
 #: tr4w/src/lang/tr4w_consts_eng.pas:879
-#, fuzzy
 msgctxt "TC_RELAYCONTROLPORTPADDLEPORT"
 msgid "RELAY CONTROL PORT = PADDLE PORT"
 msgstr ""
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_locationfieldempty
-#: tr4w/src/lang/tr4w_consts_eng.pas:880
-#, fuzzy
+#: utr4wstrings:tc_locationfieldempty tr4w/src/lang/tr4w_consts_eng.pas:880
 msgctxt "TC_LOCATIONFIELDEMPTY"
 msgid "LOCATION field is empty."
 msgstr ""
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_pttlockouttrue
-#: tr4w/src/lang/tr4w_consts_eng.pas:881
-#, fuzzy
+#: utr4wstrings:tc_pttlockouttrue tr4w/src/lang/tr4w_consts_eng.pas:881
 msgctxt "TC_PTTLOCKOUTTRUE"
 msgid "PTT LOCKOUT=TRUE"
 msgstr ""
@@ -6974,7 +6216,6 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_preferencescouldopeneds
 #: tr4w/src/lang/tr4w_consts_eng.pas:882
-#, fuzzy
 msgctxt "TC_PREFERENCESCOULDOPENEDS"
 msgid "Preferences could not be opened (%s)."
 msgstr ""
@@ -6982,7 +6223,6 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_theseentrieswereacceptedbeensaved
 #: tr4w/src/lang/tr4w_consts_eng.pas:883
-#, fuzzy
 msgctxt "TC_THESEENTRIESWEREACCEPTEDBEENSAVED"
 msgid "These entries were not accepted and have not been saved:"
 msgstr ""
@@ -6990,7 +6230,6 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_tciservercouldopenportds
 #: tr4w/src/lang/tr4w_consts_eng.pas:884
-#, fuzzy
 msgctxt "TC_TCISERVERCOULDOPENPORTDS"
 msgid "The TCI server could not open port %d: %s"
 msgstr ""
@@ -6998,31 +6237,24 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_keyernamedsalreadyexists
 #: tr4w/src/lang/tr4w_consts_eng.pas:885
-#, fuzzy
 msgctxt "TC_KEYERNAMEDSALREADYEXISTS"
 msgid "A keyer named \"%s\" already exists."
 msgstr ""
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_sstillusedbys
-#: tr4w/src/lang/tr4w_consts_eng.pas:886
-#, fuzzy
+#: utr4wstrings:tc_sstillusedbys tr4w/src/lang/tr4w_consts_eng.pas:886
 msgctxt "TC_SSTILLUSEDBYS"
 msgid "\"%s\" is still used by: %s"
 msgstr ""
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_removeclusters
-#: tr4w/src/lang/tr4w_consts_eng.pas:887
-#, fuzzy
+#: utr4wstrings:tc_removeclusters tr4w/src/lang/tr4w_consts_eng.pas:887
 msgctxt "TC_REMOVECLUSTERS"
 msgid "Remove the cluster \"%s\"?"
 msgstr ""
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_removerotators
-#: tr4w/src/lang/tr4w_consts_eng.pas:888
-#, fuzzy
+#: utr4wstrings:tc_removerotators tr4w/src/lang/tr4w_consts_eng.pas:888
 msgctxt "TC_REMOVEROTATORS"
 msgid "Remove the rotator \"%s\"?"
 msgstr ""
@@ -7030,64 +6262,71 @@ msgstr ""
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_loggingrunningsotherenofileopen
 #: tr4w/src/lang/tr4w_consts_eng.pas:889
-#, fuzzy
 msgctxt "TC_LOGGINGRUNNINGSOTHERENOFILEOPEN"
 msgid "Logging is not running, so there is no file to open."
 msgstr ""
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_therenologfileyets
-#: tr4w/src/lang/tr4w_consts_eng.pas:890
-#, fuzzy
+#: utr4wstrings:tc_therenologfileyets tr4w/src/lang/tr4w_consts_eng.pas:890
 msgctxt "TC_THERENOLOGFILEYETS"
 msgid "There is no log file yet at %s."
 msgstr ""
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_editor_openineditor
-#: tr4w/src/lang/tr4w_consts_eng.pas:896
-#, fuzzy
+#: utr4wstrings:tc_editor_openineditor tr4w/src/lang/tr4w_consts_eng.pas:896
 msgctxt "TC_EDITOR_OPENINEDITOR"
 msgid "Open in text &editor"
 msgstr ""
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_editor_explore
-#: tr4w/src/lang/tr4w_consts_eng.pas:897
-#, fuzzy
+#: utr4wstrings:tc_editor_explore tr4w/src/lang/tr4w_consts_eng.pas:897
 msgctxt "TC_EDITOR_EXPLORE"
 msgid "Explore"
 msgstr ""
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_editor_copy
-#: tr4w/src/lang/tr4w_consts_eng.pas:898
-#, fuzzy
+#: utr4wstrings:tc_editor_copy tr4w/src/lang/tr4w_consts_eng.pas:898
 msgctxt "TC_EDITOR_COPY"
 msgid "&Copy"
 msgstr ""
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_editor_selectall
-#: tr4w/src/lang/tr4w_consts_eng.pas:899
-#, fuzzy
+#: utr4wstrings:tc_editor_selectall tr4w/src/lang/tr4w_consts_eng.pas:899
 msgctxt "TC_EDITOR_SELECTALL"
 msgid "Select &all"
 msgstr ""
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_editor_sendlogto
-#: tr4w/src/lang/tr4w_consts_eng.pas:900
-#, fuzzy
+#: utr4wstrings:tc_editor_sendlogto tr4w/src/lang/tr4w_consts_eng.pas:900
 msgctxt "TC_EDITOR_SENDLOGTO"
 msgid "Send log to %s"
 msgstr ""
 
 #. Section: FD Additions NY4I
-#: utr4wstrings:tc_uploadcabrillotoscp
-#: tr4w/src/lang/tr4w_consts_eng.pas:901
-#, fuzzy
+#: utr4wstrings:tc_uploadcabrillotoscp tr4w/src/lang/tr4w_consts_eng.pas:901
 msgctxt "TC_UPLOADCABRILLOTOSCP"
 msgid "Do you want to upload your Cabrillo file to SuperChecklPartial?"
+msgstr "¿Quieres subir tu archivo Cabrillo a SuperCheckPartial?"
+
+#. Section: General
+#. minute
+#: utr4wstrings:tc_m tr4w/src/lang/tr4w_consts_eng.pas:23
+msgctxt "TC_M"
+msgid "m"
+msgstr "m"
+
+#. Section: General
+#. second
+#: utr4wstrings:tc_s tr4w/src/lang/tr4w_consts_eng.pas:24
+msgctxt "TC_S"
+msgid "s"
+msgstr "s"
+
+#: tfrmabout.lblurl.caption
+msgid "http://www.tr4w.net"
 msgstr ""
+
+#: tfrmeditqso.chksap.caption
+msgid "S&P"
+msgstr "S&P"
 

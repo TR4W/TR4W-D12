@@ -163,7 +163,8 @@ uses
   IdURI
   ,
   uTR4WStrings,
-  uAnsiStr;
+  uAnsiStr,
+  LCLStrConsts;
 
 var
   Begin_QSO: boolean = False; // 4.115.3
@@ -7188,8 +7189,8 @@ begin
   X := (temprect.Right div 2) - (button_width + 5);
   Y := temprect.Bottom - temprect.Top - 27 {35};
   // ny4i changed this for the Cabrillo dialog as the buttons were too close to the last text field. The window may need to be a bit longer.
-  CreateButton(0, OK_WORD, X, Y, button_width, nWidthhwndParent, 1);
-  CreateButton(0, CANCEL_WORD, X + button_width + 10, Y, button_width,
+  CreateButton(0, rsMbOK, X, Y, button_width, nWidthhwndParent, 1);
+  CreateButton(0, rsMbCancel, X + button_width + 10, Y, button_width,
     nWidthhwndParent, 2);
 end;
 

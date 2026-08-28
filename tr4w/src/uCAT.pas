@@ -42,7 +42,8 @@ uses
   uIcomNetworkDiscovery,
   uIcomNetworkTypes,
   uTR4WStrings,
-  uAnsiStr;
+  uAnsiStr,
+  LCLStrConsts;
 
 procedure CloseCATAndKeyerForThisRadio;
 function CATDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
@@ -1877,7 +1878,7 @@ begin
         // OK/Apply call RestartPollingThread), so the new label simply makes the
         // edit-commit semantics explicit.  Done at runtime to cover all
         // languages without touching the per-language resources.
-        Windows.SetDlgItemTextW(hwnddlg, 119, PWideChar(CANCEL_WORD));
+        Windows.SetDlgItemTextW(hwnddlg, 119, PWideChar(rsMbCancel));
 
         // Everything above moved, resized or recreated controls at runtime (the
         // credential rows, the Show-all row, the widening for port names, the

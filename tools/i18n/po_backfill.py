@@ -38,12 +38,17 @@ Usage
 
 import argparse
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import pasconsts as pc
 import pofile
 import pas2po
+
+# A function-key name, bare punctuation, or a bare number. See the use site
+# for why this is not mt_seed.is_translatable.
+INVARIANT = re.compile(r'F[0-9]{1,2}|[-+.]{1,3}|[0-9]+')
 
 
 def covered_names(entries):
@@ -96,6 +101,19 @@ def main():
       added = seeded = 0
       for d in eng_decls:
          if not d.name or d.name.lower() in have:
+            continue
+         # INVARIANT TOKENS NEVER ENTER A CATALOGUE. 'F1' is 'F1' in every
+         # language, and so are '+', '...' and a bare number -- but a
+         # translator opening the file sees them as 20 more rows of work
+         # (NY4I, 2026-08-27).
+         #
+         # DELIBERATELY NARROWER THAN mt_seed.is_translatable, which was the
+         # first thing tried. That predicate answers 'should a MACHINE
+         # translate this', which is not the same question: it also rejects
+         # 'S&P', 'm' and 's', which are real captions a human may well want
+         # to translate. Whether those get translated is a decision, not a
+         # pattern match.
+         if INVARIANT.fullmatch(d.value.strip()):
             continue
          t = table.get(d.name)
          value = t.value if t is not None else ''

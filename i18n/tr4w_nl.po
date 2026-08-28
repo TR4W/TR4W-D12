@@ -123,24 +123,6 @@ msgid "%s is from a different program version.\rTR4W is expecting version %s.\rT
 msgstr "%s komt van een andere programmaversie.\rTR4W verwacht versie %s.\rHet bestand dat u probeert versie %s te lezen."
 
 #. Section: General
-#. minute
-#: utr4wstrings:tc_m
-#: tr4w/src/lang/tr4w_consts_eng.pas:23
-#, fuzzy
-msgctxt "TC_M"
-msgid "m"
-msgstr "m"
-
-#. Section: General
-#. second
-#: utr4wstrings:tc_s
-#: tr4w/src/lang/tr4w_consts_eng.pas:24
-#, fuzzy
-msgctxt "TC_S"
-msgid "s"
-msgstr "s"
-
-#. Section: General
 #: utr4wstrings:tc_radio1
 #: tr4w/src/lang/tr4w_consts_eng.pas:26
 #: tprefsform.lblradio1.caption
@@ -3068,55 +3050,9 @@ msgctxt "TC_SHOW_ALL_SERIAL_PORTS"
 msgid "Show all serial ports"
 msgstr "Alle seriële poorten tonen"
 
-#. Section: UEDITMESSAGE
-#: tfrmabout.btnok.caption
-#: tfrmaltd.btnok.caption
-#: tfrmautocq.btnok.caption
-#: tfrmbandplan.btnok.caption
-#: tfrmeditmessage.btnok.caption
-#: tfrminputquery.btnok.caption
-#: tfrmlpt.btnok.caption
-#: tfrmmessageslist.btnok.caption
-#: tfrmsendspot.btnok.caption
-#: tfrmudpdestinationedit.btnok.caption
-#: tfrmwinmanager.btnok.caption
-#: utr4wstrings:ok_word
-#: tr4w/src/lang/tr4w_consts_eng.pas:530
-#, fuzzy
-msgctxt "OK_WORD"
-msgid "OK"
-msgstr ""
-
 #: tfrmabout.caption
 #, fuzzy
 msgid "About TR4W"
-msgstr ""
-
-#: tfrmabout.lblurl.caption
-#, fuzzy
-msgid "http://www.tr4w.net"
-msgstr ""
-
-#. Section: UEDITMESSAGE
-#: tfrmaltd.btncancel.caption
-#: tfrmautocq.btncancel.caption
-#: tfrmbandplan.btncancel.caption
-#: tfrmeditmessage.btncancel.caption
-#: tfrmeditqso.btncancel.caption
-#: tfrminputquery.btncancel.caption
-#: tfrmkeyeredit.btncancel.caption
-#: tfrmlpt.btncancel.caption
-#: tfrmmessageslist.btncancel.caption
-#: tfrmsendspot.btncancel.caption
-#: tfrmudpdestinationedit.btncancel.caption
-#: tfrmwinmanager.btncancel.caption
-#: tprefsform.btncancel.caption
-#: tradioeditform.btncancel.caption
-#: utr4wstrings:cancel_word
-#: tr4w/src/lang/tr4w_consts_eng.pas:528
-#, fuzzy
-msgctxt "CANCEL_WORD"
-msgid "Cancel"
 msgstr ""
 
 #. Section: UEDITMESSAGE
@@ -3335,11 +3271,6 @@ msgstr ""
 msgid "Prefix Mult"
 msgstr ""
 
-#: tfrmeditqso.chksap.caption
-#, fuzzy
-msgid "S&P"
-msgstr ""
-
 #: tfrmeditqso.chkxqso.caption
 #, fuzzy
 msgid "X-QSO"
@@ -3531,66 +3462,6 @@ msgctxt "RC_FKEYS"
 msgid "Function keys"
 msgstr ""
 
-#: tfrmfunctionkeys.pnlf1.caption
-#, fuzzy
-msgid "F1"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf10.caption
-#, fuzzy
-msgid "F10"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf11.caption
-#, fuzzy
-msgid "F11"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf12.caption
-#, fuzzy
-msgid "F12"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf2.caption
-#, fuzzy
-msgid "F2"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf3.caption
-#, fuzzy
-msgid "F3"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf4.caption
-#, fuzzy
-msgid "F4"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf5.caption
-#, fuzzy
-msgid "F5"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf6.caption
-#, fuzzy
-msgid "F6"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf7.caption
-#, fuzzy
-msgid "F7"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf8.caption
-#, fuzzy
-msgid "F8"
-msgstr ""
-
-#: tfrmfunctionkeys.pnlf9.caption
-#, fuzzy
-msgid "F9"
-msgstr ""
-
 #: tfrmhamscore.btnpushnow.caption
 #, fuzzy
 msgid "Push Now"
@@ -3609,11 +3480,6 @@ msgstr ""
 #: tfrmhamscore.lblqueuetitle.caption
 #, fuzzy
 msgid "Queued contacts:"
-msgstr ""
-
-#: tfrmhamscore.lblqueuevalue.caption
-#, fuzzy
-msgid "--"
 msgstr ""
 
 #: tfrmhamscore.lblstatustitle.caption
@@ -3807,11 +3673,6 @@ msgctxt "tfrmmmtty.caption"
 msgid "MMTTY"
 msgstr ""
 
-#: tfrmmp3recorder.btncontrol.caption
-#, fuzzy
-msgid "..."
-msgstr ""
-
 #. Section: UEDITMESSAGE
 #: tfrmmp3recorder.caption
 #: utr4wstrings:rc_mp3rec
@@ -3841,19 +3702,9 @@ msgstr ""
 msgid "Pause"
 msgstr ""
 
-#: tfrmpanadapter.btnspannarrow.caption
-#, fuzzy
-msgid "-"
-msgstr ""
-
 #: tfrmpanadapter.btnspannarrow.hint
 #, fuzzy
 msgid "Narrower span (zoom in)"
-msgstr ""
-
-#: tfrmpanadapter.btnspanwide.caption
-#, fuzzy
-msgid "+"
 msgstr ""
 
 #: tfrmpanadapter.btnspanwide.hint
@@ -5735,16 +5586,6 @@ msgctxt "tradioeditform.lbluser.caption"
 msgid "User name"
 msgstr ""
 
-#: tradioeditform.optdata7.caption
-#, fuzzy
-msgid "7"
-msgstr ""
-
-#: tradioeditform.optdata8.caption
-#, fuzzy
-msgid "8"
-msgstr ""
-
 #: tradioeditform.optparityeven.caption
 #, fuzzy
 msgctxt "tradioeditform.optparityeven.caption"
@@ -5761,16 +5602,6 @@ msgstr ""
 #, fuzzy
 msgctxt "tradioeditform.optparityodd.caption"
 msgid "Odd"
-msgstr ""
-
-#: tradioeditform.optstop1.caption
-#, fuzzy
-msgid "1"
-msgstr ""
-
-#: tradioeditform.optstop2.caption
-#, fuzzy
-msgid "2"
 msgstr ""
 
 #: tradioeditform.tabadvanced.caption
@@ -7589,5 +7420,33 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_UPLOADCABRILLOTOSCP"
 msgid "Do you want to upload your Cabrillo file to SuperChecklPartial?"
+msgstr ""
+
+#. Section: General
+#. minute
+#: utr4wstrings:tc_m
+#: tr4w/src/lang/tr4w_consts_eng.pas:23
+#, fuzzy
+msgctxt "TC_M"
+msgid "m"
+msgstr "m"
+
+#. Section: General
+#. second
+#: utr4wstrings:tc_s
+#: tr4w/src/lang/tr4w_consts_eng.pas:24
+#, fuzzy
+msgctxt "TC_S"
+msgid "s"
+msgstr "s"
+
+#: tfrmabout.lblurl.caption
+#, fuzzy
+msgid "http://www.tr4w.net"
+msgstr ""
+
+#: tfrmeditqso.chksap.caption
+#, fuzzy
+msgid "S&P"
 msgstr ""
 
