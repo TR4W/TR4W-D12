@@ -401,13 +401,12 @@ uses
   uIcomCIV in 'src\uIcomCIV.pas',
   // uRadioManager uses Generics.Collections (Delphi 2009+) - not Delphi 7 IDE compatible
   //uRadioManager in 'src\radioFactory\uRadioManager.pas',
-  // uDXSSpotsFilter and uSpotsFilter reference SendViaSocket which is not defined - unfinished code
-  //uDXSSpotsFilter in 'src\uDXSSpotsFilter.pas',
-  //uSpotsFilter in 'src\uSpotsFilter.pas',
-  // uRemMults_DOM/DX/Zone: dead code since initial commit, depends on Country9.pas which was never in the repo
-  //uRemMults_DOM in 'src\uRemMults_DOM.pas',
-  //uRemMults_DX in 'src\uRemMults_DX.pas',
-  //uRemMults_Zone in 'src\uRemMults_Zone.pas',
+  // DELETED 2026-08-28: uRemMults_DOM/DX/Zone, uDXSSpotsFilter,
+  // uSpotsFilter and uMultsFrequencies. Commented out of this uses clause
+  // since the initial commit, so never compiled, and with no live reference
+  // anywhere -- the notes here recorded why: one set depends on a
+  // Country9.pas that was never in the repo, one is unfinished, one is
+  // orphaned. Six Win32 dialog procedures, 794 lines.
 {$IFNDEF FPC}
   // The OpenGL About box.  OGLVERSION is False (VC.pas), so its only caller
   // -- MainUnit's menu_about arm -- is compiled out and the About menu is a
@@ -420,8 +419,6 @@ uses
   uReminder in 'src\uReminder.pas',
   // uSCP: never referenced anywhere, was never compiled prior to this session - orphaned code
   //uSCP in 'src\uSCP.pas',
-  // uMultsFrequencies: never referenced (commented out in MainUnit and uNet) - orphaned code
-  //uMultsFrequencies in 'src\uMultsFrequencies.pas',
   uMakeHelpFile in 'src\uMakeHelpFile.pas',
   uLogConfig in 'src\uLogConfig.pas',
   uPOTAParks in 'src\uPOTAParks.pas',

@@ -207,7 +207,6 @@ uses
   uNetworkForm,   { the station list is a TListView on a form now }
   uCFG,
   LOGSUBS2,
-//  uMultsFrequencies,
   uRadioPolling,
   uRadioConfigApply,   // ApplyPeerCommand -- a peer's config change
   uTelnet,

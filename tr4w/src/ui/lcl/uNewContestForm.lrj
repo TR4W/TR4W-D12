@@ -1,0 +1,13 @@
+{"version":1,"strings":[
+{"hash":71381428,"name":"tfrmnewcontest.caption","sourcebytes":[79,112,101,110,32,99,111,110,102,105,103,117,114,97,116,105,111,110,32,102,105,108,101,32,111,114,32,115,116,97,114,116,32,97,32,110,101,119,32,99,111,110,116,101,115,116],"value":"Open configuration file or start a new contest"},
+{"hash":219948990,"name":"tfrmnewcontest.gbexisting.caption","sourcebytes":[79,112,101,110,32,97,110,32,101,120,105,115,116,105,110,103,32,99,111,110,102,105,103,117,114,97,116,105,111,110],"value":"Open an existing configuration"},
+{"hash":115952286,"name":"tfrmnewcontest.btnbrowse.caption","sourcebytes":[66,114,111,119,115,101,46,46,46],"value":"Browse..."},
+{"hash":215337029,"name":"tfrmnewcontest.btnlatest.caption","sourcebytes":[76,97,116,101,115,116,32,99,111,110,102,105,103,32,102,105,108,101],"value":"Latest config file"},
+{"hash":26866676,"name":"tfrmnewcontest.gbnew.caption","sourcebytes":[83,116,97,114,116,32,97,32,110,101,119,32,99,111,110,116,101,115,116],"value":"Start a new contest"},
+{"hash":45381212,"name":"tfrmnewcontest.lblmycall.caption","sourcebytes":[77,89,32,67,65,76,76],"value":"MY CALL"},
+{"hash":138644164,"name":"tfrmnewcontest.lblcontest.caption","sourcebytes":[67,79,78,84,69,83,84],"value":"CONTEST"},
+{"hash":32,"name":"tfrmnewcontest.chkiamin.caption","sourcebytes":[32],"value":" "},
+{"hash":1339,"name":"tfrmnewcontest.btnok.caption","sourcebytes":[79,75],"value":"OK"},
+{"hash":77089212,"name":"tfrmnewcontest.btncancel.caption","sourcebytes":[67,97,110,99,101,108],"value":"Cancel"},
+{"hash":236611125,"name":"tfrmnewcontest.dlgopen.title","sourcebytes":[79,112,101,110,32,99,111,110,102,105,103,117,114,97,116,105,111,110,32,102,105,108,101],"value":"Open configuration file"}
+]}
