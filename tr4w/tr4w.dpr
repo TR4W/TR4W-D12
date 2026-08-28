@@ -417,8 +417,6 @@ uses
 {$ENDIF}
   uHardWare in 'src\uHardWare.pas',
   uReminder in 'src\uReminder.pas',
-  // uSCP: never referenced anywhere, was never compiled prior to this session - orphaned code
-  //uSCP in 'src\uSCP.pas',
   uMakeHelpFile in 'src\uMakeHelpFile.pas',
   uLogConfig in 'src\uLogConfig.pas',
   uPOTAParks in 'src\uPOTAParks.pas',

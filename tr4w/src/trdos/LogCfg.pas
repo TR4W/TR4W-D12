@@ -48,11 +48,9 @@ uses
   LogEdit,
   //LOGDDX,
   LOGWAE,
-//  LOGHP,
   LogPack,
   LogK1EA, {DOS,}
 //  Help,
-//  LOGPROM,
   CFGCMD,
   {SlowTree,}Tree, {Crt,}
 //  LOGMENU,

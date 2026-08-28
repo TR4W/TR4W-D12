@@ -48,12 +48,10 @@ uses
   LogEdit,
   LogGrid,
   //  Help,
-  //  LOGHP,
   LogK1EA,
   //  LOGMENU,
   LogNet,
   LogPack,
-  //  LOGPROM,
   LogRadio, { Currently not an overlay }
   LOGSend,
   LogSCP,

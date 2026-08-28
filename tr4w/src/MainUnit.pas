@@ -605,7 +605,6 @@ uses
   uCT1BOH,
   CFGCMD,
   CFGDEF,
-  // ColorCfg,
   // Country9,
   FCONTEST,
   uPOTAParks,

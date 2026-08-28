@@ -22,7 +22,6 @@ uses
   uConfigValues,   // Config -- migrated settings
   uMMTTY,
   uCallSignRoutines,
-//  uSCP,
   uIO,
   MMSystem,
   utils_net,
@@ -71,12 +70,10 @@ uses
   LogEdit,
   LogGrid,
 //  Help,
-//  LOGHP,
   LogK1EA,
 //  LOGMENU,
   LogNet,
   LogPack,
-//  LOGPROM,
   LogRadio, { Currently not an overlay }
   LOGSend,
   LogSCP,

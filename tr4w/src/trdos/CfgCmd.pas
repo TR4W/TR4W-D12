@@ -45,14 +45,11 @@ uses {SlowTree,} Tree,
 //  Country9,
   LogEdit,
   //LOGDDX,
-//  LOGHP,
   LOGWAE,
   LogPack,
   LogK1EA, {DOS, }
 //  Help,
-//  LOGPROM, {Crt, }
   LogNet,
-//  ColorCfg,
   LogRadio 
 
   ;
