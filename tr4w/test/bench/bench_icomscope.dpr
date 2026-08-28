@@ -131,6 +131,9 @@ uses
 const
    MAX_SOURCES = 8;
    DEFAULT_SECONDS = 30;
+   { Consecutive dead seconds that turn a truncated run into a FAILURE.
+     Generous: a healthy LAN link delivers several sweeps a second. }
+   STALL_LIMIT_SECONDS = 5;
 
 type
    TSourceTally = record
@@ -359,41 +362,90 @@ end;
    not, and silence is the whole difficulty -- it is indistinguishable from a
    radio that simply has nothing to say.
 
+   BUT "BOTH WAYS" IS NOT SAFE FOR EVERY SUB-COMMAND, AND ASKING IT THAT WAY
+   BROKE A MEASUREMENT.  The trailing byte does not mean the same thing across
+   the $27 family:
+
+     * on the GLOBAL sub-commands the setting exists once for the radio, the
+       bare form IS the read, and a trailing byte is the VALUE.  `27 10 00` is
+       not "read scope 0" -- it is SCOPE OFF.
+     * only on the PER-SCOPE sub-commands is a trailing byte a selector.
+
+   Measured on an IC-7760 on 2026-08-28: the old unconditional "with selector"
+   pass sent `27 10 00` and `27 11 00`, which switched the scope and the wave
+   output off 132 ms after the last sweep.  The run then measured nothing for
+   its remaining 28 seconds and still printed PASS.  So the selector pass is
+   now restricted to the sub-commands where that byte is actually a selector.
+
    Frames are built with Char() typecasts, never Chr() -- see the CivChr note
    in uRadioIcomBase for what that costs. *)
 procedure ProbeScopeSettings(ARadio: TIcomRadio; AWithSelector: Boolean);
 const
-   SUBS: array[0 .. 9] of Byte =
-      ($10,   // scope on/off
-       $11,   // CI-V wave data output on/off
-       $12,   // main/sub setting
-       $13,   // single/dual scope
-       $14,   // centre/fixed mode
+   { GLOBAL -- one setting for the whole radio.  A TRAILING BYTE IS THE VALUE,
+     so these are probed BARE ONLY and must never be sent a selector. }
+   GLOBAL_SUBS: array[0 .. 4] of Byte =
+      ($10,   // scope on/off          -- trailing byte = ON/OFF VALUE
+       $11,   // CI-V wave data output -- trailing byte = ON/OFF VALUE
+       $12,   // main/sub setting      -- trailing byte = VALUE
+       $13,   // single/dual scope     -- trailing byte = VALUE
+       $1B);  // scope during TX       -- trailing byte = VALUE
+
+   { PER-SCOPE -- the setting exists once per scope, so the read has to name
+     one.  Measured on the IC-7760: each of these answers NG ($FA) when sent
+     bare and answers normally with a trailing scope byte.  These are the only
+     sub-commands for which the selector form is a READ and not a SET. }
+   SCOPE_SUBS: array[0 .. 4] of Byte =
+      ($14,   // centre/fixed mode
        $15,   // span
        $17,   // hold
        $19,   // reference level
-       $1A,   // sweep speed
-       $1B);  // scope during TX
-var
-   i: Integer;
-   frame: string;
-   payload: string;
-begin
-   for i := Low(SUBS) to High(SUBS) do
-      begin
-      if AWithSelector then
+       $1A);  // sweep speed
+
+   procedure SendProbe(ASub: Byte; AIncludeSelector: Boolean);
+   var
+      frame: string;
+      payload: string;
+   begin
+      if AIncludeSelector then
          begin
-         payload := Char($27) + Char(SUBS[i]) + Char(ARadio.ScopeIdToFollow);
+         payload := Char($27) + Char(ASub) + Char(ARadio.ScopeIdToFollow);
          end
       else
          begin
-         payload := Char($27) + Char(SUBS[i]);
+         payload := Char($27) + Char(ASub);
          end;
 
       frame := Char($FE) + Char($FE) +
                Char(ARadio.RadioAddress) + Char(ARadio.ControllerAddress) +
                payload + Char($FD);
       ARadio.SendToRadio(frame);
+   end;
+
+var
+   i: Integer;
+begin
+   if AWithSelector then
+      begin
+      { ONLY the per-scope sub-commands.  A trailing byte on a global one is a
+        SET and would switch the scope off in the middle of the measurement. }
+      for i := Low(SCOPE_SUBS) to High(SCOPE_SUBS) do
+         begin
+         SendProbe(SCOPE_SUBS[i], True);
+         end;
+      end
+   else
+      begin
+      // Bare is safe for both groups: a read for the globals, an NG for the
+      // per-scope ones -- and that NG is itself the evidence we are after.
+      for i := Low(GLOBAL_SUBS) to High(GLOBAL_SUBS) do
+         begin
+         SendProbe(GLOBAL_SUBS[i], False);
+         end;
+
+      for i := Low(SCOPE_SUBS) to High(SCOPE_SUBS) do
+         begin
+         SendProbe(SCOPE_SUBS[i], False);
+         end;
       end;
 end;
 
@@ -434,6 +486,7 @@ var
    started: TDateTime;
    elapsed: Double;
    lastTotal, nowTotal: Integer;
+   stalledFor, worstStall: Integer;
    failed: Boolean;
    i: Integer;
    appender: TLogRollingFileAppender;
@@ -570,11 +623,31 @@ begin
 
       started := Now;
       lastTotal := 0;
+      stalledFor := 0;
+      worstStall := 0;
 
       repeat
          Sleep(1000);
          nowTotal := collector.Total;
          elapsed := (Now - started) * 24 * 60 * 60;
+
+         { A STALL IS A RESULT, NOT A GAP.  `collector.Total = 0` below is
+           the only other guard, and a run that streams briefly and then
+           stops sails past it -- which is exactly how the 2026-08-28 run
+           reported PASS on nine sweeps and 28 dead seconds. }
+         if (nowTotal > lastTotal) or (nowTotal = 0) then
+            begin
+            stalledFor := 0;
+            end
+         else
+            begin
+            Inc(stalledFor);
+
+            if stalledFor > worstStall then
+               begin
+               worstStall := stalledFor;
+               end;
+            end;
 
          WriteLn(Format('  t=%4.0f s   link %-5s   sweeps %-6d  (+%d/s)   span %d Hz',
                         [elapsed, BoolToStr(radio.SpectrumLinkUp, True),
@@ -622,6 +695,18 @@ begin
       // A run that connected and decoded nothing is a FAILURE, not a quiet
       // pass -- this is the whole point of the exercise, so it must not be
       // possible to report green with no evidence.
+      if (collector.Total > 0) and (worstStall >= STALL_LIMIT_SECONDS) then
+         begin
+         WriteLn;
+         WriteLn(Format('FAIL: the stream stalled -- %d consecutive seconds with no sweep.',
+                        [worstStall]));
+         WriteLn('  The radio streamed and then stopped.  Check whether anything this');
+         WriteLn('  program sent switched the scope off: on the $27 family a trailing');
+         WriteLn('  byte is a VALUE for the global sub-commands ($10 $11 $12 $13 $1B),');
+         WriteLn('  so `27 10 00` means SCOPE OFF, not "read scope 0".');
+         failed := True;
+         end;
+
       if collector.Total = 0 then
          begin
          WriteLn;
