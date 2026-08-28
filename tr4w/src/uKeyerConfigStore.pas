@@ -121,9 +121,17 @@ type
      and much worse to serialise, diff and edit. }
    TKeyerDefinition = class(TObject)
    public
-      // Identity.  Name is what the operator sees and what a profile or radio
-      // refers to, so it is unique within a store (case-insensitively) and
-      // renaming has to fix the references.
+      // THE KEY, and it is not the name -- see TRadioDefinition.Id, which was
+      // changed first and for the same reason: a profile referring to a device
+      // by a name the operator can edit turns a rename into a fan-out that has
+      // to be got right in every path.
+      //
+      // Minted on creation, never rewritten, and given to a keyer read from a
+      // store that predates it.
+      Id: string;
+      // What the OPERATOR sees. Unique within the store because two keyers
+      // called WinKeyer would be indistinguishable in a combo box, not because
+      // anything keys on it.
       Name: string;
       Kind: TKeyerKind;
 
@@ -182,6 +190,7 @@ type
       function Keyer(const aIndex: integer): TKeyerDefinition;
       // Case-INSENSITIVE: an operator typing 'desk winkey' means the 'Desk
       // WinKey' they already defined, and a store holding both is a trap.
+      function FindKeyerById(const aId: string): TKeyerDefinition;
       function FindKeyer(const aName: string): TKeyerDefinition;
       function IndexOfKeyer(const aName: string): integer;
       function AddKeyer(const aName: string; const aKind: TKeyerKind): TKeyerDefinition;
@@ -233,9 +242,26 @@ end;
 
 { ------------------------------------------------------- TKeyerDefinition --- }
 
+{ A NEW KEYER ID -- a GUID in the registry spelling, braces stripped. Same
+  shape and the same reasoning as NewRadioId. }
+function NewKeyerId: string;
+var
+   g: TGUID;
+begin
+   if CreateGUID(g) = 0 then
+      begin
+      Result := Copy(GUIDToString(g), 2, 36);
+      end
+   else
+      begin
+      Result := 'keyer-' + FormatDateTime('yyyymmddhhnnsszzz', Now);
+      end;
+end;
+
 constructor TKeyerDefinition.Create;
 begin
    inherited Create;
+   Id   := NewKeyerId;
    Kind := kkWinKeyer;
    Port := PORT_NONE;
    // Zeroes elsewhere mean "leave it to the device default", the same
@@ -251,6 +277,10 @@ begin
       Exit;
       end;
 
+   { The Id travels with the definition: the editor copies a clone back onto
+     the original, and a clone that lost its identity would look like a new
+     keyer to every profile referring to it. }
+   Id   := aSource.Id;
    Name := aSource.Name;
    Kind := aSource.Kind;
    Port := aSource.Port;
@@ -361,6 +391,26 @@ begin
       if SameText(FKeyers[i].Name, Trim(aName)) then
          begin
          Result := i;
+         Exit;
+         end;
+      end;
+end;
+
+{ THE LOOKUP A PROFILE USES. By id, so a rename cannot break it. }
+function TKeyerConfigStore.FindKeyerById(const aId: string): TKeyerDefinition;
+var
+   i: integer;
+begin
+   Result := nil;
+   if Trim(aId) = '' then
+      begin
+      Exit;
+      end;
+   for i := 0 to FKeyers.Count - 1 do
+      begin
+      if SameText(FKeyers[i].Id, aId) then
+         begin
+         Result := FKeyers[i];
          Exit;
          end;
       end;
@@ -502,6 +552,7 @@ begin
    // NAME IS A VALUE, not a key. The ini encoded a definition's name in its
    // section header, which made ']' and '=' hazards; the radio store learned
    // that in F-5a and this follows it.
+   Result.AddPair('id',   aKeyer.Id);
    Result.AddPair('name', aKeyer.Name);
    Result.AddPair('kind', KeyerKindToStr(aKeyer.Kind));
    Result.AddPair('port', aKeyer.Port);
@@ -572,6 +623,12 @@ procedure TKeyerConfigStore.KeyerFromJSON(const aObj: TJSONObject;
 var
    kind: TKeyerKind;
 begin
+   aKeyer.Id := Str('id', '');
+   if aKeyer.Id = '' then
+      begin
+      { A store written before keyers had ids. }
+      aKeyer.Id := NewKeyerId;
+      end;
    aKeyer.Name := Str('name', '');
    if StrToKeyerKind(Str('kind', ''), kind) then
       begin

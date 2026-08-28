@@ -1046,6 +1046,7 @@ type
       procedure NoteRadiosNavItem(item: TTreeNode);
       procedure ApplyChevrons;
 
+      function  KeyerIdForOutput(const aOutput: string): string;
       function  RadioNameForId(const aId: string): string;
       procedure FillRadioNameCombo(const aCombo: TComboBox;
                                    const aSelected, aUsedByOtherSlot,
@@ -1827,6 +1828,26 @@ end;
 // The TAG stays the bare radio name, so selection still matches by TagString
 // and the decorated text never reaches the profile -- the reason this dialog
 // selects by tag and never by index.
+{ The keyer id behind a CW-output choice, or '' when the choice is a sentinel
+  ('CAT', 'NONE') or names no keyer. }
+function TPrefsForm.KeyerIdForOutput(const aOutput: string): string;
+var
+   keyer: TKeyerDefinition;
+begin
+   Result := '';
+   if (Trim(aOutput) = '') or
+      SameText(aOutput, CWOUTPUT_CAT) or
+      SameText(aOutput, CWOUTPUT_NONE) then
+      begin
+      Exit;
+      end;
+   keyer := FKeyerStore.FindKeyer(aOutput);
+   if keyer <> nil then
+      begin
+      Result := keyer.Id;
+      end;
+end;
+
 { The name to SHOW for a stored id, or '' when the id names nothing. }
 function TPrefsForm.RadioNameForId(const aId: string): string;
 var
@@ -1951,6 +1972,11 @@ begin
    SelectByTag(aCombo, aSelected);
 end;
 
+{ THE MIRROR, NOT THE REFERENCE -- since keyers gained ids, a profile written
+  by this build already points at the right device and this changes nothing it
+  depends on. It stays for two reasons: the name is what the file and the combo
+  show, so it must not go stale; and a profile written BEFORE keyer ids has no
+  id yet and is still resolved by name until it is next saved. }
 procedure TPrefsForm.RenameKeyerInProfiles(const aOldName, aNewName: string);
 var
    i: integer;
@@ -2519,8 +2545,15 @@ begin
    prof.Radio2Id    := SelectedTag(cbxRadio2);
    prof.Radio1Name  := RadioNameForId(prof.Radio1Id);
    prof.Radio2Name  := RadioNameForId(prof.Radio2Id);
+   { THE CHOICE AND ITS ID TOGETHER. CWOutput carries 'CAT' or 'NONE' as
+     itself and a keyer as its NAME; the id beside it is the reference and is
+     empty for the two sentinels. Stamped here so a profile written by this
+     build survives a keyer rename, and so an older profile picks one up the
+     first time it is touched. }
    prof.CWOutput1   := SelectedTag(cbxCW1);
    prof.CWOutput2   := SelectedTag(cbxCW2);
+   prof.CWOutput1Id := KeyerIdForOutput(prof.CWOutput1);
+   prof.CWOutput2Id := KeyerIdForOutput(prof.CWOutput2);
    prof.SpeedSync1  := chkSpeedSync1.Checked;
    prof.SpeedSync2  := chkSpeedSync2.Checked;
    prof.SO2REnabled := chkSO2R.Checked;

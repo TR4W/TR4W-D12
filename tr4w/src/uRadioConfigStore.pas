@@ -340,10 +340,18 @@ type
       Radio1Name: string;
       Radio2Name: string;
       DefaultActiveSlot: integer;   // 1 or 2
-      // CW output per slot: 'CAT', a keyer port value, or 'NONE'.  Held as a
-      // string because the keyer vocabulary is the ini's, not an enum here.
+      // CW output per slot: 'CAT', 'NONE', or the NAME of a keyer device.
+      //
+      // SENTINEL AND REFERENCE IN ONE FIELD, which is why the keyer id lives
+      // beside it rather than replacing it: 'CAT' and 'NONE' are answers, not
+      // devices, and they have no id to hold.
       CWOutput1: string;
       CWOutput2: string;
+      // The keyer's Id when CWOutput names a device, and '' for CAT and NONE.
+      // THIS is the reference; the name above is the readable mirror, refreshed
+      // from the id on save so the two cannot disagree.
+      CWOutput1Id: string;
+      CWOutput2Id: string;
       SpeedSync1: boolean;
       SpeedSync2: boolean;
       SO2REnabled: boolean;
@@ -951,6 +959,8 @@ begin
    { The ids are the reference; the names are their mirror. Both travel. }
    Radio1Id          := aSource.Radio1Id;
    Radio2Id          := aSource.Radio2Id;
+   CWOutput1Id       := aSource.CWOutput1Id;
+   CWOutput2Id       := aSource.CWOutput2Id;
    Radio1Name        := aSource.Radio1Name;
    Radio2Name        := aSource.Radio2Name;
    DefaultActiveSlot := aSource.DefaultActiveSlot;
@@ -2148,6 +2158,8 @@ begin
      every save, so they cannot drift into a lie. }
    Result.AddPair('radio1Id',          aProfile.Radio1Id);
    Result.AddPair('radio2Id',          aProfile.Radio2Id);
+   Result.AddPair('cwOutput1Id',       aProfile.CWOutput1Id);
+   Result.AddPair('cwOutput2Id',       aProfile.CWOutput2Id);
    Result.AddPair('radio1',            aProfile.Radio1Name);
    Result.AddPair('radio2',            aProfile.Radio2Name);
    Result.AddPair('defaultActiveSlot', TJSONNumber.Create(aProfile.DefaultActiveSlot));
@@ -2621,6 +2633,8 @@ begin
          profile.Radio2Name        := JSONStr(obj, 'radio2',            '');
          profile.Radio1Id          := JSONStr(obj, 'radio1Id',          '');
          profile.Radio2Id          := JSONStr(obj, 'radio2Id',          '');
+         profile.CWOutput1Id       := JSONStr(obj, 'cwOutput1Id',       '');
+         profile.CWOutput2Id       := JSONStr(obj, 'cwOutput2Id',       '');
 
          { MIGRATION, once, for a file written before profiles carried ids: the
            name still says which radio was meant, and the radios were read

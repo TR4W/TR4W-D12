@@ -1797,7 +1797,7 @@ function KeyerDeviceForSlot(const aKeyers: TKeyerConfigStore;
                             const aProfile: TStationProfile;
                             const aSlot: integer): TKeyerDefinition;
 var
-   cwChoice: string;
+   cwChoice, cwId: string;
 begin
    Result := nil;
    if (aKeyers = nil) or (aProfile = nil) then
@@ -1808,13 +1808,29 @@ begin
    if aSlot = 2 then
       begin
       cwChoice := Trim(aProfile.CWOutput2);
+      cwId     := Trim(aProfile.CWOutput2Id);
       end
    else
       begin
       cwChoice := Trim(aProfile.CWOutput1);
+      cwId     := Trim(aProfile.CWOutput1Id);
       end;
 
-   Result := aKeyers.FindKeyer(cwChoice);
+   { THE ID FIRST, THE NAME AS A FALLBACK.
+
+     The id is the reference and survives a rename. The name lookup stays
+     because it is also the MIGRATION: the keyer store is a different store from
+     the one profiles live in, so a profile read from a file written before
+     keyer ids cannot be resolved during load -- there is nothing to resolve
+     against yet. Falling back here means such a profile keeps working
+     unchanged, and gains its id the next time Preferences writes it.
+
+     'CAT' and 'NONE' match no keyer by either route and correctly yield nil. }
+   Result := aKeyers.FindKeyerById(cwId);
+   if Result = nil then
+      begin
+      Result := aKeyers.FindKeyer(cwChoice);
+      end;
 end;
 
 // Configures every keyer device the profile names, and settles whether the

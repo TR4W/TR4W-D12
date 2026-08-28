@@ -53,6 +53,7 @@ type
       procedure Test_RenameToADifferentSpellingOfItselfAllowed;
       procedure Test_RenameOfMissingKeyerRefused;
       procedure Test_RemoveKeyer;
+      procedure Test_KeyerIdSurvivesRenameAndReload;
 
       procedure Test_ValidateCatchesDuplicateNames;
       procedure Test_ValidateCatchesBlankName;
@@ -347,6 +348,49 @@ begin
    end;
 end;
 
+{ THE POINT OF GIVING KEYERS AN ID.
+
+  A profile refers to a keyer by id, so renaming the device must not move the
+  reference -- the same failure that lost NY4I a radio when profiles referred to
+  radios by name (2026-08-28). Also pins that the id survives a save and reload,
+  because an id that changed on every load would be no better than a name. }
+procedure TKeyerConfigStoreTests.Test_KeyerIdSurvivesRenameAndReload;
+var
+   store: TKeyerConfigStore;
+   keyer: TKeyerDefinition;
+   arr: TJSONArray;
+   idBefore, err: string;
+begin
+   BeginTest('Test_KeyerIdSurvivesRenameAndReload');
+   store := TKeyerConfigStore.Create;
+   try
+      store.AddKeyer('WinKeyer', kkWinKeyer);
+      keyer := store.FindKeyer('WinKeyer');
+      CheckTrue(keyer <> nil, 'the keyer is there');
+      idBefore := keyer.Id;
+      CheckTrue(idBefore <> '', 'a new keyer is given an id');
+
+      CheckTrue(store.RenameKeyer('WinKeyer', 'Shack WinKeyer', err), 'renamed: ' + err);
+      keyer := store.FindKeyerById(idBefore);
+      CheckTrue(keyer <> nil, 'still found BY ID after the rename');
+      CheckEquals('Shack WinKeyer', keyer.Name, 'and it is the renamed one');
+
+      arr := store.ToJSON;
+      try
+         store.Clear;
+         store.FromJSON(arr);
+      finally
+         arr.Free;
+      end;
+
+      keyer := store.FindKeyerById(idBefore);
+      CheckTrue(keyer <> nil, 'the id survived the round trip');
+      CheckEquals('Shack WinKeyer', keyer.Name, 'with its name');
+   finally
+      store.Free;
+   end;
+end;
+
 procedure TKeyerConfigStoreTests.Test_RemoveKeyer;
 var
    store: TKeyerConfigStore;
@@ -503,6 +547,7 @@ begin
    Test_RenameToADifferentSpellingOfItselfAllowed;
    Test_RenameOfMissingKeyerRefused;
    Test_RemoveKeyer;
+   Test_KeyerIdSurvivesRenameAndReload;
 
    Test_ValidateCatchesDuplicateNames;
    Test_ValidateCatchesBlankName;
