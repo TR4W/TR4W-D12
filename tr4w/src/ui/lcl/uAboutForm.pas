@@ -58,7 +58,7 @@ uses
 
 const
   { The one place the site appears, so the label and the link cannot disagree. }
-  TR4W_WEBSITE = 'http://www.tr4w.net';
+  TR4W_WEBSITE = 'https://tr4w.net';
 
 procedure TfrmAbout.lblURLClick(Sender: TObject);
 begin

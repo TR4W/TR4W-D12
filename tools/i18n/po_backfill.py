@@ -56,6 +56,10 @@ INVARIANT = re.compile(r'F[0-9]{1,2}|[-+.]{1,3}|[0-9]+')
 # guessing wrong is a string nobody can ever translate.
 INVARIANT_WORDS = {'ok', 'qth', 'dx', 'uk', 'cis'}
 
+# A bare URL is never translated, and one sitting in a catalogue is a row a
+# translator has to decide to skip.
+URL = re.compile(r'(?i)^(https?://|www[.])\S*$')
+
 
 def covered_names(entries):
    """Keys a catalogue already has, by msgctxt and by utr4wstrings reference."""
@@ -120,7 +124,8 @@ def main():
          # to translate. Whether those get translated is a decision, not a
          # pattern match.
          if (INVARIANT.fullmatch(d.value.strip())
-             or d.value.strip().lower() in INVARIANT_WORDS):
+             or d.value.strip().lower() in INVARIANT_WORDS
+             or URL.match(d.value.strip())):
             continue
          t = table.get(d.name)
          value = t.value if t is not None else ''

@@ -525,7 +525,7 @@ const
     #13 +
     '2006 - 2012 Dmitriy Gulyaev UA4WLI' + #13 +
     'TR4WSERVER version - ' + TR4WSERVER_CURRENTVERSION + #13#13 +
-    'http://www.tr4w.net'#13#10
+    'https://tr4w.net'#13#10
 
   // 'Log format version - v.1.' + LOGVERSION4 + #13 +
   // 'Compiler directives: ['{$IFOPT I+} + 'I'{$ENDIF}{$IFOPT R+} + 'R'{$ENDIF}{$IFOPT Q+} + 'Q'{$ENDIF} + ']'
@@ -618,6 +618,24 @@ uses
 // (These are // comments deliberately: a {$IF ...} directive inside a { } block
 // comment ends that comment at its own closing brace, which is exactly how the
 // first version of this note failed to compile.)
+var
+  (* HOW OFTEN THIS STILL FINDS ANYTHING.  Temporary instrumentation.
+
+     DrawWindows says every main-window element is an LCL control now and that
+     their WM_CTLCOLOR* goes to uMainForm.TR4WFormSubclassProcBody instead of
+     here.  If that is true this function scans up to 60 handles on every
+     colour message and never matches -- waste on a painting path, and the
+     WM_CTLCOLOR* arm could be deleted outright.
+
+     It is an assertion in a comment either way, so it gets counted rather
+     than believed.  Reported once at shutdown; delete both counters and the
+     report when the question is settled.
+
+     Paren-star: a brace comment would end at the first closing brace, and
+     this one has to be able to quote things. *)
+  GColorQueries: Cardinal = 0;
+  GColorMatches: Cardinal = 0;
+
 function GetCPU: int64;
 begin
   if not Windows.QueryPerformanceCounter(Result) then
@@ -3556,6 +3574,10 @@ begin
 
   if Assigned(logger) then
      begin
+     (* See the counters' declaration.  Zero matches means the WM_CTLCOLOR*
+        arm no longer serves any main-window element. *)
+     logger.Info('CheckWindowAndColor: %d query(s), %d match(es)',
+                 [GColorQueries, GColorMatches]);
      logger.Info('------------------------------Program shutdown----------------------------');
      FreeAndNil(logger);
      end;
@@ -5164,7 +5186,7 @@ begin
       OpenUrl('http://www.tr4w.com/wiki/');
 
     menu_home_page:
-      OpenUrl('http://www.tr4w.net/'); // n4af 04.42.5
+      OpenUrl('https://tr4w.net/'); // n4af 04.42.5
 
 {$IFDEF LANG_RUS}
     menu_contents:
@@ -9508,6 +9530,7 @@ var
   TempWindowElement: TMainWindowElement;
 begin
   Result := False;
+  Inc(GColorQueries);
   for TempWindowElement := Low(TMainWindowElement) to High(TMainWindowElement)
     do
      begin
@@ -9516,6 +9539,7 @@ begin
         Brush := tr4wBrushArray[TWindows[TempWindowElement].mweBackG];
         Color := tr4wColorsArray[TWindows[TempWindowElement].mweColor];
         Result := True;
+        Inc(GColorMatches);
         Break;
         end;
      end;

@@ -62,6 +62,11 @@ begin
   // disagreed, and the version check could only ever have worked if .com served
   // the same content.  Found on 2026-08-22 when the routine was given its first
   // caller; it had never run, so nothing had exercised the mismatch.
+  // LEFT ON PLAIN HTTP DELIBERATELY (2026-08-27). The displayed URLs moved to
+  // https, but this is a RAW SOCKET on port 80 speaking HTTP by hand -- there
+  // is no TLS here, so changing the scheme in the string would change nothing
+  // except to make the code lie about what it does. Moving it properly means
+  // an Indy client, which is a separate change.
   if not GetConnection(TempSocket, 'www.tr4w.net', 80, SOCK_STREAM) then
      begin
      ShowSyserror(WSAGetLastError);

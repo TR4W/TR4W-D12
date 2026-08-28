@@ -30,7 +30,7 @@ object frmAbout: TfrmAbout
     Top = 238
     Width = 368
     AutoSize = False
-    Caption = 'http://www.tr4w.net'
+    Caption = 'https://tr4w.net'
     Font.Color = clHotLight
     Font.Style = [fsUnderline]
     ParentFont = False

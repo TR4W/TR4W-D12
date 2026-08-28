@@ -304,7 +304,7 @@ const
   LOGVERSION3                           = '.';
   LOGVERSION4                           = '7';     // ny4i Added QSO GUID (id field) to ContestExchange
   CURRENTVERSIONASINTEGER               = Ord(LOGVERSION1) + Ord(LOGVERSION2) * 256 + Ord(LOGVERSION3) * $10000 + Ord(LOGVERSION4) * $1000000;
-  TR4W_DOWNLOAD_LINK                    : PChar = 'http://www.tr4w.net/download/?' + TR4W_CURRENTVERSION_NUMBER;
+  TR4W_DOWNLOAD_LINK                    : PChar = 'https://tr4w.net/download/?' + TR4W_CURRENTVERSION_NUMBER;
 
   LATEST_CONFIG_FILE                    : PAnsiChar = 'LATEST CONFIG FILE';
   MAIN_CALLSIGN                         : PAnsiChar = 'MAIN CALLSIGN';

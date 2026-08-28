@@ -6971,11 +6971,6 @@ msgctxt "TC_S"
 msgid "s"
 msgstr "s"
 
-#: tfrmabout.lblurl.caption
-#, fuzzy
-msgid "http://www.tr4w.net"
-msgstr ""
-
 #: tfrmeditqso.chksap.caption
 #, fuzzy
 msgid "S&P"

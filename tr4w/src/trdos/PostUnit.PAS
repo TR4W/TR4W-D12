@@ -650,7 +650,7 @@ procedure ExportTo3830Scores;
   showPh  := RawQSOTotals[ AllBands, Phone ] > 0;
   showDig := RawQSOTotals[ AllBands, Digital ] > 0;
 
-  buf := sysutils.Format( 'SOFTWARE: %s http://www.tr4w.net'#13#10#13#10,
+  buf := sysutils.Format( 'SOFTWARE: %s https://tr4w.net'#13#10#13#10,
      [ TR4W_CURRENTVERSION ] );
   buf := buf + '3830Scores summary'#13#10#13#10;
 
@@ -928,7 +928,7 @@ procedure WriteTitleBlockToSummarySheet;
      [ SearchAndPounceOpMode ] ) + ' Qs' + #13#10'      UNIQUE CALLSIGNS: ' +
      IntToStr( CallsignsList.GetTotalWorkedStations ) + #13#10 +
      #13#10'            SOFTWARE: ' + TR4W_CURRENTVERSION +
-     ' http://www.tr4w.net'#13#10 );
+     ' https://tr4w.net'#13#10 );
 
   end;
 

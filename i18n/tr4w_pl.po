@@ -5518,7 +5518,7 @@ msgstr "Connect\000Disconnect\000Commands\000Freeze\000Clear\000100\000\000"
 #, fuzzy
 msgctxt "TC_BANDCHANGEDISABLED"
 msgid "Band change requires MULTIPLE BANDS = TRUE once the log has QSOs"
-msgstr ""
+msgstr "Zmiana pasma wymaga MULTIPLE BANDS = TRUE gdy logarytm ma QSOS"
 
 #. Section: UEDITMESSAGE
 #. 4.51.8
@@ -5527,7 +5527,7 @@ msgstr ""
 #, fuzzy
 msgctxt "RC_3830"
 msgid "3830 Score posting"
-msgstr ""
+msgstr "3830 Punktacja"
 
 #. Section: UEDITMESSAGE
 #. 4.53.3
@@ -5536,7 +5536,7 @@ msgstr ""
 #, fuzzy
 msgctxt "RC_3830_ARRL"
 msgid "Submit ARRL Log"
-msgstr ""
+msgstr "Wyślij dziennik ARRL"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_vieweditlog2
@@ -5636,7 +5636,7 @@ msgstr "Uruchom TR4WSERVER"
 #, fuzzy
 msgctxt "RC_DVKVOLCONTROL"
 msgid "DVK volume control"
-msgstr ""
+msgstr "Kontrola głośności DVK"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_reccontrol
@@ -5886,7 +5886,7 @@ msgstr "DX Cluster"
 #, fuzzy
 msgctxt "RC_ALTP"
 msgid "Open Fkeys"
-msgstr ""
+msgstr "Otwórz klawisze"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_altx
@@ -5894,7 +5894,7 @@ msgstr ""
 #, fuzzy
 msgctxt "RC_ALTX"
 msgid "Exit Program"
-msgstr ""
+msgstr "Program wyjścia"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_autocqresume
@@ -5923,7 +5923,7 @@ msgstr "Edycja"
 #, fuzzy
 msgctxt "RC_BACKUPLOG"
 msgid "Backup Log"
-msgstr ""
+msgstr "Dziennik kopii zapasowej"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_swapmultview
@@ -6435,7 +6435,7 @@ msgstr "Re-initialize WinKeyer"
 #, fuzzy
 msgctxt "TC_DOWNLOADINGCTYDAT"
 msgid "Downloading CTY.DAT..."
-msgstr ""
+msgstr "Pobieranie CTY.DAT..."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_downloadingtrmasterdta
@@ -6443,7 +6443,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_DOWNLOADINGTRMASTERDTA"
 msgid "Downloading TRMASTER.DTA..."
-msgstr ""
+msgstr "Pobieranie TRMASTER.DTA..."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_downloadingpotaparks
@@ -6451,7 +6451,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_DOWNLOADINGPOTAPARKS"
 msgid "Downloading POTA parks..."
-msgstr ""
+msgstr "Pobieranie parków POTA..."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_hamscorequeueingfulllogresync
@@ -6459,7 +6459,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_HAMSCOREQUEUEINGFULLLOGRESYNC"
 msgid "HamScore: queueing full log resync..."
-msgstr ""
+msgstr "HamScore: kolejka w pełnym dzienniku..."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_logincalldoeslooklikecallsign
@@ -6467,7 +6467,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_LOGINCALLDOESLOOKLIKECALLSIGN"
 msgid "Login call does not look like a callsign"
-msgstr ""
+msgstr "Zaloguj się nie wygląda jak sygnał wywoławczy"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_nopotaparksloggedyetsession
@@ -6475,7 +6475,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_NOPOTAPARKSLOGGEDYETSESSION"
 msgid "No POTA parks logged yet this session"
-msgstr ""
+msgstr "Nie zalogowano jeszcze żadnych parków POTA"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_cwoff
@@ -6483,7 +6483,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_CWOFF"
 msgid "CW Off"
-msgstr ""
+msgstr "CW wyłączone"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_cannotopenlogfile
@@ -6491,7 +6491,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_CANNOTOPENLOGFILE"
 msgid "Cannot open log file"
-msgstr ""
+msgstr "Nie można otworzyć pliku dziennika"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_scannoteditedhere
@@ -6499,7 +6499,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_SCANNOTEDITEDHERE"
 msgid "%s cannot be edited here."
-msgstr ""
+msgstr "%s nie można tutaj edytować."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_debugmodecreatedprefixestxt
@@ -6507,7 +6507,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_DEBUGMODECREATEDPREFIXESTXT"
 msgid "debug mode created prefixes.txt"
-msgstr ""
+msgstr "tryb debug stworzony prefixes.txt"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_potaparksloaded
@@ -6515,7 +6515,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_POTAPARKSLOADED"
 msgid "POTA parks loaded"
-msgstr ""
+msgstr "Parki POTA załadowane"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_potaparksfilecouldloaded
@@ -6523,7 +6523,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_POTAPARKSFILECOULDLOADED"
 msgid "POTA parks file could not be loaded"
-msgstr ""
+msgstr "Plik POTA parków nie mógł być wczytany"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_potaparksdownloadfailed
@@ -6531,7 +6531,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_POTAPARKSDOWNLOADFAILED"
 msgid "POTA parks download failed"
-msgstr ""
+msgstr "Pobieranie parków POTA nie powiodło się"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_trmasterdtadownloadedrestarttr4wus
@@ -6539,7 +6539,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_TRMASTERDTADOWNLOADEDRESTARTTR4WUS"
 msgid "TRMASTER.DTA downloaded -- restart TR4W to use it"
-msgstr ""
+msgstr "TRMASTER.DTA pobrany -- ponownie uruchomić TR4W, aby go używać"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_trmasterdtadownloadfailed
@@ -6547,7 +6547,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_TRMASTERDTADOWNLOADFAILED"
 msgid "TRMASTER.DTA download failed"
-msgstr ""
+msgstr "TRMASTER.DTA pobranie nie powiodło się"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_ctydatdownloadedreloading
@@ -6555,7 +6555,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_CTYDATDOWNLOADEDRELOADING"
 msgid "CTY.DAT downloaded. Reloading..."
-msgstr ""
+msgstr "CTY.DAT pobrany. Przeładowanie..."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_ctydatreloadedsuccessfully
@@ -6563,7 +6563,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_CTYDATRELOADEDSUCCESSFULLY"
 msgid "CTY.DAT reloaded successfully."
-msgstr ""
+msgstr "CTY.DAT przeładował się pomyślnie."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_ctydatdownloadfailed
@@ -6571,7 +6571,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_CTYDATDOWNLOADFAILED"
 msgid "CTY.DAT download failed."
-msgstr ""
+msgstr "Pobieranie CTY.DAT nie powiodło się."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_errorplayingvoicememory
@@ -6579,7 +6579,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_ERRORPLAYINGVOICEMEMORY"
 msgid "Error playing voice memory"
-msgstr ""
+msgstr "Błąd odtwarzania pamięci głosowej"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_flushinitialexcommandexecuted
@@ -6587,7 +6587,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_FLUSHINITIALEXCOMMANDEXECUTED"
 msgid "FLUSHINITIALEX command is executed."
-msgstr ""
+msgstr "Polecenie FLUSHINITIALEX jest wykonywane."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_autospotenabledtestmodeonly
@@ -6595,7 +6595,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_AUTOSPOTENABLEDTESTMODEONLY"
 msgid "AUTOSPOT is enabled - Test Mode Only"
-msgstr ""
+msgstr "AUTOSPOT jest włączony - tylko tryb testowy"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_handlogmodetrue
@@ -6603,7 +6603,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_HANDLOGMODETRUE"
 msgid "HAND LOG MODE = TRUE"
-msgstr ""
+msgstr "HAND LOG MODE = TRUE"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_trmasterdtas
@@ -6611,7 +6611,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_TRMASTERDTAS"
 msgid "TRMASTER.DTA : %s"
-msgstr ""
+msgstr "TRMASTER.DTA: %s"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_tr4wtimewarning
@@ -6619,7 +6619,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_TR4WTIMEWARNING"
 msgid "TR4W Time Warning"
-msgstr ""
+msgstr "TR4W Ostrzeżenie o czasie"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_errorofferingcommanderproxytcpport
@@ -6627,7 +6627,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_ERROROFFERINGCOMMANDERPROXYTCPPORT"
 msgid "Error offering Commander proxy TCP Port"
-msgstr ""
+msgstr "Błąd oferowania Commander Proxy TCP Port"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_pttviacommandsctrljoptionmusttruew
@@ -6635,7 +6635,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_PTTVIACOMMANDSCTRLJOPTIONMUSTTRUEW"
 msgid "PTT VIA COMMANDS (CTRL-J) option must be true for WSJT-X use - Setting to true"
-msgstr ""
+msgstr "Opcja PTT VIA COMMANDS (CTRL- J) musi być prawdziwa dla zastosowania WSJT- X - Ustawienie na true"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_cannotdisablesplittransmitslicecre
@@ -6643,7 +6643,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_CANNOTDISABLESPLITTRANSMITSLICECRE"
 msgid "Cannot disable split -- the transmit slice was created on the radio. Turn it off in the SDR."
-msgstr ""
+msgstr "Nie można wyłączyć rozdzielenia - transmisja została stworzona w radiu. Wyłącz to w SDR."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_sorryusedupallreminders
@@ -6651,7 +6651,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_SORRYUSEDUPALLREMINDERS"
 msgid "Sorry, you have used up all your reminders!!"
-msgstr ""
+msgstr "Przepraszam, zużyłeś wszystkie swoje przypomnienia!!"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_invaliddate
@@ -6659,7 +6659,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_INVALIDDATE"
 msgid "Invalid date!!"
-msgstr ""
+msgstr "Niepoprawna data!"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_enoughmemoryinitialexchangearray
@@ -6667,7 +6667,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_ENOUGHMEMORYINITIALEXCHANGEARRAY"
 msgid "Not enough memory for initial exchange array!!"
-msgstr ""
+msgstr "Za mało pamięci do wstępnej wymiany!!"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_findingzeroendvisibledupesheetlist
@@ -6675,7 +6675,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_FINDINGZEROENDVISIBLEDUPESHEETLIST"
 msgid "Not finding zero at end visible dupesheet list!!"
-msgstr ""
+msgstr "Nie znajdując zero na końcu widoczna lista dupesheet!!"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_qtcprocessterminated
@@ -6683,7 +6683,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_QTCPROCESSTERMINATED"
 msgid "QTC process terminated."
-msgstr ""
+msgstr "Proces QTC zakończony."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_qtcnumberillegalcharacters
@@ -6691,7 +6691,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_QTCNUMBERILLEGALCHARACTERS"
 msgid "QTC Number has illegal characters."
-msgstr ""
+msgstr "Numer QTC ma nielegalne znaki."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_numbermessagesillegalcharacters
@@ -6699,7 +6699,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_NUMBERMESSAGESILLEGALCHARACTERS"
 msgid "Number of messages has illegal characters."
-msgstr ""
+msgstr "Liczba wiadomości ma nielegalne znaki."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_qtcprocessterminatedinvalidnumberm
@@ -6707,7 +6707,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_QTCPROCESSTERMINATEDINVALIDNUMBERM"
 msgid "QTC process terminated.  Invalid number of messages."
-msgstr ""
+msgstr "Proces QTC zakończony. Nieprawidłowa liczba wiadomości."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_ifoundcontestnameidonounderstandlo
@@ -6715,7 +6715,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_IFOUNDCONTESTNAMEIDONOUNDERSTANDLO"
 msgid "I found a contest name I do no understand in your LOGCFG.DAT file."
-msgstr ""
+msgstr "Znalazłem nazwę konkursu, której nie rozumiem w twoich aktach."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_ididfinecontestnamelogcfgdatfile
@@ -6723,7 +6723,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_IDIDFINECONTESTNAMELOGCFGDATFILE"
 msgid "I did not fine a contest name in your LOGCFG.DAT file."
-msgstr ""
+msgstr "Nie poprawiłem nazwy konkursu w twoich aktach logCFG.DAT."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_arenewengland
@@ -6731,7 +6731,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_ARENEWENGLAND"
 msgid "Are you in New England?"
-msgstr ""
+msgstr "Jesteś w Nowej Anglii?"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_cwtimerfired
@@ -6739,7 +6739,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_CWTIMERFIRED"
 msgid "CW Timer fired"
-msgstr ""
+msgstr "CW Timer zwolniony"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_testradiointerface
@@ -6747,7 +6747,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_TESTRADIOINTERFACE"
 msgid "TEST RADIO INTERFACE"
-msgstr ""
+msgstr "BADANIE INTERFACE RADIO"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_unablesavedtaasciifile
@@ -6755,7 +6755,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_UNABLESAVEDTAASCIIFILE"
 msgid "Unable to save .DTA to ASCII file."
-msgstr ""
+msgstr "Nie można zapisać .DTA do pliku ASCII."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_savingdtafileasciifileprocessingce
@@ -6763,7 +6763,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_SAVINGDTAFILEASCIIFILEPROCESSINGCE"
 msgid "Saving .DTA file to ASCII file.  Processing cell   "
-msgstr ""
+msgstr "Zapisywanie pliku .DTA do pliku ASCII. Komórka przetwórcza   "
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_datasuccessfullysavedasciifile
@@ -6771,7 +6771,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_DATASUCCESSFULLYSAVEDASCIIFILE"
 msgid "Data successfully saved to ASCII file."
-msgstr ""
+msgstr "Dane z powodzeniem zapisane do pliku ASCII."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_notrmasterdtafilefound
@@ -6779,7 +6779,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_NOTRMASTERDTAFILEFOUND"
 msgid "No TRMASTER.DTA file found."
-msgstr ""
+msgstr "Nie znaleziono pliku TRMASTER.DTA."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_hitcounthistogram050
@@ -6787,7 +6787,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_HITCOUNTHISTOGRAM050"
 msgid "Hit count histogram for 0 to 50+ : "
-msgstr ""
+msgstr "Hit liczenie histogram dla 0 do 50 +: "
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_pleasecheckmultinetwork
@@ -6795,7 +6795,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_PLEASECHECKMULTINETWORK"
 msgid "Please check multi network"
-msgstr ""
+msgstr "Proszę sprawdzić wielosieciową"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_possibledatalossmultinetwork
@@ -6803,7 +6803,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_POSSIBLEDATALOSSMULTINETWORK"
 msgid "Possible data loss on multi network."
-msgstr ""
+msgstr "Możliwe straty danych w wielu sieciach."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_selectspotreturnleftorrightarrowse
@@ -6811,7 +6811,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_SELECTSPOTRETURNLEFTORRIGHTARROWSE"
 msgid "Select spot.  RETURN, left or right arrow to select.  ESCAPE to exit."
-msgstr ""
+msgstr "Wybierz miejsce. Return, lewa lub prawa strzałka do wyboru. Escape do wyjścia."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_entercallsignspacedupecheckalthhel
@@ -6819,7 +6819,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_ENTERCALLSIGNSPACEDUPECHECKALTHHEL"
 msgid "ENTER a callsign.  SPACE for dupecheck.  Alt-H for help."
-msgstr ""
+msgstr "Zawołaj mnie. Miejsce dla dupeczków. Alt- H prosi o pomoc."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_continueenteringcharactersautoterm
@@ -6827,7 +6827,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_CONTINUEENTERINGCHARACTERSAUTOTERM"
 msgid "Continue entering characters.  Auto terminate active!!"
-msgstr ""
+msgstr "Kontynuuj wprowadzanie znaków. Auto wyłączyć aktywne!"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_continueenteringcharacterspressret
@@ -6835,7 +6835,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_CONTINUEENTERINGCHARACTERSPRESSRET"
 msgid "Continue entering characters and press RETURN when done."
-msgstr ""
+msgstr "Kontynuuj wprowadzanie znaków i naciśnij przycisk RETURN po wykonaniu."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_enterexchangepressenterlogescapeab
@@ -6843,7 +6843,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_ENTEREXCHANGEPRESSENTERLOGESCAPEAB"
 msgid "Enter exchange.  Press ENTER to log, ESCAPE to abort QSO."
-msgstr ""
+msgstr "Wprowadź wymianę. Naciśnij ENTER do logowania, ESCAPE do przerwania QSO."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_relaycontrolportpaddleport
@@ -6851,7 +6851,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_RELAYCONTROLPORTPADDLEPORT"
 msgid "RELAY CONTROL PORT = PADDLE PORT"
-msgstr ""
+msgstr "PORT KONTROLI RELAYY = PORT PADDLE"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_locationfieldempty
@@ -6859,7 +6859,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_LOCATIONFIELDEMPTY"
 msgid "LOCATION field is empty."
-msgstr ""
+msgstr "Pole lokacyjne jest puste."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_pttlockouttrue
@@ -6867,7 +6867,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_PTTLOCKOUTTRUE"
 msgid "PTT LOCKOUT=TRUE"
-msgstr ""
+msgstr "PTT LOCKOUT = TRUE"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_preferencescouldopeneds
@@ -6875,7 +6875,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_PREFERENCESCOULDOPENEDS"
 msgid "Preferences could not be opened (%s)."
-msgstr ""
+msgstr "Preferencje nie mogły zostać otwarte (%s)."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_theseentrieswereacceptedbeensaved
@@ -6883,7 +6883,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_THESEENTRIESWEREACCEPTEDBEENSAVED"
 msgid "These entries were not accepted and have not been saved:"
-msgstr ""
+msgstr "Te wpisy nie zostały przyjęte i nie zostały zapisane:"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_tciservercouldopenportds
@@ -6891,7 +6891,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_TCISERVERCOULDOPENPORTDS"
 msgid "The TCI server could not open port %d: %s"
-msgstr ""
+msgstr "Serwer TCI nie mógł otworzyć portu %d: %s"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_keyernamedsalreadyexists
@@ -6899,7 +6899,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_KEYERNAMEDSALREADYEXISTS"
 msgid "A keyer named \"%s\" already exists."
-msgstr ""
+msgstr "Keyer o nazwie \"%s\" już istnieje."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_sstillusedbys
@@ -6907,7 +6907,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_SSTILLUSEDBYS"
 msgid "\"%s\" is still used by: %s"
-msgstr ""
+msgstr "\"%s\" jest nadal używany przez: %s"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_removeclusters
@@ -6915,7 +6915,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_REMOVECLUSTERS"
 msgid "Remove the cluster \"%s\"?"
-msgstr ""
+msgstr "Usunąć klaster \"%s\"?"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_removerotators
@@ -6923,7 +6923,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_REMOVEROTATORS"
 msgid "Remove the rotator \"%s\"?"
-msgstr ""
+msgstr "Usunąć rotator \"%s\"?"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_loggingrunningsotherenofileopen
@@ -6931,7 +6931,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_LOGGINGRUNNINGSOTHERENOFILEOPEN"
 msgid "Logging is not running, so there is no file to open."
-msgstr ""
+msgstr "Logowanie nie działa, więc nie ma pliku do otwarcia."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_therenologfileyets
@@ -6939,7 +6939,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_THERENOLOGFILEYETS"
 msgid "There is no log file yet at %s."
-msgstr ""
+msgstr "Nie ma jeszcze pliku dziennika na stronie %s."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_openineditor
@@ -6947,7 +6947,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_EDITOR_OPENINEDITOR"
 msgid "Open in text &editor"
-msgstr ""
+msgstr "Otwórz w edytorze tekstu"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_explore
@@ -6955,7 +6955,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_EDITOR_EXPLORE"
 msgid "Explore"
-msgstr ""
+msgstr "Poznaj"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_copy
@@ -6963,7 +6963,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_EDITOR_COPY"
 msgid "&Copy"
-msgstr ""
+msgstr "& Kopiuj"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_selectall
@@ -6971,7 +6971,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_EDITOR_SELECTALL"
 msgid "Select &all"
-msgstr ""
+msgstr "Wybierz & wszystkie"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_sendlogto
@@ -6979,7 +6979,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_EDITOR_SENDLOGTO"
 msgid "Send log to %s"
-msgstr ""
+msgstr "Wyślij dziennik do %s"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_uploadcabrillotoscp
@@ -6987,7 +6987,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_UPLOADCABRILLOTOSCP"
 msgid "Do you want to upload your Cabrillo file to SuperChecklPartial?"
-msgstr ""
+msgstr "Chcesz przesłać plik Cabrillo do SuperChecklPartial?"
 
 #. Section: General
 #. minute
@@ -7006,11 +7006,6 @@ msgstr "m"
 msgctxt "TC_S"
 msgid "s"
 msgstr "s"
-
-#: tfrmabout.lblurl.caption
-#, fuzzy
-msgid "http://www.tr4w.net"
-msgstr ""
 
 #: tfrmeditqso.chksap.caption
 #, fuzzy

@@ -414,7 +414,6 @@ uses
   // rather than ported because Delphi's Winapi.OpenGL and FPC's GL are
   // different bindings and there is nothing behind this to test them with.
   // If OGLVERSION is ever turned on, this needs a real decision.
-  uAbout in 'src\uAbout.pas',
 {$ENDIF}
   uHardWare in 'src\uHardWare.pas',
   uReminder in 'src\uReminder.pas',
