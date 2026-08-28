@@ -97,7 +97,6 @@ var
   ButtonsText                           : array[112..123] of Str40;
 
 //  FKCloseButton                         : HWND;
-  FKRButtonTimerHAndle                  : HWND;
 
 implementation
 uses

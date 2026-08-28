@@ -778,7 +778,6 @@ var
   MyITUZone                             : Byte;
 
   RichEditObject                        : TRichEditObject;
-  RemMultsDXToolTip                     : HWND;
 //  ti                                    : TOOLINFO;
 
   DomesticMultByBand                    : TAdditionalMultByBand;
@@ -2244,7 +2243,6 @@ type
     cfFont: tagLOGFONTA;
     cfFontColor: Cardinal;
     cfBkGrColor: HBRUSH;
-    cfWindowHandle: HWND;
   end;
 
 type
@@ -2740,7 +2738,6 @@ var
 
   TotWinheadHandles                     : array[1..7] of HWND;
   tr4whandle                            : HWND;
-  TR4WApplication                       : HWND;
   tr4w_WinClass                         : TWndClass = (Style: CS_DBLCLKS; hbrBackground: COLOR_BTNFACE + 1; {lpszMenuName: 'T'; } lpszClassName: tr4w_ClassName; );
   tr4w_main_menu                        : HMENU;
   tr4w_accelerators                     : hAccel;
@@ -2931,7 +2928,6 @@ var
   CWThreadCounter                       : Cardinal;
   CWThreadID                            : Cardinal;
   CWThreadHandle                        : HWND;
-  BnadmapThread                         : HWND;
   BnadmapThreadID                       : Cardinal;
 
   {AutoCQ variables}

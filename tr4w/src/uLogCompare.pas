@@ -53,7 +53,6 @@ uses
 }
 
 var
-  LogCompareListView                    : HWND;
   TimeDifference                        : integer;
 
 // the log-comparison dialog.  Two call sites in uNet pass the same shape.

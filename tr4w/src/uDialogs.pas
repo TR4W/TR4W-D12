@@ -505,7 +505,6 @@ var
   ModifyFlag                            : integer;
   FirstCDN_SELCHANGE                    : boolean;
 
-  FileNameEdit                          : HWND;
   //  LB                                    : HWND;
 
 const

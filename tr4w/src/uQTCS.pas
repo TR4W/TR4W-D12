@@ -80,7 +80,6 @@ var
 var
   QTCWasSend                            : integer ;
   ArrowWindow                           : HWND;
-  CurrentQTC                            : HWND ;
   QTCSWindow                            : HWND ;
   LastSendedQTCHour                     : integer = -1;
 
