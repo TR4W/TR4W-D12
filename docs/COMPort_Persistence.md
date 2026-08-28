@@ -1,4 +1,4 @@
-Question: from a useability standpoint and related to persisting the COM port for a serial device, is it recommended to persist the name of the COM port even though it may not be there when the program starts up again (someone may unplug a particular USB cable)? This is a balance between showing COM ports that are not defined versus letting th euser chnage to a COM port that is enumerated
+Question: from a useability standpoint and related to persisting the COM port for a serial device, is it recommended to persist the name of the COM port even though it may not be there when the program starts up again (someone may unplug a particular USB cable)? This is a balance between showing COM ports that are not defined versus letting the user chnage to a COM port that is enumerated
 
 Answer provided by Perplexity
 
@@ -31,11 +31,26 @@ From a usability standpoint, a combo box that mixes missing and present ports wi
 
 Example display:
 
-| State | What user sees |
-|---|---|
-| Saved device is present | `COM5 — USB Serial Device (last used)`  [stackoverflow](https://stackoverflow.com/questions/304986/how-do-i-get-the-friendly-name-of-a-com-port-in-windows) |
-| Saved device is absent | `Last used: COM5 — USB Serial Device (not connected)`  [learn.microsoft](https://learn.microsoft.com/en-us/windows-hardware/drivers/install/guid-devinterface-comport) |
-| Other ports are present | `COM3 — Silicon Labs CP210x...`, `COM7 — USB Serial Device...`  [stackoverflow](https://stackoverflow.com/questions/304986/how-do-i-get-the-friendly-name-of-a-com-port-in-windows) |
+| State    | What user sees                                                           |
+| -------- | ------------------------------------------------------------------------ |
+| Saved    | `COM5 — USB Serial Device (last used)`                                   |
+| devic    | [                                                                        |
+|          | stackoverflow](https://stackoverflow.com/questions/304986/how-do-i-get-t |
+|          | he                                                                       |
+| e is     | -friendly-name-of-a-com-port-in-windows)                                 |
+| present  |                                                                          |
+| Saved    | `Last used: COM5 — USB Serial Device (not connected)`                    |
+| devic    | [                                                                        |
+|          | learn.microsoft](https://learn.microsoft.com/en-us/windows-hardware/dri  |
+|          | ver                                                                      |
+| e is     | s/install/guid-devinterface-comport)                                     |
+| absent   |                                                                          |
+| Other    | `COM3 — Silicon Labs CP210x...` , `COM7 — USB Serial Device...`          |
+| ports    | [                                                                        |
+|          | stackoverflow](https://stackoverflow.com/questions/304986/how-do-i-get-t |
+|          | he                                                                       |
+| are      | -friendly-name-of-a-com-port-in-windows)                                 |
+| present  |                                                                          |
 
 That keeps the user oriented without lying about what is actually openable right now. Using `WM_DEVICECHANGE` to refresh the list also helps the UI recover naturally when the cable is plugged back in. [learn.microsoft](https://learn.microsoft.com/en-us/windows/win32/devio/dbt-devicearrival)
 

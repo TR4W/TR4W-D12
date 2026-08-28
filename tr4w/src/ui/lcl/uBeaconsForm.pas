@@ -241,8 +241,23 @@ begin
       end;
    RefreshIfSlotChanged;
 
-   sbFreq1.Down := True;
-   SetRadioFreq(RadioOne, FreqArray[101] * 1000, CW, 'A');
+   { OPENING A WINDOW IS NOT AN INSTRUCTION TO MOVE THE RADIO.
+
+     This used to tick the first button and tune Radio 1 to it, so merely
+     looking at the beacon monitor retuned the rig -- mid-QSO, mid-run, from a
+     window the operator may have opened to READ. NY4I, 2026-08-28: "Simply the
+     act of opening the beacons monitor window changes the radio frequency to
+     the first monitor. That should not work that way -- even though it may have
+     in D7 too. I should have to take an overt act to start changing the radio
+     frequency."
+
+     The behaviour is kept, it just needs asking for: clicking a frequency
+     button tunes, and that is the overt act. No button starts down, because a
+     button shown down while the radio is elsewhere would be a lie about what
+     the rig is doing -- which is the same defect wearing different clothes.
+
+     The grid still fills and the slot timer still runs, so the window is fully
+     useful without touching the radio at all. }
 
    tmrSlot.Enabled := True;
 end;

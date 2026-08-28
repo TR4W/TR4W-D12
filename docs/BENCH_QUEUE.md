@@ -93,17 +93,51 @@ launch TR4W, enumerate every window and control, drive menu commands, type into
 fields and read the log back. Anything in the list below should be run by the
 agent BEFORE it reaches this file.
 
-| Question | Tool | Verified tonight |
-|---|---|---|
-| Does a dialog open at all? | `Invoke-MenuSmoke.ps1` | 8 commands, 7 windows |
-| Do Edit QSO's fields round-trip? | `Invoke-FieldCheck.ps1` | 69/69 |
-| Is a menu caption, id or shortcut right? | `Dump-Menu.ps1` | caught About reading "Check for Updates" |
-| Do accelerators collide? | `Dump-Accelerators.ps1` | -- |
-| Did a window lose a control, or its size? | `Dump-WindowTree.ps1` + `Compare-WindowTree.ps1` | -- |
-| Does a translated caption still fit? | `Test-TextFit.ps1` | -- |
-| Does typing reach the right field? | `Test-Typing.ps1` | -- |
-| Does Preferences show every section? | `Test-PreferencesSections.ps1` | -- |
-| Did the program write what it claims? | read `target/tr4w.log` | proved the Spanish menu is not ours |
+| Question   | Tool                | Verified tonight |
+| ---------- | ------------------- | ---------------- |
+| Does a     | ` Invoke-MenuSmoke. | 8 commands, 7    |
+| dialog     | ps1`                | windows          |
+| openat     |                     |                  |
+| all?       |                     |                  |
+| Do Edit    | `Invoke-FieldCheck  | 69/69            |
+| QSO's      | .ps1`               |                  |
+| fields     |                     |                  |
+| round-trip |                     |                  |
+| ?          |                     |                  |
+| Is a menu  | `Dump-Menu.ps1`     | caught About     |
+| caption,   |                     | reading "Check   |
+| idor       |                     | for Updates"     |
+| shortcut   |                     |                  |
+| right?     |                     |                  |
+| Do         | `Dump-Accelerators  | --               |
+| accelerato | .ps1`               |                  |
+| rs         |                     |                  |
+| collide?   |                     |                  |
+| Did a      | `Dump-WindowTree.p  | --               |
+| window     | s1` +               |                  |
+| losea      | `Compare-WindowTre  |                  |
+| control,   | e.ps1`              |                  |
+| or its     |                     |                  |
+| size?      |                     |                  |
+| Does a     | `Test-TextFit.ps1`  | --               |
+| translated |                     |                  |
+| caption    |                     |                  |
+| still fit? |                     |                  |
+| Does       | `Test-Typing.ps1`   | --               |
+| typing     |                     |                  |
+| reach the  |                     |                  |
+| right      |                     |                  |
+| field?     |                     |                  |
+| Does       | `Test-PreferencesS  | --               |
+| Preference | ections.ps1`        |                  |
+| s show     |                     |                  |
+| every      |                     |                  |
+| section?   |                     |                  |
+| Did the    | read                | proved the       |
+| program    | `target/tr4w.log`   | Spanish menu is  |
+| write      |                     | not ours         |
+| whatit     |                     |                  |
+| claims?    |                     |                  |
 
 **What the agent still cannot do**, and what therefore belongs here: judge a
 COLOUR or a layout by eye; confirm a caret is visible; see flicker or timing;
@@ -127,20 +161,20 @@ has been on screen.
 **This is the first thing the operator sees, and it changed shape** -- it
 replaced 494 lines of `NewContestDlgProc`.
 
-- [ ] **The `.CFG` list** shows the TR4W directory, and **Browse...** opens the
+- [x] **The `.CFG` list** shows the TR4W directory, and **Browse...** opens the
   standard file picker and can reach a config somewhere else.
 
-- [ ] **Latest config file** still reopens the last one.
+- [x] **Latest config file** still reopens the last one.
 
-- [ ] **OK stays disabled** until the callsign and every shown field are filled.
+- [x] **OK stays disabled** until the callsign and every shown field are filled.
   Pick a contest and watch the prompt panel and any extra field appear.
 
-- [ ] **A contest that asks for a field** -- `NEWENGLANDQSO`, `WAG`, `POTA` --
+- [x] **A contest that asks for a field** -- `NEWENGLANDQSO`, `WAG`, `POTA` --
   shows one row with the right label.
 
-- [ ] **The "I am in" box** on a QSO-party contest changes the prompts.
+- [x] **The "I am in" box** on a QSO-party contest changes the prompts.
 
-- [ ] **The six `CATEGORY-*` drop-downs have labels.** They shipped unlabelled in
+- [x] **The six `CATEGORY-*` drop-downs have labels.** They shipped unlabelled in
   the first pass; this is the fix.
 
 - [ ] **Resize the window** -- list and fields follow, buttons stay bottom-right.
@@ -177,7 +211,7 @@ nothing ever passes to `DialogBox`.
   Delphi 7 IDE compatible". Delphi 7 is gone and FPC has
   `Generics.Collections`. CLAUDE.md still describes `uExternalLoggerManager` as
   carrying the external-logger implementation, so this is either work to finish
-  or code to delete -- it should not stay in limbo. **The one worth your time.**
+  or code to delete -- it should not stay in limbo. **The one worth your time.** [AGENT: Yes the external loggers should be a factory. I believe it is so I am not sure why the Generics aftect this. I could see there being an external logger status indicator but a better UX might be an external status panel. That way we could show the time of the last WSJT-X message, the last status sent form ExternalLOggers, the last exchange with Hamscore. Sort of a status window on these items. But new windows can wait and the external logger works now.]
 
 - [ ] **`MixW2DlgProc` and `WinKeyer2SettingsDlgProc` have zero references.**
   Their units are live (MixW integration, WinKeyer driver) but those two
@@ -787,10 +821,17 @@ NY4I, 2026-08-21, pointing at <https://wiki.freepascal.org/Hardware_Access>: the
 parallel-port methods there cover Windows AND Linux, and they share TR4W's model
 of "read or write a byte at an I/O base address".
 
-|         | how                                                                    | condition                              |
-| ------- | ---------------------------------------------------------------------- | -------------------------------------- |
-| Windows | `inpout32.dll`, `Inp32`/`Out32`                                        | what `uIO` already does                |
-| Linux   | `ports` unit + `ioperm()` from libc, or FPC's `fpioperm` in unit `x86` | **requires root**, and is **x86-only** |
+|         | how                           | condition |
+| ------- | ----------------------------- | --------- |
+| Windows | `inpout32.dll` , `Inp32`      | what      |
+|         | /`Out32`                      | `uIO`     |
+|         |                               | already   |
+|         |                               | does      |
+| Linux   | `ports` unit + `ioperm()`     | **require |
+|         | from libc, or FPC's           | s root**, |
+|         | `fpioperm` in unit `x86`      | and is    |
+|         |                               | **x86-onl |
+|         |                               | y**       |
 
 **Both conditions matter and neither should be designed away.** Asking a contest
 operator to run the logger as root is a genuine deployment problem, and
@@ -1065,12 +1106,14 @@ a `CFGFunc` filter since Ctrl-J, and once every filter routed to Preferences the
 parameter was ignored -- so Settings > WinKeyer opened Preferences wherever it
 was last left. Every filter that names a page now maps to one:
 
-| menu              | page                                         |
-| ----------------- | -------------------------------------------- |
-| Colors            | Appearance > Colors                          |
-| Appearance        | Appearance                                   |
-| WinKeyer          | **CW Settings** -- the keying-device library |
-| Radio 1 / Radio 2 | Radios                                       |
+| menu        | page                                  |
+| ----------- | ------------------------------------- |
+| Colors      | Appearance > Colors                   |
+| Appearance  | Appearance                            |
+| WinKeyer    | **CW Settings** -- the keying-device  |
+|             | library                               |
+| Radio 1 /   | Radios                                |
+| Radio 2     |                                       |
 
 - [ ] Settings > WinKeyer must land on **CW Settings**, with the keying devices
   list at the top. Pick the keyer, **Edit...**, and all seventeen options are
@@ -2132,10 +2175,15 @@ twice for one action.
 
 Behaviour now, all gated on `CONFIRM EDIT CHANGES`:
 
-| Action              | Nothing changed            | Something changed                                                |
-| ------------------- | -------------------------- | ---------------------------------------------------------------- |
-| Save button         | unreachable (disabled)     | "Save changes?" -> Yes writes, No returns to the dialog          |
-| Escape / Cancel / X | closes silently, as before | "Save changes?" -> Yes writes and closes, No discards and closes |
+| Action | Nothing changed | Something changed        |
+| ------ | --------------- | ------------------------ |
+| Save   | unreachable     | "Save changes?" -> Yes   |
+| button | (disabled)      | writes, No returns to    |
+|        |                 | the dialog               |
+| Escape | closes          | "Save changes?" -> Yes   |
+| /      | silently, as    | writes and closes, No    |
+| Cancel | before          | discards and closes      |
+| / X    |                 |                          |
 
 A save that FAILS does not close -- the operator would otherwise lose the edit to
 a validation refusal they never saw resolved.
@@ -2219,12 +2267,32 @@ it was written -- which is also why bench item 10 has nothing to report yet.
 **AND THREE MORE MESSAGES WERE BEING DROPPED THE SAME WAY**, two of them from
 long before this work:
 
-| Message                         | The list said  | Actually               | Consequence                                                                                                                |
-| ------------------------------- | -------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `WM_CTY_VERSION_CHECKED`        | `WM_APP + 213` | `WM_APP + 210`         | CTY.DAT version-check result discarded                                                                                     |
-| `WM_TRAYBALLON`                 | `WM_APP + 100` | `WM_SOCK + 3` = `$5F7` | tray icon clicks never handled                                                                                             |
-| `WM_PANEL_UPDATE`               | absent         | `WM_APP + 230`         | the whole radio-panel seam                                                                                                 |
-| `WM_USER_HEADLESS_SYNC_REPLACE` | absent         | `WM_USER + 200`        | **multi-op log replace never ran**, and it is `SendMessage`d, so the requesting thread blocked to be told nothing happened |
+| Message | The list said | Actually | Consequence    |
+| ------- | ------------- | -------- | -------------- |
+| `       | ` WM_APP + 21 | ` WM_APP | CTY.DAT        |
+| WM_CTY_ |               |          |                |
+| VER     |               |          |                |
+| SION_CH | 3`            | + 210`   | version-check  |
+| ECKED`  |               |          | result         |
+|         |               |          | discarded      |
+| `       | ` WM_APP + 10 | `        | tray icon      |
+| WM_TRAY |               | WM_SOCK  |                |
+| BAL     |               |          |                |
+| LON`    | 0`            | + 3` =   | clicks never   |
+|         |               | `$5F7`   | handled        |
+| `WM_PAN | absent        | `WM_APP  | the whole      |
+|  EL_U P |               | + 230`   | radio-panel    |
+| D ATE`  |               |          | seam           |
+| `WM_USE | absent        | `WM_USER | **multi-op log |
+|  R_HE A |               |  + 200`  | replace never  |
+| D LESS_ |               |          | ran**, anditis |
+|  SYNC _ |               |          | `SendMessage`  |
+|  REP LA |               |          | d, so the      |
+| CE `    |               |          | requesting     |
+|         |               |          | thread blocked |
+|         |               |          | tobe told      |
+|         |               |          | nothing        |
+|         |               |          | happened       |
 
 Four of eight. Not one of them produced an error, a log line or a compiler
 diagnostic: the post SUCCEEDS, and the work simply does not happen.

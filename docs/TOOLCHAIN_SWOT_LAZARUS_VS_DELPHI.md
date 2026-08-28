@@ -46,14 +46,14 @@ number from both sides of the ledger at once — see §3.
 
 Measured, not estimated (2026-08-12, `tr4w/src`):
 
-| Area                                 | Units   | Lines       | Units touching Win32 |
-| ------------------------------------ | -------:| -----------:| --------------------:|
-| `src/` root — **the Win32 UI layer** | 146     | 97,657      | **53**               |
-| `src/trdos/` — contest engine        | 34      | 65,903      | 13                   |
-| `src/radioFactory/`                  | 118     | 27,319      | **1**                |
-| `src/lang/`                          | 11      | 9,800       | 0                    |
-| `src/utils/`                         | 7       | 1,015       | 1                    |
-| **Total**                            | **304** | **152,357** | **68**               |
+| Area                                 |   Units |       Lines | Units touching Win32 |
+| ------------------------------------ | ------: | ----------: | -------------------: |
+| `src/` root — **the Win32 UI layer** |     146 |      97,657 |               **53** |
+| `src/trdos/` — contest engine        |      34 |      65,903 |                   13 |
+| `src/radioFactory/`                  |     118 |      27,319 |                **1** |
+| `src/lang/`                          |      11 |       9,800 |                    0 |
+| `src/utils/`                         |       7 |       1,015 |                    1 |
+| **Total**                            | **304** | **152,357** |               **68** |
 
 Other measurements that bear on portability:
 
@@ -342,22 +342,43 @@ NY4I's extension — run it on all three platforms, not just under FPC on Window
 a portability test rather than only a dialect test. The three legs answer different questions and
 should be run in this order:
 
-| Leg                       | What it isolates                                                                                                                                                                                                             |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **FPC on Windows**        | The **dialect** alone — anonymous methods, generics, RTL units. Platform held constant.                                                                                                                                      |
-| **Linux**                 | **Platform semantics**: path separators, a case-sensitive filesystem, line endings in the config-file tests, `AnsiString` codepage behaviour. The failures that compile clean and go wrong at runtime.                       |
-| **macOS (Apple Silicon)** | The strictest leg. ARM64 and **64-bit only**, so it forces both things D12 explicitly scoped out — 64-bit correctness and the total absence of x86 `asm` — against a suite that answers pass/fail rather than "it compiled". |
+| Leg           | What it isolates                                                    |
+| ------------- | ------------------------------------------------------------------- |
+| **F           | The **dialect** alone — anonymous methods, generics, RTL units.     |
+|               | Platform held                                                       |
+| PCon Win dow  | constant.                                                           |
+| s**           |                                                                     |
+| **L           | **Platform semantics**: path separators, a case-sensitive           |
+|               | filesystem, line                                                    |
+| inu           | endings in the config-file tests, `AnsiString` codepage behaviour.  |
+|               | The                                                                 |
+| x**           | failures that compile clean and go wrong at runtime.                |
+| **m           | The strictest leg. ARM64 and **64-bit only**, so it forces both     |
+|               | things D12                                                          |
+| acO           | explicitly scoped out — 64-bit correctness and the total absence of |
+|               | x86 `asm`                                                           |
+| S (Ap ple Sil | — against a suite that answers pass/fail rather than "it compiled". |
+| ico n)* *     |                                                                     |
 
 ### What actually stands in the way — measured, 2026-08-12
 
 Of the **148 `src` units the test project links**:
 
-| Blocker                            | Count | Units                                                                                              |
-| ---------------------------------- | -----:| -------------------------------------------------------------------------------------------------- |
-| Win32 API calls                    | **2** | `uCTYDAT`, `utils_file`                                                                            |
-| Inline `asm`                       | **2** | `uCRC32`, `utils_text`                                                                             |
-| Indy                               | **5** | `uFactoryRadioBase`, `uWebSocketClient`, `uWebSocketFraming`, `uWebSocketServer`, `uFlexDiscovery` |
-| Names the `Windows` unit in `uses` | 14    | mostly for types                                                                                   |
+| Blocker | Count | Units                                                             |
+| ------- | ----: | ----------------------------------------------------------------- |
+| Win32   | **2** | `uCTYDAT` , `utils_file`                                          |
+| API     |       |                                                                   |
+| calls   |       |                                                                   |
+| Inline  | **2** | `uCRC32` , `utils_text`                                           |
+| `asm`   |       |                                                                   |
+| Indy    | **5** | `uFactoryRadioBase` , `uWebSocketClient` , `uWebSocketFraming` ,  |
+|         |       | `uWebSocketServer` , `uFlexDiscovery`                             |
+| Names   |    14 | mostly for types                                                  |
+| the     |       |                                                                   |
+| `Window |       |                                                                   |
+| s`      |       |                                                                   |
+| unitin  |       |                                                                   |
+| `uses`  |       |                                                                   |
 
 That is a short and specific list, and it makes the spike smaller than the one-day estimate:
 
@@ -446,15 +467,70 @@ CI → UI rewritten once, in LCL, replacing the Win32 windows that were going to
 I have flagged these rather than asserted them, because each could change the recommendation and
 none should be taken on my word:
 
-| #   | To verify                                                                                | Why it matters                                                                               | NY4I Reply                                                                                                                                                                                                                                                                                                                                                                |
-| --- | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Does **current stable FPC support `reference to`** / anonymous methods?                  | The #1 technical risk. Settled by the §8 spike.                                              | FPC does supports anonymous functions per https://lists.freepascal.org/fpc-announce/2022-May/000620.html                                                                                                                                                                                                                                                                  |
-| 2   | **Delphi's current Linux desktop GUI story** — first-party FMX Linux, or still FmxLinux? | The central argument against Delphi. If this has changed, re-weigh.                          | From an Embarcadero blog post, "Embarcadero is very happy to announce that the FMX Linux UI library for building Linux client applications with Delphi is available once again for RAD Studio 12.3 and also for RAD Studio 12.2, along with older versions" (Retreived from https://blogs.embarcadero.com/fmx-linux-for-delphi-12-3-is-now-available/ on 12 August 2026)) |
-| 3   | **Current Community Edition terms** — revenue cap, command-line compiler, renewal.       | The contributor argument.                                                                    | This is an open source project but for example if I ever wanted to use my company's Signing certtificate, I could get into a questionable area.                                                                                                                                                                                                                           |
-| 4   | **Vendored Indy 10.6.3.3 under FPC** — or the cost of moving to Synapse/lNet.            | 19 units.                                                                                    | The Indy recommendation and thus from the community is to not use th eDelphi 12 supplied Indy. Instead, all recommendations I have read suggest to use the one downloaded from Indy. Also, my research indicates that Indy does work on the Mac but that remains to be tested.                                                                                            |
-| 5   | **hamlib, OpenSSL** on Linux/macOS.                                                      | Expected fine — both are natively cross-platform, which is a quiet point in favour.          | Agreed                                                                                                                                                                                                                                                                                                                                                                    |
-| 6   | **LPT keying (`inpout32.dll`, `DLPortIO.pas`)**.                                         | Windows-only and legacy. Likely a documented Windows-only feature rather than a port target. | That will be a Windows only idea.                                                                                                                                                                                                                                                                                                                                         |
-| 7   | **macOS code signing / notarisation** burden.                                            | Applies under either toolchain; a real cost nobody enjoys.                                   | I would handle that as I do it for other apps. We can script the notary tool as needed.                                                                                                                                                                                                                                                                                   |
+| #   | To verify | Why it matters | NY4I Reply                                       |
+| --- | --------- | -------------- | ------------------------------------------------ |
+| 1   | Does      | The #1         | FPC does supports anonymous functions per        |
+|     | **current | technical      | https://lists.freepascal.org/fpc-announce/2022-M |
+|     | stable    | risk.          | ay/000620.html                                   |
+|     | FPC       | Settledby      |                                                  |
+|     | support   | the§8 spike.   |                                                  |
+|     | `referenc |                |                                                  |
+|     | e to` **  |                |                                                  |
+|     | /         |                |                                                  |
+|     | anonymous |                |                                                  |
+|     | methods?  |                |                                                  |
+| 2   | **Delphi' | The central    | From an Embarcadero blog post, "Embarcadero is   |
+|     | s current | argument       | very happy to announce that the FMX Linux UI     |
+|     | Linux     | against        | library for building Linux client applications   |
+|     | desktop   | Delphi. If     | with Delphi is available once again for RAD      |
+|     | GUI       | this has       | Studio 12.3 and also for RAD Studio 12.2, along  |
+|     | story** — | changed,       | with older versions" (Retreived from             |
+|     | first-par | re-weigh.      | https://blogs.embarcadero.com/fmx-linux-for-delp |
+|     | ty FMX    |                | hi-12-3-is-now-available/ on 12 August 2026))    |
+|     | Linux, or |                |                                                  |
+|     | still     |                |                                                  |
+|     | FmxLinux? |                |                                                  |
+| 3   | **Current | The            | This is an open source project but for           |
+|     | Community | contributor    | exampleifI ever wanted to use my company's       |
+|     | Edition   | argument.      | Signing certtificate, I could get into a         |
+|     | terms** — |                | questionable area.                               |
+|     | revenue   |                |                                                  |
+|     | cap,      |                |                                                  |
+|     | command-l |                |                                                  |
+|     | ine       |                |                                                  |
+|     | compiler, |                |                                                  |
+|     | renewal.  |                |                                                  |
+| 4   | **Vendore | 19 units.      | The Indy recommendation and thus from the        |
+|     | d Indy    |                | community is to not use the Delphi 12 supplied   |
+|     | 10.6.3.3  |                | Indy. Instead, all recommendations I have read   |
+|     | under     |                | suggest to use the one downloaded from Indy.     |
+|     | FPC** —or |                | Also, my research indicates that Indy does       |
+|     | the       |                | workon the Mac but that remains to be tested.    |
+|     | costof    |                |                                                  |
+|     | movingto  |                |                                                  |
+|     | Synapse/l |                |                                                  |
+|     | Net.      |                |                                                  |
+| 5   | **hamlib, | Expected fine— | Agreed                                           |
+|     | OpenSSL** | both are       |                                                  |
+|     | on        | natively       |                                                  |
+|     | Linux/mac | cross-platform |                                                  |
+|     | OS.       | , which is a   |                                                  |
+|     |           | quiet point in |                                                  |
+|     |           | favour.        |                                                  |
+| 6   | **LPT     | Windows-only   | That will be a Windows only idea.                |
+|     | keying    | and legacy.    |                                                  |
+|     | (`inpout3 | Likely a       |                                                  |
+|     | 2.dll`,   | documented     |                                                  |
+|     | `DLPortIO | Windows-only   |                                                  |
+|     |  .pas`    | feature rather |                                                  |
+|     | )**.      | than a port    |                                                  |
+|     |           | target.        |                                                  |
+| 7   | **macOS   | Applies under  | I would handle that as I do it for other apps.   |
+|     | code      | either         | We can script the notary tool as needed.         |
+|     | signing / | toolchain; a   |                                                  |
+|     | notarisat | real cost      |                                                  |
+|     | ion**     | nobody enjoys. |                                                  |
+|     | burden.   |                |                                                  |
 
 ---
 
