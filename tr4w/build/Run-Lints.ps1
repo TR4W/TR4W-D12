@@ -94,6 +94,7 @@ $lints = @(
    @{ Name = 'Lint-DesignedForms';   Arg = $src;      NeedsFpc = $false }
    @{ Name = 'Lint-OneConfigWriter'; Arg = $src;      NeedsFpc = $false }
    @{ Name = 'Lint-PathEscapes';     Arg = $repoRoot; NeedsFpc = $false }
+   @{ Name = 'Lint-MarkdownTables'; Arg = $repoRoot; NeedsFpc = $false }
    # THE SAME RATCHET, SECOND GROUP -- phase 8, the Win32 the program speaks
    # OUTSIDE its windows: the ini API, serial, the registry, raw threads and
    # events, audio, LPT. Phase 7 does not touch any of it, and none of it
