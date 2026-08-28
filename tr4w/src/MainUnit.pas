@@ -4542,6 +4542,7 @@ procedure ProcessMenu(menuID: integer);
 var
   LowordWparam: integer;
   ID: WindowsType;
+  lclForm: TCustomForm;   { the window-menu toggle asks it whether it is visible }
   tCardinal: HWND;
   focus: HWND;
   TempCallstring: CallString;
@@ -4554,9 +4555,33 @@ begin
     if LowordWparam <= menu_windows_hamscore then  // Issue #783 -- extended past dupesheet2
        begin
        ID := WindowsType(LowordWparam - menu_windows_bandmap + 1);
-       if not tWindowsExist(ID) then
+
+       { PICKING THE MENU SHOWS THE WINDOW, ALWAYS -- it does not toggle a flag
+         that may have drifted from what is on screen.
+
+         This asked tWindowsExist, which is `WndHandle <> 0`, and that is not
+         the same question as "is the operator looking at it". A form closed
+         with caHide keeps its object and can keep a handle while being
+         invisible, so an item the operator sees UNCHECKED could still take the
+         close branch: the window stayed away, the check mark went ON, and a
+         second pick was needed to get it back. NY4I, 2026-08-28, on the DX
+         cluster after Escape: "Selecting the unchecked DX cluster in the window
+         should ALWAYS show the window - goes for all others too."
+
+         So: not there, or there but not visible -> show it. Only a window that
+         is genuinely on screen is closed. }
+       lclForm := LclFormFor(ID);
+       if (not tWindowsExist(ID)) then
           begin
-          OpenTR4WWindow(ID)
+          OpenTR4WWindow(ID);
+          end
+       else if (lclForm <> nil) and (not lclForm.Visible) then
+          begin
+          { Exists but hidden -- the case that used to close it again. }
+          lclForm.Visible := True;
+          lclForm.BringToFront;
+          Windows.CheckMenuItem(tr4w_main_menu, LowordWparam, MF_CHECKED);
+          tr4w_WindowsArray[ID].WndVisible := True;
           end
        else
           begin

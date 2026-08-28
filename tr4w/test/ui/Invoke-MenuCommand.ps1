@@ -33,7 +33,11 @@ param(
    [string] $Repo = (Split-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) -Parent),
    # Defaults to the binary FullBuild.ps1 produces. Derived from this script's
    # own location so a clone anywhere works without arguments.
-   [string] $Exe = (Join-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) 'target\tr4w.exe'),
+   # EMPTY BY DEFAULT, resolved below. It used to name target\tr4w.exe outright
+   # -- the SHIPPED binary, not the one just built -- which is the defect fixed
+   # in the rest of the harness by 50ec17ba and missed here. A menu test driving
+   # last month's install proves nothing about the tree.
+   [string] $Exe = '',
    # NO DEFAULT ON PURPOSE.  This needs a contest config, and TR4W will not
    # create the main window without one -- it stops on the "Open configuration
    # file or start a new contest" dialog, and there is nothing to drive.
@@ -52,6 +56,7 @@ Import-Module (Join-Path $PSScriptRoot 'UiDriver.psm1') -Force
 $target = Join-Path $Repo 'tr4w\target'
 $log    = Join-Path $target 'tr4w.log'
 
+$Exe = Resolve-TR4WExe -Exe $Exe -Repo $Repo
 if (-not (Test-Path $Exe))
    {
    Write-Error "No FPC build at $Exe -- run FullBuild.ps1 first"
