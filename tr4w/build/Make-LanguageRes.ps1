@@ -111,6 +111,25 @@ foreach ($po in (Get-ChildItem -Path $i18n -Filter 'tr4w_*.po' | Sort-Object Nam
    # Forward slashes in the path: the resource compiler treats a backslash as an
    # escape, which is the same corruption Lint-PathEscapes exists to catch.
    $rcLines.Add(("TR4W_{0} RCDATA ""{1}""" -f $lang.ToUpper(), ($trim -replace '\\', '/')))
+
+   # AND THE LCL OWN CATALOGUE FOR THE SAME LANGUAGE.
+   #
+   # Lazarus ships lclstrconsts.<lang>.po -- standard buttons, common dialogs,
+   # RTL error text -- already translated by its own translators.
+   # SetDefaultLang loaded it automatically; LoadEmbeddedTranslation replaced
+   # SetDefaultLang and did not, so every LCL-supplied string has been showing
+   # in English in every language. Found 2026-08-27, chasing why our own &Yes
+   # was translated worse than the one Lazarus already ships.
+   #
+   # Embedded UNTRIMMED: these are finished upstream translations, not our
+   # machine-seeded entries, so there are no fuzzy flags of ours to drop.
+   $lcl = Join-Path $tc.LazDir ("lcl\languages\lclstrconsts.$lang.po")
+   if (Test-Path $lcl)
+      {
+      $lclCopy = Join-Path $work ("lcl_$lang.po")
+      Copy-Item $lcl $lclCopy -Force
+      $rcLines.Add(("LCL_{0} RCDATA ""{1}""" -f $lang.ToUpper(), ($lclCopy -replace '\\', '/')))
+      }
    if (-not $Quiet)
       {
       $kb = [math]::Round((Get-Item $trim).Length / 1KB)
@@ -128,5 +147,8 @@ if ($LASTEXITCODE -ne 0 -or -not (Test-Path $res)) { throw "fpcres failed on $rc
 Remove-Item -Recurse -Force $work -ErrorAction SilentlyContinue
 
 $size = [math]::Round((Get-Item $res).Length / 1KB)
+$ours = ($rcLines | Where-Object { $_ -like "TR4W_*" }).Count
+$lcls = ($rcLines | Where-Object { $_ -like "LCL_*" }).Count
 Write-Host ("Make-LanguageRes: {0} reviewed entries across {1} language(s) -> {2} ({3} KB)" -f `
-   $total, $rcLines.Count, (Split-Path $res -Leaf), $size)
+   $total, $ours, (Split-Path $res -Leaf), $size)
+Write-Host ("  plus {0} Lazarus catalogue(s), so the LCL own strings translate too" -f $lcls)

@@ -213,6 +213,57 @@ begin
    end;
 end;
 
+procedure LoadLCLCatalogue(const aLang: string);
+{ Translate the LCL's OWN strings -- standard buttons, common dialogs, RTL
+  error text -- from the lclstrconsts catalogue Lazarus ships, embedded beside
+  ours by Make-LanguageRes.
+
+  SetDefaultLang did this automatically (lcltranslator.pas: "This unit localizes
+  LCL too"). Replacing it with LoadEmbeddedTranslation dropped it, so every
+  LCL-supplied string had been English in every language -- including the Yes
+  and No buttons, which Lazarus translates better than we do: its Spanish is
+  '&Si' with the accelerator correctly moved, ours was 'Si' with none at all.
+
+  Unlike the form translator, this one may free its catalogue:
+  TranslateUnitResourceStrings copies into the resource string table there and
+  then, where TPOTranslator keeps the pointer. That asymmetry is exactly what
+  the --lang crash was, so it is worth stating rather than inferring.
+
+  Absent is normal: Lazarus ships 15 of our 21 languages. }
+var
+   rs: TResourceStream;
+   po: TPOFile;
+begin
+   if (aLang = '') or (FindResourceA(HInstance,
+          PAnsiChar(AnsiString('LCL_' + UpperCase(aLang))), RT_RCDATA) = 0) then
+      begin
+      Exit;
+      end;
+   try
+      rs := TResourceStream.Create(HInstance, 'LCL_' + UpperCase(aLang), RT_RCDATA);
+      try
+         po := TPOFile.Create(rs, False);
+         try
+            if Translations.TranslateUnitResourceStrings('lclstrconsts', po) then
+               begin
+               logger.Info('UI language: the Lazarus catalogue for "' + aLang +
+                           '" was applied, so the LCL own strings translate too');
+               end;
+         finally
+            po.Free;
+         end;
+      finally
+         rs.Free;
+      end;
+   except
+      on E: Exception do
+         begin
+         logger.Warn('UI language: the Lazarus catalogue for "' + aLang +
+                     '" could not be applied -- ' + E.Message);
+         end;
+   end;
+end;
+
 function ActiveUILanguage: string;
 begin
    Result := GActiveLang;
@@ -296,6 +347,7 @@ begin
             begin
             Result := lang;
             GActiveLang := lang;
+            LoadLCLCatalogue(lang);
             logger.Info('UI language: "' + lang + '" selected by ' + source +
                         ', loaded from ' + fileCandidate +
                         ' (overriding the embedded catalogue)');
@@ -334,6 +386,7 @@ begin
             begin
             Result := lang;
             GActiveLang := lang;
+            LoadLCLCatalogue(lang);
             logger.Info('UI language: "' + lang + '" selected by ' + source +
                         ', loaded from the embedded catalogue');
             end;
