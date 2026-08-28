@@ -648,7 +648,7 @@ procedure ExitProgram(Ask: boolean);
 begin
 {$IF not tDebugMode }
   if Ask then
-    if YesOrNo(tr4whandle, TC_DOYOUREALLYWANTTOEXITTHEPROGRAM) = IDno then Exit;
+    if YesOrNo(TC_DOYOUREALLYWANTTOEXITTHEPROGRAM) = IDno then Exit;
   logger.Info('Starting ExitProgram');
 {$IFEND}
 //  GetLogColumnsWidth;

@@ -523,7 +523,7 @@ procedure CreateCabrilloFile;
   FilePreview;
   // Ask if user wants to upload the Cabrillo file to SCP
   If ( not tSilentExport ) and
-     ( YesOrNo( 0,
+     ( YesOrNo(
      TC_UPLOADCABRILLOTOSCP )
      = IDYES ) then
      begin

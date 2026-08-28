@@ -309,7 +309,7 @@ begin
    // uses order.
    if not utils_file.FileExists(PAnsiChar(path)) then
       begin
-      if YesOrNo(Self.Handle, TC_THIS_FILE_DOES_NOT_EXIST) = IDNO then
+      if YesOrNo(TC_THIS_FILE_DOES_NOT_EXIST) = IDNO then
          begin
          Exit;
          end;

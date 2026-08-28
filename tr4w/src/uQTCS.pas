@@ -278,7 +278,7 @@ begin
                  begin
                  // Issue #997: asm wsprintf-push -> TF.Format (cdecl-reverse: QTCNumber, QTCWasSend).
                  TF.Format(wsprintfBuffer, 'QSL %u/%u ?', QTCNumber, QTCWasSend);
-                 if YesOrNo2(tr4whandle, wsprintfBuffer) <> IDOK then Exit;
+                 if YesOrNo2(string(wsprintfBuffer)) <> IDOK then Exit;
                  SaveQTCS;
                  Exit;
                  end ;

@@ -285,8 +285,37 @@ procedure InitializeQSO;
 function CreateCallOrExchangeWin(Top, ID: integer; const aField: TTR4WEntryField): HWND;
 procedure TimeApplet(i: Cardinal);
 
-function YesOrNo(h: HWND; Text: string): integer;
-function YesOrNo2(h: HWND; Text: PAnsiChar): integer;
+{ ASK THE OPERATOR, WITHOUT AN HWND.
+
+  The parameter never carried information: fifteen of the twenty-two callers
+  passed tr4whandle, a literal 0, or their own Self.Handle -- three spellings
+  of "parent it to the application".  An LCL dialog is application-modal and
+  parents itself to the active form, so there is nothing left to pass.
+
+  THE DEFAULT BUTTON IS PART OF THE BEHAVIOUR, NOT OF THE STYLING.  The Win32
+  call passed MB_DEFBUTTON2, so No was focused and a reflexive Enter answered
+  No -- on prompts including "do you really want to clear the log".  Plain
+  MessageDlg focuses the FIRST button, so the obvious swap would have moved
+  every one of those defaults to Yes: same buttons, same words, one keystroke
+  away from a different outcome, and invisible in review.  QuestionDlg takes
+  an IsDefault marker that applies to the button before it (LCL
+  promptdialog.inc:900), which keeps Yes/No in that order with No focused.
+  NY4I, 2026-08-28: "that could impact operator muscle memory".
+
+  The captions now come from the LCL and are translated with the rest of the
+  program; MessageBoxW took them from the OS locale, which ignored --lang.
+
+  MB_TOPMOST is gone with the HWND.  It existed to beat TR4W's always-on-top
+  main window, and an application-modal LCL dialog does not need it. }
+function YesOrNo(const Text: string): integer; overload;
+function YesOrNo2(const Text: string): integer; overload;
+
+{ THE HWND FORMS, FOR THE SEVEN CALLERS THAT STILL HAVE A REAL ONE: uQTCR,
+  uQTCS and uNewContest are Win32 DIALOGS, and a message box owned by the
+  dialog it interrupts is not the same thing as one owned by the application.
+  These die when those three convert; do not add callers. }
+function YesOrNo(h: HWND; Text: string): integer; overload;
+function YesOrNo2(h: HWND; Text: PAnsiChar): integer; overload;
 procedure PTTOffWhenStopWAV(uTimerID, uMessage: UINT; dwUser, dw1, dw2: DWORD)
   stdcall;
 procedure OneSecTimerProc(uTimerID, uMessage: UINT; dwUser, dw1, dw2: DWORD)
@@ -551,6 +580,7 @@ uses
   uUDPBroadcastConfig, // TUDPStream / usLookup
   uPanelUpdate,     // ForgetPanel -- see CloseTR4WWindow
   uUDPBroadcaster,  // Enabled() -- the broadcaster owns the enable rule
+  Dialogs,             // QuestionDlg -- the HWND-free YesOrNo, see below
   uMainForm,
   uAboutForm,   // ShowAboutBox -- the designed About box        // the main window IS
   uBandMapForm,        // CreateTR4WBandMapWindow -- the band map tool window
@@ -2774,6 +2804,34 @@ begin
     MB_ICONERROR or MB_TASKMODAL);
 end;
 
+function YesOrNo(const Text: string): integer;
+begin
+   if QuestionDlg('TR4W', Text, mtConfirmation,
+                  [mrYes, mrNo, 'IsDefault'], 0) = mrYes then
+      begin
+      Result := IDYES;
+      end
+   else
+      begin
+      Result := IDNO;
+      end;
+end;
+
+function YesOrNo2(const Text: string): integer;
+begin
+   { OK/Cancel, and OK was MB_DEFBUTTON1 -- the first button, which is what
+     QuestionDlg focuses anyway, so no marker is needed here. }
+   if QuestionDlg('TR4W', Text, mtConfirmation,
+                  [mrOk, mrCancel], 0) = mrOk then
+      begin
+      Result := IDOK;
+      end
+   else
+      begin
+      Result := IDCANCEL;
+      end;
+end;
+
 function YesOrNo(h: HWND; Text: string): integer;
 begin
   // DoABeep(PromptBeep);
@@ -4546,7 +4604,7 @@ begin
         if OpenFileDlg(nil, tr4whandle, 'ADIF (*.adi)'#0'*.adi', TR4W_ADIF_FILENAME, OFN_HIDEREADONLY or OFN_ENABLESIZING or OFN_FILEMUSTEXIST) then
         begin
         if QSOTotals[All, Both] > 0 then
-        if YesOrNo(tr4whandle, TC_APPENDIMPORTEDQSOSTOCURRENTLOG) = IDno then Exit;
+        if YesOrNo(TC_APPENDIMPORTEDQSOSTOCURRENTLOG) = IDno then Exit;
        // if ImportFromADIFThreadID = 0 then tCreateThread(@ImportFromADIF, ImportFromADIFThreadID);
         ImportFromADIF;
         end;
@@ -4662,7 +4720,7 @@ begin
       TimeApplet(0);
 
     menu_alt_setnettime:
-      if YesOrNo(tr4whandle, TC_SENDTIMETOCOMPUTERSONTHENETWORK) = IDYES then
+      if YesOrNo(TC_SENDTIMETOCOMPUTERSONTHENETWORK) = IDYES then
          begin
          Windows.GetSystemTime(NetTimeSync.tsTime);
          SendToNet(NetTimeSync, SizeOf(NetTimeSync));
@@ -5141,7 +5199,7 @@ begin
     menu_exit: ExitProgram(True);
 
     menu_clear_log:
-      if YesOrNo(tr4whandle, TC_REALLYWANTTOCLEARTHELOG) = IDYES then
+      if YesOrNo(TC_REALLYWANTTOCLEARTHELOG) = IDYES then
          begin
          ClearLog;
          end;
@@ -8877,7 +8935,7 @@ begin
  tGetSystemTime;
 
  if UTC.wYear * 12 * 30 + UTC.wMonth * 30 + UTC.wDay >= EXPIREDDAY then
- if YesOrNo(tr4whandle,
+ if YesOrNo(
  TC_THISVERSION +
  TR4W_CURRENTVERSION +
  TC_WASBUILDIN +
@@ -9771,7 +9829,7 @@ begin
   if QSOTotals[AllBands, Both] > 0 then
      begin
      // YesOrNo is MessageBoxA, so it answers with Win32 IDYES/IDNO.
-     if YesOrNo(tr4whandle, TC_APPENDIMPORTEDQSOSTOCURRENTLOG) = IDNO then
+     if YesOrNo(TC_APPENDIMPORTEDQSOSTOCURRENTLOG) = IDNO then
         begin
         Exit;
         end;
@@ -9943,7 +10001,7 @@ var
   ownedElsewhere: boolean;
 begin
   TF.Format(TempBuffer1, PAnsiChar(WinAnsi(TC_SET_VALUE_OF_SET_NOW)), c);
-  if YesOrNo(tr4whandle, TempBuffer1) = IDno then
+  if YesOrNo(string(TempBuffer1)) = IDno then
      begin
      Exit;
      end;
@@ -10904,7 +10962,7 @@ begin
   // = 7), so this comparison was correct by coincidence rather than by intent;
   // YesOrNo returns MessageBoxA's ID and should be compared with the Win32
   // constant.  Behaviour is unchanged -- verified against the D12 RTL source.
-  if YesOrNo(0, PAnsiChar(ansiMsg)) = IDNO then
+  if YesOrNo(string(ansiMsg)) = IDNO then
      begin
      logger.Fatal('User opted to not upgrade log format');
      Halt;

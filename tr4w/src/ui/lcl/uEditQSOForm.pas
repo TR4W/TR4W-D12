@@ -581,7 +581,7 @@ end;
 function TfrmEditQSO.ConfirmSave: boolean;
 begin
    Result := (not Config.ConfirmEditChanges) or
-             (YesOrNo(Self.Handle, TC_SAVECHANGES) = IDyes);
+             (YesOrNo(TC_SAVECHANGES) = IDyes);
 end;
 
 procedure TfrmEditQSO.btnSaveClick(Sender: TObject);
@@ -636,7 +636,7 @@ begin
       Exit;
       end;
 
-   if YesOrNo(Self.Handle, TC_SAVECHANGES) = IDno then
+   if YesOrNo(TC_SAVECHANGES) = IDno then
       begin
       // Discard. This is the answer that throws the edits away, and it is the
       // one D7 gave silently.

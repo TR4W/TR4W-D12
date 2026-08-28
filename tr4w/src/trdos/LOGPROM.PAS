@@ -805,7 +805,7 @@ begin
   if UpperCase(ContestName) = 'NEW ENGLAND QSO' then
      begin
       //    repeat
-    if YesOrNo(0, TC_ARENEWENGLAND) = IDYES then
+    if YesOrNo(TC_ARENEWENGLAND) = IDYES then
         {
               if Key = EscapeKey then
               begin

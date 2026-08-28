@@ -231,7 +231,7 @@ begin
      // cdecl-reverse pushes -> arg1=QTCCallsign, arg2=QRVString.
      TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_ISQRVFOR)), @QTCCallsign[1], @QRVString[1]);
 
-     if YesOrNo2(tr4whandle, wsprintfBuffer) <> IDOK then Exit;
+     if YesOrNo2(string(wsprintfBuffer)) <> IDOK then Exit;
      //tDialogBox(63, @QTCSDlgProc);
      ShowQTCSend;
 

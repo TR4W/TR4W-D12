@@ -95,7 +95,7 @@ begin
         end;
 
      TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_VERSIONONSERVER + ': %s. ' + TC_THISVERSION2 + ': ' + TR4W_CURRENTVERSION + '.'#13#10 + TC_DOWNLOADIT)), p);
-     if YesOrNo(tr4whandle, wsprintfBuffer) = IDYES then
+     if YesOrNo(string(wsprintfBuffer)) = IDYES then
         begin
         OpenURL(TR4W_DOWNLOAD_LINK);
         end;
