@@ -205,8 +205,13 @@ begin
 
       logger.Info('[RadioManager.ConnectAll] Connecting radio: %s', [radioId]);
       try
+         { WaitForOperational, not IsConnected.  Connect only STARTS the
+           handshake for a network radio, and IsConnected is the lenient
+           signal that stays true throughout it -- so the old test read a
+           value that could not yet mean success or failure, and counted
+           good radios as failures. }
          radio.Connect;
-         if radio.IsConnected then
+         if radio.WaitForOperational(CONNECT_TIMEOUT_MS) then
             begin
             Inc(connected);
             logger.Info('[RadioManager.ConnectAll] Successfully connected: %s', [radioId]);
@@ -282,8 +287,9 @@ begin
 
    logger.Info('[RadioManager.ConnectRadio] Connecting: %s', [radioId]);
    try
+      // See ConnectAll above: Connect is asynchronous, IsConnected is lenient.
       radio.Connect;
-      Result := radio.IsConnected;
+      Result := radio.WaitForOperational(CONNECT_TIMEOUT_MS);
 
       if Result then
          begin

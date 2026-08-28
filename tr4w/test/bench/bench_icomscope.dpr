@@ -590,7 +590,20 @@ begin
 
       if radio.Connect <> 0 then
          begin
-         WriteLn('FAIL: could not connect');
+         WriteLn('FAIL: could not start the connection');
+         Halt(1);
+         end;
+
+      { CONNECT ONLY STARTS THE HANDSHAKE.  Saying "connected" on the strength
+        of its return value is how a run against a powered-off radio got all
+        the way to "no sweeps decoded" and then blamed $27 $11 -- the rig had
+        never answered the first packet.  Ask the strict signal instead. }
+      if not radio.WaitForOperational(CONNECT_TIMEOUT_MS) then
+         begin
+         WriteLn('FAIL: the radio never completed its handshake.');
+         WriteLn('  Connect started, but the link never became operational.');
+         WriteLn('  Check the radio is powered on, on the network, and at the');
+         WriteLn('  address given -- the bench log records the last transport state.');
          Halt(1);
          end;
 
@@ -711,6 +724,7 @@ begin
          begin
          WriteLn;
          WriteLn('FAIL: no sweeps decoded.');
+         WriteLn('  The link was operational, so this is not a connection problem.');
          WriteLn('  The usual cause is that only $27 $10 took effect and not $27 $11:');
          WriteLn('  the scope lights up on the radio''s own screen and nothing is sent.');
          failed := True;

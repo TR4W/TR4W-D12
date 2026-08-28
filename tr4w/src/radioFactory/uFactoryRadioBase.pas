@@ -306,6 +306,11 @@ const
 
    // Serial disconnect detection
    SERIAL_RESPONSE_TIMEOUT = 5.0;     // 5 seconds - consider disconnected if no valid response
+
+   // How long WaitForOperational will wait for an asynchronous Connect to
+   // finish its handshake.  Matched to SERIAL_RESPONSE_TIMEOUT deliberately:
+   // both answer "how long before we call this radio unreachable".
+   CONNECT_TIMEOUT_MS = 5000;
 {var
    logger: TLogLogger;
    appender: TLogFileAppender;
@@ -749,6 +754,20 @@ Type TFactoryRadioBase = class(TObject)
       property serialPort: portType read GetSerialPort write SetSerialPort;
       property PTTviaCAT: boolean read GetPTTviaCAT write SetPTTviaCAT;
       property CWSpeed: integer read GetCWSpeed;
+      { CONNECT MAY RETURN BEFORE THE RADIO IS USABLE, and for every network
+        radio it does.  0 means "the attempt was started without error", not
+        "connected" -- an Icom is still mid-RS-BA1-handshake when this
+        returns, and a K4 has only opened its TCP socket.
+
+        So do NOT test IsConnected immediately after calling this.  Two
+        callers in uRadioManager did exactly that and reported failure for
+        radios that connect perfectly well: IsConnected is deliberately
+        LENIENT (true throughout the handshake, so the polling thread does
+        not re-dial and abort it), and IsOperational -- the strict one --
+        cannot be true yet at the instant Connect returns.
+
+        Either poll across iterations the way uRadioPolling does, or call
+        WaitForOperational below. }
       function Connect: integer; overload; virtual;
       function Connect (address: string; port: integer): integer; overload;
       function VFOToString(whichVFO: TVFO): string;
@@ -799,6 +818,7 @@ Type TFactoryRadioBase = class(TObject)
       property IsReceiving: boolean read GetIsReceiving;
       property IsConnected: boolean read GetIsConnected;
       property IsOperational: boolean read GetIsOperational;
+      function WaitForOperational(timeoutMs: integer): boolean;
       property CanRecycleOnStuckHandshake: boolean read GetCanRecycleOnStuckHandshake;
       property AuthFailed: boolean read GetAuthFailed;
       property IsRITOn[whichVFO: TVFO]: boolean read GetIsRITOn;
@@ -1644,6 +1664,57 @@ begin
              end;
       end;
       end;
+end;
+
+(* THE BRIDGE BETWEEN AN ASYNCHRONOUS Connect AND A CALLER THAT NEEDS AN ANSWER.
+
+   Connect starts a handshake; IsOperational reports when it finished.  A caller
+   that wants a yes/no -- "did this radio come up?" -- has to span that gap, and
+   before this existed each one improvised.  Both sites in uRadioManager
+   improvised the same wrong thing: they read the LENIENT IsConnected one
+   statement after Connect, where it is true for any attempt in flight, and so
+   reported success or failure on a value that could not yet mean either.
+
+   Polls rather than waits on an event because there is no event to wait on:
+   the transports signal progress through OnStateChange callbacks on their own
+   threads, and IsOperational is a snapshot computed from that state.  A 50 ms
+   slice is far below human perception and costs at most 100 wakeups over the
+   full timeout.
+
+   Serial radios are operational as soon as Connect returns, so this exits on
+   the first test and costs them nothing -- which is why it lives on the base
+   rather than on TIcomRadio.
+
+   NOT a substitute for the polling thread's design: that thread must NOT block
+   here.  It already spans the gap correctly by re-testing on its next
+   iteration, and its comment says so. *)
+function TFactoryRadioBase.WaitForOperational(timeoutMs: integer): boolean;
+var
+   deadline: QWord;
+begin
+   Result := IsOperational;
+
+   if Result or (timeoutMs <= 0) then
+      begin
+      Exit;
+      end;
+
+   { GetTickCount64, not GetTickCount: the 32-bit counter wraps every 49.7 days
+     and a wrap mid-wait would make the deadline unreachable. }
+   deadline := GetTickCount64 + QWord(timeoutMs);
+
+   while GetTickCount64 < deadline do
+      begin
+      Sleep(50);
+
+      if IsOperational then
+         begin
+         Result := True;
+         Exit;
+         end;
+      end;
+
+   Result := False;
 end;
 
 function TFactoryRadioBase.Connect(address: string; port: integer): integer;
