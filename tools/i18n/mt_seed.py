@@ -406,13 +406,33 @@ def fix_spacing(po_path, dry_run):
    return len(fixed)
 
 
+def print_languages(paths):
+   """The LANG codes this tree accepts, with what each one writes."""
+   i18n = paths["i18n"]
+   print("LANG codes (TR4W's own, not ISO 639-2):")
+   print()
+   print("  %-6s %-7s %-24s %s" % ("LANG", "code", "language", "catalogue"))
+   print("  %-6s %-7s %-24s %s" % ("-" * 6, "-" * 7, "-" * 24, "-" * 22))
+   for lang in sorted(pc.LANG_CODES):
+      code = pc.LANG_CODES[lang]
+      name = pc.LANGUAGE_NAMES.get(lang, "")
+      po = os.path.join(i18n, "tr4w_%s.po" % code)
+      mark = os.path.basename(po) if os.path.exists(po) else "-- none yet --"
+      print("  %-6s %-7s %-24s %s" % (lang, code, name, mark))
+   print()
+   print("  ALL is accepted by --fix-spacing only; to seed every language use")
+   print("  Refresh-Catalogues.ps1 -Seed ALL, which loops these one at a time.")
+
+
 def main(argv=None):
    for stream in (sys.stdout, sys.stderr):
       if hasattr(stream, "reconfigure"):
          stream.reconfigure(encoding="utf-8", errors="replace")
 
    ap = argparse.ArgumentParser(description=__doc__)
-   ap.add_argument("--lang", required=True, help="LANG code, or ALL for "
+   ap.add_argument("--list-languages", action="store_true",
+                   help="print the LANG codes this tree knows and exit")
+   ap.add_argument("--lang", help="LANG code, or ALL for "
                                                  "--fix-spacing")
    ap.add_argument("--catalog", default="tr4w", choices=("tr4w", "help"),
                    help="which catalogue: the TC_ constants (default) or the "
@@ -436,13 +456,28 @@ def main(argv=None):
    paths = pc.repo_paths()
    pc.load_language_registry(paths["i18n"])
 
+   # WHICH THREE LETTERS, and it is a fair question: the codes are TR4W's own
+   # (POR is Portugal, PTB is Brazil), not ISO 639-2, so they cannot be guessed
+   # or looked up elsewhere. NY4I, 2026-08-28: "I honestly could not recall the
+   # three letter code for port. versus brazilian port."
+   #
+   # Printed when asked for, and ALSO when --lang is omitted or unknown, which
+   # is the moment the operator actually needs it -- an error that says "unknown
+   # LANG" without saying what the known ones are is a dead end.
+   if args.list_languages or not args.lang:
+      print_languages(paths)
+      return 0 if args.list_languages else 2
+   pc.load_language_registry(paths["i18n"])
+
    if args.fix_spacing:
       if args.lang.upper() == "ALL":
          targets = sorted(glob.glob(os.path.join(paths["i18n"], "*.po")))
       else:
          code = pc.LANG_CODES.get(args.lang.upper())
          if code is None:
-            raise SystemExit("unknown LANG %r" % args.lang)
+            print_languages(paths)
+            raise SystemExit("unknown LANG %r -- the codes above are the ones "
+                             "this tree knows" % args.lang)
          targets = [os.path.join(paths["i18n"],
                                  "%s_%s.po" % (args.catalog, code))]
       total = sum(fix_spacing(p, args.dry_run) for p in targets
@@ -455,7 +490,10 @@ def main(argv=None):
    lang = args.lang.upper()
    code = pc.LANG_CODES.get(lang)
    if code is None:
-      raise SystemExit("unknown LANG %r -- register it with "
+      # THE LIST, not just the complaint. "unknown LANG 'BRA'" without saying
+      # what IS known is a dead end, and these codes cannot be guessed.
+      print_languages(paths)
+      raise SystemExit("unknown LANG %r -- pick one above, or register it with "
                        "`pas2po.py --new-lang %s --code <iso639-1>`"
                        % (lang, lang))
    prefix = "tr4w" if args.catalog == "tr4w" else "help"

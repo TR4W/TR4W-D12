@@ -327,9 +327,38 @@ LANG_CODES = {
 }
 
 # Endonym for TC_TRANSLATION_LANGUAGE -- the language's name IN that language.
+# The endonym for each built-in LANG. Two of these were here already; the rest
+# were added 2026-08-28 so `mt_seed.py --list-languages` can say WHICH language
+# a code means. The codes are TR4W's own rather than ISO 639-2 -- POR is
+# Portugal and PTB is Brazil -- so a reader has nowhere else to look them up
+# (NY4I: "I honestly could not recall the three letter code for port. versus
+# brazilian port.").
+#
+# Languages added through i18n/languages.json carry their own name and override
+# anything here.
 LANGUAGE_NAMES = {
-   "ITA": "ITALIANO",
+   "CHN": "ZHONGWEN",
+   "CZE": "CESTINA",
+   "DAN": "DANSK",
+   "DUT": "NEDERLANDS",
+   "ENG": "ENGLISH",
+   "ESP": "ESPANOL",
+   "FIN": "SUOMI",
    "FRA": "FRANCAIS",
+   "GER": "DEUTSCH",
+   "GRE": "ELLINIKA",
+   "ITA": "ITALIANO",
+   "JPN": "NIHONGO",
+   "KOR": "HANGUGEO",
+   "MNG": "MONGOL",
+   "POL": "POLSKI",
+   "POR": "PORTUGUES (PORTUGAL)",
+   "PTB": "PORTUGUES (BRASIL)",
+   "ROM": "ROMANA",
+   "RUS": "RUSSKIY",
+   "SER": "SRPSKI",
+   "SWE": "SVENSKA",
+   "UKR": "UKRAYINSKA",
 }
 
 # Languages added after this file was written live in i18n/languages.json, so
