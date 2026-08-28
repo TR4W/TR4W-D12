@@ -23,6 +23,66 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-08-28 (evening) -- FIXED FROM NY4I'S NOTES, UNRUN
+
+Worked from the [AGENT ...] notes as instructions. Each of these is a change he
+reported and has not re-tested, except where marked confirmed.
+
+- [x] **Edit QSO wrote the operator as its first letter only** (`1e53f410`).
+  CONFIRMED as a defect from his log; the fix itself wants a look: edit a QSO,
+  change Operator to something longer than one character, save, reopen.
+
+- [x] **Check for Updates is off the Help menu** (`2366f099`). Verified by
+  dumping the live menu. **Still yours:** an endpoint that returns a version
+  string, and a static link to the latest.
+
+- [x] **Edit QSO tab order** (`9792b795`) -- RST received -> Operator ->
+  Deleted -> X-QSO -> Save -> Cancel.
+
+- [x] **Picking a window from the Windows menu always shows it** (`9792b795`).
+  Was: an item shown UNCHECKED could still take the close branch. Applies to
+  every tool window, so worth a pass over several.
+
+- [x] **The call and exchange fields use the main font** (`9adffbeb`). They were
+  still being handed an HFONT, which an LCL control ignores, so they kept the
+  form default while everything beside them did not.
+
+- [x] **One config log line per CHANGE, not two per save** (`53921ce2`), and it
+  now says what the value was.
+
+- [x] **Renaming a profile no longer empties the radio combos** (`ca1eb59a`).
+  CONFIRMED by NY4I. Took four attempts; the first three fenced the capture
+  side when the fault was on the display side.
+
+### Stable ids -- three stores changed, NONE bench-verified
+
+`875c71b6` radios, `aacf6571` keyers, `79cda4c5` rotators. Profiles and the
+active-device references are ids now, not names. Migration from a file without
+ids is covered by unit tests, including one built from the shape of his own
+settings/tr4w.json.
+
+- [ ] **Rename a radio** in Preferences and confirm the active profile keeps it.
+  This is the case that failed and started all of it.
+- [ ] **Rename a keyer** and confirm the profile's CW output still names it.
+- [ ] **Rename the active rotator** -- type over its name a character at a time.
+  It used to deactivate after the first letter.
+- [ ] **Open an existing station** and confirm nothing moved: the migration runs
+  once, silently, on the first load with this build.
+
+### Still open from his notes
+
+- [ ] **Ctrl/Alt bank labels do not restore on release** (`88d5d5ef`
+  instrumented, not fixed). Set DEBUG, press and release Ctrl then Alt, send the
+  `[Modifiers]` lines. Two lines = the restore ran and the fault is inside
+  `ShowFMessages(0)`; one line = the release never arrives.
+- [ ] **The beacon monitor tunes the radio just by opening.** "I should have to
+  take an overt act to start changing the radio frequency."
+- [ ] **The colours table could show a sample** of the text and background.
+- [ ] **Escape closes the DX cluster with no confirmation.** Escape closes every
+  converted window, so this is a decision about all of them, not one.
+
+---
+
 ## What the agent can check without you  (audit, 2026-08-28)
 
 NY4I asked: "confirm there are not any of the steps you added to this document
