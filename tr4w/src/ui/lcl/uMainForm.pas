@@ -107,7 +107,10 @@ var
 function CreateTR4WEntryField(const aLeft, aTop, aWidth, aHeight: integer;
                               const aId: integer;
                               const aBorder: boolean;
-                              const aField: TTR4WEntryField): HWND;
+                              const aField: TTR4WEntryField;
+                              const aFontName: string = '';
+                              const aFontHeight: integer = 0;
+                              const aFontBold: boolean = False): HWND;
 
 { Creates the main form and returns its handle, which becomes tr4whandle.
   aMenu is TR4W's own menu, built by CreateTR4WMenu -- CreateWindowExW used to
@@ -963,7 +966,10 @@ end;
 function CreateTR4WEntryField(const aLeft, aTop, aWidth, aHeight: integer;
                               const aId: integer;
                               const aBorder: boolean;
-                              const aField: TTR4WEntryField): HWND;
+                              const aField: TTR4WEntryField;
+                              const aFontName: string = '';
+                              const aFontHeight: integer = 0;
+                              const aFontBold: boolean = False): HWND;
 var
    edit: TEdit;
 begin
@@ -1046,6 +1052,22 @@ begin
    // THE OBJECT IS KEPT, not only its handle.  Nothing reads these two yet;
    // they exist because Phase 7 cannot write TR4WMainForm.edtCall.Text while
    // the only thing this function returns is an HWND.
+   { THE FONT BEFORE THE HANDLE, and the ordering is the whole point.
+
+     Assigning Font to a TEdit RECREATES its handle. Doing it after the line
+     below would discard the GWL_ID applied there and leave the HWND this
+     function returned pointing at a destroyed window -- Test-Typing.ps1 caught
+     exactly that: "no control with id 73 (the callsign window)". }
+   if aFontName <> '' then
+      begin
+      edit.Font.Name   := aFontName;
+      edit.Font.Height := -aFontHeight;
+      if aFontBold then
+         begin
+         edit.Font.Style := [fsBold];
+         end;
+      end;
+
    Result := edit.Handle;
    Windows.SetWindowLong(Result, GWL_ID, aId);
 end;

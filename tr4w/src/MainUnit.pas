@@ -7426,11 +7426,32 @@ begin
   // message loop still routes keystrokes by comparing Msg.HWND against
   // wh[mweCall], and a TEdit's Handle IS that HWND, so nothing about the
   // routing changes here.  See src\ui\lcl\uMainForm.pas.
-  Result := CreateTR4WEntryField(ws * 15 {col4}, Top, 13 * ws,
-                                 MainWindowEditHeight, ID,
-                                 not Config.NoBorder, aField);
-  // Issue #997: asm tWM_SETFONT (EAX = Result above).
-  tWM_SETFONT(Result, MainWindowEditFont);
+  // THE SHAPE, NOT AN HFONT, and passed IN so it is applied before the handle
+  // exists. tWM_SETFONT(Result, MainWindowEditFont) sent WM_SETFONT to an LCL
+  // TEdit, which paints from its own TFont and ignores it -- so these two
+  // fields kept the FORM's default while every element got MainFont, and the
+  // call window read smaller than the band, date and time beside it (NY4I,
+  // 2026-08-28). Same three numbers MainWindowEditFont is built from.
+  if LuconSZLoadded then
+     begin
+     Result := CreateTR4WEntryField(ws * 15 {col4}, Top, 13 * ws,
+                                    MainWindowEditHeight, ID,
+                                    not Config.NoBorder, aField,
+                                    'Lucida Console SZ', ws + 3, True);
+     end
+  else
+     begin
+     Result := CreateTR4WEntryField(ws * 15 {col4}, Top, 13 * ws,
+                                    MainWindowEditHeight, ID,
+                                    not Config.NoBorder, aField,
+                                    'Lucida Console', ws + 3, True);
+     end;
+  // THE SHAPE, NOT AN HFONT.  tWM_SETFONT(Result, MainWindowEditFont) sent a
+  // WM_SETFONT to an LCL TEdit, which paints from its own TFont and ignores it,
+  // so these two fields kept the FORM's default while every element got
+  // MainFont -- the call window read smaller than the band, date and time
+  // beside it (NY4I, 2026-08-28).  Same three numbers MainWindowEditFont is
+  // created from: ws + 3, extra-bold, Lucida Console (SZ when it loaded).
   SendMessage(Result, EM_LIMITTEXT, 12, 0);
 end;
 
