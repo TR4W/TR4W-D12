@@ -780,6 +780,14 @@ type
         which is what uBandPlanForm already does for the same shape of data. }
       FColorGrid: TStringGrid;
       FColorElements: TStringList;   // row -> mweName, owned
+      { Set once, the first time the rows are known. See SizeColorColumns. }
+      FColorColumnsSized: boolean;
+      { THE VALUE BEING CHOSEN RIGHT NOW, before the grid has taken it. The
+        sample paints from this so the preview follows the drop-down as it is
+        used -- see ColorGridSetEditText. -1 when nothing is being edited. }
+      FPreviewCol: integer;
+      FPreviewRow: integer;
+      FPreviewText: string;
       FPalette: TStringList;         // the colour spellings, owned; see ColorGridSelectEditor
 
       FKeyerEditTarget: TKeyerDefinition;
@@ -1008,6 +1016,14 @@ type
                                       var Editor: TWinControl);
       procedure ColorGridPrepareCanvas(Sender: TObject; aCol, aRow: integer;
                                        aState: TGridDrawState);
+      procedure SizeColorColumns;
+      { AnsiString EXPLICITLY, and the compiler is what says so: TSetEditEvent
+        is declared in the LCL, which is compiled with 8-bit strings, while
+        `string` in this unit is UnicodeString (tr4w.inc). A method assigned to
+        an event has to match its signature exactly. }
+      procedure ColorGridSetEditText(Sender: TObject; aCol, aRow: integer;
+                                     const aValue: AnsiString);
+      procedure ColorGridEditingDone(Sender: TObject);
       procedure LoadColorRows;
       procedure SaveColorRows;
       function  BuildGeneratedSection(const aTag: NativeInt; const aHeading: string;
@@ -2892,14 +2908,16 @@ begin
    FColorGrid.Cells[COLORS_COL_FG,      0] := 'Text';
    FColorGrid.Cells[COLORS_COL_BG,      0] := 'Background';
    FColorGrid.Cells[COLORS_COL_SAMPLE,  0] := 'Sample';
-   FColorGrid.ColWidths[COLORS_COL_ELEMENT] := 260;
-   FColorGrid.ColWidths[COLORS_COL_FG]      := 170;
-   FColorGrid.ColWidths[COLORS_COL_BG]      := 170;
-   FColorGrid.ColWidths[COLORS_COL_SAMPLE]  := 170;
+   { No fixed widths: SizeColorColumns measures the real content once the rows
+     are loaded. Four numbers guessed here cannot survive a font-size change. }
    FColorGrid.OnSelectEditor  := ColorGridSelectEditor;
    { The grid paints the sample cell; nothing here creates a control, which is
      the whole reason this page is a grid rather than 150 windows. }
    FColorGrid.OnPrepareCanvas := ColorGridPrepareCanvas;
+   FColorGrid.OnSetEditText    := ColorGridSetEditText;
+   FColorGrid.OnEditingDone    := ColorGridEditingDone;
+   FPreviewCol := -1;
+   FPreviewRow := -1;
 
    FreeAndNil(FPalette);
    FPalette := TStringList.Create;
@@ -2980,14 +2998,33 @@ procedure TPrefsForm.ColorGridPrepareCanvas(Sender: TObject; aCol, aRow: integer
                                             aState: TGridDrawState);
 var
    fg, bg: integer;
+   fgName, bgName: string;
 begin
    if (aCol <> COLORS_COL_SAMPLE) or (aRow < 1) then
       begin
       Exit;
       end;
 
-   fg := ColorIndexForName(FColorGrid.Cells[COLORS_COL_FG, aRow]);
-   bg := ColorIndexForName(FColorGrid.Cells[COLORS_COL_BG, aRow]);
+   { The cell still holds the OLD spelling while the drop-down is open, so the
+     value being chosen wins for the row it belongs to. That is what makes this
+     a demonstration rather than a report: NY4I, 2026-08-28, "the change needs
+     to be immediate. This is a way the user can demo the colors." }
+   fgName := FColorGrid.Cells[COLORS_COL_FG, aRow];
+   bgName := FColorGrid.Cells[COLORS_COL_BG, aRow];
+   if aRow = FPreviewRow then
+      begin
+      if FPreviewCol = COLORS_COL_FG then
+         begin
+         fgName := FPreviewText;
+         end
+      else if FPreviewCol = COLORS_COL_BG then
+         begin
+         bgName := FPreviewText;
+         end;
+      end;
+
+   fg := ColorIndexForName(fgName);
+   bg := ColorIndexForName(bgName);
    if (fg < 0) or (bg < 0) then
       begin
       Exit;
@@ -3034,6 +3071,74 @@ begin
    finally
       FColorGrid.EndUpdate;
    end;
+
+   SizeColorColumns;
+end;
+
+{ FIT THE COLUMNS TO WHAT IS IN THEM, ONCE.
+
+  The widths were four fixed numbers -- 260/170/170/170 -- chosen before the
+  Sample column existed. They were too wide for the three text columns and too
+  narrow overall, so the page opened needing a horizontal scroll and the sample
+  itself was cut off mid-word (NY4I's screenshot, 2026-08-28: "W1A|").
+
+  AutoSizeColumns is the LCL's own measurement -- it asks the canvas about the
+  real strings in the real font, which is the only thing that can answer this
+  when the operator's font size is a setting.
+
+  ONCE, AND ONLY ONCE, which is the other half of what was asked: "If the user
+  resizes the columns or forms, we want to capture that but the default should
+  be readable without scrolling." LoadColorRows runs again on Cancel-and-reload,
+  and re-sizing there would silently undo a width the operator had dragged. }
+{ EVERY KEYSTROKE AND EVERY PICK, while the editor is still open.
+
+  The grid does not write the cell until editing finishes, so without this the
+  sample only caught up after the operator moved away -- too late to be a
+  preview. The chosen value is remembered and the row redrawn; nothing is
+  written to the grid here, because the grid owns the cell and writing it
+  underneath its own editor is how editors get confused. }
+procedure TPrefsForm.ColorGridSetEditText(Sender: TObject; aCol, aRow: integer;
+                                          const aValue: AnsiString);
+begin
+   FPreviewCol  := aCol;
+   FPreviewRow  := aRow;
+   FPreviewText := string(aValue);
+   FColorGrid.InvalidateRow(aRow);
+end;
+
+{ The cell holds the value now, so the override has to go -- otherwise a stale
+  preview would outlive the edit and paint the next row it happened to match. }
+procedure TPrefsForm.ColorGridEditingDone(Sender: TObject);
+begin
+   FPreviewCol := -1;
+   FPreviewRow := -1;
+   FPreviewText := '';
+   if FColorGrid <> nil then
+      begin
+      FColorGrid.Invalidate;
+      end;
+end;
+
+procedure TPrefsForm.SizeColorColumns;
+const
+   { Breathing room either side of the text. AutoSize measures the glyphs; this
+     is the margin that stops a cell reading as though it were clipped. }
+   COLOR_COL_PADDING = 14;
+var
+   c: integer;
+begin
+   if FColorColumnsSized or (FColorGrid = nil) then
+      begin
+      Exit;
+      end;
+
+   FColorGrid.AutoSizeColumns;
+   for c := 0 to FColorGrid.ColCount - 1 do
+      begin
+      FColorGrid.ColWidths[c] := FColorGrid.ColWidths[c] + COLOR_COL_PADDING;
+      end;
+
+   FColorColumnsSized := True;
 end;
 
 procedure TPrefsForm.SaveColorRows;

@@ -423,6 +423,45 @@ The UI mass is the main window, not the dialogs: `SetMainWindowText` 66,
 343 of the 356 total sites are those five kinds plus the platform top four.
 
 
+### TODO: one pattern for remembering what the operator resized (NY4I, 2026-08-28)
+
+> *"If a user resizes something (grids included) saving it and restoring it drastically increases
+> usability of a program."*
+
+**Not a feature request for one grid — a rule the program does not yet have.** Today the answer
+differs everywhere it is asked:
+
+| What the operator resizes | What happens next time |
+|---|---|
+| Editable-log columns | **Remembered** — `SaveColumnWidthToConfig`, `EnsureListViewColumnVisible` |
+| Tool-window position and size | **Remembered** — `settings/tr4w.json`, restored by `RestoreToolWindows` |
+| Preferences colours grid columns | **Forgotten** — measured once per open (`SizeColorColumns`, `33281dc3`) |
+| Band plan grid, dupe sheets, stations, the other converted grids | **Forgotten** |
+| Preferences window itself | **Forgotten** |
+
+The first two prove the appetite and the mechanism; the rest were simply never done, and each new
+converted window adds another. So the work is a PATTERN, not a pass: one helper that a form can
+call to say "these are my resizable things", storing under a key derived from the form and control
+name, in the store the window layout already uses.
+
+**Three things to get right, learned from the two that exist:**
+
+* **Restore must not fight the LCL.** Positions are set through `lclForm.BoundsRect`, never
+  `SetWindowPos` — the LCL holds its own bounds and pushes the designed ones back down, which
+  silently undid a restored position until 2026-08-25.
+* **A restore is a refill, and a refill must not look like an edit.** Writing widths back into a
+  grid raises the same events an operator would, and this form answers those by writing the model
+  (`ca1eb59a`, and the three failed attempts before it).
+* **A saved width must survive a font-size change.** Widths measured for one `FONT SIZE` are wrong
+  at another, so a stored number needs either a scale or a "measured at" record — otherwise
+  remembering is worse than measuring.
+
+Sequence it AFTER the conversions: every window still to convert would otherwise need retro-fitting
+twice. `docs/GRID_RESTYLE_PLAN.md` is parked for the same reason and is the natural place for this
+to land with it.
+
+---
+
 ### The end state, stated plainly (NY4I, 2026-08-20)
 
 > *"Given that we would never write a new Lazarus app this way, this is our goal. We want to get
