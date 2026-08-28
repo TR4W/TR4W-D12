@@ -30,64 +30,77 @@ has been on screen.
 
 ### A. New Contest dialog is now an LCL form  (`16ffc284`)
 
-**This is the first thing the operator sees, and it changed shape.** It replaced
-494 lines of `NewContestDlgProc`. What to check:
+**This is the first thing the operator sees, and it changed shape** -- it
+replaced 494 lines of `NewContestDlgProc`.
 
-* the `.CFG` list shows the TR4W directory, and **Browse...** opens the standard
-  file picker and can reach a config elsewhere;
-* **Latest config file** still opens the last one;
-* pick a contest -> the prompt panel and any extra field appear, and **OK stays
-  disabled** until the callsign and every shown field are filled;
-* a contest with a field: `NEWENGLANDQSO`, `WAG`, `POTA`;
-* the **I am in** box on a QSO-party contest;
-* the six `CATEGORY-*` drop-downs have labels (they shipped unlabelled in the
-  first pass and were fixed);
-* resize the window -- the list and fields should follow, buttons stay
-  bottom-right.
+- [ ] **The `.CFG` list** shows the TR4W directory, and **Browse...** opens the
+  standard file picker and can reach a config somewhere else.
 
-Two contests lost a line that never worked: `ARRL10/160/DXCW/RTTY_ROUNDUP` had
-`SendMessage(107, BM_SETCHECK, ...)`, and 107 is a control ID, not an HWND, so it
-addressed nothing. If those four are supposed to pre-tick something, say so --
-it is a new decision, not a port.
+- [ ] **Latest config file** still reopens the last one.
+
+- [ ] **OK stays disabled** until the callsign and every shown field are filled.
+  Pick a contest and watch the prompt panel and any extra field appear.
+
+- [ ] **A contest that asks for a field** -- `NEWENGLANDQSO`, `WAG`, `POTA` --
+  shows one row with the right label.
+
+- [ ] **The "I am in" box** on a QSO-party contest changes the prompts.
+
+- [ ] **The six `CATEGORY-*` drop-downs have labels.** They shipped unlabelled in
+  the first pass; this is the fix.
+
+- [ ] **Resize the window** -- list and fields follow, buttons stay bottom-right.
+
+- [ ] **DECISION: should `ARRL10/160/DXCW/RTTY_ROUNDUP` pre-tick something?**
+  Those four arms called `SendMessage(107, BM_SETCHECK, ...)`, and 107 is a
+  control ID, not an HWND, so it addressed nothing and never worked. Dropped
+  rather than reinvented: giving it a meaning now is a new decision, not a port.
 
 ### B. YesOrNo lost its HWND at 16 call sites  (`384d1895`)
 
-The **default button** is the thing to check, because the failure is silent and
-one keystroke wide. Every Yes/No prompt must still default to **No**: press
-Enter on "do you really want to clear the log" and it must NOT clear. Confirmed
-once on the exit prompt; the other fifteen are unverified.
+- [ ] **Every Yes/No prompt still defaults to No.** Press Enter on "do you really
+  want to clear the log" and it must NOT clear. This is the one to check
+  because the failure is silent and one keystroke wide: `MessageDlg` focuses
+  the FIRST button, so a naive port would have moved every destructive prompt's
+  default to Yes. Confirmed once on the exit prompt; the other fifteen are
+  unverified.
 
-### C. Ten units deleted  (`d1`..`d3` this session)
+### C. Twelve units deleted  (`96d2f2c2`, `7d65787b`, `49b30e07`, `3722f669`)
 
 uRemMults_DOM/DX/Zone, uDXSSpotsFilter, uSpotsFilter, uMultsFrequencies,
-ColorCfg, LOGHP, LOGPROM, uSCP, uReminder, uQuickEdit -- 3070 lines and twelve
-Win32 dialog procedures. All were proved unreachable (not in any program's uses
-clause, or a dialog procedure nothing ever passes to DialogBox). Nothing should
-change; if some menu item now does nothing that used to work, it is one of
-these.
+ColorCfg, LOGHP, LOGPROM, uSCP, uReminder, uQuickEdit -- 3070 lines, twelve
+Win32 dialog procedures, and eight HWND globals nothing read. All were proved
+unreachable: absent from every program's uses clause, or a dialog procedure
+nothing ever passes to `DialogBox`.
+
+- [ ] **Nothing should have changed.** If a menu item now does nothing that used
+  to work, it is one of these -- `git revert` the commit above and say which.
 
 ### D. Decisions waiting on NY4I, not bench items
 
-1. **`uExternalLoggerManager` and `uRadioManager` are excluded from the build
-   for an expired reason.** tr4w.dpr says "uses Generics.Collections (Delphi
-   2009+) - not Delphi 7 IDE compatible". Delphi 7 is gone and FPC has
-   Generics.Collections. CLAUDE.md still describes uExternalLoggerManager as
-   carrying the external-logger implementation, so this is either work to
-   finish or code to delete -- it should not stay in limbo.
+- [ ] **`uExternalLoggerManager` and `uRadioManager` are excluded for an expired
+  reason.** `tr4w.dpr` says "uses Generics.Collections (Delphi 2009+) - not
+  Delphi 7 IDE compatible". Delphi 7 is gone and FPC has
+  `Generics.Collections`. CLAUDE.md still describes `uExternalLoggerManager` as
+  carrying the external-logger implementation, so this is either work to finish
+  or code to delete -- it should not stay in limbo. **The one worth your time.**
 
-2. **`MixW2DlgProc` and `WinKeyer2SettingsDlgProc` have zero references.** Their
-   units are live (MixW integration, WinKeyer driver) but those two dialogs are
-   never opened. Is the WinKeyer settings dialog reachable from a menu, or has
-   it been replaced by Preferences?
+- [ ] **`MixW2DlgProc` and `WinKeyer2SettingsDlgProc` have zero references.**
+  Their units are live (MixW integration, WinKeyer driver) but those two
+  dialogs are never opened. Is the WinKeyer settings dialog reachable from a
+  menu, or has Preferences replaced it? If replaced, both procedures can go.
 
-3. **The main window's start-up paint** -- grid lines then data -- is still
-   unexplained. The `WM_SETREDRAW` bracket was tried, made no visible
-   difference, and was reverted when the lint showed it added three `wh[]`
-   references to a surface being retired.
+- [ ] **The main window's start-up paint is still unexplained** -- grid lines,
+  then data. The `WM_SETREDRAW` bracket was tried, made no visible difference,
+  and was reverted when the lint showed it added three `wh[]` references to a
+  surface being retired. Cause unknown; likely the control's own first paint
+  before any rows exist, which redraw suppression cannot touch.
 
-4. **15 unreferenced routines in TF.pas and uDialogs.pas** (`SelectColor`,
-   `SelectFolder`, `SaveFileDlg`, `TR4W_OFNHookProc` and others). Removing them
-   by pattern broke a multi-line declaration; they need a careful hand pass.
+- [ ] **15 unreferenced routines in `TF.pas` and `uDialogs.pas`** --
+  `SelectColor`, `SelectFolder`, `SaveFileDlg`, `TR4W_OFNHookProc` (referenced
+  only from a commented-out `lpfnHook` assignment, so the hook is never
+  installed) and others. Two automated attempts to remove them broke on a
+  multi-line declaration and on an assembly block; they need a hand pass.
 
 ---
 
