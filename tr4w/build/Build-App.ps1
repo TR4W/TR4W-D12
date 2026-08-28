@@ -161,6 +161,51 @@ if ($warnLines.Count -lt $WARN_CEILING)
    Write-Host "  down from $WARN_CEILING -- lower `$WARN_CEILING in this script and commit it with the fix."
    }
 
+# ---------------------------------------------------------------------------
+# A SECOND RATCHET: STRING CONVERSIONS THAT CAN LOSE CHARACTERS.
+#
+# tr4w.inc makes `string` UnicodeString for all 426 units, while the TRDOS core
+# still declares bounded ShortStrings (CallString, GridString, Str14...) and the
+# LCL and the Win32 boundary speak AnsiString. Every assignment across that line
+# is a conversion, and the compiler says which ones can lose something:
+#
+#   ...to "CallString"    -- TRUNCATION past the declared length
+#   ...to "AnsiString"    -- the non-ASCII characters go through the ANSI
+#                            codepage, which is the mojibake fixed by WinAnsi
+#                            in 9f388029 and by 45dc430c in the log headers
+#
+# NOT INVISIBLE -- the compiler warns on every one. But they sit inside 5,600
+# warnings, and nobody reads 5,600 warnings, so in practice they are silent.
+# NY4I asked whether the AnsiString event-signature trap was a general issue
+# (2026-08-28); it is, and this is the size of it.
+#
+# COUNTED, NOT FIXED. Auditing 1,400 sites is its own piece of work -- it is
+# already the "PChar -> PAnsiChar proactive audit" on the roadmap. What this
+# stops is the number GROWING while that waits, which is the same bargain the
+# Win32 baselines make.
+$NARROW_CEILING = 1427
+
+$narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
+Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"
+
+if ($narrowLines.Count -gt $NARROW_CEILING)
+   {
+   Write-Host ''
+   $narrowLines | Select-Object -First 15 | ForEach-Object { Write-Host "  $($_.Line.Trim())" }
+   Write-Host ''
+   Write-Host "BUILD FAILED: $($narrowLines.Count) narrowing conversions, ceiling is $NARROW_CEILING."
+   Write-Host '  Each one can lose characters: to a bounded ShortString it TRUNCATES, to'
+   Write-Host '  AnsiString it mangles anything outside the ANSI codepage. Convert'
+   Write-Host '  explicitly at the boundary -- uAnsiStr.WinAnsi for bytes going to Win32 --'
+   Write-Host '  rather than letting the assignment do it silently.'
+   exit 1
+   }
+
+if ($narrowLines.Count -lt $NARROW_CEILING)
+   {
+   Write-Host "  down from $NARROW_CEILING -- lower `$NARROW_CEILING in this script and commit it with the fix."
+   }
+
 # State the outcome explicitly -- a filtered pipeline that matches nothing prints
 # nothing, which reads as success.
 if ($rc -ne 0)

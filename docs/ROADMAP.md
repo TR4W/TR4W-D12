@@ -423,6 +423,44 @@ The UI mass is the main window, not the dialogs: `SetMainWindowText` 66,
 343 of the 356 total sites are those five kinds plus the platform top four.
 
 
+### TODO: 1,427 narrowing string conversions, and a ratchet holding the line (2026-08-28)
+
+NY4I asked whether the `AnsiString` event-signature trap was a general issue. **It is**, and this
+is its size. `tr4w.inc` makes `string` UnicodeString for all 426 units, while the TRDOS core still
+declares bounded ShortStrings and the LCL and the Win32 boundary speak `AnsiString`. Every
+assignment across that line converts, and the compiler names the ones that can lose something:
+
+| direction | count | what goes wrong |
+|---|---:|---|
+| widening — Ansi/Short/CallString to Unicode | ~2,530 | nothing; noise |
+| **narrowing to a bounded ShortString** | **401** | **truncates** past the declared length |
+| **narrowing to AnsiString / TTranslateString** | **999** | non-ASCII goes through the ANSI codepage |
+
+The second row is the mojibake class already fixed twice by hand — `WinAnsi` (`9f388029`) and the
+log-grid headers (`45dc430c`). The third is how `ceOperator` became `N` (`1e53f410`).
+
+**Where they are:** `uRadioConfigStore` 147, `uPrefsForm` 124, `MainUnit` 68, `FCONTEST` 54,
+`uRadioConfigApply` 43, then a long tail. Truncation risk concentrates in TRDOS (`FCONTEST`,
+`LOGSTUFF`, `LogCW`, `LOGEDIT`, `tree`); codepage risk in the config and UI units.
+
+**There is no single idiom to fix.** Measured by reading the source line behind every warning:
+`SameText` 213 (15%), `Format` 36, `Pos` 35, `IndexOf` 25, `Trim` 19 — and **1,096 (77%) are
+assorted assignments**. So this is a pass over ~1,100 sites, not a clever one-liner.
+
+**The cheapest first cut is `SameText`.** FPC 3.2.2's `SysUtils.SameText` has NO UnicodeString
+overload — reproduced in a nine-line program — so every call from a UnicodeStrings unit narrows
+both arguments. One `inline` overload in a unit everything already uses would fix 213 sites with no
+call-site edits, but it resolves by USES ORDER, and this program already depends on use-order for
+name resolution (see the note on `uProgramMain`'s uses clause). That makes it a deliberate change
+with a test, not a drive-by.
+
+**Held at 1,427 by `Build-App.ps1`** (`$NARROW_CEILING`), the same bargain the Win32 baselines make:
+the number cannot grow, and every fix lowers it. NY4I, 2026-08-28: *"I am all for getting to zero
+warnings."* That is the target; the ratchet is what makes progress toward it visible instead of
+theoretical.
+
+---
+
 ### TODO: one pattern for remembering what the operator resized (NY4I, 2026-08-28)
 
 > *"If a user resizes something (grids included) saving it and restoring it drastically increases
