@@ -210,6 +210,56 @@ def seed(po_path, url, target, lang, dry_run, batch=DEFAULT_BATCH,
    candidates = [e for e in entries
                  if not e.target.strip() and not e.obsolete
                  and e.key not in SKIP_KEYS]
+
+   # THE WIDGET SET ALREADY TRANSLATED THESE, SO DO NOT ASK A MACHINE.
+   #
+   # Every designed form carries its own OK and Cancel captions, so the harvest
+   # produces tfrmaltd.btnok.caption, tfrmautocq.btnok.caption and so on -- 39
+   # per catalogue, 819 across all of them, whose English is one of six words.
+   # Sending those to Argos costs a request each and returns the input:
+   #
+   #    ('paragraphs:', ['Cancel'])  ('apply_packaged_translation', 'Cancel')
+   #
+   # (NY4I, watching LibreTranslate, 2026-08-28: "why would you be translating
+   # OK".) Lazarus ships lclstrconsts.<lang>.po, translated by the people who
+   # maintain the widget set, so the answer is already on disk -- and it is
+   # BETTER than the machine's: Spanish OK is 'Aceptar', which Argos will not
+   # say because it is not what 'OK' means, it is what the BUTTON is called.
+   #
+   # Taken as fuzzy like any other unreviewed text: the wording is right, but
+   # which button a given form means is still a human's call.
+   lcl = pofile.lcl_catalogue(target)
+   from_lcl = []
+   if lcl:
+      remaining = []
+      for e in candidates:
+         hit = lcl.get(e.source.replace('&', '').strip().lower())
+         if hit and e.source.strip():
+            # MATCH THE ENGLISH ON ACCELERATORS. The LCL spells its captions
+            # with one ('&Aceptar') because its own dialogs use them; a .lfm
+            # caption usually does not. Copying the & across where the English
+            # has none is exactly what po_lint calls "an & was added where the
+            # English has none" -- 800 self-inflicted defects.
+            if '&' not in e.source:
+               hit = hit.replace('&', '')
+            elif '&' not in hit:
+               # The English wants an accelerator and the LCL's wording has
+               # none. Inventing a position is a guess about which letter is
+               # free on THAT form, which is the one thing this cannot know, so
+               # leave the entry to the ordinary path instead of shipping a
+               # caption with no accelerator.
+               remaining.append(e)
+               continue
+            e.target = hit
+            e.fuzzy = True
+            from_lcl.append(e)
+         else:
+            remaining.append(e)
+      candidates = remaining
+   if from_lcl:
+      print("%d entr%s filled from the LCL's own catalogue, not translated: %s"
+            % (len(from_lcl), "y" if len(from_lcl) == 1 else "ies",
+               ", ".join(sorted({repr(e.source.strip()) for e in from_lcl})[:8])))
    no_source = [e for e in candidates if not e.source.strip()]
    placeholder = [e for e in candidates
                   if e.source.strip().upper() in PLACEHOLDER_SOURCES]
@@ -241,6 +291,11 @@ def seed(po_path, url, target, lang, dry_run, batch=DEFAULT_BATCH,
          print("   %-38s %r" % (e.key, e.source[:60]))
       return 0
    if not todo:
+      # STILL WRITE, if the LCL supplied anything. Returning without saving
+      # would throw the fills away and ask again on the next run.
+      if from_lcl and not dry_run:
+         pofile.write_po(po_path, entries, pc.LANG_CODES[lang],
+                         pc.LANG_CODES[pc.SOURCE_LANG])
       return 0
 
    check_target(url, target)

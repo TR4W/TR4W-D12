@@ -214,3 +214,29 @@ def read_po(path):
 
 def by_key(entries):
    return {e.key: e for e in entries if e.key and not e.obsolete}
+
+def lcl_catalogue(lang):
+   """The LCL's OWN translations for this language, by English text.
+
+   Standard buttons -- OK, Cancel, Yes, No, Close, Help -- are the widget
+   set's, not ours. Lazarus ships lclstrconsts.<lang>.po translated by the
+   people who maintain it, so asking a machine translator for 'OK' is both
+   wasted and worse: Argos returns 'OK' and Spanish wants 'Aceptar'.
+
+   Returns {english_lowercased_without_ampersand: translation}, or {} when the
+   language has no LCL catalogue -- which is not an error, just a language
+   Lazarus has not been translated into.
+   """
+   import os
+   out = {}
+   for root in (os.environ.get('LAZARUS_DIR'), r'C:/lazarus', '/usr/share/lazarus'):
+      if not root:
+         continue
+      path = os.path.join(root, 'lcl', 'languages', 'lclstrconsts.%s.po' % lang)
+      if not os.path.exists(path):
+         continue
+      for e in read_po(path):
+         if e.source.strip() and e.target.strip() and not e.obsolete:
+            out[e.source.replace('&', '').strip().lower()] = e.target
+      break
+   return out
