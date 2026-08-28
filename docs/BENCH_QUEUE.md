@@ -23,6 +23,74 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-08-28 (overnight) -- UNRUN
+
+Everything below was built, linted, unit-tested and corpus-checked. None of it
+has been on screen.
+
+### A. New Contest dialog is now an LCL form  (`16ffc284`)
+
+**This is the first thing the operator sees, and it changed shape.** It replaced
+494 lines of `NewContestDlgProc`. What to check:
+
+* the `.CFG` list shows the TR4W directory, and **Browse...** opens the standard
+  file picker and can reach a config elsewhere;
+* **Latest config file** still opens the last one;
+* pick a contest -> the prompt panel and any extra field appear, and **OK stays
+  disabled** until the callsign and every shown field are filled;
+* a contest with a field: `NEWENGLANDQSO`, `WAG`, `POTA`;
+* the **I am in** box on a QSO-party contest;
+* the six `CATEGORY-*` drop-downs have labels (they shipped unlabelled in the
+  first pass and were fixed);
+* resize the window -- the list and fields should follow, buttons stay
+  bottom-right.
+
+Two contests lost a line that never worked: `ARRL10/160/DXCW/RTTY_ROUNDUP` had
+`SendMessage(107, BM_SETCHECK, ...)`, and 107 is a control ID, not an HWND, so it
+addressed nothing. If those four are supposed to pre-tick something, say so --
+it is a new decision, not a port.
+
+### B. YesOrNo lost its HWND at 16 call sites  (`384d1895`)
+
+The **default button** is the thing to check, because the failure is silent and
+one keystroke wide. Every Yes/No prompt must still default to **No**: press
+Enter on "do you really want to clear the log" and it must NOT clear. Confirmed
+once on the exit prompt; the other fifteen are unverified.
+
+### C. Ten units deleted  (`d1`..`d3` this session)
+
+uRemMults_DOM/DX/Zone, uDXSSpotsFilter, uSpotsFilter, uMultsFrequencies,
+ColorCfg, LOGHP, LOGPROM, uSCP, uReminder, uQuickEdit -- 3070 lines and twelve
+Win32 dialog procedures. All were proved unreachable (not in any program's uses
+clause, or a dialog procedure nothing ever passes to DialogBox). Nothing should
+change; if some menu item now does nothing that used to work, it is one of
+these.
+
+### D. Decisions waiting on NY4I, not bench items
+
+1. **`uExternalLoggerManager` and `uRadioManager` are excluded from the build
+   for an expired reason.** tr4w.dpr says "uses Generics.Collections (Delphi
+   2009+) - not Delphi 7 IDE compatible". Delphi 7 is gone and FPC has
+   Generics.Collections. CLAUDE.md still describes uExternalLoggerManager as
+   carrying the external-logger implementation, so this is either work to
+   finish or code to delete -- it should not stay in limbo.
+
+2. **`MixW2DlgProc` and `WinKeyer2SettingsDlgProc` have zero references.** Their
+   units are live (MixW integration, WinKeyer driver) but those two dialogs are
+   never opened. Is the WinKeyer settings dialog reachable from a menu, or has
+   it been replaced by Preferences?
+
+3. **The main window's start-up paint** -- grid lines then data -- is still
+   unexplained. The `WM_SETREDRAW` bracket was tried, made no visible
+   difference, and was reverted when the lint showed it added three `wh[]`
+   references to a surface being retired.
+
+4. **15 unreferenced routines in TF.pas and uDialogs.pas** (`SelectColor`,
+   `SelectFolder`, `SaveFileDlg`, `TR4W_OFNHookProc` and others). Removing them
+   by pattern broke a multi-line declaration; they need a careful hand pass.
+
+---
+
 ## Added 2026-08-26 (overnight) -- UNRUN
 
 Five changes landed while NY4I was away. Three are visible and want an eye; two
