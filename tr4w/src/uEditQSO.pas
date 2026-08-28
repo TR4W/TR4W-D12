@@ -403,7 +403,8 @@ var
   IndexInMap: integer;
   lpNumberOfBytesWritten: Cardinal;
   TempInteger: integer;
-  tempOperator: string;
+  ansiOperator: RawByteString;
+  operatorLen:  integer;
   TempString: string;
   lpTranslated: boolean;
   //  TempString                            : ShortString;
@@ -642,9 +643,37 @@ begin
 
   {Operator}
 
-  Windows.ZeroMemory(@EditableQSORXData.ceOperator,Windows.lstrlenA(EditableQSORXData.ceOperator));
-  tempOperator := EditQSOGetText(FLD_OPERATOR);
-  Move(tempOperator[1], EditableQSORXData.ceOperator[0], length(TempOperator) * sizeof(char));
+  { AN ANSI ARRAY, WRITTEN FROM A UTF-16 STRING -- and that is how the operator
+    became one letter.
+
+    ceOperator is array[0..10] of AnsiChar. tempOperator is `string`, which
+    tr4w.inc makes UnicodeString, so `sizeof(char)` here is 2 and the old Move
+    copied UTF-16 code units straight into the byte array: 'NY4I' landed as
+    'N',#0,'Y',#0,'4',#0,'I',#0 and read back at the first #0 as "N". NY4I,
+    2026-08-28: "I changed the contact for W1SSB and it updated operator to
+    just N. The sanctity of a QSO is paramount."
+
+    The round-trip harness could not see this -- Invoke-FieldCheck proves a
+    value survives the CONTROL, and this is the write to the RECORD.
+
+    Two more faults in the three lines, both silent:
+      * the zero-fill used lstrlenA of the value ALREADY there, so a shorter
+        new name left the tail of the old one behind;
+      * nothing bounded the copy to the array, so an operator name of 11
+        characters or more wrote past it, over ceSentRST and whatever follows.
+
+    Convert once, bound it, and leave room for the terminator. }
+  ansiOperator := WinAnsi(EditQSOGetText(FLD_OPERATOR));
+  FillChar(EditableQSORXData.ceOperator, SizeOf(EditableQSORXData.ceOperator), 0);
+  operatorLen := Length(ansiOperator);
+  if operatorLen > SizeOf(EditableQSORXData.ceOperator) - 1 then
+     begin
+     operatorLen := SizeOf(EditableQSORXData.ceOperator) - 1;
+     end;
+  if operatorLen > 0 then
+     begin
+     Move(ansiOperator[1], EditableQSORXData.ceOperator[0], operatorLen);
+     end;
   //EditableQSORXData.ceOperator[1] := Char(Windows.GetDlgItemTextA(eq_handle,
   //  FLD_OPERATOR, @EditableQSORXData.ceOperator,
   //  Windows.lstrlen(EditableQSORXData.ceOperator) - 1));
