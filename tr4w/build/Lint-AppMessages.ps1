@@ -1,7 +1,8 @@
 <#
 .SYNOPSIS
    Every message `uMainWindowProc.WindowProc` handles must be claimed by
-   `uMainForm.IsTR4WsOwnMessage`, or it is silently never delivered.
+   `uMainForm.IsTR4WsOwnMessage`, or it is silently never delivered -- and
+   every message claimed there must be handled, or it is silently swallowed.
 
 .DESCRIPTION
    THE MECHANISM. Since the main window became an LCL form (Phase 3a) its window
@@ -40,10 +41,26 @@
    case label is not mistaken for a live one -- the same parser the other lints
    use, and for the same reason.
 
-   WHAT IT DELIBERATELY DOES NOT CHECK: a message claimed but not handled. That
-   is harmless (TR4W's proc ignores it and returns), and forbidding it would
-   fight the WM_SIZE / WM_COMMAND entries that are claimed in order to be
-   chained to BOTH procedures.
+   AND THE OTHER DIRECTION, WHICH THIS FILE USED TO CALL HARMLESS. It said a
+   message claimed but not handled was harmless because TR4W's proc would
+   ignore it and return. IT RETURNS WITHOUT CHAINING, and that is the whole
+   problem: TR4WFormSubclassProc treats a claimed message as answered, so the
+   LCL never sees it either. The message is not ignored, it is SWALLOWED.
+
+   WHAT THAT COST, measured 2026-08-28. WM_DRAWITEM and WM_MEASUREITEM stayed
+   on the allow-list after their case labels were deleted -- correctly deleted,
+   when the possible-call strip became a designed TListBox. WM_DRAWITEM is sent
+   to the PARENT of an owner-drawn list, so it arrived at a proc that claimed
+   it and had nothing to do with it. The strip loaded its rows, reported
+   Visible, sat inside its parent, and OnDrawItem was called ZERO times. The
+   operator saw an empty bar at the bottom of the screen for weeks.
+
+   The two lists are IDENTICAL today, so this needs no exceptions. If one is
+   ever wanted -- a message claimed purely to be chained to both procedures,
+   with no case label of its own -- add it to $CLAIMED_WITHOUT_HANDLER below
+   WITH THE REASON, rather than weakening the check. The three dual-run
+   messages (WM_SIZE, WM_WINDOWPOSCHANGING, WM_COMMAND) are not exceptions:
+   they have case labels and are handled.
 
 .PARAMETER SourceDir
    The tr4w\src directory. Defaults to src beside this script's parent.
@@ -57,6 +74,11 @@ Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 
 Import-Module (Join-Path $PSScriptRoot 'PascalSource.psm1') -Force
+
+# Messages claimed on purpose with no case label of their own. EMPTY, and it
+# should stay that way: an entry here is a message TR4W intercepts and does
+# not answer. Add one only with the reason, in a comment, beside it.
+$CLAIMED_WITHOUT_HANDLER = @()
 
 if (-not $SourceDir) {
    $SourceDir = Join-Path (Split-Path -Parent $PSScriptRoot) 'src'
@@ -144,5 +166,29 @@ if ($missing.Count -gt 0) {
    exit 1
 }
 
-Write-Output ("Lint-AppMessages: {0} message(s) handled by WindowProc, all claimed." -f $handled.Count)
+# ------------------------------------------- claimed, but nothing answers it
+
+$swallowed = @()
+foreach ($name in $claimed.Keys) {
+   if ($handled.Contains($name))                { continue }
+   if ($CLAIMED_WITHOUT_HANDLER -contains $name) { continue }
+   $swallowed += $name
+}
+
+if ($swallowed.Count -gt 0) {
+   Write-Output ("Lint-AppMessages: {0} message(s) claimed by IsTR4WsOwnMessage but NOT handled by WindowProc." -f $swallowed.Count)
+   Write-Output ''
+   foreach ($name in ($swallowed | Sort-Object)) {
+      Write-Output ("  {0}" -f $name)
+      Write-Output  '     TR4WFormSubclassProc treats a claimed message as ANSWERED and does'
+      Write-Output  '     not chain it, so the LCL never sees it either. It is not ignored,'
+      Write-Output  '     it is SWALLOWED -- and nothing fails, logs, or warns.'
+      Write-Output  '     Either handle it in WindowProc, or remove it from IsTR4WsOwnMessage'
+      Write-Output  '     in src\ui\lcl\uMainForm.pas. Deleting a case label is not enough.'
+      Write-Output ''
+   }
+   exit 1
+}
+
+Write-Output ("Lint-AppMessages: {0} message(s), handled and claimed agree in both directions." -f $handled.Count)
 exit 0
