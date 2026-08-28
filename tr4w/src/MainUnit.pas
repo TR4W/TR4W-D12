@@ -60,7 +60,6 @@ uses
   uCTYDAT,
   uBMCF,
   uIO,
-  uQuickEdit,
   utils_file,
   { $ IF LANG = 'RUS'}
   HtmlHelp,

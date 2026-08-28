@@ -187,7 +187,6 @@ uses
   uMults,
   HtmlHelp,
   uSSL,
-  uQuickEdit,
   uIO,
   uBMCF,
   uCTYDAT,
@@ -412,7 +411,6 @@ uses
   // If OGLVERSION is ever turned on, this needs a real decision.
 {$ENDIF}
   uHardWare,
-  uReminder,
   uMakeHelpFile,
   uLogConfig,
   uPOTAParks,

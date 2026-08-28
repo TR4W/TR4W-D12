@@ -189,7 +189,6 @@ uses
   uMults in 'src\uMults.pas',
   HtmlHelp in 'src\HtmlHelp.pas',
   uSSL in 'src\uSSL.pas',
-  uQuickEdit in 'src\uQuickEdit.pas',
   uIO in 'src\uIO.pas',
   uBMCF in 'src\uBMCF.pas',
   uCTYDAT in 'src\uCTYDAT.PAS',
@@ -416,7 +415,6 @@ uses
   // If OGLVERSION is ever turned on, this needs a real decision.
 {$ENDIF}
   uHardWare in 'src\uHardWare.pas',
-  uReminder in 'src\uReminder.pas',
   uMakeHelpFile in 'src\uMakeHelpFile.pas',
   uLogConfig in 'src\uLogConfig.pas',
   uPOTAParks in 'src\uPOTAParks.pas',
