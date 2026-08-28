@@ -1785,6 +1785,13 @@ procedure TPrefsForm.RefreshRadioList;
 var
    i, keep: integer;
 begin
+   { A REFILL, NOT AN EDIT. Clearing and repopulating a control raises its
+     change events, and this form answers those by writing the model FROM the
+     controls -- so a refill that is not fenced can save a half-built state.
+     Guarding here rather than at each call site means a new caller cannot get
+     it wrong. }
+   BeginLoading;
+   try
    keep := lstRadios.ItemIndex;
    ClearListItems(lstRadios);
    for i := 0 to FStore.RadioCount - 1 do
@@ -1800,6 +1807,9 @@ begin
       begin
       lstRadios.ItemIndex := 0;
       end;
+   finally
+      EndLoading;
+   end;
 end;
 
 // aUsedByOtherSlot is the radio the OTHER slot already has.  One physical radio
@@ -1984,6 +1994,13 @@ procedure TPrefsForm.RefreshKeyerList;
 var
    i, keep: integer;
 begin
+   { A REFILL, NOT AN EDIT. Clearing and repopulating a control raises its
+     change events, and this form answers those by writing the model FROM the
+     controls -- so a refill that is not fenced can save a half-built state.
+     Guarding here rather than at each call site means a new caller cannot get
+     it wrong. }
+   BeginLoading;
+   try
    keep := lstKeyers.ItemIndex;
    ClearListItems(lstKeyers);
    for i := 0 to FKeyerStore.KeyerCount - 1 do
@@ -1995,6 +2012,9 @@ begin
       begin
       lstKeyers.ItemIndex := keep;
       end;
+   finally
+      EndLoading;
+   end;
 end;
 
 function TPrefsForm.SelectedKeyer: TKeyerDefinition;
@@ -2151,6 +2171,18 @@ var
    i: integer;
    keep: string;
 begin
+   { A REFILL, NOT AN EDIT -- and it has to say so itself, because every caller
+     would otherwise have to remember.
+
+     Clear and the SelectByTag below both raise OnChange, and OnChange runs
+     CaptureProfileFields, which writes the profile's radio ids FROM THE COMBO
+     BOXES. Mid-refill those are not in a state worth saving, so a profile could
+     be written back with empty slots. That is what renaming a profile did:
+     "renaming a profile clears out the radios defined in the combo boxes"
+     (NY4I, 2026-08-28) -- the same shape as the radio rename fixed in
+     ab2a9b8d, one level up. }
+   BeginLoading;
+   try
    keep := SelectedTag(cbxProfile);
    if keep = '' then
       begin
@@ -2163,6 +2195,9 @@ begin
       AddComboItem(cbxProfile, FStore.Profile(i).Name, FStore.Profile(i).Name);
       end;
    SelectByTag(cbxProfile, keep);
+   finally
+      EndLoading;
+   end;
 end;
 
 procedure TPrefsForm.RefreshProfileFields;
@@ -4224,8 +4259,15 @@ begin
    if FStore.AddProfile(prof, err) then
       begin
       Dirty := True;
-      RefreshProfileCombo;
-      SelectByTag(cbxProfile, prof.Name);
+      { One refill: combo, selection and fields together, so nothing between
+        them can be mistaken for the operator editing a profile. }
+      BeginLoading;
+      try
+         RefreshProfileCombo;
+         SelectByTag(cbxProfile, prof.Name);
+      finally
+         EndLoading;
+      end;
       RefreshProfileFields;
       end
    else
@@ -4262,8 +4304,13 @@ begin
       end;
    prof.Name := Trim(name);
    Dirty := True;
-   RefreshProfileCombo;
-   SelectByTag(cbxProfile, prof.Name);
+   BeginLoading;
+   try
+      RefreshProfileCombo;
+      SelectByTag(cbxProfile, prof.Name);
+   finally
+      EndLoading;
+   end;
    RefreshProfileFields;
 end;
 
