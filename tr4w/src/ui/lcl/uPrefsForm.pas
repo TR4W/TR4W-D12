@@ -2539,21 +2539,54 @@ begin
       Exit;
       end;
 
-   { THE ID IS WHAT IS STORED. The names are a mirror, refreshed here so the
-     file stays readable and never disagrees with the reference. }
-   prof.Radio1Id    := SelectedTag(cbxRadio1);
-   prof.Radio2Id    := SelectedTag(cbxRadio2);
-   prof.Radio1Name  := RadioNameForId(prof.Radio1Id);
-   prof.Radio2Name  := RadioNameForId(prof.Radio2Id);
+   { AN EMPTY CONTROL IS NOT AN ANSWER.
+
+     Everything above this line has been a fence around WHEN this runs, and
+     renaming a profile still emptied both radio slots (NY4I, 2026-08-28, after
+     the fences went in). So state the rule the fences were only approximating:
+     a combo with no items in it has not been filled yet, and a control that
+     has not been filled cannot be the authority for a stored value. Writing
+     SelectedTag from one turns "I do not know yet" into "the operator chose
+     nothing", which is how a rename erased two radios.
+
+     This is deliberately about ITEMS, not about the selection. A filled combo
+     sitting on its "None" row IS an answer and must still be honoured -- that
+     is how a slot gets cleared on purpose. }
+   { One line when it matters, so a third report can be diagnosed from a log
+     instead of a guess: this has now been chased through two orderings. }
+   if logger.IsDebugEnabled and
+      ((cbxRadio1.Items.Count = 0) or (cbxRadio2.Items.Count = 0)) then
+      begin
+      logger.Debug('[Prefs] capture SKIPPED for %s -- radio combos hold %d/%d items',
+                   [prof.Name, cbxRadio1.Items.Count, cbxRadio2.Items.Count]);
+      end;
+
+   if cbxRadio1.Items.Count > 0 then
+      begin
+      prof.Radio1Id   := SelectedTag(cbxRadio1);
+      prof.Radio1Name := RadioNameForId(prof.Radio1Id);
+      end;
+   if cbxRadio2.Items.Count > 0 then
+      begin
+      prof.Radio2Id   := SelectedTag(cbxRadio2);
+      prof.Radio2Name := RadioNameForId(prof.Radio2Id);
+      end;
+
    { THE CHOICE AND ITS ID TOGETHER. CWOutput carries 'CAT' or 'NONE' as
      itself and a keyer as its NAME; the id beside it is the reference and is
      empty for the two sentinels. Stamped here so a profile written by this
      build survives a keyer rename, and so an older profile picks one up the
      first time it is touched. }
-   prof.CWOutput1   := SelectedTag(cbxCW1);
-   prof.CWOutput2   := SelectedTag(cbxCW2);
-   prof.CWOutput1Id := KeyerIdForOutput(prof.CWOutput1);
-   prof.CWOutput2Id := KeyerIdForOutput(prof.CWOutput2);
+   if cbxCW1.Items.Count > 0 then
+      begin
+      prof.CWOutput1   := SelectedTag(cbxCW1);
+      prof.CWOutput1Id := KeyerIdForOutput(prof.CWOutput1);
+      end;
+   if cbxCW2.Items.Count > 0 then
+      begin
+      prof.CWOutput2   := SelectedTag(cbxCW2);
+      prof.CWOutput2Id := KeyerIdForOutput(prof.CWOutput2);
+      end;
    prof.SpeedSync1  := chkSpeedSync1.Checked;
    prof.SpeedSync2  := chkSpeedSync2.Checked;
    prof.SO2REnabled := chkSO2R.Checked;
