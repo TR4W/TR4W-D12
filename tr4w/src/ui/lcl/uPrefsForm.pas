@@ -2236,6 +2236,38 @@ begin
    BeginLoading;
    try
       prof := CurrentProfile;
+
+      { NO CURRENT PROFILE, BUT PROFILES EXIST, IS A TRANSIENT -- NOT AN ANSWER.
+
+        THIS is what emptied the combos when a profile was renamed, and it took
+        three wrong fixes to find because it clears the DISPLAY without touching
+        the model: the log showed both slots filled correctly (ItemIndex 3 and
+        7), no capture ever cleared them, and the rename produced no fill at all
+        -- because it came through here instead.
+
+        CurrentProfile resolves the profile combo's selection, and immediately
+        after a rename that selection can name a profile that no longer exists
+        under that name. The honest answer then is "ask again", not "there is no
+        profile": fall back to the active one, or the first, and only truly
+        empty the panel when the store really has none.
+
+        NY4I, three times: "renaming a profile clears out the radios defined in
+        the combo boxes." }
+      if (prof = nil) and (FStore.ProfileCount > 0) then
+         begin
+         prof := FStore.FindProfile(FStore.ActiveProfileName);
+         if prof = nil then
+            begin
+            prof := FStore.Profile(0);
+            end;
+         if logger.IsDebugEnabled then
+            begin
+            logger.Debug('[Prefs] no profile for combo tag %s -- falling back to "%s"',
+                         [SelectedTag(cbxProfile), prof.Name]);
+            end;
+         SelectByTag(cbxProfile, prof.Name);
+         end;
+
       if prof = nil then
          begin
          FillRadioNameCombo(cbxRadio1, '', '', '');
@@ -2250,6 +2282,12 @@ begin
          begin
          FillRadioNameCombo(cbxRadio1, prof.Radio1Id, prof.Radio2Id, TC_PREFS_RADIO2);
          FillRadioNameCombo(cbxRadio2, prof.Radio2Id, prof.Radio1Id, TC_PREFS_RADIO1);
+         if logger.IsDebugEnabled then
+            begin
+            logger.Debug('[Prefs] filled "%s": r1 id=%s -> ItemIndex=%d, r2 id=%s -> ItemIndex=%d',
+                         [prof.Name, prof.Radio1Id, cbxRadio1.ItemIndex,
+                          prof.Radio2Id, cbxRadio2.ItemIndex]);
+            end;
          FillCWOutputCombo(cbxCW1, prof.CWOutput1, RadioNameForId(prof.Radio1Id));
          FillCWOutputCombo(cbxCW2, prof.CWOutput2, RadioNameForId(prof.Radio2Id));
          chkSpeedSync1.Checked := prof.SpeedSync1;
@@ -2559,6 +2597,26 @@ begin
       begin
       logger.Debug('[Prefs] capture SKIPPED for %s -- radio combos hold %d/%d items',
                    [prof.Name, cbxRadio1.Items.Count, cbxRadio2.Items.Count]);
+      end;
+
+   { LOG THE HARMFUL EVENT ITSELF, not its neighbourhood. Two fences and an
+     emptiness rule have all failed to stop a rename clearing both slots, and
+     the SKIPPED line above never fired -- so the combos DO hold items and the
+     selection is what is wrong. This says so, with everything needed to tell
+     which: the profile, what is being overwritten, the item count and the
+     selected index. }
+   if logger.IsDebugEnabled then
+      begin
+      if (prof.Radio1Id <> '') and (SelectedTag(cbxRadio1) = '') then
+         begin
+         logger.Warn('[Prefs] CLEARING radio1 of "%s" (was %s); combo has %d item(s), ItemIndex=%d',
+                     [prof.Name, prof.Radio1Name, cbxRadio1.Items.Count, cbxRadio1.ItemIndex]);
+         end;
+      if (prof.Radio2Id <> '') and (SelectedTag(cbxRadio2) = '') then
+         begin
+         logger.Warn('[Prefs] CLEARING radio2 of "%s" (was %s); combo has %d item(s), ItemIndex=%d',
+                     [prof.Name, prof.Radio2Name, cbxRadio2.Items.Count, cbxRadio2.ItemIndex]);
+         end;
       end;
 
    if cbxRadio1.Items.Count > 0 then
