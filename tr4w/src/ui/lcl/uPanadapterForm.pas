@@ -2199,7 +2199,10 @@ begin
       GPanForms[aSlot].RestoreBounds;
       end;
 
-   GPanForms[aSlot].Show;
+   { NOT Show -- this window opens when the spectrum link comes up, not
+     because the operator asked for it, and Show would take the foreground
+     and the caret with it.  TR4W has exactly one place the operator types. }
+   ShowWithoutTakingFocus(GPanForms[aSlot]);
 end;
 
 procedure ClosePanadapterWindow(const aSlot: integer);

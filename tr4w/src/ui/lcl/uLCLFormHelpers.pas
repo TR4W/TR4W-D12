@@ -250,6 +250,21 @@ function ShowModalOverWin32Parent(const aForm: TCustomForm; const aParent: HWND)
   Call OWN before showing. CENTRE is separate because a form that resizes itself
   in OnShow -- the band plan measures its columns there -- must centre AFTER
   that, and only when it has not restored a saved position. }
+{ SHOW A TOOL WINDOW WITHOUT TAKING THE CARET.
+
+  TCustomForm.Show brings the form to the front and makes it active, which
+  is right for a window the operator just asked for and WRONG for one that
+  opens on a background event.  The panadapter opens when the radio spectrum
+  link comes up -- seconds after start-up -- and took the foreground with it,
+  leaving the operator typing into a palette combo box (measured 2026-08-28:
+  activeform=frmPanadapter_1, activecontrol=cboPalette).
+
+  Restoring activation afterwards, rather than showing with SW_SHOWNOACTIVATE,
+  keeps this HWND-free.  It does not fight the z-order either: these windows
+  are PopupParent-owned by the main window, so they stay above it and
+  re-activating the main form does not cover them. }
+procedure ShowWithoutTakingFocus(const aForm: TCustomForm);
+
 procedure OwnFormByMainWindow(const aForm: TCustomForm);
 procedure CentreOverMainWindow(const aForm: TCustomForm);
 
@@ -349,6 +364,35 @@ uses
    uRadioRegistry,
    ComPortEnumerator,
    VC;
+
+procedure ShowWithoutTakingFocus(const aForm: TCustomForm);
+var
+   prevForm: TCustomForm;
+   prevCtl:  TWinControl;
+begin
+   if aForm = nil then
+      begin
+      Exit;
+      end;
+
+   prevForm := Screen.ActiveForm;
+   prevCtl  := Screen.ActiveControl;
+
+   aForm.Show;
+
+   { Nothing to hand back to -- and never to the form just shown, which is
+     what Show already did. }
+   if (prevForm = nil) or (prevForm = aForm) or (not prevForm.IsVisible) then
+      begin
+      Exit;
+      end;
+
+   prevForm.BringToFront;
+   if (prevCtl <> nil) and prevCtl.CanFocus then
+      begin
+      prevCtl.SetFocus;
+      end;
+end;
 
 procedure OwnFormByMainWindow(const aForm: TCustomForm);
 begin

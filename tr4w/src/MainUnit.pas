@@ -4247,7 +4247,19 @@ begin
   // restored tool window is Shown, and showing a window can take the focus --
   // harmless when this ran before the message loop, but this now runs after
   // tCallWindowSetFocus has already put the caret where it belongs.
-  tCallWindowSetFocus;
+  //
+  // AND BRING THE MAIN WINDOW FORWARD WHILE DOING IT, which plain
+  // tCallWindowSetFocus does not.  Showing a tool window can take the
+  // FOREGROUND, not just the focus; setting focus into a form that is not
+  // frontmost records the intent -- ActiveControl -- and shows no caret, so
+  // the operator starts typing with nowhere visible to type (NY4I,
+  // 2026-08-28: 'after startup I do not know where the cursor is').
+  //
+  // FocusEntry keeps BringToFront opt-in because a caller that pulled TR4W
+  // to the foreground mid-contest would be a new and unwelcome behaviour.
+  // START-UP IS THE ONE PLACE THAT IS NOT TRUE: the operator just launched
+  // the program, and the window they launched belongs in front.
+  FocusEntry(TR4WCallEdit, True);
 end;
 
 { THE MAIN WINDOW FIRST, THE TOOL WINDOWS AFTER THE LOOP IS RUNNING.
