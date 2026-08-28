@@ -1006,6 +1006,8 @@ type
       function  BuildColorsSection: integer;
       procedure ColorGridSelectEditor(Sender: TObject; aCol, aRow: integer;
                                       var Editor: TWinControl);
+      procedure ColorGridPrepareCanvas(Sender: TObject; aCol, aRow: integer;
+                                       aState: TGridDrawState);
       procedure LoadColorRows;
       procedure SaveColorRows;
       function  BuildGeneratedSection(const aTag: NativeInt; const aHeading: string;
@@ -2800,6 +2802,11 @@ const
    COLORS_COL_ELEMENT = 0;
    COLORS_COL_FG      = 1;
    COLORS_COL_BG      = 2;
+   { A LIVE PREVIEW, asked for by NY4I: "Is it possible to arrange this dialog
+     to show in the table a sample of the text and background?" Two colour NAMES
+     side by side do not answer "is that readable" -- LIGHT GRAY on WHITE reads
+     fine as words and is nearly invisible on screen. }
+   COLORS_COL_SAMPLE  = 3;
 
 function TPrefsForm.BuildColorsSection: integer;
 var
@@ -2876,7 +2883,7 @@ begin
    // one now does too, and the pick list arrives through OnSelectEditor -- the
    // LCL's own way to give a column a drop-down without a Columns entry, and
    // still ONE editor for the whole grid rather than a control per cell.
-   FColorGrid.ColCount    := 3;
+   FColorGrid.ColCount    := 4;   { element, text, background, sample }
    FColorGrid.FixedRows   := 1;
    FColorGrid.FixedCols   := 0;
    FColorGrid.Options     := FColorGrid.Options + [goEditing, goVertLine, goHorzLine,
@@ -2884,10 +2891,15 @@ begin
    FColorGrid.Cells[COLORS_COL_ELEMENT, 0] := 'Element';
    FColorGrid.Cells[COLORS_COL_FG,      0] := 'Text';
    FColorGrid.Cells[COLORS_COL_BG,      0] := 'Background';
+   FColorGrid.Cells[COLORS_COL_SAMPLE,  0] := 'Sample';
    FColorGrid.ColWidths[COLORS_COL_ELEMENT] := 260;
    FColorGrid.ColWidths[COLORS_COL_FG]      := 170;
    FColorGrid.ColWidths[COLORS_COL_BG]      := 170;
-   FColorGrid.OnSelectEditor := ColorGridSelectEditor;
+   FColorGrid.ColWidths[COLORS_COL_SAMPLE]  := 170;
+   FColorGrid.OnSelectEditor  := ColorGridSelectEditor;
+   { The grid paints the sample cell; nothing here creates a control, which is
+     the whole reason this page is a grid rather than 150 windows. }
+   FColorGrid.OnPrepareCanvas := ColorGridPrepareCanvas;
 
    FreeAndNil(FPalette);
    FPalette := TStringList.Create;
@@ -2923,8 +2935,9 @@ begin
    // COLUMN 0 IS THE ELEMENT NAME and is not editable.  Refusing an editor is
    // how a grid says that per-column when there is no Columns collection to
    // carry a ReadOnly flag.
-   if aCol = COLORS_COL_ELEMENT then
+   if (aCol = COLORS_COL_ELEMENT) or (aCol = COLORS_COL_SAMPLE) then
       begin
+      { The sample is an OUTPUT. Editing it would offer to change a picture. }
       Editor := nil;
       Exit;
       end;
@@ -2937,6 +2950,51 @@ begin
       begin
       TCustomComboBox(Editor).Items.Assign(FPalette);
       end;
+end;
+
+{ The tr4wColors member a spelling names, or -1. The two tables are indexed by
+  the same enum, so the name in the grid and the TColor to paint with are the
+  same lookup. }
+function ColorIndexForName(const aName: string): integer;
+var
+   c: tr4wColors;
+begin
+   Result := -1;
+   for c := Low(tr4wColors) to High(tr4wColors) do
+      begin
+      if SameText(string(AnsiString(tr4wColorsSA[c])), Trim(aName)) then
+         begin
+         Result := Ord(c);
+         Exit;
+         end;
+      end;
+end;
+
+{ PAINT THE SAMPLE CELL IN THE COLOURS ITS ROW DESCRIBES.
+
+  OnPrepareCanvas rather than OnDrawCell: the grid still does the drawing, this
+  only says what to draw it with, so selection, focus and the rest keep working.
+  A row whose spelling matches nothing is left alone -- an unpainted cell is a
+  visible "I do not know that colour", which is better than guessing black. }
+procedure TPrefsForm.ColorGridPrepareCanvas(Sender: TObject; aCol, aRow: integer;
+                                            aState: TGridDrawState);
+var
+   fg, bg: integer;
+begin
+   if (aCol <> COLORS_COL_SAMPLE) or (aRow < 1) then
+      begin
+      Exit;
+      end;
+
+   fg := ColorIndexForName(FColorGrid.Cells[COLORS_COL_FG, aRow]);
+   bg := ColorIndexForName(FColorGrid.Cells[COLORS_COL_BG, aRow]);
+   if (fg < 0) or (bg < 0) then
+      begin
+      Exit;
+      end;
+
+   FColorGrid.Canvas.Brush.Color := tr4wColorsArray[tr4wColors(bg)];
+   FColorGrid.Canvas.Font.Color  := tr4wColorsArray[tr4wColors(fg)];
 end;
 
 procedure TPrefsForm.LoadColorRows;
@@ -2964,6 +3022,11 @@ begin
                begin
                FColorGrid.Cells[1, i + 1] := string(AnsiString(tr4wColorsSA[TWindows[e].mweColor]));
                FColorGrid.Cells[2, i + 1] := string(AnsiString(tr4wColorsSA[TWindows[e].mweBackG]));
+               { SOMETHING TO READ, not a swatch. The question the sample has to
+                 answer is "can I read this during a contest", so it carries
+                 letters and digits at the size the grid draws -- a plain block
+                 of colour would not answer it. }
+               FColorGrid.Cells[COLORS_COL_SAMPLE, i + 1] := 'W1AW 599 14.025';
                Break;
                end;
             end;
