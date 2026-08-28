@@ -99,7 +99,7 @@ function Get-VisibleChildCount
 }
 
 $target = Join-Path $Repo 'tr4w\target'
-if (-not $Exe) { $Exe = Join-Path $target 'tr4w.exe' }
+$Exe = Resolve-TR4WExe -Exe $Exe -Repo $Repo
 
 # Shared -- see UiDriver.psm1.  This copy had no guard for a missing corpus
 # set and died on a raw Copy-Item error; the shared one reports it.

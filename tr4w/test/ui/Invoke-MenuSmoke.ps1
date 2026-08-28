@@ -101,7 +101,7 @@ function Get-VisibleTopLevelCount
 
 $target = Join-Path $Repo 'tr4w\target'
 $log    = Join-Path $target 'tr4w.log'
-if (-not $Exe) { $Exe = Join-Path $target 'tr4w.exe' }
+$Exe = Resolve-TR4WExe -Exe $Exe -Repo $Repo
 
 if (-not (Test-Path -LiteralPath $Exe))
    {

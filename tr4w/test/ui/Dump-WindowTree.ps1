@@ -156,7 +156,7 @@ function Get-ProcessWindows
 }
 
 $target = Join-Path $Repo 'tr4w\target'
-if (-not $Exe) { $Exe = Join-Path $target 'tr4w.exe' }
+$Exe = Resolve-TR4WExe -Exe $Exe -Repo $Repo
 
 $launched = $null
 

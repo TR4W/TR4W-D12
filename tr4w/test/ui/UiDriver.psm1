@@ -88,6 +88,45 @@ function Assert-NoRunningTR4W
 # the base name and every path built from it is wrong. Measured both ways
 # 2026-08-13. The fragility is TR4W's and pre-dates FPC; an absolute path here
 # keeps the harness from manufacturing bug reports.
+function Resolve-TR4WExe
+{
+   <#
+   .SYNOPSIS
+      The binary a harness run should drive, unless one was named.
+
+   .DESCRIPTION
+      EVERY SCRIPT HERE DEFAULTED TO target\tr4w.exe, WHICH IS THE SHIPPED
+      BINARY. The FPC build writes build-out\app-i386-win32\tr4w_fpc.exe and
+      that is what NY4I runs; target\tr4w.exe is whatever was last installed.
+
+      So the harness was testing an artifact nobody had built. Measured
+      2026-08-28: a typing run reported 'Current program version = TR4W v.5.0.1'
+      while the tree was at 5.0.2 with a probe compiled in that never fired, and
+      an earlier window-tree comparison diffed against that same stale build.
+
+      Prefers the fresher of the two by write time, so a deliberate install is
+      still respected and a forgotten one cannot mislead. -Exe overrides both.
+   #>
+   param([string] $Exe, [Parameter(Mandatory = $true)][string] $Repo)
+
+   if ($Exe) { return $Exe }
+
+   $built    = Join-Path $Repo 'build-out\app-i386-win32\tr4w_fpc.exe'
+   $shipped  = Join-Path $Repo 'tr4w\target\tr4w.exe'
+   $haveB    = Test-Path $built
+   $haveS    = Test-Path $shipped
+
+   if ($haveB -and $haveS)
+      {
+      $b = (Get-Item $built).LastWriteTime
+      $s = (Get-Item $shipped).LastWriteTime
+      if ($b -ge $s) { return $built } else { return $shipped }
+      }
+   if ($haveB) { return $built }
+   if ($haveS) { return $shipped }
+   throw 'no tr4w binary found -- build one, or pass -Exe'
+}
+
 function Start-TR4WForDriving
 {
    param(
@@ -242,7 +281,7 @@ function Resolve-TR4WHarnessConfig
                              Message = $message; Failure = $null }
 }
 
-Export-ModuleMember -Function Find-TR4WMainWindow, Assert-NoRunningTR4W,
+Export-ModuleMember -Function Resolve-TR4WExe, Find-TR4WMainWindow, Assert-NoRunningTR4W,
                               Start-TR4WForDriving, Send-TR4WMenuCommand,
                               Stop-TR4WForDriving, Get-TR4WLogMark, Get-TR4WLogSince,
                               Resolve-TR4WHarnessConfig
