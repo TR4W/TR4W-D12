@@ -431,8 +431,14 @@ def main(argv=None):
 
    ap = argparse.ArgumentParser(description=__doc__)
    ap.add_argument("--list-languages", action="store_true",
-                   help="print the LANG codes this tree knows and exit")
-   ap.add_argument("--lang", help="LANG code, or ALL for "
+                   help="print the LANG codes this tree knows and exit "
+                        "(so does --lang with no value)")
+   # nargs="?" so `--lang` ON ITS OWN is legal and means "which are there?".
+   # Without it argparse rejects the flag before any of this runs -- which is
+   # what NY4I hit, and it is the exact form he asked for:
+   #   mt_seed.py --lang
+   #   error: argument --lang: expected one argument
+   ap.add_argument("--lang", nargs="?", const="", help="LANG code, or ALL for "
                                                  "--fix-spacing")
    ap.add_argument("--catalog", default="tr4w", choices=("tr4w", "help"),
                    help="which catalogue: the TC_ constants (default) or the "
