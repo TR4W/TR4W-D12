@@ -253,8 +253,34 @@ begin
   down := ((Windows.GetKeyState(VK_CONTROL) and $8000) <> 0) or
           ((Windows.GetKeyState(VK_MENU) and $8000) <> 0);
 
+  { WHY THIS IS INSTRUMENTED RATHER THAN GUESSED AT. NY4I, 2026-08-28: "When I
+    press CTRL in the main window, the function key labels do change but when I
+    unkey CTRL, they do not restore to their original non-CTRL setting. Same for
+    ALT." The press and the release are handled in two different places -- the
+    press by the entry field's OnKeyDown (uMainWindowProc), the release here,
+    application-wide -- so which half is missing decides the fix, and the two
+    look identical from outside.
+
+    It cannot be reproduced from the harness: Test-Typing drives keys with
+    PostMessage, which does not move the real keyboard state GetKeyState reads,
+    so a modifier hold cannot be simulated that way.
+
+    DEBUG level, and only on a TRANSITION, so it costs nothing unless the
+    operator has asked for it. }
+  if logger.IsDebugEnabled and (FModifierWasDown <> down) then
+     begin
+     logger.Debug('[Modifiers] %s -- ctrl=%s alt=%s',
+                  [BoolToStr(down, 'down', 'up'),
+                   BoolToStr((Windows.GetKeyState(VK_CONTROL) and $8000) <> 0, True),
+                   BoolToStr((Windows.GetKeyState(VK_MENU) and $8000) <> 0, True)]);
+     end;
+
   if FModifierWasDown and (not down) then
      begin
+     if logger.IsDebugEnabled then
+        begin
+        logger.Debug('[Modifiers] restoring the plain function-key bank');
+        end;
      ShowFMessages(0);
      end;
   FModifierWasDown := down;

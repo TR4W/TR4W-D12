@@ -1094,6 +1094,25 @@ is provable by build. Please give it a real session.
   instead of invalidating an owner-draw.
 - [ ] **Ctrl and Alt banks.** Hold Ctrl, then Alt, and confirm the captions
   switch to those banks and back on release. [AGENT - When I press CTRL in the main window, the function key labels do change but when I unkey CTRL, they do not restore to their original non-CTRL setting. Same for ALT.]
+
+  **INSTRUMENTED 2026-08-28 (`pending`), not yet fixed -- and deliberately so.**
+  The press and the release are handled in two DIFFERENT places: the press by
+  the entry field's `OnKeyDown` (`uMainWindowProc`, `ShowFMessages(12)` for
+  Ctrl and `(24)` for Alt), the release application-wide in
+  `uAppInputHooks.UserInput`, which watches a `GetKeyState` TRANSITION and
+  calls `ShowFMessages(0)`. Both are wired and installed, so which half is
+  missing decides the fix and the two look identical from the outside.
+
+  It cannot be reproduced from the harness: `Test-Typing` drives keys with
+  `PostMessage`, which does not move the real keyboard state `GetKeyState`
+  reads, so a modifier HOLD cannot be simulated. Driving it with `SendInput`
+  would type into whatever has focus on NY4I's desktop.
+
+  So `DEBUG LOG LEVEL = DEBUG`, press and release Ctrl, then Alt, and send the
+  `[Modifiers]` lines. Two lines per press means the transition is seen and the
+  restore ran -- the fault is then in `ShowFMessages(0)` itself. No second line
+  means the release never reaches the handler, which is a different fix.
+
 - [ ] **AN AMPERSAND IN A CW MESSAGE.** Put `&` in an F-key message and check it
   shows as one `&`, not none and not two. `ShowFMessages` deliberately doubles
   it; a `TPanel` caption treats `&` the same way the owner-draw did, so the
