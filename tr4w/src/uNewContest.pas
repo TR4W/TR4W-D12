@@ -44,16 +44,17 @@ type
   InitialCommands =
     (icmyCheck, icmyFDClass, icmyGrid, icmyFOC, icmyIOTA, icmyName, icmyPark, icmyPrec, icmyQTH, icmySection, icmyState, icmyZone, icmyPostalCode);
 
-function NewContestDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-procedure BeginNewContest(h: HWND);
+{ GONE WITH THE DIALOG PROCEDURE (2026-08-28): NewContestDlgProc itself,
+  NewSelectContestListBoxProc -- a list box SUBCLASSED to catch Enter -- and
+  ChangeDir and StartContestFromListbox, which existed to drive DlgDirListA
+  and DlgDirSelectExA around a filesystem the brief says this dialog should
+  not be browsing. See TfrmNewContest.PopulateFiles. }
+procedure BeginNewContest;
 procedure ClearFields;
-procedure SaveNewContest(h: HWND);
+procedure SaveNewContest;
 procedure DisplayCheckBox(Text: string);
 procedure SetCommentAndEnableEditControl(comment: string; EditControl: InitialCommands);
 procedure EnterCountyOrState(State: string);
-procedure StartContestFromListbox();
-function NewSelectContestListBoxProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): integer; stdcall;
-procedure ChangeDir;
 procedure DisplayInitialCommand(Command: InitialCommands);
 //procedure FillMyStateComboBox;
 
@@ -69,6 +70,9 @@ procedure ShowNewContest;
 
 implementation
 uses
+  SysUtils,            // Format, Trim, FreeAndNil -- the RTL, not TF shims
+  Controls,            // mrOk -- the modal results
+  uNewContestForm,     // the designed form this unit now drives
   MainUnit,
   uRadioConfigApply,   // GetLatestConfigFile -- the last contest, from tr4w.json
   uCFG;                // SetCFGCommandValue -- the one route to a [COMMANDS] value
@@ -108,251 +112,44 @@ const
     );
 
 var
-  InitialCommandsHWNDArray              : array[1..CSAS, 1..2] of HWND;
   NewContestDisplayedCommands           : integer;
-  NewContestCheckBox                    : HWND;
-  NewContestDlgWndHandle                : HWND;
-  NewContestListBoxHandle               : HWND;
-  NewContestCommentWndHandle            : HWND;
 //  NewContestAllowReturn                 : boolean;
   SelectedContest                       : ContestType;
-  OldSelectContestListBoxProc           : Pointer;
 
 const
 
 {(*}
-  NC_CALL_EDIT                               = 221;
-  NC_CONTEST_COMBOBOX                        = 233;
-  NC_BUTTON_OK                               = 101;
-  NC_BUTTON_CANCEL                           = 102;
-  NC_BUTTON_LATEST_CONFIG                    = 73;
-  NC_CHECKBOX_IAMIN                          = 107;
-  NC_LISTBOX                                 = 444;
   {*)}
 
   sfFLAG                                = DDL_ARCHIVE or DDL_READWRITE or DDL_DIRECTORY;
 
-function NewContestDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-label
-  1, ExitAndClose;
-var
-  TempCardinal                          : Cardinal;
-  ct                                    : ContestType;
-  Top                                   : integer;
+{ THE CONTEST-SPECIFIC PROMPTS, MOVED VERBATIM.
 
-  TempCategoryAssisted                  : tCategoryAssisted;
-  TempCategoryBand                      : tCategoryBand;
-  TempCategoryMode                      : tCategoryMode;
-  TempCategoryOperator                  : tCategoryOperator;
-  TempCategoryPower                     : tCategoryPower;
-  TempCategoryTransmitter               : tCategoryTransmitter;
-  
+  These two case statements are ~240 lines of contest knowledge -- which
+  contest wants a district code, which wants a DOK, which wants an oblast --
+  built up one contest at a time over years. NOTHING here was retyped or
+  reformatted during the LCL conversion: they were lifted out of
+  NewContestDlgProc's WM_COMMAND arms as they stood, because the risk in a
+  conversion is not the code you rewrite carefully, it is the line you retype
+  slightly differently and nobody notices until that contest weekend.
 
-//  TempActiveExchange                    : ExchangeType;
-//  TempExchangeInformation               : ExchangeInformationRecord;
-const
-  h                                     = 18;
-  BS_COMMANDLINK                        = $0000000E;
+  They reach the screen through five presentation helpers, and it is only
+  those helpers that changed: SetWindowTextA on a control handle became a
+  method on the form. }
 
+{ The 'I am in <state>' box was ticked or cleared. }
+procedure ApplyIAmIn;
 begin
-  Result := False;
-  case Msg of
-    WM_INITDIALOG:
+   ClearFields;
+   frmNewContest.SetComment('');
+
+   { Unticked: the prompts below are what ticking it ASKS FOR, so there is
+     nothing to put up. Was an Exit out of the dialog procedure. }
+   if not frmNewContest.IAmIn then
       begin
-        NewContestDlgWndHandle := hwnddlg;
-
-        // Issue #915: shrink left column by 30 px to give the right-side
-        // CATEGORY-* labels room.  CATEGORY-TRANSMITTER (the longest label)
-        // was being clipped on the left because the label area was too
-        // narrow for right-aligned text.  Listbox entries are typically
-        // ~25-30 chars (e.g. "[2025 FLORIDA QSO PARTY NY4I]") which still
-        // fit comfortably at width 250.
-        CreateStatic(RC_CAPTION, 5, 5, 250, hwnddlg, 445);
-         {LISTBOX}
-        CreateListBox(5, 35, 250, 370, hwnddlg, NC_LISTBOX);
-
-        // FROM settings\tr4w.json, not tr4w.ini (NY4I, 2026-08-16). This is the
-        // read half of the move; the write is in tr4w.dpr. An empty result is
-        // the ordinary first-run state and simply hides the button below.
-        Windows.ZeroMemory(@TR4W_LATESTCFG_FILENAME, SizeOf(FileNameType));
-        Windows.lstrcpynA(TR4W_LATESTCFG_FILENAME,
-                          PAnsiChar(WinAnsi(GetLatestConfigFile)),
-                          SizeOf(FileNameType));
-        if TR4W_LATESTCFG_FILENAME[0] <> #0 then
-           begin
-
-           if FileExists(TR4W_LATESTCFG_FILENAME) then
-
-              begin
-
-              {BUTTON LATEST CONFIG}
-                  TempCardinal := tWM_SETFONT(
-                    CreateWindowExW(0, ButtonPChar, nil, BS_MULTILINE or WS_CHILD or BS_TEXT or WS_VISIBLE {or WS_TABSTOP}, 5, 415, 250, 50 {nHeight}, hwnddlg, NC_BUTTON_LATEST_CONFIG, hInstance, nil),
-                    MSSansSerifFont);
-
-                  Windows.CopyMemory(@TempBuffer1, @TR4W_LATESTCFG_FILENAME, SizeOf(FileNameType));
-                  Windows.CharLowerA(TempBuffer1);
-                  TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_LATEST_CONFIG_FILE + ' (Alt+&A):'#13#10'%s')), TempBuffer1);
-                  //i := GetDlgItem(hwnddlg, NC_BUTTON_LATEST_CONFIG);
-
-                  Windows.SetWindowTextA(TempCardinal, wsprintfBuffer);
-                  EnableWindow(TempCardinal, True);
-                  Windows.ShowWindow(TempCardinal, SW_SHOW);
-              end;
-           end;
-
-        // Issue #915: labels shifted left + widened to fit CATEGORY-TRANSMITTER
-        // at right-align.  x was 300, w was 125+20 (=145).  Now x=270, w=155+20.
-        tCreateStaticWindow('MY CALL', WS_CHILD or SS_NOTIFY or SS_RIGHT or SS_NOPREFIX or WS_VISIBLE, 270, 5, 155 + 20, h, hwnddlg, 0);
-
-        tCreateStaticWindow('CONTEST', WS_CHILD or SS_NOTIFY or SS_RIGHT or SS_NOPREFIX or WS_VISIBLE, 270, 33, 155 + 20, h, hwnddlg, 0);
-        tWM_SETFONT(CreateWindowW(StaticPChar, nil, SS_SUNKEN or SS_center or WS_CHILD or WS_VISIBLE, 305, 95, 300, 40, hwnddlg, 106, hInstance, nil), MSSansSerifFont);
-
-        {MY CALL}
-        CreateEdit(ES_UPPERCASE, 455, 5, 150, 23, hwnddlg, NC_CALL_EDIT);
-        {CONTEST}
-        tCreateComboBoxWindow(WS_VSCROLL + CBS_SORT + CBS_UPPERCASE + CBS_DROPDOWNLIST or CBS_AUTOHSCROLL or WS_CHILD or WS_VISIBLE or WS_TABSTOP, 455, 30, 150, hwnddlg, NC_CONTEST_COMBOBOX);
-        {I AM IN}
-         Windows.ShowWindow(CreateButton(BS_AUTOCHECKBOX or BS_LEFT or BS_TOP or BS_MULTILINE or WS_CHILD or WS_TABSTOP, '', 420, 60, 430, hwnddlg, NC_CHECKBOX_IAMIN), SW_HIDE); // 4.76.3
-
-        Windows.SetWindowTextW(hwnddlg, PWideChar(TR4W_CURRENTVERSION + TC_OPENCONFIGURATIONFILE));
-
-        NewContestListBoxHandle := GetDlgItem(hwnddlg, NC_LISTBOX);
-
-        TF.Format(wsprintfBuffer, '%s*.CFG', TR4W_PATH_NAME);
-
-        Windows.DlgDirListA(hwnddlg, wsprintfBuffer, NC_LISTBOX, 445, sfFLAG + DDL_DRIVES);
-        SelectParentDir(NewContestListBoxHandle);
-        OldSelectContestListBoxProc := Pointer(Windows.SetWindowLong(NewContestListBoxHandle, GWL_WNDPROC, integer(@NewSelectContestListBoxProc)));
-        tWM_SETFONT(NewContestListBoxHandle, MainFixedFont);
-
-        for ct := Succ(DUMMYCONTEST) to High(ContestType) do
-           begin
-           tCB_ADDSTRING_PCHAR(hwnddlg, NC_CONTEST_COMBOBOX, ContestTypeSA[ct]);
-           end;
-
-        NewContestCheckBox := GetDlgItem(hwnddlg, NC_CHECKBOX_IAMIN);
-
-
-        NewContestCommentWndHandle := GetDlgItem(hwnddlg, 106);
-        tLoadKeyboardLayout;
-
-        for TempCardinal := 1 to CSAS do
-           begin
-           Top := 120 + TempCardinal * (h + 6);
-           // Issue #915: CATEGORY-* labels shifted left + widened so the
-           // longest one (CATEGORY-TRANSMITTER) fits at right-align without
-           // clipping.  Was: x=300, w=128+20 (=148).  Now: x=270, w=158+20.
-           InitialCommandsHWNDArray[TempCardinal, 1] := tCreateStaticWindow(InitialCommandsSA2[TempCardinal], WS_CHILD or SS_NOTIFY or SS_RIGHT or SS_NOPREFIX or WS_VISIBLE, 270, Top, 158 + 20, h, hwnddlg, 0);
-           if TempCardinal < 4 then
-              begin
-              InitialCommandsHWNDArray[TempCardinal, 2] := tCreateEditWindow(WS_EX_STATICEDGE, '', WS_TABSTOP or WS_CHILD or ES_UPPERCASE, 435 + 20, Top, 173 - 20, h, hwnddlg, 0)
-              end
-           else
-              begin
-              InitialCommandsHWNDArray[TempCardinal, 2] := tCreateComboBoxWindow({CBS_SORT + }CBS_UPPERCASE + CBS_DROPDOWNLIST or WS_CHILD or {WS_VSCROLL or } WS_VISIBLE or WS_TABSTOP, 435 + 20, Top, 173 - 20, hwnddlg, 0);
-              end;
-           end;
-
-        for TempCategoryAssisted := Low(tCategoryAssisted) to High(tCategoryAssisted) do
-           begin
-           SendMessageA(InitialCommandsHWNDArray[4, 2], CB_ADDSTRING, 0, integer(tCategoryAssistedSA[TempCategoryAssisted]));
-           end;
-
-        for TempCategoryBand := Low(tCategoryBand) to High(tCategoryBand) do
-           begin
-           SendMessageA(InitialCommandsHWNDArray[5, 2], CB_ADDSTRING, 0, integer(tCategoryBandSA[TempCategoryBand]));
-           end;
-
-        for TempCategoryMode := Low(tCategoryMode) to High(tCategoryMode) do
-           begin
-           SendMessageA(InitialCommandsHWNDArray[6, 2], CB_ADDSTRING, 0, integer(tCategoryModeSA[TempCategoryMode]));
-           end;
-
-        for TempCategoryOperator := Low(tCategoryOperator) to High(tCategoryOperator) do
-           begin
-           SendMessageA(InitialCommandsHWNDArray[7, 2], CB_ADDSTRING, 0, integer(tCategoryOperatorSA[TempCategoryOperator]));
-           end;
-
-        for TempCategoryPower := Low(tCategoryPower) to High(tCategoryPower) do
-           begin
-           SendMessageA(InitialCommandsHWNDArray[8, 2], CB_ADDSTRING, 0, integer(tCategoryPowerSA[TempCategoryPower]));
-           end;
-
-        for TempCategoryTransmitter := Low(tCategoryTransmitter) to High(tCategoryTransmitter) do
-           begin
-           SendMessageA(InitialCommandsHWNDArray[9, 2], CB_ADDSTRING, 0, integer(tCategoryTransmitterSA[TempCategoryTransmitter]));
-           end;
-
-        for TempCardinal := 4 to CSAS do
-           begin
-           SendMessage(InitialCommandsHWNDArray[TempCardinal, 2], CB_SETCURSEL, 0, 0);
-           end;
-
-        // THE LIVE VALUE, NOT THE INI.  This used to read MAIN CALLSIGN out of
-        // tr4w.ini straight into the MainCallsign global -- but that row is
-        // csJSON, so settings\tr4w.json owns it and ApplyStoredCommands has
-        // already put the right value in that global at startup.  Reading the
-        // ini here did not merely show a stale callsign in the box: it
-        // OVERWROTE the live global with it, so opening New Contest on a
-        // station whose ini disagreed silently changed the operator's callsign.
-        // On a station with no ini at all it blanked it.
-        //
-        // Same defect as tr4w.dpr's DEBUG LOG LEVEL read (fixed 2026-08-21):
-        // a migrated row still being read from the file it no longer lives in.
-        if MainCallsign <> '' then
-           begin
-           Windows.SetDlgItemTextA(hwnddlg, NC_CALL_EDIT, @MainCallsign[1]);
-           end;
-
-        {OK}
-        CreateButton(BS_DEFPUSHBUTTON, rsMbOK, 350, 430, 80, hwnddlg, NC_BUTTON_OK);
-        SendMessage(hwnddlg, DM_SETDEFID, NC_BUTTON_OK, 0);
-        {CANCEL}
-        CreateButton(0, rsMbCancel, 350 + 90, 430, 80, hwnddlg, NC_BUTTON_CANCEL);
-
+      Exit;
       end;
 
-    WM_CLOSE:
-      begin
-        ExitAndClose:
-        TR4W_CFG_FILENAME[0] := '_';
-        EndDialog(hwnddlg, 0);
-      end;
-
-    WM_COMMAND:
-      begin
-        if HiWord(wParam) = LBN_DBLCLK then
-           begin
-           ChangeDir;
-           end;
-
-        if HiWord(wParam) = BN_CLICKED then
-           begin
-           if LoWord(wParam) = NC_BUTTON_LATEST_CONFIG then
-              begin
-              Windows.CopyMemory(@TR4W_CFG_FILENAME, @TR4W_LATESTCFG_FILENAME, SizeOf(FileNameType));
-              DestroyWindow(NewContestDlgWndHandle);
-              end;
-
-           if LoWord(wParam) = NC_CHECKBOX_IAMIN then
-              begin
-              ClearFields;
-
-              Windows.SetWindowTextA(NewContestCommentWndHandle, nil);
-               if Windows.SendMessage(NewContestCheckBox, BM_GETCHECK, 0, 0) = BST_UNCHECKED then
-
-
-                  begin
-                  {
-              if SelectedContest = NYQP then
-              begin
-                SetCommentAndEnableEditControl(TC_ENTERSTATEFORUSPROVINCEFORCANADA, nc_MyState);
-                EnableWindow(GetDlgItem(hwnddlg, 101), False);
-              end;
-}
-                                Exit;
-                  end;
               case SelectedContest of
               MWC:
               ;
@@ -367,7 +164,14 @@ begin
 
                 ARRL10, ARRL160, ARRLDXCW, ARRL_RTTY_ROUNDUP:
                   begin
-                     Windows.SendMessage(107, BM_SETCHECK, BST_CHECKED, 0);
+                     { WAS: SendMessage(107, BM_SETCHECK, ...). 107 is a control
+                       ID, not an HWND, so this addressed whatever window
+                       happened to have handle 107 -- almost certainly nothing.
+                       Pre-existing, and present in the D7 tree too; it is
+                       dropped rather than carried across, because there is no
+                       LCL control it could mean. If these four contests are
+                       supposed to pre-tick something, that is a new decision
+                       and needs saying out loud. }
                     SetCommentAndEnableEditControl(TC_ENTERTHEQTHTHATYOUWANTTOSEND, icmyState);
                   end;
 
@@ -420,23 +224,22 @@ begin
                   SetCommentAndEnableEditControl(TC_PREFECTURE, icmyState);
 
               end;
-              end;
 
-           end;
+   BeginNewContest;
+end;
 
-        if HiWord(wParam) = CBN_SELCHANGE then
-          if LoWord(wParam) = NC_CONTEST_COMBOBOX then
-             begin
-             SelectedContest := GetContestFromString(GetDialogItemText(hwnddlg, NC_CONTEST_COMBOBOX));
-             ClearFields;
-             Windows.SetWindowTextA(NewContestCommentWndHandle, nil);
-             Windows.ShowWindow(NewContestCheckBox, SW_HIDE);
-             Windows.SendMessage(NewContestCheckBox, BM_SETCHECK, BST_UNCHECKED, 0);
+{ A contest was chosen in the combo. }
+procedure ApplyContestChoice;
+begin
+   SelectedContest := GetContestFromString(frmNewContest.ContestName);
+   ClearFields;
+   frmNewContest.SetComment('');
+   frmNewContest.ResetIAmIn;
 
-             if (ContestsArray[SelectedContest].p <> 0) and (SelectedContest <> BCQP)  then
-                begin
-                EnterCountyOrState(QSOParties[ContestsArray[SelectedContest].p].StateName);
-                end;
+   if (ContestsArray[SelectedContest].p <> 0) and (SelectedContest <> BCQP) then
+      begin
+      EnterCountyOrState(QSOParties[ContestsArray[SelectedContest].p].StateName);
+      end;
 
              case SelectedContest of
               LABRE:
@@ -522,8 +325,7 @@ begin
                BSCI, IARU: DisplayCheckBox(TC_HQ_OR_MEMBER);
                IOTA:
                  begin
-                   Windows.SetWindowTextW(NewContestCheckBox, PWideChar(TC_ISLANDSTATION));
-                   Windows.ShowWindow(NewContestCheckBox, SW_SHOW);
+                   frmNewContest.ShowIAmIn(TC_ISLANDSTATION);
                  end;
 
                WWPMC: DisplayCheckBox('PMC');
@@ -559,8 +361,7 @@ begin
 
               POTA:
                  begin
-                  Windows.SetWindowTextA(NewContestCheckBox, 'Activator');
-                  Windows.ShowWindow(NewContestCheckBox, SW_SHOW);
+                  frmNewContest.ShowIAmIn('Activator');
                  end;
               WINTERFIELDDAY:
                  begin
@@ -612,65 +413,59 @@ begin
 
              end;
 
-             end;
-        BeginNewContest(hwnddlg);
+   BeginNewContest;
+end;
 
-        case wParam of
-{$IFDEF LANG_RUS}
-//          104: ShowHelp('ru_selectingacontest');
-{$ENDIF}
-          NC_BUTTON_CANCEL, 2: goto ExitAndClose;
-          NC_BUTTON_OK: SaveNewContest(hwnddlg);
-        end;
-      end;
-  end;
+{ Anything typed that can change whether OK is legal. In the dialog procedure
+  this was BeginNewContest called at the bottom of EVERY WM_COMMAND, which is
+  the same rule said once. }
+procedure FieldsChanged;
+begin
+   BeginNewContest;
 end;
 
 procedure ClearFields;
-var
-  i                                     : integer;
 begin
   NewContestDisplayedCommands := 0;
-  for i := 1 to 3 do
-     begin
-     ShowWindow(InitialCommandsHWNDArray[i, 1], SW_HIDE);
-     ShowWindow(InitialCommandsHWNDArray[i, 2], SW_HIDE);
-     Windows.SetWindowTextA(InitialCommandsHWNDArray[i, 2], nil);
-     end;
+  frmNewContest.ClearRows;
 end;
 
-procedure BeginNewContest(h: HWND);
+{ WHETHER OK IS LEGAL YET. Same four rules, asked of the form instead of of
+  control handles: a contest is chosen, the callsign is at least three
+  characters and passes IsAGoodCall, and every row this contest asked for has
+  been filled in. }
+procedure BeginNewContest;
 var
-  res                                   : LongBool;
-  i                                     : Cardinal;
-  Call                                  : CallString;
+  res  : boolean;
+  i    : integer;
+  Call : string;
 begin
-  res := True;
-  if tCB_GETCURSEL(h, NC_CONTEST_COMBOBOX) = -1 then
+  res  := frmNewContest.ContestChosen;
+  Call := frmNewContest.MyCall;
+
+  if Length(Call) < 3 then
      begin
      res := False;
      end;
-  i := GetDlgItemTextA(h, NC_CALL_EDIT, @Call[1], SizeOf(CallString));
-  if i < 3 then
-     begin
-     res := False;
-     end;
-  Call[0] := AnsiChar(i);
-  if not IsAGoodCall(Call) then
+
+  { IsAGoodCall takes the ShortString the contest engine uses. }
+  if res and (not IsAGoodCall(CallString(Call))) then
      begin
      res := False;
      end;
 
   for i := 1 to NewContestDisplayedCommands do
-    if Windows.GetWindowTextLength(InitialCommandsHWNDArray[i, 2]) = 0 then
-       begin
-       res := False;
-       end;
-  EnableWindow(GetDlgItem(h, NC_BUTTON_OK), res);
+     begin
+     if Trim(frmNewContest.RowText(i)) = '' then
+        begin
+        res := False;
+        end;
+     end;
 
+  frmNewContest.EnableOK(res);
 end;
 
-procedure SaveNewContest(h: HWND);
+procedure SaveNewContest;
 var
   f                                     : HWND;
   i                                     : Cardinal;
@@ -678,7 +473,10 @@ var
 begin
   begin
       {callsign}
-    i := Windows.GetDlgItemTextA(h, NC_CALL_EDIT, TempBuffer1, SizeOf(TempBuffer1));
+    { The .cfg is written as bytes, so the two working buffers stay ANSI; what
+      changed is where the text comes from -- the form, not a control id. }
+    Windows.lstrcpynA(TempBuffer1, PAnsiChar(WinAnsi(frmNewContest.MyCall)),
+                      SizeOf(TempBuffer1));
     if MainCallsign = '' then
        begin
        // THROUGH THE REGISTRY, NOT STRAIGHT AT THE INI.  'MAIN CALLSIGN' is a
@@ -694,7 +492,8 @@ begin
     DeleteSlashes(TempBuffer1);
 
       {Contest Name}
-    Windows.GetDlgItemTextA(h, NC_CONTEST_COMBOBOX, TempBuffer2, SizeOf(TempBuffer2));
+    Windows.lstrcpynA(TempBuffer2, PAnsiChar(WinAnsi(frmNewContest.ContestName)),
+                      SizeOf(TempBuffer2));
 
     if TempBuffer2 = 'POTA' then
        begin
@@ -709,27 +508,39 @@ begin
   end;
 
   {CFGFileName}
-  Windows.GetDlgItemTextA(h, NC_CONTEST_COMBOBOX, TempBuffer1, SizeOf(TempBuffer1));
+  Windows.lstrcpynA(TempBuffer1, PAnsiChar(WinAnsi(frmNewContest.ContestName)),
+                    SizeOf(TempBuffer1));
   TF.Format(TR4W_CFG_FILENAME, '%s%s.CFG', wsprintfBuffer, TempBuffer1);
 
   if FileExists(TR4W_CFG_FILENAME) then
      begin
      TF.Format(SYSERRORBUFFER, PAnsiChar(WinAnsi(TC_FOLDERALREADYEXISTSOVERWRITE)), TR4W_CFG_FILENAME);
-     if YesOrNo(h, SYSERRORBUFFER) = IDno then Exit;
+     if YesOrNo(string(PAnsiChar(@SYSERRORBUFFER[0]))) = IDno then Exit;
      end;
 
   f := CreateFileA(TR4W_CFG_FILENAME, GENERIC_WRITE, FILE_SHARE_WRITE, nil, CREATE_ALWAYS, FILE_ATTRIBUTE_ARCHIVE, 0);
   if f <> INVALID_HANDLE_VALUE then
      begin
 
-     Windows.GetDlgItemTextA(h, NC_CALL_EDIT, TempBuffer1, SizeOf(TempBuffer1));
+     Windows.lstrcpynA(TempBuffer1, PAnsiChar(WinAnsi(frmNewContest.MyCall)),
+                       SizeOf(TempBuffer1));
      BytesToWrite := TF.Format(wsprintfBuffer, ';Created by ' + TR4W_CURRENTVERSION + #13#10#13#10'[COMMANDS]'#13#10'MY CALL=%s'#13#10, TempBuffer1);
      sWriteFile(f, wsprintfBuffer, BytesToWrite);
 
+     { The row's LABEL is the command name and its field is the value, which is
+       why the label is read back rather than held in a parallel array. A row
+       the contest never asked for is empty and is skipped, exactly as the
+       zero-length GetWindowTextA did. }
      for i := 1 to CSAS do
         begin
-        GetWindowTextA(InitialCommandsHWNDArray[i, 1], TempBuffer1, SizeOf(TempBuffer1));
-        if GetWindowTextA(InitialCommandsHWNDArray[i, 2], TempBuffer2, SizeOf(TempBuffer2)) = 0 then Continue;
+        if Trim(frmNewContest.RowText(i)) = '' then
+           begin
+           Continue;
+           end;
+        Windows.lstrcpynA(TempBuffer1, PAnsiChar(WinAnsi(frmNewContest.RowCaption(i))),
+                          SizeOf(TempBuffer1));
+        Windows.lstrcpynA(TempBuffer2, PAnsiChar(WinAnsi(frmNewContest.RowText(i))),
+                          SizeOf(TempBuffer2));
         BytesToWrite := TF.Format(wsprintfBuffer, '%s=%s'#13#10, TempBuffer1, TempBuffer2);
         sWriteFile(f, wsprintfBuffer, BytesToWrite);
         end;
@@ -748,7 +559,8 @@ begin
      // Pre-existing in D7 (uNewContest.pas:660 there), not a port regression.
      // Existing .cfg files are unaffected -- this only changes what is newly
      // written, and TR4W already reads an unterminated last line correctly.
-     Windows.GetDlgItemTextA(h, NC_CONTEST_COMBOBOX, TempBuffer1, SizeOf(TempBuffer1));
+     Windows.lstrcpynA(TempBuffer1, PAnsiChar(WinAnsi(frmNewContest.ContestName)),
+                       SizeOf(TempBuffer1));
      BytesToWrite := TF.Format(wsprintfBuffer, 'CONTEST=%s'#13#10, TempBuffer1);
      sWriteFile(f, wsprintfBuffer, BytesToWrite);
 
@@ -764,7 +576,7 @@ begin
      TempBuffer1[lstrlenA(TempBuffer1) - 1] := 'W';
      Windows.DeleteFileA(TempBuffer1); // no-op (returns False) if no .TRW exists
 
-     DestroyWindow(h);
+     { The modal form closes itself -- ShowNewContest reads Choice. }
      end
   else
      begin
@@ -773,76 +585,139 @@ begin
 
 end;
 
+{ The formatting is Format, not TF.Format through a shared PAnsiChar buffer:
+  these strings go to an LCL caption, so there is no byte boundary to cross and
+  no reason to route them via wsprintfBuffer. }
 procedure DisplayCheckBox(Text: string);
 begin
-  // Issue #997: asm-push wsprintf -> Format (TC_IAMIN = '&I am in %s').
-  TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_IAMIN)), PAnsiChar(WinAnsi(Text)));
-  Windows.SetWindowTextA(NewContestCheckBox, wsprintfBuffer);
-  Windows.ShowWindow(NewContestCheckBox, SW_SHOW);
+  frmNewContest.ShowIAmIn(Format(TC_IAMIN, [Text]));
 end;
 
 procedure SetCommentAndEnableEditControl(comment: string; EditControl: InitialCommands);
 begin
   DisplayInitialCommand(EditControl);
-  Windows.SetWindowTextW(NewContestCommentWndHandle, PWideChar(comment));
+  frmNewContest.SetComment(comment);
 end;
-
 
 procedure EnterCountyOrState(State: string);
 begin
   DisplayInitialCommand(icmyState);
-  // Issue #997: asm-push wsprintf -> Format. TC_ENTERYOURCOUNTYORSTATEPOROVINCEDX
-  // has two %s, both = State.
-  TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_ENTERYOURCOUNTYORSTATEPOROVINCEDX)),
-     PAnsiChar(WinAnsi(State)), PAnsiChar(WinAnsi(State)));
-  Windows.SetWindowTextA(NewContestCommentWndHandle, wsprintfBuffer);
+  { TC_ENTERYOURCOUNTYORSTATEPOROVINCEDX has two %s, both the state. }
+  frmNewContest.SetComment(Format(TC_ENTERYOURCOUNTYORSTATEPOROVINCEDX,
+                                  [State, State]));
 end;
 
-procedure StartContestFromListbox();
-var
-  p                                     : PAnsiChar;
-begin
-  p := TR4W_CFG_FILENAME;
-  GetDlgItemTextA(NewContestDlgWndHandle, 445, TR4W_CFG_FILENAME, SizeOf(TR4W_CFG_FILENAME));
-  Windows.GetFullPathNameA(@TempBuffer1, 256, @TR4W_CFG_FILENAME, p);
-  DestroyWindow(NewContestDlgWndHandle);
-end;
-
-function NewSelectContestListBoxProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): integer; stdcall;
-begin
-  if Msg = WM_KEYUP then
-    if wParam = VK_RETURN then
-       begin
-       ChangeDir;
-       end;
-  Result := CallWindowProc(OldSelectContestListBoxProc, hwnddlg, Msg, wParam, lParam);
-end;
-
-procedure ChangeDir;
-begin
-  if Windows.DlgDirSelectExA(NewContestDlgWndHandle, TempBuffer1, SizeOf(TempBuffer1), NC_LISTBOX) = False then
-     begin
-     StartContestFromListbox;
-     Exit;
-     end;
-  Windows.lstrcatA(TempBuffer1, '*.CFG');
-  Windows.DlgDirListA(NewContestDlgWndHandle, TempBuffer1, NC_LISTBOX, 445, sfFLAG);
-
-  SelectParentDir(NewContestListBoxHandle);
-end;
-
+{ Rows are handed out IN ORDER as contests ask for them -- the counter is the
+  next free row, not the command's identity. Two contests wanting two fields
+  get rows 1 and 2 whichever fields those are. }
 procedure DisplayInitialCommand(Command: InitialCommands);
 begin
   inc(NewContestDisplayedCommands);
-  ShowWindow(InitialCommandsHWNDArray[NewContestDisplayedCommands, 1], SW_SHOWNORMAL);
-  ShowWindow(InitialCommandsHWNDArray[NewContestDisplayedCommands, 2], SW_SHOWNORMAL);
-  Windows.SetWindowTextA(InitialCommandsHWNDArray[NewContestDisplayedCommands, 1], InitialCommandsSA[Command]);
+  frmNewContest.EnableRow(NewContestDisplayedCommands,
+                          string(InitialCommandsSA[Command]));
 end;
 
 
+{ WHAT WM_INITDIALOG DID, minus creating thirty controls by hand. }
+procedure PrepareForm;
+var
+   latest: string;
+   i     : integer;
+begin
+   frmNewContest.Caption := TR4W_CURRENTVERSION + TC_OPENCONFIGURATIONFILE;
+   frmNewContest.PopulateFiles(string(TR4W_PATH_NAME));
+
+   // THE LIVE VALUE, NOT THE INI.  This used to read MAIN CALLSIGN out of
+   // tr4w.ini straight into the MainCallsign global -- but that row is
+   // csJSON, so settings\tr4w.json owns it and ApplyStoredCommands has
+   // already put the right value in that global at startup.  Reading the
+   // ini here did not merely show a stale callsign in the box: it
+   // OVERWROTE the live global with it, so opening New Contest on a
+   // station whose ini disagreed silently changed the operator's callsign.
+   // On a station with no ini at all it blanked it.
+   if MainCallsign <> '' then
+      begin
+      frmNewContest.SetMyCall(string(MainCallsign));
+      end;
+
+   // FROM settings\tr4w.json, not tr4w.ini (NY4I, 2026-08-16). An empty
+   // result is the ordinary first-run state and simply hides the button.
+   latest := GetLatestConfigFile;
+   Windows.ZeroMemory(@TR4W_LATESTCFG_FILENAME, SizeOf(FileNameType));
+   Windows.lstrcpynA(TR4W_LATESTCFG_FILENAME, PAnsiChar(WinAnsi(latest)),
+                     SizeOf(FileNameType));
+
+   if (latest <> '') and FileExists(latest) then
+      begin
+      frmNewContest.ShowLatest(Format(TC_LATEST_CONFIG_FILE + ' (Alt+&A):'#13#10'%s',
+                                      [LowerCase(latest)]));
+      end
+   else
+      begin
+      frmNewContest.ShowLatest('');
+      end;
+
+   { The six CATEGORY-* rows are labelled once and stay labelled. Rows 1..3 are
+     nil in this table because they are named per contest by DisplayInitialCommand. }
+   for i := 1 to CSAS do
+      begin
+      if InitialCommandsSA2[i] <> nil then
+         begin
+         frmNewContest.SetRowLabel(i, string(InitialCommandsSA2[i]));
+         end;
+      end;
+
+   BeginNewContest;   { OK starts disabled unless the form is already valid }
+end;
+
+{ The operator picked an existing .cfg from the list.
+
+  StartContestFromListbox read the file name back out of the static that
+  DlgDirListA wrote the current directory into, then expanded it with
+  GetFullPathNameA because the list could be showing any directory. With a flat
+  list of one directory there is nothing to expand: the name joins the path it
+  was listed from. }
+procedure OpenSelectedConfig;
+begin
+   { A FULL path already -- the grid can be showing any directory, which is why
+     SelectedFile answers with the path and not just the name. }
+   Windows.lstrcpynA(TR4W_CFG_FILENAME,
+                     PAnsiChar(WinAnsi(frmNewContest.SelectedFile)),
+                     SizeOf(FileNameType));
+end;
+
 procedure ShowNewContest;
 begin
-   CreateModalDialog(305, 235, tr4whandle, @NewContestDlgProc, 0);
+   frmNewContest := TfrmNewContest.Create(nil);
+   try
+      OnContestChanged := ApplyContestChoice;
+      OnIAmInChanged   := ApplyIAmIn;
+      OnFieldsChanged  := FieldsChanged;
+
+      PrepareForm;
+
+      if frmNewContest.ShowModal = mrOk then
+         begin
+         case frmNewContest.Choice of
+            nccOpenSelected: OpenSelectedConfig;
+            nccLatest:       Windows.CopyMemory(@TR4W_CFG_FILENAME,
+                                                @TR4W_LATESTCFG_FILENAME,
+                                                SizeOf(FileNameType));
+            nccCreate:       SaveNewContest;
+         end;
+         end
+      else
+         begin
+         { WM_CLOSE set this sentinel and uProgramMain tests it to mean
+           "the operator did not choose a contest" -- see the caller. }
+         TR4W_CFG_FILENAME[0] := '_';
+         end;
+   finally
+      OnContestChanged := nil;
+      OnIAmInChanged   := nil;
+      OnFieldsChanged  := nil;
+      FreeAndNil(frmNewContest);
+   end;
 end;
 end.
 

@@ -42,6 +42,7 @@ uses
    Grids,      // TStringGrid -- the band plan and the beacon monitor
    Buttons,    // TSpeedButton -- the beacon monitor's push-like radio group
    Menus,      // TPopupMenu / TMenuItem -- the band map's context menu
+   Dialogs,         // TOpenDialog -- the New Contest file picker
    DateTimePicker;  // TDateTimePicker -- the Edit QSO date/time field
 
 const
@@ -349,6 +350,8 @@ begin
                     // ExtCtrls
                     TImage, TShape, TBevel, TRadioGroup, TCheckGroup,
                     TSplitter, TScrollBox, TTimer, TPaintBox,
+                    // Dialogs
+                    TOpenDialog,
                     // ComCtrls
                     TListView, TProgressBar, TTrackBar, TStatusBar, TToolBar,
                     TUpDown,

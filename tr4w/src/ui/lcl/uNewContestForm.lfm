@@ -1,131 +1,172 @@
 object frmNewContest: TfrmNewContest
   Left = 0
-  Height = 490
+  Height = 524
   Top = 0
-  Width = 620
+  Width = 740
   BorderIcons = [biSystemMenu]
   Caption = 'Open configuration file or start a new contest'
-  ClientHeight = 490
-  ClientWidth = 620
-  Constraints.MinHeight = 490
-  Constraints.MinWidth = 620
+  ClientHeight = 524
+  ClientWidth = 740
+  Constraints.MinHeight = 460
+  Constraints.MinWidth = 660
   Position = poScreenCenter
   LCLVersion = '4.8.0.0'
   OnCreate = HandleCreate
   OnShow = HandleShow
-  object lblFiles: TLabel
+  object gbExisting: TGroupBox
     Left = 8
-    Height = 18
+    Height = 468
     Top = 8
-    Width = 252
-    AutoSize = False
-    Caption = 'Configuration files'
-  end
-  object lstFiles: TListBox
-    Left = 8
-    Height = 370
-    Top = 30
-    Width = 252
-    ItemHeight = 0
-    OnDblClick = lstFilesDblClick
-    ScrollWidth = 250
+    Width = 300
+    Anchors = [akTop, akLeft, akBottom]
+    Caption = 'Open an existing configuration'
+    ClientHeight = 448
+    ClientWidth = 296
     TabOrder = 0
+    object lstFiles: TListBox
+      Left = 10
+      Height = 328
+      Top = 8
+      Width = 276
+      Anchors = [akTop, akLeft, akRight, akBottom]
+      ItemHeight = 0
+      OnDblClick = lstFilesDblClick
+      TabOrder = 0
+    end
+    object btnBrowse: TButton
+      Left = 10
+      Height = 30
+      Top = 344
+      Width = 276
+      Anchors = [akLeft, akRight, akBottom]
+      Caption = 'Browse...'
+      TabOrder = 1
+      OnClick = btnBrowseClick
+    end
+    object dlgOpen: TOpenDialog
+      Title = 'Open configuration file'
+      DefaultExt = '.cfg'
+      Filter = 'TR4W configuration files|*.cfg|All files|*.*'
+      Options = [ofPathMustExist, ofFileMustExist, ofEnableSizing, ofViewDetail]
+    end
+    object btnLatest: TButton
+      Left = 10
+      Height = 44
+      Top = 388
+      Width = 276
+      Anchors = [akLeft, akRight, akBottom]
+      Caption = 'Latest config file'
+      TabOrder = 2
+      OnClick = btnLatestClick
+    end
   end
-  object btnLatest: TButton
-    Left = 8
-    Height = 50
-    Top = 408
-    Width = 252
-    Caption = 'Latest config file'
-    TabOrder = 1
-    OnClick = btnLatestClick
-  end
-  object lblMyCall: TLabel
-    Left = 272
-    Height = 18
-    Top = 11
-    Width = 176
-    Alignment = taRightJustify
-    AutoSize = False
-    Caption = 'MY CALL'
-  end
-  object edtMyCall: TEdit
-    Left = 456
-    Height = 23
+  object gbNew: TGroupBox
+    Left = 316
+    Height = 468
     Top = 8
-    Width = 152
-    CharCase = ecUpperCase
-    TabOrder = 2
-  end
-  object lblContest: TLabel
-    Left = 272
-    Height = 18
-    Top = 39
-    Width = 176
-    Alignment = taRightJustify
-    AutoSize = False
-    Caption = 'CONTEST'
-  end
-  object cboContest: TComboBox
-    Left = 456
-    Height = 23
-    Top = 36
-    Width = 152
-    ItemHeight = 0
-    Sorted = True
-    Style = csDropDownList
-    TabOrder = 3
-    OnChange = cboContestChange
-  end
-  object chkIAmIn: TCheckBox
-    Left = 272
-    Height = 23
-    Top = 66
-    Width = 336
-    Caption = ' '
-    TabOrder = 4
-    Visible = False
-    OnChange = chkIAmInChange
-  end
-  object pnlComment: TPanel
-    Left = 272
-    Height = 44
-    Top = 94
-    Width = 336
-    BevelOuter = bvNone
-    BorderStyle = bsSingle
-    Color = clForm
-    ParentColor = False
-    TabOrder = 5
-    object lblComment: TLabel
-      Left = 6
-      Height = 32
-      Top = 4
-      Width = 322
-      Alignment = taCenter
+    Width = 416
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    Caption = 'Start a new contest'
+    ClientHeight = 448
+    ClientWidth = 412
+    TabOrder = 1
+    object lblMyCall: TLabel
+      Left = 12
+      Height = 20
+      Top = 14
+      Width = 140
+      Alignment = taRightJustify
       AutoSize = False
-      Caption = ''
-      WordWrap = True
+      Caption = 'MY CALL'
+      Layout = tlCenter
+    end
+    object edtMyCall: TEdit
+      Left = 160
+      Height = 26
+      Top = 11
+      Width = 200
+      Anchors = [akTop, akLeft, akRight]
+      CharCase = ecUpperCase
+      TabOrder = 0
+    end
+    object lblContest: TLabel
+      Left = 12
+      Height = 20
+      Top = 48
+      Width = 140
+      Alignment = taRightJustify
+      AutoSize = False
+      Caption = 'CONTEST'
+      Layout = tlCenter
+    end
+    object cboContest: TComboBox
+      Left = 160
+      Height = 26
+      Top = 45
+      Width = 200
+      Anchors = [akTop, akLeft, akRight]
+      ItemHeight = 0
+      Sorted = True
+      Style = csDropDownList
+      TabOrder = 1
+      OnChange = cboContestChange
+    end
+    object chkIAmIn: TCheckBox
+      Left = 160
+      Height = 23
+      Top = 78
+      Width = 272
+      Anchors = [akTop, akLeft, akRight]
+      Caption = ' '
+      TabOrder = 2
+      Visible = False
+      OnChange = chkIAmInChange
+    end
+    object pnlComment: TPanel
+      Left = 12
+      Height = 52
+      Top = 108
+      Width = 420
+      Anchors = [akTop, akLeft, akRight]
+      BevelOuter = bvNone
+      BorderStyle = bsSingle
+      Color = clInfoBk
+      ParentColor = False
+      TabOrder = 3
+      object lblComment: TLabel
+        Left = 8
+        Height = 40
+        Top = 5
+        Width = 404
+        Alignment = taCenter
+        Anchors = [akTop, akLeft, akRight]
+        AutoSize = False
+        Caption = ''
+        Layout = tlCenter
+        WordWrap = True
+      end
     end
   end
   object btnOK: TButton
-    Left = 352
-    Height = 25
-    Top = 434
-    Width = 80
+    Left = 548
+    Height = 30
+    Top = 484
+    Width = 88
+    Anchors = [akRight, akBottom]
     Caption = 'OK'
     Default = True
-    TabOrder = 6
+    TabOrder = 2
     OnClick = btnOKClick
   end
   object btnCancel: TButton
-    Left = 442
-    Height = 25
-    Top = 434
-    Width = 80
+    Left = 644
+    Height = 30
+    Top = 484
+    Width = 88
+    Anchors = [akRight, akBottom]
     Cancel = True
     Caption = 'Cancel'
     ModalResult = 2
-    TabOrder = 7
+    TabOrder = 3
   end
 end
