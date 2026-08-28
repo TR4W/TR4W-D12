@@ -904,12 +904,6 @@ msgid "Germany"
 msgstr "Alemania"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_uk tr4w/src/lang/tr4w_consts_eng.pas:173
-msgctxt "TC_UK"
-msgid "UK"
-msgstr "UK"
-
-#. Section: NEW CONTEST
 #: utr4wstrings:tc_arktikaclub tr4w/src/lang/tr4w_consts_eng.pas:174
 msgctxt "TC_ARKTIKACLUB"
 msgid "club"
@@ -944,12 +938,6 @@ msgstr "Suiza"
 msgctxt "TC_HQ"
 msgid "HQ (HQ station)"
 msgstr "HQ (HQ station)"
-
-#. Section: NEW CONTEST
-#: utr4wstrings:tc_cis tr4w/src/lang/tr4w_consts_eng.pas:180
-msgctxt "TC_CIS"
-msgid "CIS"
-msgstr "CIS"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_spain tr4w/src/lang/tr4w_consts_eng.pas:181
@@ -2373,17 +2361,6 @@ msgctxt "TC_SHOW_ALL_SERIAL_PORTS"
 msgid "Show all serial ports"
 msgstr "Mostrar todos los puertos serie"
 
-#. Section: UEDITMESSAGE
-#: tfrmabout.btnok.caption tfrmaltd.btnok.caption tfrmautocq.btnok.caption
-#: tfrmbandplan.btnok.caption tfrmeditmessage.btnok.caption
-#: tfrminputquery.btnok.caption tfrmlpt.btnok.caption
-#: tfrmmessageslist.btnok.caption tfrmsendspot.btnok.caption
-#: tfrmudpdestinationedit.btnok.caption tfrmwinmanager.btnok.caption
-#: utr4wstrings:ok_word tr4w/src/lang/tr4w_consts_eng.pas:530
-msgctxt "tfrmabout.btnok.caption"
-msgid "OK"
-msgstr "OK"
-
 #: tfrmabout.caption
 msgid "About TR4W"
 msgstr "Acerca de TR4W"
@@ -2639,11 +2616,6 @@ msgstr "Fecha"
 msgid "Domestic"
 msgstr "Interior"
 
-#: tfrmeditqso.lbldx.caption
-#, fuzzy
-msgid "DX"
-msgstr "DX"
-
 #: tfrmeditqso.lblfrequency.caption
 #, fuzzy
 msgid "Frequency, Hz"
@@ -2710,11 +2682,6 @@ msgstr "Prefijo"
 #, fuzzy
 msgid "QSO points"
 msgstr "Puntos de QSO"
-
-#: tfrmeditqso.lblqth.caption
-#, fuzzy
-msgid "QTH"
-msgstr "QTH"
 
 #: tfrmeditqso.lblradio.caption
 #, fuzzy
@@ -5064,7 +5031,7 @@ msgstr "Paquete de prueba enviado a %s:%d. UDP no puede confirmar que llegó - c
 #: utr4wstrings:tc_translation_credit tr4w/src/lang/tr4w_consts_eng.pas:13
 msgctxt "TC_TRANSLATION_CREDIT"
 msgid "%s translation by %s"
-msgstr ""
+msgstr "%s traducción por %s"
 
 #. Section: UTELNET
 #: utr4wstrings:tc_telnet tr4w/src/lang/tr4w_consts_eng.pas:195
@@ -5847,58 +5814,58 @@ msgstr "Desactivar modo Split TX"
 #: utr4wstrings:rc_wkmode tr4w/src/lang/tr4w_consts_eng.pas:813
 msgctxt "RC_wkMode"
 msgid "Re-initialize WinKeyer"
-msgstr ""
+msgstr "Reinicializar WinKeyer"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_downloadingctydat tr4w/src/lang/tr4w_consts_eng.pas:827
 msgctxt "TC_DOWNLOADINGCTYDAT"
 msgid "Downloading CTY.DAT..."
-msgstr ""
+msgstr "Descargar CTY.DAT..."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_downloadingtrmasterdta tr4w/src/lang/tr4w_consts_eng.pas:828
 msgctxt "TC_DOWNLOADINGTRMASTERDTA"
 msgid "Downloading TRMASTER.DTA..."
-msgstr ""
+msgstr "Descargando TRMASTER.DTA..."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_downloadingpotaparks tr4w/src/lang/tr4w_consts_eng.pas:829
 msgctxt "TC_DOWNLOADINGPOTAPARKS"
 msgid "Downloading POTA parks..."
-msgstr ""
+msgstr "Descargar parques POTA..."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_hamscorequeueingfulllogresync
 #: tr4w/src/lang/tr4w_consts_eng.pas:830
 msgctxt "TC_HAMSCOREQUEUEINGFULLLOGRESYNC"
 msgid "HamScore: queueing full log resync..."
-msgstr ""
+msgstr "HamScore: colar el resync del registro completo..."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_logincalldoeslooklikecallsign
 #: tr4w/src/lang/tr4w_consts_eng.pas:831
 msgctxt "TC_LOGINCALLDOESLOOKLIKECALLSIGN"
 msgid "Login call does not look like a callsign"
-msgstr ""
+msgstr "La llamada de inicio no parece una llamada"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_nopotaparksloggedyetsession
 #: tr4w/src/lang/tr4w_consts_eng.pas:832
 msgctxt "TC_NOPOTAPARKSLOGGEDYETSESSION"
 msgid "No POTA parks logged yet this session"
-msgstr ""
+msgstr "No POTA parks logged yet this session"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_cwoff tr4w/src/lang/tr4w_consts_eng.pas:833
 msgctxt "TC_CWOFF"
 msgid "CW Off"
-msgstr ""
+msgstr "CW Off"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_cannotopenlogfile tr4w/src/lang/tr4w_consts_eng.pas:834
 msgctxt "TC_CANNOTOPENLOGFILE"
 msgid "Cannot open log file"
-msgstr ""
+msgstr "No se puede abrir el archivo de registro"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_scannoteditedhere tr4w/src/lang/tr4w_consts_eng.pas:835
@@ -5911,88 +5878,88 @@ msgstr ""
 #: tr4w/src/lang/tr4w_consts_eng.pas:836
 msgctxt "TC_DEBUGMODECREATEDPREFIXESTXT"
 msgid "debug mode created prefixes.txt"
-msgstr ""
+msgstr "modo de depuración creado prefixes.txt"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_potaparksloaded tr4w/src/lang/tr4w_consts_eng.pas:837
 msgctxt "TC_POTAPARKSLOADED"
 msgid "POTA parks loaded"
-msgstr ""
+msgstr "Parques POTA cargados"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_potaparksfilecouldloaded
 #: tr4w/src/lang/tr4w_consts_eng.pas:838
 msgctxt "TC_POTAPARKSFILECOULDLOADED"
 msgid "POTA parks file could not be loaded"
-msgstr ""
+msgstr "POTA parks file could not be loaded"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_potaparksdownloadfailed
 #: tr4w/src/lang/tr4w_consts_eng.pas:839
 msgctxt "TC_POTAPARKSDOWNLOADFAILED"
 msgid "POTA parks download failed"
-msgstr ""
+msgstr "POTA parks descarga falló"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_trmasterdtadownloadedrestarttr4wus
 #: tr4w/src/lang/tr4w_consts_eng.pas:840
 msgctxt "TC_TRMASTERDTADOWNLOADEDRESTARTTR4WUS"
 msgid "TRMASTER.DTA downloaded -- restart TR4W to use it"
-msgstr ""
+msgstr "TRMASTER.DTA descargada -- reiniciar TR4W para utilizarlo"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_trmasterdtadownloadfailed
 #: tr4w/src/lang/tr4w_consts_eng.pas:841
 msgctxt "TC_TRMASTERDTADOWNLOADFAILED"
 msgid "TRMASTER.DTA download failed"
-msgstr ""
+msgstr "TRMASTER.DTA descarga fallada"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_ctydatdownloadedreloading
 #: tr4w/src/lang/tr4w_consts_eng.pas:842
 msgctxt "TC_CTYDATDOWNLOADEDRELOADING"
 msgid "CTY.DAT downloaded. Reloading..."
-msgstr ""
+msgstr "CTY.DAT descargado. Recargando..."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_ctydatreloadedsuccessfully
 #: tr4w/src/lang/tr4w_consts_eng.pas:843
 msgctxt "TC_CTYDATRELOADEDSUCCESSFULLY"
 msgid "CTY.DAT reloaded successfully."
-msgstr ""
+msgstr "CTY.DAT volvió a cargar con éxito."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_ctydatdownloadfailed tr4w/src/lang/tr4w_consts_eng.pas:844
 msgctxt "TC_CTYDATDOWNLOADFAILED"
 msgid "CTY.DAT download failed."
-msgstr ""
+msgstr "La descarga de CTY.DAT falló."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_errorplayingvoicememory
 #: tr4w/src/lang/tr4w_consts_eng.pas:845
 msgctxt "TC_ERRORPLAYINGVOICEMEMORY"
 msgid "Error playing voice memory"
-msgstr ""
+msgstr "Error jugando memoria de voz"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_flushinitialexcommandexecuted
 #: tr4w/src/lang/tr4w_consts_eng.pas:846
 msgctxt "TC_FLUSHINITIALEXCOMMANDEXECUTED"
 msgid "FLUSHINITIALEX command is executed."
-msgstr ""
+msgstr "El comando FLUSHINITIALEX se ejecuta."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_autospotenabledtestmodeonly
 #: tr4w/src/lang/tr4w_consts_eng.pas:847
 msgctxt "TC_AUTOSPOTENABLEDTESTMODEONLY"
 msgid "AUTOSPOT is enabled - Test Mode Only"
-msgstr ""
+msgstr "AUTOSPOT está habilitado - modo de prueba solamente"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_handlogmodetrue tr4w/src/lang/tr4w_consts_eng.pas:848
 msgctxt "TC_HANDLOGMODETRUE"
 msgid "HAND LOG MODE = TRUE"
-msgstr ""
+msgstr "HAND LOG MODE = TRUE"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_trmasterdtas tr4w/src/lang/tr4w_consts_eng.pas:849
@@ -6004,303 +5971,303 @@ msgstr ""
 #: utr4wstrings:tc_tr4wtimewarning tr4w/src/lang/tr4w_consts_eng.pas:850
 msgctxt "TC_TR4WTIMEWARNING"
 msgid "TR4W Time Warning"
-msgstr ""
+msgstr "TR4W Tiempo de advertencia"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_errorofferingcommanderproxytcpport
 #: tr4w/src/lang/tr4w_consts_eng.pas:851
 msgctxt "TC_ERROROFFERINGCOMMANDERPROXYTCPPORT"
 msgid "Error offering Commander proxy TCP Port"
-msgstr ""
+msgstr "Oferta de error Commander proxy TCP Port"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_pttviacommandsctrljoptionmusttruew
 #: tr4w/src/lang/tr4w_consts_eng.pas:852
 msgctxt "TC_PTTVIACOMMANDSCTRLJOPTIONMUSTTRUEW"
 msgid "PTT VIA COMMANDS (CTRL-J) option must be true for WSJT-X use - Setting to true"
-msgstr ""
+msgstr "PTT VIA COMMANDS (CTRL-J) opción debe ser verdad para el uso WSJT-X - Ajuste a la verdad"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_cannotdisablesplittransmitslicecre
 #: tr4w/src/lang/tr4w_consts_eng.pas:853
 msgctxt "TC_CANNOTDISABLESPLITTRANSMITSLICECRE"
 msgid "Cannot disable split -- the transmit slice was created on the radio. Turn it off in the SDR."
-msgstr ""
+msgstr "No se puede deshabilitar la división -- la rebanada de transmisión fue creada en la radio. Apágalo en la RDA."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_sorryusedupallreminders
 #: tr4w/src/lang/tr4w_consts_eng.pas:854
 msgctxt "TC_SORRYUSEDUPALLREMINDERS"
 msgid "Sorry, you have used up all your reminders!!"
-msgstr ""
+msgstr "¡Lo siento, has usado todos tus recordatorios!"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_invaliddate tr4w/src/lang/tr4w_consts_eng.pas:855
 msgctxt "TC_INVALIDDATE"
 msgid "Invalid date!!"
-msgstr ""
+msgstr "¡Fecha inválida!"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_enoughmemoryinitialexchangearray
 #: tr4w/src/lang/tr4w_consts_eng.pas:856
 msgctxt "TC_ENOUGHMEMORYINITIALEXCHANGEARRAY"
 msgid "Not enough memory for initial exchange array!!"
-msgstr ""
+msgstr "¡No hay suficiente memoria para el array de intercambio inicial!"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_findingzeroendvisibledupesheetlist
 #: tr4w/src/lang/tr4w_consts_eng.pas:857
 msgctxt "TC_FINDINGZEROENDVISIBLEDUPESHEETLIST"
 msgid "Not finding zero at end visible dupesheet list!!"
-msgstr ""
+msgstr "¡No encontrar cero al final de la lista de hojas de hoja visible!"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_qtcprocessterminated tr4w/src/lang/tr4w_consts_eng.pas:858
 msgctxt "TC_QTCPROCESSTERMINATED"
 msgid "QTC process terminated."
-msgstr ""
+msgstr "El proceso QTC terminó."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_qtcnumberillegalcharacters
 #: tr4w/src/lang/tr4w_consts_eng.pas:859
 msgctxt "TC_QTCNUMBERILLEGALCHARACTERS"
 msgid "QTC Number has illegal characters."
-msgstr ""
+msgstr "QTC Number tiene caracteres ilegales."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_numbermessagesillegalcharacters
 #: tr4w/src/lang/tr4w_consts_eng.pas:860
 msgctxt "TC_NUMBERMESSAGESILLEGALCHARACTERS"
 msgid "Number of messages has illegal characters."
-msgstr ""
+msgstr "El número de mensajes tiene caracteres ilegales."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_qtcprocessterminatedinvalidnumberm
 #: tr4w/src/lang/tr4w_consts_eng.pas:861
 msgctxt "TC_QTCPROCESSTERMINATEDINVALIDNUMBERM"
 msgid "QTC process terminated.  Invalid number of messages."
-msgstr ""
+msgstr "El proceso QTC terminó. Número inválido de mensajes."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_ifoundcontestnameidonounderstandlo
 #: tr4w/src/lang/tr4w_consts_eng.pas:862
 msgctxt "TC_IFOUNDCONTESTNAMEIDONOUNDERSTANDLO"
 msgid "I found a contest name I do no understand in your LOGCFG.DAT file."
-msgstr ""
+msgstr "Encontré un nombre de concurso que no entiendo en su archivo LOGCFG.DAT."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_ididfinecontestnamelogcfgdatfile
 #: tr4w/src/lang/tr4w_consts_eng.pas:863
 msgctxt "TC_IDIDFINECONTESTNAMELOGCFGDATFILE"
 msgid "I did not fine a contest name in your LOGCFG.DAT file."
-msgstr ""
+msgstr "No me gustó un nombre de concurso en su archivo LOGCFG.DAT."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_arenewengland tr4w/src/lang/tr4w_consts_eng.pas:864
 msgctxt "TC_ARENEWENGLAND"
 msgid "Are you in New England?"
-msgstr ""
+msgstr "¿Estás en Nueva Inglaterra?"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_cwtimerfired tr4w/src/lang/tr4w_consts_eng.pas:865
 msgctxt "TC_CWTIMERFIRED"
 msgid "CW Timer fired"
-msgstr ""
+msgstr "CW Timer fired"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_testradiointerface tr4w/src/lang/tr4w_consts_eng.pas:866
 msgctxt "TC_TESTRADIOINTERFACE"
 msgid "TEST RADIO INTERFACE"
-msgstr ""
+msgstr "TEST RADIO INTERFACE"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_unablesavedtaasciifile tr4w/src/lang/tr4w_consts_eng.pas:867
 msgctxt "TC_UNABLESAVEDTAASCIIFILE"
 msgid "Unable to save .DTA to ASCII file."
-msgstr ""
+msgstr "Incapaz de guardar .DTA al archivo ASCII."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_savingdtafileasciifileprocessingce
 #: tr4w/src/lang/tr4w_consts_eng.pas:868
 msgctxt "TC_SAVINGDTAFILEASCIIFILEPROCESSINGCE"
 msgid "Saving .DTA file to ASCII file.  Processing cell   "
-msgstr ""
+msgstr "Guardar archivo .DTA al archivo ASCII. Celda de procesamiento   "
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_datasuccessfullysavedasciifile
 #: tr4w/src/lang/tr4w_consts_eng.pas:869
 msgctxt "TC_DATASUCCESSFULLYSAVEDASCIIFILE"
 msgid "Data successfully saved to ASCII file."
-msgstr ""
+msgstr "Los datos se guardan con éxito en el archivo ASCII."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_notrmasterdtafilefound tr4w/src/lang/tr4w_consts_eng.pas:870
 msgctxt "TC_NOTRMASTERDTAFILEFOUND"
 msgid "No TRMASTER.DTA file found."
-msgstr ""
+msgstr "No hay archivo TRMASTER.DTA encontrado."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_hitcounthistogram050 tr4w/src/lang/tr4w_consts_eng.pas:871
 msgctxt "TC_HITCOUNTHISTOGRAM050"
 msgid "Hit count histogram for 0 to 50+ : "
-msgstr ""
+msgstr "Hit cuenta histograma para 0 a 50+ : "
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_pleasecheckmultinetwork
 #: tr4w/src/lang/tr4w_consts_eng.pas:872
 msgctxt "TC_PLEASECHECKMULTINETWORK"
 msgid "Please check multi network"
-msgstr ""
+msgstr "Por favor, compruebe la red multi"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_possibledatalossmultinetwork
 #: tr4w/src/lang/tr4w_consts_eng.pas:873
 msgctxt "TC_POSSIBLEDATALOSSMULTINETWORK"
 msgid "Possible data loss on multi network."
-msgstr ""
+msgstr "Posible pérdida de datos en red multi."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_selectspotreturnleftorrightarrowse
 #: tr4w/src/lang/tr4w_consts_eng.pas:874
 msgctxt "TC_SELECTSPOTRETURNLEFTORRIGHTARROWSE"
 msgid "Select spot.  RETURN, left or right arrow to select.  ESCAPE to exit."
-msgstr ""
+msgstr "Seleccione el lugar. RETURN, flecha izquierda o derecha para seleccionar. CESPAP para salir."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_entercallsignspacedupecheckalthhel
 #: tr4w/src/lang/tr4w_consts_eng.pas:875
 msgctxt "TC_ENTERCALLSIGNSPACEDUPECHECKALTHHEL"
 msgid "ENTER a callsign.  SPACE for dupecheck.  Alt-H for help."
-msgstr ""
+msgstr "ENTRA UNA CALENDA. ESPACIO para el control. Alt-H por ayuda."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_continueenteringcharactersautoterm
 #: tr4w/src/lang/tr4w_consts_eng.pas:876
 msgctxt "TC_CONTINUEENTERINGCHARACTERSAUTOTERM"
 msgid "Continue entering characters.  Auto terminate active!!"
-msgstr ""
+msgstr "Sigue entrando personajes. Auto terminar activo!!"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_continueenteringcharacterspressret
 #: tr4w/src/lang/tr4w_consts_eng.pas:877
 msgctxt "TC_CONTINUEENTERINGCHARACTERSPRESSRET"
 msgid "Continue entering characters and press RETURN when done."
-msgstr ""
+msgstr "Continuar entrando personajes y presionar RETURN cuando esté hecho."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_enterexchangepressenterlogescapeab
 #: tr4w/src/lang/tr4w_consts_eng.pas:878
 msgctxt "TC_ENTEREXCHANGEPRESSENTERLOGESCAPEAB"
 msgid "Enter exchange.  Press ENTER to log, ESCAPE to abort QSO."
-msgstr ""
+msgstr "Entra en intercambio. Presione ENTER para iniciar sesión, ESCAPE para abortar QSO."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_relaycontrolportpaddleport
 #: tr4w/src/lang/tr4w_consts_eng.pas:879
 msgctxt "TC_RELAYCONTROLPORTPADDLEPORT"
 msgid "RELAY CONTROL PORT = PADDLE PORT"
-msgstr ""
+msgstr "RELAY CONTROL PORT = PADDLE PORT"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_locationfieldempty tr4w/src/lang/tr4w_consts_eng.pas:880
 msgctxt "TC_LOCATIONFIELDEMPTY"
 msgid "LOCATION field is empty."
-msgstr ""
+msgstr "El campo de la LOCACIÓN está vacío."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_pttlockouttrue tr4w/src/lang/tr4w_consts_eng.pas:881
 msgctxt "TC_PTTLOCKOUTTRUE"
 msgid "PTT LOCKOUT=TRUE"
-msgstr ""
+msgstr "PTT LOCKOUT=TRUE"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_preferencescouldopeneds
 #: tr4w/src/lang/tr4w_consts_eng.pas:882
 msgctxt "TC_PREFERENCESCOULDOPENEDS"
 msgid "Preferences could not be opened (%s)."
-msgstr ""
+msgstr "Las preferencias no pueden abrirse (%s)."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_theseentrieswereacceptedbeensaved
 #: tr4w/src/lang/tr4w_consts_eng.pas:883
 msgctxt "TC_THESEENTRIESWEREACCEPTEDBEENSAVED"
 msgid "These entries were not accepted and have not been saved:"
-msgstr ""
+msgstr "Estas entradas no fueron aceptadas y no se han salvado:"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_tciservercouldopenportds
 #: tr4w/src/lang/tr4w_consts_eng.pas:884
 msgctxt "TC_TCISERVERCOULDOPENPORTDS"
 msgid "The TCI server could not open port %d: %s"
-msgstr ""
+msgstr "El servidor TCI no podía abrir el puerto %d: %s"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_keyernamedsalreadyexists
 #: tr4w/src/lang/tr4w_consts_eng.pas:885
 msgctxt "TC_KEYERNAMEDSALREADYEXISTS"
 msgid "A keyer named \"%s\" already exists."
-msgstr ""
+msgstr "Un keyer llamado \"%s\" ya existe."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_sstillusedbys tr4w/src/lang/tr4w_consts_eng.pas:886
 msgctxt "TC_SSTILLUSEDBYS"
 msgid "\"%s\" is still used by: %s"
-msgstr ""
+msgstr "\"%s\" sigue siendo utilizado por: %s"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_removeclusters tr4w/src/lang/tr4w_consts_eng.pas:887
 msgctxt "TC_REMOVECLUSTERS"
 msgid "Remove the cluster \"%s\"?"
-msgstr ""
+msgstr "Quitar el clúster \"%s\"?"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_removerotators tr4w/src/lang/tr4w_consts_eng.pas:888
 msgctxt "TC_REMOVEROTATORS"
 msgid "Remove the rotator \"%s\"?"
-msgstr ""
+msgstr "Quitar el rotor \"%s\"?"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_loggingrunningsotherenofileopen
 #: tr4w/src/lang/tr4w_consts_eng.pas:889
 msgctxt "TC_LOGGINGRUNNINGSOTHERENOFILEOPEN"
 msgid "Logging is not running, so there is no file to open."
-msgstr ""
+msgstr "El registro no funciona, así que no hay ningún archivo que abrir."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_therenologfileyets tr4w/src/lang/tr4w_consts_eng.pas:890
 msgctxt "TC_THERENOLOGFILEYETS"
 msgid "There is no log file yet at %s."
-msgstr ""
+msgstr "Aún no hay archivo de registro en %s."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_openineditor tr4w/src/lang/tr4w_consts_eng.pas:896
 msgctxt "TC_EDITOR_OPENINEDITOR"
 msgid "Open in text &editor"
-msgstr ""
+msgstr "Abierto en texto"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_explore tr4w/src/lang/tr4w_consts_eng.pas:897
 msgctxt "TC_EDITOR_EXPLORE"
 msgid "Explore"
-msgstr ""
+msgstr "Explorar"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_copy tr4w/src/lang/tr4w_consts_eng.pas:898
 msgctxt "TC_EDITOR_COPY"
 msgid "&Copy"
-msgstr ""
+msgstr "\" Copy"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_selectall tr4w/src/lang/tr4w_consts_eng.pas:899
 msgctxt "TC_EDITOR_SELECTALL"
 msgid "Select &all"
-msgstr ""
+msgstr "Seleccione"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_sendlogto tr4w/src/lang/tr4w_consts_eng.pas:900
 msgctxt "TC_EDITOR_SENDLOGTO"
 msgid "Send log to %s"
-msgstr ""
+msgstr "Enviar registro a %s"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_uploadcabrillotoscp tr4w/src/lang/tr4w_consts_eng.pas:901

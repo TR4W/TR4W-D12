@@ -1163,14 +1163,6 @@ msgid "Germany"
 msgstr "Allemagne"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_uk
-#: tr4w/src/lang/tr4w_consts_eng.pas:173
-#, fuzzy
-msgctxt "TC_UK"
-msgid "UK"
-msgstr "ROYAUME-UNI"
-
-#. Section: NEW CONTEST
 #: utr4wstrings:tc_arktikaclub
 #: tr4w/src/lang/tr4w_consts_eng.pas:174
 #, fuzzy
@@ -1217,14 +1209,6 @@ msgstr "Suisse"
 msgctxt "TC_HQ"
 msgid "HQ (HQ station)"
 msgstr "QG (poste du QG)"
-
-#. Section: NEW CONTEST
-#: utr4wstrings:tc_cis
-#: tr4w/src/lang/tr4w_consts_eng.pas:180
-#, fuzzy
-msgctxt "TC_CIS"
-msgid "CIS"
-msgstr "CEI"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_spain
@@ -3342,11 +3326,6 @@ msgstr ""
 msgid "Domestic"
 msgstr ""
 
-#: tfrmeditqso.lbldx.caption
-#, fuzzy
-msgid "DX"
-msgstr ""
-
 #: tfrmeditqso.lblfrequency.caption
 #, fuzzy
 msgid "Frequency, Hz"
@@ -3419,11 +3398,6 @@ msgstr ""
 #: tfrmeditqso.lblqsopoints.caption
 #, fuzzy
 msgid "QSO points"
-msgstr ""
-
-#: tfrmeditqso.lblqth.caption
-#, fuzzy
-msgid "QTH"
 msgstr ""
 
 #: tfrmeditqso.lblradio.caption

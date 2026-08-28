@@ -50,6 +50,12 @@ import pas2po
 # for why this is not mt_seed.is_translatable.
 INVARIANT = re.compile(r'F[0-9]{1,2}|[-+.]{1,3}|[0-9]+')
 
+# Named one by one, not matched by shape. These are ham and geographic tokens
+# that stay as they are in every language (NY4I, 2026-08-27). A rule like
+# 'all upper case and short' would also catch real captions, and the cost of
+# guessing wrong is a string nobody can ever translate.
+INVARIANT_WORDS = {'ok', 'qth', 'dx', 'uk', 'cis'}
+
 
 def covered_names(entries):
    """Keys a catalogue already has, by msgctxt and by utr4wstrings reference."""
@@ -113,7 +119,8 @@ def main():
          # 'S&P', 'm' and 's', which are real captions a human may well want
          # to translate. Whether those get translated is a decision, not a
          # pattern match.
-         if INVARIANT.fullmatch(d.value.strip()):
+         if (INVARIANT.fullmatch(d.value.strip())
+             or d.value.strip().lower() in INVARIANT_WORDS):
             continue
          t = table.get(d.name)
          value = t.value if t is not None else ''
