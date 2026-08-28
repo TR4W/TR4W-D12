@@ -460,10 +460,13 @@ var
   TempIndex                             : integer;
 //  TempMode                              : ModeType;
 begin
+  { FIRST, so the two guards below cannot return an uninitialised Result.
+    A function that exits before assigning one hands back whatever was in
+    the register, and both callers read it as a count. }
+  Result := 0;
   if not Config.PossibleCallEnable then Exit;
   ClearPossibleCalls;
   if length(Call) < 2 then Exit;
-  Result := 0;
   for Index := 0 to FCount - 1 do
      begin
      if pos(Call, FList^[Index].FCall) > 0 then

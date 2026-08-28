@@ -6775,12 +6775,14 @@ begin
   dc := TListBox(Control).Canvas.Handle;
   r  := ARect;
 
-  if odFocused in State then
-     begin
-     DrawFocusRect(dc, r);
-     Exit;
-     end;
+  (* NO EARLY EXIT ON odFocused -- see the focus rectangle at the end.
 
+     The Win32 original tested itemAction = ODA_FOCUS, which is a distinct
+     ACTION: Windows asked for the focus rectangle alone and the item was
+     already on screen.  odFocused is a STATE FLAG, set while the LCL is
+     asking for an ordinary repaint of the focused row -- so honouring it
+     the old way drew a rectangle around nothing and returned, and the
+     focused entry rendered as an empty box.  Faithful line, wrong axis. *)
   if odSelected in State then
      begin
      Pen := CreatePen(PS_SOLID, nWidth, $FF0000 {RGB(255, 0, 0)});
@@ -6813,6 +6815,13 @@ begin
     @PossibleCallList.List[Index].Call[1],
     length(PossibleCallList.List[Index].Call),
     r, DT_END_ELLIPSIS + DT_SINGLELINE + DT_CENTER + DT_VCENTER);
+
+  { OVER the finished item, and over the WHOLE item: ARect, not the r that
+    the selection border shrank. }
+  if odFocused in State then
+     begin
+     DrawFocusRect(dc, ARect);
+     end;
 end;
 
 procedure PossibleCallsProc(PCDRAWITEMSTRUCT: PDrawItemStruct);

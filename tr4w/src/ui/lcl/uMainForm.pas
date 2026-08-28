@@ -285,8 +285,26 @@ begin
    Result := (aMsg = WM_CLOSE) or
              (aMsg = WM_COMMAND) or
              (aMsg = WM_NOTIFY) or
-             (aMsg = WM_DRAWITEM) or
-             (aMsg = WM_MEASUREITEM) or
+             // WM_DRAWITEM AND WM_MEASUREITEM ARE DELIBERATELY ABSENT, and
+             // removing them from this list is the FIX, not an omission.
+             //
+             // Their arms in uMainWindowProc.WindowProc were deleted when the
+             // possible-call strip became a designed TListBox -- correctly, as
+             // both only ever served that one control id.  But the message
+             // stayed CLAIMED here, and a claimed message this proc no longer
+             // answers is SWALLOWED: line 841 calls WindowProc and returns
+             // without chaining to the LCL.
+             //
+             // WM_DRAWITEM is sent to the PARENT of an owner-drawn list, so
+             // the LCL form proc never received it and TListBox.OnDrawItem was
+             // never called.  The strip held its rows, reported Visible, sat in
+             // bounds, and painted NOTHING -- measured 2026-08-28: two matching
+             // calls in the model, zero draw calls, for weeks (NY4I).
+             //
+             // The note above says a message added THERE and not HERE is never
+             // delivered.  This is its mirror image, and it is the second time
+             // this control has been hit by it -- see the WM_CTLCOLORLISTBOX
+             // forward at line 835.
              (aMsg = WM_CTLCOLORLISTBOX) or
              (aMsg = WM_CTLCOLOREDIT) or
              (aMsg = WM_CTLCOLORSTATIC) or
