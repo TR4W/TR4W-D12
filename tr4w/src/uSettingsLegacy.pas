@@ -214,8 +214,20 @@ end;
 function TStoredSetting.TrySetText(const aText: string; out aError: string): boolean;
 var
    store: TObject;
+   wasText: string;
 begin
    aError := '';
+
+   { WHAT IT SAID BEFORE, so the log below can report a CHANGE rather than a
+     write. Preferences calls this twice for the same value on purpose -- once
+     as the operator types, so accepted values apply immediately, and again on
+     OK, so refusals can be reported together -- and both calls logged, which
+     read as the program doing the work twice. NY4I, 2026-08-28: "I see two
+     messages in the log as if we are going through this code twice."
+
+     It IS going through it twice, and that is the design. What was wrong was
+     saying so twice. }
+   wasText := AsText;
 
    if not Assigned(ActiveStoreProvider) then
       begin
@@ -253,9 +265,15 @@ begin
      is otherwise discarded with nothing anywhere to say why. }
    if logger.IsDebugEnabled then
       begin
-      if Result then
+      if Result and (AsText <> wasText) then
          begin
-         logger.Debug('[Config] %s = %s (stored in tr4w.json)', [Command, aText]);
+         logger.Debug('[Config] %s = %s (was %s, stored in tr4w.json)',
+                      [Command, aText, wasText]);
+         end
+      else if Result then
+         begin
+         { Re-applied with no change -- the second of the two calls above, or a
+           keystroke that landed back on the same value. Nothing to say. }
          end
       else
          begin

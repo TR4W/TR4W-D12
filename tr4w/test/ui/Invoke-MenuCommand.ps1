@@ -30,7 +30,12 @@
 param(
    [Parameter(Mandatory = $true)]
    [int]    $Command,
-   [string] $Repo = (Split-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) -Parent),
+   # EMPTY, RESOLVED IN THE BODY. A param default that reads $PSScriptRoot is
+   # not reliable here: with a MANDATORY parameter present, PowerShell evaluates
+   # the other defaults in a context where $PSScriptRoot is empty, and the run
+   # dies inside Split-Path before a line of the script executes. Two harness
+   # scripts could not be run at all because of it (2026-08-28).
+   [string] $Repo = '',
    # Defaults to the binary FullBuild.ps1 produces. Derived from this script's
    # own location so a clone anywhere works without arguments.
    # EMPTY BY DEFAULT, resolved below. It used to name target\tr4w.exe outright
@@ -52,6 +57,10 @@ param(
 )
 
 Import-Module (Join-Path $PSScriptRoot 'UiDriver.psm1') -Force
+
+# The paths the param block can no longer work out for itself.
+$here = Split-Path -Parent $MyInvocation.MyCommand.Path
+if (-not $Repo) { $Repo = Split-Path (Split-Path (Split-Path $here -Parent) -Parent) -Parent }
 
 $target = Join-Path $Repo 'tr4w\target'
 $log    = Join-Path $target 'tr4w.log'

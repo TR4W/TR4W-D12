@@ -21,10 +21,15 @@
 # parent, no-op on a leaf) then DOWN.
 
 param(
-   [string] $Repo = (Split-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) -Parent),
+   # EMPTY, RESOLVED IN THE BODY. A param default that reads $PSScriptRoot is
+   # not reliable here: with a MANDATORY parameter present, PowerShell evaluates
+   # the other defaults in a context where $PSScriptRoot is empty, and the run
+   # dies inside Split-Path before a line of the script executes. Two harness
+   # scripts could not be run at all because of it (2026-08-28).
+   [string] $Repo = '',
    # Defaults to the binary FullBuild.ps1 produces. Derived from this script's
    # own location so a clone anywhere works without arguments.
-   [string] $Exe = (Join-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) 'target\tr4w.exe'),
+   [string] $Exe = '',
    # NO DEFAULT ON PURPOSE.  This needs a contest config, and TR4W will not
    # create the main window without one -- it stops on the "Open configuration
    # file or start a new contest" dialog, and there is nothing to drive.
@@ -36,6 +41,28 @@ param(
    [int]    $Steps  = 27,
    [switch] $KeepOpen
 )
+
+# The paths the param block can no longer work out for itself.
+$here = Split-Path -Parent $MyInvocation.MyCommand.Path
+if (-not $Repo) { $Repo = Split-Path (Split-Path (Split-Path $here -Parent) -Parent) -Parent }
+if (-not $Exe)
+   {
+   # The binary Build-App.ps1 refreshes -- NOT the installed one under
+   # target, which is whatever was last shipped. Same rule as
+   # Resolve-TR4WExe. Built with Join-Path segments and no embedded
+   # backslashes: a literal Windows path written through a
+   # backslash-interpreting tool turns into tabs, which is what
+   # Lint-PathEscapes exists to catch.
+   $built = Join-Path (Join-Path $Repo 'build-out') (Join-Path 'app-i386-win32' 'tr4w_fpc.exe')
+   if (Test-Path -LiteralPath $built)
+      {
+      $Exe = $built
+      }
+   else
+      {
+      $Exe = Join-Path (Join-Path $Repo 'tr4w') (Join-Path 'target' 'tr4w.exe')
+      }
+   }
 
 $target = Join-Path $Repo 'tr4w\target'
 $log    = Join-Path $target 'tr4w.log'
