@@ -78,13 +78,20 @@ function Test-NoiseNode
 
 function Get-NodeKey
    {
-   # Class + control id + ordinal among siblings sharing that pair.
+   # Class + ordinal among siblings of that class.
    #
    # NOT the caption: the caption is the thing under test. Keying on it would
    # make a renamed button look like one control removed and another added,
    # which is the least useful way to report a rename.
+   #
+   # AND NOT THE CONTROL ID EITHER, which this did until it was first run
+   # against a live dump. An LCL control has no assigned id, so GetDlgCtrlID
+   # hands back something HWND-derived that differs on every run -- 44700950
+   # one time, something else the next -- and every node reported as ADDED.
+   # baselines/README.md said so from the start: diff captions and geometry,
+   # not ids.
    param($Node, [int] $Ordinal)
-   return ('{0}#{1}[{2}]' -f $Node.Class, $Node.Id, $Ordinal)
+   return ('{0}[{1}]' -f $Node.Class, $Ordinal)
    }
 
 function Get-KeyedChildren
@@ -98,7 +105,7 @@ function Get-KeyedChildren
          {
          continue
          }
-      $stem = '{0}#{1}' -f $n.Class, $n.Id
+      $stem = $n.Class
       if (-not $seen.ContainsKey($stem))
          {
          $seen[$stem] = 0
