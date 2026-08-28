@@ -44,7 +44,20 @@
 
 .EXAMPLE
    ... -Seed ESP     seed one language
-   ... -Seed ALL     seed every language
+   ... -Seed ALL     seed every language, one at a time
+
+.NOTES
+   PARALLELISM. Do not run two copies of THIS script at once: the merge step
+   writes every catalogue, so two runs race on the same 21 files. Seeding a
+   language directly is a different matter -- mt_seed writes only its own
+   catalogue, so separate languages cannot collide:
+
+      python tools\i18n\mt_seed.py --lang ESP
+      python tools\i18n\mt_seed.py --lang POL
+
+   Whether that is FASTER depends on the LibreTranslate instance, not on
+   this: one local server is usually CPU-bound and several clients simply
+   queue behind each other.
 
 .EXAMPLE
    powershell -ExecutionPolicy Bypass -File tr4w\build\Refresh-Catalogues.ps1
@@ -136,16 +149,31 @@ if ($Seed)
    else
       {
       Write-Host ''
-      Write-Host ('--- mt_seed --lang {0}   (LibreTranslate; drafts, all Needs work)' -f $Seed)
-      $seedArgs = @((Join-Path $tools 'mt_seed.py'), '--lang', $Seed)
-      if ($SeedUrl) { $seedArgs += @('--url', $SeedUrl) }
-      & $python @seedArgs
-      if ($LASTEXITCODE -ne 0)
+      # ALL IS THIS SCRIPT'S OWN LOOP, NOT mt_seed's. mt_seed accepts --lang ALL
+      # only alongside --fix-spacing; on the seeding path ALL is not a language
+      # code and it exits 'unknown LANG'. Expanding it here is what makes the
+      # word mean the same thing in both places.
+      $langs = @($Seed)
+      if ($Seed.ToUpper() -eq 'ALL')
          {
-         # NOT FATAL. The merge above succeeded and is worth keeping; a seeder
-         # that cannot reach its server must not make the refresh look failed.
-         Write-Host ('mt_seed exited {0} -- the merge above still stands.' -f $LASTEXITCODE)
-         Write-Host 'Is LibreTranslate running? -SeedUrl changes where it looks.'
+         $langs = @(Get-ChildItem -Path $i18n -Filter 'tr4w_*.po' |
+                    ForEach-Object { $_.BaseName -replace '^tr4w_', '' })
+         Write-Host ('    ALL -- {0} language(s), one at a time' -f $langs.Count)
+         }
+
+      foreach ($one in $langs)
+         {
+         Write-Host ('--- mt_seed --lang {0}   (LibreTranslate; drafts, all Needs work)' -f $one)
+         $seedArgs = @((Join-Path $tools 'mt_seed.py'), '--lang', $one)
+         if ($SeedUrl) { $seedArgs += @('--url', $SeedUrl) }
+         & $python @seedArgs
+         if ($LASTEXITCODE -ne 0)
+            {
+            # NOT FATAL, and it does not stop the other languages. The merge
+            # above succeeded and is worth keeping; a seeder that cannot reach
+            # its server must not make the refresh look failed.
+            Write-Host ('mt_seed exited {0} for {1} -- continuing.' -f $LASTEXITCODE, $one)
+            }
          }
       }
    }
