@@ -384,11 +384,13 @@ begin
       // screen said so: the Rotators list showed which one you were EDITING,
       // not which one turned.
       //
-      // Same shape as the active cluster: chosen by NAME, shown with a tick.
+      // Same shape as the active cluster: chosen by the operator, shown with a
+      // tick. BY ID since 2026-08-28 -- the editor rewrites a rotator's Name on
+      // every keystroke, so a name could not survive being typed over.
       // The Bands claim still decides whether the ACTIVE one serves the band in
       // play, so the day several rotators on different bands become real work,
       // this is the one place that opens back up.
-      active := aStore.IndexOfRotator(aStore.ActiveRotatorName);
+      active := aStore.IndexOfActiveRotator;
 
       // NO CHOICE RECORDED -- an existing config, or one written before this
       // existed.  Take the first and SAY SO, rather than falling back to the

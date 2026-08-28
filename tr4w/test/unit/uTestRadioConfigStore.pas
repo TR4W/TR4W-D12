@@ -87,6 +87,7 @@ type
       // --- JSON persistence (Track F-5a) ---------------------------------
       procedure Test_JSONWithoutIdsMigratesProfileReferences;
       procedure Test_RenameLeavesProfileReferencesAlone;
+      procedure Test_ActiveRotatorSurvivesBeingRetyped;
       procedure Test_JSONRoundTripsEveryRadioField;
       procedure Test_JSONRoundTripsProfilesAndGeneral;
       procedure Test_JSONStoresTheSchemaVersion;
@@ -1314,6 +1315,42 @@ end;
 { THE POINT OF THE WHOLE CHANGE. Renaming a radio used to be a fan-out that had
   to find every profile; now it is a non-event for the reference, and only the
   readable mirror follows. NY4I lost a profile to the old behaviour. }
+{ THE ACTIVE ROTATOR SURVIVES ITS NAME BEING RETYPED.
+
+  Worse than the radio case and the reason rotators were done next: the rotator
+  editor assigns r.Name on EVERY KEYSTROKE in the name box, so a rename is not
+  an event that can be hooked -- it is a stream of them. Tracked by name, the
+  active rotator was lost after the first letter. }
+procedure TRadioConfigStoreTests.Test_ActiveRotatorSurvivesBeingRetyped;
+var
+   store: TRadioConfigStore;
+   rot: TRotatorDefinition;
+   idBefore: string;
+begin
+   BeginTest('Test_ActiveRotatorSurvivesBeingRetyped');
+   store := TRadioConfigStore.Create;
+   try
+      rot := TRotatorDefinition.Create;
+      rot.Name := 'Tower';
+      store.AddRotator(rot);
+
+      idBefore := rot.Id;
+      CheckTrue(idBefore <> '', 'a rotator is born with an id');
+
+      store.ActiveRotatorId   := rot.Id;
+      store.ActiveRotatorName := rot.Name;
+      CheckEquals(0, store.IndexOfActiveRotator, 'it is the active one');
+
+      { What the editor does, one keystroke at a time. }
+      rot.Name := 'T';
+      CheckEquals(0, store.IndexOfActiveRotator, 'still active after one letter');
+      rot.Name := 'Tower 2';
+      CheckEquals(0, store.IndexOfActiveRotator, 'and after the rest');
+   finally
+      store.Free;
+   end;
+end;
+
 procedure TRadioConfigStoreTests.Test_RenameLeavesProfileReferencesAlone;
 var
    store: TRadioConfigStore;
@@ -1954,6 +1991,7 @@ begin
 
    Test_JSONWithoutIdsMigratesProfileReferences;
    Test_RenameLeavesProfileReferencesAlone;
+   Test_ActiveRotatorSurvivesBeingRetyped;
    Test_JSONRoundTripsEveryRadioField;
    Test_JSONRoundTripsProfilesAndGeneral;
    Test_JSONStoresTheSchemaVersion;

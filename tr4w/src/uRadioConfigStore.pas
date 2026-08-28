@@ -191,6 +191,14 @@ type
 
    TRotatorDefinition = class(TObject)
    public
+      // THE KEY -- see TRadioDefinition.Id. Note this is NOT RotatorId below,
+      // which is the MODEL ('YAESU', 'ORION'); this identifies THIS rotator.
+      //
+      // It matters more here than anywhere else: the rotator editor writes
+      // r.Name on EVERY KEYSTROKE in the name box, so a rename is not an event
+      // that can be hooked -- it is a continuous stream of them, and the active
+      // rotator was tracked by that same name.
+      Id: string;
       Name: string;
       // Registry id from uRotatorRegistry: 'YAESU', 'ORION', 'DCU1',
       // 'ALFA SPID', 'PSTROTATOR'.  Opaque here -- the store knows no protocol.
@@ -216,6 +224,8 @@ type
       Bands: string;
 
       procedure Assign(const aOther: TRotatorDefinition);
+
+      constructor Create;
    end;
 
    TRadioDefinition = class(TObject)
@@ -388,6 +398,8 @@ type
         this with it; an index would silently re-point at whatever moved into
         the slot. }
       FActiveRotatorName: string;
+      { The reference. FActiveRotatorName above is the readable mirror. }
+      FActiveRotatorId: string;
       { The contest .cfg last opened. NOT a setting -- it is bookkeeping, which
         is why it lives in `general` beside activeProfile rather than in
         `commands`, and why it is deliberately absent from Preferences and from
@@ -651,6 +663,9 @@ type
       function  IndexOfRotator(const aName: string): integer;
       function  AddRotator(const aRotator: TRotatorDefinition): boolean;
       procedure DeleteRotator(const aIndex: integer);
+      { The active rotator, by id, falling back to the name for a store written
+        before rotators had one. -1 when there is none. }
+      function  IndexOfActiveRotator: integer;
       function  UniqueRotatorName(const aBase: string): string;
 
       { The cluster library.  One is ACTIVE -- the one TR4W connects to. }
@@ -663,6 +678,7 @@ type
       function  ActiveCluster: TClusterDefinition;
       property  ActiveClusterName: string read FActiveClusterName write FActiveClusterName;
       property  ActiveRotatorName: string read FActiveRotatorName write FActiveRotatorName;
+      property  ActiveRotatorId: string read FActiveRotatorId write FActiveRotatorId;
       property  LatestConfigFile: string read FLatestConfigFile write FLatestConfigFile;
       property  GridPromptShown: boolean read FGridPromptShown write FGridPromptShown;
       { The Name=Value list for one export header section ('REPORT',
@@ -1224,11 +1240,47 @@ begin
       // promoting a neighbour -- same rule as DeleteCluster, and for the same
       // reason: turning a rotator the operator never picked is worse than
       // turning none until they say which.
-      if SameText(FRotators[aIndex].Name, FActiveRotatorName) then
+      if SameText(FRotators[aIndex].Id, FActiveRotatorId) or
+         SameText(FRotators[aIndex].Name, FActiveRotatorName) then
          begin
          FActiveRotatorName := '';
+         FActiveRotatorId   := '';
          end;
       FRotators.Delete(aIndex);
+      end;
+end;
+
+constructor TRotatorDefinition.Create;
+begin
+   inherited Create;
+   { Born with one, so no creation site has to remember. }
+   Id := NewRadioId;
+end;
+
+function TRadioConfigStore.IndexOfActiveRotator: integer;
+var
+   i: integer;
+begin
+   Result := -1;
+   for i := 0 to FRotators.Count - 1 do
+      begin
+      if (FActiveRotatorId <> '') and SameText(FRotators[i].Id, FActiveRotatorId) then
+         begin
+         Result := i;
+         Exit;
+         end;
+      end;
+   { A store written before rotators had ids still says which one by name. }
+   if FActiveRotatorName <> '' then
+      begin
+      for i := 0 to FRotators.Count - 1 do
+         begin
+         if SameText(FRotators[i].Name, FActiveRotatorName) then
+            begin
+            Result := i;
+            Exit;
+            end;
+         end;
       end;
 end;
 
@@ -2229,6 +2281,7 @@ begin
    for i := 0 to FRotators.Count - 1 do
       begin
       rot := TJSONObject.Create;
+      rot.AddPair('id',          FRotators[i].Id);
       rot.AddPair(JSONKEY_NAME,  FRotators[i].Name);
       rot.AddPair('rotatorId',   FRotators[i].RotatorId);
       rot.AddPair('controlPort', FRotators[i].ControlPort);
@@ -2302,7 +2355,8 @@ begin
       end;
    Result.AddPair(JSONKEY_CLUSTERS, clusters);
    general.AddPair('activeCluster', FActiveClusterName);
-   general.AddPair('activeRotator', FActiveRotatorName);
+   general.AddPair('activeRotatorId', FActiveRotatorId);
+   general.AddPair('activeRotator',   FActiveRotatorName);
    general.AddPair('latestConfigFile', FLatestConfigFile);
    general.AddPair('gridPromptShown', TJSONBool.Create(FGridPromptShown));
 
@@ -2419,7 +2473,8 @@ begin
    // than needing a check of its own.
    FClusters.Clear;
    FActiveClusterName := JSONStr(general, 'activeCluster', '');
-   FActiveRotatorName := JSONStr(general, 'activeRotator', '');
+   FActiveRotatorName := JSONStr(general, 'activeRotator',   '');
+   FActiveRotatorId   := JSONStr(general, 'activeRotatorId', '');
    FLatestConfigFile  := JSONStr(general, 'latestConfigFile', '');
    FGridPromptShown   := JSONBool(general, 'gridPromptShown', False);
 
@@ -2517,6 +2572,11 @@ begin
             end;
          obj := TJSONObject(arr.Items[i]);
          rotDef := TRotatorDefinition.Create;
+         rotDef.Id          := JSONStr(obj, 'id',           '');
+         if rotDef.Id = '' then
+            begin
+            rotDef.Id := NewRadioId;   { the same minter; a GUID is a GUID }
+            end;
          rotDef.Name        := JSONStr(obj, JSONKEY_NAME,  '');
          rotDef.RotatorId   := JSONStr(obj, 'rotatorId',   '');
          rotDef.ControlPort := JSONStr(obj, 'controlPort', '');

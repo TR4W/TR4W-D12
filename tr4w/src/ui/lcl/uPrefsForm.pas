@@ -5327,6 +5327,8 @@ begin
       Exit;
       end;
 
+   { BOTH: the id is the reference, the name is the readable mirror. }
+   FStore.ActiveRotatorId   := FStore.Rotator(lstRotators.ItemIndex).Id;
    FStore.ActiveRotatorName := FStore.Rotator(lstRotators.ItemIndex).Name;
    ShowActiveRotator;
    LoadRotatorList;   // redraw so the tick moves
@@ -5347,7 +5349,7 @@ procedure TPrefsForm.ShowActiveRotator;
 var
    i: integer;
 begin
-   i := FStore.IndexOfRotator(FStore.ActiveRotatorName);
+   i := FStore.IndexOfActiveRotator;
    if i < 0 then
       begin
       if FStore.RotatorCount > 0 then
@@ -5422,12 +5424,19 @@ end;
 
 function TPrefsForm.RotatorIsActive(const aRotator: TRotatorDefinition): boolean;
 begin
-   // BY NAME, like the cluster: renaming the active rotator must carry
-   // ActiveRotatorName with it, and an index would re-point at whatever moved
-   // into the slot.
+   // BY ID. It used to be by name, and the comment here said renaming the
+   // active rotator "must carry ActiveRotatorName with it" -- nothing did, and
+   // the editor writes r.Name on EVERY KEYSTROKE in the name box, so typing a
+   // new name silently deactivated the rotator one letter in.
+   //
+   // The name is still accepted as a fallback so a store written before rotator
+   // ids keeps its active rotator until it is next saved.
    Result := (aRotator <> nil)
-             and (FStore.ActiveRotatorName <> '')
-             and SameText(aRotator.Name, FStore.ActiveRotatorName);
+             and (((FStore.ActiveRotatorId <> '')
+                   and SameText(aRotator.Id, FStore.ActiveRotatorId))
+                  or ((FStore.ActiveRotatorId = '')
+                      and (FStore.ActiveRotatorName <> '')
+                      and SameText(aRotator.Name, FStore.ActiveRotatorName)));
 end;
 
 procedure TPrefsForm.ShowRotatorRow(const aIndex: integer;
@@ -5531,7 +5540,7 @@ begin
       end
    else if lstRotators.Items.Count > 0 then
       begin
-      active := FStore.IndexOfRotator(FStore.ActiveRotatorName);
+      active := FStore.IndexOfActiveRotator;
       if (active >= 0) and (active < lstRotators.Items.Count) then
          begin
          lstRotators.ItemIndex := active;
