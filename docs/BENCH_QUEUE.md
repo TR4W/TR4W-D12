@@ -127,20 +127,20 @@ has been on screen.
 **This is the first thing the operator sees, and it changed shape** -- it
 replaced 494 lines of `NewContestDlgProc`.
 
-- [ ] **The `.CFG` list** shows the TR4W directory, and **Browse...** opens the
+- [x] **The `.CFG` list** shows the TR4W directory, and **Browse...** opens the
   standard file picker and can reach a config somewhere else.
 
-- [ ] **Latest config file** still reopens the last one.
+- [x] **Latest config file** still reopens the last one.
 
-- [ ] **OK stays disabled** until the callsign and every shown field are filled.
+- [x] **OK stays disabled** until the callsign and every shown field are filled.
   Pick a contest and watch the prompt panel and any extra field appear.
 
-- [ ] **A contest that asks for a field** -- `NEWENGLANDQSO`, `WAG`, `POTA` --
+- [x] **A contest that asks for a field** -- `NEWENGLANDQSO`, `WAG`, `POTA` --
   shows one row with the right label.
 
-- [ ] **The "I am in" box** on a QSO-party contest changes the prompts.
+- [x] **The "I am in" box** on a QSO-party contest changes the prompts.
 
-- [ ] **The six `CATEGORY-*` drop-downs have labels.** They shipped unlabelled in
+- [x] **The six `CATEGORY-*` drop-downs have labels.** They shipped unlabelled in
   the first pass; this is the fix.
 
 - [ ] **Resize the window** -- list and fields follow, buttons stay bottom-right.
@@ -177,7 +177,7 @@ nothing ever passes to `DialogBox`.
   Delphi 7 IDE compatible". Delphi 7 is gone and FPC has
   `Generics.Collections`. CLAUDE.md still describes `uExternalLoggerManager` as
   carrying the external-logger implementation, so this is either work to finish
-  or code to delete -- it should not stay in limbo. **The one worth your time.**
+  or code to delete -- it should not stay in limbo. **The one worth your time.** [AGENT: Yes the external loggers should be a factory. I believe it is so I am not sure why the Generics aftect this. I could see there being an external logger status indicator but a better UX might be an external status panel. That way we could show the time of the last WSJT-X message, the last status sent form ExternalLOggers, the last exchange with Hamscore. Sort of a status window on these items. But new windows can wait and the external logger works now.]
 
 - [ ] **`MixW2DlgProc` and `WinKeyer2SettingsDlgProc` have zero references.**
   Their units are live (MixW integration, WinKeyer driver) but those two
