@@ -8095,3 +8095,3458 @@ msgctxt "ulclformhelpers.tc_radioedit_widecw"
 msgid "Wide CW filter"
 msgstr ""
 
+#: tfrmaltd.caption
+#, fuzzy
+msgctxt "tfrmaltd.caption"
+msgid "Dupe Check On Inactive Radio"
+msgstr "Kontrola spojení na neaktivním RIGu"
+
+#: tfrmautocq.caption
+#, fuzzy
+msgctxt "tfrmautocq.caption"
+msgid "Auto-CQ"
+msgstr ""
+
+#: tfrmautocq.lbldelay.caption
+#, fuzzy
+msgctxt "tfrmautocq.lbldelay.caption"
+msgid "Number of milliseconds of listening time:"
+msgstr "Čas poslechu v milisekundách:"
+
+#: tfrmautocq.lblmemorykey.caption
+#, fuzzy
+msgctxt "tfrmautocq.lblmemorykey.caption"
+msgid "Press the memory key you want to repeat:"
+msgstr "Stiskni klávesu paměti, kterou chceš opakovat:"
+
+#: tfrmbandmap.mideletespot.caption
+#, fuzzy
+msgctxt "tfrmbandmap.mideletespot.caption"
+msgid "Delete selected spot"
+msgstr "Smaž vybraný spot"
+
+#: tfrmbandmap.miremoveall.caption
+#, fuzzy
+msgctxt "tfrmbandmap.miremoveall.caption"
+msgid "Remove all spots"
+msgstr "Smaž všechny spoty"
+
+#: tfrmbandplan.caption
+#, fuzzy
+msgctxt "tfrmbandplan.caption"
+msgid "Band plan"
+msgstr "Rozdělení pásem"
+
+#: tfrmeditmessage.btneditwav.caption
+#, fuzzy
+msgctxt "tfrmeditmessage.btneditwav.caption"
+msgid "&Edit"
+msgstr ""
+
+#: tfrmeditmessage.caption
+#, fuzzy
+msgctxt "tfrmeditmessage.caption"
+msgid "Program message"
+msgstr "Programuj MSG"
+
+#: tfrmeditmessage.lblcaption.caption
+#, fuzzy
+msgctxt "tfrmeditmessage.lblcaption.caption"
+msgid "Caption"
+msgstr "Název"
+
+#: tfrmeditqso.lblband.caption
+#, fuzzy
+msgctxt "tfrmeditqso.lblband.caption"
+msgid "Band"
+msgstr "Pásmo"
+
+#: tfrmeditqso.lbldate.caption
+#, fuzzy
+msgctxt "tfrmeditqso.lbldate.caption"
+msgid "Date"
+msgstr "Datum"
+
+#: tfrmeditqso.lblmode.caption
+#, fuzzy
+msgctxt "tfrmeditqso.lblmode.caption"
+msgid "Mode"
+msgstr "Mód"
+
+#: tfrmeditqso.lbloperator.caption
+#, fuzzy
+msgctxt "tfrmeditqso.lbloperator.caption"
+msgid "Operator"
+msgstr "Operátor"
+
+#: tfrmfunctionkeys.caption
+#, fuzzy
+msgctxt "tfrmfunctionkeys.caption"
+msgid "Function keys"
+msgstr "Klávesy pamětí"
+
+#: tfrmintercom.caption
+#, fuzzy
+msgctxt "tfrmintercom.caption"
+msgid "Intercom"
+msgstr "Interkom"
+
+#: tfrmkeyeredit.lblwkfirstext.caption
+#, fuzzy
+msgctxt "tfrmkeyeredit.lblwkfirstext.caption"
+msgid "First extension"
+msgstr "Prodloužení 1.elementu"
+
+#: tfrmkeyeredit.lblwkkeyermode.caption
+#, fuzzy
+msgctxt "tfrmkeyeredit.lblwkkeyermode.caption"
+msgid "Keyer mode"
+msgstr "Mód klíčování"
+
+#: tfrmlogcompare.btnsynchronize.caption
+#, fuzzy
+msgctxt "tfrmlogcompare.btnsynchronize.caption"
+msgid "Synchronize"
+msgstr "Synchronizovat"
+
+#: tfrmmp3recorder.caption
+#, fuzzy
+msgctxt "tfrmmp3recorder.caption"
+msgid "MP3 Recorder"
+msgstr "MP3 rekordér"
+
+#: tfrmnewcontest.btnbrowse.caption
+#, fuzzy
+msgctxt "tfrmnewcontest.btnbrowse.caption"
+msgid "Browse..."
+msgstr ""
+
+#: tfrmnewcontest.btncancel.caption
+#, fuzzy
+msgctxt "tfrmnewcontest.btncancel.caption"
+msgid "Cancel"
+msgstr ""
+
+#: tfrmnewcontest.btnlatest.caption
+#, fuzzy
+msgctxt "tfrmnewcontest.btnlatest.caption"
+msgid "Latest config file"
+msgstr "poslední konfigurace"
+
+#: tfrmnewcontest.btnok.caption
+#, fuzzy
+msgctxt "tfrmnewcontest.btnok.caption"
+msgid "OK"
+msgstr ""
+
+#: tfrmnewcontest.caption
+#, fuzzy
+msgid "Open configuration file or start a new contest"
+msgstr ""
+
+#: tfrmnewcontest.dlgopen.title
+#, fuzzy
+msgid "Open configuration file"
+msgstr ""
+
+#: tfrmnewcontest.gbexisting.caption
+#, fuzzy
+msgid "Open an existing configuration"
+msgstr ""
+
+#: tfrmnewcontest.gbnew.caption
+#, fuzzy
+msgid "Start a new contest"
+msgstr ""
+
+#: tfrmnewcontest.lblcontest.caption
+#, fuzzy
+msgid "CONTEST"
+msgstr ""
+
+#: tfrmnewcontest.lblmycall.caption
+#, fuzzy
+msgid "MY CALL"
+msgstr ""
+
+#: tfrmpanadapter.lblstatus.caption
+#, fuzzy
+msgctxt "tfrmpanadapter.lblstatus.caption"
+msgid "Disconnected"
+msgstr "MIXW odpojen"
+
+#: tfrmpostscores.btnpostnow.caption
+#, fuzzy
+msgctxt "tfrmpostscores.btnpostnow.caption"
+msgid "Post now"
+msgstr "Pošli teď"
+
+#: tfrmpostscores.btnshowscores.caption
+#, fuzzy
+msgctxt "tfrmpostscores.btnshowscores.caption"
+msgid "Show scores"
+msgstr "Ukaž skóre"
+
+#: tfrmprogrammessage.btncq.caption
+#, fuzzy
+msgctxt "tfrmprogrammessage.btncq.caption"
+msgid "Press &C to program a CQ function key."
+msgstr "Stiskni &C\\n pro programování pamětí v módu CQ."
+
+#: tfrmprogrammessage.btnexchange.caption
+#, fuzzy
+msgctxt "tfrmprogrammessage.btnexchange.caption"
+msgid "Press &E to program an exchange/search and pounce function key."
+msgstr "Stiskni &E\\n pro programování pamětí v módech EX(change) a S&P."
+
+#: tfrmprogrammessage.btnother.caption
+#, fuzzy
+msgctxt "tfrmprogrammessage.btnother.caption"
+msgid "Press &O to program the other non function key messages."
+msgstr "Stiskni &O\\n pro programování ostatních pamětí."
+
+#: tfrmprogrammessage.caption
+#, fuzzy
+msgctxt "tfrmprogrammessage.caption"
+msgid "Memory program function"
+msgstr "Funkce programování pamětí"
+
+#: tfrmsendkeyboard.btnclose.caption
+#, fuzzy
+msgctxt "tfrmsendkeyboard.btnclose.caption"
+msgid "Close"
+msgstr "Zavři"
+
+#: tfrmsendspot.caption
+#, fuzzy
+msgctxt "tfrmsendspot.caption"
+msgid "Send spot"
+msgstr "Vyslat spot"
+
+#: tfrmsendspot.lblcomment.caption
+#, fuzzy
+msgctxt "tfrmsendspot.lblcomment.caption"
+msgid "Comment"
+msgstr "Komentář"
+
+#: tfrmsendspot.lblfrequency.caption
+#, fuzzy
+msgctxt "tfrmsendspot.lblfrequency.caption"
+msgid "Frequency"
+msgstr "Kmitočet"
+
+#: tfrmstations.caption
+#, fuzzy
+msgctxt "tfrmstations.caption"
+msgid "Stations"
+msgstr "Přehled stanic"
+
+#: tfrmtelnet.btncommands.caption
+#, fuzzy
+msgctxt "tfrmtelnet.btncommands.caption"
+msgid "Commands"
+msgstr "Příkazy"
+
+#: tprefsform.lblpaddlegroup.caption
+#, fuzzy
+msgctxt "tprefsform.lblpaddlegroup.caption"
+msgid "Paddle"
+msgstr "Pastička"
+
+#: tprefsform.lblstationheading.caption
+#, fuzzy
+msgctxt "tprefsform.lblstationheading.caption"
+msgid "Station information"
+msgstr "Údaje pro záhlaví deníku"
+
+#: utr4wstrings.close_word
+#, fuzzy
+msgctxt "utr4wstrings.close_word"
+msgid "Close"
+msgstr "Zavři"
+
+#: utr4wstrings.exit_word
+#, fuzzy
+msgctxt "utr4wstrings.exit_word"
+msgid "E&xit"
+msgstr "Konec"
+
+#: utr4wstrings.help_word
+#, fuzzy
+msgid "Help"
+msgstr "Nápověda"
+
+#: utr4wstrings.rc_3830
+#, fuzzy
+msgid "3830 Score posting"
+msgstr "zaslání skóre na 3830"
+
+#: utr4wstrings.rc_3830_arrl
+#, fuzzy
+msgid "Submit ARRL Log"
+msgstr "odeslat deník ARRL"
+
+#: utr4wstrings.rc_about
+#, fuzzy
+msgid "About"
+msgstr "O programu TR4W"
+
+#: utr4wstrings.rc_addbandmapph
+#, fuzzy
+msgid "Add bandmap place holder"
+msgstr "Vytvoř volné místo v okně bandmapy"
+
+#: utr4wstrings.rc_addinfo
+#, fuzzy
+msgid "Additional information"
+msgstr "Další info"
+
+#: utr4wstrings.rc_ai_cwspeed
+#, fuzzy
+msgid "CW Speed"
+msgstr "Rychlost CW"
+
+#: utr4wstrings.rc_ai_qsonumber
+#, fuzzy
+msgid "QSO number"
+msgstr "Číslo QSO"
+
+#: utr4wstrings.rc_allcalls
+#, fuzzy
+msgid "All callsigns"
+msgstr "Všechny značky"
+
+#: utr4wstrings.rc_altp
+#, fuzzy
+msgid "Open Fkeys"
+msgstr "Otevřít F-klávesy"
+
+#: utr4wstrings.rc_altx
+#, fuzzy
+msgid "Exit Program"
+msgstr "Opustit program"
+
+#: utr4wstrings.rc_autocq
+#, fuzzy
+msgctxt "utr4wstrings.rc_autocq"
+msgid "Auto-CQ"
+msgstr ""
+
+#: utr4wstrings.rc_autocq2
+#, fuzzy
+msgctxt "utr4wstrings.rc_autocq2"
+msgid "Auto-CQ"
+msgstr ""
+
+#: utr4wstrings.rc_autocqresume
+#, fuzzy
+msgid "Auto-CQ resume"
+msgstr "Nastavení Auto-CQ"
+
+#: utr4wstrings.rc_backuplog
+#, fuzzy
+msgid "Backup Log"
+msgstr "záložní deník"
+
+#: utr4wstrings.rc_band
+#, fuzzy
+msgctxt "utr4wstrings.rc_band"
+msgid "Band"
+msgstr "Pásmo"
+
+#: utr4wstrings.rc_bandchanges
+#, fuzzy
+msgid "Band changes"
+msgstr "Změny pásma"
+
+#: utr4wstrings.rc_banddown
+#, fuzzy
+msgid "Band Down"
+msgstr "Nižší pásmo"
+
+#: utr4wstrings.rc_bandmap
+#, fuzzy
+msgid "Bandmap"
+msgstr "Bandmapa"
+
+#: utr4wstrings.rc_bandplan
+#, fuzzy
+msgctxt "utr4wstrings.rc_bandplan"
+msgid "Band plan"
+msgstr "Rozdělení pásem"
+
+#: utr4wstrings.rc_bandup
+#, fuzzy
+msgid "Band Up"
+msgstr "Vyšší pásmo"
+
+#: utr4wstrings.rc_beaconsm
+#, fuzzy
+msgid "Beacons monitor"
+msgstr "Monitor majáků"
+
+#: utr4wstrings.rc_calculator
+#, fuzzy
+msgid "Calculator"
+msgstr "Kalkulačka"
+
+#: utr4wstrings.rc_callsign
+#, fuzzy
+msgctxt "utr4wstrings.rc_callsign"
+msgid "Callsign"
+msgstr "Značka"
+
+#: utr4wstrings.rc_caption
+#, fuzzy
+msgctxt "utr4wstrings.rc_caption"
+msgid "Caption"
+msgstr "Název"
+
+#: utr4wstrings.rc_catandcw
+#, fuzzy
+msgid "CAT and CW Keying"
+msgstr "Nastavení RIG, CAT a portů pro CW"
+
+#: utr4wstrings.rc_clearalllogs
+#, fuzzy
+msgid "Clear all logs in network"
+msgstr "Vymaž všechny deníky v síti"
+
+#: utr4wstrings.rc_cleardupes
+#, fuzzy
+msgid "Clear dupesheet"
+msgstr "Smaž seznam QSO"
+
+#: utr4wstrings.rc_clearlog
+#, fuzzy
+msgid "Clear log"
+msgstr "Vymaž deník"
+
+#: utr4wstrings.rc_clearmsheet
+#, fuzzy
+msgid "Clear multsheet"
+msgstr "Smaž seznam násobičů"
+
+#: utr4wstrings.rc_colors
+#, fuzzy
+msgid "Colors"
+msgstr "Barvy"
+
+#: utr4wstrings.rc_commands
+#, fuzzy
+msgctxt "utr4wstrings.rc_commands"
+msgid "Commands"
+msgstr "Příkazy"
+
+#: utr4wstrings.rc_comment
+#, fuzzy
+msgctxt "utr4wstrings.rc_comment"
+msgid "Comment"
+msgstr "Komentář"
+
+#: utr4wstrings.rc_contents
+#, fuzzy
+msgid "Contents"
+msgstr "Obsah"
+
+#: utr4wstrings.rc_contestnameic
+#, fuzzy
+msgid "C&ontest name in comment"
+msgstr "Název Z&ávodu"
+
+#: utr4wstrings.rc_contlist
+#, fuzzy
+msgid "Continent List"
+msgstr "QSO podle kontinentů"
+
+#: utr4wstrings.rc_cqmode
+#, fuzzy
+msgid "CQ Mode"
+msgstr "Mód CQ"
+
+#: utr4wstrings.rc_ct1bohis
+#, fuzzy
+msgctxt "utr4wstrings.rc_ct1bohis"
+msgid "CT1BOH info screen"
+msgstr "Zobrazení info CT1BOH"
+
+#: utr4wstrings.rc_ct1bohis2
+#, fuzzy
+msgctxt "utr4wstrings.rc_ct1bohis2"
+msgid "CT1BOH info screen"
+msgstr "Zobrazení info CT1BOH"
+
+#: utr4wstrings.rc_cursorinbm
+#, fuzzy
+msgid "Cursor in bandmap window"
+msgstr "Přesunout kurzor do okna bandmapy"
+
+#: utr4wstrings.rc_cursortelnet
+#, fuzzy
+msgid "Cursor in DX Cluster window"
+msgstr "Kurzor v okně DXClusteru"
+
+#: utr4wstrings.rc_cwspdnir
+#, fuzzy
+msgid "CW Speed Down for the inactive radio"
+msgstr "Snížit rychlost CW u neaktivního RIGu"
+
+#: utr4wstrings.rc_cwspeed
+#, fuzzy
+msgid "CW speed"
+msgstr "Rychlost CW"
+
+#: utr4wstrings.rc_cwspeeddown
+#, fuzzy
+msgid "CW Speed Down"
+msgstr "Snížit rychlost CW"
+
+#: utr4wstrings.rc_cwspeedup
+#, fuzzy
+msgid "CW Speed Up"
+msgstr "Zvýšit rychlost CW"
+
+#: utr4wstrings.rc_cwspupir
+#, fuzzy
+msgid "CW Speed Up for the inactive radio"
+msgstr "Zvýšit rychlost CW u neaktivního RIGu"
+
+#: utr4wstrings.rc_daqslint
+#, fuzzy
+msgid "Auto QSL Interval (Decrease)"
+msgstr "Zmenšit interval pro aut.potvrzení"
+
+#: utr4wstrings.rc_date
+#, fuzzy
+msgctxt "utr4wstrings.rc_date"
+msgid "Date"
+msgstr "Datum"
+
+#: utr4wstrings.rc_deleted
+#, fuzzy
+msgid "Deleted"
+msgstr "&Smazáno"
+
+#: utr4wstrings.rc_deletelastqso
+#, fuzzy
+msgid "Delete the last QSO"
+msgstr "Smaž poslední QSO"
+
+#: utr4wstrings.rc_deleteselspot
+#, fuzzy
+msgctxt "utr4wstrings.rc_deleteselspot"
+msgid "Delete selected spot"
+msgstr "Smaž vybraný spot"
+
+#: utr4wstrings.rc_devicemanager
+#, fuzzy
+msgid "Device Manager"
+msgstr "Správce zařízení (PC)"
+
+#: utr4wstrings.rc_diffinlog
+#, fuzzy
+msgid "Difference in logs"
+msgstr "Rozdíly v denících"
+
+#: utr4wstrings.rc_download
+#, fuzzy
+msgid "Download the latest CTY.DAT"
+msgstr "Zkus poslední verzi"
+
+#: utr4wstrings.rc_dupecheck
+#, fuzzy
+msgid "Dupe check"
+msgstr "Kontrola opakovaných QSO"
+
+#: utr4wstrings.rc_dupecheckoar
+#, fuzzy
+msgctxt "utr4wstrings.rc_dupecheckoar"
+msgid "Dupe Check On Inactive Radio"
+msgstr "Kontrola spojení na neaktivním RIGu"
+
+#: utr4wstrings.rc_dupesheet
+#, fuzzy
+msgid "Dupesheet"
+msgstr "Zapsané značky"
+
+#: utr4wstrings.rc_dvkvolcontrol
+#, fuzzy
+msgid "DVK volume control"
+msgstr "Nastavení hlasitosti DVK"
+
+#: utr4wstrings.rc_edit
+#, fuzzy
+msgid "SO1R-Edit or SO2R-SWAP"
+msgstr "Editace v okně QSO"
+
+#: utr4wstrings.rc_edit_word
+#, fuzzy
+msgctxt "utr4wstrings.rc_edit_word"
+msgid "&Edit"
+msgstr ""
+
+#: utr4wstrings.rc_escape
+#, fuzzy
+msgid "Escape"
+msgstr "ESC"
+
+#: utr4wstrings.rc_execonfigfile
+#, fuzzy
+msgid "Execute configuration file"
+msgstr "Spustit konfigurační soubor"
+
+#: utr4wstrings.rc_exit
+#, fuzzy
+msgctxt "utr4wstrings.rc_exit"
+msgid "E&xit"
+msgstr "Konec"
+
+#: utr4wstrings.rc_export
+#, fuzzy
+msgid "Export"
+msgstr ""
+
+#: utr4wstrings.rc_fcc
+#, fuzzy
+msgid "First callsign worked in each country"
+msgstr "První značka v každé zemi"
+
+#: utr4wstrings.rc_fcz
+#, fuzzy
+msgid "First callsign worked in each zone"
+msgstr "První značka v každé zóně"
+
+#: utr4wstrings.rc_file
+#, fuzzy
+msgid "File"
+msgstr "Soubor"
+
+#: utr4wstrings.rc_fkeys
+#, fuzzy
+msgctxt "utr4wstrings.rc_fkeys"
+msgid "Function keys"
+msgstr "Klávesy pamětí"
+
+#: utr4wstrings.rc_focusinmw
+#, fuzzy
+msgid "Focus in main window"
+msgstr "Návrat do hlavního okna"
+
+#: utr4wstrings.rc_frequency
+#, fuzzy
+msgctxt "utr4wstrings.rc_frequency"
+msgid "Frequency"
+msgstr "Kmitočet"
+
+#: utr4wstrings.rc_gotogs
+#, fuzzy
+msgctxt "utr4wstrings.rc_gotogs"
+msgid "Show scores"
+msgstr "Ukaž skóre"
+
+#: utr4wstrings.rc_homepage
+#, fuzzy
+msgid "TR4W Home Page"
+msgstr "Domácí stránky TR4W"
+
+#: utr4wstrings.rc_iaqslint
+#, fuzzy
+msgid "Auto QSL Interval (Increase)"
+msgstr "Zvětšit interval pro aut.potvrzení"
+
+#: utr4wstrings.rc_import
+#, fuzzy
+msgid "Import"
+msgstr ""
+
+#: utr4wstrings.rc_incnumber
+#, fuzzy
+msgid "Increment number"
+msgstr "Zvětšit číslo o 1"
+
+#: utr4wstrings.rc_inc_time
+#, fuzzy
+msgid "Increment time"
+msgstr "Upravit čas (přidat):"
+
+#: utr4wstrings.rc_iniexlist
+#, fuzzy
+msgid "Initial exchanges list"
+msgstr "Seznam výchozích sout.kódů"
+
+#: utr4wstrings.rc_initialex
+#, fuzzy
+msgid "Initial exchange"
+msgstr "Výchozí sout.kód"
+
+#: utr4wstrings.rc_initialize
+#, fuzzy
+msgid "Initialize QSO"
+msgstr "Nové zadání QSO"
+
+#: utr4wstrings.rc_intercom
+#, fuzzy
+msgctxt "utr4wstrings.rc_intercom"
+msgid "Intercom"
+msgstr "Interkom"
+
+#: utr4wstrings.rc_killcw
+#, fuzzy
+msgid "Toggle CW"
+msgstr "Přepínač CW"
+
+#: utr4wstrings.rc_listofmess
+#, fuzzy
+msgid "List of messages"
+msgstr "seznam zpráv"
+
+#: utr4wstrings.rc_login
+#, fuzzy
+msgid "Log in"
+msgstr "přihlásit"
+
+#: utr4wstrings.rc_memprogfunc
+#, fuzzy
+msgctxt "utr4wstrings.rc_memprogfunc"
+msgid "Memory program function"
+msgstr "Funkce programování pamětí"
+
+#: utr4wstrings.rc_message
+#, fuzzy
+msgctxt "utr4wstrings.rc_message"
+msgid "Message"
+msgstr "MSG"
+
+#: utr4wstrings.rc_missmultsrep
+#, fuzzy
+msgid "Missing mults report"
+msgstr "Přehled chybějících násobičů"
+
+#: utr4wstrings.rc_mode
+#, fuzzy
+msgctxt "utr4wstrings.rc_mode"
+msgid "Mode"
+msgstr "Mód"
+
+#: utr4wstrings.rc_mp3rec
+#, fuzzy
+msgctxt "utr4wstrings.rc_mp3rec"
+msgid "MP3 Recorder"
+msgstr "MP3 rekordér"
+
+#: utr4wstrings.rc_mp3_recenable
+#, fuzzy
+msgid "Enable"
+msgstr "spusť"
+
+#: utr4wstrings.rc_name
+#, fuzzy
+msgctxt "utr4wstrings.rc_name"
+msgid "Name"
+msgstr "Jméno"
+
+#: utr4wstrings.rc_net
+#, fuzzy
+msgid "Net"
+msgstr "Síť"
+
+#: utr4wstrings.rc_network
+#, fuzzy
+msgctxt "utr4wstrings.rc_network"
+msgid "Network"
+msgstr "Síť"
+
+#: utr4wstrings.rc_net_cldupe
+#, fuzzy
+msgid "Clear dupesheet in all logs"
+msgstr "Smaž seznamy QSO ve všech denících"
+
+#: utr4wstrings.rc_net_clmult
+#, fuzzy
+msgid "Clear multsheet in all logs"
+msgstr "Smaž seznamy násobičů ve všech denících"
+
+#: utr4wstrings.rc_note
+#, fuzzy
+msgid "Note"
+msgstr "Poznámka"
+
+#: utr4wstrings.rc_notes
+#, fuzzy
+msgid "Notes"
+msgstr "Poznámky"
+
+#: utr4wstrings.rc_numberosolt
+#, fuzzy
+msgctxt "utr4wstrings.rc_numberosolt"
+msgid "Number of milliseconds of listening time:"
+msgstr "Čas poslechu v milisekundách:"
+
+#: utr4wstrings.rc_openlogdir
+#, fuzzy
+msgid "Open log directory"
+msgstr "Otevři adresář deníku"
+
+#: utr4wstrings.rc_operator
+#, fuzzy
+msgctxt "utr4wstrings.rc_operator"
+msgid "Operator"
+msgstr "Operátor"
+
+#: utr4wstrings.rc_options
+#, fuzzy
+msgid "Configuration commands"
+msgstr "Volba konfiguračních příkazů"
+
+#: utr4wstrings.rc_ping
+#, fuzzy
+msgid "Ping [SERVER ADDRESS]"
+msgstr "Ping [ADRESA SERVERU]"
+
+#: utr4wstrings.rc_postnow
+#, fuzzy
+msgctxt "utr4wstrings.rc_postnow"
+msgid "Post now"
+msgstr "Pošli teď"
+
+#: utr4wstrings.rc_postscoretogs
+#, fuzzy
+msgid "Post score"
+msgstr "Poslat skóre"
+
+#: utr4wstrings.rc_pressmkywtr
+#, fuzzy
+msgctxt "utr4wstrings.rc_pressmkywtr"
+msgid "Press the memory key you want to repeat:"
+msgstr "Stiskni klávesu paměti, kterou chceš opakovat:"
+
+#: utr4wstrings.rc_press_c
+#, fuzzy
+msgctxt "utr4wstrings.rc_press_c"
+msgid "Press &C to program a CQ function key."
+msgstr "Stiskni &C\\n pro programování pamětí v módu CQ."
+
+#: utr4wstrings.rc_press_e
+#, fuzzy
+msgctxt "utr4wstrings.rc_press_e"
+msgid "Press &E to program an exchange/search and pounce function key."
+msgstr "Stiskni &E\\n pro programování pamětí v módech EX(change) a S&P."
+
+#: utr4wstrings.rc_press_o
+#, fuzzy
+msgctxt "utr4wstrings.rc_press_o"
+msgid "Press &O to program the other non function key messages."
+msgstr "Stiskni &O\\n pro programování ostatních pamětí."
+
+#: utr4wstrings.rc_programmes
+#, fuzzy
+msgid "Program messages"
+msgstr "Programování MSG"
+
+#: utr4wstrings.rc_progrmess
+#, fuzzy
+msgctxt "utr4wstrings.rc_progrmess"
+msgid "Program message"
+msgstr "Programuj MSG"
+
+#: utr4wstrings.rc_qsobycountry
+#, fuzzy
+msgid "QSOs by country by band"
+msgstr "QSO podle zemí a pásem"
+
+#: utr4wstrings.rc_qsowithnocw
+#, fuzzy
+msgid "QSO with no CW"
+msgstr "QSO bez vysílání CW"
+
+#: utr4wstrings.rc_qtcfunctions
+#, fuzzy
+msgid "QTC functions"
+msgstr "Funkce QTC"
+
+#: utr4wstrings.rc_recalllastent
+#, fuzzy
+msgid "Recall last entry"
+msgstr "Obnovit poslední vstup"
+
+#: utr4wstrings.rc_reccontrol
+#, fuzzy
+msgid "Recording control"
+msgstr "Nastavení záznamu"
+
+#: utr4wstrings.rc_recvqtc
+#, fuzzy
+msgid "Receiving QTCs"
+msgstr "Příjem QTC"
+
+#: utr4wstrings.rc_refreshbm
+#, fuzzy
+msgid "Refresh bandmap"
+msgstr "Obnovit bandmapu"
+
+#: utr4wstrings.rc_remmults
+#, fuzzy
+msgid "Mults"
+msgstr "Zbývající násobiče"
+
+#: utr4wstrings.rc_removeallsp
+#, fuzzy
+msgctxt "utr4wstrings.rc_removeallsp"
+msgid "Remove all spots"
+msgstr "Smaž všechny spoty"
+
+#: utr4wstrings.rc_reports
+#, fuzzy
+msgid "Reports"
+msgstr "Reporty"
+
+#: utr4wstrings.rc_rescore
+#, fuzzy
+msgid "Rescore"
+msgstr "Přepočítat"
+
+#: utr4wstrings.rc_reset_radio_ports
+#, fuzzy
+msgid "Reset Radio Ports"
+msgstr "Resetovat porty stanic"
+
+#: utr4wstrings.rc_rm_default
+#, fuzzy
+msgid "Default"
+msgstr "Výchozí"
+
+#: utr4wstrings.rc_runserver
+#, fuzzy
+msgid "Run TR4WSERVER"
+msgstr "Spusť TR4WSERVER"
+
+#: utr4wstrings.rc_scorebyhour
+#, fuzzy
+msgid "Score by hour"
+msgstr "Skóre po hodinách"
+
+#: utr4wstrings.rc_search
+#, fuzzy
+msgid "&Search"
+msgstr "&Hledání"
+
+#: utr4wstrings.rc_searchlog
+#, fuzzy
+msgid "Search log"
+msgstr "Vyhledat spojení v deníku"
+
+#: utr4wstrings.rc_searchpounce
+#, fuzzy
+msgid "Search && pounce mode"
+msgstr "Mód SP"
+
+#: utr4wstrings.rc_sendingcw
+#, fuzzy
+msgid "Sending CW from the keyboard. Use ENTER/Escape/F10 to exit."
+msgstr "Vysílá se CW z klávesnice. ENTER/ESC/F10 pro ukončení."
+
+#: utr4wstrings.rc_sendinrig
+#, fuzzy
+msgid "QSY Inactive Radio"
+msgstr "Nastav neaktivní RIG na kmitočet"
+
+#: utr4wstrings.rc_sendkeyboard
+#, fuzzy
+msgid "Send Keyboard Input"
+msgstr "Vstup klíčování z klávesnice"
+
+#: utr4wstrings.rc_sendmessage
+#, fuzzy
+msgid "Send message"
+msgstr "Vyšli MSG"
+
+#: utr4wstrings.rc_sendspot
+#, fuzzy
+msgctxt "utr4wstrings.rc_sendspot"
+msgid "Send spot"
+msgstr "Vyslat spot"
+
+#: utr4wstrings.rc_send_bug
+#, fuzzy
+msgid "Send bug report"
+msgstr "odeslat seznam chyb"
+
+#: utr4wstrings.rc_setsysdt
+#, fuzzy
+msgid "Set system date/time"
+msgstr "Nastav datum a čas v op.systému"
+
+#: utr4wstrings.rc_settimezone
+#, fuzzy
+msgid "Set time zone"
+msgstr "Nastav časovou zónu"
+
+#: utr4wstrings.rc_settings
+#, fuzzy
+msgid "Settings"
+msgstr "Nastavení"
+
+#: utr4wstrings.rc_shdx_callsign
+#, fuzzy
+msgid "SH/DX [callsign]"
+msgstr "SH/DX [značka]"
+
+#: utr4wstrings.rc_splitoff
+#, fuzzy
+msgid "Set Split Mode Tx"
+msgstr "Vynucený režim Split VYPNUT"
+
+#: utr4wstrings.rc_ssbcwmode
+#, fuzzy
+msgid "SSB/CW mode"
+msgstr "Přepínač módu SSB/CW"
+
+#: utr4wstrings.rc_stationinfo
+#, fuzzy
+msgctxt "utr4wstrings.rc_stationinfo"
+msgid "Station information"
+msgstr "Údaje pro záhlaví deníku"
+
+#: utr4wstrings.rc_stations
+#, fuzzy
+msgctxt "utr4wstrings.rc_stations"
+msgid "Stations"
+msgstr "Přehled stanic"
+
+#: utr4wstrings.rc_summary
+#, fuzzy
+msgid "Summary"
+msgstr "Hlavička deníku (Cabrillo)"
+
+#: utr4wstrings.rc_swapmultview
+#, fuzzy
+msgid "Swap mult view"
+msgstr "Změnit zobrazení násobičů"
+
+#: utr4wstrings.rc_synchronize
+#, fuzzy
+msgctxt "utr4wstrings.rc_synchronize"
+msgid "Synchronize"
+msgstr "Synchronizovat"
+
+#: utr4wstrings.rc_synlog
+#, fuzzy
+msgid "Compare and synchronize logs"
+msgstr "Porovnej a synchronizuj deníky"
+
+#: utr4wstrings.rc_telnet
+#, fuzzy
+msgctxt "utr4wstrings.rc_telnet"
+msgid "DX Cluster"
+msgstr ""
+
+#: utr4wstrings.rc_timesyn
+#, fuzzy
+msgid "Synchronize time on &all computers"
+msgstr "Synchronizace času"
+
+#: utr4wstrings.rc_toggleinsert
+#, fuzzy
+msgid "Toggle insert mode"
+msgstr "Přepínač módu INSERT"
+
+#: utr4wstrings.rc_toogleas
+#, fuzzy
+msgid "Toggle autosend"
+msgstr "AutoSend zap./vyp."
+
+#: utr4wstrings.rc_tooglemb
+#, fuzzy
+msgid "Toogle multiplier bell"
+msgstr "Ovladač signálu pro násobič"
+
+#: utr4wstrings.rc_tooglerigs
+#, fuzzy
+msgid "Toggle rigs"
+msgstr "Volba RIG"
+
+#: utr4wstrings.rc_tooglest
+#, fuzzy
+msgid "Toggle sidetone"
+msgstr "Příposlech zap./vyp."
+
+#: utr4wstrings.rc_tools
+#, fuzzy
+msgid "Tools"
+msgstr "Nástroje"
+
+#: utr4wstrings.rc_transfreq
+#, fuzzy
+msgid "Transmit frequency"
+msgstr "Vysílací kmitočet"
+
+#: utr4wstrings.rc_trlogform
+#, fuzzy
+msgid "TR Log format"
+msgstr "Formát TR Log"
+
+#: utr4wstrings.rc_trmaster
+#, fuzzy
+msgid "SCP"
+msgstr ""
+
+#: utr4wstrings.rc_vieweditlog
+#, fuzzy
+msgctxt "utr4wstrings.rc_vieweditlog"
+msgid "View / Edit log"
+msgstr "Zobraz / edituj deník"
+
+#: utr4wstrings.rc_vieweditlog2
+#, fuzzy
+msgctxt "utr4wstrings.rc_vieweditlog2"
+msgid "View / Edit log"
+msgstr "Zobraz / edituj deník"
+
+#: utr4wstrings.rc_viewpakspots
+#, fuzzy
+msgid "View packet spots"
+msgstr "Zobrazit spoty z paket radia"
+
+#: utr4wstrings.rc_wiki
+#, fuzzy
+msgid "On-line documentation (in Russian)"
+msgstr "On-line dokumentace (rusky)"
+
+#: utr4wstrings.rc_wincontrol
+#, fuzzy
+msgctxt "utr4wstrings.rc_wincontrol"
+msgid "Windows control"
+msgstr "Přepínání oken"
+
+#: utr4wstrings.rc_wincontrol2
+#, fuzzy
+msgctxt "utr4wstrings.rc_wincontrol2"
+msgid "Windows control"
+msgstr "Přepínání oken"
+
+#: utr4wstrings.rc_windows
+#, fuzzy
+msgid "Windows"
+msgstr "Okna"
+
+#: utr4wstrings.rc_wkmode
+#, fuzzy
+msgid "Re-initialize WinKeyer"
+msgstr "znovu inicializovat WinKeyer"
+
+#: utr4wstrings.tc_2radio_warn
+#, fuzzy
+msgid "ERROR: 2 Radios on single band"
+msgstr "CHYBA: 2 stanice na jednom pásmu"
+
+#: utr4wstrings.tc_agecallsignage
+#, fuzzy
+msgid "Enter your age (and Silent Key callsign and age):"
+msgstr "zadej svůj věk (a zaniklou značku a věk):"
+
+#: utr4wstrings.tc_alldark
+#, fuzzy
+msgid "All dark"
+msgstr "Noc"
+
+#: utr4wstrings.tc_allsun
+#, fuzzy
+msgid "All sun"
+msgstr "Den"
+
+#: utr4wstrings.tc_all_logs_network_cleared
+#, fuzzy
+msgid "All logs in TR4W network cleared."
+msgstr "Všechny deníky v síti TR4W byly smazány."
+
+#: utr4wstrings.tc_alreadyexistsokaytodelete
+#, fuzzy
+msgid ""
+"%s already exists.\n"
+"\n"
+"Okay to delete?"
+msgstr ""
+
+#: utr4wstrings.tc_altdcommanddisabled
+#, fuzzy
+msgid "Alt-D command requires TWO RADIO MODE = TRUE"
+msgstr "Příkaz Alt-D vyžaduje TWO RADIO MODE = TRUE"
+
+#: utr4wstrings.tc_altrcommanddisabled
+#, fuzzy
+msgid "Alt-R command requires TWO RADIO MODE = TRUE"
+msgstr "Příkaz Alt-R vyžaduje TWO RADIO MODE = TRUE"
+
+#: utr4wstrings.tc_appendimportedqsostocurrentlog
+#, fuzzy
+msgid "Append imported QSOs to current log?"
+msgstr "Připojit importovaná QSO k aktuálnímu deníku?"
+
+#: utr4wstrings.tc_arenewengland
+#, fuzzy
+msgid "Are you in New England?"
+msgstr ""
+
+#: utr4wstrings.tc_arktikaclub
+#, fuzzy
+msgid "club"
+msgstr "Arktika klub"
+
+#: utr4wstrings.tc_arrlfielddayimproperdxexchange
+#, fuzzy
+msgid "DX Station exchange must be \"DX\"."
+msgstr "soutěž. kód DX stanic musí být \"DX\"."
+
+#: utr4wstrings.tc_autospace
+#, fuzzy
+msgid "&Autospace"
+msgstr "&aut. mezery"
+
+#: utr4wstrings.tc_autospotenabledtestmodeonly
+#, fuzzy
+msgid "AUTOSPOT is enabled - Test Mode Only"
+msgstr ""
+
+#: utr4wstrings.tc_autosynchronizinglog
+#, fuzzy
+msgid "Auto-synchronizing log from server."
+msgstr "Automatická synchronizace logu ze serveru."
+
+#: utr4wstrings.tc_backupcreated
+#, fuzzy
+msgid "Log file backup created"
+msgstr "Záloha souboru logu vytvořena"
+
+#: utr4wstrings.tc_bandchangedisabled
+#, fuzzy
+msgid "Band change requires MULTIPLE BANDS = TRUE once the log has QSOs"
+msgstr ""
+
+#: utr4wstrings.tc_band_changes
+#, fuzzy
+msgid "Bn. ch. = %d"
+msgstr "Zm.pásma= %d"
+
+#: utr4wstrings.tc_belgium
+#, fuzzy
+msgid "Belgium"
+msgstr "Belgie"
+
+#: utr4wstrings.tc_bugmode
+#, fuzzy
+msgid "Bug mode"
+msgstr "Bug"
+
+#: utr4wstrings.tc_bulgaria
+#, fuzzy
+msgid "Bulgaria"
+msgstr "Bulharsko"
+
+#: utr4wstrings.tc_c9_africa
+#, fuzzy
+msgid "Africa"
+msgstr "Afrika"
+
+#: utr4wstrings.tc_c9_antartica
+#, fuzzy
+msgid "Antartica"
+msgstr "Antarktida"
+
+#: utr4wstrings.tc_c9_asia
+#, fuzzy
+msgid "Asia"
+msgstr "Asie"
+
+#: utr4wstrings.tc_c9_europe
+#, fuzzy
+msgid "Europe"
+msgstr "Evropa"
+
+#: utr4wstrings.tc_c9_northamerica
+#, fuzzy
+msgctxt "utr4wstrings.tc_c9_northamerica"
+msgid "North America"
+msgstr "Sev.Amerika"
+
+#: utr4wstrings.tc_c9_oceania
+#, fuzzy
+msgid "Oceania"
+msgstr "Oceánie"
+
+#: utr4wstrings.tc_c9_southamerica
+#, fuzzy
+msgid "South America"
+msgstr "Jižní Amerika"
+
+#: utr4wstrings.tc_c9_unknown
+#, fuzzy
+msgctxt "utr4wstrings.tc_c9_unknown"
+msgid "Unknown"
+msgstr "Neznámý"
+
+#: utr4wstrings.tc_california
+#, fuzzy
+msgid "California"
+msgstr ""
+
+#: utr4wstrings.tc_call_in_call_window
+#, fuzzy
+msgid "Call in Call Window"
+msgstr "Značku do okna značky"
+
+#: utr4wstrings.tc_canada
+#, fuzzy
+msgid "Canada"
+msgstr "Kanada"
+
+#: utr4wstrings.tc_cannotbackuplog
+#, fuzzy
+msgid "Could not make a backup copy of "
+msgstr "Nelze vytvořit zálohu "
+
+#: utr4wstrings.tc_cannotcopylogreadonly
+#, fuzzy
+msgid "Cannot copy log file -- target exists and is read-only"
+msgstr "Nelze zkopírovat soubor logu -- cíl existuje a je pouze pro čtení"
+
+#: utr4wstrings.tc_cannotdisablesplittransmitslicecre
+#, fuzzy
+msgid "Cannot disable split -- the transmit slice was created on the radio. Turn it off in the SDR."
+msgstr ""
+
+#: utr4wstrings.tc_cannotopenlogfile
+#, fuzzy
+msgid "Cannot open log file"
+msgstr ""
+
+#: utr4wstrings.tc_cannotrename
+#, fuzzy
+msgid "Can not rename"
+msgstr "Nelze přejmenovat"
+
+#: utr4wstrings.tc_checkcallsign
+#, fuzzy
+msgid "Check callsign"
+msgstr "Kontroluj značku"
+
+#: utr4wstrings.tc_checkdatetime
+#, fuzzy
+msgid "Check Date/Time !!"
+msgstr "Kontroluj datum/čas!"
+
+#: utr4wstrings.tc_checkqtcnumber
+#, fuzzy
+msgid "Check QTC number"
+msgstr "Kontroluj počet QTC"
+
+#: utr4wstrings.tc_checktime
+#, fuzzy
+msgid "Check time"
+msgstr "Kontroluj čas"
+
+#: utr4wstrings.tc_cis
+#, fuzzy
+msgid "CIS"
+msgstr ""
+
+#: utr4wstrings.tc_cleansweepcongratulations
+#, fuzzy
+msgid "CLEAN SWEEP!! CONGRATULATIONS!!"
+msgstr "UKLIZENO! BLAHOPŘEJEME!"
+
+#: utr4wstrings.tc_clearalllogs
+#, fuzzy
+msgid "\"CLEARALLLOGS\" to clear all logs in network"
+msgstr "\"CLEARALLLOGS\" pro vymazání všech deníků v síti"
+
+#: utr4wstrings.tc_clearmulttoclearmultsheet
+#, fuzzy
+msgid "\"CLEARMULT\" to clear the multsheet"
+msgstr "\"CLEARMULT\" pro vymazání seznamu násobičů"
+
+#: utr4wstrings.tc_clear_dupesheet_net
+#, fuzzy
+msgid "\"CLEARDUPESHEET\" to clear all dupesheets in network"
+msgstr "\"CLEARDUPESHEET\" pro vymazání všech seznamů QSO v síti"
+
+#: utr4wstrings.tc_clear_multsheet_net
+#, fuzzy
+msgid "\"CLEARMULTSHEET\" to clear all multsheets in network"
+msgstr "\"CLEARMULTSHEET\" pro vymazání všech seznamů násobičů v síti"
+
+#: utr4wstrings.tc_command
+#, fuzzy
+msgid "Command"
+msgstr "Příkaz"
+
+#: utr4wstrings.tc_computerclockissynchronized
+#, fuzzy
+msgid "Computer clock is synchronized."
+msgstr "Hodiny PC jsou synchronizovány."
+
+#: utr4wstrings.tc_configuration_file
+#, fuzzy
+msgid "Configuration file"
+msgstr "Konfigurační soubor"
+
+#: utr4wstrings.tc_connect
+#, fuzzy
+msgid "CONNECT.."
+msgstr "PŘIPOJIT.."
+
+#: utr4wstrings.tc_connected
+#, fuzzy
+msgid "CONNECTED"
+msgstr "PŘIPOJEN"
+
+#: utr4wstrings.tc_connectedto
+#, fuzzy
+msgid "Connected to "
+msgstr "Připojen k "
+
+#: utr4wstrings.tc_connectingto
+#, fuzzy
+msgid "Connecting to "
+msgstr "Připojuje se k "
+
+#: utr4wstrings.tc_connectiontotr4wserverlost
+#, fuzzy
+msgid "Connection to TR4WSERVER %s:%d lost."
+msgstr "Připojení k serveru TR4W %s:%d bylo přerušeno."
+
+#: utr4wstrings.tc_connecttotr4wserverfailed
+#, fuzzy
+msgid "Connect to TR4WSERVER failed. Check SERVER PASSWORD value!!"
+msgstr "Připojení k serveru TR4W neúspěšné. Ověř heslo!"
+
+#: utr4wstrings.tc_continueenteringcharactersautoterm
+#, fuzzy
+msgid "Continue entering characters.  Auto terminate active!!"
+msgstr ""
+
+#: utr4wstrings.tc_continueenteringcharacterspressret
+#, fuzzy
+msgid "Continue entering characters and press RETURN when done."
+msgstr ""
+
+#: utr4wstrings.tc_cqfunctionkeymemorystatus
+#, fuzzy
+msgid "CQ FUNCTION KEY MEMORY STATUS"
+msgstr "STAV PAMĚTI PROGRAMOVÁNÍ CQ"
+
+#: utr4wstrings.tc_cqtotal
+#, fuzzy
+msgid "CQ total: %u"
+msgstr "CQ celkem: %u"
+
+#: utr4wstrings.tc_croat
+#, fuzzy
+msgid "I am in Croatia"
+msgstr ""
+
+#: utr4wstrings.tc_ctrl_a
+#, fuzzy
+msgid "Send this message on inactive radio"
+msgstr "Odešli tuto MSG na neaktivní RIG"
+
+#: utr4wstrings.tc_ctrl_b
+#, fuzzy
+msgid "Identify ctrl-A message as a CQ"
+msgstr "Označ MSG CTRL-A jako CQ"
+
+#: utr4wstrings.tc_ctrl_c
+#, fuzzy
+msgid "Start special command"
+msgstr "Aktivuj speciální příkaz"
+
+#: utr4wstrings.tc_ctrl_d
+#, fuzzy
+msgid "Do not interrupt"
+msgstr "Nepřerušuj"
+
+#: utr4wstrings.tc_ctrl_e
+#, fuzzy
+msgid "Dah 73% of normal duration"
+msgstr "Čárka má délku 73% normální hodnoty"
+
+#: utr4wstrings.tc_ctrl_f
+#, fuzzy
+msgid "Increase speed by 6%"
+msgstr "Zvyš rychlost o 6%"
+
+#: utr4wstrings.tc_ctrl_k
+#, fuzzy
+msgid "Normal dah"
+msgstr "Normální čárka"
+
+#: utr4wstrings.tc_ctrl_l
+#, fuzzy
+msgid "Dit 140% of normal duration"
+msgstr "Tečka má délku 140% normální hodnoty"
+
+#: utr4wstrings.tc_ctrl_n
+#, fuzzy
+msgid "Dah 113% of normal duration"
+msgstr "Čárka má délku 113% normální hodnoty"
+
+#: utr4wstrings.tc_ctrl_o
+#, fuzzy
+msgid "Dah 127% of normal duration"
+msgstr "Čárka má délku 127% normální hodnoty"
+
+#: utr4wstrings.tc_ctrl_p
+#, fuzzy
+msgid "Dit 60% of normal duration"
+msgstr "Tečka má délku 60% normální hodnoty"
+
+#: utr4wstrings.tc_ctrl_q
+#, fuzzy
+msgid "Dit 80% of normal duration"
+msgstr "Tečka má délku 80% normální hodnoty"
+
+#: utr4wstrings.tc_ctrl_s
+#, fuzzy
+msgid "Decrease speed by 6%"
+msgstr "Sniž rychlost o 6%"
+
+#: utr4wstrings.tc_ctrl_sl
+#, fuzzy
+msgid "Normal dit"
+msgstr "Normální tečka"
+
+#: utr4wstrings.tc_ctrl_v
+#, fuzzy
+msgid "Dit 120% of normal duration"
+msgstr "Tečka má délku 120% normální hodnoty"
+
+#: utr4wstrings.tc_ctrl_x
+#, fuzzy
+msgid "Decrease weight by 0.03"
+msgstr "Sniž poměr tečka/mezera o 0.03"
+
+#: utr4wstrings.tc_ctrl_y
+#, fuzzy
+msgid "Increase weight by 0.03"
+msgstr "Zvyš poměr tečka/mezera o 0.03"
+
+#: utr4wstrings.tc_ctspacing
+#, fuzzy
+msgid "C&T spacing"
+msgstr "Kalibrace mezer C&T"
+
+#: utr4wstrings.tc_ctydatdownloadedreloading
+#, fuzzy
+msgid "CTY.DAT downloaded. Reloading..."
+msgstr ""
+
+#: utr4wstrings.tc_ctydatdownloadfailed
+#, fuzzy
+msgid "CTY.DAT download failed."
+msgstr ""
+
+#: utr4wstrings.tc_ctydatreloadedsuccessfully
+#, fuzzy
+msgid "CTY.DAT reloaded successfully."
+msgstr ""
+
+#: utr4wstrings.tc_current_operator_callsign
+#, fuzzy
+msgid "current operator callsign"
+msgstr "současný operátor má značku "
+
+#: utr4wstrings.tc_cwdisabledwithaltk
+#, fuzzy
+msgid "CW disabled with Alt-K!!  Use Alt-K again to enable."
+msgstr "CW je blokováno stiskem Alt-K!  Stiskni znovu Alt-K pro obnovení CW."
+
+#: utr4wstrings.tc_cwoff
+#, fuzzy
+msgid "CW Off"
+msgstr ""
+
+#: utr4wstrings.tc_cwqsos
+#, fuzzy
+msgid "CW QSOs"
+msgstr ""
+
+#: utr4wstrings.tc_cwtimerfired
+#, fuzzy
+msgid "CW Timer fired"
+msgstr ""
+
+#: utr4wstrings.tc_czechrepublicorinslovakia
+#, fuzzy
+msgid "Czech Republic or in Slovakia"
+msgstr "Česko nebo Slovensko"
+
+#: utr4wstrings.tc_datasuccessfullysavedasciifile
+#, fuzzy
+msgid "Data successfully saved to ASCII file."
+msgstr ""
+
+#: utr4wstrings.tc_debugmodecreatedprefixestxt
+#, fuzzy
+msgid "debug mode created prefixes.txt"
+msgstr ""
+
+#: utr4wstrings.tc_department
+#, fuzzy
+msgid "Enter your department:"
+msgstr "zadej svůj department:"
+
+#: utr4wstrings.tc_difversion
+#, fuzzy
+msgid ""
+"%s is from a different program version.\n"
+"TR4W is expecting version %s.\n"
+"The file you are trying to read version %s."
+msgstr ""
+
+#: utr4wstrings.tc_digqsos
+#, fuzzy
+msgid "DIG QSOs"
+msgstr ""
+
+#: utr4wstrings.tc_disbale_civ
+#, fuzzy
+msgid "Disable \"CI-V Transceive\" mode in your ICOM rig. Refer to instruction manual of your radio."
+msgstr "vypnout \"CI-V Transceive\" mód v transceiveru ICOM"
+
+#: utr4wstrings.tc_disconnectedfrom
+#, fuzzy
+msgid "** DISCONNECTED from "
+msgstr "** Odpojen od "
+
+#: utr4wstrings.tc_discover_multi_found
+#, fuzzy
+msgid "More than one %s found; filled in the first.  All found:"
+msgstr ""
+
+#: utr4wstrings.tc_discover_none_found
+#, fuzzy
+msgid "No radio of type %s found on the network"
+msgstr ""
+
+#: utr4wstrings.tc_discover_not_available
+#, fuzzy
+msgid "Network discovery is not available for radio %s"
+msgstr ""
+
+#: utr4wstrings.tc_ditdahratio
+#, fuzzy
+msgid "Dit/Dah ratio"
+msgstr "Poměr tečka/čárka"
+
+#: utr4wstrings.tc_dlportiodriverisnotinstalled
+#, fuzzy
+msgid "DLPortIO error"
+msgstr "Chyba aplikace DLPortIO"
+
+#: utr4wstrings.tc_dommults
+#, fuzzy
+msgid "Dom Mults"
+msgstr "Dom násobiče"
+
+#: utr4wstrings.tc_downloadingctydat
+#, fuzzy
+msgid "Downloading CTY.DAT..."
+msgstr ""
+
+#: utr4wstrings.tc_downloadingpotaparks
+#, fuzzy
+msgid "Downloading POTA parks..."
+msgstr ""
+
+#: utr4wstrings.tc_downloadingtrmasterdta
+#, fuzzy
+msgid "Downloading TRMASTER.DTA..."
+msgstr ""
+
+#: utr4wstrings.tc_downloadit
+#, fuzzy
+msgid "Would you like to download the latest version?"
+msgstr "Má se stáhnout poslední verze?"
+
+#: utr4wstrings.tc_doyoureallywantstopnow
+#, fuzzy
+msgid "Do you really want stop now?"
+msgstr "Chceš to opravdu teď ukončit?"
+
+#: utr4wstrings.tc_doyoureallywanttoabortthisqtc
+#, fuzzy
+msgid "Do you really want to abort this QTC?"
+msgstr "Chceš opravdu přerušit toto QTC?"
+
+#: utr4wstrings.tc_doyoureallywanttoexittheprogram
+#, fuzzy
+msgid "Do you really want to exit the program?"
+msgstr "Chceš skutečně ukončit program?"
+
+#: utr4wstrings.tc_doyoureallywanttosavethisqtc
+#, fuzzy
+msgid "Do you really want to save this QTC?"
+msgstr "Chceš opravdu uložit toto QTC?"
+
+#: utr4wstrings.tc_doyouwanttocheckthelatestversion
+#, fuzzy
+msgid "Would you like to check for a possible newer version of  TR4W ?"
+msgstr "Chceš ověřit, zda existuje novější verze TR4W ?"
+
+#: utr4wstrings.tc_dupesheet
+#, fuzzy
+msgid "Dupesheet - %sm-%s"
+msgstr "Zapsáno - %sm-%s"
+
+#: utr4wstrings.tc_dupesheetcleared
+#, fuzzy
+msgid "Dupe sheet cleared!"
+msgstr "Seznam QSO byl vymazán!"
+
+#: utr4wstrings.tc_dxmults
+#, fuzzy
+msgid "DX Mults"
+msgstr "DX násobiče"
+
+#: utr4wstrings.tc_editfunctionkey
+#, fuzzy
+msgid "Edit %s message"
+msgstr "Edituj %s zprávu"
+
+#: utr4wstrings.tc_editor_copy
+#, fuzzy
+msgid "&Copy"
+msgstr ""
+
+#: utr4wstrings.tc_editor_edit
+#, fuzzy
+msgctxt "utr4wstrings.tc_editor_edit"
+msgid "&Edit"
+msgstr ""
+
+#: utr4wstrings.tc_editor_explore
+#, fuzzy
+msgid "Explore"
+msgstr ""
+
+#: utr4wstrings.tc_editor_openineditor
+#, fuzzy
+msgid "Open in text &editor"
+msgstr ""
+
+#: utr4wstrings.tc_editor_selectall
+#, fuzzy
+msgid "Select &all"
+msgstr ""
+
+#: utr4wstrings.tc_editor_sendlogto
+#, fuzzy
+msgid "Send log to %s"
+msgstr ""
+
+#: utr4wstrings.tc_editqtcpressyestoeditqtcornotolog
+#, fuzzy
+msgid "Edit QTC? Press Yes to edit QTC or  No to log "
+msgstr "Editovat QTC? YES pro editaci nebo NO pro zápis "
+
+#: utr4wstrings.tc_enoughmemoryinitialexchangearray
+#, fuzzy
+msgid "Not enough memory for initial exchange array!!"
+msgstr ""
+
+#: utr4wstrings.tc_enter
+#, fuzzy
+msgid "Enter %s :"
+msgstr "ENTER > %s :"
+
+#: utr4wstrings.tc_entercallsignspacedupecheckalthhel
+#, fuzzy
+msgid "ENTER a callsign.  SPACE for dupecheck.  Alt-H for help."
+msgstr ""
+
+#: utr4wstrings.tc_entercalltobecheckedon
+#, fuzzy
+msgid "Enter call to be checked on %s%s:"
+msgstr "Zadej značku pro kontrolu na %s%s:"
+
+#: utr4wstrings.tc_enterexchangepressenterlogescapeab
+#, fuzzy
+msgid "Enter exchange.  Press ENTER to log, ESCAPE to abort QSO."
+msgstr ""
+
+#: utr4wstrings.tc_enterfirsttwodigitsofyourqth
+#, fuzzy
+msgid "Enter first two digits of your QTH:"
+msgstr "Zadej první dvě číslice svého QTH:"
+
+#: utr4wstrings.tc_enterfirsttwolettersofyourgrid
+#, fuzzy
+msgid "Enter first two letters of your grid square:"
+msgstr "Zadej první dvě písmena svého WW lokátoru:"
+
+#: utr4wstrings.tc_enterqtcmaxof
+#, fuzzy
+msgid "Enter QTC #/# (max of %d) :"
+msgstr "Zadej QTC #/# (max  %d) :"
+
+#: utr4wstrings.tc_enterstateforusprovinceforcanada
+#, fuzzy
+msgid "Enter state for U.S., province for Canada:"
+msgstr "Zadej stát v USA, nebo provincii v Kanadě:"
+
+#: utr4wstrings.tc_entersumofyourageandamount
+#, fuzzy
+msgid "Enter sum of your age and amount of years elapsed since your first QSO (e.g. 28+14=42):"
+msgstr "Zadej součet svého věku a počtu let od svého prvního radioamatérského QSO (např. 28+14=42):"
+
+#: utr4wstrings.tc_enterthelasttwodigitsoftheyear
+#, fuzzy
+msgid "Enter the last two digits of the year of your first official amateur radio license:"
+msgstr "Zadej poslední dvě číslice roku vydání své první oficiální radioamatérské licence:"
+
+#: utr4wstrings.tc_entertheqththatyouwanttosend
+#, fuzzy
+msgid "Enter the QTH that you want to send:"
+msgstr "Zadej QTH, které budeš vysílat:"
+
+#: utr4wstrings.tc_enteryourageinmystatefield
+#, fuzzy
+msgid "Enter your age in MY STATE field:"
+msgstr "Zadej svůj věk do pole MY STATE:"
+
+#: utr4wstrings.tc_enteryourbranchnumber
+#, fuzzy
+msgid "Enter your Branch number:"
+msgstr "Zadej své číslo odbočky:"
+
+#: utr4wstrings.tc_enteryourcityidentifier
+#, fuzzy
+msgid "Enter your city identifier:"
+msgstr "Zadej identifikátor svého města:"
+
+#: utr4wstrings.tc_enteryourcontinent
+#, fuzzy
+msgid "Enter your continent (and possible additional ID, i.e. SA or NAQ)"
+msgstr "Zadej svůj kontinent (a případné doplňkové ID, např. SAYL or NAQRP)"
+
+#: utr4wstrings.tc_enteryourcountycode
+#, fuzzy
+msgid "Enter your county code:"
+msgstr "Zadej kód svého kraje:"
+
+#: utr4wstrings.tc_enteryourcountyorstateporovincedx
+#, fuzzy
+msgid "Enter your county if you are in %s state. Enter your state, Canadian Province or \"DX\" if outside of %s:"
+msgstr "Zadej svůj kraj (county), pokud jsi ve státu %s. Zadej svůj stát, kanadskou provincii, nebo \"DX\", pokud jsi mimo %s:"
+
+#: utr4wstrings.tc_enteryourdistrictabbreviation
+#, fuzzy
+msgid "Enter your district abbreviation:"
+msgstr "Zadej zkratku svého okresu (distriktu):"
+
+#: utr4wstrings.tc_enteryourdistrictcode
+#, fuzzy
+msgid "If in UK/EI, enter your 2 digit district code"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourdok
+#, fuzzy
+msgid "Enter your DOK:"
+msgstr "Zadej svůj DOK:"
+
+#: utr4wstrings.tc_enteryourfocnumber
+#, fuzzy
+msgid "Enter your FOC number:"
+msgstr "Zadej své číslo FOC:"
+
+#: utr4wstrings.tc_enteryourfourdigitgridsquare
+#, fuzzy
+msgid "Enter your four digit grid square:"
+msgstr "Zadej svůj čtyřmístný WW lokátor (např. JO70):"
+
+#: utr4wstrings.tc_enteryourgeographicalcoordinates
+#, fuzzy
+msgid ""
+"Enter your geographical coordinates\n"
+"(e.g. 55N37O for Moscow):"
+msgstr ""
+
+#: utr4wstrings.tc_enteryouriotareferencedesignator
+#, fuzzy
+msgid "Enter your IOTA Reference Designator (WITH DASH and no leading zeros delimiting # e.g. EU-5)"
+msgstr "Zadej své referenční číslo IOTA (včetně oddělovací pomlčky, např. EU-123):"
+
+#: utr4wstrings.tc_enteryouristrictifinve7
+#, fuzzy
+msgid "Enter your federal district if in British Columbia, or your State/Province"
+msgstr "Zadejte svůj federální okres, pokud jste v British Columbia, nebo svůj stát/provincii"
+
+#: utr4wstrings.tc_enteryourmembershipnumber
+#, fuzzy
+msgid "Enter your membership number:"
+msgstr "Zadej své členské číslo:"
+
+#: utr4wstrings.tc_enteryourname
+#, fuzzy
+msgid "Enter your name:"
+msgstr "Zadej své jméno:"
+
+#: utr4wstrings.tc_enteryournameandqth
+#, fuzzy
+msgid "Enter your name and QTH (US state, Canadian Province or DX country) or member number:"
+msgstr "Zadej své jméno a QTH (stát USA, provincii v Kanadě nebo zemi DXCC):"
+
+#: utr4wstrings.tc_enteryournameandstate
+#, fuzzy
+msgid "Enter your name (and state if you are in North America):"
+msgstr "Zadej své jméno (a stát, pokud jsi v USA):"
+
+#: utr4wstrings.tc_enteryouroblastid
+#, fuzzy
+msgid "Enter your oblast ID:"
+msgstr "Zadej ID své oblasti:"
+
+#: utr4wstrings.tc_enteryourparkreferencedesignator
+#, fuzzy
+msgid "Enter your POTA Park Reference Designator (WITH DASH e.g. K-1234)"
+msgstr "Zadej své referenční číslo POTA (např K-1234)"
+
+#: utr4wstrings.tc_enteryourpostcode
+#, fuzzy
+msgid "Enter your postcode:"
+msgstr "Zadej svoje PSČ:"
+
+#: utr4wstrings.tc_enteryourprecedencechecksection
+#, fuzzy
+msgid ""
+"Enter your precedence, your check\n"
+"(last two digits of year licensed) and ARRL section:"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourprovinceid
+#, fuzzy
+msgid "Enter your province ID:"
+msgstr "Zadej ID své provincie:"
+
+#: utr4wstrings.tc_enteryourqthandthename
+#, fuzzy
+msgid ""
+"Enter your QTH that you want to send\n"
+"and the name you want to use:"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourqthorpower
+#, fuzzy
+msgid "Enter your QTH that you want to send if you are in North America or your power as MY STATE if outside:"
+msgstr "Zadej do pole MY STATE své QTH, které chceš vysílat, pokud jsi v USA, nebo svůj výkon, pokud jsi mimo USA:"
+
+#: utr4wstrings.tc_enteryourrdaid
+#, fuzzy
+msgid "Enter your RDA ID:"
+msgstr "Zadej svůj RDA ID:"
+
+#: utr4wstrings.tc_enteryourrdaidorgrid
+#, fuzzy
+msgid "Enter your RDA ID (for UA1A stations) or four digit grid square:"
+msgstr "zadej své RDA ID (pro stanice UA1A) nebo čtyřmístný QTH lokátor:"
+
+#: utr4wstrings.tc_enteryoursixdigitgridsquare
+#, fuzzy
+msgid "Enter your six digit grid square:"
+msgstr "Zadej svůj šestimístný WW lokátor (např. JO70ND):"
+
+#: utr4wstrings.tc_enteryoursquareid
+#, fuzzy
+msgid "Enter your square ID:"
+msgstr "Zadej ID svého čtverce:"
+
+#: utr4wstrings.tc_enteryourstatecode
+#, fuzzy
+msgid "Enter your state code:"
+msgstr "Zadej kód své země (CZ pro Česko):"
+
+#: utr4wstrings.tc_enteryourzone
+#, fuzzy
+msgid "Enter your zone:"
+msgstr "Zadej svou zónu:"
+
+#: utr4wstrings.tc_entriesperms
+#, fuzzy
+msgid "%u entries per %u ms"
+msgstr "%u vstupů za %u ms"
+
+#: utr4wstrings.tc_errorinlogfile
+#, fuzzy
+msgid "Error in log file!"
+msgstr "Chyba v souboru .TRW!"
+
+#: utr4wstrings.tc_errorofferingcommanderproxytcpport
+#, fuzzy
+msgid "Error offering Commander proxy TCP Port"
+msgstr ""
+
+#: utr4wstrings.tc_errorplayingvoicememory
+#, fuzzy
+msgid "Error playing voice memory"
+msgstr ""
+
+#: utr4wstrings.tc_eudx
+#, fuzzy
+msgid "EU country, enter your four character country code"
+msgstr "Země EU, zadejte čtyřznakový kód země"
+
+#: utr4wstrings.tc_exchangefunctionkeymemorystatus
+#, fuzzy
+msgid "EXCHANGE FUNCTION KEY MEMORY STATUS"
+msgstr "STAV PAMĚTI PROGRAMOVÁNÍ EX(CHANGE)"
+
+#: utr4wstrings.tc_failedtoconnectto
+#, fuzzy
+msgid "Failed to connect to "
+msgstr "Porucha spojení s "
+
+#: utr4wstrings.tc_failedtoconnecttogetscoresorg
+#, fuzzy
+msgid "Failed to connect"
+msgstr "Spojení se nezdařilo"
+
+#: utr4wstrings.tc_failedtoload
+#, fuzzy
+msgid "Failed to load. View getscoresanswer.html for details."
+msgstr "Vložení dat selhalo. Podrobnosti viz getscoresanswer.html."
+
+#: utr4wstrings.tc_failedtoreceiveserverlog
+#, fuzzy
+msgid "Failed to receive server log."
+msgstr "Příjem deníku ze serveru se nezdařil."
+
+#: utr4wstrings.tc_filesavedtofilesuccessfully
+#, fuzzy
+msgid "File saved to file successfully."
+msgstr ""
+
+#: utr4wstrings.tc_filesavedtosuccessfully
+#, fuzzy
+msgid "File saved to %s successfully."
+msgstr "Soubor byl úspěšně uložen do %s"
+
+#: utr4wstrings.tc_findingzeroendvisibledupesheetlist
+#, fuzzy
+msgid "Not finding zero at end visible dupesheet list!!"
+msgstr ""
+
+#: utr4wstrings.tc_firstextension
+#, fuzzy
+msgctxt "utr4wstrings.tc_firstextension"
+msgid "First extension"
+msgstr "Prodloužení 1.elementu"
+
+#: utr4wstrings.tc_florida
+#, fuzzy
+msgid "Florida"
+msgstr ""
+
+#: utr4wstrings.tc_flushinitialexcommandexecuted
+#, fuzzy
+msgid "FLUSHINITIALEX command is executed."
+msgstr ""
+
+#: utr4wstrings.tc_folderalreadyexistsoverwrite
+#, fuzzy
+msgid ""
+"Folder \"%s\" already exists.\n"
+"Overwrite ?"
+msgstr ""
+
+#: utr4wstrings.tc_footsw
+#, fuzzy
+msgid "Footsw."
+msgstr "Šlapka"
+
+#: utr4wstrings.tc_france
+#, fuzzy
+msgid "France"
+msgstr "Francie"
+
+#: utr4wstrings.tc_freq
+#, fuzzy
+msgid "Freq"
+msgstr "frekv"
+
+#: utr4wstrings.tc_frequencyforcallinkhz
+#, fuzzy
+msgid "frequency for %s in kHz"
+msgstr "Kmitočet pro %s v kHz"
+
+#: utr4wstrings.tc_freq_off
+#, fuzzy
+msgid "SHOW FREQUENCY IN LOG is turned off"
+msgstr "ZOBRAZIT FREKVENCI V LOGU je vypnuto"
+
+#: utr4wstrings.tc_freq_zero
+#, fuzzy
+msgid "ERROR: Invalid Frequency logged"
+msgstr "CHYBA: Zalogována neplatná frekvence"
+
+#: utr4wstrings.tc_fri
+#, fuzzy
+msgid "Fri"
+msgstr "Pá"
+
+#: utr4wstrings.tc_gagarin
+#, fuzzy
+msgid "special two char ID"
+msgstr "speciální dvouznakové ID"
+
+#: utr4wstrings.tc_gc
+#, fuzzy
+msgid "special two character designator"
+msgstr "speciální dvouznakové označení"
+
+#: utr4wstrings.tc_germany
+#, fuzzy
+msgid "Germany"
+msgstr "Německo"
+
+#: utr4wstrings.tc_gethost
+#, fuzzy
+msgid "GET HOST.."
+msgstr "Připoj HOST.."
+
+#: utr4wstrings.tc_hamlib_id_label
+#, fuzzy
+msgid "HAMLIB ID"
+msgstr ""
+
+#: utr4wstrings.tc_hamscorequeueingfulllogresync
+#, fuzzy
+msgid "HamScore: queueing full log resync..."
+msgstr ""
+
+#: utr4wstrings.tc_handlogmodetrue
+#, fuzzy
+msgid "HAND LOG MODE = TRUE"
+msgstr ""
+
+#: utr4wstrings.tc_hangtime
+#, fuzzy
+msgid "Hang time"
+msgstr "Prodleva"
+
+#: utr4wstrings.tc_hasimpropersyntax
+#, fuzzy
+msgid "%s has improper syntax!!"
+msgstr "%s má nesprávnou syntaxi!"
+
+#: utr4wstrings.tc_haveqtcs
+#, fuzzy
+msgid "Have %u QTCs"
+msgstr "%u QTC OK"
+
+#: utr4wstrings.tc_hitcounthistogram050
+#, fuzzy
+msgid "Hit count histogram for 0 to 50+ : "
+msgstr ""
+
+#: utr4wstrings.tc_host
+#, fuzzy
+msgid "HOST  : %s"
+msgstr ""
+
+#: utr4wstrings.tc_hq
+#, fuzzy
+msgid "HQ (HQ station)"
+msgstr "HQ (HQ stanice)"
+
+#: utr4wstrings.tc_hqmults
+#, fuzzy
+msgid "HQ Mults"
+msgstr "HQ násobiče"
+
+#: utr4wstrings.tc_hq_or_member
+#, fuzzy
+msgid "HQ or member"
+msgstr "HQ nebo člen"
+
+#: utr4wstrings.tc_hungary
+#, fuzzy
+msgid "Hungary"
+msgstr "Maďarsko"
+
+#: utr4wstrings.tc_iambica
+#, fuzzy
+msgid "Iambic A"
+msgstr "Jambický mód A"
+
+#: utr4wstrings.tc_iambicb
+#, fuzzy
+msgid "Iambic B"
+msgstr "Jambický mód B"
+
+#: utr4wstrings.tc_iamin
+#, fuzzy
+msgid "&I am in %s"
+msgstr "&Moje QTH je %s"
+
+#: utr4wstrings.tc_ididfinecontestnamelogcfgdatfile
+#, fuzzy
+msgid "I did not fine a contest name in your LOGCFG.DAT file."
+msgstr ""
+
+#: utr4wstrings.tc_ifoundcontestnameidonounderstandlo
+#, fuzzy
+msgid "I found a contest name I do no understand in your LOGCFG.DAT file."
+msgstr ""
+
+#: utr4wstrings.tc_ignorespeedpot
+#, fuzzy
+msgid "&Ignore speed pot"
+msgstr "&progr.rychlost"
+
+#: utr4wstrings.tc_improperarrlfielddayclass
+#, fuzzy
+msgid "Field Day class must be A, B, C, D, E or F."
+msgstr "kategorie při Field Day musí být A, B, C, D, E nebo F."
+
+#: utr4wstrings.tc_impropercontinent
+#, fuzzy
+msgid "Improper continent!!"
+msgstr "Nesprávný kontinent!"
+
+#: utr4wstrings.tc_improperdomesitcqth
+#, fuzzy
+msgid "Improper domestic QTH!!"
+msgstr "Nesprávné domovské QTH!"
+
+#: utr4wstrings.tc_improperdomesitcqthormissingname
+#, fuzzy
+msgid "Improper domestic QTH or missing name!!"
+msgstr "Nesprávné domovské QTH nebo chybí jméno!"
+
+#: utr4wstrings.tc_impropertransmittercount
+#, fuzzy
+msgid "FD transmitters must be between 1 and 99."
+msgstr "vysílače při Field Day musí být mezi 1 až 99."
+
+#: utr4wstrings.tc_improperwinterfielddayclass
+#, fuzzy
+msgid "Winter Field Day class must be H, I, O or M."
+msgstr "Winter Field Day class musí být H, I, M nebo O."
+
+#: utr4wstrings.tc_improperzonenumber
+#, fuzzy
+msgid "Improper zone number!!"
+msgstr "Nesprávná zóna!"
+
+#: utr4wstrings.tc_info
+#, fuzzy
+msgid "Info"
+msgstr ""
+
+#: utr4wstrings.tc_insert
+#, fuzzy
+msgid "INSERT"
+msgstr "VLOŽIT"
+
+#: utr4wstrings.tc_invalid
+#, fuzzy
+msgid "Invalid Entry"
+msgstr "Neplatný záznam"
+
+#: utr4wstrings.tc_invalidcallsignincallwindow
+#, fuzzy
+msgid "Invalid callsign in call window!!"
+msgstr "Neplatná značka v okně QSO!"
+
+#: utr4wstrings.tc_invaliddate
+#, fuzzy
+msgid "Invalid date!!"
+msgstr ""
+
+#: utr4wstrings.tc_invalidreminderdate
+#, fuzzy
+msgid "Invalid reminder date!!"
+msgstr "Neplatné datum připomínky!"
+
+#: utr4wstrings.tc_invalidremindertime
+#, fuzzy
+msgid "Invalid reminder time!!"
+msgstr "Neplatný čas připomínky!"
+
+#: utr4wstrings.tc_invalidstatementin
+#, fuzzy
+msgid ""
+"Invalid statement in %s !!\n"
+"\n"
+"Line %u\n"
+"%s"
+msgstr ""
+
+#: utr4wstrings.tc_invalidstatementinconfigfile
+#, fuzzy
+msgid ""
+"%s:\n"
+"Invalid statement in config file.\n"
+"\n"
+"Line %u\n"
+"%s"
+msgstr ""
+
+#: utr4wstrings.tc_ireland
+#, fuzzy
+msgid "Ireland"
+msgstr "Irsko"
+
+#: utr4wstrings.tc_irts
+#, fuzzy
+msgid "EI/GI, enter your County"
+msgstr "EI/GI, zadejte své hrabství"
+
+#: utr4wstrings.tc_isadupe
+#, fuzzy
+msgid "%s is a dupe!!"
+msgstr "%s je duplicitní!"
+
+#: utr4wstrings.tc_isadupeandwillbeloggedwithzero
+#, fuzzy
+msgid "%s is a dupe and will be logged with zero QSO points."
+msgstr "%s je duplicitní a bude zapsáno v deníku s hodnotou 0 bodů."
+
+#: utr4wstrings.tc_islandstation
+#, fuzzy
+msgid "Island station"
+msgstr "Stanice na ostrově (IOTA)"
+
+#: utr4wstrings.tc_isqrvfor
+#, fuzzy
+msgid "Is %s QRV for %s?"
+msgstr "Je %s QRV pro %s?"
+
+#: utr4wstrings.tc_italy
+#, fuzzy
+msgid "Italy"
+msgstr "Itálie"
+
+#: utr4wstrings.tc_japan
+#, fuzzy
+msgid "Japan"
+msgstr "Japonsko"
+
+#: utr4wstrings.tc_kazakhstan
+#, fuzzy
+msgid "Kazakhstan"
+msgstr "Kazachstán"
+
+#: utr4wstrings.tc_keycomp
+#, fuzzy
+msgid "Keyer compensation"
+msgstr "Kompenzace klíčování"
+
+#: utr4wstrings.tc_keyermode
+#, fuzzy
+msgctxt "utr4wstrings.tc_keyermode"
+msgid "Keyer mode"
+msgstr "Mód klíčování"
+
+#: utr4wstrings.tc_keyernamedsalreadyexists
+#, fuzzy
+msgid "A keyer named \"%s\" already exists."
+msgstr ""
+
+#: utr4wstrings.tc_labre
+#, fuzzy
+msgid "Enter 2 char QTH ID"
+msgstr "Zadejte 2-znakové ID QTH"
+
+#: utr4wstrings.tc_lame_error
+#, fuzzy
+msgid "You may download it from"
+msgstr "Můžeš to stáhnout ze serveru"
+
+#: utr4wstrings.tc_last60
+#, fuzzy
+msgid "Last 60 = %d"
+msgstr "Posl.60= %d"
+
+#: utr4wstrings.tc_latest_config_file
+#, fuzzy
+msgctxt "utr4wstrings.tc_latest_config_file"
+msgid "Latest config file"
+msgstr "poslední konfigurace"
+
+#: utr4wstrings.tc_leadin
+#, fuzzy
+msgid "Lead-in time (*10 ms)"
+msgstr "Náběh PTT (*10 ms)"
+
+#: utr4wstrings.tc_list_of_command
+#, fuzzy
+msgctxt "utr4wstrings.tc_list_of_command"
+msgid "List of commands"
+msgstr "&Seznam příkazů"
+
+#: utr4wstrings.tc_locallog
+#, fuzzy
+msgid "LOCAL LOG"
+msgstr "MÍSTNÍ DENÍK"
+
+#: utr4wstrings.tc_locationfieldempty
+#, fuzzy
+msgid "LOCATION field is empty."
+msgstr ""
+
+#: utr4wstrings.tc_logfilenotfound
+#, fuzzy
+msgid "Log file not found"
+msgstr "Soubor logu nenalezen"
+
+#: utr4wstrings.tc_logfilesizecheckfailed
+#, fuzzy
+msgid "LOG FILE SIZE CHECK FAILED!!!!"
+msgstr "Kontrola velikosti souboru .TRW selhala!!"
+
+#: utr4wstrings.tc_loggingrunningsotherenofileopen
+#, fuzzy
+msgid "Logging is not running, so there is no file to open."
+msgstr ""
+
+#: utr4wstrings.tc_logincalldoeslooklikecallsign
+#, fuzzy
+msgid "Login call does not look like a callsign"
+msgstr ""
+
+#: utr4wstrings.tc_m
+#, fuzzy
+msgid "m"
+msgstr ""
+
+#: utr4wstrings.tc_maximumnumberofremindersexceeded
+#, fuzzy
+msgid "Maximum number of reminders exceeded!!"
+msgstr "Překročen maximální počet připomínek!"
+
+#: utr4wstrings.tc_messagetosendvianetwork
+#, fuzzy
+msgid "message to send via network"
+msgstr "Zpráva pro síť"
+
+#: utr4wstrings.tc_michigan
+#, fuzzy
+msgid "Michigan"
+msgstr ""
+
+#: utr4wstrings.tc_min
+#, fuzzy
+msgid "%u min."
+msgstr ""
+
+#: utr4wstrings.tc_minnesota
+#, fuzzy
+msgid "Minnesota"
+msgstr ""
+
+#: utr4wstrings.tc_missingmultsreport
+#, fuzzy
+msgid "Missing mults report: %u countries on at least %u but not all bands."
+msgstr "Chybějící násobiče: %u zemí nejméně na %u pásmech, ale ne na všech."
+
+#: utr4wstrings.tc_missingqthandorname
+#, fuzzy
+msgid "Missing QTH and/or name!!"
+msgstr "Schází QTH a/nebo jméno!"
+
+#: utr4wstrings.tc_mixw_connected
+#, fuzzy
+msgid "Connected"
+msgstr "MIXW připojen"
+
+#: utr4wstrings.tc_mixw_disconnected
+#, fuzzy
+msgctxt "utr4wstrings.tc_mixw_disconnected"
+msgid "Disconnected"
+msgstr "MIXW odpojen"
+
+#: utr4wstrings.tc_modified
+#, fuzzy
+msgid "Modified"
+msgstr "Upraveno"
+
+#: utr4wstrings.tc_mon
+#, fuzzy
+msgid "Mon"
+msgstr "Po"
+
+#: utr4wstrings.tc_morethan50differenthoursinthislog
+#, fuzzy
+msgid "More than 50 different hours in this log!!"
+msgstr "Více než 50 různých hodinových údajů v tomto deníku!"
+
+#: utr4wstrings.tc_ms
+#, fuzzy
+msgid " ms"
+msgstr ""
+
+#: utr4wstrings.tc_multneedsfor
+#, fuzzy
+msgid " Mult needs for %s :"
+msgstr "Chybí násobiče od %s :"
+
+#: utr4wstrings.tc_multsheetcleared
+#, fuzzy
+msgid "Mult sheet cleared!"
+msgstr "Seznam násobičů byl vymazán!"
+
+#: utr4wstrings.tc_name_from_name_database
+#, fuzzy
+msgid "Name from name database"
+msgstr "Jméno z databáze"
+
+#: utr4wstrings.tc_netherlands
+#, fuzzy
+msgid "Netherlands"
+msgstr "Holandsko"
+
+#: utr4wstrings.tc_network
+#, fuzzy
+msgid "Network : %s %s:%d"
+msgstr "Síť     : %s %s:%d"
+
+#: utr4wstrings.tc_networktest
+#, fuzzy
+msgid "Network Test"
+msgstr "Kontrola sítě"
+
+#: utr4wstrings.tc_newengland
+#, fuzzy
+msgid "New England"
+msgstr ""
+
+#: utr4wstrings.tc_newenglandstateabreviation
+#, fuzzy
+msgid ""
+"Enter your New England state abbreviation\n"
+"(ME, NH, VT, MA, CT, RI):"
+msgstr ""
+
+#: utr4wstrings.tc_newtour
+#, fuzzy
+msgid "New tour %d/%d"
+msgstr "Nové kolo %d/%d"
+
+#: utr4wstrings.tc_newvalue
+#, fuzzy
+msgid "new value"
+msgstr "nová hodnota"
+
+#: utr4wstrings.tc_next
+#, fuzzy
+msgid "< Next"
+msgstr "< Příští"
+
+#: utr4wstrings.tc_noanswerfromserver
+#, fuzzy
+msgid "No answer from server"
+msgstr "Žádná odpověď od serveru"
+
+#: utr4wstrings.tc_nocallsignspecified
+#, fuzzy
+msgid "No callsign specified!!"
+msgstr "Nebyla zadána volací značka!"
+
+#: utr4wstrings.tc_nocqmesprogrammedintocqmemoryaltf1
+#, fuzzy
+msgid "No CQ message programmed into CQ MEMORY AltF1."
+msgstr "V paměti CQ [AltF1] není naprogramována žádná MSG."
+
+#: utr4wstrings.tc_nofloppyfilesavenamespecified
+#, fuzzy
+msgid "No floppy file save name specified."
+msgstr "Nebyl zadán název souboru pro uložení na disketu!"
+
+#: utr4wstrings.tc_nopotaparksloggedyetsession
+#, fuzzy
+msgid "No POTA parks logged yet this session"
+msgstr ""
+
+#: utr4wstrings.tc_noqsonumberfound
+#, fuzzy
+msgid "No QSO number found!!"
+msgstr "Nebylo nalezeno číslo QSO!"
+
+#: utr4wstrings.tc_noqtcspendingqru
+#, fuzzy
+msgid "No QTCs pending, QRU."
+msgstr "Žádné QTC, QRU."
+
+#: utr4wstrings.tc_northamerica
+#, fuzzy
+msgctxt "utr4wstrings.tc_northamerica"
+msgid "North America"
+msgstr "Sev.Amerika"
+
+#: utr4wstrings.tc_note
+#, fuzzy
+msgid "note"
+msgstr "poznámka"
+
+#: utr4wstrings.tc_notenoughinfoinexchange
+#, fuzzy
+msgid "Not enough info in exchange!!"
+msgstr "Kód je neúplný!"
+
+#: utr4wstrings.tc_notrmasterdtafilefound
+#, fuzzy
+msgid "No TRMASTER.DTA file found."
+msgstr ""
+
+#: utr4wstrings.tc_numbermessagesillegalcharacters
+#, fuzzy
+msgid "Number of messages has illegal characters."
+msgstr ""
+
+#: utr4wstrings.tc_numberorletterofmessagetobeprogram
+#, fuzzy
+msgid "Number or letter of message to be programmed (1-9, A-C, or ESCAPE to exit):"
+msgstr "Zadej číslo nebo písmeno MSG, která má být programována (1-9, A-C, nebo ESC pro odchod):"
+
+#: utr4wstrings.tc_oblasts
+#, fuzzy
+msgid "Oblasts"
+msgstr "Oblasti"
+
+#: utr4wstrings.tc_ohio
+#, fuzzy
+msgid "Ohio"
+msgstr ""
+
+#: utr4wstrings.tc_op
+#, fuzzy
+msgid "Op"
+msgstr ""
+
+#: utr4wstrings.tc_openconfigurationfile
+#, fuzzy
+msgid " - Open configuration file or start a new contest"
+msgstr " - Otevře konfigurační soubor nebo deník závodu"
+
+#: utr4wstrings.tc_othercwmessagememorystatus
+#, fuzzy
+msgid "Other CW message memory status"
+msgstr "Stav jiné CW paměti"
+
+#: utr4wstrings.tc_otherssbmessagememorystatus
+#, fuzzy
+msgid "Other SSB message memory status"
+msgstr "Stav jiné SSB paměti"
+
+#: utr4wstrings.tc_override
+#, fuzzy
+msgid "OVERRIDE"
+msgstr "PŘEPSAT"
+
+#: utr4wstrings.tc_ozcr
+#, fuzzy
+msgid "Enter three-letters number:"
+msgstr "Zadej třímístný kód, složený z libovolných písmen (např. XYZ):"
+
+#: utr4wstrings.tc_paddle
+#, fuzzy
+msgctxt "utr4wstrings.tc_paddle"
+msgid "Paddle"
+msgstr "Pastička"
+
+#: utr4wstrings.tc_paddleonlysidetone
+#, fuzzy
+msgid "Paddle &only sidetone"
+msgstr "&příposlech elbugu"
+
+#: utr4wstrings.tc_paddleswap
+#, fuzzy
+msgid "Paddle swa&p"
+msgstr "Záměna T/Č"
+
+#: utr4wstrings.tc_paddleswitchpoint
+#, fuzzy
+msgid "Paddle switchpoint"
+msgstr "Prodleva pastičky"
+
+#: utr4wstrings.tc_parameterhasnovalue
+#, fuzzy
+msgid "Parameter \"%s\" has no value in the config file -- left at its default."
+msgstr "Parametr „%s“ nemá v konfiguračním souboru žádnou hodnotu -- ponechán na výchozí hodnotě."
+
+#: utr4wstrings.tc_pleasecheckmultinetwork
+#, fuzzy
+msgid "Please check multi network"
+msgstr ""
+
+#: utr4wstrings.tc_points
+#, fuzzy
+msgid "Pts"
+msgstr "body"
+
+#: utr4wstrings.tc_poland
+#, fuzzy
+msgid "Poland"
+msgstr "Polsko"
+
+#: utr4wstrings.tc_port_conflict_dialog
+#, fuzzy
+msgid "%s is already configured as %s. Two devices cannot share a serial port."
+msgstr ""
+
+#: utr4wstrings.tc_port_conflict_proceed
+#, fuzzy
+msgid "Apply anyway?"
+msgstr ""
+
+#: utr4wstrings.tc_port_conflict_startup
+#, fuzzy
+msgid "RADIO ONE and RADIO TWO are both configured to use %s. RADIO ONE keeps the port; RADIO TWO CAT control is disabled until one radio's CONTROL PORT is changed."
+msgstr ""
+
+#: utr4wstrings.tc_port_not_connected
+#, fuzzy
+msgid "(not connected)"
+msgstr "(nepřipojeno)"
+
+#: utr4wstrings.tc_possibledatalossmultinetwork
+#, fuzzy
+msgid "Possible data loss on multi network."
+msgstr ""
+
+#: utr4wstrings.tc_potaparksdownloadfailed
+#, fuzzy
+msgid "POTA parks download failed"
+msgstr ""
+
+#: utr4wstrings.tc_potaparksfilecouldloaded
+#, fuzzy
+msgid "POTA parks file could not be loaded"
+msgstr ""
+
+#: utr4wstrings.tc_potaparksloaded
+#, fuzzy
+msgid "POTA parks loaded"
+msgstr ""
+
+#: utr4wstrings.tc_prefecture
+#, fuzzy
+msgid "Enter your prefecture:"
+msgstr "Zadej svou prefekturu:"
+
+#: utr4wstrings.tc_preferencescouldopeneds
+#, fuzzy
+msgid "Preferences could not be opened (%s)."
+msgstr ""
+
+#: utr4wstrings.tc_prefix
+#, fuzzy
+msgid "Prefixes"
+msgstr "Prefix"
+
+#: utr4wstrings.tc_pref_or_cqzone
+#, fuzzy
+msgid "Enter your CQ ZONE or JA PREFECTURE"
+msgstr "Zadej svoji CQ ZÓNU nebo JA PREFEKTURU"
+
+#: utr4wstrings.tc_presscqfunctionkeytoprogram
+#, fuzzy
+msgid " Press CQ function key to program (F1, AltF1, CtrlF1), or ESCAPE to exit) : "
+msgstr "Stiskni klávesu programování CQ (F1, AltF1, CtrlF1), nebo ESC pro odchod) : "
+
+#: utr4wstrings.tc_pressexfunctionkeytoprogram
+#, fuzzy
+msgid "Press ex function key to program (F3-F12, Alt/Ctrl F1-F12) or ESCAPE to exit:"
+msgstr "Stiskni klávesu programování EX(change) (F3-F12, Alt/Ctrl F1-F12) nebo ESC pro odchod:"
+
+#: utr4wstrings.tc_pts
+#, fuzzy
+msgid "%d Pts"
+msgstr "%d bodů"
+
+#: utr4wstrings.tc_pttlockouttrue
+#, fuzzy
+msgid "PTT LOCKOUT=TRUE"
+msgstr ""
+
+#: utr4wstrings.tc_pttviacommandsctrljoptionmusttruew
+#, fuzzy
+msgid "PTT VIA COMMANDS (CTRL-J) option must be true for WSJT-X use - Setting to true"
+msgstr ""
+
+#: utr4wstrings.tc_qsoneedsfor
+#, fuzzy
+msgid " QSO needs for %s :"
+msgstr "Chybí QSO s %s :"
+
+#: utr4wstrings.tc_qsos
+#, fuzzy
+msgid "QSOs"
+msgstr ""
+
+#: utr4wstrings.tc_qso_imported
+#, fuzzy
+msgid "Qs imported."
+msgstr "QSO importována"
+
+#: utr4wstrings.tc_qso_number
+#, fuzzy
+msgid "QSO Number"
+msgstr "Číslo QSO"
+
+#: utr4wstrings.tc_qtcabortedbyoperator
+#, fuzzy
+msgid "QTC aborted by operator."
+msgstr "QTC přerušeno operátorem."
+
+#: utr4wstrings.tc_qtcnumberillegalcharacters
+#, fuzzy
+msgid "QTC Number has illegal characters."
+msgstr ""
+
+#: utr4wstrings.tc_qtcpending
+#, fuzzy
+msgid "QTC Pending"
+msgstr "Zpracovává se QTC"
+
+#: utr4wstrings.tc_qtcprocessterminated
+#, fuzzy
+msgid "QTC process terminated."
+msgstr ""
+
+#: utr4wstrings.tc_qtcprocessterminatedinvalidnumberm
+#, fuzzy
+msgid "QTC process terminated.  Invalid number of messages."
+msgstr ""
+
+#: utr4wstrings.tc_qtc_callsign
+#, fuzzy
+msgid "Callsign :"
+msgstr "Značka :"
+
+#: utr4wstrings.tc_qtc_for
+#, fuzzy
+msgid "%s for %s"
+msgstr "%s pro %s"
+
+#: utr4wstrings.tc_radio1
+#, fuzzy
+msgctxt "utr4wstrings.tc_radio1"
+msgid "Radio 1"
+msgstr "RIG 1"
+
+#: utr4wstrings.tc_radio2
+#, fuzzy
+msgctxt "utr4wstrings.tc_radio2"
+msgid "Radio 2"
+msgstr "RIG 2"
+
+#: utr4wstrings.tc_rate
+#, fuzzy
+msgid "Rate = %u"
+msgstr "Rate= %u"
+
+#: utr4wstrings.tc_reallywanttoclearthelog
+#, fuzzy
+msgid "Do you really want to clear the current log?"
+msgstr "Opravdu chceš smazat aktuální deník?"
+
+#: utr4wstrings.tc_recorddvppressescapeorreturntostop
+#, fuzzy
+msgid "Recording DVP. Press ESCAPE or RETURN to stop."
+msgstr "Nahrává se DVP. Stiskni ESC nebo RETURN pro ukončení."
+
+#: utr4wstrings.tc_records
+#, fuzzy
+msgid "Records"
+msgstr "Zápisy"
+
+#: utr4wstrings.tc_relaycontrolportpaddleport
+#, fuzzy
+msgid "RELAY CONTROL PORT = PADDLE PORT"
+msgstr ""
+
+#: utr4wstrings.tc_removeclusters
+#, fuzzy
+msgid "Remove the cluster \"%s\"?"
+msgstr ""
+
+#: utr4wstrings.tc_removerotators
+#, fuzzy
+msgid "Remove the rotator \"%s\"?"
+msgstr ""
+
+#: utr4wstrings.tc_repeating
+#, fuzzy
+msgid "Repeating %s  Listen time = %u msec - PgUp/Dn to adjust or ESCAPE"
+msgstr "Opakuje se %s  Doba poslechu = %u msec - PgUp/Dn pro nastavení nebo ESC pro ukončení"
+
+#: utr4wstrings.tc_repeatrstsent
+#, fuzzy
+msgid "Repeat RST sent"
+msgstr "Opakuj vyslané RST"
+
+#: utr4wstrings.tc_restartbinisforadifferentcontest
+#, fuzzy
+msgid "RESTART.BIN is for a different contest."
+msgstr "RESTART.BIN je pro jiný závod."
+
+#: utr4wstrings.tc_rfas
+#, fuzzy
+msgid "Enter your geographical coordinates:"
+msgstr "Zadej své zeměpisné souřadnice:"
+
+#: utr4wstrings.tc_romania
+#, fuzzy
+msgid "Romania"
+msgstr "Rumunsko"
+
+#: utr4wstrings.tc_rst_prompt
+#, fuzzy
+msgid "RST prompt"
+msgstr "Nabídka RST"
+
+#: utr4wstrings.tc_rulesonqrzru
+#, fuzzy
+msgid "Rules for %s contest at QRZ.RU"
+msgstr "Podmínky závodu %s viz QRZ.RU"
+
+#: utr4wstrings.tc_rulesonsm3cer
+#, fuzzy
+msgid "Rules for %s contest at WA7BNM Contest Calendar"
+msgstr "Pravidla závodu %s na \"WA7BNM Contest Calendar\""
+
+#: utr4wstrings.tc_runwarn
+#, fuzzy
+msgid "Another instance of TR4W is already running"
+msgstr "jiná instance TR4W je již spuštěna"
+
+#: utr4wstrings.tc_russia
+#, fuzzy
+msgid "Russia"
+msgstr "Rusko"
+
+#: utr4wstrings.tc_s
+#, fuzzy
+msgid "s"
+msgstr ""
+
+#: utr4wstrings.tc_salutation_and_name_if_known
+#, fuzzy
+msgid "Salutation and name if known"
+msgstr "Pozdrav a jméno (je-li známo)"
+
+#: utr4wstrings.tc_sat
+#, fuzzy
+msgid "Sat"
+msgstr "So"
+
+#: utr4wstrings.tc_savechanges
+#, fuzzy
+msgid "Save changes?"
+msgstr "Uložit změny?"
+
+#: utr4wstrings.tc_savingdtafileasciifileprocessingce
+#, fuzzy
+msgid "Saving .DTA file to ASCII file.  Processing cell   "
+msgstr ""
+
+#: utr4wstrings.tc_savingto
+#, fuzzy
+msgid "Saving %s to %s"
+msgstr "Ukládá se %s do %s"
+
+#: utr4wstrings.tc_scannoteditedhere
+#, fuzzy
+msgid "%s cannot be edited here."
+msgstr ""
+
+#: utr4wstrings.tc_selectspotreturnleftorrightarrowse
+#, fuzzy
+msgid "Select spot.  RETURN, left or right arrow to select.  ESCAPE to exit."
+msgstr ""
+
+#: utr4wstrings.tc_sendingssbwavfilename
+#, fuzzy
+msgid "Sending SSB .wav filename. Use ENTER to play, Escape/F10 to exit."
+msgstr "Vysílá se SSB soubor .wav. ENTER pro přehrání, ESC/F10 pro odchod."
+
+#: utr4wstrings.tc_sendtimetocomputersonthenetwork
+#, fuzzy
+msgid "Do you really want to send time to computers on the network?"
+msgstr "Opravdu chceš poslat časový údaj všem počítačům v síti?"
+
+#: utr4wstrings.tc_send_callassetbymycallcommand
+#, fuzzy
+msgid "Send call as set by MY CALL command"
+msgstr "Vysílej značku podle příkazu MY CALL"
+
+#: utr4wstrings.tc_send_characters_from_keyboard
+#, fuzzy
+msgid "Send characters from keyboard"
+msgstr "Vysílej znaky z klávesnice"
+
+#: utr4wstrings.tc_serial_format_label
+#, fuzzy
+msgid "DATA/PARITY/STOP"
+msgstr ""
+
+#: utr4wstrings.tc_server
+#, fuzzy
+msgid "SERVER: %s"
+msgstr ""
+
+#: utr4wstrings.tc_serverandlocallogsareidentical
+#, fuzzy
+msgid "Server and local logs are identical."
+msgstr "Deníky na serveru a aktuální deníky jsou identické."
+
+#: utr4wstrings.tc_serverlog
+#, fuzzy
+msgid "SERVER LOG"
+msgstr "DENÍK NA SERVERU"
+
+#: utr4wstrings.tc_server_log_changed
+#, fuzzy
+msgid "Server log changed. %u QSO(s) updated. Do logs synchronizing (Ctrl+Alt+S)."
+msgstr "Deník na serveru byl změněn. %u QSO(s) bylo přepsáno. Synchronizuj deníky (Ctrl+Alt+S)."
+
+#: utr4wstrings.tc_setcomputeridvalue
+#, fuzzy
+msgid "Set COMPUTER ID value."
+msgstr "Nastav údaj COMPUTER ID."
+
+#: utr4wstrings.tc_set_value_of_set_now
+#, fuzzy
+msgid "Set value of %s. Set now?"
+msgstr "nastavit nyní hodnotu %s ?"
+
+#: utr4wstrings.tc_show_all_serial_ports
+#, fuzzy
+msgid "Show all serial ports"
+msgstr "Zobrazit všechny sériové porty"
+
+#: utr4wstrings.tc_show_passwords
+#, fuzzy
+msgid "Show passwords"
+msgstr ""
+
+#: utr4wstrings.tc_sidetone
+#, fuzzy
+msgid "&Sidetone"
+msgstr "&Příposlech klíč."
+
+#: utr4wstrings.tc_sidetonefreq
+#, fuzzy
+msgid "Sidetone freq."
+msgstr "Kmitočet příposlechu"
+
+#: utr4wstrings.tc_sizebytes
+#, fuzzy
+msgid "Size, bytes"
+msgstr "Velikost, bytů"
+
+#: utr4wstrings.tc_sorrynolog
+#, fuzzy
+msgid "Sorry!! NO LOG = TRUE which prohibits logging QSOs on this computer"
+msgstr "Lituji! NO LOG = TRUE blokuje zápis QSO na tomto počítači"
+
+#: utr4wstrings.tc_sorryusedupallreminders
+#, fuzzy
+msgid "Sorry, you have used up all your reminders!!"
+msgstr ""
+
+#: utr4wstrings.tc_sorryyoualreadyhave10qtcswith
+#, fuzzy
+msgid "Sorry, you already have 10 QTCs with %s"
+msgstr "Lituji, již máš 10 QTC od %s"
+
+#: utr4wstrings.tc_source
+#, fuzzy
+msgid "Source: %s"
+msgstr "Zdroj: %s"
+
+#: utr4wstrings.tc_spain
+#, fuzzy
+msgid "Spain"
+msgstr "Španělsko"
+
+#: utr4wstrings.tc_split_warn
+#, fuzzy
+msgid "Warning: You are in SPLIT MODE !!!"
+msgstr "POZOR: Pracujete v režimu SPLIT!"
+
+#: utr4wstrings.tc_spots
+#, fuzzy
+msgid "%d spots"
+msgstr "%d spotů"
+
+#: utr4wstrings.tc_sprintqsyrule
+#, fuzzy
+msgid "SPRINT QSY RULE!!!"
+msgstr "PRAVIDLO SPRINT QSY!!"
+
+#: utr4wstrings.tc_ssbqsos
+#, fuzzy
+msgid "SSB QSOs"
+msgstr ""
+
+#: utr4wstrings.tc_sstillusedbys
+#, fuzzy
+msgid "\"%s\" is still used by: %s"
+msgstr ""
+
+#: utr4wstrings.tc_stationclass
+#, fuzzy
+msgid "Enter your station class:"
+msgstr "zadej třídu své licence:"
+
+#: utr4wstrings.tc_stationsinmode
+#, fuzzy
+msgid "Stations in %s mode"
+msgstr "Stanice v módu %s"
+
+#: utr4wstrings.tc_stpetersburgoblast
+#, fuzzy
+msgid "St.Petersburg / oblast"
+msgstr ""
+
+#: utr4wstrings.tc_sun
+#, fuzzy
+msgid "Sun"
+msgstr "Ne"
+
+#: utr4wstrings.tc_switzerland
+#, fuzzy
+msgid "Switzerland"
+msgstr "Švýcarsko"
+
+#: utr4wstrings.tc_tail
+#, fuzzy
+msgid "Tail time (*10 ms)"
+msgstr "Doběh PTT (*10 ms)"
+
+#: utr4wstrings.tc_tciservercouldopenportds
+#, fuzzy
+msgid "The TCI server could not open port %d: %s"
+msgstr ""
+
+#: utr4wstrings.tc_telnet
+#, fuzzy
+msgid "Connect#0Disconnect#0Commands#0Freeze#0Clear#0SH/50#0#0"
+msgstr ""
+
+#: utr4wstrings.tc_testradiointerface
+#, fuzzy
+msgid "TEST RADIO INTERFACE"
+msgstr ""
+
+#: utr4wstrings.tc_texas
+#, fuzzy
+msgid "Texas"
+msgstr ""
+
+#: utr4wstrings.tc_thefirstcommandinconfigfilemustbe
+#, fuzzy
+msgid "The first command in config file must be the MY CALL statement!!"
+msgstr "První údaj v konfiguračním souboru musí být zadání vlastní značky (MY CALL)!"
+
+#: utr4wstrings.tc_therenologfileyets
+#, fuzzy
+msgid "There is no log file yet at %s."
+msgstr ""
+
+#: utr4wstrings.tc_therewerecalls
+#, fuzzy
+msgid ""
+"There were %u calls found in initial exchange file.\n"
+"+%u dupe(s)"
+msgstr ""
+
+#: utr4wstrings.tc_theseentrieswereacceptedbeensaved
+#, fuzzy
+msgid "These entries were not accepted and have not been saved:"
+msgstr ""
+
+#: utr4wstrings.tc_thishr
+#, fuzzy
+msgid "This hr = %d"
+msgstr "Tato hod.= %d"
+
+#: utr4wstrings.tc_thisversion
+#, fuzzy
+msgid "You have "
+msgstr "Máš verzi "
+
+#: utr4wstrings.tc_thisversion2
+#, fuzzy
+msgid "This version"
+msgstr "Aktivní verze je "
+
+#: utr4wstrings.tc_this_file_does_not_exist
+#, fuzzy
+msgid "This file does not exist. Create an empty file for editing?"
+msgstr "Tento soubor neexistuje. Vytvořit soubor pro editaci?"
+
+#: utr4wstrings.tc_thu
+#, fuzzy
+msgid "Thu"
+msgstr "Čt"
+
+#: utr4wstrings.tc_timediff
+#, fuzzy
+msgid "Time diff."
+msgstr "Časový rozdíl"
+
+#: utr4wstrings.tc_timeon
+#, fuzzy
+msgid "Time on"
+msgstr "Čas zapnutí"
+
+#: utr4wstrings.tc_tooltip_discovery
+#, fuzzy
+msgid "Discover radios on the network"
+msgstr ""
+
+#: utr4wstrings.tc_toomanycontestdates
+#, fuzzy
+msgid "Too many contest dates!!"
+msgstr "Příliš mnoho dat závodu!"
+
+#: utr4wstrings.tc_toomanytotalscoremessages
+#, fuzzy
+msgid "Too many TOTAL SCORE MESSAGEs!!"
+msgstr "Příliš mnoho TOTAL SCORE MSG!"
+
+#: utr4wstrings.tc_tr4wtimewarning
+#, fuzzy
+msgid "TR4W Time Warning"
+msgstr ""
+
+#: utr4wstrings.tc_translation_author
+#, fuzzy
+msgid "N4AF"
+msgstr "OK1RR"
+
+#: utr4wstrings.tc_translation_credit
+#, fuzzy
+msgid "%s translation by %s"
+msgstr ""
+
+#: utr4wstrings.tc_translation_language
+#, fuzzy
+msgid "ENGLISH"
+msgstr "ČESKY"
+
+#: utr4wstrings.tc_translator_email
+#, fuzzy
+msgid "ny4i@ny4i.com"
+msgstr "martin@ok1rr.com"
+
+#: utr4wstrings.tc_transmitfrequencykilohertz
+#, fuzzy
+msgid "transmit frequency (kiloHertz): "
+msgstr "vysílací kmitočet (kHz): "
+
+#: utr4wstrings.tc_trmasterdtadownloadedrestarttr4wus
+#, fuzzy
+msgid "TRMASTER.DTA downloaded -- restart TR4W to use it"
+msgstr ""
+
+#: utr4wstrings.tc_trmasterdtadownloadfailed
+#, fuzzy
+msgid "TRMASTER.DTA download failed"
+msgstr ""
+
+#: utr4wstrings.tc_trmasterdtas
+#, fuzzy
+msgid "TRMASTER.DTA : %s"
+msgstr ""
+
+#: utr4wstrings.tc_tue
+#, fuzzy
+msgid "Tue"
+msgstr "Út"
+
+#: utr4wstrings.tc_uk
+#, fuzzy
+msgid "UK"
+msgstr ""
+
+#: utr4wstrings.tc_ukei
+#, fuzzy
+msgid "If in Uk/EI enter your 2 digit district code"
+msgstr "Zkontrolovat, je-li UK/EI"
+
+#: utr4wstrings.tc_ukraine
+#, fuzzy
+msgid "Ukraine"
+msgstr "Ukrajina"
+
+#: utr4wstrings.tc_ultimatic
+#, fuzzy
+msgid "Ultimatic"
+msgstr "Mód Ultimatic"
+
+#: utr4wstrings.tc_unablesavedtaasciifile
+#, fuzzy
+msgid "Unable to save .DTA to ASCII file."
+msgstr ""
+
+#: utr4wstrings.tc_unabletofind
+#, fuzzy
+msgid "Unable to find %s ."
+msgstr "Nelze nalézt %s!"
+
+#: utr4wstrings.tc_unabletofindctydat
+#, fuzzy
+msgid ""
+"Unable to find CTY.DAT country file!!\n"
+"Make sure this file is in the same directory as the program."
+msgstr ""
+
+#: utr4wstrings.tc_unknowncountry
+#, fuzzy
+msgid "Unknown country"
+msgstr "Neznámá země"
+
+#: utr4wstrings.tc_uploadcabrillotoscp
+#, fuzzy
+msgid "Do you want to upload your Cabrillo file to SuperChecklPartial?"
+msgstr ""
+
+#: utr4wstrings.tc_uploadedsuccessfully
+#, fuzzy
+msgid "Uploaded successfully."
+msgstr "Úpravy byly úspěšné."
+
+#: utr4wstrings.tc_value
+#, fuzzy
+msgid "Value"
+msgstr "Hodnota"
+
+#: utr4wstrings.tc_versiononserver
+#, fuzzy
+msgid "The last version on server"
+msgstr "Poslední verze na serveru je "
+
+#: utr4wstrings.tc_voicekeyerdisabledwithaltk
+#, fuzzy
+msgid "Voice keyer disabled with Alt-K!!  Use Alt-K again to enable."
+msgstr "Hlasový automat blokován stiskem  Alt-K! Stiskni znovu Alt-K pro obnovení funkce."
+
+#: utr4wstrings.tc_wagwarn
+#, fuzzy
+msgid "Warning: Out of WAG allowed frequency range"
+msgstr ""
+
+#: utr4wstrings.tc_waitingforyouenterstrengthofrst
+#, fuzzy
+msgid "Waiting for you enter strength of RST (Single digit)!!"
+msgstr " S (jedinou číslici)!"
+
+#: utr4wstrings.tc_wanttoconvertlog
+#, fuzzy
+msgid "Would you like to convert this log to the latest format?"
+msgstr "Chcete převést tento log na nejnovější formát?"
+
+#: utr4wstrings.tc_wasbuildin
+#, fuzzy
+msgid " installed (build date "
+msgstr " instalována (vydána) dne "
+
+#: utr4wstrings.tc_washington
+#, fuzzy
+msgid "Washington"
+msgstr ""
+
+#: utr4wstrings.tc_wasmessagenumberconfirmed
+#, fuzzy
+msgid "Was message number %u confirmed?"
+msgstr "Bylo QTC číslo %u potvrzeno?"
+
+#: utr4wstrings.tc_wed
+#, fuzzy
+msgid "Wed"
+msgstr "St"
+
+#: utr4wstrings.tc_weighting
+#, fuzzy
+msgid "Weighting"
+msgstr "Poměr tečka/mezera"
+
+#: utr4wstrings.tc_winkeyerenable
+#, fuzzy
+msgid "&Winkeyer enable"
+msgstr "&Winkeyer v provozu"
+
+#: utr4wstrings.tc_winkeyerport
+#, fuzzy
+msgid "Winkeyer port"
+msgstr "Port WK"
+
+#: utr4wstrings.tc_wisconsin
+#, fuzzy
+msgid "Wisconsin"
+msgstr ""
+
+#: utr4wstrings.tc_wpmcodespeed
+#, fuzzy
+msgid "WPM code speed"
+msgstr "rychlost (slov/min)"
+
+#: utr4wstrings.tc_yestoclearthedupesheet
+#, fuzzy
+msgid "\"YES\" to clear the dupesheet"
+msgstr "\"YES\" pro vymazání seznamu QSO"
+
+#: utr4wstrings.tc_youalreadyworkedin
+#, fuzzy
+msgid "You already worked %s in %s!!"
+msgstr "Již jsi pracoval s %s na %s!"
+
+#: utr4wstrings.tc_youarenowtalkingtoyourpacketport
+#, fuzzy
+msgid "You are now talking to your packet port.  Use Control-B to exit."
+msgstr "Nyní pracuješ přes rozhraní packet radio. Stiskni CTRL-B pro ukončení."
+
+#: utr4wstrings.tc_youarespottedbyanotherstation
+#, fuzzy
+msgid "You are spotted by another station."
+msgstr "Jiná stanice předává spot s tvou značkou."
+
+#: utr4wstrings.tc_youcanchangethisinyourconfigfile
+#, fuzzy
+msgid "You can only change this in your config file."
+msgstr "To můžeš změnit jen ve svém konfiguračním souboru."
+
+#: utr4wstrings.tc_youhavedeletedthelastlogentry
+#, fuzzy
+msgid "You have deleted the last log entry!!  Use Alt-Y to restore it."
+msgstr "Smazal jsi poslední záznam v deníku!  Stiskni ALT-Y k jeho obnovení."
+
+#: utr4wstrings.tc_youhaverestoredthelastdeleted
+#, fuzzy
+msgid "You have restored the last deleted log entry!!"
+msgstr "Poslední smazaný záznam v deníku byl obnoven!"
+
+#: utr4wstrings.tc_yournotconnectedtotheinternet
+#, fuzzy
+msgid "YOU ARE NOT CONNECTED TO THE INTERNET!"
+msgstr "NEJSI PŘIPOJEN K INTERNETU!"
+
+#: utr4wstrings.tc_you_are_using_the_latest_version
+#, fuzzy
+msgid "You are using the latest version"
+msgstr "používáš poslední (aktuální) verzi"
+
+#: utr4wstrings.tc_yugoslavia
+#, fuzzy
+msgid "Yugoslavia"
+msgstr "Jugoslávie"
+
+#: utr4wstrings.tc_zone
+#, fuzzy
+msgid "Zones"
+msgstr "Zóna"
+

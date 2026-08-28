@@ -8100,3 +8100,3458 @@ msgctxt "ulclformhelpers.tc_radioedit_widecw"
 msgid "Wide CW filter"
 msgstr ""
 
+#: tfrmaltd.caption
+#, fuzzy
+msgctxt "tfrmaltd.caption"
+msgid "Dupe Check On Inactive Radio"
+msgstr "Идэвхгvй радиогийн давтагдсан холбоог шалгах"
+
+#: tfrmautocq.caption
+#, fuzzy
+msgctxt "tfrmautocq.caption"
+msgid "Auto-CQ"
+msgstr "Авто CQ"
+
+#: tfrmautocq.lbldelay.caption
+#, fuzzy
+msgctxt "tfrmautocq.lbldelay.caption"
+msgid "Number of milliseconds of listening time:"
+msgstr "Сонсох хугацаа (миллисекундээр):"
+
+#: tfrmautocq.lblmemorykey.caption
+#, fuzzy
+msgctxt "tfrmautocq.lblmemorykey.caption"
+msgid "Press the memory key you want to repeat:"
+msgstr "Давтахыг хvсвэл сануулсан товчоо дарна уу:"
+
+#: tfrmbandmap.mideletespot.caption
+#, fuzzy
+msgctxt "tfrmbandmap.mideletespot.caption"
+msgid "Delete selected spot"
+msgstr "Сонгосон спотыг устгах"
+
+#: tfrmbandmap.miremoveall.caption
+#, fuzzy
+msgctxt "tfrmbandmap.miremoveall.caption"
+msgid "Remove all spots"
+msgstr "Бvх спотыг арилгах"
+
+#: tfrmbandplan.caption
+#, fuzzy
+msgctxt "tfrmbandplan.caption"
+msgid "Band plan"
+msgstr "Долгион"
+
+#: tfrmeditmessage.btneditwav.caption
+#, fuzzy
+msgctxt "tfrmeditmessage.btneditwav.caption"
+msgid "&Edit"
+msgstr "Засварлах"
+
+#: tfrmeditmessage.caption
+#, fuzzy
+msgctxt "tfrmeditmessage.caption"
+msgid "Program message"
+msgstr "Програмчилсан мессэж"
+
+#: tfrmeditmessage.lblcaption.caption
+#, fuzzy
+msgctxt "tfrmeditmessage.lblcaption.caption"
+msgid "Caption"
+msgstr "Гарчиг"
+
+#: tfrmeditqso.lblband.caption
+#, fuzzy
+msgctxt "tfrmeditqso.lblband.caption"
+msgid "Band"
+msgstr "Диапазон"
+
+#: tfrmeditqso.lbldate.caption
+#, fuzzy
+msgctxt "tfrmeditqso.lbldate.caption"
+msgid "Date"
+msgstr "Огноо"
+
+#: tfrmeditqso.lblmode.caption
+#, fuzzy
+msgctxt "tfrmeditqso.lblmode.caption"
+msgid "Mode"
+msgstr "Горим"
+
+#: tfrmeditqso.lbloperator.caption
+#, fuzzy
+msgctxt "tfrmeditqso.lbloperator.caption"
+msgid "Operator"
+msgstr "Оператор"
+
+#: tfrmfunctionkeys.caption
+#, fuzzy
+msgctxt "tfrmfunctionkeys.caption"
+msgid "Function keys"
+msgstr "Функцийн товчнууд"
+
+#: tfrmintercom.caption
+#, fuzzy
+msgctxt "tfrmintercom.caption"
+msgid "Intercom"
+msgstr "Дотоод холбоо"
+
+#: tfrmkeyeredit.lblwkfirstext.caption
+#, fuzzy
+msgctxt "tfrmkeyeredit.lblwkfirstext.caption"
+msgid "First extension"
+msgstr "Анхны орготгол"
+
+#: tfrmkeyeredit.lblwkkeyermode.caption
+#, fuzzy
+msgctxt "tfrmkeyeredit.lblwkkeyermode.caption"
+msgid "Keyer mode"
+msgstr "Тvлхvvрийн горим"
+
+#: tfrmlogcompare.btnsynchronize.caption
+#, fuzzy
+msgctxt "tfrmlogcompare.btnsynchronize.caption"
+msgid "Synchronize"
+msgstr "&Синхрончлох"
+
+#: tfrmmp3recorder.caption
+#, fuzzy
+msgctxt "tfrmmp3recorder.caption"
+msgid "MP3 Recorder"
+msgstr "MP3 Бичигч"
+
+#: tfrmnewcontest.btnbrowse.caption
+#, fuzzy
+msgctxt "tfrmnewcontest.btnbrowse.caption"
+msgid "Browse..."
+msgstr ""
+
+#: tfrmnewcontest.btncancel.caption
+#, fuzzy
+msgctxt "tfrmnewcontest.btncancel.caption"
+msgid "Cancel"
+msgstr ""
+
+#: tfrmnewcontest.btnlatest.caption
+#, fuzzy
+msgctxt "tfrmnewcontest.btnlatest.caption"
+msgid "Latest config file"
+msgstr "Сvvлчийн Config File"
+
+#: tfrmnewcontest.btnok.caption
+#, fuzzy
+msgctxt "tfrmnewcontest.btnok.caption"
+msgid "OK"
+msgstr ""
+
+#: tfrmnewcontest.caption
+#, fuzzy
+msgid "Open configuration file or start a new contest"
+msgstr ""
+
+#: tfrmnewcontest.dlgopen.title
+#, fuzzy
+msgid "Open configuration file"
+msgstr ""
+
+#: tfrmnewcontest.gbexisting.caption
+#, fuzzy
+msgid "Open an existing configuration"
+msgstr ""
+
+#: tfrmnewcontest.gbnew.caption
+#, fuzzy
+msgid "Start a new contest"
+msgstr ""
+
+#: tfrmnewcontest.lblcontest.caption
+#, fuzzy
+msgid "CONTEST"
+msgstr ""
+
+#: tfrmnewcontest.lblmycall.caption
+#, fuzzy
+msgid "MY CALL"
+msgstr ""
+
+#: tfrmpanadapter.lblstatus.caption
+#, fuzzy
+msgctxt "tfrmpanadapter.lblstatus.caption"
+msgid "Disconnected"
+msgstr "Салгагдлаа"
+
+#: tfrmpostscores.btnpostnow.caption
+#, fuzzy
+msgctxt "tfrmpostscores.btnpostnow.caption"
+msgid "Post now"
+msgstr "Одоо илгээх vv"
+
+#: tfrmpostscores.btnshowscores.caption
+#, fuzzy
+msgctxt "tfrmpostscores.btnshowscores.caption"
+msgid "Show scores"
+msgstr "Харах"
+
+#: tfrmprogrammessage.btncq.caption
+#, fuzzy
+msgctxt "tfrmprogrammessage.btncq.caption"
+msgid "Press &C to program a CQ function key."
+msgstr "&C-г дарж CQ функцийн товчийг програмчилна"
+
+#: tfrmprogrammessage.btnexchange.caption
+#, fuzzy
+msgctxt "tfrmprogrammessage.btnexchange.caption"
+msgid "Press &E to program an exchange/search and pounce function key."
+msgstr "&E-г дарж солилцоо,хайлт-дайралтын товчийг програмчилна"
+
+#: tfrmprogrammessage.btnother.caption
+#, fuzzy
+msgctxt "tfrmprogrammessage.btnother.caption"
+msgid "Press &O to program the other non function key messages."
+msgstr "&O-г дарж бусад функцийн биш товчийг програмчилна"
+
+#: tfrmprogrammessage.caption
+#, fuzzy
+msgctxt "tfrmprogrammessage.caption"
+msgid "Memory program function"
+msgstr "Санах ойн програмын функц"
+
+#: tfrmsendkeyboard.btnclose.caption
+#, fuzzy
+msgctxt "tfrmsendkeyboard.btnclose.caption"
+msgid "Close"
+msgstr "Хаах"
+
+#: tfrmsendspot.caption
+#, fuzzy
+msgctxt "tfrmsendspot.caption"
+msgid "Send spot"
+msgstr "Спот явуулах"
+
+#: tfrmsendspot.lblcomment.caption
+#, fuzzy
+msgctxt "tfrmsendspot.lblcomment.caption"
+msgid "Comment"
+msgstr "Санал"
+
+#: tfrmsendspot.lblfrequency.caption
+#, fuzzy
+msgctxt "tfrmsendspot.lblfrequency.caption"
+msgid "Frequency"
+msgstr "Давтамж"
+
+#: tfrmstations.caption
+#, fuzzy
+msgctxt "tfrmstations.caption"
+msgid "Stations"
+msgstr "Станцууд"
+
+#: tfrmtelnet.btncommands.caption
+#, fuzzy
+msgctxt "tfrmtelnet.btncommands.caption"
+msgid "Commands"
+msgstr "Командууд"
+
+#: tprefsform.lblpaddlegroup.caption
+#, fuzzy
+msgctxt "tprefsform.lblpaddlegroup.caption"
+msgid "Paddle"
+msgstr "Салаа тvлхvvр"
+
+#: tprefsform.lblstationheading.caption
+#, fuzzy
+msgctxt "tprefsform.lblstationheading.caption"
+msgid "Station information"
+msgstr "Станцын мэдээлэл"
+
+#: utr4wstrings.close_word
+#, fuzzy
+msgctxt "utr4wstrings.close_word"
+msgid "Close"
+msgstr "Хаах"
+
+#: utr4wstrings.exit_word
+#, fuzzy
+msgctxt "utr4wstrings.exit_word"
+msgid "E&xit"
+msgstr "Гарах"
+
+#: utr4wstrings.help_word
+#, fuzzy
+msgid "Help"
+msgstr "Тусламж"
+
+#: utr4wstrings.rc_3830
+#, fuzzy
+msgid "3830 Score posting"
+msgstr ""
+
+#: utr4wstrings.rc_3830_arrl
+#, fuzzy
+msgid "Submit ARRL Log"
+msgstr ""
+
+#: utr4wstrings.rc_about
+#, fuzzy
+msgid "About"
+msgstr "TR4W програмын тухай"
+
+#: utr4wstrings.rc_addbandmapph
+#, fuzzy
+msgid "Add bandmap place holder"
+msgstr "Долгионы цонх нэмэх"
+
+#: utr4wstrings.rc_addinfo
+#, fuzzy
+msgid "Additional information"
+msgstr "Нэмэлт мэдээлэл"
+
+#: utr4wstrings.rc_ai_cwspeed
+#, fuzzy
+msgid "CW Speed"
+msgstr "Телеграфын хурд"
+
+#: utr4wstrings.rc_ai_qsonumber
+#, fuzzy
+msgid "QSO number"
+msgstr "Холбооны дугаар"
+
+#: utr4wstrings.rc_allcalls
+#, fuzzy
+msgid "All callsigns"
+msgstr "Бvх дуудлагууд"
+
+#: utr4wstrings.rc_altp
+#, fuzzy
+msgid "Open Fkeys"
+msgstr "Функцийн товчнуудыг програмчлах"
+
+#: utr4wstrings.rc_altx
+#, fuzzy
+msgid "Exit Program"
+msgstr "Програмаас гарах"
+
+#: utr4wstrings.rc_autocq
+#, fuzzy
+msgctxt "utr4wstrings.rc_autocq"
+msgid "Auto-CQ"
+msgstr "Авто CQ"
+
+#: utr4wstrings.rc_autocq2
+#, fuzzy
+msgctxt "utr4wstrings.rc_autocq2"
+msgid "Auto-CQ"
+msgstr "Авто CQ"
+
+#: utr4wstrings.rc_autocqresume
+#, fuzzy
+msgid "Auto-CQ resume"
+msgstr "Авто CQ-г эхлvvлэх"
+
+#: utr4wstrings.rc_backuplog
+#, fuzzy
+msgid "Backup Log"
+msgstr ""
+
+#: utr4wstrings.rc_band
+#, fuzzy
+msgctxt "utr4wstrings.rc_band"
+msgid "Band"
+msgstr "Диапазон"
+
+#: utr4wstrings.rc_bandchanges
+#, fuzzy
+msgid "Band changes"
+msgstr "Шилжсэн диапазонууд"
+
+#: utr4wstrings.rc_banddown
+#, fuzzy
+msgid "Band Down"
+msgstr "Диапазон доошлуулах"
+
+#: utr4wstrings.rc_bandmap
+#, fuzzy
+msgid "Bandmap"
+msgstr "Долгионы цонх"
+
+#: utr4wstrings.rc_bandplan
+#, fuzzy
+msgctxt "utr4wstrings.rc_bandplan"
+msgid "Band plan"
+msgstr "Долгион"
+
+#: utr4wstrings.rc_bandup
+#, fuzzy
+msgid "Band Up"
+msgstr "Диапазон дээшлvvлэх"
+
+#: utr4wstrings.rc_beaconsm
+#, fuzzy
+msgid "Beacons monitor"
+msgstr "IARU-ийн чиглvvлэгч станцуудын хуваарь"
+
+#: utr4wstrings.rc_calculator
+#, fuzzy
+msgid "Calculator"
+msgstr "Тооны машин"
+
+#: utr4wstrings.rc_callsign
+#, fuzzy
+msgctxt "utr4wstrings.rc_callsign"
+msgid "Callsign"
+msgstr "Дуудлага"
+
+#: utr4wstrings.rc_caption
+#, fuzzy
+msgctxt "utr4wstrings.rc_caption"
+msgid "Caption"
+msgstr "Гарчиг"
+
+#: utr4wstrings.rc_catandcw
+#, fuzzy
+msgid "CAT and CW Keying"
+msgstr "CAT ба CW манипуляц"
+
+#: utr4wstrings.rc_clearalllogs
+#, fuzzy
+msgid "Clear all logs in network"
+msgstr "Сvлжээний бvх логийг арилгах"
+
+#: utr4wstrings.rc_cleardupes
+#, fuzzy
+msgid "Clear dupesheet"
+msgstr "Давтагдсан холбооны логийг арилгах"
+
+#: utr4wstrings.rc_clearlog
+#, fuzzy
+msgid "Clear log"
+msgstr "Логоо УСТГАХ!!!"
+
+#: utr4wstrings.rc_clearmsheet
+#, fuzzy
+msgid "Clear multsheet"
+msgstr "Vржvvлэгчvvдийг арилгах"
+
+#: utr4wstrings.rc_colors
+#, fuzzy
+msgid "Colors"
+msgstr "Онго"
+
+#: utr4wstrings.rc_commands
+#, fuzzy
+msgctxt "utr4wstrings.rc_commands"
+msgid "Commands"
+msgstr "Командууд"
+
+#: utr4wstrings.rc_comment
+#, fuzzy
+msgctxt "utr4wstrings.rc_comment"
+msgid "Comment"
+msgstr "Санал"
+
+#: utr4wstrings.rc_contents
+#, fuzzy
+msgid "Contents"
+msgstr "Гарчиг"
+
+#: utr4wstrings.rc_contestnameic
+#, fuzzy
+msgid "C&ontest name in comment"
+msgstr "Тэмцээний нэрийн тайлбар"
+
+#: utr4wstrings.rc_contlist
+#, fuzzy
+msgid "Continent List"
+msgstr "Холбоог тивээр ангилсан лог"
+
+#: utr4wstrings.rc_cqmode
+#, fuzzy
+msgid "CQ Mode"
+msgstr "CQ горим"
+
+#: utr4wstrings.rc_ct1bohis
+#, fuzzy
+msgctxt "utr4wstrings.rc_ct1bohis"
+msgid "CT1BOH info screen"
+msgstr "CT1BOH форматаар харах"
+
+#: utr4wstrings.rc_ct1bohis2
+#, fuzzy
+msgctxt "utr4wstrings.rc_ct1bohis2"
+msgid "CT1BOH info screen"
+msgstr "CT1BOH форматаар харах"
+
+#: utr4wstrings.rc_cursorinbm
+#, fuzzy
+msgid "Cursor in bandmap window"
+msgstr "Курсорыг диапазоны цонх руу зоох"
+
+#: utr4wstrings.rc_cursortelnet
+#, fuzzy
+msgid "Cursor in DX Cluster window"
+msgstr "DX Cluster дээр курсороо аваачих"
+
+#: utr4wstrings.rc_cwspdnir
+#, fuzzy
+msgid "CW Speed Down for the inactive radio"
+msgstr "Идэвхгvй радиогийн CW хурдыг багасгах"
+
+#: utr4wstrings.rc_cwspeed
+#, fuzzy
+msgid "CW speed"
+msgstr "Телеграфын хурд"
+
+#: utr4wstrings.rc_cwspeeddown
+#, fuzzy
+msgid "CW Speed Down"
+msgstr "CW хурдыг багасгах"
+
+#: utr4wstrings.rc_cwspeedup
+#, fuzzy
+msgid "CW Speed Up"
+msgstr "CW хурдыг нэмэх"
+
+#: utr4wstrings.rc_cwspupir
+#, fuzzy
+msgid "CW Speed Up for the inactive radio"
+msgstr "Идэвхгvй радиогийн CW хурдыг нэмэх"
+
+#: utr4wstrings.rc_daqslint
+#, fuzzy
+msgid "Auto QSL Interval (Decrease)"
+msgstr "Авто QSL Интервал (Багасах)"
+
+#: utr4wstrings.rc_date
+#, fuzzy
+msgctxt "utr4wstrings.rc_date"
+msgid "Date"
+msgstr "Огноо"
+
+#: utr4wstrings.rc_deleted
+#, fuzzy
+msgid "Deleted"
+msgstr "&Устгах"
+
+#: utr4wstrings.rc_deletelastqso
+#, fuzzy
+msgid "Delete the last QSO"
+msgstr "Сvvлчийн холбоог устгах"
+
+#: utr4wstrings.rc_deleteselspot
+#, fuzzy
+msgctxt "utr4wstrings.rc_deleteselspot"
+msgid "Delete selected spot"
+msgstr "Сонгосон спотыг устгах"
+
+#: utr4wstrings.rc_devicemanager
+#, fuzzy
+msgid "Device Manager"
+msgstr "Тохооромжvvдийг удирдах"
+
+#: utr4wstrings.rc_diffinlog
+#, fuzzy
+msgid "Difference in logs"
+msgstr "Логуудыг торолж??лэх"
+
+#: utr4wstrings.rc_download
+#, fuzzy
+msgid "Download the latest CTY.DAT"
+msgstr "Шинэ хувилбарыг шалгах"
+
+#: utr4wstrings.rc_dupecheck
+#, fuzzy
+msgid "Dupe check"
+msgstr "Давтагдсан холбоог шалгах"
+
+#: utr4wstrings.rc_dupecheckoar
+#, fuzzy
+msgctxt "utr4wstrings.rc_dupecheckoar"
+msgid "Dupe Check On Inactive Radio"
+msgstr "Идэвхгvй радиогийн давтагдсан холбоог шалгах"
+
+#: utr4wstrings.rc_dupesheet
+#, fuzzy
+msgid "Dupesheet"
+msgstr "Давтагдсан холбооны лог"
+
+#: utr4wstrings.rc_dvkvolcontrol
+#, fuzzy
+msgid "DVK volume control"
+msgstr "DVK-ийн дууны тохируулагч"
+
+#: utr4wstrings.rc_edit
+#, fuzzy
+msgid "SO1R-Edit or SO2R-SWAP"
+msgstr "Засварлах"
+
+#: utr4wstrings.rc_edit_word
+#, fuzzy
+msgctxt "utr4wstrings.rc_edit_word"
+msgid "&Edit"
+msgstr "Засварлах"
+
+#: utr4wstrings.rc_escape
+#, fuzzy
+msgid "Escape"
+msgstr "Цуцлах"
+
+#: utr4wstrings.rc_execonfigfile
+#, fuzzy
+msgid "Execute configuration file"
+msgstr "Тохируулгын файл дээр очих"
+
+#: utr4wstrings.rc_exit
+#, fuzzy
+msgctxt "utr4wstrings.rc_exit"
+msgid "E&xit"
+msgstr "Гарах"
+
+#: utr4wstrings.rc_export
+#, fuzzy
+msgid "Export"
+msgstr "Экспортлох"
+
+#: utr4wstrings.rc_fcc
+#, fuzzy
+msgid "First callsign worked in each country"
+msgstr "Улс бvрийн анхны холбооны лог"
+
+#: utr4wstrings.rc_fcz
+#, fuzzy
+msgid "First callsign worked in each zone"
+msgstr "Зон бvрийн анхны холбооны лог"
+
+#: utr4wstrings.rc_file
+#, fuzzy
+msgid "File"
+msgstr "Файл"
+
+#: utr4wstrings.rc_fkeys
+#, fuzzy
+msgctxt "utr4wstrings.rc_fkeys"
+msgid "Function keys"
+msgstr "Функцийн товчнууд"
+
+#: utr4wstrings.rc_focusinmw
+#, fuzzy
+msgid "Focus in main window"
+msgstr "Еронхий цонхны фокус"
+
+#: utr4wstrings.rc_frequency
+#, fuzzy
+msgctxt "utr4wstrings.rc_frequency"
+msgid "Frequency"
+msgstr "Давтамж"
+
+#: utr4wstrings.rc_gotogs
+#, fuzzy
+msgctxt "utr4wstrings.rc_gotogs"
+msgid "Show scores"
+msgstr "Харах"
+
+#: utr4wstrings.rc_homepage
+#, fuzzy
+msgid "TR4W Home Page"
+msgstr "TR4W-ийн сайт"
+
+#: utr4wstrings.rc_iaqslint
+#, fuzzy
+msgid "Auto QSL Interval (Increase)"
+msgstr "Авто QSL Интервал (Нэмэгдэх)"
+
+#: utr4wstrings.rc_import
+#, fuzzy
+msgid "Import"
+msgstr "Импортлох"
+
+#: utr4wstrings.rc_incnumber
+#, fuzzy
+msgid "Increment number"
+msgstr "Дугаарыг ахиулан илгээх"
+
+#: utr4wstrings.rc_inc_time
+#, fuzzy
+msgid "Increment time"
+msgstr "Хугацаа ахиулах интервал"
+
+#: utr4wstrings.rc_iniexlist
+#, fuzzy
+msgid "Initial exchanges list"
+msgstr "Анхны холбооны лог"
+
+#: utr4wstrings.rc_initialex
+#, fuzzy
+msgid "Initial exchange"
+msgstr "Солилцсон дугаарыг оруулах"
+
+#: utr4wstrings.rc_initialize
+#, fuzzy
+msgid "Initialize QSO"
+msgstr "Холбооны мэдээллийг арилгах"
+
+#: utr4wstrings.rc_intercom
+#, fuzzy
+msgctxt "utr4wstrings.rc_intercom"
+msgid "Intercom"
+msgstr "Дотоод холбоо"
+
+#: utr4wstrings.rc_killcw
+#, fuzzy
+msgid "Toggle CW"
+msgstr "CW-ийн дууг зогсоох"
+
+#: utr4wstrings.rc_listofmess
+#, fuzzy
+msgid "List of messages"
+msgstr "Мессэжvvд"
+
+#: utr4wstrings.rc_login
+#, fuzzy
+msgid "Log in"
+msgstr "Ажиллах операторын дуудлага"
+
+#: utr4wstrings.rc_memprogfunc
+#, fuzzy
+msgctxt "utr4wstrings.rc_memprogfunc"
+msgid "Memory program function"
+msgstr "Санах ойн програмын функц"
+
+#: utr4wstrings.rc_message
+#, fuzzy
+msgctxt "utr4wstrings.rc_message"
+msgid "Message"
+msgstr "Мессэж"
+
+#: utr4wstrings.rc_missmultsrep
+#, fuzzy
+msgid "Missing mults report"
+msgstr "Шаардлагатай vржvvлэгчvvд"
+
+#: utr4wstrings.rc_mode
+#, fuzzy
+msgctxt "utr4wstrings.rc_mode"
+msgid "Mode"
+msgstr "Горим"
+
+#: utr4wstrings.rc_mp3rec
+#, fuzzy
+msgctxt "utr4wstrings.rc_mp3rec"
+msgid "MP3 Recorder"
+msgstr "MP3 Бичигч"
+
+#: utr4wstrings.rc_mp3_recenable
+#, fuzzy
+msgid "Enable"
+msgstr "Залгах"
+
+#: utr4wstrings.rc_name
+#, fuzzy
+msgctxt "utr4wstrings.rc_name"
+msgid "Name"
+msgstr "Нэр"
+
+#: utr4wstrings.rc_net
+#, fuzzy
+msgid "Net"
+msgstr "Сvлжээ"
+
+#: utr4wstrings.rc_network
+#, fuzzy
+msgctxt "utr4wstrings.rc_network"
+msgid "Network"
+msgstr "Сvлжээ"
+
+#: utr4wstrings.rc_net_cldupe
+#, fuzzy
+msgid "Clear dupesheet in all logs"
+msgstr "Бvх логийн давтагдсан холбооны логийг арилгах"
+
+#: utr4wstrings.rc_net_clmult
+#, fuzzy
+msgid "Clear multsheet in all logs"
+msgstr "Бvх логийн vржvvлэгчийн логийг арилгах"
+
+#: utr4wstrings.rc_note
+#, fuzzy
+msgid "Note"
+msgstr "Тэмдэглэл"
+
+#: utr4wstrings.rc_notes
+#, fuzzy
+msgid "Notes"
+msgstr "Тэмдэглэл"
+
+#: utr4wstrings.rc_numberosolt
+#, fuzzy
+msgctxt "utr4wstrings.rc_numberosolt"
+msgid "Number of milliseconds of listening time:"
+msgstr "Сонсох хугацаа (миллисекундээр):"
+
+#: utr4wstrings.rc_openlogdir
+#, fuzzy
+msgid "Open log directory"
+msgstr "Логийн хавтасыг нээх"
+
+#: utr4wstrings.rc_operator
+#, fuzzy
+msgctxt "utr4wstrings.rc_operator"
+msgid "Operator"
+msgstr "Оператор"
+
+#: utr4wstrings.rc_options
+#, fuzzy
+msgid "Configuration commands"
+msgstr "Тохируулгын командууд"
+
+#: utr4wstrings.rc_ping
+#, fuzzy
+msgid "Ping [SERVER ADDRESS]"
+msgstr "Пингдэх [SERVER ADDRESS]"
+
+#: utr4wstrings.rc_postnow
+#, fuzzy
+msgctxt "utr4wstrings.rc_postnow"
+msgid "Post now"
+msgstr "Одоо илгээх vv"
+
+#: utr4wstrings.rc_postscoretogs
+#, fuzzy
+msgid "Post score"
+msgstr "Дvнгээ илгээх"
+
+#: utr4wstrings.rc_pressmkywtr
+#, fuzzy
+msgctxt "utr4wstrings.rc_pressmkywtr"
+msgid "Press the memory key you want to repeat:"
+msgstr "Давтахыг хvсвэл сануулсан товчоо дарна уу:"
+
+#: utr4wstrings.rc_press_c
+#, fuzzy
+msgctxt "utr4wstrings.rc_press_c"
+msgid "Press &C to program a CQ function key."
+msgstr "&C-г дарж CQ функцийн товчийг програмчилна"
+
+#: utr4wstrings.rc_press_e
+#, fuzzy
+msgctxt "utr4wstrings.rc_press_e"
+msgid "Press &E to program an exchange/search and pounce function key."
+msgstr "&E-г дарж солилцоо,хайлт-дайралтын товчийг програмчилна"
+
+#: utr4wstrings.rc_press_o
+#, fuzzy
+msgctxt "utr4wstrings.rc_press_o"
+msgid "Press &O to program the other non function key messages."
+msgstr "&O-г дарж бусад функцийн биш товчийг програмчилна"
+
+#: utr4wstrings.rc_programmes
+#, fuzzy
+msgid "Program messages"
+msgstr "CW сувгийг програмчлах"
+
+#: utr4wstrings.rc_progrmess
+#, fuzzy
+msgctxt "utr4wstrings.rc_progrmess"
+msgid "Program message"
+msgstr "Програмчилсан мессэж"
+
+#: utr4wstrings.rc_qsobycountry
+#, fuzzy
+msgid "QSOs by country by band"
+msgstr "Улс ба диапазон тус бvрээр ангилсан холбоонууд"
+
+#: utr4wstrings.rc_qsowithnocw
+#, fuzzy
+msgid "QSO with no CW"
+msgstr "Телеграфын бус холбоо"
+
+#: utr4wstrings.rc_qtcfunctions
+#, fuzzy
+msgid "QTC functions"
+msgstr "QTC функцууд"
+
+#: utr4wstrings.rc_recalllastent
+#, fuzzy
+msgid "Recall last entry"
+msgstr "Сvvлийн оролтыг дахин дуудах"
+
+#: utr4wstrings.rc_reccontrol
+#, fuzzy
+msgid "Recording control"
+msgstr "Бичлэгээ тохируулах"
+
+#: utr4wstrings.rc_recvqtc
+#, fuzzy
+msgid "Receiving QTCs"
+msgstr "Хvлээгдэж байгаа QTC"
+
+#: utr4wstrings.rc_refreshbm
+#, fuzzy
+msgid "Refresh bandmap"
+msgstr "Диапазоны цонхыг сэргээх"
+
+#: utr4wstrings.rc_remmults
+#, fuzzy
+msgid "Mults"
+msgstr "Хvлээгдэж буй vржvvлэгчvvд"
+
+#: utr4wstrings.rc_removeallsp
+#, fuzzy
+msgctxt "utr4wstrings.rc_removeallsp"
+msgid "Remove all spots"
+msgstr "Бvх спотыг арилгах"
+
+#: utr4wstrings.rc_reports
+#, fuzzy
+msgid "Reports"
+msgstr "Тайлан"
+
+#: utr4wstrings.rc_rescore
+#, fuzzy
+msgid "Rescore"
+msgstr "Дахин дvгнэх"
+
+#: utr4wstrings.rc_reset_radio_ports
+#, fuzzy
+msgid "Reset Radio Ports"
+msgstr ""
+
+#: utr4wstrings.rc_rm_default
+#, fuzzy
+msgid "Default"
+msgstr "Анхны тохиргоо"
+
+#: utr4wstrings.rc_runserver
+#, fuzzy
+msgid "Run TR4WSERVER"
+msgstr "TR4WSERVER -г ажиллуулах"
+
+#: utr4wstrings.rc_scorebyhour
+#, fuzzy
+msgid "Score by hour"
+msgstr "Цаг тутмын оноо"
+
+#: utr4wstrings.rc_search
+#, fuzzy
+msgid "&Search"
+msgstr "&Хайх"
+
+#: utr4wstrings.rc_searchlog
+#, fuzzy
+msgid "Search log"
+msgstr "Логоос хайх"
+
+#: utr4wstrings.rc_searchpounce
+#, fuzzy
+msgid "Search && pounce mode"
+msgstr "Хайх ба Дайрах горим"
+
+#: utr4wstrings.rc_sendingcw
+#, fuzzy
+msgid "Sending CW from the keyboard. Use ENTER/Escape/F10 to exit."
+msgstr "РС-ын гараас нэвтрvvлэх. ENTER/Escape/F10 товчоор цуцлах"
+
+#: utr4wstrings.rc_sendinrig
+#, fuzzy
+msgid "QSY Inactive Radio"
+msgstr "Идэвхгvй трансиверийн давтамж руу илгээх"
+
+#: utr4wstrings.rc_sendkeyboard
+#, fuzzy
+msgid "Send Keyboard Input"
+msgstr "РС-ын гарнаас нэвтрvvлэх"
+
+#: utr4wstrings.rc_sendmessage
+#, fuzzy
+msgid "Send message"
+msgstr "Мессэж явуулах"
+
+#: utr4wstrings.rc_sendspot
+#, fuzzy
+msgctxt "utr4wstrings.rc_sendspot"
+msgid "Send spot"
+msgstr "Спот явуулах"
+
+#: utr4wstrings.rc_send_bug
+#, fuzzy
+msgid "Send bug report"
+msgstr "Алдааны тайланг илгээх"
+
+#: utr4wstrings.rc_setsysdt
+#, fuzzy
+msgid "Set system date/time"
+msgstr "Системийн огноо,цагийг тохируулах"
+
+#: utr4wstrings.rc_settimezone
+#, fuzzy
+msgid "Set time zone"
+msgstr "Цагийн бvсийг тохируулах"
+
+#: utr4wstrings.rc_settings
+#, fuzzy
+msgid "Settings"
+msgstr "Тохируулга"
+
+#: utr4wstrings.rc_shdx_callsign
+#, fuzzy
+msgid "SH/DX [callsign]"
+msgstr "SH/DX [дуудлага]"
+
+#: utr4wstrings.rc_splitoff
+#, fuzzy
+msgid "Set Split Mode Tx"
+msgstr "SPLIT-ийг залгах ба салгах ON/OFF"
+
+#: utr4wstrings.rc_ssbcwmode
+#, fuzzy
+msgid "SSB/CW mode"
+msgstr "Модуляцийг солих"
+
+#: utr4wstrings.rc_stationinfo
+#, fuzzy
+msgctxt "utr4wstrings.rc_stationinfo"
+msgid "Station information"
+msgstr "Станцын мэдээлэл"
+
+#: utr4wstrings.rc_stations
+#, fuzzy
+msgctxt "utr4wstrings.rc_stations"
+msgid "Stations"
+msgstr "Станцууд"
+
+#: utr4wstrings.rc_summary
+#, fuzzy
+msgid "Summary"
+msgstr "Еронхий ДVH"
+
+#: utr4wstrings.rc_swapmultview
+#, fuzzy
+msgid "Swap mult view"
+msgstr "Vржvvлэгчvvдийг ээлжлэн харах"
+
+#: utr4wstrings.rc_synchronize
+#, fuzzy
+msgctxt "utr4wstrings.rc_synchronize"
+msgid "Synchronize"
+msgstr "&Синхрончлох"
+
+#: utr4wstrings.rc_synlog
+#, fuzzy
+msgid "Compare and synchronize logs"
+msgstr "Логийг харьцуулах ба тохируулах"
+
+#: utr4wstrings.rc_telnet
+#, fuzzy
+msgctxt "utr4wstrings.rc_telnet"
+msgid "DX Cluster"
+msgstr ""
+
+#: utr4wstrings.rc_timesyn
+#, fuzzy
+msgid "Synchronize time on &all computers"
+msgstr "Цаг тохируулж байна"
+
+#: utr4wstrings.rc_toggleinsert
+#, fuzzy
+msgid "Toggle insert mode"
+msgstr "Орох горим руу шилжих"
+
+#: utr4wstrings.rc_toogleas
+#, fuzzy
+msgid "Toggle autosend"
+msgstr "Автомат нэвтрvvлэгчийг зал/салгах"
+
+#: utr4wstrings.rc_tooglemb
+#, fuzzy
+msgid "Toogle multiplier bell"
+msgstr "Шинэ vржvvлэгч гарвал хонх дуугаргах"
+
+#: utr4wstrings.rc_tooglerigs
+#, fuzzy
+msgid "Toggle rigs"
+msgstr "Трансивертэй холбох"
+
+#: utr4wstrings.rc_tooglest
+#, fuzzy
+msgid "Toggle sidetone"
+msgstr "РС-ын дууг зогсоох"
+
+#: utr4wstrings.rc_tools
+#, fuzzy
+msgid "Tools"
+msgstr "Багажнууд"
+
+#: utr4wstrings.rc_transfreq
+#, fuzzy
+msgid "Transmit frequency"
+msgstr "Нэвтруулэх давтамжаа оруул"
+
+#: utr4wstrings.rc_trlogform
+#, fuzzy
+msgid "TR Log format"
+msgstr "N6TR лог формат"
+
+#: utr4wstrings.rc_trmaster
+#, fuzzy
+msgid "SCP"
+msgstr "Будаа идэх"
+
+#: utr4wstrings.rc_vieweditlog
+#, fuzzy
+msgctxt "utr4wstrings.rc_vieweditlog"
+msgid "View / Edit log"
+msgstr "Логийг харах, засварлах"
+
+#: utr4wstrings.rc_vieweditlog2
+#, fuzzy
+msgctxt "utr4wstrings.rc_vieweditlog2"
+msgid "View / Edit log"
+msgstr "Логийг харах, засварлах"
+
+#: utr4wstrings.rc_viewpakspots
+#, fuzzy
+msgid "View packet spots"
+msgstr "Пакет спотыг харах"
+
+#: utr4wstrings.rc_wiki
+#, fuzzy
+msgid "On-line documentation (in Russian)"
+msgstr "Онлайн заавар"
+
+#: utr4wstrings.rc_wincontrol
+#, fuzzy
+msgctxt "utr4wstrings.rc_wincontrol"
+msgid "Windows control"
+msgstr "Дэлгэцийн удирдлага"
+
+#: utr4wstrings.rc_wincontrol2
+#, fuzzy
+msgctxt "utr4wstrings.rc_wincontrol2"
+msgid "Windows control"
+msgstr "Дэлгэцийн удирдлага"
+
+#: utr4wstrings.rc_windows
+#, fuzzy
+msgid "Windows"
+msgstr "Цонх"
+
+#: utr4wstrings.rc_wkmode
+#, fuzzy
+msgid "Re-initialize WinKeyer"
+msgstr ""
+
+#: utr4wstrings.tc_2radio_warn
+#, fuzzy
+msgid "ERROR: 2 Radios on single band"
+msgstr ""
+
+#: utr4wstrings.tc_agecallsignage
+#, fuzzy
+msgid "Enter your age (and Silent Key callsign and age):"
+msgstr "Насаа оруулна уу (and Silent Key callsign and age):"
+
+#: utr4wstrings.tc_alldark
+#, fuzzy
+msgid "All dark"
+msgstr "Шоно"
+
+#: utr4wstrings.tc_allsun
+#, fuzzy
+msgid "All sun"
+msgstr "Одор"
+
+#: utr4wstrings.tc_all_logs_network_cleared
+#, fuzzy
+msgid "All logs in TR4W network cleared."
+msgstr "TR4W сvлжээний бvх логийг арилгалаа"
+
+#: utr4wstrings.tc_alreadyexistsokaytodelete
+#, fuzzy
+msgid ""
+"%s already exists.\n"
+"\n"
+"Okay to delete?"
+msgstr ""
+
+#: utr4wstrings.tc_altdcommanddisabled
+#, fuzzy
+msgid "Alt-D command requires TWO RADIO MODE = TRUE"
+msgstr "Alt-D команд TWO RADIO MODE = TRUE шаардлагатай"
+
+#: utr4wstrings.tc_altrcommanddisabled
+#, fuzzy
+msgid "Alt-R command requires TWO RADIO MODE = TRUE"
+msgstr "Alt-R команд TWO RADIO MODE = TRUE шаардлагатай"
+
+#: utr4wstrings.tc_appendimportedqsostocurrentlog
+#, fuzzy
+msgid "Append imported QSOs to current log?"
+msgstr "Импортлосон логийг энэ лог руу оруулах уу?"
+
+#: utr4wstrings.tc_arenewengland
+#, fuzzy
+msgid "Are you in New England?"
+msgstr ""
+
+#: utr4wstrings.tc_arktikaclub
+#, fuzzy
+msgid "club"
+msgstr "Хойд туйлын клуб"
+
+#: utr4wstrings.tc_arrlfielddayimproperdxexchange
+#, fuzzy
+msgid "DX Station exchange must be \"DX\"."
+msgstr "DX станц \"DX\" гэж нэвтрvvлнэ"
+
+#: utr4wstrings.tc_autospace
+#, fuzzy
+msgid "&Autospace"
+msgstr "&Автоматаар зай авах"
+
+#: utr4wstrings.tc_autospotenabledtestmodeonly
+#, fuzzy
+msgid "AUTOSPOT is enabled - Test Mode Only"
+msgstr ""
+
+#: utr4wstrings.tc_autosynchronizinglog
+#, fuzzy
+msgid "Auto-synchronizing log from server."
+msgstr ""
+
+#: utr4wstrings.tc_backupcreated
+#, fuzzy
+msgid "Log file backup created"
+msgstr ""
+
+#: utr4wstrings.tc_bandchangedisabled
+#, fuzzy
+msgid "Band change requires MULTIPLE BANDS = TRUE once the log has QSOs"
+msgstr ""
+
+#: utr4wstrings.tc_band_changes
+#, fuzzy
+msgid "Bn. ch. = %d"
+msgstr ""
+
+#: utr4wstrings.tc_belgium
+#, fuzzy
+msgid "Belgium"
+msgstr "Бельгийн"
+
+#: utr4wstrings.tc_bugmode
+#, fuzzy
+msgid "Bug mode"
+msgstr "Жирийн тvлхvvийн горим"
+
+#: utr4wstrings.tc_bulgaria
+#, fuzzy
+msgid "Bulgaria"
+msgstr "Болгарын"
+
+#: utr4wstrings.tc_c9_africa
+#, fuzzy
+msgid "Africa"
+msgstr "Африк"
+
+#: utr4wstrings.tc_c9_antartica
+#, fuzzy
+msgid "Antartica"
+msgstr "Антарктид"
+
+#: utr4wstrings.tc_c9_asia
+#, fuzzy
+msgid "Asia"
+msgstr "Ази"
+
+#: utr4wstrings.tc_c9_europe
+#, fuzzy
+msgid "Europe"
+msgstr "Европ"
+
+#: utr4wstrings.tc_c9_northamerica
+#, fuzzy
+msgctxt "utr4wstrings.tc_c9_northamerica"
+msgid "North America"
+msgstr "Хойд Америкийн"
+
+#: utr4wstrings.tc_c9_oceania
+#, fuzzy
+msgid "Oceania"
+msgstr "Далайн орнууд"
+
+#: utr4wstrings.tc_c9_southamerica
+#, fuzzy
+msgid "South America"
+msgstr "?мн?д Америк"
+
+#: utr4wstrings.tc_c9_unknown
+#, fuzzy
+msgctxt "utr4wstrings.tc_c9_unknown"
+msgid "Unknown"
+msgstr ""
+
+#: utr4wstrings.tc_california
+#, fuzzy
+msgid "California"
+msgstr "Калифорни мужийн"
+
+#: utr4wstrings.tc_call_in_call_window
+#, fuzzy
+msgid "Call in Call Window"
+msgstr "Харилцагчийн дуудлагыг Call Window -д харуулах"
+
+#: utr4wstrings.tc_canada
+#, fuzzy
+msgid "Canada"
+msgstr "Канадын"
+
+#: utr4wstrings.tc_cannotbackuplog
+#, fuzzy
+msgid "Could not make a backup copy of "
+msgstr ""
+
+#: utr4wstrings.tc_cannotcopylogreadonly
+#, fuzzy
+msgid "Cannot copy log file -- target exists and is read-only"
+msgstr ""
+
+#: utr4wstrings.tc_cannotdisablesplittransmitslicecre
+#, fuzzy
+msgid "Cannot disable split -- the transmit slice was created on the radio. Turn it off in the SDR."
+msgstr ""
+
+#: utr4wstrings.tc_cannotopenlogfile
+#, fuzzy
+msgid "Cannot open log file"
+msgstr ""
+
+#: utr4wstrings.tc_cannotrename
+#, fuzzy
+msgid "Can not rename"
+msgstr ""
+
+#: utr4wstrings.tc_checkcallsign
+#, fuzzy
+msgid "Check callsign"
+msgstr "Дуудлагаа шалга"
+
+#: utr4wstrings.tc_checkdatetime
+#, fuzzy
+msgid "Check Date/Time !!"
+msgstr "Огноо, цагаа шалгана уу !!"
+
+#: utr4wstrings.tc_checkqtcnumber
+#, fuzzy
+msgid "Check QTC number"
+msgstr "QTC-ийн дугаараа шалгана уу"
+
+#: utr4wstrings.tc_checktime
+#, fuzzy
+msgid "Check time"
+msgstr "Цагаа шалгана уу"
+
+#: utr4wstrings.tc_cis
+#, fuzzy
+msgid "CIS"
+msgstr ""
+
+#: utr4wstrings.tc_cleansweepcongratulations
+#, fuzzy
+msgid "CLEAN SWEEP!! CONGRATULATIONS!!"
+msgstr "Бvрэн ЯЛАЛТ!! Баяр хvргэе!!"
+
+#: utr4wstrings.tc_clearalllogs
+#, fuzzy
+msgid "\"CLEARALLLOGS\" to clear all logs in network"
+msgstr "\"CLEARALLLOGS\" сvлжээний бvх логийг арилгана"
+
+#: utr4wstrings.tc_clearmulttoclearmultsheet
+#, fuzzy
+msgid "\"CLEARMULT\" to clear the multsheet"
+msgstr "\"CLEARMULT\" бол vржvvлэгчийн логийг арилгана"
+
+#: utr4wstrings.tc_clear_dupesheet_net
+#, fuzzy
+msgid "\"CLEARDUPESHEET\" to clear all dupesheets in network"
+msgstr "\"CLEARDUPESHEET\" сvлжээний бvх давтагдсан холбооны логийг арилгана"
+
+#: utr4wstrings.tc_clear_multsheet_net
+#, fuzzy
+msgid "\"CLEARMULTSHEET\" to clear all multsheets in network"
+msgstr "\"CLEARMULTSHEET\" сvлжээний бvх vржvvлэгчийн логийг арилгана"
+
+#: utr4wstrings.tc_command
+#, fuzzy
+msgid "Command"
+msgstr "Команд"
+
+#: utr4wstrings.tc_computerclockissynchronized
+#, fuzzy
+msgid "Computer clock is synchronized."
+msgstr "Компьютерийн цагийг тохируулав"
+
+#: utr4wstrings.tc_configuration_file
+#, fuzzy
+msgid "Configuration file"
+msgstr "Тохируулгын файл"
+
+#: utr4wstrings.tc_connect
+#, fuzzy
+msgid "CONNECT.."
+msgstr "...тэй холбогдох"
+
+#: utr4wstrings.tc_connected
+#, fuzzy
+msgid "CONNECTED"
+msgstr "Холбогдлоо"
+
+#: utr4wstrings.tc_connectedto
+#, fuzzy
+msgid "Connected to "
+msgstr "Холбогдлоо"
+
+#: utr4wstrings.tc_connectingto
+#, fuzzy
+msgid "Connecting to "
+msgstr "Холбогдож байна"
+
+#: utr4wstrings.tc_connectiontotr4wserverlost
+#, fuzzy
+msgid "Connection to TR4WSERVER %s:%d lost."
+msgstr "TR4WSERVER %s:%d -ийн холболт тасарлаа."
+
+#: utr4wstrings.tc_connecttotr4wserverfailed
+#, fuzzy
+msgid "Connect to TR4WSERVER failed. Check SERVER PASSWORD value!!"
+msgstr "TR4WSERVER сервер лvv холбогдсонгvй. SERVER PASSWORDаа шалгана уу!!"
+
+#: utr4wstrings.tc_continueenteringcharactersautoterm
+#, fuzzy
+msgid "Continue entering characters.  Auto terminate active!!"
+msgstr ""
+
+#: utr4wstrings.tc_continueenteringcharacterspressret
+#, fuzzy
+msgid "Continue entering characters and press RETURN when done."
+msgstr ""
+
+#: utr4wstrings.tc_cqfunctionkeymemorystatus
+#, fuzzy
+msgid "CQ FUNCTION KEY MEMORY STATUS"
+msgstr "CQ функцийн товчийн санах ойн толов"
+
+#: utr4wstrings.tc_cqtotal
+#, fuzzy
+msgid "CQ total: %u"
+msgstr "CQ дуудсан тоо: %u"
+
+#: utr4wstrings.tc_croat
+#, fuzzy
+msgid "I am in Croatia"
+msgstr ""
+
+#: utr4wstrings.tc_ctrl_a
+#, fuzzy
+msgid "Send this message on inactive radio"
+msgstr "Энэ зурвасыг идэвхгvй трансиверээс илгээх"
+
+#: utr4wstrings.tc_ctrl_b
+#, fuzzy
+msgid "Identify ctrl-A message as a CQ"
+msgstr "ctrl-A CQ -тэй адил"
+
+#: utr4wstrings.tc_ctrl_c
+#, fuzzy
+msgid "Start special command"
+msgstr "Тусгай командаар эхлvvлэх"
+
+#: utr4wstrings.tc_ctrl_d
+#, fuzzy
+msgid "Do not interrupt"
+msgstr "Зогсоож болохгуй"
+
+#: utr4wstrings.tc_ctrl_e
+#, fuzzy
+msgid "Dah 73% of normal duration"
+msgstr "Стандарт зураасны 73%-тай тэнцэнэ"
+
+#: utr4wstrings.tc_ctrl_f
+#, fuzzy
+msgid "Increase speed by 6%"
+msgstr "Хурдыг 6%-аар ихэсгэх"
+
+#: utr4wstrings.tc_ctrl_k
+#, fuzzy
+msgid "Normal dah"
+msgstr "Стандарт зураас"
+
+#: utr4wstrings.tc_ctrl_l
+#, fuzzy
+msgid "Dit 140% of normal duration"
+msgstr "Стандарт цэгний 140%-тай тэнцэнэ"
+
+#: utr4wstrings.tc_ctrl_n
+#, fuzzy
+msgid "Dah 113% of normal duration"
+msgstr "Стандарт цэгний 113%-тай тэнцэнэ"
+
+#: utr4wstrings.tc_ctrl_o
+#, fuzzy
+msgid "Dah 127% of normal duration"
+msgstr "Стандарт цэгний 127%-тай тэнцэнэ"
+
+#: utr4wstrings.tc_ctrl_p
+#, fuzzy
+msgid "Dit 60% of normal duration"
+msgstr "Стандарт цэгний 60%-тай тэнцэнэ"
+
+#: utr4wstrings.tc_ctrl_q
+#, fuzzy
+msgid "Dit 80% of normal duration"
+msgstr "Стандарт цэгний 80%-тай тэнцэнэ"
+
+#: utr4wstrings.tc_ctrl_s
+#, fuzzy
+msgid "Decrease speed by 6%"
+msgstr "Хурдыг 6%-аар багасгах"
+
+#: utr4wstrings.tc_ctrl_sl
+#, fuzzy
+msgid "Normal dit"
+msgstr "Стандарт цэг"
+
+#: utr4wstrings.tc_ctrl_v
+#, fuzzy
+msgid "Dit 120% of normal duration"
+msgstr "Стандарт цэгний 120%-тай тэнцэнэ"
+
+#: utr4wstrings.tc_ctrl_x
+#, fuzzy
+msgid "Decrease weight by 0.03"
+msgstr "Цэг зураасны харьцааг 0.03-аар багасгах"
+
+#: utr4wstrings.tc_ctrl_y
+#, fuzzy
+msgid "Increase weight by 0.03"
+msgstr "Цэг зураасны харьцааг 0.03-аар ихэсгэх"
+
+#: utr4wstrings.tc_ctspacing
+#, fuzzy
+msgid "C&T spacing"
+msgstr "C&T зай авч байна"
+
+#: utr4wstrings.tc_ctydatdownloadedreloading
+#, fuzzy
+msgid "CTY.DAT downloaded. Reloading..."
+msgstr ""
+
+#: utr4wstrings.tc_ctydatdownloadfailed
+#, fuzzy
+msgid "CTY.DAT download failed."
+msgstr ""
+
+#: utr4wstrings.tc_ctydatreloadedsuccessfully
+#, fuzzy
+msgid "CTY.DAT reloaded successfully."
+msgstr ""
+
+#: utr4wstrings.tc_current_operator_callsign
+#, fuzzy
+msgid "current operator callsign"
+msgstr "Операторын дуудлага"
+
+#: utr4wstrings.tc_cwdisabledwithaltk
+#, fuzzy
+msgid "CW disabled with Alt-K!!  Use Alt-K again to enable."
+msgstr "CW-ийн дууг Alt-K-ээр зогсооно!!  Alt-K -г ахин дарахад CW дуу гарна"
+
+#: utr4wstrings.tc_cwoff
+#, fuzzy
+msgid "CW Off"
+msgstr ""
+
+#: utr4wstrings.tc_cwqsos
+#, fuzzy
+msgid "CW QSOs"
+msgstr "CW холбоо"
+
+#: utr4wstrings.tc_cwtimerfired
+#, fuzzy
+msgid "CW Timer fired"
+msgstr ""
+
+#: utr4wstrings.tc_czechrepublicorinslovakia
+#, fuzzy
+msgid "Czech Republic or in Slovakia"
+msgstr "Чех буюу Словакийн"
+
+#: utr4wstrings.tc_datasuccessfullysavedasciifile
+#, fuzzy
+msgid "Data successfully saved to ASCII file."
+msgstr ""
+
+#: utr4wstrings.tc_debugmodecreatedprefixestxt
+#, fuzzy
+msgid "debug mode created prefixes.txt"
+msgstr ""
+
+#: utr4wstrings.tc_department
+#, fuzzy
+msgid "Enter your department:"
+msgstr "Департментаа оруулна уу:"
+
+#: utr4wstrings.tc_difversion
+#, fuzzy
+msgid ""
+"%s is from a different program version.\n"
+"TR4W is expecting version %s.\n"
+"The file you are trying to read version %s."
+msgstr ""
+
+#: utr4wstrings.tc_digqsos
+#, fuzzy
+msgid "DIG QSOs"
+msgstr "DIGITAL холбоо"
+
+#: utr4wstrings.tc_disbale_civ
+#, fuzzy
+msgid "Disable \"CI-V Transceive\" mode in your ICOM rig. Refer to instruction manual of your radio."
+msgstr "ICOM-ын Ci-V (CAT)-г салгах"
+
+#: utr4wstrings.tc_disconnectedfrom
+#, fuzzy
+msgid "** DISCONNECTED from "
+msgstr ""
+
+#: utr4wstrings.tc_discover_multi_found
+#, fuzzy
+msgid "More than one %s found; filled in the first.  All found:"
+msgstr ""
+
+#: utr4wstrings.tc_discover_none_found
+#, fuzzy
+msgid "No radio of type %s found on the network"
+msgstr ""
+
+#: utr4wstrings.tc_discover_not_available
+#, fuzzy
+msgid "Network discovery is not available for radio %s"
+msgstr ""
+
+#: utr4wstrings.tc_ditdahratio
+#, fuzzy
+msgid "Dit/Dah ratio"
+msgstr "Цэг/Зураасны харьцаа"
+
+#: utr4wstrings.tc_dlportiodriverisnotinstalled
+#, fuzzy
+msgid "DLPortIO error"
+msgstr "DLPortIO буруу байна"
+
+#: utr4wstrings.tc_dommults
+#, fuzzy
+msgid "Dom Mults"
+msgstr "Орон нутгийн vржvvлэгч"
+
+#: utr4wstrings.tc_downloadingctydat
+#, fuzzy
+msgid "Downloading CTY.DAT..."
+msgstr ""
+
+#: utr4wstrings.tc_downloadingpotaparks
+#, fuzzy
+msgid "Downloading POTA parks..."
+msgstr ""
+
+#: utr4wstrings.tc_downloadingtrmasterdta
+#, fuzzy
+msgid "Downloading TRMASTER.DTA..."
+msgstr ""
+
+#: utr4wstrings.tc_downloadit
+#, fuzzy
+msgid "Would you like to download the latest version?"
+msgstr "Сvvлийн хувилбарыг татах уу?"
+
+#: utr4wstrings.tc_doyoureallywantstopnow
+#, fuzzy
+msgid "Do you really want stop now?"
+msgstr "Та яг одоо зогсоохыг хvсч байна уу?"
+
+#: utr4wstrings.tc_doyoureallywanttoabortthisqtc
+#, fuzzy
+msgid "Do you really want to abort this QTC?"
+msgstr "Та энэ QTC -ийг хvчингvй болгохыг хvсч байна уу?"
+
+#: utr4wstrings.tc_doyoureallywanttoexittheprogram
+#, fuzzy
+msgid "Do you really want to exit the program?"
+msgstr "Та програмаас гармаар байна уу?"
+
+#: utr4wstrings.tc_doyoureallywanttosavethisqtc
+#, fuzzy
+msgid "Do you really want to save this QTC?"
+msgstr "Та энэ QTC-г бичихэд итгэлтэй байна уу?"
+
+#: utr4wstrings.tc_doyouwanttocheckthelatestversion
+#, fuzzy
+msgid "Would you like to check for a possible newer version of  TR4W ?"
+msgstr "TR4W-ийн шинэ хувилбар гарсан эсэхийг шалгах уу?"
+
+#: utr4wstrings.tc_dupesheet
+#, fuzzy
+msgid "Dupesheet - %sm-%s"
+msgstr "Давтагдсан холбооны лог - %sm-%s"
+
+#: utr4wstrings.tc_dupesheetcleared
+#, fuzzy
+msgid "Dupe sheet cleared!"
+msgstr "Давтагдсан холбооны логийг арилгав!"
+
+#: utr4wstrings.tc_dxmults
+#, fuzzy
+msgid "DX Mults"
+msgstr "DX vржvvлэгч"
+
+#: utr4wstrings.tc_editfunctionkey
+#, fuzzy
+msgid "Edit %s message"
+msgstr ""
+
+#: utr4wstrings.tc_editor_copy
+#, fuzzy
+msgid "&Copy"
+msgstr ""
+
+#: utr4wstrings.tc_editor_edit
+#, fuzzy
+msgctxt "utr4wstrings.tc_editor_edit"
+msgid "&Edit"
+msgstr "Засварлах"
+
+#: utr4wstrings.tc_editor_explore
+#, fuzzy
+msgid "Explore"
+msgstr ""
+
+#: utr4wstrings.tc_editor_openineditor
+#, fuzzy
+msgid "Open in text &editor"
+msgstr ""
+
+#: utr4wstrings.tc_editor_selectall
+#, fuzzy
+msgid "Select &all"
+msgstr ""
+
+#: utr4wstrings.tc_editor_sendlogto
+#, fuzzy
+msgid "Send log to %s"
+msgstr ""
+
+#: utr4wstrings.tc_editqtcpressyestoeditqtcornotolog
+#, fuzzy
+msgid "Edit QTC? Press Yes to edit QTC or  No to log "
+msgstr "QTC-ээ засварлах уу? Yes гэвэл QTC -ээ засварлана. No гэвэл лог руу орно "
+
+#: utr4wstrings.tc_enoughmemoryinitialexchangearray
+#, fuzzy
+msgid "Not enough memory for initial exchange array!!"
+msgstr ""
+
+#: utr4wstrings.tc_enter
+#, fuzzy
+msgid "Enter %s :"
+msgstr " %s :"
+
+#: utr4wstrings.tc_entercallsignspacedupecheckalthhel
+#, fuzzy
+msgid "ENTER a callsign.  SPACE for dupecheck.  Alt-H for help."
+msgstr ""
+
+#: utr4wstrings.tc_entercalltobecheckedon
+#, fuzzy
+msgid "Enter call to be checked on %s%s:"
+msgstr "%s%s шалгахын тулд дуудлагаа оруулна уу:"
+
+#: utr4wstrings.tc_enterexchangepressenterlogescapeab
+#, fuzzy
+msgid "Enter exchange.  Press ENTER to log, ESCAPE to abort QSO."
+msgstr ""
+
+#: utr4wstrings.tc_enterfirsttwodigitsofyourqth
+#, fuzzy
+msgid "Enter first two digits of your QTH:"
+msgstr "Оорийн QTH -ийн эхний хоёр vсгийг оруулна уу:"
+
+#: utr4wstrings.tc_enterfirsttwolettersofyourgrid
+#, fuzzy
+msgid "Enter first two letters of your grid square:"
+msgstr "Грид локаторын эхний хоёр vсгээ оруулна уу:"
+
+#: utr4wstrings.tc_enterqtcmaxof
+#, fuzzy
+msgid "Enter QTC #/# (max of %d) :"
+msgstr "QTC-ээ оруулна уу #/# (max of %d) :"
+
+#: utr4wstrings.tc_enterstateforusprovinceforcanada
+#, fuzzy
+msgid "Enter state for U.S., province for Canada:"
+msgstr "АНУ-ын штат буюу Канадын провинцийг оруулна уу:"
+
+#: utr4wstrings.tc_entersumofyourageandamount
+#, fuzzy
+msgid "Enter sum of your age and amount of years elapsed since your first QSO (e.g. 28+14=42):"
+msgstr "Оорийн нас ба анхны холбоо барьсанаас хойшхи жилийн нийлбэрийг оруулна уу(жишээ нь 53+38=91):"
+
+#: utr4wstrings.tc_enterthelasttwodigitsoftheyear
+#, fuzzy
+msgid "Enter the last two digits of the year of your first official amateur radio license:"
+msgstr "Анх лиценз авсан оныхоо сvvлийн хоёр оронг оруулна уу:"
+
+#: utr4wstrings.tc_entertheqththatyouwanttosend
+#, fuzzy
+msgid "Enter the QTH that you want to send:"
+msgstr "Явуулах QTH-ээ оруулна уу:"
+
+#: utr4wstrings.tc_enteryourageinmystatefield
+#, fuzzy
+msgid "Enter your age in MY STATE field:"
+msgstr "Оорийн насаа MY STATE талбарт оруулна уу:"
+
+#: utr4wstrings.tc_enteryourbranchnumber
+#, fuzzy
+msgid "Enter your Branch number:"
+msgstr "Таны салбарын дугаар:"
+
+#: utr4wstrings.tc_enteryourcityidentifier
+#, fuzzy
+msgid "Enter your city identifier:"
+msgstr "Танай хотын товчилсон нэр:"
+
+#: utr4wstrings.tc_enteryourcontinent
+#, fuzzy
+msgid "Enter your continent (and possible additional ID, i.e. SA or NAQ)"
+msgstr "Оорийн байгаа тивээ боломжтой мэдээллийн хамт оруулна уу? Жишээ нь ASYL, NAQRP гэх мэт)"
+
+#: utr4wstrings.tc_enteryourcountycode
+#, fuzzy
+msgid "Enter your county code:"
+msgstr "County кодоо оруулна уу:"
+
+#: utr4wstrings.tc_enteryourcountyorstateporovincedx
+#, fuzzy
+msgid "Enter your county if you are in %s state. Enter your state, Canadian Province or \"DX\" if outside of %s:"
+msgstr "%s -ийн гадна байгаа бол DX гэж бичнэ:"
+
+#: utr4wstrings.tc_enteryourdistrictabbreviation
+#, fuzzy
+msgid "Enter your district abbreviation:"
+msgstr "Дистриктийнхээ товчлолыг оруулна уу:"
+
+#: utr4wstrings.tc_enteryourdistrictcode
+#, fuzzy
+msgid "If in UK/EI, enter your 2 digit district code"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourdok
+#, fuzzy
+msgid "Enter your DOK:"
+msgstr "DOK -оо оруулна уу:"
+
+#: utr4wstrings.tc_enteryourfocnumber
+#, fuzzy
+msgid "Enter your FOC number:"
+msgstr "Та FOC дугаараа оруулна уу:"
+
+#: utr4wstrings.tc_enteryourfourdigitgridsquare
+#, fuzzy
+msgid "Enter your four digit grid square:"
+msgstr "Грид локаторын 4 оронтой дугаараа оруулна уу:"
+
+#: utr4wstrings.tc_enteryourgeographicalcoordinates
+#, fuzzy
+msgid ""
+"Enter your geographical coordinates\n"
+"(e.g. 55N37O for Moscow):"
+msgstr ""
+
+#: utr4wstrings.tc_enteryouriotareferencedesignator
+#, fuzzy
+msgid "Enter your IOTA Reference Designator (WITH DASH and no leading zeros delimiting # e.g. EU-5)"
+msgstr "IOTA Reference Designator-ийг оруулна уу:"
+
+#: utr4wstrings.tc_enteryouristrictifinve7
+#, fuzzy
+msgid "Enter your federal district if in British Columbia, or your State/Province"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourmembershipnumber
+#, fuzzy
+msgid "Enter your membership number:"
+msgstr "Гишvvнчлэлийн дугаараа оруулна уу:"
+
+#: utr4wstrings.tc_enteryourname
+#, fuzzy
+msgid "Enter your name:"
+msgstr "Нэрээ оруулна уу:"
+
+#: utr4wstrings.tc_enteryournameandqth
+#, fuzzy
+msgid "Enter your name and QTH (US state, Canadian Province or DX country) or member number:"
+msgstr "Та оорийн нэр, QTH-ээ оруулна уу (АНУ-ыг штат, Канадын провинц, DX улс):"
+
+#: utr4wstrings.tc_enteryournameandstate
+#, fuzzy
+msgid "Enter your name (and state if you are in North America):"
+msgstr "Нэрээ оруулна уу (Хойд Америкт бол штатаа оруулна):"
+
+#: utr4wstrings.tc_enteryouroblastid
+#, fuzzy
+msgid "Enter your oblast ID:"
+msgstr "Областын товчилсон нэрээ оруулна уу:"
+
+#: utr4wstrings.tc_enteryourparkreferencedesignator
+#, fuzzy
+msgid "Enter your POTA Park Reference Designator (WITH DASH e.g. K-1234)"
+msgstr "POTA Reference Designator-ийг оруулна уу:"
+
+#: utr4wstrings.tc_enteryourpostcode
+#, fuzzy
+msgid "Enter your postcode:"
+msgstr "Таны шуудангийн зипкод:"
+
+#: utr4wstrings.tc_enteryourprecedencechecksection
+#, fuzzy
+msgid ""
+"Enter your precedence, your check\n"
+"(last two digits of year licensed) and ARRL section:"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourprovinceid
+#, fuzzy
+msgid "Enter your province ID:"
+msgstr "Оорийн провинцийн ID -г оруулна уу:"
+
+#: utr4wstrings.tc_enteryourqthandthename
+#, fuzzy
+msgid ""
+"Enter your QTH that you want to send\n"
+"and the name you want to use:"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourqthorpower
+#, fuzzy
+msgid "Enter your QTH that you want to send if you are in North America or your power as MY STATE if outside:"
+msgstr "Хэрэв та Хойд Америкт байвал QTH-ээ, оор газар байвал гаралтын чадлаа MY STATE талбарт оруулна уу:"
+
+#: utr4wstrings.tc_enteryourrdaid
+#, fuzzy
+msgid "Enter your RDA ID:"
+msgstr "RDA -ийн ID -г оруулна уу:"
+
+#: utr4wstrings.tc_enteryourrdaidorgrid
+#, fuzzy
+msgid "Enter your RDA ID (for UA1A stations) or four digit grid square:"
+msgstr "Таны RDA ID (for UA1A stations) эсвэл Грид локаторын 4 эхний орон:"
+
+#: utr4wstrings.tc_enteryoursixdigitgridsquare
+#, fuzzy
+msgid "Enter your six digit grid square:"
+msgstr "Грид Локаторын 6 оронтой дугаараа оруулна уу:"
+
+#: utr4wstrings.tc_enteryoursquareid
+#, fuzzy
+msgid "Enter your square ID:"
+msgstr "Таны Грид Локатор:"
+
+#: utr4wstrings.tc_enteryourstatecode
+#, fuzzy
+msgid "Enter your state code:"
+msgstr "Оорийн штатын товчилсон нэрээ оруулна уу:"
+
+#: utr4wstrings.tc_enteryourzone
+#, fuzzy
+msgid "Enter your zone:"
+msgstr "Оорийн зоноо оруулна уу:"
+
+#: utr4wstrings.tc_entriesperms
+#, fuzzy
+msgid "%u entries per %u ms"
+msgstr "%u бvрт орох %u ms"
+
+#: utr4wstrings.tc_errorinlogfile
+#, fuzzy
+msgid "Error in log file!"
+msgstr "log file-д алдаа байна!"
+
+#: utr4wstrings.tc_errorofferingcommanderproxytcpport
+#, fuzzy
+msgid "Error offering Commander proxy TCP Port"
+msgstr ""
+
+#: utr4wstrings.tc_errorplayingvoicememory
+#, fuzzy
+msgid "Error playing voice memory"
+msgstr ""
+
+#: utr4wstrings.tc_eudx
+#, fuzzy
+msgid "EU country, enter your four character country code"
+msgstr ""
+
+#: utr4wstrings.tc_exchangefunctionkeymemorystatus
+#, fuzzy
+msgid "EXCHANGE FUNCTION KEY MEMORY STATUS"
+msgstr "Солилцооны функцийн товчийн санах ойн толов"
+
+#: utr4wstrings.tc_failedtoconnectto
+#, fuzzy
+msgid "Failed to connect to "
+msgstr "Холболт амжилтгvй боллоо"
+
+#: utr4wstrings.tc_failedtoconnecttogetscoresorg
+#, fuzzy
+msgid "Failed to connect"
+msgstr "getscores.org сайт руу холбогдож чадсангуй"
+
+#: utr4wstrings.tc_failedtoload
+#, fuzzy
+msgid "Failed to load. View getscoresanswer.html for details."
+msgstr "Ачаалал амжилтгvй боллоо. getscoresanswer.html дээр харах уу?"
+
+#: utr4wstrings.tc_failedtoreceiveserverlog
+#, fuzzy
+msgid "Failed to receive server log."
+msgstr "Серверийн логийг хvлээн авч чадсангvй"
+
+#: utr4wstrings.tc_filesavedtofilesuccessfully
+#, fuzzy
+msgid "File saved to file successfully."
+msgstr ""
+
+#: utr4wstrings.tc_filesavedtosuccessfully
+#, fuzzy
+msgid "File saved to %s successfully."
+msgstr "%s руу файлыг амжилттай бичлээ"
+
+#: utr4wstrings.tc_findingzeroendvisibledupesheetlist
+#, fuzzy
+msgid "Not finding zero at end visible dupesheet list!!"
+msgstr ""
+
+#: utr4wstrings.tc_firstextension
+#, fuzzy
+msgctxt "utr4wstrings.tc_firstextension"
+msgid "First extension"
+msgstr "Анхны орготгол"
+
+#: utr4wstrings.tc_florida
+#, fuzzy
+msgid "Florida"
+msgstr "Флорида мужийн"
+
+#: utr4wstrings.tc_flushinitialexcommandexecuted
+#, fuzzy
+msgid "FLUSHINITIALEX command is executed."
+msgstr ""
+
+#: utr4wstrings.tc_folderalreadyexistsoverwrite
+#, fuzzy
+msgid ""
+"Folder \"%s\" already exists.\n"
+"Overwrite ?"
+msgstr ""
+
+#: utr4wstrings.tc_footsw
+#, fuzzy
+msgid "Footsw."
+msgstr "Хол педаль."
+
+#: utr4wstrings.tc_france
+#, fuzzy
+msgid "France"
+msgstr "Францын"
+
+#: utr4wstrings.tc_freq
+#, fuzzy
+msgid "Freq"
+msgstr "Давтамж"
+
+#: utr4wstrings.tc_frequencyforcallinkhz
+#, fuzzy
+msgid "frequency for %s in kHz"
+msgstr "Давтамж КГц-ээр %s"
+
+#: utr4wstrings.tc_freq_off
+#, fuzzy
+msgid "SHOW FREQUENCY IN LOG is turned off"
+msgstr ""
+
+#: utr4wstrings.tc_freq_zero
+#, fuzzy
+msgid "ERROR: Invalid Frequency logged"
+msgstr ""
+
+#: utr4wstrings.tc_fri
+#, fuzzy
+msgid "Fri"
+msgstr "Баасан"
+
+#: utr4wstrings.tc_gagarin
+#, fuzzy
+msgid "special two char ID"
+msgstr ""
+
+#: utr4wstrings.tc_gc
+#, fuzzy
+msgid "special two character designator"
+msgstr ""
+
+#: utr4wstrings.tc_germany
+#, fuzzy
+msgid "Germany"
+msgstr "Германы"
+
+#: utr4wstrings.tc_gethost
+#, fuzzy
+msgid "GET HOST.."
+msgstr "Хост авах"
+
+#: utr4wstrings.tc_hamlib_id_label
+#, fuzzy
+msgid "HAMLIB ID"
+msgstr ""
+
+#: utr4wstrings.tc_hamscorequeueingfulllogresync
+#, fuzzy
+msgid "HamScore: queueing full log resync..."
+msgstr ""
+
+#: utr4wstrings.tc_handlogmodetrue
+#, fuzzy
+msgid "HAND LOG MODE = TRUE"
+msgstr ""
+
+#: utr4wstrings.tc_hangtime
+#, fuzzy
+msgid "Hang time"
+msgstr "Хугацаа дуусах"
+
+#: utr4wstrings.tc_hasimpropersyntax
+#, fuzzy
+msgid "%s has improper syntax!!"
+msgstr "%s СИНТАКС алдаа!!"
+
+#: utr4wstrings.tc_haveqtcs
+#, fuzzy
+msgid "Have %u QTCs"
+msgstr "%u -д QTCs байна уу"
+
+#: utr4wstrings.tc_hitcounthistogram050
+#, fuzzy
+msgid "Hit count histogram for 0 to 50+ : "
+msgstr ""
+
+#: utr4wstrings.tc_host
+#, fuzzy
+msgid "HOST  : %s"
+msgstr "Хост  : %s"
+
+#: utr4wstrings.tc_hq
+#, fuzzy
+msgid "HQ (HQ station)"
+msgstr "IARU-ийн гишvvн холбооны HQ station"
+
+#: utr4wstrings.tc_hqmults
+#, fuzzy
+msgid "HQ Mults"
+msgstr "HQ vржvvлэгч"
+
+#: utr4wstrings.tc_hq_or_member
+#, fuzzy
+msgid "HQ or member"
+msgstr "HQ станц буюу гишvvн"
+
+#: utr4wstrings.tc_hungary
+#, fuzzy
+msgid "Hungary"
+msgstr "Унгарын"
+
+#: utr4wstrings.tc_iambica
+#, fuzzy
+msgid "Iambic A"
+msgstr "Салаа тvлхvvр A"
+
+#: utr4wstrings.tc_iambicb
+#, fuzzy
+msgid "Iambic B"
+msgstr "Салаа тvлхvvр B"
+
+#: utr4wstrings.tc_iamin
+#, fuzzy
+msgid "&I am in %s"
+msgstr "Та & %s станц бол тэмдэглэнэ vv"
+
+#: utr4wstrings.tc_ididfinecontestnamelogcfgdatfile
+#, fuzzy
+msgid "I did not fine a contest name in your LOGCFG.DAT file."
+msgstr ""
+
+#: utr4wstrings.tc_ifoundcontestnameidonounderstandlo
+#, fuzzy
+msgid "I found a contest name I do no understand in your LOGCFG.DAT file."
+msgstr ""
+
+#: utr4wstrings.tc_ignorespeedpot
+#, fuzzy
+msgid "&Ignore speed pot"
+msgstr "&Сануулсан хурдыг цуцлах"
+
+#: utr4wstrings.tc_improperarrlfielddayclass
+#, fuzzy
+msgid "Field Day class must be A, B, C, D, E or F."
+msgstr "Field Day-ын ангилал A, B, C, D, E, F байна"
+
+#: utr4wstrings.tc_impropercontinent
+#, fuzzy
+msgid "Improper continent!!"
+msgstr "Тивийн нэр буруу байна!!"
+
+#: utr4wstrings.tc_improperdomesitcqth
+#, fuzzy
+msgid "Improper domestic QTH!!"
+msgstr "Орон нутгийн QTH буруу!!"
+
+#: utr4wstrings.tc_improperdomesitcqthormissingname
+#, fuzzy
+msgid "Improper domestic QTH or missing name!!"
+msgstr "Орон нутгийн QTH буруу буюу нэр байхгvй байна!!"
+
+#: utr4wstrings.tc_impropertransmittercount
+#, fuzzy
+msgid "FD transmitters must be between 1 and 99."
+msgstr "FD нэвтрvvлэгчvvд 1-ээс 99-ийн хооронд байна"
+
+#: utr4wstrings.tc_improperwinterfielddayclass
+#, fuzzy
+msgid "Winter Field Day class must be H, I, O or M."
+msgstr ""
+
+#: utr4wstrings.tc_improperzonenumber
+#, fuzzy
+msgid "Improper zone number!!"
+msgstr "Зоны дугаар буруу байна шvv!!"
+
+#: utr4wstrings.tc_info
+#, fuzzy
+msgid "Info"
+msgstr "Мэдээлэл"
+
+#: utr4wstrings.tc_insert
+#, fuzzy
+msgid "INSERT"
+msgstr "Оруулах"
+
+#: utr4wstrings.tc_invalid
+#, fuzzy
+msgid "Invalid Entry"
+msgstr ""
+
+#: utr4wstrings.tc_invalidcallsignincallwindow
+#, fuzzy
+msgid "Invalid callsign in call window!!"
+msgstr "Алдаатай дуудлага!!"
+
+#: utr4wstrings.tc_invaliddate
+#, fuzzy
+msgid "Invalid date!!"
+msgstr ""
+
+#: utr4wstrings.tc_invalidreminderdate
+#, fuzzy
+msgid "Invalid reminder date!!"
+msgstr "Сануулах огноо буруу байна!!"
+
+#: utr4wstrings.tc_invalidremindertime
+#, fuzzy
+msgid "Invalid reminder time!!"
+msgstr "Сануулах цаг буруу байна!!"
+
+#: utr4wstrings.tc_invalidstatementin
+#, fuzzy
+msgid ""
+"Invalid statement in %s !!\n"
+"\n"
+"Line %u\n"
+"%s"
+msgstr ""
+
+#: utr4wstrings.tc_invalidstatementinconfigfile
+#, fuzzy
+msgid ""
+"%s:\n"
+"Invalid statement in config file.\n"
+"\n"
+"Line %u\n"
+"%s"
+msgstr ""
+
+#: utr4wstrings.tc_ireland
+#, fuzzy
+msgid "Ireland"
+msgstr "Ирланд"
+
+#: utr4wstrings.tc_irts
+#, fuzzy
+msgid "EI/GI, enter your County"
+msgstr ""
+
+#: utr4wstrings.tc_isadupe
+#, fuzzy
+msgid "%s is a dupe!!"
+msgstr "%s бол ДАВТАГДСАН ХОЛБОО байна шvv!!"
+
+#: utr4wstrings.tc_isadupeandwillbeloggedwithzero
+#, fuzzy
+msgid "%s is a dupe and will be logged with zero QSO points."
+msgstr "%s -тай урьд холбоо барьсан тул оноо огохгvй"
+
+#: utr4wstrings.tc_islandstation
+#, fuzzy
+msgid "Island station"
+msgstr "Та арал дээр байгаа станц бол тэмдэглэнэ vv"
+
+#: utr4wstrings.tc_isqrvfor
+#, fuzzy
+msgid "Is %s QRV for %s?"
+msgstr "%s %s руу бэлэн байна уу?"
+
+#: utr4wstrings.tc_italy
+#, fuzzy
+msgid "Italy"
+msgstr "Италийн"
+
+#: utr4wstrings.tc_japan
+#, fuzzy
+msgid "Japan"
+msgstr "Японы"
+
+#: utr4wstrings.tc_kazakhstan
+#, fuzzy
+msgid "Kazakhstan"
+msgstr "Казахстаны"
+
+#: utr4wstrings.tc_keycomp
+#, fuzzy
+msgid "Keyer compensation"
+msgstr "Тvлхvvрийн харьцааг тохируулах"
+
+#: utr4wstrings.tc_keyermode
+#, fuzzy
+msgctxt "utr4wstrings.tc_keyermode"
+msgid "Keyer mode"
+msgstr "Тvлхvvрийн горим"
+
+#: utr4wstrings.tc_keyernamedsalreadyexists
+#, fuzzy
+msgid "A keyer named \"%s\" already exists."
+msgstr ""
+
+#: utr4wstrings.tc_labre
+#, fuzzy
+msgid "Enter 2 char QTH ID"
+msgstr ""
+
+#: utr4wstrings.tc_lame_error
+#, fuzzy
+msgid "You may download it from"
+msgstr "Энэ хаягаар файлыг татаж болно"
+
+#: utr4wstrings.tc_last60
+#, fuzzy
+msgid "Last 60 = %d"
+msgstr "Сvvлийн 60 = %d"
+
+#: utr4wstrings.tc_latest_config_file
+#, fuzzy
+msgctxt "utr4wstrings.tc_latest_config_file"
+msgid "Latest config file"
+msgstr "Сvvлчийн Config File"
+
+#: utr4wstrings.tc_leadin
+#, fuzzy
+msgid "Lead-in time (*10 ms)"
+msgstr "Тvрvvлэх (*10 ms)"
+
+#: utr4wstrings.tc_list_of_command
+#, fuzzy
+msgctxt "utr4wstrings.tc_list_of_command"
+msgid "List of commands"
+msgstr "&Командын жагсаалт"
+
+#: utr4wstrings.tc_locallog
+#, fuzzy
+msgid "LOCAL LOG"
+msgstr "ЛОКАЛ ЛОГ"
+
+#: utr4wstrings.tc_locationfieldempty
+#, fuzzy
+msgid "LOCATION field is empty."
+msgstr ""
+
+#: utr4wstrings.tc_logfilenotfound
+#, fuzzy
+msgid "Log file not found"
+msgstr ""
+
+#: utr4wstrings.tc_logfilesizecheckfailed
+#, fuzzy
+msgid "LOG FILE SIZE CHECK FAILED!!!!"
+msgstr "Логийн хэмжээг шалгах явц амжилтгvй боллоо!!!!"
+
+#: utr4wstrings.tc_loggingrunningsotherenofileopen
+#, fuzzy
+msgid "Logging is not running, so there is no file to open."
+msgstr ""
+
+#: utr4wstrings.tc_logincalldoeslooklikecallsign
+#, fuzzy
+msgid "Login call does not look like a callsign"
+msgstr ""
+
+#: utr4wstrings.tc_m
+#, fuzzy
+msgid "m"
+msgstr ""
+
+#: utr4wstrings.tc_maximumnumberofremindersexceeded
+#, fuzzy
+msgid "Maximum number of reminders exceeded!!"
+msgstr "Сануулах vгийн хэмжээ их байна!!"
+
+#: utr4wstrings.tc_messagetosendvianetwork
+#, fuzzy
+msgid "message to send via network"
+msgstr "Мессэжийг сvлжээгээр явуулах уу"
+
+#: utr4wstrings.tc_michigan
+#, fuzzy
+msgid "Michigan"
+msgstr "Мичиган мужийн"
+
+#: utr4wstrings.tc_min
+#, fuzzy
+msgid "%u min."
+msgstr "%u мин"
+
+#: utr4wstrings.tc_minnesota
+#, fuzzy
+msgid "Minnesota"
+msgstr "Миннесота мужийн"
+
+#: utr4wstrings.tc_missingmultsreport
+#, fuzzy
+msgid "Missing mults report: %u countries on at least %u but not all bands."
+msgstr "Хэрэгтэй vржvvлэгчдийн тайлан: %u улс хамгийн багаар %u боловч бvх долгионд биш."
+
+#: utr4wstrings.tc_missingqthandorname
+#, fuzzy
+msgid "Missing QTH and/or name!!"
+msgstr "QTH буюу Нэр байхгvй байна!!"
+
+#: utr4wstrings.tc_mixw_connected
+#, fuzzy
+msgid "Connected"
+msgstr "Холбогдлоо"
+
+#: utr4wstrings.tc_mixw_disconnected
+#, fuzzy
+msgctxt "utr4wstrings.tc_mixw_disconnected"
+msgid "Disconnected"
+msgstr "Салгагдлаа"
+
+#: utr4wstrings.tc_modified
+#, fuzzy
+msgid "Modified"
+msgstr "Оорчилсон"
+
+#: utr4wstrings.tc_mon
+#, fuzzy
+msgid "Mon"
+msgstr "Даваа"
+
+#: utr4wstrings.tc_morethan50differenthoursinthislog
+#, fuzzy
+msgid "More than 50 different hours in this log!!"
+msgstr "Энэ лог-д 50 илvv торлийн цаг байна шvv!!"
+
+#: utr4wstrings.tc_ms
+#, fuzzy
+msgid " ms"
+msgstr ""
+
+#: utr4wstrings.tc_multneedsfor
+#, fuzzy
+msgid " Mult needs for %s :"
+msgstr " %s энэ диапазонд ?рж??лэгч болно:"
+
+#: utr4wstrings.tc_multsheetcleared
+#, fuzzy
+msgid "Mult sheet cleared!"
+msgstr "Vржvvлэгчийн логийг арилгав!"
+
+#: utr4wstrings.tc_name_from_name_database
+#, fuzzy
+msgid "Name from name database"
+msgstr "Огодлийн сангаас нэрийг нь авах"
+
+#: utr4wstrings.tc_netherlands
+#, fuzzy
+msgid "Netherlands"
+msgstr "Голландийн"
+
+#: utr4wstrings.tc_network
+#, fuzzy
+msgid "Network : %s %s:%d"
+msgstr "Сvлжээ : %s %s:%d"
+
+#: utr4wstrings.tc_networktest
+#, fuzzy
+msgid "Network Test"
+msgstr "Сvлжээгээ шалгах"
+
+#: utr4wstrings.tc_newengland
+#, fuzzy
+msgid "New England"
+msgstr "ШИнэ Ингланд мужийн"
+
+#: utr4wstrings.tc_newenglandstateabreviation
+#, fuzzy
+msgid ""
+"Enter your New England state abbreviation\n"
+"(ME, NH, VT, MA, CT, RI):"
+msgstr ""
+
+#: utr4wstrings.tc_newtour
+#, fuzzy
+msgid "New tour %d/%d"
+msgstr "Шинэ тур %d/%d"
+
+#: utr4wstrings.tc_newvalue
+#, fuzzy
+msgid "new value"
+msgstr "шинэ хэмжээ"
+
+#: utr4wstrings.tc_next
+#, fuzzy
+msgid "< Next"
+msgstr "< дараагийн"
+
+#: utr4wstrings.tc_noanswerfromserver
+#, fuzzy
+msgid "No answer from server"
+msgstr "Серверээс ямар ч хариу алга даа"
+
+#: utr4wstrings.tc_nocallsignspecified
+#, fuzzy
+msgid "No callsign specified!!"
+msgstr "Дуудлага огогдоогvй байна!!"
+
+#: utr4wstrings.tc_nocqmesprogrammedintocqmemoryaltf1
+#, fuzzy
+msgid "No CQ message programmed into CQ MEMORY AltF1."
+msgstr "CQ MEMORY AltF1 -д CQ кодыг програмчлаагvй байна"
+
+#: utr4wstrings.tc_nofloppyfilesavenamespecified
+#, fuzzy
+msgid "No floppy file save name specified."
+msgstr "Флоппи дискний нэр огогдоогvй байна!!"
+
+#: utr4wstrings.tc_nopotaparksloggedyetsession
+#, fuzzy
+msgid "No POTA parks logged yet this session"
+msgstr ""
+
+#: utr4wstrings.tc_noqsonumberfound
+#, fuzzy
+msgid "No QSO number found!!"
+msgstr "Холбооны дугаарыг олсонгvй!!"
+
+#: utr4wstrings.tc_noqtcspendingqru
+#, fuzzy
+msgid "No QTCs pending, QRU."
+msgstr "Хvлээгдэж байгаа QTCs байхгvй, QRU."
+
+#: utr4wstrings.tc_northamerica
+#, fuzzy
+msgctxt "utr4wstrings.tc_northamerica"
+msgid "North America"
+msgstr "Хойд Америкийн"
+
+#: utr4wstrings.tc_note
+#, fuzzy
+msgid "note"
+msgstr "Тэмдэглэл"
+
+#: utr4wstrings.tc_notenoughinfoinexchange
+#, fuzzy
+msgid "Not enough info in exchange!!"
+msgstr "Солилцоо хийх мэдээлэл хангалтгvй!!"
+
+#: utr4wstrings.tc_notrmasterdtafilefound
+#, fuzzy
+msgid "No TRMASTER.DTA file found."
+msgstr ""
+
+#: utr4wstrings.tc_numbermessagesillegalcharacters
+#, fuzzy
+msgid "Number of messages has illegal characters."
+msgstr ""
+
+#: utr4wstrings.tc_numberorletterofmessagetobeprogram
+#, fuzzy
+msgid "Number or letter of message to be programmed (1-9, A-C, or ESCAPE to exit):"
+msgstr "Дараах тоо ба vсэг бухий товчоор програмчлав (1-9, A-C, or ESCAPE to exit):"
+
+#: utr4wstrings.tc_oblasts
+#, fuzzy
+msgid "Oblasts"
+msgstr "Область"
+
+#: utr4wstrings.tc_ohio
+#, fuzzy
+msgid "Ohio"
+msgstr "Охиа мужийн"
+
+#: utr4wstrings.tc_op
+#, fuzzy
+msgid "Op"
+msgstr "Oператор"
+
+#: utr4wstrings.tc_openconfigurationfile
+#, fuzzy
+msgid " - Open configuration file or start a new contest"
+msgstr " Тохируулгын (config.file) файл шинээр нээх,шинэ тэмцээн сонгоно уу"
+
+#: utr4wstrings.tc_othercwmessagememorystatus
+#, fuzzy
+msgid "Other CW message memory status"
+msgstr "Бусад CW санах ойн толов"
+
+#: utr4wstrings.tc_otherssbmessagememorystatus
+#, fuzzy
+msgid "Other SSB message memory status"
+msgstr "Бусад SSB санах ойн толов"
+
+#: utr4wstrings.tc_override
+#, fuzzy
+msgid "OVERRIDE"
+msgstr "Солих"
+
+#: utr4wstrings.tc_ozcr
+#, fuzzy
+msgid "Enter three-letters number:"
+msgstr "Гурван vсэг бvхий дугаараа оруулна уу:"
+
+#: utr4wstrings.tc_paddle
+#, fuzzy
+msgctxt "utr4wstrings.tc_paddle"
+msgid "Paddle"
+msgstr "Салаа тvлхvvр"
+
+#: utr4wstrings.tc_paddleonlysidetone
+#, fuzzy
+msgid "Paddle &only sidetone"
+msgstr "Салаа тvлхvvр &зовхон дууны сигнал"
+
+#: utr4wstrings.tc_paddleswap
+#, fuzzy
+msgid "Paddle swa&p"
+msgstr "Цэг, зураасны байрлалыг солих"
+
+#: utr4wstrings.tc_paddleswitchpoint
+#, fuzzy
+msgid "Paddle switchpoint"
+msgstr "Салаа тvлхvvрээ залгах цэг"
+
+#: utr4wstrings.tc_parameterhasnovalue
+#, fuzzy
+msgid "Parameter \"%s\" has no value in the config file -- left at its default."
+msgstr ""
+
+#: utr4wstrings.tc_pleasecheckmultinetwork
+#, fuzzy
+msgid "Please check multi network"
+msgstr ""
+
+#: utr4wstrings.tc_points
+#, fuzzy
+msgid "Pts"
+msgstr "Оноо"
+
+#: utr4wstrings.tc_poland
+#, fuzzy
+msgid "Poland"
+msgstr "Польшийн"
+
+#: utr4wstrings.tc_port_conflict_dialog
+#, fuzzy
+msgid "%s is already configured as %s. Two devices cannot share a serial port."
+msgstr ""
+
+#: utr4wstrings.tc_port_conflict_proceed
+#, fuzzy
+msgid "Apply anyway?"
+msgstr ""
+
+#: utr4wstrings.tc_port_conflict_startup
+#, fuzzy
+msgid "RADIO ONE and RADIO TWO are both configured to use %s. RADIO ONE keeps the port; RADIO TWO CAT control is disabled until one radio's CONTROL PORT is changed."
+msgstr ""
+
+#: utr4wstrings.tc_port_not_connected
+#, fuzzy
+msgid "(not connected)"
+msgstr "(холбогдоогүй)"
+
+#: utr4wstrings.tc_possibledatalossmultinetwork
+#, fuzzy
+msgid "Possible data loss on multi network."
+msgstr ""
+
+#: utr4wstrings.tc_potaparksdownloadfailed
+#, fuzzy
+msgid "POTA parks download failed"
+msgstr ""
+
+#: utr4wstrings.tc_potaparksfilecouldloaded
+#, fuzzy
+msgid "POTA parks file could not be loaded"
+msgstr ""
+
+#: utr4wstrings.tc_potaparksloaded
+#, fuzzy
+msgid "POTA parks loaded"
+msgstr ""
+
+#: utr4wstrings.tc_prefecture
+#, fuzzy
+msgid "Enter your prefecture:"
+msgstr "Оорийн префектурээ оруулна уу:"
+
+#: utr4wstrings.tc_preferencescouldopeneds
+#, fuzzy
+msgid "Preferences could not be opened (%s)."
+msgstr ""
+
+#: utr4wstrings.tc_prefix
+#, fuzzy
+msgid "Prefixes"
+msgstr "Префикс vржvvлэгч"
+
+#: utr4wstrings.tc_pref_or_cqzone
+#, fuzzy
+msgid "Enter your CQ ZONE or JA PREFECTURE"
+msgstr ""
+
+#: utr4wstrings.tc_presscqfunctionkeytoprogram
+#, fuzzy
+msgid " Press CQ function key to program (F1, AltF1, CtrlF1), or ESCAPE to exit) : "
+msgstr "CQ функцийн товчийг дарж програмчилна (F1, AltF1, CtrlF1), or ESCAPE to exit) : "
+
+#: utr4wstrings.tc_pressexfunctionkeytoprogram
+#, fuzzy
+msgid "Press ex function key to program (F3-F12, Alt/Ctrl F1-F12) or ESCAPE to exit:"
+msgstr "ex функцийн товчийг дарж програмчилна (F3-F12, Alt/Ctrl F1-F12) or ESCAPE to exit:"
+
+#: utr4wstrings.tc_pts
+#, fuzzy
+msgid "%d Pts"
+msgstr "%d оноо"
+
+#: utr4wstrings.tc_pttlockouttrue
+#, fuzzy
+msgid "PTT LOCKOUT=TRUE"
+msgstr ""
+
+#: utr4wstrings.tc_pttviacommandsctrljoptionmusttruew
+#, fuzzy
+msgid "PTT VIA COMMANDS (CTRL-J) option must be true for WSJT-X use - Setting to true"
+msgstr ""
+
+#: utr4wstrings.tc_qsoneedsfor
+#, fuzzy
+msgid " QSO needs for %s :"
+msgstr " %s-д QSO хэрэгтэй диапазон:"
+
+#: utr4wstrings.tc_qsos
+#, fuzzy
+msgid "QSOs"
+msgstr "Холбоо"
+
+#: utr4wstrings.tc_qso_imported
+#, fuzzy
+msgid "Qs imported."
+msgstr "QSO-г импортлов"
+
+#: utr4wstrings.tc_qso_number
+#, fuzzy
+msgid "QSO Number"
+msgstr "Холбооны тоо"
+
+#: utr4wstrings.tc_qtcabortedbyoperator
+#, fuzzy
+msgid "QTC aborted by operator."
+msgstr "QTC-г оператор зогсоолоо"
+
+#: utr4wstrings.tc_qtcnumberillegalcharacters
+#, fuzzy
+msgid "QTC Number has illegal characters."
+msgstr ""
+
+#: utr4wstrings.tc_qtcpending
+#, fuzzy
+msgid "QTC Pending"
+msgstr "QTC хvлээгдэж байна"
+
+#: utr4wstrings.tc_qtcprocessterminated
+#, fuzzy
+msgid "QTC process terminated."
+msgstr ""
+
+#: utr4wstrings.tc_qtcprocessterminatedinvalidnumberm
+#, fuzzy
+msgid "QTC process terminated.  Invalid number of messages."
+msgstr ""
+
+#: utr4wstrings.tc_qtc_callsign
+#, fuzzy
+msgid "Callsign :"
+msgstr "Дуудлага :"
+
+#: utr4wstrings.tc_qtc_for
+#, fuzzy
+msgid "%s for %s"
+msgstr "%s бол %s -д зориулагдсан"
+
+#: utr4wstrings.tc_radio1
+#, fuzzy
+msgctxt "utr4wstrings.tc_radio1"
+msgid "Radio 1"
+msgstr "1-р трансивер"
+
+#: utr4wstrings.tc_radio2
+#, fuzzy
+msgctxt "utr4wstrings.tc_radio2"
+msgid "Radio 2"
+msgstr "2-р трансивер"
+
+#: utr4wstrings.tc_rate
+#, fuzzy
+msgid "Rate = %u"
+msgstr "Чансаа = %u"
+
+#: utr4wstrings.tc_reallywanttoclearthelog
+#, fuzzy
+msgid "Do you really want to clear the current log?"
+msgstr "Та vнэхээр энэ логоо УСТГАХ гэж vv!!!"
+
+#: utr4wstrings.tc_recorddvppressescapeorreturntostop
+#, fuzzy
+msgid "Recording DVP. Press ESCAPE or RETURN to stop."
+msgstr "DVP бичиж байна.ESCAPE буюу ENTER дарвал зогсоно"
+
+#: utr4wstrings.tc_records
+#, fuzzy
+msgid "Records"
+msgstr "Бичлэгvvд"
+
+#: utr4wstrings.tc_relaycontrolportpaddleport
+#, fuzzy
+msgid "RELAY CONTROL PORT = PADDLE PORT"
+msgstr ""
+
+#: utr4wstrings.tc_removeclusters
+#, fuzzy
+msgid "Remove the cluster \"%s\"?"
+msgstr ""
+
+#: utr4wstrings.tc_removerotators
+#, fuzzy
+msgid "Remove the rotator \"%s\"?"
+msgstr ""
+
+#: utr4wstrings.tc_repeating
+#, fuzzy
+msgid "Repeating %s  Listen time = %u msec - PgUp/Dn to adjust or ESCAPE"
+msgstr "Давталт %s  Сонсох хугацаа = %u миллисекунд - PgUp/Dn -аар тохируулах ба ESCAPE -ээр гарна"
+
+#: utr4wstrings.tc_repeatrstsent
+#, fuzzy
+msgid "Repeat RST sent"
+msgstr "RST-ээ дахин нэвтрvvлэх"
+
+#: utr4wstrings.tc_restartbinisforadifferentcontest
+#, fuzzy
+msgid "RESTART.BIN is for a different contest."
+msgstr "RESTART.BIN оор тэмцээнийх байна."
+
+#: utr4wstrings.tc_rfas
+#, fuzzy
+msgid "Enter your geographical coordinates:"
+msgstr "Та оорийн байгаа газрын газар зуйн координатаа оруулна уу:"
+
+#: utr4wstrings.tc_romania
+#, fuzzy
+msgid "Romania"
+msgstr "Румыний"
+
+#: utr4wstrings.tc_rst_prompt
+#, fuzzy
+msgid "RST prompt"
+msgstr "RST"
+
+#: utr4wstrings.tc_rulesonqrzru
+#, fuzzy
+msgid "Rules for %s contest at QRZ.RU"
+msgstr "%s тэмцээний зааврыг QRZ.RU дээрээс харна уу"
+
+#: utr4wstrings.tc_rulesonsm3cer
+#, fuzzy
+msgid "Rules for %s contest at WA7BNM Contest Calendar"
+msgstr "WA7BNM тэмцээний хуанли дээрх %s тэмцээний заавар"
+
+#: utr4wstrings.tc_runwarn
+#, fuzzy
+msgid "Another instance of TR4W is already running"
+msgstr "TR4W-ийн ??р нэг жишээ аль хэдийн ажиллаж байна"
+
+#: utr4wstrings.tc_russia
+#, fuzzy
+msgid "Russia"
+msgstr "ОХУ-д байгаа"
+
+#: utr4wstrings.tc_s
+#, fuzzy
+msgid "s"
+msgstr ""
+
+#: utr4wstrings.tc_salutation_and_name_if_known
+#, fuzzy
+msgid "Salutation and name if known"
+msgstr "Нэрийг нь мэдэж байвал мэндчилгээ илгээх"
+
+#: utr4wstrings.tc_sat
+#, fuzzy
+msgid "Sat"
+msgstr "Бямба"
+
+#: utr4wstrings.tc_savechanges
+#, fuzzy
+msgid "Save changes?"
+msgstr "Оорчлолтийг хадгалах уу?"
+
+#: utr4wstrings.tc_savingdtafileasciifileprocessingce
+#, fuzzy
+msgid "Saving .DTA file to ASCII file.  Processing cell   "
+msgstr ""
+
+#: utr4wstrings.tc_savingto
+#, fuzzy
+msgid "Saving %s to %s"
+msgstr "%s-ийг %s руу хуулж байна"
+
+#: utr4wstrings.tc_scannoteditedhere
+#, fuzzy
+msgid "%s cannot be edited here."
+msgstr ""
+
+#: utr4wstrings.tc_selectspotreturnleftorrightarrowse
+#, fuzzy
+msgid "Select spot.  RETURN, left or right arrow to select.  ESCAPE to exit."
+msgstr ""
+
+#: utr4wstrings.tc_sendingssbwavfilename
+#, fuzzy
+msgid "Sending SSB .wav filename. Use ENTER to play, Escape/F10 to exit."
+msgstr "SSB.wav файлыг уншуулах. ENTER дарвал ажиллана, Escape/F10 дарвал зогсоно"
+
+#: utr4wstrings.tc_sendtimetocomputersonthenetwork
+#, fuzzy
+msgid "Do you really want to send time to computers on the network?"
+msgstr "Та сvлжээ руу хугацаагаа явуулахыг хvсч байна уу?"
+
+#: utr4wstrings.tc_send_callassetbymycallcommand
+#, fuzzy
+msgid "Send call as set by MY CALL command"
+msgstr "MY CALL командаар дуудлага нэвтрvvлэх"
+
+#: utr4wstrings.tc_send_characters_from_keyboard
+#, fuzzy
+msgid "Send characters from keyboard"
+msgstr "Компьютерийн гарнаас нэвтрvvлэх"
+
+#: utr4wstrings.tc_serial_format_label
+#, fuzzy
+msgid "DATA/PARITY/STOP"
+msgstr ""
+
+#: utr4wstrings.tc_server
+#, fuzzy
+msgid "SERVER: %s"
+msgstr "Сервер: %s"
+
+#: utr4wstrings.tc_serverandlocallogsareidentical
+#, fuzzy
+msgid "Server and local logs are identical."
+msgstr "Серверийн ба локал логууд зов байна"
+
+#: utr4wstrings.tc_serverlog
+#, fuzzy
+msgid "SERVER LOG"
+msgstr "СЕРВЕР ЛОГ"
+
+#: utr4wstrings.tc_server_log_changed
+#, fuzzy
+msgid "Server log changed. %u QSO(s) updated. Do logs synchronizing (Ctrl+Alt+S)."
+msgstr "Серверийн лог оорчлогдлоо. %u QSO(s) шинэчлэгдэв. Логуудаа синхрончлах уу (Ctrl+Alt+S)."
+
+#: utr4wstrings.tc_setcomputeridvalue
+#, fuzzy
+msgid "Set COMPUTER ID value."
+msgstr "Компьютерийн ID -г тохируулна уу"
+
+#: utr4wstrings.tc_set_value_of_set_now
+#, fuzzy
+msgid "Set value of %s. Set now?"
+msgstr "%s байна. Одоо тохируулах уу?"
+
+#: utr4wstrings.tc_show_all_serial_ports
+#, fuzzy
+msgid "Show all serial ports"
+msgstr "Бүх сериал портыг харуулах"
+
+#: utr4wstrings.tc_show_passwords
+#, fuzzy
+msgid "Show passwords"
+msgstr "Нууц vгсийг харуулах"
+
+#: utr4wstrings.tc_sidetone
+#, fuzzy
+msgid "&Sidetone"
+msgstr "&Дууны давтамж"
+
+#: utr4wstrings.tc_sidetonefreq
+#, fuzzy
+msgid "Sidetone freq."
+msgstr "Телеграфын сигналын давтамж"
+
+#: utr4wstrings.tc_sizebytes
+#, fuzzy
+msgid "Size, bytes"
+msgstr "Хэмжээ, bytes"
+
+#: utr4wstrings.tc_sorrynolog
+#, fuzzy
+msgid "Sorry!! NO LOG = TRUE which prohibits logging QSOs on this computer"
+msgstr "Уучлаарай!! NO LOG = TRUE холбоог компьютер луу оруулах боломжгvй"
+
+#: utr4wstrings.tc_sorryusedupallreminders
+#, fuzzy
+msgid "Sorry, you have used up all your reminders!!"
+msgstr ""
+
+#: utr4wstrings.tc_sorryyoualreadyhave10qtcswith
+#, fuzzy
+msgid "Sorry, you already have 10 QTCs with %s"
+msgstr "Уучлаарай %s -аас 10 QTC авсан байна"
+
+#: utr4wstrings.tc_source
+#, fuzzy
+msgid "Source: %s"
+msgstr "Эх vvсвэр: %s"
+
+#: utr4wstrings.tc_spain
+#, fuzzy
+msgid "Spain"
+msgstr "Испанийн"
+
+#: utr4wstrings.tc_split_warn
+#, fuzzy
+msgid "Warning: You are in SPLIT MODE !!!"
+msgstr "Анхаар!: Та SPLIT MODE дээр байна ш??!"
+
+#: utr4wstrings.tc_spots
+#, fuzzy
+msgid "%d spots"
+msgstr "%d спот"
+
+#: utr4wstrings.tc_sprintqsyrule
+#, fuzzy
+msgid "SPRINT QSY RULE!!!"
+msgstr ""
+
+#: utr4wstrings.tc_ssbqsos
+#, fuzzy
+msgid "SSB QSOs"
+msgstr "SSB холбоо"
+
+#: utr4wstrings.tc_sstillusedbys
+#, fuzzy
+msgid "\"%s\" is still used by: %s"
+msgstr ""
+
+#: utr4wstrings.tc_stationclass
+#, fuzzy
+msgid "Enter your station class:"
+msgstr "Таны станцын зэрэглэл:"
+
+#: utr4wstrings.tc_stationsinmode
+#, fuzzy
+msgid "Stations in %s mode"
+msgstr "Станцууд %s горим дээр байна"
+
+#: utr4wstrings.tc_stpetersburgoblast
+#, fuzzy
+msgid "St.Petersburg / oblast"
+msgstr "Санкт Петербург/ Областийн"
+
+#: utr4wstrings.tc_sun
+#, fuzzy
+msgid "Sun"
+msgstr "Ням"
+
+#: utr4wstrings.tc_switzerland
+#, fuzzy
+msgid "Switzerland"
+msgstr "Швейцарийн"
+
+#: utr4wstrings.tc_tail
+#, fuzzy
+msgid "Tail time (*10 ms)"
+msgstr "Хоцрох (*10 ms)"
+
+#: utr4wstrings.tc_tciservercouldopenportds
+#, fuzzy
+msgid "The TCI server could not open port %d: %s"
+msgstr ""
+
+#: utr4wstrings.tc_telnet
+#, fuzzy
+msgid "Connect#0Disconnect#0Commands#0Freeze#0Clear#0SH/50#0#0"
+msgstr ""
+
+#: utr4wstrings.tc_testradiointerface
+#, fuzzy
+msgid "TEST RADIO INTERFACE"
+msgstr ""
+
+#: utr4wstrings.tc_texas
+#, fuzzy
+msgid "Texas"
+msgstr "Техас мужийн"
+
+#: utr4wstrings.tc_thefirstcommandinconfigfilemustbe
+#, fuzzy
+msgid "The first command in config file must be the MY CALL statement!!"
+msgstr "Тохируулгын файлын эхэнд MY CALL байх ёстой!!"
+
+#: utr4wstrings.tc_therenologfileyets
+#, fuzzy
+msgid "There is no log file yet at %s."
+msgstr ""
+
+#: utr4wstrings.tc_therewerecalls
+#, fuzzy
+msgid ""
+"There were %u calls found in initial exchange file.\n"
+"+%u dupe(s)"
+msgstr ""
+
+#: utr4wstrings.tc_theseentrieswereacceptedbeensaved
+#, fuzzy
+msgid "These entries were not accepted and have not been saved:"
+msgstr ""
+
+#: utr4wstrings.tc_thishr
+#, fuzzy
+msgid "This hr = %d"
+msgstr "Энэ цагт = %d"
+
+#: utr4wstrings.tc_thisversion
+#, fuzzy
+msgid "You have "
+msgstr "Таны програмын хувилбар"
+
+#: utr4wstrings.tc_thisversion2
+#, fuzzy
+msgid "This version"
+msgstr "Энэ хувилбар"
+
+#: utr4wstrings.tc_this_file_does_not_exist
+#, fuzzy
+msgid "This file does not exist. Create an empty file for editing?"
+msgstr "Энэ файл байхгvй байна. Шинэ файл нээх vv?"
+
+#: utr4wstrings.tc_thu
+#, fuzzy
+msgid "Thu"
+msgstr "Пvрэв"
+
+#: utr4wstrings.tc_timediff
+#, fuzzy
+msgid "Time diff."
+msgstr "Цагийн зорvv"
+
+#: utr4wstrings.tc_timeon
+#, fuzzy
+msgid "Time on"
+msgstr "Эфирт ажилласан цаг"
+
+#: utr4wstrings.tc_tooltip_discovery
+#, fuzzy
+msgid "Discover radios on the network"
+msgstr "Сvлжээнд радио илрvvлэх"
+
+#: utr4wstrings.tc_toomanycontestdates
+#, fuzzy
+msgid "Too many contest dates!!"
+msgstr "Хэтэрхий олон огогдол байна!!"
+
+#: utr4wstrings.tc_toomanytotalscoremessages
+#, fuzzy
+msgid "Too many TOTAL SCORE MESSAGEs!!"
+msgstr "TOTAL SCORE MESSAGEs хэтэрхий их байна!!"
+
+#: utr4wstrings.tc_tr4wtimewarning
+#, fuzzy
+msgid "TR4W Time Warning"
+msgstr ""
+
+#: utr4wstrings.tc_translation_author
+#, fuzzy
+msgid "N4AF"
+msgstr "Khosbayar.N JT1CD"
+
+#: utr4wstrings.tc_translation_credit
+#, fuzzy
+msgid "%s translation by %s"
+msgstr ""
+
+#: utr4wstrings.tc_translation_language
+#, fuzzy
+msgid "ENGLISH"
+msgstr "MONGOLIAN"
+
+#: utr4wstrings.tc_translator_email
+#, fuzzy
+msgid "ny4i@ny4i.com"
+msgstr "jt1cd.khos@gmail.com"
+
+#: utr4wstrings.tc_transmitfrequencykilohertz
+#, fuzzy
+msgid "transmit frequency (kiloHertz): "
+msgstr "Нэвтрvvлэх давтамж (Килогерц): "
+
+#: utr4wstrings.tc_trmasterdtadownloadedrestarttr4wus
+#, fuzzy
+msgid "TRMASTER.DTA downloaded -- restart TR4W to use it"
+msgstr ""
+
+#: utr4wstrings.tc_trmasterdtadownloadfailed
+#, fuzzy
+msgid "TRMASTER.DTA download failed"
+msgstr ""
+
+#: utr4wstrings.tc_trmasterdtas
+#, fuzzy
+msgid "TRMASTER.DTA : %s"
+msgstr ""
+
+#: utr4wstrings.tc_tue
+#, fuzzy
+msgid "Tue"
+msgstr "Мягмар"
+
+#: utr4wstrings.tc_uk
+#, fuzzy
+msgid "UK"
+msgstr ""
+
+#: utr4wstrings.tc_ukei
+#, fuzzy
+msgid "If in Uk/EI enter your 2 digit district code"
+msgstr "If inside UK/EI check here"
+
+#: utr4wstrings.tc_ukraine
+#, fuzzy
+msgid "Ukraine"
+msgstr "Украйний"
+
+#: utr4wstrings.tc_ultimatic
+#, fuzzy
+msgid "Ultimatic"
+msgstr "Дээд зэргийн"
+
+#: utr4wstrings.tc_unablesavedtaasciifile
+#, fuzzy
+msgid "Unable to save .DTA to ASCII file."
+msgstr ""
+
+#: utr4wstrings.tc_unabletofind
+#, fuzzy
+msgid "Unable to find %s ."
+msgstr "%s олдохгvй байна !!"
+
+#: utr4wstrings.tc_unabletofindctydat
+#, fuzzy
+msgid ""
+"Unable to find CTY.DAT country file!!\n"
+"Make sure this file is in the same directory as the program."
+msgstr ""
+
+#: utr4wstrings.tc_unknowncountry
+#, fuzzy
+msgid "Unknown country"
+msgstr "Ямар улс нь мэдэгдэхгvй байна"
+
+#: utr4wstrings.tc_uploadcabrillotoscp
+#, fuzzy
+msgid "Do you want to upload your Cabrillo file to SuperChecklPartial?"
+msgstr ""
+
+#: utr4wstrings.tc_uploadedsuccessfully
+#, fuzzy
+msgid "Uploaded successfully."
+msgstr "Амжилттай илгээлээ"
+
+#: utr4wstrings.tc_value
+#, fuzzy
+msgid "Value"
+msgstr "Хэмжээ"
+
+#: utr4wstrings.tc_versiononserver
+#, fuzzy
+msgid "The last version on server"
+msgstr "Серверийн сvvлчийн хувилбар"
+
+#: utr4wstrings.tc_voicekeyerdisabledwithaltk
+#, fuzzy
+msgid "Voice keyer disabled with Alt-K!!  Use Alt-K again to enable."
+msgstr "Alt-K -аар нэвтрvvлгийг зогсооно!!  Alt-K ахин дарахад дахин нэвтрvvлнэ"
+
+#: utr4wstrings.tc_wagwarn
+#, fuzzy
+msgid "Warning: Out of WAG allowed frequency range"
+msgstr ""
+
+#: utr4wstrings.tc_waitingforyouenterstrengthofrst
+#, fuzzy
+msgid "Waiting for you enter strength of RST (Single digit)!!"
+msgstr "RST-ийн сигналын (S) хэмжээг оруулна уу (Нэг оронтой шvv)!!"
+
+#: utr4wstrings.tc_wanttoconvertlog
+#, fuzzy
+msgid "Would you like to convert this log to the latest format?"
+msgstr ""
+
+#: utr4wstrings.tc_wasbuildin
+#, fuzzy
+msgid " installed (build date "
+msgstr "суулгалаа (суулгасан огноо"
+
+#: utr4wstrings.tc_washington
+#, fuzzy
+msgid "Washington"
+msgstr "Вашингтон"
+
+#: utr4wstrings.tc_wasmessagenumberconfirmed
+#, fuzzy
+msgid "Was message number %u confirmed?"
+msgstr "%u -ийн дугаар батлагдсан уу?"
+
+#: utr4wstrings.tc_wed
+#, fuzzy
+msgid "Wed"
+msgstr "Лхагва"
+
+#: utr4wstrings.tc_weighting
+#, fuzzy
+msgid "Weighting"
+msgstr "Цэг зураасын харьцаа"
+
+#: utr4wstrings.tc_winkeyerenable
+#, fuzzy
+msgid "&Winkeyer enable"
+msgstr "&Winkeyer"
+
+#: utr4wstrings.tc_winkeyerport
+#, fuzzy
+msgid "Winkeyer port"
+msgstr "Winkeyer-ийн порт"
+
+#: utr4wstrings.tc_wisconsin
+#, fuzzy
+msgid "Wisconsin"
+msgstr "Винконсон мужийн"
+
+#: utr4wstrings.tc_wpmcodespeed
+#, fuzzy
+msgid "WPM code speed"
+msgstr "Нэвтрvvлэх хурд (групп/минутаар)"
+
+#: utr4wstrings.tc_yestoclearthedupesheet
+#, fuzzy
+msgid "\"YES\" to clear the dupesheet"
+msgstr "\"YES\" гэвэл давтагдсан холбооны логийг арилгана"
+
+#: utr4wstrings.tc_youalreadyworkedin
+#, fuzzy
+msgid "You already worked %s in %s!!"
+msgstr "Та %s-тай урьд нь холбоо барьсан байна!!"
+
+#: utr4wstrings.tc_youarenowtalkingtoyourpacketport
+#, fuzzy
+msgid "You are now talking to your packet port.  Use Control-B to exit."
+msgstr "Та одоо пакетийн портоор харьцаж байна.  Control-B дарвал дуусгана"
+
+#: utr4wstrings.tc_youarespottedbyanotherstation
+#, fuzzy
+msgid "You are spotted by another station."
+msgstr "Таныг оор станц споттоллоо"
+
+#: utr4wstrings.tc_youcanchangethisinyourconfigfile
+#, fuzzy
+msgid "You can only change this in your config file."
+msgstr "Тохируулгын файл дотроос зовхон vvнийг оорчилж болно"
+
+#: utr4wstrings.tc_youhavedeletedthelastlogentry
+#, fuzzy
+msgid "You have deleted the last log entry!!  Use Alt-Y to restore it."
+msgstr "Та сvvлчийн холбоогоо устгалаа!!  Alt-Y ахин дарвал лог руу буцаж орно"
+
+#: utr4wstrings.tc_youhaverestoredthelastdeleted
+#, fuzzy
+msgid "You have restored the last deleted log entry!!"
+msgstr "Хамгийн сvvлд устгасан холбоогоо сэргээлээ!!"
+
+#: utr4wstrings.tc_yournotconnectedtotheinternet
+#, fuzzy
+msgid "YOU ARE NOT CONNECTED TO THE INTERNET!"
+msgstr "Та интернэтэд холбогдсонгvй!"
+
+#: utr4wstrings.tc_you_are_using_the_latest_version
+#, fuzzy
+msgid "You are using the latest version"
+msgstr "Та TR4W-ийн шинэ хувилбарыг хэрэглэж байна"
+
+#: utr4wstrings.tc_yugoslavia
+#, fuzzy
+msgid "Yugoslavia"
+msgstr ""
+
+#: utr4wstrings.tc_zone
+#, fuzzy
+msgid "Zones"
+msgstr "Зон"
+

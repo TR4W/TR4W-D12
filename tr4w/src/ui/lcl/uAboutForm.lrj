@@ -1,5 +1,5 @@
 {"version":1,"strings":[
 {"hash":207744247,"name":"tfrmabout.caption","sourcebytes":[65,98,111,117,116,32,84,82,52,87],"value":"About TR4W"},
-{"hash":216927476,"name":"tfrmabout.lblurl.caption","sourcebytes":[104,116,116,112,58,47,47,119,119,119,46,116,114,52,119,46,110,101,116],"value":"http://www.tr4w.net"},
+{"hash":47434180,"name":"tfrmabout.lblurl.caption","sourcebytes":[104,116,116,112,115,58,47,47,116,114,52,119,46,110,101,116],"value":"https://tr4w.net"},
 {"hash":1339,"name":"tfrmabout.btnok.caption","sourcebytes":[79,75],"value":"OK"}
 ]}

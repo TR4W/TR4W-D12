@@ -30,8 +30,8 @@ object frmNewContest: TfrmNewContest
       Width = 276
       Anchors = [akTop, akLeft, akRight, akBottom]
       ItemHeight = 0
-      OnDblClick = lstFilesDblClick
       TabOrder = 0
+      OnDblClick = lstFilesDblClick
     end
     object btnBrowse: TButton
       Left = 10
@@ -42,12 +42,6 @@ object frmNewContest: TfrmNewContest
       Caption = 'Browse...'
       TabOrder = 1
       OnClick = btnBrowseClick
-    end
-    object dlgOpen: TOpenDialog
-      Title = 'Open configuration file'
-      DefaultExt = '.cfg'
-      Filter = 'TR4W configuration files|*.cfg|All files|*.*'
-      Options = [ofPathMustExist, ofFileMustExist, ofEnableSizing, ofViewDetail]
     end
     object btnLatest: TButton
       Left = 10
@@ -86,7 +80,7 @@ object frmNewContest: TfrmNewContest
       Top = 11
       Width = 200
       Anchors = [akTop, akLeft, akRight]
-      CharCase = ecUpperCase
+      CharCase = ecUppercase
       TabOrder = 0
     end
     object lblContest: TLabel
@@ -130,7 +124,10 @@ object frmNewContest: TfrmNewContest
       Anchors = [akTop, akLeft, akRight]
       BevelOuter = bvNone
       BorderStyle = bsSingle
+      ClientHeight = 52
+      ClientWidth = 420
       Color = clInfoBk
+      ParentBackground = False
       ParentColor = False
       TabOrder = 3
       object lblComment: TLabel
@@ -141,7 +138,6 @@ object frmNewContest: TfrmNewContest
         Alignment = taCenter
         Anchors = [akTop, akLeft, akRight]
         AutoSize = False
-        Caption = ''
         Layout = tlCenter
         WordWrap = True
       end
@@ -168,5 +164,11 @@ object frmNewContest: TfrmNewContest
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 3
+  end
+  object dlgOpen: TOpenDialog
+    Title = 'Open configuration file'
+    DefaultExt = '.cfg'
+    Filter = 'TR4W configuration files|*.cfg|All files|*.*'
+    Options = [ofPathMustExist, ofFileMustExist, ofEnableSizing, ofViewDetail]
   end
 end

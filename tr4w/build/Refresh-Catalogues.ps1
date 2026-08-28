@@ -26,13 +26,35 @@
 .PARAMETER Preview
    Run the merge without writing anything. The lint and the summary still run.
 
+.PARAMETER Seed
+   After merging, machine-translate the empty entries of one language (a LANG
+   code such as ESP) or of every language (ALL), through mt_seed.py.
+
+   OPT-IN ON PURPOSE. This is the only step here that leaves the machine: it
+   posts every untranslated string to a LibreTranslate server, which for ALL is
+   thousands of requests. A refresh that fired those silently before a build
+   would be a bad surprise, so the default does not.
+
+   Everything it produces is marked "Needs work" and is invisible to the build
+   until a person approves it. The review is the bottleneck, not the machine
+   translation.
+
+.PARAMETER SeedUrl
+   Where LibreTranslate is listening. Defaults to mt_seed's own default.
+
+.EXAMPLE
+   ... -Seed ESP     seed one language
+   ... -Seed ALL     seed every language
+
 .EXAMPLE
    powershell -ExecutionPolicy Bypass -File tr4w\build\Refresh-Catalogues.ps1
    powershell -ExecutionPolicy Bypass -File tr4w\build\Refresh-Catalogues.ps1 -Preview
 #>
 
 param(
-   [switch] $Preview
+   [switch] $Preview,
+   [string] $Seed = '',
+   [string] $SeedUrl = ''
 )
 
 Set-StrictMode -Version 2.0
@@ -98,6 +120,34 @@ if ($LASTEXITCODE -ne 0)
    {
    Write-Host "po_merge failed ($LASTEXITCODE)"
    exit 1
+   }
+
+# ------------------------------------------------------------- 1a. the seeding
+
+# AFTER the merge, so it seeds the strings just discovered, and BEFORE the lint,
+# so anything the seeder gets wrong is reported in the same run.
+if ($Seed)
+   {
+   if ($Preview)
+      {
+      Write-Host ''
+      Write-Host '--- mt_seed SKIPPED -- with -Preview the merge added nothing to seed.'
+      }
+   else
+      {
+      Write-Host ''
+      Write-Host ('--- mt_seed --lang {0}   (LibreTranslate; drafts, all Needs work)' -f $Seed)
+      $seedArgs = @((Join-Path $tools 'mt_seed.py'), '--lang', $Seed)
+      if ($SeedUrl) { $seedArgs += @('--url', $SeedUrl) }
+      & $python @seedArgs
+      if ($LASTEXITCODE -ne 0)
+         {
+         # NOT FATAL. The merge above succeeded and is worth keeping; a seeder
+         # that cannot reach its server must not make the refresh look failed.
+         Write-Host ('mt_seed exited {0} -- the merge above still stands.' -f $LASTEXITCODE)
+         Write-Host 'Is LibreTranslate running? -SeedUrl changes where it looks.'
+         }
+      }
    }
 
 # ----------------------------------------------------------------- 2. the lint

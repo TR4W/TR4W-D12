@@ -8086,3 +8086,3458 @@ msgctxt "ulclformhelpers.tc_radioedit_widecw"
 msgid "Wide CW filter"
 msgstr ""
 
+#: tfrmaltd.caption
+#, fuzzy
+msgctxt "tfrmaltd.caption"
+msgid "Dupe Check On Inactive Radio"
+msgstr "Provera duplih na neaktivnoj stanici"
+
+#: tfrmautocq.caption
+#, fuzzy
+msgctxt "tfrmautocq.caption"
+msgid "Auto-CQ"
+msgstr "Auto CQ"
+
+#: tfrmautocq.lbldelay.caption
+#, fuzzy
+msgctxt "tfrmautocq.lbldelay.caption"
+msgid "Number of milliseconds of listening time:"
+msgstr "Broj milisekundi za slusanje:"
+
+#: tfrmautocq.lblmemorykey.caption
+#, fuzzy
+msgctxt "tfrmautocq.lblmemorykey.caption"
+msgid "Press the memory key you want to repeat:"
+msgstr "Pritisni funkcijski taster koji hoces da ponavljas:"
+
+#: tfrmbandmap.mideletespot.caption
+#, fuzzy
+msgctxt "tfrmbandmap.mideletespot.caption"
+msgid "Delete selected spot"
+msgstr "Obrisi selektovani spot"
+
+#: tfrmbandmap.miremoveall.caption
+#, fuzzy
+msgctxt "tfrmbandmap.miremoveall.caption"
+msgid "Remove all spots"
+msgstr "Obrisi sve spotove"
+
+#: tfrmbandplan.caption
+#, fuzzy
+msgctxt "tfrmbandplan.caption"
+msgid "Band plan"
+msgstr ""
+
+#: tfrmeditmessage.btneditwav.caption
+#, fuzzy
+msgctxt "tfrmeditmessage.btneditwav.caption"
+msgid "&Edit"
+msgstr "&Edituj"
+
+#: tfrmeditmessage.caption
+#, fuzzy
+msgctxt "tfrmeditmessage.caption"
+msgid "Program message"
+msgstr "Programirane poruke"
+
+#: tfrmeditmessage.lblcaption.caption
+#, fuzzy
+msgctxt "tfrmeditmessage.lblcaption.caption"
+msgid "Caption"
+msgstr "Naziv"
+
+#: tfrmeditqso.lblband.caption
+#, fuzzy
+msgctxt "tfrmeditqso.lblband.caption"
+msgid "Band"
+msgstr "Opseg"
+
+#: tfrmeditqso.lbldate.caption
+#, fuzzy
+msgctxt "tfrmeditqso.lbldate.caption"
+msgid "Date"
+msgstr "Datum"
+
+#: tfrmeditqso.lblmode.caption
+#, fuzzy
+msgctxt "tfrmeditqso.lblmode.caption"
+msgid "Mode"
+msgstr "Mod"
+
+#: tfrmeditqso.lbloperator.caption
+#, fuzzy
+msgctxt "tfrmeditqso.lbloperator.caption"
+msgid "Operator"
+msgstr ""
+
+#: tfrmfunctionkeys.caption
+#, fuzzy
+msgctxt "tfrmfunctionkeys.caption"
+msgid "Function keys"
+msgstr "Funkcijski tasteri"
+
+#: tfrmintercom.caption
+#, fuzzy
+msgctxt "tfrmintercom.caption"
+msgid "Intercom"
+msgstr "Interfon"
+
+#: tfrmkeyeredit.lblwkfirstext.caption
+#, fuzzy
+msgctxt "tfrmkeyeredit.lblwkfirstext.caption"
+msgid "First extension"
+msgstr "Prva ekstenzija"
+
+#: tfrmkeyeredit.lblwkkeyermode.caption
+#, fuzzy
+msgctxt "tfrmkeyeredit.lblwkkeyermode.caption"
+msgid "Keyer mode"
+msgstr "Rezim tastera"
+
+#: tfrmlogcompare.btnsynchronize.caption
+#, fuzzy
+msgctxt "tfrmlogcompare.btnsynchronize.caption"
+msgid "Synchronize"
+msgstr "Sinhronizuj"
+
+#: tfrmmp3recorder.caption
+#, fuzzy
+msgctxt "tfrmmp3recorder.caption"
+msgid "MP3 Recorder"
+msgstr "MP3 snimac"
+
+#: tfrmnewcontest.btnbrowse.caption
+#, fuzzy
+msgctxt "tfrmnewcontest.btnbrowse.caption"
+msgid "Browse..."
+msgstr ""
+
+#: tfrmnewcontest.btncancel.caption
+#, fuzzy
+msgctxt "tfrmnewcontest.btncancel.caption"
+msgid "Cancel"
+msgstr ""
+
+#: tfrmnewcontest.btnlatest.caption
+#, fuzzy
+msgctxt "tfrmnewcontest.btnlatest.caption"
+msgid "Latest config file"
+msgstr "Poslednja konfiguraciona datoteka"
+
+#: tfrmnewcontest.btnok.caption
+#, fuzzy
+msgctxt "tfrmnewcontest.btnok.caption"
+msgid "OK"
+msgstr ""
+
+#: tfrmnewcontest.caption
+#, fuzzy
+msgid "Open configuration file or start a new contest"
+msgstr ""
+
+#: tfrmnewcontest.dlgopen.title
+#, fuzzy
+msgid "Open configuration file"
+msgstr ""
+
+#: tfrmnewcontest.gbexisting.caption
+#, fuzzy
+msgid "Open an existing configuration"
+msgstr ""
+
+#: tfrmnewcontest.gbnew.caption
+#, fuzzy
+msgid "Start a new contest"
+msgstr ""
+
+#: tfrmnewcontest.lblcontest.caption
+#, fuzzy
+msgid "CONTEST"
+msgstr ""
+
+#: tfrmnewcontest.lblmycall.caption
+#, fuzzy
+msgid "MY CALL"
+msgstr ""
+
+#: tfrmpanadapter.lblstatus.caption
+#, fuzzy
+msgctxt "tfrmpanadapter.lblstatus.caption"
+msgid "Disconnected"
+msgstr "Iskljucen"
+
+#: tfrmpostscores.btnpostnow.caption
+#, fuzzy
+msgctxt "tfrmpostscores.btnpostnow.caption"
+msgid "Post now"
+msgstr "Posalji sada"
+
+#: tfrmpostscores.btnshowscores.caption
+#, fuzzy
+msgctxt "tfrmpostscores.btnshowscores.caption"
+msgid "Show scores"
+msgstr "Prikazi rezultate"
+
+#: tfrmprogrammessage.btncq.caption
+#, fuzzy
+msgctxt "tfrmprogrammessage.btncq.caption"
+msgid "Press &C to program a CQ function key."
+msgstr "Pritisni &C za programiranje CQ funkcijskih tastera."
+
+#: tfrmprogrammessage.btnexchange.caption
+#, fuzzy
+msgctxt "tfrmprogrammessage.btnexchange.caption"
+msgid "Press &E to program an exchange/search and pounce function key."
+msgstr "Pritisni &E za programiranje razmena/SP funkcijskih tastera."
+
+#: tfrmprogrammessage.btnother.caption
+#, fuzzy
+msgctxt "tfrmprogrammessage.btnother.caption"
+msgid "Press &O to program the other non function key messages."
+msgstr "Pritisni &O za programiranje ostalih poruka."
+
+#: tfrmprogrammessage.caption
+#, fuzzy
+msgctxt "tfrmprogrammessage.caption"
+msgid "Memory program function"
+msgstr "Programiranje funkcijskih tastera"
+
+#: tfrmsendkeyboard.btnclose.caption
+#, fuzzy
+msgctxt "tfrmsendkeyboard.btnclose.caption"
+msgid "Close"
+msgstr "Zatvori"
+
+#: tfrmsendspot.caption
+#, fuzzy
+msgctxt "tfrmsendspot.caption"
+msgid "Send spot"
+msgstr "Posaji spot"
+
+#: tfrmsendspot.lblcomment.caption
+#, fuzzy
+msgctxt "tfrmsendspot.lblcomment.caption"
+msgid "Comment"
+msgstr "Komentar"
+
+#: tfrmsendspot.lblfrequency.caption
+#, fuzzy
+msgctxt "tfrmsendspot.lblfrequency.caption"
+msgid "Frequency"
+msgstr "Frekvencija"
+
+#: tfrmstations.caption
+#, fuzzy
+msgctxt "tfrmstations.caption"
+msgid "Stations"
+msgstr "Stanice"
+
+#: tfrmtelnet.btncommands.caption
+#, fuzzy
+msgctxt "tfrmtelnet.btncommands.caption"
+msgid "Commands"
+msgstr "Komande"
+
+#: tprefsform.lblpaddlegroup.caption
+#, fuzzy
+msgctxt "tprefsform.lblpaddlegroup.caption"
+msgid "Paddle"
+msgstr "Rucice"
+
+#: tprefsform.lblstationheading.caption
+#, fuzzy
+msgctxt "tprefsform.lblstationheading.caption"
+msgid "Station information"
+msgstr "Informacije o stanici"
+
+#: utr4wstrings.close_word
+#, fuzzy
+msgctxt "utr4wstrings.close_word"
+msgid "Close"
+msgstr "Zatvori"
+
+#: utr4wstrings.exit_word
+#, fuzzy
+msgctxt "utr4wstrings.exit_word"
+msgid "E&xit"
+msgstr "I&zadji"
+
+#: utr4wstrings.help_word
+#, fuzzy
+msgid "Help"
+msgstr "Pomoc"
+
+#: utr4wstrings.rc_3830
+#, fuzzy
+msgid "3830 Score posting"
+msgstr "3830 slanje rezultata"
+
+#: utr4wstrings.rc_3830_arrl
+#, fuzzy
+msgid "Submit ARRL Log"
+msgstr "Pošalji ARRL log"
+
+#: utr4wstrings.rc_about
+#, fuzzy
+msgid "About"
+msgstr "O programu"
+
+#: utr4wstrings.rc_addbandmapph
+#, fuzzy
+msgid "Add bandmap place holder"
+msgstr "Dodaj mesto u bandmapi"
+
+#: utr4wstrings.rc_addinfo
+#, fuzzy
+msgid "Additional information"
+msgstr "Dodatne informacije"
+
+#: utr4wstrings.rc_ai_cwspeed
+#, fuzzy
+msgid "CW Speed"
+msgstr "CW Brzina"
+
+#: utr4wstrings.rc_ai_qsonumber
+#, fuzzy
+msgid "QSO number"
+msgstr "QSO broj"
+
+#: utr4wstrings.rc_allcalls
+#, fuzzy
+msgid "All callsigns"
+msgstr "Svi znakovi"
+
+#: utr4wstrings.rc_altp
+#, fuzzy
+msgid "Open Fkeys"
+msgstr "Otvori F tastere"
+
+#: utr4wstrings.rc_altx
+#, fuzzy
+msgid "Exit Program"
+msgstr "Izadji iz programa"
+
+#: utr4wstrings.rc_autocq
+#, fuzzy
+msgctxt "utr4wstrings.rc_autocq"
+msgid "Auto-CQ"
+msgstr "Auto CQ"
+
+#: utr4wstrings.rc_autocq2
+#, fuzzy
+msgctxt "utr4wstrings.rc_autocq2"
+msgid "Auto-CQ"
+msgstr "Auto CQ"
+
+#: utr4wstrings.rc_autocqresume
+#, fuzzy
+msgid "Auto-CQ resume"
+msgstr "Nastavi auto CQ"
+
+#: utr4wstrings.rc_backuplog
+#, fuzzy
+msgid "Backup Log"
+msgstr "Rezervna kopija loga"
+
+#: utr4wstrings.rc_band
+#, fuzzy
+msgctxt "utr4wstrings.rc_band"
+msgid "Band"
+msgstr "Opseg"
+
+#: utr4wstrings.rc_bandchanges
+#, fuzzy
+msgid "Band changes"
+msgstr "Promene opsega"
+
+#: utr4wstrings.rc_banddown
+#, fuzzy
+msgid "Band Down"
+msgstr "Opseg dole"
+
+#: utr4wstrings.rc_bandmap
+#, fuzzy
+msgid "Bandmap"
+msgstr "Bandmapa"
+
+#: utr4wstrings.rc_bandplan
+#, fuzzy
+msgctxt "utr4wstrings.rc_bandplan"
+msgid "Band plan"
+msgstr ""
+
+#: utr4wstrings.rc_bandup
+#, fuzzy
+msgid "Band Up"
+msgstr "Opseg gore"
+
+#: utr4wstrings.rc_beaconsm
+#, fuzzy
+msgid "Beacons monitor"
+msgstr "Bikon monitor"
+
+#: utr4wstrings.rc_calculator
+#, fuzzy
+msgid "Calculator"
+msgstr "Digitron"
+
+#: utr4wstrings.rc_callsign
+#, fuzzy
+msgctxt "utr4wstrings.rc_callsign"
+msgid "Callsign"
+msgstr "Pozivni znak"
+
+#: utr4wstrings.rc_caption
+#, fuzzy
+msgctxt "utr4wstrings.rc_caption"
+msgid "Caption"
+msgstr "Naziv"
+
+#: utr4wstrings.rc_catandcw
+#, fuzzy
+msgid "CAT and CW Keying"
+msgstr "CAT i CW podesavanja"
+
+#: utr4wstrings.rc_clearalllogs
+#, fuzzy
+msgid "Clear all logs in network"
+msgstr "Ocisti sve dnevnike na mrezi"
+
+#: utr4wstrings.rc_cleardupes
+#, fuzzy
+msgid "Clear dupesheet"
+msgstr "Ocisti listu duplih"
+
+#: utr4wstrings.rc_clearlog
+#, fuzzy
+msgid "Clear log"
+msgstr "Ocisti dnevnik"
+
+#: utr4wstrings.rc_clearmsheet
+#, fuzzy
+msgid "Clear multsheet"
+msgstr "Ocisti listu mnozitelja"
+
+#: utr4wstrings.rc_colors
+#, fuzzy
+msgid "Colors"
+msgstr "Boje"
+
+#: utr4wstrings.rc_commands
+#, fuzzy
+msgctxt "utr4wstrings.rc_commands"
+msgid "Commands"
+msgstr "Komande"
+
+#: utr4wstrings.rc_comment
+#, fuzzy
+msgctxt "utr4wstrings.rc_comment"
+msgid "Comment"
+msgstr "Komentar"
+
+#: utr4wstrings.rc_contents
+#, fuzzy
+msgid "Contents"
+msgstr "Sadrzaj"
+
+#: utr4wstrings.rc_contestnameic
+#, fuzzy
+msgid "C&ontest name in comment"
+msgstr "I&me takmicenja u komentar"
+
+#: utr4wstrings.rc_contlist
+#, fuzzy
+msgid "Continent List"
+msgstr "Lista kontinenata"
+
+#: utr4wstrings.rc_cqmode
+#, fuzzy
+msgid "CQ Mode"
+msgstr "CQ mod"
+
+#: utr4wstrings.rc_ct1bohis
+#, fuzzy
+msgctxt "utr4wstrings.rc_ct1bohis"
+msgid "CT1BOH info screen"
+msgstr "Statistike po CT1BOH"
+
+#: utr4wstrings.rc_ct1bohis2
+#, fuzzy
+msgctxt "utr4wstrings.rc_ct1bohis2"
+msgid "CT1BOH info screen"
+msgstr "Statistike po CT1BOH"
+
+#: utr4wstrings.rc_cursorinbm
+#, fuzzy
+msgid "Cursor in bandmap window"
+msgstr "Kursor u bandmap prozoru"
+
+#: utr4wstrings.rc_cursortelnet
+#, fuzzy
+msgid "Cursor in DX Cluster window"
+msgstr "Kursor u DX klaster prozoru"
+
+#: utr4wstrings.rc_cwspdnir
+#, fuzzy
+msgid "CW Speed Down for the inactive radio"
+msgstr "CW brzina dole za neaktivnu stanicu"
+
+#: utr4wstrings.rc_cwspeed
+#, fuzzy
+msgid "CW speed"
+msgstr "CW brzina"
+
+#: utr4wstrings.rc_cwspeeddown
+#, fuzzy
+msgid "CW Speed Down"
+msgstr "CW brzina dole"
+
+#: utr4wstrings.rc_cwspeedup
+#, fuzzy
+msgid "CW Speed Up"
+msgstr "CW brzina gore"
+
+#: utr4wstrings.rc_cwspupir
+#, fuzzy
+msgid "CW Speed Up for the inactive radio"
+msgstr "CW brzina gore za neaktivnu stanicu"
+
+#: utr4wstrings.rc_daqslint
+#, fuzzy
+msgid "Auto QSL Interval (Decrease)"
+msgstr "Auto QSL interval (Opadajuci)"
+
+#: utr4wstrings.rc_date
+#, fuzzy
+msgctxt "utr4wstrings.rc_date"
+msgid "Date"
+msgstr "Datum"
+
+#: utr4wstrings.rc_deleted
+#, fuzzy
+msgid "Deleted"
+msgstr "&Obrisano"
+
+#: utr4wstrings.rc_deletelastqso
+#, fuzzy
+msgid "Delete the last QSO"
+msgstr "Obrisi poslednju vezu"
+
+#: utr4wstrings.rc_deleteselspot
+#, fuzzy
+msgctxt "utr4wstrings.rc_deleteselspot"
+msgid "Delete selected spot"
+msgstr "Obrisi selektovani spot"
+
+#: utr4wstrings.rc_devicemanager
+#, fuzzy
+msgid "Device Manager"
+msgstr "Menadzer uredjaja"
+
+#: utr4wstrings.rc_diffinlog
+#, fuzzy
+msgid "Difference in logs"
+msgstr "razlike u dnevnicima"
+
+#: utr4wstrings.rc_download
+#, fuzzy
+msgid "Download the latest CTY.DAT"
+msgstr "Preuzmi poslednju verziju programa"
+
+#: utr4wstrings.rc_dupecheck
+#, fuzzy
+msgid "Dupe check"
+msgstr "Provera duplih"
+
+#: utr4wstrings.rc_dupecheckoar
+#, fuzzy
+msgctxt "utr4wstrings.rc_dupecheckoar"
+msgid "Dupe Check On Inactive Radio"
+msgstr "Provera duplih na neaktivnoj stanici"
+
+#: utr4wstrings.rc_dupesheet
+#, fuzzy
+msgid "Dupesheet"
+msgstr "Lista duplih veza"
+
+#: utr4wstrings.rc_dvkvolcontrol
+#, fuzzy
+msgid "DVK volume control"
+msgstr "DVK kontrola nivoa"
+
+#: utr4wstrings.rc_edit
+#, fuzzy
+msgid "SO1R-Edit or SO2R-SWAP"
+msgstr "Izmena"
+
+#: utr4wstrings.rc_edit_word
+#, fuzzy
+msgctxt "utr4wstrings.rc_edit_word"
+msgid "&Edit"
+msgstr "&Edituj"
+
+#: utr4wstrings.rc_escape
+#, fuzzy
+msgid "Escape"
+msgstr "Napusti"
+
+#: utr4wstrings.rc_execonfigfile
+#, fuzzy
+msgid "Execute configuration file"
+msgstr "Izvrsi konfiguracionu datoteku"
+
+#: utr4wstrings.rc_exit
+#, fuzzy
+msgctxt "utr4wstrings.rc_exit"
+msgid "E&xit"
+msgstr "I&zadji"
+
+#: utr4wstrings.rc_export
+#, fuzzy
+msgid "Export"
+msgstr "Izvezi"
+
+#: utr4wstrings.rc_fcc
+#, fuzzy
+msgid "First callsign worked in each country"
+msgstr "Prvi znak radjen u svakoj DXCC"
+
+#: utr4wstrings.rc_fcz
+#, fuzzy
+msgid "First callsign worked in each zone"
+msgstr "Prvi znak radjen u svakoj zoni"
+
+#: utr4wstrings.rc_file
+#, fuzzy
+msgid "File"
+msgstr "Datoteka"
+
+#: utr4wstrings.rc_fkeys
+#, fuzzy
+msgctxt "utr4wstrings.rc_fkeys"
+msgid "Function keys"
+msgstr "Funkcijski tasteri"
+
+#: utr4wstrings.rc_focusinmw
+#, fuzzy
+msgid "Focus in main window"
+msgstr "Fokus na osnovni prozor"
+
+#: utr4wstrings.rc_frequency
+#, fuzzy
+msgctxt "utr4wstrings.rc_frequency"
+msgid "Frequency"
+msgstr "Frekvencija"
+
+#: utr4wstrings.rc_gotogs
+#, fuzzy
+msgctxt "utr4wstrings.rc_gotogs"
+msgid "Show scores"
+msgstr "Prikazi rezultate"
+
+#: utr4wstrings.rc_homepage
+#, fuzzy
+msgid "TR4W Home Page"
+msgstr "TR4W početna stranica"
+
+#: utr4wstrings.rc_iaqslint
+#, fuzzy
+msgid "Auto QSL Interval (Increase)"
+msgstr "Auto QSL interval (Rastuci)"
+
+#: utr4wstrings.rc_import
+#, fuzzy
+msgid "Import"
+msgstr "Uvezi"
+
+#: utr4wstrings.rc_incnumber
+#, fuzzy
+msgid "Increment number"
+msgstr "Uvecaj broj"
+
+#: utr4wstrings.rc_inc_time
+#, fuzzy
+msgid "Increment time"
+msgstr "Uvecaj vreme"
+
+#: utr4wstrings.rc_iniexlist
+#, fuzzy
+msgid "Initial exchanges list"
+msgstr "Napravi listu sa razmenama"
+
+#: utr4wstrings.rc_initialex
+#, fuzzy
+msgid "Initial exchange"
+msgstr "Inicijalna razmena"
+
+#: utr4wstrings.rc_initialize
+#, fuzzy
+msgid "Initialize QSO"
+msgstr "Inicijalizuj QSO"
+
+#: utr4wstrings.rc_intercom
+#, fuzzy
+msgctxt "utr4wstrings.rc_intercom"
+msgid "Intercom"
+msgstr "Interfon"
+
+#: utr4wstrings.rc_killcw
+#, fuzzy
+msgid "Toggle CW"
+msgstr "Iskljuci CW"
+
+#: utr4wstrings.rc_listofmess
+#, fuzzy
+msgid "List of messages"
+msgstr "Lista poruka"
+
+#: utr4wstrings.rc_login
+#, fuzzy
+msgid "Log in"
+msgstr "Uloguj"
+
+#: utr4wstrings.rc_memprogfunc
+#, fuzzy
+msgctxt "utr4wstrings.rc_memprogfunc"
+msgid "Memory program function"
+msgstr "Programiranje funkcijskih tastera"
+
+#: utr4wstrings.rc_message
+#, fuzzy
+msgctxt "utr4wstrings.rc_message"
+msgid "Message"
+msgstr "Poruka"
+
+#: utr4wstrings.rc_missmultsrep
+#, fuzzy
+msgid "Missing mults report"
+msgstr "Raport o nedostajucim mnoziteljima"
+
+#: utr4wstrings.rc_mode
+#, fuzzy
+msgctxt "utr4wstrings.rc_mode"
+msgid "Mode"
+msgstr "Mod"
+
+#: utr4wstrings.rc_mp3rec
+#, fuzzy
+msgctxt "utr4wstrings.rc_mp3rec"
+msgid "MP3 Recorder"
+msgstr "MP3 snimac"
+
+#: utr4wstrings.rc_mp3_recenable
+#, fuzzy
+msgid "Enable"
+msgstr "Omoguci"
+
+#: utr4wstrings.rc_name
+#, fuzzy
+msgctxt "utr4wstrings.rc_name"
+msgid "Name"
+msgstr "Ime"
+
+#: utr4wstrings.rc_net
+#, fuzzy
+msgid "Net"
+msgstr "Mreza"
+
+#: utr4wstrings.rc_network
+#, fuzzy
+msgctxt "utr4wstrings.rc_network"
+msgid "Network"
+msgstr "Mreza"
+
+#: utr4wstrings.rc_net_cldupe
+#, fuzzy
+msgid "Clear dupesheet in all logs"
+msgstr "Ocisti listu radjenih stanica u svim LOG-ovima"
+
+#: utr4wstrings.rc_net_clmult
+#, fuzzy
+msgid "Clear multsheet in all logs"
+msgstr "Ocisti listu radjenih mnozitelja u svim LOG-ovima"
+
+#: utr4wstrings.rc_note
+#, fuzzy
+msgid "Note"
+msgstr "Napomena"
+
+#: utr4wstrings.rc_notes
+#, fuzzy
+msgid "Notes"
+msgstr "Zabeleska"
+
+#: utr4wstrings.rc_numberosolt
+#, fuzzy
+msgctxt "utr4wstrings.rc_numberosolt"
+msgid "Number of milliseconds of listening time:"
+msgstr "Broj milisekundi za slusanje:"
+
+#: utr4wstrings.rc_openlogdir
+#, fuzzy
+msgid "Open log directory"
+msgstr "Otvori direktorijum datoteke"
+
+#: utr4wstrings.rc_operator
+#, fuzzy
+msgctxt "utr4wstrings.rc_operator"
+msgid "Operator"
+msgstr ""
+
+#: utr4wstrings.rc_options
+#, fuzzy
+msgid "Configuration commands"
+msgstr "Podesavanje opcija programa"
+
+#: utr4wstrings.rc_ping
+#, fuzzy
+msgid "Ping [SERVER ADDRESS]"
+msgstr "Ping [ADRESA SERVERA]"
+
+#: utr4wstrings.rc_postnow
+#, fuzzy
+msgctxt "utr4wstrings.rc_postnow"
+msgid "Post now"
+msgstr "Posalji sada"
+
+#: utr4wstrings.rc_postscoretogs
+#, fuzzy
+msgid "Post score"
+msgstr "Posalji rezultat"
+
+#: utr4wstrings.rc_pressmkywtr
+#, fuzzy
+msgctxt "utr4wstrings.rc_pressmkywtr"
+msgid "Press the memory key you want to repeat:"
+msgstr "Pritisni funkcijski taster koji hoces da ponavljas:"
+
+#: utr4wstrings.rc_press_c
+#, fuzzy
+msgctxt "utr4wstrings.rc_press_c"
+msgid "Press &C to program a CQ function key."
+msgstr "Pritisni &C za programiranje CQ funkcijskih tastera."
+
+#: utr4wstrings.rc_press_e
+#, fuzzy
+msgctxt "utr4wstrings.rc_press_e"
+msgid "Press &E to program an exchange/search and pounce function key."
+msgstr "Pritisni &E za programiranje razmena/SP funkcijskih tastera."
+
+#: utr4wstrings.rc_press_o
+#, fuzzy
+msgctxt "utr4wstrings.rc_press_o"
+msgid "Press &O to program the other non function key messages."
+msgstr "Pritisni &O za programiranje ostalih poruka."
+
+#: utr4wstrings.rc_programmes
+#, fuzzy
+msgid "Program messages"
+msgstr "Programiranje poruka"
+
+#: utr4wstrings.rc_progrmess
+#, fuzzy
+msgctxt "utr4wstrings.rc_progrmess"
+msgid "Program message"
+msgstr "Programirane poruke"
+
+#: utr4wstrings.rc_qsobycountry
+#, fuzzy
+msgid "QSOs by country by band"
+msgstr "Veze po zemljama po opsezima"
+
+#: utr4wstrings.rc_qsowithnocw
+#, fuzzy
+msgid "QSO with no CW"
+msgstr "Veza bez slanja CW"
+
+#: utr4wstrings.rc_qtcfunctions
+#, fuzzy
+msgid "QTC functions"
+msgstr "QTC opcije"
+
+#: utr4wstrings.rc_recalllastent
+#, fuzzy
+msgid "Recall last entry"
+msgstr "Pozovi poslenji unos"
+
+#: utr4wstrings.rc_reccontrol
+#, fuzzy
+msgid "Recording control"
+msgstr "Kontrola snimanja"
+
+#: utr4wstrings.rc_recvqtc
+#, fuzzy
+msgid "Receiving QTCs"
+msgstr "Prijem QTC-a"
+
+#: utr4wstrings.rc_refreshbm
+#, fuzzy
+msgid "Refresh bandmap"
+msgstr "Obnovi bandmapu"
+
+#: utr4wstrings.rc_remmults
+#, fuzzy
+msgid "Mults"
+msgstr "Prikaz mnozitelja"
+
+#: utr4wstrings.rc_removeallsp
+#, fuzzy
+msgctxt "utr4wstrings.rc_removeallsp"
+msgid "Remove all spots"
+msgstr "Obrisi sve spotove"
+
+#: utr4wstrings.rc_reports
+#, fuzzy
+msgid "Reports"
+msgstr "Raporti"
+
+#: utr4wstrings.rc_rescore
+#, fuzzy
+msgid "Rescore"
+msgstr "Preracunaj poene"
+
+#: utr4wstrings.rc_reset_radio_ports
+#, fuzzy
+msgid "Reset Radio Ports"
+msgstr "Resetuj radio portove"
+
+#: utr4wstrings.rc_rm_default
+#, fuzzy
+msgid "Default"
+msgstr "Standardno"
+
+#: utr4wstrings.rc_runserver
+#, fuzzy
+msgid "Run TR4WSERVER"
+msgstr "Startovanje TR4WSERVER-a"
+
+#: utr4wstrings.rc_scorebyhour
+#, fuzzy
+msgid "Score by hour"
+msgstr "Rezultati po satu"
+
+#: utr4wstrings.rc_search
+#, fuzzy
+msgid "&Search"
+msgstr "Pretraga"
+
+#: utr4wstrings.rc_searchlog
+#, fuzzy
+msgid "Search log"
+msgstr "Pretraga dnevnika"
+
+#: utr4wstrings.rc_searchpounce
+#, fuzzy
+msgid "Search && pounce mode"
+msgstr "Nadji i upisi mod (S&&P)"
+
+#: utr4wstrings.rc_sendingcw
+#, fuzzy
+msgid "Sending CW from the keyboard. Use ENTER/Escape/F10 to exit."
+msgstr "Slanje CW sa tastature. Koristi ENTER/Escape/F10 za prekid."
+
+#: utr4wstrings.rc_sendinrig
+#, fuzzy
+msgid "QSY Inactive Radio"
+msgstr "Posalji neaktivni uredjaj na frekvenciju"
+
+#: utr4wstrings.rc_sendkeyboard
+#, fuzzy
+msgid "Send Keyboard Input"
+msgstr "CW preko tastature"
+
+#: utr4wstrings.rc_sendmessage
+#, fuzzy
+msgid "Send message"
+msgstr "Posalji poruku ostalim stanicama"
+
+#: utr4wstrings.rc_sendspot
+#, fuzzy
+msgctxt "utr4wstrings.rc_sendspot"
+msgid "Send spot"
+msgstr "Posaji spot"
+
+#: utr4wstrings.rc_send_bug
+#, fuzzy
+msgid "Send bug report"
+msgstr "Posalji raport o gresci"
+
+#: utr4wstrings.rc_setsysdt
+#, fuzzy
+msgid "Set system date/time"
+msgstr "Podesi datum/vreme"
+
+#: utr4wstrings.rc_settimezone
+#, fuzzy
+msgid "Set time zone"
+msgstr "Podesavanje vremenske zone"
+
+#: utr4wstrings.rc_settings
+#, fuzzy
+msgid "Settings"
+msgstr "Podesavanja"
+
+#: utr4wstrings.rc_shdx_callsign
+#, fuzzy
+msgid "SH/DX [callsign]"
+msgstr "SH/DX [Pozivni znak]"
+
+#: utr4wstrings.rc_splitoff
+#, fuzzy
+msgid "Set Split Mode Tx"
+msgstr "Split ukljucen ON/OFF"
+
+#: utr4wstrings.rc_ssbcwmode
+#, fuzzy
+msgid "SSB/CW mode"
+msgstr "SSB/CW mod"
+
+#: utr4wstrings.rc_stationinfo
+#, fuzzy
+msgctxt "utr4wstrings.rc_stationinfo"
+msgid "Station information"
+msgstr "Informacije o stanici"
+
+#: utr4wstrings.rc_stations
+#, fuzzy
+msgctxt "utr4wstrings.rc_stations"
+msgid "Stations"
+msgstr "Stanice"
+
+#: utr4wstrings.rc_summary
+#, fuzzy
+msgid "Summary"
+msgstr "Zbirni list"
+
+#: utr4wstrings.rc_swapmultview
+#, fuzzy
+msgid "Swap mult view"
+msgstr "Zameni pregled mnozitelja"
+
+#: utr4wstrings.rc_synchronize
+#, fuzzy
+msgctxt "utr4wstrings.rc_synchronize"
+msgid "Synchronize"
+msgstr "Sinhronizuj"
+
+#: utr4wstrings.rc_synlog
+#, fuzzy
+msgid "Compare and synchronize logs"
+msgstr "Sinhronizuj dnevnik"
+
+#: utr4wstrings.rc_telnet
+#, fuzzy
+msgctxt "utr4wstrings.rc_telnet"
+msgid "DX Cluster"
+msgstr "DX klaster"
+
+#: utr4wstrings.rc_timesyn
+#, fuzzy
+msgid "Synchronize time on &all computers"
+msgstr "Sinhronizacija vremena na &svim racunarima"
+
+#: utr4wstrings.rc_toggleinsert
+#, fuzzy
+msgid "Toggle insert mode"
+msgstr "Predji u mod za unos"
+
+#: utr4wstrings.rc_toogleas
+#, fuzzy
+msgid "Toggle autosend"
+msgstr "Iskljuci AUTO-CW"
+
+#: utr4wstrings.rc_tooglemb
+#, fuzzy
+msgid "Toogle multiplier bell"
+msgstr "Ukljucivanje zvona kad je mnozitelj"
+
+#: utr4wstrings.rc_tooglerigs
+#, fuzzy
+msgid "Toggle rigs"
+msgstr "Zameni stanice"
+
+#: utr4wstrings.rc_tooglest
+#, fuzzy
+msgid "Toggle sidetone"
+msgstr "Iskljuci ton"
+
+#: utr4wstrings.rc_tools
+#, fuzzy
+msgid "Tools"
+msgstr "Alati"
+
+#: utr4wstrings.rc_transfreq
+#, fuzzy
+msgid "Transmit frequency"
+msgstr "Predajna frekvencija"
+
+#: utr4wstrings.rc_trlogform
+#, fuzzy
+msgid "TR Log format"
+msgstr ""
+
+#: utr4wstrings.rc_trmaster
+#, fuzzy
+msgid "SCP"
+msgstr ""
+
+#: utr4wstrings.rc_vieweditlog
+#, fuzzy
+msgctxt "utr4wstrings.rc_vieweditlog"
+msgid "View / Edit log"
+msgstr "Pregled / izmena dnevnika"
+
+#: utr4wstrings.rc_vieweditlog2
+#, fuzzy
+msgctxt "utr4wstrings.rc_vieweditlog2"
+msgid "View / Edit log"
+msgstr "Pregled / izmena dnevnika"
+
+#: utr4wstrings.rc_viewpakspots
+#, fuzzy
+msgid "View packet spots"
+msgstr "Prikazi spotove"
+
+#: utr4wstrings.rc_wiki
+#, fuzzy
+msgid "On-line documentation (in Russian)"
+msgstr "Onlajn dokumentacija (na ruskom)"
+
+#: utr4wstrings.rc_wincontrol
+#, fuzzy
+msgctxt "utr4wstrings.rc_wincontrol"
+msgid "Windows control"
+msgstr "Kontrola prozora"
+
+#: utr4wstrings.rc_wincontrol2
+#, fuzzy
+msgctxt "utr4wstrings.rc_wincontrol2"
+msgid "Windows control"
+msgstr "Kontrola prozora"
+
+#: utr4wstrings.rc_windows
+#, fuzzy
+msgid "Windows"
+msgstr "Prozori"
+
+#: utr4wstrings.rc_wkmode
+#, fuzzy
+msgid "Re-initialize WinKeyer"
+msgstr "Reinicijalizuj WinKeyer"
+
+#: utr4wstrings.tc_2radio_warn
+#, fuzzy
+msgid "ERROR: 2 Radios on single band"
+msgstr "GREŠKA: 2 radio uređaja na istom opsegu"
+
+#: utr4wstrings.tc_agecallsignage
+#, fuzzy
+msgid "Enter your age (and Silent Key callsign and age):"
+msgstr "Upisi svoje godine:"
+
+#: utr4wstrings.tc_alldark
+#, fuzzy
+msgid "All dark"
+msgstr "Noc"
+
+#: utr4wstrings.tc_allsun
+#, fuzzy
+msgid "All sun"
+msgstr "Dan"
+
+#: utr4wstrings.tc_all_logs_network_cleared
+#, fuzzy
+msgid "All logs in TR4W network cleared."
+msgstr "Svi LOG-ovi u TR4W mrezi ocisceni."
+
+#: utr4wstrings.tc_alreadyexistsokaytodelete
+#, fuzzy
+msgid ""
+"%s already exists.\n"
+"\n"
+"Okay to delete?"
+msgstr ""
+
+#: utr4wstrings.tc_altdcommanddisabled
+#, fuzzy
+msgid "Alt-D command requires TWO RADIO MODE = TRUE"
+msgstr "Alt-D komanda zahteva TWO RADIO MODE = TRUE"
+
+#: utr4wstrings.tc_altrcommanddisabled
+#, fuzzy
+msgid "Alt-R command requires TWO RADIO MODE = TRUE"
+msgstr "Alt-R komanda zahteva TWO RADIO MODE = TRUE"
+
+#: utr4wstrings.tc_appendimportedqsostocurrentlog
+#, fuzzy
+msgid "Append imported QSOs to current log?"
+msgstr "Dodati importovane QSO-e u trenutni LOG?"
+
+#: utr4wstrings.tc_arenewengland
+#, fuzzy
+msgid "Are you in New England?"
+msgstr ""
+
+#: utr4wstrings.tc_arktikaclub
+#, fuzzy
+msgid "club"
+msgstr "Arktika klub"
+
+#: utr4wstrings.tc_arrlfielddayimproperdxexchange
+#, fuzzy
+msgid "DX Station exchange must be \"DX\"."
+msgstr "DX Station razmena mora biti \"DX\"."
+
+#: utr4wstrings.tc_autospace
+#, fuzzy
+msgid "&Autospace"
+msgstr "&Auto razmak"
+
+#: utr4wstrings.tc_autospotenabledtestmodeonly
+#, fuzzy
+msgid "AUTOSPOT is enabled - Test Mode Only"
+msgstr ""
+
+#: utr4wstrings.tc_autosynchronizinglog
+#, fuzzy
+msgid "Auto-synchronizing log from server."
+msgstr "Auto-sinhronizacija loga sa servera."
+
+#: utr4wstrings.tc_backupcreated
+#, fuzzy
+msgid "Log file backup created"
+msgstr "Rezervna kopija log fajla napravljena"
+
+#: utr4wstrings.tc_bandchangedisabled
+#, fuzzy
+msgid "Band change requires MULTIPLE BANDS = TRUE once the log has QSOs"
+msgstr ""
+
+#: utr4wstrings.tc_band_changes
+#, fuzzy
+msgid "Bn. ch. = %d"
+msgstr "Band prom. = %d"
+
+#: utr4wstrings.tc_belgium
+#, fuzzy
+msgid "Belgium"
+msgstr "Belgiji"
+
+#: utr4wstrings.tc_bugmode
+#, fuzzy
+msgid "Bug mode"
+msgstr "Bug mod"
+
+#: utr4wstrings.tc_bulgaria
+#, fuzzy
+msgid "Bulgaria"
+msgstr "Bugarskoj"
+
+#: utr4wstrings.tc_c9_africa
+#, fuzzy
+msgid "Africa"
+msgstr "Afrika"
+
+#: utr4wstrings.tc_c9_antartica
+#, fuzzy
+msgid "Antartica"
+msgstr "Antarktik"
+
+#: utr4wstrings.tc_c9_asia
+#, fuzzy
+msgid "Asia"
+msgstr "Azija"
+
+#: utr4wstrings.tc_c9_europe
+#, fuzzy
+msgid "Europe"
+msgstr "Evropa"
+
+#: utr4wstrings.tc_c9_northamerica
+#, fuzzy
+msgctxt "utr4wstrings.tc_c9_northamerica"
+msgid "North America"
+msgstr "Severnoj Americi"
+
+#: utr4wstrings.tc_c9_oceania
+#, fuzzy
+msgid "Oceania"
+msgstr "Okeanija"
+
+#: utr4wstrings.tc_c9_southamerica
+#, fuzzy
+msgid "South America"
+msgstr "Juzna Amerika"
+
+#: utr4wstrings.tc_c9_unknown
+#, fuzzy
+msgctxt "utr4wstrings.tc_c9_unknown"
+msgid "Unknown"
+msgstr "Nepoznato"
+
+#: utr4wstrings.tc_california
+#, fuzzy
+msgid "California"
+msgstr "Kaliforniji"
+
+#: utr4wstrings.tc_call_in_call_window
+#, fuzzy
+msgid "Call in Call Window"
+msgstr "Znak u prozoru za znak"
+
+#: utr4wstrings.tc_canada
+#, fuzzy
+msgid "Canada"
+msgstr "Kanadi"
+
+#: utr4wstrings.tc_cannotbackuplog
+#, fuzzy
+msgid "Could not make a backup copy of "
+msgstr "Nije moguće napraviti rezervnu kopiju "
+
+#: utr4wstrings.tc_cannotcopylogreadonly
+#, fuzzy
+msgid "Cannot copy log file -- target exists and is read-only"
+msgstr "Nije moguće kopirati log fajl -- ciljni fajl postoji i samo je za čitanje"
+
+#: utr4wstrings.tc_cannotdisablesplittransmitslicecre
+#, fuzzy
+msgid "Cannot disable split -- the transmit slice was created on the radio. Turn it off in the SDR."
+msgstr ""
+
+#: utr4wstrings.tc_cannotopenlogfile
+#, fuzzy
+msgid "Cannot open log file"
+msgstr ""
+
+#: utr4wstrings.tc_cannotrename
+#, fuzzy
+msgid "Can not rename"
+msgstr "Nije moguće preimenovati"
+
+#: utr4wstrings.tc_checkcallsign
+#, fuzzy
+msgid "Check callsign"
+msgstr "Proveri pozivni znak"
+
+#: utr4wstrings.tc_checkdatetime
+#, fuzzy
+msgid "Check Date/Time !!"
+msgstr "Proveri Datum/Vreme!!"
+
+#: utr4wstrings.tc_checkqtcnumber
+#, fuzzy
+msgid "Check QTC number"
+msgstr "Provera QTC broja"
+
+#: utr4wstrings.tc_checktime
+#, fuzzy
+msgid "Check time"
+msgstr "Provera vremena"
+
+#: utr4wstrings.tc_cis
+#, fuzzy
+msgid "CIS"
+msgstr ""
+
+#: utr4wstrings.tc_cleansweepcongratulations
+#, fuzzy
+msgid "CLEAN SWEEP!! CONGRATULATIONS!!"
+msgstr "Cista pobeda! Cestitamo!!"
+
+#: utr4wstrings.tc_clearalllogs
+#, fuzzy
+msgid "\"CLEARALLLOGS\" to clear all logs in network"
+msgstr "\"CLEARALLLOGS\" ocisti sve dnevnike u mrezi"
+
+#: utr4wstrings.tc_clearmulttoclearmultsheet
+#, fuzzy
+msgid "\"CLEARMULT\" to clear the multsheet"
+msgstr "\"CLEARMULT\" za ciscenje liste mnozitelja"
+
+#: utr4wstrings.tc_clear_dupesheet_net
+#, fuzzy
+msgid "\"CLEARDUPESHEET\" to clear all dupesheets in network"
+msgstr "\"CLEARDUPESHEET\" ocisti sve litse duplih veza na mrezi"
+
+#: utr4wstrings.tc_clear_multsheet_net
+#, fuzzy
+msgid "\"CLEARMULTSHEET\" to clear all multsheets in network"
+msgstr "\"CLEARMULTSHEET\" ocisti sve liste mnozitelja na mrezi"
+
+#: utr4wstrings.tc_command
+#, fuzzy
+msgid "Command"
+msgstr "Komanda"
+
+#: utr4wstrings.tc_computerclockissynchronized
+#, fuzzy
+msgid "Computer clock is synchronized."
+msgstr "Vreme na racunaru sinhronizovano."
+
+#: utr4wstrings.tc_configuration_file
+#, fuzzy
+msgid "Configuration file"
+msgstr "Konfiguraciona datoteka"
+
+#: utr4wstrings.tc_connect
+#, fuzzy
+msgid "CONNECT.."
+msgstr "Konektovanje.."
+
+#: utr4wstrings.tc_connected
+#, fuzzy
+msgid "CONNECTED"
+msgstr "Konektovan"
+
+#: utr4wstrings.tc_connectedto
+#, fuzzy
+msgid "Connected to "
+msgstr "Konektovan na "
+
+#: utr4wstrings.tc_connectingto
+#, fuzzy
+msgid "Connecting to "
+msgstr "Konektujem se na "
+
+#: utr4wstrings.tc_connectiontotr4wserverlost
+#, fuzzy
+msgid "Connection to TR4WSERVER %s:%d lost."
+msgstr "Konekcija na TR4WSERVER %s:%d izgubljena."
+
+#: utr4wstrings.tc_connecttotr4wserverfailed
+#, fuzzy
+msgid "Connect to TR4WSERVER failed. Check SERVER PASSWORD value!!"
+msgstr "Konekcija na TR4WSERVER nije uspela. Proveri ispravnost LOZINKE SERVERA!!"
+
+#: utr4wstrings.tc_continueenteringcharactersautoterm
+#, fuzzy
+msgid "Continue entering characters.  Auto terminate active!!"
+msgstr ""
+
+#: utr4wstrings.tc_continueenteringcharacterspressret
+#, fuzzy
+msgid "Continue entering characters and press RETURN when done."
+msgstr ""
+
+#: utr4wstrings.tc_cqfunctionkeymemorystatus
+#, fuzzy
+msgid "CQ FUNCTION KEY MEMORY STATUS"
+msgstr "Sadrzaj memorije funkcijskih tastera \"CQ\""
+
+#: utr4wstrings.tc_cqtotal
+#, fuzzy
+msgid "CQ total: %u"
+msgstr "Ukupno CQ: %u"
+
+#: utr4wstrings.tc_croat
+#, fuzzy
+msgid "I am in Croatia"
+msgstr ""
+
+#: utr4wstrings.tc_ctrl_a
+#, fuzzy
+msgid "Send this message on inactive radio"
+msgstr "Posalji ovu poruku na neaktivnu stanicu"
+
+#: utr4wstrings.tc_ctrl_b
+#, fuzzy
+msgid "Identify ctrl-A message as a CQ"
+msgstr "Koristi ctrl-A poruku kao CQ"
+
+#: utr4wstrings.tc_ctrl_c
+#, fuzzy
+msgid "Start special command"
+msgstr "Startuj posebnu komandu"
+
+#: utr4wstrings.tc_ctrl_d
+#, fuzzy
+msgid "Do not interrupt"
+msgstr "Ne prekidaj"
+
+#: utr4wstrings.tc_ctrl_e
+#, fuzzy
+msgid "Dah 73% of normal duration"
+msgstr "Povlaka 73% od normalne duzine"
+
+#: utr4wstrings.tc_ctrl_f
+#, fuzzy
+msgid "Increase speed by 6%"
+msgstr "Povecaj brzinu za 6%"
+
+#: utr4wstrings.tc_ctrl_k
+#, fuzzy
+msgid "Normal dah"
+msgstr "Normala povlaka"
+
+#: utr4wstrings.tc_ctrl_l
+#, fuzzy
+msgid "Dit 140% of normal duration"
+msgstr "Tacka 140% od normalne duzine"
+
+#: utr4wstrings.tc_ctrl_n
+#, fuzzy
+msgid "Dah 113% of normal duration"
+msgstr "Povlaka 113% od normalne duzine"
+
+#: utr4wstrings.tc_ctrl_o
+#, fuzzy
+msgid "Dah 127% of normal duration"
+msgstr "Povlaka 127% od normalne duzine"
+
+#: utr4wstrings.tc_ctrl_p
+#, fuzzy
+msgid "Dit 60% of normal duration"
+msgstr "Tacka 60% od normalne duzine"
+
+#: utr4wstrings.tc_ctrl_q
+#, fuzzy
+msgid "Dit 80% of normal duration"
+msgstr "Tacka 80% od normalne duzine"
+
+#: utr4wstrings.tc_ctrl_s
+#, fuzzy
+msgid "Decrease speed by 6%"
+msgstr "Smanji brzinu za 6%"
+
+#: utr4wstrings.tc_ctrl_sl
+#, fuzzy
+msgid "Normal dit"
+msgstr "Normala tacka"
+
+#: utr4wstrings.tc_ctrl_v
+#, fuzzy
+msgid "Dit 120% of normal duration"
+msgstr "Tacka 120% od normalne duzine"
+
+#: utr4wstrings.tc_ctrl_x
+#, fuzzy
+msgid "Decrease weight by 0.03"
+msgstr "Smanji duzinu za 0.03"
+
+#: utr4wstrings.tc_ctrl_y
+#, fuzzy
+msgid "Increase weight by 0.03"
+msgstr "Povecaj duzinu za 0.03"
+
+#: utr4wstrings.tc_ctspacing
+#, fuzzy
+msgid "C&T spacing"
+msgstr "C&T razmak"
+
+#: utr4wstrings.tc_ctydatdownloadedreloading
+#, fuzzy
+msgid "CTY.DAT downloaded. Reloading..."
+msgstr ""
+
+#: utr4wstrings.tc_ctydatdownloadfailed
+#, fuzzy
+msgid "CTY.DAT download failed."
+msgstr ""
+
+#: utr4wstrings.tc_ctydatreloadedsuccessfully
+#, fuzzy
+msgid "CTY.DAT reloaded successfully."
+msgstr ""
+
+#: utr4wstrings.tc_current_operator_callsign
+#, fuzzy
+msgid "current operator callsign"
+msgstr "pozivni znak operatora koji trenutno radi"
+
+#: utr4wstrings.tc_cwdisabledwithaltk
+#, fuzzy
+msgid "CW disabled with Alt-K!!  Use Alt-K again to enable."
+msgstr "CW iskljucen pomocu Alt-K!!  Za ponovno ukljucenje pritisni Alt-K."
+
+#: utr4wstrings.tc_cwoff
+#, fuzzy
+msgid "CW Off"
+msgstr ""
+
+#: utr4wstrings.tc_cwqsos
+#, fuzzy
+msgid "CW QSOs"
+msgstr "CW veza"
+
+#: utr4wstrings.tc_cwtimerfired
+#, fuzzy
+msgid "CW Timer fired"
+msgstr ""
+
+#: utr4wstrings.tc_czechrepublicorinslovakia
+#, fuzzy
+msgid "Czech Republic or in Slovakia"
+msgstr "Ceskoj Republici ili Slovackoj"
+
+#: utr4wstrings.tc_datasuccessfullysavedasciifile
+#, fuzzy
+msgid "Data successfully saved to ASCII file."
+msgstr ""
+
+#: utr4wstrings.tc_debugmodecreatedprefixestxt
+#, fuzzy
+msgid "debug mode created prefixes.txt"
+msgstr ""
+
+#: utr4wstrings.tc_department
+#, fuzzy
+msgid "Enter your department:"
+msgstr "Upisi svoju oblast:"
+
+#: utr4wstrings.tc_difversion
+#, fuzzy
+msgid ""
+"%s is from a different program version.\n"
+"TR4W is expecting version %s.\n"
+"The file you are trying to read version %s."
+msgstr ""
+
+#: utr4wstrings.tc_digqsos
+#, fuzzy
+msgid "DIG QSOs"
+msgstr "DIG veza"
+
+#: utr4wstrings.tc_disbale_civ
+#, fuzzy
+msgid "Disable \"CI-V Transceive\" mode in your ICOM rig. Refer to instruction manual of your radio."
+msgstr "Iskljuci \"CI-V Transceive\" mod u svom ICOM uredjaju. Pogledaj u uputstvu za taj uredjaj."
+
+#: utr4wstrings.tc_disconnectedfrom
+#, fuzzy
+msgid "** DISCONNECTED from "
+msgstr "** Diskonektovan sa "
+
+#: utr4wstrings.tc_discover_multi_found
+#, fuzzy
+msgid "More than one %s found; filled in the first.  All found:"
+msgstr ""
+
+#: utr4wstrings.tc_discover_none_found
+#, fuzzy
+msgid "No radio of type %s found on the network"
+msgstr ""
+
+#: utr4wstrings.tc_discover_not_available
+#, fuzzy
+msgid "Network discovery is not available for radio %s"
+msgstr ""
+
+#: utr4wstrings.tc_ditdahratio
+#, fuzzy
+msgid "Dit/Dah ratio"
+msgstr "Odnos Tacka/Crta"
+
+#: utr4wstrings.tc_dlportiodriverisnotinstalled
+#, fuzzy
+msgid "DLPortIO error"
+msgstr "DLPortIO drajver nije instaliran."
+
+#: utr4wstrings.tc_dommults
+#, fuzzy
+msgid "Dom Mults"
+msgstr "Definisanih mnozitelja"
+
+#: utr4wstrings.tc_downloadingctydat
+#, fuzzy
+msgid "Downloading CTY.DAT..."
+msgstr ""
+
+#: utr4wstrings.tc_downloadingpotaparks
+#, fuzzy
+msgid "Downloading POTA parks..."
+msgstr ""
+
+#: utr4wstrings.tc_downloadingtrmasterdta
+#, fuzzy
+msgid "Downloading TRMASTER.DTA..."
+msgstr ""
+
+#: utr4wstrings.tc_downloadit
+#, fuzzy
+msgid "Would you like to download the latest version?"
+msgstr "Preuzeti poslednju verziju programa?"
+
+#: utr4wstrings.tc_doyoureallywantstopnow
+#, fuzzy
+msgid "Do you really want stop now?"
+msgstr "Da li zelis da prekines sada?"
+
+#: utr4wstrings.tc_doyoureallywanttoabortthisqtc
+#, fuzzy
+msgid "Do you really want to abort this QTC?"
+msgstr "Da li zelis da prekines ovaj QTC?"
+
+#: utr4wstrings.tc_doyoureallywanttoexittheprogram
+#, fuzzy
+msgid "Do you really want to exit the program?"
+msgstr "Da li zelis da napustis program?"
+
+#: utr4wstrings.tc_doyoureallywanttosavethisqtc
+#, fuzzy
+msgid "Do you really want to save this QTC?"
+msgstr "Da li zelis da snimis ovaj QTC?"
+
+#: utr4wstrings.tc_doyouwanttocheckthelatestversion
+#, fuzzy
+msgid "Would you like to check for a possible newer version of  TR4W ?"
+msgstr "Proveri da li je instalirana poslednja verzija TR4W programa"
+
+#: utr4wstrings.tc_dupesheet
+#, fuzzy
+msgid "Dupesheet - %sm-%s"
+msgstr "Lista duplih - %sm-%s"
+
+#: utr4wstrings.tc_dupesheetcleared
+#, fuzzy
+msgid "Dupe sheet cleared!"
+msgstr "Lista duplih veza je ociscena!"
+
+#: utr4wstrings.tc_dxmults
+#, fuzzy
+msgid "DX Mults"
+msgstr "DX mnozitelji"
+
+#: utr4wstrings.tc_editfunctionkey
+#, fuzzy
+msgid "Edit %s message"
+msgstr "Izmeni %s Poruka"
+
+#: utr4wstrings.tc_editor_copy
+#, fuzzy
+msgid "&Copy"
+msgstr ""
+
+#: utr4wstrings.tc_editor_edit
+#, fuzzy
+msgctxt "utr4wstrings.tc_editor_edit"
+msgid "&Edit"
+msgstr "&Edituj"
+
+#: utr4wstrings.tc_editor_explore
+#, fuzzy
+msgid "Explore"
+msgstr ""
+
+#: utr4wstrings.tc_editor_openineditor
+#, fuzzy
+msgid "Open in text &editor"
+msgstr ""
+
+#: utr4wstrings.tc_editor_selectall
+#, fuzzy
+msgid "Select &all"
+msgstr ""
+
+#: utr4wstrings.tc_editor_sendlogto
+#, fuzzy
+msgid "Send log to %s"
+msgstr ""
+
+#: utr4wstrings.tc_editqtcpressyestoeditqtcornotolog
+#, fuzzy
+msgid "Edit QTC? Press Yes to edit QTC or  No to log "
+msgstr "Ispraviti QTC? Klikni na Yes za ispravljanje QTC ili No za upis u LOG "
+
+#: utr4wstrings.tc_enoughmemoryinitialexchangearray
+#, fuzzy
+msgid "Not enough memory for initial exchange array!!"
+msgstr ""
+
+#: utr4wstrings.tc_enter
+#, fuzzy
+msgid "Enter %s :"
+msgstr "Upisi %s :"
+
+#: utr4wstrings.tc_entercallsignspacedupecheckalthhel
+#, fuzzy
+msgid "ENTER a callsign.  SPACE for dupecheck.  Alt-H for help."
+msgstr ""
+
+#: utr4wstrings.tc_entercalltobecheckedon
+#, fuzzy
+msgid "Enter call to be checked on %s%s:"
+msgstr "Upisi pozivni znak za proveru na %s%s:"
+
+#: utr4wstrings.tc_enterexchangepressenterlogescapeab
+#, fuzzy
+msgid "Enter exchange.  Press ENTER to log, ESCAPE to abort QSO."
+msgstr ""
+
+#: utr4wstrings.tc_enterfirsttwodigitsofyourqth
+#, fuzzy
+msgid "Enter first two digits of your QTH:"
+msgstr "Upisi prva dva slova svog QTH:"
+
+#: utr4wstrings.tc_enterfirsttwolettersofyourgrid
+#, fuzzy
+msgid "Enter first two letters of your grid square:"
+msgstr "Upisi prva dva slova svog lokatora:"
+
+#: utr4wstrings.tc_enterqtcmaxof
+#, fuzzy
+msgid "Enter QTC #/# (max of %d) :"
+msgstr "Unesi QTC #/# (maksimum od %d) :"
+
+#: utr4wstrings.tc_enterstateforusprovinceforcanada
+#, fuzzy
+msgid "Enter state for U.S., province for Canada:"
+msgstr "Upisi SAD drzavu, provinciju za Kanadu:"
+
+#: utr4wstrings.tc_entersumofyourageandamount
+#, fuzzy
+msgid "Enter sum of your age and amount of years elapsed since your first QSO (e.g. 28+14=42):"
+msgstr "Upisi zbir svojih godina i broj godina, koji je prosao od momenta kada si uradio prvu vezu (na primer: 28+14=42):"
+
+#: utr4wstrings.tc_enterthelasttwodigitsoftheyear
+#, fuzzy
+msgid "Enter the last two digits of the year of your first official amateur radio license:"
+msgstr "Upisi poslednja dva broja godine, kada si prvi put dobio licencu:"
+
+#: utr4wstrings.tc_entertheqththatyouwanttosend
+#, fuzzy
+msgid "Enter the QTH that you want to send:"
+msgstr "Upisi QTH koji ce se emitovati:"
+
+#: utr4wstrings.tc_enteryourageinmystatefield
+#, fuzzy
+msgid "Enter your age in MY STATE field:"
+msgstr "Upisi koliko imas godina u polje MY STATE:"
+
+#: utr4wstrings.tc_enteryourbranchnumber
+#, fuzzy
+msgid "Enter your Branch number:"
+msgstr "Upisi broj svoje filijale:"
+
+#: utr4wstrings.tc_enteryourcityidentifier
+#, fuzzy
+msgid "Enter your city identifier:"
+msgstr "Upisi identifikator svog grada:"
+
+#: utr4wstrings.tc_enteryourcontinent
+#, fuzzy
+msgid "Enter your continent (and possible additional ID, i.e. SA or NAQ)"
+msgstr "Upisi svoj kontinent (moguci dodatni ID, npr. SA ili NAQ)"
+
+#: utr4wstrings.tc_enteryourcountycode
+#, fuzzy
+msgid "Enter your county code:"
+msgstr "Upisi prefiks svoje drzave:"
+
+#: utr4wstrings.tc_enteryourcountyorstateporovincedx
+#, fuzzy
+msgid "Enter your county if you are in %s state. Enter your state, Canadian Province or \"DX\" if outside of %s:"
+msgstr "Upisi svoj okrug ako si u %s drzavi. Upisi svoju drzavu, kanadsku provinciju ili \"DX\" ako je van %s:"
+
+#: utr4wstrings.tc_enteryourdistrictabbreviation
+#, fuzzy
+msgid "Enter your district abbreviation:"
+msgstr "Upisi skracenicu svog reona:"
+
+#: utr4wstrings.tc_enteryourdistrictcode
+#, fuzzy
+msgid "If in UK/EI, enter your 2 digit district code"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourdok
+#, fuzzy
+msgid "Enter your DOK:"
+msgstr "Upisi svoj DOK:"
+
+#: utr4wstrings.tc_enteryourfocnumber
+#, fuzzy
+msgid "Enter your FOC number:"
+msgstr "Upisi svoj FOC broj:"
+
+#: utr4wstrings.tc_enteryourfourdigitgridsquare
+#, fuzzy
+msgid "Enter your four digit grid square:"
+msgstr "Upisi prva 4 znaka svog lokatora:"
+
+#: utr4wstrings.tc_enteryourgeographicalcoordinates
+#, fuzzy
+msgid ""
+"Enter your geographical coordinates\n"
+"(e.g. 55N37O for Moscow):"
+msgstr ""
+
+#: utr4wstrings.tc_enteryouriotareferencedesignator
+#, fuzzy
+msgid "Enter your IOTA Reference Designator (WITH DASH and no leading zeros delimiting # e.g. EU-5)"
+msgstr "Upisi svoju IOTA referencu:"
+
+#: utr4wstrings.tc_enteryouristrictifinve7
+#, fuzzy
+msgid "Enter your federal district if in British Columbia, or your State/Province"
+msgstr "Unesite federalni distrikt ako ste u British Columbia, ili državu/provinciju"
+
+#: utr4wstrings.tc_enteryourmembershipnumber
+#, fuzzy
+msgid "Enter your membership number:"
+msgstr "Upisi svoj clanski broj:"
+
+#: utr4wstrings.tc_enteryourname
+#, fuzzy
+msgid "Enter your name:"
+msgstr "Upisi svoje ime:"
+
+#: utr4wstrings.tc_enteryournameandqth
+#, fuzzy
+msgid "Enter your name and QTH (US state, Canadian Province or DX country) or member number:"
+msgstr "Upisi svoje ime i QTH (drzavu SAD, kanadsku provinciju ili DX zemlju):"
+
+#: utr4wstrings.tc_enteryournameandstate
+#, fuzzy
+msgid "Enter your name (and state if you are in North America):"
+msgstr "Upisi svoje ime (i drzavu ako si u Severnoj Americi):"
+
+#: utr4wstrings.tc_enteryouroblastid
+#, fuzzy
+msgid "Enter your oblast ID:"
+msgstr "Upisi identifikator svoje oblasti:"
+
+#: utr4wstrings.tc_enteryourparkreferencedesignator
+#, fuzzy
+msgid "Enter your POTA Park Reference Designator (WITH DASH e.g. K-1234)"
+msgstr "Upisi svoju POTA referencu:"
+
+#: utr4wstrings.tc_enteryourpostcode
+#, fuzzy
+msgid "Enter your postcode:"
+msgstr "Upisi svoj postanski broj:"
+
+#: utr4wstrings.tc_enteryourprecedencechecksection
+#, fuzzy
+msgid ""
+"Enter your precedence, your check\n"
+"(last two digits of year licensed) and ARRL section:"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourprovinceid
+#, fuzzy
+msgid "Enter your province ID:"
+msgstr "Upisi identifikator svoje provincije:"
+
+#: utr4wstrings.tc_enteryourqthandthename
+#, fuzzy
+msgid ""
+"Enter your QTH that you want to send\n"
+"and the name you want to use:"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourqthorpower
+#, fuzzy
+msgid "Enter your QTH that you want to send if you are in North America or your power as MY STATE if outside:"
+msgstr "Upisi svoj QTH, koji hoces da emitujes ako si u Severnoj Americi ili snagu u polje MY STATE, ako nisi:"
+
+#: utr4wstrings.tc_enteryourrdaid
+#, fuzzy
+msgid "Enter your RDA ID:"
+msgstr "Upisi svoj broj RDA:"
+
+#: utr4wstrings.tc_enteryourrdaidorgrid
+#, fuzzy
+msgid "Enter your RDA ID (for UA1A stations) or four digit grid square:"
+msgstr "Upisi svoj RDA ID (za UA1A stanice) ili 4 karaktera QTH lokatora:"
+
+#: utr4wstrings.tc_enteryoursixdigitgridsquare
+#, fuzzy
+msgid "Enter your six digit grid square:"
+msgstr "Upisi svoj ceo lokator:"
+
+#: utr4wstrings.tc_enteryoursquareid
+#, fuzzy
+msgid "Enter your square ID:"
+msgstr "Upisi ID svog lokatora:"
+
+#: utr4wstrings.tc_enteryourstatecode
+#, fuzzy
+msgid "Enter your state code:"
+msgstr "Upisi oznaku svoje drzave:"
+
+#: utr4wstrings.tc_enteryourzone
+#, fuzzy
+msgid "Enter your zone:"
+msgstr "Upisi svoju zonu:"
+
+#: utr4wstrings.tc_entriesperms
+#, fuzzy
+msgid "%u entries per %u ms"
+msgstr "%u unosa na %u ms"
+
+#: utr4wstrings.tc_errorinlogfile
+#, fuzzy
+msgid "Error in log file!"
+msgstr "Greska u LOG fajlu!"
+
+#: utr4wstrings.tc_errorofferingcommanderproxytcpport
+#, fuzzy
+msgid "Error offering Commander proxy TCP Port"
+msgstr ""
+
+#: utr4wstrings.tc_errorplayingvoicememory
+#, fuzzy
+msgid "Error playing voice memory"
+msgstr ""
+
+#: utr4wstrings.tc_eudx
+#, fuzzy
+msgid "EU country, enter your four character country code"
+msgstr "EU zemlja, unesite četvoroznakovni kod zemlje"
+
+#: utr4wstrings.tc_exchangefunctionkeymemorystatus
+#, fuzzy
+msgid "EXCHANGE FUNCTION KEY MEMORY STATUS"
+msgstr "Sadrzaj memorije funkcijskih tastera \"Razmena\""
+
+#: utr4wstrings.tc_failedtoconnectto
+#, fuzzy
+msgid "Failed to connect to "
+msgstr "Konekcija nije uspela na "
+
+#: utr4wstrings.tc_failedtoconnecttogetscoresorg
+#, fuzzy
+msgid "Failed to connect"
+msgstr "Konekcija nije uspela"
+
+#: utr4wstrings.tc_failedtoload
+#, fuzzy
+msgid "Failed to load. View getscoresanswer.html for details."
+msgstr "Predaja podataka nije uspela. Pogledaj getscoresanswer.html za detalje."
+
+#: utr4wstrings.tc_failedtoreceiveserverlog
+#, fuzzy
+msgid "Failed to receive server log."
+msgstr "Nije uspeo prijem dnevnika sa servera."
+
+#: utr4wstrings.tc_filesavedtofilesuccessfully
+#, fuzzy
+msgid "File saved to file successfully."
+msgstr ""
+
+#: utr4wstrings.tc_filesavedtosuccessfully
+#, fuzzy
+msgid "File saved to %s successfully."
+msgstr "Fajl snimljen na %s uspesno"
+
+#: utr4wstrings.tc_findingzeroendvisibledupesheetlist
+#, fuzzy
+msgid "Not finding zero at end visible dupesheet list!!"
+msgstr ""
+
+#: utr4wstrings.tc_firstextension
+#, fuzzy
+msgctxt "utr4wstrings.tc_firstextension"
+msgid "First extension"
+msgstr "Prva ekstenzija"
+
+#: utr4wstrings.tc_florida
+#, fuzzy
+msgid "Florida"
+msgstr "Floridi"
+
+#: utr4wstrings.tc_flushinitialexcommandexecuted
+#, fuzzy
+msgid "FLUSHINITIALEX command is executed."
+msgstr ""
+
+#: utr4wstrings.tc_folderalreadyexistsoverwrite
+#, fuzzy
+msgid ""
+"Folder \"%s\" already exists.\n"
+"Overwrite ?"
+msgstr ""
+
+#: utr4wstrings.tc_footsw
+#, fuzzy
+msgid "Footsw."
+msgstr "Futsvic"
+
+#: utr4wstrings.tc_france
+#, fuzzy
+msgid "France"
+msgstr "Francuskoj"
+
+#: utr4wstrings.tc_freq
+#, fuzzy
+msgid "Freq"
+msgstr ""
+
+#: utr4wstrings.tc_frequencyforcallinkhz
+#, fuzzy
+msgid "frequency for %s in kHz"
+msgstr "frekvencija za %s u kHz"
+
+#: utr4wstrings.tc_freq_off
+#, fuzzy
+msgid "SHOW FREQUENCY IN LOG is turned off"
+msgstr "PRIKAZ FREKVENCIJE U LOGU je isključen"
+
+#: utr4wstrings.tc_freq_zero
+#, fuzzy
+msgid "ERROR: Invalid Frequency logged"
+msgstr "GREŠKA: Logovana nevažeća frekvencija"
+
+#: utr4wstrings.tc_fri
+#, fuzzy
+msgid "Fri"
+msgstr "Pet"
+
+#: utr4wstrings.tc_gagarin
+#, fuzzy
+msgid "special two char ID"
+msgstr "specijalni dvoznakovni ID"
+
+#: utr4wstrings.tc_gc
+#, fuzzy
+msgid "special two character designator"
+msgstr "specijalna dvoznakovna oznaka"
+
+#: utr4wstrings.tc_germany
+#, fuzzy
+msgid "Germany"
+msgstr "Nemackoj"
+
+#: utr4wstrings.tc_gethost
+#, fuzzy
+msgid "GET HOST.."
+msgstr "Dobijanje hosta..."
+
+#: utr4wstrings.tc_hamlib_id_label
+#, fuzzy
+msgid "HAMLIB ID"
+msgstr ""
+
+#: utr4wstrings.tc_hamscorequeueingfulllogresync
+#, fuzzy
+msgid "HamScore: queueing full log resync..."
+msgstr ""
+
+#: utr4wstrings.tc_handlogmodetrue
+#, fuzzy
+msgid "HAND LOG MODE = TRUE"
+msgstr ""
+
+#: utr4wstrings.tc_hangtime
+#, fuzzy
+msgid "Hang time"
+msgstr "Vreme prekida"
+
+#: utr4wstrings.tc_hasimpropersyntax
+#, fuzzy
+msgid "%s has improper syntax!!"
+msgstr "%s ima nepravilnu sintaksu!!"
+
+#: utr4wstrings.tc_haveqtcs
+#, fuzzy
+msgid "Have %u QTCs"
+msgstr "Kod tebe %u QTC"
+
+#: utr4wstrings.tc_hitcounthistogram050
+#, fuzzy
+msgid "Hit count histogram for 0 to 50+ : "
+msgstr ""
+
+#: utr4wstrings.tc_host
+#, fuzzy
+msgid "HOST  : %s"
+msgstr ""
+
+#: utr4wstrings.tc_hq
+#, fuzzy
+msgid "HQ (HQ station)"
+msgstr "HQ (HQ stanica)"
+
+#: utr4wstrings.tc_hqmults
+#, fuzzy
+msgid "HQ Mults"
+msgstr "HQ mnozitelji"
+
+#: utr4wstrings.tc_hq_or_member
+#, fuzzy
+msgid "HQ or member"
+msgstr "HQ ili clan"
+
+#: utr4wstrings.tc_hungary
+#, fuzzy
+msgid "Hungary"
+msgstr "Madjarskoj"
+
+#: utr4wstrings.tc_iambica
+#, fuzzy
+msgid "Iambic A"
+msgstr ""
+
+#: utr4wstrings.tc_iambicb
+#, fuzzy
+msgid "Iambic B"
+msgstr ""
+
+#: utr4wstrings.tc_iamin
+#, fuzzy
+msgid "&I am in %s"
+msgstr "&Ja sam u %s"
+
+#: utr4wstrings.tc_ididfinecontestnamelogcfgdatfile
+#, fuzzy
+msgid "I did not fine a contest name in your LOGCFG.DAT file."
+msgstr ""
+
+#: utr4wstrings.tc_ifoundcontestnameidonounderstandlo
+#, fuzzy
+msgid "I found a contest name I do no understand in your LOGCFG.DAT file."
+msgstr ""
+
+#: utr4wstrings.tc_ignorespeedpot
+#, fuzzy
+msgid "&Ignore speed pot"
+msgstr "&Ignorisi brzinu potenciometra"
+
+#: utr4wstrings.tc_improperarrlfielddayclass
+#, fuzzy
+msgid "Field Day class must be A, B, C, D, E or F."
+msgstr "Field Day klasa mora biti A, B, C, D, E ili F."
+
+#: utr4wstrings.tc_impropercontinent
+#, fuzzy
+msgid "Improper continent!!"
+msgstr "Neodgovarajuca oznaka kontinenta!!"
+
+#: utr4wstrings.tc_improperdomesitcqth
+#, fuzzy
+msgid "Improper domestic QTH!!"
+msgstr "Neodgovarajuci QTH!!"
+
+#: utr4wstrings.tc_improperdomesitcqthormissingname
+#, fuzzy
+msgid "Improper domestic QTH or missing name!!"
+msgstr "Neodgovarajuci QTH ili nedostaje ime!!"
+
+#: utr4wstrings.tc_impropertransmittercount
+#, fuzzy
+msgid "FD transmitters must be between 1 and 99."
+msgstr "FD predajnici moraju biti izmedju 1 i 99."
+
+#: utr4wstrings.tc_improperwinterfielddayclass
+#, fuzzy
+msgid "Winter Field Day class must be H, I, O or M."
+msgstr "Winter Field Day klasa mora biti H, I, O ili M."
+
+#: utr4wstrings.tc_improperzonenumber
+#, fuzzy
+msgid "Improper zone number!!"
+msgstr "Neodgovarajuci broj zone!!"
+
+#: utr4wstrings.tc_info
+#, fuzzy
+msgid "Info"
+msgstr ""
+
+#: utr4wstrings.tc_insert
+#, fuzzy
+msgid "INSERT"
+msgstr "Uneti"
+
+#: utr4wstrings.tc_invalid
+#, fuzzy
+msgid "Invalid Entry"
+msgstr "Nevažeći unos"
+
+#: utr4wstrings.tc_invalidcallsignincallwindow
+#, fuzzy
+msgid "Invalid callsign in call window!!"
+msgstr "Neispravan pozivni znak u prozoru za upis!!"
+
+#: utr4wstrings.tc_invaliddate
+#, fuzzy
+msgid "Invalid date!!"
+msgstr ""
+
+#: utr4wstrings.tc_invalidreminderdate
+#, fuzzy
+msgid "Invalid reminder date!!"
+msgstr "Neispravan datum podsetnika!!"
+
+#: utr4wstrings.tc_invalidremindertime
+#, fuzzy
+msgid "Invalid reminder time!!"
+msgstr "Neispravno vreme podsetnika!!"
+
+#: utr4wstrings.tc_invalidstatementin
+#, fuzzy
+msgid ""
+"Invalid statement in %s !!\n"
+"\n"
+"Line %u\n"
+"%s"
+msgstr ""
+
+#: utr4wstrings.tc_invalidstatementinconfigfile
+#, fuzzy
+msgid ""
+"%s:\n"
+"Invalid statement in config file.\n"
+"\n"
+"Line %u\n"
+"%s"
+msgstr ""
+
+#: utr4wstrings.tc_ireland
+#, fuzzy
+msgid "Ireland"
+msgstr "Irskoj"
+
+#: utr4wstrings.tc_irts
+#, fuzzy
+msgid "EI/GI, enter your County"
+msgstr "EI/GI, unesite svoju oblast"
+
+#: utr4wstrings.tc_isadupe
+#, fuzzy
+msgid "%s is a dupe!!"
+msgstr "%s je dupla!!"
+
+#: utr4wstrings.tc_isadupeandwillbeloggedwithzero
+#, fuzzy
+msgid "%s is a dupe and will be logged with zero QSO points."
+msgstr "%s - ovo je dupla veza i bice upisana u dnevnik sa NULA poena."
+
+#: utr4wstrings.tc_islandstation
+#, fuzzy
+msgid "Island station"
+msgstr "Ostrvska stanica"
+
+#: utr4wstrings.tc_isqrvfor
+#, fuzzy
+msgid "Is %s QRV for %s?"
+msgstr "%s QRV za %s?"
+
+#: utr4wstrings.tc_italy
+#, fuzzy
+msgid "Italy"
+msgstr "Italiji"
+
+#: utr4wstrings.tc_japan
+#, fuzzy
+msgid "Japan"
+msgstr "Japanu"
+
+#: utr4wstrings.tc_kazakhstan
+#, fuzzy
+msgid "Kazakhstan"
+msgstr "Kazahstanu"
+
+#: utr4wstrings.tc_keycomp
+#, fuzzy
+msgid "Keyer compensation"
+msgstr "Taster kompenzacija"
+
+#: utr4wstrings.tc_keyermode
+#, fuzzy
+msgctxt "utr4wstrings.tc_keyermode"
+msgid "Keyer mode"
+msgstr "Rezim tastera"
+
+#: utr4wstrings.tc_keyernamedsalreadyexists
+#, fuzzy
+msgid "A keyer named \"%s\" already exists."
+msgstr ""
+
+#: utr4wstrings.tc_labre
+#, fuzzy
+msgid "Enter 2 char QTH ID"
+msgstr "Unesite QTH ID od 2 znaka"
+
+#: utr4wstrings.tc_lame_error
+#, fuzzy
+msgid "You may download it from"
+msgstr "Mozes ga preuzeti sa"
+
+#: utr4wstrings.tc_last60
+#, fuzzy
+msgid "Last 60 = %d"
+msgstr "Zadnjih 60: %d"
+
+#: utr4wstrings.tc_latest_config_file
+#, fuzzy
+msgctxt "utr4wstrings.tc_latest_config_file"
+msgid "Latest config file"
+msgstr "Poslednja konfiguraciona datoteka"
+
+#: utr4wstrings.tc_leadin
+#, fuzzy
+msgid "Lead-in time (*10 ms)"
+msgstr "Ispred (*10 ms)"
+
+#: utr4wstrings.tc_list_of_command
+#, fuzzy
+msgctxt "utr4wstrings.tc_list_of_command"
+msgid "List of commands"
+msgstr "Lista komandi"
+
+#: utr4wstrings.tc_locallog
+#, fuzzy
+msgid "LOCAL LOG"
+msgstr "Lokalni dnevnik"
+
+#: utr4wstrings.tc_locationfieldempty
+#, fuzzy
+msgid "LOCATION field is empty."
+msgstr ""
+
+#: utr4wstrings.tc_logfilenotfound
+#, fuzzy
+msgid "Log file not found"
+msgstr "Log fajl nije pronađen"
+
+#: utr4wstrings.tc_logfilesizecheckfailed
+#, fuzzy
+msgid "LOG FILE SIZE CHECK FAILED!!!!"
+msgstr "Nemoguce proveriti duzinu fajla dnevnika!!!!"
+
+#: utr4wstrings.tc_loggingrunningsotherenofileopen
+#, fuzzy
+msgid "Logging is not running, so there is no file to open."
+msgstr ""
+
+#: utr4wstrings.tc_logincalldoeslooklikecallsign
+#, fuzzy
+msgid "Login call does not look like a callsign"
+msgstr ""
+
+#: utr4wstrings.tc_m
+#, fuzzy
+msgid "m"
+msgstr ""
+
+#: utr4wstrings.tc_maximumnumberofremindersexceeded
+#, fuzzy
+msgid "Maximum number of reminders exceeded!!"
+msgstr "Maksimalni broj podsetnika je iskoriscen!!"
+
+#: utr4wstrings.tc_messagetosendvianetwork
+#, fuzzy
+msgid "message to send via network"
+msgstr " i posalji poruku preko mreze"
+
+#: utr4wstrings.tc_michigan
+#, fuzzy
+msgid "Michigan"
+msgstr "Miciganu"
+
+#: utr4wstrings.tc_min
+#, fuzzy
+msgid "%u min."
+msgstr ""
+
+#: utr4wstrings.tc_minnesota
+#, fuzzy
+msgid "Minnesota"
+msgstr "Minesoti"
+
+#: utr4wstrings.tc_missingmultsreport
+#, fuzzy
+msgid "Missing mults report: %u countries on at least %u but not all bands."
+msgstr "Raport o neodradjenim mnoziteljima: %u zemalja, po poslednjem sravnjivanju, %u ali ne po svim opsezima."
+
+#: utr4wstrings.tc_missingqthandorname
+#, fuzzy
+msgid "Missing QTH and/or name!!"
+msgstr "Ispusten QTH i/ili ime!!"
+
+#: utr4wstrings.tc_mixw_connected
+#, fuzzy
+msgid "Connected"
+msgstr "Prikljucen"
+
+#: utr4wstrings.tc_mixw_disconnected
+#, fuzzy
+msgctxt "utr4wstrings.tc_mixw_disconnected"
+msgid "Disconnected"
+msgstr "Iskljucen"
+
+#: utr4wstrings.tc_modified
+#, fuzzy
+msgid "Modified"
+msgstr "Modifikovan"
+
+#: utr4wstrings.tc_mon
+#, fuzzy
+msgid "Mon"
+msgstr "Pon"
+
+#: utr4wstrings.tc_morethan50differenthoursinthislog
+#, fuzzy
+msgid "More than 50 different hours in this log!!"
+msgstr "Vise od 50 razlicitih sati u ovom dnevniku!!"
+
+#: utr4wstrings.tc_ms
+#, fuzzy
+msgid " ms"
+msgstr ""
+
+#: utr4wstrings.tc_multneedsfor
+#, fuzzy
+msgid " Mult needs for %s :"
+msgstr " mnozitelj potreban za %s :"
+
+#: utr4wstrings.tc_multsheetcleared
+#, fuzzy
+msgid "Mult sheet cleared!"
+msgstr "Lista mnozitelja je ociscena!"
+
+#: utr4wstrings.tc_name_from_name_database
+#, fuzzy
+msgid "Name from name database"
+msgstr "Ime iz baze"
+
+#: utr4wstrings.tc_netherlands
+#, fuzzy
+msgid "Netherlands"
+msgstr "Holandiji"
+
+#: utr4wstrings.tc_network
+#, fuzzy
+msgid "Network : %s %s:%d"
+msgstr "Lokalna mreza : %s %s:%d"
+
+#: utr4wstrings.tc_networktest
+#, fuzzy
+msgid "Network Test"
+msgstr "Provera mreze"
+
+#: utr4wstrings.tc_newengland
+#, fuzzy
+msgid "New England"
+msgstr "Nova Engleska"
+
+#: utr4wstrings.tc_newenglandstateabreviation
+#, fuzzy
+msgid ""
+"Enter your New England state abbreviation\n"
+"(ME, NH, VT, MA, CT, RI):"
+msgstr ""
+
+#: utr4wstrings.tc_newtour
+#, fuzzy
+msgid "New tour %d/%d"
+msgstr "Nova tura %d/%d"
+
+#: utr4wstrings.tc_newvalue
+#, fuzzy
+msgid "new value"
+msgstr "nova vrednost"
+
+#: utr4wstrings.tc_next
+#, fuzzy
+msgid "< Next"
+msgstr "< Sledeci"
+
+#: utr4wstrings.tc_noanswerfromserver
+#, fuzzy
+msgid "No answer from server"
+msgstr "Nema odgovora od servera"
+
+#: utr4wstrings.tc_nocallsignspecified
+#, fuzzy
+msgid "No callsign specified!!"
+msgstr "Nije upisan pozivni!!"
+
+#: utr4wstrings.tc_nocqmesprogrammedintocqmemoryaltf1
+#, fuzzy
+msgid "No CQ message programmed into CQ MEMORY AltF1."
+msgstr "Nije isprogramirana CQ poruka u CQ MEMORY AltF1."
+
+#: utr4wstrings.tc_nofloppyfilesavenamespecified
+#, fuzzy
+msgid "No floppy file save name specified."
+msgstr "Nije upisano ime fajla za snimanje na disketu!!"
+
+#: utr4wstrings.tc_nopotaparksloggedyetsession
+#, fuzzy
+msgid "No POTA parks logged yet this session"
+msgstr ""
+
+#: utr4wstrings.tc_noqsonumberfound
+#, fuzzy
+msgid "No QSO number found!!"
+msgstr "Nije nadjen broj QSO!!"
+
+#: utr4wstrings.tc_noqtcspendingqru
+#, fuzzy
+msgid "No QTCs pending, QRU."
+msgstr "Nema neisporucenih QTCs, QRU."
+
+#: utr4wstrings.tc_northamerica
+#, fuzzy
+msgctxt "utr4wstrings.tc_northamerica"
+msgid "North America"
+msgstr "Severnoj Americi"
+
+#: utr4wstrings.tc_note
+#, fuzzy
+msgid "note"
+msgstr "oznaka"
+
+#: utr4wstrings.tc_notenoughinfoinexchange
+#, fuzzy
+msgid "Not enough info in exchange!!"
+msgstr "Nedovoljno podataka za razmenu!!"
+
+#: utr4wstrings.tc_notrmasterdtafilefound
+#, fuzzy
+msgid "No TRMASTER.DTA file found."
+msgstr ""
+
+#: utr4wstrings.tc_numbermessagesillegalcharacters
+#, fuzzy
+msgid "Number of messages has illegal characters."
+msgstr ""
+
+#: utr4wstrings.tc_numberorletterofmessagetobeprogram
+#, fuzzy
+msgid "Number or letter of message to be programmed (1-9, A-C, or ESCAPE to exit):"
+msgstr "Broj ili slovo poruke za programiranje (1-9, A-C, ili ESCAPE za izlaz):"
+
+#: utr4wstrings.tc_oblasts
+#, fuzzy
+msgid "Oblasts"
+msgstr "Oblasti"
+
+#: utr4wstrings.tc_ohio
+#, fuzzy
+msgid "Ohio"
+msgstr "Ohaju"
+
+#: utr4wstrings.tc_op
+#, fuzzy
+msgid "Op"
+msgstr ""
+
+#: utr4wstrings.tc_openconfigurationfile
+#, fuzzy
+msgid " - Open configuration file or start a new contest"
+msgstr " - Otvori konfiguracionu datoteku ili kreiraj konfiguraciju za novo takmicenje"
+
+#: utr4wstrings.tc_othercwmessagememorystatus
+#, fuzzy
+msgid "Other CW message memory status"
+msgstr "Sadrzaj memorije drugih CW poruka"
+
+#: utr4wstrings.tc_otherssbmessagememorystatus
+#, fuzzy
+msgid "Other SSB message memory status"
+msgstr "Sadrzaj memorije drugih SSB poruka"
+
+#: utr4wstrings.tc_override
+#, fuzzy
+msgid "OVERRIDE"
+msgstr "Zamena"
+
+#: utr4wstrings.tc_ozcr
+#, fuzzy
+msgid "Enter three-letters number:"
+msgstr "Upisi troslovnu kombinaciju serijskog broja:"
+
+#: utr4wstrings.tc_paddle
+#, fuzzy
+msgctxt "utr4wstrings.tc_paddle"
+msgid "Paddle"
+msgstr "Rucice"
+
+#: utr4wstrings.tc_paddleonlysidetone
+#, fuzzy
+msgid "Paddle &only sidetone"
+msgstr "Rucice &samo tonski"
+
+#: utr4wstrings.tc_paddleswap
+#, fuzzy
+msgid "Paddle swa&p"
+msgstr "&Obrni rucice"
+
+#: utr4wstrings.tc_paddleswitchpoint
+#, fuzzy
+msgid "Paddle switchpoint"
+msgstr "Prikljucna tacka rucica"
+
+#: utr4wstrings.tc_parameterhasnovalue
+#, fuzzy
+msgid "Parameter \"%s\" has no value in the config file -- left at its default."
+msgstr "Parametar „%s“ nema vrednost u konfiguracionom fajlu -- ostavljen je na podrazumevanoj vrednosti."
+
+#: utr4wstrings.tc_pleasecheckmultinetwork
+#, fuzzy
+msgid "Please check multi network"
+msgstr ""
+
+#: utr4wstrings.tc_points
+#, fuzzy
+msgid "Pts"
+msgstr ""
+
+#: utr4wstrings.tc_poland
+#, fuzzy
+msgid "Poland"
+msgstr "Poljskoj"
+
+#: utr4wstrings.tc_port_conflict_dialog
+#, fuzzy
+msgid "%s is already configured as %s. Two devices cannot share a serial port."
+msgstr ""
+
+#: utr4wstrings.tc_port_conflict_proceed
+#, fuzzy
+msgid "Apply anyway?"
+msgstr ""
+
+#: utr4wstrings.tc_port_conflict_startup
+#, fuzzy
+msgid "RADIO ONE and RADIO TWO are both configured to use %s. RADIO ONE keeps the port; RADIO TWO CAT control is disabled until one radio's CONTROL PORT is changed."
+msgstr ""
+
+#: utr4wstrings.tc_port_not_connected
+#, fuzzy
+msgid "(not connected)"
+msgstr "(nije povezan)"
+
+#: utr4wstrings.tc_possibledatalossmultinetwork
+#, fuzzy
+msgid "Possible data loss on multi network."
+msgstr ""
+
+#: utr4wstrings.tc_potaparksdownloadfailed
+#, fuzzy
+msgid "POTA parks download failed"
+msgstr ""
+
+#: utr4wstrings.tc_potaparksfilecouldloaded
+#, fuzzy
+msgid "POTA parks file could not be loaded"
+msgstr ""
+
+#: utr4wstrings.tc_potaparksloaded
+#, fuzzy
+msgid "POTA parks loaded"
+msgstr ""
+
+#: utr4wstrings.tc_prefecture
+#, fuzzy
+msgid "Enter your prefecture:"
+msgstr "Upisi svoj distrikt:"
+
+#: utr4wstrings.tc_preferencescouldopeneds
+#, fuzzy
+msgid "Preferences could not be opened (%s)."
+msgstr ""
+
+#: utr4wstrings.tc_prefix
+#, fuzzy
+msgid "Prefixes"
+msgstr "Prefiksa"
+
+#: utr4wstrings.tc_pref_or_cqzone
+#, fuzzy
+msgid "Enter your CQ ZONE or JA PREFECTURE"
+msgstr "Unesite vašu CQ ZONU ili JA PREFEKTURU"
+
+#: utr4wstrings.tc_presscqfunctionkeytoprogram
+#, fuzzy
+msgid " Press CQ function key to program (F1, AltF1, CtrlF1), or ESCAPE to exit) : "
+msgstr " Pritisni funkcijski taster \"CQ\" za programiranje (F1, AltF1, CtrlF1), ili ESCAPE za izlaz) : "
+
+#: utr4wstrings.tc_pressexfunctionkeytoprogram
+#, fuzzy
+msgid "Press ex function key to program (F3-F12, Alt/Ctrl F1-F12) or ESCAPE to exit:"
+msgstr "Pritisni funkcijski taster \"Razmena\" za programiranje (F3-F12, Alt/Ctrl F1-F12) ili ESCAPE za izlaz:"
+
+#: utr4wstrings.tc_pts
+#, fuzzy
+msgid "%d Pts"
+msgstr "%d poena"
+
+#: utr4wstrings.tc_pttlockouttrue
+#, fuzzy
+msgid "PTT LOCKOUT=TRUE"
+msgstr ""
+
+#: utr4wstrings.tc_pttviacommandsctrljoptionmusttruew
+#, fuzzy
+msgid "PTT VIA COMMANDS (CTRL-J) option must be true for WSJT-X use - Setting to true"
+msgstr ""
+
+#: utr4wstrings.tc_qsoneedsfor
+#, fuzzy
+msgid " QSO needs for %s :"
+msgstr " QSO potreban za %s :"
+
+#: utr4wstrings.tc_qsos
+#, fuzzy
+msgid "QSOs"
+msgstr "Veza"
+
+#: utr4wstrings.tc_qso_imported
+#, fuzzy
+msgid "Qs imported."
+msgstr "Qs imporovano."
+
+#: utr4wstrings.tc_qso_number
+#, fuzzy
+msgid "QSO Number"
+msgstr "QSO broj"
+
+#: utr4wstrings.tc_qtcabortedbyoperator
+#, fuzzy
+msgid "QTC aborted by operator."
+msgstr "QTC prekinut od strane operatora."
+
+#: utr4wstrings.tc_qtcnumberillegalcharacters
+#, fuzzy
+msgid "QTC Number has illegal characters."
+msgstr ""
+
+#: utr4wstrings.tc_qtcpending
+#, fuzzy
+msgid "QTC Pending"
+msgstr "Neisporuceni QTC-i"
+
+#: utr4wstrings.tc_qtcprocessterminated
+#, fuzzy
+msgid "QTC process terminated."
+msgstr ""
+
+#: utr4wstrings.tc_qtcprocessterminatedinvalidnumberm
+#, fuzzy
+msgid "QTC process terminated.  Invalid number of messages."
+msgstr ""
+
+#: utr4wstrings.tc_qtc_callsign
+#, fuzzy
+msgid "Callsign :"
+msgstr "Pozivni :"
+
+#: utr4wstrings.tc_qtc_for
+#, fuzzy
+msgid "%s for %s"
+msgstr "%s za %s"
+
+#: utr4wstrings.tc_radio1
+#, fuzzy
+msgctxt "utr4wstrings.tc_radio1"
+msgid "Radio 1"
+msgstr "Stanica 1"
+
+#: utr4wstrings.tc_radio2
+#, fuzzy
+msgctxt "utr4wstrings.tc_radio2"
+msgid "Radio 2"
+msgstr "Stanica 2"
+
+#: utr4wstrings.tc_rate
+#, fuzzy
+msgid "Rate = %u"
+msgstr "Rejt: %u"
+
+#: utr4wstrings.tc_reallywanttoclearthelog
+#, fuzzy
+msgid "Do you really want to clear the current log?"
+msgstr "Siguran si da hoces da obrises dnevnik?"
+
+#: utr4wstrings.tc_recorddvppressescapeorreturntostop
+#, fuzzy
+msgid "Recording DVP. Press ESCAPE or RETURN to stop."
+msgstr "Snimanje DVP. Pritisni ESCAPE ili ENTER za prekid."
+
+#: utr4wstrings.tc_records
+#, fuzzy
+msgid "Records"
+msgstr "Zapisi"
+
+#: utr4wstrings.tc_relaycontrolportpaddleport
+#, fuzzy
+msgid "RELAY CONTROL PORT = PADDLE PORT"
+msgstr ""
+
+#: utr4wstrings.tc_removeclusters
+#, fuzzy
+msgid "Remove the cluster \"%s\"?"
+msgstr ""
+
+#: utr4wstrings.tc_removerotators
+#, fuzzy
+msgid "Remove the rotator \"%s\"?"
+msgstr ""
+
+#: utr4wstrings.tc_repeating
+#, fuzzy
+msgid "Repeating %s  Listen time = %u msec - PgUp/Dn to adjust or ESCAPE"
+msgstr "Ponavljanje %s  Vreme slusanja = %u milisekundi - PgUp/Dn za promenu ili ESC za izlaz"
+
+#: utr4wstrings.tc_repeatrstsent
+#, fuzzy
+msgid "Repeat RST sent"
+msgstr "Ponovi poslati RST"
+
+#: utr4wstrings.tc_restartbinisforadifferentcontest
+#, fuzzy
+msgid "RESTART.BIN is for a different contest."
+msgstr "datoteka RESTART.BIN je od drugog takmicenja."
+
+#: utr4wstrings.tc_rfas
+#, fuzzy
+msgid "Enter your geographical coordinates:"
+msgstr "Upisi svoje geografske koordinate (sirina i duzina), zaokruzene do desetine stepena:"
+
+#: utr4wstrings.tc_romania
+#, fuzzy
+msgid "Romania"
+msgstr "Rumuniji"
+
+#: utr4wstrings.tc_rst_prompt
+#, fuzzy
+msgid "RST prompt"
+msgstr "RST upit"
+
+#: utr4wstrings.tc_rulesonqrzru
+#, fuzzy
+msgid "Rules for %s contest at QRZ.RU"
+msgstr "Pravila za %s takmicenje na sajtu QRZ.RU"
+
+#: utr4wstrings.tc_rulesonsm3cer
+#, fuzzy
+msgid "Rules for %s contest at WA7BNM Contest Calendar"
+msgstr "Pravila %s takmicenja na WA7BNM takmicarskom kalendaru"
+
+#: utr4wstrings.tc_runwarn
+#, fuzzy
+msgid "Another instance of TR4W is already running"
+msgstr "Program TR4W je vec startvan"
+
+#: utr4wstrings.tc_russia
+#, fuzzy
+msgid "Russia"
+msgstr "Rusiji"
+
+#: utr4wstrings.tc_s
+#, fuzzy
+msgid "s"
+msgstr ""
+
+#: utr4wstrings.tc_salutation_and_name_if_known
+#, fuzzy
+msgid "Salutation and name if known"
+msgstr "Pozdrav i ime ako je poznato"
+
+#: utr4wstrings.tc_sat
+#, fuzzy
+msgid "Sat"
+msgstr "Sub"
+
+#: utr4wstrings.tc_savechanges
+#, fuzzy
+msgid "Save changes?"
+msgstr "Snimiti izmene?"
+
+#: utr4wstrings.tc_savingdtafileasciifileprocessingce
+#, fuzzy
+msgid "Saving .DTA file to ASCII file.  Processing cell   "
+msgstr ""
+
+#: utr4wstrings.tc_savingto
+#, fuzzy
+msgid "Saving %s to %s"
+msgstr "Snimanje %s u %s"
+
+#: utr4wstrings.tc_scannoteditedhere
+#, fuzzy
+msgid "%s cannot be edited here."
+msgstr ""
+
+#: utr4wstrings.tc_selectspotreturnleftorrightarrowse
+#, fuzzy
+msgid "Select spot.  RETURN, left or right arrow to select.  ESCAPE to exit."
+msgstr ""
+
+#: utr4wstrings.tc_sendingssbwavfilename
+#, fuzzy
+msgid "Sending SSB .wav filename. Use ENTER to play, Escape/F10 to exit."
+msgstr "Predaja SSB .wav ime fajla. Koristi ENTER za emitovanje fajla, Escape/F10 za prekid."
+
+#: utr4wstrings.tc_sendtimetocomputersonthenetwork
+#, fuzzy
+msgid "Do you really want to send time to computers on the network?"
+msgstr "Hoces li izvrsiti sinhronizaciju vremena na svim racunarima u mrezi?"
+
+#: utr4wstrings.tc_send_callassetbymycallcommand
+#, fuzzy
+msgid "Send call as set by MY CALL command"
+msgstr "posalji znak koji je podesen u MY CALL komandi"
+
+#: utr4wstrings.tc_send_characters_from_keyboard
+#, fuzzy
+msgid "Send characters from keyboard"
+msgstr "Slanje teksta preko tastature"
+
+#: utr4wstrings.tc_serial_format_label
+#, fuzzy
+msgid "DATA/PARITY/STOP"
+msgstr ""
+
+#: utr4wstrings.tc_server
+#, fuzzy
+msgid "SERVER: %s"
+msgstr ""
+
+#: utr4wstrings.tc_serverandlocallogsareidentical
+#, fuzzy
+msgid "Server and local logs are identical."
+msgstr "Dnevnik na serveru i lokalni dnevnik identicni."
+
+#: utr4wstrings.tc_serverlog
+#, fuzzy
+msgid "SERVER LOG"
+msgstr "Dnevnik na serveru"
+
+#: utr4wstrings.tc_server_log_changed
+#, fuzzy
+msgid "Server log changed. %u QSO(s) updated. Do logs synchronizing (Ctrl+Alt+S)."
+msgstr "LOG na serveru je promenjen. %u QSO-a dodato. Uradi sinhronizaciju LOG-ova (Ctrl+Alt+S)."
+
+#: utr4wstrings.tc_setcomputeridvalue
+#, fuzzy
+msgid "Set COMPUTER ID value."
+msgstr "Podesite vrednost COMPUTER ID"
+
+#: utr4wstrings.tc_set_value_of_set_now
+#, fuzzy
+msgid "Set value of %s. Set now?"
+msgstr "Podesi vrednost za %s. Podesiti sada?"
+
+#: utr4wstrings.tc_show_all_serial_ports
+#, fuzzy
+msgid "Show all serial ports"
+msgstr "Prikazi sve serijske portove"
+
+#: utr4wstrings.tc_show_passwords
+#, fuzzy
+msgid "Show passwords"
+msgstr ""
+
+#: utr4wstrings.tc_sidetone
+#, fuzzy
+msgid "&Sidetone"
+msgstr "&Tonalitet"
+
+#: utr4wstrings.tc_sidetonefreq
+#, fuzzy
+msgid "Sidetone freq."
+msgstr "Frekvencija tona."
+
+#: utr4wstrings.tc_sizebytes
+#, fuzzy
+msgid "Size, bytes"
+msgstr "Velicina, bajta"
+
+#: utr4wstrings.tc_sorrynolog
+#, fuzzy
+msgid "Sorry!! NO LOG = TRUE which prohibits logging QSOs on this computer"
+msgstr "Parametar NO LOG = TRUE zabranjuje upis veza na ovom racunaru"
+
+#: utr4wstrings.tc_sorryusedupallreminders
+#, fuzzy
+msgid "Sorry, you have used up all your reminders!!"
+msgstr ""
+
+#: utr4wstrings.tc_sorryyoualreadyhave10qtcswith
+#, fuzzy
+msgid "Sorry, you already have 10 QTCs with %s"
+msgstr "Vec imas 10 QTC sa %s"
+
+#: utr4wstrings.tc_source
+#, fuzzy
+msgid "Source: %s"
+msgstr "Izvor: %s"
+
+#: utr4wstrings.tc_spain
+#, fuzzy
+msgid "Spain"
+msgstr "Spaniji"
+
+#: utr4wstrings.tc_split_warn
+#, fuzzy
+msgid "Warning: You are in SPLIT MODE !!!"
+msgstr "Paznja: u SPLIT MODU si!!!"
+
+#: utr4wstrings.tc_spots
+#, fuzzy
+msgid "%d spots"
+msgstr "%d spot(ova)"
+
+#: utr4wstrings.tc_sprintqsyrule
+#, fuzzy
+msgid "SPRINT QSY RULE!!!"
+msgstr "Pravilo SPRINT QSY!!!"
+
+#: utr4wstrings.tc_ssbqsos
+#, fuzzy
+msgid "SSB QSOs"
+msgstr "SSB veza"
+
+#: utr4wstrings.tc_sstillusedbys
+#, fuzzy
+msgid "\"%s\" is still used by: %s"
+msgstr ""
+
+#: utr4wstrings.tc_stationclass
+#, fuzzy
+msgid "Enter your station class:"
+msgstr "Upisi klasu svoje stanice:"
+
+#: utr4wstrings.tc_stationsinmode
+#, fuzzy
+msgid "Stations in %s mode"
+msgstr "Stanica u %s rezimu"
+
+#: utr4wstrings.tc_stpetersburgoblast
+#, fuzzy
+msgid "St.Petersburg / oblast"
+msgstr ""
+
+#: utr4wstrings.tc_sun
+#, fuzzy
+msgid "Sun"
+msgstr "Ned"
+
+#: utr4wstrings.tc_switzerland
+#, fuzzy
+msgid "Switzerland"
+msgstr "Svajcarskoj"
+
+#: utr4wstrings.tc_tail
+#, fuzzy
+msgid "Tail time (*10 ms)"
+msgstr "Iza (*10 ms)"
+
+#: utr4wstrings.tc_tciservercouldopenportds
+#, fuzzy
+msgid "The TCI server could not open port %d: %s"
+msgstr ""
+
+#: utr4wstrings.tc_telnet
+#, fuzzy
+msgid "Connect#0Disconnect#0Commands#0Freeze#0Clear#0SH/50#0#0"
+msgstr ""
+
+#: utr4wstrings.tc_testradiointerface
+#, fuzzy
+msgid "TEST RADIO INTERFACE"
+msgstr ""
+
+#: utr4wstrings.tc_texas
+#, fuzzy
+msgid "Texas"
+msgstr "Teksasu"
+
+#: utr4wstrings.tc_thefirstcommandinconfigfilemustbe
+#, fuzzy
+msgid "The first command in config file must be the MY CALL statement!!"
+msgstr "Prva linija u konfiguracionom fajlu mora biti MY CALL !!"
+
+#: utr4wstrings.tc_therenologfileyets
+#, fuzzy
+msgid "There is no log file yet at %s."
+msgstr ""
+
+#: utr4wstrings.tc_therewerecalls
+#, fuzzy
+msgid ""
+"There were %u calls found in initial exchange file.\n"
+"+%u dupe(s)"
+msgstr ""
+
+#: utr4wstrings.tc_theseentrieswereacceptedbeensaved
+#, fuzzy
+msgid "These entries were not accepted and have not been saved:"
+msgstr ""
+
+#: utr4wstrings.tc_thishr
+#, fuzzy
+msgid "This hr = %d"
+msgstr "Ovaj sat: %d"
+
+#: utr4wstrings.tc_thisversion
+#, fuzzy
+msgid "You have "
+msgstr "Imas "
+
+#: utr4wstrings.tc_thisversion2
+#, fuzzy
+msgid "This version"
+msgstr "Ova verzija"
+
+#: utr4wstrings.tc_this_file_does_not_exist
+#, fuzzy
+msgid "This file does not exist. Create an empty file for editing?"
+msgstr "Ova datoteka ne postiji. Napraviti praznu datoteku za editovanje?"
+
+#: utr4wstrings.tc_thu
+#, fuzzy
+msgid "Thu"
+msgstr "Cet"
+
+#: utr4wstrings.tc_timediff
+#, fuzzy
+msgid "Time diff."
+msgstr "Razlika vremena."
+
+#: utr4wstrings.tc_timeon
+#, fuzzy
+msgid "Time on"
+msgstr "Pocetno vreme"
+
+#: utr4wstrings.tc_tooltip_discovery
+#, fuzzy
+msgid "Discover radios on the network"
+msgstr ""
+
+#: utr4wstrings.tc_toomanycontestdates
+#, fuzzy
+msgid "Too many contest dates!!"
+msgstr "Previse datuma u takmicenju!!"
+
+#: utr4wstrings.tc_toomanytotalscoremessages
+#, fuzzy
+msgid "Too many TOTAL SCORE MESSAGEs!!"
+msgstr "Previse poruka TOTAL SCORE MESSAGE!!"
+
+#: utr4wstrings.tc_tr4wtimewarning
+#, fuzzy
+msgid "TR4W Time Warning"
+msgstr ""
+
+#: utr4wstrings.tc_translation_author
+#, fuzzy
+msgid "N4AF"
+msgstr "Dragan Acimovic YT3W"
+
+#: utr4wstrings.tc_translation_credit
+#, fuzzy
+msgid "%s translation by %s"
+msgstr ""
+
+#: utr4wstrings.tc_translation_language
+#, fuzzy
+msgid "ENGLISH"
+msgstr "SERBIAN"
+
+#: utr4wstrings.tc_translator_email
+#, fuzzy
+msgid "ny4i@ny4i.com"
+msgstr "dragan.acimovic@gmail.com"
+
+#: utr4wstrings.tc_transmitfrequencykilohertz
+#, fuzzy
+msgid "transmit frequency (kiloHertz): "
+msgstr "predajna frekvencija (u kHz): "
+
+#: utr4wstrings.tc_trmasterdtadownloadedrestarttr4wus
+#, fuzzy
+msgid "TRMASTER.DTA downloaded -- restart TR4W to use it"
+msgstr ""
+
+#: utr4wstrings.tc_trmasterdtadownloadfailed
+#, fuzzy
+msgid "TRMASTER.DTA download failed"
+msgstr ""
+
+#: utr4wstrings.tc_trmasterdtas
+#, fuzzy
+msgid "TRMASTER.DTA : %s"
+msgstr ""
+
+#: utr4wstrings.tc_tue
+#, fuzzy
+msgid "Tue"
+msgstr "Uto"
+
+#: utr4wstrings.tc_uk
+#, fuzzy
+msgid "UK"
+msgstr ""
+
+#: utr4wstrings.tc_ukei
+#, fuzzy
+msgid "If in Uk/EI enter your 2 digit district code"
+msgstr "Check IF you are within UK/EI"
+
+#: utr4wstrings.tc_ukraine
+#, fuzzy
+msgid "Ukraine"
+msgstr "Ukrajini"
+
+#: utr4wstrings.tc_ultimatic
+#, fuzzy
+msgid "Ultimatic"
+msgstr ""
+
+#: utr4wstrings.tc_unablesavedtaasciifile
+#, fuzzy
+msgid "Unable to save .DTA to ASCII file."
+msgstr ""
+
+#: utr4wstrings.tc_unabletofind
+#, fuzzy
+msgid "Unable to find %s ."
+msgstr "Nemoguce naci %s !!"
+
+#: utr4wstrings.tc_unabletofindctydat
+#, fuzzy
+msgid ""
+"Unable to find CTY.DAT country file!!\n"
+"Make sure this file is in the same directory as the program."
+msgstr ""
+
+#: utr4wstrings.tc_unknowncountry
+#, fuzzy
+msgid "Unknown country"
+msgstr "Nepoznata drzava"
+
+#: utr4wstrings.tc_uploadcabrillotoscp
+#, fuzzy
+msgid "Do you want to upload your Cabrillo file to SuperChecklPartial?"
+msgstr ""
+
+#: utr4wstrings.tc_uploadedsuccessfully
+#, fuzzy
+msgid "Uploaded successfully."
+msgstr "Podaci predati uspesno."
+
+#: utr4wstrings.tc_value
+#, fuzzy
+msgid "Value"
+msgstr "Velicina"
+
+#: utr4wstrings.tc_versiononserver
+#, fuzzy
+msgid "The last version on server"
+msgstr "Poslednja verzija na serveru"
+
+#: utr4wstrings.tc_voicekeyerdisabledwithaltk
+#, fuzzy
+msgid "Voice keyer disabled with Alt-K!!  Use Alt-K again to enable."
+msgstr "Vojskejer iskljucen pomocu Alt-K!!  Za ponovno ukljucenje pritisni Alt-K."
+
+#: utr4wstrings.tc_wagwarn
+#, fuzzy
+msgid "Warning: Out of WAG allowed frequency range"
+msgstr ""
+
+#: utr4wstrings.tc_waitingforyouenterstrengthofrst
+#, fuzzy
+msgid "Waiting for you enter strength of RST (Single digit)!!"
+msgstr "Upisi jacinu signala (S) u RST (jedan broj)"
+
+#: utr4wstrings.tc_wanttoconvertlog
+#, fuzzy
+msgid "Would you like to convert this log to the latest format?"
+msgstr "Da li želite da konvertujete ovaj log u najnoviji format?"
+
+#: utr4wstrings.tc_wasbuildin
+#, fuzzy
+msgid " installed (build date "
+msgstr " instaliran (verzija "
+
+#: utr4wstrings.tc_washington
+#, fuzzy
+msgid "Washington"
+msgstr "Vasingtonu"
+
+#: utr4wstrings.tc_wasmessagenumberconfirmed
+#, fuzzy
+msgid "Was message number %u confirmed?"
+msgstr "Koji broj poruke %u potvrdjujes?"
+
+#: utr4wstrings.tc_wed
+#, fuzzy
+msgid "Wed"
+msgstr "Sre"
+
+#: utr4wstrings.tc_weighting
+#, fuzzy
+msgid "Weighting"
+msgstr ""
+
+#: utr4wstrings.tc_winkeyerenable
+#, fuzzy
+msgid "&Winkeyer enable"
+msgstr "Ukljuci &Winkeyer"
+
+#: utr4wstrings.tc_winkeyerport
+#, fuzzy
+msgid "Winkeyer port"
+msgstr "port Winkeyer-a"
+
+#: utr4wstrings.tc_wisconsin
+#, fuzzy
+msgid "Wisconsin"
+msgstr "Viskonsinu"
+
+#: utr4wstrings.tc_wpmcodespeed
+#, fuzzy
+msgid "WPM code speed"
+msgstr "Brzina, grupa/min"
+
+#: utr4wstrings.tc_yestoclearthedupesheet
+#, fuzzy
+msgid "\"YES\" to clear the dupesheet"
+msgstr "\"YES\" za ciscenje liste duplih veza"
+
+#: utr4wstrings.tc_youalreadyworkedin
+#, fuzzy
+msgid "You already worked %s in %s!!"
+msgstr "Vec si radio sa %s u %s!!"
+
+#: utr4wstrings.tc_youarenowtalkingtoyourpacketport
+#, fuzzy
+msgid "You are now talking to your packet port.  Use Control-B to exit."
+msgstr "Sada razgovarate preko porta paketne veze. Pritisnite Control-B za izlaz."
+
+#: utr4wstrings.tc_youarespottedbyanotherstation
+#, fuzzy
+msgid "You are spotted by another station."
+msgstr "Spotovala te je druga stanica."
+
+#: utr4wstrings.tc_youcanchangethisinyourconfigfile
+#, fuzzy
+msgid "You can only change this in your config file."
+msgstr "To mozes izmeniti samo u konfiguracionom fajlu."
+
+#: utr4wstrings.tc_youhavedeletedthelastlogentry
+#, fuzzy
+msgid "You have deleted the last log entry!!  Use Alt-Y to restore it."
+msgstr "Obrisao si poslednju vezu iz dnevnika! Pritisni Alt-Y za njeno vracanje."
+
+#: utr4wstrings.tc_youhaverestoredthelastdeleted
+#, fuzzy
+msgid "You have restored the last deleted log entry!!"
+msgstr "Vratio si poslednju obrisanu vezu iz dnevnika!!"
+
+#: utr4wstrings.tc_yournotconnectedtotheinternet
+#, fuzzy
+msgid "YOU ARE NOT CONNECTED TO THE INTERNET!"
+msgstr "Nisi konektovan na Internet!"
+
+#: utr4wstrings.tc_you_are_using_the_latest_version
+#, fuzzy
+msgid "You are using the latest version"
+msgstr "Koristis poslednju verziju"
+
+#: utr4wstrings.tc_yugoslavia
+#, fuzzy
+msgid "Yugoslavia"
+msgstr "Jugoslavija"
+
+#: utr4wstrings.tc_zone
+#, fuzzy
+msgid "Zones"
+msgstr "Zona"
+

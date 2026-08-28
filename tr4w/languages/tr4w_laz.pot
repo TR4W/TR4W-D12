@@ -226,6 +226,7 @@ msgid "Time"
 msgstr ""
 
 #: log4d.valueunknownmsg
+msgctxt "log4d.valueunknownmsg"
 msgid "Unknown"
 msgstr ""
 
@@ -239,7 +240,7 @@ msgid "About TR4W"
 msgstr ""
 
 #: tfrmabout.lblurl.caption
-msgid "http://www.tr4w.net"
+msgid "https://tr4w.net"
 msgstr ""
 
 #: tfrmaltd.btncancel.caption
@@ -253,6 +254,7 @@ msgid "OK"
 msgstr ""
 
 #: tfrmaltd.caption
+msgctxt "tfrmaltd.caption"
 msgid "Dupe Check On Inactive Radio"
 msgstr ""
 
@@ -271,14 +273,17 @@ msgid "OK"
 msgstr ""
 
 #: tfrmautocq.caption
+msgctxt "tfrmautocq.caption"
 msgid "Auto-CQ"
 msgstr ""
 
 #: tfrmautocq.lbldelay.caption
+msgctxt "tfrmautocq.lbldelay.caption"
 msgid "Number of milliseconds of listening time:"
 msgstr ""
 
 #: tfrmautocq.lblmemorykey.caption
+msgctxt "tfrmautocq.lblmemorykey.caption"
 msgid "Press the memory key you want to repeat:"
 msgstr ""
 
@@ -296,6 +301,7 @@ msgid "BAND MAP ALL MODES"
 msgstr ""
 
 #: tfrmbandmap.mideletespot.caption
+msgctxt "tfrmbandmap.mideletespot.caption"
 msgid "Delete selected spot"
 msgstr ""
 
@@ -316,6 +322,7 @@ msgid "Send spot to inactive radio"
 msgstr ""
 
 #: tfrmbandmap.miremoveall.caption
+msgctxt "tfrmbandmap.miremoveall.caption"
 msgid "Remove all spots"
 msgstr ""
 
@@ -364,11 +371,12 @@ msgid "OK"
 msgstr ""
 
 #: tfrmbandplan.caption
+msgctxt "tfrmbandplan.caption"
 msgid "Band plan"
 msgstr ""
 
 #: tfrmbeacons.caption
-msgid "Beacons  Monitor"
+msgid "Beacons Monitor"
 msgstr ""
 
 #: tfrmct1boh.caption
@@ -385,6 +393,7 @@ msgid "Cancel"
 msgstr ""
 
 #: tfrmeditmessage.btneditwav.caption
+msgctxt "tfrmeditmessage.btneditwav.caption"
 msgid "&Edit"
 msgstr ""
 
@@ -399,10 +408,12 @@ msgid "OK"
 msgstr ""
 
 #: tfrmeditmessage.caption
+msgctxt "tfrmeditmessage.caption"
 msgid "Program message"
 msgstr ""
 
 #: tfrmeditmessage.lblcaption.caption
+msgctxt "tfrmeditmessage.lblcaption.caption"
 msgid "Caption"
 msgstr ""
 
@@ -477,6 +488,7 @@ msgid "Age"
 msgstr ""
 
 #: tfrmeditqso.lblband.caption
+msgctxt "tfrmeditqso.lblband.caption"
 msgid "Band"
 msgstr ""
 
@@ -502,6 +514,7 @@ msgid "Computer ID"
 msgstr ""
 
 #: tfrmeditqso.lbldate.caption
+msgctxt "tfrmeditqso.lbldate.caption"
 msgid "Date"
 msgstr ""
 
@@ -518,6 +531,7 @@ msgid "Frequency, Hz"
 msgstr ""
 
 #: tfrmeditqso.lblmode.caption
+msgctxt "tfrmeditqso.lblmode.caption"
 msgid "Mode"
 msgstr ""
 
@@ -535,6 +549,7 @@ msgid "Number Sent"
 msgstr ""
 
 #: tfrmeditqso.lbloperator.caption
+msgctxt "tfrmeditqso.lbloperator.caption"
 msgid "Operator"
 msgstr ""
 
@@ -587,6 +602,7 @@ msgid "Zone"
 msgstr ""
 
 #: tfrmfunctionkeys.caption
+msgctxt "tfrmfunctionkeys.caption"
 msgid "Function keys"
 msgstr ""
 
@@ -703,6 +719,7 @@ msgid "Enter value:"
 msgstr ""
 
 #: tfrmintercom.caption
+msgctxt "tfrmintercom.caption"
 msgid "Intercom"
 msgstr ""
 
@@ -767,10 +784,12 @@ msgid "Compensation"
 msgstr ""
 
 #: tfrmkeyeredit.lblwkfirstext.caption
+msgctxt "tfrmkeyeredit.lblwkfirstext.caption"
 msgid "First extension"
 msgstr ""
 
 #: tfrmkeyeredit.lblwkkeyermode.caption
+msgctxt "tfrmkeyeredit.lblwkkeyermode.caption"
 msgid "Keyer mode"
 msgstr ""
 
@@ -807,6 +826,7 @@ msgid "Exit"
 msgstr ""
 
 #: tfrmlogcompare.btnsynchronize.caption
+msgctxt "tfrmlogcompare.btnsynchronize.caption"
 msgid "Synchronize"
 msgstr ""
 
@@ -857,6 +877,7 @@ msgid "..."
 msgstr ""
 
 #: tfrmmp3recorder.caption
+msgctxt "tfrmmp3recorder.caption"
 msgid "MP3 Recorder"
 msgstr ""
 
@@ -867,6 +888,55 @@ msgstr ""
 #: tfrmnetwork.caption
 msgctxt "tfrmnetwork.caption"
 msgid "Network"
+msgstr ""
+
+#: tfrmnewcontest.btnbrowse.caption
+msgctxt "tfrmnewcontest.btnbrowse.caption"
+msgid "Browse..."
+msgstr ""
+
+#: tfrmnewcontest.btncancel.caption
+msgctxt "tfrmnewcontest.btncancel.caption"
+msgid "Cancel"
+msgstr ""
+
+#: tfrmnewcontest.btnlatest.caption
+msgctxt "tfrmnewcontest.btnlatest.caption"
+msgid "Latest config file"
+msgstr ""
+
+#: tfrmnewcontest.btnok.caption
+msgctxt "tfrmnewcontest.btnok.caption"
+msgid "OK"
+msgstr ""
+
+#: tfrmnewcontest.caption
+msgid "Open configuration file or start a new contest"
+msgstr ""
+
+#: tfrmnewcontest.chkiamin.caption
+msgctxt "tfrmnewcontest.chkiamin.caption"
+msgid " "
+msgstr ""
+
+#: tfrmnewcontest.dlgopen.title
+msgid "Open configuration file"
+msgstr ""
+
+#: tfrmnewcontest.gbexisting.caption
+msgid "Open an existing configuration"
+msgstr ""
+
+#: tfrmnewcontest.gbnew.caption
+msgid "Start a new contest"
+msgstr ""
+
+#: tfrmnewcontest.lblcontest.caption
+msgid "CONTEST"
+msgstr ""
+
+#: tfrmnewcontest.lblmycall.caption
+msgid "MY CALL"
 msgstr ""
 
 #: tfrmpanadapter.btnpause.caption
@@ -906,14 +976,17 @@ msgid "Span --"
 msgstr ""
 
 #: tfrmpanadapter.lblstatus.caption
+msgctxt "tfrmpanadapter.lblstatus.caption"
 msgid "Disconnected"
 msgstr ""
 
 #: tfrmpostscores.btnpostnow.caption
+msgctxt "tfrmpostscores.btnpostnow.caption"
 msgid "Post now"
 msgstr ""
 
 #: tfrmpostscores.btnshowscores.caption
+msgctxt "tfrmpostscores.btnshowscores.caption"
 msgid "Show scores"
 msgstr ""
 
@@ -922,18 +995,22 @@ msgid "Post scores"
 msgstr ""
 
 #: tfrmprogrammessage.btncq.caption
+msgctxt "tfrmprogrammessage.btncq.caption"
 msgid "Press &C to program a CQ function key."
 msgstr ""
 
 #: tfrmprogrammessage.btnexchange.caption
+msgctxt "tfrmprogrammessage.btnexchange.caption"
 msgid "Press &E to program an exchange/search and pounce function key."
 msgstr ""
 
 #: tfrmprogrammessage.btnother.caption
+msgctxt "tfrmprogrammessage.btnother.caption"
 msgid "Press &O to program the other non function key messages."
 msgstr ""
 
 #: tfrmprogrammessage.caption
+msgctxt "tfrmprogrammessage.caption"
 msgid "Memory program function"
 msgstr ""
 
@@ -971,6 +1048,7 @@ msgid "Remaining mults"
 msgstr ""
 
 #: tfrmsendkeyboard.btnclose.caption
+msgctxt "tfrmsendkeyboard.btnclose.caption"
 msgid "Close"
 msgstr ""
 
@@ -989,6 +1067,7 @@ msgid "OK"
 msgstr ""
 
 #: tfrmsendspot.caption
+msgctxt "tfrmsendspot.caption"
 msgid "Send spot"
 msgstr ""
 
@@ -1002,14 +1081,17 @@ msgid "Callsign"
 msgstr ""
 
 #: tfrmsendspot.lblcomment.caption
+msgctxt "tfrmsendspot.lblcomment.caption"
 msgid "Comment"
 msgstr ""
 
 #: tfrmsendspot.lblfrequency.caption
+msgctxt "tfrmsendspot.lblfrequency.caption"
 msgid "Frequency"
 msgstr ""
 
 #: tfrmstations.caption
+msgctxt "tfrmstations.caption"
 msgid "Stations"
 msgstr ""
 
@@ -1018,6 +1100,7 @@ msgid "Clear"
 msgstr ""
 
 #: tfrmtelnet.btncommands.caption
+msgctxt "tfrmtelnet.btncommands.caption"
 msgid "Commands"
 msgstr ""
 
@@ -2117,6 +2200,7 @@ msgid "How the log behaves while you are running the contest. Band map, bands, C
 msgstr ""
 
 #: tprefsform.lblpaddlegroup.caption
+msgctxt "tprefsform.lblpaddlegroup.caption"
 msgid "Paddle"
 msgstr ""
 
@@ -2318,6 +2402,7 @@ msgid "These shape the CW that TR4W generates itself by toggling a serial line. 
 msgstr ""
 
 #: tprefsform.lblstationheading.caption
+msgctxt "tprefsform.lblstationheading.caption"
 msgid "Station information"
 msgstr ""
 
@@ -2699,18 +2784,9 @@ msgctxt "uappstrings.siniretiretitle"
 msgid "Old settings file"
 msgstr ""
 
-#: ulclformhelpers.tc_prefs_activate
-msgid "Save and activate this profile"
-msgstr ""
-
 #: ulclformhelpers.tc_prefs_activelabel
 msgctxt "ulclformhelpers.tc_prefs_activelabel"
 msgid "Active profile: "
-msgstr ""
-
-#: ulclformhelpers.tc_prefs_add
-msgctxt "ulclformhelpers.tc_prefs_add"
-msgid "Add..."
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_applied
@@ -2718,71 +2794,14 @@ msgstr ""
 msgid "Profile \"%s\" is active."
 msgstr ""
 
-#: ulclformhelpers.tc_prefs_apply
-msgctxt "ulclformhelpers.tc_prefs_apply"
-msgid "Save"
-msgstr ""
-
-#: ulclformhelpers.tc_prefs_autoconnect
-msgctxt "ulclformhelpers.tc_prefs_autoconnect"
-msgid "Connect radios at startup"
-msgstr ""
-
-#: ulclformhelpers.tc_prefs_cancel
-msgctxt "ulclformhelpers.tc_prefs_cancel"
-msgid "Cancel"
-msgstr ""
-
-#: ulclformhelpers.tc_prefs_cluster
-msgid "DX Cluster"
-msgstr ""
-
 #: ulclformhelpers.tc_prefs_confirmremove
 #, object-pascal-format
 msgid "Remove radio \"%s\"?"
 msgstr ""
 
-#: ulclformhelpers.tc_prefs_contest
-msgid "Contest"
-msgstr ""
-
-#: ulclformhelpers.tc_prefs_cw
-msgid "CW"
-msgstr ""
-
-#: ulclformhelpers.tc_prefs_cwoutput1
-msgctxt "ulclformhelpers.tc_prefs_cwoutput1"
-msgid "CW output 1"
-msgstr ""
-
-#: ulclformhelpers.tc_prefs_cwoutput2
-msgctxt "ulclformhelpers.tc_prefs_cwoutput2"
-msgid "CW output 2"
-msgstr ""
-
-#: ulclformhelpers.tc_prefs_deleteprofile
-msgctxt "ulclformhelpers.tc_prefs_deleteprofile"
-msgid "Delete"
-msgstr ""
-
-#: ulclformhelpers.tc_prefs_duplicate
-msgctxt "ulclformhelpers.tc_prefs_duplicate"
-msgid "Duplicate"
-msgstr ""
-
-#: ulclformhelpers.tc_prefs_edit
-msgctxt "ulclformhelpers.tc_prefs_edit"
-msgid "Edit..."
-msgstr ""
-
 #: ulclformhelpers.tc_prefs_hardware
 msgctxt "ulclformhelpers.tc_prefs_hardware"
 msgid "Hardware"
-msgstr ""
-
-#: ulclformhelpers.tc_prefs_myradios
-msgctxt "ulclformhelpers.tc_prefs_myradios"
-msgid "My radios"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_newprofile
@@ -2796,18 +2815,6 @@ msgstr ""
 
 #: ulclformhelpers.tc_prefs_noprofile
 msgid "Select or create a station profile first."
-msgstr ""
-
-#: ulclformhelpers.tc_prefs_notmigrated
-msgctxt "ulclformhelpers.tc_prefs_notmigrated"
-msgid ""
-"This section has not been migrated yet.\n"
-"Use the existing configuration screens for it."
-msgstr ""
-
-#: ulclformhelpers.tc_prefs_ok
-msgctxt "ulclformhelpers.tc_prefs_ok"
-msgid "Save and close"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_portconflict
@@ -2840,29 +2847,9 @@ msgstr ""
 msgid "%s  (in use as %s)"
 msgstr ""
 
-#: ulclformhelpers.tc_prefs_remove
-msgctxt "ulclformhelpers.tc_prefs_remove"
-msgid "Remove"
-msgstr ""
-
 #: ulclformhelpers.tc_prefs_renameprofile
 msgctxt "ulclformhelpers.tc_prefs_renameprofile"
 msgid "Rename..."
-msgstr ""
-
-#: ulclformhelpers.tc_prefs_so2r
-msgctxt "ulclformhelpers.tc_prefs_so2r"
-msgid "SO2R enabled"
-msgstr ""
-
-#: ulclformhelpers.tc_prefs_speedsync
-msgctxt "ulclformhelpers.tc_prefs_speedsync"
-msgid "Speed sync"
-msgstr ""
-
-#: ulclformhelpers.tc_prefs_title
-msgctxt "ulclformhelpers.tc_prefs_title"
-msgid "TR4W Preferences"
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_udpconfirmremove
@@ -2931,11 +2918,6 @@ msgctxt "ulclformhelpers.tc_prefs_unsavedtitle"
 msgid "TR4W Preferences"
 msgstr ""
 
-#: ulclformhelpers.tc_radioedit_advanced
-msgctxt "ulclformhelpers.tc_radioedit_advanced"
-msgid "Advanced"
-msgstr ""
-
 #: ulclformhelpers.tc_radioedit_autoinfowarn
 msgid ""
 "Setting an auto-info level by hand is a non-standard configuration.\n"
@@ -2951,36 +2933,6 @@ msgstr ""
 msgid "The CI-V address must be a hex value, e.g. 88 or $88."
 msgstr ""
 
-#: ulclformhelpers.tc_radioedit_baud
-msgctxt "ulclformhelpers.tc_radioedit_baud"
-msgid "Baud rate"
-msgstr ""
-
-#: ulclformhelpers.tc_radioedit_catdtr
-msgctxt "ulclformhelpers.tc_radioedit_catdtr"
-msgid "CAT DTR"
-msgstr ""
-
-#: ulclformhelpers.tc_radioedit_catrts
-msgctxt "ulclformhelpers.tc_radioedit_catrts"
-msgid "CAT RTS"
-msgstr ""
-
-#: ulclformhelpers.tc_radioedit_civaddress
-msgctxt "ulclformhelpers.tc_radioedit_civaddress"
-msgid "CI-V address (hex)"
-msgstr ""
-
-#: ulclformhelpers.tc_radioedit_databits
-msgctxt "ulclformhelpers.tc_radioedit_databits"
-msgid "Data bits"
-msgstr ""
-
-#: ulclformhelpers.tc_radioedit_datamodeid
-msgctxt "ulclformhelpers.tc_radioedit_datamodeid"
-msgid "Icom data mode ID"
-msgstr ""
-
 #: ulclformhelpers.tc_radioedit_defaulthint
 #, object-pascal-format
 msgid "%s (default)"
@@ -2991,163 +2943,2657 @@ msgctxt "ulclformhelpers.tc_radioedit_discover"
 msgid "Discover"
 msgstr ""
 
-#: ulclformhelpers.tc_radioedit_filterbyte
-msgctxt "ulclformhelpers.tc_radioedit_filterbyte"
-msgid "Icom filter byte"
-msgstr ""
-
-#: ulclformhelpers.tc_radioedit_found
-msgctxt "ulclformhelpers.tc_radioedit_found"
-msgid "Found"
-msgstr ""
-
-#: ulclformhelpers.tc_radioedit_ft1000mprev
-msgctxt "ulclformhelpers.tc_radioedit_ft1000mprev"
-msgid "FT-1000MP CW reverse"
-msgstr ""
-
-#: ulclformhelpers.tc_radioedit_hamlibid
-msgctxt "ulclformhelpers.tc_radioedit_hamlibid"
-msgid "HamLib model ID"
-msgstr ""
-
-#: ulclformhelpers.tc_radioedit_ipaddress
-msgctxt "ulclformhelpers.tc_radioedit_ipaddress"
-msgid "IP address"
-msgstr ""
-
-#: ulclformhelpers.tc_radioedit_keyerdtr
-msgctxt "ulclformhelpers.tc_radioedit_keyerdtr"
-msgid "Keyer DTR line"
-msgstr ""
-
-#: ulclformhelpers.tc_radioedit_keyerport
-msgctxt "ulclformhelpers.tc_radioedit_keyerport"
-msgid "Keyer output port"
-msgstr ""
-
-#: ulclformhelpers.tc_radioedit_keyerrts
-msgctxt "ulclformhelpers.tc_radioedit_keyerrts"
-msgid "Keyer RTS line"
-msgstr ""
-
-#: ulclformhelpers.tc_radioedit_keyerstopbits
-msgctxt "ulclformhelpers.tc_radioedit_keyerstopbits"
-msgid "Stop bits"
-msgstr ""
-
-#: ulclformhelpers.tc_radioedit_name
-msgctxt "ulclformhelpers.tc_radioedit_name"
-msgid "Name"
-msgstr ""
-
 #: ulclformhelpers.tc_radioedit_namerequired
 msgid "The radio needs a name."
-msgstr ""
-
-#: ulclformhelpers.tc_radioedit_network
-msgctxt "ulclformhelpers.tc_radioedit_network"
-msgid "Network"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_nonefound
 msgid "No radios answered."
 msgstr ""
 
-#: ulclformhelpers.tc_radioedit_parity
-msgctxt "ulclformhelpers.tc_radioedit_parity"
-msgid "Parity"
-msgstr ""
-
-#: ulclformhelpers.tc_radioedit_parityeven
-msgctxt "ulclformhelpers.tc_radioedit_parityeven"
-msgid "Even"
-msgstr ""
-
-#: ulclformhelpers.tc_radioedit_paritynone
-msgctxt "ulclformhelpers.tc_radioedit_paritynone"
-msgid "None"
-msgstr ""
-
-#: ulclformhelpers.tc_radioedit_parityodd
-msgctxt "ulclformhelpers.tc_radioedit_parityodd"
-msgid "Odd"
-msgstr ""
-
-#: ulclformhelpers.tc_radioedit_password
-msgctxt "ulclformhelpers.tc_radioedit_password"
-msgid "Password"
-msgstr ""
-
-#: ulclformhelpers.tc_radioedit_polling
-msgctxt "ulclformhelpers.tc_radioedit_polling"
-msgid "Poll this radio"
-msgstr ""
-
-#: ulclformhelpers.tc_radioedit_port
-msgctxt "ulclformhelpers.tc_radioedit_port"
-msgid "Port"
-msgstr ""
-
 #: ulclformhelpers.tc_radioedit_searching
 msgid "Searching..."
-msgstr ""
-
-#: ulclformhelpers.tc_radioedit_serial
-msgctxt "ulclformhelpers.tc_radioedit_serial"
-msgid "Serial"
-msgstr ""
-
-#: ulclformhelpers.tc_radioedit_startup
-msgctxt "ulclformhelpers.tc_radioedit_startup"
-msgid "Startup command"
-msgstr ""
-
-#: ulclformhelpers.tc_radioedit_stopbits
-msgctxt "ulclformhelpers.tc_radioedit_stopbits"
-msgid "Stop bits"
-msgstr ""
-
-#: ulclformhelpers.tc_radioedit_tcpport
-msgctxt "ulclformhelpers.tc_radioedit_tcpport"
-msgid "TCP port"
-msgstr ""
-
-#: ulclformhelpers.tc_radioedit_title
-msgctxt "ulclformhelpers.tc_radioedit_title"
-msgid "Radio"
-msgstr ""
-
-#: ulclformhelpers.tc_radioedit_transport
-msgid "Connection"
-msgstr ""
-
-#: ulclformhelpers.tc_radioedit_type
-msgctxt "ulclformhelpers.tc_radioedit_type"
-msgid "Radio type"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_typerequired
 msgid "Choose a radio type."
 msgstr ""
 
-#: ulclformhelpers.tc_radioedit_unsaved
-msgid "Save your changes to this radio?"
+#: utr4wstrings.close_word
+msgctxt "utr4wstrings.close_word"
+msgid "Close"
 msgstr ""
 
-#: ulclformhelpers.tc_radioedit_usehamlib
-msgctxt "ulclformhelpers.tc_radioedit_usehamlib"
-msgid "Drive through HamLib"
+#: utr4wstrings.exit_word
+msgctxt "utr4wstrings.exit_word"
+msgid "E&xit"
 msgstr ""
 
-#: ulclformhelpers.tc_radioedit_username
-msgctxt "ulclformhelpers.tc_radioedit_username"
-msgid "User name"
+#: utr4wstrings.help_word
+msgid "Help"
 msgstr ""
 
-#: ulclformhelpers.tc_radioedit_widecw
-msgctxt "ulclformhelpers.tc_radioedit_widecw"
-msgid "Wide CW filter"
+#: utr4wstrings.rc_3830
+msgid "3830 Score posting"
+msgstr ""
+
+#: utr4wstrings.rc_3830_arrl
+msgid "Submit ARRL Log"
+msgstr ""
+
+#: utr4wstrings.rc_about
+msgid "About"
+msgstr ""
+
+#: utr4wstrings.rc_addbandmapph
+msgid "Add bandmap place holder"
+msgstr ""
+
+#: utr4wstrings.rc_addinfo
+msgid "Additional information"
+msgstr ""
+
+#: utr4wstrings.rc_ai_cwspeed
+msgid "CW Speed"
+msgstr ""
+
+#: utr4wstrings.rc_ai_qsonumber
+msgid "QSO number"
+msgstr ""
+
+#: utr4wstrings.rc_allcalls
+msgid "All callsigns"
+msgstr ""
+
+#: utr4wstrings.rc_altp
+msgid "Open Fkeys"
+msgstr ""
+
+#: utr4wstrings.rc_altx
+msgid "Exit Program"
+msgstr ""
+
+#: utr4wstrings.rc_autocq
+msgctxt "utr4wstrings.rc_autocq"
+msgid "Auto-CQ"
+msgstr ""
+
+#: utr4wstrings.rc_autocq2
+msgctxt "utr4wstrings.rc_autocq2"
+msgid "Auto-CQ"
+msgstr ""
+
+#: utr4wstrings.rc_autocqresume
+msgid "Auto-CQ resume"
+msgstr ""
+
+#: utr4wstrings.rc_backuplog
+msgid "Backup Log"
+msgstr ""
+
+#: utr4wstrings.rc_band
+msgctxt "utr4wstrings.rc_band"
+msgid "Band"
+msgstr ""
+
+#: utr4wstrings.rc_bandchanges
+msgid "Band changes"
+msgstr ""
+
+#: utr4wstrings.rc_banddown
+msgid "Band Down"
+msgstr ""
+
+#: utr4wstrings.rc_bandmap
+msgid "Bandmap"
+msgstr ""
+
+#: utr4wstrings.rc_bandplan
+msgctxt "utr4wstrings.rc_bandplan"
+msgid "Band plan"
+msgstr ""
+
+#: utr4wstrings.rc_bandup
+msgid "Band Up"
+msgstr ""
+
+#: utr4wstrings.rc_beaconsm
+msgid "Beacons monitor"
+msgstr ""
+
+#: utr4wstrings.rc_calculator
+msgid "Calculator"
+msgstr ""
+
+#: utr4wstrings.rc_callsign
+msgctxt "utr4wstrings.rc_callsign"
+msgid "Callsign"
+msgstr ""
+
+#: utr4wstrings.rc_caption
+msgctxt "utr4wstrings.rc_caption"
+msgid "Caption"
+msgstr ""
+
+#: utr4wstrings.rc_catandcw
+msgid "CAT and CW Keying"
+msgstr ""
+
+#: utr4wstrings.rc_clearalllogs
+msgid "Clear all logs in network"
+msgstr ""
+
+#: utr4wstrings.rc_cleardupes
+msgid "Clear dupesheet"
+msgstr ""
+
+#: utr4wstrings.rc_clearlog
+msgid "Clear log"
+msgstr ""
+
+#: utr4wstrings.rc_clearmsheet
+msgid "Clear multsheet"
+msgstr ""
+
+#: utr4wstrings.rc_colors
+msgid "Colors"
+msgstr ""
+
+#: utr4wstrings.rc_commands
+msgctxt "utr4wstrings.rc_commands"
+msgid "Commands"
+msgstr ""
+
+#: utr4wstrings.rc_comment
+msgctxt "utr4wstrings.rc_comment"
+msgid "Comment"
+msgstr ""
+
+#: utr4wstrings.rc_contents
+msgid "Contents"
+msgstr ""
+
+#: utr4wstrings.rc_contestnameic
+msgid "C&ontest name in comment"
+msgstr ""
+
+#: utr4wstrings.rc_contlist
+msgid "Continent List"
+msgstr ""
+
+#: utr4wstrings.rc_cqmode
+msgid "CQ Mode"
+msgstr ""
+
+#: utr4wstrings.rc_ct1bohis
+msgctxt "utr4wstrings.rc_ct1bohis"
+msgid "CT1BOH info screen"
+msgstr ""
+
+#: utr4wstrings.rc_ct1bohis2
+msgctxt "utr4wstrings.rc_ct1bohis2"
+msgid "CT1BOH info screen"
+msgstr ""
+
+#: utr4wstrings.rc_cursorinbm
+msgid "Cursor in bandmap window"
+msgstr ""
+
+#: utr4wstrings.rc_cursortelnet
+msgid "Cursor in DX Cluster window"
+msgstr ""
+
+#: utr4wstrings.rc_cwspdnir
+msgid "CW Speed Down for the inactive radio"
+msgstr ""
+
+#: utr4wstrings.rc_cwspeed
+msgid "CW speed"
+msgstr ""
+
+#: utr4wstrings.rc_cwspeeddown
+msgid "CW Speed Down"
+msgstr ""
+
+#: utr4wstrings.rc_cwspeedup
+msgid "CW Speed Up"
+msgstr ""
+
+#: utr4wstrings.rc_cwspupir
+msgid "CW Speed Up for the inactive radio"
+msgstr ""
+
+#: utr4wstrings.rc_daqslint
+msgid "Auto QSL Interval (Decrease)"
+msgstr ""
+
+#: utr4wstrings.rc_date
+msgctxt "utr4wstrings.rc_date"
+msgid "Date"
+msgstr ""
+
+#: utr4wstrings.rc_deleted
+msgid "Deleted"
+msgstr ""
+
+#: utr4wstrings.rc_deletelastqso
+msgid "Delete the last QSO"
+msgstr ""
+
+#: utr4wstrings.rc_deleteselspot
+msgctxt "utr4wstrings.rc_deleteselspot"
+msgid "Delete selected spot"
+msgstr ""
+
+#: utr4wstrings.rc_devicemanager
+msgid "Device Manager"
+msgstr ""
+
+#: utr4wstrings.rc_diffinlog
+msgid "Difference in logs"
+msgstr ""
+
+#: utr4wstrings.rc_download
+msgid "Download the latest CTY.DAT"
+msgstr ""
+
+#: utr4wstrings.rc_dupecheck
+msgid "Dupe check"
+msgstr ""
+
+#: utr4wstrings.rc_dupecheckoar
+msgctxt "utr4wstrings.rc_dupecheckoar"
+msgid "Dupe Check On Inactive Radio"
+msgstr ""
+
+#: utr4wstrings.rc_dupesheet
+msgid "Dupesheet"
+msgstr ""
+
+#: utr4wstrings.rc_dvkvolcontrol
+msgid "DVK volume control"
+msgstr ""
+
+#: utr4wstrings.rc_edit
+msgid "SO1R-Edit or SO2R-SWAP"
+msgstr ""
+
+#: utr4wstrings.rc_edit_word
+msgctxt "utr4wstrings.rc_edit_word"
+msgid "&Edit"
+msgstr ""
+
+#: utr4wstrings.rc_escape
+msgid "Escape"
+msgstr ""
+
+#: utr4wstrings.rc_execonfigfile
+msgid "Execute configuration file"
+msgstr ""
+
+#: utr4wstrings.rc_exit
+msgctxt "utr4wstrings.rc_exit"
+msgid "E&xit"
+msgstr ""
+
+#: utr4wstrings.rc_export
+msgid "Export"
+msgstr ""
+
+#: utr4wstrings.rc_fcc
+msgid "First callsign worked in each country"
+msgstr ""
+
+#: utr4wstrings.rc_fcz
+msgid "First callsign worked in each zone"
+msgstr ""
+
+#: utr4wstrings.rc_file
+msgid "File"
+msgstr ""
+
+#: utr4wstrings.rc_fkeys
+msgctxt "utr4wstrings.rc_fkeys"
+msgid "Function keys"
+msgstr ""
+
+#: utr4wstrings.rc_focusinmw
+msgid "Focus in main window"
+msgstr ""
+
+#: utr4wstrings.rc_frequency
+msgctxt "utr4wstrings.rc_frequency"
+msgid "Frequency"
+msgstr ""
+
+#: utr4wstrings.rc_gotogs
+msgctxt "utr4wstrings.rc_gotogs"
+msgid "Show scores"
+msgstr ""
+
+#: utr4wstrings.rc_homepage
+msgid "TR4W Home Page"
+msgstr ""
+
+#: utr4wstrings.rc_iaqslint
+msgid "Auto QSL Interval (Increase)"
+msgstr ""
+
+#: utr4wstrings.rc_import
+msgid "Import"
+msgstr ""
+
+#: utr4wstrings.rc_incnumber
+msgid "Increment number"
+msgstr ""
+
+#: utr4wstrings.rc_inc_time
+msgid "Increment time"
+msgstr ""
+
+#: utr4wstrings.rc_iniexlist
+msgid "Initial exchanges list"
+msgstr ""
+
+#: utr4wstrings.rc_initialex
+msgid "Initial exchange"
+msgstr ""
+
+#: utr4wstrings.rc_initialize
+msgid "Initialize QSO"
+msgstr ""
+
+#: utr4wstrings.rc_intercom
+msgctxt "utr4wstrings.rc_intercom"
+msgid "Intercom"
+msgstr ""
+
+#: utr4wstrings.rc_killcw
+msgid "Toggle CW"
+msgstr ""
+
+#: utr4wstrings.rc_listofmess
+msgid "List of messages"
+msgstr ""
+
+#: utr4wstrings.rc_login
+msgid "Log in"
+msgstr ""
+
+#: utr4wstrings.rc_memprogfunc
+msgctxt "utr4wstrings.rc_memprogfunc"
+msgid "Memory program function"
+msgstr ""
+
+#: utr4wstrings.rc_message
+msgctxt "utr4wstrings.rc_message"
+msgid "Message"
+msgstr ""
+
+#: utr4wstrings.rc_missmultsrep
+msgid "Missing mults report"
+msgstr ""
+
+#: utr4wstrings.rc_mode
+msgctxt "utr4wstrings.rc_mode"
+msgid "Mode"
+msgstr ""
+
+#: utr4wstrings.rc_mp3rec
+msgctxt "utr4wstrings.rc_mp3rec"
+msgid "MP3 Recorder"
+msgstr ""
+
+#: utr4wstrings.rc_mp3_recenable
+msgid "Enable"
+msgstr ""
+
+#: utr4wstrings.rc_name
+msgctxt "utr4wstrings.rc_name"
+msgid "Name"
+msgstr ""
+
+#: utr4wstrings.rc_net
+msgid "Net"
+msgstr ""
+
+#: utr4wstrings.rc_network
+msgctxt "utr4wstrings.rc_network"
+msgid "Network"
+msgstr ""
+
+#: utr4wstrings.rc_net_cldupe
+msgid "Clear dupesheet in all logs"
+msgstr ""
+
+#: utr4wstrings.rc_net_clmult
+msgid "Clear multsheet in all logs"
+msgstr ""
+
+#: utr4wstrings.rc_note
+msgid "Note"
+msgstr ""
+
+#: utr4wstrings.rc_notes
+msgid "Notes"
+msgstr ""
+
+#: utr4wstrings.rc_numberosolt
+msgctxt "utr4wstrings.rc_numberosolt"
+msgid "Number of milliseconds of listening time:"
+msgstr ""
+
+#: utr4wstrings.rc_openlogdir
+msgid "Open log directory"
+msgstr ""
+
+#: utr4wstrings.rc_operator
+msgctxt "utr4wstrings.rc_operator"
+msgid "Operator"
+msgstr ""
+
+#: utr4wstrings.rc_options
+msgid "Configuration commands"
+msgstr ""
+
+#: utr4wstrings.rc_ping
+msgid "Ping [SERVER ADDRESS]"
+msgstr ""
+
+#: utr4wstrings.rc_postnow
+msgctxt "utr4wstrings.rc_postnow"
+msgid "Post now"
+msgstr ""
+
+#: utr4wstrings.rc_postscoretogs
+msgid "Post score"
+msgstr ""
+
+#: utr4wstrings.rc_pressmkywtr
+msgctxt "utr4wstrings.rc_pressmkywtr"
+msgid "Press the memory key you want to repeat:"
+msgstr ""
+
+#: utr4wstrings.rc_press_c
+msgctxt "utr4wstrings.rc_press_c"
+msgid "Press &C to program a CQ function key."
+msgstr ""
+
+#: utr4wstrings.rc_press_e
+msgctxt "utr4wstrings.rc_press_e"
+msgid "Press &E to program an exchange/search and pounce function key."
+msgstr ""
+
+#: utr4wstrings.rc_press_o
+msgctxt "utr4wstrings.rc_press_o"
+msgid "Press &O to program the other non function key messages."
+msgstr ""
+
+#: utr4wstrings.rc_programmes
+msgid "Program messages"
+msgstr ""
+
+#: utr4wstrings.rc_progrmess
+msgctxt "utr4wstrings.rc_progrmess"
+msgid "Program message"
+msgstr ""
+
+#: utr4wstrings.rc_qsobycountry
+msgid "QSOs by country by band"
+msgstr ""
+
+#: utr4wstrings.rc_qsowithnocw
+msgid "QSO with no CW"
+msgstr ""
+
+#: utr4wstrings.rc_qtcfunctions
+msgid "QTC functions"
+msgstr ""
+
+#: utr4wstrings.rc_recalllastent
+msgid "Recall last entry"
+msgstr ""
+
+#: utr4wstrings.rc_reccontrol
+msgid "Recording control"
+msgstr ""
+
+#: utr4wstrings.rc_recvqtc
+msgid "Receiving QTCs"
+msgstr ""
+
+#: utr4wstrings.rc_refreshbm
+msgid "Refresh bandmap"
+msgstr ""
+
+#: utr4wstrings.rc_remmults
+msgid "Mults"
+msgstr ""
+
+#: utr4wstrings.rc_removeallsp
+msgctxt "utr4wstrings.rc_removeallsp"
+msgid "Remove all spots"
+msgstr ""
+
+#: utr4wstrings.rc_reports
+msgid "Reports"
+msgstr ""
+
+#: utr4wstrings.rc_rescore
+msgid "Rescore"
+msgstr ""
+
+#: utr4wstrings.rc_reset_radio_ports
+msgid "Reset Radio Ports"
+msgstr ""
+
+#: utr4wstrings.rc_rm_default
+msgid "Default"
+msgstr ""
+
+#: utr4wstrings.rc_runserver
+msgid "Run TR4WSERVER"
+msgstr ""
+
+#: utr4wstrings.rc_scorebyhour
+msgid "Score by hour"
+msgstr ""
+
+#: utr4wstrings.rc_search
+msgid "&Search"
+msgstr ""
+
+#: utr4wstrings.rc_searchlog
+msgid "Search log"
+msgstr ""
+
+#: utr4wstrings.rc_searchpounce
+msgid "Search && pounce mode"
+msgstr ""
+
+#: utr4wstrings.rc_sendingcw
+msgid "Sending CW from the keyboard. Use ENTER/Escape/F10 to exit."
+msgstr ""
+
+#: utr4wstrings.rc_sendinrig
+msgid "QSY Inactive Radio"
+msgstr ""
+
+#: utr4wstrings.rc_sendkeyboard
+msgid "Send Keyboard Input"
+msgstr ""
+
+#: utr4wstrings.rc_sendmessage
+msgid "Send message"
+msgstr ""
+
+#: utr4wstrings.rc_sendspot
+msgctxt "utr4wstrings.rc_sendspot"
+msgid "Send spot"
+msgstr ""
+
+#: utr4wstrings.rc_send_bug
+msgid "Send bug report"
+msgstr ""
+
+#: utr4wstrings.rc_setsysdt
+msgid "Set system date/time"
+msgstr ""
+
+#: utr4wstrings.rc_settimezone
+msgid "Set time zone"
+msgstr ""
+
+#: utr4wstrings.rc_settings
+msgid "Settings"
+msgstr ""
+
+#: utr4wstrings.rc_shdx_callsign
+msgid "SH/DX [callsign]"
+msgstr ""
+
+#: utr4wstrings.rc_splitoff
+msgid "Set Split Mode Tx"
+msgstr ""
+
+#: utr4wstrings.rc_ssbcwmode
+msgid "SSB/CW mode"
+msgstr ""
+
+#: utr4wstrings.rc_stationinfo
+msgctxt "utr4wstrings.rc_stationinfo"
+msgid "Station information"
+msgstr ""
+
+#: utr4wstrings.rc_stations
+msgctxt "utr4wstrings.rc_stations"
+msgid "Stations"
+msgstr ""
+
+#: utr4wstrings.rc_summary
+msgid "Summary"
+msgstr ""
+
+#: utr4wstrings.rc_swapmultview
+msgid "Swap mult view"
+msgstr ""
+
+#: utr4wstrings.rc_synchronize
+msgctxt "utr4wstrings.rc_synchronize"
+msgid "Synchronize"
+msgstr ""
+
+#: utr4wstrings.rc_synlog
+msgid "Compare and synchronize logs"
+msgstr ""
+
+#: utr4wstrings.rc_telnet
+msgctxt "utr4wstrings.rc_telnet"
+msgid "DX Cluster"
+msgstr ""
+
+#: utr4wstrings.rc_timesyn
+msgid "Synchronize time on &all computers"
+msgstr ""
+
+#: utr4wstrings.rc_toggleinsert
+msgid "Toggle insert mode"
+msgstr ""
+
+#: utr4wstrings.rc_toogleas
+msgid "Toggle autosend"
+msgstr ""
+
+#: utr4wstrings.rc_tooglemb
+msgid "Toogle multiplier bell"
+msgstr ""
+
+#: utr4wstrings.rc_tooglerigs
+msgid "Toggle rigs"
+msgstr ""
+
+#: utr4wstrings.rc_tooglest
+msgid "Toggle sidetone"
+msgstr ""
+
+#: utr4wstrings.rc_tools
+msgid "Tools"
+msgstr ""
+
+#: utr4wstrings.rc_transfreq
+msgid "Transmit frequency"
+msgstr ""
+
+#: utr4wstrings.rc_trlogform
+msgid "TR Log format"
+msgstr ""
+
+#: utr4wstrings.rc_trmaster
+msgid "SCP"
+msgstr ""
+
+#: utr4wstrings.rc_vieweditlog
+msgctxt "utr4wstrings.rc_vieweditlog"
+msgid "View / Edit log"
+msgstr ""
+
+#: utr4wstrings.rc_vieweditlog2
+msgctxt "utr4wstrings.rc_vieweditlog2"
+msgid "View / Edit log"
+msgstr ""
+
+#: utr4wstrings.rc_viewpakspots
+msgid "View packet spots"
+msgstr ""
+
+#: utr4wstrings.rc_wiki
+msgid "On-line documentation (in Russian)"
+msgstr ""
+
+#: utr4wstrings.rc_wincontrol
+msgctxt "utr4wstrings.rc_wincontrol"
+msgid "Windows control"
+msgstr ""
+
+#: utr4wstrings.rc_wincontrol2
+msgctxt "utr4wstrings.rc_wincontrol2"
+msgid "Windows control"
+msgstr ""
+
+#: utr4wstrings.rc_windows
+msgid "Windows"
+msgstr ""
+
+#: utr4wstrings.rc_wkmode
+msgid "Re-initialize WinKeyer"
+msgstr ""
+
+#: utr4wstrings.tc_2radio_warn
+msgid "ERROR: 2 Radios on single band"
+msgstr ""
+
+#: utr4wstrings.tc_agecallsignage
+msgid "Enter your age (and Silent Key callsign and age):"
+msgstr ""
+
+#: utr4wstrings.tc_alldark
+msgid "All dark"
+msgstr ""
+
+#: utr4wstrings.tc_allsun
+msgid "All sun"
+msgstr ""
+
+#: utr4wstrings.tc_all_logs_network_cleared
+msgid "All logs in TR4W network cleared."
+msgstr ""
+
+#: utr4wstrings.tc_alreadyexistsokaytodelete
+#, object-pascal-format
+msgid ""
+"%s already exists.\n"
+"\n"
+"Okay to delete?"
+msgstr ""
+
+#: utr4wstrings.tc_altdcommanddisabled
+msgid "Alt-D command requires TWO RADIO MODE = TRUE"
+msgstr ""
+
+#: utr4wstrings.tc_altrcommanddisabled
+msgid "Alt-R command requires TWO RADIO MODE = TRUE"
+msgstr ""
+
+#: utr4wstrings.tc_appendimportedqsostocurrentlog
+msgid "Append imported QSOs to current log?"
+msgstr ""
+
+#: utr4wstrings.tc_arenewengland
+msgid "Are you in New England?"
+msgstr ""
+
+#: utr4wstrings.tc_arktikaclub
+msgid "club"
+msgstr ""
+
+#: utr4wstrings.tc_arrlfielddayimproperdxexchange
+msgid "DX Station exchange must be \"DX\"."
+msgstr ""
+
+#: utr4wstrings.tc_autospace
+msgid "&Autospace"
+msgstr ""
+
+#: utr4wstrings.tc_autospotenabledtestmodeonly
+msgid "AUTOSPOT is enabled - Test Mode Only"
+msgstr ""
+
+#: utr4wstrings.tc_autosynchronizinglog
+msgid "Auto-synchronizing log from server."
+msgstr ""
+
+#: utr4wstrings.tc_backupcreated
+msgid "Log file backup created"
+msgstr ""
+
+#: utr4wstrings.tc_bandchangedisabled
+msgid "Band change requires MULTIPLE BANDS = TRUE once the log has QSOs"
+msgstr ""
+
+#: utr4wstrings.tc_band_changes
+#, object-pascal-format
+msgid "Bn. ch. = %d"
+msgstr ""
+
+#: utr4wstrings.tc_belgium
+msgid "Belgium"
+msgstr ""
+
+#: utr4wstrings.tc_bugmode
+msgid "Bug mode"
+msgstr ""
+
+#: utr4wstrings.tc_bulgaria
+msgid "Bulgaria"
+msgstr ""
+
+#: utr4wstrings.tc_c9_africa
+msgid "Africa"
+msgstr ""
+
+#: utr4wstrings.tc_c9_antartica
+msgid "Antartica"
+msgstr ""
+
+#: utr4wstrings.tc_c9_asia
+msgid "Asia"
+msgstr ""
+
+#: utr4wstrings.tc_c9_europe
+msgid "Europe"
+msgstr ""
+
+#: utr4wstrings.tc_c9_northamerica
+msgctxt "utr4wstrings.tc_c9_northamerica"
+msgid "North America"
+msgstr ""
+
+#: utr4wstrings.tc_c9_oceania
+msgid "Oceania"
+msgstr ""
+
+#: utr4wstrings.tc_c9_southamerica
+msgid "South America"
+msgstr ""
+
+#: utr4wstrings.tc_c9_unknown
+msgctxt "utr4wstrings.tc_c9_unknown"
+msgid "Unknown"
+msgstr ""
+
+#: utr4wstrings.tc_california
+msgid "California"
+msgstr ""
+
+#: utr4wstrings.tc_call_in_call_window
+msgid "Call in Call Window"
+msgstr ""
+
+#: utr4wstrings.tc_canada
+msgid "Canada"
+msgstr ""
+
+#: utr4wstrings.tc_cannotbackuplog
+msgid "Could not make a backup copy of "
+msgstr ""
+
+#: utr4wstrings.tc_cannotcopylogreadonly
+msgid "Cannot copy log file -- target exists and is read-only"
+msgstr ""
+
+#: utr4wstrings.tc_cannotdisablesplittransmitslicecre
+msgid "Cannot disable split -- the transmit slice was created on the radio. Turn it off in the SDR."
+msgstr ""
+
+#: utr4wstrings.tc_cannotopenlogfile
+msgid "Cannot open log file"
+msgstr ""
+
+#: utr4wstrings.tc_cannotrename
+msgid "Can not rename"
+msgstr ""
+
+#: utr4wstrings.tc_checkcallsign
+msgid "Check callsign"
+msgstr ""
+
+#: utr4wstrings.tc_checkdatetime
+msgid "Check Date/Time !!"
+msgstr ""
+
+#: utr4wstrings.tc_checkqtcnumber
+msgid "Check QTC number"
+msgstr ""
+
+#: utr4wstrings.tc_checktime
+msgid "Check time"
+msgstr ""
+
+#: utr4wstrings.tc_cis
+msgid "CIS"
+msgstr ""
+
+#: utr4wstrings.tc_cleansweepcongratulations
+msgid "CLEAN SWEEP!! CONGRATULATIONS!!"
+msgstr ""
+
+#: utr4wstrings.tc_clearalllogs
+msgid "\"CLEARALLLOGS\" to clear all logs in network"
+msgstr ""
+
+#: utr4wstrings.tc_clearmulttoclearmultsheet
+msgid "\"CLEARMULT\" to clear the multsheet"
+msgstr ""
+
+#: utr4wstrings.tc_clear_dupesheet_net
+msgid "\"CLEARDUPESHEET\" to clear all dupesheets in network"
+msgstr ""
+
+#: utr4wstrings.tc_clear_multsheet_net
+msgid "\"CLEARMULTSHEET\" to clear all multsheets in network"
+msgstr ""
+
+#: utr4wstrings.tc_command
+msgid "Command"
+msgstr ""
+
+#: utr4wstrings.tc_computerclockissynchronized
+msgid "Computer clock is synchronized."
+msgstr ""
+
+#: utr4wstrings.tc_configuration_file
+msgid "Configuration file"
+msgstr ""
+
+#: utr4wstrings.tc_connect
+msgid "CONNECT.."
+msgstr ""
+
+#: utr4wstrings.tc_connected
+msgid "CONNECTED"
+msgstr ""
+
+#: utr4wstrings.tc_connectedto
+msgid "Connected to "
+msgstr ""
+
+#: utr4wstrings.tc_connectingto
+msgid "Connecting to "
+msgstr ""
+
+#: utr4wstrings.tc_connectiontotr4wserverlost
+#, object-pascal-format
+msgid "Connection to TR4WSERVER %s:%d lost."
+msgstr ""
+
+#: utr4wstrings.tc_connecttotr4wserverfailed
+msgid "Connect to TR4WSERVER failed. Check SERVER PASSWORD value!!"
+msgstr ""
+
+#: utr4wstrings.tc_continueenteringcharactersautoterm
+msgid "Continue entering characters.  Auto terminate active!!"
+msgstr ""
+
+#: utr4wstrings.tc_continueenteringcharacterspressret
+msgid "Continue entering characters and press RETURN when done."
+msgstr ""
+
+#: utr4wstrings.tc_cqfunctionkeymemorystatus
+msgid "CQ FUNCTION KEY MEMORY STATUS"
+msgstr ""
+
+#: utr4wstrings.tc_cqtotal
+#, object-pascal-format
+msgid "CQ total: %u"
+msgstr ""
+
+#: utr4wstrings.tc_croat
+msgid "I am in Croatia"
+msgstr ""
+
+#: utr4wstrings.tc_ctrl_a
+msgid "Send this message on inactive radio"
+msgstr ""
+
+#: utr4wstrings.tc_ctrl_b
+msgid "Identify ctrl-A message as a CQ"
+msgstr ""
+
+#: utr4wstrings.tc_ctrl_c
+msgid "Start special command"
+msgstr ""
+
+#: utr4wstrings.tc_ctrl_d
+msgid "Do not interrupt"
+msgstr ""
+
+#: utr4wstrings.tc_ctrl_e
+msgid "Dah 73% of normal duration"
+msgstr ""
+
+#: utr4wstrings.tc_ctrl_f
+msgid "Increase speed by 6%"
+msgstr ""
+
+#: utr4wstrings.tc_ctrl_k
+msgid "Normal dah"
+msgstr ""
+
+#: utr4wstrings.tc_ctrl_l
+msgid "Dit 140% of normal duration"
+msgstr ""
+
+#: utr4wstrings.tc_ctrl_n
+msgid "Dah 113% of normal duration"
+msgstr ""
+
+#: utr4wstrings.tc_ctrl_o
+msgid "Dah 127% of normal duration"
+msgstr ""
+
+#: utr4wstrings.tc_ctrl_p
+msgid "Dit 60% of normal duration"
+msgstr ""
+
+#: utr4wstrings.tc_ctrl_q
+msgid "Dit 80% of normal duration"
+msgstr ""
+
+#: utr4wstrings.tc_ctrl_s
+msgid "Decrease speed by 6%"
+msgstr ""
+
+#: utr4wstrings.tc_ctrl_sl
+msgid "Normal dit"
+msgstr ""
+
+#: utr4wstrings.tc_ctrl_v
+msgid "Dit 120% of normal duration"
+msgstr ""
+
+#: utr4wstrings.tc_ctrl_x
+msgid "Decrease weight by 0.03"
+msgstr ""
+
+#: utr4wstrings.tc_ctrl_y
+msgid "Increase weight by 0.03"
+msgstr ""
+
+#: utr4wstrings.tc_ctspacing
+msgid "C&T spacing"
+msgstr ""
+
+#: utr4wstrings.tc_ctydatdownloadedreloading
+msgid "CTY.DAT downloaded. Reloading..."
+msgstr ""
+
+#: utr4wstrings.tc_ctydatdownloadfailed
+msgid "CTY.DAT download failed."
+msgstr ""
+
+#: utr4wstrings.tc_ctydatreloadedsuccessfully
+msgid "CTY.DAT reloaded successfully."
+msgstr ""
+
+#: utr4wstrings.tc_current_operator_callsign
+msgid "current operator callsign"
+msgstr ""
+
+#: utr4wstrings.tc_cwdisabledwithaltk
+msgid "CW disabled with Alt-K!!  Use Alt-K again to enable."
+msgstr ""
+
+#: utr4wstrings.tc_cwoff
+msgid "CW Off"
+msgstr ""
+
+#: utr4wstrings.tc_cwqsos
+msgid "CW QSOs"
+msgstr ""
+
+#: utr4wstrings.tc_cwtimerfired
+msgid "CW Timer fired"
+msgstr ""
+
+#: utr4wstrings.tc_czechrepublicorinslovakia
+msgid "Czech Republic or in Slovakia"
+msgstr ""
+
+#: utr4wstrings.tc_datasuccessfullysavedasciifile
+msgid "Data successfully saved to ASCII file."
+msgstr ""
+
+#: utr4wstrings.tc_debugmodecreatedprefixestxt
+msgid "debug mode created prefixes.txt"
+msgstr ""
+
+#: utr4wstrings.tc_department
+msgid "Enter your department:"
+msgstr ""
+
+#: utr4wstrings.tc_difversion
+#, object-pascal-format
+msgid ""
+"%s is from a different program version.\n"
+"TR4W is expecting version %s.\n"
+"The file you are trying to read version %s."
+msgstr ""
+
+#: utr4wstrings.tc_digqsos
+msgid "DIG QSOs"
+msgstr ""
+
+#: utr4wstrings.tc_disbale_civ
+msgid "Disable \"CI-V Transceive\" mode in your ICOM rig. Refer to instruction manual of your radio."
+msgstr ""
+
+#: utr4wstrings.tc_disconnectedfrom
+msgid "** DISCONNECTED from "
+msgstr ""
+
+#: utr4wstrings.tc_discover_multi_found
+#, object-pascal-format
+msgid "More than one %s found; filled in the first.  All found:"
+msgstr ""
+
+#: utr4wstrings.tc_discover_none_found
+#, object-pascal-format
+msgid "No radio of type %s found on the network"
+msgstr ""
+
+#: utr4wstrings.tc_discover_not_available
+#, object-pascal-format
+msgid "Network discovery is not available for radio %s"
+msgstr ""
+
+#: utr4wstrings.tc_ditdahratio
+msgid "Dit/Dah ratio"
+msgstr ""
+
+#: utr4wstrings.tc_dlportiodriverisnotinstalled
+msgid "DLPortIO error"
+msgstr ""
+
+#: utr4wstrings.tc_dommults
+msgid "Dom Mults"
+msgstr ""
+
+#: utr4wstrings.tc_downloadingctydat
+msgid "Downloading CTY.DAT..."
+msgstr ""
+
+#: utr4wstrings.tc_downloadingpotaparks
+msgid "Downloading POTA parks..."
+msgstr ""
+
+#: utr4wstrings.tc_downloadingtrmasterdta
+msgid "Downloading TRMASTER.DTA..."
+msgstr ""
+
+#: utr4wstrings.tc_downloadit
+msgid "Would you like to download the latest version?"
+msgstr ""
+
+#: utr4wstrings.tc_doyoureallywantstopnow
+msgid "Do you really want stop now?"
+msgstr ""
+
+#: utr4wstrings.tc_doyoureallywanttoabortthisqtc
+msgid "Do you really want to abort this QTC?"
+msgstr ""
+
+#: utr4wstrings.tc_doyoureallywanttoexittheprogram
+msgid "Do you really want to exit the program?"
+msgstr ""
+
+#: utr4wstrings.tc_doyoureallywanttosavethisqtc
+msgid "Do you really want to save this QTC?"
+msgstr ""
+
+#: utr4wstrings.tc_doyouwanttocheckthelatestversion
+msgid "Would you like to check for a possible newer version of  TR4W ?"
+msgstr ""
+
+#: utr4wstrings.tc_dupesheet
+#, object-pascal-format
+msgid "Dupesheet - %sm-%s"
+msgstr ""
+
+#: utr4wstrings.tc_dupesheetcleared
+msgid "Dupe sheet cleared!"
+msgstr ""
+
+#: utr4wstrings.tc_dxmults
+msgid "DX Mults"
+msgstr ""
+
+#: utr4wstrings.tc_editfunctionkey
+#, object-pascal-format
+msgid "Edit %s message"
+msgstr ""
+
+#: utr4wstrings.tc_editor_copy
+msgid "&Copy"
+msgstr ""
+
+#: utr4wstrings.tc_editor_edit
+msgctxt "utr4wstrings.tc_editor_edit"
+msgid "&Edit"
+msgstr ""
+
+#: utr4wstrings.tc_editor_explore
+msgid "Explore"
+msgstr ""
+
+#: utr4wstrings.tc_editor_openineditor
+msgid "Open in text &editor"
+msgstr ""
+
+#: utr4wstrings.tc_editor_selectall
+msgid "Select &all"
+msgstr ""
+
+#: utr4wstrings.tc_editor_sendlogto
+#, object-pascal-format
+msgid "Send log to %s"
+msgstr ""
+
+#: utr4wstrings.tc_editqtcpressyestoeditqtcornotolog
+msgid "Edit QTC? Press Yes to edit QTC or  No to log "
+msgstr ""
+
+#: utr4wstrings.tc_enoughmemoryinitialexchangearray
+msgid "Not enough memory for initial exchange array!!"
+msgstr ""
+
+#: utr4wstrings.tc_enter
+#, object-pascal-format
+msgid "Enter %s :"
+msgstr ""
+
+#: utr4wstrings.tc_entercallsignspacedupecheckalthhel
+msgid "ENTER a callsign.  SPACE for dupecheck.  Alt-H for help."
+msgstr ""
+
+#: utr4wstrings.tc_entercalltobecheckedon
+#, object-pascal-format
+msgid "Enter call to be checked on %s%s:"
+msgstr ""
+
+#: utr4wstrings.tc_enterexchangepressenterlogescapeab
+msgid "Enter exchange.  Press ENTER to log, ESCAPE to abort QSO."
+msgstr ""
+
+#: utr4wstrings.tc_enterfirsttwodigitsofyourqth
+msgid "Enter first two digits of your QTH:"
+msgstr ""
+
+#: utr4wstrings.tc_enterfirsttwolettersofyourgrid
+msgid "Enter first two letters of your grid square:"
+msgstr ""
+
+#: utr4wstrings.tc_enterqtcmaxof
+#, object-pascal-format
+msgid "Enter QTC #/# (max of %d) :"
+msgstr ""
+
+#: utr4wstrings.tc_enterstateforusprovinceforcanada
+msgid "Enter state for U.S., province for Canada:"
+msgstr ""
+
+#: utr4wstrings.tc_entersumofyourageandamount
+msgid "Enter sum of your age and amount of years elapsed since your first QSO (e.g. 28+14=42):"
+msgstr ""
+
+#: utr4wstrings.tc_enterthelasttwodigitsoftheyear
+msgid "Enter the last two digits of the year of your first official amateur radio license:"
+msgstr ""
+
+#: utr4wstrings.tc_entertheqththatyouwanttosend
+msgid "Enter the QTH that you want to send:"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourageinmystatefield
+msgid "Enter your age in MY STATE field:"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourbranchnumber
+msgid "Enter your Branch number:"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourcityidentifier
+msgid "Enter your city identifier:"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourcontinent
+msgid "Enter your continent (and possible additional ID, i.e. SA or NAQ)"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourcountycode
+msgid "Enter your county code:"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourcountyorstateporovincedx
+#, object-pascal-format
+msgid "Enter your county if you are in %s state. Enter your state, Canadian Province or \"DX\" if outside of %s:"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourdistrictabbreviation
+msgid "Enter your district abbreviation:"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourdistrictcode
+msgid "If in UK/EI, enter your 2 digit district code"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourdok
+msgid "Enter your DOK:"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourfocnumber
+msgid "Enter your FOC number:"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourfourdigitgridsquare
+msgid "Enter your four digit grid square:"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourgeographicalcoordinates
+msgid ""
+"Enter your geographical coordinates\n"
+"(e.g. 55N37O for Moscow):"
+msgstr ""
+
+#: utr4wstrings.tc_enteryouriotareferencedesignator
+msgid "Enter your IOTA Reference Designator (WITH DASH and no leading zeros delimiting # e.g. EU-5)"
+msgstr ""
+
+#: utr4wstrings.tc_enteryouristrictifinve7
+msgid "Enter your federal district if in British Columbia, or your State/Province"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourmembershipnumber
+msgid "Enter your membership number:"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourname
+msgid "Enter your name:"
+msgstr ""
+
+#: utr4wstrings.tc_enteryournameandqth
+msgid "Enter your name and QTH (US state, Canadian Province or DX country) or member number:"
+msgstr ""
+
+#: utr4wstrings.tc_enteryournameandstate
+msgid "Enter your name (and state if you are in North America):"
+msgstr ""
+
+#: utr4wstrings.tc_enteryouroblastid
+msgid "Enter your oblast ID:"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourparkreferencedesignator
+msgid "Enter your POTA Park Reference Designator (WITH DASH e.g. K-1234)"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourpostcode
+msgid "Enter your postcode:"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourprecedencechecksection
+msgid ""
+"Enter your precedence, your check\n"
+"(last two digits of year licensed) and ARRL section:"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourprovinceid
+msgid "Enter your province ID:"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourqthandthename
+msgid ""
+"Enter your QTH that you want to send\n"
+"and the name you want to use:"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourqthorpower
+msgid "Enter your QTH that you want to send if you are in North America or your power as MY STATE if outside:"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourrdaid
+msgid "Enter your RDA ID:"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourrdaidorgrid
+msgid "Enter your RDA ID (for UA1A stations) or four digit grid square:"
+msgstr ""
+
+#: utr4wstrings.tc_enteryoursixdigitgridsquare
+msgid "Enter your six digit grid square:"
+msgstr ""
+
+#: utr4wstrings.tc_enteryoursquareid
+msgid "Enter your square ID:"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourstatecode
+msgid "Enter your state code:"
+msgstr ""
+
+#: utr4wstrings.tc_enteryourzone
+msgid "Enter your zone:"
+msgstr ""
+
+#: utr4wstrings.tc_entriesperms
+#, object-pascal-format
+msgid "%u entries per %u ms"
+msgstr ""
+
+#: utr4wstrings.tc_errorinlogfile
+msgid "Error in log file!"
+msgstr ""
+
+#: utr4wstrings.tc_errorofferingcommanderproxytcpport
+msgid "Error offering Commander proxy TCP Port"
+msgstr ""
+
+#: utr4wstrings.tc_errorplayingvoicememory
+msgid "Error playing voice memory"
+msgstr ""
+
+#: utr4wstrings.tc_eudx
+msgid "EU country, enter your four character country code"
+msgstr ""
+
+#: utr4wstrings.tc_exchangefunctionkeymemorystatus
+msgid "EXCHANGE FUNCTION KEY MEMORY STATUS"
+msgstr ""
+
+#: utr4wstrings.tc_failedtoconnectto
+msgid "Failed to connect to "
+msgstr ""
+
+#: utr4wstrings.tc_failedtoconnecttogetscoresorg
+msgid "Failed to connect"
+msgstr ""
+
+#: utr4wstrings.tc_failedtoload
+msgid "Failed to load. View getscoresanswer.html for details."
+msgstr ""
+
+#: utr4wstrings.tc_failedtoreceiveserverlog
+msgid "Failed to receive server log."
+msgstr ""
+
+#: utr4wstrings.tc_filesavedtofilesuccessfully
+msgid "File saved to file successfully."
+msgstr ""
+
+#: utr4wstrings.tc_filesavedtosuccessfully
+#, object-pascal-format
+msgid "File saved to %s successfully."
+msgstr ""
+
+#: utr4wstrings.tc_findingzeroendvisibledupesheetlist
+msgid "Not finding zero at end visible dupesheet list!!"
+msgstr ""
+
+#: utr4wstrings.tc_firstextension
+msgctxt "utr4wstrings.tc_firstextension"
+msgid "First extension"
+msgstr ""
+
+#: utr4wstrings.tc_florida
+msgid "Florida"
+msgstr ""
+
+#: utr4wstrings.tc_flushinitialexcommandexecuted
+msgid "FLUSHINITIALEX command is executed."
+msgstr ""
+
+#: utr4wstrings.tc_folderalreadyexistsoverwrite
+#, object-pascal-format
+msgid ""
+"Folder \"%s\" already exists.\n"
+"Overwrite ?"
+msgstr ""
+
+#: utr4wstrings.tc_footsw
+msgid "Footsw."
+msgstr ""
+
+#: utr4wstrings.tc_france
+msgid "France"
+msgstr ""
+
+#: utr4wstrings.tc_freq
+msgid "Freq"
+msgstr ""
+
+#: utr4wstrings.tc_frequencyforcallinkhz
+#, object-pascal-format
+msgid "frequency for %s in kHz"
+msgstr ""
+
+#: utr4wstrings.tc_freq_off
+msgid "SHOW FREQUENCY IN LOG is turned off"
+msgstr ""
+
+#: utr4wstrings.tc_freq_zero
+msgid "ERROR: Invalid Frequency logged"
+msgstr ""
+
+#: utr4wstrings.tc_fri
+msgid "Fri"
+msgstr ""
+
+#: utr4wstrings.tc_gagarin
+msgid "special two char ID"
+msgstr ""
+
+#: utr4wstrings.tc_gc
+msgid "special two character designator"
+msgstr ""
+
+#: utr4wstrings.tc_germany
+msgid "Germany"
+msgstr ""
+
+#: utr4wstrings.tc_gethost
+msgid "GET HOST.."
+msgstr ""
+
+#: utr4wstrings.tc_hamlib_id_label
+msgid "HAMLIB ID"
+msgstr ""
+
+#: utr4wstrings.tc_hamscorequeueingfulllogresync
+msgid "HamScore: queueing full log resync..."
+msgstr ""
+
+#: utr4wstrings.tc_handlogmodetrue
+msgid "HAND LOG MODE = TRUE"
+msgstr ""
+
+#: utr4wstrings.tc_hangtime
+msgid "Hang time"
+msgstr ""
+
+#: utr4wstrings.tc_hasimpropersyntax
+#, object-pascal-format
+msgid "%s has improper syntax!!"
+msgstr ""
+
+#: utr4wstrings.tc_haveqtcs
+#, object-pascal-format
+msgid "Have %u QTCs"
+msgstr ""
+
+#: utr4wstrings.tc_hitcounthistogram050
+msgid "Hit count histogram for 0 to 50+ : "
+msgstr ""
+
+#: utr4wstrings.tc_host
+#, object-pascal-format
+msgid "HOST  : %s"
+msgstr ""
+
+#: utr4wstrings.tc_hq
+msgid "HQ (HQ station)"
+msgstr ""
+
+#: utr4wstrings.tc_hqmults
+msgid "HQ Mults"
+msgstr ""
+
+#: utr4wstrings.tc_hq_or_member
+msgid "HQ or member"
+msgstr ""
+
+#: utr4wstrings.tc_hungary
+msgid "Hungary"
+msgstr ""
+
+#: utr4wstrings.tc_iambica
+msgid "Iambic A"
+msgstr ""
+
+#: utr4wstrings.tc_iambicb
+msgid "Iambic B"
+msgstr ""
+
+#: utr4wstrings.tc_iamin
+#, object-pascal-format
+msgid "&I am in %s"
+msgstr ""
+
+#: utr4wstrings.tc_ididfinecontestnamelogcfgdatfile
+msgid "I did not fine a contest name in your LOGCFG.DAT file."
+msgstr ""
+
+#: utr4wstrings.tc_ifoundcontestnameidonounderstandlo
+msgid "I found a contest name I do no understand in your LOGCFG.DAT file."
+msgstr ""
+
+#: utr4wstrings.tc_ignorespeedpot
+msgid "&Ignore speed pot"
+msgstr ""
+
+#: utr4wstrings.tc_improperarrlfielddayclass
+msgid "Field Day class must be A, B, C, D, E or F."
+msgstr ""
+
+#: utr4wstrings.tc_impropercontinent
+msgid "Improper continent!!"
+msgstr ""
+
+#: utr4wstrings.tc_improperdomesitcqth
+msgid "Improper domestic QTH!!"
+msgstr ""
+
+#: utr4wstrings.tc_improperdomesitcqthormissingname
+msgid "Improper domestic QTH or missing name!!"
+msgstr ""
+
+#: utr4wstrings.tc_impropertransmittercount
+msgid "FD transmitters must be between 1 and 99."
+msgstr ""
+
+#: utr4wstrings.tc_improperwinterfielddayclass
+msgid "Winter Field Day class must be H, I, O or M."
+msgstr ""
+
+#: utr4wstrings.tc_improperzonenumber
+msgid "Improper zone number!!"
+msgstr ""
+
+#: utr4wstrings.tc_info
+msgid "Info"
+msgstr ""
+
+#: utr4wstrings.tc_insert
+msgid "INSERT"
+msgstr ""
+
+#: utr4wstrings.tc_invalid
+msgid "Invalid Entry"
+msgstr ""
+
+#: utr4wstrings.tc_invalidcallsignincallwindow
+msgid "Invalid callsign in call window!!"
+msgstr ""
+
+#: utr4wstrings.tc_invaliddate
+msgid "Invalid date!!"
+msgstr ""
+
+#: utr4wstrings.tc_invalidreminderdate
+msgid "Invalid reminder date!!"
+msgstr ""
+
+#: utr4wstrings.tc_invalidremindertime
+msgid "Invalid reminder time!!"
+msgstr ""
+
+#: utr4wstrings.tc_invalidstatementin
+#, object-pascal-format
+msgid ""
+"Invalid statement in %s !!\n"
+"\n"
+"Line %u\n"
+"%s"
+msgstr ""
+
+#: utr4wstrings.tc_invalidstatementinconfigfile
+#, object-pascal-format
+msgid ""
+"%s:\n"
+"Invalid statement in config file.\n"
+"\n"
+"Line %u\n"
+"%s"
+msgstr ""
+
+#: utr4wstrings.tc_ireland
+msgid "Ireland"
+msgstr ""
+
+#: utr4wstrings.tc_irts
+msgid "EI/GI, enter your County"
+msgstr ""
+
+#: utr4wstrings.tc_isadupe
+#, object-pascal-format
+msgid "%s is a dupe!!"
+msgstr ""
+
+#: utr4wstrings.tc_isadupeandwillbeloggedwithzero
+#, object-pascal-format
+msgid "%s is a dupe and will be logged with zero QSO points."
+msgstr ""
+
+#: utr4wstrings.tc_islandstation
+msgid "Island station"
+msgstr ""
+
+#: utr4wstrings.tc_isqrvfor
+#, object-pascal-format
+msgid "Is %s QRV for %s?"
+msgstr ""
+
+#: utr4wstrings.tc_italy
+msgid "Italy"
+msgstr ""
+
+#: utr4wstrings.tc_japan
+msgid "Japan"
+msgstr ""
+
+#: utr4wstrings.tc_kazakhstan
+msgid "Kazakhstan"
+msgstr ""
+
+#: utr4wstrings.tc_keycomp
+msgid "Keyer compensation"
+msgstr ""
+
+#: utr4wstrings.tc_keyermode
+msgctxt "utr4wstrings.tc_keyermode"
+msgid "Keyer mode"
+msgstr ""
+
+#: utr4wstrings.tc_keyernamedsalreadyexists
+#, object-pascal-format
+msgid "A keyer named \"%s\" already exists."
+msgstr ""
+
+#: utr4wstrings.tc_labre
+msgid "Enter 2 char QTH ID"
+msgstr ""
+
+#: utr4wstrings.tc_lame_error
+msgid "You may download it from"
+msgstr ""
+
+#: utr4wstrings.tc_last60
+#, object-pascal-format
+msgid "Last 60 = %d"
+msgstr ""
+
+#: utr4wstrings.tc_latest_config_file
+msgctxt "utr4wstrings.tc_latest_config_file"
+msgid "Latest config file"
+msgstr ""
+
+#: utr4wstrings.tc_leadin
+msgid "Lead-in time (*10 ms)"
+msgstr ""
+
+#: utr4wstrings.tc_list_of_command
+msgctxt "utr4wstrings.tc_list_of_command"
+msgid "List of commands"
+msgstr ""
+
+#: utr4wstrings.tc_locallog
+msgid "LOCAL LOG"
+msgstr ""
+
+#: utr4wstrings.tc_locationfieldempty
+msgid "LOCATION field is empty."
+msgstr ""
+
+#: utr4wstrings.tc_logfilenotfound
+msgid "Log file not found"
+msgstr ""
+
+#: utr4wstrings.tc_logfilesizecheckfailed
+msgid "LOG FILE SIZE CHECK FAILED!!!!"
+msgstr ""
+
+#: utr4wstrings.tc_loggingrunningsotherenofileopen
+msgid "Logging is not running, so there is no file to open."
+msgstr ""
+
+#: utr4wstrings.tc_logincalldoeslooklikecallsign
+msgid "Login call does not look like a callsign"
+msgstr ""
+
+#: utr4wstrings.tc_m
+msgid "m"
+msgstr ""
+
+#: utr4wstrings.tc_maximumnumberofremindersexceeded
+msgid "Maximum number of reminders exceeded!!"
+msgstr ""
+
+#: utr4wstrings.tc_messagetosendvianetwork
+msgid "message to send via network"
+msgstr ""
+
+#: utr4wstrings.tc_michigan
+msgid "Michigan"
+msgstr ""
+
+#: utr4wstrings.tc_min
+#, object-pascal-format
+msgid "%u min."
+msgstr ""
+
+#: utr4wstrings.tc_minnesota
+msgid "Minnesota"
+msgstr ""
+
+#: utr4wstrings.tc_missingmultsreport
+#, object-pascal-format
+msgid "Missing mults report: %u countries on at least %u but not all bands."
+msgstr ""
+
+#: utr4wstrings.tc_missingqthandorname
+msgid "Missing QTH and/or name!!"
+msgstr ""
+
+#: utr4wstrings.tc_mixw_connected
+msgid "Connected"
+msgstr ""
+
+#: utr4wstrings.tc_mixw_disconnected
+msgctxt "utr4wstrings.tc_mixw_disconnected"
+msgid "Disconnected"
+msgstr ""
+
+#: utr4wstrings.tc_modified
+msgid "Modified"
+msgstr ""
+
+#: utr4wstrings.tc_mon
+msgid "Mon"
+msgstr ""
+
+#: utr4wstrings.tc_morethan50differenthoursinthislog
+msgid "More than 50 different hours in this log!!"
+msgstr ""
+
+#: utr4wstrings.tc_ms
+msgid " ms"
+msgstr ""
+
+#: utr4wstrings.tc_multneedsfor
+#, object-pascal-format
+msgid " Mult needs for %s :"
+msgstr ""
+
+#: utr4wstrings.tc_multsheetcleared
+msgid "Mult sheet cleared!"
+msgstr ""
+
+#: utr4wstrings.tc_name_from_name_database
+msgid "Name from name database"
+msgstr ""
+
+#: utr4wstrings.tc_netherlands
+msgid "Netherlands"
+msgstr ""
+
+#: utr4wstrings.tc_network
+#, object-pascal-format
+msgid "Network : %s %s:%d"
+msgstr ""
+
+#: utr4wstrings.tc_networktest
+msgid "Network Test"
+msgstr ""
+
+#: utr4wstrings.tc_newengland
+msgid "New England"
+msgstr ""
+
+#: utr4wstrings.tc_newenglandstateabreviation
+msgid ""
+"Enter your New England state abbreviation\n"
+"(ME, NH, VT, MA, CT, RI):"
+msgstr ""
+
+#: utr4wstrings.tc_newtour
+#, object-pascal-format
+msgid "New tour %d/%d"
+msgstr ""
+
+#: utr4wstrings.tc_newvalue
+msgid "new value"
+msgstr ""
+
+#: utr4wstrings.tc_next
+msgid "< Next"
+msgstr ""
+
+#: utr4wstrings.tc_noanswerfromserver
+msgid "No answer from server"
+msgstr ""
+
+#: utr4wstrings.tc_nocallsignspecified
+msgid "No callsign specified!!"
+msgstr ""
+
+#: utr4wstrings.tc_nocqmesprogrammedintocqmemoryaltf1
+msgid "No CQ message programmed into CQ MEMORY AltF1."
+msgstr ""
+
+#: utr4wstrings.tc_nofloppyfilesavenamespecified
+msgid "No floppy file save name specified."
+msgstr ""
+
+#: utr4wstrings.tc_nopotaparksloggedyetsession
+msgid "No POTA parks logged yet this session"
+msgstr ""
+
+#: utr4wstrings.tc_noqsonumberfound
+msgid "No QSO number found!!"
+msgstr ""
+
+#: utr4wstrings.tc_noqtcspendingqru
+msgid "No QTCs pending, QRU."
+msgstr ""
+
+#: utr4wstrings.tc_northamerica
+msgctxt "utr4wstrings.tc_northamerica"
+msgid "North America"
+msgstr ""
+
+#: utr4wstrings.tc_note
+msgid "note"
+msgstr ""
+
+#: utr4wstrings.tc_notenoughinfoinexchange
+msgid "Not enough info in exchange!!"
+msgstr ""
+
+#: utr4wstrings.tc_notrmasterdtafilefound
+msgid "No TRMASTER.DTA file found."
+msgstr ""
+
+#: utr4wstrings.tc_numbermessagesillegalcharacters
+msgid "Number of messages has illegal characters."
+msgstr ""
+
+#: utr4wstrings.tc_numberorletterofmessagetobeprogram
+msgid "Number or letter of message to be programmed (1-9, A-C, or ESCAPE to exit):"
+msgstr ""
+
+#: utr4wstrings.tc_oblasts
+msgid "Oblasts"
+msgstr ""
+
+#: utr4wstrings.tc_ohio
+msgid "Ohio"
+msgstr ""
+
+#: utr4wstrings.tc_op
+msgid "Op"
+msgstr ""
+
+#: utr4wstrings.tc_openconfigurationfile
+msgid " - Open configuration file or start a new contest"
+msgstr ""
+
+#: utr4wstrings.tc_othercwmessagememorystatus
+msgid "Other CW message memory status"
+msgstr ""
+
+#: utr4wstrings.tc_otherssbmessagememorystatus
+msgid "Other SSB message memory status"
+msgstr ""
+
+#: utr4wstrings.tc_override
+msgid "OVERRIDE"
+msgstr ""
+
+#: utr4wstrings.tc_ozcr
+msgid "Enter three-letters number:"
+msgstr ""
+
+#: utr4wstrings.tc_paddle
+msgctxt "utr4wstrings.tc_paddle"
+msgid "Paddle"
+msgstr ""
+
+#: utr4wstrings.tc_paddleonlysidetone
+msgid "Paddle &only sidetone"
+msgstr ""
+
+#: utr4wstrings.tc_paddleswap
+msgid "Paddle swa&p"
+msgstr ""
+
+#: utr4wstrings.tc_paddleswitchpoint
+msgid "Paddle switchpoint"
+msgstr ""
+
+#: utr4wstrings.tc_parameterhasnovalue
+#, object-pascal-format
+msgid "Parameter \"%s\" has no value in the config file -- left at its default."
+msgstr ""
+
+#: utr4wstrings.tc_pleasecheckmultinetwork
+msgid "Please check multi network"
+msgstr ""
+
+#: utr4wstrings.tc_points
+msgid "Pts"
+msgstr ""
+
+#: utr4wstrings.tc_poland
+msgid "Poland"
+msgstr ""
+
+#: utr4wstrings.tc_port_conflict_dialog
+#, object-pascal-format
+msgid "%s is already configured as %s. Two devices cannot share a serial port."
+msgstr ""
+
+#: utr4wstrings.tc_port_conflict_proceed
+msgid "Apply anyway?"
+msgstr ""
+
+#: utr4wstrings.tc_port_conflict_startup
+#, object-pascal-format
+msgid "RADIO ONE and RADIO TWO are both configured to use %s. RADIO ONE keeps the port; RADIO TWO CAT control is disabled until one radio's CONTROL PORT is changed."
+msgstr ""
+
+#: utr4wstrings.tc_port_not_connected
+msgid "(not connected)"
+msgstr ""
+
+#: utr4wstrings.tc_possibledatalossmultinetwork
+msgid "Possible data loss on multi network."
+msgstr ""
+
+#: utr4wstrings.tc_potaparksdownloadfailed
+msgid "POTA parks download failed"
+msgstr ""
+
+#: utr4wstrings.tc_potaparksfilecouldloaded
+msgid "POTA parks file could not be loaded"
+msgstr ""
+
+#: utr4wstrings.tc_potaparksloaded
+msgid "POTA parks loaded"
+msgstr ""
+
+#: utr4wstrings.tc_prefecture
+msgid "Enter your prefecture:"
+msgstr ""
+
+#: utr4wstrings.tc_preferencescouldopeneds
+#, object-pascal-format
+msgid "Preferences could not be opened (%s)."
+msgstr ""
+
+#: utr4wstrings.tc_prefix
+msgid "Prefixes"
+msgstr ""
+
+#: utr4wstrings.tc_pref_or_cqzone
+msgid "Enter your CQ ZONE or JA PREFECTURE"
+msgstr ""
+
+#: utr4wstrings.tc_presscqfunctionkeytoprogram
+msgid " Press CQ function key to program (F1, AltF1, CtrlF1), or ESCAPE to exit) : "
+msgstr ""
+
+#: utr4wstrings.tc_pressexfunctionkeytoprogram
+msgid "Press ex function key to program (F3-F12, Alt/Ctrl F1-F12) or ESCAPE to exit:"
+msgstr ""
+
+#: utr4wstrings.tc_pts
+#, object-pascal-format
+msgid "%d Pts"
+msgstr ""
+
+#: utr4wstrings.tc_pttlockouttrue
+msgid "PTT LOCKOUT=TRUE"
+msgstr ""
+
+#: utr4wstrings.tc_pttviacommandsctrljoptionmusttruew
+msgid "PTT VIA COMMANDS (CTRL-J) option must be true for WSJT-X use - Setting to true"
+msgstr ""
+
+#: utr4wstrings.tc_qsoneedsfor
+#, object-pascal-format
+msgid " QSO needs for %s :"
+msgstr ""
+
+#: utr4wstrings.tc_qsos
+msgid "QSOs"
+msgstr ""
+
+#: utr4wstrings.tc_qso_imported
+msgid "Qs imported."
+msgstr ""
+
+#: utr4wstrings.tc_qso_number
+msgid "QSO Number"
+msgstr ""
+
+#: utr4wstrings.tc_qtcabortedbyoperator
+msgid "QTC aborted by operator."
+msgstr ""
+
+#: utr4wstrings.tc_qtcnumberillegalcharacters
+msgid "QTC Number has illegal characters."
+msgstr ""
+
+#: utr4wstrings.tc_qtcpending
+msgid "QTC Pending"
+msgstr ""
+
+#: utr4wstrings.tc_qtcprocessterminated
+msgid "QTC process terminated."
+msgstr ""
+
+#: utr4wstrings.tc_qtcprocessterminatedinvalidnumberm
+msgid "QTC process terminated.  Invalid number of messages."
+msgstr ""
+
+#: utr4wstrings.tc_qtc_callsign
+msgid "Callsign :"
+msgstr ""
+
+#: utr4wstrings.tc_qtc_for
+#, object-pascal-format
+msgid "%s for %s"
+msgstr ""
+
+#: utr4wstrings.tc_radio1
+msgctxt "utr4wstrings.tc_radio1"
+msgid "Radio 1"
+msgstr ""
+
+#: utr4wstrings.tc_radio2
+msgctxt "utr4wstrings.tc_radio2"
+msgid "Radio 2"
+msgstr ""
+
+#: utr4wstrings.tc_rate
+#, object-pascal-format
+msgid "Rate = %u"
+msgstr ""
+
+#: utr4wstrings.tc_reallywanttoclearthelog
+msgid "Do you really want to clear the current log?"
+msgstr ""
+
+#: utr4wstrings.tc_recorddvppressescapeorreturntostop
+msgid "Recording DVP. Press ESCAPE or RETURN to stop."
+msgstr ""
+
+#: utr4wstrings.tc_records
+msgid "Records"
+msgstr ""
+
+#: utr4wstrings.tc_relaycontrolportpaddleport
+msgid "RELAY CONTROL PORT = PADDLE PORT"
+msgstr ""
+
+#: utr4wstrings.tc_removeclusters
+#, object-pascal-format
+msgid "Remove the cluster \"%s\"?"
+msgstr ""
+
+#: utr4wstrings.tc_removerotators
+#, object-pascal-format
+msgid "Remove the rotator \"%s\"?"
+msgstr ""
+
+#: utr4wstrings.tc_repeating
+#, object-pascal-format
+msgid "Repeating %s  Listen time = %u msec - PgUp/Dn to adjust or ESCAPE"
+msgstr ""
+
+#: utr4wstrings.tc_repeatrstsent
+msgid "Repeat RST sent"
+msgstr ""
+
+#: utr4wstrings.tc_restartbinisforadifferentcontest
+msgid "RESTART.BIN is for a different contest."
+msgstr ""
+
+#: utr4wstrings.tc_rfas
+msgid "Enter your geographical coordinates:"
+msgstr ""
+
+#: utr4wstrings.tc_romania
+msgid "Romania"
+msgstr ""
+
+#: utr4wstrings.tc_rst_prompt
+msgid "RST prompt"
+msgstr ""
+
+#: utr4wstrings.tc_rulesonqrzru
+#, object-pascal-format
+msgid "Rules for %s contest at QRZ.RU"
+msgstr ""
+
+#: utr4wstrings.tc_rulesonsm3cer
+#, object-pascal-format
+msgid "Rules for %s contest at WA7BNM Contest Calendar"
+msgstr ""
+
+#: utr4wstrings.tc_runwarn
+msgid "Another instance of TR4W is already running"
+msgstr ""
+
+#: utr4wstrings.tc_russia
+msgid "Russia"
+msgstr ""
+
+#: utr4wstrings.tc_s
+msgid "s"
+msgstr ""
+
+#: utr4wstrings.tc_salutation_and_name_if_known
+msgid "Salutation and name if known"
+msgstr ""
+
+#: utr4wstrings.tc_sat
+msgid "Sat"
+msgstr ""
+
+#: utr4wstrings.tc_savechanges
+msgid "Save changes?"
+msgstr ""
+
+#: utr4wstrings.tc_savingdtafileasciifileprocessingce
+msgid "Saving .DTA file to ASCII file.  Processing cell   "
+msgstr ""
+
+#: utr4wstrings.tc_savingto
+#, object-pascal-format
+msgid "Saving %s to %s"
+msgstr ""
+
+#: utr4wstrings.tc_scannoteditedhere
+#, object-pascal-format
+msgid "%s cannot be edited here."
+msgstr ""
+
+#: utr4wstrings.tc_selectspotreturnleftorrightarrowse
+msgid "Select spot.  RETURN, left or right arrow to select.  ESCAPE to exit."
+msgstr ""
+
+#: utr4wstrings.tc_sendingssbwavfilename
+msgid "Sending SSB .wav filename. Use ENTER to play, Escape/F10 to exit."
+msgstr ""
+
+#: utr4wstrings.tc_sendtimetocomputersonthenetwork
+msgid "Do you really want to send time to computers on the network?"
+msgstr ""
+
+#: utr4wstrings.tc_send_callassetbymycallcommand
+msgid "Send call as set by MY CALL command"
+msgstr ""
+
+#: utr4wstrings.tc_send_characters_from_keyboard
+msgid "Send characters from keyboard"
+msgstr ""
+
+#: utr4wstrings.tc_serial_format_label
+msgid "DATA/PARITY/STOP"
+msgstr ""
+
+#: utr4wstrings.tc_server
+#, object-pascal-format
+msgid "SERVER: %s"
+msgstr ""
+
+#: utr4wstrings.tc_serverandlocallogsareidentical
+msgid "Server and local logs are identical."
+msgstr ""
+
+#: utr4wstrings.tc_serverlog
+msgid "SERVER LOG"
+msgstr ""
+
+#: utr4wstrings.tc_server_log_changed
+#, object-pascal-format
+msgid "Server log changed. %u QSO(s) updated. Do logs synchronizing (Ctrl+Alt+S)."
+msgstr ""
+
+#: utr4wstrings.tc_setcomputeridvalue
+msgid "Set COMPUTER ID value."
+msgstr ""
+
+#: utr4wstrings.tc_set_value_of_set_now
+#, object-pascal-format
+msgid "Set value of %s. Set now?"
+msgstr ""
+
+#: utr4wstrings.tc_show_all_serial_ports
+msgid "Show all serial ports"
+msgstr ""
+
+#: utr4wstrings.tc_show_passwords
+msgid "Show passwords"
+msgstr ""
+
+#: utr4wstrings.tc_sidetone
+msgid "&Sidetone"
+msgstr ""
+
+#: utr4wstrings.tc_sidetonefreq
+msgid "Sidetone freq."
+msgstr ""
+
+#: utr4wstrings.tc_sizebytes
+msgid "Size, bytes"
+msgstr ""
+
+#: utr4wstrings.tc_sorrynolog
+msgid "Sorry!! NO LOG = TRUE which prohibits logging QSOs on this computer"
+msgstr ""
+
+#: utr4wstrings.tc_sorryusedupallreminders
+msgid "Sorry, you have used up all your reminders!!"
+msgstr ""
+
+#: utr4wstrings.tc_sorryyoualreadyhave10qtcswith
+#, object-pascal-format
+msgid "Sorry, you already have 10 QTCs with %s"
+msgstr ""
+
+#: utr4wstrings.tc_source
+#, object-pascal-format
+msgid "Source: %s"
+msgstr ""
+
+#: utr4wstrings.tc_spain
+msgid "Spain"
+msgstr ""
+
+#: utr4wstrings.tc_split_warn
+msgid "Warning: You are in SPLIT MODE !!!"
+msgstr ""
+
+#: utr4wstrings.tc_spots
+#, object-pascal-format
+msgid "%d spots"
+msgstr ""
+
+#: utr4wstrings.tc_sprintqsyrule
+msgid "SPRINT QSY RULE!!!"
+msgstr ""
+
+#: utr4wstrings.tc_ssbqsos
+msgid "SSB QSOs"
+msgstr ""
+
+#: utr4wstrings.tc_sstillusedbys
+#, object-pascal-format
+msgid "\"%s\" is still used by: %s"
+msgstr ""
+
+#: utr4wstrings.tc_stationclass
+msgid "Enter your station class:"
+msgstr ""
+
+#: utr4wstrings.tc_stationsinmode
+#, object-pascal-format
+msgid "Stations in %s mode"
+msgstr ""
+
+#: utr4wstrings.tc_stpetersburgoblast
+msgid "St.Petersburg / oblast"
+msgstr ""
+
+#: utr4wstrings.tc_sun
+msgid "Sun"
+msgstr ""
+
+#: utr4wstrings.tc_switzerland
+msgid "Switzerland"
+msgstr ""
+
+#: utr4wstrings.tc_tail
+msgid "Tail time (*10 ms)"
+msgstr ""
+
+#: utr4wstrings.tc_tciservercouldopenportds
+#, object-pascal-format
+msgid "The TCI server could not open port %d: %s"
+msgstr ""
+
+#: utr4wstrings.tc_telnet
+msgid "Connect#0Disconnect#0Commands#0Freeze#0Clear#0SH/50#0#0"
+msgstr ""
+
+#: utr4wstrings.tc_testradiointerface
+msgid "TEST RADIO INTERFACE"
+msgstr ""
+
+#: utr4wstrings.tc_texas
+msgid "Texas"
+msgstr ""
+
+#: utr4wstrings.tc_thefirstcommandinconfigfilemustbe
+msgid "The first command in config file must be the MY CALL statement!!"
+msgstr ""
+
+#: utr4wstrings.tc_therenologfileyets
+#, object-pascal-format
+msgid "There is no log file yet at %s."
+msgstr ""
+
+#: utr4wstrings.tc_therewerecalls
+#, object-pascal-format
+msgid ""
+"There were %u calls found in initial exchange file.\n"
+"+%u dupe(s)"
+msgstr ""
+
+#: utr4wstrings.tc_theseentrieswereacceptedbeensaved
+msgid "These entries were not accepted and have not been saved:"
+msgstr ""
+
+#: utr4wstrings.tc_thishr
+#, object-pascal-format
+msgid "This hr = %d"
+msgstr ""
+
+#: utr4wstrings.tc_thisversion
+msgid "You have "
+msgstr ""
+
+#: utr4wstrings.tc_thisversion2
+msgid "This version"
+msgstr ""
+
+#: utr4wstrings.tc_this_file_does_not_exist
+msgid "This file does not exist. Create an empty file for editing?"
+msgstr ""
+
+#: utr4wstrings.tc_thu
+msgid "Thu"
+msgstr ""
+
+#: utr4wstrings.tc_timediff
+msgid "Time diff."
+msgstr ""
+
+#: utr4wstrings.tc_timeon
+msgid "Time on"
+msgstr ""
+
+#: utr4wstrings.tc_tooltip_discovery
+msgid "Discover radios on the network"
+msgstr ""
+
+#: utr4wstrings.tc_toomanycontestdates
+msgid "Too many contest dates!!"
+msgstr ""
+
+#: utr4wstrings.tc_toomanytotalscoremessages
+msgid "Too many TOTAL SCORE MESSAGEs!!"
+msgstr ""
+
+#: utr4wstrings.tc_tr4wtimewarning
+msgid "TR4W Time Warning"
+msgstr ""
+
+#: utr4wstrings.tc_translation_author
+msgid "N4AF"
+msgstr ""
+
+#: utr4wstrings.tc_translation_credit
+#, object-pascal-format
+msgid "%s translation by %s"
+msgstr ""
+
+#: utr4wstrings.tc_translation_language
+msgid "ENGLISH"
+msgstr ""
+
+#: utr4wstrings.tc_translator_email
+msgid "ny4i@ny4i.com"
+msgstr ""
+
+#: utr4wstrings.tc_transmitfrequencykilohertz
+msgid "transmit frequency (kiloHertz): "
+msgstr ""
+
+#: utr4wstrings.tc_trmasterdtadownloadedrestarttr4wus
+msgid "TRMASTER.DTA downloaded -- restart TR4W to use it"
+msgstr ""
+
+#: utr4wstrings.tc_trmasterdtadownloadfailed
+msgid "TRMASTER.DTA download failed"
+msgstr ""
+
+#: utr4wstrings.tc_trmasterdtas
+#, object-pascal-format
+msgid "TRMASTER.DTA : %s"
+msgstr ""
+
+#: utr4wstrings.tc_tue
+msgid "Tue"
+msgstr ""
+
+#: utr4wstrings.tc_uk
+msgid "UK"
+msgstr ""
+
+#: utr4wstrings.tc_ukei
+msgid "If in Uk/EI enter your 2 digit district code"
+msgstr ""
+
+#: utr4wstrings.tc_ukraine
+msgid "Ukraine"
+msgstr ""
+
+#: utr4wstrings.tc_ultimatic
+msgid "Ultimatic"
+msgstr ""
+
+#: utr4wstrings.tc_unablesavedtaasciifile
+msgid "Unable to save .DTA to ASCII file."
+msgstr ""
+
+#: utr4wstrings.tc_unabletofind
+#, object-pascal-format
+msgid "Unable to find %s ."
+msgstr ""
+
+#: utr4wstrings.tc_unabletofindctydat
+msgid ""
+"Unable to find CTY.DAT country file!!\n"
+"Make sure this file is in the same directory as the program."
+msgstr ""
+
+#: utr4wstrings.tc_unknowncountry
+msgid "Unknown country"
+msgstr ""
+
+#: utr4wstrings.tc_uploadcabrillotoscp
+msgid "Do you want to upload your Cabrillo file to SuperChecklPartial?"
+msgstr ""
+
+#: utr4wstrings.tc_uploadedsuccessfully
+msgid "Uploaded successfully."
+msgstr ""
+
+#: utr4wstrings.tc_value
+msgid "Value"
+msgstr ""
+
+#: utr4wstrings.tc_versiononserver
+msgid "The last version on server"
+msgstr ""
+
+#: utr4wstrings.tc_voicekeyerdisabledwithaltk
+msgid "Voice keyer disabled with Alt-K!!  Use Alt-K again to enable."
+msgstr ""
+
+#: utr4wstrings.tc_wagwarn
+msgid "Warning: Out of WAG allowed frequency range"
+msgstr ""
+
+#: utr4wstrings.tc_waitingforyouenterstrengthofrst
+msgid "Waiting for you enter strength of RST (Single digit)!!"
+msgstr ""
+
+#: utr4wstrings.tc_wanttoconvertlog
+msgid "Would you like to convert this log to the latest format?"
+msgstr ""
+
+#: utr4wstrings.tc_wasbuildin
+msgid " installed (build date "
+msgstr ""
+
+#: utr4wstrings.tc_washington
+msgid "Washington"
+msgstr ""
+
+#: utr4wstrings.tc_wasmessagenumberconfirmed
+#, object-pascal-format
+msgid "Was message number %u confirmed?"
+msgstr ""
+
+#: utr4wstrings.tc_wed
+msgid "Wed"
+msgstr ""
+
+#: utr4wstrings.tc_weighting
+msgid "Weighting"
+msgstr ""
+
+#: utr4wstrings.tc_winkeyerenable
+msgid "&Winkeyer enable"
+msgstr ""
+
+#: utr4wstrings.tc_winkeyerport
+msgid "Winkeyer port"
+msgstr ""
+
+#: utr4wstrings.tc_wisconsin
+msgid "Wisconsin"
+msgstr ""
+
+#: utr4wstrings.tc_wpmcodespeed
+msgid "WPM code speed"
+msgstr ""
+
+#: utr4wstrings.tc_yestoclearthedupesheet
+msgid "\"YES\" to clear the dupesheet"
+msgstr ""
+
+#: utr4wstrings.tc_youalreadyworkedin
+#, object-pascal-format
+msgid "You already worked %s in %s!!"
+msgstr ""
+
+#: utr4wstrings.tc_youarenowtalkingtoyourpacketport
+msgid "You are now talking to your packet port.  Use Control-B to exit."
+msgstr ""
+
+#: utr4wstrings.tc_youarespottedbyanotherstation
+msgid "You are spotted by another station."
+msgstr ""
+
+#: utr4wstrings.tc_youcanchangethisinyourconfigfile
+msgid "You can only change this in your config file."
+msgstr ""
+
+#: utr4wstrings.tc_youhavedeletedthelastlogentry
+msgid "You have deleted the last log entry!!  Use Alt-Y to restore it."
+msgstr ""
+
+#: utr4wstrings.tc_youhaverestoredthelastdeleted
+msgid "You have restored the last deleted log entry!!"
+msgstr ""
+
+#: utr4wstrings.tc_yournotconnectedtotheinternet
+msgid "YOU ARE NOT CONNECTED TO THE INTERNET!"
+msgstr ""
+
+#: utr4wstrings.tc_you_are_using_the_latest_version
+msgid "You are using the latest version"
+msgstr ""
+
+#: utr4wstrings.tc_yugoslavia
+msgid "Yugoslavia"
+msgstr ""
+
+#: utr4wstrings.tc_zone
+msgid "Zones"
 msgstr ""
 
 #: uudpdestinationeditform.tc_udpedit_badport

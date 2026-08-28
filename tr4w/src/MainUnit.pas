@@ -7460,24 +7460,6 @@ begin
   tLogIndex := 0;
   ListView_DeleteAllItems(wh[mweEditableLog]);
 
-  { ONE REPAINT, NOT ONE PER QSO.
-
-    Every tAddContestExchangeToLog below is an LVM_INSERTITEM, and a visible
-    list view repaints on each -- so opening a contest showed empty grid lines
-    and then the rows arriving one at a time (NY4I, 2026-08-28). The control is
-    already on screen by now: the main window is shown first on purpose and the
-    tool windows are restored after the loop is running.
-
-    tSetWindowRedraw has been sitting in TF.pas with NO CALLERS, written for
-    exactly this.
-
-    SAFE WITHOUT try/finally, and it was checked rather than assumed: between
-    here and label 2 there is no Exit and no raise, and the single early escape
-    is `goto 2`, which lands on the restore. A try block could not bracket this
-    anyway -- the loop is built from goto and jumping out of a try is not
-    allowed. The residual risk is an exception from the read loop leaving the
-    view frozen; the next LoadinLog re-enables it. }
-  tSetWindowRedraw(wh[mweEditableLog], False);
 
   Size := Windows.GetFileSize(LogHandle, nil);
 
@@ -7662,12 +7644,6 @@ begin
      goto 1;
      end;
   2:
-  { Both paths reach here -- the loop's normal end and the empty-log goto. }
-  tSetWindowRedraw(wh[mweEditableLog], True);
-  { WM_SETREDRAW(True) does not repaint by itself; without this the rows stay
-    invisible until something else happens to invalidate the control. }
-  Windows.InvalidateRect(wh[mweEditableLog], nil, True);
-
   // LoadingInLogFile := False;
   CloseLogFile;
   // DispalyLoadedQSOs(-1);
