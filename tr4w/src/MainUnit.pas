@@ -361,8 +361,6 @@ procedure SetRemMultsColumnWidth;
 function KeyerDebugDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam:
   lParam): BOOL; stdcall;
 procedure CheckInactiveRigCallingCQ;
-function CheckWindowAndColor(Window: HWND; var Brush: HBRUSH; var Color:
-  integer): boolean;
 procedure tAltI;
 procedure tr4w_alt_n_transmit_frequency;
 procedure tr4w_toggle_sidetone;
@@ -618,23 +616,6 @@ uses
 // (These are // comments deliberately: a {$IF ...} directive inside a { } block
 // comment ends that comment at its own closing brace, which is exactly how the
 // first version of this note failed to compile.)
-var
-  (* HOW OFTEN THIS STILL FINDS ANYTHING.  Temporary instrumentation.
-
-     DrawWindows says every main-window element is an LCL control now and that
-     their WM_CTLCOLOR* goes to uMainForm.TR4WFormSubclassProcBody instead of
-     here.  If that is true this function scans up to 60 handles on every
-     colour message and never matches -- waste on a painting path, and the
-     WM_CTLCOLOR* arm could be deleted outright.
-
-     It is an assertion in a comment either way, so it gets counted rather
-     than believed.  Reported once at shutdown; delete both counters and the
-     report when the question is settled.
-
-     Paren-star: a brace comment would end at the first closing brace, and
-     this one has to be able to quote things. *)
-  GColorQueries: Cardinal = 0;
-  GColorMatches: Cardinal = 0;
 
 function GetCPU: int64;
 begin
@@ -3574,10 +3555,6 @@ begin
 
   if Assigned(logger) then
      begin
-     (* See the counters' declaration.  Zero matches means the WM_CTLCOLOR*
-        arm no longer serves any main-window element. *)
-     logger.Info('CheckWindowAndColor: %d query(s), %d match(es)',
-                 [GColorQueries, GColorMatches]);
      logger.Info('------------------------------Program shutdown----------------------------');
      FreeAndNil(logger);
      end;
@@ -4381,23 +4358,19 @@ begin
   //tr4wBrushArray[trBtnFace];
   TempWindowColor := tr4wColorsArray[TWindows[mweWholeScreen].mweColor];
 
-  if CheckWindowAndColor(HWND(lParam), TempBrush, TempWindowColor) then
-     begin
+  (* THE MAIN-WINDOW ELEMENTS WERE TESTED HERE, by scanning wh[] for a matching
+     handle. They are all LCL controls now and the form subclass forwards their
+     WM_CTLCOLOR* to the LCL, so the scan never matched.
 
-     // NOTHING IS LEFT IN HERE, and the guard above is what still runs.
-     //
-     // The search-and-pounce green on the exchange field, the dupe-info
-     // colours, PTT, WSJT-X and the two radio rows were all arms of this
-     // function.  Every element it painted is an LCL control now and carries
-     // its own Color and Font.Color -- see RefreshMainWindowElementColors --
-     // and uMainForm.TR4WFormSubclassProcBody sends their WM_CTLCOLOR* to the
-     // LCL rather than here, so this function is never asked about them.
-     //
-     // What still reaches it: the totals-window headers and the mults array
-     // window below, which are not TMainWindowElement at all.
+     MEASURED, not assumed. A counter read 48 queries and 7 matches on
+     2026-08-27, and every match was the possible-call list -- whose
+     WM_CTLCOLORLISTBOX was simply missing from that fork. With it added the
+     count went to 41 queries, 0 matches, and the scan came out with its
+     function.
 
-     goto DrawWindow;
-     end;
+     What still arrives is the two windows below, which are not
+     TMainWindowElement at all: the totals-window headers and the mults array.
+     This function retires with them. *)
 
   if TotWinCurrrentColumn in [1..7] then
      begin
@@ -9524,27 +9497,6 @@ begin
 
 end;
 
-function CheckWindowAndColor(Window: HWND; var Brush: HBRUSH; var Color:
-  integer): boolean;
-var
-  TempWindowElement: TMainWindowElement;
-begin
-  Result := False;
-  Inc(GColorQueries);
-  for TempWindowElement := Low(TMainWindowElement) to High(TMainWindowElement)
-    do
-     begin
-     if wh[TempWindowElement] = Window then
-        begin
-        Brush := tr4wBrushArray[TWindows[TempWindowElement].mweBackG];
-        Color := tr4wColorsArray[TWindows[TempWindowElement].mweColor];
-        Result := True;
-        Inc(GColorMatches);
-        Break;
-        end;
-     end;
-
-end;
 
 (*----------------------------------------------------------------------------*)
 

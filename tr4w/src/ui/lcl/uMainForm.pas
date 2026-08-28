@@ -785,6 +785,14 @@ begin
              (ControlUsable(TR4WExchangeEdit) and (TR4WExchangeEdit.Handle = aWnd));
 end;
 
+function IsPossibleCallHandle(const aWnd: HWND): boolean;
+{ Guarded the same way as IsEntryFieldHandle: the control is nil on the
+  headless /EXPORT path, where no form is ever built. }
+begin
+   Result := ControlUsable(TR4WMainForm.lstPossibleCall)
+             and (TR4WMainForm.lstPossibleCall.Handle = aWnd);
+end;
+
 function TR4WFormSubclassProcBody(TRHWND: HWND; Msg: UINT;
                                   wParam: wParam; lParam: lParam): longword; stdcall;
 begin
@@ -804,8 +812,22 @@ begin
      Brush.Reference.Handle (win32callback.inc:1420).  ONE system paints the
      control, which is the whole point: while TR4W claimed this message, the
      Color property on a converted TEdit did nothing at all. }
-   if ((Msg = WM_CTLCOLOREDIT)   and IsEntryFieldHandle(HWND(lParam))) or
-      ((Msg = WM_CTLCOLORSTATIC) and IsMainElementHandle(HWND(lParam)))   then
+   (* AND THE POSSIBLE-CALL LIST, added 2026-08-27 after MEASURING it.
+
+      DrawWindows carried a comment saying nothing reached it any more. A
+      counter in CheckWindowAndColor said otherwise: 48 queries, 7 matches,
+      and every match was this one control. WM_CTLCOLORLISTBOX was simply not
+      in the fork above, so the list box's background was still being decided
+      by TR4W while the LCL owned everything else about it.
+
+      The items are owner-drawn through lstPossibleCallDrawItem, so this
+      message only ever governed the background BEYOND the items -- which is
+      why nobody noticed. It is the last main-window element on the Win32
+      colour path, and with it forwarded the whole WM_CTLCOLOR* arm of
+      WindowProcBody has nothing left to answer. *)
+   if ((Msg = WM_CTLCOLOREDIT)    and IsEntryFieldHandle(HWND(lParam))) or
+      ((Msg = WM_CTLCOLORSTATIC)  and IsMainElementHandle(HWND(lParam))) or
+      ((Msg = WM_CTLCOLORLISTBOX) and IsPossibleCallHandle(HWND(lParam)))  then
       begin
       Result := Windows.CallWindowProc(GLCLFormProc, TRHWND, Msg, wParam, lParam);
       Exit;
@@ -886,6 +908,14 @@ begin
 
    with TR4WMainForm.lstPossibleCall do
       begin
+      (* THE COLOURS, which RefreshMainWindowElementColors does not apply:
+         its loop skips anything with mweiStyle <= 2 and this element has 0.
+         Without them the LCL would answer WM_CTLCOLORLISTBOX from the form
+         default rather than from the table, which is the regression that
+         forwarding the message would otherwise introduce. *)
+      Color      := tr4wColorsArray[TWindows[mwePossibleCall].mweBackG];
+      Font.Color := tr4wColorsArray[TWindows[mwePossibleCall].mweColor];
+
       // WM_MEASUREITEM, which the main window proc used to answer with
       // `itemHeight := ws` for this one control id.  A property, and that arm is
       // deleted.
