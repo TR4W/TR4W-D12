@@ -795,7 +795,11 @@ begin
    try
       radio.Name := 'K4';
       radio.KeyerOutputPort := 'SERIAL 6';
-      prof.Radio1Name := 'K4';
+      { No store in this test -- the profile and the radio are built by hand,
+        so the slot is pointed at the radio directly. The ID is the
+        reference; the name beside it is the readable mirror. }
+      prof.Radio1Id   := radio.Id;
+      prof.Radio1Name := radio.Name;
 
       // A DEVICE NAME with no resolved port must fall back to NONE, never leak.
       prof.CWOutput1 := 'WinKeyer';

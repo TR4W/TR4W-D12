@@ -1046,6 +1046,7 @@ type
       procedure NoteRadiosNavItem(item: TTreeNode);
       procedure ApplyChevrons;
 
+      function  RadioNameForId(const aId: string): string;
       procedure FillRadioNameCombo(const aCombo: TComboBox;
                                    const aSelected, aUsedByOtherSlot,
                                    aOtherSlotLabel: string);
@@ -1816,17 +1817,35 @@ end;
 // The TAG stays the bare radio name, so selection still matches by TagString
 // and the decorated text never reaches the profile -- the reason this dialog
 // selects by tag and never by index.
+{ The name to SHOW for a stored id, or '' when the id names nothing. }
+function TPrefsForm.RadioNameForId(const aId: string): string;
+var
+   radio: TRadioDefinition;
+begin
+   Result := '';
+   radio := FStore.FindRadioById(aId);
+   if radio <> nil then
+      begin
+      Result := radio.Name;
+      end;
+end;
+
 procedure TPrefsForm.FillRadioNameCombo(const aCombo: TComboBox;
                                         const aSelected, aUsedByOtherSlot,
                                         aOtherSlotLabel: string);
 var
    i: integer;
-   name, shown: string;
+   id, name, shown: string;
 begin
+   { THE TAG IS THE RADIO'S ID, the caption is its name. A profile references
+     by id, so the control has to hand one back -- and the operator still picks
+     a radio by the name they gave it. aSelected and aUsedByOtherSlot are ids
+     for the same reason. }
    aCombo.Clear;
    AddComboItem(aCombo, TC_PREFS_NONE, '');
    for i := 0 to FStore.RadioCount - 1 do
       begin
+      id    := FStore.Radio(i).Id;
       name  := FStore.Radio(i).Name;
       shown := name;
 
@@ -1835,8 +1854,8 @@ begin
       // marking the very item the combo has to display would leave the control
       // showing a decorated name -- hiding the conflict instead of showing it.
       if (aUsedByOtherSlot <> '') and
-         SameText(name, aUsedByOtherSlot) and
-         (not SameText(name, aSelected)) then
+         SameText(id, aUsedByOtherSlot) and
+         (not SameText(id, aSelected)) then
          begin
          // THE ROW STILL SAYS SO, IT IS JUST NOT GREYED.  FMX let an item be
          // Enabled := False; an LCL combo holds plain strings and has no
@@ -1846,11 +1865,11 @@ begin
          // lived in the OnChange handler.  What is lost is the visual cue, and
          // the caption carries that (TC_PREFS_RADIOINUSE names the other slot).
          shown := Format(TC_PREFS_RADIOINUSE, [name, aOtherSlotLabel]);
-         AddComboItem(aCombo, shown, name);
+         AddComboItem(aCombo, shown, id);
          Continue;
          end;
 
-      AddComboItem(aCombo, shown, name);
+      AddComboItem(aCombo, shown, id);
       end;
    SelectByTag(aCombo, aSelected);
 end;
@@ -2168,10 +2187,10 @@ begin
          end
       else
          begin
-         FillRadioNameCombo(cbxRadio1, prof.Radio1Name, prof.Radio2Name, TC_PREFS_RADIO2);
-         FillRadioNameCombo(cbxRadio2, prof.Radio2Name, prof.Radio1Name, TC_PREFS_RADIO1);
-         FillCWOutputCombo(cbxCW1, prof.CWOutput1, prof.Radio1Name);
-         FillCWOutputCombo(cbxCW2, prof.CWOutput2, prof.Radio2Name);
+         FillRadioNameCombo(cbxRadio1, prof.Radio1Id, prof.Radio2Id, TC_PREFS_RADIO2);
+         FillRadioNameCombo(cbxRadio2, prof.Radio2Id, prof.Radio1Id, TC_PREFS_RADIO1);
+         FillCWOutputCombo(cbxCW1, prof.CWOutput1, RadioNameForId(prof.Radio1Id));
+         FillCWOutputCombo(cbxCW2, prof.CWOutput2, RadioNameForId(prof.Radio2Id));
          chkSpeedSync1.Checked := prof.SpeedSync1;
          chkSpeedSync2.Checked := prof.SpeedSync2;
          chkSO2R.Checked  := prof.SO2REnabled;
@@ -2459,8 +2478,12 @@ begin
       Exit;
       end;
 
-   prof.Radio1Name  := SelectedTag(cbxRadio1);
-   prof.Radio2Name  := SelectedTag(cbxRadio2);
+   { THE ID IS WHAT IS STORED. The names are a mirror, refreshed here so the
+     file stays readable and never disagrees with the reference. }
+   prof.Radio1Id    := SelectedTag(cbxRadio1);
+   prof.Radio2Id    := SelectedTag(cbxRadio2);
+   prof.Radio1Name  := RadioNameForId(prof.Radio1Id);
+   prof.Radio2Name  := RadioNameForId(prof.Radio2Id);
    prof.CWOutput1   := SelectedTag(cbxCW1);
    prof.CWOutput2   := SelectedTag(cbxCW2);
    prof.SpeedSync1  := chkSpeedSync1.Checked;
@@ -6564,13 +6587,16 @@ begin
 
    if (prof <> nil) and (Trim(chosen) <> '') and SameText(chosen, taken) then
       begin
+      { AN ID, because that is what the combo's tag now is and what
+        SelectByTag below will look for. Reverting to a NAME would match no
+        item and silently clear the slot. }
       if thisCombo = cbxRadio2 then
          begin
-         previous := prof.Radio2Name;
+         previous := prof.Radio2Id;
          end
       else
          begin
-         previous := prof.Radio1Name;
+         previous := prof.Radio1Id;
          end;
 
       // REVERTED SILENTLY.  The row the operator clicked says "(in use as

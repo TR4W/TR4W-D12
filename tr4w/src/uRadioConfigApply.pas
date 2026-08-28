@@ -1919,7 +1919,7 @@ begin
          begin
          Continue;
          end;
-      if aStore.FindRadio(aProfile.RadioNameForSlot(slot)) = nil then
+      if aStore.FindRadioById(aProfile.RadioIdForSlot(slot)) = nil then
          begin
          aError := Format('Profile "%s" refers to radio "%s", which does not exist',
                           [aProfile.Name, aProfile.RadioNameForSlot(slot)]);
@@ -1978,7 +1978,7 @@ begin
 
       for slot := 1 to 2 do
          begin
-         radioDef := aStore.FindRadio(aProfile.RadioNameForSlot(slot));
+         radioDef := aStore.FindRadioById(aProfile.RadioIdForSlot(slot));
          // radioDef is nil for an empty slot, and the renderer treats that as
          // "clear it" -- necessary, or the slot keeps whatever the previously
          // active profile left there.
@@ -2060,7 +2060,7 @@ var
    i: integer;
 begin
    Result := '';
-   radioDef := aStore.FindRadio(aProfile.RadioNameForSlot(aSlot));
+   radioDef := aStore.FindRadioById(aProfile.RadioIdForSlot(aSlot));
    if radioDef = nil then
       begin
       Exit;
@@ -2316,8 +2316,8 @@ begin
       Exit;
       end;
 
-   radio1 := aStore.FindRadio(aProfile.Radio1Name);
-   radio2 := aStore.FindRadio(aProfile.Radio2Name);
+   radio1 := aStore.FindRadioById(aProfile.Radio1Id);
+   radio2 := aStore.FindRadioById(aProfile.Radio2Id);
 
    if (radio1 = nil) or (radio2 = nil) then
       begin

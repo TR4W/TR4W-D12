@@ -85,6 +85,8 @@ type
       procedure Test_LegacyIniHasRadiosDetectsFactoryOnlySlot;
 
       // --- JSON persistence (Track F-5a) ---------------------------------
+      procedure Test_JSONWithoutIdsMigratesProfileReferences;
+      procedure Test_RenameLeavesProfileReferencesAlone;
       procedure Test_JSONRoundTripsEveryRadioField;
       procedure Test_JSONRoundTripsProfilesAndGeneral;
       procedure Test_JSONStoresTheSchemaVersion;
@@ -346,8 +348,8 @@ begin
 
          prof := TStationProfile.Create;
          prof.Name              := 'Home SO2R';
-         prof.Radio1Name        := 'K3';
-         prof.Radio2Name        := 'IC-7100';
+         store.SetProfileRadioByName(prof, 1, 'K3');
+         store.SetProfileRadioByName(prof, 2, 'IC-7100');
          prof.DefaultActiveSlot := 2;
          prof.CWOutput1         := CWOUTPUT_CAT;
          prof.CWOutput2         := 'SERIAL 4';
@@ -581,8 +583,8 @@ begin
 
       prof := TStationProfile.Create;
       prof.Name       := 'Home';
-      prof.Radio1Name := 'K3';
-      prof.Radio2Name := 'IC-7100';
+      store.SetProfileRadioByName(prof, 1, 'K3');
+      store.SetProfileRadioByName(prof, 2, 'IC-7100');
       store.AddProfile(prof, err);
 
       CheckTrue(store.RenameRadio('K3', 'K3 (loaner)', err), 'renamed: ' + err);
@@ -658,7 +660,7 @@ begin
 
       prof := TStationProfile.Create;
       prof.Name       := 'Home';
-      prof.Radio1Name := 'K3';
+      store.SetProfileRadioByName(prof, 1, 'K3');
       store.AddProfile(prof, err);
 
       CheckFalse(store.DeleteRadio('K3', err), 'refused while a profile uses it');
@@ -757,6 +759,10 @@ begin
    try
       prof := TStationProfile.Create;
       prof.Name       := 'Home';
+      { A DANGLING REFERENCE IS NOW A DANGLING ID. A name that matches no
+        radio leaves the slot empty, which is not an error -- the reference is
+        the id, so that is what has to be made to point at nothing. }
+      prof.Radio1Id   := 'no-such-radio-id';
       prof.Radio1Name := 'A Radio That Is Gone';
       store.AddProfile(prof, err);
 
@@ -786,8 +792,8 @@ begin
 
       prof := TStationProfile.Create;
       prof.Name       := 'Home';
-      prof.Radio1Name := 'K3';
-      prof.Radio2Name := 'K3';
+      store.SetProfileRadioByName(prof, 1, 'K3');
+      store.SetProfileRadioByName(prof, 2, 'K3');
       store.AddProfile(prof, err);
 
       CheckFalse(store.Validate(err), 'caught');
@@ -823,8 +829,8 @@ begin
 
       prof := TStationProfile.Create;
       prof.Name       := 'Home';
-      prof.Radio1Name := 'K3';
-      prof.Radio2Name := 'IC-7100';
+      store.SetProfileRadioByName(prof, 1, 'K3');
+      store.SetProfileRadioByName(prof, 2, 'IC-7100');
       store.AddProfile(prof, err);
 
       CheckFalse(store.Validate(err), 'caught despite the casing difference');
@@ -861,8 +867,8 @@ begin
 
       prof := TStationProfile.Create;
       prof.Name        := 'Remote SO2R';
-      prof.Radio1Name  := 'K4 Remote';
-      prof.Radio2Name  := 'Flex Remote';
+      store.SetProfileRadioByName(prof, 1, 'K4 Remote');
+      store.SetProfileRadioByName(prof, 2, 'Flex Remote');
       prof.SO2REnabled := True;
       store.AddProfile(prof, err);
       store.ActiveProfileName := 'Remote SO2R';
@@ -1258,6 +1264,91 @@ end;
 
 { ----------------------------------------------------------------- runner - }
 
+{ A STORE WRITTEN BEFORE RADIOS HAD IDS.
+
+  Every existing installation is this case -- NY4I's own settings/tr4w.json had
+  8 radios and 13 profiles and not one id (2026-08-28) -- so the migration is
+  not an edge case, it is what happens on the next start after this build.
+
+  The reference must survive: the profile named a radio, and after loading it
+  must point at that radio BY ID, still show the name, and validate. }
+procedure TRadioConfigStoreTests.Test_JSONWithoutIdsMigratesProfileReferences;
+var
+   store: TRadioConfigStore;
+   root: TJSONObject;
+   prof: TStationProfile;
+   radio: TRadioDefinition;
+   err: string;
+begin
+   BeginTest('Test_JSONWithoutIdsMigratesProfileReferences');
+   root := TJSONObject(TJSONObject.ParseJSONValue(
+      '{"radios":[{"name":"K3","registryId":"K3"},' +
+      '           {"name":"IC-7100","registryId":"IC7100"}],' +
+      ' "profiles":[{"name":"Home","radio1":"K3","radio2":"IC-7100"}],' +
+      ' "general":{"activeProfile":"Home"}}'));
+   try
+      store := TRadioConfigStore.Create;
+      try
+         store.LoadFromJSON(root);
+
+         CheckEquals(2, store.RadioCount, 'both radios read');
+         radio := store.FindRadio('K3');
+         CheckTrue(radio <> nil, 'K3 is there');
+         CheckTrue(radio.Id <> '', 'a radio read without an id is given one');
+
+         prof := store.Profile(0);
+         CheckTrue(prof <> nil, 'the profile is there');
+         CheckEquals(radio.Id, prof.Radio1Id, 'slot one resolved to the id');
+         CheckEquals('K3',     prof.Radio1Name, 'and still shows the name');
+         CheckTrue(prof.Radio2Id <> '', 'slot two resolved too');
+
+         CheckTrue(store.Validate(err), 'the migrated store is valid: ' + err);
+      finally
+         store.Free;
+      end;
+   finally
+      root.Free;
+   end;
+end;
+
+{ THE POINT OF THE WHOLE CHANGE. Renaming a radio used to be a fan-out that had
+  to find every profile; now it is a non-event for the reference, and only the
+  readable mirror follows. NY4I lost a profile to the old behaviour. }
+procedure TRadioConfigStoreTests.Test_RenameLeavesProfileReferencesAlone;
+var
+   store: TRadioConfigStore;
+   radio: TRadioDefinition;
+   prof: TStationProfile;
+   err, idBefore: string;
+begin
+   BeginTest('Test_RenameLeavesProfileReferencesAlone');
+   store := TRadioConfigStore.Create;
+   try
+      radio := TRadioDefinition.Create;
+      radio.Name := 'K4Z';
+      store.AddRadio(radio, err);
+
+      prof := TStationProfile.Create;
+      prof.Name := 'K4D/K4Z';
+      store.AddProfile(prof, err);
+      CheckTrue(store.SetProfileRadioByName(prof, 2, 'K4Z'), 'slot two set');
+      idBefore := prof.Radio2Id;
+      CheckTrue(idBefore <> '', 'and it carries an id');
+
+      CheckTrue(store.RenameRadio('K4Z', 'K40', err), 'renamed: ' + err);
+
+      CheckEquals(idBefore, prof.Radio2Id, 'the REFERENCE did not move');
+      CheckEquals('K40',    prof.Radio2Name, 'the readable mirror followed');
+      CheckTrue(store.Validate(err), 'still valid after the rename: ' + err);
+
+      { And the radio is still known to be in use, which is what stops it being
+        deleted out from under the profile. }
+      CheckFalse(store.DeleteRadio('K40', err), 'refused while referenced');
+   finally
+      store.Free;
+   end;
+end;
+
 procedure TRadioConfigStoreTests.Test_JSONRoundTripsEveryRadioField;
 var
    store: TRadioConfigStore;
@@ -1313,8 +1404,8 @@ begin
 
       prof := TStationProfile.Create;
       prof.Name              := 'Field Day';
-      prof.Radio1Name        := 'A';
-      prof.Radio2Name        := 'B';
+      store.SetProfileRadioByName(prof, 1, 'A');
+      store.SetProfileRadioByName(prof, 2, 'B');
       prof.DefaultActiveSlot := 2;
       prof.CWOutput1         := 'CAT';
       prof.CWOutput2         := 'NONE';
@@ -1861,6 +1952,8 @@ begin
    Test_SeedUsesFactoryIdAndLegacyNetworkNames;
    Test_SeedDedupesIdenticalSlotNames;
 
+   Test_JSONWithoutIdsMigratesProfileReferences;
+   Test_RenameLeavesProfileReferencesAlone;
    Test_JSONRoundTripsEveryRadioField;
    Test_JSONRoundTripsProfilesAndGeneral;
    Test_JSONStoresTheSchemaVersion;

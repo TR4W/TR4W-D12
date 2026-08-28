@@ -220,9 +220,20 @@ type
 
    TRadioDefinition = class(TObject)
    public
-      // Identity.  Name is the key the operator sees and profiles refer to, so
-      // it is unique within a store and renaming has to fix the references
-      // (see TRadioConfigStore.RenameRadio).
+      // THE KEY, and it is not the name.  A profile refers to a radio by Id, so
+      // renaming is a non-event: nothing else has to be found and fixed.
+      //
+      // It used to be the Name, and that cost NY4I a profile: renaming K4Z to
+      // K40 left the active profile pointing at a radio that no longer existed
+      // (2026-08-28).  "Changeable names are not good for keys in any context.
+      // GUID is cheap and universally unique."
+      //
+      // Assigned when the radio is created and never rewritten.  A store read
+      // from an older file has none, so one is minted on load -- see LoadRadios.
+      Id: string;
+      // What the OPERATOR sees and types.  Unique within a store because two
+      // radios called K3 would be unusable in the combo boxes, not because
+      // anything keys on it.
       Name: string;
       // Registry id, e.g. 'K3', 'IC7300', 'TCI', 'HAMLIBANY'.  Opaque here.
       RegistryId: string;
@@ -320,6 +331,12 @@ type
    TStationProfile = class(TObject)
    public
       Name: string;
+      { THE REFERENCE IS THE ID. The two names below are a MIRROR kept for the
+        file to stay readable and for a store written by this build to remain
+        openable by an older one -- nothing resolves through them except the
+        migration of a file that predates ids. }
+      Radio1Id: string;
+      Radio2Id: string;
       Radio1Name: string;
       Radio2Name: string;
       DefaultActiveSlot: integer;   // 1 or 2
@@ -336,7 +353,9 @@ type
       function Clone: TStationProfile;
       function SameAs(const aOther: TStationProfile): boolean;
       // Slot lookup without the caller writing the same if/else every time.
+      function RadioIdForSlot(const aSlot: integer): string;
       function RadioNameForSlot(const aSlot: integer): string;
+      function ReferencesRadioId(const aRadioId: string): boolean;
       function ReferencesRadio(const aRadioName: string): boolean;
    end;
 
@@ -478,6 +497,10 @@ type
       // Refuses while any profile still refers to it: a dangling reference is
       // a profile that silently loses a radio, which is worse than a refusal.
       function DeleteRadio(const aName: string; out aError: string): boolean;
+      function FindRadioById(const aId: string): TRadioDefinition;
+      function SetProfileRadioByName(const aProfile: TStationProfile;
+                                     const aSlot: integer;
+                                     const aName: string): boolean;
       function RenameRadio(const aOldName, aNewName: string; out aError: string): boolean;
       // A name not yet in use, derived from aBase ('K3', 'K3 (2)', ...).
       function UniqueRadioName(const aBase: string): string;
@@ -753,9 +776,33 @@ end;
 
 { ------------------------------------------------------- TRadioDefinition -- }
 
+{ A NEW RADIO ID.
+
+  A GUID, in the registry spelling without the braces: it has to survive a
+  round trip through JSON and be legible in a file an operator may read, and it
+  never has to be parsed back. Cheap, and unique without a central counter --
+  two stores merged by hand cannot collide. }
+function NewRadioId: string;
+var
+   g: TGUID;
+begin
+   if CreateGUID(g) = 0 then
+      begin
+      Result := Copy(GUIDToString(g), 2, 36);
+      end
+   else
+      begin
+      { CreateGUID does not fail in practice; if it ever did, a name-shaped
+        fallback is still better than an empty key, which would make every
+        radio look like the same one. }
+      Result := 'radio-' + FormatDateTime('yyyymmddhhnnsszzz', Now);
+      end;
+end;
+
 constructor TRadioDefinition.Create;
 begin
    inherited Create;
+   Id                := NewRadioId;
    // Defaults chosen to mean "nothing configured": a zero baud rate or CI-V
    // address is not a real setting, so the apply layer can leave the model's
    // own default in place rather than write a wrong number.
@@ -775,6 +822,10 @@ begin
       Exit;
       end;
 
+   { The Id travels with the definition: EditorDone copies a clone back onto
+     the original, and a clone that lost its identity would look like a new
+     radio to every profile referring to it. }
+   Id                := aSource.Id;
    Name              := aSource.Name;
    RegistryId        := aSource.RegistryId;
    Transport         := aSource.Transport;
@@ -897,6 +948,9 @@ begin
       end;
 
    Name              := aSource.Name;
+   { The ids are the reference; the names are their mirror. Both travel. }
+   Radio1Id          := aSource.Radio1Id;
+   Radio2Id          := aSource.Radio2Id;
    Radio1Name        := aSource.Radio1Name;
    Radio2Name        := aSource.Radio2Name;
    DefaultActiveSlot := aSource.DefaultActiveSlot;
@@ -927,6 +981,19 @@ begin
    Result.Assign(Self);
 end;
 
+{ The id for a slot -- what every lookup should ask for. }
+function TStationProfile.RadioIdForSlot(const aSlot: integer): string;
+begin
+   if aSlot = 2 then
+      begin
+      Result := Radio2Id;
+      end
+   else
+      begin
+      Result := Radio1Id;
+      end;
+end;
+
 function TStationProfile.RadioNameForSlot(const aSlot: integer): string;
 begin
    if aSlot = 2 then
@@ -937,6 +1004,15 @@ begin
       begin
       Result := Radio1Name;
       end;
+end;
+
+{ BY ID. Asked before deleting a radio, and a name comparison would answer
+  "no" for a radio whose name had changed since the profile was written -- which
+  is exactly the case ids exist to remove. }
+function TStationProfile.ReferencesRadioId(const aRadioId: string): boolean;
+begin
+   Result := (Trim(aRadioId) <> '') and
+             (SameText(Radio1Id, aRadioId) or SameText(Radio2Id, aRadioId));
 end;
 
 function TStationProfile.ReferencesRadio(const aRadioName: string): boolean;
@@ -1414,6 +1490,83 @@ begin
       end;
 end;
 
+{ POINT A PROFILE SLOT AT A RADIO, GIVEN A NAME.
+
+  The only supported way to do it from a name, and it exists because the
+  alternative is a footgun: assigning Radio1Name on its own now leaves the ID
+  -- the actual reference -- untouched, so the profile would look right in the
+  file and resolve to nothing. Setting both here keeps them from disagreeing.
+
+  False when no radio has that name, and the slot is left alone; the caller
+  decides whether that is an error. }
+function TRadioConfigStore.SetProfileRadioByName(const aProfile: TStationProfile;
+                                                 const aSlot: integer;
+                                                 const aName: string): boolean;
+var
+   radioDef: TRadioDefinition;
+begin
+   Result := False;
+   if aProfile = nil then
+      begin
+      Exit;
+      end;
+
+   if Trim(aName) = '' then
+      begin
+      { Clearing a slot is legitimate and is not a lookup failure. }
+      if aSlot = 2 then
+         begin
+         aProfile.Radio2Id := '';
+         aProfile.Radio2Name := '';
+         end
+      else
+         begin
+         aProfile.Radio1Id := '';
+         aProfile.Radio1Name := '';
+         end;
+      Result := True;
+      Exit;
+      end;
+
+   radioDef := FindRadio(aName);
+   if radioDef = nil then
+      begin
+      Exit;
+      end;
+
+   if aSlot = 2 then
+      begin
+      aProfile.Radio2Id   := radioDef.Id;
+      aProfile.Radio2Name := radioDef.Name;
+      end
+   else
+      begin
+      aProfile.Radio1Id   := radioDef.Id;
+      aProfile.Radio1Name := radioDef.Name;
+      end;
+   Result := True;
+end;
+
+{ THE LOOKUP PROFILES USE. By id, so a rename cannot break it. }
+function TRadioConfigStore.FindRadioById(const aId: string): TRadioDefinition;
+var
+   i: integer;
+begin
+   Result := nil;
+   if Trim(aId) = '' then
+      begin
+      Exit;
+      end;
+   for i := 0 to FRadios.Count - 1 do
+      begin
+      if SameText(FRadios[i].Id, aId) then
+         begin
+         Result := FRadios[i];
+         Exit;
+         end;
+      end;
+end;
+
 function TRadioConfigStore.FindRadio(const aName: string): TRadioDefinition;
 var
    idx: integer;
@@ -1475,7 +1628,7 @@ begin
    // time with no explanation, so refuse and name the profile instead.
    for i := 0 to FProfiles.Count - 1 do
       begin
-      if FProfiles[i].ReferencesRadio(aName) then
+      if FProfiles[i].ReferencesRadioId(FRadios[idx].Id) then
          begin
          aError := Format('"%s" is used by profile "%s"',
                           [Trim(aName), FProfiles[i].Name]);
@@ -1519,8 +1672,10 @@ begin
       Exit;
       end;
 
-   // Fix the references before the name moves, or the comparison below would
-   // no longer match anything.
+   // THE MIRROR, NOT THE REFERENCE. Profiles point at this radio by Id, so the
+   // rename is already a non-event for them; these two fields are the readable
+   // copy written into the file and they would otherwise still say K4Z.
+   // Updated before the name moves, or the comparison would match nothing.
    for i := 0 to FProfiles.Count - 1 do
       begin
       if SameName(FProfiles[i].Radio1Name, aOldName) then
@@ -1692,7 +1847,7 @@ begin
 
       if Trim(prof.Radio1Name) <> '' then
          begin
-         radio1 := FindRadio(prof.Radio1Name);
+         radio1 := FindRadioById(prof.Radio1Id);
          if radio1 = nil then
             begin
             aError := Format('Profile "%s" refers to radio "%s", which does not exist',
@@ -1703,7 +1858,7 @@ begin
 
       if Trim(prof.Radio2Name) <> '' then
          begin
-         radio2 := FindRadio(prof.Radio2Name);
+         radio2 := FindRadioById(prof.Radio2Id);
          if radio2 = nil then
             begin
             aError := Format('Profile "%s" refers to radio "%s", which does not exist',
@@ -1869,6 +2024,8 @@ begin
 
    prof.Radio1Name        := aIni.ReadString(aSection,  'Radio1',            '');
    prof.Radio2Name        := aIni.ReadString(aSection,  'Radio2',            '');
+   { An ini names radios; the caller resolves those to ids once the radios are
+     in the store -- see ResolveProfileRadioIds. }
    prof.DefaultActiveSlot := aIni.ReadInteger(aSection, 'DefaultActiveSlot', 1);
    prof.CWOutput1         := aIni.ReadString(aSection,  'CWOutput1',         CWOUTPUT_NONE);
    prof.CWOutput2         := aIni.ReadString(aSection,  'CWOutput2',         CWOUTPUT_NONE);
@@ -1944,6 +2101,7 @@ function RadioToJSON(const aRadio: TRadioDefinition): TJSONObject;
 begin
    Result := TJSONObject.Create;
 
+   Result.AddPair('id',              aRadio.Id);
    Result.AddPair(JSONKEY_NAME,      aRadio.Name);
    Result.AddPair('registryId',      aRadio.RegistryId);
    Result.AddPair('transport',       TransportToStr(aRadio.Transport));
@@ -1985,6 +2143,11 @@ begin
    Result := TJSONObject.Create;
 
    Result.AddPair(JSONKEY_NAME,        aProfile.Name);
+   { BOTH, and the id is the one that counts. The names stay so the file can be
+     read by a person and by an older build; they are refreshed from the ids on
+     every save, so they cannot drift into a lie. }
+   Result.AddPair('radio1Id',          aProfile.Radio1Id);
+   Result.AddPair('radio2Id',          aProfile.Radio2Id);
    Result.AddPair('radio1',            aProfile.Radio1Name);
    Result.AddPair('radio2',            aProfile.Radio2Name);
    Result.AddPair('defaultActiveSlot', TJSONNumber.Create(aProfile.DefaultActiveSlot));
@@ -2386,6 +2549,14 @@ begin
          obj := TJSONObject(arr.Items[i]);
 
          radioDef := TRadioDefinition.Create;
+         radioDef.Id                := JSONStr(obj,  'id',              '');
+         if radioDef.Id = '' then
+            begin
+            { A store written before radios had ids.  Mint one now; the profile
+              reader below resolves its by NAME in the same pass, so the two
+              halves of the migration cannot disagree. }
+            radioDef.Id := NewRadioId;
+            end;
          radioDef.Name              := JSONStr(obj,  JSONKEY_NAME,      '');
          radioDef.RegistryId        := JSONStr(obj,  'registryId',      '');
          radioDef.Transport         := StrToTransport(
@@ -2448,6 +2619,30 @@ begin
          profile.Name              := JSONStr(obj, JSONKEY_NAME,        '');
          profile.Radio1Name        := JSONStr(obj, 'radio1',            '');
          profile.Radio2Name        := JSONStr(obj, 'radio2',            '');
+         profile.Radio1Id          := JSONStr(obj, 'radio1Id',          '');
+         profile.Radio2Id          := JSONStr(obj, 'radio2Id',          '');
+
+         { MIGRATION, once, for a file written before profiles carried ids: the
+           name still says which radio was meant, and the radios were read
+           above, so resolve it now. A name that matches nothing leaves the id
+           empty and Validate reports it, which is the same outcome as before
+           and better than inventing a reference. }
+         if (profile.Radio1Id = '') and (Trim(profile.Radio1Name) <> '') then
+            begin
+            radioDef := FindRadio(profile.Radio1Name);
+            if radioDef <> nil then
+               begin
+               profile.Radio1Id := radioDef.Id;
+               end;
+            end;
+         if (profile.Radio2Id = '') and (Trim(profile.Radio2Name) <> '') then
+            begin
+            radioDef := FindRadio(profile.Radio2Name);
+            if radioDef <> nil then
+               begin
+               profile.Radio2Id := radioDef.Id;
+               end;
+            end;
          profile.DefaultActiveSlot := JSONInt(obj, 'defaultActiveSlot', 1);
          profile.CWOutput1         := JSONStr(obj, 'cwOutput1',         '');
          profile.CWOutput2         := JSONStr(obj, 'cwOutput2',         '');
@@ -2832,6 +3027,7 @@ begin
 
       if slot = 1 then
          begin
+         prof.Radio1Id   := radioDef.Id;
          prof.Radio1Name := radioDef.Name;
          if radioDef.CWByCAT then
             begin
@@ -2845,6 +3041,7 @@ begin
          end
       else
          begin
+         prof.Radio2Id   := radioDef.Id;
          prof.Radio2Name := radioDef.Name;
          if radioDef.CWByCAT then
             begin
