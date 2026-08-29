@@ -15,7 +15,7 @@ msgstr ""
 #: tr4w/src/lang/tr4w_consts_eng.pas:7
 msgctxt "TC_TRANSLATION_LANGUAGE"
 msgid "ENGLISH"
-msgstr "UKRAINIAN"
+msgstr "Українська"
 
 #. Section: General
 #: utr4wstrings:tc_translation_author

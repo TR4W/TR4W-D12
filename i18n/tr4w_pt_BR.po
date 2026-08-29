@@ -7,15 +7,14 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: BR\n"
+"Language: pt_BR\n"
 "X-Source-Language: en\n"
 
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:7
-#, fuzzy
 msgctxt "TC_TRANSLATION_LANGUAGE"
 msgid "ENGLISH"
-msgstr ""
+msgstr "Português (Brasil)"
 
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:8

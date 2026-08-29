@@ -13,7 +13,6 @@ msgstr ""
 #. Section: General
 #: utr4wstrings:tc_translation_language
 #: tr4w/src/lang/tr4w_consts_eng.pas:7
-#, fuzzy
 msgctxt "TC_TRANSLATION_LANGUAGE"
 msgid "ENGLISH"
 msgstr "한국어"

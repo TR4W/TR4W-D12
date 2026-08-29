@@ -13,10 +13,9 @@ msgstr ""
 #. Section: General
 #. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
 #: tr4w/src/lang/tr4w_consts_eng.pas:7
-#, fuzzy
 msgctxt "TC_TRANSLATION_LANGUAGE"
 msgid "ENGLISH"
-msgstr "CHINESE"
+msgstr "中文"
 
 #. Section: General
 #. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.

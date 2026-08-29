@@ -12,10 +12,9 @@ msgstr ""
 
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:7
-#, fuzzy
 msgctxt "TC_TRANSLATION_LANGUAGE"
 msgid "ENGLISH"
-msgstr ""
+msgstr "Suomi"
 
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:8
