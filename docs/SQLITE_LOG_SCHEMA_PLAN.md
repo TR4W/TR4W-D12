@@ -189,6 +189,10 @@ CREATE TABLE contest (
     created_at        INTEGER NOT NULL,   -- unix UTC
     start_time        INTEGER,
     end_time          INTEGER,
+    -- Written every time the log is OPENED, and it is the chooser's default
+    -- sort key: recent activity floats up, not start date (§11b). A contest
+    -- resumed on Sunday belongs above one created on Saturday and abandoned.
+    last_opened_at    INTEGER,
 
     -- tier 2: the entry declaration, as sent in the Cabrillo header
     my_call           TEXT NOT NULL,
@@ -701,6 +705,57 @@ than a fear.
 
 ---
 
+## 9b. Connection lifecycle — confirmed
+
+NY4I asked to confirm this, and it is worth stating in the plan because getting
+it wrong is a classic way to make SQLite look slow.
+
+**One connection per open log, created once.** `TSQLite3Connection` and its
+`TSQLTransaction` are created when a log is opened and destroyed when it closes.
+The database path is set once, at that moment. Nothing re-opens the file per
+QSO, per query, or per screen refresh.
+
+**Queries are created as needed** — but the two on the hot path are created
+once and **prepared**, then re-executed with parameters:
+
+```pascal
+// once, when the log opens
+FInsertQso.SQL.Text := 'INSERT INTO qso (guid, qso_at, callsign, ...) ' +
+                       'VALUES (:guid, :qso_at, :callsign, ...)';
+FInsertQso.Prepare;
+
+FDupeCheck.SQL.Text := 'SELECT 1 FROM qso WHERE callsign = :call ' +
+                       'AND band = :band AND mode = :mode AND deleted = 0 LIMIT 1';
+FDupeCheck.Prepare;
+
+// per QSO / per keystroke
+FInsertQso.ParamByName('callsign').AsString := aCall;
+FInsertQso.ExecSQL;
+```
+
+That is the whole performance story, and it is why §9a can say "do not build a
+cache" without hand-waving: a prepared statement against an indexed column is
+one B-tree descent. Re-assigning `SQL.Text` on every call throws the prepared
+plan away and re-parses the SQL, which is the mistake that makes people conclude
+they need a cache.
+
+Three consequences worth writing down:
+
+- **A connection belongs to one thread.** The backup decision in §6
+  (`LockUntilFinished = True`, on the logging thread) is consistent with this.
+  If a backup ever moves to a worker it needs its own connection, and then it is
+  the restarting case §6 describes.
+- **`TSQLTransaction` is not optional.** SQLdb requires one; without an explicit
+  `Commit` the writes sit in a transaction that is rolled back when the object
+  dies. Commit policy — per QSO, or batched — is a real decision, and per QSO is
+  the right default for a contest log: an operator who loses power should lose
+  at most the QSO in progress.
+- **The chooser (§11b) is the exception** and opens many databases briefly. Those
+  are separate, short-lived, read-only connections and are not this connection.
+
+
+---
+
 ## 10. Constraints that must hold
 
 **The golden corpus is the regression oracle and it reads binary `.dat` through
@@ -915,6 +970,91 @@ end;
 `LogModel` lives under `src/domain/` and is the only thing that knows there is a
 database. That is the seam the whole sequencing argument is about, and it is why
 the main log gets this shape and the browser can afford the other one.
+
+---
+
+## 11b. The log chooser — a requirement that has been waiting for this
+
+NY4I, 2026-08-29: *"one of the things TR4QT does which is nice is that it
+displays a chooser with information about the databases… it still would be nice
+to say the name and the contest, the date, maybe the number of QSOs, maybe the
+callsign used… clicking on the date column would make it so they can find the
+last one."*
+
+**This is already a written requirement, and it has been blocked on exactly this
+work.** `docs/NEW_CONTEST_DIALOG_DESIGN_BRIEF.md` lists as **Tier 1**:
+
+| feature | note in the brief |
+|---|---|
+| Database-backed list (no filesystem browser) | kill `[..]` and absolute paths |
+| Columned existing-contest grid (Name/Type/Date/Ver) | *"From TR4QT"* |
+| Clickable sortable columns | *"Enables recent"* |
+| "Last Opened" column / sort key | *"Recent activity floats up, not start date"* |
+| Delete / manage existing contests | *"From TR4QT"* |
+
+And the current LCL dialog says so itself, in the comment above `PopulateFiles`
+(`uNewContestForm.pas:244-262`), explaining why it settled for a plain list:
+
+> *"The one thing it cannot do — show columns read from INSIDE each .cfg, which
+> is the brief's Tier 1 — no filesystem browser can do either, **because that
+> needs the contest database**."*
+
+So this is not a new idea to evaluate; it is the feature that motivated part of
+the brief, and the schema has to serve it.
+
+### Is opening every database unreasonable? No.
+
+NY4I: *"I suspect it'd be pretty fast."* It is, and the reason is structural
+rather than lucky:
+
+- Opening a SQLite file is **lazy** — it reads the header and the schema, not
+  the data.
+- Everything the chooser wants except the QSO count is **one row**, because
+  `contest` is a single-row table (question 1): `SELECT contest_name,
+  contest_type, my_call, start_time, created_at, last_opened_at FROM contest`.
+- The count is `SELECT COUNT(*) FROM qso WHERE deleted = 0`, which the partial
+  index in §4 already serves.
+
+That is two trivial statements per file. At a hundred saved logs it is on the
+order of a tenth of a second, once, when the dialog opens — and a contester with
+a hundred logs is already unusual. If it ever did become slow the answer is to
+fill the count column asynchronously, not to cache metadata in a sidecar file
+that can drift from the log it describes (§9a).
+
+### What the schema owes it
+
+One addition to the `contest` row, which the brief asks for and the draft did
+not have:
+
+```sql
+    last_opened_at    INTEGER,   -- unix UTC; written when the log is OPENED
+```
+
+"Last opened" rather than "created" is deliberate and the brief is explicit
+about why: *recent activity floats up, not start date*. A contest resumed on
+Sunday morning should sort above one created on Saturday and abandoned.
+
+The schema version for the "Ver" column is free — `PRAGMA user_version` (§8).
+
+### Two things it must get right
+
+**A bad file must not break the dialog.** One corrupt, truncated, locked or
+foreign `.db` in the directory has to render as a row that says so, not as an
+exception that stops the chooser listing the other ninety-nine. This is the same
+fail-visibly rule as everywhere else in this tree.
+
+**It is the natural place to surface an integrity problem.** The chooser already
+has to open every database; `PRAGMA quick_check` is cheap enough to run there,
+so a damaged log can be marked in the list **before** an operator opens it and
+starts logging into it. That is also where the restore path from §11/7 wants to
+be offered — the operator is already looking at a list of logs with dates and
+QSO counts, which is exactly the information needed to choose a backup.
+
+
+
+---
+
+## 12. Findings from the event-source verification
 
 Measured 2026-08-29 against the code, not inferred. Four of these change the
 plan; they are not tidy-ups.
