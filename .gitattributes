@@ -101,3 +101,10 @@ status_trace_baseline.jsonl  -text
 # is full of 0xFF/0x0D/0x0A bytes that mean SAMPLE DATA, so leaving it to the
 # NUL-byte heuristic is precisely the risk the section above exists to remove.
 *.bin           binary
+
+# GIT HOOKS MUST BE LF. They are shell scripts run through sh, and a CRLF
+# shebang line makes the interpreter path end in a carriage return -- the
+# result is "bad interpreter: /bin/sh^M" and a hook that never runs. This is
+# the one place in this tree where CRLF is the wrong answer; see the note at
+# the top of this file for why it is right everywhere else.
+.githooks/*     text eol=lf

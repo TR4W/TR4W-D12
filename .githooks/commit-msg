@@ -1,0 +1,44 @@
+#!/bin/sh
+#
+# Strip the Claude-Session trailer before it reaches a commit.
+#
+# TR4W/TR4W-D12 IS A PUBLIC REPOSITORY. A "Claude-Session: https://claude.ai/..."
+# trailer is a link to a private transcript, and it does not belong in a public
+# commit message.
+#
+# WHY THIS IS A HOOK AND NOT A RULE IN CLAUDE.md.
+#
+# It WAS a rule. On 2026-08-19 someone ran `git filter-branch` over the whole of
+# `fpc` to strip 714 of these trailers, force-pushed the result, and every other
+# clone had to be rebuilt by hand -- 200+ conflicts on the next pull, because
+# rewriting also stripped the SSH signatures and so changed every SHA.
+#
+# It did not hold. ELEVEN more commits carrying the trailer landed between
+# 2026-08-25 and 2026-08-28, after the cleanup. The rule was correct and it was
+# written down; what was missing was anything that enforced it at the moment the
+# commit was made.
+#
+# So this strips, rather than rejecting. A rejection is something to work around
+# at 3am; a strip just makes the commit correct. It prints what it removed so the
+# change is never silent.
+#
+# THE STANDING RULE THIS PROTECTS: the fix for a trailer that slipped through is
+# to stop emitting it, NEVER to rewrite published history. See CLAUDE.md,
+# "MANDATORY: Never force-push `fpc`".
+#
+# Install (once per clone):
+#     git -C /c/tr4w-d12 config core.hooksPath .githooks
+
+set -e
+
+MSG_FILE="$1"
+[ -f "$MSG_FILE" ] || exit 0
+
+if grep -q '^Claude-Session:' "$MSG_FILE" 2>/dev/null; then
+   COUNT=$(grep -c '^Claude-Session:' "$MSG_FILE")
+   grep -v '^Claude-Session:' "$MSG_FILE" > "$MSG_FILE.stripped"
+   mv "$MSG_FILE.stripped" "$MSG_FILE"
+   echo "commit-msg: removed $COUNT Claude-Session trailer(s) -- this repo is public." >&2
+fi
+
+exit 0

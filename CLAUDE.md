@@ -20,16 +20,70 @@ time — the `-C` flag targets the repo explicitly with no `cd` and no prompt. (
 
 `fpc` is shared across at least three clones. **Never rewrite its history** — no `push --force`, no
 `--force-with-lease`, no delete-and-recreate. A rewrite invalidates every other clone, and this is
-measured, not hypothetical: on 2026-08-29 a force-push moved the merge base back to `0913dec7`
-(2026-07-06), so the next `git pull` on another PC tried to merge 560 commits against 1054 rewritten
-twins of the same work and produced **200+ conflicts across the whole tree**. The trees were
-identical; the only difference was that the rewrite had stripped the SSH signatures, giving every
-commit a new SHA.
+measured, not hypothetical: the merge base moved back to `0913dec7` (2026-07-06), so a `git pull` on
+another PC tried to merge 560 commits against 1054 rewritten twins of the same work and produced
+**200+ conflicts across the whole tree**. The trees were identical; the only difference was that the
+rewrite had stripped the SSH signatures, giving every commit a new SHA.
 
 This is now enforced server-side — ruleset `protect-fpc` blocks `non_fast_forward` and `deletion`
 with **no bypass actors**, so the push is simply **rejected**. When that happens, **do not work
-around it**: rebase or merge onto `origin/fpc` and push normally. If history genuinely needs
-rewriting, push it to a new branch and ask NY4I.
+around it**: rebase or merge onto `d12/fpc` and push normally. If history genuinely needs rewriting,
+push it to a new branch and ask NY4I.
+
+### What actually happened, so nobody chases the wrong commits
+
+**The rewrite was 2026-08-19 at 12:04, not 2026-08-29.** The 29th is when a stale clone first
+*fetched* it — that clone's tip was `152118b2` from **2026-08-14**, so it met a ten-day-old
+force-push and reported it as same-day. Every push on 2026-08-29 was an ordinary fast-forward.
+
+It was **deliberate**: `git filter-branch` over `fpc` to strip `Claude-Session:` trailers, which are
+links to private transcripts and do not belong in a public repo. Whoever ran it took a backup first
+— `backup-pre-trailer-strip-2026-08-19`, still present, tip `e815d7a3`. `.git/refs/original/` was
+also left behind, which is `filter-branch`'s fingerprint.
+
+Signature loss was collateral: `filter-branch` re-creates every commit and `gpgsig` does not survive.
+Hence **741 unsigned commits dated 2026-08-19 or earlier, and 335 signed after it**.
+
+**Three things follow, and the third is the one that will tempt someone:**
+
+1. The cleanup did not hold — **11 more commits carrying the trailer landed 2026-08-25 to 2026-08-28**.
+   A rule that is only written down does not survive contact with an agent that has its own
+   instructions. Hence the hook below.
+2. A stale clone must **reset, not merge** — see the recipe below.
+3. **DO NOT RE-SIGN OR RE-STRIP HISTORY.** Mixed signing across the 2026-08-19 boundary is cosmetic
+   and signing is deliberately not enforced. "Tidying" it means another `filter-branch`, another
+   force-push, and another round of broken clones — this time against a ruleset that will reject it.
+   The unsigned commits broke nothing. Rewriting did.
+
+### The hook that keeps the trailer out
+
+```powershell
+git -C /c/tr4w-d12 config core.hooksPath .githooks    # once per clone
+```
+
+`.githooks/commit-msg` is tracked and **strips** `Claude-Session:` lines from every commit message,
+reporting what it removed. It strips rather than rejects because a rejection is something to work
+around at 3am. `Co-Authored-By` is kept. `.gitattributes` pins `.githooks/*` to **LF** — a CRLF
+shebang gives `bad interpreter: /bin/sh^M` and a hook that silently never runs, which is the one
+place in this tree where CRLF is the wrong answer.
+
+If a trailer still reaches the remote, the fix is **forward-only**: stop emitting it. Leave the
+published commit alone.
+
+### Recovering a clone that is behind the 2026-08-19 rewrite
+
+A `git pull` will produce hundreds of conflicts. Do not resolve them — the trees are identical, so
+there is nothing to resolve. **Check for local work first**, then reset:
+
+```powershell
+git -C <clone> status --short          # anything uncommitted? save it elsewhere first
+git -C <clone> log --oneline d12/fpc..fpc   # any local commits not on the remote?
+git -C <clone> fetch d12
+git -C <clone> reset --hard d12/fpc
+```
+
+If the middle command lists commits, those are yours and reset would discard them: cherry-pick them
+onto `d12/fpc` afterwards rather than merging.
 
 ## MANDATORY: Development Philosophy
 
