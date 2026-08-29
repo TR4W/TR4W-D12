@@ -177,13 +177,32 @@ procedure RegisterRadio(model: InterfacedRadioType;
 
 // String-id registration -- for a NEW factory radio with no InterfacedRadioType
 // member.  Its RadioModel is the sentinel NoInterfacedRadio.
+//
+// THIS IS THE PREFERRED FORM FOR A NEW RADIO.  It is the only one that makes
+// adding a radio a single-file job: the enum-keyed overload also requires a
+// member in VC.pas, which is a second place to edit and, historically, a second
+// list to drift (see Lint-NoRadioTables).  The connect path handles an id-only
+// radio on serial and on network alike -- LOGRADIO's SupportsSerialId /
+// SupportsNetworkId branches -- and the config store already keys on the id
+// string rather than the enum.
+//
+// The enum-keyed overload remains for the ~100 models that already have a
+// member; nothing is gained by moving them, and their ordinals are not
+// persisted anywhere.
 procedure RegisterRadioById(const id: string;
                             const ctor: TRadioCtor;
                             const displayName: string;
                             links: TRadioLinks;
                             networkPort: integer;
                             discoverable: Boolean;
-                            const serial: TSerialParams);
+                            const serial: TSerialParams;
+                            hamlibID: Integer = 0;
+                            civAddress: Byte = 0);
+
+// The CI-V address / HamLib rig_model a string-id radio registered, for the
+// dialog defaults an enum radio gets through RegisteredCIVAddress.
+function RegisteredCIVAddressId(const id: string): Byte;
+function RegisteredHamLibIDId(const id: string): Integer;
 
 // HamLib-only registration -- a model with NO native TR4W driver, driven
 // through THamLibDirect (the software bridges FLRig/TRXManager/TCI/ACLog/
@@ -493,9 +512,17 @@ procedure RegisterRadioById(const id: string;
                             links: TRadioLinks;
                             networkPort: integer;
                             discoverable: Boolean;
-                            const serial: TSerialParams);
+                            const serial: TSerialParams;
+                            hamlibID: Integer = 0;
+                            civAddress: Byte = 0);
 begin
-   DoRegister(id, NoInterfacedRadio, ctor, nil, displayName, links, networkPort, discoverable, serial);
+   { hamlibID and civAddress were absent until 2026-08-28, because the only
+     id-only radio was TCI -- a network WebSocket rig that has neither. An Icom
+     registered this way needs its CI-V address on the ROW as well as in its
+     constructor: the radio dialog offers it as the editable default, and a
+     silent 0 there is a legal-looking address the radio will never answer to. }
+   DoRegister(id, NoInterfacedRadio, ctor, nil, displayName, links, networkPort,
+              discoverable, serial, hamlibID, civAddress);
 end;
 
 procedure RegisterHamLibOnlyRadio(model: InterfacedRadioType;
@@ -855,6 +882,28 @@ begin
    if RegByModel(model, reg) then
       begin
       Result := reg.civAddress;
+      end;
+end;
+
+function RegisteredCIVAddressId(const id: string): Byte;
+var
+   reg: TRadioReg;
+begin
+   Result := 0;
+   if RegById(id, reg) then
+      begin
+      Result := reg.civAddress;
+      end;
+end;
+
+function RegisteredHamLibIDId(const id: string): Integer;
+var
+   reg: TRadioReg;
+begin
+   Result := 0;
+   if RegById(id, reg) then
+      begin
+      Result := reg.hamlibID;
       end;
 end;
 

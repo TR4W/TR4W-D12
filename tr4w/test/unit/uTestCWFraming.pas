@@ -67,7 +67,7 @@ type
    end;
 
 const
-   CW_PINS: array[0..29] of TCWPin = (
+   CW_PINS: array[0..28] of TCWPin = (
       // Elecraft: 22 and padded, to survive the keyer-abort window.  The K2 is
       // the family's one deviation -- same length, no padding.
       (model: K2;     link: rlSerial;  name: 'K2';     maxLen: 22; pad: False; busyPct: 100; skText: '*';    snText: ''),
@@ -97,11 +97,6 @@ const
       // did not, on the first run -- the value was set in DefineCapabilities,
       // which every subclass replaces, and all fourteen came out with maxLen 0.
       (model: IC705;    link: rlSerial; name: 'IC-705';    maxLen: 28; pad: False; busyPct: 125; skText: '^SK'; snText: '^SN'),
-      // The IC-7110 is a clone of the IC-705 and inherits its frame rule.
-      // Pinned because a radio declaring rcCWByCAT with no row here has an
-      // UNINITIALISED maxLen -- a silent zero, which is how the TS-850 shipped
-      // with 'no limit'. If the real radio differs, this row is what fails.
-      (model: IC7110;   link: rlSerial; name: 'IC-7110';   maxLen: 28; pad: False; busyPct: 125; skText: '^SK'; snText: '^SN'),
       (model: IC905;    link: rlSerial; name: 'IC-905';    maxLen: 28; pad: False; busyPct: 125; skText: '^SK'; snText: '^SN'),
       (model: IC7100;   link: rlSerial; name: 'IC-7100';   maxLen: 28; pad: False; busyPct: 125; skText: '^SK'; snText: '^SN'),
       (model: IC7300;   link: rlSerial; name: 'IC-7300';   maxLen: 28; pad: False; busyPct: 125; skText: '^SK'; snText: '^SN'),
@@ -123,6 +118,41 @@ const
    // String-id radios have no InterfacedRadioType, which is the whole reason the
    // model table could not describe them.  Pinned by id.
    TCI_ID = 'TCI';
+
+type
+   // The same pin, keyed by id rather than enum, for radios registered with
+   // RegisterRadioById.  Test_EveryKeyingRadioIsPinned enforces this list is
+   // exhaustive over id-only radios that declare rcCWByCAT.
+   TCWPinId = record
+      id:      string;
+      name:    string;
+      maxLen:  integer;
+      pad:     boolean;
+      busyPct: integer;
+      // FALSE means this radio deliberately substitutes no prosigns. Stated
+      // rather than merely absent, so "nobody established what it does" cannot
+      // be confused with "it declares nothing by accident" -- which is the very
+      // distinction the enum pins exist to make.
+      prosigns: boolean;
+      skText:  string;
+      snText:  string;
+   end;
+
+const
+   ID_CW_PINS: array[0..1] of TCWPinId = (
+      // IC-7110: an IC-705 clone, so the Icom family rule -- 28 per send and the
+      // 1.25 busy factor for the rate-limited CI-V queue.  It reaches this radio
+      // by INHERITANCE, which is exactly what needs proving: the same value was
+      // once set in DefineCapabilities and wiped by every Icom subclass, leaving
+      // all fourteen keying Icoms claiming no limit.
+      (id: 'IC7110'; name: 'IC-7110'; maxLen: 28; pad: False; busyPct: 125;
+       prosigns: True; skText: '^SK'; snText: '^SN'),
+      // TCI: no length limit and no prosign substitution. Its cw_macros grammar
+      // is not one of the three KY dialects and nobody has established what it
+      // does with a prosign, so declaring one would be inventing a fact.
+      (id: 'TCI';    name: 'TCI';     maxLen: 0;  pad: False; busyPct: 100;
+       prosigns: False; skText: '';   snText: '')
+   );
 
 procedure TCWFramingTests.Test_DeclaredRulesArePinned;
 var
@@ -164,6 +194,44 @@ begin
       end;
       end;
 
+   { The id-keyed pins, asserted the same way as the enum ones above. Presence
+     alone is not the point -- an id radio with a row but a zeroed frame rule
+     would pass the exhaustiveness check and still key a 40-byte payload. }
+   for i := Low(ID_CW_PINS) to High(ID_CW_PINS) do
+      begin
+      r := uRadioRegistry.CreateInstanceId(ID_CW_PINS[i].id);
+      CheckTrue(r <> nil, ID_CW_PINS[i].name + ' constructs (string-id radio)');
+      if r = nil then
+         begin
+         Continue;
+         end;
+      try
+         caps := r.Capabilities;
+         CheckEquals(ID_CW_PINS[i].maxLen, caps.CWFrame.maxLen,
+                     ID_CW_PINS[i].name + ' maxLen');
+         CheckTrue(caps.CWFrame.pad = ID_CW_PINS[i].pad,
+                   ID_CW_PINS[i].name + ' pad');
+         CheckEquals(ID_CW_PINS[i].busyPct, Round(caps.CWFrame.busyFactor * 100),
+                     ID_CW_PINS[i].name + ' busyFactor');
+         if ID_CW_PINS[i].prosigns then
+            begin
+            CheckEquals(ID_CW_PINS[i].skText, r.CWProsign('<').text,
+                        ID_CW_PINS[i].name + ' SK spelling');
+            CheckEquals(ID_CW_PINS[i].snText, r.CWProsign('!').text,
+                        ID_CW_PINS[i].name + ' SN spelling');
+            CheckTrue(r.CWProsign('!').handled,
+                      ID_CW_PINS[i].name + ' declares a prosign grammar');
+            end
+         else
+            begin
+            CheckFalse(r.CWProsign('<').handled,
+                       ID_CW_PINS[i].name + ' substitutes no prosigns');
+            end;
+      finally
+         r.Free;
+      end;
+      end;
+
    // TCI: no length limit, and no prosign substitution -- its cw_macros grammar
    // is not one of the three KY dialects and nobody has established what it does
    // with a prosign, so guessing one would be inventing a fact.
@@ -191,6 +259,7 @@ var
    found: boolean;
    r: TFactoryRadioBase;
    keys: boolean;
+   idText: string;
 begin
    // The guard that makes the table above worth having: a radio that declares
    // rcCWByCAT without a pin would otherwise be free to inherit a zeroed frame
@@ -223,6 +292,48 @@ begin
                 'model ' + uRadioRegistry.ModelId(m) +
                 ' declares rcCWByCAT but has no row in CW_PINS -- state its ' +
                 'frame rule in the driver and pin it here');
+      end;
+
+   { AND THE SAME FOR RADIOS WITH NO ENUM MEMBER.
+
+     The loop above walks InterfacedRadioType and therefore cannot see a radio
+     registered with RegisterRadioById -- which is the preferred form for new
+     radios precisely because it needs no enum. Without this second loop, an
+     id-only radio could declare rcCWByCAT and inherit a zeroed frame rule, and
+     the exhaustiveness guarantee in this unit's header would quietly be false
+     for exactly the radios most likely to be added next. }
+   for idText in uRadioRegistry.RegisteredIds do
+      begin
+      if uRadioRegistry.ModelForId(idText) <> NoInterfacedRadio then
+         begin
+         Continue;      { an enum radio -- already covered above }
+         end;
+      r := uRadioRegistry.CreateInstanceId(idText);
+      if r = nil then
+         begin
+         Continue;
+         end;
+      try
+         if not (rcCWByCAT in r.Capabilities.Flags) then
+            begin
+            Continue;
+            end;
+         found := False;
+         for i := Low(ID_CW_PINS) to High(ID_CW_PINS) do
+            begin
+            if ID_CW_PINS[i].id = idText then
+               begin
+               found := True;
+               Break;
+               end;
+            end;
+         CheckTrue(found,
+                   'string-id radio ' + idText +
+                   ' declares rcCWByCAT but has no row in ID_CW_PINS -- state ' +
+                   'its frame rule in the driver and pin it here');
+      finally
+         r.Free;
+      end;
       end;
 
    // And the converse: a pinned radio that no longer claims rcCWByCAT means the

@@ -196,9 +196,15 @@ end;
   The list is the AUTHORITY, not a sample: the second test below fails if any
   network-capable radio is missing from it, so adding one forces a decision. }
 const
-   CREDENTIALED_NETWORK_RADIOS: array[0..12] of InterfacedRadioType =
-      (IC705, IC7110, IC7300MK2, IC7600, IC7610, IC7700, IC7760, IC7850, IC7851,
-       IC905, IC9700, TS890, TS990);
+   { ENUM RADIOS ONLY. An id-only radio (RegisterRadioById) has no member here
+     to name, so this list cannot see one and the loop that walks it does not
+     either -- the IC-7110 declares its credentials and is invisible to this
+     pin. That is a real gap for id-only network radios and it grows as more
+     radios move off the enum; the check wants re-expressing over RegisteredIds
+     when they do. }
+   CREDENTIALED_NETWORK_RADIOS: array[0..11] of InterfacedRadioType =
+      (IC705, IC7300MK2, IC7600, IC7610, IC7700, IC7760, IC7850, IC7851, IC905,
+       IC9700, TS890, TS990);
 
    { Network-capable and deliberately WITHOUT credentials. Named rather than
      merely absent, so "nobody looked at this one" cannot masquerade as "this one

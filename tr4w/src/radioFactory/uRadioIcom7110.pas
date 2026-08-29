@@ -145,25 +145,31 @@ end;
 
 initialization
   logger := TLogLogger.GetLogger('uRadioIcom7110');
-  RegisterRadio(IC7110,
+
+  { REGISTERED BY ID, NOT BY ENUM -- and that is the whole point of this unit.
+
+    RegisterRadio(IC7110, ...) would need an InterfacedRadioType member in
+    VC.pas, which is a second file to edit for one radio and, historically, a
+    second list to fall out of step with (two of them did; four Kenwoods
+    selected the wrong driver for years). RegisterRadioById needs nothing
+    outside this file.
+
+    What it costs: the enum-keyed unit tests walk Low(InterfacedRadioType) to
+    High and cannot see an id-only radio, so this driver is not covered by the
+    exhaustive per-model pins. uTestCWFraming covers it explicitly by id
+    instead, because a radio declaring rcCWByCAT with no frame rule has an
+    uninitialised maxLen -- the silent zero that shipped the TS-850 as "no
+    limit". Any future id-only radio needs the same treatment. }
+  RegisterRadioById('IC7110',
      CreateIcom7110,
      'Icom IC-7110', [rlSerial, rlNetwork], 50001, True,
-     SerialParams(19200, 8, PARITY_NONE, 1)
-     ,
-     3085
-     , 186);
+     SerialParams(19200, 8, PARITY_NONE, 1),
+     3085,        // HamLib: the IC-705's, until this radio has its own
+     186);        // CI-V $BA
 
   // This radio's NETWORK link authenticates, so the editor offers user and
   // password. ApplyNetworkCredentials on the class is what USES them; this is
   // what lets the UI ask before a radio object exists.
-  MarkNetworkCredentials(IC7110);
-
-  // ANNOUNCED AFTER THE LEGACY TABLES WERE FROZEN.
-  // LOGRADIO's RadioSupports* sets and the pinned legacy arrays record what
-  // the D7 program knew. They have no row for this radio and never will, so
-  // the tests that cross-check the factory against them must skip it rather
-  // than read the absence as False -- and the sets must NOT be edited to
-  // agree, because being a frozen record is the whole of their value.
-  MarkPostLegacy(IC7110);
+  MarkNetworkCredentials('IC7110');
 
 end.
