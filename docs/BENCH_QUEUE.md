@@ -23,6 +23,50 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-08-28 (night) -- I18N: TWO THINGS TO SEND, ONE THING TO DISTRUST
+
+### [ ] Send the Polish catalogue
+
+`build-out\TR4W-polish-translation.zip` -- `tr4w_pl.po` + `TRANSLATOR_GUIDE.md`,
+which is exactly what `TRANSLATION_HANDOFF.md` says to send and nothing else.
+A draft covering note is beside it in `build-out\handoff\POLISH-COVERING-NOTE.txt`;
+edit it freely.
+
+1939 entries, 444 already reviewed, 1493 marked "Needs work". 27 accelerator
+questions are listed in the note for him -- which letter should carry each `&`
+is a judgement only a Polish speaker can make, so they were deliberately NOT
+repaired here. The 79 that WERE mechanical (`& Zapisz` for `&Zapisz`, which
+stops the shortcut working) are already fixed across all 16 catalogues.
+
+### [ ] Send the Chinese catalogue to BA4WI, and ask for his original file
+
+`i18n\tr4w_zh_CN.po` now exists. It holds 73 strings recovered from his
+`tr4w_consts_chn.pas` plus 536 machine drafts, every one of them fuzzy.
+
+**Ask him for the original file.** `tr4w_consts_chn.pas` is UTF-8 damaged at
+the BIT level and only partly invertible -- 144 of his strings cannot be
+recovered at all, and of the 73 that came back, roughly half have one character
+wrong (`其闭` where it must be `关闭`). A wrong hanzi looks exactly like a right
+one, so those are suggestions for him to confirm, never translations. If he
+still has the file he wrote, all 254 come back cleanly instead.
+
+### [ ] DISTRUST: does `Invoke-MenuSmoke` really fail when a window does not open?
+
+The preamble to this document says it does -- "fails if any of them does not
+produce a window". Evidence from 2026-08-28 says otherwise: in one sweep run the
+Preferences window never opened (294 captions measured against another
+language's 744, and no `PrefsForm` line in the log at all) and the runner
+reported no failure. If `ExpectsWindow` can miss, then every "the conversion is
+fine" result it has ever produced is weaker than it reads, which is worth
+knowing before the next conversion leans on it.
+
+Not yet chased -- flagged because the claim is load-bearing and is written into
+this file. `Sweep-TextFit.ps1` now keeps the runner's own output per language in
+`build-out\textfit-logs\<lang>-menusmoke.txt`, so the next occurrence is
+diagnosable rather than gone.
+
+---
+
 ## Added 2026-08-28 (evening) -- FIXED FROM NY4I'S NOTES, UNRUN
 
 Worked from the [AGENT ...] notes as instructions. Each of these is a change he

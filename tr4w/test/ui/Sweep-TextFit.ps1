@@ -149,7 +149,12 @@ foreach ($code in $Lang)
    }
    if ($Command) { $smokeArgs['Command'] = $Command }
 
-   & (Join-Path $PSScriptRoot 'Invoke-MenuSmoke.ps1') @smokeArgs 2>&1 | Out-Null
+   # KEEP THE RUNNER'S OWN OUTPUT. It went to Out-Null, which threw away the
+   # only account of what the menu commands actually did -- so when Preferences
+   # failed to open there was nothing left to say so.
+   $smokeOut = Join-Path $logDir ('{0}-menusmoke.txt' -f $code)
+   & (Join-Path $PSScriptRoot 'Invoke-MenuSmoke.ps1') @smokeArgs 2>&1 |
+      Out-File -FilePath $smokeOut -Encoding utf8
    $smokeFailed = ($LASTEXITCODE -ne 0)
 
    $runDir = Move-LogsAside $code
