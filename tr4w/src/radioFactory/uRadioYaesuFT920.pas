@@ -112,6 +112,11 @@ begin
    FSetModeOpcode := $0C;
    FModeByteIndex := 3;
    FModeCW   := $02;
+   // Reverse CW. D7-DERIVED, NOT BENCH-CONFIRMED: D7 sent $03 for the FT-920
+   // when the operator had CW REVERSE set, alongside FT100/FT817/FT818/
+   // FT847/FT857/FT897/FT920/FT1000MP (LOGRADIO.PAS:3403). Plain CW is $02
+   // here and was $02 in D7's table too, so the pair is consistent.
+   FModeCWRev := $03;
    FModeLSB  := $00;
    FModeUSB  := $01;
    FModeAM   := $04;

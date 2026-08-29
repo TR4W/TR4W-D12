@@ -115,6 +115,11 @@ type
     FSetModeOpcode: Byte;    // SMOC
     FModeByteIndex: Integer; // MB: which of the 4 payload slots holds the mode byte
     FModeCW:   Byte;
+    // Reverse-sideband CW, if this model has its own byte for it. Left
+    // MODEBYTE_NONE means "no separate byte", and reverse CW falls back to
+    // FModeCW -- which is what every model in this family did until
+    // 2026-08-28, including two that D7 sent a distinct byte for.
+    FModeCWRev: Byte;
     FModeLSB:  Byte;
     FModeUSB:  Byte;
     FModeAM:   Byte;
@@ -217,6 +222,7 @@ begin
    FSetModeOpcode := MODEOPCODE_UNSET;
    FModeByteIndex := 3;      // MB=3 is the common case in the table
    FModeCW   := MODEBYTE_NONE;
+   FModeCWRev := MODEBYTE_NONE;
    FModeLSB  := MODEBYTE_NONE;
    FModeUSB  := MODEBYTE_NONE;
    FModeAM   := MODEBYTE_NONE;
@@ -242,7 +248,22 @@ begin
 
    case mode of
       rmCW:    modeByte := FModeCW;
-      rmCWRev: modeByte := FModeCW;    // no separate CW-reverse byte in this family
+      rmCWRev:
+         begin
+         { A model that declares its own reverse byte gets it; the rest fall
+           back to plain CW, which is what this line used to do for ALL of
+           them. D7 sent /usr/bin/bash3 for the FT-100 and FT-920 when the operator had
+           CW REVERSE set (LOGRADIO.PAS:3403), so for those two the fallback
+           was a silent regression. }
+         if FModeCWRev <> MODEBYTE_NONE then
+            begin
+            modeByte := FModeCWRev;
+            end
+         else
+            begin
+            modeByte := FModeCW;
+            end;
+         end;
       rmLSB:   modeByte := FModeLSB;
       rmUSB:   modeByte := FModeUSB;
       rmAM:    modeByte := FModeAM;

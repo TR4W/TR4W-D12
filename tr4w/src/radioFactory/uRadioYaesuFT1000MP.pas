@@ -137,7 +137,6 @@ const
 type
   TFT1000MPRadio = class(TYaesuBinary)
   protected
-    FCWReverse: boolean;   // CW mode byte $03 (reverse) vs $02; default off
     function  StatusModeToMode(b: Byte): TRadioMode;
     function  YaesuFreqRead(const frame: string; pos1: integer): integer;
     function  RITOffsetRead(const frame: string; pos1: integer): integer;
@@ -173,7 +172,6 @@ constructor TFT1000MPRadio.Create;
 begin
    inherited Create;
    radioModel := 'Yaesu FT-1000MP';
-   FCWReverse := False;
 
    SerialFixedFrameLength := FT1KMP_FRAME_LEN;  // 32-byte status + 6-byte $FA block
    pollingInterval        := 150;  // BR4800; 48 bytes/cycle is ~65% of the link
@@ -336,17 +334,11 @@ begin
    case mode of
       rmLSB:  modeByte := $00;
       rmUSB:  modeByte := $01;
-      rmCW:
-         begin
-         if FCWReverse then
-            begin
-            modeByte := $03;
-            end
-         else
-            begin
-            modeByte := $02;
-            end;
-         end;
+      rmCW:    modeByte := $02;
+      // Reverse CW is a MODE, so the caller asks for it. This used to be a
+      // second path to the same byte -- an FCWReverse flag that made rmCW
+      // encode as $03 -- which was never set from anywhere and produced
+      // exactly what rmCWRev already produces.
       rmCWRev: modeByte := $03;
       rmFM:   modeByte := $06;
       rmAM:   modeByte := $04;

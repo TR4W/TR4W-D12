@@ -2092,6 +2092,29 @@ begin
       end;
 end;
 
+// CW on the reverse sideband is a MODE, not a per-radio flag.
+//
+// The operator's 'RADIO ONE FT1000MP CW REVERSE' setting used to be carried to
+// the FT-1000MP driver as its own boolean, which then picked mode byte $03
+// instead of $02 -- a second path to a value the driver already produced for
+// rmCWRev. Except the boolean was never passed: it reached
+// Radio1.FT1000MPCWReverse and stopped there, so the setting did nothing at
+// all from the port until 2026-08-28. D7 acted on it (JCtrl1.pas:890).
+//
+// Asking for the mode TR4W actually wants is both the fix and the
+// simplification. rmCWRev is a general mode that Elecraft, Flex, HamLib, Icom,
+// Kenwood, TCI and Yaesu drivers all already encode, so this works for any
+// radio whose operator wants reverse CW -- not only the one the setting is
+// named after.
+function AdjustCWForReverse(mode: TRadioMode; reverse: boolean): TRadioMode;
+begin
+   Result := mode;
+   if reverse and (mode = rmCW) then
+      begin
+      Result := rmCWRev;
+      end;
+end;
+
 procedure RadioObject.SetRadioFreq(Freq: longint; Mode: ModeType; VFO: char);
 
 var
@@ -2124,6 +2147,7 @@ begin
    if Self.tFactoryObject <> nil then
       begin
       tNetMode := AdjustSSBModeForFreq(ModeTypeToNetMode(mode), freq);
+      tNetMode := AdjustCWForReverse(tNetMode, Self.FT1000MPCWReverse);
 
       // THE OTHER HALF OF THE TRANSVERTER OFFSET, and it must be subtracted.
       //

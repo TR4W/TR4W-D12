@@ -32,7 +32,7 @@ uses
    uRadioYaesuFT817Group, uRadioYaesuFT818, uRadioYaesuFT847,
    uRadioYaesuFT857, uRadioYaesuFT897, uRadioYaesuFT990, uRadioYaesuFT1000, uRadioYaesuFT840,
    uRadioYaesuFT890, uRadioYaesuFT900,
-   uRadioYaesuFT920, uRadioYaesuBinary, uRadioRegistry, VC;
+   uRadioYaesuFT920, uRadioYaesuFT1000MP, uRadioYaesuBinary, uRadioRegistry, VC;
 
 type
    TYaesuBinaryTests = class(TTestCase)
@@ -46,6 +46,7 @@ type
       procedure Test_GroupModelsAreRegistered;
       procedure Test_TraitDrivenSetMode_PerModelModeBytes;
       procedure Test_TraitDrivenSetMode_RefusesUndefinedMode;
+      procedure Test_FT1000MP_CWAndReverseCWAreDistinctBytes;
    public
       procedure RunAllTests; override;
    end;
@@ -73,6 +74,12 @@ type
    end;
 
    // Trait-driven SetMode probes -- these four take TYaesuBinary.SetMode as-is.
+   TFT1000MPProbe = class(TFT1000MPRadio)
+   public
+      sent: string;
+      procedure SendToRadio(s: string); overload; override;
+   end;
+
    TFT990Probe = class(TFT990Radio)
    public
       sent: string;
@@ -108,6 +115,11 @@ begin
 end;
 
 procedure TFT857Probe.SendToRadio(s: string);
+begin
+   sent := sent + s;
+end;
+
+procedure TFT1000MPProbe.SendToRadio(s: string);
 begin
    sent := sent + s;
 end;
@@ -302,6 +314,79 @@ begin
    end;
 end;
 
+procedure TYaesuBinaryTests.Test_FT1000MP_CWAndReverseCWAreDistinctBytes;
+{ REVERSE CW IS A MODE, AND THIS PINS THAT IT REACHES THE WIRE.
+
+  The FT-1000MP used to decide reverse CW from its own FCWReverse boolean,
+  which made rmCW encode as $03 instead of $02. That flag was never set from
+  anywhere -- the operator's 'RADIO ONE FT1000MP CW REVERSE' setting reached
+  Radio1.FT1000MPCWReverse and stopped, so the setting did nothing from the
+  port at all, though D7 acted on it. The flag is gone and the caller asks for
+  rmCWRev instead (LOGRADIO.AdjustCWForReverse).
+
+  Pinned as a PAIR: asserting $03 alone would still pass if both modes
+  collapsed onto the reverse byte, which is the failure that would silently
+  put every CW QSO on the wrong sideband. }
+var
+   r:    TFT1000MPProbe;
+   r920: TFT920Probe;
+   r990: TFT990Probe;
+   cwFrame, cwrFrame: string;
+begin
+   BeginTest('Yaesu binary: reverse CW is its own mode byte where the radio has one');
+   r := TFT1000MPProbe.Create;
+   try
+      r.SetMode(rmCW);
+      cwFrame := r.sent;
+      r.sent := '';
+      r.SetMode(rmCWRev);
+      cwrFrame := r.sent;
+
+      // 5-byte frame, mode byte at index 3 (MB=3), opcode $0C last.
+      CheckEquals(#$00#$00#$00#$02#$0C, cwFrame, 'CW frame');
+      CheckEquals(#$00#$00#$00#$03#$0C, cwrFrame, 'reverse-CW frame');
+      CheckTrue(cwFrame <> cwrFrame,
+                'CW and reverse CW must not send the same byte');
+   finally
+      r.Free;
+   end;
+
+   { THE OTHER TWO D7 SENT $03 FOR. The FT-100 and FT-920 derive from
+     TYaesuBinary, whose rmCWRev used to fall back to the plain CW byte -- so
+     reverse CW was silently dropped for them while the FT817 group and the
+     FT-1000MP honoured it. D7 sent $03 for all eight. }
+   r920 := TFT920Probe.Create;
+   try
+      r920.SetMode(rmCW);
+      cwFrame := r920.sent;
+      r920.sent := '';
+      r920.SetMode(rmCWRev);
+      cwrFrame := r920.sent;
+      CheckEquals(#$00#$00#$00#$02#$0C, cwFrame, 'FT-920 CW frame');
+      CheckEquals(#$00#$00#$00#$03#$0C, cwrFrame, 'FT-920 reverse-CW frame');
+   finally
+      r920.Free;
+   end;
+
+   { AND THE FALLBACK STILL HOLDS. A model with no reverse byte declared must
+     keep sending plain CW rather than refusing the mode outright -- refusing
+     would leave the radio on whatever mode it had, which is worse than the
+     wrong sideband. }
+   r990 := TFT990Probe.Create;
+   try
+      r990.SetMode(rmCW);
+      cwFrame := r990.sent;
+      r990.sent := '';
+      r990.SetMode(rmCWRev);
+      cwrFrame := r990.sent;
+      CheckTrue(cwrFrame <> '', 'FT-990 still sends something for reverse CW');
+      CheckEquals(cwFrame, cwrFrame,
+                  'FT-990 declares no reverse byte, so reverse CW is plain CW');
+   finally
+      r990.Free;
+   end;
+end;
+
 // MODEBYTE_NONE ($FF) is the table's "this radio has no such mode".  It must be
 // REFUSED, not transmitted -- $FF is not a defined mode byte on any of these
 // radios.  Paired with a model that DOES define the mode, so the test cannot
@@ -337,6 +422,7 @@ begin
    Test_GroupModelsAreRegistered;
    Test_TraitDrivenSetMode_PerModelModeBytes;
    Test_TraitDrivenSetMode_RefusesUndefinedMode;
+   Test_FT1000MP_CWAndReverseCWAreDistinctBytes;
 end;
 
 end.
