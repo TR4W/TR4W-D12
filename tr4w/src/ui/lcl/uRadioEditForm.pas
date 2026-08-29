@@ -129,6 +129,22 @@ type
       cbxCatDTR: TComboBox;
       lblIP: TLabel;
       edtIP: TEdit;
+      { THE CAPTION SAYS 'IP port', THE IDENTIFIERS SAY TCP, AND THAT IS
+        DELIBERATE.
+
+        The label was 'TCP port' and it was wrong for the radios most likely to
+        use this field: Icom's LAN protocol is UDP -- see docs/ICOM_NETWORK_SPEC
+        and uIcomNetworkTransport, which opens SOCK_DGRAM/IPPROTO_UDP. Elecraft
+        and Flex are TCP. One box, two transports, so the caption names neither
+        (NY4I, bench, 2026-08-29).
+
+        'Control port' was the other candidate and is taken: that is already the
+        radio's COM port, in 'RADIO ONE CONTROL PORT'. 'IP port' also sits
+        directly under 'IP address', which is the field it belongs with.
+
+        The identifiers and the config command 'RADIO ONE TCP PORT' keep the old
+        spelling on purpose -- renaming a config key would silently drop the
+        value out of every existing tr4w.ini. }
       lblTCPPort: TLabel;
       edtTCPPort: TEdit;
       lblUser: TLabel;

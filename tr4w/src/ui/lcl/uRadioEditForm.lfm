@@ -297,7 +297,7 @@ object RadioEditForm: TRadioEditForm
         Top = 46
         Width = 120
         AutoSize = False
-        Caption = 'TCP port'
+        Caption = 'IP port'
       end
       object edtTCPPort: TEdit
         Left = 140
