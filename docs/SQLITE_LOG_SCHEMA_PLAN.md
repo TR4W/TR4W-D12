@@ -73,7 +73,12 @@ log?**
 |---|---|---|
 | 1. durable station identity | name, address, city, state, postcode, country, email, club | `settings/tr4w.json` — cross-contest; **seeds** the export form and stays overridable at export |
 | 2. per-contest entry declaration | category, transmitters, assisted, overlay, power, station, mode, band, time, soapbox, my park | the **`contest` row**, captured when the log is created — never read live at export |
-| 3. per-QSO event | what was **sent**; my county; my grid | the **`qso` row** |
+| 3. per-QSO event | what was **sent**; what was **copied**; my county; my grid | the **`qso` row** |
+
+There is a fourth thing that is not a tier but obeys the same law: values
+**derived** at the time of the QSO — DXCC entity, zones and continent from
+CTY.DAT. They are stored, never re-derived, and they lose to what was copied
+wherever both exist. §4a, which corrects a real mistake in the first draft.
 
 Tier 2 is the subtle one and it is where issue #2 actually bites: these must be
 *captured at log creation and stored*, not read from config at export time. A
@@ -105,8 +110,10 @@ that change this plan.
 
 ## 4. Proposed schema
 
-Deliberately close to TR4QT's where there is no reason to differ, so the two can
-be compared and a TR4QT log can be read by us later if that is ever wanted.
+Shaped like TR4QT's where there is no reason to differ, purely so the two are
+easy to compare. **Not** for interoperability — question 8 settled that a TR4QT
+log never has to be readable by us, which is what frees §4a and §4b to diverge
+where we have a better answer.
 
 ```sql
 PRAGMA user_version = 1;
@@ -151,46 +158,81 @@ CREATE TABLE contest (
 
 CREATE TABLE qso (
     id                INTEGER PRIMARY KEY AUTOINCREMENT,
-    guid              TEXT NOT NULL UNIQUE,
+    guid              TEXT NOT NULL UNIQUE,          -- UUIDv7
 
     qso_at            INTEGER NOT NULL,   -- unix UTC seconds
     callsign          TEXT NOT NULL,
-    frequency_hz      INTEGER NOT NULL,
+
+    -- TWO frequencies. Split is not an edge case in a contest, and one column
+    -- cannot say "listening 14025, transmitting 14200".
+    freq_tx_hz        INTEGER NOT NULL,
+    freq_rx_hz        INTEGER,            -- NULL when not split
     band              TEXT NOT NULL,
     mode              TEXT NOT NULL,
     submode           TEXT,
 
-    rst_sent          TEXT,
-    rst_received      TEXT,
-    exchange_sent     TEXT,               -- WHAT WE SENT. tier 3, and the fix
-    exchange_received TEXT,               -- for the corpus divergences
+    -- THE RAW COPY, and it is the event source for everything below it.
+    exchange_sent     TEXT,               -- what we SENT, verbatim
+    exchange_received TEXT,               -- what we COPIED, verbatim
 
-    -- tier 3: ours, at the moment of this QSO
+    -- Signal report. RST stays NUMERIC; WSJT-X's dB report gets its own column
+    -- rather than being shoehorned into it as '-12'.
+    rst_sent          INTEGER,
+    rst_received      INTEGER,
+    snr_sent          INTEGER,            -- dB, WSJT-X modes
+    snr_received      INTEGER,
+
+    -- =====================================================================
+    -- COPIED. Parsed out of exchange_received. These OUTRANK the derived
+    -- block below wherever both exist -- see 4a.
+    -- =====================================================================
+    serial_sent       INTEGER,
+    serial_received   INTEGER,
+    rcvd_zone         INTEGER,            -- CQ **or** ITU: the contest decides
+    rcvd_state        TEXT,
+    rcvd_county       TEXT,
+    rcvd_section      TEXT,               -- ARRL/RAC section
+    rcvd_grid         TEXT,
+    rcvd_name         TEXT,
+    rcvd_age          INTEGER,
+    rcvd_check        TEXT,               -- Sweepstakes: 2-digit year
+    rcvd_precedence   TEXT,               -- Sweepstakes
+    rcvd_class        TEXT,               -- Field Day "2A"
+    rcvd_power        TEXT,               -- ARRL DX
+    rcvd_chapter      TEXT,
+    rcvd_prefecture   TEXT,               -- JA
+    rcvd_continent    TEXT,
+    rcvd_postal_code  TEXT,
+    rcvd_member_no    TEXT,               -- FOC, TenTen, FISTS, club numbers
+    rcvd_society      TEXT,               -- IARU
+    rcvd_department   TEXT,               -- French
+    rcvd_rda          TEXT,               -- Russian district
+    rcvd_qth          TEXT,               -- domestic/DX QTH, the catch-all
+    rcvd_random       TEXT,               -- random-character exchanges
+    rcvd_park         TEXT,               -- POTA
+    rcvd_summit       TEXT,               -- SOTA
+    rcvd_iota         TEXT,
+    rcvd_coords       TEXT,               -- lat/long exchanges
+    rcvd_extra        TEXT,               -- JSON. THE NARROW ESCAPE HATCH, 4b
+
+    -- =====================================================================
+    -- OURS, at the moment of this QSO (tier 3)
+    -- =====================================================================
     my_county         TEXT,
     my_grid           TEXT,
     my_state          TEXT,
 
-    -- theirs, parsed
-    serial_sent       INTEGER,
-    serial_received   INTEGER,
-    state             TEXT,
-    county            TEXT,
-    arrl_section      TEXT,
-    grid_square       TEXT,
-    iota              TEXT,
-    contest_class     TEXT,               -- Field Day "2A"
-    precedence        TEXT,               -- Sweepstakes
-    check_year        TEXT,               -- Sweepstakes
-    op_name_received  TEXT,               -- NAQP
-    power_received    TEXT,               -- ARRL DX
-
-    -- from CTY.DAT at the time of the QSO
+    -- =====================================================================
+    -- DERIVED from CTY.DAT AT THE TIME OF THE QSO. Stored so a later CTY.DAT
+    -- cannot rewrite history -- never re-derived at export, and never used
+    -- where the contest carries the value in the exchange (4a).
+    -- =====================================================================
     dxcc_prefix       TEXT,
     dxcc_entity       TEXT,
     dxcc_code         INTEGER,
-    cq_zone           INTEGER,
-    itu_zone          INTEGER,
-    continent         TEXT,
+    cty_cq_zone       INTEGER,
+    cty_itu_zone      INTEGER,
+    cty_continent     TEXT,
 
     qso_points        INTEGER DEFAULT 0,
     is_dupe           INTEGER DEFAULT 0,
@@ -198,12 +240,25 @@ CREATE TABLE qso (
     radio_nr          INTEGER DEFAULT 1,
     operator_call     TEXT,
     deleted           INTEGER DEFAULT 0,
-    notes             TEXT
+    notes             TEXT,
+
+    -- =====================================================================
+    -- DISTRIBUTION STATE. Not about the contact -- about what we have told
+    -- other software. Precedent: ceSendToServer and ceNeedSendToServerAE.
+    -- =====================================================================
+    sent_to_server    INTEGER DEFAULT 0,  -- the multi-op server has it
+    server_dirty      INTEGER DEFAULT 0,  -- edited since; needs re-sending
+    sent_udp          INTEGER DEFAULT 0,  -- the UDP broadcast went out
+    udp_dirty         INTEGER DEFAULT 0
 );
 
 CREATE INDEX idx_qso_at       ON qso(qso_at);
 CREATE INDEX idx_qso_callsign ON qso(callsign);
 CREATE INDEX idx_qso_dupe     ON qso(callsign, band, mode) WHERE deleted = 0;
+
+-- The outbound queues are a WHERE clause, not a data structure.
+CREATE INDEX idx_qso_unsent   ON qso(id) WHERE sent_to_server = 0 OR server_dirty = 1;
+CREATE INDEX idx_qso_unsent_udp ON qso(id) WHERE sent_udp = 0 OR udp_dirty = 1;
 ```
 
 Differences from TR4QT worth noting, and free to take now that question 8 has
@@ -213,6 +268,139 @@ file);
 `my_*` fields are on the QSO; there is no `multipliers` table yet (question 3);
 `current_serial` is not stored, because it is `MAX(serial_sent)` and a stored
 copy is a second source of truth that can disagree.
+
+---
+
+### 4a. WHAT WAS COPIED OUTRANKS WHAT WAS LOOKED UP
+
+NY4I, 2026-08-29, and this is a **defect in the first draft of §4**, not a
+refinement of it. That draft had one `cq_zone` and one `itu_zone` column
+labelled *"from CTY.DAT"*, which is wrong in exactly the contests where zones
+matter:
+
+- **CQ WW**: the zone is what the other station **sent**. CTY.DAT's zone for his
+  prefix is a *guess*, and it is wrong for every station operating away from
+  home, every rover, and a good part of Russia and the USA.
+- **IARU HF**: the ITU zone is copied, and may be a **society** instead.
+- **A QSO party**: county and state are copied. CTY.DAT knows neither.
+
+So the schema now has two clearly separated blocks — `rcvd_*` for what was
+parsed out of the exchange, and `cty_*` for what CTY.DAT said at the time — and
+one rule:
+
+> **Scoring, multipliers and export read `rcvd_*` when the contest's exchange
+> carries that value, and `cty_*` only when it does not.** Which of the two
+> applies is a property of the CONTEST, and belongs in the contest definition
+> rather than being decided per query.
+
+Both are stored. Neither is re-derived at export. That is the same event-source
+principle as §3, applied one level down — and note that **CTY.DAT is itself a
+moving target**: it is updated every few weeks, TR4W rewrites it at run time
+(hence its `.gitignore` entry), and a DXCC entity can be added, deleted or
+re-mapped between a contest and its log check. Re-deriving DXCC at export would
+reproduce issue #2 in a second place, with a slower fuse.
+
+`rcvd_zone` is deliberately **one** column, not two. A contest asks for one
+zone; which kind it is, is a property of the contest, and storing a CQ zone in
+an ITU column would be the same category error in reverse. The verification
+found the live code has the matching bug from the other direction: `MyZone` is
+a single global doing double duty for CQ and ITU, `MY ITU ZONE` is read by no
+export path, and it is why the `iaru_hf` corpus divergence will not close by
+event sourcing alone (§12a).
+
+### 4b. Flat, or something cleverer? — flat, with one narrow hatch
+
+NY4I: *"the more and more things we get into, I wonder if the flat record is
+going to cause us some issues… maybe we do a hybrid."*
+
+Measured before answering. `ExchangeType` (`VC.pas:3412`) has **61 members**,
+and they are composed from **29 distinct elements**:
+
+| element | in N exchange types | | element | in N |
+|---|---:|---|---|---:|
+| RST | 36 | | Precedence | 2 |
+| QTH (domestic/DX) | 24 | | FOC number | 2 |
+| QSO number | 23 | | Class | 1 |
+| Grid | 10 | | Kids | 1 |
+| Name | 9 | | TenTen | 1 |
+| Zone | 5 | | Continent | 1 |
+| Age | 4 | | POTA park | 1 |
+| Prefecture | 3 | | Member number | 1 |
+| Power | 3 | | Postal code | 1 |
+| Check | 2 | | Random characters | 1 |
+| Chapter | 2 | | Society | 1 |
+| Coordinates | 2 | | French department | 1 |
+| | | | RDA | 1 |
+
+**The flat design is not a proposal, it is the thing that already works.**
+`ContestExchange` carries about twenty of these as fixed fields and has covered
+120-plus contests for twenty-five years. Twenty-nine columns is nothing to
+SQLite — the cost of a column you do not use is one NULL byte per row, and at
+ten thousand rows the whole concern disappears (§9a).
+
+The alternative — an `exchange_element(qso_id, key, value)` side table — buys
+"adding a field needs no migration" and pays for it in every query, every
+export, every dupe check, and all type safety. It is the EAV pattern, and it is
+how a log that reads in one statement becomes one that reads in a join with a
+pivot.
+
+**So: flat, plus exactly one escape hatch — `rcvd_extra`, a JSON column.** The
+rule for it has to be written down or it becomes a dumping ground:
+
+- A new exchange element gets a **real column** the moment a contest we support
+  uses it. Adding a column is `ALTER TABLE ADD COLUMN` guarded by
+  `PRAGMA table_info` (§8) — cheap, and SQLite does it without rewriting the
+  table.
+- `rcvd_extra` is for **imported foreign fields we do not model** and for
+  experiments that have not earned a column yet. Nothing in scoring, multipliers
+  or Cabrillo export may read it. If something needs to, that is the signal to
+  promote it.
+
+SQLite's `json_extract()` can even index into it, which is the temptation to
+resist rather than the feature to use.
+
+**Worth doing while the list is in front of us:** the 29 elements above come
+from the *names* of the exchange types. The authoritative list of what is
+actually parsed and stored is `ContestExchange` plus the arms of
+`ProcessExchange`, and the two should be reconciled field by field before the
+DDL is final — that is a mechanical pass over `LOGSTUFF.PAS` and
+`uCabrilloExchange.pas`, and it is the sort of thing that is done once properly
+or wrong forever.
+
+### 4c. Sending it to the network
+
+NY4I: *"we also need to have some information in this record about has it been
+sent to the network and has it been sent via UDP already… I suspect we'll send a
+JSON record, but that's got to be pretty fast. So I think I just more have a
+JSON record of the items that are changed."*
+
+**The flags.** Precedent exists and is worth copying exactly, because it already
+encodes the hard part. `ContestExchange` has `ceSendToServer` — the multi-op
+server has this QSO — *and* `ceNeedSendToServerAE`, set when a QSO is **edited**
+(`uEditQSO.pas:748`). Two booleans, not one: "sent" and "sent, but has changed
+since". A single flag cannot express a QSO that was delivered and then corrected,
+which is precisely the case a multi-op needs to get right.
+
+UDP has **no such flag today** — that is the gap. So four columns, two per
+transport, as in §4.
+
+The outbound queue is then a `WHERE` clause with a partial index on it, not a
+data structure to maintain — which is also §9a's rule.
+
+**The wire format.** A delta rather than a whole record is the right instinct,
+and the GUID is what makes it safe: `{"guid": "...", "rcvd_state": "MA"}` is
+unambiguous about which QSO it patches, in a way that `{serial: 41}` is not once
+two stations are logging. Three things to settle when that work starts, flagged
+here so the schema does not foreclose them:
+
+1. **A delta needs a version or a sequence**, or two edits racing between
+   stations resolve by arrival order, which is not the same as by time.
+2. **Deletion is an edit**, not an absence — `deleted = 1` travels as a patch.
+3. The existing binary protocol with CRC32
+   (`src/utils/networkmessageutils.pas`) is what `tr4wserver` speaks today.
+   Whether the delta rides inside it or replaces it is a networking decision,
+   not a schema one — but the schema should not assume either.
+
 
 ---
 
