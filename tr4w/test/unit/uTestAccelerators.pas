@@ -23,7 +23,7 @@ unit uTestAccelerators;
 
   What these tests CANNOT see: whether a keystroke is the RIGHT one for a
   command, and whether the message loop separately binds something (PgUp/PgDn
-  are bound at tr4w.dpr:1589-1590 and appear in no table at all).
+  are bound at tr4w.lpr:1589-1590 and appear in no table at all).
 }
 
 interface

@@ -2,7 +2,7 @@ $ErrorActionPreference = "Continue"
 
 $LIB = "C:\tr4w\tr4w\include\Core;C:\tr4w\tr4w\include\System;C:\tr4w\tr4w\include;C:\tr4w\tr4w\include\Protocols;C:\tr4w\tr4w\src;C:\tr4w\tr4w\src\trdos;C:\tr4w\tr4w\src\utils"
 $DCC32 = "C:\Program Files (x86)\Borland\Delphi7\Bin\DCC32.EXE"
-$PROJECT = "C:\TR4W\tr4w\test\RadioFactoryTester.dpr"
+$PROJECT = "C:\TR4W\tr4w\test\RadioFactoryTester.lpr"
 $EXE_DIR = "C:\TR4W\tr4w\target"
 
 Write-Host "=== Building RadioFactoryTester ===" -ForegroundColor Cyan

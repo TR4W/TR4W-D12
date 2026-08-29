@@ -2362,7 +2362,7 @@ begin
 
      ShowFMessages then finds that slot non-nil, dereferences it and takes
      an access violation -- which is the Ctrl-P crash of 2026-08-15
-     (uFunctionKeys.pas:279, reached from tr4w.dpr:1415 where Ctrl calls
+     (uFunctionKeys.pas:279, reached from tr4w.lpr:1415 where Ctrl calls
      ShowFMessages(12)). The corruption and the symptom are in different
      units, which is why it took a symbolicated backtrace to find.
 

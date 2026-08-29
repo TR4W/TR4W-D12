@@ -4,7 +4,7 @@
 # Automates the D12 golden-master exports.  For each corpus set it runs the
 # D12 build's batch-export mode:
 #     tr4w.exe "<contest>.CFG" /EXPORT
-# (added in tr4w.dpr after SetUpGlobalsAndInitialize -- boots the contest,
+# (added in tr4w.lpr after SetUpGlobalsAndInitialize -- boots the contest,
 # writes <log>.ADI + <CALL>.LOG with the -D12 banner, then Halts before the
 # GUI/network init), then pull-d12-candidates.sh diffs everything vs the
 # frozen D7 refs.  Replaces hand-doing File->Export on every log.

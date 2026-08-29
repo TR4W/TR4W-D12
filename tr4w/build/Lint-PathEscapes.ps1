@@ -23,7 +23,7 @@
    tab followed by the tail of a path this project actually uses -- every path in
    TR4W contains tr4w, target or tools, so \t before one of those is the
    corruption and nothing else. Measured 2026-08-21: this pattern matched
-   exactly the two real defects across src, tr4w.dpr and docs, and nothing else.
+   exactly the two real defects across src, tr4w.lpr and docs, and nothing else.
 
    THE REAL FIX IS UPSTREAM, and it belongs in whatever writes the file: use a
    raw string, or double the backslash, or write the path with forward slashes.
@@ -45,7 +45,7 @@ $tails = @('r4w', 'arget', 'ools')
 $tab   = [char]9
 $pattern = $tab + '(' + ($tails -join '|') + ')'
 
-$extensions = @('.pas', '.dpr', '.dpk', '.inc', '.lfm', '.md', '.ps1', '.psm1')
+$extensions = @('.pas', '.lpr', '.dpr', '.dpk', '.inc', '.lfm', '.md', '.ps1', '.psm1')
 $skipDir    = '\\\.git\\|\\build-out\\|\\graphify-out\\|\\release\\|\\backup|\\dcu'
 
 if (-not (Test-Path -LiteralPath $SourceDir -PathType Container)) {

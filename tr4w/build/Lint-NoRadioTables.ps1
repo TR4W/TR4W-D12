@@ -62,7 +62,7 @@ $pattern = 'array\s*\[\s*(' + ($enums -join '|') + ')\s*\]'
 $findings = @()
 $scanned  = 0
 
-foreach ($f in Get-ChildItem -Path $SourceDir -Recurse -Include *.pas,*.PAS,*.inc,*.dpr)
+foreach ($f in Get-ChildItem -Path $SourceDir -Recurse -Include *.pas,*.PAS,*.inc,*.lpr,*.dpr)
    {
    $scanned++
    $lines = @(Get-Content -LiteralPath $f.FullName)

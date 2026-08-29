@@ -228,7 +228,7 @@ the native one is bench-proven, then let NY4I decide its fate.
 | `src/uWebSocketClient.pas` | `TWebSocketClient` — RFC 6455 client subset over `TIdTCPClient`. **No radio knowledge.** Own reader thread; callbacks: `OnTextMessage(s)`, `OnConnected`, `OnDisconnected`. Lives in `src/`, not `radioFactory/` — it is a transport, reusable (a future TCI keyer/peripheral, per AetherSDR's `_tci._tcp` peripheral ecosystem, would use it too). |
 | `src/radioFactory/uRadioTCI.pas` | `TTCIRadio = class(TFactoryRadioBase)` — the protocol driver **and** the single `RegisterRadioById` (like `uRadioKenwoodLAN`; there is no per-model fan-out because TCI *is* the model — the server abstracts the hardware). |
 
-Both listed explicitly in `tr4w.dpr` **and** `test/unit/tr4w_unit_tests.dpr`
+Both listed explicitly in `tr4w.lpr` **and** `test/unit/tr4w_unit_tests.lpr`
 (self-registration silently vanishes otherwise — known trap).
 
 ### 4.2 How TTCIRadio sits on the base class

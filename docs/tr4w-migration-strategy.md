@@ -111,12 +111,12 @@ implementation) to keep original call sites working.
 2. Create the new unit (e.g., `src/trdos/uExchangeParsing.pas`).
 3. Move the target function and its private helpers verbatim. **Do not refactor**;
    preserving the exact body keeps behavior identical and `git blame` useful.
-4. Add the new unit to `tr4w.dpr`'s uses clause.
+4. Add the new unit to `tr4w.lpr`'s uses clause.
 5. From the monolith, either `uses` the new unit or `{$INCLUDE}` its
    implementation — whichever produces zero call-site changes.
 6. Build TR4W; confirm zero behavior change (regression test against a known log).
 7. Write the test suite against the now-isolated unit and register it in
-   `tr4w_unit_tests.dpr`.
+   `tr4w_unit_tests.lpr`.
 
 If a moved function references a global that lives in the monolith, either
 (a) move the global with it, (b) the new unit `uses` the monolith for read-only
@@ -238,7 +238,7 @@ Test scope after extraction:
 
 ### Phase 1 — Compile D12 32-bit (Remove Blockers) — ✅ COMPLETE
 
-**Goal:** `tr4w.dpr` compiles under Delphi 12 in 32-bit ANSI-compatible mode
+**Goal:** `tr4w.lpr` compiles under Delphi 12 in 32-bit ANSI-compatible mode
 with zero behavior change. **Achieved** — the app builds clean (Win32) and the
 golden-master corpus passes.
 
@@ -261,8 +261,8 @@ golden-master corpus passes.
    / 74 files.)* **Cataloged** (`PHASE_INVENTORIES.md`) and **actively being eradicated**
    per project directive during the string work (many already gone).
 
-5. ~~**`IsMultiThread := True`** — Already fixed; must stay first statement in `tr4w.dpr`.~~
-   **Done** (present in `tr4w.dpr`).
+5. ~~**`IsMultiThread := True`** — Already fixed; must stay first statement in `tr4w.lpr`.~~
+   **Done** (present in `tr4w.lpr`).
 
 **Win32 API calls:** Leave as-is. Win32 API works identically in D12 32-bit.
 There is no benefit to wrapping it in Phase 1; defer to Phase 4 (VCL forms).
@@ -346,7 +346,7 @@ These can be decompiled to `.dfm` now. The `DlgProc` logic maps directly to
 > **2026-07-31 — FIRST FMX FORM: the WinKeyer settings dialog, not dialog 66.**
 > NY4I's reasoning, recorded so it is not relitigated: the first form exists to
 > **prove the toolchain**, not to deliver value. The questions it must answer are
-> all infrastructural — does an FMX form coexist with `tr4w.dpr`'s hand-rolled
+> all infrastructural — does an FMX form coexist with `tr4w.lpr`'s hand-rolled
 > `GetMessage`/`TranslateAccelerator` loop; what does FMX do to a build that is
 > currently Win32-only with no VCL at all; does modal behaviour work with a raw
 > `HWND` parent; how do the eleven per-language string constants map onto it —
@@ -399,7 +399,7 @@ windows are on VCL forms. Migration approach:
    and position at startup (one-time diagnostic run)
 2. Use that output to generate a `TForm` with manually placed controls
 3. Replace `CreateDialogIndirectParam` call with `TMainForm.Create`
-4. Port the `WindowProc` message dispatcher in `tr4w.dpr` into `TMainForm`
+4. Port the `WindowProc` message dispatcher in `tr4w.lpr` into `TMainForm`
    overrides and event handlers — this is the bulk of the work
 
 ---
@@ -475,5 +475,5 @@ The TR4QT SQLite implementation at `C:\projects\TR4QT` is the reference schema.
 | ~~`src/uIcomCIV.pas`~~ | `string` → `AnsiString` for BCD | Phase 2 | ✅ done (byte-faithful) |
 | ~~`src/uRadioIcomBase.pas`~~ | delegates to uIcomCIV | Phase 2 | ✅ done |
 | All `asm` blocks | Catalog Phase 1, replace Phase 3 | Phase 1/3 | 🟡 cataloged; eradication in progress |
-| ~~`tr4w.dpr` `IsMultiThread`~~ | Already fixed | Done | ✅ |
-| `test/unit/tr4w_unit_tests.dpr` | Add DUnitX runner | Phase 4 | ⏳ not started |
+| ~~`tr4w.lpr` `IsMultiThread`~~ | Already fixed | Done | ✅ |
+| `test/unit/tr4w_unit_tests.lpr` | Add DUnitX runner | Phase 4 | ⏳ not started |

@@ -84,7 +84,7 @@ type
       );
 
    // Observer for the status pipeline.  nil in the running program; assigned by
-   // test/integration/tr4w_status_trace.dpr, which records the sequence of
+   // test/integration/tr4w_status_trace.lpr, which records the sequence of
    // events and dumps it as JSONL so two builds can be diffed.
    //
    // WHY A HOOK AND NOT A COPY OF UpdateStatus IN THE HARNESS.  The whole point

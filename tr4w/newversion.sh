@@ -6,7 +6,7 @@
 cd build
 sed -i  "s/'$3'/'$4'/" full.nsi
 cd  ..
-dcc32 -O+ -H+ -J- -I- tr4w.dpr
+dcc32 -O+ -H+ -J- -I- tr4w.lpr
 cd d:/newsrc/TR4W/build
 
 ./upx ../target/tr4w.exe --lzma

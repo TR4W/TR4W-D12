@@ -8,7 +8,7 @@ the knowledge survives independently of that branch.
 ## Why this matters
 
 TR4W is a raw Win32 program: `program tr4w;` runs its **own** `GetMessage` /
-`TranslateMessage` / `DispatchMessage` loop (`tr4w.dpr`) and creates windows by
+`TranslateMessage` / `DispatchMessage` loop (`tr4w.lpr`) and creates windows by
 hand with `CreateWindow`. It does **not** use the VCL `Application.Run` loop and
 has no VCL `MainForm`. That makes windows like the **Band Map** and the **Telnet
 (DX Cluster)** window painful — they're hand-built Win32 windows that would be
@@ -23,7 +23,7 @@ running, rather than a big-bang rewrite.
 
 ## The recipe (the five wiring changes)
 
-### 1. `tr4w.dpr` uses clause — add `Forms` and the form unit
+### 1. `tr4w.lpr` uses clause — add `Forms` and the form unit
 ```pascal
 uses
   Forms,                          // the VCL Application object
@@ -32,7 +32,7 @@ uses
   Unit2 in 'src\Unit2.pas' {Form2};   // your form-editor form
 ```
 
-### 2. `tr4w.dpr` startup — initialize VCL but DON'T let it own the app
+### 2. `tr4w.lpr` startup — initialize VCL but DON'T let it own the app
 At the top of the main `begin` block, **before** the legacy init:
 ```pascal
 Application.Initialize;
@@ -58,7 +58,7 @@ Two non-obvious points, both essential:
 Note the program still uses its own `while GetMessage(...)` loop — it never
 calls `Application.Run`.
 
-### 3. `tr4w.dpr` message loop — give VCL forms their keyboard messages
+### 3. `tr4w.lpr` message loop — give VCL forms their keyboard messages
 Inside the existing `while GetMessage(Msg, 0, 0, 0)` loop, **before**
 `TranslateAccelerator`:
 ```pascal
@@ -122,7 +122,7 @@ code is required.
 
 ## Reference
 - Branch `Add-VCL-to-Program`, commit `67785ae` — the working POC diff
-  (`.gitignore`, `tr4w.dpr`, `tr4w/src/MainUnit.pas`, `tr4w/src/VC.pas`,
+  (`.gitignore`, `tr4w.lpr`, `tr4w/src/MainUnit.pas`, `tr4w/src/VC.pas`,
   `tr4w/src/Unit2.pas`, `tr4w/src/Unit2.dfm`).
 - Hand-derived by NY4I after considerable research; see also the broader
   Delphi 12/13 conversion plan in `docs/`.

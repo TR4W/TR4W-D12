@@ -130,7 +130,7 @@ uses
 
   A CHILD OF THE SAME LOGGER, so nothing about the output moves.  Log4D
   propagates to the root appender and children inherit the parent's level, and
-  the global is TLogLogger.GetLogger('TR4WDebugLog') (tr4w.dpr:657) -- so
+  the global is TLogLogger.GetLogger('TR4WDebugLog') (tr4w.lpr:657) -- so
   'TR4WDebugLog.CrashLog' lands in the same tr4w.log at the same level, and
   merely says which subsystem wrote the line.  Obtained lazily because a crash
   can happen before startup has configured anything. }

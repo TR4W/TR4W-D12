@@ -15,7 +15,7 @@
 #   Tests  -- the same, and ui\lcl must come BEFORE src: uSettingsBinding exists
 #             in both, one binding FMX controls and one binding LCL ones, and
 #             the test project names neither explicitly, so search ORDER is the
-#             only thing choosing. (tr4w.dpr picks correctly with {$IFDEF FPC}.)
+#             only thing choosing. (tr4w.lpr picks correctly with {$IFDEF FPC}.)
 #   Server -- no LCL and no ui\ at all. tr4wserver is a console program; adding
 #             the LCL would link a widgetset into something with no UI.
 
@@ -33,7 +33,7 @@
 #
 #     Log4D.pas(2,2) Fatal: Cannot open include file "tr4w.inc"
 #
-# That commit updated tr4w.dpr, tr4w.dproj and tr4w.lpi -- the IDE and Delphi
+# That commit updated tr4w.lpr, tr4w.lproj and tr4w.lpi -- the IDE and Delphi
 # paths -- and no build\*.ps1, which is the PACKAGING path.  The Lazarus project
 # kept working, so nothing surfaced it until the next command-line build.
 #
@@ -120,7 +120,7 @@ function Get-Tr4wSearchPaths
       $paths.Add($TestDir)
       }
 
-   # ui\lcl BEFORE src -- see the header. Harmless for the app (tr4w.dpr names
+   # ui\lcl BEFORE src -- see the header. Harmless for the app (tr4w.lpr names
    # its units with explicit paths) and load-bearing for the tests.
    if ($For -ne 'Server')
       {

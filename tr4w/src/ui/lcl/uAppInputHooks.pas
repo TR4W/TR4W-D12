@@ -4,7 +4,7 @@ unit uAppInputHooks;
 {
   WHAT THE HAND-ROLLED MESSAGE LOOP DID, AS LCL APPLICATION HANDLERS.
 
-  Phase 3c.  tr4w.dpr owned a GetMessage / TranslateMessage / DispatchMessage
+  Phase 3c.  tr4w.lpr owned a GetMessage / TranslateMessage / DispatchMessage
   loop for the life of the program, and four things lived inside it that had
   nowhere else to be: the accelerator table, the numeric-keypad CW memories, the
   F-key label refresh when a modifier is released, and a fault-recovery wrapper.

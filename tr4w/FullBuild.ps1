@@ -15,7 +15,7 @@
 #
 # WHAT IT ADDS THAT THE D12 SCRIPT NEVER NEEDED
 #
-# The nine gating lints lived in tr4w.dproj's PreBuildEvent, so msbuild ran them
+# The nine gating lints lived in tr4w.lproj's PreBuildEvent, so msbuild ran them
 # and nothing else did. An FPC build saw none of them. They are invoked here
 # explicitly, through build\Run-Lints.ps1, or moving toolchains would have
 # silently dropped every gate this repo has built.
@@ -122,7 +122,7 @@ Write-Host "TR4W $TR4W_VERSION -- FPC $Cpu-$Os, English, LCL" -ForegroundColor G
 # preprocessor (cc1) that the FPC distribution does not ship, and fails with
 # "cannot execute 'cc1'". fpcres parses .rc itself.
 #
-# tr4w.dpr links this only under {$IFDEF VERSIONINFO_RES}, so the define below
+# tr4w.lpr links this only under {$IFDEF VERSIONINFO_RES}, so the define below
 # and this file travel together.
 # ---------------------------------------------------------------------------
 Phase 'Version resource'
@@ -175,7 +175,7 @@ Write-Host "  tr4w_versioninfo.res ($((Get-Item $resPath).Length) bytes)"
 # The application manifest.
 #
 # COMPILED HERE rather than shipped as a checked-in .res, because that is what
-# it was: tr4w.dpr links {$R 'Win11.res'} and NOTHING rebuilt it, so editing
+# it was: tr4w.lpr links {$R 'Win11.res'} and NOTHING rebuilt it, so editing
 # W11.manifest changed nothing at all. The same shape as tr4w.cfg and tr4w.dof
 # -- a source file that looks live and is not -- and it hid the fact that the
 # manifest never asked for Common-Controls v6, which is why every stock control

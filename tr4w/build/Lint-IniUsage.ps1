@@ -14,7 +14,7 @@
    WHY IT CATCHES TWO MECHANISMS, WHICH IS THE WHOLE POINT.  An audit on
    2026-08-21 counted 26 call sites by searching for GetPrivateProfileString /
    WritePrivateProfileString. It MISSED SEVEN MORE that reach the same file
-   through TIniFile -- tr4w.dpr, uRadioConfigApply (x3), uPrefsForm (x2),
+   through TIniFile -- tr4w.lpr, uRadioConfigApply (x3), uPrefsForm (x2),
    uTR4WConfigFile. A rule enforced against one spelling of the offence is not
    enforced.
 
@@ -70,7 +70,7 @@ $allowed = @(
    @{ Unit = 'uTR4WConfigFile.pas'; Match = '';             Why = 'the seed reader that uCabrilloHeader uses; same one-time path.' }
    @{ Unit = 'uPrefsForm.pas';      Match = '';             Why = 'reads the legacy stores once to offer a migration; does not write.' }
    @{ Unit = 'uRadioConfigApply.pas'; Match = '';           Why = 'reads the legacy radio ini once to seed the library; the WRITES were removed 2026-08-21.' }
-   # tr4w.dpr USED to be on this list, and is the example of how an entry should
+   # tr4w.lpr USED to be on this list, and is the example of how an entry should
    # leave it. It read [COMMANDS] DEBUG LOG LEVEL from the ini to configure the
    # logger before the config system existed -- but that key is a csJSON row, so
    # the ini was a STALE source: an operator who set the level in Preferences got

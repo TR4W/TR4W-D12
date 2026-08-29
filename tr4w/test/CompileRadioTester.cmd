@@ -1,5 +1,5 @@
 @echo off
-REM Compile RadioFactoryTester.dpr using Delphi 7 command-line compiler
+REM Compile RadioFactoryTester.lpr using Delphi 7 command-line compiler
 
 set LIB=C:\tr4w\tr4w\include\Core;
 set LIB=%LIB%C:\tr4w\tr4w\include\System;
@@ -11,7 +11,7 @@ cd C:\tr4w\tr4w
 
 echo Compiling RadioFactoryTester...
 
-"c:\Program Files (x86)\Borland\Delphi7\Bin\DCC32.EXE" test\RadioFactoryTester.dpr ^
+"c:\Program Files (x86)\Borland\Delphi7\Bin\DCC32.EXE" test\RadioFactoryTester.lpr ^
   -NC:\Temp ^
   /U%LIB% ^
   /I%LIB% ^

@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 $DCC32 = "C:\Program Files (x86)\Borland\Delphi7\Bin\DCC32.EXE"
-$PROJECT = "C:\TR4W\tr4w\test\logdump\logdump.dpr"
+$PROJECT = "C:\TR4W\tr4w\test\logdump\logdump.lpr"
 $OUT_DIR = "C:\TR4W\tr4w\test\logdump"
 
 $DCU_DIR = "C:\Temp\tr4w-logdump"

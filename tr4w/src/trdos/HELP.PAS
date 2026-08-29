@@ -22,7 +22,7 @@ unit Help;
 {
   NOT COMPILED BY ANYTHING, measured 2026-08-20.
 
-  This unit is in no program's uses clause -- not tr4w.dpr, not the unit tests,
+  This unit is in no program's uses clause -- not tr4w.lpr, not the unit tests,
   not tr4wserver, not the bench harnesses -- and every `uses Help` elsewhere in
   the tree is inside a comment (CfgCmd, FCONTEST, LogCfg, LOGDDX, LogSend,
   LOGSTUFF, LOGSUBS1, LOGSUBS2, LOGWAE, PostUnit). FPC compiles only what a

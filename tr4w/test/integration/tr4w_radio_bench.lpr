@@ -428,7 +428,7 @@ var
    baud: integer;
 
 begin
-   // The radio classes log through MainUnit's global `logger`, which tr4w.dpr
+   // The radio classes log through MainUnit's global `logger`, which tr4w.lpr
    // assigns at startup.  Without this every received frame faults -- see the
    // same note in the unit-test project.
    logger := TLogLogger.GetLogger('TR4WRadioBench');

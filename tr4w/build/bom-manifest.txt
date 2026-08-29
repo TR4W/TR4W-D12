@@ -75,7 +75,7 @@ src\uSpots.pas
 src\uTelnet.pas
 src\uWinManager.pas
 src\VC.pas
-test\unit\tr4w_unit_tests.dpr
+test\unit\tr4w_unit_tests.lpr
 test\unit\uTestCWKeyer.pas
 test\unit\uTestRegistryTaxonomy.pas
-tr4wserver\tr4wserver.dpr
+tr4wserver\tr4wserver.lpr

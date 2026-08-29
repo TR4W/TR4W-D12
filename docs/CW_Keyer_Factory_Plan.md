@@ -1,6 +1,6 @@
 # CW Keyer Factory/Strategy Refactor — Implementation Plan
 
-Repo: `c:\tr4w-d12`, branch `delphi12`, Delphi 12, raw Win32 (no VCL). Build: `call rsvars.bat` (Studio 23.0) → `msbuild tr4w.dproj /t:Build /p:Config=Debug /p:Platform=Win32`. Follow the user's Pascal style: 3-space indent, `begin` on its own line indented from the control statement, code at the same level as `begin`/`end`, no single-line ifs. Pascal identifiers are case-insensitive — every verification grep must use `-i`.
+Repo: `c:\tr4w-d12`, branch `delphi12`, Delphi 12, raw Win32 (no VCL). Build: `call rsvars.bat` (Studio 23.0) → `msbuild tr4w.lproj /t:Build /p:Config=Debug /p:Platform=Win32`. Follow the user's Pascal style: 3-space indent, `begin` on its own line indented from the control statement, code at the same level as `begin`/`end`, no single-line ifs. Pascal identifiers are case-insensitive — every verification grep must use `-i`.
 
 > **Status (2026-07-31): PHASES A AND B ARE COMPLETE.**
 > A1 `7ceb884` (base + four adapters + T1-T3,T8) · A2 `b939c7f` (LogCW facade
@@ -122,7 +122,7 @@ This refactor introduces a `TCWKeyer` strategy class with four concrete keyers b
 
 ### D2. Selection is a per-call pure function, not a cached object
 `function ActiveCWKeyer: TCWKeyer` in `uCWKeyerBase` re-evaluates per call: `IsCWByCATActive` → `wkActive` → `ycccActive` → CPU. This resolves the two hard correctness points with zero hook infrastructure:
-- **WinKeyer async open:** `wkActive` only goes True inside the read thread after a successful echo test (`tr4w.dpr:969-974` starts `wkOpen` on a thread). Today a WinKeyer that never opens falls through to YCCC/CPU; a static selection on `wksWinKey2Enable` would break that. Testing `wkActive` live preserves it exactly.
+- **WinKeyer async open:** `wkActive` only goes True inside the read thread after a successful echo test (`tr4w.lpr:969-974` starts `wkOpen` on a thread). Today a WinKeyer that never opens falls through to YCCC/CPU; a static selection on `wksWinKey2Enable` would break that. Testing `wkActive` live preserves it exactly.
 - **Per-radio CW-by-CAT:** `IsCWByCATActive` (`MainUnit.pas:9247-9271`) follows `ActiveRadioPtr` (config AND `rcCWByCAT` capability), so radio swaps/model changes need no re-selection events. The CAT adapter resolves `KeyersSwapped ? InactiveRadioPtr : ActiveRadioPtr` per call, exactly as `LogCW.pas:236-243` does today.
 
 Exclusivity: exactly one keyer handles any call (one documented exception, quirk Q4). `ActiveCWKeyer` logs `logger.Info('Active CW keyer is now %s', ...)` only on change (unit-level `LastLoggedKeyer`; benign race). Config-conflict warnings run once post-config-load (D5).
@@ -140,7 +140,7 @@ New units in `tr4w\src\` (NOT `src\trdos\`):
 - `uCWKeyerBase.pas` — `TCWKeyer`, capability set, four singleton slots, `ActiveCWKeyer`, `WarnIfKeyerConfigsConflict`.
 - `uCWKeyerCAT.pas`, `uCWKeyerWinKey.pas`, `uCWKeyerYCCC.pas`, `uCWKeyerCPU.pas`.
 
-Deviation from `uRadioRegistry`'s closure registry, justified: the radio set is open (~90 models); the keyer set is closed (four) with fixed precedence — a priority registry would only add init-order hazard. Keep the essence: base + derived units, capability flags, self-installation from `initialization` sections (`KeyerCPU := TCWKeyerCPU.Create;` into named slots; `finalization` frees). Per the lesson at `tr4w_unit_tests.dpr:103-108`, list all five units **explicitly** in both `tr4w.dpr` and the test dpr.
+Deviation from `uRadioRegistry`'s closure registry, justified: the radio set is open (~90 models); the keyer set is closed (four) with fixed precedence — a priority registry would only add init-order hazard. Keep the essence: base + derived units, capability flags, self-installation from `initialization` sections (`KeyerCPU := TCWKeyerCPU.Create;` into named slots; `finalization` frees). Per the lesson at `tr4w_unit_tests.lpr:103-108`, list all five units **explicitly** in both `tr4w.lpr` and the test dpr.
 
 ### D6. Uses-clause rules (no new interface-level edges into legacy code)
 - `uCWKeyerBase` interface uses `VC` only (`Str160` at `VC.pas:1483`). Implementation uses `SysUtils, MainUnit` (IsCWByCATActive, logger), `uWinKey`, `uYCCCSO2R`, `LogRadio`, `uRadioRegistry`.
@@ -264,8 +264,8 @@ Adapters are **stateless** (no fields beyond Name/Capabilities); all mutable sta
 
 ### Commit A1 — new units + selection tests (no facade change)
 1. Create the five units.
-2. Add to `tr4w\tr4w.dpr` uses: `uCWKeyerBase in 'src\uCWKeyerBase.pas'` + four adapters (explicit, style of `uYCCCSO2R` entry near dpr:199).
-3. Add the same five to `tr4w\test\unit\tr4w_unit_tests.dpr` (`in '..\..\src\...'`) + `uTestCWKeyer in 'uTestCWKeyer.pas'` + `RegisterSuite(TCWKeyerTests.Create('CWKeyer'));` near dpr:222.
+2. Add to `tr4w\tr4w.lpr` uses: `uCWKeyerBase in 'src\uCWKeyerBase.pas'` + four adapters (explicit, style of `uYCCCSO2R` entry near dpr:199).
+3. Add the same five to `tr4w\test\unit\tr4w_unit_tests.lpr` (`in '..\..\src\...'`) + `uTestCWKeyer in 'uTestCWKeyer.pas'` + `RegisterSuite(TCWKeyerTests.Create('CWKeyer'));` near dpr:222.
 4. New `tr4w\test\unit\uTestCWKeyer.pas` with tests T1-T3, T8 (below).
 
 Gate: full `/t:Build` both projects; `tr4w_unit_tests.exe` passes; corpus `bash tr4w/test/corpus/export-d12-corpus.sh` = 22/0/4 (guard `Get-Process -Name tr4w` first).
@@ -364,7 +364,7 @@ Golden corpus after every commit: `bash tr4w/test/corpus/export-d12-corpus.sh` �
 
 - **PTT**: MainUnit PTTOn/PTTOff 4-way branch (MainUnit.pas:9014+). Future `PTTOn/PTTOff` virtuals.
 - **SO2R switching**: `SetUpToSendOnActiveRadio/Inactive` (LogCW.pas:2015+), `wkSetKeyerOutput` (uWinKey.pas:976), `SetRelayForActiveRadio`, `YCCCSetActiveRadio`. Future `SetKeyerOutput(radio)` virtual.
-- **WinKeyer internal bugs** (known, NOT fixed here): thread-ID collision (`tr4w.dpr:969-974` and `uWinKey.pas:323` both write `wkThreadID`); read thread calling UI/QSO-flow code and `LogCW.SetSpeed` (uWinKey.pas:768-796); dead `wkReadThreadProc1`.
+- **WinKeyer internal bugs** (known, NOT fixed here): thread-ID collision (`tr4w.lpr:969-974` and `uWinKey.pas:323` both write `wkThreadID`); read thread calling UI/QSO-flow code and `LogCW.SetSpeed` (uWinKey.pas:768-796); dead `wkReadThreadProc1`.
 - **Drift fixes deferred** (one-liners when user opts in): Q1 wkClearBuffer in WK Flush; Q2 YCCCSetSpeed; Q4 YCCC autosend via YCCC buffer.
 - **MMTTY branch** stays inline (mode dispatch, not a keyer). **DVK/DVP** separate domain. **Paddle** separate. **Legacy LOGRADIO CW protocol case** (:2405-2752) + legacy set guard (:2379) + commented kludge (:2398-2404) stay until legacy radio removal — the CAT adapter is the single future repoint.
 - `wkSwapTune` (uWinKey.pas:1073) divergence from scWK_SWAPTUNE — pre-existing, untouched.
@@ -449,4 +449,4 @@ Git: every command as `git -C /c/tr4w-d12 <subcommand>`, never a leading `cd`.
 - `c:\tr4w-d12\tr4w\src\uWinKey.pas` — WinKeyer procedural API the adapter wraps; async wkActive
 - `c:\tr4w-d12\tr4w\src\trdos\LOGK1EA.PAS` — CPUKeyer object the CPU adapter wraps
 - `c:\tr4w-d12\tr4w\src\uYCCCSO2R.pas` — YCCC procs the adapter wraps
-- `c:\tr4w-d12\tr4w\test\unit\tr4w_unit_tests.dpr` — unit listing + RegisterSuite pattern
+- `c:\tr4w-d12\tr4w\test\unit\tr4w_unit_tests.lpr` — unit listing + RegisterSuite pattern

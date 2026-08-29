@@ -49,7 +49,7 @@ program bench_panadapter;
 
 uses
    // Interfaces first: this links the LCL, whose widgetset registration lives
-   // here.  Same reason tr4w_unit_tests.dpr does it.
+   // here.  Same reason tr4w_unit_tests.lpr does it.
    Interfaces,
    SysUtils, Classes, Graphics, Forms, Controls, Log4D, MainUnit, VC,
    uSpectrumTypes, uFactoryRadioBase, uRadioElecraftK4, uPanadapterForm,
@@ -179,7 +179,7 @@ begin
       end;
 
    // The radio factory logs through MainUnit's global `logger`, which only
-   // tr4w.dpr's startup assigns.  Without this the first call that logs dies
+   // tr4w.lpr's startup assigns.  Without this the first call that logs dies
    // with an access violation.
    logger := TLogLogger.GetLogger('PanadapterBench');
 

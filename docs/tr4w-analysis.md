@@ -53,7 +53,7 @@ TR4W-08baa552/
 │   ├── RADIO_FACTORY_README.md
 │   └── RADIO_FACTORY_UPDATE.txt
 └── tr4w/                             *** Main project directory ***
-    ├── tr4w.dpr                      Main application entry point (878 lines)
+    ├── tr4w.lpr                      Main application entry point (878 lines)
     ├── tr4w.cfg                      Compiler configuration
     ├── tr4w.dof                      Delphi 7 IDE options
     ├── tr4w.cfp                      Project configuration
@@ -138,7 +138,7 @@ TR4W-08baa552/
     │   └── dom/                      Domestic zone definitions
     │
     ├── tr4wserver/                   *** Multi-station server ***
-    │   ├── tr4wserver.dpr            Server entry point
+    │   ├── tr4wserver.lpr            Server entry point
     │   └── src/tr4wserverUnit.pas    Server logic (1,157 lines)
     │
     └── build/                        *** Build artifacts ***
@@ -182,7 +182,7 @@ TR4W-08baa552/
 
 ### Application Source Lines of Code (excluding third-party)
 
-**Grand Total: 132,165 lines** across 173 `.pas` files + 878 lines in `tr4w.dpr`
+**Grand Total: 132,165 lines** across 173 `.pas` files + 878 lines in `tr4w.lpr`
 
 #### Top 30 Largest Units
 
@@ -231,7 +231,7 @@ TR4W uses a **monolithic procedural architecture** with a **hub-and-spoke** patt
 
 ```
                         ┌──────────────┐
-                        │  tr4w.dpr    │  Entry point, message loop,
+                        │  tr4w.lpr    │  Entry point, message loop,
                         │  (878 lines) │  WindowProc
                         └──────┬───────┘
                                │
@@ -261,14 +261,14 @@ TR4W uses a **monolithic procedural architecture** with a **hub-and-spoke** patt
 
 ### 3.2 Entry Point
 
-The entry point is `tr4w.dpr`. Unlike typical Delphi applications, it does **not** use `Application.Initialize` / `Application.Run`. Instead:
+The entry point is `tr4w.lpr`. Unlike typical Delphi applications, it does **not** use `Application.Initialize` / `Application.Run`. Instead:
 
 1. **Direct initialization** in the `begin..end` block (lines 328–668)
 2. **Explicit window class registration** via `RegisterClass`
 3. **Manual window creation** via `CreateWindowEx`
 4. **Custom message loop** via `while GetMessage(msg, 0, 0, 0) do` (lines 671–869)
 
-The `WindowProc` function (lines 145–304 of `tr4w.dpr`) is the main window procedure handling all Windows messages.
+The `WindowProc` function (lines 145–304 of `tr4w.lpr`) is the main window procedure handling all Windows messages.
 
 ### 3.3 Startup Sequence
 
@@ -370,7 +370,7 @@ This application is **100% Win32 API for the UI layer**. No VCL forms, no VCL co
 
 - **49+ `DlgProc` functions** — each dialog has its own procedure
 - **8+ subclassed window procedures** — for call window, exchange window, bandmap, etc.
-- **1 main `WindowProc`** in `tr4w.dpr` handling `WM_COMMAND`, `WM_NOTIFY`, `WM_SIZE`, owner-draw, color, focus, etc.
+- **1 main `WindowProc`** in `tr4w.lpr` handling `WM_COMMAND`, `WM_NOTIFY`, `WM_SIZE`, owner-draw, color, focus, etc.
 
 ### 4.3 Messages Handled
 
@@ -444,7 +444,7 @@ This is a **major migration concern**, especially for 64-bit targets where inlin
 | String/memory operations | 10+ | Custom `IntToStr`, `Format`, `StrComp` |
 | I/O port access | 5+ | `inb`/`outb` for parallel port, keyer timing |
 | Floating-point math | 5+ | `log10`, `power`, fast truncation |
-| Thread event creation | 1 | `tr4w.dpr` — creates `CreateEvent` via asm |
+| Thread event creation | 1 | `tr4w.lpr` — creates `CreateEvent` via asm |
 | System utilities | 5+ | CPU detection, GetTickCount wrappers |
 
 **Key concern:** Delphi 12 does NOT support inline assembly in 64-bit mode. All `asm` blocks must be converted to pure Pascal or use external `.obj` files for a 64-bit build. Many of these reimplements standard RTL functions and can simply be replaced.
@@ -487,7 +487,7 @@ The codebase is predominantly **procedural** with global state. Classes are used
 
 | Feature | Location | Issue |
 |---------|----------|-------|
-| `GetVersionEx` | `tr4w.dpr` | Deprecated in Windows 8.1+ |
+| `GetVersionEx` | `tr4w.lpr` | Deprecated in Windows 8.1+ |
 | `SetWindowLong` | 14 files | Should be `SetWindowLongPtr` for 64-bit |
 | `GetWindowLong` | Multiple | Should be `GetWindowLongPtr` for 64-bit |
 | `Integer` for handles/pointers | Pervasive | Should be `NativeInt`/`NativeUInt` for 64-bit |
@@ -674,7 +674,7 @@ SET LIB=C:\Indy\Lib\Core;C:\Indy\Lib\System;C:\tr4w\tr4w\include;C:\Indy\Lib\Pro
 SET EXE=C:\TR4W\tr4w\target
 C:
 cd C:\tr4w\tr4w
-"c:\Program Files (x86)\Borland\Delphi7\Bin\DCC32.EXE" C:\TR4W\tr4w\tr4w.dpr -NC:\Temp /U%LIB% /I%LIB% /E%EXE%
+"c:\Program Files (x86)\Borland\Delphi7\Bin\DCC32.EXE" C:\TR4W\tr4w\tr4w.lpr -NC:\Temp /U%LIB% /I%LIB% /E%EXE%
 ```
 
 - **Compiler:** Delphi 7 `DCC32.EXE` (command-line 32-bit compiler)
@@ -878,7 +878,7 @@ Two files already use `Generics.Collections` which is NOT available in Delphi 7.
 | 3 | Heavy rewrite | `src/TF.pas` (ANSI-specific wrappers — 1,947 lines) |
 | 4 | Remove | `include/` (bundled Indy — 381 files) |
 | 5 | Remove/replace | `src/uVariants.pas`, `src/uComObj.pas`, `src/MMSystem.pas` |
-| 6 | Update | `tr4w.dpr` (entry point, asm blocks, message loop) |
+| 6 | Update | `tr4w.lpr` (entry point, asm blocks, message loop) |
 | 7 | Update | `src/MainUnit.pas` (string casts, PChar usage — 9,023 lines) |
 | 8 | Update | `src/VC.pas` (type definitions, ShortString types — 3,870 lines) |
 | 9 | Review | `src/uCommctrl.pas` (common controls declarations — 5,785 lines) |

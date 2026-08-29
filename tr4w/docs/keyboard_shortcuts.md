@@ -103,5 +103,5 @@ These are soft-configured defaults (user can change):
 | `src/uMenu.pas` | Menu accelerator definitions (lines 41–132) |
 | `src/trdos/LOGSTUFF.PAS` | Configurable character key definitions (lines 510–577) |
 | `src/MainUnit.pas` | Key processing logic |
-| `tr4w.dpr` | WM_KEYDOWN / WM_CHAR dispatch in main message loop |
+| `tr4w.lpr` | WM_KEYDOWN / WM_CHAR dispatch in main message loop |
 | `src/uFunctionKeys.pas` | Function key window handling |

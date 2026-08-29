@@ -186,7 +186,7 @@ Only the **LCL** is used. TR4W is not a Lazarus *project* in the usual sense: it
 
 ## Lints
 
-`tr4w\build\Run-Lints.ps1` runs all ten, and `FullBuild.ps1` calls it. They previously lived only in `tr4w.dproj`'s `PreBuildEvent`, so msbuild ran them and **nothing else did** — an FPC build saw none. Add a lint by editing the one array in that script.
+`tr4w\build\Run-Lints.ps1` runs all ten, and `FullBuild.ps1` calls it. They previously lived only in `tr4w.lproj`'s `PreBuildEvent`, so msbuild ran them and **nothing else did** — an FPC build saw none. Add a lint by editing the one array in that script.
 
 `Lint-LFMProperties` is the odd one out: it compiles a small FPC helper (`build\lintlfm\`) that links the LCL and asks the same RTTI the form loader uses, because "does this class publish this property, and is this a legal value for it" cannot be answered by grepping a `published` block. It fails *closed* if FPC or the LCL is missing — a lint that cannot run must not look like a lint that found nothing.
 
@@ -258,10 +258,10 @@ Every row above has a `.cmd` twin for a plain cmd prompt; just swap the extensio
 ```bat
 call "C:\Program Files (x86)\Embarcadero\Studio\23.0\bin\rsvars.bat"
 cd /d C:\tr4w-d12\tr4w
-msbuild tr4w.dproj /t:Make /p:Config=Debug /p:Platform=Win32 /v:minimal /nologo
+msbuild tr4w.lproj /t:Make /p:Config=Debug /p:Platform=Win32 /v:minimal /nologo
 echo EXITCODE=%ERRORLEVEL%
 ```
 
 ~~`/t:Make` is incremental; `/t:Build` is a full rebuild and was required before committing anything that changed a class hierarchy, because `Make` skips up-to-date units and hides a `W1020` missing-abstract-method warning. DCUs landed in `src\`.~~
 
-~~`tr4w.dpr` is shared by both toolchains — the LCL and FMX unit sets are selected by `{$IFDEF FPC}` in its uses clause, which is why the Delphi build still works at all. `tr4w.cfg` / `tr4w.dof` are D7 leftovers and editing them does nothing.~~
+~~`tr4w.lpr` is shared by both toolchains — the LCL and FMX unit sets are selected by `{$IFDEF FPC}` in its uses clause, which is why the Delphi build still works at all. `tr4w.cfg` / `tr4w.dof` are D7 leftovers and editing them does nothing.~~

@@ -56,7 +56,7 @@ uses MainUnit;
 // Issue #1012 (and #69): the S&P F1 ("send call") caption is derived from the
 // DE ENABLE setting.  DEEnable's final value is only known after the config
 // files are read, so this decision is factored out here and re-applied
-// post-config (see tr4w.dpr) rather than computed only once with the
+// post-config (see tr4w.lpr) rather than computed only once with the
 // compiled-in default of True.  RUS uses a language-fixed F1 caption that does
 // not depend on DE ENABLE, so it is left untouched.
 procedure UpdateSAndPF1Caption;

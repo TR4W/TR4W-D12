@@ -68,7 +68,7 @@ begin
      HamLib carries no spectrum caps for the IC-7760 and AetherSDR's model
      table does not list it, so nothing published anywhere states this
      geometry.  It was read off NY4I's rig with
-     tr4w/test/bench/bench_icomscope.dpr:
+     tr4w/test/bench/bench_icomscope.lpr:
 
        LAN payload            704 bytes  =  15-byte header + 689 levels
        points                 689

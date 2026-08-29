@@ -207,8 +207,8 @@ not invent a new config mechanism here.
 **Modified:** `tr4w/src/uWebSocketClient.pas` (framing delegated out),
 `tr4w/src/radioFactory/uRadioTCI.pas` (adopt the shared tokenizer only — leave `DispatchCommand`'s
 dispatch alone), `tr4w/src/uRadioPolling.pas` (one `PublishRadioState` call),
-`tr4w/src/uCFG.pas` (3 keys), `tr4w/tr4w.dpr` (unit list + create/start/stop, near the existing
-wsjtx wiring at :897-900 / :1141-1143), `tr4w/test/unit/tr4w_unit_tests.dpr` (unit list),
+`tr4w/src/uCFG.pas` (3 keys), `tr4w/tr4w.lpr` (unit list + create/start/stop, near the existing
+wsjtx wiring at :897-900 / :1141-1143), `tr4w/test/unit/tr4w_unit_tests.lpr` (unit list),
 `CLAUDE.md` (documentation map row).
 
 **Untouched:** `tr4w/src/uWSJTX.pas`. `src/trdos/` beyond nothing at all.
@@ -238,7 +238,7 @@ arity table, GET/SET dispatch, `TThread.Queue` apply path, broadcast on publish-
 PTT ownership. Tests assert the init-burst *ordering* invariants (§4 above) and every numbered
 gotcha, table-driven.
 
-**4 — Wiring and docs.** `uCFG` keys, `tr4w.dpr` lifecycle, `docs/TCI_SERVER_DESIGN.md`, CLAUDE.md
+**4 — Wiring and docs.** `uCFG` keys, `tr4w.lpr` lifecycle, `docs/TCI_SERVER_DESIGN.md`, CLAUDE.md
 doc-map row.
 
 **5 — Bench.** Not provable by code review; see verification.
@@ -247,12 +247,12 @@ doc-map row.
 
 ## Verification
 
-**Unit** — `cd tr4w\test\unit && msbuild tr4w_unit_tests.dproj /t:Make /p:Config=Debug
+**Unit** — `cd tr4w\test\unit && msbuild tr4w_unit_tests.lproj /t:Make /p:Config=Debug
 /p:Platform=Win32 && tr4w_unit_tests.exe`. Baseline is 2021 tests / 0 failures (`55f4f5ed`); the new
 suites add to it. The loopback client↔server round-trip lives here.
 
 **Corpus** — the contest engine is untouched, but run it anyway before committing since
-`uRadioPolling.pas` and `tr4w.dpr` are edited. **Full `/t:Build` first** (a `/t:Make` exe has
+`uRadioPolling.pas` and `tr4w.lpr` are edited. **Full `/t:Build` first** (a `/t:Make` exe has
 produced phantom corpus failures), confirm no `tr4w.exe` is running, then
 `bash tr4w/test/corpus/export-d12-corpus.sh`. Expect `22 passed, 0 failed, 4 known-divergence`.
 Read the result, **then** commit — never chain them in one shell block.

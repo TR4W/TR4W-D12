@@ -211,7 +211,7 @@ instead of implying it, and `live.SendBytes` says what the anonymous method's co
 nothing at all, so the anonymous form was buying nothing. This is work worth doing whichever
 toolchain wins.
 
-**The dotted-unit-name problem is not a problem.** `tr4w.dproj` already declares `System` as a unit
+**The dotted-unit-name problem is not a problem.** `tr4w.lproj` already declares `System` as a unit
 scope (`<DCC_Namespace>System;…`), so **`uses SysUtils` compiles under Delphi too**. Dropping the
 `System.` prefixes satisfies both compilers with **no `{$IFDEF}` anywhere**. FPC's `-FN` flag does
 *not* help — it resolves short names to namespaced units, the opposite direction — so the fix is the
@@ -550,12 +550,12 @@ would double every CW element. The real answer is a sidetone on its own thread
 
 ### The count was ALSO wrong because it only looked at `.pas`
 
-`tr4w.dpr` carried one of the largest live blocks in the tree and a `.pas`-only
+`tr4w.lpr` carried one of the largest live blocks in the tree and a `.pas`-only
 search missed it entirely (NY4I caught this). `tr4w/build/Count-LiveAsm.ps1` is
 now checked in: it blanks comments first and scans `.pas`/`.dpr`/`.dpk`/`.inc`,
 so the number is reproducible instead of re-derived by hand each time.
 
-### `tr4w.dpr` -- the four event handles
+### `tr4w.lpr` -- the four event handles
 
 `CreateEvent` x4 built by hand: push four zeros, call, then `sub esp,16` before
 each subsequent call to walk ESP back over stack bytes the stdcall epilogue had
@@ -594,7 +594,7 @@ by building normally**. Flipping each switch on and building is cheap, and it
 paid twice:
 
 - `tr4wserverUnit`'s debug writer converted cleanly (verified by building
-  `tr4wserver.dproj` with the switch on -- note it is NOT in `tr4w.dproj`, so
+  `tr4wserver.lproj` with the switch on -- note it is NOT in `tr4w.lproj`, so
   building the app proves nothing about it). Three latent defects came out with
   the assembly: a **`Time` local that was never assigned** yet formatted by the
   leading `%s`; a `stored` CHARACTER count passed to `WriteFile`, which takes
@@ -667,7 +667,7 @@ needed, and no amount of argument would have produced it.
 
 The corpus runs `tr4w.exe <contest>.CFG /EXPORT` over **D7-written binary `.dat`
 logs** and byte-diffs the output. This install has `ppcx64` ONLY. A 64-bit build
-changes record padding and pointer width, and `tr4w.dproj` pins `-$A8` alignment
+changes record padding and pointer width, and `tr4w.lproj` pins `-$A8` alignment
 on top, so a 64-bit FPC build would not read those logs equivalently. **`ppc386`
 is a prerequisite for the gate, not a detail** -- an fpcupdeluxe install, but it
 has to happen before any corpus result under FPC means anything.

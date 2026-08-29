@@ -58,7 +58,7 @@ Measured, not estimated (2026-08-12, `tr4w/src`):
 Other measurements that bear on portability:
 
 - **73 inline `asm` blocks** across ~20 units, including `LOGSTUFF`, `LOGWIND`, `tree`, `TF`,
-  `MainUnit` and `tr4w.dpr`.
+  `MainUnit` and `tr4w.lpr`.
 - **19 units use Indy**; the vendored copy is 10.6.3.3.
 - **451 `ShortString` / `string[n]` declarations**, concentrated in the TRDOS core.
 - **7 units use anonymous methods** (`reference to`) — and they are the *newest* code: the radio

@@ -85,7 +85,7 @@ const
    TCI_SERVER_DEFAULT_PORT = 50001;
 
    { Posted by a TCI connection thread to hand an apply to the main thread.
-     lParam carries the command object; the handler in tr4w.dpr calls
+     lParam carries the command object; the handler in tr4w.lpr calls
      TCIRunQueuedApply, which takes ownership.
 
      WHY A WINDOW MESSAGE AND NOT TThread.Queue -- the reason is specific and was
@@ -119,7 +119,7 @@ const
    WM_TCI_APPLY = WM_APP + 220;   // 200/201 POTA, 210/211 CTY
 
 { Runs an apply posted with WM_TCI_APPLY and frees it. aLParam is the command
-  object. Exposed because the message is handled in tr4w.dpr, which has no
+  object. Exposed because the message is handled in tr4w.lpr, which has no
   business knowing the command classes -- they stay in the implementation. }
 procedure TCIRunQueuedApply(aLParam: LPARAM);
 

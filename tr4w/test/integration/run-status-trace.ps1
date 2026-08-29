@@ -41,7 +41,7 @@ if (-not $SkipBuild) {
    }
    Write-Host 'Building tr4w_status_trace...' -ForegroundColor Cyan
    # msbuild, not dcc32: DCC32 is retired on this branch (see CLAUDE.md).
-   & cmd /c "call `"$rsvars`" && cd /d `"$here`" && msbuild tr4w_status_trace.dproj /t:Build /p:Config=Debug /p:Platform=Win32 /v:minimal /nologo"
+   & cmd /c "call `"$rsvars`" && cd /d `"$here`" && msbuild tr4w_status_trace.lproj /t:Build /p:Config=Debug /p:Platform=Win32 /v:minimal /nologo"
    if ($LASTEXITCODE -ne 0) { throw "build failed ($LASTEXITCODE)" }
 }
 

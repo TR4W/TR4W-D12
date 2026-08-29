@@ -3610,7 +3610,7 @@ begin
      end;
   // Issue #783 -- stop the HamScore RTC uploader cleanly so its worker thread
   // is not holding sockets when the process exits.  This was a `finally` at the
-  // bottom of tr4w.dpr, below the message loop, which meant it only ran if the
+  // bottom of tr4w.lpr, below the message loop, which meant it only ran if the
   // loop RETURNED -- and it never does: the exit path is ExitProcess, three
   // lines below this one.  So the clean shutdown it exists to provide has never
   // actually happened.  Here it does.
@@ -5699,7 +5699,7 @@ end;
 procedure RepeatLastCWMessage;
    // '=' repeat-last-CW-message: replay the exact characters last sent on CW.
    // Centralized so it works in both the call and exchange windows -- it is
-   // dispatched from the main message loop (tr4w.dpr), the same way the
+   // dispatched from the main message loop (tr4w.lpr), the same way the
    // function keys are, rather than from a single window's key handler.
 begin
    if LastCWMessage <> '' then
@@ -5738,7 +5738,7 @@ begin
      end;
 
   // '=' repeat-last-CW-message is handled centrally in the main message loop
-  // (tr4w.dpr WM_CHAR) so it works in both the call and exchange windows.
+  // (tr4w.lpr WM_CHAR) so it works in both the call and exchange windows.
   // start sending now code
   if Key = StartSendingNowKey then
     if tAutoSendMode = False then
@@ -7817,7 +7817,7 @@ end;
 
 // Stash the X-QSO flag on a fully-populated editable-log row in the
 // row's per-item lParam slot.  Used by the NM_CUSTOMDRAW handler in
-// tr4w.dpr to gray out X-QSO rows without re-reading the binary log
+// tr4w.lpr to gray out X-QSO rows without re-reading the binary log
 // on every paint.  Called from tAddContestExchangeToLog after the
 // row's text subitems are all set -- doing this as a separate
 // LVM_SETITEM with LVIF_PARAM avoids the bug where putting LVIF_PARAM
@@ -7863,7 +7863,7 @@ begin
   elvi.iSubItem := ColumnsArray[logColBand].pos; //Ord(logColBand);
 
   // Issue #750: stash the X-QSO flag in the row's per-item lParam so the
-  // editable log's NM_CUSTOMDRAW handler (tr4w.dpr WM_NOTIFY) can gray
+  // editable log's NM_CUSTOMDRAW handler (tr4w.lpr WM_NOTIFY) can gray
   // out the row without re-reading the binary log on every paint.  This
   // happens in SetRowXQSOFlag below, AFTER all the text subitems are
   // set: lParam is per-item, not per-subitem, and including LVIF_PARAM
@@ -8186,7 +8186,7 @@ begin
      end;
 
   // Issue #750: stash the X-QSO flag on the just-built row so the
-  // NM_CUSTOMDRAW handler (tr4w.dpr WM_NOTIFY) can gray out X-QSO
+  // NM_CUSTOMDRAW handler (tr4w.lpr WM_NOTIFY) can gray out X-QSO
   // rows without re-reading the binary log.  Uses elvi.iItem because
   // the var-parameter Index has already been inc'd (the row we just
   // populated is at elvi.iItem, which equals Index - 1 by now).

@@ -10,7 +10,7 @@ unit uTestConfigDefaults;
   settings file unless the initial value is carried across by hand, and nothing
   reports the loss: not the compiler, which sees a legal field; not the golden
   corpus, which runs headless and skips the settings apply entirely
-  (tr4w.dpr:971); and not the operator, who sees a plausible number.
+  (tr4w.lpr:971); and not the operator, who sees a plausible number.
 
   That is the standing rule in CLAUDE.md -- a silently-defaulted field reads as a
   legal zero, so the exhaustive pin test goes in with the move.

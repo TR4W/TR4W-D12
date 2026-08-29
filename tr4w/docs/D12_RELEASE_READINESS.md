@@ -24,7 +24,7 @@ the *string/Unicode conversion*; this document tracks what stands between the cu
 
 ## Bottom line up front
 
-The D12 **build already works**: `tr4w.dproj` compiles the modernized source and the resulting
+The D12 **build already works**: `tr4w.lproj` compiles the modernized source and the resulting
 `target\tr4w.exe` passes the scoring golden-master **22/22**. Standing up the release therefore is
 **not** a build-system problem — it is (1) **expected cutover mechanics** you already plan to do
 (install D12 on the runner, repoint the committed CI scripts from DCC32 to the `.dproj`), plus (2) the
@@ -56,12 +56,12 @@ verification — not just the code change — is done.
 ## Expected cutover work (mechanical — the known "move to D12" chores)
 
 These are not defects or surprises; they are the wiring you already intend to do once D12 is on the
-runner. Listed so nothing is forgotten, not because anything is wrong. The `tr4w.dproj` build is proven
+runner. Listed so nothing is forgotten, not because anything is wrong. The `tr4w.lproj` build is proven
 (it produced the passing `target\tr4w.exe`).
 
 - [x] **C-1 — Repoint the committed CI/build scripts from DCC32 to the `.dproj`.** DONE for
   **`FullBuild.ps1`** (2026-07-18): unit tests, ENG app, all 8 language variants (serial **and**
-  `-ParallelLanguages` worktree paths), and the ENG relink now build via `msbuild tr4w.dproj` through a
+  `-ParallelLanguages` worktree paths), and the ENG relink now build via `msbuild tr4w.lproj` through a
   new `Invoke-MSBuild` helper (`call rsvars.bat && msbuild`). Language define is injected via a new
   `$(ExtraDefines)` slot in the `.dproj` (`/p:ExtraDefines=LANG_x` — note the plan's
   `/p:DCC_Define=LANG_x` idea is a trap: MSBuild global props drop the config's `DEBUG`); per-language
@@ -136,7 +136,7 @@ runner. Listed so nothing is forgotten, not because anything is wrong. The `tr4w
 
 - [ ] **P1-6 — Network/SSL/telnet/cluster runs on vendored Indy 10.6.3.3.**
   - Evidence: vendored Indy under `include\{Core,System,Protocols}` (`IdVers.inc`: 10.6.3.3) is on the
-    D12 search path (`tr4w.dproj:67`) and shadows D12's bundled Indy. `src\MMSystem.pas` shadows
+    D12 search path (`tr4w.lproj:67`) and shadows D12's bundled Indy. `src\MMSystem.pas` shadows
     `Winapi.MMSystem`. Plan flags this "needs live network/SSL testing to swap."
   - Verify: bench-test live telnet, DX cluster, and SSL against the D12 binary (connect, spot flow,
     disconnect/reconnect).
@@ -144,7 +144,7 @@ runner. Listed so nothing is forgotten, not because anything is wrong. The `tr4w
 - [ ] **P1-7 — D7↔D12 wire compatibility (mixed-version network).**
   - Evidence (reassuring for disk): `ContestExchange` (`VC.pas:1541`) is entirely fixed-width types —
     no `string`/`Pointer`/`NativeInt`; the passing D12 exe reads real D7-written `.dat` corpora, so
-    `tr4w.dproj` already carries compatible `-$A8`/`-$Z1` (matching `tr4w.cfg.d7leftover:1,26`).
+    `tr4w.lproj` already carries compatible `-$A8`/`-$Z1` (matching `tr4w.cfg.d7leftover:1,26`).
   - Gap: the **live wire path** (a D12 station networked to a D7 station mid-contest) is exercised by
     no test.
   - Verify: two-station bench run (one D7, one D12) — exchange QSOs, spots, time-sync; confirm no
@@ -203,7 +203,7 @@ existing (ASCII-only) test harness cannot cover.
 - Scoring/multiplier/points engine is byte-faithful under D12 across 11 candidate contests
   (`CLAIMED-SCORE` exact on all: cqww_ssb 30912, arrl_ss 30192, winter_fd 42364, cqwpx 78, …).
 - `.dat` on-disk log layout is preserved (D12 exe reads D7 corpora; `ContestExchange` fixed-width;
-  `-$A8`/`-$Z1` carried by `tr4w.dproj`).
+  `-$A8`/`-$Z1` carried by `tr4w.lproj`).
 - Runtime payload in `target\` is complete (OpenSSL, HamLib, `rigctld.exe`, CTY.DAT, TRMASTER.DTA,
   `dom\*.dom`); no new D12 runtime DLL required (RTL linked statically, no BPLs); `inpout32.dll`
   omission is intentional.

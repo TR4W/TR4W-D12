@@ -87,7 +87,7 @@ would have duplicated the radio factory's dispatch to no end.
 | `src/radioFactory/uIcomScope.pas` | **PURE** decoder: bytes + geometry in, `TSpectrumFrame` out. No socket, no thread, no UI, no globals. |
 | `test/unit/uTestIcomScope.pas` | 33 pin tests on that decoder. Synthetic frames, no radio. |
 | `test/unit/uTestIcomScopeSeam.pas` | The seam and the per-model declarations, including the exhaustive guard. |
-| `test/bench/bench_icomscope.dpr` | Drives a real rig. **A measuring instrument first**, a test second — see §6. |
+| `test/bench/bench_icomscope.lpr` | Drives a real rig. **A measuring instrument first**, a test second — see §6. |
 | `src/radioFactory/uRadioIcomBase.pas` | The wiring: the `$27` arm, the enables, the span, the three gates. |
 | the ten network Icom model units | One `DeclareScopeGeometry` each, with its provenance. |
 
@@ -378,7 +378,7 @@ and edits the pins to match; that one does not.
 
 ## 6. The bench harness is a measuring instrument first
 
-`test/bench/bench_icomscope.dpr`, run as:
+`test/bench/bench_icomscope.lpr`, run as:
 
 ```
 bench_icomscope <model-id> <host> <user> <password> [seconds] [-capture <file>]
@@ -562,7 +562,7 @@ trimmed capture as a fixture.
 ## 11. Bench results, 2026-08-26
 
 Both radios on NY4I's bench, over the RS-BA1 network transport, driven by
-`test/bench/bench_icomscope.dpr`.
+`test/bench/bench_icomscope.lpr`.
 
 ### 11.1 IC-9700 at 192.168.73.171 — PASS
 
@@ -765,7 +765,7 @@ Fixed by declaring the three constants `: Char`.
 ### 12.3 The bench harnesses do not include `tr4w.inc`
 
 Found while chasing 12.2, and it bit this work directly: **no harness in the
-tree includes it** — not `tr4w_unit_tests.dpr`, not `bench_k4spectrum.dpr`, not
+tree includes it** — not `tr4w_unit_tests.lpr`, not `bench_k4spectrum.lpr`, not
 this bench until it was added. They therefore compile with an 8-bit `string`
 while every unit under `src` uses UTF-16.
 
@@ -778,7 +778,7 @@ exactly like a radio that does not implement the command.
 
 **A bench for a binary protocol must compile under the same string regime as
 the code it exercises, or it is testing a different program.** Only
-`bench_icomscope.dpr` was changed here; the same gap remains in the other two
+`bench_icomscope.lpr` was changed here; the same gap remains in the other two
 and is worth closing deliberately.
 
 ### 12.4 The same shape exists in `uRadioYaesuBinary` — reported, not changed

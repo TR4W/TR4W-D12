@@ -7,7 +7,7 @@
 # first (preserving newlines so line numbers stay usable) and counts only what
 # the compiler actually sees.
 #
-# It also scans .dpr / .dpk / .inc, not just .pas: tr4w.dpr carried one of the
+# It also scans .dpr / .dpk / .inc, not just .pas: tr4w.lpr carried one of the
 # largest live blocks in the tree and a .pas-only search missed it entirely.
 #
 #   .\Count-LiveAsm.ps1              # summary per file

@@ -172,7 +172,12 @@ function Get-TR4WPascalFiles
 
    $skipDir  = '\\include\\|\\dcu|dcu-cache|\\target\\|\\backup|\\build-out\\'
    $skipFile = '\.bad$|\.bakup$|\.old$|~'
-   $keepExt  = @('.pas', '.dpr', '.dpk', '.inc')
+   # .lpr FIRST, because that is what the program files are called now (renamed
+   # from .dpr on 2026-08-29 -- they are FPC/Lazarus programs and the Delphi
+   # extension was a leftover). .dpr stays so a stray one is still linted rather
+   # than silently skipped: this list feeds EVERY lint, so an extension missing
+   # here is coverage lost with nothing to say so.
+   $keepExt  = @('.pas', '.lpr', '.dpr', '.dpk', '.inc')
 
    # FILTER ON THE EXTENSION, NOT `-Include`. With an absolute -LiteralPath and
    # no wildcard, `-Include` is SILENTLY IGNORED under Windows PowerShell 5.1 --

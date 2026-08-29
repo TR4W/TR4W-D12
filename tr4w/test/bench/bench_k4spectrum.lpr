@@ -48,7 +48,7 @@ program bench_k4spectrum;
 {$APPTYPE CONSOLE}
 
 uses
-   // Interfaces FIRST, exactly as tr4w_unit_tests.dpr does.  Linking MainUnit
+   // Interfaces FIRST, exactly as tr4w_unit_tests.lpr does.  Linking MainUnit
    // drags in the LCL, whose widgetset registration lives here; without it the
    // link fails on ~50 undefined WSRegister* symbols.  Nothing in this program
    // opens a window -- this is a link-time requirement, not a UI one.
@@ -242,7 +242,7 @@ begin
    seconds := StrToIntDef(ParamStr(3), DEFAULT_SECONDS);
 
    // The radio factory logs through MainUnit's global `logger`, which only
-   // tr4w.dpr's startup assigns.  A standalone EXE that links app units must
+   // tr4w.lpr's startup assigns.  A standalone EXE that links app units must
    // assign it or the first call that logs dies with an access violation.
    logger := TLogLogger.GetLogger('K4SpectrumBench');
 

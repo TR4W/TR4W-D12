@@ -9,7 +9,7 @@ unit uTestRegexValidators;
   RX_US_CALLSIGN -- were retired on 2026-08-21 in favour of hand-written tests in
   uCallSignRoutines (IsAGoodCall, IsAUSPrefix, IsAGoodUSCall), and their cases
   moved to uTestCallSignRoutines. The reason was measured, not assumed
-  (tr4w\test\bench\bench_callsign.dpr, 234,467 callsigns from ARRL's LOTW
+  (tr4w\test\bench\bench_callsign.lpr, 234,467 callsigns from ARRL's LOTW
   activity file):
 
      IsAGoodCall     327 ns/call    accepted 234,466

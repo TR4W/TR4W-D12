@@ -440,7 +440,7 @@ type
         THAT IS NOT A HYPOTHETICAL NEED.  The IC-7760's geometry is published
         nowhere -- not by HamLib, not by AetherSDR -- so its declaration is a
         provisional guess, and this counter is how it gets replaced by a
-        measurement.  tr4w/test/bench/bench_icomscope.dpr reports it.
+        measurement.  tr4w/test/bench/bench_icomscope.lpr reports it.
 
         MaxLevelSeen is the highest level byte in any sweep so far.  WEAKER
         EVIDENCE, and honestly so: it is a lower bound on the range, reached

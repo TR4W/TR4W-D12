@@ -1181,7 +1181,7 @@ begin
        // the "Difference in logs" dialog AND the GetServerLog dialog entirely
        // and run the sync headlessly in a worker thread.  The replace happens
        // on the UI thread via SendMessage (see WM_USER_HEADLESS_SYNC_REPLACE
-       // in tr4w.dpr) so LoadinLog's ListView access is thread-safe.
+       // in tr4w.lpr) so LoadinLog's ListView access is thread-safe.
        //
        // Safety: only auto-sync when contests match (or server has no contest
        // yet); otherwise fall through to the existing dialog so the operator

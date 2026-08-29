@@ -40,7 +40,7 @@ foreach ($p in (Get-Tr4wSearchPaths -Tr4wDir $TR4W_DIR -Toolchain $tc -For Tests
    $fpcArgs += "-Fu$p"
 }
 foreach ($p in (Get-Tr4wIncludePaths -Tr4wDir $TR4W_DIR)) { $fpcArgs += "-Fi$p" }
-$fpcArgs += "$Program.dpr"
+$fpcArgs += "$Program.lpr"
 
 Push-Location $bench
 try {

@@ -31,7 +31,7 @@ unit uLegacyIniPrompt;
 
   ORDER MATTERS.  This must run AFTER the seeding, or it would offer to delete a
   file whose contents have not been carried across yet; and after the /EXPORT
-  early exit in tr4w.dpr, or a headless golden-corpus run would block on a
+  early exit in tr4w.lpr, or a headless golden-corpus run would block on a
   modal dialog.
 }
 

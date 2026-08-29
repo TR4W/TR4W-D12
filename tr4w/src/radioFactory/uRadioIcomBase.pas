@@ -358,7 +358,7 @@ type
     procedure ApplyDataModeID(id: integer); override;
     property NetworkTransport: TIcomNetworkTransport read FNetworkTransport;
 
-    // Capture hook for tr4w/test/bench/bench_icomscope.dpr.  See
+    // Capture hook for tr4w/test/bench/bench_icomscope.lpr.  See
     // TIcomScopePayloadProc; nothing in the program assigns it.
     property OnScopePayload: TIcomScopePayloadProc
              read FOnScopePayload write FOnScopePayload;

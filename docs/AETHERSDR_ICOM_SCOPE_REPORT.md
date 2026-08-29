@@ -46,7 +46,7 @@ claims for its own table.
 
 ## Method
 
-Captured with `tr4w/test/bench/bench_icomscope.dpr`, which connects over Icom's
+Captured with `tr4w/test/bench/bench_icomscope.lpr`, which connects over Icom's
 RS-BA1 UDP transport (ports 50001/50002), enables the scope with `$27 $10` and
 `$27 $11`, and writes every raw `$27 $00` payload to a file **before decoding**,
 so the capture is evidence about the radio rather than a record of what our

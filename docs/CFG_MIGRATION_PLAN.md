@@ -530,7 +530,7 @@ by the radio rows.
 | `ApplyAndStoreCommand`                | `uRadioConfigApply`        | applies via `CheckCommand(…, True)` **and** records in the store |
 | `TRadioConfigStore.Commands`          | `uRadioConfigStore`        | persists as the `commands` section of `settings\tr4w.json`       |
 | `ApplyStoredCommands`                 | `uRadioConfigApply:307`    | applies every stored command at startup                          |
-| `ApplyActiveProfileToConfigAtStartup` | called from `tr4w.dpr:971` | **the live startup hook**                                        |
+| `ApplyActiveProfileToConfigAtStartup` | called from `tr4w.lpr:971` | **the live startup hook**                                        |
 | `crS = csJSON`                        | `uCFG:1415`                | the ini loader skips the row                                     |
 | `crS = csJSON`                        | `uOption:362`              | Ctrl-J hides the row                                             |
 | `CommandIsJSONOwned`                  | `uCFG:965`                 | the ini writer skips the row                                     |
@@ -642,7 +642,7 @@ none is read by an export unit, so `COMPUTER ID` was the only one.
 
 ### The corpus cannot see a migrated setting
 
-`tr4w.dpr:971` skips `ApplyActiveProfileToConfigAtStartup` under `/EXPORT` — deliberately, so
+`tr4w.lpr:971` skips `ApplyActiveProfileToConfigAtStartup` under `/EXPORT` — deliberately, so
 automated testing never touches the operator's live settings. The consequence for this work:
 **headless export runs on compiled defaults, so a migrated setting is invisible to the corpus.**
 
@@ -764,7 +764,7 @@ key.** `RenderedKeyNames` in `uRadioConfigLegacyMap` is the list.
 `PaddleMonitorTone = 700`, `PaddlePTTHoldCount = 13`) and **a record field defaults to zero**. Losing
 those means PTT disabled, a 0 Hz sidetone, and PTT dropping between characters — hot switching, on an
 amplifier. Neither the compiler nor the corpus can see it (headless export skips the settings apply,
-`tr4w.dpr:971`). `test/unit/uTestConfigDefaults.pas` pins every default and was proved to fail.
+`tr4w.lpr:971`). `test/unit/uTestConfigDefaults.pas` pins every default and was proved to fail.
 
 UI: three checkboxes on **CW Settings**, the other seven on a new **Paddle and PTT** page made a
 *child* of it — collapsed by default, so the nav gains no height.

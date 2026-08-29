@@ -32,7 +32,7 @@ line references are to the tree at the time of writing.
       +-- AddStringToTelnetConsole
       +-- BandMapNeedsRefresh := True                uTelnet.pas:1769
 
-  SetTimer(tr4whandle, BANDMAP_REFRESH_TIMER_HANDLE, 250, ...)   tr4w.dpr:1061
+  SetTimer(tr4whandle, BANDMAP_REFRESH_TIMER_HANDLE, 250, ...)   tr4w.lpr:1061
       |
   BandMapRefreshTimerProc                  MainUnit.pas:2306
       +-- DisplayBandMap                   LOGWIND.PAS:3491
@@ -215,7 +215,7 @@ Replace it with `TDXSpotsList.Revision: cardinal`, bumped by every mutator
 ```
 
 Cannot be missed, cannot be double-cleared, and a tick with nothing to do costs
-one comparison. The `SetTimer` in `tr4w.dpr:1061` and
+one comparison. The `SetTimer` in `tr4w.lpr:1061` and
 `MainUnit.BandMapRefreshTimerProc` are then deleted -- the form owns its own
 refresh, which is the point of the LCL move.
 
@@ -315,7 +315,7 @@ it is what makes a 250 ms tick genuinely cheap rather than nominally cheap.
 `BandMapItemWidth`, `BMPanelWidth`, `SetTextInBMSB`, `GetBMSelItemData`,
 `BandMapListBox`, `BandMapStatusBar`, `BandMapPreventRefresh`,
 `BandMapSettingFocus`, `BandMapNeedsRefresh`, `BandMapRefreshTimerProc`, the
-`SetTimer` at `tr4w.dpr:1061`, `TDXSpotsList.Display`, the `BList` buffer group,
+`SetTimer` at `tr4w.lpr:1061`, `TDXSpotsList.Display`, the `BList` buffer group,
 and `sleep(BMDelay)`.
 
 `CreateOwnerDrawListBox` and `tListBoxClientAlign` **stay** -- six and eight other

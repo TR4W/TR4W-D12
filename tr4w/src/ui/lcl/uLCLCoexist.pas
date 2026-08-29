@@ -24,10 +24,10 @@ unit uLCLCoexist;
   being to host LCL forms inside TR4W's OWN GetMessage / TranslateMessage /
   DispatchMessage loop, and its header said "Application.Run is never called".
   That stopped being true on 2026-08-23 (Phase 3c).  RunLCLApplication below IS
-  that call, and tr4w.dpr no longer has a loop of its own.
+  that call, and tr4w.lpr no longer has a loop of its own.
 
   What survives from the old arrangement, because it is still the reason this
-  unit exists: tr4w.dpr does not link Forms, so every reference to Application
+  unit exists: tr4w.lpr does not link Forms, so every reference to Application
   lives here.
 
   THIS UNIT IS DELIBERATELY ALMOST EMPTY, and the reason is worth stating
@@ -55,7 +55,7 @@ unit uLCLCoexist;
 
   WHICH WINDOWS ARE OURS was in uHostedFormWindows -- pure Win32, naming no
   toolkit, shared with the FMX side.  A form registered its handle as it showed
-  and unregistered as it closed, and tr4w.dpr's loop asked that unit whether a
+  and unregistered as it closed, and tr4w.lpr's loop asked that unit whether a
   message belonged to a hosted window before applying its own CW-memory and
   accelerator handling.  With the loop gone nothing asks any more: the registry
   is still written by eighteen forms and read by nobody, and should be retired.
@@ -75,7 +75,7 @@ procedure InitLCLApplication;
 
 { Tell the operator that TR4W is already running, and say it VISIBLY.
 
-  This was a raw MessageBoxW(0, ...) in tr4w.dpr with MB_SYSTEMMODAL.
+  This was a raw MessageBoxW(0, ...) in tr4w.lpr with MB_SYSTEMMODAL.
   Application.Initialize has already run by this point, so the LCL owns the
   message pump such a dialog needs; going around it with a raw Win32 call was
   gratuitous.
@@ -86,7 +86,7 @@ procedure InitLCLApplication;
   That probe could not see ANY window, not even Notepad's, so it proved nothing;
   NY4I confirmed the dialog does appear on his desktop.  The real cause of the
   invisible, unkillable-looking TR4W was a HEADLESS EXPORT reaching this dialog,
-  and that is fixed in tr4w.dpr by deciding batch mode before the
+  and that is fixed in tr4w.lpr by deciding batch mode before the
   single-instance check. }
 procedure ReportAlreadyRunning(const aMessage: string);
 
@@ -96,9 +96,9 @@ procedure ReportAlreadyRunning(const aMessage: string);
   initialiser above used to be called InitLCLForHostedLoop -- the LCL was a
   guest inside TR4W's loop.  It is the other way round now.
 
-  Application.Run is HERE rather than in tr4w.dpr for the same reason
+  Application.Run is HERE rather than in tr4w.lpr for the same reason
   Application.Initialize is: this unit owns the whole LCL dependency, and
-  tr4w.dpr does not link Forms. }
+  tr4w.lpr does not link Forms. }
 procedure RunLCLApplication;
 
 // True once InitLCLApplication has run.  A form that creates itself before
@@ -118,7 +118,7 @@ uses
    // reference.  Without it the link fails with a wall of
    //     Undefined symbol: WSRegisterControl, WSRegisterMenu, ...
    // that names no unit and does not suggest its own cause.  Listing it here
-   // rather than in tr4w.dpr keeps the whole LCL dependency in one place, and
+   // rather than in tr4w.lpr keeps the whole LCL dependency in one place, and
    // the uses order guarantees it initialises before Forms.
    Interfaces,
    Forms,

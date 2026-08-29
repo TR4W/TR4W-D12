@@ -760,7 +760,7 @@ end;
 procedure TfrmBandMap.SpotsKeyUp(Sender: TObject; var Key: word;
                                  Shift: TShiftState);
 begin
-   // These arrived here from tr4w.dpr's message loop, where they were dispatched
+   // These arrived here from tr4w.lpr's message loop, where they were dispatched
    // by comparing Msg.HWND against the list box handle -- the last
    // window-specific arm in the loop, and the thing that gated Application.Run.
    // A raw Win32 child raises no LCL key events, which is why they could not

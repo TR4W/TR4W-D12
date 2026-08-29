@@ -1731,7 +1731,7 @@ begin
       uRotatorControl.ConfigureRotators(FStore);
 
       // The TCI server, on the same footing and for the same reason.  It was
-      // originally started only from tr4w.dpr, which reproduced the exact
+      // originally started only from tr4w.lpr, which reproduced the exact
       // uWSJTX trap this project already knows about: the enable flag was
       // read once at startup, so ticking the box did nothing until the next
       // launch and the operator had no way to tell that from a broken server.

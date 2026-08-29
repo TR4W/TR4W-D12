@@ -69,7 +69,7 @@ unit uWinTimer;
   THREAD AFFINITY, unchanged from the VCL: the hidden window belongs to the
   thread that constructs the timer, and WM_TIMER is delivered to that thread's
   message loop.  TR4W's radio objects are built on the main thread, which is the
-  thread running the loop in tr4w.dpr -- the same condition TTimer already
+  thread running the loop in tr4w.lpr -- the same condition TTimer already
   relied on.
 }
 

@@ -91,7 +91,7 @@ type
 
 var
    // Singleton slots, installed by each adapter unit's initialization section.
-   // Listed EXPLICITLY in both tr4w.dpr and the test dpr -- a unit reached only
+   // Listed EXPLICITLY in both tr4w.lpr and the test dpr -- a unit reached only
    // transitively vanishes when the chain changes (the uRadioIcomLegacy lesson).
    KeyerCAT: TCWKeyer = nil;
    KeyerWinKey: TCWKeyer = nil;

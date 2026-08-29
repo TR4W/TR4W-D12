@@ -143,7 +143,7 @@ type
 // that unit for why the types must match the rows exactly.
 
 // ---------------------------------------------------------------------------
-// Lifecycle (called from tr4w.dpr / shutdown path)
+// Lifecycle (called from tr4w.lpr / shutdown path)
 // ---------------------------------------------------------------------------
 
 procedure HamScoreInit;       // No-op if Config.HamScoreEnable is False or password missing

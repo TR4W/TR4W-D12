@@ -1,6 +1,6 @@
 # Runs every gating lint, once, from one place.
 #
-# WHY THIS EXISTS.  The lint list lived only in tr4w.dproj's PreBuildEvent, so
+# WHY THIS EXISTS.  The lint list lived only in tr4w.lproj's PreBuildEvent, so
 # it gated the DELPHI build and nothing else.  As FPC becomes the shipping
 # toolchain that arrangement silently drops all of them: an FPC build would be
 # green with a duplicate radio registration, an LF source file, an unwired form
@@ -62,7 +62,7 @@ $lints = @(
    @{ Name = 'Lint-DomainPurity';    Arg = (Join-Path $Tr4wDir 'src\domain'); NeedsFpc = $false }
    @{ Name = 'Lint-LineEndings';     Arg = $Tr4wDir; NeedsFpc = $false }
    # The BOM's sibling, and it took six silent losses in one session to earn its
-   # place: line endings were gated, encoding was not. $Tr4wDir because tr4w.dpr
+   # place: line endings were gated, encoding was not. $Tr4wDir because tr4w.lpr
    # and the test .dpr files carry BOMs too and live outside src\.
    @{ Name = 'Lint-BOM';             Arg = $Tr4wDir; NeedsFpc = $false }
    @{ Name = 'Lint-FormTags';        Arg = $src;     NeedsFpc = $false }
@@ -74,7 +74,7 @@ $lints = @(
    # Pins the Edit QSO form against the dialog template it was generated from.
    # $Tr4wDir because it needs res\ and test\ui\ as well as src\.
    @{ Name = 'Lint-EditQSOTemplate'; Arg = $Tr4wDir; NeedsFpc = $false }
-   # The Win32-UI burn-down ratchet. $Tr4wDir, not $src: tr4w.dpr creates windows
+   # The Win32-UI burn-down ratchet. $Tr4wDir, not $src: tr4w.lpr creates windows
    # too and lives one level up, and a ratchet that cannot see the program's own
    # entry point would let new Win32 UI in through the door it does not watch.
    @{ Name = 'Lint-Win32Dialogs';    Arg = $Tr4wDir; NeedsFpc = $false; Extra = @('-Group', 'ui') }

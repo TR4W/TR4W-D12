@@ -1,4 +1,4 @@
-# Builds tr4wserver.dpr with FPC.
+# Builds tr4wserver.lpr with FPC.
 #
 # NO LCL AND NO -WG. tr4wserver is a console program with no UI at all, so it
 # links neither the widgetset nor any ui\ unit -- see Get-SearchPaths, which
@@ -37,7 +37,7 @@ if ($cleared -gt 0) { Write-Host "  cleared $cleared stale artifact(s) from $out
 $fpcArgs = @("-Mdelphi", "-P$Cpu", "-T$Os", '-Sc', '-B', "-FU$out", "-o$exe")
 foreach ($p in (Get-Tr4wSearchPaths -Tr4wDir $TR4W_DIR -Toolchain $tc -For Server)) { $fpcArgs += "-Fu$p" }
 foreach ($p in (Get-Tr4wIncludePaths -Tr4wDir $TR4W_DIR)) { $fpcArgs += "-Fi$p" }
-$fpcArgs += 'tr4wserver.dpr'
+$fpcArgs += 'tr4wserver.lpr'
 
 Push-Location $SERVER_DIR
 try

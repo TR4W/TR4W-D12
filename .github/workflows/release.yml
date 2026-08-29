@@ -38,7 +38,7 @@
 #     LAZARUS_DIR below pin it explicitly, which is what you want on CI.
 #
 #   * The lints now run as part of the build. They used to live in
-#     tr4w.dproj's PreBuildEvent, so msbuild ran them and nothing else did;
+#     tr4w.lproj's PreBuildEvent, so msbuild ran them and nothing else did;
 #     FullBuild.ps1 invokes build/Run-Lints.ps1 explicitly.
 #
 # Runner setup (one-time on the self-hosted win-ci runner):

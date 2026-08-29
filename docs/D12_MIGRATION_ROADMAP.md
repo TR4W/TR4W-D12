@@ -54,7 +54,7 @@ Three conditions, all of which have open items today:
 
 | Phase (from `tr4w-analysis` / `tr4w-migration-strategy`) | Status |
 |---|---|
-| **Phase 1 — compile under D12, Win32** | ✅ Complete. Builds via `msbuild tr4w.dproj`; golden corpus 22 pass / 0 fail / 4 known-divergence. |
+| **Phase 1 — compile under D12, Win32** | ✅ Complete. Builds via `msbuild tr4w.lproj`; golden corpus 22 pass / 0 fail / 4 known-divergence. |
 | **Phase 2 — Unicode / string correctness** | 🟡 Substantially done. Leaf interiors flipped, Win32 display chain on W-APIs, ListView A→W, CI-V byte paths byte-faithful. Four intentional deferrals remain (§5). |
 | **Phase 3 — 64-bit** | ⛔ Not started, and **out of scope for this migration** (§7). `asm` inventory cataloged; convertible blocks already removed; the hardware/RTL tail is parked. |
 | **Phase 4 — modernization (VCL/FMX, contest factory, DUnitX)** | ⛔ Not started as a phase — but two pieces were **pulled forward** and executed under the strangler pattern: the **radio factory** (complete, 99 registered radios) and the **CW keyer factory** (Phases A and B complete, plus the CAT repoint in `edc9cbf`). |

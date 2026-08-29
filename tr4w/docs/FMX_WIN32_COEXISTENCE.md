@@ -28,7 +28,7 @@ checklist below is green.
 
 ## The actual problem
 
-`tr4w.dpr` owns a hand-written `GetMessage` loop that inspects nearly every
+`tr4w.lpr` owns a hand-written `GetMessage` loop that inspects nearly every
 message before dispatching it:
 
 - it runs the accelerator table,
@@ -71,8 +71,8 @@ One test, in one place, closes every leak listed above at once.
 |---|---|---|
 | `src\ui\fmx\uFMXCoexist.pas` | **yes** | the message-loop gate |
 | `src\ui\fmx\uFMXSpikeForm.pas` | no — throwaway | the test instrument |
-| `tr4w.dpr` uses + `Application.Initialize` + loop gate | **yes** | wiring |
-| `tr4w.dproj` — `fmx` package, `FMX` namespace, search path | **yes** | wiring |
+| `tr4w.lpr` uses + `Application.Initialize` + loop gate | **yes** | wiring |
+| `tr4w.lproj` — `fmx` package, `FMX` namespace, search path | **yes** | wiring |
 | `MainUnit` `FMXTEST` command | no — throwaway | opens the spike form |
 
 ### Startup

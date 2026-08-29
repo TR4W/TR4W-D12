@@ -92,7 +92,7 @@ Legend: ✅ done (asm removed — converted, or all blocks were dead/commented) 
 | ~~tr4w/src/uDistance.pas~~ | 2 | ✅ done (#1026) |
 | tr4w/src/trdos/JCTRL2.PAS | 2 | ⏭ skip (unused; revert per NY4I) |
 | tr4w/src/trdos/BeepUnit.pas | 2 | ⏸ parked (`in`/`out` port I/O) |
-| tr4w/src/t_.pas | 2 | ⏭ skip (scratch; not in tr4w.dpr) |
+| tr4w/src/t_.pas | 2 | ⏭ skip (scratch; not in tr4w.lpr) |
 | tr4w/src/LPTIO.pas | 2 | ⏸ parked (parallel-port driver I/O) |
 | tr4w/src/DLPortIO.pas | 2 | ⏸ parked (parallel-port driver I/O) |
 | ~~tr4w/src/uRemMults_DX.pas~~ | 1 | ✅ done |

@@ -128,8 +128,8 @@ result text says so: UDP cannot tell us it arrived, and wording it as "reached
    too, that is harmless — the assignments are the same method.
 3. Load / capture / validate, and hand the config to `UDPBroadcaster.Configure`
    on Apply, exactly as the radio profile does.
-4. Add the `<FormName>` metadata to `tr4w.dproj` and the `{FormName}` entry in
-   `tr4w.dpr` for the new editor form. **Order matters** — metadata without
+4. Add the `<FormName>` metadata to `tr4w.lproj` and the `{FormName}` entry in
+   `tr4w.lpr` for the new editor form. **Order matters** — metadata without
    `{$R *.fmx}` opens an empty designer and leaves every field nil at runtime.
 
 Only step 1 depends on you; everything else follows.

@@ -298,7 +298,7 @@ begin
    IsMultiThread := True;  // Match main application setting
 
    // The radio-factory classes log through MainUnit's GLOBAL `logger`,
-   // which tr4w.dpr assigns during startup.  A test EXE never runs that
+   // which tr4w.lpr assigns during startup.  A test EXE never runs that
    // startup, so the global stays nil and the first radio call that logs
    // -- UpdateLastValidResponse, on every received frame -- dies with an
    // access violation.  Assign it here the same way the app does.

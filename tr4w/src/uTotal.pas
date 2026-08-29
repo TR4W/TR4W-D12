@@ -54,7 +54,7 @@ uses
 var
    // This unit's own reference to the program's log category, rather than
    // MainUnit's global.  GetLogger is a repository lookup, so this IS the same
-   // instance tr4w.dpr configures -- and it keeps a display unit from dragging
+   // instance tr4w.lpr configures -- and it keeps a display unit from dragging
    // the whole main-window unit graph in, which is what made dcc32 die with an
    // internal error on a cold build (see 8e4cafac).
    logger: TLogLogger;

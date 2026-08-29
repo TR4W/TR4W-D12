@@ -998,7 +998,7 @@ var
    //
    // Log4D's GetLogger is a repository lookup: the same name always returns the
    // same instance (Log4D.pas, DefaultHierarchy.GetLogger).  So asking for
-   // 'TR4WDebugLog' here yields the very object tr4w.dpr assigns to the global,
+   // 'TR4WDebugLog' here yields the very object tr4w.lpr assigns to the global,
    // and the thread logs exactly where it always did -- without this unit
    // knowing the main window exists.
    //

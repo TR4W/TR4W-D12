@@ -22,7 +22,7 @@ program tr4w_status_trace;
   names the exact step and field that moved.
 
   WHY NOT THE SIMULATORS.  tools/radiosim and the hamlib ports drive the DRIVER
-  half -- bytes on a wire into a factory radio -- which tr4w_radio_bench.dpr
+  half -- bytes on a wire into a factory radio -- which tr4w_radio_bench.lpr
   already covers and which this refactor does not touch.  They also need a
   virtual COM pair, so they cannot run unattended.  For a refactor the oracle
   has to be DETERMINISTIC: the same input must produce a byte-identical trace
@@ -35,7 +35,7 @@ program tr4w_status_trace;
   the hook: DisplayCurrentStatus, ProcessFilteredStatus, SendRadioInfoToUDP.
   Those are observed only in that they are reached, not in what they render.
 
-  RUN:  msbuild tr4w_status_trace.dproj /t:Build /p:Config=Debug /p:Platform=Win32
+  RUN:  msbuild tr4w_status_trace.lproj /t:Build /p:Config=Debug /p:Platform=Win32
         tr4w_status_trace.exe > before.jsonl
         ...refactor...
         tr4w_status_trace.exe > after.jsonl
@@ -257,7 +257,7 @@ begin
 end;
 
 begin
-   // Every unit below logs through MainUnit's global `logger`, which tr4w.dpr
+   // Every unit below logs through MainUnit's global `logger`, which tr4w.lpr
    // assigns at startup.  A standalone EXE that links app units and skips this
    // faults on the first log call -- same note as the unit-test project and the
    // radio bench.

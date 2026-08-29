@@ -68,7 +68,7 @@ procedure ConfigureRotators(const aStore: TRadioConfigStore);
 procedure TurnRotator(const aHeading: integer; const aBandName: string);
 
 { Open the serial port of every live rotator that has one.  Call AFTER
-  ConfigureRotators -- the startup order does exactly that (tr4w.dpr:974, then
+  ConfigureRotators -- the startup order does exactly that (tr4w.lpr:974, then
   LogCfg from :1091). }
 procedure OpenRotatorPorts;
 

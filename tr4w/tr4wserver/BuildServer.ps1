@@ -21,7 +21,7 @@ $ErrorActionPreference = "Continue"
 
 $TR4W_DIR   = Join-Path $ProjectRoot "tr4w"
 $SERVER_DIR = Join-Path $TR4W_DIR "tr4wserver"
-$DPROJ      = Join-Path $SERVER_DIR "tr4wserver.dproj"
+$DPROJ      = Join-Path $SERVER_DIR "tr4wserver.lproj"
 $RSVARS     = Join-Path $StudioBin "rsvars.bat"
 $EXE        = Join-Path $SERVER_DIR "tr4wserver.exe"
 
@@ -35,7 +35,7 @@ if (-not (Test-Path $RSVARS)) {
     exit 2
 }
 if (-not (Test-Path $DPROJ)) {
-    Write-Host "tr4wserver.dproj not found at: $DPROJ" -ForegroundColor Red
+    Write-Host "tr4wserver.lproj not found at: $DPROJ" -ForegroundColor Red
     exit 2
 }
 if ($Delphi7Bin -ne '' -or $IndyRoot -ne '') {

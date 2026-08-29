@@ -120,7 +120,7 @@ program bench_icomscope;
    as the code it is exercising, or it is testing a different program. *)
 
 uses
-   // Interfaces FIRST, exactly as tr4w_unit_tests.dpr does -- linking MainUnit
+   // Interfaces FIRST, exactly as tr4w_unit_tests.lpr does -- linking MainUnit
    // drags in the LCL, whose widgetset registration lives here.  Nothing here
    // opens a window; this is a link-time requirement, not a UI one.
    Interfaces,
@@ -516,7 +516,7 @@ begin
       end;
 
    // The radio factory logs through MainUnit's global `logger`, which only
-   // tr4w.dpr's startup assigns.  A standalone EXE that links app units must
+   // tr4w.lpr's startup assigns.  A standalone EXE that links app units must
    // assign it or the first call that logs dies with an access violation.
    { A REAL LOG, not just the console tally.
 

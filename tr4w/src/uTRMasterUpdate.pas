@@ -8,7 +8,7 @@ unit uTRMasterUpdate;
   and no message loop yet (a first-run wizard, or startup).
 
   WHAT THIS UNIT DOES NOT DO: reload SCP in the running program.  See
-  WM_TRMASTER_DOWNLOAD_DONE's handler in tr4w.dpr for why that is a restart
+  WM_TRMASTER_DOWNLOAD_DONE's handler in tr4w.lpr for why that is a restart
   rather than a live swap.
 }
 

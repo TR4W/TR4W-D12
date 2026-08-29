@@ -43,7 +43,7 @@ order, so a failing test stops the build before it produces a shippable binary. 
 discovered (`Find-Toolchain.ps1`), search paths defined once (`Get-SearchPaths.ps1`), and
 `Test-FreshClone.ps1` re-proves the clone-and-build guarantee on demand.
 
-~~**Lints gate the FPC path.**~~ All nine previously lived only in `tr4w.dproj`'s PreBuildEvent —
+~~**Lints gate the FPC path.**~~ All nine previously lived only in `tr4w.lproj`'s PreBuildEvent —
 msbuild ran them and nothing else did. Now `Run-Lints.ps1`, plus a tenth (`Lint-LFMProperties`).
 
 ~~**CI.**~~ `release.yml` and `version-guard.yml` ported. The guard had **stopped firing entirely**
@@ -101,7 +101,7 @@ only thing that was actually true.
 | 2 | Menus and shortcuts | **done** — menus built in code, shortcuts carried |
 | 3a | Main window is a `TForm`; `tr4whandle` = `TMainForm.Handle` | **done** — `uMainForm.pas` |
 | 3b | The four input-bearing controls become LCL | **3 of 4** — call + exchange `TEdit` (`89b91cdd`), possible-call `TListBox` (2026-08-22, designed). The editable log is **deliberately not** converted — see below |
-| 3c | `Application.Run` replaces the loop | **DONE** — 2026-08-23, `57c278fd`. `tr4w.dpr` lost 220 lines and has no `GetMessage` at all. **Bench queue section 30 is the gate and is unrun.** |
+| 3c | `Application.Run` replaces the loop | **DONE** — 2026-08-23, `57c278fd`. `tr4w.lpr` lost 220 lines and has no `GetMessage` at all. **Bench queue section 30 is the gate and is unrun.** |
 | 4 | The ~25 modal forms | **21 designed** (About converted 2026-08-22). **Three Win32 dialogs left**, all entangled — see below |
 | 5 | The three real resource dialogs | not started |
 | 6 | The 21 child panels | not started |
@@ -121,7 +121,7 @@ band map (2026-08-23). Measured by counting `WndProcAdr := @` in `MainUnit.pas`:
 intercom, post-scores, HamScore, stations, remaining-mults ×4, MP3 recorder,
 MMTTY. 23 designed forms exist in `src/ui/lcl`.
 
-**3c IS DONE (2026-08-23).** `Application.Run` drives the program; `tr4w.dpr` has no
+**3c IS DONE (2026-08-23).** `Application.Run` drives the program; `tr4w.lpr` has no
 `GetMessage` at all and lost 220 lines. What the loop carried is in
 `src/ui/lcl/uAppInputHooks.pas` — read that unit's header before touching any of it.
 
@@ -312,7 +312,7 @@ two pieces of the LCL migration now queue behind it.
 
 **Why this one first:** it owns two of the three loop arms that gate
 `Application.Run` (`WM_RBUTTONDBLCLK` -> `GetButtonByRDblClick`,
-`WM_RBUTTONDOWN` -> `ShowFunctionKeyContextMenu`, both in `tr4w.dpr` ~1319).
+`WM_RBUTTONDOWN` -> `ShowFunctionKeyContextMenu`, both in `tr4w.lpr` ~1319).
 The band map owns the third. Nothing else about Phase 3c is outstanding.
 
 **Why it needs a design note rather than just doing it:** no `tw_` tool window
@@ -622,7 +622,7 @@ used for the one case that must block (`uGetServerLog`'s replace). The seam shou
 **THE BANDMAP IS NOT IN THE BLOCKED SET — IT IS THE MODEL.** Correcting what this section said when
 first written: worker threads never touch the bandmap's controls. `uRadioPolling` and `uTelnet` only
 set `BandMapNeedsRefresh := True`, and `BandMapRefreshTimerProc` (`MainUnit.pas:2203`) repaints on
-the MAIN thread from a 250 ms `SetTimer` callback (`tr4w.dpr:1038`). Converting it to a `TListBox`
+the MAIN thread from a 250 ms `SetTimer` callback (`tr4w.lpr:1038`). Converting it to a `TListBox`
 changes none of that.
 
 So no — a bandmap update does not marshal per spot, and it must not start. A dirty flag plus one
@@ -737,17 +737,17 @@ code review, and it is the reason the FMX twins should not be deleted yet.
   main-window work in §2.
 - **`ActiveCWKeyer` precedence** (CAT → WinKeyer → YCCC → CPU) is an artifact of if/else ordering,
   not a decision. An explicit `CW INTERFACE` config command would make it a lookup.
-- **Move the body of `tr4w.dpr` into units, AFTER Phase 3/7** (NY4I raised it, 2026-08-20).
+- **Move the body of `tr4w.lpr` into units, AFTER Phase 3/7** (NY4I raised it, 2026-08-20).
   Measured that day: the file is **1382 lines** -- a 388-line uses clause (338 entries carrying
   an explicit `in '...'` path), one routine (`EnsureCountryFile`), and **~826 lines of program
   body** in a single `begin...end.`: the startup sequence, `/EXPORT`, `/FIELDCHECK` and the
   `GetMessage` loop.
 
   **The `.dpr` itself does not go away** -- FPC and Lazarus still need a program file, and
-  `tr4w.lpi` already names `tr4w.dpr` directly, so renaming it `.lpr` buys nothing. What the
+  `tr4w.lpi` already names `tr4w.lpr` directly, so renaming it `.lpr` buys nothing. What the
   split buys is four things, none of them cosmetic:
 
-  1. **It is invisible to `src/`-scoped search.** `tr4w.dpr` sits at `tr4w/`, so every
+  1. **It is invisible to `src/`-scoped search.** `tr4w.lpr` sits at `tr4w/`, so every
      `grep -rn ... src/` skips the file that lists every unit. That is how a reachability
      question gets the right answer for the wrong reason -- the `unit Help` proof on
      2026-08-20 turned entirely on "it is in none of the 8 `.dpr`/`.lpr` files".
@@ -770,7 +770,7 @@ code review, and it is the reason the FMX twins should not be deleted yet.
   missed as some do not remember to look in the tray."* So the notification-area icon is not
   wanted, and this stops being a judgement call about unreferenced code.
 
-  State of it, measured the same day: the unit is **compiled and linked** (`tr4w.dpr:373`) but
+  State of it, measured the same day: the unit is **compiled and linked** (`tr4w.lpr:373`) but
   **nothing calls it**. Every `uses uTrayBalloon` in the tree is commented out — `LOGSUBS2`,
   `LOGWIND`, `uNet`, `uTelnet` — and there is no live call to any of its four exported routines,
   so the tray icon is never registered. `WM_TRAYBALLON`'s handler in `uMainWindowProc.pas:385` is
@@ -779,7 +779,7 @@ code review, and it is the reason the FMX twins should not be deleted yet.
 
   **This one the compiler CAN vouch for**, unlike `HELP.PAS`. That unit is in no program's uses
   clause, so deleting it proved nothing and it was kept. This one is linked, so removing it from
-  `tr4w.dpr` and getting a green `FullBuild` is real evidence. Take the `WM_TRAYBALLON` case
+  `tr4w.lpr` and getting a green `FullBuild` is real evidence. Take the `WM_TRAYBALLON` case
   label and its `VC.pas` constant with it, and `Lint-AppMessages` will confirm the allow-list
   entry goes too.
 

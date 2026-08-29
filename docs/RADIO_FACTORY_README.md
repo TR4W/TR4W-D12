@@ -356,7 +356,7 @@ The factory and manager units should compile with existing TR4W build system:
 
 ```bash
 cd tr4w
-"C:\Program Files (x86)\Borland\Delphi7\Bin\DCC32.EXE" tr4w.dpr
+"C:\Program Files (x86)\Borland\Delphi7\Bin\DCC32.EXE" tr4w.lpr
 ```
 
 ## Logging

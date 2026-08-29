@@ -52,7 +52,7 @@ if ($Rebuild -or -not (Test-Path $exe)) {
             '..\..\Include;..\..\include\Core;..\..\include\System;..\..\include\Protocols'
    Push-Location $here
    try {
-      & cmd /c "call `"$rsvars`" && dcc32 -Q tr4w_radio_bench.dpr -U$paths -NSWinapi;System;System.Win;Data;Vcl -E."
+      & cmd /c "call `"$rsvars`" && dcc32 -Q tr4w_radio_bench.lpr -U$paths -NSWinapi;System;System.Win;Data;Vcl -E."
       if ($LASTEXITCODE -ne 0) { throw "build failed ($LASTEXITCODE)" }
    } finally {
       Pop-Location

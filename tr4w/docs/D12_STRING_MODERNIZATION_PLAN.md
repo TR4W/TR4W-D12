@@ -58,7 +58,7 @@ known-divergence) and was committed on `delphi12`.
   tagged boundaries (`inet_addr`, `rig_set_conf`, `msvcrt_fopen`, `lstrcpyA`, INI files,
   the raw telnet socket buffer).
 - **Housekeeping.** ~1,400 lines of dead code removed (compiler-verified); 8
-  transitively-compiled units added to `tr4w.dpr` for project-search visibility.
+  transitively-compiled units added to `tr4w.lpr` for project-search visibility.
 
 **Deferred / queued (intentional)**
 

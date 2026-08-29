@@ -144,7 +144,7 @@ function LoadConfig(const aFileName: string;
 //
 // FOR THE STARTUP BOOTSTRAP ONLY, and it exists because that moment is a
 // chicken-and-egg: the logger has to be configured before the config system is
-// up, so tr4w.dpr needs ONE value before anything else can supply it. It used
+// up, so tr4w.lpr needs ONE value before anything else can supply it. It used
 // to read that value from tr4w.ini -- which stopped being the system of record
 // when DEBUG LOG LEVEL became csJSON, so an operator who set the level in
 // Preferences got their old ini value for the earliest lines, or the compiled

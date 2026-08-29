@@ -306,7 +306,7 @@ begin
   // uRotatorControl now opens the port each LIVE rotator names, and the driver
   // states its own baud rate.
   //
-  // ConfigureRotators has already run by this point (tr4w.dpr:974; this routine
+  // ConfigureRotators has already run by this point (tr4w.lpr:974; this routine
   // is reached from :1091) and seeds itself from ActiveRotatorType/Port when the
   // library is empty, so a station that has never opened the Rotators page is
   // unaffected.

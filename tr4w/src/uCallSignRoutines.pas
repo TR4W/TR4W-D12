@@ -78,7 +78,7 @@ function SimilarCall(Call1: string; Call2: string): boolean;
 // predicates, and it is now the ONE callsign validator in TR4W: the RX_CALLSIGN
 // regular expression in LOGSTUFF was retired in favour of it.
 //
-// MEASURED, not asserted (tr4w\test\bench\bench_callsign.dpr, over the 234,467
+// MEASURED, not asserted (tr4w\test\bench\bench_callsign.lpr, over the 234,467
 // callsigns in ARRL's LOTW activity file):
 //
 //   IsAGoodCall              327 ns/call   accepted 234,466 of 234,467

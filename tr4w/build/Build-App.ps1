@@ -1,4 +1,4 @@
-# Builds tr4w.dpr with FPC. The developer's inner loop; FullBuild.ps1 calls this
+# Builds tr4w.lpr with FPC. The developer's inner loop; FullBuild.ps1 calls this
 # for the release build too.
 #
 #   .\Build-App.ps1                 # full rebuild (-B), the safe default
@@ -67,7 +67,7 @@ if (-not $Incremental)
 foreach ($d in $Defines) { $fpcArgs += "-d$d" }
 foreach ($p in (Get-Tr4wSearchPaths -Tr4wDir $TR4W_DIR -Toolchain $tc -For App)) { $fpcArgs += "-Fu$p" }
 foreach ($p in (Get-Tr4wIncludePaths -Tr4wDir $TR4W_DIR)) { $fpcArgs += "-Fi$p" }
-$fpcArgs += 'tr4w.dpr'
+$fpcArgs += 'tr4w.lpr'
 
 # A DESIGNED FORM IS TWO FILES AND FPC ONLY WATCHES ONE. uPrefsForm.lfm is pulled
 # in by {$R *.lfm} while uPrefsForm.pas compiles, so editing the LAYOUT leaves

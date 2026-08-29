@@ -17,7 +17,7 @@
    SEED THAT TABLE FROM THIS DUMP, NOT FROM THE `_HK` CONSTANTS. Two reasons,
    and the first is decisive:
 
-     * at least one binding exists ONLY in the binary. tr4w.dpr:1056 says so in
+     * at least one binding exists ONLY in the binary. tr4w.lpr:1056 says so in
        code -- "Ctrl+T -> menu_repeat_pota_parks is defined directly in the .res
        file" -- so a transcription approach silently loses it;
      * the display constants are the very thing that may be wrong, so they

@@ -217,7 +217,7 @@ end;
 // Stamp the DIALOG's own font (WM_GETFONT -- what the dialog manager gave every
 // template control) on a runtime-created control.  The generic creation helpers
 // (CreateStatic/CreateEdit/CreateButton/tCreate*Window) stamp MSSansSerifFont,
-// which tr4w.dpr creates at 15px -- LARGER than the ~13px derived from the
+// which tr4w.lpr creates at 15px -- LARGER than the ~13px derived from the
 // template's 'FONT 8, MS Sans Serif' -- so runtime controls sat subtly oversized
 // next to template ones, and a long one-row caption could wrap and clip
 // (the DATA/PARITY/STOP label bench finding).  Call this after every runtime

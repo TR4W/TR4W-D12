@@ -43,7 +43,7 @@ unit uAccelerators;
   that to be removed and a second accelerator for one command is legal.
 
   NOT INCLUDED, and this is the trap to remember: PgUp and PgDn (CW speed
-  up/down, ids 10503/10504) are bound by the MESSAGE LOOP at tr4w.dpr:1589-1590,
+  up/down, ids 10503/10504) are bound by the MESSAGE LOOP at tr4w.lpr:1589-1590,
   not by any accelerator table. They are invisible to a tool that reads the
   .RES, and they DIE WITH THE LOOP unless they are carried across in Phase 3.
   The loop's WM_KEYDOWN arms are a third place a keystroke can be defined.
@@ -69,7 +69,7 @@ type
       does not carry it, because something else already does. Three shapes, all
       real -- see docs\ACCELERATOR_AUDIT.md:
 
-        * the MESSAGE LOOP binds it -- PgUp/PgDn at tr4w.dpr:1589-1590. Recording
+        * the MESSAGE LOOP binds it -- PgUp/PgDn at tr4w.lpr:1589-1590. Recording
           them here is deliberate: they are otherwise invisible to every tool
           that reads a table, and they die with the loop in Phase 3. This is the
           list to convert.
@@ -169,8 +169,8 @@ const
     (acId: 10500; acCtrl: false; acAlt: false; acShift: false; acKey: $13; acDisplay: 'Pause'; acInstall: true),   // menu_mainwindow_setfocus
     (acId: 10501; acCtrl: false; acAlt: false; acShift: false; acKey: $2D; acDisplay: 'Ins'; acInstall: true),   // menu_insertmode
     (acId: 10502; acCtrl: false; acAlt: false; acShift: false; acKey: $1B; acDisplay: 'Esc'; acInstall: true),   // menu_escape
-    (acId: 10503; acCtrl: false; acAlt: false; acShift: false; acKey: $21; acDisplay: 'PgUp'; acInstall: false),   // menu_cwspeedup -- bound by the MESSAGE LOOP, tr4w.dpr:1589
-    (acId: 10504; acCtrl: false; acAlt: false; acShift: false; acKey: $22; acDisplay: 'PgDn'; acInstall: false),   // menu_cwspeeddown -- bound by the MESSAGE LOOP, tr4w.dpr:1590
+    (acId: 10503; acCtrl: false; acAlt: false; acShift: false; acKey: $21; acDisplay: 'PgUp'; acInstall: false),   // menu_cwspeedup -- bound by the MESSAGE LOOP, tr4w.lpr:1589
+    (acId: 10504; acCtrl: false; acAlt: false; acShift: false; acKey: $22; acDisplay: 'PgDn'; acInstall: false),   // menu_cwspeeddown -- bound by the MESSAGE LOOP, tr4w.lpr:1590
     (acId: 10505; acCtrl: false; acAlt: false; acShift: true ; acKey: $09; acDisplay: 'Shift+Tab'; acInstall: true),   // menu_cqmode
     (acId: 10506; acCtrl: false; acAlt: false; acShift: false; acKey: $09; acDisplay: 'Tab'; acInstall: true),   // menu_spmode_ortab
     (acId: 10507; acCtrl: false; acAlt: false; acShift: false; acKey: $C0; acDisplay: '`'; acInstall: true),   // menu_ctrl_sendspot

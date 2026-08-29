@@ -255,7 +255,7 @@ nothing ever passes to `DialogBox`.
 ### D. Decisions waiting on NY4I, not bench items
 
 - [ ] **`uExternalLoggerManager` and `uRadioManager` are excluded for an expired
-  reason.** `tr4w.dpr` says "uses Generics.Collections (Delphi 2009+) - not
+  reason.** `tr4w.lpr` says "uses Generics.Collections (Delphi 2009+) - not
   Delphi 7 IDE compatible". Delphi 7 is gone and FPC has
   `Generics.Collections`. CLAUDE.md still describes `uExternalLoggerManager` as
   carrying the external-logger implementation, so this is either work to finish
@@ -709,7 +709,7 @@ deploy into `target\`, which is yours).
   still being called. That is a dead FEATURE, not dead text: delete the
   routines and their call sites, or reinstate the behaviour.
 - [x] **`StartNewContest` is dead and carries a hardcoded path.** No callers
-  anywhere (checked case-insensitively, including `tr4w.dpr` and `test\`), and
+  anywhere (checked case-insensitively, including `tr4w.lpr` and `test\`), and
   its body is `WinExec('D:\TR4W_WinAPI\out\tr4w.exe', 0)` -- the original
   author's own machine. It could never have worked on a user's PC. Delete, or
   say what it was meant to do.
@@ -787,7 +787,7 @@ refused, none the other way). 254 of those callsigns are now a test fixture.
   tell would be a spot that used to be filtered out and now is not, or the
   reverse. ~~[AGENT - We do not have the concept of a filter in spots.]~~
   **CONFIRMED 2026-08-28 -- correct, and the code agrees.** `uSpotsFilter` and
-  `uDXSSpotsFilter` were commented out of `tr4w.dpr` since the initial commit,
+  `uDXSSpotsFilter` were commented out of `tr4w.lpr` since the initial commit,
   never compiled, and are now deleted (`96d2f2c2`). There is no spot filter to
   test; the item is struck rather than pending.
 
@@ -1129,7 +1129,7 @@ answer the question actually being asked.
 - [ ] **A station with no `tr4w.ini` must never see the prompt.**
 
 **The corpus is the automated half of this and is green (22/0/4).** The prompt
-sits AFTER the `/EXPORT` Halt in `tr4w.dpr` for exactly that reason: a modal
+sits AFTER the `/EXPORT` Halt in `tr4w.lpr` for exactly that reason: a modal
 dialog in headless mode would HANG all thirteen runs rather than fail them.
 
 **First `resourcestring` in the program** (`src\uAppStrings.pas`). New dialogs

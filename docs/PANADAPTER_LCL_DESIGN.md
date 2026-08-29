@@ -365,7 +365,7 @@ span changes.
      menu exists, and writing it now would be an unused function whose only
      caller is hypothetical. It lands with the menu.
 
-   Until then the window is driven by `tr4w/test/bench/bench_panadapter.dpr`,
+   Until then the window is driven by `tr4w/test/bench/bench_panadapter.lpr`,
    which opens it through the real `ShowPanadapterWindow` against a real radio
    and **writes a PNG of the result** — because "the trace is flat / clipped /
    upside down / absent" is not something a frame counter can tell you.
@@ -458,7 +458,7 @@ span changes.
   `TFactoryRadioBase`, which all 100 radios inherit.
 
 Steps 1 and 2 are provable by unit test. From step 3 on nothing is provable by
-code review, which is why `tr4w/test/bench/bench_k4spectrum.dpr` exists: it
+code review, which is why `tr4w/test/bench/bench_k4spectrum.lpr` exists: it
 drives `TK4Radio` against a real K4 and fails if it decodes nothing.
 
 **Bench result, 2026-08-25, K4 at 192.168.73.108** — 20 s, **729 frames, 243

@@ -9,7 +9,7 @@ unit uFunctionKeysForm;
   and the traps.
 
   WHY THIS ONE FIRST.  It owns two of the three message-loop arms that gate
-  Application.Run: WM_RBUTTONDBLCLK and WM_RBUTTONDOWN, dispatched in tr4w.dpr by
+  Application.Run: WM_RBUTTONDBLCLK and WM_RBUTTONDOWN, dispatched in tr4w.lpr by
   comparing Msg.HWND against the twelve button handles.  A raw Win32 child
   generates no LCL mouse events, so those arms could not move until the buttons
   became LCL controls.  They are TPanels now and the arms are deleted.
@@ -234,7 +234,7 @@ begin
       Exit;
       end;
 
-   // THE TWO DELETED LOOP ARMS.  tr4w.dpr compared Msg.HWND against the twelve
+   // THE TWO DELETED LOOP ARMS.  tr4w.lpr compared Msg.HWND against the twelve
    // button handles for WM_RBUTTONDBLCLK and WM_RBUTTONDOWN; Sender says which
    // panel directly, so ResolveFunctionKeyRow no longer has to scan.
    //

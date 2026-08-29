@@ -207,7 +207,7 @@ if ($SelfTest)
 # looking at them: the gate that catches a corrupted source file did not watch
 # the gate. A mixed-ending script makes git warn on every touch and makes a diff
 # unreadable, and neither symptom points at the cause.
-$extensions = @('.pas', '.dpr', '.dpk', '.inc', '.dproj', '.bdsproj', '.fmx', '.dfm', '.rc',
+$extensions = @('.pas', '.lpr', '.dpr', '.dpk', '.inc', '.dproj', '.bdsproj', '.fmx', '.dfm', '.rc',
                 '.lfm', '.lpi', '.ps1', '.psm1')
 
 if (-not (Test-Path -LiteralPath $SourceDir))

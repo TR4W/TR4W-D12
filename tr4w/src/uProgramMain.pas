@@ -1,6 +1,6 @@
 unit uProgramMain;
 
-// THE PROGRAM ITSELF -- everything tr4w.dpr used to hold in its own begin/end.
+// THE PROGRAM ITSELF -- everything tr4w.lpr used to hold in its own begin/end.
 //
 // WHY IT IS HERE AND NOT THERE (NY4I, 2026-08-25).  A .dpr is invisible to a
 // search of src\, and this is where the STARTUP ORDER lives: the single-instance
@@ -9,7 +9,7 @@ unit uProgramMain;
 // program sat in the one file nobody greps, and the answer to "where does X
 // happen at startup" was "not in any unit."
 //
-// tr4w.dpr now holds the uses clause, the resources and one call.  The uses
+// tr4w.lpr now holds the uses clause, the resources and one call.  The uses
 // clause has to stay there -- it is what names every unit for the compiler and
 // the IDE, and listing units for search visibility is deliberate (28d8f1da).
 // So "which units are compiled" is still a .dpr question; "what does the

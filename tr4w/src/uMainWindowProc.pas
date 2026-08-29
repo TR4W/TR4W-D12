@@ -3,7 +3,7 @@ unit uMainWindowProc;
 {
   THE MAIN WINDOW'S WINDOW PROCEDURE.
 
-  Lifted out of tr4w.dpr on 2026-08-17, at the start of Phase 3 of the
+  Lifted out of tr4w.lpr on 2026-08-17, at the start of Phase 3 of the
   Win32-to-LCL migration.  BEHAVIOUR-NEUTRAL: the body below is the one that was
   in the program file, moved and not rewritten.
 
@@ -34,7 +34,7 @@ type
 
    { THE CALLSIGN AND EXCHANGE FIELDS' KEYBOARD BEHAVIOUR, as LCL events.
 
-     Phase 3c. These arms lived in the hand-rolled GetMessage loop in tr4w.dpr
+     Phase 3c. These arms lived in the hand-rolled GetMessage loop in tr4w.lpr
      and dispatched by comparing Msg.HWND against wh[mweCall] / wh[mweExchange].
      That comparison existed only because there were no control objects to hang
      events on; the fields became LCL TEdits in Phase 3b, so the arms are not
@@ -91,7 +91,7 @@ function WindowProc(TRHWND: HWND; Msg: UINT; wParam: wParam; lParam: lParam): lo
 
 implementation
 
-{ MINIMAL, and measured rather than inherited.  Lifting this out of tr4w.dpr
+{ MINIMAL, and measured rather than inherited.  Lifting this out of tr4w.lpr
   brought the program's whole 300-unit uses clause with it; the list below is
   what the compiler actually demanded, arrived at by stripping to four units and
   reading the missing identifiers.  A window procedure that pulls in everything
@@ -524,7 +524,7 @@ begin
 
               // ARROW-DOWN OFF THE LAST ROW RETURNS FOCUS TO THE CALL WINDOW.
               //
-              // Moved here from the message loop (tr4w.dpr, the one
+              // Moved here from the message loop (tr4w.lpr, the one
               // `Msg.HWND = wh[mweEditableLog]` keyboard arm) as part of Phase
               // 3b.  The loop dies in 3c, and every arm in it has to find a
               // home that outlives it.

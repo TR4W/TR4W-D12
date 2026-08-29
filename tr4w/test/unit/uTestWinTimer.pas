@@ -15,7 +15,7 @@ unit uTestWinTimer;
   THE MESSAGE PUMP.  WM_TIMER is delivered to the thread's message queue, and a
   console test EXE has no loop -- so these tests pump one themselves.  That is
   also a faithful test of the real arrangement: in TR4W the timer's window is
-  serviced by the main loop in tr4w.dpr.
+  serviced by the main loop in tr4w.lpr.
 }
 
 interface

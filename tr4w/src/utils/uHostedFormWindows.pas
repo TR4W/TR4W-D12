@@ -22,7 +22,7 @@ unit uHostedFormWindows;
   message loop -- and therefore must be left alone by it.
 
   WHY THIS IS ITS OWN UNIT.  `program tr4w;` owns its GetMessage /
-  TranslateMessage / DispatchMessage loop (tr4w.dpr) and routes WM_CHAR into the
+  TranslateMessage / DispatchMessage loop (tr4w.lpr) and routes WM_CHAR into the
   callsign window, treats F-keys and the numeric keypad as CW memories, and runs
   an accelerator table.  Every one of those would steal keystrokes from a text
   box in a toolkit-owned window.  So the loop's FIRST question is "is this

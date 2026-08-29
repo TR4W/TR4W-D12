@@ -12,7 +12,7 @@ unit uTestCTYDAT;
   Test data: the real, git-tracked cty.dat shipped in tr4w\target\.
   It is resolved relative to the test EXE (test\unit\ -> ..\..\target\)
   and loaded once via ctyLoadInCountryFile -- the same call the app makes
-  at startup (tr4w.dpr) -- so the tests exercise the actual
+  at startup (tr4w.lpr) -- so the tests exercise the actual
   load -> shell-sort -> index -> binary-search pipeline, not a mock.
 
   Asserted values were verified directly against the country header lines

@@ -344,7 +344,7 @@ end;
 // Restored from the tr4wserver/src fork (commit 60620b2, "TR4WServer logging").
 // The D12 string work branched from a copy that predated it, so this and the
 // two logging sites below were absent from the copy being modernized -- and
-// tr4wserver.dpr calls this at WM_INITDIALOG.
+// tr4wserver.lpr calls this at WM_INITDIALOG.
 procedure InitServerLogger;
 begin
   appender := TLogRollingFileAppender.Create('name', 'tr4wserver.log');

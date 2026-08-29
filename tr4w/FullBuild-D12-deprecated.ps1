@@ -20,7 +20,7 @@
     # RAD Studio 23.0 (Delphi 12 Athens) bin directory -- contains rsvars.bat
     # (sets up the msbuild command-line environment) and brcc32.exe (VERSIONINFO
     # resource compiler). This is the primary toolchain: the app + unit tests +
-    # per-language variants all build via `msbuild tr4w.dproj` after `call
+    # per-language variants all build via `msbuild tr4w.lproj` after `call
     # rsvars.bat`. Override with $env:STUDIO_BIN or -StudioBin.
     [string]$StudioBin = $(if ($env:STUDIO_BIN) { $env:STUDIO_BIN } else { "C:\Program Files (x86)\Embarcadero\Studio\23.0\bin" }),
 
@@ -87,14 +87,14 @@
     #   2. -B       force a full rebuild. An incremental compile only reports
     #      diagnostics for the units it actually recompiles; -B recompiles
     #      every unit so no prior warnings are skipped.
-    # Applies to the Step 2 ENG build only (the full tr4w.dpr + all src units).
+    # Applies to the Step 2 ENG build only (the full tr4w.lpr + all src units).
     [switch]$VerboseCompile,
 
     # Build configuration.  DEBUG IS THE DEFAULT AND IS WHAT SHIPS TODAY -- every
     # D12 release so far was built Debug, and every corpus/unit-test result on
     # record is a Debug result.
     #
-    # The two configs are NOT just a label.  In tr4w.dproj, Debug sets
+    # The two configs are NOT just a label.  In tr4w.lproj, Debug sets
     # DCC_Optimize=false and DCC_GenerateStackFrames=true; Release sets NEITHER,
     # so Release inherits the compiler defaults -- OPTIMISATION ON, no stack
     # frames, no debug info.  (The RELEASE/DEBUG conditional symbols are inert:
@@ -123,11 +123,11 @@ $DIST_DIR      = Join-Path $EXE_DIR     "dist"
 $LANG_OUT      = Join-Path $DIST_DIR    "lang-test"
 $DCU_CACHE_DIR = Join-Path $EXE_DIR     "dcu-cache"
 $TEST_DIR      = Join-Path $TR4W_DIR    "test\unit"
-$TEST_DPROJ    = Join-Path $TEST_DIR    "tr4w_unit_tests.dproj"
+$TEST_DPROJ    = Join-Path $TEST_DIR    "tr4w_unit_tests.lproj"
 $SERVER_PS1    = Join-Path $TR4W_DIR    "tr4wserver\BuildServer.ps1"   # standalone entry point; FullBuild calls msbuild directly
-$SERVER_DPROJ  = Join-Path $TR4W_DIR    "tr4wserver\tr4wserver.dproj"
+$SERVER_DPROJ  = Join-Path $TR4W_DIR    "tr4wserver\tr4wserver.lproj"
 $VERSION_PAS   = Join-Path $SRC_DIR     "Version.pas"
-$PROJECT_DPROJ = Join-Path $TR4W_DIR    "tr4w.dproj"
+$PROJECT_DPROJ = Join-Path $TR4W_DIR    "tr4w.lproj"
 $RSVARS        = Join-Path $StudioBin   "rsvars.bat"
 # NOTE: $DCC32 / $PROJECT / $LIB used to live here for the Delphi 7 command line.
 # All three are gone -- nothing in this script invokes DCC32.EXE, and the language
@@ -257,7 +257,7 @@ function Invoke-MSBuild {
 
 # Generate tr4w_versioninfo.rc + .res with the right language LANGID and
 # the current Version.pas number embedded. Picked up by DCC32 via the
-# {$R tr4w_versioninfo.res} directive in tr4w.dpr (gated on the
+# {$R tr4w_versioninfo.res} directive in tr4w.lpr (gated on the
 # VERSIONINFO_RES compiler symbol passed by the build script).
 #
 # The Windows Properties dialog reads this resource for File version /
@@ -568,7 +568,7 @@ function Invoke-Packaging {
 #
 # WHY worktrees: each language compile embeds a per-language VERSIONINFO via the
 # {$R tr4w_versioninfo.res} directive, whose path is hardcoded relative to
-# tr4w.dpr -- so ALL builds in one tree share that single .res. Two concurrent
+# tr4w.lpr -- so ALL builds in one tree share that single .res. Two concurrent
 # builds would race on it (and on target\tr4w.exe). Giving each concurrent
 # compile its own detached git worktree isolates BOTH files for free, and lets
 # us reuse Write-VersionInfoResource + the msbuild invocation unchanged.
@@ -650,8 +650,8 @@ function Invoke-ParallelLangBuilds {
         Write-Host "  Creating worktree wt_$i ..." -ForegroundColor DarkGray
         $addRc = (Invoke-GitCmd @('-C', $ProjectRoot, 'worktree', 'add', '--detach', $wtPath, $headSha)).Code
         $wtTr4w = Join-Path $wtPath "tr4w"
-        if ($addRc -ne 0 -or -not (Test-Path (Join-Path $wtTr4w "tr4w.dpr"))) {
-            Write-Host "  wt_$i creation FAILED (git rc=$addRc, no tr4w.dpr) -- aborting parallel build." -ForegroundColor Red
+        if ($addRc -ne 0 -or -not (Test-Path (Join-Path $wtTr4w "tr4w.lpr"))) {
+            Write-Host "  wt_$i creation FAILED (git rc=$addRc, no tr4w.lpr) -- aborting parallel build." -ForegroundColor Red
             return @($Langs | ForEach-Object { [PSCustomObject]@{ Lang=$_; Status="FAIL"; Size=0; Hash="" } })
         }
         $pool += [PSCustomObject]@{ Index=$i; WtRoot=$wtPath; Tr4w=$wtTr4w; Busy=$false; Proc=$null; Lang=$null; Sw=$null; ExeDir=$null }
@@ -679,11 +679,11 @@ function Invoke-ParallelLangBuilds {
             # Full /t:Build in this worktree. The worktree isolates src\ (no DCUs),
             # target\, and tr4w_versioninfo.res, so no DcuOutput override is needed
             # and concurrent builds can't collide. Search paths + exe output come
-            # from the worktree's own tr4w.dproj. msbuild needs the rsvars env, so
+            # from the worktree's own tr4w.lproj. msbuild needs the rsvars env, so
             # launch it via cmd.exe async (one per slot); $LASTEXITCODE isn't
             # meaningful for a backgrounded Start-Process, so exe-presence is the
             # success gate (checked on exit below).
-            $mbLine = "call `"$RSVARS`" && cd /d `"$wtTr4w`" && msbuild tr4w.dproj /t:Build " +
+            $mbLine = "call `"$RSVARS`" && cd /d `"$wtTr4w`" && msbuild tr4w.lproj /t:Build " +
                       "/p:Config=$Config /p:Platform=Win32 /p:ExtraDefines=`"$wtDefines`" /v:minimal /nologo"
 
             $outLog = Join-Path $collect "$lang.compile.out.log"
@@ -773,7 +773,7 @@ function Invoke-ParallelLangBuilds {
 Write-Host "=== Compiling Unit Tests ===" -ForegroundColor Cyan
 Write-Host ""
 
-# Search paths (src\, src\trdos, src\utils) are baked into tr4w_unit_tests.dproj,
+# Search paths (src\, src\trdos, src\utils) are baked into tr4w_unit_tests.lproj,
 # so msbuild needs no /U. Incremental (/t:Make). The exe lands in test\unit\
 # (the .dproj sets no DCC_ExeOutput), same path the run step below invokes.
 $testBuildResult = Invoke-MSBuild -Dproj $TEST_DPROJ -Target Make
@@ -842,14 +842,14 @@ if (-not (Test-Path $DCU_MANAGED_MARKER)) {
 }
 
 # Generate the VERSIONINFO PE resource for ENG. DCC32 picks it up via
-# {$R tr4w_versioninfo.res} in tr4w.dpr -- but only when the build is
+# {$R tr4w_versioninfo.res} in tr4w.lpr -- but only when the build is
 # invoked with -DVERSIONINFO_RES (so the IDE compile still works without
 # the file). If brcc32 fails or isn't available we drop the flag and
 # build without VERSIONINFO -- same behaviour as historic builds (blank
 # Properties dialog), no build failure.
 Write-Host "Generating VERSIONINFO resource (ENG, $TR4W_VERSION)..." -ForegroundColor DarkGray
 $viOk = Write-VersionInfoResource -Lang 'ENG' -VersionString $TR4W_VERSION
-# VERSIONINFO_RES gates the {$R tr4w_versioninfo.res} directive in tr4w.dpr; it
+# VERSIONINFO_RES gates the {$R tr4w_versioninfo.res} directive in tr4w.lpr; it
 # flows in through the .dproj's $(ExtraDefines) slot. Empty if brcc32 failed, so
 # the compiler never fatals on a missing {$R} file (matches historic behaviour).
 $mainDefines = if ($viOk) { @('VERSIONINFO_RES') } else { @() }
@@ -865,7 +865,7 @@ if ($VerboseCompile) {
     Write-Host ""
 }
 
-# Search paths + exe output (target\) are baked into tr4w.dproj, so no /U or /E.
+# Search paths + exe output (target\) are baked into tr4w.lproj, so no /U or /E.
 $result = Invoke-MSBuild -Dproj $PROJECT_DPROJ -Target $mainTarget -Defines $mainDefines -ExtraProps $mainProps
 
 Write-Host ""

@@ -143,13 +143,13 @@ function SettingsDirectory: string;
 // Library-owned settings that the PROGRAM (not a radio) acts on, published
 // here by ApplyActiveProfileToConfigAtStartup.  The store is loaded once at
 // startup and freed again, so a global is how a decision made in Preferences
-// reaches tr4w.dpr without a second read of the file.
+// reaches tr4w.lpr without a second read of the file.
 var
    RadioLibraryTCIServerEnabled: boolean = False;
 
    // 0 = "use the server's own default port" -- the store deliberately does not
    // name 50001, so that number stays written down in exactly one place
-   // (uTCIServer).  tr4w.dpr substitutes it.
+   // (uTCIServer).  tr4w.lpr substitutes it.
    RadioLibraryTCIPort: integer = 0;
    RadioLibraryTCIBindAll: boolean = False;
 

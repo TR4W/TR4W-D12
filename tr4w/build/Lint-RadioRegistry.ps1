@@ -21,7 +21,7 @@
 
    This is a static property of the source, which is why it belongs in a
    pre-build hook rather than a startup log line: registration happens in unit
-   initialization, which runs BEFORE tr4w.dpr configures the log appender, so a
+   initialization, which runs BEFORE tr4w.lpr configures the log appender, so a
    warning logged from the registry would go nowhere.
 
 .PARAMETER SourceDir

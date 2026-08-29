@@ -471,7 +471,7 @@ begin
   //
   // NOTE ON WHAT THIS DOES *NOT* EXPLAIN.  This clamp was added believing it
   // was the cause of an ERangeError NY4I saw in this routine.  It cannot be:
-  // range checking is OFF in this build (tr4w.dproj, DCC_RangeChecking=false)
+  // range checking is OFF in this build (tr4w.lproj, DCC_RangeChecking=false)
   // and no unit here turns it on, so a negative index is a SILENT bad read, not
   // a raised exception.  With $R-, an ERangeError comes from the RTL itself --
   // chiefly SetLength with a NEGATIVE length, which in this routine means

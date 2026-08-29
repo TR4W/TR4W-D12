@@ -162,7 +162,7 @@ the next command you implement may divide them differently.
 
    The ~100 models that already have enum members keep them; nothing is gained
    by moving them, and their ordinals are not persisted anywhere.
-6. Add the unit to `tr4w.dpr` **and** to `test/unit/tr4w_unit_tests.dpr`.
+6. Add the unit to `tr4w.lpr` **and** to `test/unit/tr4w_unit_tests.lpr`.
    ⚠ List it explicitly in both. Radios self-register from unit initialization,
    so a unit reached only through another unit's `uses` clause silently vanishes
    — with no compile error — the moment that chain changes.
@@ -322,7 +322,7 @@ This page was checked by using it: `uRadioTCI.pas` + `uWebSocketClient.pas` were
 written against it, for a radio whose transport (WebSocket) did not exist in TR4W.
 
 **The isolation claim held.** Adding it required changes to exactly two project
-files — `tr4w.dpr` and `test/unit/tr4w_unit_tests.dpr` — plus the two new units.
+files — `tr4w.lpr` and `test/unit/tr4w_unit_tests.lpr` — plus the two new units.
 
 ---
 
@@ -474,9 +474,9 @@ Notes:
       `RegisterRadio`, which would also need a `VC.pas` member
 - [ ] **Nothing edited in `VC.pas` or `LOGRADIO.PAS`.** If you touched either,
       something is wrong with the design, not with your radio
-- [ ] Unit listed explicitly in `tr4w.dpr` **and** `tr4w_unit_tests.dpr`
+- [ ] Unit listed explicitly in `tr4w.lpr` **and** `tr4w_unit_tests.lpr`
       (both are ordinary Pascal program sources that FPC compiles; the Delphi
-      extension is historical, and `tr4w.lpi` points at `tr4w.dpr`)
+      extension is historical, and `tr4w.lpi` points at `tr4w.lpr`)
 - [ ] A row in `ID_CW_PINS` if the radio declares `rcCWByCAT`
 - [ ] `MarkNetworkCredentials` if its network link authenticates — an id-only
       radio is invisible to the taxonomy pin that would otherwise force the
