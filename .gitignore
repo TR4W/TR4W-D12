@@ -191,3 +191,9 @@ tr4w/res/RCa*
 
 # Poedit compiles a .mo beside the .po; the binary is build output, not source.
 i18n/*.mo
+# Lazarus copies the loaded application icon beside the project when you use
+# Project Options -> Application -> Load Icon. It is a byte-identical copy of
+# tr4w/res/tr4w.ico, which is the tracked source, and the icon the build links
+# comes from tr4w.res -- so this is a third copy of the same image and exactly
+# the kind of duplicate that drifts.
+tr4w/tr4w.ico
