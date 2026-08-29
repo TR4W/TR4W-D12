@@ -101,7 +101,7 @@ begin
             if TIcomRadio(r).RadioAddress <> RadioParametersArray[m].RA then
                begin
                mismatches := mismatches + Format('%s: factory $%2.2x, legacy $%2.2x; ',
-                  [InterfacedRadioTypeSA[m], TIcomRadio(r).RadioAddress,
+                  [RadioTypeToken(m), TIcomRadio(r).RadioAddress,
                    RadioParametersArray[m].RA]);
                end;
             end;
@@ -130,7 +130,7 @@ var
       if (cap in r.Capabilities.Flags) <> legacy then
          begin
          wrong := wrong + Format('%s: %s factory=%s legacy=%s; ',
-            [InterfacedRadioTypeSA[m], what,
+            [RadioTypeToken(m), what,
              BoolToStr(cap in r.Capabilities.Flags, True), BoolToStr(legacy, True)]);
          end;
    end;
@@ -225,7 +225,7 @@ begin
       begin
       if (RadioParametersArray[m].rt = rtICOM) and (not IsRegistered(m)) then
          begin
-         missing := missing + InterfacedRadioTypeSA[m] + ' ';
+         missing := missing + RadioTypeToken(m) + ' ';
          end;
       end;
    CheckEquals('', missing, 'unmigrated CI-V models: ' + missing);

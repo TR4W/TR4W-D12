@@ -537,111 +537,21 @@ const
     ({Name: 'HAMLIBANY';  } BR:BR57600; P: 0; C: 1; S: 1; T:1; RA: $00; SW: 1; SFOC: $00; SMOC: $00; SPOC: $00; RX: $00; TX: $00; MB: 0; CW: $00; LSB: $00; USB: $00; FM: $00; AM: $00; DIGL: $00; DIGU: $00; hamlibID: 1; rt:rtHamLib)
 );
 {*)}
-const
-   InterfacedRadioTypeSA: array[InterfacedRadioType] of PAnsiChar = (
+{ InterfacedRadioTypeSA LIVED HERE AND IS GONE (2026-08-28).
 
-      'NONE',
-      'K2',
-      'K3',
-      'KX3',
-      'K4',
-      'FLEX',
-      'TS440',
-      'TS450',
-      'TS480',
-      'TS530',
-      'TS570',
-      'TS590',
-      'TS690',
-      'TS850',
-      'TS870',
-      'TS890',
-      'TS940',
-      'TS950',
-      'TS990',
-      'TS2000',
-      'FT100',
-      'FTDX10',
-      'FTDX101',
-      'FTX-1',
-      'FT450',
-      'FT710',
-      'FT736R',
-      'FT747GX',
-      'FT767',
-      'FT817',
-      'FT818',
-      'FT840',
-      'FT847',
-      'FT857',
-      'FT890',
-      'FT891',
-      'FT897',
-      'FT900',
-      'FT920',
-      'FT950',
-      'FT990',
-      'FT991',
-      'FT1000',
-      'FT1000MP',
-      'FT1200',
-      'FT2000',
-      'FTDX3000',
-      'FTDX5000',
-      'FTDX9000',
-      'IC78',
-      'IC705',
-      'IC706',
-      'IC706II',
-      'IC706IIG',
-      'IC707',
-      'IC718',
-      'IC725',
-      'IC726',
-      'IC728',
-      'IC729',
-      'IC735',
-      'IC736',
-      'IC737',
-      'IC738',
-      'IC746',
-      'IC746PRO',
-      'IC756',
-      'IC756PRO',
-      'IC756PROII',
-      'IC756PROIII',
-      'IC761',
-      'IC765',
-      'IC775',
-      'IC781',
-      'IC905',
-      'IC910H',
-      'IC970D',
-      'IC7000',
-      'IC7100',
-      'IC7110',
-      'IC7200',
-      'IC7300',
-      'IC7300MK2',
-      'IC7410',
-      'IC7600',
-      'IC7610',
-      'IC7700',
-      'IC7760',
-      'IC7800',
-      'IC7850',
-      'IC7851',
-      'IC9100',
-      'IC9700',
-      'OMNI6',
-      'ORION',
-      'FLRIG',          // HamLib Only
-      'TRX-MANAGER',    // HamLib Only
-      'FT757GXII',      // HamLib Only
-      'EXPERTTCI',     // HamLib Only
-      'ACLOG',          // HamLib Only
-      'HAMLIB-ANY'      // HamLib Only
-      );
+  It was an array[InterfacedRadioType] of the name each model is written as in
+  tr4w.ini, maintained by hand beside the enum in VC.pas -- two copies of one
+  list, which drifted exactly as CLAUDE.md warns. It was missing TS140 and
+  carried a TS530 the enum never had, so from that point on it was off by one:
+  a config saying TS440 selected the TS-140 driver, TS450 selected the TS-440,
+  and TS140 could not be selected at all. Nothing failed; the names simply
+  lined up against the wrong radios.
+
+  The factory owns this now -- uRadioRegistry.RadioTypeToken builds the token
+  from the enum itself, so it cannot fall out of step, and the few models the
+  file spells differently declare that with MarkConfigToken. Adding a radio no
+  longer requires touching this unit at all, which was the point (NY4I). }
+
 
  {
     const

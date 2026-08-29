@@ -26,6 +26,8 @@ unit uCFG;
 interface
 
 uses
+  uRadioRegistry,  // RadioTypeTokensA + RegisteredCIVAddress. In the INTERFACE
+                   // uses because ListParamArray below takes its address.
   uConfigValues,   // Config -- the live values migrated rows write into
   uAnsiStr,
    uIO,
@@ -364,8 +366,8 @@ const
     (lpArray: @ZoneMultTypeSA;                    lpLength: Byte(High(ZoneMultType));           lpVar: @ActiveZoneMult; ),
     (lpArray: @BandStringsArrayWithOutSpaces;     lpLength: Byte(High(BandType));               lpVar: @ActiveBand; ),
     (lpArray: @BandStringsArrayWithOutSpaces;     lpLength: Byte(High(BandType));               lpVar: @SingleBand; ),
-    (lpArray: @InterfacedRadioTypeSA;             lpLength: Byte(High(InterfacedRadioType));    lpVar: @Radio1.RadioModel; ),
-    (lpArray: @InterfacedRadioTypeSA;             lpLength: Byte(High(InterfacedRadioType));    lpVar: @Radio2.RadioModel; ),
+    (lpArray: @RadioTypeTokensA;                 lpLength: Byte(High(InterfacedRadioType));    lpVar: @Radio1.RadioModel; ),
+    (lpArray: @RadioTypeTokensA;                 lpLength: Byte(High(InterfacedRadioType));    lpVar: @Radio2.RadioModel; ),
 
     (lpArray: @tr4w_RTSDTRTypeSA;                 lpLength: Byte(High(tr4w_RTSDTRType));        lpVar: @Radio1.tr4w_cat_rts_state; ),
     (lpArray: @tr4w_RTSDTRTypeSA;                 lpLength: Byte(High(tr4w_RTSDTRType));        lpVar: @Radio1.tr4w_cat_dtr_state; ),
@@ -1024,8 +1026,7 @@ var
 
 implementation
 uses MainUnit, SysUtils,   // Issue #997 -- SysUtils for Format/StrPCopy (asm-to-Pascal conversion)
-     uStateBridge,         // RefreshWSJTXIndicator -- the box tracks WSJT-X ENABLED
-     uRadioRegistry;       // RegisteredCIVAddress -- the per-model Icom CI-V default
+     uStateBridge;         // RefreshWSJTXIndicator -- the box tracks WSJT-X ENABLED
 
 var
    { Commands the CURRENT contest .cfg set explicitly. Single digits in every

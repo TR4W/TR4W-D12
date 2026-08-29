@@ -200,4 +200,8 @@ initialization
      1051
      );
 
+
+  { HISTORICAL SPELLING -- the file writes 'FTX-1', not the enum name. }
+  MarkConfigToken(FTX1F, 'FTX-1');
+
 end.

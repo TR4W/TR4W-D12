@@ -76,4 +76,10 @@ initialization
      3044
      , 96);
 
+
+  { HISTORICAL SPELLING. tr4w.ini has always written this model as 'IC910H',
+    which is not its enum name, so it is declared rather than derived --
+    otherwise every existing config naming this radio would stop parsing. }
+  MarkConfigToken(IC910, 'IC910H');
+
 end.

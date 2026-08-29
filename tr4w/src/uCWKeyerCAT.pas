@@ -283,11 +283,11 @@ begin
    if sendingOnActiveRadio then
       begin
       DebugMsg('Sending on ACTIVE radio ' + ActiveRadioPtr.RadioName + ' (' +
-               InterfacedRadioTypeSA[ActiveRadioPtr.RadioModel] + ')');
+               RadioTypeToken(ActiveRadioPtr.RadioModel) + ')');
       if InactiveRadioPtr.CWByCAT_Sending then
          begin
          DebugMsg('Stopping sending CW on INACTIVE ' + ActiveRadioPtr.RadioName +
-                  ' (' + InterfacedRadioTypeSA[ActiveRadioPtr.RadioModel] + ')');
+                  ' (' + RadioTypeToken(ActiveRadioPtr.RadioModel) + ')');
          InactiveRadioPtr.StopSendingCW;
          Sleep(500); // Give command chance to complete
          end;
@@ -295,11 +295,11 @@ begin
    else
       begin
       DebugMsg('Sending on INACTIVE radio ' + InactiveRadioPtr.RadioName + ' (' +
-               InterfacedRadioTypeSA[InactiveRadioPtr.RadioModel] + ')');
+               RadioTypeToken(InactiveRadioPtr.RadioModel) + ')');
       if ActiveRadioPtr.CWByCAT_Sending then
          begin
          DebugMsg('Stopping sending CW on ACTIVE ' + InactiveRadioPtr.RadioName +
-                  ' (' + InterfacedRadioTypeSA[InactiveRadioPtr.RadioModel] + ')');
+                  ' (' + RadioTypeToken(InactiveRadioPtr.RadioModel) + ')');
          ActiveRadioPtr.StopSendingCW;
          end;
       end;

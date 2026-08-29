@@ -327,6 +327,33 @@ procedure MarkNetworkCredentials(model: InterfacedRadioType); overload;
   Declared here rather than in a list a test owns, because the factory is what
   knows a radio is new. }
 procedure MarkPostLegacy(const id: string); overload;
+
+{ THE NAME THIS MODEL IS WRITTEN AS IN tr4w.ini.
+
+  'RADIO ONE MODEL = TS450' is matched against these, and the INDEX of the hit
+  becomes the enum value -- so this list and the enum must agree position for
+  position or an operator gets a different radio than they asked for. They did
+  not agree: LOGRADIO's hand-maintained copy was missing TS140 and carried a
+  TS530 the enum never had, which silently shifted four Kenwoods (a config
+  saying TS440 selected the TS-140 driver). Found 2026-08-28.
+
+  So it is no longer hand-maintained. The token IS the enum name, produced by
+  GetEnumName, and drift of that kind is now unrepresentable. A handful of
+  models were historically spelled differently in the file and say so with
+  MarkConfigToken, because breaking those configs would be a real cost for no
+  gain. }
+function RadioTypeToken(model: InterfacedRadioType): string;
+procedure MarkConfigToken(model: InterfacedRadioType; const token: string);
+
+{ The same tokens as a plain array of PAnsiChar, for uCFG's table-driven
+  parser, which holds a POINTER to the list and indexes it by enum ordinal.
+  Call PopulateRadioTypeTokens once at start-up, after every radio unit's
+  initialization has run and before the config is read. }
+var
+   RadioTypeTokensA: array[InterfacedRadioType] of PAnsiChar;
+
+procedure PopulateRadioTypeTokens;
+
 procedure MarkPostLegacy(model: InterfacedRadioType); overload;
 function RegisteredPostLegacy(model: InterfacedRadioType): Boolean;
 
@@ -356,6 +383,7 @@ type
         have no row for it and the legacy cross-check tests must skip it.
         See MarkPostLegacy. }
       postLegacy: Boolean;
+      configToken: string;          // legacy spelling in tr4w.ini, '' = use the enum name
       serial: TSerialParams;
       hamlibOnly: Boolean;          // True => no native TR4W driver; driven through HamLib
       civAddress: Byte;             // default CI-V receiver address (Icom); 0 = not a CI-V radio
@@ -405,6 +433,7 @@ begin
    // forgets to say so simply fails the legacy cross-checks, loudly -- the
    // safe direction, unlike the reverse.
    reg.postLegacy := False;
+   reg.configToken := '';
    reg.serial := serial;
    reg.hamlibOnly := False;   // RegisterHamLibOnlyRadio patches this after the call
    // The HamLib rig_model for THIS radio, used when the operator drives an
@@ -645,6 +674,59 @@ begin
       Result := reg.postLegacy;
       end;
 end;
+
+var
+   { Owns the bytes RadioTypeTokensA points at. A PAnsiChar into a temporary
+     AnsiString would dangle the moment the string went out of scope -- FPC's
+     allocator surfaces that where Delphi's used to hide it. }
+   gTokenStore: array[InterfacedRadioType] of AnsiString;
+
+function RadioTypeToken(model: InterfacedRadioType): string;
+var
+   id:  string;
+   reg: TRadioReg;
+begin
+   { NoInterfacedRadio is not a registered radio and never will be, but it is a
+     legal setting and the file has always spelled it NONE. }
+   if model = NoInterfacedRadio then
+      begin
+      Result := 'NONE';
+      Exit;
+      end;
+   Result := GetEnumName(TypeInfo(InterfacedRadioType), Ord(model));
+   if gByModel.TryGetValue(model, id) and RegById(id, reg) and
+      (reg.configToken <> '') then
+      begin
+      Result := reg.configToken;
+      end;
+end;
+
+procedure MarkConfigToken(model: InterfacedRadioType; const token: string);
+var
+   id:  string;
+   reg: TRadioReg;
+begin
+   id := GetEnumName(TypeInfo(InterfacedRadioType), Ord(model));
+   if not gById.TryGetValue(id, reg) then
+      begin
+      raise Exception.CreateFmt(
+         'MarkConfigToken: no radio registered as "%s"', [id]);
+      end;
+   reg.configToken := token;
+   gById.AddOrSetValue(id, reg);
+end;
+
+procedure PopulateRadioTypeTokens;
+var
+   m: InterfacedRadioType;
+begin
+   for m := Low(InterfacedRadioType) to High(InterfacedRadioType) do
+      begin
+      gTokenStore[m] := AnsiString(RadioTypeToken(m));
+      RadioTypeTokensA[m] := PAnsiChar(gTokenStore[m]);
+      end;
+end;
+
 
 procedure MarkPostLegacy(model: InterfacedRadioType);
 begin

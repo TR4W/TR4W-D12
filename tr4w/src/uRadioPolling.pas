@@ -126,6 +126,7 @@ const
 implementation
 
 uses
+  uRadioRegistry,   // RadioTypeToken -- the model name, from the factory
    uPanelUpdate,    // cross-thread panel writes -- the seam and why, in that unit
    uMainThreadWork; // the UI work below runs on the MAIN thread -- see MarshalledJobs
 
@@ -893,7 +894,7 @@ begin
                // ny4i Moved under this If to only perform when we are sending
                begin
                logger.trace('rig.CWByCAT_Sending set to FALSE - %s (%s)',
-                        [rig.RadioName, InterfacedRadioTypeSA[rig.RadioModel]]);
+                        [rig.RadioName, RadioTypeToken(rig.RadioModel)]);
                      rig.tmrCWByCAT.Enabled := false;
                         // ny4i Issue 153 Disable timer so we do not fire if we get the this event here
                      //BackToInactiveRadioAfterQSO; // Moved to Timer event // ny4i Issue 153 We have to try here as WK and Serial do it in their threads when not busy
@@ -1490,7 +1491,7 @@ begin
                // If we were sending but the PTT goes off, now reset this.
             BackToInactiveRadioAfterQSO; // ny4i Issue 153 We have to try here as WK and Serial do it in their threads when not busy
             logger.trace('[Active] CWByCAT_Sending set to FALSE - %s (%s)',
-               [ActiveRadioPtr.RadioName, InterfacedRadioTypeSA[ActiveRadioPtr.RadioModel]]);
+               [ActiveRadioPtr.RadioName, RadioTypeToken(ActiveRadioPtr.RadioModel)]);
             tStartAutoCQ; // this is totally bizzare but the way autocqresume works is you call this and it checks.
             end;
       if tr4w_PTTStartTime <> 0 then

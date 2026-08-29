@@ -497,7 +497,7 @@ begin
             end;
          end;
       names.Sort;   // case-insensitive; groups manufacturers naturally
-      ComboAddRadio(hwnddlg, AnsiString(InterfacedRadioTypeSA[NoInterfacedRadio]),
+      ComboAddRadio(hwnddlg, AnsiString(RadioTypeToken(NoInterfacedRadio)),
                     Ord(NoInterfacedRadio));
       for i := 0 to names.Count - 1 do
          begin
@@ -1290,7 +1290,7 @@ begin
      end
   else if rt = NoInterfacedRadio then
      begin
-     radioName := AnsiString(InterfacedRadioTypeSA[NoInterfacedRadio]);
+     radioName := AnsiString(RadioTypeToken(NoInterfacedRadio));
      end
   else
      begin
@@ -2409,7 +2409,7 @@ if (CATWTR^.tCATPortHandle <> INVALID_HANDLE_VALUE) or
         // NoInterfacedRadio => TYPE=NONE, matching the FACTORY ID block below.
         Windows.ZeroMemory(@CMD, SizeOf(CMD));
         CMD := ShortString(AnsiString(
-           InterfacedRadioTypeSA[ComboSelectedRadioModel(CATWndHWND)]));
+           RadioTypeToken(ComboSelectedRadioModel(CATWndHWND))));
         end;
      if (i = 102) or (i = 103) then
         begin

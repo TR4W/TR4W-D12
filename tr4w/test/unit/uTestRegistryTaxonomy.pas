@@ -39,7 +39,7 @@
 interface
 
 uses
-   SysUtils, uTR4WTestFramework, uRadioRegistry, LogRadio, VC;   // LogRadio for InterfacedRadioTypeSA
+   SysUtils, Classes, TypInfo, uTR4WTestFramework, uRadioRegistry, VC;
 
 type
    TRegistryTaxonomyTests = class(TTestCase)
@@ -50,6 +50,7 @@ type
       procedure Test_HamLibOnlyRegistrations;
       procedure Test_NetworkCredentialsArePinned;
       procedure Test_EveryNetworkRadioDeclaresCredentialsEitherWay;
+      procedure Test_ConfigTokensAreTheEnumNamesOrDeclared;
    public
       procedure RunAllTests; override;
    end;
@@ -97,7 +98,7 @@ begin
       if IsHamLibOnly(m) <> (m in RetiredHamLibONLYRadios) then
          begin
          wrong := wrong + Format('%s: IsHamLibOnly=%s, retired set says %s; ',
-            [InterfacedRadioTypeSA[m],
+            [RadioTypeToken(m),
              BoolToStr(IsHamLibOnly(m), True),
              BoolToStr(m in RetiredHamLibONLYRadios, True)]);
          end;
@@ -123,7 +124,7 @@ begin
       if isYaesu <> (m in RetiredYaesuRadios) then
          begin
          wrong := wrong + Format('%s: ManufacturerOf=''%s'', retired set says Yaesu=%s; ',
-            [InterfacedRadioTypeSA[m], ManufacturerOf(m),
+            [RadioTypeToken(m), ManufacturerOf(m),
              BoolToStr(m in RetiredYaesuRadios, True)]);
          end;
       end;
@@ -149,7 +150,7 @@ var
       if RegisteredHamLibID(model) <> want then
          begin
          bad := bad + Format('%s: hamlibID %d, want %d (%s); ',
-            [InterfacedRadioTypeSA[model], RegisteredHamLibID(model), want, why]);
+            [RadioTypeToken(model), RegisteredHamLibID(model), want, why]);
          end;
    end;
 
@@ -164,7 +165,7 @@ begin
       begin
       if (m in RetiredHamLibONLYRadios) and (not IsRegistered(m)) then
          begin
-         bad := bad + InterfacedRadioTypeSA[m] + ': not registered; ';
+         bad := bad + RadioTypeToken(m) + ': not registered; ';
          end;
       end;
    CheckID(FLRIG, 4, 'RIG_MODEL_FLRIG');
@@ -262,6 +263,79 @@ begin
       end;
 end;
 
+procedure TRegistryTaxonomyTests.Test_ConfigTokensAreTheEnumNamesOrDeclared;
+{ THE REGRESSION PIN FOR A REAL DEFECT, found 2026-08-28.
+
+  'RADIO ONE MODEL = TS450' is matched against the token list and the INDEX of
+  the hit becomes the enum value. LOGRADIO used to hold that list by hand,
+  beside the enum in VC.pas -- two copies of one thing. It was missing TS140
+  and carried a TS530 the enum never had, so four Kenwoods were off by one: a
+  config saying TS440 selected the TS-140 driver, TS450 selected the TS-440,
+  and TS140 could not be selected at all. Nothing failed. The names simply
+  lined up against the wrong radios.
+
+  The token is derived from the enum now, so that class of drift is gone. What
+  is still possible is a careless MarkConfigToken, which is what this pins:
+  every token is either the enum name or one of the handful deliberately
+  declared, and no two models share one. }
+var
+   m:     InterfacedRadioType;
+   token: string;
+   seen:  TStringList;
+   bad:   string;
+   n:     integer;
+begin
+   BeginTest('every config token is the enum name, or a declared exception, and unique');
+   bad := '';
+   n := 0;
+   seen := TStringList.Create;
+   try
+      seen.Sorted := True;
+      for m := Low(InterfacedRadioType) to High(InterfacedRadioType) do
+         begin
+         if (m <> NoInterfacedRadio) and (not IsRegistered(m)) then
+            begin
+            Continue;
+            end;
+         token := RadioTypeToken(m);
+         Inc(n);
+         if token = '' then
+            begin
+            bad := bad + GetEnumName(TypeInfo(InterfacedRadioType), Ord(m)) + ': empty; ';
+            end
+         else if seen.IndexOf(token) >= 0 then
+            begin
+            bad := bad + token + ': duplicated; ';
+            end
+         else
+            begin
+            seen.Add(token);
+            end;
+         end;
+   finally
+      seen.Free;
+   end;
+
+   { The four the old table got wrong. Spelled out rather than derived, so this
+     still fails if someone reintroduces a hand-maintained list. }
+   CheckEquals('TS140', RadioTypeToken(TS140), 'TS140 token');
+   CheckEquals('TS440', RadioTypeToken(TS440), 'TS440 token');
+   CheckEquals('TS450', RadioTypeToken(TS450), 'TS450 token');
+   CheckEquals('TS480', RadioTypeToken(TS480), 'TS480 token');
+
+   { The deliberate exceptions -- existing configs spell these differently and
+     must keep parsing. }
+   CheckEquals('NONE',        RadioTypeToken(NoInterfacedRadio), 'no-radio token');
+   CheckEquals('IC910H',      RadioTypeToken(IC910),      'IC910 token');
+   CheckEquals('FTX-1',       RadioTypeToken(FTX1F),      'FTX1F token');
+   CheckEquals('TRX-MANAGER', RadioTypeToken(TRXMANAGER), 'TRXMANAGER token');
+   CheckEquals('HAMLIB-ANY',  RadioTypeToken(HAMLIBANY),  'HAMLIBANY token');
+
+   { Guard the guard: an empty loop would report no duplicates at all. }
+   CheckTrue((n > 90) and (bad = ''),
+             Format('checked %d tokens; problems: %s', [n, bad]));
+end;
+
 procedure TRegistryTaxonomyTests.RunAllTests;
 begin
    Test_IsHamLibOnly_MatchesRetiredSet;
@@ -270,6 +344,7 @@ begin
    Test_HamLibOnlyRegistrations;
    Test_NetworkCredentialsArePinned;
    Test_EveryNetworkRadioDeclaresCredentialsEitherWay;
+   Test_ConfigTokensAreTheEnumNamesOrDeclared;
 end;
 
 end.

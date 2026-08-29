@@ -290,7 +290,7 @@ begin
       end
    else
       begin
-      Result.LegacyTypeName := string(AnsiString(InterfacedRadioTypeSA[model]));
+      Result.LegacyTypeName := RadioTypeToken(model);
       end;
 
    // The model's own defaults, for every field the operator left blank.  The

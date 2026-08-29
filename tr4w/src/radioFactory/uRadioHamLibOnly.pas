@@ -158,4 +158,10 @@ initialization
       'Yaesu FT-757GXII (via HamLib)', 1007,
       SerialParams(4800, 8, PARITY_NONE, 2));
 
+
+  { HISTORICAL SPELLINGS. tr4w.ini writes these two with a hyphen, which their
+    enum names do not have. Declared so existing configs keep parsing. }
+  MarkConfigToken(TRXMANAGER, 'TRX-MANAGER');
+  MarkConfigToken(HAMLIBANY, 'HAMLIB-ANY');
+
 end.

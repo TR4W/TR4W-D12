@@ -692,6 +692,18 @@ begin
    // the main thread initialize simultaneously.
    IsMultiThread := True;
 
+   { THE RADIO NAME TABLE, BUILT FROM THE FACTORY.
+
+     Every radio unit has self-registered by now -- initialization sections all
+     run before this procedure does -- so the registry is complete and the
+     tokens tr4w.ini is parsed against can be derived from it. This MUST happen
+     before the config is read: uCFG matches 'RADIO ONE MODEL = ...' against
+     this list and stores the index as the enum.
+
+     It replaces a hand-maintained array in LOGRADIO that had drifted one
+     position out of step with the enum -- see the note where it used to be. }
+   PopulateRadioTypeTokens;
+
    // Application.Initialize creates the widgetset.  Application.Run at the
    // bottom of this file drives it -- Phase 3c, 2026-08-23.  The hand-rolled
    // GetMessage loop that owned the program until then is gone; what lived

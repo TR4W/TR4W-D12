@@ -42,11 +42,13 @@ utils_text,
 procedure CheckLatestVersion;
 
 implementation
-uses MainUnit;
+uses MainUnit,
+     uRadioRegistry;   // RadioTypeToken -- the model name, from the factory
 
 procedure CheckLatestVersion;
 label 1;
 var
+   radio1Token, radio2Token: AnsiString;
  
   p                                     : PAnsiChar;
   TempSocket                            : Cardinal;
@@ -73,7 +75,11 @@ begin
      Exit;
      end;
 
-  WinSock2.Send(TempSocket, wsprintfBuffer, TF.Format(wsprintfBuffer, checkVersionRequest, @MyCall[1], InterfacedRadioTypeSA[Radio1.RadioModel], InterfacedRadioTypeSA[Radio2.RadioModel], BA[CD.MasterFileExists]), 0);
+  // NAMED locals, not an inline cast: TF.Format takes PAnsiChar and a
+  // pointer into a temporary AnsiString dangles before Send reads it.
+  radio1Token := AnsiString(RadioTypeToken(Radio1.RadioModel));
+  radio2Token := AnsiString(RadioTypeToken(Radio2.RadioModel));
+  WinSock2.Send(TempSocket, wsprintfBuffer, TF.Format(wsprintfBuffer, checkVersionRequest, @MyCall[1], PAnsiChar(radio1Token), PAnsiChar(radio2Token), BA[CD.MasterFileExists]), 0);
   Windows.Sleep(2000);
   if WinSock2.recv(TempSocket, GetScoresBuffer, SizeOf(GetScoresBuffer), 0) <= 0 then
      begin
