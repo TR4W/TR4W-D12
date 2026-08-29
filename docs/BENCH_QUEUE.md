@@ -23,6 +23,44 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-08-28 (night) -- FOUR KENWOODS CHANGE DRIVER ON UPGRADE
+
+### [ ] This one needs a release note, not just a bench run
+
+`InterfacedRadioTypeSA` -- the table `RADIO ONE MODEL = ...` was matched against
+-- had drifted one row from the enum in `VC.pas`. It was missing `TS140` and
+carried a `TS530` the enum never had, so from that point on it was off by one:
+
+| the config said | the operator actually got | after the fix |
+|---|---|---|
+| `TS440` | TS-140 driver | TS-440 driver |
+| `TS450` | TS-440 driver | TS-450 driver |
+| `TS480` | TS-450 driver | TS-480 driver |
+| `TS530` | TS-480 driver | **no match** -- TR4W has no TS-530 driver |
+| `TS140` | no match at all | TS-140 driver |
+
+**Existing configs will behave differently after upgrading**, and for these four
+that means correctly rather than as before. Two things follow:
+
+* somebody with a TS-440/450/480 should confirm on hardware that the *correct*
+  driver actually works -- they have been running the neighbouring one, possibly
+  for years, and nobody has exercised the right one;
+* `TS530` was never a real TR4W model. Anyone whose config says that was getting
+  a TS-480 driver by accident and will now get no radio at all. If that spelling
+  should keep working it needs a deliberate `MarkConfigToken` alias -- ask before
+  adding one, because preserving it means preserving a bug.
+
+### [ ] Icom IC-7110 -- a clone, not a driver
+
+Added the same evening. It is the IC-705's driver with a different name and the
+one fact available: CI-V `$BA`. The band plan, transceive menu address, scope
+geometry, HamLib id (still the IC-705's, deliberately) and serial parameters are
+all inherited and unverified -- the radio was announced days ago and has no CI-V
+reference guide yet. It needs a real manual and a real radio before it is
+offered to anyone as finished.
+
+---
+
 ## Added 2026-08-28 (night) -- I18N: TWO THINGS TO SEND, ONE THING TO DISTRUST
 
 ### [ ] Send the Polish catalogue
