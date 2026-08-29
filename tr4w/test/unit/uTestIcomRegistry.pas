@@ -173,7 +173,10 @@ begin
    checked := 0;
    for m := Low(InterfacedRadioType) to High(InterfacedRadioType) do
       begin
-      if (not IsRegistered(m)) or (RadioParametersArray[m].rt <> rtICOM) then
+      // Post-legacy radios are skipped: LOGRADIO's sets predate them, so
+      // there is no legacy value to disagree with. See MarkPostLegacy.
+      if (not IsRegistered(m)) or (RadioParametersArray[m].rt <> rtICOM)
+         or uRadioRegistry.RegisteredPostLegacy(m) then
          begin
          Continue;
          end;

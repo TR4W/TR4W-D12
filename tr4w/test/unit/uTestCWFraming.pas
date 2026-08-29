@@ -67,7 +67,7 @@ type
    end;
 
 const
-   CW_PINS: array[0..28] of TCWPin = (
+   CW_PINS: array[0..29] of TCWPin = (
       // Elecraft: 22 and padded, to survive the keyer-abort window.  The K2 is
       // the family's one deviation -- same length, no padding.
       (model: K2;     link: rlSerial;  name: 'K2';     maxLen: 22; pad: False; busyPct: 100; skText: '*';    snText: ''),
@@ -97,6 +97,11 @@ const
       // did not, on the first run -- the value was set in DefineCapabilities,
       // which every subclass replaces, and all fourteen came out with maxLen 0.
       (model: IC705;    link: rlSerial; name: 'IC-705';    maxLen: 28; pad: False; busyPct: 125; skText: '^SK'; snText: '^SN'),
+      // The IC-7110 is a clone of the IC-705 and inherits its frame rule.
+      // Pinned because a radio declaring rcCWByCAT with no row here has an
+      // UNINITIALISED maxLen -- a silent zero, which is how the TS-850 shipped
+      // with 'no limit'. If the real radio differs, this row is what fails.
+      (model: IC7110;   link: rlSerial; name: 'IC-7110';   maxLen: 28; pad: False; busyPct: 125; skText: '^SK'; snText: '^SN'),
       (model: IC905;    link: rlSerial; name: 'IC-905';    maxLen: 28; pad: False; busyPct: 125; skText: '^SK'; snText: '^SN'),
       (model: IC7100;   link: rlSerial; name: 'IC-7100';   maxLen: 28; pad: False; busyPct: 125; skText: '^SK'; snText: '^SN'),
       (model: IC7300;   link: rlSerial; name: 'IC-7300';   maxLen: 28; pad: False; busyPct: 125; skText: '^SK'; snText: '^SN'),

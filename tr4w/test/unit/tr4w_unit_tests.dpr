@@ -226,6 +226,7 @@ uses
    uRadioIcom910 in '..\..\src\radioFactory\uRadioIcom910.pas',
    uRadioIcom970D in '..\..\src\radioFactory\uRadioIcom970D.pas',
    uRadioIcom7200 in '..\..\src\radioFactory\uRadioIcom7200.pas',
+   uRadioIcom7110 in '..\..\src\radioFactory\uRadioIcom7110.pas',
    uRadioIcom7410 in '..\..\src\radioFactory\uRadioIcom7410.pas',
    uRadioIcom9100 in '..\..\src\radioFactory\uRadioIcom9100.pas',
    uRadioTenTecOmni6 in '..\..\src\radioFactory\uRadioTenTecOmni6.pas',

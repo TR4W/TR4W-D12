@@ -310,6 +310,26 @@ function RegisteredNetworkCredentialsId(const id: string): Boolean;
 procedure MarkNetworkCredentials(const id: string); overload;
 procedure MarkNetworkCredentials(model: InterfacedRadioType); overload;
 
+{ Declare that this radio POST-DATES the legacy tables.
+
+  LOGRADIO's RadioParametersArray and the frozen RadioSupports* sets are a
+  record of what the D7 program knew. Several unit tests cross-check the
+  factory against them, which is right for a radio that existed then and
+  meaningless for one that did not: the "legacy value" for a radio Icom
+  announced last week is not False, it is ABSENT, and a test that reads
+  absence as False reports the factory as wrong for stating a fact the legacy
+  record never had a chance to hold.
+
+  The IC-7110 was the first, 2026-08-28. Without this it failed four tests for
+  no defect at all -- and the tempting fix, editing the legacy sets to agree,
+  would corrupt the historical record those sets exist to BE.
+
+  Declared here rather than in a list a test owns, because the factory is what
+  knows a radio is new. }
+procedure MarkPostLegacy(const id: string); overload;
+procedure MarkPostLegacy(model: InterfacedRadioType); overload;
+function RegisteredPostLegacy(model: InterfacedRadioType): Boolean;
+
 // id <-> enum bridge and enumeration.
 function ModelId(model: InterfacedRadioType): string;         // enum -> id ('' if unregistered)
 function ModelForId(const id: string): InterfacedRadioType;   // id -> enum (NoInterfacedRadio if none)
@@ -332,6 +352,10 @@ type
       networkPort: integer;
       discoverable: Boolean;
       networkCredentials: Boolean;  // the network link authenticates: offer user+password
+      { Announced after LOGRADIO's legacy tables were frozen, so those tables
+        have no row for it and the legacy cross-check tests must skip it.
+        See MarkPostLegacy. }
+      postLegacy: Boolean;
       serial: TSerialParams;
       hamlibOnly: Boolean;          // True => no native TR4W driver; driven through HamLib
       civAddress: Byte;             // default CI-V receiver address (Icom); 0 = not a CI-V radio
@@ -377,6 +401,10 @@ begin
    // simply fails to connect -- which is why the pin test exists rather than a
    // comment asking people to remember.
    reg.networkCredentials := False;
+   // Off unless the radio says otherwise. A radio that IS post-legacy but
+   // forgets to say so simply fails the legacy cross-checks, loudly -- the
+   // safe direction, unlike the reverse.
+   reg.postLegacy := False;
    reg.serial := serial;
    reg.hamlibOnly := False;   // RegisterHamLibOnlyRadio patches this after the call
    // The HamLib rig_model for THIS radio, used when the operator drives an
@@ -604,6 +632,38 @@ begin
       begin
       Result := RegisteredNetworkCredentialsId(id);
       end;
+end;
+
+function RegisteredPostLegacy(model: InterfacedRadioType): Boolean;
+var
+   id:  string;
+   reg: TRadioReg;
+begin
+   Result := False;
+   if gByModel.TryGetValue(model, id) and RegById(id, reg) then
+      begin
+      Result := reg.postLegacy;
+      end;
+end;
+
+procedure MarkPostLegacy(model: InterfacedRadioType);
+begin
+   { GetEnumName, not a call with `model` -- see MarkNetworkCredentials for
+     what that mistake costs. }
+   MarkPostLegacy(GetEnumName(TypeInfo(InterfacedRadioType), Ord(model)));
+end;
+
+procedure MarkPostLegacy(const id: string);
+var
+   reg: TRadioReg;
+begin
+   if not gById.TryGetValue(id, reg) then
+      begin
+      raise Exception.CreateFmt(
+         'MarkPostLegacy: no radio registered as "%s"', [id]);
+      end;
+   reg.postLegacy := True;
+   gById.AddOrSetValue(id, reg);
 end;
 
 procedure MarkNetworkCredentials(model: InterfacedRadioType);

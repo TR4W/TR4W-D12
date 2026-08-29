@@ -150,6 +150,16 @@ begin
          begin
          Continue;
          end;
+      { A radio announced after the legacy sets were frozen has no entry in
+        them, and absence is not False. Comparing it here would report the
+        factory as wrong for stating a fact the sets never had the chance to
+        hold -- and 'fixing' that by editing the sets would destroy the
+        historical record they exist to be. The factory says which radios
+        these are; see uRadioRegistry.MarkPostLegacy. }
+      if uRadioRegistry.RegisteredPostLegacy(m) then
+         begin
+         Continue;
+         end;
       r := uRadioRegistry.CreateInstance(m);
       if r = nil then
          begin

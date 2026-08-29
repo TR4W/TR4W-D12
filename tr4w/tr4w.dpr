@@ -315,6 +315,7 @@ uses
   uRadioIcom7610 in 'src\radioFactory\uRadioIcom7610.pas',
   uRadioIcom7300 in 'src\radioFactory\uRadioIcom7300.pas',
   uRadioIcom705 in 'src\radioFactory\uRadioIcom705.pas',
+  uRadioIcom7110 in 'src\radioFactory\uRadioIcom7110.pas',
   uRadioIcom7300MK2 in 'src\radioFactory\uRadioIcom7300MK2.pas',
   uRadioIcom7600 in 'src\radioFactory\uRadioIcom7600.pas',
   uRadioIcom7760 in 'src\radioFactory\uRadioIcom7760.pas',

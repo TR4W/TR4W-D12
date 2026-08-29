@@ -1192,6 +1192,7 @@ type
     IC970D,
     IC7000,
     IC7100,
+    IC7110,     // clone of the IC-705, CI-V $BA -- see uRadioIcom7110.pas
     IC7200,
     IC7300,
     IC7300MK2,  // Alphabetical placement among Icoms (right after IC7300)
