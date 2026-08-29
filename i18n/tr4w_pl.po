@@ -2588,12 +2588,12 @@ msgstr "WiadomoÜö"
 #: tfrmeditqso.btnplay.caption
 #, fuzzy
 msgid "&Play"
-msgstr "& Odtwórz"
+msgstr "&Odtwórz"
 
 #: tfrmeditqso.btnsave.caption
 #, fuzzy
 msgid "&Save"
-msgstr "& Zapisz"
+msgstr "&Zapisz"
 
 #: tfrmeditqso.caption
 #, fuzzy
@@ -2603,7 +2603,7 @@ msgstr "Edytuj QSO"
 #: tfrmeditqso.chkdeleted.caption
 #, fuzzy
 msgid "&Deleted"
-msgstr "& Usuń"
+msgstr "&Usuń"
 
 #: tfrmeditqso.chkdomesticmult.caption
 #, fuzzy
@@ -2829,12 +2829,12 @@ msgstr "Ostatni status:"
 #: tfrminiretire.btnno.caption
 #, fuzzy
 msgid "&No"
-msgstr "& Nr"
+msgstr "&Nr"
 
 #: tfrminiretire.btnyes.caption
 #, fuzzy
 msgid "&Yes"
-msgstr "& Tak"
+msgstr "&Tak"
 
 #: tfrminiretire.caption uappstrings.siniretiretitle
 #, fuzzy
@@ -6432,14 +6432,14 @@ msgstr "Poznaj"
 #, fuzzy
 msgctxt "TC_EDITOR_COPY"
 msgid "&Copy"
-msgstr "& Kopiuj"
+msgstr "&Kopiuj"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_selectall tr4w/src/lang/tr4w_consts_eng.pas:899
 #, fuzzy
 msgctxt "TC_EDITOR_SELECTALL"
 msgid "Select &all"
-msgstr "Wybierz & wszystkie"
+msgstr "Wybierz &wszystkie"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_sendlogto tr4w/src/lang/tr4w_consts_eng.pas:900
@@ -7697,7 +7697,7 @@ msgstr "Plan pasm"
 #, fuzzy
 msgctxt "tfrmeditmessage.btneditwav.caption"
 msgid "&Edit"
-msgstr "& Edycja"
+msgstr "&Edycja"
 
 #: tfrmeditmessage.caption
 #, fuzzy
@@ -8239,7 +8239,7 @@ msgstr "Edycja"
 #, fuzzy
 msgctxt "utr4wstrings.rc_edit_word"
 msgid "&Edit"
-msgstr "& Edycja"
+msgstr "&Edycja"
 
 #: utr4wstrings.rc_escape
 #, fuzzy
@@ -9374,13 +9374,13 @@ msgstr "Edytuj %s WiadomoÜö"
 #: utr4wstrings.tc_editor_copy
 #, fuzzy
 msgid "&Copy"
-msgstr "& Kopiuj"
+msgstr "&Kopiuj"
 
 #: utr4wstrings.tc_editor_edit
 #, fuzzy
 msgctxt "utr4wstrings.tc_editor_edit"
 msgid "&Edit"
-msgstr "& Edycja"
+msgstr "&Edycja"
 
 #: utr4wstrings.tc_editor_explore
 #, fuzzy
@@ -9395,7 +9395,7 @@ msgstr "Otwórz w edytorze tekstu"
 #: utr4wstrings.tc_editor_selectall
 #, fuzzy
 msgid "Select &all"
-msgstr "Wybierz & wszystkie"
+msgstr "Wybierz &wszystkie"
 
 #: utr4wstrings.tc_editor_sendlogto
 #, fuzzy

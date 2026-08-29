@@ -80,7 +80,7 @@ msgstr "Normalement, lorsque vous appuyez sur <Enter> pour enregistrer un QSO, l
 #, fuzzy
 msgctxt "TC_HELP_AUTO_QSO_NUMBER_DECREMENT"
 msgid "If you have programmed an S&P exchange that includes a QSO number, you might find yourself in the situation in which you have just logged a station who is now asking for a repeat of the exchange you sent him. If you press F2, you will send the next QSO number, which will be one more than the one you sent the first time. To fix this problem, you can set AUTO QSO NUMBER DECREMENT to TRUE; this causes TR4W to decrement the QSO number when you press F2 when both the Call Window and the Exchange Window are empty."
-msgstr "Si vous avez programmé un échange S & P qui comprend un numéro QSO, vous pourriez vous trouver dans la situation où vous venez de enregistrer une station qui demande maintenant une répétition de l'échange que vous lui avez envoyé. Si vous appuyez sur F2, vous allez envoyer le prochain numéro QSO, qui sera un de plus que celui que vous avez envoyé la première fois. Pour résoudre ce problème, vous pouvez définir AUTO QSO NUMÉRO DECREMENT à TRUE; cela provoque TR4W à diminuer le numéro QSO lorsque vous appuyez sur F2 lorsque la fenêtre d'appel et la fenêtre d'échange sont vides."
+msgstr "Si vous avez programmé un échange S &P qui comprend un numéro QSO, vous pourriez vous trouver dans la situation où vous venez de enregistrer une station qui demande maintenant une répétition de l'échange que vous lui avez envoyé. Si vous appuyez sur F2, vous allez envoyer le prochain numéro QSO, qui sera un de plus que celui que vous avez envoyé la première fois. Pour résoudre ce problème, vous pouvez définir AUTO QSO NUMÉRO DECREMENT à TRUE; cela provoque TR4W à diminuer le numéro QSO lorsque vous appuyez sur F2 lorsque la fenêtre d'appel et la fenêtre d'échange sont vides."
 
 #. Config command: AUTO RETURN TO CQ MODE   (default: TRUE)
 #, fuzzy
@@ -92,7 +92,7 @@ msgstr "Si ce paramètre est TRUE, alors appuyez sur <Enter> en mode S&P lorsqu'
 #, fuzzy
 msgctxt "TC_HELP_AUTO_S_P_ENABLE_SENSITIVITY"
 msgid "Controls how quickly you must move the VFO (in Hz/sec) in order for the program to jump automatically into S&P Mode if AUTO S&P ENABLE is TRUE."
-msgstr "Contrôle la rapidité avec laquelle vous devez déplacer le VFO (en Hz/sec) afin que le programme saute automatiquement en mode S & P si AUTO S & P ENABLE est TRUE."
+msgstr "Contrôle la rapidité avec laquelle vous devez déplacer le VFO (en Hz/sec) afin que le programme saute automatiquement en mode S &P si AUTO S &P ENABLE est TRUE."
 
 #. Config command: AUTO S&P ENABLE   (default: FALSE)
 #, fuzzy
@@ -410,7 +410,7 @@ msgstr "L'ordinateur peut envoyer le CW sur son haut-parleur pour surveiller la 
 #, fuzzy
 msgctxt "TC_HELP_DE_ENABLE"
 msgid "This determines whether DE is sent before your callsign when using the F1 key in S&P Mode. If you dont want the program to put DE in front of your call (which is the case for most operators), set this flag to FALSE."
-msgstr "Cela détermine si DE est envoyé avant votre callsign lors de l'utilisation de la touche F1 en mode S & P. Si vous ne voulez pas que le programme mette DE devant votre appel (ce qui est le cas pour la plupart des opérateurs), définissez ce drapeau à FALSE."
+msgstr "Cela détermine si DE est envoyé avant votre callsign lors de l'utilisation de la touche F1 en mode S &P. Si vous ne voulez pas que le programme mette DE devant votre appel (ce qui est le cas pour la plupart des opérateurs), définissez ce drapeau à FALSE."
 
 #. Config command: DEBUG LOG LEVEL   (default: NONE)
 #, fuzzy
@@ -1688,13 +1688,13 @@ msgstr "Valeurs : Tout caractère. Si vous souhaitez utiliser un autre caractèr
 #, fuzzy
 msgctxt "TC_HELP_SPACE_BAR_DUPE_CHECK_ENABLE"
 msgid "Normally when you press <Space> when a callsign is present in the Call Window, TR4W will perform a dupe check on the displayed callsign. If you press <Space> without a callsign in the window, you will be put into S&P Mode and your callsign will be sent. If you set SPACE BAR DUPE CHECK ENABLE to FALSE, you will always go into S&P Mode and send your call, even if a call is present in the Call Window."
-msgstr "Normalement, lorsque vous appuyez sur <Space> lorsqu'un callsign est présent dans la fenêtre d'appel, TR4W effectue une vérification de dupe sur le callsign affiché. Si vous appuyez sur <Space> sans callsign dans la fenêtre, vous serez mis en mode S & P et votre callsign sera envoyé. Si vous définissez ESPACE BAR DUPE CHECK ENABLE à FALSE, vous allez toujours en mode S&P et envoyez votre appel, même si un appel est présent dans la fenêtre d'appel."
+msgstr "Normalement, lorsque vous appuyez sur <Space> lorsqu'un callsign est présent dans la fenêtre d'appel, TR4W effectue une vérification de dupe sur le callsign affiché. Si vous appuyez sur <Space> sans callsign dans la fenêtre, vous serez mis en mode S &P et votre callsign sera envoyé. Si vous définissez ESPACE BAR DUPE CHECK ENABLE à FALSE, vous allez toujours en mode S&P et envoyez votre appel, même si un appel est présent dans la fenêtre d'appel."
 
 #. Config command: SPRINT QSY RULE   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_SPRINT_QSY_RULE"
 msgid "If this parameter is TRUE, TR4W will automatically enter CQ Mode after completing a QSO in S&P Mode. This parameter is automatically set to TRUE when the Sprint contest is selected. See subsection 6.18.1 for more information on operating the Sprint. You should not set this variable to TRUE unless you are operating the Sprint. For similar (but not quite identical) behaviour in other contests, see the AUTO S&P ENABLE command."
-msgstr "Si ce paramètre est TRUE, TR4W entrera automatiquement en mode CQ après avoir rempli un QSO en mode S & P. Ce paramètre est automatiquement défini à TRUE lorsque le concours Sprint est sélectionné. Voir le paragraphe 6.18.1 pour de plus amples renseignements sur le fonctionnement du Sprint. Vous ne devriez pas définir cette variable à TRUE sauf si vous utilisez le Sprint. Pour des comportements similaires (mais pas tout à fait identiques) dans d'autres concours, voir la commande AUTO S&P ENABLE."
+msgstr "Si ce paramètre est TRUE, TR4W entrera automatiquement en mode CQ après avoir rempli un QSO en mode S &P. Ce paramètre est automatiquement défini à TRUE lorsque le concours Sprint est sélectionné. Voir le paragraphe 6.18.1 pour de plus amples renseignements sur le fonctionnement du Sprint. Vous ne devriez pas définir cette variable à TRUE sauf si vous utilisez le Sprint. Pour des comportements similaires (mais pas tout à fait identiques) dans d'autres concours, voir la commande AUTO S&P ENABLE."
 
 #. Config command: START SENDING NOW KEY   (default: «'» (the open-single-quote key, not the apostrophe))
 #, fuzzy
@@ -2174,7 +2174,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_HELP_EXCHANGE_WINDOW_S_P_BACKGROUND"
 msgid "The background color of the Exchange window when in S&P mode."
-msgstr "La couleur de fond de la fenêtre d'échange en mode S & P."
+msgstr "La couleur de fond de la fenêtre d'échange en mode S &P."
 
 #. Config command: HAMLIB ASYNC ONLY   (default: FALSE)
 #, fuzzy
@@ -2468,19 +2468,19 @@ msgstr "Si vous choisissez d'utiliser Hamlib plutôt que le support radio natif 
 #, fuzzy
 msgctxt "TC_HELP_REPEAT_S_P_CW_EXCHANGE"
 msgid "CW Exchange sent ween repeating the exchange in S&P mode."
-msgstr "CW Exchange nous a envoyé répéter l'échange en mode S & P."
+msgstr "CW Exchange nous a envoyé répéter l'échange en mode S &P."
 
 #. Config command: REPEAT S&P EXCHANGE
 #, fuzzy
 msgctxt "TC_HELP_REPEAT_S_P_EXCHANGE"
 msgid "Phone exchange message sent when repeating your exchange in S&P mode. Programmed via Alt+P."
-msgstr "Message d'échange téléphonique envoyé lors de la répétition de votre échange en mode S & P. Programmation via Alt+P."
+msgstr "Message d'échange téléphonique envoyé lors de la répétition de votre échange en mode S &P. Programmation via Alt+P."
 
 #. Config command: REPEAT S&P SSB EXCHANGE
 #, fuzzy
 msgctxt "TC_HELP_REPEAT_S_P_SSB_EXCHANGE"
 msgid "SSB exchange message sent when repeating your exchange in S&P mode. Programmed via Alt+P. ### S"
-msgstr "Message d'échange SSB envoyé lors de la répétition de votre échange en mode S & P. Programmation via Alt+P. ### S"
+msgstr "Message d'échange SSB envoyé lors de la répétition de votre échange en mode S &P. Programmation via Alt+P. ### S"
 
 #. Config command: RFOBL MODE   (default: TO BE COMPLETED)
 #, fuzzy
@@ -2498,7 +2498,7 @@ msgstr "Le message d'échange CW envoyé en mode Recherche et Ponce. Ceci est s�
 #, fuzzy
 msgctxt "TC_HELP_S_P_EXCHANGE"
 msgid "The phone exchange message sent in S&P mode. Programmed via Alt+P."
-msgstr "Le message d'échange téléphonique envoyé en mode S & P. Programmation via Alt+P."
+msgstr "Le message d'échange téléphonique envoyé en mode S &P. Programmation via Alt+P."
 
 #. Config command: S&P SSB EXCHANGE
 #, fuzzy

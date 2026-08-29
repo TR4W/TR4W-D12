@@ -547,7 +547,7 @@ msgstr "Directorul \"%s\" exista deja.\rSuprascriem ?"
 #: tr4w/src/lang/tr4w_consts_eng.pas:103
 msgctxt "TC_IAMIN"
 msgid "&I am in %s"
-msgstr "& sunt in %s"
+msgstr "&sunt in %s"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_croat
@@ -10326,7 +10326,7 @@ msgstr ""
 #: utr4wstrings.tc_iamin
 #, fuzzy
 msgid "&I am in %s"
-msgstr "& sunt in %s"
+msgstr "&sunt in %s"
 
 #: utr4wstrings.tc_ididfinecontestnamelogcfgdatfile
 #, fuzzy

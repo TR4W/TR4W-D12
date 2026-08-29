@@ -2184,7 +2184,7 @@ msgstr "&Winkeyer abilitare"
 #, fuzzy
 msgctxt "TC_AUTOSPACE"
 msgid "&Autospace"
-msgstr "& Autospace"
+msgstr "&Autospace"
 
 #. Section: UWINKEY
 #: utr4wstrings:tc_ctspacing
@@ -2224,7 +2224,7 @@ msgstr "POT di velocità &Ignore"
 #, fuzzy
 msgctxt "TC_PADDLEONLYSIDETONE"
 msgid "Paddle &only sidetone"
-msgstr "Paddle & solo lato tono"
+msgstr "Paddle &solo lato tono"
 
 #. Section: UWINKEY
 #: utr4wstrings:tc_winkeyerport
@@ -3189,7 +3189,7 @@ msgstr "Messaggio"
 #: tfrmeditqso.btnplay.caption
 #, fuzzy
 msgid "&Play"
-msgstr "& Play"
+msgstr "&Play"
 
 #: tfrmeditqso.btnsave.caption
 #, fuzzy
@@ -3445,7 +3445,7 @@ msgstr "Ultimo stato:"
 #: tfrminiretire.btnno.caption
 #, fuzzy
 msgid "&No"
-msgstr "& No"
+msgstr "&No"
 
 #: tfrminiretire.btnyes.caption
 #, fuzzy
@@ -5975,7 +5975,7 @@ msgstr "Reset Radio Ports"
 #, fuzzy
 msgctxt "RC_TIMESYN"
 msgid "Synchronize time on &all computers"
-msgstr "Sincronizzare il tempo su & tutti i computer"
+msgstr "Sincronizzare il tempo su &tutti i computer"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_mp3_recenable
@@ -7353,7 +7353,7 @@ msgstr "Non c'è ancora un file di registro a %s."
 #, fuzzy
 msgctxt "TC_EDITOR_OPENINEDITOR"
 msgid "Open in text &editor"
-msgstr "Aperto nel testo & editor"
+msgstr "Aperto nel testo &editor"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_explore
@@ -9642,7 +9642,7 @@ msgstr "Cluster DX"
 #: utr4wstrings.rc_timesyn
 #, fuzzy
 msgid "Synchronize time on &all computers"
-msgstr "Sincronizzare il tempo su & tutti i computer"
+msgstr "Sincronizzare il tempo su &tutti i computer"
 
 #: utr4wstrings.rc_toggleinsert
 #, fuzzy
@@ -9799,7 +9799,7 @@ msgstr "Lo scambio della stazione DX deve essere \"DX\"."
 #: utr4wstrings.tc_autospace
 #, fuzzy
 msgid "&Autospace"
-msgstr "& Autospace"
+msgstr "&Autospace"
 
 #: utr4wstrings.tc_autospotenabledtestmodeonly
 #, fuzzy
@@ -10333,7 +10333,7 @@ msgstr "Esplorare"
 #: utr4wstrings.tc_editor_openineditor
 #, fuzzy
 msgid "Open in text &editor"
-msgstr "Aperto nel testo & editor"
+msgstr "Aperto nel testo &editor"
 
 #: utr4wstrings.tc_editor_selectall
 #, fuzzy
@@ -11273,7 +11273,7 @@ msgstr "Paddle"
 #: utr4wstrings.tc_paddleonlysidetone
 #, fuzzy
 msgid "Paddle &only sidetone"
-msgstr "Paddle & solo lato tono"
+msgstr "Paddle &solo lato tono"
 
 #: utr4wstrings.tc_paddleswap
 #, fuzzy

@@ -3174,7 +3174,7 @@ msgstr "Feuille de dupe"
 #, fuzzy
 msgctxt "RC_EDIT_WORD"
 msgid "&Edit"
-msgstr "& Modifier"
+msgstr "&Modifier"
 
 #. Section: UEDITMESSAGE
 #: tfrmeditmessage.caption
@@ -3206,7 +3206,7 @@ msgstr "Message"
 #: tfrmeditqso.btnplay.caption
 #, fuzzy
 msgid "&Play"
-msgstr "& Jouer"
+msgstr "&Jouer"
 
 #: tfrmeditqso.btnsave.caption
 #, fuzzy
@@ -7415,7 +7415,7 @@ msgstr "&Copier"
 #, fuzzy
 msgctxt "TC_EDITOR_SELECTALL"
 msgid "Select &all"
-msgstr "Sélectionner & tout"
+msgstr "Sélectionner &tout"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_sendlogto
@@ -7547,7 +7547,7 @@ msgstr "Annuler"
 #: tfrmeditmessage.btneditwav.caption
 #, fuzzy
 msgid "&Edit"
-msgstr "& Modifier"
+msgstr "&Modifier"
 
 #: tfrmeditmessage.btnlist.caption
 #, fuzzy
@@ -8678,7 +8678,7 @@ msgstr "Plan de bande"
 #, fuzzy
 msgctxt "tfrmeditmessage.btneditwav.caption"
 msgid "&Edit"
-msgstr "& Modifier"
+msgstr "&Modifier"
 
 #: tfrmeditmessage.caption
 #, fuzzy
@@ -9220,7 +9220,7 @@ msgstr "SO1R-Edit ou SO2R-SWAP"
 #, fuzzy
 msgctxt "utr4wstrings.rc_edit_word"
 msgid "&Edit"
-msgstr "& Modifier"
+msgstr "&Modifier"
 
 #: utr4wstrings.rc_escape
 #, fuzzy
@@ -10364,7 +10364,7 @@ msgstr "&Copier"
 #, fuzzy
 msgctxt "utr4wstrings.tc_editor_edit"
 msgid "&Edit"
-msgstr "& Modifier"
+msgstr "&Modifier"
 
 #: utr4wstrings.tc_editor_explore
 #, fuzzy
@@ -10379,7 +10379,7 @@ msgstr "Ouvrir dans le &éditeur de texte"
 #: utr4wstrings.tc_editor_selectall
 #, fuzzy
 msgid "Select &all"
-msgstr "Sélectionner & tout"
+msgstr "Sélectionner &tout"
 
 #: utr4wstrings.tc_editor_sendlogto
 #, fuzzy

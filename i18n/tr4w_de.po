@@ -6967,7 +6967,7 @@ msgstr "Es gibt noch keine Protokolldatei bei %s."
 #, fuzzy
 msgctxt "TC_EDITOR_OPENINEDITOR"
 msgid "Open in text &editor"
-msgstr "Offen im Text & Editor"
+msgstr "Offen im Text &Editor"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_explore
@@ -6991,7 +6991,7 @@ msgstr "&Kopie"
 #, fuzzy
 msgctxt "TC_EDITOR_SELECTALL"
 msgid "Select &all"
-msgstr "Select & All"
+msgstr "Select &All"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_sendlogto
@@ -9416,7 +9416,7 @@ msgstr "DX Stations Angabe muss \"DX\" sein."
 #: utr4wstrings.tc_autospace
 #, fuzzy
 msgid "&Autospace"
-msgstr "& Autospace"
+msgstr "&Autospace"
 
 #: utr4wstrings.tc_autospotenabledtestmodeonly
 #, fuzzy
@@ -9950,12 +9950,12 @@ msgstr "Entdecken"
 #: utr4wstrings.tc_editor_openineditor
 #, fuzzy
 msgid "Open in text &editor"
-msgstr "Offen im Text & Editor"
+msgstr "Offen im Text &Editor"
 
 #: utr4wstrings.tc_editor_selectall
 #, fuzzy
 msgid "Select &all"
-msgstr "Select & All"
+msgstr "Select &All"
 
 #: utr4wstrings.tc_editor_sendlogto
 #, fuzzy
@@ -10895,7 +10895,7 @@ msgstr "Paddle"
 #: utr4wstrings.tc_paddleonlysidetone
 #, fuzzy
 msgid "Paddle &only sidetone"
-msgstr "Paddle & Only Sidetone"
+msgstr "Paddle &Only Sidetone"
 
 #: utr4wstrings.tc_paddleswap
 #, fuzzy
@@ -11272,7 +11272,7 @@ msgstr "Passwörter anzeigen"
 #: utr4wstrings.tc_sidetone
 #, fuzzy
 msgid "&Sidetone"
-msgstr "& Sideton"
+msgstr "&Sideton"
 
 #: utr4wstrings.tc_sidetonefreq
 #, fuzzy

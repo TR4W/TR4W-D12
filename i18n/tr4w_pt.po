@@ -2193,7 +2193,7 @@ msgstr "%s já existe.\r\rPode apagar?"
 #, fuzzy
 msgctxt "TC_WINKEYERENABLE"
 msgid "&Winkeyer enable"
-msgstr "Activar & Winkeyer"
+msgstr "Activar &Winkeyer"
 
 #. Section: UWINKEY
 #: utr4wstrings:tc_autospace
@@ -2201,7 +2201,7 @@ msgstr "Activar & Winkeyer"
 #, fuzzy
 msgctxt "TC_AUTOSPACE"
 msgid "&Autospace"
-msgstr "& Espaço Automático"
+msgstr "&Espaço Automático"
 
 #. Section: UWINKEY
 #: utr4wstrings:tc_ctspacing
@@ -2241,7 +2241,7 @@ msgstr "&Ignorar pote de velocidade"
 #, fuzzy
 msgctxt "TC_PADDLEONLYSIDETONE"
 msgid "Paddle &only sidetone"
-msgstr "Reme & apenas sideton"
+msgstr "Reme &apenas sideton"
 
 #. Section: UWINKEY
 #: utr4wstrings:tc_winkeyerport

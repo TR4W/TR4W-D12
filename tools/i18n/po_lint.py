@@ -143,10 +143,16 @@ def same_text(a, b):
    return norm(a) == norm(b) and norm(a) != ""
 
 
+# A lone '&' (not the escaped '&&') followed by whitespace and then a word
+# character: an accelerator with a space knocked into the middle of it.
+SPACED_AMP = re.compile(r"(?<!&)&(?!&)[ 	]+(?=\w)")
+
+
 def check(path, fix):
    entries = pofile.read_po(path)
    name = os.path.basename(path)
    ctrl_bad, fmt_bad, stranded = [], [], []
+   spaced = []
    accel_bad, by_form, english = [], {}, []
    lang = name.rsplit('_', 1)[-1].replace('.po', '')
    is_source = lang == 'en'
@@ -192,6 +198,19 @@ def check(path, fix):
       # one exists where one is expected, that it points at a real letter of the
       # translated word, and that it does not collide on the form.
       sa, ta = accel(e.source), accel(e.target)
+
+      # '& Zapisz' IS NOT AN ACCELERATOR. To Windows a lone & followed by a
+      # space is a literal ampersand, so the control gets no mnemonic AND
+      # paints a stray '&' in its caption. The machine seed introduces these
+      # by rendering '&Save' as '& Zapisz' -- 81 of them across 16 catalogues
+      # when this was written.
+      #
+      # Safe to repair from here, unlike every other accelerator defect: the
+      # space is simply deleted, the letter the translator chose is kept, and
+      # no knowledge of the language is involved. Which letter SHOULD carry the
+      # mnemonic remains theirs to decide.
+      if (sa is not None) and SPACED_AMP.search(e.target):
+         spaced.append(e)
       if (sa is not None) and (ta is None):
          accel_bad.append((e, "the & was dropped, so the control has no accelerator"))
       elif (sa is None) and (ta is not None):
@@ -251,7 +270,12 @@ def check(path, fix):
             % (name, len(stranded), "y" if len(stranded) == 1 else "ies",
                " -- re-flagged" if fix else " (run with --fix)"))
 
-   if fix and (stranded or english):
+   if spaced:
+      print("  %s: %d accelerator%s written as '& x' rather than '&x'%s"
+            % (name, len(spaced), "" if len(spaced) == 1 else "s",
+               " -- repaired" if fix else " (run with --fix)"))
+
+   if fix and (stranded or english or spaced):
       # ONLY EVER ADDS A FLAG. The text is left exactly as it is -- a fuzzy
       # entry still carries its translation, Poedit shows it as "Needs work",
       # and po2pas refuses it, so nothing wrong can reach a build while a person
@@ -259,10 +283,13 @@ def check(path, fix):
       # cannot distinguish: a word that is genuinely the same in both languages.
       for e in english:
          e.fuzzy = True
+      for e in spaced:
+         e.target = SPACED_AMP.sub("&", e.target)
       lang = name.rsplit("_", 1)[-1].replace(".po", "")
       pofile.write_po(path, entries, lang)
 
-   ok = not ctrl_bad and not fmt_bad and not accel_bad and not clashes and not english
+   ok = (not ctrl_bad and not fmt_bad and not accel_bad and not clashes
+         and not english and not spaced)
    if ok and not stranded:
       live = [e for e in entries if not e.obsolete and e.source.strip()]
       print("  %-16s %4d entries, no control-character or format defects"

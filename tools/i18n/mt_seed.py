@@ -139,8 +139,35 @@ def mirror_edge_space(src, text):
    return lead + text.strip() + trail
 
 
-def check_target(url, target, source="en"):
-   """Fail early and legibly if the engine has no model for this pair."""
+# A locale the engine spells differently from us. Chinese is the case that
+# matters: we key on region (zh_CN), the engine keys on SCRIPT (zh-Hans /
+# zh-Hant), and neither is derivable from the other by string surgery.
+ENGINE_ALIASES = {
+   "zh_CN": ("zh-Hans", "zh"),
+   "zh_TW": ("zh-Hant", "zh"),
+   "zh_HK": ("zh-Hant", "zh"),
+}
+
+
+def engine_target(url, code, source="en"):
+   """Our catalogue code -> the code THIS engine actually offers.
+
+   Asking beats guessing. Splitting on '_' and keeping the head was the old
+   rule; it turns zh_CN into 'zh', which LibreTranslate does not have at all,
+   and pt_BR into 'pt', silently seeding Brazilian Portuguese from the European
+   model. Both are engine-specific facts, so read them off the engine.
+   """
+   offered = set(_targets(url, source))
+   for cand in (ENGINE_ALIASES.get(code, ()) +
+                (code.replace("_", "-"), code.split("_")[0])):
+      if cand in offered:
+         return cand
+   # Nothing matched: hand back the old guess so check_target can produce its
+   # error, which lists what the engine does have.
+   return code.split("_")[0]
+
+
+def _targets(url, source="en"):
    try:
       with urllib.request.urlopen(url.rstrip("/") + "/languages",
                                   timeout=30) as fh:
@@ -150,6 +177,12 @@ def check_target(url, target, source="en"):
    src = next((x for x in langs if x.get("code") == source), None)
    if src is None:
       raise SystemExit("engine does not offer %r as a source" % source)
+   return src.get("targets", [])
+
+
+def check_target(url, target, source="en"):
+   """Fail early and legibly if the engine has no model for this pair."""
+   src = {"targets": _targets(url, source)}
    if target not in src.get("targets", []):
       raise SystemExit(
          "engine has no %s->%s model. Available: %s\n"
@@ -179,6 +212,11 @@ def translate(url, texts, target, source="en", batch=DEFAULT_BATCH):
    return out
 
 
+# The fingerprint salvage_lossy.py leaves on a recovered entry. Matched loosely
+# on purpose: the note's wording may be edited, its subject will not.
+SALVAGE_MARK = "RECOVERED from a bit-corrupted lang file"
+
+
 def seed(po_path, url, target, lang, dry_run, batch=DEFAULT_BATCH,
          reseed=False, verify=DEFAULT_VERIFY):
    entries = pofile.read_po(po_path)
@@ -188,10 +226,21 @@ def seed(po_path, url, target, lang, dry_run, batch=DEFAULT_BATCH,
       # entries are cleared -- a cleared-fuzzy entry carries a human's review
       # decision and is never touched.
       wiped = 0
+      kept_salvage = 0
       for e in entries:
          if e.fuzzy and e.target.strip() and not e.obsolete:
+            if any(SALVAGE_MARK in n for n in e.notes):
+               # NOT machine output. salvage_lossy.py recovered this from a
+               # damaged lang file -- it is a native speaker's words, wearing
+               # the same fuzzy flag because the recovery is unverified. An
+               # engine cannot regenerate it, so clearing it destroys it.
+               kept_salvage += 1
+               continue
             e.target = ""
             wiped += 1
+      if kept_salvage:
+         print("--reseed: kept %d recovered entr%s -- not machine output"
+               % (kept_salvage, "y" if kept_salvage == 1 else "ies"))
       print("--reseed: cleared %d unreviewed entr%s"
             % (wiped, "y" if wiped == 1 else "ies"))
 
@@ -506,7 +555,10 @@ def main(argv=None):
    po_path = os.path.join(paths["i18n"], "%s_%s.po" % (prefix, code))
    if not os.path.exists(po_path):
       raise SystemExit("no %s" % po_path)
-   return seed(po_path, args.url, code.split("_")[0], lang,
+   # A dry run returns before it ever contacts the engine, so it must not
+   # require one to be up just to resolve a code.
+   target = code if args.dry_run else engine_target(args.url, code)
+   return seed(po_path, args.url, target, lang,
                args.dry_run, args.batch, args.reseed, args.verify)
 
 

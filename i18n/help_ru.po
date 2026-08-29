@@ -29,7 +29,7 @@ msgstr "Функция не реализована."
 #, fuzzy
 msgctxt "TC_HELP_ALT_D_CQ_ENABLE"
 msgid "(SO2R) Setting this to true will enable a CQ to be automatically sent on the run rig upon completion of exchange on S&P rig."
-msgstr "(SO2R) Установка этого на истинность позволит автоматически отправлять CQ на ходовой установке после завершения обмена на S & P буровой установке."
+msgstr "(SO2R) Установка этого на истинность позволит автоматически отправлять CQ на ходовой установке после завершения обмена на S &P буровой установке."
 
 #. Config command: ALWAYS CALL BLIND CQ   (default: FALSE)
 msgctxt "TC_HELP_ALWAYS_CALL_BLIND_CQ"

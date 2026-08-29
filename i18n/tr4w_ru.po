@@ -2860,7 +2860,7 @@ msgstr "Сообщение"
 #: tfrmeditqso.btnplay.caption
 #, fuzzy
 msgid "&Play"
-msgstr "& Play"
+msgstr "&Play"
 
 #: tfrmeditqso.btnsave.caption
 #, fuzzy
@@ -6890,7 +6890,7 @@ msgstr "Исследовать"
 #, fuzzy
 msgctxt "TC_EDITOR_COPY"
 msgid "&Copy"
-msgstr "& Copy"
+msgstr "&Copy"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_selectall
@@ -9836,7 +9836,7 @@ msgstr "Редактирование %s Сообщение"
 #: utr4wstrings.tc_editor_copy
 #, fuzzy
 msgid "&Copy"
-msgstr "& Copy"
+msgstr "&Copy"
 
 #: utr4wstrings.tc_editor_edit
 #, fuzzy

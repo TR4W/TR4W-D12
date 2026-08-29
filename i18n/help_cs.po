@@ -29,7 +29,7 @@ msgstr "hodnota: TRUE nebo FALSE. Tento příkaz kontroluje, zda je zásobník A
 #, fuzzy
 msgctxt "TC_HELP_ALT_D_CQ_ENABLE"
 msgid "(SO2R) Setting this to true will enable a CQ to be automatically sent on the run rig upon completion of exchange on S&P rig."
-msgstr "(SO2R) Nastavení na true umožní automaticky odeslat CQ na běžící plošině po dokončení výměny na S & P plošině."
+msgstr "(SO2R) Nastavení na true umožní automaticky odeslat CQ na běžící plošině po dokončení výměny na S &P plošině."
 
 #. Config command: ALWAYS CALL BLIND CQ   (default: FALSE)
 msgctxt "TC_HELP_ALWAYS_CALL_BLIND_CQ"
@@ -1881,7 +1881,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_HELP_EXCHANGE_WINDOW_S_P_BACKGROUND"
 msgid "The background color of the Exchange window when in S&P mode."
-msgstr "Barva pozadí okna Exchange v režimu S & P."
+msgstr "Barva pozadí okna Exchange v režimu S &P."
 
 #. Config command: HAMLIB ASYNC ONLY   (default: FALSE)
 #, fuzzy
@@ -2175,19 +2175,19 @@ msgstr "Pokud se rozhodnete použít Hamlib spíše než místní radiovou podpo
 #, fuzzy
 msgctxt "TC_HELP_REPEAT_S_P_CW_EXCHANGE"
 msgid "CW Exchange sent ween repeating the exchange in S&P mode."
-msgstr "CW Exchange odeslala opakování výměny v režimu S & P."
+msgstr "CW Exchange odeslala opakování výměny v režimu S &P."
 
 #. Config command: REPEAT S&P EXCHANGE
 #, fuzzy
 msgctxt "TC_HELP_REPEAT_S_P_EXCHANGE"
 msgid "Phone exchange message sent when repeating your exchange in S&P mode. Programmed via Alt+P."
-msgstr "Zpráva o výměně telefonů odeslaná při opakování výměny v režimu S & P. Naprogramováno přes Alt + P."
+msgstr "Zpráva o výměně telefonů odeslaná při opakování výměny v režimu S &P. Naprogramováno přes Alt + P."
 
 #. Config command: REPEAT S&P SSB EXCHANGE
 #, fuzzy
 msgctxt "TC_HELP_REPEAT_S_P_SSB_EXCHANGE"
 msgid "SSB exchange message sent when repeating your exchange in S&P mode. Programmed via Alt+P. ### S"
-msgstr "SSB směnná zpráva odeslaná při opakování výměny v režimu S & P. Naprogramováno přes Alt + P. # # # S"
+msgstr "SSB směnná zpráva odeslaná při opakování výměny v režimu S &P. Naprogramováno přes Alt + P. # # # S"
 
 #. Config command: RFOBL MODE   (default: TO BE COMPLETED)
 #, fuzzy
@@ -2205,13 +2205,13 @@ msgstr "Zpráva o výměně CW odeslaná v režimu Hledání a Pounce. To je odd
 #, fuzzy
 msgctxt "TC_HELP_S_P_EXCHANGE"
 msgid "The phone exchange message sent in S&P mode. Programmed via Alt+P."
-msgstr "Zpráva o výměně hovorů odeslaná v režimu S & P. Naprogramováno přes Alt + P."
+msgstr "Zpráva o výměně hovorů odeslaná v režimu S &P. Naprogramováno přes Alt + P."
 
 #. Config command: S&P SSB EXCHANGE
 #, fuzzy
 msgctxt "TC_HELP_S_P_SSB_EXCHANGE"
 msgid "The SSB voice exchange message sent in S&P mode. Programmed via Alt+P. ### T"
-msgstr "Zpráva SSB hlasové výměny odeslaná v režimu S & P. Naprogramováno přes Alt + P. # # # T"
+msgstr "Zpráva SSB hlasové výměny odeslaná v režimu S &P. Naprogramováno přes Alt + P. # # # T"
 
 #. Config command: SCORE POSTING ID   (default: 0)
 #, fuzzy

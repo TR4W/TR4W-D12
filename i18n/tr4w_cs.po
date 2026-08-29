@@ -2857,7 +2857,7 @@ msgstr "MSG"
 #: tfrmeditqso.btnplay.caption
 #, fuzzy
 msgid "&Play"
-msgstr "& Přehrát"
+msgstr "&Přehrát"
 
 #: tfrmeditqso.btnsave.caption
 #, fuzzy
@@ -6911,7 +6911,7 @@ msgstr "Prozkoumejte"
 #, fuzzy
 msgctxt "TC_EDITOR_COPY"
 msgid "&Copy"
-msgstr "& Kopírovat"
+msgstr "&Kopírovat"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_selectall
@@ -9862,7 +9862,7 @@ msgstr "Edituj %s zprávu"
 #: utr4wstrings.tc_editor_copy
 #, fuzzy
 msgid "&Copy"
-msgstr "& Kopírovat"
+msgstr "&Kopírovat"
 
 #: utr4wstrings.tc_editor_edit
 #, fuzzy

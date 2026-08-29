@@ -2241,7 +2241,7 @@ msgstr "&Ignore 속도 냄비"
 #, fuzzy
 msgctxt "TC_PADDLEONLYSIDETONE"
 msgid "Paddle &only sidetone"
-msgstr "패들 & 유일한 측돌"
+msgstr "패들 &유일한 측돌"
 
 #. Section: UWINKEY
 #: utr4wstrings:tc_winkeyerport

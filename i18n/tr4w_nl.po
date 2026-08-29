@@ -2217,7 +2217,7 @@ msgstr "C&T-afstand"
 #, fuzzy
 msgctxt "TC_SIDETONE"
 msgid "&Sidetone"
-msgstr "& Sidetone"
+msgstr "&Sidetone"
 
 #. Section: UWINKEY
 #: utr4wstrings:tc_paddleswap
@@ -2233,7 +2233,7 @@ msgstr "Paddle swa&p"
 #, fuzzy
 msgctxt "TC_IGNORESPEEDPOT"
 msgid "&Ignore speed pot"
-msgstr "Snelheidspot & negeren"
+msgstr "Snelheidspot &negeren"
 
 #. Section: UWINKEY
 #: utr4wstrings:tc_paddleonlysidetone
@@ -2241,7 +2241,7 @@ msgstr "Snelheidspot & negeren"
 #, fuzzy
 msgctxt "TC_PADDLEONLYSIDETONE"
 msgid "Paddle &only sidetone"
-msgstr "Paddle & only sidetone"
+msgstr "Paddle &only sidetone"
 
 #. Section: UWINKEY
 #: utr4wstrings:tc_winkeyerport

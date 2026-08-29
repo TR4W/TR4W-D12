@@ -9763,7 +9763,7 @@ msgstr "Encontré un nombre de concurso que no entiendo en su archivo LOGCFG.DAT
 #: utr4wstrings.tc_ignorespeedpot
 #, fuzzy
 msgid "&Ignore speed pot"
-msgstr "& Ignorar la velocidad de la olla"
+msgstr "&Ignorar la velocidad de la olla"
 
 #: utr4wstrings.tc_improperarrlfielddayclass
 #, fuzzy
@@ -10956,7 +10956,7 @@ msgstr "Ponderación"
 #: utr4wstrings.tc_winkeyerenable
 #, fuzzy
 msgid "&Winkeyer enable"
-msgstr "& Winkeyer habilita"
+msgstr "&Winkeyer habilita"
 
 #: utr4wstrings.tc_winkeyerport
 #, fuzzy

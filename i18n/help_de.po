@@ -29,7 +29,7 @@ msgstr "Dieses Kommando prueft, ob der ALT-D Puffer aktiv ist. Ist diese FLAG ak
 #, fuzzy
 msgctxt "TC_HELP_ALT_D_CQ_ENABLE"
 msgid "(SO2R) Setting this to true will enable a CQ to be automatically sent on the run rig upon completion of exchange on S&P rig."
-msgstr "(SO2R) Wenn Sie dies auf true setzen, kann ein CQ nach Abschluss des Austauschs auf dem S & P-Rig automatisch auf dem Run-Rig gesendet werden."
+msgstr "(SO2R) Wenn Sie dies auf true setzen, kann ein CQ nach Abschluss des Austauschs auf dem S &P-Rig automatisch auf dem Run-Rig gesendet werden."
 
 #. Config command: ALWAYS CALL BLIND CQ   (default: FALSE)
 msgctxt "TC_HELP_ALWAYS_CALL_BLIND_CQ"
@@ -1912,7 +1912,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_HELP_EXCHANGE_WINDOW_S_P_BACKGROUND"
 msgid "The background color of the Exchange window when in S&P mode."
-msgstr "Die Hintergrundfarbe des Exchange-Fensters im S & P-Modus."
+msgstr "Die Hintergrundfarbe des Exchange-Fensters im S &P-Modus."
 
 #. Config command: HAMLIB ASYNC ONLY   (default: FALSE)
 #, fuzzy
@@ -2206,19 +2206,19 @@ msgstr "Wenn Sie Hamlib anstelle der nativen Funkunterstützung von TR4W verwend
 #, fuzzy
 msgctxt "TC_HELP_REPEAT_S_P_CW_EXCHANGE"
 msgid "CW Exchange sent ween repeating the exchange in S&P mode."
-msgstr "CW Exchange schickte Ween Wiederholung des Austauschs im S & P-Modus."
+msgstr "CW Exchange schickte Ween Wiederholung des Austauschs im S &P-Modus."
 
 #. Config command: REPEAT S&P EXCHANGE
 #, fuzzy
 msgctxt "TC_HELP_REPEAT_S_P_EXCHANGE"
 msgid "Phone exchange message sent when repeating your exchange in S&P mode. Programmed via Alt+P."
-msgstr "Telefonaustauschnachricht, die gesendet wird, wenn sie ihren austausch im s & p-modus wiederholen. Programmiert über Alt+P."
+msgstr "Telefonaustauschnachricht, die gesendet wird, wenn sie ihren austausch im s &p-modus wiederholen. Programmiert über Alt+P."
 
 #. Config command: REPEAT S&P SSB EXCHANGE
 #, fuzzy
 msgctxt "TC_HELP_REPEAT_S_P_SSB_EXCHANGE"
 msgid "SSB exchange message sent when repeating your exchange in S&P mode. Programmed via Alt+P. ### S"
-msgstr "SSB-Austauschnachricht gesendet, wenn Sie Ihren Austausch im S & P-Modus wiederholen. Programmiert über Alt+P. ### S"
+msgstr "SSB-Austauschnachricht gesendet, wenn Sie Ihren Austausch im S &P-Modus wiederholen. Programmiert über Alt+P. ### S"
 
 #. Config command: RFOBL MODE   (default: TO BE COMPLETED)
 #, fuzzy
@@ -2236,13 +2236,13 @@ msgstr "Die CW-Austauschnachricht wird im Such- und Pounce-Modus gesendet. Dies 
 #, fuzzy
 msgctxt "TC_HELP_S_P_EXCHANGE"
 msgid "The phone exchange message sent in S&P mode. Programmed via Alt+P."
-msgstr "Die Telefonaustauschnachricht, die im S & P-Modus gesendet wird. Programmiert über Alt+P."
+msgstr "Die Telefonaustauschnachricht, die im S &P-Modus gesendet wird. Programmiert über Alt+P."
 
 #. Config command: S&P SSB EXCHANGE
 #, fuzzy
 msgctxt "TC_HELP_S_P_SSB_EXCHANGE"
 msgid "The SSB voice exchange message sent in S&P mode. Programmed via Alt+P. ### T"
-msgstr "Die SSB-Sprachaustauschnachricht wird im S & P-Modus gesendet. Programmiert über Alt+P. ### T"
+msgstr "Die SSB-Sprachaustauschnachricht wird im S &P-Modus gesendet. Programmiert über Alt+P. ### T"
 
 #. Config command: SCORE POSTING ID   (default: 0)
 #, fuzzy
