@@ -210,30 +210,30 @@ type
 
 function SetupDiGetClassDevsW(ClassGuid: PGUID; Enumerator: PWideChar;
    hwndParent: HWND; Flags: DWORD): HDEVINFO; stdcall;
-   external SetupApiDll name 'SetupDiGetClassDevsW'{$IFNDEF FPC} delayed{$ENDIF};
+   external SetupApiDll name 'SetupDiGetClassDevsW';
 
 function SetupDiEnumDeviceInfo(DeviceInfoSet: HDEVINFO; MemberIndex: DWORD;
    var DeviceInfoData: SP_DEVINFO_DATA): BOOL; stdcall;
-   external SetupApiDll name 'SetupDiEnumDeviceInfo'{$IFNDEF FPC} delayed{$ENDIF};
+   external SetupApiDll name 'SetupDiEnumDeviceInfo';
 
 function SetupDiDestroyDeviceInfoList(DeviceInfoSet: HDEVINFO): BOOL; stdcall;
-   external SetupApiDll name 'SetupDiDestroyDeviceInfoList'{$IFNDEF FPC} delayed{$ENDIF};
+   external SetupApiDll name 'SetupDiDestroyDeviceInfoList';
 
 function SetupDiGetDeviceRegistryPropertyW(DeviceInfoSet: HDEVINFO;
    const DeviceInfoData: SP_DEVINFO_DATA; Property_: DWORD;
    PropertyRegDataType: PDWORD; PropertyBuffer: PByte; PropertyBufferSize: DWORD;
    RequiredSize: PDWORD): BOOL; stdcall;
-   external SetupApiDll name 'SetupDiGetDeviceRegistryPropertyW'{$IFNDEF FPC} delayed{$ENDIF};
+   external SetupApiDll name 'SetupDiGetDeviceRegistryPropertyW';
 
 function SetupDiGetDeviceInstanceIdW(DeviceInfoSet: HDEVINFO;
    const DeviceInfoData: SP_DEVINFO_DATA; DeviceInstanceId: PWideChar;
    DeviceInstanceIdSize: DWORD; RequiredSize: PDWORD): BOOL; stdcall;
-   external SetupApiDll name 'SetupDiGetDeviceInstanceIdW'{$IFNDEF FPC} delayed{$ENDIF};
+   external SetupApiDll name 'SetupDiGetDeviceInstanceIdW';
 
 function SetupDiOpenDevRegKey(DeviceInfoSet: HDEVINFO;
    const DeviceInfoData: SP_DEVINFO_DATA; Scope, HwProfile, KeyType: DWORD;
    samDesired: REGSAM): HKEY; stdcall;
-   external SetupApiDll name 'SetupDiOpenDevRegKey'{$IFNDEF FPC} delayed{$ENDIF};
+   external SetupApiDll name 'SetupDiOpenDevRegKey';
 
 // ---------------------------------------------------------------------------
 

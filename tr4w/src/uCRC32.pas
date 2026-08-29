@@ -59,11 +59,7 @@ function GetCRC32(const data; Count: longword): longword; register;
 implementation
 
 uses
-{$IFDEF FPC}
   crc;
-{$ELSE}
-  System.ZLib;
-{$ENDIF}
 
 function GetCRC32(const data; Count: longword): longword; register;
 begin

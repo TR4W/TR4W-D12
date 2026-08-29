@@ -31,7 +31,6 @@ unit uWin32Compat;
 
 interface
 
-{$IFDEF FPC}
 
 uses
    Windows;
@@ -69,7 +68,6 @@ function RegisterDeviceNotificationW(hRecipient: THandle;
 function UnregisterDeviceNotification(Handle: HDEVNOTIFY): BOOL; stdcall;
    external 'user32.dll' name 'UnregisterDeviceNotification';
 
-{$ENDIF}
 
 implementation
 

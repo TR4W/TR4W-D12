@@ -50,15 +50,10 @@ unit uJSON;
 interface
 
 uses
-{$IFDEF FPC}
    fpjson,
    jsonparser;
-{$ELSE}
-   System.JSON;
-{$ENDIF}
 
 type
-{$IFDEF FPC}
    TJSONValue  = TJSONData;
    TJSONObject = fpjson.TJSONObject;
    TJSONArray  = fpjson.TJSONArray;
@@ -111,14 +106,6 @@ type
       class function Create(aValue: Int64): TJSONNumber; overload;
       class function Create(aValue: Double): TJSONNumber; overload;
    end;
-{$ELSE}
-   TJSONValue  = System.JSON.TJSONValue;
-   TJSONObject = System.JSON.TJSONObject;
-   TJSONArray  = System.JSON.TJSONArray;
-   TJSONString = System.JSON.TJSONString;
-   TJSONBool   = System.JSON.TJSONBool;
-   TJSONNumber = System.JSON.TJSONNumber;
-{$ENDIF}
 
 function JSONText(aValue: TJSONValue): string;
 function JSONPairName(aObj: TJSONObject; aIndex: integer): string;
@@ -145,7 +132,6 @@ implementation
 uses
    SysUtils;
 
-{$IFDEF FPC}
 
 function TJSONObjectHelper.AddPair(const aName: string; const aValue: string): TJSONObject;
 begin
@@ -226,7 +212,6 @@ begin
    end;
 end;
 
-{$ENDIF}
 
 function JSONText(aValue: TJSONValue): string;
 begin
@@ -236,30 +221,18 @@ begin
       Exit;
       end;
 
-{$IFDEF FPC}
    // AsString, not Value: Value is a Variant and would convert implicitly.
    Result := aValue.AsString;
-{$ELSE}
-   Result := aValue.Value;
-{$ENDIF}
 end;
 
 function JSONPairName(aObj: TJSONObject; aIndex: integer): string;
 begin
-{$IFDEF FPC}
    Result := aObj.Names[aIndex];
-{$ELSE}
-   Result := aObj.Pairs[aIndex].JsonString.Value;
-{$ENDIF}
 end;
 
 function JSONPairValue(aObj: TJSONObject; aIndex: integer): TJSONValue;
 begin
-{$IFDEF FPC}
    Result := aObj.Items[aIndex];
-{$ELSE}
-   Result := aObj.Pairs[aIndex].JsonValue;
-{$ENDIF}
 end;
 
 function JSONGetStr(aObj: TJSONObject; const aName, aDefault: string): string;
@@ -298,7 +271,6 @@ begin
       end;
 end;
 
-{$IFDEF FPC}
 
 procedure JSONSetSection(aObj: TJSONObject; const aName: string; aValue: TJSONValue);
 var
@@ -319,27 +291,5 @@ begin
    Result := aValue.Clone;
 end;
 
-{$ELSE}
-
-procedure JSONSetSection(aObj: TJSONObject; const aName: string; aValue: TJSONValue);
-var
-   pair: System.JSON.TJSONPair;
-begin
-   // RemovePair hands ownership BACK to the caller and returns nil when the
-   // name is absent; Free tolerates both.
-   pair := aObj.RemovePair(aName);
-   pair.Free;
-   aObj.AddPair(aName, aValue);
-end;
-
-function JSONClone(aValue: TJSONValue): TJSONValue;
-begin
-   // A re-parse of the value's own text, rather than a Clone whose spelling has
-   // moved between the System.JSON versions this tree has been built against.
-   // Exact by construction, and this path is the deprecated one.
-   Result := TJSONObject.ParseJSONValue(aValue.ToJSON);
-end;
-
-{$ENDIF}
 
 end.

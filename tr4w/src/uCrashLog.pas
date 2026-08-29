@@ -113,9 +113,7 @@ uses
    Windows,    // GetCurrentThreadId
    Version,    // TR4W_CURRENTVERSION_NUMBER -- a raw address is useless
                // unless the exact binary that produced it can be identified
-{$IFDEF FPC}
    Forms,      // Application.OnException -- the LCL's own handler
-{$ENDIF}
    Log4D;      // our own logger -- see CrashLogger
 
 { NOT MainUnit's `logger` GLOBAL, AND THAT IS DELIBERATE.
@@ -292,12 +290,10 @@ begin
    // useful than "it crashed".
    WriteCrashReport('LCL', E, ExceptAddr, ExceptFrameCount, ExceptFrames);
 
-{$IFDEF FPC}
    // Then the LCL's own dialog, unchanged.  Suppressing it would hide from the
    // operator a fault we have only written to a file they have not been asked
    // to look at.
    Application.ShowException(E);
-{$ENDIF}
 end;
 
 procedure EarlyTrace(const aMessage: string);
@@ -489,13 +485,11 @@ begin
    GPreviousExceptProc := ExceptProc;
    ExceptProc := @CatchUnhandledException;
 
-{$IFDEF FPC}
    GReporter := TCrashReporter.Create;
    // NO @ on the method reference: tr4w.inc compiles every unit in
    // {$MODE Delphi}, where a method is assigned directly. The ObjFPC spelling
    // with @, which the FreePascal wiki example uses, does not compile here.
    Application.OnException := GReporter.HandleLCLException;
-{$ENDIF}
 
    CrashLogger.Info('[CRASH] unhandled-exception logging installed (RTL + LCL)');
    ReportSymbolState;

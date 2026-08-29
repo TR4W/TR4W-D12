@@ -85,18 +85,13 @@ implementation
 uses
    SysUtils,
    Log4D,
-{$IFDEF FPC}
    RegExpr;
-{$ELSE}
-   PerlRegEx;
-{$ENDIF}
 
 var
    // Own logger rather than MainUnit's global: this unit is linked by the
    // standalone test executable, which does not assign that global.
    logger: TLogLogger;
 
-{$IFDEF FPC}
 
 function RegexMatches(const aPattern, aSubject: string): boolean;
 var
@@ -127,39 +122,6 @@ begin
    end;
 end;
 
-{$ELSE}
-
-function RegexMatches(const aPattern, aSubject: string): boolean;
-var
-   rx: TPerlRegEx;
-begin
-   Result := False;
-
-   rx := TPerlRegEx.Create;
-   try
-      try
-         rx.RegEx   := UTF8Encode(aPattern);
-         rx.Subject := UTF8Encode(aSubject);
-
-         // MatchAgain, not Match, because that is what the five validators
-         // called.  On a freshly created object there is no previous match to
-         // continue from, so it searches from the start -- which is what every
-         // one of these anchored patterns wants.
-         Result := rx.MatchAgain;
-      except
-         on E: Exception do
-            begin
-            Result := False;
-            logger.Error('[Regex] %s on pattern <%s> subject <%s>',
-                         [E.Message, aPattern, aSubject]);
-            end;
-      end;
-   finally
-      rx.Free;
-   end;
-end;
-
-{$ENDIF}
 
 initialization
    logger := TLogLogger.GetLogger('TR4WDebugLog.Regex');

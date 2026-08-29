@@ -205,7 +205,6 @@ uses
   uRegex,
   uWin32Compat,
   uHostedFormWindows,
-{$IFDEF FPC}
   // The LCL side of hosting a toolkit in TR4W's own loop.  FPC-only:
   // Delphi cannot compile the LCL, just as FPC cannot compile FMX.
   uLCLCoexist,
@@ -240,7 +239,6 @@ uses
   uRadioEditForm,
   uMainForm,
   uPrefsForm,
-{$ENDIF}
   uJSON,
   uHTTPDownload,
   utils_text,
@@ -402,14 +400,6 @@ uses
   // anywhere -- the notes here recorded why: one set depends on a
   // Country9.pas that was never in the repo, one is unfinished, one is
   // orphaned. Six Win32 dialog procedures, 794 lines.
-{$IFNDEF FPC}
-  // The OpenGL About box.  OGLVERSION is False (VC.pas), so its only caller
-  // -- MainUnit's menu_about arm -- is compiled out and the About menu is a
-  // MessageBox; the unit is linked and never entered.  Excluded under FPC
-  // rather than ported because Delphi's Winapi.OpenGL and FPC's GL are
-  // different bindings and there is nothing behind this to test them with.
-  // If OGLVERSION is ever turned on, this needs a real decision.
-{$ENDIF}
   uHardWare,
   uMakeHelpFile,
   uLogConfig,
@@ -708,11 +698,8 @@ begin
    // bottom of this file drives it -- Phase 3c, 2026-08-23.  The hand-rolled
    // GetMessage loop that owned the program until then is gone; what lived
    // inside it is in uAppInputHooks.
-{$IFDEF FPC}
    InitLCLApplication;
-{$ENDIF}
 
-{$IFDEF FPC}
    // HEADLESS FIELD ROUND-TRIP:  tr4w.exe /FIELDCHECK
    //
    // Puts a probe value through every input control of the Edit QSO form and
@@ -731,7 +718,6 @@ begin
       begin
       Halt(RunEditQSOFieldCheck);
       end;
-{$ENDIF}
 
    // Check for another running instance BEFORE opening any shared files
    // (log file, etc.) to avoid an EFOpenError crash on the second instance.

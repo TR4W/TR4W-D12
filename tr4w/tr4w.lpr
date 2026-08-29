@@ -207,7 +207,6 @@ uses
   uRegex in 'src\utils\uRegex.pas',
   uWin32Compat in 'src\utils\uWin32Compat.pas',
   uHostedFormWindows in 'src\utils\uHostedFormWindows.pas',
-{$IFDEF FPC}
   // The LCL side of hosting a toolkit in TR4W's own loop.  FPC-only:
   // Delphi cannot compile the LCL, just as FPC cannot compile FMX.
   uLCLCoexist in 'src\ui\lcl\uLCLCoexist.pas',
@@ -242,7 +241,6 @@ uses
   uRadioEditForm in 'src\ui\lcl\uRadioEditForm.pas',
   uMainForm in 'src\ui\lcl\uMainForm.pas',
   uPrefsForm in 'src\ui\lcl\uPrefsForm.pas',
-{$ENDIF}
   uJSON in 'src\utils\uJSON.pas',
   uHTTPDownload in 'src\utils\uHTTPDownload.pas',
   utils_text in 'src\utils\utils_text.pas',
@@ -407,14 +405,6 @@ uses
   // anywhere -- the notes here recorded why: one set depends on a
   // Country9.pas that was never in the repo, one is unfinished, one is
   // orphaned. Six Win32 dialog procedures, 794 lines.
-{$IFNDEF FPC}
-  // The OpenGL About box.  OGLVERSION is False (VC.pas), so its only caller
-  // -- MainUnit's menu_about arm -- is compiled out and the About menu is a
-  // MessageBox; the unit is linked and never entered.  Excluded under FPC
-  // rather than ported because Delphi's Winapi.OpenGL and FPC's GL are
-  // different bindings and there is nothing behind this to test them with.
-  // If OGLVERSION is ever turned on, this needs a real decision.
-{$ENDIF}
   uHardWare in 'src\uHardWare.pas',
   uMakeHelpFile in 'src\uMakeHelpFile.pas',
   uLogConfig in 'src\uLogConfig.pas',

@@ -43,12 +43,15 @@
 // reinterprets AnsiString bytes as UTF-16.  That is exactly how uSerialPort
 // opened COM13 and got ERROR_INVALID_NAME (123) with no diagnostic anywhere.
 //
-// Delphi does not recognise the FPC mode directives and never sees this block.
+// The {$IFDEF FPC} guard that used to wrap this is gone (2026-08-29). It existed
+// so Delphi would not choke on directives it does not recognise, and Delphi is
+// not coming back -- FullBuild-D12-deprecated.ps1 has not worked since the FMX
+// twins were deleted in August. A guard for a compiler that cannot build this
+// tree is a claim that it might, which is the kind of thing a reader has to
+// disprove before they can act.
 
-{$IFDEF FPC}
-  {$MODE Delphi}
-  {$MODESWITCH UnicodeStrings}
-{$ENDIF}
+{$MODE Delphi}
+{$MODESWITCH UnicodeStrings}
 
 {$IFDEF LANG_RUS}{$DEFINE _TR4W_LANG_SET}{$ENDIF}
 {$IFDEF LANG_SER}{$DEFINE _TR4W_LANG_SET}{$ENDIF}

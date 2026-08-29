@@ -200,7 +200,7 @@ type
   // this alias rather than with `string`.  Naming the boundary is the point:
   // the alternative is a per-site {$IFDEF} that reads like a compiler quirk
   // instead of like the protocol seam it actually is.
-  TIdText = {$IFDEF FPC}AnsiString{$ELSE}string{$ENDIF};
+  TIdText = AnsiString;
 
 const
 

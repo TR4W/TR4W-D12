@@ -34,15 +34,11 @@ uses
   SysUtils,
   Classes,
   WinInet,
-{$IFDEF FPC}
   // FPC's fcl-base spells it base64/EncodeStringBase64; Delphi's RTL spells it
   // EncdDecd/EncodeString.  One call site, one line different -- shimmed here
   // rather than owned, because both RTLs already have a correct RFC 4648
   // encoder and re-implementing one would be gold-plating, not portability.
   base64;
-{$ELSE}
-  EncdDecd;
-{$ENDIF}
 
 function SslInet(Const AServer, AUrl, AData, ALogin, APass: AnsiString; isSSL: Boolean = True): AnsiString;
 
@@ -93,11 +89,7 @@ begin
         if Assigned(pRequest) then
           try
 
-{$IFDEF FPC}
             authEncode := base64.EncodeStringBase64(ALogin + ':' + APass);
-{$ELSE}
-            authEncode := EncdDecd.EncodeString(ALogin + ':' + APass);
-{$ENDIF}
 
             Header := TStringStream.Create('');
 

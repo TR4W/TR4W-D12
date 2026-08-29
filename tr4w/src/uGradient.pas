@@ -34,7 +34,6 @@ type
     Blue: {Smallint} Word;
     Alpha: Smallint;
   end;
-{$IFDEF FPC}
   // A genuine gap in FPC's `windows` unit rather than a behavioural
   // difference: the Win32 API has GRADIENT_RECT and Delphi's Winapi.Windows
   // declares it, FPC does not.  It is simply the index pair naming which two
@@ -45,7 +44,6 @@ type
     UpperLeft: ULONG;
     LowerRight: ULONG;
   end;
-{$ENDIF}
 
   TGradientFill = function(DC: HDC; var P2: TTriVertex; p3: ULONG; p4: Pointer; p5, p6: ULONG): BOOL; stdcall;
   // Variables used for interfacing to the MSIMG32.DLL
@@ -60,11 +58,9 @@ function ColorToRGB(Color: tcolor): Cardinal {LONGINT};
 function InitTriVertex(XPos, YPos: integer; Color: tcolor): TTriVertex;
 implementation
 
-{$IFDEF FPC}
 const
   // Winapi.Windows supplies this DLL name; FPC's windows unit does not.
   msimg32 = 'msimg32.dll';
-{$ENDIF}
 
 //uses Unit1;
 //function GradientFill; external msimg32 Name 'GradientFill';

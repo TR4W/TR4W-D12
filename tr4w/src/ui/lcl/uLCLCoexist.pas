@@ -63,7 +63,6 @@ unit uLCLCoexist;
 
 interface
 
-{$IFDEF FPC}
 
 // Call ONCE, early in startup, before any LCL form is created.  Idempotent:
 // calling it twice is harmless, which matters because the call site is a
@@ -106,11 +105,9 @@ procedure RunLCLApplication;
 // the form units assert on this rather than discovering it at random.
 function LCLReadyForHostedForms: boolean;
 
-{$ENDIF}
 
 implementation
 
-{$IFDEF FPC}
 
 uses
    // Interfaces FIRST, and it is not optional.  It is what links the win32
@@ -173,6 +170,5 @@ begin
    Result := gInitialised;
 end;
 
-{$ENDIF}
 
 end.
