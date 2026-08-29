@@ -73,6 +73,14 @@ const
      the real ones. *)
   SLACK_PX = 6;
 
+var
+  (* Captions actually measured on the current walk.
+     A form whose captions all fit logs nothing, which makes "0 do not fit"
+     indistinguishable from "nothing was measured" -- and the second is what a
+     harness gets when the window never opened. Counting what was LOOKED AT is
+     what makes a zero worth believing. *)
+  GMeasured: integer = 0;
+
 function Scrolls(aControl: TControl): boolean;
 { Content that scrolls is SUPPOSED to exceed its box. }
 begin
@@ -127,6 +135,7 @@ begin
       begin
       Exit;
       end;
+   Inc(GMeasured);
 
    (* The canvas is the form's; the FONT below is the control's own.
 
@@ -172,43 +181,82 @@ var
    i: integer;
 begin
    Result := 0;
+   GMeasured := 0;
    for i := 0 to Screen.FormCount - 1 do
       begin
       Inc(Result, WalkControls(Screen.Forms[i], Screen.Forms[i].Name,
                                Screen.Forms[i].Canvas));
       end;
-   logger.Info('TextFit: %s -- %d form(s) walked, %d caption(s) do not fit',
-               [aWhy, Screen.FormCount, Result]);
+   logger.Info('TextFit: %s -- %d form(s) walked, %d caption(s) measured, ' +
+               '%d do not fit', [aWhy, Screen.FormCount, GMeasured, Result]);
 end;
 
 type
   { A handler needs an object to hang off. Nothing else uses it. }
   TTextFitWatcher = class
-     procedure FormAdded(Sender: TObject; Form: TCustomForm);
+     procedure AppIdle(Sender: TObject; var Done: boolean);
   end;
 
 var
   GWatcher: TTextFitWatcher = nil;
   GSeen: TStringList = nil;
 
-procedure TTextFitWatcher.FormAdded(Sender: TObject; Form: TCustomForm);
+procedure MeasureForm(aForm: TCustomForm);
 var
    n: integer;
 begin
-   if (Form = nil) or (GSeen = nil) then
+   if (aForm = nil) or (GSeen = nil) then
+      begin
+      Exit;
+      end;
+   { A form still being streamed in has no Name yet -- see AppIdle. }
+   if aForm.Name = '' then
       begin
       Exit;
       end;
    { Once per form. A form reopened ten times is the same measurement. }
-   if GSeen.IndexOf(Form.Name) >= 0 then
+   if GSeen.IndexOf(aForm.Name) >= 0 then
       begin
       Exit;
       end;
-   GSeen.Add(Form.Name);
-   n := WalkControls(Form, Form.Name, Form.Canvas);
-   if n > 0 then
+   GSeen.Add(aForm.Name);
+   GMeasured := 0;
+   n := WalkControls(aForm, aForm.Name, aForm.Canvas);
+   logger.Info('TextFit: %s -- %d caption(s) measured, %d do not fit',
+               [aForm.Name, GMeasured, n]);
+end;
+
+procedure TTextFitWatcher.AppIdle(Sender: TObject; var Done: boolean);
+(* MEASURE WHEN THE FORM IS UP, NOT WHEN IT IS BORN.
+
+   This hung off Screen.AddHandlerFormAdded until 2026-08-28, and that fires
+   from the TCustomForm constructor -- BEFORE the .lfm has been streamed in. At
+   that moment the form has no controls and not even a Name, so every window
+   measured as
+
+      TextFit:  -- 0 caption(s) measured, 0 do not fit
+
+   an empty name and an empty result, which reads exactly like a clean bill of
+   health. Every converted window had been "measured" that way and none of them
+   had actually been looked at.
+
+   Idle is the right moment instead: the form is constructed, streamed, sized
+   and shown, and the LCL pumps idle inside modal loops too, so a modal dialog
+   is measured like any other window. *)
+var
+   i: integer;
+begin
+   if GSeen = nil then
       begin
-      logger.Warn('TextFit: %s -- %d caption(s) do not fit', [Form.Name, n]);
+      Exit;
+      end;
+   { CustomForms, not Forms: a modal dialog lives in the custom list. }
+   for i := 0 to Screen.CustomFormCount - 1 do
+      begin
+      if Screen.CustomForms[i].Visible then
+         begin
+         MeasureForm(Screen.CustomForms[i]);
+         end;
       end;
 end;
 
@@ -222,7 +270,7 @@ begin
    GSeen := TStringList.Create;
    GSeen.Sorted := True;
    { No @: in Delphi mode a method reference IS the pointer. }
-   Screen.AddHandlerFormAdded(GWatcher.FormAdded);
+   Application.AddOnIdleHandler(GWatcher.AppIdle);
    logger.Info('TextFit: auditing every form as it opens; open the windows you want measured');
    AuditTextFit('the forms that already exist');
 end;

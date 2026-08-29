@@ -67,7 +67,10 @@ param(
    [string] $Config,
    [int]    $SettleMs = 8000,   # startup: config, CTY.DAT, main window
    [int]    $AfterMs  = 3000,   # time for the command to finish or to fault
-   [switch] $KeepLog
+   [switch] $KeepLog,
+   # Passed to the program after the config path. The sweep in
+   # Sweep-TextFit.ps1 uses it for --lang and --textfit; nothing else needs it.
+   [string[]] $ExtraArgs = @()
 )
 
 Set-StrictMode -Version Latest
@@ -132,7 +135,7 @@ $results = @()
 foreach ($id in $Command)
    {
    $mark  = Get-TR4WLogMark -LogPath $log
-   $start = Start-TR4WForDriving -Exe $Exe -TargetDir $target -ConfigPath $configPath -SettleMs $SettleMs
+   $start = Start-TR4WForDriving -Exe $Exe -TargetDir $target -ConfigPath $configPath -SettleMs $SettleMs -ExtraArgs $ExtraArgs
 
    if ($start.Failure)
       {
