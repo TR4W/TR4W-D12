@@ -415,9 +415,18 @@ def seed(po_path, url, target, lang, dry_run, batch=DEFAULT_BATCH,
       e.target = pofile.unescape_entities(text)     # stays fuzzy
       seeded += 1
 
+   # ONLY IF EMPTY. This used to overwrite unconditionally, and
+   # LANGUAGE_NAMES is the ASCII table that feeds --list-languages on a
+   # cp1252 console -- so a seed run turned the catalogue Espanol back into
+   # ESPANOL, Dansk into DANSK, undoing the native endonyms on sight.
+   #
+   # Two audiences, two answers: console text is ASCII because the console
+   # cannot print the alternative; catalogue text is UTF-8 and lands in a
+   # GUI. A language names itself in its own script there. Filling a BLANK
+   # from the ASCII table is still better than leaving it empty.
    if lang in pc.LANGUAGE_NAMES:
       for e in entries:
-         if e.key == LANGUAGE_KEY:
+         if (e.key == LANGUAGE_KEY) and (not e.target.strip()):
             e.target = pc.LANGUAGE_NAMES[lang]
 
    pofile.write_po(po_path, entries, pc.LANG_CODES[lang],
