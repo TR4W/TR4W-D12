@@ -103,6 +103,8 @@ def main():
                    help='write to <exe-dir>/languages/<lang>/tr4w.po')
    ap.add_argument('--exe-dir', default=None,
                    help='where tr4w_fpc.exe lives (default %s)' % DEFAULT_EXE_DIR)
+   ap.add_argument('--force-salvaged', action='store_true',
+                   help='defuzz zh_CN anyway; see the refusal message')
    args = ap.parse_args()
 
    if not args.out and not args.install:
@@ -110,6 +112,28 @@ def main():
 
    if not os.path.exists(args.po):
       print('no catalogue at ' + args.po)
+      return 2
+
+   # ZH_CN IS NOT LIKE THE OTHERS AND MUST NOT BE DEFUZZED CASUALLY.
+   #
+   # Everywhere else, a fuzzy entry is a machine draft: the words may be wrong
+   # but the CHARACTERS are what the engine produced. In zh_CN a large part of
+   # the fuzzy set is salvage from tr4w_consts_chn.pas, whose bytes are damaged
+   # at the bit level -- tools/i18n/salvage_lossy.py recovers what decodes as
+   # well-formed UTF-8 and marks all of it fuzzy precisely because the inversion
+   # guesses wrong often enough to matter, and a wrong hanzi looks exactly like
+   # a right one. CLAUDE.md: "Never bulk-defuzz that catalogue -- fuzzy is the
+   # only thing keeping unverified text out of a build."
+   #
+   # For LAYOUT measurement the text does not have to be correct, so this is a
+   # refusal you may legitimately override -- but it has to be deliberate, and
+   # the resulting file must never be mistaken for a translation.
+   if 'zh_CN' in os.path.basename(args.po) and not args.force_salvaged:
+      print('REFUSING to defuzz ' + os.path.basename(args.po) + '.')
+      print('  Its fuzzy entries are not machine drafts -- they are salvage from a')
+      print('  bit-damaged source, and a wrong hanzi is indistinguishable from a')
+      print('  right one. See CLAUDE.md, "Never bulk-defuzz that catalogue".')
+      print('  For LAYOUT testing only, pass --force-salvaged.')
       return 2
 
    text = io.open(args.po, encoding='utf-8').read()

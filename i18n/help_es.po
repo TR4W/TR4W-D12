@@ -80,7 +80,9 @@ msgctxt "TC_HELP_AUTO_S_P_ENABLE_SENSITIVITY"
 msgid "Controls how quickly you must move the VFO (in Hz/sec) in order for the program to jump automatically into S&P Mode if AUTO S&P ENABLE is TRUE."
 msgstr "Controla con qué rapidez debe mover el VFO (en Hz/s) para que el programa pase automáticamente al modo S&P si AUTO S&P ENABLE es TRUE."
 
+#. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Config command: AUTO S&P ENABLE   (default: FALSE)
+#, fuzzy
 msgctxt "TC_HELP_AUTO_S_P_ENABLE"
 msgid "When this parameter is TRUE, TR4W will automatically jump into S&P Mode if it detects you have moved the VFO quickly. See also AUTO S&P See also AUTO S&P ENABLE SENSITIVITY."
 msgstr "Cuando este parámetro es TRUE, TR4W pasará automáticamente al modo S&P si detecta que ha movido el VFO rápidamente. Véase también AUTO S&P ENABLE SENSITIVITY."

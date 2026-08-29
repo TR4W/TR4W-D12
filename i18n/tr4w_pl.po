@@ -2975,9 +2975,11 @@ msgstr "Wyczyść wszystkie dzienniki"
 msgid "Exit"
 msgstr "Wyjście"
 
+#. ACCELERATOR: this translation marks a keyboard shortcut (&) that the English does not have. Remove it unless this control really should have one -- two controls claiming the same letter makes one of them unreachable. Then clear "Needs work".
 #. Section: UEDITMESSAGE
 #: tfrmlogcompare.btnsynchronize.caption utr4wstrings:rc_synchronize
 #: tr4w/src/lang/tr4w_consts_eng.pas:794
+#, fuzzy
 msgctxt "RC_SYNCHRONIZE"
 msgid "Synchronize"
 msgstr "&Synchronizuj"
@@ -3083,9 +3085,11 @@ msgctxt "RC_PRESS_C"
 msgid "Press &C to program a CQ function key."
 msgstr "U¬yj  &C\\n  do zaprogramowania klawisza CQ."
 
+#. ACCELERATOR: this translation marks a keyboard shortcut (&) that the English does not have. Remove it unless this control really should have one -- two controls claiming the same letter makes one of them unreachable. Then clear "Needs work".
 #. Section: UEDITMESSAGE
 #: tfrmprogrammessage.btnexchange.caption utr4wstrings:rc_press_e
 #: tr4w/src/lang/tr4w_consts_eng.pas:539
+#, fuzzy
 msgctxt "RC_PRESS_E"
 msgid "Press &E to program an exchange/search and pounce function key."
 msgstr "U¬yj  &E\\n  do zaprogramowania klawisza grupy kontrolnej dla trybu S&P."
@@ -5183,9 +5187,11 @@ msgctxt "HELP_WORD"
 msgid "Help"
 msgstr "Pomoc"
 
+#. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Section: UEDITMESSAGE
 #: utr4wstrings:exit_word tr4w/src/lang/tr4w_consts_eng.pas:531
 #: utr4wstrings:rc_exit tr4w/src/lang/tr4w_consts_eng.pas:613
+#, fuzzy
 msgctxt "EXIT_WORD"
 msgid "E&xit"
 msgstr "WyjÜcie"
@@ -5264,8 +5270,10 @@ msgctxt "RC_RESET_RADIO_PORTS"
 msgid "Reset Radio Ports"
 msgstr "Resetuj porty radia"
 
+#. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_timesyn tr4w/src/lang/tr4w_consts_eng.pas:571
+#, fuzzy
 msgctxt "RC_TIMESYN"
 msgid "Synchronize time on &all computers"
 msgstr "Synchronizowanie czasu"
@@ -5723,8 +5731,10 @@ msgctxt "RC_CQMODE"
 msgid "CQ Mode"
 msgstr "Tryb CQ"
 
+#. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_searchpounce tr4w/src/lang/tr4w_consts_eng.pas:690
+#, fuzzy
 msgctxt "RC_SEARCHPOUNCE"
 msgid "Search && pounce mode"
 msgstr "Tryb S&P"
@@ -5777,8 +5787,10 @@ msgctxt "RC_ABOUT"
 msgid "About"
 msgstr "Na temat"
 
+#. ACCELERATOR: this translation marks a keyboard shortcut (&) that the English does not have. Remove it unless this control really should have one -- two controls claiming the same letter makes one of them unreachable. Then clear "Needs work".
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_deleted tr4w/src/lang/tr4w_consts_eng.pas:705
+#, fuzzy
 msgctxt "RC_DELETED"
 msgid "Deleted"
 msgstr "&Usuniúte"
@@ -5789,8 +5801,10 @@ msgctxt "RC_SEARCH"
 msgid "&Search"
 msgstr "&Wyszukuj"
 
+#. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_contestnameic tr4w/src/lang/tr4w_consts_eng.pas:712
+#, fuzzy
 msgctxt "RC_CONTESTNAMEIC"
 msgid "C&ontest name in comment"
 msgstr "Nazwa zawodşw w polu ' Komentarz '"

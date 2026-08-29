@@ -3422,10 +3422,12 @@ msgctxt "RC_PRESS_C"
 msgid "Press &C to program a CQ function key."
 msgstr "Druecke &C zur Programmierung einer CQ Funktionstaste."
 
+#. ACCELERATOR: this translation marks a keyboard shortcut (&) that the English does not have. Remove it unless this control really should have one -- two controls claiming the same letter makes one of them unreachable. Then clear "Needs work".
 #. Section: UEDITMESSAGE
 #: tfrmprogrammessage.btnexchange.caption
 #: utr4wstrings:rc_press_e
 #: tr4w/src/lang/tr4w_consts_eng.pas:539
+#, fuzzy
 msgctxt "RC_PRESS_E"
 msgid "Press &E to program an exchange/search and pounce function key."
 msgstr "Druecke &E zur Programmierung einer  Austausch/Search&Pounce Funktionstaste."
@@ -6213,9 +6215,11 @@ msgctxt "RC_CQMODE"
 msgid "CQ Mode"
 msgstr "CQ Mode"
 
+#. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_searchpounce
 #: tr4w/src/lang/tr4w_consts_eng.pas:690
+#, fuzzy
 msgctxt "RC_SEARCHPOUNCE"
 msgid "Search && pounce mode"
 msgstr "Search&Pounce Mode"

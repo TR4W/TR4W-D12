@@ -6160,16 +6160,20 @@ msgctxt "RC_ABOUT"
 msgid "About"
 msgstr "O programu"
 
+#. ACCELERATOR: this translation marks a keyboard shortcut (&) that the English does not have. Remove it unless this control really should have one -- two controls claiming the same letter makes one of them unreachable. Then clear "Needs work".
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_deleted
 #: tr4w/src/lang/tr4w_consts_eng.pas:705
+#, fuzzy
 msgctxt "RC_DELETED"
 msgid "Deleted"
 msgstr "&Obrisano"
 
+#. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_search
 #: tr4w/src/lang/tr4w_consts_eng.pas:708
+#, fuzzy
 msgctxt "RC_SEARCH"
 msgid "&Search"
 msgstr "Pretraga"

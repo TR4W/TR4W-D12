@@ -71,7 +71,9 @@ msgctxt "TC_HELP_AUTO_QSO_NUMBER_DECREMENT"
 msgid "If you have programmed an S&P exchange that includes a QSO number, you might find yourself in the situation in which you have just logged a station who is now asking for a repeat of the exchange you sent him. If you press F2, you will send the next QSO number, which will be one more than the one you sent the first time. To fix this problem, you can set AUTO QSO NUMBER DECREMENT to TRUE; this causes TR4W to decrement the QSO number when you press F2 when both the Call Window and the Exchange Window are empty."
 msgstr "Enthaelt ein S&P Rapport eine QSO-Nummer, kann man in die Situation kommen, dass eine Station um die Wiederholung des Rapports bittet. Drueckt man dann F2, wird die naechsthoehere QSO-Nummer gesendet, was dann aber um eine Stelle zu hoch ist. Um dieses Problem zu umgehen, kann man AUTO QSO NUMBER DECREMENT auf TRUE setzen. Dies veranlasst TR4W, wenn die Eingabefelder fuer Call und Seriennummer leer sind, die richtige QSO-Nummer zu senden."
 
+#. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Config command: AUTO RETURN TO CQ MODE   (default: TRUE)
+#, fuzzy
 msgctxt "TC_HELP_AUTO_RETURN_TO_CQ_MODE"
 msgid "If this parameter is TRUE, then pressing <Enter> in S&P Mode when there is no information in either the Call Window or the Exchange Window will cause TR4W to return to CQ Mode."
 msgstr "Steht dieser Parameter auf TRUE und die Eingabefelder fuer Call und Rapport sind leer, wird durch druecken von <ENTER> zurueck in den CQ-Mode gewechselt."
@@ -81,7 +83,9 @@ msgctxt "TC_HELP_AUTO_S_P_ENABLE_SENSITIVITY"
 msgid "Controls how quickly you must move the VFO (in Hz/sec) in order for the program to jump automatically into S&P Mode if AUTO S&P ENABLE is TRUE."
 msgstr "Legt fest, wie schnell man den VFO (Hz/sec) veraendern muss, und AUTO S&P ENABLE auf TRUE gesetzt ist, um automatisch in den S&P-Modus zu wechseln."
 
+#. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Config command: AUTO S&P ENABLE   (default: FALSE)
+#, fuzzy
 msgctxt "TC_HELP_AUTO_S_P_ENABLE"
 msgid "When this parameter is TRUE, TR4W will automatically jump into S&P Mode if it detects you have moved the VFO quickly. See also AUTO S&P See also AUTO S&P ENABLE SENSITIVITY."
 msgstr "Steht dieser Parameter auf TRUE, wechselt TR4W automatisch in den S&P-Mode, wenn erkannt wird, dass man den VFO schnell veraendert hat. Beachte dazu auch AUTO S&P ENABLE SENSITIVITY."

@@ -1978,9 +1978,11 @@ msgctxt "TC_SIDETONE"
 msgid "&Sidetone"
 msgstr "&Дууны давтамж"
 
+#. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Section: UWINKEY
 #: utr4wstrings:tc_paddleswap
 #: tr4w/src/lang/tr4w_consts_eng.pas:386
+#, fuzzy
 msgctxt "TC_PADDLESWAP"
 msgid "Paddle swa&p"
 msgstr "Цэг, зураасны байрлалыг солих"
@@ -2585,11 +2587,13 @@ msgctxt "TC_DOWNLOADIT"
 msgid "Would you like to download the latest version?"
 msgstr "Сvvлийн хувилбарыг татах уу?"
 
+#. ACCELERATOR: this translation marks a keyboard shortcut (&) that the English does not have. Remove it unless this control really should have one -- two controls claiming the same letter makes one of them unreachable. Then clear "Needs work".
 #. Section: UCHECKLATESTVERSION
 #: utr4wstrings:tc_list_of_command
 #: tr4w/src/lang/tr4w_consts_eng.pas:551
 #: tfrmeditmessage.btnlist.caption
 #: tfrmmessageslist.caption
+#, fuzzy
 msgctxt "TC_LIST_OF_COMMAND"
 msgid "List of commands"
 msgstr "&Командын жагсаалт"
@@ -2822,6 +2826,7 @@ msgstr ""
 msgid "Dupe sheet"
 msgstr ""
 
+#. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Section: UEDITMESSAGE
 #. Section: FD Additions NY4I
 #: tfrmeditmessage.btneditwav.caption
@@ -2829,6 +2834,7 @@ msgstr ""
 #: tr4w/src/lang/tr4w_consts_eng.pas:595
 #: utr4wstrings:tc_editor_edit
 #: tr4w/src/lang/tr4w_consts_eng.pas:895
+#, fuzzy
 msgctxt "RC_EDIT_WORD"
 msgid "&Edit"
 msgstr "Засварлах"
@@ -3260,10 +3266,12 @@ msgstr ""
 msgid "Exit"
 msgstr ""
 
+#. ACCELERATOR: this translation marks a keyboard shortcut (&) that the English does not have. Remove it unless this control really should have one -- two controls claiming the same letter makes one of them unreachable. Then clear "Needs work".
 #. Section: UEDITMESSAGE
 #: tfrmlogcompare.btnsynchronize.caption
 #: utr4wstrings:rc_synchronize
 #: tr4w/src/lang/tr4w_consts_eng.pas:794
+#, fuzzy
 msgctxt "RC_SYNCHRONIZE"
 msgid "Synchronize"
 msgstr "&Синхрончлох"
@@ -5486,11 +5494,13 @@ msgctxt "HELP_WORD"
 msgid "Help"
 msgstr "Тусламж"
 
+#. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Section: UEDITMESSAGE
 #: utr4wstrings:exit_word
 #: tr4w/src/lang/tr4w_consts_eng.pas:531
 #: utr4wstrings:rc_exit
 #: tr4w/src/lang/tr4w_consts_eng.pas:613
+#, fuzzy
 msgctxt "EXIT_WORD"
 msgid "E&xit"
 msgstr "Гарах"
@@ -5582,9 +5592,11 @@ msgctxt "RC_RESET_RADIO_PORTS"
 msgid "Reset Radio Ports"
 msgstr "Reset Radio Ports"
 
+#. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_timesyn
 #: tr4w/src/lang/tr4w_consts_eng.pas:571
+#, fuzzy
 msgctxt "RC_TIMESYN"
 msgid "Synchronize time on &all computers"
 msgstr "Цаг тохируулж байна"
@@ -6110,9 +6122,11 @@ msgctxt "RC_CQMODE"
 msgid "CQ Mode"
 msgstr "CQ горим"
 
+#. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_searchpounce
 #: tr4w/src/lang/tr4w_consts_eng.pas:690
+#, fuzzy
 msgctxt "RC_SEARCHPOUNCE"
 msgid "Search && pounce mode"
 msgstr "Хайх ба Дайрах горим"
@@ -6173,9 +6187,11 @@ msgctxt "RC_ABOUT"
 msgid "About"
 msgstr "TR4W програмын тухай"
 
+#. ACCELERATOR: this translation marks a keyboard shortcut (&) that the English does not have. Remove it unless this control really should have one -- two controls claiming the same letter makes one of them unreachable. Then clear "Needs work".
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_deleted
 #: tr4w/src/lang/tr4w_consts_eng.pas:705
+#, fuzzy
 msgctxt "RC_DELETED"
 msgid "Deleted"
 msgstr "&Устгах"
@@ -6187,9 +6203,11 @@ msgctxt "RC_SEARCH"
 msgid "&Search"
 msgstr "&Хайх"
 
+#. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_contestnameic
 #: tr4w/src/lang/tr4w_consts_eng.pas:712
+#, fuzzy
 msgctxt "RC_CONTESTNAMEIC"
 msgid "C&ontest name in comment"
 msgstr "Тэмцээний нэрийн тайлбар"

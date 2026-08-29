@@ -66,7 +66,9 @@ msgctxt "TC_HELP_AUTO_QSL_INTERVAL"
 msgid "Normally when you press <Enter> to log a QSO, the QSL MESSAGE is transmitted. The AUTO QSL INTERVAL command can be used to send the QUICK QSL MESSAGE instead, except that once every AUTO QSL INTERVAL QSOs, the QSL MESSAGE is transmitted instead. This is typically used when dealing with a large pileup. If you set AUTO QSL INTERVAL to 3, then the QUICK QSL MESSAGE would be sent, except for every third QSO. A value of zero disables this feature, in which case the QSL MESSAGE is sent at the end of every QSO."
 msgstr "hodnota: celé číslo. Při běžném nastavení se pro potvrzení příjmu kódu vysílá text, přednastavený v příkazu QSL MESSAGE. Obsahuje obvykle i CQ a značku vlastní stanice. Při velkém pile-upu to zdržuje a proto se používá krátký text, nastavený v příkazu QUICK QSL MESSAGE, což vyžaduje stisk speciální klávesy. Pro usnadnění lze příkazem AUTO QSL INTERVAL = n nastavit počet QSO, ve kterých je použito zkrácené potvrzení, načež následuje jedno potvrzení dlouhé. Při nastavení AUTO QSL INTERVAL=3 bude použito dlouhé potvrzení při každém čtvrtém QSO."
 
+#. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Config command: AUTO QSO NUMBER DECREMENT   (default: TRUE)
+#, fuzzy
 msgctxt "TC_HELP_AUTO_QSO_NUMBER_DECREMENT"
 msgid "If you have programmed an S&P exchange that includes a QSO number, you might find yourself in the situation in which you have just logged a station who is now asking for a repeat of the exchange you sent him. If you press F2, you will send the next QSO number, which will be one more than the one you sent the first time. To fix this problem, you can set AUTO QSO NUMBER DECREMENT to TRUE; this causes TR4W to decrement the QSO number when you press F2 when both the Call Window and the Exchange Window are empty."
 msgstr "hodnota: TRUE nebo FALSE. Automaticky odečítá od čísla spojení jedničku."
@@ -76,12 +78,16 @@ msgctxt "TC_HELP_AUTO_RETURN_TO_CQ_MODE"
 msgid "If this parameter is TRUE, then pressing <Enter> in S&P Mode when there is no information in either the Call Window or the Exchange Window will cause TR4W to return to CQ Mode."
 msgstr "hodnota: TRUE nebo FALSE. Je-li volba nastavena na TRUE, pak v režimu S&P při stisku klávesy ENTER a prázdném okně QSO dojde k automatickému přepnutí do módu CQ."
 
+#. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Config command: AUTO S&P ENABLE SENSITIVITY   (default: 500)
+#, fuzzy
 msgctxt "TC_HELP_AUTO_S_P_ENABLE_SENSITIVITY"
 msgid "Controls how quickly you must move the VFO (in Hz/sec) in order for the program to jump automatically into S&P Mode if AUTO S&P ENABLE is TRUE."
 msgstr "hodnota: celé číslo. Vložená hodnota (větší, než 100) určuje, jak rychle je třeba otáčet knoflíkem ladění v režimu CQ, aby došlo k automatickému přepnutí do režimu S&P. U transceiverů s malou rychlostí přenosu dat na sériovém portu tato funkce nepracuje."
 
+#. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Config command: AUTO S&P ENABLE   (default: FALSE)
+#, fuzzy
 msgctxt "TC_HELP_AUTO_S_P_ENABLE"
 msgid "When this parameter is TRUE, TR4W will automatically jump into S&P Mode if it detects you have moved the VFO quickly. See also AUTO S&P See also AUTO S&P ENABLE SENSITIVITY."
 msgstr "hodnota: TRUE nebo FALSE. Je-li volba nastavena na TRUE, program TR4W automaticky přejde do režimu S&P vždy, když se nastavený kmitočet změní o více, než 1 kHz za sekundu."
@@ -111,7 +117,9 @@ msgctxt "TC_HELP_BAND_MAP_ALL_MODES"
 msgid "If TRUE, the bandmap displays entries from all modes. If FALSE, the bandmap displays those entries associated with the current mode only. When the cursor is in the bandmap, the value of this flag may be toggled with the M key."
 msgstr "hodnota: TRUE nebo FALSE . Je-li volba nastavena na TRUE, pak se při příjmu DX CLUSTERU zobrazí v okně BAND MAP všechny spoty, bez ohledu na zvolený druh provozu (mód). Volba FALSE zajistí zobrazení spotů pouze v aktuálním druhu provozu."
 
+#. ACCELERATOR: this translation marks a keyboard shortcut (&) that the English does not have. Remove it unless this control really should have one -- two controls claiming the same letter makes one of them unreachable. Then clear "Needs work".
 #. Config command: BAND MAP CALL WINDOW ENABLE   (default: TRUE)
+#, fuzzy
 msgctxt "TC_HELP_BAND_MAP_CALL_WINDOW_ENABLE"
 msgid "When this is TRUE, and you tune to a frequency that has a station in the bandmap, the callsign and exchange information of the station will be displayed in the Call Window. This allows you to renew the entry by simply pressing the space bar1. The exchange information is shown to help you to identify the station quickly. If you start entering a new callsign, the entry in the Call Window will first be erased."
 msgstr "hodnota: TRUE nebo FALSE. Funkce je aktivní jen při volbě TRUE, práci v režimu S&P a připojení počítače k transceiveru přes sériový port. Při naladění kmitočtu, na kterém je v okně BAND MAP zapsána volací značka stanice, zajistí program TR4W přenos volací značky a závodního kódu (pokud je znám) do okna QSO deníku. Zavolání této stanice, zápis přijatého kódu a odeslání vlastního kódu je pak jen otázkou stisku klávesy ENTER. Současně program TR4W provede kontrolu, a v případě dvojáku záznam barevně označí. Pokud nedojde ke stisku klávesy ENTER a bude naopak zapsán jiný, než zobrazený znak, původní text se automaticky smaže. U transceiverů s malou přenosovou rychlostí na sériovém portu tato funkce pracuje nespolehlivě."
@@ -413,7 +421,9 @@ msgctxt "TC_HELP_DX_MULTIPLIER"
 msgid "This command determines which type of DX multiplier the program will use."
 msgstr "hodnota: NONE nebo výběr z daných možností. Příkaz určuje, jaký typ DX násobičů bude použit. U standardních závodů je hodnota určena názvem závodu. U nestandardních závodů lze zadat typ DX násobičů příkazem v samostatném řádku v konfiguračním souboru daného závodu."
 
+#. ACCELERATOR: this translation marks a keyboard shortcut (&) that the English does not have. Remove it unless this control really should have one -- two controls claiming the same letter makes one of them unreachable. Then clear "Needs work".
 #. Config command: ESCAPE EXITS SEARCH AND POUNCE   (default: TRUE)
+#, fuzzy
 msgctxt "TC_HELP_ESCAPE_EXITS_SEARCH_AND_POUNCE"
 msgid "When this parameter is TRUE, pressing <Esc> when in S&P Mode causes TR4W to revert to CQ Mode. When the parameter is FALSE, the only way to revert to CQ Mode is to press shift-Tab. However, the FALSE setting is ignored if you have a call ready for a QSO on the other rig. This allows you to abort a second-radio QSO with <Esc> even if this parameter is FALSE."
 msgstr "hodnota: TRUE nebo FALSE. Je-li volba nastavena na TRUE, pak po stisku klávesy ESC v režimu S&P přepne program TR4W do režimu CQ. Při volbě FALSE lze přepnout z režimu S&P do režimu CQ jen stiskem kláves SHIFT-TAB. V režimu <2 RIG> není tato funkce aktivní, přičemž stisk klávesy ESC přeruší QSO na druhém RIGu."
@@ -1442,7 +1452,9 @@ msgctxt "TC_HELP_SPACE_BAR_DUPE_CHECK_ENABLE"
 msgid "Normally when you press <Space> when a callsign is present in the Call Window, TR4W will perform a dupe check on the displayed callsign. If you press <Space> without a callsign in the window, you will be put into S&P Mode and your callsign will be sent. If you set SPACE BAR DUPE CHECK ENABLE to FALSE, you will always go into S&P Mode and send your call, even if a call is present in the Call Window."
 msgstr "hodnota: TRUE nebo FALSE. Je-li volba nastavena na TRUE, pak je po zápisu do okna značky stiskem klávesy mezerníku vyvolána automatická kontrola, zda značka není dvoják. Při stisku klávesy mezerníku při prázdném okně značky dojde k přepnutí do režimu S&P a vyslání vlastní značky. Jestliže je nastavena volba SPACE BAR DUPE CHECK ENABLE = FALSE, pak dojde k přepnutí do režimu S&P a vyslání vlastní značky vždy, i když je v okně zápisu značky zapsáno cokoli."
 
+#. ACCELERATOR: this translation marks a keyboard shortcut (&) that the English does not have. Remove it unless this control really should have one -- two controls claiming the same letter makes one of them unreachable. Then clear "Needs work".
 #. Config command: SPRINT QSY RULE   (default: FALSE)
+#, fuzzy
 msgctxt "TC_HELP_SPRINT_QSY_RULE"
 msgid "If this parameter is TRUE, TR4W will automatically enter CQ Mode after completing a QSO in S&P Mode. This parameter is automatically set to TRUE when the Sprint contest is selected. See subsection 6.18.1 for more information on operating the Sprint. You should not set this variable to TRUE unless you are operating the Sprint. For similar (but not quite identical) behaviour in other contests, see the AUTO S&P ENABLE command."
 msgstr "hodnota: TRUE nebo FALSE. Je-li volba nastavena na TRUE, pak program automaticky přepne z režimu S&P do režimu CQ ihned po zápisu QSO v režimu S&P. Pak není nutno přepínat druh provozu ručně. Volba je nastavena automaticky při volbě závodu typu SPRINT. Nedoporučuje se nastavovat tuto volbu na hodnotu TRUE v případě, že nejde o závod typu SPRINT. Pro podobné, avšak nikoli totožné nastavení lze použít příkaz AUTO S&P ENABLE (viz)."

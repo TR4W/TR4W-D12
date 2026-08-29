@@ -56,7 +56,9 @@ msgctxt "TC_HELP_AUTO_DUPE_ENABLE_CQ"
 msgid "This parameter is now ignored. It did produce a 'QSO B4' message. Reference GitHub issue 556 for more information. 'QSO B4' message may be added to any F key if desired."
 msgstr "Когда вы находитесь в режиме CQ и этот переключатель имеет значение TRUE, то ранее сработанному корреспонденту, который вас вновь вызывает, будет передано вместо контрольного номера сообщение QSO BEFORE MESSAGE. Если переключатель имеет значение FALSE, то будет произведен нормальный обмен и QSO будет зарегистрировано с нулем очков за QSO. Значение по умолчанию TRUE. Удобно установить значение FALSE при вводе лога вручную после соревнований."
 
+#. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Config command: AUTO DUPE ENABLE S AND P   (default: TRUE)
+#, fuzzy
 msgctxt "TC_HELP_AUTO_DUPE_ENABLE_S_AND_P"
 msgid "If this parameter is TRUE, when you try to call a dupe with the <Enter> key in S&P Mode, TR4W will refuse to call the station. You might want to set this parameter to FALSE in contests like the Internet Sprint, in which you often call the same station on the same band and mode several times during the contest."
 msgstr "Если этот переключатель имеет значение TRUE, то когда в режиме поиска попытаетесь вызвать клавишей ENTER ранее сработанного корреспондента, то программа не будет передавать вызов. Вы можете установить FALSE в соревнованиях подобных Internet Sprint, где приходится часто вызывать одну и ту же станцию в разное время."
@@ -66,22 +68,30 @@ msgctxt "TC_HELP_AUTO_QSL_INTERVAL"
 msgid "Normally when you press <Enter> to log a QSO, the QSL MESSAGE is transmitted. The AUTO QSL INTERVAL command can be used to send the QUICK QSL MESSAGE instead, except that once every AUTO QSL INTERVAL QSOs, the QSL MESSAGE is transmitted instead. This is typically used when dealing with a large pileup. If you set AUTO QSL INTERVAL to 3, then the QUICK QSL MESSAGE would be sent, except for every third QSO. A value of zero disables this feature, in which case the QSL MESSAGE is sent at the end of every QSO."
 msgstr "Значения: любое целое число N. Обычно, когда вы нажимаете клавишу ENTER, чтобы зарегистрировать QSO, то будет передано сообщение QSL MESSAGE. Команда AUTO QSL INTERVAL может использоваться, чтобы вместо длинного QSL MESSAGE передать короткое QUICK QSL MESSAGE, и только через N раз — QSL MESSAGE. Эта команда обычно используется в большом pile-up. Если Вы устанавливаете AUTO QSL INTERVAL=3, то QUICK QSL MESSAGE будет передаваться, каждое третье QSO. Значение ноль отключает эту особенность, и QSL MESSAGE передается каждый раз."
 
+#. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Config command: AUTO QSO NUMBER DECREMENT   (default: TRUE)
+#, fuzzy
 msgctxt "TC_HELP_AUTO_QSO_NUMBER_DECREMENT"
 msgid "If you have programmed an S&P exchange that includes a QSO number, you might find yourself in the situation in which you have just logged a station who is now asking for a repeat of the exchange you sent him. If you press F2, you will send the next QSO number, which will be one more than the one you sent the first time. To fix this problem, you can set AUTO QSO NUMBER DECREMENT to TRUE; this causes TR4W to decrement the QSO number when you press F2 when both the Call Window and the Exchange Window are empty."
 msgstr "Когда этот параметр имеет значение TRUE, то независимо от режима поиска или общего вызова при пустом поле принимаемого позывного нажатие любой функциональной клавиши с записанным передаваемым номером (#) уменьшает последний на единицу. Функция полезна, если корреспондент переспрашивает переданный номер, а связь уже записана в журнал."
 
+#. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Config command: AUTO RETURN TO CQ MODE   (default: TRUE)
+#, fuzzy
 msgctxt "TC_HELP_AUTO_RETURN_TO_CQ_MODE"
 msgid "If this parameter is TRUE, then pressing <Enter> in S&P Mode when there is no information in either the Call Window or the Exchange Window will cause TR4W to return to CQ Mode."
 msgstr "Когда этот параметр имеет значение TRUE и в режиме поиска при пустых полях позывного и обмена нажата клавиша ENTER, то программа автоматически переходит в режим CQ."
 
+#. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Config command: AUTO S&P ENABLE SENSITIVITY   (default: 500)
+#, fuzzy
 msgctxt "TC_HELP_AUTO_S_P_ENABLE_SENSITIVITY"
 msgid "Controls how quickly you must move the VFO (in Hz/sec) in order for the program to jump automatically into S&P Mode if AUTO S&P ENABLE is TRUE."
 msgstr "Команда определяет, как быстро вы должны крутить валкодер трансивера, для того чтобы программа автоматически переключилась в режим поиска, при условии, что значение команды AUTO SP ENABLE равно TRUE."
 
+#. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Config command: AUTO S&P ENABLE   (default: FALSE)
+#, fuzzy
 msgctxt "TC_HELP_AUTO_S_P_ENABLE"
 msgid "When this parameter is TRUE, TR4W will automatically jump into S&P Mode if it detects you have moved the VFO quickly. See also AUTO S&P See also AUTO S&P ENABLE SENSITIVITY."
 msgstr "Когда этот параметр имеет значение TRUE программа автоматически перейдет в режим поиска, если обнаружится, что частота настройки изменилась больше чем на один килогерц за секунду."
@@ -342,7 +352,9 @@ msgctxt "TC_HELP_CW_TONE"
 msgid "The computer can send the CW over its speaker for the purpose of monitoring the transmission. This command allows you to select the pitch of that CW. Setting the value to zero disables sending the CW to the speaker (but the rig will still be keyed). The PADDLE MONITOR TONE command separately controls the tone frequency of CW sent with the paddle."
 msgstr "Компьютер может передавать CW на динамик компьютера для контроля. Этой командой можно установить желаемый тон. Установка CW TONE=0 отключает звук. Команда PADDLE MONITOR TONE отдельно управляет тоном CW, передаваемого с ключа, а PADDLE SPEED – скоростью передачи."
 
+#. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Config command: DE ENABLE   (default: TRUE)
+#, fuzzy
 msgctxt "TC_HELP_DE_ENABLE"
 msgid "This determines whether DE is sent before your callsign when using the F1 key in S&P Mode. If you dont want the program to put DE in front of your call (which is the case for most operators), set this flag to FALSE."
 msgstr "Эта команда определяет, передается ли DE перед вашим позывным при использовании клавиши F1 в режиме поиска. Если вы не хотите, чтобы программа передавала DE перед позывным, установите в FALSE."
@@ -407,7 +419,9 @@ msgctxt "TC_HELP_DX_MULTIPLIER"
 msgid "This command determines which type of DX multiplier the program will use."
 msgstr "Эта команда определяет, какой тип DX множителя использует программа."
 
+#. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Config command: ESCAPE EXITS SEARCH AND POUNCE   (default: TRUE)
+#, fuzzy
 msgctxt "TC_HELP_ESCAPE_EXITS_SEARCH_AND_POUNCE"
 msgid "When this parameter is TRUE, pressing <Esc> when in S&P Mode causes TR4W to revert to CQ Mode. When the parameter is FALSE, the only way to revert to CQ Mode is to press shift-Tab. However, the FALSE setting is ignored if you have a call ready for a QSO on the other rig. This allows you to abort a second-radio QSO with <Esc> even if this parameter is FALSE."
 msgstr "Если параметр установлен в TRUE, то при нажатии клавиши ESC в режиме поиска программа переходит в режим CQ. Если FALSE – то переключение «поиск-CQ» происходит только клавишами SHIFT-TAB. Однако эта команда игнорируется в режиме «2 радио», при этом клавишей ESCAPE можно прекратить QSO на втором радио."
@@ -1433,7 +1447,9 @@ msgctxt "TC_HELP_SPACE_BAR_DUPE_CHECK_ENABLE"
 msgid "Normally when you press <Space> when a callsign is present in the Call Window, TR4W will perform a dupe check on the displayed callsign. If you press <Space> without a callsign in the window, you will be put into S&P Mode and your callsign will be sent. If you set SPACE BAR DUPE CHECK ENABLE to FALSE, you will always go into S&P Mode and send your call, even if a call is present in the Call Window."
 msgstr "Обычно, когда вы нажимаете <Space>, когда в окне вызова присутствует позывной, TR4W выполняет проверку обмана на отображаемом позывном. Если вы нажмете <Space> без позывного в окне, вас поместят в режим S&P, и ваш позывной будет отправлен. Если вы установите SPACE BAR DUPE CHECK ENABLE на FALSE, вы всегда перейдете в режим S&P и отправите свой звонок, даже если звонок присутствует в окне вызова."
 
+#. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Config command: SPRINT QSY RULE   (default: FALSE)
+#, fuzzy
 msgctxt "TC_HELP_SPRINT_QSY_RULE"
 msgid "If this parameter is TRUE, TR4W will automatically enter CQ Mode after completing a QSO in S&P Mode. This parameter is automatically set to TRUE when the Sprint contest is selected. See subsection 6.18.1 for more information on operating the Sprint. You should not set this variable to TRUE unless you are operating the Sprint. For similar (but not quite identical) behaviour in other contests, see the AUTO S&P ENABLE command."
 msgstr "При установке в TRUE программа автоматически переключится в режим CQ после завершения проведения связи в режиме поиска. Это избавит вас от необходимости делать это вручную. Команда включается автоматически, когда выбраны соревнования SPRINT."

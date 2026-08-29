@@ -3062,9 +3062,11 @@ msgctxt "RC_PRESS_C"
 msgid "Press &C to program a CQ function key."
 msgstr "Pulse  &C  para programar la tecla funcion CQ."
 
+#. ACCELERATOR: this translation marks a keyboard shortcut (&) that the English does not have. Remove it unless this control really should have one -- two controls claiming the same letter makes one of them unreachable. Then clear "Needs work".
 #. Section: UEDITMESSAGE
 #: tfrmprogrammessage.btnexchange.caption utr4wstrings:rc_press_e
 #: tr4w/src/lang/tr4w_consts_eng.pas:539
+#, fuzzy
 msgctxt "RC_PRESS_E"
 msgid "Press &E to program an exchange/search and pounce function key."
 msgstr "Pulse  &E  para programar la tecla intercambio/buscar y trabajar S&P."
@@ -5230,8 +5232,10 @@ msgctxt "RC_RESET_RADIO_PORTS"
 msgid "Reset Radio Ports"
 msgstr "Restablecer puertos de radio"
 
+#. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_timesyn tr4w/src/lang/tr4w_consts_eng.pas:571
+#, fuzzy
 msgctxt "RC_TIMESYN"
 msgid "Synchronize time on &all computers"
 msgstr "Sincronizacion tiempo"
@@ -5738,14 +5742,18 @@ msgctxt "RC_ABOUT"
 msgid "About"
 msgstr "Acerca de"
 
+#. ACCELERATOR: this translation marks a keyboard shortcut (&) that the English does not have. Remove it unless this control really should have one -- two controls claiming the same letter makes one of them unreachable. Then clear "Needs work".
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_deleted tr4w/src/lang/tr4w_consts_eng.pas:705
+#, fuzzy
 msgctxt "RC_DELETED"
 msgid "Deleted"
 msgstr "&Borrados"
 
+#. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_search tr4w/src/lang/tr4w_consts_eng.pas:708
+#, fuzzy
 msgctxt "RC_SEARCH"
 msgid "&Search"
 msgstr "Buscar"
@@ -6317,8 +6325,10 @@ msgctxt "TC_THERENOLOGFILEYETS"
 msgid "There is no log file yet at %s."
 msgstr "Aún no hay archivo de registro en %s."
 
+#. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_openineditor tr4w/src/lang/tr4w_consts_eng.pas:896
+#, fuzzy
 msgctxt "TC_EDITOR_OPENINEDITOR"
 msgid "Open in text &editor"
 msgstr "Abierto en texto"
@@ -6329,14 +6339,18 @@ msgctxt "TC_EDITOR_EXPLORE"
 msgid "Explore"
 msgstr "Explorar"
 
+#. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_copy tr4w/src/lang/tr4w_consts_eng.pas:898
+#, fuzzy
 msgctxt "TC_EDITOR_COPY"
 msgid "&Copy"
 msgstr "\" Copy"
 
+#. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_selectall tr4w/src/lang/tr4w_consts_eng.pas:899
+#, fuzzy
 msgctxt "TC_EDITOR_SELECTALL"
 msgid "Select &all"
 msgstr "Seleccione"
