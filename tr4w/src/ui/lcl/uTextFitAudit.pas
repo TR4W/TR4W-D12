@@ -104,12 +104,28 @@ begin
       end;
 end;
 
+function Identify(aControl: TControl): string;
+{ What to call a control in a report.
+
+  A control placed in the designer without a Name still gets measured, and
+  reporting it as an empty string gives a reader nothing to search for. Fall
+  back to its class, which at least says what KIND of thing to look for. }
+begin
+   Result := aControl.Name;
+   if Result = '' then
+      begin
+      Result := '<unnamed ' + aControl.ClassName + '>';
+      end;
+end;
+
 function MeasureControl(aControl: TControl; const aForm: string;
                         aCanvas: TCanvas): integer;
 var
-   caption: string;
-   needs:   integer;
-   canvas:  TCanvas;
+   caption:    string;
+   needs:      integer;
+   lines:      integer;
+   lineHeight: integer;
+   canvas:     TCanvas;
 begin
    Result := 0;
    if (not aControl.Visible) or Scrolls(aControl) then
@@ -137,8 +153,6 @@ begin
       end;
    Inc(GMeasured);
 
-   (* The canvas is the form's; the FONT below is the control's own.
-
    (* THE FORM'S canvas, handed in. TWinControl does not publish one -- only
       TCustomControl and TGraphicControl do -- so there is no canvas to take
       from an arbitrary parent. The form always has one, and the font below
@@ -152,10 +166,45 @@ begin
    canvas.Font.Assign(aControl.Font);
    needs := canvas.TextWidth(caption);
 
+   (* A WORD-WRAPPED LABEL IS SUPPOSED TO BE WIDER THAN ITS BOX.
+
+      Measuring one against its Width reports every explanatory paragraph on
+      the form as catastrophically clipped -- PrefsForm.lblRelayPortInfo came
+      back "1449px over" in ENGLISH, on a label 620px wide and 54px tall that
+      renders perfectly in three lines. It was the loudest finding in every
+      language and it was noise in all of them.
+
+      For these the question is HEIGHT: does the wrapped text still fit the box
+      the designer gave it? A translation 40% longer needs a fourth line and
+      the box does not grow. Lines are estimated as width/width rather than
+      measured, which UNDER-counts -- wrapping breaks at word boundaries, so
+      the real line count is never lower than this. Under-counting is the right
+      direction: it can miss a marginal case but it cannot invent one, and a
+      false finding here is what buried the real ones. *)
+   { TLabel, not TCustomLabel: WordWrap is published one level down. }
+   if (aControl is TLabel) and TLabel(aControl).WordWrap then
+      begin
+      lineHeight := canvas.TextHeight('Wg');
+      if lineHeight < 1 then
+         begin
+         Exit;
+         end;
+      lines := (needs + Available(aControl) - 1) div Available(aControl);
+      if (lines * lineHeight) > aControl.Height then
+         begin
+         logger.Warn('TextFit: %s.%s wraps to %d line(s) needing %dpx of ' +
+                     'height, has %dpx -- "%s"',
+                     [aForm, Identify(aControl), lines, lines * lineHeight,
+                      aControl.Height, caption]);
+         Result := 1;
+         end;
+      Exit;
+      end;
+
    if needs > (Available(aControl) - SLACK_PX) then
       begin
       logger.Warn('TextFit: %s.%s needs %dpx, has %dpx -- "%s"',
-                  [aForm, aControl.Name, needs, Available(aControl), caption]);
+                  [aForm, Identify(aControl), needs, Available(aControl), caption]);
       Result := 1;
       end;
 end;

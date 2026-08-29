@@ -146,6 +146,11 @@ foreach ($code in $Lang)
       Repo       = $Repo
       Exe        = $Exe
       ExtraArgs  = @('--lang', $code, '--textfit')
+      # The default 3s was not always enough for Preferences to appear -- about
+      # a third of the languages measured ~290 captions instead of ~750 because
+      # that one window never opened. More time is a mitigation, not the fix;
+      # see the DISTRUST item in BENCH_QUEUE.md.
+      AfterMs    = 6000
    }
    if ($Command) { $smokeArgs['Command'] = $Command }
 
@@ -160,11 +165,29 @@ foreach ($code in $Lang)
    $runDir = Move-LogsAside $code
    $lines = Read-RunLogs -Dir $runDir
    # 'TextFit: <form>.<control> needs Npx, has Npx -- "caption"'
-   $hits = $lines | Where-Object { $_ -match 'TextFit: .*needs \d+px' }
+   $hits = $lines | Where-Object { $_ -match 'TextFit: .*(needs \d+px|needing \d+px)' }
 
    $seen = @{}
    foreach ($h in $hits)
       {
+      # A wrapped label overflows DOWNWARDS, and says so differently.
+      if ($h -match 'TextFit: (\S+) wraps to (\d+) line\(s\) needing (\d+)px of height, has (\d+)px -- "(.*)')
+         {
+         $key = '{0}|{1}' -f $matches[1], $matches[5]
+         if (-not $seen.ContainsKey($key))
+            {
+            $seen[$key] = $true
+            $results += [pscustomobject]@{
+               Lang    = $code
+               Control = $matches[1]
+               Needs   = [int]$matches[3]
+               Has     = [int]$matches[4]
+               Over    = [int]$matches[3] - [int]$matches[4]
+               Caption = ('[wraps to {0} lines] {1}' -f $matches[2], $matches[5])
+            }
+            }
+         continue
+         }
       # No '$' anchor: a caption may contain a line break (the function-key
       # messages do), so the log line does not end at the closing quote and an
       # anchored pattern drops exactly the findings most likely to be real.
