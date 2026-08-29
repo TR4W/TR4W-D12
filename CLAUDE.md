@@ -70,7 +70,17 @@ binary, the rest have not.
 
 **One English build.** ~~ENG + 8 (RUS/SER/MNG/CZE/ROM/GER/UKR/ESP)~~ — the compile-time language
 matrix is no longer built by anything. Translation moves to `resourcestring`, arriving from a
-separate worktree. POL and CHN were already decided-out.
+separate worktree. ~~POL and CHN were already decided-out.~~ **That restriction was rescinded
+on 2026-08-28 (NY4I) now that catalogues, not compile-time tables, carry the translations.**
+Polish already had a catalogue. Chinese did not, and the reason is worth knowing before anyone
+"fixes" it: `tr4w/src/lang/tr4w_consts_chn.pas` holds a real translation by Li Jia Wei BA4WI
+whose bytes are damaged at the BIT level -- it decodes as neither UTF-8 nor GBK nor Big5, so
+`pas2po` flags it `lossy` and refuses to harvest it. `tools/i18n/salvage_lossy.py` recovers the
+110 literals that come back as well-formed UTF-8 and writes them into `i18n/tr4w_zh_CN.po` as
+**fuzzy suggestions**, because the inversion guesses wrong often enough to matter and a wrong
+hanzi looks exactly like a right one. 144 strings are unrecoverable and need his original file.
+**Never bulk-defuzz that catalogue** -- fuzzy is the only thing keeping unverified text out of a
+build.
 
 ## Build System
 

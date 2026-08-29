@@ -1,0 +1,4441 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: TR4W\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: zh_CN\n"
+"X-Source-Language: en\n"
+
+#. Section: General
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:7
+#, fuzzy
+msgctxt "TC_TRANSLATION_LANGUAGE"
+msgid "ENGLISH"
+msgstr "CHINESE"
+
+#. Section: General
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:8
+#, fuzzy
+msgctxt "TC_TRANSLATION_AUTHOR"
+msgid "N4AF"
+msgstr "Li Jia Wei BA4WI"
+
+#. Section: General
+#: tr4w/src/lang/tr4w_consts_eng.pas:9
+#, fuzzy
+msgctxt "TC_TRANSLATOR_EMAIL"
+msgid "ny4i@ny4i.com"
+msgstr ""
+
+#. Section: General
+#: tr4w/src/lang/tr4w_consts_eng.pas:13
+#, fuzzy
+msgctxt "TC_TRANSLATION_CREDIT"
+msgid "%s translation by %s"
+msgstr ""
+
+#. Section: General
+#: tr4w/src/lang/tr4w_consts_eng.pas:14
+#, fuzzy
+msgctxt "TC_WAGWarn"
+msgid "Warning: Out of WAG allowed frequency range"
+msgstr ""
+
+#. Section: General
+#: tr4w/src/lang/tr4w_consts_eng.pas:15
+#, fuzzy
+msgctxt "TC_FREQ"
+msgid "Freq"
+msgstr ""
+
+#. Section: General
+#: tr4w/src/lang/tr4w_consts_eng.pas:16
+#, fuzzy
+msgctxt "TC_POINTS"
+msgid "Pts"
+msgstr ""
+
+#. Section: General
+#: tr4w/src/lang/tr4w_consts_eng.pas:17
+#, fuzzy
+msgctxt "TC_OP"
+msgid "Op"
+msgstr ""
+
+#. Section: General
+#: tr4w/src/lang/tr4w_consts_eng.pas:18
+#, fuzzy
+msgctxt "TC_INVALID"
+msgid "Invalid Entry"
+msgstr ""
+
+#. Section: General
+#: tr4w/src/lang/tr4w_consts_eng.pas:19
+#, fuzzy
+msgctxt "TC_FREQ_ZERO"
+msgid "ERROR: Invalid Frequency logged"
+msgstr ""
+
+#. Section: General
+#: tr4w/src/lang/tr4w_consts_eng.pas:20
+#, fuzzy
+msgctxt "TC_FREQ_OFF"
+msgid "SHOW FREQUENCY IN LOG is turned off"
+msgstr ""
+
+#. Section: General
+#: tr4w/src/lang/tr4w_consts_eng.pas:21
+#, fuzzy
+msgctxt "TC_CHECKCALLSIGN"
+msgid "Check callsign"
+msgstr ""
+
+#. Section: General
+#: tr4w/src/lang/tr4w_consts_eng.pas:22
+#, fuzzy
+msgctxt "TC_2RADIO_WARN"
+msgid "ERROR: 2 Radios on single band"
+msgstr ""
+
+#. Section: General
+#: tr4w/src/lang/tr4w_consts_eng.pas:23
+#, fuzzy
+msgctxt "TC_FREQUENCYFORCALLINKHZ"
+msgid "frequency for %s in kHz"
+msgstr ""
+
+#. Section: General
+#: tr4w/src/lang/tr4w_consts_eng.pas:24
+#, fuzzy
+msgctxt "TC_DIFVERSION"
+msgid "%s is from a different program version.\rTR4W is expecting version %s.\rThe file you are trying to read version %s."
+msgstr ""
+
+#. Section: General
+#. minute
+#: tr4w/src/lang/tr4w_consts_eng.pas:27
+#, fuzzy
+msgctxt "TC_M"
+msgid "m"
+msgstr ""
+
+#. Section: General
+#. second
+#: tr4w/src/lang/tr4w_consts_eng.pas:28
+#, fuzzy
+msgctxt "TC_S"
+msgid "s"
+msgstr ""
+
+#. Section: General
+#: tr4w/src/lang/tr4w_consts_eng.pas:30
+#, fuzzy
+msgctxt "TC_RADIO1"
+msgid "Radio 1"
+msgstr ""
+
+#. Section: General
+#: tr4w/src/lang/tr4w_consts_eng.pas:31
+#, fuzzy
+msgctxt "TC_RADIO2"
+msgid "Radio 2"
+msgstr ""
+
+#. Section: General
+#: tr4w/src/lang/tr4w_consts_eng.pas:33
+#, fuzzy
+msgctxt "TC_DISBALE_CIV"
+msgid "Disable \"CI-V Transceive\" mode in your ICOM rig. Refer to instruction manual of your radio."
+msgstr ""
+
+#. Section: General
+#: tr4w/src/lang/tr4w_consts_eng.pas:34
+#, fuzzy
+msgctxt "TC_SERIAL_FORMAT_LABEL"
+msgid "DATA/PARITY/STOP"
+msgstr ""
+
+#. Section: General
+#: tr4w/src/lang/tr4w_consts_eng.pas:35
+#, fuzzy
+msgctxt "TC_HAMLIB_ID_LABEL"
+msgid "HAMLIB ID"
+msgstr ""
+
+#. Section: General
+#: tr4w/src/lang/tr4w_consts_eng.pas:36
+#, fuzzy
+msgctxt "TC_PORT_CONFLICT_STARTUP"
+msgid "RADIO ONE and RADIO TWO are both configured to use %s. RADIO ONE keeps the port; RADIO TWO CAT control is disabled until one radio's CONTROL PORT is changed."
+msgstr ""
+
+#. Section: General
+#: tr4w/src/lang/tr4w_consts_eng.pas:37
+#, fuzzy
+msgctxt "TC_PORT_CONFLICT_DIALOG"
+msgid "%s is already configured as %s. Two devices cannot share a serial port."
+msgstr ""
+
+#. Section: General
+#: tr4w/src/lang/tr4w_consts_eng.pas:38
+#, fuzzy
+msgctxt "TC_PORT_CONFLICT_PROCEED"
+msgid "Apply anyway?"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:41
+#, fuzzy
+msgctxt "TC_YOU_ARE_USING_THE_LATEST_VERSION"
+msgid "You are using the latest version"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:42
+#, fuzzy
+msgctxt "TC_SET_VALUE_OF_SET_NOW"
+msgid "Set value of %s. Set now?"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:43
+#, fuzzy
+msgctxt "TC_CONFIGURATION_FILE"
+msgid "Configuration file"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:44
+#, fuzzy
+msgctxt "TC_CURRENT_OPERATOR_CALLSIGN"
+msgid "current operator callsign"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:45
+#, fuzzy
+msgctxt "TC_APPENDIMPORTEDQSOSTOCURRENTLOG"
+msgid "Append imported QSOs to current log?"
+msgstr ""
+
+#. Section: MAIN
+#. - '345 Qs imported.'
+#: tr4w/src/lang/tr4w_consts_eng.pas:46
+#, fuzzy
+msgctxt "TC_QSO_IMPORTED"
+msgid "Qs imported."
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:47
+#, fuzzy
+msgctxt "TC_ISADUPE"
+msgid "%s is a dupe!!"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:48
+#, fuzzy
+msgctxt "TC_ERRORINLOGFILE"
+msgid "Error in log file!"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:49
+#, fuzzy
+msgctxt "TC_HASIMPROPERSYNTAX"
+msgid "%s has improper syntax!!"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:50
+#, fuzzy
+msgctxt "TC_PREF_OR_CQZONE"
+msgid "Enter your CQ ZONE or JA PREFECTURE"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:51
+#, fuzzy
+msgctxt "TC_SORRYNOLOG"
+msgid "Sorry!! NO LOG = TRUE which prohibits logging QSOs on this computer"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:52
+#, fuzzy
+msgctxt "TC_SETCOMPUTERIDVALUE"
+msgid "Set COMPUTER ID value."
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:54
+#, fuzzy
+msgctxt "TC_WANTTOCONVERTLOG"
+msgid "Would you like to convert this log to the latest format?"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:55
+#, fuzzy
+msgctxt "TC_LOGFILENOTFOUND"
+msgid "Log file not found"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:56
+#, fuzzy
+msgctxt "TC_CANNOTBACKUPLOG"
+msgid "Could not make a backup copy of "
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:57
+#, fuzzy
+msgctxt "TC_CANNOTCOPYLOGREADONLY"
+msgid "Cannot copy log file -- target exists and is read-only"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:58
+#, fuzzy
+msgctxt "TC_BACKUPCREATED"
+msgid "Log file backup created"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:59
+#, fuzzy
+msgctxt "TC_CANNOTRENAME"
+msgid "Can not rename"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:61
+#, fuzzy
+msgctxt "TC_CLEARALLLOGS"
+msgid "\"CLEARALLLOGS\" to clear all logs in network"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:62
+#, fuzzy
+msgctxt "TC_CLEAR_DUPESHEET_NET"
+msgid "\"CLEARDUPESHEET\" to clear all dupesheets in network"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:63
+#, fuzzy
+msgctxt "TC_CLEAR_MULTSHEET_NET"
+msgid "\"CLEARMULTSHEET\" to clear all multsheets in network"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:65
+#, fuzzy
+msgctxt "TC_REALLYWANTTOCLEARTHELOG"
+msgid "Do you really want to clear the current log?"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:66
+#, fuzzy
+msgctxt "TC_MESSAGETOSENDVIANETWORK"
+msgid "message to send via network"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:67
+#, fuzzy
+msgctxt "TC_SENDTIMETOCOMPUTERSONTHENETWORK"
+msgid "Do you really want to send time to computers on the network?"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:68
+#, fuzzy
+msgctxt "TC_RULESONSM3CER"
+msgid "Rules for %s contest at WA7BNM Contest Calendar"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:69
+#, fuzzy
+msgctxt "TC_RULESONQRZRU"
+msgid "Rules for %s contest at QRZ.RU"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:70
+#, fuzzy
+msgctxt "TC_NOTE"
+msgid "note"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:71
+#, fuzzy
+msgctxt "TC_DUPESHEETCLEARED"
+msgid "Dupe sheet cleared!"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:72
+#, fuzzy
+msgctxt "TC_MULTSHEETCLEARED"
+msgid "Mult sheet cleared!"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:73
+#, fuzzy
+msgctxt "TC_YESTOCLEARTHEDUPESHEET"
+msgid "\"YES\" to clear the dupesheet"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:74
+#, fuzzy
+msgctxt "TC_CLEARMULTTOCLEARMULTSHEET"
+msgid "\"CLEARMULT\" to clear the multsheet"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:76
+#, fuzzy
+msgctxt "TC_TRANSMITFREQUENCYKILOHERTZ"
+msgid "transmit frequency (kiloHertz): "
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:77
+#, fuzzy
+msgctxt "TC_SPRINTQSYRULE"
+msgid "SPRINT QSY RULE!!!"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:78
+#, fuzzy
+msgctxt "TC_PADDLE"
+msgid "Paddle"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:79
+#, fuzzy
+msgctxt "TC_FOOTSW"
+msgid "Footsw."
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:83
+#, fuzzy
+msgctxt "TC_SUN"
+msgid "Sun"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:84
+#, fuzzy
+msgctxt "TC_MON"
+msgid "Mon"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:85
+#, fuzzy
+msgctxt "TC_TUE"
+msgid "Tue"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:86
+#, fuzzy
+msgctxt "TC_WED"
+msgid "Wed"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:87
+#, fuzzy
+msgctxt "TC_THU"
+msgid "Thu"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:88
+#, fuzzy
+msgctxt "TC_FRI"
+msgid "Fri"
+msgstr ""
+
+#. Section: MAIN
+#: tr4w/src/lang/tr4w_consts_eng.pas:89
+#, fuzzy
+msgctxt "TC_SAT"
+msgid "Sat"
+msgstr ""
+
+#. Section: uMP3Recorder
+#: tr4w/src/lang/tr4w_consts_eng.pas:93
+#, fuzzy
+msgctxt "TC_LAME_ERROR"
+msgid "You may download it from"
+msgstr ""
+
+#. Section: uMP3Recorder
+#: tr4w/src/lang/tr4w_consts_eng.pas:96
+#, fuzzy
+msgctxt "TC_THISVERSION"
+msgid "You have "
+msgstr ""
+
+#. Section: uMP3Recorder
+#: tr4w/src/lang/tr4w_consts_eng.pas:97
+#, fuzzy
+msgctxt "TC_WASBUILDIN"
+msgid " installed (build date "
+msgstr ""
+
+#. Section: uMP3Recorder
+#: tr4w/src/lang/tr4w_consts_eng.pas:98
+#, fuzzy
+msgctxt "TC_DOYOUWANTTOCHECKTHELATESTVERSION"
+msgid "Would you like to check for a possible newer version of  TR4W ?"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:101
+#, fuzzy
+msgctxt "TC_LABRE"
+msgid "Enter 2 char QTH ID"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:102
+#, fuzzy
+msgctxt "TC_EUDX"
+msgid "EU country, enter your four character country code"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:103
+#, fuzzy
+msgctxt "TC_IRTS"
+msgid "EI/GI, enter your County"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:104
+#, fuzzy
+msgctxt "TC_LATEST_CONFIG_FILE"
+msgid "Latest config file"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:105
+#, fuzzy
+msgctxt "TC_OPENCONFIGURATIONFILE"
+msgid " - Open configuration file or start a new contest"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:106
+#, fuzzy
+msgctxt "TC_FOLDERALREADYEXISTSOVERWRITE"
+msgid "Folder \"%s\" already exists.\rOverwrite ?"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:107
+#, fuzzy
+msgctxt "TC_IAMIN"
+msgid "&I am in %s"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:108
+#, fuzzy
+msgctxt "TC_CROAT"
+msgid "I am in Croatia"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:110
+#, fuzzy
+msgctxt "TC_NEWENGLANDSTATEABREVIATION"
+msgid "Enter your New England state abbreviation\r(ME, NH, VT, MA, CT, RI):"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:111
+#, fuzzy
+msgctxt "TC_ENTERTHEQTHTHATYOUWANTTOSEND"
+msgid "Enter the QTH that you want to send:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:112
+#, fuzzy
+msgctxt "TC_ENTERSTATEFORUSPROVINCEFORCANADA"
+msgid "Enter state for U.S., province for Canada:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:113
+#, fuzzy
+msgctxt "TC_ENTERYOUROBLASTID"
+msgid "Enter your oblast ID:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:114
+#, fuzzy
+msgctxt "TC_ENTERYOURPROVINCEID"
+msgid "Enter your province ID:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:115
+#, fuzzy
+msgctxt "TC_ENTERYOURCOUNTYCODE"
+msgid "Enter your county code:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:116
+#, fuzzy
+msgctxt "TC_ENTERYOURDOK"
+msgid "Enter your DOK:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:117
+#, fuzzy
+msgctxt "TC_ENTERYOURDISTRICTABBREVIATION"
+msgid "Enter your district abbreviation:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:118
+#, fuzzy
+msgctxt "TC_ENTERYOURFOCNUMBER"
+msgid "Enter your FOC number:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:119
+#, fuzzy
+msgctxt "TC_ENTERYOURRDAID"
+msgid "Enter your RDA ID:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:120
+#, fuzzy
+msgctxt "TC_ENTERYOURIOTAREFERENCEDESIGNATOR"
+msgid "Enter your IOTA Reference Designator (WITH DASH and no leading zeros delimiting # e.g. EU-5)"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:121
+#, fuzzy
+msgctxt "TC_ENTERYOURPARKREFERENCEDESIGNATOR"
+msgid "Enter your POTA Park Reference Designator (WITH DASH e.g. K-1234)"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:122
+#, fuzzy
+msgctxt "TC_ENTERYOURCITYIDENTIFIER"
+msgid "Enter your city identifier:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:123
+#, fuzzy
+msgctxt "TC_ENTERYOURNAME"
+msgid "Enter your name:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:124
+#, fuzzy
+msgctxt "TC_ENTERTHELASTTWODIGITSOFTHEYEAR"
+msgid "Enter the last two digits of the year of your first official amateur radio license:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:125
+#, fuzzy
+msgctxt "TC_ENTERYOURZONE"
+msgid "Enter your zone:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:126
+#, fuzzy
+msgctxt "TC_ENTERYOURGEOGRAPHICALCOORDINATES"
+msgid "Enter your geographical coordinates\r(e.g. 55N37O for Moscow):"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:127
+#, fuzzy
+msgctxt "TC_ENTERSUMOFYOURAGEANDAMOUNT"
+msgid "Enter sum of your age and amount of years elapsed since your first QSO (e.g. 28+14=42):"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:128
+#, fuzzy
+msgctxt "TC_OZCR"
+msgid "Enter three-letters number:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:129
+#, fuzzy
+msgctxt "TC_ENTERYOURSTATECODE"
+msgid "Enter your state code:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:130
+#, fuzzy
+msgctxt "TC_ENTERYOURFOURDIGITGRIDSQUARE"
+msgid "Enter your four digit grid square:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:131
+#, fuzzy
+msgctxt "TC_RFAS"
+msgid "Enter your geographical coordinates:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:132
+#, fuzzy
+msgctxt "TC_ENTERYOURSIXDIGITGRIDSQUARE"
+msgid "Enter your six digit grid square:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:133
+#, fuzzy
+msgctxt "TC_ENTERYOURNAMEANDSTATE"
+msgid "Enter your name (and state if you are in North America):"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:134
+#, fuzzy
+msgctxt "TC_ENTERYOURNAMEANDQTH"
+msgid "Enter your name and QTH (US state, Canadian Province or DX country) or member number:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:135
+#, fuzzy
+msgctxt "TC_ENTERYOURPRECEDENCECHECKSECTION"
+msgid "Enter your precedence, your check\r(last two digits of year licensed) and ARRL section:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:136
+#, fuzzy
+msgctxt "TC_ENTERYOURQTHANDTHENAME"
+msgid "Enter your QTH that you want to send\rand the name you want to use:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:137
+#, fuzzy
+msgctxt "TC_ENTERFIRSTTWODIGITSOFYOURQTH"
+msgid "Enter first two digits of your QTH:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:138
+#, fuzzy
+msgctxt "TC_ENTERYOURAGEINMYSTATEFIELD"
+msgid "Enter your age in MY STATE field:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:139
+#, fuzzy
+msgctxt "TC_ENTERYOURQTHORPOWER"
+msgid "Enter your QTH that you want to send if you are in North America or your power as MY STATE if outside:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:140
+#, fuzzy
+msgctxt "TC_ENTERFIRSTTWOLETTERSOFYOURGRID"
+msgid "Enter first two letters of your grid square:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:141
+#, fuzzy
+msgctxt "TC_ENTERYOURSQUAREID"
+msgid "Enter your square ID:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:142
+#, fuzzy
+msgctxt "TC_ENTERYOURMEMBERSHIPNUMBER"
+msgid "Enter your membership number:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:143
+#, fuzzy
+msgctxt "TC_ENTERYOURCONTINENT"
+msgid "Enter your continent (and possible additional ID, i.e. SA or NAQ)"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:144
+#, fuzzy
+msgctxt "TC_ENTERYOURCOUNTYORSTATEPOROVINCEDX"
+msgid "Enter your county if you are in %s state. Enter your state, Canadian Province or \"DX\" if outside of %s:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#. 4.97.6
+#: tr4w/src/lang/tr4w_consts_eng.pas:145
+#, fuzzy
+msgctxt "TC_ENTERYOURISTRICTIFINVE7"
+msgid "Enter your federal district if in British Columbia, or your State/Province"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:146
+#, fuzzy
+msgctxt "TC_PREFECTURE"
+msgid "Enter your prefecture:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:147
+#, fuzzy
+msgctxt "TC_STATIONCLASS"
+msgid "Enter your station class:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:148
+#, fuzzy
+msgctxt "TC_AGECALLSIGNAGE"
+msgid "Enter your age (and Silent Key callsign and age):"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:149
+#, fuzzy
+msgctxt "TC_DEPARTMENT"
+msgid "Enter your department:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:150
+#, fuzzy
+msgctxt "TC_ENTERYOURRDAIDORGRID"
+msgid "Enter your RDA ID (for UA1A stations) or four digit grid square:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:151
+#, fuzzy
+msgctxt "TC_ENTERYOURBRANCHNUMBER"
+msgid "Enter your Branch number:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:152
+#, fuzzy
+msgctxt "TC_ENTERYOURPOSTCODE"
+msgid "Enter your postcode:"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:153
+#, fuzzy
+msgctxt "TC_ENTERYOURDISTRICTCODE"
+msgid "If in UK/EI, enter your 2 digit district code"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:154
+#, fuzzy
+msgctxt "TC_ISLANDSTATION"
+msgid "Island station"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:155
+#, fuzzy
+msgctxt "TC_NEWENGLAND"
+msgid "New England"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:156
+#, fuzzy
+msgctxt "TC_CALIFORNIA"
+msgid "California"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:157
+#, fuzzy
+msgctxt "TC_FLORIDA"
+msgid "Florida"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:158
+#, fuzzy
+msgctxt "TC_MICHIGAN"
+msgid "Michigan"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:159
+#, fuzzy
+msgctxt "TC_MINNESOTA"
+msgid "Minnesota"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:160
+#, fuzzy
+msgctxt "TC_OHIO"
+msgid "Ohio"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:161
+#, fuzzy
+msgctxt "TC_WASHINGTON"
+msgid "Washington"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:162
+#, fuzzy
+msgctxt "TC_WISCONSIN"
+msgid "Wisconsin"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:163
+#, fuzzy
+msgctxt "TC_TEXAS"
+msgid "Texas"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:164
+#, fuzzy
+msgctxt "TC_NORTHAMERICA"
+msgid "North America"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:165
+#, fuzzy
+msgctxt "TC_RUSSIA"
+msgid "Russia"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:166
+#, fuzzy
+msgctxt "TC_UKRAINE"
+msgid "Ukraine"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:167
+#, fuzzy
+msgctxt "TC_CZECHREPUBLICORINSLOVAKIA"
+msgid "Czech Republic or in Slovakia"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:168
+#, fuzzy
+msgctxt "TC_BULGARIA"
+msgid "Bulgaria"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:169
+#, fuzzy
+msgctxt "TC_ROMANIA"
+msgid "Romania"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:170
+#, fuzzy
+msgctxt "TC_HUNGARY"
+msgid "Hungary"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:171
+#, fuzzy
+msgctxt "TC_YUGOSLAVIA"
+msgid "Yugoslavia"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:172
+#, fuzzy
+msgctxt "TC_UKEI"
+msgid "If in Uk/EI enter your 2 digit district code"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:173
+#, fuzzy
+msgctxt "TC_BELGIUM"
+msgid "Belgium"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:174
+#, fuzzy
+msgctxt "TC_NETHERLANDS"
+msgid "Netherlands"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:175
+#, fuzzy
+msgctxt "TC_STPETERSBURGOBLAST"
+msgid "St.Petersburg / oblast"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:176
+#, fuzzy
+msgctxt "TC_GERMANY"
+msgid "Germany"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:177
+#, fuzzy
+msgctxt "TC_UK"
+msgid "UK"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:178
+#, fuzzy
+msgctxt "TC_ARKTIKACLUB"
+msgid "club"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:179
+#, fuzzy
+msgctxt "TC_POLAND"
+msgid "Poland"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:180
+#, fuzzy
+msgctxt "TC_KAZAKHSTAN"
+msgid "Kazakhstan"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:181
+#, fuzzy
+msgctxt "TC_ITALY"
+msgid "Italy"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:182
+#, fuzzy
+msgctxt "TC_SWITZERLAND"
+msgid "Switzerland"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:183
+#, fuzzy
+msgctxt "TC_HQ"
+msgid "HQ (HQ station)"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:184
+#, fuzzy
+msgctxt "TC_CIS"
+msgid "CIS"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:185
+#, fuzzy
+msgctxt "TC_SPAIN"
+msgid "Spain"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:186
+#, fuzzy
+msgctxt "TC_JAPAN"
+msgid "Japan"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:187
+#, fuzzy
+msgctxt "TC_CANADA"
+msgid "Canada"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:188
+#, fuzzy
+msgctxt "TC_FRANCE"
+msgid "France"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:189
+#, fuzzy
+msgctxt "TC_HQ_OR_MEMBER"
+msgid "HQ or member"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:190
+#, fuzzy
+msgctxt "TC_IRELAND"
+msgid "Ireland"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:191
+#, fuzzy
+msgctxt "TC_GC"
+msgid "special two character designator"
+msgstr ""
+
+#. Section: NEW CONTEST
+#: tr4w/src/lang/tr4w_consts_eng.pas:192
+#, fuzzy
+msgctxt "TC_GAGARIN"
+msgid "special two char ID"
+msgstr ""
+
+#. Section: UTELNET
+#: tr4w/src/lang/tr4w_consts_eng.pas:195
+#, fuzzy
+msgctxt "TC_TELNET"
+msgid "Connect\000Disconnect\000Commands\000Freeze\000Clear\000SH/50\000\000"
+msgstr ""
+
+#. Section: UTELNET
+#: tr4w/src/lang/tr4w_consts_eng.pas:196
+#, fuzzy
+msgctxt "TC_YOURNOTCONNECTEDTOTHEINTERNET"
+msgid "YOU ARE NOT CONNECTED TO THE INTERNET!"
+msgstr ""
+
+#. Section: UTELNET
+#: tr4w/src/lang/tr4w_consts_eng.pas:197
+#, fuzzy
+msgctxt "TC_GETHOST"
+msgid "GET HOST.."
+msgstr ""
+
+#. Section: UTELNET
+#: tr4w/src/lang/tr4w_consts_eng.pas:198
+#, fuzzy
+msgctxt "TC_SERVER"
+msgid "SERVER: %s"
+msgstr ""
+
+#. Section: UTELNET
+#: tr4w/src/lang/tr4w_consts_eng.pas:199
+#, fuzzy
+msgctxt "TC_HOST"
+msgid "HOST  : %s"
+msgstr ""
+
+#. Section: UTELNET
+#: tr4w/src/lang/tr4w_consts_eng.pas:200
+#, fuzzy
+msgctxt "TC_CONNECT"
+msgid "CONNECT.."
+msgstr ""
+
+#. Section: UTELNET
+#: tr4w/src/lang/tr4w_consts_eng.pas:201
+#, fuzzy
+msgctxt "TC_CONNECTED"
+msgid "CONNECTED"
+msgstr ""
+
+#. Section: UTELNET
+#: tr4w/src/lang/tr4w_consts_eng.pas:202
+#, fuzzy
+msgctxt "TC_YOUARESPOTTEDBYANOTHERSTATION"
+msgid "You are spotted by another station."
+msgstr ""
+
+#. Section: UNET
+#: tr4w/src/lang/tr4w_consts_eng.pas:206
+#, fuzzy
+msgctxt "TC_CONNECTIONTOTR4WSERVERLOST"
+msgid "Connection to TR4WSERVER %s:%d lost."
+msgstr ""
+
+#. Section: UNET
+#: tr4w/src/lang/tr4w_consts_eng.pas:207
+#, fuzzy
+msgctxt "TC_COMPUTERCLOCKISSYNCHRONIZED"
+msgid "Computer clock is synchronized."
+msgstr ""
+
+#. Section: UNET
+#: tr4w/src/lang/tr4w_consts_eng.pas:208
+#, fuzzy
+msgctxt "TC_CONNECTINGTO"
+msgid "Connecting to "
+msgstr ""
+
+#. Section: UNET
+#: tr4w/src/lang/tr4w_consts_eng.pas:209
+#, fuzzy
+msgctxt "TC_CONNECTTOTR4WSERVERFAILED"
+msgid "Connect to TR4WSERVER failed. Check SERVER PASSWORD value!!"
+msgstr ""
+
+#. Section: UNET
+#: tr4w/src/lang/tr4w_consts_eng.pas:210
+#, fuzzy
+msgctxt "TC_CONNECTEDTO"
+msgid "Connected to "
+msgstr ""
+
+#. Section: UNET
+#: tr4w/src/lang/tr4w_consts_eng.pas:211
+#, fuzzy
+msgctxt "TC_DISCONNECTEDFROM"
+msgid "** DISCONNECTED from "
+msgstr ""
+
+#. Section: UNET
+#: tr4w/src/lang/tr4w_consts_eng.pas:212
+#, fuzzy
+msgctxt "TC_AUTOSYNCHRONIZINGLOG"
+msgid "Auto-synchronizing log from server."
+msgstr ""
+
+#. Section: UNET
+#: tr4w/src/lang/tr4w_consts_eng.pas:213
+#, fuzzy
+msgctxt "TC_FAILEDTOCONNECTTO"
+msgid "Failed to connect to "
+msgstr ""
+
+#. Section: UNET
+#: tr4w/src/lang/tr4w_consts_eng.pas:214
+#, fuzzy
+msgctxt "TC_SERVERANDLOCALLOGSAREIDENTICAL"
+msgid "Server and local logs are identical."
+msgstr ""
+
+#. Section: UNET
+#: tr4w/src/lang/tr4w_consts_eng.pas:215
+#, fuzzy
+msgctxt "TC_NETWORK"
+msgid "Network : %s %s:%d"
+msgstr ""
+
+#. Section: UNET
+#: tr4w/src/lang/tr4w_consts_eng.pas:216
+#, fuzzy
+msgctxt "TC_SERVER_LOG_CHANGED"
+msgid "Server log changed. %u QSO(s) updated. Do logs synchronizing (Ctrl+Alt+S)."
+msgstr ""
+
+#. Section: UNET
+#: tr4w/src/lang/tr4w_consts_eng.pas:217
+#, fuzzy
+msgctxt "TC_ALL_LOGS_NETWORK_CLEARED"
+msgid "All logs in TR4W network cleared."
+msgstr ""
+
+#. Section: UGETSCORES
+#: tr4w/src/lang/tr4w_consts_eng.pas:221
+#, fuzzy
+msgctxt "TC_FAILEDTOCONNECTTOGETSCORESORG"
+msgid "Failed to connect"
+msgstr ""
+
+#. Section: UGETSCORES
+#: tr4w/src/lang/tr4w_consts_eng.pas:222
+#, fuzzy
+msgctxt "TC_NOANSWERFROMSERVER"
+msgid "No answer from server"
+msgstr ""
+
+#. Section: UGETSCORES
+#: tr4w/src/lang/tr4w_consts_eng.pas:223
+#, fuzzy
+msgctxt "TC_UPLOADEDSUCCESSFULLY"
+msgid "Uploaded successfully."
+msgstr ""
+
+#. Section: UGETSCORES
+#: tr4w/src/lang/tr4w_consts_eng.pas:224
+#, fuzzy
+msgctxt "TC_FAILEDTOLOAD"
+msgid "Failed to load. View getscoresanswer.html for details."
+msgstr ""
+
+#. Section: UBANDMAP
+#: tr4w/src/lang/tr4w_consts_eng.pas:228
+#, fuzzy
+msgctxt "TC_SOURCE"
+msgid "Source: %s"
+msgstr ""
+
+#. Section: UBANDMAP
+#: tr4w/src/lang/tr4w_consts_eng.pas:229
+#, fuzzy
+msgctxt "TC_MIN"
+msgid "%u min."
+msgstr ""
+
+#. Section: LOGWIND
+#: tr4w/src/lang/tr4w_consts_eng.pas:233
+#, fuzzy
+msgctxt "TC_CQTOTAL"
+msgid "CQ total: %u"
+msgstr ""
+
+#. Section: LOGWIND
+#: tr4w/src/lang/tr4w_consts_eng.pas:234
+#, fuzzy
+msgctxt "TC_REPEATING"
+msgid "Repeating %s  Listen time = %u msec - PgUp/Dn to adjust or ESCAPE"
+msgstr ""
+
+#. Section: LOGWIND
+#: tr4w/src/lang/tr4w_consts_eng.pas:235
+#, fuzzy
+msgctxt "TC_NEWTOUR"
+msgid "New tour %d/%d"
+msgstr ""
+
+#. Section: LOGWIND
+#: tr4w/src/lang/tr4w_consts_eng.pas:236
+#, fuzzy
+msgctxt "TC_ENTER"
+msgid "Enter %s :"
+msgstr ""
+
+#. Section: LOGWIND
+#: tr4w/src/lang/tr4w_consts_eng.pas:237
+#, fuzzy
+msgctxt "TC_PTS"
+msgid "%d Pts"
+msgstr ""
+
+#. Section: LOGWIND
+#: tr4w/src/lang/tr4w_consts_eng.pas:238
+#, fuzzy
+msgctxt "TC_RATE"
+msgid "Rate = %u"
+msgstr ""
+
+#. Section: LOGWIND
+#: tr4w/src/lang/tr4w_consts_eng.pas:239
+#, fuzzy
+msgctxt "TC_LAST60"
+msgid "Last 60 = %d"
+msgstr ""
+
+#. Section: LOGWIND
+#: tr4w/src/lang/tr4w_consts_eng.pas:240
+#, fuzzy
+msgctxt "TC_THISHR"
+msgid "This hr = %d"
+msgstr ""
+
+#. Section: LOGWIND
+#: tr4w/src/lang/tr4w_consts_eng.pas:241
+#, fuzzy
+msgctxt "TC_BAND_CHANGES"
+msgid "Bn. ch. = %d"
+msgstr ""
+
+#. Section: LOGWIND
+#: tr4w/src/lang/tr4w_consts_eng.pas:243
+#, fuzzy
+msgctxt "TC_HAVEQTCS"
+msgid "Have %u QTCs"
+msgstr ""
+
+#. Section: LOGWIND
+#: tr4w/src/lang/tr4w_consts_eng.pas:244
+#, fuzzy
+msgctxt "TC_INSERT"
+msgid "INSERT"
+msgstr ""
+
+#. Section: LOGWIND
+#: tr4w/src/lang/tr4w_consts_eng.pas:245
+#, fuzzy
+msgctxt "TC_OVERRIDE"
+msgid "OVERRIDE"
+msgstr ""
+
+#. Section: LOGWIND
+#: tr4w/src/lang/tr4w_consts_eng.pas:246
+#, fuzzy
+msgctxt "TC_UNKNOWNCOUNTRY"
+msgid "Unknown country"
+msgstr ""
+
+#. Section: UCALLSIGNS
+#: tr4w/src/lang/tr4w_consts_eng.pas:250
+#, fuzzy
+msgctxt "TC_DUPESHEET"
+msgid "Dupesheet - %sm-%s"
+msgstr ""
+
+#. Section: LOGEDIT
+#: tr4w/src/lang/tr4w_consts_eng.pas:254
+#, fuzzy
+msgctxt "TC_QSONEEDSFOR"
+msgid " QSO needs for %s :"
+msgstr ""
+
+#. Section: LOGEDIT
+#: tr4w/src/lang/tr4w_consts_eng.pas:255
+#, fuzzy
+msgctxt "TC_MULTNEEDSFOR"
+msgid " Mult needs for %s :"
+msgstr ""
+
+#. Section: LOGEDIT
+#: tr4w/src/lang/tr4w_consts_eng.pas:256
+#, fuzzy
+msgctxt "TC_MISSINGMULTSREPORT"
+msgid "Missing mults report: %u countries on at least %u but not all bands."
+msgstr ""
+
+#. Section: LOGDUPE
+#: tr4w/src/lang/tr4w_consts_eng.pas:260
+#, fuzzy
+msgctxt "TC_THEREWERECALLS"
+msgid "There were %u calls found in initial exchange file.\r+%u dupe(s)"
+msgstr ""
+
+#. Section: LOGDUPE
+#: tr4w/src/lang/tr4w_consts_eng.pas:261
+#, fuzzy
+msgctxt "TC_RESTARTBINISFORADIFFERENTCONTEST"
+msgid "RESTART.BIN is for a different contest."
+msgstr ""
+
+#. Section: LOGSTUFF
+#: tr4w/src/lang/tr4w_consts_eng.pas:265
+#, fuzzy
+msgctxt "TC_NOTENOUGHINFOINEXCHANGE"
+msgid "Not enough info in exchange!!"
+msgstr ""
+
+#. Section: LOGSTUFF
+#: tr4w/src/lang/tr4w_consts_eng.pas:266
+#, fuzzy
+msgctxt "TC_IMPROPERDOMESITCQTH"
+msgid "Improper domestic QTH!!"
+msgstr ""
+
+#. Section: LOGSTUFF
+#: tr4w/src/lang/tr4w_consts_eng.pas:267
+#, fuzzy
+msgctxt "TC_IMPROPERDOMESITCQTHORMISSINGNAME"
+msgid "Improper domestic QTH or missing name!!"
+msgstr ""
+
+#. Section: LOGSTUFF
+#: tr4w/src/lang/tr4w_consts_eng.pas:268
+#, fuzzy
+msgctxt "TC_MISSINGQTHANDORNAME"
+msgid "Missing QTH and/or name!!"
+msgstr ""
+
+#. Section: LOGSTUFF
+#: tr4w/src/lang/tr4w_consts_eng.pas:269
+#, fuzzy
+msgctxt "TC_NOQSONUMBERFOUND"
+msgid "No QSO number found!!"
+msgstr ""
+
+#. Section: LOGSTUFF
+#: tr4w/src/lang/tr4w_consts_eng.pas:270
+#, fuzzy
+msgctxt "TC_IMPROPERZONENUMBER"
+msgid "Improper zone number!!"
+msgstr ""
+
+#. Section: LOGSTUFF
+#: tr4w/src/lang/tr4w_consts_eng.pas:271
+#, fuzzy
+msgctxt "TC_IMPROPERCONTINENT"
+msgid "Improper continent!!"
+msgstr ""
+
+#. Section: LOGSTUFF
+#: tr4w/src/lang/tr4w_consts_eng.pas:272
+#, fuzzy
+msgctxt "TC_SAVINGTO"
+msgid "Saving %s to %s"
+msgstr ""
+
+#. Section: LOGSTUFF
+#: tr4w/src/lang/tr4w_consts_eng.pas:273
+#, fuzzy
+msgctxt "TC_FILESAVEDTOFILESUCCESSFULLY"
+msgid "File saved to file successfully."
+msgstr ""
+
+#. Section: LOGSTUFF
+#: tr4w/src/lang/tr4w_consts_eng.pas:274
+#, fuzzy
+msgctxt "TC_FILESAVEDTOSUCCESSFULLY"
+msgid "File saved to %s successfully."
+msgstr ""
+
+#. Section: LOGSEND
+#: tr4w/src/lang/tr4w_consts_eng.pas:279
+#, fuzzy
+msgctxt "TC_WAITINGFORYOUENTERSTRENGTHOFRST"
+msgid "Waiting for you enter strength of RST (Single digit)!!"
+msgstr ""
+
+#. Section: COUNTRY9
+#: tr4w/src/lang/tr4w_consts_eng.pas:283
+#, fuzzy
+msgctxt "TC_C9_NORTHAMERICA"
+msgid "North America"
+msgstr ""
+
+#. Section: COUNTRY9
+#: tr4w/src/lang/tr4w_consts_eng.pas:284
+#, fuzzy
+msgctxt "TC_C9_SOUTHAMERICA"
+msgid "South America"
+msgstr ""
+
+#. Section: COUNTRY9
+#: tr4w/src/lang/tr4w_consts_eng.pas:285
+#, fuzzy
+msgctxt "TC_C9_EUROPE"
+msgid "Europe"
+msgstr ""
+
+#. Section: COUNTRY9
+#: tr4w/src/lang/tr4w_consts_eng.pas:286
+#, fuzzy
+msgctxt "TC_C9_AFRICA"
+msgid "Africa"
+msgstr ""
+
+#. Section: COUNTRY9
+#: tr4w/src/lang/tr4w_consts_eng.pas:287
+#, fuzzy
+msgctxt "TC_C9_OCEANIA"
+msgid "Oceania"
+msgstr ""
+
+#. Section: COUNTRY9
+#: tr4w/src/lang/tr4w_consts_eng.pas:288
+#, fuzzy
+msgctxt "TC_C9_ANTARTICA"
+msgid "Antartica"
+msgstr ""
+
+#. Section: COUNTRY9
+#: tr4w/src/lang/tr4w_consts_eng.pas:289
+#, fuzzy
+msgctxt "TC_C9_ASIA"
+msgid "Asia"
+msgstr ""
+
+#. Section: COUNTRY9
+#: tr4w/src/lang/tr4w_consts_eng.pas:290
+#, fuzzy
+msgctxt "TC_C9_UNKNOWN"
+msgid "Unknown"
+msgstr ""
+
+#. Section: USTATIONS
+#: tr4w/src/lang/tr4w_consts_eng.pas:294
+#, fuzzy
+msgctxt "TC_STATIONSINMODE"
+msgid "Stations in %s mode"
+msgstr ""
+
+#. Section: USPOTS
+#: tr4w/src/lang/tr4w_consts_eng.pas:298
+#, fuzzy
+msgctxt "TC_SPOTS"
+msgid "%d spots"
+msgstr ""
+
+#. Section: uSendKeyboard
+#: tr4w/src/lang/tr4w_consts_eng.pas:302
+#, fuzzy
+msgctxt "TC_SENDINGSSBWAVFILENAME"
+msgid "Sending SSB .wav filename. Use ENTER to play, Escape/F10 to exit."
+msgstr ""
+
+#. Section: QTC
+#: tr4w/src/lang/tr4w_consts_eng.pas:306
+#, fuzzy
+msgctxt "TC_WASMESSAGENUMBERCONFIRMED"
+msgid "Was message number %u confirmed?"
+msgstr ""
+
+#. Section: QTC
+#: tr4w/src/lang/tr4w_consts_eng.pas:307
+#, fuzzy
+msgctxt "TC_DOYOUREALLYWANTSTOPNOW"
+msgid "Do you really want stop now?"
+msgstr ""
+
+#. Section: QTC
+#: tr4w/src/lang/tr4w_consts_eng.pas:308
+#, fuzzy
+msgctxt "TC_QTCABORTEDBYOPERATOR"
+msgid "QTC aborted by operator."
+msgstr ""
+
+#. Section: QTC
+#: tr4w/src/lang/tr4w_consts_eng.pas:309
+#, fuzzy
+msgctxt "TC_DOYOUREALLYWANTTOABORTTHISQTC"
+msgid "Do you really want to abort this QTC?"
+msgstr ""
+
+#. Section: QTC
+#: tr4w/src/lang/tr4w_consts_eng.pas:310
+#, fuzzy
+msgctxt "TC_NEXT"
+msgid "< Next"
+msgstr ""
+
+#. Section: QTC
+#: tr4w/src/lang/tr4w_consts_eng.pas:311
+#, fuzzy
+msgctxt "TC_QTC_FOR"
+msgid "%s for %s"
+msgstr ""
+
+#. Section: QTC
+#: tr4w/src/lang/tr4w_consts_eng.pas:312
+#, fuzzy
+msgctxt "TC_QTC_CALLSIGN"
+msgid "Callsign :"
+msgstr ""
+
+#. Section: QTC
+#: tr4w/src/lang/tr4w_consts_eng.pas:313
+#, fuzzy
+msgctxt "TC_ENTERQTCMAXOF"
+msgid "Enter QTC #/# (max of %d) :"
+msgstr ""
+
+#. Section: QTC
+#: tr4w/src/lang/tr4w_consts_eng.pas:314
+#, fuzzy
+msgctxt "TC_DOYOUREALLYWANTTOSAVETHISQTC"
+msgid "Do you really want to save this QTC?"
+msgstr ""
+
+#. Section: QTC
+#: tr4w/src/lang/tr4w_consts_eng.pas:315
+#, fuzzy
+msgctxt "TC_EDITQTCPRESSYESTOEDITQTCORNOTOLOG"
+msgid "Edit QTC? Press Yes to edit QTC or  No to log "
+msgstr ""
+
+#. Section: QTC
+#: tr4w/src/lang/tr4w_consts_eng.pas:316
+#, fuzzy
+msgctxt "TC_CHECKQTCNUMBER"
+msgid "Check QTC number"
+msgstr ""
+
+#. Section: QTC
+#: tr4w/src/lang/tr4w_consts_eng.pas:317
+#, fuzzy
+msgctxt "TC_CHECKTIME"
+msgid "Check time"
+msgstr ""
+
+#. Section: UOPTION
+#: tr4w/src/lang/tr4w_consts_eng.pas:321
+#, fuzzy
+msgctxt "TC_COMMAND"
+msgid "Command"
+msgstr ""
+
+#. Section: UOPTION
+#: tr4w/src/lang/tr4w_consts_eng.pas:322
+#, fuzzy
+msgctxt "TC_VALUE"
+msgid "Value"
+msgstr ""
+
+#. Section: UOPTION
+#: tr4w/src/lang/tr4w_consts_eng.pas:323
+#, fuzzy
+msgctxt "TC_INFO"
+msgid "Info"
+msgstr ""
+
+#. Section: UOPTION
+#: tr4w/src/lang/tr4w_consts_eng.pas:324
+#, fuzzy
+msgctxt "TC_YOUCANCHANGETHISINYOURCONFIGFILE"
+msgid "You can only change this in your config file."
+msgstr ""
+
+#. Section: UEDITQSO
+#: tr4w/src/lang/tr4w_consts_eng.pas:328
+#, fuzzy
+msgctxt "TC_CHECKDATETIME"
+msgid "Check Date/Time !!"
+msgstr ""
+
+#. Section: UEDITQSO
+#: tr4w/src/lang/tr4w_consts_eng.pas:329
+#, fuzzy
+msgctxt "TC_SAVECHANGES"
+msgid "Save changes?"
+msgstr ""
+
+#. Section: LOGCW
+#: tr4w/src/lang/tr4w_consts_eng.pas:333
+#, fuzzy
+msgctxt "TC_WPMCODESPEED"
+msgid "WPM code speed"
+msgstr ""
+
+#. Section: LOGCW
+#: tr4w/src/lang/tr4w_consts_eng.pas:334
+#, fuzzy
+msgctxt "TC_CQFUNCTIONKEYMEMORYSTATUS"
+msgid "CQ FUNCTION KEY MEMORY STATUS"
+msgstr ""
+
+#. Section: LOGCW
+#: tr4w/src/lang/tr4w_consts_eng.pas:335
+#, fuzzy
+msgctxt "TC_EXCHANGEFUNCTIONKEYMEMORYSTATUS"
+msgid "EXCHANGE FUNCTION KEY MEMORY STATUS"
+msgstr ""
+
+#. Section: LOGCW
+#: tr4w/src/lang/tr4w_consts_eng.pas:336
+#, fuzzy
+msgctxt "TC_OTHERCWMESSAGEMEMORYSTATUS"
+msgid "Other CW message memory status"
+msgstr ""
+
+#. Section: LOGCW
+#: tr4w/src/lang/tr4w_consts_eng.pas:337
+#, fuzzy
+msgctxt "TC_OTHERSSBMESSAGEMEMORYSTATUS"
+msgid "Other SSB message memory status"
+msgstr ""
+
+#. Section: LOGCW
+#: tr4w/src/lang/tr4w_consts_eng.pas:338
+#, fuzzy
+msgctxt "TC_PRESSCQFUNCTIONKEYTOPROGRAM"
+msgid " Press CQ function key to program (F1, AltF1, CtrlF1), or ESCAPE to exit) : "
+msgstr ""
+
+#. Section: LOGCW
+#: tr4w/src/lang/tr4w_consts_eng.pas:339
+#, fuzzy
+msgctxt "TC_PRESSEXFUNCTIONKEYTOPROGRAM"
+msgid "Press ex function key to program (F3-F12, Alt/Ctrl F1-F12) or ESCAPE to exit:"
+msgstr ""
+
+#. Section: LOGCW
+#: tr4w/src/lang/tr4w_consts_eng.pas:340
+#, fuzzy
+msgctxt "TC_NUMBERORLETTEROFMESSAGETOBEPROGRAM"
+msgid "Number or letter of message to be programmed (1-9, A-C, or ESCAPE to exit):"
+msgstr ""
+
+#. Section: LOGCW
+#: tr4w/src/lang/tr4w_consts_eng.pas:341
+#, fuzzy
+msgctxt "TC_CWDISABLEDWITHALTK"
+msgid "CW disabled with Alt-K!!  Use Alt-K again to enable."
+msgstr ""
+
+#. Section: LOGCW
+#: tr4w/src/lang/tr4w_consts_eng.pas:342
+#, fuzzy
+msgctxt "TC_VOICEKEYERDISABLEDWITHALTK"
+msgid "Voice keyer disabled with Alt-K!!  Use Alt-K again to enable."
+msgstr ""
+
+#. Section: LOGCFG
+#: tr4w/src/lang/tr4w_consts_eng.pas:346
+#, fuzzy
+msgctxt "TC_NOCALLSIGNSPECIFIED"
+msgid "No callsign specified!!"
+msgstr ""
+
+#. Section: LOGCFG
+#: tr4w/src/lang/tr4w_consts_eng.pas:347
+#, fuzzy
+msgctxt "TC_NOFLOPPYFILESAVENAMESPECIFIED"
+msgid "No floppy file save name specified."
+msgstr ""
+
+#. Section: LOGCFG
+#: tr4w/src/lang/tr4w_consts_eng.pas:348
+#, fuzzy
+msgctxt "TC_UNABLETOFIND"
+msgid "Unable to find %s ."
+msgstr ""
+
+#. Section: LOGCFG
+#: tr4w/src/lang/tr4w_consts_eng.pas:349
+#, fuzzy
+msgctxt "TC_INVALIDSTATEMENTIN"
+msgid "Invalid statement in %s !!\r\rLine %u\r%s"
+msgstr ""
+
+#. Section: LOGCFG
+#: tr4w/src/lang/tr4w_consts_eng.pas:350
+#, fuzzy
+msgctxt "TC_UNABLETOFINDCTYDAT"
+msgid "Unable to find CTY.DAT country file!!\rMake sure this file is in the same directory as the program."
+msgstr ""
+
+#. Section: LOGCFG
+#: tr4w/src/lang/tr4w_consts_eng.pas:351
+#, fuzzy
+msgctxt "TC_INVALIDSTATEMENTINCONFIGFILE"
+msgid "%s:\rInvalid statement in config file.\r\rLine %u\r%s"
+msgstr ""
+
+#. Section: LOGCFG
+#: tr4w/src/lang/tr4w_consts_eng.pas:352
+#, fuzzy
+msgctxt "TC_PARAMETERHASNOVALUE"
+msgid "Parameter \"%s\" has no value in the config file -- left at its default."
+msgstr ""
+
+#. Section: LOGSUBS1
+#: tr4w/src/lang/tr4w_consts_eng.pas:356
+#, fuzzy
+msgctxt "TC_RECORDDVPPRESSESCAPEORRETURNTOSTOP"
+msgid "Recording DVP. Press ESCAPE or RETURN to stop."
+msgstr ""
+
+#. Section: LOGSUBS1
+#: tr4w/src/lang/tr4w_consts_eng.pas:357
+#, fuzzy
+msgctxt "TC_ALTRCOMMANDDISABLED"
+msgid "Alt-R command requires TWO RADIO MODE = TRUE"
+msgstr ""
+
+#. Section: LOGSUBS1
+#: tr4w/src/lang/tr4w_consts_eng.pas:358
+#, fuzzy
+msgctxt "TC_NOCQMESPROGRAMMEDINTOCQMEMORYALTF1"
+msgid "No CQ message programmed into CQ MEMORY AltF1."
+msgstr ""
+
+#. Section: LOGSUBS1
+#: tr4w/src/lang/tr4w_consts_eng.pas:359
+#, fuzzy
+msgctxt "TC_THIS_FILE_DOES_NOT_EXIST"
+msgid "This file does not exist. Create an empty file for editing?"
+msgstr ""
+
+#. Section: LOGSUBS2
+#: tr4w/src/lang/tr4w_consts_eng.pas:364
+#, fuzzy
+msgctxt "TC_ALTDCOMMANDDISABLED"
+msgid "Alt-D command requires TWO RADIO MODE = TRUE"
+msgstr ""
+
+#. Section: LOGSUBS2
+#: tr4w/src/lang/tr4w_consts_eng.pas:365
+#, fuzzy
+msgctxt "TC_BANDCHANGEDISABLED"
+msgid "Band change requires MULTIPLE BANDS = TRUE once the log has QSOs"
+msgstr ""
+
+#. Section: LOGSUBS2
+#: tr4w/src/lang/tr4w_consts_eng.pas:366
+#, fuzzy
+msgctxt "TC_YOUHAVERESTOREDTHELASTDELETED"
+msgid "You have restored the last deleted log entry!!"
+msgstr ""
+
+#. Section: LOGSUBS2
+#: tr4w/src/lang/tr4w_consts_eng.pas:367
+#, fuzzy
+msgctxt "TC_YOUHAVEDELETEDTHELASTLOGENTRY"
+msgid "You have deleted the last log entry!!  Use Alt-Y to restore it."
+msgstr ""
+
+#. Section: LOGSUBS2
+#: tr4w/src/lang/tr4w_consts_eng.pas:368
+#, fuzzy
+msgctxt "TC_DOYOUREALLYWANTTOEXITTHEPROGRAM"
+msgid "Do you really want to exit the program?"
+msgstr ""
+
+#. Section: LOGSUBS2
+#: tr4w/src/lang/tr4w_consts_eng.pas:369
+#, fuzzy
+msgctxt "TC_YOUARENOWTALKINGTOYOURPACKETPORT"
+msgid "You are now talking to your packet port.  Use Control-B to exit."
+msgstr ""
+
+#. Section: LOGSUBS2
+#: tr4w/src/lang/tr4w_consts_eng.pas:370
+#, fuzzy
+msgctxt "TC_YOUALREADYWORKEDIN"
+msgid "You already worked %s in %s!!"
+msgstr ""
+
+#. Section: LOGSUBS2
+#: tr4w/src/lang/tr4w_consts_eng.pas:371
+#, fuzzy
+msgctxt "TC_ISADUPEANDWILLBELOGGEDWITHZERO"
+msgid "%s is a dupe and will be logged with zero QSO points."
+msgstr ""
+
+#. Section: LOGSUBS2
+#: tr4w/src/lang/tr4w_consts_eng.pas:372
+#, fuzzy
+msgctxt "TC_LOGFILESIZECHECKFAILED"
+msgid "LOG FILE SIZE CHECK FAILED!!!!"
+msgstr ""
+
+#. Section: JCTRL2
+#: tr4w/src/lang/tr4w_consts_eng.pas:375
+#, fuzzy
+msgctxt "TC_NEWVALUE"
+msgid "new value"
+msgstr ""
+
+#. Section: TREE
+#: tr4w/src/lang/tr4w_consts_eng.pas:379
+#, fuzzy
+msgctxt "TC_ALREADYEXISTSOKAYTODELETE"
+msgid "%s already exists.\r\rOkay to delete?"
+msgstr ""
+
+#. Section: UWINKEY
+#: tr4w/src/lang/tr4w_consts_eng.pas:383
+#, fuzzy
+msgctxt "TC_WINKEYERENABLE"
+msgid "&Winkeyer enable"
+msgstr ""
+
+#. Section: UWINKEY
+#: tr4w/src/lang/tr4w_consts_eng.pas:384
+#, fuzzy
+msgctxt "TC_AUTOSPACE"
+msgid "&Autospace"
+msgstr ""
+
+#. Section: UWINKEY
+#: tr4w/src/lang/tr4w_consts_eng.pas:385
+#, fuzzy
+msgctxt "TC_CTSPACING"
+msgid "C&T spacing"
+msgstr ""
+
+#. Section: UWINKEY
+#: tr4w/src/lang/tr4w_consts_eng.pas:386
+#, fuzzy
+msgctxt "TC_SIDETONE"
+msgid "&Sidetone"
+msgstr ""
+
+#. Section: UWINKEY
+#: tr4w/src/lang/tr4w_consts_eng.pas:387
+#, fuzzy
+msgctxt "TC_PADDLESWAP"
+msgid "Paddle swa&p"
+msgstr ""
+
+#. Section: UWINKEY
+#: tr4w/src/lang/tr4w_consts_eng.pas:388
+#, fuzzy
+msgctxt "TC_IGNORESPEEDPOT"
+msgid "&Ignore speed pot"
+msgstr ""
+
+#. Section: UWINKEY
+#: tr4w/src/lang/tr4w_consts_eng.pas:389
+#, fuzzy
+msgctxt "TC_PADDLEONLYSIDETONE"
+msgid "Paddle &only sidetone"
+msgstr ""
+
+#. Section: UWINKEY
+#: tr4w/src/lang/tr4w_consts_eng.pas:391
+#, fuzzy
+msgctxt "TC_WINKEYERPORT"
+msgid "Winkeyer port"
+msgstr ""
+
+#. Section: UWINKEY
+#: tr4w/src/lang/tr4w_consts_eng.pas:392
+#, fuzzy
+msgctxt "TC_KEYERMODE"
+msgid "Keyer mode"
+msgstr ""
+
+#. Section: UWINKEY
+#: tr4w/src/lang/tr4w_consts_eng.pas:393
+#, fuzzy
+msgctxt "TC_SIDETONEFREQ"
+msgid "Sidetone freq."
+msgstr ""
+
+#. Section: UWINKEY
+#: tr4w/src/lang/tr4w_consts_eng.pas:394
+#, fuzzy
+msgctxt "TC_HANGTIME"
+msgid "Hang time"
+msgstr ""
+
+#. Section: UWINKEY
+#: tr4w/src/lang/tr4w_consts_eng.pas:396
+#, fuzzy
+msgctxt "TC_IAMBICB"
+msgid "Iambic B"
+msgstr ""
+
+#. Section: UWINKEY
+#: tr4w/src/lang/tr4w_consts_eng.pas:397
+#, fuzzy
+msgctxt "TC_IAMBICA"
+msgid "Iambic A"
+msgstr ""
+
+#. Section: UWINKEY
+#: tr4w/src/lang/tr4w_consts_eng.pas:398
+#, fuzzy
+msgctxt "TC_ULTIMATIC"
+msgid "Ultimatic"
+msgstr ""
+
+#. Section: UWINKEY
+#: tr4w/src/lang/tr4w_consts_eng.pas:399
+#, fuzzy
+msgctxt "TC_BUGMODE"
+msgid "Bug mode"
+msgstr ""
+
+#. Section: UWINKEY
+#: tr4w/src/lang/tr4w_consts_eng.pas:401
+#, fuzzy
+msgctxt "TC_WEIGHTING"
+msgid "Weighting"
+msgstr ""
+
+#. Section: UWINKEY
+#: tr4w/src/lang/tr4w_consts_eng.pas:402
+#, fuzzy
+msgctxt "TC_DITDAHRATIO"
+msgid "Dit/Dah ratio"
+msgstr ""
+
+#. Section: UWINKEY
+#: tr4w/src/lang/tr4w_consts_eng.pas:403
+#, fuzzy
+msgctxt "TC_LEADIN"
+msgid "Lead-in time (*10 ms)"
+msgstr ""
+
+#. Section: UWINKEY
+#: tr4w/src/lang/tr4w_consts_eng.pas:404
+#, fuzzy
+msgctxt "TC_TAIL"
+msgid "Tail time (*10 ms)"
+msgstr ""
+
+#. Section: UWINKEY
+#: tr4w/src/lang/tr4w_consts_eng.pas:405
+#, fuzzy
+msgctxt "TC_FIRSTEXTENSION"
+msgid "First extension"
+msgstr ""
+
+#. Section: UWINKEY
+#: tr4w/src/lang/tr4w_consts_eng.pas:406
+#, fuzzy
+msgctxt "TC_KEYCOMP"
+msgid "Keyer compensation"
+msgstr ""
+
+#. Section: UWINKEY
+#: tr4w/src/lang/tr4w_consts_eng.pas:407
+#, fuzzy
+msgctxt "TC_PADDLESWITCHPOINT"
+msgid "Paddle switchpoint"
+msgstr ""
+
+#. Section: UTOTAL
+#: tr4w/src/lang/tr4w_consts_eng.pas:411
+#, fuzzy
+msgctxt "TC_QTCPENDING"
+msgid "QTC Pending"
+msgstr ""
+
+#. Section: UTOTAL
+#: tr4w/src/lang/tr4w_consts_eng.pas:412
+#, fuzzy
+msgctxt "TC_ZONE"
+msgid "Zones"
+msgstr ""
+
+#. Section: UTOTAL
+#: tr4w/src/lang/tr4w_consts_eng.pas:413
+#, fuzzy
+msgctxt "TC_PREFIX"
+msgid "Prefixes"
+msgstr ""
+
+#. Section: UTOTAL
+#: tr4w/src/lang/tr4w_consts_eng.pas:414
+#, fuzzy
+msgctxt "TC_DXMULTS"
+msgid "DX Mults"
+msgstr ""
+
+#. Section: UTOTAL
+#: tr4w/src/lang/tr4w_consts_eng.pas:415
+#, fuzzy
+msgctxt "TC_OBLASTS"
+msgid "Oblasts"
+msgstr ""
+
+#. Section: UTOTAL
+#: tr4w/src/lang/tr4w_consts_eng.pas:416
+#, fuzzy
+msgctxt "TC_HQMULTS"
+msgid "HQ Mults"
+msgstr ""
+
+#. Section: UTOTAL
+#: tr4w/src/lang/tr4w_consts_eng.pas:417
+#, fuzzy
+msgctxt "TC_DOMMULTS"
+msgid "Dom Mults"
+msgstr ""
+
+#. Section: UTOTAL
+#: tr4w/src/lang/tr4w_consts_eng.pas:418
+#, fuzzy
+msgctxt "TC_QSOS"
+msgid "QSOs"
+msgstr ""
+
+#. Section: UTOTAL
+#: tr4w/src/lang/tr4w_consts_eng.pas:419
+#, fuzzy
+msgctxt "TC_CWQSOS"
+msgid "CW QSOs"
+msgstr ""
+
+#. Section: UTOTAL
+#: tr4w/src/lang/tr4w_consts_eng.pas:420
+#, fuzzy
+msgctxt "TC_SSBQSOS"
+msgid "SSB QSOs"
+msgstr ""
+
+#. Section: UTOTAL
+#: tr4w/src/lang/tr4w_consts_eng.pas:421
+#, fuzzy
+msgctxt "TC_DIGQSOS"
+msgid "DIG QSOs"
+msgstr ""
+
+#. Section: UALTD
+#: tr4w/src/lang/tr4w_consts_eng.pas:425
+#, fuzzy
+msgctxt "TC_ENTERCALLTOBECHECKEDON"
+msgid "Enter call to be checked on %s%s:"
+msgstr ""
+
+#. Section: LOGGRID
+#: tr4w/src/lang/tr4w_consts_eng.pas:429
+#, fuzzy
+msgctxt "TC_ALLSUN"
+msgid "All sun"
+msgstr ""
+
+#. Section: LOGGRID
+#: tr4w/src/lang/tr4w_consts_eng.pas:430
+#, fuzzy
+msgctxt "TC_ALLDARK"
+msgid "All dark"
+msgstr ""
+
+#. Section: UMIXW
+#: tr4w/src/lang/tr4w_consts_eng.pas:434
+#, fuzzy
+msgctxt "TC_MIXW_CONNECTED"
+msgid "Connected"
+msgstr ""
+
+#. Section: UMIXW
+#: tr4w/src/lang/tr4w_consts_eng.pas:435
+#, fuzzy
+msgctxt "TC_MIXW_DISCONNECTED"
+msgid "Disconnected"
+msgstr ""
+
+#. Section: LOGWAE
+#: tr4w/src/lang/tr4w_consts_eng.pas:439
+#, fuzzy
+msgctxt "TC_INVALIDCALLSIGNINCALLWINDOW"
+msgid "Invalid callsign in call window!!"
+msgstr ""
+
+#. Section: LOGWAE
+#: tr4w/src/lang/tr4w_consts_eng.pas:440
+#, fuzzy
+msgctxt "TC_SORRYYOUALREADYHAVE10QTCSWITH"
+msgid "Sorry, you already have 10 QTCs with %s"
+msgstr ""
+
+#. Section: LOGWAE
+#: tr4w/src/lang/tr4w_consts_eng.pas:441
+#, fuzzy
+msgctxt "TC_NOQTCSPENDINGQRU"
+msgid "No QTCs pending, QRU."
+msgstr ""
+
+#. Section: LOGWAE
+#: tr4w/src/lang/tr4w_consts_eng.pas:442
+#, fuzzy
+msgctxt "TC_ISQRVFOR"
+msgid "Is %s QRV for %s?"
+msgstr ""
+
+#. Section: UREMMULTS
+#: tr4w/src/lang/tr4w_consts_eng.pas:446
+#, fuzzy
+msgctxt "TC_CLEANSWEEPCONGRATULATIONS"
+msgid "CLEAN SWEEP!! CONGRATULATIONS!!"
+msgstr ""
+
+#. Section: CFGCMD
+#: tr4w/src/lang/tr4w_consts_eng.pas:450
+#, fuzzy
+msgctxt "TC_NETWORKTEST"
+msgid "Network Test"
+msgstr ""
+
+#. Section: CFGCMD
+#: tr4w/src/lang/tr4w_consts_eng.pas:451
+#, fuzzy
+msgctxt "TC_MAXIMUMNUMBEROFREMINDERSEXCEEDED"
+msgid "Maximum number of reminders exceeded!!"
+msgstr ""
+
+#. Section: CFGCMD
+#: tr4w/src/lang/tr4w_consts_eng.pas:452
+#, fuzzy
+msgctxt "TC_INVALIDREMINDERTIME"
+msgid "Invalid reminder time!!"
+msgstr ""
+
+#. Section: CFGCMD
+#: tr4w/src/lang/tr4w_consts_eng.pas:453
+#, fuzzy
+msgctxt "TC_INVALIDREMINDERDATE"
+msgid "Invalid reminder date!!"
+msgstr ""
+
+#. Section: CFGCMD
+#: tr4w/src/lang/tr4w_consts_eng.pas:454
+#, fuzzy
+msgctxt "TC_TOOMANYTOTALSCOREMESSAGES"
+msgid "Too many TOTAL SCORE MESSAGEs!!"
+msgstr ""
+
+#. Section: CFGCMD
+#: tr4w/src/lang/tr4w_consts_eng.pas:455
+#, fuzzy
+msgctxt "TC_THEFIRSTCOMMANDINCONFIGFILEMUSTBE"
+msgid "The first command in config file must be the MY CALL statement!!"
+msgstr ""
+
+#. Section: USYNTIME
+#. milliseconds
+#: tr4w/src/lang/tr4w_consts_eng.pas:458
+#, fuzzy
+msgctxt "TC_MS"
+msgid " ms"
+msgstr ""
+
+#. Section: ULOGSEARCH
+#: tr4w/src/lang/tr4w_consts_eng.pas:461
+#, fuzzy
+msgctxt "TC_ENTRIESPERMS"
+msgid "%u entries per %u ms"
+msgstr ""
+
+#. Section: ULOGCOMPARE
+#: tr4w/src/lang/tr4w_consts_eng.pas:464
+#, fuzzy
+msgctxt "TC_SIZEBYTES"
+msgid "Size, bytes"
+msgstr ""
+
+#. Section: ULOGCOMPARE
+#: tr4w/src/lang/tr4w_consts_eng.pas:465
+#, fuzzy
+msgctxt "TC_RECORDS"
+msgid "Records"
+msgstr ""
+
+#. Section: ULOGCOMPARE
+#: tr4w/src/lang/tr4w_consts_eng.pas:466
+#, fuzzy
+msgctxt "TC_MODIFIED"
+msgid "Modified"
+msgstr ""
+
+#. Section: ULOGCOMPARE
+#: tr4w/src/lang/tr4w_consts_eng.pas:467
+#, fuzzy
+msgctxt "TC_TIMEDIFF"
+msgid "Time diff."
+msgstr ""
+
+#. Section: POSTUNIT
+#: tr4w/src/lang/tr4w_consts_eng.pas:470
+#, fuzzy
+msgctxt "TC_MORETHAN50DIFFERENTHOURSINTHISLOG"
+msgid "More than 50 different hours in this log!!"
+msgstr ""
+
+#. Section: POSTUNIT
+#: tr4w/src/lang/tr4w_consts_eng.pas:471
+#, fuzzy
+msgctxt "TC_TOOMANYCONTESTDATES"
+msgid "Too many contest dates!!"
+msgstr ""
+
+#. Section: UGETSERVERLOG
+#: tr4w/src/lang/tr4w_consts_eng.pas:474
+#, fuzzy
+msgctxt "TC_FAILEDTORECEIVESERVERLOG"
+msgid "Failed to receive server log."
+msgstr ""
+
+#. Section: DLPORTIO
+#: tr4w/src/lang/tr4w_consts_eng.pas:477
+#, fuzzy
+msgctxt "TC_DLPORTIODRIVERISNOTINSTALLED"
+msgid "DLPortIO error"
+msgstr ""
+
+#. Section: UCT1BOH
+#: tr4w/src/lang/tr4w_consts_eng.pas:480
+#, fuzzy
+msgctxt "TC_TIMEON"
+msgid "Time on"
+msgstr ""
+
+#. Section: ULOGCOMPARE
+#: tr4w/src/lang/tr4w_consts_eng.pas:483
+#, fuzzy
+msgctxt "TC_SERVERLOG"
+msgid "SERVER LOG"
+msgstr ""
+
+#. Section: ULOGCOMPARE
+#: tr4w/src/lang/tr4w_consts_eng.pas:484
+#, fuzzy
+msgctxt "TC_LOCALLOG"
+msgid "LOCAL LOG"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:488
+#, fuzzy
+msgctxt "TC_CTRL_A"
+msgid "Send this message on inactive radio"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:489
+#, fuzzy
+msgctxt "TC_CTRL_B"
+msgid "Identify ctrl-A message as a CQ"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:490
+#, fuzzy
+msgctxt "TC_CTRL_C"
+msgid "Start special command"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:491
+#, fuzzy
+msgctxt "TC_CTRL_D"
+msgid "Do not interrupt"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:492
+#, fuzzy
+msgctxt "TC_CTRL_E"
+msgid "Dah 73% of normal duration"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:493
+#, fuzzy
+msgctxt "TC_CTRL_F"
+msgid "Increase speed by 6%"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:494
+#, fuzzy
+msgctxt "TC_CTRL_K"
+msgid "Normal dah"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:495
+#, fuzzy
+msgctxt "TC_CTRL_L"
+msgid "Dit 140% of normal duration"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:496
+#, fuzzy
+msgctxt "TC_CTRL_N"
+msgid "Dah 113% of normal duration"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:497
+#, fuzzy
+msgctxt "TC_CTRL_O"
+msgid "Dah 127% of normal duration"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:498
+#, fuzzy
+msgctxt "TC_CTRL_P"
+msgid "Dit 60% of normal duration"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:499
+#, fuzzy
+msgctxt "TC_CTRL_Q"
+msgid "Dit 80% of normal duration"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:500
+#, fuzzy
+msgctxt "TC_CTRL_S"
+msgid "Decrease speed by 6%"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:501
+#, fuzzy
+msgctxt "TC_CTRL_V"
+msgid "Dit 120% of normal duration"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:502
+#, fuzzy
+msgctxt "TC_CTRL_X"
+msgid "Decrease weight by 0.03"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:503
+#, fuzzy
+msgctxt "TC_CTRL_Y"
+msgid "Increase weight by 0.03"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:504
+#, fuzzy
+msgctxt "TC_CTRL_SL"
+msgid "Normal dit"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:505
+#, fuzzy
+msgctxt "TC_QSO_NUMBER"
+msgid "QSO Number"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:507
+#, fuzzy
+msgctxt "TC_SALUTATION_AND_NAME_IF_KNOWN"
+msgid "Salutation and name if known"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:508
+#, fuzzy
+msgctxt "TC_NAME_FROM_NAME_DATABASE"
+msgid "Name from name database"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:509
+#, fuzzy
+msgctxt "TC_SEND_CHARACTERS_FROM_KEYBOARD"
+msgid "Send characters from keyboard"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:510
+#, fuzzy
+msgctxt "TC_CALL_IN_CALL_WINDOW"
+msgid "Call in Call Window"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:511
+#, fuzzy
+msgctxt "TC_RST_PROMPT"
+msgid "RST prompt"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:512
+#, fuzzy
+msgctxt "TC_SEND_CALLASSETBYMYCALLCOMMAND"
+msgid "Send call as set by MY CALL command"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:513
+#, fuzzy
+msgctxt "TC_REPEATRSTSENT"
+msgid "Repeat RST sent"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:514
+#, fuzzy
+msgctxt "TC_VERSIONONSERVER"
+msgid "The last version on server"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:515
+#, fuzzy
+msgctxt "TC_THISVERSION2"
+msgid "This version"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:516
+#, fuzzy
+msgctxt "TC_DOWNLOADIT"
+msgid "Would you like to download the latest version?"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:519
+#, fuzzy
+msgctxt "TC_LIST_OF_COMMAND"
+msgid "List of commands"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. 4.51.8
+#: tr4w/src/lang/tr4w_consts_eng.pas:521
+#, fuzzy
+msgctxt "RC_3830"
+msgid "3830 Score posting"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. 4.53.3
+#: tr4w/src/lang/tr4w_consts_eng.pas:522
+#, fuzzy
+msgctxt "RC_3830_ARRL"
+msgid "Submit ARRL Log"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:523
+#, fuzzy
+msgctxt "RC_VIEWEDITLOG2"
+msgid "View / Edit log"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:524
+#, fuzzy
+msgctxt "RC_CT1BOHIS2"
+msgid "CT1BOH info screen"
+msgstr "CT1BOH伡息窗口"
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:525
+#, fuzzy
+msgctxt "RC_BANDPLAN"
+msgid "Band plan"
+msgstr "涢殶计划"
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:527
+#, fuzzy
+msgctxt "CLOSE_WORD"
+msgid "Close"
+msgstr "其闭"
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:528
+#, fuzzy
+msgctxt "HELP_WORD"
+msgid "Help"
+msgstr "弮助"
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:529
+#, fuzzy
+msgctxt "EXIT_WORD"
+msgid "E&xit"
+msgstr "其闭"
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:530
+#, fuzzy
+msgctxt "RC_LISTOFMESS"
+msgid "List of messages"
+msgstr "消息列表"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:531
+#, fuzzy
+msgctxt "RC_STATIONINFO"
+msgid "Station information"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:532
+#, fuzzy
+msgctxt "RC_DUPECHECKOAR"
+msgid "Dupe Check On Inactive Radio"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:534
+#, fuzzy
+msgctxt "RC_MEMPROGFUNC"
+msgid "Memory program function"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:536
+#, fuzzy
+msgctxt "RC_PRESS_C"
+msgid "Press &C to program a CQ function key."
+msgstr "按 &C\\n 定䶉伀伪CQ键."
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:537
+#, fuzzy
+msgctxt "RC_PRESS_E"
+msgid "Press &E to program an exchange/search and pounce function key."
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:538
+#, fuzzy
+msgctxt "RC_PRESS_O"
+msgid "Press &O to program the other non function key messages."
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:540
+#, fuzzy
+msgctxt "RC_SENDINGCW"
+msgid "Sending CW from the keyboard. Use ENTER/Escape/F10 to exit."
+msgstr "伎键盘发送CW.按ENTER/Escape/F10退凶."
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:542
+#, fuzzy
+msgctxt "RC_AUTOCQ2"
+msgid "Auto-CQ"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:543
+#, fuzzy
+msgctxt "RC_PRESSMKYWTR"
+msgid "Press the memory key you want to repeat:"
+msgstr "惶重复,按存储键:"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:544
+#, fuzzy
+msgctxt "RC_NUMBEROSOLT"
+msgid "Number of milliseconds of listening time:"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:545
+#, fuzzy
+msgctxt "RC_WINCONTROL2"
+msgid "Windows control"
+msgstr "窗口控制"
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:547
+#, fuzzy
+msgctxt "RC_TOOLS"
+msgid "Tools"
+msgstr "弥兼"
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:549
+#, fuzzy
+msgctxt "RC_BEACONSM"
+msgid "Beacons monitor"
+msgstr "灯塔监涋"
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:550
+#, fuzzy
+msgctxt "RC_WINCONTROL"
+msgid "Windows control"
+msgstr "窗口控制"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:551
+#, fuzzy
+msgctxt "RC_SETTIMEZONE"
+msgid "Set time zone"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:552
+#, fuzzy
+msgctxt "RC_PING"
+msgid "Ping [SERVER ADDRESS]"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:553
+#, fuzzy
+msgctxt "RC_RUNSERVER"
+msgid "Run TR4WSERVER"
+msgstr "輐行TR4W服务器"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:554
+#, fuzzy
+msgctxt "RC_DVKVOLCONTROL"
+msgid "DVK volume control"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:555
+#, fuzzy
+msgctxt "RC_RECCONTROL"
+msgid "Recording control"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:559
+#, fuzzy
+msgctxt "RC_CALCULATOR"
+msgid "Calculator"
+msgstr "计算器"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:561
+#, fuzzy
+msgctxt "RC_RESET_RADIO_PORTS"
+msgid "Reset Radio Ports"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:569
+#, fuzzy
+msgctxt "RC_TIMESYN"
+msgid "Synchronize time on &all computers"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:571
+#, fuzzy
+msgctxt "RC_POSTNOW"
+msgid "Post now"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:572
+#, fuzzy
+msgctxt "RC_GOTOGS"
+msgid "Show scores"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:573
+#, fuzzy
+msgctxt "RC_MP3_RECENABLE"
+msgid "Enable"
+msgstr "启用"
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:575
+#, fuzzy
+msgctxt "RC_DELETESELSPOT"
+msgid "Delete selected spot"
+msgstr "删除选择缓炶"
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:576
+#, fuzzy
+msgctxt "RC_REMOVEALLSP"
+msgid "Remove all spots"
+msgstr "删除所有缓炶"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:577
+#, fuzzy
+msgctxt "RC_SENDINRIG"
+msgid "QSY Inactive Radio"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:578
+#, fuzzy
+msgctxt "RC_FILE"
+msgid "File"
+msgstr "文伶"
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:579
+#, fuzzy
+msgctxt "RC_CLEARLOG"
+msgid "Clear log"
+msgstr "漅除日弗"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:580
+#, fuzzy
+msgctxt "RC_IMPORT"
+msgid "Import"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:581
+#, fuzzy
+msgctxt "RC_OPENLOGDIR"
+msgid "Open log directory"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:583
+#, fuzzy
+msgctxt "RC_OPERATOR"
+msgid "Operator"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:584
+#, fuzzy
+msgctxt "RC_CALLSIGN"
+msgid "Callsign"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:585
+#, fuzzy
+msgctxt "RC_MODE"
+msgid "Mode"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:586
+#, fuzzy
+msgctxt "RC_BAND"
+msgid "Band"
+msgstr "涢殶"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:593
+#, fuzzy
+msgctxt "RC_EDIT_WORD"
+msgid "&Edit"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:594
+#, fuzzy
+msgctxt "RC_POSTSCORETOGS"
+msgid "Post score"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:598
+#, fuzzy
+msgctxt "RC_EXPORT"
+msgid "Export"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:599
+#, fuzzy
+msgctxt "RC_INIEXLIST"
+msgid "Initial exchanges list"
+msgstr "初始化䶤换列表"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:600
+#, fuzzy
+msgctxt "RC_TRLOGFORM"
+msgid "TR Log format"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:601
+#, fuzzy
+msgctxt "RC_REPORTS"
+msgid "Reports"
+msgstr "报告"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:602
+#, fuzzy
+msgctxt "RC_ALLCALLS"
+msgid "All callsigns"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:603
+#, fuzzy
+msgctxt "RC_BANDCHANGES"
+msgid "Band changes"
+msgstr "涢殶切换"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:604
+#, fuzzy
+msgctxt "RC_CONTLIST"
+msgid "Continent List"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:605
+#, fuzzy
+msgctxt "RC_FCC"
+msgid "First callsign worked in each country"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:606
+#, fuzzy
+msgctxt "RC_FCZ"
+msgid "First callsign worked in each zone"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:608
+#, fuzzy
+msgctxt "RC_QSOBYCOUNTRY"
+msgid "QSOs by country by band"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:609
+#, fuzzy
+msgctxt "RC_SCOREBYHOUR"
+msgid "Score by hour"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:610
+#, fuzzy
+msgctxt "RC_SUMMARY"
+msgid "Summary"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:611
+#, fuzzy
+msgctxt "RC_EXIT"
+msgid "E&xit"
+msgstr "退凶"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:612
+#, fuzzy
+msgctxt "RC_SETTINGS"
+msgid "Settings"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:614
+#, fuzzy
+msgctxt "RC_OPTIONS"
+msgid "Configuration commands"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:615
+#, fuzzy
+msgctxt "RC_PROGRAMMES"
+msgid "Program messages"
+msgstr "程嶏消息"
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:616
+#, fuzzy
+msgctxt "RC_CATANDCW"
+msgid "CAT and CW Keying"
+msgstr "控制和甶键"
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:617
+#, fuzzy
+msgctxt "RC_WINDOWS"
+msgid "Windows"
+msgstr "窗口"
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:618
+#, fuzzy
+msgctxt "RC_BANDMAP"
+msgid "Bandmap"
+msgstr "涢殶窗口"
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:619
+#, fuzzy
+msgctxt "RC_DUPESHEET"
+msgid "Dupesheet"
+msgstr "错误表"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:620
+#, fuzzy
+msgctxt "RC_FKEYS"
+msgid "Function keys"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:621
+#, fuzzy
+msgctxt "RC_TRMASTER"
+msgid "SCP"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. 4.72.3
+#: tr4w/src/lang/tr4w_consts_eng.pas:622
+#, fuzzy
+msgctxt "RC_REMMULTS"
+msgid "Mults"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:623
+#, fuzzy
+msgctxt "RC_RM_DEFAULT"
+msgid "Default"
+msgstr "鼘认"
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:624
+#, fuzzy
+msgctxt "RC_TELNET"
+msgid "DX Cluster"
+msgstr "DX公告杼"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:625
+#, fuzzy
+msgctxt "RC_NETWORK"
+msgid "Network"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:626
+#, fuzzy
+msgctxt "RC_INTERCOM"
+msgid "Intercom"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:628
+#, fuzzy
+msgctxt "RC_STATIONS"
+msgid "Stations"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:629
+#, fuzzy
+msgctxt "RC_MP3REC"
+msgid "MP3 Recorder"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:633
+#, fuzzy
+msgctxt "RC_ALTP"
+msgid "Open Fkeys"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:634
+#, fuzzy
+msgctxt "RC_ALTX"
+msgid "Exit Program"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:636
+#, fuzzy
+msgctxt "RC_AUTOCQRESUME"
+msgid "Auto-CQ resume"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:637
+#, fuzzy
+msgctxt "RC_DUPECHECK"
+msgid "Dupe check"
+msgstr "错误检涋"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:638
+#, fuzzy
+msgctxt "RC_EDIT"
+msgid "SO1R-Edit or SO2R-SWAP"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:639
+#, fuzzy
+msgctxt "RC_BACKUPLOG"
+msgid "Backup Log"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:641
+#, fuzzy
+msgctxt "RC_SWAPMULTVIEW"
+msgid "Swap mult view"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:642
+#, fuzzy
+msgctxt "RC_INCNUMBER"
+msgid "Increment number"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:643
+#, fuzzy
+msgctxt "RC_TOOGLEMB"
+msgid "Toogle multiplier bell"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:644
+#, fuzzy
+msgctxt "RC_KILLCW"
+msgid "Toggle CW"
+msgstr "停止CW"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:645
+#, fuzzy
+msgctxt "RC_SEARCHLOG"
+msgid "Search log"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:646
+#, fuzzy
+msgctxt "RC_TRANSFREQ"
+msgid "Transmit frequency"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:648
+#, fuzzy
+msgctxt "RC_AUTOCQ"
+msgid "Auto-CQ"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:649
+#, fuzzy
+msgctxt "RC_TOOGLERIGS"
+msgid "Toggle rigs"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:650
+#, fuzzy
+msgctxt "RC_CWSPEED"
+msgid "CW speed"
+msgstr "CW速嶦"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:651
+#, fuzzy
+msgctxt "RC_SETSYSDT"
+msgid "Set system date/time"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:652
+#, fuzzy
+msgctxt "RC_INITIALIZE"
+msgid "Initialize QSO"
+msgstr "初始化QSO"
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:654
+#, fuzzy
+msgctxt "RC_DELETELASTQSO"
+msgid "Delete the last QSO"
+msgstr "删除最后伀伪QSO"
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:655
+#, fuzzy
+msgctxt "RC_INITIALEX"
+msgid "Initial exchange"
+msgstr "初始化䶤换"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:656
+#, fuzzy
+msgctxt "RC_TOOGLEST"
+msgid "Toggle sidetone"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:657
+#, fuzzy
+msgctxt "RC_TOOGLEAS"
+msgid "Toggle autosend"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:658
+#, fuzzy
+msgctxt "RC_BANDUP"
+msgid "Band Up"
+msgstr "涢殶向伊"
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:659
+#, fuzzy
+msgctxt "RC_BANDDOWN"
+msgid "Band Down"
+msgstr "涢殶向伋"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:660
+#, fuzzy
+msgctxt "RC_SSBCWMODE"
+msgid "SSB/CW mode"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:661
+#, fuzzy
+msgctxt "RC_SENDKEYBOARD"
+msgid "Send Keyboard Input"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:663
+#, fuzzy
+msgctxt "RC_CLEARDUPES"
+msgid "Clear dupesheet"
+msgstr "漅除错误列表"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:664
+#, fuzzy
+msgctxt "RC_VIEWEDITLOG"
+msgid "View / Edit log"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:665
+#, fuzzy
+msgctxt "RC_NOTE"
+msgid "Note"
+msgstr "备涨"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:666
+#, fuzzy
+msgctxt "RC_MISSMULTSREP"
+msgid "Missing mults report"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:668
+#, fuzzy
+msgctxt "RC_QTCFUNCTIONS"
+msgid "QTC functions"
+msgstr "QTC选顶"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:669
+#, fuzzy
+msgctxt "RC_RECALLLASTENT"
+msgid "Recall last entry"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:670
+#, fuzzy
+msgctxt "RC_VIEWPAKSPOTS"
+msgid "View packet spots"
+msgstr "查看发送包"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:671
+#, fuzzy
+msgctxt "RC_EXECONFIGFILE"
+msgid "Execute configuration file"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:672
+#, fuzzy
+msgctxt "RC_REFRESHBM"
+msgid "Refresh bandmap"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:674
+#, fuzzy
+msgctxt "RC_CURSORINBM"
+msgid "Cursor in bandmap window"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:675
+#, fuzzy
+msgctxt "RC_CURSORTELNET"
+msgid "Cursor in DX Cluster window"
+msgstr "DX公告杼光标"
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:676
+#, fuzzy
+msgctxt "RC_QSOWITHNOCW"
+msgid "QSO with no CW"
+msgstr "非CW的QSO"
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:677
+#, fuzzy
+msgctxt "RC_CT1BOHIS"
+msgid "CT1BOH info screen"
+msgstr "CT1BOH伡息窗口"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:678
+#, fuzzy
+msgctxt "RC_ADDBANDMAPPH"
+msgid "Add bandmap place holder"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:679
+#, fuzzy
+msgctxt "RC_COMMANDS"
+msgid "Commands"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:680
+#, fuzzy
+msgctxt "RC_FOCUSINMW"
+msgid "Focus in main window"
+msgstr "似窗口焦炶"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:681
+#, fuzzy
+msgctxt "RC_TOGGLEINSERT"
+msgid "Toggle insert mode"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:682
+#, fuzzy
+msgctxt "RC_ESCAPE"
+msgid "Escape"
+msgstr "取消"
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:683
+#, fuzzy
+msgctxt "RC_CWSPEEDUP"
+msgid "CW Speed Up"
+msgstr "CW速嶦加"
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:684
+#, fuzzy
+msgctxt "RC_CWSPEEDDOWN"
+msgid "CW Speed Down"
+msgstr "CW速嶦减"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:685
+#, fuzzy
+msgctxt "RC_CWSPUPIR"
+msgid "CW Speed Up for the inactive radio"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:686
+#, fuzzy
+msgctxt "RC_CWSPDNIR"
+msgid "CW Speed Down for the inactive radio"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:687
+#, fuzzy
+msgctxt "RC_CQMODE"
+msgid "CQ Mode"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:688
+#, fuzzy
+msgctxt "RC_SEARCHPOUNCE"
+msgid "Search && pounce mode"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:689
+#, fuzzy
+msgctxt "RC_SENDSPOT"
+msgid "Send spot"
+msgstr "发送公告"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:690
+#, fuzzy
+msgctxt "RC_RESCORE"
+msgid "Rescore"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:692
+#, fuzzy
+msgctxt "RC_NET"
+msgid "Net"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:694
+#, fuzzy
+msgctxt "RC_SENDMESSAGE"
+msgid "Send message"
+msgstr "发送消息"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:695
+#, fuzzy
+msgctxt "RC_SYNLOG"
+msgid "Compare and synchronize logs"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:696
+#, fuzzy
+msgctxt "RC_CLEARALLLOGS"
+msgid "Clear all logs in network"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:697
+#, fuzzy
+msgctxt "RC_DOWNLOAD"
+msgid "Download the latest CTY.DAT"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:698
+#, fuzzy
+msgctxt "RC_CONTENTS"
+msgid "Contents"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:699
+#, fuzzy
+msgctxt "RC_ABOUT"
+msgid "About"
+msgstr "其䶎"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:702
+#, fuzzy
+msgctxt "TC_EDITFUNCTIONKEY"
+msgid "Edit %s message"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:703
+#, fuzzy
+msgctxt "RC_DELETED"
+msgid "Deleted"
+msgstr "删除&D"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:706
+#, fuzzy
+msgctxt "RC_SEARCH"
+msgid "&Search"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:710
+#, fuzzy
+msgctxt "RC_CONTESTNAMEIC"
+msgid "C&ontest name in comment"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:711
+#, fuzzy
+msgctxt "RC_COMMENT"
+msgid "Comment"
+msgstr "备涨"
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:733
+#, fuzzy
+msgctxt "RC_RECVQTC"
+msgid "Receiving QTCs"
+msgstr "接收QTCs"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:747
+#, fuzzy
+msgctxt "RC_DIFFINLOG"
+msgid "Difference in logs"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:757
+#, fuzzy
+msgctxt "RC_DATE"
+msgid "Date"
+msgstr "日期"
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:767
+#, fuzzy
+msgctxt "RC_NAME"
+msgid "Name"
+msgstr "姓名"
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:770
+#, fuzzy
+msgctxt "RC_PROGRMESS"
+msgid "Program message"
+msgstr "程嶏伡息"
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:771
+#, fuzzy
+msgctxt "RC_MESSAGE"
+msgid "Message"
+msgstr "消息"
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:772
+#, fuzzy
+msgctxt "RC_CAPTION"
+msgid "Caption"
+msgstr "标题"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:773
+#, fuzzy
+msgctxt "RC_IAQSLINT"
+msgid "Auto QSL Interval (Increase)"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:774
+#, fuzzy
+msgctxt "RC_DAQSLINT"
+msgid "Auto QSL Interval (Decrease)"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:775
+#, fuzzy
+msgctxt "RC_ADDINFO"
+msgid "Additional information"
+msgstr "其伖伡息"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:776
+#, fuzzy
+msgctxt "RC_AI_QSONUMBER"
+msgid "QSO number"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:777
+#, fuzzy
+msgctxt "RC_AI_CWSPEED"
+msgid "CW Speed"
+msgstr "CW速嶦"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:778
+#, fuzzy
+msgctxt "RC_CLEARMSHEET"
+msgid "Clear multsheet"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:779
+#, fuzzy
+msgctxt "RC_WIKI"
+msgid "On-line documentation (in Russian)"
+msgstr "在綼文档(伄文)"
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:780
+#, fuzzy
+msgctxt "RC_NET_CLDUPE"
+msgid "Clear dupesheet in all logs"
+msgstr "漅除所有日弗错误表"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:781
+#, fuzzy
+msgctxt "RC_NET_CLMULT"
+msgid "Clear multsheet in all logs"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:782
+#, fuzzy
+msgctxt "RC_INC_TIME"
+msgid "Increment time"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:783
+#, fuzzy
+msgctxt "RC_NOTES"
+msgid "Notes"
+msgstr "备涨"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:786
+#, fuzzy
+msgctxt "RC_DEVICEMANAGER"
+msgid "Device Manager"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:787
+#, fuzzy
+msgctxt "RC_SHDX_CALLSIGN"
+msgid "SH/DX [callsign]"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:791
+#, fuzzy
+msgctxt "RC_LOGIN"
+msgid "Log in"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:792
+#, fuzzy
+msgctxt "RC_SYNCHRONIZE"
+msgid "Synchronize"
+msgstr "同步"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:794
+#, fuzzy
+msgctxt "RC_COLORS"
+msgid "Colors"
+msgstr ""
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:798
+#, fuzzy
+msgctxt "RC_SEND_BUG"
+msgid "Send bug report"
+msgstr "发送错误报告"
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:799
+#, fuzzy
+msgctxt "RC_HOMEPAGE"
+msgid "TR4W Home Page"
+msgstr "TR4W首顶"
+
+#. Section: UEDITMESSAGE
+#. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
+#: tr4w/src/lang/tr4w_consts_eng.pas:800
+#, fuzzy
+msgctxt "RC_FREQUENCY"
+msgid "Frequency"
+msgstr "频率"
+
+#. Section: UEDITMESSAGE
+#: tr4w/src/lang/tr4w_consts_eng.pas:801
+#, fuzzy
+msgctxt "TC_SPLIT_WARN"
+msgid "Warning: You are in SPLIT MODE !!!"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:804
+#, fuzzy
+msgctxt "TC_IMPROPERTRANSMITTERCOUNT"
+msgid "FD transmitters must be between 1 and 99."
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:805
+#, fuzzy
+msgctxt "TC_IMPROPERARRLFIELDDAYCLASS"
+msgid "Field Day class must be A, B, C, D, E or F."
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:806
+#, fuzzy
+msgctxt "TC_IMPROPERWINTERFIELDDAYCLASS"
+msgid "Winter Field Day class must be H, I, O or M."
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:807
+#, fuzzy
+msgctxt "TC_ARRLFIELDDAYIMPROPERDXEXCHANGE"
+msgid "DX Station exchange must be \"DX\"."
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:809
+#, fuzzy
+msgctxt "RC_SPLITOFF"
+msgid "Set Split Mode Tx"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:810
+#, fuzzy
+msgctxt "TC_RUNWARN"
+msgid "Another instance of TR4W is already running"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#. 4.60.1
+#: tr4w/src/lang/tr4w_consts_eng.pas:811
+#, fuzzy
+msgctxt "RC_wkMode"
+msgid "Re-initialize WinKeyer"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:813
+#, fuzzy
+msgctxt "TC_SHOW_PASSWORDS"
+msgid "Show passwords"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:815
+#, fuzzy
+msgctxt "TC_TOOLTIP_DISCOVERY"
+msgid "Discover radios on the network"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:816
+#, fuzzy
+msgctxt "TC_DISCOVER_NOT_AVAILABLE"
+msgid "Network discovery is not available for radio %s"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:817
+#, fuzzy
+msgctxt "TC_DISCOVER_NONE_FOUND"
+msgid "No radio of type %s found on the network"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:818
+#, fuzzy
+msgctxt "TC_DISCOVER_MULTI_FOUND"
+msgid "More than one %s found; filled in the first.  All found:"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:819
+#, fuzzy
+msgctxt "TC_PORT_NOT_CONNECTED"
+msgid "(not connected)"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:820
+#, fuzzy
+msgctxt "TC_SHOW_ALL_SERIAL_PORTS"
+msgid "Show all serial ports"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:825
+#, fuzzy
+msgctxt "TC_DOWNLOADINGCTYDAT"
+msgid "Downloading CTY.DAT..."
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:826
+#, fuzzy
+msgctxt "TC_DOWNLOADINGTRMASTERDTA"
+msgid "Downloading TRMASTER.DTA..."
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:827
+#, fuzzy
+msgctxt "TC_DOWNLOADINGPOTAPARKS"
+msgid "Downloading POTA parks..."
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:828
+#, fuzzy
+msgctxt "TC_HAMSCOREQUEUEINGFULLLOGRESYNC"
+msgid "HamScore: queueing full log resync..."
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:829
+#, fuzzy
+msgctxt "TC_LOGINCALLDOESLOOKLIKECALLSIGN"
+msgid "Login call does not look like a callsign"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:830
+#, fuzzy
+msgctxt "TC_NOPOTAPARKSLOGGEDYETSESSION"
+msgid "No POTA parks logged yet this session"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:831
+#, fuzzy
+msgctxt "TC_CWOFF"
+msgid "CW Off"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:832
+#, fuzzy
+msgctxt "TC_CANNOTOPENLOGFILE"
+msgid "Cannot open log file"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:833
+#, fuzzy
+msgctxt "TC_SCANNOTEDITEDHERE"
+msgid "%s cannot be edited here."
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:834
+#, fuzzy
+msgctxt "TC_DEBUGMODECREATEDPREFIXESTXT"
+msgid "debug mode created prefixes.txt"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:835
+#, fuzzy
+msgctxt "TC_POTAPARKSLOADED"
+msgid "POTA parks loaded"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:836
+#, fuzzy
+msgctxt "TC_POTAPARKSFILECOULDLOADED"
+msgid "POTA parks file could not be loaded"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:837
+#, fuzzy
+msgctxt "TC_POTAPARKSDOWNLOADFAILED"
+msgid "POTA parks download failed"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:838
+#, fuzzy
+msgctxt "TC_TRMASTERDTADOWNLOADEDRESTARTTR4WUS"
+msgid "TRMASTER.DTA downloaded -- restart TR4W to use it"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:839
+#, fuzzy
+msgctxt "TC_TRMASTERDTADOWNLOADFAILED"
+msgid "TRMASTER.DTA download failed"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:840
+#, fuzzy
+msgctxt "TC_CTYDATDOWNLOADEDRELOADING"
+msgid "CTY.DAT downloaded. Reloading..."
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:841
+#, fuzzy
+msgctxt "TC_CTYDATRELOADEDSUCCESSFULLY"
+msgid "CTY.DAT reloaded successfully."
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:842
+#, fuzzy
+msgctxt "TC_CTYDATDOWNLOADFAILED"
+msgid "CTY.DAT download failed."
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:843
+#, fuzzy
+msgctxt "TC_ERRORPLAYINGVOICEMEMORY"
+msgid "Error playing voice memory"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:844
+#, fuzzy
+msgctxt "TC_FLUSHINITIALEXCOMMANDEXECUTED"
+msgid "FLUSHINITIALEX command is executed."
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:845
+#, fuzzy
+msgctxt "TC_AUTOSPOTENABLEDTESTMODEONLY"
+msgid "AUTOSPOT is enabled - Test Mode Only"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:846
+#, fuzzy
+msgctxt "TC_HANDLOGMODETRUE"
+msgid "HAND LOG MODE = TRUE"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:847
+#, fuzzy
+msgctxt "TC_TRMASTERDTAS"
+msgid "TRMASTER.DTA : %s"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:848
+#, fuzzy
+msgctxt "TC_TR4WTIMEWARNING"
+msgid "TR4W Time Warning"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:849
+#, fuzzy
+msgctxt "TC_ERROROFFERINGCOMMANDERPROXYTCPPORT"
+msgid "Error offering Commander proxy TCP Port"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:850
+#, fuzzy
+msgctxt "TC_PTTVIACOMMANDSCTRLJOPTIONMUSTTRUEW"
+msgid "PTT VIA COMMANDS (CTRL-J) option must be true for WSJT-X use - Setting to true"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:851
+#, fuzzy
+msgctxt "TC_CANNOTDISABLESPLITTRANSMITSLICECRE"
+msgid "Cannot disable split -- the transmit slice was created on the radio. Turn it off in the SDR."
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:852
+#, fuzzy
+msgctxt "TC_SORRYUSEDUPALLREMINDERS"
+msgid "Sorry, you have used up all your reminders!!"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:853
+#, fuzzy
+msgctxt "TC_INVALIDDATE"
+msgid "Invalid date!!"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:854
+#, fuzzy
+msgctxt "TC_ENOUGHMEMORYINITIALEXCHANGEARRAY"
+msgid "Not enough memory for initial exchange array!!"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:855
+#, fuzzy
+msgctxt "TC_FINDINGZEROENDVISIBLEDUPESHEETLIST"
+msgid "Not finding zero at end visible dupesheet list!!"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:856
+#, fuzzy
+msgctxt "TC_QTCPROCESSTERMINATED"
+msgid "QTC process terminated."
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:857
+#, fuzzy
+msgctxt "TC_QTCNUMBERILLEGALCHARACTERS"
+msgid "QTC Number has illegal characters."
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:858
+#, fuzzy
+msgctxt "TC_NUMBERMESSAGESILLEGALCHARACTERS"
+msgid "Number of messages has illegal characters."
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:859
+#, fuzzy
+msgctxt "TC_QTCPROCESSTERMINATEDINVALIDNUMBERM"
+msgid "QTC process terminated.  Invalid number of messages."
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:860
+#, fuzzy
+msgctxt "TC_IFOUNDCONTESTNAMEIDONOUNDERSTANDLO"
+msgid "I found a contest name I do no understand in your LOGCFG.DAT file."
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:861
+#, fuzzy
+msgctxt "TC_IDIDFINECONTESTNAMELOGCFGDATFILE"
+msgid "I did not fine a contest name in your LOGCFG.DAT file."
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:862
+#, fuzzy
+msgctxt "TC_ARENEWENGLAND"
+msgid "Are you in New England?"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:863
+#, fuzzy
+msgctxt "TC_CWTIMERFIRED"
+msgid "CW Timer fired"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:864
+#, fuzzy
+msgctxt "TC_TESTRADIOINTERFACE"
+msgid "TEST RADIO INTERFACE"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:865
+#, fuzzy
+msgctxt "TC_UNABLESAVEDTAASCIIFILE"
+msgid "Unable to save .DTA to ASCII file."
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:866
+#, fuzzy
+msgctxt "TC_SAVINGDTAFILEASCIIFILEPROCESSINGCE"
+msgid "Saving .DTA file to ASCII file.  Processing cell   "
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:867
+#, fuzzy
+msgctxt "TC_DATASUCCESSFULLYSAVEDASCIIFILE"
+msgid "Data successfully saved to ASCII file."
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:868
+#, fuzzy
+msgctxt "TC_NOTRMASTERDTAFILEFOUND"
+msgid "No TRMASTER.DTA file found."
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:869
+#, fuzzy
+msgctxt "TC_HITCOUNTHISTOGRAM050"
+msgid "Hit count histogram for 0 to 50+ : "
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:870
+#, fuzzy
+msgctxt "TC_PLEASECHECKMULTINETWORK"
+msgid "Please check multi network"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:871
+#, fuzzy
+msgctxt "TC_POSSIBLEDATALOSSMULTINETWORK"
+msgid "Possible data loss on multi network."
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:872
+#, fuzzy
+msgctxt "TC_SELECTSPOTRETURNLEFTORRIGHTARROWSE"
+msgid "Select spot.  RETURN, left or right arrow to select.  ESCAPE to exit."
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:873
+#, fuzzy
+msgctxt "TC_ENTERCALLSIGNSPACEDUPECHECKALTHHEL"
+msgid "ENTER a callsign.  SPACE for dupecheck.  Alt-H for help."
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:874
+#, fuzzy
+msgctxt "TC_CONTINUEENTERINGCHARACTERSAUTOTERM"
+msgid "Continue entering characters.  Auto terminate active!!"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:875
+#, fuzzy
+msgctxt "TC_CONTINUEENTERINGCHARACTERSPRESSRET"
+msgid "Continue entering characters and press RETURN when done."
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:876
+#, fuzzy
+msgctxt "TC_ENTEREXCHANGEPRESSENTERLOGESCAPEAB"
+msgid "Enter exchange.  Press ENTER to log, ESCAPE to abort QSO."
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:877
+#, fuzzy
+msgctxt "TC_RELAYCONTROLPORTPADDLEPORT"
+msgid "RELAY CONTROL PORT = PADDLE PORT"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:878
+#, fuzzy
+msgctxt "TC_LOCATIONFIELDEMPTY"
+msgid "LOCATION field is empty."
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:879
+#, fuzzy
+msgctxt "TC_PTTLOCKOUTTRUE"
+msgid "PTT LOCKOUT=TRUE"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:880
+#, fuzzy
+msgctxt "TC_PREFERENCESCOULDOPENEDS"
+msgid "Preferences could not be opened (%s)."
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:881
+#, fuzzy
+msgctxt "TC_THESEENTRIESWEREACCEPTEDBEENSAVED"
+msgid "These entries were not accepted and have not been saved:"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:882
+#, fuzzy
+msgctxt "TC_TCISERVERCOULDOPENPORTDS"
+msgid "The TCI server could not open port %d: %s"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:883
+#, fuzzy
+msgctxt "TC_KEYERNAMEDSALREADYEXISTS"
+msgid "A keyer named \"%s\" already exists."
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:884
+#, fuzzy
+msgctxt "TC_SSTILLUSEDBYS"
+msgid "\"%s\" is still used by: %s"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:885
+#, fuzzy
+msgctxt "TC_REMOVECLUSTERS"
+msgid "Remove the cluster \"%s\"?"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:886
+#, fuzzy
+msgctxt "TC_REMOVEROTATORS"
+msgid "Remove the rotator \"%s\"?"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:887
+#, fuzzy
+msgctxt "TC_LOGGINGRUNNINGSOTHERENOFILEOPEN"
+msgid "Logging is not running, so there is no file to open."
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:888
+#, fuzzy
+msgctxt "TC_THERENOLOGFILEYETS"
+msgid "There is no log file yet at %s."
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:893
+#, fuzzy
+msgctxt "TC_EDITOR_EDIT"
+msgid "&Edit"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:894
+#, fuzzy
+msgctxt "TC_EDITOR_OPENINEDITOR"
+msgid "Open in text &editor"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:895
+#, fuzzy
+msgctxt "TC_EDITOR_EXPLORE"
+msgid "Explore"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:896
+#, fuzzy
+msgctxt "TC_EDITOR_COPY"
+msgid "&Copy"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:897
+#, fuzzy
+msgctxt "TC_EDITOR_SELECTALL"
+msgid "Select &all"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:898
+#, fuzzy
+msgctxt "TC_EDITOR_SENDLOGTO"
+msgid "Send log to %s"
+msgstr ""
+
+#. Section: FD Additions NY4I
+#: tr4w/src/lang/tr4w_consts_eng.pas:899
+#, fuzzy
+msgctxt "TC_UPLOADCABRILLOTOSCP"
+msgid "Do you want to upload your Cabrillo file to SuperChecklPartial?"
+msgstr ""
+

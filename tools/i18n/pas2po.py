@@ -247,7 +247,12 @@ def main(argv=None):
          print("unknown LANG %r -- pass --code with its ISO 639-1 tag" % lang,
                file=sys.stderr)
          return 2
-      if lang in files:
+      # A lossy language HAS a lang file and still has nothing safely
+      # harvestable: its bytes decode under no declared codepage, so a blanket
+      # take would emit mojibake. Treating it as new seeds the catalogue from
+      # ENG -- all fuzzy, nothing invented. What DOES decode is merged in
+      # afterwards by salvage_lossy.py, which is a separate, reviewable step.
+      if lang in files and lang not in lossy:
          print("%s already has a lang file; use plain pas2po.py" % lang,
                file=sys.stderr)
          return 2
@@ -270,7 +275,9 @@ def main(argv=None):
          print("skipping unknown LANG %s" % lang, file=sys.stderr)
          continue
       if lang in lossy:
-         print("%-5s SKIPPED -- decodes under no declared codepage" % lang)
+         print("%-5s SKIPPED -- decodes under no declared codepage; seed its "
+               "catalogue from ENG with --new-lang %s, then salvage what "
+               "decodes with salvage_lossy.py" % (lang, lang))
          continue
       out = os.path.join(paths["i18n"], "tr4w_%s.po" % code)
       emit(eng_decls, others[lang], lang, out, args.reflag_identical)
