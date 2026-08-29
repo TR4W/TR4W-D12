@@ -115,7 +115,67 @@ easy to compare. **Not** for interoperability — question 8 settled that a TR4Q
 log never has to be readable by us, which is what frees §4a and §4b to diverge
 where we have a better answer.
 
+**The header comment below is part of the deliverable, not decoration.** It
+ships in `schema.sql` verbatim. NY4I, 2026-08-29: *"make sure in the code you
+document the decisions for why a flat record versus a referential one, because
+somebody reading this six months from now on GitHub will think we had no
+knowledge of what a relational database was."*
+
 ```sql
+-- ===========================================================================
+-- TR4W CONTEST LOG SCHEMA
+--
+-- WHY THIS IS FLAT AND NOT NORMALISED, since that is the first thing a reader
+-- will want to argue with.
+--
+-- The obvious relational design gives each QSO a set of exchange elements in a
+-- child table -- exchange_element(qso_id, key, value) -- because a contest
+-- exchange is a variable set of fields and that is what a child table is for.
+-- It was considered and rejected. This is a deliberate choice, not an omission.
+--
+-- WHAT WE MEASURED. TR4W's ExchangeType enum (src/VC.pas) has 61 members, and
+-- they are composed from 29 distinct elements. RST appears in 36 of the 61,
+-- QTH in 24, serial in 23, and then a long tail: one exchange type each uses
+-- the Russian district, the French department, an IARU society, a Ten-Ten
+-- number. The set is not open-ended and it is not large. It is 29 columns, and
+-- it has been roughly this size for 25 years and 120-plus contests -- the
+-- predecessor binary record (ContestExchange) carried about twenty of them as
+-- fixed fields and covered every contest TR4W has ever supported.
+--
+-- WHAT NORMALISING WOULD BUY: adding an exchange element needs no schema
+-- migration.
+--
+-- WHAT IT WOULD COST: every read. A dupe check, a multiplier lookup, the
+-- editable log, and Cabrillo export all want a QSO as ONE ROW. Against a child
+-- table each becomes a join with a pivot, values lose their types (a zone is an
+-- INTEGER in one row and a callsign is TEXT in the next, in the same column),
+-- and nothing can be constrained or indexed usefully. That is the EAV pattern.
+-- It is a reasonable design when the attribute set is genuinely unbounded or
+-- user-defined. Ours is neither: it is enumerated in VC.pas and changes when a
+-- new contest is added, which is a code change anyway.
+--
+-- THE SIZE ARGUMENT DOES NOT APPLY EITHER WAY. A contest log is about 10,000
+-- rows at the extreme; the largest in our regression corpus is 78 KB. An
+-- unused column costs one byte per row. Neither design would be measurably
+-- faster; this is a decision about clarity and correctness, not performance.
+--
+-- THE ONE HATCH: rcvd_extra is a JSON column for elements we do not model --
+-- imported foreign fields, experiments. NOTHING IN SCORING, MULTIPLIERS OR
+-- CABRILLO EXPORT MAY READ IT. When something needs to, that is the signal to
+-- give the element a real column (ALTER TABLE ADD COLUMN, guarded by
+-- PRAGMA table_info -- see the migration note below). If rcvd_extra ever grows
+-- a consumer, the rule has been broken and the fix is a column, not a query.
+--
+-- WHY THERE IS NO multipliers TABLE. It would be a cache of something the qso
+-- rows already say, and a cache that can disagree with the log is a contest
+-- logger showing the wrong score. Multipliers are derived by query.
+--
+-- WHY SOME VALUES APPEAR TWICE, as rcvd_* and cty_*: see the block above the
+-- rcvd_ columns. Short version -- what the other station SENT and what CTY.DAT
+-- guessed from his prefix are different facts, and in a zone contest the sent
+-- one is the only correct one.
+-- ===========================================================================
+
 PRAGMA user_version = 1;
 
 -- ONE ROW. This is the log's own identity and its entry declaration, frozen
@@ -358,6 +418,16 @@ rule for it has to be written down or it becomes a dumping ground:
 
 SQLite's `json_extract()` can even index into it, which is the temptation to
 resist rather than the feature to use.
+
+**This reasoning ships in the schema, not only here.** The DDL in §4 opens with
+it, and that comment is part of the deliverable — a reader who meets
+`schema.sql` on GitHub in six months must find the argument at the point of
+contact, not be left to assume nobody here knew what third normal form was.
+Same rule for the units that carry it: the one that owns the schema, and the
+one that reads `rcvd_extra`, each restate the part that constrains them. This
+tree already works that way — `uCrashLogLCL`, `uServerLogForm` and the resource
+block in `tr4w.lpr` all explain themselves where the reader arrives, and each of
+those comments exists because someone otherwise "fixed" the thing they describe.
 
 **Worth doing while the list is in front of us:** the 29 elements above come
 from the *names* of the exchange types. The authoritative list of what is
