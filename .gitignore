@@ -183,6 +183,18 @@ corpus_test_data/local_test_data/
 # rather than the files.
 tr4w/src/ui/lcl/backup/
 
+# The PROJECT backup directory, same mechanism one level up: Lazarus writes the
+# previous revision of tr4w.lpi/.lpr here on every save, so tr4w/backup/tr4w.lpi
+# showed as modified after each time the IDE was opened.
+#
+# tr4w.dpr and tr4w.lpi were committed here by accident in adaa30dd, the .dpr ->
+# .lpr rename. Nothing is lost by untracking them: the pre-rename program file is
+# git show adaa30dd^:tr4w/tr4w.dpr, and a stale copy of a file that HAS moved is
+# worse than no copy -- the sibling directory already proved that, where a grep
+# for tDialogBox found the pre-conversion uLogCompareForm and had to be filtered
+# out by hand every time.
+tr4w/backup/
+
 # Defuzzed test catalogues (tools/i18n/po_defuzz.py). They carry UNREVIEWED
 # machine translation for layout testing and must never be shipped or committed.
 build-out/**/languages/
