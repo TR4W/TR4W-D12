@@ -150,16 +150,71 @@ LCL LogCompare form's Synchronize button. Dialog 74 went with the Missing Mults
 report the same day; 68 (About) is behind a dead `{$IF OGLVERSION}` and 77
 (Select File) sits inside a block comment.
 
-`res\tr4w_eng.res` therefore carries only an icon, a cursor and a bitmap that
-nothing opens a dialog with. **Both remaining steps are NY4I's by hand**, since
-`.rc`/`.res` edits are:
+#### What `tr4w_eng.RES` actually contains
 
-1. move the icon and cursor to the `.lpi` (`<Icon>`, `Screen.Cursors[]`), then
-2. drop the `{$R res\tr4w_eng.res}` link, `res/Tr4w.rc` and `tr4w_eng.RES`, and
-   let `tr4w.lpr` link `{$R *.res}` plus the manifest.
+Read out of the binary, 2026-08-29 — **not** from the `.rc`, which is a superset:
 
-Until then `Tr4w.rc` stays: it is the source `tr4w_eng.res` was built from, and
-deleting it removes the ability to regenerate it.
+| resource | bytes | still reached? |
+|---|---:|---|
+| `GROUP_ICON MAINICON` + `ICON 1` | 3260 | **YES** — the only live thing in the file |
+| `DIALOG 46` (Edit QSO) | 2984 | no — `uEditQSOForm` is the window |
+| `DIALOG 66` | 1268 | no |
+| `DIALOG 73` (server log) | 694 | no — converted 2026-08-29 |
+| `ACCELERATOR T` | 776 | no — `uAccelerators`' Pascal table replaced it |
+| `BITMAP 853` | 1064 | no — nothing calls `LoadBitmap` for it |
+
+**THERE IS NO CURSOR TO MOVE.** An earlier draft of this section said the file
+carried one and that `Screen.Cursors[]` was the destination. Both wrong: the
+`.RES` has no `CURSOR` or `GROUP_CURSOR` resource at all, and every `LoadCursor`
+in the tree passes instance **0** with a stock id (`IDC_ARROW`, `IDC_WAIT` in
+`uPrefsForm` and `uProgramMain`). Nothing custom is loaded, so nothing moves.
+
+#### Moving the icon — the whole job
+
+`MAINICON` is loaded at four sites, all `LoadIcon(hInstance, 'MAINICON')`:
+`uProgramMain.pas:1171` (the main window class), `uDialogs.pas:677` and `:689`,
+and `uNet.pas:1257`.
+
+**None of them has to change**, because Lazarus names its project icon
+`MAINICON` too. That is the whole reason this is cheap.
+
+`tr4w/tr4w.res` — the Lazarus project resource, 940 bytes, **linked by nothing**
+— already declares `MAINICON`. It is not our icon: it holds a 32×32 **4-bpp**
+placeholder, against the real 32×32 **24-bpp** one in `tr4w_eng.RES`. So the
+step is to put the real icon into the project resource, not to invent one.
+
+`tr4w/res/tr4w.ico` is that icon, extracted from the `.RES` and verified to
+render (the TR4W logo). Then, **by hand, because `.res`/`.rc` are NY4I's**:
+
+1. Lazarus → Project → Project Options → **Application** → *Load Icon* →
+   `tr4w\res\tr4w.ico`, then save. Lazarus rewrites `tr4w\tr4w.res` with it.
+2. In `tr4w.lpr` replace `{$R res\tr4w_eng.res}` with `{$R *.res}` — that is
+   what picks `tr4w.res` up.
+3. Delete `tr4w\res\tr4w_eng.RES` and `res\Tr4w.rc`.
+4. **Delete `build\Lint-EditQSOTemplate.ps1` and its row in `Run-Lints.ps1`, in
+   the same commit.** It reads `res\tr4w_eng.res` directly and exports dialog 46
+   from it to compare against the `.lfm`; its own header says to delete it when
+   dialog 46 leaves the `.RES`. It will otherwise fail the build.
+5. Rebuild and check the icon in the taskbar, in Alt-Tab, and on the help button
+   `uDialogs.pas:689` puts it on.
+
+The `.ico` is kept in `res\` afterwards: it becomes the source the `.lpi` was
+loaded from, replacing `Tr4w.rc` in that role.
+
+#### The `.lpi` title — already correct, and it is not the title bar
+
+`<Title Value="TR4W"/>` is set. Leave it at exactly `TR4W`.
+
+It sets `Application.Title` (taskbar grouping, the LCL's hidden application
+window). It is **not** what the title bar says: `LOGWIND.DisplayContestTitle`
+composes `TR4W_CURRENTVERSION + ' - ' + ContestTitle` and pushes it with
+`SetWindowTextA(tr4whandle, ...)`, which is where
+`TR4W v.5.0.2 - 2026 CQ-WW-SSB NY4I` comes from. Nothing in the tree assigns
+`Application.Title`.
+
+Leave `MainUnitHasTitleStatement` at `False` as well, or the IDE starts writing
+an `Application.Title := ...` line into `tr4w.lpr`, which is hand-maintained and
+whose uses-clause order is load-bearing for name resolution.
 
 **Two things learned converting 73, worth keeping.** A Win32 control id can be
 written by `SetDlgItemInt` from *any* unit holding the window handle — the 'sent
