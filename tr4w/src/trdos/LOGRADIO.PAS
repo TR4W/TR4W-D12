@@ -275,20 +275,11 @@ type
       procedure AddCommandToBuffer;
       function  CheckAutoCallTerminate: boolean;
       function DeleteLastCWCharacter: boolean;
-      procedure FlushCWByCATBuffer;
       procedure PutRadioIntoSplit;
       procedure PutRadioOutOfSplit;
-      procedure SendIcomCommand(Command: byte);
-      procedure SendIcomTwoByteCommand(Command: byte; opCode: byte);
-      procedure SendXMITStatusCommand;
      { procedure SendIcomExtendedVFO(bVFO: boolean);
      }
-      procedure SendRITStatusCommand;
-      procedure SendRITFreqCommand;
-      procedure GetIcomDataStateCommand;
-      procedure SetICOMRITFrequency(hz: integer);
       function MemoryKeyer(mem: integer): boolean;
-      procedure ProcessIcomMode(mode: integer);
      // procedure SendIcomClearRITCommand;
     //  function CalculateIcomFilterWidth: integer;
       function HasCapability(cap: TRadioCapability): boolean;
@@ -310,8 +301,6 @@ type
       //    procedure StartNextPoll;
       //    function TimeToGiveUp: boolean;
       procedure UpdateBandOutputInfo(Band: BandType; Mode: ModeType);
-      procedure UpdateRadioStatus;
-      function ConvertBCDStringToFreq(BCDString: Str20): longint;
 
       procedure FreqToBCD(Freq: longint; Swap: boolean; OpCode: byte);
       procedure ResolveSerialFrameSettings;
@@ -321,9 +310,7 @@ type
       procedure LogRadioConfiguration;
       procedure CheckAndInitializePorts_ForThisRadio;
       function WriteToCATPort(const Buffer; nNumberOfBytesToWrite: DWORD): longbool;
-      function WritePollRequest(const Buffer; nNumberOfBytesToWrite: DWORD): longbool;
       procedure WriteBufferToCATPort(const Buffer);
-      procedure OnCWByCATTimeEvent(Sender :TObject);
       procedure EnableCWBYCATTimer(ms: integer);
       procedure AddTimeToCWByCATTimer(ms: integer);
 
@@ -1080,25 +1067,6 @@ begin
    WriteToCATPort(Buffer, lstrlenA(@Buffer));
 end;
 
-function RadioObject.WritePollRequest(const Buffer;
-   nNumberOfBytesToWrite: DWORD): longbool;
-begin
- { if Config.NoPollDuringPTT then
-  if tPTTStatus = PTT_ON then
-  Sleep(500);   }
- //     try
-     begin
-      Result := WriteToCATPort(Buffer, nNumberOfBytesToWrite);
-  //    except //on E : Exception do
-      ; // TLogger.GetInstance.Debug(Format('In WritePollRequest, %s error raised, with message <%s> ',[E.ClassName,E.Message]));
-      end;
-   if not Result then
-      begin
-      Sleep(200);
-      end;
-end;
-
-
 function RadioObject.WriteToCATPort(const Buffer;
    nNumberOfBytesToWrite: DWORD): longbool;
 var
@@ -1396,47 +1364,6 @@ begin
       end;
 end;
 
-function RadioObject.ConvertBCDStringToFreq(BCDString: Str20): longint;
-
-var
-   F1: longint;
-
-begin
-   if length(BCDString) = 5 then
-      begin
-      F1 := (Ord(BCDString[5]) and $F0) shr 4; { 1000s of mhz }
-      F1 := F1 * 10;
-      F1 := F1 + (Ord(BCDString[5]) and $0F); { 100s of mhz}
-      F1 := F1 * 10;
-      end
-   else
-      begin
-      F1 := 0;
-      end;
-
-   F1 := F1 + ((Ord(BCDString[4]) and $F0) shr 4); { 10s of mhz }
-   F1 := F1 * 10;
-   F1 := F1 + (Ord(BCDString[4]) and $0F); { 1s of mhz}
-   F1 := F1 * 10;
-
-   F1 := F1 + ((Ord(BCDString[3]) and $F0) shr 4);
-   F1 := F1 * 10;
-   F1 := F1 + (Ord(BCDString[3]) and $0F);
-   F1 := F1 * 10;
-
-   F1 := F1 + ((Ord(BCDString[2]) and $F0) shr 4);
-   F1 := F1 * 10;
-   F1 := F1 + (Ord(BCDString[2]) and $0F);
-   F1 := F1 * 10;
-
-   F1 := F1 + ((Ord(BCDString[1]) and $F0) shr 4);
-   F1 := F1 * 10;
-
-   F1 := F1 + (Ord(BCDString[1]) and $0F);
-
-   ConvertBCDStringToFreq := F1;
-end;
-
 function FrequencyFromFourBytes(FreqStr: string): longint;
 
 var
@@ -1452,88 +1379,9 @@ begin
    FrequencyFromFourBytes := F1 + F2 + F3 + Ord(FreqStr[4]);
 end;
 
-procedure RadioObject.SendIcomTwoByteCommand(Command: byte; opCode: byte);
-
-begin
-
-   tIcom7Bytes[0] := Ord(ICOM_PREAMBLE_CODE);
-   tIcom7Bytes[1] := Ord(ICOM_PREAMBLE_CODE);
-   tIcom7Bytes[2] := ReceiverAddress;
-   tIcom7Bytes[3] := Ord(ICOM_CONTROLLER_ADDRESS);
-   tIcom7Bytes[4] := Command;
-   tIcom7Bytes[5] := Ord(Chr(opCode));
-   tIcom7Bytes[6] := Ord(ICOM_END_OF_MESSAGE_CODE);
-   WriteToCATPort(tIcom6Bytes, 7);
-end;
-procedure RadioObject.SendIcomCommand(Command: byte);
-
-begin
-
-   tIcom6Bytes[0] := Ord(ICOM_PREAMBLE_CODE);
-   tIcom6Bytes[1] := Ord(ICOM_PREAMBLE_CODE);
-   tIcom6Bytes[2] := ReceiverAddress;
-   tIcom6Bytes[3] := Ord(ICOM_CONTROLLER_ADDRESS);
-   tIcom6Bytes[4] := Command;
-   tIcom6Bytes[5] := Ord(ICOM_END_OF_MESSAGE_CODE);
-
-   //TLogger.GetInstance.Debug(Format('In SendIcomCommand, Sending command %s',[Chr(Command)]));
-   WriteToCATPort(tIcom6Bytes, 6);
-end;
 //------------------------------------------------------------------------------
-procedure RadioObject.SendXMITStatusCommand;
-begin
-   tIcom7Bytes[0] := Ord(ICOM_PREAMBLE_CODE);
-   tIcom7Bytes[1] := Ord(ICOM_PREAMBLE_CODE);
-   tIcom7Bytes[2] := ReceiverAddress;
-   tIcom7Bytes[3] := Ord(ICOM_CONTROLLER_ADDRESS);
-   tIcom7Bytes[4] := Ord(ICOM_XMIT_SETTINGS);
-   tIcom7Bytes[5] := (Ord(Chr(0)));
-   tIcom7Bytes[6] := Ord(ICOM_END_OF_MESSAGE_CODE);
-   WriteToCATPort(tIcom7Bytes, 7);
-end; // SendXMITStatusCommand;
  //------------------------------------------------------------------------------
- procedure RadioObject.GetIcomDataStateCommand;
-begin
-   tIcom7Bytes[0] := Ord(ICOM_PREAMBLE_CODE);
-   tIcom7Bytes[1] := Ord(ICOM_PREAMBLE_CODE);
-   tIcom7Bytes[2] := ReceiverAddress;
-   tIcom7Bytes[3] := Ord(ICOM_CONTROLLER_ADDRESS);
-   tIcom7Bytes[4] := Ord(ICOM_STATE);
-   tIcom7Bytes[5] := (Ord(ICOM_STATE_DATA_MODE));
-   tIcom7Bytes[6] := Ord(ICOM_END_OF_MESSAGE_CODE);
-   WriteToCATPort(tIcom7Bytes, 7);
-end; // GetDatyaStateCommand;
 //---------------------------------------------------------------------------
- procedure RadioObject.SendRITStatusCommand;
-begin
-   tIcom7Bytes[0] := Ord(ICOM_PREAMBLE_CODE);
-   tIcom7Bytes[1] := Ord(ICOM_PREAMBLE_CODE);
-   tIcom7Bytes[2] := ReceiverAddress;
-   tIcom7Bytes[3] := Ord(ICOM_CONTROLLER_ADDRESS);
-   tIcom7Bytes[4] := Ord(ICOM_GET_RIT_FREQ);
-   tIcom7Bytes[5] := (Ord(Chr(1)));
-   tIcom7Bytes[6] := Ord(ICOM_END_OF_MESSAGE_CODE);
-   WriteToCATPort(tIcom7Bytes, 7);
-end; // SendRITStatusCommand;
-
-procedure RadioObject.SendRITFreqCommand;
-begin
-   tIcom7Bytes[0] := Ord(ICOM_PREAMBLE_CODE);
-   tIcom7Bytes[1] := Ord(ICOM_PREAMBLE_CODE);
-   tIcom7Bytes[2] := ReceiverAddress;
-   tIcom7Bytes[3] := Ord(ICOM_CONTROLLER_ADDRESS);
-   tIcom7Bytes[4] := Ord(ICOM_GET_RIT_FREQ);
-   tIcom7Bytes[5] := (Ord(Chr(0)));
-   tIcom7Bytes[6] := Ord(ICOM_END_OF_MESSAGE_CODE);
-   WriteToCATPort(tIcom7Bytes, 7);
-end; // SendRITFreqCommand;
-
-
-procedure RadioObject.SetICOMRITFrequency(hz: integer);
-
-begin
-end;
-
 function RadioObject.MemoryKeyer(mem: integer): boolean;
 begin
    // The per-model `case RadioModel of` that played DVK memories here is DELETED
@@ -1555,104 +1403,6 @@ begin
 end;
 
 
-procedure RadioObject.ProcessIcomMode(mode: integer);
-begin
-   case mode of
-   0:
-      begin
-      Self.CurrentStatus.Mode := Phone;
-      Self.CurrentStatus.ExtendedMode := eLSB;
-      end;
-   1:
-      begin
-      Self.CurrentStatus.Mode := Phone;
-      Self.CurrentStatus.ExtendedMode := eUSB;
-      end;
-   2:
-      begin
-      Self.CurrentStatus.Mode := Phone;
-      Self.CurrentStatus.ExtendedMode := eAM;
-      end;
-   3:
-      begin
-      Self.CurrentStatus.Mode := CW;
-      Self.CurrentStatus.ExtendedMode := eCW;
-      end;
-   4:
-      begin
-      Self.CurrentStatus.Mode := Digital;
-      Self.CurrentStatus.ExtendedMode := eRTTY;
-      end;
-   5:
-      begin
-      Self.CurrentStatus.Mode := Phone;
-      Self.CurrentStatus.ExtendedMode := eFM;
-      end;
-   6:
-      begin
-      Self.CurrentStatus.Mode := Phone;
-      Self.CurrentStatus.ExtendedMode := eWFM;
-      end;
-   7:
-      begin
-      Self.CurrentStatus.Mode := CW;
-      Self.CurrentStatus.ExtendedMode := eCW_R;
-      end;
-   8:
-      begin
-      Self.CurrentStatus.Mode := Digital;
-      Self.CurrentStatus.ExtendedMode := eRTTY_R;
-      end;
-   12:
-      begin
-      Self.CurrentStatus.Mode := Digital;
-      Self.CurrentStatus.ExtendedMode := ePSK31;
-      end;
-   13:
-      begin
-      Self.CurrentStatus.Mode := Digital;
-      Self.CurrentStatus.ExtendedMode := ePSK_R;
-      end;
-   17:
-      begin
-      Self.CurrentStatus.Mode := Phone;
-      Self.CurrentStatus.ExtendedMode := eDSTAR;
-      end;
-   else
-      DEBUGMSG('Unknown Mode command from Icom ' + IntToStr(mode));
-   end;
-end;
-
-
-{procedure RadioObject.SendIcomClearRITCommand;
-begin
-   tIcom11Bytes[0] := Ord(ICOM_PREAMBLE_CODE);
-   tIcom11Bytes[1] := Ord(ICOM_PREAMBLE_CODE);
-   tIcom11Bytes[2] := ReceiverAddress;
-   tIcom11Bytes[3] := Ord(ICOM_CONTROLLER_ADDRESS);
-   tIcom11Bytes[4] := Ord(ICOM_GET_RIT_FREQ);
-   tIcom11Bytes[5] := (Ord(Chr(0)));
-   tIcom11Bytes[6] := (Ord(Chr(0)));
-   tIcom11Bytes[7] := (Ord(Chr(0)));
-   tIcom11Bytes[8] := (Ord(Chr(0)));
-   tIcom11Bytes[9] := Ord(ICOM_END_OF_MESSAGE_CODE);
-   WriteToCATPort(tIcom11Bytes, 10);
-end; // SendRITFreqCommand;
-
-
-procedure RadioObject.SendIcomExtendedVFO(bVFO: boolean);
-begin
-   tIcom11Bytes[0] := Ord(ICOM_PREAMBLE_CODE);
-   tIcom11Bytes[1] := Ord(ICOM_PREAMBLE_CODE);
-   tIcom11Bytes[2] := ReceiverAddress;
-   tIcom11Bytes[3] := Ord(ICOM_CONTROLLER_ADDRESS);
-   tIcom11Bytes[4] := Ord(ICOM_GET_EXTENDEDVFO);
-   tIcom11Bytes[5] := ifthen(bVFO,Ord(Chr(1)),Ord(Chr(0)));
-   tIcom11Bytes[6] := Ord(ICOM_END_OF_MESSAGE_CODE);
-   WriteToCATPort(tIcom11Bytes, 7);
-end; // SendIcomExtendedVFO
-
-}
 procedure RadioObject.PutRadioIntoSplit;
 
 begin
@@ -1682,103 +1432,6 @@ begin
    if Self.tFactoryObject <> nil then
       begin
       Self.tFactoryObject.Split(false);
-      end;
-end;
-
-procedure RadioObject.UpdateRadioStatus;
-
-{ Updates the filtered radio status } // This is not called anymore
-
-begin
-   if CurrentStatus.Freq = PreviousStatus.Freq then
-      begin
-      FilteredStatus.Freq := CurrentStatus.Freq;
-      end;
-
-   if CurrentStatus.Mode = PreviousStatus.Mode then
-      begin
-      FilteredStatus.Mode := CurrentStatus.Mode;
-      end;
-
-      if CurrentStatus.ExtendedMode = PreviousStatus.ExtendedMode then
-         begin
-         FilteredStatus.ExtendedMode := CurrentStatus.ExtendedMode;
-         end;
-
-   if CurrentStatus.Band = PreviousStatus.Band then
-      begin
-      FilteredStatus.Band := CurrentStatus.Band;
-      end;
-
-   if CurrentStatus.Split = PreviousStatus.Split then
-      begin
-      FilteredStatus.Split := CurrentStatus.Split;
-      end;
-
-   if CurrentStatus.VFO[VFOA].Frequency = PreviousStatus.VFO[VFOA].Frequency then
-      begin
-      FilteredStatus.VFO[VFOA].Frequency := CurrentStatus.VFO[VFOA].Frequency;
-      end;
-
-   if CurrentStatus.VFO[VFOA].Band = PreviousStatus.VFO[VFOA].Band then
-      begin
-      FilteredStatus.VFO[VFOA].Band := CurrentStatus.VFO[VFOA].Band;
-      end;
-
-   if CurrentStatus.VFO[VFOA].Mode = PreviousStatus.VFO[VFOA].Mode then
-      begin
-      FilteredStatus.VFO[VFOA].Mode := CurrentStatus.VFO[VFOA].Mode;
-      end;
-
-   if CurrentStatus.VFO[VFOA].ExtendedMode = PreviousStatus.VFO[VFOA].ExtendedMode then
-      begin
-      FilteredStatus.VFO[VFOA].ExtendedMode := CurrentStatus.VFO[VFOA].ExtendedMode;
-      end;
-
-   //   if CurrentStatus.VFOA.TXRX = PreviousStatus.VFOA.TXRX then
-   //      FilteredStatus.VFOA.TXRX := CurrentStatus.VFOA.TXRX;
-
-   if CurrentStatus.VFO[VFOB].Frequency = PreviousStatus.VFO[VFOB].Frequency then
-      begin
-      FilteredStatus.VFO[VFOB].Frequency := CurrentStatus.VFO[VFOB].Frequency;
-      end;
-
-   if CurrentStatus.VFO[VFOB].Band = PreviousStatus.VFO[VFOB].Band then
-      begin
-      FilteredStatus.VFO[VFOB].Band := CurrentStatus.VFO[VFOB].Band;
-      end;
-
-   if CurrentStatus.VFO[VFOB].Mode = PreviousStatus.VFO[VFOB].Mode then
-      begin
-      FilteredStatus.VFO[VFOB].Mode := CurrentStatus.VFO[VFOB].Mode;
-      end;
-
-   if CurrentStatus.VFO[VFOB].ExtendedMode = PreviousStatus.VFO[VFOB].ExtendedMode then
-      begin
-      FilteredStatus.VFO[VFOB].ExtendedMode := CurrentStatus.VFO[VFOB].ExtendedMode;
-      end;
-
-   //   if CurrentStatus.VFOB.TXRX = PreviousStatus.VFOB.TXRX then
-   //      FilteredStatus.VFOB.TXRX := CurrentStatus.VFOB.TXRX;
-
-   if CurrentStatus.TXOn = PreviousStatus.TXOn then        // ny4i  // 4.44.5
-      begin
-      FilteredStatus.TXOn := CurrentStatus.TXOn;
-      end;
-
-   PreviousStatus := CurrentStatus;
-end;
-
-procedure RadioObject.OnCWByCATTimeEvent(Sender :TObject);
-begin
-   // Q9: the radio's own capability, not the legacy typeset (see SendCW).
-   if Self.CWByCAT and Self.HasCapability(rcCWByCAT) then
-      begin
-      if Self.CWBYCAT_Sending then
-         begin
-         QuickDisplay(TC_CWTIMERFIRED);
-         Self.tmrCWByCat.enabled := false;
-         end;
       end;
 end;
 
@@ -1868,10 +1521,6 @@ begin
       end;
 end;
 //------------------------------------------------------------------------------
-procedure RadioObject.FlushCWByCATBuffer;      // ny4i 4.44.5
-begin
-   SetLength(Self.CWByCATBuffer,0);    // ny4i Issue 149 Added (general cleanup)
-end;
 //------------------------------------------------------------------------------
 // CW-by-CAT send.  ONE path for every radio -- the `case rt of` with separate
 // Kenwood/Elecraft, Icom and Orion arms is gone.  What differed between them is
