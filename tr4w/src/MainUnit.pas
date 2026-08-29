@@ -68,7 +68,7 @@ uses
   // ShellAPI,
   uMults,
   // uSelectFile,
-  // uHardWare,
+  //
   uErmak,
   uCheckLatestVersion,
   // uMakeHelpFile,
@@ -4630,27 +4630,19 @@ begin
 
     menu_export_notes: MakeNotesList;
 
-    // Settings -> 'CAT and CW Keying' now opens the radio Preferences window.
-    // The two arms below are the LEGACY per-slot dialog, no longer on the menu
-    // but still reachable with the CATLEGACY call-window command while the new
-    // path is being proven on the bench.  Delete them, and uCAT.CATDlgProc,
-    // once Track F has replaced it outright.
+    // Settings -> 'CAT and CW Keying' opens the radio Preferences window, and
+    // that is now the only route. The LEGACY per-slot dialog that used to sit
+    // here -- two menu arms, the CATLEGACY call-window command and the
+    // Ctrl+Alt+1 / Ctrl+Alt+2 accelerators -- is DELETED (2026-08-29), along
+    // with uCAT.CATDlgProc and the dead uHardWare property sheet.
+    //
+    // Nothing was lost: the LCL editor writes a strict superset of its
+    // settings, and the old one could not reach the CI-V address, startup
+    // command, polling switch, frequency offset, Icom filter/data-mode bytes,
+    // auto-info level, wide CW filter or the RTS/DTR lines at all. Its edits
+    // also did not survive a restart once a profile was active -- the library
+    // won and logged the override.
     menu_radio_preferences: ShowPreferences;
-
-    menu_cat_radio_one:
-      begin
-        CATWTR := @Radio1;
-        // DialogBoxParam(hInstance, MAKEINTRESOURCE(66), tr4whandle, @CATDlgProc, integer(@Radio1));
-        tDialogBox(66, @CATDlgProc);
-        // RunOptionsDialog(cfRadio1);
-      end;
-
-    menu_cat_radio_two:
-      begin
-        CATWTR := @Radio2;
-        tDialogBox(66, @CATDlgProc);
-        // DialogBoxParam(hInstance, MAKEINTRESOURCE(66), tr4whandle, @CATDlgProc, integer(@Radio2));
-      end;
 
     menu_lpt:
       ShowLPTDialog;
@@ -9392,12 +9384,7 @@ begin
     // 'FMXTEST' (was 14) and 'FMXDESIGN' (was 16) were removed with the FMX
     // twins on 2026-08-17, which is why PREF and CATLEGACY renumbered here --
     // the one edit this array's ordering rule was written to make deliberate.
-    'PREF',
-    // TRANSITIONAL -- the legacy per-slot CAT dialog, which came off the
-    // Settings menu when 'CAT and CW Keying' was repointed at the Preferences
-    // window.  Kept reachable until Track F has replaced it on the bench, then
-    // deleted along with uCAT.CATDlgProc.
-    'CATLEGACY']) of
+    'PREF']) of
     0: ProcessMenu(menu_adif);
     1: ProcessMenu(menu_cabrillo);
     2: RunWindowsUtility('cmd.exe');
@@ -9433,13 +9420,6 @@ begin
     12: SendViaTelnetSocket('SH/WCY');
     13: SendViaTelnetSocket('SH/WWV');
     14: ShowPreferences;
-    15:
-      begin
-      // Radio 1, because the legacy dialog is per-slot and this is only an
-      // escape hatch; Settings -> CAT and CW Keying is the supported route.
-      CATWTR := @Radio1;
-      tDialogBox(66, @CATDlgProc);
-      end;
   else
     Result := false; // False result does not clear call window
   end; // case

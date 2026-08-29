@@ -221,8 +221,14 @@ begin
 
    { 97 until 2026-08-25, when Ctrl+Alt+N went with the Synchronize-PC-time
      menu item -- setting the clock needs UAC elevation TR4W never asked for.
-     The startup NTP CHECK is unaffected: it warns, it never set the clock. }
-   CheckEquals(96, installed, 'installed bindings (the table read out of the binary)');
+     The startup NTP CHECK is unaffected: it warns, it never set the clock.
+
+     96 until 2026-08-29, when Ctrl+Alt+1 and Ctrl+Alt+2 went with the legacy
+     per-slot CAT dialog. They were the last route to it after it came off the
+     menu -- and the reason deleting the dialog was not just a matter of
+     removing its two menu arms: an installed accelerator whose id has no
+     handler fires a WM_COMMAND into nothing. }
+   CheckEquals(94, installed, 'installed bindings (the table read out of the binary)');
    CheckEquals(4, displayOnly, 'display-only rows');
 
    // Named individually: each is here for a DIFFERENT reason and losing any one

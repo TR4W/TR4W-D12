@@ -183,7 +183,7 @@ if ($warnLines.Count -lt $WARN_CEILING)
 # already the "PChar -> PAnsiChar proactive audit" on the roadmap. What this
 # stops is the number GROWING while that waits, which is the same bargain the
 # Win32 baselines make.
-$NARROW_CEILING = 1427
+$NARROW_CEILING = 1425
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

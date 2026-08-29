@@ -400,7 +400,6 @@ uses
   // anywhere -- the notes here recorded why: one set depends on a
   // Country9.pas that was never in the repo, one is unfinished, one is
   // orphaned. Six Win32 dialog procedures, 794 lines.
-  uHardWare,
   uMakeHelpFile,
   uLogConfig,
   uPOTAParks,
