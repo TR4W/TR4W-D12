@@ -993,10 +993,17 @@ begin
    // That is not pedantry: the Ten-Tec Omni VI has an Icom-compatible CI-V
    // interface and declares address 4, so a brand test would have locked it out
    // of the one field it needs.
+   // ASK BY ID. This used to be RegisteredCIVAddress(ModelForId(id)), which
+   // round-trips through the enum -- and a radio registered with
+   // RegisterRadioById has no enum member, so ModelForId answers
+   // NoInterfacedRadio, the default came back 0, and the field disabled itself.
+   // The IC-7110 is an Icom whose CI-V address the operator could not edit
+   // (NY4I, bench, 2026-08-29). Nothing in the registry needs the enum here;
+   // the id is the key.
    civDefault := 0;
    if id <> '' then
       begin
-      civDefault := RegisteredCIVAddress(ModelForId(id));
+      civDefault := RegisteredCIVAddressId(id);
       end;
 
    edtCIV.Enabled := (civDefault <> 0);

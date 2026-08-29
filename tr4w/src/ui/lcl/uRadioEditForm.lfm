@@ -1,12 +1,12 @@
 object RadioEditForm: TRadioEditForm
   Left = 0
-  Height = 470
+  Height = 494
   Top = 0
   Width = 520
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
   Caption = 'Radio'
-  ClientHeight = 470
+  ClientHeight = 494
   ClientWidth = 520
   Position = poScreenCenter
   LCLVersion = '4.8.0.0'
@@ -48,7 +48,7 @@ object RadioEditForm: TRadioEditForm
   end
   object tbcTransport: TPageControl
     Left = 12
-    Height = 202
+    Height = 226
     Top = 72
     Width = 480
     ActivePage = tabSerial
@@ -483,7 +483,7 @@ object RadioEditForm: TRadioEditForm
   object lblKeyerPort: TLabel
     Left = 12
     Height = 17
-    Top = 288
+    Top = 312
     Width = 130
     AutoSize = False
     Caption = 'Keyer output port'
@@ -491,7 +491,7 @@ object RadioEditForm: TRadioEditForm
   object cbxKeyerPort: TComboBox
     Left = 150
     Height = 22
-    Top = 284
+    Top = 308
     Width = 200
     AutoSize = False
     ItemHeight = 0
@@ -500,7 +500,7 @@ object RadioEditForm: TRadioEditForm
   object lblCIV: TLabel
     Left = 12
     Height = 17
-    Top = 318
+    Top = 342
     Width = 130
     AutoSize = False
     Caption = 'CI-V address (hex)'
@@ -508,7 +508,7 @@ object RadioEditForm: TRadioEditForm
   object edtCIV: TEdit
     Left = 150
     Height = 22
-    Top = 314
+    Top = 338
     Width = 80
     AutoSize = False
     TabOrder = 7
@@ -516,7 +516,7 @@ object RadioEditForm: TRadioEditForm
   object lblKeyerRTS: TLabel
     Left = 12
     Height = 17
-    Top = 348
+    Top = 372
     Width = 130
     AutoSize = False
     Caption = 'Keyer RTS line'
@@ -524,7 +524,7 @@ object RadioEditForm: TRadioEditForm
   object cbxKeyerRTS: TComboBox
     Left = 150
     Height = 22
-    Top = 344
+    Top = 368
     Width = 200
     AutoSize = False
     ItemHeight = 0
@@ -533,7 +533,7 @@ object RadioEditForm: TRadioEditForm
   object lblKeyerStopBits: TLabel
     Left = 360
     Height = 17
-    Top = 348
+    Top = 372
     Width = 70
     AutoSize = False
     Caption = 'Stop bits'
@@ -541,7 +541,7 @@ object RadioEditForm: TRadioEditForm
   object cbxKeyerStopBits: TComboBox
     Left = 435
     Height = 22
-    Top = 344
+    Top = 368
     Width = 70
     AutoSize = False
     ItemHeight = 0
@@ -550,7 +550,7 @@ object RadioEditForm: TRadioEditForm
   object lblKeyerDTR: TLabel
     Left = 12
     Height = 17
-    Top = 378
+    Top = 402
     Width = 130
     AutoSize = False
     Caption = 'Keyer DTR line'
@@ -558,7 +558,7 @@ object RadioEditForm: TRadioEditForm
   object cbxKeyerDTR: TComboBox
     Left = 150
     Height = 22
-    Top = 374
+    Top = 398
     Width = 200
     AutoSize = False
     ItemHeight = 0
@@ -567,7 +567,7 @@ object RadioEditForm: TRadioEditForm
   object btnOK: TButton
     Left = 320
     Height = 25
-    Top = 432
+    Top = 456
     Width = 90
     Anchors = [akRight, akBottom]
     Caption = 'Save and close'
@@ -578,7 +578,7 @@ object RadioEditForm: TRadioEditForm
   object btnCancel: TButton
     Left = 420
     Height = 25
-    Top = 432
+    Top = 456
     Width = 90
     Anchors = [akRight, akBottom]
     Cancel = True

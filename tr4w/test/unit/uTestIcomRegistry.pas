@@ -225,6 +225,8 @@ procedure TIcomRegistryTests.Test_RegistryCoversEveryCIVModel;
 var
    m: InterfacedRadioType;
    r: TFactoryRadioBase;
+   idText: string;
+   idSeen: integer;
    missing: string;
 begin
    // The point of the migration: no CI-V radio left on the legacy path.
@@ -236,6 +238,7 @@ begin
      answers. }
    BeginTest('every CI-V radio has a CI-V address declared in the registry');
    missing := '';
+   idSeen := 0;
    for m := Low(InterfacedRadioType) to High(InterfacedRadioType) do
       begin
       if not IsRegistered(m) then
@@ -256,6 +259,46 @@ begin
          r.Free;
       end;
       end;
+   { AND THE ID-ONLY RADIOS, which the loop above cannot see.
+
+     This gap was not theoretical for a single day. The radio editor asked for
+     the CI-V default with RegisteredCIVAddress(ModelForId(id)) -- a round trip
+     through the enum -- so for the IC-7110 it got NoInterfacedRadio, then 0,
+     then disabled the field. An Icom whose CI-V address the operator could not
+     edit, on a radio that declares it perfectly well. NY4I found it on the
+     bench the day after the radio was added; this test is what should have.
+
+     The registry is keyed by id and has an ...Id form of every lookup. Asking
+     by id is not an alternative spelling, it is the correct one. }
+   for idText in uRadioRegistry.RegisteredIds do
+      begin
+      if uRadioRegistry.ModelForId(idText) <> NoInterfacedRadio then
+         begin
+         Continue;      { an enum radio -- covered above }
+         end;
+      r := uRadioRegistry.CreateInstanceId(idText);
+      if r = nil then
+         begin
+         Continue;
+         end;
+      try
+         Inc(idSeen);
+         if (r is TIcomRadio) and (uRadioRegistry.RegisteredCIVAddressId(idText) = 0) then
+            begin
+            missing := missing + idText + ' ';
+            end;
+      finally
+         r.Free;
+      end;
+      end;
+
+   { Guard the guard. An id-only radio that constructs to nil, or a registry
+     that returns no ids, would leave `missing` empty and the loop would report
+     success while examining nothing -- which is precisely the shape of the bug
+     it is here to catch. }
+   CheckTrue(idSeen > 0,
+             'no string-id radios were examined at all -- this check proves nothing');
+
    CheckEquals('', missing, 'CI-V radios with no declared address: ' + missing);
 end;
 
