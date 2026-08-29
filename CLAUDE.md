@@ -15,6 +15,26 @@ Run **every** git command as `git -C /c/tr4w-d12 <subcommand>` (e.g. `git -C /c/
 command in a shell block. A `cd` to the already-current directory triggers a permission prompt every
 time — the `-C` flag targets the repo explicitly with no `cd` and no prompt. (A PreToolUse hook in
 `.claude/settings.json` enforces this; if it warns you, fix the command — don't work around it.)
+Substitute your own clone's path: the hook derives it from `$CLAUDE_PROJECT_DIR` and will tell you
+what it expects.
+
+## MANDATORY: Project guardrails live in the repo
+
+`.claude/settings.json` and `.claude/hooks/` are **tracked**. They carry the hooks every clone needs:
+the `git -C` rule, the case-insensitive Pascal glob rule, the begin/end lint, and the CRLF check.
+
+**`.claude/settings.local.json` is gitignored and is yours alone** — permission allow-lists, machine
+paths, anything you would not ask another developer to adopt. It wins over `settings.json` where they
+overlap. `CLAUDE.local.md` is ignored for the same reason: personal notes, not project instruction.
+
+This split was made on 2026-08-29 and it fixed a real gap. `.claude/` had been ignored wholesale, so
+every hook above existed on exactly one machine, and this file had been claiming since August that
+`.claude/settings.json` enforced the `git -C` rule — a file that was not in the repository. A control
+that is real on one clone and absent on the next is worse than no control, because it is believed.
+
+**Hook commands must use `$CLAUDE_PROJECT_DIR`, never an absolute path.** The clones are not in the
+same place — `C:\tr4w-d12` here, `C:\projects\TR4W-D12` elsewhere — and a hardcoded path is a hook
+that silently does not run.
 
 ## MANDATORY: Never force-push `fpc`
 

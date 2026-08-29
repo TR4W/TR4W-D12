@@ -111,9 +111,27 @@ tr4w/compile_*.txt
 tr4w/tr4w.log.*
 tr4w/build_*.log
 
-# Claude Code local config and memory
-.claude/
+# CLAUDE CODE: project guardrails are TRACKED, personal config is not.
+#
+# .claude/ was ignored wholesale until 2026-08-29, which meant every hook this
+# repo relies on -- the git -C rule, the Pascal glob rule, the begin/end lint,
+# the CRLF check -- existed on one machine and nowhere else, and CLAUDE.md
+# described a settings.json that was not in the repository at all.
+#
+# Ignore everything under .claude/, then re-include the two things that belong
+# to the PROJECT rather than to the developer. Order matters: negations must
+# follow the blanket rule, and git cannot re-include a path through an ignored
+# parent directory -- which is why the blanket is ".claude/*" and not ".claude/".
+.claude/*
+!.claude/settings.json
+!.claude/hooks/
 tr4w/.claude/
+
+# Personal, machine-specific, or scratch. Never tracked.
+.claude/settings.local.json
+.claude/*.bak-*
+.claude/worktrees/
+CLAUDE.local.md
 
 # Network capture files (local debugging only)
 *.pcap

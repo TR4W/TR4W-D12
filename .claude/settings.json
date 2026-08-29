@@ -1,0 +1,63 @@
+{
+  "$comment": [
+    "PROJECT settings for TR4W/TR4W-D12. TRACKED, and it must stay that way.",
+    "",
+    "These are the repository's own guardrails and they belong to the repository,",
+    "not to whoever happens to have cloned it. Until 2026-08-29 they lived in",
+    "settings.local.json, which is gitignored -- so every one of them was real on",
+    "one machine and absent on the next, and CLAUDE.md described a settings.json",
+    "that did not exist. Anything personal or machine-specific goes in",
+    "settings.local.json instead; it is ignored and it wins over this file.",
+    "",
+    "PATHS USE $CLAUDE_PROJECT_DIR, NEVER AN ABSOLUTE PATH. The clones are not at",
+    "the same place -- C:\\tr4w-d12 here, C:\\projects\\TR4W-D12 elsewhere -- and a",
+    "hardcoded path is a hook that silently does not run in the other clone."
+  ],
+
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$CLAUDE_PROJECT_DIR/.claude/hooks/enforce-git-c.py\""
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|Grep|Glob",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$CLAUDE_PROJECT_DIR/.claude/hooks/enforce-pascal-glob.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/.claude/hooks/pascal-lint-hook.ps1\"",
+            "timeout": 30,
+            "statusMessage": "Linting Pascal (begin/end)..."
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$CLAUDE_PROJECT_DIR/.claude/hooks/check-line-endings.py\""
+          }
+        ]
+      }
+    ]
+  }
+}
