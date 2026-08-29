@@ -13,7 +13,34 @@ uses
   Log4D,        // the dialog proc logs through tr4wserverUnit's logger
   VC in '..\src\vc.pas';
 
-{$R res\tr4wserver.res}
+{ TWO resources, and their FILENAMES MUST DIFFER.
+
+  FPC resolves a resource directive by BASENAME -- written here without its
+  braces, since a directive inside a brace comment closes the comment. It uses
+  the directory as a search hint, not a
+  constraint, and the compilation runs with the server directory as the working
+  directory -- so while the dialog resource was also called tr4wserver.res, the
+  directive below found the SIBLING of that name (the Lazarus project resource,
+  icons) and linked it instead. No warning: FPC compiled a resource, the link
+  succeeded, and the binary simply had no DIALOG in it.
+
+  The program is a dialog: its whole body is
+
+      DialogBox(hInstance, MAKEINTRESOURCE(100), 0, @TR4wServerDlgProc);
+
+  DialogBox returns -1 for a template it cannot find, the program falls out of
+  end., and the process exits 0 with no window and nothing in any log. That is
+  what "tr4wserver quit immediately" was.
+
+  Live since 2026-08-13, when 820ef560 added the Lazarus tr4wserver.res -- and
+  invisible because the server stopped compiling ten days later and nobody ran
+  it in between.
+
+  So the dialog file is res\tr4wserver_dialog.res now, which no sibling shadows.
+  Build-Server.ps1 asserts the linked binary really has DIALOG 100; a resource
+  that goes missing again fails the build instead of the program. }
+{$R res\tr4wserver_dialog.res}   // DIALOG 100 -- the server's main window
+{$R *.res}                       // the Lazarus project resource -- icons
 
 function TR4wServerDlgProc(hwnddlg: HWND; uMsg: UINT; wp: wParam; lp: lParam): BOOL; stdcall;
 label
