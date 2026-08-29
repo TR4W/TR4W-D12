@@ -27,13 +27,47 @@ You will have received a `.po` file, for example `tr4w_es.po`. Double-click it, 
 You will see a list of English phrases with a column for your language. That is the
 whole job: fill in the second column.
 
+### If you were sent two files
+
+There are two separate catalogues, and you may have been sent one or both. **They are
+independent jobs — please finish one before starting the other.**
+
+| file | what it is | size |
+|---|---|---|
+| `tr4w_<code>.po` | **the program itself** — every window, menu, button and message. This is the one that matters | ~1,900 entries |
+| `help_<code>.po` | the help text for configuration settings, shown in one pane of the settings dialog | ~420 entries |
+
+If you only do one, do `tr4w_`. It is what an operator reads at speed during a
+contest. The help file is worth having but nobody is reading it mid-contest.
+
 ## 3. What the marks mean
 
 | what you see | what it means |
 |---|---|
-| **orange / "Needs work"** | a machine produced a first draft. **Read it — it is often wrong.** Correct it, then clear the flag |
+| **orange / "Needs work"** | someone or something already put text here, and it has not been checked. See below — there are two very different kinds |
 | blank | nobody has translated this yet |
 | plain, no mark | already reviewed by a person. Leave it unless it is wrong |
+
+**Two kinds of "Needs work", and they need different amounts of your attention:**
+
+- **A machine draft.** An automatic translator produced it. These are often wrong —
+  see section 4 — and some are nonsense. Read every one.
+- **Text carried over from elsewhere in the same file.** Where the same English
+  phrase already had a human translation somewhere else, it was copied here and
+  flagged. These are usually right and are quick to confirm — but they were matched
+  on the English alone, with no knowledge of where the words appear, and the same
+  word on a button and in a menu does not always take the same form.
+
+**The carried-over ones are the fast half. Do them first if you want to see progress
+quickly** — in Mongolian, for instance, 572 of them are already sitting there in
+Mongolian, waiting only to be confirmed.
+
+**Clearing "Needs work" is how you approve a string.** In Poedit it is the
+✓ **Needs Work** toggle on the toolbar, or **Ctrl+U**. A string still marked "Needs
+work" **will not appear in the program** — that is deliberate, so an unreviewed
+guess can never reach an operator.
+
+So: a string is only finished when it has your text *and* the flag is off.
 
 **Clearing "Needs work" is how you approve a string.** In Poedit it is the
 ✓ **Needs Work** toggle on the toolbar, or **Ctrl+U**. A string still marked "Needs
@@ -102,8 +136,9 @@ mention it — the window can usually be adjusted.
 
 ## 8. When you are done
 
-**File → Save.** Send back the same `.po` file. Nothing else — no ZIP needed unless
-your mail system insists, and please do not rename it.
+**File → Save.** Send back the same `.po` file — or both, if you were sent two.
+Nothing else: no ZIP needed unless your mail system insists, and **please do not
+rename them.** The filename is how the build knows which language it is.
 
 You do not have to finish. A partly translated file is genuinely useful: the strings
 you approved go in, the rest stay English until someone gets to them. If you would
