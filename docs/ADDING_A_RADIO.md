@@ -149,22 +149,35 @@ the next command you implement may divide them differently.
    that genuinely differ.
 4. If a difference has no flag yet, **add one to the family base** with a safe
    default that preserves existing behaviour, and document it in §3 below.
-5. `RegisterRadio` — **one entry per model an operator can buy**, with its own
-   display name. A duplicate display name makes a model invisible in the radio
-   list.
-6. Add the `InterfacedRadioType` member to `VC.pas`, and the unit to
-   `tr4w.dpr` **and** `test/unit/tr4w_unit_tests.dpr`.
+5. **`RegisterRadioById` — one entry per model an operator can buy**, with its
+   own display name. A duplicate display name makes a model invisible in the
+   radio list.
+
+   **Use the id form, not `RegisterRadio`.** The enum-keyed overload also needs
+   an `InterfacedRadioType` member in `VC.pas`, which is a second file to edit
+   and, historically, a second list to drift out of step. `RegisterRadioById`
+   needs nothing outside your own unit. The connect path handles an id-only
+   radio on serial and on network alike, and the config store already keys on
+   the id string.
+
+   The ~100 models that already have enum members keep them; nothing is gained
+   by moving them, and their ordinals are not persisted anywhere.
+6. Add the unit to `tr4w.dpr` **and** to `test/unit/tr4w_unit_tests.dpr`.
    ⚠ List it explicitly in both. Radios self-register from unit initialization,
    so a unit reached only through another unit's `uses` clause silently vanishes
    — with no compile error — the moment that chain changes.
-7. **That is the whole list. Do not touch `LOGRADIO.PAS`.** It used to hold
-   two tables indexed by the radio enum — `RadioParametersArray` and
-   `InterfacedRadioTypeSA` — which the compiler forced you to extend for
-   every new radio. Both are **deleted** (2026-08-28). They were a second
-   definition of what a radio is, and the name table had drifted one row
-   from the enum: a config saying `TS440` selected the TS-140 driver, and
-   `TS140` could not be selected at all. `Lint-NoRadioTables` fails the
-   build if anything of that shape comes back.
+7. **That is the whole list.** Adding a radio touches **your unit and those two
+   `.dpr` lines** — nothing else. Verified by doing it: the IC-7110 (2026-08-28)
+   appears in no other source file except one CW frame pin, because it keys CW.
+
+   **Do not touch `LOGRADIO.PAS` or `VC.pas`.** LOGRADIO used to hold two tables
+   indexed by the radio enum — `RadioParametersArray` and
+   `InterfacedRadioTypeSA` — which the compiler forced you to extend for every
+   new radio. Both are **deleted** (2026-08-28). They were a second definition
+   of what a radio is, and the name table had drifted one row from the enum: a
+   config saying `TS440` selected the TS-140 driver, and `TS140` could not be
+   selected at all. `Lint-NoRadioTables` fails the build if anything of that
+   shape comes back.
 8. **Write tests with paired opposites** (§5).
 9. Add a row to `RADIO_MIGRATION_ASSUMPTIONS.md` for anything not verified.
 
@@ -313,43 +326,6 @@ files — `tr4w.dpr` and `test/unit/tr4w_unit_tests.dpr` — plus the two new un
 
 ---
 
-## 3c. Re-checked by adding a radio the legacy tables never knew (IC-7110, 2026-08-28)
-
-The claim above was **only true for a radio with a string id**. `uRadioTCI` has no
-`InterfacedRadioType` member, so it never touched anything indexed by that enum.
-Adding an ordinary enum-keyed radio told a different story, and it is worth
-knowing what it cost before the clean-up:
-
-| what broke | why |
-|---|---|
-| the build | `RadioParametersArray` and `InterfacedRadioTypeSA` were `array[InterfacedRadioType]`, so the compiler demanded a row in each |
-| six unit tests | they cross-check the factory against LOGRADIO's frozen `RadioSupports*` sets — which have no entry for a radio announced last week |
-
-Neither was a defect in the radio. The second one is the trap: the "legacy value"
-for a new model is not `False`, it is **absent**, and a test reading absence as
-`False` reports the factory as wrong for stating a fact the legacy record never
-had the chance to hold. Editing those sets so they agree would destroy the
-historical record they exist to be.
-
-**Both tables are now deleted** and the factory declares the rest:
-
-- **`MarkPostLegacy(<MODEL>)`** — put this in the `initialization` of any radio
-  that post-dates the D7 program, beside its `RegisterRadio`. The legacy
-  cross-checks then skip it. It is off by default, so a radio that forgets to
-  declare it fails loudly rather than quietly.
-- **`MarkConfigToken(<MODEL>, '<spelling>')`** — only if `tr4w.ini` must spell the
-  model differently from its enum name. Five models do (`IC910H`, `FTX-1`,
-  `TRX-MANAGER`, `HAMLIB-ANY`, and `NONE`). A new radio never needs this.
-
-Two pins are **not** skipped for a new radio, because they are the factory's own
-invariants rather than legacy comparisons — and both guard silent failures:
-
-- a `CW_PINS` row in `uTestCWFraming.pas` if the radio declares `rcCWByCAT`. Without
-  one its `maxLen` is an uninitialised zero, which is how the TS-850 shipped
-  advertising "no limit";
-- membership of `CREDENTIALED_NETWORK_RADIOS` or `OPEN_NETWORK_RADIOS` in
-  `uTestRegistryTaxonomy.pas` if the radio has a network link. The comment there
-  says out loud that a missing radio "forces a decision".
 **No edit to `TFactoryRadioBase`, `uRadioRegistry`, `uRadioPolling`, `LOGRADIO`,
 `VC.pas`, or any dialog.** A new radio with a new transport, a new protocol and a
 new framing did not perturb the shared code at all. Registry lint went 99 → 100
@@ -376,6 +352,57 @@ proved it is talking), do **not** start the base reading thread, and feed
 reassembled commands to `ProcessMsg` so state still lands through the normal
 base setters. Do not add a third framing mode to the shared reading thread for
 one driver.
+
+---
+
+## 3c. Re-checked by adding a radio the legacy tables never knew (IC-7110, 2026-08-28)
+
+The claim above was **only true for a radio with a string id**. `uRadioTCI` has no
+`InterfacedRadioType` member, so it never touched anything indexed by that enum.
+Adding an ordinary enum-keyed radio told a different story, and it is worth
+knowing what it cost before the clean-up:
+
+| what broke | why |
+|---|---|
+| the build | `RadioParametersArray` and `InterfacedRadioTypeSA` were `array[InterfacedRadioType]`, so the compiler demanded a row in each |
+| six unit tests | they cross-check the factory against LOGRADIO's frozen `RadioSupports*` sets — which have no entry for a radio announced last week |
+
+Neither was a defect in the radio. The second one is the trap: the "legacy value"
+for a new model is not `False`, it is **absent**, and a test reading absence as
+`False` reports the factory as wrong for stating a fact the legacy record never
+had the chance to hold. Editing those sets so they agree would destroy the
+historical record they exist to be.
+
+**Both tables are now deleted**, and the IC-7110 was then moved to
+`RegisterRadioById` and its enum member removed — which is why step 5 tells you
+to register by id. In its finished form it appears in **no source file but its
+own**, plus one CW pin. That is the standard to hold a new radio to.
+
+What an id-only radio does NOT need, precisely because the enum-walking tests
+cannot see it:
+
+- **`MarkPostLegacy`** — for an enum radio this tells the legacy cross-checks to
+  skip a model the D7 sets never knew. An id-only radio is invisible to them
+  already. The seam stays for the ~100 models that still have enum members.
+- **`MarkConfigToken`** — only if `tr4w.ini` must spell an ENUM model
+  differently from its enum name. Five do (`IC910H`, `FTX-1`, `TRX-MANAGER`,
+  `HAMLIB-ANY`, `NONE`). A new radio never needs it.
+
+One pin you **do** still owe, because it is the factory's own invariant and it
+guards a silent failure:
+
+- **a row in `ID_CW_PINS`** (`uTestCWFraming.pas`) if the radio declares
+  `rcCWByCAT`. Without one its `maxLen` is an uninitialised zero — "no limit" —
+  which is how the TS-850 shipped keying a 40-byte payload at a radio that
+  accepts 24. `Test_EveryKeyingRadioIsPinned` walks id-only radios as well as
+  enum ones, so a missing row fails the build. It caught TCI the day it was
+  written.
+
+And one gap to know about rather than trip over: `CREDENTIALED_NETWORK_RADIOS` /
+`OPEN_NETWORK_RADIOS` in `uTestRegistryTaxonomy.pas` are enum lists, so the
+"declare credentials either way" forcing function **does not apply to an id-only
+radio**. Declare `MarkNetworkCredentials` if your radio authenticates; nothing
+will remind you.
 
 ---
 
@@ -443,8 +470,17 @@ Notes:
 
 - [ ] Manual read for **this** model, not a sibling
 - [ ] Only flags set; no model test added to any base class
-- [ ] `RegisterRadio` with a unique display name
+- [ ] `RegisterRadioById` with a unique display name — **not** the enum-keyed
+      `RegisterRadio`, which would also need a `VC.pas` member
+- [ ] **Nothing edited in `VC.pas` or `LOGRADIO.PAS`.** If you touched either,
+      something is wrong with the design, not with your radio
 - [ ] Unit listed explicitly in `tr4w.dpr` **and** `tr4w_unit_tests.dpr`
+      (both are ordinary Pascal program sources that FPC compiles; the Delphi
+      extension is historical, and `tr4w.lpi` points at `tr4w.dpr`)
+- [ ] A row in `ID_CW_PINS` if the radio declares `rcCWByCAT`
+- [ ] `MarkNetworkCredentials` if its network link authenticates — an id-only
+      radio is invisible to the taxonomy pin that would otherwise force the
+      decision, so nothing will remind you
 - [ ] Tests with paired opposites
 - [ ] `Lint-RadioRegistry.ps1` clean (no display-name collisions)
 - [ ] Marked **NOT BENCH-VALIDATED** in the unit header until someone runs it on
