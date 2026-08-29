@@ -236,6 +236,22 @@ type
       // MEANS is the radio's business -- an Elecraft AI2 and a K4 AI5 are not
       // the same thing and this record must not know the difference.
       AutoInfoLevel:   integer;
+      { TWO FIELDS FOR ONE FACT, which is why so much of this unit was spent
+        reconciling them.
+
+        A radio with an enum member set RadioModel and left FactoryId empty; a
+        string-id radio (RegisterRadioById) set FactoryId and left RadioModel
+        at NoInterfacedRadio. So 'no radio configured' was not RadioModel =
+        NoInterfacedRadio -- it was that AND FactoryId = '' -- and every site
+        that asked which radio this is had to know the rule.
+
+        RadioId below is the single answer. Prefer it: the registry is keyed by
+        id and has an ...Id form of every lookup, so a caller never needs to
+        know which of the two fields carried the identity. RadioModel is kept
+        because uCFG still parses 'RADIO ONE MODEL =' into it by writing the
+        enum ordinal through a pointer, and uCAT still puts Ord(model) in its
+        combo item data. Those are the last two, and when they are gone the
+        field goes with them. }
       RadioModel:      InterfacedRadioType;
       FactoryId:       Str50;   // non-empty => a string-id factory radio (RadioModel is NoInterfacedRadio)
       RadioBaudRate:   cardinal;
@@ -290,6 +306,9 @@ type
       // itself, in ONE place.  Call immediately after construction and BEFORE
       // Connect: the drivers re-key their logger from rigLabel during
       // Initialize, which runs on the reading thread once Connect starts.
+      { WHICH RADIO THIS SLOT IS, as the registry's own id, or '' for none.
+        The one identity: see the note on RadioModel/FactoryId above. }
+      function RadioId: string;
       procedure AdoptFactoryObject;
       procedure SetUpRadioInterface;
       // Stops the polling thread and frees the factory object, leaving the slot
@@ -1076,19 +1095,6 @@ var
    nLen: integer;
 
 begin
-{
-  if not Config.DVKEnable then
-    if RadioModel = TS850 then
-      if nNumberOfBytesToWrite = 4 then
-        if PChar(Buffer)[0] = 'P' then
-          if PChar(Buffer)[1] = 'B' then
-            if PChar(Buffer)[2] in ['1'..'3'] then
-              if PChar(Buffer)[3] = ';' then
-              begin
-//                Result := 0;
-                Exit;
-              end;
-}
       try
       if logger.IsTraceEnabled then
          begin
@@ -1182,9 +1188,9 @@ begin
       logger.Warn('[%s] SERIAL FORMAT ''%s'' is not valid (expected e.g. 8N2) -- using the radio''s defaults',
          [RadioName, SerialFormat]);
       end;
-   if uRadioRegistry.IsRegistered(RadioModel) then
+   if uRadioRegistry.IsRegisteredId(Self.RadioId) then
       begin
-      sp := uRadioRegistry.SerialParamsFor(RadioModel);
+      sp := uRadioRegistry.SerialParamsForId(Self.RadioId);
       RadioNumberBits := sp.dataBits;
       RadioParity     := Win32ParityToParityType(sp.parity);
       RadioStopBits   := sp.stopBits;
@@ -1232,13 +1238,13 @@ begin
       what := 'factory-id ' + string(Self.FactoryId) + ' (' +
               uRadioRegistry.DisplayNameId(string(Self.FactoryId)) + ')';
       end
-   else if Self.RadioModel = NoInterfacedRadio then
+   else if Self.RadioId = '' then
       begin
       what := 'NONE (no RADIO n TYPE and no RADIO n FACTORY ID configured)';
       end
    else
       begin
-      what := uRadioRegistry.DisplayName(Self.RadioModel);
+      what := uRadioRegistry.DisplayNameId(Self.RadioId);
       end;
 
    // HOW it is wired.
@@ -1288,14 +1294,13 @@ begin
    // Reset data-mode capability for this connection: assume no data mode until
    // the radio proves it by answering a valid $1A06. This lets an old Icom put
    // on a slot previously held by a data-mode radio commit its mode via $04.
-   // "No radio configured" is NOT the same as "RadioModel = NoInterfacedRadio".
-   // A STRING-ID radio (RegisterRadioById) has no InterfacedRadioType member at
-   // all, so its RadioModel IS NoInterfacedRadio by design -- see the note in
-   // SetUpRadioInterface.  Testing the enum alone silently skipped setup for the
-   // entire string-id mechanism: no SetUpRadioInterface, no polling thread, and
-   // not one line in the log to say why.  TCI was the first such radio, so this
-   // path had never been exercised until 2026-08-02.
-   if (RadioModel = NoInterfacedRadio) and (Self.FactoryId = '') then
+   // "No radio configured" is RadioId = "", and that is the whole test now.
+   // It used to be two conditions -- the enum AND FactoryId -- because identity
+   // lived in two fields, and testing the enum alone silently skipped setup for
+   // every string-id radio: no SetUpRadioInterface, no polling thread, and not
+   // one line in the log to say why.  TCI was the first such radio, so that path
+   // went unexercised until 2026-08-02.  One identity, one test, no rule to know.
+   if Self.RadioId = '' then
       begin
       // "No radio configured" must also mean "STOP whatever was here".  A
       // profile that CLEARS a slot lands exactly here, and returning early
@@ -1518,6 +1523,23 @@ begin
       end;
 end;
 //------------------------------------------------------------------------------
+function RadioObject.RadioId: string;
+begin
+   { A string-id radio carries its id directly. An enum radio's id IS its enum
+     name -- uRadioRegistry.ModelId is the registry's own RTTI lookup, so the
+     two identities cannot drift the way a hand-maintained name table did.
+     NoInterfacedRadio has no registration and ModelId answers '', which is
+     exactly the "no radio configured" case the callers used to spell out. }
+   if Self.FactoryId <> '' then
+      begin
+      Result := string(Self.FactoryId);
+      end
+   else
+      begin
+      Result := uRadioRegistry.ModelId(Self.RadioModel);
+      end;
+end;
+
 procedure RadioObject.AdoptFactoryObject;
 begin
    // Five construction sites (HamLib, serial x2, network x2) all need the same
@@ -1605,7 +1627,7 @@ begin
    // Enforce it where the interface is actually chosen, not only where it is edited.
    // "HamLib-only" is now derived from the registry: a real model with no factory
    // registration has no native driver (uRadioRegistry.IsHamLibOnly).
-   if uRadioRegistry.IsHamLibOnly(Self.RadioModel) then
+   if uRadioRegistry.IsHamLibOnlyId(Self.RadioId) then
       begin
       if not Self.UseHamLib then
          begin
@@ -1642,7 +1664,12 @@ begin
                // the field for that model alone and shows a read-only registry
                // value otherwise.  A stale HamLibID left in the config from an
                // earlier setup must not be allowed to beat a real model's ID.
-               if (Self.RadioModel = HAMLIBANY) and (Self.HamLibID > 0) then
+               // EXACT COMPARE, not SameText. Every SameText visible here --
+               // qualified or not -- takes AnsiString, so it narrows the id and
+               // costs a data-loss warning for nothing. Exact case is also the
+               // right semantics: gById is a default-comparer dictionary, so
+               // every other id lookup in the program is already case-sensitive.
+               if (Self.RadioId = 'HAMLIBANY') and (Self.HamLibID > 0) then
                   begin
                   HamLibModelID := Self.HamLibID;
                   logger.Info('[%s] HamLib rig_model %d (operator override)',
@@ -1661,7 +1688,7 @@ begin
                   // matters: two live sources for one fact is what put three
                   // WRONG hamlibIDs in the table (TS-590, TS-2000, FLEX) until
                   // task #16 went looking for them.
-                  HamLibModelID := uRadioRegistry.RegisteredHamLibID(Self.RadioModel);
+                  HamLibModelID := uRadioRegistry.RegisteredHamLibIDId(Self.RadioId);
                   logger.Info('[%s] HamLib rig_model %d (per-model default)',
                               [Self.RadioName, HamLibModelID]);
                   end;
@@ -1752,15 +1779,15 @@ begin
             end;
          Exit;
          end
-      else if uRadioRegistry.IsRegistered(Self.RadioModel) and
-         uRadioRegistry.SupportsSerial(Self.RadioModel) then
+      else if uRadioRegistry.IsRegisteredId(Self.RadioId) and
+         uRadioRegistry.SupportsSerialId(Self.RadioId) then
          begin
          // Registered serial-capable radio -> build it through the factory.
          logger.Info('[%s.SetUpRadioInterface] Setting up %s serial via factory: Port=%d, Baud=%d, DataBits=%d, Parity=%d, StopBits=%d',
-                     [Self.RadioName, uRadioRegistry.DisplayName(Self.RadioModel), Ord(tCATPortType),
+                     [Self.RadioName, uRadioRegistry.DisplayNameId(Self.RadioId), Ord(tCATPortType),
                       RadioBaudRate, RadioNumberBits, Ord(RadioParity), RadioStopBits]);
-         Self.tFactoryObject := TRadioFactory.CreateRadioSerial(
-            Self.RadioModel,
+         Self.tFactoryObject := TRadioFactory.CreateRadioSerialById(
+            Self.RadioId,
             tCATPortType,
             RadioBaudRate,
             RadioNumberBits,
@@ -1787,13 +1814,13 @@ begin
             if Self.tFactoryObject.IsConnected then
                begin
                logger.Info('[%s.SetUpRadioInterface] %s serial radio connected via factory',
-                          [Self.RadioName, uRadioRegistry.DisplayName(Self.RadioModel)]);
+                          [Self.RadioName, uRadioRegistry.DisplayNameId(Self.RadioId)]);
                end
             else
                begin
                logger.Error('[%s.SetUpRadioInterface] %s did NOT connect -- ' +
                             'serial port %d is in use or unavailable',
-                            [Self.RadioName, uRadioRegistry.DisplayName(Self.RadioModel),
+                            [Self.RadioName, uRadioRegistry.DisplayNameId(Self.RadioId),
                              Ord(tCATPortType)]);
                QuickDisplayError('Radio "' + string(Self.RadioName) +
                                  '" could not open its port -- not connected.');
@@ -1804,7 +1831,7 @@ begin
             // A factory radio has no legacy fallback -- if the factory could not
             // build it, surface it to the operator and do NOT connect.
             logger.Error('[%s.SetUpRadioInterface] Factory could not create serial radio "%s" -- not connecting',
-                        [Self.RadioName, uRadioRegistry.DisplayName(Self.RadioModel)]);
+                        [Self.RadioName, uRadioRegistry.DisplayNameId(Self.RadioId)]);
             QuickDisplayError('Radio "' + string(Self.RadioName) + '" could not be created -- not connected. Check its configuration.');
             end;
 
@@ -1841,7 +1868,7 @@ begin
          // rig looks connected and silently does nothing.  Fail loudly instead,
          // exactly as the by-id branch above already does.
          logger.Error('[%s.SetUpRadioInterface] %s does not support a serial connection -- not connecting. Check RADIO n TYPE / PORT.',
-                      [Self.RadioName, uRadioRegistry.DisplayName(Self.RadioModel)]);
+                      [Self.RadioName, uRadioRegistry.DisplayNameId(Self.RadioId)]);
          QuickDisplayError('Radio "' + string(Self.RadioName) + '" is not a serial radio -- not connected. Check its configuration.');
          end;
       end
@@ -1866,23 +1893,23 @@ begin
          Self.AdoptFactoryObject;
          logger.Info('[%s] Using %s network protocol (id)', [Self.RadioName, uRadioRegistry.DisplayNameId(string(Self.FactoryId))]);
          end
-      else if uRadioRegistry.IsRegistered(Self.RadioModel) and
-         uRadioRegistry.SupportsNetwork(Self.RadioModel) then
+      else if uRadioRegistry.IsRegisteredId(Self.RadioId) and
+         uRadioRegistry.SupportsNetworkId(Self.RadioId) then
          begin
-         Self.tFactoryObject := TRadioFactory.CreateRadioNetwork(
-            Self.RadioModel,
+         Self.tFactoryObject := TRadioFactory.CreateRadioNetworkById(
+            Self.RadioId,
             Self.IPAddress,
             Self.RadioTCPPort
          );
          // The radio owns its name and startup command from birth;
          // SendStartupCommand fires the latter once the link is actually up.
          Self.AdoptFactoryObject;
-         logger.Info('[%s] Using %s network protocol', [Self.RadioName, uRadioRegistry.DisplayName(Self.RadioModel)]);
+         logger.Info('[%s] Using %s network protocol', [Self.RadioName, uRadioRegistry.DisplayNameId(Self.RadioId)]);
          end
       else
          begin
-         logger.warn('[%s] Unknown network radio model (RadioModel=%d), cannot create factory instance',
-                    [Self.RadioName, Ord(Self.RadioModel)]);
+         logger.warn('[%s] Unknown network radio "%s", cannot create factory instance',
+                    [Self.RadioName, Self.RadioId]);
          end;
 
       if Self.tFactoryObject <> nil then
@@ -1976,7 +2003,7 @@ begin
    // instead: this is the diagnostic that has to exist BEFORE those tails can
    // be deleted, or removing them would replace a silent fallback with silence.
    if (Self.tFactoryObject = nil) and
-      ( (Self.RadioModel <> NoInterfacedRadio) or (Self.FactoryId <> '') ) then
+      (Self.RadioId <> '') then
       begin
       if Self.FactoryId <> '' then
          begin
@@ -1990,7 +2017,7 @@ begin
          logger.Error('[%s] NO FACTORY DRIVER built for %s on port %d ' +
                       '- falling back to the legacy radio path. The radio may not ' +
                       'support this connection type.',
-                      [Self.RadioName, uRadioRegistry.DisplayName(Self.RadioModel),
+                      [Self.RadioName, uRadioRegistry.DisplayNameId(Self.RadioId),
                        Ord(Self.tCATPortType)]);
          end;
       end;
@@ -2036,7 +2063,7 @@ begin
       end
    else
       begin
-      Result := uRadioRegistry.SupportsFor(Self.RadioModel, cap);
+      Result := uRadioRegistry.SupportsForId(Self.RadioId, cap);
       end;
 end;
 

@@ -270,6 +270,7 @@ function SerialParamsForId(const id: string): TSerialParams;
 // can be built from the registry required the explicit flag.
 // uTestRegistryTaxonomy still pins the answer against the historical set.)
 function IsHamLibOnly(model: InterfacedRadioType): Boolean;
+function IsHamLibOnlyId(const id: string): Boolean;
 
 // The registration's default HamLib rig_model (riglist.h numbering).  0 when
 // the model is not registered or carries no ID; for HAMLIBANY the meaningful
@@ -861,6 +862,13 @@ begin
    // with RegisterHamLibOnlyRadio and carries hamlibOnly = True.  Everything
    // else -- native radios, NoInterfacedRadio, anything unregistered -- is False.
    Result := RegByModel(model, reg) and reg.hamlibOnly;
+end;
+
+function IsHamLibOnlyId(const id: string): Boolean;
+var
+   reg: TRadioReg;
+begin
+   Result := RegById(id, reg) and reg.hamlibOnly;
 end;
 
 function RegisteredHamLibID(model: InterfacedRadioType): Integer;
