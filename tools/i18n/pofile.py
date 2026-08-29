@@ -25,6 +25,7 @@ them. If one appears, add it here rather than working around it at a call site.
 """
 
 import os
+import html
 import re
 
 # gettext escapes a C string. \r matters to us: 11 TR4W values embed #13.
@@ -240,3 +241,28 @@ def lcl_catalogue(lang):
             out[e.source.replace('&', '').strip().lower()] = e.target
       break
    return out
+
+# ---------------------------------------------------------------- HTML entities
+
+# WHY A CATALOGUE EVER CONTAINS ONE. LibreTranslate's French model renders the
+# space before a colon -- correct French typography -- as the HTML entity
+# `&#160;`, and something in the round trip has been putting a space inside it,
+# so what lands in the .po is the literal text `& #160;`. TR4W paints that
+# verbatim: 'Saisissez votre nom & #160;:'. 24 French entries carried it.
+#
+# Tolerating the stray space is the point; a strict `&#\d+;` finds none of them.
+_ENTITY = re.compile(r"&\s*(#\d+|#x[0-9a-fA-F]+|nbsp|amp|quot|lt|gt|apos)\s*;")
+
+
+def unescape_entities(text):
+   """Turn HTML entities in caption text back into the characters they name.
+
+   `&amp;` becomes `&&` rather than `&`, because in a caption a lone ampersand
+   is an ACCELERATOR marker -- unescaping it naively would silently invent a
+   keyboard shortcut on whatever letter followed."""
+   def one(m):
+      name = m.group(1)
+      if name == "amp":
+         return "&&"
+      return html.unescape("&%s;" % name)
+   return _ENTITY.sub(one, text)

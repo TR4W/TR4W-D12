@@ -410,7 +410,9 @@ def seed(po_path, url, target, lang, dry_run, batch=DEFAULT_BATCH,
                                 % (pc.specifier_types(e.source),
                                    pc.specifier_types(text))))
          continue
-      e.target = text          # stays fuzzy
+      # The engine emits HTML entities -- the French model renders the space
+      # before a colon as &#160; -- and TR4W paints them verbatim.
+      e.target = pofile.unescape_entities(text)     # stays fuzzy
       seeded += 1
 
    if lang in pc.LANGUAGE_NAMES:

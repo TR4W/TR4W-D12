@@ -153,6 +153,7 @@ def check(path, fix):
    name = os.path.basename(path)
    ctrl_bad, fmt_bad, stranded = [], [], []
    spaced = []
+   entities = []
    accel_bad, by_form, english = [], {}, []
    lang = name.rsplit('_', 1)[-1].replace('.po', '')
    is_source = lang == 'en'
@@ -211,6 +212,12 @@ def check(path, fix):
       # mnemonic remains theirs to decide.
       if (sa is not None) and SPACED_AMP.search(e.target):
          spaced.append(e)
+
+      # An HTML entity the ENGLISH does not have came from the translation
+      # engine, and TR4W paints it verbatim. See pofile.unescape_entities.
+      if (pofile.unescape_entities(e.target) != e.target and
+            pofile.unescape_entities(e.source) == e.source):
+         entities.append(e)
       if (sa is not None) and (ta is None):
          accel_bad.append((e, "the & was dropped, so the control has no accelerator"))
       elif (sa is None) and (ta is not None):
@@ -275,7 +282,13 @@ def check(path, fix):
             % (name, len(spaced), "" if len(spaced) == 1 else "s",
                " -- repaired" if fix else " (run with --fix)"))
 
-   if fix and (stranded or english or spaced):
+   if entities:
+      print("  %s: %d entr%s carr%s an HTML entity the English has not%s"
+            % (name, len(entities), "y" if len(entities) == 1 else "ies",
+               "ies" if len(entities) == 1 else "y",
+               " -- repaired" if fix else " (run with --fix)"))
+
+   if fix and (stranded or english or spaced or entities):
       # ONLY EVER ADDS A FLAG. The text is left exactly as it is -- a fuzzy
       # entry still carries its translation, Poedit shows it as "Needs work",
       # and po2pas refuses it, so nothing wrong can reach a build while a person
@@ -285,11 +298,13 @@ def check(path, fix):
          e.fuzzy = True
       for e in spaced:
          e.target = SPACED_AMP.sub("&", e.target)
+      for e in entities:
+         e.target = pofile.unescape_entities(e.target)
       lang = name.rsplit("_", 1)[-1].replace(".po", "")
       pofile.write_po(path, entries, lang)
 
    ok = (not ctrl_bad and not fmt_bad and not accel_bad and not clashes
-         and not english and not spaced)
+         and not english and not spaced and not entities)
    if ok and not stranded:
       live = [e for e in entries if not e.obsolete and e.source.strip()]
       print("  %-16s %4d entries, no control-character or format defects"

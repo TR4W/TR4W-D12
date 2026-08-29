@@ -7,7 +7,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: zh_CN\n"
+"Language: CN\n"
 "X-Source-Language: en\n"
 
 #. Section: General
@@ -2711,14 +2711,14 @@ msgstr "按 &C\\n 定䶉伀伪CQ键."
 #, fuzzy
 msgctxt "RC_PRESS_E"
 msgid "Press &E to program an exchange/search and pounce function key."
-msgstr "按 & E 来编程一个交换/搜索和弹出函数键 ."
+msgstr "按 &E 来编程一个交换/搜索和弹出函数键 ."
 
 #. Section: UEDITMESSAGE
 #: tr4w/src/lang/tr4w_consts_eng.pas:538
 #, fuzzy
 msgctxt "RC_PRESS_O"
 msgid "Press &O to program the other non function key messages."
-msgstr "按 & O 来编程其他非函数密钥消息 ."
+msgstr "按 &O 来编程其他非函数密钥消息 ."
 
 #. Section: UEDITMESSAGE
 #. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.

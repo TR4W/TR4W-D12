@@ -732,7 +732,7 @@ msgstr "Saisissez votre identifiant de ville :"
 #, fuzzy
 msgctxt "TC_ENTERYOURNAME"
 msgid "Enter your name:"
-msgstr "Saisissez votre nom & #160;:"
+msgstr "Saisissez votre nom  :"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_enterthelasttwodigitsoftheyear
@@ -748,7 +748,7 @@ msgstr "Inscrivez les deux derniers chiffres de l'année de votre première lice
 #, fuzzy
 msgctxt "TC_ENTERYOURZONE"
 msgid "Enter your zone:"
-msgstr "Entrez votre zone & #160;:"
+msgstr "Entrez votre zone  :"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_enteryourgeographicalcoordinates
@@ -876,7 +876,7 @@ msgstr "Entrez les deux premières lettres de votre carré de grille :"
 #, fuzzy
 msgctxt "TC_ENTERYOURSQUAREID"
 msgid "Enter your square ID:"
-msgstr "Saisissez votre identifiant carré & #160;:"
+msgstr "Saisissez votre identifiant carré  :"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_enteryourmembershipnumber
@@ -884,7 +884,7 @@ msgstr "Saisissez votre identifiant carré & #160;:"
 #, fuzzy
 msgctxt "TC_ENTERYOURMEMBERSHIPNUMBER"
 msgid "Enter your membership number:"
-msgstr "Saisissez votre numéro d'adhésion & #160;:"
+msgstr "Saisissez votre numéro d'adhésion  :"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_enteryourcontinent
@@ -965,7 +965,7 @@ msgstr "Saisissez votre numéro de succursale :"
 #, fuzzy
 msgctxt "TC_ENTERYOURPOSTCODE"
 msgid "Enter your postcode:"
-msgstr "Entrez votre code postal & #160;:"
+msgstr "Entrez votre code postal  :"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_enteryourdistrictcode
@@ -2064,7 +2064,7 @@ msgstr "Impossible de trouver le fichier pays CTY.DAT!!\rAssurez-vous que ce fic
 #, fuzzy
 msgctxt "TC_INVALIDSTATEMENTINCONFIGFILE"
 msgid "%s:\rInvalid statement in config file.\r\rLine %u\r%s"
-msgstr "%s & #160;:\rDéclaration non valide dans le fichier de configuration.\r\rLigne %u\r%s"
+msgstr "%s  :\rDéclaration non valide dans le fichier de configuration.\r\rLigne %u\r%s"
 
 #. Section: LOGCFG
 #: utr4wstrings:tc_parameterhasnovalue
@@ -3497,7 +3497,7 @@ msgstr "TR4W"
 #: tfrminputquery.lblprompt.caption
 #, fuzzy
 msgid "Enter value:"
-msgstr "Saisissez la valeur & #160;:"
+msgstr "Saisissez la valeur  :"
 
 #. Section: UEDITMESSAGE
 #: tfrmintercom.caption
@@ -4619,7 +4619,7 @@ msgstr "Hz"
 #: tprefsform.lblbandmaplimit.caption
 #, fuzzy
 msgid "Display limit:"
-msgstr "Afficher la limite & #160;:"
+msgstr "Afficher la limite  :"
 
 #: tprefsform.lblbandmaplimitunits.caption
 #, fuzzy
@@ -4674,7 +4674,7 @@ msgstr "Mes clusters DX"
 #: tprefsform.lblclusterlogin.caption
 #, fuzzy
 msgid "Log in as:"
-msgstr "Connectez-vous comme & #160;:"
+msgstr "Connectez-vous comme  :"
 
 #: tprefsform.lblclusterloginhint.caption
 #, fuzzy
@@ -4706,7 +4706,7 @@ msgstr "Mot de passe :"
 #, fuzzy
 msgctxt "tprefsform.lblclusterserver.caption"
 msgid "Server:"
-msgstr "Serveur & #160;:"
+msgstr "Serveur  :"
 
 #: tprefsform.lblclusterserverhint.caption
 #, fuzzy
@@ -4818,7 +4818,7 @@ msgstr "Les trois paramètres HamLib prennent effet lorsque TR4W commence ensuit
 #: tprefsform.lblhamscoreurl.caption
 #, fuzzy
 msgid "Service URL:"
-msgstr "URL du service & #160;:"
+msgstr "URL du service  :"
 
 #: tprefsform.lblhamscoreuser.caption
 #, fuzzy
@@ -4901,7 +4901,7 @@ msgstr "Programme :"
 #: tprefsform.lblloglevel.caption
 #, fuzzy
 msgid "Log level:"
-msgstr "Niveau du journal & #160;:"
+msgstr "Niveau du journal  :"
 
 #: tprefsform.lblloglevelhint.caption
 #, fuzzy
@@ -4971,7 +4971,7 @@ msgstr "Numéro FOC:"
 #: tprefsform.lblmygrid.caption
 #, fuzzy
 msgid "Grid square:"
-msgstr "Grille carré & #160;:"
+msgstr "Grille carré  :"
 
 #: tprefsform.lblmyiota.caption
 #, fuzzy
@@ -5147,7 +5147,7 @@ msgstr "Laisse un autre poste lire la radio de cette station. prend effet lorsqu
 #: tprefsform.lblradiotcpport.caption
 #, fuzzy
 msgid "TCP port:"
-msgstr "Port TCP & #160;:"
+msgstr "Port TCP  :"
 
 #: tprefsform.lblrelayport.caption
 #, fuzzy
@@ -5227,7 +5227,7 @@ msgstr "Note en ligne"
 #: tprefsform.lblscoreposturl.caption
 #, fuzzy
 msgid "Posting URL:"
-msgstr "URL d'affichage & #160;:"
+msgstr "URL d'affichage  :"
 
 #: tprefsform.lblscorereadurl.caption
 #, fuzzy
@@ -5262,7 +5262,7 @@ msgstr "Correspondance"
 #: tprefsform.lblscpminletters.caption
 #, fuzzy
 msgid "Start matching after:"
-msgstr "Commencez à correspondre après & #160;:"
+msgstr "Commencez à correspondre après  :"
 
 #: tprefsform.lblscpminlettersunits.caption
 #, fuzzy
@@ -8062,7 +8062,7 @@ msgstr "MMTTY"
 #, fuzzy
 msgctxt "tprefsform.lblnetaddress.caption"
 msgid "Server:"
-msgstr "Serveur & #160;:"
+msgstr "Serveur  :"
 
 #: tprefsform.lblnetpassword.caption
 #, fuzzy
@@ -10409,7 +10409,7 @@ msgstr "Entrez un indicatif d'appel. ESPACE pour le dupecheck. Alt-H pour l'aide
 #: utr4wstrings.tc_entercalltobecheckedon
 #, fuzzy
 msgid "Enter call to be checked on %s%s:"
-msgstr "Saisissez l'appel à cocher sur %s%s & #160;:"
+msgstr "Saisissez l'appel à cocher sur %s%s  :"
 
 #: utr4wstrings.tc_enterexchangepressenterlogescapeab
 #, fuzzy
@@ -10528,12 +10528,12 @@ msgstr "Inscrivez votre district fédéral si en Colombie-Britannique, ou votre 
 #: utr4wstrings.tc_enteryourmembershipnumber
 #, fuzzy
 msgid "Enter your membership number:"
-msgstr "Saisissez votre numéro d'adhésion & #160;:"
+msgstr "Saisissez votre numéro d'adhésion  :"
 
 #: utr4wstrings.tc_enteryourname
 #, fuzzy
 msgid "Enter your name:"
-msgstr "Saisissez votre nom & #160;:"
+msgstr "Saisissez votre nom  :"
 
 #: utr4wstrings.tc_enteryournameandqth
 #, fuzzy
@@ -10558,7 +10558,7 @@ msgstr "Entrez votre référent POTA Park (WITH DASH p.ex. K-1234)"
 #: utr4wstrings.tc_enteryourpostcode
 #, fuzzy
 msgid "Enter your postcode:"
-msgstr "Entrez votre code postal & #160;:"
+msgstr "Entrez votre code postal  :"
 
 #: utr4wstrings.tc_enteryourprecedencechecksection
 #, fuzzy
@@ -10606,7 +10606,7 @@ msgstr "Entrez votre carré à six chiffres :"
 #: utr4wstrings.tc_enteryoursquareid
 #, fuzzy
 msgid "Enter your square ID:"
-msgstr "Saisissez votre identifiant carré & #160;:"
+msgstr "Saisissez votre identifiant carré  :"
 
 #: utr4wstrings.tc_enteryourstatecode
 #, fuzzy
@@ -10616,7 +10616,7 @@ msgstr "Saisissez votre code d'état :"
 #: utr4wstrings.tc_enteryourzone
 #, fuzzy
 msgid "Enter your zone:"
-msgstr "Entrez votre zone & #160;:"
+msgstr "Entrez votre zone  :"
 
 #: utr4wstrings.tc_entriesperms
 #, fuzzy
@@ -10945,7 +10945,7 @@ msgid ""
 "Line %u\n"
 "%s"
 msgstr ""
-"%s & #160;:\n"
+"%s  :\n"
 "Déclaration non valide dans le fichier de configuration.\n"
 "\n"
 "Ligne %u\n"
