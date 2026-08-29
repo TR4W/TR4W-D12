@@ -16,6 +16,21 @@ command in a shell block. A `cd` to the already-current directory triggers a per
 time — the `-C` flag targets the repo explicitly with no `cd` and no prompt. (A PreToolUse hook in
 `.claude/settings.json` enforces this; if it warns you, fix the command — don't work around it.)
 
+## MANDATORY: Never force-push `fpc`
+
+`fpc` is shared across at least three clones. **Never rewrite its history** — no `push --force`, no
+`--force-with-lease`, no delete-and-recreate. A rewrite invalidates every other clone, and this is
+measured, not hypothetical: on 2026-08-29 a force-push moved the merge base back to `0913dec7`
+(2026-07-06), so the next `git pull` on another PC tried to merge 560 commits against 1054 rewritten
+twins of the same work and produced **200+ conflicts across the whole tree**. The trees were
+identical; the only difference was that the rewrite had stripped the SSH signatures, giving every
+commit a new SHA.
+
+This is now enforced server-side — ruleset `protect-fpc` blocks `non_fast_forward` and `deletion`
+with **no bypass actors**, so the push is simply **rejected**. When that happens, **do not work
+around it**: rebase or merge onto `origin/fpc` and push normally. If history genuinely needs
+rewriting, push it to a new branch and ask NY4I.
+
 ## MANDATORY: Development Philosophy
 
 This is a port. We want to do this once. Refactoring is not as important a factor as getting the
