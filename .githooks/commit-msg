@@ -6,21 +6,26 @@
 # trailer is a link to a private transcript, and it does not belong in a public
 # commit message.
 #
-# WHY THIS IS A HOOK AND NOT A RULE IN CLAUDE.md.
+# THIS HOOK IS OPTIONAL. THE RULE IN CLAUDE.md IS THE CONTROL.
 #
-# It WAS a rule. On 2026-08-19 someone ran `git filter-branch` over the whole of
-# `fpc` to strip 714 of these trailers, force-pushed the result, and every other
-# clone had to be rebuilt by hand -- 200+ conflicts on the next pull, because
-# rewriting also stripped the SSH signatures and so changed every SHA.
+# Correcting an earlier claim in this file: it was NOT that a rule existed and
+# failed. CLAUDE.md said nothing about the trailer until 2026-08-29 -- zero
+# mentions -- so twelve commits carried one simply because nothing had ever
+# asked them not to. The one-line rule is the fix; this is a net under it.
 #
-# It did not hold. ELEVEN more commits carrying the trailer landed between
-# 2026-08-25 and 2026-08-28, after the cleanup. The rule was correct and it was
-# written down; what was missing was anything that enforced it at the moment the
-# commit was made.
+# It matters that this is opt-in: `core.hooksPath` is per-clone local config and
+# does not travel with the repository, so a clone without it has an inert hook
+# file and no protection. Do not treat its presence as enforcement.
 #
-# So this strips, rather than rejecting. A rejection is something to work around
-# at 3am; a strip just makes the commit correct. It prints what it removed so the
+# It strips rather than rejecting. A rejection is something to work around at
+# 3am; a strip just makes the commit correct. It prints what it removed so the
 # change is never silent.
+#
+# For context on why this matters: on 2026-08-19 someone ran `git filter-branch`
+# over `fpc` to strip 714 of these trailers and force-pushed the result. Every
+# other clone had to be rebuilt by hand -- 200+ conflicts on the next pull,
+# because rewriting also dropped the SSH signatures and so changed every SHA.
+# That is the cost of removing one after the fact.
 #
 # THE STANDING RULE THIS PROTECTS: the fix for a trailer that slipped through is
 # to stop emitting it, NEVER to rewrite published history. See CLAUDE.md,

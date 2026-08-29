@@ -46,29 +46,42 @@ Hence **741 unsigned commits dated 2026-08-19 or earlier, and 335 signed after i
 
 **Three things follow, and the third is the one that will tempt someone:**
 
-1. The cleanup did not hold — **11 more commits carrying the trailer landed 2026-08-25 to 2026-08-28**.
-   A rule that is only written down does not survive contact with an agent that has its own
-   instructions. Hence the hook below.
+1. The cleanup did not hold — **12 more commits carrying the trailer have landed since**, 2026-08-25
+   to 2026-08-29, the most recent being `4185c893` itself. Not because a rule was ignored: **there
+   was no rule.** CLAUDE.md had zero mentions of the trailer until 2026-08-29. That is now fixed
+   above, and it is a one-line fix, not a mechanism.
 2. A stale clone must **reset, not merge** — see the recipe below.
 3. **DO NOT RE-SIGN OR RE-STRIP HISTORY.** Mixed signing across the 2026-08-19 boundary is cosmetic
    and signing is deliberately not enforced. "Tidying" it means another `filter-branch`, another
    force-push, and another round of broken clones — this time against a ruleset that will reject it.
    The unsigned commits broke nothing. Rewriting did.
 
-### The hook that keeps the trailer out
+## MANDATORY: No `Claude-Session:` trailer in commit messages
+
+**TR4W/TR4W-D12 IS PUBLIC.** A `Claude-Session: https://claude.ai/code/session_…` trailer is a link
+to a private transcript. Do not put one in a commit message or a PR body. `Co-Authored-By` is fine.
+
+This rule is new on 2026-08-29 and **it is the whole fix.** Until today CLAUDE.md said nothing about
+it — zero mentions — so the trailer was not being added against a rule, it was being added in the
+absence of one. Agents follow this file; that is what it is for.
+
+If one still reaches the remote, the fix is **forward-only**: stop emitting it, and leave the
+published commit alone. Removing it means rewriting published history, which is the thing that cost
+a day. Rotate the session if the link matters.
+
+### Optional belt-and-braces
+
+`.githooks/commit-msg` is tracked and strips the trailer if one appears, reporting what it removed.
+It is **not** required and nothing depends on it:
 
 ```powershell
-git -C /c/tr4w-d12 config core.hooksPath .githooks    # once per clone
+git -C /c/tr4w-d12 config core.hooksPath .githooks    # opt-in, once per clone
 ```
 
-`.githooks/commit-msg` is tracked and **strips** `Claude-Session:` lines from every commit message,
-reporting what it removed. It strips rather than rejects because a rejection is something to work
-around at 3am. `Co-Authored-By` is kept. `.gitattributes` pins `.githooks/*` to **LF** — a CRLF
-shebang gives `bad interpreter: /bin/sh^M` and a hook that silently never runs, which is the one
-place in this tree where CRLF is the wrong answer.
-
-If a trailer still reaches the remote, the fix is **forward-only**: stop emitting it. Leave the
-published commit alone.
+`core.hooksPath` is per-clone local config and does not travel, so an uninstalled hook is inert —
+which is why the rule above, not the hook, is the control. `.gitattributes` pins `.githooks/*` to
+**LF**: a CRLF shebang gives `bad interpreter: /bin/sh^M` and a hook that silently never runs, the
+one place in this tree where CRLF is the wrong answer.
 
 ### Recovering a clone that is behind the 2026-08-19 rewrite
 
