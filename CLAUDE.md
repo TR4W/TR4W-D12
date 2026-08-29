@@ -687,6 +687,7 @@ Read the specific doc before acting in its area — these are current and this f
 | ~~D12 migration roadmap~~ | ~~`docs/D12_MIGRATION_ROADMAP.md`, `tr4w/docs/D12_RELEASE_READINESS.md`~~ — superseded, read for *why* not *status* |
 | String/ShortString work | `tr4w/docs/D12_STRING_MODERNIZATION_PLAN.md`, `docs/SHORTSTRING_BOUNDARY_AUDIT.md` |
 | VCL coexistence / FMX | `docs/VCL_WIN32_COEXISTENCE.md`, `docs/FMX Migration Discussion.md` |
+| **What is still here only for Delphi (survey, nothing changed)** | **`docs/DELPHI_SHIM_INVENTORY.md`** |
 | Icom network protocol | `docs/ICOM_NETWORK_SPEC.md`, `docs/ICOM_NETWORK_PROTOCOL_GUIDE.md` |
 | **Icom bandscope -> panadapter (read before touching `$27`)** | **`docs/ICOM_SPECTRUM_DESIGN.md`** |
 | Icom scope findings for upstream (pasteable, cites no third project) | `docs/AETHERSDR_ICOM_SCOPE_REPORT.md` |
