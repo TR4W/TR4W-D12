@@ -113,6 +113,42 @@ UI language: none loaded; using the compiled-in English
 
 ---
 
+## See whether the text fits
+
+A translation is routinely 20–40% longer than the English the layout was drawn for,
+and the first anyone usually knows is a clipped caption in a screenshot. This asks
+the program itself, in every language:
+
+```powershell
+cd tr4w\test\ui
+.\Sweep-TextFit.ps1                 # every language
+.\Sweep-TextFit.ps1 -Lang de,pl     # just these
+```
+
+Findings land in `build-out\textfit-sweep.csv`. Measured 2026-08-28: **45 clipped
+captions in German Preferences alone.**
+
+Three things about it are worth knowing, because each one produced a wrong answer
+before it was understood:
+
+- **It defuzzes first, into the exe's own directory.** The shipping catalogue has
+  every "Needs work" entry dropped, so against it almost nothing is translated and
+  nothing can overrun. The defuzzed copy is for measurement only — the words in it
+  are unreviewed machine output. *Layout truth, not language truth.*
+- **It measures from inside the program**, not by walking the window tree. A `TLabel`
+  is a `TGraphicControl` with no window handle, and most captions in the converted
+  forms are labels — which is why the older `Test-TextFit.ps1` reported nothing
+  clipped in German. Prefer this one.
+- **A zero means something now.** Each form logs how many captions it *measured*
+  beside how many failed, so "no findings" can be told apart from "nothing was
+  looked at". Until 2026-08-28 they were the same output, and that is how the audit
+  managed never to measure a single converted window.
+
+It cannot see anything *painted* rather than placed — the main window's own elements,
+owner-drawn list items, grid cells. Those still need eyes.
+
+---
+
 ## Add a new language
 
 **Order matters.** The two halves of the catalogue live in different places, and step 1
@@ -150,6 +186,8 @@ is in `i18n\languages.json` and `--lang FIN` is enough.
 | `po_rekey.py` | adds the run-time identifier beside the `msgctxt` key |
 | `po_prune.py` | marks entries obsolete when their key leaves the source |
 | `ini2po.py` | help INIs ⟷ `.po` |
+| `po_defuzz.py` | a copy with the "Needs work" flags removed, for testing only |
+| `salvage_lossy.py` | recovers what it can from a lang file that decodes under no codepage (CHN) |
 | `pofile.py`, `pasconsts.py` | shared readers — not run directly |
 
 ---
