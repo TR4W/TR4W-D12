@@ -7,9 +7,15 @@
 # Dump-WindowTree.ps1 is for forms.
 #
 # IT READS THE MENU WINDOWS ACTUALLY HAS, not the table the menu is built from.
-# That distinction is the whole point and it is the lesson from
-# Dump-Accelerators.ps1, which read the live accelerator table out of the binary
-# and found that 25 of 97 bindings were displayed by NO menu row. Parsing
+# That distinction is the whole point, and Dump-Accelerators.ps1 is the cautionary
+# half of it: it read an accelerator table out of the binary and found that 25 of
+# 97 bindings were displayed by no menu row -- useful then, wrong later. Once
+# uAccelerators built the table at run time with CreateAcceleratorTable, that
+# table stopped being a PE resource, and the tool went on reporting the RETIRED
+# D7 one without saying so. It was deleted 2026-08-29 with res\tr4w_eng.RES.
+#
+# The lesson is not "read the binary"; it is "read the thing that is actually in
+# use, and make sure it is still the thing you are reading." Parsing
 # T_MENU_ARRAY out of uMenu.pas would be checking the source against itself:
 # the captions are the thing under test, so they cannot also be the oracle.
 #

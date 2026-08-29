@@ -13,6 +13,7 @@
       <Title Value="TR4W"/>
       <UseAppBundle Value="False"/>
       <ResourceType Value="res"/>
+      <Icon Value="0"/>
     </General>
     <i18n>
       <EnableI18N Value="True"/>
@@ -42,7 +43,7 @@
         <PackageName Value="LCL"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="369">
+    <Units Count="377">
       <Unit0>
         <Filename Value="tr4w.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -1630,6 +1631,42 @@
         <Filename Value="src/uProgramMain.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit368>
+      <Unit369>
+        <Filename Value="src/ui/lcl/uNewContestForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmNewContest"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit369>
+      <Unit370>
+        <Filename Value="src/ui/lcl/uTextFitAudit.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit370>
+      <Unit371>
+        <Filename Value="src/uTR4WStrings.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit371>
+      <Unit372>
+        <Filename Value="src/radioFactory/uIcomScope.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit372>
+      <Unit373>
+        <Filename Value="src/ui/lcl/uCrashLogLCL.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit373>
+      <Unit374>
+        <Filename Value="src/ui/lcl/uEmbeddedTranslations.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit374>
+      <Unit375>
+        <Filename Value="src/ui/lcl/uServerLogForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+      </Unit375>
+      <Unit376>
+        <Filename Value="src/radioFactory/uRadioIcom7110.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit376>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

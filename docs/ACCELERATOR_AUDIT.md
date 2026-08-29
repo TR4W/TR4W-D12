@@ -1,7 +1,21 @@
 # The accelerator table vs the menu: what they actually say
 
-**Measured 2026-08-17**, Phase 2 of the Win32-to-LCL migration. Regenerate with
-`tr4w/test/ui/Dump-Accelerators.ps1`; the comparison method is described at the end.
+**Measured 2026-08-17**, Phase 2 of the Win32-to-LCL migration. The comparison
+method is described at the end.
+
+> **THE DUMP BELOW CANNOT BE REGENERATED, AND THAT IS CORRECT.**
+> `tr4w/test/ui/Dump-Accelerators.ps1` read the `'T'` ACCELERATORS resource out
+> of the linked binary. That resource came from `res\tr4w_eng.RES`, which was
+> deleted on 2026-08-29 — and it was already the WRONG ANSWER before that: the
+> live table is built at run time by `CreateAcceleratorTable` and never becomes
+> a PE resource at all, so from the day `uAccelerators` landed the tool was
+> reporting the retired D7 table. On 2026-08-29 it still listed `Ctrl+Alt+1`,
+> `Ctrl+Alt+2` (10103/10106, deleted with the legacy CAT dialog), `Ctrl+O`
+> (10405, deleted with Missing Mults) and `Ctrl+Alt+N` (10550, deleted with
+> Synchronize PC time) — four bindings the program does not have.
+>
+> The live table's invariants are pinned by `test/unit/uTestAccelerators.pas`,
+> which reads `ACCELERATORS` directly. Ask it, not a resource.
 
 > **STATUS 2026-08-17: the unified table is BUILT** — `tr4w/src/uAccelerators.pas`, 97 rows
 > generated from the dump below, `CreateAcceleratorTable` in place of `LoadAccelerators`
@@ -122,8 +136,9 @@ the hypothesis was worth testing, and for this case the test says no.
 
 ## Method
 
-`Dump-Accelerators.ps1` maps `tr4w.exe` with `LOAD_LIBRARY_AS_DATAFILE` (it runs nothing),
-calls `LoadAccelerators` + `CopyAcceleratorTable`, and decodes `fVirt`. The comparison
+`Dump-Accelerators.ps1` — **deleted 2026-08-29, see the note at the top** — mapped
+`tr4w.exe` with `LOAD_LIBRARY_AS_DATAFILE` (it ran nothing),
+called `LoadAccelerators` + `CopyAcceleratorTable`, and decoded `fVirt`. The comparison
 parses `menu_* = <id>` from `VC.pas` and the `mrText: RC_X + RC_X_HK; mrId: menu_y` rows
 from `uMenu.pas`, with comments and string literals stripped the way the compiler sees them.
 

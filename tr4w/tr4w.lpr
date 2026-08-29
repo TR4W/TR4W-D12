@@ -432,25 +432,34 @@ uses
   uProgramMain in 'src\uProgramMain.pas';
   //cty in 'src\cty.pas';  // Excluded: unit name 'cty' conflicts with global variable 'CTY' from uCTYDAT
 
-{ The binary resource: icon, cursor and the one surviving Win32 dialog template.
+{ THE PROJECT RESOURCE -- tr4w.res, written by Lazarus from the .lpi.
 
-  UNCONDITIONAL since 2026-08-29.  Ten sibling links stood here, one per
-  language, each guarded by an IFDEF on LANG_<xxx> -- spelled without its braces
-  because a directive inside a brace comment CLOSES it -- and no build has
-  defined any
-  of those symbols since the compile-time language matrix was retired.  So ten
-  of the eleven lines could not compile, and the eleventh was guarded on
-  LANG_ENG: a symbol tr4w.inc derives ONLY when none of the other ten is set.
-  Pass -dLANG_RUS today and the program links no icon, no cursor and no dialog
-  template at all, because the arm that would have supplied them was deleted
-  years before the arm that guards them was.
+  Carries MAINICON, the application icon, which is loaded by name at four sites
+  (uProgramMain's window class, uDialogs twice, uNet's list icon). Lazarus names
+  its project icon MAINICON as well, which is why moving the icon off the
+  Delphi-era resource needed no code change at all.
 
-  There is one build and one resource.  Guarding it on the language of a matrix
-  that no longer exists cannot make it more correct, only conditionally absent. }
-{$R res\tr4w_eng.res}
+  This replaced the res\tr4w_eng.res link on 2026-08-29 -- named without its
+  $R braces, because a directive inside a brace comment closes the comment and
+  the compiler then reads the prose as code. That file held seven
+  resources and only the icon was still reached: dialogs 46, 66 and 73 had no
+  loader left once dialog 73 became a designed form, ACCELERATOR 'T' was
+  replaced by the Pascal table in uAccelerators, and nothing ever called
+  LoadBitmap for BITMAP 853. It had no CURSOR resource -- every LoadCursor in
+  the tree asks Windows for a stock one.
 
+  Before that it was one of ELEVEN links, ten of them guarded by an IFDEF on
+  LANG_<xxx> -- written here without its braces, because a directive inside a
+  brace comment closes the comment. No build had defined those symbols since the
+  compile-time language matrix was retired, so ten could not compile; and the
+  eleventh was guarded on LANG_ENG, which tr4w.inc derives ONLY when none of the
+  other ten is set. -dLANG_RUS would have linked no icon at all. }
+{$R *.res}
+
+{ The manifest stays hand-kept and separate: the build VERIFIES it -- "manifest
+  verified in the binary (parses, visual styles declared)" -- and the .lpi
+  checkbox offers less control over the content. }
 {$R 'Win11.res'}
-
 
 begin
    RunTR4W;

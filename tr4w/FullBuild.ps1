@@ -287,10 +287,14 @@ else
 # ---------------------------------------------------------------------------
 # The application.
 #
-# LANG_ENG selects res\tr4w_eng.res and the ENG string table; VERSIONINFO_RES
-# links the resource built above. Both were verified to link under FPC -- the
-# .res files are standard Win32 RES and FPC consumes the Delphi-produced ones
-# unchanged.
+# LANG_ENG selects the ENG string table; VERSIONINFO_RES links the version
+# resource built above.
+#
+# It used to select res\tr4w_eng.res as well. That file went on 2026-08-29: its
+# only live resource was the application icon, and the icon is in the Lazarus
+# project resource now (tr4w.res, linked by {$R *.res}), which is where a native
+# LCL application keeps it. Lazarus names its icon MAINICON too, so no code
+# changed.
 # ---------------------------------------------------------------------------
 Phase 'Application'
 

@@ -184,22 +184,44 @@ placeholder, against the real 32×32 **24-bpp** one in `tr4w_eng.RES`. So the
 step is to put the real icon into the project resource, not to invent one.
 
 `tr4w/res/tr4w.ico` is that icon, extracted from the `.RES` and verified to
-render (the TR4W logo). Then, **by hand, because `.res`/`.rc` are NY4I's**:
+render (the TR4W logo). It stays in `res\` as the source the `.lpi` was loaded
+from.
 
-1. Lazarus → Project → Project Options → **Application** → *Load Icon* →
-   `tr4w\res\tr4w.ico`, then save. Lazarus rewrites `tr4w\tr4w.res` with it.
-2. In `tr4w.lpr` replace `{$R res\tr4w_eng.res}` with `{$R *.res}` — that is
-   what picks `tr4w.res` up.
-3. Delete `tr4w\res\tr4w_eng.RES` and `res\Tr4w.rc`.
-4. **Delete `build\Lint-EditQSOTemplate.ps1` and its row in `Run-Lints.ps1`, in
-   the same commit.** It reads `res\tr4w_eng.res` directly and exports dialog 46
-   from it to compare against the `.lfm`; its own header says to delete it when
-   dialog 46 leaves the `.RES`. It will otherwise fail the build.
-5. Rebuild and check the icon in the taskbar, in Alt-Tab, and on the help button
-   `uDialogs.pas:689` puts it on.
+**DONE 2026-08-29.** NY4I loaded the icon in Lazarus (Project Options →
+Application → *Load Icon*), which rewrote `tr4w\tr4w.res` with the real 32×32
+24-bpp image and added `<Icon Value="0"/>` to the `.lpi`. Lazarus also appended
+its own `{$R *.res}` to `tr4w.lpr`, which briefly left **two** resource links in
+the file; the `tr4w_eng.res` one is gone and `{$R *.res}` is what carries the
+icon now. Verified by extracting the icon back out of the linked binary.
 
-The `.ico` is kept in `res\` afterwards: it becomes the source the `.lpi` was
-loaded from, replacing `Tr4w.rc` in that role.
+Deleted with it, because all three read that `.RES` and nothing else:
+
+- `build\Lint-EditQSOTemplate.ps1` and its row in `Run-Lints.ps1` — it exported
+  dialog 46 from the binary resource to diff against the `.lfm`. Its own header
+  said to delete it when the template went. `Invoke-FieldCheck` still checks
+  `EDITQSO_FIELDS` against the form, on the linked binary, in every `FullBuild`.
+- `test\ui\Export-DialogTemplate.ps1` — used only by that lint.
+- `test\ui\Dump-Accelerators.ps1` — **and this one was already lying.** It read
+  the `'T'` ACCELERATORS resource out of the binary, but the live table has been
+  built at run time by `CreateAcceleratorTable` since `uAccelerators` landed and
+  never becomes a PE resource. So it had been reporting the retired D7 table for
+  weeks: on the day it was deleted it still listed `Ctrl+Alt+1`, `Ctrl+Alt+2`,
+  `Ctrl+O` and `Ctrl+Alt+N`, all four deliberately removed from the program.
+  `docs/BENCH_QUEUE.md` now sends "do accelerators collide?" to
+  `uTestAccelerators.Test_NoDuplicateKeystroke`, which reads the live table.
+
+### `res/Tr4w.rc` is NOT deleted, and that is a decision for NY4I
+
+An earlier draft of this recipe said to delete it with the `.RES`. That would
+pre-empt an open question: `docs/MENU_ACTIONLIST_PLAN.md` §7 records that
+`Tr4w.rc` holds a complete **`T MENU` resource, 1503 lines, that nothing loads**
+— `uProgramMain.pas:961` has `//tr4w_main_menu := LoadMenu(hInstance, 'T');`
+commented out and `T_MENU_ARRAY` is the live menu — and asks whether it records
+anything the code copy has lost before it goes. That question is still open, and
+the file is the only place the old menu survives outside git history.
+
+Nothing builds from it and nothing links it. It is heritage, kept deliberately,
+until that diff is done or NY4I says not to bother.
 
 #### The `.lpi` title — already correct, and it is not the title bar
 

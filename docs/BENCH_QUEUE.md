@@ -180,7 +180,7 @@ agent BEFORE it reaches this file.
 | Does a dialog open at all? | `Invoke-MenuSmoke.ps1` | 8 commands, 7 windows |
 | Do Edit QSO's fields round-trip? | `Invoke-FieldCheck.ps1` | 69/69 |
 | Is a menu caption, id or shortcut right? | `Dump-Menu.ps1` | caught About reading "Check for Updates" |
-| Do accelerators collide? | `Dump-Accelerators.ps1` | -- |
+| Do accelerators collide? | `uTestAccelerators.Test_NoDuplicateKeystroke` (unit tests) | -- |
 | Did a window lose a control, or its size? | `Dump-WindowTree.ps1` + `Compare-WindowTree.ps1` | -- |
 | Does a translated caption still fit? | `Test-TextFit.ps1` | -- |
 | Does typing reach the right field? | `Test-Typing.ps1` | -- |

@@ -71,9 +71,12 @@ $lints = @(
    @{ Name = 'Lint-FormEvents';      Arg = $src;     NeedsFpc = $false }
    @{ Name = 'Lint-FormDefaults';    Arg = $src;     NeedsFpc = $false }
    @{ Name = 'Lint-ConfigOwnership'; Arg = $src;     NeedsFpc = $false }
-   # Pins the Edit QSO form against the dialog template it was generated from.
-   # $Tr4wDir because it needs res\ and test\ui\ as well as src\.
-   @{ Name = 'Lint-EditQSOTemplate'; Arg = $Tr4wDir; NeedsFpc = $false }
+   # Lint-EditQSOTemplate stood here. It pinned the Edit QSO form against dialog
+   # template 46 inside res\tr4w_eng.res, and BOTH went on 2026-08-29 when the
+   # icon moved to the Lazarus project resource and the .RES was deleted. Its own
+   # header said to remove it in the same commit as the template. The form is
+   # still covered: EDITQSO_FIELDS and the .lfm are checked against each other by
+   # Invoke-FieldCheck, which FullBuild runs against the linked binary.
    # The Win32-UI burn-down ratchet. $Tr4wDir, not $src: tr4w.lpr creates windows
    # too and lives one level up, and a ratchet that cannot see the program's own
    # entry point would let new Win32 UI in through the door it does not watch.
