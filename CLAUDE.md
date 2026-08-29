@@ -754,6 +754,15 @@ Two silent-corruption traps live here, and neither produces a compiler diagnosti
   the same designer action inserts perfectly (2026-08-06; 148 tracked `.pas` files were LF at the
   time, `LOGSTUFF.PAS` and `VC.pas` among them). Fix with
   `powershell -File tr4w\build\Lint-LineEndings.ps1 -SourceDir tr4w -Fix`.
+
+  **EDIT SOURCE THROUGH `tools/srcfile.py`.** The obvious Python idiom silently converts the file:
+  reading with `encoding=` gives universal newlines (`\r\n` → `\n`) and writing with `newline=''`
+  puts back `\n`. `srcfile.read`/`write` round-trip the file's own BOM and newline instead —
+  verified byte-identical on BOM and non-BOM files. This is not hypothetical: on 2026-08-29 that
+  idiom LF-ified 97 files in one command, and twice more the same day one file at a time.
+  A `PostToolUse` hook on **Bash** (`.claude/hooks/check-line-endings.py`) now reports it
+  immediately — the pre-existing hook is driven by `tool_input.file_path`, so it only ever saw
+  `Edit`/`Write` and never the scripts that did the damage.
 - **The corpus fixtures are `-text` and must stay that way.** `ref.adi` / `ref.cbr` are
   **byte-diffed**, and git was previously EOL-converting them — they were stored LF and checked out
   CRLF, surviving only because of one machine's `core.autocrlf`. A differently-configured clone
