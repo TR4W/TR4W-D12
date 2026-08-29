@@ -215,6 +215,7 @@ uses
   uUDPDestinationEditForm,
   uAltDForm,
   uLogCompareForm,
+  uServerLogForm,
   uCT1BOHForm,
   uBeaconsForm,
   uEditQSOForm,

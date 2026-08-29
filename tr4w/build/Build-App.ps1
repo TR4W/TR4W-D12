@@ -183,7 +183,17 @@ if ($warnLines.Count -lt $WARN_CEILING)
 # already the "PChar -> PAnsiChar proactive audit" on the roadmap. What this
 # stops is the number GROWING while that waits, which is the same bargain the
 # Win32 baselines make.
-$NARROW_CEILING = 1425
+#
+# 1425 -> 1432 on 2026-08-29, for dialog 73 becoming a designed form. The whole
+# +7 is net of two things: ten Caption assignments in uServerLogForm, and three
+# returned by the uCAT prune. A converted form assigns its captions from the
+# RC_/TC_ constants -- which is the POINT, an .lfm caption ships as English in
+# every language -- and Caption is TTranslateString, an AnsiString because the
+# LCL is compiled with 8-bit strings while tr4w.inc puts every unit of ours in
+# UnicodeStrings. So each assignment narrows. There are 139 of these tree-wide
+# and they all have that one cause; they will go together or not at all, and a
+# form that avoided them would be a form whose text cannot be translated.
+$NARROW_CEILING = 1432
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

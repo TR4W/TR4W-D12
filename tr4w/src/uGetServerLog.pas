@@ -41,14 +41,31 @@ uses
   ,
   uTR4WStrings;
 procedure ReplaceLogByServerLog(Replace: boolean);
-function GetServerLogDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 procedure RunSyncThread;
+
+{ HOW THE DOWNLOAD THREAD TALKS TO THE WINDOW.
+
+  RunSyncThread is a raw thread. It used to write straight into the dialog's
+  item ids with SetDlgItemInt, which was safe only because they were Win32
+  controls; the window is an LCL form now (ui\lcl\uServerLogForm) and touching
+  a control's properties off the main thread is not safe at all.
+
+  So the thread calls this, and this SendMessage's -- Windows marshals the call
+  onto the window's own thread and blocks until the handler returns, so the
+  handler may assign an LCL property directly. Post would NOT do: the values are
+  a running total and the thread overwrites its locals immediately.
+
+  A no-op when no window is listening, which is both the headless path and the
+  window having closed mid-download. }
+procedure ReportSyncProgress(aField: integer; aValue: integer);
 
 var
 
   NewServerLogHandle                    : HWND;
   AmountQSOsFromServer                  : Cardinal;
-  GetServerLogWnd                       : HWND;
+  { The form's handle while the sync window is open, 0 otherwise.  Set last in
+    HandleShow and cleared FIRST in HandleClose. }
+  ServerLogFormWnd                      : HWND;
   SynQSOTotalArray                      : QSOTotalArray;
   SyncMode                              : boolean;
   ServerLogListView                     : HWND;
@@ -63,66 +80,35 @@ const
   // and Win32 controls require all messages from their creating thread.
   WM_USER_HEADLESS_SYNC_REPLACE = WM_USER + 200;
 
+  // Progress, worker -> sync window.  wParam is one of SYNC_FIELD_*, lParam the
+  // value.  Same reasoning as above, generalised: see ReportSyncProgress.
+  WM_USER_SYNC_PROGRESS         = WM_USER + 201;
+
+  SYNC_FIELD_RECORDS        = 1;
+  SYNC_FIELD_BYTES          = 2;
+  SYNC_FIELD_QSOS           = 3;
+  SYNC_FIELD_ENABLE_REPLACE = 4;   // lParam unused
+  // Written from uNet.CommitChangesInLocalLog, which RunSyncThread calls before
+  // it opens the socket -- so this field is fed from a DIFFERENT unit on the
+  // same worker thread.  It is why the old control id 112 looked unreferenced.
+  SYNC_FIELD_SENT           = 5;
+
 implementation
 uses MainUnit;
 
-function GetServerLogDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-label CloseLabel;
+{ GetServerLogDlgProc STOOD HERE and went with dialog template 73 on
+  2026-08-29 -- the last Win32 dialog in the program. Its window is
+  ui\lcl\uServerLogForm now, and every arm of that case statement is a method
+  on the form. Only the parts a CONSOLE-reachable unit may own stayed here: the
+  download thread, the log replacement, and the progress seam below. }
 
+procedure ReportSyncProgress(aField: integer; aValue: integer);
 begin
-  Result := False;
-  case Msg of
-
-    WM_INITDIALOG:
+   if ServerLogFormWnd = 0 then
       begin
-        AmountQSOsFromServer := 0;
-        GetServerLogWnd := hwnddlg;
-        Windows.ZeroMemory(@SynQSOTotalArray, SizeOf(SynQSOTotalArray));
-        ServerLogListView := CreateEditableLog(hwnddlg, 1, 60, 770, 330, True);
-        Windows.SendDlgItemMessage(hwnddlg, 110, BM_SETCHECK, integer(showresverlogcontent), 0);
+      Exit;
       end;
-    WM_COMMAND:
-      begin
-        case LoWord(wParam) of
-          102:
-            begin
-              SyncMode := True;
-              EnableWindowFalse(hwnddlg, 102);
-              NewServerLogHandle := CreateFileA(TR4W_SYN_FILENAME, GENERIC_READ or GENERIC_WRITE, FILE_SHARE_READ or FILE_SHARE_WRITE, nil, CREATE_ALWAYS, FILE_ATTRIBUTE_ARCHIVE, 0);
-              if NewServerLogHandle = INVALID_HANDLE_VALUE then
-                 begin
-                 goto CloseLabel;
-                 end;
-              logger.Info('Calling tCreateThread from GetServerLogDlgProc');
-              if LogSyncThreadID = 0 then
-                 begin
-                 tCreateThread(@RunSyncThread, LogSyncThreadID);
-                 end;
-              logger.Info('Created LogSync thread with threadid of %d',[LogSyncThreadID] );
-            end;
-          103: goto CloseLabel;
-          104: ShowHelp('rulogsynchronize');
-          107:
-            begin
-              ReplaceLogByServerLog(True);
-              goto CloseLabel;
-            end;
-
-          110: showresverlogcontent := boolean(TF.SendDlgItemMessage(hwnddlg, 110, BM_GETCHECK));
-        end;
-      end;
-    WM_CLOSE: CloseLabel:
-      begin
-
-        if NewServerLogHandle <> INVALID_HANDLE_VALUE then
-           begin
-           CloseHandle(NewServerLogHandle);
-           end;
-        EndDialog(hwnddlg, 0);
-      end;
-
-  end;
-
+   Windows.SendMessage(ServerLogFormWnd, WM_USER_SYNC_PROGRESS, aField, aValue);
 end;
 
 procedure ReplaceLogByServerLog(Replace: boolean);
@@ -204,7 +190,7 @@ begin
         TotalBytes := TotalBytes + i - Offset;
         if not HeadlessSyncMode then
            begin
-           tSetDlgItemIntFalse(GetServerLogWnd, 108, TotalBytes);
+           ReportSyncProgress(SYNC_FIELD_BYTES, TotalBytes);
            end;
         end;
      if i <> 0 then
@@ -254,7 +240,7 @@ begin
            begin
            if TotalRecords mod 10 = 0 then
               begin
-              tSetDlgItemIntFalse(GetServerLogWnd, 101, TotalRecords);
+              ReportSyncProgress(SYNC_FIELD_RECORDS, TotalRecords);
               end;
            if showresverlogcontent then
               begin
@@ -270,11 +256,11 @@ begin
      end;
   if not HeadlessSyncMode then
      begin
-     tSetDlgItemIntFalse(GetServerLogWnd, 101, TotalRecords);
-     tSetDlgItemIntFalse(GetServerLogWnd, 109, TotalQ);
+     ReportSyncProgress(SYNC_FIELD_RECORDS, TotalRecords);
+     ReportSyncProgress(SYNC_FIELD_QSOS, TotalQ);
      if TotalQ > 0 then
         begin
-        EnableWindowTrue(GetServerLogWnd, 107);
+        ReportSyncProgress(SYNC_FIELD_ENABLE_REPLACE, 0);
         end;
      end;
   e:

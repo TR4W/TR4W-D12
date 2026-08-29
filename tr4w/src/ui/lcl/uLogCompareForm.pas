@@ -83,11 +83,11 @@ implementation
 uses
   uLCLFormHelpers,   // ShowModalOverWin32Parent -- ownership and centring
   Windows,
-  TF,               // tDialogBox -- the server-log dialog is still Win32
+  TF,
   PostUnit,         // Contest, ContestExchange
   LogDupe,
   uNet,             // DifferentContests, tUSQ, tUSQE
-  uGetServerLog,    // GetServerLogDlgProc -- still a Win32 dialog
+  uServerLogForm,   // ShowServerLogSync -- a designed form since 2026-08-29
   MainUnit,         // OpenLogFile / CloseLogFile, ProcessMenu, logger
   uHostedFormWindows,
   Log4D;
@@ -201,7 +201,7 @@ begin
    if FOpenServerLogDlg then
       begin
       FOpenServerLogDlg := False;
-      tDialogBox(73, @GetServerLogDlgProc);
+      ShowServerLogSync;
       end;
 end;
 

@@ -734,10 +734,10 @@
   RC_MIXWINTERFACE                      = 'MixW Interface';
   RC_CONNECTTOMIXW                      = 'Connect to MixW';
 
-//  RC_SYNLOG2                            = 'Synchronize log';
+  RC_SYNLOG2                            = 'Synchronize log';
   RC_GETSERVLOG                         = '&Get server log';
   RC_RECVRECORDS                        = 'Received records:';
-  RC_SENDRECORDS                        = 'Sended records:';
+  RC_SENDRECORDS                        = 'Sent records:';
   RC_CREATEAUNL                         = '&Create and use new log';
   RC_RECVBYTES                          = 'Received bytes:';
   RC_RECVQSOS                           = 'Received QSOs:';

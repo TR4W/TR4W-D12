@@ -5617,3 +5617,44 @@ msgstr ""
 msgid "Test packet sent to %s:%d.  UDP cannot confirm it arrived -- check the receiving program."
 msgstr ""
 
+
+#: utr4wstrings.rc_synlog2
+msgctxt "utr4wstrings.rc_synlog2"
+msgid "Synchronize log"
+msgstr ""
+
+#: utr4wstrings.rc_getservlog
+msgctxt "utr4wstrings.rc_getservlog"
+msgid "&Get server log"
+msgstr ""
+
+#: utr4wstrings.rc_recvrecords
+msgctxt "utr4wstrings.rc_recvrecords"
+msgid "Received records:"
+msgstr ""
+
+#: utr4wstrings.rc_sendrecords
+msgctxt "utr4wstrings.rc_sendrecords"
+msgid "Sent records:"
+msgstr ""
+
+#: utr4wstrings.rc_recvbytes
+msgctxt "utr4wstrings.rc_recvbytes"
+msgid "Received bytes:"
+msgstr ""
+
+#: utr4wstrings.rc_recvqsos
+msgctxt "utr4wstrings.rc_recvqsos"
+msgid "Received QSOs:"
+msgstr ""
+
+#: utr4wstrings.rc_showservlogc
+msgctxt "utr4wstrings.rc_showservlogc"
+msgid "Show server log content"
+msgstr ""
+
+#: utr4wstrings.rc_createaunl
+msgctxt "utr4wstrings.rc_createaunl"
+msgid "&Create and use new log"
+msgstr ""
+

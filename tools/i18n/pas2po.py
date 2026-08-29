@@ -137,6 +137,38 @@ def emit(eng_decls, translations, lang, out_path, reflag_identical=False):
          ["Not present in ENG; retained so nothing is lost."], [],
          obsolete=True))
 
+   # FAIL CLOSED BEFORE WRITING.
+   #
+   # This tool rebuilds a catalogue from the TC_/RC_ language tables, and those
+   # are not the only source the catalogues have: the Lazarus harvest
+   # contributes every .lfm property and resourcestring key, which arrive
+   # through po_merge and are invisible here. Rebuilding therefore DELETES them.
+   #
+   # Measured 2026-08-29, running this to pick up eight new strings: 2,203
+   # finished native-speaker translations destroyed across ten catalogues, exit
+   # code 0, no diagnostic. The obsolete-entry path above does not catch it --
+   # that retains keys present in the LANGUAGE TABLE, and these were only ever
+   # in the .po.
+   #
+   # So: adding strings to existing catalogues is po_merge's job, and this
+   # refuses rather than being the tool that happens to be to hand.
+   keeping = {e.key for e in entries}
+   losing = sorted(k for k, e in prior.items()
+                   if e.target.strip() and k not in keeping)
+   if losing:
+      raise SystemExit(
+         "pas2po: refusing to write %s -- it would delete %d translated "
+         "entr%s that are not in the language tables.\n"
+         "  e.g. %s\n"
+         "  These come from the Lazarus harvest (.lfm properties and "
+         "resourcestrings).\n"
+         "  To ADD strings to catalogues that already exist, use:\n"
+         "      python tools/i18n/po_merge.py --pot tr4w/languages/tr4w_laz.pot "
+         "--apply\n"
+         "  pas2po is for creating a NEW language (--new-lang)."
+         % (out_path, len(losing), 'y' if len(losing) == 1 else 'ies',
+            ', '.join(losing[:5])))
+
    pofile.write_po(out_path, entries, pc.LANG_CODES[lang],
                    pc.LANG_CODES[pc.SOURCE_LANG])
 

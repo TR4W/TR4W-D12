@@ -185,7 +185,11 @@ foreach ($id in $Command)
    # An RTE that does NOT kill the process still matters -- report it even when
    # the answer is ALIVE, because a silently-logged fault is the shape this
    # migration produces most.
-   elseif ($written -match '(?m)^.*(RTE|Runtime error|EXCEPTION|Access violation).*$')
+   # \bRTE\b, not RTE. Unanchored it matches "sta-RTE-d", so every ordinary
+   # 'bandscope started' line was reported as a possible fault (2026-08-29:
+   # seven notes on a run with nothing wrong). A guard that cries wolf on every
+   # green run is one nobody reads on the run that matters.
+   elseif ($written -match '(?im)^.*(\bRTE\b|Runtime error|\bEXCEPTION\b|Access violation).*$')
       {
       Write-Output ("  note: command {0} logged '{1}'" -f $id, $Matches[0].Trim())
       }

@@ -717,6 +717,14 @@ resourcestring
    RC_CONTESTNAMEIC     = 'C&ontest name in comment';
    RC_COMMENT           = 'Comment';
    RC_RECVQTC           = 'Receiving QTCs';
+   RC_SYNLOG2           = 'Synchronize log';
+   RC_GETSERVLOG        = '&Get server log';
+   RC_RECVRECORDS       = 'Received records:';
+   RC_SENDRECORDS       = 'Sent records:';
+   RC_CREATEAUNL        = '&Create and use new log';
+   RC_RECVBYTES         = 'Received bytes:';
+   RC_RECVQSOS          = 'Received QSOs:';
+   RC_SHOWSERVLOGC      = 'Show server log content';
    RC_DIFFINLOG         = 'Difference in logs';
    RC_DATE              = 'Date';
    RC_NAME              = 'Name';

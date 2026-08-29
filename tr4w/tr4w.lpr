@@ -217,6 +217,7 @@ uses
   uUDPDestinationEditForm in 'src\ui\lcl\uUDPDestinationEditForm.pas',
   uAltDForm in 'src\ui\lcl\uAltDForm.pas',
   uLogCompareForm in 'src\ui\lcl\uLogCompareForm.pas',
+  uServerLogForm in 'src\ui\lcl\uServerLogForm.pas',
   uCT1BOHForm in 'src\ui\lcl\uCT1BOHForm.pas',
   uBeaconsForm in 'src\ui\lcl\uBeaconsForm.pas',
   uEditQSOForm in 'src\ui\lcl\uEditQSOForm.pas',

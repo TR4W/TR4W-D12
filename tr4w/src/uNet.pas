@@ -1321,7 +1321,10 @@ var
     sWriteFile(LogHandle, TempRXData, SizeOf(ContestExchange));
     inc(SendedQSOs);
     WaitForSingleObject(tNet_Event, 1000);
-    Windows.SetDlgItemInt(GetServerLogWnd, 112, SendedQSOs, False);
+    // Runs on the sync WORKER thread and the window is an LCL form now, so this
+    // goes through the marshalling seam rather than writing a control directly.
+    // See uGetServerLog.ReportSyncProgress.
+    ReportSyncProgress(SYNC_FIELD_SENT, SendedQSOs);
   end;
 begin
   if (tUSQE = 0) and (tUSQ = 0) then Exit;

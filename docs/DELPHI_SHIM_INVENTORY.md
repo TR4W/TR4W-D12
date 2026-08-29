@@ -142,25 +142,41 @@ Delphi-era one.
   in the binary (parses, visual styles declared)". The `.lpi` checkbox offers
   less control over the content.
 
-### What blocks the clean-up
+### What blocked the clean-up — DONE 2026-08-29
 
-**One Win32 dialog template is still in use: 73**, the server-log dialog, which
-the *LCL* LogCompare form opens from its Synchronize button
-(`uLogCompareForm:204`). Dialog 74 went with the Missing Mults report on
-2026-08-29; 68 (About) and 77 (Select File) were already dead.
+**No Win32 dialog template is in use any more.** Dialog 73, the server-log
+dialog, was the last: it is `src/ui/lcl/uServerLogForm.pas` now, opened from the
+LCL LogCompare form's Synchronize button. Dialog 74 went with the Missing Mults
+report the same day; 68 (About) is behind a dead `{$IF OGLVERSION}` and 77
+(Select File) sits inside a block comment.
 
-When 73 is converted, `res\tr4w_eng.res` carries only icon and cursor, both of
-which can move to the `.lpi`. At that point this file, `res/Tr4w.rc` and the ten
-dead language `.res` files all go, and `tr4w.lpr` links `{$R *.res}` plus the
-manifest.
+`res\tr4w_eng.res` therefore carries only an icon, a cursor and a bitmap that
+nothing opens a dialog with. **Both remaining steps are NY4I's by hand**, since
+`.rc`/`.res` edits are:
 
-### Deletable now, without touching any of the above
+1. move the icon and cursor to the `.lpi` (`<Icon>`, `Screen.Cursors[]`), then
+2. drop the `{$R res\tr4w_eng.res}` link, `res/Tr4w.rc` and `tr4w_eng.RES`, and
+   let `tr4w.lpr` link `{$R *.res}` plus the manifest.
+
+Until then `Tr4w.rc` stays: it is the source `tr4w_eng.res` was built from, and
+deleting it removes the ability to regenerate it.
+
+**Two things learned converting 73, worth keeping.** A Win32 control id can be
+written by `SetDlgItemInt` from *any* unit holding the window handle — the 'sent
+records' field looked dead from `uGetServerLog` and its writer was in `uNet`, so
+"grep this unit" does not establish that a field is unused; the compiler found
+it. And the six captions that dialog used had never been translatable at all,
+because their text came from the compiled `.RES`; naming them from Pascal is
+what promotes them, since `pas2res` emits every `RC_` a source file references.
+
+### Done 2026-08-29
 
 The ten `{$IFDEF LANG_RUS}` … `{$IFDEF LANG_UKR}` links in `tr4w.lpr` and their
-`.res` files — **263 KB, all tracked**. Nothing defines those symbols any more;
-`FullBuild` passes `-dLANG_ENG` only, so those ten lines cannot compile. Keep
-`res/Tr4w.rc` until dialog 73 is gone: it is the source `tr4w_eng.res` was
-built from, and deleting it removes the ability to regenerate that file.
+`.res` files — **263 KB, all tracked** — are deleted, along with the two `.old`
+copies. The surviving `{$R res\tr4w_eng.res}` is now **unconditional**: it was
+guarded on `LANG_ENG`, a symbol `tr4w.inc` derives only when none of the other
+ten is set, so `-dLANG_RUS` would have linked no icon, no cursor and no dialog
+template at all.
 
 ---
 
@@ -186,8 +202,9 @@ name. Move it out of `src/` or exclude it.
 
 ## Suggested order
 
-0. the ten dead `{$IFDEF LANG_*}` resource links and their `.res` files (§3b) —
-   263 KB, cannot compile, nothing else depends on them
+0. ~~the ten dead `{$IFDEF LANG_*}` resource links and their `.res` files (§3b)~~
+   — **done 2026-08-29**, along with dialog 73, which was the thing blocking the
+   rest of §3b
 
 1. `jedi.inc` + `Defines.inc` — pure deletion, zero behaviour, largest reduction
    in per-build preprocessing

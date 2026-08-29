@@ -7,7 +7,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: pt_BR\n"
+"Language: BR\n"
 "X-Source-Language: en\n"
 
 #. Section: General
@@ -11682,5 +11682,53 @@ msgstr ""
 #: utr4wstrings.tc_zone
 #, fuzzy
 msgid "Zones"
+msgstr ""
+
+#: utr4wstrings.rc_synlog2
+#, fuzzy
+msgctxt "utr4wstrings.rc_synlog2"
+msgid "Synchronize log"
+msgstr ""
+
+#: utr4wstrings.rc_getservlog
+#, fuzzy
+msgctxt "utr4wstrings.rc_getservlog"
+msgid "&Get server log"
+msgstr ""
+
+#: utr4wstrings.rc_recvrecords
+#, fuzzy
+msgctxt "utr4wstrings.rc_recvrecords"
+msgid "Received records:"
+msgstr ""
+
+#: utr4wstrings.rc_sendrecords
+#, fuzzy
+msgctxt "utr4wstrings.rc_sendrecords"
+msgid "Sent records:"
+msgstr ""
+
+#: utr4wstrings.rc_recvbytes
+#, fuzzy
+msgctxt "utr4wstrings.rc_recvbytes"
+msgid "Received bytes:"
+msgstr ""
+
+#: utr4wstrings.rc_recvqsos
+#, fuzzy
+msgctxt "utr4wstrings.rc_recvqsos"
+msgid "Received QSOs:"
+msgstr ""
+
+#: utr4wstrings.rc_showservlogc
+#, fuzzy
+msgctxt "utr4wstrings.rc_showservlogc"
+msgid "Show server log content"
+msgstr ""
+
+#: utr4wstrings.rc_createaunl
+#, fuzzy
+msgctxt "utr4wstrings.rc_createaunl"
+msgid "&Create and use new log"
 msgstr ""
 
