@@ -302,7 +302,6 @@ type
       //    function TimeToGiveUp: boolean;
       procedure UpdateBandOutputInfo(Band: BandType; Mode: ModeType);
 
-      procedure FreqToBCD(Freq: longint; Swap: boolean; OpCode: byte);
       procedure ResolveSerialFrameSettings;
       // Dumps this radio's operator-settable configuration to the log at DEBUG.
       // Called before anything can bail out, so a radio that is NOT set up still
@@ -1324,44 +1323,6 @@ begin
          end;
       end;
 
-end;
-
-procedure RadioObject.FreqToBCD(Freq: longint; Swap: boolean; OpCode: byte);
-var
-   TempByte, sb1, sb2: byte;
-   c: cardinal;
-   TempFreq: longint;
-begin
-   ZeroMemory(@tYaesuFreq5Bytes, SizeOf (tYaesuFreq5Bytes));
-   tYaesuFreq5Bytes[4] := OpCode;
-   TempFreq := Freq div 10;
-   for c := 3 downto 0 do
-      begin
-      TempByte := TempFreq mod 100;
-      TempFreq := TempFreq div 100;
-      sb1 := TempByte div 10;
-      sb2 := TempByte mod 10;
-      if c = 0 then
-         begin
-         if Freq > 1000000000 then
-            begin
-            sb1 := sb1 + 10;
-            end;
-         end;
-      TempByte := sb1 * 16 + sb2;
-      tYaesuFreq5Bytes[c] := TempByte;
-      end;
-
-   if Swap then
-      begin
-      c := PDWORD(@tYaesuFreq5Bytes)^;
-      // Issue #997: BSWAP EAX -> reverse the four bytes (c is Cardinal).
-      c := ((c and $000000FF) shl 24) or
-           ((c and $0000FF00) shl 8)  or
-           ((c and $00FF0000) shr 8)  or
-           ((c and $FF000000) shr 24);
-      PDWORD(@tYaesuFreq5Bytes)^ := c;
-      end;
 end;
 
 function FrequencyFromFourBytes(FreqStr: string): longint;
