@@ -81,31 +81,51 @@ if (-not $Lang -or $Lang.Count -eq 0)
               Sort-Object
    }
 
-# THE LOG IS THE CHANNEL, so read only what each run appends to it. Truncating
-# it instead would throw away whatever the operator was looking at, and the
-# audit is not the only thing writing here.
-function Get-LogLength
+# THE LOG IS THE CHANNEL, AND IT ROLLS.
+#
+# This read the log by byte offset -- remember the length before a language,
+# read the tail afterwards. That silently loses findings, because tr4w.log is a
+# TLogRollingFileAppender: at 10 MB it becomes tr4w.log.1 and a fresh tr4w.log
+# starts. A sweep of twenty languages writes ~19 MB, so it WILL roll, and every
+# language whose runs straddled the roll reported a handful of findings instead
+# of its real count. Measured 2026-08-28: Danish 2 and Greek 0 against Finnish
+# 34, all four of which have an empty catalogue and must therefore produce the
+# SAME English baseline. The low numbers read like good news.
+#
+# So give each language its own logs instead of trying to slice a shared one.
+# Nothing is running between languages, so moving the files aside is safe, and
+# they are kept as evidence rather than deleted.
+$logDir = Join-Path $Repo 'build-out\textfit-logs'
+New-Item -ItemType Directory -Force $logDir | Out-Null
+
+function Move-LogsAside
 {
-   if (Test-Path $logPath) { return (Get-Item $logPath).Length }
-   return 0
+   param([string] $Name)
+   $dest = Join-Path $logDir $Name
+   New-Item -ItemType Directory -Force $dest | Out-Null
+   Get-ChildItem (Join-Path $target 'tr4w.log*') -ErrorAction SilentlyContinue |
+      ForEach-Object { Move-Item -LiteralPath $_.FullName -Destination (Join-Path $dest $_.Name) -Force }
+   return $dest
 }
 
-function Read-LogSince
+function Read-RunLogs
 {
-   param([long] $Offset)
-   if (-not (Test-Path $logPath)) { return @() }
-   $fs = [IO.File]::Open($logPath, 'Open', 'Read', 'ReadWrite')
-   try
+   param([string] $Dir)
+   $lines = @()
+   # tr4w.log.1 first: it holds the OLDER half of a run that rolled.
+   foreach ($f in @('tr4w.log.1', 'tr4w.log'))
       {
-      if ($Offset -gt $fs.Length) { $Offset = 0 }   # log rolled under us
-      [void]$fs.Seek($Offset, 'Begin')
-      $sr = New-Object IO.StreamReader($fs)
-      return $sr.ReadToEnd() -split "`r?`n"
+      $p = Join-Path $Dir $f
+      if (Test-Path -LiteralPath $p) { $lines += (Get-Content -LiteralPath $p) }
       }
-   finally { $fs.Dispose() }
+   return $lines
 }
 
 $results = @()
+$coverage = @()
+
+# Whatever was in target\ before the sweep belongs to the operator, not to us.
+[void](Move-LogsAside '_before')
 
 foreach ($code in $Lang)
    {
@@ -122,7 +142,6 @@ foreach ($code in $Lang)
       if ($LASTEXITCODE -ne 0) { throw "po_defuzz failed for $code" }
       }
 
-   $before = Get-LogLength
    $smokeArgs = @{
       Repo       = $Repo
       Exe        = $Exe
@@ -133,14 +152,18 @@ foreach ($code in $Lang)
    & (Join-Path $PSScriptRoot 'Invoke-MenuSmoke.ps1') @smokeArgs 2>&1 | Out-Null
    $smokeFailed = ($LASTEXITCODE -ne 0)
 
-   $lines = Read-LogSince -Offset $before
+   $runDir = Move-LogsAside $code
+   $lines = Read-RunLogs -Dir $runDir
    # 'TextFit: <form>.<control> needs Npx, has Npx -- "caption"'
    $hits = $lines | Where-Object { $_ -match 'TextFit: .*needs \d+px' }
 
    $seen = @{}
    foreach ($h in $hits)
       {
-      if ($h -match 'TextFit: (\S+) needs (\d+)px, has (\d+)px -- "(.*)"$')
+      # No '$' anchor: a caption may contain a line break (the function-key
+      # messages do), so the log line does not end at the closing quote and an
+      # anchored pattern drops exactly the findings most likely to be real.
+      if ($h -match 'TextFit: (\S+) needs (\d+)px, has (\d+)px -- "(.*)')
          {
          $key = '{0}|{1}' -f $matches[1], $matches[4]
          if ($seen.ContainsKey($key)) { continue }
@@ -156,8 +179,29 @@ foreach ($code in $Lang)
          }
       }
 
+   # HOW MUCH WAS LOOKED AT, printed beside what was found. A language that
+   # measured 40 captions and found none is good news; one that measured 0 is a
+   # broken run wearing the same number, and that is the mistake this harness
+   # has already made twice.
+   $measured = 0
+   $forms = 0
+   foreach ($l in $lines)
+      {
+      if ($l -match 'TextFit: \S* -- (\d+) caption\(s\) measured')
+         {
+         $forms++
+         $measured += [int]$matches[1]
+         }
+      }
+
    $note = if ($smokeFailed) { '  (menu smoke reported a failure)' } else { '' }
-   Write-Host ("  {0,-6} {1,4} caption(s) do not fit{2}" -f $code, $seen.Count, $note)
+   Write-Host ("  {0,-6} {1,4} of {2,4} caption(s) do not fit, across {3,3} form(s){4}" -f
+               $code, $seen.Count, $measured, $forms, $note)
+   if ($measured -eq 0)
+      {
+      Write-Host ("         NOTHING WAS MEASURED -- see {0}" -f $runDir)
+      }
+   $coverage += [pscustomobject]@{ Lang = $code; Measured = $measured; LogDir = $runDir }
    }
 
 if (-not $Quiet)
@@ -187,6 +231,30 @@ if (-not $Quiet)
       Write-Host ("Sweep-TextFit: {0} clipped and {1} snug caption(s) across {2} language(s)." -f
                   $clipped.Count, ($results.Count - $clipped.Count), $langs.Count)
       Write-Host 'Painted content is not measured -- see the notes at the top.'
+      }
+   }
+
+# A FLOOR, because a language that measured almost nothing reports almost no
+# findings and that reads like a pass.
+#
+# Every language walks the same windows, so the number of captions measured
+# should barely vary between them. When it does, a window did not open --
+# measured 2026-08-28: Finnish saw 280 captions to Danish's 747 because
+# Preferences never appeared, and the menu-smoke runner did not object. The
+# best run is the yardstick; anything under half of it is not a result.
+if ($coverage.Count -gt 1)
+   {
+   $best = ($coverage | Measure-Object -Property Measured -Maximum).Maximum
+   $thin = @($coverage | Where-Object { $_.Measured -lt ($best / 2) })
+   if ($thin.Count -gt 0)
+      {
+      Write-Host ''
+      Write-Host ("SUSPECT: {0} language(s) measured less than half of the best run ({1} captions)." -f
+                  $thin.Count, $best)
+      Write-Host 'A window did not open. Their finding counts are NOT a pass.'
+      $thin | ForEach-Object {
+         Write-Host ("  {0,-6} {1,4} captions   {2}" -f $_.Lang, $_.Measured, $_.LogDir)
+      }
       }
    }
 
