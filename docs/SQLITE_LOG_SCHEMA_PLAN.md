@@ -11,7 +11,9 @@ Read [`DOMAIN_LAYER_SEQUENCE.md`](DOMAIN_LAYER_SEQUENCE.md) first — it settles
 *why* this comes second (after display state) and it already contains the
 three-tier event-sourcing decision this schema implements.
 
-**Open questions are at the end and are the point of this document.**
+**All eleven open questions were answered by NY4I on 2026-08-29 — see §11.**
+The schema below is therefore a proposal whose decisions are settled; what is
+not settled is the code, of which none is written.
 
 ---
 
@@ -204,8 +206,10 @@ CREATE INDEX idx_qso_callsign ON qso(callsign);
 CREATE INDEX idx_qso_dupe     ON qso(callsign, band, mode) WHERE deleted = 0;
 ```
 
-Differences from TR4QT worth noting: `contest` is a **single row** with
-`CHECK (id = 1)` rather than a table of many contests (see question 1);
+Differences from TR4QT worth noting, and free to take now that question 8 has
+ruled out any need to read a TR4QT log: `contest` is a **single row** with
+`CHECK (id = 1)` rather than a table of many contests (question 1: one log per
+file);
 `my_*` fields are on the QSO; there is no `multipliers` table yet (question 3);
 `current_serial` is not stored, because it is `MAX(serial_sent)` and a stored
 copy is a second source of truth that can disagree.
@@ -220,9 +224,15 @@ real reason — **multi-op merge**. Today `tr4wserver` reconciles logs by serial
 number and callsign; a stable per-QSO identity makes "did I already have this
 QSO" answerable without heuristics.
 
-Recommendation: **UUIDv7**, not v4. v7 is time-ordered, so an index on it stays
-local rather than scattering, and it sorts by creation. FPC has no v7 generator
-built in; it is about fifteen lines (48-bit unix millis + 74 random bits).
+**Decided: UUIDv7** (NY4I, question 5). v7 is time-ordered, so an index on it
+stays local rather than scattering, and it sorts by creation. FPC has no v7
+generator built in; it is about fifteen lines (48-bit unix millis + 74 random
+bits), and it wants a unit test that asserts monotonicity across a tight loop —
+two v7s generated in the same millisecond must still order correctly.
+
+It is also what makes a future backup **merge** possible (§11, question 7):
+"which QSOs does this backup not have" is answerable exactly, by GUID, rather
+than by guessing from serial and callsign.
 
 ---
 
@@ -293,7 +303,22 @@ want one for tests.
 
 **Rotation and naming** can be taken from TR4QT directly — timestamped
 `<base>_yyyyMMdd_HHmmss.db`, newest-first listing, delete beyond `maxBackups`
-(`BackupManager.cpp:262`).
+(`BackupManager.cpp:262`). This replaces today's single overwritten destination
+(`LOGSTUFF.PAS:5405`, `CopyFileA` with `bFailIfExists = False`).
+
+**And `Restore` is half the reason to use this API at all** — NY4I called it the
+more important half, and today there is no restore path of any kind. Same unit,
+same safety, opposite direction:
+
+```pascal
+function Restore(FileName: string; Destination: TSQLite3Connection;
+                 LockUntilFinished: boolean = true;
+                 DestinationDBName: string = 'main'): boolean;
+```
+
+See §11 question 7 for what has to surround it: detection, letting the operator
+choose a backup by timestamp and QSO count, and moving the damaged database
+aside rather than overwriting it.
 
 ---
 
@@ -434,74 +459,87 @@ test for the event-sourcing half of this plan.
 
 ---
 
-## 11. Open questions — NY4I
+## 11. Decisions — answered by NY4I, 2026-08-29
 
-1. **One database per contest, or one holding many?** TR4QT stores one file per
-   contest, named `<ContestType>_<StartDate>.db`
-   (`docs/File-Storage-Locations.md:185`), but its schema still has a `contests`
-   *table* with an autoincrement id and a FK from `qsos` — so the structure
-   allows many and the practice is one. I have proposed a **single-row `contest`
-   table** (`CHECK (id = 1)`), one file per contest, matching today's one `.cfg`
-   + one `.trw` and keeping a log a thing you can email. Say if you want many
-   contests per file instead — it changes every query and is much harder to undo
-   later than to decide now.
+All eleven settled. Recorded here so the DDL above and any later argument have
+one place to point at.
 
-2. **Where do the files live?** Today: beside the `.cfg` in the working
-   directory. TR4QT: `%LOCALAPPDATA%\TR4QT\logs\`. There is an existing tabled
-   decision here (`settings-location-appdata`) about probing writability and
-   telling the operator. Same answer for logs, or different?
+| # | question | decision |
+|---|---|---|
+| 1 | one database per contest, or many per file? | **one log per file.** The single-row `contest` table with `CHECK (id = 1)` in §4 stands |
+| 2 | where do the files live? | **`target/`, as today.** `%LOCALAPPDATA%` has merit but consistency with what we already do wins |
+| 3 | multipliers stored or derived? | **derived.** No `multipliers` table |
+| 4 | timestamp format | **INTEGER, and always UTC** |
+| 5 | GUID version | **UUIDv7** |
+| 6 | frequency unit | **Hz** — the lowest granularity needed |
+| 7 | backup trigger and generations | see below — the important half is RESTORE |
+| 8 | must a TR4QT log be readable by us? | **no.** TR4QT is a reference, not an interop target |
+| 9 | what happens to `.trw`? | **import only** |
+| 10 | delete `sqlite3.def`? | **already deleted** |
+| 11 | `TDBGrid` for View / Edit Log? | **agreed** — §11a |
 
-3. **Is the multiplier table stored or derived?** TR4QT stores one. Storing it
-   makes it a second source of truth that can disagree with the QSOs — and a
-   contest logger showing the wrong mult count is showing the wrong score.
-   **Derive it by query, store nothing**, which is also what §9a implies: a
-   `multipliers` table is a cache, and the only argument for it was a
-   performance one that does not survive ten thousand rows. I have left it out
-   of §4 on that basis — say if you disagree, because it is scoring-adjacent
-   and those calls are yours.
+Two of these change §4 as written: nothing about the schema, but 8 removes the
+last reason to stay shaped like TR4QT where we have a better answer, and 3
+confirms the `multipliers` table stays out.
 
-4. **Timestamps: unix INTEGER, or ISO-8601 TEXT?** TR4QT uses INTEGER unix
-   seconds. INTEGER sorts and indexes better and is unambiguous about UTC; TEXT
-   is readable when someone opens the file in a SQLite browser, which for a
-   format operators may inspect is a real argument. I lean INTEGER with a view
-   for readability. Also: seconds or milliseconds? Our log records to the
-   second today.
+### 7 in full — backup, generations, and the restore that does not exist
 
-5. **GUID version — v7 as recommended, or v4?** v7 is time-ordered and indexes
-   better; v4 is what TR4QT uses and is trivially available everywhere.
+**What happens today, verified rather than recalled.** `SaveLogFileToFloppy`
+(`LOGSTUFF.PAS:5405`) does
 
-6. **`frequency_hz` INTEGER — confirm the unit.** The current record's
-   frequency unit needs confirming before this is fixed (the background
-   verification will report it). If we store Hz and the engine works in tens of
-   Hz, the conversion must be in exactly one place.
+```pascal
+Windows.CopyFileA(TR4W_LOG_FILENAME, TR4W_FLOPPY_FILENAME, False)
+```
 
-7. **Backup trigger.** On a timer, on N QSOs, on close, or on demand from a
-   menu? TR4QT's `BackupManager` has rotation but the policy is separate. And
-   how many generations to keep?
+— `bFailIfExists = False`, so it **overwrites one destination file**. It is
+driven by two `csJSON` settings, `BACKUP LOG FILE NAME` and
+`BACKUP LOG FREQUENCY` (`uCFG.pas:498-499`), and does nothing at all when the
+name is empty. The DOS heritage is in the routine's name: this is the floppy
+backup. NY4I's description — *"it's just backing up, it overwrites the backup
+file"* — is exactly right.
 
-8. **Does a TR4QT log need to be readable by us, or ours by TR4QT?** If yes,
-   the schema differences in §4 have a cost and some should be reconsidered. If
-   no — which I assume — then the remaining reason to stay close to TR4QT's
-   shape is only familiarity.
+Note what that means alongside §6: **the current backup is a plain file copy of
+a live file**, which is precisely the mechanism SQLite's own documentation warns
+can yield a corrupt backup if the machine loses power mid-copy. Moving to the
+online backup API fixes a real hazard that exists today, not a hypothetical one.
 
-9. **What happens to `.trw` after the migration?** Import-only, or do we keep
-   writing both for a release so an operator can go back? I would write only
-   SQLite and keep the importer permanently, but a dual-write release is the
-   conservative option and it is cheap.
+**Generations: yes, but they are the easy half.** Timestamped names and a
+rotation count, taken from TR4QT's `BackupManager` (`listBackups`,
+`rotateBackups`) which already does newest-first ordering and delete-beyond-N.
+One setting for how many to keep.
 
-10. **Delete `tr4w/include/sqlite3.def`?** Not needed by a dynamically-bound
-    build (§9). Kept only in case you want it for something else.
+**Restore is the half that does not exist, and NY4I named it as the more
+important one.** Today there is no path from a backup back into the live log at
+all — the operator would close TR4W and copy a file by hand, and would have to
+know which file. So this is new design, not a port, and the pieces are:
 
-11. **`TDBGrid` for View / Edit Log — agreed?** §11a argues yes for that window
-    and no for the main-window log. If yes, a second question follows: does the
-    grid get its own `TSQLQuery` (simplest, puts SQL in a UI unit for one
-    read-only window), or does the domain hand it a dataset (keeps the layering
-    clean, slightly more machinery)? I lean to the first **for this window
-    only**, on the grounds that a read-only browser is not where the layering
-    rule earns its keep — but it is the sort of exception that spreads, so it
-    should be a decision with a reason attached rather than a shortcut.
+1. **Detection.** `PRAGMA integrity_check` and `foreign_key_check` on open (§7),
+   and a QSO-count comparison after each backup. An integrity failure must be
+   **reported and actionable**, never silently repaired — consistent with this
+   tree's standing rule.
+2. **Choosing.** The operator has to see what the candidates are: each backup's
+   timestamp and its QSO count. TR4QT already computes the second
+   (`getBackupQSOCount`, counting `WHERE deleted = 0`) which is exactly the
+   number an operator can recognise — "the one from 14:32 with 812 QSOs".
+3. **Restoring.** `TSQLite3Backup.Restore(FileName, Destination)` — the same
+   API in the other direction, so the copy back is as safe as the copy out.
+4. **Not losing the damaged file.** A restore must move the suspect database
+   aside, not overwrite it. The QSOs it still holds may be the newest ones, and
+   a merge may be possible later; a restore that destroys the evidence turns a
+   recoverable afternoon into a lost one.
+5. **When.** At minimum on demand. Offering it automatically at startup when the
+   integrity check fails is the case that actually helps an operator at 03:00
+   in a contest — that is the moment the feature is for.
 
----
+**Open, and deliberately not decided here:** whether a restore should attempt to
+MERGE the surviving rows of the damaged log into the restored one. It is
+attractive — GUIDs make "which QSOs does the backup not have" answerable
+exactly — and it is also the kind of thing that quietly does the wrong thing at
+the worst moment. My recommendation is to ship restore-and-set-aside first, and
+treat merge as a separate feature with its own tests. Flagging it now because
+the GUID decision (5) is what makes it possible later, and is one more reason
+that decision is right.
+
 
 ## 11a. The two grids — `TDBGrid` or a virtual list?
 
@@ -565,7 +603,7 @@ to one `ORDER BY` / `WHERE` — which is the thing SQLite is actually good at, a
 a visible improvement for an operator checking a log after a contest.
 
 So: **`TDBGrid` for View / Edit Log, read-only, with the edit form still doing
-the editing.** Recommendation, not a decision — see question 11.
+the editing.** Agreed by NY4I, question 11.
 
 ### What the two look like in Pascal
 
