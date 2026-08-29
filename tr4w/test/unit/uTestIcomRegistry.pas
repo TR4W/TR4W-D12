@@ -76,7 +76,7 @@ var
    mismatches: string;
    checked: integer;
 begin
-   BeginTest('every registered CI-V radio uses its LOGRADIO CI-V address');
+   BeginTest('every CI-V radio sets the address the registry declares for it');
    mismatches := '';
    checked := 0;
    for m := Low(InterfacedRadioType) to High(InterfacedRadioType) do
@@ -85,10 +85,8 @@ begin
          begin
          Continue;
          end;
-      if RadioParametersArray[m].rt <> rtICOM then
-         begin
-         Continue;
-         end;
+      { ASK THE OBJECT, not a table, whether this is an Icom -- see the
+        `r is TIcomRadio` guard below, which is now the only test. }
       r := Build(m);
       if r = nil then
          begin
@@ -98,11 +96,11 @@ begin
          if r is TIcomRadio then
             begin
             Inc(checked);
-            if TIcomRadio(r).RadioAddress <> RadioParametersArray[m].RA then
+            if TIcomRadio(r).RadioAddress <> RegisteredCIVAddress(m) then
                begin
-               mismatches := mismatches + Format('%s: factory $%2.2x, legacy $%2.2x; ',
+               mismatches := mismatches + Format('%s: driver $%2.2x, registry $%2.2x; ',
                   [RadioTypeToken(m), TIcomRadio(r).RadioAddress,
-                   RadioParametersArray[m].RA]);
+                   RegisteredCIVAddress(m)]);
                end;
             end;
       finally
@@ -175,8 +173,7 @@ begin
       begin
       // Post-legacy radios are skipped: LOGRADIO's sets predate them, so
       // there is no legacy value to disagree with. See MarkPostLegacy.
-      if (not IsRegistered(m)) or (RadioParametersArray[m].rt <> rtICOM)
-         or uRadioRegistry.RegisteredPostLegacy(m) then
+      if (not IsRegistered(m)) or uRadioRegistry.RegisteredPostLegacy(m) then
          begin
          Continue;
          end;
@@ -186,6 +183,17 @@ begin
          Continue;
          end;
       try
+         { CI-V ONLY, and the OBJECT is what says so. This used to read
+           RadioParametersArray[m].rt = rtICOM, from a table that no longer
+           exists; asking whether the driver IS a TIcomRadio is the same
+           question put to the thing that actually knows. Without this the
+           loop compares Kenwoods and Yaesus against Icom-specific lists
+           and reports 100 disagreements -- which is exactly what it did
+           for one build here. }
+         if not (r is TIcomRadio) then
+            begin
+            Continue;
+            end;
          Inc(checked);
          // All FOUR sets, not two.  An earlier version checked only RIT and VFOB
          // and passed while 26 radios were silently missing split and TX-status
@@ -216,19 +224,39 @@ end;
 procedure TIcomRegistryTests.Test_RegistryCoversEveryCIVModel;
 var
    m: InterfacedRadioType;
+   r: TFactoryRadioBase;
    missing: string;
 begin
    // The point of the migration: no CI-V radio left on the legacy path.
-   BeginTest('every rtICOM model in the legacy table is registered in the factory');
+   { WAS: 'every rtICOM model in the legacy table is registered'. That asked
+     whether the migration had finished, and it finished in 2026-08. The
+     question worth asking now is a factory invariant: a radio that BEHAVES
+     as CI-V must have an address declared for it, because a missing one
+     reads as the perfectly legal address $00 and the radio simply never
+     answers. }
+   BeginTest('every CI-V radio has a CI-V address declared in the registry');
    missing := '';
    for m := Low(InterfacedRadioType) to High(InterfacedRadioType) do
       begin
-      if (RadioParametersArray[m].rt = rtICOM) and (not IsRegistered(m)) then
+      if not IsRegistered(m) then
          begin
-         missing := missing + RadioTypeToken(m) + ' ';
+         Continue;
          end;
+      r := Build(m);
+      if r = nil then
+         begin
+         Continue;
+         end;
+      try
+         if (r is TIcomRadio) and (RegisteredCIVAddress(m) = 0) then
+            begin
+            missing := missing + RadioTypeToken(m) + ' ';
+            end;
+      finally
+         r.Free;
       end;
-   CheckEquals('', missing, 'unmigrated CI-V models: ' + missing);
+      end;
+   CheckEquals('', missing, 'CI-V radios with no declared address: ' + missing);
 end;
 
 procedure TIcomRegistryTests.RunAllTests;

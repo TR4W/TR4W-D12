@@ -464,7 +464,19 @@ string-id radio with no enum member) — covering every selectable `InterfacedRa
 - `LOGRADIO.PAS` went **4,416 → 3,165 lines** with 11 model dispatches → 0. All seven Icom quirk
   typesets (`IcomRadiosThatSupportRIT`, VFOB, PSKMode, SplitSetOnly, ModeSetNoFilter,
   TXStatusUnreadable, 6to60WPMKeyer) and the last three `RadioSupports*` typesets are deleted;
-  `RadioParametersArray` is unreferenced. **LOGRADIO now holds no per-model radio knowledge.**
+  ~~`RadioParametersArray` is unreferenced.~~ **Both enum-indexed radio tables are DELETED
+  (2026-08-28) — `RadioParametersArray` and `InterfacedRadioTypeSA`.** "Unreferenced" was true of
+  the running program and missed the point: they were `array[InterfacedRadioType]`, so the
+  *compiler* demanded a row for every radio anyone added, and the unit tests then compared the new
+  radio against a row someone had just invented for it. That is a second definition of what a radio
+  is, and it had already drifted — the name table was missing `TS140` and carried a `TS530` the enum
+  never had, so **a config saying `TS440` selected the TS-140 driver** and `TS140` could not be
+  selected at all. Four Kenwoods, silently, for years.
+
+  The factory owns per-model data now; `uRadioRegistry.RadioTypeToken` derives the config-file
+  spelling from the enum itself, so that drift is unrepresentable rather than merely fixed.
+  **`Lint-NoRadioTables` fails the build if a hand-typed table indexed by a radio enum comes back.**
+  **LOGRADIO now holds no per-model radio knowledge.**
 - The `is TIcomRadio` / `is TKenwoodLAN` credential casts became virtuals on `TFactoryRadioBase`
   (`ApplyNetworkCredentials`, `ApplyDataModeID` — named for the *concept*, not the vendor).
 

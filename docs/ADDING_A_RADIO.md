@@ -152,12 +152,21 @@ the next command you implement may divide them differently.
 5. `RegisterRadio` — **one entry per model an operator can buy**, with its own
    display name. A duplicate display name makes a model invisible in the radio
    list.
-6. Add the unit to `tr4w.dpr` **and** to `test/unit/tr4w_unit_tests.dpr`.
+6. Add the `InterfacedRadioType` member to `VC.pas`, and the unit to
+   `tr4w.dpr` **and** `test/unit/tr4w_unit_tests.dpr`.
    ⚠ List it explicitly in both. Radios self-register from unit initialization,
    so a unit reached only through another unit's `uses` clause silently vanishes
    — with no compile error — the moment that chain changes.
-7. **Write tests with paired opposites** (§5).
-8. Add a row to `RADIO_MIGRATION_ASSUMPTIONS.md` for anything not verified.
+7. **That is the whole list. Do not touch `LOGRADIO.PAS`.** It used to hold
+   two tables indexed by the radio enum — `RadioParametersArray` and
+   `InterfacedRadioTypeSA` — which the compiler forced you to extend for
+   every new radio. Both are **deleted** (2026-08-28). They were a second
+   definition of what a radio is, and the name table had drifted one row
+   from the enum: a config saying `TS440` selected the TS-140 driver, and
+   `TS140` could not be selected at all. `Lint-NoRadioTables` fails the
+   build if anything of that shape comes back.
+8. **Write tests with paired opposites** (§5).
+9. Add a row to `RADIO_MIGRATION_ASSUMPTIONS.md` for anything not verified.
 
 ---
 
@@ -219,7 +228,7 @@ Ranged traits are fields, not flags: `CWSpeedMin` / `CWSpeedMax`.
 | `FHasClarifier` | `True` | `False` if the chart has no CLAR command (FT-847) |
 
 `$FF` = "the radio does not have this mode", matching the legacy
-`RadioParametersArray` `DIGL`/`DIGU` convention.
+D7 `DIGL`/`DIGU` convention (the table that recorded it is gone; the convention is not).
 
 ### Yaesu — ASCII legacy / rtYaesu2 (`uRadioYaesuASCIILegacy.pas`)
 
@@ -278,7 +287,7 @@ Two further traps in mode handling:
 
 | trait | notes |
 |---|---|
-| `RadioAddress` | CI-V address — **must** match `RadioParametersArray`; a test enforces this |
+| `RadioAddress` | CI-V address — **must** match the `civAddress` on its own `RegisterRadio`; a test enforces this |
 | `FDirectFreqRoute` | skip the `$07 $D2` active-VFO query |
 | `FModeSetIncludesFilter` | `False` when `$06` takes the mode byte only (IC-718) |
 
@@ -301,6 +310,46 @@ written against it, for a radio whose transport (WebSocket) did not exist in TR4
 
 **The isolation claim held.** Adding it required changes to exactly two project
 files — `tr4w.dpr` and `test/unit/tr4w_unit_tests.dpr` — plus the two new units.
+
+---
+
+## 3c. Re-checked by adding a radio the legacy tables never knew (IC-7110, 2026-08-28)
+
+The claim above was **only true for a radio with a string id**. `uRadioTCI` has no
+`InterfacedRadioType` member, so it never touched anything indexed by that enum.
+Adding an ordinary enum-keyed radio told a different story, and it is worth
+knowing what it cost before the clean-up:
+
+| what broke | why |
+|---|---|
+| the build | `RadioParametersArray` and `InterfacedRadioTypeSA` were `array[InterfacedRadioType]`, so the compiler demanded a row in each |
+| six unit tests | they cross-check the factory against LOGRADIO's frozen `RadioSupports*` sets — which have no entry for a radio announced last week |
+
+Neither was a defect in the radio. The second one is the trap: the "legacy value"
+for a new model is not `False`, it is **absent**, and a test reading absence as
+`False` reports the factory as wrong for stating a fact the legacy record never
+had the chance to hold. Editing those sets so they agree would destroy the
+historical record they exist to be.
+
+**Both tables are now deleted** and the factory declares the rest:
+
+- **`MarkPostLegacy(<MODEL>)`** — put this in the `initialization` of any radio
+  that post-dates the D7 program, beside its `RegisterRadio`. The legacy
+  cross-checks then skip it. It is off by default, so a radio that forgets to
+  declare it fails loudly rather than quietly.
+- **`MarkConfigToken(<MODEL>, '<spelling>')`** — only if `tr4w.ini` must spell the
+  model differently from its enum name. Five models do (`IC910H`, `FTX-1`,
+  `TRX-MANAGER`, `HAMLIB-ANY`, and `NONE`). A new radio never needs this.
+
+Two pins are **not** skipped for a new radio, because they are the factory's own
+invariants rather than legacy comparisons — and both guard silent failures:
+
+- a `CW_PINS` row in `uTestCWFraming.pas` if the radio declares `rcCWByCAT`. Without
+  one its `maxLen` is an uninitialised zero, which is how the TS-850 shipped
+  advertising "no limit";
+- membership of `CREDENTIALED_NETWORK_RADIOS` or `OPEN_NETWORK_RADIOS` in
+  `uTestRegistryTaxonomy.pas` if the radio has a network link. The comment there
+  says out loud that a missing radio "forces a decision".
 **No edit to `TFactoryRadioBase`, `uRadioRegistry`, `uRadioPolling`, `LOGRADIO`,
 `VC.pas`, or any dialog.** A new radio with a new transport, a new protocol and a
 new framing did not perturb the shared code at all. Registry lint went 99 → 100
@@ -334,7 +383,10 @@ one driver.
 
 In this order:
 
-1. **The manufacturer's CAT manual** for *that* model.
+1. **The manufacturer's CAT manual** for *that* model. For a radio announced too
+   recently to have one, say so in the unit header and mark every inherited value
+   as inherited — see `uRadioIcom7110.pas`, which is an IC-705 clone and states
+   that plainly rather than reading like a verified driver.
 2. **An independent implementation** — hamlib, or the D7 tree at `C:\TR4W`.
 3. **TR4W's own code** — authoritative for "what does TR4W do?", which is the
    question a migration must answer. Grep D12 and D7 before opening a manual for

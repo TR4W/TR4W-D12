@@ -1,4 +1,4 @@
-﻿# Runs every gating lint, once, from one place.
+# Runs every gating lint, once, from one place.
 #
 # WHY THIS EXISTS.  The lint list lived only in tr4w.dproj's PreBuildEvent, so
 # it gated the DELPHI build and nothing else.  As FPC becomes the shipping
@@ -51,6 +51,9 @@ $build = $PSScriptRoot
 # cost seconds rather than milliseconds on a cold run.
 $lints = @(
    @{ Name = 'Lint-RadioRegistry';   Arg = $src;     NeedsFpc = $false }
+   # Bans a hand-typed table indexed by a radio enum. Two of them drifted from
+   # VC.pas and four Kenwoods selected the wrong driver -- see the script.
+   @{ Name = 'Lint-NoRadioTables'; Arg = $src;     NeedsFpc = $false }
    @{ Name = 'Lint-PollRadioState';  Arg = $src;     NeedsFpc = $false }
    @{ Name = 'Lint-PCharAnsi';       Arg = $src;     NeedsFpc = $false }
    # THE DOMAIN LAYER STAYS ONE.  Shipped with the first domain unit rather

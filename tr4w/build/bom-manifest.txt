@@ -20,6 +20,7 @@ src\LPT.pas
 src\MainUnit.pas
 src\radioFactory\uFactoryRadioBase.pas
 src\radioFactory\uRadioIcom705.pas
+src\radioFactory\uRadioIcom7110.pas
 src\radioFactory\uRadioIcom7300MK2.pas
 src\radioFactory\uRadioIcom7600.pas
 src\radioFactory\uRadioIcom7610.pas
