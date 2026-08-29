@@ -174,6 +174,7 @@ uses
   uPrefsSearch in 'src\uPrefsSearch.pas',
   uConfigValues in 'src\uConfigValues.pas',
   uCrashLog in 'src\uCrashLog.pas',
+  uCrashLogLCL in 'src\ui\lcl\uCrashLogLCL.pas',
   uCFG in 'src\uCFG.pas',
   uCRC32 in 'src\uCRC32.pas',
   uCRC16 in 'src\uCRC16.pas',
@@ -430,19 +431,22 @@ uses
   uProgramMain in 'src\uProgramMain.pas';
   //cty in 'src\cty.pas';  // Excluded: unit name 'cty' conflicts with global variable 'CTY' from uCTYDAT
 
-{ LANG_<xxx>, not the LANG string constant -- see the note in src\tr4w.inc.
-  LANG_ENG is derived by that include, which is pulled in at the top of this file. }
-{$IFDEF LANG_ENG}{$R res\tr4w_eng.res}{$ENDIF}
-{$IFDEF LANG_RUS}{$R res\tr4w_rus.res}{$ENDIF}
-{$IFDEF LANG_SER}{$R res\tr4w_ser.res}{$ENDIF}
-{$IFDEF LANG_ESP}{$R res\tr4w_esp.res}{$ENDIF}
-{$IFDEF LANG_MNG}{$R res\tr4w_mng.res}{$ENDIF}
-{$IFDEF LANG_POL}{$R res\tr4w_pol.res}{$ENDIF}
-{$IFDEF LANG_CZE}{$R res\tr4w_cze.res}{$ENDIF}
-{$IFDEF LANG_ROM}{$R res\tr4w_rom.res}{$ENDIF}
-{$IFDEF LANG_CHN}{$R res\tr4w_chn.res}{$ENDIF}
-{$IFDEF LANG_GER}{$R res\tr4w_ger.res}{$ENDIF}
-{$IFDEF LANG_UKR}{$R res\tr4w_ukr.res}{$ENDIF}
+{ The binary resource: icon, cursor and the one surviving Win32 dialog template.
+
+  UNCONDITIONAL since 2026-08-29.  Ten sibling links stood here, one per
+  language, each guarded by an IFDEF on LANG_<xxx> -- spelled without its braces
+  because a directive inside a brace comment CLOSES it -- and no build has
+  defined any
+  of those symbols since the compile-time language matrix was retired.  So ten
+  of the eleven lines could not compile, and the eleventh was guarded on
+  LANG_ENG: a symbol tr4w.inc derives ONLY when none of the other ten is set.
+  Pass -dLANG_RUS today and the program links no icon, no cursor and no dialog
+  template at all, because the arm that would have supplied them was deleted
+  years before the arm that guards them was.
+
+  There is one build and one resource.  Guarding it on the language of a matrix
+  that no longer exists cannot make it more correct, only conditionally absent. }
+{$R res\tr4w_eng.res}
 
 {$R 'Win11.res'}
 

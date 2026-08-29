@@ -48,12 +48,52 @@ unit uCrashLog;
   installed before. Continuing after an unhandled exception would mean running
   with a half-updated log or a half-drawn window, which turns a crash the
   operator can report into a corruption they cannot.
+
+  ONLY THE FIRST HOOK IS IN THIS UNIT.  The second one is in
+  ui\lcl\uCrashLogLCL, and the split is not tidiness -- it is a build break that
+  stood for six days.
+
+  This unit used to reference Forms for those two statements, and TF references
+  this unit so a fault on a worker thread would not be silent.  That gave
+
+      tr4wserver.dpr -> tr4wserverUnit -> TF -> uCrashLog -> Forms
+
+  and tr4wserver is a CONSOLE program whose unit search path deliberately
+  excludes the LCL.  It stopped linking on 2026-08-23 and nothing noticed for
+  three days, because that search path is the only thing guarding the boundary
+  and it only fires on a full build.
+
+  The IFDEF FPC that used to guard the LCL half -- spelled without its braces
+  here, because a compiler directive written inside a brace comment CLOSES the
+  comment -- was on the WRONG AXIS.  It
+  asked which COMPILER, when the question is whether this PROGRAM has a widget
+  set.  Both programs are FPC; only tr4w.exe has Forms.  A conditional cannot
+  answer that question at all -- only the unit graph can, which is why the
+  answer is a second unit and not a define.
+
+  The server gains crash logging by the same move, which it has never had.
 }
 
 interface
 
-{ Call once at startup, after the logger exists.  Idempotent. }
+uses
+   SysUtils;    // TObject, Exception -- in the INTERFACE because
+                // WriteCrashReport is exported; see below
+
+{ Call once at startup, after the logger exists.  Idempotent.
+
+  INSTALLS THE RTL HOOK ONLY.  The LCL half lives in ui\lcl\uCrashLogLCL, and
+  a program with an LCL calls THAT, which calls this.  See the unit header. }
 procedure InstallCrashLog;
+
+{ The common writer, exported so the LCL hook produces an identical record.
+
+  aSource names which hook caught it -- 'RTL' or 'LCL' -- and is the only
+  difference between the two paths.  Everything that reports a crash goes
+  through here so the hooks cannot drift into different-looking output. }
+procedure WriteCrashReport(const aSource: string; aObj: TObject;
+                           aAddr: CodePointer;
+                           aFrameCount: Longint; aFrames: PCodePointer);
 
 { Say in the log whether this run can produce usable backtraces.  Called by
   InstallCrashLog. }
@@ -109,12 +149,17 @@ procedure ReportOffMainThread(const aSite: string; const aCaller: CodePointer);
 implementation
 
 uses
-   SysUtils,
+   // SysUtils is in the INTERFACE uses -- WriteCrashReport's signature needs
+   // TObject there. Naming it twice is a duplicate-identifier error, not a
+   // no-op.
    Windows,    // GetCurrentThreadId
    Version,    // TR4W_CURRENTVERSION_NUMBER -- a raw address is useless
                // unless the exact binary that produced it can be identified
-   Forms,      // Application.OnException -- the LCL's own handler
    Log4D;      // our own logger -- see CrashLogger
+
+   { NO Forms, AND THAT IS THE POINT OF THE UNIT.  Everything here must link
+     into a console program.  If something in this file comes to want the LCL,
+     it belongs in uCrashLogLCL instead -- see the unit header. }
 
 { NOT MainUnit's `logger` GLOBAL, AND THAT IS DELIBERATE.
 
@@ -144,15 +189,8 @@ begin
    Result := GCrashLogger;
 end;
 
-type
-   TCrashReporter = class(TObject)
-   public
-      procedure HandleLCLException(Sender: TObject; E: Exception);
-   end;
-
 var
    GPreviousExceptProc: TExceptProc = nil;
-   GReporter: TCrashReporter = nil;
    GInstalled: boolean = False;
    GMainThreadId: DWORD = 0;
 
@@ -281,19 +319,6 @@ begin
       begin
       GPreviousExceptProc(Obj, Addr, FrameCount, Frames);
       end;
-end;
-
-procedure TCrashReporter.HandleLCLException(Sender: TObject; E: Exception);
-begin
-   // ExceptAddr/ExceptFrames rather than the exception object alone: the LCL
-   // hands over only E, and an exception without a location is barely more
-   // useful than "it crashed".
-   WriteCrashReport('LCL', E, ExceptAddr, ExceptFrameCount, ExceptFrames);
-
-   // Then the LCL's own dialog, unchanged.  Suppressing it would hide from the
-   // operator a fault we have only written to a file they have not been asked
-   // to look at.
-   Application.ShowException(E);
 end;
 
 procedure EarlyTrace(const aMessage: string);
@@ -485,13 +510,11 @@ begin
    GPreviousExceptProc := ExceptProc;
    ExceptProc := @CatchUnhandledException;
 
-   GReporter := TCrashReporter.Create;
-   // NO @ on the method reference: tr4w.inc compiles every unit in
-   // {$MODE Delphi}, where a method is assigned directly. The ObjFPC spelling
-   // with @, which the FreePascal wiki example uses, does not compile here.
-   Application.OnException := GReporter.HandleLCLException;
-
-   CrashLogger.Info('[CRASH] unhandled-exception logging installed (RTL + LCL)');
+   // 'RTL' not 'RTL + LCL': a program that has an LCL says so itself, from
+   // uCrashLogLCL, on the line after this one. The old message claimed both
+   // hooks unconditionally, which in a console program would have been a
+   // written record of a handler that was never installed.
+   CrashLogger.Info('[CRASH] unhandled-exception logging installed (RTL)');
    ReportSymbolState;
 end;
 
@@ -500,6 +523,5 @@ initialization
 
 finalization
    DoneCriticalSection(GOffThreadLock);
-   FreeAndNil(GReporter);
 
 end.

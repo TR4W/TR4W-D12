@@ -93,7 +93,8 @@ FPC build passes the unit tests (3978/0) and the golden corpus (22/0/4), runs th
 
 ```powershell
 .\FullBuild.ps1                    # lints + unit tests + app + tr4wserver
-.\FullBuild.ps1 -SkipServer        # tr4wserver cannot link -- see Multi-user networking
+.\FullBuild.ps1 -SkipServer        # DON'T: the server build is the only guard on the
+                                   # console/LCL boundary -- see Multi-user networking
 .\FullBuild.ps1 -BuildInstaller    # + the NSIS installer
 ```
 
@@ -256,11 +257,36 @@ band map, stations, SCP/master, both dupe sheets, the five remaining-multiplier
 windows, PostScores, HamScore, Intercom, MP3 Recorder, both radio panels, and
 Network — then **Telnet and MMTTY**, which this file listed as the last two
 holdouts until 2026-08-26. `uTelnetForm` and `uMMTTYForm` are in `tr4w.dpr`;
-the DX cluster window landed in `00e9a987`. `Lint-Win32Dialogs[ui]` is at 853.
+the DX cluster window landed in `00e9a987`. `Lint-Win32Dialogs[ui]` is at 748.
 
-**A CONVERTED WINDOW LOSES ITS TRANSLATIONS, SILENTLY, AND EVERY CONVERSION SO
-FAR HAS.** The Win32 code assigned captions from `TC_`/`RC_` constants, which
-are what the 16 `.po` catalogues translate. A designed form carries its caption
+**AND SO IS EVERY DIALOG (2026-08-29).** The last Win32 dialog template in use
+was **73**, the server-log synchronize window; it is
+`src/ui/lcl/uServerLogForm.pas`. `tDialogBox` has no live caller left. Two
+things that conversion is worth remembering for: a control id can be written by
+`SetDlgItemInt` from **any** unit holding the window handle — the 'sent records'
+field looked dead from `uGetServerLog` and its writer was in `uNet` — and a
+worker thread that used to poke dialog items must now marshal, which
+`uGetServerLog.ReportSyncProgress` does by `SendMessage` so the handler runs on
+the main thread.
+
+**A CONVERTED WINDOW LOSES ITS TRANSLATIONS, SILENTLY, AND EVERY CONVERSION UP
+TO 2026-08-29 DID.** `uServerLogForm` is the pattern to copy instead: its `.lfm`
+text is an explicit designer placeholder and `HandleShow` assigns every caption
+from the constant. The `RC_` names it uses had never been translatable at all —
+their text reached the screen from the compiled `.RES`, so `pas2res` left them
+out on purpose — and **naming them from Pascal is what promotes them**, because
+the generator emits every `RC_` a source file references. Run `pas2res` and then
+`po_merge` after a conversion.
+
+**NEVER run `pas2po` to pick up new strings.** It rebuilds a catalogue from the
+`TC_`/`RC_` tables alone and drops every `.lfm` and resourcestring key the
+Lazarus harvest contributed — measured 2026-08-29: **2,203 real translations
+destroyed across ten catalogues in one run**, with no warning and a clean exit.
+`po_merge --pot` is the additive tool and the only safe one; `pas2po` is for
+creating a *new* language.
+
+The underlying trap: the Win32 code assigned captions from `TC_`/`RC_`
+constants, which are what the 16 `.po` catalogues translate. A designed form carries its caption
 in the `.lfm`, and every conversion has re-typed the English there and left the
 constant behind. Telnet is the clearest case: the `.lfm` says
 `Caption = 'Connect'` while `TC_TELNET_CONNECT` sits in the catalogues with
@@ -501,24 +527,27 @@ ready: gate post-connect sends on link *stability*, not presence.
 centralised log, multipliers, dupe checking, serial-number lockout, time sync. Binary packet
 protocol with CRC32 (`src/utils/networkmessageutils.pas`).
 
-~~built by `FullBuild.ps1` as a normal step — it compiles under FPC unchanged and links no LCL~~
-**IT HAS NOT COMPILED SINCE 2026-08-23, AND `FullBuild.ps1` NOW SKIPS IT.** `a3c671cc` added a
-`TF` → `uCrashLog` edge so a fault on a worker thread would not be silent; `uCrashLog` uses
-`Forms`. So the chain
+**It is built by `FullBuild.ps1` as a normal step again (2026-08-29).** It had not compiled since
+2026-08-23: `a3c671cc` added a `TF` → `uCrashLog` edge so a fault on a worker thread would not be
+silent, and `uCrashLog` used `Forms`, so the chain
 
     tr4wserver.dpr → tr4wserverUnit → TF → uCrashLog → Forms
 
-drags the LCL into a console program whose search paths deliberately exclude it. **Nothing
-surfaced it for three days**, because the server's LCL-free search path is the only guard and it
-fires only when someone runs a full build. Use `-SkipServer` until the LCL conversion lands (NY4I
-is taking it, 2026-08-26); the switch is loud and stamps the build unshippable.
+dragged the LCL into a console program whose search paths deliberately exclude it. **Nothing
+surfaced it for three days**, because that search path is the only guard on the boundary and it
+fires only on a full build — then `-SkipServer` kept it hidden for six more.
 
-The `{$IFDEF FPC}` guard in `uCrashLog` is on the **wrong axis**: it asks which *compiler*, when
-the question is whether this *program* has an LCL. Both programs are FPC; only `tr4w.exe` has
-Forms. The layering fix is to split `uCrashLog` — the RTL reporter (`LogCaughtException`,
-`EarlyTrace`, `OnMainThread`, the `ExceptProc` hook) links anywhere; only `Application.OnException`
-and `Application.ShowException` need the LCL. Two statements move, and the server would then get
-crash logging, which today it has none of.
+**There was no LCL conversion to wait for.** `uCrashLog` is split instead: it keeps the RTL
+reporter (`LogCaughtException`, `EarlyTrace`, `OnMainThread`, the `ExceptProc` hook) and links
+anywhere, and the two statements that need a widget set — `Application.OnException` and
+`Application.ShowException` — are `src/ui/lcl/uCrashLogLCL.pas`. A program with an LCL calls
+`InstallCrashLogLCL`, which installs both; `tr4wserver` calls `InstallCrashLog` and now gets crash
+logging, which it never had.
+
+The `{$IFDEF FPC}` that used to guard the LCL half was on the **wrong axis** and could not have
+helped: it asks which *compiler*, when the question is which *program* has a widget set. Both are
+FPC. No conditional can answer that — only the unit graph can, which is why the answer is a second
+unit. **`-SkipServer` now also warns that you have skipped the only guard on that boundary.**
 
 Client side: `src/uNetClient.pas`, `src/uNet.pas`, `src/trdos/LogNet.pas`,
 `src/uGetServerLog.pas`.

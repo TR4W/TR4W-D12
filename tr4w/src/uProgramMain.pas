@@ -175,6 +175,7 @@ uses
   uPrefsSearch,
   uConfigValues,
   uCrashLog,
+  uCrashLogLCL,
   uCFG,
   uCRC32,
   uMP3Recorder,
@@ -787,7 +788,11 @@ begin
    // fault. Until now an unhandled exception left tr4w.log ending in the
    // ordinary unit finalizations -- indistinguishable from a clean exit --
    // so a crash report could only say that the program had closed.
-   InstallCrashLog;
+   // The LCL entry point, which installs the RTL hook too.  This
+   // program has a widget set; tr4wserver does not and calls
+   // InstallCrashLog directly.  See the uCrashLogLCL header for
+   // why that is a second unit and not a define.
+   InstallCrashLogLCL;
 
    // BATCH MODE, decided here rather than at the /EXPORT block far below,
    // because two things before that block need to know.

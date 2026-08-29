@@ -455,8 +455,14 @@ if ($SkipServer)
    {
    $serverExe = $null
    Write-Host ''
-   Write-Host 'TR4WServer SKIPPED (-SkipServer) -- pending its LCL conversion.' -ForegroundColor Yellow
+   Write-Host 'TR4WServer SKIPPED (-SkipServer).' -ForegroundColor Yellow
    Write-Host '  the multi-op server is NOT in this build; do not ship it.' -ForegroundColor Yellow
+   # It said "pending its LCL conversion" from 2026-08-23 to 2026-08-29. There
+   # was no conversion to pend on: the server had simply acquired a path to
+   # Forms through TF -> uCrashLog, and the fix was to split uCrashLog.
+   Write-Host '  AND you have skipped the only guard on the console/LCL boundary --' -ForegroundColor Yellow
+   Write-Host "  the server's LCL-free search path is what catches a unit that has" -ForegroundColor Yellow
+   Write-Host '  quietly grown a Forms dependency. Nothing else looks.' -ForegroundColor Yellow
    }
 else
    {
