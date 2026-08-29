@@ -227,8 +227,12 @@ begin
      per-slot CAT dialog. They were the last route to it after it came off the
      menu -- and the reason deleting the dialog was not just a matter of
      removing its two menu arms: an installed accelerator whose id has no
-     handler fires a WM_COMMAND into nothing. }
-   CheckEquals(94, installed, 'installed bindings (the table read out of the binary)');
+     handler fires a WM_COMMAND into nothing.
+
+     94 until 2026-08-29, when Ctrl+O went with the Missing Mults report --
+     its menu row was commented out by N4AF back in 4.37.10 and the MULTS
+     window shows the same thing, so the accelerator was the only way in. }
+   CheckEquals(93, installed, 'installed bindings (the table read out of the binary)');
    CheckEquals(4, displayOnly, 'display-only rows');
 
    // Named individually: each is here for a DIFFERENT reason and losing any one

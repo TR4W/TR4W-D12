@@ -119,7 +119,6 @@ uses
   uSynTime,
   uBeacons,
   uDialogs,
-  uMissingMults,
   uLogSearch,
   Windows,
   Messages,
@@ -4849,15 +4848,6 @@ begin
 
     menu_ctrl_note:
       tr4w_add_note_in_log;
-
-    menu_ctrl_missmultsreport:
-      begin
-        if (ActiveDXMult = NoDXMults) or (not MultByBand) then
-           begin
-           Exit;
-           end;
-        tDialogBox(74 {45}, @MissingMultsReportProc);
-      end;
 
     menu_ctrl_redoposscalls:
       begin

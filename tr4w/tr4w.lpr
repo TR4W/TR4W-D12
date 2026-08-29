@@ -71,7 +71,6 @@ uses
   uTextFitAudit in 'src\ui\lcl\uTextFitAudit.pas',
   uNewContest in 'src\uNewContest.pas',
   uRadioPolling in 'src\uRadioPolling.pas',
-  uMissingMults in 'src\uMissingMults.pas',
   uEditQSO in 'src\uEditQSO.pas',
   uLogSearch in 'src\uLogSearch.pas',
   uBeacons in 'src\uBeacons.pas',

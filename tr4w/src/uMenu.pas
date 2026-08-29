@@ -258,7 +258,6 @@ var
     (mrText: ''; mrId: menu_ctrl_cleardupesheet),
     (mrText: ''; mrId: menu_ctrl_viewlogdat),
     (mrText: ''; mrId: menu_ctrl_note),
-//    (mrText: RC_MISSMULTSREP; mrId: menu_ctrl_missmultsreport),  //n4af 04/37.10
 //    (mrText:  'PTT'; mrId: menu_ctrl_ptt),
     (mrText:  ''; mrId: menu_ctrl_redoposscalls),  // 4.54.5
     (mrText: ''; mrId: menu_ctrl_qtcfunctions),

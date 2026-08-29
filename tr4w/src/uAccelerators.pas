@@ -83,7 +83,7 @@ type
   end;
 
 const
-  ACCELERATORS: array[0..97] of TAcceleratorRow = (
+  ACCELERATORS: array[0..96] of TAcceleratorRow = (
     (acId: 10002; acCtrl: false; acAlt: true ; acShift: false; acKey: $58; acDisplay: 'Alt+X'; acInstall: true),   // menu_exit
     (acId: 10003; acCtrl: true ; acAlt: true ; acShift: false; acKey: $42; acDisplay: 'Ctrl+Alt+B'; acInstall: true),   // menu_cabrillo
     (acId: 10100; acCtrl: true ; acAlt: false; acShift: false; acKey: $4A; acDisplay: 'Ctrl+J'; acInstall: true),   // menu_options
@@ -142,7 +142,6 @@ const
     (acId: 10402; acCtrl: true ; acAlt: false; acShift: false; acKey: $4B; acDisplay: 'Ctrl+K'; acInstall: true),   // menu_ctrl_cleardupesheet
     (acId: 10403; acCtrl: true ; acAlt: false; acShift: false; acKey: $4C; acDisplay: 'Ctrl+L'; acInstall: true),   // menu_ctrl_viewlogdat
     (acId: 10404; acCtrl: true ; acAlt: false; acShift: false; acKey: $4E; acDisplay: 'Ctrl+N'; acInstall: true),   // menu_ctrl_note
-    (acId: 10405; acCtrl: true ; acAlt: false; acShift: false; acKey: $4F; acDisplay: 'Ctrl+O'; acInstall: true),   // menu_ctrl_missmultsreport
     (acId: 10406; acCtrl: true ; acAlt: false; acShift: false; acKey: $50; acDisplay: 'Ctrl+P'; acInstall: true),   // menu_ctrl_redoposscalls
     (acId: 10407; acCtrl: true ; acAlt: false; acShift: false; acKey: $51; acDisplay: 'Ctrl+Q'; acInstall: true),   // menu_ctrl_qtcfunctions
     (acId: 10408; acCtrl: true ; acAlt: false; acShift: false; acKey: $52; acDisplay: 'Ctrl+R'; acInstall: true),   // menu_ctrl_recalllastentry

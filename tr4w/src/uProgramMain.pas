@@ -74,7 +74,6 @@ uses
   uNewContest,
   uTextFitAudit,
   uRadioPolling,
-  uMissingMults,
   uEditQSO,
   uLogSearch,
   uBeacons,

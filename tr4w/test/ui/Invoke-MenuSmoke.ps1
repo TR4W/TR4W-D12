@@ -13,7 +13,7 @@
 # with an eye diff for anything painted. Say so when quoting a green run.
 #
 #   .\Invoke-MenuSmoke.ps1                       # the default id set
-#   .\Invoke-MenuSmoke.ps1 -Command 10111,10405  # just these
+#   .\Invoke-MenuSmoke.ps1 -Command 10111,10302  # just these
 #   .\Invoke-MenuSmoke.ps1 -KeepLog              # print each run's log output
 #
 # ONE PROCESS PER COMMAND, on purpose. Most of these ids open a MODAL dialog, and
@@ -41,11 +41,13 @@
 
 param(
    # Menu ids to post. The default set is deliberately SMALL and stable: the
-   # windows most likely to be broken by a form conversion, plus one that is
-   # known-doubtful and wants an answer (10405 -- see below).
+   # windows most likely to be broken by a form conversion.
+   #
+   # 10405 (Missing Mults report) was here as "known-doubtful, wants an answer".
+   # It got one on 2026-08-29: N4AF commented its menu row out back in 4.37.10,
+   # the MULTS window shows the same thing, and the whole report is deleted.
    [int[]]  $Command = @(
       10111,   # Settings -> CAT and CW Keying (ShowPreferences -- the LCL form)
-      10405,   # Tools -> Missing Mults report (menu_ctrl_missmultsreport)
       10302,   # Alt+D dupe check (menu_alt_dupecheck -- LCL form, Phase 4a)
       10101,   # Tools -> Program message (menu_messages -- LCL form, Phase 4a)
       10104,   # LPT ports, Ctrl+Alt+L (menu_lpt -- LCL form, Phase 4b)
