@@ -2695,7 +2695,7 @@ msgstr "Zobrazit všechny sériové porty"
 #: tfrmabout.caption
 #, fuzzy
 msgid "About TR4W"
-msgstr ""
+msgstr "O TR4W"
 
 #. Section: UEDITMESSAGE
 #: tfrmaltd.caption
@@ -2708,7 +2708,7 @@ msgstr "Kontrola spojení na neaktivním RIGu"
 #: tfrmaltd.lblprompt.caption
 #, fuzzy
 msgid "Enter call to be checked on:"
-msgstr ""
+msgstr "Zadejte zaškrtnutí:"
 
 #. Section: UEDITMESSAGE
 #: tfrmautocq.caption
@@ -2742,17 +2742,17 @@ msgstr "Stiskni klávesu paměti, kterou chceš opakovat:"
 #, fuzzy
 msgctxt "tfrmbandmap.caption"
 msgid "Band map"
-msgstr ""
+msgstr "Mapa pásma"
 
 #: tfrmbandmap.miallbands.caption
 #, fuzzy
 msgid "BAND MAP ALL BANDS"
-msgstr ""
+msgstr "BAND MAP VŠECHNY BANDY"
 
 #: tfrmbandmap.miallmodes.caption
 #, fuzzy
 msgid "BAND MAP ALL MODES"
-msgstr ""
+msgstr "BAND MAP VŠECHNY MODY"
 
 #. Section: UEDITMESSAGE
 #: tfrmbandmap.mideletespot.caption
@@ -2765,22 +2765,22 @@ msgstr "Smaž vybraný spot"
 #: tfrmbandmap.midisplaycq.caption
 #, fuzzy
 msgid "BAND MAP DISPLAY CQ"
-msgstr ""
+msgstr "BAND MAP DISPLAY CQ"
 
 #: tfrmbandmap.midupedisplay.caption
 #, fuzzy
 msgid "BAND MAP DUPE DISPLAY"
-msgstr ""
+msgstr "BAND MAP DUPE DISPLAY"
 
 #: tfrmbandmap.mimultsonly.caption
 #, fuzzy
 msgid "BAND MAP MULTS ONLY"
-msgstr ""
+msgstr "POUZE MAP BAND"
 
 #: tfrmbandmap.miqsyinactive.caption
 #, fuzzy
 msgid "Send spot to inactive radio"
-msgstr ""
+msgstr "Poslat místo do neaktivního rádia"
 
 #. Section: UEDITMESSAGE
 #: tfrmbandmap.miremoveall.caption
@@ -2793,7 +2793,7 @@ msgstr "Smaž všechny spoty"
 #: tfrmbandmap.miso2rdisplay.caption
 #, fuzzy
 msgid "BAND MAP SO2R DISPLAY"
-msgstr ""
+msgstr "BAND MAP SOBR DISPLAY"
 
 #. Section: UEDITMESSAGE
 #: tfrmbandplan.caption
@@ -2806,17 +2806,17 @@ msgstr "Rozdělení pásem"
 #: tfrmbeacons.caption
 #, fuzzy
 msgid "Beacons  Monitor"
-msgstr ""
+msgstr "Monitor majáků"
 
 #: tfrmct1boh.caption
 #, fuzzy
 msgid "CT1BOH information"
-msgstr ""
+msgstr "Informace o CT1BOH"
 
 #: tfrmdupesheet.caption
 #, fuzzy
 msgid "Dupe sheet"
-msgstr ""
+msgstr "Dupe list"
 
 #. Section: UEDITMESSAGE
 #. Section: FD Additions NY4I
@@ -2857,72 +2857,72 @@ msgstr "MSG"
 #: tfrmeditqso.btnplay.caption
 #, fuzzy
 msgid "&Play"
-msgstr ""
+msgstr "& Přehrát"
 
 #: tfrmeditqso.btnsave.caption
 #, fuzzy
 msgid "&Save"
-msgstr ""
+msgstr "&Uložit"
 
 #: tfrmeditqso.caption
 #, fuzzy
 msgid "Edit QSO"
-msgstr ""
+msgstr "Upravit QSO"
 
 #: tfrmeditqso.chkdeleted.caption
 #, fuzzy
 msgid "&Deleted"
-msgstr ""
+msgstr "Smazáno"
 
 #: tfrmeditqso.chkdomesticmult.caption
 #, fuzzy
 msgid "Domestic Mult"
-msgstr ""
+msgstr "Domácí mult"
 
 #: tfrmeditqso.chkdupe.caption
 #, fuzzy
 msgid "Dupe"
-msgstr ""
+msgstr "Dupe"
 
 #: tfrmeditqso.chkdxmult.caption
 #, fuzzy
 msgid "DX Mult"
-msgstr ""
+msgstr "DX Mult"
 
 #: tfrmeditqso.chkinhibitmults.caption
 #, fuzzy
 msgid "Inhibit Mults"
-msgstr ""
+msgstr "Inhibit Mults"
 
 #: tfrmeditqso.chknamesent.caption
 #, fuzzy
 msgid "Name Sent"
-msgstr ""
+msgstr "Odesláno"
 
 #: tfrmeditqso.chkprefixmult.caption
 #, fuzzy
 msgid "Prefix Mult"
-msgstr ""
+msgstr "Name"
 
 #: tfrmeditqso.chkxqso.caption
 #, fuzzy
 msgid "X-QSO"
-msgstr ""
+msgstr "X- QSO"
 
 #: tfrmeditqso.chkzonemult.caption
 #, fuzzy
 msgid "Zone Mult"
-msgstr ""
+msgstr "Zóna Mult"
 
 #: tfrmeditqso.dtpdatetime.textfornulldate
 #, fuzzy
 msgid "NULL"
-msgstr ""
+msgstr "NULL"
 
 #: tfrmeditqso.lblage.caption
 #, fuzzy
 msgid "Age"
-msgstr ""
+msgstr "Věk"
 
 #. Section: UEDITMESSAGE
 #: tfrmeditqso.lblband.caption
@@ -2944,22 +2944,22 @@ msgstr "Značka"
 #: tfrmeditqso.lblchapter.caption
 #, fuzzy
 msgid "Chapter"
-msgstr ""
+msgstr "Kapitola"
 
 #: tfrmeditqso.lblcheck.caption
 #, fuzzy
 msgid "Check"
-msgstr ""
+msgstr "Kontrola"
 
 #: tfrmeditqso.lblclass.caption
 #, fuzzy
 msgid "Class"
-msgstr ""
+msgstr "Třída"
 
 #: tfrmeditqso.lblcomputerid.caption
 #, fuzzy
 msgid "Computer ID"
-msgstr ""
+msgstr "Identifikace počítače"
 
 #. Section: UEDITMESSAGE
 #: tfrmeditqso.lbldate.caption
@@ -2972,12 +2972,12 @@ msgstr "Datum"
 #: tfrmeditqso.lbldomestic.caption
 #, fuzzy
 msgid "Domestic"
-msgstr ""
+msgstr "Domácí"
 
 #: tfrmeditqso.lblfrequency.caption
 #, fuzzy
 msgid "Frequency, Hz"
-msgstr ""
+msgstr "Frekvence, Hz"
 
 #. Section: UEDITMESSAGE
 #: tfrmeditqso.lblmode.caption
@@ -3000,12 +3000,12 @@ msgstr "Jméno"
 #: tfrmeditqso.lblnumberrcvd.caption
 #, fuzzy
 msgid "Number Rcvd"
-msgstr ""
+msgstr "Číslo Rcvd"
 
 #: tfrmeditqso.lblnumbersent.caption
 #, fuzzy
 msgid "Number Sent"
-msgstr ""
+msgstr "Číslo odeslané"
 
 #. Section: UEDITMESSAGE
 #: tfrmeditqso.lbloperator.caption
@@ -3018,57 +3018,57 @@ msgstr "Operátor"
 #: tfrmeditqso.lblpostalcode.caption
 #, fuzzy
 msgid "Postal Code"
-msgstr ""
+msgstr "PSČ"
 
 #: tfrmeditqso.lblpower.caption
 #, fuzzy
 msgid "Power"
-msgstr ""
+msgstr "Výkon"
 
 #: tfrmeditqso.lblprecedence.caption
 #, fuzzy
 msgid "Precedence"
-msgstr ""
+msgstr "Přesnost"
 
 #: tfrmeditqso.lblprefecture.caption
 #, fuzzy
 msgid "Prefecture"
-msgstr ""
+msgstr "Prefektura"
 
 #: tfrmeditqso.lblprefix.caption
 #, fuzzy
 msgid "Prefix"
-msgstr ""
+msgstr "Prefix"
 
 #: tfrmeditqso.lblqsopoints.caption
 #, fuzzy
 msgid "QSO points"
-msgstr ""
+msgstr "QSO body"
 
 #: tfrmeditqso.lblradio.caption
 #, fuzzy
 msgid "RADIO ONE"
-msgstr ""
+msgstr "RADIO ONE"
 
 #: tfrmeditqso.lblrstreceived.caption
 #, fuzzy
 msgid "RST received"
-msgstr ""
+msgstr "RST přijaté"
 
 #: tfrmeditqso.lblrstsent.caption
 #, fuzzy
 msgid "RST sent"
-msgstr ""
+msgstr "RST odeslán"
 
 #: tfrmeditqso.lbltenten.caption
 #, fuzzy
 msgid "Ten Ten Number"
-msgstr ""
+msgstr "Číslo 10"
 
 #: tfrmeditqso.lblzone.caption
 #, fuzzy
 msgid "Zone"
-msgstr ""
+msgstr "Oblast"
 
 #. Section: UEDITMESSAGE
 #: tfrmfunctionkeys.caption
@@ -3081,54 +3081,54 @@ msgstr "Klávesy pamětí"
 #: tfrmhamscore.btnpushnow.caption
 #, fuzzy
 msgid "Push Now"
-msgstr ""
+msgstr "Push Now"
 
 #: tfrmhamscore.btnresync.caption
 #, fuzzy
 msgid "Resync from log"
-msgstr ""
+msgstr "Resync from log"
 
 #: tfrmhamscore.caption
 #, fuzzy
 msgid "HamScore"
-msgstr ""
+msgstr "HamScore"
 
 #: tfrmhamscore.lblqueuetitle.caption
 #, fuzzy
 msgid "Queued contacts:"
-msgstr ""
+msgstr "Kontakty ve frontě:"
 
 #: tfrmhamscore.lblstatustitle.caption
 #, fuzzy
 msgid "Last status:"
-msgstr ""
+msgstr "Poslední stav:"
 
 #: tfrminiretire.btnno.caption
 #, fuzzy
 msgid "&No"
-msgstr ""
+msgstr "&Ne"
 
 #: tfrminiretire.btnyes.caption
 #, fuzzy
 msgid "&Yes"
-msgstr ""
+msgstr "&Ano"
 
 #: tfrminiretire.caption
 #: uappstrings.siniretiretitle
 #, fuzzy
 msgctxt "tfrminiretire.caption"
 msgid "Old settings file"
-msgstr ""
+msgstr "Starý soubor nastavení"
 
 #: tfrminiretire.chkdontask.caption
 #, fuzzy
 msgid "chkDontAsk"
-msgstr ""
+msgstr "chkDontAsk"
 
 #: tfrminiretire.lblprompt.caption
 #, fuzzy
 msgid "lblPrompt"
-msgstr ""
+msgstr "lblPrompt"
 
 #: tfrminputquery.caption
 #: ttr4wmainform.caption
@@ -3136,12 +3136,12 @@ msgstr ""
 #, fuzzy
 msgctxt "tfrminputquery.caption"
 msgid "TR4W"
-msgstr ""
+msgstr "TR4W"
 
 #: tfrminputquery.lblprompt.caption
 #, fuzzy
 msgid "Enter value:"
-msgstr ""
+msgstr "Zadejte hodnotu:"
 
 #. Section: UEDITMESSAGE
 #: tfrmintercom.caption
@@ -3157,52 +3157,52 @@ msgstr "Interkom"
 #, fuzzy
 msgctxt "tfrmkeyeredit.btnok.caption"
 msgid "Save and close"
-msgstr ""
+msgstr "Uložit a zavřít"
 
 #: tfrmkeyeredit.caption
 #, fuzzy
 msgid "CW keying device"
-msgstr ""
+msgstr "CW keyingové zařízení"
 
 #: tfrmkeyeredit.chkwkautospace.caption
 #, fuzzy
 msgid "Auto space"
-msgstr ""
+msgstr "Automatický prostor"
 
 #: tfrmkeyeredit.chkwkctspacing.caption
 #, fuzzy
 msgid "CT spacing"
-msgstr ""
+msgstr "Rozteč CT"
 
 #: tfrmkeyeredit.chkwkignorespeedpot.caption
 #, fuzzy
 msgid "Ignore speed pot"
-msgstr ""
+msgstr "Ignorovat rychlost pot"
 
 #: tfrmkeyeredit.chkwkpaddleonlysidetone.caption
 #, fuzzy
 msgid "Paddle-only sidetone"
-msgstr ""
+msgstr "Paddle- only sidtone"
 
 #: tfrmkeyeredit.chkwkpaddleswap.caption
 #, fuzzy
 msgid "Swap paddles"
-msgstr ""
+msgstr "Výměna pádel"
 
 #: tfrmkeyeredit.chkwksidetoneenable.caption
 #, fuzzy
 msgid "Sidetone on"
-msgstr ""
+msgstr "Sideton on"
 
 #: tfrmkeyeredit.grpwinkeyer.caption
 #, fuzzy
 msgid "WinKeyer settings"
-msgstr ""
+msgstr "Nastavení WinKeyeru"
 
 #: tfrmkeyeredit.lblkind.caption
 #, fuzzy
 msgid "Keyer type"
-msgstr ""
+msgstr "Typ keyeru"
 
 #: tfrmkeyeredit.lblport.caption
 #: tfrmudpdestinationedit.lblport.caption
@@ -3210,52 +3210,52 @@ msgstr ""
 #, fuzzy
 msgctxt "tfrmkeyeredit.lblport.caption"
 msgid "Port"
-msgstr ""
+msgstr "Přístav"
 
 #: tfrmkeyeredit.lblwkcomp.caption
 #, fuzzy
 msgid "Compensation"
-msgstr ""
+msgstr "Náhrada"
 
 #: tfrmkeyeredit.lblwkleadin.caption
 #, fuzzy
 msgid "Lead-in"
-msgstr ""
+msgstr "Vpřed"
 
 #: tfrmkeyeredit.lblwkratio.caption
 #, fuzzy
 msgid "Dit/dah ratio"
-msgstr ""
+msgstr "Poměr dit / dah"
 
 #: tfrmkeyeredit.lblwksidetone.caption
 #, fuzzy
 msgid "Sidetone"
-msgstr ""
+msgstr "Sideton"
 
 #: tfrmkeyeredit.lblwkswitchpoint.caption
 #, fuzzy
 msgid "Switchpoint"
-msgstr ""
+msgstr "Přepínač"
 
 #: tfrmkeyeredit.lblwktail.caption
 #, fuzzy
 msgid "Tail"
-msgstr ""
+msgstr "Ocas"
 
 #: tfrmkeyeredit.lblwkweight.caption
 #, fuzzy
 msgid "Weight"
-msgstr ""
+msgstr "Hmotnost"
 
 #: tfrmlogcompare.btnclearalllogs.caption
 #, fuzzy
 msgid "Clear all logs"
-msgstr ""
+msgstr "Vyčistit všechny protokoly"
 
 #: tfrmlogcompare.btnexit.caption
 #, fuzzy
 msgid "Exit"
-msgstr ""
+msgstr "Ukončit"
 
 #. Section: UEDITMESSAGE
 #: tfrmlogcompare.btnsynchronize.caption
@@ -3268,24 +3268,24 @@ msgstr "Synchronizovat"
 #: tfrmlogcompare.caption
 #, fuzzy
 msgid "Differences in the log"
-msgstr ""
+msgstr "Rozdíly v záznamu"
 
 #: tfrmlpt.caption
 #, fuzzy
 msgid "LPT"
-msgstr ""
+msgstr "LPT"
 
 #: tfrmmaster.caption
 #, fuzzy
 msgid "Super check partial"
-msgstr ""
+msgstr "Super kontrola parciální"
 
 #: tfrmmmtty.caption
 #: tprefsform.lblmmttyheading.caption
 #, fuzzy
 msgctxt "tfrmmmtty.caption"
 msgid "MMTTY"
-msgstr ""
+msgstr "MMTTY"
 
 #. Section: UEDITMESSAGE
 #: tfrmmp3recorder.caption
@@ -3298,7 +3298,7 @@ msgstr "MP3 rekordér"
 #: tfrmmp3recorder.chkrecord.caption
 #, fuzzy
 msgid "Record"
-msgstr ""
+msgstr "Záznam"
 
 #. Section: UEDITMESSAGE
 #: tfrmnetwork.caption
@@ -3312,37 +3312,37 @@ msgstr "Síť"
 #: tfrmpanadapter.btnpause.caption
 #, fuzzy
 msgid "Pause"
-msgstr ""
+msgstr "Pauza"
 
 #: tfrmpanadapter.btnspannarrow.hint
 #, fuzzy
 msgid "Narrower span (zoom in)"
-msgstr ""
+msgstr "Užší rozpětí (zoom in)"
 
 #: tfrmpanadapter.btnspanwide.hint
 #, fuzzy
 msgid "Wider span (zoom out)"
-msgstr ""
+msgstr "Větší rozpětí (oddálení)"
 
 #: tfrmpanadapter.caption
 #, fuzzy
 msgid "Panadapter"
-msgstr ""
+msgstr "Panadaptér"
 
 #: tfrmpanadapter.lblscale.caption
 #, fuzzy
 msgid "80 dB"
-msgstr ""
+msgstr "80 dB"
 
 #: tfrmpanadapter.lblsource.caption
 #, fuzzy
 msgid "Pan A"
-msgstr ""
+msgstr "Pan A"
 
 #: tfrmpanadapter.lblspan.caption
 #, fuzzy
 msgid "Span --"
-msgstr ""
+msgstr "Span.."
 
 #. Section: UEDITMESSAGE
 #: tfrmpostscores.btnpostnow.caption
@@ -3363,7 +3363,7 @@ msgstr "Ukaž skóre"
 #: tfrmpostscores.caption
 #, fuzzy
 msgid "Post scores"
-msgstr ""
+msgstr "Postscore"
 
 #. Section: UEDITMESSAGE
 #: tfrmprogrammessage.btncq.caption
@@ -3400,44 +3400,44 @@ msgstr "Funkce programování pamětí"
 #: tfrmradiopanel.btnspectrum.caption
 #, fuzzy
 msgid "Spectrum"
-msgstr ""
+msgstr "Spektrum"
 
 #: tfrmradiopanel.caption
 #: tradioeditform.caption
 #, fuzzy
 msgctxt "tfrmradiopanel.caption"
 msgid "Radio"
-msgstr ""
+msgstr "Rádio"
 
 #: tfrmradiopanel.lblrit.caption
 #, fuzzy
 msgid "RIT"
-msgstr ""
+msgstr "RIT"
 
 #: tfrmradiopanel.lblsplit.caption
 #, fuzzy
 msgid "SPLIT"
-msgstr ""
+msgstr "SPLIT"
 
 #: tfrmradiopanel.lblvfoacaption.caption
 #, fuzzy
 msgid "VFO A"
-msgstr ""
+msgstr "VFO A"
 
 #: tfrmradiopanel.lblvfobcaption.caption
 #, fuzzy
 msgid "VFO B"
-msgstr ""
+msgstr "VFO B"
 
 #: tfrmradiopanel.lblxit.caption
 #, fuzzy
 msgid "XIT"
-msgstr ""
+msgstr "XIT"
 
 #: tfrmremmults.caption
 #, fuzzy
 msgid "Remaining mults"
-msgstr ""
+msgstr "Zbývající multi"
 
 #. Section: UEDITMESSAGE
 #: tfrmsendkeyboard.btnclose.caption
@@ -3450,7 +3450,7 @@ msgstr "Zavři"
 #: tfrmsendkeyboard.caption
 #, fuzzy
 msgid "Sending CW"
-msgstr ""
+msgstr "Vysílání CW"
 
 #. Section: UEDITMESSAGE
 #: tfrmsendspot.caption
@@ -3463,7 +3463,7 @@ msgstr "Vyslat spot"
 #: tfrmsendspot.chkcontestname.caption
 #, fuzzy
 msgid "Contest name in comment"
-msgstr ""
+msgstr "Název soutěže v komentáři"
 
 #. Section: UEDITMESSAGE
 #: tfrmsendspot.lblcomment.caption
@@ -3520,91 +3520,91 @@ msgstr "Zastavit"
 #: tfrmtelnet.btnsend.caption
 #, fuzzy
 msgid "Send"
-msgstr ""
+msgstr "Odeslat"
 
 #: tfrmtelnet.btnshow50.caption
 #, fuzzy
 msgid "SH/50"
-msgstr ""
+msgstr "SH / 50"
 
 #: tfrmtelnet.caption
 #, fuzzy
 msgid "Telnet"
-msgstr ""
+msgstr "Telnet"
 
 #: tfrmudpdestinationedit.btntest.caption
 #: tprefsform.btnudptest.caption
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.btntest.caption"
 msgid "Test"
-msgstr ""
+msgstr "Zkouška"
 
 #: tfrmudpdestinationedit.caption
 #, fuzzy
 msgid "UDP Destination"
-msgstr ""
+msgstr "Místo určení podle UDP"
 
 #: tfrmudpdestinationedit.chkstreamappinfo.caption
 #: ulclformhelpers.tc_prefs_udpstream_appinfo
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamappinfo.caption"
 msgid "App info"
-msgstr ""
+msgstr "Informace o aplikaci"
 
 #: tfrmudpdestinationedit.chkstreamcontact.caption
 #: ulclformhelpers.tc_prefs_udpstream_contact
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamcontact.caption"
 msgid "Contact info"
-msgstr ""
+msgstr "Kontaktní údaje"
 
 #: tfrmudpdestinationedit.chkstreamlookup.caption
 #: ulclformhelpers.tc_prefs_udpstream_lookup
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamlookup.caption"
 msgid "Callsign lookup"
-msgstr ""
+msgstr "Vyhledat volací znak"
 
 #: tfrmudpdestinationedit.chkstreamradio.caption
 #: ulclformhelpers.tc_prefs_udpstream_radio
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamradio.caption"
 msgid "Radio info"
-msgstr ""
+msgstr "Rádiové informace"
 
 #: tfrmudpdestinationedit.chkstreamrotor.caption
 #: ulclformhelpers.tc_prefs_udpstream_rotor
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamrotor.caption"
 msgid "Rotor"
-msgstr ""
+msgstr "Rotor"
 
 #: tfrmudpdestinationedit.chkstreamscore.caption
 #: ulclformhelpers.tc_prefs_udpstream_score
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamscore.caption"
 msgid "Score"
-msgstr ""
+msgstr "Bod"
 
 #: tfrmudpdestinationedit.grpstreams.caption
 #, fuzzy
 msgid "Send this destination"
-msgstr ""
+msgstr "Poslat tuto destinaci"
 
 #: tfrmudpdestinationedit.lbladdress.caption
 #, fuzzy
 msgid "Address"
-msgstr ""
+msgstr "Adresa"
 
 #: tfrmwinmanager.caption
 #, fuzzy
 msgid "Window control"
-msgstr ""
+msgstr "Ovládání oken"
 
 #: tprefsform.btnactivate.caption
 #, fuzzy
 msgid "Activate this profile now"
-msgstr ""
+msgstr "Aktivujte tento profil"
 
 #: tprefsform.btnadd.caption
 #: tprefsform.btnaddcluster.caption
@@ -3614,13 +3614,13 @@ msgstr ""
 #, fuzzy
 msgctxt "tprefsform.btnadd.caption"
 msgid "Add..."
-msgstr ""
+msgstr "Přidat..."
 
 #: tprefsform.btnapply.caption
 #, fuzzy
 msgctxt "tprefsform.btnapply.caption"
 msgid "Save"
-msgstr ""
+msgstr "Uložit"
 
 #: tprefsform.btnbrowsebackup.caption
 #: tprefsform.btnbrowsedvkpath.caption
@@ -3631,20 +3631,20 @@ msgstr ""
 #, fuzzy
 msgctxt "tprefsform.btnbrowsebackup.caption"
 msgid "Browse..."
-msgstr ""
+msgstr "Procházet..."
 
 #: tprefsform.btndeleteprofile.caption
 #, fuzzy
 msgctxt "tprefsform.btndeleteprofile.caption"
 msgid "Delete"
-msgstr ""
+msgstr "Smazat"
 
 #: tprefsform.btnduplicate.caption
 #: tprefsform.btnduplicatekeyer.caption
 #, fuzzy
 msgctxt "tprefsform.btnduplicate.caption"
 msgid "Duplicate"
-msgstr ""
+msgstr "Duplikovat"
 
 #: tprefsform.btnedit.caption
 #: tprefsform.btneditkeyer.caption
@@ -3652,19 +3652,19 @@ msgstr ""
 #, fuzzy
 msgctxt "tprefsform.btnedit.caption"
 msgid "Edit..."
-msgstr ""
+msgstr "Upravit..."
 
 #: tprefsform.btnnewprofile.caption
 #: ulclformhelpers.tc_prefs_newprofile
 #, fuzzy
 msgctxt "tprefsform.btnnewprofile.caption"
 msgid "New..."
-msgstr ""
+msgstr "Nový..."
 
 #: tprefsform.btnopenlogfile.caption
 #, fuzzy
 msgid "Open log file"
-msgstr ""
+msgstr "Otevřít soubor záznamu"
 
 #: tprefsform.btnremove.caption
 #: tprefsform.btnremovecluster.caption
@@ -3674,652 +3674,652 @@ msgstr ""
 #, fuzzy
 msgctxt "tprefsform.btnremove.caption"
 msgid "Remove"
-msgstr ""
+msgstr "Odstranit"
 
 #: tprefsform.btnrenameprofile.caption
 #: ulclformhelpers.tc_prefs_renameprofile
 #, fuzzy
 msgctxt "tprefsform.btnrenameprofile.caption"
 msgid "Rename..."
-msgstr ""
+msgstr "Přejmenovat..."
 
 #: tprefsform.btnusecluster.caption
 #: tprefsform.btnuserotator.caption
 #, fuzzy
 msgctxt "tprefsform.btnusecluster.caption"
 msgid "Use this"
-msgstr ""
+msgstr "Použij tohle"
 
 #: tprefsform.caption
 #: ulclformhelpers.tc_prefs_unsavedtitle
 #, fuzzy
 msgctxt "tprefsform.caption"
 msgid "TR4W Preferences"
-msgstr ""
+msgstr "Nastavení TR4W"
 
 #: tprefsform.chkaltdbuffer.caption
 #, fuzzy
 msgid "Alt-D remembers what you typed"
-msgstr ""
+msgstr "Alt- D si pamatuje, co jsi napsal"
 
 #: tprefsform.chkaltdcq.caption
 #, fuzzy
 msgid "Alt-D can start a CQ on the second radio"
-msgstr ""
+msgstr "Alt-D může spustit CQ na druhém rádiu"
 
 #: tprefsform.chkalwaysblindcq.caption
 #, fuzzy
 msgid "Always call a blind CQ"
-msgstr ""
+msgstr "Vždy volejte slepé CQ"
 
 #: tprefsform.chkautocallterminate.caption
 #, fuzzy
 msgid "Stop sending when the call window changes"
-msgstr ""
+msgstr "Zastavit odesílání, když se změní okno volání"
 
 #: tprefsform.chkautoconnect.caption
 #, fuzzy
 msgctxt "tprefsform.chkautoconnect.caption"
 msgid "Connect radios at startup"
-msgstr ""
+msgstr "Připojení rádia při spuštění"
 
 #: tprefsform.chkautoqsonumberdecrement.caption
 #, fuzzy
 msgid "Give the serial number back when a QSO is abandoned"
-msgstr ""
+msgstr "Vraťte sériové číslo, až bude QSO opuštěno"
 
 #: tprefsform.chkautoreturntocq.caption
 #, fuzzy
 msgid "Return to CQ mode after logging a QSO"
-msgstr ""
+msgstr "Zpět do CQ režimu po nahrání QSO"
 
 #: tprefsform.chkbandmapallbands.caption
 #, fuzzy
 msgid "All bands"
-msgstr ""
+msgstr "Všechny kapely"
 
 #: tprefsform.chkbandmapallmodes.caption
 #, fuzzy
 msgid "All modes"
-msgstr ""
+msgstr "Všechny režimy"
 
 #: tprefsform.chkbandmapcallwindow.caption
 #, fuzzy
 msgid "Show the call window entry"
-msgstr ""
+msgstr "Zobrazit vstup do okna volání"
 
 #: tprefsform.chkbandmapcq.caption
 #, fuzzy
 msgid "Show CQ spots"
-msgstr ""
+msgstr "Zobrazit CQ skvrny"
 
 #: tprefsform.chkbandmapdupes.caption
 #, fuzzy
 msgid "Show duplicates"
-msgstr ""
+msgstr "Zobrazit duplikáty"
 
 #: tprefsform.chkbandmapghz.caption
 #, fuzzy
 msgid "Show GHz"
-msgstr ""
+msgstr "Zobrazit GHz"
 
 #: tprefsform.chkbandmapmultsonly.caption
 #, fuzzy
 msgid "Multipliers only"
-msgstr ""
+msgstr "Pouze multiplikátory"
 
 #: tprefsform.chkbandmapso2r.caption
 #, fuzzy
 msgid "SO2R display"
-msgstr ""
+msgstr "Displej SO2R"
 
 #: tprefsform.chkboldfont.caption
 #, fuzzy
 msgid "Bold"
-msgstr ""
+msgstr "Tučné"
 
 #: tprefsform.chkcallwindowshowallspots.caption
 #, fuzzy
 msgid "Show every spot in the call window"
-msgstr ""
+msgstr "Zobrazit každé místo v okně volání"
 
 #: tprefsform.chkchecklogfilesize.caption
 #, fuzzy
 msgid "Warn when the log file grows unexpectedly"
-msgstr ""
+msgstr "Varovat, když log soubor roste neočekávaně"
 
 #: tprefsform.chkclusteratstartup.caption
 #, fuzzy
 msgid "Connect at startup"
-msgstr ""
+msgstr "Připojení při spuštění"
 
 #: tprefsform.chkconfirmeditchanges.caption
 #, fuzzy
 msgid "Confirm before saving an edited QSO"
-msgstr ""
+msgstr "Potvrdit před uložením editovaného QSO"
 
 #: tprefsform.chkcwenable.caption
 #, fuzzy
 msgid "Send CW"
-msgstr ""
+msgstr "Poslat CW"
 
 #: tprefsform.chkcwmessageschainable.caption
 #, fuzzy
 msgid "Any CW message may chain into the next"
-msgstr ""
+msgstr "Jakákoliv zpráva CW se může napojit na další"
 
 #: tprefsform.chkcwspeedfromdatabase.caption
 #, fuzzy
 msgid "Match the speed a station was worked at before"
-msgstr ""
+msgstr "Odpovídejte rychlosti stanice byla pracoval před"
 
 #: tprefsform.chkdupesheetcolor.caption
 #, fuzzy
 msgid "Color the dupe sheet columns"
-msgstr ""
+msgstr "Barva sloupců dupe list"
 
 #: tprefsform.chkdvkenable.caption
 #, fuzzy
 msgid "Use the digital voice keyer"
-msgstr ""
+msgstr "Použít digitální hlasový keyer"
 
 #: tprefsform.chkdvklocalizedmessages.caption
 #, fuzzy
 msgid "Use localized DVK message files"
-msgstr ""
+msgstr "Použít lokalizované soubory zpráv DVK"
 
 #: tprefsform.chkescapeexitssap.caption
 #, fuzzy
 msgid "Escape leaves search and pounce"
-msgstr ""
+msgstr "Útěk opustí vyhledávání a vrhnout"
 
 #: tprefsform.chkfarnsworth.caption
 #, fuzzy
 msgid "Farnsworth spacing"
-msgstr ""
+msgstr "Farnsworthské mezery"
 
 #: tprefsform.chkhamlibasynconly.caption
 #, fuzzy
 msgid "HamLib - async callbacks only, no heartbeat (testing)"
-msgstr ""
+msgstr "HamLib - pouze async curbacks, žádný tlukot srdce (testování)"
 
 #: tprefsform.chkhamlibdebug.caption
 #, fuzzy
 msgid "HamLib - debug logging"
-msgstr ""
+msgstr "HamLib - ladění"
 
 #: tprefsform.chkhamlibtrace.caption
 #, fuzzy
 msgid "HamLib - internal trace to hamlib_trace.log"
-msgstr ""
+msgstr "HamLib - vnitřní stopa k hamlib _ trace.log"
 
 #: tprefsform.chkhamscorecontact.caption
 #, fuzzy
 msgid "Include contact information"
-msgstr ""
+msgstr "Zahrnout kontaktní informace"
 
 #: tprefsform.chkhamscoreenable.caption
 #, fuzzy
 msgid "Post my score while the contest runs"
-msgstr ""
+msgstr "Odeslat moje skóre, zatímco soutěž běží"
 
 #: tprefsform.chkhfbands.caption
 #, fuzzy
 msgid "HF (160 - 10 m)"
-msgstr ""
+msgstr "HF (160 - 10 m)"
 
 #: tprefsform.chkinbandlockout.caption
 #, fuzzy
 msgid "Stop both radios landing on one band"
-msgstr ""
+msgstr "Zastavit obě rádia přistání na jednom pásmu"
 
 #: tprefsform.chkincludefkeynumber.caption
 #, fuzzy
 msgid "Show the key number on the function-key buttons"
-msgstr ""
+msgstr "Zobrazit číslo klíče na tlačítkách function- key"
 
 #: tprefsform.chkintercomfile.caption
 #, fuzzy
 msgid "Log network messages to INTERCOM.TXT"
-msgstr ""
+msgstr "Přihlaš zprávy ze sítě do INTERCOM. TXT"
 
 #: tprefsform.chkkeypadcwmemories.caption
 #, fuzzy
 msgid "Number keypad sends CW memories"
-msgstr ""
+msgstr "Číslo klávesnice posílá vzpomínky na CW"
 
 #: tprefsform.chkleavecursorincall.caption
 #, fuzzy
 msgid "Leave the cursor in the call window"
-msgstr ""
+msgstr "Zanechte kurzor v okně volání"
 
 #: tprefsform.chkloggerenabled.caption
 #, fuzzy
 msgid "Send QSOs to it as they are logged"
-msgstr ""
+msgstr "Poslat QSO k němu, jak jsou zaznamenány"
 
 #: tprefsform.chklogwithsingleenter.caption
 #, fuzzy
 msgid "Log with a single Enter"
-msgstr ""
+msgstr "Log s jedním Enter"
 
 #: tprefsform.chkmp3recorderenable.caption
 #, fuzzy
 msgid "Record each QSO to MP3"
-msgstr ""
+msgstr "Zaznamenejte každý QSO do MP3"
 
 #: tprefsform.chkmultimultsonly.caption
 #, fuzzy
 msgid "Pass only new multipliers around the network"
-msgstr ""
+msgstr "Předávat pouze nové multiplikátory po síti"
 
 #: tprefsform.chknameflag.caption
 #, fuzzy
 msgid "Flag a station whose name is already known"
-msgstr ""
+msgstr "Vlajku stanice, jejíž jméno je již známo"
 
 #: tprefsform.chknetautosync.caption
 #, fuzzy
 msgid "Synchronize the log when connecting"
-msgstr ""
+msgstr "Synchronizovat záznam při připojení"
 
 #: tprefsform.chknoborder.caption
 #, fuzzy
 msgid "Main window has no border"
-msgstr ""
+msgstr "Hlavní okno nemá hranice"
 
 #: tprefsform.chknocaption.caption
 #, fuzzy
 msgid "Main window has no title bar"
-msgstr ""
+msgstr "Hlavní okno nemá žádnou tyčinku"
 
 #: tprefsform.chknocolumnheader.caption
 #, fuzzy
 msgid "Hide the log column headings"
-msgstr ""
+msgstr "Skrýt záhlaví sloupce záznamu"
 
 #: tprefsform.chknopollduringptt.caption
 #, fuzzy
 msgid "Stop polling the radio while transmitting"
-msgstr ""
+msgstr "Zastavit hlasování v rádiu při vysílání"
 
 #: tprefsform.chkpartialcall.caption
 #, fuzzy
 msgid "Match on a partial callsign"
-msgstr ""
+msgstr "Zápas na částečný volací znak"
 
 #: tprefsform.chkpossiblecalls.caption
 #, fuzzy
 msgid "Offer possible calls"
-msgstr ""
+msgstr "Nabídnout možné hovory"
 
 #: tprefsform.chkpttenable.caption
 #, fuzzy
 msgid "Assert PTT when transmitting"
-msgstr ""
+msgstr "Asert PTT při přenosu"
 
 #: tprefsform.chkpttlockout.caption
 #, fuzzy
 msgid "Lock out PTT"
-msgstr ""
+msgstr "Zamknout PTT"
 
 #: tprefsform.chkpttviacommands.caption
 #, fuzzy
 msgid "Key the transmitter with a CAT command instead of a hardware line"
-msgstr ""
+msgstr "Klíč vysílač s povelem CAT místo hardwarové linky"
 
 #: tprefsform.chkqsyinactive.caption
 #, fuzzy
 msgid "QSY the inactive radio when I change band"
-msgstr ""
+msgstr "QSY neaktivní rádio, když změním pásmo"
 
 #: tprefsform.chksayhienable.caption
 #, fuzzy
 msgid "Send a greeting to stations worked before"
-msgstr ""
+msgstr "Pošlete pozdrav stanicím, které předtím pracovaly"
 
 #: tprefsform.chksendfourlettercall.caption
 #, fuzzy
 msgid "Always send all four letters of a four-letter call"
-msgstr ""
+msgstr "Vždy poslat všechny čtyři dopisy na čtyřpísmenný hovor"
 
 #: tprefsform.chkshowgridlines.caption
 #, fuzzy
 msgid "Draw gridlines in the log"
-msgstr ""
+msgstr "Kreslit mřížky v záznamu"
 
 #: tprefsform.chkskipactiveband.caption
 #, fuzzy
 msgid "Skip the band the other radio is on"
-msgstr ""
+msgstr "Přeskočte kapelu, druhé rádio je zapnuté"
 
 #: tprefsform.chkso2r.caption
 #, fuzzy
 msgctxt "tprefsform.chkso2r.caption"
 msgid "SO2R enabled"
-msgstr ""
+msgstr "SOBR povoleno"
 
 #: tprefsform.chkspacebardupecheck.caption
 #, fuzzy
 msgid "Space bar performs a dupe check"
-msgstr ""
+msgstr "Space bar provádí dupe kontrolu"
 
 #: tprefsform.chkspeedsync1.caption
 #: tprefsform.chkspeedsync2.caption
 #, fuzzy
 msgctxt "tprefsform.chkspeedsync1.caption"
 msgid "Speed sync"
-msgstr ""
+msgstr "Speed sync"
 
 #: tprefsform.chkspotcollector.caption
 #, fuzzy
 msgid "Collect spots from the cluster"
-msgstr ""
+msgstr "Sbírat skvrny z clusteru"
 
 #: tprefsform.chkswappacketspotradios.caption
 #, fuzzy
 msgid "Send spots to the other radio"
-msgstr ""
+msgstr "Poslat místa do jiného rádia"
 
 #: tprefsform.chkswappaddles.caption
 #, fuzzy
 msgid "Swap dit and dah"
-msgstr ""
+msgstr "Swap dit a dah"
 
 #: tprefsform.chkswaprelaysense.caption
 #, fuzzy
 msgid "Invert the radio relay sense"
-msgstr ""
+msgstr "Invertovat smysl rádiového relé"
 
 #: tprefsform.chktcibindall.caption
 #, fuzzy
 msgid "Also listen on the network (other computers can connect)"
-msgstr ""
+msgstr "Také poslouchat v síti (jiné počítače mohou připojit)"
 
 #: tprefsform.chktcidebug.caption
 #, fuzzy
 msgid "TCI server - log every command, both directions"
-msgstr ""
+msgstr "TCI server - zaznamenejte každý příkaz, oba směry"
 
 #: tprefsform.chktciserver.caption
 #, fuzzy
 msgid "Enable the TCI server"
-msgstr ""
+msgstr "Povolit TCI server"
 
 #: tprefsform.chktelnetdebug.caption
 #, fuzzy
 msgid "DX cluster - log all telnet traffic"
-msgstr ""
+msgstr "DX cluster - zaznamenejte veškerý provoz v telnetu"
 
 #: tprefsform.chktunewithdits.caption
 #, fuzzy
 msgid "Tune with dits rather than a solid carrier"
-msgstr ""
+msgstr "Tune s dutinami spíše než pevným nosičem"
 
 #: tprefsform.chktworadiomode.caption
 #, fuzzy
 msgid "Two radio mode"
-msgstr ""
+msgstr "Dva rádiové režimy"
 
 #: tprefsform.chkudpallqsos.caption
 #, fuzzy
 msgid "Also broadcast edited and previously logged QSOs"
-msgstr ""
+msgstr "Také vysílal editované a dříve zaznamenané QSO"
 
 #: tprefsform.chkudpenabled.caption
 #, fuzzy
 msgid "Broadcast UDP data"
-msgstr ""
+msgstr "Vysílání dat UDP"
 
 #: tprefsform.chkunknowncountryfile.caption
 #, fuzzy
 msgid "Record callsigns with no country match"
-msgstr ""
+msgstr "Rekordní volací značky bez shody země"
 
 #: tprefsform.chkupdaterestartfile.caption
 #, fuzzy
 msgid "Keep the restart file up to date"
-msgstr ""
+msgstr "Udržet soubor restartování aktuální"
 
 #: tprefsform.chkusecontrolport.caption
 #, fuzzy
 msgid "Use the radio control port for paddle and foot switch"
-msgstr ""
+msgstr "Použijte rádiový ovladač pro pádlo a přepínač chodidel"
 
 #: tprefsform.chkuserecordedsigns.caption
 #, fuzzy
 msgid "Send recorded audio for callsign characters"
-msgstr ""
+msgstr "Odeslat nahraný zvuk znaků volajícího"
 
 #: tprefsform.chkvhfbands.caption
 #, fuzzy
 msgid "VHF and up (6 m and above)"
-msgstr ""
+msgstr "VHF a nahoru (6 m a více)"
 
 #: tprefsform.chkwaitforstrength.caption
 #, fuzzy
 msgid "Wait for a signal strength reading before switching"
-msgstr ""
+msgstr "Před přepínačem vyčkejte na čtení síly signálu"
 
 #: tprefsform.chkwarcbands.caption
 #, fuzzy
 msgid "WARC (30, 17, 12 m)"
-msgstr ""
+msgstr "VARC (30, 17, 12 m)"
 
 #: tprefsform.chkwildcardpartials.caption
 #, fuzzy
 msgid "Allow wildcards in a partial"
-msgstr ""
+msgstr "Povolit divoké karty v částečném"
 
 #: tprefsform.chkwsjtxenabled.caption
 #, fuzzy
 msgid "Exchange data with WSJT-X"
-msgstr ""
+msgstr "Výměna dat s WSJT-X"
 
 #: tprefsform.chkwsjtxhighlights.caption
 #, fuzzy
 msgid "Send callsign highlighting to WSJT-X"
-msgstr ""
+msgstr "Poslat zvýraznění volací značky na WSJT-X"
 
 #: tprefsform.chkwsjtxradiocontrol.caption
 #, fuzzy
 msgid "Let WSJT-X control the radio"
-msgstr ""
+msgstr "Nechte WSJT-X ovládat rádio"
 
 #: tprefsform.chkycccso2r.caption
 #, fuzzy
 msgid "YCCC SO2R Plus box connected"
-msgstr ""
+msgstr "YCCC SO2R Připojen box"
 
 #: tprefsform.edtsearch.texthint
 #, fuzzy
 msgid "Search settings"
-msgstr ""
+msgstr "Nastavení vyhledávání"
 
 #: tprefsform.grpprofile.caption
 #: ulclformhelpers.tc_prefs_profiles
 #, fuzzy
 msgctxt "tprefsform.grpprofile.caption"
 msgid "Station profile"
-msgstr ""
+msgstr "Profil stanice"
 
 #: tprefsform.lblactivatehint.caption
 #, fuzzy
 msgid "Saving stores your changes. It does not switch the radios over - use this button for that."
-msgstr ""
+msgstr "Šetří vaše změny. Nezapne rádio - pro to použijte toto tlačítko."
 
 #: tprefsform.lblactive.caption
 #: ulclformhelpers.tc_prefs_activelabel
 #, fuzzy
 msgctxt "tprefsform.lblactive.caption"
 msgid "Active profile: "
-msgstr ""
+msgstr "Aktivní profil: "
 
 #: tprefsform.lblactivecluster.caption
 #, fuzzy
 msgid "Connecting to: (none chosen)"
-msgstr ""
+msgstr "Připojení k: (žádné zvolené)"
 
 #: tprefsform.lblappearcolorshint.caption
 #, fuzzy
 msgid "Window colors are still on the Settings menu.  They belong here and will move once the main window is resizable, which is the change that decides what the layout options need to be."
-msgstr ""
+msgstr "Barvy oken jsou stále v nabídce Nastavení. Patří sem a budou se pohybovat, jakmile je hlavní okno odporovatelné, což je změna, která rozhoduje o tom, jaké možnosti rozložení musí být."
 
 #: tprefsform.lblappearheading.caption
 #: tprefsform.lblmainwindowheading.caption
 #, fuzzy
 msgctxt "tprefsform.lblappearheading.caption"
 msgid "Main window"
-msgstr ""
+msgstr "Hlavní okno"
 
 #: tprefsform.lblappearhint.caption
 #, fuzzy
 msgid "The font applies to the main contest window.  All four take effect when TR4W next starts."
-msgstr ""
+msgstr "Písmo se vztahuje na hlavní okno soutěže. Všechny čtyři nabývají účinku, když začíná TR4W."
 
 #: tprefsform.lblappearmenunote.caption
 #, fuzzy
 msgid "These were on the Appearance item of the Settings menu. That window goes away once ROW COUNT and WINDOW SIZE join them here."
-msgstr ""
+msgstr "Tyto byly v položce Vzhled v nabídce Nastavení. To okno zmizí, jakmile se k nim připojí ROW COUNT a WINDOW SIZE."
 
 #: tprefsform.lblaudioheading.caption
 #, fuzzy
 msgid "Audio"
-msgstr ""
+msgstr "Audio"
 
 #: tprefsform.lblaudioinfo.caption
 #, fuzzy
 msgid "Voice keying and QSO recording. CW keying is on the CW Settings page."
-msgstr ""
+msgstr "Hlasové keying a nahrávání QSO. CW keying je na stránce Nastavení CW."
 
 #: tprefsform.lblaudionote.caption
 #, fuzzy
 msgid "Bit rate and recording length are not here yet: both are stored through a lookup table rather than directly, and move separately."
-msgstr ""
+msgstr "Mírná rychlost a délka záznamu zde ještě nejsou: obě jsou ukládány přes vyhledávací tabulku spíše než přímo a pohybují se odděleně."
 
 #: tprefsform.lblbackupevery.caption
 #, fuzzy
 msgid "Back up every:"
-msgstr ""
+msgstr "Zálohovat každý:"
 
 #: tprefsform.lblbackupeveryunits.caption
 #, fuzzy
 msgid "QSOs  (0 = never)"
-msgstr ""
+msgstr "QSP (0 = nikdy)"
 
 #: tprefsform.lblbackupfile.caption
 #, fuzzy
 msgid "Copy to:"
-msgstr ""
+msgstr "Kopírovat na:"
 
 #: tprefsform.lblbackupheading.caption
 #, fuzzy
 msgid "Log backup"
-msgstr ""
+msgstr "Zálohování záznamu"
 
 #: tprefsform.lblbackuphint.caption
 #, fuzzy
 msgid "A second copy of the log, written as you go.  Put it somewhere that is not the same disk as the log itself, or it protects against nothing worth protecting against."
-msgstr ""
+msgstr "Druhá kopie záznamu, napsaná za pochodu. Dejte to někam, kde to není stejný disk jako samotný záznam, nebo to chrání před ničím, před čím stojí za ochranu."
 
 #: tprefsform.lblbandmapdecay.caption
 #, fuzzy
 msgid "Spot expiry:"
-msgstr ""
+msgstr "Doba použitelnosti:"
 
 #: tprefsform.lblbandmapdecayunits.caption
 #, fuzzy
 msgid "minutes"
-msgstr ""
+msgstr "minuty"
 
 #: tprefsform.lblbandmapguard.caption
 #, fuzzy
 msgid "Guard band:"
-msgstr ""
+msgstr "Strážní skupina:"
 
 #: tprefsform.lblbandmapguardunits.caption
 #: tprefsform.lblpaddletoneunits.caption
 #, fuzzy
 msgctxt "tprefsform.lblbandmapguardunits.caption"
 msgid "Hz"
-msgstr ""
+msgstr "Hz"
 
 #: tprefsform.lblbandmaplimit.caption
 #, fuzzy
 msgid "Display limit:"
-msgstr ""
+msgstr "Mezní hodnota displeje:"
 
 #: tprefsform.lblbandmaplimitunits.caption
 #, fuzzy
 msgid "spots"
-msgstr ""
+msgstr "skvrny"
 
 #: tprefsform.lblbandmapnote.caption
 #, fuzzy
 msgid "A band map does not need a DX cluster: it also holds spots you make yourself and anything the SO2R radio hears.  Cluster settings are on the DX Cluster page."
-msgstr ""
+msgstr "Mapa kapely nepotřebuje shluk DX: také obsahuje místa, která si vytvoříte a cokoliv, co rádio SO2R slyší. Nastavení clusteru je na stránce DX Cluster."
 
 #: tprefsform.lblbandoutput1.caption
 #, fuzzy
 msgid "Radio 1 band output port"
-msgstr ""
+msgstr "Výstupní port Radio 1"
 
 #: tprefsform.lblbandoutput2.caption
 #, fuzzy
 msgid "Radio 2 band output port"
-msgstr ""
+msgstr "Výstupní port pásma Radio 2"
 
 #: tprefsform.lblbandsheading.caption
 #, fuzzy
 msgid "Bands in use"
-msgstr ""
+msgstr "Používané pásky"
 
 #: tprefsform.lblbandshint.caption
 #, fuzzy
 msgid "Which bands TR4W offers when you change band, and which appear in the multiplier and band-map displays.  WARC bands are off by default because most contests do not allow them."
-msgstr ""
+msgstr "Které kapely TR4W nabízí, když změníte pásmo, a které se objeví v zobrazení násobitele a bandmap. Brány WARC jsou ve výchozím nastavení vypnuty, protože většina soutěží jim to nedovoluje."
 
 #: tprefsform.lblclustercommand.caption
 #, fuzzy
 msgid "After connecting:"
-msgstr ""
+msgstr "Po připojení:"
 
 #: tprefsform.lblclustercommandhint.caption
 #, fuzzy
 msgid "Sent once the login is accepted - filters, set/name, sh/dx.  Separate several with a semicolon."
-msgstr ""
+msgstr "Odesláno po přijetí přihlášení - filtry, set / name, sh / dx. Oddělte několik se středníkem."
 
 #: tprefsform.lblclusterglobalheading.caption
 #, fuzzy
 msgid "For every cluster"
-msgstr ""
+msgstr "Pro každou skupinu"
 
 #: tprefsform.lblclusterheading.caption
 #, fuzzy
 msgid "My DX clusters"
-msgstr ""
+msgstr "Moje DX hvězdokupy"
 
 #: tprefsform.lblclusterlogin.caption
 #, fuzzy
 msgid "Log in as:"
-msgstr ""
+msgstr "Přihlaste se jako:"
 
 #: tprefsform.lblclusterloginhint.caption
 #, fuzzy
 msgid "blank = my station callsign"
-msgstr ""
+msgstr "prázdný = můj volací znak"
 
 #: tprefsform.lblclustername.caption
 #: tprefsform.lblrotatorname.caption
 #, fuzzy
 msgctxt "tprefsform.lblclustername.caption"
 msgid "Name:"
-msgstr ""
+msgstr "Název:"
 
 #: tprefsform.lblclusternote.caption
 #, fuzzy
 msgid "The cluster reconnects on its own after a drop.  Telnet logging is on the Logging page; spot display and ageing are on Band Map."
-msgstr ""
+msgstr "Shluky se po kapce znovu spojí. Telnet logování je na záložce Logging; bodové zobrazení a stárnutí jsou na mapě Band."
 
 #: tprefsform.lblclusterpassword.caption
 #: tprefsform.lblhamscorepass.caption
@@ -4327,178 +4327,178 @@ msgstr ""
 #, fuzzy
 msgctxt "tprefsform.lblclusterpassword.caption"
 msgid "Password:"
-msgstr ""
+msgstr "Heslo:"
 
 #: tprefsform.lblclusterserver.caption
 #: tprefsform.lblnetaddress.caption
 #, fuzzy
 msgctxt "tprefsform.lblclusterserver.caption"
 msgid "Server:"
-msgstr ""
+msgstr "Server:"
 
 #: tprefsform.lblclusterserverhint.caption
 #, fuzzy
 msgid "host:port, for example dxc.nc7j.com:7373.  The drop-down lists the servers in TRCLUSTER.DAT; you can also type one that is not on it."
-msgstr ""
+msgstr "hostitel: port, například dxc.nc7j.com: 7373. Drop- down obsahuje seznam serverů v TRCLUSTER.DAT; můžete také zadat typ, který na něm není."
 
 #: tprefsform.lblcontestheading.caption
 #, fuzzy
 msgid "Contest exchange"
-msgstr ""
+msgstr "Soutěžná výměna"
 
 #: tprefsform.lblcwoutput1.caption
 #, fuzzy
 msgctxt "tprefsform.lblcwoutput1.caption"
 msgid "CW output 1"
-msgstr ""
+msgstr "Výstup CW 1"
 
 #: tprefsform.lblcwoutput2.caption
 #, fuzzy
 msgctxt "tprefsform.lblcwoutput2.caption"
 msgid "CW output 2"
-msgstr ""
+msgstr "Výstup CW 2"
 
 #: tprefsform.lblcwsendheading.caption
 #, fuzzy
 msgid "Sending"
-msgstr ""
+msgstr "Odesílání"
 
 #: tprefsform.lblcwspeedincrement.caption
 #, fuzzy
 msgid "Speed step:"
-msgstr ""
+msgstr "Rychlost:"
 
 #: tprefsform.lblcwspeedincrementunits.caption
 #, fuzzy
 msgid "WPM per PageUp / PageDown"
-msgstr ""
+msgstr "WPM per PageUp / PageDown"
 
 #: tprefsform.lblcwtone.caption
 #, fuzzy
 msgid "Sidetone:"
-msgstr ""
+msgstr "Sideton:"
 
 #: tprefsform.lblcwtoneunits.caption
 #, fuzzy
 msgid "Hz  (0 = the radios own sidetone)"
-msgstr ""
+msgstr "Hz (0 = poloměr vlastní bočnice)"
 
 #: tprefsform.lbldetaillogs.caption
 #, fuzzy
 msgid "Detailed logging for one subsystem"
-msgstr ""
+msgstr "Podrobná evidence jednoho subsystému"
 
 #: tprefsform.lblditdah.caption
 #, fuzzy
 msgid "Dit/dah ratio:"
-msgstr ""
+msgstr "Poměr dit / dah:"
 
 #: tprefsform.lbldvkheading.caption
 #, fuzzy
 msgid "Digital voice keyer"
-msgstr ""
+msgstr "Digitální hlasový keyer"
 
 #: tprefsform.lbldvkpath.caption
 #, fuzzy
 msgid "DVK recording folder"
-msgstr ""
+msgstr "Složka pro záznam DVK"
 
 #: tprefsform.lbldvkrecorder.caption
 #, fuzzy
 msgid "DVK recorder program"
-msgstr ""
+msgstr "Program rekordéru DVK"
 
 #: tprefsform.lbldxlabheading.caption
 #, fuzzy
 msgid "DXLab"
-msgstr ""
+msgstr "DXLab"
 
 #: tprefsform.lbldxlabinfo.caption
 #, fuzzy
 msgid "DXLab needs no settings of its own.  TR4W offers a DX Commander compatible interface on TCP port 52002 whenever the WSJT-X support is running, and DXLab programs connect to that."
-msgstr ""
+msgstr "DXLab nepotřebuje vlastní nastavení. TR4W nabízí DX Commander kompatibilní rozhraní na TCP portu 52002, kdykoli je spuštěna podpora WSJT-X, a DXLab programy připojit k tomu."
 
 #: tprefsform.lbldxlabinfo2.caption
 #, fuzzy
 msgid "The port is not configurable today.  If you want it to be, say so and it becomes a setting here."
-msgstr ""
+msgstr "Port není dnes konfigurovatelný. Pokud chcete, aby to bylo, řekněte to a stane se to tady."
 
 #: tprefsform.lblfarnsworthspeed.caption
 #, fuzzy
 msgid "Character speed:"
-msgstr ""
+msgstr "Rychlost znaku:"
 
 #: tprefsform.lblfarnsworthunits.caption
 #, fuzzy
 msgid "WPM"
-msgstr ""
+msgstr "WPM"
 
 #: tprefsform.lblfontsize.caption
 #, fuzzy
 msgid "Size:"
-msgstr ""
+msgstr "Velikost:"
 
 #: tprefsform.lblhamlibrestart.caption
 #, fuzzy
 msgid "The three HamLib settings take effect when TR4W next starts.  They are very verbose and are for diagnosing a radio problem - leave them off otherwise."
-msgstr ""
+msgstr "Tři HamLib nastavení nabývají účinku, když TR4W další začíná. Jsou velmi verbální a jsou pro diagnostiku rádiového problému - nechte je jinak."
 
 #: tprefsform.lblhamscoreurl.caption
 #, fuzzy
 msgid "Service URL:"
-msgstr ""
+msgstr "URL služby:"
 
 #: tprefsform.lblhamscoreuser.caption
 #, fuzzy
 msgid "Username:"
-msgstr ""
+msgstr "Uživatelské jméno:"
 
 #: tprefsform.lblhardwareheading.caption
 #: ulclformhelpers.tc_prefs_hardware
 #, fuzzy
 msgctxt "tprefsform.lblhardwareheading.caption"
 msgid "Hardware"
-msgstr ""
+msgstr "Hardware"
 
 #: tprefsform.lblhardwareinfo.caption
 #, fuzzy
 msgid "Station-wide hardware. Settings that belong to one radio are under Radios; rotators are under Rotators."
-msgstr ""
+msgstr "Stanice - široký hardware. Nastavení, které patří do jednoho rádia jsou pod Radios; rotátory jsou pod Rotátory."
 
 #: tprefsform.lblkeyerhint.caption
 #, fuzzy
 msgid "Only devices with their own settings live here - a WinKeyer or a YCCC SO2R+ box.  Keying on a radio's own port, or by CAT, is part of that radio's setup; a station profile then chooses which method each slot uses."
-msgstr ""
+msgstr "Žijí zde pouze zařízení s vlastním nastavením - WinKeyer nebo YCCC SO2R + box. Keying on a radio 's own port, or by CAT, is part of that radio' s setup; a station profile then choses which method each slot use."
 
 #: tprefsform.lblleadingzerochar.caption
 #, fuzzy
 msgid "Sent as:"
-msgstr ""
+msgstr "Odesláno jako:"
 
 #: tprefsform.lblleadingzerohint.caption
 #, fuzzy
 msgid "Serial numbers are padded to that many digits.  T for a zero is the usual cut-number choice; leave it as 0 to send them plainly."
-msgstr ""
+msgstr "Sériová čísla jsou polstrovaná do tolika číslic. T pro nulu je obvyklá volba cut- number; nechte to jako 0 poslat je jasně."
 
 #: tprefsform.lblleadingzeros.caption
 #, fuzzy
 msgid "Leading zeros:"
-msgstr ""
+msgstr "Hlavní nuly:"
 
 #: tprefsform.lbllogfilesheading.caption
 #, fuzzy
 msgid "Log files"
-msgstr ""
+msgstr "Soubory záznamů"
 
 #: tprefsform.lblloggeraddress.caption
 #, fuzzy
 msgid "Address:"
-msgstr ""
+msgstr "Adresa:"
 
 #: tprefsform.lblloggerheading.caption
 #, fuzzy
 msgid "External logger"
-msgstr ""
+msgstr "Externí záznamník"
 
 #: tprefsform.lblloggerport.caption
 #: tprefsform.lblnetport.caption
@@ -4507,235 +4507,235 @@ msgstr ""
 #, fuzzy
 msgctxt "tprefsform.lblloggerport.caption"
 msgid "Port:"
-msgstr ""
+msgstr "Port:"
 
 #: tprefsform.lblloggerrestart.caption
 #: tprefsform.lblscorerestart.caption
 #, fuzzy
 msgctxt "tprefsform.lblloggerrestart.caption"
 msgid "These take effect when TR4W next starts."
-msgstr ""
+msgstr "Ty nabudou účinku, až začne TR4W."
 
 #: tprefsform.lblloggerstatus.caption
 #, fuzzy
 msgid "DXKEEPER is complete.  ACLOG and HRD are not finished - selecting one logs a warning and no QSOs are sent."
-msgstr ""
+msgstr "DXKeeper je kompletní. ACLOG a HRD nejsou dokončeny - výběr jednoho záznamu varování a žádné QSO nejsou zaslány."
 
 #: tprefsform.lblloggertype.caption
 #, fuzzy
 msgid "Program:"
-msgstr ""
+msgstr "Program:"
 
 #: tprefsform.lblloglevel.caption
 #, fuzzy
 msgid "Log level:"
-msgstr ""
+msgstr "Úroveň záznamu:"
 
 #: tprefsform.lblloglevelhint.caption
 #, fuzzy
 msgid "Takes effect immediately - no restart.  INFO is the normal setting; DEBUG and TRACE make the log much larger and are for diagnosing a problem."
-msgstr ""
+msgstr "Okamžitě nabývá účinku - žádný restart. INFO je normální nastavení; DEBUG a TRACE dělat log mnohem větší a jsou pro diagnostiku problému."
 
 #: tprefsform.lblmainfont.caption
 #, fuzzy
 msgid "Font:"
-msgstr ""
+msgstr "Písmo:"
 
 #: tprefsform.lblmmttyengine.caption
 #, fuzzy
 msgid "Engine:"
-msgstr ""
+msgstr "Motor:"
 
 #: tprefsform.lblmmttyhint.caption
 #, fuzzy
 msgid "The full path to MMTTY.EXE.  TR4W starts it for RTTY and talks to it directly."
-msgstr ""
+msgstr "Plnou cestu k MMTTY.EXE. TR4W začíná pro RTTY a mluví s ním přímo."
 
 #: tprefsform.lblmp3heading.caption
 #, fuzzy
 msgid "QSO recording"
-msgstr ""
+msgstr "Záznam QSO"
 
 #: tprefsform.lblmp3path.caption
 #, fuzzy
 msgid "MP3 folder"
-msgstr ""
+msgstr "Složka MP3"
 
 #: tprefsform.lblmp3player.caption
 #, fuzzy
 msgid "MP3 player program"
-msgstr ""
+msgstr "MP3 přehrávač program"
 
 #: tprefsform.lblmycall.caption
 #, fuzzy
 msgid "Callsign:"
-msgstr ""
+msgstr "Volací znak:"
 
 #: tprefsform.lblmycheck.caption
 #, fuzzy
 msgid "Check:"
-msgstr ""
+msgstr "Kontrola:"
 
 #: tprefsform.lblmycontinent.caption
 #, fuzzy
 msgid "Continent:"
-msgstr ""
+msgstr "Kontinent:"
 
 #: tprefsform.lblmycountry.caption
 #, fuzzy
 msgid "Country:"
-msgstr ""
+msgstr "Země:"
 
 #: tprefsform.lblmyfdclass.caption
 #, fuzzy
 msgid "FD class:"
-msgstr ""
+msgstr "Třída FD:"
 
 #: tprefsform.lblmyfocnumber.caption
 #, fuzzy
 msgid "FOC number:"
-msgstr ""
+msgstr "Číslo FOC:"
 
 #: tprefsform.lblmygrid.caption
 #, fuzzy
 msgid "Grid square:"
-msgstr ""
+msgstr "Čtverec mřížky:"
 
 #: tprefsform.lblmyiota.caption
 #, fuzzy
 msgid "IOTA:"
-msgstr ""
+msgstr "IOTA:"
 
 #: tprefsform.lblmyituzone.caption
 #, fuzzy
 msgid "ITU zone:"
-msgstr ""
+msgstr "Oblast ITU:"
 
 #: tprefsform.lblmykeyers.caption
 #, fuzzy
 msgid "CW keying devices"
-msgstr ""
+msgstr "CW keyingová zařízení"
 
 #: tprefsform.lblmyname.caption
 #, fuzzy
 msgid "First name:"
-msgstr ""
+msgstr "Jméno:"
 
 #: tprefsform.lblmypark.caption
 #, fuzzy
 msgid "Park:"
-msgstr ""
+msgstr "Park:"
 
 #: tprefsform.lblmypostalcode.caption
 #, fuzzy
 msgid "Postal code:"
-msgstr ""
+msgstr "PSČ:"
 
 #: tprefsform.lblmyprec.caption
 #, fuzzy
 msgid "Precedence:"
-msgstr ""
+msgstr "Přesnost:"
 
 #: tprefsform.lblmyradios.caption
 #, fuzzy
 msgctxt "tprefsform.lblmyradios.caption"
 msgid "My radios"
-msgstr ""
+msgstr "Moje rádia"
 
 #: tprefsform.lblmyrotators.caption
 #, fuzzy
 msgid "My rotators"
-msgstr ""
+msgstr "Moje rotátory"
 
 #: tprefsform.lblmysection.caption
 #, fuzzy
 msgid "ARRL section:"
-msgstr ""
+msgstr "Oddíl ARRL:"
 
 #: tprefsform.lblmystate.caption
 #, fuzzy
 msgid "State/Province:"
-msgstr ""
+msgstr "Stát / provincie:"
 
 #: tprefsform.lblmyzone.caption
 #, fuzzy
 msgid "CQ zone:"
-msgstr ""
+msgstr "Oblast CQ:"
 
 #: tprefsform.lblnetcomputerid.caption
 #, fuzzy
 msgid "This station:"
-msgstr ""
+msgstr "Tato stanice:"
 
 #: tprefsform.lblnetcomputeridhint.caption
 #, fuzzy
 msgid "a single letter, unique in the network"
-msgstr ""
+msgstr "jedno písmeno, jedinečné v síti"
 
 #: tprefsform.lblnetheading.caption
 #, fuzzy
 msgid "Multi-operator network"
-msgstr ""
+msgstr "Síť multioperátorů"
 
 #: tprefsform.lblnethint.caption
 #, fuzzy
 msgid "TR4WServer runs on one machine and every operating position connects to it.  It holds the shared log, the multipliers and the serial numbers."
-msgstr ""
+msgstr "TR4WServer běží na jednom stroji a každá operační pozice se k němu připojí. Drží sdílený záznam, násobitele a sériová čísla."
 
 #: tprefsform.lblopcwheading.caption
 #, fuzzy
 msgid "CW while operating"
-msgstr ""
+msgstr "CW při provozu"
 
 #: tprefsform.lbloperatingheading.caption
 #, fuzzy
 msgid "Operating"
-msgstr ""
+msgstr "Provozní"
 
 #: tprefsform.lbloperatinginfo.caption
 #, fuzzy
 msgid "How the log behaves while you are running the contest. Band map, bands, CW, scoring and two-radio settings are on the pages below."
-msgstr ""
+msgstr "Jak se deník chová, když vedete soutěž. Mapa pásů, pásky, CW, bodování a dvourádiová nastavení jsou na níže uvedených stránkách."
 
 #: tprefsform.lblpaddlehold.caption
 #, fuzzy
 msgid "Hold PTT after the last element"
-msgstr ""
+msgstr "Držte PTT po posledním prvku"
 
 #: tprefsform.lblpaddleholdunits.caption
 #, fuzzy
 msgid "dit counts"
-msgstr ""
+msgstr "dit počet"
 
 #: tprefsform.lblpaddleportnote.caption
 #, fuzzy
 msgid "The parallel port a paddle or foot switch is wired to is not here. Whether TR4W keeps supporting LPT at all is an open question, so PADDLE PORT stays on the Ctrl-J command list until that is settled rather than being given a home it may not keep."
-msgstr ""
+msgstr "Paralelní port, ke kterému je připojen pádlo nebo pádlo. Zda TR4W udržuje podporu LPT vůbec, je otevřená otázka, takže PADDLE PORT zůstane na příkazovém seznamu Ctrl-J, dokud je usazen, spíše než být uveden domov nemusí držet."
 
 #: tprefsform.lblpaddlepttheading.caption
 #, fuzzy
 msgid "Paddle and PTT"
-msgstr ""
+msgstr "Pádlo a PTT"
 
 #: tprefsform.lblpaddlepttinfo.caption
 #, fuzzy
 msgid "The paddle keyer TR4W runs itself, and the PTT line it asserts. A WinKeyer or YCCC box keeps its own paddle timing, so these do not apply to it."
-msgstr ""
+msgstr "Pádlo keyer TR4W běží sám, a PTT linka to prosazuje. WinKeyer nebo YCCC box si udržuje své vlastní pádlo načasování, takže tyto se na něj nevztahují."
 
 #: tprefsform.lblpaddlespeed.caption
 #, fuzzy
 msgid "Paddle speed"
-msgstr ""
+msgstr "Rychlost pádla"
 
 #: tprefsform.lblpaddlespeedunits.caption
 #, fuzzy
 msgid "WPM  (0 follows the keyboard speed)"
-msgstr ""
+msgstr "WPM (0 následuje po rychlosti klávesnice)"
 
 #: tprefsform.lblpaddletone.caption
 #, fuzzy
 msgid "Paddle sidetone"
-msgstr ""
+msgstr "Boční pádlo"
 
 #: tprefsform.lblplaceholder.caption
 #, fuzzy
@@ -4744,166 +4744,168 @@ msgid ""
 "This section has not been migrated yet.\n"
 "Use the existing configuration screens for it."
 msgstr ""
+"Tato sekce ještě nebyla přemístěna.\n"
+"Pro to použijte stávající konfigurační obrazovky."
 
 #: tprefsform.lblpttdelay.caption
 #, fuzzy
 msgid "Delay after PTT before sending"
-msgstr ""
+msgstr "Zpoždění po PTT před odesláním"
 
 #: tprefsform.lblpttdelayunits.caption
 #, fuzzy
 msgid "x 1.7 ms  (0 disables)"
-msgstr ""
+msgstr "x 1.7 ms (0 vad)"
 
 #: tprefsform.lblpttgroup.caption
 #, fuzzy
 msgid "PTT"
-msgstr ""
+msgstr "PTT"
 
 #: tprefsform.lblradiotcpheading.caption
 #, fuzzy
 msgid "Radio sharing"
-msgstr ""
+msgstr "Sdílení rádia"
 
 #: tprefsform.lblradiotcphint.caption
 #, fuzzy
 msgid "Lets another position read this station's radio.  Takes effect when TR4W next starts."
-msgstr ""
+msgstr "Pojďme si přečíst další pozici rádia této stanice. Nabývá účinku, když TR4W příště začne."
 
 #: tprefsform.lblradiotcpport.caption
 #, fuzzy
 msgid "TCP port:"
-msgstr ""
+msgstr "TCP port:"
 
 #: tprefsform.lblrelayport.caption
 #, fuzzy
 msgid "Relay control port"
-msgstr ""
+msgstr "Ovládací port relé"
 
 #: tprefsform.lblrelayportinfo.caption
 #, fuzzy
 msgid "Parallel (LPT) port wiring for this station: relay switching, band data out to a decoder per operating position, and stereo audio control. These follow the DESK, not the radio, so they stay put when you activate a different radio. Leave them None unless you have such an interface - whether TR4W keeps supporting LPT at all is still an open question, which the greyed box below is a placeholder for."
-msgstr ""
+msgstr "Paralelní (LPT) portové zapojení pro tuto stanici: přepínání relé, data z pásma na dekodér na operační pozici a stereo audio ovládání. Tyhle následují DESK, ne rádio, takže zůstanou na místě, když aktivujete jiné rádio. Nezanechte žádné, pokud nemáte takové rozhraní - zda TR4W udržuje podporu LPT vůbec je stále otevřená otázka, která šedá krabice níže je prostředníkem pro."
 
 #: tprefsform.lblrotatorbands.caption
 #, fuzzy
 msgid "Bands:"
-msgstr ""
+msgstr "Kapela:"
 
 #: tprefsform.lblrotatorbandshint.caption
 #, fuzzy
 msgid "Leave blank and this rotator turns for every band, which is what a station with one antenna wants.  List bands - 20 15 10 - to have TR4W choose between several rotators by band."
-msgstr ""
+msgstr "Nechte prázdné a tento rotátor se otočí pro každou kapelu, což je to, co stanice s jednou anténou chce. Seznam kapel - 20 15 10 - mít TR4W vybrat mezi několika rotátory podle pásma."
 
 #: tprefsform.lblrotatorbaud.caption
 #, fuzzy
 msgid "Baud rate:"
-msgstr ""
+msgstr "Míra Baud:"
 
 #: tprefsform.lblrotatorbaudhint.caption
 #, fuzzy
 msgid "blank or 0 = the default for this type"
-msgstr ""
+msgstr "prázdný nebo 0 = výchozí hodnota pro tento typ"
 
 #: tprefsform.lblrotatorip.caption
 #, fuzzy
 msgid "IP address:"
-msgstr ""
+msgstr "IP adresa:"
 
 #: tprefsform.lblrotatornote.caption
 #, fuzzy
 msgid "PstRotator is reached over UDP and has no serial port; the others use one.  A blank baud rate lets each type use what it expects - the DCU-1 wants 4800 where the rest want 9600."
-msgstr ""
+msgstr "PstRotator je dosažen přes UDP a nemá žádný sériový port; ostatní jej používají. Prázdná baud sazba umožňuje každému typu použít, co očekává - DCU-1 chce4800, kde ostatní chtějí9600."
 
 #: tprefsform.lblrotatortype.caption
 #, fuzzy
 msgid "Type:"
-msgstr ""
+msgstr "Typ:"
 
 #: tprefsform.lblrotatorudp.caption
 #, fuzzy
 msgid "UDP port:"
-msgstr ""
+msgstr "UDP port:"
 
 #: tprefsform.lblsayhicutoff.caption
 #, fuzzy
 msgid "Stop above a rate of:"
-msgstr ""
+msgstr "Zastavit nad rychlostí:"
 
 #: tprefsform.lblsayhicutoffunits.caption
 #, fuzzy
 msgid "QSOs per hour"
-msgstr ""
+msgstr "QSP za hodinu"
 
 #: tprefsform.lblscoreboardheading.caption
 #, fuzzy
 msgid "Score board"
-msgstr ""
+msgstr "Skóre"
 
 #: tprefsform.lblscoreboardhint.caption
 #, fuzzy
 msgid "Where TR4W posts its score and where it reads other stations' scores from.  The two are separate so a club board can be read while posting elsewhere."
-msgstr ""
+msgstr "Kde TR4W píše skóre a odkud čte skóre ostatních stanic. Tyto dva jsou oddělené, takže klubová rada může být čtena při vysílání jinde."
 
 #: tprefsform.lblscoreheading.caption
 #, fuzzy
 msgid "Online scoring"
-msgstr ""
+msgstr "Online bodování"
 
 #: tprefsform.lblscoreposturl.caption
 #, fuzzy
 msgid "Posting URL:"
-msgstr ""
+msgstr "URL pro vysílání:"
 
 #: tprefsform.lblscorereadurl.caption
 #, fuzzy
 msgid "Reading URL:"
-msgstr ""
+msgstr "Čtení URL:"
 
 #: tprefsform.lblscpcountry.caption
 #, fuzzy
 msgid "Restrict to countries:"
-msgstr ""
+msgstr "Omezení na země:"
 
 #: tprefsform.lblscpfilehint.caption
 #, fuzzy
 msgid "Matches come from TRMASTER.DTA in the program folder.  Without that file Super Check Partial simply shows nothing; it is not an error."
-msgstr ""
+msgstr "Zápalky pocházejí z TRMASTER.DTA ve složce programu. Bez tohoto souboru Super Check Partial jednoduše nic neukazuje; není to chyba."
 
 #: tprefsform.lblscpheading.caption
 #, fuzzy
 msgid "Super Check Partial"
-msgstr ""
+msgstr "Super check parciální"
 
 #: tprefsform.lblscphint.caption
 #, fuzzy
 msgid "Blank shows matches from everywhere.  A list of country prefixes narrows it, which is useful in a domestic contest where the whole world is not workable."
-msgstr ""
+msgstr "Prázdné ukazuje sirky ze všech stran. Seznam předpokladů země ji zužuje, což je užitečné v domácí soutěži, kde celý svět není funkční."
 
 #: tprefsform.lblscpmatchheading.caption
 #, fuzzy
 msgid "Matching"
-msgstr ""
+msgstr "Odpovídající"
 
 #: tprefsform.lblscpminletters.caption
 #, fuzzy
 msgid "Start matching after:"
-msgstr ""
+msgstr "Spustit porovnávání po:"
 
 #: tprefsform.lblscpminlettersunits.caption
 #, fuzzy
 msgid "letters typed"
-msgstr ""
+msgstr "zadané dopisy"
 
 #: tprefsform.lblserialkeyheading.caption
 #, fuzzy
 msgid "Radio serial keying  (DTR/RTS keying only)"
-msgstr ""
+msgstr "Sériové keying rádia (pouze keying DTR / RTS)"
 
 #: tprefsform.lblserialkeyintro.caption
 #, fuzzy
 msgid "These shape the CW that TR4W generates itself by toggling a serial line.  They do nothing for a WinKeyer, a YCCC box, or CW sent by CAT - those devices keep their own timing."
-msgstr ""
+msgstr "Tyto tvary CW, které se TR4W generuje přepínáním sériové linky. Nedělají nic pro WinKeyer, YCCC box, nebo CW poslané CAT - tato zařízení si nechávají vlastní načasování."
 
 #. Section: UEDITMESSAGE
 #: tprefsform.lblstationheading.caption
@@ -4916,304 +4918,304 @@ msgstr "Údaje pro záhlaví deníku"
 #: tprefsform.lblstationhint.caption
 #, fuzzy
 msgid "These are sent to the other stations in a multi-operator network when you change them, so all positions agree on the exchange."
-msgstr ""
+msgstr "Tyto jsou odesílány do ostatních stanic v síti multioperátorů, když je změníte, takže všechny pozice se dohodnou na výměně."
 
 #: tprefsform.lblstereoport.caption
 #, fuzzy
 msgid "Stereo control port"
-msgstr ""
+msgstr "Port ovládání Stereo"
 
 #: tprefsform.lbltcibindallwarning.caption
 #, fuzzy
 msgid "Off by default, and worth leaving off.  This is an unauthenticated radio-control socket: anything that can reach the port can move your VFO and key your transmitter."
-msgstr ""
+msgstr "Vypnuto ve výchozím nastavení a stojí to za to. Toto je neověřená radiotelefonní zásuvka: cokoliv, co se dostane do portu, může přesunout VFO a aktivovat vysílač."
 
 #: tprefsform.lbltciintro.caption
 #, fuzzy
 msgid "Lets other programs - WSJT-X, JTDX, a skimmer - control whichever radio TR4W has the port open on, even a radio with no TCI of its own.  Radio 1 is trx 0 and radio 2 is trx 1."
-msgstr ""
+msgstr "Umožňuje další programy - WSJT-X, JTDX, skimmer - ovládání podle rádia TR4W má port otevřený, dokonce i rádio bez TCI své vlastní. Radio1 je trx0 a rádio2 je trx1."
 
 #: tprefsform.lbltciloghint.caption
 #, fuzzy
 msgid "To log every TCI command in both directions, see the Logging section."
-msgstr ""
+msgstr "Chcete-li zaznamenat každý příkaz TCI v obou směrech, podívejte se na sekci Logging."
 
 #: tprefsform.lbltcimaxtx.caption
 #, fuzzy
 msgid "Stop transmitting after:"
-msgstr ""
+msgstr "Zastavit vysílání po:"
 
 #: tprefsform.lbltcimaxtxhint.caption
 #, fuzzy
 msgid "A safety net, not a timer for normal use: if a client keys the radio and then stops answering - it crashed, or the network went away - this is what puts the transmitter back into receive."
-msgstr ""
+msgstr "Bezpečnostní síť, ne časovač pro normální použití: pokud klient otevře rádio a pak přestane odpovídat - havarovalo, nebo síť odešla - to je to, co dává vysílač zpět na příjem."
 
 #: tprefsform.lbltcimaxtxunits.caption
 #, fuzzy
 msgid "seconds  (0 = no limit)"
-msgstr ""
+msgstr "sekund (0 = žádný limit)"
 
 #: tprefsform.lbltciserverscope.caption
 #, fuzzy
 msgid "- this computer only (127.0.0.1), until you tick the box below"
-msgstr ""
+msgstr "- pouze tento počítač (127.0.0.1), dokud nezaškrtnete políčko níže"
 
 #: tprefsform.lbltworadioheading.caption
 #, fuzzy
 msgid "Two radio operating"
-msgstr ""
+msgstr "Dvourádiový provoz"
 
 #: tprefsform.lbltworadiohint.caption
 #, fuzzy
 msgid "Skipping the other radio's band is what stops a band change on one radio landing you on top of the other."
-msgstr ""
+msgstr "Přeskočení kapely druhého rádia je to, co zastaví změnu kapely na jednom rádiu a přistane na druhém."
 
 #: tprefsform.lbltworadiointro.caption
 #, fuzzy
 msgid "Everything below applies only while two radio mode is on."
-msgstr ""
+msgstr "Vše níže platí pouze při zapnutém rádiovém režimu."
 
 #: tprefsform.lbludpdestinations.caption
 #, fuzzy
 msgid "Destinations"
-msgstr ""
+msgstr "Místa určení"
 
 #: tprefsform.lbludphint.caption
 #, fuzzy
 msgid "Each destination is one program listening.  Add a second row for the same address when it expects different data on a different port."
-msgstr ""
+msgstr "Každý cíl je jeden program poslouchat. Přidat druhý řádek pro stejnou adresu, když očekává jiná data na jiném portu."
 
 #: tprefsform.lblweight.caption
 #, fuzzy
 msgid "Weight:"
-msgstr ""
+msgstr "Hmotnost:"
 
 #: tprefsform.lblwsjtxheading.caption
 #, fuzzy
 msgid "WSJT-X / JTDX"
-msgstr ""
+msgstr "WSJT-X / JTDX"
 
 #: tprefsform.lblwsjtxmulticast.caption
 #, fuzzy
 msgid "Multicast group:"
-msgstr ""
+msgstr "Multicast skupina:"
 
 #: tprefsform.lblwsjtxport.caption
 #, fuzzy
 msgid "Broadcast port:"
-msgstr ""
+msgstr "Vysílací port:"
 
 #: tprefsform.lblwsjtxrestart.caption
 #, fuzzy
 msgid "These take effect when TR4W next starts.  Leave the multicast group blank unless WSJT-X is configured to use one."
-msgstr ""
+msgstr "Ty nabudou účinku, až začne TR4W. Zanechte multicast skupinu prázdnou, pokud není nastaveno WSJT-X pro použití."
 
 #: tprefsform.lblwsjtxtcihint.caption
 #, fuzzy
 msgid "To let WSJT-X drive the radio over TCI instead, see the TCI Server section - that works with any radio TR4W controls, not only one with TCI of its own."
-msgstr ""
+msgstr "Chcete-li nechat WSJT-X řídit rádio přes TCI, podívejte se na sekci TCI Server - která pracuje s libovolným rádiem TR4W ovládání, nejen jeden s TCI své vlastní."
 
 #: tprefsform.lblycccinfo.caption
 #, fuzzy
 msgid "Station controllers will get a factory of their own, as radios and keyers did. This checkbox is the interim home for the setting."
-msgstr ""
+msgstr "Řídící stanice dostane vlastní továrnu, stejně jako rádia a keyers. Toto políčko je dočasným domovem pro nastavení."
 
 #: tradioeditform.btndiscover.caption
 #: ulclformhelpers.tc_radioedit_discover
 #, fuzzy
 msgctxt "tradioeditform.btndiscover.caption"
 msgid "Discover"
-msgstr ""
+msgstr "Objevte"
 
 #: tradioeditform.chkft1000mpreverse.caption
 #, fuzzy
 msgctxt "tradioeditform.chkft1000mpreverse.caption"
 msgid "FT-1000MP CW reverse"
-msgstr ""
+msgstr "FT-1000MP CW reverzní"
 
 #: tradioeditform.chkpolling.caption
 #, fuzzy
 msgctxt "tradioeditform.chkpolling.caption"
 msgid "Poll this radio"
-msgstr ""
+msgstr "Vyzkoušej to rádio"
 
 #: tradioeditform.chkusehamlib.caption
 #, fuzzy
 msgctxt "tradioeditform.chkusehamlib.caption"
 msgid "Drive through HamLib"
-msgstr ""
+msgstr "Projet HamLib"
 
 #: tradioeditform.chkwidecw.caption
 #, fuzzy
 msgctxt "tradioeditform.chkwidecw.caption"
 msgid "Wide CW filter"
-msgstr ""
+msgstr "Široký CW filtr"
 
 #: tradioeditform.edtfreqoffset.texthint
 #, fuzzy
 msgid "0 = none, e.g. 116000000"
-msgstr ""
+msgstr "0 = žádný, např. 116000000"
 
 #: tradioeditform.lblautoinfo.caption
 #, fuzzy
 msgid "Auto-info level"
-msgstr ""
+msgstr "Auto- info level"
 
 #: tradioeditform.lblbaud.caption
 #, fuzzy
 msgctxt "tradioeditform.lblbaud.caption"
 msgid "Baud rate"
-msgstr ""
+msgstr "Sazba Baud"
 
 #: tradioeditform.lblcatdtr.caption
 #, fuzzy
 msgctxt "tradioeditform.lblcatdtr.caption"
 msgid "CAT DTR"
-msgstr ""
+msgstr "CAT DTR"
 
 #: tradioeditform.lblcatrts.caption
 #, fuzzy
 msgctxt "tradioeditform.lblcatrts.caption"
 msgid "CAT RTS"
-msgstr ""
+msgstr "KOCOUR RTS"
 
 #: tradioeditform.lblciv.caption
 #, fuzzy
 msgctxt "tradioeditform.lblciv.caption"
 msgid "CI-V address (hex)"
-msgstr ""
+msgstr "CI- V adresa (hex)"
 
 #: tradioeditform.lbldatabits.caption
 #, fuzzy
 msgctxt "tradioeditform.lbldatabits.caption"
 msgid "Data bits"
-msgstr ""
+msgstr "Bity dat"
 
 #: tradioeditform.lbldatamode.caption
 #, fuzzy
 msgctxt "tradioeditform.lbldatamode.caption"
 msgid "Icom data mode ID"
-msgstr ""
+msgstr "ID datového režimu Icom"
 
 #: tradioeditform.lblfilterbyte.caption
 #, fuzzy
 msgctxt "tradioeditform.lblfilterbyte.caption"
 msgid "Icom filter byte"
-msgstr ""
+msgstr "Icom filtr byte"
 
 #: tradioeditform.lblfound.caption
 #, fuzzy
 msgctxt "tradioeditform.lblfound.caption"
 msgid "Found"
-msgstr ""
+msgstr "Nalezeno"
 
 #: tradioeditform.lblfreqoffset.caption
 #, fuzzy
 msgid "Frequency offset (transverter), Hz"
-msgstr ""
+msgstr "Frekvenční posun (transvertor), Hz"
 
 #: tradioeditform.lblhamlibid.caption
 #, fuzzy
 msgctxt "tradioeditform.lblhamlibid.caption"
 msgid "HamLib model ID"
-msgstr ""
+msgstr "ID modelu HamLib"
 
 #: tradioeditform.lblip.caption
 #, fuzzy
 msgctxt "tradioeditform.lblip.caption"
 msgid "IP address"
-msgstr ""
+msgstr "IP adresa"
 
 #: tradioeditform.lblkeyerdtr.caption
 #, fuzzy
 msgctxt "tradioeditform.lblkeyerdtr.caption"
 msgid "Keyer DTR line"
-msgstr ""
+msgstr "Keyer DTR linka"
 
 #: tradioeditform.lblkeyerport.caption
 #, fuzzy
 msgctxt "tradioeditform.lblkeyerport.caption"
 msgid "Keyer output port"
-msgstr ""
+msgstr "Výstupní port Keyeru"
 
 #: tradioeditform.lblkeyerrts.caption
 #, fuzzy
 msgctxt "tradioeditform.lblkeyerrts.caption"
 msgid "Keyer RTS line"
-msgstr ""
+msgstr "Přímka Keyer RTS"
 
 #: tradioeditform.lblkeyerstopbits.caption
 #: tradioeditform.lblstopbits.caption
 #, fuzzy
 msgctxt "tradioeditform.lblkeyerstopbits.caption"
 msgid "Stop bits"
-msgstr ""
+msgstr "Zastavit bity"
 
 #: tradioeditform.lblparity.caption
 #, fuzzy
 msgctxt "tradioeditform.lblparity.caption"
 msgid "Parity"
-msgstr ""
+msgstr "Parita"
 
 #: tradioeditform.lblpassword.caption
 #, fuzzy
 msgctxt "tradioeditform.lblpassword.caption"
 msgid "Password"
-msgstr ""
+msgstr "Heslo"
 
 #: tradioeditform.lblstartup.caption
 #, fuzzy
 msgctxt "tradioeditform.lblstartup.caption"
 msgid "Startup command"
-msgstr ""
+msgstr "Příkaz spuštění"
 
 #: tradioeditform.lbltcpport.caption
 #, fuzzy
 msgctxt "tradioeditform.lbltcpport.caption"
 msgid "TCP port"
-msgstr ""
+msgstr "TCP port"
 
 #: tradioeditform.lbltype.caption
 #, fuzzy
 msgctxt "tradioeditform.lbltype.caption"
 msgid "Radio type"
-msgstr ""
+msgstr "Radiový typ"
 
 #: tradioeditform.lbluser.caption
 #, fuzzy
 msgctxt "tradioeditform.lbluser.caption"
 msgid "User name"
-msgstr ""
+msgstr "Uživatelské jméno"
 
 #: tradioeditform.optparityeven.caption
 #, fuzzy
 msgctxt "tradioeditform.optparityeven.caption"
 msgid "Even"
-msgstr ""
+msgstr "Dokonce"
 
 #: tradioeditform.optparitynone.caption
 #, fuzzy
 msgctxt "tradioeditform.optparitynone.caption"
 msgid "None"
-msgstr ""
+msgstr "Žádné"
 
 #: tradioeditform.optparityodd.caption
 #, fuzzy
 msgctxt "tradioeditform.optparityodd.caption"
 msgid "Odd"
-msgstr ""
+msgstr "Zvláštní"
 
 #: tradioeditform.tabadvanced.caption
 #, fuzzy
 msgctxt "tradioeditform.tabadvanced.caption"
 msgid "Advanced"
-msgstr ""
+msgstr "Pokročilé"
 
 #: tradioeditform.tabserial.caption
 #, fuzzy
 msgctxt "tradioeditform.tabserial.caption"
 msgid "Serial"
-msgstr ""
+msgstr "Pořadové"
 
 #: uappstrings.sctydownloadfailed
 #, fuzzy
@@ -5226,16 +5228,23 @@ msgid ""
 "\n"
 "tr4w.log records the full detail."
 msgstr ""
+"Nelze stáhnout CTY.DAT na:\n"
+"\n"
+"%s\n"
+"\n"
+"Důvod: %s\n"
+"\n"
+"Tr4w.log zaznamenává celý detail."
 
 #: uappstrings.sctydownloadfailedtitle
 #, fuzzy
 msgid "CTY.DAT"
-msgstr ""
+msgstr "CTY.DAT"
 
 #: uappstrings.sdownloadcouldnotstart
 #, fuzzy
 msgid "the download was refused before it began (bad URL)."
-msgstr ""
+msgstr "stahování bylo odmítnuto před tím, než začalo (špatná URL)."
 
 #: uappstrings.sdownloadnossllibrary
 #, fuzzy
@@ -5244,16 +5253,19 @@ msgid ""
 "\n"
 "libeay32.dll and ssleay32.dll must sit in the same folder as tr4w.exe. The TR4W installer puts them there -- was this folder installed, or is it a copy of tr4w.exe on its own?"
 msgstr ""
+"openSSL knihovny nelze načíst.\n"
+"\n"
+"libeay32.dll a sleay32.dll musí sedět ve stejné složce jako tr4w.ex. Instalátor TR4W je tam umístí -- byla tato složka nainstalována, nebo je to kopie tr4w.exe sama o sobě?"
 
 #: uappstrings.sdownloadrenamefailed
 #, fuzzy
 msgid "the file downloaded but could not be saved under its final name."
-msgstr ""
+msgstr "stažený soubor, ale nemohl být uložen pod jeho konečným názvem."
 
 #: uappstrings.siniretiredontask
 #, fuzzy
 msgid "Do not ask me about this file again"
-msgstr ""
+msgstr "Už se mě na tu složku neptej"
 
 #: uappstrings.siniretirefailed
 #, fuzzy
@@ -5261,6 +5273,8 @@ msgid ""
 "Could not remove %s -- %s.\n"
 "It is ignored regardless, so nothing is broken."
 msgstr ""
+"Nelze odstranit %s -- %s.\n"
+"Bez ohledu na to je ignorován, takže nic není rozbité."
 
 #: uappstrings.siniretireprompt
 #, fuzzy
@@ -5275,6 +5289,15 @@ msgid ""
 "\n"
 "The file is ignored either way."
 msgstr ""
+"Vaše nastavení byla přesunuta na:\n"
+"%s\n"
+"\n"
+"Starý soubor se již nečte:\n"
+"%s\n"
+"\n"
+"Odstranit to teď?\n"
+"\n"
+"Soubor je ignorován tak jako tak."
 
 #: uappstrings.siniretireremoved
 #, fuzzy
@@ -5284,22 +5307,22 @@ msgstr ""
 #: ulclformhelpers.tc_prefs_applied
 #, fuzzy
 msgid "Profile \"%s\" is active."
-msgstr ""
+msgstr "Profil \"%s\" je aktivní."
 
 #: ulclformhelpers.tc_prefs_confirmremove
 #, fuzzy
 msgid "Remove radio \"%s\"?"
-msgstr ""
+msgstr "Odstranit rádio \"%s\"?"
 
 #: ulclformhelpers.tc_prefs_none
 #, fuzzy
 msgid "(none)"
-msgstr ""
+msgstr "(žádné)"
 
 #: ulclformhelpers.tc_prefs_noprofile
 #, fuzzy
 msgid "Select or create a station profile first."
-msgstr ""
+msgstr "Nejprve vyberte nebo vytvořte profil stanice."
 
 #: ulclformhelpers.tc_prefs_portconflict
 #, fuzzy
@@ -5310,16 +5333,21 @@ msgid ""
 "\n"
 "Apply anyway?"
 msgstr ""
+"Konflikty v přístavu:\n"
+"\n"
+"%s\n"
+"\n"
+"Přihlásíš se?"
 
 #: ulclformhelpers.tc_prefs_radioinuse
 #, fuzzy
 msgid "%s  (in use as %s)"
-msgstr ""
+msgstr "%s (používá se jako %s)"
 
 #: ulclformhelpers.tc_prefs_udpconfirmremove
 #, fuzzy
 msgid "Remove the destination %s:%d?"
-msgstr ""
+msgstr "Odstranit destinaci %s: %d?"
 
 #: ulclformhelpers.tc_prefs_udpduplicate
 #, fuzzy
@@ -5327,16 +5355,18 @@ msgid ""
 "%s:%d is already in the list.\n"
 "Add the extra kinds of data to that destination instead of listing it twice."
 msgstr ""
+"%s: %d je již na seznamu.\n"
+"Přidat další druhy dat do této destinace místo výpisu dvakrát."
 
 #: ulclformhelpers.tc_prefs_udpnostreams
 #, fuzzy
 msgid "(nothing selected)"
-msgstr ""
+msgstr "(nic vybraného)"
 
 #: ulclformhelpers.tc_prefs_udpselectfirst
 #, fuzzy
 msgid "Select a destination to test."
-msgstr ""
+msgstr "Zvolte místo určení pro testování."
 
 #: ulclformhelpers.tc_prefs_udptestsent
 #, fuzzy
@@ -5344,11 +5374,13 @@ msgid ""
 "Test packet sent to %s:%d.\n"
 "UDP cannot confirm it arrived -- check the receiving program."
 msgstr ""
+"Testovací paket odeslán na %s: %d.\n"
+"UDP nemůže potvrdit, že dorazil -- zkontrolujte přijímací program."
 
 #: ulclformhelpers.tc_prefs_unsaved
 #, fuzzy
 msgid "Save your changes before closing?"
-msgstr ""
+msgstr "Uložit změny před zavřením?"
 
 #: ulclformhelpers.tc_radioedit_autoinfowarn
 #, fuzzy
@@ -5361,61 +5393,68 @@ msgid ""
 "\n"
 "Use this value anyway?"
 msgstr ""
+"Nastavení úrovně automatických informací ručně je nestandardní konfigurace.\n"
+"\n"
+"Zanechte tento box EMPTY, pokud nemáte konkrétní důvod: rádio pak používá úroveň TR4W ví funguje pro něj, a TR4W průzkumy to co nejméně.\n"
+"\n"
+"Hodnota, kterou zde zadáte, to přečte a ovlivní to provoz - vstup 0 vrací rádio, aby bylo vše hodnoceno, což znatelně odkládá změnu z přenosu zpět na příjem.\n"
+"\n"
+"Stejně použiješ tuhle hodnotu?"
 
 #: ulclformhelpers.tc_radioedit_badciv
 #, fuzzy
 msgid "The CI-V address must be a hex value, e.g. 88 or $88."
-msgstr ""
+msgstr "Adresa CI-V musí být hodnota hex, např. 88 nebo 88 dolarů."
 
 #: ulclformhelpers.tc_radioedit_defaulthint
 #, fuzzy
 msgid "%s (default)"
-msgstr ""
+msgstr "%s (přednastaveno)"
 
 #: ulclformhelpers.tc_radioedit_namerequired
 #, fuzzy
 msgid "The radio needs a name."
-msgstr ""
+msgstr "Rádio potřebuje jméno."
 
 #: ulclformhelpers.tc_radioedit_nonefound
 #, fuzzy
 msgid "No radios answered."
-msgstr ""
+msgstr "Žádné rádio neodpovídá."
 
 #: ulclformhelpers.tc_radioedit_searching
 #, fuzzy
 msgid "Searching..."
-msgstr ""
+msgstr "Hledám..."
 
 #: ulclformhelpers.tc_radioedit_typerequired
 #, fuzzy
 msgid "Choose a radio type."
-msgstr ""
+msgstr "Vyberte si rádiový typ."
 
 #: uudpdestinationeditform.tc_udpedit_badport
 #, fuzzy
 msgid "The port must be a number between 1 and 65535."
-msgstr ""
+msgstr "Port musí být číslo mezi1 a65535."
 
 #: uudpdestinationeditform.tc_udpedit_noaddress
 #, fuzzy
 msgid "Enter an address."
-msgstr ""
+msgstr "Zadejte adresu."
 
 #: uudpdestinationeditform.tc_udpedit_nostreams
 #, fuzzy
 msgid "Choose at least one kind of data to send, or cancel and remove this destination."
-msgstr ""
+msgstr "Vyberte si alespoň jeden druh dat k odeslání, nebo zrušit a odstranit tuto destinaci."
 
 #: uudpdestinationeditform.tc_udpedit_notimplemented
 #, fuzzy
 msgid " (not implemented yet)"
-msgstr ""
+msgstr " (dosud neprovedeno)"
 
 #: uudpdestinationeditform.tc_udpedit_testsent
 #, fuzzy
 msgid "Test packet sent to %s:%d.  UDP cannot confirm it arrived -- check the receiving program."
-msgstr ""
+msgstr "Testovací paket odeslán na %s: %d. UDP nemůže potvrdit, že dorazil -- zkontrolujte přijímací program."
 
 #. Section: General
 #: utr4wstrings:tc_translation_credit
@@ -5423,7 +5462,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_TRANSLATION_CREDIT"
 msgid "%s translation by %s"
-msgstr ""
+msgstr "%s překlad do %s"
 
 #. Section: UTELNET
 #: utr4wstrings:tc_telnet
@@ -5438,7 +5477,7 @@ msgstr "Spojit\000Odpojit\000Příkazy\000Zastavit\000Vymazat\000100\000\000"
 #, fuzzy
 msgctxt "TC_BANDCHANGEDISABLED"
 msgid "Band change requires MULTIPLE BANDS = TRUE once the log has QSOs"
-msgstr ""
+msgstr "Změna pásma vyžaduje MULTIPLE BANDS = TRUE, jakmile má záznam QSP"
 
 #. Section: UEDITMESSAGE
 #. 4.51.8
@@ -6344,7 +6383,7 @@ msgstr "znovu inicializovat WinKeyer"
 #, fuzzy
 msgctxt "TC_DOWNLOADINGCTYDAT"
 msgid "Downloading CTY.DAT..."
-msgstr ""
+msgstr "Stahuji CTY.DAT..."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_downloadingtrmasterdta
@@ -6352,7 +6391,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_DOWNLOADINGTRMASTERDTA"
 msgid "Downloading TRMASTER.DTA..."
-msgstr ""
+msgstr "Stahování TRMASTER.DTA..."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_downloadingpotaparks
@@ -6360,7 +6399,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_DOWNLOADINGPOTAPARKS"
 msgid "Downloading POTA parks..."
-msgstr ""
+msgstr "Stahování POTA parků..."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_hamscorequeueingfulllogresync
@@ -6368,7 +6407,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_HAMSCOREQUEUEINGFULLLOGRESYNC"
 msgid "HamScore: queueing full log resync..."
-msgstr ""
+msgstr "HamScore: queueing full log resync..."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_logincalldoeslooklikecallsign
@@ -6376,7 +6415,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_LOGINCALLDOESLOOKLIKECALLSIGN"
 msgid "Login call does not look like a callsign"
-msgstr ""
+msgstr "Přihlášení nevypadá jako volací znak"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_nopotaparksloggedyetsession
@@ -6384,7 +6423,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_NOPOTAPARKSLOGGEDYETSESSION"
 msgid "No POTA parks logged yet this session"
-msgstr ""
+msgstr "Žádné POTA parky se zatím nezaznamenávají"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_cwoff
@@ -6392,7 +6431,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_CWOFF"
 msgid "CW Off"
-msgstr ""
+msgstr "CW vypnuto"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_cannotopenlogfile
@@ -6400,7 +6439,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_CANNOTOPENLOGFILE"
 msgid "Cannot open log file"
-msgstr ""
+msgstr "Nelze otevřít soubor záznamu"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_scannoteditedhere
@@ -6416,7 +6455,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_DEBUGMODECREATEDPREFIXESTXT"
 msgid "debug mode created prefixes.txt"
-msgstr ""
+msgstr "debug mode vytvořil prefiles.txt"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_potaparksloaded
@@ -6424,7 +6463,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_POTAPARKSLOADED"
 msgid "POTA parks loaded"
-msgstr ""
+msgstr "Nabité parky POTA"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_potaparksfilecouldloaded
@@ -6432,7 +6471,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_POTAPARKSFILECOULDLOADED"
 msgid "POTA parks file could not be loaded"
-msgstr ""
+msgstr "Soubor POTA parků nelze načíst"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_potaparksdownloadfailed
@@ -6440,7 +6479,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_POTAPARKSDOWNLOADFAILED"
 msgid "POTA parks download failed"
-msgstr ""
+msgstr "Stáhnout POTA parky selhalo"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_trmasterdtadownloadedrestarttr4wus
@@ -6448,7 +6487,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_TRMASTERDTADOWNLOADEDRESTARTTR4WUS"
 msgid "TRMASTER.DTA downloaded -- restart TR4W to use it"
-msgstr ""
+msgstr "TRMASTER.DTA stažen -- restartovat TR4W použít"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_trmasterdtadownloadfailed
@@ -6456,7 +6495,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_TRMASTERDTADOWNLOADFAILED"
 msgid "TRMASTER.DTA download failed"
-msgstr ""
+msgstr "TRMASTER.DTA stahování selhalo"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_ctydatdownloadedreloading
@@ -6464,7 +6503,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_CTYDATDOWNLOADEDRELOADING"
 msgid "CTY.DAT downloaded. Reloading..."
-msgstr ""
+msgstr "CTY.DAT stažen. Nabíjím..."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_ctydatreloadedsuccessfully
@@ -6472,7 +6511,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_CTYDATRELOADEDSUCCESSFULLY"
 msgid "CTY.DAT reloaded successfully."
-msgstr ""
+msgstr "CTY.DAT úspěšně nabil."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_ctydatdownloadfailed
@@ -6480,7 +6519,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_CTYDATDOWNLOADFAILED"
 msgid "CTY.DAT download failed."
-msgstr ""
+msgstr "Stáhnout CTY.DAT selhalo."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_errorplayingvoicememory
@@ -6488,7 +6527,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_ERRORPLAYINGVOICEMEMORY"
 msgid "Error playing voice memory"
-msgstr ""
+msgstr "Chyba při přehrávání hlasové paměti"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_flushinitialexcommandexecuted
@@ -6496,7 +6535,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_FLUSHINITIALEXCOMMANDEXECUTED"
 msgid "FLUSHINITIALEX command is executed."
-msgstr ""
+msgstr "Příkaz FLUSHINITIALEX je proveden."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_autospotenabledtestmodeonly
@@ -6504,7 +6543,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_AUTOSPOTENABLEDTESTMODEONLY"
 msgid "AUTOSPOT is enabled - Test Mode Only"
-msgstr ""
+msgstr "AUTOSPOT je zapnut - pouze zkušební režim"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_handlogmodetrue
@@ -6512,7 +6551,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_HANDLOGMODETRUE"
 msgid "HAND LOG MODE = TRUE"
-msgstr ""
+msgstr "HAND LOG MODE = TRUE"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_trmasterdtas
@@ -6520,7 +6559,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_TRMASTERDTAS"
 msgid "TRMASTER.DTA : %s"
-msgstr ""
+msgstr "TRMASTER.DTA: %s"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_tr4wtimewarning
@@ -6528,7 +6567,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_TR4WTIMEWARNING"
 msgid "TR4W Time Warning"
-msgstr ""
+msgstr "TR4W Varování času"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_errorofferingcommanderproxytcpport
@@ -6536,7 +6575,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_ERROROFFERINGCOMMANDERPROXYTCPPORT"
 msgid "Error offering Commander proxy TCP Port"
-msgstr ""
+msgstr "Chyba při nabízení Commander proxy TCP Port"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_pttviacommandsctrljoptionmusttruew
@@ -6544,7 +6583,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_PTTVIACOMMANDSCTRLJOPTIONMUSTTRUEW"
 msgid "PTT VIA COMMANDS (CTRL-J) option must be true for WSJT-X use - Setting to true"
-msgstr ""
+msgstr "Volba PTT VIA COMRANDS (CTRL-J) musí platit pro použití WSJT-X - Nastavení na true"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_cannotdisablesplittransmitslicecre
@@ -6552,7 +6591,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_CANNOTDISABLESPLITTRANSMITSLICECRE"
 msgid "Cannot disable split -- the transmit slice was created on the radio. Turn it off in the SDR."
-msgstr ""
+msgstr "Nelze vypnout rozdělení -- vysílač byl vytvořen v rádiu. Vypněte to v SDR."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_sorryusedupallreminders
@@ -6560,7 +6599,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_SORRYUSEDUPALLREMINDERS"
 msgid "Sorry, you have used up all your reminders!!"
-msgstr ""
+msgstr "Promiň, vyčerpal jsi všechny vzpomínky!"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_invaliddate
@@ -6568,7 +6607,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_INVALIDDATE"
 msgid "Invalid date!!"
-msgstr ""
+msgstr "Neplatné datum!!"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_enoughmemoryinitialexchangearray
@@ -6576,7 +6615,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_ENOUGHMEMORYINITIALEXCHANGEARRAY"
 msgid "Not enough memory for initial exchange array!!"
-msgstr ""
+msgstr "Nedostatek paměti pro počáteční výměnu pole!!"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_findingzeroendvisibledupesheetlist
@@ -6584,7 +6623,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_FINDINGZEROENDVISIBLEDUPESHEETLIST"
 msgid "Not finding zero at end visible dupesheet list!!"
-msgstr ""
+msgstr "Nenajdete nulu na konci viditelné dupesheet seznam!!"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_qtcprocessterminated
@@ -6592,7 +6631,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_QTCPROCESSTERMINATED"
 msgid "QTC process terminated."
-msgstr ""
+msgstr "QTC proces ukončen."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_qtcnumberillegalcharacters
@@ -6600,7 +6639,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_QTCNUMBERILLEGALCHARACTERS"
 msgid "QTC Number has illegal characters."
-msgstr ""
+msgstr "Číslo QTC má nelegální znaky."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_numbermessagesillegalcharacters
@@ -6608,7 +6647,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_NUMBERMESSAGESILLEGALCHARACTERS"
 msgid "Number of messages has illegal characters."
-msgstr ""
+msgstr "Počet zpráv má nelegální znaky."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_qtcprocessterminatedinvalidnumberm
@@ -6616,7 +6655,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_QTCPROCESSTERMINATEDINVALIDNUMBERM"
 msgid "QTC process terminated.  Invalid number of messages."
-msgstr ""
+msgstr "QTC proces ukončen. Neplatný počet zpráv."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_ifoundcontestnameidonounderstandlo
@@ -6624,7 +6663,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_IFOUNDCONTESTNAMEIDONOUNDERSTANDLO"
 msgid "I found a contest name I do no understand in your LOGCFG.DAT file."
-msgstr ""
+msgstr "Našel jsem název soutěže, kterému nerozumím ve vašem souboru LOGCFG.DAT."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_ididfinecontestnamelogcfgdatfile
@@ -6632,7 +6671,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_IDIDFINECONTESTNAMELOGCFGDATFILE"
 msgid "I did not fine a contest name in your LOGCFG.DAT file."
-msgstr ""
+msgstr "Ve vaší složce o LOGCFG.DAT jsem nepoškodil název soutěže."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_arenewengland
@@ -6640,7 +6679,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_ARENEWENGLAND"
 msgid "Are you in New England?"
-msgstr ""
+msgstr "Jste v Nové Anglii?"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_cwtimerfired
@@ -6648,7 +6687,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_CWTIMERFIRED"
 msgid "CW Timer fired"
-msgstr ""
+msgstr "CW časovač vystřelil"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_testradiointerface
@@ -6656,7 +6695,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_TESTRADIOINTERFACE"
 msgid "TEST RADIO INTERFACE"
-msgstr ""
+msgstr "ZKUŠEBNÍ RADIO INTERFACE"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_unablesavedtaasciifile
@@ -6664,7 +6703,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_UNABLESAVEDTAASCIIFILE"
 msgid "Unable to save .DTA to ASCII file."
-msgstr ""
+msgstr "Nelze uložit .DTA do ASCII souboru."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_savingdtafileasciifileprocessingce
@@ -6672,7 +6711,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_SAVINGDTAFILEASCIIFILEPROCESSINGCE"
 msgid "Saving .DTA file to ASCII file.  Processing cell   "
-msgstr ""
+msgstr "Uložení souboru DTA do souboru ASCII. Zpracovatelská buňka   "
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_datasuccessfullysavedasciifile
@@ -6680,7 +6719,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_DATASUCCESSFULLYSAVEDASCIIFILE"
 msgid "Data successfully saved to ASCII file."
-msgstr ""
+msgstr "Data úspěšně uložená do ASCII souboru."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_notrmasterdtafilefound
@@ -6688,7 +6727,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_NOTRMASTERDTAFILEFOUND"
 msgid "No TRMASTER.DTA file found."
-msgstr ""
+msgstr "Nebyl nalezen žádný soubor TRMASTER.DTA."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_hitcounthistogram050
@@ -6696,7 +6735,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_HITCOUNTHISTOGRAM050"
 msgid "Hit count histogram for 0 to 50+ : "
-msgstr ""
+msgstr "Hit počet histogram pro 0 až 50 +: "
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_pleasecheckmultinetwork
@@ -6704,7 +6743,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_PLEASECHECKMULTINETWORK"
 msgid "Please check multi network"
-msgstr ""
+msgstr "Zkontrolujte prosím více sítí"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_possibledatalossmultinetwork
@@ -6712,7 +6751,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_POSSIBLEDATALOSSMULTINETWORK"
 msgid "Possible data loss on multi network."
-msgstr ""
+msgstr "Možné ztráty dat na více sítích."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_selectspotreturnleftorrightarrowse
@@ -6720,7 +6759,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_SELECTSPOTRETURNLEFTORRIGHTARROWSE"
 msgid "Select spot.  RETURN, left or right arrow to select.  ESCAPE to exit."
-msgstr ""
+msgstr "Vyberte místo. Vrátit, levou nebo pravou šipku vybrat. Escape k východu."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_entercallsignspacedupecheckalthhel
@@ -6728,7 +6767,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_ENTERCALLSIGNSPACEDUPECHECKALTHHEL"
 msgid "ENTER a callsign.  SPACE for dupecheck.  Alt-H for help."
-msgstr ""
+msgstr "Tady je volací znak. SPACE pro Dupecheck. Alt- H jako pomoc."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_continueenteringcharactersautoterm
@@ -6736,7 +6775,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_CONTINUEENTERINGCHARACTERSAUTOTERM"
 msgid "Continue entering characters.  Auto terminate active!!"
-msgstr ""
+msgstr "Pokračovat v zadávání znaků. Automatické ukončení aktivní!"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_continueenteringcharacterspressret
@@ -6744,7 +6783,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_CONTINUEENTERINGCHARACTERSPRESSRET"
 msgid "Continue entering characters and press RETURN when done."
-msgstr ""
+msgstr "Pokračovat v zadávání znaků a stiskněte tlačítko RETURN po dokončení."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_enterexchangepressenterlogescapeab
@@ -6752,7 +6791,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_ENTEREXCHANGEPRESSENTERLOGESCAPEAB"
 msgid "Enter exchange.  Press ENTER to log, ESCAPE to abort QSO."
-msgstr ""
+msgstr "Zadejte výměnu. Stiskněte ENTER pro záznam, ESCAPE pro zrušení QSO."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_relaycontrolportpaddleport
@@ -6760,7 +6799,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_RELAYCONTROLPORTPADDLEPORT"
 msgid "RELAY CONTROL PORT = PADDLE PORT"
-msgstr ""
+msgstr "RELAY CONTROL PORT = PADDLE PORT"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_locationfieldempty
@@ -6768,7 +6807,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_LOCATIONFIELDEMPTY"
 msgid "LOCATION field is empty."
-msgstr ""
+msgstr "Lokalizační pole je prázdné."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_pttlockouttrue
@@ -6776,7 +6815,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_PTTLOCKOUTTRUE"
 msgid "PTT LOCKOUT=TRUE"
-msgstr ""
+msgstr "PTT LOCKOUT = TRUE"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_preferencescouldopeneds
@@ -6784,7 +6823,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_PREFERENCESCOULDOPENEDS"
 msgid "Preferences could not be opened (%s)."
-msgstr ""
+msgstr "Předvolby nelze otevřít (%s)."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_theseentrieswereacceptedbeensaved
@@ -6792,7 +6831,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_THESEENTRIESWEREACCEPTEDBEENSAVED"
 msgid "These entries were not accepted and have not been saved:"
-msgstr ""
+msgstr "Tyto položky nebyly přijaty a nebyly uloženy:"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_tciservercouldopenportds
@@ -6800,7 +6839,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_TCISERVERCOULDOPENPORTDS"
 msgid "The TCI server could not open port %d: %s"
-msgstr ""
+msgstr "Server TCI nemohl otevřít port %d: %s"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_keyernamedsalreadyexists
@@ -6808,7 +6847,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_KEYERNAMEDSALREADYEXISTS"
 msgid "A keyer named \"%s\" already exists."
-msgstr ""
+msgstr "Keyer jménem \"%s\" už existuje."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_sstillusedbys
@@ -6816,7 +6855,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_SSTILLUSEDBYS"
 msgid "\"%s\" is still used by: %s"
-msgstr ""
+msgstr "\"%s\" je stále používán: %s"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_removeclusters
@@ -6824,7 +6863,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_REMOVECLUSTERS"
 msgid "Remove the cluster \"%s\"?"
-msgstr ""
+msgstr "Odstranit shluk \"%s\"?"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_removerotators
@@ -6832,7 +6871,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_REMOVEROTATORS"
 msgid "Remove the rotator \"%s\"?"
-msgstr ""
+msgstr "Odstranit rotátor \"%s\"?"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_loggingrunningsotherenofileopen
@@ -6840,7 +6879,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_LOGGINGRUNNINGSOTHERENOFILEOPEN"
 msgid "Logging is not running, so there is no file to open."
-msgstr ""
+msgstr "Záznam není spuštěn, takže není žádný soubor k otevření."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_therenologfileyets
@@ -6848,7 +6887,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_THERENOLOGFILEYETS"
 msgid "There is no log file yet at %s."
-msgstr ""
+msgstr "V %s není zatím žádný záznam."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_openineditor
@@ -6856,7 +6895,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_EDITOR_OPENINEDITOR"
 msgid "Open in text &editor"
-msgstr ""
+msgstr "Otevřít v textovém editoru"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_explore
@@ -6864,7 +6903,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_EDITOR_EXPLORE"
 msgid "Explore"
-msgstr ""
+msgstr "Prozkoumejte"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_copy
@@ -6872,7 +6911,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_EDITOR_COPY"
 msgid "&Copy"
-msgstr ""
+msgstr "& Kopírovat"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_selectall
@@ -6880,7 +6919,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_EDITOR_SELECTALL"
 msgid "Select &all"
-msgstr ""
+msgstr "Vybrat všechny"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_sendlogto
@@ -6888,7 +6927,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_EDITOR_SENDLOGTO"
 msgid "Send log to %s"
-msgstr ""
+msgstr "Odeslat záznam na %s"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_uploadcabrillotoscp
@@ -6896,7 +6935,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_UPLOADCABRILLOTOSCP"
 msgid "Do you want to upload your Cabrillo file to SuperChecklPartial?"
-msgstr ""
+msgstr "Chcete nahrát svůj Cabrillo soubor do SuperChecklPartial?"
 
 #. Section: General
 #. minute
@@ -6925,7 +6964,7 @@ msgstr ""
 #, fuzzy
 msgctxt "tfrmabout.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "OK"
 
 #: tfrmabout.lblurl.caption
 #, fuzzy
@@ -6936,13 +6975,13 @@ msgstr ""
 #, fuzzy
 msgctxt "tfrmaltd.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "Zrušit"
 
 #: tfrmaltd.btnok.caption
 #, fuzzy
 msgctxt "tfrmaltd.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "OK"
 
 #: tfrmaltd.caption
 #, fuzzy
@@ -6953,18 +6992,18 @@ msgstr "Kontrola spojení na neaktivním RIGu"
 #, fuzzy
 msgctxt "tfrmautocq.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "Zrušit"
 
 #: tfrmautocq.btnok.caption
 #, fuzzy
 msgctxt "tfrmautocq.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "OK"
 
 #: tfrmautocq.caption
 #, fuzzy
 msgid "Auto-CQ"
-msgstr ""
+msgstr "Automatické CQ"
 
 #: tfrmautocq.lbldelay.caption
 #, fuzzy
@@ -6990,13 +7029,13 @@ msgstr "Smaž všechny spoty"
 #, fuzzy
 msgctxt "tfrmbandplan.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "Zrušit"
 
 #: tfrmbandplan.btnok.caption
 #, fuzzy
 msgctxt "tfrmbandplan.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "OK"
 
 #: tfrmbandplan.caption
 #, fuzzy
@@ -7007,7 +7046,7 @@ msgstr "Rozdělení pásem"
 #, fuzzy
 msgctxt "tfrmeditmessage.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "Zrušit"
 
 #: tfrmeditmessage.btneditwav.caption
 #, fuzzy
@@ -7024,7 +7063,7 @@ msgstr "&Seznam příkazů"
 #, fuzzy
 msgctxt "tfrmeditmessage.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "OK"
 
 #: tfrmeditmessage.caption
 #, fuzzy
@@ -7046,7 +7085,7 @@ msgstr "MSG"
 #, fuzzy
 msgctxt "tfrmeditqso.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "Zrušit"
 
 #: tfrmeditqso.lblband.caption
 #, fuzzy
@@ -7067,7 +7106,7 @@ msgstr "Datum"
 #: tfrmeditqso.lbldx.caption
 #, fuzzy
 msgid "DX"
-msgstr ""
+msgstr "DX"
 
 #: tfrmeditqso.lblmode.caption
 #, fuzzy
@@ -7088,7 +7127,7 @@ msgstr "Operátor"
 #: tfrmeditqso.lblqth.caption
 #, fuzzy
 msgid "QTH"
-msgstr ""
+msgstr "QTH"
 
 #: tfrmfunctionkeys.caption
 #, fuzzy
@@ -7164,13 +7203,13 @@ msgstr ""
 #, fuzzy
 msgctxt "tfrminputquery.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "Zrušit"
 
 #: tfrminputquery.btnok.caption
 #, fuzzy
 msgctxt "tfrminputquery.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "OK"
 
 #: tfrmintercom.caption
 #, fuzzy
@@ -7181,7 +7220,7 @@ msgstr "Interkom"
 #, fuzzy
 msgctxt "tfrmkeyeredit.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "Zrušit"
 
 #: tfrmkeyeredit.lblname.caption
 #, fuzzy
@@ -7208,25 +7247,25 @@ msgstr "Synchronizovat"
 #, fuzzy
 msgctxt "tfrmlpt.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "Zrušit"
 
 #: tfrmlpt.btnok.caption
 #, fuzzy
 msgctxt "tfrmlpt.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "OK"
 
 #: tfrmmessageslist.btncancel.caption
 #, fuzzy
 msgctxt "tfrmmessageslist.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "Zrušit"
 
 #: tfrmmessageslist.btnok.caption
 #, fuzzy
 msgctxt "tfrmmessageslist.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "OK"
 
 #: tfrmmessageslist.caption
 #, fuzzy
@@ -7304,13 +7343,13 @@ msgstr "Zavři"
 #, fuzzy
 msgctxt "tfrmsendspot.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "Zrušit"
 
 #: tfrmsendspot.btnok.caption
 #, fuzzy
 msgctxt "tfrmsendspot.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "OK"
 
 #: tfrmsendspot.caption
 #, fuzzy
@@ -7347,199 +7386,199 @@ msgstr "Příkazy"
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "Zrušit"
 
 #: tfrmudpdestinationedit.btnok.caption
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "OK"
 
 #: tfrmudpdestinationedit.lblport.caption
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.lblport.caption"
 msgid "Port"
-msgstr ""
+msgstr "Přístav"
 
 #: tfrmwinmanager.btncancel.caption
 #, fuzzy
 msgctxt "tfrmwinmanager.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "Zrušit"
 
 #: tfrmwinmanager.btnok.caption
 #, fuzzy
 msgctxt "tfrmwinmanager.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "OK"
 
 #: tprefsform.btnaddcluster.caption
 #, fuzzy
 msgctxt "tprefsform.btnaddcluster.caption"
 msgid "Add..."
-msgstr ""
+msgstr "Přidat..."
 
 #: tprefsform.btnaddkeyer.caption
 #, fuzzy
 msgctxt "tprefsform.btnaddkeyer.caption"
 msgid "Add..."
-msgstr ""
+msgstr "Přidat..."
 
 #: tprefsform.btnaddrotator.caption
 #, fuzzy
 msgctxt "tprefsform.btnaddrotator.caption"
 msgid "Add..."
-msgstr ""
+msgstr "Přidat..."
 
 #: tprefsform.btnbrowsedvkpath.caption
 #, fuzzy
 msgctxt "tprefsform.btnbrowsedvkpath.caption"
 msgid "Browse..."
-msgstr ""
+msgstr "Procházet..."
 
 #: tprefsform.btnbrowsedvkrecorder.caption
 #, fuzzy
 msgctxt "tprefsform.btnbrowsedvkrecorder.caption"
 msgid "Browse..."
-msgstr ""
+msgstr "Procházet..."
 
 #: tprefsform.btnbrowsemmtty.caption
 #, fuzzy
 msgctxt "tprefsform.btnbrowsemmtty.caption"
 msgid "Browse..."
-msgstr ""
+msgstr "Procházet..."
 
 #: tprefsform.btnbrowsemp3path.caption
 #, fuzzy
 msgctxt "tprefsform.btnbrowsemp3path.caption"
 msgid "Browse..."
-msgstr ""
+msgstr "Procházet..."
 
 #: tprefsform.btnbrowsemp3player.caption
 #, fuzzy
 msgctxt "tprefsform.btnbrowsemp3player.caption"
 msgid "Browse..."
-msgstr ""
+msgstr "Procházet..."
 
 #: tprefsform.btncancel.caption
 #, fuzzy
 msgctxt "tprefsform.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "Zrušit"
 
 #: tprefsform.btnduplicatekeyer.caption
 #, fuzzy
 msgctxt "tprefsform.btnduplicatekeyer.caption"
 msgid "Duplicate"
-msgstr ""
+msgstr "Duplikovat"
 
 #: tprefsform.btneditkeyer.caption
 #, fuzzy
 msgctxt "tprefsform.btneditkeyer.caption"
 msgid "Edit..."
-msgstr ""
+msgstr "Upravit..."
 
 #: tprefsform.btnok.caption
 #, fuzzy
 msgctxt "tprefsform.btnok.caption"
 msgid "Save and close"
-msgstr ""
+msgstr "Uložit a zavřít"
 
 #: tprefsform.btnremovecluster.caption
 #, fuzzy
 msgctxt "tprefsform.btnremovecluster.caption"
 msgid "Remove"
-msgstr ""
+msgstr "Odstranit"
 
 #: tprefsform.btnremovekeyer.caption
 #, fuzzy
 msgctxt "tprefsform.btnremovekeyer.caption"
 msgid "Remove"
-msgstr ""
+msgstr "Odstranit"
 
 #: tprefsform.btnremoverotator.caption
 #, fuzzy
 msgctxt "tprefsform.btnremoverotator.caption"
 msgid "Remove"
-msgstr ""
+msgstr "Odstranit"
 
 #: tprefsform.btnudpadd.caption
 #, fuzzy
 msgctxt "tprefsform.btnudpadd.caption"
 msgid "Add..."
-msgstr ""
+msgstr "Přidat..."
 
 #: tprefsform.btnudpedit.caption
 #, fuzzy
 msgctxt "tprefsform.btnudpedit.caption"
 msgid "Edit..."
-msgstr ""
+msgstr "Upravit..."
 
 #: tprefsform.btnudpremove.caption
 #, fuzzy
 msgctxt "tprefsform.btnudpremove.caption"
 msgid "Remove"
-msgstr ""
+msgstr "Odstranit"
 
 #: tprefsform.btnudptest.caption
 #, fuzzy
 msgctxt "tprefsform.btnudptest.caption"
 msgid "Test"
-msgstr ""
+msgstr "Zkouška"
 
 #: tprefsform.btnuserotator.caption
 #, fuzzy
 msgctxt "tprefsform.btnuserotator.caption"
 msgid "Use this"
-msgstr ""
+msgstr "Použij tohle"
 
 #: tprefsform.chkspeedsync2.caption
 #, fuzzy
 msgctxt "tprefsform.chkspeedsync2.caption"
 msgid "Speed sync"
-msgstr ""
+msgstr "Speed sync"
 
 #: tprefsform.lblbandmapheading.caption
 #, fuzzy
 msgctxt "tprefsform.lblbandmapheading.caption"
 msgid "Band map"
-msgstr ""
+msgstr "Mapa pásma"
 
 #: tprefsform.lblhamscorepass.caption
 #, fuzzy
 msgctxt "tprefsform.lblhamscorepass.caption"
 msgid "Password:"
-msgstr ""
+msgstr "Heslo:"
 
 #: tprefsform.lblmainwindowheading.caption
 #, fuzzy
 msgctxt "tprefsform.lblmainwindowheading.caption"
 msgid "Main window"
-msgstr ""
+msgstr "Hlavní okno"
 
 #: tprefsform.lblmmttyheading.caption
 #, fuzzy
 msgctxt "tprefsform.lblmmttyheading.caption"
 msgid "MMTTY"
-msgstr ""
+msgstr "MMTTY"
 
 #: tprefsform.lblnetaddress.caption
 #, fuzzy
 msgctxt "tprefsform.lblnetaddress.caption"
 msgid "Server:"
-msgstr ""
+msgstr "Server:"
 
 #: tprefsform.lblnetpassword.caption
 #, fuzzy
 msgctxt "tprefsform.lblnetpassword.caption"
 msgid "Password:"
-msgstr ""
+msgstr "Heslo:"
 
 #: tprefsform.lblnetport.caption
 #, fuzzy
 msgctxt "tprefsform.lblnetport.caption"
 msgid "Port:"
-msgstr ""
+msgstr "Port:"
 
 #: tprefsform.lblpaddlegroup.caption
 #, fuzzy
@@ -7550,7 +7589,7 @@ msgstr "Pastička"
 #, fuzzy
 msgctxt "tprefsform.lblpaddletoneunits.caption"
 msgid "Hz"
-msgstr ""
+msgstr "Hz"
 
 #: tprefsform.lblradio1.caption
 #, fuzzy
@@ -7568,19 +7607,19 @@ msgstr "RIG 2"
 #, fuzzy
 msgctxt "tprefsform.lblrotatorname.caption"
 msgid "Name:"
-msgstr ""
+msgstr "Název:"
 
 #: tprefsform.lblrotatorport.caption
 #, fuzzy
 msgctxt "tprefsform.lblrotatorport.caption"
 msgid "Port:"
-msgstr ""
+msgstr "Port:"
 
 #: tprefsform.lblscorerestart.caption
 #, fuzzy
 msgctxt "tprefsform.lblscorerestart.caption"
 msgid "These take effect when TR4W next starts."
-msgstr ""
+msgstr "Ty nabudou účinku, až začne TR4W."
 
 #: tprefsform.lblstationheading.caption
 #, fuzzy
@@ -7591,25 +7630,25 @@ msgstr "Údaje pro záhlaví deníku"
 #, fuzzy
 msgctxt "tprefsform.lbltciport.caption"
 msgid "Port:"
-msgstr ""
+msgstr "Port:"
 
 #: tradioeditform.btncancel.caption
 #, fuzzy
 msgctxt "tradioeditform.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "Zrušit"
 
 #: tradioeditform.btnok.caption
 #, fuzzy
 msgctxt "tradioeditform.btnok.caption"
 msgid "Save and close"
-msgstr ""
+msgstr "Uložit a zavřít"
 
 #: tradioeditform.caption
 #, fuzzy
 msgctxt "tradioeditform.caption"
 msgid "Radio"
-msgstr ""
+msgstr "Rádio"
 
 #: tradioeditform.lblname.caption
 #, fuzzy
@@ -7621,13 +7660,13 @@ msgstr "Jméno"
 #, fuzzy
 msgctxt "tradioeditform.lblport.caption"
 msgid "Port"
-msgstr ""
+msgstr "Přístav"
 
 #: tradioeditform.lblstopbits.caption
 #, fuzzy
 msgctxt "tradioeditform.lblstopbits.caption"
 msgid "Stop bits"
-msgstr ""
+msgstr "Zastavit bity"
 
 #: tradioeditform.optdata7.caption
 #, fuzzy
@@ -7659,117 +7698,117 @@ msgstr "Síť"
 #, fuzzy
 msgctxt "ttr4wmainform.caption"
 msgid "TR4W"
-msgstr ""
+msgstr "TR4W"
 
 #: uappstrings.salreadyrunningtitle
 #, fuzzy
 msgctxt "uappstrings.salreadyrunningtitle"
 msgid "TR4W"
-msgstr ""
+msgstr "TR4W"
 
 #: uappstrings.siniretiretitle
 #, fuzzy
 msgctxt "uappstrings.siniretiretitle"
 msgid "Old settings file"
-msgstr ""
+msgstr "Starý soubor nastavení"
 
 #: ulclformhelpers.tc_prefs_activate
 #, fuzzy
 msgid "Save and activate this profile"
-msgstr ""
+msgstr "Uložit a aktivovat tento profil"
 
 #: ulclformhelpers.tc_prefs_activelabel
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_activelabel"
 msgid "Active profile: "
-msgstr ""
+msgstr "Aktivní profil: "
 
 #: ulclformhelpers.tc_prefs_add
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_add"
 msgid "Add..."
-msgstr ""
+msgstr "Přidat..."
 
 #: ulclformhelpers.tc_prefs_apply
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_apply"
 msgid "Save"
-msgstr ""
+msgstr "Uložit"
 
 #: ulclformhelpers.tc_prefs_autoconnect
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_autoconnect"
 msgid "Connect radios at startup"
-msgstr ""
+msgstr "Připojení rádia při spuštění"
 
 #: ulclformhelpers.tc_prefs_cancel
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_cancel"
 msgid "Cancel"
-msgstr ""
+msgstr "Zrušit"
 
 #: ulclformhelpers.tc_prefs_cluster
 #, fuzzy
 msgid "DX Cluster"
-msgstr ""
+msgstr "DX Cluster"
 
 #: ulclformhelpers.tc_prefs_contest
 #, fuzzy
 msgid "Contest"
-msgstr ""
+msgstr "Soutěž"
 
 #: ulclformhelpers.tc_prefs_cw
 #, fuzzy
 msgid "CW"
-msgstr ""
+msgstr "CW"
 
 #: ulclformhelpers.tc_prefs_cwoutput1
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_cwoutput1"
 msgid "CW output 1"
-msgstr ""
+msgstr "Výstup CW 1"
 
 #: ulclformhelpers.tc_prefs_cwoutput2
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_cwoutput2"
 msgid "CW output 2"
-msgstr ""
+msgstr "Výstup CW 2"
 
 #: ulclformhelpers.tc_prefs_deleteprofile
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_deleteprofile"
 msgid "Delete"
-msgstr ""
+msgstr "Smazat"
 
 #: ulclformhelpers.tc_prefs_duplicate
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_duplicate"
 msgid "Duplicate"
-msgstr ""
+msgstr "Duplikovat"
 
 #: ulclformhelpers.tc_prefs_edit
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_edit"
 msgid "Edit..."
-msgstr ""
+msgstr "Upravit..."
 
 #: ulclformhelpers.tc_prefs_hardware
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_hardware"
 msgid "Hardware"
-msgstr ""
+msgstr "Hardware"
 
 #: ulclformhelpers.tc_prefs_myradios
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_myradios"
 msgid "My radios"
-msgstr ""
+msgstr "Moje rádia"
 
 #: ulclformhelpers.tc_prefs_newprofile
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_newprofile"
 msgid "New..."
-msgstr ""
+msgstr "Nový..."
 
 #: ulclformhelpers.tc_prefs_notmigrated
 #, fuzzy
@@ -7778,18 +7817,20 @@ msgid ""
 "This section has not been migrated yet.\n"
 "Use the existing configuration screens for it."
 msgstr ""
+"Tato sekce ještě nebyla přemístěna.\n"
+"Pro to použijte stávající konfigurační obrazovky."
 
 #: ulclformhelpers.tc_prefs_ok
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_ok"
 msgid "Save and close"
-msgstr ""
+msgstr "Uložit a zavřít"
 
 #: ulclformhelpers.tc_prefs_profiles
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_profiles"
 msgid "Station profile"
-msgstr ""
+msgstr "Profil stanice"
 
 #: ulclformhelpers.tc_prefs_radio1
 #, fuzzy
@@ -7807,175 +7848,175 @@ msgstr "RIG 2"
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_remove"
 msgid "Remove"
-msgstr ""
+msgstr "Odstranit"
 
 #: ulclformhelpers.tc_prefs_renameprofile
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_renameprofile"
 msgid "Rename..."
-msgstr ""
+msgstr "Přejmenovat..."
 
 #: ulclformhelpers.tc_prefs_so2r
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_so2r"
 msgid "SO2R enabled"
-msgstr ""
+msgstr "SOBR povoleno"
 
 #: ulclformhelpers.tc_prefs_speedsync
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_speedsync"
 msgid "Speed sync"
-msgstr ""
+msgstr "Speed sync"
 
 #: ulclformhelpers.tc_prefs_title
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_title"
 msgid "TR4W Preferences"
-msgstr ""
+msgstr "Nastavení TR4W"
 
 #: ulclformhelpers.tc_prefs_udpstream_appinfo
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_udpstream_appinfo"
 msgid "App info"
-msgstr ""
+msgstr "Informace o aplikaci"
 
 #: ulclformhelpers.tc_prefs_udpstream_contact
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_udpstream_contact"
 msgid "Contact info"
-msgstr ""
+msgstr "Kontaktní údaje"
 
 #: ulclformhelpers.tc_prefs_udpstream_lookup
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_udpstream_lookup"
 msgid "Callsign lookup"
-msgstr ""
+msgstr "Vyhledat volací znak"
 
 #: ulclformhelpers.tc_prefs_udpstream_radio
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_udpstream_radio"
 msgid "Radio info"
-msgstr ""
+msgstr "Rádiové informace"
 
 #: ulclformhelpers.tc_prefs_udpstream_rotor
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_udpstream_rotor"
 msgid "Rotor"
-msgstr ""
+msgstr "Rotor"
 
 #: ulclformhelpers.tc_prefs_udpstream_score
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_udpstream_score"
 msgid "Score"
-msgstr ""
+msgstr "Bod"
 
 #: ulclformhelpers.tc_prefs_unsavedtitle
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_unsavedtitle"
 msgid "TR4W Preferences"
-msgstr ""
+msgstr "Nastavení TR4W"
 
 #: ulclformhelpers.tc_radioedit_advanced
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_advanced"
 msgid "Advanced"
-msgstr ""
+msgstr "Pokročilé"
 
 #: ulclformhelpers.tc_radioedit_baud
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_baud"
 msgid "Baud rate"
-msgstr ""
+msgstr "Sazba Baud"
 
 #: ulclformhelpers.tc_radioedit_catdtr
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_catdtr"
 msgid "CAT DTR"
-msgstr ""
+msgstr "CAT DTR"
 
 #: ulclformhelpers.tc_radioedit_catrts
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_catrts"
 msgid "CAT RTS"
-msgstr ""
+msgstr "KOCOUR RTS"
 
 #: ulclformhelpers.tc_radioedit_civaddress
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_civaddress"
 msgid "CI-V address (hex)"
-msgstr ""
+msgstr "CI- V adresa (hex)"
 
 #: ulclformhelpers.tc_radioedit_databits
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_databits"
 msgid "Data bits"
-msgstr ""
+msgstr "Bity dat"
 
 #: ulclformhelpers.tc_radioedit_datamodeid
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_datamodeid"
 msgid "Icom data mode ID"
-msgstr ""
+msgstr "ID datového režimu Icom"
 
 #: ulclformhelpers.tc_radioedit_discover
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_discover"
 msgid "Discover"
-msgstr ""
+msgstr "Objevte"
 
 #: ulclformhelpers.tc_radioedit_filterbyte
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_filterbyte"
 msgid "Icom filter byte"
-msgstr ""
+msgstr "Icom filtr byte"
 
 #: ulclformhelpers.tc_radioedit_found
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_found"
 msgid "Found"
-msgstr ""
+msgstr "Nalezeno"
 
 #: ulclformhelpers.tc_radioedit_ft1000mprev
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_ft1000mprev"
 msgid "FT-1000MP CW reverse"
-msgstr ""
+msgstr "FT-1000MP CW reverzní"
 
 #: ulclformhelpers.tc_radioedit_hamlibid
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_hamlibid"
 msgid "HamLib model ID"
-msgstr ""
+msgstr "ID modelu HamLib"
 
 #: ulclformhelpers.tc_radioedit_ipaddress
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_ipaddress"
 msgid "IP address"
-msgstr ""
+msgstr "IP adresa"
 
 #: ulclformhelpers.tc_radioedit_keyerdtr
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_keyerdtr"
 msgid "Keyer DTR line"
-msgstr ""
+msgstr "Keyer DTR linka"
 
 #: ulclformhelpers.tc_radioedit_keyerport
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_keyerport"
 msgid "Keyer output port"
-msgstr ""
+msgstr "Výstupní port Keyeru"
 
 #: ulclformhelpers.tc_radioedit_keyerrts
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_keyerrts"
 msgid "Keyer RTS line"
-msgstr ""
+msgstr "Přímka Keyer RTS"
 
 #: ulclformhelpers.tc_radioedit_keyerstopbits
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_keyerstopbits"
 msgid "Stop bits"
-msgstr ""
+msgstr "Zastavit bity"
 
 #: ulclformhelpers.tc_radioedit_name
 #, fuzzy
@@ -7993,107 +8034,107 @@ msgstr "Síť"
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_parity"
 msgid "Parity"
-msgstr ""
+msgstr "Parita"
 
 #: ulclformhelpers.tc_radioedit_parityeven
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_parityeven"
 msgid "Even"
-msgstr ""
+msgstr "Dokonce"
 
 #: ulclformhelpers.tc_radioedit_paritynone
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_paritynone"
 msgid "None"
-msgstr ""
+msgstr "Žádné"
 
 #: ulclformhelpers.tc_radioedit_parityodd
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_parityodd"
 msgid "Odd"
-msgstr ""
+msgstr "Zvláštní"
 
 #: ulclformhelpers.tc_radioedit_password
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_password"
 msgid "Password"
-msgstr ""
+msgstr "Heslo"
 
 #: ulclformhelpers.tc_radioedit_polling
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_polling"
 msgid "Poll this radio"
-msgstr ""
+msgstr "Vyzkoušej to rádio"
 
 #: ulclformhelpers.tc_radioedit_port
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_port"
 msgid "Port"
-msgstr ""
+msgstr "Přístav"
 
 #: ulclformhelpers.tc_radioedit_serial
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_serial"
 msgid "Serial"
-msgstr ""
+msgstr "Pořadové"
 
 #: ulclformhelpers.tc_radioedit_startup
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_startup"
 msgid "Startup command"
-msgstr ""
+msgstr "Příkaz spuštění"
 
 #: ulclformhelpers.tc_radioedit_stopbits
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_stopbits"
 msgid "Stop bits"
-msgstr ""
+msgstr "Zastavit bity"
 
 #: ulclformhelpers.tc_radioedit_tcpport
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_tcpport"
 msgid "TCP port"
-msgstr ""
+msgstr "TCP port"
 
 #: ulclformhelpers.tc_radioedit_title
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_title"
 msgid "Radio"
-msgstr ""
+msgstr "Rádio"
 
 #: ulclformhelpers.tc_radioedit_transport
 #, fuzzy
 msgid "Connection"
-msgstr ""
+msgstr "Připojení"
 
 #: ulclformhelpers.tc_radioedit_type
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_type"
 msgid "Radio type"
-msgstr ""
+msgstr "Radiový typ"
 
 #: ulclformhelpers.tc_radioedit_unsaved
 #, fuzzy
 msgid "Save your changes to this radio?"
-msgstr ""
+msgstr "Schovej si změny v rádiu?"
 
 #: ulclformhelpers.tc_radioedit_usehamlib
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_usehamlib"
 msgid "Drive through HamLib"
-msgstr ""
+msgstr "Projet HamLib"
 
 #: ulclformhelpers.tc_radioedit_username
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_username"
 msgid "User name"
-msgstr ""
+msgstr "Uživatelské jméno"
 
 #: ulclformhelpers.tc_radioedit_widecw
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_widecw"
 msgid "Wide CW filter"
-msgstr ""
+msgstr "Široký CW filtr"
 
 #: tfrmaltd.caption
 #, fuzzy
@@ -8105,7 +8146,7 @@ msgstr "Kontrola spojení na neaktivním RIGu"
 #, fuzzy
 msgctxt "tfrmautocq.caption"
 msgid "Auto-CQ"
-msgstr ""
+msgstr "Automatické CQ"
 
 #: tfrmautocq.lbldelay.caption
 #, fuzzy
@@ -8141,7 +8182,7 @@ msgstr "Rozdělení pásem"
 #, fuzzy
 msgctxt "tfrmeditmessage.btneditwav.caption"
 msgid "&Edit"
-msgstr ""
+msgstr "Upravit"
 
 #: tfrmeditmessage.caption
 #, fuzzy
@@ -8219,13 +8260,13 @@ msgstr "MP3 rekordér"
 #, fuzzy
 msgctxt "tfrmnewcontest.btnbrowse.caption"
 msgid "Browse..."
-msgstr ""
+msgstr "Procházet..."
 
 #: tfrmnewcontest.btncancel.caption
 #, fuzzy
 msgctxt "tfrmnewcontest.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "Zrušit"
 
 #: tfrmnewcontest.btnlatest.caption
 #, fuzzy
@@ -8237,37 +8278,37 @@ msgstr "poslední konfigurace"
 #, fuzzy
 msgctxt "tfrmnewcontest.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "OK"
 
 #: tfrmnewcontest.caption
 #, fuzzy
 msgid "Open configuration file or start a new contest"
-msgstr ""
+msgstr "Otevřít konfigurační soubor nebo spustit novou soutěž"
 
 #: tfrmnewcontest.dlgopen.title
 #, fuzzy
 msgid "Open configuration file"
-msgstr ""
+msgstr "Otevřít konfigurační soubor"
 
 #: tfrmnewcontest.gbexisting.caption
 #, fuzzy
 msgid "Open an existing configuration"
-msgstr ""
+msgstr "Otevřít existující konfiguraci"
 
 #: tfrmnewcontest.gbnew.caption
 #, fuzzy
 msgid "Start a new contest"
-msgstr ""
+msgstr "Zahájit novou soutěž"
 
 #: tfrmnewcontest.lblcontest.caption
 #, fuzzy
 msgid "CONTEST"
-msgstr ""
+msgstr "KONTEST"
 
 #: tfrmnewcontest.lblmycall.caption
 #, fuzzy
 msgid "MY CALL"
-msgstr ""
+msgstr "MŮJ HOVOR"
 
 #: tfrmpanadapter.lblstatus.caption
 #, fuzzy
@@ -8430,13 +8471,13 @@ msgstr "Opustit program"
 #, fuzzy
 msgctxt "utr4wstrings.rc_autocq"
 msgid "Auto-CQ"
-msgstr ""
+msgstr "Automatické CQ"
 
 #: utr4wstrings.rc_autocq2
 #, fuzzy
 msgctxt "utr4wstrings.rc_autocq2"
 msgid "Auto-CQ"
-msgstr ""
+msgstr "Automatické CQ"
 
 #: utr4wstrings.rc_autocqresume
 #, fuzzy
@@ -8683,7 +8724,7 @@ msgstr "Editace v okně QSO"
 #, fuzzy
 msgctxt "utr4wstrings.rc_edit_word"
 msgid "&Edit"
-msgstr ""
+msgstr "Upravit"
 
 #: utr4wstrings.rc_escape
 #, fuzzy
@@ -8704,7 +8745,7 @@ msgstr "Konec"
 #: utr4wstrings.rc_export
 #, fuzzy
 msgid "Export"
-msgstr ""
+msgstr "Vývoz"
 
 #: utr4wstrings.rc_fcc
 #, fuzzy
@@ -8757,7 +8798,7 @@ msgstr "Zvětšit interval pro aut.potvrzení"
 #: utr4wstrings.rc_import
 #, fuzzy
 msgid "Import"
-msgstr ""
+msgstr "Importovat"
 
 #: utr4wstrings.rc_incnumber
 #, fuzzy
@@ -9138,7 +9179,7 @@ msgstr "Porovnej a synchronizuj deníky"
 #, fuzzy
 msgctxt "utr4wstrings.rc_telnet"
 msgid "DX Cluster"
-msgstr ""
+msgstr "DX Cluster"
 
 #: utr4wstrings.rc_timesyn
 #, fuzzy
@@ -9188,7 +9229,7 @@ msgstr "Formát TR Log"
 #: utr4wstrings.rc_trmaster
 #, fuzzy
 msgid "SCP"
-msgstr ""
+msgstr "SCP"
 
 #: utr4wstrings.rc_vieweditlog
 #, fuzzy
@@ -9266,6 +9307,9 @@ msgid ""
 "\n"
 "Okay to delete?"
 msgstr ""
+"%s už existuje.\n"
+"\n"
+"Můžeme to smazat?"
 
 #: utr4wstrings.tc_altdcommanddisabled
 #, fuzzy
@@ -9285,7 +9329,7 @@ msgstr "Připojit importovaná QSO k aktuálnímu deníku?"
 #: utr4wstrings.tc_arenewengland
 #, fuzzy
 msgid "Are you in New England?"
-msgstr ""
+msgstr "Jste v Nové Anglii?"
 
 #: utr4wstrings.tc_arktikaclub
 #, fuzzy
@@ -9305,7 +9349,7 @@ msgstr "&aut. mezery"
 #: utr4wstrings.tc_autospotenabledtestmodeonly
 #, fuzzy
 msgid "AUTOSPOT is enabled - Test Mode Only"
-msgstr ""
+msgstr "AUTOSPOT je zapnut - pouze zkušební režim"
 
 #: utr4wstrings.tc_autosynchronizinglog
 #, fuzzy
@@ -9320,7 +9364,7 @@ msgstr "Záloha souboru logu vytvořena"
 #: utr4wstrings.tc_bandchangedisabled
 #, fuzzy
 msgid "Band change requires MULTIPLE BANDS = TRUE once the log has QSOs"
-msgstr ""
+msgstr "Změna pásma vyžaduje MULTIPLE BANDS = TRUE, jakmile má záznam QSP"
 
 #: utr4wstrings.tc_band_changes
 #, fuzzy
@@ -9387,7 +9431,7 @@ msgstr "Neznámý"
 #: utr4wstrings.tc_california
 #, fuzzy
 msgid "California"
-msgstr ""
+msgstr "Kalifornie"
 
 #: utr4wstrings.tc_call_in_call_window
 #, fuzzy
@@ -9412,12 +9456,12 @@ msgstr "Nelze zkopírovat soubor logu -- cíl existuje a je pouze pro čtení"
 #: utr4wstrings.tc_cannotdisablesplittransmitslicecre
 #, fuzzy
 msgid "Cannot disable split -- the transmit slice was created on the radio. Turn it off in the SDR."
-msgstr ""
+msgstr "Nelze vypnout rozdělení -- vysílač byl vytvořen v rádiu. Vypněte to v SDR."
 
 #: utr4wstrings.tc_cannotopenlogfile
 #, fuzzy
 msgid "Cannot open log file"
-msgstr ""
+msgstr "Nelze otevřít soubor záznamu"
 
 #: utr4wstrings.tc_cannotrename
 #, fuzzy
@@ -9447,7 +9491,7 @@ msgstr "Kontroluj čas"
 #: utr4wstrings.tc_cis
 #, fuzzy
 msgid "CIS"
-msgstr ""
+msgstr "CIS"
 
 #: utr4wstrings.tc_cleansweepcongratulations
 #, fuzzy
@@ -9522,12 +9566,12 @@ msgstr "Připojení k serveru TR4W neúspěšné. Ověř heslo!"
 #: utr4wstrings.tc_continueenteringcharactersautoterm
 #, fuzzy
 msgid "Continue entering characters.  Auto terminate active!!"
-msgstr ""
+msgstr "Pokračovat v zadávání znaků. Automatické ukončení aktivní!"
 
 #: utr4wstrings.tc_continueenteringcharacterspressret
 #, fuzzy
 msgid "Continue entering characters and press RETURN when done."
-msgstr ""
+msgstr "Pokračovat v zadávání znaků a stiskněte tlačítko RETURN po dokončení."
 
 #: utr4wstrings.tc_cqfunctionkeymemorystatus
 #, fuzzy
@@ -9542,7 +9586,7 @@ msgstr "CQ celkem: %u"
 #: utr4wstrings.tc_croat
 #, fuzzy
 msgid "I am in Croatia"
-msgstr ""
+msgstr "Jsem v Chorvatsku"
 
 #: utr4wstrings.tc_ctrl_a
 #, fuzzy
@@ -9637,17 +9681,17 @@ msgstr "Kalibrace mezer C&T"
 #: utr4wstrings.tc_ctydatdownloadedreloading
 #, fuzzy
 msgid "CTY.DAT downloaded. Reloading..."
-msgstr ""
+msgstr "CTY.DAT stažen. Nabíjím..."
 
 #: utr4wstrings.tc_ctydatdownloadfailed
 #, fuzzy
 msgid "CTY.DAT download failed."
-msgstr ""
+msgstr "Stáhnout CTY.DAT selhalo."
 
 #: utr4wstrings.tc_ctydatreloadedsuccessfully
 #, fuzzy
 msgid "CTY.DAT reloaded successfully."
-msgstr ""
+msgstr "CTY.DAT úspěšně nabil."
 
 #: utr4wstrings.tc_current_operator_callsign
 #, fuzzy
@@ -9662,17 +9706,17 @@ msgstr "CW je blokováno stiskem Alt-K!  Stiskni znovu Alt-K pro obnovení CW."
 #: utr4wstrings.tc_cwoff
 #, fuzzy
 msgid "CW Off"
-msgstr ""
+msgstr "CW vypnuto"
 
 #: utr4wstrings.tc_cwqsos
 #, fuzzy
 msgid "CW QSOs"
-msgstr ""
+msgstr "CW QSP"
 
 #: utr4wstrings.tc_cwtimerfired
 #, fuzzy
 msgid "CW Timer fired"
-msgstr ""
+msgstr "CW časovač vystřelil"
 
 #: utr4wstrings.tc_czechrepublicorinslovakia
 #, fuzzy
@@ -9682,12 +9726,12 @@ msgstr "Česko nebo Slovensko"
 #: utr4wstrings.tc_datasuccessfullysavedasciifile
 #, fuzzy
 msgid "Data successfully saved to ASCII file."
-msgstr ""
+msgstr "Data úspěšně uložená do ASCII souboru."
 
 #: utr4wstrings.tc_debugmodecreatedprefixestxt
 #, fuzzy
 msgid "debug mode created prefixes.txt"
-msgstr ""
+msgstr "debug mode vytvořil prefiles.txt"
 
 #: utr4wstrings.tc_department
 #, fuzzy
@@ -9701,11 +9745,14 @@ msgid ""
 "TR4W is expecting version %s.\n"
 "The file you are trying to read version %s."
 msgstr ""
+"%s je z jiné verze programu.\n"
+"TR4W očekává verzi %s.\n"
+"Soubor, který se snažíte přečíst ve verzi %s."
 
 #: utr4wstrings.tc_digqsos
 #, fuzzy
 msgid "DIG QSOs"
-msgstr ""
+msgstr "DIG QSP"
 
 #: utr4wstrings.tc_disbale_civ
 #, fuzzy
@@ -9720,17 +9767,17 @@ msgstr "** Odpojen od "
 #: utr4wstrings.tc_discover_multi_found
 #, fuzzy
 msgid "More than one %s found; filled in the first.  All found:"
-msgstr ""
+msgstr "Více než jeden %s nalezen, vyplněn v prvním. Všechny nalezeny:"
 
 #: utr4wstrings.tc_discover_none_found
 #, fuzzy
 msgid "No radio of type %s found on the network"
-msgstr ""
+msgstr "Žádné rádio typu %s nenalezeno v síti"
 
 #: utr4wstrings.tc_discover_not_available
 #, fuzzy
 msgid "Network discovery is not available for radio %s"
-msgstr ""
+msgstr "Objev sítě není k dispozici pro rádio %s"
 
 #: utr4wstrings.tc_ditdahratio
 #, fuzzy
@@ -9750,17 +9797,17 @@ msgstr "Dom násobiče"
 #: utr4wstrings.tc_downloadingctydat
 #, fuzzy
 msgid "Downloading CTY.DAT..."
-msgstr ""
+msgstr "Stahuji CTY.DAT..."
 
 #: utr4wstrings.tc_downloadingpotaparks
 #, fuzzy
 msgid "Downloading POTA parks..."
-msgstr ""
+msgstr "Stahování POTA parků..."
 
 #: utr4wstrings.tc_downloadingtrmasterdta
 #, fuzzy
 msgid "Downloading TRMASTER.DTA..."
-msgstr ""
+msgstr "Stahování TRMASTER.DTA..."
 
 #: utr4wstrings.tc_downloadit
 #, fuzzy
@@ -9815,33 +9862,33 @@ msgstr "Edituj %s zprávu"
 #: utr4wstrings.tc_editor_copy
 #, fuzzy
 msgid "&Copy"
-msgstr ""
+msgstr "& Kopírovat"
 
 #: utr4wstrings.tc_editor_edit
 #, fuzzy
 msgctxt "utr4wstrings.tc_editor_edit"
 msgid "&Edit"
-msgstr ""
+msgstr "Upravit"
 
 #: utr4wstrings.tc_editor_explore
 #, fuzzy
 msgid "Explore"
-msgstr ""
+msgstr "Prozkoumejte"
 
 #: utr4wstrings.tc_editor_openineditor
 #, fuzzy
 msgid "Open in text &editor"
-msgstr ""
+msgstr "Otevřít v textovém editoru"
 
 #: utr4wstrings.tc_editor_selectall
 #, fuzzy
 msgid "Select &all"
-msgstr ""
+msgstr "Vybrat všechny"
 
 #: utr4wstrings.tc_editor_sendlogto
 #, fuzzy
 msgid "Send log to %s"
-msgstr ""
+msgstr "Odeslat záznam na %s"
 
 #: utr4wstrings.tc_editqtcpressyestoeditqtcornotolog
 #, fuzzy
@@ -9851,7 +9898,7 @@ msgstr "Editovat QTC? YES pro editaci nebo NO pro zápis "
 #: utr4wstrings.tc_enoughmemoryinitialexchangearray
 #, fuzzy
 msgid "Not enough memory for initial exchange array!!"
-msgstr ""
+msgstr "Nedostatek paměti pro počáteční výměnu pole!!"
 
 #: utr4wstrings.tc_enter
 #, fuzzy
@@ -9861,7 +9908,7 @@ msgstr "ENTER > %s :"
 #: utr4wstrings.tc_entercallsignspacedupecheckalthhel
 #, fuzzy
 msgid "ENTER a callsign.  SPACE for dupecheck.  Alt-H for help."
-msgstr ""
+msgstr "Tady je volací znak. SPACE pro Dupecheck. Alt- H jako pomoc."
 
 #: utr4wstrings.tc_entercalltobecheckedon
 #, fuzzy
@@ -9871,7 +9918,7 @@ msgstr "Zadej značku pro kontrolu na %s%s:"
 #: utr4wstrings.tc_enterexchangepressenterlogescapeab
 #, fuzzy
 msgid "Enter exchange.  Press ENTER to log, ESCAPE to abort QSO."
-msgstr ""
+msgstr "Zadejte výměnu. Stiskněte ENTER pro záznam, ESCAPE pro zrušení QSO."
 
 #: utr4wstrings.tc_enterfirsttwodigitsofyourqth
 #, fuzzy
@@ -9946,7 +9993,7 @@ msgstr "Zadej zkratku svého okresu (distriktu):"
 #: utr4wstrings.tc_enteryourdistrictcode
 #, fuzzy
 msgid "If in UK/EI, enter your 2 digit district code"
-msgstr ""
+msgstr "Pokud ve Velké Británii / EI, zadejte 2 číslice okresní kód"
 
 #: utr4wstrings.tc_enteryourdok
 #, fuzzy
@@ -9969,6 +10016,8 @@ msgid ""
 "Enter your geographical coordinates\n"
 "(e.g. 55N37O for Moscow):"
 msgstr ""
+"Zadejte své zeměpisné souřadnice\n"
+"(např. 55N37O pro Moskvu):"
 
 #: utr4wstrings.tc_enteryouriotareferencedesignator
 #, fuzzy
@@ -10021,6 +10070,8 @@ msgid ""
 "Enter your precedence, your check\n"
 "(last two digits of year licensed) and ARRL section:"
 msgstr ""
+"Zadejte svůj precedent, svůj šek\n"
+"(poslední dvě číslice roku s licencí) a oddíl ARRL:"
 
 #: utr4wstrings.tc_enteryourprovinceid
 #, fuzzy
@@ -10033,6 +10084,8 @@ msgid ""
 "Enter your QTH that you want to send\n"
 "and the name you want to use:"
 msgstr ""
+"Zadejte svůj QTH, který chcete odeslat\n"
+"a jméno, které chcete použít:"
 
 #: utr4wstrings.tc_enteryourqthorpower
 #, fuzzy
@@ -10082,12 +10135,12 @@ msgstr "Chyba v souboru .TRW!"
 #: utr4wstrings.tc_errorofferingcommanderproxytcpport
 #, fuzzy
 msgid "Error offering Commander proxy TCP Port"
-msgstr ""
+msgstr "Chyba při nabízení Commander proxy TCP Port"
 
 #: utr4wstrings.tc_errorplayingvoicememory
 #, fuzzy
 msgid "Error playing voice memory"
-msgstr ""
+msgstr "Chyba při přehrávání hlasové paměti"
 
 #: utr4wstrings.tc_eudx
 #, fuzzy
@@ -10122,7 +10175,7 @@ msgstr "Příjem deníku ze serveru se nezdařil."
 #: utr4wstrings.tc_filesavedtofilesuccessfully
 #, fuzzy
 msgid "File saved to file successfully."
-msgstr ""
+msgstr "Soubor uložen do souboru úspěšně."
 
 #: utr4wstrings.tc_filesavedtosuccessfully
 #, fuzzy
@@ -10132,7 +10185,7 @@ msgstr "Soubor byl úspěšně uložen do %s"
 #: utr4wstrings.tc_findingzeroendvisibledupesheetlist
 #, fuzzy
 msgid "Not finding zero at end visible dupesheet list!!"
-msgstr ""
+msgstr "Nenajdete nulu na konci viditelné dupesheet seznam!!"
 
 #: utr4wstrings.tc_firstextension
 #, fuzzy
@@ -10143,12 +10196,12 @@ msgstr "Prodloužení 1.elementu"
 #: utr4wstrings.tc_florida
 #, fuzzy
 msgid "Florida"
-msgstr ""
+msgstr "Florida"
 
 #: utr4wstrings.tc_flushinitialexcommandexecuted
 #, fuzzy
 msgid "FLUSHINITIALEX command is executed."
-msgstr ""
+msgstr "Příkaz FLUSHINITIALEX je proveden."
 
 #: utr4wstrings.tc_folderalreadyexistsoverwrite
 #, fuzzy
@@ -10156,6 +10209,8 @@ msgid ""
 "Folder \"%s\" already exists.\n"
 "Overwrite ?"
 msgstr ""
+"Složka \"%s\" již existuje.\n"
+"Přepsat?"
 
 #: utr4wstrings.tc_footsw
 #, fuzzy
@@ -10215,17 +10270,17 @@ msgstr "Připoj HOST.."
 #: utr4wstrings.tc_hamlib_id_label
 #, fuzzy
 msgid "HAMLIB ID"
-msgstr ""
+msgstr "HAMLIB ID"
 
 #: utr4wstrings.tc_hamscorequeueingfulllogresync
 #, fuzzy
 msgid "HamScore: queueing full log resync..."
-msgstr ""
+msgstr "HamScore: queueing full log resync..."
 
 #: utr4wstrings.tc_handlogmodetrue
 #, fuzzy
 msgid "HAND LOG MODE = TRUE"
-msgstr ""
+msgstr "HAND LOG MODE = TRUE"
 
 #: utr4wstrings.tc_hangtime
 #, fuzzy
@@ -10245,12 +10300,12 @@ msgstr "%u QTC OK"
 #: utr4wstrings.tc_hitcounthistogram050
 #, fuzzy
 msgid "Hit count histogram for 0 to 50+ : "
-msgstr ""
+msgstr "Hit počet histogram pro 0 až 50 +: "
 
 #: utr4wstrings.tc_host
 #, fuzzy
 msgid "HOST  : %s"
-msgstr ""
+msgstr "HOST: %s"
 
 #: utr4wstrings.tc_hq
 #, fuzzy
@@ -10290,12 +10345,12 @@ msgstr "&Moje QTH je %s"
 #: utr4wstrings.tc_ididfinecontestnamelogcfgdatfile
 #, fuzzy
 msgid "I did not fine a contest name in your LOGCFG.DAT file."
-msgstr ""
+msgstr "Ve vaší složce o LOGCFG.DAT jsem nepoškodil název soutěže."
 
 #: utr4wstrings.tc_ifoundcontestnameidonounderstandlo
 #, fuzzy
 msgid "I found a contest name I do no understand in your LOGCFG.DAT file."
-msgstr ""
+msgstr "Našel jsem název soutěže, kterému nerozumím ve vašem souboru LOGCFG.DAT."
 
 #: utr4wstrings.tc_ignorespeedpot
 #, fuzzy
@@ -10340,7 +10395,7 @@ msgstr "Nesprávná zóna!"
 #: utr4wstrings.tc_info
 #, fuzzy
 msgid "Info"
-msgstr ""
+msgstr "Informace"
 
 #: utr4wstrings.tc_insert
 #, fuzzy
@@ -10360,7 +10415,7 @@ msgstr "Neplatná značka v okně QSO!"
 #: utr4wstrings.tc_invaliddate
 #, fuzzy
 msgid "Invalid date!!"
-msgstr ""
+msgstr "Neplatné datum!!"
 
 #: utr4wstrings.tc_invalidreminderdate
 #, fuzzy
@@ -10380,6 +10435,10 @@ msgid ""
 "Line %u\n"
 "%s"
 msgstr ""
+"Neplatné prohlášení v %s!!\n"
+"\n"
+"Řádek %u\n"
+"%s"
 
 #: utr4wstrings.tc_invalidstatementinconfigfile
 #, fuzzy
@@ -10390,6 +10449,11 @@ msgid ""
 "Line %u\n"
 "%s"
 msgstr ""
+"%s:\n"
+"Neplatný údaj v konfiguračním souboru.\n"
+"\n"
+"Řádek %u\n"
+"%s"
 
 #: utr4wstrings.tc_ireland
 #, fuzzy
@@ -10450,7 +10514,7 @@ msgstr "Mód klíčování"
 #: utr4wstrings.tc_keyernamedsalreadyexists
 #, fuzzy
 msgid "A keyer named \"%s\" already exists."
-msgstr ""
+msgstr "Keyer jménem \"%s\" už existuje."
 
 #: utr4wstrings.tc_labre
 #, fuzzy
@@ -10492,7 +10556,7 @@ msgstr "MÍSTNÍ DENÍK"
 #: utr4wstrings.tc_locationfieldempty
 #, fuzzy
 msgid "LOCATION field is empty."
-msgstr ""
+msgstr "Lokalizační pole je prázdné."
 
 #: utr4wstrings.tc_logfilenotfound
 #, fuzzy
@@ -10507,12 +10571,12 @@ msgstr "Kontrola velikosti souboru .TRW selhala!!"
 #: utr4wstrings.tc_loggingrunningsotherenofileopen
 #, fuzzy
 msgid "Logging is not running, so there is no file to open."
-msgstr ""
+msgstr "Záznam není spuštěn, takže není žádný soubor k otevření."
 
 #: utr4wstrings.tc_logincalldoeslooklikecallsign
 #, fuzzy
 msgid "Login call does not look like a callsign"
-msgstr ""
+msgstr "Přihlášení nevypadá jako volací znak"
 
 #: utr4wstrings.tc_m
 #, fuzzy
@@ -10532,17 +10596,17 @@ msgstr "Zpráva pro síť"
 #: utr4wstrings.tc_michigan
 #, fuzzy
 msgid "Michigan"
-msgstr ""
+msgstr "Michigan"
 
 #: utr4wstrings.tc_min
 #, fuzzy
 msgid "%u min."
-msgstr ""
+msgstr "%u min."
 
 #: utr4wstrings.tc_minnesota
 #, fuzzy
 msgid "Minnesota"
-msgstr ""
+msgstr "Minnesota"
 
 #: utr4wstrings.tc_missingmultsreport
 #, fuzzy
@@ -10583,7 +10647,7 @@ msgstr "Více než 50 různých hodinových údajů v tomto deníku!"
 #: utr4wstrings.tc_ms
 #, fuzzy
 msgid " ms"
-msgstr ""
+msgstr " ms"
 
 #: utr4wstrings.tc_multneedsfor
 #, fuzzy
@@ -10618,7 +10682,7 @@ msgstr "Kontrola sítě"
 #: utr4wstrings.tc_newengland
 #, fuzzy
 msgid "New England"
-msgstr ""
+msgstr "Nová Anglie"
 
 #: utr4wstrings.tc_newenglandstateabreviation
 #, fuzzy
@@ -10626,6 +10690,8 @@ msgid ""
 "Enter your New England state abbreviation\n"
 "(ME, NH, VT, MA, CT, RI):"
 msgstr ""
+"Zadejte svou zkratku New England State\n"
+"(ME, NH, VT, MA, CT, RI):"
 
 #: utr4wstrings.tc_newtour
 #, fuzzy
@@ -10665,7 +10731,7 @@ msgstr "Nebyl zadán název souboru pro uložení na disketu!"
 #: utr4wstrings.tc_nopotaparksloggedyetsession
 #, fuzzy
 msgid "No POTA parks logged yet this session"
-msgstr ""
+msgstr "Žádné POTA parky se zatím nezaznamenávají"
 
 #: utr4wstrings.tc_noqsonumberfound
 #, fuzzy
@@ -10696,12 +10762,12 @@ msgstr "Kód je neúplný!"
 #: utr4wstrings.tc_notrmasterdtafilefound
 #, fuzzy
 msgid "No TRMASTER.DTA file found."
-msgstr ""
+msgstr "Nebyl nalezen žádný soubor TRMASTER.DTA."
 
 #: utr4wstrings.tc_numbermessagesillegalcharacters
 #, fuzzy
 msgid "Number of messages has illegal characters."
-msgstr ""
+msgstr "Počet zpráv má nelegální znaky."
 
 #: utr4wstrings.tc_numberorletterofmessagetobeprogram
 #, fuzzy
@@ -10716,12 +10782,12 @@ msgstr "Oblasti"
 #: utr4wstrings.tc_ohio
 #, fuzzy
 msgid "Ohio"
-msgstr ""
+msgstr "Ohio"
 
 #: utr4wstrings.tc_op
 #, fuzzy
 msgid "Op"
-msgstr ""
+msgstr "Op"
 
 #: utr4wstrings.tc_openconfigurationfile
 #, fuzzy
@@ -10777,7 +10843,7 @@ msgstr "Parametr „%s“ nemá v konfiguračním souboru žádnou hodnotu -- po
 #: utr4wstrings.tc_pleasecheckmultinetwork
 #, fuzzy
 msgid "Please check multi network"
-msgstr ""
+msgstr "Zkontrolujte prosím více sítí"
 
 #: utr4wstrings.tc_points
 #, fuzzy
@@ -10792,17 +10858,17 @@ msgstr "Polsko"
 #: utr4wstrings.tc_port_conflict_dialog
 #, fuzzy
 msgid "%s is already configured as %s. Two devices cannot share a serial port."
-msgstr ""
+msgstr "%s je již nakonfigurován jako %s. Dvě zařízení nemohou sdílet sériový port."
 
 #: utr4wstrings.tc_port_conflict_proceed
 #, fuzzy
 msgid "Apply anyway?"
-msgstr ""
+msgstr "Přihlásíš se?"
 
 #: utr4wstrings.tc_port_conflict_startup
 #, fuzzy
 msgid "RADIO ONE and RADIO TWO are both configured to use %s. RADIO ONE keeps the port; RADIO TWO CAT control is disabled until one radio's CONTROL PORT is changed."
-msgstr ""
+msgstr "RADIO 1 a RADIO 2 jsou nastaveny tak, aby používaly %s. RADIO ONE udržuje port; RADIO Two CAT ovládání je vypnuto, dokud jeden radio je CONTROL PORT je změněn."
 
 #: utr4wstrings.tc_port_not_connected
 #, fuzzy
@@ -10812,22 +10878,22 @@ msgstr "(nepřipojeno)"
 #: utr4wstrings.tc_possibledatalossmultinetwork
 #, fuzzy
 msgid "Possible data loss on multi network."
-msgstr ""
+msgstr "Možné ztráty dat na více sítích."
 
 #: utr4wstrings.tc_potaparksdownloadfailed
 #, fuzzy
 msgid "POTA parks download failed"
-msgstr ""
+msgstr "Stáhnout POTA parky selhalo"
 
 #: utr4wstrings.tc_potaparksfilecouldloaded
 #, fuzzy
 msgid "POTA parks file could not be loaded"
-msgstr ""
+msgstr "Soubor POTA parků nelze načíst"
 
 #: utr4wstrings.tc_potaparksloaded
 #, fuzzy
 msgid "POTA parks loaded"
-msgstr ""
+msgstr "Nabité parky POTA"
 
 #: utr4wstrings.tc_prefecture
 #, fuzzy
@@ -10837,7 +10903,7 @@ msgstr "Zadej svou prefekturu:"
 #: utr4wstrings.tc_preferencescouldopeneds
 #, fuzzy
 msgid "Preferences could not be opened (%s)."
-msgstr ""
+msgstr "Předvolby nelze otevřít (%s)."
 
 #: utr4wstrings.tc_prefix
 #, fuzzy
@@ -10867,12 +10933,12 @@ msgstr "%d bodů"
 #: utr4wstrings.tc_pttlockouttrue
 #, fuzzy
 msgid "PTT LOCKOUT=TRUE"
-msgstr ""
+msgstr "PTT LOCKOUT = TRUE"
 
 #: utr4wstrings.tc_pttviacommandsctrljoptionmusttruew
 #, fuzzy
 msgid "PTT VIA COMMANDS (CTRL-J) option must be true for WSJT-X use - Setting to true"
-msgstr ""
+msgstr "Volba PTT VIA COMRANDS (CTRL-J) musí platit pro použití WSJT-X - Nastavení na true"
 
 #: utr4wstrings.tc_qsoneedsfor
 #, fuzzy
@@ -10882,7 +10948,7 @@ msgstr "Chybí QSO s %s :"
 #: utr4wstrings.tc_qsos
 #, fuzzy
 msgid "QSOs"
-msgstr ""
+msgstr "QSP"
 
 #: utr4wstrings.tc_qso_imported
 #, fuzzy
@@ -10902,7 +10968,7 @@ msgstr "QTC přerušeno operátorem."
 #: utr4wstrings.tc_qtcnumberillegalcharacters
 #, fuzzy
 msgid "QTC Number has illegal characters."
-msgstr ""
+msgstr "Číslo QTC má nelegální znaky."
 
 #: utr4wstrings.tc_qtcpending
 #, fuzzy
@@ -10912,12 +10978,12 @@ msgstr "Zpracovává se QTC"
 #: utr4wstrings.tc_qtcprocessterminated
 #, fuzzy
 msgid "QTC process terminated."
-msgstr ""
+msgstr "QTC proces ukončen."
 
 #: utr4wstrings.tc_qtcprocessterminatedinvalidnumberm
 #, fuzzy
 msgid "QTC process terminated.  Invalid number of messages."
-msgstr ""
+msgstr "QTC proces ukončen. Neplatný počet zpráv."
 
 #: utr4wstrings.tc_qtc_callsign
 #, fuzzy
@@ -10964,17 +11030,17 @@ msgstr "Zápisy"
 #: utr4wstrings.tc_relaycontrolportpaddleport
 #, fuzzy
 msgid "RELAY CONTROL PORT = PADDLE PORT"
-msgstr ""
+msgstr "RELAY CONTROL PORT = PADDLE PORT"
 
 #: utr4wstrings.tc_removeclusters
 #, fuzzy
 msgid "Remove the cluster \"%s\"?"
-msgstr ""
+msgstr "Odstranit shluk \"%s\"?"
 
 #: utr4wstrings.tc_removerotators
 #, fuzzy
 msgid "Remove the rotator \"%s\"?"
-msgstr ""
+msgstr "Odstranit rotátor \"%s\"?"
 
 #: utr4wstrings.tc_repeating
 #, fuzzy
@@ -11049,7 +11115,7 @@ msgstr "Uložit změny?"
 #: utr4wstrings.tc_savingdtafileasciifileprocessingce
 #, fuzzy
 msgid "Saving .DTA file to ASCII file.  Processing cell   "
-msgstr ""
+msgstr "Uložení souboru DTA do souboru ASCII. Zpracovatelská buňka   "
 
 #: utr4wstrings.tc_savingto
 #, fuzzy
@@ -11064,7 +11130,7 @@ msgstr ""
 #: utr4wstrings.tc_selectspotreturnleftorrightarrowse
 #, fuzzy
 msgid "Select spot.  RETURN, left or right arrow to select.  ESCAPE to exit."
-msgstr ""
+msgstr "Vyberte místo. Vrátit, levou nebo pravou šipku vybrat. Escape k východu."
 
 #: utr4wstrings.tc_sendingssbwavfilename
 #, fuzzy
@@ -11089,12 +11155,12 @@ msgstr "Vysílej znaky z klávesnice"
 #: utr4wstrings.tc_serial_format_label
 #, fuzzy
 msgid "DATA/PARITY/STOP"
-msgstr ""
+msgstr "ÚDAJE / PARITY / STOP"
 
 #: utr4wstrings.tc_server
 #, fuzzy
 msgid "SERVER: %s"
-msgstr ""
+msgstr "SERVER: %s"
 
 #: utr4wstrings.tc_serverandlocallogsareidentical
 #, fuzzy
@@ -11129,7 +11195,7 @@ msgstr "Zobrazit všechny sériové porty"
 #: utr4wstrings.tc_show_passwords
 #, fuzzy
 msgid "Show passwords"
-msgstr ""
+msgstr "Zobrazit hesla"
 
 #: utr4wstrings.tc_sidetone
 #, fuzzy
@@ -11154,7 +11220,7 @@ msgstr "Lituji! NO LOG = TRUE blokuje zápis QSO na tomto počítači"
 #: utr4wstrings.tc_sorryusedupallreminders
 #, fuzzy
 msgid "Sorry, you have used up all your reminders!!"
-msgstr ""
+msgstr "Promiň, vyčerpal jsi všechny vzpomínky!"
 
 #: utr4wstrings.tc_sorryyoualreadyhave10qtcswith
 #, fuzzy
@@ -11189,12 +11255,12 @@ msgstr "PRAVIDLO SPRINT QSY!!"
 #: utr4wstrings.tc_ssbqsos
 #, fuzzy
 msgid "SSB QSOs"
-msgstr ""
+msgstr "SSB QSP"
 
 #: utr4wstrings.tc_sstillusedbys
 #, fuzzy
 msgid "\"%s\" is still used by: %s"
-msgstr ""
+msgstr "\"%s\" je stále používán: %s"
 
 #: utr4wstrings.tc_stationclass
 #, fuzzy
@@ -11209,7 +11275,7 @@ msgstr "Stanice v módu %s"
 #: utr4wstrings.tc_stpetersburgoblast
 #, fuzzy
 msgid "St.Petersburg / oblast"
-msgstr ""
+msgstr "Petrohrad / oblast"
 
 #: utr4wstrings.tc_sun
 #, fuzzy
@@ -11229,22 +11295,22 @@ msgstr "Doběh PTT (*10 ms)"
 #: utr4wstrings.tc_tciservercouldopenportds
 #, fuzzy
 msgid "The TCI server could not open port %d: %s"
-msgstr ""
+msgstr "Server TCI nemohl otevřít port %d: %s"
 
 #: utr4wstrings.tc_telnet
 #, fuzzy
 msgid "Connect#0Disconnect#0Commands#0Freeze#0Clear#0SH/50#0#0"
-msgstr ""
+msgstr "Connect # 0Odpojení # 0Příkazy # 0Freeze # 0Clear # 0SH / 50 # 0 # 0"
 
 #: utr4wstrings.tc_testradiointerface
 #, fuzzy
 msgid "TEST RADIO INTERFACE"
-msgstr ""
+msgstr "ZKUŠEBNÍ RADIO INTERFACE"
 
 #: utr4wstrings.tc_texas
 #, fuzzy
 msgid "Texas"
-msgstr ""
+msgstr "Texas"
 
 #: utr4wstrings.tc_thefirstcommandinconfigfilemustbe
 #, fuzzy
@@ -11254,7 +11320,7 @@ msgstr "První údaj v konfiguračním souboru musí být zadání vlastní zna�
 #: utr4wstrings.tc_therenologfileyets
 #, fuzzy
 msgid "There is no log file yet at %s."
-msgstr ""
+msgstr "V %s není zatím žádný záznam."
 
 #: utr4wstrings.tc_therewerecalls
 #, fuzzy
@@ -11266,7 +11332,7 @@ msgstr ""
 #: utr4wstrings.tc_theseentrieswereacceptedbeensaved
 #, fuzzy
 msgid "These entries were not accepted and have not been saved:"
-msgstr ""
+msgstr "Tyto položky nebyly přijaty a nebyly uloženy:"
 
 #: utr4wstrings.tc_thishr
 #, fuzzy
@@ -11306,7 +11372,7 @@ msgstr "Čas zapnutí"
 #: utr4wstrings.tc_tooltip_discovery
 #, fuzzy
 msgid "Discover radios on the network"
-msgstr ""
+msgstr "Objevte rádia v síti"
 
 #: utr4wstrings.tc_toomanycontestdates
 #, fuzzy
@@ -11321,7 +11387,7 @@ msgstr "Příliš mnoho TOTAL SCORE MSG!"
 #: utr4wstrings.tc_tr4wtimewarning
 #, fuzzy
 msgid "TR4W Time Warning"
-msgstr ""
+msgstr "TR4W Varování času"
 
 #: utr4wstrings.tc_translation_author
 #, fuzzy
@@ -11331,7 +11397,7 @@ msgstr "OK1RR"
 #: utr4wstrings.tc_translation_credit
 #, fuzzy
 msgid "%s translation by %s"
-msgstr ""
+msgstr "%s překlad do %s"
 
 #: utr4wstrings.tc_translation_language
 #, fuzzy
@@ -11351,17 +11417,17 @@ msgstr "vysílací kmitočet (kHz): "
 #: utr4wstrings.tc_trmasterdtadownloadedrestarttr4wus
 #, fuzzy
 msgid "TRMASTER.DTA downloaded -- restart TR4W to use it"
-msgstr ""
+msgstr "TRMASTER.DTA stažen -- restartovat TR4W použít"
 
 #: utr4wstrings.tc_trmasterdtadownloadfailed
 #, fuzzy
 msgid "TRMASTER.DTA download failed"
-msgstr ""
+msgstr "TRMASTER.DTA stahování selhalo"
 
 #: utr4wstrings.tc_trmasterdtas
 #, fuzzy
 msgid "TRMASTER.DTA : %s"
-msgstr ""
+msgstr "TRMASTER.DTA: %s"
 
 #: utr4wstrings.tc_tue
 #, fuzzy
@@ -11371,7 +11437,7 @@ msgstr "Út"
 #: utr4wstrings.tc_uk
 #, fuzzy
 msgid "UK"
-msgstr ""
+msgstr "SPOJENÉ KRÁLOVSTVÍ"
 
 #: utr4wstrings.tc_ukei
 #, fuzzy
@@ -11391,7 +11457,7 @@ msgstr "Mód Ultimatic"
 #: utr4wstrings.tc_unablesavedtaasciifile
 #, fuzzy
 msgid "Unable to save .DTA to ASCII file."
-msgstr ""
+msgstr "Nelze uložit .DTA do ASCII souboru."
 
 #: utr4wstrings.tc_unabletofind
 #, fuzzy
@@ -11404,6 +11470,8 @@ msgid ""
 "Unable to find CTY.DAT country file!!\n"
 "Make sure this file is in the same directory as the program."
 msgstr ""
+"Nelze najít soubor země CTY.DAT!!\n"
+"Ujistěte se, že tento soubor je ve stejném adresáři jako program."
 
 #: utr4wstrings.tc_unknowncountry
 #, fuzzy
@@ -11413,7 +11481,7 @@ msgstr "Neznámá země"
 #: utr4wstrings.tc_uploadcabrillotoscp
 #, fuzzy
 msgid "Do you want to upload your Cabrillo file to SuperChecklPartial?"
-msgstr ""
+msgstr "Chcete nahrát svůj Cabrillo soubor do SuperChecklPartial?"
 
 #: utr4wstrings.tc_uploadedsuccessfully
 #, fuzzy
@@ -11438,7 +11506,7 @@ msgstr "Hlasový automat blokován stiskem  Alt-K! Stiskni znovu Alt-K pro obnov
 #: utr4wstrings.tc_wagwarn
 #, fuzzy
 msgid "Warning: Out of WAG allowed frequency range"
-msgstr ""
+msgstr "Varování: Mimo WAG povolený kmitočtový rozsah"
 
 #: utr4wstrings.tc_waitingforyouenterstrengthofrst
 #, fuzzy
@@ -11458,7 +11526,7 @@ msgstr " instalována (vydána) dne "
 #: utr4wstrings.tc_washington
 #, fuzzy
 msgid "Washington"
-msgstr ""
+msgstr "Washington"
 
 #: utr4wstrings.tc_wasmessagenumberconfirmed
 #, fuzzy
@@ -11488,7 +11556,7 @@ msgstr "Port WK"
 #: utr4wstrings.tc_wisconsin
 #, fuzzy
 msgid "Wisconsin"
-msgstr ""
+msgstr "Wisconsin"
 
 #: utr4wstrings.tc_wpmcodespeed
 #, fuzzy

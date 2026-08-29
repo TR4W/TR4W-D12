@@ -2700,7 +2700,7 @@ msgstr "Показати всі COM-порти"
 #: tfrmabout.caption
 #, fuzzy
 msgid "About TR4W"
-msgstr ""
+msgstr "Про TR4W"
 
 #. Section: UEDITMESSAGE
 #: tfrmaltd.caption
@@ -2713,7 +2713,7 @@ msgstr "Перевірка на повторення на неактивному
 #: tfrmaltd.lblprompt.caption
 #, fuzzy
 msgid "Enter call to be checked on:"
-msgstr ""
+msgstr "Введіть номер мобільного, який Ви вказали:"
 
 #. Section: UEDITMESSAGE
 #: tfrmautocq.caption
@@ -2746,17 +2746,17 @@ msgstr "Функц. клавіша, яку потрібно повторюват
 #, fuzzy
 msgctxt "tfrmbandmap.caption"
 msgid "Band map"
-msgstr ""
+msgstr "Band мапа"
 
 #: tfrmbandmap.miallbands.caption
 #, fuzzy
 msgid "BAND MAP ALL BANDS"
-msgstr ""
+msgstr "БЕНД МАП ВСІ БАНДИ"
 
 #: tfrmbandmap.miallmodes.caption
 #, fuzzy
 msgid "BAND MAP ALL MODES"
-msgstr ""
+msgstr "BAND MAP ВСІ МОДИ"
 
 #. Section: UEDITMESSAGE
 #: tfrmbandmap.mideletespot.caption
@@ -2769,22 +2769,22 @@ msgstr "Видалити виділений спот"
 #: tfrmbandmap.midisplaycq.caption
 #, fuzzy
 msgid "BAND MAP DISPLAY CQ"
-msgstr ""
+msgstr "BAND MAP DISPLAY CQ"
 
 #: tfrmbandmap.midupedisplay.caption
 #, fuzzy
 msgid "BAND MAP DUPE DISPLAY"
-msgstr ""
+msgstr "BAND MAP DUPE DISPLAY"
 
 #: tfrmbandmap.mimultsonly.caption
 #, fuzzy
 msgid "BAND MAP MULTS ONLY"
-msgstr ""
+msgstr "БЕНД МАПОВІ МУЛЬТИ"
 
 #: tfrmbandmap.miqsyinactive.caption
 #, fuzzy
 msgid "Send spot to inactive radio"
-msgstr ""
+msgstr "Залишити коментар або відгук про Неактивне радіо"
 
 #. Section: UEDITMESSAGE
 #: tfrmbandmap.miremoveall.caption
@@ -2797,7 +2797,7 @@ msgstr "Видалити всі споти"
 #: tfrmbandmap.miso2rdisplay.caption
 #, fuzzy
 msgid "BAND MAP SO2R DISPLAY"
-msgstr ""
+msgstr "BAND MAP SO2R DISPLAY"
 
 #. Section: UEDITMESSAGE
 #: tfrmbandplan.caption
@@ -2810,17 +2810,17 @@ msgstr "Частотний план"
 #: tfrmbeacons.caption
 #, fuzzy
 msgid "Beacons  Monitor"
-msgstr ""
+msgstr "Beacons монітор"
 
 #: tfrmct1boh.caption
 #, fuzzy
 msgid "CT1BOH information"
-msgstr ""
+msgstr "CT1BOH інформація"
 
 #: tfrmdupesheet.caption
 #, fuzzy
 msgid "Dupe sheet"
-msgstr ""
+msgstr "Лист лист"
 
 #. Section: UEDITMESSAGE
 #. Section: FD Additions NY4I
@@ -2860,72 +2860,72 @@ msgstr "Повідомлення"
 #: tfrmeditqso.btnplay.caption
 #, fuzzy
 msgid "&Play"
-msgstr ""
+msgstr "Новини"
 
 #: tfrmeditqso.btnsave.caption
 #, fuzzy
 msgid "&Save"
-msgstr ""
+msgstr "&Зберегти"
 
 #: tfrmeditqso.caption
 #, fuzzy
 msgid "Edit QSO"
-msgstr ""
+msgstr "Редагувати QSO"
 
 #: tfrmeditqso.chkdeleted.caption
 #, fuzzy
 msgid "&Deleted"
-msgstr ""
+msgstr "іделетовані"
 
 #: tfrmeditqso.chkdomesticmult.caption
 #, fuzzy
 msgid "Domestic Mult"
-msgstr ""
+msgstr "Мул"
 
 #: tfrmeditqso.chkdupe.caption
 #, fuzzy
 msgid "Dupe"
-msgstr ""
+msgstr "Плеймейт"
 
 #: tfrmeditqso.chkdxmult.caption
 #, fuzzy
 msgid "DX Mult"
-msgstr ""
+msgstr "ДКС Мул"
 
 #: tfrmeditqso.chkinhibitmults.caption
 #, fuzzy
 msgid "Inhibit Mults"
-msgstr ""
+msgstr "Інгібітні мулти"
 
 #: tfrmeditqso.chknamesent.caption
 #, fuzzy
 msgid "Name Sent"
-msgstr ""
+msgstr "Ім'я Sent"
 
 #: tfrmeditqso.chkprefixmult.caption
 #, fuzzy
 msgid "Prefix Mult"
-msgstr ""
+msgstr "Префікс Мул"
 
 #: tfrmeditqso.chkxqso.caption
 #, fuzzy
 msgid "X-QSO"
-msgstr ""
+msgstr "Х-QSO"
 
 #: tfrmeditqso.chkzonemult.caption
 #, fuzzy
 msgid "Zone Mult"
-msgstr ""
+msgstr "Зона Мул"
 
 #: tfrmeditqso.dtpdatetime.textfornulldate
 #, fuzzy
 msgid "NULL"
-msgstr ""
+msgstr "NULL"
 
 #: tfrmeditqso.lblage.caption
 #, fuzzy
 msgid "Age"
-msgstr ""
+msgstr "Вік"
 
 #. Section: UEDITMESSAGE
 #: tfrmeditqso.lblband.caption
@@ -2947,22 +2947,22 @@ msgstr "Позивний"
 #: tfrmeditqso.lblchapter.caption
 #, fuzzy
 msgid "Chapter"
-msgstr ""
+msgstr "Головна"
 
 #: tfrmeditqso.lblcheck.caption
 #, fuzzy
 msgid "Check"
-msgstr ""
+msgstr "Зареєструватися"
 
 #: tfrmeditqso.lblclass.caption
 #, fuzzy
 msgid "Class"
-msgstr ""
+msgstr "Класика"
 
 #: tfrmeditqso.lblcomputerid.caption
 #, fuzzy
 msgid "Computer ID"
-msgstr ""
+msgstr "Комп'ютерний ідентифікатор"
 
 #. Section: UEDITMESSAGE
 #: tfrmeditqso.lbldate.caption
@@ -2975,12 +2975,12 @@ msgstr "Дата"
 #: tfrmeditqso.lbldomestic.caption
 #, fuzzy
 msgid "Domestic"
-msgstr ""
+msgstr "УКРАЇНСЬКА"
 
 #: tfrmeditqso.lblfrequency.caption
 #, fuzzy
 msgid "Frequency, Hz"
-msgstr ""
+msgstr "Частота, Гц"
 
 #. Section: UEDITMESSAGE
 #: tfrmeditqso.lblmode.caption
@@ -3003,12 +3003,12 @@ msgstr "Ім`я"
 #: tfrmeditqso.lblnumberrcvd.caption
 #, fuzzy
 msgid "Number Rcvd"
-msgstr ""
+msgstr "Номер Rcvd"
 
 #: tfrmeditqso.lblnumbersent.caption
 #, fuzzy
 msgid "Number Sent"
-msgstr ""
+msgstr "Кількість місць"
 
 #. Section: UEDITMESSAGE
 #: tfrmeditqso.lbloperator.caption
@@ -3021,57 +3021,57 @@ msgstr "Оператор"
 #: tfrmeditqso.lblpostalcode.caption
 #, fuzzy
 msgid "Postal Code"
-msgstr ""
+msgstr "Поштовий індекс"
 
 #: tfrmeditqso.lblpower.caption
 #, fuzzy
 msgid "Power"
-msgstr ""
+msgstr "Потужність"
 
 #: tfrmeditqso.lblprecedence.caption
 #, fuzzy
 msgid "Precedence"
-msgstr ""
+msgstr "Закінчення"
 
 #: tfrmeditqso.lblprefecture.caption
 #, fuzzy
 msgid "Prefecture"
-msgstr ""
+msgstr "Профілактика"
 
 #: tfrmeditqso.lblprefix.caption
 #, fuzzy
 msgid "Prefix"
-msgstr ""
+msgstr "Префікс"
 
 #: tfrmeditqso.lblqsopoints.caption
 #, fuzzy
 msgid "QSO points"
-msgstr ""
+msgstr "QSO точок"
 
 #: tfrmeditqso.lblradio.caption
 #, fuzzy
 msgid "RADIO ONE"
-msgstr ""
+msgstr "РАДІО ОД"
 
 #: tfrmeditqso.lblrstreceived.caption
 #, fuzzy
 msgid "RST received"
-msgstr ""
+msgstr "РСТ отримав"
 
 #: tfrmeditqso.lblrstsent.caption
 #, fuzzy
 msgid "RST sent"
-msgstr ""
+msgstr "РСТ відправлено"
 
 #: tfrmeditqso.lbltenten.caption
 #, fuzzy
 msgid "Ten Ten Number"
-msgstr ""
+msgstr "Десятий номер"
 
 #: tfrmeditqso.lblzone.caption
 #, fuzzy
 msgid "Zone"
-msgstr ""
+msgstr "Зона"
 
 #. Section: UEDITMESSAGE
 #: tfrmfunctionkeys.caption
@@ -3084,54 +3084,54 @@ msgstr "Функціональні клавіші"
 #: tfrmhamscore.btnpushnow.caption
 #, fuzzy
 msgid "Push Now"
-msgstr ""
+msgstr "Пошати зараз"
 
 #: tfrmhamscore.btnresync.caption
 #, fuzzy
 msgid "Resync from log"
-msgstr ""
+msgstr "Resync з журналу"
 
 #: tfrmhamscore.caption
 #, fuzzy
 msgid "HamScore"
-msgstr ""
+msgstr "Латинки"
 
 #: tfrmhamscore.lblqueuetitle.caption
 #, fuzzy
 msgid "Queued contacts:"
-msgstr ""
+msgstr "Контакти:"
 
 #: tfrmhamscore.lblstatustitle.caption
 #, fuzzy
 msgid "Last status:"
-msgstr ""
+msgstr "Останній статус:"
 
 #: tfrminiretire.btnno.caption
 #, fuzzy
 msgid "&No"
-msgstr ""
+msgstr "&Ні"
 
 #: tfrminiretire.btnyes.caption
 #, fuzzy
 msgid "&Yes"
-msgstr ""
+msgstr "&Так"
 
 #: tfrminiretire.caption
 #: uappstrings.siniretiretitle
 #, fuzzy
 msgctxt "tfrminiretire.caption"
 msgid "Old settings file"
-msgstr ""
+msgstr "Старий файл налаштувань"
 
 #: tfrminiretire.chkdontask.caption
 #, fuzzy
 msgid "chkDontAsk"
-msgstr ""
+msgstr "шемале"
 
 #: tfrminiretire.lblprompt.caption
 #, fuzzy
 msgid "lblPrompt"
-msgstr ""
+msgstr "лблПромпт"
 
 #: tfrminputquery.caption
 #: ttr4wmainform.caption
@@ -3139,12 +3139,12 @@ msgstr ""
 #, fuzzy
 msgctxt "tfrminputquery.caption"
 msgid "TR4W"
-msgstr ""
+msgstr "Т4В"
 
 #: tfrminputquery.lblprompt.caption
 #, fuzzy
 msgid "Enter value:"
-msgstr ""
+msgstr "Введіть значення:"
 
 #. Section: UEDITMESSAGE
 #: tfrmintercom.caption
@@ -3160,52 +3160,52 @@ msgstr "Внутрішній зв`язок"
 #, fuzzy
 msgctxt "tfrmkeyeredit.btnok.caption"
 msgid "Save and close"
-msgstr ""
+msgstr "Заощаджуйте і закрийте"
 
 #: tfrmkeyeredit.caption
 #, fuzzy
 msgid "CW keying device"
-msgstr ""
+msgstr "CW клавіатурний пристрій"
 
 #: tfrmkeyeredit.chkwkautospace.caption
 #, fuzzy
 msgid "Auto space"
-msgstr ""
+msgstr "Автопростір"
 
 #: tfrmkeyeredit.chkwkctspacing.caption
 #, fuzzy
 msgid "CT spacing"
-msgstr ""
+msgstr "КТ спакування"
 
 #: tfrmkeyeredit.chkwkignorespeedpot.caption
 #, fuzzy
 msgid "Ignore speed pot"
-msgstr ""
+msgstr "Ignore швидкість горщик"
 
 #: tfrmkeyeredit.chkwkpaddleonlysidetone.caption
 #, fuzzy
 msgid "Paddle-only sidetone"
-msgstr ""
+msgstr "Свічка-тільки боковий"
 
 #: tfrmkeyeredit.chkwkpaddleswap.caption
 #, fuzzy
 msgid "Swap paddles"
-msgstr ""
+msgstr "Обмінні колодки"
 
 #: tfrmkeyeredit.chkwksidetoneenable.caption
 #, fuzzy
 msgid "Sidetone on"
-msgstr ""
+msgstr "Битон на"
 
 #: tfrmkeyeredit.grpwinkeyer.caption
 #, fuzzy
 msgid "WinKeyer settings"
-msgstr ""
+msgstr "Параметри WinKeyer"
 
 #: tfrmkeyeredit.lblkind.caption
 #, fuzzy
 msgid "Keyer type"
-msgstr ""
+msgstr "Тип ключа"
 
 #: tfrmkeyeredit.lblport.caption
 #: tfrmudpdestinationedit.lblport.caption
@@ -3213,52 +3213,52 @@ msgstr ""
 #, fuzzy
 msgctxt "tfrmkeyeredit.lblport.caption"
 msgid "Port"
-msgstr ""
+msgstr "Портфоліо"
 
 #: tfrmkeyeredit.lblwkcomp.caption
 #, fuzzy
 msgid "Compensation"
-msgstr ""
+msgstr "Компенсація"
 
 #: tfrmkeyeredit.lblwkleadin.caption
 #, fuzzy
 msgid "Lead-in"
-msgstr ""
+msgstr "Провідний"
 
 #: tfrmkeyeredit.lblwkratio.caption
 #, fuzzy
 msgid "Dit/dah ratio"
-msgstr ""
+msgstr "Dit/dah співвідношення"
 
 #: tfrmkeyeredit.lblwksidetone.caption
 #, fuzzy
 msgid "Sidetone"
-msgstr ""
+msgstr "Бодибилдерши"
 
 #: tfrmkeyeredit.lblwkswitchpoint.caption
 #, fuzzy
 msgid "Switchpoint"
-msgstr ""
+msgstr "Твитнуть"
 
 #: tfrmkeyeredit.lblwktail.caption
 #, fuzzy
 msgid "Tail"
-msgstr ""
+msgstr "В'язниця"
 
 #: tfrmkeyeredit.lblwkweight.caption
 #, fuzzy
 msgid "Weight"
-msgstr ""
+msgstr "Вага"
 
 #: tfrmlogcompare.btnclearalllogs.caption
 #, fuzzy
 msgid "Clear all logs"
-msgstr ""
+msgstr "Очистити всі журнали"
 
 #: tfrmlogcompare.btnexit.caption
 #, fuzzy
 msgid "Exit"
-msgstr ""
+msgstr "Випадковий"
 
 #. Section: UEDITMESSAGE
 #: tfrmlogcompare.btnsynchronize.caption
@@ -3271,24 +3271,24 @@ msgstr "Синхронізувати"
 #: tfrmlogcompare.caption
 #, fuzzy
 msgid "Differences in the log"
-msgstr ""
+msgstr "Відмінності в журналі"
 
 #: tfrmlpt.caption
 #, fuzzy
 msgid "LPT"
-msgstr ""
+msgstr "ЛПТ"
 
 #: tfrmmaster.caption
 #, fuzzy
 msgid "Super check partial"
-msgstr ""
+msgstr "Супер контроль"
 
 #: tfrmmmtty.caption
 #: tprefsform.lblmmttyheading.caption
 #, fuzzy
 msgctxt "tfrmmmtty.caption"
 msgid "MMTTY"
-msgstr ""
+msgstr "ММТТИ"
 
 #. Section: UEDITMESSAGE
 #: tfrmmp3recorder.caption
@@ -3301,7 +3301,7 @@ msgstr "MP3 рекордер"
 #: tfrmmp3recorder.chkrecord.caption
 #, fuzzy
 msgid "Record"
-msgstr ""
+msgstr "Запис"
 
 #. Section: UEDITMESSAGE
 #: tfrmnetwork.caption
@@ -3315,37 +3315,37 @@ msgstr "Мережа"
 #: tfrmpanadapter.btnpause.caption
 #, fuzzy
 msgid "Pause"
-msgstr ""
+msgstr "Пауза"
 
 #: tfrmpanadapter.btnspannarrow.hint
 #, fuzzy
 msgid "Narrower span (zoom in)"
-msgstr ""
+msgstr "Вузький проміжок (зом в)"
 
 #: tfrmpanadapter.btnspanwide.hint
 #, fuzzy
 msgid "Wider span (zoom out)"
-msgstr ""
+msgstr "Проміжний проміжок (зом)"
 
 #: tfrmpanadapter.caption
 #, fuzzy
 msgid "Panadapter"
-msgstr ""
+msgstr "Панадептер"
 
 #: tfrmpanadapter.lblscale.caption
 #, fuzzy
 msgid "80 dB"
-msgstr ""
+msgstr "80 дБ"
 
 #: tfrmpanadapter.lblsource.caption
 #, fuzzy
 msgid "Pan A"
-msgstr ""
+msgstr "Пан А"
 
 #: tfrmpanadapter.lblspan.caption
 #, fuzzy
 msgid "Span --"
-msgstr ""
+msgstr "Спан --"
 
 #. Section: UEDITMESSAGE
 #: tfrmpostscores.btnpostnow.caption
@@ -3366,7 +3366,7 @@ msgstr "Показати результати"
 #: tfrmpostscores.caption
 #, fuzzy
 msgid "Post scores"
-msgstr ""
+msgstr "Поштові бали"
 
 #. Section: UEDITMESSAGE
 #: tfrmprogrammessage.btncq.caption
@@ -3403,44 +3403,44 @@ msgstr "Програмування повідомлень"
 #: tfrmradiopanel.btnspectrum.caption
 #, fuzzy
 msgid "Spectrum"
-msgstr ""
+msgstr "Спектр"
 
 #: tfrmradiopanel.caption
 #: tradioeditform.caption
 #, fuzzy
 msgctxt "tfrmradiopanel.caption"
 msgid "Radio"
-msgstr ""
+msgstr "Радіо"
 
 #: tfrmradiopanel.lblrit.caption
 #, fuzzy
 msgid "RIT"
-msgstr ""
+msgstr "РІТ"
 
 #: tfrmradiopanel.lblsplit.caption
 #, fuzzy
 msgid "SPLIT"
-msgstr ""
+msgstr "СПЛАТ"
 
 #: tfrmradiopanel.lblvfoacaption.caption
 #, fuzzy
 msgid "VFO A"
-msgstr ""
+msgstr "ВФО А"
 
 #: tfrmradiopanel.lblvfobcaption.caption
 #, fuzzy
 msgid "VFO B"
-msgstr ""
+msgstr "ВФО Б"
 
 #: tfrmradiopanel.lblxit.caption
 #, fuzzy
 msgid "XIT"
-msgstr ""
+msgstr "ХІТ"
 
 #: tfrmremmults.caption
 #, fuzzy
 msgid "Remaining mults"
-msgstr ""
+msgstr "Відновлення мульти"
 
 #. Section: UEDITMESSAGE
 #: tfrmsendkeyboard.btnclose.caption
@@ -3453,7 +3453,7 @@ msgstr "Закрити"
 #: tfrmsendkeyboard.caption
 #, fuzzy
 msgid "Sending CW"
-msgstr ""
+msgstr "Відправити CW"
 
 #. Section: UEDITMESSAGE
 #: tfrmsendspot.caption
@@ -3466,7 +3466,7 @@ msgstr "Надіслати спот"
 #: tfrmsendspot.chkcontestname.caption
 #, fuzzy
 msgid "Contest name in comment"
-msgstr ""
+msgstr "Назва конкурсу в коментарях"
 
 #. Section: UEDITMESSAGE
 #: tfrmsendspot.lblcomment.caption
@@ -3495,7 +3495,7 @@ msgstr "Станції"
 #: tfrmtelnet.btnclear.caption
 #, fuzzy
 msgid "Clear"
-msgstr ""
+msgstr "Очистити"
 
 #. Section: UEDITMESSAGE
 #: tfrmtelnet.btncommands.caption
@@ -3508,106 +3508,106 @@ msgstr "Команди"
 #: tfrmtelnet.btnconnect.caption
 #, fuzzy
 msgid "Connect"
-msgstr ""
+msgstr "Зв'язатися"
 
 #: tfrmtelnet.btndisconnect.caption
 #, fuzzy
 msgid "Disconnect"
-msgstr ""
+msgstr "Відключення"
 
 #: tfrmtelnet.btnfreeze.caption
 #, fuzzy
 msgid "Freeze"
-msgstr ""
+msgstr "Зареєструватися"
 
 #: tfrmtelnet.btnsend.caption
 #, fuzzy
 msgid "Send"
-msgstr ""
+msgstr "Відправити"
 
 #: tfrmtelnet.btnshow50.caption
 #, fuzzy
 msgid "SH/50"
-msgstr ""
+msgstr "Ш/50"
 
 #: tfrmtelnet.caption
 #, fuzzy
 msgid "Telnet"
-msgstr ""
+msgstr "Твитнуть"
 
 #: tfrmudpdestinationedit.btntest.caption
 #: tprefsform.btnudptest.caption
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.btntest.caption"
 msgid "Test"
-msgstr ""
+msgstr "Тести"
 
 #: tfrmudpdestinationedit.caption
 #, fuzzy
 msgid "UDP Destination"
-msgstr ""
+msgstr "Місцеположення UDP"
 
 #: tfrmudpdestinationedit.chkstreamappinfo.caption
 #: ulclformhelpers.tc_prefs_udpstream_appinfo
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamappinfo.caption"
 msgid "App info"
-msgstr ""
+msgstr "Інформація про програму"
 
 #: tfrmudpdestinationedit.chkstreamcontact.caption
 #: ulclformhelpers.tc_prefs_udpstream_contact
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamcontact.caption"
 msgid "Contact info"
-msgstr ""
+msgstr "Контакти"
 
 #: tfrmudpdestinationedit.chkstreamlookup.caption
 #: ulclformhelpers.tc_prefs_udpstream_lookup
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamlookup.caption"
 msgid "Callsign lookup"
-msgstr ""
+msgstr "Шукаю роботу"
 
 #: tfrmudpdestinationedit.chkstreamradio.caption
 #: ulclformhelpers.tc_prefs_udpstream_radio
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamradio.caption"
 msgid "Radio info"
-msgstr ""
+msgstr "Радіо інформація"
 
 #: tfrmudpdestinationedit.chkstreamrotor.caption
 #: ulclformhelpers.tc_prefs_udpstream_rotor
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamrotor.caption"
 msgid "Rotor"
-msgstr ""
+msgstr "Ротор"
 
 #: tfrmudpdestinationedit.chkstreamscore.caption
 #: ulclformhelpers.tc_prefs_udpstream_score
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamscore.caption"
 msgid "Score"
-msgstr ""
+msgstr "Зареєструватися"
 
 #: tfrmudpdestinationedit.grpstreams.caption
 #, fuzzy
 msgid "Send this destination"
-msgstr ""
+msgstr "Надіслати запит"
 
 #: tfrmudpdestinationedit.lbladdress.caption
 #, fuzzy
 msgid "Address"
-msgstr ""
+msgstr "Контакти"
 
 #: tfrmwinmanager.caption
 #, fuzzy
 msgid "Window control"
-msgstr ""
+msgstr "Контроль вікон"
 
 #: tprefsform.btnactivate.caption
 #, fuzzy
 msgid "Activate this profile now"
-msgstr ""
+msgstr "Активувати цей профіль зараз"
 
 #: tprefsform.btnadd.caption
 #: tprefsform.btnaddcluster.caption
@@ -3617,13 +3617,13 @@ msgstr ""
 #, fuzzy
 msgctxt "tprefsform.btnadd.caption"
 msgid "Add..."
-msgstr ""
+msgstr "Додати..."
 
 #: tprefsform.btnapply.caption
 #, fuzzy
 msgctxt "tprefsform.btnapply.caption"
 msgid "Save"
-msgstr ""
+msgstr "Зберегти"
 
 #: tprefsform.btnbrowsebackup.caption
 #: tprefsform.btnbrowsedvkpath.caption
@@ -3634,20 +3634,20 @@ msgstr ""
 #, fuzzy
 msgctxt "tprefsform.btnbrowsebackup.caption"
 msgid "Browse..."
-msgstr ""
+msgstr "Поза «69»."
 
 #: tprefsform.btndeleteprofile.caption
 #, fuzzy
 msgctxt "tprefsform.btndeleteprofile.caption"
 msgid "Delete"
-msgstr ""
+msgstr "Видалити"
 
 #: tprefsform.btnduplicate.caption
 #: tprefsform.btnduplicatekeyer.caption
 #, fuzzy
 msgctxt "tprefsform.btnduplicate.caption"
 msgid "Duplicate"
-msgstr ""
+msgstr "Дублікат"
 
 #: tprefsform.btnedit.caption
 #: tprefsform.btneditkeyer.caption
@@ -3655,19 +3655,19 @@ msgstr ""
 #, fuzzy
 msgctxt "tprefsform.btnedit.caption"
 msgid "Edit..."
-msgstr ""
+msgstr "Редагування."
 
 #: tprefsform.btnnewprofile.caption
 #: ulclformhelpers.tc_prefs_newprofile
 #, fuzzy
 msgctxt "tprefsform.btnnewprofile.caption"
 msgid "New..."
-msgstr ""
+msgstr "Новий..."
 
 #: tprefsform.btnopenlogfile.caption
 #, fuzzy
 msgid "Open log file"
-msgstr ""
+msgstr "Відкритий файл журналу"
 
 #: tprefsform.btnremove.caption
 #: tprefsform.btnremovecluster.caption
@@ -3677,652 +3677,652 @@ msgstr ""
 #, fuzzy
 msgctxt "tprefsform.btnremove.caption"
 msgid "Remove"
-msgstr ""
+msgstr "Прибрати"
 
 #: tprefsform.btnrenameprofile.caption
 #: ulclformhelpers.tc_prefs_renameprofile
 #, fuzzy
 msgctxt "tprefsform.btnrenameprofile.caption"
 msgid "Rename..."
-msgstr ""
+msgstr "Ім'я."
 
 #: tprefsform.btnusecluster.caption
 #: tprefsform.btnuserotator.caption
 #, fuzzy
 msgctxt "tprefsform.btnusecluster.caption"
 msgid "Use this"
-msgstr ""
+msgstr "Використовуйте це"
 
 #: tprefsform.caption
 #: ulclformhelpers.tc_prefs_unsavedtitle
 #, fuzzy
 msgctxt "tprefsform.caption"
 msgid "TR4W Preferences"
-msgstr ""
+msgstr "Налаштування TR4W"
 
 #: tprefsform.chkaltdbuffer.caption
 #, fuzzy
 msgid "Alt-D remembers what you typed"
-msgstr ""
+msgstr "Alt-D запам'ятовує те, що ви набрали"
 
 #: tprefsform.chkaltdcq.caption
 #, fuzzy
 msgid "Alt-D can start a CQ on the second radio"
-msgstr ""
+msgstr "Alt-D може запустити CQ на другому радіо"
 
 #: tprefsform.chkalwaysblindcq.caption
 #, fuzzy
 msgid "Always call a blind CQ"
-msgstr ""
+msgstr "Завжди викликати сліпий CQ"
 
 #: tprefsform.chkautocallterminate.caption
 #, fuzzy
 msgid "Stop sending when the call window changes"
-msgstr ""
+msgstr "Стоп відправлення при зміні вікна виклику"
 
 #: tprefsform.chkautoconnect.caption
 #, fuzzy
 msgctxt "tprefsform.chkautoconnect.caption"
 msgid "Connect radios at startup"
-msgstr ""
+msgstr "З'єднайте радіо на старті"
 
 #: tprefsform.chkautoqsonumberdecrement.caption
 #, fuzzy
 msgid "Give the serial number back when a QSO is abandoned"
-msgstr ""
+msgstr "Подаруйте серійний номер, коли QSO покинеться"
 
 #: tprefsform.chkautoreturntocq.caption
 #, fuzzy
 msgid "Return to CQ mode after logging a QSO"
-msgstr ""
+msgstr "Повернутися до режиму CQ після входу в QSO"
 
 #: tprefsform.chkbandmapallbands.caption
 #, fuzzy
 msgid "All bands"
-msgstr ""
+msgstr "Всі гурти"
 
 #: tprefsform.chkbandmapallmodes.caption
 #, fuzzy
 msgid "All modes"
-msgstr ""
+msgstr "Всі режими"
 
 #: tprefsform.chkbandmapcallwindow.caption
 #, fuzzy
 msgid "Show the call window entry"
-msgstr ""
+msgstr "Показати запис вікна виклику"
 
 #: tprefsform.chkbandmapcq.caption
 #, fuzzy
 msgid "Show CQ spots"
-msgstr ""
+msgstr "Показати CQ плями"
 
 #: tprefsform.chkbandmapdupes.caption
 #, fuzzy
 msgid "Show duplicates"
-msgstr ""
+msgstr "Показати дублікати"
 
 #: tprefsform.chkbandmapghz.caption
 #, fuzzy
 msgid "Show GHz"
-msgstr ""
+msgstr "Показати GHz"
 
 #: tprefsform.chkbandmapmultsonly.caption
 #, fuzzy
 msgid "Multipliers only"
-msgstr ""
+msgstr "Мультиплікатори тільки"
 
 #: tprefsform.chkbandmapso2r.caption
 #, fuzzy
 msgid "SO2R display"
-msgstr ""
+msgstr "Дисплей SO2R"
 
 #: tprefsform.chkboldfont.caption
 #, fuzzy
 msgid "Bold"
-msgstr ""
+msgstr "Золотий"
 
 #: tprefsform.chkcallwindowshowallspots.caption
 #, fuzzy
 msgid "Show every spot in the call window"
-msgstr ""
+msgstr "Показати кожне місце у вікні виклику"
 
 #: tprefsform.chkchecklogfilesize.caption
 #, fuzzy
 msgid "Warn when the log file grows unexpectedly"
-msgstr ""
+msgstr "Війна, коли файл журналу виростає несподівано"
 
 #: tprefsform.chkclusteratstartup.caption
 #, fuzzy
 msgid "Connect at startup"
-msgstr ""
+msgstr "Підключатися до стартапу"
 
 #: tprefsform.chkconfirmeditchanges.caption
 #, fuzzy
 msgid "Confirm before saving an edited QSO"
-msgstr ""
+msgstr "Підтвердження перед збереженням редагованого QSO"
 
 #: tprefsform.chkcwenable.caption
 #, fuzzy
 msgid "Send CW"
-msgstr ""
+msgstr "Надіслати"
 
 #: tprefsform.chkcwmessageschainable.caption
 #, fuzzy
 msgid "Any CW message may chain into the next"
-msgstr ""
+msgstr "Будь-яке повідомлення CW може бути введене в наступний"
 
 #: tprefsform.chkcwspeedfromdatabase.caption
 #, fuzzy
 msgid "Match the speed a station was worked at before"
-msgstr ""
+msgstr "Зібрати швидкість станції раніше"
 
 #: tprefsform.chkdupesheetcolor.caption
 #, fuzzy
 msgid "Color the dupe sheet columns"
-msgstr ""
+msgstr "Кольори дупа листові"
 
 #: tprefsform.chkdvkenable.caption
 #, fuzzy
 msgid "Use the digital voice keyer"
-msgstr ""
+msgstr "Використовуйте цифровий голосовий брелок"
 
 #: tprefsform.chkdvklocalizedmessages.caption
 #, fuzzy
 msgid "Use localized DVK message files"
-msgstr ""
+msgstr "Використовуйте локалізовані файли повідомлень DVK"
 
 #: tprefsform.chkescapeexitssap.caption
 #, fuzzy
 msgid "Escape leaves search and pounce"
-msgstr ""
+msgstr "Пошук листя і відмова"
 
 #: tprefsform.chkfarnsworth.caption
 #, fuzzy
 msgid "Farnsworth spacing"
-msgstr ""
+msgstr "Фарнсуортне спарювання"
 
 #: tprefsform.chkhamlibasynconly.caption
 #, fuzzy
 msgid "HamLib - async callbacks only, no heartbeat (testing)"
-msgstr ""
+msgstr "HamLib - async callbacks only, no heartbeat (testing)"
 
 #: tprefsform.chkhamlibdebug.caption
 #, fuzzy
 msgid "HamLib - debug logging"
-msgstr ""
+msgstr "HamLib - знезаду"
 
 #: tprefsform.chkhamlibtrace.caption
 #, fuzzy
 msgid "HamLib - internal trace to hamlib_trace.log"
-msgstr ""
+msgstr "HamLib - внутрішні сліди для hamlib trace.log"
 
 #: tprefsform.chkhamscorecontact.caption
 #, fuzzy
 msgid "Include contact information"
-msgstr ""
+msgstr "Включити контактну інформацію"
 
 #: tprefsform.chkhamscoreenable.caption
 #, fuzzy
 msgid "Post my score while the contest runs"
-msgstr ""
+msgstr "Пост мій рахунок під час проведення конкурсу"
 
 #: tprefsform.chkhfbands.caption
 #, fuzzy
 msgid "HF (160 - 10 m)"
-msgstr ""
+msgstr "HF (160 - 10 м)"
 
 #: tprefsform.chkinbandlockout.caption
 #, fuzzy
 msgid "Stop both radios landing on one band"
-msgstr ""
+msgstr "Стоп і радіовиставка на одну смугу"
 
 #: tprefsform.chkincludefkeynumber.caption
 #, fuzzy
 msgid "Show the key number on the function-key buttons"
-msgstr ""
+msgstr "Показати номер ключа на кнопках функції"
 
 #: tprefsform.chkintercomfile.caption
 #, fuzzy
 msgid "Log network messages to INTERCOM.TXT"
-msgstr ""
+msgstr "Логічні повідомлення в INTERCOM. ТСТ"
 
 #: tprefsform.chkkeypadcwmemories.caption
 #, fuzzy
 msgid "Number keypad sends CW memories"
-msgstr ""
+msgstr "Номер клавіатури надсилає спогади CW"
 
 #: tprefsform.chkleavecursorincall.caption
 #, fuzzy
 msgid "Leave the cursor in the call window"
-msgstr ""
+msgstr "Залишити курсор у вікні виклику"
 
 #: tprefsform.chkloggerenabled.caption
 #, fuzzy
 msgid "Send QSOs to it as they are logged"
-msgstr ""
+msgstr "Відправити QSO до нього, як вони з'єднуються"
 
 #: tprefsform.chklogwithsingleenter.caption
 #, fuzzy
 msgid "Log with a single Enter"
-msgstr ""
+msgstr "Зареєструватися"
 
 #: tprefsform.chkmp3recorderenable.caption
 #, fuzzy
 msgid "Record each QSO to MP3"
-msgstr ""
+msgstr "Запис кожного QSO до MP3"
 
 #: tprefsform.chkmultimultsonly.caption
 #, fuzzy
 msgid "Pass only new multipliers around the network"
-msgstr ""
+msgstr "Пройдіть нові мультиплікатори по мережі"
 
 #: tprefsform.chknameflag.caption
 #, fuzzy
 msgid "Flag a station whose name is already known"
-msgstr ""
+msgstr "Прапор станції, назва якого вже відома"
 
 #: tprefsform.chknetautosync.caption
 #, fuzzy
 msgid "Synchronize the log when connecting"
-msgstr ""
+msgstr "Синхронізувати журнал при підключенні"
 
 #: tprefsform.chknoborder.caption
 #, fuzzy
 msgid "Main window has no border"
-msgstr ""
+msgstr "Головне вікно не має кордонів"
 
 #: tprefsform.chknocaption.caption
 #, fuzzy
 msgid "Main window has no title bar"
-msgstr ""
+msgstr "Головне вікно не має титулу"
 
 #: tprefsform.chknocolumnheader.caption
 #, fuzzy
 msgid "Hide the log column headings"
-msgstr ""
+msgstr "Приховати заголовки стовпця"
 
 #: tprefsform.chknopollduringptt.caption
 #, fuzzy
 msgid "Stop polling the radio while transmitting"
-msgstr ""
+msgstr "Стоп опитування радіо при передачі"
 
 #: tprefsform.chkpartialcall.caption
 #, fuzzy
 msgid "Match on a partial callsign"
-msgstr ""
+msgstr "Матч на частковому дзвінок"
 
 #: tprefsform.chkpossiblecalls.caption
 #, fuzzy
 msgid "Offer possible calls"
-msgstr ""
+msgstr "Замовити можливі дзвінки"
 
 #: tprefsform.chkpttenable.caption
 #, fuzzy
 msgid "Assert PTT when transmitting"
-msgstr ""
+msgstr "Вставити PTT при передачі"
 
 #: tprefsform.chkpttlockout.caption
 #, fuzzy
 msgid "Lock out PTT"
-msgstr ""
+msgstr "Заблокувати PTT"
 
 #: tprefsform.chkpttviacommands.caption
 #, fuzzy
 msgid "Key the transmitter with a CAT command instead of a hardware line"
-msgstr ""
+msgstr "Ключ передавач з командою CAT замість апаратної лінії"
 
 #: tprefsform.chkqsyinactive.caption
 #, fuzzy
 msgid "QSY the inactive radio when I change band"
-msgstr ""
+msgstr "QSY неактивне радіо, коли я змінює групу"
 
 #: tprefsform.chksayhienable.caption
 #, fuzzy
 msgid "Send a greeting to stations worked before"
-msgstr ""
+msgstr "Відправте привітання станціям, які працювали перед"
 
 #: tprefsform.chksendfourlettercall.caption
 #, fuzzy
 msgid "Always send all four letters of a four-letter call"
-msgstr ""
+msgstr "Завжди надсилайте всі чотири літери з четвертим дзвінком"
 
 #: tprefsform.chkshowgridlines.caption
 #, fuzzy
 msgid "Draw gridlines in the log"
-msgstr ""
+msgstr "Накладні сітки в колоді"
 
 #: tprefsform.chkskipactiveband.caption
 #, fuzzy
 msgid "Skip the band the other radio is on"
-msgstr ""
+msgstr "Пропустити гурт на іншому радіо"
 
 #: tprefsform.chkso2r.caption
 #, fuzzy
 msgctxt "tprefsform.chkso2r.caption"
 msgid "SO2R enabled"
-msgstr ""
+msgstr "Увімкнення SO2R"
 
 #: tprefsform.chkspacebardupecheck.caption
 #, fuzzy
 msgid "Space bar performs a dupe check"
-msgstr ""
+msgstr "Космічна панель виконує дубову перевірку"
 
 #: tprefsform.chkspeedsync1.caption
 #: tprefsform.chkspeedsync2.caption
 #, fuzzy
 msgctxt "tprefsform.chkspeedsync1.caption"
 msgid "Speed sync"
-msgstr ""
+msgstr "Швидкість синхронізації"
 
 #: tprefsform.chkspotcollector.caption
 #, fuzzy
 msgid "Collect spots from the cluster"
-msgstr ""
+msgstr "Збір плям з кластера"
 
 #: tprefsform.chkswappacketspotradios.caption
 #, fuzzy
 msgid "Send spots to the other radio"
-msgstr ""
+msgstr "Відправити плями на інший радіо"
 
 #: tprefsform.chkswappaddles.caption
 #, fuzzy
 msgid "Swap dit and dah"
-msgstr ""
+msgstr "Обмінний діт і dah"
 
 #: tprefsform.chkswaprelaysense.caption
 #, fuzzy
 msgid "Invert the radio relay sense"
-msgstr ""
+msgstr "Зворотній зв'язок радіорелей"
 
 #: tprefsform.chktcibindall.caption
 #, fuzzy
 msgid "Also listen on the network (other computers can connect)"
-msgstr ""
+msgstr "Також слухайте мережу (з'єднання комп'ютерів)"
 
 #: tprefsform.chktcidebug.caption
 #, fuzzy
 msgid "TCI server - log every command, both directions"
-msgstr ""
+msgstr "Сервер TCI - записувати кожну команду, обидва напрямки"
 
 #: tprefsform.chktciserver.caption
 #, fuzzy
 msgid "Enable the TCI server"
-msgstr ""
+msgstr "Увімкнути сервер TCI"
 
 #: tprefsform.chktelnetdebug.caption
 #, fuzzy
 msgid "DX cluster - log all telnet traffic"
-msgstr ""
+msgstr "DX кластер - ввійдіть всі телекомунікаційні трафік"
 
 #: tprefsform.chktunewithdits.caption
 #, fuzzy
 msgid "Tune with dits rather than a solid carrier"
-msgstr ""
+msgstr "Туне з ставками, а не твердим перевізником"
 
 #: tprefsform.chktworadiomode.caption
 #, fuzzy
 msgid "Two radio mode"
-msgstr ""
+msgstr "Два радіорежима"
 
 #: tprefsform.chkudpallqsos.caption
 #, fuzzy
 msgid "Also broadcast edited and previously logged QSOs"
-msgstr ""
+msgstr "Також віщає редаговані та попередньо зафіксовані QSO"
 
 #: tprefsform.chkudpenabled.caption
 #, fuzzy
 msgid "Broadcast UDP data"
-msgstr ""
+msgstr "Радіоканал UDP дані"
 
 #: tprefsform.chkunknowncountryfile.caption
 #, fuzzy
 msgid "Record callsigns with no country match"
-msgstr ""
+msgstr "Запис дзвінків без узгодження країни"
 
 #: tprefsform.chkupdaterestartfile.caption
 #, fuzzy
 msgid "Keep the restart file up to date"
-msgstr ""
+msgstr "Збережіть файл перезавантаження до дати"
 
 #: tprefsform.chkusecontrolport.caption
 #, fuzzy
 msgid "Use the radio control port for paddle and foot switch"
-msgstr ""
+msgstr "Використовуйте відеореєстраційний порт для веслування та вимикача стопи"
 
 #: tprefsform.chkuserecordedsigns.caption
 #, fuzzy
 msgid "Send recorded audio for callsign characters"
-msgstr ""
+msgstr "Відправити записаний аудіо для символів виклику"
 
 #: tprefsform.chkvhfbands.caption
 #, fuzzy
 msgid "VHF and up (6 m and above)"
-msgstr ""
+msgstr "VHF і вгору (6 м і вище)"
 
 #: tprefsform.chkwaitforstrength.caption
 #, fuzzy
 msgid "Wait for a signal strength reading before switching"
-msgstr ""
+msgstr "Очікується читання сигналу перед перемиканням"
 
 #: tprefsform.chkwarcbands.caption
 #, fuzzy
 msgid "WARC (30, 17, 12 m)"
-msgstr ""
+msgstr "ВАРК (30, 17, 12 м)"
 
 #: tprefsform.chkwildcardpartials.caption
 #, fuzzy
 msgid "Allow wildcards in a partial"
-msgstr ""
+msgstr "Дозволити дикікарти в парі"
 
 #: tprefsform.chkwsjtxenabled.caption
 #, fuzzy
 msgid "Exchange data with WSJT-X"
-msgstr ""
+msgstr "Обмін даними з WSJT-X"
 
 #: tprefsform.chkwsjtxhighlights.caption
 #, fuzzy
 msgid "Send callsign highlighting to WSJT-X"
-msgstr ""
+msgstr "Відправлення виклику до WSJT-X"
 
 #: tprefsform.chkwsjtxradiocontrol.caption
 #, fuzzy
 msgid "Let WSJT-X control the radio"
-msgstr ""
+msgstr "Нехай WSJT-X контроль радіо"
 
 #: tprefsform.chkycccso2r.caption
 #, fuzzy
 msgid "YCCC SO2R Plus box connected"
-msgstr ""
+msgstr "YCCC SO2R Плюс коробка підключений"
 
 #: tprefsform.edtsearch.texthint
 #, fuzzy
 msgid "Search settings"
-msgstr ""
+msgstr "Параметри пошуку"
 
 #: tprefsform.grpprofile.caption
 #: ulclformhelpers.tc_prefs_profiles
 #, fuzzy
 msgctxt "tprefsform.grpprofile.caption"
 msgid "Station profile"
-msgstr ""
+msgstr "Профіль станції"
 
 #: tprefsform.lblactivatehint.caption
 #, fuzzy
 msgid "Saving stores your changes. It does not switch the radios over - use this button for that."
-msgstr ""
+msgstr "Економія зберігає ваші зміни. Не переключіть радіо над - використовуйте цю кнопку для цього."
 
 #: tprefsform.lblactive.caption
 #: ulclformhelpers.tc_prefs_activelabel
 #, fuzzy
 msgctxt "tprefsform.lblactive.caption"
 msgid "Active profile: "
-msgstr ""
+msgstr "Активний профіль: "
 
 #: tprefsform.lblactivecluster.caption
 #, fuzzy
 msgid "Connecting to: (none chosen)"
-msgstr ""
+msgstr "Підключення до:"
 
 #: tprefsform.lblappearcolorshint.caption
 #, fuzzy
 msgid "Window colors are still on the Settings menu.  They belong here and will move once the main window is resizable, which is the change that decides what the layout options need to be."
-msgstr ""
+msgstr "Кольори вікон все ще на меню Налаштування. Вони належать тут і будуть пересуватися один від основного вікна, що є зміною, що вирішує, які параметри макета повинні бути."
 
 #: tprefsform.lblappearheading.caption
 #: tprefsform.lblmainwindowheading.caption
 #, fuzzy
 msgctxt "tprefsform.lblappearheading.caption"
 msgid "Main window"
-msgstr ""
+msgstr "Головна"
 
 #: tprefsform.lblappearhint.caption
 #, fuzzy
 msgid "The font applies to the main contest window.  All four take effect when TR4W next starts."
-msgstr ""
+msgstr "Шрифт відноситься до основного вікна конкурсу. Всі чотири приймають ефект при старті TR4W."
 
 #: tprefsform.lblappearmenunote.caption
 #, fuzzy
 msgid "These were on the Appearance item of the Settings menu. That window goes away once ROW COUNT and WINDOW SIZE join them here."
-msgstr ""
+msgstr "Це були на пункті призначення меню налаштувань. Цей вікно відправляється один раз на ROW COUNT і WINDOW SIZE приєднатися до них тут."
 
 #: tprefsform.lblaudioheading.caption
 #, fuzzy
 msgid "Audio"
-msgstr ""
+msgstr "Аудіо"
 
 #: tprefsform.lblaudioinfo.caption
 #, fuzzy
 msgid "Voice keying and QSO recording. CW keying is on the CW Settings page."
-msgstr ""
+msgstr "Голосування та запис QSO. Клавіша CW знаходиться на сторінці налаштувань CW."
 
 #: tprefsform.lblaudionote.caption
 #, fuzzy
 msgid "Bit rate and recording length are not here yet: both are stored through a lookup table rather than directly, and move separately."
-msgstr ""
+msgstr "Частота і тривалість запису не тут: обидва зберігаються через таблицю пошуку, а не безпосередньо, і рухаються окремо."
 
 #: tprefsform.lblbackupevery.caption
 #, fuzzy
 msgid "Back up every:"
-msgstr ""
+msgstr "Повернутися до кожного:"
 
 #: tprefsform.lblbackupeveryunits.caption
 #, fuzzy
 msgid "QSOs  (0 = never)"
-msgstr ""
+msgstr "QSOs (0 = ніколи)"
 
 #: tprefsform.lblbackupfile.caption
 #, fuzzy
 msgid "Copy to:"
-msgstr ""
+msgstr "Статус на сервери"
 
 #: tprefsform.lblbackupheading.caption
 #, fuzzy
 msgid "Log backup"
-msgstr ""
+msgstr "Статус на сервери"
 
 #: tprefsform.lblbackuphint.caption
 #, fuzzy
 msgid "A second copy of the log, written as you go.  Put it somewhere that is not the same disk as the log itself, or it protects against nothing worth protecting against."
-msgstr ""
+msgstr "Другий примірник журналу, написаний вами. Поставте його кудись, що це не той самий диск, як сам лог, або він захищає від нічого не варто захистити."
 
 #: tprefsform.lblbandmapdecay.caption
 #, fuzzy
 msgid "Spot expiry:"
-msgstr ""
+msgstr "Витрата плям:"
 
 #: tprefsform.lblbandmapdecayunits.caption
 #, fuzzy
 msgid "minutes"
-msgstr ""
+msgstr "хвилини"
 
 #: tprefsform.lblbandmapguard.caption
 #, fuzzy
 msgid "Guard band:"
-msgstr ""
+msgstr "Охорона:"
 
 #: tprefsform.lblbandmapguardunits.caption
 #: tprefsform.lblpaddletoneunits.caption
 #, fuzzy
 msgctxt "tprefsform.lblbandmapguardunits.caption"
 msgid "Hz"
-msgstr ""
+msgstr "ХХз"
 
 #: tprefsform.lblbandmaplimit.caption
 #, fuzzy
 msgid "Display limit:"
-msgstr ""
+msgstr "Обмеження дисплея:"
 
 #: tprefsform.lblbandmaplimitunits.caption
 #, fuzzy
 msgid "spots"
-msgstr ""
+msgstr "кошик"
 
 #: tprefsform.lblbandmapnote.caption
 #, fuzzy
 msgid "A band map does not need a DX cluster: it also holds spots you make yourself and anything the SO2R radio hears.  Cluster settings are on the DX Cluster page."
-msgstr ""
+msgstr "Гуртова карта не потребує кластеру DX: вона також тримає плями, які ви робите самостійно, і що радіо SO2R чути. Налаштування кластера на сторінці DX Cluster."
 
 #: tprefsform.lblbandoutput1.caption
 #, fuzzy
 msgid "Radio 1 band output port"
-msgstr ""
+msgstr "Радіо 1 смуговий вихідний порт"
 
 #: tprefsform.lblbandoutput2.caption
 #, fuzzy
 msgid "Radio 2 band output port"
-msgstr ""
+msgstr "Радіо 2 діапазон вихідного порту"
 
 #: tprefsform.lblbandsheading.caption
 #, fuzzy
 msgid "Bands in use"
-msgstr ""
+msgstr "Гурти у використанні"
 
 #: tprefsform.lblbandshint.caption
 #, fuzzy
 msgid "Which bands TR4W offers when you change band, and which appear in the multiplier and band-map displays.  WARC bands are off by default because most contests do not allow them."
-msgstr ""
+msgstr "Які смуги TR4W пропонуються при зміні смуги, і які з'являються в багатоплечових і стрічкових екранах. WARC відключається за замовчуванням, оскільки більшість конкурсів не дозволяють їм."
 
 #: tprefsform.lblclustercommand.caption
 #, fuzzy
 msgid "After connecting:"
-msgstr ""
+msgstr "Після підключення:"
 
 #: tprefsform.lblclustercommandhint.caption
 #, fuzzy
 msgid "Sent once the login is accepted - filters, set/name, sh/dx.  Separate several with a semicolon."
-msgstr ""
+msgstr "Після прийняття логіна - фільтри, набір/ім'я, ш/дкс. Відокремити кілька з полуколоном."
 
 #: tprefsform.lblclusterglobalheading.caption
 #, fuzzy
 msgid "For every cluster"
-msgstr ""
+msgstr "Для кожного кластера"
 
 #: tprefsform.lblclusterheading.caption
 #, fuzzy
 msgid "My DX clusters"
-msgstr ""
+msgstr "Мої кластери DX"
 
 #: tprefsform.lblclusterlogin.caption
 #, fuzzy
 msgid "Log in as:"
-msgstr ""
+msgstr "Увійти:"
 
 #: tprefsform.lblclusterloginhint.caption
 #, fuzzy
 msgid "blank = my station callsign"
-msgstr ""
+msgstr "порожній = мій вокзал"
 
 #: tprefsform.lblclustername.caption
 #: tprefsform.lblrotatorname.caption
 #, fuzzy
 msgctxt "tprefsform.lblclustername.caption"
 msgid "Name:"
-msgstr ""
+msgstr "Ім'я:"
 
 #: tprefsform.lblclusternote.caption
 #, fuzzy
 msgid "The cluster reconnects on its own after a drop.  Telnet logging is on the Logging page; spot display and ageing are on Band Map."
-msgstr ""
+msgstr "Скупштина відключається самостійно після падіння. Залога Telnet знаходиться на сторінці Логіна; відображення місця та вікінг на мапі Band."
 
 #: tprefsform.lblclusterpassword.caption
 #: tprefsform.lblhamscorepass.caption
@@ -4330,178 +4330,178 @@ msgstr ""
 #, fuzzy
 msgctxt "tprefsform.lblclusterpassword.caption"
 msgid "Password:"
-msgstr ""
+msgstr "Пароль:"
 
 #: tprefsform.lblclusterserver.caption
 #: tprefsform.lblnetaddress.caption
 #, fuzzy
 msgctxt "tprefsform.lblclusterserver.caption"
 msgid "Server:"
-msgstr ""
+msgstr "Сервер:"
 
 #: tprefsform.lblclusterserverhint.caption
 #, fuzzy
 msgid "host:port, for example dxc.nc7j.com:7373.  The drop-down lists the servers in TRCLUSTER.DAT; you can also type one that is not on it."
-msgstr ""
+msgstr "ведучий:порт, наприклад dxc.nc7j.com:737373. Сервери в TRCLUSTER.DAT також можна набрати, що це не на ньому."
 
 #: tprefsform.lblcontestheading.caption
 #, fuzzy
 msgid "Contest exchange"
-msgstr ""
+msgstr "Конкурси"
 
 #: tprefsform.lblcwoutput1.caption
 #, fuzzy
 msgctxt "tprefsform.lblcwoutput1.caption"
 msgid "CW output 1"
-msgstr ""
+msgstr "CW вихід 1"
 
 #: tprefsform.lblcwoutput2.caption
 #, fuzzy
 msgctxt "tprefsform.lblcwoutput2.caption"
 msgid "CW output 2"
-msgstr ""
+msgstr "CW вихід 2"
 
 #: tprefsform.lblcwsendheading.caption
 #, fuzzy
 msgid "Sending"
-msgstr ""
+msgstr "Відправити"
 
 #: tprefsform.lblcwspeedincrement.caption
 #, fuzzy
 msgid "Speed step:"
-msgstr ""
+msgstr "Крок швидкості:"
 
 #: tprefsform.lblcwspeedincrementunits.caption
 #, fuzzy
 msgid "WPM per PageUp / PageDown"
-msgstr ""
+msgstr "UKRSIBBANK BNP Paribas Group відкрив можливість покупки валюти онлайн через UKRSIB online"
 
 #: tprefsform.lblcwtone.caption
 #, fuzzy
 msgid "Sidetone:"
-msgstr ""
+msgstr "Бічнийтон:"
 
 #: tprefsform.lblcwtoneunits.caption
 #, fuzzy
 msgid "Hz  (0 = the radios own sidetone)"
-msgstr ""
+msgstr "Hz (0 = радіо власних ботонів)"
 
 #: tprefsform.lbldetaillogs.caption
 #, fuzzy
 msgid "Detailed logging for one subsystem"
-msgstr ""
+msgstr "Детальний запис для однієї підсистеми"
 
 #: tprefsform.lblditdah.caption
 #, fuzzy
 msgid "Dit/dah ratio:"
-msgstr ""
+msgstr "Dit/dah співвідношення:"
 
 #: tprefsform.lbldvkheading.caption
 #, fuzzy
 msgid "Digital voice keyer"
-msgstr ""
+msgstr "Цифровий диктофон"
 
 #: tprefsform.lbldvkpath.caption
 #, fuzzy
 msgid "DVK recording folder"
-msgstr ""
+msgstr "Папка запису DVK"
 
 #: tprefsform.lbldvkrecorder.caption
 #, fuzzy
 msgid "DVK recorder program"
-msgstr ""
+msgstr "Програма запису DVK"
 
 #: tprefsform.lbldxlabheading.caption
 #, fuzzy
 msgid "DXLab"
-msgstr ""
+msgstr "ДХЛ"
 
 #: tprefsform.lbldxlabinfo.caption
 #, fuzzy
 msgid "DXLab needs no settings of its own.  TR4W offers a DX Commander compatible interface on TCP port 52002 whenever the WSJT-X support is running, and DXLab programs connect to that."
-msgstr ""
+msgstr "DXLab не потребує налаштувань. TR4W пропонує сумісний інтерфейс DX Commander на порті TCP 52002, коли служба підтримки WSJT-X працює, і програми DXLab підключаються до цього."
 
 #: tprefsform.lbldxlabinfo2.caption
 #, fuzzy
 msgid "The port is not configurable today.  If you want it to be, say so and it becomes a setting here."
-msgstr ""
+msgstr "Порт не конфігурується сьогодні. Якщо ви хочете, щоб це було, скажте, і це стає настроєм тут."
 
 #: tprefsform.lblfarnsworthspeed.caption
 #, fuzzy
 msgid "Character speed:"
-msgstr ""
+msgstr "Частота символів:"
 
 #: tprefsform.lblfarnsworthunits.caption
 #, fuzzy
 msgid "WPM"
-msgstr ""
+msgstr "ВАМ"
 
 #: tprefsform.lblfontsize.caption
 #, fuzzy
 msgid "Size:"
-msgstr ""
+msgstr "Розмір:"
 
 #: tprefsform.lblhamlibrestart.caption
 #, fuzzy
 msgid "The three HamLib settings take effect when TR4W next starts.  They are very verbose and are for diagnosing a radio problem - leave them off otherwise."
-msgstr ""
+msgstr "Три налаштування HamLib приймають ефект при старті TR4W. Вони дуже словесно і призначені для діагностики радіопроблем - відкинути їх інакше."
 
 #: tprefsform.lblhamscoreurl.caption
 #, fuzzy
 msgid "Service URL:"
-msgstr ""
+msgstr "Адреса служби:"
 
 #: tprefsform.lblhamscoreuser.caption
 #, fuzzy
 msgid "Username:"
-msgstr ""
+msgstr "Ім'я користувача:"
 
 #: tprefsform.lblhardwareheading.caption
 #: ulclformhelpers.tc_prefs_hardware
 #, fuzzy
 msgctxt "tprefsform.lblhardwareheading.caption"
 msgid "Hardware"
-msgstr ""
+msgstr "Обладнання"
 
 #: tprefsform.lblhardwareinfo.caption
 #, fuzzy
 msgid "Station-wide hardware. Settings that belong to one radio are under Radios; rotators are under Rotators."
-msgstr ""
+msgstr "Станція-широкий апарат. Пристрої, які належать одному радіо, знаходяться під радіо; ротатори під ротаторами."
 
 #: tprefsform.lblkeyerhint.caption
 #, fuzzy
 msgid "Only devices with their own settings live here - a WinKeyer or a YCCC SO2R+ box.  Keying on a radio's own port, or by CAT, is part of that radio's setup; a station profile then chooses which method each slot uses."
-msgstr ""
+msgstr "Тільки пристрої з власними налаштуваннями тут - WinKeyer або YCCC SO2R + коробка. Клавіатура на власний порт радіо, або CAT, є частиною цієї установки радіо; профіль станції, потім вибирає, який метод кожного слота використовує."
 
 #: tprefsform.lblleadingzerochar.caption
 #, fuzzy
 msgid "Sent as:"
-msgstr ""
+msgstr "Як:"
 
 #: tprefsform.lblleadingzerohint.caption
 #, fuzzy
 msgid "Serial numbers are padded to that many digits.  T for a zero is the usual cut-number choice; leave it as 0 to send them plainly."
-msgstr ""
+msgstr "Серійні номери виводяться до того, що багато цифр. T для нуля - це звичайний вибір зрізу; залишити його як 0, щоб відправити їх просто."
 
 #: tprefsform.lblleadingzeros.caption
 #, fuzzy
 msgid "Leading zeros:"
-msgstr ""
+msgstr "Провідні нулі:"
 
 #: tprefsform.lbllogfilesheading.caption
 #, fuzzy
 msgid "Log files"
-msgstr ""
+msgstr "Файли"
 
 #: tprefsform.lblloggeraddress.caption
 #, fuzzy
 msgid "Address:"
-msgstr ""
+msgstr "Адреса:"
 
 #: tprefsform.lblloggerheading.caption
 #, fuzzy
 msgid "External logger"
-msgstr ""
+msgstr "Зовнішній logger"
 
 #: tprefsform.lblloggerport.caption
 #: tprefsform.lblnetport.caption
@@ -4510,235 +4510,235 @@ msgstr ""
 #, fuzzy
 msgctxt "tprefsform.lblloggerport.caption"
 msgid "Port:"
-msgstr ""
+msgstr "Порт:"
 
 #: tprefsform.lblloggerrestart.caption
 #: tprefsform.lblscorerestart.caption
 #, fuzzy
 msgctxt "tprefsform.lblloggerrestart.caption"
 msgid "These take effect when TR4W next starts."
-msgstr ""
+msgstr "Цей ефект приймають при старті TR4W."
 
 #: tprefsform.lblloggerstatus.caption
 #, fuzzy
 msgid "DXKEEPER is complete.  ACLOG and HRD are not finished - selecting one logs a warning and no QSOs are sent."
-msgstr ""
+msgstr "DXKEEPER завершено. АКЛОГ і HRD не закінчуються - вибравши один журнали попередження та не надсилайте QSO."
 
 #: tprefsform.lblloggertype.caption
 #, fuzzy
 msgid "Program:"
-msgstr ""
+msgstr "Програма:"
 
 #: tprefsform.lblloglevel.caption
 #, fuzzy
 msgid "Log level:"
-msgstr ""
+msgstr "Статус на сервери"
 
 #: tprefsform.lblloglevelhint.caption
 #, fuzzy
 msgid "Takes effect immediately - no restart.  INFO is the normal setting; DEBUG and TRACE make the log much larger and are for diagnosing a problem."
-msgstr ""
+msgstr "Взяти ефект відразу - не перезапустити. INFO - це нормальна установка; DEBUG і TRACE робить журнал набагато більшим і є для діагностики проблеми."
 
 #: tprefsform.lblmainfont.caption
 #, fuzzy
 msgid "Font:"
-msgstr ""
+msgstr "Шрифт:"
 
 #: tprefsform.lblmmttyengine.caption
 #, fuzzy
 msgid "Engine:"
-msgstr ""
+msgstr "Двигун:"
 
 #: tprefsform.lblmmttyhint.caption
 #, fuzzy
 msgid "The full path to MMTTY.EXE.  TR4W starts it for RTTY and talks to it directly."
-msgstr ""
+msgstr "Повний шлях до MMTTY.EXE. TR4W запускає його для RTTY і розповідає про це безпосередньо."
 
 #: tprefsform.lblmp3heading.caption
 #, fuzzy
 msgid "QSO recording"
-msgstr ""
+msgstr "Запис QSO"
 
 #: tprefsform.lblmp3path.caption
 #, fuzzy
 msgid "MP3 folder"
-msgstr ""
+msgstr "Папка MP3"
 
 #: tprefsform.lblmp3player.caption
 #, fuzzy
 msgid "MP3 player program"
-msgstr ""
+msgstr "Програма гравця MP3"
 
 #: tprefsform.lblmycall.caption
 #, fuzzy
 msgid "Callsign:"
-msgstr ""
+msgstr "Відправити:"
 
 #: tprefsform.lblmycheck.caption
 #, fuzzy
 msgid "Check:"
-msgstr ""
+msgstr "Перевірити:"
 
 #: tprefsform.lblmycontinent.caption
 #, fuzzy
 msgid "Continent:"
-msgstr ""
+msgstr "Континент:"
 
 #: tprefsform.lblmycountry.caption
 #, fuzzy
 msgid "Country:"
-msgstr ""
+msgstr "Країна:"
 
 #: tprefsform.lblmyfdclass.caption
 #, fuzzy
 msgid "FD class:"
-msgstr ""
+msgstr "Клас FD:"
 
 #: tprefsform.lblmyfocnumber.caption
 #, fuzzy
 msgid "FOC number:"
-msgstr ""
+msgstr "Номер ФОК:"
 
 #: tprefsform.lblmygrid.caption
 #, fuzzy
 msgid "Grid square:"
-msgstr ""
+msgstr "Площа сітки:"
 
 #: tprefsform.lblmyiota.caption
 #, fuzzy
 msgid "IOTA:"
-msgstr ""
+msgstr "ІОТА:"
 
 #: tprefsform.lblmyituzone.caption
 #, fuzzy
 msgid "ITU zone:"
-msgstr ""
+msgstr "Зона ІТУ:"
 
 #: tprefsform.lblmykeyers.caption
 #, fuzzy
 msgid "CW keying devices"
-msgstr ""
+msgstr "Пристрої для ключів CW"
 
 #: tprefsform.lblmyname.caption
 #, fuzzy
 msgid "First name:"
-msgstr ""
+msgstr "Ім'я:"
 
 #: tprefsform.lblmypark.caption
 #, fuzzy
 msgid "Park:"
-msgstr ""
+msgstr "Парк:"
 
 #: tprefsform.lblmypostalcode.caption
 #, fuzzy
 msgid "Postal code:"
-msgstr ""
+msgstr "Поштовий індекс:"
 
 #: tprefsform.lblmyprec.caption
 #, fuzzy
 msgid "Precedence:"
-msgstr ""
+msgstr "Наявність:"
 
 #: tprefsform.lblmyradios.caption
 #, fuzzy
 msgctxt "tprefsform.lblmyradios.caption"
 msgid "My radios"
-msgstr ""
+msgstr "Моє радіо"
 
 #: tprefsform.lblmyrotators.caption
 #, fuzzy
 msgid "My rotators"
-msgstr ""
+msgstr "Моя ротатори"
 
 #: tprefsform.lblmysection.caption
 #, fuzzy
 msgid "ARRL section:"
-msgstr ""
+msgstr "Секція ARRL:"
 
 #: tprefsform.lblmystate.caption
 #, fuzzy
 msgid "State/Province:"
-msgstr ""
+msgstr "Стан/Провінце:"
 
 #: tprefsform.lblmyzone.caption
 #, fuzzy
 msgid "CQ zone:"
-msgstr ""
+msgstr "CQ зони:"
 
 #: tprefsform.lblnetcomputerid.caption
 #, fuzzy
 msgid "This station:"
-msgstr ""
+msgstr "Станція:"
 
 #: tprefsform.lblnetcomputeridhint.caption
 #, fuzzy
 msgid "a single letter, unique in the network"
-msgstr ""
+msgstr "єдиний лист, унікальний в мережі"
 
 #: tprefsform.lblnetheading.caption
 #, fuzzy
 msgid "Multi-operator network"
-msgstr ""
+msgstr "Багатооператорська мережа"
 
 #: tprefsform.lblnethint.caption
 #, fuzzy
 msgid "TR4WServer runs on one machine and every operating position connects to it.  It holds the shared log, the multipliers and the serial numbers."
-msgstr ""
+msgstr "TR4WServer працює на одній машині і з'єднує в неї робочу позицію. Займає загальний журнал, мультиплікатори та серійні номери."
 
 #: tprefsform.lblopcwheading.caption
 #, fuzzy
 msgid "CW while operating"
-msgstr ""
+msgstr "CW при експлуатації"
 
 #: tprefsform.lbloperatingheading.caption
 #, fuzzy
 msgid "Operating"
-msgstr ""
+msgstr "Проксимус"
 
 #: tprefsform.lbloperatinginfo.caption
 #, fuzzy
 msgid "How the log behaves while you are running the contest. Band map, bands, CW, scoring and two-radio settings are on the pages below."
-msgstr ""
+msgstr "Як працює журнал під час проведення конкурсу. Стрічкові карти, гурти, CW, забивні та дворадіо налаштування на сторінках нижче."
 
 #: tprefsform.lblpaddlehold.caption
 #, fuzzy
 msgid "Hold PTT after the last element"
-msgstr ""
+msgstr "Тримач PTT після останнього елемента"
 
 #: tprefsform.lblpaddleholdunits.caption
 #, fuzzy
 msgid "dit counts"
-msgstr ""
+msgstr "кількість точок"
 
 #: tprefsform.lblpaddleportnote.caption
 #, fuzzy
 msgid "The parallel port a paddle or foot switch is wired to is not here. Whether TR4W keeps supporting LPT at all is an open question, so PADDLE PORT stays on the Ctrl-J command list until that is settled rather than being given a home it may not keep."
-msgstr ""
+msgstr "Паралельний порт веслування або вимикач стопи продається не тут. Якщо TR4W зберігає підтримку LPT у всьому є відкритим питанням, тому PADDLE PORT залишається на списку команд Ctrl-J до тих пір, поки це не буде заблоковано, а не дано додому, він не може зберігатися."
 
 #: tprefsform.lblpaddlepttheading.caption
 #, fuzzy
 msgid "Paddle and PTT"
-msgstr ""
+msgstr "Свічка і PTT"
 
 #: tprefsform.lblpaddlepttinfo.caption
 #, fuzzy
 msgid "The paddle keyer TR4W runs itself, and the PTT line it asserts. A WinKeyer or YCCC box keeps its own paddle timing, so these do not apply to it."
-msgstr ""
+msgstr "Накладний брелок TR4W працює самостійно, а лінія PTT стверджує. Коробка WinKeyer або YCCC зберігає свій власний час, тому це не стосується його."
 
 #: tprefsform.lblpaddlespeed.caption
 #, fuzzy
 msgid "Paddle speed"
-msgstr ""
+msgstr "Швидкість накидка"
 
 #: tprefsform.lblpaddlespeedunits.caption
 #, fuzzy
 msgid "WPM  (0 follows the keyboard speed)"
-msgstr ""
+msgstr "WPM (0 наступні швидкості клавіатури)"
 
 #: tprefsform.lblpaddletone.caption
 #, fuzzy
 msgid "Paddle sidetone"
-msgstr ""
+msgstr "Свічка босоніж"
 
 #: tprefsform.lblplaceholder.caption
 #, fuzzy
@@ -4747,166 +4747,168 @@ msgid ""
 "This section has not been migrated yet.\n"
 "Use the existing configuration screens for it."
 msgstr ""
+"Цей розділ ще не мігрувати.\n"
+"Використовуйте існуючі екрани конфігурації для нього."
 
 #: tprefsform.lblpttdelay.caption
 #, fuzzy
 msgid "Delay after PTT before sending"
-msgstr ""
+msgstr "Прокладка після PTT перед відправленням"
 
 #: tprefsform.lblpttdelayunits.caption
 #, fuzzy
 msgid "x 1.7 ms  (0 disables)"
-msgstr ""
+msgstr "х 1.7 мс (0 відключення)"
 
 #: tprefsform.lblpttgroup.caption
 #, fuzzy
 msgid "PTT"
-msgstr ""
+msgstr "ПТТ"
 
 #: tprefsform.lblradiotcpheading.caption
 #, fuzzy
 msgid "Radio sharing"
-msgstr ""
+msgstr "Радіоканал"
 
 #: tprefsform.lblradiotcphint.caption
 #, fuzzy
 msgid "Lets another position read this station's radio.  Takes effect when TR4W next starts."
-msgstr ""
+msgstr "Давайте ще одну позицію читайте в радіо цієї станції. Приймає ефект при старті TR4W."
 
 #: tprefsform.lblradiotcpport.caption
 #, fuzzy
 msgid "TCP port:"
-msgstr ""
+msgstr "TCP порт:"
 
 #: tprefsform.lblrelayport.caption
 #, fuzzy
 msgid "Relay control port"
-msgstr ""
+msgstr "Реле управління портом"
 
 #: tprefsform.lblrelayportinfo.caption
 #, fuzzy
 msgid "Parallel (LPT) port wiring for this station: relay switching, band data out to a decoder per operating position, and stereo audio control. These follow the DESK, not the radio, so they stay put when you activate a different radio. Leave them None unless you have such an interface - whether TR4W keeps supporting LPT at all is still an open question, which the greyed box below is a placeholder for."
-msgstr ""
+msgstr "Паралел (LPT) порт проводка для цієї станції: реле перемикання, групові дані з декодера на робочу позицію та стерео аудіо контроль. Про це слідуйте за радіо DESK, щоб вони залишалися при активації іншої радіостанції. Залиште їх Ні, якщо у вас є такий інтерфейс - чи підтримує TR4W LPT на все ще є відкритим питанням, який сірий ящик нижче є власником місця."
 
 #: tprefsform.lblrotatorbands.caption
 #, fuzzy
 msgid "Bands:"
-msgstr ""
+msgstr "Гурти:"
 
 #: tprefsform.lblrotatorbandshint.caption
 #, fuzzy
 msgid "Leave blank and this rotator turns for every band, which is what a station with one antenna wants.  List bands - 20 15 10 - to have TR4W choose between several rotators by band."
-msgstr ""
+msgstr "Залиште порожній і цей ротатор перетворюється на кожну смугу, яка є те, що станція з однією антеною хоче. Список гуртів - 20 15 10 - мати TR4W вибрати між декількома ротаторами по смугі."
 
 #: tprefsform.lblrotatorbaud.caption
 #, fuzzy
 msgid "Baud rate:"
-msgstr ""
+msgstr "Ставка:"
 
 #: tprefsform.lblrotatorbaudhint.caption
 #, fuzzy
 msgid "blank or 0 = the default for this type"
-msgstr ""
+msgstr "порожній або 0 = за замовчуванням для цього типу"
 
 #: tprefsform.lblrotatorip.caption
 #, fuzzy
 msgid "IP address:"
-msgstr ""
+msgstr "IP адреса:"
 
 #: tprefsform.lblrotatornote.caption
 #, fuzzy
 msgid "PstRotator is reached over UDP and has no serial port; the others use one.  A blank baud rate lets each type use what it expects - the DCU-1 wants 4800 where the rest want 9600."
-msgstr ""
+msgstr "PstRotator досягається над UDP і не має серійного порту; інші використовують один. Заготовий курс з бруду дозволяє кожному типу використовувати те, що він очікує - DCU-1 хоче 4800, де відпочинок хоче 9600."
 
 #: tprefsform.lblrotatortype.caption
 #, fuzzy
 msgid "Type:"
-msgstr ""
+msgstr "Тип:"
 
 #: tprefsform.lblrotatorudp.caption
 #, fuzzy
 msgid "UDP port:"
-msgstr ""
+msgstr "Порт UDP:"
 
 #: tprefsform.lblsayhicutoff.caption
 #, fuzzy
 msgid "Stop above a rate of:"
-msgstr ""
+msgstr "Стоп над курсом:"
 
 #: tprefsform.lblsayhicutoffunits.caption
 #, fuzzy
 msgid "QSOs per hour"
-msgstr ""
+msgstr "QSO в час"
 
 #: tprefsform.lblscoreboardheading.caption
 #, fuzzy
 msgid "Score board"
-msgstr ""
+msgstr "Табло"
 
 #: tprefsform.lblscoreboardhint.caption
 #, fuzzy
 msgid "Where TR4W posts its score and where it reads other stations' scores from.  The two are separate so a club board can be read while posting elsewhere."
-msgstr ""
+msgstr "Де TR4W публікує свій рахунок і де він читає інші рахунки станцій. Під час розміщення в іншому місці можна ознайомитися двома клубними дошками."
 
 #: tprefsform.lblscoreheading.caption
 #, fuzzy
 msgid "Online scoring"
-msgstr ""
+msgstr "Онлайн запис"
 
 #: tprefsform.lblscoreposturl.caption
 #, fuzzy
 msgid "Posting URL:"
-msgstr ""
+msgstr "Поштова адреса:"
 
 #: tprefsform.lblscorereadurl.caption
 #, fuzzy
 msgid "Reading URL:"
-msgstr ""
+msgstr "Перегляд URL:"
 
 #: tprefsform.lblscpcountry.caption
 #, fuzzy
 msgid "Restrict to countries:"
-msgstr ""
+msgstr "Обмеження країн:"
 
 #: tprefsform.lblscpfilehint.caption
 #, fuzzy
 msgid "Matches come from TRMASTER.DTA in the program folder.  Without that file Super Check Partial simply shows nothing; it is not an error."
-msgstr ""
+msgstr "У програмі беруть участь матчі TRMASTER.DTA. Без цього файлу Super Check Partial просто показує нічого; це не помилка."
 
 #: tprefsform.lblscpheading.caption
 #, fuzzy
 msgid "Super Check Partial"
-msgstr ""
+msgstr "Super Check Часті"
 
 #: tprefsform.lblscphint.caption
 #, fuzzy
 msgid "Blank shows matches from everywhere.  A list of country prefixes narrows it, which is useful in a domestic contest where the whole world is not workable."
-msgstr ""
+msgstr "Полотно показує матчі з скрізь. Список заміських префіксів звужує її, що корисно в вітчизняному конкурсі, де весь світ не працює."
 
 #: tprefsform.lblscpmatchheading.caption
 #, fuzzy
 msgid "Matching"
-msgstr ""
+msgstr "Зняття"
 
 #: tprefsform.lblscpminletters.caption
 #, fuzzy
 msgid "Start matching after:"
-msgstr ""
+msgstr "Почати матч після:"
 
 #: tprefsform.lblscpminlettersunits.caption
 #, fuzzy
 msgid "letters typed"
-msgstr ""
+msgstr "літери типу"
 
 #: tprefsform.lblserialkeyheading.caption
 #, fuzzy
 msgid "Radio serial keying  (DTR/RTS keying only)"
-msgstr ""
+msgstr "Радіо серійний ключ (DTR/RTS)"
 
 #: tprefsform.lblserialkeyintro.caption
 #, fuzzy
 msgid "These shape the CW that TR4W generates itself by toggling a serial line.  They do nothing for a WinKeyer, a YCCC box, or CW sent by CAT - those devices keep their own timing."
-msgstr ""
+msgstr "Ці форми CW, які TR4W генерує себе, щоб закріпити послідовну лінію. Вони нічого не роблять для WinKeyer, YCCC, або CW, відправлених CAT - ті пристрої зберігають власний час."
 
 #. Section: UEDITMESSAGE
 #: tprefsform.lblstationheading.caption
@@ -4919,304 +4921,304 @@ msgstr "Інформація про станцію"
 #: tprefsform.lblstationhint.caption
 #, fuzzy
 msgid "These are sent to the other stations in a multi-operator network when you change them, so all positions agree on the exchange."
-msgstr ""
+msgstr "Ці відправлення надходять на інші станції в багатооператорній мережі, коли ви змінюєте їх, тому всі позиції погоджуються на обмін."
 
 #: tprefsform.lblstereoport.caption
 #, fuzzy
 msgid "Stereo control port"
-msgstr ""
+msgstr "Порт керування стерео"
 
 #: tprefsform.lbltcibindallwarning.caption
 #, fuzzy
 msgid "Off by default, and worth leaving off.  This is an unauthenticated radio-control socket: anything that can reach the port can move your VFO and key your transmitter."
-msgstr ""
+msgstr "Вимкнено за замовчуванням, і варто залишити. Це неаутентичний радіокерований розетки: що можна дістатися до порту можна перемістити VFO і завести ваш передавач."
 
 #: tprefsform.lbltciintro.caption
 #, fuzzy
 msgid "Lets other programs - WSJT-X, JTDX, a skimmer - control whichever radio TR4W has the port open on, even a radio with no TCI of its own.  Radio 1 is trx 0 and radio 2 is trx 1."
-msgstr ""
+msgstr "Давайте інші програми - WSJT-X, JTDX, скіммер - контроль, який радіо TR4W має відкритий порт, навіть радіо без ТПП. Радіо 1 тркс 0 і радіо 2 тркс 1."
 
 #: tprefsform.lbltciloghint.caption
 #, fuzzy
 msgid "To log every TCI command in both directions, see the Logging section."
-msgstr ""
+msgstr "Щоб увійти кожну команду TCI в обох напрямках, див. розділ пропускання."
 
 #: tprefsform.lbltcimaxtx.caption
 #, fuzzy
 msgid "Stop transmitting after:"
-msgstr ""
+msgstr "Стоп передавання після:"
 
 #: tprefsform.lbltcimaxtxhint.caption
 #, fuzzy
 msgid "A safety net, not a timer for normal use: if a client keys the radio and then stops answering - it crashed, or the network went away - this is what puts the transmitter back into receive."
-msgstr ""
+msgstr "Чистка безпеки, не таймер для нормального використання: якщо клієнт заявляє радіо, а потім перестає відповісти - вона збита, або мережа відійшовся - це те, що кладе передавач назад в отримання."
 
 #: tprefsform.lbltcimaxtxunits.caption
 #, fuzzy
 msgid "seconds  (0 = no limit)"
-msgstr ""
+msgstr "секунд (0 = немає ліміту)"
 
 #: tprefsform.lbltciserverscope.caption
 #, fuzzy
 msgid "- this computer only (127.0.0.1), until you tick the box below"
-msgstr ""
+msgstr "- цей комп'ютер тільки (127.0.0.1), поки ви не зіткнете поле нижче"
 
 #: tprefsform.lbltworadioheading.caption
 #, fuzzy
 msgid "Two radio operating"
-msgstr ""
+msgstr "Двох радіоактивних"
 
 #: tprefsform.lbltworadiohint.caption
 #, fuzzy
 msgid "Skipping the other radio's band is what stops a band change on one radio landing you on top of the other."
-msgstr ""
+msgstr "Скіппінг інших радіоперегонів, що зупиняє зміну смуги на одному радіовисадці, ви на вершині іншої."
 
 #: tprefsform.lbltworadiointro.caption
 #, fuzzy
 msgid "Everything below applies only while two radio mode is on."
-msgstr ""
+msgstr "Усе нижче діє тільки тоді як на двох радіорежисах."
 
 #: tprefsform.lbludpdestinations.caption
 #, fuzzy
 msgid "Destinations"
-msgstr ""
+msgstr "Напрямки"
 
 #: tprefsform.lbludphint.caption
 #, fuzzy
 msgid "Each destination is one program listening.  Add a second row for the same address when it expects different data on a different port."
-msgstr ""
+msgstr "Кожен пункт призначення - це одна програма. Додати другий ряд для тієї ж адреси, коли він очікує різні дані на іншому порту."
 
 #: tprefsform.lblweight.caption
 #, fuzzy
 msgid "Weight:"
-msgstr ""
+msgstr "Вага:"
 
 #: tprefsform.lblwsjtxheading.caption
 #, fuzzy
 msgid "WSJT-X / JTDX"
-msgstr ""
+msgstr "WSJT-X / JTDX"
 
 #: tprefsform.lblwsjtxmulticast.caption
 #, fuzzy
 msgid "Multicast group:"
-msgstr ""
+msgstr "Група Multicast:"
 
 #: tprefsform.lblwsjtxport.caption
 #, fuzzy
 msgid "Broadcast port:"
-msgstr ""
+msgstr "Телевізор:"
 
 #: tprefsform.lblwsjtxrestart.caption
 #, fuzzy
 msgid "These take effect when TR4W next starts.  Leave the multicast group blank unless WSJT-X is configured to use one."
-msgstr ""
+msgstr "Цей ефект приймають при старті TR4W. Будь ласка, зв'яжіться з нами."
 
 #: tprefsform.lblwsjtxtcihint.caption
 #, fuzzy
 msgid "To let WSJT-X drive the radio over TCI instead, see the TCI Server section - that works with any radio TR4W controls, not only one with TCI of its own."
-msgstr ""
+msgstr "Щоб пустити WSJT-X радіо над ТПП замість цього див. розділ TCI Server - це працює з будь-яким радіоприймачем TR4W, не тільки з ТПП власного."
 
 #: tprefsform.lblycccinfo.caption
 #, fuzzy
 msgid "Station controllers will get a factory of their own, as radios and keyers did. This checkbox is the interim home for the setting."
-msgstr ""
+msgstr "Контролери станції отримають завод власних, як радіо і клавіатури. Цей прапорець є проміжним будинок для налаштування."
 
 #: tradioeditform.btndiscover.caption
 #: ulclformhelpers.tc_radioedit_discover
 #, fuzzy
 msgctxt "tradioeditform.btndiscover.caption"
 msgid "Discover"
-msgstr ""
+msgstr "Про нас"
 
 #: tradioeditform.chkft1000mpreverse.caption
 #, fuzzy
 msgctxt "tradioeditform.chkft1000mpreverse.caption"
 msgid "FT-1000MP CW reverse"
-msgstr ""
+msgstr "FT-1000MP CW зворотний"
 
 #: tradioeditform.chkpolling.caption
 #, fuzzy
 msgctxt "tradioeditform.chkpolling.caption"
 msgid "Poll this radio"
-msgstr ""
+msgstr "Полл це радіо"
 
 #: tradioeditform.chkusehamlib.caption
 #, fuzzy
 msgctxt "tradioeditform.chkusehamlib.caption"
 msgid "Drive through HamLib"
-msgstr ""
+msgstr "Привід через HamLib"
 
 #: tradioeditform.chkwidecw.caption
 #, fuzzy
 msgctxt "tradioeditform.chkwidecw.caption"
 msgid "Wide CW filter"
-msgstr ""
+msgstr "Широкий фільтр CW"
 
 #: tradioeditform.edtfreqoffset.texthint
 #, fuzzy
 msgid "0 = none, e.g. 116000000"
-msgstr ""
+msgstr "0 = немає, наприклад, 116000000"
 
 #: tradioeditform.lblautoinfo.caption
 #, fuzzy
 msgid "Auto-info level"
-msgstr ""
+msgstr "Рівень авто-info"
 
 #: tradioeditform.lblbaud.caption
 #, fuzzy
 msgctxt "tradioeditform.lblbaud.caption"
 msgid "Baud rate"
-msgstr ""
+msgstr "Курс валют"
 
 #: tradioeditform.lblcatdtr.caption
 #, fuzzy
 msgctxt "tradioeditform.lblcatdtr.caption"
 msgid "CAT DTR"
-msgstr ""
+msgstr "КАТ ДТР"
 
 #: tradioeditform.lblcatrts.caption
 #, fuzzy
 msgctxt "tradioeditform.lblcatrts.caption"
 msgid "CAT RTS"
-msgstr ""
+msgstr "КАТ РТС"
 
 #: tradioeditform.lblciv.caption
 #, fuzzy
 msgctxt "tradioeditform.lblciv.caption"
 msgid "CI-V address (hex)"
-msgstr ""
+msgstr "CI-V адреса (hex)"
 
 #: tradioeditform.lbldatabits.caption
 #, fuzzy
 msgctxt "tradioeditform.lbldatabits.caption"
 msgid "Data bits"
-msgstr ""
+msgstr "Біти даних"
 
 #: tradioeditform.lbldatamode.caption
 #, fuzzy
 msgctxt "tradioeditform.lbldatamode.caption"
 msgid "Icom data mode ID"
-msgstr ""
+msgstr "Ім'я користувача"
 
 #: tradioeditform.lblfilterbyte.caption
 #, fuzzy
 msgctxt "tradioeditform.lblfilterbyte.caption"
 msgid "Icom filter byte"
-msgstr ""
+msgstr "Фільтр Icom"
 
 #: tradioeditform.lblfound.caption
 #, fuzzy
 msgctxt "tradioeditform.lblfound.caption"
 msgid "Found"
-msgstr ""
+msgstr "Головна"
 
 #: tradioeditform.lblfreqoffset.caption
 #, fuzzy
 msgid "Frequency offset (transverter), Hz"
-msgstr ""
+msgstr "Частотний офсет (перетворювач), Гц"
 
 #: tradioeditform.lblhamlibid.caption
 #, fuzzy
 msgctxt "tradioeditform.lblhamlibid.caption"
 msgid "HamLib model ID"
-msgstr ""
+msgstr "Модель ХамЛиб ID"
 
 #: tradioeditform.lblip.caption
 #, fuzzy
 msgctxt "tradioeditform.lblip.caption"
 msgid "IP address"
-msgstr ""
+msgstr "IP-адреса"
 
 #: tradioeditform.lblkeyerdtr.caption
 #, fuzzy
 msgctxt "tradioeditform.lblkeyerdtr.caption"
 msgid "Keyer DTR line"
-msgstr ""
+msgstr "Ключниця DTR лінія"
 
 #: tradioeditform.lblkeyerport.caption
 #, fuzzy
 msgctxt "tradioeditform.lblkeyerport.caption"
 msgid "Keyer output port"
-msgstr ""
+msgstr "Порт виведення ключа"
 
 #: tradioeditform.lblkeyerrts.caption
 #, fuzzy
 msgctxt "tradioeditform.lblkeyerrts.caption"
 msgid "Keyer RTS line"
-msgstr ""
+msgstr "Ключниця RTS лінія"
 
 #: tradioeditform.lblkeyerstopbits.caption
 #: tradioeditform.lblstopbits.caption
 #, fuzzy
 msgctxt "tradioeditform.lblkeyerstopbits.caption"
 msgid "Stop bits"
-msgstr ""
+msgstr "Стоп біт"
 
 #: tradioeditform.lblparity.caption
 #, fuzzy
 msgctxt "tradioeditform.lblparity.caption"
 msgid "Parity"
-msgstr ""
+msgstr "Партії"
 
 #: tradioeditform.lblpassword.caption
 #, fuzzy
 msgctxt "tradioeditform.lblpassword.caption"
 msgid "Password"
-msgstr ""
+msgstr "Логін"
 
 #: tradioeditform.lblstartup.caption
 #, fuzzy
 msgctxt "tradioeditform.lblstartup.caption"
 msgid "Startup command"
-msgstr ""
+msgstr "Команда Startup"
 
 #: tradioeditform.lbltcpport.caption
 #, fuzzy
 msgctxt "tradioeditform.lbltcpport.caption"
 msgid "TCP port"
-msgstr ""
+msgstr "TCP порт"
 
 #: tradioeditform.lbltype.caption
 #, fuzzy
 msgctxt "tradioeditform.lbltype.caption"
 msgid "Radio type"
-msgstr ""
+msgstr "Тип радіо"
 
 #: tradioeditform.lbluser.caption
 #, fuzzy
 msgctxt "tradioeditform.lbluser.caption"
 msgid "User name"
-msgstr ""
+msgstr "Ім'я користувача"
 
 #: tradioeditform.optparityeven.caption
 #, fuzzy
 msgctxt "tradioeditform.optparityeven.caption"
 msgid "Even"
-msgstr ""
+msgstr "Вечір"
 
 #: tradioeditform.optparitynone.caption
 #, fuzzy
 msgctxt "tradioeditform.optparitynone.caption"
 msgid "None"
-msgstr ""
+msgstr "Жоден"
 
 #: tradioeditform.optparityodd.caption
 #, fuzzy
 msgctxt "tradioeditform.optparityodd.caption"
 msgid "Odd"
-msgstr ""
+msgstr "ОД"
 
 #: tradioeditform.tabadvanced.caption
 #, fuzzy
 msgctxt "tradioeditform.tabadvanced.caption"
 msgid "Advanced"
-msgstr ""
+msgstr "Головна"
 
 #: tradioeditform.tabserial.caption
 #, fuzzy
 msgctxt "tradioeditform.tabserial.caption"
 msgid "Serial"
-msgstr ""
+msgstr "Сфера"
 
 #: uappstrings.sctydownloadfailed
 #, fuzzy
@@ -5233,12 +5235,12 @@ msgstr ""
 #: uappstrings.sctydownloadfailedtitle
 #, fuzzy
 msgid "CTY.DAT"
-msgstr ""
+msgstr "КТИ.ДАТ"
 
 #: uappstrings.sdownloadcouldnotstart
 #, fuzzy
 msgid "the download was refused before it began (bad URL)."
-msgstr ""
+msgstr "завантаження було відмовлено перед початком (код URL)."
 
 #: uappstrings.sdownloadnossllibrary
 #, fuzzy
@@ -5247,16 +5249,19 @@ msgid ""
 "\n"
 "libeay32.dll and ssleay32.dll must sit in the same folder as tr4w.exe. The TR4W installer puts them there -- was this folder installed, or is it a copy of tr4w.exe on its own?"
 msgstr ""
+"бібліотеки OpenSSL не можна завантажити.\n"
+"\n"
+"libeay32.dll і ssleay32.dll повинні сидіти в одній папці, як tr4w.exe. Встановити TR4W - це папка, встановлена, або це копія tr4w.exe на власний розсуд?"
 
 #: uappstrings.sdownloadrenamefailed
 #, fuzzy
 msgid "the file downloaded but could not be saved under its final name."
-msgstr ""
+msgstr "завантажений файл, але не можна зберігати під його кінцевою назвою."
 
 #: uappstrings.siniretiredontask
 #, fuzzy
 msgid "Do not ask me about this file again"
-msgstr ""
+msgstr "Не запитайте мене про цей файл знову"
 
 #: uappstrings.siniretirefailed
 #, fuzzy
@@ -5264,6 +5269,8 @@ msgid ""
 "Could not remove %s -- %s.\n"
 "It is ignored regardless, so nothing is broken."
 msgstr ""
+"Не можна видалити %s -- %s.\n"
+"Він ігнорується незалежно від того, що нічого не порушується."
 
 #: uappstrings.siniretireprompt
 #, fuzzy
@@ -5282,27 +5289,27 @@ msgstr ""
 #: uappstrings.siniretireremoved
 #, fuzzy
 msgid "Removed %s."
-msgstr ""
+msgstr "Видалити %s."
 
 #: ulclformhelpers.tc_prefs_applied
 #, fuzzy
 msgid "Profile \"%s\" is active."
-msgstr ""
+msgstr "Профіль \"%s\" активний."
 
 #: ulclformhelpers.tc_prefs_confirmremove
 #, fuzzy
 msgid "Remove radio \"%s\"?"
-msgstr ""
+msgstr "Видалити радіо \"%s\"?"
 
 #: ulclformhelpers.tc_prefs_none
 #, fuzzy
 msgid "(none)"
-msgstr ""
+msgstr "(без)"
 
 #: ulclformhelpers.tc_prefs_noprofile
 #, fuzzy
 msgid "Select or create a station profile first."
-msgstr ""
+msgstr "Виберіть або створюйте профілі станції першим."
 
 #: ulclformhelpers.tc_prefs_portconflict
 #, fuzzy
@@ -5317,12 +5324,12 @@ msgstr ""
 #: ulclformhelpers.tc_prefs_radioinuse
 #, fuzzy
 msgid "%s  (in use as %s)"
-msgstr ""
+msgstr "%s (у використанні %s)"
 
 #: ulclformhelpers.tc_prefs_udpconfirmremove
 #, fuzzy
 msgid "Remove the destination %s:%d?"
-msgstr ""
+msgstr "Видалити пункт призначення %s:%d?"
 
 #: ulclformhelpers.tc_prefs_udpduplicate
 #, fuzzy
@@ -5330,16 +5337,18 @@ msgid ""
 "%s:%d is already in the list.\n"
 "Add the extra kinds of data to that destination instead of listing it twice."
 msgstr ""
+"%s:%d вже в списку.\n"
+"Додати додаткові види даних до цього пункту замість його списку двічі."
 
 #: ulclformhelpers.tc_prefs_udpnostreams
 #, fuzzy
 msgid "(nothing selected)"
-msgstr ""
+msgstr "(не вибрано)"
 
 #: ulclformhelpers.tc_prefs_udpselectfirst
 #, fuzzy
 msgid "Select a destination to test."
-msgstr ""
+msgstr "Виберіть пункт призначення для тестування."
 
 #: ulclformhelpers.tc_prefs_udptestsent
 #, fuzzy
@@ -5347,11 +5356,13 @@ msgid ""
 "Test packet sent to %s:%d.\n"
 "UDP cannot confirm it arrived -- check the receiving program."
 msgstr ""
+"Тестовий пакет, відправлений %s:%d.\n"
+"UDP не може підтвердити це прибули - перевірте програму отримання."
 
 #: ulclformhelpers.tc_prefs_unsaved
 #, fuzzy
 msgid "Save your changes before closing?"
-msgstr ""
+msgstr "Збережіть свої зміни перед закриттям?"
 
 #: ulclformhelpers.tc_radioedit_autoinfowarn
 #, fuzzy
@@ -5364,61 +5375,68 @@ msgid ""
 "\n"
 "Use this value anyway?"
 msgstr ""
+"Налаштування рівня авто-info вручну - нестандартна конфігурація.\n"
+"\n"
+"Залишити цю коробку EMPTY, якщо у вас є певна причина: радіо, а потім використовує рівень TR4W знає твори для неї, і TR4W опитування це якомога простіше.\n"
+"\n"
+"Вартість, яку ви набираєте тут, і це впливає на роботу - вказавши 0, що повертає радіо для всіх, що помітно затримує зміни від передачі назад до отримання.\n"
+"\n"
+"Використовуйте це значення будь-яким чином?"
 
 #: ulclformhelpers.tc_radioedit_badciv
 #, fuzzy
 msgid "The CI-V address must be a hex value, e.g. 88 or $88."
-msgstr ""
+msgstr "CI-V адреса повинна бути шестигранною вартістю, наприклад 88 або $ 88."
 
 #: ulclformhelpers.tc_radioedit_defaulthint
 #, fuzzy
 msgid "%s (default)"
-msgstr ""
+msgstr "%s (за замовчуванням)"
 
 #: ulclformhelpers.tc_radioedit_namerequired
 #, fuzzy
 msgid "The radio needs a name."
-msgstr ""
+msgstr "Радіо потребує назви."
 
 #: ulclformhelpers.tc_radioedit_nonefound
 #, fuzzy
 msgid "No radios answered."
-msgstr ""
+msgstr "Не відповів радіо."
 
 #: ulclformhelpers.tc_radioedit_searching
 #, fuzzy
 msgid "Searching..."
-msgstr ""
+msgstr "Пошук."
 
 #: ulclformhelpers.tc_radioedit_typerequired
 #, fuzzy
 msgid "Choose a radio type."
-msgstr ""
+msgstr "Виберіть тип радіо."
 
 #: uudpdestinationeditform.tc_udpedit_badport
 #, fuzzy
 msgid "The port must be a number between 1 and 65535."
-msgstr ""
+msgstr "Порт повинен бути номером між 1 і 65535."
 
 #: uudpdestinationeditform.tc_udpedit_noaddress
 #, fuzzy
 msgid "Enter an address."
-msgstr ""
+msgstr "Введіть адресу."
 
 #: uudpdestinationeditform.tc_udpedit_nostreams
 #, fuzzy
 msgid "Choose at least one kind of data to send, or cancel and remove this destination."
-msgstr ""
+msgstr "Виберіть принаймні один вид даних для відправки або скасування та видалення цього пункту."
 
 #: uudpdestinationeditform.tc_udpedit_notimplemented
 #, fuzzy
 msgid " (not implemented yet)"
-msgstr ""
+msgstr " (не реалізовано ще)"
 
 #: uudpdestinationeditform.tc_udpedit_testsent
 #, fuzzy
 msgid "Test packet sent to %s:%d.  UDP cannot confirm it arrived -- check the receiving program."
-msgstr ""
+msgstr "Тестовий пакет, відправлений %s:%d. UDP не може підтвердити це прибули - перевірте програму отримання."
 
 #. Section: General
 #: utr4wstrings:tc_translation_credit
@@ -5426,7 +5444,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_TRANSLATION_CREDIT"
 msgid "%s translation by %s"
-msgstr ""
+msgstr "%s переклад %s"
 
 #. Section: UTELNET
 #: utr4wstrings:tc_telnet
@@ -5441,7 +5459,7 @@ msgstr "Connect\000Disconnect\000Commands\000Freeze\000Clear\000100\000\000"
 #, fuzzy
 msgctxt "TC_BANDCHANGEDISABLED"
 msgid "Band change requires MULTIPLE BANDS = TRUE once the log has QSOs"
-msgstr ""
+msgstr "Зміна смуги вимагає MULTIPLE BANDS = TRUE після того, як журнал має QSO"
 
 #. Section: UEDITMESSAGE
 #. 4.51.8
@@ -6344,7 +6362,7 @@ msgstr "Реініціалізація WinKeyer"
 #, fuzzy
 msgctxt "TC_DOWNLOADINGCTYDAT"
 msgid "Downloading CTY.DAT..."
-msgstr ""
+msgstr "Завантажити CTY.DAT ..."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_downloadingtrmasterdta
@@ -6352,7 +6370,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_DOWNLOADINGTRMASTERDTA"
 msgid "Downloading TRMASTER.DTA..."
-msgstr ""
+msgstr "Завантажити TRMASTER.DTA ..."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_downloadingpotaparks
@@ -6360,7 +6378,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_DOWNLOADINGPOTAPARKS"
 msgid "Downloading POTA parks..."
-msgstr ""
+msgstr "Завантаження парків POTA ..."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_hamscorequeueingfulllogresync
@@ -6368,7 +6386,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_HAMSCOREQUEUEINGFULLLOGRESYNC"
 msgid "HamScore: queueing full log resync..."
-msgstr ""
+msgstr "HamScore: чергування повного журналу resync ..."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_logincalldoeslooklikecallsign
@@ -6376,7 +6394,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_LOGINCALLDOESLOOKLIKECALLSIGN"
 msgid "Login call does not look like a callsign"
-msgstr ""
+msgstr "Вхідний дзвінок не схожий на дзвінок"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_nopotaparksloggedyetsession
@@ -6384,7 +6402,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_NOPOTAPARKSLOGGEDYETSESSION"
 msgid "No POTA parks logged yet this session"
-msgstr ""
+msgstr "No POTA парки ввійшли до цього сеансу"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_cwoff
@@ -6392,7 +6410,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_CWOFF"
 msgid "CW Off"
-msgstr ""
+msgstr "CW від"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_cannotopenlogfile
@@ -6400,7 +6418,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_CANNOTOPENLOGFILE"
 msgid "Cannot open log file"
-msgstr ""
+msgstr "Неможливо відкрити файл журналу"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_scannoteditedhere
@@ -6408,7 +6426,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_SCANNOTEDITEDHERE"
 msgid "%s cannot be edited here."
-msgstr ""
+msgstr "%s не можна редагувати тут."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_debugmodecreatedprefixestxt
@@ -6416,7 +6434,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_DEBUGMODECREATEDPREFIXESTXT"
 msgid "debug mode created prefixes.txt"
-msgstr ""
+msgstr "javascript licenses api веб-сайт"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_potaparksloaded
@@ -6424,7 +6442,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_POTAPARKSLOADED"
 msgid "POTA parks loaded"
-msgstr ""
+msgstr "Парки POTA завантажені"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_potaparksfilecouldloaded
@@ -6432,7 +6450,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_POTAPARKSFILECOULDLOADED"
 msgid "POTA parks file could not be loaded"
-msgstr ""
+msgstr "Файл парків POTA не може бути завантажений"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_potaparksdownloadfailed
@@ -6440,7 +6458,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_POTAPARKSDOWNLOADFAILED"
 msgid "POTA parks download failed"
-msgstr ""
+msgstr "POTA парки скачати не вдалося"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_trmasterdtadownloadedrestarttr4wus
@@ -6448,7 +6466,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_TRMASTERDTADOWNLOADEDRESTARTTR4WUS"
 msgid "TRMASTER.DTA downloaded -- restart TR4W to use it"
-msgstr ""
+msgstr "TRMASTER.DTA завантажити -- перезавантажити TR4W для його використання"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_trmasterdtadownloadfailed
@@ -6456,7 +6474,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_TRMASTERDTADOWNLOADFAILED"
 msgid "TRMASTER.DTA download failed"
-msgstr ""
+msgstr "TRMASTER.DTA завантажити не вдалося"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_ctydatdownloadedreloading
@@ -6464,7 +6482,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_CTYDATDOWNLOADEDRELOADING"
 msgid "CTY.DAT downloaded. Reloading..."
-msgstr ""
+msgstr "CTY.DAT скачати. Перевантаження ..."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_ctydatreloadedsuccessfully
@@ -6472,7 +6490,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_CTYDATRELOADEDSUCCESSFULLY"
 msgid "CTY.DAT reloaded successfully."
-msgstr ""
+msgstr "CTY.DAT успішно перезавантажено."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_ctydatdownloadfailed
@@ -6480,7 +6498,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_CTYDATDOWNLOADFAILED"
 msgid "CTY.DAT download failed."
-msgstr ""
+msgstr "CTY.DAT завантажити не вдалося."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_errorplayingvoicememory
@@ -6488,7 +6506,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_ERRORPLAYINGVOICEMEMORY"
 msgid "Error playing voice memory"
-msgstr ""
+msgstr "Помилка відтворення голосової пам'яті"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_flushinitialexcommandexecuted
@@ -6496,7 +6514,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_FLUSHINITIALEXCOMMANDEXECUTED"
 msgid "FLUSHINITIALEX command is executed."
-msgstr ""
+msgstr "Команда FLUSHINITIALEX виконана."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_autospotenabledtestmodeonly
@@ -6504,7 +6522,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_AUTOSPOTENABLEDTESTMODEONLY"
 msgid "AUTOSPOT is enabled - Test Mode Only"
-msgstr ""
+msgstr "AUTOSPOT включений - Режим тестування тільки"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_handlogmodetrue
@@ -6512,7 +6530,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_HANDLOGMODETRUE"
 msgid "HAND LOG MODE = TRUE"
-msgstr ""
+msgstr "HAND LOG MODE = TRUE"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_trmasterdtas
@@ -6520,7 +6538,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_TRMASTERDTAS"
 msgid "TRMASTER.DTA : %s"
-msgstr ""
+msgstr "ТЕРИТОРІЯ: %s"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_tr4wtimewarning
@@ -6528,7 +6546,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_TR4WTIMEWARNING"
 msgid "TR4W Time Warning"
-msgstr ""
+msgstr "Т4В Попередження часу"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_errorofferingcommanderproxytcpport
@@ -6536,7 +6554,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_ERROROFFERINGCOMMANDERPROXYTCPPORT"
 msgid "Error offering Commander proxy TCP Port"
-msgstr ""
+msgstr "Помилка для командного проксі TCP Port"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_pttviacommandsctrljoptionmusttruew
@@ -6544,7 +6562,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_PTTVIACOMMANDSCTRLJOPTIONMUSTTRUEW"
 msgid "PTT VIA COMMANDS (CTRL-J) option must be true for WSJT-X use - Setting to true"
-msgstr ""
+msgstr "PTT VIA COMMANDS (CTRL-J) параметр повинен бути вірним для використання WSJT-X - Налаштування true"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_cannotdisablesplittransmitslicecre
@@ -6552,7 +6570,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_CANNOTDISABLESPLITTRANSMITSLICECRE"
 msgid "Cannot disable split -- the transmit slice was created on the radio. Turn it off in the SDR."
-msgstr ""
+msgstr "Не можна розбити розкол - на радіо було створене скибочка передач. Вимкніть його в SDR."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_sorryusedupallreminders
@@ -6560,7 +6578,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_SORRYUSEDUPALLREMINDERS"
 msgid "Sorry, you have used up all your reminders!!"
-msgstr ""
+msgstr "Нагадуємо!"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_invaliddate
@@ -6568,7 +6586,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_INVALIDDATE"
 msgid "Invalid date!!"
-msgstr ""
+msgstr "Термін дії!"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_enoughmemoryinitialexchangearray
@@ -6576,7 +6594,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_ENOUGHMEMORYINITIALEXCHANGEARRAY"
 msgid "Not enough memory for initial exchange array!!"
-msgstr ""
+msgstr "Не достатньо пам'яті для початкового масиву обміну!"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_findingzeroendvisibledupesheetlist
@@ -6584,7 +6602,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_FINDINGZEROENDVISIBLEDUPESHEETLIST"
 msgid "Not finding zero at end visible dupesheet list!!"
-msgstr ""
+msgstr "Не знайдено нуля в кінцевому видимому списку електронних листів!"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_qtcprocessterminated
@@ -6592,7 +6610,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_QTCPROCESSTERMINATED"
 msgid "QTC process terminated."
-msgstr ""
+msgstr "Процес QTC припиняється."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_qtcnumberillegalcharacters
@@ -6600,7 +6618,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_QTCNUMBERILLEGALCHARACTERS"
 msgid "QTC Number has illegal characters."
-msgstr ""
+msgstr "Номер QTC має нелегальні символи."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_numbermessagesillegalcharacters
@@ -6608,7 +6626,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_NUMBERMESSAGESILLEGALCHARACTERS"
 msgid "Number of messages has illegal characters."
-msgstr ""
+msgstr "Кількість повідомлень має нелегальні символи."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_qtcprocessterminatedinvalidnumberm
@@ -6616,7 +6634,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_QTCPROCESSTERMINATEDINVALIDNUMBERM"
 msgid "QTC process terminated.  Invalid number of messages."
-msgstr ""
+msgstr "Процес QTC припиняється. Кількість повідомлень."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_ifoundcontestnameidonounderstandlo
@@ -6624,7 +6642,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_IFOUNDCONTESTNAMEIDONOUNDERSTANDLO"
 msgid "I found a contest name I do no understand in your LOGCFG.DAT file."
-msgstr ""
+msgstr "Я знайшов назву конкурсу, я не розумію у файлі LOGCFG.DAT."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_ididfinecontestnamelogcfgdatfile
@@ -6632,7 +6650,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_IDIDFINECONTESTNAMELOGCFGDATFILE"
 msgid "I did not fine a contest name in your LOGCFG.DAT file."
-msgstr ""
+msgstr "Я не відчував ім’я конкурсу у файлі LOGCFG.DAT."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_arenewengland
@@ -6640,7 +6658,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_ARENEWENGLAND"
 msgid "Are you in New England?"
-msgstr ""
+msgstr "Ви в Новій Англії?"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_cwtimerfired
@@ -6648,7 +6666,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_CWTIMERFIRED"
 msgid "CW Timer fired"
-msgstr ""
+msgstr "CW таймер пожежний"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_testradiointerface
@@ -6656,7 +6674,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_TESTRADIOINTERFACE"
 msgid "TEST RADIO INTERFACE"
-msgstr ""
+msgstr "ТЕСТ РАДІО ІНТЕРФЕРА"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_unablesavedtaasciifile
@@ -6664,7 +6682,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_UNABLESAVEDTAASCIIFILE"
 msgid "Unable to save .DTA to ASCII file."
-msgstr ""
+msgstr "Неможливо зберегти файл .DTA до ASCII."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_savingdtafileasciifileprocessingce
@@ -6672,7 +6690,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_SAVINGDTAFILEASCIIFILEPROCESSINGCE"
 msgid "Saving .DTA file to ASCII file.  Processing cell   "
-msgstr ""
+msgstr "Збереження файлу .DTA до файлу ASCII. Обробка клітин   "
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_datasuccessfullysavedasciifile
@@ -6680,7 +6698,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_DATASUCCESSFULLYSAVEDASCIIFILE"
 msgid "Data successfully saved to ASCII file."
-msgstr ""
+msgstr "Дані успішно збережені в файлі ASCII."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_notrmasterdtafilefound
@@ -6688,7 +6706,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_NOTRMASTERDTAFILEFOUND"
 msgid "No TRMASTER.DTA file found."
-msgstr ""
+msgstr "Не знайдено файл TRMASTER.DTA."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_hitcounthistogram050
@@ -6696,7 +6714,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_HITCOUNTHISTOGRAM050"
 msgid "Hit count histogram for 0 to 50+ : "
-msgstr ""
+msgstr "Хіт підрахунку гістограми 0 до 50+ : "
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_pleasecheckmultinetwork
@@ -6704,7 +6722,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_PLEASECHECKMULTINETWORK"
 msgid "Please check multi network"
-msgstr ""
+msgstr "Будь ласка, перевірте багато мережі"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_possibledatalossmultinetwork
@@ -6712,7 +6730,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_POSSIBLEDATALOSSMULTINETWORK"
 msgid "Possible data loss on multi network."
-msgstr ""
+msgstr "Можлива втрата даних на багатомережах."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_selectspotreturnleftorrightarrowse
@@ -6720,7 +6738,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_SELECTSPOTRETURNLEFTORRIGHTARROWSE"
 msgid "Select spot.  RETURN, left or right arrow to select.  ESCAPE to exit."
-msgstr ""
+msgstr "Виберіть місце. RETURN, ліва або права стрілка для вибору. ESCAPE до виходу."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_entercallsignspacedupecheckalthhel
@@ -6728,7 +6746,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_ENTERCALLSIGNSPACEDUPECHECKALTHHEL"
 msgid "ENTER a callsign.  SPACE for dupecheck.  Alt-H for help."
-msgstr ""
+msgstr "Зареєструвати дзвінок. SPACE для дупечек. Alt-H для допомоги."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_continueenteringcharactersautoterm
@@ -6736,7 +6754,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_CONTINUEENTERINGCHARACTERSAUTOTERM"
 msgid "Continue entering characters.  Auto terminate active!!"
-msgstr ""
+msgstr "Продовжити введення символів. Автоматичне припинення дії!"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_continueenteringcharacterspressret
@@ -6744,7 +6762,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_CONTINUEENTERINGCHARACTERSPRESSRET"
 msgid "Continue entering characters and press RETURN when done."
-msgstr ""
+msgstr "Продовжити введення символів і натиснути RETURN при виконанні."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_enterexchangepressenterlogescapeab
@@ -6752,7 +6770,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_ENTEREXCHANGEPRESSENTERLOGESCAPEAB"
 msgid "Enter exchange.  Press ENTER to log, ESCAPE to abort QSO."
-msgstr ""
+msgstr "Вхідний обмін Натисніть ENTER для входу, ESCAPE до аборту QSO."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_relaycontrolportpaddleport
@@ -6760,7 +6778,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_RELAYCONTROLPORTPADDLEPORT"
 msgid "RELAY CONTROL PORT = PADDLE PORT"
-msgstr ""
+msgstr "ЗВІТ З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_locationfieldempty
@@ -6768,7 +6786,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_LOCATIONFIELDEMPTY"
 msgid "LOCATION field is empty."
-msgstr ""
+msgstr "Порожня локація."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_pttlockouttrue
@@ -6776,7 +6794,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_PTTLOCKOUTTRUE"
 msgid "PTT LOCKOUT=TRUE"
-msgstr ""
+msgstr "PTT LOCKOUT=TRUE"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_preferencescouldopeneds
@@ -6784,7 +6802,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_PREFERENCESCOULDOPENEDS"
 msgid "Preferences could not be opened (%s)."
-msgstr ""
+msgstr "Не вдалося відкрити посилання (%s)."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_theseentrieswereacceptedbeensaved
@@ -6792,7 +6810,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_THESEENTRIESWEREACCEPTEDBEENSAVED"
 msgid "These entries were not accepted and have not been saved:"
-msgstr ""
+msgstr "Ці записи не приймаються і не були збережені:"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_tciservercouldopenportds
@@ -6800,7 +6818,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_TCISERVERCOULDOPENPORTDS"
 msgid "The TCI server could not open port %d: %s"
-msgstr ""
+msgstr "Сервер TCI не може відкрити порт %d: %s"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_keyernamedsalreadyexists
@@ -6808,7 +6826,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_KEYERNAMEDSALREADYEXISTS"
 msgid "A keyer named \"%s\" already exists."
-msgstr ""
+msgstr "Заголовок «%s» вже існує."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_sstillusedbys
@@ -6816,7 +6834,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_SSTILLUSEDBYS"
 msgid "\"%s\" is still used by: %s"
-msgstr ""
+msgstr "\"%s\" ще використовується: %s"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_removeclusters
@@ -6824,7 +6842,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_REMOVECLUSTERS"
 msgid "Remove the cluster \"%s\"?"
-msgstr ""
+msgstr "Видалити кластер \"%s\"?"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_removerotators
@@ -6832,7 +6850,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_REMOVEROTATORS"
 msgid "Remove the rotator \"%s\"?"
-msgstr ""
+msgstr "Видалити ротатор \"%s\"?"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_loggingrunningsotherenofileopen
@@ -6840,7 +6858,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_LOGGINGRUNNINGSOTHERENOFILEOPEN"
 msgid "Logging is not running, so there is no file to open."
-msgstr ""
+msgstr "Відправка не працює, тому немає файлу для відкриття."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_therenologfileyets
@@ -6848,7 +6866,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_THERENOLOGFILEYETS"
 msgid "There is no log file yet at %s."
-msgstr ""
+msgstr "Немає файлу входу в %s."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_openineditor
@@ -6856,7 +6874,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_EDITOR_OPENINEDITOR"
 msgid "Open in text &editor"
-msgstr ""
+msgstr "Відкрити в тексті &editor"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_explore
@@ -6864,7 +6882,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_EDITOR_EXPLORE"
 msgid "Explore"
-msgstr ""
+msgstr "Про нас"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_copy
@@ -6872,7 +6890,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_EDITOR_COPY"
 msgid "&Copy"
-msgstr ""
+msgstr "&Копіювати"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_selectall
@@ -6880,7 +6898,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_EDITOR_SELECTALL"
 msgid "Select &all"
-msgstr ""
+msgstr "Виділити &усе"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_sendlogto
@@ -6888,7 +6906,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_EDITOR_SENDLOGTO"
 msgid "Send log to %s"
-msgstr ""
+msgstr "Перейти до вмісту %s"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_uploadcabrillotoscp
@@ -6896,7 +6914,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_UPLOADCABRILLOTOSCP"
 msgid "Do you want to upload your Cabrillo file to SuperChecklPartial?"
-msgstr ""
+msgstr "Ви хочете завантажити файл Cabrillo для SuperChecklP Combat?"
 
 #. Section: General
 #. minute
@@ -6923,7 +6941,7 @@ msgstr ""
 #, fuzzy
 msgctxt "tfrmabout.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "ОК"
 
 #: tfrmabout.lblurl.caption
 #, fuzzy
@@ -6934,13 +6952,13 @@ msgstr ""
 #, fuzzy
 msgctxt "tfrmaltd.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "Скасувати"
 
 #: tfrmaltd.btnok.caption
 #, fuzzy
 msgctxt "tfrmaltd.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "ОК"
 
 #: tfrmaltd.caption
 #, fuzzy
@@ -6951,13 +6969,13 @@ msgstr "Перевірка на повторення на неактивному
 #, fuzzy
 msgctxt "tfrmautocq.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "Скасувати"
 
 #: tfrmautocq.btnok.caption
 #, fuzzy
 msgctxt "tfrmautocq.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "ОК"
 
 #: tfrmautocq.caption
 #, fuzzy
@@ -6988,13 +7006,13 @@ msgstr "Видалити всі споти"
 #, fuzzy
 msgctxt "tfrmbandplan.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "Скасувати"
 
 #: tfrmbandplan.btnok.caption
 #, fuzzy
 msgctxt "tfrmbandplan.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "ОК"
 
 #: tfrmbandplan.caption
 #, fuzzy
@@ -7005,7 +7023,7 @@ msgstr "Частотний план"
 #, fuzzy
 msgctxt "tfrmeditmessage.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "Скасувати"
 
 #: tfrmeditmessage.btneditwav.caption
 #, fuzzy
@@ -7022,7 +7040,7 @@ msgstr "Список команд"
 #, fuzzy
 msgctxt "tfrmeditmessage.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "ОК"
 
 #: tfrmeditmessage.caption
 #, fuzzy
@@ -7044,7 +7062,7 @@ msgstr "Повідомлення"
 #, fuzzy
 msgctxt "tfrmeditqso.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "Скасувати"
 
 #: tfrmeditqso.lblband.caption
 #, fuzzy
@@ -7065,7 +7083,7 @@ msgstr "Дата"
 #: tfrmeditqso.lbldx.caption
 #, fuzzy
 msgid "DX"
-msgstr ""
+msgstr "ДКС"
 
 #: tfrmeditqso.lblmode.caption
 #, fuzzy
@@ -7086,7 +7104,7 @@ msgstr "Оператор"
 #: tfrmeditqso.lblqth.caption
 #, fuzzy
 msgid "QTH"
-msgstr ""
+msgstr "ЗАМОВИТИ"
 
 #: tfrmfunctionkeys.caption
 #, fuzzy
@@ -7162,13 +7180,13 @@ msgstr ""
 #, fuzzy
 msgctxt "tfrminputquery.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "Скасувати"
 
 #: tfrminputquery.btnok.caption
 #, fuzzy
 msgctxt "tfrminputquery.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "ОК"
 
 #: tfrmintercom.caption
 #, fuzzy
@@ -7179,7 +7197,7 @@ msgstr "Внутрішній зв`язок"
 #, fuzzy
 msgctxt "tfrmkeyeredit.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "Скасувати"
 
 #: tfrmkeyeredit.lblname.caption
 #, fuzzy
@@ -7206,25 +7224,25 @@ msgstr "Синхронізувати"
 #, fuzzy
 msgctxt "tfrmlpt.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "Скасувати"
 
 #: tfrmlpt.btnok.caption
 #, fuzzy
 msgctxt "tfrmlpt.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "ОК"
 
 #: tfrmmessageslist.btncancel.caption
 #, fuzzy
 msgctxt "tfrmmessageslist.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "Скасувати"
 
 #: tfrmmessageslist.btnok.caption
 #, fuzzy
 msgctxt "tfrmmessageslist.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "ОК"
 
 #: tfrmmessageslist.caption
 #, fuzzy
@@ -7302,13 +7320,13 @@ msgstr "Закрити"
 #, fuzzy
 msgctxt "tfrmsendspot.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "Скасувати"
 
 #: tfrmsendspot.btnok.caption
 #, fuzzy
 msgctxt "tfrmsendspot.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "ОК"
 
 #: tfrmsendspot.caption
 #, fuzzy
@@ -7345,199 +7363,199 @@ msgstr "Команди"
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "Скасувати"
 
 #: tfrmudpdestinationedit.btnok.caption
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "ОК"
 
 #: tfrmudpdestinationedit.lblport.caption
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.lblport.caption"
 msgid "Port"
-msgstr ""
+msgstr "Портфоліо"
 
 #: tfrmwinmanager.btncancel.caption
 #, fuzzy
 msgctxt "tfrmwinmanager.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "Скасувати"
 
 #: tfrmwinmanager.btnok.caption
 #, fuzzy
 msgctxt "tfrmwinmanager.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "ОК"
 
 #: tprefsform.btnaddcluster.caption
 #, fuzzy
 msgctxt "tprefsform.btnaddcluster.caption"
 msgid "Add..."
-msgstr ""
+msgstr "Додати..."
 
 #: tprefsform.btnaddkeyer.caption
 #, fuzzy
 msgctxt "tprefsform.btnaddkeyer.caption"
 msgid "Add..."
-msgstr ""
+msgstr "Додати..."
 
 #: tprefsform.btnaddrotator.caption
 #, fuzzy
 msgctxt "tprefsform.btnaddrotator.caption"
 msgid "Add..."
-msgstr ""
+msgstr "Додати..."
 
 #: tprefsform.btnbrowsedvkpath.caption
 #, fuzzy
 msgctxt "tprefsform.btnbrowsedvkpath.caption"
 msgid "Browse..."
-msgstr ""
+msgstr "Поза «69»."
 
 #: tprefsform.btnbrowsedvkrecorder.caption
 #, fuzzy
 msgctxt "tprefsform.btnbrowsedvkrecorder.caption"
 msgid "Browse..."
-msgstr ""
+msgstr "Поза «69»."
 
 #: tprefsform.btnbrowsemmtty.caption
 #, fuzzy
 msgctxt "tprefsform.btnbrowsemmtty.caption"
 msgid "Browse..."
-msgstr ""
+msgstr "Поза «69»."
 
 #: tprefsform.btnbrowsemp3path.caption
 #, fuzzy
 msgctxt "tprefsform.btnbrowsemp3path.caption"
 msgid "Browse..."
-msgstr ""
+msgstr "Поза «69»."
 
 #: tprefsform.btnbrowsemp3player.caption
 #, fuzzy
 msgctxt "tprefsform.btnbrowsemp3player.caption"
 msgid "Browse..."
-msgstr ""
+msgstr "Поза «69»."
 
 #: tprefsform.btncancel.caption
 #, fuzzy
 msgctxt "tprefsform.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "Скасувати"
 
 #: tprefsform.btnduplicatekeyer.caption
 #, fuzzy
 msgctxt "tprefsform.btnduplicatekeyer.caption"
 msgid "Duplicate"
-msgstr ""
+msgstr "Дублікат"
 
 #: tprefsform.btneditkeyer.caption
 #, fuzzy
 msgctxt "tprefsform.btneditkeyer.caption"
 msgid "Edit..."
-msgstr ""
+msgstr "Редагування."
 
 #: tprefsform.btnok.caption
 #, fuzzy
 msgctxt "tprefsform.btnok.caption"
 msgid "Save and close"
-msgstr ""
+msgstr "Заощаджуйте і закрийте"
 
 #: tprefsform.btnremovecluster.caption
 #, fuzzy
 msgctxt "tprefsform.btnremovecluster.caption"
 msgid "Remove"
-msgstr ""
+msgstr "Прибрати"
 
 #: tprefsform.btnremovekeyer.caption
 #, fuzzy
 msgctxt "tprefsform.btnremovekeyer.caption"
 msgid "Remove"
-msgstr ""
+msgstr "Прибрати"
 
 #: tprefsform.btnremoverotator.caption
 #, fuzzy
 msgctxt "tprefsform.btnremoverotator.caption"
 msgid "Remove"
-msgstr ""
+msgstr "Прибрати"
 
 #: tprefsform.btnudpadd.caption
 #, fuzzy
 msgctxt "tprefsform.btnudpadd.caption"
 msgid "Add..."
-msgstr ""
+msgstr "Додати..."
 
 #: tprefsform.btnudpedit.caption
 #, fuzzy
 msgctxt "tprefsform.btnudpedit.caption"
 msgid "Edit..."
-msgstr ""
+msgstr "Редагування."
 
 #: tprefsform.btnudpremove.caption
 #, fuzzy
 msgctxt "tprefsform.btnudpremove.caption"
 msgid "Remove"
-msgstr ""
+msgstr "Прибрати"
 
 #: tprefsform.btnudptest.caption
 #, fuzzy
 msgctxt "tprefsform.btnudptest.caption"
 msgid "Test"
-msgstr ""
+msgstr "Тести"
 
 #: tprefsform.btnuserotator.caption
 #, fuzzy
 msgctxt "tprefsform.btnuserotator.caption"
 msgid "Use this"
-msgstr ""
+msgstr "Використовуйте це"
 
 #: tprefsform.chkspeedsync2.caption
 #, fuzzy
 msgctxt "tprefsform.chkspeedsync2.caption"
 msgid "Speed sync"
-msgstr ""
+msgstr "Швидкість синхронізації"
 
 #: tprefsform.lblbandmapheading.caption
 #, fuzzy
 msgctxt "tprefsform.lblbandmapheading.caption"
 msgid "Band map"
-msgstr ""
+msgstr "Band мапа"
 
 #: tprefsform.lblhamscorepass.caption
 #, fuzzy
 msgctxt "tprefsform.lblhamscorepass.caption"
 msgid "Password:"
-msgstr ""
+msgstr "Пароль:"
 
 #: tprefsform.lblmainwindowheading.caption
 #, fuzzy
 msgctxt "tprefsform.lblmainwindowheading.caption"
 msgid "Main window"
-msgstr ""
+msgstr "Головна"
 
 #: tprefsform.lblmmttyheading.caption
 #, fuzzy
 msgctxt "tprefsform.lblmmttyheading.caption"
 msgid "MMTTY"
-msgstr ""
+msgstr "ММТТИ"
 
 #: tprefsform.lblnetaddress.caption
 #, fuzzy
 msgctxt "tprefsform.lblnetaddress.caption"
 msgid "Server:"
-msgstr ""
+msgstr "Сервер:"
 
 #: tprefsform.lblnetpassword.caption
 #, fuzzy
 msgctxt "tprefsform.lblnetpassword.caption"
 msgid "Password:"
-msgstr ""
+msgstr "Пароль:"
 
 #: tprefsform.lblnetport.caption
 #, fuzzy
 msgctxt "tprefsform.lblnetport.caption"
 msgid "Port:"
-msgstr ""
+msgstr "Порт:"
 
 #: tprefsform.lblpaddlegroup.caption
 #, fuzzy
@@ -7548,7 +7566,7 @@ msgstr "Маніпулятор"
 #, fuzzy
 msgctxt "tprefsform.lblpaddletoneunits.caption"
 msgid "Hz"
-msgstr ""
+msgstr "ХХз"
 
 #: tprefsform.lblradio1.caption
 #, fuzzy
@@ -7566,19 +7584,19 @@ msgstr "Радіо 2"
 #, fuzzy
 msgctxt "tprefsform.lblrotatorname.caption"
 msgid "Name:"
-msgstr ""
+msgstr "Ім'я:"
 
 #: tprefsform.lblrotatorport.caption
 #, fuzzy
 msgctxt "tprefsform.lblrotatorport.caption"
 msgid "Port:"
-msgstr ""
+msgstr "Порт:"
 
 #: tprefsform.lblscorerestart.caption
 #, fuzzy
 msgctxt "tprefsform.lblscorerestart.caption"
 msgid "These take effect when TR4W next starts."
-msgstr ""
+msgstr "Цей ефект приймають при старті TR4W."
 
 #: tprefsform.lblstationheading.caption
 #, fuzzy
@@ -7589,25 +7607,25 @@ msgstr "Інформація про станцію"
 #, fuzzy
 msgctxt "tprefsform.lbltciport.caption"
 msgid "Port:"
-msgstr ""
+msgstr "Порт:"
 
 #: tradioeditform.btncancel.caption
 #, fuzzy
 msgctxt "tradioeditform.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "Скасувати"
 
 #: tradioeditform.btnok.caption
 #, fuzzy
 msgctxt "tradioeditform.btnok.caption"
 msgid "Save and close"
-msgstr ""
+msgstr "Заощаджуйте і закрийте"
 
 #: tradioeditform.caption
 #, fuzzy
 msgctxt "tradioeditform.caption"
 msgid "Radio"
-msgstr ""
+msgstr "Радіо"
 
 #: tradioeditform.lblname.caption
 #, fuzzy
@@ -7619,13 +7637,13 @@ msgstr "Ім`я"
 #, fuzzy
 msgctxt "tradioeditform.lblport.caption"
 msgid "Port"
-msgstr ""
+msgstr "Портфоліо"
 
 #: tradioeditform.lblstopbits.caption
 #, fuzzy
 msgctxt "tradioeditform.lblstopbits.caption"
 msgid "Stop bits"
-msgstr ""
+msgstr "Стоп біт"
 
 #: tradioeditform.optdata7.caption
 #, fuzzy
@@ -7657,54 +7675,54 @@ msgstr "Мережа"
 #, fuzzy
 msgctxt "ttr4wmainform.caption"
 msgid "TR4W"
-msgstr ""
+msgstr "Т4В"
 
 #: uappstrings.salreadyrunningtitle
 #, fuzzy
 msgctxt "uappstrings.salreadyrunningtitle"
 msgid "TR4W"
-msgstr ""
+msgstr "Т4В"
 
 #: uappstrings.siniretiretitle
 #, fuzzy
 msgctxt "uappstrings.siniretiretitle"
 msgid "Old settings file"
-msgstr ""
+msgstr "Старий файл налаштувань"
 
 #: ulclformhelpers.tc_prefs_activate
 #, fuzzy
 msgid "Save and activate this profile"
-msgstr ""
+msgstr "Заощаджуйте та активуйте цей профіль"
 
 #: ulclformhelpers.tc_prefs_activelabel
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_activelabel"
 msgid "Active profile: "
-msgstr ""
+msgstr "Активний профіль: "
 
 #: ulclformhelpers.tc_prefs_add
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_add"
 msgid "Add..."
-msgstr ""
+msgstr "Додати..."
 
 #: ulclformhelpers.tc_prefs_apply
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_apply"
 msgid "Save"
-msgstr ""
+msgstr "Зберегти"
 
 #: ulclformhelpers.tc_prefs_autoconnect
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_autoconnect"
 msgid "Connect radios at startup"
-msgstr ""
+msgstr "З'єднайте радіо на старті"
 
 #: ulclformhelpers.tc_prefs_cancel
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_cancel"
 msgid "Cancel"
-msgstr ""
+msgstr "Скасувати"
 
 #: ulclformhelpers.tc_prefs_cluster
 #, fuzzy
@@ -7714,60 +7732,60 @@ msgstr "DX Кластер"
 #: ulclformhelpers.tc_prefs_contest
 #, fuzzy
 msgid "Contest"
-msgstr ""
+msgstr "Конкурси"
 
 #: ulclformhelpers.tc_prefs_cw
 #, fuzzy
 msgid "CW"
-msgstr ""
+msgstr "СВ"
 
 #: ulclformhelpers.tc_prefs_cwoutput1
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_cwoutput1"
 msgid "CW output 1"
-msgstr ""
+msgstr "CW вихід 1"
 
 #: ulclformhelpers.tc_prefs_cwoutput2
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_cwoutput2"
 msgid "CW output 2"
-msgstr ""
+msgstr "CW вихід 2"
 
 #: ulclformhelpers.tc_prefs_deleteprofile
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_deleteprofile"
 msgid "Delete"
-msgstr ""
+msgstr "Видалити"
 
 #: ulclformhelpers.tc_prefs_duplicate
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_duplicate"
 msgid "Duplicate"
-msgstr ""
+msgstr "Дублікат"
 
 #: ulclformhelpers.tc_prefs_edit
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_edit"
 msgid "Edit..."
-msgstr ""
+msgstr "Редагування."
 
 #: ulclformhelpers.tc_prefs_hardware
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_hardware"
 msgid "Hardware"
-msgstr ""
+msgstr "Обладнання"
 
 #: ulclformhelpers.tc_prefs_myradios
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_myradios"
 msgid "My radios"
-msgstr ""
+msgstr "Моє радіо"
 
 #: ulclformhelpers.tc_prefs_newprofile
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_newprofile"
 msgid "New..."
-msgstr ""
+msgstr "Новий..."
 
 #: ulclformhelpers.tc_prefs_notmigrated
 #, fuzzy
@@ -7776,18 +7794,20 @@ msgid ""
 "This section has not been migrated yet.\n"
 "Use the existing configuration screens for it."
 msgstr ""
+"Цей розділ ще не мігрувати.\n"
+"Використовуйте існуючі екрани конфігурації для нього."
 
 #: ulclformhelpers.tc_prefs_ok
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_ok"
 msgid "Save and close"
-msgstr ""
+msgstr "Заощаджуйте і закрийте"
 
 #: ulclformhelpers.tc_prefs_profiles
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_profiles"
 msgid "Station profile"
-msgstr ""
+msgstr "Профіль станції"
 
 #: ulclformhelpers.tc_prefs_radio1
 #, fuzzy
@@ -7805,175 +7825,175 @@ msgstr "Радіо 2"
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_remove"
 msgid "Remove"
-msgstr ""
+msgstr "Прибрати"
 
 #: ulclformhelpers.tc_prefs_renameprofile
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_renameprofile"
 msgid "Rename..."
-msgstr ""
+msgstr "Ім'я."
 
 #: ulclformhelpers.tc_prefs_so2r
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_so2r"
 msgid "SO2R enabled"
-msgstr ""
+msgstr "Увімкнення SO2R"
 
 #: ulclformhelpers.tc_prefs_speedsync
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_speedsync"
 msgid "Speed sync"
-msgstr ""
+msgstr "Швидкість синхронізації"
 
 #: ulclformhelpers.tc_prefs_title
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_title"
 msgid "TR4W Preferences"
-msgstr ""
+msgstr "Налаштування TR4W"
 
 #: ulclformhelpers.tc_prefs_udpstream_appinfo
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_udpstream_appinfo"
 msgid "App info"
-msgstr ""
+msgstr "Інформація про програму"
 
 #: ulclformhelpers.tc_prefs_udpstream_contact
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_udpstream_contact"
 msgid "Contact info"
-msgstr ""
+msgstr "Контакти"
 
 #: ulclformhelpers.tc_prefs_udpstream_lookup
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_udpstream_lookup"
 msgid "Callsign lookup"
-msgstr ""
+msgstr "Шукаю роботу"
 
 #: ulclformhelpers.tc_prefs_udpstream_radio
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_udpstream_radio"
 msgid "Radio info"
-msgstr ""
+msgstr "Радіо інформація"
 
 #: ulclformhelpers.tc_prefs_udpstream_rotor
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_udpstream_rotor"
 msgid "Rotor"
-msgstr ""
+msgstr "Ротор"
 
 #: ulclformhelpers.tc_prefs_udpstream_score
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_udpstream_score"
 msgid "Score"
-msgstr ""
+msgstr "Зареєструватися"
 
 #: ulclformhelpers.tc_prefs_unsavedtitle
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_unsavedtitle"
 msgid "TR4W Preferences"
-msgstr ""
+msgstr "Налаштування TR4W"
 
 #: ulclformhelpers.tc_radioedit_advanced
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_advanced"
 msgid "Advanced"
-msgstr ""
+msgstr "Головна"
 
 #: ulclformhelpers.tc_radioedit_baud
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_baud"
 msgid "Baud rate"
-msgstr ""
+msgstr "Курс валют"
 
 #: ulclformhelpers.tc_radioedit_catdtr
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_catdtr"
 msgid "CAT DTR"
-msgstr ""
+msgstr "КАТ ДТР"
 
 #: ulclformhelpers.tc_radioedit_catrts
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_catrts"
 msgid "CAT RTS"
-msgstr ""
+msgstr "КАТ РТС"
 
 #: ulclformhelpers.tc_radioedit_civaddress
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_civaddress"
 msgid "CI-V address (hex)"
-msgstr ""
+msgstr "CI-V адреса (hex)"
 
 #: ulclformhelpers.tc_radioedit_databits
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_databits"
 msgid "Data bits"
-msgstr ""
+msgstr "Біти даних"
 
 #: ulclformhelpers.tc_radioedit_datamodeid
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_datamodeid"
 msgid "Icom data mode ID"
-msgstr ""
+msgstr "Ім'я користувача"
 
 #: ulclformhelpers.tc_radioedit_discover
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_discover"
 msgid "Discover"
-msgstr ""
+msgstr "Про нас"
 
 #: ulclformhelpers.tc_radioedit_filterbyte
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_filterbyte"
 msgid "Icom filter byte"
-msgstr ""
+msgstr "Фільтр Icom"
 
 #: ulclformhelpers.tc_radioedit_found
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_found"
 msgid "Found"
-msgstr ""
+msgstr "Головна"
 
 #: ulclformhelpers.tc_radioedit_ft1000mprev
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_ft1000mprev"
 msgid "FT-1000MP CW reverse"
-msgstr ""
+msgstr "FT-1000MP CW зворотний"
 
 #: ulclformhelpers.tc_radioedit_hamlibid
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_hamlibid"
 msgid "HamLib model ID"
-msgstr ""
+msgstr "Модель ХамЛиб ID"
 
 #: ulclformhelpers.tc_radioedit_ipaddress
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_ipaddress"
 msgid "IP address"
-msgstr ""
+msgstr "IP-адреса"
 
 #: ulclformhelpers.tc_radioedit_keyerdtr
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_keyerdtr"
 msgid "Keyer DTR line"
-msgstr ""
+msgstr "Ключниця DTR лінія"
 
 #: ulclformhelpers.tc_radioedit_keyerport
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_keyerport"
 msgid "Keyer output port"
-msgstr ""
+msgstr "Порт виведення ключа"
 
 #: ulclformhelpers.tc_radioedit_keyerrts
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_keyerrts"
 msgid "Keyer RTS line"
-msgstr ""
+msgstr "Ключниця RTS лінія"
 
 #: ulclformhelpers.tc_radioedit_keyerstopbits
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_keyerstopbits"
 msgid "Stop bits"
-msgstr ""
+msgstr "Стоп біт"
 
 #: ulclformhelpers.tc_radioedit_name
 #, fuzzy
@@ -7991,107 +8011,107 @@ msgstr "Мережа"
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_parity"
 msgid "Parity"
-msgstr ""
+msgstr "Партії"
 
 #: ulclformhelpers.tc_radioedit_parityeven
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_parityeven"
 msgid "Even"
-msgstr ""
+msgstr "Вечір"
 
 #: ulclformhelpers.tc_radioedit_paritynone
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_paritynone"
 msgid "None"
-msgstr ""
+msgstr "Жоден"
 
 #: ulclformhelpers.tc_radioedit_parityodd
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_parityodd"
 msgid "Odd"
-msgstr ""
+msgstr "ОД"
 
 #: ulclformhelpers.tc_radioedit_password
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_password"
 msgid "Password"
-msgstr ""
+msgstr "Логін"
 
 #: ulclformhelpers.tc_radioedit_polling
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_polling"
 msgid "Poll this radio"
-msgstr ""
+msgstr "Полл це радіо"
 
 #: ulclformhelpers.tc_radioedit_port
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_port"
 msgid "Port"
-msgstr ""
+msgstr "Портфоліо"
 
 #: ulclformhelpers.tc_radioedit_serial
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_serial"
 msgid "Serial"
-msgstr ""
+msgstr "Сфера"
 
 #: ulclformhelpers.tc_radioedit_startup
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_startup"
 msgid "Startup command"
-msgstr ""
+msgstr "Команда Startup"
 
 #: ulclformhelpers.tc_radioedit_stopbits
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_stopbits"
 msgid "Stop bits"
-msgstr ""
+msgstr "Стоп біт"
 
 #: ulclformhelpers.tc_radioedit_tcpport
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_tcpport"
 msgid "TCP port"
-msgstr ""
+msgstr "TCP порт"
 
 #: ulclformhelpers.tc_radioedit_title
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_title"
 msgid "Radio"
-msgstr ""
+msgstr "Радіо"
 
 #: ulclformhelpers.tc_radioedit_transport
 #, fuzzy
 msgid "Connection"
-msgstr ""
+msgstr "Підключення"
 
 #: ulclformhelpers.tc_radioedit_type
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_type"
 msgid "Radio type"
-msgstr ""
+msgstr "Тип радіо"
 
 #: ulclformhelpers.tc_radioedit_unsaved
 #, fuzzy
 msgid "Save your changes to this radio?"
-msgstr ""
+msgstr "Збережіть свої зміни в цьому радіо?"
 
 #: ulclformhelpers.tc_radioedit_usehamlib
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_usehamlib"
 msgid "Drive through HamLib"
-msgstr ""
+msgstr "Привід через HamLib"
 
 #: ulclformhelpers.tc_radioedit_username
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_username"
 msgid "User name"
-msgstr ""
+msgstr "Ім'я користувача"
 
 #: ulclformhelpers.tc_radioedit_widecw
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_widecw"
 msgid "Wide CW filter"
-msgstr ""
+msgstr "Широкий фільтр CW"
 
 #: tfrmaltd.caption
 #, fuzzy
@@ -8217,13 +8237,13 @@ msgstr "MP3 рекордер"
 #, fuzzy
 msgctxt "tfrmnewcontest.btnbrowse.caption"
 msgid "Browse..."
-msgstr ""
+msgstr "Поза «69»."
 
 #: tfrmnewcontest.btncancel.caption
 #, fuzzy
 msgctxt "tfrmnewcontest.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "Скасувати"
 
 #: tfrmnewcontest.btnlatest.caption
 #, fuzzy
@@ -8235,37 +8255,37 @@ msgstr "Останній файл конфігурації"
 #, fuzzy
 msgctxt "tfrmnewcontest.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "ОК"
 
 #: tfrmnewcontest.caption
 #, fuzzy
 msgid "Open configuration file or start a new contest"
-msgstr ""
+msgstr "Відкрийте файл конфігурації або запустіть новий конкурс"
 
 #: tfrmnewcontest.dlgopen.title
 #, fuzzy
 msgid "Open configuration file"
-msgstr ""
+msgstr "Відкритий файл конфігурації"
 
 #: tfrmnewcontest.gbexisting.caption
 #, fuzzy
 msgid "Open an existing configuration"
-msgstr ""
+msgstr "Відкрийте існуючу конфігурацію"
 
 #: tfrmnewcontest.gbnew.caption
 #, fuzzy
 msgid "Start a new contest"
-msgstr ""
+msgstr "Почати новий конкурс"
 
 #: tfrmnewcontest.lblcontest.caption
 #, fuzzy
 msgid "CONTEST"
-msgstr ""
+msgstr "КОНТАКТИ"
 
 #: tfrmnewcontest.lblmycall.caption
 #, fuzzy
 msgid "MY CALL"
-msgstr ""
+msgstr "МИ БУДЬ"
 
 #: tfrmpanadapter.lblstatus.caption
 #, fuzzy
@@ -9186,7 +9206,7 @@ msgstr "Формат TR Log"
 #: utr4wstrings.rc_trmaster
 #, fuzzy
 msgid "SCP"
-msgstr ""
+msgstr "ФОП"
 
 #: utr4wstrings.rc_vieweditlog
 #, fuzzy
@@ -9264,6 +9284,9 @@ msgid ""
 "\n"
 "Okay to delete?"
 msgstr ""
+"%s вже існує.\n"
+"\n"
+"Очі видалити?"
 
 #: utr4wstrings.tc_altdcommanddisabled
 #, fuzzy
@@ -9283,7 +9306,7 @@ msgstr "Додати імпортовані зв`язки до поточног�
 #: utr4wstrings.tc_arenewengland
 #, fuzzy
 msgid "Are you in New England?"
-msgstr ""
+msgstr "Ви в Новій Англії?"
 
 #: utr4wstrings.tc_arktikaclub
 #, fuzzy
@@ -9303,7 +9326,7 @@ msgstr "Тривалість паузи"
 #: utr4wstrings.tc_autospotenabledtestmodeonly
 #, fuzzy
 msgid "AUTOSPOT is enabled - Test Mode Only"
-msgstr ""
+msgstr "AUTOSPOT включений - Режим тестування тільки"
 
 #: utr4wstrings.tc_autosynchronizinglog
 #, fuzzy
@@ -9318,7 +9341,7 @@ msgstr "Створена резервна копія файлу журналу"
 #: utr4wstrings.tc_bandchangedisabled
 #, fuzzy
 msgid "Band change requires MULTIPLE BANDS = TRUE once the log has QSOs"
-msgstr ""
+msgstr "Зміна смуги вимагає MULTIPLE BANDS = TRUE після того, як журнал має QSO"
 
 #: utr4wstrings.tc_band_changes
 #, fuzzy
@@ -9390,7 +9413,7 @@ msgstr "штаті California"
 #: utr4wstrings.tc_call_in_call_window
 #, fuzzy
 msgid "Call in Call Window"
-msgstr ""
+msgstr "Дзвоните до вікна виклику"
 
 #: utr4wstrings.tc_canada
 #, fuzzy
@@ -9410,12 +9433,12 @@ msgstr "Неможливо скопіювати файл журналу - ціл
 #: utr4wstrings.tc_cannotdisablesplittransmitslicecre
 #, fuzzy
 msgid "Cannot disable split -- the transmit slice was created on the radio. Turn it off in the SDR."
-msgstr ""
+msgstr "Не можна розбити розкол - на радіо було створене скибочка передач. Вимкніть його в SDR."
 
 #: utr4wstrings.tc_cannotopenlogfile
 #, fuzzy
 msgid "Cannot open log file"
-msgstr ""
+msgstr "Неможливо відкрити файл журналу"
 
 #: utr4wstrings.tc_cannotrename
 #, fuzzy
@@ -9445,7 +9468,7 @@ msgstr "Перевірка часу"
 #: utr4wstrings.tc_cis
 #, fuzzy
 msgid "CIS"
-msgstr ""
+msgstr "УКРАЇНСЬКА"
 
 #: utr4wstrings.tc_cleansweepcongratulations
 #, fuzzy
@@ -9520,12 +9543,12 @@ msgstr "З`єднання з TR4WSERVER не вдалося. Перевірте 
 #: utr4wstrings.tc_continueenteringcharactersautoterm
 #, fuzzy
 msgid "Continue entering characters.  Auto terminate active!!"
-msgstr ""
+msgstr "Продовжити введення символів. Автоматичне припинення дії!"
 
 #: utr4wstrings.tc_continueenteringcharacterspressret
 #, fuzzy
 msgid "Continue entering characters and press RETURN when done."
-msgstr ""
+msgstr "Продовжити введення символів і натиснути RETURN при виконанні."
 
 #: utr4wstrings.tc_cqfunctionkeymemorystatus
 #, fuzzy
@@ -9540,92 +9563,92 @@ msgstr "Всього CQ: %"
 #: utr4wstrings.tc_croat
 #, fuzzy
 msgid "I am in Croatia"
-msgstr ""
+msgstr "Я в Хорватії"
 
 #: utr4wstrings.tc_ctrl_a
 #, fuzzy
 msgid "Send this message on inactive radio"
-msgstr ""
+msgstr "Надіслати повідомлення про неактивне радіо"
 
 #: utr4wstrings.tc_ctrl_b
 #, fuzzy
 msgid "Identify ctrl-A message as a CQ"
-msgstr ""
+msgstr "Визначте ctrl-A повідомлення як CQ"
 
 #: utr4wstrings.tc_ctrl_c
 #, fuzzy
 msgid "Start special command"
-msgstr ""
+msgstr "Почати спеціальну команду"
 
 #: utr4wstrings.tc_ctrl_d
 #, fuzzy
 msgid "Do not interrupt"
-msgstr ""
+msgstr "Не переривати"
 
 #: utr4wstrings.tc_ctrl_e
 #, fuzzy
 msgid "Dah 73% of normal duration"
-msgstr ""
+msgstr "Дах 73% від нормальної тривалості"
 
 #: utr4wstrings.tc_ctrl_f
 #, fuzzy
 msgid "Increase speed by 6%"
-msgstr ""
+msgstr "Збільшення швидкості на 6%"
 
 #: utr4wstrings.tc_ctrl_k
 #, fuzzy
 msgid "Normal dah"
-msgstr ""
+msgstr "Нормальний ромашка"
 
 #: utr4wstrings.tc_ctrl_l
 #, fuzzy
 msgid "Dit 140% of normal duration"
-msgstr ""
+msgstr "Сидіння 140% нормальної тривалості"
 
 #: utr4wstrings.tc_ctrl_n
 #, fuzzy
 msgid "Dah 113% of normal duration"
-msgstr ""
+msgstr "Dah 113% від нормальної тривалості"
 
 #: utr4wstrings.tc_ctrl_o
 #, fuzzy
 msgid "Dah 127% of normal duration"
-msgstr ""
+msgstr "Да 127% нормальної тривалості"
 
 #: utr4wstrings.tc_ctrl_p
 #, fuzzy
 msgid "Dit 60% of normal duration"
-msgstr ""
+msgstr "Діт 60% нормальної тривалості"
 
 #: utr4wstrings.tc_ctrl_q
 #, fuzzy
 msgid "Dit 80% of normal duration"
-msgstr ""
+msgstr "Діт 80% нормальної тривалості"
 
 #: utr4wstrings.tc_ctrl_s
 #, fuzzy
 msgid "Decrease speed by 6%"
-msgstr ""
+msgstr "Швидкість знежирення на 6%"
 
 #: utr4wstrings.tc_ctrl_sl
 #, fuzzy
 msgid "Normal dit"
-msgstr ""
+msgstr "Нормальна точка"
 
 #: utr4wstrings.tc_ctrl_v
 #, fuzzy
 msgid "Dit 120% of normal duration"
-msgstr ""
+msgstr "Діт 120% нормальної тривалості"
 
 #: utr4wstrings.tc_ctrl_x
 #, fuzzy
 msgid "Decrease weight by 0.03"
-msgstr ""
+msgstr "Знижена вага 0.03"
 
 #: utr4wstrings.tc_ctrl_y
 #, fuzzy
 msgid "Increase weight by 0.03"
-msgstr ""
+msgstr "Збільшення ваги 0.03"
 
 #: utr4wstrings.tc_ctspacing
 #, fuzzy
@@ -9635,17 +9658,17 @@ msgstr "CT інтервал"
 #: utr4wstrings.tc_ctydatdownloadedreloading
 #, fuzzy
 msgid "CTY.DAT downloaded. Reloading..."
-msgstr ""
+msgstr "CTY.DAT скачати. Перевантаження ..."
 
 #: utr4wstrings.tc_ctydatdownloadfailed
 #, fuzzy
 msgid "CTY.DAT download failed."
-msgstr ""
+msgstr "CTY.DAT завантажити не вдалося."
 
 #: utr4wstrings.tc_ctydatreloadedsuccessfully
 #, fuzzy
 msgid "CTY.DAT reloaded successfully."
-msgstr ""
+msgstr "CTY.DAT успішно перезавантажено."
 
 #: utr4wstrings.tc_current_operator_callsign
 #, fuzzy
@@ -9660,7 +9683,7 @@ msgstr "CW-маніпуляція відключена за допомогою A
 #: utr4wstrings.tc_cwoff
 #, fuzzy
 msgid "CW Off"
-msgstr ""
+msgstr "CW від"
 
 #: utr4wstrings.tc_cwqsos
 #, fuzzy
@@ -9670,7 +9693,7 @@ msgstr "CW зв`язків"
 #: utr4wstrings.tc_cwtimerfired
 #, fuzzy
 msgid "CW Timer fired"
-msgstr ""
+msgstr "CW таймер пожежний"
 
 #: utr4wstrings.tc_czechrepublicorinslovakia
 #, fuzzy
@@ -9680,12 +9703,12 @@ msgstr "Чехії або Словаччині"
 #: utr4wstrings.tc_datasuccessfullysavedasciifile
 #, fuzzy
 msgid "Data successfully saved to ASCII file."
-msgstr ""
+msgstr "Дані успішно збережені в файлі ASCII."
 
 #: utr4wstrings.tc_debugmodecreatedprefixestxt
 #, fuzzy
 msgid "debug mode created prefixes.txt"
-msgstr ""
+msgstr "javascript licenses api веб-сайт"
 
 #: utr4wstrings.tc_department
 #, fuzzy
@@ -9699,6 +9722,9 @@ msgid ""
 "TR4W is expecting version %s.\n"
 "The file you are trying to read version %s."
 msgstr ""
+"%s від іншої версії програми.\n"
+"TR4W очікується версія %s.\n"
+"Файл, який ви намагаєтеся читати версію %s."
 
 #: utr4wstrings.tc_digqsos
 #, fuzzy
@@ -9718,17 +9744,17 @@ msgstr "** ВІД'ЄДНАНО від "
 #: utr4wstrings.tc_discover_multi_found
 #, fuzzy
 msgid "More than one %s found; filled in the first.  All found:"
-msgstr ""
+msgstr "Більше одного %s знайдено; Всі знайдені:"
 
 #: utr4wstrings.tc_discover_none_found
 #, fuzzy
 msgid "No radio of type %s found on the network"
-msgstr ""
+msgstr "No радіо типу %s знайдено в мережі"
 
 #: utr4wstrings.tc_discover_not_available
 #, fuzzy
 msgid "Network discovery is not available for radio %s"
-msgstr ""
+msgstr "Відкриття мережі не доступна для радіо %s"
 
 #: utr4wstrings.tc_ditdahratio
 #, fuzzy
@@ -9748,17 +9774,17 @@ msgstr "Внутр. множ."
 #: utr4wstrings.tc_downloadingctydat
 #, fuzzy
 msgid "Downloading CTY.DAT..."
-msgstr ""
+msgstr "Завантажити CTY.DAT ..."
 
 #: utr4wstrings.tc_downloadingpotaparks
 #, fuzzy
 msgid "Downloading POTA parks..."
-msgstr ""
+msgstr "Завантаження парків POTA ..."
 
 #: utr4wstrings.tc_downloadingtrmasterdta
 #, fuzzy
 msgid "Downloading TRMASTER.DTA..."
-msgstr ""
+msgstr "Завантажити TRMASTER.DTA ..."
 
 #: utr4wstrings.tc_downloadit
 #, fuzzy
@@ -9813,7 +9839,7 @@ msgstr "Редагування %s Повідомлення"
 #: utr4wstrings.tc_editor_copy
 #, fuzzy
 msgid "&Copy"
-msgstr ""
+msgstr "&Копіювати"
 
 #: utr4wstrings.tc_editor_edit
 #, fuzzy
@@ -9824,22 +9850,22 @@ msgstr "Редагувати"
 #: utr4wstrings.tc_editor_explore
 #, fuzzy
 msgid "Explore"
-msgstr ""
+msgstr "Про нас"
 
 #: utr4wstrings.tc_editor_openineditor
 #, fuzzy
 msgid "Open in text &editor"
-msgstr ""
+msgstr "Відкрити в тексті &editor"
 
 #: utr4wstrings.tc_editor_selectall
 #, fuzzy
 msgid "Select &all"
-msgstr ""
+msgstr "Виділити &усе"
 
 #: utr4wstrings.tc_editor_sendlogto
 #, fuzzy
 msgid "Send log to %s"
-msgstr ""
+msgstr "Перейти до вмісту %s"
 
 #: utr4wstrings.tc_editqtcpressyestoeditqtcornotolog
 #, fuzzy
@@ -9849,7 +9875,7 @@ msgstr "Редагувати QTC? Натисніть Yes, щоб редагув�
 #: utr4wstrings.tc_enoughmemoryinitialexchangearray
 #, fuzzy
 msgid "Not enough memory for initial exchange array!!"
-msgstr ""
+msgstr "Не достатньо пам'яті для початкового масиву обміну!"
 
 #: utr4wstrings.tc_enter
 #, fuzzy
@@ -9859,7 +9885,7 @@ msgstr "Введіть %s:"
 #: utr4wstrings.tc_entercallsignspacedupecheckalthhel
 #, fuzzy
 msgid "ENTER a callsign.  SPACE for dupecheck.  Alt-H for help."
-msgstr ""
+msgstr "Зареєструвати дзвінок. SPACE для дупечек. Alt-H для допомоги."
 
 #: utr4wstrings.tc_entercalltobecheckedon
 #, fuzzy
@@ -9869,7 +9895,7 @@ msgstr "Введіть позивний для перевірки на %s%s:"
 #: utr4wstrings.tc_enterexchangepressenterlogescapeab
 #, fuzzy
 msgid "Enter exchange.  Press ENTER to log, ESCAPE to abort QSO."
-msgstr ""
+msgstr "Вхідний обмін Натисніть ENTER для входу, ESCAPE до аборту QSO."
 
 #: utr4wstrings.tc_enterfirsttwodigitsofyourqth
 #, fuzzy
@@ -9944,7 +9970,7 @@ msgstr "Введіть скорочення вашого району:"
 #: utr4wstrings.tc_enteryourdistrictcode
 #, fuzzy
 msgid "If in UK/EI, enter your 2 digit district code"
-msgstr ""
+msgstr "Якщо у Великобританії / EI, введіть ваш 2 цифровий районний код"
 
 #: utr4wstrings.tc_enteryourdok
 #, fuzzy
@@ -9967,6 +9993,8 @@ msgid ""
 "Enter your geographical coordinates\n"
 "(e.g. 55N37O for Moscow):"
 msgstr ""
+"Введіть свої географічні координати\n"
+"(наприклад, 55N37O для Москви):"
 
 #: utr4wstrings.tc_enteryouriotareferencedesignator
 #, fuzzy
@@ -10019,6 +10047,8 @@ msgid ""
 "Enter your precedence, your check\n"
 "(last two digits of year licensed) and ARRL section:"
 msgstr ""
+"Введіть вашу прецедентію, перевірте\n"
+"(останнє два цифри року ліцензовано) і розділ ARRL:"
 
 #: utr4wstrings.tc_enteryourprovinceid
 #, fuzzy
@@ -10031,6 +10061,8 @@ msgid ""
 "Enter your QTH that you want to send\n"
 "and the name you want to use:"
 msgstr ""
+"Введіть свій QTH, який ви хочете надіслати\n"
+"і ім'я, яку ви хочете використовувати:"
 
 #: utr4wstrings.tc_enteryourqthorpower
 #, fuzzy
@@ -10080,12 +10112,12 @@ msgstr "Помилка у файлі лога!"
 #: utr4wstrings.tc_errorofferingcommanderproxytcpport
 #, fuzzy
 msgid "Error offering Commander proxy TCP Port"
-msgstr ""
+msgstr "Помилка для командного проксі TCP Port"
 
 #: utr4wstrings.tc_errorplayingvoicememory
 #, fuzzy
 msgid "Error playing voice memory"
-msgstr ""
+msgstr "Помилка відтворення голосової пам'яті"
 
 #: utr4wstrings.tc_eudx
 #, fuzzy
@@ -10110,7 +10142,7 @@ msgstr "Не вдалося з`єднатися із сервером"
 #: utr4wstrings.tc_failedtoload
 #, fuzzy
 msgid "Failed to load. View getscoresanswer.html for details."
-msgstr ""
+msgstr "Заборонено на навантаження. Перегляд getcoresanswer.html для деталей."
 
 #: utr4wstrings.tc_failedtoreceiveserverlog
 #, fuzzy
@@ -10120,7 +10152,7 @@ msgstr "Не вдалося отримати серверний лог."
 #: utr4wstrings.tc_filesavedtofilesuccessfully
 #, fuzzy
 msgid "File saved to file successfully."
-msgstr ""
+msgstr "Файл успішно збережений у файлі."
 
 #: utr4wstrings.tc_filesavedtosuccessfully
 #, fuzzy
@@ -10130,7 +10162,7 @@ msgstr "Файл %s успішно збережено"
 #: utr4wstrings.tc_findingzeroendvisibledupesheetlist
 #, fuzzy
 msgid "Not finding zero at end visible dupesheet list!!"
-msgstr ""
+msgstr "Не знайдено нуля в кінцевому видимому списку електронних листів!"
 
 #: utr4wstrings.tc_firstextension
 #, fuzzy
@@ -10146,7 +10178,7 @@ msgstr "штаті Florida"
 #: utr4wstrings.tc_flushinitialexcommandexecuted
 #, fuzzy
 msgid "FLUSHINITIALEX command is executed."
-msgstr ""
+msgstr "Команда FLUSHINITIALEX виконана."
 
 #: utr4wstrings.tc_folderalreadyexistsoverwrite
 #, fuzzy
@@ -10154,6 +10186,8 @@ msgid ""
 "Folder \"%s\" already exists.\n"
 "Overwrite ?"
 msgstr ""
+"Складання \"%s\" вже існує.\n"
+"Овертюра ?"
 
 #: utr4wstrings.tc_footsw
 #, fuzzy
@@ -10213,17 +10247,17 @@ msgstr "ВИЗНАЧЕННЯ ХОСТУ.."
 #: utr4wstrings.tc_hamlib_id_label
 #, fuzzy
 msgid "HAMLIB ID"
-msgstr ""
+msgstr "ХАМЛІБ ID"
 
 #: utr4wstrings.tc_hamscorequeueingfulllogresync
 #, fuzzy
 msgid "HamScore: queueing full log resync..."
-msgstr ""
+msgstr "HamScore: чергування повного журналу resync ..."
 
 #: utr4wstrings.tc_handlogmodetrue
 #, fuzzy
 msgid "HAND LOG MODE = TRUE"
-msgstr ""
+msgstr "HAND LOG MODE = TRUE"
 
 #: utr4wstrings.tc_hangtime
 #, fuzzy
@@ -10243,7 +10277,7 @@ msgstr "У вас є %u QTC"
 #: utr4wstrings.tc_hitcounthistogram050
 #, fuzzy
 msgid "Hit count histogram for 0 to 50+ : "
-msgstr ""
+msgstr "Хіт підрахунку гістограми 0 до 50+ : "
 
 #: utr4wstrings.tc_host
 #, fuzzy
@@ -10288,12 +10322,12 @@ msgstr "&Я перебуваю в %s"
 #: utr4wstrings.tc_ididfinecontestnamelogcfgdatfile
 #, fuzzy
 msgid "I did not fine a contest name in your LOGCFG.DAT file."
-msgstr ""
+msgstr "Я не відчував ім’я конкурсу у файлі LOGCFG.DAT."
 
 #: utr4wstrings.tc_ifoundcontestnameidonounderstandlo
 #, fuzzy
 msgid "I found a contest name I do no understand in your LOGCFG.DAT file."
-msgstr ""
+msgstr "Я знайшов назву конкурсу, я не розумію у файлі LOGCFG.DAT."
 
 #: utr4wstrings.tc_ignorespeedpot
 #, fuzzy
@@ -10358,7 +10392,7 @@ msgstr "Невірний позивний у вікні введення!!"
 #: utr4wstrings.tc_invaliddate
 #, fuzzy
 msgid "Invalid date!!"
-msgstr ""
+msgstr "Термін дії!"
 
 #: utr4wstrings.tc_invalidreminderdate
 #, fuzzy
@@ -10448,7 +10482,7 @@ msgstr "Режим роботи ключа"
 #: utr4wstrings.tc_keyernamedsalreadyexists
 #, fuzzy
 msgid "A keyer named \"%s\" already exists."
-msgstr ""
+msgstr "Заголовок «%s» вже існує."
 
 #: utr4wstrings.tc_labre
 #, fuzzy
@@ -10490,7 +10524,7 @@ msgstr "ЛОКАЛЬНИЙ ЛОГ"
 #: utr4wstrings.tc_locationfieldempty
 #, fuzzy
 msgid "LOCATION field is empty."
-msgstr ""
+msgstr "Порожня локація."
 
 #: utr4wstrings.tc_logfilenotfound
 #, fuzzy
@@ -10505,12 +10539,12 @@ msgstr "НЕ ВДАЛОСЯ ПЕРЕВІРИТИ РОЗМІР ФАЙЛУ ЛОГ�
 #: utr4wstrings.tc_loggingrunningsotherenofileopen
 #, fuzzy
 msgid "Logging is not running, so there is no file to open."
-msgstr ""
+msgstr "Відправка не працює, тому немає файлу для відкриття."
 
 #: utr4wstrings.tc_logincalldoeslooklikecallsign
 #, fuzzy
 msgid "Login call does not look like a callsign"
-msgstr ""
+msgstr "Вхідний дзвінок не схожий на дзвінок"
 
 #: utr4wstrings.tc_m
 #, fuzzy
@@ -10596,7 +10630,7 @@ msgstr "Таблиця множників очищена!"
 #: utr4wstrings.tc_name_from_name_database
 #, fuzzy
 msgid "Name from name database"
-msgstr ""
+msgstr "Назва бази даних імен"
 
 #: utr4wstrings.tc_netherlands
 #, fuzzy
@@ -10624,6 +10658,8 @@ msgid ""
 "Enter your New England state abbreviation\n"
 "(ME, NH, VT, MA, CT, RI):"
 msgstr ""
+"Введіть Ваше ім’я користувача\n"
+"(ME, NH, VT, MA, CT, RI):"
 
 #: utr4wstrings.tc_newtour
 #, fuzzy
@@ -10663,7 +10699,7 @@ msgstr "Не вказано ім`я файлу, що зберігається н
 #: utr4wstrings.tc_nopotaparksloggedyetsession
 #, fuzzy
 msgid "No POTA parks logged yet this session"
-msgstr ""
+msgstr "No POTA парки ввійшли до цього сеансу"
 
 #: utr4wstrings.tc_noqsonumberfound
 #, fuzzy
@@ -10694,12 +10730,12 @@ msgstr "Недостатньо інформації в обмінному ном
 #: utr4wstrings.tc_notrmasterdtafilefound
 #, fuzzy
 msgid "No TRMASTER.DTA file found."
-msgstr ""
+msgstr "Не знайдено файл TRMASTER.DTA."
 
 #: utr4wstrings.tc_numbermessagesillegalcharacters
 #, fuzzy
 msgid "Number of messages has illegal characters."
-msgstr ""
+msgstr "Кількість повідомлень має нелегальні символи."
 
 #: utr4wstrings.tc_numberorletterofmessagetobeprogram
 #, fuzzy
@@ -10775,7 +10811,7 @@ msgstr "Параметр \"%s\" не має значення у файлі ко�
 #: utr4wstrings.tc_pleasecheckmultinetwork
 #, fuzzy
 msgid "Please check multi network"
-msgstr ""
+msgstr "Будь ласка, перевірте багато мережі"
 
 #: utr4wstrings.tc_points
 #, fuzzy
@@ -10790,17 +10826,17 @@ msgstr "Польщі"
 #: utr4wstrings.tc_port_conflict_dialog
 #, fuzzy
 msgid "%s is already configured as %s. Two devices cannot share a serial port."
-msgstr ""
+msgstr "%s вже налаштовано як %s. Два пристрої не можуть ділитися серійним портом."
 
 #: utr4wstrings.tc_port_conflict_proceed
 #, fuzzy
 msgid "Apply anyway?"
-msgstr ""
+msgstr "Застосувати будь-яку сторону?"
 
 #: utr4wstrings.tc_port_conflict_startup
 #, fuzzy
 msgid "RADIO ONE and RADIO TWO are both configured to use %s. RADIO ONE keeps the port; RADIO TWO CAT control is disabled until one radio's CONTROL PORT is changed."
-msgstr ""
+msgstr "RADIO ONE і RADIO TWO обидва налаштовані для використання %s. RADIO ONE зберігає порт; RADIO TWO CAT-контроль вимкнений до зміни одного радіомовлення."
 
 #: utr4wstrings.tc_port_not_connected
 #, fuzzy
@@ -10810,22 +10846,22 @@ msgstr "(не підключено)"
 #: utr4wstrings.tc_possibledatalossmultinetwork
 #, fuzzy
 msgid "Possible data loss on multi network."
-msgstr ""
+msgstr "Можлива втрата даних на багатомережах."
 
 #: utr4wstrings.tc_potaparksdownloadfailed
 #, fuzzy
 msgid "POTA parks download failed"
-msgstr ""
+msgstr "POTA парки скачати не вдалося"
 
 #: utr4wstrings.tc_potaparksfilecouldloaded
 #, fuzzy
 msgid "POTA parks file could not be loaded"
-msgstr ""
+msgstr "Файл парків POTA не може бути завантажений"
 
 #: utr4wstrings.tc_potaparksloaded
 #, fuzzy
 msgid "POTA parks loaded"
-msgstr ""
+msgstr "Парки POTA завантажені"
 
 #: utr4wstrings.tc_prefecture
 #, fuzzy
@@ -10835,7 +10871,7 @@ msgstr "Введіть вашу префектуру:"
 #: utr4wstrings.tc_preferencescouldopeneds
 #, fuzzy
 msgid "Preferences could not be opened (%s)."
-msgstr ""
+msgstr "Не вдалося відкрити посилання (%s)."
 
 #: utr4wstrings.tc_prefix
 #, fuzzy
@@ -10865,12 +10901,12 @@ msgstr "%d очок"
 #: utr4wstrings.tc_pttlockouttrue
 #, fuzzy
 msgid "PTT LOCKOUT=TRUE"
-msgstr ""
+msgstr "PTT LOCKOUT=TRUE"
 
 #: utr4wstrings.tc_pttviacommandsctrljoptionmusttruew
 #, fuzzy
 msgid "PTT VIA COMMANDS (CTRL-J) option must be true for WSJT-X use - Setting to true"
-msgstr ""
+msgstr "PTT VIA COMMANDS (CTRL-J) параметр повинен бути вірним для використання WSJT-X - Налаштування true"
 
 #: utr4wstrings.tc_qsoneedsfor
 #, fuzzy
@@ -10890,7 +10926,7 @@ msgstr "Зв`язки імпортовано."
 #: utr4wstrings.tc_qso_number
 #, fuzzy
 msgid "QSO Number"
-msgstr ""
+msgstr "Номер QSO"
 
 #: utr4wstrings.tc_qtcabortedbyoperator
 #, fuzzy
@@ -10900,7 +10936,7 @@ msgstr "QTC видалено оператором."
 #: utr4wstrings.tc_qtcnumberillegalcharacters
 #, fuzzy
 msgid "QTC Number has illegal characters."
-msgstr ""
+msgstr "Номер QTC має нелегальні символи."
 
 #: utr4wstrings.tc_qtcpending
 #, fuzzy
@@ -10910,12 +10946,12 @@ msgstr "QTC на передачу"
 #: utr4wstrings.tc_qtcprocessterminated
 #, fuzzy
 msgid "QTC process terminated."
-msgstr ""
+msgstr "Процес QTC припиняється."
 
 #: utr4wstrings.tc_qtcprocessterminatedinvalidnumberm
 #, fuzzy
 msgid "QTC process terminated.  Invalid number of messages."
-msgstr ""
+msgstr "Процес QTC припиняється. Кількість повідомлень."
 
 #: utr4wstrings.tc_qtc_callsign
 #, fuzzy
@@ -10962,17 +10998,17 @@ msgstr "Записів"
 #: utr4wstrings.tc_relaycontrolportpaddleport
 #, fuzzy
 msgid "RELAY CONTROL PORT = PADDLE PORT"
-msgstr ""
+msgstr "ЗВІТ З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ"
 
 #: utr4wstrings.tc_removeclusters
 #, fuzzy
 msgid "Remove the cluster \"%s\"?"
-msgstr ""
+msgstr "Видалити кластер \"%s\"?"
 
 #: utr4wstrings.tc_removerotators
 #, fuzzy
 msgid "Remove the rotator \"%s\"?"
-msgstr ""
+msgstr "Видалити ротатор \"%s\"?"
 
 #: utr4wstrings.tc_repeating
 #, fuzzy
@@ -10982,7 +11018,7 @@ msgstr "Повторення %s Час прослуховування = %u мі�
 #: utr4wstrings.tc_repeatrstsent
 #, fuzzy
 msgid "Repeat RST sent"
-msgstr ""
+msgstr "Повторний RST відправлений"
 
 #: utr4wstrings.tc_restartbinisforadifferentcontest
 #, fuzzy
@@ -11002,7 +11038,7 @@ msgstr "Румунії"
 #: utr4wstrings.tc_rst_prompt
 #, fuzzy
 msgid "RST prompt"
-msgstr ""
+msgstr "RST запит"
 
 #: utr4wstrings.tc_rulesonqrzru
 #, fuzzy
@@ -11032,7 +11068,7 @@ msgstr "с"
 #: utr4wstrings.tc_salutation_and_name_if_known
 #, fuzzy
 msgid "Salutation and name if known"
-msgstr ""
+msgstr "Запобігання та ім'я, якщо відомо"
 
 #: utr4wstrings.tc_sat
 #, fuzzy
@@ -11047,7 +11083,7 @@ msgstr "Зберегти зміни?"
 #: utr4wstrings.tc_savingdtafileasciifileprocessingce
 #, fuzzy
 msgid "Saving .DTA file to ASCII file.  Processing cell   "
-msgstr ""
+msgstr "Збереження файлу .DTA до файлу ASCII. Обробка клітин   "
 
 #: utr4wstrings.tc_savingto
 #, fuzzy
@@ -11057,12 +11093,12 @@ msgstr "Копіювання %s до %s"
 #: utr4wstrings.tc_scannoteditedhere
 #, fuzzy
 msgid "%s cannot be edited here."
-msgstr ""
+msgstr "%s не можна редагувати тут."
 
 #: utr4wstrings.tc_selectspotreturnleftorrightarrowse
 #, fuzzy
 msgid "Select spot.  RETURN, left or right arrow to select.  ESCAPE to exit."
-msgstr ""
+msgstr "Виберіть місце. RETURN, ліва або права стрілка для вибору. ESCAPE до виходу."
 
 #: utr4wstrings.tc_sendingssbwavfilename
 #, fuzzy
@@ -11077,17 +11113,17 @@ msgstr "Ви дійсно хочете надіслати час через ме
 #: utr4wstrings.tc_send_callassetbymycallcommand
 #, fuzzy
 msgid "Send call as set by MY CALL command"
-msgstr ""
+msgstr "Відправте виклик як встановити команду MY CALL"
 
 #: utr4wstrings.tc_send_characters_from_keyboard
 #, fuzzy
 msgid "Send characters from keyboard"
-msgstr ""
+msgstr "Надіслати символи з клавіатури"
 
 #: utr4wstrings.tc_serial_format_label
 #, fuzzy
 msgid "DATA/PARITY/STOP"
-msgstr ""
+msgstr "ДАТА/ПАРИТИ/СТОП"
 
 #: utr4wstrings.tc_server
 #, fuzzy
@@ -11152,7 +11188,7 @@ msgstr "Вибачте!! Параметр NO LOG = TRUE забороняє вв�
 #: utr4wstrings.tc_sorryusedupallreminders
 #, fuzzy
 msgid "Sorry, you have used up all your reminders!!"
-msgstr ""
+msgstr "Нагадуємо!"
 
 #: utr4wstrings.tc_sorryyoualreadyhave10qtcswith
 #, fuzzy
@@ -11192,7 +11228,7 @@ msgstr "SSB зв`язків"
 #: utr4wstrings.tc_sstillusedbys
 #, fuzzy
 msgid "\"%s\" is still used by: %s"
-msgstr ""
+msgstr "\"%s\" ще використовується: %s"
 
 #: utr4wstrings.tc_stationclass
 #, fuzzy
@@ -11227,17 +11263,17 @@ msgstr "Час між закінченням маніпуляції та вим�
 #: utr4wstrings.tc_tciservercouldopenportds
 #, fuzzy
 msgid "The TCI server could not open port %d: %s"
-msgstr ""
+msgstr "Сервер TCI не може відкрити порт %d: %s"
 
 #: utr4wstrings.tc_telnet
 #, fuzzy
 msgid "Connect#0Disconnect#0Commands#0Freeze#0Clear#0SH/50#0#0"
-msgstr ""
+msgstr "#0#0#0#0#0#0#0#0#0#0#0#0#0#0#0#0"
 
 #: utr4wstrings.tc_testradiointerface
 #, fuzzy
 msgid "TEST RADIO INTERFACE"
-msgstr ""
+msgstr "ТЕСТ РАДІО ІНТЕРФЕРА"
 
 #: utr4wstrings.tc_texas
 #, fuzzy
@@ -11252,7 +11288,7 @@ msgstr "Перший рядок у файлі конфігурації має б
 #: utr4wstrings.tc_therenologfileyets
 #, fuzzy
 msgid "There is no log file yet at %s."
-msgstr ""
+msgstr "Немає файлу входу в %s."
 
 #: utr4wstrings.tc_therewerecalls
 #, fuzzy
@@ -11260,11 +11296,13 @@ msgid ""
 "There were %u calls found in initial exchange file.\n"
 "+%u dupe(s)"
 msgstr ""
+"У початковому файлі обміну були дзвінки %u.\n"
+"+%u дуб (s)"
 
 #: utr4wstrings.tc_theseentrieswereacceptedbeensaved
 #, fuzzy
 msgid "These entries were not accepted and have not been saved:"
-msgstr ""
+msgstr "Ці записи не приймаються і не були збережені:"
 
 #: utr4wstrings.tc_thishr
 #, fuzzy
@@ -11319,7 +11357,7 @@ msgstr "Занадто багато повідомлень TOTAL SCORE MESSAGE!!
 #: utr4wstrings.tc_tr4wtimewarning
 #, fuzzy
 msgid "TR4W Time Warning"
-msgstr ""
+msgstr "Т4В Попередження часу"
 
 #: utr4wstrings.tc_translation_author
 #, fuzzy
@@ -11329,7 +11367,7 @@ msgstr "UR7QM"
 #: utr4wstrings.tc_translation_credit
 #, fuzzy
 msgid "%s translation by %s"
-msgstr ""
+msgstr "%s переклад %s"
 
 #: utr4wstrings.tc_translation_language
 #, fuzzy
@@ -11339,7 +11377,7 @@ msgstr "UKRAINIAN"
 #: utr4wstrings.tc_translator_email
 #, fuzzy
 msgid "ny4i@ny4i.com"
-msgstr ""
+msgstr "ny4i@ny4i.com"
 
 #: utr4wstrings.tc_transmitfrequencykilohertz
 #, fuzzy
@@ -11349,17 +11387,17 @@ msgstr "передавану частоту (у кГц):"
 #: utr4wstrings.tc_trmasterdtadownloadedrestarttr4wus
 #, fuzzy
 msgid "TRMASTER.DTA downloaded -- restart TR4W to use it"
-msgstr ""
+msgstr "TRMASTER.DTA завантажити -- перезавантажити TR4W для його використання"
 
 #: utr4wstrings.tc_trmasterdtadownloadfailed
 #, fuzzy
 msgid "TRMASTER.DTA download failed"
-msgstr ""
+msgstr "TRMASTER.DTA завантажити не вдалося"
 
 #: utr4wstrings.tc_trmasterdtas
 #, fuzzy
 msgid "TRMASTER.DTA : %s"
-msgstr ""
+msgstr "ТЕРИТОРІЯ: %s"
 
 #: utr4wstrings.tc_tue
 #, fuzzy
@@ -11369,7 +11407,7 @@ msgstr "Втр"
 #: utr4wstrings.tc_uk
 #, fuzzy
 msgid "UK"
-msgstr ""
+msgstr "УКРАЇНСЬКА"
 
 #: utr4wstrings.tc_ukei
 #, fuzzy
@@ -11389,7 +11427,7 @@ msgstr "Режим Ultimatic"
 #: utr4wstrings.tc_unablesavedtaasciifile
 #, fuzzy
 msgid "Unable to save .DTA to ASCII file."
-msgstr ""
+msgstr "Неможливо зберегти файл .DTA до ASCII."
 
 #: utr4wstrings.tc_unabletofind
 #, fuzzy
@@ -11402,6 +11440,8 @@ msgid ""
 "Unable to find CTY.DAT country file!!\n"
 "Make sure this file is in the same directory as the program."
 msgstr ""
+"Неможливо знайти файл країни CTY.DAT!\n"
+"Переконайтеся, що цей файл знаходиться в тому ж каталозі, як програма."
 
 #: utr4wstrings.tc_unknowncountry
 #, fuzzy
@@ -11411,7 +11451,7 @@ msgstr "Невідома країна"
 #: utr4wstrings.tc_uploadcabrillotoscp
 #, fuzzy
 msgid "Do you want to upload your Cabrillo file to SuperChecklPartial?"
-msgstr ""
+msgstr "Ви хочете завантажити файл Cabrillo для SuperChecklP Combat?"
 
 #: utr4wstrings.tc_uploadedsuccessfully
 #, fuzzy
@@ -11516,7 +11556,7 @@ msgstr "Вас проспотіла інша станція."
 #: utr4wstrings.tc_youcanchangethisinyourconfigfile
 #, fuzzy
 msgid "You can only change this in your config file."
-msgstr ""
+msgstr "Ви можете змінити це в файлі налаштування."
 
 #: utr4wstrings.tc_youhavedeletedthelastlogentry
 #, fuzzy
