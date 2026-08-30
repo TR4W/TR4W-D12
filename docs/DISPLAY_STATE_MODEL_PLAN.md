@@ -127,8 +127,60 @@ safe by a different mechanism -- `uRadioPolling` registers
 `RefreshMainWindowElementColors` as a main-thread job -- which is precisely the
 kind of safety that holds only while one registration keeps holding.
 
-**Next: run a bench session and read `tr4w.log`.** Off-thread element writers
-are named there, once each.
+## Where it ended, 2026-08-30
+
+Eight bench sessions with a K4, WSJT-X, live CW and a DX cluster under spot
+load. The report was moved out twice before it could answer anything -- first
+from inside the guard to the accessors (`9202356c`), then from the accessors to
+`SetMainWindowText` (`ff5dbe80`), because each level named *itself* and deduped
+everything behind it.
+
+Once it named real callers, the answer was eleven sites, and **ten of them were
+one thread running one batch** after a WSJT-X QSO. Marshalled as a batch
+(`ff49eaad`) rather than converted into ten state objects -- see that commit for
+why, and NY4I's call on it.
+
+| what | where |
+|---|---|
+| `TWSJTXState`, `TRadioState`, `TKeyerState` | done -- `f46c5d5c`, `a585a7e5` |
+| WSJT-X entry-field writes | `1e3c295b` |
+| WSJT-X display batch (10 sites) | `ff49eaad` |
+| stations `TListItem` write from a socket thread | `7ab38d88` |
+
+### The finding that outlives this plan
+
+**A clean report is evidence about what is instrumented, not about the
+program.** The off-thread report covers `SetMainWindowText` and `uMainForm`'s
+element and entry accessors -- the MAIN window's funnels. Every converted tool
+window has its own way in, and `uStationsForm.StationsSetCell` guards the
+control's *existence* without guarding the *thread*. So eight runs converging on
+a tidy list of main-window callers said nothing whatever about the stations
+window, and the genuinely dangerous defect of the whole exercise -- a UDP
+listener assigning `TListItem.Caption` and `SubItems`, which reallocates rather
+than flickers -- was found by reading, not by the instrument built to find it.
+
+Measured coverage, same date: of the units under `src/ui/lcl` with a
+`...Usable` guard, only `uMainForm` and `uStateBridge` test the thread.
+`uStationsForm` and `uTelnetForm` do not. Telnet is safe in practice because the
+cluster event queue marshals before reaching it -- but nothing enforces that,
+and "safe in practice" is what this document exists to stop relying on.
+
+### What is deliberately left
+
+`LogContact` (`LOGSUBS2:1440`) interleaves model and view: it logs the QSO *and*
+calls `UpdateStationStatus`, `ShowDomesticMultiplierStatus`, `DisplayHour` and
+`DisplayNamePercentage`. That is why a socket thread reaches four display
+routines at all. The remaining reporters all reach the main window through
+accessors that DO defer, so what is left is **layering debt, not races**.
+
+Separating them is contest-engine surgery that wants a corpus run and daylight,
+and it is the same work the SQLite contest-state move
+([`SQLITE_LOG_SCHEMA_PLAN.md`](SQLITE_LOG_SCHEMA_PLAN.md)) will do properly.
+Doing it twice is the thing to avoid.
+
+Also open: `tDispalyOnAirTime` (`LOGWIND:3689,3694`) on the radio polling
+thread -- a clock tick, unrelated to any of the above, and a small state object
+when someone wants it.
 
 **Expected argument against, answered in advance:** this is a port, and the
 existing design is defensible for a port -- it preserves behaviour, every step
