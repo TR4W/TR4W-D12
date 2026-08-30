@@ -103,6 +103,40 @@ this file. `Sweep-TextFit.ps1` now keeps the runner's own output per language in
 `build-out\textfit-logs\<lang>-menusmoke.txt`, so the next occurrence is
 diagnosable rather than gone.
 
+**MEASURED 2026-08-29, and it is worse than "in one sweep run".** A full sweep of
+21 languages was run after the machine-seed, and **9 of the 21 measured 59-72
+captions against a best of 536** -- Preferences never opened, and
+`Invoke-MenuSmoke` reported success for every one of them. Re-running the nine
+fixed six; re-running the remaining two fixed one; the last needed a third run.
+
+| pass | languages run | invalid |
+|---|---:|---:|
+| 1 | 21 | 9 |
+| 2 | 8 | 2 |
+| 3 | 2 | 1 |
+| 4 | 1 | 0 |
+
+**So the first-pass failure rate is about 40%, it is load-dependent rather than
+language-dependent** -- Spanish measured 59 in the bulk run and 523 alone, with
+no change to its catalogue -- and `ExpectsWindow` did not catch a single one.
+That confirms the DISTRUST above with numbers: the runner's window check is not
+detecting a window that fails to appear.
+
+The `SUSPECT` floor in `Sweep-TextFit` is what caught it, and it only works
+because several languages run together and give it a yardstick. **A single-language
+sweep has no floor and would silently report a partial measurement as a pass.**
+
+Two things are owed, in this order:
+
+1. Find out why `ExpectsWindow` misses. It compares visible top-level window
+   counts before and after; the likely culprit is that Preferences is slow enough
+   under load that the `AfterMs` window closes before it appears, so the count
+   never rises and the check passes on a window that was merely late rather than
+   absent.
+2. Once that reports honestly, have `Sweep-TextFit` **re-run a language that
+   lands under the floor** instead of printing SUSPECT and leaving it to a human.
+   Today that took four passes by hand.
+
 ---
 
 ## Added 2026-08-28 (evening) -- FIXED FROM NY4I'S NOTES, UNRUN
