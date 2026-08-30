@@ -9134,6 +9134,31 @@ begin
      exit; // n4af issue 158
      end;
   logger.debug('Putting "%s" into the call field', [Call]);
+
+  { THE DECISION IS ABOVE, THE FIELD WRITE IS BELOW, AND ONLY THE WRITE HAS A
+    THREAD REQUIREMENT.  The MyCall check is arithmetic on a string and is
+    correct on any thread; touching a TEdit is not.
+
+    THE WSJT-X UDP LISTENER GETS HERE.  Measured, not supposed -- tr4w.log,
+    2026-08-29 23:05, thread 23196 (the Indy UDP reader) reaching ENTRYTEXT and
+    SETENTRYSEL by this path while WSJT-X called TI1T.  The entry-field guard
+    reported it and then, unlike the ELEMENT guard, carried on: ControlUsable
+    logs and returns, it does not defer.  So the assignments really did run on
+    the listener thread.
+
+    THAT IS ALSO WHY THIS IS ONE DEFERRED OPERATION AND NOT TWO DEFERRED
+    ACCESSORS.  The caret goes to the END of the text, so the selection depends
+    on the write having already landed; deferring SetEntryText and SetEntrySel
+    separately would measure the length of text that was not there yet.
+
+    Main-thread callers -- the other nine, all keyboard paths -- are unchanged
+    and still synchronous. }
+  if not OnMainThread then
+     begin
+     QueuePutCallToCallField(string(Call));
+     Exit;
+     end;
+
   SetEntryText(TR4WCallEdit, string(Call));
   SetEntrySel(TR4WCallEdit, Length(EntryText(TR4WCallEdit)), 0);
 end;

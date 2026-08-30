@@ -230,6 +230,14 @@ procedure SetElementFont(const aElement: TMainWindowElement;
   So the deferral is kept, through Application.QueueAsyncCall, which is what
   this program already uses to hand work to the main loop (see uPanelUpdate).
   What goes away is the pretence that a synthetic keystroke is being typed. }
+{ Put a call into the call field FROM ANY THREAD, caret at the end.
+  MainUnit.PutCallToCallWindow uses this when it is not on the main thread. }
+procedure QueuePutCallToCallField(const aCall: string);
+
+{ Clear both entry fields and return focus to the call field, FROM ANY THREAD.
+  The "ready for the next QSO" gesture; uWSJTX's two copies of it call this. }
+procedure QueueClearCallAndFocus;
+
 procedure QueueAppendSpaceToExchange;
 procedure QueueStartSendingKey(const aKey: AnsiChar);
 procedure QueuePasteIntoCallField;
@@ -615,7 +623,8 @@ end;
   THE DEFERRED ACTIONS.  One runner, because QueueAsyncCall wants a method.
   --------------------------------------------------------------------------- }
 type
-   TDeferredAction = (daAppendSpace, daStartSending, daPasteCall);
+   TDeferredAction = (daAppendSpace, daStartSending, daPasteCall,
+                      daPutCall, daClearCallAndFocus);
 
 
    TEntryDeferrer = class(TObject)
@@ -633,6 +642,17 @@ var
      switch, so a bare `char` is a WideChar -- and TKeyPressEvent's Key is
      passed BY VAR, so the types have to match exactly rather than convert. }
    GStartSendingKey: AnsiChar = #0;
+
+   { The call daPutCall carries, under GPendingLock because the WSJT-X UDP
+     listener writes it while the main thread reads it -- unlike
+     GStartSendingKey, whose one producer is the foot switch.
+
+     LAST ONE WINS, and that is correct rather than merely convenient: this is
+     "the station the operator should be looking at", so a newer answer
+     supersedes an older one. Queueing a growing list of calls to type into one
+     field and then erase would be the wrong shape. }
+   GPendingCall: string = '';
+   GPendingLock: TRTLCriticalSection;
 
 procedure Queue(const aAction: TDeferredAction);
 begin
@@ -813,6 +833,39 @@ begin
            end;
         end;
 
+     daPutCall:
+        begin
+        { The field write half of MainUnit.PutCallToCallWindow, which keeps the
+          decision half (the MyCall check). Text and selection move TOGETHER
+          and that is the whole reason this is one deferred operation rather
+          than two deferred accessors: the caret goes to the END of the text,
+          so the selection has to be computed AFTER the write lands. Deferring
+          SetEntryText and SetEntrySel separately would read the length of the
+          text the write had not yet made. }
+        { Through the accessors rather than at the control, so the
+          HandleAllocated guard and the ShortString narrowing are handled in the
+          one place that already handles them.  We are on the main thread here
+          by construction, so their thread check is free. }
+        EnterCriticalSection(GPendingLock);
+        try
+           SetEntryText(TR4WCallEdit, GPendingCall);
+        finally
+           LeaveCriticalSection(GPendingLock);
+        end;
+        SetEntrySel(TR4WCallEdit, Length(EntryText(TR4WCallEdit)), 0);
+        end;
+
+     daClearCallAndFocus:
+        begin
+        { Both fields cleared and focus returned to the call field -- the
+          "ready for the next QSO" gesture. ONE action, not three, because the
+          focus must land after both clears; three separate hops could
+          interleave with a fourth thing the operator did in between. }
+        SetEntryText(TR4WCallEdit, '');
+        SetEntryText(TR4WExchangeEdit, '');
+        FocusEntry(TR4WCallEdit);
+        end;
+
      daPasteCall:
         begin
         // Was WM_PASTE followed by WM_SETFOCUS, both posted.  THE SECOND ONE
@@ -841,6 +894,22 @@ end;
 procedure QueuePasteIntoCallField;
 begin
    Queue(daPasteCall);
+end;
+
+procedure QueuePutCallToCallField(const aCall: string);
+begin
+   EnterCriticalSection(GPendingLock);
+   try
+      GPendingCall := aCall;
+   finally
+      LeaveCriticalSection(GPendingLock);
+   end;
+   Queue(daPutCall);
+end;
+
+procedure QueueClearCallAndFocus;
+begin
+   Queue(daClearCallAndFocus);
 end;
 
 { Is this handle one of the main window's own elements?  Asked by the
@@ -1615,5 +1684,11 @@ begin
       lb.ItemIndex := aIndex;
       end;
 end;
+
+initialization
+   InitCriticalSection(GPendingLock);
+
+finalization
+   DoneCriticalSection(GPendingLock);
 
 end.

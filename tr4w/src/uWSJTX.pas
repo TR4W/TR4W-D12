@@ -73,6 +73,10 @@ type
     function GetNextADIFField(var sBuffer: string; var fieldName: string; var
       fieldValue: string): boolean;
     procedure HandleMessage_Clear;
+    { The "ready for the next QSO" gesture, which existed as TWO IDENTICAL
+      COPIES -- here and in the QSO-logged arm of the message loop. Both run on
+      the UDP listener thread. }
+    procedure ReadyForNextQSO;
   protected
     procedure OnServerRead(ASender: TIdUDPListenerThread; const AData: TIdBytes;
       ABinding: TIdSocketHandle);
@@ -134,6 +138,7 @@ uses
   , uCallSignRoutines   // IsAGoodCall -- was LogStuff's IsValidCallsign regex
   , LogEdit // For ShowStationInformation and DetermineIfNewMult and DetermineIfNewDomesticMult
   , LOGWIND // for GetBandMapBandModeFromFrequency
+  , uMainForm // QueueClearCallAndFocus -- this unit runs on a UDP thread
   , TF // for SetMainWindowText
   , Tree // for LooksLikeAGrid
   , utils_text
@@ -827,11 +832,7 @@ begin
                       EditingCallsignSent := False;
                       SeventyThreeMessageSent := False;
                       EscapeDeletedCallEntry := CallWindowString;
-                      tCleareCallWindow;
-                      tCleareExchangeWindow;
-                      tCallWindowSetFocus;
-                      CleanUpDisplay;
-                      sCallSentToWindow := '';
+                      ReadyForNextQSO;
                       end;
 
                    //tCleareCallWindow;
@@ -1553,12 +1554,35 @@ procedure TWSJTXServer.HandleMessage_Clear;
 begin
 
   logger.Trace('[uWSJTX] WSJTX >>> Clear');
-  tCleareCallWindow;
-  tCleareExchangeWindow;
-  tCallWindowSetFocus;
+  ReadyForNextQSO;
+end;
+
+procedure TWSJTXServer.ReadyForNextQSO;
+begin
+  { WAS THREE SEPARATE CALLS, ON THE UDP LISTENER THREAD.
+
+    tCleareCallWindow, tCleareExchangeWindow and tCallWindowSetFocus each
+    reached the LCL directly -- and tr4w.log for 2026-08-29 23:05 has thread
+    23196 (the Indy UDP reader) in SETENTRYTEXT and then FOCUSENTRY by this
+    exact path, on a WSJT-X Clear. The entry-field guard reported it and carried
+    on, because ControlUsable logs without deferring.
+
+    FOCUSENTRY IS THE SHARP END, not the text writes. It walks to the parent
+    form and touches ActiveControl/SetFocus, and the note above FocusEntry
+    records eighteen EInvalidOperation faults from that call in one CW session.
+    Doing it from a socket thread is the version of that with no window
+    procedure to catch it.
+
+    ONE ACTION, NOT THREE, and the ordering is the reason: focus must land after
+    both fields are clear. Three separate hops could interleave with whatever
+    the operator did in between.
+
+    CleanUpDisplay and sCallSentToWindow stay here. The first goes through the
+    ELEMENT accessors, which genuinely do defer, and the second is a plain
+    field of this object -- neither touches a control from here. }
+  QueueClearCallAndFocus;
   CleanUpDisplay;
   sCallSentToWindow := '';
-
 end;
 
 procedure TWSJTXServer.Display(p_sender: string; p_message: string);
