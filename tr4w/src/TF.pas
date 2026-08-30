@@ -267,7 +267,7 @@ const
 implementation
 
 uses Log4D, uFreqTimeFormat, uStrSearch, uAnsiStr,   // Issue #997: freq/time formatters + PChar search helpers extracted + golden-tested
-     uCrashLog;   // LogCaughtException -- see tCreateThread
+     uCrashLog;   // LogCaughtException, OnMainThread, ReportOffMainThread
 
 // Own Log4D logger (initialized at the foot of this unit), replacing the former
 // MainUnit.logger borrow.  MainUnit was used for NOTHING ELSE here -- three
@@ -1006,6 +1006,25 @@ end;
   empty", and it is what makes a second clear a no-op. }
 procedure SetMainWindowText(Window: TMainWindowElement; Text: string);
 begin
+  { THE LAST BLIND SPOT IN THE OFF-THREAD REPORT, and it is one frame wide.
+
+    uMainForm's accessors report their own caller, which for every main-window
+    write is WriteMainWindowText -- the funnel. So eight bench runs all named
+    the same address and none of them named the code that actually asked for
+    the write. "Which callers write an element off the main thread" is the
+    question step 4 is scoped by, and it could not be answered from the funnel.
+
+    Asked HERE because this is the entry point ~75 callers use, so
+    get_caller_addr names one of them rather than naming us.
+
+    The write itself is unchanged and still goes through: SetElementText defers
+    and RefreshMainWindowElementColors is requested as a main-thread job. This
+    reports, it does not gate. }
+  if not OnMainThread then
+     begin
+     ReportOffMainThread('SetMainWindowText', get_caller_addr(get_frame));
+     end;
+
   if (Text = '') then
     if TWindows[Window].mweE then
        begin
