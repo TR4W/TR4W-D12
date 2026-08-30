@@ -61,6 +61,13 @@ $lints = @(
    # about something else, and nothing would point at it.
    @{ Name = 'Lint-DomainPurity';    Arg = (Join-Path $Tr4wDir 'src\domain'); NeedsFpc = $false }
    @{ Name = 'Lint-LineEndings';     Arg = $Tr4wDir; NeedsFpc = $false }
+   # AND THE TOOLING, which was unguarded until 2026-08-29 and paid for it:
+   # tools/i18n/po_lint.py accumulated 361 DOUBLED carriage returns from a
+   # script that CRLF-ified content that was already CRLF. Python treats a
+   # doubled CR as whitespace, so it ran perfectly and nothing noticed. The
+   # lint that exists for exactly this never looked here, because it was
+   # pointed at tr4w\ and the i18n pipeline lives in tools\.
+   @{ Name = 'Lint-LineEndings';     Arg = (Join-Path (Split-Path $Tr4wDir -Parent) 'tools'); NeedsFpc = $false }
    # The BOM's sibling, and it took six silent losses in one session to earn its
    # place: line endings were gated, encoding was not. $Tr4wDir because tr4w.lpr
    # and the test .dpr files carry BOMs too and live outside src\.

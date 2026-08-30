@@ -5108,8 +5108,8 @@ msgstr "%s traducción por %s"
 #. Section: UTELNET
 #: utr4wstrings:tc_telnet tr4w/src/lang/tr4w_consts_eng.pas:195
 msgctxt "TC_TELNET"
-msgid "Connect\\000Disconnect\\000Commands\\000Freeze\\000Clear\\000SH/50\\000\\000"
-msgstr "Conectar\\000Desconectar\\000Comandos\\000Congelar\\000Limpiar\\000100\\000\\000"
+msgid "Connect\000Disconnect\000Commands\000Freeze\000Clear\000SH/50\000\000"
+msgstr "Conectar\000Desconectar\000Comandos\000Congelar\000Limpiar\000100\000\000"
 
 #. Section: LOGSUBS2
 #: utr4wstrings:tc_bandchangedisabled tr4w/src/lang/tr4w_consts_eng.pas:365
