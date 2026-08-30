@@ -27,6 +27,14 @@ ShowElement(mweWSJTX, True);
 That is a UDP listener knowing the name of a widget. The same shape appears in
 `uRadioPolling` (frequency, PTT status), `uWinKey` and `LOGK1EA`.
 
+**Two of those four were already stale when this was written, and the correction
+matters more than the list does.** `LOGK1EA`'s only `SetMainWindowText` is
+commented out, and its one live edge into the UI (`QueueStartSendingKey`) was
+already marshalled. `uRadioPolling`'s frequency write went through
+`DisplayFrequency`, which has *no callers at all*. So the plan opened by naming
+two units that needed nothing -- which is exactly the reason step 4 below is now
+gated on the program's own evidence rather than on a reading of the tree.
+
 **It worked for twenty years because Win32 made it work.** `SetWindowTextW`,
 `ShowWindow` and `EnableWindow` are kernel calls: Windows marshals them to the
 window's own thread. Nobody wrote that down, and nobody had to. Assigning an LCL
@@ -88,6 +96,39 @@ The direction is right in everything written recently:
 4. `SetMainWindowText` and the element accessors become internal to `src/ui/`.
    The guard stays as a backstop; it should simply stop having anything to
    catch.
+
+## Steps 1-3 are done. Step 4 is gated, deliberately
+
+| state object | replaced | commit |
+|---|---|---|
+| `TWSJTXState` | a UDP listener thread naming `mweWSJTX` | earlier |
+| `TRadioState` | the radio polling thread writing `mwePTTStatus` | `f46c5d5c` |
+| `TKeyerState` | THREE writers -- `wkOpen` plus both WinKey read threads | `a585a7e5` |
+
+**Step 4 was not started next, and the reason is the finish line it is measured
+against.** It is roughly sixty mechanical call-site moves in `LOGWIND` and
+`MainUnit`, every one of them already on the main thread -- a layering
+improvement with no thread-safety payoff. Its stated success condition is that
+the guard has "nothing to catch", and **that condition was unaskable**: all
+three element accessors deferred off-thread work in complete silence, so the
+only available evidence was a hand call-graph walk. That form of evidence has
+been wrong three times in this tree, twice in this document.
+
+So the guard was made to report first, reusing `ReportOffMainThread` -- the
+same mechanism its sibling `ControlUsable` has always used for the entry fields,
+and the same mechanism whose silence licensed *that* conversion ("a full bench
+session with a K4 produced none"). A bench session now answers "does any thread
+still write a main-window element" in the log, and step 4 can be justified by
+what the program says rather than by what a search found.
+
+The same change closed a gap it surfaced: `SetElementColors` was the one
+accessor of four with **no thread guard at all**. Its known off-thread caller is
+safe by a different mechanism -- `uRadioPolling` registers
+`RefreshMainWindowElementColors` as a main-thread job -- which is precisely the
+kind of safety that holds only while one registration keeps holding.
+
+**Next: run a bench session and read `tr4w.log`.** Off-thread element writers
+are named there, once each.
 
 **Expected argument against, answered in advance:** this is a port, and the
 existing design is defensible for a port -- it preserves behaviour, every step

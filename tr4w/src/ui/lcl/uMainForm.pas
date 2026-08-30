@@ -395,7 +395,7 @@ end;
 type
    { AN ELEMENT OPERATION THAT ARRIVED ON THE WRONG THREAD.  See the note on
      ElementOnMainThread for why this exists. }
-   TElementOp = (eoText, eoShow, eoEnable);
+   TElementOp = (eoText, eoShow, eoEnable, eoColors);
 
    PElementWork = ^TElementWork;
    TElementWork = record
@@ -403,6 +403,7 @@ type
       Element: TMainWindowElement;
       Text: string;
       Flag: boolean;
+      Back, Fore: TColor;   // eoColors only
    end;
 
 function ControlUsable(const aCtrl: TWinControl): boolean; forward;
@@ -412,6 +413,12 @@ function ControlUsable(const aCtrl: TWinControl): boolean; forward;
 function ElementOnMainThread(const aOp: TElementOp;
                              const aElement: TMainWindowElement;
                              const aText: string; const aFlag: boolean): boolean; forward;
+
+{ The colour accessor's arm of the same guard.  Separate because colours are two
+  TColors rather than a string and a flag, and widening the shared signature to
+  carry four payload arguments for the sake of one caller reads worse than this. }
+function ElementOnMainThreadColors(const aElement: TMainWindowElement;
+                                   const aBack, aFore: TColor): boolean; forward;
 
 { ---------------------------------------------------------------------------
   THE ELEMENT CONTROLS.
@@ -509,6 +516,18 @@ end;
 procedure SetElementColors(const aElement: TMainWindowElement;
                            const aBack, aText: TColor);
 begin
+   { THIS WAS THE ONE ACCESSOR OF THE FOUR WITHOUT A THREAD GUARD, and there is
+     no reason for that beyond the order they were written in.  Its known
+     off-thread caller is safe by a DIFFERENT mechanism -- uRadioPolling
+     registers RefreshMainWindowElementColors as a main-thread job -- which is
+     precisely the fragile kind of safety this exercise removes: it holds only
+     while that one registration keeps holding.  A colour write is also not a
+     hypothetical: the WSJT-X indicator's colour is what five separate defects
+     were about. }
+   if not ElementOnMainThreadColors(aElement, aBack, aText) then
+      begin
+      Exit;
+      end;
    if not ElementUsable(aElement) then
       begin
       Exit;
@@ -666,6 +685,30 @@ begin
       Exit;
       end;
 
+   { IT DEFERRED SILENTLY UNTIL NOW, AND THAT WAS THE GAP.
+
+     Its sibling guard eight hundred lines up -- ControlUsable, for the entry
+     fields -- has always called ReportOffMainThread, and that report is what
+     licensed the entry-field conversion: "EntryUsable names every distinct
+     off-main-thread caller, and a full bench session with a K4 produced none."
+     THE PROGRAM SAID SO, RATHER THAN ME.
+
+     The element guard made the same claim unaskable.  It quietly did the right
+     thing and told nobody, so "does any thread still write a main-window
+     element" had no answer short of a hand call-graph walk -- the exact form of
+     evidence that has been wrong three times in this tree.
+
+     DISPLAY_STATE_MODEL_PLAN.md sets the finish line as "the guard stays as a
+     backstop; it should simply stop having anything to catch."  That is not a
+     checkable condition while the backstop is mute.  Now a bench session
+     answers it, and the remaining step -- making these accessors internal to
+     src/ui -- can be justified by evidence instead of by inspection.
+
+     Deduped by caller address inside ReportOffMainThread, so a per-frame writer
+     costs one line in the log, not thousands. }
+   ReportOffMainThread('main window element accessor',
+                       get_caller_addr(get_frame));
+
    Result := False;
    if (Application = nil) or Application.Terminated then
       begin
@@ -685,6 +728,41 @@ begin
    Application.QueueAsyncCall(GDeferrer.RunElement, PtrInt(work));
 end;
 
+function ElementOnMainThreadColors(const aElement: TMainWindowElement;
+                                   const aBack, aFore: TColor): boolean;
+var
+   work: PElementWork;
+begin
+   Result := True;
+   if OnMainThread then
+      begin
+      Exit;
+      end;
+
+   ReportOffMainThread('main window element colours',
+                       get_caller_addr(get_frame));
+
+   Result := False;
+   if (Application = nil) or Application.Terminated then
+      begin
+      Exit;
+      end;
+
+   if GDeferrer = nil then
+      begin
+      GDeferrer := TEntryDeferrer.Create;
+      end;
+
+   New(work);
+   work^.Op := eoColors;
+   work^.Element := aElement;
+   work^.Text := '';
+   work^.Flag := False;
+   work^.Back := aBack;
+   work^.Fore := aFore;
+   Application.QueueAsyncCall(GDeferrer.RunElement, PtrInt(work));
+end;
+
 procedure TEntryDeferrer.RunElement(Data: PtrInt);
 var
    work: PElementWork;
@@ -699,6 +777,7 @@ begin
         eoText:   SetElementText(work^.Element, work^.Text);
         eoShow:   ShowElement(work^.Element, work^.Flag);
         eoEnable: EnableElement(work^.Element, work^.Flag);
+        eoColors: SetElementColors(work^.Element, work^.Back, work^.Fore);
       end;
    finally
       Dispose(work);
