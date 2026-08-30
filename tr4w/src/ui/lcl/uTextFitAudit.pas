@@ -104,6 +104,107 @@ begin
       end;
 end;
 
+function SlackRight(aControl: TControl): integer;
+{ How much room is there to GROW this control before it hits something.
+
+  A finding says a caption needs more width than it has. It does not say whether
+  that is fixable -- and the two cases want completely different work:
+
+    slack >= the shortfall   widen the control in the .lfm. One line.
+    slack <  the shortfall   something else has to move, which is a layout
+                             change, or the text has to get shorter.
+
+  Without this every finding looks the same and the only way to tell them apart
+  is to open each form in the designer and look. Measured 2026-08-29 after a
+  21-language sweep produced about thirty overruns and no way to triage them.
+
+  The nearest sibling to the RIGHT whose vertical extent overlaps ours is what
+  we would collide with; with none, the parent's client edge is the limit.
+  Siblings that do not overlap vertically are on another row and are irrelevant,
+  which is why this is not simply "the next control by Left". }
+var
+   i, myRight, myTop, myBottom, limit: integer;
+   sib: TControl;
+begin
+   myRight  := aControl.Left + aControl.Width;
+   myTop    := aControl.Top;
+   myBottom := aControl.Top + aControl.Height;
+
+   if aControl.Parent = nil then
+      begin
+      Result := 0;
+      Exit;
+      end;
+
+   limit := aControl.Parent.ClientWidth;
+
+   for i := 0 to aControl.Parent.ControlCount - 1 do
+      begin
+      sib := aControl.Parent.Controls[i];
+      if (sib = aControl) or (not sib.Visible) then
+         begin
+         Continue;
+         end;
+      // Another row: cannot collide however wide we grow.
+      if (sib.Top + sib.Height <= myTop) or (sib.Top >= myBottom) then
+         begin
+         Continue;
+         end;
+      if (sib.Left >= myRight) and (sib.Left < limit) then
+         begin
+         limit := sib.Left;
+         end;
+      end;
+
+   Result := limit - myRight;
+   if Result < 0 then
+      begin
+      Result := 0;
+      end;
+end;
+
+function SlackBelow(aControl: TControl): integer;
+{ The same question downwards, for a word-wrapped label that needs another line. }
+var
+   i, myBottom, myLeft, myRight, limit: integer;
+   sib: TControl;
+begin
+   myBottom := aControl.Top + aControl.Height;
+   myLeft   := aControl.Left;
+   myRight  := aControl.Left + aControl.Width;
+
+   if aControl.Parent = nil then
+      begin
+      Result := 0;
+      Exit;
+      end;
+
+   limit := aControl.Parent.ClientHeight;
+
+   for i := 0 to aControl.Parent.ControlCount - 1 do
+      begin
+      sib := aControl.Parent.Controls[i];
+      if (sib = aControl) or (not sib.Visible) then
+         begin
+         Continue;
+         end;
+      if (sib.Left + sib.Width <= myLeft) or (sib.Left >= myRight) then
+         begin
+         Continue;
+         end;
+      if (sib.Top >= myBottom) and (sib.Top < limit) then
+         begin
+         limit := sib.Top;
+         end;
+      end;
+
+   Result := limit - myBottom;
+   if Result < 0 then
+      begin
+      Result := 0;
+      end;
+end;
+
 function Identify(aControl: TControl): string;
 { What to call a control in a report.
 
@@ -193,9 +294,9 @@ begin
       if (lines * lineHeight) > aControl.Height then
          begin
          logger.Warn('TextFit: %s.%s wraps to %d line(s) needing %dpx of ' +
-                     'height, has %dpx -- "%s"',
+                     'height, has %dpx, slack %dpx -- "%s"',
                      [aForm, Identify(aControl), lines, lines * lineHeight,
-                      aControl.Height, caption]);
+                      aControl.Height, SlackBelow(aControl), caption]);
          Result := 1;
          end;
       Exit;
@@ -203,8 +304,9 @@ begin
 
    if needs > (Available(aControl) - SLACK_PX) then
       begin
-      logger.Warn('TextFit: %s.%s needs %dpx, has %dpx -- "%s"',
-                  [aForm, Identify(aControl), needs, Available(aControl), caption]);
+      logger.Warn('TextFit: %s.%s needs %dpx, has %dpx, slack %dpx -- "%s"',
+                  [aForm, Identify(aControl), needs, Available(aControl),
+                   SlackRight(aControl), caption]);
       Result := 1;
       end;
 end;

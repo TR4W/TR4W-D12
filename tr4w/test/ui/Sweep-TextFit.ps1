@@ -171,9 +171,9 @@ foreach ($code in $Lang)
    foreach ($h in $hits)
       {
       # A wrapped label overflows DOWNWARDS, and says so differently.
-      if ($h -match 'TextFit: (\S+) wraps to (\d+) line\(s\) needing (\d+)px of height, has (\d+)px -- "(.*)')
+      if ($h -match 'TextFit: (\S+) wraps to (\d+) line\(s\) needing (\d+)px of height, has (\d+)px, slack (\d+)px -- "(.*)')
          {
-         $key = '{0}|{1}' -f $matches[1], $matches[5]
+         $key = '{0}|{1}' -f $matches[1], $matches[6]
          if (-not $seen.ContainsKey($key))
             {
             $seen[$key] = $true
@@ -183,7 +183,8 @@ foreach ($code in $Lang)
                Needs   = [int]$matches[3]
                Has     = [int]$matches[4]
                Over    = [int]$matches[3] - [int]$matches[4]
-               Caption = ('[wraps to {0} lines] {1}' -f $matches[2], $matches[5])
+               Slack   = [int]$matches[5]
+               Caption = ('[wraps to {0} lines] {1}' -f $matches[2], $matches[6])
             }
             }
          continue
@@ -191,9 +192,9 @@ foreach ($code in $Lang)
       # No '$' anchor: a caption may contain a line break (the function-key
       # messages do), so the log line does not end at the closing quote and an
       # anchored pattern drops exactly the findings most likely to be real.
-      if ($h -match 'TextFit: (\S+) needs (\d+)px, has (\d+)px -- "(.*)')
+      if ($h -match 'TextFit: (\S+) needs (\d+)px, has (\d+)px, slack (\d+)px -- "(.*)')
          {
-         $key = '{0}|{1}' -f $matches[1], $matches[4]
+         $key = '{0}|{1}' -f $matches[1], $matches[5]
          if ($seen.ContainsKey($key)) { continue }
          $seen[$key] = $true
          $results += [pscustomobject]@{
@@ -202,7 +203,8 @@ foreach ($code in $Lang)
             Needs   = [int]$matches[2]
             Has     = [int]$matches[3]
             Over    = [int]$matches[2] - [int]$matches[3]
-            Caption = $matches[4]
+            Slack   = [int]$matches[4]
+            Caption = $matches[5]
          }
          }
       }
@@ -250,14 +252,30 @@ if (-not $Quiet)
          ForEach-Object {
             $how = if ($_.Over -gt 0) { '{0,4}px over ' -f $_.Over }
                    else               { '        snug' }
-            Write-Host ("  {0,-6} {1}  {2,-34} {3}" -f
-                        $_.Lang, $how, $_.Control, $_.Caption)
+            # THE VERDICT, not just the measurement. The auditor now reports how
+            # much room the control has to grow before it hits its neighbour, so
+            # a finding can say which KIND of work it needs instead of leaving a
+            # reader to open the form and look:
+            #
+            #   WIDEN  the slack covers the shortfall -- a one-line .lfm change
+            #   LAYOUT it does not -- something has to move, or the text has to
+            #          get shorter. A reviewer shortening a verbose machine
+            #          translation is a legitimate fix and costs nothing, since
+            #          a fuzzy entry cannot ship until a human clears it.
+            $fix = if ($_.Over -le 0)            { '     ' }
+                   elseif ($_.Slack -ge $_.Over) { 'WIDEN' }
+                   else                          { 'LAYOUT' }
+            Write-Host ("  {0,-6} {1} {2,-6} slack {3,4}px  {4,-34} {5}" -f
+                        $_.Lang, $how, $fix, $_.Slack, $_.Control, $_.Caption)
          }
       $clipped = @($results | Where-Object { $_.Over -gt 0 })
+      $widen   = @($clipped | Where-Object { $_.Slack -ge $_.Over })
       $langs   = @($results | Select-Object -ExpandProperty Lang -Unique)
       Write-Host ''
       Write-Host ("Sweep-TextFit: {0} clipped and {1} snug caption(s) across {2} language(s)." -f
                   $clipped.Count, ($results.Count - $clipped.Count), $langs.Count)
+      Write-Host ("  {0} can be fixed by WIDENING the control; {1} need LAYOUT work or shorter text." -f
+                  $widen.Count, ($clipped.Count - $widen.Count))
       Write-Host 'Painted content is not measured -- see the notes at the top.'
       }
    }
