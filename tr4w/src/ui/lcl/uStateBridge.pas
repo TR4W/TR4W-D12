@@ -94,6 +94,7 @@ uses
    uMainForm,      // ShowElement, SetElementColors
    uWSJTXState,
    uRadioState,    // PTT as state, set from the radio polling thread
+   uKeyerState,    // WinKeyer as state, set from the two read threads
    Tree;           // PTTStatusString -- the ONE rendering of PTT_ON/PTT_OFF
 
 type
@@ -104,6 +105,8 @@ type
       procedure ApplyWSJTX(Data: PtrInt); // main thread only
       procedure PTTChanged;               // subscriber -- ANY thread
       procedure ApplyPTT(Data: PtrInt);   // main thread only
+      procedure KeyerChanged;             // subscriber -- ANY thread
+      procedure ApplyKeyer(Data: PtrInt); // main thread only
    end;
 
 var
@@ -258,6 +261,57 @@ begin
    Application.QueueAsyncCall(GBridge.ApplyPTT, 0);
 end;
 
+{ ------------------------------------------------------------- keyer ------- }
+
+procedure TStateBridge.ApplyKeyer(Data: PtrInt);
+var
+   family, version: integer;
+   caption: string;
+begin
+   if KeyerState = nil then
+      begin
+      Exit;
+      end;
+
+   { THE FORMAT LIVES HERE, not in uWinKey. 'WK%d v%d' is how THIS window
+     spells a family and a version; the keyer only knows what it is.
+
+     Family 0 means nothing has identified itself -- at start-up, and after a
+     close. The element's designed caption is 'WK' (VC.pas:849), so that is what
+     it falls back to rather than 'WK0 v0'. }
+   KeyerState.GetIdentity(family, version);
+   if family > 0 then
+      begin
+      caption := Format('WK%d v%d', [family, version]);
+      end
+   else
+      begin
+      caption := 'WK';
+      end;
+
+   SetMainWindowText(mweWinKey, caption);
+
+   { Was EnableElement(mweWinKey, wkActive) inside wkDispayState, reached from
+     BOTH WinKey read threads. }
+   EnableElement(mweWinKey, KeyerState.Active);
+end;
+
+procedure TStateBridge.KeyerChanged;
+begin
+   // Called from wkOpen and from the two WinKey read threads.
+   if OnMainThread then
+      begin
+      ApplyKeyer(0);
+      Exit;
+      end;
+
+   if (Application = nil) or Application.Terminated then
+      begin
+      Exit;
+      end;
+   Application.QueueAsyncCall(GBridge.ApplyKeyer, 0);
+end;
+
 { ------------------------------------------------------------- install ----- }
 
 procedure RefreshWSJTXIndicator;
@@ -280,6 +334,7 @@ begin
 
    WSJTXState.Subscribe(GBridge.WSJTXChanged);
    RadioState.Subscribe(GBridge.PTTChanged);
+   KeyerState.Subscribe(GBridge.KeyerChanged);
 
    { BRING THE VIEW INTO LINE ONCE -- BUT QUEUED, NOT NOW.
 
@@ -305,6 +360,7 @@ begin
      MainUnit: work that touches controls belongs on the loop. }
    Application.QueueAsyncCall(GBridge.ApplyWSJTX, 0);
    Application.QueueAsyncCall(GBridge.ApplyPTT, 0);
+   Application.QueueAsyncCall(GBridge.ApplyKeyer, 0);
 end;
 
 finalization

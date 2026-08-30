@@ -279,6 +279,8 @@ implementation
 
 uses
   uMainForm,   { the main window's elements are LCL controls }
+  uKeyerState, { the keyer's state. This unit runs on read threads and must not
+                 name a control -- see wkDispayState and wkOpen }
   SysUtils,
   uNet,
   LogDupe,
@@ -293,7 +295,6 @@ function wkOpen: boolean;
 var
   versionByte : Byte;
   family      : Byte;
-  msg         : string;
 begin
   Result := False;
 
@@ -344,8 +345,15 @@ begin
         begin
         family := 1;
         end;
-     msg := Format('WK%d v%d', [family, versionByte]);
-     SetMainWindowText(mweWinKey, msg);
+     { STATE, NOT A WIDGET. This built 'WK%d v%d' and assigned it straight to
+       mweWinKey -- from wkOpen, which uProgramMain starts with tCreateThread.
+       The family and the version are the FACTS; how the main window spells
+       them is uStateBridge's business. Set together so the view cannot see a
+       new family beside an old version. }
+     if KeyerState <> nil then
+        begin
+        KeyerState.SetIdentity(family, versionByte);
+        end;
      end;
   wklpCommTimeouts.ReadTotalTimeoutConstant := 10 - 0;
 //  wklpCommTimeouts.WriteTotalTimeoutConstant := 1;
@@ -1136,7 +1144,15 @@ end;
 
 procedure wkDispayState;
 begin
-  EnableElement(mweWinKey, wkActive);
+  { Reached from wkReadThreadProc and wkReadThreadProc1 -- BOTH READ THREADS --
+    as well as from wkClose. It used to call EnableElement(mweWinKey, wkActive)
+    directly, so two reader threads were enabling and disabling a control.
+    Now it records whether the keyer is answering and uStateBridge does the
+    enabling, on the main thread. }
+  if KeyerState <> nil then
+     begin
+     KeyerState.Active := wkActive;
+     end;
 end;
 
 procedure wkAddCharToHostBuffer(c: AnsiChar);

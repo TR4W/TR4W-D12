@@ -99,6 +99,7 @@ uses
   uDomainState,
   uWSJTXState,
   uRadioState,
+  uKeyerState,
   uStateBridge,
   uFlowGrid,
   uDupeSheetForm,

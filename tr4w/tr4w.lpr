@@ -98,6 +98,7 @@ uses
   uDomainState in 'src\domain\uDomainState.pas',
   uWSJTXState in 'src\domain\uWSJTXState.pas',
   uRadioState in 'src\domain\uRadioState.pas',
+  uKeyerState in 'src\domain\uKeyerState.pas',
   uStateBridge in 'src\ui\lcl\uStateBridge.pas',
   uFlowGrid in 'src\ui\lcl\uFlowGrid.pas',
   uDupeSheetForm in 'src\ui\lcl\uDupeSheetForm.pas',
