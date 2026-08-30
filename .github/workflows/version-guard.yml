@@ -42,7 +42,14 @@ on:
   pull_request:
   push:
     branches:
+      # BOTH NAMES, DELIBERATELY, while `fpc` is renamed to `main` (2026-08-29).
+      # A trigger bound to one branch name fires on NOTHING the moment that
+      # branch is renamed -- the guard does not fail, it simply stops running,
+      # which is the failure mode this repository keeps paying for. Widening
+      # before the rename and narrowing after means there is no window in which
+      # Version.pas is unguarded. Drop `fpc` once the rename is done.
       - fpc
+      - main
 
 # A newer push to the same ref supersedes an in-flight check.
 concurrency:
