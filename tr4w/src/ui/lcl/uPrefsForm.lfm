@@ -1731,7 +1731,7 @@ object PrefsForm: TPrefsForm
       end
       object lblRelayPortInfo: TLabel
         Left = 12
-        Height = 54
+        Height = 64
         Top = 216
         Width = 620
         AutoSize = False
