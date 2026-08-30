@@ -97,6 +97,7 @@ uses
   uStationsForm in 'src\ui\lcl\uStationsForm.pas',
   uDomainState in 'src\domain\uDomainState.pas',
   uWSJTXState in 'src\domain\uWSJTXState.pas',
+  uRadioState in 'src\domain\uRadioState.pas',
   uStateBridge in 'src\ui\lcl\uStateBridge.pas',
   uFlowGrid in 'src\ui\lcl\uFlowGrid.pas',
   uDupeSheetForm in 'src\ui\lcl\uDupeSheetForm.pas',

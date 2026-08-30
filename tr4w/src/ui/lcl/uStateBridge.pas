@@ -92,7 +92,9 @@ uses
    MainUnit,       // WSJTXIndicatorBack -- the one colour rule
    uCFG,           // WSJTXEnabled -- the box tracks the SETTING, not the link
    uMainForm,      // ShowElement, SetElementColors
-   uWSJTXState;
+   uWSJTXState,
+   uRadioState,    // PTT as state, set from the radio polling thread
+   Tree;           // PTTStatusString -- the ONE rendering of PTT_ON/PTT_OFF
 
 type
    { QueueAsyncCall wants a method, so one object owns the hop. }
@@ -100,6 +102,8 @@ type
    public
       procedure WSJTXChanged;             // subscriber -- ANY thread
       procedure ApplyWSJTX(Data: PtrInt); // main thread only
+      procedure PTTChanged;               // subscriber -- ANY thread
+      procedure ApplyPTT(Data: PtrInt);   // main thread only
    end;
 
 var
@@ -201,6 +205,59 @@ begin
    Application.QueueAsyncCall(GBridge.ApplyWSJTX, 0);
 end;
 
+{ ------------------------------------------------------------- PTT --------- }
+
+procedure TStateBridge.ApplyPTT(Data: PtrInt);
+var
+   caption: string;
+begin
+   { THE RENDERING LIVES HERE, and it reuses PTTStatusString rather than
+     restating it. Two spellings of "PTT_ON looks like this" is how they come to
+     disagree -- the same reason ApplyWSJTX defers its colour to the one rule in
+     MainUnit instead of keeping a second copy.
+
+     Note 'ON ' carries a trailing space in that table. Preserved deliberately:
+     this is a behaviour-preserving move of WHERE the decision is made, not a
+     change to what the operator sees. }
+   if RadioState = nil then
+      begin
+      Exit;
+      end;
+
+   { ONE call, not one per arm. Two writes to a control is two places for its
+     value to be decided, and the Win32 ratchet counts them -- it went 65 to 66
+     on the first draft of this, which was the right complaint about the wrong
+     thing: the surface had not grown, the same write had been spelt twice. }
+   if RadioState.PTTOn then
+      begin
+      caption := string(PTTStatusString[PTT_ON]);
+      end
+   else
+      begin
+      caption := string(PTTStatusString[PTT_OFF]);
+      end;
+
+   SetMainWindowText(mwePTTStatus, caption);
+end;
+
+procedure TStateBridge.PTTChanged;
+begin
+   // Called from the RADIO POLLING thread, and from the main thread when a
+   // keyboard or footswitch action toggles PTT. One hop, and only when we are
+   // not already where we need to be.
+   if OnMainThread then
+      begin
+      ApplyPTT(0);
+      Exit;
+      end;
+
+   if (Application = nil) or Application.Terminated then
+      begin
+      Exit;
+      end;
+   Application.QueueAsyncCall(GBridge.ApplyPTT, 0);
+end;
+
 { ------------------------------------------------------------- install ----- }
 
 procedure RefreshWSJTXIndicator;
@@ -222,6 +279,7 @@ begin
    GBridge := TStateBridge.Create;
 
    WSJTXState.Subscribe(GBridge.WSJTXChanged);
+   RadioState.Subscribe(GBridge.PTTChanged);
 
    { BRING THE VIEW INTO LINE ONCE -- BUT QUEUED, NOT NOW.
 
@@ -246,6 +304,7 @@ begin
      which time the handles exist. Same rule as the tool-window restore in
      MainUnit: work that touches controls belongs on the loop. }
    Application.QueueAsyncCall(GBridge.ApplyWSJTX, 0);
+   Application.QueueAsyncCall(GBridge.ApplyPTT, 0);
 end;
 
 finalization

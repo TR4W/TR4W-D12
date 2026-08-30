@@ -128,6 +128,8 @@ implementation
 uses
   uRadioRegistry,   // RadioTypeToken -- the model name, from the factory
    uPanelUpdate,    // cross-thread panel writes -- the seam and why, in that unit
+   uRadioState,     // PTT as STATE. This unit runs on the polling thread and
+                    // must not name a control -- see the note in PTTStatusChanged
    uMainThreadWork; // the UI work below runs on the MAIN thread -- see MarshalledJobs
 
 { ===========================================================================
@@ -1502,7 +1504,23 @@ begin
       end;
 
    tDispalyOnAirTime;
-   SetMainWindowText(mwePTTStatus, PTTStatusString[ActiveRadioPtr.tPTTStatus]);
+
+   // STATE, NOT A WIDGET. This ran
+   //
+   //     SetMainWindowText(mwePTTStatus, PTTStatusString[...tPTTStatus]);
+   //
+   // and it is reached from ProcessFilteredStatus, on the RADIO POLLING THREAD
+   // -- a serial reader assigning a control's caption. Now it records the fact
+   // and src\ui\lcl\uStateBridge.pas decides what the main window shows, on the
+   // main thread. See docs\DISPLAY_STATE_MODEL_PLAN.md.
+   //
+   // Setting it to what it already is notifies nobody, so the poller re-reading
+   // status on every pass costs nothing.
+   if RadioState <> nil then
+      begin
+      RadioState.PTTOn := ActiveRadioPtr.tPTTStatus = PTT_ON;
+      end;
+
    SendStationStatus(sstPTT);
 end;
 
