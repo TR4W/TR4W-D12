@@ -26,6 +26,7 @@ and incremental: reviewed work and earlier seeding are left alone.
 
 import argparse
 import glob
+import html
 import json
 import os
 import re
@@ -59,12 +60,42 @@ DEFAULT_VERIFY = 25
 # back as "% delle esigenze % per %". Masking survives, and restoration is BY
 # INDEX so the original width/precision (%-8s) is exact.
 #
-# Token style matters per model: @0@ works for it/fr/nl/ja/ko but the pt model
-# rewrites it as "@ 0@", which cost 47 Portuguese strings. {0} survives every
-# model tested and cannot collide -- no ENG value contains a brace. The matcher
-# tolerates inserted whitespace anyway, because that is how @0@ failed.
-TOKEN_RE = re.compile(r"\{\s*(\d+)\s*\}")
-
+# HOW FORMAT SPECIFIERS SURVIVE THE ENGINE. Fourth approach, and the first
+# that is not a guess about what a model will leave alone:
+#
+#   @0@  works for it/fr/nl/ja/ko; the pt model rewrites it "@ 0@" -- 47
+#        Portuguese strings lost.
+#   {0}  its replacement, and measurably worse than it looked: braces are
+#        punctuation to these models and get dropped outright.
+#   X0X  alphanumeric, so models mostly leave it alone. Much better, still
+#        not safe -- pt-BR 27/30, ko 29/30.
+#   <ph> HTML elements sent with format=html. The engine is TOLD it is markup
+#        instead of being tricked into ignoring it.
+#
+# MEASURED 2026-08-30, 30 real placeholder strings per language, one local
+# engine, {0} then X0X then <ph>+html:
+#
+#   pt-BR 11 -> 27 -> 30     ro 21 -> 30 -> 30     ko 25 -> 29 -> 30
+#   es    21 -> 30 -> 30     ja 25 -> 30 -> 30     it 26 -> 30 -> 30
+#
+# <ph>+html scored 330/330 across all eleven target codes. THERE IS NO SAFE
+# PLAIN-TEXT MARKER: a model may split, translate or drop anything resembling
+# a word, and which one it does varies BY LANGUAGE PAIR. Stop hunting for a
+# marker and use the channel the engine documents for markup.
+#
+# WHAT SURFACED IT: NY4I reported the same ~15 strings re-submitted on every
+# runallpo.cmd. They were not being re-submitted so much as NEVER SUCCEEDING.
+# A dropped token makes unprotect() reject the translation, msgstr stays
+# empty, and an empty msgstr is exactly what makes an entry a candidate next
+# run -- a permanent loop reporting work it could never complete. Romanian
+# seeded 0 of 14; Brazilian Portuguese 0 of 106.
+#
+# THE COST of format=html is that the payload is markup, so the source is
+# HTML-escaped going out and unescaped coming back. Measured on the 20
+# catalogue strings containing & or < : 13/20 keep them under html, 13/20
+# under text. IDENTICAL. The menu-accelerator '&' that MT eats is a
+# pre-existing quality issue on entries a human reviews anyway.
+TOKEN_RE = re.compile(r'<ph id="(\d+)"\s*></ph>')
 LANGUAGE_KEY = "TC_TRANSLATION_LANGUAGE"
 SKIP_KEYS = {"TC_TRANSLATION_AUTHOR", "TC_TRANSLATOR_EMAIL"}
 
@@ -109,13 +140,20 @@ def is_translatable(source):
 
 
 def protect(text):
+   """English -> HTML payload with each %-specifier as a <ph> element.
+
+   ESCAPED FIRST, THEN TAGGED. The other order escapes the tags we just
+   inserted, and the engine receives literal text reading "&lt;ph id=..." --
+   which it translates like any other words.
+   """
    originals = []
+   escaped = html.escape(text, quote=False)
 
    def sub(m):
       originals.append(m.group(0))
-      return "{%d}" % (len(originals) - 1)
+      return '<ph id="%d"></ph>' % (len(originals) - 1)
 
-   return pc.PLACEHOLDER_RE.sub(sub, text), originals
+   return pc.PLACEHOLDER_RE.sub(sub, escaped), originals
 
 
 def unprotect(text, originals):
@@ -130,7 +168,10 @@ def unprotect(text, originals):
    if found != list(range(len(originals))):
       return text, "tokens %s, expected %s" % (found,
                                                list(range(len(originals))))
-   return TOKEN_RE.sub(lambda m: originals[int(m.group(1))], text), None
+   restored = TOKEN_RE.sub(lambda m: originals[int(m.group(1))], text)
+   # Unescaped AFTER the originals go back: a %-specifier contains no entity,
+   # so restoring first cannot be undone here.
+   return html.unescape(restored), None
 
 
 def mirror_edge_space(src, text):
@@ -196,7 +237,7 @@ def translate(url, texts, target, source="en", batch=DEFAULT_BATCH):
    for i in range(0, len(texts), batch):
       chunk = texts[i:i + batch]
       payload = json.dumps({"q": chunk, "source": source, "target": target,
-                            "format": "text"}).encode("utf-8")
+                            "format": "html"}).encode("utf-8")
       req = urllib.request.Request(url.rstrip("/") + "/translate", data=payload,
                                    headers={"Content-Type": "application/json"})
       with urllib.request.urlopen(req, timeout=120) as fh:
