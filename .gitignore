@@ -125,6 +125,12 @@ tr4w/build_*.log
 .claude/*
 !.claude/settings.json
 !.claude/hooks/
+!.claude/commands/
+
+# commands/ joined the tracked set on 2026-08-30: /update-changes and
+# /monthly-changes were ported from the D7 tree, where they had lived on one
+# machine only. A slash command that exists in a single clone is the same
+# problem the hooks had before they were tracked.
 tr4w/.claude/
 
 # Personal, machine-specific, or scratch. Never tracked.
