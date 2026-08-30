@@ -139,6 +139,8 @@ uses
   , LogEdit // For ShowStationInformation and DetermineIfNewMult and DetermineIfNewDomesticMult
   , LOGWIND // for GetBandMapBandModeFromFrequency
   , uMainForm // QueueClearCallAndFocus -- this unit runs on a UDP thread
+  , Forms     // Application.QueueAsyncCall -- the display batch below
+  , uCrashLog // OnMainThread
   , TF // for SetMainWindowText
   , Tree // for LooksLikeAGrid
   , utils_text
@@ -151,6 +153,132 @@ uses
   , IdStack // for GStack.AddMulticastMembership
   , uConfigValues // for Config.PTTViaCommand
   ;
+
+{ THE DISPLAY REFRESH THAT FOLLOWS A WSJT-X QSO, MOVED OFF THE SOCKET THREAD.
+
+  MEASURED, NOT ASSUMED. A full session on 2026-08-30 (974 spots, 820 WSJT-X
+  messages, 5 clears) named eleven call sites writing main-window elements off
+  the main thread, and TEN of them were this one thread running this one batch:
+
+    UpdateWindows -> DisplayTotalScore, DisplayNextQSONumber,
+                     DisplayQSOsByOpMode, DisplayGridMap,
+                     ShowRemainingMultipliers, both dupe sheets
+    ShowQSOStatus
+    ShowDomesticMultiplierStatus -> DispalayNewMult
+    DisplayBeamHeading -> DispalyGrid
+    CleanUpDisplay
+
+  (The eleventh is tDispalyOnAirTime on the radio polling thread -- a clock
+  tick, unrelated, and left for its own change.)
+
+  WHY MARSHAL THE BATCH RATHER THAN CONVERT ELEVEN ROUTINES TO STATE OBJECTS.
+  DISPLAY_STATE_MODEL_PLAN.md's endgame is a model per fact, and that is still
+  right -- but it was written before anyone knew the list was ten routines
+  behind ONE call. Converting them individually is a large job whose result is
+  identical to this, and several of them (DisplayTotalScore,
+  DisplayNextQSONumber, DisplayQSOsByOpMode) read contest state that the SQLite
+  work is about to redesign. Building state objects around a model due to change
+  is work done twice. NY4I chose this, 2026-08-30.
+
+  THE STATE HALF STAYS ON THIS THREAD, deliberately: ClearContestExchange and
+  the CallAlreadySent/ExchangeHasBeenSent flags are model, not view, and they
+  already ran here. Only the drawing moves.
+
+  ORDER IS PRESERVED. QueueAsyncCall is FIFO, so the batch, the entry-field
+  clear and the cleanup land in the order they were asked for. }
+type
+   TWSJTXUIJob = (wjPostQSO, wjStation, wjCleanUp);
+
+   TWSJTXUIWork = class(TObject)
+   public
+      procedure Run(Data: PtrInt);
+   end;
+
+var
+   GWSJTXUI: TWSJTXUIWork = nil;
+   GWSJTXUILock: TRTLCriticalSection;
+   GStationCall: string = '';
+   GStationGrid: string = '';
+
+procedure TWSJTXUIWork.Run(Data: PtrInt);
+var
+   call, grid: string;
+begin
+   case TWSJTXUIJob(Data) of
+     wjPostQSO:
+        begin
+        UpdateWindows;
+        end;
+
+     wjStation:
+        begin
+        { Copied under the lock: the listener thread can queue a NEWER station
+          while this one is still pending, and reading the globals directly
+          would pair one station's call with the next one's grid. }
+        EnterCriticalSection(GWSJTXUILock);
+        try
+           call := GStationCall;
+           grid := GStationGrid;
+        finally
+           LeaveCriticalSection(GWSJTXUILock);
+        end;
+
+        VisibleLog.ShowQSOStatus(call);
+        if ActiveDomesticMult = GridFields then
+           begin
+           VisibleLog.ShowDomesticMultiplierStatus(AnsiLeftStr(grid, 2));
+           end
+        else
+           begin
+           VisibleLog.ShowDomesticMultiplierStatus(grid);
+           end;
+        DisplayBeamHeading(call, grid);
+        end;
+
+     wjCleanUp:
+        begin
+        CleanUpDisplay;
+        end;
+   end;
+end;
+
+procedure QueueWSJTXUI(const aJob: TWSJTXUIJob);
+begin
+   if GWSJTXUI = nil then
+      begin
+      GWSJTXUI := TWSJTXUIWork.Create;
+      end;
+
+   { Already there: do it now rather than at the next idle, so a main-thread
+     caller keeps the synchronous behaviour it has always had. }
+   if OnMainThread then
+      begin
+      GWSJTXUI.Run(PtrInt(aJob));
+      Exit;
+      end;
+
+   // QueueAsyncCall RAISES on a shut-down queue rather than returning False.
+   if (Application = nil) or Application.Terminated then
+      begin
+      Exit;
+      end;
+   Application.QueueAsyncCall(GWSJTXUI.Run, PtrInt(aJob));
+end;
+
+{ The station WSJT-X is working, as a request to redraw rather than as six
+  display calls made from a socket. }
+procedure QueueStationDisplay(const aCall, aGrid: string);
+begin
+   EnterCriticalSection(GWSJTXUILock);
+   try
+      GStationCall := aCall;
+      GStationGrid := aGrid;
+   finally
+      LeaveCriticalSection(GWSJTXUILock);
+   end;
+   QueueWSJTXUI(wjStation);
+end;
+
 // {$R *.dfm}
 
 // Warn (non-modally) when the operator in a WSJT-X-logged ADIF record
@@ -533,19 +661,13 @@ begin
                     if DXCall <> sCallSentToWindow then
                        begin
                        sCallSentToWindow := DXCall;
-                       VisibleLog.ShowQSOStatus(DXCall);
                        //ShowStationInformation(@DXCall);
                        PutCalltoCallWindow(DXCall);
-                       if ActiveDomesticMult = GridFields then
-                          begin
-                          VisibleLog.ShowDomesticMultiplierStatus(AnsiLeftStr(DXGrid,
-                            2));
-                          end
-                       else
-                          begin
-                          VisibleLog.ShowDomesticMultiplierStatus(DXGrid);
-                          end;
-                       DisplayBeamHeading(DXCall, DXGrid);
+                       { Was six display calls made straight from this UDP
+                         listener; the grid-vs-2-character choice moved with
+                         them because it belongs beside the drawing it
+                         qualifies. }
+                       QueueStationDisplay(DXCall, DXGrid);
                        end
                     else
                        begin
@@ -823,7 +945,7 @@ begin
                       TempRXData.ceComputerID := ComputerID;
                       LogContact(TempRXData, True);
                       tElapsedTimeFromLastQSO := Windows.GetTickCount;
-                      UpdateWindows;
+                      QueueWSJTXUI(wjPostQSO);
                       //ShowStationInformation(@TempRXData.Callsign);
                       ClearContestExchange(TempRXData);
                       LastTwoLettersCrunchedOn := '';
@@ -1581,7 +1703,7 @@ begin
     ELEMENT accessors, which genuinely do defer, and the second is a plain
     field of this object -- neither touches a control from here. }
   QueueClearCallAndFocus;
-  CleanUpDisplay;
+  QueueWSJTXUI(wjCleanUp);
   sCallSentToWindow := '';
 end;
 
@@ -1638,5 +1760,13 @@ begin
      Result := 599;
      end;
 end;
+
+initialization
+   InitCriticalSection(GWSJTXUILock);
+
+finalization
+   GWSJTXUI.Free;
+   GWSJTXUI := nil;
+   DoneCriticalSection(GWSJTXUILock);
 
 end.
