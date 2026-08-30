@@ -59,6 +59,9 @@ implementation
 
 uses
   MainUnit,
+  Forms,           { Application.QueueAsyncCall -- the marshalling below }
+  SyncObjs,
+  uCrashLog,       { OnMainThread }
   uStationsForm;   { the view -- see the model note below }
 
 { ---------------------------------------------------------------------------
@@ -200,6 +203,32 @@ begin
   StationsInsertRow(Result, s);
 end;
 
+{ UpdateStationStatus IS CALLED FROM A SOCKET THREAD, AND IT WRITES A TListView.
+
+  LogContact does display work as well as logging -- UpdateStationStatus,
+  ShowDomesticMultiplierStatus, DisplayHour, DisplayNamePercentage -- and
+  uWSJTX calls LogContact directly from its UDP listener. Measured 2026-08-30:
+  thread 30356, one worked QSO.
+
+  THE MAIN-WINDOW GUARD DOES NOT COVER THIS ONE, and that is the point worth
+  recording. uMainForm's element accessors defer, so everything reaching the
+  main window off-thread was made safe by a funnel. THIS window has its own
+  accessors, and StationsSetCell assigns TListItem.Caption and SubItems with no
+  thread check at all -- ListUsable tests nil and HandleAllocated and nothing
+  else. So the off-thread report, which only instruments SetMainWindowText and
+  the main-window accessors, could never have named it: the converted tool
+  windows each have their own way in.
+
+  A TListView item write from a socket thread is worse than a caption write. It
+  manipulates the widget set's item list and can send LVM_SETITEM and
+  reallocate, so it is the class of race that corrupts rather than the class
+  that flickers.
+
+  MARSHALLED AS A WHOLE ROUTINE, not per cell: it reads the dupe model and then
+  writes six cells from it, and deferring the writes one at a time would let a
+  second QSO interleave and paint half of each. }
+procedure QueueStationStatus(const aCall: CallString; const aIndex: integer); forward;
+
 procedure UpdateStationStatus(Call: CallString; i: integer);
 var
   Index                                 : integer;
@@ -211,6 +240,13 @@ var
   TempIndex                             : integer;
 begin
   if tr4w_WindowsArray[tw_STATIONS_INDEX].WndHandle = 0 then Exit;
+
+  if not OnMainThread then
+     begin
+     QueueStationStatus(Call, i);
+     Exit;
+     end;
+
   Call[length(Call) + 1] := #0;
   if i = -1 then
      begin
@@ -341,10 +377,92 @@ begin
   FillStationsColumn;
 end;
 
+{ ------------------------------------------------------------ marshalling --
+  A FIFO, not a single pending slot. Two QSOs logged in quick succession are two
+  different callsigns, and the LAST one is not the only one that matters here --
+  each has its own row to paint. That is the opposite of the station-display
+  case in uWSJTX, where newest-wins is right because there is one "who are you
+  working" and a newer answer supersedes the older. }
+type
+  TPendingStatus = record
+    Call: CallString;
+    Index: integer;
+  end;
+
+  TStationStatusWork = class(TObject)
+  public
+    procedure Drain(Data: PtrInt);
+  end;
+
+var
+  GStatusQueue: array of TPendingStatus;
+  GStatusLock: TCriticalSection = nil;
+  GStatusWork: TStationStatusWork = nil;
+
+procedure TStationStatusWork.Drain(Data: PtrInt);
+var
+  item: TPendingStatus;
+  n: integer;
+begin
+  while True do
+     begin
+     GStatusLock.Acquire;
+     try
+       n := Length(GStatusQueue);
+       if n = 0 then
+          begin
+          Exit;
+          end;
+       item := GStatusQueue[0];
+       Move(GStatusQueue[1], GStatusQueue[0], (n - 1) * SizeOf(TPendingStatus));
+       SetLength(GStatusQueue, n - 1);
+     finally
+       GStatusLock.Release;
+     end;
+
+     // On the main thread now, so this takes the normal path.
+     UpdateStationStatus(item.Call, item.Index);
+     end;
+end;
+
+procedure QueueStationStatus(const aCall: CallString; const aIndex: integer);
+var
+  n: integer;
+begin
+  if GStatusWork = nil then
+     begin
+     GStatusWork := TStationStatusWork.Create;
+     end;
+
+  GStatusLock.Acquire;
+  try
+    n := Length(GStatusQueue);
+    SetLength(GStatusQueue, n + 1);
+    GStatusQueue[n].Call := aCall;
+    GStatusQueue[n].Index := aIndex;
+  finally
+    GStatusLock.Release;
+  end;
+
+  // Queue first, THEN schedule -- a drain already running picks up what we just
+  // added; the reverse order can leave an entry with no drain pending.
+  // QueueAsyncCall RAISES on a shut-down queue rather than returning False.
+  if (Application = nil) or Application.Terminated then
+     begin
+     Exit;
+     end;
+  Application.QueueAsyncCall(GStatusWork.Drain, 0);
+end;
+
 initialization
+  GStatusLock := TCriticalSection.Create;
   StationsOnShow := @StationsWindowShown;
 
 finalization
+  GStatusWork.Free;
+  GStatusWork := nil;
+  GStatusLock.Free;
+  GStatusLock := nil;
   StationRows.Free;
   StationRows := nil;
 
