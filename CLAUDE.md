@@ -153,8 +153,11 @@ project. It is simply stale.
 installer. `tr4w/FullBuild-D12-deprecated.ps1` still exists but **no longer works**: deleting the
 FMX twins on 2026-08-17 removed units its uses clause needs, so a Delphi build can only be
 reproduced by checking out a commit before that. **DCC32 was retired earlier and is long gone.**
-**Version:** see `tr4w/src/Version.pas` (`TR4W_CURRENTVERSION_NUMBER`) — `5.0.0` as of 2026-08.
-**Website:** https://tr4w.net
+**Version:** see `tr4w/src/Version.pas` (`TR4W_CURRENTVERSION_NUMBER`) — `5.0.2`, published as
+a **GitHub release** on 2026-08-30.
+**Website:** https://tr4w.net — **serves D7 (4.x) ONLY.** 5.x is not distributed there yet, so
+"published" above means the GitHub release page and nothing more. An operator who downloads TR4W
+from the website today gets 4.x, and that is deliberate until the bench block below closes.
 
 ## Where the FPC migration stands
 
@@ -162,11 +165,25 @@ reproduced by checking out a commit before that. **DCC32 was retired earlier and
 `FullBuild.ps1`, get the setup `.exe`. **That passes**, and is re-verifiable with
 `tr4w/build/Test-FreshClone.ps1`. Out of scope, unchanged: 64-bit, SQLite, the contest factory.
 
-Done: the build system, the lints, the unit tests (3978/0), the golden corpus (22/0/4), the LCL
-port of all four designed forms, ~~`tr4wserver`~~ (**regressed 2026-08-23, see below**), the NSIS
-installer, and `release.yml`.
-**The largest open block is still live/bench verification, and nothing in it is provable by code
-review.** Next in line: attaching a `win-ci` runner.
+Done: the build system, the lints, the unit tests (10,211/0), the golden corpus (22/0/4), the LCL
+port of all four designed forms, `tr4wserver` (**the 2026-08-23 regression is fixed** — see
+[Multi-user networking](#6-multi-user-networking)), the NSIS installer, and `release.yml`.
+
+**~~Next in line: attaching a `win-ci` runner.~~ DONE, and PROVEN END TO END on 2026-08-30.**
+`windows11-ci-d12` (`[self-hosted, win-ci]`) built, scanned and published **v5.0.2** from a
+`v5.0.2` tag push in **5½ minutes** — build 3:00, VirusTotal 2:01, release 0:32, against a
+30-minute budget. So the definition of done above is no longer only *re-verifiable* on this
+machine; it has been demonstrated on a different one, from a clean checkout, by something that is
+not a developer.
+
+**That is a BUILD-AND-PUBLISH pipeline, not a distribution channel.** The installer reaches the
+GitHub release page; it does not reach tr4w.net, which still serves 4.x. Do not read a green
+pipeline as "5.x is shipping to operators".
+
+**The largest open block is live/bench verification, and nothing in it is provable by code
+review.** That is what CI cannot buy: the runner proves the tree BUILDS, not that a radio keys or
+a spot decodes. Bench findings still arrive only from a session with real hardware — four defects
+on 2026-08-29/30 came that way and none would have failed a build.
 
 **The FMX twins are gone (2026-08-17)** — deleted at the start of the Win32-to-LCL migration
 rather than after bench-exercising the LCL forms, because FPC cannot compile FMX at all: they
