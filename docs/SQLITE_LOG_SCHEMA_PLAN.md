@@ -593,6 +593,26 @@ That deletes a whole class of silent defect — the edit that never reaches the 
 because someone added a code path and did not set a boolean. So: **yes to the class, and yes to it
 being self-aware.** The only question left is where the SQL goes.
 
+#### The names, so the next discussion is shorter
+
+NY4I: *"no doubt what I'm describing is some particular pattern name, I just don't know the name of
+it — it's just the way I've done it for years."* It is three, all from Fowler's *Patterns of
+Enterprise Application Architecture*:
+
+| what | name | who else uses it |
+|---|---|---|
+| an object that wraps a row and carries its own `Save`/`Load` | **Active Record** | Rails, Django |
+| the object knowing it has been modified since load | **dirty tracking**, the core mechanism of **Unit of Work** | most ORMs |
+| a separate object moving data between class and database, class knows no SQL | **Data Mapper** | **TR4QT** — `struct QSO` + `QSORepository` |
+
+So the choice below is the classic Active Record versus Data Mapper trade, and it is a real trade:
+Active Record wins on ergonomics and on the dirty-flag argument above; Data Mapper wins on layering
+and on being able to unit-test scoring without a database.
+
+What this section recommends is the common hybrid — the entity keeps `Save` and the dirty flag,
+`Save` delegates to a repository. It has no crisp Fowler name; it is usually described as a rich
+domain model with an injected repository.
+
 #### Where `Save` should live: the class delegates, it does not embed SQL
 
 Two shapes, and the difference matters more than it looks:
