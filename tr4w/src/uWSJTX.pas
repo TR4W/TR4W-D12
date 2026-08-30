@@ -705,6 +705,35 @@ begin
                     // cq ny4i el87     a1   OR cq fd ny4i el87  a1
                     slCQMessage.DelimitedText := message;
                     logger.debug('[uWSJTX] Processing message %s', [message]);
+
+                    { INITIALISED HERE, AND THEY NEVER WERE.
+
+                      foundCall and foundGrid are plain local booleans of
+                      OnServerRead, and Pascal does not zero locals.  Every
+                      other local in that block is a STRING -- a managed type
+                      the compiler DOES initialise -- which is exactly why this
+                      survived: the variables either side of them are safe.
+
+                      Entered with stack garbage, a True foundCall skips the
+                      callsign search entirely, DXCall stays '', and the
+                      `if call <> ''` guard below drops the decode. NO
+                      HIGHLIGHT IS SENT AND NOTHING IS LOGGED -- the
+                      "not present in CQ message" warning cannot fire either,
+                      because it needs one of the flags to be False.
+
+                      MEASURED, tr4w.log 2026-08-30: 65 CQ messages processed,
+                      9 callsigns found, 5 grids found, and the warning fired
+                      ZERO times. That zero is the proof -- 56 decodes went
+                      through the search and reported neither success nor
+                      failure. NY4I saw it as a worked dupe (HK3YL) that
+                      WSJT-X never coloured.
+
+                      The `if call <> ''` guard is what keeps this from being
+                      worse than a no-op: without it a stale or empty call
+                      would have been sent to WSJT-X as a highlight. }
+                    foundCall := False;
+                    foundGrid := False;
+
                     if slCQMessage[0] = 'CQ' then
                        begin
                        for i := 1 to slCQMessage.Count - 1 do
@@ -778,7 +807,18 @@ begin
                              logger.debug('[uWSJTX] %s is a MULT (from callsign',
                                                                    [DXCall]);
 
-                             HighlightCall(grid, 2, id);
+                             { THE CALLSIGN, NOT THE GRID.  WSJT-X message 13 is
+                               HighlightCallsign and matches on the CALLSIGN
+                               field, so a grid matches no decode and colours
+                               nothing -- silently.  NY4I spotted it in the log:
+                               "Highlighting call GK03 as a MULT", GK03 being a
+                               grid square.
+
+                               The line above already says "%s is a MULT (from
+                               callsign" and prints DXCall, so the routine
+                               disagreed with its own log.  The dupe branch
+                               above passes DXCall and works. }
+                             HighlightCall(DXCall, 2, id);
                               // Pass back id as given to us but without ? or a1..a7, etc.
                              end
                           else if grid <> '' then
@@ -791,7 +831,10 @@ begin
                                 begin
                                 logger.debug('[uWSJTX] %s is a domestic MULT',
                                               [AnsiLeftStr(grid, 2)]);
-                                HighLightCall(grid, 2, id);
+                                { The MULTIPLIER is the grid; the thing WSJT-X
+                                  can colour is the STATION.  Same message-13
+                                  callsign match as above. }
+                                HighLightCall(DXCall, 2, id);
                                 // Pass back id as given to us
                                 end
                              else
