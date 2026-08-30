@@ -127,7 +127,17 @@ for m in "$here"/*/manifest.json; do
    # SAY WHY, HERE, WHERE THE SET IS STILL KNOWN.  A set that wrote nothing
    # surfaces 26 exports later as a bare "no fresh candidate", by which point
    # the reason is a log entry nobody thought to read.
-   if ! ls "$d12"/*.ADI "$d12"/*.adi >/dev/null 2>&1; then
+   # BOTH GLOBS MUST FAIL, TESTED SEPARATELY.  `ls a b` exits non-zero when
+   # EITHER operand is missing, and Git Bash globs case-sensitively -- so with
+   # the two patterns in one ls, a set that wrote ARKTIK~1.ADI still reported
+   # "wrote NO ADIF" because *.adi matched nothing and stayed literal.
+   #
+   # It fired on all 13 healthy sets, which is worse than not firing at all:
+   # this line exists to say WHY a set produced nothing, and a warning that is
+   # always wrong is one nobody reads on the day it is right.  It also printed
+   # the last app warning beside each one, which made a benign TotalTextOut
+   # message look like the cause of a failure that had not happened.
+   if ! ls "$d12"/*.ADI >/dev/null 2>&1 && ! ls "$d12"/*.adi >/dev/null 2>&1; then
       why=$(last_app_warning)
       printf '  ^^^^^^ %-26s wrote NO ADIF' "$slug"
       [ -n "$why" ] && printf ' -- the app said: %s' "$why"
