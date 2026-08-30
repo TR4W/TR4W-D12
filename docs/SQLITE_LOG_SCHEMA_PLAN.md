@@ -7,6 +7,15 @@ Reference: TR4QT at `C:/projects/TR4QT` (`src/data/schema.sql`, `Database.cpp`,
 it was not a port. So I am open to other ways. But the ideas such as a flat
 table structure, guid where IDs are needed, etc apply."*
 
+**TR4QT IS NOT AN INDEPENDENT OPINION.** NY4I designed it. So where this document
+says "TR4QT does X", that is evidence of *the same architect's consistent
+preference* and of *what that choice cost in practice* — both genuinely useful —
+but it is **not** a second party arriving at the same answer, and it must never
+be cited as one. Anywhere the two agree, the agreement carries no extra weight;
+anywhere they differ, TR4QT is not the tie-breaker. This is already the standing
+rule for it — useful above the engine, never on scoring, multipliers or exchange
+parsing — and it was still got wrong once while writing this file.
+
 Read [`DOMAIN_LAYER_SEQUENCE.md`](DOMAIN_LAYER_SEQUENCE.md) first — it settles
 *why* this comes second (after display state) and it already contains the
 three-tier event-sourcing decision this schema implements.
@@ -691,8 +700,10 @@ in memory drift from what the rows imply.
 
 **Take the struct and the repository.** A value type that knows nothing about the database,
 persisted by something else, is the shape that survives §4e's aliasing hazard *and* keeps scoring
-testable without a database. Note this is TR4QT agreeing with §4d twice over: its QSO is a value
-type like our record, and it is not an Active Record.
+testable without a database. TR4QT is the same shape — a value type, not an Active Record — which
+is worth knowing as precedent but is **not** confirmation: same architect, so it agrees with §4d by
+common authorship rather than by independent arrival. The argument has to stand on the aliasing
+hazard and on testability, both of which it does.
 
 **Leave the full mirror**, unless a measurement demands it — and if it is ever adopted, adopt the
 integrity manager with it, because TR4QT needed one. A copy that can disagree with the log is a
