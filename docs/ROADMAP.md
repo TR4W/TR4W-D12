@@ -698,11 +698,66 @@ converted), and **14** `lParam`/`wParam` parameters declared `Integer`.
 sites to audit, of which most are probably benign and a few are real. That is a bounded, mechanical
 job — days, not months — and it is now a decision about when, not whether.
 
-**Two caveats that have not gone away:**
+**Two caveats, one of them now MEASURED AND RETIRED:**
 
-- `uCRC32` must stay byte-identical to the CRCs already written into on-disk logs.
-- Extended-precision float layout differs on x64; anything reading a binary `.dat` written by a
-  32-bit build has to be checked. (The corpus fixtures are exactly such files.)
+- `uCRC32` must stay byte-identical to the CRCs already written into on-disk logs. **Still owed.**
+- ~~Extended-precision float layout differs on x64; anything reading a binary `.dat` written by a
+  32-bit build has to be checked.~~ **Checked 2026-08-29 for the log record, and it is safe.**
+
+### The log record is architecture-stable — measured, not assumed
+
+This mattered more than it reads, because `ContestExchange` is a plain `record` — **not `packed`** —
+and `SizeOf(ContestExchange)` is used directly as a **file-offset multiplier**
+(`MainUnit.pas:7082`, `:7086`, `:7531`). One byte of drift and every existing `.trw` is unreadable
+and the golden corpus fixtures stop parsing.
+
+Compiled the same probe against `VC.pas` for both targets:
+
+| | `i386-win32` | `x86_64-win64` |
+|---|---:|---:|
+| `SizeOf(ContestExchange)` | **376** | **376** |
+| `SizeOf(QTHRecord)` | 32 | 32 |
+| `SizeOf(TLogHeader)` | 376 | 376 |
+| offset `Band` / `Frequency` / `Callsign` | 6 / 16 / 44 | 6 / 16 / 44 |
+| offset `QTH` / `NumberSent` / `RSTSent` | 114 / 204 / 208 | 114 / 204 / 208 |
+| offset `id` / `sReserved` | 290 / 324 | 290 / 324 |
+
+Identical. The record holds no float and no pointer — enums, ShortStrings and scalars of four bytes
+or fewer — so the hand-packing (the `ZERO_nn: DummyByte` fillers) lands the same way on both. The
+acceptance test is already written: **run the golden corpus against a 64-bit build.** If those 22
+byte-diffs still pass, the on-disk format is proven rather than argued.
+
+**This number has a shelf life — a long one.** NY4I, 2026-08-29: *"ContestExchange is really going
+to be completely redone because it's ultimately gonna be in the database"*, and then, correcting the
+optimism in that: *"let's not make light of the fact that ContestExchange is everywhere in the
+contest logic. Changing that is a pretty significant undertaking, and that of anything is probably a
+candidate for a shim more than anything else."*
+
+Measured: **430 references across 34 units** — `LOGSTUFF.PAS` 94, `MainUnit` 60, `LOGSUBS2` 36,
+`LOGDUPE` 34, and the ADIF, server, external-logger and HamScore paths behind them. This record is
+not a data structure the log happens to use; it is the currency the whole contest engine is written
+in. So it is persisted, not replaced — see `SQLITE_LOG_SCHEMA_PLAN.md` §4d.
+
+What the measurement buys is not permanence. It is that **a 64-bit build can read the logs that
+already exist**, which is required whether or not the record survives: the SQLite importer has to
+read years of operator `.trw` files and the corpus fixtures, and it may well be a 64-bit build doing
+it. The last consumer of this binary format is the importer, and this says the importer can be
+64-bit.
+
+### Consequence for sequencing: 64-bit and SQLite do NOT depend on each other
+
+The only real coupling between them was this record. Had the layout moved, the honest order would
+have been **SQLite first** — because moving the log out of a packed binary format removes the whole
+class of problem, and doing the 64-bit binary-format audit first would then be work thrown away.
+
+It did not move, so they are independent and the order is a scheduling choice:
+
+- **64-bit is the smaller and better-defined job** — two compile errors and roughly 120 pointer-width
+  sites, "days, not months" — and it is not gated on anything above.
+- **SQLite is preceded by the display-state model** (`DOMAIN_LAYER_SEQUENCE.md`), so it has a longer
+  runway before it starts.
+- The 64-bit DLL set grows by one when SQLite lands (`sqlite3.dll`, alongside HamLib and OpenSSL).
+  If 64-bit goes first, ship the 64-bit SQLite from the start and that cost disappears.
 
 ---
 

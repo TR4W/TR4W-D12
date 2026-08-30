@@ -478,6 +478,235 @@ here so the schema does not foreclose them:
 
 ---
 
+### 4d. `ContestExchange` is PERSISTED, not replaced
+
+The most important scoping decision in this plan, and it is NY4I's:
+
+> *"Let's not make light of the fact that ContestExchange is everywhere in the contest logic of this
+> program. So changing that is a pretty significant undertaking, and that of anything is probably a
+> candidate for a shim more than anything else. Ultimately we might get rid of it."*
+
+Measured 2026-08-29: **430 references across 34 units.**
+
+| unit | refs | | unit | refs |
+|---|---:|---|---|---:|
+| `trdos/LOGSTUFF.PAS` | 94 | | `uExternalLogger` | 19 |
+| `MainUnit` | 60 | | `uHamScore` | 12 |
+| `trdos/LOGSUBS2.PAS` | 36 | | `trdos/LOGEDIT.PAS` | 11 |
+| `trdos/LOGDUPE.PAS` | 34 | | `uNet` | 10 |
+| `uADIF` | 32 | | `uEditQSO` | 8 |
+| `tr4wserverUnit` | 32 | | `trdos/PostUnit.PAS` | 7 |
+
+It is not a data structure the log happens to use. It is the currency the contest engine is written
+in — dupe checking, scoring, exchange parsing, ADIF and Cabrillo export, the multi-op server wire
+format, and the editable log all speak it.
+
+**So the SQLite work does not touch it.** What gets built is a mapper at the storage boundary:
+
+```
+    ContestExchange  <-- one function -->  a row in qso
+```
+
+Read a row, fill a record, hand it to the engine unchanged. Take a record, write a row. Everything
+above the mapper carries on exactly as it does today, and the 430 sites are not edited.
+
+**This is the pattern this tree has already used twice and it is recorded as the model** — CLAUDE.md
+on the radio and CW keyer factories: *"thin adapters over the existing globals first, prove the seam
+on hardware, then delete the legacy path."* Same shape here: adapter first, prove it against the
+golden corpus, and only then consider whether the record becomes an object.
+
+Three consequences worth being explicit about:
+
+1. **The DDL stays close to the record's fields on purpose.** A mapper that is a column-per-field
+   assignment is one that can be read and checked; a clever one is where a silent field drop hides.
+   §4a's `rcvd_*` split is the one place the schema deliberately says more than the record does, and
+   it says more because the record is missing the fact — not because the mapping got creative.
+2. **`ContestExchange` becoming a class is the CONTEST FACTORY's job, not this one.**
+   `DOMAIN_LAYER_SEQUENCE.md` already places it there: *"it is where `ContestExchange` becomes an
+   object."* That is phase 3. This is phase 2, and conflating them would put a 430-site refactor
+   inside a storage change.
+3. **The binary format outlives the record's use as a persistence format**, because the importer
+   still has to read it — years of operator `.trw` files and the corpus fixtures. That is why the
+   32/64-bit layout measurement in `ROADMAP.md` §3 matters even though the record is on its way out:
+   the importer may well be a 64-bit build.
+
+
+---
+
+### 4e. The class — wanted, and where its `Save` should live
+
+NY4I, 2026-08-29:
+
+> *"From an object-oriented standpoint I really do like the idea of ContestExchange essentially
+> becoming a class, and one of the functions of that class is persist, or write to the database, and
+> that handles the writing to the database. Same with reading it in."*
+
+Agreed as the destination, and it is consistent with how this tree already does its best work —
+CLAUDE.md calls the radio and CW-keyer factories *"genuine OOP subsystems"* and the model for what
+comes next. Two things to settle so the class arrives well rather than early.
+
+#### The hazard: a record and a class do not behave the same, and Pascal will not tell you
+
+This is the single biggest risk in the whole plan, and it is invisible to the compiler.
+
+```pascal
+   var a, b: ContestExchange;   // RECORD  -- b := a COPIES
+   b := a;  b.Callsign := 'W1AW';          // a is untouched
+
+   var a, b: TContestExchange;  // CLASS   -- b := a ALIASES
+   b := a;  b.Callsign := 'W1AW';          // a CHANGED TOO
+```
+
+Every one of the 430 sites that assigns, copies or stashes a `ContestExchange` changes meaning, and
+none of them produces a diagnostic. `ZeroMemory(@TempRXData, SizeOf(ContestExchange))`
+(`MainUnit.pas:3522`) stops meaning what it says. `SizeOf` as a file-offset multiplier stops working
+at all. The corpus would catch some of it; aliasing bugs in dupe checking and scoring are exactly
+the kind that pass 22 byte-diffs and then go wrong in a contest.
+
+That is the argument for the shim in §4d — not that the class is wrong, but that it is a **separate
+change from adding a database**, and doing both at once means a storage bug and an aliasing bug
+arriving in the same commit with no way to tell them apart.
+
+#### The strongest argument for the class is one the codebase already makes
+
+NY4I: *"there's such value in having those records all be classes, because then the class can be
+self-aware on if it's been edited, and it can go ahead and persist itself to the database."*
+
+**That is the best argument in this section, and the evidence is already in the tree.**
+`ContestExchange` carries `ceNeedSendToServerAE` — "this QSO was edited after the server got it" —
+and it is set **by hand, at exactly one site**: `uEditQSO.pas:748`. Every other path that could
+modify a QSO has to remember. §4c adds three more flags of the same kind (`server_dirty`,
+`sent_udp`, `udp_dirty`), and each one is another thing a future edit path must not forget.
+
+A record cannot know it was written to. An object can:
+
+```pascal
+   procedure TContestExchange.SetCallsign(const aValue: string);
+   begin
+      if FCallsign = aValue then Exit;
+      FCallsign := aValue;
+      FDirty    := True;          // cannot be forgotten
+   end;
+```
+
+That deletes a whole class of silent defect — the edit that never reaches the multi-op server
+because someone added a code path and did not set a boolean. So: **yes to the class, and yes to it
+being self-aware.** The only question left is where the SQL goes.
+
+#### Where `Save` should live: the class delegates, it does not embed SQL
+
+Two shapes, and the difference matters more than it looks:
+
+| | Active Record | Data Mapper |
+|---|---|---|
+| shape | `Qso.Save` opens/uses the connection itself | `Repo.Save(Qso)`; the class knows no SQL |
+| domain purity | the domain type depends on SQLite | the domain type depends on nothing |
+| testing | needs a database to test scoring | scoring is testable with a plain object |
+| our lint | `Lint-DomainPurity` bans LCL and Windows in `src/domain/`; a type that reaches SQLite is the same coupling one layer over | passes it by construction |
+| TR4QT does | — | **this** — `QSORepository`, `ContestRepository` |
+
+Recommended, and it gives NY4I the method he wants without the coupling:
+
+```pascal
+   // the class HAS a Save. It does not CONTAIN the SQL.
+   procedure TContestExchange.Save;
+   begin
+      FRepo.Store(Self);        // injected; the repository owns the statement
+   end;
+```
+
+The call site reads as asked — `Qso.Save` — while the SQL, the prepared statements and the
+connection stay in one unit that can be swapped for a test double. It also keeps §9b's rule intact:
+one connection and one set of prepared statements, owned by the repository, not created per object.
+
+#### So the order stands
+
+1. **Phase 2, this document:** the record, persisted through a mapper. No semantics change, 430
+   sites untouched, and the corpus stays a valid oracle across the move — which is the whole reason
+   it survives the migration.
+2. **Phase 3, the contest factory:** `TContestExchange` becomes a class, with `Save`/`Load`
+   delegating to the repository the mapper already is. `DOMAIN_LAYER_SEQUENCE.md` already puts the
+   record-to-object move there, and by then the storage is proven and any aliasing defect has only
+   one possible cause.
+
+The mapper written in phase 2 is not thrown away by phase 3. It **becomes** the repository.
+
+
+---
+
+### 4f. Is the in-memory log a `TList<TContestExchange>`?
+
+NY4I's follow-on: *"if it's a class, should the in-memory log simply be a TList of ContestExchange
+objects?"* — and then, rightly: *"it's probably worth taking a look at TR4QT and seeing how it did
+it."*
+
+#### What TR4QT actually does
+
+Read 2026-08-29. It answers in three parts, and it does not all point one way:
+
+| | TR4QT |
+|---|---|
+| the QSO type | `struct QSO` — `src/models/QSO.h:37`. A plain **value** type, not a class |
+| does it persist itself? | **No.** `QSORepository::saveQSO(QSO& qso, int contestId)` — Data Mapper, as §4e recommends |
+| the in-memory log | `QList<QSO> loadedQSOs` — `src/controllers/ContestManager.h:57`. **The whole log, held open** |
+
+So NY4I's instinct matches the reference on the *collection* and not on the *class*: TR4QT keeps a
+full in-memory list of every QSO and passes it by const-reference —
+`QSOLogger::logQSO(const Input&, const QList<QSO>& existingQSOs)` dupe-checks against the list rather
+than querying the database.
+
+**And the price of that choice is visible in the same codebase.** There is a whole
+`DataIntegrityManager` whose job is reconciling the two copies, and its signature names the problem:
+
+```cpp
+    QString fullIntegrityCheck(const QList<QSO>& memoryQSOs, bool criticalOnly);
+```
+
+`memoryQSOs`, checked against the database. That class exists because the list and the table can
+disagree — the cost §9a predicts, made concrete. It also carries a `rescore` that recalculates
+points, dupe status and multiplier flags across the whole contest, precisely because derived values
+in memory drift from what the rows imply.
+
+#### What to take, and what to leave
+
+**Take the struct and the repository.** A value type that knows nothing about the database,
+persisted by something else, is the shape that survives §4e's aliasing hazard *and* keeps scoring
+testable without a database. Note this is TR4QT agreeing with §4d twice over: its QSO is a value
+type like our record, and it is not an Active Record.
+
+**Leave the full mirror**, unless a measurement demands it — and if it is ever adopted, adopt the
+integrity manager with it, because TR4QT needed one. A copy that can disagree with the log is a
+contest logger showing the wrong score, which is the same reason §11/3 refused a `multipliers`
+table.
+
+#### So: as a result set yes, as "the log" no
+
+The difference is lifetime, not type.
+
+| use | shape | why |
+|---|---|---|
+| a query result — one band, a browser page | `TObjectList<TContestExchange>` | built, read, freed. Cannot drift: it does not outlive the question |
+| rows visible in the editable log | a small window buffer | bounded by `LVS_NOSCROLL`; re-read on change (§11a) |
+| the whole log, held open | **no** | that is the mirror, and it brings an integrity manager with it |
+
+Three practical notes if a list is used:
+
+- **`TObjectList<T>`, not `TList<T>`.** With records, freeing the list was the whole job; with
+  classes a `TList` frees the pointers and leaks every object. `TObjectList` and `OwnsObjects` make
+  you answer the ownership question a record never asked.
+- **`Generics.Collections` needs `{$MODE Delphi}`**, which `tr4w.inc` already sets tree-wide — worth
+  knowing before someone reaches for `fgl`.
+- **The virtual list wants O(1) by index** (§11a's `OnData` asks for row *N*). A `TObjectList` gives
+  it, and it only has to hold the visible window rather than ten thousand rows.
+
+**One honest caveat.** A full in-memory list is not absurd here: 10,000 records at ~400 bytes is
+about 4 MB, and dupe and multiplier checks are the hottest paths in the program. If a measurement
+ever shows a query per keystroke is too slow, a bounded cache is the answer — with the measurement
+attached, per §9a's rule that the exception is justified by a number and not by a fear.
+
+
+---
+
 ## 5. Identity — GUIDs
 
 A GUID per QSO and per contest, `TEXT`, separate from the `INTEGER PRIMARY KEY`.
