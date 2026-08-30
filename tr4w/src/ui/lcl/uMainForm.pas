@@ -420,13 +420,15 @@ function ControlUsable(const aCtrl: TWinControl): boolean; forward;
   queue it uses lives.  Called by the three element accessors above it. }
 function ElementOnMainThread(const aOp: TElementOp;
                              const aElement: TMainWindowElement;
-                             const aText: string; const aFlag: boolean): boolean; forward;
+                             const aText: string; const aFlag: boolean;
+                             const aCaller: CodePointer): boolean; forward;
 
 { The colour accessor's arm of the same guard.  Separate because colours are two
   TColors rather than a string and a flag, and widening the shared signature to
   carry four payload arguments for the sake of one caller reads worse than this. }
 function ElementOnMainThreadColors(const aElement: TMainWindowElement;
-                                   const aBack, aFore: TColor): boolean; forward;
+                                   const aBack, aFore: TColor;
+                                   const aCaller: CodePointer): boolean; forward;
 
 { ---------------------------------------------------------------------------
   THE ELEMENT CONTROLS.
@@ -507,7 +509,8 @@ end;
 
 procedure SetElementText(const aElement: TMainWindowElement; const aText: string);
 begin
-   if not ElementOnMainThread(eoText, aElement, aText, False) then
+   if not ElementOnMainThread(eoText, aElement, aText, False,
+                            get_caller_addr(get_frame)) then
       begin
       Exit;
       end;
@@ -532,7 +535,8 @@ begin
      while that one registration keeps holding.  A colour write is also not a
      hypothetical: the WSJT-X indicator's colour is what five separate defects
      were about. }
-   if not ElementOnMainThreadColors(aElement, aBack, aText) then
+   if not ElementOnMainThreadColors(aElement, aBack, aText,
+                                  get_caller_addr(get_frame)) then
       begin
       Exit;
       end;
@@ -552,7 +556,8 @@ end;
 
 procedure ShowElement(const aElement: TMainWindowElement; const aVisible: boolean);
 begin
-   if not ElementOnMainThread(eoShow, aElement, '', aVisible) then
+   if not ElementOnMainThread(eoShow, aElement, '', aVisible,
+                            get_caller_addr(get_frame)) then
       begin
       Exit;
       end;
@@ -565,7 +570,8 @@ end;
 
 procedure EnableElement(const aElement: TMainWindowElement; const aEnabled: boolean);
 begin
-   if not ElementOnMainThread(eoEnable, aElement, '', aEnabled) then
+   if not ElementOnMainThread(eoEnable, aElement, '', aEnabled,
+                            get_caller_addr(get_frame)) then
       begin
       Exit;
       end;
@@ -695,7 +701,8 @@ end;
   change, a foot switch. }
 function ElementOnMainThread(const aOp: TElementOp;
                              const aElement: TMainWindowElement;
-                             const aText: string; const aFlag: boolean): boolean;
+                             const aText: string; const aFlag: boolean;
+                             const aCaller: CodePointer): boolean;
 var
    work: PElementWork;
 begin
@@ -726,8 +733,17 @@ begin
 
      Deduped by caller address inside ReportOffMainThread, so a per-frame writer
      costs one line in the log, not thousands. }
-   ReportOffMainThread('main window element accessor',
-                       get_caller_addr(get_frame));
+   { aCaller, NOT get_caller_addr(get_frame).  THE DIFFERENCE IS THE WHOLE
+     VALUE OF THE REPORT.  Taken here, the frame above is SetElementText --
+     always, for every caller in the program -- and ReportOffMainThread dedups
+     by address, so the accessor would name ITSELF once and then go quiet
+     forever.  Measured 2026-08-29: exactly two lines in a full session, which
+     says off-thread writes happen and nothing about WHERE.
+
+     Each accessor now takes its own caller's address and passes it down, so
+     the log names the code that actually wrote the element.  That list is the
+     scope of step 4. }
+   ReportOffMainThread('main window element accessor', aCaller);
 
    Result := False;
    if (Application = nil) or Application.Terminated then
@@ -749,7 +765,8 @@ begin
 end;
 
 function ElementOnMainThreadColors(const aElement: TMainWindowElement;
-                                   const aBack, aFore: TColor): boolean;
+                                   const aBack, aFore: TColor;
+                                   const aCaller: CodePointer): boolean;
 var
    work: PElementWork;
 begin
@@ -759,8 +776,7 @@ begin
       Exit;
       end;
 
-   ReportOffMainThread('main window element colours',
-                       get_caller_addr(get_frame));
+   ReportOffMainThread('main window element colours', aCaller);
 
    Result := False;
    if (Application = nil) or Application.Terminated then
