@@ -30,10 +30,13 @@ Various contributors along the way
 repository was branched.** It is kept because it is the accurate record of that
 line, and it is not maintained here.
 
-The 5.x rewrite -- the FreePascal/LCL port -- is **1,112 commits** and is
-deliberately NOT backfilled into this file. Reconstructing it as changelog
-entries would produce something nobody would read and nobody could verify.
-Where that work IS described:
+The 5.x rewrite -- the FreePascal/LCL port -- is **1,112 commits**, and it is
+summarised under `## Unreleased` as ONE operator-facing section rather than
+backfilled commit by commit. Reconstructing 1,112 entries would produce
+something nobody would read and nobody could verify; what an operator needs
+is what changed for them, which is short.
+
+The technical detail is not lost, it is just not here:
 
 - `CLAUDE.md` -- the architecture and what changed, kept current
 - `docs/` -- one document per subsystem, with the reasoning
@@ -55,7 +58,76 @@ version number is assigned later, when a release is cut. To cut a release: renam
 user-facing — no file paths or source-level jargon.
 -->
 
-_Nothing yet._
+## TR4W 5.0 — what's new for operators
+
+TR4W 5.0 is a rebuild of the program on a modern toolchain. Most of that work is
+invisible by design — the contest engine, scoring and log formats are unchanged,
+and your logs carry across. What follows is what you will actually notice.
+
+#### Languages
+
+- **TR4W now speaks 22 languages, up from 11.** New here: Danish, Dutch,
+  Finnish, French, Greek, Italian, Japanese, Korean, Portuguese, Brazilian
+  Portuguese and Swedish — joining Chinese, Czech, English, German, Mongolian,
+  Polish, Romanian, Russian, Serbian, Spanish and Ukrainian.
+- **One download, every language.** Earlier versions shipped a separate build
+  per language and you had to pick the right one. There is now a single TR4W
+  that follows your Windows language automatically. To force one, start it with
+  `--lang es` (or `--lang` on its own to list the codes).
+- The help file is translated for Czech, Dutch, French, German, Italian, Polish,
+  Romanian, Russian, Spanish and Ukrainian.
+- Machine-assisted translations are marked "needs review" and are **not shown**
+  until a native speaker has checked them, so you will not meet invented wording
+  in the middle of a contest.
+
+#### Spectrum display
+
+- **A new spectrum and waterfall window** showing the band around your operating
+  frequency, so you can see where the activity is rather than tune across it.
+- Works with the **Elecraft K4** and **ten Icom radios**: IC-705, IC-7300 MK2,
+  IC-7600, IC-7610, IC-7700, IC-7760, IC-7850, IC-7851, IC-905 and IC-9700.
+- **The IC-7110 is included provisionally.** The radio is not released yet and
+  no CAT manual is available, so TR4W drives it exactly as an IC-705 — the same
+  commands, the same spectrum settings, the same HamLib model. It should work if
+  the radio follows the IC-705's behaviour, and it will be revised once the
+  manual exists. Reports from anyone who gets one early are welcome.
+
+#### DX cluster
+
+- **The cluster window can be resized**, and the spot text scales with it.
+  Widen it and the type grows; narrow it and it shrinks, so a full spot line
+  always fits without a horizontal scrollbar. The size is clamped at both ends
+  so it stays readable.
+- Reconnection is automatic if the node drops you, and the window remembers its
+  position between sessions.
+
+#### Settings
+
+- **A new Preferences window** replaces the old configuration-command dialog.
+  Settings are grouped into pages with proper controls — drop-downs, checkboxes,
+  colour pickers — instead of typing a command name and a value.
+- **Settings are searchable.** Type in the search box and TR4W finds the setting
+  by its name *or* by the old configuration-command spelling, then jumps to the
+  page and highlights the row. If you have years of muscle memory for
+  `BAND MAP DECAY TIME`, that still finds it.
+
+#### Your equipment, defined once
+
+- **Build a library of your gear instead of reconfiguring for each setup.**
+  Define every radio you own — port, speed, CAT options, CW-by-CAT — and each
+  keeps its own settings. The same applies to WinKeyers, DX cluster connections
+  and rotators.
+- **Profiles then say which of them is live.** A profile names the radio in each
+  slot and how CW reaches it. Switching from a single-radio setup to SO2R, or
+  from the station rig to a portable one, is one selection rather than a round
+  of re-typing ports.
+- Because each radio remembers its own keying settings, moving a rig between
+  stations no longer means setting up CW again.
+
+> **A note on radio support.** TR4W drives over 100 radio models, but only one
+> rig per protocol family has been verified on real hardware. If yours behaves
+> oddly, please report it — the driver is likely correct in shape and wrong in
+> one detail, which is quick to fix with a log.
 
 ---
 
