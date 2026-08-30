@@ -284,7 +284,12 @@ procedure CancelTelnetRetry; forward;
 procedure ArmClusterLogin; forward;
 procedure CancelClusterLogin; forward;
 procedure SendClusterLogin; forward;
-procedure AnswerClusterLoginPrompts(const Line: AnsiString); forward;
+{ aComplete distinguishes a whole line from an unterminated prompt.  It exists
+  for the LINE BUDGET only -- both kinds are still offered to the prompt tests,
+  because a login or password prompt characteristically arrives WITHOUT a
+  terminator and the pending path is the only way it is ever seen. }
+procedure AnswerClusterLoginPrompts(const Line: AnsiString;
+                                    const aComplete: boolean); forward;
 
 var
   // Armed on connect, disarmed when the callsign goes out. See ArmClusterLogin.
@@ -736,7 +741,7 @@ begin
         // else this line might trigger.  Costs one Pos() per line and
         // only while the window is open -- it returns immediately once
         // the password has gone or the budget has run out.
-        AnswerClusterLoginPrompts(TelnetLine);
+        AnswerClusterLoginPrompts(TelnetLine, True);
         ProcessTelnetLine(TelnetLine);
       end;
 
@@ -747,7 +752,7 @@ begin
     cekPending:
       begin
         TelnetLine := aEvent.Text;
-        AnswerClusterLoginPrompts(TelnetLine);
+        AnswerClusterLoginPrompts(TelnetLine, False);
       end;
 
     cekClosed:
@@ -1264,7 +1269,8 @@ end;
 
 // Called for every received line. Answers whichever prompt is outstanding --
 // the login first, then the password -- and returns immediately once neither is.
-procedure AnswerClusterLoginPrompts(const Line: AnsiString);
+procedure AnswerClusterLoginPrompts(const Line: AnsiString;
+                                    const aComplete: boolean);
 begin
    if ClusterLoginArmed then
       begin
@@ -1290,6 +1296,31 @@ begin
       ClusterPasswordArmed := False;
       SendClusterPasswordQuietly;
       SendClusterConnectCommand;
+      Exit;
+      end;
+
+   { COMPLETE LINES ONLY, AND THE NAME IS THE SPECIFICATION.
+
+     This is a budget of LINES -- it says so, and so does the message below.
+     It was decremented once per CALL, and this routine is called from BOTH
+     the cekData and cekPending arms, so a line split across a TCP segment
+     was charged TWICE: once when the transport surfaced the fragment as a
+     possible prompt, once when the terminator arrived.
+
+     Measured on a live NC7J session, 2026-08-29: 63 receive events carried 46
+     complete "DX de" lines, so about a quarter were split.  That turns a
+     60-line budget into roughly 47 and gets worse the busier the node is --
+     and a skimmer node blasting spots during login is precisely when the
+     budget is under pressure.
+
+     The failure is quiet and looks like something else: the budget expires,
+     the stored password is never sent, and the operator sees a node that
+     rejects them.  The log line then states a number of lines that were never
+     counted, so the evidence contradicts itself.
+
+     Charging only the complete line makes the count mean what it says. }
+   if not aComplete then
+      begin
       Exit;
       end;
 
