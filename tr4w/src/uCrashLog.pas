@@ -366,13 +366,40 @@ end;
 
 var
    GOffThreadLock: TRTLCriticalSection;
-   GOffThreadSeen: array of PtrUInt;
+   { ONE ENTRY PER (CALL SITE, THREAD), NOT PER CALL SITE.
+
+     Keyed on the caller alone, this answered "which call sites write off the
+     main thread" -- which is what it was added for -- and could not answer
+     "which threads reach this one", because the first thread to arrive claimed
+     the site and every other was deduped away in silence.
+
+     That mattered on 2026-08-29: a five-minute DX-cluster soak with many spots
+     arriving reported nothing new, but the cluster reader almost certainly
+     writes through WriteMainWindowText, whose entry the RADIO POLLING thread
+     had already claimed seconds after startup. "No new report" could not be
+     read as "the cluster path is clean".
+
+     CAPPED, because the pair is not bounded the way the caller alone is:
+     TReadingThread is destroyed and recreated on every reconnect (see the note
+     in uStateBridge), so a flapping link mints a fresh thread id each time. The
+     cap keeps a bad night from filling the log; the last line says it stopped
+     rather than going quiet, because a silent cap is the failure mode this
+     whole exercise is about. }
+   GOffThreadSeen: array of record
+      Caller: PtrUInt;
+      Thread: TThreadID;
+   end;
+   GOffThreadCapped: boolean = False;
+
+const
+   OFF_THREAD_REPORT_CAP = 64;
 
 procedure ReportOffMainThread(const aSite: string; const aCaller: CodePointer);
 var
    i: integer;
    key: PtrUInt;
    fresh: boolean;
+   capped: boolean;
 begin
    // Before InstallCrashLog there is no main thread on record, so every thread
    // would look wrong.  Say nothing rather than say something false.
@@ -383,26 +410,44 @@ begin
 
    key := PtrUInt(aCaller);
    fresh := True;
+   capped := False;
 
    EnterCriticalSection(GOffThreadLock);
    try
       for i := 0 to High(GOffThreadSeen) do
          begin
-         if GOffThreadSeen[i] = key then
+         if (GOffThreadSeen[i].Caller = key) and
+            (GOffThreadSeen[i].Thread = GetCurrentThreadId) then
             begin
             fresh := False;
             Break;
             end;
          end;
 
-      if fresh then
+      if fresh and (Length(GOffThreadSeen) >= OFF_THREAD_REPORT_CAP) then
+         begin
+         fresh := False;
+         capped := not GOffThreadCapped;   // say it once, then stop
+         GOffThreadCapped := True;
+         end
+      else if fresh then
          begin
          SetLength(GOffThreadSeen, Length(GOffThreadSeen) + 1);
-         GOffThreadSeen[High(GOffThreadSeen)] := key;
+         GOffThreadSeen[High(GOffThreadSeen)].Caller := key;
+         GOffThreadSeen[High(GOffThreadSeen)].Thread := GetCurrentThreadId;
          end;
    finally
       LeaveCriticalSection(GOffThreadLock);
    end;
+
+   if capped then
+      begin
+      CrashLogger.Warn('[Thread] %d distinct (call site, thread) pairs reported '
+                       + '-- no more will be logged this session.  A flapping '
+                       + 'link recreates its reading thread, so this is usually '
+                       + 'reconnects rather than new call sites.',
+                       [OFF_THREAD_REPORT_CAP]);
+      end;
 
    if not fresh then
       begin
