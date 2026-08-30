@@ -808,6 +808,7 @@ Read the specific doc before acting in its area — these are current and this f
 | **The order the three big pieces go in** | **`docs/DOMAIN_LAYER_SEQUENCE.md`** |
 | **Band map -> LCL (read before touching `uBandmap`/`uSpots`)** | **`docs/BANDMAP_LCL_DESIGN.md`** |
 | **I18N: resourcestrings, .po and where every string lives** | **`docs/I18N_PLAN.md`** |
+| **Which `.lfm` captions actually reach the screen** | **`docs/CAPTION_REVIEW.md`** — every design-time caption in `src/ui/lcl`, marked `wired` (assigned at run time, so the `.lfm` text is a placeholder) or `SHIPS` (the English in the `.lfm` is what an operator sees). This is the measurement behind "469 captions ship as English" |
 | **Adding a language (recipe; step 6 is a known gap)** | **`docs/ADDING_A_LANGUAGE.md`** |
 | **Running the i18n scripts** | **`docs/I18N_TOOLS.md`** |
 | **Sending a language to a translator / taking it back** | **`docs/TRANSLATION_HANDOFF.md`** |
@@ -822,7 +823,7 @@ Read the specific doc before acting in its area — these are current and this f
 | Icom network protocol | `docs/ICOM_NETWORK_SPEC.md`, `docs/ICOM_NETWORK_PROTOCOL_GUIDE.md` |
 | **Icom bandscope -> panadapter (read before touching `$27`)** | **`docs/ICOM_SPECTRUM_DESIGN.md`** |
 | Icom scope findings for upstream (pasteable, cites no third project) | `docs/AETHERSDR_ICOM_SCOPE_REPORT.md` |
-| TCI server | `docs/TCI_SERVER_DESIGN.md` |
+| TCI server | `docs/TCI_SERVER_DESIGN.md` — and `docs/TCIServPlanning.txt`, its **superseded** precursor, kept for the reasoning only |
 | Release process | `docs/RELEASE_WORKFLOW.md` (sections 5-8; 1-4 superseded by BUILD.md), `docs/FORK_PROCESS.md` |
 | Hardware test plan | `tr4w/docs/D12_HARDWARE_TEST_PLAN.md` |
 

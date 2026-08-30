@@ -1,0 +1,47 @@
+There is another agent running in this direcftory doing work so this is a plan-only session.
+
+This project implements a websocket server to implement a TCI protocol receiver. It is communicating with external
+clients making TCI calls to AetherSDR (See names of TCI related AetherSDR files below). For example, the Flex radios not Icom radio does not implement the TCI
+protocol so Aether acts as a server to offer a TCI server to TCI clients to talk to radios connected to aether that
+do not support TCI.
+In docs, there are files that discuss the TCI protocol. Additionally TR4W in c:\tr4w-d12 alreadsy implements a TCI
+client. What I want to do is implement a similar tCI server so TCI clients can connect to TR4W and utilize those
+radios that TR4W is controlling.
+
+The reasoning is that currenlty, we open a socket in the uWSJTX unit to allow external programs to connect to TR4W via a tcp server. This is because in the case of a radio with a serial port, only one program canhave that serial port open. Since both TR4W and WSJTX need data from the radio, we alow WSJTX to use its DXCommander client interface to connect to TR4W.  My thought is to implement a TCI server such that we act as thebridge between a TCP client and the radio.
+
+Directory of c:\projects\AetherSDR\docs\architecture
+
+08/01/2026  05:52 PM             8,153 tci-discovery.md
+08/01/2026  05:52 PM             5,173 tci-receivers.md
+08/01/2026  05:52 PM            13,891 tci-routing-ordering.md
+
+Directory of c:\projects\AetherSDR\src\core
+
+08/08/2026  03:22 PM            78,883 TciProtocol.cpp
+08/01/2026  05:52 PM            11,630 TciProtocol.h
+08/01/2026  05:52 PM             5,950 TciRoutingState.cpp
+08/01/2026  05:52 PM             2,185 TciRoutingState.h
+08/08/2026  03:22 PM           164,296 TciServer.cpp
+08/01/2026  05:52 PM            17,880 TciServer.h
+08/01/2026  05:52 PM             3,837 TciTrxMap.cpp
+08/01/2026  05:52 PM             4,183 TciTrxMap.h
+         8 File(s)        288,844 bytes
+
+Directory of c:\projects\AetherSDR\src\gui
+
+08/01/2026  05:52 PM            15,413 TciApplet.cpp
+08/01/2026  05:52 PM             1,750 TciApplet.h
+         2 File(s)         17,163 bytes
+
+Directory of c:\projects\AetherSDR\tests
+
+08/08/2026  03:22 PM            17,689 tci_automation_test.cpp
+08/01/2026  05:52 PM            22,230 tci_protocol_test.cpp
+08/08/2026  03:22 PM            61,437 tci_server_review_test.cpp
+08/01/2026  05:52 PM             3,667 tci_trxmap_test.cpp
+         4 File(s)        105,023 bytes
+         
+         
+Thoughts? Can you plan this out?
+  
