@@ -22,6 +22,29 @@ Various contributors along the way
 
 ---
 
+## The 5.x line starts here
+
+<!-- D12-CHANGELOG-BASELINE: 4096dedd -->
+
+**Everything below this point is the Delphi 7 (4.x) history, inherited when this
+repository was branched.** It is kept because it is the accurate record of that
+line, and it is not maintained here.
+
+The 5.x rewrite -- the FreePascal/LCL port -- is **1,112 commits** and is
+deliberately NOT backfilled into this file. Reconstructing it as changelog
+entries would produce something nobody would read and nobody could verify.
+Where that work IS described:
+
+- `CLAUDE.md` -- the architecture and what changed, kept current
+- `docs/` -- one document per subsystem, with the reasoning
+- the git history itself, whose commit messages carry the detail
+
+`/update-changes` documents commits **after the baseline marker above**. New
+user-facing entries accumulate under `## Unreleased`; a version number is
+assigned when a release is cut.
+
+---
+
 ## Unreleased
 
 <!--
