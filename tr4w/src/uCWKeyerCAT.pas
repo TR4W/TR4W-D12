@@ -86,6 +86,38 @@ uses
    uFactoryRadioBase,   // TCWProsign -- the radio answers, so the type is its
    uCWFraming;
 
+{ Radios already reported as "configured for CW by CAT but unable to do it".
+
+  Reported ONCE PER RADIO rather than per send: this gate sits in the CW path,
+  so an unconditional log line would write one entry per character of every
+  message and bury the thing it is trying to say. }
+var
+   GIncapableReported: array of RadioPtr;
+
+procedure ReportCannotKeyByCAT(radio: RadioPtr);
+var
+   i: integer;
+begin
+   for i := 0 to High(GIncapableReported) do
+      begin
+      if GIncapableReported[i] = radio then
+         begin
+         Exit;
+         end;
+      end;
+
+   SetLength(GIncapableReported, Length(GIncapableReported) + 1);
+   GIncapableReported[High(GIncapableReported)] := radio;
+
+   { ERROR, not a warning: the operator asked for CW over CAT, the program
+     accepted the setting, and nothing will ever be keyed through it. }
+   logger.Error('[CWByCAT] %s is configured for CW BY CAT but the driver does '
+                + 'not declare rcCWByCAT -- NO CW WILL BE SENT over CAT for '
+                + 'this radio.  Either the radio cannot key over CAT, or its '
+                + 'driver is missing the capability.',
+                [radio.RadioName]);
+end;
+
 procedure CWByCATSend(radio: RadioPtr; const Msg: Str160);
 var
    frameRule: uCWFraming.TCWFrameRule;
@@ -106,8 +138,27 @@ begin
    // stood here could not see a string-id radio at all (RadioModel =
    // NoInterfacedRadio by design), so TCI reached this gate and exited -- CW
    // was configured, speed sync worked, and not one cw_macros ever went out.
-   if not ( radio.CWByCAT and radio.HasCapability(rcCWByCAT) ) then
+   { THE TWO HALVES ARE NOT THE SAME KIND OF FAILURE, and collapsing them into
+     one silent Exit is what let the TCI case above run for weeks.
+
+       CWByCAT FALSE -- the operator did not ask for CAT keying.  Silence is
+       correct; another keyer is handling it, and this routine is reachable
+       from SendStringAndStop regardless of which keyer is active.
+
+       CWByCAT TRUE, capability ABSENT -- the operator DID ask, the setting was
+       accepted, and not one character will ever go out.  That is a reported
+       error, per the house rule that a silent downgrade is worse than a loud
+       failure.  It is also the shape of every defect this file documents: TCI
+       keyed nothing, and the TS-850 declared the capability with no frame
+       rule. }
+   if not radio.CWByCAT then
       begin
+      Exit;
+      end;
+
+   if not radio.HasCapability(rcCWByCAT) then
+      begin
+      ReportCannotKeyByCAT(radio);
       Exit;
       end;
 
