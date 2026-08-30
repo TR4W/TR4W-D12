@@ -7,7 +7,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: CN\n"
+"Language: zh_CN\n"
 "X-Source-Language: en\n"
 
 #. Section: General
@@ -236,7 +236,7 @@ msgstr "Qs导入."
 #, fuzzy
 msgctxt "TC_ISADUPE"
 msgid "%s is a dupe!!"
-msgstr ""
+msgstr "%s 是哑巴!"
 
 #. Section: MAIN
 #: tr4w/src/lang/tr4w_consts_eng.pas:48
@@ -250,7 +250,7 @@ msgstr "日志文件出错 !"
 #, fuzzy
 msgctxt "TC_HASIMPROPERSYNTAX"
 msgid "%s has improper syntax!!"
-msgstr ""
+msgstr "%s 语法不当!"
 
 #. Section: MAIN
 #: tr4w/src/lang/tr4w_consts_eng.pas:50
@@ -1329,7 +1329,7 @@ msgstr "资料来源:%s"
 #, fuzzy
 msgctxt "TC_MIN"
 msgid "%u min."
-msgstr ""
+msgstr "%u 分钟。"
 
 #. Section: LOGWIND
 #: tr4w/src/lang/tr4w_consts_eng.pas:233
@@ -1364,7 +1364,7 @@ msgstr "输入%s :"
 #, fuzzy
 msgctxt "TC_PTS"
 msgid "%d Pts"
-msgstr ""
+msgstr "%d 点"
 
 #. Section: LOGWIND
 #: tr4w/src/lang/tr4w_consts_eng.pas:238
@@ -1840,7 +1840,7 @@ msgstr "无法找到%s ."
 #, fuzzy
 msgctxt "TC_INVALIDSTATEMENTIN"
 msgid "Invalid statement in %s !!\r\rLine %u\r%s"
-msgstr ""
+msgstr "无效的语句 %s 来了!\r\r行线 %u\r%s"
 
 #. Section: LOGCFG
 #: tr4w/src/lang/tr4w_consts_eng.pas:350
@@ -1854,7 +1854,7 @@ msgstr "无法找到 CTY.DAT 国家文件 !\r确保此文件与程序在同一�
 #, fuzzy
 msgctxt "TC_INVALIDSTATEMENTINCONFIGFILE"
 msgid "%s:\rInvalid statement in config file.\r\rLine %u\r%s"
-msgstr ""
+msgstr "%s编号 :\r配置文件中无效的语句 。\r\r行线 %u\r%s"
 
 #. Section: LOGCFG
 #: tr4w/src/lang/tr4w_consts_eng.pas:352
@@ -1938,7 +1938,7 @@ msgstr "你现在在跟你的包口说话 使用控制B退出 ."
 #, fuzzy
 msgctxt "TC_YOUALREADYWORKEDIN"
 msgid "You already worked %s in %s!!"
-msgstr ""
+msgstr "你已经工作了 %s 输入 %s来了!"
 
 #. Section: LOGSUBS2
 #: tr4w/src/lang/tr4w_consts_eng.pas:371
@@ -2204,7 +2204,7 @@ msgstr "DIG 质量服务组织"
 #, fuzzy
 msgctxt "TC_ENTERCALLTOBECHECKEDON"
 msgid "Enter call to be checked on %s%s:"
-msgstr ""
+msgstr "输入要检查的呼叫 %s%s编号 :"
 
 #. Section: LOGGRID
 #: tr4w/src/lang/tr4w_consts_eng.pas:429
@@ -4100,7 +4100,7 @@ msgstr "HANDLOG 模式=真实"
 #, fuzzy
 msgctxt "TC_TRMASTERDTAS"
 msgid "TRMASTER.DTA : %s"
-msgstr ""
+msgstr "特马斯特。 %s"
 
 #. Section: FD Additions NY4I
 #: tr4w/src/lang/tr4w_consts_eng.pas:848
@@ -4442,12 +4442,12 @@ msgstr "您想要上传您的 Cabrillo 文件到 SuperChecklPartial 吗 ?"
 #, fuzzy
 msgctxt "tfrmabout.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "还好"
 
 #: tfrmabout.caption
 #, fuzzy
 msgid "About TR4W"
-msgstr ""
+msgstr "关于TR4W"
 
 #: tfrmabout.lblurl.caption
 #, fuzzy
@@ -4458,238 +4458,238 @@ msgstr ""
 #, fuzzy
 msgctxt "tfrmaltd.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "取消"
 
 #: tfrmaltd.btnok.caption
 #, fuzzy
 msgctxt "tfrmaltd.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "还好"
 
 #: tfrmaltd.caption
 #, fuzzy
 msgctxt "tfrmaltd.caption"
 msgid "Dupe Check On Inactive Radio"
-msgstr ""
+msgstr "在不活动电台上检查 Dupe"
 
 #: tfrmaltd.lblprompt.caption
 #, fuzzy
 msgid "Enter call to be checked on:"
-msgstr ""
+msgstr "输入要检查的呼叫 :"
 
 #: tfrmautocq.btncancel.caption
 #, fuzzy
 msgctxt "tfrmautocq.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "取消"
 
 #: tfrmautocq.btnok.caption
 #, fuzzy
 msgctxt "tfrmautocq.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "还好"
 
 #: tfrmautocq.caption
 #, fuzzy
 msgctxt "tfrmautocq.caption"
 msgid "Auto-CQ"
-msgstr ""
+msgstr "自动CQ"
 
 #: tfrmautocq.lbldelay.caption
 #, fuzzy
 msgctxt "tfrmautocq.lbldelay.caption"
 msgid "Number of milliseconds of listening time:"
-msgstr ""
+msgstr "收听时间的毫秒数 :"
 
 #: tfrmautocq.lblmemorykey.caption
 #, fuzzy
 msgctxt "tfrmautocq.lblmemorykey.caption"
 msgid "Press the memory key you want to repeat:"
-msgstr ""
+msgstr "按您要重复的内存密钥 :"
 
 #: tfrmbandmap.caption
 #, fuzzy
 msgctxt "tfrmbandmap.caption"
 msgid "Band map"
-msgstr ""
+msgstr "带图"
 
 #: tfrmbandmap.miallbands.caption
 #, fuzzy
 msgid "BAND MAP ALL BANDS"
-msgstr ""
+msgstr "银行地图"
 
 #: tfrmbandmap.miallmodes.caption
 #, fuzzy
 msgid "BAND MAP ALL MODES"
-msgstr ""
+msgstr "BAND MAP 全部模式"
 
 #: tfrmbandmap.mideletespot.caption
 #, fuzzy
 msgctxt "tfrmbandmap.mideletespot.caption"
 msgid "Delete selected spot"
-msgstr ""
+msgstr "删除选中的点"
 
 #: tfrmbandmap.midisplaycq.caption
 #, fuzzy
 msgid "BAND MAP DISPLAY CQ"
-msgstr ""
+msgstr "BAND 地图显示 CQ"
 
 #: tfrmbandmap.midupedisplay.caption
 #, fuzzy
 msgid "BAND MAP DUPE DISPLAY"
-msgstr ""
+msgstr "豆瓣电影上\"DUPE\"的資料 (简体中文)"
 
 #: tfrmbandmap.mimultsonly.caption
 #, fuzzy
 msgid "BAND MAP MULTS ONLY"
-msgstr ""
+msgstr "仅BAND MAP MULTS"
 
 #: tfrmbandmap.miqsyinactive.caption
 #, fuzzy
 msgid "Send spot to inactive radio"
-msgstr ""
+msgstr "向不活跃的电台发送点播"
 
 #: tfrmbandmap.miremoveall.caption
 #, fuzzy
 msgctxt "tfrmbandmap.miremoveall.caption"
 msgid "Remove all spots"
-msgstr ""
+msgstr "删除所有点"
 
 #: tfrmbandmap.miso2rdisplay.caption
 #, fuzzy
 msgid "BAND MAP SO2R DISPLAY"
-msgstr ""
+msgstr "BAND MAP SO2R 解析"
 
 #: tfrmbandplan.btncancel.caption
 #, fuzzy
 msgctxt "tfrmbandplan.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "取消"
 
 #: tfrmbandplan.btnok.caption
 #, fuzzy
 msgctxt "tfrmbandplan.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "还好"
 
 #: tfrmbandplan.caption
 #, fuzzy
 msgctxt "tfrmbandplan.caption"
 msgid "Band plan"
-msgstr ""
+msgstr "乐队计划"
 
 #: tfrmbeacons.caption
 #, fuzzy
 msgid "Beacons Monitor"
-msgstr ""
+msgstr "灯塔监视器"
 
 #: tfrmct1boh.caption
 #, fuzzy
 msgid "CT1BOH information"
-msgstr ""
+msgstr "CT1BOH 资料"
 
 #: tfrmdupesheet.caption
 #, fuzzy
 msgid "Dupe sheet"
-msgstr ""
+msgstr "调色板"
 
 #: tfrmeditmessage.btncancel.caption
 #, fuzzy
 msgctxt "tfrmeditmessage.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "取消"
 
 #: tfrmeditmessage.btneditwav.caption
 #, fuzzy
 msgctxt "tfrmeditmessage.btneditwav.caption"
 msgid "&Edit"
-msgstr ""
+msgstr "编辑( E)"
 
 #: tfrmeditmessage.btnlist.caption
 #, fuzzy
 msgctxt "tfrmeditmessage.btnlist.caption"
 msgid "List of commands"
-msgstr ""
+msgstr "命令列表"
 
 #: tfrmeditmessage.btnok.caption
 #, fuzzy
 msgctxt "tfrmeditmessage.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "还好"
 
 #: tfrmeditmessage.caption
 #, fuzzy
 msgctxt "tfrmeditmessage.caption"
 msgid "Program message"
-msgstr ""
+msgstr "程序消息"
 
 #: tfrmeditmessage.lblcaption.caption
 #, fuzzy
 msgctxt "tfrmeditmessage.lblcaption.caption"
 msgid "Caption"
-msgstr ""
+msgstr "说明"
 
 #: tfrmeditmessage.lblmessage.caption
 #, fuzzy
 msgctxt "tfrmeditmessage.lblmessage.caption"
 msgid "Message"
-msgstr ""
+msgstr "消息"
 
 #: tfrmeditqso.btncancel.caption
 #, fuzzy
 msgctxt "tfrmeditqso.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "取消"
 
 #: tfrmeditqso.btnplay.caption
 #, fuzzy
 msgid "&Play"
-msgstr ""
+msgstr "播放( P)"
 
 #: tfrmeditqso.btnsave.caption
 #, fuzzy
 msgid "&Save"
-msgstr ""
+msgstr "保存( S)"
 
 #: tfrmeditqso.caption
 #, fuzzy
 msgid "Edit QSO"
-msgstr ""
+msgstr "编辑 QSO"
 
 #: tfrmeditqso.chkdeleted.caption
 #, fuzzy
 msgid "&Deleted"
-msgstr ""
+msgstr "删除( D)"
 
 #: tfrmeditqso.chkdomesticmult.caption
 #, fuzzy
 msgid "Domestic Mult"
-msgstr ""
+msgstr "国内木马"
 
 #: tfrmeditqso.chkdupe.caption
 #, fuzzy
 msgid "Dupe"
-msgstr ""
+msgstr "达普"
 
 #: tfrmeditqso.chkdxmult.caption
 #, fuzzy
 msgid "DX Mult"
-msgstr ""
+msgstr "DX 马特"
 
 #: tfrmeditqso.chkinhibitmults.caption
 #, fuzzy
 msgid "Inhibit Mults"
-msgstr ""
+msgstr "木头"
 
 #: tfrmeditqso.chknamesent.caption
 #, fuzzy
 msgid "Name Sent"
-msgstr ""
+msgstr "发送名称"
 
 #: tfrmeditqso.chkprefixmult.caption
 #, fuzzy
 msgid "Prefix Mult"
-msgstr ""
+msgstr "前缀穆特"
 
 #: tfrmeditqso.chksap.caption
 #, fuzzy
@@ -4699,169 +4699,169 @@ msgstr ""
 #: tfrmeditqso.chkxqso.caption
 #, fuzzy
 msgid "X-QSO"
-msgstr ""
+msgstr "X-QSO 数据"
 
 #: tfrmeditqso.chkzonemult.caption
 #, fuzzy
 msgid "Zone Mult"
-msgstr ""
+msgstr "区木特"
 
 #: tfrmeditqso.dtpdatetime.textfornulldate
 #, fuzzy
 msgid "NULL"
-msgstr ""
+msgstr "NULL 函数"
 
 #: tfrmeditqso.lblage.caption
 #, fuzzy
 msgid "Age"
-msgstr ""
+msgstr "年龄"
 
 #: tfrmeditqso.lblband.caption
 #, fuzzy
 msgctxt "tfrmeditqso.lblband.caption"
 msgid "Band"
-msgstr ""
+msgstr "带"
 
 #: tfrmeditqso.lblcallsign.caption
 #, fuzzy
 msgctxt "tfrmeditqso.lblcallsign.caption"
 msgid "Callsign"
-msgstr ""
+msgstr "调用"
 
 #: tfrmeditqso.lblchapter.caption
 #, fuzzy
 msgid "Chapter"
-msgstr ""
+msgstr "章 次 页 次"
 
 #: tfrmeditqso.lblcheck.caption
 #, fuzzy
 msgid "Check"
-msgstr ""
+msgstr "检查"
 
 #: tfrmeditqso.lblclass.caption
 #, fuzzy
 msgid "Class"
-msgstr ""
+msgstr "类"
 
 #: tfrmeditqso.lblcomputerid.caption
 #, fuzzy
 msgid "Computer ID"
-msgstr ""
+msgstr "计算机标识"
 
 #: tfrmeditqso.lbldate.caption
 #, fuzzy
 msgctxt "tfrmeditqso.lbldate.caption"
 msgid "Date"
-msgstr ""
+msgstr "日期"
 
 #: tfrmeditqso.lbldomestic.caption
 #, fuzzy
 msgid "Domestic"
-msgstr ""
+msgstr "国内"
 
 #: tfrmeditqso.lbldx.caption
 #, fuzzy
 msgid "DX"
-msgstr ""
+msgstr "DX 主题"
 
 #: tfrmeditqso.lblfrequency.caption
 #, fuzzy
 msgid "Frequency, Hz"
-msgstr ""
+msgstr "频率,赫兹"
 
 #: tfrmeditqso.lblmode.caption
 #, fuzzy
 msgctxt "tfrmeditqso.lblmode.caption"
 msgid "Mode"
-msgstr ""
+msgstr "模式"
 
 #: tfrmeditqso.lblname.caption
 #, fuzzy
 msgctxt "tfrmeditqso.lblname.caption"
 msgid "Name"
-msgstr ""
+msgstr "名称"
 
 #: tfrmeditqso.lblnumberrcvd.caption
 #, fuzzy
 msgid "Number Rcvd"
-msgstr ""
+msgstr "数字 Rcvd"
 
 #: tfrmeditqso.lblnumbersent.caption
 #, fuzzy
 msgid "Number Sent"
-msgstr ""
+msgstr "发送数量"
 
 #: tfrmeditqso.lbloperator.caption
 #, fuzzy
 msgctxt "tfrmeditqso.lbloperator.caption"
 msgid "Operator"
-msgstr ""
+msgstr "运算符"
 
 #: tfrmeditqso.lblpostalcode.caption
 #, fuzzy
 msgid "Postal Code"
-msgstr ""
+msgstr "邮政编码"
 
 #: tfrmeditqso.lblpower.caption
 #, fuzzy
 msgid "Power"
-msgstr ""
+msgstr "权力"
 
 #: tfrmeditqso.lblprecedence.caption
 #, fuzzy
 msgid "Precedence"
-msgstr ""
+msgstr "优先发言"
 
 #: tfrmeditqso.lblprefecture.caption
 #, fuzzy
 msgid "Prefecture"
-msgstr ""
+msgstr "县"
 
 #: tfrmeditqso.lblprefix.caption
 #, fuzzy
 msgid "Prefix"
-msgstr ""
+msgstr "前缀"
 
 #: tfrmeditqso.lblqsopoints.caption
 #, fuzzy
 msgid "QSO points"
-msgstr ""
+msgstr "QSO 点"
 
 #: tfrmeditqso.lblqth.caption
 #, fuzzy
 msgid "QTH"
-msgstr ""
+msgstr "卡塔尔"
 
 #: tfrmeditqso.lblradio.caption
 #, fuzzy
 msgid "RADIO ONE"
-msgstr ""
+msgstr "无线电一号"
 
 #: tfrmeditqso.lblrstreceived.caption
 #, fuzzy
 msgid "RST received"
-msgstr ""
+msgstr "收到"
 
 #: tfrmeditqso.lblrstsent.caption
 #, fuzzy
 msgid "RST sent"
-msgstr ""
+msgstr "RST 发送"
 
 #: tfrmeditqso.lbltenten.caption
 #, fuzzy
 msgid "Ten Ten Number"
-msgstr ""
+msgstr "十号"
 
 #: tfrmeditqso.lblzone.caption
 #, fuzzy
 msgid "Zone"
-msgstr ""
+msgstr "区"
 
 #: tfrmfunctionkeys.caption
 #, fuzzy
 msgctxt "tfrmfunctionkeys.caption"
 msgid "Function keys"
-msgstr ""
+msgstr "函数键"
 
 #: tfrmfunctionkeys.pnlf1.caption
 #, fuzzy
@@ -4926,22 +4926,22 @@ msgstr ""
 #: tfrmhamscore.btnpushnow.caption
 #, fuzzy
 msgid "Push Now"
-msgstr ""
+msgstr "现在推"
 
 #: tfrmhamscore.btnresync.caption
 #, fuzzy
 msgid "Resync from log"
-msgstr ""
+msgstr "从日志重同步"
 
 #: tfrmhamscore.caption
 #, fuzzy
 msgid "HamScore"
-msgstr ""
+msgstr "中分数"
 
 #: tfrmhamscore.lblqueuetitle.caption
 #, fuzzy
 msgid "Queued contacts:"
-msgstr ""
+msgstr "队列联系人 :"
 
 #: tfrmhamscore.lblqueuevalue.caption
 #, fuzzy
@@ -4951,245 +4951,245 @@ msgstr ""
 #: tfrmhamscore.lblstatustitle.caption
 #, fuzzy
 msgid "Last status:"
-msgstr ""
+msgstr "最后一个状态 :"
 
 #: tfrminiretire.btnno.caption
 #, fuzzy
 msgid "&No"
-msgstr ""
+msgstr "无( No)"
 
 #: tfrminiretire.btnyes.caption
 #, fuzzy
 msgid "&Yes"
-msgstr ""
+msgstr "是( S)"
 
 #: tfrminiretire.caption
 #, fuzzy
 msgctxt "tfrminiretire.caption"
 msgid "Old settings file"
-msgstr ""
+msgstr "旧设置文件"
 
 #: tfrminiretire.chkdontask.caption
 #, fuzzy
 msgid "chkDontAsk"
-msgstr ""
+msgstr "chkDontAsk 数据"
 
 #: tfrminiretire.lblprompt.caption
 #, fuzzy
 msgid "lblPrompt"
-msgstr ""
+msgstr "lbl 程序化"
 
 #: tfrminputquery.btncancel.caption
 #, fuzzy
 msgctxt "tfrminputquery.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "取消"
 
 #: tfrminputquery.btnok.caption
 #, fuzzy
 msgctxt "tfrminputquery.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "还好"
 
 #: tfrminputquery.caption
 #, fuzzy
 msgctxt "tfrminputquery.caption"
 msgid "TR4W"
-msgstr ""
+msgstr "TR4W 战车"
 
 #: tfrminputquery.lblprompt.caption
 #, fuzzy
 msgid "Enter value:"
-msgstr ""
+msgstr "输入值 :"
 
 #: tfrmintercom.caption
 #, fuzzy
 msgctxt "tfrmintercom.caption"
 msgid "Intercom"
-msgstr ""
+msgstr "对讲机"
 
 #: tfrmkeyeredit.btncancel.caption
 #, fuzzy
 msgctxt "tfrmkeyeredit.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "取消"
 
 #: tfrmkeyeredit.btnok.caption
 #, fuzzy
 msgctxt "tfrmkeyeredit.btnok.caption"
 msgid "Save and close"
-msgstr ""
+msgstr "保存和关闭"
 
 #: tfrmkeyeredit.caption
 #, fuzzy
 msgid "CW keying device"
-msgstr ""
+msgstr "CW 密钥设备"
 
 #: tfrmkeyeredit.chkwkautospace.caption
 #, fuzzy
 msgid "Auto space"
-msgstr ""
+msgstr "自动空格"
 
 #: tfrmkeyeredit.chkwkctspacing.caption
 #, fuzzy
 msgid "CT spacing"
-msgstr ""
+msgstr "CT 间隔"
 
 #: tfrmkeyeredit.chkwkignorespeedpot.caption
 #, fuzzy
 msgid "Ignore speed pot"
-msgstr ""
+msgstr "忽略速度锅"
 
 #: tfrmkeyeredit.chkwkpaddleonlysidetone.caption
 #, fuzzy
 msgid "Paddle-only sidetone"
-msgstr ""
+msgstr "仅放置边托"
 
 #: tfrmkeyeredit.chkwkpaddleswap.caption
 #, fuzzy
 msgid "Swap paddles"
-msgstr ""
+msgstr "交换桨"
 
 #: tfrmkeyeredit.chkwksidetoneenable.caption
 #, fuzzy
 msgid "Sidetone on"
-msgstr ""
+msgstr "侧托"
 
 #: tfrmkeyeredit.grpwinkeyer.caption
 #, fuzzy
 msgid "WinKeyer settings"
-msgstr ""
+msgstr "Winkeyer 设置"
 
 #: tfrmkeyeredit.lblkind.caption
 #, fuzzy
 msgid "Keyer type"
-msgstr ""
+msgstr "密钥类型"
 
 #: tfrmkeyeredit.lblname.caption
 #, fuzzy
 msgctxt "tfrmkeyeredit.lblname.caption"
 msgid "Name"
-msgstr ""
+msgstr "名称"
 
 #: tfrmkeyeredit.lblport.caption
 #, fuzzy
 msgctxt "tfrmkeyeredit.lblport.caption"
 msgid "Port"
-msgstr ""
+msgstr "端口"
 
 #: tfrmkeyeredit.lblwkcomp.caption
 #, fuzzy
 msgid "Compensation"
-msgstr ""
+msgstr "补偿"
 
 #: tfrmkeyeredit.lblwkfirstext.caption
 #, fuzzy
 msgctxt "tfrmkeyeredit.lblwkfirstext.caption"
 msgid "First extension"
-msgstr ""
+msgstr "第一次延期"
 
 #: tfrmkeyeredit.lblwkkeyermode.caption
 #, fuzzy
 msgctxt "tfrmkeyeredit.lblwkkeyermode.caption"
 msgid "Keyer mode"
-msgstr ""
+msgstr "密钥模式"
 
 #: tfrmkeyeredit.lblwkleadin.caption
 #, fuzzy
 msgid "Lead-in"
-msgstr ""
+msgstr "领先"
 
 #: tfrmkeyeredit.lblwkratio.caption
 #, fuzzy
 msgid "Dit/dah ratio"
-msgstr ""
+msgstr "日/日比率"
 
 #: tfrmkeyeredit.lblwksidetone.caption
 #, fuzzy
 msgid "Sidetone"
-msgstr ""
+msgstr "侧面"
 
 #: tfrmkeyeredit.lblwkswitchpoint.caption
 #, fuzzy
 msgid "Switchpoint"
-msgstr ""
+msgstr "切换点"
 
 #: tfrmkeyeredit.lblwktail.caption
 #, fuzzy
 msgid "Tail"
-msgstr ""
+msgstr "尾声"
 
 #: tfrmkeyeredit.lblwkweight.caption
 #, fuzzy
 msgid "Weight"
-msgstr ""
+msgstr "重量"
 
 #: tfrmlogcompare.btnclearalllogs.caption
 #, fuzzy
 msgid "Clear all logs"
-msgstr ""
+msgstr "清除全部日志"
 
 #: tfrmlogcompare.btnexit.caption
 #, fuzzy
 msgid "Exit"
-msgstr ""
+msgstr "退出"
 
 #: tfrmlogcompare.btnsynchronize.caption
 #, fuzzy
 msgctxt "tfrmlogcompare.btnsynchronize.caption"
 msgid "Synchronize"
-msgstr ""
+msgstr "同步"
 
 #: tfrmlogcompare.caption
 #, fuzzy
 msgid "Differences in the log"
-msgstr ""
+msgstr "日志的差异"
 
 #: tfrmlpt.btncancel.caption
 #, fuzzy
 msgctxt "tfrmlpt.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "取消"
 
 #: tfrmlpt.btnok.caption
 #, fuzzy
 msgctxt "tfrmlpt.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "还好"
 
 #: tfrmlpt.caption
 #, fuzzy
 msgid "LPT"
-msgstr ""
+msgstr "LPT 语言"
 
 #: tfrmmaster.caption
 #, fuzzy
 msgid "Super check partial"
-msgstr ""
+msgstr "超级检查部分"
 
 #: tfrmmessageslist.btncancel.caption
 #, fuzzy
 msgctxt "tfrmmessageslist.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "取消"
 
 #: tfrmmessageslist.btnok.caption
 #, fuzzy
 msgctxt "tfrmmessageslist.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "还好"
 
 #: tfrmmessageslist.caption
 #, fuzzy
 msgctxt "tfrmmessageslist.caption"
 msgid "List of commands"
-msgstr ""
+msgstr "命令列表"
 
 #: tfrmmmtty.caption
 #, fuzzy
 msgctxt "tfrmmmtty.caption"
 msgid "MMTTY"
-msgstr ""
+msgstr "门蒂"
 
 #: tfrmmp3recorder.btncontrol.caption
 #, fuzzy
@@ -5200,77 +5200,77 @@ msgstr ""
 #, fuzzy
 msgctxt "tfrmmp3recorder.caption"
 msgid "MP3 Recorder"
-msgstr ""
+msgstr "MP3 记录器"
 
 #: tfrmmp3recorder.chkrecord.caption
 #, fuzzy
 msgid "Record"
-msgstr ""
+msgstr "记录"
 
 #: tfrmnetwork.caption
 #, fuzzy
 msgctxt "tfrmnetwork.caption"
 msgid "Network"
-msgstr ""
+msgstr "网络"
 
 #: tfrmnewcontest.btnbrowse.caption
 #, fuzzy
 msgctxt "tfrmnewcontest.btnbrowse.caption"
 msgid "Browse..."
-msgstr ""
+msgstr "浏览..."
 
 #: tfrmnewcontest.btncancel.caption
 #, fuzzy
 msgctxt "tfrmnewcontest.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "取消"
 
 #: tfrmnewcontest.btnlatest.caption
 #, fuzzy
 msgctxt "tfrmnewcontest.btnlatest.caption"
 msgid "Latest config file"
-msgstr ""
+msgstr "最新配置文件"
 
 #: tfrmnewcontest.btnok.caption
 #, fuzzy
 msgctxt "tfrmnewcontest.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "还好"
 
 #: tfrmnewcontest.caption
 #, fuzzy
 msgid "Open configuration file or start a new contest"
-msgstr ""
+msgstr "打开配置文件或启动新比赛"
 
 #: tfrmnewcontest.dlgopen.title
 #, fuzzy
 msgid "Open configuration file"
-msgstr ""
+msgstr "打开配置文件"
 
 #: tfrmnewcontest.gbexisting.caption
 #, fuzzy
 msgid "Open an existing configuration"
-msgstr ""
+msgstr "打开已有配置"
 
 #: tfrmnewcontest.gbnew.caption
 #, fuzzy
 msgid "Start a new contest"
-msgstr ""
+msgstr "开始新比赛"
 
 #: tfrmnewcontest.lblcontest.caption
 #, fuzzy
 msgid "CONTEST"
-msgstr ""
+msgstr "内容"
 
 #: tfrmnewcontest.lblmycall.caption
 #, fuzzy
 msgid "MY CALL"
-msgstr ""
+msgstr "我的电话"
 
 #: tfrmpanadapter.btnpause.caption
 #, fuzzy
 msgid "Pause"
-msgstr ""
+msgstr "暂停"
 
 #: tfrmpanadapter.btnspannarrow.caption
 #, fuzzy
@@ -5280,7 +5280,7 @@ msgstr ""
 #: tfrmpanadapter.btnspannarrow.hint
 #, fuzzy
 msgid "Narrower span (zoom in)"
-msgstr ""
+msgstr "缩小间距( 区间)"
 
 #: tfrmpanadapter.btnspanwide.caption
 #, fuzzy
@@ -5290,1588 +5290,1588 @@ msgstr ""
 #: tfrmpanadapter.btnspanwide.hint
 #, fuzzy
 msgid "Wider span (zoom out)"
-msgstr ""
+msgstr "宽度( 结束区域)"
 
 #: tfrmpanadapter.caption
 #, fuzzy
 msgid "Panadapter"
-msgstr ""
+msgstr "调整器"
 
 #: tfrmpanadapter.lblscale.caption
 #, fuzzy
 msgid "80 dB"
-msgstr ""
+msgstr "80分贝"
 
 #: tfrmpanadapter.lblsource.caption
 #, fuzzy
 msgid "Pan A"
-msgstr ""
+msgstr "潘亚"
 
 #: tfrmpanadapter.lblspan.caption
 #, fuzzy
 msgid "Span --"
-msgstr ""
+msgstr "宽度 -"
 
 #: tfrmpanadapter.lblstatus.caption
 #, fuzzy
 msgctxt "tfrmpanadapter.lblstatus.caption"
 msgid "Disconnected"
-msgstr ""
+msgstr "断开连接"
 
 #: tfrmpostscores.btnpostnow.caption
 #, fuzzy
 msgctxt "tfrmpostscores.btnpostnow.caption"
 msgid "Post now"
-msgstr ""
+msgstr "现在"
 
 #: tfrmpostscores.btnshowscores.caption
 #, fuzzy
 msgctxt "tfrmpostscores.btnshowscores.caption"
 msgid "Show scores"
-msgstr ""
+msgstr "显示分数"
 
 #: tfrmpostscores.caption
 #, fuzzy
 msgid "Post scores"
-msgstr ""
+msgstr "员额成绩"
 
 #: tfrmprogrammessage.btncq.caption
 #, fuzzy
 msgctxt "tfrmprogrammessage.btncq.caption"
 msgid "Press &C to program a CQ function key."
-msgstr ""
+msgstr "按 & C 来编程 CQ 函数密钥 ."
 
 #: tfrmprogrammessage.btnexchange.caption
 #, fuzzy
 msgctxt "tfrmprogrammessage.btnexchange.caption"
 msgid "Press &E to program an exchange/search and pounce function key."
-msgstr ""
+msgstr "按 & E 来编程一个交换/搜索和弹出函数键 ."
 
 #: tfrmprogrammessage.btnother.caption
 #, fuzzy
 msgctxt "tfrmprogrammessage.btnother.caption"
 msgid "Press &O to program the other non function key messages."
-msgstr ""
+msgstr "按 & O 来编程其他非函数密钥消息 ."
 
 #: tfrmprogrammessage.caption
 #, fuzzy
 msgctxt "tfrmprogrammessage.caption"
 msgid "Memory program function"
-msgstr ""
+msgstr "内存程序函数"
 
 #: tfrmradiopanel.btnspectrum.caption
 #, fuzzy
 msgid "Spectrum"
-msgstr ""
+msgstr "光谱"
 
 #: tfrmradiopanel.caption
 #, fuzzy
 msgctxt "tfrmradiopanel.caption"
 msgid "Radio"
-msgstr ""
+msgstr "无线电"
 
 #: tfrmradiopanel.lblrit.caption
 #, fuzzy
 msgid "RIT"
-msgstr ""
+msgstr "里特尔"
 
 #: tfrmradiopanel.lblsplit.caption
 #, fuzzy
 msgid "SPLIT"
-msgstr ""
+msgstr "发言"
 
 #: tfrmradiopanel.lblvfoacaption.caption
 #, fuzzy
 msgid "VFO A"
-msgstr ""
+msgstr "瓦努阿图A"
 
 #: tfrmradiopanel.lblvfobcaption.caption
 #, fuzzy
 msgid "VFO B"
-msgstr ""
+msgstr "B. 观察员组织"
 
 #: tfrmradiopanel.lblxit.caption
 #, fuzzy
 msgid "XIT"
-msgstr ""
+msgstr "习 式"
 
 #: tfrmremmults.caption
 #, fuzzy
 msgid "Remaining mults"
-msgstr ""
+msgstr "残存的泥浆"
 
 #: tfrmsendkeyboard.btnclose.caption
 #, fuzzy
 msgctxt "tfrmsendkeyboard.btnclose.caption"
 msgid "Close"
-msgstr ""
+msgstr "关闭"
 
 #: tfrmsendkeyboard.caption
 #, fuzzy
 msgid "Sending CW"
-msgstr ""
+msgstr "发送CW"
 
 #: tfrmsendspot.btncancel.caption
 #, fuzzy
 msgctxt "tfrmsendspot.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "取消"
 
 #: tfrmsendspot.btnok.caption
 #, fuzzy
 msgctxt "tfrmsendspot.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "还好"
 
 #: tfrmsendspot.caption
 #, fuzzy
 msgctxt "tfrmsendspot.caption"
 msgid "Send spot"
-msgstr ""
+msgstr "发送位置"
 
 #: tfrmsendspot.chkcontestname.caption
 #, fuzzy
 msgid "Contest name in comment"
-msgstr ""
+msgstr "注释中的竞技名称"
 
 #: tfrmsendspot.lblcallsign.caption
 #, fuzzy
 msgctxt "tfrmsendspot.lblcallsign.caption"
 msgid "Callsign"
-msgstr ""
+msgstr "调用"
 
 #: tfrmsendspot.lblcomment.caption
 #, fuzzy
 msgctxt "tfrmsendspot.lblcomment.caption"
 msgid "Comment"
-msgstr ""
+msgstr "注释"
 
 #: tfrmsendspot.lblfrequency.caption
 #, fuzzy
 msgctxt "tfrmsendspot.lblfrequency.caption"
 msgid "Frequency"
-msgstr ""
+msgstr "频率"
 
 #: tfrmstations.caption
 #, fuzzy
 msgctxt "tfrmstations.caption"
 msgid "Stations"
-msgstr ""
+msgstr "车站"
 
 #: tfrmtelnet.btnclear.caption
 #, fuzzy
 msgid "Clear"
-msgstr ""
+msgstr "清除"
 
 #: tfrmtelnet.btncommands.caption
 #, fuzzy
 msgctxt "tfrmtelnet.btncommands.caption"
 msgid "Commands"
-msgstr ""
+msgstr "图标"
 
 #: tfrmtelnet.btnconnect.caption
 #, fuzzy
 msgid "Connect"
-msgstr ""
+msgstr "连接"
 
 #: tfrmtelnet.btndisconnect.caption
 #, fuzzy
 msgid "Disconnect"
-msgstr ""
+msgstr "断开连接"
 
 #: tfrmtelnet.btnfreeze.caption
 #, fuzzy
 msgid "Freeze"
-msgstr ""
+msgstr "别动"
 
 #: tfrmtelnet.btnsend.caption
 #, fuzzy
 msgid "Send"
-msgstr ""
+msgstr "发送"
 
 #: tfrmtelnet.btnshow50.caption
 #, fuzzy
 msgid "SH/50"
-msgstr ""
+msgstr "SH/50 (英语)"
 
 #: tfrmtelnet.caption
 #, fuzzy
 msgid "Telnet"
-msgstr ""
+msgstr "电话网"
 
 #: tfrmudpdestinationedit.btncancel.caption
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "取消"
 
 #: tfrmudpdestinationedit.btnok.caption
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "还好"
 
 #: tfrmudpdestinationedit.btntest.caption
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.btntest.caption"
 msgid "Test"
-msgstr ""
+msgstr "测试"
 
 #: tfrmudpdestinationedit.caption
 #, fuzzy
 msgid "UDP Destination"
-msgstr ""
+msgstr "UDP 目标"
 
 #: tfrmudpdestinationedit.chkstreamappinfo.caption
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamappinfo.caption"
 msgid "App info"
-msgstr ""
+msgstr "应用程序信息"
 
 #: tfrmudpdestinationedit.chkstreamcontact.caption
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamcontact.caption"
 msgid "Contact info"
-msgstr ""
+msgstr "联系信息"
 
 #: tfrmudpdestinationedit.chkstreamlookup.caption
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamlookup.caption"
 msgid "Callsign lookup"
-msgstr ""
+msgstr "调用搜索"
 
 #: tfrmudpdestinationedit.chkstreamradio.caption
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamradio.caption"
 msgid "Radio info"
-msgstr ""
+msgstr "无线电信息"
 
 #: tfrmudpdestinationedit.chkstreamrotor.caption
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamrotor.caption"
 msgid "Rotor"
-msgstr ""
+msgstr "旋转器"
 
 #: tfrmudpdestinationedit.chkstreamscore.caption
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamscore.caption"
 msgid "Score"
-msgstr ""
+msgstr "分数"
 
 #: tfrmudpdestinationedit.grpstreams.caption
 #, fuzzy
 msgid "Send this destination"
-msgstr ""
+msgstr "发送此目的地"
 
 #: tfrmudpdestinationedit.lbladdress.caption
 #, fuzzy
 msgid "Address"
-msgstr ""
+msgstr "地址"
 
 #: tfrmudpdestinationedit.lblport.caption
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.lblport.caption"
 msgid "Port"
-msgstr ""
+msgstr "端口"
 
 #: tfrmwinmanager.btncancel.caption
 #, fuzzy
 msgctxt "tfrmwinmanager.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "取消"
 
 #: tfrmwinmanager.btnok.caption
 #, fuzzy
 msgctxt "tfrmwinmanager.btnok.caption"
 msgid "OK"
-msgstr ""
+msgstr "还好"
 
 #: tfrmwinmanager.caption
 #, fuzzy
 msgid "Window control"
-msgstr ""
+msgstr "窗口控制"
 
 #: tprefsform.btnactivate.caption
 #, fuzzy
 msgid "Activate this profile now"
-msgstr ""
+msgstr "现在激活此配置文件"
 
 #: tprefsform.btnadd.caption
 #, fuzzy
 msgctxt "tprefsform.btnadd.caption"
 msgid "Add..."
-msgstr ""
+msgstr "添加..."
 
 #: tprefsform.btnaddcluster.caption
 #, fuzzy
 msgctxt "tprefsform.btnaddcluster.caption"
 msgid "Add..."
-msgstr ""
+msgstr "添加..."
 
 #: tprefsform.btnaddkeyer.caption
 #, fuzzy
 msgctxt "tprefsform.btnaddkeyer.caption"
 msgid "Add..."
-msgstr ""
+msgstr "添加..."
 
 #: tprefsform.btnaddrotator.caption
 #, fuzzy
 msgctxt "tprefsform.btnaddrotator.caption"
 msgid "Add..."
-msgstr ""
+msgstr "添加..."
 
 #: tprefsform.btnapply.caption
 #, fuzzy
 msgctxt "tprefsform.btnapply.caption"
 msgid "Save"
-msgstr ""
+msgstr "保存"
 
 #: tprefsform.btnbrowsebackup.caption
 #, fuzzy
 msgctxt "tprefsform.btnbrowsebackup.caption"
 msgid "Browse..."
-msgstr ""
+msgstr "浏览..."
 
 #: tprefsform.btnbrowsedvkpath.caption
 #, fuzzy
 msgctxt "tprefsform.btnbrowsedvkpath.caption"
 msgid "Browse..."
-msgstr ""
+msgstr "浏览..."
 
 #: tprefsform.btnbrowsedvkrecorder.caption
 #, fuzzy
 msgctxt "tprefsform.btnbrowsedvkrecorder.caption"
 msgid "Browse..."
-msgstr ""
+msgstr "浏览..."
 
 #: tprefsform.btnbrowsemmtty.caption
 #, fuzzy
 msgctxt "tprefsform.btnbrowsemmtty.caption"
 msgid "Browse..."
-msgstr ""
+msgstr "浏览..."
 
 #: tprefsform.btnbrowsemp3path.caption
 #, fuzzy
 msgctxt "tprefsform.btnbrowsemp3path.caption"
 msgid "Browse..."
-msgstr ""
+msgstr "浏览..."
 
 #: tprefsform.btnbrowsemp3player.caption
 #, fuzzy
 msgctxt "tprefsform.btnbrowsemp3player.caption"
 msgid "Browse..."
-msgstr ""
+msgstr "浏览..."
 
 #: tprefsform.btncancel.caption
 #, fuzzy
 msgctxt "tprefsform.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "取消"
 
 #: tprefsform.btndeleteprofile.caption
 #, fuzzy
 msgctxt "tprefsform.btndeleteprofile.caption"
 msgid "Delete"
-msgstr ""
+msgstr "删除"
 
 #: tprefsform.btnduplicate.caption
 #, fuzzy
 msgctxt "tprefsform.btnduplicate.caption"
 msgid "Duplicate"
-msgstr ""
+msgstr "复制"
 
 #: tprefsform.btnduplicatekeyer.caption
 #, fuzzy
 msgctxt "tprefsform.btnduplicatekeyer.caption"
 msgid "Duplicate"
-msgstr ""
+msgstr "复制"
 
 #: tprefsform.btnedit.caption
 #, fuzzy
 msgctxt "tprefsform.btnedit.caption"
 msgid "Edit..."
-msgstr ""
+msgstr "编辑..."
 
 #: tprefsform.btneditkeyer.caption
 #, fuzzy
 msgctxt "tprefsform.btneditkeyer.caption"
 msgid "Edit..."
-msgstr ""
+msgstr "编辑..."
 
 #: tprefsform.btnnewprofile.caption
 #, fuzzy
 msgctxt "tprefsform.btnnewprofile.caption"
 msgid "New..."
-msgstr ""
+msgstr "新建..."
 
 #: tprefsform.btnok.caption
 #, fuzzy
 msgctxt "tprefsform.btnok.caption"
 msgid "Save and close"
-msgstr ""
+msgstr "保存和关闭"
 
 #: tprefsform.btnopenlogfile.caption
 #, fuzzy
 msgid "Open log file"
-msgstr ""
+msgstr "打开日志文件"
 
 #: tprefsform.btnremove.caption
 #, fuzzy
 msgctxt "tprefsform.btnremove.caption"
 msgid "Remove"
-msgstr ""
+msgstr "删除"
 
 #: tprefsform.btnremovecluster.caption
 #, fuzzy
 msgctxt "tprefsform.btnremovecluster.caption"
 msgid "Remove"
-msgstr ""
+msgstr "删除"
 
 #: tprefsform.btnremovekeyer.caption
 #, fuzzy
 msgctxt "tprefsform.btnremovekeyer.caption"
 msgid "Remove"
-msgstr ""
+msgstr "删除"
 
 #: tprefsform.btnremoverotator.caption
 #, fuzzy
 msgctxt "tprefsform.btnremoverotator.caption"
 msgid "Remove"
-msgstr ""
+msgstr "删除"
 
 #: tprefsform.btnrenameprofile.caption
 #, fuzzy
 msgctxt "tprefsform.btnrenameprofile.caption"
 msgid "Rename..."
-msgstr ""
+msgstr "重命名..."
 
 #: tprefsform.btnudpadd.caption
 #, fuzzy
 msgctxt "tprefsform.btnudpadd.caption"
 msgid "Add..."
-msgstr ""
+msgstr "添加..."
 
 #: tprefsform.btnudpedit.caption
 #, fuzzy
 msgctxt "tprefsform.btnudpedit.caption"
 msgid "Edit..."
-msgstr ""
+msgstr "编辑..."
 
 #: tprefsform.btnudpremove.caption
 #, fuzzy
 msgctxt "tprefsform.btnudpremove.caption"
 msgid "Remove"
-msgstr ""
+msgstr "删除"
 
 #: tprefsform.btnudptest.caption
 #, fuzzy
 msgctxt "tprefsform.btnudptest.caption"
 msgid "Test"
-msgstr ""
+msgstr "测试"
 
 #: tprefsform.btnusecluster.caption
 #, fuzzy
 msgctxt "tprefsform.btnusecluster.caption"
 msgid "Use this"
-msgstr ""
+msgstr "用这个"
 
 #: tprefsform.btnuserotator.caption
 #, fuzzy
 msgctxt "tprefsform.btnuserotator.caption"
 msgid "Use this"
-msgstr ""
+msgstr "用这个"
 
 #: tprefsform.caption
 #, fuzzy
 msgctxt "tprefsform.caption"
 msgid "TR4W Preferences"
-msgstr ""
+msgstr "TR4W 首选项"
 
 #: tprefsform.chkaltdbuffer.caption
 #, fuzzy
 msgid "Alt-D remembers what you typed"
-msgstr ""
+msgstr "Alt-D 记得您输入的内容"
 
 #: tprefsform.chkaltdcq.caption
 #, fuzzy
 msgid "Alt-D can start a CQ on the second radio"
-msgstr ""
+msgstr "Alt-D可以在第二台电台上启动 CQ"
 
 #: tprefsform.chkalwaysblindcq.caption
 #, fuzzy
 msgid "Always call a blind CQ"
-msgstr ""
+msgstr "总是叫盲CQ"
 
 #: tprefsform.chkautocallterminate.caption
 #, fuzzy
 msgid "Stop sending when the call window changes"
-msgstr ""
+msgstr "调用窗口更改时停止发送"
 
 #: tprefsform.chkautoconnect.caption
 #, fuzzy
 msgctxt "tprefsform.chkautoconnect.caption"
 msgid "Connect radios at startup"
-msgstr ""
+msgstr "启动时连接收音机"
 
 #: tprefsform.chkautoqsonumberdecrement.caption
 #, fuzzy
 msgid "Give the serial number back when a QSO is abandoned"
-msgstr ""
+msgstr "QSO 被放弃时将序列号还原"
 
 #: tprefsform.chkautoreturntocq.caption
 #, fuzzy
 msgid "Return to CQ mode after logging a QSO"
-msgstr ""
+msgstr "登录一个 QSO 后返回 CQ 模式"
 
 #: tprefsform.chkbandmapallbands.caption
 #, fuzzy
 msgid "All bands"
-msgstr ""
+msgstr "所有频段"
 
 #: tprefsform.chkbandmapallmodes.caption
 #, fuzzy
 msgid "All modes"
-msgstr ""
+msgstr "所有模式"
 
 #: tprefsform.chkbandmapcallwindow.caption
 #, fuzzy
 msgid "Show the call window entry"
-msgstr ""
+msgstr "显示调用窗口条目"
 
 #: tprefsform.chkbandmapcq.caption
 #, fuzzy
 msgid "Show CQ spots"
-msgstr ""
+msgstr "显示 CQ 点"
 
 #: tprefsform.chkbandmapdupes.caption
 #, fuzzy
 msgid "Show duplicates"
-msgstr ""
+msgstr "显示重复"
 
 #: tprefsform.chkbandmapghz.caption
 #, fuzzy
 msgid "Show GHz"
-msgstr ""
+msgstr "显示 GHz"
 
 #: tprefsform.chkbandmapmultsonly.caption
 #, fuzzy
 msgid "Multipliers only"
-msgstr ""
+msgstr "仅乘数"
 
 #: tprefsform.chkbandmapso2r.caption
 #, fuzzy
 msgid "SO2R display"
-msgstr ""
+msgstr "SO2R 显示"
 
 #: tprefsform.chkboldfont.caption
 #, fuzzy
 msgid "Bold"
-msgstr ""
+msgstr "粗体"
 
 #: tprefsform.chkcallwindowshowallspots.caption
 #, fuzzy
 msgid "Show every spot in the call window"
-msgstr ""
+msgstr "显示呼叫窗口中的每个位置"
 
 #: tprefsform.chkchecklogfilesize.caption
 #, fuzzy
 msgid "Warn when the log file grows unexpectedly"
-msgstr ""
+msgstr "当日志文件意外增长时警告"
 
 #: tprefsform.chkclusteratstartup.caption
 #, fuzzy
 msgid "Connect at startup"
-msgstr ""
+msgstr "启动时连接"
 
 #: tprefsform.chkconfirmeditchanges.caption
 #, fuzzy
 msgid "Confirm before saving an edited QSO"
-msgstr ""
+msgstr "在保存已编辑的 QSO 之前确认"
 
 #: tprefsform.chkcwenable.caption
 #, fuzzy
 msgid "Send CW"
-msgstr ""
+msgstr "发送 CW"
 
 #: tprefsform.chkcwmessageschainable.caption
 #, fuzzy
 msgid "Any CW message may chain into the next"
-msgstr ""
+msgstr "任何 CW 消息可能连锁到下一个"
 
 #: tprefsform.chkcwspeedfromdatabase.caption
 #, fuzzy
 msgid "Match the speed a station was worked at before"
-msgstr ""
+msgstr "符合一个车站之前工作的速度"
 
 #: tprefsform.chkdupesheetcolor.caption
 #, fuzzy
 msgid "Color the dupe sheet columns"
-msgstr ""
+msgstr "涂色双工作表列"
 
 #: tprefsform.chkdvkenable.caption
 #, fuzzy
 msgid "Use the digital voice keyer"
-msgstr ""
+msgstr "使用数字语音密钥"
 
 #: tprefsform.chkdvklocalizedmessages.caption
 #, fuzzy
 msgid "Use localized DVK message files"
-msgstr ""
+msgstr "使用本地化的 DVK 信件文件"
 
 #: tprefsform.chkescapeexitssap.caption
 #, fuzzy
 msgid "Escape leaves search and pounce"
-msgstr ""
+msgstr "逃跑的叶子搜索和弹跳"
 
 #: tprefsform.chkfarnsworth.caption
 #, fuzzy
 msgid "Farnsworth spacing"
-msgstr ""
+msgstr "Farnsworth 间距"
 
 #: tprefsform.chkhamlibasynconly.caption
 #, fuzzy
 msgid "HamLib - async callbacks only, no heartbeat (testing)"
-msgstr ""
+msgstr "HamLib - 只有自动调用, 没有心跳( 测试)"
 
 #: tprefsform.chkhamlibdebug.caption
 #, fuzzy
 msgid "HamLib - debug logging"
-msgstr ""
+msgstr "HamLib - 调试日志"
 
 #: tprefsform.chkhamlibtrace.caption
 #, fuzzy
 msgid "HamLib - internal trace to hamlib_trace.log"
-msgstr ""
+msgstr "HamLib - 内部追踪 hamlib trace.log"
 
 #: tprefsform.chkhamscorecontact.caption
 #, fuzzy
 msgid "Include contact information"
-msgstr ""
+msgstr "包含联系信息"
 
 #: tprefsform.chkhamscoreenable.caption
 #, fuzzy
 msgid "Post my score while the contest runs"
-msgstr ""
+msgstr "在比赛进行时张贴我的成绩"
 
 #: tprefsform.chkhfbands.caption
 #, fuzzy
 msgid "HF (160 - 10 m)"
-msgstr ""
+msgstr "高频(160-10米)"
 
 #: tprefsform.chkinbandlockout.caption
 #, fuzzy
 msgid "Stop both radios landing on one band"
-msgstr ""
+msgstr "停止两台收音机在一个波段降落"
 
 #: tprefsform.chkincludefkeynumber.caption
 #, fuzzy
 msgid "Show the key number on the function-key buttons"
-msgstr ""
+msgstr "在函数键按钮上显示密钥编号"
 
 #: tprefsform.chkintercomfile.caption
 #, fuzzy
 msgid "Log network messages to INTERCOM.TXT"
-msgstr ""
+msgstr "日志网络消息给INTERCOM. TXT 电话"
 
 #: tprefsform.chkkeypadcwmemories.caption
 #, fuzzy
 msgid "Number keypad sends CW memories"
-msgstr ""
+msgstr "编号键盘发送 CW 记忆"
 
 #: tprefsform.chkleavecursorincall.caption
 #, fuzzy
 msgid "Leave the cursor in the call window"
-msgstr ""
+msgstr "将光标留在呼叫窗口"
 
 #: tprefsform.chkloggerenabled.caption
 #, fuzzy
 msgid "Send QSOs to it as they are logged"
-msgstr ""
+msgstr "当QSO被记录时,让他们去"
 
 #: tprefsform.chklogwithsingleenter.caption
 #, fuzzy
 msgid "Log with a single Enter"
-msgstr ""
+msgstr "以单个 Enter 记录"
 
 #: tprefsform.chkmp3recorderenable.caption
 #, fuzzy
 msgid "Record each QSO to MP3"
-msgstr ""
+msgstr "将每个 QSO 记录到 MP3"
 
 #: tprefsform.chkmultimultsonly.caption
 #, fuzzy
 msgid "Pass only new multipliers around the network"
-msgstr ""
+msgstr "只传递网络上的新乘数"
 
 #: tprefsform.chknameflag.caption
 #, fuzzy
 msgid "Flag a station whose name is already known"
-msgstr ""
+msgstr "标记已知道名字的车站"
 
 #: tprefsform.chknetautosync.caption
 #, fuzzy
 msgid "Synchronize the log when connecting"
-msgstr ""
+msgstr "连接时同步日志"
 
 #: tprefsform.chknoborder.caption
 #, fuzzy
 msgid "Main window has no border"
-msgstr ""
+msgstr "主窗口没有边框"
 
 #: tprefsform.chknocaption.caption
 #, fuzzy
 msgid "Main window has no title bar"
-msgstr ""
+msgstr "主窗口没有标题栏"
 
 #: tprefsform.chknocolumnheader.caption
 #, fuzzy
 msgid "Hide the log column headings"
-msgstr ""
+msgstr "隐藏日志列标题"
 
 #: tprefsform.chknopollduringptt.caption
 #, fuzzy
 msgid "Stop polling the radio while transmitting"
-msgstr ""
+msgstr "广播时停止投票"
 
 #: tprefsform.chkpartialcall.caption
 #, fuzzy
 msgid "Match on a partial callsign"
-msgstr ""
+msgstr "在部分调用符号上匹配"
 
 #: tprefsform.chkpossiblecalls.caption
 #, fuzzy
 msgid "Offer possible calls"
-msgstr ""
+msgstr "提供可能的电话"
 
 #: tprefsform.chkpttenable.caption
 #, fuzzy
 msgid "Assert PTT when transmitting"
-msgstr ""
+msgstr "传输时显示 PTT"
 
 #: tprefsform.chkpttlockout.caption
 #, fuzzy
 msgid "Lock out PTT"
-msgstr ""
+msgstr "锁定 PTT"
 
 #: tprefsform.chkpttviacommands.caption
 #, fuzzy
 msgid "Key the transmitter with a CAT command instead of a hardware line"
-msgstr ""
+msgstr "用 CAT 命令而不是硬件线键入发射机"
 
 #: tprefsform.chkqsyinactive.caption
 #, fuzzy
 msgid "QSY the inactive radio when I change band"
-msgstr ""
+msgstr "QSY 变频段时不活动的收音机"
 
 #: tprefsform.chksayhienable.caption
 #, fuzzy
 msgid "Send a greeting to stations worked before"
-msgstr ""
+msgstr "送一个问候 之前的工作站"
 
 #: tprefsform.chksendfourlettercall.caption
 #, fuzzy
 msgid "Always send all four letters of a four-letter call"
-msgstr ""
+msgstr "总是发出四个字母的呼叫"
 
 #: tprefsform.chkshowgridlines.caption
 #, fuzzy
 msgid "Draw gridlines in the log"
-msgstr ""
+msgstr "在日志中绘制网格线"
 
 #: tprefsform.chkskipactiveband.caption
 #, fuzzy
 msgid "Skip the band the other radio is on"
-msgstr ""
+msgstr "跳过乐队,另一个收音机"
 
 #: tprefsform.chkso2r.caption
 #, fuzzy
 msgctxt "tprefsform.chkso2r.caption"
 msgid "SO2R enabled"
-msgstr ""
+msgstr "SO2R 启用"
 
 #: tprefsform.chkspacebardupecheck.caption
 #, fuzzy
 msgid "Space bar performs a dupe check"
-msgstr ""
+msgstr "空格栏执行哑弹检查"
 
 #: tprefsform.chkspeedsync1.caption
 #, fuzzy
 msgctxt "tprefsform.chkspeedsync1.caption"
 msgid "Speed sync"
-msgstr ""
+msgstr "速度同步"
 
 #: tprefsform.chkspeedsync2.caption
 #, fuzzy
 msgctxt "tprefsform.chkspeedsync2.caption"
 msgid "Speed sync"
-msgstr ""
+msgstr "速度同步"
 
 #: tprefsform.chkspotcollector.caption
 #, fuzzy
 msgid "Collect spots from the cluster"
-msgstr ""
+msgstr "从集群中收集斑点"
 
 #: tprefsform.chkswappacketspotradios.caption
 #, fuzzy
 msgid "Send spots to the other radio"
-msgstr ""
+msgstr "向其他电台发送插播"
 
 #: tprefsform.chkswappaddles.caption
 #, fuzzy
 msgid "Swap dit and dah"
-msgstr ""
+msgstr "交换 dit 和 dah"
 
 #: tprefsform.chkswaprelaysense.caption
 #, fuzzy
 msgid "Invert the radio relay sense"
-msgstr ""
+msgstr "颠倒无线电中继感"
 
 #: tprefsform.chktcibindall.caption
 #, fuzzy
 msgid "Also listen on the network (other computers can connect)"
-msgstr ""
+msgstr "还监听网络( 其他计算机可以连接)"
 
 #: tprefsform.chktcidebug.caption
 #, fuzzy
 msgid "TCI server - log every command, both directions"
-msgstr ""
+msgstr "TMI 服务器 - 日志每个命令, 双向"
 
 #: tprefsform.chktciserver.caption
 #, fuzzy
 msgid "Enable the TCI server"
-msgstr ""
+msgstr "启用 TMI 服务器"
 
 #: tprefsform.chktelnetdebug.caption
 #, fuzzy
 msgid "DX cluster - log all telnet traffic"
-msgstr ""
+msgstr "DX集群 - 记录所有电话网流量"
 
 #: tprefsform.chktunewithdits.caption
 #, fuzzy
 msgid "Tune with dits rather than a solid carrier"
-msgstr ""
+msgstr "带水槽而不是坚固的载体"
 
 #: tprefsform.chktworadiomode.caption
 #, fuzzy
 msgid "Two radio mode"
-msgstr ""
+msgstr "两个无线电模式"
 
 #: tprefsform.chkudpallqsos.caption
 #, fuzzy
 msgid "Also broadcast edited and previously logged QSOs"
-msgstr ""
+msgstr "还播放了经编辑和以前登录的QSO"
 
 #: tprefsform.chkudpenabled.caption
 #, fuzzy
 msgid "Broadcast UDP data"
-msgstr ""
+msgstr "广播 UDP 数据"
 
 #: tprefsform.chkunknowncountryfile.caption
 #, fuzzy
 msgid "Record callsigns with no country match"
-msgstr ""
+msgstr "没有国家匹配的记录呼号"
 
 #: tprefsform.chkupdaterestartfile.caption
 #, fuzzy
 msgid "Keep the restart file up to date"
-msgstr ""
+msgstr "不断更新重新启动文件"
 
 #: tprefsform.chkusecontrolport.caption
 #, fuzzy
 msgid "Use the radio control port for paddle and foot switch"
-msgstr ""
+msgstr "使用无线电控制端口进行划桨和脚开关"
 
 #: tprefsform.chkuserecordedsigns.caption
 #, fuzzy
 msgid "Send recorded audio for callsign characters"
-msgstr ""
+msgstr "发送调用符号字符的录音"
 
 #: tprefsform.chkvhfbands.caption
 #, fuzzy
 msgid "VHF and up (6 m and above)"
-msgstr ""
+msgstr "甚高频及以上(6米及以上)"
 
 #: tprefsform.chkwaitforstrength.caption
 #, fuzzy
 msgid "Wait for a signal strength reading before switching"
-msgstr ""
+msgstr "切换前等待信号强度读取"
 
 #: tprefsform.chkwarcbands.caption
 #, fuzzy
 msgid "WARC (30, 17, 12 m)"
-msgstr ""
+msgstr "(30、17、12米)"
 
 #: tprefsform.chkwildcardpartials.caption
 #, fuzzy
 msgid "Allow wildcards in a partial"
-msgstr ""
+msgstr "允许部分的通配符"
 
 #: tprefsform.chkwsjtxenabled.caption
 #, fuzzy
 msgid "Exchange data with WSJT-X"
-msgstr ""
+msgstr "与 WSJT-X 交换数据"
 
 #: tprefsform.chkwsjtxhighlights.caption
 #, fuzzy
 msgid "Send callsign highlighting to WSJT-X"
-msgstr ""
+msgstr "向 WSJT-X 发送突出显示的呼号"
 
 #: tprefsform.chkwsjtxradiocontrol.caption
 #, fuzzy
 msgid "Let WSJT-X control the radio"
-msgstr ""
+msgstr "让WSJT-X控制无线电"
 
 #: tprefsform.chkycccso2r.caption
 #, fuzzy
 msgid "YCCC SO2R Plus box connected"
-msgstr ""
+msgstr "共青团SO2R 加框连接"
 
 #: tprefsform.edtsearch.texthint
 #, fuzzy
 msgid "Search settings"
-msgstr ""
+msgstr "搜索设置"
 
 #: tprefsform.grpprofile.caption
 #, fuzzy
 msgctxt "tprefsform.grpprofile.caption"
 msgid "Station profile"
-msgstr ""
+msgstr "车站简介"
 
 #: tprefsform.lblactivatehint.caption
 #, fuzzy
 msgid "Saving stores your changes. It does not switch the radios over - use this button for that."
-msgstr ""
+msgstr "保存您的更改 。 它不会把收音机切换 - 用这个按钮来做这个."
 
 #: tprefsform.lblactive.caption
 #, fuzzy
 msgctxt "tprefsform.lblactive.caption"
 msgid "Active profile: "
-msgstr ""
+msgstr "活动简介 : "
 
 #: tprefsform.lblactivecluster.caption
 #, fuzzy
 msgid "Connecting to: (none chosen)"
-msgstr ""
+msgstr "正在连接到 : (没有选择)"
 
 #: tprefsform.lblappearcolorshint.caption
 #, fuzzy
 msgid "Window colors are still on the Settings menu.  They belong here and will move once the main window is resizable, which is the change that decides what the layout options need to be."
-msgstr ""
+msgstr "窗口颜色仍在设置菜单中 。 它们属于这里,并在主窗口可调整后移动,这就是决定布局方案需要什么样的变化."
 
 #: tprefsform.lblappearheading.caption
 #, fuzzy
 msgctxt "tprefsform.lblappearheading.caption"
 msgid "Main window"
-msgstr ""
+msgstr "主窗口"
 
 #: tprefsform.lblappearhint.caption
 #, fuzzy
 msgid "The font applies to the main contest window.  All four take effect when TR4W next starts."
-msgstr ""
+msgstr "字体适用于主竞赛窗口. 四者在TR4W下一个开始时生效."
 
 #: tprefsform.lblappearmenunote.caption
 #, fuzzy
 msgid "These were on the Appearance item of the Settings menu. That window goes away once ROW COUNT and WINDOW SIZE join them here."
-msgstr ""
+msgstr "这些是设置菜单的外观项目 。 一旦WINDOW SIZE和他们一起进来 窗户就会消失."
 
 #: tprefsform.lblaudioheading.caption
 #, fuzzy
 msgid "Audio"
-msgstr ""
+msgstr "音频"
 
 #: tprefsform.lblaudioinfo.caption
 #, fuzzy
 msgid "Voice keying and QSO recording. CW keying is on the CW Settings page."
-msgstr ""
+msgstr "语音键和QSO录音. CW键入CW设置页面."
 
 #: tprefsform.lblaudionote.caption
 #, fuzzy
 msgid "Bit rate and recording length are not here yet: both are stored through a lookup table rather than directly, and move separately."
-msgstr ""
+msgstr "比特速率和记录长度尚未在这里:两者都通过一个查询表而不是直接存储,并分开移动."
 
 #: tprefsform.lblbackupevery.caption
 #, fuzzy
 msgid "Back up every:"
-msgstr ""
+msgstr "备份每个 :"
 
 #: tprefsform.lblbackupeveryunits.caption
 #, fuzzy
 msgid "QSOs  (0 = never)"
-msgstr ""
+msgstr "QSO( 0 = 永远)"
 
 #: tprefsform.lblbackupfile.caption
 #, fuzzy
 msgid "Copy to:"
-msgstr ""
+msgstr "复制到 :"
 
 #: tprefsform.lblbackupheading.caption
 #, fuzzy
 msgid "Log backup"
-msgstr ""
+msgstr "日志备份"
 
 #: tprefsform.lblbackuphint.caption
 #, fuzzy
 msgid "A second copy of the log, written as you go.  Put it somewhere that is not the same disk as the log itself, or it protects against nothing worth protecting against."
-msgstr ""
+msgstr "日记第二本,随你写 放在和日志本身不一样的磁盘的地方, 或防止任何值得保护的东西."
 
 #: tprefsform.lblbandmapdecay.caption
 #, fuzzy
 msgid "Spot expiry:"
-msgstr ""
+msgstr "点过期 :"
 
 #: tprefsform.lblbandmapdecayunits.caption
 #, fuzzy
 msgid "minutes"
-msgstr ""
+msgstr "分钟"
 
 #: tprefsform.lblbandmapguard.caption
 #, fuzzy
 msgid "Guard band:"
-msgstr ""
+msgstr "警卫乐队:"
 
 #: tprefsform.lblbandmapguardunits.caption
 #, fuzzy
 msgctxt "tprefsform.lblbandmapguardunits.caption"
 msgid "Hz"
-msgstr ""
+msgstr "赫兹"
 
 #: tprefsform.lblbandmapheading.caption
 #, fuzzy
 msgctxt "tprefsform.lblbandmapheading.caption"
 msgid "Band map"
-msgstr ""
+msgstr "带图"
 
 #: tprefsform.lblbandmaplimit.caption
 #, fuzzy
 msgid "Display limit:"
-msgstr ""
+msgstr "显示限制 :"
 
 #: tprefsform.lblbandmaplimitunits.caption
 #, fuzzy
 msgid "spots"
-msgstr ""
+msgstr "点"
 
 #: tprefsform.lblbandmapnote.caption
 #, fuzzy
 msgid "A band map does not need a DX cluster: it also holds spots you make yourself and anything the SO2R radio hears.  Cluster settings are on the DX Cluster page."
-msgstr ""
+msgstr "一个波段图不需要一个DX集群:它也持有你自制的斑点和SO2R无线电听到的任何东西. 集群设置位于DX集群页面."
 
 #: tprefsform.lblbandoutput1.caption
 #, fuzzy
 msgid "Radio 1 band output port"
-msgstr ""
+msgstr "无线电1波段输出端口"
 
 #: tprefsform.lblbandoutput2.caption
 #, fuzzy
 msgid "Radio 2 band output port"
-msgstr ""
+msgstr "无线电2波段输出端口"
 
 #: tprefsform.lblbandsheading.caption
 #, fuzzy
 msgid "Bands in use"
-msgstr ""
+msgstr "正在使用的带"
 
 #: tprefsform.lblbandshint.caption
 #, fuzzy
 msgid "Which bands TR4W offers when you change band, and which appear in the multiplier and band-map displays.  WARC bands are off by default because most contests do not allow them."
-msgstr ""
+msgstr "改变乐队时哪些乐队TR4W提供,哪些出现在乘数和带图显示中. WARC乐队默认关闭,因为大多数比赛都不允许."
 
 #: tprefsform.lblclustercommand.caption
 #, fuzzy
 msgid "After connecting:"
-msgstr ""
+msgstr "连接后 :"
 
 #: tprefsform.lblclustercommandhint.caption
 #, fuzzy
 msgid "Sent once the login is accepted - filters, set/name, sh/dx.  Separate several with a semicolon."
-msgstr ""
+msgstr "登录被接受后发送 - 过滤器,设置/名称,sh/dx. 将几个分号分开."
 
 #: tprefsform.lblclusterglobalheading.caption
 #, fuzzy
 msgid "For every cluster"
-msgstr ""
+msgstr "每组"
 
 #: tprefsform.lblclusterheading.caption
 #, fuzzy
 msgid "My DX clusters"
-msgstr ""
+msgstr "我的 DX 集群"
 
 #: tprefsform.lblclusterlogin.caption
 #, fuzzy
 msgid "Log in as:"
-msgstr ""
+msgstr "登录为:"
 
 #: tprefsform.lblclusterloginhint.caption
 #, fuzzy
 msgid "blank = my station callsign"
-msgstr ""
+msgstr "空白=我的台标"
 
 #: tprefsform.lblclustername.caption
 #, fuzzy
 msgctxt "tprefsform.lblclustername.caption"
 msgid "Name:"
-msgstr ""
+msgstr "名称 :"
 
 #: tprefsform.lblclusternote.caption
 #, fuzzy
 msgid "The cluster reconnects on its own after a drop.  Telnet logging is on the Logging page; spot display and ageing are on Band Map."
-msgstr ""
+msgstr "集群在滴水后自行重联. Telnet日志在日志页面上;即时显示和老化在Band Map上."
 
 #: tprefsform.lblclusterpassword.caption
 #, fuzzy
 msgctxt "tprefsform.lblclusterpassword.caption"
 msgid "Password:"
-msgstr ""
+msgstr "密码 :"
 
 #: tprefsform.lblclusterserver.caption
 #, fuzzy
 msgctxt "tprefsform.lblclusterserver.caption"
 msgid "Server:"
-msgstr ""
+msgstr "服务器 :"
 
 #: tprefsform.lblclusterserverhint.caption
 #, fuzzy
 msgid "host:port, for example dxc.nc7j.com:7373.  The drop-down lists the servers in TRCLUSTER.DAT; you can also type one that is not on it."
-msgstr ""
+msgstr "主机:端口,例如dxc.nc7j.com:7373. 下放列表了 TRCLUSTER.DAT 中的服务器;您也可以键入未在其中的服务器 ."
 
 #: tprefsform.lblcontestheading.caption
 #, fuzzy
 msgid "Contest exchange"
-msgstr ""
+msgstr "竞技交流"
 
 #: tprefsform.lblcwoutput1.caption
 #, fuzzy
 msgctxt "tprefsform.lblcwoutput1.caption"
 msgid "CW output 1"
-msgstr ""
+msgstr "化学武器产出1"
 
 #: tprefsform.lblcwoutput2.caption
 #, fuzzy
 msgctxt "tprefsform.lblcwoutput2.caption"
 msgid "CW output 2"
-msgstr ""
+msgstr "化学武器产出2"
 
 #: tprefsform.lblcwsendheading.caption
 #, fuzzy
 msgid "Sending"
-msgstr ""
+msgstr "发送"
 
 #: tprefsform.lblcwspeedincrement.caption
 #, fuzzy
 msgid "Speed step:"
-msgstr ""
+msgstr "速度步骤 :"
 
 #: tprefsform.lblcwspeedincrementunits.caption
 #, fuzzy
 msgid "WPM per PageUp / PageDown"
-msgstr ""
+msgstr "WPM 每页升/下页"
 
 #: tprefsform.lblcwtone.caption
 #, fuzzy
 msgid "Sidetone:"
-msgstr ""
+msgstr "侧面:"
 
 #: tprefsform.lblcwtoneunits.caption
 #, fuzzy
 msgid "Hz  (0 = the radios own sidetone)"
-msgstr ""
+msgstr "Hz(0 = 收音机本身的侧通)"
 
 #: tprefsform.lbldetaillogs.caption
 #, fuzzy
 msgid "Detailed logging for one subsystem"
-msgstr ""
+msgstr "一个子系统的详细记录"
 
 #: tprefsform.lblditdah.caption
 #, fuzzy
 msgid "Dit/dah ratio:"
-msgstr ""
+msgstr "日/日比率:"
 
 #: tprefsform.lbldvkheading.caption
 #, fuzzy
 msgid "Digital voice keyer"
-msgstr ""
+msgstr "数字语音密钥"
 
 #: tprefsform.lbldvkpath.caption
 #, fuzzy
 msgid "DVK recording folder"
-msgstr ""
+msgstr "DVK 录音文件夹"
 
 #: tprefsform.lbldvkrecorder.caption
 #, fuzzy
 msgid "DVK recorder program"
-msgstr ""
+msgstr "DVK 记录器程序"
 
 #: tprefsform.lbldxlabheading.caption
 #, fuzzy
 msgid "DXLab"
-msgstr ""
+msgstr "DXLab 日历"
 
 #: tprefsform.lbldxlabinfo.caption
 #, fuzzy
 msgid "DXLab needs no settings of its own.  TR4W offers a DX Commander compatible interface on TCP port 52002 whenever the WSJT-X support is running, and DXLab programs connect to that."
-msgstr ""
+msgstr "DXLab 不需要自己的设置 。 当WSJT-X支持运行时,TR4W在TCP端口52002上提供DX Commander兼容接口,DXLab程序与之连接."
 
 #: tprefsform.lbldxlabinfo2.caption
 #, fuzzy
 msgid "The port is not configurable today.  If you want it to be, say so and it becomes a setting here."
-msgstr ""
+msgstr "港口今天无法配置. 如果你想要的话,就这么说吧,它就变成了一个环境."
 
 #: tprefsform.lblfarnsworthspeed.caption
 #, fuzzy
 msgid "Character speed:"
-msgstr ""
+msgstr "字符速度 :"
 
 #: tprefsform.lblfarnsworthunits.caption
 #, fuzzy
 msgid "WPM"
-msgstr ""
+msgstr "妇女"
 
 #: tprefsform.lblfontsize.caption
 #, fuzzy
 msgid "Size:"
-msgstr ""
+msgstr "大小 :"
 
 #: tprefsform.lblhamlibrestart.caption
 #, fuzzy
 msgid "The three HamLib settings take effect when TR4W next starts.  They are very verbose and are for diagnosing a radio problem - leave them off otherwise."
-msgstr ""
+msgstr "三个HamLib设置在TR4W下次开始时生效. 他们非常动词化 用来诊断无线电问题 让他们离开."
 
 #: tprefsform.lblhamscorepass.caption
 #, fuzzy
 msgctxt "tprefsform.lblhamscorepass.caption"
 msgid "Password:"
-msgstr ""
+msgstr "密码 :"
 
 #: tprefsform.lblhamscoreurl.caption
 #, fuzzy
 msgid "Service URL:"
-msgstr ""
+msgstr "服务 URL :"
 
 #: tprefsform.lblhamscoreuser.caption
 #, fuzzy
 msgid "Username:"
-msgstr ""
+msgstr "用户名 :"
 
 #: tprefsform.lblhardwareheading.caption
 #, fuzzy
 msgctxt "tprefsform.lblhardwareheading.caption"
 msgid "Hardware"
-msgstr ""
+msgstr "硬件"
 
 #: tprefsform.lblhardwareinfo.caption
 #, fuzzy
 msgid "Station-wide hardware. Settings that belong to one radio are under Radios; rotators are under Rotators."
-msgstr ""
+msgstr "全站硬件. 属于一个无线电的设置在无线电下;转子在旋转器下."
 
 #: tprefsform.lblkeyerhint.caption
 #, fuzzy
 msgid "Only devices with their own settings live here - a WinKeyer or a YCCC SO2R+ box.  Keying on a radio's own port, or by CAT, is part of that radio's setup; a station profile then chooses which method each slot uses."
-msgstr ""
+msgstr "只有具有自己设置的设备才住在这里 - WinKeyer 或 YCCC SO2R+ 框. 在收音机自己的端口上按键,或由CAT按键,是收音机设置的一部分;然后由台站简介选择每个槽使用的方法."
 
 #: tprefsform.lblleadingzerochar.caption
 #, fuzzy
 msgid "Sent as:"
-msgstr ""
+msgstr "发送时间为:"
 
 #: tprefsform.lblleadingzerohint.caption
 #, fuzzy
 msgid "Serial numbers are padded to that many digits.  T for a zero is the usual cut-number choice; leave it as 0 to send them plainly."
-msgstr ""
+msgstr "序列号与那些数字相加。 T对一个零是通常的切数选择;留为0来直接发送."
 
 #: tprefsform.lblleadingzeros.caption
 #, fuzzy
 msgid "Leading zeros:"
-msgstr ""
+msgstr "引导零:"
 
 #: tprefsform.lbllogfilesheading.caption
 #, fuzzy
 msgid "Log files"
-msgstr ""
+msgstr "日志文件"
 
 #: tprefsform.lblloggeraddress.caption
 #, fuzzy
 msgid "Address:"
-msgstr ""
+msgstr "地址:"
 
 #: tprefsform.lblloggerheading.caption
 #, fuzzy
 msgid "External logger"
-msgstr ""
+msgstr "外部日志"
 
 #: tprefsform.lblloggerport.caption
 #, fuzzy
 msgctxt "tprefsform.lblloggerport.caption"
 msgid "Port:"
-msgstr ""
+msgstr "端口 :"
 
 #: tprefsform.lblloggerrestart.caption
 #, fuzzy
 msgctxt "tprefsform.lblloggerrestart.caption"
 msgid "These take effect when TR4W next starts."
-msgstr ""
+msgstr "这些在TR4W下次开始时生效."
 
 #: tprefsform.lblloggerstatus.caption
 #, fuzzy
 msgid "DXKEEPER is complete.  ACLOG and HRD are not finished - selecting one logs a warning and no QSOs are sent."
-msgstr ""
+msgstr "DXKEPER已经完成. ACLOG 和 HRD 尚未完成 - 选择一个日志一个警告, 没有发送QSO ."
 
 #: tprefsform.lblloggertype.caption
 #, fuzzy
 msgid "Program:"
-msgstr ""
+msgstr "程序 :"
 
 #: tprefsform.lblloglevel.caption
 #, fuzzy
 msgid "Log level:"
-msgstr ""
+msgstr "日志级别 :"
 
 #: tprefsform.lblloglevelhint.caption
 #, fuzzy
 msgid "Takes effect immediately - no restart.  INFO is the normal setting; DEBUG and TRACE make the log much larger and are for diagnosing a problem."
-msgstr ""
+msgstr "立即生效 - 不重新启动 。 INFO是正常设置;DEBUG和TRACE使日志大得多,用于诊断一个问题."
 
 #: tprefsform.lblmainfont.caption
 #, fuzzy
 msgid "Font:"
-msgstr ""
+msgstr "字体 :"
 
 #: tprefsform.lblmainwindowheading.caption
 #, fuzzy
 msgctxt "tprefsform.lblmainwindowheading.caption"
 msgid "Main window"
-msgstr ""
+msgstr "主窗口"
 
 #: tprefsform.lblmmttyengine.caption
 #, fuzzy
 msgid "Engine:"
-msgstr ""
+msgstr "发动机 :"
 
 #: tprefsform.lblmmttyheading.caption
 #, fuzzy
 msgctxt "tprefsform.lblmmttyheading.caption"
 msgid "MMTTY"
-msgstr ""
+msgstr "门蒂"
 
 #: tprefsform.lblmmttyhint.caption
 #, fuzzy
 msgid "The full path to MMTTY.EXE.  TR4W starts it for RTTY and talks to it directly."
-msgstr ""
+msgstr "MMTTY.EXE的完整路径. TR4W开始为RTTY,并直接与之交谈."
 
 #: tprefsform.lblmp3heading.caption
 #, fuzzy
 msgid "QSO recording"
-msgstr ""
+msgstr "QSO 记录"
 
 #: tprefsform.lblmp3path.caption
 #, fuzzy
 msgid "MP3 folder"
-msgstr ""
+msgstr "MP3 文件夹"
 
 #: tprefsform.lblmp3player.caption
 #, fuzzy
 msgid "MP3 player program"
-msgstr ""
+msgstr "MP3 播放器程序"
 
 #: tprefsform.lblmycall.caption
 #, fuzzy
 msgid "Callsign:"
-msgstr ""
+msgstr "调用 :"
 
 #: tprefsform.lblmycheck.caption
 #, fuzzy
 msgid "Check:"
-msgstr ""
+msgstr "检查 :"
 
 #: tprefsform.lblmycontinent.caption
 #, fuzzy
 msgid "Continent:"
-msgstr ""
+msgstr "大陆 :"
 
 #: tprefsform.lblmycountry.caption
 #, fuzzy
 msgid "Country:"
-msgstr ""
+msgstr "国家 :"
 
 #: tprefsform.lblmyfdclass.caption
 #, fuzzy
 msgid "FD class:"
-msgstr ""
+msgstr "FD 类 :"
 
 #: tprefsform.lblmyfocnumber.caption
 #, fuzzy
 msgid "FOC number:"
-msgstr ""
+msgstr "FOC 编号 :"
 
 #: tprefsform.lblmygrid.caption
 #, fuzzy
 msgid "Grid square:"
-msgstr ""
+msgstr "网格平方 :"
 
 #: tprefsform.lblmyiota.caption
 #, fuzzy
 msgid "IOTA:"
-msgstr ""
+msgstr "奥塔:"
 
 #: tprefsform.lblmyituzone.caption
 #, fuzzy
 msgid "ITU zone:"
-msgstr ""
+msgstr "国际电联区域:"
 
 #: tprefsform.lblmykeyers.caption
 #, fuzzy
 msgid "CW keying devices"
-msgstr ""
+msgstr "CW 密钥设备"
 
 #: tprefsform.lblmyname.caption
 #, fuzzy
 msgid "First name:"
-msgstr ""
+msgstr "名称 :"
 
 #: tprefsform.lblmypark.caption
 #, fuzzy
 msgid "Park:"
-msgstr ""
+msgstr "公园:"
 
 #: tprefsform.lblmypostalcode.caption
 #, fuzzy
 msgid "Postal code:"
-msgstr ""
+msgstr "邮政编码:"
 
 #: tprefsform.lblmyprec.caption
 #, fuzzy
 msgid "Precedence:"
-msgstr ""
+msgstr "优先发言:"
 
 #: tprefsform.lblmyradios.caption
 #, fuzzy
 msgctxt "tprefsform.lblmyradios.caption"
 msgid "My radios"
-msgstr ""
+msgstr "我的无线电"
 
 #: tprefsform.lblmyrotators.caption
 #, fuzzy
 msgid "My rotators"
-msgstr ""
+msgstr "我的轮子"
 
 #: tprefsform.lblmysection.caption
 #, fuzzy
 msgid "ARRL section:"
-msgstr ""
+msgstr "ARRL 一节:"
 
 #: tprefsform.lblmystate.caption
 #, fuzzy
 msgid "State/Province:"
-msgstr ""
+msgstr "州/省:"
 
 #: tprefsform.lblmyzone.caption
 #, fuzzy
 msgid "CQ zone:"
-msgstr ""
+msgstr "CQ 区 :"
 
 #: tprefsform.lblnetaddress.caption
 #, fuzzy
 msgctxt "tprefsform.lblnetaddress.caption"
 msgid "Server:"
-msgstr ""
+msgstr "服务器 :"
 
 #: tprefsform.lblnetcomputerid.caption
 #, fuzzy
 msgid "This station:"
-msgstr ""
+msgstr "本站:"
 
 #: tprefsform.lblnetcomputeridhint.caption
 #, fuzzy
 msgid "a single letter, unique in the network"
-msgstr ""
+msgstr "在网络中独一无二的单个字母"
 
 #: tprefsform.lblnetheading.caption
 #, fuzzy
 msgid "Multi-operator network"
-msgstr ""
+msgstr "多操作网络"
 
 #: tprefsform.lblnethint.caption
 #, fuzzy
 msgid "TR4WServer runs on one machine and every operating position connects to it.  It holds the shared log, the multipliers and the serial numbers."
-msgstr ""
+msgstr "TR4WServer运行在一台机器上,每个操作位置都与之连接. 它持有共享日志,乘数和序列号."
 
 #: tprefsform.lblnetpassword.caption
 #, fuzzy
 msgctxt "tprefsform.lblnetpassword.caption"
 msgid "Password:"
-msgstr ""
+msgstr "密码 :"
 
 #: tprefsform.lblnetport.caption
 #, fuzzy
 msgctxt "tprefsform.lblnetport.caption"
 msgid "Port:"
-msgstr ""
+msgstr "端口 :"
 
 #: tprefsform.lblopcwheading.caption
 #, fuzzy
 msgid "CW while operating"
-msgstr ""
+msgstr "操作时的 CW"
 
 #: tprefsform.lbloperatingheading.caption
 #, fuzzy
 msgid "Operating"
-msgstr ""
+msgstr "运行"
 
 #: tprefsform.lbloperatinginfo.caption
 #, fuzzy
 msgid "How the log behaves while you are running the contest. Band map, bands, CW, scoring and two-radio settings are on the pages below."
-msgstr ""
+msgstr "运行比赛时日志的表现 乐队图,乐队,CW,评分和双射线设置在下面的页面上."
 
 #: tprefsform.lblpaddlegroup.caption
 #, fuzzy
 msgctxt "tprefsform.lblpaddlegroup.caption"
 msgid "Paddle"
-msgstr ""
+msgstr "划桨"
 
 #: tprefsform.lblpaddlehold.caption
 #, fuzzy
 msgid "Hold PTT after the last element"
-msgstr ""
+msgstr "最后一个元素后按住 PTT"
 
 #: tprefsform.lblpaddleholdunits.caption
 #, fuzzy
 msgid "dit counts"
-msgstr ""
+msgstr "点数"
 
 #: tprefsform.lblpaddleportnote.caption
 #, fuzzy
 msgid "The parallel port a paddle or foot switch is wired to is not here. Whether TR4W keeps supporting LPT at all is an open question, so PADDLE PORT stays on the Ctrl-J command list until that is settled rather than being given a home it may not keep."
-msgstr ""
+msgstr "平行端口 划桨或脚开关有线,不在这里。 TR4W是否一直支持LPT是一个未决问题,因此PADDLE PORT在Ctrl-J命令列表中一直保留到解决,而不是被给予它可能保存不起来的家."
 
 #: tprefsform.lblpaddlepttheading.caption
 #, fuzzy
 msgid "Paddle and PTT"
-msgstr ""
+msgstr "划桨和 PTT"
 
 #: tprefsform.lblpaddlepttinfo.caption
 #, fuzzy
 msgid "The paddle keyer TR4W runs itself, and the PTT line it asserts. A WinKeyer or YCCC box keeps its own paddle timing, so these do not apply to it."
-msgstr ""
+msgstr "划桨键器TR4W自行运行,它声称的PTT线. 一个Winkeyer或YCCC盒保留自己的划桨时间,因此不适用."
 
 #: tprefsform.lblpaddlespeed.caption
 #, fuzzy
 msgid "Paddle speed"
-msgstr ""
+msgstr "划桨速度"
 
 #: tprefsform.lblpaddlespeedunits.caption
 #, fuzzy
 msgid "WPM  (0 follows the keyboard speed)"
-msgstr ""
+msgstr "WPM( 0 跟着键盘速度)"
 
 #: tprefsform.lblpaddletone.caption
 #, fuzzy
 msgid "Paddle sidetone"
-msgstr ""
+msgstr "平面线"
 
 #: tprefsform.lblpaddletoneunits.caption
 #, fuzzy
 msgctxt "tprefsform.lblpaddletoneunits.caption"
 msgid "Hz"
-msgstr ""
+msgstr "赫兹"
 
 #: tprefsform.lblplaceholder.caption
 #, fuzzy
@@ -6880,514 +6880,516 @@ msgid ""
 "This section has not been migrated yet.\n"
 "Use the existing configuration screens for it."
 msgstr ""
+"这一部分尚未迁移。\n"
+"使用已有的配置屏幕进行配置 ."
 
 #: tprefsform.lblpttdelay.caption
 #, fuzzy
 msgid "Delay after PTT before sending"
-msgstr ""
+msgstr "发送后 PTT 延迟"
 
 #: tprefsform.lblpttdelayunits.caption
 #, fuzzy
 msgid "x 1.7 ms  (0 disables)"
-msgstr ""
+msgstr "x 1.7 ms( 0 个禁用)"
 
 #: tprefsform.lblpttgroup.caption
 #, fuzzy
 msgid "PTT"
-msgstr ""
+msgstr "密码"
 
 #: tprefsform.lblradio1.caption
 #, fuzzy
 msgctxt "tprefsform.lblradio1.caption"
 msgid "Radio 1"
-msgstr ""
+msgstr "无线电1"
 
 #: tprefsform.lblradio2.caption
 #, fuzzy
 msgctxt "tprefsform.lblradio2.caption"
 msgid "Radio 2"
-msgstr ""
+msgstr "电台2"
 
 #: tprefsform.lblradiotcpheading.caption
 #, fuzzy
 msgid "Radio sharing"
-msgstr ""
+msgstr "无线电共享"
 
 #: tprefsform.lblradiotcphint.caption
 #, fuzzy
 msgid "Lets another position read this station's radio.  Takes effect when TR4W next starts."
-msgstr ""
+msgstr "让另一个位置读读这个电台的无线电 当TR4W下次开始时生效."
 
 #: tprefsform.lblradiotcpport.caption
 #, fuzzy
 msgid "TCP port:"
-msgstr ""
+msgstr "TCP 端口 :"
 
 #: tprefsform.lblrelayport.caption
 #, fuzzy
 msgid "Relay control port"
-msgstr ""
+msgstr "中继控制端口"
 
 #: tprefsform.lblrelayportinfo.caption
 #, fuzzy
 msgid "Parallel (LPT) port wiring for this station: relay switching, band data out to a decoder per operating position, and stereo audio control. These follow the DESK, not the radio, so they stay put when you activate a different radio. Leave them None unless you have such an interface - whether TR4W keeps supporting LPT at all is still an open question, which the greyed box below is a placeholder for."
-msgstr ""
+msgstr "本站的平行(LPT)端口线路:中继切换,波段数据向每个操作位置解码器输出,以及立体声控制. 这些跟随DESK,而不是收音机,所以当你激活另一个收音机时,它们就留在原地. 除非您有这样的接口 - TR4W 是否一直支持 LPT 仍然是一个未决问题, 下面的灰色框是一个占位符 ."
 
 #: tprefsform.lblrotatorbands.caption
 #, fuzzy
 msgid "Bands:"
-msgstr ""
+msgstr "乐队 :"
 
 #: tprefsform.lblrotatorbandshint.caption
 #, fuzzy
 msgid "Leave blank and this rotator turns for every band, which is what a station with one antenna wants.  List bands - 20 15 10 - to have TR4W choose between several rotators by band."
-msgstr ""
+msgstr "留空,这个旋转器转动每个带, 这就是一个站和一个天线想要的。 List bands - 20 15 10 - 让TR4W按乐队在几个转子之间选择."
 
 #: tprefsform.lblrotatorbaud.caption
 #, fuzzy
 msgid "Baud rate:"
-msgstr ""
+msgstr "保龄球率:"
 
 #: tprefsform.lblrotatorbaudhint.caption
 #, fuzzy
 msgid "blank or 0 = the default for this type"
-msgstr ""
+msgstr "空白或 0 = 该类型的默认值"
 
 #: tprefsform.lblrotatorip.caption
 #, fuzzy
 msgid "IP address:"
-msgstr ""
+msgstr "IP 地址 :"
 
 #: tprefsform.lblrotatorname.caption
 #, fuzzy
 msgctxt "tprefsform.lblrotatorname.caption"
 msgid "Name:"
-msgstr ""
+msgstr "名称 :"
 
 #: tprefsform.lblrotatornote.caption
 #, fuzzy
 msgid "PstRotator is reached over UDP and has no serial port; the others use one.  A blank baud rate lets each type use what it expects - the DCU-1 wants 4800 where the rest want 9600."
-msgstr ""
+msgstr "PstRotator通过UDP到达,没有串行端口;其他人使用一个. 空包率让每个类型使用它所期望的 - DCU-1想要4800,其余的则需要9600."
 
 #: tprefsform.lblrotatorport.caption
 #, fuzzy
 msgctxt "tprefsform.lblrotatorport.caption"
 msgid "Port:"
-msgstr ""
+msgstr "端口 :"
 
 #: tprefsform.lblrotatortype.caption
 #, fuzzy
 msgid "Type:"
-msgstr ""
+msgstr "类型 :"
 
 #: tprefsform.lblrotatorudp.caption
 #, fuzzy
 msgid "UDP port:"
-msgstr ""
+msgstr "UDP 端口 :"
 
 #: tprefsform.lblsayhicutoff.caption
 #, fuzzy
 msgid "Stop above a rate of:"
-msgstr ""
+msgstr "超过 :"
 
 #: tprefsform.lblsayhicutoffunits.caption
 #, fuzzy
 msgid "QSOs per hour"
-msgstr ""
+msgstr "每小时QSO"
 
 #: tprefsform.lblscoreboardheading.caption
 #, fuzzy
 msgid "Score board"
-msgstr ""
+msgstr "计分板"
 
 #: tprefsform.lblscoreboardhint.caption
 #, fuzzy
 msgid "Where TR4W posts its score and where it reads other stations' scores from.  The two are separate so a club board can be read while posting elsewhere."
-msgstr ""
+msgstr "Where TR4W发布它的分数 以及它读取其他电台的分数。 两者是分开的,所以在别处张贴时可以读取一个俱乐部董事会."
 
 #: tprefsform.lblscoreheading.caption
 #, fuzzy
 msgid "Online scoring"
-msgstr ""
+msgstr "在线评分"
 
 #: tprefsform.lblscoreposturl.caption
 #, fuzzy
 msgid "Posting URL:"
-msgstr ""
+msgstr "发布 URL :"
 
 #: tprefsform.lblscorereadurl.caption
 #, fuzzy
 msgid "Reading URL:"
-msgstr ""
+msgstr "正在读取 URL :"
 
 #: tprefsform.lblscorerestart.caption
 #, fuzzy
 msgctxt "tprefsform.lblscorerestart.caption"
 msgid "These take effect when TR4W next starts."
-msgstr ""
+msgstr "这些在TR4W下次开始时生效."
 
 #: tprefsform.lblscpcountry.caption
 #, fuzzy
 msgid "Restrict to countries:"
-msgstr ""
+msgstr "限于国家:"
 
 #: tprefsform.lblscpfilehint.caption
 #, fuzzy
 msgid "Matches come from TRMASTER.DTA in the program folder.  Without that file Super Check Partial simply shows nothing; it is not an error."
-msgstr ""
+msgstr "匹配来自程序文件夹中的 TRMASTER. DTA. 没有这个文件 Super Check 部分仅仅是没有显示; 这不是一个错误 ."
 
 #: tprefsform.lblscpheading.caption
 #, fuzzy
 msgid "Super Check Partial"
-msgstr ""
+msgstr "超级检查部分"
 
 #: tprefsform.lblscphint.caption
 #, fuzzy
 msgid "Blank shows matches from everywhere.  A list of country prefixes narrows it, which is useful in a domestic contest where the whole world is not workable."
-msgstr ""
+msgstr "空白显示来自各地的匹配 。 国家前缀列表将它缩小,这在整个世界不可行的国内竞争中是有用的."
 
 #: tprefsform.lblscpmatchheading.caption
 #, fuzzy
 msgid "Matching"
-msgstr ""
+msgstr "匹配"
 
 #: tprefsform.lblscpminletters.caption
 #, fuzzy
 msgid "Start matching after:"
-msgstr ""
+msgstr "于 :"
 
 #: tprefsform.lblscpminlettersunits.caption
 #, fuzzy
 msgid "letters typed"
-msgstr ""
+msgstr "字母键入"
 
 #: tprefsform.lblserialkeyheading.caption
 #, fuzzy
 msgid "Radio serial keying  (DTR/RTS keying only)"
-msgstr ""
+msgstr "无线电连锁密钥(仅DTR/RTS密钥)"
 
 #: tprefsform.lblserialkeyintro.caption
 #, fuzzy
 msgid "These shape the CW that TR4W generates itself by toggling a serial line.  They do nothing for a WinKeyer, a YCCC box, or CW sent by CAT - those devices keep their own timing."
-msgstr ""
+msgstr "这些通过牵引串行来塑造TR4W产生的CW. 他们对一个Winkeyer,一个YCC盒,或者CAT发送的CW-这些装置保持了自己的时间."
 
 #: tprefsform.lblstationheading.caption
 #, fuzzy
 msgctxt "tprefsform.lblstationheading.caption"
 msgid "Station information"
-msgstr ""
+msgstr "站点信息"
 
 #: tprefsform.lblstationhint.caption
 #, fuzzy
 msgid "These are sent to the other stations in a multi-operator network when you change them, so all positions agree on the exchange."
-msgstr ""
+msgstr "这些在换乘时会通过多操作网络发送给其他台站,所以所有位置都同意交换."
 
 #: tprefsform.lblstereoport.caption
 #, fuzzy
 msgid "Stereo control port"
-msgstr ""
+msgstr "立体声控制端口"
 
 #: tprefsform.lbltcibindallwarning.caption
 #, fuzzy
 msgid "Off by default, and worth leaving off.  This is an unauthenticated radio-control socket: anything that can reach the port can move your VFO and key your transmitter."
-msgstr ""
+msgstr "默认关闭,值得离开。 这是一个未经认证的无线电控制套接字:任何能到达端口的都能够移动你的VFO并按键你的发射机."
 
 #: tprefsform.lbltciintro.caption
 #, fuzzy
 msgid "Lets other programs - WSJT-X, JTDX, a skimmer - control whichever radio TR4W has the port open on, even a radio with no TCI of its own.  Radio 1 is trx 0 and radio 2 is trx 1."
-msgstr ""
+msgstr "让其他程序 - WSJT-X,JTDX,一个滑动器 - 控制哪个收音机TR4W的端口打开,甚至控制一个没有自己TCI的收音机. 1号电台为trx 0,2号电台为trx 1."
 
 #: tprefsform.lbltciloghint.caption
 #, fuzzy
 msgid "To log every TCI command in both directions, see the Logging section."
-msgstr ""
+msgstr "要登录双向的每个 TICI 命令,请参见日志部分."
 
 #: tprefsform.lbltcimaxtx.caption
 #, fuzzy
 msgid "Stop transmitting after:"
-msgstr ""
+msgstr "之后停止传输 :"
 
 #: tprefsform.lbltcimaxtxhint.caption
 #, fuzzy
 msgid "A safety net, not a timer for normal use: if a client keys the radio and then stops answering - it crashed, or the network went away - this is what puts the transmitter back into receive."
-msgstr ""
+msgstr "一个安全网,而不是一个正常使用的定时器:如果一个客户端按下收音机键然后停止回答——它崩溃了,或者网络消失了——这就是使发射机重新被接收的原因."
 
 #: tprefsform.lbltcimaxtxunits.caption
 #, fuzzy
 msgid "seconds  (0 = no limit)"
-msgstr ""
+msgstr "秒( 0 = 无限制)"
 
 #: tprefsform.lbltciport.caption
 #, fuzzy
 msgctxt "tprefsform.lbltciport.caption"
 msgid "Port:"
-msgstr ""
+msgstr "端口 :"
 
 #: tprefsform.lbltciserverscope.caption
 #, fuzzy
 msgid "- this computer only (127.0.0.1), until you tick the box below"
-msgstr ""
+msgstr "- 仅此计算机(127. 0.0.1), 直到您选中下面的框"
 
 #: tprefsform.lbltworadioheading.caption
 #, fuzzy
 msgid "Two radio operating"
-msgstr ""
+msgstr "两台无线电"
 
 #: tprefsform.lbltworadiohint.caption
 #, fuzzy
 msgid "Skipping the other radio's band is what stops a band change on one radio landing you on top of the other."
-msgstr ""
+msgstr "跳过另一个电台的乐队 就是阻止一个电台改变一个乐队 让你在另一个电台之上."
 
 #: tprefsform.lbltworadiointro.caption
 #, fuzzy
 msgid "Everything below applies only while two radio mode is on."
-msgstr ""
+msgstr "下面的一切只在两个无线电模式打开时才适用."
 
 #: tprefsform.lbludpdestinations.caption
 #, fuzzy
 msgid "Destinations"
-msgstr ""
+msgstr "目标"
 
 #: tprefsform.lbludphint.caption
 #, fuzzy
 msgid "Each destination is one program listening.  Add a second row for the same address when it expects different data on a different port."
-msgstr ""
+msgstr "每个目的地都是一个程序监听. 当它期望不同端口上的不同数据时,为同一地址添加第二行."
 
 #: tprefsform.lblweight.caption
 #, fuzzy
 msgid "Weight:"
-msgstr ""
+msgstr "重量 :"
 
 #: tprefsform.lblwsjtxheading.caption
 #, fuzzy
 msgid "WSJT-X / JTDX"
-msgstr ""
+msgstr "WSJT-X / JTDX 数据"
 
 #: tprefsform.lblwsjtxmulticast.caption
 #, fuzzy
 msgid "Multicast group:"
-msgstr ""
+msgstr "多播组 :"
 
 #: tprefsform.lblwsjtxport.caption
 #, fuzzy
 msgid "Broadcast port:"
-msgstr ""
+msgstr "广播端口 :"
 
 #: tprefsform.lblwsjtxrestart.caption
 #, fuzzy
 msgid "These take effect when TR4W next starts.  Leave the multicast group blank unless WSJT-X is configured to use one."
-msgstr ""
+msgstr "这些在TR4W下次开始时生效. 除非WSJT-X配置为使用,否则多播组保留空白."
 
 #: tprefsform.lblwsjtxtcihint.caption
 #, fuzzy
 msgid "To let WSJT-X drive the radio over TCI instead, see the TCI Server section - that works with any radio TR4W controls, not only one with TCI of its own."
-msgstr ""
+msgstr "让WSJT-X通过TCI驱动收音机,代之以看到TCI服务器段——它与任何无线电TR4W控制器合作,而不只是与TCI自己的一个."
 
 #: tprefsform.lblycccinfo.caption
 #, fuzzy
 msgid "Station controllers will get a factory of their own, as radios and keyers did. This checkbox is the interim home for the setting."
-msgstr ""
+msgstr "电台控制员会像收音机和键器一样 得到自己的工厂 此复选框是设置的临时主机 ."
 
 #: tradioeditform.btncancel.caption
 #, fuzzy
 msgctxt "tradioeditform.btncancel.caption"
 msgid "Cancel"
-msgstr ""
+msgstr "取消"
 
 #: tradioeditform.btndiscover.caption
 #, fuzzy
 msgctxt "tradioeditform.btndiscover.caption"
 msgid "Discover"
-msgstr ""
+msgstr "发现"
 
 #: tradioeditform.btnok.caption
 #, fuzzy
 msgctxt "tradioeditform.btnok.caption"
 msgid "Save and close"
-msgstr ""
+msgstr "保存和关闭"
 
 #: tradioeditform.caption
 #, fuzzy
 msgctxt "tradioeditform.caption"
 msgid "Radio"
-msgstr ""
+msgstr "无线电"
 
 #: tradioeditform.chkft1000mpreverse.caption
 #, fuzzy
 msgctxt "tradioeditform.chkft1000mpreverse.caption"
 msgid "FT-1000MP CW reverse"
-msgstr ""
+msgstr "FT-1000MP CW 反转"
 
 #: tradioeditform.chkpolling.caption
 #, fuzzy
 msgctxt "tradioeditform.chkpolling.caption"
 msgid "Poll this radio"
-msgstr ""
+msgstr "把收音机打出来"
 
 #: tradioeditform.chkusehamlib.caption
 #, fuzzy
 msgctxt "tradioeditform.chkusehamlib.caption"
 msgid "Drive through HamLib"
-msgstr ""
+msgstr "开车通过HamLib"
 
 #: tradioeditform.chkwidecw.caption
 #, fuzzy
 msgctxt "tradioeditform.chkwidecw.caption"
 msgid "Wide CW filter"
-msgstr ""
+msgstr "宽 CW 过滤器"
 
 #: tradioeditform.edtfreqoffset.texthint
 #, fuzzy
 msgid "0 = none, e.g. 116000000"
-msgstr ""
+msgstr "0=无,例如11600000"
 
 #: tradioeditform.lblautoinfo.caption
 #, fuzzy
 msgid "Auto-info level"
-msgstr ""
+msgstr "自动信息级别"
 
 #: tradioeditform.lblbaud.caption
 #, fuzzy
 msgctxt "tradioeditform.lblbaud.caption"
 msgid "Baud rate"
-msgstr ""
+msgstr "保费率"
 
 #: tradioeditform.lblcatdtr.caption
 #, fuzzy
 msgctxt "tradioeditform.lblcatdtr.caption"
 msgid "CAT DTR"
-msgstr ""
+msgstr "CAT DTR 计算机辅助设备"
 
 #: tradioeditform.lblcatrts.caption
 #, fuzzy
 msgctxt "tradioeditform.lblcatrts.caption"
 msgid "CAT RTS"
-msgstr ""
+msgstr "《禁止酷刑公约》"
 
 #: tradioeditform.lblciv.caption
 #, fuzzy
 msgctxt "tradioeditform.lblciv.caption"
 msgid "CI-V address (hex)"
-msgstr ""
+msgstr "CI-V地址(hex)"
 
 #: tradioeditform.lbldatabits.caption
 #, fuzzy
 msgctxt "tradioeditform.lbldatabits.caption"
 msgid "Data bits"
-msgstr ""
+msgstr "数据位"
 
 #: tradioeditform.lbldatamode.caption
 #, fuzzy
 msgctxt "tradioeditform.lbldatamode.caption"
 msgid "Icom data mode ID"
-msgstr ""
+msgstr "Icom 数据模式 ID"
 
 #: tradioeditform.lblfilterbyte.caption
 #, fuzzy
 msgctxt "tradioeditform.lblfilterbyte.caption"
 msgid "Icom filter byte"
-msgstr ""
+msgstr "Icom 过滤字节"
 
 #: tradioeditform.lblfound.caption
 #, fuzzy
 msgctxt "tradioeditform.lblfound.caption"
 msgid "Found"
-msgstr ""
+msgstr "发现"
 
 #: tradioeditform.lblfreqoffset.caption
 #, fuzzy
 msgid "Frequency offset (transverter), Hz"
-msgstr ""
+msgstr "频率偏移(转换器),赫兹"
 
 #: tradioeditform.lblhamlibid.caption
 #, fuzzy
 msgctxt "tradioeditform.lblhamlibid.caption"
 msgid "HamLib model ID"
-msgstr ""
+msgstr "HamLib 型号 ID"
 
 #: tradioeditform.lblip.caption
 #, fuzzy
 msgctxt "tradioeditform.lblip.caption"
 msgid "IP address"
-msgstr ""
+msgstr "IP 地址"
 
 #: tradioeditform.lblkeyerdtr.caption
 #, fuzzy
 msgctxt "tradioeditform.lblkeyerdtr.caption"
 msgid "Keyer DTR line"
-msgstr ""
+msgstr "键盘 DTR 线"
 
 #: tradioeditform.lblkeyerport.caption
 #, fuzzy
 msgctxt "tradioeditform.lblkeyerport.caption"
 msgid "Keyer output port"
-msgstr ""
+msgstr "密钥输出端口"
 
 #: tradioeditform.lblkeyerrts.caption
 #, fuzzy
 msgctxt "tradioeditform.lblkeyerrts.caption"
 msgid "Keyer RTS line"
-msgstr ""
+msgstr "键盘 RTS 线"
 
 #: tradioeditform.lblkeyerstopbits.caption
 #, fuzzy
 msgctxt "tradioeditform.lblkeyerstopbits.caption"
 msgid "Stop bits"
-msgstr ""
+msgstr "停止位数"
 
 #: tradioeditform.lblname.caption
 #, fuzzy
 msgctxt "tradioeditform.lblname.caption"
 msgid "Name"
-msgstr ""
+msgstr "名称"
 
 #: tradioeditform.lblparity.caption
 #, fuzzy
 msgctxt "tradioeditform.lblparity.caption"
 msgid "Parity"
-msgstr ""
+msgstr "均等"
 
 #: tradioeditform.lblpassword.caption
 #, fuzzy
 msgctxt "tradioeditform.lblpassword.caption"
 msgid "Password"
-msgstr ""
+msgstr "密码"
 
 #: tradioeditform.lblport.caption
 #, fuzzy
 msgctxt "tradioeditform.lblport.caption"
 msgid "Port"
-msgstr ""
+msgstr "端口"
 
 #: tradioeditform.lblstartup.caption
 #, fuzzy
 msgctxt "tradioeditform.lblstartup.caption"
 msgid "Startup command"
-msgstr ""
+msgstr "启动命令"
 
 #: tradioeditform.lblstopbits.caption
 #, fuzzy
 msgctxt "tradioeditform.lblstopbits.caption"
 msgid "Stop bits"
-msgstr ""
+msgstr "停止位数"
 
 #: tradioeditform.lbltcpport.caption
 #, fuzzy
 msgctxt "tradioeditform.lbltcpport.caption"
 msgid "TCP port"
-msgstr ""
+msgstr "TCP 端口"
 
 #: tradioeditform.lbltype.caption
 #, fuzzy
 msgctxt "tradioeditform.lbltype.caption"
 msgid "Radio type"
-msgstr ""
+msgstr "无线电类型"
 
 #: tradioeditform.lbluser.caption
 #, fuzzy
 msgctxt "tradioeditform.lbluser.caption"
 msgid "User name"
-msgstr ""
+msgstr "用户名"
 
 #: tradioeditform.optdata7.caption
 #, fuzzy
@@ -7403,19 +7405,19 @@ msgstr ""
 #, fuzzy
 msgctxt "tradioeditform.optparityeven.caption"
 msgid "Even"
-msgstr ""
+msgstr "连"
 
 #: tradioeditform.optparitynone.caption
 #, fuzzy
 msgctxt "tradioeditform.optparitynone.caption"
 msgid "None"
-msgstr ""
+msgstr "无"
 
 #: tradioeditform.optparityodd.caption
 #, fuzzy
 msgctxt "tradioeditform.optparityodd.caption"
 msgid "Odd"
-msgstr ""
+msgstr "单数"
 
 #: tradioeditform.optstop1.caption
 #, fuzzy
@@ -7431,31 +7433,31 @@ msgstr ""
 #, fuzzy
 msgctxt "tradioeditform.tabadvanced.caption"
 msgid "Advanced"
-msgstr ""
+msgstr "高级"
 
 #: tradioeditform.tabnetwork.caption
 #, fuzzy
 msgctxt "tradioeditform.tabnetwork.caption"
 msgid "Network"
-msgstr ""
+msgstr "网络"
 
 #: tradioeditform.tabserial.caption
 #, fuzzy
 msgctxt "tradioeditform.tabserial.caption"
 msgid "Serial"
-msgstr ""
+msgstr "序列"
 
 #: ttr4wmainform.caption
 #, fuzzy
 msgctxt "ttr4wmainform.caption"
 msgid "TR4W"
-msgstr ""
+msgstr "TR4W 战车"
 
 #: uappstrings.salreadyrunningtitle
 #, fuzzy
 msgctxt "uappstrings.salreadyrunningtitle"
 msgid "TR4W"
-msgstr ""
+msgstr "TR4W 战车"
 
 #: uappstrings.sctydownloadfailed
 #, fuzzy
@@ -7468,16 +7470,19 @@ msgid ""
 "\n"
 "tr4w.log records the full detail."
 msgstr ""
+"无法下载 CCY. DAT 到 :\n"
+"\n"
+" %s原因: %str4w.log记录了全部细节."
 
 #: uappstrings.sctydownloadfailedtitle
 #, fuzzy
 msgid "CTY.DAT"
-msgstr ""
+msgstr "CTY. 达特"
 
 #: uappstrings.sdownloadcouldnotstart
 #, fuzzy
 msgid "the download was refused before it began (bad URL)."
-msgstr ""
+msgstr "下载开始前被拒绝(坏 URL) ."
 
 #: uappstrings.sdownloadnossllibrary
 #, fuzzy
@@ -7486,16 +7491,19 @@ msgid ""
 "\n"
 "libeay32.dll and ssleay32.dll must sit in the same folder as tr4w.exe. The TR4W installer puts them there -- was this folder installed, or is it a copy of tr4w.exe on its own?"
 msgstr ""
+"无法装入 OpenSSL 库 。\n"
+"\n"
+"libeay32.dll和sleay32.dll必须和tr4w.exe坐在同一个文件夹里. TR4W安装器把它们放在那里——是安装了这个文件夹,还是自己是tr4w.exe的复制件?"
 
 #: uappstrings.sdownloadrenamefailed
 #, fuzzy
 msgid "the file downloaded but could not be saved under its final name."
-msgstr ""
+msgstr "文件已下载,但无法保存到其最终名称."
 
 #: uappstrings.siniretiredontask
 #, fuzzy
 msgid "Do not ask me about this file again"
-msgstr ""
+msgstr "别再问我这个文件了"
 
 #: uappstrings.siniretirefailed
 #, fuzzy
@@ -7503,6 +7511,8 @@ msgid ""
 "Could not remove %s -- %s.\n"
 "It is ignored regardless, so nothing is broken."
 msgstr ""
+"无法删除 %s --%s 。\n"
+"不管怎样,它都被忽视了,所以没有东西被打破."
 
 #: uappstrings.siniretireprompt
 #, fuzzy
@@ -7517,55 +7527,60 @@ msgid ""
 "\n"
 "The file is ignored either way."
 msgstr ""
+"您的设置已移动到 :\n"
+" %s旧文件不再读 :\n"
+" %s现在拿掉?\n"
+"\n"
+"文件被忽略 。"
 
 #: uappstrings.siniretireremoved
 #, fuzzy
 msgid "Removed %s."
-msgstr ""
+msgstr "删除%s ."
 
 #: uappstrings.siniretiretitle
 #, fuzzy
 msgctxt "uappstrings.siniretiretitle"
 msgid "Old settings file"
-msgstr ""
+msgstr "旧设置文件"
 
 #: ulclformhelpers.tc_prefs_activelabel
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_activelabel"
 msgid "Active profile: "
-msgstr ""
+msgstr "活动简介 : "
 
 #: ulclformhelpers.tc_prefs_applied
 #, fuzzy
 msgid "Profile \"%s\" is active."
-msgstr ""
+msgstr "配置文件 \"%s\" 已激活 ."
 
 #: ulclformhelpers.tc_prefs_confirmremove
 #, fuzzy
 msgid "Remove radio \"%s\"?"
-msgstr ""
+msgstr "删除收音机“%s ” ?"
 
 #: ulclformhelpers.tc_prefs_hardware
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_hardware"
 msgid "Hardware"
-msgstr ""
+msgstr "硬件"
 
 #: ulclformhelpers.tc_prefs_newprofile
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_newprofile"
 msgid "New..."
-msgstr ""
+msgstr "新建..."
 
 #: ulclformhelpers.tc_prefs_none
 #, fuzzy
 msgid "(none)"
-msgstr ""
+msgstr "(无)"
 
 #: ulclformhelpers.tc_prefs_noprofile
 #, fuzzy
 msgid "Select or create a station profile first."
-msgstr ""
+msgstr "先选择或创建站名简介 ."
 
 #: ulclformhelpers.tc_prefs_portconflict
 #, fuzzy
@@ -7576,40 +7591,43 @@ msgid ""
 "\n"
 "Apply anyway?"
 msgstr ""
+"港口冲突 :\n"
+"\n"
+"%s应用呢?"
 
 #: ulclformhelpers.tc_prefs_profiles
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_profiles"
 msgid "Station profile"
-msgstr ""
+msgstr "车站简介"
 
 #: ulclformhelpers.tc_prefs_radio1
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_radio1"
 msgid "Radio 1"
-msgstr ""
+msgstr "无线电1"
 
 #: ulclformhelpers.tc_prefs_radio2
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_radio2"
 msgid "Radio 2"
-msgstr ""
+msgstr "电台2"
 
 #: ulclformhelpers.tc_prefs_radioinuse
 #, fuzzy
 msgid "%s  (in use as %s)"
-msgstr ""
+msgstr "%s (作为%s使用)"
 
 #: ulclformhelpers.tc_prefs_renameprofile
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_renameprofile"
 msgid "Rename..."
-msgstr ""
+msgstr "重命名..."
 
 #: ulclformhelpers.tc_prefs_udpconfirmremove
 #, fuzzy
 msgid "Remove the destination %s:%d?"
-msgstr ""
+msgstr "删除目的地%s:%d?"
 
 #: ulclformhelpers.tc_prefs_udpduplicate
 #, fuzzy
@@ -7617,52 +7635,54 @@ msgid ""
 "%s:%d is already in the list.\n"
 "Add the extra kinds of data to that destination instead of listing it twice."
 msgstr ""
+"%s :%d 已经在列表中 。\n"
+"将额外类型的数据添加到该目的地,而不是两次列出."
 
 #: ulclformhelpers.tc_prefs_udpnostreams
 #, fuzzy
 msgid "(nothing selected)"
-msgstr ""
+msgstr "(没有选择)"
 
 #: ulclformhelpers.tc_prefs_udpselectfirst
 #, fuzzy
 msgid "Select a destination to test."
-msgstr ""
+msgstr "选择要测试的目的地 ."
 
 #: ulclformhelpers.tc_prefs_udpstream_appinfo
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_udpstream_appinfo"
 msgid "App info"
-msgstr ""
+msgstr "应用程序信息"
 
 #: ulclformhelpers.tc_prefs_udpstream_contact
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_udpstream_contact"
 msgid "Contact info"
-msgstr ""
+msgstr "联系信息"
 
 #: ulclformhelpers.tc_prefs_udpstream_lookup
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_udpstream_lookup"
 msgid "Callsign lookup"
-msgstr ""
+msgstr "调用搜索"
 
 #: ulclformhelpers.tc_prefs_udpstream_radio
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_udpstream_radio"
 msgid "Radio info"
-msgstr ""
+msgstr "无线电信息"
 
 #: ulclformhelpers.tc_prefs_udpstream_rotor
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_udpstream_rotor"
 msgid "Rotor"
-msgstr ""
+msgstr "旋转器"
 
 #: ulclformhelpers.tc_prefs_udpstream_score
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_udpstream_score"
 msgid "Score"
-msgstr ""
+msgstr "分数"
 
 #: ulclformhelpers.tc_prefs_udptestsent
 #, fuzzy
@@ -7670,17 +7690,19 @@ msgid ""
 "Test packet sent to %s:%d.\n"
 "UDP cannot confirm it arrived -- check the receiving program."
 msgstr ""
+"测试包发送到 %s :%d 。\n"
+"UDP 无法确认它到达 -- 检查接收程序 ."
 
 #: ulclformhelpers.tc_prefs_unsaved
 #, fuzzy
 msgid "Save your changes before closing?"
-msgstr ""
+msgstr "在关闭前保存您的更改 ?"
 
 #: ulclformhelpers.tc_prefs_unsavedtitle
 #, fuzzy
 msgctxt "ulclformhelpers.tc_prefs_unsavedtitle"
 msgid "TR4W Preferences"
-msgstr ""
+msgstr "TR4W 首选项"
 
 #: ulclformhelpers.tc_radioedit_autoinfowarn
 #, fuzzy
@@ -7693,942 +7715,949 @@ msgid ""
 "\n"
 "Use this value anyway?"
 msgstr ""
+"手设自动信息级别是非标准配置 。\n"
+"\n"
+"离开这个框 EMPTY 除非您有具体的理由: 然后无线电使用 TR4W 级别知道它的工作, 和TR4W 民调它尽可能少。\n"
+"\n"
+"您在此输入的值会覆盖它, 它会影响操作 - 输入 0 返回收音机为每件事务进行投票, 这明显会将更改从发送返回到接收 。\n"
+"\n"
+"使用这个值吗 ?"
 
 #: ulclformhelpers.tc_radioedit_badciv
 #, fuzzy
 msgid "The CI-V address must be a hex value, e.g. 88 or $88."
-msgstr ""
+msgstr "CI-V地址必须是十六进制值,例如88或88."
 
 #: ulclformhelpers.tc_radioedit_defaulthint
 #, fuzzy
 msgid "%s (default)"
-msgstr ""
+msgstr "%s (默认)"
 
 #: ulclformhelpers.tc_radioedit_discover
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_discover"
 msgid "Discover"
-msgstr ""
+msgstr "发现"
 
 #: ulclformhelpers.tc_radioedit_namerequired
 #, fuzzy
 msgid "The radio needs a name."
-msgstr ""
+msgstr "无线电需要一个名字."
 
 #: ulclformhelpers.tc_radioedit_nonefound
 #, fuzzy
 msgid "No radios answered."
-msgstr ""
+msgstr "没有收音机回答."
 
 #: ulclformhelpers.tc_radioedit_searching
 #, fuzzy
 msgid "Searching..."
-msgstr ""
+msgstr "正在搜索中..."
 
 #: ulclformhelpers.tc_radioedit_typerequired
 #, fuzzy
 msgid "Choose a radio type."
-msgstr ""
+msgstr "选择无线电类型 ."
 
 #: utr4wstrings.close_word
 #, fuzzy
 msgctxt "utr4wstrings.close_word"
 msgid "Close"
-msgstr ""
+msgstr "关闭"
 
 #: utr4wstrings.exit_word
 #, fuzzy
 msgctxt "utr4wstrings.exit_word"
 msgid "E&xit"
-msgstr ""
+msgstr "Exit 编辑器"
 
 #: utr4wstrings.help_word
 #, fuzzy
 msgid "Help"
-msgstr ""
+msgstr "帮助"
 
 #: utr4wstrings.rc_3830
 #, fuzzy
 msgid "3830 Score posting"
-msgstr ""
+msgstr "3830 记分数"
 
 #: utr4wstrings.rc_3830_arrl
 #, fuzzy
 msgid "Submit ARRL Log"
-msgstr ""
+msgstr "提交 ARRL 日志"
 
 #: utr4wstrings.rc_about
 #, fuzzy
 msgid "About"
-msgstr ""
+msgstr "关于"
 
 #: utr4wstrings.rc_addbandmapph
 #, fuzzy
 msgid "Add bandmap place holder"
-msgstr ""
+msgstr "添加带图位置控件"
 
 #: utr4wstrings.rc_addinfo
 #, fuzzy
 msgid "Additional information"
-msgstr ""
+msgstr "补充资料"
 
 #: utr4wstrings.rc_ai_cwspeed
 #, fuzzy
 msgid "CW Speed"
-msgstr ""
+msgstr "CW 速度"
 
 #: utr4wstrings.rc_ai_qsonumber
 #, fuzzy
 msgid "QSO number"
-msgstr ""
+msgstr "数量"
 
 #: utr4wstrings.rc_allcalls
 #, fuzzy
 msgid "All callsigns"
-msgstr ""
+msgstr "所有调用符号"
 
 #: utr4wstrings.rc_altp
 #, fuzzy
 msgid "Open Fkeys"
-msgstr ""
+msgstr "打开 Fkeys"
 
 #: utr4wstrings.rc_altx
 #, fuzzy
 msgid "Exit Program"
-msgstr ""
+msgstr "退出程序"
 
 #: utr4wstrings.rc_autocq
 #, fuzzy
 msgctxt "utr4wstrings.rc_autocq"
 msgid "Auto-CQ"
-msgstr ""
+msgstr "自动CQ"
 
 #: utr4wstrings.rc_autocq2
 #, fuzzy
 msgctxt "utr4wstrings.rc_autocq2"
 msgid "Auto-CQ"
-msgstr ""
+msgstr "自动CQ"
 
 #: utr4wstrings.rc_autocqresume
 #, fuzzy
 msgid "Auto-CQ resume"
-msgstr ""
+msgstr "自动 CQ 恢复"
 
 #: utr4wstrings.rc_backuplog
 #, fuzzy
 msgid "Backup Log"
-msgstr ""
+msgstr "备份日志"
 
 #: utr4wstrings.rc_band
 #, fuzzy
 msgctxt "utr4wstrings.rc_band"
 msgid "Band"
-msgstr ""
+msgstr "带"
 
 #: utr4wstrings.rc_bandchanges
 #, fuzzy
 msgid "Band changes"
-msgstr ""
+msgstr "带子变化"
 
 #: utr4wstrings.rc_banddown
 #, fuzzy
 msgid "Band Down"
-msgstr ""
+msgstr "带宽"
 
 #: utr4wstrings.rc_bandmap
 #, fuzzy
 msgid "Bandmap"
-msgstr ""
+msgstr "组合图"
 
 #: utr4wstrings.rc_bandplan
 #, fuzzy
 msgctxt "utr4wstrings.rc_bandplan"
 msgid "Band plan"
-msgstr ""
+msgstr "乐队计划"
 
 #: utr4wstrings.rc_bandup
 #, fuzzy
 msgid "Band Up"
-msgstr ""
+msgstr "带宽"
 
 #: utr4wstrings.rc_beaconsm
 #, fuzzy
 msgid "Beacons monitor"
-msgstr ""
+msgstr "灯塔监视器"
 
 #: utr4wstrings.rc_calculator
 #, fuzzy
 msgid "Calculator"
-msgstr ""
+msgstr "计算器"
 
 #: utr4wstrings.rc_callsign
 #, fuzzy
 msgctxt "utr4wstrings.rc_callsign"
 msgid "Callsign"
-msgstr ""
+msgstr "调用"
 
 #: utr4wstrings.rc_caption
 #, fuzzy
 msgctxt "utr4wstrings.rc_caption"
 msgid "Caption"
-msgstr ""
+msgstr "说明"
 
 #: utr4wstrings.rc_catandcw
 #, fuzzy
 msgid "CAT and CW Keying"
-msgstr ""
+msgstr "CAT 和 CW 密钥"
 
 #: utr4wstrings.rc_clearalllogs
 #, fuzzy
 msgid "Clear all logs in network"
-msgstr ""
+msgstr "清除网络中的所有日志"
 
 #: utr4wstrings.rc_cleardupes
 #, fuzzy
 msgid "Clear dupesheet"
-msgstr ""
+msgstr "清除套装表"
 
 #: utr4wstrings.rc_clearlog
 #, fuzzy
 msgid "Clear log"
-msgstr ""
+msgstr "清除日志"
 
 #: utr4wstrings.rc_clearmsheet
 #, fuzzy
 msgid "Clear multsheet"
-msgstr ""
+msgstr "清除挂图"
 
 #: utr4wstrings.rc_colors
 #, fuzzy
 msgid "Colors"
-msgstr ""
+msgstr "颜色"
 
 #: utr4wstrings.rc_commands
 #, fuzzy
 msgctxt "utr4wstrings.rc_commands"
 msgid "Commands"
-msgstr ""
+msgstr "图标"
 
 #: utr4wstrings.rc_comment
 #, fuzzy
 msgctxt "utr4wstrings.rc_comment"
 msgid "Comment"
-msgstr ""
+msgstr "注释"
 
 #: utr4wstrings.rc_contents
 #, fuzzy
 msgid "Contents"
-msgstr ""
+msgstr "目录"
 
 #: utr4wstrings.rc_contestnameic
 #, fuzzy
 msgid "C&ontest name in comment"
-msgstr ""
+msgstr "在注释中测试名称( O)"
 
 #: utr4wstrings.rc_contlist
 #, fuzzy
 msgid "Continent List"
-msgstr ""
+msgstr "大陆列表"
 
 #: utr4wstrings.rc_cqmode
 #, fuzzy
 msgid "CQ Mode"
-msgstr ""
+msgstr "CQ 模式"
 
 #: utr4wstrings.rc_ct1bohis
 #, fuzzy
 msgctxt "utr4wstrings.rc_ct1bohis"
 msgid "CT1BOH info screen"
-msgstr ""
+msgstr "CT1BOH 信息屏幕"
 
 #: utr4wstrings.rc_ct1bohis2
 #, fuzzy
 msgctxt "utr4wstrings.rc_ct1bohis2"
 msgid "CT1BOH info screen"
-msgstr ""
+msgstr "CT1BOH 信息屏幕"
 
 #: utr4wstrings.rc_cursorinbm
 #, fuzzy
 msgid "Cursor in bandmap window"
-msgstr ""
+msgstr "带图窗口中的光标"
 
 #: utr4wstrings.rc_cursortelnet
 #, fuzzy
 msgid "Cursor in DX Cluster window"
-msgstr ""
+msgstr "DX 集群窗口中的光标"
 
 #: utr4wstrings.rc_cwspdnir
 #, fuzzy
 msgid "CW Speed Down for the inactive radio"
-msgstr ""
+msgstr "对不活动电台的 CW 减速"
 
 #: utr4wstrings.rc_cwspeed
 #, fuzzy
 msgid "CW speed"
-msgstr ""
+msgstr "CW 速度"
 
 #: utr4wstrings.rc_cwspeeddown
 #, fuzzy
 msgid "CW Speed Down"
-msgstr ""
+msgstr "CW 减速"
 
 #: utr4wstrings.rc_cwspeedup
 #, fuzzy
 msgid "CW Speed Up"
-msgstr ""
+msgstr "CW 加速"
 
 #: utr4wstrings.rc_cwspupir
 #, fuzzy
 msgid "CW Speed Up for the inactive radio"
-msgstr ""
+msgstr "非活动电台的CW 加速"
 
 #: utr4wstrings.rc_daqslint
 #, fuzzy
 msgid "Auto QSL Interval (Decrease)"
-msgstr ""
+msgstr "自动 QSL 间隔( 减少)"
 
 #: utr4wstrings.rc_date
 #, fuzzy
 msgctxt "utr4wstrings.rc_date"
 msgid "Date"
-msgstr ""
+msgstr "日期"
 
 #: utr4wstrings.rc_deleted
 #, fuzzy
 msgid "Deleted"
-msgstr ""
+msgstr "删除"
 
 #: utr4wstrings.rc_deletelastqso
 #, fuzzy
 msgid "Delete the last QSO"
-msgstr ""
+msgstr "删除最后一个 QSO"
 
 #: utr4wstrings.rc_deleteselspot
 #, fuzzy
 msgctxt "utr4wstrings.rc_deleteselspot"
 msgid "Delete selected spot"
-msgstr ""
+msgstr "删除选中的点"
 
 #: utr4wstrings.rc_devicemanager
 #, fuzzy
 msgid "Device Manager"
-msgstr ""
+msgstr "设备管理器"
 
 #: utr4wstrings.rc_diffinlog
 #, fuzzy
 msgid "Difference in logs"
-msgstr ""
+msgstr "日志差异"
 
 #: utr4wstrings.rc_download
 #, fuzzy
 msgid "Download the latest CTY.DAT"
-msgstr ""
+msgstr "下载最新的 CCTY.DAT"
 
 #: utr4wstrings.rc_dupecheck
 #, fuzzy
 msgid "Dupe check"
-msgstr ""
+msgstr "调试"
 
 #: utr4wstrings.rc_dupecheckoar
 #, fuzzy
 msgctxt "utr4wstrings.rc_dupecheckoar"
 msgid "Dupe Check On Inactive Radio"
-msgstr ""
+msgstr "在不活动电台上检查 Dupe"
 
 #: utr4wstrings.rc_dupesheet
 #, fuzzy
 msgid "Dupesheet"
-msgstr ""
+msgstr "调试表"
 
 #: utr4wstrings.rc_dvkvolcontrol
 #, fuzzy
 msgid "DVK volume control"
-msgstr ""
+msgstr "DVK 音量控制"
 
 #: utr4wstrings.rc_edit
 #, fuzzy
 msgid "SO1R-Edit or SO2R-SWAP"
-msgstr ""
+msgstr "SO1R-编辑或SO2R-SWAP"
 
 #: utr4wstrings.rc_edit_word
 #, fuzzy
 msgctxt "utr4wstrings.rc_edit_word"
 msgid "&Edit"
-msgstr ""
+msgstr "编辑( E)"
 
 #: utr4wstrings.rc_escape
 #, fuzzy
 msgid "Escape"
-msgstr ""
+msgstr "越狱"
 
 #: utr4wstrings.rc_execonfigfile
 #, fuzzy
 msgid "Execute configuration file"
-msgstr ""
+msgstr "执行配置文件"
 
 #: utr4wstrings.rc_exit
 #, fuzzy
 msgctxt "utr4wstrings.rc_exit"
 msgid "E&xit"
-msgstr ""
+msgstr "Exit 编辑器"
 
 #: utr4wstrings.rc_export
 #, fuzzy
 msgid "Export"
-msgstr ""
+msgstr "导出"
 
 #: utr4wstrings.rc_fcc
 #, fuzzy
 msgid "First callsign worked in each country"
-msgstr ""
+msgstr "首个呼号在每个国家工作"
 
 #: utr4wstrings.rc_fcz
 #, fuzzy
 msgid "First callsign worked in each zone"
-msgstr ""
+msgstr "第一个呼号在每个区工作"
 
 #: utr4wstrings.rc_file
 #, fuzzy
 msgid "File"
-msgstr ""
+msgstr "文件"
 
 #: utr4wstrings.rc_fkeys
 #, fuzzy
 msgctxt "utr4wstrings.rc_fkeys"
 msgid "Function keys"
-msgstr ""
+msgstr "函数键"
 
 #: utr4wstrings.rc_focusinmw
 #, fuzzy
 msgid "Focus in main window"
-msgstr ""
+msgstr "主窗口的焦点"
 
 #: utr4wstrings.rc_frequency
 #, fuzzy
 msgctxt "utr4wstrings.rc_frequency"
 msgid "Frequency"
-msgstr ""
+msgstr "频率"
 
 #: utr4wstrings.rc_gotogs
 #, fuzzy
 msgctxt "utr4wstrings.rc_gotogs"
 msgid "Show scores"
-msgstr ""
+msgstr "显示分数"
 
 #: utr4wstrings.rc_homepage
 #, fuzzy
 msgid "TR4W Home Page"
-msgstr ""
+msgstr "TR4W 主页"
 
 #: utr4wstrings.rc_iaqslint
 #, fuzzy
 msgid "Auto QSL Interval (Increase)"
-msgstr ""
+msgstr "自动 QSL 间隔( 增加)"
 
 #: utr4wstrings.rc_import
 #, fuzzy
 msgid "Import"
-msgstr ""
+msgstr "导入"
 
 #: utr4wstrings.rc_incnumber
 #, fuzzy
 msgid "Increment number"
-msgstr ""
+msgstr "增加数"
 
 #: utr4wstrings.rc_inc_time
 #, fuzzy
 msgid "Increment time"
-msgstr ""
+msgstr "增加时间"
 
 #: utr4wstrings.rc_iniexlist
 #, fuzzy
 msgid "Initial exchanges list"
-msgstr ""
+msgstr "初步交流清单"
 
 #: utr4wstrings.rc_initialex
 #, fuzzy
 msgid "Initial exchange"
-msgstr ""
+msgstr "初步交换"
 
 #: utr4wstrings.rc_initialize
 #, fuzzy
 msgid "Initialize QSO"
-msgstr ""
+msgstr "初始化 QSO"
 
 #: utr4wstrings.rc_intercom
 #, fuzzy
 msgctxt "utr4wstrings.rc_intercom"
 msgid "Intercom"
-msgstr ""
+msgstr "对讲机"
 
 #: utr4wstrings.rc_killcw
 #, fuzzy
 msgid "Toggle CW"
-msgstr ""
+msgstr "切换 CW"
 
 #: utr4wstrings.rc_listofmess
 #, fuzzy
 msgid "List of messages"
-msgstr ""
+msgstr "信件列表"
 
 #: utr4wstrings.rc_login
 #, fuzzy
 msgid "Log in"
-msgstr ""
+msgstr "登录"
 
 #: utr4wstrings.rc_memprogfunc
 #, fuzzy
 msgctxt "utr4wstrings.rc_memprogfunc"
 msgid "Memory program function"
-msgstr ""
+msgstr "内存程序函数"
 
 #: utr4wstrings.rc_message
 #, fuzzy
 msgctxt "utr4wstrings.rc_message"
 msgid "Message"
-msgstr ""
+msgstr "消息"
 
 #: utr4wstrings.rc_missmultsrep
 #, fuzzy
 msgid "Missing mults report"
-msgstr ""
+msgstr "缺少泥浆报告"
 
 #: utr4wstrings.rc_mode
 #, fuzzy
 msgctxt "utr4wstrings.rc_mode"
 msgid "Mode"
-msgstr ""
+msgstr "模式"
 
 #: utr4wstrings.rc_mp3rec
 #, fuzzy
 msgctxt "utr4wstrings.rc_mp3rec"
 msgid "MP3 Recorder"
-msgstr ""
+msgstr "MP3 记录器"
 
 #: utr4wstrings.rc_mp3_recenable
 #, fuzzy
 msgid "Enable"
-msgstr ""
+msgstr "启用"
 
 #: utr4wstrings.rc_name
 #, fuzzy
 msgctxt "utr4wstrings.rc_name"
 msgid "Name"
-msgstr ""
+msgstr "名称"
 
 #: utr4wstrings.rc_net
 #, fuzzy
 msgid "Net"
-msgstr ""
+msgstr "净额"
 
 #: utr4wstrings.rc_network
 #, fuzzy
 msgctxt "utr4wstrings.rc_network"
 msgid "Network"
-msgstr ""
+msgstr "网络"
 
 #: utr4wstrings.rc_net_cldupe
 #, fuzzy
 msgid "Clear dupesheet in all logs"
-msgstr ""
+msgstr "清除所有日志中的双表"
 
 #: utr4wstrings.rc_net_clmult
 #, fuzzy
 msgid "Clear multsheet in all logs"
-msgstr ""
+msgstr "在所有日志中清除 multsheet"
 
 #: utr4wstrings.rc_note
 #, fuzzy
 msgid "Note"
-msgstr ""
+msgstr "说明"
 
 #: utr4wstrings.rc_notes
 #, fuzzy
 msgid "Notes"
-msgstr ""
+msgstr "页:1"
 
 #: utr4wstrings.rc_numberosolt
 #, fuzzy
 msgctxt "utr4wstrings.rc_numberosolt"
 msgid "Number of milliseconds of listening time:"
-msgstr ""
+msgstr "收听时间的毫秒数 :"
 
 #: utr4wstrings.rc_openlogdir
 #, fuzzy
 msgid "Open log directory"
-msgstr ""
+msgstr "打开日志目录"
 
 #: utr4wstrings.rc_operator
 #, fuzzy
 msgctxt "utr4wstrings.rc_operator"
 msgid "Operator"
-msgstr ""
+msgstr "运算符"
 
 #: utr4wstrings.rc_options
 #, fuzzy
 msgid "Configuration commands"
-msgstr ""
+msgstr "配置命令"
 
 #: utr4wstrings.rc_ping
 #, fuzzy
 msgid "Ping [SERVER ADDRESS]"
-msgstr ""
+msgstr "平 [服务解答]"
 
 #: utr4wstrings.rc_postnow
 #, fuzzy
 msgctxt "utr4wstrings.rc_postnow"
 msgid "Post now"
-msgstr ""
+msgstr "现在"
 
 #: utr4wstrings.rc_postscoretogs
 #, fuzzy
 msgid "Post score"
-msgstr ""
+msgstr "员额分数"
 
 #: utr4wstrings.rc_pressmkywtr
 #, fuzzy
 msgctxt "utr4wstrings.rc_pressmkywtr"
 msgid "Press the memory key you want to repeat:"
-msgstr ""
+msgstr "按您要重复的内存密钥 :"
 
 #: utr4wstrings.rc_press_c
 #, fuzzy
 msgctxt "utr4wstrings.rc_press_c"
 msgid "Press &C to program a CQ function key."
-msgstr ""
+msgstr "按 & C 来编程 CQ 函数密钥 ."
 
 #: utr4wstrings.rc_press_e
 #, fuzzy
 msgctxt "utr4wstrings.rc_press_e"
 msgid "Press &E to program an exchange/search and pounce function key."
-msgstr ""
+msgstr "按 & E 来编程一个交换/搜索和弹出函数键 ."
 
 #: utr4wstrings.rc_press_o
 #, fuzzy
 msgctxt "utr4wstrings.rc_press_o"
 msgid "Press &O to program the other non function key messages."
-msgstr ""
+msgstr "按 & O 来编程其他非函数密钥消息 ."
 
 #: utr4wstrings.rc_programmes
 #, fuzzy
 msgid "Program messages"
-msgstr ""
+msgstr "程序信息"
 
 #: utr4wstrings.rc_progrmess
 #, fuzzy
 msgctxt "utr4wstrings.rc_progrmess"
 msgid "Program message"
-msgstr ""
+msgstr "程序消息"
 
 #: utr4wstrings.rc_qsobycountry
 #, fuzzy
 msgid "QSOs by country by band"
-msgstr ""
+msgstr "按国家划分的QSO"
 
 #: utr4wstrings.rc_qsowithnocw
 #, fuzzy
 msgid "QSO with no CW"
-msgstr ""
+msgstr "无化学武器的QSO"
 
 #: utr4wstrings.rc_qtcfunctions
 #, fuzzy
 msgid "QTC functions"
-msgstr ""
+msgstr "QTC 函数"
 
 #: utr4wstrings.rc_recalllastent
 #, fuzzy
 msgid "Recall last entry"
-msgstr ""
+msgstr "回顾上次条目"
 
 #: utr4wstrings.rc_reccontrol
 #, fuzzy
 msgid "Recording control"
-msgstr ""
+msgstr "记录控制"
 
 #: utr4wstrings.rc_recvqtc
 #, fuzzy
 msgid "Receiving QTCs"
-msgstr ""
+msgstr "接收质量控制"
 
 #: utr4wstrings.rc_refreshbm
 #, fuzzy
 msgid "Refresh bandmap"
-msgstr ""
+msgstr "刷新带图"
 
 #: utr4wstrings.rc_remmults
 #, fuzzy
 msgid "Mults"
-msgstr ""
+msgstr "木头"
 
 #: utr4wstrings.rc_removeallsp
 #, fuzzy
 msgctxt "utr4wstrings.rc_removeallsp"
 msgid "Remove all spots"
-msgstr ""
+msgstr "删除所有点"
 
 #: utr4wstrings.rc_reports
 #, fuzzy
 msgid "Reports"
-msgstr ""
+msgstr "报告"
 
 #: utr4wstrings.rc_rescore
 #, fuzzy
 msgid "Rescore"
-msgstr ""
+msgstr "补分"
 
 #: utr4wstrings.rc_reset_radio_ports
 #, fuzzy
 msgid "Reset Radio Ports"
-msgstr ""
+msgstr "重置无线电端口"
 
 #: utr4wstrings.rc_rm_default
 #, fuzzy
 msgid "Default"
-msgstr ""
+msgstr "默认"
 
 #: utr4wstrings.rc_runserver
 #, fuzzy
 msgid "Run TR4WSERVER"
-msgstr ""
+msgstr "运行TR4WSERVER"
 
 #: utr4wstrings.rc_scorebyhour
 #, fuzzy
 msgid "Score by hour"
-msgstr ""
+msgstr "按小时计分"
 
 #: utr4wstrings.rc_search
 #, fuzzy
 msgid "&Search"
-msgstr ""
+msgstr "搜索( S)"
 
 #: utr4wstrings.rc_searchlog
 #, fuzzy
 msgid "Search log"
-msgstr ""
+msgstr "搜索日志"
 
 #: utr4wstrings.rc_searchpounce
 #, fuzzy
 msgid "Search && pounce mode"
-msgstr ""
+msgstr "搜索 QQ 跳跃模式"
 
 #: utr4wstrings.rc_sendingcw
 #, fuzzy
 msgid "Sending CW from the keyboard. Use ENTER/Escape/F10 to exit."
-msgstr ""
+msgstr "从键盘中发送 CW. 使用ENTER/Escape/F10退出."
 
 #: utr4wstrings.rc_sendinrig
 #, fuzzy
 msgid "QSY Inactive Radio"
-msgstr ""
+msgstr "QSY 非活动电台"
 
 #: utr4wstrings.rc_sendkeyboard
 #, fuzzy
 msgid "Send Keyboard Input"
-msgstr ""
+msgstr "发送键盘输入"
 
 #: utr4wstrings.rc_sendmessage
 #, fuzzy
 msgid "Send message"
-msgstr ""
+msgstr "发送消息"
 
 #: utr4wstrings.rc_sendspot
 #, fuzzy
 msgctxt "utr4wstrings.rc_sendspot"
 msgid "Send spot"
-msgstr ""
+msgstr "发送位置"
 
 #: utr4wstrings.rc_send_bug
 #, fuzzy
 msgid "Send bug report"
-msgstr ""
+msgstr "发送错误报告"
 
 #: utr4wstrings.rc_setsysdt
 #, fuzzy
 msgid "Set system date/time"
-msgstr ""
+msgstr "设定系统日期/时间"
 
 #: utr4wstrings.rc_settimezone
 #, fuzzy
 msgid "Set time zone"
-msgstr ""
+msgstr "设定时区"
 
 #: utr4wstrings.rc_settings
 #, fuzzy
 msgid "Settings"
-msgstr ""
+msgstr "设置"
 
 #: utr4wstrings.rc_shdx_callsign
 #, fuzzy
 msgid "SH/DX [callsign]"
-msgstr ""
+msgstr "SH/DX [呼号]"
 
 #: utr4wstrings.rc_splitoff
 #, fuzzy
 msgid "Set Split Mode Tx"
-msgstr ""
+msgstr "设定分割模式 Tx"
 
 #: utr4wstrings.rc_ssbcwmode
 #, fuzzy
 msgid "SSB/CW mode"
-msgstr ""
+msgstr "SSB/CW 模式"
 
 #: utr4wstrings.rc_stationinfo
 #, fuzzy
 msgctxt "utr4wstrings.rc_stationinfo"
 msgid "Station information"
-msgstr ""
+msgstr "站点信息"
 
 #: utr4wstrings.rc_stations
 #, fuzzy
 msgctxt "utr4wstrings.rc_stations"
 msgid "Stations"
-msgstr ""
+msgstr "车站"
 
 #: utr4wstrings.rc_summary
 #, fuzzy
 msgid "Summary"
-msgstr ""
+msgstr "目 录"
 
 #: utr4wstrings.rc_swapmultview
 #, fuzzy
 msgid "Swap mult view"
-msgstr ""
+msgstr "交换 mult 视图"
 
 #: utr4wstrings.rc_synchronize
 #, fuzzy
 msgctxt "utr4wstrings.rc_synchronize"
 msgid "Synchronize"
-msgstr ""
+msgstr "同步"
 
 #: utr4wstrings.rc_synlog
 #, fuzzy
 msgid "Compare and synchronize logs"
-msgstr ""
+msgstr "比较和同步日志"
 
 #: utr4wstrings.rc_telnet
 #, fuzzy
 msgctxt "utr4wstrings.rc_telnet"
 msgid "DX Cluster"
-msgstr ""
+msgstr "DX 分组"
 
 #: utr4wstrings.rc_timesyn
 #, fuzzy
 msgid "Synchronize time on &all computers"
-msgstr ""
+msgstr "在全部计算机上同步时间( A)"
 
 #: utr4wstrings.rc_toggleinsert
 #, fuzzy
 msgid "Toggle insert mode"
-msgstr ""
+msgstr "切换插入模式"
 
 #: utr4wstrings.rc_toogleas
 #, fuzzy
 msgid "Toggle autosend"
-msgstr ""
+msgstr "切换自动端点"
 
 #: utr4wstrings.rc_tooglemb
 #, fuzzy
 msgid "Toogle multiplier bell"
-msgstr ""
+msgstr "托格尔倍数钟"
 
 #: utr4wstrings.rc_tooglerigs
 #, fuzzy
 msgid "Toggle rigs"
-msgstr ""
+msgstr "切换钻机"
 
 #: utr4wstrings.rc_tooglest
 #, fuzzy
 msgid "Toggle sidetone"
-msgstr ""
+msgstr "切换侧线"
 
 #: utr4wstrings.rc_tools
 #, fuzzy
 msgid "Tools"
-msgstr ""
+msgstr "工具"
 
 #: utr4wstrings.rc_transfreq
 #, fuzzy
 msgid "Transmit frequency"
-msgstr ""
+msgstr "传送频率"
 
 #: utr4wstrings.rc_trlogform
 #, fuzzy
 msgid "TR Log format"
-msgstr ""
+msgstr "TR 日志格式"
 
 #: utr4wstrings.rc_trmaster
 #, fuzzy
 msgid "SCP"
-msgstr ""
+msgstr "南太常委会"
 
 #: utr4wstrings.rc_vieweditlog
 #, fuzzy
 msgctxt "utr4wstrings.rc_vieweditlog"
 msgid "View / Edit log"
-msgstr ""
+msgstr "查看/ 编辑日志"
 
 #: utr4wstrings.rc_vieweditlog2
 #, fuzzy
 msgctxt "utr4wstrings.rc_vieweditlog2"
 msgid "View / Edit log"
-msgstr ""
+msgstr "查看/ 编辑日志"
 
 #: utr4wstrings.rc_viewpakspots
 #, fuzzy
 msgid "View packet spots"
-msgstr ""
+msgstr "查看包点"
 
 #: utr4wstrings.rc_wiki
 #, fuzzy
 msgid "On-line documentation (in Russian)"
-msgstr ""
+msgstr "在线文件(俄文)"
 
 #: utr4wstrings.rc_wincontrol
 #, fuzzy
 msgctxt "utr4wstrings.rc_wincontrol"
 msgid "Windows control"
-msgstr ""
+msgstr "窗口控制"
 
 #: utr4wstrings.rc_wincontrol2
 #, fuzzy
 msgctxt "utr4wstrings.rc_wincontrol2"
 msgid "Windows control"
-msgstr ""
+msgstr "窗口控制"
 
 #: utr4wstrings.rc_windows
 #, fuzzy
 msgid "Windows"
-msgstr ""
+msgstr "窗口"
 
 #: utr4wstrings.rc_wkmode
 #, fuzzy
 msgid "Re-initialize WinKeyer"
-msgstr ""
+msgstr "重新启用 Winkeyer"
 
 #: utr4wstrings.tc_2radio_warn
 #, fuzzy
 msgid "ERROR: 2 Radios on single band"
-msgstr ""
+msgstr "错误: 2个单波段无线电"
 
 #: utr4wstrings.tc_agecallsignage
 #, fuzzy
 msgid "Enter your age (and Silent Key callsign and age):"
-msgstr ""
+msgstr "输入您的年龄( 和沉默的密钥调用符号和年龄) :"
 
 #: utr4wstrings.tc_alldark
 #, fuzzy
 msgid "All dark"
-msgstr ""
+msgstr "都变黑了"
 
 #: utr4wstrings.tc_allsun
 #, fuzzy
 msgid "All sun"
-msgstr ""
+msgstr "所有太阳"
 
 #: utr4wstrings.tc_all_logs_network_cleared
 #, fuzzy
 msgid "All logs in TR4W network cleared."
-msgstr ""
+msgstr "TR4W网络中的所有日志都已清除."
 
 #: utr4wstrings.tc_alreadyexistsokaytodelete
 #, fuzzy
@@ -8637,433 +8666,436 @@ msgid ""
 "\n"
 "Okay to delete?"
 msgstr ""
+"%s 已经存在 。\n"
+"\n"
+"可以删除吗?"
 
 #: utr4wstrings.tc_altdcommanddisabled
 #, fuzzy
 msgid "Alt-D command requires TWO RADIO MODE = TRUE"
-msgstr ""
+msgstr "Alt-D 命令需要两个 RADIO MODE = TRUE"
 
 #: utr4wstrings.tc_altrcommanddisabled
 #, fuzzy
 msgid "Alt-R command requires TWO RADIO MODE = TRUE"
-msgstr ""
+msgstr "Alt-R命令需要两个RADIO MODE = TRUE"
 
 #: utr4wstrings.tc_appendimportedqsostocurrentlog
 #, fuzzy
 msgid "Append imported QSOs to current log?"
-msgstr ""
+msgstr "将导入的 QSO 添加到当前日志中吗 ?"
 
 #: utr4wstrings.tc_arenewengland
 #, fuzzy
 msgid "Are you in New England?"
-msgstr ""
+msgstr "你在新英格兰吗?"
 
 #: utr4wstrings.tc_arktikaclub
 #, fuzzy
 msgid "club"
-msgstr ""
+msgstr "俱乐部"
 
 #: utr4wstrings.tc_arrlfielddayimproperdxexchange
 #, fuzzy
 msgid "DX Station exchange must be \"DX\"."
-msgstr ""
+msgstr "DX车站换乘必须是\"DX\"."
 
 #: utr4wstrings.tc_autospace
 #, fuzzy
 msgid "&Autospace"
-msgstr ""
+msgstr "自动空间( A)"
 
 #: utr4wstrings.tc_autospotenabledtestmodeonly
 #, fuzzy
 msgid "AUTOSPOT is enabled - Test Mode Only"
-msgstr ""
+msgstr "AUTOSPOT 启用 - 仅测试模式"
 
 #: utr4wstrings.tc_autosynchronizinglog
 #, fuzzy
 msgid "Auto-synchronizing log from server."
-msgstr ""
+msgstr "从服务器自动同步日志 ."
 
 #: utr4wstrings.tc_backupcreated
 #, fuzzy
 msgid "Log file backup created"
-msgstr ""
+msgstr "创建日志文件备份"
 
 #: utr4wstrings.tc_bandchangedisabled
 #, fuzzy
 msgid "Band change requires MULTIPLE BANDS = TRUE once the log has QSOs"
-msgstr ""
+msgstr "变幅需要 MULTIPLE BANDS = TRUE 一旦日志有QSO"
 
 #: utr4wstrings.tc_band_changes
 #, fuzzy
 msgid "Bn. ch. = %d"
-msgstr ""
+msgstr "Bn. ch.=%d (中文(简体) )"
 
 #: utr4wstrings.tc_belgium
 #, fuzzy
 msgid "Belgium"
-msgstr ""
+msgstr "比利时"
 
 #: utr4wstrings.tc_bugmode
 #, fuzzy
 msgid "Bug mode"
-msgstr ""
+msgstr "错误模式"
 
 #: utr4wstrings.tc_bulgaria
 #, fuzzy
 msgid "Bulgaria"
-msgstr ""
+msgstr "保加利亚"
 
 #: utr4wstrings.tc_c9_africa
 #, fuzzy
 msgid "Africa"
-msgstr ""
+msgstr "非洲"
 
 #: utr4wstrings.tc_c9_antartica
 #, fuzzy
 msgid "Antartica"
-msgstr ""
+msgstr "南极洲"
 
 #: utr4wstrings.tc_c9_asia
 #, fuzzy
 msgid "Asia"
-msgstr ""
+msgstr "亚洲"
 
 #: utr4wstrings.tc_c9_europe
 #, fuzzy
 msgid "Europe"
-msgstr ""
+msgstr "欧洲"
 
 #: utr4wstrings.tc_c9_northamerica
 #, fuzzy
 msgctxt "utr4wstrings.tc_c9_northamerica"
 msgid "North America"
-msgstr ""
+msgstr "北美"
 
 #: utr4wstrings.tc_c9_oceania
 #, fuzzy
 msgid "Oceania"
-msgstr ""
+msgstr "大洋洲"
 
 #: utr4wstrings.tc_c9_southamerica
 #, fuzzy
 msgid "South America"
-msgstr ""
+msgstr "南美洲"
 
 #: utr4wstrings.tc_c9_unknown
 #, fuzzy
 msgctxt "utr4wstrings.tc_c9_unknown"
 msgid "Unknown"
-msgstr ""
+msgstr "未知"
 
 #: utr4wstrings.tc_california
 #, fuzzy
 msgid "California"
-msgstr ""
+msgstr "加利福尼亚州"
 
 #: utr4wstrings.tc_call_in_call_window
 #, fuzzy
 msgid "Call in Call Window"
-msgstr ""
+msgstr "调用窗口"
 
 #: utr4wstrings.tc_canada
 #, fuzzy
 msgid "Canada"
-msgstr ""
+msgstr "加拿大"
 
 #: utr4wstrings.tc_cannotbackuplog
 #, fuzzy
 msgid "Could not make a backup copy of "
-msgstr ""
+msgstr "无法创建备份副本 "
 
 #: utr4wstrings.tc_cannotcopylogreadonly
 #, fuzzy
 msgid "Cannot copy log file -- target exists and is read-only"
-msgstr ""
+msgstr "无法复制日志文件 -- 目标已存在且只读"
 
 #: utr4wstrings.tc_cannotdisablesplittransmitslicecre
 #, fuzzy
 msgid "Cannot disable split -- the transmit slice was created on the radio. Turn it off in the SDR."
-msgstr ""
+msgstr "无法禁用分割 -- 传输切片是在收音机上创建的 。 在特别提款权中关闭."
 
 #: utr4wstrings.tc_cannotopenlogfile
 #, fuzzy
 msgid "Cannot open log file"
-msgstr ""
+msgstr "无法打开日志文件"
 
 #: utr4wstrings.tc_cannotrename
 #, fuzzy
 msgid "Can not rename"
-msgstr ""
+msgstr "无法重命名"
 
 #: utr4wstrings.tc_checkcallsign
 #, fuzzy
 msgid "Check callsign"
-msgstr ""
+msgstr "检查呼号"
 
 #: utr4wstrings.tc_checkdatetime
 #, fuzzy
 msgid "Check Date/Time !!"
-msgstr ""
+msgstr "检查日期/时间!"
 
 #: utr4wstrings.tc_checkqtcnumber
 #, fuzzy
 msgid "Check QTC number"
-msgstr ""
+msgstr "检查 QTC 编号"
 
 #: utr4wstrings.tc_checktime
 #, fuzzy
 msgid "Check time"
-msgstr ""
+msgstr "检查时间"
 
 #: utr4wstrings.tc_cis
 #, fuzzy
 msgid "CIS"
-msgstr ""
+msgstr "独联体"
 
 #: utr4wstrings.tc_cleansweepcongratulations
 #, fuzzy
 msgid "CLEAN SWEEP!! CONGRATULATIONS!!"
-msgstr ""
+msgstr "CLEAN SWEEEP(英语:CLEAN SWEEP)! (法语). 问候!"
 
 #: utr4wstrings.tc_clearalllogs
 #, fuzzy
 msgid "\"CLEARALLLOGS\" to clear all logs in network"
-msgstr ""
+msgstr "\"CLEALLOGS\"来清除网络中的所有日志"
 
 #: utr4wstrings.tc_clearmulttoclearmultsheet
 #, fuzzy
 msgid "\"CLEARMULT\" to clear the multsheet"
-msgstr ""
+msgstr "\"清净\"来清除泥板"
 
 #: utr4wstrings.tc_clear_dupesheet_net
 #, fuzzy
 msgid "\"CLEARDUPESHEET\" to clear all dupesheets in network"
-msgstr ""
+msgstr "\"CLEARDUPESHEET\"来清除网络中的所有假表"
 
 #: utr4wstrings.tc_clear_multsheet_net
 #, fuzzy
 msgid "\"CLEARMULTSHEET\" to clear all multsheets in network"
-msgstr ""
+msgstr "\"ClearMULTSHEET\"来清除网络中的所有泥板"
 
 #: utr4wstrings.tc_command
 #, fuzzy
 msgid "Command"
-msgstr ""
+msgstr "命令"
 
 #: utr4wstrings.tc_computerclockissynchronized
 #, fuzzy
 msgid "Computer clock is synchronized."
-msgstr ""
+msgstr "计算机时钟同步."
 
 #: utr4wstrings.tc_configuration_file
 #, fuzzy
 msgid "Configuration file"
-msgstr ""
+msgstr "配置文件"
 
 #: utr4wstrings.tc_connect
 #, fuzzy
 msgid "CONNECT.."
-msgstr ""
+msgstr "连结..."
 
 #: utr4wstrings.tc_connected
 #, fuzzy
 msgid "CONNECTED"
-msgstr ""
+msgstr "连续"
 
 #: utr4wstrings.tc_connectedto
 #, fuzzy
 msgid "Connected to "
-msgstr ""
+msgstr "已连接 "
 
 #: utr4wstrings.tc_connectingto
 #, fuzzy
 msgid "Connecting to "
-msgstr ""
+msgstr "正在连接到 "
 
 #: utr4wstrings.tc_connectiontotr4wserverlost
 #, fuzzy
 msgid "Connection to TR4WSERVER %s:%d lost."
-msgstr ""
+msgstr "连接到 TR4WSERVER %s :%d 丢失 ."
 
 #: utr4wstrings.tc_connecttotr4wserverfailed
 #, fuzzy
 msgid "Connect to TR4WSERVER failed. Check SERVER PASSWORD value!!"
-msgstr ""
+msgstr "连接到 TR4WSERVER 失败 。 检查SERVER PASWORD值!"
 
 #: utr4wstrings.tc_continueenteringcharactersautoterm
 #, fuzzy
 msgid "Continue entering characters.  Auto terminate active!!"
-msgstr ""
+msgstr "继续输入字符 。 自动终止激活!"
 
 #: utr4wstrings.tc_continueenteringcharacterspressret
 #, fuzzy
 msgid "Continue entering characters and press RETURN when done."
-msgstr ""
+msgstr "继续输入字符, 完成后按返回键 ."
 
 #: utr4wstrings.tc_cqfunctionkeymemorystatus
 #, fuzzy
 msgid "CQ FUNCTION KEY MEMORY STATUS"
-msgstr ""
+msgstr "CQ 关键职能地位"
 
 #: utr4wstrings.tc_cqtotal
 #, fuzzy
 msgid "CQ total: %u"
-msgstr ""
+msgstr "CQ 总计 :%u"
 
 #: utr4wstrings.tc_croat
 #, fuzzy
 msgid "I am in Croatia"
-msgstr ""
+msgstr "我在克罗地亚"
 
 #: utr4wstrings.tc_ctrl_a
 #, fuzzy
 msgid "Send this message on inactive radio"
-msgstr ""
+msgstr "用不活动电台发送此信件"
 
 #: utr4wstrings.tc_ctrl_b
 #, fuzzy
 msgid "Identify ctrl-A message as a CQ"
-msgstr ""
+msgstr "将 Ctrl- A 信件识别为 CQ"
 
 #: utr4wstrings.tc_ctrl_c
 #, fuzzy
 msgid "Start special command"
-msgstr ""
+msgstr "启动特殊命令"
 
 #: utr4wstrings.tc_ctrl_d
 #, fuzzy
 msgid "Do not interrupt"
-msgstr ""
+msgstr "不中断"
 
 #: utr4wstrings.tc_ctrl_e
 #, fuzzy
 msgid "Dah 73% of normal duration"
-msgstr ""
+msgstr "73%的正常工期"
 
 #: utr4wstrings.tc_ctrl_f
 #, fuzzy
 msgid "Increase speed by 6%"
-msgstr ""
+msgstr "速度增加6%"
 
 #: utr4wstrings.tc_ctrl_k
 #, fuzzy
 msgid "Normal dah"
-msgstr ""
+msgstr "普通的发型"
 
 #: utr4wstrings.tc_ctrl_l
 #, fuzzy
 msgid "Dit 140% of normal duration"
-msgstr ""
+msgstr "正常时间的140%"
 
 #: utr4wstrings.tc_ctrl_n
 #, fuzzy
 msgid "Dah 113% of normal duration"
-msgstr ""
+msgstr "正常时间的113%"
 
 #: utr4wstrings.tc_ctrl_o
 #, fuzzy
 msgid "Dah 127% of normal duration"
-msgstr ""
+msgstr "正常期限的127%"
 
 #: utr4wstrings.tc_ctrl_p
 #, fuzzy
 msgid "Dit 60% of normal duration"
-msgstr ""
+msgstr "正常时间的60%"
 
 #: utr4wstrings.tc_ctrl_q
 #, fuzzy
 msgid "Dit 80% of normal duration"
-msgstr ""
+msgstr "正常时间的80%"
 
 #: utr4wstrings.tc_ctrl_s
 #, fuzzy
 msgid "Decrease speed by 6%"
-msgstr ""
+msgstr "减速6%"
 
 #: utr4wstrings.tc_ctrl_sl
 #, fuzzy
 msgid "Normal dit"
-msgstr ""
+msgstr "正常位点"
 
 #: utr4wstrings.tc_ctrl_v
 #, fuzzy
 msgid "Dit 120% of normal duration"
-msgstr ""
+msgstr "正常时间的120%"
 
 #: utr4wstrings.tc_ctrl_x
 #, fuzzy
 msgid "Decrease weight by 0.03"
-msgstr ""
+msgstr "减重0.03"
 
 #: utr4wstrings.tc_ctrl_y
 #, fuzzy
 msgid "Increase weight by 0.03"
-msgstr ""
+msgstr "增加重量0.03"
 
 #: utr4wstrings.tc_ctspacing
 #, fuzzy
 msgid "C&T spacing"
-msgstr ""
+msgstr "CT 间隔"
 
 #: utr4wstrings.tc_ctydatdownloadedreloading
 #, fuzzy
 msgid "CTY.DAT downloaded. Reloading..."
-msgstr ""
+msgstr "CTY.DAT下载. 正在重新装入..."
 
 #: utr4wstrings.tc_ctydatdownloadfailed
 #, fuzzy
 msgid "CTY.DAT download failed."
-msgstr ""
+msgstr "CTY.DAT 下载失败."
 
 #: utr4wstrings.tc_ctydatreloadedsuccessfully
 #, fuzzy
 msgid "CTY.DAT reloaded successfully."
-msgstr ""
+msgstr "CTY.DAT重装成功."
 
 #: utr4wstrings.tc_current_operator_callsign
 #, fuzzy
 msgid "current operator callsign"
-msgstr ""
+msgstr "当前运算符调用符号"
 
 #: utr4wstrings.tc_cwdisabledwithaltk
 #, fuzzy
 msgid "CW disabled with Alt-K!!  Use Alt-K again to enable."
-msgstr ""
+msgstr "CW与Alt -K一起被禁用! 再次使用 Alt- K 启用 ."
 
 #: utr4wstrings.tc_cwoff
 #, fuzzy
 msgid "CW Off"
-msgstr ""
+msgstr "CW 关闭"
 
 #: utr4wstrings.tc_cwqsos
 #, fuzzy
 msgid "CW QSOs"
-msgstr ""
+msgstr "CW 质量服务组织"
 
 #: utr4wstrings.tc_cwtimerfired
 #, fuzzy
 msgid "CW Timer fired"
-msgstr ""
+msgstr "发射CW计时器"
 
 #: utr4wstrings.tc_czechrepublicorinslovakia
 #, fuzzy
 msgid "Czech Republic or in Slovakia"
-msgstr ""
+msgstr "捷克共和国或斯洛伐克"
 
 #: utr4wstrings.tc_datasuccessfullysavedasciifile
 #, fuzzy
 msgid "Data successfully saved to ASCII file."
-msgstr ""
+msgstr "数据成功保存到 ASCII 文件 ."
 
 #: utr4wstrings.tc_debugmodecreatedprefixestxt
 #, fuzzy
 msgid "debug mode created prefixes.txt"
-msgstr ""
+msgstr "调试模式创建前缀.txt"
 
 #: utr4wstrings.tc_department
 #, fuzzy
 msgid "Enter your department:"
-msgstr ""
+msgstr "输入您的部门 :"
 
 #: utr4wstrings.tc_difversion
 #, fuzzy
@@ -9072,267 +9104,270 @@ msgid ""
 "TR4W is expecting version %s.\n"
 "The file you are trying to read version %s."
 msgstr ""
+"%s来自不同的程序版本。\n"
+"TR4W正在等待版本%s.\n"
+"您想要读取的文件 %s ."
 
 #: utr4wstrings.tc_digqsos
 #, fuzzy
 msgid "DIG QSOs"
-msgstr ""
+msgstr "DIG 质量服务组织"
 
 #: utr4wstrings.tc_disbale_civ
 #, fuzzy
 msgid "Disable \"CI-V Transceive\" mode in your ICOM rig. Refer to instruction manual of your radio."
-msgstr ""
+msgstr "在您的 ICOM 钻机中禁用\"CI-V Transceive\" 模式 。 请参考您的收音机手册."
 
 #: utr4wstrings.tc_disconnectedfrom
 #, fuzzy
 msgid "** DISCONNECTED from "
-msgstr ""
+msgstr "页:1 "
 
 #: utr4wstrings.tc_discover_multi_found
 #, fuzzy
 msgid "More than one %s found; filled in the first.  All found:"
-msgstr ""
+msgstr "找到多于一个%s;填入第一个。 所有发现:"
 
 #: utr4wstrings.tc_discover_none_found
 #, fuzzy
 msgid "No radio of type %s found on the network"
-msgstr ""
+msgstr "在网络上找不到%s类型的收音机"
 
 #: utr4wstrings.tc_discover_not_available
 #, fuzzy
 msgid "Network discovery is not available for radio %s"
-msgstr ""
+msgstr "无法为电台%s 找到网络"
 
 #: utr4wstrings.tc_ditdahratio
 #, fuzzy
 msgid "Dit/Dah ratio"
-msgstr ""
+msgstr "迪特/达赫比率"
 
 #: utr4wstrings.tc_dlportiodriverisnotinstalled
 #, fuzzy
 msgid "DLPortIO error"
-msgstr ""
+msgstr "DLPortIO 错误"
 
 #: utr4wstrings.tc_dommults
 #, fuzzy
 msgid "Dom Mults"
-msgstr ""
+msgstr "多姆马特"
 
 #: utr4wstrings.tc_downloadingctydat
 #, fuzzy
 msgid "Downloading CTY.DAT..."
-msgstr ""
+msgstr "正在下载 CTY. DAT..."
 
 #: utr4wstrings.tc_downloadingpotaparks
 #, fuzzy
 msgid "Downloading POTA parks..."
-msgstr ""
+msgstr "正在下载 POTA 公园..."
 
 #: utr4wstrings.tc_downloadingtrmasterdta
 #, fuzzy
 msgid "Downloading TRMASTER.DTA..."
-msgstr ""
+msgstr "正在下载 TRMASTER. DATA..."
 
 #: utr4wstrings.tc_downloadit
 #, fuzzy
 msgid "Would you like to download the latest version?"
-msgstr ""
+msgstr "您想要下载最新版本吗 ?"
 
 #: utr4wstrings.tc_doyoureallywantstopnow
 #, fuzzy
 msgid "Do you really want stop now?"
-msgstr ""
+msgstr "你真的想停下来吗?"
 
 #: utr4wstrings.tc_doyoureallywanttoabortthisqtc
 #, fuzzy
 msgid "Do you really want to abort this QTC?"
-msgstr ""
+msgstr "您真的要中止此 QTC 吗 ?"
 
 #: utr4wstrings.tc_doyoureallywanttoexittheprogram
 #, fuzzy
 msgid "Do you really want to exit the program?"
-msgstr ""
+msgstr "你真的想退出程序吗?"
 
 #: utr4wstrings.tc_doyoureallywanttosavethisqtc
 #, fuzzy
 msgid "Do you really want to save this QTC?"
-msgstr ""
+msgstr "您真的想要保存此 QTC 吗 ?"
 
 #: utr4wstrings.tc_doyouwanttocheckthelatestversion
 #, fuzzy
 msgid "Would you like to check for a possible newer version of  TR4W ?"
-msgstr ""
+msgstr "您想要检查 可能的更新版本的TR4W?"
 
 #: utr4wstrings.tc_dupesheet
 #, fuzzy
 msgid "Dupesheet - %sm-%s"
-msgstr ""
+msgstr "双表 - %s m-%s"
 
 #: utr4wstrings.tc_dupesheetcleared
 #, fuzzy
 msgid "Dupe sheet cleared!"
-msgstr ""
+msgstr "Dupe表清理完毕!"
 
 #: utr4wstrings.tc_dxmults
 #, fuzzy
 msgid "DX Mults"
-msgstr ""
+msgstr "DX 木头"
 
 #: utr4wstrings.tc_editfunctionkey
 #, fuzzy
 msgid "Edit %s message"
-msgstr ""
+msgstr "编辑%s信件"
 
 #: utr4wstrings.tc_editor_copy
 #, fuzzy
 msgid "&Copy"
-msgstr ""
+msgstr "复制( C)"
 
 #: utr4wstrings.tc_editor_edit
 #, fuzzy
 msgctxt "utr4wstrings.tc_editor_edit"
 msgid "&Edit"
-msgstr ""
+msgstr "编辑( E)"
 
 #: utr4wstrings.tc_editor_explore
 #, fuzzy
 msgid "Explore"
-msgstr ""
+msgstr "探索"
 
 #: utr4wstrings.tc_editor_openineditor
 #, fuzzy
 msgid "Open in text &editor"
-msgstr ""
+msgstr "在文本编辑器中打开( E)"
 
 #: utr4wstrings.tc_editor_selectall
 #, fuzzy
 msgid "Select &all"
-msgstr ""
+msgstr "全部选择( A)"
 
 #: utr4wstrings.tc_editor_sendlogto
 #, fuzzy
 msgid "Send log to %s"
-msgstr ""
+msgstr "发送日志到 %s"
 
 #: utr4wstrings.tc_editqtcpressyestoeditqtcornotolog
 #, fuzzy
 msgid "Edit QTC? Press Yes to edit QTC or  No to log "
-msgstr ""
+msgstr "编辑 QTC ? 新闻 是编辑 QTC 或否日志 "
 
 #: utr4wstrings.tc_enoughmemoryinitialexchangearray
 #, fuzzy
 msgid "Not enough memory for initial exchange array!!"
-msgstr ""
+msgstr "初始交换阵列的内存不足 !"
 
 #: utr4wstrings.tc_enter
 #, fuzzy
 msgid "Enter %s :"
-msgstr ""
+msgstr "输入%s :"
 
 #: utr4wstrings.tc_entercallsignspacedupecheckalthhel
 #, fuzzy
 msgid "ENTER a callsign.  SPACE for dupecheck.  Alt-H for help."
-msgstr ""
+msgstr "调用一个呼号。 空格换假 Alt-H寻求帮助."
 
 #: utr4wstrings.tc_entercalltobecheckedon
 #, fuzzy
 msgid "Enter call to be checked on %s%s:"
-msgstr ""
+msgstr "输入要检查的呼叫 %s%s编号 :"
 
 #: utr4wstrings.tc_enterexchangepressenterlogescapeab
 #, fuzzy
 msgid "Enter exchange.  Press ENTER to log, ESCAPE to abort QSO."
-msgstr ""
+msgstr "输入交换。 按 ENDER 进行登录, ESCAPE 中止 QSO ."
 
 #: utr4wstrings.tc_enterfirsttwodigitsofyourqth
 #, fuzzy
 msgid "Enter first two digits of your QTH:"
-msgstr ""
+msgstr "输入您的 QTH 的前两位数 :"
 
 #: utr4wstrings.tc_enterfirsttwolettersofyourgrid
 #, fuzzy
 msgid "Enter first two letters of your grid square:"
-msgstr ""
+msgstr "输入您网格方块的前两个字母 :"
 
 #: utr4wstrings.tc_enterqtcmaxof
 #, fuzzy
 msgid "Enter QTC #/# (max of %d) :"
-msgstr ""
+msgstr "输入 QTC #/#(最大为%d) :"
 
 #: utr4wstrings.tc_enterstateforusprovinceforcanada
 #, fuzzy
 msgid "Enter state for U.S., province for Canada:"
-msgstr ""
+msgstr "进入美国,加拿大的省:"
 
 #: utr4wstrings.tc_entersumofyourageandamount
 #, fuzzy
 msgid "Enter sum of your age and amount of years elapsed since your first QSO (e.g. 28+14=42):"
-msgstr ""
+msgstr "输入您自第一个QSO( 如 28+14=42) 以来的年龄和年限总和 :"
 
 #: utr4wstrings.tc_enterthelasttwodigitsoftheyear
 #, fuzzy
 msgid "Enter the last two digits of the year of your first official amateur radio license:"
-msgstr ""
+msgstr "输入您首张业余无线电执照年度的最后两位数 :"
 
 #: utr4wstrings.tc_entertheqththatyouwanttosend
 #, fuzzy
 msgid "Enter the QTH that you want to send:"
-msgstr ""
+msgstr "输入要发送的 QTH :"
 
 #: utr4wstrings.tc_enteryourageinmystatefield
 #, fuzzy
 msgid "Enter your age in MY STATE field:"
-msgstr ""
+msgstr "输入您的年龄在我的州域 :"
 
 #: utr4wstrings.tc_enteryourbranchnumber
 #, fuzzy
 msgid "Enter your Branch number:"
-msgstr ""
+msgstr "输入您的分支编号 :"
 
 #: utr4wstrings.tc_enteryourcityidentifier
 #, fuzzy
 msgid "Enter your city identifier:"
-msgstr ""
+msgstr "输入您的城市标识符 :"
 
 #: utr4wstrings.tc_enteryourcontinent
 #, fuzzy
 msgid "Enter your continent (and possible additional ID, i.e. SA or NAQ)"
-msgstr ""
+msgstr "输入您的大陆( 以及可能的额外ID, 即 SA 或 NAQ)"
 
 #: utr4wstrings.tc_enteryourcountycode
 #, fuzzy
 msgid "Enter your county code:"
-msgstr ""
+msgstr "输入您的县代码 :"
 
 #: utr4wstrings.tc_enteryourcountyorstateporovincedx
 #, fuzzy
 msgid "Enter your county if you are in %s state. Enter your state, Canadian Province or \"DX\" if outside of %s:"
-msgstr ""
+msgstr "在%s状态下, 请输入您的县 。 在%s之外输入您的状态、 加拿大省或“ DX ” :"
 
 #: utr4wstrings.tc_enteryourdistrictabbreviation
 #, fuzzy
 msgid "Enter your district abbreviation:"
-msgstr ""
+msgstr "输入您的区域缩写 :"
 
 #: utr4wstrings.tc_enteryourdistrictcode
 #, fuzzy
 msgid "If in UK/EI, enter your 2 digit district code"
-msgstr ""
+msgstr "如果在英国/ EI 中, 请输入您的 2 位数区号"
 
 #: utr4wstrings.tc_enteryourdok
 #, fuzzy
 msgid "Enter your DOK:"
-msgstr ""
+msgstr "输入您的 DOK :"
 
 #: utr4wstrings.tc_enteryourfocnumber
 #, fuzzy
 msgid "Enter your FOC number:"
-msgstr ""
+msgstr "输入您的 FOC 编号 :"
 
 #: utr4wstrings.tc_enteryourfourdigitgridsquare
 #, fuzzy
 msgid "Enter your four digit grid square:"
-msgstr ""
+msgstr "输入您的四位数网格平方 :"
 
 #: utr4wstrings.tc_enteryourgeographicalcoordinates
 #, fuzzy
@@ -9340,51 +9375,53 @@ msgid ""
 "Enter your geographical coordinates\n"
 "(e.g. 55N37O for Moscow):"
 msgstr ""
+"输入您的地理坐标\n"
+"(例如莫斯科55N37O):"
 
 #: utr4wstrings.tc_enteryouriotareferencedesignator
 #, fuzzy
 msgid "Enter your IOTA Reference Designator (WITH DASH and no leading zeros delimiting # e.g. EU-5)"
-msgstr ""
+msgstr "输入您的 IOTA 参考代号( WITH DASH 且没有指定% 1)"
 
 #: utr4wstrings.tc_enteryouristrictifinve7
 #, fuzzy
 msgid "Enter your federal district if in British Columbia, or your State/Province"
-msgstr ""
+msgstr "如果在不列颠哥伦比亚省,或州/省,请输入您的联邦区"
 
 #: utr4wstrings.tc_enteryourmembershipnumber
 #, fuzzy
 msgid "Enter your membership number:"
-msgstr ""
+msgstr "输入会员号 :"
 
 #: utr4wstrings.tc_enteryourname
 #, fuzzy
 msgid "Enter your name:"
-msgstr ""
+msgstr "输入您的名字 :"
 
 #: utr4wstrings.tc_enteryournameandqth
 #, fuzzy
 msgid "Enter your name and QTH (US state, Canadian Province or DX country) or member number:"
-msgstr ""
+msgstr "输入您的名称和 QTH( 美国州、 加拿大省或 DX 国家) 或成员编号 :"
 
 #: utr4wstrings.tc_enteryournameandstate
 #, fuzzy
 msgid "Enter your name (and state if you are in North America):"
-msgstr ""
+msgstr "请输入您的姓名( 如果您在北美) :"
 
 #: utr4wstrings.tc_enteryouroblastid
 #, fuzzy
 msgid "Enter your oblast ID:"
-msgstr ""
+msgstr "输入州编号 :"
 
 #: utr4wstrings.tc_enteryourparkreferencedesignator
 #, fuzzy
 msgid "Enter your POTA Park Reference Designator (WITH DASH e.g. K-1234)"
-msgstr ""
+msgstr "输入您的 POTA 公园参考代号( 例如 K- 1234 )"
 
 #: utr4wstrings.tc_enteryourpostcode
 #, fuzzy
 msgid "Enter your postcode:"
-msgstr ""
+msgstr "输入您的邮政编码 :"
 
 #: utr4wstrings.tc_enteryourprecedencechecksection
 #, fuzzy
@@ -9392,11 +9429,13 @@ msgid ""
 "Enter your precedence, your check\n"
 "(last two digits of year licensed) and ARRL section:"
 msgstr ""
+"输入您的优先级, 您的支票\n"
+"(前两个数字的许可年份)和ARRL部分:"
 
 #: utr4wstrings.tc_enteryourprovinceid
 #, fuzzy
 msgid "Enter your province ID:"
-msgstr ""
+msgstr "输入您的省编号 :"
 
 #: utr4wstrings.tc_enteryourqthandthename
 #, fuzzy
@@ -9404,122 +9443,124 @@ msgid ""
 "Enter your QTH that you want to send\n"
 "and the name you want to use:"
 msgstr ""
+"输入要发送的QTH\n"
+"和要使用的名称 :"
 
 #: utr4wstrings.tc_enteryourqthorpower
 #, fuzzy
 msgid "Enter your QTH that you want to send if you are in North America or your power as MY STATE if outside:"
-msgstr ""
+msgstr "输入您想要发送的QTH, 如果您在北美, 或者您作为我的州的力量, 如果在外 :"
 
 #: utr4wstrings.tc_enteryourrdaid
 #, fuzzy
 msgid "Enter your RDA ID:"
-msgstr ""
+msgstr "输入您的 RDA ID :"
 
 #: utr4wstrings.tc_enteryourrdaidorgrid
 #, fuzzy
 msgid "Enter your RDA ID (for UA1A stations) or four digit grid square:"
-msgstr ""
+msgstr "输入您的 RDA ID( 对于 UA1A 站) 或 四位数网格 平方 :"
 
 #: utr4wstrings.tc_enteryoursixdigitgridsquare
 #, fuzzy
 msgid "Enter your six digit grid square:"
-msgstr ""
+msgstr "输入您的六位数网格方格 :"
 
 #: utr4wstrings.tc_enteryoursquareid
 #, fuzzy
 msgid "Enter your square ID:"
-msgstr ""
+msgstr "输入您的平方 ID :"
 
 #: utr4wstrings.tc_enteryourstatecode
 #, fuzzy
 msgid "Enter your state code:"
-msgstr ""
+msgstr "输入您的状态代码 :"
 
 #: utr4wstrings.tc_enteryourzone
 #, fuzzy
 msgid "Enter your zone:"
-msgstr ""
+msgstr "输入您的区域 :"
 
 #: utr4wstrings.tc_entriesperms
 #, fuzzy
 msgid "%u entries per %u ms"
-msgstr ""
+msgstr "%u 条目每%u ms"
 
 #: utr4wstrings.tc_errorinlogfile
 #, fuzzy
 msgid "Error in log file!"
-msgstr ""
+msgstr "日志文件出错 !"
 
 #: utr4wstrings.tc_errorofferingcommanderproxytcpport
 #, fuzzy
 msgid "Error offering Commander proxy TCP Port"
-msgstr ""
+msgstr "提供命令代理 TCP 端口出错"
 
 #: utr4wstrings.tc_errorplayingvoicememory
 #, fuzzy
 msgid "Error playing voice memory"
-msgstr ""
+msgstr "播放语音内存出错"
 
 #: utr4wstrings.tc_eudx
 #, fuzzy
 msgid "EU country, enter your four character country code"
-msgstr ""
+msgstr "欧盟国家,请输入您的四个字符国家代码"
 
 #: utr4wstrings.tc_exchangefunctionkeymemorystatus
 #, fuzzy
 msgid "EXCHANGE FUNCTION KEY MEMORY STATUS"
-msgstr ""
+msgstr "职能变化重要记忆地位"
 
 #: utr4wstrings.tc_failedtoconnectto
 #, fuzzy
 msgid "Failed to connect to "
-msgstr ""
+msgstr "连接失败 "
 
 #: utr4wstrings.tc_failedtoconnecttogetscoresorg
 #, fuzzy
 msgid "Failed to connect"
-msgstr ""
+msgstr "连接失败"
 
 #: utr4wstrings.tc_failedtoload
 #, fuzzy
 msgid "Failed to load. View getscoresanswer.html for details."
-msgstr ""
+msgstr "装入失败 。 查看获得coresanswer.html的详细信息."
 
 #: utr4wstrings.tc_failedtoreceiveserverlog
 #, fuzzy
 msgid "Failed to receive server log."
-msgstr ""
+msgstr "接收服务器日志失败 ."
 
 #: utr4wstrings.tc_filesavedtofilesuccessfully
 #, fuzzy
 msgid "File saved to file successfully."
-msgstr ""
+msgstr "文件已保存以成功存档 ."
 
 #: utr4wstrings.tc_filesavedtosuccessfully
 #, fuzzy
 msgid "File saved to %s successfully."
-msgstr ""
+msgstr "文件保存到%s 成功 ."
 
 #: utr4wstrings.tc_findingzeroendvisibledupesheetlist
 #, fuzzy
 msgid "Not finding zero at end visible dupesheet list!!"
-msgstr ""
+msgstr "找不到最后可见的 dupesheet 列表中的 0 !"
 
 #: utr4wstrings.tc_firstextension
 #, fuzzy
 msgctxt "utr4wstrings.tc_firstextension"
 msgid "First extension"
-msgstr ""
+msgstr "第一次延期"
 
 #: utr4wstrings.tc_florida
 #, fuzzy
 msgid "Florida"
-msgstr ""
+msgstr "佛罗里达州"
 
 #: utr4wstrings.tc_flushinitialexcommandexecuted
 #, fuzzy
 msgid "FLUSHINITIALEX command is executed."
-msgstr ""
+msgstr "FLUSHINITIALEX 命令执行."
 
 #: utr4wstrings.tc_folderalreadyexistsoverwrite
 #, fuzzy
@@ -9527,221 +9568,223 @@ msgid ""
 "Folder \"%s\" already exists.\n"
 "Overwrite ?"
 msgstr ""
+"文件夹“ %s ” 已经存在 。\n"
+"覆盖 ?"
 
 #: utr4wstrings.tc_footsw
 #, fuzzy
 msgid "Footsw."
-msgstr ""
+msgstr "足厥阴."
 
 #: utr4wstrings.tc_france
 #, fuzzy
 msgid "France"
-msgstr ""
+msgstr "法国"
 
 #: utr4wstrings.tc_freq
 #, fuzzy
 msgid "Freq"
-msgstr ""
+msgstr "弗莱克"
 
 #: utr4wstrings.tc_frequencyforcallinkhz
 #, fuzzy
 msgid "frequency for %s in kHz"
-msgstr ""
+msgstr "kHz %s 频率"
 
 #: utr4wstrings.tc_freq_off
 #, fuzzy
 msgid "SHOW FREQUENCY IN LOG is turned off"
-msgstr ""
+msgstr "在LOG里穿的FREQUENCY是关闭的"
 
 #: utr4wstrings.tc_freq_zero
 #, fuzzy
 msgid "ERROR: Invalid Frequency logged"
-msgstr ""
+msgstr "错误: 已登录的频率无效"
 
 #: utr4wstrings.tc_fri
 #, fuzzy
 msgid "Fri"
-msgstr ""
+msgstr "弗里语Name"
 
 #: utr4wstrings.tc_gagarin
 #, fuzzy
 msgid "special two char ID"
-msgstr ""
+msgstr "特殊两个字符标识"
 
 #: utr4wstrings.tc_gc
 #, fuzzy
 msgid "special two character designator"
-msgstr ""
+msgstr "特殊两个字符代号"
 
 #: utr4wstrings.tc_germany
 #, fuzzy
 msgid "Germany"
-msgstr ""
+msgstr "德国"
 
 #: utr4wstrings.tc_gethost
 #, fuzzy
 msgid "GET HOST.."
-msgstr ""
+msgstr "赢得."
 
 #: utr4wstrings.tc_hamlib_id_label
 #, fuzzy
 msgid "HAMLIB ID"
-msgstr ""
+msgstr "海地身份证"
 
 #: utr4wstrings.tc_hamscorequeueingfulllogresync
 #, fuzzy
 msgid "HamScore: queueing full log resync..."
-msgstr ""
+msgstr "HamScore: 正在排队完整日志再同步..."
 
 #: utr4wstrings.tc_handlogmodetrue
 #, fuzzy
 msgid "HAND LOG MODE = TRUE"
-msgstr ""
+msgstr "HANDLOG 模式=真实"
 
 #: utr4wstrings.tc_hangtime
 #, fuzzy
 msgid "Hang time"
-msgstr ""
+msgstr "挂断时间"
 
 #: utr4wstrings.tc_hasimpropersyntax
 #, fuzzy
 msgid "%s has improper syntax!!"
-msgstr ""
+msgstr "%s 语法不当!"
 
 #: utr4wstrings.tc_haveqtcs
 #, fuzzy
 msgid "Have %u QTCs"
-msgstr ""
+msgstr "拥有%u QTCs"
 
 #: utr4wstrings.tc_hitcounthistogram050
 #, fuzzy
 msgid "Hit count histogram for 0 to 50+ : "
-msgstr ""
+msgstr "点击0至50+的直方图: "
 
 #: utr4wstrings.tc_host
 #, fuzzy
 msgid "HOST  : %s"
-msgstr ""
+msgstr "地点 : %s"
 
 #: utr4wstrings.tc_hq
 #, fuzzy
 msgid "HQ (HQ station)"
-msgstr ""
+msgstr "总部(总部站)"
 
 #: utr4wstrings.tc_hqmults
 #, fuzzy
 msgid "HQ Mults"
-msgstr ""
+msgstr "总部"
 
 #: utr4wstrings.tc_hq_or_member
 #, fuzzy
 msgid "HQ or member"
-msgstr ""
+msgstr "总部或成员"
 
 #: utr4wstrings.tc_hungary
 #, fuzzy
 msgid "Hungary"
-msgstr ""
+msgstr "匈牙利"
 
 #: utr4wstrings.tc_iambica
 #, fuzzy
 msgid "Iambic A"
-msgstr ""
+msgstr "Iambic A 语录"
 
 #: utr4wstrings.tc_iambicb
 #, fuzzy
 msgid "Iambic B"
-msgstr ""
+msgstr "Iambic B 语录"
 
 #: utr4wstrings.tc_iamin
 #, fuzzy
 msgid "&I am in %s"
-msgstr ""
+msgstr "在 %s 中( I)"
 
 #: utr4wstrings.tc_ididfinecontestnamelogcfgdatfile
 #, fuzzy
 msgid "I did not fine a contest name in your LOGCFG.DAT file."
-msgstr ""
+msgstr "在你的LOGCFG.DAT档案里 我可没选好名字."
 
 #: utr4wstrings.tc_ifoundcontestnameidonounderstandlo
 #, fuzzy
 msgid "I found a contest name I do no understand in your LOGCFG.DAT file."
-msgstr ""
+msgstr "我在你的LOGCFG. DAT文件中找到一个我不懂的竞赛名称."
 
 #: utr4wstrings.tc_ignorespeedpot
 #, fuzzy
 msgid "&Ignore speed pot"
-msgstr ""
+msgstr "忽略速度壶( I)"
 
 #: utr4wstrings.tc_improperarrlfielddayclass
 #, fuzzy
 msgid "Field Day class must be A, B, C, D, E or F."
-msgstr ""
+msgstr "战地日班必须是A,B,C,D,E或F."
 
 #: utr4wstrings.tc_impropercontinent
 #, fuzzy
 msgid "Improper continent!!"
-msgstr ""
+msgstr "不对的大陆!"
 
 #: utr4wstrings.tc_improperdomesitcqth
 #, fuzzy
 msgid "Improper domestic QTH!!"
-msgstr ""
+msgstr "国产QTH!"
 
 #: utr4wstrings.tc_improperdomesitcqthormissingname
 #, fuzzy
 msgid "Improper domestic QTH or missing name!!"
-msgstr ""
+msgstr "不恰当的国内QTH 或缺失的名字!"
 
 #: utr4wstrings.tc_impropertransmittercount
 #, fuzzy
 msgid "FD transmitters must be between 1 and 99."
-msgstr ""
+msgstr "FD发射机必须在1到99之间."
 
 #: utr4wstrings.tc_improperwinterfielddayclass
 #, fuzzy
 msgid "Winter Field Day class must be H, I, O or M."
-msgstr ""
+msgstr "冬季战地日课必须是H,I,O或M."
 
 #: utr4wstrings.tc_improperzonenumber
 #, fuzzy
 msgid "Improper zone number!!"
-msgstr ""
+msgstr "区号不对!"
 
 #: utr4wstrings.tc_info
 #, fuzzy
 msgid "Info"
-msgstr ""
+msgstr "资讯"
 
 #: utr4wstrings.tc_insert
 #, fuzzy
 msgid "INSERT"
-msgstr ""
+msgstr "服务"
 
 #: utr4wstrings.tc_invalid
 #, fuzzy
 msgid "Invalid Entry"
-msgstr ""
+msgstr "无效的条目"
 
 #: utr4wstrings.tc_invalidcallsignincallwindow
 #, fuzzy
 msgid "Invalid callsign in call window!!"
-msgstr ""
+msgstr "调用窗口中无效的调用符号 !"
 
 #: utr4wstrings.tc_invaliddate
 #, fuzzy
 msgid "Invalid date!!"
-msgstr ""
+msgstr "无效的日期!"
 
 #: utr4wstrings.tc_invalidreminderdate
 #, fuzzy
 msgid "Invalid reminder date!!"
-msgstr ""
+msgstr "无效的提醒日期 !"
 
 #: utr4wstrings.tc_invalidremindertime
 #, fuzzy
 msgid "Invalid reminder time!!"
-msgstr ""
+msgstr "无效的提醒时间 !"
 
 #: utr4wstrings.tc_invalidstatementin
 #, fuzzy
@@ -9751,6 +9794,10 @@ msgid ""
 "Line %u\n"
 "%s"
 msgstr ""
+"无效的语句在 %s !\n"
+"\n"
+"线条%u\n"
+"%s"
 
 #: utr4wstrings.tc_invalidstatementinconfigfile
 #, fuzzy
@@ -9761,129 +9808,133 @@ msgid ""
 "Line %u\n"
 "%s"
 msgstr ""
+"%s编号 :\n"
+"配置文件中无效的语句 。\n"
+"\n"
+"行线 %u%s"
 
 #: utr4wstrings.tc_ireland
 #, fuzzy
 msgid "Ireland"
-msgstr ""
+msgstr "爱尔兰"
 
 #: utr4wstrings.tc_irts
 #, fuzzy
 msgid "EI/GI, enter your County"
-msgstr ""
+msgstr "EI/GI, 进入您的县"
 
 #: utr4wstrings.tc_isadupe
 #, fuzzy
 msgid "%s is a dupe!!"
-msgstr ""
+msgstr "%s 是哑巴!"
 
 #: utr4wstrings.tc_isadupeandwillbeloggedwithzero
 #, fuzzy
 msgid "%s is a dupe and will be logged with zero QSO points."
-msgstr ""
+msgstr "%s 是一个 dupe , 并将以 0 QSO 点登录 ."
 
 #: utr4wstrings.tc_islandstation
 #, fuzzy
 msgid "Island station"
-msgstr ""
+msgstr "岛式站台"
 
 #: utr4wstrings.tc_isqrvfor
 #, fuzzy
 msgid "Is %s QRV for %s?"
-msgstr ""
+msgstr "是%s %s 的QRV 吗 ?"
 
 #: utr4wstrings.tc_italy
 #, fuzzy
 msgid "Italy"
-msgstr ""
+msgstr "意大利"
 
 #: utr4wstrings.tc_japan
 #, fuzzy
 msgid "Japan"
-msgstr ""
+msgstr "日本"
 
 #: utr4wstrings.tc_kazakhstan
 #, fuzzy
 msgid "Kazakhstan"
-msgstr ""
+msgstr "哈萨克斯坦"
 
 #: utr4wstrings.tc_keycomp
 #, fuzzy
 msgid "Keyer compensation"
-msgstr ""
+msgstr "扣键赔偿"
 
 #: utr4wstrings.tc_keyermode
 #, fuzzy
 msgctxt "utr4wstrings.tc_keyermode"
 msgid "Keyer mode"
-msgstr ""
+msgstr "密钥模式"
 
 #: utr4wstrings.tc_keyernamedsalreadyexists
 #, fuzzy
 msgid "A keyer named \"%s\" already exists."
-msgstr ""
+msgstr "已经存在名为“ %s ” 的密钥 ."
 
 #: utr4wstrings.tc_labre
 #, fuzzy
 msgid "Enter 2 char QTH ID"
-msgstr ""
+msgstr "输入 2 个字符 QTH ID"
 
 #: utr4wstrings.tc_lame_error
 #, fuzzy
 msgid "You may download it from"
-msgstr ""
+msgstr "你可以从这里下载"
 
 #: utr4wstrings.tc_last60
 #, fuzzy
 msgid "Last 60 = %d"
-msgstr ""
+msgstr "倒数 60 = %d"
 
 #: utr4wstrings.tc_latest_config_file
 #, fuzzy
 msgctxt "utr4wstrings.tc_latest_config_file"
 msgid "Latest config file"
-msgstr ""
+msgstr "最新配置文件"
 
 #: utr4wstrings.tc_leadin
 #, fuzzy
 msgid "Lead-in time (*10 ms)"
-msgstr ""
+msgstr "进入时间(*10毫秒)"
 
 #: utr4wstrings.tc_list_of_command
 #, fuzzy
 msgctxt "utr4wstrings.tc_list_of_command"
 msgid "List of commands"
-msgstr ""
+msgstr "命令列表"
 
 #: utr4wstrings.tc_locallog
 #, fuzzy
 msgid "LOCAL LOG"
-msgstr ""
+msgstr "当地语言组"
 
 #: utr4wstrings.tc_locationfieldempty
 #, fuzzy
 msgid "LOCATION field is empty."
-msgstr ""
+msgstr "定位域为空 ."
 
 #: utr4wstrings.tc_logfilenotfound
 #, fuzzy
 msgid "Log file not found"
-msgstr ""
+msgstr "找不到日志文件"
 
 #: utr4wstrings.tc_logfilesizecheckfailed
 #, fuzzy
 msgid "LOG FILE SIZE CHECK FAILED!!!!"
-msgstr ""
+msgstr "洛格・西兹检查失败了!"
 
 #: utr4wstrings.tc_loggingrunningsotherenofileopen
 #, fuzzy
 msgid "Logging is not running, so there is no file to open."
-msgstr ""
+msgstr "日志未运行, 所以没有要打开的文件 ."
 
 #: utr4wstrings.tc_logincalldoeslooklikecallsign
 #, fuzzy
 msgid "Login call does not look like a callsign"
-msgstr ""
+msgstr "登录呼叫看起来不像一个呼叫符号"
 
 #: utr4wstrings.tc_m
 #, fuzzy
@@ -9893,103 +9944,103 @@ msgstr ""
 #: utr4wstrings.tc_maximumnumberofremindersexceeded
 #, fuzzy
 msgid "Maximum number of reminders exceeded!!"
-msgstr ""
+msgstr "最大提醒次数超过!"
 
 #: utr4wstrings.tc_messagetosendvianetwork
 #, fuzzy
 msgid "message to send via network"
-msgstr ""
+msgstr "要通过网络发送的消息"
 
 #: utr4wstrings.tc_michigan
 #, fuzzy
 msgid "Michigan"
-msgstr ""
+msgstr "密歇根州"
 
 #: utr4wstrings.tc_min
 #, fuzzy
 msgid "%u min."
-msgstr ""
+msgstr "%u 分钟。"
 
 #: utr4wstrings.tc_minnesota
 #, fuzzy
 msgid "Minnesota"
-msgstr ""
+msgstr "明尼苏达州"
 
 #: utr4wstrings.tc_missingmultsreport
 #, fuzzy
 msgid "Missing mults report: %u countries on at least %u but not all bands."
-msgstr ""
+msgstr "缺少 mults 报告 :%u 至少在%u 上的国家, 但并非所有的频段 ."
 
 #: utr4wstrings.tc_missingqthandorname
 #, fuzzy
 msgid "Missing QTH and/or name!!"
-msgstr ""
+msgstr "缺少QTH 和/或名称 !"
 
 #: utr4wstrings.tc_mixw_connected
 #, fuzzy
 msgid "Connected"
-msgstr ""
+msgstr "已连接"
 
 #: utr4wstrings.tc_mixw_disconnected
 #, fuzzy
 msgctxt "utr4wstrings.tc_mixw_disconnected"
 msgid "Disconnected"
-msgstr ""
+msgstr "断开连接"
 
 #: utr4wstrings.tc_modified
 #, fuzzy
 msgid "Modified"
-msgstr ""
+msgstr "已修改"
 
 #: utr4wstrings.tc_mon
 #, fuzzy
 msgid "Mon"
-msgstr ""
+msgstr "单"
 
 #: utr4wstrings.tc_morethan50differenthoursinthislog
 #, fuzzy
 msgid "More than 50 different hours in this log!!"
-msgstr ""
+msgstr "超过50个不同的小时在这个日志!"
 
 #: utr4wstrings.tc_ms
 #, fuzzy
 msgid " ms"
-msgstr ""
+msgstr " 分钟"
 
 #: utr4wstrings.tc_multneedsfor
 #, fuzzy
 msgid " Mult needs for %s :"
-msgstr ""
+msgstr " 穆特需要%s :"
 
 #: utr4wstrings.tc_multsheetcleared
 #, fuzzy
 msgid "Mult sheet cleared!"
-msgstr ""
+msgstr "木板清理完毕!"
 
 #: utr4wstrings.tc_name_from_name_database
 #, fuzzy
 msgid "Name from name database"
-msgstr ""
+msgstr "来自名称数据库的名称"
 
 #: utr4wstrings.tc_netherlands
 #, fuzzy
 msgid "Netherlands"
-msgstr ""
+msgstr "荷兰"
 
 #: utr4wstrings.tc_network
 #, fuzzy
 msgid "Network : %s %s:%d"
-msgstr ""
+msgstr "网络 : %s%s :%d"
 
 #: utr4wstrings.tc_networktest
 #, fuzzy
 msgid "Network Test"
-msgstr ""
+msgstr "网络测试"
 
 #: utr4wstrings.tc_newengland
 #, fuzzy
 msgid "New England"
-msgstr ""
+msgstr "新英格兰"
 
 #: utr4wstrings.tc_newenglandstateabreviation
 #, fuzzy
@@ -9997,405 +10048,407 @@ msgid ""
 "Enter your New England state abbreviation\n"
 "(ME, NH, VT, MA, CT, RI):"
 msgstr ""
+"输入您新英格兰州的缩写\n"
+"(ME、NH、VT、MA、CT、RI):"
 
 #: utr4wstrings.tc_newtour
 #, fuzzy
 msgid "New tour %d/%d"
-msgstr ""
+msgstr "新巡演%d/%d"
 
 #: utr4wstrings.tc_newvalue
 #, fuzzy
 msgid "new value"
-msgstr ""
+msgstr "新值"
 
 #: utr4wstrings.tc_next
 #, fuzzy
 msgid "< Next"
-msgstr ""
+msgstr "< 下一个"
 
 #: utr4wstrings.tc_noanswerfromserver
 #, fuzzy
 msgid "No answer from server"
-msgstr ""
+msgstr "服务器没有回复"
 
 #: utr4wstrings.tc_nocallsignspecified
 #, fuzzy
 msgid "No callsign specified!!"
-msgstr ""
+msgstr "没有指定呼号!"
 
 #: utr4wstrings.tc_nocqmesprogrammedintocqmemoryaltf1
 #, fuzzy
 msgid "No CQ message programmed into CQ MEMORY AltF1."
-msgstr ""
+msgstr "没有 CQ 消息编程到 CQ MEMORY AltF1."
 
 #: utr4wstrings.tc_nofloppyfilesavenamespecified
 #, fuzzy
 msgid "No floppy file save name specified."
-msgstr ""
+msgstr "没有指定软盘文件保存名称 ."
 
 #: utr4wstrings.tc_nopotaparksloggedyetsession
 #, fuzzy
 msgid "No POTA parks logged yet this session"
-msgstr ""
+msgstr "目前还没有 POTA 园区登录"
 
 #: utr4wstrings.tc_noqsonumberfound
 #, fuzzy
 msgid "No QSO number found!!"
-msgstr ""
+msgstr "找不到QSO号码!"
 
 #: utr4wstrings.tc_noqtcspendingqru
 #, fuzzy
 msgid "No QTCs pending, QRU."
-msgstr ""
+msgstr "没有QTCs未决,QRU."
 
 #: utr4wstrings.tc_northamerica
 #, fuzzy
 msgctxt "utr4wstrings.tc_northamerica"
 msgid "North America"
-msgstr ""
+msgstr "北美"
 
 #: utr4wstrings.tc_note
 #, fuzzy
 msgid "note"
-msgstr ""
+msgstr "说明"
 
 #: utr4wstrings.tc_notenoughinfoinexchange
 #, fuzzy
 msgid "Not enough info in exchange!!"
-msgstr ""
+msgstr "没有足够的信息交换!"
 
 #: utr4wstrings.tc_notrmasterdtafilefound
 #, fuzzy
 msgid "No TRMASTER.DTA file found."
-msgstr ""
+msgstr "未找到 TRMASTER. DATA 文件 ."
 
 #: utr4wstrings.tc_numbermessagesillegalcharacters
 #, fuzzy
 msgid "Number of messages has illegal characters."
-msgstr ""
+msgstr "信件数量有非法字符 ."
 
 #: utr4wstrings.tc_numberorletterofmessagetobeprogram
 #, fuzzy
 msgid "Number or letter of message to be programmed (1-9, A-C, or ESCAPE to exit):"
-msgstr ""
+msgstr "拟编程(1-9, A-C, 或 ESCAPE 退出)的邮件编号或信件 :"
 
 #: utr4wstrings.tc_oblasts
 #, fuzzy
 msgid "Oblasts"
-msgstr ""
+msgstr "州"
 
 #: utr4wstrings.tc_ohio
 #, fuzzy
 msgid "Ohio"
-msgstr ""
+msgstr "俄亥俄州"
 
 #: utr4wstrings.tc_op
 #, fuzzy
 msgid "Op"
-msgstr ""
+msgstr "操作"
 
 #: utr4wstrings.tc_openconfigurationfile
 #, fuzzy
 msgid " - Open configuration file or start a new contest"
-msgstr ""
+msgstr " - 打开配置文件或启动新比赛"
 
 #: utr4wstrings.tc_othercwmessagememorystatus
 #, fuzzy
 msgid "Other CW message memory status"
-msgstr ""
+msgstr "其他 CW 信件内存状态"
 
 #: utr4wstrings.tc_otherssbmessagememorystatus
 #, fuzzy
 msgid "Other SSB message memory status"
-msgstr ""
+msgstr "其他 SSB 信件内存状态"
 
 #: utr4wstrings.tc_override
 #, fuzzy
 msgid "OVERRIDE"
-msgstr ""
+msgstr "超出范围"
 
 #: utr4wstrings.tc_ozcr
 #, fuzzy
 msgid "Enter three-letters number:"
-msgstr ""
+msgstr "输入三个字母编号 :"
 
 #: utr4wstrings.tc_paddle
 #, fuzzy
 msgctxt "utr4wstrings.tc_paddle"
 msgid "Paddle"
-msgstr ""
+msgstr "划桨"
 
 #: utr4wstrings.tc_paddleonlysidetone
 #, fuzzy
 msgid "Paddle &only sidetone"
-msgstr ""
+msgstr "仅放置侧面( O)"
 
 #: utr4wstrings.tc_paddleswap
 #, fuzzy
 msgid "Paddle swa&p"
-msgstr ""
+msgstr "划划划"
 
 #: utr4wstrings.tc_paddleswitchpoint
 #, fuzzy
 msgid "Paddle switchpoint"
-msgstr ""
+msgstr "划桨切换点"
 
 #: utr4wstrings.tc_parameterhasnovalue
 #, fuzzy
 msgid "Parameter \"%s\" has no value in the config file -- left at its default."
-msgstr ""
+msgstr "参数 \"%s\" 在配置文件中没有值 - 默认时留下 ."
 
 #: utr4wstrings.tc_pleasecheckmultinetwork
 #, fuzzy
 msgid "Please check multi network"
-msgstr ""
+msgstr "请检查多网络"
 
 #: utr4wstrings.tc_points
 #, fuzzy
 msgid "Pts"
-msgstr ""
+msgstr "点"
 
 #: utr4wstrings.tc_poland
 #, fuzzy
 msgid "Poland"
-msgstr ""
+msgstr "波兰"
 
 #: utr4wstrings.tc_port_conflict_dialog
 #, fuzzy
 msgid "%s is already configured as %s. Two devices cannot share a serial port."
-msgstr ""
+msgstr "%s 已经配置为%s 。 两个设备不能共享序列端口 ."
 
 #: utr4wstrings.tc_port_conflict_proceed
 #, fuzzy
 msgid "Apply anyway?"
-msgstr ""
+msgstr "应用呢?"
 
 #: utr4wstrings.tc_port_conflict_startup
 #, fuzzy
 msgid "RADIO ONE and RADIO TWO are both configured to use %s. RADIO ONE keeps the port; RADIO TWO CAT control is disabled until one radio's CONTROL PORT is changed."
-msgstr ""
+msgstr "RADIO one和RADIO 2都配置为使用%s. RADIO one保留端口;RADIO Two CAT控制被禁用,直到一个无线电控制端口被改变."
 
 #: utr4wstrings.tc_port_not_connected
 #, fuzzy
 msgid "(not connected)"
-msgstr ""
+msgstr "(未连接)"
 
 #: utr4wstrings.tc_possibledatalossmultinetwork
 #, fuzzy
 msgid "Possible data loss on multi network."
-msgstr ""
+msgstr "多网络可能丢失数据."
 
 #: utr4wstrings.tc_potaparksdownloadfailed
 #, fuzzy
 msgid "POTA parks download failed"
-msgstr ""
+msgstr "POTA 公园下载失败"
 
 #: utr4wstrings.tc_potaparksfilecouldloaded
 #, fuzzy
 msgid "POTA parks file could not be loaded"
-msgstr ""
+msgstr "无法装入 POTA 园区文件"
 
 #: utr4wstrings.tc_potaparksloaded
 #, fuzzy
 msgid "POTA parks loaded"
-msgstr ""
+msgstr "POTA 园区已装入"
 
 #: utr4wstrings.tc_prefecture
 #, fuzzy
 msgid "Enter your prefecture:"
-msgstr ""
+msgstr "输入您的省道 :"
 
 #: utr4wstrings.tc_preferencescouldopeneds
 #, fuzzy
 msgid "Preferences could not be opened (%s)."
-msgstr ""
+msgstr "无法打开首选项 (%s) ."
 
 #: utr4wstrings.tc_prefix
 #, fuzzy
 msgid "Prefixes"
-msgstr ""
+msgstr "前缀"
 
 #: utr4wstrings.tc_pref_or_cqzone
 #, fuzzy
 msgid "Enter your CQ ZONE or JA PREFECTURE"
-msgstr ""
+msgstr "输入您的 CQ ZONE 或 JA 预录"
 
 #: utr4wstrings.tc_presscqfunctionkeytoprogram
 #, fuzzy
 msgid " Press CQ function key to program (F1, AltF1, CtrlF1), or ESCAPE to exit) : "
-msgstr ""
+msgstr " 按 CQ 函数键程序( F1, AltF1, CtrlF1, 或 ESCAPE 退出) : "
 
 #: utr4wstrings.tc_pressexfunctionkeytoprogram
 #, fuzzy
 msgid "Press ex function key to program (F3-F12, Alt/Ctrl F1-F12) or ESCAPE to exit:"
-msgstr ""
+msgstr "按前函数键程序(F3-F12,Alt/Ctrl F1-F12)或ESCAPE退出:"
 
 #: utr4wstrings.tc_pts
 #, fuzzy
 msgid "%d Pts"
-msgstr ""
+msgstr "%d 点"
 
 #: utr4wstrings.tc_pttlockouttrue
 #, fuzzy
 msgid "PTT LOCKOUT=TRUE"
-msgstr ""
+msgstr "PTT LOCKUT=图"
 
 #: utr4wstrings.tc_pttviacommandsctrljoptionmusttruew
 #, fuzzy
 msgid "PTT VIA COMMANDS (CTRL-J) option must be true for WSJT-X use - Setting to true"
-msgstr ""
+msgstr "PTT VIA CommanDS(CTRL-J) 选项对 WSJT- X 使用必须是真的 - 设置为真"
 
 #: utr4wstrings.tc_qsoneedsfor
 #, fuzzy
 msgid " QSO needs for %s :"
-msgstr ""
+msgstr " QSO 需要 %s :"
 
 #: utr4wstrings.tc_qsos
 #, fuzzy
 msgid "QSOs"
-msgstr ""
+msgstr "快速行动组织"
 
 #: utr4wstrings.tc_qso_imported
 #, fuzzy
 msgid "Qs imported."
-msgstr ""
+msgstr "Qs导入."
 
 #: utr4wstrings.tc_qso_number
 #, fuzzy
 msgid "QSO Number"
-msgstr ""
+msgstr "数量"
 
 #: utr4wstrings.tc_qtcabortedbyoperator
 #, fuzzy
 msgid "QTC aborted by operator."
-msgstr ""
+msgstr "QTC 被操作员中止 ."
 
 #: utr4wstrings.tc_qtcnumberillegalcharacters
 #, fuzzy
 msgid "QTC Number has illegal characters."
-msgstr ""
+msgstr "QTC号码有非法字符."
 
 #: utr4wstrings.tc_qtcpending
 #, fuzzy
 msgid "QTC Pending"
-msgstr ""
+msgstr "QTC 待定"
 
 #: utr4wstrings.tc_qtcprocessterminated
 #, fuzzy
 msgid "QTC process terminated."
-msgstr ""
+msgstr "QTC进程终止."
 
 #: utr4wstrings.tc_qtcprocessterminatedinvalidnumberm
 #, fuzzy
 msgid "QTC process terminated.  Invalid number of messages."
-msgstr ""
+msgstr "QTC进程终止. 无效的消息数量 ."
 
 #: utr4wstrings.tc_qtc_callsign
 #, fuzzy
 msgid "Callsign :"
-msgstr ""
+msgstr "调用 :"
 
 #: utr4wstrings.tc_qtc_for
 #, fuzzy
 msgid "%s for %s"
-msgstr ""
+msgstr "%s 对%s"
 
 #: utr4wstrings.tc_radio1
 #, fuzzy
 msgctxt "utr4wstrings.tc_radio1"
 msgid "Radio 1"
-msgstr ""
+msgstr "无线电1"
 
 #: utr4wstrings.tc_radio2
 #, fuzzy
 msgctxt "utr4wstrings.tc_radio2"
 msgid "Radio 2"
-msgstr ""
+msgstr "电台2"
 
 #: utr4wstrings.tc_rate
 #, fuzzy
 msgid "Rate = %u"
-msgstr ""
+msgstr "比率 =%u"
 
 #: utr4wstrings.tc_reallywanttoclearthelog
 #, fuzzy
 msgid "Do you really want to clear the current log?"
-msgstr ""
+msgstr "您真的要清除当前日志吗 ?"
 
 #: utr4wstrings.tc_recorddvppressescapeorreturntostop
 #, fuzzy
 msgid "Recording DVP. Press ESCAPE or RETURN to stop."
-msgstr ""
+msgstr "录制DVP. 按ESCAPE或回电停止."
 
 #: utr4wstrings.tc_records
 #, fuzzy
 msgid "Records"
-msgstr ""
+msgstr "记录"
 
 #: utr4wstrings.tc_relaycontrolportpaddleport
 #, fuzzy
 msgid "RELAY CONTROL PORT = PADDLE PORT"
-msgstr ""
+msgstr "RELAY控制端口 = 管道端口"
 
 #: utr4wstrings.tc_removeclusters
 #, fuzzy
 msgid "Remove the cluster \"%s\"?"
-msgstr ""
+msgstr "删除集群“%s ” 吗 ?"
 
 #: utr4wstrings.tc_removerotators
 #, fuzzy
 msgid "Remove the rotator \"%s\"?"
-msgstr ""
+msgstr "删除转子“%s ” 吗 ?"
 
 #: utr4wstrings.tc_repeating
 #, fuzzy
 msgid "Repeating %s  Listen time = %u msec - PgUp/Dn to adjust or ESCAPE"
-msgstr ""
+msgstr "正在重复%s 收听时间 = %u msec - PgUp/ Dn 调整或 ESCAPE"
 
 #: utr4wstrings.tc_repeatrstsent
 #, fuzzy
 msgid "Repeat RST sent"
-msgstr ""
+msgstr "重复发送的 RST"
 
 #: utr4wstrings.tc_restartbinisforadifferentcontest
 #, fuzzy
 msgid "RESTART.BIN is for a different contest."
-msgstr ""
+msgstr "RESTART.BIN参加不同的比赛."
 
 #: utr4wstrings.tc_rfas
 #, fuzzy
 msgid "Enter your geographical coordinates:"
-msgstr ""
+msgstr "输入您的地理坐标 :"
 
 #: utr4wstrings.tc_romania
 #, fuzzy
 msgid "Romania"
-msgstr ""
+msgstr "罗马尼亚"
 
 #: utr4wstrings.tc_rst_prompt
 #, fuzzy
 msgid "RST prompt"
-msgstr ""
+msgstr "RST 提示"
 
 #: utr4wstrings.tc_rulesonqrzru
 #, fuzzy
 msgid "Rules for %s contest at QRZ.RU"
-msgstr ""
+msgstr "%s在QRZ比赛的规则。 卢比"
 
 #: utr4wstrings.tc_rulesonsm3cer
 #, fuzzy
 msgid "Rules for %s contest at WA7BNM Contest Calendar"
-msgstr ""
+msgstr "%s WA7BNM 竞赛日程规则"
 
 #: utr4wstrings.tc_runwarn
 #, fuzzy
 msgid "Another instance of TR4W is already running"
-msgstr ""
+msgstr "TR4W 的另一个实例已经运行"
 
 #: utr4wstrings.tc_russia
 #, fuzzy
 msgid "Russia"
-msgstr ""
+msgstr "俄罗斯"
 
 #: utr4wstrings.tc_s
 #, fuzzy
@@ -10405,227 +10458,227 @@ msgstr ""
 #: utr4wstrings.tc_salutation_and_name_if_known
 #, fuzzy
 msgid "Salutation and name if known"
-msgstr ""
+msgstr "问候和名称(如果知道的话)"
 
 #: utr4wstrings.tc_sat
 #, fuzzy
 msgid "Sat"
-msgstr ""
+msgstr "座位"
 
 #: utr4wstrings.tc_savechanges
 #, fuzzy
 msgid "Save changes?"
-msgstr ""
+msgstr "保存更改吗 ?"
 
 #: utr4wstrings.tc_savingdtafileasciifileprocessingce
 #, fuzzy
 msgid "Saving .DTA file to ASCII file.  Processing cell   "
-msgstr ""
+msgstr "将.DTA文件保存到 ASCII 文件. 处理单元格   "
 
 #: utr4wstrings.tc_savingto
 #, fuzzy
 msgid "Saving %s to %s"
-msgstr ""
+msgstr "保存%s 到%s"
 
 #: utr4wstrings.tc_scannoteditedhere
 #, fuzzy
 msgid "%s cannot be edited here."
-msgstr ""
+msgstr "%s 无法在此编辑 ."
 
 #: utr4wstrings.tc_selectspotreturnleftorrightarrowse
 #, fuzzy
 msgid "Select spot.  RETURN, left or right arrow to select.  ESCAPE to exit."
-msgstr ""
+msgstr "选择位置。 返回, 左右箭头选择 。 (原始内容存档于2017-09-21). SECAPE to exit."
 
 #: utr4wstrings.tc_sendingssbwavfilename
 #, fuzzy
 msgid "Sending SSB .wav filename. Use ENTER to play, Escape/F10 to exit."
-msgstr ""
+msgstr "正在发送 SSB.wav 文件名 。 使用ENTER进行游戏, Escape/F10 退出."
 
 #: utr4wstrings.tc_sendtimetocomputersonthenetwork
 #, fuzzy
 msgid "Do you really want to send time to computers on the network?"
-msgstr ""
+msgstr "您真的想要给网络上的计算机发送时间吗 ?"
 
 #: utr4wstrings.tc_send_callassetbymycallcommand
 #, fuzzy
 msgid "Send call as set by MY CALL command"
-msgstr ""
+msgstr "按我的呼叫命令发送呼叫"
 
 #: utr4wstrings.tc_send_characters_from_keyboard
 #, fuzzy
 msgid "Send characters from keyboard"
-msgstr ""
+msgstr "从键盘中发送字符"
 
 #: utr4wstrings.tc_serial_format_label
 #, fuzzy
 msgid "DATA/PARITY/STOP"
-msgstr ""
+msgstr "数据/数量/结构"
 
 #: utr4wstrings.tc_server
 #, fuzzy
 msgid "SERVER: %s"
-msgstr ""
+msgstr "服务器 : %s"
 
 #: utr4wstrings.tc_serverandlocallogsareidentical
 #, fuzzy
 msgid "Server and local logs are identical."
-msgstr ""
+msgstr "服务器和本地日志是相同的."
 
 #: utr4wstrings.tc_serverlog
 #, fuzzy
 msgid "SERVER LOG"
-msgstr ""
+msgstr "{\\FN黑体\\FS22\\BORD1\\SHAD0\\3AHBE\\4AH00\\FSCX67\\FSCY66\\2CHFFFFFF\\3CH808080}亲爱的"
 
 #: utr4wstrings.tc_server_log_changed
 #, fuzzy
 msgid "Server log changed. %u QSO(s) updated. Do logs synchronizing (Ctrl+Alt+S)."
-msgstr ""
+msgstr "服务器日志已更改。 %u QSO 已更新 。 进行日志同步( Ctrl+ Alt+S) ."
 
 #: utr4wstrings.tc_setcomputeridvalue
 #, fuzzy
 msgid "Set COMPUTER ID value."
-msgstr ""
+msgstr "设置计算机标识值 ."
 
 #: utr4wstrings.tc_set_value_of_set_now
 #, fuzzy
 msgid "Set value of %s. Set now?"
-msgstr ""
+msgstr "设置值为%s. 准备好了吗?"
 
 #: utr4wstrings.tc_show_all_serial_ports
 #, fuzzy
 msgid "Show all serial ports"
-msgstr ""
+msgstr "显示全部串行端口"
 
 #: utr4wstrings.tc_show_passwords
 #, fuzzy
 msgid "Show passwords"
-msgstr ""
+msgstr "显示密码"
 
 #: utr4wstrings.tc_sidetone
 #, fuzzy
 msgid "&Sidetone"
-msgstr ""
+msgstr "线粒体( S)"
 
 #: utr4wstrings.tc_sidetonefreq
 #, fuzzy
 msgid "Sidetone freq."
-msgstr ""
+msgstr "(原始内容存档于2018-09-26). Sidetone freq."
 
 #: utr4wstrings.tc_sizebytes
 #, fuzzy
 msgid "Size, bytes"
-msgstr ""
+msgstr "大小, 字节"
 
 #: utr4wstrings.tc_sorrynolog
 #, fuzzy
 msgid "Sorry!! NO LOG = TRUE which prohibits logging QSOs on this computer"
-msgstr ""
+msgstr "对不起! NO LOG = TRUE 禁止在这个计算机上记录QSO"
 
 #: utr4wstrings.tc_sorryusedupallreminders
 #, fuzzy
 msgid "Sorry, you have used up all your reminders!!"
-msgstr ""
+msgstr "对不起,你的提醒都用光了!"
 
 #: utr4wstrings.tc_sorryyoualreadyhave10qtcswith
 #, fuzzy
 msgid "Sorry, you already have 10 QTCs with %s"
-msgstr ""
+msgstr "抱歉, 你已经有 %s 的 10 个 QTC 了"
 
 #: utr4wstrings.tc_source
 #, fuzzy
 msgid "Source: %s"
-msgstr ""
+msgstr "资料来源:%s"
 
 #: utr4wstrings.tc_spain
 #, fuzzy
 msgid "Spain"
-msgstr ""
+msgstr "页:1"
 
 #: utr4wstrings.tc_split_warn
 #, fuzzy
 msgid "Warning: You are in SPLIT MODE !!!"
-msgstr ""
+msgstr "警告:你进入了SPLIT MODE!"
 
 #: utr4wstrings.tc_spots
 #, fuzzy
 msgid "%d spots"
-msgstr ""
+msgstr "%d点"
 
 #: utr4wstrings.tc_sprintqsyrule
 #, fuzzy
 msgid "SPRINT QSY RULE!!!"
-msgstr ""
+msgstr "斯普林特・奎尔!"
 
 #: utr4wstrings.tc_ssbqsos
 #, fuzzy
 msgid "SSB QSOs"
-msgstr ""
+msgstr "SSB 质量标准"
 
 #: utr4wstrings.tc_sstillusedbys
 #, fuzzy
 msgid "\"%s\" is still used by: %s"
-msgstr ""
+msgstr "“ %s ” 仍然用于 : %s"
 
 #: utr4wstrings.tc_stationclass
 #, fuzzy
 msgid "Enter your station class:"
-msgstr ""
+msgstr "输入您的站级 :"
 
 #: utr4wstrings.tc_stationsinmode
 #, fuzzy
 msgid "Stations in %s mode"
-msgstr ""
+msgstr "%s 模式下的站点"
 
 #: utr4wstrings.tc_stpetersburgoblast
 #, fuzzy
 msgid "St.Petersburg / oblast"
-msgstr ""
+msgstr "圣彼得堡/州"
 
 #: utr4wstrings.tc_sun
 #, fuzzy
 msgid "Sun"
-msgstr ""
+msgstr "太阳"
 
 #: utr4wstrings.tc_switzerland
 #, fuzzy
 msgid "Switzerland"
-msgstr ""
+msgstr "瑞士"
 
 #: utr4wstrings.tc_tail
 #, fuzzy
 msgid "Tail time (*10 ms)"
-msgstr ""
+msgstr "尾巴时间(*10毫秒)"
 
 #: utr4wstrings.tc_tciservercouldopenportds
 #, fuzzy
 msgid "The TCI server could not open port %d: %s"
-msgstr ""
+msgstr "TCI 服务器无法打开端口 %d :%s"
 
 #: utr4wstrings.tc_telnet
 #, fuzzy
 msgid "Connect#0Disconnect#0Commands#0Freeze#0Clear#0SH/50#0#0"
-msgstr ""
+msgstr "连接#0DISK#0指令#0Freeze#0Clear#0SH/50#0"
 
 #: utr4wstrings.tc_testradiointerface
 #, fuzzy
 msgid "TEST RADIO INTERFACE"
-msgstr ""
+msgstr "测试无线电接口"
 
 #: utr4wstrings.tc_texas
 #, fuzzy
 msgid "Texas"
-msgstr ""
+msgstr "德克萨斯州"
 
 #: utr4wstrings.tc_thefirstcommandinconfigfilemustbe
 #, fuzzy
 msgid "The first command in config file must be the MY CALL statement!!"
-msgstr ""
+msgstr "配置文件中的第一个命令必须是 My Call 语句 !"
 
 #: utr4wstrings.tc_therenologfileyets
 #, fuzzy
 msgid "There is no log file yet at %s."
-msgstr ""
+msgstr "目前还没有日志文件 %s ."
 
 #: utr4wstrings.tc_therewerecalls
 #, fuzzy
@@ -10633,76 +10686,78 @@ msgid ""
 "There were %u calls found in initial exchange file.\n"
 "+%u dupe(s)"
 msgstr ""
+"在初始交换文件中发现了%u电话 。\n"
+"+%u"
 
 #: utr4wstrings.tc_theseentrieswereacceptedbeensaved
 #, fuzzy
 msgid "These entries were not accepted and have not been saved:"
-msgstr ""
+msgstr "这些条目未被接受,也没有保存 :"
 
 #: utr4wstrings.tc_thishr
 #, fuzzy
 msgid "This hr = %d"
-msgstr ""
+msgstr "此 hr = %d"
 
 #: utr4wstrings.tc_thisversion
 #, fuzzy
 msgid "You have "
-msgstr ""
+msgstr "你有过 "
 
 #: utr4wstrings.tc_thisversion2
 #, fuzzy
 msgid "This version"
-msgstr ""
+msgstr "此版本"
 
 #: utr4wstrings.tc_this_file_does_not_exist
 #, fuzzy
 msgid "This file does not exist. Create an empty file for editing?"
-msgstr ""
+msgstr "此文件不存在 。 创建用于编辑的空文件 ?"
 
 #: utr4wstrings.tc_thu
 #, fuzzy
 msgid "Thu"
-msgstr ""
+msgstr "图"
 
 #: utr4wstrings.tc_timediff
 #, fuzzy
 msgid "Time diff."
-msgstr ""
+msgstr "时帝弗."
 
 #: utr4wstrings.tc_timeon
 #, fuzzy
 msgid "Time on"
-msgstr ""
+msgstr "时间开始"
 
 #: utr4wstrings.tc_tooltip_discovery
 #, fuzzy
 msgid "Discover radios on the network"
-msgstr ""
+msgstr "在网络上发现收音机"
 
 #: utr4wstrings.tc_toomanycontestdates
 #, fuzzy
 msgid "Too many contest dates!!"
-msgstr ""
+msgstr "太多的比赛日期!"
 
 #: utr4wstrings.tc_toomanytotalscoremessages
 #, fuzzy
 msgid "Too many TOTAL SCORE MESSAGEs!!"
-msgstr ""
+msgstr "太多总的悲伤!"
 
 #: utr4wstrings.tc_tr4wtimewarning
 #, fuzzy
 msgid "TR4W Time Warning"
-msgstr ""
+msgstr "TR4W 战车 时间警告"
 
 #: utr4wstrings.tc_translation_author
 #, fuzzy
 msgid "N4AF"
-msgstr ""
+msgstr "国家4AF"
 
 #: utr4wstrings.tc_translation_credit
 #, fuzzy
 msgid "%s translation by %s"
-msgstr ""
+msgstr "%s翻译 %s"
 
 #: utr4wstrings.tc_translation_language
 #, fuzzy
@@ -10712,62 +10767,62 @@ msgstr "中文"
 #: utr4wstrings.tc_translator_email
 #, fuzzy
 msgid "ny4i@ny4i.com"
-msgstr ""
+msgstr "ny4i@ny4i.com (中文(简体) )"
 
 #: utr4wstrings.tc_transmitfrequencykilohertz
 #, fuzzy
 msgid "transmit frequency (kiloHertz): "
-msgstr ""
+msgstr "传输频率( kiloHertz) : "
 
 #: utr4wstrings.tc_trmasterdtadownloadedrestarttr4wus
 #, fuzzy
 msgid "TRMASTER.DTA downloaded -- restart TR4W to use it"
-msgstr ""
+msgstr "TRMASTER.DATA下载 - 重新启动TR4W以使用它"
 
 #: utr4wstrings.tc_trmasterdtadownloadfailed
 #, fuzzy
 msgid "TRMASTER.DTA download failed"
-msgstr ""
+msgstr "TRMASTER. DTA 下载失败"
 
 #: utr4wstrings.tc_trmasterdtas
 #, fuzzy
 msgid "TRMASTER.DTA : %s"
-msgstr ""
+msgstr "特马斯特。 %s"
 
 #: utr4wstrings.tc_tue
 #, fuzzy
 msgid "Tue"
-msgstr ""
+msgstr "图"
 
 #: utr4wstrings.tc_uk
 #, fuzzy
 msgid "UK"
-msgstr ""
+msgstr "联合王国"
 
 #: utr4wstrings.tc_ukei
 #, fuzzy
 msgid "If in Uk/EI enter your 2 digit district code"
-msgstr ""
+msgstr "如果在 Uk/EI 中输入您的 2 位数区号"
 
 #: utr4wstrings.tc_ukraine
 #, fuzzy
 msgid "Ukraine"
-msgstr ""
+msgstr "乌克兰"
 
 #: utr4wstrings.tc_ultimatic
 #, fuzzy
 msgid "Ultimatic"
-msgstr ""
+msgstr "终极"
 
 #: utr4wstrings.tc_unablesavedtaasciifile
 #, fuzzy
 msgid "Unable to save .DTA to ASCII file."
-msgstr ""
+msgstr "无法将.DTA保存到 ASCII 文件 ."
 
 #: utr4wstrings.tc_unabletofind
 #, fuzzy
 msgid "Unable to find %s ."
-msgstr ""
+msgstr "无法找到%s ."
 
 #: utr4wstrings.tc_unabletofindctydat
 #, fuzzy
@@ -10775,222 +10830,224 @@ msgid ""
 "Unable to find CTY.DAT country file!!\n"
 "Make sure this file is in the same directory as the program."
 msgstr ""
+"无法找到 CTY.DAT 国家文件 !\n"
+"确保此文件与程序在同一目录中."
 
 #: utr4wstrings.tc_unknowncountry
 #, fuzzy
 msgid "Unknown country"
-msgstr ""
+msgstr "未知国家"
 
 #: utr4wstrings.tc_uploadcabrillotoscp
 #, fuzzy
 msgid "Do you want to upload your Cabrillo file to SuperChecklPartial?"
-msgstr ""
+msgstr "您想要上传您的 Cabrillo 文件到 SuperChecklPartial 吗 ?"
 
 #: utr4wstrings.tc_uploadedsuccessfully
 #, fuzzy
 msgid "Uploaded successfully."
-msgstr ""
+msgstr "上传成功 ."
 
 #: utr4wstrings.tc_value
 #, fuzzy
 msgid "Value"
-msgstr ""
+msgstr "数值"
 
 #: utr4wstrings.tc_versiononserver
 #, fuzzy
 msgid "The last version on server"
-msgstr ""
+msgstr "服务器上最后一个版本"
 
 #: utr4wstrings.tc_voicekeyerdisabledwithaltk
 #, fuzzy
 msgid "Voice keyer disabled with Alt-K!!  Use Alt-K again to enable."
-msgstr ""
+msgstr "声键器与 Alt -K 已禁用 ! 再次使用 Alt- K 启用 ."
 
 #: utr4wstrings.tc_wagwarn
 #, fuzzy
 msgid "Warning: Out of WAG allowed frequency range"
-msgstr ""
+msgstr "警告: WAG 允许的频率范围外"
 
 #: utr4wstrings.tc_waitingforyouenterstrengthofrst
 #, fuzzy
 msgid "Waiting for you enter strength of RST (Single digit)!!"
-msgstr ""
+msgstr "等待您进入 RST (单个数字) 的强度 !"
 
 #: utr4wstrings.tc_wanttoconvertlog
 #, fuzzy
 msgid "Would you like to convert this log to the latest format?"
-msgstr ""
+msgstr "您要将此日志转换为最新格式吗 ?"
 
 #: utr4wstrings.tc_wasbuildin
 #, fuzzy
 msgid " installed (build date "
-msgstr ""
+msgstr " 安装( 建设日期) "
 
 #: utr4wstrings.tc_washington
 #, fuzzy
 msgid "Washington"
-msgstr ""
+msgstr "华盛顿"
 
 #: utr4wstrings.tc_wasmessagenumberconfirmed
 #, fuzzy
 msgid "Was message number %u confirmed?"
-msgstr ""
+msgstr "消息号码%u确认吗 ?"
 
 #: utr4wstrings.tc_wed
 #, fuzzy
 msgid "Wed"
-msgstr ""
+msgstr "结婚"
 
 #: utr4wstrings.tc_weighting
 #, fuzzy
 msgid "Weighting"
-msgstr ""
+msgstr "加权"
 
 #: utr4wstrings.tc_winkeyerenable
 #, fuzzy
 msgid "&Winkeyer enable"
-msgstr ""
+msgstr "启用 Winkeyer( W)"
 
 #: utr4wstrings.tc_winkeyerport
 #, fuzzy
 msgid "Winkeyer port"
-msgstr ""
+msgstr "Winkeyer 端口"
 
 #: utr4wstrings.tc_wisconsin
 #, fuzzy
 msgid "Wisconsin"
-msgstr ""
+msgstr "威斯康星州"
 
 #: utr4wstrings.tc_wpmcodespeed
 #, fuzzy
 msgid "WPM code speed"
-msgstr ""
+msgstr "WPM 代码速度"
 
 #: utr4wstrings.tc_yestoclearthedupesheet
 #, fuzzy
 msgid "\"YES\" to clear the dupesheet"
-msgstr ""
+msgstr "\"YES\"来清除哑弹"
 
 #: utr4wstrings.tc_youalreadyworkedin
 #, fuzzy
 msgid "You already worked %s in %s!!"
-msgstr ""
+msgstr "你已经工作了 %s 输入 %s来了!"
 
 #: utr4wstrings.tc_youarenowtalkingtoyourpacketport
 #, fuzzy
 msgid "You are now talking to your packet port.  Use Control-B to exit."
-msgstr ""
+msgstr "你现在在跟你的包口说话 使用控制B退出 ."
 
 #: utr4wstrings.tc_youarespottedbyanotherstation
 #, fuzzy
 msgid "You are spotted by another station."
-msgstr ""
+msgstr "你被发现在另一个站."
 
 #: utr4wstrings.tc_youcanchangethisinyourconfigfile
 #, fuzzy
 msgid "You can only change this in your config file."
-msgstr ""
+msgstr "您只能在配置文件中更改此选项 ."
 
 #: utr4wstrings.tc_youhavedeletedthelastlogentry
 #, fuzzy
 msgid "You have deleted the last log entry!!  Use Alt-Y to restore it."
-msgstr ""
+msgstr "您删除了最后一个日志条目 ! 使用Alt-Y来恢复."
 
 #: utr4wstrings.tc_youhaverestoredthelastdeleted
 #, fuzzy
 msgid "You have restored the last deleted log entry!!"
-msgstr ""
+msgstr "您恢复了上次删除的日志条目 !"
 
 #: utr4wstrings.tc_yournotconnectedtotheinternet
 #, fuzzy
 msgid "YOU ARE NOT CONNECTED TO THE INTERNET!"
-msgstr ""
+msgstr "你和内网无关!"
 
 #: utr4wstrings.tc_you_are_using_the_latest_version
 #, fuzzy
 msgid "You are using the latest version"
-msgstr ""
+msgstr "您正在使用最新版本"
 
 #: utr4wstrings.tc_yugoslavia
 #, fuzzy
 msgid "Yugoslavia"
-msgstr ""
+msgstr "南斯拉夫"
 
 #: utr4wstrings.tc_zone
 #, fuzzy
 msgid "Zones"
-msgstr ""
+msgstr "区"
 
 #: uudpdestinationeditform.tc_udpedit_badport
 #, fuzzy
 msgid "The port must be a number between 1 and 65535."
-msgstr ""
+msgstr "港号必须是1至65535之间的号码."
 
 #: uudpdestinationeditform.tc_udpedit_noaddress
 #, fuzzy
 msgid "Enter an address."
-msgstr ""
+msgstr "输入地址 ."
 
 #: uudpdestinationeditform.tc_udpedit_nostreams
 #, fuzzy
 msgid "Choose at least one kind of data to send, or cancel and remove this destination."
-msgstr ""
+msgstr "选择至少要发送的一种数据, 或取消并删除此目的地 ."
 
 #: uudpdestinationeditform.tc_udpedit_notimplemented
 #, fuzzy
 msgid " (not implemented yet)"
-msgstr ""
+msgstr " (尚未执行)"
 
 #: uudpdestinationeditform.tc_udpedit_testsent
 #, fuzzy
 msgid "Test packet sent to %s:%d.  UDP cannot confirm it arrived -- check the receiving program."
-msgstr ""
+msgstr "测试包发送到 %s :%d 。 UDP 无法确认它到达 -- 检查接收程序 ."
 
 #: utr4wstrings.rc_synlog2
 #, fuzzy
 msgctxt "utr4wstrings.rc_synlog2"
 msgid "Synchronize log"
-msgstr ""
+msgstr "同步日志"
 
 #: utr4wstrings.rc_getservlog
 #, fuzzy
 msgctxt "utr4wstrings.rc_getservlog"
 msgid "&Get server log"
-msgstr ""
+msgstr "获取服务器日志( G)"
 
 #: utr4wstrings.rc_recvrecords
 #, fuzzy
 msgctxt "utr4wstrings.rc_recvrecords"
 msgid "Received records:"
-msgstr ""
+msgstr "收到记录 :"
 
 #: utr4wstrings.rc_sendrecords
 #, fuzzy
 msgctxt "utr4wstrings.rc_sendrecords"
 msgid "Sent records:"
-msgstr ""
+msgstr "发送记录 :"
 
 #: utr4wstrings.rc_recvbytes
 #, fuzzy
 msgctxt "utr4wstrings.rc_recvbytes"
 msgid "Received bytes:"
-msgstr ""
+msgstr "收到字节 :"
 
 #: utr4wstrings.rc_recvqsos
 #, fuzzy
 msgctxt "utr4wstrings.rc_recvqsos"
 msgid "Received QSOs:"
-msgstr ""
+msgstr "收到QSO:"
 
 #: utr4wstrings.rc_showservlogc
 #, fuzzy
 msgctxt "utr4wstrings.rc_showservlogc"
 msgid "Show server log content"
-msgstr ""
+msgstr "显示服务器日志内容"
 
 #: utr4wstrings.rc_createaunl
 #, fuzzy
 msgctxt "utr4wstrings.rc_createaunl"
 msgid "&Create and use new log"
-msgstr ""
+msgstr "创建并使用新日志( C)"
 

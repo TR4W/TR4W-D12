@@ -1921,7 +1921,7 @@ msgstr "tau dialog cu portul de packet.  Prin Control-B poti renunta"
 #, fuzzy
 msgctxt "TC_YOUALREADYWORKEDIN"
 msgid "You already worked %s in %s!!"
-msgstr ""
+msgstr "Ai lucrat deja %s în %s!!"
 
 #. Section: LOGSUBS2
 #: utr4wstrings:tc_isadupeandwillbeloggedwithzero
@@ -5343,7 +5343,7 @@ msgstr ""
 #: uappstrings.siniretireremoved
 #, fuzzy
 msgid "Removed %s."
-msgstr ""
+msgstr "Eliminat %s."
 
 #: ulclformhelpers.tc_prefs_applied
 #, fuzzy
@@ -5388,7 +5388,7 @@ msgstr "%s (în uz ca %s)"
 #: ulclformhelpers.tc_prefs_udpconfirmremove
 #, fuzzy
 msgid "Remove the destination %s:%d?"
-msgstr ""
+msgstr "Eliminați destinația %s:%d?"
 
 #: ulclformhelpers.tc_prefs_udpduplicate
 #, fuzzy
@@ -5503,7 +5503,7 @@ msgstr "Pachetul de testare trimis la %s: %d. UDP nu poate confirma că a sosit 
 #, fuzzy
 msgctxt "TC_TRANSLATION_CREDIT"
 msgid "%s translation by %s"
-msgstr ""
+msgstr "Traducere %s de %s"
 
 #. Section: UTELNET
 #: utr4wstrings:tc_telnet
@@ -6500,7 +6500,7 @@ msgstr "Nu pot deschide fișierul jurnal"
 #, fuzzy
 msgctxt "TC_SCANNOTEDITEDHERE"
 msgid "%s cannot be edited here."
-msgstr ""
+msgstr "%s nu poate fi editat aici."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_debugmodecreatedprefixestxt
@@ -6924,7 +6924,7 @@ msgstr "Scoateţi grupul \"%s \" ?"
 #, fuzzy
 msgctxt "TC_REMOVEROTATORS"
 msgid "Remove the rotator \"%s\"?"
-msgstr ""
+msgstr "Scoateţi rotitorul \"%s\"?"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_loggingrunningsotherenofileopen
@@ -9360,6 +9360,9 @@ msgid ""
 "\n"
 "Okay to delete?"
 msgstr ""
+"%s există deja.\n"
+"\n"
+"Bine pentru a șterge?"
 
 #: utr4wstrings.tc_altdcommanddisabled
 #, fuzzy
@@ -9817,7 +9820,7 @@ msgstr "** Deconectat de la "
 #: utr4wstrings.tc_discover_multi_found
 #, fuzzy
 msgid "More than one %s found; filled in the first.  All found:"
-msgstr ""
+msgstr "Mai mult de un %s găsit; completat în primul. Toate găsite:"
 
 #: utr4wstrings.tc_discover_none_found
 #, fuzzy
@@ -10485,6 +10488,10 @@ msgid ""
 "Line %u\n"
 "%s"
 msgstr ""
+"Declaraţie nevalidă în %s !!\n"
+"\n"
+"Linia %u\n"
+"%s"
 
 #: utr4wstrings.tc_invalidstatementinconfigfile
 #, fuzzy
@@ -10647,7 +10654,7 @@ msgstr "Michigan"
 #: utr4wstrings.tc_min
 #, fuzzy
 msgid "%u min."
-msgstr ""
+msgstr "%u min."
 
 #: utr4wstrings.tc_minnesota
 #, fuzzy
@@ -11086,7 +11093,7 @@ msgstr "Scoateţi grupul \"%s \" ?"
 #: utr4wstrings.tc_removerotators
 #, fuzzy
 msgid "Remove the rotator \"%s\"?"
-msgstr ""
+msgstr "Scoateţi rotitorul \"%s\"?"
 
 #: utr4wstrings.tc_repeating
 #, fuzzy
@@ -11171,7 +11178,7 @@ msgstr "Salvez %s pe %s"
 #: utr4wstrings.tc_scannoteditedhere
 #, fuzzy
 msgid "%s cannot be edited here."
-msgstr ""
+msgstr "%s nu poate fi editat aici."
 
 #: utr4wstrings.tc_selectspotreturnleftorrightarrowse
 #, fuzzy
@@ -11445,7 +11452,7 @@ msgstr "Suli I.Iulius YO2IS"
 #: utr4wstrings.tc_translation_credit
 #, fuzzy
 msgid "%s translation by %s"
-msgstr ""
+msgstr "Traducere %s de %s"
 
 #: utr4wstrings.tc_translation_language
 #, fuzzy
@@ -11619,7 +11626,7 @@ msgstr "\"YES\" ptr anulat fisier de duble"
 #: utr4wstrings.tc_youalreadyworkedin
 #, fuzzy
 msgid "You already worked %s in %s!!"
-msgstr ""
+msgstr "Ai lucrat deja %s în %s!!"
 
 #: utr4wstrings.tc_youarenowtalkingtoyourpacketport
 #, fuzzy

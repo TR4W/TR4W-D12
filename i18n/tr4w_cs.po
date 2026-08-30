@@ -5308,7 +5308,7 @@ msgstr ""
 #: uappstrings.siniretireremoved
 #, fuzzy
 msgid "Removed %s."
-msgstr ""
+msgstr "Odstraněno %s."
 
 #: ulclformhelpers.tc_prefs_applied
 #, fuzzy
@@ -6461,7 +6461,7 @@ msgstr "Nelze otevřít soubor záznamu"
 #, fuzzy
 msgctxt "TC_SCANNOTEDITEDHERE"
 msgid "%s cannot be edited here."
-msgstr ""
+msgstr "%s zde nelze editovat."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_debugmodecreatedprefixestxt
@@ -11139,7 +11139,7 @@ msgstr "Ukládá se %s do %s"
 #: utr4wstrings.tc_scannoteditedhere
 #, fuzzy
 msgid "%s cannot be edited here."
-msgstr ""
+msgstr "%s zde nelze editovat."
 
 #: utr4wstrings.tc_selectspotreturnleftorrightarrowse
 #, fuzzy
@@ -11342,6 +11342,8 @@ msgid ""
 "There were %u calls found in initial exchange file.\n"
 "+%u dupe(s)"
 msgstr ""
+"Byly. %u volání nalezená v původním souboru výměny.\n"
+"+%u Dupe (s)"
 
 #: utr4wstrings.tc_theseentrieswereacceptedbeensaved
 #, fuzzy
@@ -11636,47 +11638,47 @@ msgstr "Zóna"
 #, fuzzy
 msgctxt "utr4wstrings.rc_synlog2"
 msgid "Synchronize log"
-msgstr ""
+msgstr "Synchronizovat záznam"
 
 #: utr4wstrings.rc_getservlog
 #, fuzzy
 msgctxt "utr4wstrings.rc_getservlog"
 msgid "&Get server log"
-msgstr ""
+msgstr "Získat záznam serveru"
 
 #: utr4wstrings.rc_recvrecords
 #, fuzzy
 msgctxt "utr4wstrings.rc_recvrecords"
 msgid "Received records:"
-msgstr ""
+msgstr "Přijaté záznamy:"
 
 #: utr4wstrings.rc_sendrecords
 #, fuzzy
 msgctxt "utr4wstrings.rc_sendrecords"
 msgid "Sent records:"
-msgstr ""
+msgstr "Odesílané záznamy:"
 
 #: utr4wstrings.rc_recvbytes
 #, fuzzy
 msgctxt "utr4wstrings.rc_recvbytes"
 msgid "Received bytes:"
-msgstr ""
+msgstr "Přijaté byty:"
 
 #: utr4wstrings.rc_recvqsos
 #, fuzzy
 msgctxt "utr4wstrings.rc_recvqsos"
 msgid "Received QSOs:"
-msgstr ""
+msgstr "Přijato QSP:"
 
 #: utr4wstrings.rc_showservlogc
 #, fuzzy
 msgctxt "utr4wstrings.rc_showservlogc"
 msgid "Show server log content"
-msgstr ""
+msgstr "Zobrazit obsah záznamu serveru"
 
 #: utr4wstrings.rc_createaunl
 #, fuzzy
 msgctxt "utr4wstrings.rc_createaunl"
 msgid "&Create and use new log"
-msgstr ""
+msgstr "Vytvořit a používat nový záznam"
 

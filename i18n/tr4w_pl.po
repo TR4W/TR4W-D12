@@ -5136,7 +5136,7 @@ msgstr "Zestaw testowy wysłany do %s: %d. UDP nie może potwierdzić, że przyb
 #: utr4wstrings:tc_translation_credit tr4w/src/lang/tr4w_consts_eng.pas:13
 msgctxt "TC_TRANSLATION_CREDIT"
 msgid "%s translation by %s"
-msgstr ""
+msgstr "%s Tłumaczenie %s"
 
 #. Section: UTELNET
 #: utr4wstrings:tc_telnet tr4w/src/lang/tr4w_consts_eng.pas:195
@@ -8836,6 +8836,9 @@ msgid ""
 "\n"
 "Okay to delete?"
 msgstr ""
+"%s już istnieje.\n"
+"\n"
+"Możesz usunąć?"
 
 #: utr4wstrings.tc_altdcommanddisabled
 #, fuzzy
@@ -10925,7 +10928,7 @@ msgstr "Aleksander Otulak SP2EWQ"
 #: utr4wstrings.tc_translation_credit
 #, fuzzy
 msgid "%s translation by %s"
-msgstr ""
+msgstr "%s Tłumaczenie %s"
 
 #: utr4wstrings.tc_translation_language
 #, fuzzy

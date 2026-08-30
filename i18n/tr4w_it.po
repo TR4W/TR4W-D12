@@ -1283,7 +1283,7 @@ msgstr "VAI."
 #, fuzzy
 msgctxt "TC_SERVER"
 msgid "SERVER: %s"
-msgstr ""
+msgstr "SERVER: %s"
 
 #. Section: UTELNET
 #: utr4wstrings:tc_host
@@ -1395,7 +1395,7 @@ msgstr "I registri del server e del locale sono identici."
 #, fuzzy
 msgctxt "TC_NETWORK"
 msgid "Network : %s %s:%d"
-msgstr ""
+msgstr "Rete: %s %s:%d"
 
 #. Section: UNET
 #: utr4wstrings:tc_server_log_changed
@@ -1459,7 +1459,7 @@ msgstr "Fonte: %s"
 #, fuzzy
 msgctxt "TC_MIN"
 msgid "%u min."
-msgstr ""
+msgstr "%u min."
 
 #. Section: LOGWIND
 #: utr4wstrings:tc_cqtotal
@@ -1499,7 +1499,7 @@ msgstr "Immettere %s :"
 #, fuzzy
 msgctxt "TC_PTS"
 msgid "%d Pts"
-msgstr ""
+msgstr "%d Pts"
 
 #. Section: LOGWIND
 #: utr4wstrings:tc_rate
@@ -1587,7 +1587,7 @@ msgstr " Il QSO ha bisogno di %s :"
 #, fuzzy
 msgctxt "TC_MULTNEEDSFOR"
 msgid " Mult needs for %s :"
-msgstr ""
+msgstr " Mult ha bisogno di %s :"
 
 #. Section: LOGEDIT
 #: utr4wstrings:tc_missingmultsreport
@@ -1768,7 +1768,7 @@ msgstr "Stazioni in modalità %s"
 #, fuzzy
 msgctxt "TC_SPOTS"
 msgid "%d spots"
-msgstr ""
+msgstr "%d macchie"
 
 #. Section: uSendKeyboard
 #: utr4wstrings:tc_sendingssbwavfilename
@@ -2032,7 +2032,7 @@ msgstr "Incapace di trovare %s ."
 #, fuzzy
 msgctxt "TC_INVALIDSTATEMENTIN"
 msgid "Invalid statement in %s !!\r\rLine %u\r%s"
-msgstr ""
+msgstr "Dichiarazione non valida %s !\r\rLinea %u\r%s"
 
 #. Section: LOGCFG
 #: utr4wstrings:tc_unabletofindctydat
@@ -2048,7 +2048,7 @@ msgstr "Incapace di trovare CTY.DAT file paese!!\rAssicurarsi che questo file si
 #, fuzzy
 msgctxt "TC_INVALIDSTATEMENTINCONFIGFILE"
 msgid "%s:\rInvalid statement in config file.\r\rLine %u\r%s"
-msgstr ""
+msgstr "%s:\rDichiarazione non valida nel file di configurazione.\r\rLinea %u\r%s"
 
 #. Section: LOGCFG
 #: utr4wstrings:tc_parameterhasnovalue
@@ -2168,7 +2168,7 @@ msgstr "nuovo valore"
 #, fuzzy
 msgctxt "TC_ALREADYEXISTSOKAYTODELETE"
 msgid "%s already exists.\r\rOkay to delete?"
-msgstr ""
+msgstr "%s esiste già.\r\rOk per eliminare?"
 
 #. Section: UWINKEY
 #: utr4wstrings:tc_winkeyerenable
@@ -2507,7 +2507,7 @@ msgstr "Nessun QTC in sospeso, QRU."
 #, fuzzy
 msgctxt "TC_ISQRVFOR"
 msgid "Is %s QRV for %s?"
-msgstr ""
+msgstr "È %s QRV per %s?"
 
 #. Section: UREMMULTS
 #: utr4wstrings:tc_cleansweepcongratulations
@@ -5584,6 +5584,9 @@ msgid ""
 "\n"
 "tr4w.log records the full detail."
 msgstr ""
+"Non è possibile scaricare CTY.DAT a:\n"
+"\n"
+" %sMotivo: %str4w.log registra il dettaglio completo."
 
 #: uappstrings.sctydownloadfailedtitle
 #, fuzzy
@@ -5638,6 +5641,11 @@ msgid ""
 "\n"
 "The file is ignored either way."
 msgstr ""
+"Le impostazioni sono state spostate a:\n"
+" %sIl vecchio file non è più letto:\n"
+" %sRimozione?\n"
+"\n"
+"Il file viene ignorato in entrambi i casi."
 
 #: uappstrings.siniretireremoved
 #, fuzzy
@@ -5673,6 +5681,9 @@ msgid ""
 "\n"
 "Apply anyway?"
 msgstr ""
+"Conflitti portuali:\n"
+"\n"
+"%sApplicare comunque?"
 
 #: ulclformhelpers.tc_prefs_radioinuse
 #, fuzzy
@@ -7017,7 +7028,7 @@ msgstr "HAND LOG MODE = TRUE"
 #, fuzzy
 msgctxt "TC_TRMASTERDTAS"
 msgid "TRMASTER.DTA : %s"
-msgstr ""
+msgstr "TRMASTER.DTA: %s"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_tr4wtimewarning
@@ -9765,6 +9776,9 @@ msgid ""
 "\n"
 "Okay to delete?"
 msgstr ""
+"%s esiste già.\n"
+"\n"
+"Ok per eliminare?"
 
 #: utr4wstrings.tc_altdcommanddisabled
 #, fuzzy
@@ -10904,6 +10918,10 @@ msgid ""
 "Line %u\n"
 "%s"
 msgstr ""
+"%s:\n"
+"Dichiarazione non valida nel file di configurazione.\n"
+"\n"
+"Linea %u%s"
 
 #: utr4wstrings.tc_ireland
 #, fuzzy
@@ -10933,7 +10951,7 @@ msgstr "Stazione di Isola"
 #: utr4wstrings.tc_isqrvfor
 #, fuzzy
 msgid "Is %s QRV for %s?"
-msgstr ""
+msgstr "È %s QRV per %s?"
 
 #: utr4wstrings.tc_italy
 #, fuzzy
@@ -11051,7 +11069,7 @@ msgstr "Michigan"
 #: utr4wstrings.tc_min
 #, fuzzy
 msgid "%u min."
-msgstr ""
+msgstr "%u min."
 
 #: utr4wstrings.tc_minnesota
 #, fuzzy
@@ -11102,7 +11120,7 @@ msgstr " m"
 #: utr4wstrings.tc_multneedsfor
 #, fuzzy
 msgid " Mult needs for %s :"
-msgstr ""
+msgstr " Mult ha bisogno di %s :"
 
 #: utr4wstrings.tc_multsheetcleared
 #, fuzzy
@@ -11122,7 +11140,7 @@ msgstr "Paesi Bassi"
 #: utr4wstrings.tc_network
 #, fuzzy
 msgid "Network : %s %s:%d"
-msgstr ""
+msgstr "Rete: %s %s:%d"
 
 #: utr4wstrings.tc_networktest
 #, fuzzy
@@ -11378,7 +11396,7 @@ msgstr "Premere ex tasto funzione per programmare (F3-F12, Alt/Ctrl F1-F12) o ES
 #: utr4wstrings.tc_pts
 #, fuzzy
 msgid "%d Pts"
-msgstr ""
+msgstr "%d Pts"
 
 #: utr4wstrings.tc_pttlockouttrue
 #, fuzzy
@@ -11610,7 +11628,7 @@ msgstr "DATI/PARITÀ/STOP"
 #: utr4wstrings.tc_server
 #, fuzzy
 msgid "SERVER: %s"
-msgstr ""
+msgstr "SERVER: %s"
 
 #: utr4wstrings.tc_serverandlocallogsareidentical
 #, fuzzy
@@ -11695,7 +11713,7 @@ msgstr "Attenzione: siete in SPLIT MODE !!!"
 #: utr4wstrings.tc_spots
 #, fuzzy
 msgid "%d spots"
-msgstr ""
+msgstr "%d macchie"
 
 #: utr4wstrings.tc_sprintqsyrule
 #, fuzzy
@@ -11778,6 +11796,8 @@ msgid ""
 "There were %u calls found in initial exchange file.\n"
 "+%u dupe(s)"
 msgstr ""
+"C'erano %u chiamate trovate nel file di scambio iniziale.\n"
+"+%u (i)"
 
 #: utr4wstrings.tc_theseentrieswereacceptedbeensaved
 #, fuzzy
@@ -11877,7 +11897,7 @@ msgstr "TRMASTER.DTA download fallito"
 #: utr4wstrings.tc_trmasterdtas
 #, fuzzy
 msgid "TRMASTER.DTA : %s"
-msgstr ""
+msgstr "TRMASTER.DTA: %s"
 
 #: utr4wstrings.tc_tue
 #, fuzzy
@@ -12072,47 +12092,47 @@ msgstr "Zone"
 #, fuzzy
 msgctxt "utr4wstrings.rc_synlog2"
 msgid "Synchronize log"
-msgstr ""
+msgstr "Sincronizzare il log"
 
 #: utr4wstrings.rc_getservlog
 #, fuzzy
 msgctxt "utr4wstrings.rc_getservlog"
 msgid "&Get server log"
-msgstr ""
+msgstr "&Get server log"
 
 #: utr4wstrings.rc_recvrecords
 #, fuzzy
 msgctxt "utr4wstrings.rc_recvrecords"
 msgid "Received records:"
-msgstr ""
+msgstr "Registrati ricevuti:"
 
 #: utr4wstrings.rc_sendrecords
 #, fuzzy
 msgctxt "utr4wstrings.rc_sendrecords"
 msgid "Sent records:"
-msgstr ""
+msgstr "Registrazione:"
 
 #: utr4wstrings.rc_recvbytes
 #, fuzzy
 msgctxt "utr4wstrings.rc_recvbytes"
 msgid "Received bytes:"
-msgstr ""
+msgstr "Ricevuto:"
 
 #: utr4wstrings.rc_recvqsos
 #, fuzzy
 msgctxt "utr4wstrings.rc_recvqsos"
 msgid "Received QSOs:"
-msgstr ""
+msgstr "Ricevuto:"
 
 #: utr4wstrings.rc_showservlogc
 #, fuzzy
 msgctxt "utr4wstrings.rc_showservlogc"
 msgid "Show server log content"
-msgstr ""
+msgstr "Mostra contenuti di log server"
 
 #: utr4wstrings.rc_createaunl
 #, fuzzy
 msgctxt "utr4wstrings.rc_createaunl"
 msgid "&Create and use new log"
-msgstr ""
+msgstr "&Creare e utilizzare il nuovo log"
 

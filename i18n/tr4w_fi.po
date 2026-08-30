@@ -219,7 +219,7 @@ msgstr "Qs tuotu."
 #, fuzzy
 msgctxt "TC_ISADUPE"
 msgid "%s is a dupe!!"
-msgstr ""
+msgstr "%s Se on huijari!"
 
 #. Section: MAIN
 #: tr4w/src/lang/tr4w_consts_eng.pas:44
@@ -10602,7 +10602,7 @@ msgstr "EI/GI, mene piirikuntaasi"
 #: utr4wstrings.tc_isadupe
 #, fuzzy
 msgid "%s is a dupe!!"
-msgstr ""
+msgstr "%s Se on huijari!"
 
 #: utr4wstrings.tc_isadupeandwillbeloggedwithzero
 #, fuzzy
@@ -11758,47 +11758,47 @@ msgstr "Alue"
 #, fuzzy
 msgctxt "utr4wstrings.rc_synlog2"
 msgid "Synchronize log"
-msgstr ""
+msgstr "Synkronoi loki"
 
 #: utr4wstrings.rc_getservlog
 #, fuzzy
 msgctxt "utr4wstrings.rc_getservlog"
 msgid "&Get server log"
-msgstr ""
+msgstr "& Hae palvelimen loki"
 
 #: utr4wstrings.rc_recvrecords
 #, fuzzy
 msgctxt "utr4wstrings.rc_recvrecords"
 msgid "Received records:"
-msgstr ""
+msgstr "Vastaanotetut tietueet:"
 
 #: utr4wstrings.rc_sendrecords
 #, fuzzy
 msgctxt "utr4wstrings.rc_sendrecords"
 msgid "Sent records:"
-msgstr ""
+msgstr "Lähetetyt tietueet:"
 
 #: utr4wstrings.rc_recvbytes
 #, fuzzy
 msgctxt "utr4wstrings.rc_recvbytes"
 msgid "Received bytes:"
-msgstr ""
+msgstr "Vastaanottaneet tavut:"
 
 #: utr4wstrings.rc_recvqsos
 #, fuzzy
 msgctxt "utr4wstrings.rc_recvqsos"
 msgid "Received QSOs:"
-msgstr ""
+msgstr "Vastaanotetut QSO:t:"
 
 #: utr4wstrings.rc_showservlogc
 #, fuzzy
 msgctxt "utr4wstrings.rc_showservlogc"
 msgid "Show server log content"
-msgstr ""
+msgstr "Näytä palvelimen lokisisältö"
 
 #: utr4wstrings.rc_createaunl
 #, fuzzy
 msgctxt "utr4wstrings.rc_createaunl"
 msgid "&Create and use new log"
-msgstr ""
+msgstr "Luo ja käytä uutta lokia"
 

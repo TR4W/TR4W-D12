@@ -1594,7 +1594,7 @@ msgstr "Sender SSB. wav filnavn. Brug ENTER til at spille, flugt / F10 at afslut
 #, fuzzy
 msgctxt "TC_WASMESSAGENUMBERCONFIRMED"
 msgid "Was message number %u confirmed?"
-msgstr ""
+msgstr "Var brevnummer %u Bekræftet?"
 
 #. Section: QTC
 #: tr4w/src/lang/tr4w_consts_eng.pas:303
@@ -11667,7 +11667,7 @@ msgstr "Washington"
 #: utr4wstrings.tc_wasmessagenumberconfirmed
 #, fuzzy
 msgid "Was message number %u confirmed?"
-msgstr ""
+msgstr "Var brevnummer %u Bekræftet?"
 
 #: utr4wstrings.tc_wed
 #, fuzzy
@@ -11758,47 +11758,47 @@ msgstr "Zoner"
 #, fuzzy
 msgctxt "utr4wstrings.rc_synlog2"
 msgid "Synchronize log"
-msgstr ""
+msgstr "Synkronisér log"
 
 #: utr4wstrings.rc_getservlog
 #, fuzzy
 msgctxt "utr4wstrings.rc_getservlog"
 msgid "&Get server log"
-msgstr ""
+msgstr "& Hent serverlog"
 
 #: utr4wstrings.rc_recvrecords
 #, fuzzy
 msgctxt "utr4wstrings.rc_recvrecords"
 msgid "Received records:"
-msgstr ""
+msgstr "Modtagne registreringer:"
 
 #: utr4wstrings.rc_sendrecords
 #, fuzzy
 msgctxt "utr4wstrings.rc_sendrecords"
 msgid "Sent records:"
-msgstr ""
+msgstr "Sendte optegnelser:"
 
 #: utr4wstrings.rc_recvbytes
 #, fuzzy
 msgctxt "utr4wstrings.rc_recvbytes"
 msgid "Received bytes:"
-msgstr ""
+msgstr "Modtagne bytes:"
 
 #: utr4wstrings.rc_recvqsos
 #, fuzzy
 msgctxt "utr4wstrings.rc_recvqsos"
 msgid "Received QSOs:"
-msgstr ""
+msgstr "Modtaget QSO:"
 
 #: utr4wstrings.rc_showservlogc
 #, fuzzy
 msgctxt "utr4wstrings.rc_showservlogc"
 msgid "Show server log content"
-msgstr ""
+msgstr "Vis serverlog- indhold"
 
 #: utr4wstrings.rc_createaunl
 #, fuzzy
 msgctxt "utr4wstrings.rc_createaunl"
 msgid "&Create and use new log"
-msgstr ""
+msgstr "& Opret og brug ny log"
 

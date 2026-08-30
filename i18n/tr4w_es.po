@@ -4920,6 +4920,8 @@ msgid ""
 "Could not remove %s -- %s.\n"
 "It is ignored regardless, so nothing is broken."
 msgstr ""
+"No se puede quitar %s -- %s.\n"
+"Es ignorado independientemente, así que nada está roto."
 
 #: uappstrings.siniretireprompt
 #, fuzzy
@@ -4946,7 +4948,7 @@ msgstr ""
 
 #: uappstrings.siniretireremoved
 msgid "Removed %s."
-msgstr ""
+msgstr "Eliminado %s."
 
 #: ulclformhelpers.tc_prefs_applied
 #, fuzzy
@@ -4955,7 +4957,7 @@ msgstr "Perfil \"%s\" está activo."
 
 #: ulclformhelpers.tc_prefs_confirmremove
 msgid "Remove radio \"%s\"?"
-msgstr ""
+msgstr "Quitar la radio \"%s\"?"
 
 #: ulclformhelpers.tc_prefs_none
 #, fuzzy
@@ -5951,7 +5953,7 @@ msgstr "No se puede abrir el archivo de registro"
 #: utr4wstrings:tc_scannoteditedhere tr4w/src/lang/tr4w_consts_eng.pas:835
 msgctxt "TC_SCANNOTEDITEDHERE"
 msgid "%s cannot be edited here."
-msgstr ""
+msgstr "%s no se puede editar aquí."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_debugmodecreatedprefixestxt
@@ -6047,7 +6049,7 @@ msgstr "HAND LOG MODE = TRUE"
 #: utr4wstrings:tc_trmasterdtas tr4w/src/lang/tr4w_consts_eng.pas:849
 msgctxt "TC_TRMASTERDTAS"
 msgid "TRMASTER.DTA : %s"
-msgstr ""
+msgstr "TRMASTER.DTA : %s"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_tr4wtimewarning tr4w/src/lang/tr4w_consts_eng.pas:850
@@ -8735,6 +8737,9 @@ msgid ""
 "\n"
 "Okay to delete?"
 msgstr ""
+"%s ya existe.\n"
+"\n"
+"¿Está bien borrar?"
 
 #: utr4wstrings.tc_altdcommanddisabled
 #, fuzzy
@@ -9170,6 +9175,9 @@ msgid ""
 "TR4W is expecting version %s.\n"
 "The file you are trying to read version %s."
 msgstr ""
+"%s es de una versión diferente del programa.\n"
+"TR4W espera versión %s.\n"
+"El archivo que intenta leer la versión %s."
 
 #: utr4wstrings.tc_digqsos
 #, fuzzy
@@ -9189,7 +9197,7 @@ msgstr "** Desconectado de "
 #: utr4wstrings.tc_discover_multi_found
 #, fuzzy
 msgid "More than one %s found; filled in the first.  All found:"
-msgstr ""
+msgstr "Más de uno %s encontrado; lleno en el primero. Todos encontrados:"
 
 #: utr4wstrings.tc_discover_none_found
 #, fuzzy
@@ -10023,7 +10031,7 @@ msgstr "Michigan"
 #: utr4wstrings.tc_min
 #, fuzzy
 msgid "%u min."
-msgstr ""
+msgstr "%u min."
 
 #: utr4wstrings.tc_minnesota
 #, fuzzy
@@ -10547,7 +10555,7 @@ msgstr "Guardar %s en %s"
 #: utr4wstrings.tc_scannoteditedhere
 #, fuzzy
 msgid "%s cannot be edited here."
-msgstr ""
+msgstr "%s no se puede editar aquí."
 
 #: utr4wstrings.tc_selectspotreturnleftorrightarrowse
 #, fuzzy
@@ -10851,7 +10859,7 @@ msgstr "TRMASTER.DTA descarga fallada"
 #: utr4wstrings.tc_trmasterdtas
 #, fuzzy
 msgid "TRMASTER.DTA : %s"
-msgstr ""
+msgstr "TRMASTER.DTA : %s"
 
 #: utr4wstrings.tc_tue
 #, fuzzy

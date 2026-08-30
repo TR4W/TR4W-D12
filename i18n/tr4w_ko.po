@@ -1305,7 +1305,7 @@ msgstr "파일 형식 : %s"
 #, fuzzy
 msgctxt "TC_HOST"
 msgid "HOST  : %s"
-msgstr ""
+msgstr "이름 : %s"
 
 #. Section: UTELNET
 #: utr4wstrings:tc_connect
@@ -1545,7 +1545,7 @@ msgstr "이 hr = %d"
 #, fuzzy
 msgctxt "TC_BAND_CHANGES"
 msgid "Bn. ch. = %d"
-msgstr ""
+msgstr "₢ 킹 %d"
 
 #. Section: LOGWIND
 #: utr4wstrings:tc_haveqtcs
@@ -5602,6 +5602,9 @@ msgid ""
 "\n"
 "tr4w.log records the full detail."
 msgstr ""
+"CTY.DAT를 다운로드 할 수 없습니다 :\n"
+"\n"
+" %s이유: %str4w.log는 전체 세부 사항을 기록합니다."
 
 #: uappstrings.sctydownloadfailedtitle
 #, fuzzy
@@ -5656,6 +5659,11 @@ msgid ""
 "\n"
 "The file is ignored either way."
 msgstr ""
+"설정이 이동되었습니다 :\n"
+" %s오래된 파일은 더 이상 읽지 않습니다 :\n"
+" %s지금 제거?\n"
+"\n"
+"파일이 무시됩니다."
 
 #: uappstrings.siniretireremoved
 #, fuzzy
@@ -5691,6 +5699,9 @@ msgid ""
 "\n"
 "Apply anyway?"
 msgstr ""
+"항구 충돌:\n"
+"\n"
+"%s자주 묻는 질문"
 
 #: ulclformhelpers.tc_prefs_radioinuse
 #, fuzzy
@@ -9845,7 +9856,7 @@ msgstr "밴드 변경은 MULTIPLE BANDS = TRUE를 한 번 로그인하면 QSOs"
 #: utr4wstrings.tc_band_changes
 #, fuzzy
 msgid "Bn. ch. = %d"
-msgstr ""
+msgstr "₢ 킹 %d"
 
 #: utr4wstrings.tc_belgium
 #, fuzzy
@@ -10318,7 +10329,7 @@ msgstr "TR4W의 가능한 새로운 버전을 확인 하시겠습니까?"
 #: utr4wstrings.tc_dupesheet
 #, fuzzy
 msgid "Dupesheet - %sm-%s"
-msgstr ""
+msgstr "듀페 시트 - %s사이트맵%s"
 
 #: utr4wstrings.tc_dupesheetcleared
 #, fuzzy
@@ -10781,7 +10792,7 @@ msgstr "0에서 50+에 대한 조회수 : "
 #: utr4wstrings.tc_host
 #, fuzzy
 msgid "HOST  : %s"
-msgstr ""
+msgstr "이름 : %s"
 
 #: utr4wstrings.tc_hq
 #, fuzzy
@@ -10911,6 +10922,9 @@ msgid ""
 "Line %u\n"
 "%s"
 msgstr ""
+"잘못된 성명 %s ·\n"
+"\n"
+"제품정보 %u%s"
 
 #: utr4wstrings.tc_invalidstatementinconfigfile
 #, fuzzy
@@ -10921,6 +10935,10 @@ msgid ""
 "Line %u\n"
 "%s"
 msgstr ""
+"%s::\n"
+"config 파일에서 잘못된 진술.\n"
+"\n"
+"제품정보 %u%s"
 
 #: utr4wstrings.tc_ireland
 #, fuzzy
@@ -11395,7 +11413,7 @@ msgstr "프로그램 (F3-F12, Alt/Ctrl F1-F12) 또는 ESCAPE에 전 기능 키�
 #: utr4wstrings.tc_pts
 #, fuzzy
 msgid "%d Pts"
-msgstr ""
+msgstr "%d 사이트맵"
 
 #: utr4wstrings.tc_pttlockouttrue
 #, fuzzy
@@ -11547,7 +11565,7 @@ msgstr "QRZ에서 %s 대회에 대한 규칙. ·"
 #: utr4wstrings.tc_rulesonsm3cer
 #, fuzzy
 msgid "Rules for %s contest at WA7BNM Contest Calendar"
-msgstr ""
+msgstr "에 대한 규칙 %s WA7BNM 경연대회 일정"
 
 #: utr4wstrings.tc_runwarn
 #, fuzzy

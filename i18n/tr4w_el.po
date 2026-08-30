@@ -155,7 +155,7 @@ msgstr "ΤΑΥΤΌΤΗΤΑ HAMLIB"
 #, fuzzy
 msgctxt "TC_PORT_CONFLICT_STARTUP"
 msgid "RADIO ONE and RADIO TWO are both configured to use %s. RADIO ONE keeps the port; RADIO TWO CAT control is disabled until one radio's CONTROL PORT is changed."
-msgstr ""
+msgstr "Το ΡΑΔΙΟ 1 και το ΡΑΔΙΟ 2 είναι ρυθμισμένα για χρήση. %s. ΡΑΔΙΟΦΩΝΟ Ένα κρατά την θύρα ; ΡΑΔΙΟ Δύο CAT έλεγχο είναι απενεργοποιημένο μέχρι ένα radio του ελέγχου port έχει αλλάξει."
 
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:33
@@ -219,7 +219,7 @@ msgstr "Εισάγεται Qs."
 #, fuzzy
 msgctxt "TC_ISADUPE"
 msgid "%s is a dupe!!"
-msgstr ""
+msgstr "%s Είναι ένα τέχνασμα!"
 
 #. Section: MAIN
 #: tr4w/src/lang/tr4w_consts_eng.pas:44
@@ -233,7 +233,7 @@ msgstr "Σφάλμα στο αρχείο καταγραφής!"
 #, fuzzy
 msgctxt "TC_HASIMPROPERSYNTAX"
 msgid "%s has improper syntax!!"
-msgstr ""
+msgstr "%s Έχει ακατάλληλη σύνταξη!"
 
 #. Section: MAIN
 #: tr4w/src/lang/tr4w_consts_eng.pas:46
@@ -352,7 +352,7 @@ msgstr "Κανόνες για το διαγωνισμό %s στο ημερολό
 #, fuzzy
 msgctxt "TC_RULESONQRZRU"
 msgid "Rules for %s contest at QRZ.RU"
-msgstr ""
+msgstr "Κανόνες %s Διαγωνισμός στο QRZ. ΕΣ"
 
 #. Section: MAIN
 #: tr4w/src/lang/tr4w_consts_eng.pas:66
@@ -1153,7 +1153,7 @@ msgstr "ΦΩΝΆΞΤΕ..."
 #, fuzzy
 msgctxt "TC_SERVER"
 msgid "SERVER: %s"
-msgstr ""
+msgstr "Σερβερ: %s"
 
 #. Section: UTELNET
 #: tr4w/src/lang/tr4w_consts_eng.pas:195
@@ -1433,7 +1433,7 @@ msgstr "Λείπει mults αναφορά: %u χώρες σε τουλάχιστ
 #, fuzzy
 msgctxt "TC_THEREWERECALLS"
 msgid "There were %u calls found in initial exchange file.\r+%u dupe(s)"
-msgstr ""
+msgstr "Υπήρχαν. %u κλήσεις βρέθηκαν στο αρχικό αρχείο ανταλλαγής.\r+%u dupe( ών)"
 
 #. Section: LOGDUPE
 #: tr4w/src/lang/tr4w_consts_eng.pas:257
@@ -1594,7 +1594,7 @@ msgstr "Αποστολή αρχείου SSB .wav. Χρησιμοποιήστε �
 #, fuzzy
 msgctxt "TC_WASMESSAGENUMBERCONFIRMED"
 msgid "Was message number %u confirmed?"
-msgstr ""
+msgstr "Ήταν ο αριθμός μηνύματος %u Επιβεβαιώθηκε;"
 
 #. Section: QTC
 #: tr4w/src/lang/tr4w_consts_eng.pas:303
@@ -1909,7 +1909,7 @@ msgstr "Τώρα μιλάς στη θύρα του πακέτου σου. Χρη
 #, fuzzy
 msgctxt "TC_YOUALREADYWORKEDIN"
 msgid "You already worked %s in %s!!"
-msgstr ""
+msgstr "Έχεις ήδη δουλέψει. %s μέσα %s- Όχι!"
 
 #. Section: LOGSUBS2
 #: tr4w/src/lang/tr4w_consts_eng.pas:367
@@ -1937,7 +1937,7 @@ msgstr "νέα τιμή"
 #, fuzzy
 msgctxt "TC_ALREADYEXISTSOKAYTODELETE"
 msgid "%s already exists.\r\rOkay to delete?"
-msgstr ""
+msgstr "%s Υπάρχει ήδη.\r\rΜπορείς να διαγράψεις;"
 
 #. Section: UWINKEY
 #: tr4w/src/lang/tr4w_consts_eng.pas:379
@@ -2240,7 +2240,7 @@ msgstr "Δεν εκκρεμούν QTC, QRU."
 #, fuzzy
 msgctxt "TC_ISQRVFOR"
 msgid "Is %s QRV for %s?"
-msgstr ""
+msgstr "Είναι %s QRV για %s♪ ♪"
 
 #. Section: UREMMULTS
 #: tr4w/src/lang/tr4w_consts_eng.pas:442
@@ -6583,7 +6583,7 @@ msgstr "Αδυναμία ανοίγματος του αρχείου καταγρ
 #, fuzzy
 msgctxt "TC_SCANNOTEDITEDHERE"
 msgid "%s cannot be edited here."
-msgstr ""
+msgstr "%s Δεν μπορεί να επεξεργαστεί εδώ."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_debugmodecreatedprefixestxt
@@ -9441,6 +9441,9 @@ msgid ""
 "\n"
 "Okay to delete?"
 msgstr ""
+"%s Υπάρχει ήδη.\n"
+"\n"
+"Μπορείς να διαγράψεις;"
 
 #: utr4wstrings.tc_altdcommanddisabled
 #, fuzzy
@@ -10421,7 +10424,7 @@ msgstr "Ώρα για κρέμασμα"
 #: utr4wstrings.tc_hasimpropersyntax
 #, fuzzy
 msgid "%s has improper syntax!!"
-msgstr ""
+msgstr "%s Έχει ακατάλληλη σύνταξη!"
 
 #: utr4wstrings.tc_haveqtcs
 #, fuzzy
@@ -10599,7 +10602,7 @@ msgstr "EI/GI, μπες στην κομητεία σου"
 #: utr4wstrings.tc_isadupe
 #, fuzzy
 msgid "%s is a dupe!!"
-msgstr ""
+msgstr "%s Είναι ένα τέχνασμα!"
 
 #: utr4wstrings.tc_isadupeandwillbeloggedwithzero
 #, fuzzy
@@ -10614,7 +10617,7 @@ msgstr "Νησιωτικός σταθμός"
 #: utr4wstrings.tc_isqrvfor
 #, fuzzy
 msgid "Is %s QRV for %s?"
-msgstr ""
+msgstr "Είναι %s QRV για %s♪ ♪"
 
 #: utr4wstrings.tc_italy
 #, fuzzy
@@ -10999,7 +11002,7 @@ msgstr "Να κάνω αίτηση?"
 #: utr4wstrings.tc_port_conflict_startup
 #, fuzzy
 msgid "RADIO ONE and RADIO TWO are both configured to use %s. RADIO ONE keeps the port; RADIO TWO CAT control is disabled until one radio's CONTROL PORT is changed."
-msgstr ""
+msgstr "Το ΡΑΔΙΟ 1 και το ΡΑΔΙΟ 2 είναι ρυθμισμένα για χρήση. %s. ΡΑΔΙΟΦΩΝΟ Ένα κρατά την θύρα ; ΡΑΔΙΟ Δύο CAT έλεγχο είναι απενεργοποιημένο μέχρι ένα radio του ελέγχου port έχει αλλάξει."
 
 #: utr4wstrings.tc_port_not_connected
 #, fuzzy
@@ -11206,7 +11209,7 @@ msgstr "Άμεση RST"
 #: utr4wstrings.tc_rulesonqrzru
 #, fuzzy
 msgid "Rules for %s contest at QRZ.RU"
-msgstr ""
+msgstr "Κανόνες %s Διαγωνισμός στο QRZ. ΕΣ"
 
 #: utr4wstrings.tc_rulesonsm3cer
 #, fuzzy
@@ -11256,7 +11259,7 @@ msgstr "Αποθήκευση %s σε %s"
 #: utr4wstrings.tc_scannoteditedhere
 #, fuzzy
 msgid "%s cannot be edited here."
-msgstr ""
+msgstr "%s Δεν μπορεί να επεξεργαστεί εδώ."
 
 #: utr4wstrings.tc_selectspotreturnleftorrightarrowse
 #, fuzzy
@@ -11291,7 +11294,7 @@ msgstr "ΔΕΔΟΜΕΝΑ/ΠΑARΟΤΗΤΑ/ΚΑΤΑΣΤΑΣΗ"
 #: utr4wstrings.tc_server
 #, fuzzy
 msgid "SERVER: %s"
-msgstr ""
+msgstr "Σερβερ: %s"
 
 #: utr4wstrings.tc_serverandlocallogsareidentical
 #, fuzzy
@@ -11459,6 +11462,8 @@ msgid ""
 "There were %u calls found in initial exchange file.\n"
 "+%u dupe(s)"
 msgstr ""
+"Υπήρχαν. %u κλήσεις βρέθηκαν στο αρχικό αρχείο ανταλλαγής.\n"
+"+%u dupe( ών)"
 
 #: utr4wstrings.tc_theseentrieswereacceptedbeensaved
 #, fuzzy
@@ -11662,7 +11667,7 @@ msgstr "Ουάσινγκτον"
 #: utr4wstrings.tc_wasmessagenumberconfirmed
 #, fuzzy
 msgid "Was message number %u confirmed?"
-msgstr ""
+msgstr "Ήταν ο αριθμός μηνύματος %u Επιβεβαιώθηκε;"
 
 #: utr4wstrings.tc_wed
 #, fuzzy
@@ -11702,7 +11707,7 @@ msgstr "\" Ναι\" για να καθαρίσετε το φύλλο"
 #: utr4wstrings.tc_youalreadyworkedin
 #, fuzzy
 msgid "You already worked %s in %s!!"
-msgstr ""
+msgstr "Έχεις ήδη δουλέψει. %s μέσα %s- Όχι!"
 
 #: utr4wstrings.tc_youarenowtalkingtoyourpacketport
 #, fuzzy

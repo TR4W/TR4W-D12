@@ -5253,6 +5253,9 @@ msgid ""
 "\n"
 "tr4w.log records the full detail."
 msgstr ""
+"Не удалось скачать CTY.DAT на:\n"
+"\n"
+" %sПричина: %str4w.log записывает все детали."
 
 #: uappstrings.sctydownloadfailedtitle
 #, fuzzy
@@ -5307,6 +5310,11 @@ msgid ""
 "\n"
 "The file is ignored either way."
 msgstr ""
+"Ваши настройки были перемещены на:\n"
+" %sСтарый файл больше не читается:\n"
+" %sУдалить сейчас?\n"
+"\n"
+"Файл в любом случае игнорируется."
 
 #: uappstrings.siniretireremoved
 #, fuzzy
@@ -5342,6 +5350,9 @@ msgid ""
 "\n"
 "Apply anyway?"
 msgstr ""
+"Портовые конфликты:\n"
+"\n"
+"%sВ любом случае?"
 
 #: ulclformhelpers.tc_prefs_radioinuse
 #, fuzzy
@@ -5466,7 +5477,7 @@ msgstr "Тестовый пакет отправлен в %s:%d. UDP не мож
 #, fuzzy
 msgctxt "TC_TRANSLATION_CREDIT"
 msgid "%s translation by %s"
-msgstr ""
+msgstr "%s Переводчик %s"
 
 #. Section: UTELNET
 #: utr4wstrings:tc_telnet
@@ -6834,7 +6845,7 @@ msgstr "PTT LOCKOUT = ПРАВДА"
 #, fuzzy
 msgctxt "TC_PREFERENCESCOULDOPENEDS"
 msgid "Preferences could not be opened (%s)."
-msgstr ""
+msgstr "Предпочтения не могут быть открыты (%s)."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_theseentrieswereacceptedbeensaved
@@ -9316,6 +9327,9 @@ msgid ""
 "\n"
 "Okay to delete?"
 msgstr ""
+"%s Уже существует.\n"
+"\n"
+"Хорошо, чтобы удалить?"
 
 #: utr4wstrings.tc_altdcommanddisabled
 #, fuzzy
@@ -9773,7 +9787,7 @@ msgstr "** ОТКЛЮЧЕНО от "
 #: utr4wstrings.tc_discover_multi_found
 #, fuzzy
 msgid "More than one %s found; filled in the first.  All found:"
-msgstr ""
+msgstr "Более одного %s Найдено; заполнено первым. Все найдено:"
 
 #: utr4wstrings.tc_discover_none_found
 #, fuzzy
@@ -9783,7 +9797,7 @@ msgstr "Радио типа %s в сети не обнаружено"
 #: utr4wstrings.tc_discover_not_available
 #, fuzzy
 msgid "Network discovery is not available for radio %s"
-msgstr ""
+msgstr "Открытие сети недоступно для радио %s"
 
 #: utr4wstrings.tc_ditdahratio
 #, fuzzy
@@ -10909,7 +10923,7 @@ msgstr "Введите вашу префектуру:"
 #: utr4wstrings.tc_preferencescouldopeneds
 #, fuzzy
 msgid "Preferences could not be opened (%s)."
-msgstr ""
+msgstr "Предпочтения не могут быть открыты (%s)."
 
 #: utr4wstrings.tc_prefix
 #, fuzzy
@@ -11334,6 +11348,8 @@ msgid ""
 "There were %u calls found in initial exchange file.\n"
 "+%u dupe(s)"
 msgstr ""
+"Там были %u Звонки, найденные в исходном файле обмена.\n"
+"+%u дурачок"
 
 #: utr4wstrings.tc_theseentrieswereacceptedbeensaved
 #, fuzzy
@@ -11403,7 +11419,7 @@ msgstr "UR7QM, R8TR"
 #: utr4wstrings.tc_translation_credit
 #, fuzzy
 msgid "%s translation by %s"
-msgstr ""
+msgstr "%s Переводчик %s"
 
 #: utr4wstrings.tc_translation_language
 #, fuzzy
@@ -11628,47 +11644,47 @@ msgstr "Зон"
 #, fuzzy
 msgctxt "utr4wstrings.rc_synlog2"
 msgid "Synchronize log"
-msgstr ""
+msgstr "Синхронизация журнала"
 
 #: utr4wstrings.rc_getservlog
 #, fuzzy
 msgctxt "utr4wstrings.rc_getservlog"
 msgid "&Get server log"
-msgstr ""
+msgstr "Зарегистрируйте сервер"
 
 #: utr4wstrings.rc_recvrecords
 #, fuzzy
 msgctxt "utr4wstrings.rc_recvrecords"
 msgid "Received records:"
-msgstr ""
+msgstr "Полученные записи:"
 
 #: utr4wstrings.rc_sendrecords
 #, fuzzy
 msgctxt "utr4wstrings.rc_sendrecords"
 msgid "Sent records:"
-msgstr ""
+msgstr "Записи отправлены:"
 
 #: utr4wstrings.rc_recvbytes
 #, fuzzy
 msgctxt "utr4wstrings.rc_recvbytes"
 msgid "Received bytes:"
-msgstr ""
+msgstr "Полученные байты:"
 
 #: utr4wstrings.rc_recvqsos
 #, fuzzy
 msgctxt "utr4wstrings.rc_recvqsos"
 msgid "Received QSOs:"
-msgstr ""
+msgstr "Полученные QSO:"
 
 #: utr4wstrings.rc_showservlogc
 #, fuzzy
 msgctxt "utr4wstrings.rc_showservlogc"
 msgid "Show server log content"
-msgstr ""
+msgstr "Показать содержимое журнала сервера"
 
 #: utr4wstrings.rc_createaunl
 #, fuzzy
 msgctxt "utr4wstrings.rc_createaunl"
 msgid "&Create and use new log"
-msgstr ""
+msgstr "& Создание и использование нового журнала"
 

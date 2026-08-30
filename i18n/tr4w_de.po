@@ -9853,7 +9853,7 @@ msgstr "Kein Radio vom Typ %s im Netzwerk gefunden"
 #: utr4wstrings.tc_discover_not_available
 #, fuzzy
 msgid "Network discovery is not available for radio %s"
-msgstr ""
+msgstr "Network Discovery ist für Radio nicht verfügbar %s"
 
 #: utr4wstrings.tc_ditdahratio
 #, fuzzy
@@ -11700,47 +11700,47 @@ msgstr "Zonen"
 #, fuzzy
 msgctxt "utr4wstrings.rc_synlog2"
 msgid "Synchronize log"
-msgstr ""
+msgstr "Synchronisationsprotokoll"
 
 #: utr4wstrings.rc_getservlog
 #, fuzzy
 msgctxt "utr4wstrings.rc_getservlog"
 msgid "&Get server log"
-msgstr ""
+msgstr "&Get server log"
 
 #: utr4wstrings.rc_recvrecords
 #, fuzzy
 msgctxt "utr4wstrings.rc_recvrecords"
 msgid "Received records:"
-msgstr ""
+msgstr "Empfangene Aufzeichnungen:"
 
 #: utr4wstrings.rc_sendrecords
 #, fuzzy
 msgctxt "utr4wstrings.rc_sendrecords"
 msgid "Sent records:"
-msgstr ""
+msgstr "Gesendete Aufzeichnungen:"
 
 #: utr4wstrings.rc_recvbytes
 #, fuzzy
 msgctxt "utr4wstrings.rc_recvbytes"
 msgid "Received bytes:"
-msgstr ""
+msgstr "Empfangene Bytes:"
 
 #: utr4wstrings.rc_recvqsos
 #, fuzzy
 msgctxt "utr4wstrings.rc_recvqsos"
 msgid "Received QSOs:"
-msgstr ""
+msgstr "Empfangene QSOs:"
 
 #: utr4wstrings.rc_showservlogc
 #, fuzzy
 msgctxt "utr4wstrings.rc_showservlogc"
 msgid "Show server log content"
-msgstr ""
+msgstr "Server Log Content anzeigen"
 
 #: utr4wstrings.rc_createaunl
 #, fuzzy
 msgctxt "utr4wstrings.rc_createaunl"
 msgid "&Create and use new log"
-msgstr ""
+msgstr "&Erstellen und Verwenden von neuem Log"
 

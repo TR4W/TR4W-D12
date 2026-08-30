@@ -1305,7 +1305,7 @@ msgstr "担当: %s"
 #, fuzzy
 msgctxt "TC_HOST"
 msgid "HOST  : %s"
-msgstr ""
+msgstr "ファースト : %s"
 
 #. Section: UTELNET
 #: utr4wstrings:tc_connect
@@ -1505,7 +1505,7 @@ msgstr "新ツアー %d/%d"
 #, fuzzy
 msgctxt "TC_ENTER"
 msgid "Enter %s :"
-msgstr ""
+msgstr "エントリー %s : : :"
 
 #. Section: LOGWIND
 #: utr4wstrings:tc_pts
@@ -1513,7 +1513,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_PTS"
 msgid "%d Pts"
-msgstr ""
+msgstr "%d ピッツ"
 
 #. Section: LOGWIND
 #: utr4wstrings:tc_rate
@@ -1537,7 +1537,7 @@ msgstr "最後の60 = %d"
 #, fuzzy
 msgctxt "TC_THISHR"
 msgid "This hr = %d"
-msgstr ""
+msgstr "この時間 = %d"
 
 #. Section: LOGWIND
 #: utr4wstrings:tc_band_changes
@@ -1841,7 +1841,7 @@ msgstr "< 次へ>"
 #, fuzzy
 msgctxt "TC_QTC_FOR"
 msgid "%s for %s"
-msgstr ""
+msgstr "%s お問い合わせ %s"
 
 #. Section: QTC
 #: utr4wstrings:tc_qtc_callsign
@@ -2049,7 +2049,7 @@ msgstr "%s を検索できません."
 #, fuzzy
 msgctxt "TC_INVALIDSTATEMENTIN"
 msgid "Invalid statement in %s !!\r\rLine %u\r%s"
-msgstr ""
+msgstr "無効なステートメント %s お問い合わせ\r\rライン %u\r%s"
 
 #. Section: LOGCFG
 #: utr4wstrings:tc_unabletofindctydat
@@ -2065,7 +2065,7 @@ msgstr "CTY.DATの国ファイルを見つけることができません!\rこ�
 #, fuzzy
 msgctxt "TC_INVALIDSTATEMENTINCONFIGFILE"
 msgid "%s:\rInvalid statement in config file.\r\rLine %u\r%s"
-msgstr ""
+msgstr "%s: : :\r設定ファイル内の無効なステートメント。\r\rライン %u\r%s"
 
 #. Section: LOGCFG
 #: utr4wstrings:tc_parameterhasnovalue
@@ -2153,7 +2153,7 @@ msgstr "パケットポートに話しています。 Control-B を使用して�
 #, fuzzy
 msgctxt "TC_YOUALREADYWORKEDIN"
 msgid "You already worked %s in %s!!"
-msgstr ""
+msgstr "既に働いた %s お問い合わせ %sお問い合わせ"
 
 #. Section: LOGSUBS2
 #: utr4wstrings:tc_isadupeandwillbeloggedwithzero
@@ -2508,7 +2508,7 @@ msgstr "コールウィンドウで無効なコールサイン!!"
 #, fuzzy
 msgctxt "TC_SORRYYOUALREADYHAVE10QTCSWITH"
 msgid "Sorry, you already have 10 QTCs with %s"
-msgstr ""
+msgstr "申し訳ありません、このコンテンツはただ今 English のみです。 %s"
 
 #. Section: LOGWAE
 #: utr4wstrings:tc_noqtcspendingqru
@@ -2597,7 +2597,7 @@ msgstr " ミリ秒"
 #, fuzzy
 msgctxt "TC_ENTRIESPERMS"
 msgid "%u entries per %u ms"
-msgstr ""
+msgstr "%u エントリー %u ミリ秒"
 
 #. Section: ULOGCOMPARE
 #: utr4wstrings:tc_sizebytes
@@ -5602,6 +5602,9 @@ msgid ""
 "\n"
 "tr4w.log records the full detail."
 msgstr ""
+"CTY.DATをダウンロードできません:\n"
+"\n"
+" %s理由: %str4w.log は、完全な詳細を記録します。"
 
 #: uappstrings.sctydownloadfailedtitle
 #, fuzzy
@@ -5656,6 +5659,11 @@ msgid ""
 "\n"
 "The file is ignored either way."
 msgstr ""
+"設定は以下に移動しました。\n"
+" %s古いファイルが読み込まれません。\n"
+" %s今すぐ削除しますか?\n"
+"\n"
+"ファイルが無視されます。"
 
 #: uappstrings.siniretireremoved
 #, fuzzy
@@ -5691,6 +5699,9 @@ msgid ""
 "\n"
 "Apply anyway?"
 msgstr ""
+"ポートの競合:\n"
+"\n"
+"%sとにかく申し込む?"
 
 #: ulclformhelpers.tc_prefs_radioinuse
 #, fuzzy
@@ -10379,7 +10390,7 @@ msgstr "初期交換配列のメモリが不足!!"
 #: utr4wstrings.tc_enter
 #, fuzzy
 msgid "Enter %s :"
-msgstr ""
+msgstr "エントリー %s : : :"
 
 #: utr4wstrings.tc_entercallsignspacedupecheckalthhel
 #, fuzzy
@@ -10601,7 +10612,7 @@ msgstr "ゾーンを入力してください"
 #: utr4wstrings.tc_entriesperms
 #, fuzzy
 msgid "%u entries per %u ms"
-msgstr ""
+msgstr "%u エントリー %u ミリ秒"
 
 #: utr4wstrings.tc_errorinlogfile
 #, fuzzy
@@ -10781,7 +10792,7 @@ msgstr "ヒットカウントのヒストグラム 0 へ 50+ : "
 #: utr4wstrings.tc_host
 #, fuzzy
 msgid "HOST  : %s"
-msgstr ""
+msgstr "ファースト : %s"
 
 #: utr4wstrings.tc_hq
 #, fuzzy
@@ -10911,6 +10922,9 @@ msgid ""
 "Line %u\n"
 "%s"
 msgstr ""
+"無効なステートメント %s お問い合わせ\n"
+"\n"
+"ライン %u%s"
 
 #: utr4wstrings.tc_invalidstatementinconfigfile
 #, fuzzy
@@ -10921,6 +10935,10 @@ msgid ""
 "Line %u\n"
 "%s"
 msgstr ""
+"%s: : :\n"
+"設定ファイル内の無効なステートメント。\n"
+"\n"
+"ライン %u%s"
 
 #: utr4wstrings.tc_ireland
 #, fuzzy
@@ -11068,7 +11086,7 @@ msgstr "ミシガン州"
 #: utr4wstrings.tc_min
 #, fuzzy
 msgid "%u min."
-msgstr ""
+msgstr "%u ツイート"
 
 #: utr4wstrings.tc_minnesota
 #, fuzzy
@@ -11395,7 +11413,7 @@ msgstr "プログラム (F3-F12、Alt/Ctrl F1-F12) または ESCAPE へ出力す
 #: utr4wstrings.tc_pts
 #, fuzzy
 msgid "%d Pts"
-msgstr ""
+msgstr "%d ピッツ"
 
 #: utr4wstrings.tc_pttlockouttrue
 #, fuzzy
@@ -11460,7 +11478,7 @@ msgstr "コールサイン:"
 #: utr4wstrings.tc_qtc_for
 #, fuzzy
 msgid "%s for %s"
-msgstr ""
+msgstr "%s お問い合わせ %s"
 
 #: utr4wstrings.tc_radio1
 #, fuzzy
@@ -11692,7 +11710,7 @@ msgstr "申し訳ありません、このコンテンツはただ今 アメリ�
 #: utr4wstrings.tc_sorryyoualreadyhave10qtcswith
 #, fuzzy
 msgid "Sorry, you already have 10 QTCs with %s"
-msgstr ""
+msgstr "申し訳ありません、このコンテンツはただ今 English のみです。 %s"
 
 #: utr4wstrings.tc_source
 #, fuzzy
@@ -11806,7 +11824,7 @@ msgstr "これらのエントリは受け入れられず、保存されていな
 #: utr4wstrings.tc_thishr
 #, fuzzy
 msgid "This hr = %d"
-msgstr ""
+msgstr "この時間 = %d"
 
 #: utr4wstrings.tc_thisversion
 #, fuzzy
@@ -12040,7 +12058,7 @@ msgstr "「はい」は、デュペシートをクリアする"
 #: utr4wstrings.tc_youalreadyworkedin
 #, fuzzy
 msgid "You already worked %s in %s!!"
-msgstr ""
+msgstr "既に働いた %s お問い合わせ %sお問い合わせ"
 
 #: utr4wstrings.tc_youarenowtalkingtoyourpacketport
 #, fuzzy

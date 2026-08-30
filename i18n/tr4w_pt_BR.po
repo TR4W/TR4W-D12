@@ -105,7 +105,7 @@ msgstr "frequência para %s em kHz"
 #, fuzzy
 msgctxt "TC_DIFVERSION"
 msgid "%s is from a different program version.\rTR4W is expecting version %s.\rThe file you are trying to read version %s."
-msgstr ""
+msgstr "%s é de uma versão diferente do programa.\rTR4W está esperando a versão %s.\rO arquivo que está tentando ler a versão %s."
 
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:26
@@ -155,14 +155,14 @@ msgstr "ID HAMLIB"
 #, fuzzy
 msgctxt "TC_PORT_CONFLICT_STARTUP"
 msgid "RADIO ONE and RADIO TWO are both configured to use %s. RADIO ONE keeps the port; RADIO TWO CAT control is disabled until one radio's CONTROL PORT is changed."
-msgstr ""
+msgstr "Rádio Um e Rádio Dois estão configurados para usar %s. O rádio 1 mantém o porto, o controle de dois gatos está desativado até que um rádio mude o porto do CONTROLE."
 
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:33
 #, fuzzy
 msgctxt "TC_PORT_CONFLICT_DIALOG"
 msgid "%s is already configured as %s. Two devices cannot share a serial port."
-msgstr ""
+msgstr "%s já está configurado como %s. Dois dispositivos não podem dividir uma porta serial."
 
 #. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:34
@@ -219,7 +219,7 @@ msgstr "Qs importados."
 #, fuzzy
 msgctxt "TC_ISADUPE"
 msgid "%s is a dupe!!"
-msgstr ""
+msgstr "%s É um idiota!"
 
 #. Section: MAIN
 #: tr4w/src/lang/tr4w_consts_eng.pas:44
@@ -233,7 +233,7 @@ msgstr "Erro no arquivo de registro!"
 #, fuzzy
 msgctxt "TC_HASIMPROPERSYNTAX"
 msgid "%s has improper syntax!!"
-msgstr ""
+msgstr "%s tem sintaxe imprópria!"
 
 #. Section: MAIN
 #: tr4w/src/lang/tr4w_consts_eng.pas:46
@@ -345,14 +345,14 @@ msgstr "Você realmente quer enviar tempo para computadores na rede?"
 #, fuzzy
 msgctxt "TC_RULESONSM3CER"
 msgid "Rules for %s contest at WA7BNM Contest Calendar"
-msgstr ""
+msgstr "Regras para o concurso %s no calendário do concurso WA7BNM"
 
 #. Section: MAIN
 #: tr4w/src/lang/tr4w_consts_eng.pas:65
 #, fuzzy
 msgctxt "TC_RULESONQRZRU"
 msgid "Rules for %s contest at QRZ.RU"
-msgstr ""
+msgstr "Regras para o concurso %s no QRZ. RU"
 
 #. Section: MAIN
 #: tr4w/src/lang/tr4w_consts_eng.pas:66
@@ -537,14 +537,14 @@ msgstr " - Abra o arquivo de configuração ou comece um novo concurso"
 #, fuzzy
 msgctxt "TC_FOLDERALREADYEXISTSOVERWRITE"
 msgid "Folder \"%s\" already exists.\rOverwrite ?"
-msgstr ""
+msgstr "A pasta \"%s\" já existe.\rSobrescrever?"
 
 #. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:103
 #, fuzzy
 msgctxt "TC_IAMIN"
 msgid "&I am in %s"
-msgstr ""
+msgstr "Estou no %s"
 
 #. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:104
@@ -796,7 +796,7 @@ msgstr "Entre em seu continente (e possível identificação adicional, ou seja,
 #, fuzzy
 msgctxt "TC_ENTERYOURCOUNTYORSTATEPOROVINCEDX"
 msgid "Enter your county if you are in %s state. Enter your state, Canadian Province or \"DX\" if outside of %s:"
-msgstr ""
+msgstr "Entre no seu condado se estiver no estado %s. Entre em seu estado, província canadense ou \"DX\" se fora do %s:"
 
 #. Section: NEW CONTEST
 #. 4.97.6
@@ -1188,7 +1188,7 @@ msgstr "Você foi visto por outra estação."
 #, fuzzy
 msgctxt "TC_CONNECTIONTOTR4WSERVERLOST"
 msgid "Connection to TR4WSERVER %s:%d lost."
-msgstr ""
+msgstr "Conexão com TR4WSERVER %s:%d perdido."
 
 #. Section: UNET
 #: tr4w/src/lang/tr4w_consts_eng.pas:203
@@ -1258,7 +1258,7 @@ msgstr "Rede: %s %s: %d"
 #, fuzzy
 msgctxt "TC_SERVER_LOG_CHANGED"
 msgid "Server log changed. %u QSO(s) updated. Do logs synchronizing (Ctrl+Alt+S)."
-msgstr ""
+msgstr "Registro do servidor alterado. %u QSO(s) atualizados. Faça a sincronização de registros (Ctrl+Alt+S)."
 
 #. Section: UNET
 #: tr4w/src/lang/tr4w_consts_eng.pas:213
@@ -1307,7 +1307,7 @@ msgstr "Fonte: %s"
 #, fuzzy
 msgctxt "TC_MIN"
 msgid "%u min."
-msgstr ""
+msgstr "%u min."
 
 #. Section: LOGWIND
 #: tr4w/src/lang/tr4w_consts_eng.pas:229
@@ -1321,28 +1321,28 @@ msgstr "CQ total: %u"
 #, fuzzy
 msgctxt "TC_REPEATING"
 msgid "Repeating %s  Listen time = %u msec - PgUp/Dn to adjust or ESCAPE"
-msgstr ""
+msgstr "Repetindo %s Tempo de escuta = %u msec - PgUp/Dn para ajustar ou escapar"
 
 #. Section: LOGWIND
 #: tr4w/src/lang/tr4w_consts_eng.pas:231
 #, fuzzy
 msgctxt "TC_NEWTOUR"
 msgid "New tour %d/%d"
-msgstr ""
+msgstr "Nova turnê %d/%d"
 
 #. Section: LOGWIND
 #: tr4w/src/lang/tr4w_consts_eng.pas:232
 #, fuzzy
 msgctxt "TC_ENTER"
 msgid "Enter %s :"
-msgstr ""
+msgstr "Digite %s :"
 
 #. Section: LOGWIND
 #: tr4w/src/lang/tr4w_consts_eng.pas:233
 #, fuzzy
 msgctxt "TC_PTS"
 msgid "%d Pts"
-msgstr ""
+msgstr "%d Pts"
 
 #. Section: LOGWIND
 #: tr4w/src/lang/tr4w_consts_eng.pas:234
@@ -1377,7 +1377,7 @@ msgstr "Bn. ch. = %d"
 #, fuzzy
 msgctxt "TC_HAVEQTCS"
 msgid "Have %u QTCs"
-msgstr ""
+msgstr "Tenha QTCs %u"
 
 #. Section: LOGWIND
 #: tr4w/src/lang/tr4w_consts_eng.pas:240
@@ -1405,35 +1405,35 @@ msgstr "País desconhecido"
 #, fuzzy
 msgctxt "TC_DUPESHEET"
 msgid "Dupesheet - %sm-%s"
-msgstr ""
+msgstr "Dupesheet - %sm-%s"
 
 #. Section: LOGEDIT
 #: tr4w/src/lang/tr4w_consts_eng.pas:250
 #, fuzzy
 msgctxt "TC_QSONEEDSFOR"
 msgid " QSO needs for %s :"
-msgstr ""
+msgstr " QSO precisa de %s:"
 
 #. Section: LOGEDIT
 #: tr4w/src/lang/tr4w_consts_eng.pas:251
 #, fuzzy
 msgctxt "TC_MULTNEEDSFOR"
 msgid " Mult needs for %s :"
-msgstr ""
+msgstr " Necessidades mult para %s:"
 
 #. Section: LOGEDIT
 #: tr4w/src/lang/tr4w_consts_eng.pas:252
 #, fuzzy
 msgctxt "TC_MISSINGMULTSREPORT"
 msgid "Missing mults report: %u countries on at least %u but not all bands."
-msgstr ""
+msgstr "Relatório de mults desaparecidos: %u países em pelo menos %u mas não todas as bandas."
 
 #. Section: LOGDUPE
 #: tr4w/src/lang/tr4w_consts_eng.pas:256
 #, fuzzy
 msgctxt "TC_THEREWERECALLS"
 msgid "There were %u calls found in initial exchange file.\r+%u dupe(s)"
-msgstr ""
+msgstr "Houve chamadas %u encontradas no arquivo de troca inicial.\r+%u dupe(s)"
 
 #. Section: LOGDUPE
 #: tr4w/src/lang/tr4w_consts_eng.pas:257
@@ -1496,7 +1496,7 @@ msgstr "Continente inadequado!"
 #, fuzzy
 msgctxt "TC_SAVINGTO"
 msgid "Saving %s to %s"
-msgstr ""
+msgstr "Salvando %s para %s"
 
 #. Section: LOGSTUFF
 #: tr4w/src/lang/tr4w_consts_eng.pas:269
@@ -1510,7 +1510,7 @@ msgstr "Arquivo salvo em arquivo com sucesso."
 #, fuzzy
 msgctxt "TC_FILESAVEDTOSUCCESSFULLY"
 msgid "File saved to %s successfully."
-msgstr ""
+msgstr "Arquivo salvo em %s com sucesso."
 
 #. Section: LOGSEND
 #: tr4w/src/lang/tr4w_consts_eng.pas:275
@@ -1573,14 +1573,14 @@ msgstr "Desconhecido"
 #, fuzzy
 msgctxt "TC_STATIONSINMODE"
 msgid "Stations in %s mode"
-msgstr ""
+msgstr "Estações em modo %s"
 
 #. Section: USPOTS
 #: tr4w/src/lang/tr4w_consts_eng.pas:294
 #, fuzzy
 msgctxt "TC_SPOTS"
 msgid "%d spots"
-msgstr ""
+msgstr "Pontos %d"
 
 #. Section: uSendKeyboard
 #: tr4w/src/lang/tr4w_consts_eng.pas:298
@@ -1594,7 +1594,7 @@ msgstr "Enviando o nome do arquivo SSB.wav. Use ENTER para jogar, Escape/F10 par
 #, fuzzy
 msgctxt "TC_WASMESSAGENUMBERCONFIRMED"
 msgid "Was message number %u confirmed?"
-msgstr ""
+msgstr "A mensagem número %u foi confirmada?"
 
 #. Section: QTC
 #: tr4w/src/lang/tr4w_consts_eng.pas:303
@@ -1804,14 +1804,14 @@ msgstr "Nenhum arquivo flexível é especificado."
 #, fuzzy
 msgctxt "TC_UNABLETOFIND"
 msgid "Unable to find %s ."
-msgstr ""
+msgstr "Incapaz de encontrar %s."
 
 #. Section: LOGCFG
 #: tr4w/src/lang/tr4w_consts_eng.pas:345
 #, fuzzy
 msgctxt "TC_INVALIDSTATEMENTIN"
 msgid "Invalid statement in %s !!\r\rLine %u\r%s"
-msgstr ""
+msgstr "Declaração inválida em %s !\r\rLinha %u\r%s"
 
 #. Section: LOGCFG
 #: tr4w/src/lang/tr4w_consts_eng.pas:346
@@ -1825,7 +1825,7 @@ msgstr "Incapaz de encontrar o arquivo da CTY.DAT!\rCertifique-se que este arqui
 #, fuzzy
 msgctxt "TC_INVALIDSTATEMENTINCONFIGFILE"
 msgid "%s:\rInvalid statement in config file.\r\rLine %u\r%s"
-msgstr ""
+msgstr "%s:\rDeclaração inválida no arquivo de configuração.\r\rLinha %u\r%s"
 
 #. Section: LOGCFG
 #: tr4w/src/lang/tr4w_consts_eng.pas:348
@@ -1909,14 +1909,14 @@ msgstr "Agora você está falando com seu porto de pacotes. Use o controle B par
 #, fuzzy
 msgctxt "TC_YOUALREADYWORKEDIN"
 msgid "You already worked %s in %s!!"
-msgstr ""
+msgstr "Você já trabalhou. %s em %s!"
 
 #. Section: LOGSUBS2
 #: tr4w/src/lang/tr4w_consts_eng.pas:367
 #, fuzzy
 msgctxt "TC_ISADUPEANDWILLBELOGGEDWITHZERO"
 msgid "%s is a dupe and will be logged with zero QSO points."
-msgstr ""
+msgstr "%s é um dupe e será registrado com zero pontos QSO."
 
 #. Section: LOGSUBS2
 #: tr4w/src/lang/tr4w_consts_eng.pas:368
@@ -1937,7 +1937,7 @@ msgstr "novo valor"
 #, fuzzy
 msgctxt "TC_ALREADYEXISTSOKAYTODELETE"
 msgid "%s already exists.\r\rOkay to delete?"
-msgstr ""
+msgstr "%s já existe.\r\rPode deletar?"
 
 #. Section: UWINKEY
 #: tr4w/src/lang/tr4w_consts_eng.pas:379
@@ -2181,7 +2181,7 @@ msgstr "DIG QSOs"
 #, fuzzy
 msgctxt "TC_ENTERCALLTOBECHECKEDON"
 msgid "Enter call to be checked on %s%s:"
-msgstr ""
+msgstr "Digite chamada para ser verificada em %s%s:"
 
 #. Section: LOGGRID
 #: tr4w/src/lang/tr4w_consts_eng.pas:425
@@ -2226,7 +2226,7 @@ msgstr "Sinal de chamada inválido na janela de chamada!"
 #, fuzzy
 msgctxt "TC_SORRYYOUALREADYHAVE10QTCSWITH"
 msgid "Sorry, you already have 10 QTCs with %s"
-msgstr ""
+msgstr "Desculpe, você já tem 10 QTCs com %s"
 
 #. Section: LOGWAE
 #: tr4w/src/lang/tr4w_consts_eng.pas:437
@@ -2240,7 +2240,7 @@ msgstr "Sem QTCs pendentes, QRU."
 #, fuzzy
 msgctxt "TC_ISQRVFOR"
 msgid "Is %s QRV for %s?"
-msgstr ""
+msgstr "%s QRV é para %s?"
 
 #. Section: UREMMULTS
 #: tr4w/src/lang/tr4w_consts_eng.pas:442
@@ -2304,7 +2304,7 @@ msgstr " ms"
 #, fuzzy
 msgctxt "TC_ENTRIESPERMS"
 msgid "%u entries per %u ms"
-msgstr ""
+msgstr "%u entradas por %u ms"
 
 #. Section: ULOGCOMPARE
 #: tr4w/src/lang/tr4w_consts_eng.pas:460
@@ -2658,21 +2658,21 @@ msgstr "Descubra rádios na rede"
 #, fuzzy
 msgctxt "TC_DISCOVER_NOT_AVAILABLE"
 msgid "Network discovery is not available for radio %s"
-msgstr ""
+msgstr "A rede não está disponível para rádio %s"
 
 #. Section: FD Additions NY4I
 #: tr4w/src/lang/tr4w_consts_eng.pas:815
 #, fuzzy
 msgctxt "TC_DISCOVER_NONE_FOUND"
 msgid "No radio of type %s found on the network"
-msgstr ""
+msgstr "Nenhum rádio do tipo %s encontrado na rede"
 
 #. Section: FD Additions NY4I
 #: tr4w/src/lang/tr4w_consts_eng.pas:816
 #, fuzzy
 msgctxt "TC_DISCOVER_MULTI_FOUND"
 msgid "More than one %s found; filled in the first.  All found:"
-msgstr ""
+msgstr "Mais de um %s encontrado, preenchido no primeiro. Todos encontrados:"
 
 #. Section: FD Additions NY4I
 #: tr4w/src/lang/tr4w_consts_eng.pas:817
@@ -5257,6 +5257,9 @@ msgid ""
 "\n"
 "tr4w.log records the full detail."
 msgstr ""
+"Não foi possível baixar CTY.DAT para:\n"
+"\n"
+" %sRazão: %sTr4w.log registra todos os detalhes."
 
 #: uappstrings.sctydownloadfailedtitle
 #, fuzzy
@@ -5295,6 +5298,8 @@ msgid ""
 "Could not remove %s -- %s.\n"
 "It is ignored regardless, so nothing is broken."
 msgstr ""
+"Não foi possível remover %s - %s.\n"
+"É ignorado independentemente, então nada está quebrado."
 
 #: uappstrings.siniretireprompt
 #, fuzzy
@@ -5322,17 +5327,17 @@ msgstr ""
 #: uappstrings.siniretireremoved
 #, fuzzy
 msgid "Removed %s."
-msgstr ""
+msgstr "%s removido."
 
 #: ulclformhelpers.tc_prefs_applied
 #, fuzzy
 msgid "Profile \"%s\" is active."
-msgstr ""
+msgstr "Perfil \"%s\" está ativo."
 
 #: ulclformhelpers.tc_prefs_confirmremove
 #, fuzzy
 msgid "Remove radio \"%s\"?"
-msgstr ""
+msgstr "Remover rádio \"%s\"?"
 
 #: ulclformhelpers.tc_prefs_none
 #, fuzzy
@@ -5362,12 +5367,12 @@ msgstr ""
 #: ulclformhelpers.tc_prefs_radioinuse
 #, fuzzy
 msgid "%s  (in use as %s)"
-msgstr ""
+msgstr "%s (em uso como %s)"
 
 #: ulclformhelpers.tc_prefs_udpconfirmremove
 #, fuzzy
 msgid "Remove the destination %s:%d?"
-msgstr ""
+msgstr "Remover o destino %s:%d?"
 
 #: ulclformhelpers.tc_prefs_udpduplicate
 #, fuzzy
@@ -5375,6 +5380,8 @@ msgid ""
 "%s:%d is already in the list.\n"
 "Add the extra kinds of data to that destination instead of listing it twice."
 msgstr ""
+"%s:%d já está na lista.\n"
+"Adicione os tipos extras de dados ao destino em vez de listar duas vezes."
 
 #: ulclformhelpers.tc_prefs_udpnostreams
 #, fuzzy
@@ -5480,7 +5487,7 @@ msgstr "Pacote de teste enviado para %s: %d. UDP não pode confirmar que chegou.
 #, fuzzy
 msgctxt "TC_TRANSLATION_CREDIT"
 msgid "%s translation by %s"
-msgstr ""
+msgstr "%s Tradução: %s"
 
 #. Section: UEDITMESSAGE
 #. 4.51.8
@@ -6572,7 +6579,7 @@ msgstr "Não foi possível abrir o arquivo de log"
 #, fuzzy
 msgctxt "TC_SCANNOTEDITEDHERE"
 msgid "%s cannot be edited here."
-msgstr ""
+msgstr "%s não pode ser editado aqui."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_debugmodecreatedprefixestxt
@@ -6684,7 +6691,7 @@ msgstr "MÃO LOG MODE = VERDADEIRA"
 #, fuzzy
 msgctxt "TC_TRMASTERDTAS"
 msgid "TRMASTER.DTA : %s"
-msgstr ""
+msgstr "TRMASTER. %s"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_tr4wtimewarning
@@ -6948,7 +6955,7 @@ msgstr "LOCALIZAÇÃO DE PTT=TRUE"
 #, fuzzy
 msgctxt "TC_PREFERENCESCOULDOPENEDS"
 msgid "Preferences could not be opened (%s)."
-msgstr ""
+msgstr "Preferências não puderam ser abertas.%s)."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_theseentrieswereacceptedbeensaved
@@ -6972,7 +6979,7 @@ msgstr "O servidor TCI não pôde abrir a porta %d: %s"
 #, fuzzy
 msgctxt "TC_KEYERNAMEDSALREADYEXISTS"
 msgid "A keyer named \"%s\" already exists."
-msgstr ""
+msgstr "Um chaveiro chamado %s já existe."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_sstillusedbys
@@ -6980,7 +6987,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_SSTILLUSEDBYS"
 msgid "\"%s\" is still used by: %s"
-msgstr ""
+msgstr "\"%s\" ainda é usado por: %s"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_removeclusters
@@ -6988,7 +6995,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_REMOVECLUSTERS"
 msgid "Remove the cluster \"%s\"?"
-msgstr ""
+msgstr "Remover o cluster \"%s\"?"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_removerotators
@@ -6996,7 +7003,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_REMOVEROTATORS"
 msgid "Remove the rotator \"%s\"?"
-msgstr ""
+msgstr "Remover o rotador \"%s\"?"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_loggingrunningsotherenofileopen
@@ -7012,7 +7019,7 @@ msgstr "O registro não está funcionando, então não há nenhum arquivo para a
 #, fuzzy
 msgctxt "TC_THERENOLOGFILEYETS"
 msgid "There is no log file yet at %s."
-msgstr ""
+msgstr "Não há nenhum arquivo de registro ainda no %s."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_openineditor
@@ -9430,6 +9437,9 @@ msgid ""
 "\n"
 "Okay to delete?"
 msgstr ""
+"%s já existe.\n"
+"\n"
+"Pode deletar?"
 
 #: utr4wstrings.tc_altdcommanddisabled
 #, fuzzy
@@ -9676,7 +9686,7 @@ msgstr "Ligando-se a "
 #: utr4wstrings.tc_connectiontotr4wserverlost
 #, fuzzy
 msgid "Connection to TR4WSERVER %s:%d lost."
-msgstr ""
+msgstr "Conexão com TR4WSERVER %s:%d perdido."
 
 #: utr4wstrings.tc_connecttotr4wserverfailed
 #, fuzzy
@@ -9865,6 +9875,9 @@ msgid ""
 "TR4W is expecting version %s.\n"
 "The file you are trying to read version %s."
 msgstr ""
+"%s é de uma versão diferente do programa.\n"
+"TR4W está esperando a versão %s.\n"
+"O arquivo que está tentando ler a versão %s."
 
 #: utr4wstrings.tc_digqsos
 #, fuzzy
@@ -9884,17 +9897,17 @@ msgstr "** Desconectado de "
 #: utr4wstrings.tc_discover_multi_found
 #, fuzzy
 msgid "More than one %s found; filled in the first.  All found:"
-msgstr ""
+msgstr "Mais de um %s encontrado, preenchido no primeiro. Todos encontrados:"
 
 #: utr4wstrings.tc_discover_none_found
 #, fuzzy
 msgid "No radio of type %s found on the network"
-msgstr ""
+msgstr "Nenhum rádio do tipo %s encontrado na rede"
 
 #: utr4wstrings.tc_discover_not_available
 #, fuzzy
 msgid "Network discovery is not available for radio %s"
-msgstr ""
+msgstr "A rede não está disponível para rádio %s"
 
 #: utr4wstrings.tc_ditdahratio
 #, fuzzy
@@ -9959,7 +9972,7 @@ msgstr "Gostaria de verificar uma possível nova versão do TR4W?"
 #: utr4wstrings.tc_dupesheet
 #, fuzzy
 msgid "Dupesheet - %sm-%s"
-msgstr ""
+msgstr "Dupesheet - %sm-%s"
 
 #: utr4wstrings.tc_dupesheetcleared
 #, fuzzy
@@ -10020,7 +10033,7 @@ msgstr "Não há memória suficiente para troca inicial!"
 #: utr4wstrings.tc_enter
 #, fuzzy
 msgid "Enter %s :"
-msgstr ""
+msgstr "Digite %s :"
 
 #: utr4wstrings.tc_entercallsignspacedupecheckalthhel
 #, fuzzy
@@ -10030,7 +10043,7 @@ msgstr "Entre com um indicativo. Espaço para Dupecheck. Alt-H para ajuda."
 #: utr4wstrings.tc_entercalltobecheckedon
 #, fuzzy
 msgid "Enter call to be checked on %s%s:"
-msgstr ""
+msgstr "Digite chamada para ser verificada em %s%s:"
 
 #: utr4wstrings.tc_enterexchangepressenterlogescapeab
 #, fuzzy
@@ -10100,7 +10113,7 @@ msgstr "Digite seu código do condado:"
 #: utr4wstrings.tc_enteryourcountyorstateporovincedx
 #, fuzzy
 msgid "Enter your county if you are in %s state. Enter your state, Canadian Province or \"DX\" if outside of %s:"
-msgstr ""
+msgstr "Entre no seu condado se estiver no estado %s. Entre em seu estado, província canadense ou \"DX\" se fora do %s:"
 
 #: utr4wstrings.tc_enteryourdistrictabbreviation
 #, fuzzy
@@ -10242,7 +10255,7 @@ msgstr "Entre na sua zona"
 #: utr4wstrings.tc_entriesperms
 #, fuzzy
 msgid "%u entries per %u ms"
-msgstr ""
+msgstr "%u entradas por %u ms"
 
 #: utr4wstrings.tc_errorinlogfile
 #, fuzzy
@@ -10297,7 +10310,7 @@ msgstr "Arquivo salvo em arquivo com sucesso."
 #: utr4wstrings.tc_filesavedtosuccessfully
 #, fuzzy
 msgid "File saved to %s successfully."
-msgstr ""
+msgstr "Arquivo salvo em %s com sucesso."
 
 #: utr4wstrings.tc_findingzeroendvisibledupesheetlist
 #, fuzzy
@@ -10326,6 +10339,8 @@ msgid ""
 "Folder \"%s\" already exists.\n"
 "Overwrite ?"
 msgstr ""
+"A pasta \"%s\" já existe.\n"
+"Sobrescrever?"
 
 #: utr4wstrings.tc_footsw
 #, fuzzy
@@ -10405,12 +10420,12 @@ msgstr "Tempo de espera"
 #: utr4wstrings.tc_hasimpropersyntax
 #, fuzzy
 msgid "%s has improper syntax!!"
-msgstr ""
+msgstr "%s tem sintaxe imprópria!"
 
 #: utr4wstrings.tc_haveqtcs
 #, fuzzy
 msgid "Have %u QTCs"
-msgstr ""
+msgstr "Tenha QTCs %u"
 
 #: utr4wstrings.tc_hitcounthistogram050
 #, fuzzy
@@ -10455,7 +10470,7 @@ msgstr "Iâmbico B"
 #: utr4wstrings.tc_iamin
 #, fuzzy
 msgid "&I am in %s"
-msgstr ""
+msgstr "Estou no %s"
 
 #: utr4wstrings.tc_ididfinecontestnamelogcfgdatfile
 #, fuzzy
@@ -10583,12 +10598,12 @@ msgstr "EI/GI, entre em seu condado"
 #: utr4wstrings.tc_isadupe
 #, fuzzy
 msgid "%s is a dupe!!"
-msgstr ""
+msgstr "%s É um idiota!"
 
 #: utr4wstrings.tc_isadupeandwillbeloggedwithzero
 #, fuzzy
 msgid "%s is a dupe and will be logged with zero QSO points."
-msgstr ""
+msgstr "%s é um dupe e será registrado com zero pontos QSO."
 
 #: utr4wstrings.tc_islandstation
 #, fuzzy
@@ -10598,7 +10613,7 @@ msgstr "Estação da ilha"
 #: utr4wstrings.tc_isqrvfor
 #, fuzzy
 msgid "Is %s QRV for %s?"
-msgstr ""
+msgstr "%s QRV é para %s?"
 
 #: utr4wstrings.tc_italy
 #, fuzzy
@@ -10629,7 +10644,7 @@ msgstr "Modo Keyer"
 #: utr4wstrings.tc_keyernamedsalreadyexists
 #, fuzzy
 msgid "A keyer named \"%s\" already exists."
-msgstr ""
+msgstr "Um chaveiro chamado %s já existe."
 
 #: utr4wstrings.tc_labre
 #, fuzzy
@@ -10716,7 +10731,7 @@ msgstr "Michigan"
 #: utr4wstrings.tc_min
 #, fuzzy
 msgid "%u min."
-msgstr ""
+msgstr "%u min."
 
 #: utr4wstrings.tc_minnesota
 #, fuzzy
@@ -10726,7 +10741,7 @@ msgstr "Minnesota"
 #: utr4wstrings.tc_missingmultsreport
 #, fuzzy
 msgid "Missing mults report: %u countries on at least %u but not all bands."
-msgstr ""
+msgstr "Relatório de mults desaparecidos: %u países em pelo menos %u mas não todas as bandas."
 
 #: utr4wstrings.tc_missingqthandorname
 #, fuzzy
@@ -10767,7 +10782,7 @@ msgstr " ms"
 #: utr4wstrings.tc_multneedsfor
 #, fuzzy
 msgid " Mult needs for %s :"
-msgstr ""
+msgstr " Necessidades mult para %s:"
 
 #: utr4wstrings.tc_multsheetcleared
 #, fuzzy
@@ -10811,7 +10826,7 @@ msgstr ""
 #: utr4wstrings.tc_newtour
 #, fuzzy
 msgid "New tour %d/%d"
-msgstr ""
+msgstr "Nova turnê %d/%d"
 
 #: utr4wstrings.tc_newvalue
 #, fuzzy
@@ -10973,7 +10988,7 @@ msgstr "Polônia"
 #: utr4wstrings.tc_port_conflict_dialog
 #, fuzzy
 msgid "%s is already configured as %s. Two devices cannot share a serial port."
-msgstr ""
+msgstr "%s já está configurado como %s. Dois dispositivos não podem dividir uma porta serial."
 
 #: utr4wstrings.tc_port_conflict_proceed
 #, fuzzy
@@ -10983,7 +10998,7 @@ msgstr "Aplicar mesmo assim?"
 #: utr4wstrings.tc_port_conflict_startup
 #, fuzzy
 msgid "RADIO ONE and RADIO TWO are both configured to use %s. RADIO ONE keeps the port; RADIO TWO CAT control is disabled until one radio's CONTROL PORT is changed."
-msgstr ""
+msgstr "Rádio Um e Rádio Dois estão configurados para usar %s. O rádio 1 mantém o porto, o controle de dois gatos está desativado até que um rádio mude o porto do CONTROLE."
 
 #: utr4wstrings.tc_port_not_connected
 #, fuzzy
@@ -11018,7 +11033,7 @@ msgstr "Entre em sua prefeitura:"
 #: utr4wstrings.tc_preferencescouldopeneds
 #, fuzzy
 msgid "Preferences could not be opened (%s)."
-msgstr ""
+msgstr "Preferências não puderam ser abertas.%s)."
 
 #: utr4wstrings.tc_prefix
 #, fuzzy
@@ -11043,7 +11058,7 @@ msgstr "Pressione a tecla ex-função para o programa (F3-F12, Alt/Ctrl F1-F12) 
 #: utr4wstrings.tc_pts
 #, fuzzy
 msgid "%d Pts"
-msgstr ""
+msgstr "%d Pts"
 
 #: utr4wstrings.tc_pttlockouttrue
 #, fuzzy
@@ -11058,7 +11073,7 @@ msgstr "A opção PTT VIA COMMANDS (CTRL-J) deve ser verdadeira para uso WSJT-X"
 #: utr4wstrings.tc_qsoneedsfor
 #, fuzzy
 msgid " QSO needs for %s :"
-msgstr ""
+msgstr " QSO precisa de %s:"
 
 #: utr4wstrings.tc_qsos
 #, fuzzy
@@ -11150,17 +11165,17 @@ msgstr "RELAY CONTROLE PORTO = PADDLE PORTO"
 #: utr4wstrings.tc_removeclusters
 #, fuzzy
 msgid "Remove the cluster \"%s\"?"
-msgstr ""
+msgstr "Remover o cluster \"%s\"?"
 
 #: utr4wstrings.tc_removerotators
 #, fuzzy
 msgid "Remove the rotator \"%s\"?"
-msgstr ""
+msgstr "Remover o rotador \"%s\"?"
 
 #: utr4wstrings.tc_repeating
 #, fuzzy
 msgid "Repeating %s  Listen time = %u msec - PgUp/Dn to adjust or ESCAPE"
-msgstr ""
+msgstr "Repetindo %s Tempo de escuta = %u msec - PgUp/Dn para ajustar ou escapar"
 
 #: utr4wstrings.tc_repeatrstsent
 #, fuzzy
@@ -11190,12 +11205,12 @@ msgstr "RST prompt"
 #: utr4wstrings.tc_rulesonqrzru
 #, fuzzy
 msgid "Rules for %s contest at QRZ.RU"
-msgstr ""
+msgstr "Regras para o concurso %s no QRZ. RU"
 
 #: utr4wstrings.tc_rulesonsm3cer
 #, fuzzy
 msgid "Rules for %s contest at WA7BNM Contest Calendar"
-msgstr ""
+msgstr "Regras para o concurso %s no calendário do concurso WA7BNM"
 
 #: utr4wstrings.tc_runwarn
 #, fuzzy
@@ -11235,12 +11250,12 @@ msgstr "Salvando arquivo DTA para arquivo ASCII. Célula de processamento   "
 #: utr4wstrings.tc_savingto
 #, fuzzy
 msgid "Saving %s to %s"
-msgstr ""
+msgstr "Salvando %s para %s"
 
 #: utr4wstrings.tc_scannoteditedhere
 #, fuzzy
 msgid "%s cannot be edited here."
-msgstr ""
+msgstr "%s não pode ser editado aqui."
 
 #: utr4wstrings.tc_selectspotreturnleftorrightarrowse
 #, fuzzy
@@ -11290,7 +11305,7 @@ msgstr "LOG DE SERVIÇO"
 #: utr4wstrings.tc_server_log_changed
 #, fuzzy
 msgid "Server log changed. %u QSO(s) updated. Do logs synchronizing (Ctrl+Alt+S)."
-msgstr ""
+msgstr "Registro do servidor alterado. %u QSO(s) atualizados. Faça a sincronização de registros (Ctrl+Alt+S)."
 
 #: utr4wstrings.tc_setcomputeridvalue
 #, fuzzy
@@ -11340,7 +11355,7 @@ msgstr "Desculpe, você gastou todos os seus lembretes!"
 #: utr4wstrings.tc_sorryyoualreadyhave10qtcswith
 #, fuzzy
 msgid "Sorry, you already have 10 QTCs with %s"
-msgstr ""
+msgstr "Desculpe, você já tem 10 QTCs com %s"
 
 #: utr4wstrings.tc_source
 #, fuzzy
@@ -11360,7 +11375,7 @@ msgstr "Aviso: você está no modelo SPLIT!!"
 #: utr4wstrings.tc_spots
 #, fuzzy
 msgid "%d spots"
-msgstr ""
+msgstr "Pontos %d"
 
 #: utr4wstrings.tc_sprintqsyrule
 #, fuzzy
@@ -11375,7 +11390,7 @@ msgstr "SSB QSOs"
 #: utr4wstrings.tc_sstillusedbys
 #, fuzzy
 msgid "\"%s\" is still used by: %s"
-msgstr ""
+msgstr "\"%s\" ainda é usado por: %s"
 
 #: utr4wstrings.tc_stationclass
 #, fuzzy
@@ -11385,7 +11400,7 @@ msgstr "Entre na sua classe de estação:"
 #: utr4wstrings.tc_stationsinmode
 #, fuzzy
 msgid "Stations in %s mode"
-msgstr ""
+msgstr "Estações em modo %s"
 
 #: utr4wstrings.tc_stpetersburgoblast
 #, fuzzy
@@ -11435,7 +11450,7 @@ msgstr "O primeiro comando no arquivo de configuração deve ser a declaração 
 #: utr4wstrings.tc_therenologfileyets
 #, fuzzy
 msgid "There is no log file yet at %s."
-msgstr ""
+msgstr "Não há nenhum arquivo de registro ainda no %s."
 
 #: utr4wstrings.tc_therewerecalls
 #, fuzzy
@@ -11443,6 +11458,8 @@ msgid ""
 "There were %u calls found in initial exchange file.\n"
 "+%u dupe(s)"
 msgstr ""
+"Houve chamadas %u encontradas no arquivo de troca inicial.\n"
+"+%u dupe(s)"
 
 #: utr4wstrings.tc_theseentrieswereacceptedbeensaved
 #, fuzzy
@@ -11512,7 +11529,7 @@ msgstr "N4AF"
 #: utr4wstrings.tc_translation_credit
 #, fuzzy
 msgid "%s translation by %s"
-msgstr ""
+msgstr "%s Tradução: %s"
 
 #: utr4wstrings.tc_translation_language
 #, fuzzy
@@ -11542,7 +11559,7 @@ msgstr "TRMASTER. DTA download falhou"
 #: utr4wstrings.tc_trmasterdtas
 #, fuzzy
 msgid "TRMASTER.DTA : %s"
-msgstr ""
+msgstr "TRMASTER. %s"
 
 #: utr4wstrings.tc_tue
 #, fuzzy
@@ -11577,7 +11594,7 @@ msgstr "Incapaz de salvar o arquivo ASCII."
 #: utr4wstrings.tc_unabletofind
 #, fuzzy
 msgid "Unable to find %s ."
-msgstr ""
+msgstr "Incapaz de encontrar %s."
 
 #: utr4wstrings.tc_unabletofindctydat
 #, fuzzy
@@ -11646,7 +11663,7 @@ msgstr "Washington"
 #: utr4wstrings.tc_wasmessagenumberconfirmed
 #, fuzzy
 msgid "Was message number %u confirmed?"
-msgstr ""
+msgstr "A mensagem número %u foi confirmada?"
 
 #: utr4wstrings.tc_wed
 #, fuzzy
@@ -11686,7 +11703,7 @@ msgstr "\"Sim\" para limpar o dupesheet"
 #: utr4wstrings.tc_youalreadyworkedin
 #, fuzzy
 msgid "You already worked %s in %s!!"
-msgstr ""
+msgstr "Você já trabalhou. %s em %s!"
 
 #: utr4wstrings.tc_youarenowtalkingtoyourpacketport
 #, fuzzy

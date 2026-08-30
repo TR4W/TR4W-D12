@@ -2524,7 +2524,7 @@ msgstr "Sem QTCs pendentes, QRU."
 #, fuzzy
 msgctxt "TC_ISQRVFOR"
 msgid "Is %s QRV for %s?"
-msgstr ""
+msgstr "É %s QRV para %s?"
 
 #. Section: UREMMULTS
 #: utr4wstrings:tc_cleansweepcongratulations
@@ -5686,7 +5686,7 @@ msgstr "O perfil \"%s\" está activo."
 #: ulclformhelpers.tc_prefs_confirmremove
 #, fuzzy
 msgid "Remove radio \"%s\"?"
-msgstr ""
+msgstr "Remover rádio \"%s\"?"
 
 #: ulclformhelpers.tc_prefs_none
 #, fuzzy
@@ -7056,7 +7056,7 @@ msgstr "MODELO DE LOG MÃO = VERDADEIRO"
 #, fuzzy
 msgctxt "TC_TRMASTERDTAS"
 msgid "TRMASTER.DTA : %s"
-msgstr ""
+msgstr "TRMASTER. %s"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_tr4wtimewarning
@@ -10965,7 +10965,7 @@ msgstr "EI/GI, entrar no seu condado"
 #: utr4wstrings.tc_isadupe
 #, fuzzy
 msgid "%s is a dupe!!"
-msgstr ""
+msgstr "%s É um idiota!"
 
 #: utr4wstrings.tc_isadupeandwillbeloggedwithzero
 #, fuzzy
@@ -10980,7 +10980,7 @@ msgstr "Estação da ilha"
 #: utr4wstrings.tc_isqrvfor
 #, fuzzy
 msgid "Is %s QRV for %s?"
-msgstr ""
+msgstr "É %s QRV para %s?"
 
 #: utr4wstrings.tc_italy
 #, fuzzy
@@ -11926,7 +11926,7 @@ msgstr "O download do TRMASTER.DTA falhou"
 #: utr4wstrings.tc_trmasterdtas
 #, fuzzy
 msgid "TRMASTER.DTA : %s"
-msgstr ""
+msgstr "TRMASTER. %s"
 
 #: utr4wstrings.tc_tue
 #, fuzzy
@@ -12030,7 +12030,7 @@ msgstr "Washington"
 #: utr4wstrings.tc_wasmessagenumberconfirmed
 #, fuzzy
 msgid "Was message number %u confirmed?"
-msgstr ""
+msgstr "Era o número da mensagem %u Confirmado?"
 
 #: utr4wstrings.tc_wed
 #, fuzzy
@@ -12070,7 +12070,7 @@ msgstr "\"Sim\" para limpar o dupesheet"
 #: utr4wstrings.tc_youalreadyworkedin
 #, fuzzy
 msgid "You already worked %s in %s!!"
-msgstr ""
+msgstr "Já trabalhaste. %s em %s!"
 
 #: utr4wstrings.tc_youarenowtalkingtoyourpacketport
 #, fuzzy

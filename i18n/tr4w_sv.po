@@ -219,7 +219,7 @@ msgstr "Qs importeras."
 #, fuzzy
 msgctxt "TC_ISADUPE"
 msgid "%s is a dupe!!"
-msgstr ""
+msgstr "%s är en dupe!!"
 
 #. Section: MAIN
 #: tr4w/src/lang/tr4w_consts_eng.pas:44
@@ -1377,7 +1377,7 @@ msgstr "Bn. ch. = %d"
 #, fuzzy
 msgctxt "TC_HAVEQTCS"
 msgid "Have %u QTCs"
-msgstr ""
+msgstr "har haft %u QTC"
 
 #. Section: LOGWIND
 #: tr4w/src/lang/tr4w_consts_eng.pas:240
@@ -2181,7 +2181,7 @@ msgstr "DIG QSOs"
 #, fuzzy
 msgctxt "TC_ENTERCALLTOBECHECKEDON"
 msgid "Enter call to be checked on %s%s:"
-msgstr ""
+msgstr "Ange samtal för att kontrolleras på %s%sFrån:"
 
 #. Section: LOGGRID
 #: tr4w/src/lang/tr4w_consts_eng.pas:425
@@ -2240,7 +2240,7 @@ msgstr "Inga QTC i väntan, QRU."
 #, fuzzy
 msgctxt "TC_ISQRVFOR"
 msgid "Is %s QRV for %s?"
-msgstr ""
+msgstr "Är %s QRV för %s??"
 
 #. Section: UREMMULTS
 #: tr4w/src/lang/tr4w_consts_eng.pas:442
@@ -2304,7 +2304,7 @@ msgstr " ms"
 #, fuzzy
 msgctxt "TC_ENTRIESPERMS"
 msgid "%u entries per %u ms"
-msgstr ""
+msgstr "%u Inlägg per %u Ms"
 
 #. Section: ULOGCOMPARE
 #: tr4w/src/lang/tr4w_consts_eng.pas:460
@@ -5384,6 +5384,8 @@ msgid ""
 "%s:%d is already in the list.\n"
 "Add the extra kinds of data to that destination instead of listing it twice."
 msgstr ""
+"%sFrån:%d finns redan i listan.\n"
+"Lägg till extra typer av data till den destinationen istället för att lista den två gånger."
 
 #: ulclformhelpers.tc_prefs_udpnostreams
 #, fuzzy
@@ -5489,7 +5491,7 @@ msgstr "Testpaket skickat till %s:%d. UDP kan inte bekräfta att det anlände - 
 #, fuzzy
 msgctxt "TC_TRANSLATION_CREDIT"
 msgid "%s translation by %s"
-msgstr ""
+msgstr "%s översättning genom %s"
 
 #. Section: UEDITMESSAGE
 #. 4.51.8
@@ -10045,7 +10047,7 @@ msgstr "En callsign. SPACE för Dupecheck. Alt-H för hjälp."
 #: utr4wstrings.tc_entercalltobecheckedon
 #, fuzzy
 msgid "Enter call to be checked on %s%s:"
-msgstr ""
+msgstr "Ange samtal för att kontrolleras på %s%sFrån:"
 
 #: utr4wstrings.tc_enterexchangepressenterlogescapeab
 #, fuzzy
@@ -10257,7 +10259,7 @@ msgstr "Ange din zon:"
 #: utr4wstrings.tc_entriesperms
 #, fuzzy
 msgid "%u entries per %u ms"
-msgstr ""
+msgstr "%u Inlägg per %u Ms"
 
 #: utr4wstrings.tc_errorinlogfile
 #, fuzzy
@@ -10427,7 +10429,7 @@ msgstr "%s har felaktig syntax!!!"
 #: utr4wstrings.tc_haveqtcs
 #, fuzzy
 msgid "Have %u QTCs"
-msgstr ""
+msgstr "har haft %u QTC"
 
 #: utr4wstrings.tc_hitcounthistogram050
 #, fuzzy
@@ -10600,7 +10602,7 @@ msgstr "EI/GI, gå in i ditt land"
 #: utr4wstrings.tc_isadupe
 #, fuzzy
 msgid "%s is a dupe!!"
-msgstr ""
+msgstr "%s är en dupe!!"
 
 #: utr4wstrings.tc_isadupeandwillbeloggedwithzero
 #, fuzzy
@@ -10615,7 +10617,7 @@ msgstr "Island station"
 #: utr4wstrings.tc_isqrvfor
 #, fuzzy
 msgid "Is %s QRV for %s?"
-msgstr ""
+msgstr "Är %s QRV för %s??"
 
 #: utr4wstrings.tc_italy
 #, fuzzy
@@ -11531,7 +11533,7 @@ msgstr "N4AF"
 #: utr4wstrings.tc_translation_credit
 #, fuzzy
 msgid "%s translation by %s"
-msgstr ""
+msgstr "%s översättning genom %s"
 
 #: utr4wstrings.tc_translation_language
 #, fuzzy
