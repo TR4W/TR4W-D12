@@ -23,7 +23,7 @@
   PORTED TO FPC 2026-08-13:
     * The BRANCH and REMOTE are derived from the current branch's upstream, not
       hardcoded to 'master' / 'origin'. In this clone `origin` is TR4W/TR4W --
-      the Delphi 7 heritage repo -- while the active line is `d12/fpc`. Run
+      the Delphi 7 heritage repo -- while the active line is `d12/main`. Run
       unchanged this would have pushed a release commit and tag into the wrong
       repository.
     * No '-all' tag and no -EnglishOnly switch. TR4W builds ONE English binary;
@@ -142,7 +142,7 @@ foreach ($p in @($VersionPas, $FullBuild)) { if (-not (Test-Path $p)) { Fail "No
 #
 # THE BRANCH AND REMOTE ARE DERIVED, NOT ASSUMED. This required branch 'master'
 # and pushed to 'origin' until 2026-08-13. In this clone `origin` is TR4W/TR4W --
-# the DELPHI 7 heritage repository -- and the active line is `d12/fpc`, so the
+# the DELPHI 7 heritage repository -- and the active line is `d12/main`, so the
 # old form would have refused to run at all and, had it run, pushed a release
 # commit and tag into the wrong project.
 #

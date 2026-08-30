@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## MANDATORY: Git command form
 
 Run **every** git command as `git -C /c/tr4w-d12 <subcommand>` (e.g. `git -C /c/tr4w-d12 commit ...`,
-`git -C /c/tr4w-d12 push d12 fpc`). **NEVER** prepend `cd /c/tr4w-d12` (or any `cd`) as the first
+`git -C /c/tr4w-d12 push d12 main`). **NEVER** prepend `cd /c/tr4w-d12` (or any `cd`) as the first
 command in a shell block. A `cd` to the already-current directory triggers a permission prompt every
 time — the `-C` flag targets the repo explicitly with no `cd` and no prompt. (A PreToolUse hook in
 `.claude/settings.json` enforces this; if it warns you, fix the command — don't work around it.)
@@ -36,18 +36,23 @@ that is real on one clone and absent on the next is worse than no control, becau
 same place — `C:\tr4w-d12` here, `C:\projects\TR4W-D12` elsewhere — and a hardcoded path is a hook
 that silently does not run.
 
-## MANDATORY: Never force-push `fpc`
+## MANDATORY: Never force-push `main`
 
-`fpc` is shared across at least three clones. **Never rewrite its history** — no `push --force`, no
+> **The branch was `fpc` until 2026-08-29.** That name marked an open question — whether FreePascal
+> was the toolchain — and the question closed months ago, so the marker had outlived its purpose
+> (NY4I). Renamed, not rebuilt: `master` was `fpc`'s own ancestor (merge-base `457bc14d`), nothing
+> had diverged, and a rename preserves every SHA. `fpc` no longer exists on the remote.
+
+`main` is shared across at least three clones. **Never rewrite its history** — no `push --force`, no
 `--force-with-lease`, no delete-and-recreate. A rewrite invalidates every other clone, and this is
 measured, not hypothetical: the merge base moved back to `0913dec7` (2026-07-06), so a `git pull` on
 another PC tried to merge 560 commits against 1054 rewritten twins of the same work and produced
 **200+ conflicts across the whole tree**. The trees were identical; the only difference was that the
 rewrite had stripped the SSH signatures, giving every commit a new SHA.
 
-This is now enforced server-side — ruleset `protect-fpc` blocks `non_fast_forward` and `deletion`
+This is now enforced server-side — ruleset `protect-main` blocks `non_fast_forward` and `deletion`
 with **no bypass actors**, so the push is simply **rejected**. When that happens, **do not work
-around it**: rebase or merge onto `d12/fpc` and push normally. If history genuinely needs rewriting,
+around it**: rebase or merge onto `d12/main` and push normally. If history genuinely needs rewriting,
 push it to a new branch and ask NY4I.
 
 ### What actually happened, so nobody chases the wrong commits
@@ -110,13 +115,13 @@ there is nothing to resolve. **Check for local work first**, then reset:
 
 ```powershell
 git -C <clone> status --short          # anything uncommitted? save it elsewhere first
-git -C <clone> log --oneline d12/fpc..fpc   # any local commits not on the remote?
+git -C <clone> log --oneline d12/main..main   # any local commits not on the remote?
 git -C <clone> fetch d12
-git -C <clone> reset --hard d12/fpc
+git -C <clone> reset --hard d12/main
 ```
 
 If the middle command lists commits, those are yours and reset would discard them: cherry-pick them
-onto `d12/fpc` afterwards rather than merging.
+onto `d12/main` afterwards rather than merging.
 
 ## MANDATORY: Development Philosophy
 
@@ -131,10 +136,18 @@ It supports 120+ contests with multi-user networking, extensive radio control, a
 integration. Roughly **129,000 lines across ~260 units** (`tr4w/src`, `src/trdos`, `src/radioFactory`,
 `src/utils`, `src/lang`).
 
-**Repository:** `TR4W/TR4W-D12`, remote **`d12`**. Note `origin` is a *different* repo —
-`TR4W/TR4W`, the Delphi 7 heritage — so `git push origin ...` pushes to the wrong project.
-**Branch:** **`fpc`** — the active line and the default since 2026-08-13. `delphi12` is its
-predecessor and is fully contained in it. `master` means the D7 heritage on both remotes.
+**Repository:** `TR4W/TR4W-D12`, and **`d12` is the only remote.** ~~Note `origin` is a *different*
+repo — `TR4W/TR4W`, the Delphi 7 heritage — so `git push origin ...` pushes to the wrong project.~~
+**That warning is retired: there is no `origin` remote** (checked 2026-08-29). The D7 relationship is
+severed. The D7 *tree* on disk at `C:\TR4W` is unaffected and is still the authority on old
+behaviour — see note 7 below.
+
+**Branch:** **`main`** — the active line and the default. ~~`fpc`~~ was renamed to it on 2026-08-29;
+`delphi12` is its predecessor and is fully contained in it.
+~~`master` means the D7 heritage on both remotes.~~ **Also wrong:** `d12/master` is `457bc14d`
+(2026-07-03, *"Pre-migration…"*) and is **`main`'s own ancestor** — the point this line branched
+from, inside this repository. It is not D7 heritage and pushing to it would not reach another
+project. It is simply stale.
 **Toolchain:** **FreePascal 3.2.2 + the Lazarus LCL.** ~~Delphi 12 Athens~~ was left behind on
 2026-08-13 once FPC passed the unit tests (3978/0), the golden corpus (22/0/4) and shipped the
 installer. `tr4w/FullBuild-D12-deprecated.ps1` still exists but **no longer works**: deleting the

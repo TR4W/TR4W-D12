@@ -13,12 +13,21 @@
 #   is missing or no longer contains a parseable version string.
 #
 # BRANCH NAME:
-#   Triggers on `fpc`, the default branch as of 2026-08-13. It previously said
-#   `master`, which in this repository is the frozen pre-migration fork point --
-#   so the guard had quietly stopped firing on the active line of development
-#   the moment work moved to delphi12, and would have stayed silent through the
-#   whole FPC migration. If the default branch is renamed again, this trigger
-#   moves with it; a guard pointed at a branch nobody pushes to is not a guard.
+#   Triggers on `main`, the default branch. It has been wrong twice, in the same
+#   way, and the pattern is worth keeping:
+#
+#     * it said `master`, which in this repository is the frozen pre-migration
+#       fork point -- so the guard quietly stopped firing on the active line the
+#       moment work moved to delphi12, and would have stayed silent through the
+#       whole FPC migration;
+#     * it said `fpc`, which was renamed to `main` on 2026-08-29. That rename
+#       would have silenced it again, except the trigger was widened to accept
+#       both names BEFORE the rename and narrowed after.
+#
+#   A guard pointed at a branch nobody pushes to is not a guard, and it fails by
+#   going quiet rather than by going red. If this branch is ever renamed again,
+#   WIDEN THIS LIST FIRST, rename, then narrow -- and do the same for the
+#   `protect-main` ruleset, which also targets the branch by name.
 #
 # What it deliberately does NOT do:
 #   It does NOT require the version to be bumped or changed in a PR. The
@@ -42,13 +51,11 @@ on:
   pull_request:
   push:
     branches:
-      # BOTH NAMES, DELIBERATELY, while `fpc` is renamed to `main` (2026-08-29).
-      # A trigger bound to one branch name fires on NOTHING the moment that
-      # branch is renamed -- the guard does not fail, it simply stops running,
-      # which is the failure mode this repository keeps paying for. Widening
-      # before the rename and narrowing after means there is no window in which
-      # Version.pas is unguarded. Drop `fpc` once the rename is done.
-      - fpc
+      # `fpc` was renamed to `main` on 2026-08-29 and is gone. If you ever
+      # rename this branch again, WIDEN THIS LIST FIRST and narrow it after: a
+      # trigger bound to one name fires on NOTHING the moment that name changes,
+      # and the guard does not fail, it stops running. Same for the protect-main
+      # ruleset, which targets refs/heads/main by name.
       - main
 
 # A newer push to the same ref supersedes an in-flight check.

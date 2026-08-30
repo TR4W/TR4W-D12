@@ -9,7 +9,7 @@
 > |---|---|---|
 > | Toolchain | ~~Delphi 7, DCC32, UPX~~ | **FPC 3.2.2 + Lazarus LCL** |
 > | Repository | ~~`TR4W/TR4W`~~ | **`TR4W/TR4W-D12`**, remote `d12` |
-> | Branch | ~~`master`~~ | **`fpc`** (default since 2026-08-13) |
+> | Branch | ~~`master`~~, ~~`fpc`~~ | **`main`** (`fpc` renamed to it 2026-08-29) |
 > | Languages | ~~ENG + 8, `-all` tags~~ | **One English build.** `-all` is tolerated, does nothing |
 > | Local build | ~~`Build.cmd` → DCC32~~ | `utils\Build.cmd` → `FullBuild.ps1` (FPC) |
 > | Installer | ~~`BuildAllInstallers.cmd`~~ | `utils\BuildEnglishInstaller.cmd` |
@@ -19,24 +19,24 @@
 >
 > **Sections 5-8 (version policy, tagging, the GitHub release flow) are still broadly right** —
 > the one rule below has not changed, and `TagIt.cmd` now derives the remote and branch from the
-> current branch's upstream rather than assuming `origin master`. Read `master` as `fpc` and
+> current branch's upstream rather than assuming `origin master`. Read `master` as `main` and
 > `origin` as `d12` throughout.
 >
 > **`utils\MonthlyBuild.cmd` / `tr4w\build\Invoke-Release.ps1` have NOT been ported.** They still
 > require branch `master`, fetch `origin/master`, and default to an `-all` tag. They fail fast on
-> `fpc` rather than doing damage, but they will not run until someone updates them.
+> `main` rather than doing damage, but they will not run until someone updates them.
 
 ## TL;DR — the caveman version
 
 **Interim release** — bump, tag, let CI build:
 
 ```
-:: 1. bump Version.pas (number + date) -- on fpc, locally or via the GitHub web UI
+:: 1. bump Version.pas (number + date) -- on main, locally or via the GitHub web UI
 :: 2. tag it:
 utils\TagIt.cmd 5.0.1
 ```
 
-`TagIt` derives the remote and branch from the current branch's upstream (`d12/fpc`),
+`TagIt` derives the remote and branch from the current branch's upstream (`d12/main`),
 fast-forwards to it so it never tags a stale checkout, refuses to proceed if `Version.pas` is
 uncommitted or if local HEAD is ahead of the remote, checks the tag matches the **committed**
 `Version.pas`, then creates and pushes the tag. CI builds the installer once a `win-ci` runner is
@@ -161,7 +161,7 @@ to verify before merging).
 
 7. **Back to the default branch.**
    ```
-   git checkout fpc
+   git checkout main
    git pull
    ```
 
@@ -261,12 +261,12 @@ Use this when:
 Steps -- runs **directly on the default branch**, no branch, no PR:
 
 ```
-git checkout fpc
+git checkout main
 git pull
 # edit tr4w\src\Version.pas: bump TR4W_CURRENTVERSION_NUMBER and _DATE
 git add tr4w\src\Version.pas
 git commit -m "Bump Version.pas to 5.0.1"
-git push d12 fpc
+git push d12 main
 ```
 
 > **The remote is `d12`, not `origin`.** In this clone `origin` is `TR4W/TR4W` — the Delphi 7
@@ -311,7 +311,7 @@ about to tag. If not, do [section 5](#5-when-to-update-versionpas) first.
 
 1. **Make sure the branch is clean and you're on it.**
    ```
-   git checkout fpc
+   git checkout main
    git pull
    git status   # should be clean
    ```
