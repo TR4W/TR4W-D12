@@ -995,8 +995,13 @@ begin
      nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '<b>Version %s</b>', V[Version].hrVersion);
      sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
 
-     nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '<i> (%02u-%s-%u)</i>', V[Version].hrDay, MonthTags[V[Version].hrMonth], V[Version].hrYear);
-     sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
+     { '%.2u' -- see the note in uGetServerLog. Written through
+       sWriteFileFromString, which makes the byte count wsprintfA returned
+       unnecessary. }
+
+     sWriteFileFromString(h, AnsiString(SysUtils.Format('<i> (%.2u-%s-%u)</i>',
+                          [V[Version].hrDay, MonthTags[V[Version].hrMonth],
+                           V[Version].hrYear])));
 
      sWriteFileFromString(h, '<ul>');
      for Feature := 0 to MAXFEATURES - 1 do
@@ -1081,8 +1086,13 @@ begin
      nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '<b>Version %s</b>', V[Version].hrVersion);
      sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
 
-     nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '<i> (%02u-%s-%u)</i>', V[Version].hrDay, MonthTags[V[Version].hrMonth], V[Version].hrYear);
-     sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
+     { '%.2u' -- see the note in uGetServerLog. Written through
+       sWriteFileFromString, which makes the byte count wsprintfA returned
+       unnecessary. }
+
+     sWriteFileFromString(h, AnsiString(SysUtils.Format('<i> (%.2u-%s-%u)</i>',
+                          [V[Version].hrDay, MonthTags[V[Version].hrMonth],
+                           V[Version].hrYear])));
 
      sWriteFileFromString(h, '<ul>');
      for Feature := 0 to MAXFEATURES - 1 do

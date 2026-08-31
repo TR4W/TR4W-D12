@@ -2731,10 +2731,15 @@ procedure AddBandMapPlaceHolder;
 {           tune across a station, catch a partial call, and don't want to wait.}
 
 begin
-  tBandMapPlaceHolder[0] := CHR(8);
   tGetSystemTime;
 
-  TF.Format(@tBandMapPlaceHolder[1], 'NEW %02u%02u', UTC.wMinute, UTC.wSecond);
+  { Was a wsprintfA write through @tBandMapPlaceHolder[1] with the length byte
+    poked in by hand above it -- the ShortString-into-a-Win32-API pattern.
+    Assigning a string sets the length and the characters together.
+    '%.2u', not '%02u': Delphi zero-pads by precision, not by the width flag. }
+
+  tBandMapPlaceHolder := CallString(SysUtils.Format('NEW %.2u%.2u',
+                                    [UTC.wMinute, UTC.wSecond]));
 
   tCreateAndAddNewSpot(tBandMapPlaceHolder, False, ActiveRadioPtr);
   DisplayBandMap;

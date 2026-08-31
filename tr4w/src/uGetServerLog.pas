@@ -94,7 +94,8 @@ const
   SYNC_FIELD_SENT           = 5;
 
 implementation
-uses MainUnit;
+uses SysUtils,   { Format, StrPCopy -- replaced TF.Format/wsprintfA }
+  MainUnit;
 
 { GetServerLogDlgProc STOOD HERE and went with dialog template 73 on
   2026-08-29 -- the last Win32 dialog in the program. Its window is
@@ -117,10 +118,16 @@ var
 begin
   for counter := 1 to 1000 do
      begin
-     TF.Format(TempBuffer2, '%sLOGBACKUP_%03d.TRW', TR4W_LOG_PATH_NAME, counter);
+     { '%.3d', not '%03d'. Delphi zero-pads by PRECISION; the width flag it
+       would otherwise read pads with spaces, and a backup called
+       'LOGBACKUP_  1.TRW' is not what the next run looks for. }
+
+     StrPCopy(TempBuffer2, AnsiString(SysUtils.Format('%sLOGBACKUP_%.3d.TRW',
+                                      [PAnsiChar(@TR4W_LOG_PATH_NAME), counter])));
      if Windows.CopyFileA(TR4W_LOG_FILENAME, TempBuffer2, True) = True then
         begin
-        TF.Format(TempBuffer2, '%sRSTBACKUP_%03d.RST', TR4W_LOG_PATH_NAME, counter);
+        StrPCopy(TempBuffer2, AnsiString(SysUtils.Format('%sRSTBACKUP_%.3d.RST',
+                                         [PAnsiChar(@TR4W_LOG_PATH_NAME), counter])));
         Windows.CopyFileA(TR4W_RST_FILENAME, TempBuffer2, False);
         Break;
         end;

@@ -544,7 +544,11 @@ end;
 
 procedure OpenTempMP3File;
 begin
-  TF.Format(TR4W_TEMP_MP3_FILENAME, '%s\TEMP_%02u_%02u.MP3', Config.MP3Path, UTC.wHour, UTC.wDay);
+  { '%.2u', not '%02u' -- space padding here would put 'TEMP_ 9_ 5.MP3' on disk. }
+
+  StrPCopy(TR4W_TEMP_MP3_FILENAME,
+           AnsiString(SysUtils.Format('%s\TEMP_%.2u_%.2u.MP3',
+                      [Config.MP3Path, UTC.wHour, UTC.wDay])));
   TempMP3FileHandle := CreateFileA(TR4W_TEMP_MP3_FILENAME, GENERIC_WRITE, FILE_SHARE_WRITE, nil, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
   RecorderStartTime := Windows.GetTickCount;
 end;
@@ -556,18 +560,20 @@ end;
 
 function MakeMP3Filename(CE: ContestExchangePtr): PAnsiChar;
 begin
-  TF.Format(TR4W_GET_MP3_FILENAME, '%s\%u%02u%02u_%02u%02u%02u_%sm_%s.MP3',
+  { Six zero-padded fields, and this name is the QSO's audio on disk -- a space
+    where a zero belongs makes it unfindable. '%02u' -> '%.2u'. }
 
-    Config.MP3Path,
-    CE.tSysTime.qtYear + 2000,
-    CE.tSysTime.qtMonth,
-    CE.tSysTime.qtDay,
-    CE.tSysTime.qtHour,
-    CE.tSysTime.qtMinute,
-    CE.tSysTime.qtSecond,
-    BandStringsArrayWithOutSpaces[CE.Band],
-    @CE.Callsign[1]
-    );
+  StrPCopy(TR4W_GET_MP3_FILENAME,
+           AnsiString(SysUtils.Format('%s\%u%.2u%.2u_%.2u%.2u%.2u_%sm_%s.MP3',
+                      [Config.MP3Path,
+                       CE.tSysTime.qtYear + 2000,
+                       CE.tSysTime.qtMonth,
+                       CE.tSysTime.qtDay,
+                       CE.tSysTime.qtHour,
+                       CE.tSysTime.qtMinute,
+                       CE.tSysTime.qtSecond,
+                       BandStringsArrayWithOutSpaces[CE.Band],
+                       string(CE.Callsign)])));
 
   Result := TR4W_GET_MP3_FILENAME;
 end;

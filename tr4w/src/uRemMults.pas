@@ -65,6 +65,7 @@ procedure UpdateRemainingMultsWindows;
 implementation
 
 uses
+  SysUtils,   { Format -- replaced TF.Format/wsprintfA }
   Tree,
   MainUnit,
   uRemMultsForm;
@@ -125,8 +126,10 @@ begin
     rmZone:
       begin
         aWorked := not mo.IsZnMult(Index, MultBand, MultMode);
-        TF.Format(RemMultsBuf, '%02u', Index);
-        aText := string(PAnsiChar(@RemMultsBuf));
+        { '%.2u', not '%02u' -- Delphi's Format has no zero-pad flag and would
+          space-pad. The buffer goes with the call: aText is already a string. }
+
+        aText := SysUtils.Format('%.2u', [Index]);
       end;
   end;
 end;

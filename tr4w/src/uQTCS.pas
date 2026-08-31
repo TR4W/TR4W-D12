@@ -157,7 +157,10 @@ begin
            Time := QTCsToBeSendArray[I].qsTime;
            p := @QTCsToBeSendArray[I].qsCall[1];
            // Issue #997: asm wsprintf-push -> TF.Format. cdecl-reverse -> Time, p, Number.
-           TF.Format(wsprintfBuffer, '%04u %-8s %u', Time, p, Number);       // n4af 04.40.2
+           { '%.4u', not '%04u'. '%-8s' means the same in both. }
+
+           StrPCopy(wsprintfBuffer, AnsiString(SysUtils.Format('%.4u %-8s %u',
+                                    [Time, string(QTCsToBeSendArray[I].qsCall), Number])));  // n4af 04.40.2
            {QTC}
            tCreateStaticWindow
              (
