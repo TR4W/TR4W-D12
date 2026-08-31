@@ -68,7 +68,8 @@ implementation
 uses
   uConfigValues,
    uSettingsRegistry,
-   uSettingsLegacy;   // RegisterLegacySetting -- no FMX
+   uSettingsLegacy,   // RegisterLegacySetting -- no FMX
+   uSettingsCaptions;  // RS_* -- the translatable setting labels
 
 var
    GDeclared: boolean = False;
@@ -83,130 +84,130 @@ begin
 
    // --- Operating: CW ------------------------------------------------------
    RegisterStoredSetting('operating.cw.sayHi',            'SAY HI ENABLE',
-                         'Send a greeting to stations worked before');
+                         RS_OPERATING_CW_SAYHI);
    RegisterStoredSetting('operating.cw.sayHiRateCutoff',  'SAY HI RATE CUTOFF',
-                         'Stop above this rate');
+                         RS_OPERATING_CW_SAYHIRATECUTOFF);
    RegisterStoredSetting('operating.cw.keypadMemories',   'KEYPAD CW MEMORIES',
-                         'Number keypad sends CW memories');
+                         RS_OPERATING_CW_KEYPADMEMORIES);
    RegisterStoredSetting('operating.cw.leadingZeros',     'LEADING ZEROS',
-                         'Leading zeros');
+                         RS_OPERATING_CW_LEADINGZEROS);
    RegisterStoredSetting('operating.cw.leadingZeroChar',  'LEADING ZERO CHARACTER',
-                         'Leading zero sent as');
+                         RS_OPERATING_CW_LEADINGZEROCHAR);
 
    // Radio serial keying.  These shape only the CW TR4W generates itself by
    // toggling DTR/RTS -- a WinKeyer, a YCCC box or CW-by-CAT keep their own
    // timing -- which is why they sit in their own frame rather than beside the
    // settings that apply to every keyer.
    RegisterStoredSetting('operating.cw.serial.ditDahRatio',    'DIT DAH RATIO',
-                         'Dit/dah ratio');
+                         RS_OPERATING_CW_SERIAL_DITDAHRATIO);
    RegisterStoredSetting('operating.cw.serial.weight',         'WEIGHT',
-                         'Weight');
+                         RS_OPERATING_CW_SERIAL_WEIGHT);
    RegisterStoredSetting('operating.cw.serial.farnsworth',     'FARNSWORTH ENABLE',
-                         'Farnsworth spacing');
+                         RS_OPERATING_CW_SERIAL_FARNSWORTH);
    RegisterStoredSetting('operating.cw.serial.farnsworthSpeed','FARNSWORTH SPEED',
-                         'Character speed');
+                         RS_OPERATING_CW_SERIAL_FARNSWORTHSPEED);
 
    // --- CW Settings (the keyer page) ---------------------------------------
    RegisterStoredSetting('cw.enable',            'CW ENABLE',
-                         'Send CW');
+                         RS_CW_ENABLE);
    RegisterStoredSetting('cw.speedFromDatabase', 'CW SPEED FROM DATABASE',
-                         'Match the speed a station was worked at before');
+                         RS_CW_SPEEDFROMDATABASE);
    // MIGRATED 2026-08-14 -- the first row to graduate.  Stored: writes go to
    // settings\tr4w.json, the CFGCA row is csJSON, and so it no longer appears
    // in Ctrl-J nor in tr4w.ini.  The two halves must stay in step; see
    // docs/CFG_MIGRATION_PLAN.md.
    RegisterStoredSetting('cw.speedIncrement',    'CW SPEED INCREMENT',
-                         'Speed step');
+                         RS_CW_SPEEDINCREMENT);
    RegisterStoredSetting('cw.tone',              'CW TONE',
-                         'Sidetone');
+                         RS_CW_TONE);
 
    { CW SENDING BEHAVIOUR. These shape what the keyer sends and how, whichever
      keyer is selected -- unlike the serial-keying group above, which only
      affects CW TR4W generates itself. }
    RegisterStoredSetting('cw.messagesChainable',  'ALL CW MESSAGES CHAINABLE',
-                         'Any message may chain into the next');
+                         RS_CW_MESSAGESCHAINABLE);
    RegisterStoredSetting('cw.tuneWithDits',       'TUNE WITH DITS',
-                         'Tune with dits rather than a solid carrier');
+                         RS_CW_TUNEWITHDITS);
    RegisterStoredSetting('cw.sendFourLetterCall', 'SEND COMPLETE FOUR LETTER CALL',
-                         'Always send all four letters of a four-letter call');
+                         RS_CW_SENDFOURLETTERCALL);
 
    { The F-key button captions, 2026-08-15. }
    RegisterStoredSetting('cw.includeFKeyNumber',              'INCLUDE F-KEY NUMBER',
-                         'Show the key number on the function-key buttons');
+                         RS_CW_INCLUDEFKEYNUMBER);
 
    { The old Appearance menu's contents, 2026-08-15. }
    RegisterStoredSetting('appearance.noBorder',               'NO BORDER',
-                         'Main window has no border');
+                         RS_APPEARANCE_NOBORDER);
    RegisterStoredSetting('appearance.noCaption',              'NO CAPTION',
-                         'Main window has no title bar');
+                         RS_APPEARANCE_NOCAPTION);
    RegisterStoredSetting('appearance.noColumnHeader',         'NO COLUMN HEADER',
-                         'Hide the log column headings');
+                         RS_APPEARANCE_NOCOLUMNHEADER);
    RegisterStoredSetting('appearance.showGridlines',          'SHOW GRIDLINES',
-                         'Draw gridlines in the log');
+                         RS_APPEARANCE_SHOWGRIDLINES);
 
    { Audio: MP3 recording and the digital voice keyer, 2026-08-15. }
    RegisterStoredSetting('audio.mp3.recorderEnable',          'MP3 RECORDER ENABLE',
-                         'Record each QSO to MP3');
+                         RS_AUDIO_MP3_RECORDERENABLE);
    RegisterStoredSetting('audio.mp3.path',                    'MP3 PATH',
-                         'Folder for MP3 recordings');
+                         RS_AUDIO_MP3_PATH);
    RegisterStoredSetting('audio.mp3.player',                  'MP3 PLAYER',
-                         'MP3 player program');
+                         RS_AUDIO_MP3_PLAYER);
    RegisterStoredSetting('audio.dvk.enable',                  'DVK ENABLE',
-                         'Use the digital voice keyer');
+                         RS_AUDIO_DVK_ENABLE);
    RegisterStoredSetting('audio.dvk.localizedMessages',       'DVK LOCALIZED MESSAGES ENABLE',
-                         'Use localized DVK message files');
+                         RS_AUDIO_DVK_LOCALIZEDMESSAGES);
    RegisterStoredSetting('audio.dvk.path',                    'DVK PATH',
-                         'Folder for DVK recordings');
+                         RS_AUDIO_DVK_PATH);
    RegisterStoredSetting('audio.dvk.recorder',                'DVK RECORDER',
-                         'DVK recorder program');
+                         RS_AUDIO_DVK_RECORDER);
    RegisterStoredSetting('audio.useRecordedSigns',            'USE RECORDED SIGNS',
-                         'Send recorded audio for callsign characters');
+                         RS_AUDIO_USERECORDEDSIGNS);
 
    { PADDLE. The paddle keyer TR4W runs itself; a WinKeyer or YCCC box keeps its
      own. PADDLE PORT is deliberately NOT here -- it is a parallel port, and
      whether TR4W keeps supporting those is an open question (see the Hardware
      panel). Speed and tone are useful regardless of which port carries it. }
    RegisterStoredSetting('cw.paddle.speed',       'PADDLE SPEED',
-                         'Paddle speed');
+                         RS_CW_PADDLE_SPEED);
    RegisterStoredSetting('cw.paddle.monitorTone', 'PADDLE MONITOR TONE',
-                         'Paddle sidetone');
+                         RS_CW_PADDLE_MONITORTONE);
    RegisterStoredSetting('cw.paddle.swap',        'SWAP PADDLES',
-                         'Swap dit and dah');
+                         RS_CW_PADDLE_SWAP);
    RegisterStoredSetting('cw.paddle.pttHoldCount','PADDLE PTT HOLD COUNT',
-                         'Hold PTT for');
+                         RS_CW_PADDLE_PTTHOLDCOUNT);
 
    { PTT. Not CW-only -- PTT ENABLE keys the transmitter for phone too -- but it
      is grouped with the keyer because that is where an operator changes it. }
    RegisterStoredSetting('ptt.enable',            'PTT ENABLE',
-                         'Assert PTT when transmitting');
+                         RS_PTT_ENABLE);
    RegisterStoredSetting('ptt.turnOnDelay',       'PTT TURN ON DELAY',
-                         'Delay after PTT before sending');
+                         RS_PTT_TURNONDELAY);
    RegisterStoredSetting('ptt.noPollDuringPTT',   'NO POLL DURING PTT',
-                         'Stop polling the radio while transmitting');
+                         RS_PTT_NOPOLLDURINGPTT);
 
    { Operating and PTT, 2026-08-15. Captions follow each command's help entry:
      AUTO CALL TERMINATE stops sending when the call window changes, and
      CONFIRM EDIT CHANGES asks before an edited QSO is written back. }
    RegisterStoredSetting('ptt.viaCommands',                   'PTT VIA COMMANDS',
-                         'Key the transmitter with a CAT command');
+                         RS_PTT_VIACOMMANDS);
    RegisterStoredSetting('ptt.lockout',                       'PTT LOCKOUT',
-                         'Lock out PTT');
+                         RS_PTT_LOCKOUT);
    RegisterStoredSetting('operating.autoCallTerminate',       'AUTO CALL TERMINATE',
-                         'Stop sending when the call window changes');
+                         RS_OPERATING_AUTOCALLTERMINATE);
    RegisterStoredSetting('operating.autoReturnToCQ',          'AUTO RETURN TO CQ MODE',
-                         'Return to CQ mode after logging');
+                         RS_OPERATING_AUTORETURNTOCQ);
    RegisterStoredSetting('operating.escapeExitsSAP',          'ESCAPE EXITS SEARCH AND POUNCE',
-                         'Escape leaves search and pounce');
+                         RS_OPERATING_ESCAPEEXITSSAP);
    RegisterStoredSetting('operating.leaveCursorInCall',       'LEAVE CURSOR IN CALL WINDOW',
-                         'Leave the cursor in the call window');
+                         RS_OPERATING_LEAVECURSORINCALL);
    RegisterStoredSetting('operating.logWithSingleEnter',      'LOG WITH SINGLE ENTER',
-                         'Log with a single Enter');
+                         RS_OPERATING_LOGWITHSINGLEENTER);
    RegisterStoredSetting('operating.spaceBarDupeCheck',       'SPACE BAR DUPE CHECK ENABLE',
-                         'Space bar performs a dupe check');
+                         RS_OPERATING_SPACEBARDUPECHECK);
    RegisterStoredSetting('operating.confirmEditChanges',      'CONFIRM EDIT CHANGES',
-                         'Confirm before saving an edited QSO');
+                         RS_OPERATING_CONFIRMEDITCHANGES);
    RegisterStoredSetting('operating.autoQSONumberDecrement',  'AUTO QSO NUMBER DECREMENT',
-                         'Give the serial number back when a QSO is abandoned');
+                         RS_OPERATING_AUTOQSONUMBERDECREMENT);
 
    // --- Operating: bands ---------------------------------------------------
    // MIGRATED 2026-08-16, with the CFGCA rows flipped to csJSON in the same
@@ -224,15 +225,15 @@ begin
    // inconsistently -- HFBandEnable but VHFBandsEnabled -- which makes a naive
    // grep under-report.)
    RegisterStoredSetting('operating.bands.hf',   'HF BAND ENABLE',
-                         'HF (160 - 10 m)');
+                         RS_OPERATING_BANDS_HF);
    RegisterStoredSetting('operating.bands.warc', 'WARC BAND ENABLE',
-                         'WARC (30, 17, 12 m)');
+                         RS_OPERATING_BANDS_WARC);
    RegisterStoredSetting('operating.bands.vhf',  'VHF BAND ENABLE',
-                         'VHF and up');
+                         RS_OPERATING_BANDS_VHF);
 
    // --- Operating: two radio -----------------------------------------------
    RegisterStoredSetting('operating.tworadio.enable',       'TWO RADIO MODE',
-                         'Two radio mode');
+                         RS_OPERATING_TWORADIO_ENABLE);
 
    { Two radio and multi-op, 2026-08-15. Captions from each command's own entry
      in commands_help_eng.ini rather than invented -- IN BAND LOCKOUT is
@@ -240,65 +241,65 @@ begin
      a single band", and MULTI MULTS ONLY decides whether all QSOs or only new
      multipliers are passed around the network. }
    RegisterStoredSetting('operating.tworadio.inBandLockout',  'IN BAND LOCKOUT',
-                         'Stop both radios landing on one band');
+                         RS_OPERATING_TWORADIO_INBANDLOCKOUT);
    RegisterStoredSetting('operating.tworadio.qsyInactive',    'QSY INACTIVE RADIO',
-                         'QSY the inactive radio');
+                         RS_OPERATING_TWORADIO_QSYINACTIVE);
    RegisterStoredSetting('operating.tworadio.swapRelaySense', 'SWAP RADIO RELAY SENSE',
-                         'Invert the radio relay sense');
+                         RS_OPERATING_TWORADIO_SWAPRELAYSENSE);
    RegisterStoredSetting('operating.tworadio.waitForStrength', 'WAIT FOR STRENGTH',
-                         'Wait for a signal strength reading');
+                         RS_OPERATING_TWORADIO_WAITFORSTRENGTH);
    RegisterStoredSetting('network.multiMultsOnly',            'MULTI MULTS ONLY',
-                         'Pass only new multipliers around the network');
+                         RS_NETWORK_MULTIMULTSONLY);
    RegisterStoredSetting('network.intercomFile',              'INTERCOM FILE ENABLE',
-                         'Log network messages to INTERCOM.TXT');
+                         RS_NETWORK_INTERCOMFILE);
 
    { Super Check Partial, band map and log files, 2026-08-15. }
    RegisterStoredSetting('scp.possibleCalls',                 'POSSIBLE CALLS',
-                         'Offer possible calls');
+                         RS_SCP_POSSIBLECALLS);
    RegisterStoredSetting('scp.partialCall',                   'PARTIAL CALL ENABLE',
-                         'Match on a partial callsign');
+                         RS_SCP_PARTIALCALL);
    RegisterStoredSetting('scp.wildcardPartials',              'WILDCARD PARTIALS',
-                         'Allow wildcards in a partial');
+                         RS_SCP_WILDCARDPARTIALS);
    RegisterStoredSetting('scp.nameFlag',                      'NAME FLAG ENABLE',
-                         'Flag a station whose name is known');
+                         RS_SCP_NAMEFLAG);
    RegisterStoredSetting('bandmap.callWindowShowAllSpots',    'CALL WINDOW SHOW ALL SPOTS',
-                         'Show every spot in the call window');
+                         RS_BANDMAP_CALLWINDOWSHOWALLSPOTS);
    RegisterStoredSetting('bandmap.swapPacketSpotRadios',      'SWAP PACKET SPOT RADIOS',
-                         'Send spots to the other radio');
+                         RS_BANDMAP_SWAPPACKETSPOTRADIOS);
    RegisterStoredSetting('logging.checkLogFileSize',          'CHECK LOG FILE SIZE',
-                         'Warn when the log file grows unexpectedly');
+                         RS_LOGGING_CHECKLOGFILESIZE);
    RegisterStoredSetting('logging.unknownCountryFile',        'UNKNOWN COUNTRY FILE ENABLE',
-                         'Record callsigns with no country match');
+                         RS_LOGGING_UNKNOWNCOUNTRYFILE);
    RegisterStoredSetting('logging.updateRestartFile',         'UPDATE RESTART FILE ENABLE',
-                         'Keep the restart file up to date');
+                         RS_LOGGING_UPDATERESTARTFILE);
    RegisterStoredSetting('operating.tworadio.altDBuffer',   'ALT-D BUFFER ENABLE',
-                         'Alt-D remembers what you typed');
+                         RS_OPERATING_TWORADIO_ALTDBUFFER);
    RegisterStoredSetting('operating.tworadio.altDCQ',       'ALT-D CQ ENABLE',
-                         'Alt-D can start a CQ on the second radio');
+                         RS_OPERATING_TWORADIO_ALTDCQ);
    RegisterStoredSetting('operating.tworadio.blindCQ',      'ALWAYS CALL BLIND CQ',
-                         'Always call a blind CQ');
+                         RS_OPERATING_TWORADIO_BLINDCQ);
    RegisterStoredSetting('operating.tworadio.skipActiveBand','SKIP ACTIVE BAND',
-                         'Skip the band the other radio is on');
+                         RS_OPERATING_TWORADIO_SKIPACTIVEBAND);
 
    // --- Operating: online scoring ------------------------------------------
    RegisterStoredSetting('scoring.hamscore.enable',      'HAMSCORE ENABLE',
-                         'Post my score while the contest runs');
+                         RS_SCORING_HAMSCORE_ENABLE);
    RegisterStoredSetting('scoring.hamscore.url',         'HAMSCORE URL',
-                         'Service URL');
+                         RS_SCORING_HAMSCORE_URL);
    RegisterStoredSetting('scoring.hamscore.username',    'HAMSCORE USERNAME',
-                         'Username');
+                         RS_SCORING_HAMSCORE_USERNAME);
    RegisterStoredSetting('scoring.hamscore.password',    'HAMSCORE PASSWORD',
-                         'Password');
+                         RS_SCORING_HAMSCORE_PASSWORD);
    RegisterStoredSetting('scoring.hamscore.contactInfo', 'HAMSCORE SEND CONTACT INFO',
-                         'Include contact information');
+                         RS_SCORING_HAMSCORE_CONTACTINFO);
    RegisterStoredSetting('scoring.board.postingUrl',     'SCORE POSTING URL',
-                         'Posting URL');
+                         RS_SCORING_BOARD_POSTINGURL);
    RegisterStoredSetting('scoring.board.readingUrl',     'SCORE READING URL',
-                         'Reading URL');
+                         RS_SCORING_BOARD_READINGURL);
 
    // --- DX cluster ---------------------------------------------------------
    RegisterStoredSetting('cluster.connectAtStartup', 'CONNECTION AT STARTUP',
-                         'Connect at startup');
+                         RS_CLUSTER_CONNECTATSTARTUP);
    // CONNECTION COMMAND is NOT registered as a flat setting. It belongs to the
    // cluster definition -- one cluster, one connect command -- and the cluster
    // editor in Preferences owns it. Registering it here as well gave one edit box
@@ -333,335 +334,335 @@ begin
 
    // --- Contest (68) ----------------------------------
    RegisterStoredSetting('contest.autoQslInterval',     'AUTO QSL INTERVAL',
-                          'Auto QSL Interval');
+                          RS_CONTEST_AUTOQSLINTERVAL);
    RegisterStoredSetting('contest.autoCqDelayTime',     'AUTO-CQ DELAY TIME',
-                          'Auto-CQ Delay Time');
+                          RS_CONTEST_AUTOCQDELAYTIME);
    RegisterStoredSetting('contest.beepEvery10Qsos',     'BEEP EVERY 10 QSOS',
-                          'Beep Every 10 QSOs');
+                          RS_CONTEST_BEEPEVERY10QSOS);
    RegisterStoredSetting('contest.categoryAssisted',    'CATEGORY-ASSISTED',
-                          'Category-Assisted');
+                          RS_CONTEST_CATEGORYASSISTED);
    RegisterStoredSetting('contest.categoryBand',        'CATEGORY-BAND',
-                          'Category-Band');
+                          RS_CONTEST_CATEGORYBAND);
    RegisterStoredSetting('contest.categoryMode',        'CATEGORY-MODE',
-                          'Category-Mode');
+                          RS_CONTEST_CATEGORYMODE);
    RegisterStoredSetting('contest.categoryOperator',    'CATEGORY-OPERATOR',
-                          'Category-Operator');
+                          RS_CONTEST_CATEGORYOPERATOR);
    RegisterStoredSetting('contest.categoryOverlay',     'CATEGORY-OVERLAY',
-                          'Category-Overlay');
+                          RS_CONTEST_CATEGORYOVERLAY);
    RegisterStoredSetting('contest.categoryPower',       'CATEGORY-POWER',
-                          'Category-Power');
+                          RS_CONTEST_CATEGORYPOWER);
    RegisterStoredSetting('contest.categoryTransmitter', 'CATEGORY-TRANSMITTER',
-                          'Category-Transmitter');
+                          RS_CONTEST_CATEGORYTRANSMITTER);
    RegisterStoredSetting('contest.contest',             'CONTEST',
-                          'Contest');
+                          RS_CONTEST_CONTEST);
    RegisterStoredSetting('contest.contestName',         'CONTEST NAME',
-                          'Contest Name');
+                          RS_CONTEST_CONTESTNAME);
    RegisterStoredSetting('contest.contestTitle',        'CONTEST TITLE',
-                          'Contest Title');
+                          RS_CONTEST_CONTESTTITLE);
    RegisterStoredSetting('contest.countDomesticCountries','COUNT DOMESTIC COUNTRIES',
-                          'Count Domestic Countries');
+                          RS_CONTEST_COUNTDOMESTICCOUNTRIES);
    RegisterStoredSetting('contest.customInitialExchangeString','CUSTOM INITIAL EXCHANGE STRING',
-                          'Custom Initial Exchange String');
+                          RS_CONTEST_CUSTOMINITIALEXCHANGESTRING);
    RegisterStoredSetting('contest.domesticMultiplier',  'DOMESTIC MULTIPLIER',
-                          'Domestic Multiplier');
+                          RS_CONTEST_DOMESTICMULTIPLIER);
    RegisterStoredSetting('contest.dxMultiplier',        'DX MULTIPLIER',
-                          'DX Multiplier');
+                          RS_CONTEST_DXMULTIPLIER);
    RegisterStoredSetting('contest.exchangeMemoryEnable','EXCHANGE MEMORY ENABLE',
-                          'Exchange Memory Enable');
+                          RS_CONTEST_EXCHANGEMEMORYENABLE);
    RegisterStoredSetting('contest.exchangeReceived',    'EXCHANGE RECEIVED',
-                          'Exchange Received');
+                          RS_CONTEST_EXCHANGERECEIVED);
    RegisterStoredSetting('contest.gridMapCenter',       'GRID MAP CENTER',
-                          'Grid Map Center');
+                          RS_CONTEST_GRIDMAPCENTER);
    RegisterStoredSetting('contest.initialExchange',     'INITIAL EXCHANGE',
-                          'Initial Exchange');
+                          RS_CONTEST_INITIALEXCHANGE);
    RegisterStoredSetting('contest.initialExchangeCursorPos','INITIAL EXCHANGE CURSOR POS',
-                          'Initial Exchange Cursor Pos');
+                          RS_CONTEST_INITIALEXCHANGECURSORPOS);
    RegisterStoredSetting('contest.initialExchangeOverwrite','INITIAL EXCHANGE OVERWRITE',
-                          'Initial Exchange Overwrite');
+                          RS_CONTEST_INITIALEXCHANGEOVERWRITE);
    RegisterStoredSetting('contest.literalDomesticQth',  'LITERAL DOMESTIC QTH',
-                          'Literal Domestic Qth');
+                          RS_CONTEST_LITERALDOMESTICQTH);
    RegisterStoredSetting('contest.logRsSent',           'LOG RS SENT',
-                          'Log Rs Sent');
+                          RS_CONTEST_LOGRSSENT);
    RegisterStoredSetting('contest.logRstSent',          'LOG RST SENT',
-                          'Log Rst Sent');
+                          RS_CONTEST_LOGRSTSENT);
    RegisterStoredSetting('contest.lookForRstSent',      'LOOK FOR RST SENT',
-                          'Look For Rst Sent');
+                          RS_CONTEST_LOOKFORRSTSENT);
    RegisterStoredSetting('contest.messageEnable',       'MESSAGE ENABLE',
-                          'Message Enable');
+                          RS_CONTEST_MESSAGEENABLE);
    RegisterStoredSetting('contest.minitourDuration',    'MINITOUR DURATION',
-                          'Minitour Duration');
+                          RS_CONTEST_MINITOURDURATION);
    RegisterStoredSetting('contest.multByBand',          'MULT BY BAND',
-                          'Mult By Band');
+                          RS_CONTEST_MULTBYBAND);
    RegisterStoredSetting('contest.multByMode',          'MULT BY MODE',
-                          'Mult By Mode');
+                          RS_CONTEST_MULTBYMODE);
    RegisterStoredSetting('contest.multReportMinimumBands','MULT REPORT MINIMUM BANDS',
-                          'Mult Report Minimum Bands');
+                          RS_CONTEST_MULTREPORTMINIMUMBANDS);
    RegisterStoredSetting('contest.multSheetAutoReset',  'MULT SHEET AUTO RESET',
-                          'Mult Sheet Auto Reset');
+                          RS_CONTEST_MULTSHEETAUTORESET);
    RegisterStoredSetting('contest.multipleBands',       'MULTIPLE BANDS',
-                          'Multiple Bands');
+                          RS_CONTEST_MULTIPLEBANDS);
    RegisterStoredSetting('contest.multipleModes',       'MULTIPLE MODES',
-                          'Multiple Modes');
+                          RS_CONTEST_MULTIPLEMODES);
    RegisterStoredSetting('contest.prefixMultiplier',    'PREFIX MULTIPLIER',
-                          'Prefix Multiplier');
+                          RS_CONTEST_PREFIXMULTIPLIER);
    RegisterStoredSetting('contest.qslMode',             'QSL MODE',
-                          'QSL Mode');
+                          RS_CONTEST_QSLMODE);
    RegisterStoredSetting('contest.qsoByBand',           'QSO BY BAND',
-                          'QSO By Band');
+                          RS_CONTEST_QSOBYBAND);
    RegisterStoredSetting('contest.qsoByMode',           'QSO BY MODE',
-                          'QSO By Mode');
+                          RS_CONTEST_QSOBYMODE);
    RegisterStoredSetting('contest.qsoNumberByBand',     'QSO NUMBER BY BAND',
-                          'QSO Number By Band');
+                          RS_CONTEST_QSONUMBERBYBAND);
    RegisterStoredSetting('contest.qsoPointMethod',      'QSO POINT METHOD',
-                          'QSO Point Method');
+                          RS_CONTEST_QSOPOINTMETHOD);
    RegisterStoredSetting('contest.qsoPointsDomesticCw', 'QSO POINTS DOMESTIC CW',
-                          'QSO Points Domestic CW');
+                          RS_CONTEST_QSOPOINTSDOMESTICCW);
    RegisterStoredSetting('contest.qsoPointsDomesticPhone','QSO POINTS DOMESTIC PHONE',
-                          'QSO Points Domestic Phone');
+                          RS_CONTEST_QSOPOINTSDOMESTICPHONE);
    RegisterStoredSetting('contest.qsoPointsDxCw',       'QSO POINTS DX CW',
-                          'QSO Points DX CW');
+                          RS_CONTEST_QSOPOINTSDXCW);
    RegisterStoredSetting('contest.qsoPointsDxPhone',    'QSO POINTS DX PHONE',
-                          'QSO Points DX Phone');
+                          RS_CONTEST_QSOPOINTSDXPHONE);
    RegisterStoredSetting('contest.qtcEnable',           'QTC ENABLE',
-                          'Qtc Enable');
+                          RS_CONTEST_QTCENABLE);
    RegisterStoredSetting('contest.qtcExtraSpace',       'QTC EXTRA SPACE',
-                          'Qtc Extra Space');
+                          RS_CONTEST_QTCEXTRASPACE);
    RegisterStoredSetting('contest.qtcMinutes',          'QTC MINUTES',
-                          'Qtc Minutes');
+                          RS_CONTEST_QTCMINUTES);
    RegisterStoredSetting('contest.qtcQrs',              'QTC QRS',
-                          'Qtc Qrs');
+                          RS_CONTEST_QTCQRS);
    RegisterStoredSetting('contest.quickQslCwMessage',   'QUICK QSL CW MESSAGE',
-                          'Quick QSL CW Message');
+                          RS_CONTEST_QUICKQSLCWMESSAGE);
    RegisterStoredSetting('contest.quickQslCwMessage1',  'QUICK QSL CW MESSAGE1',
-                          'Quick QSL CW Message1');
+                          RS_CONTEST_QUICKQSLCWMESSAGE1);
    RegisterStoredSetting('contest.quickQslKey1',        'QUICK QSL KEY 1',
-                          'Quick QSL Key 1');
+                          RS_CONTEST_QUICKQSLKEY1);
    RegisterStoredSetting('contest.quickQslKey2',        'QUICK QSL KEY 2',
-                          'Quick QSL Key 2');
+                          RS_CONTEST_QUICKQSLKEY2);
    RegisterStoredSetting('contest.quickQslMessage1',    'QUICK QSL MESSAGE 1',
-                          'Quick QSL Message 1');
+                          RS_CONTEST_QUICKQSLMESSAGE1);
    RegisterStoredSetting('contest.quickQslMessage2',    'QUICK QSL MESSAGE 2',
-                          'Quick QSL Message 2');
+                          RS_CONTEST_QUICKQSLMESSAGE2);
    RegisterStoredSetting('contest.quickQslSsbMessage',  'QUICK QSL SSB MESSAGE',
-                          'Quick QSL SSB Message');
+                          RS_CONTEST_QUICKQSLSSBMESSAGE);
    RegisterStoredSetting('contest.r150sMode',           'R150S MODE',
-                          'R150S Mode');
+                          RS_CONTEST_R150SMODE);
    RegisterStoredSetting('contest.randomCqMode',        'RANDOM CQ MODE',
-                          'Random CQ Mode');
+                          RS_CONTEST_RANDOMCQMODE);
    RegisterStoredSetting('contest.remainingMultDisplayMode','REMAINING MULT DISPLAY MODE',
-                          'Remaining Mult Display Mode');
+                          RS_CONTEST_REMAININGMULTDISPLAYMODE);
    RegisterStoredSetting('contest.reverseInitialEx',    'REVERSE INITIAL EX',
-                          'Reverse Initial Ex');
+                          RS_CONTEST_REVERSEINITIALEX);
    RegisterStoredSetting('contest.rfoblMode',           'RFOBL MODE',
-                          'Rfobl Mode');
+                          RS_CONTEST_RFOBLMODE);
    RegisterStoredSetting('contest.showAllSerialPorts',  'SHOW ALL SERIAL PORTS',
-                          'Show All Serial Ports');
+                          RS_CONTEST_SHOWALLSERIALPORTS);
    RegisterStoredSetting('contest.showDomesticMultiplierName','SHOW DOMESTIC MULTIPLIER NAME',
-                          'Show Domestic Multiplier Name');
+                          RS_CONTEST_SHOWDOMESTICMULTIPLIERNAME);
    RegisterLegacySetting('contest.singleBandScore',     'SINGLE BAND SCORE',
                           'Single Band Score');
    RegisterStoredSetting('contest.sprintQsyRule',       'SPRINT QSY RULE',
-                          'Sprint Qsy Rule');
+                          RS_CONTEST_SPRINTQSYRULE);
    RegisterStoredSetting('contest.tenMinuteRule',       'TEN MINUTE RULE',
-                          'Ten Minute Rule');
+                          RS_CONTEST_TENMINUTERULE);
    RegisterStoredSetting('contest.zoneMultiplier',      'ZONE MULTIPLIER',
-                          'Zone Multiplier');
+                          RS_CONTEST_ZONEMULTIPLIER);
 
    // --- Operating (34) --------------------------------
    RegisterStoredSetting('operating.ctrlj.askForFrequencies', 'ASK FOR FREQUENCIES',
-                          'Ask For Frequencies');
+                          RS_OPERATING_CTRLJ_ASKFORFREQUENCIES);
    RegisterStoredSetting('operating.ctrlj.autoDisplayDupeQso','AUTO DISPLAY DUPE QSO',
-                          'Auto Display Dupe QSO');
+                          RS_OPERATING_CTRLJ_AUTODISPLAYDUPEQSO);
    RegisterStoredSetting('operating.ctrlj.autoDupeEnableCq',  'AUTO DUPE ENABLE CQ',
-                          'Auto Dupe Enable CQ');
+                          RS_OPERATING_CTRLJ_AUTODUPEENABLECQ);
    RegisterStoredSetting('operating.ctrlj.autoDupeEnableSAndP','AUTO DUPE ENABLE S AND P',
-                          'Auto Dupe Enable S And P');
+                          RS_OPERATING_CTRLJ_AUTODUPEENABLESANDP);
    RegisterStoredSetting('operating.ctrlj.autoSPEnable',      'AUTO S&P ENABLE',
-                          'Auto S&P Enable');
+                          RS_OPERATING_CTRLJ_AUTOSPENABLE);
    RegisterStoredSetting('operating.ctrlj.autoSPEnableSensitivity','AUTO S&P ENABLE SENSITIVITY',
-                          'Auto S&P Enable Sensitivity');
+                          RS_OPERATING_CTRLJ_AUTOSPENABLESENSITIVITY);
    RegisterStoredSetting('operating.ctrlj.autoTimeIncrement', 'AUTO TIME INCREMENT',
-                          'Auto Time Increment');
+                          RS_OPERATING_CTRLJ_AUTOTIMEINCREMENT);
    RegisterLegacySetting('operating.ctrlj.band',              'BAND',
                           'Band');
    RegisterLegacySetting('operating.ctrlj.clearDupeSheet',    'CLEAR DUPE SHEET',
                           'Clear Dupe Sheet');
    RegisterStoredSetting('operating.ctrlj.customUserString',  'CUSTOM USER STRING',
-                          'Custom User String');
+                          RS_OPERATING_CTRLJ_CUSTOMUSERSTRING);
    RegisterStoredSetting('operating.ctrlj.deEnable',          'DE ENABLE',
-                          'De Enable');
+                          RS_OPERATING_CTRLJ_DEENABLE);
    RegisterStoredSetting('operating.ctrlj.digitalModeEnable', 'DIGITAL MODE ENABLE',
-                          'Digital Mode Enable');
+                          RS_OPERATING_CTRLJ_DIGITALMODEENABLE);
    RegisterStoredSetting('operating.ctrlj.distanceMode',      'DISTANCE MODE',
-                          'Distance Mode');
+                          RS_OPERATING_CTRLJ_DISTANCEMODE);
    RegisterStoredSetting('operating.ctrlj.dupeCheckSound',    'DUPE CHECK SOUND',
-                          'Dupe Check Sound');
+                          RS_OPERATING_CTRLJ_DUPECHECKSOUND);
    RegisterStoredSetting('operating.ctrlj.dupeSheetAutoReset','DUPE SHEET AUTO RESET',
-                          'Dupe Sheet Auto Reset');
+                          RS_OPERATING_CTRLJ_DUPESHEETAUTORESET);
    RegisterStoredSetting('operating.ctrlj.frequencyMemory',   'FREQUENCY MEMORY',
-                          'Frequency Memory');
+                          RS_OPERATING_CTRLJ_FREQUENCYMEMORY);
    RegisterStoredSetting('operating.ctrlj.frequencyMemoryEnable','FREQUENCY MEMORY ENABLE',
-                          'Frequency Memory Enable');
+                          RS_OPERATING_CTRLJ_FREQUENCYMEMORYENABLE);
    RegisterStoredSetting('operating.ctrlj.frequencyPollRate', 'FREQUENCY POLL RATE',
-                          'Frequency Poll Rate');
+                          RS_OPERATING_CTRLJ_FREQUENCYPOLLRATE);
    RegisterStoredSetting('operating.ctrlj.ieSwitch',          'IE SWITCH',
-                          'Ie Switch');
+                          RS_OPERATING_CTRLJ_IESWITCH);
    RegisterStoredSetting('operating.ctrlj.incrementTimeEnable','INCREMENT TIME ENABLE',
-                          'Increment Time Enable');
+                          RS_OPERATING_CTRLJ_INCREMENTTIMEENABLE);
    RegisterStoredSetting('operating.ctrlj.logFrequencyEnable','LOG FREQUENCY ENABLE',
-                          'Log Frequency Enable');
+                          RS_OPERATING_CTRLJ_LOGFREQUENCYENABLE);
    RegisterStoredSetting('operating.ctrlj.logSubTitle',       'LOG SUB TITLE',
-                          'Log Sub Title');
+                          RS_OPERATING_CTRLJ_LOGSUBTITLE);
    RegisterStoredSetting('operating.ctrlj.mainCallsign',      'MAIN CALLSIGN',
-                          'Main Callsign');
+                          RS_OPERATING_CTRLJ_MAINCALLSIGN);
    RegisterStoredSetting('operating.ctrlj.mode',              'MODE',
-                          'Mode');
+                          RS_OPERATING_CTRLJ_MODE);
    RegisterStoredSetting('operating.ctrlj.possibleCallAcceptKey','POSSIBLE CALL ACCEPT KEY',
-                          'Possible Call Accept Key');
+                          RS_OPERATING_CTRLJ_POSSIBLECALLACCEPTKEY);
    RegisterStoredSetting('operating.ctrlj.possibleCallLeftKey','POSSIBLE CALL LEFT KEY',
-                          'Possible Call Left Key');
+                          RS_OPERATING_CTRLJ_POSSIBLECALLLEFTKEY);
    RegisterStoredSetting('operating.ctrlj.possibleCallMode',  'POSSIBLE CALL MODE',
-                          'Possible Call Mode');
+                          RS_OPERATING_CTRLJ_POSSIBLECALLMODE);
    RegisterStoredSetting('operating.ctrlj.possibleCallRightKey','POSSIBLE CALL RIGHT KEY',
-                          'Possible Call Right Key');
+                          RS_OPERATING_CTRLJ_POSSIBLECALLRIGHTKEY);
    RegisterStoredSetting('operating.ctrlj.qsxEnable',         'QSX ENABLE',
-                          'Qsx Enable');
+                          RS_OPERATING_CTRLJ_QSXENABLE);
    RegisterStoredSetting('operating.ctrlj.qzbRandomOffsetEnable','QZB RANDOM OFFSET ENABLE',
-                          'Qzb Random Offset Enable');
+                          RS_OPERATING_CTRLJ_QZBRANDOMOFFSETENABLE);
    RegisterStoredSetting('operating.ctrlj.radiusOfEarth',     'RADIUS OF EARTH',
-                          'Radius Of Earth');
+                          RS_OPERATING_CTRLJ_RADIUSOFEARTH);
    RegisterStoredSetting('operating.ctrlj.shiftKeyEnable',    'SHIFT KEY ENABLE',
-                          'Shift Key Enable');
+                          RS_OPERATING_CTRLJ_SHIFTKEYENABLE);
    RegisterStoredSetting('operating.ctrlj.stationsCallsignsMask','STATIONS CALLSIGNS MASK',
-                          'Stations Callsigns Mask');
+                          RS_OPERATING_CTRLJ_STATIONSCALLSIGNSMASK);
    RegisterStoredSetting('operating.ctrlj.wakeUpTimeOut',     'WAKE UP TIME OUT',
-                          'Wake Up Time Out');
+                          RS_OPERATING_CTRLJ_WAKEUPTIMEOUT);
 
    // --- CW (12) ---------------------------------------
    RegisterStoredSetting('cw.ctrlj.autoSendCharacterCount',   'AUTO SEND CHARACTER COUNT',
-                          'Auto Send Character Count');
+                          RS_CW_CTRLJ_AUTOSENDCHARACTERCOUNT);
    RegisterStoredSetting('cw.ctrlj.codeSpeed',                'CODE SPEED',
-                          'Code Speed');
+                          RS_CW_CTRLJ_CODESPEED);
    RegisterStoredSetting('cw.ctrlj.paddlePort',               'PADDLE PORT',
-                          'Paddle Port');
+                          RS_CW_CTRLJ_PADDLEPORT);
    RegisterStoredSetting('cw.ctrlj.questionMarkChar',         'QUESTION MARK CHAR',
-                          'Question Mark Char');
+                          RS_CW_CTRLJ_QUESTIONMARKCHAR);
    RegisterStoredSetting('cw.ctrlj.short0',                   'SHORT 0',
-                          'Short 0');
+                          RS_CW_CTRLJ_SHORT0);
    RegisterStoredSetting('cw.ctrlj.short1',                   'SHORT 1',
-                          'Short 1');
+                          RS_CW_CTRLJ_SHORT1);
    RegisterStoredSetting('cw.ctrlj.short2',                   'SHORT 2',
-                          'Short 2');
+                          RS_CW_CTRLJ_SHORT2);
    RegisterStoredSetting('cw.ctrlj.short9',                   'SHORT 9',
-                          'Short 9');
+                          RS_CW_CTRLJ_SHORT9);
    RegisterStoredSetting('cw.ctrlj.shortIntegers',            'SHORT INTEGERS',
-                          'Short Integers');
+                          RS_CW_CTRLJ_SHORTINTEGERS);
    RegisterStoredSetting('cw.ctrlj.slashMarkChar',            'SLASH MARK CHAR',
-                          'Slash Mark Char');
+                          RS_CW_CTRLJ_SLASHMARKCHAR);
    RegisterStoredSetting('cw.ctrlj.startSendingNowKey',       'START SENDING NOW KEY',
-                          'Start Sending Now Key');
+                          RS_CW_CTRLJ_STARTSENDINGNOWKEY);
    RegisterStoredSetting('cw.ctrlj.tuneAltDEnable',           'TUNE ALT-D ENABLE',
-                          'Tune Alt-D Enable');
+                          RS_CW_CTRLJ_TUNEALTDENABLE);
 
    // --- Appearance (13) -------------------------------
    // customCaret was here until 2026-08-18; the CFG row is csRem now and
    // retired rows are not registered (cf. AUTO ALT-D ENABLE, BACKCOPY ENABLE).
    RegisterStoredSetting('appearance.ctrlj.beepEnable',       'BEEP ENABLE',
-                          'Beep Enable');
+                          RS_APPEARANCE_CTRLJ_BEEPENABLE);
    RegisterStoredSetting('appearance.ctrlj.columnAutosize',   'COLUMN AUTOSIZE',
-                          'Column Autosize');
+                          RS_APPEARANCE_CTRLJ_COLUMNAUTOSIZE);
    RegisterStoredSetting('appearance.ctrlj.completeCallsignMask','COMPLETE CALLSIGN MASK',
-                          'Complete Callsign Mask');
+                          RS_APPEARANCE_CTRLJ_COMPLETECALLSIGNMASK);
    RegisterStoredSetting('appearance.ctrlj.contactsPerPage',  'CONTACTS PER PAGE',
-                          'Contacts Per Page');
+                          RS_APPEARANCE_CTRLJ_CONTACTSPERPAGE);
    RegisterStoredSetting('appearance.ctrlj.hourDisplay',      'HOUR DISPLAY',
-                          'Hour Display');
+                          RS_APPEARANCE_CTRLJ_HOURDISPLAY);
    RegisterStoredSetting('appearance.ctrlj.insertMode',       'INSERT MODE',
-                          'Insert Mode');
+                          RS_APPEARANCE_CTRLJ_INSERTMODE);
    RegisterStoredSetting('appearance.ctrlj.rateDisplay',      'RATE DISPLAY',
-                          'Rate Display');
+                          RS_APPEARANCE_CTRLJ_RATEDISPLAY);
    RegisterStoredSetting('appearance.ctrlj.reminder',         'REMINDER',
-                          'Reminder');
+                          RS_APPEARANCE_CTRLJ_REMINDER);
    RegisterStoredSetting('appearance.layout.rowCount',         'ROW COUNT',
-                          'Row Count');
+                          RS_APPEARANCE_LAYOUT_ROWCOUNT);
    RegisterStoredSetting('appearance.ctrlj.showFrequencyInLog','SHOW FREQUENCY IN LOG',
-                          'Show Frequency In Log');
+                          RS_APPEARANCE_CTRLJ_SHOWFREQUENCYINLOG);
    RegisterStoredSetting('appearance.ctrlj.showTypedCallsign','SHOW TYPED CALLSIGN',
-                          'Show Typed Callsign');
+                          RS_APPEARANCE_CTRLJ_SHOWTYPEDCALLSIGN);
    RegisterStoredSetting('appearance.ctrlj.userInfoShown',    'USER INFO SHOWN',
-                          'User Info Shown');
+                          RS_APPEARANCE_CTRLJ_USERINFOSHOWN);
    RegisterStoredSetting('appearance.layout.windowSize',       'WINDOW SIZE',
-                          'Window Size');
+                          RS_APPEARANCE_LAYOUT_WINDOWSIZE);
 
    // --- Hardware (5) ---------------------------------
    RegisterStoredSetting('hardware.ctrlj.lpt1BaseAddress',    'LPT1 BASE ADDRESS',
-                          'LPT1 Base Address');
+                          RS_HARDWARE_CTRLJ_LPT1BASEADDRESS);
    RegisterStoredSetting('hardware.ctrlj.lpt2BaseAddress',    'LPT2 BASE ADDRESS',
-                          'LPT2 Base Address');
+                          RS_HARDWARE_CTRLJ_LPT2BASEADDRESS);
    RegisterStoredSetting('hardware.ctrlj.lpt3BaseAddress',    'LPT3 BASE ADDRESS',
-                          'LPT3 Base Address');
+                          RS_HARDWARE_CTRLJ_LPT3BASEADDRESS);
    RegisterStoredSetting('hardware.ctrlj.stereoPinHigh',      'STEREO PIN HIGH',
-                          'Stereo Pin High');
+                          RS_HARDWARE_CTRLJ_STEREOPINHIGH);
    RegisterStoredSetting('hardware.ctrlj.useControlPort',     'USE CONTROL PORT',
-                          'Use Control Port');
+                          RS_HARDWARE_CTRLJ_USECONTROLPORT);
 
    // --- Files/Updates (7) ----------------------------
    RegisterStoredSetting('files.ctrlj.allowAutoUpdate',       'ALLOW AUTO UPDATE',
-                          'Allow Auto Update');
+                          RS_FILES_CTRLJ_ALLOWAUTOUPDATE);
    RegisterStoredSetting('files.ctrlj.callsignUpdateEnable',  'CALLSIGN UPDATE ENABLE',
-                          'Callsign Update Enable');
+                          RS_FILES_CTRLJ_CALLSIGNUPDATEENABLE);
    RegisterStoredSetting('files.ctrlj.countryInformationFile','COUNTRY INFORMATION FILE',
-                          'Country Information File');
+                          RS_FILES_CTRLJ_COUNTRYINFORMATIONFILE);
    RegisterStoredSetting('files.ctrlj.ctyUpdateCheckOnStartup','CTY UPDATE CHECK ON STARTUP',
-                          'Cty Update Check On Startup');
+                          RS_FILES_CTRLJ_CTYUPDATECHECKONSTARTUP);
    RegisterStoredSetting('files.ctrlj.domesticFilename',      'DOMESTIC FILENAME',
-                          'Domestic Filename');
+                          RS_FILES_CTRLJ_DOMESTICFILENAME);
    RegisterStoredSetting('files.ctrlj.missingcallsignsFileEnable','MISSINGCALLSIGNS FILE ENABLE',
-                          'Missingcallsigns File Enable');
+                          RS_FILES_CTRLJ_MISSINGCALLSIGNSFILEENABLE);
    RegisterStoredSetting('files.ctrlj.unknownCountryFileName','UNKNOWN COUNTRY FILE NAME',
-                          'Unknown Country File Name');
+                          RS_FILES_CTRLJ_UNKNOWNCOUNTRYFILENAME);
 
    // --- Band Map (5) ---------------------------------
    RegisterStoredSetting('bandmap.ctrlj.bandMapCutoffFrequency','BAND MAP CUTOFF FREQUENCY',
-                          'Band Map Cutoff Frequency');
+                          RS_BANDMAP_CTRLJ_BANDMAPCUTOFFFREQUENCY);
    RegisterStoredSetting('bandmap.ctrlj.bandMapItemHeight',   'BAND MAP ITEM HEIGHT',
-                          'Band Map Item Height');
+                          RS_BANDMAP_CTRLJ_BANDMAPITEMHEIGHT);
    RegisterStoredSetting('bandmap.ctrlj.bandMapItemWidth',    'BAND MAP ITEM WIDTH',
-                          'Band Map Item Width');
+                          RS_BANDMAP_CTRLJ_BANDMAPITEMWIDTH);
    RegisterStoredSetting('bandmap.ctrlj.bandMapSize',         'BAND MAP SIZE',
-                          'Band Map Size');
+                          RS_BANDMAP_CTRLJ_BANDMAPSIZE);
    RegisterStoredSetting('bandmap.ctrlj.bandMapSplitMode',    'BAND MAP SPLIT MODE',
-                          'Band Map Split Mode');
+                          RS_BANDMAP_CTRLJ_BANDMAPSPLITMODE);
 
    // --- Network (2) ----------------------------------
    RegisterStoredSetting('network.ctrlj.computerName',        'COMPUTER NAME',
-                          'Computer Name');
+                          RS_NETWORK_CTRLJ_COMPUTERNAME);
    RegisterStoredSetting('network.ctrlj.netStatusUpdateInterval','NET STATUS UPDATE INTERVAL',
-                          'Net Status Update Interval');
+                          RS_NETWORK_CTRLJ_NETSTATUSUPDATEINTERVAL);
 
    // --- Voice/DVK (2) --------------------------------
    RegisterStoredSetting('voice.ctrlj.mp3RecorderBitrate',    'MP3 RECORDER BITRATE',
-                          'Mp3 Recorder Bitrate');
+                          RS_VOICE_CTRLJ_MP3RECORDERBITRATE);
    RegisterStoredSetting('voice.ctrlj.mp3RecorderDuration',   'MP3 RECORDER DURATION',
-                          'Mp3 Recorder Duration');
+                          RS_VOICE_CTRLJ_MP3RECORDERDURATION);
 
    // --- Advanced (2) ---------------------------------
    RegisterStoredSetting('advanced.handLogMode',        'HAND LOG MODE',
-                          'Hand Log Mode');
+                          RS_ADVANCED_HANDLOGMODE);
    RegisterStoredSetting('advanced.noLog',              'NO LOG',
-                          'No Log');
+                          RS_ADVANCED_NOLOG);
 
    // --- DX Cluster (1) -------------------------------
    RegisterStoredSetting('cluster.ctrlj.broadcastAllPacketData','BROADCAST ALL PACKET DATA',
-                          'Broadcast All Packet Data');
+                          RS_CLUSTER_CTRLJ_BROADCASTALLPACKETDATA);
    // Two rows a case-SENSITIVE type scan missed on 2026-08-16: their crType is
    // spelled 'ctFilename' and 'ctinteger' in CFGCA. Pascal does not care; the
    // scan did, and reported Ctrl-J empty while they were still in it.
    // STEREO CONTROL PIN joins STEREO PIN HIGH on Hardware.
    RegisterStoredSetting('hardware.ctrlj.stereoControlPin',   'STEREO CONTROL PIN',
-                          'Stereo Control Pin');
+                          RS_HARDWARE_CTRLJ_STEREOCONTROLPIN);
    RegisterStoredSetting('files.ctrlj.initialExchangeFilename','INITIAL EXCHANGE FILENAME',
-                          'Initial Exchange Filename');
+                          RS_FILES_CTRLJ_INITIALEXCHANGEFILENAME);
 
 
 end;

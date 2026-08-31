@@ -43,7 +43,7 @@
         <PackageName Value="LCL"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="377">
+    <Units Count="378">
       <Unit0>
         <Filename Value="tr4w.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -1667,6 +1667,10 @@
         <Filename Value="src/radioFactory/uRadioIcom7110.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit376>
+      <Unit377>
+        <Filename Value="src/uSettingsCaptions.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit377>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

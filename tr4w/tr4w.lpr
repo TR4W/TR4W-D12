@@ -127,6 +127,7 @@ uses
   uRotatorPSTRotator in 'src\rotatorFactory\uRotatorPSTRotator.pas',
   uSettingsRegistry in 'src\uSettingsRegistry.pas',
   uSettingsLegacy in 'src\uSettingsLegacy.pas',
+  uSettingsCaptions in 'src\uSettingsCaptions.pas',
   uSettingsDeclarations in 'src\uSettingsDeclarations.pas',
   uRadioConfigStore in 'src\uRadioConfigStore.pas',
   uKeyerConfigStore in 'src\uKeyerConfigStore.pas',
