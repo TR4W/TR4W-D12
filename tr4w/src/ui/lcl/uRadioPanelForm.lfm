@@ -11,6 +11,7 @@ object frmRadioPanel: TfrmRadioPanel
   LCLVersion = '4.8.0.0'
   OnClose = HandleClose
   OnKeyDown = HandleKeyDown
+  OnResize = HandleResize
   object lblVFOACaption: TPanel
     Left = 5
     Height = 23
@@ -122,5 +123,10 @@ object frmRadioPanel: TfrmRadioPanel
     Font.Color = clRed
     ParentFont = False
     TabOrder = 11
+  end
+  object tmrResize: TTimer
+    Enabled = False
+    Interval = 80
+    OnTimer = ResizeSettled
   end
 end

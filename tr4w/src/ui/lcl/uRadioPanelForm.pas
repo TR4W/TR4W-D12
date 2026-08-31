@@ -30,7 +30,9 @@ interface
 
 uses
    Classes, SysUtils, LCLType, Forms, Controls, StdCtrls, ExtCtrls, Graphics, VC,
-  uTR4WStrings;
+  uTR4WStrings,
+  uLCLFormHelpers;   { TDesignLayout -- named in the class declaration below,
+                       so it belongs here rather than in the implementation }
 
 type
    TfrmRadioPanel = class(TForm)
@@ -46,7 +48,10 @@ type
       lblSplit: TPanel;
       lblStatus: TPanel;
       btnSpectrum: TButton;
+      tmrResize: TTimer;
       procedure HandleClose(Sender: TObject; var CloseAction: TCloseAction);
+      procedure HandleResize(Sender: TObject);
+      procedure ResizeSettled(Sender: TObject);
       procedure SpectrumClick(Sender: TObject);
       procedure UpdateSpectrumButton;
       procedure HandleKeyDown(Sender: TObject; var Key: word;
@@ -54,7 +59,14 @@ type
    private
       FSlot: integer;
       FFlagOn: array[0..2] of boolean;
+      { The layout as DESIGNED, recorded once before anything scales it --
+        see CaptureDesignLayout for why it cannot be re-derived later. }
+      FDesign: TDesignLayout;
+      FDesignW, FDesignH: integer;
    public
+      { Called once, at construction, while the form is still at its designed
+        size -- see CreateTR4WRadioPanelWindow. }
+      procedure CaptureDesign;
       { The three flags that used to be a control's Enabled state.  aIndex is
         0 = RIT, 1 = XIT, 2 = SPLIT. }
       procedure SetFlag(const aIndex: integer; const aOn: boolean);
@@ -87,8 +99,8 @@ uses
    LOGRADIO,
    uFactoryRadioBase,   { rcSpectrum / SpectrumAvailable -- the two radio gates }
    uPanadapterForm,     { ShowPanadapterWindow }
-   uPanelUpdate,
-   uLCLFormHelpers;
+   uPanelUpdate;   { uLCLFormHelpers is in the INTERFACE uses -- TDesignLayout
+                     is named in the class declaration }
 
 var
    GForms: array[1..2] of TfrmRadioPanel = (nil, nil);
@@ -441,6 +453,43 @@ begin
    Result := GForms[SlotOf(aID)];
 end;
 
+procedure TfrmRadioPanel.CaptureDesign;
+begin
+   CaptureDesignLayout(Self, FDesign, FDesignW, FDesignH);
+end;
+
+{ THE RESIZE ITSELF DOES NOTHING BUT RESTART A TIMER -- the same debounce the DX
+  cluster console uses, and for the same reason: a drag fires OnResize
+  continuously, and re-laying twelve panels and their fonts on every tick is
+  fifty repaints of which only the last is the answer.  80 ms is below the point
+  where releasing the mouse feels laggy and well above a drag's tick rate. }
+procedure TfrmRadioPanel.HandleResize(Sender: TObject);
+begin
+   if tmrResize = nil then
+      begin
+      Exit;
+      end;
+
+   { Restart, not merely enable: a running timer must measure from the LAST
+     movement, not the first. }
+   tmrResize.Enabled := False;
+   tmrResize.Enabled := True;
+end;
+
+procedure TfrmRadioPanel.ResizeSettled(Sender: TObject);
+begin
+   tmrResize.Enabled := False;
+
+   { THE OPERATOR DECIDES HOW BIG THE DATA IS.  Drag the panel larger and the
+     VFO readout grows with it, rather than sitting at its designed size in the
+     corner of an empty window (NY4I, 2026-08-31).
+
+     The floor is 100% -- the panel never renders smaller than designed, which
+     pairs with ApplyContentMinimumSize refusing to shrink the window past it. }
+
+   ApplyLayoutScale(Self, FDesign, FDesignW, FDesignH, 100, 400);
+end;
+
 function CreateTR4WRadioPanelWindow(const aID: WindowsType): HWND;
 var
    slot: integer;
@@ -450,6 +499,12 @@ begin
       begin
       GForms[slot] := TfrmRadioPanel.Create(nil);
       GForms[slot].Slot := slot;
+
+      { HERE, and only here: the form is at its designed size for exactly this
+        moment.  A saved window position is restored afterwards, and capturing
+        after that would record a resized layout as the design. }
+
+      GForms[slot].CaptureDesign;
       end;
 
    OwnFormByMainWindow(GForms[slot]);

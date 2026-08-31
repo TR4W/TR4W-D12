@@ -378,6 +378,44 @@ procedure FillStopBitsCombo(const aCombo: TComboBox; const aSelected: integer);
   rows -- and call it again if the layout changes. }
 procedure ApplyContentMinimumSize(const aForm: TForm);
 
+
+{ CONTENT THAT GROWS WITH ITS WINDOW.
+
+  The operator decides how big the data is: drag the window larger and the
+  controls and their fonts grow with it, the way the DX cluster console already
+  rescales its font on resize (NY4I, 2026-08-31).
+
+  TWO CALLS, because a scaler cannot ask a scaled form what its design size was.
+  CaptureDesignLayout records every control's bounds and font ONCE, before any
+  scaling; ApplyLayoutScale then always works from those originals. Scaling from
+  the CURRENT bounds instead would compound rounding on every drag tick and walk
+  the layout away from itself.
+
+  THE FACTOR IS THE SMALLER OF THE TWO AXES, so the content fits rather than
+  being clipped by the tighter one, and the proportions the form was designed
+  with survive. It is carried in PERCENT to keep the arithmetic integral -- the
+  same reason the console computes a font SIZE rather than a ratio.
+
+  CLAMPED AT BOTH ENDS. Below the floor the text stops being readable and below
+  that it stops being hit-testable; above the ceiling a maximised window turns a
+  readout into a billboard. A form that must not shrink past its content should
+  also call ApplyContentMinimumSize, which is the other half of this. }
+
+type
+   TDesignBounds = record
+      Ctl                        : TControl;
+      Left, Top, Width, Height   : integer;
+      FontHeight                 : integer;
+   end;
+   TDesignLayout = array of TDesignBounds;
+
+procedure CaptureDesignLayout(const aForm: TForm; out aLayout: TDesignLayout;
+                              out aDesignW, aDesignH: integer);
+procedure ApplyLayoutScale(const aForm: TForm; const aLayout: TDesignLayout;
+                           const aDesignW, aDesignH: integer;
+                           const aMinPercent: integer = 100;
+                           const aMaxPercent: integer = 400);
+
 function TryParseHexByte(const aText: string; out aValue: integer): boolean;
 
 implementation
@@ -1076,6 +1114,121 @@ begin
       begin
       aForm.Constraints.MinHeight := aForm.Height - slackH;
       end;
+end;
+
+
+type
+   { TControl.Font is PROTECTED -- published only from TWinControl down. An
+     access class is the standard way to reach it without requiring every
+     caller to know which concrete control it holds. }
+   TControlAccess = class(TControl);
+
+procedure CaptureDesignLayout(const aForm: TForm; out aLayout: TDesignLayout;
+                              out aDesignW, aDesignH: integer);
+var
+   i: integer;
+begin
+   SetLength(aLayout, 0);
+   aDesignW := 0;
+   aDesignH := 0;
+
+   if aForm = nil then
+      begin
+      Exit;
+      end;
+
+   aDesignW := aForm.ClientWidth;
+   aDesignH := aForm.ClientHeight;
+
+   SetLength(aLayout, aForm.ControlCount);
+   for i := 0 to aForm.ControlCount - 1 do
+      begin
+      aLayout[i].Ctl    := aForm.Controls[i];
+      aLayout[i].Left   := aForm.Controls[i].Left;
+      aLayout[i].Top    := aForm.Controls[i].Top;
+      aLayout[i].Width  := aForm.Controls[i].Width;
+      aLayout[i].Height := aForm.Controls[i].Height;
+
+      { Font.Height, not Font.Size: Height is in pixels and scales linearly,
+        while Size is in points and is rounded through the screen DPI on the way
+        in and out -- scaling that quantises and drifts. Height is negative for
+        a character-height font, which is why the sign is preserved below. }
+      if aForm.Controls[i] is TControl then
+         begin
+         aLayout[i].FontHeight := TControlAccess(aForm.Controls[i]).Font.Height;
+         end;
+      end;
+end;
+
+procedure ApplyLayoutScale(const aForm: TForm; const aLayout: TDesignLayout;
+                           const aDesignW, aDesignH: integer;
+                           const aMinPercent: integer = 100;
+                           const aMaxPercent: integer = 400);
+var
+   i, pct, pctW, pctH: integer;
+   c: TControl;
+begin
+   if (aForm = nil) or (Length(aLayout) = 0) or
+      (aDesignW < 1) or (aDesignH < 1) then
+      begin
+      Exit;
+      end;
+
+   if (aForm.ClientWidth < 1) or (aForm.ClientHeight < 1) then
+      begin
+      Exit;      { mid-layout, or minimised }
+      end;
+
+   pctW := (aForm.ClientWidth  * 100) div aDesignW;
+   pctH := (aForm.ClientHeight * 100) div aDesignH;
+
+   if pctW < pctH then
+      begin
+      pct := pctW;
+      end
+   else
+      begin
+      pct := pctH;
+      end;
+
+   if pct < aMinPercent then
+      begin
+      pct := aMinPercent;
+      end;
+   if pct > aMaxPercent then
+      begin
+      pct := aMaxPercent;
+      end;
+
+   { NOTHING TO DO is the common case once a drag settles inside the clamp, and
+     re-laying the form out anyway is the flicker this exists to avoid. }
+   if (Length(aLayout) > 0) and (aLayout[0].Ctl <> nil) and
+      (aLayout[0].Ctl.Left = (aLayout[0].Left * pct) div 100) and
+      (aLayout[0].Ctl.Width = (aLayout[0].Width * pct) div 100) then
+      begin
+      Exit;
+      end;
+
+   aForm.DisableAlign;
+   try
+      for i := 0 to High(aLayout) do
+         begin
+         c := aLayout[i].Ctl;
+         if c = nil then
+            begin
+            Continue;
+            end;
+
+         TControlAccess(c).Font.Height := (aLayout[i].FontHeight * pct) div 100;
+
+         c.SetBounds((aLayout[i].Left   * pct) div 100,
+                     (aLayout[i].Top    * pct) div 100,
+                     (aLayout[i].Width  * pct) div 100,
+                     (aLayout[i].Height * pct) div 100);
+         end;
+   finally
+      aForm.EnableAlign;
+   end;
 end;
 
 function TStopwatch.ElapsedMilliseconds: Int64;
