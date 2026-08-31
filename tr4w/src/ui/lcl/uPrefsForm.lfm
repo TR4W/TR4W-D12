@@ -2386,7 +2386,7 @@ object PrefsForm: TPrefsForm
         Top = 186
         Width = 620
         AutoSize = False
-        Caption = 'Lets you double-click a spot in DXLab SpotCollector and have the callsign appear in TR4W'#39's call field.  This does NOT affect spots from your DX cluster - those arrive whether this is ticked or not.'
+        Caption = 'Lets you double-click a spot in DXLab SpotCollector and have the callsign appear in TR4W''s call field.  This does NOT affect spots from your DX cluster - those arrive whether this is ticked or not.'
         Font.Color = clGrayText
         ParentFont = False
         WordWrap = True

@@ -132,7 +132,6 @@ object frmServerLog: TfrmServerLog
     Top = 60
     Width = 772
     BevelOuter = bvNone
-    Caption = ''
     TabOrder = 5
   end
 end

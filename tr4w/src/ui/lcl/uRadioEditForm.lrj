@@ -21,7 +21,7 @@
 {"hash":128937667,"name":"tradioeditform.lblip.caption","sourcebytes":[73,80,32,97,100,100,114,101,115,115],"value":"IP address"},
 {"hash":10119282,"name":"tradioeditform.btndiscover.caption","sourcebytes":[68,105,115,99,111,118,101,114],"value":"Discover"},
 {"hash":5073988,"name":"tradioeditform.lblfound.caption","sourcebytes":[70,111,117,110,100],"value":"Found"},
-{"hash":136803092,"name":"tradioeditform.lbltcpport.caption","sourcebytes":[84,67,80,32,112,111,114,116],"value":"TCP port"},
+{"hash":237467348,"name":"tradioeditform.lbltcpport.caption","sourcebytes":[73,80,32,112,111,114,116],"value":"IP port"},
 {"hash":205986981,"name":"tradioeditform.lbluser.caption","sourcebytes":[85,115,101,114,32,110,97,109,101],"value":"User name"},
 {"hash":145417188,"name":"tradioeditform.lblpassword.caption","sourcebytes":[80,97,115,115,119,111,114,100],"value":"Password"},
 {"hash":197676484,"name":"tradioeditform.tabadvanced.caption","sourcebytes":[65,100,118,97,110,99,101,100],"value":"Advanced"},

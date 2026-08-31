@@ -798,10 +798,12 @@ msgid "Lead-in"
 msgstr ""
 
 #: tfrmkeyeredit.lblwkratio.caption
+msgctxt "tfrmkeyeredit.lblwkratio.caption"
 msgid "Dit/dah ratio"
 msgstr ""
 
 #: tfrmkeyeredit.lblwksidetone.caption
+msgctxt "tfrmkeyeredit.lblwksidetone.caption"
 msgid "Sidetone"
 msgstr ""
 
@@ -814,6 +816,7 @@ msgid "Tail"
 msgstr ""
 
 #: tfrmkeyeredit.lblwkweight.caption
+msgctxt "tfrmkeyeredit.lblwkweight.caption"
 msgid "Weight"
 msgstr ""
 
@@ -1090,6 +1093,74 @@ msgctxt "tfrmsendspot.lblfrequency.caption"
 msgid "Frequency"
 msgstr ""
 
+#: tfrmserverlog.btnclose.caption
+msgctxt "tfrmserverlog.btnclose.caption"
+msgid "Close"
+msgstr ""
+
+#: tfrmserverlog.btncreatenewlog.caption
+msgid "Create and use new log"
+msgstr ""
+
+#: tfrmserverlog.btngetlog.caption
+msgid "Get server log"
+msgstr ""
+
+#: tfrmserverlog.btnhelp.caption
+msgctxt "tfrmserverlog.btnhelp.caption"
+msgid "Help"
+msgstr ""
+
+#: tfrmserverlog.caption
+msgctxt "tfrmserverlog.caption"
+msgid "Synchronize log"
+msgstr ""
+
+#: tfrmserverlog.chkshowcontent.caption
+msgctxt "tfrmserverlog.chkshowcontent.caption"
+msgid "Show server log content"
+msgstr ""
+
+#: tfrmserverlog.lblbytes.caption
+msgctxt "tfrmserverlog.lblbytes.caption"
+msgid "0"
+msgstr ""
+
+#: tfrmserverlog.lblbytescaption.caption
+msgctxt "tfrmserverlog.lblbytescaption.caption"
+msgid "Received bytes:"
+msgstr ""
+
+#: tfrmserverlog.lblqsos.caption
+msgctxt "tfrmserverlog.lblqsos.caption"
+msgid "0"
+msgstr ""
+
+#: tfrmserverlog.lblqsoscaption.caption
+msgctxt "tfrmserverlog.lblqsoscaption.caption"
+msgid "Received QSOs:"
+msgstr ""
+
+#: tfrmserverlog.lblrecords.caption
+msgctxt "tfrmserverlog.lblrecords.caption"
+msgid "0"
+msgstr ""
+
+#: tfrmserverlog.lblrecordscaption.caption
+msgctxt "tfrmserverlog.lblrecordscaption.caption"
+msgid "Received records:"
+msgstr ""
+
+#: tfrmserverlog.lblsent.caption
+msgctxt "tfrmserverlog.lblsent.caption"
+msgid "0"
+msgstr ""
+
+#: tfrmserverlog.lblsentcaption.caption
+msgctxt "tfrmserverlog.lblsentcaption.caption"
+msgid "Sent records:"
+msgstr ""
+
 #: tfrmstations.caption
 msgctxt "tfrmstations.caption"
 msgid "Stations"
@@ -1102,6 +1173,11 @@ msgstr ""
 #: tfrmtelnet.btncommands.caption
 msgctxt "tfrmtelnet.btncommands.caption"
 msgid "Commands"
+msgstr ""
+
+#: tfrmtelnet.btnconfigure.caption
+msgctxt "tfrmtelnet.btnconfigure.caption"
+msgid "Configure..."
 msgstr ""
 
 #: tfrmtelnet.btnconnect.caption
@@ -1126,6 +1202,10 @@ msgstr ""
 
 #: tfrmtelnet.caption
 msgid "Telnet"
+msgstr ""
+
+#: tfrmtelnet.lblnoclusters.caption
+msgid "lblNoClusters"
 msgstr ""
 
 #: tfrmudpdestinationedit.btncancel.caption
@@ -1368,18 +1448,22 @@ msgid "TR4W Preferences"
 msgstr ""
 
 #: tprefsform.chkaltdbuffer.caption
+msgctxt "tprefsform.chkaltdbuffer.caption"
 msgid "Alt-D remembers what you typed"
 msgstr ""
 
 #: tprefsform.chkaltdcq.caption
+msgctxt "tprefsform.chkaltdcq.caption"
 msgid "Alt-D can start a CQ on the second radio"
 msgstr ""
 
 #: tprefsform.chkalwaysblindcq.caption
+msgctxt "tprefsform.chkalwaysblindcq.caption"
 msgid "Always call a blind CQ"
 msgstr ""
 
 #: tprefsform.chkautocallterminate.caption
+msgctxt "tprefsform.chkautocallterminate.caption"
 msgid "Stop sending when the call window changes"
 msgstr ""
 
@@ -1389,6 +1473,7 @@ msgid "Connect radios at startup"
 msgstr ""
 
 #: tprefsform.chkautoqsonumberdecrement.caption
+msgctxt "tprefsform.chkautoqsonumberdecrement.caption"
 msgid "Give the serial number back when a QSO is abandoned"
 msgstr ""
 
@@ -1433,22 +1518,27 @@ msgid "Bold"
 msgstr ""
 
 #: tprefsform.chkcallwindowshowallspots.caption
+msgctxt "tprefsform.chkcallwindowshowallspots.caption"
 msgid "Show every spot in the call window"
 msgstr ""
 
 #: tprefsform.chkchecklogfilesize.caption
+msgctxt "tprefsform.chkchecklogfilesize.caption"
 msgid "Warn when the log file grows unexpectedly"
 msgstr ""
 
 #: tprefsform.chkclusteratstartup.caption
+msgctxt "tprefsform.chkclusteratstartup.caption"
 msgid "Connect at startup"
 msgstr ""
 
 #: tprefsform.chkconfirmeditchanges.caption
+msgctxt "tprefsform.chkconfirmeditchanges.caption"
 msgid "Confirm before saving an edited QSO"
 msgstr ""
 
 #: tprefsform.chkcwenable.caption
+msgctxt "tprefsform.chkcwenable.caption"
 msgid "Send CW"
 msgstr ""
 
@@ -1457,6 +1547,7 @@ msgid "Any CW message may chain into the next"
 msgstr ""
 
 #: tprefsform.chkcwspeedfromdatabase.caption
+msgctxt "tprefsform.chkcwspeedfromdatabase.caption"
 msgid "Match the speed a station was worked at before"
 msgstr ""
 
@@ -1465,18 +1556,22 @@ msgid "Color the dupe sheet columns"
 msgstr ""
 
 #: tprefsform.chkdvkenable.caption
+msgctxt "tprefsform.chkdvkenable.caption"
 msgid "Use the digital voice keyer"
 msgstr ""
 
 #: tprefsform.chkdvklocalizedmessages.caption
+msgctxt "tprefsform.chkdvklocalizedmessages.caption"
 msgid "Use localized DVK message files"
 msgstr ""
 
 #: tprefsform.chkescapeexitssap.caption
+msgctxt "tprefsform.chkescapeexitssap.caption"
 msgid "Escape leaves search and pounce"
 msgstr ""
 
 #: tprefsform.chkfarnsworth.caption
+msgctxt "tprefsform.chkfarnsworth.caption"
 msgid "Farnsworth spacing"
 msgstr ""
 
@@ -1493,34 +1588,42 @@ msgid "HamLib - internal trace to hamlib_trace.log"
 msgstr ""
 
 #: tprefsform.chkhamscorecontact.caption
+msgctxt "tprefsform.chkhamscorecontact.caption"
 msgid "Include contact information"
 msgstr ""
 
 #: tprefsform.chkhamscoreenable.caption
+msgctxt "tprefsform.chkhamscoreenable.caption"
 msgid "Post my score while the contest runs"
 msgstr ""
 
 #: tprefsform.chkhfbands.caption
+msgctxt "tprefsform.chkhfbands.caption"
 msgid "HF (160 - 10 m)"
 msgstr ""
 
 #: tprefsform.chkinbandlockout.caption
+msgctxt "tprefsform.chkinbandlockout.caption"
 msgid "Stop both radios landing on one band"
 msgstr ""
 
 #: tprefsform.chkincludefkeynumber.caption
+msgctxt "tprefsform.chkincludefkeynumber.caption"
 msgid "Show the key number on the function-key buttons"
 msgstr ""
 
 #: tprefsform.chkintercomfile.caption
+msgctxt "tprefsform.chkintercomfile.caption"
 msgid "Log network messages to INTERCOM.TXT"
 msgstr ""
 
 #: tprefsform.chkkeypadcwmemories.caption
+msgctxt "tprefsform.chkkeypadcwmemories.caption"
 msgid "Number keypad sends CW memories"
 msgstr ""
 
 #: tprefsform.chkleavecursorincall.caption
+msgctxt "tprefsform.chkleavecursorincall.caption"
 msgid "Leave the cursor in the call window"
 msgstr ""
 
@@ -1529,14 +1632,17 @@ msgid "Send QSOs to it as they are logged"
 msgstr ""
 
 #: tprefsform.chklogwithsingleenter.caption
+msgctxt "tprefsform.chklogwithsingleenter.caption"
 msgid "Log with a single Enter"
 msgstr ""
 
 #: tprefsform.chkmp3recorderenable.caption
+msgctxt "tprefsform.chkmp3recorderenable.caption"
 msgid "Record each QSO to MP3"
 msgstr ""
 
 #: tprefsform.chkmultimultsonly.caption
+msgctxt "tprefsform.chkmultimultsonly.caption"
 msgid "Pass only new multipliers around the network"
 msgstr ""
 
@@ -1549,34 +1655,42 @@ msgid "Synchronize the log when connecting"
 msgstr ""
 
 #: tprefsform.chknoborder.caption
+msgctxt "tprefsform.chknoborder.caption"
 msgid "Main window has no border"
 msgstr ""
 
 #: tprefsform.chknocaption.caption
+msgctxt "tprefsform.chknocaption.caption"
 msgid "Main window has no title bar"
 msgstr ""
 
 #: tprefsform.chknocolumnheader.caption
+msgctxt "tprefsform.chknocolumnheader.caption"
 msgid "Hide the log column headings"
 msgstr ""
 
 #: tprefsform.chknopollduringptt.caption
+msgctxt "tprefsform.chknopollduringptt.caption"
 msgid "Stop polling the radio while transmitting"
 msgstr ""
 
 #: tprefsform.chkpartialcall.caption
+msgctxt "tprefsform.chkpartialcall.caption"
 msgid "Match on a partial callsign"
 msgstr ""
 
 #: tprefsform.chkpossiblecalls.caption
+msgctxt "tprefsform.chkpossiblecalls.caption"
 msgid "Offer possible calls"
 msgstr ""
 
 #: tprefsform.chkpttenable.caption
+msgctxt "tprefsform.chkpttenable.caption"
 msgid "Assert PTT when transmitting"
 msgstr ""
 
 #: tprefsform.chkpttlockout.caption
+msgctxt "tprefsform.chkpttlockout.caption"
 msgid "Lock out PTT"
 msgstr ""
 
@@ -1589,18 +1703,22 @@ msgid "QSY the inactive radio when I change band"
 msgstr ""
 
 #: tprefsform.chksayhienable.caption
+msgctxt "tprefsform.chksayhienable.caption"
 msgid "Send a greeting to stations worked before"
 msgstr ""
 
 #: tprefsform.chksendfourlettercall.caption
+msgctxt "tprefsform.chksendfourlettercall.caption"
 msgid "Always send all four letters of a four-letter call"
 msgstr ""
 
 #: tprefsform.chkshowgridlines.caption
+msgctxt "tprefsform.chkshowgridlines.caption"
 msgid "Draw gridlines in the log"
 msgstr ""
 
 #: tprefsform.chkskipactiveband.caption
+msgctxt "tprefsform.chkskipactiveband.caption"
 msgid "Skip the band the other radio is on"
 msgstr ""
 
@@ -1610,6 +1728,7 @@ msgid "SO2R enabled"
 msgstr ""
 
 #: tprefsform.chkspacebardupecheck.caption
+msgctxt "tprefsform.chkspacebardupecheck.caption"
 msgid "Space bar performs a dupe check"
 msgstr ""
 
@@ -1624,18 +1743,21 @@ msgid "Speed sync"
 msgstr ""
 
 #: tprefsform.chkspotcollector.caption
-msgid "Collect spots from the cluster"
+msgid "Integrate with DXLab SpotCollector"
 msgstr ""
 
 #: tprefsform.chkswappacketspotradios.caption
+msgctxt "tprefsform.chkswappacketspotradios.caption"
 msgid "Send spots to the other radio"
 msgstr ""
 
 #: tprefsform.chkswappaddles.caption
+msgctxt "tprefsform.chkswappaddles.caption"
 msgid "Swap dit and dah"
 msgstr ""
 
 #: tprefsform.chkswaprelaysense.caption
+msgctxt "tprefsform.chkswaprelaysense.caption"
 msgid "Invert the radio relay sense"
 msgstr ""
 
@@ -1656,10 +1778,12 @@ msgid "DX cluster - log all telnet traffic"
 msgstr ""
 
 #: tprefsform.chktunewithdits.caption
+msgctxt "tprefsform.chktunewithdits.caption"
 msgid "Tune with dits rather than a solid carrier"
 msgstr ""
 
 #: tprefsform.chktworadiomode.caption
+msgctxt "tprefsform.chktworadiomode.caption"
 msgid "Two radio mode"
 msgstr ""
 
@@ -1672,10 +1796,12 @@ msgid "Broadcast UDP data"
 msgstr ""
 
 #: tprefsform.chkunknowncountryfile.caption
+msgctxt "tprefsform.chkunknowncountryfile.caption"
 msgid "Record callsigns with no country match"
 msgstr ""
 
 #: tprefsform.chkupdaterestartfile.caption
+msgctxt "tprefsform.chkupdaterestartfile.caption"
 msgid "Keep the restart file up to date"
 msgstr ""
 
@@ -1684,6 +1810,7 @@ msgid "Use the radio control port for paddle and foot switch"
 msgstr ""
 
 #: tprefsform.chkuserecordedsigns.caption
+msgctxt "tprefsform.chkuserecordedsigns.caption"
 msgid "Send recorded audio for callsign characters"
 msgstr ""
 
@@ -1696,10 +1823,12 @@ msgid "Wait for a signal strength reading before switching"
 msgstr ""
 
 #: tprefsform.chkwarcbands.caption
+msgctxt "tprefsform.chkwarcbands.caption"
 msgid "WARC (30, 17, 12 m)"
 msgstr ""
 
 #: tprefsform.chkwildcardpartials.caption
+msgctxt "tprefsform.chkwildcardpartials.caption"
 msgid "Allow wildcards in a partial"
 msgstr ""
 
@@ -1884,6 +2013,7 @@ msgid "Server:"
 msgstr ""
 
 #: tprefsform.lblclusterserverhint.caption
+msgctxt "tprefsform.lblclusterserverhint.caption"
 msgid "host:port, for example dxc.nc7j.com:7373.  The drop-down lists the servers in TRCLUSTER.DAT; you can also type one that is not on it."
 msgstr ""
 
@@ -1938,6 +2068,7 @@ msgid "DVK recording folder"
 msgstr ""
 
 #: tprefsform.lbldvkrecorder.caption
+msgctxt "tprefsform.lbldvkrecorder.caption"
 msgid "DVK recorder program"
 msgstr ""
 
@@ -1946,7 +2077,7 @@ msgid "DXLab"
 msgstr ""
 
 #: tprefsform.lbldxlabinfo.caption
-msgid "DXLab needs no settings of its own.  TR4W offers a DX Commander compatible interface on TCP port 52002 whenever the WSJT-X support is running, and DXLab programs connect to that."
+msgid "TR4W offers a DX Commander compatible interface on TCP port 52002 whenever the WSJT-X support is running, and DXLab programs connect to that."
 msgstr ""
 
 #: tprefsform.lbldxlabinfo2.caption
@@ -2076,6 +2207,7 @@ msgid "MP3 folder"
 msgstr ""
 
 #: tprefsform.lblmp3player.caption
+msgctxt "tprefsform.lblmp3player.caption"
 msgid "MP3 player program"
 msgstr ""
 
@@ -2225,6 +2357,7 @@ msgid "The paddle keyer TR4W runs itself, and the PTT line it asserts. A WinKeye
 msgstr ""
 
 #: tprefsform.lblpaddlespeed.caption
+msgctxt "tprefsform.lblpaddlespeed.caption"
 msgid "Paddle speed"
 msgstr ""
 
@@ -2233,6 +2366,7 @@ msgid "WPM  (0 follows the keyboard speed)"
 msgstr ""
 
 #: tprefsform.lblpaddletone.caption
+msgctxt "tprefsform.lblpaddletone.caption"
 msgid "Paddle sidetone"
 msgstr ""
 
@@ -2249,6 +2383,7 @@ msgid ""
 msgstr ""
 
 #: tprefsform.lblpttdelay.caption
+msgctxt "tprefsform.lblpttdelay.caption"
 msgid "Delay after PTT before sending"
 msgstr ""
 
@@ -2399,6 +2534,10 @@ msgstr ""
 
 #: tprefsform.lblserialkeyintro.caption
 msgid "These shape the CW that TR4W generates itself by toggling a serial line.  They do nothing for a WinKeyer, a YCCC box, or CW sent by CAT - those devices keep their own timing."
+msgstr ""
+
+#: tprefsform.lblspotcollectorhint.caption
+msgid "Lets you double-click a spot in DXLab SpotCollector and have the callsign appear in TR4W's call field.  This does NOT affect spots from your DX cluster - those arrive whether this is ticked or not."
 msgstr ""
 
 #: tprefsform.lblstationheading.caption
@@ -2649,7 +2788,7 @@ msgstr ""
 
 #: tradioeditform.lbltcpport.caption
 msgctxt "tradioeditform.lbltcpport.caption"
-msgid "TCP port"
+msgid "IP port"
 msgstr ""
 
 #: tradioeditform.lbltype.caption
@@ -2959,6 +3098,969 @@ msgstr ""
 msgid "Choose a radio type."
 msgstr ""
 
+#: usettingscaptions.rs_advanced_handlogmode
+msgid "Hand Log Mode"
+msgstr ""
+
+#: usettingscaptions.rs_advanced_nolog
+msgid "No Log"
+msgstr ""
+
+#: usettingscaptions.rs_appearance_ctrlj_beepenable
+msgid "Beep Enable"
+msgstr ""
+
+#: usettingscaptions.rs_appearance_ctrlj_columnautosize
+msgid "Column Autosize"
+msgstr ""
+
+#: usettingscaptions.rs_appearance_ctrlj_completecallsignmask
+msgid "Complete Callsign Mask"
+msgstr ""
+
+#: usettingscaptions.rs_appearance_ctrlj_contactsperpage
+msgid "Contacts Per Page"
+msgstr ""
+
+#: usettingscaptions.rs_appearance_ctrlj_hourdisplay
+msgid "Hour Display"
+msgstr ""
+
+#: usettingscaptions.rs_appearance_ctrlj_insertmode
+msgid "Insert Mode"
+msgstr ""
+
+#: usettingscaptions.rs_appearance_ctrlj_ratedisplay
+msgid "Rate Display"
+msgstr ""
+
+#: usettingscaptions.rs_appearance_ctrlj_reminder
+msgid "Reminder"
+msgstr ""
+
+#: usettingscaptions.rs_appearance_ctrlj_showfrequencyinlog
+msgid "Show Frequency In Log"
+msgstr ""
+
+#: usettingscaptions.rs_appearance_ctrlj_showtypedcallsign
+msgid "Show Typed Callsign"
+msgstr ""
+
+#: usettingscaptions.rs_appearance_ctrlj_userinfoshown
+msgid "User Info Shown"
+msgstr ""
+
+#: usettingscaptions.rs_appearance_layout_rowcount
+msgid "Row Count"
+msgstr ""
+
+#: usettingscaptions.rs_appearance_layout_windowsize
+msgid "Window Size"
+msgstr ""
+
+#: usettingscaptions.rs_appearance_noborder
+msgctxt "usettingscaptions.rs_appearance_noborder"
+msgid "Main window has no border"
+msgstr ""
+
+#: usettingscaptions.rs_appearance_nocaption
+msgctxt "usettingscaptions.rs_appearance_nocaption"
+msgid "Main window has no title bar"
+msgstr ""
+
+#: usettingscaptions.rs_appearance_nocolumnheader
+msgctxt "usettingscaptions.rs_appearance_nocolumnheader"
+msgid "Hide the log column headings"
+msgstr ""
+
+#: usettingscaptions.rs_appearance_showgridlines
+msgctxt "usettingscaptions.rs_appearance_showgridlines"
+msgid "Draw gridlines in the log"
+msgstr ""
+
+#: usettingscaptions.rs_audio_dvk_enable
+msgctxt "usettingscaptions.rs_audio_dvk_enable"
+msgid "Use the digital voice keyer"
+msgstr ""
+
+#: usettingscaptions.rs_audio_dvk_localizedmessages
+msgctxt "usettingscaptions.rs_audio_dvk_localizedmessages"
+msgid "Use localized DVK message files"
+msgstr ""
+
+#: usettingscaptions.rs_audio_dvk_path
+msgid "Folder for DVK recordings"
+msgstr ""
+
+#: usettingscaptions.rs_audio_dvk_recorder
+msgctxt "usettingscaptions.rs_audio_dvk_recorder"
+msgid "DVK recorder program"
+msgstr ""
+
+#: usettingscaptions.rs_audio_mp3_path
+msgid "Folder for MP3 recordings"
+msgstr ""
+
+#: usettingscaptions.rs_audio_mp3_player
+msgctxt "usettingscaptions.rs_audio_mp3_player"
+msgid "MP3 player program"
+msgstr ""
+
+#: usettingscaptions.rs_audio_mp3_recorderenable
+msgctxt "usettingscaptions.rs_audio_mp3_recorderenable"
+msgid "Record each QSO to MP3"
+msgstr ""
+
+#: usettingscaptions.rs_audio_userecordedsigns
+msgctxt "usettingscaptions.rs_audio_userecordedsigns"
+msgid "Send recorded audio for callsign characters"
+msgstr ""
+
+#: usettingscaptions.rs_bandmap_callwindowshowallspots
+msgctxt "usettingscaptions.rs_bandmap_callwindowshowallspots"
+msgid "Show every spot in the call window"
+msgstr ""
+
+#: usettingscaptions.rs_bandmap_ctrlj_bandmapcutofffrequency
+msgid "Band Map Cutoff Frequency"
+msgstr ""
+
+#: usettingscaptions.rs_bandmap_ctrlj_bandmapitemheight
+msgid "Band Map Item Height"
+msgstr ""
+
+#: usettingscaptions.rs_bandmap_ctrlj_bandmapitemwidth
+msgid "Band Map Item Width"
+msgstr ""
+
+#: usettingscaptions.rs_bandmap_ctrlj_bandmapsize
+msgid "Band Map Size"
+msgstr ""
+
+#: usettingscaptions.rs_bandmap_ctrlj_bandmapsplitmode
+msgid "Band Map Split Mode"
+msgstr ""
+
+#: usettingscaptions.rs_bandmap_swappacketspotradios
+msgctxt "usettingscaptions.rs_bandmap_swappacketspotradios"
+msgid "Send spots to the other radio"
+msgstr ""
+
+#: usettingscaptions.rs_cluster_connectatstartup
+msgctxt "usettingscaptions.rs_cluster_connectatstartup"
+msgid "Connect at startup"
+msgstr ""
+
+#: usettingscaptions.rs_cluster_ctrlj_broadcastallpacketdata
+msgid "Broadcast All Packet Data"
+msgstr ""
+
+#: usettingscaptions.rs_contest_autocqdelaytime
+msgid "Auto-CQ Delay Time"
+msgstr ""
+
+#: usettingscaptions.rs_contest_autoqslinterval
+msgid "Auto QSL Interval"
+msgstr ""
+
+#: usettingscaptions.rs_contest_beepevery10qsos
+msgid "Beep Every 10 QSOs"
+msgstr ""
+
+#: usettingscaptions.rs_contest_categoryassisted
+msgid "Category-Assisted"
+msgstr ""
+
+#: usettingscaptions.rs_contest_categoryband
+msgid "Category-Band"
+msgstr ""
+
+#: usettingscaptions.rs_contest_categorymode
+msgid "Category-Mode"
+msgstr ""
+
+#: usettingscaptions.rs_contest_categoryoperator
+msgid "Category-Operator"
+msgstr ""
+
+#: usettingscaptions.rs_contest_categoryoverlay
+msgid "Category-Overlay"
+msgstr ""
+
+#: usettingscaptions.rs_contest_categorypower
+msgid "Category-Power"
+msgstr ""
+
+#: usettingscaptions.rs_contest_categorytransmitter
+msgid "Category-Transmitter"
+msgstr ""
+
+#: usettingscaptions.rs_contest_contest
+msgid "Contest"
+msgstr ""
+
+#: usettingscaptions.rs_contest_contestname
+msgid "Contest Name"
+msgstr ""
+
+#: usettingscaptions.rs_contest_contesttitle
+msgid "Contest Title"
+msgstr ""
+
+#: usettingscaptions.rs_contest_countdomesticcountries
+msgid "Count Domestic Countries"
+msgstr ""
+
+#: usettingscaptions.rs_contest_custominitialexchangestring
+msgid "Custom Initial Exchange String"
+msgstr ""
+
+#: usettingscaptions.rs_contest_domesticmultiplier
+msgid "Domestic Multiplier"
+msgstr ""
+
+#: usettingscaptions.rs_contest_dxmultiplier
+msgid "DX Multiplier"
+msgstr ""
+
+#: usettingscaptions.rs_contest_exchangememoryenable
+msgid "Exchange Memory Enable"
+msgstr ""
+
+#: usettingscaptions.rs_contest_exchangereceived
+msgid "Exchange Received"
+msgstr ""
+
+#: usettingscaptions.rs_contest_gridmapcenter
+msgid "Grid Map Center"
+msgstr ""
+
+#: usettingscaptions.rs_contest_initialexchange
+msgid "Initial Exchange"
+msgstr ""
+
+#: usettingscaptions.rs_contest_initialexchangecursorpos
+msgid "Initial Exchange Cursor Pos"
+msgstr ""
+
+#: usettingscaptions.rs_contest_initialexchangeoverwrite
+msgid "Initial Exchange Overwrite"
+msgstr ""
+
+#: usettingscaptions.rs_contest_literaldomesticqth
+msgid "Literal Domestic Qth"
+msgstr ""
+
+#: usettingscaptions.rs_contest_logrssent
+msgid "Log Rs Sent"
+msgstr ""
+
+#: usettingscaptions.rs_contest_logrstsent
+msgid "Log Rst Sent"
+msgstr ""
+
+#: usettingscaptions.rs_contest_lookforrstsent
+msgid "Look For Rst Sent"
+msgstr ""
+
+#: usettingscaptions.rs_contest_messageenable
+msgid "Message Enable"
+msgstr ""
+
+#: usettingscaptions.rs_contest_minitourduration
+msgid "Minitour Duration"
+msgstr ""
+
+#: usettingscaptions.rs_contest_multbyband
+msgid "Mult By Band"
+msgstr ""
+
+#: usettingscaptions.rs_contest_multbymode
+msgid "Mult By Mode"
+msgstr ""
+
+#: usettingscaptions.rs_contest_multiplebands
+msgid "Multiple Bands"
+msgstr ""
+
+#: usettingscaptions.rs_contest_multiplemodes
+msgid "Multiple Modes"
+msgstr ""
+
+#: usettingscaptions.rs_contest_multreportminimumbands
+msgid "Mult Report Minimum Bands"
+msgstr ""
+
+#: usettingscaptions.rs_contest_multsheetautoreset
+msgid "Mult Sheet Auto Reset"
+msgstr ""
+
+#: usettingscaptions.rs_contest_prefixmultiplier
+msgid "Prefix Multiplier"
+msgstr ""
+
+#: usettingscaptions.rs_contest_qslmode
+msgid "QSL Mode"
+msgstr ""
+
+#: usettingscaptions.rs_contest_qsobyband
+msgid "QSO By Band"
+msgstr ""
+
+#: usettingscaptions.rs_contest_qsobymode
+msgid "QSO By Mode"
+msgstr ""
+
+#: usettingscaptions.rs_contest_qsonumberbyband
+msgid "QSO Number By Band"
+msgstr ""
+
+#: usettingscaptions.rs_contest_qsopointmethod
+msgid "QSO Point Method"
+msgstr ""
+
+#: usettingscaptions.rs_contest_qsopointsdomesticcw
+msgid "QSO Points Domestic CW"
+msgstr ""
+
+#: usettingscaptions.rs_contest_qsopointsdomesticphone
+msgid "QSO Points Domestic Phone"
+msgstr ""
+
+#: usettingscaptions.rs_contest_qsopointsdxcw
+msgid "QSO Points DX CW"
+msgstr ""
+
+#: usettingscaptions.rs_contest_qsopointsdxphone
+msgid "QSO Points DX Phone"
+msgstr ""
+
+#: usettingscaptions.rs_contest_qtcenable
+msgid "Qtc Enable"
+msgstr ""
+
+#: usettingscaptions.rs_contest_qtcextraspace
+msgid "Qtc Extra Space"
+msgstr ""
+
+#: usettingscaptions.rs_contest_qtcminutes
+msgid "Qtc Minutes"
+msgstr ""
+
+#: usettingscaptions.rs_contest_qtcqrs
+msgid "Qtc Qrs"
+msgstr ""
+
+#: usettingscaptions.rs_contest_quickqslcwmessage
+msgid "Quick QSL CW Message"
+msgstr ""
+
+#: usettingscaptions.rs_contest_quickqslcwmessage1
+msgid "Quick QSL CW Message1"
+msgstr ""
+
+#: usettingscaptions.rs_contest_quickqslkey1
+msgid "Quick QSL Key 1"
+msgstr ""
+
+#: usettingscaptions.rs_contest_quickqslkey2
+msgid "Quick QSL Key 2"
+msgstr ""
+
+#: usettingscaptions.rs_contest_quickqslmessage1
+msgid "Quick QSL Message 1"
+msgstr ""
+
+#: usettingscaptions.rs_contest_quickqslmessage2
+msgid "Quick QSL Message 2"
+msgstr ""
+
+#: usettingscaptions.rs_contest_quickqslssbmessage
+msgid "Quick QSL SSB Message"
+msgstr ""
+
+#: usettingscaptions.rs_contest_r150smode
+msgid "R150S Mode"
+msgstr ""
+
+#: usettingscaptions.rs_contest_randomcqmode
+msgid "Random CQ Mode"
+msgstr ""
+
+#: usettingscaptions.rs_contest_remainingmultdisplaymode
+msgid "Remaining Mult Display Mode"
+msgstr ""
+
+#: usettingscaptions.rs_contest_reverseinitialex
+msgid "Reverse Initial Ex"
+msgstr ""
+
+#: usettingscaptions.rs_contest_rfoblmode
+msgid "Rfobl Mode"
+msgstr ""
+
+#: usettingscaptions.rs_contest_showallserialports
+msgid "Show All Serial Ports"
+msgstr ""
+
+#: usettingscaptions.rs_contest_showdomesticmultipliername
+msgid "Show Domestic Multiplier Name"
+msgstr ""
+
+#: usettingscaptions.rs_contest_sprintqsyrule
+msgid "Sprint Qsy Rule"
+msgstr ""
+
+#: usettingscaptions.rs_contest_tenminuterule
+msgid "Ten Minute Rule"
+msgstr ""
+
+#: usettingscaptions.rs_contest_zonemultiplier
+msgid "Zone Multiplier"
+msgstr ""
+
+#: usettingscaptions.rs_cw_ctrlj_autosendcharactercount
+msgid "Auto Send Character Count"
+msgstr ""
+
+#: usettingscaptions.rs_cw_ctrlj_codespeed
+msgid "Code Speed"
+msgstr ""
+
+#: usettingscaptions.rs_cw_ctrlj_paddleport
+msgid "Paddle Port"
+msgstr ""
+
+#: usettingscaptions.rs_cw_ctrlj_questionmarkchar
+msgid "Question Mark Char"
+msgstr ""
+
+#: usettingscaptions.rs_cw_ctrlj_short0
+msgid "Short 0"
+msgstr ""
+
+#: usettingscaptions.rs_cw_ctrlj_short1
+msgid "Short 1"
+msgstr ""
+
+#: usettingscaptions.rs_cw_ctrlj_short2
+msgid "Short 2"
+msgstr ""
+
+#: usettingscaptions.rs_cw_ctrlj_short9
+msgid "Short 9"
+msgstr ""
+
+#: usettingscaptions.rs_cw_ctrlj_shortintegers
+msgid "Short Integers"
+msgstr ""
+
+#: usettingscaptions.rs_cw_ctrlj_slashmarkchar
+msgid "Slash Mark Char"
+msgstr ""
+
+#: usettingscaptions.rs_cw_ctrlj_startsendingnowkey
+msgid "Start Sending Now Key"
+msgstr ""
+
+#: usettingscaptions.rs_cw_ctrlj_tunealtdenable
+msgid "Tune Alt-D Enable"
+msgstr ""
+
+#: usettingscaptions.rs_cw_enable
+msgctxt "usettingscaptions.rs_cw_enable"
+msgid "Send CW"
+msgstr ""
+
+#: usettingscaptions.rs_cw_includefkeynumber
+msgctxt "usettingscaptions.rs_cw_includefkeynumber"
+msgid "Show the key number on the function-key buttons"
+msgstr ""
+
+#: usettingscaptions.rs_cw_messageschainable
+msgid "Any message may chain into the next"
+msgstr ""
+
+#: usettingscaptions.rs_cw_paddle_monitortone
+msgctxt "usettingscaptions.rs_cw_paddle_monitortone"
+msgid "Paddle sidetone"
+msgstr ""
+
+#: usettingscaptions.rs_cw_paddle_pttholdcount
+msgid "Hold PTT for"
+msgstr ""
+
+#: usettingscaptions.rs_cw_paddle_speed
+msgctxt "usettingscaptions.rs_cw_paddle_speed"
+msgid "Paddle speed"
+msgstr ""
+
+#: usettingscaptions.rs_cw_paddle_swap
+msgctxt "usettingscaptions.rs_cw_paddle_swap"
+msgid "Swap dit and dah"
+msgstr ""
+
+#: usettingscaptions.rs_cw_sendfourlettercall
+msgctxt "usettingscaptions.rs_cw_sendfourlettercall"
+msgid "Always send all four letters of a four-letter call"
+msgstr ""
+
+#: usettingscaptions.rs_cw_speedfromdatabase
+msgctxt "usettingscaptions.rs_cw_speedfromdatabase"
+msgid "Match the speed a station was worked at before"
+msgstr ""
+
+#: usettingscaptions.rs_cw_speedincrement
+msgid "Speed step"
+msgstr ""
+
+#: usettingscaptions.rs_cw_tone
+msgctxt "usettingscaptions.rs_cw_tone"
+msgid "Sidetone"
+msgstr ""
+
+#: usettingscaptions.rs_cw_tunewithdits
+msgctxt "usettingscaptions.rs_cw_tunewithdits"
+msgid "Tune with dits rather than a solid carrier"
+msgstr ""
+
+#: usettingscaptions.rs_files_ctrlj_allowautoupdate
+msgid "Allow Auto Update"
+msgstr ""
+
+#: usettingscaptions.rs_files_ctrlj_callsignupdateenable
+msgid "Callsign Update Enable"
+msgstr ""
+
+#: usettingscaptions.rs_files_ctrlj_countryinformationfile
+msgid "Country Information File"
+msgstr ""
+
+#: usettingscaptions.rs_files_ctrlj_ctyupdatecheckonstartup
+msgid "Cty Update Check On Startup"
+msgstr ""
+
+#: usettingscaptions.rs_files_ctrlj_domesticfilename
+msgid "Domestic Filename"
+msgstr ""
+
+#: usettingscaptions.rs_files_ctrlj_initialexchangefilename
+msgid "Initial Exchange Filename"
+msgstr ""
+
+#: usettingscaptions.rs_files_ctrlj_missingcallsignsfileenable
+msgid "Missingcallsigns File Enable"
+msgstr ""
+
+#: usettingscaptions.rs_files_ctrlj_unknowncountryfilename
+msgid "Unknown Country File Name"
+msgstr ""
+
+#: usettingscaptions.rs_hardware_ctrlj_lpt1baseaddress
+msgid "LPT1 Base Address"
+msgstr ""
+
+#: usettingscaptions.rs_hardware_ctrlj_lpt2baseaddress
+msgid "LPT2 Base Address"
+msgstr ""
+
+#: usettingscaptions.rs_hardware_ctrlj_lpt3baseaddress
+msgid "LPT3 Base Address"
+msgstr ""
+
+#: usettingscaptions.rs_hardware_ctrlj_stereocontrolpin
+msgid "Stereo Control Pin"
+msgstr ""
+
+#: usettingscaptions.rs_hardware_ctrlj_stereopinhigh
+msgid "Stereo Pin High"
+msgstr ""
+
+#: usettingscaptions.rs_hardware_ctrlj_usecontrolport
+msgid "Use Control Port"
+msgstr ""
+
+#: usettingscaptions.rs_logging_checklogfilesize
+msgctxt "usettingscaptions.rs_logging_checklogfilesize"
+msgid "Warn when the log file grows unexpectedly"
+msgstr ""
+
+#: usettingscaptions.rs_logging_unknowncountryfile
+msgctxt "usettingscaptions.rs_logging_unknowncountryfile"
+msgid "Record callsigns with no country match"
+msgstr ""
+
+#: usettingscaptions.rs_logging_updaterestartfile
+msgctxt "usettingscaptions.rs_logging_updaterestartfile"
+msgid "Keep the restart file up to date"
+msgstr ""
+
+#: usettingscaptions.rs_network_ctrlj_computername
+msgid "Computer Name"
+msgstr ""
+
+#: usettingscaptions.rs_network_ctrlj_netstatusupdateinterval
+msgid "Net Status Update Interval"
+msgstr ""
+
+#: usettingscaptions.rs_network_intercomfile
+msgctxt "usettingscaptions.rs_network_intercomfile"
+msgid "Log network messages to INTERCOM.TXT"
+msgstr ""
+
+#: usettingscaptions.rs_network_multimultsonly
+msgctxt "usettingscaptions.rs_network_multimultsonly"
+msgid "Pass only new multipliers around the network"
+msgstr ""
+
+#: usettingscaptions.rs_operating_autocallterminate
+msgctxt "usettingscaptions.rs_operating_autocallterminate"
+msgid "Stop sending when the call window changes"
+msgstr ""
+
+#: usettingscaptions.rs_operating_autoqsonumberdecrement
+msgctxt "usettingscaptions.rs_operating_autoqsonumberdecrement"
+msgid "Give the serial number back when a QSO is abandoned"
+msgstr ""
+
+#: usettingscaptions.rs_operating_autoreturntocq
+msgid "Return to CQ mode after logging"
+msgstr ""
+
+#: usettingscaptions.rs_operating_bands_hf
+msgctxt "usettingscaptions.rs_operating_bands_hf"
+msgid "HF (160 - 10 m)"
+msgstr ""
+
+#: usettingscaptions.rs_operating_bands_vhf
+msgid "VHF and up"
+msgstr ""
+
+#: usettingscaptions.rs_operating_bands_warc
+msgctxt "usettingscaptions.rs_operating_bands_warc"
+msgid "WARC (30, 17, 12 m)"
+msgstr ""
+
+#: usettingscaptions.rs_operating_confirmeditchanges
+msgctxt "usettingscaptions.rs_operating_confirmeditchanges"
+msgid "Confirm before saving an edited QSO"
+msgstr ""
+
+#: usettingscaptions.rs_operating_ctrlj_askforfrequencies
+msgid "Ask For Frequencies"
+msgstr ""
+
+#: usettingscaptions.rs_operating_ctrlj_autodisplaydupeqso
+msgid "Auto Display Dupe QSO"
+msgstr ""
+
+#: usettingscaptions.rs_operating_ctrlj_autodupeenablecq
+msgid "Auto Dupe Enable CQ"
+msgstr ""
+
+#: usettingscaptions.rs_operating_ctrlj_autodupeenablesandp
+msgid "Auto Dupe Enable S And P"
+msgstr ""
+
+#: usettingscaptions.rs_operating_ctrlj_autospenable
+msgid "Auto S&P Enable"
+msgstr ""
+
+#: usettingscaptions.rs_operating_ctrlj_autospenablesensitivity
+msgid "Auto S&P Enable Sensitivity"
+msgstr ""
+
+#: usettingscaptions.rs_operating_ctrlj_autotimeincrement
+msgid "Auto Time Increment"
+msgstr ""
+
+#: usettingscaptions.rs_operating_ctrlj_customuserstring
+msgid "Custom User String"
+msgstr ""
+
+#: usettingscaptions.rs_operating_ctrlj_deenable
+msgid "De Enable"
+msgstr ""
+
+#: usettingscaptions.rs_operating_ctrlj_digitalmodeenable
+msgid "Digital Mode Enable"
+msgstr ""
+
+#: usettingscaptions.rs_operating_ctrlj_distancemode
+msgid "Distance Mode"
+msgstr ""
+
+#: usettingscaptions.rs_operating_ctrlj_dupechecksound
+msgid "Dupe Check Sound"
+msgstr ""
+
+#: usettingscaptions.rs_operating_ctrlj_dupesheetautoreset
+msgid "Dupe Sheet Auto Reset"
+msgstr ""
+
+#: usettingscaptions.rs_operating_ctrlj_frequencymemory
+msgid "Frequency Memory"
+msgstr ""
+
+#: usettingscaptions.rs_operating_ctrlj_frequencymemoryenable
+msgid "Frequency Memory Enable"
+msgstr ""
+
+#: usettingscaptions.rs_operating_ctrlj_frequencypollrate
+msgid "Frequency Poll Rate"
+msgstr ""
+
+#: usettingscaptions.rs_operating_ctrlj_ieswitch
+msgid "Ie Switch"
+msgstr ""
+
+#: usettingscaptions.rs_operating_ctrlj_incrementtimeenable
+msgid "Increment Time Enable"
+msgstr ""
+
+#: usettingscaptions.rs_operating_ctrlj_logfrequencyenable
+msgid "Log Frequency Enable"
+msgstr ""
+
+#: usettingscaptions.rs_operating_ctrlj_logsubtitle
+msgid "Log Sub Title"
+msgstr ""
+
+#: usettingscaptions.rs_operating_ctrlj_maincallsign
+msgid "Main Callsign"
+msgstr ""
+
+#: usettingscaptions.rs_operating_ctrlj_mode
+msgctxt "usettingscaptions.rs_operating_ctrlj_mode"
+msgid "Mode"
+msgstr ""
+
+#: usettingscaptions.rs_operating_ctrlj_possiblecallacceptkey
+msgid "Possible Call Accept Key"
+msgstr ""
+
+#: usettingscaptions.rs_operating_ctrlj_possiblecallleftkey
+msgid "Possible Call Left Key"
+msgstr ""
+
+#: usettingscaptions.rs_operating_ctrlj_possiblecallmode
+msgid "Possible Call Mode"
+msgstr ""
+
+#: usettingscaptions.rs_operating_ctrlj_possiblecallrightkey
+msgid "Possible Call Right Key"
+msgstr ""
+
+#: usettingscaptions.rs_operating_ctrlj_qsxenable
+msgid "Qsx Enable"
+msgstr ""
+
+#: usettingscaptions.rs_operating_ctrlj_qzbrandomoffsetenable
+msgid "Qzb Random Offset Enable"
+msgstr ""
+
+#: usettingscaptions.rs_operating_ctrlj_radiusofearth
+msgid "Radius Of Earth"
+msgstr ""
+
+#: usettingscaptions.rs_operating_ctrlj_shiftkeyenable
+msgid "Shift Key Enable"
+msgstr ""
+
+#: usettingscaptions.rs_operating_ctrlj_stationscallsignsmask
+msgid "Stations Callsigns Mask"
+msgstr ""
+
+#: usettingscaptions.rs_operating_ctrlj_wakeuptimeout
+msgid "Wake Up Time Out"
+msgstr ""
+
+#: usettingscaptions.rs_operating_cw_keypadmemories
+msgctxt "usettingscaptions.rs_operating_cw_keypadmemories"
+msgid "Number keypad sends CW memories"
+msgstr ""
+
+#: usettingscaptions.rs_operating_cw_leadingzerochar
+msgid "Leading zero sent as"
+msgstr ""
+
+#: usettingscaptions.rs_operating_cw_leadingzeros
+msgid "Leading zeros"
+msgstr ""
+
+#: usettingscaptions.rs_operating_cw_sayhi
+msgctxt "usettingscaptions.rs_operating_cw_sayhi"
+msgid "Send a greeting to stations worked before"
+msgstr ""
+
+#: usettingscaptions.rs_operating_cw_sayhiratecutoff
+msgid "Stop above this rate"
+msgstr ""
+
+#: usettingscaptions.rs_operating_cw_serial_ditdahratio
+msgctxt "usettingscaptions.rs_operating_cw_serial_ditdahratio"
+msgid "Dit/dah ratio"
+msgstr ""
+
+#: usettingscaptions.rs_operating_cw_serial_farnsworth
+msgctxt "usettingscaptions.rs_operating_cw_serial_farnsworth"
+msgid "Farnsworth spacing"
+msgstr ""
+
+#: usettingscaptions.rs_operating_cw_serial_farnsworthspeed
+msgid "Character speed"
+msgstr ""
+
+#: usettingscaptions.rs_operating_cw_serial_weight
+msgctxt "usettingscaptions.rs_operating_cw_serial_weight"
+msgid "Weight"
+msgstr ""
+
+#: usettingscaptions.rs_operating_escapeexitssap
+msgctxt "usettingscaptions.rs_operating_escapeexitssap"
+msgid "Escape leaves search and pounce"
+msgstr ""
+
+#: usettingscaptions.rs_operating_leavecursorincall
+msgctxt "usettingscaptions.rs_operating_leavecursorincall"
+msgid "Leave the cursor in the call window"
+msgstr ""
+
+#: usettingscaptions.rs_operating_logwithsingleenter
+msgctxt "usettingscaptions.rs_operating_logwithsingleenter"
+msgid "Log with a single Enter"
+msgstr ""
+
+#: usettingscaptions.rs_operating_spacebardupecheck
+msgctxt "usettingscaptions.rs_operating_spacebardupecheck"
+msgid "Space bar performs a dupe check"
+msgstr ""
+
+#: usettingscaptions.rs_operating_tworadio_altdbuffer
+msgctxt "usettingscaptions.rs_operating_tworadio_altdbuffer"
+msgid "Alt-D remembers what you typed"
+msgstr ""
+
+#: usettingscaptions.rs_operating_tworadio_altdcq
+msgctxt "usettingscaptions.rs_operating_tworadio_altdcq"
+msgid "Alt-D can start a CQ on the second radio"
+msgstr ""
+
+#: usettingscaptions.rs_operating_tworadio_blindcq
+msgctxt "usettingscaptions.rs_operating_tworadio_blindcq"
+msgid "Always call a blind CQ"
+msgstr ""
+
+#: usettingscaptions.rs_operating_tworadio_enable
+msgctxt "usettingscaptions.rs_operating_tworadio_enable"
+msgid "Two radio mode"
+msgstr ""
+
+#: usettingscaptions.rs_operating_tworadio_inbandlockout
+msgctxt "usettingscaptions.rs_operating_tworadio_inbandlockout"
+msgid "Stop both radios landing on one band"
+msgstr ""
+
+#: usettingscaptions.rs_operating_tworadio_qsyinactive
+msgid "QSY the inactive radio"
+msgstr ""
+
+#: usettingscaptions.rs_operating_tworadio_skipactiveband
+msgctxt "usettingscaptions.rs_operating_tworadio_skipactiveband"
+msgid "Skip the band the other radio is on"
+msgstr ""
+
+#: usettingscaptions.rs_operating_tworadio_swaprelaysense
+msgctxt "usettingscaptions.rs_operating_tworadio_swaprelaysense"
+msgid "Invert the radio relay sense"
+msgstr ""
+
+#: usettingscaptions.rs_operating_tworadio_waitforstrength
+msgid "Wait for a signal strength reading"
+msgstr ""
+
+#: usettingscaptions.rs_ptt_enable
+msgctxt "usettingscaptions.rs_ptt_enable"
+msgid "Assert PTT when transmitting"
+msgstr ""
+
+#: usettingscaptions.rs_ptt_lockout
+msgctxt "usettingscaptions.rs_ptt_lockout"
+msgid "Lock out PTT"
+msgstr ""
+
+#: usettingscaptions.rs_ptt_nopollduringptt
+msgctxt "usettingscaptions.rs_ptt_nopollduringptt"
+msgid "Stop polling the radio while transmitting"
+msgstr ""
+
+#: usettingscaptions.rs_ptt_turnondelay
+msgctxt "usettingscaptions.rs_ptt_turnondelay"
+msgid "Delay after PTT before sending"
+msgstr ""
+
+#: usettingscaptions.rs_ptt_viacommands
+msgid "Key the transmitter with a CAT command"
+msgstr ""
+
+#: usettingscaptions.rs_scoring_board_postingurl
+msgid "Posting URL"
+msgstr ""
+
+#: usettingscaptions.rs_scoring_board_readingurl
+msgid "Reading URL"
+msgstr ""
+
+#: usettingscaptions.rs_scoring_hamscore_contactinfo
+msgctxt "usettingscaptions.rs_scoring_hamscore_contactinfo"
+msgid "Include contact information"
+msgstr ""
+
+#: usettingscaptions.rs_scoring_hamscore_enable
+msgctxt "usettingscaptions.rs_scoring_hamscore_enable"
+msgid "Post my score while the contest runs"
+msgstr ""
+
+#: usettingscaptions.rs_scoring_hamscore_password
+msgctxt "usettingscaptions.rs_scoring_hamscore_password"
+msgid "Password"
+msgstr ""
+
+#: usettingscaptions.rs_scoring_hamscore_url
+msgid "Service URL"
+msgstr ""
+
+#: usettingscaptions.rs_scoring_hamscore_username
+msgid "Username"
+msgstr ""
+
+#: usettingscaptions.rs_scp_nameflag
+msgid "Flag a station whose name is known"
+msgstr ""
+
+#: usettingscaptions.rs_scp_partialcall
+msgctxt "usettingscaptions.rs_scp_partialcall"
+msgid "Match on a partial callsign"
+msgstr ""
+
+#: usettingscaptions.rs_scp_possiblecalls
+msgctxt "usettingscaptions.rs_scp_possiblecalls"
+msgid "Offer possible calls"
+msgstr ""
+
+#: usettingscaptions.rs_scp_wildcardpartials
+msgctxt "usettingscaptions.rs_scp_wildcardpartials"
+msgid "Allow wildcards in a partial"
+msgstr ""
+
+#: usettingscaptions.rs_voice_ctrlj_mp3recorderbitrate
+msgid "Mp3 Recorder Bitrate"
+msgstr ""
+
+#: usettingscaptions.rs_voice_ctrlj_mp3recorderduration
+msgid "Mp3 Recorder Duration"
+msgstr ""
+
 #: utr4wstrings.close_word
 msgctxt "utr4wstrings.close_word"
 msgid "Close"
@@ -2970,6 +4072,7 @@ msgid "E&xit"
 msgstr ""
 
 #: utr4wstrings.help_word
+msgctxt "utr4wstrings.help_word"
 msgid "Help"
 msgstr ""
 
@@ -3125,6 +4228,11 @@ msgstr ""
 msgid "CQ Mode"
 msgstr ""
 
+#: utr4wstrings.rc_createaunl
+msgctxt "utr4wstrings.rc_createaunl"
+msgid "&Create and use new log"
+msgstr ""
+
 #: utr4wstrings.rc_ct1bohis
 msgctxt "utr4wstrings.rc_ct1bohis"
 msgid "CT1BOH info screen"
@@ -3264,6 +4372,11 @@ msgstr ""
 #: utr4wstrings.rc_frequency
 msgctxt "utr4wstrings.rc_frequency"
 msgid "Frequency"
+msgstr ""
+
+#: utr4wstrings.rc_getservlog
+msgctxt "utr4wstrings.rc_getservlog"
+msgid "&Get server log"
 msgstr ""
 
 #: utr4wstrings.rc_gotogs
@@ -3458,8 +4571,23 @@ msgstr ""
 msgid "Recording control"
 msgstr ""
 
+#: utr4wstrings.rc_recvbytes
+msgctxt "utr4wstrings.rc_recvbytes"
+msgid "Received bytes:"
+msgstr ""
+
+#: utr4wstrings.rc_recvqsos
+msgctxt "utr4wstrings.rc_recvqsos"
+msgid "Received QSOs:"
+msgstr ""
+
 #: utr4wstrings.rc_recvqtc
 msgid "Receiving QTCs"
+msgstr ""
+
+#: utr4wstrings.rc_recvrecords
+msgctxt "utr4wstrings.rc_recvrecords"
+msgid "Received records:"
 msgstr ""
 
 #: utr4wstrings.rc_refreshbm
@@ -3527,6 +4655,11 @@ msgstr ""
 msgid "Send message"
 msgstr ""
 
+#: utr4wstrings.rc_sendrecords
+msgctxt "utr4wstrings.rc_sendrecords"
+msgid "Sent records:"
+msgstr ""
+
 #: utr4wstrings.rc_sendspot
 msgctxt "utr4wstrings.rc_sendspot"
 msgid "Send spot"
@@ -3550,6 +4683,11 @@ msgstr ""
 
 #: utr4wstrings.rc_shdx_callsign
 msgid "SH/DX [callsign]"
+msgstr ""
+
+#: utr4wstrings.rc_showservlogc
+msgctxt "utr4wstrings.rc_showservlogc"
+msgid "Show server log content"
 msgstr ""
 
 #: utr4wstrings.rc_splitoff
@@ -3585,6 +4723,11 @@ msgstr ""
 
 #: utr4wstrings.rc_synlog
 msgid "Compare and synchronize logs"
+msgstr ""
+
+#: utr4wstrings.rc_synlog2
+msgctxt "utr4wstrings.rc_synlog2"
+msgid "Synchronize log"
 msgstr ""
 
 #: utr4wstrings.rc_telnet
@@ -3863,6 +5006,15 @@ msgstr ""
 msgid "\"CLEARMULTSHEET\" to clear all multsheets in network"
 msgstr ""
 
+#: utr4wstrings.tc_clusterdirmissing
+msgid "TRCLUSTER.DAT was not found beside the program, so the list is empty. Type the server as host:port, for example dxc.nc7j.com:7373."
+msgstr ""
+
+#: utr4wstrings.tc_clusterserverhint
+msgctxt "utr4wstrings.tc_clusterserverhint"
+msgid "host:port, for example dxc.nc7j.com:7373.  The drop-down lists the servers in TRCLUSTER.DAT; you can also type one that is not on it."
+msgstr ""
+
 #: utr4wstrings.tc_command
 msgid "Command"
 msgstr ""
@@ -3873,6 +5025,11 @@ msgstr ""
 
 #: utr4wstrings.tc_configuration_file
 msgid "Configuration file"
+msgstr ""
+
+#: utr4wstrings.tc_configure_ellipsis
+msgctxt "utr4wstrings.tc_configure_ellipsis"
+msgid "Configure..."
 msgstr ""
 
 #: utr4wstrings.tc_connect
@@ -4848,6 +6005,10 @@ msgstr ""
 msgid "No CQ message programmed into CQ MEMORY AltF1."
 msgstr ""
 
+#: utr4wstrings.tc_nodxclustersdefined
+msgid "No DX clusters are defined yet -- click Configure to add one."
+msgstr ""
+
 #: utr4wstrings.tc_nofloppyfilesavenamespecified
 msgid "No floppy file save name specified."
 msgstr ""
@@ -5615,46 +6776,5 @@ msgstr ""
 #: uudpdestinationeditform.tc_udpedit_testsent
 #, object-pascal-format
 msgid "Test packet sent to %s:%d.  UDP cannot confirm it arrived -- check the receiving program."
-msgstr ""
-
-
-#: utr4wstrings.rc_synlog2
-msgctxt "utr4wstrings.rc_synlog2"
-msgid "Synchronize log"
-msgstr ""
-
-#: utr4wstrings.rc_getservlog
-msgctxt "utr4wstrings.rc_getservlog"
-msgid "&Get server log"
-msgstr ""
-
-#: utr4wstrings.rc_recvrecords
-msgctxt "utr4wstrings.rc_recvrecords"
-msgid "Received records:"
-msgstr ""
-
-#: utr4wstrings.rc_sendrecords
-msgctxt "utr4wstrings.rc_sendrecords"
-msgid "Sent records:"
-msgstr ""
-
-#: utr4wstrings.rc_recvbytes
-msgctxt "utr4wstrings.rc_recvbytes"
-msgid "Received bytes:"
-msgstr ""
-
-#: utr4wstrings.rc_recvqsos
-msgctxt "utr4wstrings.rc_recvqsos"
-msgid "Received QSOs:"
-msgstr ""
-
-#: utr4wstrings.rc_showservlogc
-msgctxt "utr4wstrings.rc_showservlogc"
-msgid "Show server log content"
-msgstr ""
-
-#: utr4wstrings.rc_createaunl
-msgctxt "utr4wstrings.rc_createaunl"
-msgid "&Create and use new log"
 msgstr ""
 

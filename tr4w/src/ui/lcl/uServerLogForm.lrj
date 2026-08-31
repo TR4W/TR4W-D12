@@ -1,0 +1,16 @@
+{"version":1,"strings":[
+{"hash":93888007,"name":"tfrmserverlog.caption","sourcebytes":[83,121,110,99,104,114,111,110,105,122,101,32,108,111,103],"value":"Synchronize log"},
+{"hash":231378778,"name":"tfrmserverlog.lblqsoscaption.caption","sourcebytes":[82,101,99,101,105,118,101,100,32,81,83,79,115,58],"value":"Received QSOs:"},
+{"hash":48,"name":"tfrmserverlog.lblqsos.caption","sourcebytes":[48],"value":"0"},
+{"hash":257966010,"name":"tfrmserverlog.lblbytescaption.caption","sourcebytes":[82,101,99,101,105,118,101,100,32,98,121,116,101,115,58],"value":"Received bytes:"},
+{"hash":48,"name":"tfrmserverlog.lblbytes.caption","sourcebytes":[48],"value":"0"},
+{"hash":185947434,"name":"tfrmserverlog.lblrecordscaption.caption","sourcebytes":[82,101,99,101,105,118,101,100,32,114,101,99,111,114,100,115,58],"value":"Received records:"},
+{"hash":48,"name":"tfrmserverlog.lblrecords.caption","sourcebytes":[48],"value":"0"},
+{"hash":40103098,"name":"tfrmserverlog.lblsentcaption.caption","sourcebytes":[83,101,110,116,32,114,101,99,111,114,100,115,58],"value":"Sent records:"},
+{"hash":48,"name":"tfrmserverlog.lblsent.caption","sourcebytes":[48],"value":"0"},
+{"hash":10750743,"name":"tfrmserverlog.btngetlog.caption","sourcebytes":[71,101,116,32,115,101,114,118,101,114,32,108,111,103],"value":"Get server log"},
+{"hash":169228023,"name":"tfrmserverlog.btncreatenewlog.caption","sourcebytes":[67,114,101,97,116,101,32,97,110,100,32,117,115,101,32,110,101,119,32,108,111,103],"value":"Create and use new log"},
+{"hash":201169252,"name":"tfrmserverlog.chkshowcontent.caption","sourcebytes":[83,104,111,119,32,115,101,114,118,101,114,32,108,111,103,32,99,111,110,116,101,110,116],"value":"Show server log content"},
+{"hash":322608,"name":"tfrmserverlog.btnhelp.caption","sourcebytes":[72,101,108,112],"value":"Help"},
+{"hash":4863637,"name":"tfrmserverlog.btnclose.caption","sourcebytes":[67,108,111,115,101],"value":"Close"}
+]}

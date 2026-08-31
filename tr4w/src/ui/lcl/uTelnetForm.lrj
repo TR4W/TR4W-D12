@@ -6,5 +6,7 @@
 {"hash":4860802,"name":"tfrmtelnet.btnclear.caption","sourcebytes":[67,108,101,97,114],"value":"Clear"},
 {"hash":105086995,"name":"tfrmtelnet.btncommands.caption","sourcebytes":[67,111,109,109,97,110,100,115],"value":"Commands"},
 {"hash":5747328,"name":"tfrmtelnet.btnshow50.caption","sourcebytes":[83,72,47,53,48],"value":"SH/50"},
+{"hash":175001086,"name":"tfrmtelnet.btnconfigure.caption","sourcebytes":[67,111,110,102,105,103,117,114,101,46,46,46],"value":"Configure..."},
+{"hash":22806371,"name":"tfrmtelnet.lblnoclusters.caption","sourcebytes":[108,98,108,78,111,67,108,117,115,116,101,114,115],"value":"lblNoClusters"},
 {"hash":367684,"name":"tfrmtelnet.btnsend.caption","sourcebytes":[83,101,110,100],"value":"Send"}
 ]}
