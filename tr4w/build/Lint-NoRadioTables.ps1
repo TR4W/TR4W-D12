@@ -53,6 +53,8 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'Get-ScanExclusions.ps1')   # Test-Tr4wScannable -- IDE backup dirs are not source
+
 
 # Enums that name a radio model. A table indexed by one of these is a per-model
 # data table, whatever it happens to be called.
@@ -62,7 +64,7 @@ $pattern = 'array\s*\[\s*(' + ($enums -join '|') + ')\s*\]'
 $findings = @()
 $scanned  = 0
 
-foreach ($f in Get-ChildItem -Path $SourceDir -Recurse -Include *.pas,*.PAS,*.inc,*.lpr,*.dpr)
+foreach ($f in Get-ChildItem -Path $SourceDir -Recurse -Include *.pas,*.PAS,*.inc,*.lpr,*.dpr | Where-Object { Test-Tr4wScannable $_.FullName })
    {
    $scanned++
    $lines = @(Get-Content -LiteralPath $f.FullName)

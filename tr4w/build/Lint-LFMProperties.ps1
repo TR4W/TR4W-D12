@@ -45,6 +45,8 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'Get-ScanExclusions.ps1')   # Test-Tr4wScannable -- IDE backup dirs are not source
+
 
 # Resolve before anything uses them.  A caller may still pin either one, and a
 # pin is honoured exactly as Find-Toolchain honours FPC_HOME / LAZARUS_DIR.
@@ -73,7 +75,7 @@ if (-not (Test-Path -LiteralPath $SourceDir))
    exit 2
    }
 
-$forms = @(Get-ChildItem -LiteralPath $SourceDir -Recurse -Filter '*.lfm' -File)
+$forms = @(Get-ChildItem -LiteralPath $SourceDir -Recurse -Filter '*.lfm' -File | Where-Object { Test-Tr4wScannable $_.FullName })
 
 # A FLOOR, not just a pass/fail.  Zero .lfm files means the search moved or the
 # port finished, and either way "checked nothing, all good" is a lie.

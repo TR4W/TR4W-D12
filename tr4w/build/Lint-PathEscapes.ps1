@@ -34,6 +34,8 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'Get-ScanExclusions.ps1')   # Test-Tr4wScannable -- IDE backup dirs are not source
+
 
 if (-not $SourceDir) {
    $SourceDir = Split-Path -Parent $PSScriptRoot
@@ -53,7 +55,7 @@ if (-not (Test-Path -LiteralPath $SourceDir -PathType Container)) {
    exit 1
 }
 
-$files = @(Get-ChildItem -LiteralPath $SourceDir -Recurse -File -ErrorAction SilentlyContinue |
+$files = @(Get-ChildItem -LiteralPath $SourceDir -Recurse -File -ErrorAction SilentlyContinue | Where-Object { Test-Tr4wScannable $_.FullName } |
            Where-Object { $extensions -contains $_.Extension.ToLowerInvariant() -and
                           $_.FullName -notmatch $skipDir })
 

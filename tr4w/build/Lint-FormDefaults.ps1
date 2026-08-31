@@ -53,13 +53,15 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'Get-ScanExclusions.ps1')   # Test-Tr4wScannable -- IDE backup dirs are not source
+
 
 if (-not (Test-Path -LiteralPath $SourceDir -PathType Container)) {
    Write-Output "Lint-FormDefaults: source directory not found: $SourceDir"
    exit 1
 }
 
-$forms = @(Get-ChildItem -LiteralPath $SourceDir -Recurse -File |
+$forms = @(Get-ChildItem -LiteralPath $SourceDir -Recurse -File | Where-Object { Test-Tr4wScannable $_.FullName } |
            Where-Object { $_.Extension -eq '.lfm' })
 
 # A FLOOR. Zero forms scanned means the path or the filter is wrong, and a lint

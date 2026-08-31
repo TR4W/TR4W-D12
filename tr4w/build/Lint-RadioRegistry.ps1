@@ -37,6 +37,8 @@ param(
    [string] $SourceDir
 )
 
+. (Join-Path $PSScriptRoot 'Get-ScanExclusions.ps1')   # Test-Tr4wScannable -- IDE backup dirs are not source
+
 if (-not $SourceDir) {
    $SourceDir = Join-Path (Split-Path -Parent $PSScriptRoot) 'src'
 }

@@ -68,6 +68,8 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'Get-ScanExclusions.ps1')   # Test-Tr4wScannable -- IDE backup dirs are not source
+
 
 # Byte-level on purpose: reading the file as text would let .NET normalise the
 # very thing being measured, and would drag encoding/BOM handling into a
@@ -219,7 +221,7 @@ if (-not (Test-Path -LiteralPath $SourceDir))
 $offenders = @()
 $scanned   = 0
 
-Get-ChildItem -LiteralPath $SourceDir -Recurse -File | Where-Object {
+Get-ChildItem -LiteralPath $SourceDir -Recurse -File | Where-Object { Test-Tr4wScannable $_.FullName } | Where-Object {
    $extensions -contains $_.Extension.ToLowerInvariant()
 } | ForEach-Object {
    $scanned++

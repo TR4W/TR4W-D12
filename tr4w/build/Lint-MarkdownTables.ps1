@@ -32,6 +32,8 @@ param(
 
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'Get-ScanExclusions.ps1')   # Test-Tr4wScannable -- IDE backup dirs are not source
+
 
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 if (-not $Root) { $Root = Split-Path (Split-Path $here -Parent) -Parent }
@@ -48,7 +50,7 @@ function Get-CellCount
    }
 
 $bad = @()
-$files = Get-ChildItem -Path $Root -Filter '*.md' -Recurse -File |
+$files = Get-ChildItem -Path $Root -Filter '*.md' -Recurse -File | Where-Object { Test-Tr4wScannable $_.FullName } |
          Where-Object { $_.FullName -notmatch 'build-out|backup|[.]git' }
 
 foreach ($f in $files)

@@ -48,6 +48,8 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'Get-ScanExclusions.ps1')   # Test-Tr4wScannable -- IDE backup dirs are not source
+
 
 # Strip Pascal comments and string literals before looking for assignments, so
 # that a handler named only inside a comment does not read as wired. Without
@@ -257,7 +259,7 @@ $forms = 0
 # forms renamed to .fmx and getting identical, sensible answers. Filtering on
 # .fmx alone meant that as each form was ported to the LCL it silently dropped
 # out of this gate, which is how a designed-form defect gets shipped.
-foreach ($fmx in Get-ChildItem -LiteralPath $SourceDir -Recurse -File | Where-Object { $_.Extension -in '.fmx', '.lfm' }) {
+foreach ($fmx in Get-ChildItem -LiteralPath $SourceDir -Recurse -File | Where-Object { Test-Tr4wScannable $_.FullName } | Where-Object { $_.Extension -in '.fmx', '.lfm' }) {
    $pas = [System.IO.Path]::ChangeExtension($fmx.FullName, '.pas')
    if (-not (Test-Path -LiteralPath $pas)) { continue }
 

@@ -40,6 +40,8 @@ param(
    [switch] $SelfTest
 )
 
+. (Join-Path $PSScriptRoot 'Get-ScanExclusions.ps1')   # Test-Tr4wScannable -- IDE backup dirs are not source
+
 # COMMENTS OUT FIRST, or a comment decides where the published section ends.
 #
 # The visibility scan below anchors on a line STARTING with private/public/...,
@@ -297,7 +299,7 @@ if (-not (Test-Path -LiteralPath $SourceDir)) {
 # .fmx alone meant that as each form was ported to the LCL it silently dropped
 # out of this gate, which is how a designed-form defect gets shipped.
 $files = @(Get-ChildItem -LiteralPath $SourceDir -Recurse -File | Where-Object { $_.Extension -in '.fmx', '.lfm' } |
-           Where-Object { $_.FullName -notmatch '\\__history\\|\\__recovery\\' })
+           Where-Object { Test-Tr4wScannable $_.FullName })
 
 $violations = @()
 $checked = 0

@@ -21,6 +21,8 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'Get-ScanExclusions.ps1')   # Test-Tr4wScannable -- IDE backup dirs are not source
+
 
 if (-not (Test-Path $SourceDir)) {
    Write-Host "  Lint-DomainPurity: no $SourceDir yet, nothing to check."

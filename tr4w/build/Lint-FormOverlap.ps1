@@ -43,6 +43,8 @@ param(
    [switch] $SelfTest
 )
 
+. (Join-Path $PSScriptRoot 'Get-ScanExclusions.ps1')   # Test-Tr4wScannable -- IDE backup dirs are not source
+
 # TTabSheet/TPage join the list for the same reason TTabItem is already on it:
 # the pages of a tab control are SUPPOSED to sit on top of each other, and
 # flagging them would train the reader to ignore this lint.

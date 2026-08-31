@@ -66,6 +66,8 @@ param(
 
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'Get-ScanExclusions.ps1')   # Test-Tr4wScannable -- IDE backup dirs are not source
+
 
 Import-Module (Join-Path $PSScriptRoot 'PascalSource.psm1') -Force
 
@@ -140,7 +142,7 @@ function Test-IsValidUtf8
 # that extension is unioned in here rather than by widening the shared helper
 # and shifting every other lint's counts.
 $files = @(Get-TR4WPascalFiles -Root $SourceDir)
-$lpr = @(Get-ChildItem -LiteralPath $SourceDir -Recurse -File -Filter '*.lpr' -ErrorAction SilentlyContinue |
+$lpr = @(Get-ChildItem -LiteralPath $SourceDir -Recurse -File -Filter '*.lpr' -ErrorAction SilentlyContinue | Where-Object { Test-Tr4wScannable $_.FullName } |
          Where-Object { $_.FullName -notmatch '\\build-out\\|\\backup' })
 $files = @($files) + @($lpr)
 

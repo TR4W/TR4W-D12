@@ -50,6 +50,8 @@ param(
    [string] $SourceDir
 )
 
+. (Join-Path $PSScriptRoot 'Get-ScanExclusions.ps1')   # Test-Tr4wScannable -- IDE backup dirs are not source
+
 if ($SourceDir) {
    if (-not (Test-Path -LiteralPath $SourceDir -PathType Container)) {
       Write-Error "Lint-PCharAnsi: source directory not found: $SourceDir"

@@ -54,6 +54,8 @@ param(
    [switch] $SelfTest
 )
 
+. (Join-Path $PSScriptRoot 'Get-ScanExclusions.ps1')   # Test-Tr4wScannable -- IDE backup dirs are not source
+
 # Parses one .fmx and returns the objects it declares, each with its Tag.
 #
 # The format nests, and `end` closes an object -- but `end` ALSO closes an item
@@ -459,7 +461,7 @@ if (-not (Test-Path -LiteralPath $SourceDir)) {
 # .fmx alone meant that as each form was ported to the LCL it silently dropped
 # out of this gate, which is how a designed-form defect gets shipped.
 $files = @(Get-ChildItem -LiteralPath $SourceDir -Recurse -File | Where-Object { $_.Extension -in '.fmx', '.lfm' } |
-           Where-Object { $_.FullName -notmatch '\\__history\\|\\__recovery\\' })
+           Where-Object { Test-Tr4wScannable $_.FullName })
 
 $violations = @()
 $formsChecked = 0
