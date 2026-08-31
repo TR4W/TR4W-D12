@@ -105,6 +105,7 @@ $lints = @(
    # this tree at least seven times, every one of them agent-written. $ProjectRoot
    # rather than $Tr4wDir because docs\ and the repo-root markdown get it too.
    @{ Name = 'Lint-DesignedForms';   Arg = $src;      NeedsFpc = $false }
+   @{ Name = 'Lint-SearchIndex'; Arg = $src;      NeedsFpc = $false }
    @{ Name = 'Lint-OneConfigWriter'; Arg = $src;      NeedsFpc = $false }
    @{ Name = 'Lint-PathEscapes';     Arg = $repoRoot; NeedsFpc = $false }
    @{ Name = 'Lint-MarkdownTables'; Arg = $repoRoot; NeedsFpc = $false }

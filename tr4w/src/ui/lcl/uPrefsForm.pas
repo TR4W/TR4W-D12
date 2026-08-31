@@ -3744,6 +3744,90 @@ begin
 
    // --- MMTTY (page tag NAV_MMTTY) ---
    AddHandWiredToSearchIndex(aN, 'MMTTY ENGINE',           edtMMTTYEngine);
+
+   { EVERYTHING BELOW WAS INVISIBLE TO THE SEARCH BOX until 2026-08-31.
+
+     These controls all SAVE correctly -- they write a CFGCA command directly
+     through ApplyIfChanged/SetCommandBool, or they are backed by a store
+     property -- so nothing was losing data. They simply had no registration,
+     and the index is built only from FBindings plus the two lists here, so an
+     operator searching for "band map decay" or "main font" got nothing while
+     the setting sat in plain sight on its page.
+
+     Lint-SearchIndex now fails the build if a designed control on a section
+     panel reaches neither the bindings nor this list, so the next one cannot
+     be forgotten silently. }
+
+   // --- layAppearance ---
+   AddHandWiredToSearchIndex(aN, 'BOLD FONT',                         chkBoldFont);
+   AddHandWiredToSearchIndex(aN, 'COLUMN DUPESHEET COLOR',            chkDupeSheetColor);
+   AddHandWiredToSearchIndex(aN, 'FONT SIZE',                         edtFontSize);
+   AddHandWiredToSearchIndex(aN, 'MAIN FONT',                         edtMainFont);
+
+   // --- layBackup ---
+   AddHandWiredToSearchIndex(aN, 'BACKUP LOG FREQUENCY',              edtBackupEvery);
+   AddHandWiredToSearchIndex(aN, 'BACKUP LOG FILE NAME',              edtBackupFile);
+
+   // --- layBandMap ---
+   AddHandWiredToSearchIndex(aN, 'BAND MAP ALL BANDS',                chkBandMapAllBands);
+   AddHandWiredToSearchIndex(aN, 'BAND MAP ALL MODES',                chkBandMapAllModes);
+   AddHandWiredToSearchIndex(aN, 'BAND MAP DISPLAY CQ',               chkBandMapCQ);
+   AddHandWiredToSearchIndex(aN, 'BAND MAP CALL WINDOW ENABLE',       chkBandMapCallWindow);
+   AddHandWiredToSearchIndex(aN, 'BAND MAP DUPE DISPLAY',             chkBandMapDupes);
+   AddHandWiredToSearchIndex(aN, 'BAND MAP DISPLAY GHZ',              chkBandMapGHz);
+   AddHandWiredToSearchIndex(aN, 'BAND MAP MULTS ONLY',               chkBandMapMultsOnly);
+   AddHandWiredToSearchIndex(aN, 'BAND MAP SO2R DISPLAY',             chkBandMapSO2R);
+   AddHandWiredToSearchIndex(aN, 'BAND MAP DECAY TIME',               edtBandMapDecay);
+   AddHandWiredToSearchIndex(aN, 'BAND MAP GUARD BAND',               edtBandMapGuard);
+   AddHandWiredToSearchIndex(aN, 'BAND MAP DISPLAY LIMIT',            edtBandMapLimit);
+
+   // --- layHardware ---
+   AddHandWiredToSearchIndex(aN, 'RADIO ONE BAND OUTPUT PORT',        cbxBandOutput1);
+   AddHandWiredToSearchIndex(aN, 'RADIO TWO BAND OUTPUT PORT',        cbxBandOutput2);
+   AddHandWiredToSearchIndex(aN, 'RELAY CONTROL PORT',                cbxRelayPort);
+   AddHandWiredToSearchIndex(aN, 'STEREO CONTROL PORT',               cbxStereoPort);
+   AddStoreBackedToSearchIndex(aN, chkUseControlPort);
+   AddHandWiredToSearchIndex(aN, 'YCCC SO2R ENABLE',                  chkYCCCSO2R);
+
+   // --- layLogging ---
+   AddStoreBackedToSearchIndex(aN, cbxLogLevel);
+   AddStoreBackedToSearchIndex(aN, chkHamLibAsyncOnly);
+   AddStoreBackedToSearchIndex(aN, chkHamLibDebug);
+   AddStoreBackedToSearchIndex(aN, chkHamLibTrace);
+   AddStoreBackedToSearchIndex(aN, chkTelnetDebug);
+
+   // --- layNetwork ---
+   AddHandWiredToSearchIndex(aN, 'SERVER AUTO SYNCHRONIZE LOG ON CONNECT', chkNetAutoSync);
+   AddHandWiredToSearchIndex(aN, 'SERVER ADDRESS',                    edtNetAddress);
+   AddHandWiredToSearchIndex(aN, 'COMPUTER ID',                       edtNetComputerID);
+   AddHandWiredToSearchIndex(aN, 'SERVER PASSWORD',                   edtNetPassword);
+   AddHandWiredToSearchIndex(aN, 'SERVER PORT',                       edtNetPort);
+   AddHandWiredToSearchIndex(aN, 'RADIO TCP SERVER PORT',             edtRadioTCPPort);
+
+   // --- laySCP ---
+   AddHandWiredToSearchIndex(aN, 'SCP MINIMUM LETTERS',               cbxSCPMinLetters);
+   AddHandWiredToSearchIndex(aN, 'SCP COUNTRY STRING',                edtSCPCountry);
+
+   // --- layStation ---
+   AddStoreBackedToSearchIndex(aN, cbxMyContinent);
+   AddHandWiredToSearchIndex(aN, 'MY CALL',                           edtMyCall);
+   AddHandWiredToSearchIndex(aN, 'MY CHECK',                          edtMyCheck);
+   AddHandWiredToSearchIndex(aN, 'MY COUNTRY',                        edtMyCountry);
+   AddHandWiredToSearchIndex(aN, 'MY FD CLASS',                       edtMyFDClass);
+   AddHandWiredToSearchIndex(aN, 'MY FOC NUMBER',                     edtMyFOCNumber);
+   AddHandWiredToSearchIndex(aN, 'MY GRID',                           edtMyGrid);
+   AddHandWiredToSearchIndex(aN, 'MY IOTA',                           edtMyIOTA);
+   AddHandWiredToSearchIndex(aN, 'MY ITU ZONE',                       edtMyITUZone);
+   AddHandWiredToSearchIndex(aN, 'MY NAME',                           edtMyName);
+   AddHandWiredToSearchIndex(aN, 'MY PARK',                           edtMyPark);
+   AddHandWiredToSearchIndex(aN, 'MY POSTAL CODE',                    edtMyPostalCode);
+   AddHandWiredToSearchIndex(aN, 'MY PREC',                           edtMyPrec);
+   AddHandWiredToSearchIndex(aN, 'MY SECTION',                        edtMySection);
+   AddHandWiredToSearchIndex(aN, 'MY STATE',                          edtMyState);
+   AddHandWiredToSearchIndex(aN, 'MY ZONE',                           edtMyZone);
+
+   // --- layTCIServer ---
+   AddStoreBackedToSearchIndex(aN, edtTCIMaxTx);
 end;
 
 procedure TPrefsForm.RunSearch(const aNeedle: string);
