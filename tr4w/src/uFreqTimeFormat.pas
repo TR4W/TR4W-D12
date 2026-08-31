@@ -39,6 +39,11 @@ function MillisecondsToFormattedString(msecs: Cardinal; WithMsec: boolean): stri
 function SystemTimeToString(SysTime: SYSTEMTIME): string;
 function FormatFullTime(Hour, Minute, Second, Milliseconds: Word; WithMilliseconds: boolean): string;
 
+{ HH:MM, or HHMM with aSeparator = ''.  One function rather than two named
+  variants: the only difference between the clock display and the CW/filename
+  form is the separator, and two bodies would drift. }
+function FormatHourMinute(Hour, Minute: Word; const aSeparator: string = ':'): string;
+
 implementation
 
 uses SysUtils;
@@ -111,6 +116,22 @@ begin
   Result := SysUtils.Format('%.2u-%.2u-%.2u %.2u:%.2u:%.2u',
     [SysTime.wYear, SysTime.wMonth, SysTime.wDay,
      SysTime.wHour, SysTime.wMinute, SysTime.wSecond]);
+end;
+
+function FormatHourMinute(Hour, Minute: Word; const aSeparator: string = ':'): string;
+
+{ `%.2u`, NOT `%02u`.  Delphi's Format has no zero-pad FLAG -- `%02u` is read as
+  width 2 and pads with a SPACE, so a naive translation of the wsprintf form
+  turns 09:05 into ' 9: 5' and says nothing.  Precision is what zero-pads here.
+  The same substitution was made for FormatFullTime under Issue #997. }
+
+begin
+   { EXPLICIT cast.  SysUtils.Format returns AnsiString and `string` here is
+     UnicodeString, so the plain assignment the other functions in this unit
+     use raises an implicit-conversion warning -- and the build counts those
+     against a ceiling that is meant to ratchet DOWN, not up. }
+
+   Result := string(SysUtils.Format('%.2u%s%.2u', [Hour, aSeparator, Minute]));
 end;
 
 function FormatFullTime(Hour, Minute, Second, Milliseconds: Word; WithMilliseconds: boolean): string;

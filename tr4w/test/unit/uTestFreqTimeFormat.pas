@@ -30,6 +30,7 @@ type
       procedure Test_Milliseconds_WithMsec;
       procedure Test_SystemTimeToString;
       procedure Test_FormatFullTime;
+      procedure Test_FormatHourMinute;
    public
       procedure RunAllTests; override;
    end;
@@ -117,6 +118,24 @@ end;
 
 // FormatFullTime(Hour, Minute, Second, Milliseconds, WithMs)
 //   = '%.2hu:%.2hu:%.2hu[:%.3hu]'  (extracted from tree.GetFullTimeString)
+{ THE ZERO-PAD CASES ARE THE POINT.  wsprintf's '%.2hu' and Delphi's '%.2u'
+  agree; wsprintf's '%02u' and Delphi's '%02u' DO NOT -- the second space-pads.
+  Every expectation below has a leading zero for that reason. }
+procedure TFreqTimeFormatTests.Test_FormatHourMinute;
+begin
+   BeginTest('Test_FormatHourMinute');
+   CheckEquals('14:05', FormatHourMinute(14, 5),      'FHM afternoon');
+   CheckEquals('09:05', FormatHourMinute(9, 5),       'FHM both zero-padded');
+   CheckEquals('00:00', FormatHourMinute(0, 0),       'FHM midnight');
+   CheckEquals('23:59', FormatHourMinute(23, 59),     'FHM last minute');
+   CheckEquals('01:02', FormatHourMinute(1, 2),       'FHM single digits');
+   { The separator-free form -- LogCW.TimeString and the MP3/backup names. }
+   CheckEquals('1405',  FormatHourMinute(14, 5, ''),  'FHM compact');
+   CheckEquals('0905',  FormatHourMinute(9, 5, ''),   'FHM compact zero-padded');
+   CheckEquals('0000',  FormatHourMinute(0, 0, ''),   'FHM compact midnight');
+   CheckEquals('2359',  FormatHourMinute(23, 59, ''), 'FHM compact last minute');
+end;
+
 procedure TFreqTimeFormatTests.Test_FormatFullTime;
 begin
    BeginTest('Test_FormatFullTime');
@@ -137,6 +156,7 @@ begin
    Test_Milliseconds_WithMsec;
    Test_SystemTimeToString;
    Test_FormatFullTime;
+   Test_FormatHourMinute;
 end;
 
 end.

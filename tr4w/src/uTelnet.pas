@@ -409,7 +409,7 @@ begin
       end
    else if Token = 'TIME' then
       begin
-      Value := string(GetTimeString)
+      Value := GetTimeString
       end
    else if Token = 'BAND' then
       begin
@@ -1494,7 +1494,7 @@ end;
 procedure SaveTelnetWindowSpots;
 var
   i, Lines: integer;
-  TimeString: PAnsiChar;
+  TimeString: string;
   TelnetLogHandle: HWND;
   Line: AnsiString;
 begin
@@ -1510,7 +1510,14 @@ begin
      end;
 
   TimeString := GetTimeString;
-  TimeString[2] := '-';
+
+  { [3], NOT [2].  GetTimeString used to return a PAnsiChar, where index 2 is
+    the THIRD character -- the ':' of HH:MM, replaced to make the name
+    filename-safe.  A string indexes from 1, so the same character is [3];
+    leaving it at 2 would quietly write 'H-:MM'.  It also no longer scribbles
+    on the shared buffer GetTimeString used to hand out. }
+
+  TimeString[3] := '-';
   StrPCopy(wsprintfBuffer, SysUtils.Format('%sDXCluster\dxcluster %s %s.txt',
     [string(PAnsiChar(@TR4W_PATH_NAME)), string(GetDateString), string(TimeString)]));
 

@@ -180,7 +180,7 @@ end;
   marshals nothing, so the hop is explicit and lives with the form. }
 procedure ShowGetScoresStatus(Status: string);
 begin
-  PostScoresShowStatus(string(GetTimeString) + ' : ' + Status);
+  PostScoresShowStatus(GetTimeString + ' : ' + Status);
 end;
 
 procedure CheckServerAnswer(AnswerLength: integer);

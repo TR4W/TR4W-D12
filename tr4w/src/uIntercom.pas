@@ -53,14 +53,19 @@ var
   LastItemInIntercomListBox        : integer;
 
 implementation
-uses MainUnit,
+uses SysUtils,   { Format -- replaced TF.Format/wsprintfA }
+  MainUnit,
   uFlasher,    { the intercom flash is a timer now }
   uIntercomForm,   { the window is a form -- the list box lives there }
    uConfigValues;
 
 procedure AddMessageToIntercomWindow(mes: PAnsiChar; Sender: AnsiChar);
 var
-  stored                           : integer;
+  { AnsiString, NOT string.  Every consumer of this line is AnsiString --
+    sWriteFileFromString takes one, and the LCL's TStrings.Add takes one -- so a
+    UnicodeString here would be narrowed back at each use.  The content is a
+    timestamp, a callsign character and a message; there is nothing to lose. }
+  Line                             : AnsiString;
   h                                : HWND;
   lpThreadId                       : DWORD;
 begin
@@ -69,12 +74,14 @@ begin
      ProcessMenu(menu_windows_intercom);
      end;
 
-  // Issue #997: manual cdecl varargs push -> TF.Format (itself wsprintfA, so
-  // identical marshalling). The asm pushes were right-to-left, so the format
-  // arg order is: GetTimeString (%s), Sender (%C), mes (%s). Sender is pushed
-  // zero-extended (xor eax,eax; mov al,Sender) -> Ord(Sender). This binds the
-  // (PChar, integer, PChar) overload.
-  stored := TF.Format(wsprintfBuffer, '%s %C :   %s', GetTimeString, Ord(Sender), mes);
+  // TF.Format (wsprintfA) -> SysUtils.Format.  '%C' has no equivalent at all in
+  // Delphi's Format -- it would raise, not misformat -- so the character is
+  // passed as a one-character string instead of as Ord(Sender).
+  //
+  // The shared wsprintfBuffer, the byte count it returned, and the
+  // string(AnsiString(PAnsiChar(@wsprintfBuffer))) round trip below all go with
+  // it: the line is a string from here on.
+  Line := SysUtils.Format('%s %s :   %s', [GetTimeString, Sender, AnsiString(mes)]);
 
   if Config.IntercomFileEnable then
      begin
@@ -82,7 +89,7 @@ begin
      if h <> INVALID_HANDLE_VALUE then
         begin
         SetFilePointer(h, 0, nil, FILE_END);
-        sWriteFile(h, wsprintfBuffer, stored);
+        sWriteFileFromString(h, Line);
         sWriteFileFromString(h, #13#10);
         CloseHandle(h);
         end;
@@ -96,7 +103,7 @@ begin
      end;
   with TR4WIntercomForm.lstMessages do
      begin
-     LastItemInIntercomListBox := Items.Add(string(AnsiString(PAnsiChar(@wsprintfBuffer))));
+     LastItemInIntercomListBox := Items.Add(Line);
      TopIndex := Items.Count - 1;
      end;
   FlashIntercomListBox;

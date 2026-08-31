@@ -186,6 +186,7 @@ var
 implementation
 
 uses
+  uFreqTimeFormat,   { FormatHourMinute -- see TimeString }
   LogStuff,
   uTelnet,
   CFGCMD,
@@ -782,11 +783,17 @@ begin
 end;
 
 function TimeString: Str10;
+{ THE SIGNATURE IS DELIBERATELY UNCHANGED -- 38 callers.  Only the body moves.
+
+  It was TF.Format (wsprintfA) writing through `@Result[1]`, then setting the
+  length byte by hand.  That is the ShortString-into-a-Win32-API pattern: a
+  ShortString is not null-terminated, so the API writes a terminator into
+  whatever byte follows and the caller has to zero the buffer first and fix
+  the length afterwards.  Assigning a normal string does all three. }
+
 begin
   tGetSystemTime;
-  Windows.ZeroMemory(@Result, SizeOf(Result));
-  TF.Format(@Result[1], '%.2hu%.2hu', UTC.wHour, UTC.wMinute);
-  Result[0]                                                 := #4;
+  Result := Str10(uFreqTimeFormat.FormatHourMinute(UTC.wHour, UTC.wMinute, ''));
 end;
 
 function QSONumberString(QSONumber: integer): string;

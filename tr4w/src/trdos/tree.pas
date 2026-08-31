@@ -789,7 +789,7 @@ function GetSCPCharFromInteger(Index: integer): Char;
 function GetSCPIntegerFromChar(InputChar: AnsiChar): integer;
 function GetStateFromSection(Section: Str20): string;
 function GetSuffix(Call: CallString): CallString;
-function GetTimeString: PAnsiChar {str80};
+function GetTimeString: string;
 function GetTomorrowString: Str80;
 
 function GetYearString: PAnsiChar {Str20};
@@ -2200,11 +2200,14 @@ begin
               UTC.wMilliseconds, WithMilliseconds);
 end;
 
-function GetTimeString: PAnsiChar;
+function GetTimeString: string;
+{ Was TF.Format (wsprintfA) into the SHARED GLOBAL GetTimeStringBuffer, returned
+  as a pointer to it -- so every caller aliased one buffer and a caller that
+  wrote through the result changed what the next one read.  uTelnet did exactly
+  that.  A managed string result removes the aliasing outright. }
 begin
   tGetSystemTime;
-  TF.Format(GetTimeStringBuffer, '%.2hu:%.2hu', UTC.wHour, UTC.wMinute);
-  Result := GetTimeStringBuffer;
+  Result := uFreqTimeFormat.FormatHourMinute(UTC.wHour, UTC.wMinute);
 end;
 
 
