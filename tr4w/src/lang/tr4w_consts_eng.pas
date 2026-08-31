@@ -264,6 +264,7 @@
 
   TC_NOTENOUGHINFOINEXCHANGE            = 'Not enough info in exchange!!';
   TC_IMPROPERDOMESITCQTH                = 'Improper domestic QTH!!';
+  TC_IGNOREDUNKNOWNQTH                  = 'Ignored, not a known QTH:';
   TC_IMPROPERDOMESITCQTHORMISSINGNAME   = 'Improper domestic QTH or missing name!!';
   TC_MISSINGQTHANDORNAME                = 'Missing QTH and/or name!!';
   TC_NOQSONUMBERFOUND                   = 'No QSO number found!!';
@@ -883,6 +884,17 @@ TC_SHOW_ALL_SERIAL_PORTS = 'Show all serial ports';
   TC_KEYERNAMEDSALREADYEXISTS           = 'A keyer named "%s" already exists.';
   TC_SSTILLUSEDBYS                      = '"%s" is still used by: %s';
   TC_REMOVECLUSTERS                     = 'Remove the cluster "%s"?';
+  { The DX cluster window, when the cluster library is empty.  Shown as a red
+    label ABOVE the drop-down rather than as a greyed item inside it: a greyed
+    combo item is still selectable, and one inside a drop-down is invisible
+    until the operator opens it. }
+  TC_NODXCLUSTERSDEFINED                = 'No DX clusters are defined yet -- click Configure to add one.';
+  TC_CONFIGURE_ELLIPSIS                 = 'Configure...';
+  { The DX Cluster page, when the shipped server directory is missing. Shown
+    in place of the normal hint beside the Server drop-down, in red -- the
+    normal hint promises a list, so leaving it there would be a lie. }
+  TC_CLUSTERSERVERHINT                  = 'host:port, for example dxc.nc7j.com:7373.  The drop-down lists the servers in TRCLUSTER.DAT; you can also type one that is not on it.';
+  TC_CLUSTERDIRMISSING                  = 'TRCLUSTER.DAT was not found beside the program, so the list is empty. Type the server as host:port, for example dxc.nc7j.com:7373.';
   TC_REMOVEROTATORS                     = 'Remove the rotator "%s"?';
   TC_LOGGINGRUNNINGSOTHERENOFILEOPEN    = 'Logging is not running, so there is no file to open.';
   TC_THERENOLOGFILEYETS                 = 'There is no log file yet at %s.';

@@ -1698,11 +1698,17 @@ end;
   --------------------------------------------------------------------------- }
 
 procedure SplitExchangeIntoNumbersAndDomesticQTHs(Exchange: ShortString;
-  NumericTokens: TStringList; ValidQTHs: TStringList);
+  NumericTokens: TStringList; ValidQTHs: TStringList;
+  UnknownTokens: TStringList);
 
-{ Classify every token in Exchange as either an all-numeric token or a valid
-  domestic QTH, returning each group in user-typed (left to right) order.
-  Tokens that are neither are discarded.
+{ Classify every token in Exchange as an all-numeric token, a valid domestic
+  QTH, or neither -- returning each group in user-typed (left to right) order.
+
+  A token that is NEITHER is handed back in UnknownTokens rather than dropped.
+  It used to be discarded in silence, so "32 SLUI/MTY" -- a mistyped second
+  county, and MTY is exactly the abbreviation people reach for when the file
+  wants MONT -- logged one QSO for SLUI and lost the other leg with nothing
+  said.  The operator cannot see a QSO that was never written.
 
   All '/' characters are mapped to spaces first, so a county-line exchange may
   be given either way: "SLUI/MONT" and "SLUI MONT" travel the same path. }
@@ -1750,9 +1756,55 @@ begin
         if FoundDomesticQTH(ProbeRX) then
            begin
            ValidQTHs.Insert(0, TempString);
+           end
+        else
+           begin
+           UnknownTokens.Insert(0, TempString);
            end;
         end;
      end;
+end;
+
+procedure ReportIgnoredQTHTokens(const aCaller: string;
+  UnknownTokens: TStringList);
+
+{ Say what was thrown away.  Both parsers need this and they name themselves
+  differently in the log, so the caller is passed in rather than the message
+  being written out twice.
+
+  DELIBERATELY NOT FATAL.  The valid counties in the exchange are real and the
+  QSO should stand; refusing the whole entry would also change behaviour for
+  the thirteen QSO parties on the RST parser, where a stray token has always
+  been tolerated.  The operator is told and the QSO is logged, which is the
+  difference between a warning and a silent loss.
+
+  QuickDisplayError, not QuickDisplay: it beeps.  A message that only appears
+  in a corner of the screen during a run rate is a message nobody reads. }
+
+var
+  i                                     : integer;
+  IgnoredList                           : string;
+
+begin
+  if UnknownTokens.Count = 0 then
+     begin
+     Exit;
+     end;
+
+  IgnoredList := '';
+
+  for i := 0 to UnknownTokens.Count - 1 do
+     begin
+     if IgnoredList <> '' then
+        begin
+        IgnoredList := IgnoredList + ' ';
+        end;
+
+     IgnoredList := IgnoredList + UnknownTokens[i];
+     end;
+
+  logger.Error('[%s] Ignored unrecognised QTH token(s): %s', [aCaller, IgnoredList]);
+  QuickDisplayError(TC_IGNOREDUNKNOWNQTH + ' ' + IgnoredList);
 end;
 
 function ApplyFirstQTHAndQueueRest(ValidQTHs: TStringList;
@@ -1823,6 +1875,7 @@ var
   Normalized                            : ShortString;
   NumericTokens                         : TStringList;
   ValidQTHs                             : TStringList;
+  UnknownTokens                         : TStringList;
   ConversionResult                      : integer;
   i                                     : integer;
 
@@ -1858,9 +1911,11 @@ begin
 
   NumericTokens := TStringList.Create;
   ValidQTHs := TStringList.Create;
+  UnknownTokens := TStringList.Create;
 
   try
-     SplitExchangeIntoNumbersAndDomesticQTHs(Normalized, NumericTokens, ValidQTHs);
+     SplitExchangeIntoNumbersAndDomesticQTHs(Normalized, NumericTokens, ValidQTHs,
+                                             UnknownTokens);
 
      { This exchange is "number and QTH": a bare QTH with no number has always
        been rejected here, and still is. }
@@ -1886,10 +1941,18 @@ begin
      if not Result then
         begin
         logger.Error('[ProcessQSONumberAndDomesticQTHExchange] Improper Domestic QTH - Exchange = (%s)', [Exchange]);
+        end
+     else
+        begin
+        { Only once the exchange stands.  A rejected exchange already reports
+          itself above, and two complaints about one entry is noise. }
+
+        ReportIgnoredQTHTokens('ProcessQSONumberAndDomesticQTHExchange', UnknownTokens);
         end;
   finally
      NumericTokens.Free;
      ValidQTHs.Free;
+     UnknownTokens.Free;
      end;
 end;
 
@@ -3737,6 +3800,7 @@ var
   i             : Integer;
   NumericTokens : TStringList;
   ValidQTHs     : TStringList;
+  UnknownTokens : TStringList;
 
 begin
   ProcessRSTAndDomesticQTHExchange := False;
@@ -3801,9 +3865,11 @@ begin
 
   NumericTokens := TStringList.Create;
   ValidQTHs := TStringList.Create;
+  UnknownTokens := TStringList.Create;
 
   try
-     SplitExchangeIntoNumbersAndDomesticQTHs(Exchange, NumericTokens, ValidQTHs);
+     SplitExchangeIntoNumbersAndDomesticQTHs(Exchange, NumericTokens, ValidQTHs,
+                                             UnknownTokens);
 
      { The RIGHTMOST numeric token is the RS(T).  That is what the previous
        right-to-left walk selected: it took the first number it met, and its
@@ -3839,10 +3905,15 @@ begin
      if not Result then
         begin
         logger.Error('[ProcessRSTAndDomesticQTHExchange] Improper Domestic QTH - Exchange = (%s)', [Exchange]);
+        end
+     else
+        begin
+        ReportIgnoredQTHTokens('ProcessRSTAndDomesticQTHExchange', UnknownTokens);
         end;
   finally
      NumericTokens.Free;
      ValidQTHs.Free;
+     UnknownTokens.Free;
      end;
 end;
 

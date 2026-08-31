@@ -61,7 +61,12 @@ param(
    # THE NEGATIVE CONTROL.  Expect the exchange to be REFUSED: no QSO written
    # and the parser's own complaint in the log.  A suite that has never failed
    # has not been shown to be capable of failing.
-   [switch]   $ExpectReject
+   [switch]   $ExpectReject,
+   # A token the exchange named that is NOT a known QTH.  The QSO still stands
+   # on its valid counties, but the operator must be TOLD what was ignored --
+   # a mistyped second county used to vanish in silence, costing a QSO nobody
+   # could see was missing.
+   [string]   $ExpectIgnored = ''
 )
 
 Set-StrictMode -Version Latest
@@ -81,6 +86,7 @@ if ($AllCases)
       # california_cty.dom uses four letters, SLUI and MONT.  So this is both the
       # negative control and a real operator mistake.
       @{ Ex = '32 SLO/MTY';             Cty = '';                    Nr = 0;   Reject = $true; Note = 'INVALID counties -- must be refused, with a reason' }
+      @{ Ex = '32 SLUI/MTY';            Cty = 'SLUI';                Nr = 32;  Ignored = 'MTY'; Note = 'one valid county, one typo -- log the good one, REPORT the bad one' }
    )
    $failed = 0
    foreach ($c in $cases)
@@ -93,8 +99,10 @@ if ($AllCases)
          }
       else
          {
+         $ignored = ''
+         if ($c.ContainsKey('Ignored')) { $ignored = $c.Ignored }
          & $PSCommandPath -Exchange $c.Ex -ExpectCounties $c.Cty -ExpectSerial $c.Nr `
-                          -Repo $Repo -Exe $Exe -Call $Call
+                          -ExpectIgnored $ignored -Repo $Repo -Exe $Exe -Call $Call
          }
       if ($LASTEXITCODE -ne 0) { $failed++ }
       }
@@ -354,6 +362,14 @@ try
          }
 
       $gotCounties = @($qsos | ForEach-Object { $_.QTH.ToUpper() })
+      # The ignored token is asserted alongside the QSOs, not instead of them:
+      # logging the good county and reporting the bad one are both required, and
+      # checking only one of the two would pass on the silent-drop behaviour.
+      if ($ExpectIgnored -and ($written -notmatch "Ignored unrecognised QTH token\(s\): .*$([regex]::Escape($ExpectIgnored))"))
+         {
+         $failures.Add("'$ExpectIgnored' was not reported as an unrecognised QTH -- it was dropped silently")
+         }
+
       foreach ($want in $wantCounties)
          {
          if ($gotCounties -notcontains $want.ToUpper())
@@ -383,6 +399,7 @@ try
          {
          Write-Output ("Test-CountyLineEntry: PASS -- '{0}' logged {1} QSOs ({2}), all with serial {3}." -f `
                        $Exchange, $qsos.Count, ($gotCounties -join ' + '), $ExpectSerial)
+         if ($ExpectIgnored) { Write-Output "  and reported the ignored token: $ExpectIgnored" }
          }
       }
 }
