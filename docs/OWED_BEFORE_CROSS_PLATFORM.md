@@ -92,6 +92,34 @@ merged into the sections, so the file keeps reporting the number.
 54 is also the better figure to plan against than the 17 store-backed controls
 counted earlier — different measure, related cause, and larger.
 
+### 1b. The settings hierarchy exists in two places (2026-08-31)
+
+Added the same day it was created, so it is not discovered later as a mystery.
+
+Sectioning `tr4w.json` needs to know that **Band Map sits under Operating**, and
+the key space does not say so: `bandmap.*` is a top-level prefix while Band Map
+is a CHILD of Operating in the nav tree. Same for Online Scoring
+(`scoring.hamscore.*`) and Paddle and PTT (`ptt.*`, under CW Settings).
+
+So `uRadioConfigStore.SectionParent` is a three-line table that **must match the
+nav tree by hand**. NY4I is not thrilled about it, and is right not to be.
+
+**Why the obvious fix was not taken.** Renaming the key prefixes to match the
+tree would have made the grouping derivable again — but **55 controls are bound
+by literal key** in `uPrefsForm` and `Bind()` takes a `string`, so a mistyped
+rename does not fail to compile: it silently unbinds a control, and the setting
+then does nothing with no diagnostic anywhere. A table that only decides how a
+file is grouped is the smaller risk.
+
+**And the key space is already inconsistent underneath it**: `operating.cw.*`
+and a separate top-level `cw.*` both exist.
+
+**The real fix is one declared hierarchy** — slug, caption, parent — driving the
+nav tree AND the file grouping, so neither can drift. That also gives the search
+index its `SectionName` for hand-wired settings, which item 1 needs anyway. Do
+it with the lint, not before: both want the registry to be the single place a
+setting's identity lives.
+
 **What is still owed is the lint.** A hand-maintained registry that nothing
 checks will drift again the day after it is corrected, and there is still no
 proof there is not a fourth class of setting. `Lint-FormEvents` shows the

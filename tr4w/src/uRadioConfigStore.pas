@@ -2298,6 +2298,75 @@ begin
    aList.Values[aName] := aValue;
 end;
 
+{ Read every command out of a `commands` tree, WHATEVER ITS DEPTH.
+
+  RECURSIVE, and the first version was not -- it assumed exactly one level of
+  section and called a text accessor on every child. That held while sections
+  were flat, and broke the moment Band Map nested inside Operating: `operating`
+  then holds 60 command STRINGS and 2 child OBJECTS side by side, and FPC's JSON
+  answers a text accessor on an object with "Cannot convert data from object
+  value" -- which TR4W showed the operator on the way out (NY4I, 2026-08-31).
+
+  THE VALUE'S TYPE IS THE ONLY RULE, at any depth: an object is a section to
+  descend into, anything else is a command. That reads the flat shape, today's
+  two-level shape, and any deeper grouping later, with no version flag and
+  nothing to keep in step. }
+procedure TakeCommandTree(const aList: TStringList; const aObj: TJSONObject);
+var
+   i: integer;
+   v: TJSONValue;
+begin
+   for i := 0 to aObj.Count - 1 do
+      begin
+      v := JSONPairValue(aObj, i);
+      if v is TJSONObject then
+         begin
+         TakeCommandTree(aList, TJSONObject(v));
+         end
+      else
+         begin
+         TakeCommand(aList, JSONPairName(aObj, i), JSONText(v));
+         end;
+      end;
+end;
+
+{ The section that OWNS this one in Preferences, '' if it is top level.
+
+  THE KEY SPACE AND THE NAV TREE DISAGREE, and the nav tree is what the operator
+  sees. 'bandmap.*' is a top-level key prefix but Band Map is a CHILD of
+  Operating on screen; likewise Online Scoring (scoring.hamscore.*) under
+  Operating, and Paddle and PTT (ptt.*) under CW Settings. Grouping the file by
+  key prefix alone put Band Map beside Operating rather than inside it
+  (NY4I, 2026-08-31).
+
+  THIS IS A SECOND COPY OF A HIERARCHY AND THAT IS A KNOWN DEBT, recorded in
+  docs/OWED_BEFORE_CROSS_PLATFORM.md. The alternative was renaming the key
+  prefixes to match -- but 55 controls are bound by literal key in uPrefsForm
+  and Bind() takes a STRING, so a mistyped rename does not fail to compile, it
+  silently unbinds a control. A three-line table that only decides how a file is
+  grouped is the smaller risk; the real fix is one declared hierarchy driving
+  both the nav tree and this. }
+function SectionParent(const aSection: string): string;
+begin
+   { LowerCase COMPARISON, NOT SameText, for the same reason BuildSectionMap
+     upper-cases: SameText resolves to the AnsiString overload here, so every
+     call narrows both arguments -- six ratchet entries for comparing three
+     ASCII slugs against literals. Section names are already lower case by
+     construction; this only guards a caller that is not. }
+   if (LowerCase(aSection) = 'bandmap') or (LowerCase(aSection) = 'scoring') then
+      begin
+      Result := 'operating';
+      end
+   else if LowerCase(aSection) = 'ptt' then
+      begin
+      Result := 'cw';
+      end
+   else
+      begin
+      Result := '';
+      end;
+end;
+
 function TRadioConfigStore.SaveToJSON: TJSONObject;
 var
    radios, profiles: TJSONArray;
@@ -2310,6 +2379,9 @@ var
      Sharing the variable would leave the next reader one edit away from
      freeing something that belongs to the object. }
    ordered: TStringList;
+   parent: TJSONObject;
+   parentName: string;
+   path: AnsiString;
    section: TJSONObject;
    sectionName: AnsiString;
    i, s, idx: integer;
@@ -2396,11 +2468,43 @@ begin
             begin
             sectionName := SECTION_OTHER;
             end;
-         idx := sections.IndexOf(sectionName);
+         { NESTED UNDER ITS PARENT WHERE PREFERENCES NESTS IT. Keyed by the full
+           path so a child and a top-level section of the same name could not
+           collide, and so the parent is created once however many children it
+           has. }
+         parentName := SectionParent(sectionName);
+         if parentName <> '' then
+            begin
+            path := AnsiString(parentName + '/' + sectionName);
+            end
+         else
+            begin
+            path := AnsiString(sectionName);
+            end;
+
+         idx := sections.IndexOf(path);
          if idx < 0 then
             begin
             section := TJSONObject.Create;
-            sections.AddObject(sectionName, section);
+            sections.AddObject(path, section);
+
+            if parentName <> '' then
+               begin
+               { The parent may not have been reached yet -- sections are
+                 created as their first command turns up, and a child's command
+                 can sort before any of the parent's own. }
+               idx := sections.IndexOf(AnsiString(parentName));
+               if idx < 0 then
+                  begin
+                  parent := TJSONObject.Create;
+                  sections.AddObject(AnsiString(parentName), parent);
+                  end
+               else
+                  begin
+                  parent := TJSONObject(sections.Objects[idx]);
+                  end;
+               parent.AddPair(sectionName, section);
+               end;
             end
          else
             begin
@@ -2409,9 +2513,15 @@ begin
          section.AddPair(ordered.Names[i], ordered.ValueFromIndex[i]);
          end;
 
+      { Only the TOP-LEVEL entries go into `commands`; a child is already inside
+        its parent and adding it again would hand the same object to two owners
+        -- a double free on the way out. }
       for i := 0 to sections.Count - 1 do
          begin
-         commands.AddPair(sections[i], TJSONObject(sections.Objects[i]));
+         if Pos('/', sections[i]) = 0 then
+            begin
+            commands.AddPair(sections[i], TJSONObject(sections.Objects[i]));
+            end;
          end;
    finally
       sections.Free;
@@ -2548,10 +2658,9 @@ var
    rotDef: TRotatorDefinition;
    cluDef: TClusterDefinition;
    profile: TStationProfile;
-   v, pv: TJSONValue;
-   section: TJSONObject;
+   v: TJSONValue;
    lst: TStringList;
-   i, s, k: integer;
+   i, s: integer;
    err: string;
 begin
    Clear;
@@ -2755,23 +2864,7 @@ begin
         it. }
       lst := TStringList.Create;
       try
-         for i := 0 to commands.Count - 1 do
-            begin
-            pv := JSONPairValue(commands, i);
-            if pv is TJSONObject then
-               begin
-               section := TJSONObject(pv);
-               for k := 0 to section.Count - 1 do
-                  begin
-                  TakeCommand(lst, JSONPairName(section, k),
-                              JSONText(JSONPairValue(section, k)));
-                  end;
-               end
-            else
-               begin
-               TakeCommand(lst, JSONPairName(commands, i), JSONText(pv));
-               end;
-            end;
+         TakeCommandTree(lst, commands);
          FCommands.Assign(lst);
       finally
          lst.Free;
