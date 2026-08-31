@@ -1079,7 +1079,7 @@ type
                                    const aSelected, aUsedByOtherSlot,
                                    aOtherSlotLabel: string);
       procedure FillCWOutputCombo(const aCombo: TComboBox;
-                                  const aSelected, aRadioName: string);
+                                  const aSelected, aRadioId: string);
       procedure CaptureProfileFields;
 
       // WHERE THE WORK LIVES.  Each is called by more than one control's
@@ -1940,8 +1940,18 @@ end;
 // which port had a keyer on it and to re-answer that question in every profile.
 // Now a keyer is DEFINED once in the keyer library and REFERENCED here by name,
 // exactly as a radio is.
+// THE RADIO IS NAMED BY ID, NOT BY DISPLAY NAME.  A radio's id is a GUID and
+// its name is an operator-chosen label, so the two can never coincide -- and
+// both the radio combo's item tag and the profile's Radio1Id/Radio2Id already
+// hold the id.  This routine alone wanted a name, and the interactive path
+// (OnRadioComboChanged) passed it the combo tag, which is an id: FindRadio is
+// a name-only lookup, so it returned nil, the whole radio-relative block was
+// skipped, and neither 'CW by CAT' nor the radio keyer port was offered.  It
+// failed silently and only when the operator CHANGED a radio -- loading a
+// saved profile converted the id first and worked, which is what made it look
+// like the IC-7100 lacked a capability it declares (NY4I, 2026-08-31).
 procedure TPrefsForm.FillCWOutputCombo(const aCombo: TComboBox;
-                                       const aSelected, aRadioName: string);
+                                       const aSelected, aRadioId: string);
 var
    i: integer;
    radio: TRadioDefinition;
@@ -1953,9 +1963,9 @@ begin
    // actually provide them.  Both are properties of that radio, not devices --
    // see uKeyerConfigStore's header for where the line falls.
    radio := nil;
-   if Trim(aRadioName) <> '' then
+   if Trim(aRadioId) <> '' then
       begin
-      radio := FStore.FindRadio(aRadioName);
+      radio := FStore.FindRadioById(aRadioId);
       end;
 
    if radio <> nil then
@@ -2324,8 +2334,8 @@ begin
                          [prof.Name, prof.Radio1Id, cbxRadio1.ItemIndex,
                           prof.Radio2Id, cbxRadio2.ItemIndex]);
             end;
-         FillCWOutputCombo(cbxCW1, prof.CWOutput1, RadioNameForId(prof.Radio1Id));
-         FillCWOutputCombo(cbxCW2, prof.CWOutput2, RadioNameForId(prof.Radio2Id));
+         FillCWOutputCombo(cbxCW1, prof.CWOutput1, prof.Radio1Id);
+         FillCWOutputCombo(cbxCW2, prof.CWOutput2, prof.Radio2Id);
          chkSpeedSync1.Checked := prof.SpeedSync1;
          chkSpeedSync2.Checked := prof.SpeedSync2;
          chkSO2R.Checked  := prof.SO2REnabled;
