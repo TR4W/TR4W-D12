@@ -100,8 +100,20 @@ type
     FChoice: TNewContestChoice;
     FDir: string;            { the directory lstFiles was filled from }
     FBrowsedFile: string;    { set only when Browse... was used }
+    { The designed geometry of the bottom of gbExisting, captured once so
+      LayoutLatestButton is idempotent and survives a resize. See it. }
+    FLatestMargin: integer;      { gbExisting client bottom -> button bottom }
+    FLatestHeight: integer;      { the designed height, used as a floor }
+    FGapBrowse:    integer;      { Browse bottom -> Latest top }
+    FGapList:      integer;      { list bottom -> Browse top }
+    FGeometry:     boolean;      { the four above have been captured }
     procedure BuildRows;
-    function GetRowCount: integer;
+    procedure CaptureGeometry;
+
+    procedure ApplyMinimumSize;
+    procedure LayoutLatestButton;
+    function  WrappedTextHeight(const aText: TCaption; const aWidth: integer): integer;
+    function  GetRowCount: integer;
   public
     { Population -- what WM_INITDIALOG used to do with CreateWindow calls. }
     procedure PopulateFiles(const aDir: string);
@@ -148,6 +160,8 @@ implementation
 
 uses
   SysUtils, Graphics,
+  MainUnit,   // logger
+  Log4D,
   VC;   { ContestTypeSA, tCategory*SA -- the source of truth for types }
 
 const
@@ -155,9 +169,19 @@ const
     so the group box resizes them with it. }
   ROW_TOP    = 174;   // first dynamic row, below the comment panel
   ROW_HEIGHT = 30;
-  ROW_LABEL_LEFT  = 12;
-  ROW_LABEL_WIDTH = 140;
-  ROW_FIELD_LEFT  = 160;
+  { THE LABEL COLUMN IS SIZED BY ITS LONGEST MEMBER, which is
+    CATEGORY-TRANSMITTER. At 140 it fitted that label EXACTLY, so the text ran
+    up against the left edge with nothing to spare and read as though it were
+    clipped (NY4I, 2026-08-31). Widened by 20 and the column started 4 further
+    left, which buys room for a longer translation of the same word rather than
+    just un-crowding the English.
+
+    The three move together: the field column starts one gap right of where the
+    label column ends, and ROW_FIELD_WIDTH is only the DESIGN width -- the
+    fields are akRight-anchored and stretch with the form. }
+  ROW_LABEL_LEFT  = 8;
+  ROW_LABEL_WIDTH = 160;
+  ROW_FIELD_LEFT  = 176;
   ROW_FIELD_WIDTH = 200;
   FIRST_CHOICE_ROW = 4;   // rows 1..3 are free text, 4..9 are CATEGORY-* lists
 
@@ -239,6 +263,42 @@ begin
    lblMyCall.Caption := RC_CALLSIGN;
    btnOK.Caption    := rsMbOK;
    btnCancel.Caption := rsMbCancel;
+
+   { THIS IS THE CALL THAT SIZES THE BUTTON. The one in ShowLatest cannot.
+
+     A LABEL CANNOT MEASURE ITSELF UNTIL ITS FORM IS SHOWN, and PrepareForm
+     captions the button beforehand. Measured on 2026-08-31, the same caption
+     on the same probe at the same width:
+
+         from PrepareForm, form not yet shown   33 px   (one line)
+         from here, form shown                  61 px   (three lines)
+
+     So the earlier pass computes a single line however long the text is,
+     clamps to the designed height and changes nothing. It is left in place
+     because it still does the other half of the job -- showing or hiding the
+     button and handing its space back to the file list -- and because deleting
+     it would leave the dialog unsized for anything that captions the button
+     while it is already open.
+
+     NOTE WHAT THIS IS NOT. The first attempt at this assumed the akBottom
+     anchors were reverting the geometry on show; the log said Top and Height
+     were untouched at 388/44 both times, because nothing had ever grown them.
+     Do not reintroduce an anchor workaround.
+
+     Calling it twice is safe: every value it writes derives from the geometry
+     captured once from the .lfm and from the current caption, never from the
+     controls' present Top and Height. }
+   LayoutLatestButton;
+   ApplyMinimumSize;
+
+   if logger.IsDebugEnabled then
+      begin
+      logger.Debug('[NewContest] minimum height: gbNew client=%d, last row bottom=%d, ' +
+                   'form Height=%d -> MinHeight=%d',
+                   [gbNew.ClientHeight,
+                    FRows[High(FRows)].Choice.Top + FRows[High(FRows)].Choice.Height,
+                    Height, Constraints.MinHeight]);
+      end;
 end;
 
 { THE .CFG FILES WHERE TR4W KEEPS THEM -- the one-click common case.
@@ -369,10 +429,240 @@ begin
       end;
 end;
 
+{ HOW TALL THIS TEXT IS once wrapped into aWidth, in the button's own font.
+
+  MEASURED WITH A TLabel RATHER THAN TEXT METRICS. The LCL already knows how it
+  breaks a caption into lines; a hand-rolled word-wrap here would be a SECOND
+  opinion, free to disagree with the one that actually paints -- and the failure
+  mode of disagreeing is the clipped text this routine exists to prevent.
+  Constraints.MaxWidth with AutoSize and WordWrap is the LCL's own idiom for
+  "how tall is this, wrapped". The probe is never shown and never parented into
+  the visible layout beyond the measurement.
+
+  ShowAccelChar is left at its default because the caption carries one: the
+  '&' in '(Alt+&A)' is drawn as an underline, not as a character, and measuring
+  it as a character would over-estimate by one glyph.
+
+  THE PROBE MUST BE VISIBLE, and that is the whole trick. The LCL does not
+  auto-size a control that is not visible -- AutoSize is skipped, Height keeps
+  the default, and the measurement comes back as a SINGLE LINE no matter what
+  the caption says. Measured on 2026-08-31: an invisible probe reported 17px
+  for a caption that renders three lines, so the button never grew and the fix
+  looked like it had done nothing at all.
+
+  Nothing flashes on screen. The probe is created, measured and freed without
+  the message loop turning, so it never gets the chance to paint.
+
+  ORDER MATTERS TOO: WordWrap and the width constraint go on BEFORE AutoSize
+  and the caption, so the first size it computes is already the wrapped one. }
+function TfrmNewContest.WrappedTextHeight(const aText: TCaption;
+                                          const aWidth: integer): integer;
+var
+   probe: TLabel;
+begin
+   probe := TLabel.Create(nil);
+   try
+      probe.Parent               := Self;
+      probe.Font                 := btnLatest.Font;
+      probe.WordWrap             := True;
+      probe.Constraints.MaxWidth := aWidth;
+      probe.Width                := aWidth;
+      probe.AutoSize             := True;
+      probe.Caption              := aText;
+      probe.AdjustSize;
+      Result                     := probe.Height;
+   finally
+      probe.Free;
+   end;
+end;
+
+{ THE FORM MAY NOT SHRINK PAST ITS LAST CATEGORY ROW.
+
+  The nine rows are built in code, akTop-anchored, so they do NOT move when the
+  form is resized -- gbNew simply clips them. Constraints.MinHeight in the .lfm
+  was 460 against a designed 524, and the difference is almost exactly two rows:
+  at the minimum size CATEGORY-POWER and CATEGORY-TRANSMITTER were both cut off
+  with nothing to say so (NY4I, 2026-08-31).
+
+  DERIVED, NOT TYPED, and that is the point. The obvious fix is to type a bigger
+  number into the .lfm, which requires knowing whether a form's Height includes
+  its caption and borders -- and being wrong there is off by exactly one row,
+  which looks like a rounding error rather than a mistake. This asks the form
+  what it currently has instead: SLACK is the unused space left inside gbNew
+  below the last row, and the form may give up precisely that much and no more.
+
+  Both terms are read at the same moment, so the frame size cancels and never
+  has to be known. It is also self-maintaining: add a tenth row and the minimum
+  grows on its own. }
+procedure TfrmNewContest.ApplyMinimumSize;
+var
+   last : TControl;
+   slack: integer;
+begin
+   last := FRows[High(FRows)].Choice;
+   if last = nil then
+      begin
+      Exit;
+      end;
+
+   slack := gbNew.ClientHeight - (last.Top + last.Height);
+   if slack > 0 then
+      begin
+      Constraints.MinHeight := Height - slack;
+      end;
+end;
+
+{ The designed spacing at the bottom of gbExisting, read ONCE from the .lfm.
+
+  CAPTURED RATHER THAN HARD-CODED so the designer stays the single source of
+  the layout -- move a control in the .lfm and this follows. Captured ONCE
+  because LayoutLatestButton rewrites Top and Height, so reading them again
+  afterwards would measure this routine's own output and drift a little further
+  every time the button is re-captioned.
+
+  The margin is held against the group box's CLIENT HEIGHT, not as an absolute
+  Top, because all three controls are akBottom-anchored and move when the form
+  is resized. }
+procedure TfrmNewContest.CaptureGeometry;
+begin
+   if FGeometry then
+      begin
+      Exit;
+      end;
+   FLatestMargin := gbExisting.ClientHeight - (btnLatest.Top + btnLatest.Height);
+   FLatestHeight := btnLatest.Height;
+   FGapBrowse    := btnLatest.Top - (btnBrowse.Top + btnBrowse.Height);
+   FGapList      := btnBrowse.Top - (lstFiles.Top + lstFiles.Height);
+   FGeometry     := True;
+end;
+
+{ SIZE THE BUTTON TO ITS TEXT, and take the difference out of the file list.
+
+  The caption is two logical lines -- the label and then the full path -- and
+  the path is as long as the operator's directory names make it. It was a fixed
+  44px in the .lfm, which fits exactly two rendered lines, so a path that wrapped
+  to a third was silently clipped (NY4I, 2026-08-31: a path ending in
+  \2026 wwdigi ny4i\wwdigi.cfg lost its last line).
+
+  GROWS UPWARD, because the button is anchored to the bottom of the group box
+  and the operator's eye is on it there. Browse moves up by the same amount and
+  the list absorbs it.
+
+  THE LIST HAS A FLOOR. Growth is capped so the file list keeps MIN_LIST pixels
+  -- an unbounded path would otherwise consume the very list this dialog exists
+  to show. When the cap bites, the PATH is elided in its middle rather than
+  clipped at its end: the drive and the file name are the two parts that
+  identify it, and they are the two parts a right-clip destroys.
+
+  IDEMPOTENT: every value is derived from the captured design geometry and the
+  current caption, never from the controls' present Top and Height. }
+procedure TfrmNewContest.LayoutLatestButton;
+const
+   { A button insets its text from its own edges; measure against the inside. }
+   TEXT_INSET = 16;
+   MIN_LIST   = 120;
+   ELIDE      = '...';
+var
+   { TCaption, NOT string. In this unit `string` is UnicodeString while an LCL
+     caption is TCaption, so a plain string local converts on every read and
+     every write -- four narrowing warnings for text that never leaves the
+     widget set. Hold the caption in the type the control uses. }
+   text, label_, path: TCaption;
+   { The ellipsis as a TCaption too. As a bare string constant it is
+     UnicodeString here, which promotes the whole concatenation and then
+     narrows it back on the way into text -- three warnings for three dots. }
+   dots: TCaption;
+   avail, needed, capHeight, bottom, keep, brk: integer;
+begin
+   CaptureGeometry;
+
+   bottom := gbExisting.ClientHeight - FLatestMargin;
+
+   if not btnLatest.Visible then
+      begin
+      { No latest file: hand the space back rather than leaving a hole. }
+      capHeight := 0;
+      end
+   else
+      begin
+      avail := bottom - FGapBrowse - btnBrowse.Height - FGapList
+                      - lstFiles.Top - MIN_LIST;
+
+      text   := btnLatest.Caption;
+      needed := WrappedTextHeight(text, btnLatest.Width - TEXT_INSET) + TEXT_INSET;
+      if logger.IsDebugEnabled then
+         begin
+         logger.Debug('[NewContest] measured "%s" at width %d: %d px',
+                      [StringReplace(text, #13#10, ' | ', [rfReplaceAll]),
+                       btnLatest.Width - TEXT_INSET, needed]);
+         end;
+
+      { STILL TOO LONG FOR THE WHOLE ALLOWANCE: shorten the PATH, and only the
+        path. The caption is 'Latest config file (Alt+&A):' + a line break + the
+        file name, and eliding into the label would damage the one part that
+        says what the button does. Everything after the last line break is the
+        path; if there is no line break there is nothing to protect and the
+        whole caption is the path.
+
+        Shortened from the MIDDLE: the drive and the file name identify a path,
+        and they are exactly the two parts a right-hand clip destroys. Halved
+        each pass, so this converges in a handful of passes on any real path,
+        and it runs once per show. }
+      dots   := ELIDE;
+      brk    := LastDelimiter(#10, text);
+      label_ := Copy(text, 1, brk);
+      path   := Copy(text, brk + 1, MaxInt);
+      keep   := Length(path);
+      while (needed > avail) and (keep > Length(ELIDE) + 8) do
+         begin
+         keep := keep div 2;
+         text := label_ + Copy(path, 1, keep div 2) + dots +
+                 Copy(path, Length(path) - (keep - keep div 2) + 1, MaxInt);
+         needed := WrappedTextHeight(text, btnLatest.Width - TEXT_INSET) + TEXT_INSET;
+         end;
+      if text <> btnLatest.Caption then
+         begin
+         { The full path stays reachable even when it cannot be shown. }
+         btnLatest.Hint     := btnLatest.Caption;
+         btnLatest.ShowHint := True;
+         btnLatest.Caption  := text;
+         end;
+
+      capHeight := needed;
+      if capHeight < FLatestHeight then
+         begin
+         capHeight := FLatestHeight;
+         end;
+      if capHeight > avail then
+         begin
+         capHeight := avail;
+         end;
+
+      btnLatest.Height := capHeight;
+      btnLatest.Top    := bottom - capHeight;
+      capHeight        := capHeight + FGapBrowse;
+      end;
+
+   btnBrowse.Top   := bottom - capHeight - btnBrowse.Height;
+   lstFiles.Height := btnBrowse.Top - FGapList - lstFiles.Top;
+
+   if logger.IsDebugEnabled then
+      begin
+      logger.Debug('[NewContest] latest button: client=%d bottom=%d needed=%d ' +
+                   'avail=%d -> Top=%d Height=%d (browse Top=%d, list Height=%d)',
+                   [gbExisting.ClientHeight, bottom, needed, avail,
+                    btnLatest.Top, btnLatest.Height, btnBrowse.Top,
+                    lstFiles.Height]);
+      end;
+end;
+
 procedure TfrmNewContest.ShowLatest(const aCaption: string);
 begin
-   btnLatest.Caption := aCaption;
-   btnLatest.Visible := aCaption <> '';
+   btnLatest.ShowHint := False;
+   btnLatest.Hint     := '';
+   btnLatest.Caption  := aCaption;
+   btnLatest.Visible  := aCaption <> '';
+   LayoutLatestButton;
 end;
 
 { THE FULL PATH, whichever way it was chosen: Browse answers with one already,

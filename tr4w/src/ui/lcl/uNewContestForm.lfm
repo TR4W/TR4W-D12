@@ -8,7 +8,7 @@ object frmNewContest: TfrmNewContest
   ClientHeight = 524
   ClientWidth = 740
   Constraints.MinHeight = 460
-  Constraints.MinWidth = 660
+  Constraints.MinWidth = 680
   Position = poScreenCenter
   LCLVersion = '4.8.0.0'
   OnCreate = HandleCreate
