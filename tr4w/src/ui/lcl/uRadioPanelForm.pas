@@ -454,6 +454,17 @@ begin
 
    OwnFormByMainWindow(GForms[slot]);
 
+   { THE PANEL MAY NOT BE SHRUNK PAST ITS OWN READOUT.  It had no Constraints at
+     all, so the window could be dragged down until the VFO frequencies were
+     clipped -- with nothing to say so, which is the same complaint the open-
+     contest dialog had about its category rows (NY4I, 2026-08-31).
+
+     Derived from the controls rather than typed into the .lfm; see
+     ApplyContentMinimumSize.  After OwnFormByMainWindow, so the form has its
+     final frame when both terms are read. }
+
+   ApplyContentMinimumSize(GForms[slot]);
+
    Result := GForms[slot].Handle;
    GForms[slot].SyncActiveTint;
    GForms[slot].UpdateSpectrumButton;

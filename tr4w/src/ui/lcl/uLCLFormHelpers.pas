@@ -350,6 +350,34 @@ procedure FillRTSDTRCombo(const aCombo: TComboBox; const aSelected: string);
 // chose -- the same convention BaudRate and ReceiverAddress already use.
 procedure FillStopBitsCombo(const aCombo: TComboBox; const aSelected: integer);
 
+
+{ A FORM MAY NOT BE SHRUNK PAST ITS OWN CONTENT.
+
+  Sets Constraints.MinWidth / MinHeight from what the form actually holds: the
+  SLACK is the unused space to the right of, and below, the furthest control,
+  and the form may give up precisely that much and no more.
+
+  DERIVED, NOT TYPED, which is the whole point. The obvious alternative is to
+  put numbers in the .lfm, and that requires knowing whether a form's Width and
+  Height include its caption and borders -- being wrong there is off by exactly
+  one control, which reads as a rounding error rather than a mistake. Asking the
+  form for both terms AT THE SAME MOMENT makes the frame size cancel, so it
+  never has to be known. It is also self-maintaining: move or add a control and
+  the minimum follows.
+
+  Generalised from TfrmNewContest.ApplyMinimumSize (NY4I, 2026-08-31), where a
+  typed MinHeight of 460 against a designed 524 clipped CATEGORY-POWER and
+  CATEGORY-TRANSMITTER with nothing on screen to say so.
+
+  ONLY VISIBLE, TOP-LEFT-ANCHORED CONTROLS COUNT. A control anchored right or
+  bottom MOVES with the form, so its position at this instant says nothing about
+  how small the form may become; including one would pin the form to whatever
+  size it happened to have when this ran. A hidden control is not content.
+
+  Call it once the form is laid out -- OnShow, or after any code that builds
+  rows -- and call it again if the layout changes. }
+procedure ApplyContentMinimumSize(const aForm: TForm);
+
 function TryParseHexByte(const aText: string; out aValue: integer): boolean;
 
 implementation
@@ -981,6 +1009,73 @@ end;
 class function TStopwatch.StartNew: TStopwatch;
 begin
    Result.FStart := GetTickCount64;
+end;
+
+
+procedure ApplyContentMinimumSize(const aForm: TForm);
+var
+   i           : integer;
+   c           : TControl;
+   maxR, maxB  : integer;
+   slackW, slackH: integer;
+begin
+   if aForm = nil then
+      begin
+      Exit;
+      end;
+
+   maxR := 0;
+   maxB := 0;
+
+   for i := 0 to aForm.ControlCount - 1 do
+      begin
+      c := aForm.Controls[i];
+
+      if not c.Visible then
+         begin
+         Continue;
+         end;
+
+      { A right- or bottom-anchored control travels with the edge, so where it
+        sits right now is not a statement about the minimum. }
+      if akRight in c.Anchors then
+         begin
+         Continue;
+         end;
+      if akBottom in c.Anchors then
+         begin
+         Continue;
+         end;
+
+      if c.Left + c.Width > maxR then
+         begin
+         maxR := c.Left + c.Width;
+         end;
+      if c.Top + c.Height > maxB then
+         begin
+         maxB := c.Top + c.Height;
+         end;
+      end;
+
+   if (maxR = 0) or (maxB = 0) then
+      begin
+      { Nothing measurable -- an empty form, or every control anchored to an
+        edge. Say nothing rather than pin the form to its current size. }
+      Exit;
+      end;
+
+   slackW := aForm.ClientWidth - maxR;
+   slackH := aForm.ClientHeight - maxB;
+
+   { Both read at this instant, so (Width - ClientWidth) never appears. }
+   if slackW > 0 then
+      begin
+      aForm.Constraints.MinWidth := aForm.Width - slackW;
+      end;
+   if slackH > 0 then
+      begin
+      aForm.Constraints.MinHeight := aForm.Height - slackH;
+      end;
 end;
 
 function TStopwatch.ElapsedMilliseconds: Int64;
