@@ -2626,16 +2626,39 @@ begin
 
            //ctyLocateCall(Call, TempQTH);
            //if TempQTH.Zone > 0 then Str(TempQTH.Zone, TempString);
+           { ctyGetZone reports failure with TWO different values, and they
+             mean different things: DUMMYZONE (255) when the call could not be
+             located at all, and 0 when it WAS located but no zone could be
+             resolved for the active zone mode -- uCTYDAT.PAS initialises
+             Result to 0 and falls back to it.  Guarding on DUMMYZONE alone let
+             the 0 through, and Str() then wrote a literal "0" into the
+             operator's exchange window as though it were a real zone
+             (reported by NY4I against CQP, 2026-08-31).
+
+             Note the guard needs BOTH tests, not just "> 0": DUMMYZONE is 255,
+             so a "> 0" test on its own would print 255 for a call that could
+             not be located.  Every other zone call site in this tree tests
+             only "> 0" -- including two in the CustomInitialExchange arm of
+             this same function -- so they carry that inverse gap. Left alone
+             here deliberately: that is a separate defect on display paths this
+             change is not about. }
+
            TempZone := ctyGetZone(Call);
-           if TempZone {TempQTH.Zone} <> DUMMYZONE then
+
+           if (TempZone <> DUMMYZONE)  and
+              (TempZone <> 0)          then
               begin
-              Str(TempZone {TempQTH.Zone}, TempString);
+              Str(TempZone, TempString);
               end;
            GetRidOfPrecedingSpaces(TempString);
-           if DebugFlag and (TempString = '') then
-              begin
-              TempString := '40';
-              end;
+
+           { A DebugFlag fallback that substituted a hardcoded '40' for an
+             unresolved zone used to sit here.  It was removed (NY4I,
+             2026-08-31): DebugFlag is set by the DEBUG and TRACE command-line
+             parameters, which are in routine use, so this injected a fake zone
+             into a live operator field rather than into anything diagnostic.
+             An unresolved zone now yields an empty initial exchange in every
+             build, which is what the rest of the tree already does. }
 
            { InitialExchangePutUp := TempString <> ''; }
          end;
