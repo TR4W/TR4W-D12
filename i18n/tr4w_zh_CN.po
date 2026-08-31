@@ -2745,7 +2745,7 @@ msgstr "内存程序函数"
 #, fuzzy
 msgctxt "tfrmprogrammessage.btncq.caption"
 msgid "Press &C to program a CQ function key."
-msgstr "按 & C 来编程 CQ 函数密钥 ."
+msgstr "按 &C 来编程 CQ 函数密钥 ."
 
 #. Section: UEDITMESSAGE
 #: tr4w/src/lang/tr4w_consts_eng.pas:537
@@ -2754,7 +2754,7 @@ msgstr "按 & C 来编程 CQ 函数密钥 ."
 #, fuzzy
 msgctxt "tfrmprogrammessage.btnexchange.caption"
 msgid "Press &E to program an exchange/search and pounce function key."
-msgstr "按 & E 来编程一个交换/搜索和弹出函数键 ."
+msgstr "按 &E 来编程一个交换/搜索和弹出函数键 ."
 
 #. Section: UEDITMESSAGE
 #: tr4w/src/lang/tr4w_consts_eng.pas:538
@@ -2763,7 +2763,7 @@ msgstr "按 & E 来编程一个交换/搜索和弹出函数键 ."
 #, fuzzy
 msgctxt "tfrmprogrammessage.btnother.caption"
 msgid "Press &O to program the other non function key messages."
-msgstr "按 & O 来编程其他非函数密钥消息 ."
+msgstr "按 &O 来编程其他非函数密钥消息 ."
 
 #. Section: UEDITMESSAGE
 #. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
@@ -7390,12 +7390,12 @@ msgstr "创建并使用新日志( C)"
 #: tfrmserverlog.btncreatenewlog.caption
 #, fuzzy
 msgid "Create and use new log"
-msgstr ""
+msgstr "创建和使用新日志"
 
 #: tfrmserverlog.btngetlog.caption
 #, fuzzy
 msgid "Get server log"
-msgstr ""
+msgstr "获取服务器日志"
 
 #: tfrmserverlog.lblbytes.caption
 #: tfrmserverlog.lblqsos.caption
@@ -7411,7 +7411,7 @@ msgstr ""
 #, fuzzy
 msgctxt "tfrmtelnet.btnconfigure.caption"
 msgid "Configure..."
-msgstr ""
+msgstr "配置..."
 
 #: tfrmtelnet.lblnoclusters.caption
 #, fuzzy
@@ -7421,850 +7421,850 @@ msgstr ""
 #: tprefsform.lblspotcollectorhint.caption
 #, fuzzy
 msgid "Lets you double-click a spot in DXLab SpotCollector and have the callsign appear in TR4W's call field.  This does NOT affect spots from your DX cluster - those arrive whether this is ticked or not."
-msgstr ""
+msgstr "允许您双击 DXLab SpotCollector 中的一个位置,并将调用符号显示在 TR4W 的调用字段中 。 这不影响您 DX 星团的斑点, 无论是否选中, 都会到达 。"
 
 #: usettingscaptions.rs_advanced_handlogmode
 #, fuzzy
 msgid "Hand Log Mode"
-msgstr ""
+msgstr "手记模式"
 
 #: usettingscaptions.rs_advanced_nolog
 #, fuzzy
 msgid "No Log"
-msgstr ""
+msgstr "无日志"
 
 #: usettingscaptions.rs_appearance_ctrlj_beepenable
 #, fuzzy
 msgid "Beep Enable"
-msgstr ""
+msgstr "哔声启用"
 
 #: usettingscaptions.rs_appearance_ctrlj_columnautosize
 #, fuzzy
 msgid "Column Autosize"
-msgstr ""
+msgstr "列自动大小"
 
 #: usettingscaptions.rs_appearance_ctrlj_completecallsignmask
 #, fuzzy
 msgid "Complete Callsign Mask"
-msgstr ""
+msgstr "完整调用罩"
 
 #: usettingscaptions.rs_appearance_ctrlj_contactsperpage
 #, fuzzy
 msgid "Contacts Per Page"
-msgstr ""
+msgstr "每页联系人"
 
 #: usettingscaptions.rs_appearance_ctrlj_hourdisplay
 #, fuzzy
 msgid "Hour Display"
-msgstr ""
+msgstr "小时显示"
 
 #: usettingscaptions.rs_appearance_ctrlj_insertmode
 #, fuzzy
 msgid "Insert Mode"
-msgstr ""
+msgstr "插入模式"
 
 #: usettingscaptions.rs_appearance_ctrlj_ratedisplay
 #, fuzzy
 msgid "Rate Display"
-msgstr ""
+msgstr "速率显示"
 
 #: usettingscaptions.rs_appearance_ctrlj_reminder
 #, fuzzy
 msgid "Reminder"
-msgstr ""
+msgstr "提醒"
 
 #: usettingscaptions.rs_appearance_ctrlj_showfrequencyinlog
 #, fuzzy
 msgid "Show Frequency In Log"
-msgstr ""
+msgstr "在日志中显示频率"
 
 #: usettingscaptions.rs_appearance_ctrlj_showtypedcallsign
 #, fuzzy
 msgid "Show Typed Callsign"
-msgstr ""
+msgstr "显示已键入的调用"
 
 #: usettingscaptions.rs_appearance_ctrlj_userinfoshown
 #, fuzzy
 msgid "User Info Shown"
-msgstr ""
+msgstr "用户信息显示"
 
 #: usettingscaptions.rs_appearance_layout_rowcount
 #, fuzzy
 msgid "Row Count"
-msgstr ""
+msgstr "行数"
 
 #: usettingscaptions.rs_appearance_layout_windowsize
 #, fuzzy
 msgid "Window Size"
-msgstr ""
+msgstr "窗口大小"
 
 #: usettingscaptions.rs_audio_dvk_path
 #, fuzzy
 msgid "Folder for DVK recordings"
-msgstr ""
+msgstr "DVK 录音文件夹"
 
 #: usettingscaptions.rs_audio_mp3_path
 #, fuzzy
 msgid "Folder for MP3 recordings"
-msgstr ""
+msgstr "MP3 录音文件夹"
 
 #: usettingscaptions.rs_bandmap_ctrlj_bandmapcutofffrequency
 #, fuzzy
 msgid "Band Map Cutoff Frequency"
-msgstr ""
+msgstr "带状图断流频率"
 
 #: usettingscaptions.rs_bandmap_ctrlj_bandmapitemheight
 #, fuzzy
 msgid "Band Map Item Height"
-msgstr ""
+msgstr "带状映射项目高度"
 
 #: usettingscaptions.rs_bandmap_ctrlj_bandmapitemwidth
 #, fuzzy
 msgid "Band Map Item Width"
-msgstr ""
+msgstr "带状映射项目宽度"
 
 #: usettingscaptions.rs_bandmap_ctrlj_bandmapsize
 #, fuzzy
 msgid "Band Map Size"
-msgstr ""
+msgstr "带状映射大小"
 
 #: usettingscaptions.rs_bandmap_ctrlj_bandmapsplitmode
 #, fuzzy
 msgid "Band Map Split Mode"
-msgstr ""
+msgstr "带图分割模式"
 
 #: usettingscaptions.rs_cluster_ctrlj_broadcastallpacketdata
 #, fuzzy
 msgid "Broadcast All Packet Data"
-msgstr ""
+msgstr "广播所有数据包"
 
 #: usettingscaptions.rs_contest_autocqdelaytime
 #, fuzzy
 msgid "Auto-CQ Delay Time"
-msgstr ""
+msgstr "自动 CQ 延迟时间"
 
 #: usettingscaptions.rs_contest_autoqslinterval
 #, fuzzy
 msgid "Auto QSL Interval"
-msgstr ""
+msgstr "自动 QSL 间隔"
 
 #: usettingscaptions.rs_contest_beepevery10qsos
 #, fuzzy
 msgid "Beep Every 10 QSOs"
-msgstr ""
+msgstr "每10个QSO鸣声"
 
 #: usettingscaptions.rs_contest_categoryassisted
 #, fuzzy
 msgid "Category-Assisted"
-msgstr ""
+msgstr "已确认类别"
 
 #: usettingscaptions.rs_contest_categoryband
 #, fuzzy
 msgid "Category-Band"
-msgstr ""
+msgstr "类别Band"
 
 #: usettingscaptions.rs_contest_categorymode
 #, fuzzy
 msgid "Category-Mode"
-msgstr ""
+msgstr "类别模式"
 
 #: usettingscaptions.rs_contest_categoryoperator
 #, fuzzy
 msgid "Category-Operator"
-msgstr ""
+msgstr "类别操作员"
 
 #: usettingscaptions.rs_contest_categoryoverlay
 #, fuzzy
 msgid "Category-Overlay"
-msgstr ""
+msgstr "类别汇总"
 
 #: usettingscaptions.rs_contest_categorypower
 #, fuzzy
 msgid "Category-Power"
-msgstr ""
+msgstr "类别国"
 
 #: usettingscaptions.rs_contest_categorytransmitter
 #, fuzzy
 msgid "Category-Transmitter"
-msgstr ""
+msgstr "类别传送器"
 
 #: usettingscaptions.rs_contest_contest
 #, fuzzy
 msgid "Contest"
-msgstr ""
+msgstr "竞技"
 
 #: usettingscaptions.rs_contest_contestname
 #, fuzzy
 msgid "Contest Name"
-msgstr ""
+msgstr "竞技名称"
 
 #: usettingscaptions.rs_contest_contesttitle
 #, fuzzy
 msgid "Contest Title"
-msgstr ""
+msgstr "竞技标题"
 
 #: usettingscaptions.rs_contest_countdomesticcountries
 #, fuzzy
 msgid "Count Domestic Countries"
-msgstr ""
+msgstr "计算国内国家"
 
 #: usettingscaptions.rs_contest_custominitialexchangestring
 #, fuzzy
 msgid "Custom Initial Exchange String"
-msgstr ""
+msgstr "自定义初始交换字符串"
 
 #: usettingscaptions.rs_contest_domesticmultiplier
 #, fuzzy
 msgid "Domestic Multiplier"
-msgstr ""
+msgstr "国内乘数"
 
 #: usettingscaptions.rs_contest_dxmultiplier
 #, fuzzy
 msgid "DX Multiplier"
-msgstr ""
+msgstr "DX 乘数"
 
 #: usettingscaptions.rs_contest_exchangememoryenable
 #, fuzzy
 msgid "Exchange Memory Enable"
-msgstr ""
+msgstr "交换内存启用"
 
 #: usettingscaptions.rs_contest_exchangereceived
 #, fuzzy
 msgid "Exchange Received"
-msgstr ""
+msgstr "收到的交换"
 
 #: usettingscaptions.rs_contest_gridmapcenter
 #, fuzzy
 msgid "Grid Map Center"
-msgstr ""
+msgstr "网格地图中心"
 
 #: usettingscaptions.rs_contest_initialexchange
 #, fuzzy
 msgid "Initial Exchange"
-msgstr ""
+msgstr "初始交换"
 
 #: usettingscaptions.rs_contest_initialexchangecursorpos
 #, fuzzy
 msgid "Initial Exchange Cursor Pos"
-msgstr ""
+msgstr "初始交换光标"
 
 #: usettingscaptions.rs_contest_initialexchangeoverwrite
 #, fuzzy
 msgid "Initial Exchange Overwrite"
-msgstr ""
+msgstr "初始交换覆盖"
 
 #: usettingscaptions.rs_contest_literaldomesticqth
 #, fuzzy
 msgid "Literal Domestic Qth"
-msgstr ""
+msgstr "国内文学Qth"
 
 #: usettingscaptions.rs_contest_logrssent
 #, fuzzy
 msgid "Log Rs Sent"
-msgstr ""
+msgstr "发送日志 Rs"
 
 #: usettingscaptions.rs_contest_logrstsent
 #, fuzzy
 msgid "Log Rst Sent"
-msgstr ""
+msgstr "发送日志"
 
 #: usettingscaptions.rs_contest_lookforrstsent
 #, fuzzy
 msgid "Look For Rst Sent"
-msgstr ""
+msgstr "寻找发件人"
 
 #: usettingscaptions.rs_contest_messageenable
 #, fuzzy
 msgid "Message Enable"
-msgstr ""
+msgstr "信件启用"
 
 #: usettingscaptions.rs_contest_minitourduration
 #, fuzzy
 msgid "Minitour Duration"
-msgstr ""
+msgstr "最小持续时间"
 
 #: usettingscaptions.rs_contest_multbyband
 #, fuzzy
 msgid "Mult By Band"
-msgstr ""
+msgstr "依乐队"
 
 #: usettingscaptions.rs_contest_multbymode
 #, fuzzy
 msgid "Mult By Mode"
-msgstr ""
+msgstr "按模式排列"
 
 #: usettingscaptions.rs_contest_multiplebands
 #, fuzzy
 msgid "Multiple Bands"
-msgstr ""
+msgstr "多个频段"
 
 #: usettingscaptions.rs_contest_multiplemodes
 #, fuzzy
 msgid "Multiple Modes"
-msgstr ""
+msgstr "多模式"
 
 #: usettingscaptions.rs_contest_multreportminimumbands
 #, fuzzy
 msgid "Mult Report Minimum Bands"
-msgstr ""
+msgstr "Mult 报告最小带"
 
 #: usettingscaptions.rs_contest_multsheetautoreset
 #, fuzzy
 msgid "Mult Sheet Auto Reset"
-msgstr ""
+msgstr "Mult 工作表自动重置"
 
 #: usettingscaptions.rs_contest_prefixmultiplier
 #, fuzzy
 msgid "Prefix Multiplier"
-msgstr ""
+msgstr "前缀 乘数"
 
 #: usettingscaptions.rs_contest_qslmode
 #, fuzzy
 msgid "QSL Mode"
-msgstr ""
+msgstr "QSL 模式"
 
 #: usettingscaptions.rs_contest_qsobyband
 #, fuzzy
 msgid "QSO By Band"
-msgstr ""
+msgstr "QSO 按乐队"
 
 #: usettingscaptions.rs_contest_qsobymode
 #, fuzzy
 msgid "QSO By Mode"
-msgstr ""
+msgstr "QSO 按模式"
 
 #: usettingscaptions.rs_contest_qsonumberbyband
 #, fuzzy
 msgid "QSO Number By Band"
-msgstr ""
+msgstr "QSO 按带数"
 
 #: usettingscaptions.rs_contest_qsopointmethod
 #, fuzzy
 msgid "QSO Point Method"
-msgstr ""
+msgstr "QSO 点方法"
 
 #: usettingscaptions.rs_contest_qsopointsdomesticcw
 #, fuzzy
 msgid "QSO Points Domestic CW"
-msgstr ""
+msgstr "QSO 点国内CW"
 
 #: usettingscaptions.rs_contest_qsopointsdomesticphone
 #, fuzzy
 msgid "QSO Points Domestic Phone"
-msgstr ""
+msgstr "QSO 国内电话"
 
 #: usettingscaptions.rs_contest_qsopointsdxcw
 #, fuzzy
 msgid "QSO Points DX CW"
-msgstr ""
+msgstr "QSO 点 DX CW"
 
 #: usettingscaptions.rs_contest_qsopointsdxphone
 #, fuzzy
 msgid "QSO Points DX Phone"
-msgstr ""
+msgstr "QSO 点数 DX 电话"
 
 #: usettingscaptions.rs_contest_qtcenable
 #, fuzzy
 msgid "Qtc Enable"
-msgstr ""
+msgstr "启用 Qtc"
 
 #: usettingscaptions.rs_contest_qtcextraspace
 #, fuzzy
 msgid "Qtc Extra Space"
-msgstr ""
+msgstr "Qtc 额外空间"
 
 #: usettingscaptions.rs_contest_qtcminutes
 #, fuzzy
 msgid "Qtc Minutes"
-msgstr ""
+msgstr "Qtc 分钟"
 
 #: usettingscaptions.rs_contest_qtcqrs
 #, fuzzy
 msgid "Qtc Qrs"
-msgstr ""
+msgstr "Qtc 质子"
 
 #: usettingscaptions.rs_contest_quickqslcwmessage
 #, fuzzy
 msgid "Quick QSL CW Message"
-msgstr ""
+msgstr "快速 QSL CW 信件"
 
 #: usettingscaptions.rs_contest_quickqslcwmessage1
 #, fuzzy
 msgid "Quick QSL CW Message1"
-msgstr ""
+msgstr "快速 QSL CW 信件1"
 
 #: usettingscaptions.rs_contest_quickqslkey1
 #, fuzzy
 msgid "Quick QSL Key 1"
-msgstr ""
+msgstr "快速 QSL 键 1"
 
 #: usettingscaptions.rs_contest_quickqslkey2
 #, fuzzy
 msgid "Quick QSL Key 2"
-msgstr ""
+msgstr "快速 QSL 键 2"
 
 #: usettingscaptions.rs_contest_quickqslmessage1
 #, fuzzy
 msgid "Quick QSL Message 1"
-msgstr ""
+msgstr "快速 QSL 信件 1"
 
 #: usettingscaptions.rs_contest_quickqslmessage2
 #, fuzzy
 msgid "Quick QSL Message 2"
-msgstr ""
+msgstr "快速 QSL 信件 2"
 
 #: usettingscaptions.rs_contest_quickqslssbmessage
 #, fuzzy
 msgid "Quick QSL SSB Message"
-msgstr ""
+msgstr "快速 QSL SSB 信件"
 
 #: usettingscaptions.rs_contest_r150smode
 #, fuzzy
 msgid "R150S Mode"
-msgstr ""
+msgstr "R150S 模式"
 
 #: usettingscaptions.rs_contest_randomcqmode
 #, fuzzy
 msgid "Random CQ Mode"
-msgstr ""
+msgstr "随机 CQ 模式"
 
 #: usettingscaptions.rs_contest_remainingmultdisplaymode
 #, fuzzy
 msgid "Remaining Mult Display Mode"
-msgstr ""
+msgstr "剩余穆特显示模式"
 
 #: usettingscaptions.rs_contest_reverseinitialex
 #, fuzzy
 msgid "Reverse Initial Ex"
-msgstr ""
+msgstr "反转初始 Ex"
 
 #: usettingscaptions.rs_contest_rfoblmode
 #, fuzzy
 msgid "Rfobl Mode"
-msgstr ""
+msgstr "Rfobl 模式"
 
 #: usettingscaptions.rs_contest_showallserialports
 #, fuzzy
 msgid "Show All Serial Ports"
-msgstr ""
+msgstr "显示全部串行端口"
 
 #: usettingscaptions.rs_contest_showdomesticmultipliername
 #, fuzzy
 msgid "Show Domestic Multiplier Name"
-msgstr ""
+msgstr "显示国内乘数名称"
 
 #: usettingscaptions.rs_contest_sprintqsyrule
 #, fuzzy
 msgid "Sprint Qsy Rule"
-msgstr ""
+msgstr "冲刺Qsy规则"
 
 #: usettingscaptions.rs_contest_tenminuterule
 #, fuzzy
 msgid "Ten Minute Rule"
-msgstr ""
+msgstr "十分钟规则"
 
 #: usettingscaptions.rs_contest_zonemultiplier
 #, fuzzy
 msgid "Zone Multiplier"
-msgstr ""
+msgstr "区数倍数"
 
 #: usettingscaptions.rs_cw_ctrlj_autosendcharactercount
 #, fuzzy
 msgid "Auto Send Character Count"
-msgstr ""
+msgstr "自动发送字符计数"
 
 #: usettingscaptions.rs_cw_ctrlj_codespeed
 #, fuzzy
 msgid "Code Speed"
-msgstr ""
+msgstr "代码速度"
 
 #: usettingscaptions.rs_cw_ctrlj_paddleport
 #, fuzzy
 msgid "Paddle Port"
-msgstr ""
+msgstr "划桨端口"
 
 #: usettingscaptions.rs_cw_ctrlj_questionmarkchar
 #, fuzzy
 msgid "Question Mark Char"
-msgstr ""
+msgstr "问题标记字符"
 
 #: usettingscaptions.rs_cw_ctrlj_short0
 #, fuzzy
 msgid "Short 0"
-msgstr ""
+msgstr "简称 0"
 
 #: usettingscaptions.rs_cw_ctrlj_short1
 #, fuzzy
 msgid "Short 1"
-msgstr ""
+msgstr "简称 1"
 
 #: usettingscaptions.rs_cw_ctrlj_short2
 #, fuzzy
 msgid "Short 2"
-msgstr ""
+msgstr "简称 2"
 
 #: usettingscaptions.rs_cw_ctrlj_short9
 #, fuzzy
 msgid "Short 9"
-msgstr ""
+msgstr "简称 9"
 
 #: usettingscaptions.rs_cw_ctrlj_shortintegers
 #, fuzzy
 msgid "Short Integers"
-msgstr ""
+msgstr "短整数"
 
 #: usettingscaptions.rs_cw_ctrlj_slashmarkchar
 #, fuzzy
 msgid "Slash Mark Char"
-msgstr ""
+msgstr "斜线标记字符"
 
 #: usettingscaptions.rs_cw_ctrlj_startsendingnowkey
 #, fuzzy
 msgid "Start Sending Now Key"
-msgstr ""
+msgstr "开始发送现在的密钥"
 
 #: usettingscaptions.rs_cw_ctrlj_tunealtdenable
 #, fuzzy
 msgid "Tune Alt-D Enable"
-msgstr ""
+msgstr "启用 Tune Alt-D"
 
 #: usettingscaptions.rs_cw_messageschainable
 #, fuzzy
 msgid "Any message may chain into the next"
-msgstr ""
+msgstr "任何信件都会连锁到下一个"
 
 #: usettingscaptions.rs_cw_paddle_pttholdcount
 #, fuzzy
 msgid "Hold PTT for"
-msgstr ""
+msgstr "持有 PTT 为"
 
 #: usettingscaptions.rs_cw_speedincrement
 #, fuzzy
 msgid "Speed step"
-msgstr ""
+msgstr "速度步骤"
 
 #: usettingscaptions.rs_files_ctrlj_allowautoupdate
 #, fuzzy
 msgid "Allow Auto Update"
-msgstr ""
+msgstr "允许自动更新"
 
 #: usettingscaptions.rs_files_ctrlj_callsignupdateenable
 #, fuzzy
 msgid "Callsign Update Enable"
-msgstr ""
+msgstr "调用更新启用"
 
 #: usettingscaptions.rs_files_ctrlj_countryinformationfile
 #, fuzzy
 msgid "Country Information File"
-msgstr ""
+msgstr "国家信息文件"
 
 #: usettingscaptions.rs_files_ctrlj_ctyupdatecheckonstartup
 #, fuzzy
 msgid "Cty Update Check On Startup"
-msgstr ""
+msgstr "启动时进行 Cty 更新检查"
 
 #: usettingscaptions.rs_files_ctrlj_domesticfilename
 #, fuzzy
 msgid "Domestic Filename"
-msgstr ""
+msgstr "国内文件名"
 
 #: usettingscaptions.rs_files_ctrlj_initialexchangefilename
 #, fuzzy
 msgid "Initial Exchange Filename"
-msgstr ""
+msgstr "初始交换文件名"
 
 #: usettingscaptions.rs_files_ctrlj_missingcallsignsfileenable
 #, fuzzy
 msgid "Missingcallsigns File Enable"
-msgstr ""
+msgstr "缺少调用符号文件启用"
 
 #: usettingscaptions.rs_files_ctrlj_unknowncountryfilename
 #, fuzzy
 msgid "Unknown Country File Name"
-msgstr ""
+msgstr "未知的国家文件名称"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt1baseaddress
 #, fuzzy
 msgid "LPT1 Base Address"
-msgstr ""
+msgstr "LPT1 基本地址"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt2baseaddress
 #, fuzzy
 msgid "LPT2 Base Address"
-msgstr ""
+msgstr "LPT2 基础地址"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt3baseaddress
 #, fuzzy
 msgid "LPT3 Base Address"
-msgstr ""
+msgstr "LPT3 基本地址"
 
 #: usettingscaptions.rs_hardware_ctrlj_stereocontrolpin
 #, fuzzy
 msgid "Stereo Control Pin"
-msgstr ""
+msgstr "立体声控制键"
 
 #: usettingscaptions.rs_hardware_ctrlj_stereopinhigh
 #, fuzzy
 msgid "Stereo Pin High"
-msgstr ""
+msgstr "立体声高"
 
 #: usettingscaptions.rs_hardware_ctrlj_usecontrolport
 #, fuzzy
 msgid "Use Control Port"
-msgstr ""
+msgstr "使用控制端口"
 
 #: usettingscaptions.rs_network_ctrlj_computername
 #, fuzzy
 msgid "Computer Name"
-msgstr ""
+msgstr "计算机名称"
 
 #: usettingscaptions.rs_network_ctrlj_netstatusupdateinterval
 #, fuzzy
 msgid "Net Status Update Interval"
-msgstr ""
+msgstr "净状态更新间隔"
 
 #: usettingscaptions.rs_operating_autoreturntocq
 #, fuzzy
 msgid "Return to CQ mode after logging"
-msgstr ""
+msgstr "记录后返回 CQ 模式"
 
 #: usettingscaptions.rs_operating_bands_vhf
 #, fuzzy
 msgid "VHF and up"
-msgstr ""
+msgstr "甚高频和上"
 
 #: usettingscaptions.rs_operating_ctrlj_askforfrequencies
 #, fuzzy
 msgid "Ask For Frequencies"
-msgstr ""
+msgstr "问一些花样"
 
 #: usettingscaptions.rs_operating_ctrlj_autodisplaydupeqso
 #, fuzzy
 msgid "Auto Display Dupe QSO"
-msgstr ""
+msgstr "自动显示 Dupe QSO"
 
 #: usettingscaptions.rs_operating_ctrlj_autodupeenablecq
 #, fuzzy
 msgid "Auto Dupe Enable CQ"
-msgstr ""
+msgstr "自动 Dupe 启用 CQ"
 
 #: usettingscaptions.rs_operating_ctrlj_autodupeenablesandp
 #, fuzzy
 msgid "Auto Dupe Enable S And P"
-msgstr ""
+msgstr "自动 Dupe 启用 S和 P"
 
 #: usettingscaptions.rs_operating_ctrlj_autospenable
 #, fuzzy
 msgid "Auto S&P Enable"
-msgstr ""
+msgstr "自动 S&P 启用"
 
 #: usettingscaptions.rs_operating_ctrlj_autospenablesensitivity
 #, fuzzy
 msgid "Auto S&P Enable Sensitivity"
-msgstr ""
+msgstr "自动 S&P 启用灵敏度"
 
 #: usettingscaptions.rs_operating_ctrlj_autotimeincrement
 #, fuzzy
 msgid "Auto Time Increment"
-msgstr ""
+msgstr "自动时间递增"
 
 #: usettingscaptions.rs_operating_ctrlj_customuserstring
 #, fuzzy
 msgid "Custom User String"
-msgstr ""
+msgstr "自定义用户字符串"
 
 #: usettingscaptions.rs_operating_ctrlj_deenable
 #, fuzzy
 msgid "De Enable"
-msgstr ""
+msgstr "取消启用"
 
 #: usettingscaptions.rs_operating_ctrlj_digitalmodeenable
 #, fuzzy
 msgid "Digital Mode Enable"
-msgstr ""
+msgstr "数字模式启用"
 
 #: usettingscaptions.rs_operating_ctrlj_distancemode
 #, fuzzy
 msgid "Distance Mode"
-msgstr ""
+msgstr "远程模式"
 
 #: usettingscaptions.rs_operating_ctrlj_dupechecksound
 #, fuzzy
 msgid "Dupe Check Sound"
-msgstr ""
+msgstr "Dupe 检查声音"
 
 #: usettingscaptions.rs_operating_ctrlj_dupesheetautoreset
 #, fuzzy
 msgid "Dupe Sheet Auto Reset"
-msgstr ""
+msgstr "dupe 工作表自动重置"
 
 #: usettingscaptions.rs_operating_ctrlj_frequencymemory
 #, fuzzy
 msgid "Frequency Memory"
-msgstr ""
+msgstr "频率内存"
 
 #: usettingscaptions.rs_operating_ctrlj_frequencymemoryenable
 #, fuzzy
 msgid "Frequency Memory Enable"
-msgstr ""
+msgstr "频率内存启用"
 
 #: usettingscaptions.rs_operating_ctrlj_frequencypollrate
 #, fuzzy
 msgid "Frequency Poll Rate"
-msgstr ""
+msgstr "频率"
 
 #: usettingscaptions.rs_operating_ctrlj_ieswitch
 #, fuzzy
 msgid "Ie Switch"
-msgstr ""
+msgstr "易切换"
 
 #: usettingscaptions.rs_operating_ctrlj_incrementtimeenable
 #, fuzzy
 msgid "Increment Time Enable"
-msgstr ""
+msgstr "增加时间启用"
 
 #: usettingscaptions.rs_operating_ctrlj_logfrequencyenable
 #, fuzzy
 msgid "Log Frequency Enable"
-msgstr ""
+msgstr "启用日志频率"
 
 #: usettingscaptions.rs_operating_ctrlj_logsubtitle
 #, fuzzy
 msgid "Log Sub Title"
-msgstr ""
+msgstr "日志子标题"
 
 #: usettingscaptions.rs_operating_ctrlj_maincallsign
 #, fuzzy
 msgid "Main Callsign"
-msgstr ""
+msgstr "主调用"
 
 #: usettingscaptions.rs_operating_ctrlj_possiblecallacceptkey
 #, fuzzy
 msgid "Possible Call Accept Key"
-msgstr ""
+msgstr "可能呼叫接受密钥"
 
 #: usettingscaptions.rs_operating_ctrlj_possiblecallleftkey
 #, fuzzy
 msgid "Possible Call Left Key"
-msgstr ""
+msgstr "可能调用左键"
 
 #: usettingscaptions.rs_operating_ctrlj_possiblecallmode
 #, fuzzy
 msgid "Possible Call Mode"
-msgstr ""
+msgstr "可能的呼叫模式"
 
 #: usettingscaptions.rs_operating_ctrlj_possiblecallrightkey
 #, fuzzy
 msgid "Possible Call Right Key"
-msgstr ""
+msgstr "可能调用右键"
 
 #: usettingscaptions.rs_operating_ctrlj_qsxenable
 #, fuzzy
 msgid "Qsx Enable"
-msgstr ""
+msgstr "Qsx 启用"
 
 #: usettingscaptions.rs_operating_ctrlj_qzbrandomoffsetenable
 #, fuzzy
 msgid "Qzb Random Offset Enable"
-msgstr ""
+msgstr "启用 Qzb 随机偏移"
 
 #: usettingscaptions.rs_operating_ctrlj_radiusofearth
 #, fuzzy
 msgid "Radius Of Earth"
-msgstr ""
+msgstr "地球半径"
 
 #: usettingscaptions.rs_operating_ctrlj_shiftkeyenable
 #, fuzzy
 msgid "Shift Key Enable"
-msgstr ""
+msgstr "移动密钥启用"
 
 #: usettingscaptions.rs_operating_ctrlj_stationscallsignsmask
 #, fuzzy
 msgid "Stations Callsigns Mask"
-msgstr ""
+msgstr "呼叫口罩站"
 
 #: usettingscaptions.rs_operating_ctrlj_wakeuptimeout
 #, fuzzy
 msgid "Wake Up Time Out"
-msgstr ""
+msgstr "唤醒时间"
 
 #: usettingscaptions.rs_operating_cw_leadingzerochar
 #, fuzzy
 msgid "Leading zero sent as"
-msgstr ""
+msgstr "引导 0 发送为"
 
 #: usettingscaptions.rs_operating_cw_leadingzeros
 #, fuzzy
 msgid "Leading zeros"
-msgstr ""
+msgstr "引导零"
 
 #: usettingscaptions.rs_operating_cw_sayhiratecutoff
 #, fuzzy
 msgid "Stop above this rate"
-msgstr ""
+msgstr "超过此比例停止"
 
 #: usettingscaptions.rs_operating_cw_serial_farnsworthspeed
 #, fuzzy
 msgid "Character speed"
-msgstr ""
+msgstr "字符速度"
 
 #: usettingscaptions.rs_operating_tworadio_qsyinactive
 #, fuzzy
 msgid "QSY the inactive radio"
-msgstr ""
+msgstr "QSY 不活跃的无线电"
 
 #: usettingscaptions.rs_operating_tworadio_waitforstrength
 #, fuzzy
 msgid "Wait for a signal strength reading"
-msgstr ""
+msgstr "等待信号强度读取"
 
 #: usettingscaptions.rs_ptt_viacommands
 #, fuzzy
 msgid "Key the transmitter with a CAT command"
-msgstr ""
+msgstr "用 CAT 命令键入发射机"
 
 #: usettingscaptions.rs_scoring_board_postingurl
 #, fuzzy
 msgid "Posting URL"
-msgstr ""
+msgstr "发布 URL"
 
 #: usettingscaptions.rs_scoring_board_readingurl
 #, fuzzy
 msgid "Reading URL"
-msgstr ""
+msgstr "读取 URL"
 
 #: usettingscaptions.rs_scoring_hamscore_url
 #, fuzzy
 msgid "Service URL"
-msgstr ""
+msgstr "服务 URL"
 
 #: usettingscaptions.rs_scoring_hamscore_username
 #, fuzzy
 msgid "Username"
-msgstr ""
+msgstr "用户名"
 
 #: usettingscaptions.rs_scp_nameflag
 #, fuzzy
 msgid "Flag a station whose name is known"
-msgstr ""
+msgstr "标记已知名称的车站"
 
 #: usettingscaptions.rs_voice_ctrlj_mp3recorderbitrate
 #, fuzzy
 msgid "Mp3 Recorder Bitrate"
-msgstr ""
+msgstr "Mp3 记录器比特率"
 
 #: usettingscaptions.rs_voice_ctrlj_mp3recorderduration
 #, fuzzy
 msgid "Mp3 Recorder Duration"
-msgstr ""
+msgstr "Mp3 记录器持续时间"
 
 #: utr4wstrings.tc_clusterdirmissing
 #, fuzzy
 msgid "TRCLUSTER.DAT was not found beside the program, so the list is empty. Type the server as host:port, for example dxc.nc7j.com:7373."
-msgstr ""
+msgstr "TRCLUSTER. DAT 在程序旁没有找到,所以列表是空的. 输入服务器为主机:port,例如dxc.nc7j.com:7373."
 
 #: utr4wstrings.tc_nodxclustersdefined
 #, fuzzy
 msgid "No DX clusters are defined yet -- click Configure to add one."
-msgstr ""
+msgstr "尚未定义 DX 集群 -- 单击配置以添加一个 。"
 

@@ -8090,17 +8090,17 @@ msgstr "Показать содержимое журнала сервера"
 #, fuzzy
 msgctxt "utr4wstrings.rc_createaunl"
 msgid "&Create and use new log"
-msgstr "& Создание и использование нового журнала"
+msgstr "&Создание и использование нового журнала"
 
 #: tfrmserverlog.btncreatenewlog.caption
 #, fuzzy
 msgid "Create and use new log"
-msgstr ""
+msgstr "Создавайте и используйте новый журнал"
 
 #: tfrmserverlog.btngetlog.caption
 #, fuzzy
 msgid "Get server log"
-msgstr ""
+msgstr "Запись сервера"
 
 #: tfrmserverlog.lblbytes.caption
 #: tfrmserverlog.lblqsos.caption
@@ -8116,7 +8116,7 @@ msgstr ""
 #, fuzzy
 msgctxt "tfrmtelnet.btnconfigure.caption"
 msgid "Configure..."
-msgstr ""
+msgstr "Настройка..."
 
 #: tfrmtelnet.lblnoclusters.caption
 #, fuzzy
@@ -8126,845 +8126,845 @@ msgstr ""
 #: tprefsform.lblspotcollectorhint.caption
 #, fuzzy
 msgid "Lets you double-click a spot in DXLab SpotCollector and have the callsign appear in TR4W's call field.  This does NOT affect spots from your DX cluster - those arrive whether this is ticked or not."
-msgstr ""
+msgstr "Позволяет дважды щелкнуть пятно в DXLab SpotCollector и включить позывной в поле вызова TR4W. Это не влияет на пятна из вашего кластера DX - они приходят независимо от того, тикают они или нет."
 
 #: usettingscaptions.rs_advanced_handlogmode
 #, fuzzy
 msgid "Hand Log Mode"
-msgstr ""
+msgstr "Режим Hand Log"
 
 #: usettingscaptions.rs_advanced_nolog
 #, fuzzy
 msgid "No Log"
-msgstr ""
+msgstr "Лог не"
 
 #: usettingscaptions.rs_appearance_ctrlj_beepenable
 #, fuzzy
 msgid "Beep Enable"
-msgstr ""
+msgstr "Бип включен"
 
 #: usettingscaptions.rs_appearance_ctrlj_columnautosize
 #, fuzzy
 msgid "Column Autosize"
-msgstr ""
+msgstr "Колонка Autosize"
 
 #: usettingscaptions.rs_appearance_ctrlj_completecallsignmask
 #, fuzzy
 msgid "Complete Callsign Mask"
-msgstr ""
+msgstr "Полная маска Callsign"
 
 #: usettingscaptions.rs_appearance_ctrlj_contactsperpage
 #, fuzzy
 msgid "Contacts Per Page"
-msgstr ""
+msgstr "Контакты на странице"
 
 #: usettingscaptions.rs_appearance_ctrlj_hourdisplay
 #, fuzzy
 msgid "Hour Display"
-msgstr ""
+msgstr "Часовой дисплей"
 
 #: usettingscaptions.rs_appearance_ctrlj_insertmode
 #, fuzzy
 msgid "Insert Mode"
-msgstr ""
+msgstr "Включить режим"
 
 #: usettingscaptions.rs_appearance_ctrlj_ratedisplay
 #, fuzzy
 msgid "Rate Display"
-msgstr ""
+msgstr "Дисплей Rate"
 
 #: usettingscaptions.rs_appearance_ctrlj_reminder
 #, fuzzy
 msgid "Reminder"
-msgstr ""
+msgstr "Напоминание"
 
 #: usettingscaptions.rs_appearance_ctrlj_showfrequencyinlog
 #, fuzzy
 msgid "Show Frequency In Log"
-msgstr ""
+msgstr "Показать частоту в журнале"
 
 #: usettingscaptions.rs_appearance_ctrlj_showtypedcallsign
 #, fuzzy
 msgid "Show Typed Callsign"
-msgstr ""
+msgstr "Показать тип Callsign"
 
 #: usettingscaptions.rs_appearance_ctrlj_userinfoshown
 #, fuzzy
 msgid "User Info Shown"
-msgstr ""
+msgstr "Показ пользовательской информации"
 
 #: usettingscaptions.rs_appearance_layout_rowcount
 #, fuzzy
 msgid "Row Count"
-msgstr ""
+msgstr "Роу Граф"
 
 #: usettingscaptions.rs_appearance_layout_windowsize
 #, fuzzy
 msgid "Window Size"
-msgstr ""
+msgstr "Размер окна"
 
 #: usettingscaptions.rs_audio_dvk_path
 #, fuzzy
 msgid "Folder for DVK recordings"
-msgstr ""
+msgstr "Складка для записей DVK"
 
 #: usettingscaptions.rs_audio_mp3_path
 #, fuzzy
 msgid "Folder for MP3 recordings"
-msgstr ""
+msgstr "Складка для MP3 записей"
 
 #: usettingscaptions.rs_bandmap_ctrlj_bandmapcutofffrequency
 #, fuzzy
 msgid "Band Map Cutoff Frequency"
-msgstr ""
+msgstr "Band Map сокращает частоту"
 
 #: usettingscaptions.rs_bandmap_ctrlj_bandmapitemheight
 #, fuzzy
 msgid "Band Map Item Height"
-msgstr ""
+msgstr "Альбом: Map Item Height"
 
 #: usettingscaptions.rs_bandmap_ctrlj_bandmapitemwidth
 #, fuzzy
 msgid "Band Map Item Width"
-msgstr ""
+msgstr "Обсуждение Band Map Width"
 
 #: usettingscaptions.rs_bandmap_ctrlj_bandmapsize
 #, fuzzy
 msgid "Band Map Size"
-msgstr ""
+msgstr "Размер карты группы"
 
 #: usettingscaptions.rs_bandmap_ctrlj_bandmapsplitmode
 #, fuzzy
 msgid "Band Map Split Mode"
-msgstr ""
+msgstr "Скачать Band Map Split Mode"
 
 #: usettingscaptions.rs_cluster_ctrlj_broadcastallpacketdata
 #, fuzzy
 msgid "Broadcast All Packet Data"
-msgstr ""
+msgstr "Трансляция всех пакетных данных"
 
 #: usettingscaptions.rs_contest_autocqdelaytime
 #, fuzzy
 msgid "Auto-CQ Delay Time"
-msgstr ""
+msgstr "Auto-CQ задерживает время"
 
 #: usettingscaptions.rs_contest_autoqslinterval
 #, fuzzy
 msgid "Auto QSL Interval"
-msgstr ""
+msgstr "Автоматический QSL-интервал"
 
 #: usettingscaptions.rs_contest_beepevery10qsos
 #, fuzzy
 msgid "Beep Every 10 QSOs"
-msgstr ""
+msgstr "Beep каждые 10 QSO"
 
 #: usettingscaptions.rs_contest_categoryassisted
 #, fuzzy
 msgid "Category-Assisted"
-msgstr ""
+msgstr "Категория Помощь"
 
 #: usettingscaptions.rs_contest_categoryband
 #, fuzzy
 msgid "Category-Band"
-msgstr ""
+msgstr "Группа категорий"
 
 #: usettingscaptions.rs_contest_categorymode
 #, fuzzy
 msgid "Category-Mode"
-msgstr ""
+msgstr "Типовой режим"
 
 #: usettingscaptions.rs_contest_categoryoperator
 #, fuzzy
 msgid "Category-Operator"
-msgstr ""
+msgstr "Оператор категории"
 
 #: usettingscaptions.rs_contest_categoryoverlay
 #, fuzzy
 msgid "Category-Overlay"
-msgstr ""
+msgstr "Категория:Оверлей"
 
 #: usettingscaptions.rs_contest_categorypower
 #, fuzzy
 msgid "Category-Power"
-msgstr ""
+msgstr "Категория:Власть"
 
 #: usettingscaptions.rs_contest_categorytransmitter
 #, fuzzy
 msgid "Category-Transmitter"
-msgstr ""
+msgstr "Передача по категориям"
 
 #: usettingscaptions.rs_contest_contestname
 #, fuzzy
 msgid "Contest Name"
-msgstr ""
+msgstr "Название конкурса"
 
 #: usettingscaptions.rs_contest_contesttitle
 #, fuzzy
 msgid "Contest Title"
-msgstr ""
+msgstr "Название конкурса"
 
 #: usettingscaptions.rs_contest_countdomesticcountries
 #, fuzzy
 msgid "Count Domestic Countries"
-msgstr ""
+msgstr "Подсчитать внутренние страны"
 
 #: usettingscaptions.rs_contest_custominitialexchangestring
 #, fuzzy
 msgid "Custom Initial Exchange String"
-msgstr ""
+msgstr "Пользовательская начальная строка обмена"
 
 #: usettingscaptions.rs_contest_domesticmultiplier
 #, fuzzy
 msgid "Domestic Multiplier"
-msgstr ""
+msgstr "Внутренний мультипликатор"
 
 #: usettingscaptions.rs_contest_dxmultiplier
 #, fuzzy
 msgid "DX Multiplier"
-msgstr ""
+msgstr "Умножитель DX"
 
 #: usettingscaptions.rs_contest_exchangememoryenable
 #, fuzzy
 msgid "Exchange Memory Enable"
-msgstr ""
+msgstr "Возможность обмена памятью"
 
 #: usettingscaptions.rs_contest_exchangereceived
 #, fuzzy
 msgid "Exchange Received"
-msgstr ""
+msgstr "Обмен полученный"
 
 #: usettingscaptions.rs_contest_gridmapcenter
 #, fuzzy
 msgid "Grid Map Center"
-msgstr ""
+msgstr "Центр Grid Map"
 
 #: usettingscaptions.rs_contest_initialexchange
 #, fuzzy
 msgid "Initial Exchange"
-msgstr ""
+msgstr "Первоначальный обмен"
 
 #: usettingscaptions.rs_contest_initialexchangecursorpos
 #, fuzzy
 msgid "Initial Exchange Cursor Pos"
-msgstr ""
+msgstr "Начальный курсор обмена Pos"
 
 #: usettingscaptions.rs_contest_initialexchangeoverwrite
 #, fuzzy
 msgid "Initial Exchange Overwrite"
-msgstr ""
+msgstr "Начальный обмен Overwrite"
 
 #: usettingscaptions.rs_contest_literaldomesticqth
 #, fuzzy
 msgid "Literal Domestic Qth"
-msgstr ""
+msgstr "Литературный домашний Qth"
 
 #: usettingscaptions.rs_contest_logrssent
 #, fuzzy
 msgid "Log Rs Sent"
-msgstr ""
+msgstr "Лог Rs отправлен"
 
 #: usettingscaptions.rs_contest_logrstsent
 #, fuzzy
 msgid "Log Rst Sent"
-msgstr ""
+msgstr "Лог Rst отправлен"
 
 #: usettingscaptions.rs_contest_lookforrstsent
 #, fuzzy
 msgid "Look For Rst Sent"
-msgstr ""
+msgstr "Ищите Rst Sent"
 
 #: usettingscaptions.rs_contest_messageenable
 #, fuzzy
 msgid "Message Enable"
-msgstr ""
+msgstr "Сообщение Enable"
 
 #: usettingscaptions.rs_contest_minitourduration
 #, fuzzy
 msgid "Minitour Duration"
-msgstr ""
+msgstr "Минимальная продолжительность"
 
 #: usettingscaptions.rs_contest_multbyband
 #, fuzzy
 msgid "Mult By Band"
-msgstr ""
+msgstr "Исполнитель: Band"
 
 #: usettingscaptions.rs_contest_multbymode
 #, fuzzy
 msgid "Mult By Mode"
-msgstr ""
+msgstr "Мульт в режиме"
 
 #: usettingscaptions.rs_contest_multiplebands
 #, fuzzy
 msgid "Multiple Bands"
-msgstr ""
+msgstr "Несколько полос"
 
 #: usettingscaptions.rs_contest_multiplemodes
 #, fuzzy
 msgid "Multiple Modes"
-msgstr ""
+msgstr "Несколько режимов"
 
 #: usettingscaptions.rs_contest_multreportminimumbands
 #, fuzzy
 msgid "Mult Report Minimum Bands"
-msgstr ""
+msgstr "Mult Report Минимальные группы"
 
 #: usettingscaptions.rs_contest_multsheetautoreset
 #, fuzzy
 msgid "Mult Sheet Auto Reset"
-msgstr ""
+msgstr "Обновление Multi Sheet Auto"
 
 #: usettingscaptions.rs_contest_prefixmultiplier
 #, fuzzy
 msgid "Prefix Multiplier"
-msgstr ""
+msgstr "Умножитель префикса"
 
 #: usettingscaptions.rs_contest_qslmode
 #, fuzzy
 msgid "QSL Mode"
-msgstr ""
+msgstr "Режим QSL"
 
 #: usettingscaptions.rs_contest_qsobyband
 #, fuzzy
 msgid "QSO By Band"
-msgstr ""
+msgstr "QSO в группе"
 
 #: usettingscaptions.rs_contest_qsobymode
 #, fuzzy
 msgid "QSO By Mode"
-msgstr ""
+msgstr "QSO в режиме"
 
 #: usettingscaptions.rs_contest_qsonumberbyband
 #, fuzzy
 msgid "QSO Number By Band"
-msgstr ""
+msgstr "QSO номер в полосе"
 
 #: usettingscaptions.rs_contest_qsopointmethod
 #, fuzzy
 msgid "QSO Point Method"
-msgstr ""
+msgstr "Метод QSO Point"
 
 #: usettingscaptions.rs_contest_qsopointsdomesticcw
 #, fuzzy
 msgid "QSO Points Domestic CW"
-msgstr ""
+msgstr "QSO указывает на внутренний CW"
 
 #: usettingscaptions.rs_contest_qsopointsdomesticphone
 #, fuzzy
 msgid "QSO Points Domestic Phone"
-msgstr ""
+msgstr "QSO указывает на домашний телефон"
 
 #: usettingscaptions.rs_contest_qsopointsdxcw
 #, fuzzy
 msgid "QSO Points DX CW"
-msgstr ""
+msgstr "Обсуждение QSO Points DX CW"
 
 #: usettingscaptions.rs_contest_qsopointsdxphone
 #, fuzzy
 msgid "QSO Points DX Phone"
-msgstr ""
+msgstr "Телефон QSO Points DX"
 
 #: usettingscaptions.rs_contest_qtcenable
 #, fuzzy
 msgid "Qtc Enable"
-msgstr ""
+msgstr "Qtc позволяет"
 
 #: usettingscaptions.rs_contest_qtcextraspace
 #, fuzzy
 msgid "Qtc Extra Space"
-msgstr ""
+msgstr "Qtc дополнительное пространство"
 
 #: usettingscaptions.rs_contest_qtcminutes
 #, fuzzy
 msgid "Qtc Minutes"
-msgstr ""
+msgstr "Qtc минуты"
 
 #: usettingscaptions.rs_contest_qtcqrs
 #, fuzzy
 msgid "Qtc Qrs"
-msgstr ""
+msgstr "Qtc QR"
 
 #: usettingscaptions.rs_contest_quickqslcwmessage
 #, fuzzy
 msgid "Quick QSL CW Message"
-msgstr ""
+msgstr "Быстрое сообщение QSL CW"
 
 #: usettingscaptions.rs_contest_quickqslcwmessage1
 #, fuzzy
 msgid "Quick QSL CW Message1"
-msgstr ""
+msgstr "Быстрое сообщение QSL CW1"
 
 #: usettingscaptions.rs_contest_quickqslkey1
 #, fuzzy
 msgid "Quick QSL Key 1"
-msgstr ""
+msgstr "Быстрый QSL ключ 1"
 
 #: usettingscaptions.rs_contest_quickqslkey2
 #, fuzzy
 msgid "Quick QSL Key 2"
-msgstr ""
+msgstr "Быстрый QSL ключ 2"
 
 #: usettingscaptions.rs_contest_quickqslmessage1
 #, fuzzy
 msgid "Quick QSL Message 1"
-msgstr ""
+msgstr "Быстрое сообщение QSL 1"
 
 #: usettingscaptions.rs_contest_quickqslmessage2
 #, fuzzy
 msgid "Quick QSL Message 2"
-msgstr ""
+msgstr "Быстрое сообщение QSL 2"
 
 #: usettingscaptions.rs_contest_quickqslssbmessage
 #, fuzzy
 msgid "Quick QSL SSB Message"
-msgstr ""
+msgstr "Быстрое сообщение QSL SSB"
 
 #: usettingscaptions.rs_contest_r150smode
 #, fuzzy
 msgid "R150S Mode"
-msgstr ""
+msgstr "Режим R150S"
 
 #: usettingscaptions.rs_contest_randomcqmode
 #, fuzzy
 msgid "Random CQ Mode"
-msgstr ""
+msgstr "Режим Random CQ"
 
 #: usettingscaptions.rs_contest_remainingmultdisplaymode
 #, fuzzy
 msgid "Remaining Mult Display Mode"
-msgstr ""
+msgstr "Оставшийся Mult Display Mode"
 
 #: usettingscaptions.rs_contest_reverseinitialex
 #, fuzzy
 msgid "Reverse Initial Ex"
-msgstr ""
+msgstr "Обратный первоначальный ex"
 
 #: usettingscaptions.rs_contest_rfoblmode
 #, fuzzy
 msgid "Rfobl Mode"
-msgstr ""
+msgstr "Режим Rfobl"
 
 #: usettingscaptions.rs_contest_showallserialports
 #, fuzzy
 msgid "Show All Serial Ports"
-msgstr ""
+msgstr "Показать все серийные порты"
 
 #: usettingscaptions.rs_contest_showdomesticmultipliername
 #, fuzzy
 msgid "Show Domestic Multiplier Name"
-msgstr ""
+msgstr "Показать название отечественного мультипликатора"
 
 #: usettingscaptions.rs_contest_sprintqsyrule
 #, fuzzy
 msgid "Sprint Qsy Rule"
-msgstr ""
+msgstr "Правило Sprint Qsy"
 
 #: usettingscaptions.rs_contest_tenminuterule
 #, fuzzy
 msgid "Ten Minute Rule"
-msgstr ""
+msgstr "Правило десяти минут"
 
 #: usettingscaptions.rs_contest_zonemultiplier
 #, fuzzy
 msgid "Zone Multiplier"
-msgstr ""
+msgstr "Умножитель зоны"
 
 #: usettingscaptions.rs_cw_ctrlj_autosendcharactercount
 #, fuzzy
 msgid "Auto Send Character Count"
-msgstr ""
+msgstr "Автоотправляем граф персонажей"
 
 #: usettingscaptions.rs_cw_ctrlj_codespeed
 #, fuzzy
 msgid "Code Speed"
-msgstr ""
+msgstr "Код скорости"
 
 #: usettingscaptions.rs_cw_ctrlj_paddleport
 #, fuzzy
 msgid "Paddle Port"
-msgstr ""
+msgstr "Порт Паддл"
 
 #: usettingscaptions.rs_cw_ctrlj_questionmarkchar
 #, fuzzy
 msgid "Question Mark Char"
-msgstr ""
+msgstr "Вопрос Марк Чар"
 
 #: usettingscaptions.rs_cw_ctrlj_short0
 #, fuzzy
 msgid "Short 0"
-msgstr ""
+msgstr "Короткий 0"
 
 #: usettingscaptions.rs_cw_ctrlj_short1
 #, fuzzy
 msgid "Short 1"
-msgstr ""
+msgstr "Коротко 1"
 
 #: usettingscaptions.rs_cw_ctrlj_short2
 #, fuzzy
 msgid "Short 2"
-msgstr ""
+msgstr "Короткий 2"
 
 #: usettingscaptions.rs_cw_ctrlj_short9
 #, fuzzy
 msgid "Short 9"
-msgstr ""
+msgstr "Короткий 9"
 
 #: usettingscaptions.rs_cw_ctrlj_shortintegers
 #, fuzzy
 msgid "Short Integers"
-msgstr ""
+msgstr "Короткие целые числа"
 
 #: usettingscaptions.rs_cw_ctrlj_slashmarkchar
 #, fuzzy
 msgid "Slash Mark Char"
-msgstr ""
+msgstr "Слэш Марк Чар"
 
 #: usettingscaptions.rs_cw_ctrlj_startsendingnowkey
 #, fuzzy
 msgid "Start Sending Now Key"
-msgstr ""
+msgstr "Начните отправлять ключи сейчас"
 
 #: usettingscaptions.rs_cw_ctrlj_tunealtdenable
 #, fuzzy
 msgid "Tune Alt-D Enable"
-msgstr ""
+msgstr "Скачать Alt-D Enable"
 
 #: usettingscaptions.rs_cw_messageschainable
 #, fuzzy
 msgid "Any message may chain into the next"
-msgstr ""
+msgstr "Любое сообщение может зацепиться за следующее"
 
 #: usettingscaptions.rs_cw_paddle_pttholdcount
 #, fuzzy
 msgid "Hold PTT for"
-msgstr ""
+msgstr "Держите PTT"
 
 #: usettingscaptions.rs_cw_speedincrement
 #, fuzzy
 msgid "Speed step"
-msgstr ""
+msgstr "Скорость шага"
 
 #: usettingscaptions.rs_files_ctrlj_allowautoupdate
 #, fuzzy
 msgid "Allow Auto Update"
-msgstr ""
+msgstr "Разрешить автоматическое обновление"
 
 #: usettingscaptions.rs_files_ctrlj_callsignupdateenable
 #, fuzzy
 msgid "Callsign Update Enable"
-msgstr ""
+msgstr "Callsign Update включен"
 
 #: usettingscaptions.rs_files_ctrlj_countryinformationfile
 #, fuzzy
 msgid "Country Information File"
-msgstr ""
+msgstr "Информационный файл страны"
 
 #: usettingscaptions.rs_files_ctrlj_ctyupdatecheckonstartup
 #, fuzzy
 msgid "Cty Update Check On Startup"
-msgstr ""
+msgstr "Cty Update Check on Стартап"
 
 #: usettingscaptions.rs_files_ctrlj_domesticfilename
 #, fuzzy
 msgid "Domestic Filename"
-msgstr ""
+msgstr "Внутренний файл"
 
 #: usettingscaptions.rs_files_ctrlj_initialexchangefilename
 #, fuzzy
 msgid "Initial Exchange Filename"
-msgstr ""
+msgstr "Оригинальное название Exchange Filename"
 
 #: usettingscaptions.rs_files_ctrlj_missingcallsignsfileenable
 #, fuzzy
 msgid "Missingcallsigns File Enable"
-msgstr ""
+msgstr "Отсутствующие сигналы File Enable"
 
 #: usettingscaptions.rs_files_ctrlj_unknowncountryfilename
 #, fuzzy
 msgid "Unknown Country File Name"
-msgstr ""
+msgstr "Неизвестное название файла страны"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt1baseaddress
 #, fuzzy
 msgid "LPT1 Base Address"
-msgstr ""
+msgstr "Базовый адрес LPT1"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt2baseaddress
 #, fuzzy
 msgid "LPT2 Base Address"
-msgstr ""
+msgstr "Базовый адрес LPT2"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt3baseaddress
 #, fuzzy
 msgid "LPT3 Base Address"
-msgstr ""
+msgstr "Базовый адрес LPT3"
 
 #: usettingscaptions.rs_hardware_ctrlj_stereocontrolpin
 #, fuzzy
 msgid "Stereo Control Pin"
-msgstr ""
+msgstr "Stereo Control Pin"
 
 #: usettingscaptions.rs_hardware_ctrlj_stereopinhigh
 #, fuzzy
 msgid "Stereo Pin High"
-msgstr ""
+msgstr "Стерео Пин Хай"
 
 #: usettingscaptions.rs_hardware_ctrlj_usecontrolport
 #, fuzzy
 msgid "Use Control Port"
-msgstr ""
+msgstr "Использование Control Port"
 
 #: usettingscaptions.rs_network_ctrlj_computername
 #, fuzzy
 msgid "Computer Name"
-msgstr ""
+msgstr "Компьютерное имя"
 
 #: usettingscaptions.rs_network_ctrlj_netstatusupdateinterval
 #, fuzzy
 msgid "Net Status Update Interval"
-msgstr ""
+msgstr "Интервал обновления состояния"
 
 #: usettingscaptions.rs_operating_autoreturntocq
 #, fuzzy
 msgid "Return to CQ mode after logging"
-msgstr ""
+msgstr "Вернуться в режим CQ после регистрации"
 
 #: usettingscaptions.rs_operating_bands_vhf
 #, fuzzy
 msgid "VHF and up"
-msgstr ""
+msgstr "VHF и выше"
 
 #: usettingscaptions.rs_operating_ctrlj_askforfrequencies
 #, fuzzy
 msgid "Ask For Frequencies"
-msgstr ""
+msgstr "Попросите частоты"
 
 #: usettingscaptions.rs_operating_ctrlj_autodisplaydupeqso
 #, fuzzy
 msgid "Auto Display Dupe QSO"
-msgstr ""
+msgstr "Автомобильный дисплей Dupe QSO"
 
 #: usettingscaptions.rs_operating_ctrlj_autodupeenablecq
 #, fuzzy
 msgid "Auto Dupe Enable CQ"
-msgstr ""
+msgstr "Auto Dupe поддерживает CQ"
 
 #: usettingscaptions.rs_operating_ctrlj_autodupeenablesandp
 #, fuzzy
 msgid "Auto Dupe Enable S And P"
-msgstr ""
+msgstr "Auto Dupe позволяет использовать S и P"
 
 #: usettingscaptions.rs_operating_ctrlj_autospenable
 #, fuzzy
 msgid "Auto S&P Enable"
-msgstr ""
+msgstr "Автомобиль S&P Enable"
 
 #: usettingscaptions.rs_operating_ctrlj_autospenablesensitivity
 #, fuzzy
 msgid "Auto S&P Enable Sensitivity"
-msgstr ""
+msgstr "Auto S&P повышает чувствительность"
 
 #: usettingscaptions.rs_operating_ctrlj_autotimeincrement
 #, fuzzy
 msgid "Auto Time Increment"
-msgstr ""
+msgstr "Auto Time Increment"
 
 #: usettingscaptions.rs_operating_ctrlj_customuserstring
 #, fuzzy
 msgid "Custom User String"
-msgstr ""
+msgstr "Пользовательская строка"
 
 #: usettingscaptions.rs_operating_ctrlj_deenable
 #, fuzzy
 msgid "De Enable"
-msgstr ""
+msgstr "Включить"
 
 #: usettingscaptions.rs_operating_ctrlj_digitalmodeenable
 #, fuzzy
 msgid "Digital Mode Enable"
-msgstr ""
+msgstr "Цифровой режим включен"
 
 #: usettingscaptions.rs_operating_ctrlj_distancemode
 #, fuzzy
 msgid "Distance Mode"
-msgstr ""
+msgstr "Дистанционный режим"
 
 #: usettingscaptions.rs_operating_ctrlj_dupechecksound
 #, fuzzy
 msgid "Dupe Check Sound"
-msgstr ""
+msgstr "Проверить звук"
 
 #: usettingscaptions.rs_operating_ctrlj_dupesheetautoreset
 #, fuzzy
 msgid "Dupe Sheet Auto Reset"
-msgstr ""
+msgstr "Сброс Dupe Sheet Auto"
 
 #: usettingscaptions.rs_operating_ctrlj_frequencymemory
 #, fuzzy
 msgid "Frequency Memory"
-msgstr ""
+msgstr "Частотная память"
 
 #: usettingscaptions.rs_operating_ctrlj_frequencymemoryenable
 #, fuzzy
 msgid "Frequency Memory Enable"
-msgstr ""
+msgstr "Частотная память Enable"
 
 #: usettingscaptions.rs_operating_ctrlj_frequencypollrate
 #, fuzzy
 msgid "Frequency Poll Rate"
-msgstr ""
+msgstr "Частота опросов"
 
 #: usettingscaptions.rs_operating_ctrlj_ieswitch
 #, fuzzy
 msgid "Ie Switch"
-msgstr ""
+msgstr "Ie Switch"
 
 #: usettingscaptions.rs_operating_ctrlj_incrementtimeenable
 #, fuzzy
 msgid "Increment Time Enable"
-msgstr ""
+msgstr "Время действия Enable"
 
 #: usettingscaptions.rs_operating_ctrlj_logfrequencyenable
 #, fuzzy
 msgid "Log Frequency Enable"
-msgstr ""
+msgstr "Включить Log Frequency Enable"
 
 #: usettingscaptions.rs_operating_ctrlj_logsubtitle
 #, fuzzy
 msgid "Log Sub Title"
-msgstr ""
+msgstr "Log Sub Title"
 
 #: usettingscaptions.rs_operating_ctrlj_maincallsign
 #, fuzzy
 msgid "Main Callsign"
-msgstr ""
+msgstr "Главная Callsign"
 
 #: usettingscaptions.rs_operating_ctrlj_possiblecallacceptkey
 #, fuzzy
 msgid "Possible Call Accept Key"
-msgstr ""
+msgstr "Возможный ключ Call Accept"
 
 #: usettingscaptions.rs_operating_ctrlj_possiblecallleftkey
 #, fuzzy
 msgid "Possible Call Left Key"
-msgstr ""
+msgstr "Возможный левый звонок"
 
 #: usettingscaptions.rs_operating_ctrlj_possiblecallmode
 #, fuzzy
 msgid "Possible Call Mode"
-msgstr ""
+msgstr "Возможный режим вызова"
 
 #: usettingscaptions.rs_operating_ctrlj_possiblecallrightkey
 #, fuzzy
 msgid "Possible Call Right Key"
-msgstr ""
+msgstr "Возможный звонок правильный ключ"
 
 #: usettingscaptions.rs_operating_ctrlj_qsxenable
 #, fuzzy
 msgid "Qsx Enable"
-msgstr ""
+msgstr "Qsx позволяет"
 
 #: usettingscaptions.rs_operating_ctrlj_qzbrandomoffsetenable
 #, fuzzy
 msgid "Qzb Random Offset Enable"
-msgstr ""
+msgstr "Скачать Qzb Random Offset"
 
 #: usettingscaptions.rs_operating_ctrlj_radiusofearth
 #, fuzzy
 msgid "Radius Of Earth"
-msgstr ""
+msgstr "Радиус Земли"
 
 #: usettingscaptions.rs_operating_ctrlj_shiftkeyenable
 #, fuzzy
 msgid "Shift Key Enable"
-msgstr ""
+msgstr "Скачать Shift Key Enable"
 
 #: usettingscaptions.rs_operating_ctrlj_stationscallsignsmask
 #, fuzzy
 msgid "Stations Callsigns Mask"
-msgstr ""
+msgstr "Станции Callsigns Маска"
 
 #: usettingscaptions.rs_operating_ctrlj_wakeuptimeout
 #, fuzzy
 msgid "Wake Up Time Out"
-msgstr ""
+msgstr "Пробуждение Time Out"
 
 #: usettingscaptions.rs_operating_cw_leadingzerochar
 #, fuzzy
 msgid "Leading zero sent as"
-msgstr ""
+msgstr "Ноль отправлен как"
 
 #: usettingscaptions.rs_operating_cw_leadingzeros
 #, fuzzy
 msgid "Leading zeros"
-msgstr ""
+msgstr "Ведущие нули"
 
 #: usettingscaptions.rs_operating_cw_sayhiratecutoff
 #, fuzzy
 msgid "Stop above this rate"
-msgstr ""
+msgstr "Превышайте этот показатель"
 
 #: usettingscaptions.rs_operating_cw_serial_farnsworthspeed
 #, fuzzy
 msgid "Character speed"
-msgstr ""
+msgstr "Скорость персонажа"
 
 #: usettingscaptions.rs_operating_tworadio_qsyinactive
 #, fuzzy
 msgid "QSY the inactive radio"
-msgstr ""
+msgstr "QSY неактивное радио"
 
 #: usettingscaptions.rs_operating_tworadio_waitforstrength
 #, fuzzy
 msgid "Wait for a signal strength reading"
-msgstr ""
+msgstr "Подождите, пока считывают силу сигнала"
 
 #: usettingscaptions.rs_ptt_viacommands
 #, fuzzy
 msgid "Key the transmitter with a CAT command"
-msgstr ""
+msgstr "Ключ передатчик с командой CAT"
 
 #: usettingscaptions.rs_scoring_board_postingurl
 #, fuzzy
 msgid "Posting URL"
-msgstr ""
+msgstr "Опубликовать URL"
 
 #: usettingscaptions.rs_scoring_board_readingurl
 #, fuzzy
 msgid "Reading URL"
-msgstr ""
+msgstr "Читать URL"
 
 #: usettingscaptions.rs_scoring_hamscore_url
 #, fuzzy
 msgid "Service URL"
-msgstr ""
+msgstr "Сервис URL"
 
 #: usettingscaptions.rs_scoring_hamscore_username
 #, fuzzy
 msgid "Username"
-msgstr ""
+msgstr "Имя пользователя"
 
 #: usettingscaptions.rs_scp_nameflag
 #, fuzzy
 msgid "Flag a station whose name is known"
-msgstr ""
+msgstr "Флаг станции, название которой известно"
 
 #: usettingscaptions.rs_voice_ctrlj_mp3recorderbitrate
 #, fuzzy
 msgid "Mp3 Recorder Bitrate"
-msgstr ""
+msgstr "Mp3 Recorder Bitrate"
 
 #: usettingscaptions.rs_voice_ctrlj_mp3recorderduration
 #, fuzzy
 msgid "Mp3 Recorder Duration"
-msgstr ""
+msgstr "Продолжительность записи Mp3"
 
 #: utr4wstrings.tc_clusterdirmissing
 #, fuzzy
 msgid "TRCLUSTER.DAT was not found beside the program, so the list is empty. Type the server as host:port, for example dxc.nc7j.com:7373."
-msgstr ""
+msgstr "TRCLUSTER.DAT не был найден рядом с программой, поэтому список пуст. Введите сервер в качестве хоста:port, например dxc.nc7j.com:7373."
 
 #: utr4wstrings.tc_nodxclustersdefined
 #, fuzzy
 msgid "No DX clusters are defined yet -- click Configure to add one."
-msgstr ""
+msgstr "Пока не определены кластеры DX - нажмите Конфигурировать, чтобы добавить один."
 

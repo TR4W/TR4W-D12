@@ -3276,12 +3276,12 @@ msgstr "Mesaj"
 #: tfrmeditqso.btnplay.caption
 #, fuzzy
 msgid "&Play"
-msgstr "& Redă"
+msgstr "&Redă"
 
 #: tfrmeditqso.btnsave.caption
 #, fuzzy
 msgid "&Save"
-msgstr "& Salvează"
+msgstr "&Salvează"
 
 #: tfrmeditqso.caption
 #, fuzzy
@@ -3291,7 +3291,7 @@ msgstr "Editează QSO"
 #: tfrmeditqso.chkdeleted.caption
 #, fuzzy
 msgid "&Deleted"
-msgstr "& Eliminat"
+msgstr "&Eliminat"
 
 #: tfrmeditqso.chkdomesticmult.caption
 #, fuzzy
@@ -3535,12 +3535,12 @@ msgstr "Ultima stare:"
 #: tfrminiretire.btnno.caption
 #, fuzzy
 msgid "&No"
-msgstr "& Nu"
+msgstr "&Nu"
 
 #: tfrminiretire.btnyes.caption
 #, fuzzy
 msgid "&Yes"
-msgstr "& Da"
+msgstr "&Da"
 
 #: tfrminiretire.caption
 #: uappstrings.siniretiretitle
@@ -7680,7 +7680,7 @@ msgstr "Explorează"
 #, fuzzy
 msgctxt "TC_EDITOR_COPY"
 msgid "&Copy"
-msgstr "& Copiază"
+msgstr "&Copiază"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_selectall
@@ -7689,7 +7689,7 @@ msgstr "& Copiază"
 #, fuzzy
 msgctxt "TC_EDITOR_SELECTALL"
 msgid "Select &all"
-msgstr "Selectează & tot"
+msgstr "Selectează &tot"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_sendlogto
@@ -8082,7 +8082,7 @@ msgstr "Sincronizează jurnalul"
 #, fuzzy
 msgctxt "utr4wstrings.rc_getservlog"
 msgid "&Get server log"
-msgstr "& Obține jurnalul serverului"
+msgstr "&Obține jurnalul serverului"
 
 #: utr4wstrings.rc_recvrecords
 #: tfrmserverlog.lblrecordscaption.caption
@@ -8128,12 +8128,12 @@ msgstr "Creează și folosește un jurnal nou"
 #: tfrmserverlog.btncreatenewlog.caption
 #, fuzzy
 msgid "Create and use new log"
-msgstr ""
+msgstr "Creează și folosește un jurnal nou"
 
 #: tfrmserverlog.btngetlog.caption
 #, fuzzy
 msgid "Get server log"
-msgstr ""
+msgstr "Obține jurnalul serverului"
 
 #: tfrmserverlog.lblbytes.caption
 #: tfrmserverlog.lblqsos.caption
@@ -8149,7 +8149,7 @@ msgstr ""
 #, fuzzy
 msgctxt "tfrmtelnet.btnconfigure.caption"
 msgid "Configure..."
-msgstr ""
+msgstr "Configurează..."
 
 #: tfrmtelnet.lblnoclusters.caption
 #, fuzzy
@@ -8159,845 +8159,845 @@ msgstr ""
 #: tprefsform.lblspotcollectorhint.caption
 #, fuzzy
 msgid "Lets you double-click a spot in DXLab SpotCollector and have the callsign appear in TR4W's call field.  This does NOT affect spots from your DX cluster - those arrive whether this is ticked or not."
-msgstr ""
+msgstr "Vă permite să faceți dublu clic pe un loc în DXLab SpotColector și au indicativul de apel apar în câmpul de apel TR4W lui. Acest lucru NU afectează petele din clusterul DX - cele care sosesc dacă acest lucru este bifat sau nu."
 
 #: usettingscaptions.rs_advanced_handlogmode
 #, fuzzy
 msgid "Hand Log Mode"
-msgstr ""
+msgstr "Mod jurnal mână"
 
 #: usettingscaptions.rs_advanced_nolog
 #, fuzzy
 msgid "No Log"
-msgstr ""
+msgstr "Fără jurnal"
 
 #: usettingscaptions.rs_appearance_ctrlj_beepenable
 #, fuzzy
 msgid "Beep Enable"
-msgstr ""
+msgstr "Activează beep-ul"
 
 #: usettingscaptions.rs_appearance_ctrlj_columnautosize
 #, fuzzy
 msgid "Column Autosize"
-msgstr ""
+msgstr "Autodimensionare coloană"
 
 #: usettingscaptions.rs_appearance_ctrlj_completecallsignmask
 #, fuzzy
 msgid "Complete Callsign Mask"
-msgstr ""
+msgstr "Masca completă a semnului de apel"
 
 #: usettingscaptions.rs_appearance_ctrlj_contactsperpage
 #, fuzzy
 msgid "Contacts Per Page"
-msgstr ""
+msgstr "Contacte per pagină"
 
 #: usettingscaptions.rs_appearance_ctrlj_hourdisplay
 #, fuzzy
 msgid "Hour Display"
-msgstr ""
+msgstr "Afișare oră"
 
 #: usettingscaptions.rs_appearance_ctrlj_insertmode
 #, fuzzy
 msgid "Insert Mode"
-msgstr ""
+msgstr "Inserează mod"
 
 #: usettingscaptions.rs_appearance_ctrlj_ratedisplay
 #, fuzzy
 msgid "Rate Display"
-msgstr ""
+msgstr "Afișează rata"
 
 #: usettingscaptions.rs_appearance_ctrlj_reminder
 #, fuzzy
 msgid "Reminder"
-msgstr ""
+msgstr "Amintire"
 
 #: usettingscaptions.rs_appearance_ctrlj_showfrequencyinlog
 #, fuzzy
 msgid "Show Frequency In Log"
-msgstr ""
+msgstr "Arată frecvența în jurnal"
 
 #: usettingscaptions.rs_appearance_ctrlj_showtypedcallsign
 #, fuzzy
 msgid "Show Typed Callsign"
-msgstr ""
+msgstr "Afișează indicativul de apel tastat"
 
 #: usettingscaptions.rs_appearance_ctrlj_userinfoshown
 #, fuzzy
 msgid "User Info Shown"
-msgstr ""
+msgstr "Informații pentru utilizator afișate"
 
 #: usettingscaptions.rs_appearance_layout_rowcount
 #, fuzzy
 msgid "Row Count"
-msgstr ""
+msgstr "Număr rând"
 
 #: usettingscaptions.rs_appearance_layout_windowsize
 #, fuzzy
 msgid "Window Size"
-msgstr ""
+msgstr "Mărime fereastră"
 
 #: usettingscaptions.rs_audio_dvk_path
 #, fuzzy
 msgid "Folder for DVK recordings"
-msgstr ""
+msgstr "Dosar pentru înregistrări DVK"
 
 #: usettingscaptions.rs_audio_mp3_path
 #, fuzzy
 msgid "Folder for MP3 recordings"
-msgstr ""
+msgstr "Dosar pentru înregistrări MP3"
 
 #: usettingscaptions.rs_bandmap_ctrlj_bandmapcutofffrequency
 #, fuzzy
 msgid "Band Map Cutoff Frequency"
-msgstr ""
+msgstr "Frecvenţa de întrerupere a benzii"
 
 #: usettingscaptions.rs_bandmap_ctrlj_bandmapitemheight
 #, fuzzy
 msgid "Band Map Item Height"
-msgstr ""
+msgstr "Înălţime element hartă bandă"
 
 #: usettingscaptions.rs_bandmap_ctrlj_bandmapitemwidth
 #, fuzzy
 msgid "Band Map Item Width"
-msgstr ""
+msgstr "Band Map Lățime element"
 
 #: usettingscaptions.rs_bandmap_ctrlj_bandmapsize
 #, fuzzy
 msgid "Band Map Size"
-msgstr ""
+msgstr "Mărime hartă bandă"
 
 #: usettingscaptions.rs_bandmap_ctrlj_bandmapsplitmode
 #, fuzzy
 msgid "Band Map Split Mode"
-msgstr ""
+msgstr "Modul de divizare a hărții benzii"
 
 #: usettingscaptions.rs_cluster_ctrlj_broadcastallpacketdata
 #, fuzzy
 msgid "Broadcast All Packet Data"
-msgstr ""
+msgstr "Difuzează toate datele Packet"
 
 #: usettingscaptions.rs_contest_autocqdelaytime
 #, fuzzy
 msgid "Auto-CQ Delay Time"
-msgstr ""
+msgstr "Timp de întârziere CQ automat"
 
 #: usettingscaptions.rs_contest_autoqslinterval
 #, fuzzy
 msgid "Auto QSL Interval"
-msgstr ""
+msgstr "Interval automat QSL"
 
 #: usettingscaptions.rs_contest_beepevery10qsos
 #, fuzzy
 msgid "Beep Every 10 QSOs"
-msgstr ""
+msgstr "Beep fiecare 10 QSO"
 
 #: usettingscaptions.rs_contest_categoryassisted
 #, fuzzy
 msgid "Category-Assisted"
-msgstr ""
+msgstr "Asistat pe categorii"
 
 #: usettingscaptions.rs_contest_categoryband
 #, fuzzy
 msgid "Category-Band"
-msgstr ""
+msgstr "Mașină de categorie"
 
 #: usettingscaptions.rs_contest_categorymode
 #, fuzzy
 msgid "Category-Mode"
-msgstr ""
+msgstr "Modul de categorie"
 
 #: usettingscaptions.rs_contest_categoryoperator
 #, fuzzy
 msgid "Category-Operator"
-msgstr ""
+msgstr "Operator de categorie"
 
 #: usettingscaptions.rs_contest_categoryoverlay
 #, fuzzy
 msgid "Category-Overlay"
-msgstr ""
+msgstr "Suprapunerea categoriei"
 
 #: usettingscaptions.rs_contest_categorypower
 #, fuzzy
 msgid "Category-Power"
-msgstr ""
+msgstr "Puterea de categorie"
 
 #: usettingscaptions.rs_contest_categorytransmitter
 #, fuzzy
 msgid "Category-Transmitter"
-msgstr ""
+msgstr "Transmițător de categorie"
 
 #: usettingscaptions.rs_contest_contestname
 #, fuzzy
 msgid "Contest Name"
-msgstr ""
+msgstr "Denumire concurs"
 
 #: usettingscaptions.rs_contest_contesttitle
 #, fuzzy
 msgid "Contest Title"
-msgstr ""
+msgstr "Titlul concursului"
 
 #: usettingscaptions.rs_contest_countdomesticcountries
 #, fuzzy
 msgid "Count Domestic Countries"
-msgstr ""
+msgstr "Count Ţări domestice"
 
 #: usettingscaptions.rs_contest_custominitialexchangestring
 #, fuzzy
 msgid "Custom Initial Exchange String"
-msgstr ""
+msgstr "String de schimb inițial personalizat"
 
 #: usettingscaptions.rs_contest_domesticmultiplier
 #, fuzzy
 msgid "Domestic Multiplier"
-msgstr ""
+msgstr "Multiplicator intern"
 
 #: usettingscaptions.rs_contest_dxmultiplier
 #, fuzzy
 msgid "DX Multiplier"
-msgstr ""
+msgstr "Multiplicator DX"
 
 #: usettingscaptions.rs_contest_exchangememoryenable
 #, fuzzy
 msgid "Exchange Memory Enable"
-msgstr ""
+msgstr "Activează memoria de schimb"
 
 #: usettingscaptions.rs_contest_exchangereceived
 #, fuzzy
 msgid "Exchange Received"
-msgstr ""
+msgstr "Schimbul primit"
 
 #: usettingscaptions.rs_contest_gridmapcenter
 #, fuzzy
 msgid "Grid Map Center"
-msgstr ""
+msgstr "Centru hartă grilă"
 
 #: usettingscaptions.rs_contest_initialexchange
 #, fuzzy
 msgid "Initial Exchange"
-msgstr ""
+msgstr "Bursa inițială"
 
 #: usettingscaptions.rs_contest_initialexchangecursorpos
 #, fuzzy
 msgid "Initial Exchange Cursor Pos"
-msgstr ""
+msgstr "Cursor de schimb iniţial"
 
 #: usettingscaptions.rs_contest_initialexchangeoverwrite
 #, fuzzy
 msgid "Initial Exchange Overwrite"
-msgstr ""
+msgstr "Suprascrierea iniţială a schimbului"
 
 #: usettingscaptions.rs_contest_literaldomesticqth
 #, fuzzy
 msgid "Literal Domestic Qth"
-msgstr ""
+msgstr "Qth intern literal"
 
 #: usettingscaptions.rs_contest_logrssent
 #, fuzzy
 msgid "Log Rs Sent"
-msgstr ""
+msgstr "Jurnal Rs trimis"
 
 #: usettingscaptions.rs_contest_logrstsent
 #, fuzzy
 msgid "Log Rst Sent"
-msgstr ""
+msgstr "Jurnal trimis"
 
 #: usettingscaptions.rs_contest_lookforrstsent
 #, fuzzy
 msgid "Look For Rst Sent"
-msgstr ""
+msgstr "Caută-l pe cel trimis"
 
 #: usettingscaptions.rs_contest_messageenable
 #, fuzzy
 msgid "Message Enable"
-msgstr ""
+msgstr "Activează mesajul"
 
 #: usettingscaptions.rs_contest_minitourduration
 #, fuzzy
 msgid "Minitour Duration"
-msgstr ""
+msgstr "Durata minimă"
 
 #: usettingscaptions.rs_contest_multbyband
 #, fuzzy
 msgid "Mult By Band"
-msgstr ""
+msgstr "Mult după trupă"
 
 #: usettingscaptions.rs_contest_multbymode
 #, fuzzy
 msgid "Mult By Mode"
-msgstr ""
+msgstr "Mult după mod"
 
 #: usettingscaptions.rs_contest_multiplebands
 #, fuzzy
 msgid "Multiple Bands"
-msgstr ""
+msgstr "Bande multiple"
 
 #: usettingscaptions.rs_contest_multiplemodes
 #, fuzzy
 msgid "Multiple Modes"
-msgstr ""
+msgstr "Moduri multiple"
 
 #: usettingscaptions.rs_contest_multreportminimumbands
 #, fuzzy
 msgid "Mult Report Minimum Bands"
-msgstr ""
+msgstr "Raportează mai multe benzi minime"
 
 #: usettingscaptions.rs_contest_multsheetautoreset
 #, fuzzy
 msgid "Mult Sheet Auto Reset"
-msgstr ""
+msgstr "Resetare automată a foii"
 
 #: usettingscaptions.rs_contest_prefixmultiplier
 #, fuzzy
 msgid "Prefix Multiplier"
-msgstr ""
+msgstr "Prefix Multiplicator"
 
 #: usettingscaptions.rs_contest_qslmode
 #, fuzzy
 msgid "QSL Mode"
-msgstr ""
+msgstr "Mod QSL"
 
 #: usettingscaptions.rs_contest_qsobyband
 #, fuzzy
 msgid "QSO By Band"
-msgstr ""
+msgstr "QSO by Band"
 
 #: usettingscaptions.rs_contest_qsobymode
 #, fuzzy
 msgid "QSO By Mode"
-msgstr ""
+msgstr "QSO după mod"
 
 #: usettingscaptions.rs_contest_qsonumberbyband
 #, fuzzy
 msgid "QSO Number By Band"
-msgstr ""
+msgstr "Numărul QSO după formație"
 
 #: usettingscaptions.rs_contest_qsopointmethod
 #, fuzzy
 msgid "QSO Point Method"
-msgstr ""
+msgstr "Metoda punctului QSO"
 
 #: usettingscaptions.rs_contest_qsopointsdomesticcw
 #, fuzzy
 msgid "QSO Points Domestic CW"
-msgstr ""
+msgstr "QSO puncte interne CW"
 
 #: usettingscaptions.rs_contest_qsopointsdomesticphone
 #, fuzzy
 msgid "QSO Points Domestic Phone"
-msgstr ""
+msgstr "QSO puncte telefon intern"
 
 #: usettingscaptions.rs_contest_qsopointsdxcw
 #, fuzzy
 msgid "QSO Points DX CW"
-msgstr ""
+msgstr "Puncte QSO DX CW"
 
 #: usettingscaptions.rs_contest_qsopointsdxphone
 #, fuzzy
 msgid "QSO Points DX Phone"
-msgstr ""
+msgstr "QSO puncte DX telefon"
 
 #: usettingscaptions.rs_contest_qtcenable
 #, fuzzy
 msgid "Qtc Enable"
-msgstr ""
+msgstr "Qtc Activează"
 
 #: usettingscaptions.rs_contest_qtcextraspace
 #, fuzzy
 msgid "Qtc Extra Space"
-msgstr ""
+msgstr "Qtc Extra Space"
 
 #: usettingscaptions.rs_contest_qtcminutes
 #, fuzzy
 msgid "Qtc Minutes"
-msgstr ""
+msgstr "Proces-verbal Qtc"
 
 #: usettingscaptions.rs_contest_qtcqrs
 #, fuzzy
 msgid "Qtc Qrs"
-msgstr ""
+msgstr "Qtc Qrs"
 
 #: usettingscaptions.rs_contest_quickqslcwmessage
 #, fuzzy
 msgid "Quick QSL CW Message"
-msgstr ""
+msgstr "Mesaj rapid QSL CW"
 
 #: usettingscaptions.rs_contest_quickqslcwmessage1
 #, fuzzy
 msgid "Quick QSL CW Message1"
-msgstr ""
+msgstr "Mesaj rapid QSL CW1"
 
 #: usettingscaptions.rs_contest_quickqslkey1
 #, fuzzy
 msgid "Quick QSL Key 1"
-msgstr ""
+msgstr "Tasta QSL rapidă 1"
 
 #: usettingscaptions.rs_contest_quickqslkey2
 #, fuzzy
 msgid "Quick QSL Key 2"
-msgstr ""
+msgstr "Cheie rapidă QSL 2"
 
 #: usettingscaptions.rs_contest_quickqslmessage1
 #, fuzzy
 msgid "Quick QSL Message 1"
-msgstr ""
+msgstr "Mesaj QSL rapid 1"
 
 #: usettingscaptions.rs_contest_quickqslmessage2
 #, fuzzy
 msgid "Quick QSL Message 2"
-msgstr ""
+msgstr "Mesaj QSL rapid 2"
 
 #: usettingscaptions.rs_contest_quickqslssbmessage
 #, fuzzy
 msgid "Quick QSL SSB Message"
-msgstr ""
+msgstr "Mesaj SSB QSL rapid"
 
 #: usettingscaptions.rs_contest_r150smode
 #, fuzzy
 msgid "R150S Mode"
-msgstr ""
+msgstr "Mod R150S"
 
 #: usettingscaptions.rs_contest_randomcqmode
 #, fuzzy
 msgid "Random CQ Mode"
-msgstr ""
+msgstr "Mod CQ aleator"
 
 #: usettingscaptions.rs_contest_remainingmultdisplaymode
 #, fuzzy
 msgid "Remaining Mult Display Mode"
-msgstr ""
+msgstr "Modul de afișare Multifuncțional rămas"
 
 #: usettingscaptions.rs_contest_reverseinitialex
 #, fuzzy
 msgid "Reverse Initial Ex"
-msgstr ""
+msgstr "Reverse inițiale ex"
 
 #: usettingscaptions.rs_contest_rfoblmode
 #, fuzzy
 msgid "Rfobl Mode"
-msgstr ""
+msgstr "Modul Rfobl"
 
 #: usettingscaptions.rs_contest_showallserialports
 #, fuzzy
 msgid "Show All Serial Ports"
-msgstr ""
+msgstr "Arată toate porturile în serie"
 
 #: usettingscaptions.rs_contest_showdomesticmultipliername
 #, fuzzy
 msgid "Show Domestic Multiplier Name"
-msgstr ""
+msgstr "Afișează numele multiplicatorului intern"
 
 #: usettingscaptions.rs_contest_sprintqsyrule
 #, fuzzy
 msgid "Sprint Qsy Rule"
-msgstr ""
+msgstr "Regula Sprint Qsy"
 
 #: usettingscaptions.rs_contest_tenminuterule
 #, fuzzy
 msgid "Ten Minute Rule"
-msgstr ""
+msgstr "Regula de zece minute"
 
 #: usettingscaptions.rs_contest_zonemultiplier
 #, fuzzy
 msgid "Zone Multiplier"
-msgstr ""
+msgstr "Zona Multiplicator"
 
 #: usettingscaptions.rs_cw_ctrlj_autosendcharactercount
 #, fuzzy
 msgid "Auto Send Character Count"
-msgstr ""
+msgstr "Număr de caractere Trimite automat"
 
 #: usettingscaptions.rs_cw_ctrlj_codespeed
 #, fuzzy
 msgid "Code Speed"
-msgstr ""
+msgstr "Viteza de cod"
 
 #: usettingscaptions.rs_cw_ctrlj_paddleport
 #, fuzzy
 msgid "Paddle Port"
-msgstr ""
+msgstr "Portul vâslelor"
 
 #: usettingscaptions.rs_cw_ctrlj_questionmarkchar
 #, fuzzy
 msgid "Question Mark Char"
-msgstr ""
+msgstr "Marca de întrebare Char"
 
 #: usettingscaptions.rs_cw_ctrlj_short0
 #, fuzzy
 msgid "Short 0"
-msgstr ""
+msgstr "Scurt 0"
 
 #: usettingscaptions.rs_cw_ctrlj_short1
 #, fuzzy
 msgid "Short 1"
-msgstr ""
+msgstr "Scurt 1"
 
 #: usettingscaptions.rs_cw_ctrlj_short2
 #, fuzzy
 msgid "Short 2"
-msgstr ""
+msgstr "Scurt 2"
 
 #: usettingscaptions.rs_cw_ctrlj_short9
 #, fuzzy
 msgid "Short 9"
-msgstr ""
+msgstr "Scurt 9"
 
 #: usettingscaptions.rs_cw_ctrlj_shortintegers
 #, fuzzy
 msgid "Short Integers"
-msgstr ""
+msgstr "Integeri scurte"
 
 #: usettingscaptions.rs_cw_ctrlj_slashmarkchar
 #, fuzzy
 msgid "Slash Mark Char"
-msgstr ""
+msgstr "Slash Mark Char"
 
 #: usettingscaptions.rs_cw_ctrlj_startsendingnowkey
 #, fuzzy
 msgid "Start Sending Now Key"
-msgstr ""
+msgstr "Începe trimiterea cheii"
 
 #: usettingscaptions.rs_cw_ctrlj_tunealtdenable
 #, fuzzy
 msgid "Tune Alt-D Enable"
-msgstr ""
+msgstr "Tune Alt- D Activează"
 
 #: usettingscaptions.rs_cw_messageschainable
 #, fuzzy
 msgid "Any message may chain into the next"
-msgstr ""
+msgstr "Orice mesaj poate lant in urmatorul"
 
 #: usettingscaptions.rs_cw_paddle_pttholdcount
 #, fuzzy
 msgid "Hold PTT for"
-msgstr ""
+msgstr "Țineți PTT pentru"
 
 #: usettingscaptions.rs_cw_speedincrement
 #, fuzzy
 msgid "Speed step"
-msgstr ""
+msgstr "Pasul de viteză"
 
 #: usettingscaptions.rs_files_ctrlj_allowautoupdate
 #, fuzzy
 msgid "Allow Auto Update"
-msgstr ""
+msgstr "Permite actualizarea automată"
 
 #: usettingscaptions.rs_files_ctrlj_callsignupdateenable
 #, fuzzy
 msgid "Callsign Update Enable"
-msgstr ""
+msgstr "Actualizează indicativul"
 
 #: usettingscaptions.rs_files_ctrlj_countryinformationfile
 #, fuzzy
 msgid "Country Information File"
-msgstr ""
+msgstr "Fișier informativ de țară"
 
 #: usettingscaptions.rs_files_ctrlj_ctyupdatecheckonstartup
 #, fuzzy
 msgid "Cty Update Check On Startup"
-msgstr ""
+msgstr "Comment"
 
 #: usettingscaptions.rs_files_ctrlj_domesticfilename
 #, fuzzy
 msgid "Domestic Filename"
-msgstr ""
+msgstr "Nume fișier intern"
 
 #: usettingscaptions.rs_files_ctrlj_initialexchangefilename
 #, fuzzy
 msgid "Initial Exchange Filename"
-msgstr ""
+msgstr "Nume fișier de schimb inițial"
 
 #: usettingscaptions.rs_files_ctrlj_missingcallsignsfileenable
 #, fuzzy
 msgid "Missingcallsigns File Enable"
-msgstr ""
+msgstr "Fișier semne de apel lipsă activat"
 
 #: usettingscaptions.rs_files_ctrlj_unknowncountryfilename
 #, fuzzy
 msgid "Unknown Country File Name"
-msgstr ""
+msgstr "Nume fișier țară necunoscută"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt1baseaddress
 #, fuzzy
 msgid "LPT1 Base Address"
-msgstr ""
+msgstr "Adresa bazei LPT1"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt2baseaddress
 #, fuzzy
 msgid "LPT2 Base Address"
-msgstr ""
+msgstr "Adresa bazei LPT2"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt3baseaddress
 #, fuzzy
 msgid "LPT3 Base Address"
-msgstr ""
+msgstr "Adresa bazei LPT3"
 
 #: usettingscaptions.rs_hardware_ctrlj_stereocontrolpin
 #, fuzzy
 msgid "Stereo Control Pin"
-msgstr ""
+msgstr "Pin de control Stereo"
 
 #: usettingscaptions.rs_hardware_ctrlj_stereopinhigh
 #, fuzzy
 msgid "Stereo Pin High"
-msgstr ""
+msgstr "Liceul Stereo Pin"
 
 #: usettingscaptions.rs_hardware_ctrlj_usecontrolport
 #, fuzzy
 msgid "Use Control Port"
-msgstr ""
+msgstr "Folosește portul de control"
 
 #: usettingscaptions.rs_network_ctrlj_computername
 #, fuzzy
 msgid "Computer Name"
-msgstr ""
+msgstr "Nume computer"
 
 #: usettingscaptions.rs_network_ctrlj_netstatusupdateinterval
 #, fuzzy
 msgid "Net Status Update Interval"
-msgstr ""
+msgstr "Interval de actualizare a stării nete"
 
 #: usettingscaptions.rs_operating_autoreturntocq
 #, fuzzy
 msgid "Return to CQ mode after logging"
-msgstr ""
+msgstr "Înapoi la modul CQ după logare"
 
 #: usettingscaptions.rs_operating_bands_vhf
 #, fuzzy
 msgid "VHF and up"
-msgstr ""
+msgstr "VHF și sus"
 
 #: usettingscaptions.rs_operating_ctrlj_askforfrequencies
 #, fuzzy
 msgid "Ask For Frequencies"
-msgstr ""
+msgstr "Întreabă de frecvenţe"
 
 #: usettingscaptions.rs_operating_ctrlj_autodisplaydupeqso
 #, fuzzy
 msgid "Auto Display Dupe QSO"
-msgstr ""
+msgstr "Afișează automat Dupe QSO"
 
 #: usettingscaptions.rs_operating_ctrlj_autodupeenablecq
 #, fuzzy
 msgid "Auto Dupe Enable CQ"
-msgstr ""
+msgstr "Dupe automat Activează CQ"
 
 #: usettingscaptions.rs_operating_ctrlj_autodupeenablesandp
 #, fuzzy
 msgid "Auto Dupe Enable S And P"
-msgstr ""
+msgstr "Dupe Auto Activează S și P"
 
 #: usettingscaptions.rs_operating_ctrlj_autospenable
 #, fuzzy
 msgid "Auto S&P Enable"
-msgstr ""
+msgstr "Activare S&P automată"
 
 #: usettingscaptions.rs_operating_ctrlj_autospenablesensitivity
 #, fuzzy
 msgid "Auto S&P Enable Sensitivity"
-msgstr ""
+msgstr "Auto S&P Activează sensibilitatea"
 
 #: usettingscaptions.rs_operating_ctrlj_autotimeincrement
 #, fuzzy
 msgid "Auto Time Increment"
-msgstr ""
+msgstr "Increment Timp Auto"
 
 #: usettingscaptions.rs_operating_ctrlj_customuserstring
 #, fuzzy
 msgid "Custom User String"
-msgstr ""
+msgstr "String utilizator personalizat"
 
 #: usettingscaptions.rs_operating_ctrlj_deenable
 #, fuzzy
 msgid "De Enable"
-msgstr ""
+msgstr "Activează"
 
 #: usettingscaptions.rs_operating_ctrlj_digitalmodeenable
 #, fuzzy
 msgid "Digital Mode Enable"
-msgstr ""
+msgstr "Modul digital activat"
 
 #: usettingscaptions.rs_operating_ctrlj_distancemode
 #, fuzzy
 msgid "Distance Mode"
-msgstr ""
+msgstr "Mod distanță"
 
 #: usettingscaptions.rs_operating_ctrlj_dupechecksound
 #, fuzzy
 msgid "Dupe Check Sound"
-msgstr ""
+msgstr "Dupe Check Sound"
 
 #: usettingscaptions.rs_operating_ctrlj_dupesheetautoreset
 #, fuzzy
 msgid "Dupe Sheet Auto Reset"
-msgstr ""
+msgstr "Dupe Sheet Reset Auto"
 
 #: usettingscaptions.rs_operating_ctrlj_frequencymemory
 #, fuzzy
 msgid "Frequency Memory"
-msgstr ""
+msgstr "Memorie frecvență"
 
 #: usettingscaptions.rs_operating_ctrlj_frequencymemoryenable
 #, fuzzy
 msgid "Frequency Memory Enable"
-msgstr ""
+msgstr "Activează memoria de frecvență"
 
 #: usettingscaptions.rs_operating_ctrlj_frequencypollrate
 #, fuzzy
 msgid "Frequency Poll Rate"
-msgstr ""
+msgstr "Rata polului de frecvenţă"
 
 #: usettingscaptions.rs_operating_ctrlj_ieswitch
 #, fuzzy
 msgid "Ie Switch"
-msgstr ""
+msgstr "Ie Comută"
 
 #: usettingscaptions.rs_operating_ctrlj_incrementtimeenable
 #, fuzzy
 msgid "Increment Time Enable"
-msgstr ""
+msgstr "Timp de incarcare Activează"
 
 #: usettingscaptions.rs_operating_ctrlj_logfrequencyenable
 #, fuzzy
 msgid "Log Frequency Enable"
-msgstr ""
+msgstr "Activează frecvența jurnalului"
 
 #: usettingscaptions.rs_operating_ctrlj_logsubtitle
 #, fuzzy
 msgid "Log Sub Title"
-msgstr ""
+msgstr "Subtitrare jurnal"
 
 #: usettingscaptions.rs_operating_ctrlj_maincallsign
 #, fuzzy
 msgid "Main Callsign"
-msgstr ""
+msgstr "Indicativul principal"
 
 #: usettingscaptions.rs_operating_ctrlj_possiblecallacceptkey
 #, fuzzy
 msgid "Possible Call Accept Key"
-msgstr ""
+msgstr "Posibil apel accepta cheia"
 
 #: usettingscaptions.rs_operating_ctrlj_possiblecallleftkey
 #, fuzzy
 msgid "Possible Call Left Key"
-msgstr ""
+msgstr "Posibilă cheie stânga apel"
 
 #: usettingscaptions.rs_operating_ctrlj_possiblecallmode
 #, fuzzy
 msgid "Possible Call Mode"
-msgstr ""
+msgstr "Modul de apelare posibil"
 
 #: usettingscaptions.rs_operating_ctrlj_possiblecallrightkey
 #, fuzzy
 msgid "Possible Call Right Key"
-msgstr ""
+msgstr "Posibilă cheie de apel dreapta"
 
 #: usettingscaptions.rs_operating_ctrlj_qsxenable
 #, fuzzy
 msgid "Qsx Enable"
-msgstr ""
+msgstr "Activează Qsx"
 
 #: usettingscaptions.rs_operating_ctrlj_qzbrandomoffsetenable
 #, fuzzy
 msgid "Qzb Random Offset Enable"
-msgstr ""
+msgstr "Deconectare aleatorie Qzb Activează"
 
 #: usettingscaptions.rs_operating_ctrlj_radiusofearth
 #, fuzzy
 msgid "Radius Of Earth"
-msgstr ""
+msgstr "Radius al Pământului"
 
 #: usettingscaptions.rs_operating_ctrlj_shiftkeyenable
 #, fuzzy
 msgid "Shift Key Enable"
-msgstr ""
+msgstr "Activează tasta Shift"
 
 #: usettingscaptions.rs_operating_ctrlj_stationscallsignsmask
 #, fuzzy
 msgid "Stations Callsigns Mask"
-msgstr ""
+msgstr "Posturi Callsigns Masca"
 
 #: usettingscaptions.rs_operating_ctrlj_wakeuptimeout
 #, fuzzy
 msgid "Wake Up Time Out"
-msgstr ""
+msgstr "Trezeşte - te!"
 
 #: usettingscaptions.rs_operating_cw_leadingzerochar
 #, fuzzy
 msgid "Leading zero sent as"
-msgstr ""
+msgstr "Zero de plumb trimis ca"
 
 #: usettingscaptions.rs_operating_cw_leadingzeros
 #, fuzzy
 msgid "Leading zeros"
-msgstr ""
+msgstr "Zerouri conductoare"
 
 #: usettingscaptions.rs_operating_cw_sayhiratecutoff
 #, fuzzy
 msgid "Stop above this rate"
-msgstr ""
+msgstr "Opreşte peste rata asta."
 
 #: usettingscaptions.rs_operating_cw_serial_farnsworthspeed
 #, fuzzy
 msgid "Character speed"
-msgstr ""
+msgstr "Viteza caracterelor"
 
 #: usettingscaptions.rs_operating_tworadio_qsyinactive
 #, fuzzy
 msgid "QSY the inactive radio"
-msgstr ""
+msgstr "QSY radio inactiv"
 
 #: usettingscaptions.rs_operating_tworadio_waitforstrength
 #, fuzzy
 msgid "Wait for a signal strength reading"
-msgstr ""
+msgstr "Aşteptaţi o citire a puterii semnalului"
 
 #: usettingscaptions.rs_ptt_viacommands
 #, fuzzy
 msgid "Key the transmitter with a CAT command"
-msgstr ""
+msgstr "Cheie transmițătorul cu o comandă CAT"
 
 #: usettingscaptions.rs_scoring_board_postingurl
 #, fuzzy
 msgid "Posting URL"
-msgstr ""
+msgstr "Postare URL"
 
 #: usettingscaptions.rs_scoring_board_readingurl
 #, fuzzy
 msgid "Reading URL"
-msgstr ""
+msgstr "Citire URL"
 
 #: usettingscaptions.rs_scoring_hamscore_url
 #, fuzzy
 msgid "Service URL"
-msgstr ""
+msgstr "URL- ul serviciului"
 
 #: usettingscaptions.rs_scoring_hamscore_username
 #, fuzzy
 msgid "Username"
-msgstr ""
+msgstr "Nume utilizator"
 
 #: usettingscaptions.rs_scp_nameflag
 #, fuzzy
 msgid "Flag a station whose name is known"
-msgstr ""
+msgstr "Steag o stație al cărui nume este cunoscut"
 
 #: usettingscaptions.rs_voice_ctrlj_mp3recorderbitrate
 #, fuzzy
 msgid "Mp3 Recorder Bitrate"
-msgstr ""
+msgstr "Bitrat de înregistrare Mp3"
 
 #: usettingscaptions.rs_voice_ctrlj_mp3recorderduration
 #, fuzzy
 msgid "Mp3 Recorder Duration"
-msgstr ""
+msgstr "Durata înregistrării Mp3"
 
 #: utr4wstrings.tc_clusterdirmissing
 #, fuzzy
 msgid "TRCLUSTER.DAT was not found beside the program, so the list is empty. Type the server as host:port, for example dxc.nc7j.com:7373."
-msgstr ""
+msgstr "TRCLUSTER.DAT nu a fost găsit lângă program, deci lista este goală. Tastați serverul ca gazdă:port, de exemplu dxc.nc7j.com:7373."
 
 #: utr4wstrings.tc_nodxclustersdefined
 #, fuzzy
 msgid "No DX clusters are defined yet -- click Configure to add one."
-msgstr ""
+msgstr "Nu sunt definite clustere DX încă -- faceți clic pe Configurează pentru a adăuga unul."
 

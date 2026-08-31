@@ -11159,7 +11159,7 @@ msgstr "Synchronizuj dziennik"
 #, fuzzy
 msgctxt "utr4wstrings.rc_getservlog"
 msgid "&Get server log"
-msgstr "& Pobierz dziennik serwera"
+msgstr "&Pobierz dziennik serwera"
 
 #: utr4wstrings.rc_recvrecords
 #, fuzzy
@@ -11195,5 +11195,5 @@ msgstr "Pokaż zawartość dziennika serwera"
 #, fuzzy
 msgctxt "utr4wstrings.rc_createaunl"
 msgid "&Create and use new log"
-msgstr "& Utwórz i użyj nowego dziennika"
+msgstr "&Utwórz i użyj nowego dziennika"
 

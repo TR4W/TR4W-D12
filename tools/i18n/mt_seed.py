@@ -127,6 +127,26 @@ PLACEHOLDER_SOURCES = {
 _NOT_LANGUAGE = re.compile(r"^\s*(https?://|www\.|mailto:|ftp://|[a-z]+://)", re.I)
 
 
+# A DESIGNER PLACEHOLDER IS NOT ENGLISH EITHER.
+#
+# A converted form keeps its control NAME as the .lfm caption on purpose --
+# uServerLogForm is the pattern CLAUDE.md points at, where HandleShow assigns
+# the real caption from a constant -- and the .lfm harvest cannot tell that
+# apart from a real label. So 'lblNoClusters', 'chkDontAsk' and 'lblPrompt'
+# arrived in the catalogues as strings to translate. Nobody needs a control
+# name translated (NY4I, 2026-08-31); seeding one produces confident nonsense
+# in every language and then puts it in front of a human as though it were a
+# label they should check.
+#
+# The shape is specific enough to be safe: a known widget prefix in lowercase,
+# then CamelCase, to the end, with no space and no punctuation. A real caption
+# either contains a space or does not begin with a widget prefix -- measured
+# against the catalogue this matches exactly the three above and nothing else.
+_CONTROL_NAME = re.compile(
+    r"^(lbl|btn|chk|edt|cbx|cbo|lst|pnl|grp|rad|mem|img|tv|lay|frm|dlg)"
+    r"[A-Z][A-Za-z0-9]*$")
+
+
 def is_translatable(source):
    """False for text that is not language: a URL, a key name, a bare number."""
    s = source.strip()
@@ -135,6 +155,8 @@ def is_translatable(source):
    if _NOT_LANGUAGE.match(s):
       return False
    if not re.search(r"[A-Za-z]{2}", s):
+      return False
+   if _CONTROL_NAME.match(s):
       return False
    return True
 
