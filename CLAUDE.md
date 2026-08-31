@@ -283,18 +283,28 @@ the LCL and asks the same RTTI the streaming loader uses, because "does this cla
 property, and is this a legal value" cannot be answered by grepping a `published` block. It fails
 closed if FPC or the LCL is missing.
 
-### Delphi 12 (deprecated — reference only)
+### ~~Delphi 12~~ - GONE, and there is nothing left to run
 
-```bat
-call "C:\Program Files (x86)\Embarcadero\Studio\23.0\bin\rsvars.bat"
-cd /d C:\tr4w-d12\tr4w
-msbuild tr4w.dproj /t:Make /p:Config=Debug /p:Platform=Win32 /v:minimal /nologo
-```
+**Every Delphi project file was deleted on 2026-08-31** (NY4I: *"all the d12 specific
+files can be removed. D12 is never coming back here"*): `tr4w.dproj`, both
+`tr4wserver.dproj`/`.dof`, the unit-test and status-trace `.dproj`,
+`FullBuild-D12-deprecated.ps1`, the stray `.cfp`/`.gex`/`.obj`/`.dof`, and the D7
+leftovers `tr4w.cfg` and `BatchCompile.cmd`. The msbuild recipe that stood here is
+in git history if it is ever wanted; it had not worked since the FMX twins were
+deleted in August, so it was a recipe that could not be run.
 
-~~`tr4w.dpr`~~ **`tr4w.lpr` is the program source** (renamed 2026-08-29, `adaa30dd`: *"the program files are .lpr -- this is FPC and Lazarus, not Delphi"*). **No `.dpr` remains anywhere in this tree** -- all twelve program files are `.lpr`. It is shared by both toolchains — the LCL and FMX unit sets are
-selected by `{$IFDEF FPC}` in its uses clause. `tr4w.cfg` / `tr4w.dof` are D7 leftovers and editing
-them does nothing; `BatchCompile.cmd` is a retired D7 recipe. The full recipe for both toolchains,
-FPC first and Delphi struck through, is [`tr4w/docs/BUILD.md`](tr4w/docs/BUILD.md).
+**`tr4w.lpr` is the program source** (renamed 2026-08-29, `adaa30dd`). **No `.dpr`
+remains anywhere in this tree** - all twelve program files are `.lpr`.
+
+**What was deliberately NOT deleted, because the names invite it:**
+
+| kept | why |
+|---|---|
+| the ~200 `.dpk`/`.dproj`/`.bdsproj` under `tr4w/include/` | the **vendored Indy 10.6.3.3** tree, kept on purpose |
+| the ~90 `.obj` files under `tr4w/include/` | **linked by the build**: `{$LINK pcre\pcre_compile.obj}` in `pcre.pas`. Deleting them breaks compilation |
+| `tr4w/test/corpus/export-d12-corpus.sh` | the **live golden-corpus oracle**. "d12" is its name, not its toolchain |
+| `tr4w/tr4w.res` | linked by `{$R *.res}`; Lazarus writes it from the `.lpi` |
+| `docs/D12_*.md`, `tr4w/docs/D12_*.md` | historical reasoning, still linked from the [Documentation map](#documentation-map) |
 
 ### Lazarus
 
@@ -980,7 +990,7 @@ DTR/RTS keying).
 ### Known compile snags
 - `Undeclared identifier: 'EIdConnClosedGracefully'` / `'EIdSocketError'` → add `IdException, IdStack`
   to the uses clause.
-- Missing Indy units → the vendored search path is `DCC_UnitSearchPath` in `tr4w.dproj`, not in any
+- Missing Indy units → the vendored search path is in `build/Get-SearchPaths.ps1`. ~~`DCC_UnitSearchPath` in `tr4w.dproj`~~ is gone with the Delphi project files, not in any
   batch file.
 - **Vendored Indy 10.6.3.3 is kept deliberately.** D12 ships Indy as DCUs only
   (`Studio\23.0\source\Indy` holds just the IPPeer abstraction), so swapping is plausibly a

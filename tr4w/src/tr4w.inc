@@ -45,10 +45,14 @@
 //
 // The {$IFDEF FPC} guard that used to wrap this is gone (2026-08-29). It existed
 // so Delphi would not choke on directives it does not recognise, and Delphi is
-// not coming back -- FullBuild-D12-deprecated.ps1 has not worked since the FMX
-// twins were deleted in August. A guard for a compiler that cannot build this
-// tree is a claim that it might, which is the kind of thing a reader has to
-// disprove before they can act.
+// not coming back. A guard for a compiler that cannot build this tree is a
+// claim that it might, which is the kind of thing a reader has to disprove
+// before they can act.
+//
+// The deprecated Delphi script that used to be named here is GONE, along with
+// every .dproj/.dof/.cfp/.gex in the tree (2026-08-31, NY4I: "D12 is never
+// coming back here"). It had not worked since the FMX twins were deleted in
+// August, so it was a build recipe that could not build.
 
 {$MODE Delphi}
 {$MODESWITCH UnicodeStrings}
