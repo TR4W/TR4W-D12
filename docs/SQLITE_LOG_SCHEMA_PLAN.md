@@ -43,6 +43,65 @@ have one.
 Also out, for now: the `exchange_memory` table (TR4QT's per-callsign exchange
 prediction). It is a feature, not a port of anything TR4W has.
 
+### The reference-data question, captured and NOT scheduled
+
+NY4I reopened the global-database question on 2026-08-31, from a different
+direction: not "should configuration live in a database" -- that is settled and
+the answer is `settings/tr4w.json` -- but **"why is our reference data a pile of
+flat files?"**
+
+    TRCLUSTER.DAT      15 KB   text, host:port per line
+    CTY.DAT           102 KB   text, AD1C colon-delimited records
+    TRMASTER.DTA      3.5 MB   binary
+    dom/               126 files, one per domestic-multiplier contest
+
+These are all the same KIND of thing: shipped, read-only, replaced wholesale
+when a new version appears, and structurally relational already. CTY.DAT is a
+table of countries with prefixes, zones and coordinates that happens to be
+stored as text -- NY4I's phrasing was that it is "already a database in its
+naive form", and the shipped file being text does not make that less true.
+
+**HALF OF THE HARD PART IS ALREADY BUILT, which is what makes this worth
+capturing rather than dreaming about.** TR4W already downloads reference data,
+with version checking and progress reporting:
+
+    uCTYUpdate.pas       country-files.com/feed/ then cty.dat
+    uTRMasterUpdate.pas  tr4w.net/TRMASTER.DTA
+    uPOTAParks.pas       pota.app/all_parks_ext.csv
+
+Three units, three hand-rolled update paths, three sets of "did it work"
+handling. A common store is also a common UPDATER.
+
+What a reference database would buy, in rough order of value:
+
+- **One updater instead of three**, with one version record per dataset and one
+  place that reports a failure.
+- **Queryability.** "Which countries are in zone 14" is a scan of a text file
+  today.
+- **Editability, which flat files cannot give us.** The `dom/` files are the
+  clearest case: 126 contest definitions an operator may legitimately want to
+  correct or extend, and today that means editing a `.cfg` by hand with no
+  validation and no way to tell a local edit from a shipped one. A database
+  separates "what shipped" from "what this operator changed" -- which is exactly
+  the distinction the radio/cluster libraries already make against the legacy
+  ini.
+- **One path rule.** See [`OWED_BEFORE_CROSS_PLATFORM.md`](OWED_BEFORE_CROSS_PLATFORM.md)
+  item 3: reference data currently resolves by two disagreeing rules and neither
+  survives macOS or Linux. One file to locate is easier to get right than four
+  plus a directory.
+
+**Why it is NOT scheduled.** It is a third database on top of a contest log that
+does not exist yet and a settings store that has just landed, and the contest
+log is the one with a deadline. It also has a genuine unsolved piece: a shipped
+dataset that the operator can edit needs a merge story for the next download,
+and "your edits are gone" and "your edits block the update" are both wrong
+answers. That wants designing, not discovering halfway through.
+
+The earlier decision above still stands as written -- configuration and the
+contest log are not going into a global database. This is a DIFFERENT question
+about reference data, and it is recorded here so the next reader knows it was
+considered rather than missed.
+
 ---
 
 ## 2. What TR4QT gets right, and the one thing that must change
