@@ -405,10 +405,16 @@ procedure ApplyContentMinimumSize(const aForm: TForm);
   Percent throughout, to keep the arithmetic integral -- the same reason the
   console computes a font SIZE rather than a ratio.
 
-  CLAMPED AT BOTH ENDS. Below the floor the text stops being readable and below
-  that it stops being hit-testable; above the ceiling a maximised window turns a
-  readout into a billboard. A form that must not shrink past its content should
-  also call ApplyContentMinimumSize, which is the other half of this. }
+  THE FLOOR IS A CLAMP; THE CEILING IS OPTIONAL AND OFF BY DEFAULT. Below the
+  floor text stops being readable and then stops being hit-testable. A ceiling
+  was tried at 400% and it is the wrong idea: the content simply stopped growing
+  part-way across a wide window and left the rest empty, which is the complaint
+  the scaling exists to answer (NY4I, 2026-08-31). If the operator makes the
+  window enormous they have said what they want. Pass aMaxPercent > 0 only for a
+  form that genuinely has an upper bound.
+
+  A form that must not shrink past its content should also call
+  ApplyContentMinimumSize, which is the other half of this. }
 
 type
    TDesignBounds = record
@@ -423,7 +429,7 @@ procedure CaptureDesignLayout(const aForm: TForm; out aLayout: TDesignLayout;
 procedure ApplyLayoutScale(const aForm: TForm; const aLayout: TDesignLayout;
                            const aDesignW, aDesignH: integer;
                            const aMinPercent: integer = 100;
-                           const aMaxPercent: integer = 400);
+                           const aMaxPercent: integer = 0);
 
 function TryParseHexByte(const aText: string; out aValue: integer): boolean;
 
@@ -433,6 +439,7 @@ uses
    Windows,    // EnableWindow / IsWindowEnabled -- see ShowModalOverWin32Parent
    uMainForm,  // TR4WMainForm -- the owner every dialog should have had
    Types,      // TRect
+   Graphics,   // TFont -- EffectiveFontHeight
    SysUtils,
    StrUtils,
    MainUnit,   // logger -- SyncedTags reports a desynced tag list
@@ -1126,6 +1133,48 @@ begin
 end;
 
 
+{ THE FONT HEIGHT A CONTROL ACTUALLY RENDERS AT.
+
+  Font.Height is 0 on any control that has not been given one -- which is most
+  of them, because a designed form only writes a Font entry for the controls
+  whose font was changed. Scaling that 0 yields 0, and assigning 0 back means
+  "use the default", so the control never grows.
+
+  That is not hypothetical: ten of the radio panel's twelve controls inherit
+  their font, so the two VFO panels (the only ones with an explicit
+  Font.Height = -16) scaled while every label stayed put. The frequency ended up
+  many times the size of everything around it (NY4I, 2026-08-31).
+
+  Height is resolved from Size when Size is set -- Height is Size in points
+  converted through the font's own PixelsPerInch -- and from the system font
+  when neither is. Integer arithmetic and LCL only; MulDiv is a Win32 call. }
+function EffectiveFontHeight(const aFont: TFont): integer;
+begin
+   Result := aFont.Height;
+   if Result <> 0 then
+      begin
+      Exit;
+      end;
+
+   if aFont.Size <> 0 then
+      begin
+      Result := -((aFont.Size * aFont.PixelsPerInch) div 72);
+      Exit;
+      end;
+
+   { Inherited all the way to the system font. }
+   Result := Screen.SystemFont.Height;
+   if (Result = 0) and (Screen.SystemFont.Size <> 0) then
+      begin
+      Result := -((Screen.SystemFont.Size * Screen.SystemFont.PixelsPerInch) div 72);
+      end;
+
+   if Result = 0 then
+      begin
+      Result := -12;   { the LCL's own fallback, and better than not scaling }
+      end;
+end;
+
 type
    { TControl.Font is PROTECTED -- published only from TWinControl down. An
      access class is the standard way to reach it without requiring every
@@ -1164,15 +1213,35 @@ begin
         a character-height font, which is why the sign is preserved below. }
       if aForm.Controls[i] is TControl then
          begin
-         aLayout[i].FontHeight := TControlAccess(aForm.Controls[i]).Font.Height;
+         aLayout[i].FontHeight := EffectiveFontHeight(TControlAccess(aForm.Controls[i]).Font);
          end;
+
+      { THE SCALER OWNS THE LAYOUT FROM HERE, so every control is pinned to the
+        top left and positioned explicitly.
+
+        An edge anchor and a scaler are two things laying out the same control
+        and they disagree. A right-anchored panel keeps its own right edge
+        against the form while its left edge is being scaled, so it stretches
+        instead of scaling and drifts away from the controls it was designed
+        beside -- that is exactly what the radio panel's status box did (NY4I,
+        2026-08-31). It also made the control invisible to
+        ApplyContentMinimumSize, which must skip edge-anchored controls because
+        their current position says nothing about the minimum, so the window
+        could be shrunk until the status box was gone.
+
+        Recorded BEFORE this, so the designed bounds are the anchored ones.
+
+        A form whose content should FILL rather than scale -- a grid -- wants
+        its anchors left alone and must not use this scaler. }
+
+      aForm.Controls[i].Anchors := [akLeft, akTop];
       end;
 end;
 
 procedure ApplyLayoutScale(const aForm: TForm; const aLayout: TDesignLayout;
                            const aDesignW, aDesignH: integer;
                            const aMinPercent: integer = 100;
-                           const aMaxPercent: integer = 400);
+                           const aMaxPercent: integer = 0);
 var
    i, pct, pctW, pctH: integer;
    c: TControl;
@@ -1195,7 +1264,7 @@ begin
       begin
       pctW := aMinPercent;
       end;
-   if pctW > aMaxPercent then
+   if (aMaxPercent > 0) and (pctW > aMaxPercent) then
       begin
       pctW := aMaxPercent;
       end;
@@ -1204,7 +1273,7 @@ begin
       begin
       pctH := aMinPercent;
       end;
-   if pctH > aMaxPercent then
+   if (aMaxPercent > 0) and (pctH > aMaxPercent) then
       begin
       pctH := aMaxPercent;
       end;

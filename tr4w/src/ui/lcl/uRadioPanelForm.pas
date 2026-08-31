@@ -480,7 +480,9 @@ begin
       Exit;      { before CaptureDesign -- nothing to scale from yet }
       end;
 
-   ApplyLayoutScale(Self, FDesign, FDesignW, FDesignH, 100, 400);
+   { No ceiling: 400% stopped the readout part-way across a wide window and
+     left the rest empty.  The operator sizing the window IS the decision. }
+   ApplyLayoutScale(Self, FDesign, FDesignW, FDesignH, 100);
 end;
 
 function CreateTR4WRadioPanelWindow(const aID: WindowsType): HWND;
