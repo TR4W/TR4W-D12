@@ -1955,6 +1955,7 @@ procedure TPrefsForm.FillCWOutputCombo(const aCombo: TComboBox;
 var
    i: integer;
    radio: TRadioDefinition;
+   offered: string;
 begin
    ClearComboItems(aCombo);
    AddComboItem(aCombo, TC_PREFS_NONE, CWOUTPUT_NONE);
@@ -1966,6 +1967,29 @@ begin
    if Trim(aRadioId) <> '' then
       begin
       radio := FStore.FindRadioById(aRadioId);
+      end;
+
+   { OBSERVABLE FOR THE UI HARNESS.  An id that fails to resolve is the exact
+     signature of the name-versus-id defect this routine had, and nothing
+     reported it: the combo simply came up short two entries.  The harness
+     asserts on UNRESOLVED, so the defect cannot return silently. }
+
+   if logger.IsDebugEnabled then
+      begin
+      if (Trim(aRadioId) <> '') and (radio = nil) then
+         begin
+         logger.Debug('[Prefs] CW output combo: radio id=%s UNRESOLVED', [aRadioId]);
+         end
+      else if radio <> nil then
+         begin
+         { declaresCAT comes from the SAME call the combo uses to decide, so the
+           harness asserts an internal invariant rather than re-encoding which
+           radios can key over CAT -- a second copy of that list would drift. }
+
+         logger.Debug('[Prefs] CW output combo: radio id=%s resolved name=%s registryId=%s declaresCAT=%s',
+                      [aRadioId, radio.Name, radio.RegistryId,
+                       BoolToStr(SupportsForId(radio.RegistryId, rcCWByCAT), True)]);
+         end;
       end;
 
    if radio <> nil then
@@ -2009,6 +2033,23 @@ begin
       end;
 
    SelectByTag(aCombo, aSelected);
+
+   { The tags actually on offer, so the harness can assert that a radio
+     declaring rcCWByCAT is given the CAT choice. }
+
+   if logger.IsDebugEnabled then
+      begin
+      offered := '';
+      for i := 0 to aCombo.Items.Count - 1 do
+         begin
+         if offered <> '' then
+            begin
+            offered := offered + ',';
+            end;
+         offered := offered + aCombo.Items[i];
+         end;
+      logger.Debug('[Prefs] CW output combo: offering [%s]', [offered]);
+      end;
 end;
 
 { THE MIRROR, NOT THE REFERENCE -- since keyers gained ids, a profile written

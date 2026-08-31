@@ -1451,6 +1451,19 @@ var
   perfTimeStart, perfTimeStop: TDateTime;
 begin
   logger.trace('>>>Entering LogContact');
+
+  { ONE LINE PER QSO WRITTEN, and the county-line drain comes through here
+    too -- DrainPendingMultiQSORefs calls LogContact once per queued county.
+    That makes "one exchange, several QSOs" observable to the UI harness,
+    which had no way to see it: the corpus reads finished files and the unit
+    tests cannot reach this unit at all. }
+
+  if logger.IsDebugEnabled then
+     begin
+     logger.Debug('[LogContact] QSO call=%s qth=%s rst=%d nr=%d points=%d',
+                  [RXData.Callsign, RXData.QTHString, RXData.RSTReceived,
+                   RXData.NumberReceived, RXData.QSOPoints]);
+     end;
  // StationInformationCall := '';    // This might be cleared out too soon - Moved to end of TryLogContact ny4i
   ShowQSOStatusCall := '';
   VisibleDupeSheetChanged := True;
