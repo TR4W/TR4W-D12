@@ -232,6 +232,12 @@ var
    GHostStaging: TStringList = nil;
    GHostSeen: TStringList = nil;
 
+   { FREEZE, HELD AS STATE RATHER THAN READ BACK OFF THE BUTTON.  The only other
+     record of it in this unit is btnFreeze's caption, and inferring a mode from
+     a caption breaks the moment that caption is translated -- which is coming.
+     uTelnet owns the mode; this is the view's copy of what it was last told. }
+   GFreezePressed: boolean = False;
+
 { THE COLOUR OF A CONSOLE LINE.
 
   This was a const INSIDE TelnetWndDlgProc, which is why it moves here rather
@@ -420,6 +426,21 @@ procedure TfrmTelnet.ResizeSettled(Sender: TObject);
 begin
    tmrResize.Enabled := False;
    ApplyConsoleScale;
+
+   { AND THEN BACK TO THE BOTTOM.  Rescaling changes the font and the row height,
+     so the same TopIndex leaves a different set of lines showing -- usually
+     stranded mid-list with blank space under them.  It corrected itself on the
+     next spot, which is exactly what made it look like a glitch rather than a
+     state: on a quiet band nothing arrives to correct it (NY4I, 2026-08-31).
+
+     Gated on freeze for the same reason an arriving line is: freeze means the
+     operator has deliberately pinned the view to read something, and a resize
+     must not throw that away. This is the same rule TelnetConsoleAdd applies. }
+
+   if not GFreezePressed then
+      begin
+      TelnetConsoleScrollToEnd;
+      end;
 end;
 
 procedure TfrmTelnet.ApplyConsoleScale;
@@ -778,6 +799,11 @@ end;
 
 procedure TelnetSetFreezePressed(const aPressed: boolean);
 begin
+   { Recorded BEFORE the usability guard: the mode is true whether or not there
+     is a window to show it on, and a resize later must not consult a stale copy
+     because the form happened to be down when it changed. }
+   GFreezePressed := aPressed;
+
    if not FormUsable then
       begin
       Exit;
