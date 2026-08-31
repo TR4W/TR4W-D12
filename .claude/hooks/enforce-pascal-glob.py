@@ -35,9 +35,17 @@ ESCAPE HATCH: put `glob-case-ok` in a Bash command. Say why.
 
 RULE 2 -- SEARCHING src\ AND FORGETTING THE PROGRAM FILES (warns only).
 
-tr4w.dpr lives at tr4w\, not under src\, so `grep -rn ... src/` skips it -- and
+tr4w.lpr lives at tr4w\, not under src\, so `grep -rn ... src/` skips it -- and
 it is where every unit is listed. A reachability question answered against src\
 alone cannot see whether a unit is COMPILED AT ALL.
+
+THE EXTENSION IS .lpr, NOT .dpr, SINCE 2026-08-29 (adaa30dd, "the program files
+are .lpr -- this is FPC and Lazarus, not Delphi"). There is no .dpr left in
+the tree at all; all twelve program files are .lpr. This text said otherwise
+until 2026-08-31, so the hook was telling every reader to search a file that
+does not exist -- on a search that was already missing the real one. dpr stays
+in the patterns below because matching an extension that occurs nowhere costs
+nothing, and a returning .dpr should still be recognised as a program file.
 
 Also not hypothetical: the 2026-08-20 proof that `unit Help` is dead rested on
 "it appears in none of the 8 .dpr/.lpr files". Scoped to src\, that search finds
@@ -81,10 +89,11 @@ RECURSIVE_FLAG = re.compile(r'^-[A-Za-z]*r[A-Za-z]*$')
 
 WARNING = (
    "Reminder (pascal-glob hook): this searches src\\ only. The PROGRAM files are "
-   "OUTSIDE it -- tr4w.dpr, tr4wserver/tr4wserver.dpr, the test and bench .dpr "
-   "files, build/lintlfm/lintlfm.lpr. tr4w.dpr is where every unit is listed, so "
+   "OUTSIDE it -- tr4w/tr4w.lpr, tr4w/tr4wserver/tr4wserver.lpr, the test and "
+   "bench .lpr files, tr4w/build/lintlfm/lintlfm.lpr. tr4w/tr4w.lpr is where "
+   "every unit is listed, so "
    "\"who references this\" and \"is this even compiled\" are NOT answered by src\\ "
-   "alone. Add tr4w.dpr to the search if that is the question being asked."
+   "alone. Add tr4w/tr4w.lpr to the search if that is the question being asked."
 )
 
 

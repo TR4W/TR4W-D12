@@ -291,7 +291,7 @@ cd /d C:\tr4w-d12\tr4w
 msbuild tr4w.dproj /t:Make /p:Config=Debug /p:Platform=Win32 /v:minimal /nologo
 ```
 
-`tr4w.dpr` is the **program source** and is shared by both toolchains — the LCL and FMX unit sets are
+~~`tr4w.dpr`~~ **`tr4w.lpr` is the program source** (renamed 2026-08-29, `adaa30dd`: *"the program files are .lpr -- this is FPC and Lazarus, not Delphi"*). **No `.dpr` remains anywhere in this tree** -- all twelve program files are `.lpr`. It is shared by both toolchains — the LCL and FMX unit sets are
 selected by `{$IFDEF FPC}` in its uses clause. `tr4w.cfg` / `tr4w.dof` are D7 leftovers and editing
 them does nothing; `BatchCompile.cmd` is a retired D7 recipe. The full recipe for both toolchains,
 FPC first and Delphi struck through, is [`tr4w/docs/BUILD.md`](tr4w/docs/BUILD.md).
@@ -324,7 +324,7 @@ is why a blanket conversion was wrong. Background:
 
 Three layers, all real and all expected to be green before a commit.
 
-**1. Unit tests** — `tr4w/test/unit/tr4w_unit_tests.dpr`, a minimal DUnit-compatible framework
+**1. Unit tests** — `tr4w/test/unit/tr4w_unit_tests.lpr`, a minimal DUnit-compatible framework
 (`uTR4WTestFramework.pas`, no external deps). **3978 tests, 0 failures** is the baseline (2026-08-13,
 identical under FPC and Delphi). The count grows steadily — take it from the newest commit message,
 and if the checked-in `.exe` reports fewer, it is stale.
@@ -388,7 +388,7 @@ strong net, not a proof.
 band map, stations, SCP/master, both dupe sheets, the five remaining-multiplier
 windows, PostScores, HamScore, Intercom, MP3 Recorder, both radio panels, and
 Network — then **Telnet and MMTTY**, which this file listed as the last two
-holdouts until 2026-08-26. `uTelnetForm` and `uMMTTYForm` are in `tr4w.dpr`;
+holdouts until 2026-08-26. `uTelnetForm` and `uMMTTYForm` are in `tr4w.lpr`;
 the DX cluster window landed in `00e9a987`. `Lint-Win32Dialogs[ui]` is at 748.
 
 **AND SO IS EVERY DIALOG (2026-08-29).** The last Win32 dialog template in use
@@ -455,13 +455,13 @@ no window handle, a `TPanel` caption not wrapping).
 WSJT-X and external-logger servers, `CreateMainWindow`, WinKeyer thread, then `Application.Run`.
 Grep for the step you need; the order above is what matters, not the offsets.
 
-**It moved out of `tr4w.dpr` on 2026-08-25 and that was the point of the exercise.** A `.dpr` is
+**It moved out of the program file on 2026-08-25 and that was the point of the exercise.** A program file is
 invisible to a search of `src/`, so the most order-sensitive code in the program lived in the one
 file nobody greps — and "where does X happen at startup" had the answer "in no unit at all". The
-`.dpr` is now 441 lines: the uses clause, the resource directives, and `begin RunTR4W; end.`
+`.lpr` is now 441 lines: the uses clause, the resource directives, and `begin RunTR4W; end.`
 
-**The uses clause stays in the `.dpr`**, so "which units are compiled" and "who references this" are
-still `.dpr` questions — that is what the `enforce-pascal-glob` hook is warning about, and it is
+**The uses clause stays in the `.lpr`**, so "which units are compiled" and "who references this" are
+still `.lpr` questions — that is what the `enforce-pascal-glob` hook is warning about, and it is
 still right. `uProgramMain`'s own uses clause is a copy of it in the same order: this program relies
 on use-order for name resolution (`SysUtils.SysErrorMessage` vs `TF`'s), so do not tidy it as a side
 effect of something else.
@@ -610,7 +610,7 @@ string-id radio with no enum member) — covering every selectable `InterfacedRa
    operator can buy gets its own entry and display name even when models share a class (FT-817/818,
    IC-7850/7851). A duplicate display name makes a model invisible in the radio list.
 
-**Adding a radio** should touch only its own unit(s), `tr4w.dpr`, and the unit-test `.dpr` — verified
+**Adding a radio** should touch only its own unit(s), `tr4w.lpr`, and the unit-test `.lpr` — verified
 2026-08-02 by adding TCI (a WebSocket radio) with no change to any shared file. Read
 [`docs/ADDING_A_RADIO.md`](docs/ADDING_A_RADIO.md).
 
@@ -655,7 +655,7 @@ ready: gate post-connect sends on link *stability*, not presence.
 
 ### 6. Multi-user networking
 
-**TR4WServer** (`tr4w/tr4wserver/`, its own `.dpr`) is the TCP/IP server for multi-op stations:
+**TR4WServer** (`tr4w/tr4wserver/`, its own `.lpr`) is the TCP/IP server for multi-op stations:
 centralised log, multipliers, dupe checking, serial-number lockout, time sync. Binary packet
 protocol with CRC32 (`src/utils/networkmessageutils.pas`).
 
@@ -663,7 +663,7 @@ protocol with CRC32 (`src/utils/networkmessageutils.pas`).
 2026-08-23: `a3c671cc` added a `TF` → `uCrashLog` edge so a fault on a worker thread would not be
 silent, and `uCrashLog` used `Forms`, so the chain
 
-    tr4wserver.dpr → tr4wserverUnit → TF → uCrashLog → Forms
+    tr4wserver.lpr → tr4wserverUnit → TF → uCrashLog → Forms
 
 dragged the LCL into a console program whose search paths deliberately exclude it. **Nothing
 surfaced it for three days**, because that search path is the only guard on the boundary and it
@@ -873,7 +873,7 @@ See [`docs/UPDATING_RUNTIME_DLLS.md`](docs/UPDATING_RUNTIME_DLLS.md).
 ### Add a radio
 Read [`docs/ADDING_A_RADIO.md`](docs/ADDING_A_RADIO.md). In short: one new unit in
 `src/radioFactory/` inheriting the right family base, one `RegisterRadio` in its `initialization`,
-capability flags set in the constructor, added to `tr4w.dpr` and the unit-test `.dpr`. **Never** add
+capability flags set in the constructor, added to `tr4w.lpr` and the unit-test `.lpr`. **Never** add
 a model check to a base class. **Never** add it to `LOGRADIO.PAS`.
 
 ### Add a contest
