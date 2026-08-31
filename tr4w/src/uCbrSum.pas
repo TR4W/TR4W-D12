@@ -213,7 +213,7 @@ begin
         CreateCabrilloWindow := hwnddlg;
         FormatSpecification := CABRILLOSECTION;
 
-        Windows.SetWindowTextW(hwnddlg, PWideChar(RC_STATIONINFO));
+        Windows.SetWindowTextW(hwnddlg, PWideChar(UnicodeString(RC_STATIONINFO)));
         CreateOKCancelButtons(hwnddlg);
 
         if ErmakSpecification then

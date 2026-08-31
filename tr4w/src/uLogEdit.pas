@@ -63,7 +63,7 @@ var
       WM_INITDIALOG:
          begin
             FullLogEditHandle := hwnddlg;
-            Windows.SetWindowTextW(hwnddlg, PWideChar(RC_VIEWEDITLOG2));
+            Windows.SetWindowTextW(hwnddlg, PWideChar(UnicodeString(RC_VIEWEDITLOG2)));
             LogEditListView := CreateEditableLog(hwnddlg, 0, 0, 790, 420, True);
             i := 0;
             if not OpenLogFile then

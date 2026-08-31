@@ -43,7 +43,7 @@
         <PackageName Value="LCL"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="378">
+    <Units Count="379">
       <Unit0>
         <Filename Value="tr4w.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -1671,6 +1671,10 @@
         <Filename Value="src/uSettingsCaptions.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit377>
+      <Unit378>
+        <Filename Value="src/uAppPaths.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit378>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

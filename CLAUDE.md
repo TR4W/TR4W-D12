@@ -379,8 +379,20 @@ Network — then **Telnet and MMTTY**, which this file listed as the last two
 holdouts until 2026-08-26. `uTelnetForm` and `uMMTTYForm` are in `tr4w.lpr`;
 the DX cluster window landed in `00e9a987`. `Lint-Win32Dialogs[ui]` is at 748.
 
-**AND SO IS EVERY DIALOG (2026-08-29).** The last Win32 dialog template in use
-was **73**, the server-log synchronize window; it is
+**AND SO IS EVERY DIALOG THAT USED `tDialogBox` (2026-08-29) — WHICH IS NOT
+EVERY DIALOG.** Corrected 2026-08-31: that claim tracked one creation path and
+missed `CreateModalDialog` (in `TF.pas`), through which **eight hand-built Win32
+dialogs are still live**: `uAltP`, `uCbrSum`, `uErmak`, `uFileView`, `uLogEdit`,
+`uLogSearch`, `uQTCR`, `uQTCS`. `uQTCR` also subclasses its edit controls with
+`SetWindowLong(GWL_WNDPROC)`, which makes it the heaviest of them.
+
+All five that set a title did it with `PWideChar(<resourcestring>)` — a POINTER
+CAST, not a conversion — so every one showed a garbled caption ("????????" on
+Alt-P, NY4I 2026-08-31, being 16 caption bytes read as 8 UTF-16 units). Fixed;
+the conversions themselves are still owed.
+
+The last `tDialogBox` template in use was **73**, the server-log synchronize
+window; it is
 `src/ui/lcl/uServerLogForm.pas`. `tDialogBox` has no live caller left. Two
 things that conversion is worth remembering for: a control id can be written by
 `SetDlgItemInt` from **any** unit holding the window handle — the 'sent records'
@@ -631,10 +643,16 @@ string-id radio with no enum member) — covering every selectable `InterfacedRa
 
 Read the D7 tree as the authority on what the old program did — never mirror a fix back into it.
 
-**`src/uCAT.pas` is NOT legacy.** Despite the name it is the live **radio configuration dialog**
-(`CATDlgProc`) — port enumeration, the filtered/greyed COM drop-down (item data, never index
-arithmetic), string-id factory radios in the type combo, and `RestartPollingThread`. It is actively
-maintained.
+**`src/uCAT.pas` — the DIALOG IS DEAD, the HELPERS ARE NOT.** This said `CATDlgProc` was "the
+live radio configuration dialog … actively maintained" until 2026-08-31, and that is wrong:
+**`CATDlgProc` has no caller.** Every `tDialogBox`/`DialogBoxParam` in `MainUnit` is commented out
+and the proc now appears only in comments — `uMenu.pas` calls it "the legacy per-slot dialog". Its
+~20 Win32 dialog-item calls are unreachable code.
+
+What IS still live in that unit is the surrounding machinery the Preferences form uses: port
+enumeration, the filtered/greyed COM drop-down (item data, never index arithmetic), string-id
+factory radios in the type combo, and `RestartPollingThread`. Do not delete the unit; do not treat
+`CATDlgProc` as the place to change radio configuration.
 
 **SO2R:** `src/uRadio12.pas` manages Radio 1 / Radio 2, automatic switching on focus, independent VFO
 control.

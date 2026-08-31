@@ -118,7 +118,7 @@ begin
 
     WM_INITDIALOG:
       begin
-        Windows.SetWindowTextW(hwnddlg, PWideChar(RC_RECVQTC));
+        Windows.SetWindowTextW(hwnddlg, PWideChar(UnicodeString(RC_RECVQTC)));
   //      CreateStatic('', 5, 285, 325, hwnddlg, 106);
  //  CreateStatic('', 5, 325, 325, hwnddlg, 106);
  CreateStatic('', 5, 325, 325, hwnddlg, 106);
@@ -386,7 +386,7 @@ begin
                  end
               else
                  begin
-                 Windows.SetDlgItemTextW(QTCRWindow, 106, PWideChar(TC_CHECKQTCNUMBER));
+                 Windows.SetDlgItemTextW(QTCRWindow, 106, PWideChar(UnicodeString(TC_CHECKQTCNUMBER)));
                  end;
               Exit;
               end;
@@ -511,7 +511,7 @@ begin
   Time := Windows.GetDlgItemInt(QTCRWindow, 200 + Item, lpTranslated, False);
   if (lpTranslated = False) or ((Time mod 100) > 59) or (Time div 100 > 23) {or ((Item = 1) and (Time < 100))} then
      begin
-     Windows.SetDlgItemTextW(QTCRWindow, 106, PWideChar(TC_CHECKTIME));
+     Windows.SetDlgItemTextW(QTCRWindow, 106, PWideChar(UnicodeString(TC_CHECKTIME)));
      Windows.SetFocus(Windows.GetDlgItem(QTCRWindow, 200 + Item));
      Exit;
      end;
@@ -520,7 +520,7 @@ begin
      begin
      if Call <> '' then
         begin
-        Windows.SetDlgItemTextW(QTCRWindow, 106, PWideChar(TC_CHECKCALLSIGN));
+        Windows.SetDlgItemTextW(QTCRWindow, 106, PWideChar(UnicodeString(TC_CHECKCALLSIGN)));
         end;
      Windows.SetFocus(Windows.GetDlgItem(QTCRWindow, 300 + Item));
      Exit;

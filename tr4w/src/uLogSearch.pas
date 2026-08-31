@@ -89,7 +89,7 @@ begin
     WM_INITDIALOG:
       begin
 
-        Windows.SetWindowTextW(hwnddlg, PWideChar(RC_SEARCHLOG));
+        Windows.SetWindowTextW(hwnddlg, PWideChar(UnicodeString(RC_SEARCHLOG)));
 
         for i := 0 to 3 do
            begin

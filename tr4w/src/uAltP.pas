@@ -130,7 +130,13 @@ begin
         AltWnd := hwnddlg;
 //        AltPListView := Get101Window(hwnddlg);
 
-        Windows.SetWindowTextW(hwnddlg, PWideChar(RC_LISTOFMESS));
+   { PWideChar(<resourcestring>) is a POINTER CAST, not a conversion -- it
+     reinterprets the bytes as UTF-16, so a 16-byte caption arrived as 8
+     garbage wide chars and the title bar read "????????" (NY4I, 2026-08-31,
+     Alt-P; all five surviving Win32 dialogs had the same line). The compiler
+     says nothing because no conversion was asked for. UnicodeString() first
+     forces it. }
+        Windows.SetWindowTextW(hwnddlg, PWideChar(UnicodeString(RC_LISTOFMESS)));
         AltPListView := CreateListView2(0, 0, 790, 350, hwnddlg);
 
         // Issue #997: asm tWM_SETFONT (EAX = AltPListView above).
