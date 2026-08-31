@@ -222,7 +222,6 @@ const
     that ran and produced the wrong bytes. }
   EXITCODE_ALREADY_RUNNING              = 3;
   MASKEVENT                             = False;
-  OGLVERSION                            = False;
   MORSERUNNER                           = False;
   ICOM_LONG_MODECOMMAND                 = True ;
 

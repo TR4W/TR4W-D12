@@ -6,7 +6,8 @@ unit uAboutForm;
 
   WHAT IT REPLACES.  A raw MessageBox showing tAboutText, with the OpenGL
   "about" dialog (uAbout.pas, dialog 68) compiled out beside it behind
-  an $IF OGLVERSION switch -- which is False and has been for the life of this tree.  So
+  a compile-time switch that was False for the life of this tree (deleted 2026-08-31,
+  along with uAbout.pas, which no uses clause referenced).  So
   the operator saw a system message box with five lines of text in it.
 
   WHY BOTHER.  Three reasons, in order of weight:

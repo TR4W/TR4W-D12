@@ -77,7 +77,6 @@ uses
   uMP3Recorder,
   uCRC32,
   uCFG,
-  // uAbout,
   uWinKey,
   // uStack,
   uStations,
@@ -5224,17 +5223,12 @@ begin
          ClearLog;
          end;
 
-{$IF OGLVERSION}
-    menu_about:
-      tDialogBox(68, @AboutDlgProc);
-{$ELSE}
     // A DESIGNED FORM, not a MessageBox.  MessageBox does not exist off Windows,
     // and a message box cannot be opened in the designer by anyone who wants to
     // change what About says.  Same content, assembled from the same constants,
     // with the website as a clickable link.  See src/ui/lcl/uAboutForm.pas.
     menu_about:
       ShowAboutBox;
-{$IFEND}
 
     // menu_send_bug: SendMail('tr4w@qrz.ru', True);
 
