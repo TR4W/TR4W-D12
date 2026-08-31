@@ -155,7 +155,8 @@ uses
    Windows,    // GetCurrentThreadId
    Version,    // TR4W_CURRENTVERSION_NUMBER -- a raw address is useless
                // unless the exact binary that produced it can be identified
-   Log4D;      // our own logger -- see CrashLogger
+   Log4D,      // our own logger -- see CrashLogger
+   uAppPaths;  // LogFilePath -- where tr4w-early.log goes
 
    { NO Forms, AND THAT IS THE POINT OF THE UNIT.  Everything here must link
      into a console program.  If something in this file comes to want the LCL,
@@ -330,7 +331,7 @@ begin
    // error reporting of its own; a breadcrumb that can itself fail the startup
    // would be worse than no breadcrumb.
    try
-      fn := ExtractFilePath(ParamStr(0)) + 'tr4w-early.log';
+      fn := LogFilePath('tr4w-early.log');
       AssignFile(f, fn);
       if FileExists(fn) then
          begin

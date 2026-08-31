@@ -130,7 +130,8 @@ function GetLastPOTAExchange: string;
 implementation
 
 uses
-   uHTTPDownload;   // the shared atomic fetch -- see TPOTADownloadThread.Execute
+   uHTTPDownload,   // the shared atomic fetch -- see TPOTADownloadThread.Execute
+   uAppPaths;       // DataFilePath -- the shipped parks file
 
 // ---------------------------------------------------------------------------
 // Internal state
@@ -251,7 +252,7 @@ end;
 
 function POTAParksFilePath: string;
 begin
-   Result := ExtractFilePath(ParamStr(0)) + POTA_PARKS_FILENAME;
+   Result := DataFilePath(POTA_PARKS_FILENAME);
 end;
 
 function LoadPOTAParks(const AFilename: string): Integer;

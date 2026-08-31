@@ -1242,6 +1242,7 @@ uses
    uCFG,        // CFGCommandValueAsString / SetCFGCommandValue -- Station edits CFGCA rows
    uSettingsRegistry,     // the settings themselves
    uSettingsLegacy,       // ActiveStoreProvider -- graduated settings write to OUR store
+   uAppPaths,             // DataFilePath -- shipped read-only data
    uSettingsDeclarations, // DeclareAllSettings
    ComPortEnumerator,   // the real serial ports, same source as the radio editor
    uRotatorBase,        // UsesSerialPort / PreferredBaudRate -- asked, not assumed
@@ -5333,13 +5334,28 @@ end;
 
 { ---------------------------------------------------------- DX clusters --- }
 
-{ WHERE THE SHIPPED SERVER DIRECTORY LIVES. One expression, because two
-  copies of a path rule is how the DX Cluster window and this page came to
-  disagree about the same filename -- see docs/OWED_BEFORE_CROSS_PLATFORM.md
-  item 3. }
+{ WHERE THE SHIPPED SERVER DIRECTORY LIVES.
+
+  ONE EXPRESSION was not enough -- it also has to be the RIGHT one. This read
+  ExtractFilePath(ParamStr(0)), the BINARY's directory, which is only the data
+  directory when the exe happens to sit beside the data. Running the build-out
+  binary with the working directory set to target -- how this is developed --
+  put it in build-out, where there is no trcluster.dat, so the picker reported an
+  empty directory while the DX Cluster window read the same file successfully
+  from the working directory (NY4I again, 2026-08-31: "we did not find the
+  trclusters file in the target if we were supposed to").
+
+  uAppPaths.DataFilePath is the single rule for shipped read-only data, and this
+  is its FIRST caller; the other 44 path sites still resolve their own way.
+  See docs/OWED_BEFORE_CROSS_PLATFORM.md item 3.
+
+  THE NAME IS UPPERCASE AND THE FILE ON DISK IS LOWERCASE (trcluster.dat).
+  Windows does not care; macOS and Linux will. Do not "fix" the case here in
+  isolation -- it has to be settled for every shipped data file at once, with
+  DataFilePath as the place to do it. }
 function ClusterDirectoryPath: string;
 begin
-   Result := ExtractFilePath(ParamStr(0)) + 'TRCLUSTER.DAT';
+   Result := DataFilePath('TRCLUSTER.DAT');
 end;
 
 { Say beside the drop-down whether there is a directory to drop down.

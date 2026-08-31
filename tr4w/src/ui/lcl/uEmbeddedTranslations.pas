@@ -75,7 +75,8 @@ uses
    LCLTranslator,     // TPOTranslator, SetDefaultLang
    MainUnit,          // logger
   uTR4WStrings,
-  uAnsiStr;
+  uAnsiStr,
+   uAppPaths;
 
 { The two-letter code the LCL would pick, without loading anything.
 
@@ -335,7 +336,7 @@ begin
    // A FILE BESIDE THE EXE WINS. Same layout SetDefaultLang searches, so a
    // catalogue dropped there for testing or as a patch behaves the same way it
    // did before this unit existed.
-   fileCandidate := ExtractFilePath(ParamStr(0)) + 'languages\' + lang + '\tr4w.po';
+   fileCandidate := DataFilePath('languages\' + lang + '\tr4w.po');
    if FileExists(fileCandidate) then
       begin
       try

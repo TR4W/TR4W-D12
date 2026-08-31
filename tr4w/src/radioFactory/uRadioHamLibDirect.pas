@@ -42,7 +42,7 @@ unit uRadioHamLibDirect;
 interface
 
 uses
-  uFactoryRadioBase, uRadioBand, uHamLibDirect, StrUtils, SysUtils, Math, Classes, Log4D, TF, VC, Tree, Windows;
+  uFactoryRadioBase, uRadioBand, uHamLibDirect, StrUtils, SysUtils, Math, Classes, Log4D, TF, VC, Tree, Windows, uAppPaths;
 
 {-----------------------------------------------------------------------------
   Send queue — command types posted from the main thread, executed on the
@@ -330,7 +330,7 @@ var
   traceFile: Pointer;
   tracePath: string;
 begin
-  tracePath := ExtractFilePath(ParamStr(0)) + 'hamlib_trace.log';
+  tracePath := LogFilePath('hamlib_trace.log');
   traceFile := msvcrt_fopen(PAnsiChar(AnsiString(tracePath)), 'w');
   if traceFile = nil then
      begin
