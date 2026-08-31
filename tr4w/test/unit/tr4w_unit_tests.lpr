@@ -118,6 +118,7 @@ uses
    uTestADIFRegression  in 'uTestADIFRegression.pas',
    uFreqTimeFormat      in '..\..\src\uFreqTimeFormat.pas',
    uTestFreqTimeFormat  in 'uTestFreqTimeFormat.pas',
+   uTestFormatTranslation in 'uTestFormatTranslation.pas',
    uStrSearch           in '..\..\src\uStrSearch.pas',
    uTestStrSearch       in 'uTestStrSearch.pas',
    uCallCompress        in '..\..\src\uCallCompress.pas',
@@ -335,6 +336,7 @@ begin
    RegisterSuite(TUtilsFileTests.Create('UtilsFile'));
    RegisterSuite(TADIFRegressionTests.Create('ADIFRegression'));
    RegisterSuite(TFreqTimeFormatTests.Create('FreqTimeFormat'));
+   RegisterSuite(TFormatTranslationTests.Create('FormatTranslation'));
    RegisterSuite(TStrSearchTests.Create('StrSearch'));
    RegisterSuite(TCallCompressTests.Create('CallCompress'));
    RegisterSuite(TCTYDATTests.Create('CTYDAT'));
