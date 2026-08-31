@@ -49,12 +49,15 @@ __recovery/
 # diffs that were pure noise against the .PAS beside it.
 *.$$$
 
+#Local content that is not for the repo. This could be saved agent discussions, brainstoriming, etc.
+local-content/*
 # Castalia statistics file
 *.stat.gitignore
 
 *.ini
 tr4w/target/tr4w.exe
 tr4w/target/settings/TR4W.INI
+tr4w/target/settings/tr4w.json
 *.pos
 *.CFG
 *.map
