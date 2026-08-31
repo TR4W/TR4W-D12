@@ -48,10 +48,8 @@ type
       lblSplit: TPanel;
       lblStatus: TPanel;
       btnSpectrum: TButton;
-      tmrResize: TTimer;
       procedure HandleClose(Sender: TObject; var CloseAction: TCloseAction);
       procedure HandleResize(Sender: TObject);
-      procedure ResizeSettled(Sender: TObject);
       procedure SpectrumClick(Sender: TObject);
       procedure UpdateSpectrumButton;
       procedure HandleKeyDown(Sender: TObject; var Key: word;
@@ -458,34 +456,29 @@ begin
    CaptureDesignLayout(Self, FDesign, FDesignW, FDesignH);
 end;
 
-{ THE RESIZE ITSELF DOES NOTHING BUT RESTART A TIMER -- the same debounce the DX
-  cluster console uses, and for the same reason: a drag fires OnResize
-  continuously, and re-laying twelve panels and their fonts on every tick is
-  fifty repaints of which only the last is the answer.  80 ms is below the point
-  where releasing the mouse feels laggy and well above a drag's tick rate. }
+{ SCALED LIVE, NOT ON A DEBOUNCE TIMER.
+
+  This first copied the DX cluster's 80 ms debounce, and it was the wrong
+  borrowing.  The console debounces because rescaling it repaints every line of
+  an 80-column list; repositioning twelve panels is a handful of SetBounds calls
+  and costs nothing.  What the timer bought was a visible delay: during the drag
+  the panels stayed at the OLD size and then snapped when the mouse settled,
+  which NY4I could watch happen (2026-08-31).  Tracking the drag directly has no
+  stale state to see.
+
+  The form is DoubleBuffered (.lfm) so twelve controls moving at once do not
+  flicker while they do it.
+
+  THE OPERATOR DECIDES HOW BIG THE DATA IS: drag the panel larger and the VFO
+  readout grows with it, rather than sitting at its designed size in the corner
+  of an empty window.  The floor is 100%, which pairs with
+  ApplyContentMinimumSize refusing to shrink the window past its content. }
 procedure TfrmRadioPanel.HandleResize(Sender: TObject);
 begin
-   if tmrResize = nil then
+   if Length(FDesign) = 0 then
       begin
-      Exit;
+      Exit;      { before CaptureDesign -- nothing to scale from yet }
       end;
-
-   { Restart, not merely enable: a running timer must measure from the LAST
-     movement, not the first. }
-   tmrResize.Enabled := False;
-   tmrResize.Enabled := True;
-end;
-
-procedure TfrmRadioPanel.ResizeSettled(Sender: TObject);
-begin
-   tmrResize.Enabled := False;
-
-   { THE OPERATOR DECIDES HOW BIG THE DATA IS.  Drag the panel larger and the
-     VFO readout grows with it, rather than sitting at its designed size in the
-     corner of an empty window (NY4I, 2026-08-31).
-
-     The floor is 100% -- the panel never renders smaller than designed, which
-     pairs with ApplyContentMinimumSize refusing to shrink the window past it. }
 
    ApplyLayoutScale(Self, FDesign, FDesignW, FDesignH, 100, 400);
 end;

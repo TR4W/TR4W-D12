@@ -391,10 +391,19 @@ procedure ApplyContentMinimumSize(const aForm: TForm);
   the CURRENT bounds instead would compound rounding on every drag tick and walk
   the layout away from itself.
 
-  THE FACTOR IS THE SMALLER OF THE TWO AXES, so the content fits rather than
-  being clipped by the tighter one, and the proportions the form was designed
-  with survive. It is carried in PERCENT to keep the arithmetic integral -- the
-  same reason the console computes a font SIZE rather than a ratio.
+  THE TWO AXES SCALE INDEPENDENTLY, so the content FILLS the window rather than
+  keeping its designed proportions. Taking the smaller of the two was the first
+  attempt and it is wrong for this: drag a window tall and narrow and the content
+  scales to the width, leaving the bottom empty (NY4I, 2026-08-31). Width and
+  height are separate questions and get separate answers.
+
+  THE FONT TAKES THE SMALLER of the two, though, and that is not an
+  inconsistency. Text has one size, and sizing it to the taller axis in a narrow
+  window overflows the control it sits in. Growing rows with slightly smaller
+  text is legible; text spilling out of its panel is not.
+
+  Percent throughout, to keep the arithmetic integral -- the same reason the
+  console computes a font SIZE rather than a ratio.
 
   CLAMPED AT BOTH ENDS. Below the floor the text stops being readable and below
   that it stops being hit-testable; above the ceiling a maximised window turns a
@@ -1182,6 +1191,25 @@ begin
    pctW := (aForm.ClientWidth  * 100) div aDesignW;
    pctH := (aForm.ClientHeight * 100) div aDesignH;
 
+   if pctW < aMinPercent then
+      begin
+      pctW := aMinPercent;
+      end;
+   if pctW > aMaxPercent then
+      begin
+      pctW := aMaxPercent;
+      end;
+
+   if pctH < aMinPercent then
+      begin
+      pctH := aMinPercent;
+      end;
+   if pctH > aMaxPercent then
+      begin
+      pctH := aMaxPercent;
+      end;
+
+   { The font follows the TIGHTER axis so text cannot overflow its control. }
    if pctW < pctH then
       begin
       pct := pctW;
@@ -1191,20 +1219,13 @@ begin
       pct := pctH;
       end;
 
-   if pct < aMinPercent then
-      begin
-      pct := aMinPercent;
-      end;
-   if pct > aMaxPercent then
-      begin
-      pct := aMaxPercent;
-      end;
-
    { NOTHING TO DO is the common case once a drag settles inside the clamp, and
      re-laying the form out anyway is the flicker this exists to avoid. }
-   if (Length(aLayout) > 0) and (aLayout[0].Ctl <> nil) and
-      (aLayout[0].Ctl.Left = (aLayout[0].Left * pct) div 100) and
-      (aLayout[0].Ctl.Width = (aLayout[0].Width * pct) div 100) then
+   if (aLayout[0].Ctl <> nil) and
+      (aLayout[0].Ctl.Left   = (aLayout[0].Left   * pctW) div 100) and
+      (aLayout[0].Ctl.Width  = (aLayout[0].Width  * pctW) div 100) and
+      (aLayout[0].Ctl.Top    = (aLayout[0].Top    * pctH) div 100) and
+      (aLayout[0].Ctl.Height = (aLayout[0].Height * pctH) div 100) then
       begin
       Exit;
       end;
@@ -1221,10 +1242,10 @@ begin
 
          TControlAccess(c).Font.Height := (aLayout[i].FontHeight * pct) div 100;
 
-         c.SetBounds((aLayout[i].Left   * pct) div 100,
-                     (aLayout[i].Top    * pct) div 100,
-                     (aLayout[i].Width  * pct) div 100,
-                     (aLayout[i].Height * pct) div 100);
+         c.SetBounds((aLayout[i].Left   * pctW) div 100,
+                     (aLayout[i].Top    * pctH) div 100,
+                     (aLayout[i].Width  * pctW) div 100,
+                     (aLayout[i].Height * pctH) div 100);
          end;
    finally
       aForm.EnableAlign;
