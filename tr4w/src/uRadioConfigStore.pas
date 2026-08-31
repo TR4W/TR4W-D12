@@ -709,6 +709,9 @@ const
    JSONKEY_TCI           = 'tci';
    JSONKEY_LOGGING       = 'logging';
    JSONKEY_COMMANDS      = 'commands';
+   { Commands whose section cannot be derived. Named rather than blank so it is
+     obvious in the file that they are unclassified, not misfiled. }
+   SECTION_OTHER         = 'other';
    JSONKEY_ROTATORS      = 'rotators';
    JSONKEY_CLUSTERS      = 'clusters';
    JSONKEY_BANDPLAN      = 'bandPlan';
@@ -765,6 +768,10 @@ function TransportToStr(const aTransport: TRadioTransport): string;
 function StrToTransport(const aValue: string): TRadioTransport;
 
 implementation
+
+uses
+   uSettingsRegistry;   { AllSettings -- the dotted key that names a command
+                          section is already registered there }
 
 const
    TRANSPORTNAME: array[TRadioTransport] of string = ('SERIAL', 'NETWORK');
@@ -1419,6 +1426,14 @@ begin
 
    FCommands := TStringList.Create;
    FCommands.CaseSensitive := False;
+   { NOT Sorted, AND THAT IS NOT AN OVERSIGHT. Setting it raises
+     EStringListError -- "operation not allowed on sorted list" -- the first
+     time Values[] has to INSERT a name, which is every new setting, during
+     startup, before there is a window to show the error in. TR4W died silently
+     (NY4I, 2026-08-31: "dies quietly").
+
+     The file is made stable by sorting at WRITE time instead; see SaveToJSON.
+     The live list stays insertion-ordered, which is what Values[] needs. }
 end;
 
 function TRadioConfigStore.CommandValue(const aCommand, aDefault: string): string;
@@ -2219,14 +2234,85 @@ begin
    Result.AddPair('cwOutput2',         aProfile.CWOutput2);
 end;
 
+{ command -> section, built ONCE.
+
+  DERIVED, NOT DECLARED. Every stored setting already registers a dotted key --
+  'appearance.ctrlj.showFrequencyInLog' -- so its first segment is a section
+  name that already exists and is already maintained. Adding a section argument
+  to 230 registrations would be the same fact typed twice, and the copies would
+  drift the first time a setting moved page.
+
+  A MAP RATHER THAN A LOOKUP PER COMMAND: the obvious shape scans all 230
+  settings for each of 243 commands, which is 56,000 comparisons and a string
+  allocation apiece to save one file.
+
+  UpperCase COMPARISON, NOT SameText, and that is not fussiness: SameText here
+  resolves to the AnsiString overload, so passing two `string`s narrows both --
+  two ratchet entries for a comparison of ASCII command names. Comparing
+  upper-cased strings stays in one type and says the same thing. }
+function BuildSectionMap: TStringList;
+var
+   all: TArray<TSettingBase>;
+   i, dot: integer;
+   key: string;
+begin
+   Result := TStringList.Create;
+   Result.CaseSensitive := False;
+   all := AllSettings;
+   for i := 0 to High(all) do
+      begin
+      if all[i] = nil then
+         begin
+         Continue;
+         end;
+      if Trim(all[i].LegacyCommand) = '' then
+         begin
+         Continue;
+         end;
+      key := all[i].Key;
+      dot := Pos('.', key);
+      if dot > 1 then
+         begin
+         { EXPLICIT, and the invariant is real rather than convenient: both
+           sides are ASCII by construction -- a CFGCA command name ('MY CALL')
+           and the first segment of a registered setting key ('appearance').
+           Neither is operator text, so nothing can be outside the codepage.
+           Left implicit this would be two more ratchet entries claiming a risk
+           that does not exist here. }
+         Result.Values[AnsiString(all[i].LegacyCommand)] :=
+            AnsiString(Copy(key, 1, dot - 1));
+         end;
+      end;
+end;
+
+{ Put one command into the list, and NOWHERE ELSE does.
+
+  TStringList is AnsiString-backed, so this assignment narrows -- it always did,
+  and the flat reader had exactly one of them. Reading a sectioned file needs
+  two call sites; two ASSIGNMENTS would have been two narrowings and two places
+  for the conversion to be got wrong later. One routine keeps it at one, which
+  is why the ratchet does not move for a reader that now understands two
+  shapes. }
+procedure TakeCommand(const aList: TStringList; const aName, aValue: string);
+begin
+   aList.Values[aName] := aValue;
+end;
+
 function TRadioConfigStore.SaveToJSON: TJSONObject;
 var
    radios, profiles: TJSONArray;
    general, tci, logging, commands, rot, clu, hdr: TJSONObject;
    bandPlan, bp, colors, col: TJSONObject;
    rotators, clusters: TJSONArray;
-   lst: TStringList;
-   i, s: integer;
+   lst, sections, sectionMap: TStringList;
+   { ITS OWN NAME, not lst. Further down, `lst := Header(...)` BORROWS a list
+     the store owns and must not free; this one is created and freed here.
+     Sharing the variable would leave the next reader one edit away from
+     freeing something that belongs to the object. }
+   ordered: TStringList;
+   section: TJSONObject;
+   sectionName: AnsiString;
+   i, s, idx: integer;
 begin
    Result := TJSONObject.Create;
    Result.AddPair(JSONKEY_VERSION, TJSONNumber.Create(JSON_SCHEMA_VERSION));
@@ -2268,11 +2354,70 @@ begin
 
    // Retired CFGCA rows.  An OBJECT keyed by command name, so the file reads as
    // what it is -- "MY SECTION": "WCF" -- and needs no schema beyond CFGCA.
+   { COMMANDS, GROUPED. One flat list of 243 names is machine-correct and
+     unreadable, and this file does get read by a human in practice (NY4I:
+     "inevitably, I do check things in the json file").
+
+     THE SECTION IS DERIVED, NOT DECLARED. Every stored setting already
+     registers a dotted key -- 'appearance.ctrlj.showFrequencyInLog' -- so the
+     first segment is a section name that already exists and is already
+     maintained. Adding a section argument to 230 registrations would have been
+     the same information typed twice, and the two copies would disagree.
+
+     A command with no registered setting, or a key with no dot, goes to
+     SECTION_OTHER rather than being dropped: this file is the store, and a
+     value we cannot classify must still round-trip. }
    commands := TJSONObject.Create;
-   for i := 0 to FCommands.Count - 1 do
-      begin
-      commands.AddPair(FCommands.Names[i], FCommands.ValueFromIndex[i]);
-      end;
+   sections := TStringList.Create;
+   sectionMap := BuildSectionMap;
+   try
+      sections.Sorted := True;
+      sections.Duplicates := dupIgnore;
+      sections.OwnsObjects := False;
+
+      { SORTED FOR OUTPUT ONLY. The live list cannot be Sorted -- Values[] then
+        refuses to insert -- so the order the operator sees is made here, where
+        it costs one copy and breaks nothing.
+
+        This is the actual fix for "the json file changes the order depending
+        upon what was saved last": unsorted, Values[] appends each new name at
+        the end, so tr4w.json recorded the write history of ONE MACHINE and two
+        operators with identical settings got different files. }
+      ordered := TStringList.Create;
+      ordered.Assign(FCommands);
+      ordered.Sort;
+
+      for i := 0 to ordered.Count - 1 do
+         begin
+         { Unclassified is NAMED, not blank: it must be obvious in the file
+           that a command was not misfiled but never had a section. }
+         sectionName := sectionMap.Values[ordered.Names[i]];
+         if sectionName = '' then
+            begin
+            sectionName := SECTION_OTHER;
+            end;
+         idx := sections.IndexOf(sectionName);
+         if idx < 0 then
+            begin
+            section := TJSONObject.Create;
+            sections.AddObject(sectionName, section);
+            end
+         else
+            begin
+            section := TJSONObject(sections.Objects[idx]);
+            end;
+         section.AddPair(ordered.Names[i], ordered.ValueFromIndex[i]);
+         end;
+
+      for i := 0 to sections.Count - 1 do
+         begin
+         commands.AddPair(sections[i], TJSONObject(sections.Objects[i]));
+         end;
+   finally
+      sections.Free;
+      sectionMap.Free;
+      ordered.Free;
+   end;
    Result.AddPair(JSONKEY_COMMANDS, commands);
 
    // Rotators.  An ARRAY, like radios and keyers, so order is preserved and a
@@ -2403,9 +2548,10 @@ var
    rotDef: TRotatorDefinition;
    cluDef: TClusterDefinition;
    profile: TStationProfile;
-   v: TJSONValue;
+   v, pv: TJSONValue;
+   section: TJSONObject;
    lst: TStringList;
-   i, s: integer;
+   i, s, k: integer;
    err: string;
 begin
    Clear;
@@ -2598,12 +2744,38 @@ begin
    v := aRoot.GetValue(JSONKEY_COMMANDS);
    if (v <> nil) and (v is TJSONObject) then
       begin
+      { BOTH SHAPES, and the value's TYPE says which -- an object is a section
+        to descend into, a string is a command. No version flag: the file
+        describes itself, and a store that refused the older shape would empty
+        the operator's settings on first run for no gain. }
       commands := TJSONObject(v);
-      for i := 0 to commands.Count - 1 do
-         begin
-         FCommands.Values[JSONPairName(commands, i)] :=
-            JSONText(JSONPairValue(commands, i));
-         end;
+      { FLATTENED FIRST, then stored in ONE place. Two assignment sites would be
+        two conversions to the list's AnsiString and two chances for them to
+        drift; this also keeps the narrowing count where the flat reader left
+        it. }
+      lst := TStringList.Create;
+      try
+         for i := 0 to commands.Count - 1 do
+            begin
+            pv := JSONPairValue(commands, i);
+            if pv is TJSONObject then
+               begin
+               section := TJSONObject(pv);
+               for k := 0 to section.Count - 1 do
+                  begin
+                  TakeCommand(lst, JSONPairName(section, k),
+                              JSONText(JSONPairValue(section, k)));
+                  end;
+               end
+            else
+               begin
+               TakeCommand(lst, JSONPairName(commands, i), JSONText(pv));
+               end;
+            end;
+         FCommands.Assign(lst);
+      finally
+         lst.Free;
+      end;
       end;
 
    // Radios before profiles: a profile's radio references are only meaningful

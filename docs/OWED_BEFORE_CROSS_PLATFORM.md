@@ -66,6 +66,32 @@ blocker was only that there was no path for a control without one.
 The four TCI controls are registered. **The remaining store-backed controls are
 not** — they now have a route, but nobody has walked the pages.
 
+### The size of it, measured from the settings file (2026-08-31)
+
+Sectioning `commands` in `settings/tr4w.json` turned that file into an accidental
+coverage report, because the section is derived from the registered key and a
+command with no registration has none:
+
+```
+operating 60   contest 40   cw 20   appearance 16   audio 8   scoring 7
+files 7        bandmap 6    ptt 5   network 4       scp 4     logging 3
+hardware 3     advanced 2   cluster 2   voice 2     OTHER 54
+```
+
+**54 of 243 commands are unregistered** — `BAND MAP DECAY TIME`, `COMPUTER ID`,
+`EXTERNAL LOGGER ADDRESS` and 51 more. They are real, live settings written
+directly through `ApplyAndStoreCommand`; they simply never went through
+`RegisterStoredSetting`, so they have no key, no declared caption and no
+section.
+
+That is the same population as this item's search gap, seen from another angle:
+**the registry is the one place that knows a setting's identity, and a fifth of
+them are not in it.** The `other` bucket is deliberately named rather than
+merged into the sections, so the file keeps reporting the number.
+
+54 is also the better figure to plan against than the 17 store-backed controls
+counted earlier — different measure, related cause, and larger.
+
 **What is still owed is the lint.** A hand-maintained registry that nothing
 checks will drift again the day after it is corrected, and there is still no
 proof there is not a fourth class of setting. `Lint-FormEvents` shows the
