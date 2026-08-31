@@ -1900,7 +1900,7 @@ begin
      by id, so the control has to hand one back -- and the operator still picks
      a radio by the name they gave it. aSelected and aUsedByOtherSlot are ids
      for the same reason. }
-   aCombo.Clear;
+   ClearComboItems(aCombo);
    AddComboItem(aCombo, TC_PREFS_NONE, '');
    for i := 0 to FStore.RadioCount - 1 do
       begin
@@ -1945,7 +1945,7 @@ var
    i: integer;
    radio: TRadioDefinition;
 begin
-   aCombo.Clear;
+   ClearComboItems(aCombo);
    AddComboItem(aCombo, TC_PREFS_NONE, CWOUTPUT_NONE);
 
    // The two RADIO-RELATIVE choices, offered only when the slot's radio can
@@ -2243,12 +2243,19 @@ begin
       keep := FStore.ActiveProfileName;
       end;
 
-   cbxProfile.Clear;
+   ClearComboItems(cbxProfile);
    for i := 0 to FStore.ProfileCount - 1 do
       begin
       AddComboItem(cbxProfile, FStore.Profile(i).Name, FStore.Profile(i).Name);
       end;
    SelectByTag(cbxProfile, keep);
+   if logger.IsDebugEnabled then
+      begin
+      logger.Debug('[Prefs] profile combo rebuilt: %d profile(s), keep="%s" ' +
+                   '-> ItemIndex=%d, SelectedTag="%s"',
+                   [FStore.ProfileCount, keep, cbxProfile.ItemIndex,
+                    SelectedTag(cbxProfile)]);
+      end;
    finally
       EndLoading;
    end;
@@ -4638,6 +4645,14 @@ begin
       try
          RefreshProfileCombo;
          SelectByTag(cbxProfile, prof.Name);
+         if logger.IsDebugEnabled then
+            begin
+            logger.Debug('[Prefs] new profile "%s" (len %d): %d item(s) ' +
+                         '-> ItemIndex=%d, SelectedTag="%s", HasTag=%s',
+                         [prof.Name, Length(prof.Name), cbxProfile.Items.Count,
+                          cbxProfile.ItemIndex, SelectedTag(cbxProfile),
+                          BoolToStr(HasTag(cbxProfile, prof.Name), True)]);
+            end;
       finally
          EndLoading;
       end;
@@ -5061,7 +5076,7 @@ begin
 
    aCombo.Items.BeginUpdate;
    try
-      aCombo.Clear;
+      ClearComboItems(aCombo);
       for v in CFGCommandAllowedValues(aCommand) do
          begin
          aCombo.Items.Add(v);
@@ -5884,7 +5899,7 @@ begin
    // be fixed for.
    cbxRotatorPort.Items.BeginUpdate;
    try
-      cbxRotatorPort.Clear;
+      ClearComboItems(cbxRotatorPort);
       AddComboItem(cbxRotatorPort, TC_PREFS_NONE, PORT_NONE);
 
       enumerator := TComPortEnumerator.Create;

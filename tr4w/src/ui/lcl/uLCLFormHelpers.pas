@@ -360,6 +360,8 @@ uses
    Types,      // TRect
    SysUtils,
    StrUtils,
+   MainUnit,   // logger -- SyncedTags reports a desynced tag list
+   Log4D,
    uRadioConfigStore,
    uRadioRegistry,
    ComPortEnumerator,
@@ -527,6 +529,7 @@ type
    TComboTags = class(TComponent)
    public
       Tags: TStringList;
+      Reported: boolean;   // desync already reported once -- do not spam the log
       constructor Create(aOwner: TComponent); override;
       destructor Destroy; override;
    end;
@@ -560,14 +563,69 @@ begin
    Result := TComboTags(holder).Tags;
 end;
 
+
+{ THE TAG LIST AND THE ITEM LIST ARE TWO SEPARATE OBJECTS, and nothing in the
+  type system keeps them the same length.  They go out of step the moment
+  anything fills or empties the control WITHOUT coming through this unit.
+
+  A raw Items.Clear is the one that actually shipped (2026-08-31: a newly
+  created station profile could not be selected, because RefreshProfileCombo
+  called cbxProfile.Clear -- which empties Items ONLY -- and the stale tags
+  stayed behind, so the rebuild appended on top of them and SelectByTag matched
+  the new name at an index past the end of the rebuilt item list).
+
+  IT IS CHECKED HERE, WHERE THE MAPPING IS USED, RATHER THAN BY A LINT, because
+  a lint can only enumerate the spellings someone thought of.  Items.Delete,
+  Items.Insert, assigning Items.Text, Sorted := True and design-time items left
+  in the .lfm all produce exactly the same desync and none of them is a .Clear.
+
+  It fails LOUD and then CLOSED: the mismatch is reported once per control, and
+  the tag list is squared up to the item count -- padded with empty tags or
+  truncated -- so every index is in range afterwards.  A padded slot matches no
+  tag, so SelectByTag takes its defined fallback (item 0) instead of selecting a
+  silently wrong row, and SelectedTag returns '' rather than another row's tag. }
+function SyncedTags(const aOwner: TWinControl; const aItemCount: integer;
+                    const aWhere: string): TStringList;
+var
+   holder: TComponent;
+begin
+   Result := TagsOf(aOwner);
+   if Result.Count = aItemCount then
+      begin
+      Exit;
+      end;
+
+   holder := aOwner.FindComponent(COMBO_TAGS_NAME);
+   if (holder <> nil) and (not TComboTags(holder).Reported) then
+      begin
+      TComboTags(holder).Reported := True;
+      if logger <> nil then
+         begin
+         logger.Error(Format('%s: tag list out of step with items for %s ' +
+                             '(%d tag(s), %d item(s)).  Something filled or ' +
+                             'emptied this control without using ' +
+                             'AddComboItem/ClearComboItems.',
+                             [aWhere, aOwner.Name, Result.Count, aItemCount]));
+         end;
+      end;
+
+   while Result.Count > aItemCount do
+      begin
+      Result.Delete(Result.Count - 1);
+      end;
+   while Result.Count < aItemCount do
+      begin
+      Result.Add('');
+      end;
+end;
+
 procedure AddComboItem(const aCombo: TComboBox; const aText, aTag: string);
 var
    tags: TStringList;
 begin
-   tags := TagsOf(aCombo);
-
-   // The two lists stay in step by construction: one append each, in the same
-   // call, and nothing else appends to either.
+   // Squared up BEFORE the append, so a tag added after something else
+   // disturbed the control still lands opposite its own item.
+   tags := SyncedTags(aCombo, aCombo.Items.Count, 'AddComboItem');
    aCombo.Items.Add(aText);
    tags.Add(aTag);
 end;
@@ -626,8 +684,8 @@ end;
 
 procedure AddListItem(const aList: TListBox; const aText, aTag: string);
 begin
+   SyncedTags(aList, aList.Items.Count, 'AddListItem').Add(aTag);
    aList.Items.Add(aText);
-   TagsOf(aList).Add(aTag);
 end;
 
 procedure ClearListItems(const aList: TListBox);
@@ -665,7 +723,7 @@ var
    tags: TStringList;
 begin
    Result := '';
-   tags := TagsOf(aList);
+   tags := SyncedTags(aList, aList.Items.Count, 'SelectedListTag');
    if (aList.ItemIndex >= 0) and (aList.ItemIndex < tags.Count) then
       begin
       Result := tags[aList.ItemIndex];
@@ -690,7 +748,7 @@ var
    i: integer;
    tags: TStringList;
 begin
-   tags := TagsOf(aCombo);
+   tags := SyncedTags(aCombo, aCombo.Items.Count, 'SelectByTag');
    for i := 0 to tags.Count - 1 do
       begin
       if SameText(tags[i], aTag) then
@@ -711,7 +769,7 @@ var
    tags: TStringList;
 begin
    Result := False;
-   tags := TagsOf(aCombo);
+   tags := SyncedTags(aCombo, aCombo.Items.Count, 'HasTag');
    for i := 0 to tags.Count - 1 do
       begin
       if SameText(tags[i], aTag) then
@@ -727,10 +785,9 @@ var
    tags: TStringList;
 begin
    Result := '';
-   tags := TagsOf(aCombo);
-   // Guarded against the TAG list, not just ItemIndex: a caller that filled
-   // Items directly instead of through AddComboItem would otherwise index a
-   // shorter tag list and raise.
+   tags := SyncedTags(aCombo, aCombo.Items.Count, 'SelectedTag');
+   // Guarded against the TAG list, not just ItemIndex: belt and braces, since
+   // SyncedTags has already squared the two counts up.
    if (aCombo.ItemIndex >= 0) and (aCombo.ItemIndex < tags.Count) then
       begin
       Result := tags[aCombo.ItemIndex];

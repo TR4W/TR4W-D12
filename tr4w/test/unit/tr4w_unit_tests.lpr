@@ -42,6 +42,7 @@ uses
    uTestIcomCIV         in 'uTestIcomCIV.pas',
    uRadioBand           in '..\..\src\radioFactory\uRadioBand.pas',
    uTestRadioBand       in 'uTestRadioBand.pas',
+   uTestComboTags       in 'uTestComboTags.pas',
    uFlexRadioUtils      in '..\..\src\radioFactory\uFlexRadioUtils.pas',
    uTestFlexRadioUtils  in 'uTestFlexRadioUtils.pas',
    VC                   in '..\..\src\VC.pas',
@@ -313,6 +314,7 @@ begin
    RegisterSuite(TUDPBroadcasterTests.Create('UDPBroadcaster'));
    RegisterSuite(TIcomCIVTests.Create('IcomCIV'));
    RegisterSuite(TRadioBandTests.Create('RadioBand'));
+   RegisterSuite(TComboTagTests.Create('ComboTags'));
    RegisterSuite(TFlexRadioUtilsTests.Create('FlexRadioUtils'));
    RegisterSuite(TAnsiStrTests.Create('AnsiStr'));
    RegisterSuite(TRegexValidatorTests.Create('RegexValidators'));

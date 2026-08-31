@@ -407,6 +407,11 @@ procedure CallWindowKeyDownProc(wParam: integer);
 procedure CallWindowKeyUpProc;
 procedure ExchangeWindowKeyDownProc(wParam: integer);
 procedure RepeatLastCWMessage;
+{ Re-title the radio panels from whatever radio is now in each slot. Call after
+  anything that repoints a slot -- activating a profile, or changing the radio
+  in the CAT dialog. Safe when a panel is closed. }
+procedure RefreshRadioWindowCaptions;
+
 procedure OpenTR4WWindow(ID: WindowsType);
 procedure OpenOtherWindows;
 procedure CloseTR4WWindow(ID: WindowsType);
@@ -5904,6 +5909,74 @@ begin
 end;
 {------------------------------------------------------------------------------}
 
+{ Re-title a radio panel from the radio currently in that slot.
+
+  CALLED WHENEVER THE SLOT CHANGES, not only when the window opens. The caption
+  was previously built inline in OpenTR4WWindow, with a comment admitting it
+  went stale if the radio changed while the panel was up. Profiles turned that
+  from a corner case into the normal one: activating a profile repoints BOTH
+  slots at once, so the panels were left naming the PREVIOUS profile's radios,
+  and a slot set to (none) kept the name of the radio just removed from it
+  (NY4I, 2026-08-31).
+
+  DOES NOTHING IF THE WINDOW IS NOT OPEN: there is no caption to set, and the
+  open path calls this itself.
+
+  THE GUARD ON rigName IS NOT PADDING. RadioName is INITIALISED to
+  TC_RADIO1/TC_RADIO2 (LOGRADIO.PAS) and only replaced when a definition is
+  applied, so appending it unconditionally reads "Radio 1 Radio 1" on a station
+  with no radio configured -- the state this panel is most often opened in while
+  one is being set up. An emptied slot lands there too, and correctly reads just
+  "Radio 2". }
+procedure RefreshRadioWindowCaption(const ID: WindowsType);
+var
+   radioCaption, rigName: string;
+   Radio: RadioPtr;
+begin
+   if not (ID in [tw_RADIOINTERFACEWINDOW1_INDEX, tw_RADIOINTERFACEWINDOW2_INDEX]) then
+      begin
+      Exit;
+      end;
+
+   { The handle is read straight from the array rather than held in an HWND
+     local. Lint-Win32Dialogs counts declarations too, and this routine adds no
+     Win32 SURFACE -- it is the same SetWindowTextW that was inline in
+     OpenTR4WWindow, moved. A baseline raised for a variable would be a baseline
+     raised for nothing. }
+   if tr4w_WindowsArray[ID].WndHandle = 0 then
+      begin
+      Exit;
+      end;
+
+   if ID = tw_RADIOINTERFACEWINDOW1_INDEX then
+      begin
+      radioCaption := TC_RADIO1;
+      Radio := @Radio1;
+      end
+   else
+      begin
+      radioCaption := TC_RADIO2;
+      Radio := @Radio2;
+      end;
+
+   rigName := Trim(string(Radio.RadioName));
+   if (rigName <> '') and (not SameText(rigName, radioCaption)) then
+      begin
+      radioCaption := radioCaption + ' ' + rigName;
+      end;
+
+   Windows.SetWindowTextW(tr4w_WindowsArray[ID].WndHandle,
+                          PWideChar(WideString(radioCaption)));
+end;
+
+{ Both radio panels, after anything that can repoint a slot. }
+procedure RefreshRadioWindowCaptions;
+begin
+   RefreshRadioWindowCaption(tw_RADIOINTERFACEWINDOW1_INDEX);
+   RefreshRadioWindowCaption(tw_RADIOINTERFACEWINDOW2_INDEX);
+end;
+
+
 procedure OpenTR4WWindow(ID: WindowsType);
 const
   NORESIZEEDWINDOW = SWP_SHOWWINDOW or SWP_NOSIZE;
@@ -5943,9 +6016,6 @@ var
   // Local, so a failed GetMenuStringW leaves an EMPTY caption rather than
   // whatever the shared TempBuffer1 happened to be holding.
   menuText: array[0..255] of WideChar;
-  // The radio panels' caption -- see the block that sets it.
-  radioCaption: string;
-  rigName: string;
 begin
   if Contest = WRTC then
     if ID in [tw_MASTERWINDOW_INDEX, tw_TELNETWINDOW_INDEX,
@@ -6190,26 +6260,13 @@ begin
      // unconditionally reads "Radio 1 Radio 1" on a station with no radio
      // configured -- which is exactly the state this panel is most often opened
      // in while setting one up.
-     if ID = tw_RADIOINTERFACEWINDOW1_INDEX then
-        begin
-        radioCaption := TC_RADIO1;
-        end
-     else
-        begin
-        radioCaption := TC_RADIO2;
-        end;
-
-     rigName := Trim(string(Radio.RadioName));
-     if (rigName <> '') and (not SameText(rigName, radioCaption)) then
-        begin
-        radioCaption := radioCaption + ' ' + rigName;
-        end;
-
-     // Set at OPEN only. Changing the radio in the CAT dialog while the panel
-     // is up leaves the old caption until it is reopened; refreshing it from
-     // RestartPollingThread would be the place, and is not done here because
-     // that is a second change to a path this one does not otherwise touch.
-     Windows.SetWindowTextW(h, PWideChar(WideString(radioCaption)));
+     // ONE ROUTINE, called here and again whenever the slot's radio changes.
+     // It used to be written out inline with a note saying the caption was set
+     // at OPEN only and went stale if the radio changed underneath it. Profiles
+     // made that visible: activating one repoints BOTH slots at once, so a
+     // panel could sit there naming a radio that had just been moved to the
+     // other slot or removed altogether (NY4I, 2026-08-31).
+     RefreshRadioWindowCaption(ID);
 
      DisplayCurrentStatus(Radio);
      end;

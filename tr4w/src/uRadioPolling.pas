@@ -66,6 +66,7 @@ procedure pFactoryRadio(rig: RadioPtr);
 function ArrayToString(const a: array of AnsiChar): string;
 
 procedure UpdateStatus(rig: RadioPtr);
+procedure ClearRadioPanel(rig: RadioPtr);
 procedure ClearRadioStatus(rig: RadioPtr);
 
 procedure BeginPolling(rig: RadioPtr); stdcall;
@@ -794,6 +795,40 @@ begin
       logger.trace('[ReadFromSerialPort] Read %s from serial port',[String2Hex(AnsiLeftStr(ArrayToString(rig^.tBuf),BytesRead))]);
       end;
 
+end;
+
+{ Blank a radio panel that no longer has a radio behind it.
+
+  ZEROING THE STATUS IS NOT ENOUGH, and the reason is the flicker guard.
+  DisplayCurrentStatus only writes a field when its value DIFFERS from the
+  previous one -- which is right, and is why the panel does not flicker at ten
+  updates a second. But ClearRadioStatus zeroes CURRENT and PREVIOUS together,
+  so the painter sees no change, writes nothing, and the panel keeps the
+  departed radio's frequencies for ever.
+
+  NY4I saw exactly that on 2026-08-31: a profile whose Radio 2 is (none), a
+  panel correctly re-titled "Radio 2", and 14022.54 still sitting in VFO A.
+
+  The ids are the same five DisplayCurrentStatus writes. Blanking a field it
+  does not write would leave one this routine empties and nothing refills. }
+procedure ClearRadioPanel(rig: RadioPtr);
+begin
+   { The handle is read from the radio each time rather than held in an HWND
+     local. Lint-Win32Dialogs counts the TYPE, and this routine adds no Win32
+     surface -- the same PostPanelText the painter already uses. A baseline
+     raised for a variable is a baseline raised for nothing. }
+   if rig.tRadioInterfaceWndHandle <> 0 then
+      begin
+      PostPanelText(rig.tRadioInterfaceWndHandle, 102, '');   // VFO A
+      PostPanelText(rig.tRadioInterfaceWndHandle, 104, '');   // VFO B
+      PostPanelText(rig.tRadioInterfaceWndHandle, 105, '');
+      PostPanelText(rig.tRadioInterfaceWndHandle, 106, '');
+      PostPanelText(rig.tRadioInterfaceWndHandle, 120, '');   // RIT
+      end;
+
+   { The main window's frequency row -- HANDED OVER, not written, because this
+     is reachable from the polling thread. See uPanelUpdate. }
+   PostElementText(rig^.FreqElement, '');
 end;
 
 procedure ClearRadioStatus(rig: RadioPtr);

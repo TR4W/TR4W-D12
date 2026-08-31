@@ -272,7 +272,8 @@ uses
    LogCW,
    LOGWIND,
    uBandLookup,   // CalculateBandMode -- the extracted, unit-tested copy, not tree.pas
-   MainUnit;   // logger
+   MainUnit,   // logger, RefreshRadioWindowCaptions
+   uRadioPolling;   // ClearRadioPanel -- an emptied slot must stop showing a frequency
 
 function ResolveTypeRendering(const aRegistryId: string): TRadioTypeRendering;
 var
@@ -1786,6 +1787,20 @@ begin
       end
    else
       begin
+      { AND BLANK THE PANEL. Clearing the slot zeroes the radio's status, but
+        DisplayCurrentStatus only writes a field whose value CHANGED -- and
+        current and previous are zeroed together, so it sees no change and the
+        panel keeps the departed radio's frequencies. NY4I, 2026-08-31: a
+        correctly re-titled "Radio 2" still showing 14022.54. }
+      if aSlot = 2 then
+         begin
+         ClearRadioPanel(@Radio2);
+         end
+      else
+         begin
+         ClearRadioPanel(@Radio1);
+         end;
+
       logger.Info('[ApplyRadioToSlot] Radio %s cleared, %d keys',
                   [SlotWord(aSlot), Length(rendered)]);
       end;
@@ -2041,7 +2056,15 @@ begin
    DisplayRadio(ActiveRadio);
 
    aStore.ActiveProfileName := aProfile.Name;
-    logger.Info('[ApplyProfile] profile "%s" active after %d ms total',
+    { THE PANELS NAME THE OLD RADIOS UNTIL TOLD OTHERWISE. Their caption was
+     built when the window opened and never again, so activating a profile left
+     "Radio 1 IC7760" over a slot now holding the K4, and a slot set to (none)
+     kept the name of the radio just removed (NY4I, 2026-08-31). The model was
+     right -- the log says "Radio TWO cleared, 28 keys" -- only the view was
+     stale. }
+   RefreshRadioWindowCaptions;
+
+   logger.Info('[ApplyProfile] profile "%s" active after %d ms total',
                 [aProfile.Name, GetTickCount - tStart]);
    Result := True;
 end;

@@ -308,6 +308,26 @@ $appExe = Join-Path $TARGET_DIR 'tr4w.exe'
 if ($LASTEXITCODE -ne 0) { Fail 'application build failed' }
 if (-not (Test-Path $appExe)) { Fail "application binary missing at $appExe" }
 
+# THE IN-PLACE BINARY HAS TO BE REFRESHED TOO, or it is a trap.
+#
+# Build-App.ps1 leaves its exe in build-out\app-<cpu>-<os> as tr4w_fpc.exe;
+# this script overrides that with -OutExe and writes target\tr4w.exe instead.
+# So a FullBuild used to clear a thousand stale OBJECT files out of build-out
+# and leave the stale EXE sitting beside them, looking exactly as current as
+# everything else in the directory.
+#
+# That is not hypothetical.  On 2026-08-31 a bench session ran the leftover
+# build-out binary after a FullBuild, and its log was then read as evidence
+# ABOUT THE NEW CODE -- including a diagnostic that "never fired" because it
+# was not in that binary at all.  Three correct conclusions were discarded on
+# the strength of it.
+#
+# Copying rather than deleting: running the binary in place is a normal habit,
+# so make it current instead of breaking it.
+$inPlaceExe = Join-Path (Join-Path (Split-Path $TR4W_DIR -Parent) "build-out\app-$Cpu-$Os") 'tr4w_fpc.exe'
+Copy-Item -LiteralPath $appExe -Destination $inPlaceExe -Force
+Write-Host "  refreshed in-place binary: $inPlaceExe"
+
 $vi = (Get-Item $appExe).VersionInfo
 Write-Host "  tr4w.exe $($vi.FileVersion) ($([int]((Get-Item $appExe).Length / 1KB)) KB)"
 
