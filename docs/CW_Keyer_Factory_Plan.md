@@ -1,6 +1,6 @@
 # CW Keyer Factory/Strategy Refactor — Implementation Plan
 
-Repo: `c:\tr4w-d12`, branch `delphi12`, Delphi 12, raw Win32 (no VCL). Build: `call rsvars.bat` (Studio 23.0) → `msbuild tr4w.lproj /t:Build /p:Config=Debug /p:Platform=Win32`. Follow the user's Pascal style: 3-space indent, `begin` on its own line indented from the control statement, code at the same level as `begin`/`end`, no single-line ifs. Pascal identifiers are case-insensitive — every verification grep must use `-i`.
+Repo: `c:\tr4w-d12`, branch `main`, **FreePascal 3.2.2 + Lazarus LCL** (this line said `delphi12`/Delphi 12/msbuild until 2026-08-31 -- the toolchain moved on 2026-08-13 and the Delphi project files are deleted; build with `tr4w\FullBuild.ps1`). Code style -- 3-space indent, `begin` on its own line, no single-line ifs -- is a PROJECT standard and lives in CLAUDE.md under "Code style"; it used to be described here as "the user's Pascal style", which read as one person's preference. Pascal identifiers are case-insensitive -- every verification grep must use `-i`.
 
 > **Status (2026-07-31): PHASES A AND B ARE COMPLETE.**
 > A1 `7ceb884` (base + four adapters + T1-T3,T8) · A2 `b939c7f` (LogCW facade

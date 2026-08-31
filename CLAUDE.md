@@ -341,8 +341,13 @@ comparisons).
 via `run-bench.ps1`. `tr4w/test/logdump/` dumps binary `.dat` logs to JSONL through the canonical
 `ContestExchange`; `tr4w/test/python/verify_adif_export.py` cross-checks ADIF export against it.
 
-**Lint scripts** in `tr4w/build/` enforce house rules: `Lint-PascalBeginEnd.ps1`,
-`Lint-PCharAnsi.ps1`, `Lint-RadioRegistry.ps1`, `Lint-PollRadioState.ps1`, `Lint-ChangedPascal.ps1`.
+**Lint scripts** in `tr4w/build/`. `Lint-PCharAnsi.ps1`, `Lint-RadioRegistry.ps1` and
+`Lint-PollRadioState.ps1` are in `Run-Lints.ps1` and GATE THE BUILD. `Lint-PascalBeginEnd.ps1` and
+`Lint-ChangedPascal.ps1` are NOT — the first runs as the `PostToolUse` hook
+`.claude/hooks/pascal-lint-hook.ps1`, which warns after the edit and never blocks; the second is
+run by hand. This sentence used to list all five as though they gated the build (corrected
+2026-08-31), which is why the style itself is now written down under
+[Code style](#code-style--pascal-and-python) rather than left to a linter.
 
 Scoring, multiplier and exchange-parsing changes still deserve real-contest testing — the corpus is a
 strong net, not a proof.
@@ -876,6 +881,69 @@ tracking, scoring, and Cabrillo export — and run the corpus.
 Build with `/p:Config=Debug` (the default recipe above).
 
 ## Important Conventions
+
+### Code style — Pascal and Python
+
+**STATED HERE, NOT ONLY ENFORCED.** This was for a long time only in NY4I's
+personal `~/.claude/CLAUDE.md`, which no contributor and no agent on another
+machine can see. `.claude/hooks/pascal-lint-hook.ps1` does NOT make up for that:
+it is a `PostToolUse` hook, so the edit has already happened by the time it
+speaks; it is warn-only by its own header ("it never blocks the tool"); and it
+inspects `.pas`/`.dpr` only. A rule that exists solely as a linter is one an
+agent has to discover by being told off, after writing the wrong thing.
+
+**Three spaces per indent level, in every language. Spaces, never tabs.**
+
+Pascal blocks:
+
+- **Always `begin`/`end`**, even around a single statement.
+- **`begin` on its own line**, indented three from the control statement.
+- **The block's code sits at the SAME level as its `begin`/`end`**, not indented
+  past them.
+- **No single-line `if`.**
+
+```pascal
+   if SomeCondition then
+      begin
+      DoSomething;
+      DoSomethingElse;
+      end
+   else
+      begin
+      DoAlternative;
+      end;
+
+   for I := 0 to Count - 1 do
+      begin
+      ProcessItem(I);
+      end;
+
+   if (SomeCondition)      and
+      (SomeOtherCondition) then
+      begin
+      DoSomething;
+      end;
+```
+
+Wrong, and all four are common:
+
+```pascal
+   if Condition then DoSomething;        // single-line if
+   if Condition then                     // no begin/end
+      DoSomething;
+   if Condition then begin               // begin on the same line
+      DoSomething;
+   end;
+   if Condition then
+      begin
+         DoSomething;                    // code indented past begin/end
+      end;
+```
+
+Python (`tools/`, `.claude/hooks/`) takes the same three-space indent — which is
+NOT PEP 8, so an agent will default to four and nothing in this tree will catch
+it. Readability over brevity everywhere: no minimising of lines, and comments on
+the reasoning rather than the mechanics.
 
 ### Naming
 - `u*.pas` — modern units; `Log*.pas` — core logging subsystem; `T` prefix — types/classes;
