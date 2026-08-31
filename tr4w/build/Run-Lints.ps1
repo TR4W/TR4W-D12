@@ -56,6 +56,13 @@ $lints = @(
    @{ Name = 'Lint-NoRadioTables'; Arg = $src;     NeedsFpc = $false }
    @{ Name = 'Lint-PollRadioState';  Arg = $src;     NeedsFpc = $false }
    @{ Name = 'Lint-PCharAnsi';       Arg = $src;     NeedsFpc = $false }
+   # WHERE FILES LIVE STAYS IN ONE UNIT. ExtractFilePath(ParamStr(0)) is the
+   # BINARY's directory and GetCurrentDir is the WORKING one; the shipped layout
+   # hides the difference and build-out does not, which is how the cluster
+   # picker came up empty while the cluster window found the same file. Neither
+   # rule survives leaving Windows -- a signed .app cannot be written beside its
+   # binary. uAppPaths owns both; this keeps them owned.
+   @{ Name = 'Lint-AppPaths';        Arg = $src;     NeedsFpc = $false }
    # THE DOMAIN LAYER STAYS ONE.  Shipped with the first domain unit rather
    # than after it: a `uses Forms` in src\domain\ arrives in a commit that is
    # about something else, and nothing would point at it.
