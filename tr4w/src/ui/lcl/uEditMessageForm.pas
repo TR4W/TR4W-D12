@@ -121,7 +121,8 @@ uses
   uConfigValues,  // Config.DVKRecorder, Config.DVKPath
   uMessagesList,  // ShowMessagesList, LastSelectedCommand
   uEditMessage,   // DeleteEscapeChars -- still this unit's own routine
-  uAltP,          // AltPListView, DisplaymessagesList
+  uAltP,          // DisplaymessagesList -- refresh after an edit
+  uAltPForm,      // AltPRowText -- the row being edited
   LogWind,
   MainUnit,       // ActiveMode, SetCommand, logger
   uLCLFormHelpers,
@@ -135,14 +136,15 @@ var
   frmEditMessage: TfrmEditMessage = nil;
 
 procedure TfrmEditMessage.HandleShow(Sender: TObject);
-var
-  buf: array[0..511] of AnsiChar;
 
-  function ColumnText(const aCol: integer): string;
+  { THE VIEW IS ASKED, rather than its HWND read.  This was
+    ListView_GetItemText into a fixed 512-byte stack buffer against the
+    Alt-P list's raw handle -- which also silently truncated at 511 and
+    could not tell an absent row from an empty cell. }
+
+  function ColumnText(const aCol: integer): AnsiString;
   begin
-     Windows.ZeroMemory(@buf, SizeOf(buf));
-     ListView_GetItemText(AltPListView, FRow, aCol, buf, SizeOf(buf));
-     Result := string(PAnsiChar(@buf[0]));
+     Result := AltPRowText(FRow, aCol);
   end;
 
 begin

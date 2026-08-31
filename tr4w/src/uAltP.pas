@@ -24,11 +24,11 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 interface
 
 uses
+  SysUtils,   { Format -- replaced TF.Format/wsprintfA }
   Tree,
   LogCW,
   TF,
   VC,
-  uCommctrl,
   uEditMessage,
   Windows,
   Messages,
@@ -47,7 +47,6 @@ type
     osmMessage: PAnsiChar;
   end;
 
-function AltPDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 procedure DisplaymessagesList(mt: MesWindowType; MessageMode: ModeType);
 procedure EditMessage;
 
@@ -83,7 +82,6 @@ var
 
   flashreminder                         : boolean;
   ReminderDlgHandle                     : HWND;
-  AltPListView                          : HWND;
   LastSelectedMessage                   : integer;
   // Row to pre-select when the dialog next opens (0 = F1, the historical
   // default). A caller -- e.g. right-click on a function-key button -- sets
@@ -102,85 +100,13 @@ var
 procedure ShowAltP;
 
 implementation
-uses MainUnit;
-var
-  AltWnd                                : HWND;
+uses MainUnit,
+  uAltPForm;   { the view -- see ShowAltP }
 
 const
   CQCWMEMORYF                           = 'CQ CW MEMORY F %u';
   CQCWMEMORYALTF                        = 'CQ CW MEMORY ALTF%u';
   CQCWMEMORYCONTROLF                    = 'CQ CW MEMORY CONTROLF%u';
-
-function AltPDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-label
-  1;
-var
-  elvc                                  : tagLVCOLUMNA;
-
-begin
-  Result := False;
-  case Msg of
-
-    WM_INITDIALOG:
-      begin
-        // Honor a caller-requested initial row (Issue #1001), then reset to the
-        // default so a subsequent plain open (Alt-P) lands on F1 as before.
-        LastSelectedMessage := InitialAltPSelection;
-        InitialAltPSelection := 0;
-        AltWnd := hwnddlg;
-//        AltPListView := Get101Window(hwnddlg);
-
-   { PWideChar(<resourcestring>) is a POINTER CAST, not a conversion -- it
-     reinterprets the bytes as UTF-16, so a 16-byte caption arrived as 8
-     garbage wide chars and the title bar read "????????" (NY4I, 2026-08-31,
-     Alt-P; all five surviving Win32 dialogs had the same line). The compiler
-     says nothing because no conversion was asked for. UnicodeString() first
-     forces it. }
-        Windows.SetWindowTextW(hwnddlg, PWideChar(UnicodeString(RC_LISTOFMESS)));
-        AltPListView := CreateListView2(0, 0, 790, 350, hwnddlg);
-
-        // Issue #997: asm tWM_SETFONT (EAX = AltPListView above).
-        tWM_SETFONT(AltPListView, TerminalFont);
-        ListView_SetExtendedListViewStyle(AltPListView, LVS_EX_GRIDLINES or LVS_EX_FULLROWSELECT);
-        elvc.Mask := LVCF_TEXT or LVCF_WIDTH or LVCF_FMT;
-        elvc.fmt := LVCFMT_LEFT;
-        elvc.pszText := 'Command'; //TC_COMMAND;
-        elvc.cx := 270;
-        uCommctrl.ListView_InsertColumnA(AltPListView, 0, elvc);
-
-        elvc.pszText := 'Message';
-        elvc.cx := 340;
-        uCommctrl.ListView_InsertColumnA(AltPListView, 1, elvc);
-
-        elvc.pszText := 'Caption';
-        elvc.cx := 155;
-        uCommctrl.ListView_InsertColumnA(AltPListView, 2, elvc);
-
-        DisplaymessagesList(MesWindow, ActiveMode);
-
-      end;
-    WM_COMMAND:
-      begin
-        if wParam = 2 then
-           begin
-           goto 1;
-           end;
-        if lParam = 0 then if LoWord(wParam) = 1 then EditMessage;
-      end;
-    WM_CLOSE: 1: EndDialog(hwnddlg, 0);
-
-    WM_NOTIFY:
-      begin
-        with PNMHdr(lParam)^ do
-           begin
-           case code of
-             NM_DBLCLK: EditMessage;
-           end;
-           end;
-      end;
-  end;
-
-end;
 
 procedure DisplaymessagesList(mt: MesWindowType; MessageMode: ModeType);
 label
@@ -194,8 +120,12 @@ var
     fault as the Ctrl-P crash, reached through Alt-P instead. }
   Key                                   : AnsiChar;
   TempString                            : ShortString;
-  elvi                                  : TLVItem;
-//  TempPchar                             : PChar;
+  { The row being built.  The Win32 path had no equivalent: it wrote each
+    column straight into a TLVItem and null-terminated the source
+    ShortString IN PLACE to do it. }
+  RowCommand                            : AnsiString;
+  RowMessage                            : AnsiString;
+  RowCaption                            : AnsiString;
   TempInt                               : integer;
   ModeString                            : PAnsiChar;
   OpModeString                          : PAnsiChar;
@@ -203,7 +133,8 @@ var
   TempMessagePointer                    : MessagePointer;
   TempMode                              : ModeType;
 begin
-  ListView_DeleteAllItems(AltPListView);
+  AltPBeginUpdate;
+  AltPClear;
 //  if Mode in [CW, Digital] then ModeString := 'CW' else ModeString := 'SSB';
 
   TempMode := MessageMode;
@@ -232,32 +163,27 @@ begin
 
        for TempInt := 0 to NumberOfOtherMessages - 1 do
           begin
-          elvi.Mask := LVIF_TEXT;
-          elvi.iItem := TempInt;
-          elvi.iSubItem := 0;
+          { The format string is DATA -- omCommand is e.g. 'CQ %s EXCHANGE' --
+            and carries only %s, which means the same in wsprintf and in
+            SysUtils.Format.  See docs and the TF.Format tranches. }
 
-          // Issue #997: asm wsprintf-push -> TF.Format. The format is a RUNTIME
-          // string (omCommand, e.g. 'CQ %s EXCHANGE'); TF.Format == wsprintfA so the
-          // runtime C format + ModeString work directly.
-          TF.Format(wsprintfBuffer, OthermessagesArray[TempInt].omCommand, ModeString);
-          elvi.pszText := wsprintfBuffer;
+          RowCommand := SysUtils.Format(AnsiString(OthermessagesArray[TempInt].omCommand),
+                                               [string(AnsiString(ModeString))]);
 
-          ListView_InsertItem(AltPListView, elvi);
+          { The message memories are ShortStrings.  The Win32 path wrote a #0
+            one byte PAST the length into the live memory to make a PAnsiChar
+            of them; assigning the ShortString needs none of that. }
 
-          elvi.iSubItem := 1;
           if TempMode = Phone then
              begin
-             elvi.pszText := @OthermessagesArray[TempInt].omSSBMessage^[1];
-             OthermessagesArray[TempInt].omSSBMessage^[Ord(OthermessagesArray[TempInt].omSSBMessage^[0]) + 1] := #0;
+             RowMessage := OthermessagesArray[TempInt].omSSBMessage^;
              end
           else
              begin
-             elvi.pszText := @OthermessagesArray[TempInt].omCWMessage^[1];
-             OthermessagesArray[TempInt].omCWMessage^[Ord(OthermessagesArray[TempInt].omCWMessage^[0]) + 1] := #0;
+             RowMessage := OthermessagesArray[TempInt].omCWMessage^;
              end;
 
-          ListView_SetItem(AltPListView, elvi);
-
+          AltPAddRow(RowCommand, RowMessage, '');
           end;
 
        if TempMode = CW then
@@ -265,17 +191,14 @@ begin
           for TempInt := 0 to NumberOfOtherShortMessages - 1 do
              begin
 
-             elvi.iItem := TempInt + NumberOfOtherMessages;
-             elvi.iSubItem := 0;
-             elvi.pszText := OtherShortMessagesArray[TempInt].osmCommand;
-             ListView_InsertItem(AltPListView, elvi);
+             { A SHORT message is ONE character -- osmMessage points at a
+               ShortString whose [0] is its length byte, and the Win32 code
+               copied that byte as the text.  Preserved exactly. }
 
-             elvi.iSubItem := 1;
+             RowCommand := AnsiString(OtherShortMessagesArray[TempInt].osmCommand);
+             RowMessage := AnsiChar(OtherShortMessagesArray[TempInt].osmMessage[0]);
 
-             wsprintfBuffer[0] := AnsiChar(OtherShortMessagesArray[TempInt].osmMessage[0]);
-             wsprintfBuffer[1] := #0;
-             elvi.pszText := wsprintfBuffer;
-             ListView_SetItem(AltPListView, elvi);
+             AltPAddRow(RowCommand, RowMessage, '');
              end;
           end;
 
@@ -284,9 +207,8 @@ begin
 
   for Key := F1 to AltF12 do
      begin
-     elvi.Mask := LVIF_TEXT;
-     elvi.iItem := Ord(Key) - Ord(F1);
-     elvi.iSubItem := 0;
+     RowMessage := '';
+     RowCaption := '';
 
      if Key in [F1..F12] then
         begin
@@ -306,14 +228,13 @@ begin
         TempInt := Ord(Key) - Ord(F1) + 1 - 24;
         end;
 
-     // Issue #997: asm wsprintf-push -> TF.Format. cdecl-reverse pushes ->
-     // OpModeString, ModeString, ButtonString, TempInt (%s %s MEMORY %sF%u).
-     TF.Format(wsprintfBuffer, '%s %s MEMORY %sF%u', OpModeString, ModeString, ButtonString, TempInt);
+     { '%s' and '%u' mean the same in wsprintf and SysUtils.Format. }
 
-     elvi.pszText := wsprintfBuffer;
-     ListView_InsertItem(AltPListView, elvi);
-
-     elvi.iSubItem := 1;
+     RowCommand := SysUtils.Format('%s %s MEMORY %sF%u',
+                                   [string(AnsiString(OpModeString)),
+                                    string(AnsiString(ModeString)),
+                                    string(AnsiString(ButtonString)),
+                                    TempInt]);
      if mt = CQMsgWin then
         begin
         TempString := GetCQMemoryString(TempMode, Key);
@@ -333,18 +254,7 @@ begin
   //  TC_F1SETBYTHEMYCALLSTATEMENTINCONFIG  = 'F1 - Set by the MY CALL statement in config file';
   //  TC_F2SETBYSPEXCHANGEANDREPEATSP       = 'F2 - Set by S&P EXCHANGE and REPEAT S&P EXCHANGE';
         end;
-     if TempString <> '' then
-        begin
-        TempString[Ord(TempString[0]) + 1] := #0;
-        elvi.pszText := @TempString[1];
-        end
-     else
-        begin
-        elvi.pszText := nil;
-        end;
-     ListView_SetItem(AltPListView, elvi);
-
-     elvi.iSubItem := 2;
+     RowMessage := TempString;
      if mt = CQMsgWin then
         begin
         TempMessagePointer := CQCaptionMemory[TempMode, Key];
@@ -356,39 +266,42 @@ begin
 
      if TempMessagePointer <> nil then
         begin
-        TempString := TempMessagePointer^;
-        TempString[Ord(TempString[0]) + 1] := #0;
-        elvi.pszText := @TempString[1];
-        end
-     else
-        begin
-        elvi.pszText := nil;
+        RowCaption := TempMessagePointer^;
         end;
 
-     ListView_SetItem(AltPListView, elvi);
+     AltPAddRow(RowCommand, RowMessage, RowCaption);
      end;
   1:
-  elvi.Mask := LVIF_STATE;
-  elvi.stateMask := 3;
-  elvi.State := LVIS_SELECTED or LVIS_FOCUSED;
-  SendMessage(AltPListView, LVM_SETITEMSTATE, LastSelectedMessage, LONGINT(@elvi));
-  SendMessage(AltPListView, LVM_ENSUREVISIBLE, LastSelectedMessage, LONGINT(False));
+  AltPEndUpdate;
 
+  { LVM_SETITEMSTATE + LVM_ENSUREVISIBLE, in one call. }
+  AltPSelect(LastSelectedMessage);
 end;
 
 procedure EditMessage;
 begin
-  LastSelectedMessage := ListView_GetNextItem(AltPListView, -1, LVNI_SELECTED);
+  LastSelectedMessage := AltPSelectedIndex;
   if LastSelectedMessage = -1 then Exit;
   if MesWindow = ExMsgWin then if LastSelectedMessage in [0, 1] then Exit;
-//  DialogBoxParam(hInstance, MAKEINTRESOURCE(76), AltWnd, @EditMessageDlgProc, LastSelectedMessage);
-  ShowEditMessage(AltWnd, LastSelectedMessage);
+  ShowEditMessage(AltPParentHandle, LastSelectedMessage);
 end;
 
 
 procedure ShowAltP;
 begin
-   CreateModalDialog(397, 177, tr4whandle, @AltPDlgProc, 0);
+   { The seam this procedure was written for.  Everything the dialog proc
+     used to do on WM_INITDIALOG -- title, columns, font, fill, initial
+     selection -- is either the form's (uAltPForm) or happens here. }
+
+   LastSelectedMessage := InitialAltPSelection;
+   InitialAltPSelection := 0;
+
+   uAltPForm.ShowAltPWindow;
 end;
+
+initialization
+   { The view raises Edit; this unit decides what it means.  Assigned here
+     rather than in the form so uAltPForm depends on nothing. }
+   AltPFormOnEdit := @EditMessage;
 end.
 

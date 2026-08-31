@@ -1,0 +1,51 @@
+object frmAltP: TfrmAltP
+  Left = 0
+  Height = 420
+  Top = 0
+  Width = 800
+  BorderStyle = bsSizeable
+  Caption = 'List of messages (assigned at run time)'
+  ClientHeight = 420
+  ClientWidth = 800
+  KeyPreview = True
+  LCLVersion = '4.8.0.0'
+  Position = poMainFormCenter
+  OnKeyDown = HandleKeyDown
+  OnShow = HandleShow
+  object lvMessages: TListView
+    Left = 8
+    Height = 366
+    Top = 8
+    Width = 784
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    Columns = <>
+    HideSelection = False
+    ReadOnly = True
+    RowSelect = True
+    TabOrder = 0
+    ViewStyle = vsReport
+    OnDblClick = MessagesDblClick
+  end
+  object btnEdit: TBitBtn
+    Left = 8
+    Height = 28
+    Top = 384
+    Width = 90
+    Anchors = [akLeft, akBottom]
+    Caption = 'Edit'
+    Default = True
+    TabOrder = 1
+    OnClick = EditClick
+  end
+  object btnClose: TBitBtn
+    Left = 702
+    Height = 28
+    Top = 384
+    Width = 90
+    Anchors = [akRight, akBottom]
+    Cancel = True
+    Caption = 'Close'
+    TabOrder = 2
+    OnClick = CloseClick
+  end
+end

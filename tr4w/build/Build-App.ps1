@@ -193,7 +193,7 @@ if ($warnLines.Count -lt $WARN_CEILING)
 # UnicodeStrings. So each assignment narrows. There are 139 of these tree-wide
 # and they all have that one cause; they will go together or not at all, and a
 # form that avoided them would be a form whose text cannot be translated.
-$NARROW_CEILING = 1432
+$NARROW_CEILING = 1429
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

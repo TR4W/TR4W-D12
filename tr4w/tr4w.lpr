@@ -230,6 +230,7 @@ uses
   uFlasher in 'src\ui\lcl\uFlasher.pas',
   uLPTForm in 'src\ui\lcl\uLPTForm.pas',
   uAboutForm in 'src\ui\lcl\uAboutForm.pas',
+  uAltPForm in 'src\ui\lcl\uAltPForm.pas',
   uFunctionKeysForm in 'src\ui\lcl\uFunctionKeysForm.pas',
   uBandPlanForm in 'src\ui\lcl\uBandPlanForm.pas',
   uLegacyIniPrompt in 'src\ui\lcl\uLegacyIniPrompt.pas',
