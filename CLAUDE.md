@@ -55,31 +55,18 @@ with **no bypass actors**, so the push is simply **rejected**. When that happens
 around it**: rebase or merge onto `d12/main` and push normally. If history genuinely needs rewriting,
 push it to a new branch and ask NY4I.
 
-### What actually happened, so nobody chases the wrong commits
+### The one rewrite, and the one thing not to do about it
 
-**The rewrite was 2026-08-19 at 12:04, not 2026-08-29.** The 29th is when a stale clone first
-*fetched* it — that clone's tip was `152118b2` from **2026-08-14**, so it met a ten-day-old
-force-push and reported it as same-day. Every push on 2026-08-29 was an ordinary fast-forward.
+History was rewritten once, 2026-08-19, by a `filter-branch` that stripped
+`Claude-Session:` trailers (backup branch `backup-pre-trailer-strip-2026-08-19`).
+Signatures were collateral damage: commits on or before that day are unsigned,
+later ones signed.
 
-It was **deliberate**: `git filter-branch` over `fpc` to strip `Claude-Session:` trailers, which are
-links to private transcripts and do not belong in a public repo. Whoever ran it took a backup first
-— `backup-pre-trailer-strip-2026-08-19`, still present, tip `e815d7a3`. `.git/refs/original/` was
-also left behind, which is `filter-branch`'s fingerprint.
+**DO NOT "TIDY" THAT.** Re-signing or re-stripping means another force-push and
+another round of broken clones, against a ruleset that will reject it. The
+unsigned commits broke nothing; rewriting did.
 
-Signature loss was collateral: `filter-branch` re-creates every commit and `gpgsig` does not survive.
-Hence **741 unsigned commits dated 2026-08-19 or earlier, and 335 signed after it**.
-
-**Three things follow, and the third is the one that will tempt someone:**
-
-1. The cleanup did not hold — **12 more commits carrying the trailer have landed since**, 2026-08-25
-   to 2026-08-29, the most recent being `4185c893` itself. Not because a rule was ignored: **there
-   was no rule.** CLAUDE.md had zero mentions of the trailer until 2026-08-29. That is now fixed
-   above, and it is a one-line fix, not a mechanism.
-2. A stale clone must **reset, not merge** — see the recipe below.
-3. **DO NOT RE-SIGN OR RE-STRIP HISTORY.** Mixed signing across the 2026-08-19 boundary is cosmetic
-   and signing is deliberately not enforced. "Tidying" it means another `filter-branch`, another
-   force-push, and another round of broken clones — this time against a ruleset that will reject it.
-   The unsigned commits broke nothing. Rewriting did.
+Forensics and the reset recipe for a stale clone: **`git-history-recovery` skill**.
 
 ## MANDATORY: No `Claude-Session:` trailer in commit messages
 
@@ -108,21 +95,6 @@ which is why the rule above, not the hook, is the control. `.gitattributes` pins
 **LF**: a CRLF shebang gives `bad interpreter: /bin/sh^M` and a hook that silently never runs, the
 one place in this tree where CRLF is the wrong answer.
 
-### Recovering a clone that is behind the 2026-08-19 rewrite
-
-A `git pull` will produce hundreds of conflicts. Do not resolve them — the trees are identical, so
-there is nothing to resolve. **Check for local work first**, then reset:
-
-```powershell
-git -C <clone> status --short          # anything uncommitted? save it elsewhere first
-git -C <clone> log --oneline d12/main..main   # any local commits not on the remote?
-git -C <clone> fetch d12
-git -C <clone> reset --hard d12/main
-```
-
-If the middle command lists commits, those are yours and reset would discard them: cherry-pick them
-onto `d12/main` afterwards rather than merging.
-
 ## MANDATORY: Development Philosophy
 
 This is a port. We want to do this once. Refactoring is not as important a factor as getting the
@@ -133,8 +105,9 @@ inheritance.
 
 TR4W is a free amateur radio contest logging application for Windows, written in Object Pascal.
 It supports 120+ contests with multi-user networking, extensive radio control, and digital mode
-integration. Roughly **129,000 lines across ~260 units** (`tr4w/src`, `src/trdos`, `src/radioFactory`,
-`src/utils`, `src/lang`).
+integration. A large tree — `tr4w/src`, with `src/trdos`, `src/radioFactory`, `src/utils` and
+`src/lang` beneath it. **Unit and line counts are not stated here on purpose**: they drift, and a
+stale count is believed. Measure.
 
 **Repository:** `TR4W/TR4W-D12`, and **`d12` is the only remote.** ~~Note `origin` is a *different*
 repo — `TR4W/TR4W`, the Delphi 7 heritage — so `git push origin ...` pushes to the wrong project.~~
@@ -149,7 +122,7 @@ behaviour — see note 7 below.
 from, inside this repository. It is not D7 heritage and pushing to it would not reach another
 project. It is simply stale.
 **Toolchain:** **FreePascal 3.2.2 + the Lazarus LCL.** ~~Delphi 12 Athens~~ was left behind on
-2026-08-13 once FPC passed the unit tests (3978/0), the golden corpus (22/0/4) and shipped the
+2026-08-13 once FPC passed the unit tests, the golden corpus (22/0/4) and shipped the
 installer. `tr4w/FullBuild-D12-deprecated.ps1` still exists but **no longer works**: deleting the
 FMX twins on 2026-08-17 removed units its uses clause needs, so a Delphi build can only be
 reproduced by checking out a commit before that. **DCC32 was retired earlier and is long gone.**
@@ -217,7 +190,7 @@ build.
 ## Build System
 
 **The toolchain is FreePascal 3.2.2 + the Lazarus LCL.** Delphi 12 is behind us (2026-08-13): the
-FPC build passes the unit tests (3978/0) and the golden corpus (22/0/4), runs the LCL UI, and is what
+FPC build passes the unit tests and the golden corpus (22/0/4), runs the LCL UI, and is what
 `FullBuild.ps1` ships. The Delphi script is kept as `FullBuild-D12-deprecated.ps1` for reference —
 **don't run both**, they write the same file names from different compilers.
 
@@ -335,9 +308,8 @@ is why a blanket conversion was wrong. Background:
 Three layers, all real and all expected to be green before a commit.
 
 **1. Unit tests** — `tr4w/test/unit/tr4w_unit_tests.lpr`, a minimal DUnit-compatible framework
-(`uTR4WTestFramework.pas`, no external deps). **3978 tests, 0 failures** is the baseline (2026-08-13,
-identical under FPC and Delphi). The count grows steadily — take it from the newest commit message,
-and if the checked-in `.exe` reports fewer, it is stale.
+(`uTR4WTestFramework.pas`, no external deps). **Zero failures is the baseline**; the count is not
+stated here because it grows every commit. Take it from the newest commit message.
 
 ```powershell
 .\tr4w\build\Build-Tests.ps1 -Run
@@ -379,10 +351,11 @@ strong net, not a proof.
 
 ### Hybrid: legacy core + modern Windows layer
 
-1. **TRDOS layer** (`tr4w/src/trdos/`, 35 units, ~90k lines) — the DOS-era contest logging engine
+1. **TRDOS layer** (`tr4w/src/trdos/`) — the largest single subsystem, and the DOS-era engine
    ported to Windows. Stable, battle-tested, procedural.
 2. **Windows layer** (`tr4w/src/`) — Win32 UI, networking, integrations.
-3. **Modern factories** — `tr4w/src/radioFactory/` (118 units, 100 radios) and the CW keyer factory
+3. **Modern factories** — `tr4w/src/radioFactory/` (one unit per radio; `Lint-RadioRegistry`
+   counts them on every build) and the CW keyer factory
    (`src/uCWKeyer*.pas`) are genuine OOP subsystems: proper base classes, virtuals, capability sets,
    and self-registration. Both were built with the **strangler pattern** — thin adapters over the
    existing globals first, prove the seam on hardware, then delete the legacy path. That is the
@@ -500,20 +473,23 @@ have meant building a forwarding facade just so `LOGWIND` could clear a text box
 use the LCL directly, and `LOGWIND`/`LOGEDIT` are the first that do. The rest of the rule stands:
 this is proven contest logic, so new *behaviour* still belongs in `src/`.
 
-| File | Lines | Role |
-|------|-------|------|
-| `LOGSTUFF.PAS` | 9469 | Contest logging, exchange parsing, QSO validation |
-| `tree.pas` | 4976 | Utility library |
-| `LOGWIND.PAS` | 4172 | Window management and display |
-| `PostUnit.PAS` | 3797 | Post-contest processing, Cabrillo export |
-| `HELP.PAS` | 3578 | Help text |
-| `LOGSCP.PAS` | 3320 | Super Check Partial |
-| `LOGRADIO.PAS` | 3165 | **Legacy** radio control — see the radio section below |
-| `LOGSUBS2.PAS` | 3253 | Core logging subroutines |
-| `LogCW.pas` | — | CW message memories/function keys; the **facade** over the keyer factory |
-| `LogDupe.pas` | — | Duplicate checking |
-| `FCONTEST.PAS` | — | Contest type definitions and defaults |
-| `CFGDEF.PAS` | — | Configuration parameter defaults |
+The Lines column is gone (2026-08-31): `wc -l` answers it, and six of eight figures had drifted.
+The Role column is what this table is for.
+
+| File | Role |
+|------|------|
+| `LOGSTUFF.PAS` | Contest logging, exchange parsing, QSO validation -- the biggest unit here |
+| `tree.pas` | Utility library |
+| `LOGWIND.PAS` | Window management and display |
+| `PostUnit.PAS` | Post-contest processing, Cabrillo export |
+| `HELP.PAS` | Help text |
+| `LOGSCP.PAS` | Super Check Partial |
+| `LOGRADIO.PAS` | **Legacy** radio control — see the radio section below |
+| `LOGSUBS2.PAS` | Core logging subroutines |
+| `LogCW.pas` | CW message memories/function keys; the **facade** over the keyer factory |
+| `LogDupe.pas` | Duplicate checking |
+| `FCONTEST.PAS` | Contest type definitions and defaults |
+| `CFGDEF.PAS` | Configuration parameter defaults |
 
 Contest-specific modules: `LOGWAE.PAS` (WAE), `LOGDOM.PAS` (domestic/QSO parties), `LOGK1EA.PAS`
 (also the CPU keyer), `LOGGRID.PAS`, `LOGEDIT.PAS`.

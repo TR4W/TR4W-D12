@@ -126,11 +126,21 @@ tr4w/build_*.log
 !.claude/settings.json
 !.claude/hooks/
 !.claude/commands/
+!.claude/skills/
 
 # commands/ joined the tracked set on 2026-08-30: /update-changes and
 # /monthly-changes were ported from the D7 tree, where they had lived on one
 # machine only. A slash command that exists in a single clone is the same
 # problem the hooks had before they were tracked.
+
+# skills/ joined on 2026-08-31, and the reason is the same one again. A
+# /doctor pass moved the 2026-08-19 history-rewrite forensics and the
+# stale-clone reset recipe OUT of CLAUDE.md and into
+# .claude/skills/git-history-recovery/, leaving a pointer behind. With
+# .claude/skills ignored that pointer would have resolved on exactly one
+# machine while the content it names was deleted everywhere -- a dangling
+# reference in the file people trust most, which is worse than the long
+# section it replaced.
 tr4w/.claude/
 
 # Personal, machine-specific, or scratch. Never tracked.
