@@ -187,7 +187,7 @@ begin
         begin
         Break;
         end;
-     payload := payload + Chr(Buf[i]);
+     payload := payload + Char(Buf[i]);   // Char, not Chr -- see uRadioYaesuBinary.SendBytes
      end;
 
   Radio.IPAddress := ValueFor(payload, 'ip');

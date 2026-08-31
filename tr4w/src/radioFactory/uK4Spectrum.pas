@@ -134,7 +134,7 @@ begin
 
    for i := 0 to ALength - 1 do
       begin
-      s := s + Chr(ABytes[AOffset + i]);
+      s := s + Char(ABytes[AOffset + i]);   // Char, not Chr -- see uRadioYaesuBinary.SendBytes
       end;
 
    // The K4 pads with leading zeros ('00003534390') and signs the noise floor
@@ -238,7 +238,7 @@ begin
       Exit;
       end;
 
-   AFrame.SourceId := Chr(ABytes[AOffset + 6]);
+   AFrame.SourceId := Char(ABytes[AOffset + 6]);   // Char, not Chr -- see uRadioYaesuBinary.SendBytes
    AFrame.Sequence := ABytes[AOffset + 5];
    AFrame.SpanHz := span;
    AFrame.CentreHz := centre;

@@ -320,9 +320,36 @@ begin
       end;
 end;
 
+(* Char(), NEVER Chr(), FOR A PROTOCOL BYTE -- and the parameters are what make
+  it matter.
+
+  tr4w.inc sets {$MODESWITCH UnicodeStrings}, so `string` is UTF-16. FPC's Chr()
+  returns an ANSI char, so putting one in a string runs DefaultSystemCodePage,
+  which the LCL sets to UTF-8; a lone byte >= $80 is not valid UTF-8, decodes to
+  U+FFFD, and the transport then puts $FD on the wire. Char(b) is a TYPECAST --
+  it reinterprets the ordinal as a UTF-16 code unit, so codepoint == byte and no
+  codepage is consulted. The full analysis is in uRadioIcomBase, above CivChr.
+
+  CONSTANTS HIDE THIS. FPC folds Chr($FA) at compile time and gets it right, so
+  every literal call works and only variable arguments break -- and b0..b4 are
+  parameters, so a caller writing SendBytes($00,$00,$00,$01,$FA) with perfectly
+  correct literals still had them corrupted here.
+
+  WHAT IT COST (NY4I's FT-1000MP, 2026-08-31): the poll pair is $..$03 $10 for
+  the 32-byte status block and $..$01 $FA for the 6-byte flags. $FA went out as
+  $FD, so the radio saw an unknown opcode and answered nothing. The reader still
+  expected 32+6 = 38 bytes, took the missing 6 from the next cycle, and every
+  frame after that decoded 6 bytes further out of phase -- the Radio 1 panel
+  rotating through invented frequencies while the rig sat on one. Every other
+  byte in both commands is < $80, which is why only this one was wrong.
+
+  PAREN-STAR DELIMITERS, because this comment quotes a compiler directive and
+  braces do not nest -- the directive's own closing brace would end a brace
+  comment early and compile the rest as code. That is exactly what happened on
+  the first attempt at this comment, which is the third time in this tree. *)
 procedure TYaesuBinary.SendBytes(b0, b1, b2, b3, b4: Byte);
 begin
-   Self.SendToRadio(Chr(b0) + Chr(b1) + Chr(b2) + Chr(b3) + Chr(b4));
+   Self.SendToRadio(Char(b0) + Char(b1) + Char(b2) + Char(b3) + Char(b4));
 end;
 
 // ---------------------------------------------------------------------------

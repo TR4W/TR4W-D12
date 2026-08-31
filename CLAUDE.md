@@ -170,7 +170,7 @@ The honest gate on radios is **one verified rig per protocol family**, not 100 r
 Elecraft serial, Elecraft network, Kenwood serial, Icom serial, Flex CAT, Yaesu binary (FT-1000MP,
 2026-08-09 — first proof of that family). **Unproven: Icom LAN, Yaesu ASCII, HamLib.** Track that in
 [`docs/RADIO_BENCH_STATUS.md`](docs/RADIO_BENCH_STATUS.md). **Those results were obtained under
-Delphi**; the Elecraft K4 (network) and K3S (serial) have since been re-confirmed against the FPC
+Delphi**; the Elecraft K4 (network), K3S (serial) and **Yaesu FT-1000MP (binary, 2026-08-31)** have since been re-confirmed against the FPC
 binary, the rest have not.
 
 **One English build.** ~~ENG + 8 (RUS/SER/MNG/CZE/ROM/GER/UKR/ESP)~~ — the compile-time language
