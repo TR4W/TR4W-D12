@@ -309,6 +309,7 @@ type
       lblDXLabHeading: TLabel;
       lblDXLabInfo: TLabel;
       lblDXLabInfo2: TLabel;
+      lblSpotCollectorHint: TLabel;
       lblMMTTYHeading: TLabel;
       lblMMTTYEngine: TLabel;
       lblMMTTYHint: TLabel;
@@ -916,6 +917,7 @@ type
       procedure FillFromAllowedValues(const aCombo: TComboBox; const aCommand: string);
       procedure BuildBindings;
       procedure LoadClusterServerList;
+      procedure ShowClusterDirectoryState;
       procedure LoadClusterList;
       { The blanket "something was edited" marker.  See HookDirtyMarkers. }
       procedure MarkDirty(Sender: TObject);
@@ -1039,6 +1041,13 @@ type
                                     const aHeading: string;
                                     const aPrefixes: array of string);
       procedure TrackGeneratedRoot(const aControl: TControl);
+      { A control backed by the STORE rather than by a CFGCA command. It has no
+        legacy command name, so it is registered under its own caption and is
+        findable by search but never by ShowPreferencesForCommand -- which is
+        correct: there is no command to open it AT. }
+      procedure AddStoreBackedToSearchIndex(var aN: integer;
+                                            const aControl: TWinControl;
+                                            const aCaption: string = '');
       procedure AddHandWiredToSearchIndex(var aN: integer; const aCommand: string;
                                           const aControl: TWinControl);
       procedure SearchListClick(Sender: TObject);
@@ -1225,6 +1234,7 @@ uses
    uRadioConfigApply,
    uRadioRegistry,
    uCAT,        // DiscoverNetworkRadios
+   uTelnet,     // TelnetRefreshClusterList -- the cluster window's drop-down
    uUDPBroadcaster,   // TestDestination, and Configure once the settings are saved
    uTCIServer,        // started/stopped when the check box is saved
    uFileText,          // FileTextExists -- System.IOUtils is Delphi-only
@@ -3587,6 +3597,64 @@ end;
 //
 // Skips a nil control and a control on no section panel, both of which are
 // ordinary states while a page is being built rather than errors.
+{ THE THIRD CLASS OF SETTING, which the index could not see at all.
+
+  BuildSearchIndex walks FBindings; AddHandWiredToSearchIndex covers controls
+  that edit a CFGCA command directly. A control loaded from the STORE --
+  chkTCIServer reads FStore.TCIServerEnabled -- is neither, and could not be
+  registered even by someone who remembered, because that routine takes a
+  COMMAND STRING and there is no command.
+
+  NY4I found it the way an operator would, 2026-08-30: "when I searched for TCI,
+  I was not offered any config option but there is clearly an Enable the TCI
+  Server option."
+
+  The caption defaults to the control's own, so a TCheckBox needs no text here
+  and cannot drift from what is on screen. Command is left EMPTY on purpose:
+  it is the legacy-name lookup key, and inventing one would make
+  ShowPreferencesForCommand answer for a command that does not exist. }
+procedure TPrefsForm.AddStoreBackedToSearchIndex(var aN: integer;
+                                                 const aControl: TWinControl;
+                                                 const aCaption: string = '');
+var
+   panel: TControl;
+   navItem: TTreeNode;
+   text: string;
+begin
+   if aControl = nil then
+      begin
+      Exit;
+      end;
+   panel := SectionPanelFor(aControl);
+   if panel = nil then
+      begin
+      Exit;
+      end;
+
+   text := aCaption;
+   if (text = '') and (aControl is TCheckBox) then
+      begin
+      text := TCheckBox(aControl).Caption;
+      end;
+   if text = '' then
+      begin
+      Exit;      // nothing to match on; silently indexing blank helps nobody
+      end;
+
+   SetLength(FSearchIndex, aN + 1);
+   FSearchIndex[aN].Caption     := text;
+   FSearchIndex[aN].Command     := '';
+   FSearchIndex[aN].SectionTag  := panel.Tag;
+   FSearchIndex[aN].Control     := aControl;
+   FSearchIndex[aN].SectionName := '';
+   navItem := NavItemForTag(panel.Tag);
+   if navItem <> nil then
+      begin
+      FSearchIndex[aN].SectionName := navItem.Text;
+      end;
+   Inc(aN);
+end;
+
 procedure TPrefsForm.AddHandWiredToSearchIndex(var aN: integer;
                                                const aCommand: string;
                                                const aControl: TWinControl);
@@ -3642,6 +3710,19 @@ begin
       end;
 
    // --- WSJT-X (page tag NAV_WSJTX) ---
+   { Searchable at last. It never was: the hand-wired list below covers WSJT-X,
+     the external logger and MMTTY, and SPOT COLLECTOR ENABLED was simply not on
+     it -- so "spot collector" found nothing while the setting sat in plain
+     sight on the DX Cluster page. }
+   { The TCI server page. Store-backed, so these go through the other route.
+     Captions come from the controls themselves. }
+   AddStoreBackedToSearchIndex(aN, chkTCIServer);
+   AddStoreBackedToSearchIndex(aN, chkTCIBindAll);
+   AddStoreBackedToSearchIndex(aN, chkTCIDebug);
+   AddStoreBackedToSearchIndex(aN, edtTCIPort, 'TCI server port');
+
+   AddHandWiredToSearchIndex(aN, 'SPOT COLLECTOR ENABLED',      chkSpotCollector);
+
    AddHandWiredToSearchIndex(aN, 'WSJT-X ENABLED',               chkWSJTXEnabled);
    AddHandWiredToSearchIndex(aN, 'WSJT-X RADIO CONTROL ENABLED', chkWSJTXRadioControl);
    AddHandWiredToSearchIndex(aN, 'WSJT-X SEND HIGHLIGHTS',       chkWSJTXHighlights);
@@ -5153,6 +5234,39 @@ end;
 
 { ---------------------------------------------------------- DX clusters --- }
 
+{ WHERE THE SHIPPED SERVER DIRECTORY LIVES. One expression, because two
+  copies of a path rule is how the DX Cluster window and this page came to
+  disagree about the same filename -- see docs/OWED_BEFORE_CROSS_PLATFORM.md
+  item 3. }
+function ClusterDirectoryPath: string;
+begin
+   Result := ExtractFilePath(ParamStr(0)) + 'TRCLUSTER.DAT';
+end;
+
+{ Say beside the drop-down whether there is a directory to drop down.
+
+  CHEAP, so it can run when the page loads rather than waiting for the combo to
+  be focused: an existence test, not the 726-line parse. The parse stays on
+  OnEnter where it was measured and put.
+
+  IN PLACE OF THE NORMAL HINT, not beside it. The normal hint says "the
+  drop-down lists the servers in TRCLUSTER.DAT" -- with no file that sentence
+  is false, and a wrong hint next to a right warning is worse than either
+  alone. }
+procedure TPrefsForm.ShowClusterDirectoryState;
+begin
+   if FileTextExists(ClusterDirectoryPath) then
+      begin
+      lblClusterServerHint.Caption   := TC_CLUSTERSERVERHINT;
+      lblClusterServerHint.Font.Color := clGrayText;
+      end
+   else
+      begin
+      lblClusterServerHint.Caption   := TC_CLUSTERDIRMISSING;
+      lblClusterServerHint.Font.Color := clRed;
+      end;
+end;
+
 procedure TPrefsForm.LoadClusterServerList;
 var
    fileName: string;
@@ -5210,7 +5324,7 @@ begin
    try
       cbxClusterServer.Clear;
 
-      fileName := ExtractFilePath(ParamStr(0)) + 'TRCLUSTER.DAT';
+      fileName := ClusterDirectoryPath;
       if FileTextExists(fileName) then
          begin
          lines := TStringList.Create;
@@ -5229,6 +5343,28 @@ begin
          finally
             lines.Free;
          end;
+         end
+      else
+         begin
+         { SAY THE FILE WAS NOT THERE, and say WHERE we looked.
+
+           Without this the operator gets an empty picker and a log line reading
+           "0 entries", which is what an EMPTY file would also produce -- so the
+           one number that could have explained it says the same thing for two
+           different causes.
+
+           It is not hypothetical. NY4I hit exactly this on 2026-08-30 running
+           the binary from build-out\ while the data sits in tr4w\target\:
+           this routine resolves TRCLUSTER.DAT beside the BINARY, and the DX
+           Cluster window resolves it against the WORKING DIRECTORY, so the
+           window listed servers and the picker did not. Two rules, one
+           filename, and nothing said so. See
+           docs\OWED_BEFORE_CROSS_PLATFORM.md item 3 for the fix to the rules
+           themselves; this line is what makes the NEXT instance self-
+           diagnosing rather than a conversation. }
+         logger.Warn('[Prefs] cluster directory not found at %s -- the server '
+                     + 'picker will be empty. It is read from beside the '
+                     + 'program, not from the working directory.', [fileName]);
          end;
    finally
       cbxClusterServer.Items.EndUpdate;
@@ -6168,9 +6304,14 @@ end;
 
 procedure TPrefsForm.LoadClusterPanels;
 begin
+   { Whether there is a server directory at all, said beside the drop-down.
+     Here rather than in LoadClusterServerList because that one is deferred to
+     the combo's OnEnter -- the operator would otherwise have to click the
+     control to be told why it is empty. }
+   ShowClusterDirectoryState;
+
    // TELNET SERVER is no longer edited directly -- it is a rendering of
    // whichever cluster is active, written in SaveClusterPanels.
-   chkSpotCollector.Checked := CommandBool('SPOT COLLECTOR ENABLED');
 
    edtBandMapDecay.Text := FStore.CommandValue('BAND MAP DECAY TIME',
                               CFGCommandValueAsString('BAND MAP DECAY TIME'));
@@ -6202,7 +6343,12 @@ begin
    // active cluster differently, which is the divergence this whole seam exists
    // to prevent.
    ApplyActiveCluster(FStore);
-   SetCommandBool('SPOT COLLECTOR ENABLED', chkSpotCollector.Checked);
+
+   { AND REPOINT THE CLUSTER WINDOW'S DROP-DOWN AT THE EDITED LIBRARY, without
+     changing what the operator has selected there. Adding or renaming a cluster
+     must not silently move the window to a different server -- possibly one it
+     is not connected to -- so the refresh restores the previous choice. }
+   TelnetRefreshClusterList;
 
    ApplyIfChanged('BAND MAP DECAY TIME',    Trim(edtBandMapDecay.Text));
    ApplyIfChanged('BAND MAP GUARD BAND',    Trim(edtBandMapGuard.Text));
@@ -6222,6 +6368,12 @@ procedure TPrefsForm.LoadExternalSoftwarePanels;
 var
    t: ExternalLoggerType;
 begin
+   { DXLab SpotCollector. LOADED AND SAVED HERE because the control lives on the
+     DXLab page -- it was read by LoadClusterPanels while sitting on the DX
+     Cluster page, which is how a control and the code that fills it come to
+     disagree about which page they are on. }
+   chkSpotCollector.Checked     := CommandBool('SPOT COLLECTOR ENABLED');
+
    chkWSJTXEnabled.Checked      := CommandBool('WSJT-X ENABLED');
    chkWSJTXRadioControl.Checked := CommandBool('WSJT-X RADIO CONTROL ENABLED');
    chkWSJTXHighlights.Checked   := CommandBool('WSJT-X SEND HIGHLIGHTS');
@@ -6455,6 +6607,7 @@ end;
 
 procedure TPrefsForm.SaveExternalSoftwarePanels;
 begin
+   SetCommandBool('SPOT COLLECTOR ENABLED',       chkSpotCollector.Checked);
    SetCommandBool('WSJT-X ENABLED',               chkWSJTXEnabled.Checked);
    SetCommandBool('WSJT-X RADIO CONTROL ENABLED', chkWSJTXRadioControl.Checked);
    SetCommandBool('WSJT-X SEND HIGHLIGHTS',       chkWSJTXHighlights.Checked);

@@ -66,6 +66,9 @@ type
       btnClear: TBitBtn;
       btnCommands: TBitBtn;
       btnShow50: TBitBtn;
+      btnConfigure: TBitBtn;
+      pnlHint: TPanel;
+      lblNoClusters: TLabel;
       pnlEntry: TPanel;
       cboHost: TComboBox;
       cboCommand: TComboBox;
@@ -88,6 +91,7 @@ type
       procedure ClearClick(Sender: TObject);
       procedure CommandsClick(Sender: TObject);
       procedure Show50Click(Sender: TObject);
+      procedure ConfigureClick(Sender: TObject);
       procedure SendClick(Sender: TObject);
       procedure CommandKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
       procedure ConsoleDblClick(Sender: TObject);
@@ -113,6 +117,7 @@ const
    TELNET_CMD_FREEZE     = 203;
    TELNET_CMD_CLEAR      = 204;
    TELNET_CMD_SHOW50     = 206;
+   TELNET_CMD_CONFIGURE  = 207;
 
 var
    TR4WTelnetForm: TfrmTelnet = nil;
@@ -186,6 +191,17 @@ procedure TelnetAddHostItem(const aHost: string);
 procedure TelnetEndHostList;
 procedure TelnetSelectHostItem(const aHost: string);
 
+{ Show or hide the "no clusters defined" prompt above the drop-down, and set its
+  words.  Shown ONLY when the library is empty.
+
+  A LABEL, NOT A GREYED ITEM IN THE DROP-DOWN, and the reason is worth keeping.
+  A greyed combo item is still SELECTABLE -- the widget set greys the paint, not
+  the behaviour -- so it would have needed a sentinel and an enforcement arm to
+  stop TR4W dialling the hint text as a hostname.  It is also invisible until
+  the operator opens the drop-down, which a first-time user has no reason to do
+  if they believe it is empty.  A label has neither problem. }
+procedure TelnetSetNoClustersHint(const aVisible: boolean);
+
 function  TelnetCommandText: string;
 procedure TelnetSetCommandText(const aText: string);
 procedure TelnetRememberCommand(const aText: string);
@@ -206,6 +222,7 @@ implementation
 
 uses
    VC,                { tw_TELNETWINDOW_INDEX, tr4wColorsArray }
+   uTR4WStrings,      { TC_CONFIGURE_ELLIPSIS, TC_NODXCLUSTERSDEFINED }
    MainUnit,          { CloseTR4WWindow }
    uLCLFormHelpers;   { OwnFormByMainWindow -- the LCL way to parent a tool window }
 
@@ -315,6 +332,18 @@ end;
 
 procedure TfrmTelnet.HandleShow(Sender: TObject);
 begin
+   { CAPTIONS FROM THE CONSTANTS, NOT FROM THE .lfm -- the uServerLogForm
+     pattern. The .lfm text is a designer placeholder; assigning here is what
+     makes these two strings translatable at all, because the generator emits
+     every TC_ a source file NAMES.
+
+     Only these two. The six toolbar buttons beside them still carry their
+     English from the .lfm and are part of the 469 captions
+     docs/CAPTION_REVIEW.md counts -- not made worse here, and not fixed here
+     either. }
+   btnConfigure.Caption  := TC_CONFIGURE_ELLIPSIS;
+   lblNoClusters.Caption := TC_NODXCLUSTERSDEFINED;
+
    if Assigned(TelnetFormOnShow) then
       begin
       TelnetFormOnShow;
@@ -530,6 +559,26 @@ end;
 procedure TfrmTelnet.Show50Click(Sender: TObject);
 begin
    if Assigned(TelnetFormOnCommand) then TelnetFormOnCommand(TELNET_CMD_SHOW50);
+end;
+
+{ Straight to the DX Cluster page of Preferences.
+
+  DELEGATED LIKE EVERY OTHER BUTTON rather than calling Preferences here. This
+  unit is the VIEW; it does not know that a settings form exists, and giving it
+  a uses on uPrefsForm to open one page would tie the cluster window to the
+  whole settings tree. uTelnet answers the command. }
+procedure TelnetSetNoClustersHint(const aVisible: boolean);
+begin
+   if not FormUsable then
+      begin
+      Exit;
+      end;
+   TR4WTelnetForm.pnlHint.Visible := aVisible;
+end;
+
+procedure TfrmTelnet.ConfigureClick(Sender: TObject);
+begin
+   if Assigned(TelnetFormOnCommand) then TelnetFormOnCommand(TELNET_CMD_CONFIGURE);
 end;
 
 { ONE handler for every command in the popup, and the item's Tag says which.

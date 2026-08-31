@@ -98,6 +98,9 @@ function ProcessDX(const Line: AnsiString; InListBox: boolean; var Stringtype:
 procedure tCreateAndAddNewSpot(Call: CallString; Dupe: boolean; Radio:
   RadioPtr);
 procedure AppendTelnetPopupMenu(MenuText: PAnsiChar);
+{ Rebuild the cluster drop-down after the library has been edited, KEEPING the
+  operator's current choice. Called by Preferences when it saves. }
+procedure TelnetRefreshClusterList;
 procedure EmunTRCLUSTERDAT(FileString: PShortString);
 procedure EmunDXCLUSTERALERTLISTTXT(FileString: PShortString);
 procedure EnumCLUSTERCOMMANDSTXT(FileString: PShortString);
@@ -146,6 +149,12 @@ uses uNet,
   Forms,             // Application.QueueAsyncCall -- the event transport
   ExtCtrls,          // TTimer -- the retry and login timers, off the dialog's WM_TIMER
   uTelnetForm,       // the window itself, a designed form since 2026-08-25
+  uRadioConfigStore,   // the cluster library -- what the drop-down now lists
+  uKeyerConfigStore,   // LoadConfig fills both libraries from the one file
+  uUDPBroadcastConfig, // TUDPBroadcastConfig -- LoadConfig fills it too
+  uRadioConfigApply,   // RadioStoreFileName
+  uTR4WConfigFile,     // LoadConfig
+  uPrefsForm,          // ShowPreferencesAtPage / NAV_CLUSTER -- the Configure button
   SyncObjs,          // the queue lock, shared with the cluster reader thread
   uClusterTokens,    // the braced-token parser, a leaf so it can be tested
   uDXClusterClient,   // the socket half, extracted so it can be tested headless
@@ -492,6 +501,102 @@ begin
   SendClusterLogin;
 end;
 
+{ Fill the drop-down from the operator's cluster library, and put up the
+  prompt when there is nothing in it.
+
+  ENTRY FORMAT IS 'host:port  Name' -- host FIRST, then whitespace, then a
+  label. That is not cosmetic: TelnetConnect parses the combo text by taking
+  everything up to the first space as host:port (see the note there, and the
+  control-id bug it records). Preferences shows the same cluster the other way
+  round, 'Name - host:port', because nothing parses that. }
+procedure AddDefinedClustersToHostList;
+var
+   store: TRadioConfigStore;
+   keyers: TKeyerConfigStore;
+   udp: TUDPBroadcastConfig;
+   loadErr, line: string;
+   i, defined: integer;
+begin
+   defined := 0;
+   if FileExists(RadioStoreFileName) then
+      begin
+      store  := TRadioConfigStore.Create;
+      keyers := TKeyerConfigStore.Create;
+      udp    := TUDPBroadcastConfig.Create;
+      try
+         if LoadConfig(RadioStoreFileName, store, keyers, loadErr, udp) then
+            begin
+            for i := 0 to store.ClusterCount - 1 do
+               begin
+               if Trim(store.Cluster(i).Server) = '' then
+                  begin
+                  Continue;      // a half-entered definition is not a choice
+                  end;
+               line := Trim(store.Cluster(i).Server);
+               if Trim(store.Cluster(i).Name) <> '' then
+                  begin
+                  line := line + '  ' + Trim(store.Cluster(i).Name);
+                  end;
+               TelnetAddHostItem(line);
+               Inc(defined);
+               end;
+            end
+         else
+            begin
+            logger.Warn('[Telnet] cluster library could not be read: %s', [loadErr]);
+            end;
+      finally
+         udp.Free;
+         keyers.Free;
+         store.Free;
+      end;
+      end;
+
+   { THE SERVER ACTUALLY IN USE IS ALWAYS OFFERED, even when it is not in the
+     library. An operator upgrading from a version without one has TELNET SERVER
+     in their ini and a cluster that works; taking it out of the list because it
+     has no definition yet would be a regression dressed as tidiness. It does
+     NOT count towards `defined` -- it is not a library entry, and if it is the
+     only thing here the prompt still belongs on screen. }
+   if Trim(string(TelnetServer)) <> '' then
+      begin
+      TelnetAddHostItem(Trim(string(TelnetServer)));
+      end;
+
+   TelnetSetNoClustersHint(defined = 0);
+end;
+
+{ Rebuild the drop-down after the cluster library has been edited, KEEPING THE
+  OPERATOR'S CURRENT CHOICE.
+
+  Called from Preferences when it saves. The selection is read before the
+  rebuild and put back after, so editing an unrelated cluster -- or adding one
+  -- does not silently repoint the window at a different server. If the entry
+  they had selected is gone, the text is still restored rather than snapped to
+  row 0: they may be connected to it right now, and a combo that disagrees with
+  the live connection is worse than one showing something not in the list.
+
+  DOES NOTHING IF THE WINDOW HAS NEVER BEEN OPENED -- there is no list to
+  rebuild, and TelnetFormShowHandler will build it correctly when it is. }
+procedure TelnetRefreshClusterList;
+var
+   chosen: string;
+begin
+   { NO 'does the window exist' TEST HERE. Every accessor below guards itself --
+     TelnetHostText returns '' and the list calls no-op when there is no form --
+     so a second check would only be a second place to get it wrong. }
+   chosen := TelnetHostText;
+
+   TelnetBeginHostList;
+   AddDefinedClustersToHostList;
+   TelnetEndHostList;
+
+   if Trim(chosen) <> '' then
+      begin
+      TelnetSelectHostItem(chosen);
+      end;
+end;
+
 { WM_INITDIALOG.  A dialog was rebuilt every time it opened; a form is created
   once and reshown, so this runs on every show and must be idempotent -- which
   is why the menu and the host list are CLEARED first.  The Win32 version could
@@ -507,15 +612,25 @@ begin
   EnumerateLinesInFile('DXCLUSTER_ALERT_LIST.TXT',
     EmunDXCLUSTERALERTLISTTXT, True);
 
-  // Issue 392: a cluster named in the config but absent from TRCLUSTER.DAT must
-  // still be selectable, so it is added to the list after the file is read.
+  // THE DROP-DOWN LISTS THE OPERATOR'S OWN CLUSTERS, NOT A CATALOGUE.
   //
-  // BATCHED.  726 hosts added one at a time blocked the main thread for 1.7 s
-  // on every open -- and start-up opens this window before the message loop
-  // runs, so that was 1.7 s of unpainted main window.  See TelnetBeginHostList.
+  // It used to be the 726 lines of TRCLUSTER.DAT, which is every public node
+  // that existed when the file was compiled.  Now that clusters are DEFINED --
+  // name, server, login, password, post-connect command -- offering a list of
+  // 726 servers TR4W knows nothing about invites the operator to pick one that
+  // has no credentials attached and will not log them in.
+  //
+  // NO FALLBACK TO THE FILE WHEN NOTHING IS DEFINED, and that is deliberate.
+  // NY4I, 2026-08-30: "the fallback would be confusing for a first time user.
+  // They will never look for the settings dialog."  A first run therefore shows
+  // one greyed line telling them to define a cluster, which is a signpost; 726
+  // hostnames are not.
+  //
+  // BATCHED.  Adding hosts one at a time blocked the main thread for 1.7 s on
+  // every open -- and start-up opens this window before the message loop runs,
+  // so that was 1.7 s of unpainted main window.  See TelnetBeginHostList.
   TelnetBeginHostList;
-  EnumerateLinesInFile('TRCLUSTER.DAT', EmunTRCLUSTERDAT, False);
-  EmunTRCLUSTERDAT(@TelnetServer);
+  AddDefinedClustersToHostList;
   TelnetEndHostList;
 
   TelnetSelectHostItem(string(TelnetServer));
@@ -586,6 +701,16 @@ begin
     TELNET_CMD_SHOW50:
       begin
       SendViaTelnetSocket('SH/DX 50');   //n4af 04-11-2014
+      end;
+
+    { Straight to the page that defines clusters. Answered HERE rather than in
+      the form so the cluster window keeps no dependency on the settings tree. }
+    TELNET_CMD_CONFIGURE:
+      begin
+      if not ShowPreferencesAtPage(NAV_CLUSTER) then
+         begin
+         logger.Warn('[Telnet] Preferences has no DX Cluster page to open');
+         end;
       end;
   end;
 end;

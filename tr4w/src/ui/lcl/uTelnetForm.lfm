@@ -78,11 +78,42 @@ object frmTelnet: TfrmTelnet
       TabOrder = 5
       OnClick = Show50Click
     end
+    object btnConfigure: TBitBtn
+      Left = 624
+      Height = 28
+      Top = 2
+      Width = 108
+      Caption = 'Configure...'
+      TabOrder = 6
+      OnClick = ConfigureClick
+    end
+  end
+  object pnlHint: TPanel
+    Left = 0
+    Height = 22
+    Top = 32
+    Width = 977
+    Align = alTop
+    BevelOuter = bvNone
+    ClientHeight = 22
+    ClientWidth = 977
+    TabOrder = 3
+    Visible = False
+    object lblNoClusters: TLabel
+      Left = 6
+      Height = 15
+      Top = 3
+      Width = 400
+      Caption = 'lblNoClusters'
+      Font.Color = clRed
+      ParentColor = False
+      ParentFont = False
+    end
   end
   object pnlEntry: TPanel
     Left = 0
     Height = 30
-    Top = 32
+    Top = 54
     Width = 977
     Align = alTop
     BevelOuter = bvNone

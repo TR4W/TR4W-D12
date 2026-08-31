@@ -2357,7 +2357,7 @@ object PrefsForm: TPrefsForm
         Top = 34
         Width = 620
         AutoSize = False
-        Caption = 'DXLab needs no settings of its own.  TR4W offers a DX Commander compatible interface on TCP port 52002 whenever the WSJT-X support is running, and DXLab programs connect to that.'
+        Caption = 'TR4W offers a DX Commander compatible interface on TCP port 52002 whenever the WSJT-X support is running, and DXLab programs connect to that.'
         Font.Color = clGrayText
         ParentFont = False
         WordWrap = True
@@ -2369,6 +2369,26 @@ object PrefsForm: TPrefsForm
         Width = 620
         AutoSize = False
         Caption = 'The port is not configurable today.  If you want it to be, say so and it becomes a setting here.'
+        WordWrap = True
+      end
+      object chkSpotCollector: TCheckBox
+        Left = 12
+        Height = 22
+        Top = 160
+        Width = 460
+        AutoSize = False
+        Caption = 'Integrate with DXLab SpotCollector'
+        TabOrder = 0
+      end
+      object lblSpotCollectorHint: TLabel
+        Left = 32
+        Height = 51
+        Top = 186
+        Width = 620
+        AutoSize = False
+        Caption = 'Lets you double-click a spot in DXLab SpotCollector and have the callsign appear in TR4W'#39's call field.  This does NOT affect spots from your DX cluster - those arrive whether this is ticked or not.'
+        Font.Color = clGrayText
+        ParentFont = False
         WordWrap = True
       end
     end
@@ -2642,15 +2662,6 @@ object PrefsForm: TPrefsForm
         AutoSize = False
         Caption = 'Connect at startup'
         TabOrder = 8
-      end
-      object chkSpotCollector: TCheckBox
-        Left = 12
-        Height = 22
-        Top = 476
-        Width = 460
-        AutoSize = False
-        Caption = 'Collect spots from the cluster'
-        TabOrder = 10
       end
       object lblClusterNote: TLabel
         Left = 12
