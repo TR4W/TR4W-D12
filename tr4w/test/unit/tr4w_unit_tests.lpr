@@ -270,6 +270,8 @@ uses
    uLogSchema           in '..\..\src\domain\uLogSchema.pas',
    uLogRepository       in '..\..\src\uLogRepository.pas',
    uTestLogRepository   in 'uTestLogRepository.pas',
+   uLogImport           in '..\..\src\uLogImport.pas',
+   uTestLogImport       in 'uTestLogImport.pas',
    uLogDatabase         in '..\..\src\domain\uLogDatabase.pas',
    uTestLogDatabase     in 'uTestLogDatabase.pas',
    uTestClusterTokens   in 'uTestClusterTokens.pas',
@@ -382,6 +384,7 @@ begin
    RegisterSuite(TLogBinaryFileTests.Create('LogBinaryFile'));
    RegisterSuite(TLogDatabaseTests.Create('LogDatabase'));
    RegisterSuite(TLogRepositoryTests.Create('LogRepository'));
+   RegisterSuite(TLogImportTests.Create('LogImport'));
    RegisterSuite(TClusterTokensTests.Create('ClusterTokens'));
    RegisterSuite(TSplitReassertTests.Create('SplitReassert'));
    RegisterSuite(TWinTimerTests.Create('WinTimer'));

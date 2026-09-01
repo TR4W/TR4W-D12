@@ -133,9 +133,8 @@ function NewRowGuid(const aQso: ContestExchange): AnsiString;
   and a managed string is NOT a conversion -- see the implementation.
   Exported because anything comparing or displaying that field needs the same
   NUL-aware reading, and a second hand-rolled loop is how the two drift. }
-function CharArrayToAnsi(const aBuffer; aSize: integer): AnsiString;
-procedure AnsiToCharArray(var aBuffer; aSize: integer; const aValue: AnsiString);
-procedure AssignShort(var aDest; aCapacity: integer; const aValue: AnsiString);
+function CharArrayToAnsi(const aBuffer: array of AnsiChar): AnsiString;
+procedure AnsiToCharArray(var aBuffer: array of AnsiChar; const aValue: AnsiString);
 
 implementation
 
@@ -215,77 +214,51 @@ end;
   This is the same class CLAUDE.md warns about at Win32 boundaries: a cast
   between a fixed buffer and a managed string is not a conversion. }
 
-{ COPYING AN AnsiString INTO A ShortString FIELD, EXPLICITLY.
+{ OPEN ARRAYS, NOT UNTYPED POINTERS. NY4I, 2026-09-01: "no artifacts of win32
+  string handling when we are done -- no PChar, string pointers, s[1] type
+  stuff. All native FPC/LAZ."
 
-  `Str10(someAnsiString)` and `string[32](someAnsiString)` COMPILE and are
-  typecasts, not conversions -- FPC reinterprets the AnsiString's POINTER as a
-  ShortString, so the length byte is read out of the string's data and the
-  result is garbage or an access violation. That is what crashed the first
-  round-trip test on 2026-09-01: the read side used those casts on eighteen
-  fields.
+  The first version took `const aBuffer` untyped and walked it with a PAnsiChar,
+  which is the Win32 habit this tree is unwinding. An open array says the same
+  thing in the language: the compiler passes the bounds, Low and High are real,
+  and there is no address arithmetic to get wrong.
 
-  THE CAPACITY IS PASSED IN, and that is not pedantry. The first version took
-  `var aDest: openstring` -- Pascal's "a var ShortString of any declared length"
-  -- except that in Delphi mode openstring is not a distinct type and High()
-  on it yields 255. So the copy wrote up to 255 bytes into a string[3], over
-  whatever followed it in the record, and crashed with NO EXCEPTION TEXT AT ALL,
-  which is what record corruption looks like. High(aQso.Name) at the CALL SITE
-  gives the real capacity, because there the compiler still knows it is a Str10.
-
-  Copying by Move rather than assigning also keeps this off the build's
-  narrowing-conversion count, which an implicit AnsiString -> ShortString
-  assignment would add to nineteen times. }
-procedure AssignShort(var aDest; aCapacity: integer; const aValue: AnsiString);
+  These exist at all because ContestExchange.ceOperator is
+  array[0..10] of AnsiChar -- a fixed buffer in a record designed in the
+  nineties. When the contest factory turns that record into a class the field
+  becomes a string and both routines can go. }
+function CharArrayToAnsi(const aBuffer: array of AnsiChar): AnsiString;
 var
-   p: PAnsiChar;
-   n: integer;
+   i: integer;
 begin
-   p := PAnsiChar(@aDest);
-   n := Length(aValue);
-   if n > aCapacity then
+   Result := '';
+   for i := Low(aBuffer) to High(aBuffer) do
       begin
-      n := aCapacity;
-      end;
-   { A ShortString is a length byte followed by its characters. }
-   p[0] := AnsiChar(byte(n));
-   if n > 0 then
-      begin
-      Move(aValue[1], p[1], n);
+      { NUL ends it. The rest is padding, and taking all eleven bytes is exactly
+        what an AnsiString() cast of the field would wrongly do. }
+      if aBuffer[i] = #0 then
+         begin
+         Exit;
+         end;
+      Result := Result + aBuffer[i];
       end;
 end;
 
-function CharArrayToAnsi(const aBuffer; aSize: integer): AnsiString;
+procedure AnsiToCharArray(var aBuffer: array of AnsiChar; const aValue: AnsiString);
 var
-   p: PAnsiChar;
-   n: integer;
+   i: integer;
 begin
-   p := PAnsiChar(@aBuffer);
-   n := 0;
-   while (n < aSize) and (p[n] <> #0) do
+   for i := Low(aBuffer) to High(aBuffer) do
       begin
-      Inc(n);
-      end;
-   SetLength(Result, n);
-   if n > 0 then
-      begin
-      Move(p^, Result[1], n);
-      end;
-end;
-
-procedure AnsiToCharArray(var aBuffer; aSize: integer; const aValue: AnsiString);
-var
-   n: integer;
-begin
-   { Zeroed first, so the tail is NUL padding rather than whatever was there. }
-   FillChar(aBuffer, aSize, 0);
-   n := Length(aValue);
-   if n > aSize then
-      begin
-      n := aSize;
-      end;
-   if n > 0 then
-      begin
-      Move(aValue[1], aBuffer, n);
+      if i < Length(aValue) then
+         begin
+         aBuffer[i] := aValue[i + 1];
+         end
+      else
+         begin
+         { NUL padding, so the tail is not whatever was there before. }
+         aBuffer[i] := #0;
+         end;
       end;
 end;
 
@@ -714,8 +687,7 @@ begin
    BindBool(P('clear_mult_sheet'), aQso.ceClearMultSheet);
 
    P('radio_nr').AsInteger := Ord(aQso.ceRadio);
-   BindText(P('operator_call'),
-            CharArrayToAnsi(aQso.ceOperator, SizeOf(aQso.ceOperator)));
+   BindText(P('operator_call'), CharArrayToAnsi(aQso.ceOperator));
    BindBool(P('deleted'), aQso.ceQSO_Deleted);
    BindBool(P('sent_to_server'), aQso.ceSendToServer);
    BindBool(P('server_dirty'), aQso.ceNeedSendToServerAE);
@@ -724,6 +696,7 @@ end;
 procedure TLogRepository.ReadRecord(out aQso: ContestExchange);
 var
    continentToken: Str20;
+   token: AnsiString;
 
    function F(const aName: AnsiString): TField;
    begin
@@ -759,19 +732,23 @@ begin
    aQso.QTH.Country := UNKNOWN_COUNTRY;
    aQso.TenTenNum := MAXWORD;
 
-   AssignShort(aQso.id, High(aQso.id), S('exchange_id'));
+   aQso.id := S('exchange_id');
    aQso.ceQSOID1 := Cardinal(F('session_id').AsLargeInt);
    aQso.ceQSOID2 := Cardinal(F('session_seq').AsLargeInt);
-   if S('computer_id') <> '' then
+   { A single character out of a text column. Indexing a managed string is
+     ordinary Pascal -- what this tree is removing is taking its ADDRESS. Read
+     once into a local so the guard and the use cannot disagree. }
+   token := S('computer_id');
+   if token <> '' then
       begin
-      aQso.ceComputerID := S('computer_id')[1];
+      aQso.ceComputerID := token[1];
       end;
    aQso.ceOperatorID := byte(F('operator_id').AsInteger);
    aQso.ceRecordKind := TokenToRecordKind(S('record_kind'));
 
    aQso.tSysTime := UnixUTCToQSOTime(F('qso_at').AsLargeInt);
-   AssignShort(aQso.Callsign, High(aQso.Callsign), S('callsign'));
-   AssignShort(aQso.QTH.StandardCall, High(aQso.QTH.StandardCall), S('standard_call'));
+   aQso.Callsign := S('callsign');
+   aQso.QTH.StandardCall := S('standard_call');
    aQso.Frequency := F('freq_tx_hz').AsLargeInt;
 
    { GetADIFBand IS the inverse of ADIFBANDSTRINGSARRAY -- it scans that very
@@ -780,7 +757,7 @@ begin
    aQso.Mode := TokenToMode(S('mode'));
    aQso.ExtMode := TokenToExtMode(S('submode'));
 
-   AssignShort(aQso.ExchString, High(aQso.ExchString), S('exchange_received'));
+   aQso.ExchString := S('exchange_received');
 
    aQso.RSTSent := F('rst_sent').AsInteger;
    aQso.RSTReceived := F('rst_received').AsInteger;
@@ -788,48 +765,49 @@ begin
    aQso.NumberReceived := FieldSerial(F('serial_received'));
 
    aQso.Zone := FieldByte(F('rcvd_zone'), DUMMYZONE);
-   AssignShort(aQso.Name, High(aQso.Name), S('rcvd_name'));
+   aQso.Name := S('rcvd_name');
    aQso.Age := byte(F('rcvd_age').AsInteger);
    aQso.Check := byte(F('rcvd_check').AsInteger);
-   if S('rcvd_precedence') <> '' then
+   token := S('rcvd_precedence');
+   if token <> '' then
       begin
-      aQso.Precedence := S('rcvd_precedence')[1];
+      aQso.Precedence := token[1];
       end;
-   AssignShort(aQso.ceClass, High(aQso.ceClass), S('rcvd_class'));
-   AssignShort(aQso.Power, High(aQso.Power), S('rcvd_power'));
-   AssignShort(aQso.Chapter, High(aQso.Chapter), S('rcvd_chapter'));
+   aQso.ceClass := S('rcvd_class');
+   aQso.Power := S('rcvd_power');
+   aQso.Chapter := S('rcvd_chapter');
    aQso.Prefecture := FieldByte(F('rcvd_prefecture'), MAXBYTE);
    aQso.TenTenNum := FieldWord(F('rcvd_member_no'), MAXWORD);
-   AssignShort(aQso.QTHString, High(aQso.QTHString), S('rcvd_qth'));
-   AssignShort(aQso.RandomCharsReceived, High(aQso.RandomCharsReceived), S('rcvd_random'));
-   AssignShort(aQso.RandomCharsSent, High(aQso.RandomCharsSent), S('random_sent'));
+   aQso.QTHString := S('rcvd_qth');
+   aQso.RandomCharsReceived := S('rcvd_random');
+   aQso.RandomCharsSent := S('random_sent');
 
    if aQso.ceRecordKind in [rkQTCR, rkQTCS] then
       begin
-      AssignShort(aQso.Kids, High(aQso.Kids), S('qtc_call'));
+      aQso.Kids := S('qtc_call');
       end
    else
       begin
-      AssignShort(aQso.Kids, High(aQso.Kids), S('rcvd_kids'));
+      aQso.Kids := S('rcvd_kids');
       end;
 
-   AssignShort(aQso.DomesticQTH, High(aQso.DomesticQTH), S('domestic_qth'));
+   aQso.DomesticQTH := S('domestic_qth');
 
-   AssignShort(aQso.QTH.Prefix, High(aQso.QTH.Prefix), S('dxcc_prefix'));
-   AssignShort(aQso.QTH.CountryID, High(aQso.QTH.CountryID), S('dxcc_entity'));
+   aQso.QTH.Prefix := S('dxcc_prefix');
+   aQso.QTH.CountryID := S('dxcc_entity');
    aQso.QTH.Country := FieldWord(F('dxcc_code'), UNKNOWN_COUNTRY);
    aQso.QTH.Zone := FieldByte(F('cty_cq_zone'), DUMMYZONE);
    if S('cty_continent') <> '' then
       begin
       begin
-      AssignShort(continentToken, High(continentToken), S('cty_continent'));
+      continentToken := S('cty_continent');
       aQso.QTH.Continent := GetContinentFromString(continentToken);
       end;
       end;
 
-   AssignShort(aQso.Prefix, High(aQso.Prefix), S('prefix_mult'));
-   AssignShort(aQso.DXQTH, High(aQso.DXQTH), S('dx_mult'));
-   AssignShort(aQso.DomMultQTH, High(aQso.DomMultQTH), S('domestic_mult'));
+   aQso.Prefix := S('prefix_mult');
+   aQso.DXQTH := S('dx_mult');
+   aQso.DomMultQTH := S('domestic_mult');
    aQso.DomesticMult := FieldBool(F('mult_domestic'));
    aQso.DXMult := FieldBool(F('mult_dx'));
    aQso.PrefixMult := FieldBool(F('mult_prefix'));
@@ -848,7 +826,7 @@ begin
    aQso.ceClearMultSheet := FieldBool(F('clear_mult_sheet'));
 
    aQso.ceRadio := RadioType(F('radio_nr').AsInteger);
-   AnsiToCharArray(aQso.ceOperator, SizeOf(aQso.ceOperator), S('operator_call'));
+   AnsiToCharArray(aQso.ceOperator, S('operator_call'));
    aQso.ceQSO_Deleted := FieldBool(F('deleted'));
    aQso.ceSendToServer := FieldBool(F('sent_to_server'));
    aQso.ceNeedSendToServerAE := FieldBool(F('server_dirty'));

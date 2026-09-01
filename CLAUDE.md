@@ -1028,6 +1028,35 @@ Two silent-corruption traps live here, and neither produces a compiler diagnosti
   normalises to the same blob. Check the endings of any file you *create*.
 
 ### Strings and buffers
+
+**THE DESTINATION IS NATIVE FPC/LAZARUS STRING HANDLING, WITH NO WIN32 ARTIFACTS
+LEFT** (NY4I, 2026-09-01): *"my goal here is for us to not have any artifacts of
+win32 string handling when we are done. So no PChar, string pointers, `s[1]` type
+stuff. All native FPC/LAZ."*
+
+That is a destination, not a rule you can apply blindly today -- `ShortString` is
+still the TRDOS core's currency and `PAnsiChar` is still correct at a real C
+boundary. What it means in practice, for new code:
+
+| instead of | write |
+|---|---|
+| `procedure F(var buf; size: integer)` | `procedure F(var buf: array of AnsiChar)` -- an open array carries its own bounds |
+| `PAnsiChar(@buf)` and pointer walking | index the open array; `Low`/`High` are real |
+| `Move(src[1], dst[1], n)` | plain assignment. `aRec.Name := someAnsiString` converts and truncates, and the compiler does it correctly |
+| `ShortStringType(someAnsiString)` | plain assignment. **The cast is not a conversion** -- FPC reinterprets the string's POINTER as a ShortString |
+| `AnsiString(aFixedCharArray)` | a NUL-aware helper. The cast takes the padding too |
+
+**Measured 2026-09-01, while writing the log mapper:** removing all of this from
+one new unit cost **nothing** -- the narrowing-conversion count stayed at exactly
+1429, because an `AnsiString` -> `ShortString` assignment is not a narrowing
+conversion, and the pointer version had already caused two crashes with no
+exception text (a pointer cast of an empty string, and an `openstring` parameter
+whose `High()` is 255 in Delphi mode, writing 255 bytes into a `string[3]`).
+
+**The genuine exceptions, which stay:** the SQLite C API takes a `PAnsiChar` by
+definition (`sqlite3_exec`), as do the Win32 `...A` entry points and byte-exact
+serial I/O. Those are transports. Everything above them passes strings.
+
 - **The program passes `string`s.** Pointers, lengths, `ZeroMemory` and `s[1]` belong *inside* the
   transport where the bytes are actually written. Prefer `Foo(const s: string)` over
   `Foo(p: PAnsiChar; len: DWORD)`.

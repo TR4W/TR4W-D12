@@ -102,6 +102,7 @@ uses
   uLogBinaryFile in 'src\uLogBinaryFile.pas',
   uLogSchema in 'src\domain\uLogSchema.pas',
   uLogRepository in 'src\uLogRepository.pas',
+  uLogImport in 'src\uLogImport.pas',
   uLogDatabase in 'src\domain\uLogDatabase.pas',
   uStateBridge in 'src\ui\lcl\uStateBridge.pas',
   uFlowGrid in 'src\ui\lcl\uFlowGrid.pas',
