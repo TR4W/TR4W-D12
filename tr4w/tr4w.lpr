@@ -99,6 +99,7 @@ uses
   uWSJTXState in 'src\domain\uWSJTXState.pas',
   uRadioState in 'src\domain\uRadioState.pas',
   uKeyerState in 'src\domain\uKeyerState.pas',
+  uLogBinaryFile in 'src\uLogBinaryFile.pas',
   uLogSchema in 'src\domain\uLogSchema.pas',
   uLogDatabase in 'src\domain\uLogDatabase.pas',
   uStateBridge in 'src\ui\lcl\uStateBridge.pas',

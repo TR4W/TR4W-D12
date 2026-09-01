@@ -13,7 +13,7 @@ table is the same class of bug, one layer down.
 
 ---
 
-## Two findings that change the design
+## Three findings that change the design
 
 ### 1. The record has NO sent-exchange field. That IS issue #2.
 
@@ -57,6 +57,49 @@ knowing the contest, which is the fusion this whole ordering exists to avoid.
 and the ITU zone, exactly as `MyZone` does on the sending side (§12a). The
 importer fills `cty_cq_zone` and leaves `cty_itu_zone` NULL rather than guessing;
 the factory knows which the contest wanted.
+
+### 3. Seven fields carry an "unset" SENTINEL, and it is not zero
+
+`ClearContestExchange` (`LOGDUPE.PAS:612`) does not merely zero the record. It
+writes explicit not-set markers, and they are the maximum value of the type
+rather than zero:
+
+```pascal
+Exchange.NumberReceived := -1;
+Exchange.NumberSent     := -1;
+Exchange.Prefecture     := MAXBYTE;          { 255 }
+Exchange.Zone           := DUMMYZONE;        { = MAXBYTE, VC.pas:486 }
+Exchange.QTH.Zone       := DUMMYZONE;
+Exchange.QTH.Country    := UNKNOWN_COUNTRY;  { = MAXWORD, VC.pas:417 }
+Exchange.TenTenNum      := MAXWORD;          { 65535 }
+Exchange.QTH.Continent  := UnknownContinent;
+```
+
+**Observed live, not inferred.** Dumping two corpus fixtures:
+
+| fixture | `Zone` | `TenTenNum` | `NumberReceived` |
+|---|---|---|---|
+| `cqww_ssb_2025_ny4i` | **8** — a real CQ zone | 65535 | … |
+| `general_qso_2026_w1aw4` | **255** | 65535 | **-1** |
+
+**THE MAPPER RULE, and it is not optional: a sentinel becomes NULL.** Writing
+them through unchanged would put zone 255 and Ten-Ten number 65535 into every
+non-zone, non-Ten-Ten contest in the database — values that are indistinguishable
+from data once they are there, that would be exported, and that no constraint
+would catch. `-1` for a serial is the same hazard wearing a friendlier number.
+
+The reverse matters too: the exporter must turn NULL back into the sentinel, not
+into 0, or a round trip through the database changes what `ClearContestExchange`
+meant.
+
+**A fourth polymorphic case, spotted in the same dump.** In
+`general_qso_2026_w1aw4` the received state `AR` is stored in **`Name`** —
+`{"ExchString":"AR", "Name":"AR", "QTHString":""}` — while `QTHString`, the field
+finding 2 is about, is empty. So `rcvd_name` is contest-dependent too, and the
+polymorphism is not confined to one field. It does not change the rule (store
+what the record says, let the factory interpret), but it does mean **no column
+in the `rcvd_*` block can be assumed to hold what its name suggests** until the
+contest factory has said so.
 
 ---
 

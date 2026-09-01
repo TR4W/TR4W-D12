@@ -265,6 +265,8 @@ uses
    uTestDXSpotParse     in 'uTestDXSpotParse.pas',
    uTestSpotAge         in 'uTestSpotAge.pas',
    uAppPaths            in '..\..\src\uAppPaths.pas',
+   uLogBinaryFile       in '..\..\src\uLogBinaryFile.pas',
+   uTestLogBinaryFile   in 'uTestLogBinaryFile.pas',
    uLogSchema           in '..\..\src\domain\uLogSchema.pas',
    uLogDatabase         in '..\..\src\domain\uLogDatabase.pas',
    uTestLogDatabase     in 'uTestLogDatabase.pas',
@@ -375,6 +377,7 @@ begin
    RegisterSuite(TDXClusterClientTests.Create('DXClusterClient'));
    RegisterSuite(TDXSpotParseTests.Create('DXSpotParse'));
    RegisterSuite(TSpotAgeTests.Create('SpotAge'));
+   RegisterSuite(TLogBinaryFileTests.Create('LogBinaryFile'));
    RegisterSuite(TLogDatabaseTests.Create('LogDatabase'));
    RegisterSuite(TClusterTokensTests.Create('ClusterTokens'));
    RegisterSuite(TSplitReassertTests.Create('SplitReassert'));

@@ -31,7 +31,8 @@ program logdump;
 uses
    Windows,
    SysUtils,
-   VC in '..\..\src\VC.pas';
+   VC in '..\..\src\VC.pas',
+   uLogBinaryFile in '..\..\src\uLogBinaryFile.pas';
 
 var
    gOutHandle : THandle = 0;
@@ -224,137 +225,56 @@ begin
    WriteOut('}'#13#10);
 end;
 
-// --- GoodLookingQSO filter (mirrors PostUnit.GoodLookingQSO) -----------
-
-function GoodLookingQSO(const rec: ContestExchange): Boolean;
-begin
-   Result :=
-      (rec.ceRecordKind = rkQSO)         and
-      (not rec.ceQSO_Skiped)             and
-      (rec.Band <> NoBand)               and
-      (rec.Mode <> NoMode)               and
-      (not rec.ceQSO_Deleted);
-end;
-
 // --- main loop ----------------------------------------------------------
+
+// THE READING LIVES IN src\uLogBinaryFile.pas (2026-09-01).
+//
+// It used to live here: an up-front "header + N * record" divisibility check,
+// a Windows.ReadFile loop, and the rule that a SHORT READ AT THE TAIL IS
+// END-OF-FILE because that is what the legacy ReadLogFile does.  All of that is
+// hard-won and none of it is about dumping JSON.
+//
+// It moved when the SQLite importer needed the same reader -- BEFORE becoming
+// its second copy rather than after, per CLAUDE.md.  Two copies of the
+// short-read rule would drift, and the drift would be invisible in the worst
+// way available here: the JSONL and the importer would disagree about how many
+// records a log contains, and the corpus would be comparing two different
+// populations while reporting green.
+//
+// GoodLookingQSO moved with it for the same reason -- it decides which records
+// ExportToADIF emits, and this program exists to be compared against that.
 
 procedure DumpLog(const logPath: string);
 var
-   hFile         : THandle;
-   header        : TLogHeader;
-   rec           : ContestExchange;
-   bytesRead     : DWORD;
-   recCount      : Integer;
-   goodCount     : Integer;
-   skippedCount  : Integer;
-   logVersion    : string;
-   fileSizeLow   : DWORD;
-   fileSizeHigh  : DWORD;
-   fileSize      : Int64;
-   recordsBytes  : Int64;
-   leftover      : Int64;
+   reader       : TLogBinaryReader;
+   rec          : ContestExchange;
+   recCount     : Integer;
+   goodCount    : Integer;
+   skippedCount : Integer;
 begin
-   hFile := CreateFile(PChar(logPath), GENERIC_READ,
-                       FILE_SHARE_READ or FILE_SHARE_WRITE,
-                       nil, OPEN_EXISTING,
-                       FILE_ATTRIBUTE_NORMAL, 0);
-   if hFile = INVALID_HANDLE_VALUE then
-      begin
-      Writeln(ErrOutput, 'logdump: cannot open ', logPath);
-      Halt(2);
-      end;
+   reader := TLogBinaryReader.Create(logPath);
    try
-      // Up-front sanity check: file must be header + integer * record.
-      // If not, the file was probably written by a TR4W version with a
-      // different SizeOfContestExchange and reading it with our stride
-      // would yield garbage data (misaligned record offsets), which is
-      // worse than failing.  Bail with a clear message.
-      fileSizeLow := GetFileSize(hFile, @fileSizeHigh);
-      fileSize := (Int64(fileSizeHigh) shl 32) or fileSizeLow;
-      if fileSize < SizeOf(header) then
+      if reader.Status <> lbOK then
          begin
-         Writeln(ErrOutput,
-                 'logdump: file too small to contain a header (',
-                 fileSize, ' bytes, need at least ', SizeOf(header), ')');
-         Halt(3);
-         end;
-      recordsBytes := fileSize - SizeOf(header);
-      leftover := recordsBytes mod SizeOf(rec);
-      if leftover <> 0 then
-         begin
-         Writeln(ErrOutput,
-                 'logdump: file size ', fileSize,
-                 ' is not header(', SizeOf(header),
-                 ') + N * record(', SizeOf(rec), ').  ',
-                 'Remainder = ', leftover, ' byte(s).');
-         Writeln(ErrOutput,
-                 '         This usually means the .TRW was written by a ',
-                 'TR4W version with a different SizeOfContestExchange ',
-                 '(field added/removed since this log was created).  ',
-                 'Reading records at the current stride would produce ',
-                 'misaligned/garbage data, so aborting.  ',
-                 'Workaround: open the log in current TR4W and save it ',
-                 'to force an in-place upgrade.');
-         Halt(3);
+         Writeln(ErrOutput, 'logdump: ', reader.Message);
+         // Preserved from the hand-rolled version: 2 could not open, 3 could
+         // not be read as a log.  verify_adif_export.py distinguishes them.
+         if reader.Status = lbCannotOpen then
+            Halt(2)
+         else
+            Halt(3);
          end;
 
-      // Read the header (which is exactly SizeOfContestExchange bytes --
-      // lhDummy is sized to fill the record out).
-      FillChar(header, SizeOf(header), 0);
-      if not Windows.ReadFile(hFile, header, SizeOf(header),
-                              bytesRead, nil) or
-         (bytesRead <> SizeOf(header)) then
-         begin
-         Writeln(ErrOutput, 'logdump: header read failed');
-         Halt(3);
-         end;
-
-      // Version string is the first 8 bytes, e.g. 'v1.7' + null + space + CRLF.
-      logVersion := Copy(header.lhVersionString, 1, 4);
-
-      // Emit a metadata header line as a comment-style record so Python
-      // can distinguish it from regular QSO records.
       WriteLnOut('{"_meta":true,"logVersion":"' +
-                 JsonEscape(logVersion) + '","recordSize":' +
+                 JsonEscape(reader.LogVersion) + '","recordSize":' +
                  IntToStr(SizeOfContestExchange) + '}');
 
       recCount     := 0;
       goodCount    := 0;
       skippedCount := 0;
 
-      // Read records until end-of-file.  Match the legacy ReadLogFile
-      // (MainUnit.pas):
-      //   Windows.ReadFile(..., TempRXData, SizeOf(ContestExchange), ...);
-      //   Result := bytesRead = SizeOf(ContestExchange);
-      // i.e. any short read at the tail terminates the loop SILENTLY --
-      // TR4W treats trailing bytes that don't form a complete record as
-      // end-of-file.  We must match this exactly or our record counts
-      // diverge from what ExportToADIF sees.  (Real-world cases: a log
-      // written by an older TR4W with a smaller SizeOfContestExchange,
-      // or a file truncated mid-write.)
-      while True do
+      while reader.ReadNext(rec) do
          begin
-         FillChar(rec, SizeOf(rec), 0);
-         if not Windows.ReadFile(hFile, rec, SizeOf(rec), bytesRead, nil) then
-            begin
-            Writeln(ErrOutput, 'logdump: read error at record ',
-                    recCount + 1);
-            Halt(3);
-            end;
-         if bytesRead <> SizeOf(rec) then
-            begin
-            // Match ReadLogFile: any short read = EOF.  Warn if it
-            // wasn't a clean zero-byte EOF so the user knows the file
-            // has a trailing partial record (silently dropped).
-            if bytesRead <> 0 then
-               Writeln(ErrOutput,
-                       'logdump: WARNING -- ', bytesRead,
-                       ' trailing byte(s) after record ', recCount,
-                       ' do not form a complete record (expected ',
-                       SizeOf(rec),
-                       ').  Silently dropping, matching TR4W behaviour.');
-            Break;
-            end;
          Inc(recCount);
          if GoodLookingQSO(rec) then
             begin
@@ -365,10 +285,23 @@ begin
             Inc(skippedCount);
          end;
 
+      // The reader treats a short read at the tail as end-of-file and says
+      // nothing, matching TR4W.  The counts are how that becomes visible
+      // without changing the rule: they can only differ if the file shrank
+      // between the size check and the read.
+      if recCount <> reader.ExpectedRecords then
+         begin
+         Writeln(ErrOutput,
+                 'logdump: WARNING -- the file size implies ',
+                 reader.ExpectedRecords, ' record(s) but ', recCount,
+                 ' were read.  A trailing partial record is dropped silently, ',
+                 'matching TR4W behaviour.');
+         end;
+
       Writeln(ErrOutput, 'logdump: ', recCount, ' total records, ',
               goodCount, ' good (emitted), ', skippedCount, ' skipped');
    finally
-      CloseHandle(hFile);
+      reader.Free;
    end;
 end;
 
