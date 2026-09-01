@@ -1115,21 +1115,32 @@ begin
       end;
 end;
 
-{ What a stretching control may shrink to: its own constraint when it states
-  one, the floor otherwise, and never more than it was designed at -- a
-  constraint wider than the design would demand a window bigger than the
-  designer drew. }
+{ What a stretching control may shrink to.
+
+  A STATED CONSTRAINT IS TAKEN AS STATED. The first version clamped it to
+  aDesigned -- the control's CURRENT width -- to stop a bogus constraint
+  demanding a window bigger than the designer drew. That reasoning is wrong for
+  a control that stretches, because its current width is the WINDOW's width:
+  clamping against it means a window that has been dragged small reports a small
+  content minimum, which becomes its new floor, which lets it be dragged smaller
+  still. The minimum RATCHETED DOWN every time the window was reopened, and the
+  QTC send window ended up draggable to a sliver (NY4I, screenshot, 2026-09-01).
+
+  A Constraints.MinWidth is a statement about CONTENT and does not change when
+  the window does. It is the only thing here that can be trusted across a
+  resize, so it is used unaltered.
+
+  The DEFAULT floor is still clamped: it is a guess, and demanding more than the
+  control currently occupies on the strength of a guess would be worse. }
 function ShrinkFloor(const aConstraint, aDesigned, aFloor: integer): integer;
 begin
    if aConstraint > 0 then
       begin
       Result := aConstraint;
-      end
-   else
-      begin
-      Result := aFloor;
+      Exit;
       end;
 
+   Result := aFloor;
    if Result > aDesigned then
       begin
       Result := aDesigned;
@@ -1221,24 +1232,46 @@ begin
 
    { Both read at this instant, so (Width - ClientWidth) never appears.
 
-     >= 0, NOT > 0.  Slack of exactly ZERO means the form is designed at
-     precisely the size its content needs -- which is the most likely size for
-     a form somebody laid out carefully, and it was the one case that set NO
-     CONSTRAINT AT ALL.  The QTC send window is 480 wide holding 480 of
-     content, so every minimum computed for it was silently discarded and it
-     dragged down to a title bar like the rest (2026-09-01).
+     SET UNCONDITIONALLY, INCLUDING ON NEGATIVE SLACK, and each of the three
+     cases was got wrong in turn:
 
-     NEGATIVE slack -- content wider than the form it is in -- is deliberately
-     still ignored here rather than forcing the window to grow: that is a
-     LAYOUT defect, not a minimum, and uTextFitAudit's overhang check reports
-     it by name. Silently inflating the window would hide it. }
-   if slackW >= 0 then
+       positive   room to spare. Always worked.
+
+       zero       the form is exactly the size its content needs -- the most
+                  likely size for a form somebody laid out carefully -- and the
+                  original `> 0` set NOTHING, so the most carefully drawn forms
+                  were the ones left unprotected.
+
+       negative   the form is CURRENTLY SMALLER than its content. The previous
+                  fix still ignored this, on the reasoning that content wider
+                  than its form is a layout defect for uTextFitAudit to report
+                  rather than something to paper over by inflating the window.
+
+                  That confused two situations. A control designed outside its
+                  parent is a layout defect and the audit does name it. A window
+                  the operator has dragged below its content is not a defect at
+                  all -- it is EXACTLY what a minimum exists to prevent, and
+                  refusing to act on it is how the QTC window kept the sliver it
+                  had been dragged to.
+
+     In all three cases the answer is the same and needs no test: the form may
+     not be smaller than its content, so its minimum is its current size less
+     whatever slack that content leaves -- which is larger than the current size
+     when the slack is negative, and the window grows back to fit. }
+   aForm.Constraints.MinWidth  := aForm.Width - slackW;
+   aForm.Constraints.MinHeight := aForm.Height - slackH;
+
+   { REPORTED, because every one of the three cases above failed SILENTLY and
+     looked identical from outside: a window that could be dragged too small.
+     The numbers say which control set the bound and how much room it thought it
+     had, which is the difference between reading this and guessing again. }
+   if logger <> nil then
       begin
-      aForm.Constraints.MinWidth := aForm.Width - slackW;
-      end;
-   if slackH >= 0 then
-      begin
-      aForm.Constraints.MinHeight := aForm.Height - slackH;
+      logger.Debug('[MinSize] %s: client %dx%d, content %dx%d, ' +
+                   'slack %dx%d -> min %dx%d',
+                   [aForm.Name, aForm.ClientWidth, aForm.ClientHeight,
+                    maxR, maxB, slackW, slackH,
+                    aForm.Constraints.MinWidth, aForm.Constraints.MinHeight]);
       end;
 end;
 
