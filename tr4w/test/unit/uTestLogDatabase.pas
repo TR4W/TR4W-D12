@@ -403,6 +403,7 @@ begin
 
    { Identity. The pair is how two stations agree that two rows are the same
      contact, and computer_id is how a station knows which QSOs are its own. }
+   Pin('exchange_id',      'ContestExchange.id -- the EXCHANGE, shared by county-line QSOs');
    Pin('session_id',       'ceQSOID1 -- half the multi-op network identity');
    Pin('session_seq',      'ceQSOID2 -- the other half, and the WAE QTC link');
    Pin('computer_id',      'ceComputerID -- which station logged it');

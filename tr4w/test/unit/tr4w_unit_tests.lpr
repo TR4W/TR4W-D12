@@ -268,6 +268,8 @@ uses
    uLogBinaryFile       in '..\..\src\uLogBinaryFile.pas',
    uTestLogBinaryFile   in 'uTestLogBinaryFile.pas',
    uLogSchema           in '..\..\src\domain\uLogSchema.pas',
+   uLogRepository       in '..\..\src\uLogRepository.pas',
+   uTestLogRepository   in 'uTestLogRepository.pas',
    uLogDatabase         in '..\..\src\domain\uLogDatabase.pas',
    uTestLogDatabase     in 'uTestLogDatabase.pas',
    uTestClusterTokens   in 'uTestClusterTokens.pas',
@@ -379,6 +381,7 @@ begin
    RegisterSuite(TSpotAgeTests.Create('SpotAge'));
    RegisterSuite(TLogBinaryFileTests.Create('LogBinaryFile'));
    RegisterSuite(TLogDatabaseTests.Create('LogDatabase'));
+   RegisterSuite(TLogRepositoryTests.Create('LogRepository'));
    RegisterSuite(TClusterTokensTests.Create('ClusterTokens'));
    RegisterSuite(TSplitReassertTests.Create('SplitReassert'));
    RegisterSuite(TWinTimerTests.Create('WinTimer'));

@@ -214,10 +214,19 @@ const
 
       'CREATE TABLE qso ('#10 +
       '    id                INTEGER PRIMARY KEY AUTOINCREMENT,'#10 +
-      '    -- The record ALREADY carries a per-QSO GUID: ContestExchange.id,'#10 +
-      '    -- set by GetGUID, read back on ADIF import and emitted by HamScore'#10 +
-      '    -- as <ID>. Import preserves it rather than inventing a second one.'#10 +
+      '    -- THIS ROW''S OWN identity, always minted, always unique.'#10 +
       '    guid              TEXT NOT NULL UNIQUE,'#10 +
+      '    -- ContestExchange.id, AND IT IS NOT A QSO IDENTITY -- it identifies'#10 +
+      '    -- the EXCHANGE. A county-line contact is one exchange logged as'#10 +
+      '    -- SEVERAL QSOs, and they all carry the same id: measured in'#10 +
+      '    -- florida_qp_2026_ny4i, where two W4THY rows (PIN and HIL) share'#10 +
+      '    -- 5cd6c61f69cf4422baef44f93b2cbbd2. Making it the unique row key'#10 +
+      '    -- fails on the second such QSO in any QSO party.'#10 +
+      '    --'#10 +
+      '    -- Kept because HamScore emits it as <ID> and ADIF import sets it, so'#10 +
+      '    -- other software knows QSOs by this name -- and because two rows'#10 +
+      '    -- sharing it is exactly the fact "these were one exchange".'#10 +
+      '    exchange_id       TEXT,'#10 +
       '    -- THE MULTI-OP NETWORK IDENTITY, and it is a PAIR. ceQSOID1 is the'#10 +
       '    -- program start time and ceQSOID2 is GetTickCount; tr4wserver'#10 +
       '    -- matches a record on BOTH, and WAE links a QTC to its QSO through'#10 +
@@ -263,15 +272,22 @@ const
       '    rcvd_grid         TEXT,'#10 +
       '    rcvd_name         TEXT,'#10 +
       '    rcvd_age          INTEGER,'#10 +
-      '    rcvd_check        TEXT,               -- Sweepstakes: 2-digit year'#10 +
+      '    -- NUMERIC, because the record holds these as numbers: Check and'#10 +
+      '    -- Prefecture are Byte and TenTenNum is a Word. They were TEXT in'#10 +
+      '    -- the first draft, and reading a string field as an integer is not'#10 +
+      '    -- a type quibble -- it crashed the first round-trip test outright.'#10 +
+      '    rcvd_check        INTEGER,            -- Sweepstakes: 2-digit year'#10 +
       '    rcvd_precedence   TEXT,               -- Sweepstakes'#10 +
       '    rcvd_class        TEXT,               -- Field Day "2A"'#10 +
       '    rcvd_power        TEXT,               -- ARRL DX'#10 +
       '    rcvd_chapter      TEXT,'#10 +
-      '    rcvd_prefecture   TEXT,               -- JA'#10 +
+      '    rcvd_prefecture   INTEGER,            -- JA'#10 +
       '    rcvd_continent    TEXT,'#10 +
       '    rcvd_postal_code  TEXT,'#10 +
-      '    rcvd_member_no    TEXT,               -- FOC, TenTen, FISTS, club numbers'#10 +
+      '    rcvd_member_no    INTEGER,            -- Ten-Ten and club numbers. The'#10 +
+      '                                          -- record field is a Word, so an'#10 +
+      '                                          -- alphanumeric membership id'#10 +
+      '                                          -- cannot be stored today either.'#10 +
       '    rcvd_society      TEXT,               -- IARU'#10 +
       '    rcvd_department   TEXT,               -- French'#10 +
       '    rcvd_rda          TEXT,               -- Russian district'#10 +

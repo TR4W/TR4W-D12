@@ -13,7 +13,7 @@ table is the same class of bug, one layer down.
 
 ---
 
-## Three findings that change the design
+## Five findings that change the design
 
 ### 1. The record has NO sent-exchange field. That IS issue #2.
 
@@ -101,6 +101,52 @@ what the record says, let the factory interpret), but it does mean **no column
 in the `rcvd_*` block can be assumed to hold what its name suggests** until the
 contest factory has said so.
 
+### 4. `id` is an EXCHANGE identity, not a QSO identity
+
+Found by the round-trip test on the third QSO of `florida_qp_2026_ny4i`, which
+is where the first design stopped working.
+
+A **county-line** contact is one exchange logged as **several QSOs** — the other
+station sits on a boundary and gives you two counties. TR4W writes one row per
+county, and **they carry the same `id`**:
+
+```
+W4THY  6m DIGITAL  QTH=PIN  ID=5cd6c61f69cf4422baef44f93b2cbbd2
+W4THY  6m DIGITAL  QTH=HIL  ID=5cd6c61f69cf4422baef44f93b2cbbd2
+```
+
+So `ContestExchange.id` cannot be the unique row key. Making it one fails on the
+second QSO of **every county line in every QSO party** — and it failed loudly
+enough to take the process down rather than raise, because a constraint
+violation on a prepared statement left sqldb unable to continue.
+
+**The split, and both halves are needed:**
+
+| column | is | unique |
+|---|---|---|
+| `guid` | the ROW's own identity, always minted | **yes** |
+| `exchange_id` | `ContestExchange.id` — which exchange this QSO came from | **no, deliberately** |
+
+Two rows sharing `exchange_id` is not a collision, it is the fact *"these were
+one exchange"* — which nothing in the binary log records explicitly and which the
+contest factory will want.
+
+`id` is still preserved, so HamScore's `<ID>` and ADIF import keep working.
+
+### 5. And a lesson about tokens, from the same test run
+
+`tContinentArray` was the obvious source for the `cty_continent` token. **It is
+the DISPLAY table**: filled at run time by `InitializeStringTables`, and
+*translatable* — it used to hold the `TC_C9_*` constants. Using it would have
+written blanks in any program that had not initialised the string tables, and
+**Spanish continent names in a Spanish build**.
+
+`ContinentTypeSA` — `'NA'`, `'EU'`, … — is the stable code, and it is what
+`GetContinentFromString` already parses.
+
+**A storage token must never be a display string.** The same trap is waiting
+wherever a `TC_`/`RC_` constant looks like a convenient enum name.
+
 ---
 
 ## Mapped to a column that already exists
@@ -138,7 +184,7 @@ contest factory has said so.
 | 63 | `QSOPoints` | `word` | `qso_points` | |
 | 64 | `RandomCharsReceived` | `string[7]` | `rcvd_random` | |
 | 68 | `ceOperator` | `OperatorType` | `operator_call` | `CurrentOperator` (`MainUnit:9123`); 11 chars |
-| 69 | `id` | `string[32]` | `guid` | **already a per-QSO GUID** — `RescoredRXData^.id := GetGUID`, set on ADIF import, emitted by HamScore as `<ID>`. Do not invent a second identity |
+| 69 | `id` | `string[32]` | **`exchange_id`**, not `guid` | set by `GetGUID`, read on ADIF import, emitted by HamScore as `<ID>` — but it identifies the EXCHANGE and county-line QSOs share it. See finding 4 |
 
 ### `QTH: QTHRecord` (field 33) expands into six
 
