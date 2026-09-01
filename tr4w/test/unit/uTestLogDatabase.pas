@@ -37,6 +37,7 @@ type
       { the schema itself }
       procedure TestEveryTableIsCreated;
       procedure TestQsoCarriesTheEventSourceColumns;
+      procedure TestQsoCarriesEveryCrosswalkColumn;
       procedure TestConfigIsKeyValueAndRoundTrips;
       procedure TestMessageIsKeyedByKindModeAndKey;
       procedure TestDupeIndexExists;
@@ -349,6 +350,93 @@ begin
 
    { Split working is not an edge case in a contest. }
    CheckTrue(Pos('|freq_rx_hz', cols) > 0, 'a split QSO has two frequencies');
+   Scrub(fn);
+end;
+
+{ EVERY COLUMN docs\CONTEST_EXCHANGE_CROSSWALK.md ADDED, pinned by name.
+
+  The crosswalk exists because a ContestExchange field with no column is a
+  silent data loss that no build and no test would report -- the import simply
+  would not carry it. This is the other half of that guard: a column that
+  quietly stops existing fails HERE rather than on somebody's contest log.
+
+  Grouped in the order the crosswalk argues them, so a failure says which
+  finding was undone. }
+procedure TLogDatabaseTests.TestQsoCarriesEveryCrosswalkColumn;
+var
+   db: TLogDatabase;
+   q: TSQLQuery;
+   fn: string;
+   cols: string;
+
+   procedure Pin(const aColumn: AnsiString; const aWhy: string);
+   begin
+      CheckTrue(Pos('|' + string(aColumn) + '|', cols) > 0, string(aColumn) + ' -- ' + aWhy);
+   end;
+
+begin
+   BeginTest('TestQsoCarriesEveryCrosswalkColumn');
+   fn := TempLogName('crosswalk.db');
+   Scrub(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      q := TSQLQuery.Create(nil);
+      try
+         q.DataBase := db.Connection;
+         q.SQL.Text := 'SELECT name FROM pragma_table_info(''qso'')';
+         q.Open;
+         cols := '|';
+         while not q.EOF do
+            begin
+            cols := cols + q.Fields[0].AsString + '|';
+            q.Next;
+            end;
+         q.Close;
+      finally
+         q.Free;
+      end;
+   finally
+      db.Free;
+   end;
+
+   { Identity. The pair is how two stations agree that two rows are the same
+     contact, and computer_id is how a station knows which QSOs are its own. }
+   Pin('session_id',       'ceQSOID1 -- half the multi-op network identity');
+   Pin('session_seq',      'ceQSOID2 -- the other half, and the WAE QTC link');
+   Pin('computer_id',      'ceComputerID -- which station logged it');
+   Pin('operator_id',      'ceOperatorID -- no live reader, kept for import fidelity');
+   Pin('record_kind',      'ceRecordKind -- a log record is not always a QSO');
+
+   { The two states that are NOT deleted, and are not each other. }
+   Pin('is_xqso',          'ceXQSO -- kept for NIL protection, not claimed');
+   Pin('is_skipped',       'ceQSO_Skiped -- read by the scoring paths');
+
+   { Multiplier outcome, per QSO. Not the multipliers TABLE, which stays out. }
+   Pin('mult_domestic',    'DomesticMult');
+   Pin('mult_dx',          'DXMult');
+   Pin('mult_prefix',      'PrefixMult');
+   Pin('mult_zone',        'ZoneMult');
+   Pin('inhibit_mults',    'InhibitMults');
+   Pin('prefix_mult',      'the WPX prefix -- NOT dxcc_prefix from CTY.DAT');
+   Pin('dx_mult',          'DXQTH as counted');
+   Pin('domestic_mult',    'DomMultQTH as counted');
+   Pin('domestic_qth',     'the CORRECTED QTH -- AF1 becomes AF-001');
+
+   { The overloaded field, split. }
+   Pin('rcvd_kids',        'Kids for rkQSO');
+   Pin('qtc_call',         'Kids for rkQTCR/rkQTCS -- a callsign, not exchange text');
+
+   { The rest. }
+   Pin('sent_in_qtc',      'ceWasSendInQTC -- or the QSO goes out twice');
+   Pin('name_sent',        'NameSent');
+   Pin('mp3_recorded',     'MP3Record -- an MP3 exists on disk');
+   Pin('clear_dupe_sheet', 'ceClearDupeSheet -- a stream marker, not UI state');
+   Pin('clear_mult_sheet', 'ceClearMultSheet -- likewise');
+   Pin('random_sent',      'RandomCharsSent -- the received side already had one');
+   Pin('standard_call',    'QTH.StandardCall -- the resolved call');
+
    Scrub(fn);
 end;
 
@@ -770,6 +858,7 @@ begin
 
    TestEveryTableIsCreated;
    TestQsoCarriesTheEventSourceColumns;
+   TestQsoCarriesEveryCrosswalkColumn;
    TestConfigIsKeyValueAndRoundTrips;
    TestMessageIsKeyedByKindModeAndKey;
    TestDupeIndexExists;

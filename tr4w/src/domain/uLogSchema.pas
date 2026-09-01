@@ -214,7 +214,26 @@ const
 
       'CREATE TABLE qso ('#10 +
       '    id                INTEGER PRIMARY KEY AUTOINCREMENT,'#10 +
-      '    guid              TEXT NOT NULL UNIQUE,          -- UUIDv7'#10 +
+      '    -- The record ALREADY carries a per-QSO GUID: ContestExchange.id,'#10 +
+      '    -- set by GetGUID, read back on ADIF import and emitted by HamScore'#10 +
+      '    -- as <ID>. Import preserves it rather than inventing a second one.'#10 +
+      '    guid              TEXT NOT NULL UNIQUE,'#10 +
+      '    -- THE MULTI-OP NETWORK IDENTITY, and it is a PAIR. ceQSOID1 is the'#10 +
+      '    -- program start time and ceQSOID2 is GetTickCount; tr4wserver'#10 +
+      '    -- matches a record on BOTH, and WAE links a QTC to its QSO through'#10 +
+      '    -- the second. Kept because it is how two stations agree that two'#10 +
+      '    -- rows are the same contact.'#10 +
+      '    session_id        INTEGER,'#10 +
+      '    session_seq       INTEGER,'#10 +
+      '    -- WHICH STATION LOGGED IT. A single letter in a multi-op network,'#10 +
+      '    -- and the thing that tells each program whether a QSO is its own or'#10 +
+      '    -- a foreign one. PostUnit also derives the Cabrillo transmitter'#10 +
+      '    -- digit from it. Dropping it would break multi-op silently.'#10 +
+      '    computer_id       TEXT,'#10 +
+      '    operator_id       INTEGER,            -- no live reader; kept for import fidelity'#10 +
+      '    -- A LOG RECORD IS NOT ALWAYS A QSO: rkQSO, rkQTCR, rkQTCS, rkNote.'#10 +
+      '    -- Several columns below mean different things depending on this.'#10 +
+      '    record_kind       TEXT NOT NULL DEFAULT ''QSO'','#10 +
       '    qso_at            INTEGER NOT NULL,   -- unix UTC seconds'#10 +
       '    callsign          TEXT NOT NULL,'#10 +
       '    -- TWO frequencies. Split is not an edge case in a contest, and one'#10 +
@@ -258,6 +277,15 @@ const
       '    rcvd_rda          TEXT,               -- Russian district'#10 +
       '    rcvd_qth          TEXT,               -- domestic/DX QTH, the catch-all'#10 +
       '    rcvd_random       TEXT,               -- random-character exchanges'#10 +
+      '    random_sent       TEXT,               -- ...and the ones we sent'#10 +
+      '    -- ContestExchange.Kids IS OVERLOADED BY record_kind, so it becomes'#10 +
+      '    -- TWO columns. For rkQSO it is the Kids-exchange text; for rkQTCR /'#10 +
+      '    -- rkQTCS it is the callsign INSIDE the QTC traffic, which is not the'#10 +
+      '    -- station in the callsign column. One column meaning either,'#10 +
+      '    -- depending on another column, is how a wrong Cabrillo line gets'#10 +
+      '    -- written two years from now.'#10 +
+      '    rcvd_kids         TEXT,'#10 +
+      '    qtc_call          TEXT,'#10 +
       '    rcvd_park         TEXT,               -- POTA'#10 +
       '    rcvd_summit       TEXT,               -- SOTA'#10 +
       '    rcvd_iota         TEXT,'#10 +
@@ -274,14 +302,47 @@ const
       '    -- CTY.DAT cannot rewrite history -- never re-derived at export, and'#10 +
       '    -- never used where the contest carries the value in the exchange.'#10 +
       '    dxcc_prefix       TEXT,'#10 +
+      '    standard_call     TEXT,               -- QTH.StandardCall, the resolved call'#10 +
       '    dxcc_entity       TEXT,'#10 +
       '    dxcc_code         INTEGER,'#10 +
       '    cty_cq_zone       INTEGER,'#10 +
       '    cty_itu_zone      INTEGER,'#10 +
       '    cty_continent     TEXT,'#10 +
+      '    -- THE MULTIPLIER OUTCOME, AS DECIDED AT THE TIME. This is not the'#10 +
+      '    -- multipliers TABLE that section 11/3 refused -- there is still no'#10 +
+      '    -- such table and multiplier COUNTS are derived by query. These are'#10 +
+      '    -- per-QSO facts of exactly the same kind as qso_points: what the'#10 +
+      '    -- contest rules concluded about this contact when it was logged.'#10 +
+      '    mult_domestic     INTEGER DEFAULT 0,'#10 +
+      '    mult_dx           INTEGER DEFAULT 0,'#10 +
+      '    mult_prefix       INTEGER DEFAULT 0,'#10 +
+      '    mult_zone         INTEGER DEFAULT 0,'#10 +
+      '    inhibit_mults     INTEGER DEFAULT 0,'#10 +
+      '    -- The multiplier STRINGS as counted, which is not the same as the'#10 +
+      '    -- literal the operator copied (rcvd_qth) nor the CTY.DAT lookup.'#10 +
+      '    prefix_mult       TEXT,               -- WPX prefix; NOT QTH.Prefix from CTY.DAT'#10 +
+      '    dx_mult           TEXT,'#10 +
+      '    domestic_mult     TEXT,'#10 +
+      '    domestic_qth      TEXT,               -- the CORRECTED QTH: AF1 -> AF-001 in IOTA'#10 +
       '    qso_points        INTEGER DEFAULT 0,'#10 +
       '    is_dupe           INTEGER DEFAULT 0,'#10 +
+      '    -- is_run is ceSearchAndPounce INVERTED. S&P is the opposite of run,'#10 +
+      '    -- and a mapper that copies it straight across is wrong in a way'#10 +
+      '    -- nothing reports.'#10 +
       '    is_run            INTEGER DEFAULT 0,'#10 +
+      '    -- NOT deleted. The contact happened and stays in the log for the'#10 +
+      '    -- other station''s NIL protection, but is not claimed: excluded from'#10 +
+      '    -- the QSO count, multipliers, points and dupe checking. Folding this'#10 +
+      '    -- into deleted would change what a submitted log claims.'#10 +
+      '    is_xqso           INTEGER DEFAULT 0,'#10 +
+      '    is_skipped        INTEGER DEFAULT 0,  -- read by the scoring paths'#10 +
+      '    sent_in_qtc       INTEGER DEFAULT 0,  -- WAE: already sent in a QTC book'#10 +
+      '    name_sent         INTEGER DEFAULT 0,'#10 +
+      '    mp3_recorded      INTEGER DEFAULT 0,  -- an MP3 exists on disk for this QSO'#10 +
+      '    -- STREAM MARKERS, not UI state: a record can say "the dupe sheet'#10 +
+      '    -- was cleared here", and rescoring reads it back.'#10 +
+      '    clear_dupe_sheet  INTEGER DEFAULT 0,'#10 +
+      '    clear_mult_sheet  INTEGER DEFAULT 0,'#10 +
       '    radio_nr          INTEGER DEFAULT 1,'#10 +
       '    operator_call     TEXT,'#10 +
       '    deleted           INTEGER DEFAULT 0,'#10 +
