@@ -1,16 +1,31 @@
 # Display state as a model — the successor to the window conversions
 
-**Status: PARKED, on the record.** Written 2026-08-24, at the end of the day
-that converted the main window's forty-two elements to LCL controls. NY4I asked
-how a WSJT-X datagram turns the WSJT-X indicator green; tracing the answer found
-a defect, the defect was fixed at the right layer, and then the real question:
-*"And this is how one would do this in a multithreaded LCL app starting from
-scratch?"*
+**Status: DONE, 2026-08-29/30.** The domain layer exists (`src/domain/`, four
+state objects), `uStateBridge` is the single view seam, `Lint-DomainPurity`
+gates the build, and every off-thread writer this exercise found is marshalled.
+**What the answer turned out to be** at the end of this document is the outcome;
+the plan above it is the reasoning, kept because the reasoning is what the next
+two phases reuse.
+
+**The header said `PARKED` until 2026-09-01, three days after the work closed,
+and said it directly above its own completion record.** That is the failure mode
+this project keeps hitting -- a status line a reader trusts before reading three
+hundred lines -- and it had already produced one wrong answer in a planning
+conversation: the recorded order was read as "display state still to do", which
+would have delayed the SQLite work behind something already finished. When a
+plan closes, the header is the part that has to change.
+
+**Written 2026-08-24**, at the end of the day that converted the main window's
+forty-two elements to LCL controls. NY4I asked how a WSJT-X datagram turns the
+WSJT-X indicator green; tracing the answer found a defect, the defect was fixed
+at the right layer, and then the real question: *"And this is how one would do
+this in a multithreaded LCL app starting from scratch?"*
 
 **No.** This document is why, and what the end state is.
 
-Do not start this until the window conversions are finished. It is the natural
-successor to them, not a competitor.
+Its successor is [`SQLITE_LOG_SCHEMA_PLAN.md`](SQLITE_LOG_SCHEMA_PLAN.md) --
+**What is deliberately left**, below, hands it the remaining `LogContact`
+layering debt by name.
 
 ---
 

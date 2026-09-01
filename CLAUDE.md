@@ -855,7 +855,8 @@ Read the specific doc before acting in its area — these are current and this f
 | **Panadapter / spectrum seam** | **`docs/PANADAPTER_LCL_DESIGN.md`** |
 | **Colour roles / theming (read before restyling ANY window)** | **`docs/COLOR_ROLES_DESIGN.md`** -- the palette names COLOURS, not roles, which is what blocks theming; and the radio panel's cyan IS its active-radio indicator, so removing it deletes a state signal |
 | **Restyling the converted grids (PARKED until conversions finish)** | **`docs/GRID_RESTYLE_PLAN.md`** |
-| **Display state as a model (PARKED; successor to the conversions)** | **`docs/DISPLAY_STATE_MODEL_PLAN.md`** |
+| **Display state as a model (DONE 2026-08-30; `src/domain/` + `uStateBridge`)** | **`docs/DISPLAY_STATE_MODEL_PLAN.md`** |
+| **The contest log in SQLite (STARTED 2026-09-01) -- schema, and why it is flat** | **`docs/SQLITE_LOG_SCHEMA_PLAN.md`** |
 | ~~D12 migration roadmap~~ | ~~`docs/D12_MIGRATION_ROADMAP.md`, `tr4w/docs/D12_RELEASE_READINESS.md`~~ — superseded, read for *why* not *status* |
 | String/ShortString work | `tr4w/docs/D12_STRING_MODERNIZATION_PLAN.md`, `docs/SHORTSTRING_BOUNDARY_AUDIT.md` |
 | VCL coexistence / FMX | `docs/VCL_WIN32_COEXISTENCE.md`, `docs/FMX Migration Discussion.md` |

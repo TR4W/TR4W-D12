@@ -10,6 +10,52 @@ restating it.
 
 ---
 
+## Where this stands, 2026-09-01
+
+**The order below is a PLAN and has been read as a STATUS at least once.** It
+was written before any of it was built, so the tense is wrong throughout, and
+that is a real cost: on 2026-09-01 the recorded order was read as "display state
+still to do" when it had finished two days earlier. Measured state:
+
+| phase | state |
+|---|---|
+| **0. persistent threads** | **partly done, unverified.** `TReadingThread.Execute` now waits through a disconnect rather than exiting, so the common reconnect path no longer tears the thread down. Four `Terminate` / `FreeAndNil(rt)` sites remain in `uFactoryRadioBase` and nobody has established that every reconnect path avoids them |
+| **0. `TThread.Queue` throughout** | **NOT STARTED, and see the correction below** |
+| **1. display state** | **DONE 2026-08-29/30.** `src/domain/` (`uDomainState`, `uRadioState`, `uKeyerState`, `uWSJTXState`), `uStateBridge`, `Lint-DomainPurity` |
+| **2. SQLite** | **STARTED 2026-09-01.** [`SQLITE_LOG_SCHEMA_PLAN.md`](SQLITE_LOG_SCHEMA_PLAN.md) -- schema settled, all eleven questions answered |
+| **3. contest factory** | not started |
+
+### The `TThread.Queue` prescription is contradicted by the tree, and the tree is right
+
+Phase 0 below says *"then `TThread.Queue` throughout"*. **Counted 2026-09-01:
+`TThread.Queue(` has ZERO invocations in this program.** All 29 textual hits are
+prose -- comments in eight units explaining why it is not used. Marshalling is
+62 `Application.QueueAsyncCall` sites across 17 units, plus one
+`TThread.Synchronize`.
+
+And the tree has moved AWAY from it deliberately: `a0709317` / `e03e49e9`
+(2026-08-14) are *"post the applies to the main thread instead of
+`TThread.Queue`"*, and `uK4SpectrumThread`, `uSpectrumTypes`, `uPanadapterForm`
+and `uTCIServer` all carry standing notes reading *"Synchronize, never
+`TThread.Queue`, which purges its own callback under FPC."*
+
+**So a sweep would have to overrule four recorded decisions**, and that is not a
+mechanical change. The blocker named below -- thread lifetime -- is the thing to
+fix, and it is bench-verifiable with a radio power-cycle, which is the kind of
+proof CI cannot buy. Until it is fixed, `QueueAsyncCall` is the honest answer
+and the notes in those four units are correct.
+
+**It is also not a prerequisite for phase 2, which is why phase 2 started
+first.** The worry below is that *"every state object added below inherits the
+interim"*. True, but the interim is centralised: the SQLite work is a mapper and
+a repository -- RTL-only code that does not marshal at all -- and marshalling
+appears only at the view seam, which is `uStateBridge`. Contest state adds ONE
+more `Apply`, not sixty-two sites. Sweeping 62 sites of a core mechanism that no
+test can regression-check, immediately before the largest change in the program,
+is the wrong order for a risk that cannot be measured.
+
+---
+
 ## The three pieces are one problem
 
 Display state, the contest factory and the SQLite log look like three projects.
@@ -58,7 +104,13 @@ otherwise every state object added below inherits the interim. The order is:
 persistent radio threads, then `TThread.Queue` throughout, then the rest of this
 document.
 
-### 1. Display state — smallest, and it goes first
+### 1. Display state — smallest, and it goes first — **DONE 2026-08-30**
+
+What it actually cost, against the argument below: **eleven off-thread sites,
+ten of them one thread running one batch** after a WSJT-X QSO. The ~75-caller
+grep this section implies was never the scope. The full outcome, including the
+finding that outlives it, is at the end of
+[`DISPLAY_STATE_MODEL_PLAN.md`](DISPLAY_STATE_MODEL_PLAN.md).
 
 Not because it matters most. Because **the other two will write against whatever
 seam exists when they are built.**
@@ -76,7 +128,7 @@ just made every consumer explicit. See
 and the two measured traps (Win32's accidental thread safety;
 `TThread.Queue` purging its own callbacks).
 
-### 2. SQLite — gives the log a model
+### 2. SQLite — gives the log a model — **STARTED 2026-09-01**
 
 The editable log then converts as an LCL **virtual list** (`OwnerData` /
 `OnData`), which is the native answer and is already the recorded decision: it

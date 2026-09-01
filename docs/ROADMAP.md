@@ -754,8 +754,9 @@ It did not move, so they are independent and the order is a scheduling choice:
 
 - **64-bit is the smaller and better-defined job** — two compile errors and roughly 120 pointer-width
   sites, "days, not months" — and it is not gated on anything above.
-- **SQLite is preceded by the display-state model** (`DOMAIN_LAYER_SEQUENCE.md`), so it has a longer
-  runway before it starts.
+- ~~**SQLite is preceded by the display-state model**, so it has a longer runway before it starts.~~
+  **No longer true (2026-09-01): the display-state model finished 2026-08-30 and SQLite has
+  started.** Of the two, SQLite is now the one in progress and 64-bit is the one not started.
 - The 64-bit DLL set grows by one when SQLite lands (`sqlite3.dll`, alongside HamLib and OpenSSL).
   If 64-bit goes first, ship the 64-bit SQLite from the start and that cost disappears.
 
@@ -922,7 +923,8 @@ so there is one place to change it.
    timer, and it subclasses itself for custom draw.  The socket comes off
    `WSAAsyncSelect` first; the window converts afterwards and is then trivial.
 3. **The domain layer, in the order that document sets out** -- display state,
-   then SQLite, then the contest factory.  Started 2026-08-24.
+   then SQLite, then the contest factory.  Started 2026-08-24; **display state
+   DONE 2026-08-30, SQLite STARTED 2026-09-01.**
 4. **`Lint-DomainPurity`** ships with the first domain unit, not after it.
 5. **Editable log + Get Server Log**, which fall out of the SQLite step as a
    virtual list rather than being a project of their own.

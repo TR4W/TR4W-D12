@@ -2,16 +2,47 @@
 # difference -- NOT a D12 conversion regression. run-golden-diff.sh reports
 # these as KNOWN instead of FAIL.  Format:  <slug>  <reason>
 #
-# Event-source issue (tracked in the TR4W issues, deferred to a later fix):
-# the SENT exchange is rebuilt from MY-station globals at export time (e.g.
-# MyZone), NOT stored per QSO.  When MyZone is 0/unset in the session, the
-# ADIF/Cabrillo formatter falls back to MY STATE.  The D7 refs were exported
-# with the zone set; these D12 exports were not, so the sent exchange shows
-# the state (FL) instead of the ITU zone.  logdump confirmed the log RECORD is
-# faithful (received Zone=8/27 read correctly) -- the difference is purely the
-# session global, not the conversion.
-iaru_hf_2026_ny4i       event-source: sent zone -> MY STATE fallback (MyZone 0 in session)
-general_qso_2026_w1aw4  event-source: MY STATE appended to sent exchange
+# Event-source issue (TR4W-D12 issue #2, gated on the SQLite log migration):
+# the SENT exchange is rebuilt from MY-station globals at export time, NOT
+# stored per QSO.  /EXPORT deliberately skips ApplyStoredCommands and applies
+# only COMPUTER ID (uProgramMain.pas:1067-1072), so those globals sit at their
+# CFGDEF.PAS:294-295 default of '' and the sent half of the exchange is built
+# from nothing.  The RECEIVED half is faithful in both sets -- logdump confirms
+# it, and the diff below shows the far station's zones read correctly.
+#
+# CORRECTED 2026-09-01, against ref.cbr and cand.cbr rather than from memory.
+# The two reasons recorded here described defects that DO NOT EXIST and a
+# candidate output that no longer matched -- on the file the oracle uses to
+# decide whether a difference is expected.  What was wrong:
+#
+#   * iaru was recorded as the sent zone "falling back to MY STATE", candidate
+#     "59  FL".  There is no MY-STATE fallback in that arm
+#     (uCabrilloExchange.pas:223-227).  The FL was the dangling-PChar bug since
+#     fixed and documented at PostUnit.PAS:2753-2759 ("'599 001' became
+#     'FL 001' across six corpus sets").  Measured today:
+#
+#       REF   ... NY4I    59  8      W1AW           59  8       1
+#       CAND  ... NY4I    59  0      W1AW           59  8       1
+#
+#     MyZone is '' and StrToIntDef('', 0) yields 0 (uCabrilloExchange.pas:225).
+#
+#   * general_qso was recorded as "MY STATE appended to sent exchange".  It is
+#     the OPPOSITE -- MY NAME is MISSING and nothing is appended.  Measured:
+#
+#       REF   ... W1AW/4  59  TOM          KD6RYO         59  AR
+#       CAND  ... W1AW/4  59               KD6RYO         59  AR
+#
+#     MyName is '' at export, so SetMyEx drops it (uCabrilloExchange.pas:172).
+#
+# AND ONE OF THESE WILL STILL DIVERGE AFTER EVENT SOURCING.  D7 sent 8, the ITU
+# zone.  The live store's MY ZONE is 5, the CQ zone; MY ITU ZONE is a separate
+# command that NO EXPORT PATH READS (its only consumer is uGetScores.pas:433).
+# MyZone is one global doing double duty, so storing "MyZone" per QSO would
+# store the wrong number.  Store the zone that was SENT.  That is the general
+# rule anyway and this is the case that proves it -- see
+# docs/SQLITE_LOG_SCHEMA_PLAN.md section 12a.
+iaru_hf_2026_ny4i       event-source: sent zone empty -> 0 (MyZone '' under /EXPORT; D7 sent ITU 8)
+general_qso_2026_w1aw4  event-source: sent name missing (MyName '' under /EXPORT; D7 sent TOM)
 
 # ---------------------------------------------------------------------------
 # 2026-08-13 -- all four rows are now DEMONSTRATED, not asserted.
@@ -20,13 +51,14 @@ general_qso_2026_w1aw4  event-source: MY STATE appended to sent exchange
 # interactive dialog"), so it produced no candidate and run-golden-diff.sh
 # reported it KNOWN on the strength of this file alone.  That listing had gone
 # stale: the set exports cleanly (exit 0, both artifacts, no dialog).  Its
-# divergence is exactly what is claimed above -- the SENT zone falls back to
-# MY STATE, while the RECEIVED zones are read correctly:
+# divergence is in the SENT zone only, while the RECEIVED zones are read
+# correctly.  The example below was itself stale -- it showed FL, from a bug
+# fixed since -- and is re-measured 2026-09-01 from the actual files:
 #
 #   D7-ref   QSO:  1800 PH 2026-07-05 1912 NY4I    59  8   W1AW  59  8   1
-#   D12-cand QSO:  1800 PH 2026-07-05 1912 NY4I    59  FL  W1AW  59  8   1
+#   D12-cand QSO:  1800 PH 2026-07-05 1912 NY4I    59  0   W1AW  59  8   1
 #   D7-ref   QSO:  1800 PH 2026-07-05 1912 NY4I    59  8   F4HQ  59  27  1
-#   D12-cand QSO:  1800 PH 2026-07-05 1912 NY4I    59  FL  F4HQ  59  27  1
+#   D12-cand QSO:  1800 PH 2026-07-05 1912 NY4I    59  0   F4HQ  59  27  1
 #
 # A row here now means ONLY "this set exports and the diff is tracked".  It no
 # longer excuses a MISSING candidate -- that is a strict FAIL for every set,
