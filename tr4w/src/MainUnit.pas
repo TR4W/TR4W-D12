@@ -4844,14 +4844,14 @@ begin
              logger.Warn('Trying menu_ctrl_sendkeyboardinput while CWEnable is false');
              Exit;
              end;
+        { The send-keyboard box is parented on whichever window asked for it.
+          QTCSWindow is gone -- the QTC send window is an LCL form now, so
+          ShowModalOverWin32Parent's Screen.DisableForms already covers it and
+          there is no raw HWND left to disable.  QTCRWindow is the last one. }
         tCardinal := tr4whandle;
         if QTCRWindow <> 0 then
            begin
            tCardinal := QTCRWindow;
-           end;
-        if QTCSWindow <> 0 then
-           begin
-           tCardinal := QTCSWindow;
            end;
         // DialogBox(hInstance, MAKEINTRESOURCE(60), tCardinal, @SendKeyboardCWDlgProc);
         ShowSendKeyboardCW(tCardinal);

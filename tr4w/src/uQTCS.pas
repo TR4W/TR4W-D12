@@ -43,17 +43,20 @@ uses
   uTR4WStrings,
   uAnsiStr;
 
-function QTCSDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
+// One of the eight sending commands, by its QTC_SEND_* id.  Was the dialog
+// proc's WM_COMMAND case; the window calls this and owns no logic of its own.
+procedure QTCSendCommand(const aCommand: integer);
+
 procedure SendQTC(QTC: integer);
 procedure SaveQTCS;
-procedure RegQTCSHotKeys;
 procedure SetSendedQSOs;
 
 const
-  QTC_HK_RETURN                         = 1;
-  QTC_HK_PAGEUP                         = 2;
-  QTC_HK_PAGEDOWN                       = 3;
-  QTC_HK_F10                            = 4;
+  // QTC_HK_* and RegQTCSHotKeys are GONE with the dialog.  PageUp, PageDown and
+  // F10 were registered as SYSTEM-WIDE hotkeys, because a Win32 dialog's
+  // buttons swallow keys before the dialog proc sees them; the form handles
+  // them in OnKeyDown with KeyPreview instead, which is window-local and cannot
+  // fail to register.
 
   QTC_SEND_NEXT                         = 100;
   QTC_SEND_QRVSTRING                    = 101;
@@ -78,9 +81,11 @@ var
     '&STOP'
     );
 var
+  // THE STATE STAYS HERE, and the window does not own it: a QTC book that is
+  // half sent is contest state, not window state.  ArrowWindow and QTCSWindow
+  // were the two HWNDs and are gone -- the marker is a label the form moves,
+  // and the form closes itself.
   QTCWasSend                            : integer ;
-  ArrowWindow                           : HWND;
-  QTCSWindow                            : HWND ;
   LastSendedQTCHour                     : integer = -1;
 
 // the WAE QTC send window.
@@ -97,258 +102,103 @@ uses
   uNet,
   LOGSUBS2,
   LOGWAE,
+  uQTCSendForm,
   MainUnit;
 
-function QTCSDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-label
-  ABORT_QTC;
+procedure QTCSendCommand(const aCommand: integer);
 var
-  I                                     : integer;
-  Time                                  : integer;
-  Number                                : integer;
-  p                                     : PAnsiChar;
-  TempString                            : Str160;
-
+   TempString: Str160;
 begin
-  RESULT := False;
-  case Msg of
-    WM_INITDIALOG:
-      begin
-//        P2 := PAnsiChar(WinAnsi(QTCCallsign));
-        // Issue #997: asm wsprintf-push -> TF.Format. TC_QTC_FOR = '%s for %s';
-        // cdecl-reverse pushes -> arg1=QRVString, arg2=QTCCallsign.
-        TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_QTC_FOR)), @QRVString[1], @QTCCallsign[1]);
-
-        Windows.SetWindowTextA(hwnddlg, wsprintfBuffer);
-        QTCTXButtonsPChar[1] := @QRVString[1];
-        {Custom buttons}
-        for I := 0 to QTCCustomMessages do
-           begin
-           if I = 0 then
-              begin
-              Number := BS_VCENTER or BS_MULTILINE or WS_TABSTOP or BS_PUSHBUTTON or BS_CENTER or WS_CHILD or WS_VISIBLE + BS_DEFPUSHBUTTON
-              end
-           else
-              begin
-              Number := BS_PUSHBUTTON + BS_CENTER + BS_MULTILINE + WS_CHILD + WS_VISIBLE + WS_TABSTOP;
-              end;
-
-           tCreateButtonWindow(
-             0,
-             QTCTXButtonsPChar[I],
-             Number,
-             5 + I * 55,
-             255,
-              53,
-       //      QTCHEIGHT * 2,
-         QTCHEIGHT * 4,       // n4af 04.40.2
-             hwnddlg,
-             I + 100
-             );
-           end;
-
-        QTCSWindow := hwnddlg;
-        QTCWasSend := 0;
-        LastSendedQTCHour := -1;
-
-        for I := 1 to NumberMessagesToBeSent do
-           begin
-           Number := QTCsToBeSendArray[I].qsNumber;
-           Time := QTCsToBeSendArray[I].qsTime;
-           p := @QTCsToBeSendArray[I].qsCall[1];
-           // Issue #997: asm wsprintf-push -> TF.Format. cdecl-reverse -> Time, p, Number.
-           { '%.4u', not '%04u'. '%-8s' means the same in both. }
-
-           StrPCopy(wsprintfBuffer, AnsiString(SysUtils.Format('%.4u %-8s %u',
-                                    [Time, string(QTCsToBeSendArray[I].qsCall), Number])));  // n4af 04.40.2
-           {QTC}
-           tCreateStaticWindow
-             (
-             wsprintfBuffer,
-             WS_CHILD or SS_SUNKEN or SS_NOTIFY or SS_LEFT or WS_VISIBLE,
-              70,
-
-            (I - 1) * (QTCHEIGHT + QTCROWSDIS) + 5,
-
-          410,     // n4af 4.32.4
-             QTCHEIGHT,
-             hwnddlg,
-             I + 200
-                     );
-           // Issue #997: asm tWM_SETFONT (EAX = the static window just created with
-           // child id I+200) -> re-fetch by id and set its font.
-           tWM_SETFONT(GetDlgItem(hwnddlg, I + 200), MainWindowEditFont);
-
-           // Issue #997: asm wsprintf-push -> TF.Format.
-           TF.Format(wsprintfBuffer, '&%u', i);
-           {ALT+x}
-           tCreateButtonWindow
-             (
-             WS_EX_STATICEDGE,
-             wsprintfBuffer,
-             WS_TABSTOP or WS_DISABLED or BS_PUSHBUTTON or BS_CENTER or WS_CHILD or WS_VISIBLE,
-              380 - 375,
-             (I - 1) * (QTCHEIGHT + QTCROWSDIS) + 5,
-              55,
-            //40,      // 4.40.2
-             QTCHEIGHT,
-             hwnddlg,
-             I + 200);
-           end;
-        SetDlgItemTextA(hwnddlg, 310, '1&0');
-
-        ArrowWindow :=
-          tCreateStaticWindow
-          (
-          TC_NEXT,
-          WS_CHILD or SS_center or WS_VISIBLE,
-          390,
-          5,
-          55,
-          17,
-          hwnddlg,
-          1000
-          );
-
-      end;
-
-    WM_ACTIVATE:
-      begin
-        if LoWord(wParam) = WA_INACTIVE then
-           begin
-           for I := QTC_HK_PAGEUP {QTC_HK_RETURN} to QTC_HK_F10 do UnregisterHotKey(hwnddlg, I)
-           end
-        else
-           begin
-           RegQTCSHotKeys;
-           end;
-      end;
-
-    WM_HOTKEY:
-      begin
-        case wParam of
-          QTC_HK_PAGEUP: ProcessMenu(menu_cwspeedup);
-
-          QTC_HK_PAGEDOWN: ProcessMenu(menu_cwspeeddown);
-
-          QTC_HK_F10: ProcessMenu(menu_ctrl_sendkeyboardinput);
-        end;
-
-      end;
-
-//    WM_HELP: tWinHelp(62);
-
-    WM_CTLCOLORSTATIC:
-      begin
-        SetBkMode(HDC(wParam), TRANSPARENT);
-        if GetDlgCtrlID(lParam) <= QTCWasSend + 200 then
-           begin
-           RESULT := BOOL(tr4wBrushArray[trYellow]);
-           end;
-
-        if lParam = integer(ArrowWindow) then
-           begin
-           SetTextColor(HDC(wParam), $FFFFFF);
-           RESULT := BOOL(tr4wBrushArray[trBlue]);
-           end;
-      end;
-    WM_CLOSE:
-      begin
-        if QTCWasSend <> 0 then if YesOrNo(hwnddlg, TC_DOYOUREALLYWANTTOABORTTHISQTC) = IDno then Exit;
-        ABORT_QTC:
-        QuickDisplay(TC_QTCABORTEDBYOPERATOR);
-        QTCSWindow := 0;
-        EndDialog(hwnddlg, 0);
-
-      end;
-
-    WM_COMMAND:
-
-      begin
-
-        case wParam of
-          IDCANCEL: if CWStillBeingSent then FlushCWBufferAndClearPTT;
-
-          QTC_SEND_NEXT:
+   case aCommand of
+      QTC_SEND_NEXT:
+         begin
+         if QTCWasSend = NumberMessagesToBeSent then
             begin
-              if QTCWasSend = NumberMessagesToBeSent - 1 then
-                 begin
-                 Windows.ShowWindow(ArrowWindow, SW_HIDE);
-                 end;
-
-              if QTCWasSend = NumberMessagesToBeSent then
-                 begin
-                 // Issue #997: asm wsprintf-push -> TF.Format (cdecl-reverse: QTCNumber, QTCWasSend).
-                 TF.Format(wsprintfBuffer, 'QSL %u/%u ?', QTCNumber, QTCWasSend);
-                 if YesOrNo2(string(wsprintfBuffer)) <> IDOK then Exit;
-                 SaveQTCS;
-                 Exit;
-                 end ;
-              inc(QTCWasSend);
-
-              EnableWindowTrue(hwnddlg, QTCWasSend + 200);
-              EnableWindowTrue(hwnddlg, QTCWasSend + 300);
-              Windows.MoveWindow(ArrowWindow, 390, (QTCWasSend * (QTCHEIGHT + QTCROWSDIS) + 5), 55, 17, True);
-              Windows.InvalidateRect(GetDlgItem(hwnddlg, QTCWasSend + 200), nil, True);
-              SendQTC(QTCWasSend);
+            { The whole book has gone out; ask for the QSL and save. }
+            if YesOrNo2(SysUtils.Format('QSL %u/%u ?',
+                           [QTCNumber, QTCWasSend])) <> IDOK then
+               begin
+               Exit;
+               end;
+            SaveQTCS;
+            Exit;
             end;
 
-          QTC_SEND_QRVSTRING:
-            // Issue #997: asm call SendStringAndStop -> direct call.
-            SendStringAndStop(QRVString);
+         inc(QTCWasSend);
 
-          QTC_SEND_QRV: SendStringAndStop('QRV?');
-
-          QTC_SEND_TIME:
+         { The view catches up with the state it does not own -- this replaces
+           EnableWindowTrue, MoveWindow on the arrow and InvalidateRect. }
+         if QTCSendFormOpen then
             begin
-              if QTCWasSend = 0 then Exit;
-              TempString := IntToStr(QTCsToBeSendArray[QTCWasSend].qsTime);
-              while length(TempString) <> 4 do
-                 begin
-                 TempString := '0' + TempString;
-                 end;
-              SendStringAndStop(TempString);
+            QTCSendForm.RefreshProgress;
             end;
 
-          QTC_SEND_CALL:
+         SendQTC(QTCWasSend);
+         end;
+
+      QTC_SEND_QRVSTRING: SendStringAndStop(QRVString);
+
+      QTC_SEND_QRV: SendStringAndStop('QRV?');
+
+      QTC_SEND_TIME:
+         begin
+         if QTCWasSend = 0 then
             begin
-              if QTCWasSend = 0 then Exit;
-              SendStringAndStop(QTCsToBeSendArray[QTCWasSend].qsCall);
+            Exit;
+            end;
+         { Four digits, zero-padded: HHMM read back to the other station. }
+         TempString := AnsiString(SysUtils.Format('%.4u',
+                          [QTCsToBeSendArray[QTCWasSend].qsTime]));
+         SendStringAndStop(TempString);
+         end;
+
+      QTC_SEND_CALL:
+         begin
+         if QTCWasSend = 0 then
+            begin
+            Exit;
+            end;
+         SendStringAndStop(QTCsToBeSendArray[QTCWasSend].qsCall);
+         end;
+
+      QTC_SEND_NUMBER:
+         begin
+         if QTCWasSend = 0 then
+            begin
+            Exit;
+            end;
+         SendStringAndStop(IntToStr(QTCsToBeSendArray[QTCWasSend].qsNumber));
+         end;
+
+      QTC_SEND_ALL: SendQTC(QTCWasSend);
+
+      QTC_SEND_STOP:
+         begin
+         if YesOrNo(TC_DOYOUREALLYWANTSTOPNOW) = IDNO then
+            begin
+            Exit;
             end;
 
-          QTC_SEND_NUMBER:
+         if QTCWasSend > 0 then
             begin
-              if QTCWasSend = 0 then Exit;
-              SendStringAndStop(IntToStr(QTCsToBeSendArray[QTCWasSend].qsNumber));
+            if YesOrNo(SysUtils.Format(TC_WASMESSAGENUMBERCONFIRMED,
+                          [QTCWasSend])) = IDNO then
+               begin
+               dec(QTCWasSend);
+               end;
             end;
 
-          QTC_SEND_ALL: SendQTC(QTCWasSend);
-
-          QTC_SEND_STOP:
+         if QTCWasSend < 1 then
             begin
-              if YesOrNo(hwnddlg, TC_DOYOUREALLYWANTSTOPNOW) = IDno then Exit;
-              if QTCWasSend = 0 then
-                 begin
-                 goto ABORT_QTC;
-                 end;
-
-              // Issue #997: asm wsprintf-push -> TF.Format.
-              TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_WASMESSAGENUMBERCONFIRMED)), QTCWasSend);
-
-              if YesOrNo(hwnddlg, wsprintfBuffer) = IDno then
-                 begin
-                 dec(QTCWasSend);
-                 end;
-              if QTCWasSend < 1 then
-                 begin
-                 goto ABORT_QTC;
-                 end;
-              SaveQTCS;
+            { Nothing confirmed -- the book is abandoned, and the window's own
+              close path says so. }
+            CloseQTCSendWindow;
+            Exit;
             end;
-          301..310: SendQTC(wParam - 300);
-        end;
-      end;
-  end;
+
+         SaveQTCS;
+         end;
+   end;
 end;
 
 procedure SendQTC(QTC: integer);
@@ -445,8 +295,10 @@ begin
      end;
   inc(NumberQTCBooksSent);
   SetSendedQSOs;
-  EndDialog(QTCSWindow, 0);
-  QTCSWindow := 0;
+  { The book is saved, so the window goes WITHOUT asking whether the operator
+    means to abandon it -- EndDialog had the same property, it did not go back
+    through WM_CLOSE. }
+  CloseQTCSendWindow;
 end;
 
 procedure SetSendedQSOs;
@@ -490,17 +342,9 @@ begin
 
 end;
 
-procedure RegQTCSHotKeys;
-begin
-  Windows.RegisterHotKey(QTCSWindow, QTC_HK_PAGEUP, 0, VK_PRIOR);
-  Windows.RegisterHotKey(QTCSWindow, QTC_HK_PAGEDOWN, 0, VK_NEXT);
-  Windows.RegisterHotKey(QTCSWindow, QTC_HK_F10, 0, VK_F10);
-end;
-
-
 procedure ShowQTCSend;
 begin
-   CreateModalDialog(230, 160, tr4whandle, @QTCSDlgProc, 0);
+   ShowQTCSendWindow;
 end;
 end.
 
