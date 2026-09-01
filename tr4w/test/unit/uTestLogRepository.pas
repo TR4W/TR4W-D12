@@ -45,6 +45,8 @@ type
       procedure TestSearchAndPounceIsInverted;
       procedure TestKidsFollowsTheRecordKind;
       procedure TestUUIDv7ShapeAndOrdering;
+      procedure TestUpdateReplacesTheRow;
+      procedure TestUpdateOfAMissingRowSaysSo;
       procedure TestWholeCorpusLogRoundTrips;
    public
       procedure RunAllTests; override;
@@ -192,7 +194,7 @@ var
    repo: TLogRepository;
    reader: TLogBinaryReader;
    before, after: ContestExchange;
-   guid: AnsiString;
+   rowId: Int64;
    fn: string;
    got: boolean;
 begin
@@ -218,9 +220,9 @@ begin
       db.CreateNew(fn);
       repo := TLogRepository.Create(db);
       try
-         guid := repo.SaveQSO(before);
+         rowId := repo.SaveQSO(before);
          repo.Commit;
-         CheckTrue(repo.LoadQSO(guid, after), 'the saved QSO reads back');
+         CheckTrue(repo.LoadQSO(rowId, after), 'the saved QSO reads back');
          CompareQSO(before, after, 'cqww first QSO');
       finally
          repo.Free;
@@ -237,7 +239,7 @@ var
    db: TLogDatabase;
    repo: TLogRepository;
    before, after: ContestExchange;
-   guid: AnsiString;
+   rowId: Int64;
    fn: string;
 begin
    BeginTest('TestSentinelsBecomeNullAndComeBack');
@@ -269,9 +271,9 @@ begin
       db.CreateNew(fn);
       repo := TLogRepository.Create(db);
       try
-         guid := repo.SaveQSO(before);
+         rowId := repo.SaveQSO(before);
          repo.Commit;
-         CheckTrue(repo.LoadQSO(guid, after), 'it reads back');
+         CheckTrue(repo.LoadQSO(rowId, after), 'it reads back');
 
          { Each of these is a value that would look exactly like data if the
            mapper wrote the sentinel through. }
@@ -324,7 +326,7 @@ var
    db: TLogDatabase;
    repo: TLogRepository;
    pin, hil, back: ContestExchange;
-   gPin, gHil: AnsiString;
+   gPin, gHil: Int64;
    fn: string;
 begin
    BeginTest('TestCountyLineQSOsShareAnExchangeId');
@@ -357,7 +359,7 @@ begin
          gHil := repo.SaveQSO(hil);
          repo.Commit;
 
-         CheckTrue(gPin <> gHil, 'the two QSOs get DIFFERENT row guids');
+         CheckTrue(gPin <> gHil, 'the two QSOs get DIFFERENT rows');
          CheckEquals(2, repo.QSOCount, 'and both are in the log');
 
          CheckTrue(repo.LoadQSO(gPin, back), 'the PIN row reads back');
@@ -384,7 +386,7 @@ var
    db: TLogDatabase;
    repo: TLogRepository;
    before, after: ContestExchange;
-   guid: AnsiString;
+   rowId: Int64;
    fn: string;
 begin
    BeginTest('TestSearchAndPounceIsInverted');
@@ -404,9 +406,9 @@ begin
       db.CreateNew(fn);
       repo := TLogRepository.Create(db);
       try
-         guid := repo.SaveQSO(before);
+         rowId := repo.SaveQSO(before);
          repo.Commit;
-         CheckTrue(repo.LoadQSO(guid, after), 'it reads back');
+         CheckTrue(repo.LoadQSO(rowId, after), 'it reads back');
 
          { A straight copy instead of an inversion would be wrong in a way
            nothing reports -- every S&P QSO would read as a run QSO. }
@@ -427,7 +429,7 @@ var
    db: TLogDatabase;
    repo: TLogRepository;
    qso, qtc, back: ContestExchange;
-   gQso, gQtc: AnsiString;
+   gQso, gQtc: Int64;
    fn: string;
 begin
    BeginTest('TestKidsFollowsTheRecordKind');
@@ -494,6 +496,105 @@ begin
    CheckTrue(early < late, 'a v7 guid sorts by its timestamp');
 end;
 
+{ UPDATE IS WHAT PHASE B2 ACTUALLY NEEDS. Of the eight sites that write a QSO to
+  the log, FIVE seek to a position and rewrite -- DeleteLastContact, uNet's
+  UpdateRec and FindAndUpdateQSOInLog, uQTCS.SetSendedQSOs, and the QSO editor.
+  Only three append. }
+procedure TLogRepositoryTests.TestUpdateReplacesTheRow;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   before, edited, after: ContestExchange;
+   rowId: Int64;
+   fn: string;
+begin
+   BeginTest('TestUpdateReplacesTheRow');
+   fn := TempLogName('update.db');
+   Scrub(fn);
+
+   FillChar(before, SizeOf(before), 0);
+   before.ceRecordKind := rkQSO;
+   before.Callsign := 'W1AW';
+   before.QTHString := 'CT';
+   before.RSTReceived := 599;
+   before.tSysTime.qtYear := 26;
+   before.tSysTime.qtMonth := 6;
+   before.tSysTime.qtDay := 1;
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         rowId := repo.SaveQSO(before);
+         CheckTrue(rowId > 0, 'saving returns a row id');
+         CheckEquals(rowId, repo.NewestRowId,
+                     'and it is the newest row -- what the three "seek back one ' +
+                     'record" sites want');
+
+         { The edit an operator would make: fix the QTH and mark it a dupe. }
+         edited := before;
+         edited.QTHString := 'MA';
+         edited.ceDupe := True;
+
+         CheckTrue(repo.UpdateQSO(rowId, edited), 'the update reports success');
+         repo.Commit;
+
+         CheckTrue(repo.LoadQSO(rowId, after), 'the row reads back');
+         CheckEquals('MA', string(after.QTHString), 'with the edited QTH');
+         CheckTrue(after.ceDupe, 'and the edited flag');
+         CheckEquals('W1AW', string(after.Callsign), 'and the unchanged callsign');
+
+         { It REPLACED the row rather than adding one -- the file-based code
+           rewrites in place and so must this. }
+         CheckEquals(1, repo.QSOCount, 'and there is still exactly one QSO');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+
+   Scrub(fn);
+end;
+
+procedure TLogRepositoryTests.TestUpdateOfAMissingRowSaysSo;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   qso: ContestExchange;
+   fn: string;
+begin
+   BeginTest('TestUpdateOfAMissingRowSaysSo');
+   fn := TempLogName('nosuchrow.db');
+   Scrub(fn);
+
+   FillChar(qso, SizeOf(qso), 0);
+   qso.ceRecordKind := rkQSO;
+   qso.Callsign := 'W1AW';
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         { The file-based code CANNOT tell an edit from a no-op: it seeks and
+           writes, and a bad offset corrupts or extends the file silently. This
+           is one thing the database does better rather than differently, so it
+           is worth a test of its own. }
+         CheckFalse(repo.UpdateQSO(999, qso),
+                    'updating a row that does not exist reports failure');
+         CheckEquals(0, repo.QSOCount, 'and creates nothing');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+
+   Scrub(fn);
+end;
+
 procedure TLogRepositoryTests.TestWholeCorpusLogRoundTrips;
 const
    { Four sets chosen to span the shapes: a DX zone contest, a domestic QSO
@@ -507,7 +608,7 @@ var
    repo: TLogRepository;
    reader: TLogBinaryReader;
    before, after: ContestExchange;
-   guids: TStringList;
+   rowIds: TList;
    originals: TList;
    rec: ^ContestExchange;
    fn: string;
@@ -521,7 +622,7 @@ begin
       fn := TempLogName('corpus_' + IntToStr(s) + '.db');
       Scrub(fn);
 
-      guids := TStringList.Create;
+      rowIds := TList.Create;
       originals := TList.Create;
       try
          db := TLogDatabase.Create;
@@ -542,7 +643,10 @@ begin
                      New(rec);
                      rec^ := before;
                      originals.Add(rec);
-                     guids.Add(string(repo.SaveQSO(before)));
+                     { A row id fits a pointer on this target and TList is what
+                       the tree has; storing it as one keeps the test to the
+                       collections already in use. }
+                     rowIds.Add(Pointer(PtrInt(repo.SaveQSO(before))));
                      Inc(n);
                      end;
                finally
@@ -555,9 +659,9 @@ begin
 
                { THE EXHAUSTIVE PART. Every QSO in the log, every persisted
                  field, both directions. }
-               for i := 0 to guids.Count - 1 do
+               for i := 0 to rowIds.Count - 1 do
                   begin
-                  CheckTrue(repo.LoadQSO(AnsiString(guids[i]), after),
+                  CheckTrue(repo.LoadQSO(Int64(PtrInt(rowIds[i])), after),
                             SETS[s] + ': QSO ' + IntToStr(i) + ' reads back');
                   rec := originals[i];
                   CompareQSO(rec^, after,
@@ -577,7 +681,7 @@ begin
             Dispose(rec);
             end;
          originals.Free;
-         guids.Free;
+         rowIds.Free;
       end;
 
       Scrub(fn);
@@ -593,6 +697,8 @@ begin
    TestSearchAndPounceIsInverted;
    TestKidsFollowsTheRecordKind;
    TestUUIDv7ShapeAndOrdering;
+   TestUpdateReplacesTheRow;
+   TestUpdateOfAMissingRowSaysSo;
    TestWholeCorpusLogRoundTrips;
 
    if (FDir <> '') and DirectoryExists(FDir) then

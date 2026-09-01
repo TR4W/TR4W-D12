@@ -79,21 +79,55 @@ type
       FDatabase: TLogDatabase;
       FInsert: TSQLQuery;
       FSelect: TSQLQuery;
+      FLastGuid: AnsiString;
+
+      FUpdate: TSQLQuery;
+      FSelectById: TSQLQuery;
 
       procedure PrepareStatements;
+      procedure BindInto(aQuery: TSQLQuery; const aQso: ContestExchange;
+                         const aGuid: AnsiString; aWithGuid: boolean);
       procedure BindRecord(const aQso: ContestExchange; const aGuid: AnsiString);
-      procedure ReadRecord(out aQso: ContestExchange);
+      procedure BindUpdate(const aQso: ContestExchange);
+      procedure ReadRecord(aQuery: TSQLQuery; out aQso: ContestExchange);
    public
       constructor Create(aDatabase: TLogDatabase);
       destructor Destroy; override;
 
-      { Appends a QSO.  Returns the guid actually stored, which is the record's
-        own id when it has one and a fresh UUIDv7 when it does not -- see
-        MintGuidFor. Does NOT commit; the caller decides the batch. }
-      function SaveQSO(const aQso: ContestExchange): AnsiString;
+      { Appends a QSO and returns ITS ROW ID -- the handle everything else uses.
 
-      { By the guid Save returned.  False when there is no such row. }
-      function LoadQSO(const aGuid: AnsiString; out aQso: ContestExchange): boolean;
+        THE ROW IDENTITY IS qso.id, AND THAT WAS MEASURED RATHER THAN CHOSEN.
+        The obvious candidate was (ceQSOID1, ceQSOID2), because uNet's
+        FindAndUpdateQSOInLog already finds a QSO to update by matching exactly
+        that pair. It is not unique: across four corpus logs it gave 3 distinct
+        pairs for 1,316 rows, 2 for 206, and in winter_fd 1,314 of 1,316 rows
+        are (0, 0). The pair is stamped only on the network path, so that
+        function is right for ITS job and useless as a general handle -- keying
+        an update on it would have matched 1,314 rows at once.
+
+        Does NOT commit; the caller decides the batch. }
+      function SaveQSO(const aQso: ContestExchange): Int64;
+
+      { The guid the last SaveQSO stored, for anything that wants the durable
+        identity rather than the row handle. }
+      property LastGuid: AnsiString read FLastGuid;
+
+      { REPLACES the row.  Every column BindRecord writes is rewritten, so a
+        partially-populated record blanks what it does not carry -- which is
+        what the file-based code does too, since it rewrites the whole record.
+        False when there is no such row. }
+      function UpdateQSO(aRowId: Int64; const aQso: ContestExchange): boolean;
+
+      { The newest row, which is what the three "seek back one record" sites
+        want: DeleteLastContact, uNet.UpdateRec and uQTCS.SetSendedQSOs all
+        rewrite the record they have just written. }
+      function NewestRowId: Int64;
+
+      function LoadQSO(aRowId: Int64; out aQso: ContestExchange): boolean;
+
+      { By the guid rather than the row.  Kept because the guid is the identity
+        that survives an export and a re-import, where a row id does not. }
+      function LoadQSOByGuid(const aGuid: AnsiString; out aQso: ContestExchange): boolean;
 
       { Non-deleted QSOs, counted by the database rather than tracked here --
         section 9a: no stored derived values, no in-memory mirror. }
@@ -513,6 +547,21 @@ const
       'name_sent, mp3_recorded, clear_dupe_sheet, clear_mult_sheet, ' +
       'radio_nr, operator_call, deleted, sent_to_server, server_dirty';
 
+   { The same list without the guid -- see PrepareStatements for why. }
+   QSO_COLUMNS_NO_GUID =
+      'exchange_id, session_id, session_seq, computer_id, operator_id, record_kind, ' +
+      'qso_at, callsign, standard_call, freq_tx_hz, band, mode, submode, ' +
+      'exchange_received, rst_sent, rst_received, serial_sent, serial_received, ' +
+      'rcvd_zone, rcvd_name, rcvd_age, rcvd_check, rcvd_precedence, rcvd_class, ' +
+      'rcvd_power, rcvd_chapter, rcvd_prefecture, rcvd_member_no, rcvd_qth, ' +
+      'rcvd_random, random_sent, rcvd_kids, qtc_call, domestic_qth, ' +
+      'dxcc_prefix, dxcc_entity, dxcc_code, cty_cq_zone, cty_continent, ' +
+      'prefix_mult, dx_mult, domestic_mult, ' +
+      'mult_domestic, mult_dx, mult_prefix, mult_zone, inhibit_mults, ' +
+      'qso_points, is_dupe, is_run, is_xqso, is_skipped, sent_in_qtc, ' +
+      'name_sent, mp3_recorded, clear_dupe_sheet, clear_mult_sheet, ' +
+      'radio_nr, operator_call, deleted, sent_to_server, server_dirty';
+
    QSO_PARAMS =
       ':guid, :exchange_id, :session_id, :session_seq, :computer_id, :operator_id, :record_kind, ' +
       ':qso_at, :callsign, :standard_call, :freq_tx_hz, :band, :mode, :submode, ' +
@@ -526,6 +575,65 @@ const
       ':qso_points, :is_dupe, :is_run, :is_xqso, :is_skipped, :sent_in_qtc, ' +
       ':name_sent, :mp3_recorded, :clear_dupe_sheet, :clear_mult_sheet, ' +
       ':radio_nr, :operator_call, :deleted, :sent_to_server, :server_dirty';
+
+{ 'a, b, c' -> 'a = :a, b = :b, c = :c'.
+
+  DERIVED FROM QSO_COLUMNS rather than written out, so the insert and the update
+  cannot drift. A hand-maintained second list is how an update quietly stops
+  writing a column that the insert writes -- the row would look right on
+  creation and lose the field on the first edit. }
+{ TYPED AnsiString CONSTANTS, not literals.
+
+  An untyped literal is UnicodeString here -- tr4w.inc makes `string` UTF-16 --
+  so concatenating one with an AnsiString narrows, and `AnsiString('x')` does NOT
+  help: the literal is still built as UnicodeString and then converted, which is
+  the very conversion being counted. A typed constant is compiled as AnsiString
+  from the start. }
+const
+   COMMA_SEP:  AnsiString = ', ';
+   EQUALS_BIND: AnsiString = ' = :';
+   UPDATE_HEAD: AnsiString = 'UPDATE qso SET ';
+   UPDATE_TAIL: AnsiString = ' WHERE id = :row_id';
+
+function AssignmentsFor(const aColumns: AnsiString): AnsiString;
+var
+   i: integer;
+   name: AnsiString;
+
+   procedure Emit;
+   begin
+      if name = '' then
+         begin
+         Exit;
+         end;
+      if Result <> '' then
+         begin
+         Result := Result + COMMA_SEP;
+         end;
+      Result := Result + name + EQUALS_BIND + name;
+      name := '';
+   end;
+
+begin
+   { Split by hand rather than with StrUtils' WordCount/ExtractWord: those take
+     UnicodeString here, so every column name would round-trip through a
+     narrowing conversion for no reason. The separator is one character and the
+     input is our own constant. }
+   Result := '';
+   name := '';
+   for i := 1 to Length(aColumns) do
+      begin
+      if aColumns[i] = ',' then
+         begin
+         Emit;
+         end
+      else if aColumns[i] <> ' ' then
+         begin
+         name := name + aColumns[i];
+         end;
+      end;
+   Emit;
+end;
 
 constructor TLogRepository.Create(aDatabase: TLogDatabase);
 begin
@@ -543,6 +651,8 @@ destructor TLogRepository.Destroy;
 begin
    FInsert.Free;
    FSelect.Free;
+   FSelectById.Free;
+   FUpdate.Free;
    inherited Destroy;
 end;
 
@@ -561,20 +671,46 @@ begin
    FSelect.DataBase := FDatabase.Connection;
    FSelect.SQL.Text := 'SELECT ' + QSO_COLUMNS + ' FROM qso WHERE guid = :guid';
    FSelect.Prepare;
+
+   FSelectById := TSQLQuery.Create(nil);
+   FSelectById.DataBase := FDatabase.Connection;
+   FSelectById.SQL.Text := 'SELECT ' + QSO_COLUMNS + ' FROM qso WHERE id = :row_id';
+   FSelectById.Prepare;
+
+   { guid is NOT in the SET clause: a row's identity does not change when its
+     contents do, and rewriting it would break anything holding the old one. }
+   FUpdate := TSQLQuery.Create(nil);
+   FUpdate.DataBase := FDatabase.Connection;
+   FUpdate.SQL.Text := UPDATE_HEAD +
+                       AssignmentsFor(QSO_COLUMNS_NO_GUID) +
+                       UPDATE_TAIL;
+   FUpdate.Prepare;
 end;
 
-procedure TLogRepository.BindRecord(const aQso: ContestExchange;
-                                    const aGuid: AnsiString);
+{ ONE BINDER FOR BOTH STATEMENTS.
+
+  BindUpdate calls this against FUpdate, so the insert and the update cannot
+  populate different sets of columns -- which is the defect that would show as
+  a field surviving creation and vanishing on the first edit. The only
+  difference is the guid, which an update must not touch: a row's identity does
+  not change when its contents do. }
+procedure TLogRepository.BindInto(aQuery: TSQLQuery;
+                                  const aQso: ContestExchange;
+                                  const aGuid: AnsiString;
+                                  aWithGuid: boolean);
 
    { AnsiString, because that is what ParamByName takes. Declaring it `string`
      narrowed on every one of sixty-odd binds. }
    function P(const aName: AnsiString): TParam;
    begin
-      Result := FInsert.ParamByName(aName);
+      Result := aQuery.ParamByName(aName);
    end;
 
 begin
-   P('guid').AsString := aGuid;
+   if aWithGuid then
+      begin
+      P('guid').AsString := aGuid;
+      end;
    BindText(P('exchange_id'), AnsiString(aQso.id));
 
    { Identity. session_id/session_seq are ceQSOID1/ceQSOID2 -- the pair
@@ -693,14 +829,25 @@ begin
    BindBool(P('server_dirty'), aQso.ceNeedSendToServerAE);
 end;
 
-procedure TLogRepository.ReadRecord(out aQso: ContestExchange);
+procedure TLogRepository.BindRecord(const aQso: ContestExchange;
+                                    const aGuid: AnsiString);
+begin
+   BindInto(FInsert, aQso, aGuid, True);
+end;
+
+procedure TLogRepository.BindUpdate(const aQso: ContestExchange);
+begin
+   BindInto(FUpdate, aQso, '', False);
+end;
+
+procedure TLogRepository.ReadRecord(aQuery: TSQLQuery; out aQso: ContestExchange);
 var
    continentToken: Str20;
    token: AnsiString;
 
    function F(const aName: AnsiString): TField;
    begin
-      Result := FSelect.FieldByName(aName);
+      Result := aQuery.FieldByName(aName);
    end;
 
    function S(const aName: AnsiString): AnsiString;
@@ -832,15 +979,71 @@ begin
    aQso.ceNeedSendToServerAE := FieldBool(F('server_dirty'));
 end;
 
-function TLogRepository.SaveQSO(const aQso: ContestExchange): AnsiString;
+function TLogRepository.SaveQSO(const aQso: ContestExchange): Int64;
 begin
-   Result := NewRowGuid(aQso);
-   BindRecord(aQso, Result);
+   FLastGuid := NewRowGuid(aQso);
+   BindRecord(aQso, FLastGuid);
    FInsert.ExecSQL;
+   Result := NewestRowId;
 end;
 
-function TLogRepository.LoadQSO(const aGuid: AnsiString;
+{ last_insert_rowid() rather than MAX(id): it is per-connection and unaffected by
+  anything another connection does, and it is what SQLite provides for exactly
+  this. MAX(id) would also be wrong the moment a row is deleted. }
+function TLogRepository.NewestRowId: Int64;
+var
+   q: TSQLQuery;
+begin
+   Result := 0;
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := FDatabase.Connection;
+      q.SQL.Text := 'SELECT last_insert_rowid()';
+      q.Open;
+      if not q.EOF then
+         begin
+         Result := q.Fields[0].AsLargeInt;
+         end;
+      q.Close;
+   finally
+      q.Free;
+   end;
+end;
+
+function TLogRepository.UpdateQSO(aRowId: Int64;
+                                  const aQso: ContestExchange): boolean;
+begin
+   BindUpdate(aQso);
+   FUpdate.ParamByName('row_id').AsLargeInt := aRowId;
+   FUpdate.ExecSQL;
+
+   { RowsAffected distinguishes "changed it" from "there was no such row", which
+     is the difference between an edit and a silent no-op. The file-based code
+     cannot tell those apart -- it seeks and writes -- so this is one thing the
+     database does better rather than merely differently. }
+   Result := FUpdate.RowsAffected > 0;
+end;
+
+function TLogRepository.LoadQSO(aRowId: Int64;
                                 out aQso: ContestExchange): boolean;
+begin
+   FSelectById.Close;
+   FSelectById.ParamByName('row_id').AsLargeInt := aRowId;
+   FSelectById.Open;
+   Result := not FSelectById.EOF;
+   if Result then
+      begin
+      ReadRecord(FSelectById, aQso);
+      end
+   else
+      begin
+      FillChar(aQso, SizeOf(aQso), 0);
+      end;
+   FSelectById.Close;
+end;
+
+function TLogRepository.LoadQSOByGuid(const aGuid: AnsiString;
+                                      out aQso: ContestExchange): boolean;
 begin
    FSelect.Close;
    FSelect.ParamByName('guid').AsString := aGuid;
@@ -848,7 +1051,7 @@ begin
    Result := not FSelect.EOF;
    if Result then
       begin
-      ReadRecord(aQso);
+      ReadRecord(FSelect, aQso);
       end
    else
       begin

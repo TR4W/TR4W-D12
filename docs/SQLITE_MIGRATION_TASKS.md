@@ -144,31 +144,56 @@ what `logdump` reads. **No contest-factory work.**
 **Exit:** corpus **22 passed / 0 failed / 4 known** with the log in SQLite.
 **No contest-factory work.**
 
-### B2 is not thirteen identical edits — two of them are UPDATEs
+### B2 is mostly UPDATEs, not appends — and the first sizing of it was wrong
 
-Found while sizing it. Most of the eight writes APPEND a record, and
-`TLogRepository.SaveQSO` is exactly that. But `uEditQSO:751` and
-`LOGSUBS2:2526` **seek to a record's position and rewrite it in place** -- the
-editable log and the rescore path. Those are UPDATEs, and the repository has no
-update, because an update needs a way to say WHICH ROW.
+**Corrected 2026-09-01.** The first pass through this said "six pure appends,
+two edits" from a sample. Reading all eight, it is the other way round:
 
-That is a decision, not an edit:
+| site | routine | seeks to | so it is |
+|---|---|---|---|
+| `LOGSUBS2:2526` | `tAddQSOToLog` | `FILE_END` | **APPEND** -- the main logging path |
+| `MainUnit:10044` | `ImportFromADIF` | `FILE_END` | **APPEND** |
+| `MainUnit:9005` | random test-log generator | its own handle | **APPEND**, and not the live log at all |
+| `LOGSUBS2:590` | `DeleteLastContact` | `-1 record` | **UPDATE** the newest row |
+| `uNet:1395` | `UpdateRec` | `-1 record` | **UPDATE** the newest row |
+| `uQTCS:327` | `SetSendedQSOs` | `-1 record` | **UPDATE** the newest row |
+| `uEditQSO:751` | editing a QSO | `IndexInMap, FILE_BEGIN` | **UPDATE** by byte offset |
+| `uNet:1212` | `FindAndUpdateQSOInLog` | a scanned position | **UPDATE** by search |
 
-- the file addresses a record by its **ordinal position**;
-- the database addresses a row by `guid` -- which the importer MINTS, so an
-  existing `.trw` record has no guid until it is imported;
-- `(session_id, session_seq)` is the multi-op network's own identity for a QSO
-  and would work, but it is not unique for county-line pairs any more than
-  `exchange_id` is.
+**Three appends and five updates.** So `SaveQSO` alone does not carry B2, and the
+repository needs a real update path before any of it can move.
 
-**The likely answer is that the in-memory `ContestExchange` carries its row guid
-once a log is opened from the database** -- so an edit updates the row it came
-from -- but that is exactly the sort of thing to settle with NY4I rather than
-choose at 3am. **Recorded here rather than guessed.**
+#### The identity question, answered by measurement rather than by choosing
 
-**A safer first half is available**: repoint the six pure APPENDS, leave the two
-edits on the binary path, and the corpus stays green throughout because reads
-have not moved yet.
+`FindAndUpdateQSOInLog` looked like the answer, because the program ALREADY has
+to find a QSO to update and does it by matching **`(ceQSOID1, ceQSOID2)`**,
+scanning backwards from the end of the file. That is the pair the schema stores
+as `session_id` / `session_seq`, so it seemed free.
+
+**It is not unique.** Imported and counted across four corpus logs:
+
+| log | rows | distinct `(session_id, session_seq)` |
+|---|---:|---:|
+| `winter_fd_2025_w4ta` | 1316 | **3** |
+| `arrl_ss_ssb_2024_w4ta` | 206 | **2** |
+| `florida_qp_2026_ny4i` | 5 | 3 |
+| `cqww_ssb_2025_ny4i` | 101 | 101 |
+
+In winter_fd, **1,314 of 1,316 rows are `(0, 0)`**. The pair is stamped only on
+the network path (`MainUnit:9115`, `LOGSUBS2:1556`), so `FindAndUpdateQSOInLog`
+is correct in its own context -- in a multi-op session the QSOs it looks for ARE
+stamped -- and is **useless as a general row identity**. Keying the other four
+updates on it would have matched 1,314 rows at once.
+
+**So the answer is `qso.id`**, the schema's own `INTEGER PRIMARY KEY
+AUTOINCREMENT`. It needs no new field on `ContestExchange`, no guid plumbing and
+no decision: the three "rewrite the newest record" sites want the id the insert
+just returned, and `uEditQSO` wants the id of the row it loaded -- which is
+exactly what `IndexInMap` is today, one representation later.
+
+`FindAndUpdateQSOInLog` keeps its own key, because its key is the right one for
+its job: `WHERE session_id = ? AND session_seq = ?`, which also turns an O(n)
+backwards scan of the whole log into one indexed statement.
 
 ## Phase C -- event sourcing, which is the payoff
 
