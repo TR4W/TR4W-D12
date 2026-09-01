@@ -751,19 +751,35 @@ begin
    lblComment.Caption := aText;
 end;
 
+{ Forget what the PREVIOUS contest asked for.
+
+  ROWS 1..3 ONLY.  This used to blank `FRows[i].Caption.Caption` for every row,
+  including the six CATEGORY-* rows -- which are labelled exactly ONCE, by
+  uNewContest's setup loop, and are supposed to stay labelled.  Selecting a
+  contest calls ClearFields, so the moment an operator picked a contest that
+  asks a question the six drop-downs lost their captions and stood there
+  unexplained (NY4I, screenshot, 2026-09-01).
+
+  THAT IS THE SECOND TIME THIS EXACT SYMPTOM HAS SHIPPED.  The first was the
+  categories never being labelled at all (NY4I, 2026-08-28), fixed by adding
+  SetRowLabel -- whose own comment says "the six CATEGORY-* rows are permanent
+  and permanently labelled".  ClearRows was three lines away and quietly
+  contradicted it.  A permanent label and a routine that clears everything are
+  a contradiction that no compiler and no lint can see; the loop now says which
+  rows it owns. }
 procedure TfrmNewContest.ClearRows;
 var
    i: integer;
 begin
-   for i := Low(FRows) to High(FRows) do
+   for i := Low(FRows) to FIRST_CHOICE_ROW - 1 do
       begin
       if Assigned(FRows[i].Field) then
          begin
-         FRows[i].Field.Text    := '';
-         FRows[i].Field.Visible := False;
-         FRows[i].Caption.Visible := False;
+         FRows[i].Field.Text      := '';
+         FRows[i].Field.Visible   := False;
          end;
       FRows[i].Caption.Caption := '';
+      FRows[i].Caption.Visible := False;
       end;
    lblComment.Caption := '';
 end;

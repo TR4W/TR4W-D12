@@ -933,6 +933,27 @@ begin
   MSSansSerifFont := tCreateFont(15, FW_DONTCARE, 'MS Sans Serif');
   CreateDirectoryIfNotExist;
 
+  (* --textfit: measure every caption against the room it has, and every control
+     against the room its PARENT has, for the rest of the run.
+
+     INSTALLED HERE, NOT AT THE END OF STARTUP.  It used to be installed just
+     before RunLCLApplication -- six hundred lines below -- on the reasoning that
+     forms must exist to be measured.  True, and it meant the audit could never
+     see the FIRST window an operator meets: ShowNewContest is modal and runs
+     from this routine, so the Open-Contest dialog opened, was answered and was
+     gone long before the watcher existed.  A dialog with a panel twenty pixels
+     wider than its group box therefore went unreported for as long as the audit
+     had been running (NY4I, screenshot, 2026-09-01).
+
+     Nothing needs the forms to exist at THIS moment: InstallTextFitAudit hooks
+     each form as it SHOWS, and its one-shot opening walk simply finds nothing
+     yet. uTextFitAudit records why none of this can be done from outside the
+     process. *)
+  if TextFitAuditRequested then
+     begin
+     InstallTextFitAudit;
+     end;
+
 {$IF tDebugMode}
   //uHistory.MakeRevisionHistory;
   TR4W_CFG_FILENAME := 'c:\TR4W\debug.cfg';
@@ -1556,15 +1577,6 @@ begin
     waiting, because a panadapter needs a radio that is CONNECTED and
     streaming, which start-up cannot promise.  See uRadioPanelForm. }
   StartPanadapterRestore;
-
-  (* --textfit: measure every caption against the room it has, then leave.
-     Here because the forms must EXIST to be measured, and before the loop
-     because the answer does not need one. uTextFitAudit records why this
-     cannot be done from outside the process. *)
-  if TextFitAuditRequested then
-     begin
-     InstallTextFitAudit;
-     end;
 
   RunLCLApplication;
 end;

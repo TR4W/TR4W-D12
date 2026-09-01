@@ -120,12 +120,12 @@ object frmNewContest: TfrmNewContest
       Left = 12
       Height = 52
       Top = 108
-      Width = 420
+      Width = 388
       Anchors = [akTop, akLeft, akRight]
       BevelOuter = bvNone
       BorderStyle = bsSingle
-      ClientHeight = 52
-      ClientWidth = 420
+      ClientHeight = 50
+      ClientWidth = 386
       Color = clInfoBk
       ParentBackground = False
       ParentColor = False
@@ -134,7 +134,7 @@ object frmNewContest: TfrmNewContest
         Left = 8
         Height = 40
         Top = 5
-        Width = 404
+        Width = 370
         Alignment = taCenter
         Anchors = [akTop, akLeft, akRight]
         AutoSize = False

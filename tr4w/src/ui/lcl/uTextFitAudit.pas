@@ -311,6 +311,63 @@ begin
       end;
 end;
 
+function MeasureOverhang(aControl: TControl; aParent: TWinControl;
+                         const aForm: string): integer;
+{ DOES THE CONTROL ITSELF FIT INSIDE ITS PARENT?
+
+  A DIFFERENT QUESTION FROM THE ONE ABOVE, AND THIS AUDIT COULD NOT ASK IT.
+  MeasureControl asks whether a CAPTION fits its CONTROL, and returns early when
+  the caption is blank -- so a captionless panel was never looked at even once.
+  The Open-Contest dialog's yellow prompt panel was designed 20px wider than the
+  group box holding it, akRight faithfully preserved that negative margin at
+  every window size, and it hung off the right edge of the form from the day it
+  was drawn until NY4I photographed it (2026-09-01).
+
+  Nothing else can see this. Lint-LFMProperties asks whether a property can be
+  STREAMED, not whether a number is sensible; the form opens, every control
+  works, and the overhang is simply drawn.
+
+  ANCHORED CONTROLS ARE THE POINT, not an exception. A control anchored to an
+  edge keeps its margin -- including a negative one -- so an overhang designed
+  in is an overhang for the life of the form rather than something a resize
+  corrects.
+
+  Scrolling parents are exempt: content wider than the viewport is what a scroll
+  box is FOR. }
+const
+   { A pixel or two of rounding is not a defect; twenty is. }
+   OVERHANG_PX = 4;
+var
+   over: integer;
+begin
+   Result := 0;
+
+   if (not aControl.Visible) or Scrolls(aParent) then
+      begin
+      Exit;
+      end;
+
+   over := (aControl.Left + aControl.Width) - aParent.ClientWidth;
+   if over > OVERHANG_PX then
+      begin
+      logger.Warn('TextFit: %s.%s overhangs its parent by %dpx ' +
+                  '(left %d + width %d > client %d)',
+                  [aForm, Identify(aControl), over,
+                   aControl.Left, aControl.Width, aParent.ClientWidth]);
+      Result := 1;
+      end;
+
+   over := (aControl.Top + aControl.Height) - aParent.ClientHeight;
+   if over > OVERHANG_PX then
+      begin
+      logger.Warn('TextFit: %s.%s hangs below its parent by %dpx ' +
+                  '(top %d + height %d > client %d)',
+                  [aForm, Identify(aControl), over,
+                   aControl.Top, aControl.Height, aParent.ClientHeight]);
+      Result := 1;
+      end;
+end;
+
 function WalkControls(aParent: TWinControl; const aForm: string;
                       aCanvas: TCanvas): integer;
 var
@@ -320,6 +377,7 @@ begin
    for i := 0 to aParent.ControlCount - 1 do
       begin
       Inc(Result, MeasureControl(aParent.Controls[i], aForm, aCanvas));
+      Inc(Result, MeasureOverhang(aParent.Controls[i], aParent, aForm));
       if aParent.Controls[i] is TWinControl then
          begin
          Inc(Result, WalkControls(TWinControl(aParent.Controls[i]), aForm, aCanvas));
