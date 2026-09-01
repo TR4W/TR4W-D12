@@ -22,6 +22,11 @@ Read [`DOMAIN_LAYER_SEQUENCE.md`](DOMAIN_LAYER_SEQUENCE.md) first — it settles
 *why* this comes second (after display state) and it already contains the
 three-tier event-sourcing decision this schema implements.
 
+**And read [`SQLITE_MIGRATION_TASKS.md`](SQLITE_MIGRATION_TASKS.md) before
+picking up any of the work.** This document is the SCHEMA and the reasoning; that
+one is the ORDER, the exit criteria, and where the contest factory does and does
+not enter.
+
 **All eleven open questions were answered by NY4I on 2026-08-29 — see §11.**
 The schema below is therefore a proposal whose decisions are settled; what is
 not settled is the code, of which none is written.

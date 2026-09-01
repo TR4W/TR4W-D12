@@ -130,6 +130,11 @@ and the two measured traps (Win32's accidental thread safety;
 
 ### 2. SQLite — gives the log a model — **STARTED 2026-09-01**
 
+**The ordered task list is [`SQLITE_MIGRATION_TASKS.md`](SQLITE_MIGRATION_TASKS.md)**
+— six phases with exit criteria. It also answers, with a measurement rather than
+an argument, whether phase 3 has to come first: the storage seam is **13 sites**,
+not the 430 `ContestExchange` references that make it look inseparable.
+
 The editable log then converts as an LCL **virtual list** (`OwnerData` /
 `OnData`), which is the native answer and is already the recorded decision: it
 converts AFTER the log has a model, not before. That is the 36 remaining `wh[]`
