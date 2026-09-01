@@ -797,6 +797,24 @@ begin
    // why that is a second unit and not a define.
    InstallCrashLogLCL;
 
+   { THE SETTINGS REGISTRY, AND THIS IS THE 'once at startup' ITS OWN COMMENT
+     PROMISES.  Nothing called it.  DeclareAllSettings was reached only from
+     uPrefsForm, so the 226 registrations existed only if the operator had
+     opened Preferences in that session.
+
+     That is not cosmetic: tr4w.json groups its commands into sections by
+     asking the registry which section a command belongs to (the first
+     segment of its dotted key -- see BuildSectionMap in uRadioConfigStore).
+     With the registry empty every command is unclassifiable, so all 243 land
+     in 'other' and the file has no sections at all.  NY4I hit exactly that,
+     including on a tr4w.json created from scratch (2026-08-31).
+
+     Idempotent by design -- it guards on GDeclared -- so the Preferences
+     call stays where it is.  Its own header anticipated a second entry
+     point; this is the first. }
+
+   DeclareAllSettings;
+
    // BATCH MODE, decided here rather than at the /EXPORT block far below,
    // because two things before that block need to know.
    //
@@ -1114,6 +1132,16 @@ begin
   // any crash report, "which version is this?", was answered only for people
   // already running at debug. The ENVIRONMENT versions beside them (HamLib,
   // Windows) were already info, which made the omission easy to miss.
+  { COUNTED, because zero is what this defect looked like -- and it looked
+    like nothing at all.  An empty registry does not fail; it just makes
+    every command in tr4w.json unclassifiable, so they all land in 'other'.
+
+    HERE AND NOT BESIDE DeclareAllSettings, which runs far earlier: the file
+    appender is not attached until this point, so a line logged up there goes
+    nowhere.  The comment by the batch-mode flag says exactly that, and I
+    logged it up there anyway and got silence. }
+
+  logger.Info('[Startup] settings registry: %d declared', [Length(AllSettings)]);
   logger.info('Current program version = %s',[TR4W_CURRENTVERSION]);
   logger.info('Current TR4W Server version = %s',[TR4WSERVER_CURRENTVERSION]);
   logger.info('Current log version = %s',[LOGVERSION]);
