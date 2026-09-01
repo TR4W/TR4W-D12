@@ -115,6 +115,31 @@ type
         identity rather than the row handle. }
       property LastGuid: AnsiString read FLastGuid;
 
+      { IMPORT KEYED ON THE GUID: update the row that already carries it, or
+        insert one that does.  Returns the row id either way, and aWasNew says
+        which happened.
+
+        NY4I, 2026-09-01: "On import, we have to ensure we use the uuid7 in the
+        ADIF file as the key. Upon import, we look for an existing item (or just
+        insert with no dupes and handle the error)... This allows us to import
+        our own exported file. Also good for testing."
+
+        WHY A LOOKUP RATHER THAN CATCHING THE UNIQUE VIOLATION. Both work, and
+        the lookup is the one that can UPDATE. Re-importing a file is usually
+        meant to refresh what changed, not to skip it -- and a failed INSERT
+        inside a batch transaction leaves sqldb's prepared statement in a state
+        the next row has to recover from, which is a lot of machinery to buy a
+        result that is worse.
+
+        THE CALLER MUST PASS A PER-QSO GUID. Do not pass ContestExchange.id: it
+        identifies the EXCHANGE, and a county-line contact is one exchange
+        logged as several QSOs. Measured on the shipped florida_qp corpus
+        export -- 3 ADIF records, 2 distinct APP_TR4W_ID -- so keying on it
+        would silently merge the pair and lose a contact. }
+      function ImportQSOByGuid(const aGuid: AnsiString;
+                               const aQso: ContestExchange;
+                               out aWasNew: boolean): Int64;
+
       { REPLACES the row.  Every column BindRecord writes is rewritten, so a
         partially-populated record blanks what it does not carry -- which is
         what the file-based code does too, since it rewrites the whole record.
@@ -1276,6 +1301,55 @@ begin
      cannot tell those apart -- it seeks and writes -- so this is one thing the
      database does better rather than merely differently. }
    Result := FUpdate.RowsAffected > 0;
+end;
+
+function TLogRepository.ImportQSOByGuid(const aGuid: AnsiString;
+                                       const aQso: ContestExchange;
+                                       out aWasNew: boolean): Int64;
+var
+   q: TSQLQuery;
+begin
+   Result := 0;
+   aWasNew := False;
+
+   if aGuid = '' then
+      begin
+      { No identity means nothing to match on. Appending is the only honest
+        answer -- silently merging records that merely look alike is how an
+        import loses a QSO. }
+      aWasNew := True;
+      Result := SaveQSO(aQso);
+      Exit;
+      end;
+
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := FDatabase.Connection;
+      q.SQL.Text := 'SELECT id FROM qso WHERE guid = :guid';
+      q.ParamByName('guid').AsString := aGuid;
+      q.Open;
+      if not q.EOF then
+         begin
+         Result := q.Fields[0].AsLargeInt;
+         end;
+      q.Close;
+   finally
+      q.Free;
+   end;
+
+   if Result <> 0 then
+      begin
+      UpdateQSO(Result, aQso);
+      Exit;
+      end;
+
+   { New to this log, and it keeps the guid it arrived with -- that is the whole
+     point. SaveQSO mints one instead, so it cannot be used here. }
+   aWasNew := True;
+   FLastGuid := aGuid;
+   BindRecord(aQso, aGuid);
+   FInsert.ExecSQL;
+   Result := LastInsertedRowId;
 end;
 
 function TLogRepository.LoadQSO(aRowId: Int64;

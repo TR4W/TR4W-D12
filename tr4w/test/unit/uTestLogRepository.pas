@@ -45,6 +45,9 @@ type
       procedure TestSearchAndPounceIsInverted;
       procedure TestKidsFollowsTheRecordKind;
       procedure TestUUIDv7ShapeAndOrdering;
+      procedure TestImportingTheSameFileTwiceAddsNothing;
+      procedure TestImportUpdatesAnExistingQSO;
+      procedure TestImportWithNoGuidAppends;
       procedure TestUpdateReplacesTheRow;
       procedure TestUpdateOfAMissingRowSaysSo;
       procedure TestWholeCorpusLogRoundTrips;
@@ -506,6 +509,175 @@ begin
    CheckTrue(early < late, 'a v7 guid sorts by its timestamp');
 end;
 
+{ IMPORTING OUR OWN EXPORTED FILE, which is the point of keying on the guid.
+
+  NY4I: "This allows us to import our own exported file. Also good for testing."
+  Both halves matter -- an import that duplicates on a second run is one nobody
+  dares repeat, and an import that cannot be repeated is useless as a test
+  fixture. }
+procedure TLogRepositoryTests.TestImportingTheSameFileTwiceAddsNothing;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   a, b: ContestExchange;
+   fn: string;
+   wasNew: boolean;
+   id1, id2: Int64;
+begin
+   BeginTest('TestImportingTheSameFileTwiceAddsNothing');
+   fn := TempLogName('reimport.db');
+   Scrub(fn);
+
+   FillChar(a, SizeOf(a), 0);
+   a.ceRecordKind := rkQSO;
+   a.Callsign := 'W1AW';
+   a.QTHString := 'CT';
+   a.tSysTime.qtYear := 26;
+   a.tSysTime.qtMonth := 6;
+   a.tSysTime.qtDay := 1;
+
+   { The two halves of a COUNTY-LINE contact: one exchange, two QSOs, and in a
+     real TR4W ADIF export they carry the SAME APP_TR4W_ID. That is exactly why
+     the key here must be a PER-QSO guid: keying on the exchange id would merge
+     these two and lose a contact. Measured on the shipped florida_qp export --
+     3 records, 2 distinct APP_TR4W_ID. }
+   b := a;
+   b.QTHString := 'MA';
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         id1 := repo.ImportQSOByGuid('018f3a2b7c1d7abc8def000000000001', a, wasNew);
+         CheckTrue(wasNew, 'the first QSO is new');
+         id2 := repo.ImportQSOByGuid('018f3a2b7c1d7abc8def000000000002', b, wasNew);
+         CheckTrue(wasNew, 'and so is the second');
+         repo.Commit;
+
+         CheckTrue(id1 <> id2, 'they are two different rows');
+         CheckEquals(2, repo.QSOCount, 'the log holds two QSOs');
+
+         { THE SECOND PASS -- the same file again. }
+         CheckEquals(id1, repo.ImportQSOByGuid(
+                             '018f3a2b7c1d7abc8def000000000001', a, wasNew),
+                     'the first QSO matches the row it created');
+         CheckFalse(wasNew, 'and is not treated as new');
+         CheckEquals(id2, repo.ImportQSOByGuid(
+                             '018f3a2b7c1d7abc8def000000000002', b, wasNew),
+                     'and so does the second');
+         CheckFalse(wasNew, 'likewise');
+         repo.Commit;
+
+         CheckEquals(2, repo.QSOCount,
+                     're-importing the same file adds NOTHING');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+
+   Scrub(fn);
+end;
+
+procedure TLogRepositoryTests.TestImportUpdatesAnExistingQSO;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   qso, back: ContestExchange;
+   fn: string;
+   wasNew: boolean;
+   rowId: Int64;
+begin
+   BeginTest('TestImportUpdatesAnExistingQSO');
+   fn := TempLogName('reimport2.db');
+   Scrub(fn);
+
+   FillChar(qso, SizeOf(qso), 0);
+   qso.ceRecordKind := rkQSO;
+   qso.Callsign := 'W1AW';
+   qso.QTHString := 'CT';
+   qso.tSysTime.qtYear := 26;
+   qso.tSysTime.qtMonth := 6;
+   qso.tSysTime.qtDay := 1;
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         rowId := repo.ImportQSOByGuid('018f3a2b7c1d7abc8def000000000003', qso, wasNew);
+
+         { Re-importing a CORRECTED file is the usual reason to do it twice, so
+           the second pass must UPDATE rather than skip -- which is why this
+           looks the row up instead of catching a unique violation. }
+         qso.QTHString := 'MA';
+         CheckEquals(rowId,
+                     repo.ImportQSOByGuid('018f3a2b7c1d7abc8def000000000003',
+                                          qso, wasNew),
+                     'the same guid lands on the same row');
+         CheckFalse(wasNew, 'and is not new');
+         repo.Commit;
+
+         CheckTrue(repo.LoadQSO(rowId, back), 'it reads back');
+         CheckEquals('MA', string(back.QTHString), 'carrying the correction');
+         CheckEquals(1, repo.QSOCount, 'and there is still one QSO');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+
+   Scrub(fn);
+end;
+
+procedure TLogRepositoryTests.TestImportWithNoGuidAppends;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   qso: ContestExchange;
+   fn: string;
+   wasNew: boolean;
+begin
+   BeginTest('TestImportWithNoGuidAppends');
+   fn := TempLogName('noguid.db');
+   Scrub(fn);
+
+   FillChar(qso, SizeOf(qso), 0);
+   qso.ceRecordKind := rkQSO;
+   qso.Callsign := 'W1AW';
+   qso.tSysTime.qtYear := 26;
+   qso.tSysTime.qtMonth := 6;
+   qso.tSysTime.qtDay := 1;
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         { A file from another program has no APP_TR4W_ID. With no identity
+           there is nothing to match on, and guessing from "looks similar"
+           is how an import loses a QSO -- so both go in. }
+         repo.ImportQSOByGuid('', qso, wasNew);
+         CheckTrue(wasNew, 'a record with no guid is new');
+         repo.ImportQSOByGuid('', qso, wasNew);
+         CheckTrue(wasNew, 'and so is the next one');
+         repo.Commit;
+
+         CheckEquals(2, repo.QSOCount,
+                     'two identical-looking records with no identity stay two');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+
+   Scrub(fn);
+end;
+
 { UPDATE IS WHAT PHASE B2 ACTUALLY NEEDS. Of the eight sites that write a QSO to
   the log, FIVE seek to a position and rewrite -- DeleteLastContact, uNet's
   UpdateRec and FindAndUpdateQSOInLog, uQTCS.SetSendedQSOs, and the QSO editor.
@@ -714,6 +886,9 @@ begin
    TestSearchAndPounceIsInverted;
    TestKidsFollowsTheRecordKind;
    TestUUIDv7ShapeAndOrdering;
+   TestImportingTheSameFileTwiceAddsNothing;
+   TestImportUpdatesAnExistingQSO;
+   TestImportWithNoGuidAppends;
    TestUpdateReplacesTheRow;
    TestUpdateOfAMissingRowSaysSo;
    TestWholeCorpusLogRoundTrips;
