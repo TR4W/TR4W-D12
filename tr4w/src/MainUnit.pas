@@ -2730,8 +2730,15 @@ begin
   // for tw_BANDMAPWINDOW_INDEX and never reaches CreateDialogIndirectParam.
   // No WndProcAdr for either dupe sheet: both are LCL forms as of 2026-08-24
   // and OpenTR4WWindow's seam builds them.
-  tr4w_WindowsArray[tw_FUNCTIONKEYSWINDOW_INDEX].WndProcAdr :=
-    @FunctionKeysWindowDlgProc;
+  // No WndProcAdr for the function keys window either, as of 2026-09-01 -- and
+  // it was the LAST ONE. OpenTR4WWindow has tested tw_FUNCTIONKEYSWINDOW_INDEX
+  // FIRST and built the LCL form since 2026-08-24, so this assignment has been
+  // dead ever since: written on every start-up, read by nothing. The proc it
+  // pointed at went with it.
+  //
+  // Every entry in tr4w_WindowsArray now has a nil WndProcAdr, which is what
+  // makes OpenTR4WWindow's CreateDialogIndirectParam fallback unreachable --
+  // see the note where that used to be.
   // No WndProcAdr for the SCP window: it is an LCL form as of 2026-08-24.
   // No WndProcAdr for any of the five remaining-multiplier windows: they are
   // LCL forms as of 2026-08-24.
@@ -6163,8 +6170,31 @@ begin
      end
   else
      begin
-     h := CreateDialogIndirectParam(hInstance, PDlgTemplate(@MAINTR4WDLGTEMPLATE)^,
-       tr4whandle, tr4w_WindowsArray[ID].WndProcAdr, integer(ID));
+     (* THE WIN32 FALLBACK IS GONE (2026-09-01), and it could not have run.
+
+        It was
+
+          h := CreateDialogIndirectParam(hInstance,
+                 PDlgTemplate(@MAINTR4WDLGTEMPLATE)^, tr4whandle,
+                 tr4w_WindowsArray[ID].WndProcAdr, integer(ID));
+
+        -- the original path every tool window took. Twenty arms above now cover
+        every openable id in the tw_ enum, and as of today NOT ONE entry in
+        tr4w_WindowsArray has a WndProcAdr. So the only way here was an id with
+        no arm, and it would have handed CreateDialogIndirectParam a NIL window
+        procedure: the dialog fails, h is 0, and the operator gets nothing with
+        no explanation.
+
+        REPORTED RATHER THAN SILENT, because that is the case this branch now
+        exists for. A new tw_ window added without an arm gets a log line naming
+        the id instead of a window that does not appear. *)
+     h := 0;
+     if logger <> nil then
+        begin
+        logger.Error('[Windows] OpenTR4WWindow has no arm for window id %d ' +
+                     '(%s) -- every tool window must build an LCL form',
+                     [Ord(ID), WindowNames[ID]]);
+        end;
      end;
 
   // The window's caption is its MENU ITEM's text with the accelerator cut off,

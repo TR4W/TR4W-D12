@@ -39,7 +39,6 @@ utils_text,
   Tree,
   uTR4WStrings;
 
-function FunctionKeysWindowDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 procedure ShowFMessages(VirtualKey: Byte);
 procedure EditFunctionKeyMessage(const aKey: integer);
 procedure ShowFunctionKeyContextMenu(const aKey: integer);
@@ -104,159 +103,22 @@ uses
   uFunctionKeysForm,   // the panels; this unit supplies what a key press MEANS
   uConfigValues;   // Config.IncludeFKeyNumber
 
-function FunctionKeysWindowDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-label
-  1;
-var
-  i                                     : integer;
-  Left                                  : integer;
-  temprect                              : TRect;
-  Width                                 : integer;
-  Height                                : integer;
-  FKDRAWITEMSTRUCT                      : PDrawItemStruct;
-  TempCardinal                          : Cardinal;
-  TempColor                             : tcolor;
-//  b                                     : Byte;
-const
-//  fkbstleft                             = 26;
-  delta                                 = 2;
-//  FKCloseButtonID                       = 222;
-//  ClosrButWidth                         = 14-14;
-begin
-  Result := False;
-  case Msg of
-    WM_LBUTTONDOWN, WM_WINDOWPOSCHANGING, WM_EXITSIZEMOVE: DefTR4WProc(Msg, lParam, hwnddlg);
+(* FunctionKeysWindowDlgProc IS DELETED (2026-09-01).
 
-    WM_DRAWITEM:
-      begin
-        Result := True;
-        FKDRAWITEMSTRUCT := Pointer(lParam);
-{
-        if FKDRAWITEMSTRUCT^.hwndItem = FKCloseButton then
-        begin
-          TempCardinal := DFCS_CAPTIONCLOSE or DFCS_FLAT;
-          if (lobyte(FKDRAWITEMSTRUCT^.itemState) = ODS_SELECTED or ODS_FOCUS) then TempCardinal := DFCS_CAPTIONCLOSE or DFCS_PUSHED;
-          DrawFrameControl(FKDRAWITEMSTRUCT^.HDC, FKDRAWITEMSTRUCT^.rcItem, DFC_CAPTION, TempCardinal);
-          Exit;
-        end;
-}
-        if (lobyte(PDrawItemStruct(lParam).itemState) = ODS_SELECTED or ODS_FOCUS) then
+   A hundred and fifty lines of WM_DRAWITEM owner-drawing, WM_COMMAND routing
+   and hit-testing, for a window that has been an LCL form since 2026-08-24:
+   OpenTR4WWindow tests tw_FUNCTIONKEYSWINDOW_INDEX first and builds
+   uFunctionKeysForm, so the proc was unreachable from that day. The only thing
+   that still named it was MainUnit's WndProcAdr assignment, written on every
+   start-up and read by nothing.
 
-           begin
-           TempCardinal := EDGE_SUNKEN
-           end
-        else
-           begin
-           TempCardinal := {EDGE_RAISED; //} EDGE_ETCHED;
-           end;
+   It was also the LAST window procedure in tr4w_WindowsArray. With it gone,
+   OpenTR4WWindow's CreateDialogIndirectParam fallback had no id that could
+   reach it, and that is deleted too -- so nothing in this program creates a
+   tool window the Win32 way any more.
 
-        DrawEdge(FKDRAWITEMSTRUCT^.HDC, FKDRAWITEMSTRUCT^.rcItem, TempCardinal, BF_TOPLEFT or BF_BOTTOMRIGHT);
-
-//        DrawFrameControl(FKDRAWITEMSTRUCT^.HDC, FKDRAWITEMSTRUCT^.rcItem, DFC_BUTTON, DFCS_BUTTONPUSH	);
-
-        FKDRAWITEMSTRUCT^.rcItem.Right := FKDRAWITEMSTRUCT^.rcItem.Right - delta;
-        FKDRAWITEMSTRUCT^.rcItem.Left := FKDRAWITEMSTRUCT^.rcItem.Left + delta;
-        FKDRAWITEMSTRUCT^.rcItem.Top := FKDRAWITEMSTRUCT^.rcItem.Top + delta;
-        FKDRAWITEMSTRUCT^.rcItem.Bottom := FKDRAWITEMSTRUCT^.rcItem.Bottom - delta;
-
-        SetBkMode(FKDRAWITEMSTRUCT^.HDC, TRANSPARENT);
-        TempColor := ButtonsColor[FKDRAWITEMSTRUCT^.CtlID];
-//        TempColor := tr4wColorsArray[tr4wColors(FKDRAWITEMSTRUCT^.CtlID - 112+4)];
-        GradientRect(FKDRAWITEMSTRUCT^.HDC, FKDRAWITEMSTRUCT^.rcItem, TempColor, TempColor, gdVertical);
-
-//        b := GetGValue(Cardinal(ButtonsColor[FKDRAWITEMSTRUCT^.CtlID]));
-//        if b < 128 then
-//        if TempColor = 0 then
-        Windows.SetTextColor(FKDRAWITEMSTRUCT^.HDC, 0);
-
-{
-        TempColor := ButtonsColor[FKDRAWITEMSTRUCT^.CtlID];
-        asm
-        mov eax,TempColor
-        cmp eax,0
-        jnz @@1
-        mov eax,clWhite
-        @@1:
-        bswap eax
-        mov TempColor,eax
-        end;
-        Windows.SetTextColor(FKDRAWITEMSTRUCT^.HDC, TempColor);
-}
-        if (lobyte(FKDRAWITEMSTRUCT^.itemState) = ODS_SELECTED or ODS_FOCUS) then
-           begin
-           FKDRAWITEMSTRUCT^.rcItem.Bottom := FKDRAWITEMSTRUCT^.rcItem.Bottom + delta;
-           FKDRAWITEMSTRUCT^.rcItem.Right := FKDRAWITEMSTRUCT^.rcItem.Right + delta;
-           end;
-        Windows.DrawTextA(
-          FKDRAWITEMSTRUCT^.HDC,
-          @ButtonsText[FKDRAWITEMSTRUCT^.CtlID][1],
-          length(ButtonsText[FKDRAWITEMSTRUCT^.CtlID]),
-          FKDRAWITEMSTRUCT^.rcItem,
-          {DT_END_ELLIPSIS + }DT_EDITCONTROL + DT_WORDBREAK + DT_CENTER + DT_VCENTER);
-      end;
-
-    WM_SIZE:
-      begin
-        Windows.GetClientRect(hwnddlg, temprect);
-        Width := (temprect.Right - temprect.Left - 30) div 12;
-        Height := temprect.Bottom - temprect.Top;
-        Left := 0;
-        for i := 112 to 123 do
-           begin
-
-           Windows.MoveWindow(KeysHandles[i], Left, 0, Width, Height, True);
-           inc(Left, Width + 1);
-           if (i = 115) or (i = 119) then
-              begin
-              inc(Left, 10);
-              end;
-           end;
-//        Windows.MoveWindow(FKCloseButton, temprect.Right - temprect.Left - ClosrButWidth, 0, ClosrButWidth, ClosrButWidth, True);
-        InvalidateRect(hwnddlg, nil, False);
-      end;
-
-    WM_INITDIALOG:
-      begin
-        tr4w_WindowsArray[tw_FUNCTIONKEYSWINDOW_INDEX].WndHandle := hwnddlg;
-
-        for i := 112 to 123 do
-           begin
-           KeysHandles[i] := tCreateButtonWindow(0, '', BS_OWNERDRAW or BS_AUTORADIOBUTTON or BS_PUSHLIKE or BS_LEFT or WS_CHILD or WS_VISIBLE or BS_NOTIFY, 0, 0, 0, 0, hwnddlg, i);
-           // Issue #997: asm tWM_SETFONT -> TF helper (EAX = KeysHandles[i] above).
-           tWM_SETFONT(KeysHandles[i], MainFixedFont);
-           end;
-//        FKCloseButton := tCreateButtonWindow(0, nil, BS_OWNERDRAW or BS_PUSHLIKE or WS_CHILD or WS_VISIBLE or BS_NOTIFY, 0, 0, 0, 0, hwnddlg, FKCloseButtonID);
-
-        ShowFMessages(0);
-//        for I := 112 to 115 do ButtonsColor[I] := $FFFFFF;
-//        for I := 116 to 119 do ButtonsColor[I] := $FF0000;
-//        for I := 120 to 123 do ButtonsColor[I] := $0000FF;
-      end;
-
-    WM_CLOSE: 1: CloseTR4WWindow(tw_FUNCTIONKEYSWINDOW_INDEX);
-
-    WM_COMMAND:
-      begin
-//        if wParam = FKCloseButtonID then goto 1;
-        if HiWord(wParam) = BN_CLICKED then
-          if LoWord(wParam) in [112..123] then
-             begin
-             // FIRST instruction after Windows tells us the button was clicked.
-             // Timestamp this against the '[ <radio> TX]' / '[wkSendByte]' trace
-             // to measure the click -> CW latency NY4I reported (2026-07-31);
-             // FrmSetFocus and ProcessFuntionKeys both run after this point, so
-             // anything between the two timestamps is ours, not Windows'.
-             logger.Trace('[FunctionKeysWindow] MOUSE CLICK on F%d received',
-                          [LoWord(wParam) - 111]);
-             FrmSetFocus;
-             ProcessFuntionKeys(LoWord(wParam));
-             logger.Trace('[FunctionKeysWindow] MOUSE CLICK on F%d dispatched',
-                          [LoWord(wParam) - 111]);
-             end;
-      end;
-  end;
-
-end;
+   In git history if the drawing is ever wanted as a reference;
+   uFunctionKeysForm is what draws these keys now. *)
 
 procedure ShowFMessages(VirtualKey: Byte);
 var

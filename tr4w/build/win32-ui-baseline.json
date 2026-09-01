@@ -1,10 +1,10 @@
 ﻿{
-    "type.HWND":  508,
+    "type.HWND":  506,
     "array.wh":  38,
     "CreateModalDialog":  4,
     "tDialogBox":  0,
     "DialogBox*":  2,
-    "CreateDialogIndirectParam":  2,
+    "CreateDialogIndirectParam":  1,
     "CreateDialogParam":  0,
     "CreateWindowEx":  14,
     "TF.CreateStatic":  4,
