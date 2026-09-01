@@ -493,24 +493,47 @@ procedure CreateCabrilloFile;
 
   Windows.ZeroMemory( @Radio1IDs, SizeOf( Radio1IDs ) );
 
-  (* CATEGORY-TRANSMITTER, selection 1 -- the second entry, TWO.  The control
-     id was written $CF with a decimal comment of 124 beside it, and the
-     comment was simply wrong: $CF is 207, which is Ord(ctCategoryTransmitter)
-     plus the dialog's 200 base.  Naming the tag is the point of asking the
-     window rather than a number.
+  (* THE TRANSMITTER-1 PROMPT IS HELD SHUT DELIBERATELY (2026-09-01).
 
-     AND IT HAS NEVER BEEN TRUE, ON EITHER SIDE OF THE PORT.  CabrilloTagsArray
-     marks CATEGORY-TRANSMITTER ctrList FALSE, so its row is a free-text EDIT --
-     even though CategoriesArray carries five values for it.  CB_GETCURSEL to an
-     edit control is not a message an edit handles, so DefWindowProc returned 0;
-     the accessor now returns -1 for the same reason, and neither is 1.  So
-     SetTransmittersIdentifiers is unreachable for every contest.
+     This read
 
-     REPORTED, NOT FIXED.  Making that tag a drop-down like its eight siblings
-     is very likely what was meant, but it would change what an operator sees
-     AND resurrect SetTransmittersIdentifiers in the exported log the first time
-     someone picks TWO.  That is NY4I's call, not a port's. *)
-  SetTransmittersId := CabrilloTagItemIndex( ctCategoryTransmitter ) = 1;
+        SetTransmittersId := CabrilloTagItemIndex( ctCategoryTransmitter ) = 1;
+
+     and it could never be true, on either side of the port: the tag was marked
+     ctrList FALSE, so the row was a free-text EDIT, and CB_GETCURSEL is not a
+     message an edit handles -- DefWindowProc returned 0.  (The control id was
+     written $CF with a decimal comment of 124 beside it; $CF is 207, which is
+     Ord(ctCategoryTransmitter) + 200, so the code was right and the comment had
+     been wrong for years.)
+
+     CATEGORY-TRANSMITTER IS AN EDITABLE COMBO NOW, so that line WOULD start
+     firing the first time an operator picks TWO -- and what it fires is
+     SetTransmittersIdentifiers, which asks him to type "transmiter 1 computers
+     IDs" into Radio1IDs.  Radio1IDs is declared, zeroed here, assigned there,
+     AND READ BY NOTHING.  So the only effect of waking it today is a prompt
+     that collects a value and discards it, which is a worse experience than
+     the silence it replaces.
+
+     WHAT IT WAS REACHING FOR IS REAL AND IS STILL OWED.  Cabrillo v3's QSO line
+     ends with a transmitter id: a single 0 or 1 identifying RUN/MULT or
+     RUN1/RUN2, used in the one- and two-transmitter categories (M/2, CQWW M/S)
+     and NOT in single-op or M/M.  TR4W does emit that column -- T4, in
+     tGenerateLogPortionOfCabrilloFile -- and it derives it from the wrong
+     thing:
+
+       * it emits t for EVERY multi-op entry, so an M/M log carries a column the
+         specification says it should not have; and
+       * it sets t from `TempRXData.ceComputerID = ComputerID`, which is "was
+         this QSO logged on the machine doing the export", not "which
+         transmitter made it".  With three PCs on transmitter 1 and two on
+         transmitter 2 that is simply the wrong split.
+
+     Radio1IDs -- ten characters, "transmiter 1 computers IDs" -- is exactly the
+     missing input: the set of computer ids belonging to transmitter 1, against
+     which each QSO's ceComputerID would be tested.  Finishing that is a change
+     to what a submitted log contains, so it is NY4I's to schedule; holding the
+     prompt shut until then costs nothing and keeps the intent on the page. *)
+  SetTransmittersId := False;
 
   (* IOTA ASKED CONTROL 120, AND 120 WAS NEVER A DROP-DOWN.
 

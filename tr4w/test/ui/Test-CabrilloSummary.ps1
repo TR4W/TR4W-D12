@@ -44,12 +44,12 @@ param(
    # build is the failure mode that looks healthy, and a floor of 1 would pass
    # it.
    [int]    $ExpectRows  = 21,
-   # EIGHT tags carry a drop-down. Not nine: CategoriesArray has a value list
-   # for CATEGORY-TRANSMITTER, but CabrilloTagsArray marks that tag ctrList
-   # False, so it is a free-text edit and the five values ONE/TWO/... are never
-   # offered. That mismatch is pre-existing and is REPORTED, not fixed -- see
-   # the note in PostUnit where SetTransmittersId reads it.
-   [int]    $ExpectLists = 8,
+   # NINE tags carry a drop-down. It was eight until 2026-09-01: CategoriesArray
+   # always had a value list for CATEGORY-TRANSMITTER, but the tag was marked
+   # ctrList False, so it rendered as a bare edit and the five official values
+   # were never offered. It is now an OPEN list -- seeded, and still typeable,
+   # because sponsors ask for values Cabrillo v3 does not publish.
+   [int]    $ExpectLists = 9,
    # It must not shrink past its own content. The scroll box states 400 x 220
    # and the button strip is 44 tall, so the smallest client that still shows a
    # usable row is about 400 x 264; the expectations sit under that because the

@@ -293,11 +293,23 @@ function Resolve-TR4WHarnessConfig
 # StartsWith, not equality: several windows append state to their caption once
 # they are up, and a test that has to predict the suffix is a test that breaks
 # for the wrong reason.
+#
+# POLLED, NOT SAMPLED ONCE. The first version looked exactly once and produced a
+# test that passed and then failed on the identical build (2026-09-01): the
+# caller sleeps a fixed OpenMs after posting the menu command, and a window that
+# is a few milliseconds slower than that -- because the machine is busy, because
+# the form is building twenty-one rows -- simply is not there yet. A flaky test
+# is worse than no test, because the next real failure gets shrugged at.
+#
+# The window is MODAL, so its own thread is pumping and the caption is set in
+# OnShow; waiting is the only thing needed.
 function Find-TR4WWindowByTitle
 {
    param([Parameter(Mandatory = $true)][int]    $ProcessId,
          [Parameter(Mandatory = $true)][string] $Title,
-         [System.IntPtr] $Exclude = [System.IntPtr]::Zero)
+         [System.IntPtr] $Exclude = [System.IntPtr]::Zero,
+         [int] $TimeoutMs = 5000,
+         [int] $PollMs    = 200)
 
    $script:uiDrvTitled = [IntPtr]::Zero
    $cb = [Win32.UiDrv+EnumWindowsProc]{
@@ -316,7 +328,18 @@ function Find-TR4WWindowByTitle
          }
       return $true
    }
-   [void][Win32.UiDrv]::EnumWindows($cb, [IntPtr]::Zero)
+   $deadline = (Get-Date).AddMilliseconds($TimeoutMs)
+   do
+      {
+      [void][Win32.UiDrv]::EnumWindows($cb, [IntPtr]::Zero)
+      if ($script:uiDrvTitled -ne [IntPtr]::Zero)
+         {
+         break
+         }
+      Start-Sleep -Milliseconds $PollMs
+      }
+   while ((Get-Date) -lt $deadline)
+
    return $script:uiDrvTitled
 }
 

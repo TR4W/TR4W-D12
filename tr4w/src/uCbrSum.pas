@@ -90,7 +90,28 @@ type
     ctrTag: PAnsiChar;
     ctrCFG: boolean; //do not used
     ctrSave: boolean;
+
+    { Does this tag offer a list of values? }
     ctrList: boolean;
+
+    { IS THAT LIST A SUGGESTION RATHER THAN THE WHOLE SET?
+
+      Cabrillo v3 gives each category a fixed set of legal values, and for most
+      of them that is the end of it.  CATEGORY-TRANSMITTER is different in
+      practice: sponsors commonly ask for a value that is not in the published
+      list (NY4I, 2026-09-01), so a closed drop-down cannot express what the
+      sponsor asked for, and a plain edit throws away the five values that are
+      right most of the time.
+
+      ctrOpen makes the row an EDITABLE combo -- seeded with the official list,
+      accepting anything typed.  The cost is typos, and that is the deliberate
+      trade: a log the sponsor rejects for a typo beats a log that cannot state
+      what the sponsor asked for at all.
+
+      Only CATEGORY-TRANSMITTER is open today.  Opening another is this one
+      word -- CATEGORY-STATION, CATEGORY-OVERLAY and CATEGORY-TIME are the
+      likely next candidates and are left closed until someone hits one. }
+    ctrOpen: boolean;
   end;
 
 const
@@ -114,27 +135,31 @@ const
   CabrilloTagsArray                     : array[CabrilloTags] of TCabrilloTagRecord =
     (
 {(*}
-    (ctrTag: '_CATEGORY-ASSISTED';      ctrCFG:True;  ctrSave: False; ctrList: True),
-    (ctrTag: '_CATEGORY-BAND';          ctrCFG:True;  ctrSave: False; ctrList: True),
-    (ctrTag: '_CATEGORY-MODE';          ctrCFG:True;  ctrSave: True; ctrList: True),
-    (ctrTag: '_CATEGORY-OPERATOR';      ctrCFG:True;  ctrSave: False; ctrList: True),    // ny4i changed this since we dete3rmine from the log
-    (ctrTag: '_CATEGORY-POWER';         ctrCFG:True;  ctrSave: True; ctrList: True),
-    (ctrTag: '_CATEGORY-STATION';       ctrCFG:False; ctrSave: True; ctrList: True), // Issue #976: now a drop-down
-    (ctrTag: '_CATEGORY-TIME';          ctrCFG:True;  ctrSave: True; ctrList: True),  // Issue #976: persist + restore selection
-    (ctrTag: '_CATEGORY-TRANSMITTER';   ctrCFG:False; ctrSave: True; ctrList: False),
-    (ctrTag: '_CATEGORY-OVERLAY';       ctrCFG:True;  ctrSave: True; ctrList:  True),  // Issue #976: persist + restore selection
-    (ctrTag: '_CERTIFICATE';            ctrCFG:True;  ctrSave: True; ctrList: False),
-    (ctrTag: '_OPERATORS';              ctrCFG:True;  ctrSave: True; ctrList: False),
-    (ctrTag: '_CLUB';                   ctrCFG:False; ctrSave: True;  ctrList: False),
-    (ctrTag: '_LOCATION';               ctrCFG:True;  ctrSave: True; ctrList: False),
-    (ctrTag: '_NAME';                   ctrCFG:False; ctrSave: True;  ctrList: False),
-    (ctrTag: '_ADDRESS';                ctrCFG:False; ctrSave: True;  ctrList: False),
-    (ctrTag: '_ADDRESS-CITY';           ctrCFG:False; ctrSave: True;  ctrList: False),
-    (ctrTag: '_ADDRESS-STATE-PROVINCE'; ctrCFG:False; ctrSave: True;  ctrList: False),
-    (ctrTag: '_ADDRESS-POSTALCODE';     ctrCFG:False; ctrSave: True;  ctrList: False),
-    (ctrTag: '_ADDRESS-COUNTRY';        ctrCFG:False; ctrSave: True;  ctrList: False),
-    (ctrTag: '_EMAIL';                  ctrCFG:False; ctrSave: True;  ctrList: False),
-    (ctrTag: '_SOAPBOX';                ctrCFG:True;  ctrSave: False; ctrList: False)
+    (ctrTag: '_CATEGORY-ASSISTED';      ctrCFG:True;  ctrSave: False; ctrList: True; ctrOpen: False),
+    (ctrTag: '_CATEGORY-BAND';          ctrCFG:True;  ctrSave: False; ctrList: True; ctrOpen: False),
+    (ctrTag: '_CATEGORY-MODE';          ctrCFG:True;  ctrSave: True; ctrList: True; ctrOpen: False),
+    (ctrTag: '_CATEGORY-OPERATOR';      ctrCFG:True;  ctrSave: False; ctrList: True; ctrOpen: False),    // ny4i changed this since we dete3rmine from the log
+    (ctrTag: '_CATEGORY-POWER';         ctrCFG:True;  ctrSave: True; ctrList: True; ctrOpen: False),
+    (ctrTag: '_CATEGORY-STATION';       ctrCFG:False; ctrSave: True; ctrList: True; ctrOpen: False), // Issue #976: now a drop-down
+    (ctrTag: '_CATEGORY-TIME';          ctrCFG:True;  ctrSave: True; ctrList: True; ctrOpen: False),  // Issue #976: persist + restore selection
+    // Cabrillo v3 publishes ONE/TWO/LIMITED/UNLIMITED/SWL here, and sponsors
+    // routinely ask for something else -- so this is the one EDITABLE list:
+    // seeded with the official five, accepting anything typed (NY4I,
+    // 2026-09-01).  It was a plain edit, which offered the operator nothing.
+    (ctrTag: '_CATEGORY-TRANSMITTER';   ctrCFG:False; ctrSave: True; ctrList: True;  ctrOpen: True),
+    (ctrTag: '_CATEGORY-OVERLAY';       ctrCFG:True;  ctrSave: True; ctrList:  True; ctrOpen: False),  // Issue #976: persist + restore selection
+    (ctrTag: '_CERTIFICATE';            ctrCFG:True;  ctrSave: True; ctrList: False; ctrOpen: False),
+    (ctrTag: '_OPERATORS';              ctrCFG:True;  ctrSave: True; ctrList: False; ctrOpen: False),
+    (ctrTag: '_CLUB';                   ctrCFG:False; ctrSave: True;  ctrList: False; ctrOpen: False),
+    (ctrTag: '_LOCATION';               ctrCFG:True;  ctrSave: True; ctrList: False; ctrOpen: False),
+    (ctrTag: '_NAME';                   ctrCFG:False; ctrSave: True;  ctrList: False; ctrOpen: False),
+    (ctrTag: '_ADDRESS';                ctrCFG:False; ctrSave: True;  ctrList: False; ctrOpen: False),
+    (ctrTag: '_ADDRESS-CITY';           ctrCFG:False; ctrSave: True;  ctrList: False; ctrOpen: False),
+    (ctrTag: '_ADDRESS-STATE-PROVINCE'; ctrCFG:False; ctrSave: True;  ctrList: False; ctrOpen: False),
+    (ctrTag: '_ADDRESS-POSTALCODE';     ctrCFG:False; ctrSave: True;  ctrList: False; ctrOpen: False),
+    (ctrTag: '_ADDRESS-COUNTRY';        ctrCFG:False; ctrSave: True;  ctrList: False; ctrOpen: False),
+    (ctrTag: '_EMAIL';                  ctrCFG:False; ctrSave: True;  ctrList: False; ctrOpen: False),
+    (ctrTag: '_SOAPBOX';                ctrCFG:True;  ctrSave: False; ctrList: False; ctrOpen: False)
 //    (ctrTag: '_RIG';                    ctrCFG:False; ctrSave: True;  ctrList: False),
 //    (ctrTag: '_ANTENNAS';               ctrCFG:False; ctrSave: True;  ctrList: False)
 {*)}

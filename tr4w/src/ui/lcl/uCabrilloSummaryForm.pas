@@ -221,10 +221,25 @@ begin
          begin
          cbo := TComboBox.Create(Self);
          cbo.Parent := sbTags;
-         { csDropDownList, not csDropDown: CBS_DROPDOWNLIST is what the dialog
-           created, and a category the sponsor does not publish is not a value
-           an operator should be able to type. }
-         cbo.Style  := csDropDownList;
+
+         { CLOSED BY DEFAULT, OPEN WHERE THE TAG SAYS SO.  CBS_DROPDOWNLIST is
+           what the Win32 dialog created for every list, and for a category
+           whose legal values Cabrillo v3 actually fixes that is right -- a
+           typed CATEGORY-MODE is a rejected log.
+
+           ctrOpen marks the tags where the published list is a suggestion.
+           CATEGORY-TRANSMITTER is the one today: sponsors routinely ask for a
+           value outside ONE/TWO/LIMITED/UNLIMITED/SWL, and until now that tag
+           was a bare edit, which meant the five official values were not
+           offered at all. }
+         if CabrilloTagsArray[tag].ctrOpen then
+            begin
+            cbo.Style := csDropDown;
+            end
+         else
+            begin
+            cbo.Style := csDropDownList;
+            end;
          cbo.SetBounds(FIELD_LEFT, y, fieldW, FIELD_H);
          cbo.Anchors := [akLeft, akTop, akRight];
          FillCategoryItems(tag, cbo);
@@ -331,8 +346,26 @@ begin
                                     string(CabrilloTagsArray[tag].ctrTag)));
             if saved <> '' then
                begin
-               TComboBox(FRow[tag]).ItemIndex :=
-                  TComboBox(FRow[tag]).Items.IndexOf(saved);
+               idx := TComboBox(FRow[tag]).Items.IndexOf(saved);
+               if idx >= 0 then
+                  begin
+                  TComboBox(FRow[tag]).ItemIndex := idx;
+                  end
+               else if CabrilloTagsArray[tag].ctrOpen then
+                  begin
+                  { AN OPEN LIST MUST BE ABLE TO RELOAD WHAT IT SAVED.  Setting
+                    ItemIndex to the -1 that IndexOf returned would silently
+                    blank the sponsor-specific value the operator typed last
+                    time -- the field would look untouched and the header would
+                    lose it on the next save. }
+                  TComboBox(FRow[tag]).Text := saved;
+                  end
+               else
+                  begin
+                  { A closed list holding a value it does not offer: leave it
+                    unselected rather than invent a selection. }
+                  TComboBox(FRow[tag]).ItemIndex := -1;
+                  end;
                end;
             end;
          end
