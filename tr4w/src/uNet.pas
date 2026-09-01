@@ -212,7 +212,30 @@ uses
   uTelnet,
   uGetServerLog,
   MainUnit,
+  uAppStrings,   { SNetComputerIDInUse -- new UI text does not go in uTR4WStrings }
+  uComputerID,   { the station-id rule and its two wire encodings }
    uConfigValues;
+
+{ THE ID THE SERVER REFUSED, in the ordinal form the wire uses, or #0.
+
+  WITHOUT THIS THE CLIENT RETRIES THE REFUSAL EVERY FIVE SECONDS FOREVER.  The
+  network window's timer calls TryConnectToNetwork whenever the link is down, so
+  a station kicked for a duplicate id would reconnect, be refused, drop and come
+  straight back -- flooding both logs and telling the operator nothing he had not
+  already dismissed once.
+
+  IT CLEARS ITSELF.  Rather than a flag someone has to remember to reset, the
+  refused id is REMEMBERED and compared: the moment COMPUTER ID is changed to
+  anything else the comparison stops matching and retrying resumes on its own.
+  That is exactly the action the message asks for, so recovery needs no second
+  step and no restart.
+
+  UNIT SCOPE, deliberately.  It is written by the message arm inside
+  ConsumeNetBuffer and read by TryConnectToNetwork seven hundred lines later;
+  the first version of this declared it among ConsumeNetBuffer's LOCALS, where
+  it compiled at the write and vanished at the read. }
+var
+  FRefusedComputerID : AnsiChar = #0;
 
 procedure InitializeNetworkColumnTitles;
 { Indices, not names: the array is positional and the four translatable
@@ -492,9 +515,34 @@ var
                     // every message that had arrived behind the disconnect
                     // notice in the same segment.
                     DisconnectedClient := ServerMessagePtr^.smParam;
-                    Windows.ZeroMemory(@StatusArray[DisconnectedClient],
-                                       SizeOf(TStationState));
-                    DisplayClientStatus(DisconnectedClient);
+
+                    // RANGE-CHECKED, because 0 IS REACHABLE.  The server sends
+                    // ClientsSoocketsArray[b].clID, which is #0 for any client
+                    // that connected and never announced an id -- including,
+                    // now, one the server refused.  StatusArray is [1..26] and
+                    // range checking is off in this tree, so index 0 would not
+                    // raise: it would zero the sixteen bytes in front of the
+                    // array and carry on.
+                    if DisconnectedClient in [1..26] then
+                       begin
+                       Windows.ZeroMemory(@StatusArray[DisconnectedClient],
+                                          SizeOf(TStationState));
+                       DisplayClientStatus(DisconnectedClient);
+                       end;
+                  end;
+
+                { THE SERVER WILL NOT HAVE THIS ID.  Latch, say so once, and go
+                  away -- see FRefusedComputerID for why the retry has to stop
+                  and how it starts again. }
+                SM_COMPUTERID_IN_USE_MESSAGE:
+                  begin
+                    FRefusedComputerID := AnsiChar(ServerMessagePtr^.smParam);
+                    logger.Warn('[Net] server refused computer ID %s -- ' +
+                                'another station is already using it',
+                                [string(ComputerID)]);
+                    NetDisconnect;
+                    showwarning(SysUtils.Format(SNetComputerIDInUse,
+                                                [string(ComputerID)]));
                   end;
 
                 SM_GETSTATUS_MESSAGE: SendFullStationStatus;
@@ -882,10 +930,36 @@ var
   // the thread is created stays put for that thread's whole life.
   FConnectThreadAnnounced : boolean = False;
 
+{ THIS STATION'S ID AS THE WIRE CARRIES IT.
+
+  AN ORDINAL, 1..26 -- NOT THE LETTER, whatever TClientEntry.clID's AnsiChar and
+  the server's comments suggest.  NET_STATIONSTATUS_ID carries the same identity
+  as the LETTER and converts it back on receipt (uNet.pas:331), so the protocol
+  has two encodings of one identity and they must not be confused.
+
+  THROUGH uComputerID, not by repeating the arithmetic.  This conversion now
+  happens in three places -- announcing the id, deciding whether the server's
+  refusal still applies, and the server judging it -- and the shared one also
+  answers #0 for anything that is not 'A'..'Z', which JudgeComputerID then
+  refuses as out of range rather than aliasing onto some other station. }
+function WireComputerID: AnsiChar;
+begin
+   Result := ComputerIDOrdinal(ComputerID);
+end;
+
 procedure TryConnectToNetwork;
 var
   announce: boolean;
 begin
+  { REFUSED, AND NOTHING HAS CHANGED SINCE.  Silent on purpose: the operator has
+    already been told once, and repeating it every five seconds would be the
+    same defect in a different costume. }
+  if (FRefusedComputerID <> #0) and (FRefusedComputerID = WireComputerID) then
+     begin
+     Exit;
+     end;
+  FRefusedComputerID := #0;
+
   // Issue #1041: log the "trying" line only on a GENUINE new attempt -- the
   // first one (nclsInitial) or after we'd been connected and dropped
   // (nclsConnected).  The old condition (<> nclsTrying) re-fired here every
@@ -971,7 +1045,7 @@ begin
      NetQSOInfoToSend.qiComputerID := Windows.GetTickCount;
 
  //    sCIDMESSAGE[4] := Char(Ord(ComputerID) - Ord('A') + 1);
-     ComputerNetID.ciComputerID := AnsiChar(Ord(ComputerID) - Ord('A') + 1);
+     ComputerNetID.ciComputerID := WireComputerID;
      SendToNet(ComputerNetID, SizeOf(ComputerNetID));
      SendFullStationStatus;
      SendClientStatus;

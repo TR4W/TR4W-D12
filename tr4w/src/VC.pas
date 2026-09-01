@@ -458,6 +458,12 @@ const
   SM_RECEIVED_UPDATED_QSO_MESSAGE       = 8300;
   SM_SERIAL_NUMBER_CHANGED              = 8310;
 
+  { THE SERVER REFUSED THIS STATION'S COMPUTER ID.  smParam carries the id that
+    was refused, in the ORDINAL form the wire uses (1..26, not 'A'..'Z' -- see
+    TComputerNetID).  Sent to the station that arrived SECOND: the one already
+    holding the id is operating and is not disturbed. }
+  SM_COMPUTERID_IN_USE_MESSAGE          = 8320;
+
 const
 
   TWO_STRINGS                           : PAnsiChar = '%s%s';

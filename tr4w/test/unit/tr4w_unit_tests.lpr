@@ -113,6 +113,7 @@ uses
    uTestTCIServer       in 'uTestTCIServer.pas',
    uTestTR4WConfigFile  in 'uTestTR4WConfigFile.pas',
    uTestWindowLayoutStore in 'uTestWindowLayoutStore.pas',
+   uTestComputerID in 'uTestComputerID.pas',
    uTestUDPBroadcaster  in 'uTestUDPBroadcaster.pas',
    uTestUtilsFile       in 'uTestUtilsFile.pas',
    uTestADIFRegression  in 'uTestADIFRegression.pas',
@@ -382,6 +383,7 @@ begin
    RegisterSuite(TTCIServerTests.Create('TCIServer'));
    RegisterSuite(TTR4WConfigFileTests.Create('TR4WConfigFile'));
    RegisterSuite(TWindowLayoutStoreTests.Create('WindowLayoutStore'));
+   RegisterSuite(TComputerIDTests.Create('ComputerID'));
 
    if RunAllSuites then
       begin

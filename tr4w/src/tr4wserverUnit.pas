@@ -32,6 +32,7 @@ uses
   Version,      // TR4WSERVER_CURRENTVERSION, used by FullServerVersion below
   TF,
   uCRC32,
+  uComputerID,   // the station-id rule, kept away from the sockets so it can be tested
   Messages;
 const
 
@@ -757,16 +758,98 @@ begin
        end;
 end;
 
+{ Tell one station its id is not available and leave it unidentified.
+
+  IT IS NOT DISCONNECTED HERE.  The socket is the server's only handle on a
+  client and tearing it down races the send; the client latches on this message
+  and drops itself, which is also what lets it say something useful to the
+  operator.  A client that ignores the message stays connected WITHOUT an id,
+  which is exactly where every client sits between connecting and announcing --
+  so the failure mode is the status quo, not something new. }
+procedure RefuseComputerID(s: TSocket; ID: AnsiChar; const aWhy: string);
+begin
+  ServerMessage.smMessage := SM_COMPUTERID_IN_USE_MESSAGE;
+  ServerMessage.smParam := Ord(ID);
+  sSend(s, ServerMessage, SizeOf(ServerMessage), dmDisc);
+  logger.Warn('Refused computer ID %s (%s): %s',
+              [ComputerIDLetter(ID), aWhy, 'station left unidentified']);
+end;
+
+{ WHAT THIS USED TO BE: three lines that stored the letter and asked nothing.
+
+  The server has held every connected station's id in one array all along, and
+  never compared them -- clID was written here and read in exactly ONE other
+  place in the whole program, SendDisconnectMessage.  So a second station
+  claiming a letter already in use was accepted in silence, and the damage
+  landed on the CLIENTS: StatusArray is INDEXED by the id (uNet.pas:331), so the
+  two stations become one row on every machine in the network, and three
+  separate "is this QSO mine?" tests -- MainUnit, LOGEDIT, and the Cabrillo
+  transmitter-id column in PostUnit -- start attributing one station's QSOs to
+  the other.  Nothing anywhere reports it and the log looks correctly merged.
+
+  FIRST COME, FIRST SERVED.  The station already holding the id is operating;
+  the one that just arrived is not.  Disturbing the wrong one of those in the
+  middle of a contest would be worse than the collision. }
 procedure SetComputerID(ID: AnsiChar; s: TSocket);
 var
   i                                     : integer;
+  mine                                  : integer;
+  taken                                 : TComputerIDSet;
+  { Which slot holds each id, so the refusal can name the station that has it.
+    An address is worth more to the operator than "some other station". }
+  holder                                : array[FIRST_COMPUTER_ID..LAST_COMPUTER_ID] of integer;
 begin
+  FillChar(holder, SizeOf(holder), 0);
+  mine := 0;
   for i := 1 to maxclients do
     if ClientsSoocketsArray[i].clSocket = s then
        begin
-       ClientsSoocketsArray[i].clID := ID;
+       mine := i;
        Break;
        end;
+
+  if mine = 0 then
+     begin
+     { A socket with no slot.  Nothing to record it against, and refusing it
+       would send to a client the server does not believe in. }
+     Exit;
+     end;
+
+  { WHICH IDS ARE ACTUALLY TAKEN.  Only CONNECTED slots count, and this
+    station's own slot is excluded -- DeleteSocketFromArray clears clSocket and
+    leaves clID standing, so counting either would refuse a station reclaiming
+    the letter it held before its own reconnect.  Locking an operator out of his
+    own network would be a worse defect than the one being fixed. }
+  taken := [];
+  for i := 1 to maxclients do
+     begin
+     if (i <> mine) and (ClientsSoocketsArray[i].clSocket <> 0) and
+        (Ord(ClientsSoocketsArray[i].clID) in
+           [FIRST_COMPUTER_ID..LAST_COMPUTER_ID]) then
+        begin
+        Include(taken, Ord(ClientsSoocketsArray[i].clID));
+        holder[Ord(ClientsSoocketsArray[i].clID)] := i;
+        end;
+     end;
+
+  case JudgeComputerID(ID, taken) of
+     cidOutOfRange:
+        begin
+        RefuseComputerID(s, ID, 'not a letter A..Z');
+        Exit;
+        end;
+
+     cidInUse:
+        begin
+        RefuseComputerID(s, ID, 'already held by ' +
+           string(PAnsiChar(@ClientsSoocketsArray[holder[Ord(ID)]].clIPAdr[0])));
+        Exit;
+        end;
+  end;
+
+  ClientsSoocketsArray[mine].clID := ID;
+  logger.Debug('Computer ID %s accepted for client %d',
+               [ComputerIDLetter(ID), mine]);
 end;
 
 procedure SetStatus(Status: TClientStatus; s: TSocket);

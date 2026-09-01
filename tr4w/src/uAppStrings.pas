@@ -94,6 +94,18 @@ resourcestring
       'Reason: %s' + sLineBreak + sLineBreak +
       'tr4w.log records the full detail.';
 
+   { ------------------------------------------------ multi-op networking - }
+
+   // NAMES THE SETTING, because that is what the operator has to change.
+   // "Connection refused" would send him to look at the network cable; the
+   // problem is a letter in his own configuration, and two stations cannot
+   // share one -- the whole protocol indexes station status BY that letter.
+   SNetComputerIDInUse =
+      'Computer ID %s is already in use by another station on this network.' +
+      sLineBreak + sLineBreak +
+      'Change COMPUTER ID to a letter no other station is using, then ' +
+      'reconnect.';
+
 implementation
 
 end.
