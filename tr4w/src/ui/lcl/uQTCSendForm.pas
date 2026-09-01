@@ -59,7 +59,6 @@ uses
    Controls,
    StdCtrls,
    ExtCtrls,
-   Buttons,          { TBitBtn -- the only LCL button that wraps its caption }
    uTR4WStrings;
 
 type
@@ -80,9 +79,11 @@ type
       procedure RowClick(Sender: TObject);
    private
       FRowText  : array[1..10] of TLabel;
-      FRowButton: array[1..10] of TBitBtn;
+      FRowButton: array[1..10] of TButton;
       FArrow    : TLabel;
       FRows     : integer;
+      { What BuildCommands measured the command strip to need. }
+      FCommandsWidth: integer;
 
       procedure BuildCommands;
       procedure BuildRows;
@@ -108,6 +109,7 @@ implementation
 {$R *.lfm}
 
 uses
+   Math,                  { Max -- a button is its caption or the floor }
    Graphics,
    LCLType,               { VK_PRIOR, VK_NEXT, VK_F10 }
    VC,                    { tr4wColorsArray, the menu ids }
@@ -133,20 +135,27 @@ const
    ARROW_W    = 55;
    ARROW_H    = 17;
 
-   { THE WIDTH THE CONTENT ACTUALLY NEEDS, derived from the constants above
-     rather than typed into the .lfm a second time.
+   { The command strip.  Widths are per button and measured; only the metrics
+     that do NOT depend on the text are constants. }
+   CMD_TOP    = 6;
+   CMD_HEIGHT = 50;
+   CMD_GAP    = 3;
+   CMD_MIN_W  = 55;
+   { Frame, focus rectangle and a little air either side of the text. }
+   CMD_PAD    = 18;
 
-     The rows end at the marker, not at the text: ARROW_LEFT + ARROW_W is 473,
+   { THE ROW STRIP'S MINIMUM, derived from the constants above rather than
+     typed into the .lfm a second time.
+
+     The rows end at the MARKER, not at the text: ARROW_LEFT + ARROW_W is 473,
      and the panel's stated minimum was 460 -- so at the smallest size the
      '< Next' marker hung over the edge and was clipped (NY4I, screenshot,
-     2026-09-01).  The command strip needs its own figure: eight buttons at
-     5 + i * 58, the last ending at 5 + 7 * 58 + 55.
+     2026-09-01).
 
-     Applied in HandleShow because a constraint computed from constants cannot
-     be expressed in the designer, and a number copied there by hand is the
-     thing that was wrong. }
-   ROWS_MIN_W     = ARROW_LEFT + ARROW_W + 7;
-   COMMANDS_MIN_W = 5 + 7 * 58 + 55 + 5;
+     The command strip has no constant here on purpose: its width depends on the
+     operator's QRV message and on his font, so BuildCommands measures it and
+     reports it in FCommandsWidth. }
+   ROWS_MIN_W = ARROW_LEFT + ARROW_W + 7;
 
 var
    GForm: TfrmQTCSend = nil;
@@ -183,25 +192,53 @@ const
        QTC_SEND_CALL, QTC_SEND_NUMBER, QTC_SEND_ALL, QTC_SEND_STOP);
 var
    i  : integer;
-   btn: TBitBtn;
+   x  : integer;
+   btn: TButton;
+
+   { THE WIDTH THIS CAPTION NEEDS, in the font the button will draw it in.
+
+     The '&' is an accelerator marker and is never painted, so measuring it
+     would buy every button a few pixels of nothing. }
+   function CaptionWidth(const aCaption: AnsiString): integer;
+   begin
+      Canvas.Font := Font;
+      { AnsiString throughout -- Canvas.TextWidth takes the LCL's own string
+        type, and casting to this unit's UnicodeString would narrow at the call. }
+      Result := Canvas.TextWidth(StringReplace(aCaption, '&', '', [rfReplaceAll]));
+   end;
+
 begin
+   (*
+     EACH BUTTON IS AS WIDE AS ITS OWN CAPTION, AND THE UNIFORM 55px GRID IS
+     GONE.
+
+     THE WIN32 BUTTONS WRAPPED AND NOTHING IN THE LCL CAN.  They were created
+     with BS_MULTILINE and 'N&EXT [return]' broke over three lines in 55px.  The
+     first attempt at this was to swap TButton for TBitBtn, because
+     TWin32WSBitBtn.CreateHandle sets BS_MULTILINE and TWin32WSButton does not
+     (win32wsbuttons.pp:577) -- and it changed nothing, because that flag is
+     read by the NATIVE button's drawing and LCL's BitBtn does not use it: it
+     sets BS_BITMAP, subclasses the control, measures the caption with
+     MeasureText and draws it with DrawTextEx into a rect of exactly that
+     measured size (win32wsbuttons.pp:285, :325).  One line, measured as one
+     line, drawn as one line.  Checking that the flag was SET was not the same
+     as checking it had any EFFECT (NY4I's second screenshot, 2026-09-01).
+
+     So the caption cannot be made to fit the button, and the button is made to
+     fit the caption.  A uniform grid was a fixed-size-dialog artifact anyway;
+     packed to content this whole strip is NARROWER than eight 55px buttons
+     were, because only 'NEXT [return]' is long and 'NR' and 'ALL' are not.
+
+     MEASURED, NOT ESTIMATED, and one of these captions is not even known until
+     the window opens -- the second button is the operator's QRV message.
+   *)
+   x := 5;
    for i := 0 to High(CMD_ID) do
       begin
-      { TBitBtn, NOT TButton, AND THE DIFFERENCE IS NOT DECORATION.  These
-        buttons are 55px wide and hold captions like 'N&EXT [return]' and the
-        operator's QRV message; the Win32 originals were created with
-        BS_MULTILINE and wrapped over three lines in that width.
-
-        TWin32WSButton does not set BS_MULTILINE and TWin32WSBitBtn does
-        (win32wsbuttons.pp:577), so a TButton simply clips: NY4I's screenshot at
-        the minimum size shows 'EXT [retur'.  Nothing warns -- the caption is
-        assigned, the button works, and the text is drawn short.
-
-        Owned by the PANEL, not the form: the panel is emptied and rebuilt on
+      { Owned by the PANEL, not the form: the panel is emptied and rebuilt on
         every open and DestroyComponents frees what it owns. }
-      btn := TBitBtn.Create(pnlCommands);
+      btn := TButton.Create(pnlCommands);
       btn.Parent := pnlCommands;
-      btn.SetBounds(5 + i * 58, 6, 55, 50);
       btn.Tag     := CMD_ID[i];
       btn.OnClick := CommandClick;
 
@@ -215,8 +252,35 @@ begin
          btn.Caption := AnsiString(QTCTXButtonsPChar[i]);
          end;
 
+      btn.SetBounds(x, CMD_TOP,
+                    Max(CMD_MIN_W, CaptionWidth(btn.Caption) + CMD_PAD),
+                    CMD_HEIGHT);
+      Inc(x, btn.Width + CMD_GAP);
+
       { NEXT is the default: the operator drives the whole book with Return. }
       btn.Default := (CMD_ID[i] = QTC_SEND_NEXT);
+      end;
+
+   { What the strip actually came to.  Read by HandleShow for the form's
+     minimum width -- there is no constant that could have said this, because
+     it depends on the operator's QRV message and on his font. }
+   FCommandsWidth := x + 2;
+
+   { REPORTED, because this window cannot be driven by a harness: it opens only
+     during a WAE contest with QSOs available to send, and there is no WAE set
+     in the golden corpus.  Two fixes for these buttons have now been wrong, and
+     both times the only evidence was a screenshot.  With the measurements in
+     the log the next screenshot is diagnosable -- whether a caption was clipped
+     because the measurement was wrong, or because the strip did not get the
+     width it asked for. }
+   if logger <> nil then
+      begin
+      logger.Debug('[QTCSend] command strip measured %dpx for %d button(s), ' +
+                   'first="%s" (%dpx), qrv="%s" (%dpx)',
+                   [FCommandsWidth, Length(CMD_ID),
+                    string(AnsiString(QTCTXButtonsPChar[0])),
+                    CaptionWidth(AnsiString(QTCTXButtonsPChar[0])) + CMD_PAD,
+                    string(QRVMessage), CaptionWidth(QRVMessage) + CMD_PAD]);
       end;
 end;
 
@@ -224,7 +288,7 @@ procedure TfrmQTCSend.BuildRows;
 var
    i  : integer;
    lbl: TLabel;
-   btn: TBitBtn;
+   btn: TButton;
    y  : integer;
 begin
    FRows := NumberMessagesToBeSent;
@@ -244,7 +308,7 @@ begin
         stayed disabled forever, and a line could not be repeated.  The intent
         is not in doubt: there is a handler, an enable, and a caption for it.
         See the commit that converted this window. }
-      btn := TBitBtn.Create(pnlRows);
+      btn := TButton.Create(pnlRows);
       btn.Parent := pnlRows;
       btn.SetBounds(BTN_LEFT, y, BTN_W, ROW_H);
       btn.Caption := AnsiString(SysUtils.Format('&%d', [i mod 10]));
@@ -349,9 +413,10 @@ begin
 
    RefreshProgress;
 
-   { BEFORE ApplyContentMinimumSize, which reads these. }
+   { BEFORE ApplyContentMinimumSize, which reads these.  FCommandsWidth is
+     whatever BuildCommands just measured the strip to. }
    pnlRows.Constraints.MinWidth     := ROWS_MIN_W;
-   pnlCommands.Constraints.MinWidth := COMMANDS_MIN_W;
+   pnlCommands.Constraints.MinWidth := FCommandsWidth;
 
    ApplyContentMinimumSize(Self);
 
@@ -418,13 +483,13 @@ end;
 procedure TfrmQTCSend.CommandClick(Sender: TObject);
 begin
    { The eight commands, by Tag.  Was a WM_COMMAND case on the child id. }
-   QTCSendCommand((Sender as TBitBtn).Tag);
+   QTCSendCommand((Sender as TButton).Tag);
 end;
 
 procedure TfrmQTCSend.RowClick(Sender: TObject);
 begin
    { Resend one line.  Was the 301..310 arm. }
-   SendQTC((Sender as TBitBtn).Tag);
+   SendQTC((Sender as TButton).Tag);
 end;
 
 function QTCSendForm: TfrmQTCSend;
