@@ -23,6 +23,41 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-09-01 -- BOTH WAE QTC WINDOWS, AND NOBODY HAS RUN THEM
+
+### [ ] Hand `docs/QTC_BENCH_HANDOFF.md` to N4AF
+
+Both QTC windows converted from raw Win32 to LCL on 2026-08-31/09-01 -- the
+receive window had **thirty-two subclassed edit controls** and none of them
+survive -- plus fixes on top: button captions that could not fit, a stray glyph
+in the QRV caption, a minimum size that ratcheted down on every reopen, and an
+access violation saving a completed book.
+
+**Every one of those was found from a screenshot, and three of them took more
+than one attempt.** NY4I, 2026-09-01: *"I have to look up how to operate QTCs
+honestly. That is Howie's area."*
+
+So this is the ONLY part of the conversion with neither an automated harness nor
+an operator who can judge it. It cannot get a harness for a good reason: a QTC
+window opens only in a DARC WAE contest with QSOs available to send, and there
+is no WAE set in the golden corpus. Building one would prove the windows open,
+which is not the part in doubt.
+
+`docs/QTC_BENCH_HANDOFF.md` is the script -- what to do and what correct looks
+like, taken from what the Win32 code did. Three items in it are DECISIONS rather
+than checks and are marked as such:
+
+* the per-line resend buttons (Alt+1..Alt+0) **now work**; in the Win32 version
+  they never did, because they were created with the wrong control id. Wiring
+  them was a judgement call and is one line to undo;
+* the receive window's **OK button is gone** -- it did nothing, and its handler
+  still carries an N4AF 04.32.3 note beside the commented-out save;
+* the Cabrillo **transmitter id** diverges from the specification in two ways
+  and has NOT been touched. See Part 4 of the handoff.
+
+Nothing here blocks anything else. It is on this list so it does not quietly
+become "converted, therefore done".
+
 ## Added 2026-08-28 (night) -- FOUR KENWOODS CHANGE DRIVER ON UPGRADE
 
 ### [ ] This one needs a release note, not just a bench run

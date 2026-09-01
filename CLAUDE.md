@@ -866,6 +866,7 @@ Read the specific doc before acting in its area — these are current and this f
 | **Multi-user networking: the protocol, and where its analysis is wrong** | **`docs/TR4W_NETWORKING_ANALYSIS.md`** — TR4QT's analysis, copied whole. **Read the provenance block at the top before believing any V1 claim**: three were checked against this tree and do not hold, and the V2 design in it is TR4QT's, not a plan for this repo |
 | TCI server | `docs/TCI_SERVER_DESIGN.md` — and `docs/TCIServPlanning.txt`, its **superseded** precursor, kept for the reasoning only |
 | Release process | `docs/RELEASE_WORKFLOW.md` (sections 5-8; 1-4 superseded by BUILD.md), `docs/FORK_PROCESS.md` |
+| **WAE QTC windows: the bench script nobody has run** | **`docs/QTC_BENCH_HANDOFF.md`** — for N4AF. Both QTC windows converted with no harness and no operator who can judge them; three items in it are decisions, not checks |
 | Hardware test plan | `tr4w/docs/D12_HARDWARE_TEST_PLAN.md` |
 
 ## Runtime Dependencies
