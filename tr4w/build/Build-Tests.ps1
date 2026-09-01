@@ -101,11 +101,20 @@ Write-Host "BUILD OK -> $exe"
 # so FullBuild reports "unit tests failed" with no failing test to look at.
 # Found by building on a clean box, which is exactly what Test-FreshClone is
 # for and exactly what it could not see while running here.
+#
+# sqlite3.dll is a DIFFERENT SHAPE of the same problem and is here for a
+# different reason. It is NOT a load-time import -- FPC's binding resolves
+# through LoadLibrary at run time (sqlite3.inc: Sqlite3Lib = 'sqlite3.dll') --
+# so the exe starts fine without it and then the LogDatabase suite dies partway
+# through with an unhandled exception, which reads like a broken test rather
+# than a missing file. Copied for the same reason as the rest: the tests run
+# from test\unit and the DLLs ship in target\.
 $runtimeDlls = @(
    'libhamlib-4.dll',      # the load-time import itself
    'libgcc_s_dw2-1.dll',   # ...and what it needs in turn
    'libwinpthread-1.dll',
-   'libusb-1.0.dll'
+   'libusb-1.0.dll',
+   'sqlite3.dll'           # the contest log; run-time bound, see above
 )
 $dllSrc = Join-Path $PSScriptRoot '..\target'
 $dllDst = Split-Path $exe -Parent

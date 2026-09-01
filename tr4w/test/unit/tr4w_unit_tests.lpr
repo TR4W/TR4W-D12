@@ -264,6 +264,10 @@ uses
    uClusterTokens       in '..\..\src\uClusterTokens.pas',
    uTestDXSpotParse     in 'uTestDXSpotParse.pas',
    uTestSpotAge         in 'uTestSpotAge.pas',
+   uAppPaths            in '..\..\src\uAppPaths.pas',
+   uLogSchema           in '..\..\src\domain\uLogSchema.pas',
+   uLogDatabase         in '..\..\src\domain\uLogDatabase.pas',
+   uTestLogDatabase     in 'uTestLogDatabase.pas',
    uTestClusterTokens   in 'uTestClusterTokens.pas',
    // Kenwood + Elecraft model units: listed so their initialization sections
    // self-register here, which is what puts them under the base-constructor
@@ -371,6 +375,7 @@ begin
    RegisterSuite(TDXClusterClientTests.Create('DXClusterClient'));
    RegisterSuite(TDXSpotParseTests.Create('DXSpotParse'));
    RegisterSuite(TSpotAgeTests.Create('SpotAge'));
+   RegisterSuite(TLogDatabaseTests.Create('LogDatabase'));
    RegisterSuite(TClusterTokensTests.Create('ClusterTokens'));
    RegisterSuite(TSplitReassertTests.Create('SplitReassert'));
    RegisterSuite(TWinTimerTests.Create('WinTimer'));

@@ -143,6 +143,22 @@ Section "tr4w.exe" secexe
 	File ..\target\libgcc_s_dw2-1.dll
 	File ..\target\libusb-1.0.dll
 	File ..\target\libwinpthread-1.dll
+	; The contest log.  SQLITE_LOG_SCHEMA_PLAN.md section 9 said to add this line
+	; "in the same commit as the first code that opens a database" -- which is
+	; the commit that added src\domain\uLogDatabase.pas, so here it is.
+	;
+	; It ships BEFORE any menu item reaches it, deliberately.  FPC binds SQLite
+	; dynamically, so a missing DLL is a run-time failure rather than a link
+	; error: an installer built after the log code lands but before somebody
+	; remembers this line produces a TR4W that starts normally and cannot open
+	; its own log.  2.5 MB against a remembered step is not a close call, and
+	; this tree's whole position is that remembered steps drift.
+	;
+	; IT MUST MATCH THE BUILD'S ARCHITECTURE.  This one is i386; the 64-bit move
+	; has to swap it.  Windows reports a mismatch as "the specified module could
+	; not be found", naming a file that is present -- which is why
+	; uLogDatabase.DiagnoseSQLiteLoad reads the PE header and says so.
+	File ..\target\sqlite3.dll
 
 !ifdef TR4WLANG
 !ifdef include_ini_file

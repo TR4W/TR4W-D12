@@ -160,6 +160,25 @@ function Get-Tr4wSearchPaths
    # System.JSON spellings the config stores are written against.
    $paths.Add((Join-Path $Toolchain.FpcRoot "units\$cpu-$os\fcl-json"))
 
+   # SQLite, for the contest log (src\domain\uLogDatabase.pas).
+   #   sqlite      sqlite3dyn -- the dynamic binding to sqlite3.dll
+   #   fcl-db      sqlite3conn, sqldb, db, bufdataset
+   #   fcl-base    what fcl-db itself needs
+   #
+   # DELIBERATELY NOT ADDED TO Server.  tr4wserver has no log of its own -- it
+   # relays QSOs between clients -- and the search path is the only thing
+   # guarding that boundary, exactly as it is for the LCL. A unit that grows a
+   # sqldb dependency and gets pulled into the server should FAIL THE SERVER
+   # BUILD rather than quietly link a database engine into a relay. That guard
+   # has already earned its keep once: uCrashLog reached Forms through TF and
+   # broke the server build for three days before anyone noticed (2026-08-23).
+   if ($For -ne 'Server')
+      {
+      $paths.Add((Join-Path $Toolchain.FpcRoot "units\$cpu-$os\sqlite"))
+      $paths.Add((Join-Path $Toolchain.FpcRoot "units\$cpu-$os\fcl-db"))
+      $paths.Add((Join-Path $Toolchain.FpcRoot "units\$cpu-$os\fcl-base"))
+      }
+
    # Vendored Indy 10.6.3.3 -- kept deliberately; D12 ships Indy as DCUs only.
    $paths.Add((Join-Path $Tr4wDir 'Include'))
    $paths.Add((Join-Path $Tr4wDir 'include\Core'))

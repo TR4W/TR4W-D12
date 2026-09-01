@@ -1,6 +1,8 @@
 # The contest log in SQLite — proposed schema
 
-**A proposal for NY4I to verify, 2026-08-29. Nothing has been built.**
+**Schema settled 2026-08-29. STARTED 2026-09-01 — see [§13](#13-what-is-built-so-far)
+for what exists, and [§14](#14-decisions-taken-2026-09-01) for the four decisions
+NY4I added that day.**
 
 Reference: TR4QT at `C:/projects/TR4QT` (`src/data/schema.sql`, `Database.cpp`,
 `BackupManager.cpp`). NY4I: *"TR4QT is not necessarily the right way to do it as
@@ -29,7 +31,20 @@ not settled is the code, of which none is written.
 ## 1. Scope
 
 In: the **contest log**. One database, holding QSOs, the contest's own entry
-declaration, and whatever multiplier state we decide to persist.
+declaration, **the whole contest configuration and the Alt-P program messages**,
+and whatever multiplier state we decide to persist.
+
+**THE `.cfg` FILE GOES AWAY.** NY4I, 2026-09-01: *"the configuration info for a
+database should go into the database file too. That includes anything that goes
+into the .CFG file including Program Messages (Alt-P). The contest specific items
+in the json file will go into this file as well. Parameters set in FContest.pas
+are a good reference too."* And: *"when done, the .cfg file should not be
+necessary."*
+
+That is not a change of direction — CLAUDE.md has said since 2026-08-21 that the
+contest `.cfg` is exempt from the JSON move *because it is going to an SQLite3
+contest file*. This is what that meant. See [§14.1](#141-the-contest-cfg-moves-in)
+for the shape and for the measurement that decides it.
 
 **Out: a global database.** TR4QT has `tr4qt_global.db` for configuration,
 cty.dat-derived tables, LOTW users, SCP and DX spots. NY4I, 2026-08-29: *"the
@@ -922,14 +937,69 @@ shape and we should take it, plus:
 - **Report, never silently repair.** Consistent with this tree's rule that a
   reported error beats a silent fallback.
 
+### Read against TR4QT, 2026-09-01 — taken, added, declined
+
+NY4I asked for TR4QT's integrity work to be read properly and for anything not
+replicated to be justified rather than just omitted. `DataIntegrityManager.cpp`
+is 515 lines; `BackupManager.cpp` and `Database.cpp` carry the rest.
+
+**TAKEN.**
+
+| from | what | why it is worth having |
+|---|---|---|
+| `BackupManager.cpp:307` | `PRAGMA integrity_check`, accepting **only** the literal `ok` | anything else is a problem description, and treating a non-`ok` string as truthy would pass every corrupt database |
+| `DataIntegrityManager.cpp` | **`PRAGMA wal_checkpoint(PASSIVE)` FIRST** | their own comment says that without it the check reports false positives for QSOs still in the WAL. That is a bug found the expensive way and inheriting it costs one line |
+| `Database.cpp:161` | `PRAGMA application_id`, and **refusing** a database stamped by another program | ours is `0x54523457` (`'TR4W'`); theirs is `0x54523451` (`'TR4Q'`). §11/8 settled that a TR4QT log is not an interop target, so the two must be *distinguishable*, not merely different |
+| `Database.cpp:177` | refusing a database whose `user_version` is **newer** than this build | a newer schema may carry columns we cannot see, and opening it read-write would drop them on the next write |
+
+**ADDED — TR4QT does not do these.**
+
+- **`PRAGMA foreign_key_check`** as well as `integrity_check`. The first finds
+  structural damage; the second finds broken references, which is what a partial
+  delete or a bad merge produces.
+- **A check that cannot run is a FAILURE, not a pass.** TR4QT returns early with
+  `passed = true` when the database is closed — *"Not an error, just skip the
+  check"*. That is a green light meaning "no evidence", and this tree's standing
+  rule is the opposite. `TIntegrityResult.Ok` is False with a reason.
+- **`PRAGMA synchronous = FULL`.** TR4QT leaves the default, which drops to
+  `NORMAL` under WAL and can lose the most recent transactions on power loss.
+  See §8.
+- **Reading every pragma back** rather than assuming it applied. See §14.4 — one
+  of them is a silent no-op in the obvious implementation.
+
+**DECLINED, with reasons.**
+
+- **Their tiers 1 and 3 — the memory-versus-database comparison.** Not applicable
+  rather than not wanted: both compare the table against `QList<QSO>
+  loadedQSOs`, and §4f already decided we keep no in-memory mirror. There is no
+  second copy to disagree, so the check has nothing to check. Most of that
+  515-line class is answering a question we arranged not to have. **If a mirror
+  is ever adopted, adopt this with it** — TR4QT needed it, which is evidence
+  about the mirror, not about them.
+- **`rescoreContestSilent`.** Real and needed eventually, but it is contest
+  scoring, not storage: it belongs to the contest factory (phase 3), and putting
+  it here would put scoring rules inside a storage layer.
+- **The "Unknown/None band" scan** (`DataIntegrityManager.cpp:208`) — **deferred,
+  not rejected.** It is a genuine domain check that survives without a mirror,
+  and a QSO with an uninterpretable band scores zero and exports wrong. It is
+  deferred only because nothing writes a `band` column yet; **write it with the
+  mapper**, in the same commit, or it will be forgotten.
+- **`getBackupQSOCount` compared against the source.** Wanted — it is in the list
+  above this section — but it needs a `qso` table with rows in it. Same trigger
+  as the band check.
+
 ---
 
 ## 8. Pragmas and schema versioning
 
 ```
-PRAGMA journal_mode = WAL;      -- as TR4QT
-PRAGMA foreign_keys = ON;       -- as TR4QT
+PRAGMA journal_mode = WAL;      -- as TR4QT, and READ BACK: SQLite refuses WAL
+                                --   on a network share and says nothing
+PRAGMA foreign_keys = ON;       -- as TR4QT, and READ BACK: see 14.4, this one
+                                --   is a SILENT NO-OP done the obvious way
 PRAGMA synchronous = FULL;      -- NOT as TR4QT, which leaves the default
+PRAGMA application_id = 0x54523457;  -- 'TR4W'. NOT in this plan until 2026-09-01;
+                                --   found by reading TR4QT at NY4I's suggestion
 PRAGMA user_version = <n>;
 ```
 
@@ -955,22 +1025,32 @@ half is already here; the runtime half is not.** Measured 2026-08-29:
 | `sqlite3.dll` | **now in `tr4w/target/`** — supplied by NY4I 2026-08-29, 2,572,288 bytes, PE machine `0x014c` = **i386**, which is what an i386-win32 build needs |
 | our unit search path | **fcl-db is not on it** — `Get-SearchPaths.ps1` adds `fcl-json` and `regexpr`, not `fcl-db`, `fcl-base` or `sqlite` |
 
-So there is **no package to install and nothing to build**. What remains:
+So there is **no package to install and nothing to build**. **All four steps
+below were completed on 2026-09-01** and are recorded here as done rather than
+outstanding:
 
-1. Add `units\<cpu>-<os>\fcl-db`, `\fcl-base` and `\sqlite` to
-   `Get-SearchPaths.ps1` — for the App target, and for Tests if the log gets
-   unit coverage (it should). `sqlite3conn` needs `db`, `bufdataset`, `sqldb`
-   from fcl-db and `sqlite3dyn` from sqlite.
-2. Add `File ..\target\sqlite3.dll` to `build\full.nsi` (it lists each DLL by
-   name, `full.nsi:140-145`) and a row in `docs/UPDATING_RUNTIME_DLLS.md`.
-   **Deliberately NOT done yet** — nothing loads it, and shipping 2.5 MB for a
-   feature that does not exist is not free. This belongs in the same commit as
-   the first code that opens a database.
-3. FPC's binding is **dynamic** — `sqlite3.inc:28` declares
-   `Sqlite3Lib = 'sqlite3.dll'` — so it is loaded at run time and a missing DLL
-   is a run-time failure, not a link error. That failure must be **reported**,
-   not a silent downgrade.
-4. `TSQLite3Connection` and `TSQLite3Backup` are then usable.
+1. **DONE.** `units\<cpu>-<os>\fcl-db`, `\fcl-base` and `\sqlite` are on the
+   App and Tests search paths in `Get-SearchPaths.ps1`. **Deliberately NOT on
+   Server**: `tr4wserver` has no log of its own, and the search path is the only
+   guard on that boundary — the same guard that caught `uCrashLog` reaching
+   `Forms` and breaking the server build for three days.
+2. **DONE**, on this section's own trigger: *"the same commit as the first code
+   that opens a database"*, which is the commit that added
+   `src\domain\uLogDatabase.pas`. `full.nsi` ships it and
+   `docs/UPDATING_RUNTIME_DLLS.md` has the row plus a note on why this DLL fails
+   differently from every other one in that table. `Build-Tests.ps1` also copies
+   it beside the test binary, because the suite opens real databases.
+3. **DONE.** FPC's binding is dynamic — `sqlite3.inc:28` declares
+   `Sqlite3Lib = 'sqlite3.dll'` — so a missing DLL is a run-time failure, not a
+   link error. `uLogDatabase.DiagnoseSQLiteLoad` reports it, and
+   `DescribePEArchitecture` reads the PE machine word out of the file so an
+   architecture mismatch says *"this is an x86-64 library and this is an i386
+   build"* rather than Windows' *"the specified module could not be found"*,
+   which names a file that is sitting right there.
+4. **VERIFIED, not assumed.** A throwaway probe compiled against the real
+   search paths and ran: SQLite **3.53.4**, i386, prepared statements,
+   transactions and pragmas all working. Then the real thing: a log created,
+   WAL confirmed in force, schema applied, integrity checked, closed, reopened.
 
 **Where the DLL lives.** It arrived in `tr4w/include/`, which is the *vendored
 source* directory — Indy, Log4D, PerlRegEx — and is on the compiler's `-Fi`
@@ -1491,3 +1571,168 @@ log" is a **policy we would be introducing**, not a fact the code enforces.
 - `ctrCFG` is declared at line **76** and the array has **21** rows, not 22 —
   and it is **not** uniformly set: 11 `True`, 10 `False`. It is still never
   read, so it is still dead.
+
+---
+
+## 13. What is built so far
+
+**2026-09-01, the first slice.** Deliberately narrow: the toolchain, the schema
+and the lifecycle, with no mapper and no UI. Nothing in the running program calls
+it yet -- the units compile into `tr4w.exe` and the unit tests exercise them.
+
+| unit | what it is |
+|---|---|
+| `src\domain\uLogSchema.pas` | the DDL and the reasoning, as one source |
+| `src\domain\uLogDatabase.pas` | open / create / close, pragmas, file identity, integrity |
+| `test\unit\uTestLogDatabase.pas` | 19 tests against **real** databases, not mocks |
+
+**`schema.sql` does not exist, and that is a departure from §4.** The plan said
+the DDL would ship as a `.sql` file with the header comment verbatim. It ships as
+a Pascal constant instead, because a `.sql` file plus the Pascal copy that
+executes it is two definitions of one thing -- the exact failure CLAUDE.md has a
+rule about. The reasoning NY4I asked to be visible (*"somebody reading this six
+months from now on GitHub will think we had no knowledge of what a relational
+database was"*) is at the top of `uLogSchema.pas`, where the code that runs it is
+beside it.
+
+The per-column `--` comments **do** survive into every log file: SQLite keeps
+`CREATE` statements verbatim in `sqlite_master`, so anyone opening a `.db` in a
+SQLite browser reads them without this repository. Comments *before* a statement
+do not survive, which is why the essay is a Pascal comment and the column notes
+are not.
+
+**Verified:** 28 lints, **13,333 unit tests (0 failures**, up from 13,291), the
+golden corpus at **22 passed / 0 failed / 4 known**, and a full app build with
+narrowing conversions back at exactly the 1429 ceiling -- the new units add none.
+
+**Not built, and next:** the `ContestExchange` mapper (§4d), the `.trw` importer
+(§10, which is how the corpus keeps running), the backup (§6, §14.2), and the
+`.cfg` reader/writer that makes §14.1 real.
+
+---
+
+## 14. Decisions taken 2026-09-01
+
+Four, all NY4I's, all arriving after the schema was thought settled.
+
+### 14.1 The contest `.cfg` moves in
+
+> *"The configuration info for a database should go into the database file too.
+> That includes anything that goes into the .CFG file including Program Messages
+> (Alt-P). The contest specific items in the json file will go into this file as
+> well. Parameters set in FContest.pas are a good reference too."*
+> ... *"when done, the .cfg file should not be necessary."*
+
+Two new tables, `config` and `message`.
+
+**`config` IS KEY/VALUE, WHICH IS THE OPPOSITE OF WHAT §4 ARGUES FOR THE
+EXCHANGE.** Both are right and the difference is the point:
+
+| | shape | why |
+|---|---|---|
+| the QSO exchange | **columns** | a fixed, enumerated set -- 61 exchange types from 29 elements -- each typed, joined, filtered, indexed and exported |
+| the configuration | **key/value** | *already* a key/value store. `CommandsArray` **is** the parser; every key is an editable "command" with no cross-key invariant and no validation, nothing joins on a config key, and it is read once at load |
+
+The test is not "which pattern is nicer" but **is the set enumerated AND
+queried**. Applying the column argument to configuration gives 415 columns
+nothing queries; applying the key/value argument to the exchange gives EAV on the
+hot path.
+
+#### The measurement that decides the scope — and it contradicts the obvious answer
+
+**DO NOT DERIVE "WHAT IS CONTEST-SCOPED" FROM `crC: 1`.** Measured 2026-09-01: of
+the 415 `CFGCA` rows, **29 carry `crC: 1`** — and that byte means *"SaveNewContest
+writes this"*, not *"this belongs to a contest"*.
+
+The shipped `target\dom\Idaho QSO Party.cfg` sets `EXCHANGE RECEIVED`,
+`DOMESTIC MULTIPLIER`, `QSO POINT METHOD`, `MULT BY BAND` and `CONTEST TITLE`.
+**All five are `crC: 0`.** They are what makes a contest a contest.
+
+A design that took the 29 as its definition would have dropped the exchange, the
+multiplier rule and the scoring, and would have looked principled doing it. The
+**reader** has always accepted any of the 415; only the **writer** is narrow. So
+`config` holds whatever the contest sets — which is the second, independent
+reason it cannot be columns.
+
+#### `config.source` is load-bearing, not metadata
+
+`uCFG.pas` implements station-defaults ← contest-overrides: *"AN EXPLICIT CONTEST
+.cfg LINE BEATS THE STORED VALUE, while that contest is loaded."* `LEADING ZEROS`
+is the live example — six real contest configs set it, both CQ-WPX files among
+them, and a serial-number contest must not be overruled by a station preference.
+
+**That rule is currently implemented by noticing a line in a file.** Delete the
+file and the signal goes with it. `source` (`contest` / `station` / `operator`)
+is that signal.
+
+#### `message` is a table, not config rows
+
+`CQMemory` and `EXMemory` are `array[CW..Phone, F1..AltF12]`
+(`LogCW.pas:56`) — so one function key holds **four** different messages. The
+primary key is `(kind, mode, key_id)` and a test proves the collision rather than
+reading the DDL back. `key_id` uses `KeyId`'s spelling because
+`AppendConfigFile` already writes `CQ MEMORY F1 = ...` into a `.cfg` today
+(`LogCW.pas:1366`).
+
+**Still owed:** the reader and writer. The tables exist and are tested; nothing
+populates them yet. `FCONTEST.PAS` is the reference NY4I named for which
+parameters are contest-scoped, and it is also where the *sending* half of the
+rover problem lives (§12d) — so read it once, for both.
+
+### 14.2 The backup interval is a QSO count
+
+> *"The backup FLoppy (now hopelessly misnamed for 2026) will really mean how
+> many contacts do we call the backup API in sqlite to backup the database
+> file."*
+
+The existing setting already has exactly these semantics — `FLOPPY FILE SAVE
+FREQUENCY`, whose own help text is *"Number QSOs between saves to floppy"*. So
+this is not a new control: **the trigger stays, the destination changes.** Every
+*n*th logged QSO calls the Online Backup API (§6) instead of
+`SaveLogFileToFloppy`'s `CopyFileA` to `A:\`.
+
+Two things that follow, neither of them cosmetic:
+
+- **The name.** `BACKUP LOG FILE NAME` is already renamed in `CFGCA`; the
+  frequency command is not. Renaming a config command is not free — old `.cfg`
+  and `tr4w.ini` files contain the old spelling — so it needs the alias handling
+  any command rename needs, and it is not part of the storage change.
+- **`LockUntilFinished = True`, on the logging thread** (§6). At a few hundred KB
+  the copy is milliseconds, and the alternative starves under sustained writes.
+
+### 14.3 Integrity checking, read against TR4QT
+
+> *"If our sql document doesn't mention it, look at c:\projects\tr4qt to see
+> what it does for database integrity checking. Use the best of that and state
+> the reasons for items you opt not to replicate."*
+
+§7 did mention it, and has been rewritten with the full comparison: what was
+taken, what was added, and what was declined **with the reason** — including the
+one that is *deferred rather than rejected* (the unknown-band scan, which needs a
+`band` column with rows in it and must be written **with the mapper**).
+
+### 14.4 A measured trap: pragmas cannot go through sqldb
+
+Not a decision — a finding, recorded because the obvious implementation is wrong
+in a way that does not announce itself.
+
+**sqldb begins a transaction lazily on any statement and does not end it**, so
+`ExecuteDirect` always runs inside one. SQLite then:
+
+| pragma | what happens inside a transaction |
+|---|---|
+| `synchronous` | **raises** — *"Safety level may not be changed inside a transaction"* |
+| `journal_mode` | **raises** likewise |
+| `foreign_keys` | **SILENTLY DOES NOTHING** |
+
+That third row is the dangerous one: the statement succeeds, nothing is reported,
+and referential integrity is simply off. **Committing first does not help** —
+`ExecuteDirect` opens a *new* transaction before running the statement. That was
+the second wrong attempt and it fails identically.
+
+So those three go through `sqlite3_exec` on the connection's own handle,
+immediately after `Open`, before anything can start a transaction — and **every
+one of them is then read back**, because requesting a pragma and assuming it took
+is the mistake the whole routine is a correction for. `journal_mode` is read back
+for a second reason too: SQLite refuses WAL on a network share, which is exactly
+where a multi-op station is most likely to put a log.

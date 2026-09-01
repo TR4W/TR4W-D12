@@ -22,7 +22,33 @@ a bundled DLL with a newer copy.
 | `libeay32.dll` | OpenSSL 1.0.2 (legacy series) | **32-bit** | Used by Indy for HTTPS (HamScore RTC, TR4WSERVER TLS) |
 | `ssleay32.dll` | OpenSSL 1.0.2 (legacy series) | **32-bit** | SSL/TLS layer — required by `libeay32.dll` |
 | `inpout32.dll` | [InpOut32 by Phil Gibbons](https://www.highrez.co.uk/downloads/inpout32/) | **32-bit** | Direct parallel-port I/O for LPT CW keying (legacy stations) |
+| `sqlite3.dll` | [sqlite.org](https://sqlite.org/download.html) precompiled Windows binary (`sqlite-dll-win-x86-*`) | **32-bit** | **The contest log.** Supplied by NY4I 2026-08-29; currently 3.53.4, 2,572,288 bytes. Bound at RUN TIME, not link time — see the note below |
 | `rigctld.exe` | HamLib Windows build | **32-bit** | **DEPRECATED.** Replaced by direct-DLL mode (`uRadioHamLibDirect.pas`). Tracked but not shipped by the installer; planned for removal. |
+
+### `sqlite3.dll` — the one that fails differently
+
+Every other DLL in the table above is a **load-time** import: Windows resolves it
+before a line of TR4W runs, and a missing one gives `STATUS_DLL_NOT_FOUND` and no
+window at all. Obvious, if brutal.
+
+**SQLite is bound at run time.** FPC's `sqlite3.inc` declares
+`Sqlite3Lib = 'sqlite3.dll'` and resolves through `LoadLibrary`, so TR4W starts
+perfectly and then fails the moment it opens a log — which looks like a corrupt
+log rather than a missing file.
+
+**And the architecture mismatch is worse than the missing file.** Windows reports
+a 32/64-bit DLL mismatch as *"the specified module could not be found"*, naming a
+file that is sitting right there in the install directory. That message has cost
+people afternoons.
+
+So `src\domain\uLogDatabase.pas` reads the PE machine word out of the file it
+found and says which architecture it is (`DescribePEArchitecture`,
+`DiagnoseSQLiteLoad`). **When the 64-bit move happens this DLL must be swapped**,
+and the diagnostic is what will tell whoever forgets.
+
+The DLL is also copied beside the unit-test binary by `build\Build-Tests.ps1`,
+because the `LogDatabase` suite opens real databases.
+
 
 > ⚠️ **Everything is 32-bit.** TR4W is a Delphi 7 application and compiles
 > exclusively for 32-bit Windows. The 64-bit builds of HamLib, OpenSSL, and
