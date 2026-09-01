@@ -4845,14 +4845,10 @@ begin
              Exit;
              end;
         { The send-keyboard box is parented on whichever window asked for it.
-          QTCSWindow is gone -- the QTC send window is an LCL form now, so
-          ShowModalOverWin32Parent's Screen.DisableForms already covers it and
-          there is no raw HWND left to disable.  QTCRWindow is the last one. }
+          BOTH QTC windows are LCL forms now, so ShowModalOverWin32Parent's
+          Screen.DisableForms covers them and there is no raw HWND left to name
+          -- the main window is the only parent this call has. }
         tCardinal := tr4whandle;
-        if QTCRWindow <> 0 then
-           begin
-           tCardinal := QTCRWindow;
-           end;
         // DialogBox(hInstance, MAKEINTRESOURCE(60), tCardinal, @SendKeyboardCWDlgProc);
         ShowSendKeyboardCW(tCardinal);
         SetFocus(focus);

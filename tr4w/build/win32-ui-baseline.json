@@ -1,13 +1,13 @@
 ﻿{
-    "type.HWND":  516,
+    "type.HWND":  508,
     "array.wh":  38,
-    "CreateModalDialog":  5,
+    "CreateModalDialog":  4,
     "tDialogBox":  0,
     "DialogBox*":  2,
     "CreateDialogIndirectParam":  2,
     "CreateDialogParam":  0,
-    "CreateWindowEx":  17,
-    "TF.CreateStatic":  5,
+    "CreateWindowEx":  14,
+    "TF.CreateStatic":  4,
     "TF.CreateButton":  9,
     "TF.CreateEdit":  3,
     "TF.CreateComboBox":  2,
@@ -15,8 +15,8 @@
     "TF.CreateListView2":  2,
     "TF.CreateOwnerDrawListBox":  2,
     "TF.CreateRichEdit":  3,
-    "CreateOKCancelButtons":  3,
+    "CreateOKCancelButtons":  2,
     "SetMainWindowText":  65,
-    "tCreateStaticWindow":  16,
+    "tCreateStaticWindow":  13,
     "CreateTR4WStaticWindow":  14
 }

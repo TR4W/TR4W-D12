@@ -234,6 +234,7 @@ uses
   uCabrilloSummaryForm in 'src\ui\lcl\uCabrilloSummaryForm.pas',
   uFileViewForm in 'src\ui\lcl\uFileViewForm.pas',
   uQTCSendForm in 'src\ui\lcl\uQTCSendForm.pas',
+  uQTCReceiveForm in 'src\ui\lcl\uQTCReceiveForm.pas',
   uFunctionKeysForm in 'src\ui\lcl\uFunctionKeysForm.pas',
   uBandPlanForm in 'src\ui\lcl\uBandPlanForm.pas',
   uLegacyIniPrompt in 'src\ui\lcl\uLegacyIniPrompt.pas',
