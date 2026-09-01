@@ -274,6 +274,18 @@ begin
   1:
   AltPEndUpdate;
 
+  { OBSERVABLE, and it exists because of how this conversion failed: the
+    window opened with correct columns, a correct title and NOT ONE ROW,
+    because removing the dialog proc removed the WM_INITDIALOG call that
+    filled it.  Everything visible was right, so it read as missing data.
+    A row count says which it is, and lets the UI harness assert it. }
+
+  if logger.IsDebugEnabled then
+     begin
+     logger.Debug('[AltP] filled %d row(s), window=%d mode=%d, selecting %d',
+                  [AltPRowCount, Ord(mt), Ord(MessageMode), LastSelectedMessage]);
+     end;
+
   { LVM_SETITEMSTATE + LVM_ENSUREVISIBLE, in one call. }
   AltPSelect(LastSelectedMessage);
 end;
@@ -286,6 +298,13 @@ begin
   ShowEditMessage(AltPParentHandle, LastSelectedMessage);
 end;
 
+
+{ What WM_INITDIALOG used to do.  The window shows the CURRENT message
+  window and mode, so it is read at open time, not captured earlier. }
+procedure FillAltPList;
+begin
+   DisplaymessagesList(MesWindow, ActiveMode);
+end;
 
 procedure ShowAltP;
 begin
@@ -303,5 +322,6 @@ initialization
    { The view raises Edit; this unit decides what it means.  Assigned here
      rather than in the form so uAltPForm depends on nothing. }
    AltPFormOnEdit := @EditMessage;
+   AltPFormOnFill := @FillAltPList;
 end.
 

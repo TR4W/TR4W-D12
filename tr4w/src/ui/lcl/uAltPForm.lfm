@@ -19,6 +19,7 @@ object frmAltP: TfrmAltP
     Width = 784
     Anchors = [akTop, akLeft, akRight, akBottom]
     Columns = <>
+    GridLines = True
     HideSelection = False
     ReadOnly = True
     RowSelect = True

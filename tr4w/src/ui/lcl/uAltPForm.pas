@@ -78,6 +78,7 @@ procedure AltPEndUpdate;
   what the LVM_ENSUREVISIBLE at the end of DisplaymessagesList asked for. }
 procedure AltPSelect(const aIndex: integer);
 function  AltPSelectedIndex: integer;
+function  AltPRowCount: integer;
 
 { One cell of one row.  The message editor pre-fills itself from the row the
   operator picked, and used to do it with ListView_GetItemText into a fixed
@@ -100,6 +101,14 @@ var
      window's first two rows are fixed) and what editing means.  Same shape as
      TelnetFormOnSend. }
    AltPFormOnEdit: procedure = nil;
+
+   { FILLING IS THE OWNER'S JOB TOO, and this is what WM_INITDIALOG did:
+     it called DisplaymessagesList before the dialog appeared.  Removing the
+     dialog proc removed that call, and the window opened correctly and
+     completely empty (NY4I, 2026-08-31) -- the columns and the title were
+     right, which is exactly what made it look like a data problem rather
+     than a missing call. }
+   AltPFormOnFill: procedure = nil;
 
 implementation
 
@@ -193,6 +202,15 @@ begin
       end;
 end;
 
+function AltPRowCount: integer;
+begin
+   Result := 0;
+   if TR4WAltPForm <> nil then
+      begin
+      Result := TR4WAltPForm.lvMessages.Items.Count;
+      end;
+end;
+
 function AltPRowText(const aRow, aCol: integer): AnsiString;
 var
    lv: TListView;
@@ -272,6 +290,14 @@ begin
    { The message columns line up only in a fixed-pitch face.  By PITCH, not by
      naming 'Terminal' -- see the unit header. }
    lvMessages.Font.Pitch := fpFixed;
+
+   { AFTER the columns exist, and every time the window opens -- the memories
+     may have been edited since.  This is the WM_INITDIALOG call. }
+
+   if Assigned(AltPFormOnFill) then
+      begin
+      AltPFormOnFill;
+      end;
 
    ApplyContentMinimumSize(Self);
 end;
