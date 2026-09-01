@@ -1136,6 +1136,25 @@ begin
       end;
 end;
 
+{ HOW A CONTROL BEHAVES ON EACH AXIS, given that Align OVERRIDES Anchors.
+
+  An alClient control is pinned on all four sides whatever its Anchors property
+  says, and reading Anchors alone would call it fixed and pin the FORM to
+  whatever size it opened at -- the same class of wrong answer as skipping it,
+  in the opposite direction. }
+function EffectiveAnchors(const aCtl: TControl): TAnchors;
+begin
+   case aCtl.Align of
+      alTop:    Result := [akLeft, akTop, akRight];
+      alBottom: Result := [akLeft, akRight, akBottom];
+      alLeft:   Result := [akLeft, akTop, akBottom];
+      alRight:  Result := [akTop, akRight, akBottom];
+      alClient: Result := [akLeft, akTop, akRight, akBottom];
+   else
+      Result := aCtl.Anchors;
+   end;
+end;
+
 procedure ApplyContentMinimumSize(const aForm: TForm);
 const
    { The floor for a control that stretches and says nothing about its own
@@ -1147,6 +1166,7 @@ const
 var
    i             : integer;
    c             : TControl;
+   anc           : TAnchors;
    maxR, maxB    : integer;
    needW, needH  : integer;
    slackW, slackH: integer;
@@ -1168,15 +1188,17 @@ begin
          Continue;
          end;
 
+      anc := EffectiveAnchors(c);
+
       needW := NeededExtent(c.Left, c.Width, aForm.ClientWidth,
                             ShrinkFloor(c.Constraints.MinWidth, c.Width,
                                         MIN_STRETCH_WIDTH),
-                            akLeft in c.Anchors, akRight in c.Anchors);
+                            akLeft in anc, akRight in anc);
 
       needH := NeededExtent(c.Top, c.Height, aForm.ClientHeight,
                             ShrinkFloor(c.Constraints.MinHeight, c.Height,
                                         MIN_STRETCH_HEIGHT),
-                            akTop in c.Anchors, akBottom in c.Anchors);
+                            akTop in anc, akBottom in anc);
 
       if needW > maxR then
          begin

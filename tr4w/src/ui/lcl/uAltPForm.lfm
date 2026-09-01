@@ -39,7 +39,6 @@ object frmAltP: TfrmAltP
     Width = 784
     Anchors = [akTop, akLeft, akRight, akBottom]
     Columns = <>
-    Constraints.MinHeight = 150
     Constraints.MinWidth = 560
     GridLines = True
     HideSelection = False

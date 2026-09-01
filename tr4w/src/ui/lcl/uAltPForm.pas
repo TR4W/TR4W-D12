@@ -63,6 +63,7 @@ type
       procedure HandleResize(Sender: TObject);
    private
       procedure SizeColumns;
+      procedure SizeListMinimum;
    end;
 
 { THE VIEW'S SIDE OF THE SEAM.  uAltP calls these; it never touches a control. }
@@ -417,6 +418,7 @@ begin
       AltPFormOnFill;
       end;
 
+   SizeListMinimum;
    ApplyContentMinimumSize(Self);
 end;
 
@@ -492,6 +494,47 @@ begin
    lvMessages.Columns[2].Width := avail - used;
 end;
 
+{ THE SMALLEST LIST THAT STILL SHOWS EVERY ROW.
+
+  A FLOOR OF 150 WAS A GUESS AND IT WAS WRONG: it left six and a half of the
+  twelve function keys visible, and a window that hides half a bank of memories
+  is the defect this whole minimum exists to prevent (NY4I, 2026-08-31, with
+  screenshots of both).
+
+  MEASURED, NOT COMPUTED FROM THE FONT.  The first item's DisplayRect gives the
+  real row height AND the real header height in one read -- its Top IS the
+  bottom of the header -- so this is right at any DPI, with any font, and after
+  any change to the list's own metrics.  Deriving it as TextHeight plus a
+  guessed padding would be a second, worse model of what the widget does.
+
+  Nothing to measure means nothing to say: an unfilled list keeps whatever
+  floor it already had rather than being pinned to a made-up one. }
+procedure TfrmAltP.SizeListMinimum;
+var
+   r      : TRect;
+   rowH   : integer;
+   headerH: integer;
+begin
+   if lvMessages.Items.Count = 0 then
+      begin
+      Exit;
+      end;
+
+   r       := lvMessages.Items[0].DisplayRect(drBounds);
+   rowH    := r.Bottom - r.Top;
+   headerH := r.Top;
+
+   if rowH <= 0 then
+      begin
+      Exit;      { mid-layout: the handle exists but nothing is placed yet }
+      end;
+
+   { Plus a row's worth of slack, so the last row is not flush against the
+     bottom border and a scrollbar arriving cannot eat it. }
+   lvMessages.Constraints.MinHeight :=
+      headerH + (lvMessages.Items.Count + 1) * rowH;
+end;
+
 procedure TfrmAltP.HandleResize(Sender: TObject);
 begin
    { Live, not debounced.  Three column widths is nothing to compute, and a
@@ -507,6 +550,11 @@ begin
       begin
       AltPFormOnFill;
       end;
+
+   { The banks are all twelve keys, but the 'other messages' window is 9 or 13,
+     so the floor is recomputed rather than assumed. }
+   SizeListMinimum;
+   ApplyContentMinimumSize(Self);
 end;
 
 procedure TfrmAltP.CloseClick(Sender: TObject);

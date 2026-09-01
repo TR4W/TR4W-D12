@@ -43,15 +43,20 @@ param(
    # so the floor is the bank size. The 'other messages' window is not a bank
    # and builds 9 or 13; pass -MinRows for that.
    [int]    $MinRows  = 12,
-   # THE WINDOW MUST REFUSE TO GET SMALLER THAN THIS.  Derived, not
-   # invented: lvMessages states Constraints 560x150 and sits at
-   # left 8 / top 60 with 8 and 50 of margin, so the smallest client
-   # that still shows it is 576 x 260.  The floors here are under those
-   # by a frame's worth, because the probe measures the WINDOW and the
-   # arithmetic is on the CLIENT -- the test is 'it stopped', not 'it
-   # stopped at exactly N'.
+   # THE WINDOW MUST REFUSE TO GET SMALLER THAN THIS, and the height is the
+   # half of it that was got wrong first: a typed floor of 150 passed this
+   # test and still clipped the bank to six and a half of its twelve keys
+   # (NY4I, 2026-08-31).  The list now derives its own floor from a real
+   # row rectangle, so the number to assert is 'every row fits', which at
+   # this DPI measures 592 x 420 -- almost exactly the window NY4I sized by
+   # hand and called correct.
+   #
+   # The expectations sit a little under the measurement because the probe
+   # reads the WINDOW and the arithmetic is on the CLIENT, and because row
+   # height is a font and DPI question.  What is being asserted is that all
+   # twelve rows survive the smallest window, not an exact pixel count.
    [int]    $MinFloorWidth  = 520,
-   [int]    $MinFloorHeight = 220,
+   [int]    $MinFloorHeight = 380,
    [int]    $SettleMs = 8000,
    [int]    $OpenMs   = 2500
 )
