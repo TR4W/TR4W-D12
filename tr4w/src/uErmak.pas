@@ -21,6 +21,35 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 unit uErmak;
 {$I tr4w.inc}
 {$IMPORTEDDATA OFF}
+(* ---------------------------------------------------------------------------
+  ERMAK IS COMMENTED OUT (NY4I, 2026-08-31).
+
+  Two reasons, and the second is the one that matters.
+
+  1. ITS TEXT IS ALREADY GONE. Every Cyrillic character in uErmak.pas is a
+     U+FFFD replacement -- 114 of them, no real Cyrillic left. The nine field
+     labels and the eight rank strings are `?` glyphs on screen and in the
+     report. The D7 tree at C:\TR4W has IDENTICAL damage, and so does every
+     commit in this repository including `b90ba930 initial`, so the loss
+     predates the repo and is not recoverable from anything we hold. Restoring
+     it needs a Russian speaker retyping it, not a git command.
+
+  2. IT IS HARDCODED, WHICH IS NOT WHAT A GENERAL-PURPOSE CONTEST LOGGER DOES
+     (NY4I). One contest got its own dialog, its own field enum, its own rank
+     table and its own arm in the Cabrillo writer. Whatever replaces it should
+     be data, alongside the contest factory.
+
+  COMMENTED, NOT DELETED, and with the parenthesis-star form rather than the
+  brace form, so the brace comments inside survive -- the shape of what ERMAK
+  needed is the specification for
+  doing it generally, and it is easier to read here than in git history.
+
+  ErmakSpecification and ERMAKSECTION are NOT touched: they live in MainUnit
+  and uCbrSum, are set from the contest table's ERMAK_BIT, and now simply
+  guard branches that do nothing.
+  --------------------------------------------------------------------------- *)
+
+(*
 interface
 
 uses
@@ -298,5 +327,9 @@ procedure ShowErmakReport(const aParent: HWND);
 begin
    CreateModalDialog(320, 155, aParent, @ErmakDlgProc, 0);
 end;
-end.
 
+*)
+
+interface
+implementation
+end.

@@ -69,7 +69,7 @@ uses
   uMults,
   // uSelectFile,
   //
-  uErmak,
+  (* uErmak, *)   { ERMAK commented out -- see the banner in uErmak.pas }
   uCheckLatestVersion,
   // uMakeHelpFile,
   uAltP,

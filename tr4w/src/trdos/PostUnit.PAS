@@ -29,7 +29,7 @@ uses
   uCallSignRoutines,
   uCTYDAT,
   LogDom,
-  uErmak,
+  (* uErmak, *)   { ERMAK commented out -- see the banner in uErmak.pas }
   uCallsigns,
   LogK1EA,
   utils_text,
@@ -2530,8 +2530,8 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
     Operator: integer;
     ControlID:
       integer;
-    TempErmakField:
-      TErmakFields;
+    (* TempErmakField:
+      TErmakFields; *)   { ERMAK commented out }
     TempInteger:
       integer;
       const
@@ -2670,6 +2670,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
             + #13#10 );
          end;
 
+      (*
       if ErmakSpecification then
          begin
          for Operator         := 1 to 10 do
@@ -2737,6 +2738,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                end;
             end;
          end;
+      *)
 
       Result := true;
       end;

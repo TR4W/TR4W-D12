@@ -959,6 +959,22 @@ Wrong, and all four are common:
       end;
 ```
 
+**COMMENT A BLOCK OF CODE OUT WITH `(* *)`, NEVER `{ }`.** A brace comment ends at
+the FIRST `}` it meets, and this tree is full of things that contain one:
+`{$IFDEF ...}`, the resource directive in every designed form, and ordinary
+explanatory brace comments inside the very code being commented out. The comment
+closes early, the remainder of the block becomes code, and the compiler reports a
+syntax error somewhere that looks unrelated to what you did.
+
+It gets worse as the cross-platform work lands (NY4I, 2026-08-31): every
+`{$IFDEF WINDOWS}` / `{$IFDEF DARWIN}` pair adds another closing brace a brace
+comment cannot survive. `(* *)` has no such collision — nothing in this tree
+writes `*)`.
+
+The rule applies to the EXPLANATORY comment above a commented-out block too. That
+one was written as a brace comment while quoting brace characters in its own prose,
+which closed it on the spot — 2026-08-31, commenting out ERMAK.
+
 Python (`tools/`, `.claude/hooks/`) takes the same three-space indent — which is
 NOT PEP 8, so an agent will default to four and nothing in this tree will catch
 it. Readability over brevity everywhere: no minimising of lines, and comments on

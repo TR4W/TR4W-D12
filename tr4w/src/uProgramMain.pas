@@ -184,7 +184,7 @@ uses
   uAltP,
   uEditMessage,
   uCheckLatestVersion,
-  uErmak,
+  (* uErmak, *)   { ERMAK commented out -- see the banner in uErmak.pas }
   uProcessCommand,
   uMults,
   HtmlHelp,

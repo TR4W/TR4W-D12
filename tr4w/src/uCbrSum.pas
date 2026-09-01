@@ -28,7 +28,7 @@ uses
   VC,
   Tree,
   uCallSignRoutines,
-  uErmak,
+  (* uErmak, *)   { ERMAK commented out -- see the banner in uErmak.pas }
   LogRadio,
   PostUnit,
   LogWind,
@@ -345,7 +345,7 @@ begin
           2: goto ExitAndClose;
           3:
           //DialogBox(hInstance, MAKEINTRESOURCE(50), hwnddlg, @ErmakDlgProc);
-            ShowErmakReport(hwnddlg);
+            (* ShowErmakReport(hwnddlg); *)   { ERMAK commented out }
         end;
       end;
   end;
