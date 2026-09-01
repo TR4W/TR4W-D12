@@ -74,6 +74,48 @@ type
 
    TInt64Array = array of Int64;
 
+   (* THE ENTRY DECLARATION -- tier 2, captured when the log is made.
+
+      Everything a Cabrillo header claims about the ENTRY rather than about a
+      contact. Read once, at log creation, and never again: that is the whole
+      point. Reading it live at export is TR4W-D12 issue #2 for the header,
+      and it produces a defect the corpus cannot see, because golden_diff.py
+      compares only QSO lines. Measured: a headless export ships a file with
+      CATEGORY-ASSISTED, CATEGORY-BAND and CATEGORY-OPERATOR ABSENT and a
+      CATEGORY-MODE of SSB where the log's own configuration says MIXED.
+
+      A RECORD RATHER THAN NINETEEN PARAMETERS, and it is filled by the caller
+      rather than read here: the values live in uCbrSum, which is the Cabrillo
+      header's tag table and sits beside the window that edits it. The
+      repository has no business knowing that. *)
+   TLogEntryDeclaration = record
+      MyCall: AnsiString;
+      MyPark: AnsiString;
+
+      CategoryOperator: AnsiString;
+      CategoryAssisted: AnsiString;
+      CategoryPower: AnsiString;
+      CategoryBand: AnsiString;
+      CategoryMode: AnsiString;
+      CategoryStation: AnsiString;
+      CategoryTime: AnsiString;
+      CategoryTransmitter: AnsiString;
+      CategoryOverlay: AnsiString;
+
+      Club: AnsiString;
+      Soapbox: AnsiString;
+
+      (* Tier 1 as DECLARED FOR THIS LOG. Copied from the station identity at
+         creation; edited here it does not disturb the next contest. *)
+      OpName: AnsiString;
+      Address: AnsiString;
+      City: AnsiString;
+      State: AnsiString;
+      Postcode: AnsiString;
+      Country: AnsiString;
+      Email: AnsiString;
+   end;
+
    (* Reads and writes QSOs.  Owns its prepared statements and nothing else --
      the connection belongs to the TLogDatabase handed in. *)
    TLogRepository = class(TObject)
@@ -231,6 +273,10 @@ type
         HamScore emits it as <contestnr>. A QSO loaded with ceContest left at
         DUMMYCONTEST would export as the wrong contest, silently. *)
       procedure SetContest(aContest: ContestType);
+
+      (* Writes the entry declaration onto the contest row.  Call once, when
+         the log is created -- see TLogEntryDeclaration for why never again. *)
+      procedure SetEntryDeclaration(const aDeclaration: TLogEntryDeclaration);
       function LogContest: ContestType;
 
       function NewestRowId: Int64;
@@ -1222,6 +1268,53 @@ begin
          FContest := GetContestFromString(token);
          end;
       q.Close;
+   finally
+      q.Free;
+   end;
+end;
+
+procedure TLogRepository.SetEntryDeclaration(
+   const aDeclaration: TLogEntryDeclaration);
+var
+   q: TSQLQuery;
+begin
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := FDatabase.Connection;
+      (* An UPDATE, not an upsert: SetContest creates the row, and a
+         declaration without a contest is not a state this program can reach.
+         If the row is missing, RowsAffected is 0 and nothing is invented. *)
+      q.SQL.Text :=
+         'UPDATE contest SET my_call = :my_call, my_park = :my_park, ' +
+         'category_operator = :cat_op, category_assisted = :cat_asst, ' +
+         'category_power = :cat_pwr, category_band = :cat_band, ' +
+         'category_mode = :cat_mode, category_station = :cat_stn, ' +
+         'category_time = :cat_time, category_transmitter = :cat_tx, ' +
+         'category_overlay = :cat_ovl, club = :club, soapbox = :soapbox, ' +
+         'op_name = :op_name, address = :address, city = :city, ' +
+         'state = :state, postcode = :postcode, country = :country, ' +
+         'email = :email WHERE id = 1';
+      q.ParamByName('my_call').AsString := aDeclaration.MyCall;
+      q.ParamByName('my_park').AsString := aDeclaration.MyPark;
+      q.ParamByName('cat_op').AsString := aDeclaration.CategoryOperator;
+      q.ParamByName('cat_asst').AsString := aDeclaration.CategoryAssisted;
+      q.ParamByName('cat_pwr').AsString := aDeclaration.CategoryPower;
+      q.ParamByName('cat_band').AsString := aDeclaration.CategoryBand;
+      q.ParamByName('cat_mode').AsString := aDeclaration.CategoryMode;
+      q.ParamByName('cat_stn').AsString := aDeclaration.CategoryStation;
+      q.ParamByName('cat_time').AsString := aDeclaration.CategoryTime;
+      q.ParamByName('cat_tx').AsString := aDeclaration.CategoryTransmitter;
+      q.ParamByName('cat_ovl').AsString := aDeclaration.CategoryOverlay;
+      q.ParamByName('club').AsString := aDeclaration.Club;
+      q.ParamByName('soapbox').AsString := aDeclaration.Soapbox;
+      q.ParamByName('op_name').AsString := aDeclaration.OpName;
+      q.ParamByName('address').AsString := aDeclaration.Address;
+      q.ParamByName('city').AsString := aDeclaration.City;
+      q.ParamByName('state').AsString := aDeclaration.State;
+      q.ParamByName('postcode').AsString := aDeclaration.Postcode;
+      q.ParamByName('country').AsString := aDeclaration.Country;
+      q.ParamByName('email').AsString := aDeclaration.Email;
+      q.ExecSQL;
    finally
       q.Free;
    end;

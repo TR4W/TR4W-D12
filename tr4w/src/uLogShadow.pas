@@ -95,7 +95,13 @@ uses
    SysUtils, MainUnit, uLogDatabase, uLogRepository, uLogImport, uLogBinaryFile,
    (* The canonical sent-exchange builder -- the same one the UDP broadcast
       uses, so the database and the broadcast cannot disagree. *)
-   uExchangeBuilder;
+   uExchangeBuilder,
+   (* The Cabrillo header's tag table -- CabrilloTagText answers from the live
+      window when it is open and from the store otherwise. *)
+   uCbrSum,
+   (* MyPark, which is not a Cabrillo tag: it is a per-log fact TR4W keeps as
+      its own global. *)
+   LOGWIND;
 
 var
    GDatabase: TLogDatabase = nil;
@@ -106,6 +112,17 @@ var
    GDisabled: boolean = False;
 
    GTriedToOpen: boolean = False;
+
+   (* Written once per session, the first time the shadow is usable.
+
+      It was first written only when the contest CHANGED, inside
+      ShadowAppendQSO -- which never fired: the first QSO opens the shadow by
+      rebuilding from the binary log, and ImportBinaryLog sets the contest
+      itself, so by the time the second QSO arrived the contest already matched
+      and the block was skipped. The whole entry declaration stayed NULL, which
+      is exactly the defect it exists to fix, so the guard is now "have we
+      written it" rather than "did something change". *)
+   GDeclarationWritten: boolean = False;
 
 function ShadowIsActive: boolean;
 begin
@@ -128,6 +145,50 @@ begin
 
    FreeAndNil(GRepository);
    FreeAndNil(GDatabase);
+end;
+
+(* THE ENTRY DECLARATION, READ ONCE, WHEN THE LOG IS MADE.
+
+   This is tier 2 of the event-sourcing decision and it fixes a defect the
+   golden corpus cannot see, because golden_diff.py compares only QSO lines and
+   never the header. Measured: a headless export ships a Cabrillo file with
+   CATEGORY-ASSISTED, CATEGORY-BAND and CATEGORY-OPERATOR simply ABSENT, and a
+   CATEGORY-MODE of SSB where the log's own configuration says MIXED -- because
+   those tags come only from tr4w.json and headless has no dialog to seed them.
+
+   CabrilloTagText is the right source and the only one: it answers from the
+   live window when it is open and from the store otherwise, which is exactly
+   what made the interactive and headless paths agree in the first place.
+
+   ONCE. Reading it again later would reintroduce the bug at the header level:
+   what an entry DECLARED is a fact about the entry, not about today. *)
+function ReadEntryDeclaration: TLogEntryDeclaration;
+begin
+   FillChar(Result, SizeOf(Result), 0);
+
+   Result.MyCall := AnsiString(MyCall);
+   Result.MyPark := AnsiString(MyPark);
+
+   Result.CategoryOperator    := AnsiString(CabrilloTagText(ctCategoryOperator));
+   Result.CategoryAssisted    := AnsiString(CabrilloTagText(ctCategoryAssisted));
+   Result.CategoryPower       := AnsiString(CabrilloTagText(ctCategoryPower));
+   Result.CategoryBand        := AnsiString(CabrilloTagText(ctCategoryBand));
+   Result.CategoryMode        := AnsiString(CabrilloTagText(ctCategoryMode));
+   Result.CategoryStation     := AnsiString(CabrilloTagText(ctCategoryStation));
+   Result.CategoryTime        := AnsiString(CabrilloTagText(ctCategoryTime));
+   Result.CategoryTransmitter := AnsiString(CabrilloTagText(ctCategoryTransmitter));
+   Result.CategoryOverlay     := AnsiString(CabrilloTagText(ctCategoryOverlay));
+
+   Result.Club    := AnsiString(CabrilloTagText(ctClub));
+   Result.Soapbox := AnsiString(CabrilloTagText(ctSoapbox));
+
+   Result.OpName   := AnsiString(CabrilloTagText(ctName));
+   Result.Address  := AnsiString(CabrilloTagText(ctAddress));
+   Result.City     := AnsiString(CabrilloTagText(ctAddressCity));
+   Result.State    := AnsiString(CabrilloTagText(ctAddressStateProvince));
+   Result.Postcode := AnsiString(CabrilloTagText(ctAddressPostalcode));
+   Result.Country  := AnsiString(CabrilloTagText(ctAddressCountry));
+   Result.Email    := AnsiString(CabrilloTagText(ctEmail));
 end;
 
 function ShadowFileName: string;
@@ -236,6 +297,16 @@ begin
          GDatabase := TLogDatabase.Create;
          GDatabase.Open(dbName);
          GRepository := TLogRepository.Create(GDatabase);
+         end;
+
+      (* THE ENTRY DECLARATION, ONCE THE SHADOW IS USABLE -- and on BOTH paths,
+         rebuilt or merely opened. Reading it again later would reintroduce
+         issue #2 at the header level: what an entry DECLARED is a fact about
+         the entry, not about today. *)
+      if not GDeclarationWritten then
+         begin
+         GRepository.SetEntryDeclaration(ReadEntryDeclaration);
+         GDeclarationWritten := True;
          end;
 
       Result := True;
