@@ -1,6 +1,6 @@
 unit uTestLogDatabase;
 
-{ THE CONTEST LOG DATABASE -- the first tests in TR4W that touch SQLite.
+(* THE CONTEST LOG DATABASE -- the first tests in TR4W that touch SQLite.
 
   These are REAL DATABASES, created in a temporary directory and deleted again,
   not mocks.  The thing worth testing here is whether our schema and our
@@ -11,7 +11,7 @@ unit uTestLogDatabase;
   sqlite3.dll beside the test executable.  FPC's binding is dynamic, so a
   missing library is a run-time failure -- which is the whole reason
   DiagnoseSQLiteLoad exists, and why the architecture tests below run against
-  real files rather than a contrived one. }
+  real files rather than a contrived one. *)
 
 {$I ..\..\src\tr4w.inc}
 
@@ -27,14 +27,14 @@ type
       function TempLogName(const aLeaf: string): string;
       procedure Scrub(const aFileName: string);
    protected
-      { lifecycle }
+      (* lifecycle *)
       procedure TestCreateNewMakesAFile;
       procedure TestCreateNewRefusesToClobber;
       procedure TestOpenRefusesAMissingFile;
       procedure TestReopenKeepsSchemaVersion;
       procedure TestCloseThenIsOpenIsFalse;
 
-      { the schema itself }
+      (* the schema itself *)
       procedure TestEveryTableIsCreated;
       procedure TestQsoCarriesTheEventSourceColumns;
       procedure TestQsoCarriesEveryCrosswalkColumn;
@@ -42,17 +42,17 @@ type
       procedure TestMessageIsKeyedByKindModeAndKey;
       procedure TestDupeIndexExists;
 
-      { file identity }
+      (* file identity *)
       procedure TestConnectionPragmasActuallyApply;
       procedure TestApplicationIdIsStamped;
       procedure TestForeignDatabaseIsRefused;
       procedure TestNewerSchemaIsRefused;
 
-      { integrity }
+      (* integrity *)
       procedure TestIntegrityPassesOnAFreshLog;
       procedure TestIntegrityReportsAClosedLog;
 
-      { the leaf helpers }
+      (* the leaf helpers *)
       procedure TestPEArchitectureOfTheSQLiteDLL;
       procedure TestPEArchitectureOfSomethingThatIsNotPE;
       procedure TestPEArchitectureOfAMissingFile;
@@ -77,9 +77,9 @@ begin
    Result := IncludeTrailingPathDelimiter(FDir) + aLeaf;
 end;
 
-{ WAL leaves -wal and -shm beside the database. A test that deleted only the
+(* WAL leaves -wal and -shm beside the database. A test that deleted only the
   .db would leave those behind and the NEXT run would open a database whose
-  write-ahead log belongs to a file that no longer exists. }
+  write-ahead log belongs to a file that no longer exists. *)
 procedure TLogDatabaseTests.Scrub(const aFileName: string);
 begin
    if FileExists(aFileName) then
@@ -96,9 +96,9 @@ begin
       end;
 end;
 
-{ ---------------------------------------------------------------------------
+(* ---------------------------------------------------------------------------
   lifecycle
-  --------------------------------------------------------------------------- }
+  --------------------------------------------------------------------------- *)
 
 procedure TLogDatabaseTests.TestCreateNewMakesAFile;
 var
@@ -141,8 +141,8 @@ begin
       db.Free;
    end;
 
-   { THE CASE THAT MATTERS. A contest log is the operator's only copy of a
-     weekend; "create" must not be a silent truncate. }
+   (* THE CASE THAT MATTERS. A contest log is the operator's only copy of a
+     weekend; "create" must not be a silent truncate. *)
    refused := False;
    db := TLogDatabase.Create;
    try
@@ -188,8 +188,8 @@ begin
       db.Free;
    end;
 
-   { SQLite would happily CREATE this file. An empty log that opens cleanly is
-     worse than an error, because it looks like the contest was lost. }
+   (* SQLite would happily CREATE this file. An empty log that opens cleanly is
+     worse than an error, because it looks like the contest was lost. *)
    CheckTrue(refused, 'opening a log that does not exist is refused');
    CheckFalse(FileExists(fn), 'and nothing was created by trying');
 end;
@@ -247,9 +247,9 @@ begin
    Scrub(fn);
 end;
 
-{ ---------------------------------------------------------------------------
+(* ---------------------------------------------------------------------------
   the schema
-  --------------------------------------------------------------------------- }
+  --------------------------------------------------------------------------- *)
 
 procedure TLogDatabaseTests.TestEveryTableIsCreated;
 var
@@ -286,10 +286,10 @@ begin
       db.Free;
    end;
 
-   { EXHAUSTIVE AND IN ORDER, so a table added without a thought about this
+   (* EXHAUSTIVE AND IN ORDER, so a table added without a thought about this
      suite fails here rather than being noticed a release later. The contest
      .cfg moving into the log (NY4I, 2026-09-01) is why config and message are
-     on this list. }
+     on this list. *)
    CheckEquals('config contest message qso ', found,
                'the log holds exactly the four tables the schema declares');
    Scrub(fn);
@@ -328,33 +328,33 @@ begin
       db.Free;
    end;
 
-   { THE COLUMNS THAT EXIST BECAUSE OF ISSUE #2, pinned by name. Two of the four
+   (* THE COLUMNS THAT EXIST BECAUSE OF ISSUE #2, pinned by name. Two of the four
      corpus known-divergences are the absence of exactly this -- the sent
      exchange being rebuilt from station globals at export time instead of being
      stored. If one of these is ever quietly dropped, the corpus would go green
-     for the wrong reason. }
+     for the wrong reason. *)
    CheckTrue(Pos('|exchange_sent', cols) > 0,
              'the qso row stores what was SENT, verbatim');
    CheckTrue(Pos('|exchange_received', cols) > 0,
              'and what was COPIED, verbatim');
 
-   { Tier 3 -- the only things that can change WITHIN one log, a rover. }
+   (* Tier 3 -- the only things that can change WITHIN one log, a rover. *)
    CheckTrue(Pos('|my_grid', cols) > 0, 'my grid is per QSO, not per contest');
    CheckTrue(Pos('|my_state', cols) > 0, 'my state is per QSO');
    CheckTrue(Pos('|my_county', cols) > 0, 'my county is per QSO');
 
-   { The copied/derived split -- 4a. Both must exist or the rule that one
-     outranks the other has nothing to rank. }
+   (* The copied/derived split -- 4a. Both must exist or the rule that one
+     outranks the other has nothing to rank. *)
    CheckTrue(Pos('|rcvd_zone', cols) > 0, 'the zone he SENT');
    CheckTrue(Pos('|cty_cq_zone', cols) > 0, 'and the zone CTY.DAT guessed');
    CheckTrue(Pos('|cty_itu_zone', cols) > 0, 'both zones, separately');
 
-   { Split working is not an edge case in a contest. }
+   (* Split working is not an edge case in a contest. *)
    CheckTrue(Pos('|freq_rx_hz', cols) > 0, 'a split QSO has two frequencies');
    Scrub(fn);
 end;
 
-{ EVERY COLUMN docs\CONTEST_EXCHANGE_CROSSWALK.md ADDED, pinned by name.
+(* EVERY COLUMN docs\CONTEST_EXCHANGE_CROSSWALK.md ADDED, pinned by name.
 
   The crosswalk exists because a ContestExchange field with no column is a
   silent data loss that no build and no test would report -- the import simply
@@ -362,7 +362,7 @@ end;
   quietly stops existing fails HERE rather than on somebody's contest log.
 
   Grouped in the order the crosswalk argues them, so a failure says which
-  finding was undone. }
+  finding was undone. *)
 procedure TLogDatabaseTests.TestQsoCarriesEveryCrosswalkColumn;
 var
    db: TLogDatabase;
@@ -402,14 +402,14 @@ begin
       db.Free;
    end;
 
-   { Identity. The pair is how two stations agree that two rows are the same
-     contact, and computer_id is how a station knows which QSOs are its own. }
+   (* Identity. The pair is how two stations agree that two rows are the same
+     contact, and computer_id is how a station knows which QSOs are its own. *)
    Pin('exchange_id',      'ContestExchange.id -- the EXCHANGE, shared by county-line QSOs');
 
-   { Split, stated rather than inferred (NY4I, 2026-09-01). freq_rx_hz is NOT
+   (* Split, stated rather than inferred (NY4I, 2026-09-01). freq_rx_hz is NOT
      NULL and equals freq_tx_hz when not split, so "what was I receiving on"
      needs no knowledge of split at all -- and NULL keeps its one meaning
-     instead of standing for both "same as tx" and "not known". }
+     instead of standing for both "same as tx" and "not known". *)
    Pin('freq_rx_hz',       'always populated -- equals tx when not split');
    Pin('is_split',         'stated, not inferred from a NULL rx frequency');
    Pin('session_id',       'ceQSOID1 -- half the multi-op network identity');
@@ -418,11 +418,11 @@ begin
    Pin('operator_id',      'ceOperatorID -- no live reader, kept for import fidelity');
    Pin('record_kind',      'ceRecordKind -- a log record is not always a QSO');
 
-   { The two states that are NOT deleted, and are not each other. }
+   (* The two states that are NOT deleted, and are not each other. *)
    Pin('is_xqso',          'ceXQSO -- kept for NIL protection, not claimed');
    Pin('is_skipped',       'ceQSO_Skiped -- read by the scoring paths');
 
-   { Multiplier outcome, per QSO. Not the multipliers TABLE, which stays out. }
+   (* Multiplier outcome, per QSO. Not the multipliers TABLE, which stays out. *)
    Pin('mult_domestic',    'DomesticMult');
    Pin('mult_dx',          'DXMult');
    Pin('mult_prefix',      'PrefixMult');
@@ -433,11 +433,11 @@ begin
    Pin('domestic_mult',    'DomMultQTH as counted');
    Pin('domestic_qth',     'the CORRECTED QTH -- AF1 becomes AF-001');
 
-   { The overloaded field, split. }
+   (* The overloaded field, split. *)
    Pin('rcvd_kids',        'Kids for rkQSO');
    Pin('qtc_call',         'Kids for rkQTCR/rkQTCS -- a callsign, not exchange text');
 
-   { The rest. }
+   (* The rest. *)
    Pin('sent_in_qtc',      'ceWasSendInQTC -- or the QSO goes out twice');
    Pin('name_sent',        'NameSent');
    Pin('mp3_recorded',     'MP3Record -- an MP3 exists on disk');
@@ -465,10 +465,10 @@ begin
    try
       db.CreateNew(fn);
 
-      { The commands a real contest .cfg carries. All five of these are crC: 0
+      (* The commands a real contest .cfg carries. All five of these are crC: 0
         in CFGCA -- SaveNewContest does not write them -- and all five appear in
         the shipped "Idaho QSO Party.cfg". That is why config is key/value over
-        the whole command namespace and not 29 columns. }
+        the whole command namespace and not 29 columns. *)
       db.Connection.ExecuteDirect(
          'INSERT INTO config (command, value, source) VALUES ' +
          '(''EXCHANGE RECEIVED'', ''RST DOMESTIC OR DX QTH'', ''contest''),' +
@@ -496,8 +496,8 @@ begin
 
    CheckEquals('ONE PHONE TWO CW', value,
                'a contest command round-trips through config');
-   { The precedence signal. With no .cfg file left there is nothing else to tell
-     a contest setting from a station default. }
+   (* The precedence signal. With no .cfg file left there is nothing else to tell
+     a contest setting from a station default. *)
    CheckEquals('contest', source, 'and it records that the CONTEST set it');
    Scrub(fn);
 end;
@@ -519,9 +519,9 @@ begin
    try
       db.CreateNew(fn);
 
-      { CQMemory and EXMemory are array[CW..Phone, F1..AltF12] (LogCW.pas:56),
+      (* CQMemory and EXMemory are array[CW..Phone, F1..AltF12] (LogCW.pas:56),
         so the same function key holds four different things. The primary key
-        has to carry all three or Alt-P silently loses three quarters of them. }
+        has to carry all three or Alt-P silently loses three quarters of them. *)
       db.Connection.ExecuteDirect(
          'INSERT INTO message (kind, mode, key_id, text) VALUES ' +
          '(''CQ'', ''CW'',    ''F1'', ''CQ TEST \  \ TEST''),' +
@@ -547,8 +547,8 @@ begin
          q.Free;
       end;
 
-      { The key really is composite -- prove it by collision rather than by
-        reading the DDL back. }
+      (* The key really is composite -- prove it by collision rather than by
+        reading the DDL back. *)
       collided := False;
       try
          db.Connection.ExecuteDirect(
@@ -600,18 +600,18 @@ begin
       db.Free;
    end;
 
-   { The dupe check runs on every keystroke. Section 9a says "no cache" on the
+   (* The dupe check runs on every keystroke. Section 9a says "no cache" on the
      strength of this index existing, so the index is load-bearing for a
-     DESIGN decision, not only for speed. }
+     DESIGN decision, not only for speed. *)
    CheckEquals(1, n, 'the dupe check has its partial index');
    Scrub(fn);
 end;
 
-{ ---------------------------------------------------------------------------
+(* ---------------------------------------------------------------------------
   file identity
-  --------------------------------------------------------------------------- }
+  --------------------------------------------------------------------------- *)
 
-{ THE THREE CONNECTION-LEVEL PRAGMAS, READ BACK.
+(* THE THREE CONNECTION-LEVEL PRAGMAS, READ BACK.
 
   They cannot go through TSQLConnection.ExecuteDirect: sqldb.pp:1492 starts a
   transaction unconditionally, and SQLite refuses journal_mode and synchronous
@@ -621,7 +621,7 @@ end;
 
   This test exists because "requested" and "in force" are different things and
   the difference is invisible: a log whose foreign keys were quietly never
-  switched on looks exactly like one where they were. }
+  switched on looks exactly like one where they were. *)
 procedure TLogDatabaseTests.TestConnectionPragmasActuallyApply;
 var
    db: TLogDatabase;
@@ -635,14 +635,14 @@ begin
    try
       db.CreateNew(fn);
 
-      { On ordinary local storage this is 'wal'. It is READ BACK rather than
+      (* On ordinary local storage this is 'wal'. It is READ BACK rather than
         assumed because SQLite refuses WAL on a network share and says nothing
-        -- and a multi-op station is exactly where a log ends up on one. }
+        -- and a multi-op station is exactly where a log ends up on one. *)
       CheckEquals('wal', db.JournalMode,
                   'journal_mode is WAL on local storage');
 
-      { The silent one. ApplyPragmas raises if this comes back off, so reaching
-        here at all is half the proof; asserting it states the other half. }
+      (* The silent one. ApplyPragmas raises if this comes back off, so reaching
+        here at all is half the proof; asserting it states the other half. *)
       CheckTrue(db.ForeignKeysEnforced,
                 'foreign key enforcement is actually ON, not merely requested');
    finally
@@ -680,7 +680,7 @@ begin
       db.Free;
    end;
 
-   { 'TR4W' at offset 68 of the file. }
+   (* 'TR4W' at offset 68 of the file. *)
    CheckEquals(LOG_APPLICATION_ID, appId, 'a TR4W log says so in its header');
    CheckEquals($54523457, appId, 'and the value is literally ''TR4W''');
    Scrub(fn);
@@ -696,15 +696,15 @@ begin
    fn := TempLogName('foreign.db');
    Scrub(fn);
 
-   { Build a database that is stamped as somebody else's -- 'TR4Q', which is
+   (* Build a database that is stamped as somebody else's -- 'TR4Q', which is
      TR4QT's real id (Database.h:49). Question 8 settled that a TR4QT log is not
-     an interop target, so it must be REFUSED rather than half-read. }
+     an interop target, so it must be REFUSED rather than half-read. *)
    db := TLogDatabase.Create;
    try
       db.CreateNew(fn);
       db.Connection.ExecuteDirect('PRAGMA application_id = 1414681681');
-      { COMMIT, or Close rolls it back and this test silently passes a database
-        that was never re-stamped -- which is how it failed the first time. }
+      (* COMMIT, or Close rolls it back and this test silently passes a database
+        that was never re-stamped -- which is how it failed the first time. *)
       db.Transaction.Commit;
       db.Close;
    finally
@@ -766,15 +766,15 @@ begin
       db.Free;
    end;
 
-   { A newer schema may carry columns this build cannot see; opening it
-     read-write would drop them on the next write. }
+   (* A newer schema may carry columns this build cannot see; opening it
+     read-write would drop them on the next write. *)
    CheckTrue(refused, 'a log from a newer TR4W is refused, not half-read');
    Scrub(fn);
 end;
 
-{ ---------------------------------------------------------------------------
+(* ---------------------------------------------------------------------------
   integrity
-  --------------------------------------------------------------------------- }
+  --------------------------------------------------------------------------- *)
 
 procedure TLogDatabaseTests.TestIntegrityPassesOnAFreshLog;
 var
@@ -813,17 +813,17 @@ begin
       db.Free;
    end;
 
-   { TR4QT returns early and calls it a pass (DataIntegrityManager.cpp, "Not an
+   (* TR4QT returns early and calls it a pass (DataIntegrityManager.cpp, "Not an
      error, just skip the check"). A check that cannot run is not a check that
      passed, and this tree's rule is that a reported problem beats a silent
-     one. }
+     one. *)
    CheckFalse(r.Ok, 'a check that could not run is not a pass');
    CheckTrue(r.Report <> '', 'and it says why');
 end;
 
-{ ---------------------------------------------------------------------------
+(* ---------------------------------------------------------------------------
   the leaf helpers -- what makes a missing DLL diagnosable
-  --------------------------------------------------------------------------- }
+  --------------------------------------------------------------------------- *)
 
 procedure TLogDatabaseTests.TestPEArchitectureOfTheSQLiteDLL;
 var
@@ -831,10 +831,10 @@ var
 begin
    BeginTest('TestPEArchitectureOfTheSQLiteDLL');
 
-   { The DLL that is shipping, read as a file rather than loaded, and found the
+   (* The DLL that is shipping, read as a file rather than loaded, and found the
      same way the program finds it. If this ever stops matching the build,
      SQLite fails at run time with "the specified module could not be found" --
-     naming a file that is present. }
+     naming a file that is present. *)
    dll := SQLiteLibraryPath;
 
    if FileExists(dll) then
@@ -844,8 +844,8 @@ begin
       end
    else
       begin
-      { Not a failure: the suite may run somewhere the DLL has not been copied.
-        Said out loud rather than silently skipped. }
+      (* Not a failure: the suite may run somewhere the DLL has not been copied.
+        Said out loud rather than silently skipped. *)
       CheckTrue(True, 'sqlite3.dll not found beside the tests; check skipped');
       end;
 end;
@@ -857,9 +857,9 @@ var
 begin
    BeginTest('TestPEArchitectureOfSomethingThatIsNotPE');
 
-   { A bad download is the realistic case -- an HTML error page saved under a
+   (* A bad download is the realistic case -- an HTML error page saved under a
      .dll name. It must come back as "not a PE", not as a wild machine word
-     read out of whatever bytes happened to be at that offset. }
+     read out of whatever bytes happened to be at that offset. *)
    fn := TempLogName('notadll.dll');
    f := TStringList.Create;
    try
@@ -888,15 +888,15 @@ begin
 
    msg := DiagnoseSQLiteLoad(TempLogName('nowhere\' + SQLITE_LIBRARY_NAME));
 
-   { The message has to name the file AND the path, because the operator's next
-     action is to go and look there. }
+   (* The message has to name the file AND the path, because the operator's next
+     action is to go and look there. *)
    CheckTrue(Pos(SQLITE_LIBRARY_NAME, msg) > 0,
              'the diagnosis names the library');
    CheckTrue(Pos('not found', msg) > 0,
              'and says it was not found');
 end;
 
-{ --------------------------------------------------------------------------- }
+(* --------------------------------------------------------------------------- *)
 
 procedure TLogDatabaseTests.RunAllTests;
 begin

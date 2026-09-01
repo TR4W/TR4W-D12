@@ -1,4 +1,4 @@
-{
+(*
  Copyright Thomas M. Schaefer, NY4I (c) 2026.
 
  This file is part of TR4W  (SRC)
@@ -17,9 +17,9 @@
      Public License along with TR4W in  GPL_License.TXT.
 If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
- }
+ *)
 
-{ READING A BINARY TR4W LOG -- THE ONE PLACE THAT KNOWS THE ON-DISK LAYOUT.
+(* READING A BINARY TR4W LOG -- THE ONE PLACE THAT KNOWS THE ON-DISK LAYOUT.
 
   Extracted from test\logdump\logdump.lpr on 2026-09-01, BEFORE the SQLite
   importer became its second copy rather than after.  CLAUDE.md: "when you add
@@ -49,7 +49,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   read means EOF -- are expressible either way, and TFileStream is RTL, so an
   operator's old .trw can still be imported on macOS or Linux later.  This unit
   needs VC for ContestExchange, which drags in Windows regardless, so there is
-  no purity gain today; there is a portability gain the day VC is split. }
+  no purity gain today; there is a portability gain the day VC is split. *)
 unit uLogBinaryFile;
 
 {$I tr4w.inc}
@@ -62,15 +62,15 @@ uses
 type
    TLogBinaryStatus = (
       lbOK,
-      lbCannotOpen,        { no such file, or locked by a running TR4W }
-      lbTooSmall,          { smaller than one header }
-      lbStrideMismatch,    { not header + N * record -- see the header comment }
+      lbCannotOpen,        (* no such file, or locked by a running TR4W *)
+      lbTooSmall,          (* smaller than one header *)
+      lbStrideMismatch,    (* not header + N * record -- see the header comment *)
       lbHeaderUnreadable
    );
 
-   { Reads a .trw / .dat sequentially.  One instance per file, forward only --
+   (* Reads a .trw / .dat sequentially.  One instance per file, forward only --
      which is all the importer and logdump need, and it keeps the short-read
-     rule in one place instead of at every seek. }
+     rule in one place instead of at every seek. *)
    TLogBinaryReader = class(TObject)
    private
       FStream: TFileStream;
@@ -83,36 +83,36 @@ type
 
       procedure ReportFailure(aStatus: TLogBinaryStatus; const aMessage: string);
    public
-      { Opens and validates in one step.  Check Status before reading; a reader
-        that failed to open returns False from ReadNext and says why. }
+      (* Opens and validates in one step.  Check Status before reading; a reader
+        that failed to open returns False from ReadNext and says why. *)
       constructor Create(const aFileName: string);
       destructor Destroy; override;
 
-      { False at end of file, and False if the reader never opened.  A short
-        read at the tail is end of file, not an error -- see the unit header. }
+      (* False at end of file, and False if the reader never opened.  A short
+        read at the tail is end of file, not an error -- see the unit header. *)
       function ReadNext(out aRecord: ContestExchange): boolean;
 
       property Status: TLogBinaryStatus read FStatus;
-      { Empty when Status is lbOK. Otherwise a sentence for a human. }
+      (* Empty when Status is lbOK. Otherwise a sentence for a human. *)
       property Message: string read FMessage;
       property FileName: string read FFileName;
       property Header: TLogHeader read FHeader;
 
-      { 'v1.7' -- the first four bytes of the header's version string. }
+      (* 'v1.7' -- the first four bytes of the header's version string. *)
       function LogVersion: string;
 
-      { What the file size implies, and what has actually been handed out.
-        They differ only if the file was truncated mid-write. }
+      (* What the file size implies, and what has actually been handed out.
+        They differ only if the file was truncated mid-write. *)
       property ExpectedRecords: Int64 read FExpectedRecords;
       property RecordsRead: Int64 read FRecordsRead;
    end;
 
-{ THE RECORDS ExportToADIF EMITS, and the reason this predicate is here rather
+(* THE RECORDS ExportToADIF EMITS, and the reason this predicate is here rather
   than in each caller: logdump's JSONL and the SQLite importer must agree about
-  which records are QSOs, or the corpus compares two different populations. }
+  which records are QSOs, or the corpus compares two different populations. *)
 function GoodLookingQSO(const aRecord: ContestExchange): boolean;
 
-{ TQSOTime -> unix UTC seconds.
+(* TQSOTime -> unix UTC seconds.
 
   qtYear IS THE YEAR MINUS 2000, which a byte can hold and 2026 cannot.  Both
   writers agree (tree.pas: `UTC.wYear - 2000`; uEditQSO likewise) and so does
@@ -120,12 +120,12 @@ function GoodLookingQSO(const aRecord: ContestExchange): boolean;
   a century and fails nothing, which is why it is one function with a test
   against a real fixture rather than an expression at each call site.
 
-  A zero date -- which tree.pas writes for "no time" -- returns 0. }
+  A zero date -- which tree.pas writes for "no time" -- returns 0. *)
 function QSOTimeToUnixUTC(const aTime: TQSOTime): Int64;
 
-{ The inverse, for the exporter and for round-trip tests.  Years outside
+(* The inverse, for the exporter and for round-trip tests.  Years outside
   2000..2255 cannot be represented and raise: silently truncating would
-  reproduce the very bug the note above describes. }
+  reproduce the very bug the note above describes. *)
 function UnixUTCToQSOTime(aUnix: Int64): TQSOTime;
 
 implementation
@@ -134,7 +134,7 @@ uses
    DateUtils;
 
 const
-   { The epoch TR4W's on-disk byte is relative to. Named rather than repeated. }
+   (* The epoch TR4W's on-disk byte is relative to. Named rather than repeated. *)
    QSO_TIME_YEAR_BASE = 2000;
 
 function GoodLookingQSO(const aRecord: ContestExchange): boolean;
@@ -151,9 +151,9 @@ function QSOTimeToUnixUTC(const aTime: TQSOTime): Int64;
 var
    dt: TDateTime;
 begin
-   { tree.pas writes qtYear := 0 for "no time", and a zero month or day cannot
+   (* tree.pas writes qtYear := 0 for "no time", and a zero month or day cannot
      be encoded at all. Report it as 0 rather than as 1 January 2000, which
-     would look like a real QSO in the year the log format was invented. }
+     would look like a real QSO in the year the log format was invented. *)
    if (aTime.qtMonth = 0) or (aTime.qtDay = 0) then
       begin
       Result := 0;
@@ -196,7 +196,7 @@ begin
    Result.qtSecond := s;
 end;
 
-{ --------------------------------------------------------------------------- }
+(* --------------------------------------------------------------------------- *)
 
 procedure TLogBinaryReader.ReportFailure(aStatus: TLogBinaryStatus; const aMessage: string);
 begin
@@ -219,9 +219,9 @@ begin
    FillChar(FHeader, SizeOf(FHeader), 0);
 
    try
-      { fmShareDenyNone: a multi-op station may well have TR4W holding this
+      (* fmShareDenyNone: a multi-op station may well have TR4W holding this
         file open, and refusing to read it would be a worse answer than
-        reading a snapshot of it. }
+        reading a snapshot of it. *)
       FStream := TFileStream.Create(AnsiString(aFileName),
                                     fmOpenRead or fmShareDenyNone);
    except
@@ -244,9 +244,9 @@ begin
    recordBytes := FStream.Size - SizeOf(FHeader);
    leftover := recordBytes mod SizeOf(ContestExchange);
 
-   { THE CHECK THAT PREVENTS GARBAGE. See the unit header: a stride mismatch
+   (* THE CHECK THAT PREVENTS GARBAGE. See the unit header: a stride mismatch
      means a different SizeOfContestExchange, and reading anyway produces
-     plausible-looking nonsense rather than a failure. }
+     plausible-looking nonsense rather than a failure. *)
    if leftover <> 0 then
       begin
       ReportFailure(lbStrideMismatch,
@@ -280,8 +280,8 @@ end;
 
 function TLogBinaryReader.LogVersion: string;
 begin
-   { The first four bytes -- 'v1.7'. The rest of the field is #0, a space and
-     a CRLF, which are framing rather than version. }
+   (* The first four bytes -- 'v1.7'. The rest of the field is #0, a space and
+     a CRLF, which are framing rather than version. *)
    Result := string(Copy(AnsiString(FHeader.lhVersionString), 1, 4));
 end;
 
@@ -299,10 +299,10 @@ begin
 
    got := FStream.Read(aRecord, SizeOf(aRecord));
 
-   { A SHORT READ IS END OF FILE, NOT AN ERROR -- and it is not reported,
+   (* A SHORT READ IS END OF FILE, NOT AN ERROR -- and it is not reported,
      because the legacy reader does not report it either and the corpus
      compares our record count against what ExportToADIF saw. See the unit
-     header. }
+     header. *)
    if got <> SizeOf(aRecord) then
       begin
       Exit;

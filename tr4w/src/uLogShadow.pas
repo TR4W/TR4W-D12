@@ -1,4 +1,4 @@
-{
+(*
  Copyright Thomas M. Schaefer, NY4I (c) 2026.
 
  This file is part of TR4W  (SRC)
@@ -17,9 +17,9 @@
      Public License along with TR4W in  GPL_License.TXT.
 If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
- }
+ *)
 
-{ THE SQLITE LOG, WRITTEN ALONGSIDE THE BINARY ONE -- STEP B2.
+(* THE SQLITE LOG, WRITTEN ALONGSIDE THE BINARY ONE -- STEP B2.
 
   The binary .TRW REMAINS AUTHORITATIVE. Nothing reads this database yet: it is
   written so that a bench session produces a real SQLite log next to a real
@@ -57,7 +57,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   anyway, and not as a formality: a session that ran with the shadow switched
   off after a failure, or a log edited by an older build, still leaves the two
   out of step. Rebuilding is cheap (1,316 QSOs in 63 ms) and the .TRW is
-  authoritative, so disagreement is settled rather than hoped about. }
+  authoritative, so disagreement is settled rather than hoped about. *)
 unit uLogShadow;
 
 {$I tr4w.inc}
@@ -67,26 +67,26 @@ interface
 uses
    VC;
 
-{ Appends a QSO to the shadow.  Call AFTER the binary record is written.
-  Never raises. }
+(* Appends a QSO to the shadow.  Call AFTER the binary record is written.
+  Never raises. *)
 procedure ShadowAppendQSO(const aQso: ContestExchange);
 
-{ Rewrites the shadow's newest row -- what the three "seek back one record"
-  sites do to the binary log.  Never raises. }
+(* Rewrites the shadow's newest row -- what the three "seek back one record"
+  sites do to the binary log.  Never raises. *)
 procedure ShadowUpdateNewestQSO(const aQso: ContestExchange);
 
-{ Rewrites the row matching a record's POSITION in the binary log -- what the
-  QSO editor does with a byte offset.  Never raises. }
+(* Rewrites the row matching a record's POSITION in the binary log -- what the
+  QSO editor does with a byte offset.  Never raises. *)
 procedure ShadowUpdateQSOAtIndex(aRecordIndex: Int64; const aQso: ContestExchange);
 
-{ Rewrites the row the multi-op network identifies by (ceQSOID1, ceQSOID2).
-  Does nothing when that pair is unset.  Never raises. }
+(* Rewrites the row the multi-op network identifies by (ceQSOID1, ceQSOID2).
+  Does nothing when that pair is unset.  Never raises. *)
 procedure ShadowUpdateQSOBySessionIds(const aQso: ContestExchange);
 
-{ Closes it, if it was ever opened.  Safe to call when it was not. }
+(* Closes it, if it was ever opened.  Safe to call when it was not. *)
 procedure ShadowClose;
 
-{ False after a failure has switched it off, or before anything opened it. }
+(* False after a failure has switched it off, or before anything opened it. *)
 function ShadowIsActive: boolean;
 
 implementation
@@ -98,8 +98,8 @@ var
    GDatabase: TLogDatabase = nil;
    GRepository: TLogRepository = nil;
 
-   { Tried and failed. Set once, never cleared, so a broken shadow costs one
-     log line rather than one per QSO for the rest of a contest. }
+   (* Tried and failed. Set once, never cleared, so a broken shadow costs one
+     log line rather than one per QSO for the rest of a contest. *)
    GDisabled: boolean = False;
 
    GTriedToOpen: boolean = False;
@@ -109,7 +109,7 @@ begin
    Result := (not GDisabled) and (GRepository <> nil);
 end;
 
-{ Report once and stand down.  Called from every except block here. }
+(* Report once and stand down.  Called from every except block here. *)
 procedure Disable(const aWhere: string; E: Exception);
 begin
    if not GDisabled then
@@ -129,12 +129,12 @@ end;
 
 function ShadowFileName: string;
 begin
-   { Beside the binary log, same name. A log and its shadow travel together or
-     the shadow is worse than useless. }
+   (* Beside the binary log, same name. A log and its shadow travel together or
+     the shadow is worse than useless. *)
    Result := ChangeFileExt(string(StrPas(TR4W_LOG_FILENAME)), '.db');
 end;
 
-{ How many records the binary log holds, or -1 if it cannot be read. }
+(* How many records the binary log holds, or -1 if it cannot be read. *)
 function BinaryRecordCount: Int64;
 var
    reader: TLogBinaryReader;
@@ -151,19 +151,19 @@ begin
    end;
 end;
 
-{ True when the shadow is open and usable.
+(* True when the shadow is open and usable.
 
   aRebuilt tells the caller the shadow was just built FROM THE BINARY LOG, which
-  matters more than it looks -- see ShadowAppendQSO. }
+  matters more than it looks -- see ShadowAppendQSO. *)
 function EnsureOpen(out aRebuilt: boolean): boolean;
 var
    dbName: string;
    trwCount: Int64;
    res: TLogImportResult;
 
-   { Returns False rather than raising: the caller is a try/except that would
+   (* Returns False rather than raising: the caller is a try/except that would
      only disable the shadow anyway, and raising here meant constructing an
-     Exception from a UnicodeString, which narrows. }
+     Exception from a UnicodeString, which narrows. *)
    function RebuildFromBinary(const aWhy: string): boolean;
    begin
       if logger <> nil then
@@ -200,8 +200,8 @@ begin
 
       if not FileExists(dbName) then
          begin
-         { A contest resumed after a restart has a log already. Importing it
-           first is what makes the shadow a shadow rather than a fragment. }
+         (* A contest resumed after a restart has a log already. Importing it
+           first is what makes the shadow a shadow rather than a fragment. *)
          if not RebuildFromBinary('no shadow yet') then
             begin
             GDisabled := True;
@@ -215,10 +215,10 @@ begin
       GDatabase.Open(dbName);
       GRepository := TLogRepository.Create(GDatabase);
 
-      { THE DRIFT CHECK. The three unshadowed mutations above, or a session
+      (* THE DRIFT CHECK. The three unshadowed mutations above, or a session
         that ran with the shadow switched off, leave the two out of step. The
         .TRW is authoritative and rebuilding is cheap, so disagreement is
-        settled by rebuilding rather than by hoping. }
+        settled by rebuilding rather than by hoping. *)
       if (trwCount >= 0) and (GRepository.RecordCount <> trwCount) then
          begin
          if not RebuildFromBinary(
@@ -260,7 +260,7 @@ begin
          Exit;
          end;
 
-      { THE SHADOW IS OPENED LAZILY, ON THE FIRST APPEND -- AND THE BINARY
+      (* THE SHADOW IS OPENED LAZILY, ON THE FIRST APPEND -- AND THE BINARY
         RECORD IS ALREADY ON DISK BY THEN.
 
         This call happens after tAddQSOToLog has written and closed the file,
@@ -275,26 +275,28 @@ begin
         The drift check in EnsureOpen would have repaired it at the next open,
         which is some comfort -- but a shadow that is briefly wrong is a shadow
         nobody can trust mid-contest, and "it fixes itself later" is not a
-        property to rely on. }
+        property to rely on. *)
       if rebuilt then
          begin
          Exit;
          end;
 
-      { The contest comes from the records; a binary log has no header naming
+      (* The contest comes from the records; a binary log has no header naming
         it, and the shadow must answer the same question the same way the
-        importer does. }
+        importer does. *)
       if GRepository.LogContest <> aQso.ceContest then
          begin
          GRepository.SetContest(aQso.ceContest);
          end;
 
-      GRepository.SaveQSO(aQso);
+      (* The same grouping rule the importer uses -- a county line logged
+        live must relate its rows exactly as an imported one does. *)
+      GRepository.SaveQSOGroupingByExchangeId(aQso);
 
-      { PER QSO, not batched -- section 9b. An operator who loses power should
+      (* PER QSO, not batched -- section 9b. An operator who loses power should
         lose at most the contact in progress, and this is a shadow of a log
         that has already been written, so a slow commit costs nothing an
-        operator can feel. }
+        operator can feel. *)
       GRepository.Commit;
    except
       on E: Exception do
@@ -320,9 +322,9 @@ begin
          Exit;
          end;
 
-      { A rebuild has just re-read the binary log, which already contains this
+      (* A rebuild has just re-read the binary log, which already contains this
         rewrite -- the caller writes the record before calling here, exactly as
-        the append does. }
+        the append does. *)
       if rebuilt then
          begin
          Exit;
@@ -331,8 +333,8 @@ begin
       rowId := GRepository.NewestRowId;
       if rowId <= 0 then
          begin
-         { Nothing to rewrite. Not an error: DeleteLastContact on an empty log
-           is a no-op in the binary world too. }
+         (* Nothing to rewrite. Not an error: DeleteLastContact on an empty log
+           is a no-op in the binary world too. *)
          Exit;
          end;
 
@@ -363,17 +365,17 @@ begin
          end;
       if rebuilt then
          begin
-         { The rebuild has just re-read the binary log, which already carries
-           this edit -- the caller writes before calling here. }
+         (* The rebuild has just re-read the binary log, which already carries
+           this edit -- the caller writes before calling here. *)
          Exit;
          end;
 
       rowId := GRepository.RowIdAtIndex(aRecordIndex);
       if rowId <= 0 then
          begin
-         { The shadow is short of that record. EnsureOpen's drift check will
+         (* The shadow is short of that record. EnsureOpen's drift check will
            rebuild at the next open; saying so here is what makes that visible
-           rather than mysterious. }
+           rather than mysterious. *)
          if logger <> nil then
             begin
             logger.Warn('[LogShadow] no row at record index %d -- the shadow ' +
@@ -411,8 +413,8 @@ begin
          Exit;
          end;
 
-      { False when the pair is unset or matches nothing. Not an error: the
-        binary side scans the whole log and finds nothing either. }
+      (* False when the pair is unset or matches nothing. Not an error: the
+        binary side scans the whole log and finds nothing either. *)
       if GRepository.UpdateQSOBySessionIds(aQso.ceQSOID1, aQso.ceQSOID2, aQso) then
          begin
          GRepository.Commit;

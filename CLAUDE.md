@@ -964,12 +964,33 @@ Wrong, and all four are common:
       end;
 ```
 
-**COMMENT A BLOCK OF CODE OUT WITH `(* *)`, NEVER `{ }`.** A brace comment ends at
-the FIRST `}` it meets, and this tree is full of things that contain one:
-`{$IFDEF ...}`, the resource directive in every designed form, and ordinary
-explanatory brace comments inside the very code being commented out. The comment
-closes early, the remainder of the block becomes code, and the compiler reports a
+**EVERY BLOCK COMMENT USES `(* *)`. NEVER `{ }`.** Not only commented-out code --
+**every one**, including the ordinary explanatory comment above a routine.
+
+A brace comment ends at the FIRST `}` it meets, and this tree is full of things
+that contain one: `{$IFDEF ...}`, the resource directive in every designed form,
+and ordinary explanatory brace comments inside the very code being commented out.
+The comment closes early, the remainder becomes code, and the compiler reports a
 syntax error somewhere that looks unrelated to what you did.
+
+**WIDENED 2026-09-01, and the reason it had to be is worth keeping.** This rule
+previously read *"comment a block of CODE out with `(* *)`"* and extended only to
+the explanatory comment above such a block. That scope was too narrow, because
+the MECHANISM it describes is a property of every brace comment and not of that
+one use. Three failures in a single day, all ordinary documentation:
+
+| what was quoted | where |
+|---|---|
+| `{ today }` in a table of two API shapes | a unit header |
+| `{$MODE DELPHI}`, while explaining a Delphi-mode trap | a design note |
+| a `}` in an ASCII diagram of grouped rows | a test's header |
+
+Each cost a build. NY4I: *"Please make sure you use `(*` and `*)` around all your
+block comments to avoid this problem."*
+
+There is no cost to the wider rule -- nothing in this tree writes `*)` -- and
+the narrower one required every author to notice that a rule about commenting out
+code was really a rule about braces.
 
 It gets worse as the cross-platform work lands (NY4I, 2026-08-31): every
 `{$IFDEF WINDOWS}` / `{$IFDEF DARWIN}` pair adds another closing brace a brace

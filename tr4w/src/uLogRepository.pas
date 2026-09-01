@@ -1,4 +1,4 @@
-{
+(*
  Copyright Thomas M. Schaefer, NY4I (c) 2026.
 
  This file is part of TR4W  (SRC)
@@ -17,9 +17,9 @@
      Public License along with TR4W in  GPL_License.TXT.
 If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
- }
+ *)
 
-{ ContestExchange <-> a row in qso.  THE MAPPER, AND NOTHING ELSE.
+(* ContestExchange <-> a row in qso.  THE MAPPER, AND NOTHING ELSE.
 
   WHY A REPOSITORY AND NOT A RECORD THAT SAVES ITSELF.  NY4I, 2026-09-01, on
   being shown the mapper plan: "My original idea about a QSO class is inexorably
@@ -57,7 +57,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   3. A SENTINEL IS NOT A VALUE. ClearContestExchange writes -1, MAXBYTE and
      MAXWORD for "not set", so writing them through would put zone 255 and
      Ten-Ten 65535 into every contest that uses neither. They become NULL, and
-     NULL becomes the sentinel again on the way back. }
+     NULL becomes the sentinel again on the way back. *)
 unit uLogRepository;
 
 {$I tr4w.inc}
@@ -65,21 +65,26 @@ unit uLogRepository;
 interface
 
 uses
-   { Windows for MAXBYTE / MAXWORD, which are the sentinels
-     ClearContestExchange writes. DateUtils for the unix epoch. }
+   (* Windows for MAXBYTE / MAXWORD, which are the sentinels
+     ClearContestExchange writes. DateUtils for the unix epoch. *)
    Windows, Classes, SysUtils, DateUtils, db, sqldb, VC, uLogDatabase;
 
 type
    ELogRepositoryError = class(Exception);
 
-   { Reads and writes QSOs.  Owns its prepared statements and nothing else --
-     the connection belongs to the TLogDatabase handed in. }
+   TInt64Array = array of Int64;
+
+   (* Reads and writes QSOs.  Owns its prepared statements and nothing else --
+     the connection belongs to the TLogDatabase handed in. *)
    TLogRepository = class(TObject)
    private
       FDatabase: TLogDatabase;
       FInsert: TSQLQuery;
       FSelect: TSQLQuery;
       FLastGuid: AnsiString;
+      FLastSetId: AnsiString;
+      FSetIdForNextSave: AnsiString;
+      FPreviousExchangeId: AnsiString;
       FContest: ContestType;
 
       FUpdate: TSQLQuery;
@@ -97,7 +102,7 @@ type
       constructor Create(aDatabase: TLogDatabase);
       destructor Destroy; override;
 
-      { Appends a QSO and returns ITS ROW ID -- the handle everything else uses.
+      (* Appends a QSO and returns ITS ROW ID -- the handle everything else uses.
 
         THE ROW IDENTITY IS qso.id, AND THAT WAS MEASURED RATHER THAN CHOSEN.
         The obvious candidate was (ceQSOID1, ceQSOID2), because uNet's
@@ -108,14 +113,59 @@ type
         function is right for ITS job and useless as a general handle -- keying
         an update on it would have matched 1,314 rows at once.
 
-        Does NOT commit; the caller decides the batch. }
+        Does NOT commit; the caller decides the batch. *)
       function SaveQSO(const aQso: ContestExchange): Int64;
 
-      { The guid the last SaveQSO stored, for anything that wants the durable
-        identity rather than the row handle. }
+      (* The guid the last SaveQSO stored, for anything that wants the durable
+        identity rather than the row handle. *)
       property LastGuid: AnsiString read FLastGuid;
 
-      { IMPORT KEYED ON THE GUID: update the row that already carries it, or
+      (* PUT THE NEXT SAVED QSO IN THIS SET -- a county line, a POTA n-fer.
+
+        Set it before the SECOND and subsequent rows of one contact, passing the
+        set id of the first (which is that row's own guid, since a lone QSO is a
+        set of one).
+
+        CLEARED AFTER EVERY SAVE, deliberately: a sticky set id would silently
+        pull the next unrelated QSO into the same contact, and that is a defect
+        nobody would see until an ADIF export merged two contacts. *)
+      procedure SetNextQSOSet(const aSetId: AnsiString);
+
+      (* SAVE, PUTTING CONSECUTIVE QSOs THAT SHARE A ContestExchange.id INTO ONE
+        SET.  The rule both the importer and the live shadow need, so it lives
+        here rather than in each of them.
+
+        WHY THAT RULE. A county line or a POTA n-fer is one contact logged as
+        several QSOs, and TR4W writes them CONSECUTIVELY -- the county loop in
+        DrainPendingMultiQSORefs calls LogContact once per county without
+        anything in between. They also share ContestExchange.id, because that
+        field identifies the EXCHANGE: measured on the shipped florida_qp
+        fixture, where two W4THY rows both carry
+        5cd6c61f69cf4422baef44f93b2cbbd2.
+
+        SO "SAME NON-EMPTY id AS THE PREVIOUS SAVE" IS THE WHOLE RULE, and it
+        needs no map of every id in the log. Consecutive is what makes it
+        bounded; sharing the id is what makes it right.
+
+        An empty id -- which is most QSOs, since the field is only set on some
+        paths -- always starts a new set of one. Grouping on an absent
+        identity would merge unrelated contacts. *)
+      function SaveQSOGroupingByExchangeId(const aQso: ContestExchange): Int64;
+
+      (* The set the last SaveQSO used -- the id to hand back to SetNextQSOSet
+        for the rest of the contact. *)
+      property LastSetId: AnsiString read FLastSetId;
+
+      (* What else was this contact? Row ids sharing the set, EXCLUDING the one
+        asked about. Empty for an ordinary QSO.
+
+        This is the question qso_set_id exists to answer: ADIF wants one record
+        per CONTACT (LoTW keys on call + band + mode + date + time, so three
+        records for one contact read as two duplicates), while Cabrillo and the
+        log itself want one per QSO. *)
+      function RelatedRowIds(aRowId: Int64): TInt64Array;
+
+      (* IMPORT KEYED ON THE GUID: update the row that already carries it, or
         insert one that does.  Returns the row id either way, and aWasNew says
         which happened.
 
@@ -135,21 +185,21 @@ type
         identifies the EXCHANGE, and a county-line contact is one exchange
         logged as several QSOs. Measured on the shipped florida_qp corpus
         export -- 3 ADIF records, 2 distinct APP_TR4W_ID -- so keying on it
-        would silently merge the pair and lose a contact. }
+        would silently merge the pair and lose a contact. *)
       function ImportQSOByGuid(const aGuid: AnsiString;
                                const aQso: ContestExchange;
                                out aWasNew: boolean): Int64;
 
-      { REPLACES the row.  Every column BindRecord writes is rewritten, so a
+      (* REPLACES the row.  Every column BindRecord writes is rewritten, so a
         partially-populated record blanks what it does not carry -- which is
         what the file-based code does too, since it rewrites the whole record.
-        False when there is no such row. }
+        False when there is no such row. *)
       function UpdateQSO(aRowId: Int64; const aQso: ContestExchange): boolean;
 
-      { The newest row, which is what the three "seek back one record" sites
+      (* The newest row, which is what the three "seek back one record" sites
         want: DeleteLastContact, uNet.UpdateRec and uQTCS.SetSendedQSOs all
-        rewrite the record they have just written. }
-      { THE LOG'S CONTEST, WHICH IS NOT ON THE QSO ROW.
+        rewrite the record they have just written. *)
+      (* THE LOG'S CONTEST, WHICH IS NOT ON THE QSO ROW.
 
         ceContest is stored once, on the contest row, because one log is one
         contest -- and that is measured rather than assumed: all thirteen corpus
@@ -159,13 +209,13 @@ type
         branches on `rec.ceContest = POTA` while EXPORTING, MainUnit reads
         ContestsArray[..].CountyLineAllowed from it during ADIF import, and
         HamScore emits it as <contestnr>. A QSO loaded with ceContest left at
-        DUMMYCONTEST would export as the wrong contest, silently. }
+        DUMMYCONTEST would export as the wrong contest, silently. *)
       procedure SetContest(aContest: ContestType);
       function LogContest: ContestType;
 
       function NewestRowId: Int64;
 
-      { The id of the Nth row in id order, counting from zero -- 0 for a log
+      (* The id of the Nth row in id order, counting from zero -- 0 for a log
         with fewer rows than that.
 
         THE BINARY LOG ADDRESSES A RECORD BY ITS ORDINAL POSITION, which is what
@@ -173,35 +223,35 @@ type
         converts that to a row handle WITHOUT assuming id = position + 1: the
         ids happen to be contiguous today, but an assumption that only holds
         while nothing has ever been deleted is one that breaks silently the
-        first time something is. }
+        first time something is. *)
       function RowIdAtIndex(aIndex: Int64): Int64;
 
-      { The multi-op network's own key, which uNet.FindAndUpdateQSOInLog uses to
+      (* The multi-op network's own key, which uNet.FindAndUpdateQSOInLog uses to
         find a QSO by scanning the whole log backwards.
 
         REFUSES (0, 0) and returns False. That pair is stamped only on the
         network path, so it is the DEFAULT for every other QSO -- 1,314 of
         winter_fd's 1,316 rows carry it -- and an unguarded UPDATE would rewrite
-        all of them with one record. }
+        all of them with one record. *)
       function UpdateQSOBySessionIds(aSessionId, aSessionSeq: Int64;
                                      const aQso: ContestExchange): boolean;
 
       function LoadQSO(aRowId: Int64; out aQso: ContestExchange): boolean;
 
-      { By the guid rather than the row.  Kept because the guid is the identity
-        that survives an export and a re-import, where a row id does not. }
+      (* By the guid rather than the row.  Kept because the guid is the identity
+        that survives an export and a re-import, where a row id does not. *)
       function LoadQSOByGuid(const aGuid: AnsiString; out aQso: ContestExchange): boolean;
 
-      { Non-deleted QSOs, counted by the database rather than tracked here --
-        section 9a: no stored derived values, no in-memory mirror. }
+      (* Non-deleted QSOs, counted by the database rather than tracked here --
+        section 9a: no stored derived values, no in-memory mirror. *)
       function QSOCount: integer;
 
-      { EVERY row, including deleted ones and non-QSO record kinds.
+      (* EVERY row, including deleted ones and non-QSO record kinds.
 
         Distinct from QSOCount on purpose: this is the number that compares
         against a binary log's record count, and the binary log holds the
         deleted records too. Using QSOCount there would report drift on every
-        log that contains a deleted QSO. }
+        log that contains a deleted QSO. *)
       function RecordCount: Int64;
 
       procedure Commit;
@@ -209,16 +259,16 @@ type
       property Database: TLogDatabase read FDatabase;
    end;
 
-{ A UUIDv7: 48-bit big-endian millisecond timestamp, version 7, then random.
+(* A UUIDv7: 48-bit big-endian millisecond timestamp, version 7, then random.
   Question 5 of the schema plan settled v7 over v4 -- it sorts by creation time,
   so a log's rows cluster in insertion order on disk and a chooser can order by
   guid without a second column.
 
   aUnixMillis lets the IMPORTER stamp a QSO's own time rather than the moment of
-  import, so an imported log sorts the way it was made. }
+  import, so an imported log sorts the way it was made. *)
 function NewUUIDv7(aUnixMillis: Int64): AnsiString;
 
-{ THE ROW'S OWN guid, ALWAYS FRESH.
+(* THE ROW'S OWN guid, ALWAYS FRESH.
 
   It would be tempting to reuse ContestExchange.id when the record has one, and
   the first version did. IT IS WRONG, and the corpus proved it: `id` identifies
@@ -231,13 +281,13 @@ function NewUUIDv7(aUnixMillis: Int64): AnsiString;
   sharing it is a fact rather than a collision.
 
   Stamped with the QSO's own time so an imported log sorts the way it was made
-  rather than the way it was imported. }
+  rather than the way it was imported. *)
 function NewRowGuid(const aQso: ContestExchange): AnsiString;
 
-{ ceOperator is array[0..10] of AnsiChar, and a cast between a fixed buffer
+(* ceOperator is array[0..10] of AnsiChar, and a cast between a fixed buffer
   and a managed string is NOT a conversion -- see the implementation.
   Exported because anything comparing or displaying that field needs the same
-  NUL-aware reading, and a second hand-rolled loop is how the two drift. }
+  NUL-aware reading, and a second hand-rolled loop is how the two drift. *)
 function CharArrayToAnsi(const aBuffer: array of AnsiChar): AnsiString;
 procedure AnsiToCharArray(var aBuffer: array of AnsiChar; const aValue: AnsiString);
 
@@ -246,20 +296,20 @@ implementation
 uses
    uADIF, uLogBinaryFile, ZONECONT, TF;
 
-{ --------------------------------------------------------------------------- }
-{ sentinels -- crosswalk finding 3                                            }
-{ --------------------------------------------------------------------------- }
+(* --------------------------------------------------------------------------- *)
+(* sentinels -- crosswalk finding 3                                            *)
+(* --------------------------------------------------------------------------- *)
 
-{ Each of these takes the value and the marker ClearContestExchange uses for
+(* Each of these takes the value and the marker ClearContestExchange uses for
   "not set", and yields NULL for it.  Written as four small functions rather
   than inline tests because the sentinel differs per field and an inline `if`
-  repeated forty times is where one of them gets the wrong constant. }
+  repeated forty times is where one of them gets the wrong constant. *)
 
 procedure BindByte(aParam: TParam; aValue: byte; aSentinel: byte);
 begin
    if aValue = aSentinel then
       begin
-      aParam.Clear;      { NULL }
+      aParam.Clear;      (* NULL *)
       end
    else
       begin
@@ -281,8 +331,8 @@ end;
 
 procedure BindSerial(aParam: TParam; aValue: integer);
 begin
-   { -1, not 0. ClearContestExchange sets NumberSent and NumberReceived to -1,
-     and 0 is a legal serial in some contests. }
+   (* -1, not 0. ClearContestExchange sets NumberSent and NumberReceived to -1,
+     and 0 is a legal serial in some contests. *)
    if aValue = -1 then
       begin
       aParam.Clear;
@@ -295,8 +345,8 @@ end;
 
 procedure BindText(aParam: TParam; const aValue: AnsiString);
 begin
-   { An empty ShortString and a NULL are the same absence. Storing '' would make
-     `WHERE rcvd_grid IS NULL` and `= ''` disagree about the same QSO. }
+   (* An empty ShortString and a NULL are the same absence. Storing '' would make
+     `WHERE rcvd_grid IS NULL` and `= ''` disagree about the same QSO. *)
    if aValue = '' then
       begin
       aParam.Clear;
@@ -307,7 +357,7 @@ begin
       end;
 end;
 
-{ ceOperator IS array[0..10] of AnsiChar, NOT a ShortString.
+(* ceOperator IS array[0..10] of AnsiChar, NOT a ShortString.
 
   `AnsiString(aQso.ceOperator)` and `OperatorType(someAnsiString)` both COMPILE
   and both are wrong, which is the whole hazard: the first takes all eleven
@@ -317,9 +367,9 @@ end;
   which is the ordinary case for a single-op log.
 
   This is the same class CLAUDE.md warns about at Win32 boundaries: a cast
-  between a fixed buffer and a managed string is not a conversion. }
+  between a fixed buffer and a managed string is not a conversion. *)
 
-{ OPEN ARRAYS, NOT UNTYPED POINTERS. NY4I, 2026-09-01: "no artifacts of win32
+(* OPEN ARRAYS, NOT UNTYPED POINTERS. NY4I, 2026-09-01: "no artifacts of win32
   string handling when we are done -- no PChar, string pointers, s[1] type
   stuff. All native FPC/LAZ."
 
@@ -331,7 +381,7 @@ end;
   These exist at all because ContestExchange.ceOperator is
   array[0..10] of AnsiChar -- a fixed buffer in a record designed in the
   nineties. When the contest factory turns that record into a class the field
-  becomes a string and both routines can go. }
+  becomes a string and both routines can go. *)
 function CharArrayToAnsi(const aBuffer: array of AnsiChar): AnsiString;
 var
    i: integer;
@@ -339,8 +389,8 @@ begin
    Result := '';
    for i := Low(aBuffer) to High(aBuffer) do
       begin
-      { NUL ends it. The rest is padding, and taking all eleven bytes is exactly
-        what an AnsiString() cast of the field would wrongly do. }
+      (* NUL ends it. The rest is padding, and taking all eleven bytes is exactly
+        what an AnsiString() cast of the field would wrongly do. *)
       if aBuffer[i] = #0 then
          begin
          Exit;
@@ -361,7 +411,7 @@ begin
          end
       else
          begin
-         { NUL padding, so the tail is not whatever was there before. }
+         (* NUL padding, so the tail is not whatever was there before. *)
          aBuffer[i] := #0;
          end;
       end;
@@ -420,15 +470,15 @@ begin
    Result := (not aField.IsNull) and (aField.AsInteger <> 0);
 end;
 
-{ --------------------------------------------------------------------------- }
-{ enum tokens -- the SAME arrays ADIF export uses                             }
-{ --------------------------------------------------------------------------- }
+(* --------------------------------------------------------------------------- *)
+(* enum tokens -- the SAME arrays ADIF export uses                             *)
+(* --------------------------------------------------------------------------- *)
 
-{ Deliberately not a second set of spellings. ADIFBANDSTRINGSARRAY,
+(* Deliberately not a second set of spellings. ADIFBANDSTRINGSARRAY,
   ADIFModeString and ExtendedModeStringArray are what the exporter emits, so a
   log's band column reads the same as its ADIF file, and there is one table to
   get wrong instead of two. The inverses are uADIF's GetADIFBand / GetADIFMode
-  for the same reason. }
+  for the same reason. *)
 
 function BandToken(aBand: BandType): AnsiString;
 begin
@@ -452,7 +502,7 @@ begin
    Result := AnsiString(ExtendedModeStringArray[aMode]);
 end;
 
-{ THE INVERSE OF ADIFModeString, BY SCANNING IT -- not uADIF.GetADIFMode.
+(* THE INVERSE OF ADIFModeString, BY SCANNING IT -- not uADIF.GetADIFMode.
 
   That is not duplication, it is a different contract. GetADIFMode maps ADIF
   MODE NAMES (and several TR4W-specific extended modes) onto a TR4W mode, which
@@ -462,7 +512,7 @@ end;
   arrl_fd, 2026-09-01.
 
   Deriving the inverse from the same array is what makes the pair correct by
-  construction, the way uRadioRegistry.RadioTypeToken does for radios. }
+  construction, the way uRadioRegistry.RadioTypeToken does for radios. *)
 function TokenToMode(const aToken: AnsiString): ModeType;
 var
    m: ModeType;
@@ -473,17 +523,17 @@ begin
       begin
       Exit;
       end;
-   { Widened ONCE. Comparing an AnsiString against a UnicodeString picks the
+   (* Widened ONCE. Comparing an AnsiString against a UnicodeString picks the
      Ansi overload of SameText and narrows BOTH arguments at every iteration,
      which the build counts and which is lossy for anything outside the ANSI
-     codepage -- neither is wanted for what is really an ASCII token match. }
+     codepage -- neither is wanted for what is really an ASCII token match. *)
    tok := UpperCase(string(aToken));
    for m := Low(ModeType) to High(ModeType) do
       begin
-      { UpperCase and '=' rather than SameText: SameText resolves to its
+      (* UpperCase and '=' rather than SameText: SameText resolves to its
         AnsiString overload even when both arguments are UnicodeString, and
         narrows them back at every iteration. These are ASCII tokens we wrote
-        ourselves, so an uppercase compare is exact. }
+        ourselves, so an uppercase compare is exact. *)
       if UpperCase(string(AnsiString(ADIFModeString[m]))) = tok then
          begin
          Result := m;
@@ -497,9 +547,9 @@ var
    m: ExtendedModeType;
    tok: string;
 begin
-   { Derived by scanning the same array rather than kept as a second table --
+   (* Derived by scanning the same array rather than kept as a second table --
      the trick uRadioRegistry.RadioTypeToken uses, which makes drift
-     unrepresentable rather than merely fixed. }
+     unrepresentable rather than merely fixed. *)
    Result := eNoMode;
    if aToken = '' then
       begin
@@ -548,9 +598,9 @@ begin
       end;
 end;
 
-{ --------------------------------------------------------------------------- }
-{ identity                                                                     }
-{ --------------------------------------------------------------------------- }
+(* --------------------------------------------------------------------------- *)
+(* identity                                                                     *)
+(* --------------------------------------------------------------------------- *)
 
 function NewUUIDv7(aUnixMillis: Int64): AnsiString;
 var
@@ -564,7 +614,7 @@ begin
       ms := DateTimeToUnix(Now) * Int64(1000);
       end;
 
-   { 48-bit big-endian timestamp. }
+   (* 48-bit big-endian timestamp. *)
    for i := 0 to 5 do
       begin
       b[i] := byte((ms shr ((5 - i) * 8)) and $FF);
@@ -575,16 +625,16 @@ begin
       b[i] := byte(Random(256));
       end;
 
-   b[6] := (b[6] and $0F) or $70;   { version 7 }
-   b[8] := (b[8] and $3F) or $80;   { variant 10 }
+   b[6] := (b[6] and $0F) or $70;   (* version 7 *)
+   b[8] := (b[8] and $3F) or $80;   (* variant 10 *)
 
-   { NO DASHES -- 32 lowercase hex characters.
+   (* NO DASHES -- 32 lowercase hex characters.
 
      Not a style choice: ContestExchange.id is string[32], so the canonical
      36-character form does not fit and a round trip silently truncates it,
      which is how the first version failed its own stability test. TF.GetGUID
      already returns "32-char lowercase hex, no dashes" for the same field, so
-     this matches what every existing id in every existing log looks like. }
+     this matches what every existing id in every existing log looks like. *)
    Result := '';
    for i := 0 to 15 do
       begin
@@ -597,15 +647,16 @@ begin
    Result := NewUUIDv7(QSOTimeToUnixUTC(aQso.tSysTime) * Int64(1000));
 end;
 
-{ --------------------------------------------------------------------------- }
-{ TLogRepository                                                               }
-{ --------------------------------------------------------------------------- }
+(* --------------------------------------------------------------------------- *)
+(* TLogRepository                                                               *)
+(* --------------------------------------------------------------------------- *)
 
 const
-   { Named once. Adding a column means adding it here, in BindRecord and in
-     ReadRecord, and the round-trip test fails if the three disagree. }
+   (* Named once. Adding a column means adding it here, in BindRecord and in
+     ReadRecord, and the round-trip test fails if the three disagree. *)
    QSO_COLUMNS =
-      'guid, exchange_id, session_id, session_seq, computer_id, operator_id, record_kind, ' +
+      'guid, exchange_id, qso_set_id, session_id, session_seq, ' +
+      'computer_id, operator_id, record_kind, ' +
       'qso_at, callsign, standard_call, freq_tx_hz, freq_rx_hz, is_split, ' +
       'band, mode, submode, ' +
       'exchange_received, rst_sent, rst_received, serial_sent, serial_received, ' +
@@ -619,9 +670,10 @@ const
       'name_sent, mp3_recorded, clear_dupe_sheet, clear_mult_sheet, ' +
       'radio_nr, operator_call, deleted, sent_to_server, server_dirty';
 
-   { The same list without the guid -- see PrepareStatements for why. }
+   (* The same list without the guid -- see PrepareStatements for why. *)
    QSO_COLUMNS_NO_GUID =
-      'exchange_id, session_id, session_seq, computer_id, operator_id, record_kind, ' +
+      'exchange_id, qso_set_id, session_id, session_seq, ' +
+      'computer_id, operator_id, record_kind, ' +
       'qso_at, callsign, standard_call, freq_tx_hz, freq_rx_hz, is_split, ' +
       'band, mode, submode, ' +
       'exchange_received, rst_sent, rst_received, serial_sent, serial_received, ' +
@@ -636,7 +688,8 @@ const
       'radio_nr, operator_call, deleted, sent_to_server, server_dirty';
 
    QSO_PARAMS =
-      ':guid, :exchange_id, :session_id, :session_seq, :computer_id, :operator_id, :record_kind, ' +
+      ':guid, :exchange_id, :qso_set_id, :session_id, :session_seq, ' +
+      ':computer_id, :operator_id, :record_kind, ' +
       ':qso_at, :callsign, :standard_call, :freq_tx_hz, :freq_rx_hz, :is_split, ' +
       ':band, :mode, :submode, ' +
       ':exchange_received, :rst_sent, :rst_received, :serial_sent, :serial_received, ' +
@@ -650,19 +703,19 @@ const
       ':name_sent, :mp3_recorded, :clear_dupe_sheet, :clear_mult_sheet, ' +
       ':radio_nr, :operator_call, :deleted, :sent_to_server, :server_dirty';
 
-{ 'a, b, c' -> 'a = :a, b = :b, c = :c'.
+(* 'a, b, c' -> 'a = :a, b = :b, c = :c'.
 
   DERIVED FROM QSO_COLUMNS rather than written out, so the insert and the update
   cannot drift. A hand-maintained second list is how an update quietly stops
   writing a column that the insert writes -- the row would look right on
-  creation and lose the field on the first edit. }
-{ TYPED AnsiString CONSTANTS, not literals.
+  creation and lose the field on the first edit. *)
+(* TYPED AnsiString CONSTANTS, not literals.
 
   An untyped literal is UnicodeString here -- tr4w.inc makes `string` UTF-16 --
   so concatenating one with an AnsiString narrows, and `AnsiString('x')` does NOT
   help: the literal is still built as UnicodeString and then converted, which is
   the very conversion being counted. A typed constant is compiled as AnsiString
-  from the start. }
+  from the start. *)
 const
    COMMA_SEP:  AnsiString = ', ';
    EQUALS_BIND: AnsiString = ' = :';
@@ -689,10 +742,10 @@ var
    end;
 
 begin
-   { Split by hand rather than with StrUtils' WordCount/ExtractWord: those take
+   (* Split by hand rather than with StrUtils' WordCount/ExtractWord: those take
      UnicodeString here, so every column name would round-trip through a
      narrowing conversion for no reason. The separator is one character and the
-     input is our own constant. }
+     input is our own constant. *)
    Result := '';
    name := '';
    for i := 1 to Length(aColumns) do
@@ -732,9 +785,9 @@ begin
    inherited Destroy;
 end;
 
-{ PREPARED ONCE, RE-EXECUTED WITH PARAMETERS -- section 9b. Re-assigning
+(* PREPARED ONCE, RE-EXECUTED WITH PARAMETERS -- section 9b. Re-assigning
   SQL.Text per call throws the plan away and re-parses, which is the mistake
-  that makes people conclude they need a cache. }
+  that makes people conclude they need a cache. *)
 procedure TLogRepository.PrepareStatements;
 begin
    FInsert := TSQLQuery.Create(nil);
@@ -753,8 +806,8 @@ begin
    FSelectById.SQL.Text := 'SELECT ' + QSO_COLUMNS + ' FROM qso WHERE id = :row_id';
    FSelectById.Prepare;
 
-   { guid is NOT in the SET clause: a row's identity does not change when its
-     contents do, and rewriting it would break anything holding the old one. }
+   (* guid is NOT in the SET clause: a row's identity does not change when its
+     contents do, and rewriting it would break anything holding the old one. *)
    FUpdate := TSQLQuery.Create(nil);
    FUpdate.DataBase := FDatabase.Connection;
    FUpdate.SQL.Text := UPDATE_HEAD +
@@ -763,20 +816,20 @@ begin
    FUpdate.Prepare;
 end;
 
-{ ONE BINDER FOR BOTH STATEMENTS.
+(* ONE BINDER FOR BOTH STATEMENTS.
 
   BindUpdate calls this against FUpdate, so the insert and the update cannot
   populate different sets of columns -- which is the defect that would show as
   a field surviving creation and vanishing on the first edit. The only
   difference is the guid, which an update must not touch: a row's identity does
-  not change when its contents do. }
+  not change when its contents do. *)
 procedure TLogRepository.BindInto(aQuery: TSQLQuery;
                                   const aQso: ContestExchange;
                                   const aGuid: AnsiString;
                                   aWithGuid: boolean);
 
-   { AnsiString, because that is what ParamByName takes. Declaring it `string`
-     narrowed on every one of sixty-odd binds. }
+   (* AnsiString, because that is what ParamByName takes. Declaring it `string`
+     narrowed on every one of sixty-odd binds. *)
    function P(const aName: AnsiString): TParam;
    begin
       Result := aQuery.ParamByName(aName);
@@ -789,8 +842,22 @@ begin
       end;
    BindText(P('exchange_id'), AnsiString(aQso.id));
 
-   { Identity. session_id/session_seq are ceQSOID1/ceQSOID2 -- the pair
-     tr4wserver matches on, and how WAE links a QTC to its QSO. }
+   (* The set this QSO belongs to. FSetIdForNextSave lets a caller put several
+     rows in one set -- a county line, a POTA n-fer -- and is cleared after
+     every save so the NEXT QSO cannot silently join a set it has nothing to do
+     with. Empty means "a set of one", filled in below with the row's own
+     guid. *)
+   if FSetIdForNextSave <> '' then
+      begin
+      P('qso_set_id').AsString := FSetIdForNextSave;
+      end
+   else
+      begin
+      P('qso_set_id').AsString := aGuid;
+      end;
+
+   (* Identity. session_id/session_seq are ceQSOID1/ceQSOID2 -- the pair
+     tr4wserver matches on, and how WAE links a QTC to its QSO. *)
    P('session_id').AsLargeInt := aQso.ceQSOID1;
    P('session_seq').AsLargeInt := aQso.ceQSOID2;
    BindText(P('computer_id'), AnsiString(aQso.ceComputerID));
@@ -802,21 +869,21 @@ begin
    BindText(P('standard_call'), AnsiString(aQso.QTH.StandardCall));
    P('freq_tx_hz').AsLargeInt := aQso.Frequency;
 
-   { RX EQUALS TX AND SPLIT IS FALSE, because ContestExchange says nothing
+   (* RX EQUALS TX AND SPLIT IS FALSE, because ContestExchange says nothing
      about either -- it carries ONE Frequency and no split state. That is
      the honest limit of the record rather than an assertion about the
      contact, and writing rx makes "what was I receiving on" answerable
      without every caller having to know about split. Live logging can do
      better, because the radio object knows; that arrives in Phase C with
-     the other tier-3 facts. }
+     the other tier-3 facts. *)
    P('freq_rx_hz').AsLargeInt := aQso.Frequency;
    P('is_split').AsInteger := 0;
    BindText(P('band'), BandToken(aQso.Band));
    BindText(P('mode'), ModeToken(aQso.Mode));
    BindText(P('submode'), ExtModeToken(aQso.ExtMode));
 
-   { The received exchange as rendered. There is no sent counterpart in the
-     record -- crosswalk finding 1. }
+   (* The received exchange as rendered. There is no sent counterpart in the
+     record -- crosswalk finding 1. *)
    BindText(P('exchange_received'), AnsiString(aQso.ExchString));
 
    P('rst_sent').AsInteger := aQso.RSTSent;
@@ -835,15 +902,15 @@ begin
    BindByte(P('rcvd_prefecture'), aQso.Prefecture, MAXBYTE);
    BindWord(P('rcvd_member_no'), aQso.TenTenNum, MAXWORD);
 
-   { THE POLYMORPHIC ONE. Stored as the literal it is; the contest factory
-     decides later whether it was a grid, a section or a park. }
+   (* THE POLYMORPHIC ONE. Stored as the literal it is; the contest factory
+     decides later whether it was a grid, a section or a park. *)
    BindText(P('rcvd_qth'), AnsiString(aQso.QTHString));
 
    BindText(P('rcvd_random'), AnsiString(aQso.RandomCharsReceived));
    BindText(P('random_sent'), AnsiString(aQso.RandomCharsSent));
 
-   { Kids is overloaded by record kind -- crosswalk. For a QTC it is the call
-     inside the traffic, which is not the station in `callsign`. }
+   (* Kids is overloaded by record kind -- crosswalk. For a QTC it is the call
+     inside the traffic, which is not the station in `callsign`. *)
    if aQso.ceRecordKind in [rkQTCR, rkQTCS] then
       begin
       P('rcvd_kids').Clear;
@@ -857,7 +924,7 @@ begin
 
    BindText(P('domestic_qth'), AnsiString(aQso.DomesticQTH));
 
-   { CTY.DAT-derived, stored so a later CTY.DAT cannot rewrite history. }
+   (* CTY.DAT-derived, stored so a later CTY.DAT cannot rewrite history. *)
    BindText(P('dxcc_prefix'), AnsiString(aQso.QTH.Prefix));
    BindText(P('dxcc_entity'), AnsiString(aQso.QTH.CountryID));
    BindWord(P('dxcc_code'), aQso.QTH.Country, UNKNOWN_COUNTRY);
@@ -868,7 +935,7 @@ begin
       end
    else
       begin
-      { ContinentTypeSA, NOT tContinentArray.
+      (* ContinentTypeSA, NOT tContinentArray.
 
         tContinentArray is the DISPLAY table: filled at run time by
         InitializeStringTables and TRANSLATABLE -- it used to hold the TC_C9_*
@@ -879,11 +946,11 @@ begin
 
         A STORAGE TOKEN MUST NOT BE A DISPLAY STRING. ContinentTypeSA is the
         stable two-letter code -- 'NA', 'EU' -- which is also exactly what
-        GetContinentFromString parses, so the pair round-trips by construction. }
+        GetContinentFromString parses, so the pair round-trips by construction. *)
       P('cty_continent').AsString := AnsiString(ContinentTypeSA[aQso.QTH.Continent]);
       end;
 
-   { The multiplier strings as counted, and the outcome flags. }
+   (* The multiplier strings as counted, and the outcome flags. *)
    BindText(P('prefix_mult'), AnsiString(aQso.Prefix));
    BindText(P('dx_mult'), AnsiString(aQso.DXQTH));
    BindText(P('domestic_mult'), AnsiString(aQso.DomMultQTH));
@@ -896,8 +963,8 @@ begin
    P('qso_points').AsInteger := aQso.QSOPoints;
    BindBool(P('is_dupe'), aQso.ceDupe);
 
-   { INVERTED. is_run is the opposite of ceSearchAndPounce, and a straight copy
-     would be wrong in a way nothing reports. }
+   (* INVERTED. is_run is the opposite of ceSearchAndPounce, and a straight copy
+     would be wrong in a way nothing reports. *)
    BindBool(P('is_run'), not aQso.ceSearchAndPounce);
 
    BindBool(P('is_xqso'), aQso.ceXQSO);
@@ -949,9 +1016,9 @@ var
    end;
 
 begin
-   { EVERY read starts from ClearContestExchange's shape, so a column this unit
+   (* EVERY read starts from ClearContestExchange's shape, so a column this unit
      does not restore holds the same "not set" marker the program expects rather
-     than a zero that looks like data. }
+     than a zero that looks like data. *)
    FillChar(aQso, SizeOf(aQso), 0);
    aQso.Band := NoBand;
    aQso.Mode := NoMode;
@@ -968,9 +1035,9 @@ begin
    aQso.id := S('exchange_id');
    aQso.ceQSOID1 := Cardinal(F('session_id').AsLargeInt);
    aQso.ceQSOID2 := Cardinal(F('session_seq').AsLargeInt);
-   { A single character out of a text column. Indexing a managed string is
+   (* A single character out of a text column. Indexing a managed string is
      ordinary Pascal -- what this tree is removing is taking its ADDRESS. Read
-     once into a local so the guard and the use cannot disagree. }
+     once into a local so the guard and the use cannot disagree. *)
    token := S('computer_id');
    if token <> '' then
       begin
@@ -979,8 +1046,8 @@ begin
    aQso.ceOperatorID := byte(F('operator_id').AsInteger);
    aQso.ceRecordKind := TokenToRecordKind(S('record_kind'));
 
-   { FROM THE CONTEST ROW, not from the QSO row -- see SetContest. Without this
-     every loaded QSO reports DUMMYCONTEST and exports as the wrong contest. }
+   (* FROM THE CONTEST ROW, not from the QSO row -- see SetContest. Without this
+     every loaded QSO reports DUMMYCONTEST and exports as the wrong contest. *)
    aQso.ceContest := FContest;
 
    aQso.tSysTime := UnixUTCToQSOTime(F('qso_at').AsLargeInt);
@@ -988,8 +1055,8 @@ begin
    aQso.QTH.StandardCall := S('standard_call');
    aQso.Frequency := F('freq_tx_hz').AsLargeInt;
 
-   { GetADIFBand IS the inverse of ADIFBANDSTRINGSARRAY -- it scans that very
-     array -- so it is the right routine and there is no second table. }
+   (* GetADIFBand IS the inverse of ADIFBANDSTRINGSARRAY -- it scans that very
+     array -- so it is the right routine and there is no second table. *)
    aQso.Band := GetADIFBand(string(S('band')));
    aQso.Mode := TokenToMode(S('mode'));
    aQso.ExtMode := TokenToExtMode(S('submode'));
@@ -1072,8 +1139,26 @@ end;
 function TLogRepository.SaveQSO(const aQso: ContestExchange): Int64;
 begin
    FLastGuid := NewRowGuid(aQso);
+
+   if FSetIdForNextSave <> '' then
+      begin
+      FLastSetId := FSetIdForNextSave;
+      end
+   else
+      begin
+      (* A set of one, named by the row itself. *)
+      FLastSetId := FLastGuid;
+      end;
+
    BindRecord(aQso, FLastGuid);
    FInsert.ExecSQL;
+
+   (* CLEARED IMMEDIATELY. A sticky set id would quietly pull the next
+     unrelated QSO into this contact, and an ADIF export would then merge two
+     contacts into one record -- visible to nobody until a park credit went
+     missing. *)
+   FSetIdForNextSave := '';
+
    Result := LastInsertedRowId;
 end;
 
@@ -1091,10 +1176,10 @@ begin
       if not q.EOF then
          begin
          token := q.Fields[0].AsString;
-         { GetContestFromString scans ContestTypeSA, so the pair are true
+         (* GetContestFromString scans ContestTypeSA, so the pair are true
            inverses. It is reused rather than reimplemented -- though it does
            contain an lstrcmpA and a string address, which the PChar sweep in
-           CLAUDE.md will want. Recorded there rather than forked here. }
+           CLAUDE.md will want. Recorded there rather than forked here. *)
          FContest := GetContestFromString(token);
          end;
       q.Close;
@@ -1126,10 +1211,10 @@ begin
    q := TSQLQuery.Create(nil);
    try
       q.DataBase := FDatabase.Connection;
-      { ONE ROW, enforced by the schema's CHECK (id = 1). Written or replaced,
+      (* ONE ROW, enforced by the schema's CHECK (id = 1). Written or replaced,
         so setting it twice is not an error -- an import discovers the contest
         from the first record and would otherwise have to know whether it had
-        already said so. }
+        already said so. *)
       q.SQL.Text :=
          'INSERT INTO contest (id, guid, contest_type, contest_name, ' +
          'created_at, my_call) VALUES (1, :guid, :ct, :cn, :created, :call) ' +
@@ -1138,10 +1223,10 @@ begin
       q.ParamByName('ct').AsString := token;
       q.ParamByName('cn').AsString := friendly;
       q.ParamByName('created').AsLargeInt := DateTimeToUnix(Now);
-      { MY CALL IS NOT IN THE BINARY LOG. The record carries ceOperator, which
+      (* MY CALL IS NOT IN THE BINARY LOG. The record carries ceOperator, which
         is the OPERATOR and is not the same thing at a multi-op station, so
         guessing would be worse than leaving it empty. Phase E fills it from
-        the contest configuration. }
+        the contest configuration. *)
       q.ParamByName('call').AsString := '';
       q.ParamByName('ct2').AsString := token;
       q.ParamByName('cn2').AsString := friendly;
@@ -1151,7 +1236,7 @@ begin
    end;
 end;
 
-{ MAX(id), NOT last_insert_rowid(), AND THE DIFFERENCE WAS A DEFECT.
+(* MAX(id), NOT last_insert_rowid(), AND THE DIFFERENCE WAS A DEFECT.
 
   They answer different questions. last_insert_rowid() is "the row THIS
   CONNECTION just inserted" -- right for SaveQSO, and ZERO on a connection that
@@ -1161,7 +1246,7 @@ end;
   Written the first way, that would have silently done nothing.
 
   MAX(id) is right here because rows are never hard-deleted -- `deleted` is a
-  flag -- so the newest row stays the newest. }
+  flag -- so the newest row stays the newest. *)
 function TLogRepository.NewestRowId: Int64;
 var
    q: TSQLQuery;
@@ -1182,8 +1267,8 @@ begin
    end;
 end;
 
-{ The row THIS connection just inserted, which is what SaveQSO must return even
-  if another connection has since added rows. }
+(* The row THIS connection just inserted, which is what SaveQSO must return even
+  if another connection has since added rows. *)
 function TLogRepository.LastInsertedRowId: Int64;
 var
    q: TSQLQuery;
@@ -1238,9 +1323,9 @@ var
 begin
    Result := False;
 
-   { THE GUARD IS THE POINT. (0, 0) is what ceQSOID1/ceQSOID2 hold on every QSO
+   (* THE GUARD IS THE POINT. (0, 0) is what ceQSOID1/ceQSOID2 hold on every QSO
      that did not go through the network path, which is nearly all of them.
-     Without this, one edited record would overwrite the whole log. }
+     Without this, one edited record would overwrite the whole log. *)
    if (aSessionId = 0) and (aSessionSeq = 0) then
       begin
       Exit;
@@ -1296,11 +1381,65 @@ begin
    FUpdate.ParamByName('row_id').AsLargeInt := aRowId;
    FUpdate.ExecSQL;
 
-   { RowsAffected distinguishes "changed it" from "there was no such row", which
+   (* RowsAffected distinguishes "changed it" from "there was no such row", which
      is the difference between an edit and a silent no-op. The file-based code
      cannot tell those apart -- it seeks and writes -- so this is one thing the
-     database does better rather than merely differently. }
+     database does better rather than merely differently. *)
    Result := FUpdate.RowsAffected > 0;
+end;
+
+function TLogRepository.SaveQSOGroupingByExchangeId(
+   const aQso: ContestExchange): Int64;
+var
+   thisId: AnsiString;
+begin
+   thisId := AnsiString(aQso.id);
+
+   (* Same contact as the one just saved: join its set. *)
+   if (thisId <> '') and (thisId = FPreviousExchangeId) and (FLastSetId <> '') then
+      begin
+      SetNextQSOSet(FLastSetId);
+      end;
+
+   Result := SaveQSO(aQso);
+   FPreviousExchangeId := thisId;
+end;
+
+procedure TLogRepository.SetNextQSOSet(const aSetId: AnsiString);
+begin
+   FSetIdForNextSave := aSetId;
+end;
+
+function TLogRepository.RelatedRowIds(aRowId: Int64): TInt64Array;
+var
+   q: TSQLQuery;
+   n: integer;
+begin
+   SetLength(Result, 0);
+   n := 0;
+
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := FDatabase.Connection;
+      (* The set is read from the row itself rather than passed in, so a caller
+        holding only a row id can ask. *)
+      q.SQL.Text := 'SELECT id FROM qso WHERE qso_set_id = ' +
+                    '(SELECT qso_set_id FROM qso WHERE id = :row_id) ' +
+                    'AND id <> :row_id2 ORDER BY id';
+      q.ParamByName('row_id').AsLargeInt := aRowId;
+      q.ParamByName('row_id2').AsLargeInt := aRowId;
+      q.Open;
+      while not q.EOF do
+         begin
+         SetLength(Result, n + 1);
+         Result[n] := q.Fields[0].AsLargeInt;
+         Inc(n);
+         q.Next;
+         end;
+      q.Close;
+   finally
+      q.Free;
+   end;
 end;
 
 function TLogRepository.ImportQSOByGuid(const aGuid: AnsiString;
@@ -1314,9 +1453,9 @@ begin
 
    if aGuid = '' then
       begin
-      { No identity means nothing to match on. Appending is the only honest
+      (* No identity means nothing to match on. Appending is the only honest
         answer -- silently merging records that merely look alike is how an
-        import loses a QSO. }
+        import loses a QSO. *)
       aWasNew := True;
       Result := SaveQSO(aQso);
       Exit;
@@ -1343,8 +1482,8 @@ begin
       Exit;
       end;
 
-   { New to this log, and it keeps the guid it arrived with -- that is the whole
-     point. SaveQSO mints one instead, so it cannot be used here. }
+   (* New to this log, and it keeps the guid it arrived with -- that is the whole
+     point. SaveQSO mints one instead, so it cannot be used here. *)
    aWasNew := True;
    FLastGuid := aGuid;
    BindRecord(aQso, aGuid);

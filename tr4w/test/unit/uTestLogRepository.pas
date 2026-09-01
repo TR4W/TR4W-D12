@@ -1,6 +1,6 @@
 unit uTestLogRepository;
 
-{ ContestExchange -> a qso row -> ContestExchange, ROUND TRIP.
+(* ContestExchange -> a qso row -> ContestExchange, ROUND TRIP.
 
   Task A4 of docs\SQLITE_MIGRATION_TASKS.md, and it is the reason A1's crosswalk
   was written exhaustively rather than by inspection. CLAUDE.md rule 9: a
@@ -16,14 +16,14 @@ unit uTestLogRepository;
   AND IT RUNS OVER REAL D7-WRITTEN LOGS -- the corpus fixtures. Synthetic records
   would exercise the mapper against values the mapper's author chose. These carry
   what TR4W actually wrote: empty ids, -1 serials, zone 255, Ten-Ten 65535, and
-  every combination of flags twenty years of contests produced. }
+  every combination of flags twenty years of contests produced. *)
 
 {$I ..\..\src\tr4w.inc}
 
 interface
 
 uses
-   { VC is in the INTERFACE because CompareQSO takes ContestExchange. }
+   (* VC is in the INTERFACE because CompareQSO takes ContestExchange. *)
    uTR4WTestFramework, VC;
 
 type
@@ -34,8 +34,8 @@ type
       procedure Scrub(const aFileName: string);
       function CorpusLog(const aSet: string): string;
 
-      { A METHOD, not a free function: CheckEquals is protected on TTestCase,
-        which is the framework saying assertions belong to a test. }
+      (* A METHOD, not a free function: CheckEquals is protected on TTestCase,
+        which is the framework saying assertions belong to a test. *)
       procedure CompareQSO(const a, b: ContestExchange; const where: string);
    protected
       procedure TestOneQSORoundTrips;
@@ -58,8 +58,8 @@ type
 implementation
 
 uses
-   { Windows for MAXBYTE / MAXWORD -- the not-set markers ClearContestExchange
-     writes, and the values this suite exists to prove never reach the log. }
+   (* Windows for MAXBYTE / MAXWORD -- the not-set markers ClearContestExchange
+     writes, and the values this suite exists to prove never reach the log. *)
    Windows, SysUtils, Classes, uLogDatabase, uLogSchema, uLogBinaryFile,
    uLogRepository;
 
@@ -86,12 +86,12 @@ begin
    Result := ExtractFilePath(ParamStr(0)) + '..\corpus\' + aSet + '\log.trw';
 end;
 
-{ --------------------------------------------------------------------------- }
+(* --------------------------------------------------------------------------- *)
 
-{ EVERY PERSISTED FIELD, NAMED. Adding a column to the mapper without adding it
+(* EVERY PERSISTED FIELD, NAMED. Adding a column to the mapper without adding it
   here leaves the new column untested, which is the same hole one level up --
   so the crosswalk, the schema and this list are three places that must agree,
-  and the build fails if they do not. }
+  and the build fails if they do not. *)
 procedure TLogRepositoryTests.CompareQSO(const a, b: ContestExchange;
                                         const where: string);
 
@@ -111,20 +111,20 @@ procedure TLogRepositoryTests.CompareQSO(const a, b: ContestExchange;
    end;
 
 begin
-   { identity }
+   (* identity *)
    SameInt('ceQSOID1', integer(a.ceQSOID1), integer(b.ceQSOID1));
    SameInt('ceQSOID2', integer(a.ceQSOID2), integer(b.ceQSOID2));
    Same('ceComputerID', AnsiString(a.ceComputerID), AnsiString(b.ceComputerID));
    SameInt('ceOperatorID', a.ceOperatorID, b.ceOperatorID);
    SameInt('ceRecordKind', Ord(a.ceRecordKind), Ord(b.ceRecordKind));
 
-   { COMPARED, even though it is stored on the CONTEST row rather than the QSO
+   (* COMPARED, even though it is stored on the CONTEST row rather than the QSO
      row. That is exactly why it needs checking: nothing else would notice a
      QSO coming back as DUMMYCONTEST, and PostUnit branches on
-     `rec.ceContest = POTA` while exporting. }
+     `rec.ceContest = POTA` while exporting. *)
    SameInt('ceContest', Ord(a.ceContest), Ord(b.ceContest));
 
-   { when and what }
+   (* when and what *)
    SameInt('tSysTime', integer(QSOTimeToUnixUTC(a.tSysTime)),
                        integer(QSOTimeToUnixUTC(b.tSysTime)));
    Same('Callsign', AnsiString(a.Callsign), AnsiString(b.Callsign));
@@ -135,7 +135,7 @@ begin
    SameInt('ExtMode', Ord(a.ExtMode), Ord(b.ExtMode));
    Same('ExchString', AnsiString(a.ExchString), AnsiString(b.ExchString));
 
-   { the exchange }
+   (* the exchange *)
    SameInt('RSTSent', a.RSTSent, b.RSTSent);
    SameInt('RSTReceived', a.RSTReceived, b.RSTReceived);
    SameInt('NumberSent', a.NumberSent, b.NumberSent);
@@ -157,14 +157,14 @@ begin
    Same('Kids', AnsiString(a.Kids), AnsiString(b.Kids));
    Same('DomesticQTH', AnsiString(a.DomesticQTH), AnsiString(b.DomesticQTH));
 
-   { CTY.DAT-derived }
+   (* CTY.DAT-derived *)
    Same('QTH.Prefix', AnsiString(a.QTH.Prefix), AnsiString(b.QTH.Prefix));
    Same('QTH.CountryID', AnsiString(a.QTH.CountryID), AnsiString(b.QTH.CountryID));
    SameInt('QTH.Country', a.QTH.Country, b.QTH.Country);
    SameInt('QTH.Zone', a.QTH.Zone, b.QTH.Zone);
    SameInt('QTH.Continent', Ord(a.QTH.Continent), Ord(b.QTH.Continent));
 
-   { multipliers }
+   (* multipliers *)
    Same('Prefix', AnsiString(a.Prefix), AnsiString(b.Prefix));
    Same('DXQTH', AnsiString(a.DXQTH), AnsiString(b.DXQTH));
    Same('DomMultQTH', AnsiString(a.DomMultQTH), AnsiString(b.DomMultQTH));
@@ -174,7 +174,7 @@ begin
    SameBool('ZoneMult', a.ZoneMult, b.ZoneMult);
    SameBool('InhibitMults', a.InhibitMults, b.InhibitMults);
 
-   { state }
+   (* state *)
    SameInt('QSOPoints', a.QSOPoints, b.QSOPoints);
    SameBool('ceDupe', a.ceDupe, b.ceDupe);
    SameBool('ceSearchAndPounce', a.ceSearchAndPounce, b.ceSearchAndPounce);
@@ -186,8 +186,8 @@ begin
    SameBool('ceClearDupeSheet', a.ceClearDupeSheet, b.ceClearDupeSheet);
    SameBool('ceClearMultSheet', a.ceClearMultSheet, b.ceClearMultSheet);
    SameInt('ceRadio', Ord(a.ceRadio), Ord(b.ceRadio));
-   { Compared through the same NUL-aware helper the mapper uses -- a direct
-     AnsiString() cast of this array is the bug this line would hide. }
+   (* Compared through the same NUL-aware helper the mapper uses -- a direct
+     AnsiString() cast of this array is the bug this line would hide. *)
    Same('ceOperator', CharArrayToAnsi(a.ceOperator),
                       CharArrayToAnsi(b.ceOperator));
    SameBool('ceQSO_Deleted', a.ceQSO_Deleted, b.ceQSO_Deleted);
@@ -195,7 +195,7 @@ begin
    SameBool('ceNeedSendToServerAE', a.ceNeedSendToServerAE, b.ceNeedSendToServerAE);
 end;
 
-{ --------------------------------------------------------------------------- }
+(* --------------------------------------------------------------------------- *)
 
 procedure TLogRepositoryTests.TestOneQSORoundTrips;
 var
@@ -229,9 +229,9 @@ begin
       db.CreateNew(fn);
       repo := TLogRepository.Create(db);
       try
-         { The contest lives on the contest row, so it has to be set before a
+         (* The contest lives on the contest row, so it has to be set before a
            QSO can round-trip completely -- which is what the importer does
-           from the first record it reads. }
+           from the first record it reads. *)
          repo.SetContest(before.ceContest);
          rowId := repo.SaveQSO(before);
          repo.Commit;
@@ -259,8 +259,8 @@ begin
    fn := TempLogName('sentinel.db');
    Scrub(fn);
 
-   { The shape ClearContestExchange leaves: not-set markers that are the type's
-     MAXIMUM, not zero. Crosswalk finding 3. }
+   (* The shape ClearContestExchange leaves: not-set markers that are the type's
+     MAXIMUM, not zero. Crosswalk finding 3. *)
    FillChar(before, SizeOf(before), 0);
    before.Band := Band20;
    before.Mode := CW;
@@ -288,8 +288,8 @@ begin
          repo.Commit;
          CheckTrue(repo.LoadQSO(rowId, after), 'it reads back');
 
-         { Each of these is a value that would look exactly like data if the
-           mapper wrote the sentinel through. }
+         (* Each of these is a value that would look exactly like data if the
+           mapper wrote the sentinel through. *)
          CheckEquals(-1, after.NumberSent, 'a -1 serial is not 0');
          CheckEquals(-1, after.NumberReceived, 'nor the received one');
          CheckEquals(integer(DUMMYZONE), integer(after.Zone),
@@ -318,7 +318,7 @@ begin
    BeginTest('TestEveryRowGetsItsOwnGuid');
 
    FillChar(qso, SizeOf(qso), 0);
-   qso.id := '5cd6c61f69cf4422baef44f93b2cbbd2';   { a real corpus id }
+   qso.id := '5cd6c61f69cf4422baef44f93b2cbbd2';   (* a real corpus id *)
    qso.tSysTime.qtYear := 26;
    qso.tSysTime.qtMonth := 2;
    qso.tSysTime.qtDay := 11;
@@ -328,8 +328,8 @@ begin
 
    CheckEquals(32, Length(g1), 'a row guid fits ContestExchange.id exactly');
 
-   { THE POINT: the same record minted twice gives two guids, because two rows
-     are two rows even when they came from one exchange. }
+   (* THE POINT: the same record minted twice gives two guids, because two rows
+     are two rows even when they came from one exchange. *)
    CheckTrue(g1 <> g2, 'the same record yields a DIFFERENT guid each time');
    CheckTrue(g1 <> AnsiString(qso.id), 'and it is never the record''s own id');
 end;
@@ -346,11 +346,11 @@ begin
    fn := TempLogName('countyline.db');
    Scrub(fn);
 
-   { THE CASE THAT BROKE THE FIRST DESIGN, taken from the corpus: two W4THY
+   (* THE CASE THAT BROKE THE FIRST DESIGN, taken from the corpus: two W4THY
      rows in florida_qp_2026_ny4i, one for PIN and one for HIL, both carrying
      5cd6c61f69cf4422baef44f93b2cbbd2. One exchange, two QSOs. Making the
      record's id the unique row key fails on the second of these -- which is
-     every county line in every QSO party. }
+     every county line in every QSO party. *)
    FillChar(pin, SizeOf(pin), 0);
    pin.ceRecordKind := rkQSO;
    pin.Callsign := 'W4THY';
@@ -409,7 +409,7 @@ begin
    FillChar(before, SizeOf(before), 0);
    before.ceRecordKind := rkQSO;
    before.Callsign := 'W1AW';
-   before.ceSearchAndPounce := True;      { so is_run must be 0 }
+   before.ceSearchAndPounce := True;      (* so is_run must be 0 *)
    before.tSysTime.qtYear := 26;
    before.tSysTime.qtMonth := 6;
    before.tSysTime.qtDay := 1;
@@ -423,8 +423,8 @@ begin
          repo.Commit;
          CheckTrue(repo.LoadQSO(rowId, after), 'it reads back');
 
-         { A straight copy instead of an inversion would be wrong in a way
-           nothing reports -- every S&P QSO would read as a run QSO. }
+         (* A straight copy instead of an inversion would be wrong in a way
+           nothing reports -- every S&P QSO would read as a run QSO. *)
          CheckTrue(after.ceSearchAndPounce,
                    'S&P survives the round trip through an INVERTED is_run');
       finally
@@ -459,7 +459,7 @@ begin
 
    qtc := qso;
    qtc.ceRecordKind := rkQTCS;
-   qtc.Kids := 'G3ABC';               { a CALLSIGN, not exchange text }
+   qtc.Kids := 'G3ABC';               (* a CALLSIGN, not exchange text *)
 
    db := TLogDatabase.Create;
    try
@@ -470,9 +470,9 @@ begin
          gQtc := repo.SaveQSO(qtc);
          repo.Commit;
 
-         { One column meaning either, depending on another column, is how a
+         (* One column meaning either, depending on another column, is how a
            wrong Cabrillo line gets written two years from now. Two columns,
-           and the record kind decides. }
+           and the record kind decides. *)
          CheckTrue(repo.LoadQSO(gQso, back), 'the QSO reads back');
          CheckEquals('SOME EXCHANGE', string(back.Kids),
                      'for rkQSO, Kids is the exchange text');
@@ -496,25 +496,25 @@ var
 begin
    BeginTest('TestUUIDv7ShapeAndOrdering');
 
-   early := NewUUIDv7(1000000000000);     { 2001 }
-   late  := NewUUIDv7(1800000000000);     { 2027 }
+   early := NewUUIDv7(1000000000000);     (* 2001 *)
+   late  := NewUUIDv7(1800000000000);     (* 2027 *)
 
    CheckEquals(32, Length(early), 'a guid is 32 hex characters, no dashes');
-   { Six bytes of timestamp are twelve hex characters, so the version nibble is
-     the thirteenth. }
+   (* Six bytes of timestamp are twelve hex characters, so the version nibble is
+     the thirteenth. *)
    CheckEquals('7', string(early[13]), 'version 7');
 
-   { The reason question 5 chose v7 over v4: it sorts by creation time, so rows
-     cluster in insertion order and a chooser can order by guid alone. }
+   (* The reason question 5 chose v7 over v4: it sorts by creation time, so rows
+     cluster in insertion order and a chooser can order by guid alone. *)
    CheckTrue(early < late, 'a v7 guid sorts by its timestamp');
 end;
 
-{ IMPORTING OUR OWN EXPORTED FILE, which is the point of keying on the guid.
+(* IMPORTING OUR OWN EXPORTED FILE, which is the point of keying on the guid.
 
   NY4I: "This allows us to import our own exported file. Also good for testing."
   Both halves matter -- an import that duplicates on a second run is one nobody
   dares repeat, and an import that cannot be repeated is useless as a test
-  fixture. }
+  fixture. *)
 procedure TLogRepositoryTests.TestImportingTheSameFileTwiceAddsNothing;
 var
    db: TLogDatabase;
@@ -536,11 +536,11 @@ begin
    a.tSysTime.qtMonth := 6;
    a.tSysTime.qtDay := 1;
 
-   { The two halves of a COUNTY-LINE contact: one exchange, two QSOs, and in a
+   (* The two halves of a COUNTY-LINE contact: one exchange, two QSOs, and in a
      real TR4W ADIF export they carry the SAME APP_TR4W_ID. That is exactly why
      the key here must be a PER-QSO guid: keying on the exchange id would merge
      these two and lose a contact. Measured on the shipped florida_qp export --
-     3 records, 2 distinct APP_TR4W_ID. }
+     3 records, 2 distinct APP_TR4W_ID. *)
    b := a;
    b.QTHString := 'MA';
 
@@ -558,7 +558,7 @@ begin
          CheckTrue(id1 <> id2, 'they are two different rows');
          CheckEquals(2, repo.QSOCount, 'the log holds two QSOs');
 
-         { THE SECOND PASS -- the same file again. }
+         (* THE SECOND PASS -- the same file again. *)
          CheckEquals(id1, repo.ImportQSOByGuid(
                              '018f3a2b7c1d7abc8def000000000001', a, wasNew),
                      'the first QSO matches the row it created');
@@ -609,9 +609,9 @@ begin
       try
          rowId := repo.ImportQSOByGuid('018f3a2b7c1d7abc8def000000000003', qso, wasNew);
 
-         { Re-importing a CORRECTED file is the usual reason to do it twice, so
+         (* Re-importing a CORRECTED file is the usual reason to do it twice, so
            the second pass must UPDATE rather than skip -- which is why this
-           looks the row up instead of catching a unique violation. }
+           looks the row up instead of catching a unique violation. *)
          qso.QTHString := 'MA';
          CheckEquals(rowId,
                      repo.ImportQSOByGuid('018f3a2b7c1d7abc8def000000000003',
@@ -657,9 +657,9 @@ begin
       db.CreateNew(fn);
       repo := TLogRepository.Create(db);
       try
-         { A file from another program has no APP_TR4W_ID. With no identity
+         (* A file from another program has no APP_TR4W_ID. With no identity
            there is nothing to match on, and guessing from "looks similar"
-           is how an import loses a QSO -- so both go in. }
+           is how an import loses a QSO -- so both go in. *)
          repo.ImportQSOByGuid('', qso, wasNew);
          CheckTrue(wasNew, 'a record with no guid is new');
          repo.ImportQSOByGuid('', qso, wasNew);
@@ -678,10 +678,10 @@ begin
    Scrub(fn);
 end;
 
-{ UPDATE IS WHAT PHASE B2 ACTUALLY NEEDS. Of the eight sites that write a QSO to
+(* UPDATE IS WHAT PHASE B2 ACTUALLY NEEDS. Of the eight sites that write a QSO to
   the log, FIVE seek to a position and rewrite -- DeleteLastContact, uNet's
   UpdateRec and FindAndUpdateQSOInLog, uQTCS.SetSendedQSOs, and the QSO editor.
-  Only three append. }
+  Only three append. *)
 procedure TLogRepositoryTests.TestUpdateReplacesTheRow;
 var
    db: TLogDatabase;
@@ -714,7 +714,7 @@ begin
                      'and it is the newest row -- what the three "seek back one ' +
                      'record" sites want');
 
-         { The edit an operator would make: fix the QTH and mark it a dupe. }
+         (* The edit an operator would make: fix the QTH and mark it a dupe. *)
          edited := before;
          edited.QTHString := 'MA';
          edited.ceDupe := True;
@@ -727,8 +727,8 @@ begin
          CheckTrue(after.ceDupe, 'and the edited flag');
          CheckEquals('W1AW', string(after.Callsign), 'and the unchanged callsign');
 
-         { It REPLACED the row rather than adding one -- the file-based code
-           rewrites in place and so must this. }
+         (* It REPLACED the row rather than adding one -- the file-based code
+           rewrites in place and so must this. *)
          CheckEquals(1, repo.QSOCount, 'and there is still exactly one QSO');
       finally
          repo.Free;
@@ -760,10 +760,10 @@ begin
       db.CreateNew(fn);
       repo := TLogRepository.Create(db);
       try
-         { The file-based code CANNOT tell an edit from a no-op: it seeks and
+         (* The file-based code CANNOT tell an edit from a no-op: it seeks and
            writes, and a bad offset corrupts or extends the file silently. This
            is one thing the database does better rather than differently, so it
-           is worth a test of its own. }
+           is worth a test of its own. *)
          CheckFalse(repo.UpdateQSO(999, qso),
                     'updating a row that does not exist reports failure');
          CheckEquals(0, repo.QSOCount, 'and creates nothing');
@@ -779,8 +779,8 @@ end;
 
 procedure TLogRepositoryTests.TestWholeCorpusLogRoundTrips;
 const
-   { Four sets chosen to span the shapes: a DX zone contest, a domestic QSO
-     party, a serial-number contest and Field Day's class exchange. }
+   (* Four sets chosen to span the shapes: a DX zone contest, a domestic QSO
+     party, a serial-number contest and Field Day's class exchange. *)
    SETS: array[0..3] of string = (
       'cqww_ssb_2025_ny4i', 'florida_qp_2026_ny4i',
       'cqwpx_cw_2026_ny4i', 'arrl_fd_2026_ny4i');
@@ -822,9 +822,9 @@ begin
                         begin
                         Continue;
                         end;
-                     { As the importer does: the contest comes from the records,
+                     (* As the importer does: the contest comes from the records,
                        because a binary log has no header that names it. Without
-                       this every QSO reads back as DUMMYCONTEST. }
+                       this every QSO reads back as DUMMYCONTEST. *)
                      if n = 0 then
                         begin
                         repo.SetContest(before.ceContest);
@@ -832,9 +832,9 @@ begin
                      New(rec);
                      rec^ := before;
                      originals.Add(rec);
-                     { A row id fits a pointer on this target and TList is what
+                     (* A row id fits a pointer on this target and TList is what
                        the tree has; storing it as one keeps the test to the
-                       collections already in use. }
+                       collections already in use. *)
                      rowIds.Add(Pointer(PtrInt(repo.SaveQSO(before))));
                      Inc(n);
                      end;
@@ -846,8 +846,8 @@ begin
                CheckEquals(n, repo.QSOCount,
                            SETS[s] + ': the database holds every QSO written');
 
-               { THE EXHAUSTIVE PART. Every QSO in the log, every persisted
-                 field, both directions. }
+               (* THE EXHAUSTIVE PART. Every QSO in the log, every persisted
+                 field, both directions. *)
                for i := 0 to rowIds.Count - 1 do
                   begin
                   CheckTrue(repo.LoadQSO(Int64(PtrInt(rowIds[i])), after),

@@ -1,4 +1,4 @@
-{
+(*
  Copyright Thomas M. Schaefer, NY4I (c) 2026.
 
  This file is part of TR4W  (SRC)
@@ -17,9 +17,9 @@
      Public License along with TR4W in  GPL_License.TXT.
 If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
- }
+ *)
 
-{ ONE LOG, ONE FILE, ONE CONNECTION.  The first code in TR4W that opens a
+(* ONE LOG, ONE FILE, ONE CONNECTION.  The first code in TR4W that opens a
   database.
 
   Design settled in docs\SQLITE_LOG_SCHEMA_PLAN.md; the DDL and the reasoning
@@ -52,7 +52,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   CLAUDE.md's standing rule applies and is the reason this exists at all:
   prefer a REPORTED error over a silent fallback.  There is no fallback to make
   here -- without SQLite there is no log -- so the whole value is in the
-  message. }
+  message. *)
 unit uLogDatabase;
 
 {$I ..\tr4w.inc}
@@ -65,7 +65,7 @@ uses
 type
    ELogDatabaseError = class(Exception);
 
-   { A CONNECTION THAT CAN RUN A CONNECTION-LEVEL PRAGMA.
+   (* A CONNECTION THAT CAN RUN A CONNECTION-LEVEL PRAGMA.
 
      Not a workaround -- it is FPC's own mechanism, reached the way FPC intends.
      TSQLite3Connection.execsql is PROTECTED and is the connector's
@@ -93,27 +93,27 @@ type
      cast, a ppansichar out-parameter and a hand-rolled sqlite3_free in code
      that has no business owning any of it. NY4I asked why, given
      ExecuteDirect takes a string; the answer was that ExecuteDirect is the
-     wrong method, not that a C call was unavoidable. }
+     wrong method, not that a C call was unavoidable. *)
    TLogConnection = class(TSQLite3Connection)
    public
-      { ANSISTRING, matching execsql's own parameter exactly. Declaring it
-        `string` -- which tr4w.inc makes UTF-16 -- narrows on every call. }
+      (* ANSISTRING, matching execsql's own parameter exactly. Declaring it
+        `string` -- which tr4w.inc makes UTF-16 -- narrows on every call. *)
       procedure ExecutePragma(const aSQL: AnsiString);
    end;
 
-   { The outcome of CheckIntegrity.  A record and not a boolean because the
+   (* The outcome of CheckIntegrity.  A record and not a boolean because the
      answer an operator needs is WHICH check failed and what it said -- SQLite's
      own messages are specific and throwing them away to return False would be
-     the silent-downgrade mistake this tree keeps finding. }
+     the silent-downgrade mistake this tree keeps finding. *)
    TIntegrityResult = record
       Ok: boolean;
-      { Empty when Ok. Otherwise one line per problem, already human-readable. }
+      (* Empty when Ok. Otherwise one line per problem, already human-readable. *)
       Report: string;
    end;
 
-   { An open contest log.  Owns its connection and its transaction; owns no
+   (* An open contest log.  Owns its connection and its transaction; owns no
      queries, because the statements that matter are prepared by the mapper
-     that uses them. }
+     that uses them. *)
    TLogDatabase = class(TObject)
    private
       FConnection: TLogConnection;
@@ -128,95 +128,95 @@ type
       procedure StampIdentity;
       procedure VerifyIdentity;
 
-      { PRAGMA takes no parameter markers, so these are the only places SQL is
+      (* PRAGMA takes no parameter markers, so these are the only places SQL is
         built by formatting.  Every caller passes a constant from this unit or
-        from uLogSchema -- never anything from a file or an operator. }
-      { ANSISTRING for the same reason the schema statements are -- this is the
-        type sqldb and the SQLite C API actually take. }
+        from uLogSchema -- never anything from a file or an operator. *)
+      (* ANSISTRING for the same reason the schema statements are -- this is the
+        type sqldb and the SQLite C API actually take. *)
       function PragmaAsInteger(const aPragma: AnsiString): integer;
       function PragmaAsString(const aPragma: AnsiString): AnsiString;
       procedure ExecPragma(const aPragma: AnsiString);
 
-      { The connection-level pragmas, executed BENEATH sqldb.  See its
-        implementation: they cannot be set through sqldb at all. }
+      (* The connection-level pragmas, executed BENEATH sqldb.  See its
+        implementation: they cannot be set through sqldb at all. *)
       procedure ExecPragmaRaw(const aPragma: AnsiString);
 
-      { SQLDB OPENS A TRANSACTION IMPLICITLY ON THE FIRST STATEMENT, and it does
-        not close it. }
+      (* SQLDB OPENS A TRANSACTION IMPLICITLY ON THE FIRST STATEMENT, and it does
+        not close it. *)
       procedure EndTransaction;
    public
       constructor Create;
       destructor Destroy; override;
 
-      { Create a NEW log and apply the schema.  REFUSES an existing file: a
+      (* Create a NEW log and apply the schema.  REFUSES an existing file: a
         contest log is the operator's only copy of a weekend, and "create"
         silently truncating one is not a risk worth taking for the convenience
-        of not asking. }
+        of not asking. *)
       procedure CreateNew(const aFileName: string);
 
-      { Open an EXISTING log.  Refuses a missing file for the same reason in
+      (* Open an EXISTING log.  Refuses a missing file for the same reason in
         reverse: SQLite would helpfully create an empty database, and an empty
-        log that opens cleanly is worse than an error. }
+        log that opens cleanly is worse than an error. *)
       procedure Open(const aFileName: string);
 
       procedure Close;
       function IsOpen: boolean;
 
-      { PRAGMA user_version.  0 means "no schema", which is what an empty file
+      (* PRAGMA user_version.  0 means "no schema", which is what an empty file
         reports -- so it is also how a caller detects a database that is not
-        one of ours. }
+        one of ours. *)
       function SchemaVersion: integer;
 
-      { PRAGMA integrity_check + foreign_key_check, and a WAL checkpoint first
+      (* PRAGMA integrity_check + foreign_key_check, and a WAL checkpoint first
         so recent writes are actually visible to it.  Reports; never repairs.
 
         Call it on OPEN as well as after a backup: a log opened after a crash
-        should be looked at before it is written to. }
+        should be looked at before it is written to. *)
       function CheckIntegrity: TIntegrityResult;
 
       property FileName: string read FFileName;
-      { What journal_mode actually came back -- 'wal' normally, 'delete' when
+      (* What journal_mode actually came back -- 'wal' normally, 'delete' when
         SQLite refused WAL (a network share). Worth reading before concluding
-        anything about locking or speed. }
+        anything about locking or speed. *)
       property JournalMode: string read FJournalMode;
 
-      { Whether foreign key enforcement is actually ON, read back rather than
-        assumed. See ApplyPragmas for why that distinction is not pedantry. }
+      (* Whether foreign key enforcement is actually ON, read back rather than
+        assumed. See ApplyPragmas for why that distinction is not pedantry. *)
       property ForeignKeysEnforced: boolean read FForeignKeysEnforced;
 
       property Connection: TLogConnection read FConnection;
       property Transaction: TSQLTransaction read FTransaction;
    end;
 
-{ The architecture of a Windows PE file -- 'i386', 'x86-64', 'ARM64', an
+(* The architecture of a Windows PE file -- 'i386', 'x86-64', 'ARM64', an
   'unknown (0x....)' for a machine word we do not name, or '' when the file is
   not a PE at all (which includes "does not exist").
 
   Pure file reading, and separated out precisely so it can be tested: the
   failure it explains needs a broken installation to reproduce, and a test
   cannot have one.  It can, however, point this at any two binaries and check
-  the answers, which is what test\unit\uTestLogDatabase.pas does. }
+  the answers, which is what test\unit\uTestLogDatabase.pas does. *)
 function DescribePEArchitecture(const aFileName: string): string;
 
-{ What this build is, in the same spelling DescribePEArchitecture returns, so
-  the two can be compared and quoted in one sentence. }
+(* What this build is, in the same spelling DescribePEArchitecture returns, so
+  the two can be compared and quoted in one sentence. *)
 function BuildArchitecture: string;
 
-{ Why SQLite probably did not load.  Takes the FULL PATH of the library to
+(* Why SQLite probably did not load.  Takes the FULL PATH of the library to
   examine rather than a directory to search: the caller already knows where the
   file should be (uAppPaths does), and a routine that re-derives it would be a
   second opinion about the install layout.  Returns a sentence for a human;
-  never raises. }
+  never raises. *)
 function DiagnoseSQLiteLoad(const aLibraryPath: string): string;
 
-{ Where the library should be.  Separated so the message and the load agree
-  about one path rather than each working it out. }
+(* Where the library should be.  Separated so the message and the load agree
+  about one path rather than each working it out. *)
 function SQLiteLibraryPath: string;
 
 const
    SQLITE_LIBRARY_NAME = 'sqlite3.dll';
 
-   { PRAGMA application_id -- four bytes at offset 68 of every log we create,
+   (* PRAGMA application_id -- four bytes at offset 68 of every log we create,
      which is 'TR4W' in ASCII.  Taken from TR4QT, which uses 0x54523451 ('TR4Q')
      for the same purpose (Database.h:49) and refuses to open a database whose
      id is set to something else (Database.cpp:161).
@@ -229,8 +229,8 @@ const
      staring at a hex dump five years from now.
 
      NOT MENTIONED IN THE PLAN DOCUMENT, and found by reading TR4QT at NY4I's
-     suggestion on 2026-09-01. }
-   LOG_APPLICATION_ID = $54523457;   { 'TR4W' }
+     suggestion on 2026-09-01. *)
+   LOG_APPLICATION_ID = $54523457;   (* 'TR4W' *)
 
 implementation
 
@@ -239,17 +239,17 @@ uses
 
 procedure TLogConnection.ExecutePragma(const aSQL: AnsiString);
 begin
-   { One line, and the whole point: `execsql` is protected on the ancestor. }
+   (* One line, and the whole point: `execsql` is protected on the ancestor. *)
    execsql(aSQL);
 end;
 
-{ ---------------------------------------------------------------------------
+(* ---------------------------------------------------------------------------
   PE architecture
-  --------------------------------------------------------------------------- }
+  --------------------------------------------------------------------------- *)
 
 const
-   { The three machine words that can matter to this program.  From the PE
-     specification's IMAGE_FILE_HEADER.Machine. }
+   (* The three machine words that can matter to this program.  From the PE
+     specification's IMAGE_FILE_HEADER.Machine. *)
    IMAGE_FILE_MACHINE_I386  = $014C;
    IMAGE_FILE_MACHINE_AMD64 = $8664;
    IMAGE_FILE_MACHINE_ARM64 = $AA64;
@@ -270,16 +270,16 @@ begin
       end;
 
    try
-      { EXPLICIT, at a genuine boundary. The RTL's file API is AnsiString and
+      (* EXPLICIT, at a genuine boundary. The RTL's file API is AnsiString and
         FPC treats it as the file-system codepage, which on this build is UTF-8
         -- so this is the conversion that was happening anyway, said out loud.
-        CLAUDE.md's done-criterion allows the cast exactly here. }
+        CLAUDE.md's done-criterion allows the cast exactly here. *)
       fs := TFileStream.Create(AnsiString(aFileName), fmOpenRead or fmShareDenyNone);
       try
-         { 'MZ', then the PE header offset at 0x3C, then 'PE\0\0', then the
+         (* 'MZ', then the PE header offset at 0x3C, then 'PE\0\0', then the
            machine word.  Each step is checked because this function is handed
            whatever file happened to be at the path -- including, on a bad
-           install, an HTML error page with a .dll name. }
+           install, an HTML error page with a .dll name. *)
          if fs.Size < $40 then
             begin
             Exit;
@@ -287,7 +287,7 @@ begin
 
          fs.Position := 0;
          mzSignature := fs.ReadWord;
-         if mzSignature <> $5A4D then          { 'MZ', little-endian }
+         if mzSignature <> $5A4D then          (* 'MZ', little-endian *)
             begin
             Exit;
             end;
@@ -301,7 +301,7 @@ begin
 
          fs.Position := peOffset;
          peSignature := fs.ReadDWord;
-         if peSignature <> $00004550 then      { 'PE', 0, 0 }
+         if peSignature <> $00004550 then      (* 'PE', 0, 0 *)
             begin
             Exit;
             end;
@@ -330,8 +330,8 @@ begin
          fs.Free;
       end;
    except
-      { A file we cannot read tells us nothing, and this routine exists to
-        improve an error message -- it must never replace one. }
+      (* A file we cannot read tells us nothing, and this routine exists to
+        improve an error message -- it must never replace one. *)
       on E: Exception do
          begin
          Result := '';
@@ -352,10 +352,10 @@ begin
    {$IFEND}
 end;
 
-{ DataFilePath, not SettingsFilePath or LogFilePath: sqlite3.dll is SHIPPED and
+(* DataFilePath, not SettingsFilePath or LogFilePath: sqlite3.dll is SHIPPED and
   read-only.  On Windows all three are the same directory and the choice looks
   cosmetic; on macOS and Linux they are three different places, which is why
-  Lint-AppPaths refuses a hand-rolled ExtractFilePath(ParamStr(0)) here. }
+  Lint-AppPaths refuses a hand-rolled ExtractFilePath(ParamStr(0)) here. *)
 function SQLiteLibraryPath: string;
 begin
    Result := DataFilePath(SQLITE_LIBRARY_NAME);
@@ -381,9 +381,9 @@ begin
    dllArch := DescribePEArchitecture(dllPath);
 
    {$IFNDEF WINDOWS}
-   { Off Windows the file is ELF or Mach-O and the PE reader can say nothing
+   (* Off Windows the file is ELF or Mach-O and the PE reader can say nothing
      about it. Stopping here beats reporting a perfectly good shared library
-     as corrupt because it is not a format it was never going to be. }
+     as corrupt because it is not a format it was never going to be. *)
    Result := Format('%s is present. TR4W cannot check its architecture on ' +
                     'this platform, so if loading failed, verify by hand that ' +
                     'it matches this %s build.', [dllPath, ourArch]);
@@ -400,9 +400,9 @@ begin
 
    if dllArch <> ourArch then
       begin
-      { The case the whole routine exists for.  Windows reports this as "the
+      (* The case the whole routine exists for.  Windows reports this as "the
         specified module could not be found", pointing at a file that is
-        present. }
+        present. *)
       Result := Format('%s is a %s library and this is a %s build of TR4W. ' +
                        'Windows reports an architecture mismatch as "the ' +
                        'specified module could not be found", which is why the ' +
@@ -416,11 +416,11 @@ begin
                     'failure is not the library itself.', [dllPath, dllArch]);
 end;
 
-{ ---------------------------------------------------------------------------
+(* ---------------------------------------------------------------------------
   TLogDatabase
-  --------------------------------------------------------------------------- }
+  --------------------------------------------------------------------------- *)
 
-{ SQLDB STARTS A TRANSACTION BY ITSELF AND LEAVES IT OPEN.  Any statement
+(* SQLDB STARTS A TRANSACTION BY ITSELF AND LEAVES IT OPEN.  Any statement
   through TSQLQuery or ExecuteDirect begins one lazily if none is active, and
   nothing ends it until something commits.  For ordinary data that is exactly
   right.  For pragmas it is fatal, and the failure is not obvious:
@@ -435,7 +435,7 @@ end;
 
   So every pragma is bracketed.  Committing an empty transaction costs nothing
   and it makes the rule "a pragma runs on its own" rather than a comment about
-  ordering that the next edit silently breaks. }
+  ordering that the next edit silently breaks. *)
 procedure TLogDatabase.EndTransaction;
 begin
    if FTransaction.Active then
@@ -451,7 +451,7 @@ begin
    EndTransaction;
 end;
 
-{ THE CONNECTION-LEVEL PRAGMAS CANNOT BE SET THROUGH sqldb.  MEASURED, because
+(* THE CONNECTION-LEVEL PRAGMAS CANNOT BE SET THROUGH sqldb.  MEASURED, because
   the first two attempts at this were wrong in different ways.
 
   sqldb begins a transaction lazily on any statement and does not end it, so
@@ -474,16 +474,16 @@ end;
   after Open and before anything has had a chance to start a transaction.  The
   handle is real and valid at that point -- TSQLite3Connection.Open has already
   called sqlite3_open.  Everything else in this unit still goes through sqldb;
-  this is the narrow exception, not a pattern to copy. }
+  this is the narrow exception, not a pattern to copy. *)
 procedure TLogDatabase.ExecPragmaRaw(const aPragma: AnsiString);
 begin
    try
       FConnection.ExecutePragma(aPragma);
    except
-      { execsql raises EDatabaseError carrying SQLite's own message. Re-raised
+      (* execsql raises EDatabaseError carrying SQLite's own message. Re-raised
         with the file and the statement, because "Safety level may not be
         changed inside a transaction" is a sentence about SQLite, not about
-        which log would not open. }
+        which log would not open. *)
       on E: Exception do
          begin
          raise ELogDatabaseError.CreateFmt(
@@ -523,41 +523,41 @@ begin
    Result := StrToIntDef(s, 0);
 end;
 
-{ SET ON EVERY OPEN, not only on create: journal mode is a property of the FILE
+(* SET ON EVERY OPEN, not only on create: journal mode is a property of the FILE
   and persists, but foreign_keys and synchronous are per-CONNECTION and reset to
   their defaults every time.  Setting all three here means one place to read
-  rather than a rule about which is which. }
+  rather than a rule about which is which. *)
 procedure TLogDatabase.ApplyPragmas;
 begin
-   { ORDER MATTERS: all three run before any sqldb statement has opened a
-     transaction. See ExecPragmaRaw. }
+   (* ORDER MATTERS: all three run before any sqldb statement has opened a
+     transaction. See ExecPragmaRaw. *)
    ExecPragmaRaw('PRAGMA foreign_keys = ON');
 
-   { synchronous = FULL is a DELIBERATE divergence from TR4QT, which leaves the
+   (* synchronous = FULL is a DELIBERATE divergence from TR4QT, which leaves the
      default. Under WAL the default drops to NORMAL, which can lose the most
      recent transactions on power loss. A contest log writes a few hundred bytes
      every several seconds, so the durability costs nothing measurable at that
-     rate -- and the thing being protected is the operator's weekend. }
+     rate -- and the thing being protected is the operator's weekend. *)
    ExecPragmaRaw('PRAGMA synchronous = FULL');
 
-   { WAL is requested here and CHECKED below: SQLite refuses WAL on a database
+   (* WAL is requested here and CHECKED below: SQLite refuses WAL on a database
      reached over a network share, which is exactly where a multi-op station is
      most likely to put one. Falling back to the rollback journal is legal and
      safe; not KNOWING you fell back is what makes a later "why did that lock"
-     unanswerable. }
+     unanswerable. *)
    ExecPragmaRaw('PRAGMA journal_mode = WAL');
 
-   { READ BACK, ALL OF THEM. Requesting a pragma and assuming it took is the
-     mistake this whole routine is a correction for. }
+   (* READ BACK, ALL OF THEM. Requesting a pragma and assuming it took is the
+     mistake this whole routine is a correction for. *)
    FJournalMode := PragmaAsString('PRAGMA journal_mode');
    FForeignKeysEnforced := PragmaAsInteger('PRAGMA foreign_keys') = 1;
 
    if not FForeignKeysEnforced then
       begin
-      { Nothing legitimate produces this once the pragma runs outside a
+      (* Nothing legitimate produces this once the pragma runs outside a
         transaction, so it means the mechanism above has been broken by an
         edit -- report it rather than run a log with its referential guarantees
-        quietly switched off. }
+        quietly switched off. *)
       raise ELogDatabaseError.CreateFmt(
          'The contest log "%s" opened, but foreign key enforcement could not ' +
          'be switched on. This is a defect in TR4W rather than a problem with ' +
@@ -573,8 +573,8 @@ begin
                                 [LOG_SCHEMA_VERSION])));
 end;
 
-{ IS THIS ONE OF OURS, AND CAN THIS BUILD UNDERSTAND IT.  Both questions are
-  asked on open and both refuse rather than guess. }
+(* IS THIS ONE OF OURS, AND CAN THIS BUILD UNDERSTAND IT.  Both questions are
+  asked on open and both refuse rather than guess. *)
 procedure TLogDatabase.VerifyIdentity;
 var
    appId: integer;
@@ -582,11 +582,11 @@ var
 begin
    appId := PragmaAsInteger('PRAGMA application_id');
 
-   { ZERO IS ACCEPTED. It means "never stamped" -- an empty file, or a log made
+   (* ZERO IS ACCEPTED. It means "never stamped" -- an empty file, or a log made
      by a build of TR4W older than this check. Refusing those would refuse the
      operator's own logs on the day this ships, which is not a trade worth
      making for a diagnostic. Anything ELSE was stamped deliberately by some
-     other program and is not ours. }
+     other program and is not ours. *)
    if (appId <> 0) and (appId <> LOG_APPLICATION_ID) then
       begin
       raise ELogDatabaseError.CreateFmt(
@@ -598,10 +598,10 @@ begin
 
    version := PragmaAsInteger('PRAGMA user_version');
 
-   { REFUSE A LOG FROM THE FUTURE. Taken from TR4QT (Database.cpp:177) and it is
+   (* REFUSE A LOG FROM THE FUTURE. Taken from TR4QT (Database.cpp:177) and it is
      the right instinct: a newer schema may have columns this build cannot see,
      so opening it read-write would quietly drop them on the next write. An
-     older one is fine -- that is what a migration is for. }
+     older one is fine -- that is what a migration is for. *)
    if version > LOG_SCHEMA_VERSION then
       begin
       raise ELogDatabaseError.CreateFmt(
@@ -612,7 +612,7 @@ begin
       end;
 end;
 
-{ WHAT WE TAKE FROM TR4QT AND WHAT WE DO NOT -- the reasoning is in
+(* WHAT WE TAKE FROM TR4QT AND WHAT WE DO NOT -- the reasoning is in
   docs\SQLITE_LOG_SCHEMA_PLAN.md section 7; the short form is here because this
   is the routine somebody will compare against theirs.
 
@@ -629,7 +629,7 @@ end;
   in-memory QList<QSO>. That comparison exists because TR4QT holds the whole log
   in memory; we decided not to (plan 4f), so there is no second copy to
   disagree and the check has nothing to check. Their DataIntegrityManager is
-  515 lines and most of it is answering a question we arranged not to have. }
+  515 lines and most of it is answering a question we arranged not to have. *)
 function TLogDatabase.CheckIntegrity: TIntegrityResult;
 var
    q: TSQLQuery;
@@ -647,7 +647,7 @@ begin
       Exit;
       end;
 
-   { Make recent writes visible to the checks below. }
+   (* Make recent writes visible to the checks below. *)
    PragmaAsString('PRAGMA wal_checkpoint(PASSIVE)');
 
    verdict := PragmaAsString('PRAGMA integrity_check');
@@ -663,7 +663,7 @@ begin
       q.Open;
       while not q.EOF do
          begin
-         { row: table, rowid, parent table, fkid }
+         (* row: table, rowid, parent table, fkid *)
          problems := problems + Format(
             'foreign_key_check: %s row %s references a missing row in %s' + sLineBreak,
             [q.Fields[0].AsString, q.Fields[1].AsString, q.Fields[2].AsString]);
@@ -704,20 +704,20 @@ end;
 
 procedure TLogDatabase.OpenConnection(const aFileName: string);
 begin
-   { EXPLICIT, and UTF-8 is not merely acceptable here -- it is what SQLite
+   (* EXPLICIT, and UTF-8 is not merely acceptable here -- it is what SQLite
      specifies. sqlite3_open takes a UTF-8 filename, and DefaultSystemCodePage
      is 65001 in this build, so AnsiString() produces exactly that. A path with
      non-ASCII characters (an operator whose Windows account name has an accent,
-     which is the realistic case) therefore works rather than being mangled. }
+     which is the realistic case) therefore works rather than being mangled. *)
    FConnection.DatabaseName := AnsiString(aFileName);
    try
       FConnection.Open;
    except
       on E: Exception do
          begin
-         { The diagnosis is APPENDED to the original message, never substituted
+         (* The diagnosis is APPENDED to the original message, never substituted
            for it: our guess about the cause must not hide what actually
-           failed. }
+           failed. *)
          raise ELogDatabaseError.CreateFmt(
             'Could not open the contest log "%s". %s: %s'#13#10#13#10'%s',
             [aFileName, E.ClassName, E.Message,
@@ -739,8 +739,8 @@ begin
 
    FTransaction.Commit;
 
-   { AFTER the tables and after the commit: these are file-level properties and
-     there is no point stamping a database whose schema failed to build. }
+   (* AFTER the tables and after the commit: these are file-level properties and
+     there is no point stamping a database whose schema failed to build. *)
    StampIdentity;
 end;
 
@@ -759,8 +759,8 @@ begin
    except
       on E: Exception do
          begin
-         { A half-built database is worse than none: it opens, reports schema
-           version 0, and looks like a log.  Roll the file back out. }
+         (* A half-built database is worse than none: it opens, reports schema
+           version 0, and looks like a log.  Roll the file back out. *)
          Close;
          if FileExists(aFileName) then
             begin
@@ -791,8 +791,8 @@ begin
       begin
       if FTransaction.Active then
          begin
-         { Anything uncommitted at close is by definition not wanted -- a
-           committed QSO is committed at the moment it is logged (plan 9b). }
+         (* Anything uncommitted at close is by definition not wanted -- a
+           committed QSO is committed at the moment it is logged (plan 9b). *)
          FTransaction.Rollback;
          end;
       FConnection.Close;

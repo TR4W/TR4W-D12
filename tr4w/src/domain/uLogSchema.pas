@@ -1,4 +1,4 @@
-{
+(*
  Copyright Thomas M. Schaefer, NY4I (c) 2026.
 
  This file is part of TR4W  (SRC)
@@ -17,9 +17,9 @@
      Public License along with TR4W in  GPL_License.TXT.
 If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
- }
+ *)
 
-{ ===========================================================================
+(* ===========================================================================
   TR4W CONTEST LOG SCHEMA -- the DDL, and the reasoning behind its shape.
 
   Settled in docs\SQLITE_LOG_SCHEMA_PLAN.md; all eleven open questions were
@@ -142,7 +142,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   reads them without this repository.  Comments BEFORE a statement do not
   survive, which is why the essay above is a Pascal comment and the per-column
   notes are not.
-  =========================================================================== }
+  =========================================================================== *)
 unit uLogSchema;
 
 {$I ..\tr4w.inc}
@@ -150,28 +150,28 @@ unit uLogSchema;
 interface
 
 const
-   { PRAGMA user_version in every log we create.  Bump ONLY with a migration
+   (* PRAGMA user_version in every log we create.  Bump ONLY with a migration
      step, and read docs\SQLITE_LOG_SCHEMA_PLAN.md section 8 first: an added
      column is ALTER TABLE ADD COLUMN guarded by PRAGMA table_info, not a
-     rebuild. }
+     rebuild. *)
    LOG_SCHEMA_VERSION = 1;
 
-   { EXECUTED IN ORDER, ONE STATEMENT PER ELEMENT.
+   (* EXECUTED IN ORDER, ONE STATEMENT PER ELEMENT.
 
      An array rather than one script split on ';' -- splitting SQL on a
      semicolon is a parser pretending not to be one, and it breaks silently the
      first time a literal or a trigger body contains one.  There is no reason to
-     take that risk to save a few brackets. }
-   { ANSISTRING, NOT string.  sqldb's ExecuteDirect and TSQLQuery.SQL.Text are
+     take that risk to save a few brackets. *)
+   (* ANSISTRING, NOT string.  sqldb's ExecuteDirect and TSQLQuery.SQL.Text are
      AnsiString, and tr4w.inc makes a plain `string` UTF-16 -- so declaring
      these as `string` means a narrowing conversion on every statement, which
      the build's narrowing ceiling counts and which would be silently lossy if
      any of this were ever not ASCII.  SQL keywords and our own column names
-     are ASCII by construction, so AnsiString is both correct and free. }
-   LOG_SCHEMA_STATEMENTS: array[0..8] of AnsiString = (
+     are ASCII by construction, so AnsiString is both correct and free. *)
+   LOG_SCHEMA_STATEMENTS: array[0..9] of AnsiString = (
 
-      { ONE ROW.  This is the log's own identity and its entry declaration,
-        frozen when the log is created (tier 2). }
+      (* ONE ROW.  This is the log's own identity and its entry declaration,
+        frozen when the log is created (tier 2). *)
       'CREATE TABLE contest ('#10 +
       '    id                INTEGER PRIMARY KEY CHECK (id = 1),'#10 +
       '    guid              TEXT NOT NULL UNIQUE,'#10 +
@@ -227,6 +227,39 @@ const
       '    -- other software knows QSOs by this name -- and because two rows'#10 +
       '    -- sharing it is exactly the fact "these were one exchange".'#10 +
       '    exchange_id       TEXT,'#10 +
+      '    -- WHICH CONTACT THIS QSO CAME FROM. Rows sharing a qso_set_id were'#10 +
+      '    -- ONE contact logged as several QSOs: a county line (one station,'#10 +
+      '    -- two counties) or a POTA n-fer (one operating position inside'#10 +
+      '    -- several parks).'#10 +
+      '    --'#10 +
+      '    -- WHY THE ROWS STAY SEPARATE AND THE RELATIONSHIP IS EXPLICIT, which'#10 +
+      '    -- is NY4I''s reasoning and is not obvious:'#10 +
+      '    --'#10 +
+      '    --   THE LOG needs them separate. "Once in the log, they are deleted'#10 +
+      '    --   or X-QSO individually" -- independent lifecycles need'#10 +
+      '    --   independent identities, so each row keeps its own guid.'#10 +
+      '    --'#10 +
+      '    --   CABRILLO needs them separate. A sponsor gets three QSO lines,'#10 +
+      '    --   because three multipliers were worked.'#10 +
+      '    --'#10 +
+      '    --   ADIF NEEDS THEM AS ONE. LoTW and the like treat'#10 +
+      '    --   call + band + mode + date + time as the key that decides whether'#10 +
+      '    --   a contact is unique, so three ADIF records for one contact arrive'#10 +
+      '    --   as one contact and TWO DUPLICATES. ADIF already has the right'#10 +
+      '    --   shape: POTA_REF carries several parks in a single record.'#10 +
+      '    --'#10 +
+      '    -- So the exporter needs to ask "what else was this contact?", and'#10 +
+      '    -- that question needs an answer stored rather than inferred from'#10 +
+      '    -- matching callsigns and timestamps.'#10 +
+      '    --'#10 +
+      '    -- ALWAYS POPULATED. A QSO that stands alone is a set of one and'#10 +
+      '    -- carries its own guid here. That keeps NULL out of a column whose'#10 +
+      '    -- NULL would have to mean "not in a set", and it gives the ADIF'#10 +
+      '    -- exporter ONE code path -- group by qso_set_id -- with singles'#10 +
+      '    -- falling out as groups of one rather than as a special case.'#10 +
+      '    --'#10 +
+      '    -- FLAT, not a join table, for the reason the whole schema is flat.'#10 +
+      '    qso_set_id        TEXT NOT NULL,'#10 +
       '    -- THE MULTI-OP NETWORK IDENTITY, and it is a PAIR. ceQSOID1 is the'#10 +
       '    -- program start time and ceQSOID2 is GetTickCount; tr4wserver'#10 +
       '    -- matches a record on BOTH, and WAE links a QTC to its QSO through'#10 +
@@ -396,14 +429,18 @@ const
 
       'CREATE INDEX idx_qso_at       ON qso(qso_at)',
       'CREATE INDEX idx_qso_callsign ON qso(callsign)',
+
+      (* "What else was this contact?" -- the query qso_set_id exists to answer,
+        asked once per record by the ADIF exporter. *)
+      'CREATE INDEX idx_qso_set      ON qso(qso_set_id)',
       'CREATE INDEX idx_qso_dupe     ON qso(callsign, band, mode) WHERE deleted = 0',
 
-      { The outbound queues are a WHERE clause, not a data structure. }
+      (* The outbound queues are a WHERE clause, not a data structure. *)
       'CREATE INDEX idx_qso_unsent     ON qso(id) WHERE sent_to_server = 0 OR server_dirty = 1',
       'CREATE INDEX idx_qso_unsent_udp ON qso(id) WHERE sent_udp = 0 OR udp_dirty = 1',
 
-      { EVERYTHING THE CONTEST .cfg USED TO CARRY.  When this is populated the
-        .cfg is no longer necessary, which is the stated goal. }
+      (* EVERYTHING THE CONTEST .cfg USED TO CARRY.  When this is populated the
+        .cfg is no longer necessary, which is the stated goal. *)
       'CREATE TABLE config ('#10 +
       '    -- The command exactly as CFGCA spells it -- "QSO POINT METHOD",'#10 +
       '    -- "EXCHANGE RECEIVED". That spelling is the contract with the'#10 +
@@ -426,10 +463,10 @@ const
       '    set_at    INTEGER'#10 +
       ')',
 
-      { THE PROGRAM MESSAGES -- Alt-P.  A real table and not config rows,
+      (* THE PROGRAM MESSAGES -- Alt-P.  A real table and not config rows,
         because they are structured and the editor wants them by (mode, key):
         FunctionKeyMemoryArray is array[CW..Phone, F1..AltF12] (LogCW.pas:56),
-        two of them, CQMemory and EXMemory. }
+        two of them, CQMemory and EXMemory. *)
       'CREATE TABLE message ('#10 +
       '    -- CQMemory or EXMemory: which of the two arrays this is.'#10 +
       '    kind      TEXT NOT NULL,           -- ''CQ'' | ''EX'''#10 +

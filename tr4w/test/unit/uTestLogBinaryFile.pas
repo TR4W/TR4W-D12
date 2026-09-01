@@ -1,6 +1,6 @@
 unit uTestLogBinaryFile;
 
-{ READING A BINARY TR4W LOG.
+(* READING A BINARY TR4W LOG.
 
   These run against the REAL corpus fixtures -- 13 D7-written logs in
   test\corpus\<set>\log.trw, the same files the golden-master oracle exports.
@@ -11,7 +11,7 @@ unit uTestLogBinaryFile;
   wrong epoch moves every QSO in every log by a century while failing nothing --
   no exception, no corrupt file, just a log that says 1926 or 2126. It is pinned
   against a fixture whose date is also visible in that set's frozen Cabrillo
-  reference, so the two would have to be wrong together. }
+  reference, so the two would have to be wrong together. *)
 
 {$I ..\..\src\tr4w.inc}
 
@@ -44,7 +44,7 @@ implementation
 uses
    SysUtils, Classes, DateUtils, VC, uLogBinaryFile;
 
-{ The suite runs from test\unit (ParamStr(0)), and the corpus is its sibling. }
+(* The suite runs from test\unit (ParamStr(0)), and the corpus is its sibling. *)
 function TLogBinaryFileTests.CorpusLog(const aSet: string): string;
 begin
    Result := ExtractFilePath(ParamStr(0)) + '..\corpus\' + aSet + '\log.trw';
@@ -81,9 +81,9 @@ begin
          Inc(n);
          end;
 
-      { They differ only if the file was truncated mid-write, and none of the
+      (* They differ only if the file was truncated mid-write, and none of the
         fixtures is. Comparing them is what would CATCH a stride bug that the
-        divisibility check somehow let through. }
+        divisibility check somehow let through. *)
       CheckEquals(integer(r.ExpectedRecords), n,
                   'every record the file size implies was actually read');
       CheckEquals(integer(r.ExpectedRecords), integer(r.RecordsRead),
@@ -102,11 +102,11 @@ var
 begin
    BeginTest('TestFirstQSOMatchesTheFrozenReference');
 
-   { general_qso's frozen Cabrillo says:
+   (* general_qso's frozen Cabrillo says:
        QSO: 14248 PH 2026-02-11 0006 W1AW/4  59  TOM  KD6RYO  59  AR
      so the first good-looking record must be KD6RYO on 2026-02-11 at 00:06.
      Reading it out of the BINARY and matching the reference is what proves the
-     reader and the epoch together. }
+     reader and the epoch together. *)
    r := TLogBinaryReader.Create(CorpusLog('general_qso_2026_w1aw4'));
    try
       CheckTrue(r.Status = lbOK, 'opened: ' + r.Message);
@@ -142,8 +142,8 @@ var
 begin
    BeginTest('TestQSOTimeEpochIsYearMinus2000');
 
-   { Stated as an assertion rather than left implicit in the fixture test, so a
-     failure says WHICH of the two is wrong. }
+   (* Stated as an assertion rather than left implicit in the fixture test, so a
+     failure says WHICH of the two is wrong. *)
    t.qtYear   := 26;
    t.qtMonth  := 2;
    t.qtDay    := 11;
@@ -176,9 +176,9 @@ begin
    unix := QSOTimeToUnixUTC(t);
    back := UnixUTCToQSOTime(unix);
 
-   { The export path needs the inverse, and a round trip that loses the seconds
+   (* The export path needs the inverse, and a round trip that loses the seconds
      is exactly the defect that made every spot of one clock minute share a
-     timestamp in the band map. }
+     timestamp in the band map. *)
    CheckEquals(t.qtYear, back.qtYear, 'year survives');
    CheckEquals(t.qtMonth, back.qtMonth, 'month survives');
    CheckEquals(t.qtDay, back.qtDay, 'day survives');
@@ -194,8 +194,8 @@ begin
    BeginTest('TestQSOTimeZeroDateIsZero');
    FillChar(t, SizeOf(t), 0);
 
-   { tree.pas writes qtYear := 0 for "no time". Decoding that as 1 January 2000
-     would put a real-looking QSO in the year the format was invented. }
+   (* tree.pas writes qtYear := 0 for "no time". Decoding that as 1 January 2000
+     would put a real-looking QSO in the year the format was invented. *)
    CheckEquals(0, integer(QSOTimeToUnixUTC(t)),
                'a zero date is zero, not the year 2000');
 end;
@@ -208,8 +208,8 @@ begin
 
    raised := False;
    try
-      { 1999 -- before the epoch. Silently truncating to a byte would reproduce
-        the century bug this unit exists to prevent. }
+      (* 1999 -- before the epoch. Silently truncating to a byte would reproduce
+        the century bug this unit exists to prevent. *)
       UnixUTCToQSOTime(DateTimeToUnix(EncodeDate(1999, 6, 1)));
    except
       on E: ERangeError do
@@ -227,8 +227,8 @@ var
 begin
    BeginTest('TestMissingFileReportsRatherThanRaises');
 
-   { logdump could Halt(2). A unit cannot: the importer has to tell an operator
-     which of his logs would not read and carry on with the rest. }
+   (* logdump could Halt(2). A unit cannot: the importer has to tell an operator
+     which of his logs would not read and carry on with the rest. *)
    r := TLogBinaryReader.Create(CorpusLog('no_such_contest_set'));
    try
       CheckTrue(r.Status = lbCannotOpen, 'a missing log is reported');
@@ -248,9 +248,9 @@ var
 begin
    BeginTest('TestStrideMismatchIsRefused');
 
-   { Take a real log and add one byte. That is what a log written by a TR4W with
+   (* Take a real log and add one byte. That is what a log written by a TR4W with
      a different SizeOfContestExchange looks like from here, and reading it at
-     our stride would produce misaligned records that look like data. }
+     our stride would produce misaligned records that look like data. *)
    fn := IncludeTrailingPathDelimiter(GetTempDir) + 'tr4w_stride_test.trw';
    if FileExists(fn) then
       begin
@@ -285,8 +285,8 @@ end;
 
 procedure TLogBinaryFileTests.TestEverySetInTheCorpusReads;
 const
-   { All thirteen. Named rather than enumerated from the directory, so a set
-     that disappears fails here instead of quietly shrinking the coverage. }
+   (* All thirteen. Named rather than enumerated from the directory, so a set
+     that disappears fails here instead of quietly shrinking the coverage. *)
    SETS: array[0..12] of string = (
       'arktika_2026_ny4i', 'arrl_digi_2026_ny4i', 'arrl_dx_cw_2025_ny4i',
       'arrl_fd_2026_ny4i', 'arrl_ss_ssb_2024_w4ta', 'cqwpx_cw_2026_ny4i',
@@ -321,9 +321,9 @@ begin
 
          CheckEquals(integer(r.ExpectedRecords), n, SETS[i] + ' reads every record');
 
-         { Every set in the corpus exports QSOs, so a set with none would mean
+         (* Every set in the corpus exports QSOs, so a set with none would mean
            GoodLookingQSO had drifted from what ExportToADIF emits -- which is
-           the failure that would make the corpus compare two populations. }
+           the failure that would make the corpus compare two populations. *)
          CheckTrue(good > 0, SETS[i] + ' contains at least one exportable QSO');
       finally
          r.Free;
