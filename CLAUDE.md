@@ -853,6 +853,7 @@ Read the specific doc before acting in its area — these are current and this f
 | **Sending a language to a translator / taking it back** | **`docs/TRANSLATION_HANDOFF.md`** |
 | **What the translator receives** | `docs/TRANSLATOR_GUIDE.md` |
 | **Panadapter / spectrum seam** | **`docs/PANADAPTER_LCL_DESIGN.md`** |
+| **Timing: the wall clock AND high-precision intervals (CW keying)** | **`docs/PLATFORM_CLOCK_ABSTRACTION.md`** -- part 2 measures what `winmm` is actually used for (13 sites, not 189), assesses EpikTimer, and holds the per-platform HPTimer reference including Apple Silicon |
 | **Colour roles / theming (read before restyling ANY window)** | **`docs/COLOR_ROLES_DESIGN.md`** -- the palette names COLOURS, not roles, which is what blocks theming; and the radio panel's cyan IS its active-radio indicator, so removing it deletes a state signal |
 | **Restyling the converted grids (PARKED until conversions finish)** | **`docs/GRID_RESTYLE_PLAN.md`** |
 | **Display state as a model (DONE 2026-08-30; `src/domain/` + `uStateBridge`)** | **`docs/DISPLAY_STATE_MODEL_PLAN.md`** |
@@ -1109,7 +1110,7 @@ declarations bound to a library:
 
 | bound to | count | what it means for cross-platform |
 |---|---:|---|
-| `winmm` (via `mmsyst`) | 189 | Win32 API. Replacing the FUNCTION, not the binding -- sound and timers |
+| `winmm` (via `mmsyst`) | 189 | **misleading -- `MMSystem.pas` DECLARES the whole API; TR4W calls 5 things at 13 sites.** CW element timing, DVP playback, and audio capture. Measured and written up in [`docs/PLATFORM_CLOCK_ABSTRACTION.md`](docs/PLATFORM_CLOCK_ABSTRACTION.md) part 2 |
 | `libhamlib-4.dll` (`HAMLIB_DLL`) | 36 | **Only the NAME is Windows.** HamLib ships `.so` and `.dylib`; this is one constant, not a port |
 | `user32` | 15 | Win32 API |
 | `comdlg32` | 10 | Win32 API -- and the LCL has dialogs for all of it |

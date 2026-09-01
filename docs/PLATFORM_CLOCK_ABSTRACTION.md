@@ -122,6 +122,173 @@ currently let through). No behaviour change on a correctly-configured Windows
 station -- which is also why it needs the pin test, since nothing else would notice
 if the wire layout moved.
 
+---
+
+# PART 2 -- THE OTHER CLOCK: interval timing, and why CW makes it hard
+
+**Added 2026-09-01.** Everything above is about the WALL CLOCK -- what time is it,
+and a wire format that carries it. This part is about INTERVALS -- how long is a
+dit -- and they are different problems with different answers. They live in one
+document because they will be touched by the same person on the same day.
+
+## What TR4W actually uses, measured
+
+`winmm` shows up in the DLL audit as 189 declarations, which is misleading:
+`MMSystem.pas` is a 4,669-line unit declaring the whole Windows multimedia API.
+**TR4W calls five things, at 13 sites.**
+
+| what | where | why |
+|---|---|---|
+| `timeSetEvent` + `timeBeginPeriod(1)` / `timeEndPeriod(1)` | `LOGK1EA.tCWSleep`, `:1963`, `:2019` | **CW element timing.** The hard one |
+| `timeSetEvent` | `LOGDVP:658` | DVP voice playback, waiting on `tDVP_Event` |
+| `sndPlaySound(nil, SND_ASYNC)` | `MainUnit:1077` | passing NIL is the documented way to STOP whatever is playing -- used when aborting DVP |
+| `timeKillEvent` | `MainUnit:1079` | cancels the DVP timer |
+| `waveIn*` (6 calls) | `uMP3Recorder` | audio capture: open, start, add buffer, reset, close |
+
+So the port is not 189 anything. It is **two subsystems that need real work**
+(precision timing, audio capture) and **two calls that do not**.
+
+## Why CW keying is the hard case
+
+`LOGK1EA.tCWSleep`:
+
+```pascal
+t := timeSetEvent(millsec, 1, TFNTimeCallBack(myEvent), 0,
+                  TIME_ONESHOT + TIME_CALLBACK_EVENT_SET);
+if t <> 0 then
+   WaitForSingleObject(myEvent, INFINITE)
+else
+   Sleep(millsec);
+```
+
+**Windows' default timer granularity is about 15.6 ms.** A dit at 30 WPM is 40 ms;
+at 40 WPM it is 30 ms. Quantising CW elements to 15.6 ms steps is audibly wrong
+keying, which is why `timeBeginPeriod(1)` raises the system timer to 1 ms and
+`timeSetEvent` provides the one-shot.
+
+**Note the `else` branch.** A fallback to plain `Sleep` already exists, so the
+SHAPE of a portable abstraction is present -- only the Windows arm is filled in.
+
+## EpikTimer: right project, wrong half
+
+NY4I found `c:\projects\epiktimer` and asked whether it is the answer. **It is a
+STOPWATCH, not a DELAY**, and the distinction is the whole point here.
+
+`epiktimer.pas:425`:
+
+```pascal
+function TEpikTimer.SystemSleep(Milliseconds: Integer): integer;
+begin
+  Sleep(Milliseconds);
+  Result := 0;
+end;
+```
+
+The declaration above it promises *"overhead compensated system sleep to provide a
+best possible precision delay"*; the body is a bare `Sleep`. **Adopting it for
+`tCWSleep` would give the keyer the FALLBACK path our code currently takes only
+when `timeSetEvent` fails.** The author says so himself in two comments --
+*"nanosleep... poor absolute accuracy due to large amounts of jitter"*.
+
+**What it is genuinely good at, and what we do not have:** a high-resolution
+cross-platform CLOCK -- TSC-based, with overhead extraction and timebase
+correlation against the system clock. That matters twice over. We have no portable
+way to answer *"was that dit actually 40 ms?"* -- today the only check on keying
+accuracy is an operator's ear -- and a precise DELAY is built from a precise
+CLOCK: sleep coarsely, then spin the last stretch against a high-resolution tick
+source.
+
+**Its limits, from its own source:** `{$IFDEF}`s for Windows, Linux and FreeBSD --
+**no Darwin** -- and the hardware timebase is `CPUI386`, i.e. the Pentium TSC,
+which does not exist on ARM. It is also an LCL `TComponent` with a palette icon,
+which is the wrong shape for this and is probably part of why it never reached the
+RTL, along with the TSC's need for calibration and correlation.
+
+## THE APPLE SILICON GAP, AND IT IS REAL -- verified in FPC's own source
+
+`rtl/unix/sysutils.pp:54`:
+
+```pascal
+{$IF defined(LINUX) or defined(FreeBSD)}
+{$DEFINE HAVECLOCKGETTIME}
+{$ENDIF}
+```
+
+**FPC 3.2.2 does not define `HAVECLOCKGETTIME` for Darwin**, and `clock_gettime`
+is declared only in `linux.pp:471` and `freebsd.pas:233`. There is no Darwin
+declaration anywhere in the RTL, and `rtl/darwin/aarch64/` contains only signal
+handling. So on macOS -- Apple Silicon or Intel -- **FPC gives us no monotonic
+high-resolution clock at all**; `Now` and `GetTickCount64` fall back to
+`gettimeofday`, which is wall time and can step.
+
+That is what justifies writing our own, and it is worth stating plainly because
+the standing rule is to prefer an FPC/LCL class: **there is no FPC class to
+prefer here.**
+
+## The per-platform reference for an HPTimer
+
+**Verify each of these on the platform before trusting it.** They are written down
+so the work starts from a specific claim that can be checked, not a search.
+
+| platform | monotonic tick source | precise sleep |
+|---|---|---|
+| **Windows** | `QueryPerformanceCounter` / `QueryPerformanceFrequency` | what we have: `timeBeginPeriod(1)` + `timeSetEvent` one-shot + wait |
+| **Linux** | `clock_gettime(CLOCK_MONOTONIC_RAW)` -- FPC declares it | `clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME)` -- absolute deadline, no drift accumulation |
+| **macOS / Apple Silicon** | `mach_absolute_time()` + `mach_timebase_info()`; **or** `clock_gettime(CLOCK_MONOTONIC_RAW)`, which macOS 10.12+ has in libSystem and FPC merely fails to declare | `mach_wait_until(deadline)` -- macOS has **no `clock_nanosleep`** |
+
+**Apple Silicon specifics to check on hardware rather than believe from here:**
+
+- There is **no RDTSC**. The ARM equivalent is `CNTVCT_EL0` with `CNTFRQ_EL0`
+  for the frequency, and `mach_absolute_time` is the supported way to read it
+  rather than the register directly.
+- `mach_timebase_info` returns numer/denom to convert ticks to nanoseconds. On
+  Intel Macs it is 1/1; on Apple Silicon it is **reported** as 125/3 (a 24 MHz
+  counter). **Do not hardcode either** -- that is the whole reason the call
+  exists.
+- **P-cores and E-cores matter.** A thread that drifts onto an efficiency core
+  keys differently. Audio applications set thread QoS, or a real-time
+  scheduling policy via `thread_policy_set` with
+  `THREAD_TIME_CONSTRAINT_POLICY`. Whether CW keying needs that is a bench
+  question, and it is the sort of thing that shows up as intermittent bad
+  keying rather than as a failure.
+
+**Declaring `mach_absolute_time` and `mach_wait_until` ourselves is a direct
+libSystem binding**, which CLAUDE.md's rule says must be justified. The
+justification is the section above: FPC declares neither, and there is no class
+to prefer. Write that reason beside the declarations.
+
+## The shape
+
+One unit, `tr4w/src/utils/uHPTimer.pas`, with two independent halves, because the
+measurement half is useful immediately and the sleep half is not:
+
+```pascal
+{ MEASUREMENT -- usable now, and the only way to bench keying accuracy at all }
+function HPTicks: Int64;              { monotonic, platform's best source }
+function HPTicksPerSecond: Int64;
+function HPElapsedMicroseconds(const aFrom: Int64): Int64;
+
+{ DELAY -- what tCWSleep becomes }
+procedure HPSleepMicroseconds(aMicroseconds: Int64);
+```
+
+**Do the measurement half first.** It is the smaller of the two, it has no
+real-time requirement, and it produces the instrument that says whether the sleep
+half is working -- which no bench test can currently answer on any platform.
+
+**Keep `timeSetEvent` on Windows.** It is bench-proven keying and there is no
+reason to risk it; the abstraction's value on Windows is that `LOGK1EA` stops
+naming a Win32 API, not that the mechanism changes.
+
+## What this does NOT cover
+
+Audio capture (`uMP3Recorder`'s `waveIn*`) and `sndPlaySound`. Those are a
+different subsystem with a different answer -- a cross-platform audio library, or
+a Lazarus package -- and folding them in here would make one document about two
+unrelated ports.
+
+---
+
 ## What this is NOT
 
 Not a general sweep of `Windows.` call sites. There are several hundred qualified
