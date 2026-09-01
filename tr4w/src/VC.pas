@@ -783,7 +783,6 @@ var
   DXCCMultByBand                        : TAdditionalMultByBand;
 //  DomesticMultIsRussianOblast           : boolean;
 
-  CreateCabrilloWindow                  : HWND;
   AlertColor                            : tr4wColors = trAlert;
   wh                                    : array[TMainWindowElement] of HWND;
 

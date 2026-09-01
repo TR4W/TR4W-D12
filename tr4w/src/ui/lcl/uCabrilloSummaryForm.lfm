@@ -1,0 +1,61 @@
+object frmCabrilloSummary: TfrmCabrilloSummary
+  Left = 0
+  Height = 660
+  Top = 0
+  Width = 460
+  Caption = 'Station information (assigned at run time)'
+  ClientHeight = 660
+  ClientWidth = 460
+  KeyPreview = True
+  LCLVersion = '4.8.0.0'
+  Position = poMainFormCenter
+  OnClose = HandleClose
+  OnKeyDown = HandleKeyDown
+  OnShow = HandleShow
+  object sbTags: TScrollBox
+    Left = 0
+    Height = 616
+    Top = 0
+    Width = 460
+    HorzScrollBar.Page = 1
+    VertScrollBar.Page = 596
+    Align = alClient
+    BorderStyle = bsNone
+    Constraints.MinHeight = 220
+    Constraints.MinWidth = 400
+    TabOrder = 0
+  end
+  object pnlButtons: TPanel
+    Left = 0
+    Height = 44
+    Top = 616
+    Width = 460
+    Align = alBottom
+    BevelOuter = bvNone
+    ClientHeight = 44
+    ClientWidth = 460
+    TabOrder = 1
+    object btnOK: TButton
+      Left = 250
+      Height = 28
+      Top = 8
+      Width = 95
+      Anchors = [akTop, akRight]
+      Caption = 'OK'
+      Default = True
+      TabOrder = 0
+      OnClick = OKClick
+    end
+    object btnCancel: TButton
+      Left = 353
+      Height = 28
+      Top = 8
+      Width = 95
+      Anchors = [akTop, akRight]
+      Cancel = True
+      Caption = 'Cancel'
+      TabOrder = 1
+      OnClick = CancelClick
+    end
+  end
+end

@@ -201,7 +201,7 @@ procedure CheckNumber;
 procedure RunPlugin(PluginNumber: integer);
 procedure LoadInPlugins();
 procedure OpenListOfMessages;
-procedure OpenStationInformationWindow(dwInitParam: lParam);
+procedure OpenStationInformationWindow(const aOnAccept: TCabrilloSummaryAction);
 procedure RenameCommands();
 procedure RichEditOperation(Load: boolean);
 function GetAddMultBand(Mult: TAdditionalMultByBand; Band: BandType): BandType;
@@ -5176,11 +5176,15 @@ begin
     menu_recording_control: RunWindowsUtility('SNDVOL32.EXE -r');
     // menu_soundrecorder: WinExec('SNDREC32.EXE', SW_SHOWNORMAL);
 
-    menu_cabrillo: OpenStationInformationWindow(integer(@CreateCabrilloFile));
-    menu_summary: OpenStationInformationWindow(integer(@SummarySheet));
+    // TYPED, not `integer(@Proc)` through an lParam.  The window took an
+    // untyped Pointer and called it back, so nothing checked that what OK ran
+    // was a parameterless procedure -- the compiler could not have noticed a
+    // mismatch here.
+    menu_cabrillo: OpenStationInformationWindow(CreateCabrilloFile);
+    menu_summary: OpenStationInformationWindow(SummarySheet);
     menu_3830scores: ExportTo3830Scores;  // Issue: 3830 quick-submission report
-    menu_edit_cabrillo_summary: OpenStationInformationWindow(0);  // Issue #914
-    menu_export_edi: OpenStationInformationWindow(integer(@ExportToEDI));
+    menu_edit_cabrillo_summary: OpenStationInformationWindow(nil);  // Issue #914
+    menu_export_edi: OpenStationInformationWindow(ExportToEDI);
 
     menu_scorebyhour: ScoreByHour;
     menu_continentlist: ContinentReport;
@@ -7388,10 +7392,9 @@ begin
   //DialogBox(hInstance, MAKEINTRESOURCE(69), 0, @FullLogDlgProc);
   //tDialogBox(69, @FullLogDlgProc);
   ShowFullLog;
-  if CreateCabrilloWindow <> 0 then
-     begin
-     Windows.SetFocus(CreateCabrilloWindow);
-     end;
+  { The preview opens ON TOP of the station-information window, which is still
+    modal underneath it.  Was SetFocus on a global HWND. }
+  FocusCabrilloSummaryWindow;
 end;
 
 procedure tCallWindowSetFocus;
@@ -10593,9 +10596,9 @@ begin
 
 end;
 
-procedure OpenStationInformationWindow(dwInitParam: lParam);
+procedure OpenStationInformationWindow(const aOnAccept: TCabrilloSummaryAction);
 begin
-  ShowCreateCabrillo(dwInitParam);
+  ShowCreateCabrillo(aOnAccept);
 end;
 
 procedure OpenListOfMessages;

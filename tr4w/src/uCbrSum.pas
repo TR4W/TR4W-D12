@@ -14,31 +14,46 @@
  GNU General Public License for more details.
 
  You should have received a copy of the GNU General
-     Public License along with TR4W in  GPL_License.TXT. 
-If not, ref: 
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uCbrSum;
 {$I tr4w.inc}
 {$IMPORTEDDATA OFF}
+
+(*
+  THE CABRILLO HEADER'S TAG TABLE, and the seam to the window that edits it.
+
+  The Win32 dialog that used to live here -- CreateCabrilloDlgProc, a
+  CreateModalDialog template and forty-two controls built in WM_INITDIALOG --
+  is GONE, replaced by ui\lcl\uCabrilloSummaryForm.  What stays is what the
+  dialog was a view of: the twenty-one header tags, whether each is a list or
+  free text, whether it persists, and the category values each list offers.
+
+  READING THE WINDOW FROM ELSEWHERE.  PostUnit needs the operator's answers
+  while an export runs, and it used to get them with GetDlgItemTextA against a
+  global HWND and a control id it computed itself as Ord(tag) + 200.  That is
+  the trap CLAUDE.md records for uServerLogForm -- a control written from a unit
+  with no other relationship to the window -- and it also meant the interactive
+  path and headless /EXPORT read the header through two different pieces of
+  code, which had already drifted once.  CabrilloTagText answers both: the live
+  window when it is open, the header store when it is not.
+*)
+
 interface
 
 uses
-  TF,
-  VC,
-  Tree,
-  uCallSignRoutines,
-  (* uErmak, *)   { ERMAK commented out -- see the banner in uErmak.pas }
-  LogRadio,
-  PostUnit,
-  LogWind,
-  Windows,
-  Messages,
-  uTR4WStrings;
-
-function CreateCabrilloDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
+  VC,          { tCategoryAssistedSA and the other category enums }
+  PostUnit;    { StationCategory, TimeCategory, OverlayCategory, ... }
 
 type
+  { WHAT OK DOES.  Parameterless because each of the three exports takes its
+    inputs from this window and the log, never from an argument -- the callers
+    used to pass integer(@CreateCabrilloFile) in an lParam and the dialog called
+    it back through an untyped Pointer. }
+  TCabrilloSummaryAction = procedure;
+
   CabrilloTags =
     (
     ctCategoryAssisted,
@@ -125,236 +140,96 @@ const
 {*)}
     );
 
-var
-
-  CabrilloSummaryProc                   : Pointer;
-  FormatSpecification                   : PAnsiChar;
-const
-  siCreate                              = 1;
-  siCancel                              = 2;
-  CabrSumLabels111                      : array[147..168] of PAnsiChar = (
-    'CATEGORY-ASSISTED',
-    'CATEGORY-BAND',
-    'CATEGORY-MODE',
-    'CATEGORY-OPERATOR',
-    'CATEGORY-POWER',
-    'CATEGORY-STATION',
-    'CATEGORY-TIME',
-    'CATEGORY-TRANSMITTER',
-    'CATEGORY-OVERLAY',
-    'CERTIFICATE',
-    'OPERATORS',
-    'CLUB',
-    'LOCATION',
-    'NAME',
-    'ADDRESS-CITY',
-    'ADDRESS-STATE-PROVINCE',
-    'ADDRESS-POSTALCODE',
-    'ADDRESS-COUNTRY',
-    'EMAIL',
-    'SOAPBOX',
-    'RIG',
-    'ANTENNAS'
-    );
-
-  VALUE_OPERATORS                       = 156;
-  VALUE_RIG                             = 166 - 30;
-
-
-// the Cabrillo summary dialog.  The init param selects the export mode, so it
-// is a parameter here rather than a constant.
+// Open the station-information window.  aOnAccept is what OK runs -- the
+// Cabrillo writer, the summary sheet or the EDI export -- or nil when the
+// window is opened on its own to edit the header (Issue #914).
 //
-// THE SEAM for the Win32-to-LCL migration (Phase 1, 2026-08-17): the caller
-// no longer knows this is a Win32 modal dialog, only that the window opens.
-// When the dialog becomes an LCL form, this body changes and nothing else does.
-procedure ShowCreateCabrillo(const aInitParam: lParam);
+// THE SEAM.  The caller does not know what this is, only that the window opens.
+// When the Win32 dialog became an LCL form this body changed and no call site
+// did.
+procedure ShowCreateCabrillo(const aOnAccept: TCabrilloSummaryAction);
+
+// One header tag's current value: from the window when it is open, from
+// settings\tr4w.json when it is not.
+//
+// THE FALLBACK IS THE WHOLE POINT.  Headless /EXPORT never opens the window,
+// and reading a control id off a zero HWND returned empty -- which aborted
+// every Winter Field Day and ARRL10 batch export on the LOCATION guard, in
+// silence.  PostUnit grew a private version of this fork to fix that; it is
+// here now so there is one.
+function CabrilloTagText(const aTag: CabrilloTags): string;
+
+// A list tag's selected index, or -1.  Only meaningful while the window is
+// open: the store holds text, not positions.
+function CabrilloTagItemIndex(const aTag: CabrilloTags): integer;
+
+function CabrilloSummaryIsOpen: boolean;
+
+// Bring the window forward, if it is up.
+procedure FocusCabrilloSummaryWindow;
 
 implementation
-uses
-  MainUnit,
-  uAnsiStr,          // StrPCopy / StrLen for the ANSI buffers below
-  uCabrilloHeader;   // the Cabrillo header, from settings\tr4w.json
 
-// HeaderTagText / SetHeaderTagText come from uCabrilloHeader.
-//
+uses
+  uCabrilloHeader,          { the header store, settings\tr4w.json }
+  uCabrilloSummaryForm;
+
 // Both header sections live in settings\tr4w.json: [REPORT] moved 2026-08-16
 // because it was the last thing keeping tr4w.ini load-bearing -- delete the ini
 // and every Winter Field Day / ARRL10 export aborted in silence -- and
 // [ERMAKREPORT] followed on 2026-08-17 (NY4I: "Nothing should use the INI file
 // again").
 //
-// The section is no longer a FORK, only an argument: this dialog already holds
-// the right one in FormatSpecification, and uCabrilloHeader treats the two
-// alike.
+// The section is not a fork in the storage any more, only an argument:
+// uCabrilloHeader treats the two alike.
 
-function CreateCabrilloDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-label
-  ExitAndClose;
+procedure ShowCreateCabrillo(const aOnAccept: TCabrilloSummaryAction);
+begin
+   ShowCabrilloSummary(aOnAccept);
+end;
+
+function CabrilloSummaryIsOpen: boolean;
+begin
+   Result := CabrilloSummaryOpen;
+end;
+
+procedure FocusCabrilloSummaryWindow;
+begin
+   FocusCabrilloSummary;
+end;
+
+function CabrilloTagText(const aTag: CabrilloTags): string;
 var
-  TempByte                              : Byte;
-  i                                     : Cardinal;
-  TempCardinal                          : Cardinal;
-  TempPointer                           : Pointer;
-  Top                                   : integer;
-//  ComboBoxStyle                         : integer;
-  
-  TempTag                               : CabrilloTags;
-  TempHWND                              : HWND;
-  SummaryCallback                       : procedure;   // Issue #997: typed call of the Pointer callback
-const
-  Left                                  = 10;
-  TagHeight                             = 20;
-  InitialTagsValuesArray                : array[ctCategoryAssisted..ctCategoryPower] of PByte = (@CategoryAssisted,@CategoryBand,@CategoryMode, @CategoryOperator, @CategoryPower);
+   section: string;
 begin
-  Result := False;
-  case Msg of
-    WM_INITDIALOG:
+   if CabrilloSummaryOpen then
       begin
-        CreateCabrilloWindow := hwnddlg;
-        FormatSpecification := CABRILLOSECTION;
-
-        Windows.SetWindowTextW(hwnddlg, PWideChar(UnicodeString(RC_STATIONINFO)));
-        CreateOKCancelButtons(hwnddlg);
-
-        if ErmakSpecification then
-           begin
-           //          tCreateStaticWindow(KIR_, defStyle, 10, 5, 355, 20, hwnddlg, 0);
-                     FormatSpecification := ERMAKSECTION;
-           end;
-
-        for TempTag := Low(CabrilloTags) to High(CabrilloTags) do
-           begin
-           Top := 30 + integer(TempTag) * (TagHeight + 2);
-           tCreateStaticWindow(string(PAnsiChar(@CabrilloTagSArray[TempTag].ctrTag[1])), LeftStyle, 10, Top, 160, TagHeight, hwnddlg, integer(TempTag) + 100);
-           if ErmakSpecification and (TempTag = ctOperators) then
-              begin
-              tCreateButtonWindow(WS_EX_STATICEDGE, '������� ...', WS_TABSTOP or WS_CHILD or WS_VISIBLE, 173, Top, 190, TagHeight, hwnddlg, 3);
-              Continue;
-              end;
-
-           if CabrilloTagSArray[TempTag].ctrList then
-              begin
-              TempHWND := tCreateComboBoxWindow(CBS_DROPDOWNLIST or WS_CHILD or WS_VISIBLE or WS_VSCROLL or WS_TABSTOP, 173, Top, 190, hwnddlg, integer(TempTag) + 200);
-
-              for TempByte := 0 to CategoriesArray[TempTag].cvrCount do
-                 begin
-                 TempPointer := CategoriesArray[TempTag].cvrStart + TempByte * 4;
-                 SendMessageA(TempHWND, CB_ADDSTRING, 0, integer(TempPointer^));
-                 end;
-
-              if TempTag in [ctCategoryAssisted..ctCategoryPower] then
-                 begin
-                 SendMessage(TempHWND, CB_SETCURSEL, integer(InitialTagsValuesArray[TempTag]^), 0)
-                 end
-              else if CabrilloTagSArray[TempTag].ctrSave then
-                 begin
-                 // Issue #976: restore the saved value into ctrSave drop-downs
-                 // that are outside the index-based range above (e.g.
-                 // CATEGORY-STATION).  GetDlgItemText on exit saves it back.
-                 // Both header sections come from settings\tr4w.json --
-                 // [REPORT] 2026-08-16, [ERMAKREPORT] 2026-08-17.
-                 if HeaderTagText(FormatSpecification,
-                     CabrilloTagSArray[TempTag].ctrTag, TempBuffer1,
-                     SizeOf(TempBuffer1)) > 0 then
-                    begin
-                    SendMessageA(TempHWND, CB_SELECTSTRING, -1, integer(@TempBuffer1));
-                    end;
-                 end;
-              end
-           else
-              begin
-              TempHWND := tCreateEditWindow(WS_EX_STATICEDGE, '', WS_TABSTOP or WS_CHILD or SS_LEFT or WS_VISIBLE or ES_AUTOHSCROLL, 173, Top, 190, 20, hwnddlg, integer(TempTag) + 200);
-              ;
-
-              if CabrilloTagSArray[TempTag].ctrSave then
-                 begin
-                 TempCardinal := HeaderTagText(FormatSpecification,
-                   CabrilloTagSArray[TempTag].ctrTag,
-                   TempBuffer1,
-                   SizeOf(TempBuffer1));
-
-                 if TempCardinal <> 0 then
-                    begin
-                    Windows.SetWindowTextA(TempHWND, TempBuffer1);
-                    end;
-                 end;
-              end;
-           end;
-
-        if ErmakSpecification then
-           begin
-           tCB_ADDSTRING_PCHAR(hwnddlg, integer(ctCategoryMode) + 200, 'DIGI');
-           tCB_ADDSTRING_PCHAR(hwnddlg, integer(ctCategoryOperator) + 200, 'MULTI-OP-2');
-           tCB_ADDSTRING_PCHAR(hwnddlg, integer(ctCategoryBand) + 200, '10M-15M-20M');
-           tCB_ADDSTRING_PCHAR(hwnddlg, integer(ctCategoryBand) + 200, '80M-40M-160M');
-
-           SendDlgItemMessage(hwnddlg, integer(ctCategoryOverlay) + 200, CB_RESETCONTENT, 0, 0);
-           for i := 0 to NumberErmakOverlayCategories - 1 do
-              begin
-              tCB_ADDSTRING_PCHAR(hwnddlg, integer(ctCategoryOverlay) + 200, ErmakOverlayCategory[i]);
-              end;
-           end;
-
-        CabrilloSummaryProc := Pointer(lParam);
-
+      Result := CabrilloSummary.TagText(aTag);
+      Exit;
       end;
 
-    WM_CLOSE:
+   if ErmakSpecification then
       begin
-        ExitAndClose:
-        for TempTag := Low(CabrilloTags) to High(CabrilloTags) do
-          if CabrilloTagSArray[TempTag].ctrSave then
-             begin
-             if Windows.GetDlgItemTextA(hwnddlg, integer(TempTag) + 200, TempBuffer1, SizeOf(TempBuffer1)) > 0 then
-                begin
-                SetHeaderTagText(FormatSpecification, CabrilloTagSArray[TempTag].ctrTag, TempBuffer1);
-                end;
-
-             end;
-
-        CreateCabrilloWindow := 0;
-        EndDialog(hwnddlg, 0);
+      section := string(ERMAKSECTION);
+      end
+   else
+      begin
+      section := string(CABRILLOSECTION);
       end;
 
-    //    WM_HELP: tWinHelp(43);
-    WM_COMMAND:
-      begin
-        case wParam of
-            1:
-              // Issue #914: when opened standalone (Tools -> Edit Cabrillo
-              // Summary), no callback is provided (lParam was 0).  Treat OK
-              // the same as Cancel - the WM_CLOSE/ExitAndClose path saves
-              // all ctrSave fields to tr4w.ini [REPORT] before closing.
-              if CabrilloSummaryProc = nil then
-                 begin
-                 goto ExitAndClose
-                 end
-              else
-                 begin
-                 // Issue #976: after the export callback finishes (it
-                 // generates the Cabrillo file, opens it for review, and
-                 // prompts for the SuperCheckPartial upload), close the dialog
-                 // -- otherwise the user is dropped back at OK/Cancel and has
-                 // to hit Cancel to finish a successful export.
-                 // Issue #997: asm `call CabrilloSummaryProc` (untyped Pointer
-                 // callback, parameterless) -> typed parameterless call.
-                 @SummaryCallback := CabrilloSummaryProc;
-                 SummaryCallback;
-                 goto ExitAndClose;
-                 end;
-          2: goto ExitAndClose;
-          3:
-          //DialogBox(hInstance, MAKEINTRESOURCE(50), hwnddlg, @ErmakDlgProc);
-            (* ShowErmakReport(hwnddlg); *)   { ERMAK commented out }
-        end;
-      end;
-  end;
+   Result := HeaderValue(section, string(CabrilloTagsArray[aTag].ctrTag));
 end;
 
-
-procedure ShowCreateCabrillo(const aInitParam: lParam);
+function CabrilloTagItemIndex(const aTag: CabrilloTags): integer;
 begin
-   CreateModalDialog(187, 260, tr4whandle, @CreateCabrilloDlgProc, aInitParam);
+   if CabrilloSummaryOpen then
+      begin
+      Result := CabrilloSummary.TagItemIndex(aTag);
+      end
+   else
+      begin
+      Result := -1;
+      end;
 end;
+
 end.
-

@@ -153,7 +153,11 @@ var
 function tCreateThread(lpStartAddress: TFNThreadStartRoutine; var lpThreadId: DWORD; Quiet: boolean = False; aParameter: Pointer = nil): THandle;
 
 //function tgethostbyname(h_Name: PAnsiChar): PAnsiChar;
-function tDialogBox(WindowID: Byte; WinProcAdr: Pointer): integer;
+(* tDialogBox IS DELETED (2026-08-31).  Its last live caller went with the
+   Cabrillo summary dialog; the one that LOOKS like a caller, in MainUnit's
+   SelectFileOfFolder, has been inside a brace comment for years.  It also held
+   the only remaining reference to the CreateCabrilloWindow global, which is
+   why both go in the same commit. *)
 function tWM_SETFONT(h: HWND; Font: HFONT): HWND;
 procedure tLB_SETCOLUMNWIDTH(h: HWND; Width: integer);
 function tLB_GETCURSEL(h: HWND): integer;
@@ -979,21 +983,6 @@ begin
      Windows.SendMessageA(h, LB_INSERTSTRING, 0, integer(PAnsiChar(c)));
      end;
   tLB_SETCURSEL(h, 0);
-end;
-
-function tDialogBox(WindowID: Byte; WinProcAdr: Pointer): integer;
-var
-  hwndParent                            : HWND;
-begin
-  hwndParent := tr4whandle;
-  if CreateCabrilloWindow <> 0 then
-     begin
-     hwndParent := CreateCabrilloWindow;
-     end;
-  Result := DialogBox(hInstance, MAKEINTRESOURCE(WindowID), hwndParent, WinProcAdr);
-//  Result := DialogBoxParamW(hInstance, MakeIntResourceW(WindowID), hwndParent, WinProcAdr, 0);
-
-  //  SendMessage(Result, WM_SETICON, ICON_BIG, LoadIcon(thInstance, 'MAINICON'));
 end;
 
 { THE ONE WRITE PATH FOR ALL FORTY-TWO ELEMENTS, and the reason it goes through

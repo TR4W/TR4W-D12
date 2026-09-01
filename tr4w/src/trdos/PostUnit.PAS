@@ -155,7 +155,6 @@ procedure WriteTitleBlockToSummarySheet;
 
 procedure WriteScoreInformationToSummarySheet;
 
-function MakeCategoryString: string;
 function tGenerateSummaryPortionOfCabrilloFile: boolean;
 function tGenerateLogPortionOfCabrilloFile: boolean;
 procedure tFirstCallInEachCountry;
@@ -493,14 +492,42 @@ procedure CreateCabrilloFile;
   DeleteSlashes( tReportsFilename );
 
   Windows.ZeroMemory( @Radio1IDs, SizeOf( Radio1IDs ) );
-  SetTransmittersId := TF.SendDlgItemMessage( CreateCabrilloWindow,
-     $CF { 124 } , CB_GETCURSEL ) = 1;
+
+  (* CATEGORY-TRANSMITTER, selection 1 -- the second entry, TWO.  The control
+     id was written $CF with a decimal comment of 124 beside it, and the
+     comment was simply wrong: $CF is 207, which is Ord(ctCategoryTransmitter)
+     plus the dialog's 200 base.  Naming the tag is the point of asking the
+     window rather than a number.
+
+     AND IT HAS NEVER BEEN TRUE, ON EITHER SIDE OF THE PORT.  CabrilloTagsArray
+     marks CATEGORY-TRANSMITTER ctrList FALSE, so its row is a free-text EDIT --
+     even though CategoriesArray carries five values for it.  CB_GETCURSEL to an
+     edit control is not a message an edit handles, so DefWindowProc returned 0;
+     the accessor now returns -1 for the same reason, and neither is 1.  So
+     SetTransmittersIdentifiers is unreachable for every contest.
+
+     REPORTED, NOT FIXED.  Making that tag a drop-down like its eight siblings
+     is very likely what was meant, but it would change what an operator sees
+     AND resurrect SetTransmittersIdentifiers in the exported log the first time
+     someone picks TWO.  That is NY4I's call, not a port's. *)
+  SetTransmittersId := CabrilloTagItemIndex( ctCategoryTransmitter ) = 1;
+
+  (* IOTA ASKED CONTROL 120, AND 120 WAS NEVER A DROP-DOWN.
+
+     The dialog gave its LABELS ids Ord(tag) + 100 and its FIELDS Ord(tag) +
+     200, so 120 is the CATEGORY-SOAPBOX label -- a static.  CB_GETCURSEL to a
+     static returns 0, so this test could not become true and IOTA has never
+     set transmitter identifiers by this route.  Left disabled rather than
+     repointed at a guess: the intended tag was probably CATEGORY-TRANSMITTER,
+     which the line above already reads for every contest, and making IOTA
+     behave differently is a change for NY4I to want, not a port to invent.
 
   if Contest = IOTA then
-    if TF.SendDlgItemMessage( CreateCabrilloWindow, 120, CB_GETCURSEL ) = 1 then
+    if <the intended tag> = 1 then
        begin
        SetTransmittersId := true;
        end;
+  *)
 
   if SetTransmittersId then
      begin
@@ -879,8 +906,8 @@ function ContestFriendlyParens: string;
 
 procedure WriteTitleBlockToSummarySheet;
   var
-    nNumberOfBytesToWrite: integer;
     TempTag: CabrilloTags;
+    TagValue: string;
   begin
   // Title block built as a plain string -- replaces the prior inline-asm
   // wsprintf argument pushing.  The contest's friendly name is shown in
@@ -902,17 +929,24 @@ procedure WriteTitleBlockToSummarySheet;
           Continue;
           end;
 
-     Windows.GetDlgItemTextA( CreateCabrilloWindow, integer( TempTag ) + 200,
-        @TempBuffer2, SizeOf( TempBuffer2 ) );
-     if TempBuffer2[ 0 ] = #0 then
+     (* ASKED OF uCbrSum, NOT OF A WINDOW HANDLE.  This used to be
+        GetDlgItemTextA( CreateCabrilloWindow, Ord( TempTag ) + 200, ... ) --
+        this unit reaching into another unit's dialog by an id it computed
+        itself, and returning empty whenever no dialog existed. *)
+     TagValue := CabrilloTagText( TempTag );
+     if TagValue = '' then
         begin
         Continue;
         end;
 
-     nNumberOfBytesToWrite := TF.Format( wsprintfBuffer, '%22s: %s'#13#10,
-        @CabrilloTagsArray[ TempTag ].ctrTag[ 1 ], TempBuffer2 );
-
-     sWriteFile( tReportFileWrite, wsprintfBuffer, nNumberOfBytesToWrite );
+     (* %22s right-justifies in both wsprintf and SysUtils.Format, so the
+        column is unchanged.  Copy from 2 drops the stored key's leading
+        underscore, which the old code did by taking the address of the tag's
+        second character. *)
+     sWriteFileFromString( tReportFileWrite,
+        sysutils.Format( '%22s: %s'#13#10,
+           [ Copy( string( CabrilloTagsArray[ TempTag ].ctrTag ), 2, MaxInt ),
+             TagValue ] ) );
      end;
 
   // Footer built as a plain string -- replaces the prior inline-asm wsprintf
@@ -1203,14 +1237,12 @@ procedure CheckForNewContestDate( Date: TQSOTime );
 
   end;
 
-function MakeCategoryString: string;
-  begin
-  Result := GetDialogItemText( CreateCabrilloWindow, 121 ) + ' ' +
-     GetDialogItemText( CreateCabrilloWindow, 122 ) + ' ' +
-     GetDialogItemText( CreateCabrilloWindow, 123 ) + ' ' +
-     GetDialogItemText( CreateCabrilloWindow, 124 );
-
-  end;
+(* MakeCategoryString IS DELETED, not ported.  It had no caller, and it could
+   not have worked if it had one: it read control ids 121..124, and the dialog
+   numbered its LABELS Ord(tag) + 100 -- so 121..124 were past the last label
+   (120, CATEGORY-SOAPBOX) and did not exist.  It returned three spaces.
+   Preserved in git history, where a caller-less routine that reads absent
+   controls belongs. *)
 
 procedure ScoreByHour;
   begin
@@ -2044,6 +2076,7 @@ procedure ExportToEDIByBand( Band: BandType );
     1;
   var
     TempTag: CabrilloTags;
+    AddressLine: string;
   const
     EDI_ModeCodes: array [ ModeType ] of integer  = ( 2, 7, 1, 0, 0, 6 );
     EDI_NewArray: array [ boolean ] of PAnsiChar  = ( nil, 'N' );
@@ -2069,22 +2102,18 @@ procedure ExportToEDIByBand( Band: BandType );
      Exit;
      end;
 
-  Windows.ZeroMemory( @wsprintfBuffer, SizeOf( wsprintfBuffer ) );
+  (* THE FOUR ADDRESS TAGS, JOINED.  Was lstrcatA into wsprintfBuffer after a
+     ZeroMemory; a string says the same thing and cannot overrun the buffer,
+     which the concatenation of four unbounded header fields could.  Empty tags
+     are skipped, so only a value contributes its trailing space -- unchanged. *)
+  AddressLine := '';
   for TempTag := ctAddress to ctAddressCountry do
      begin
-     if Windows.GetDlgItemTextA( CreateCabrilloWindow, integer( TempTag ) + 200,
-        @TempBuffer1, SizeOf( TempBuffer1 ) ) = 0 then
+     if CabrilloTagText( TempTag ) <> '' then
         begin
-        Continue;
+        AddressLine := AddressLine + CabrilloTagText( TempTag ) + ' ';
         end;
-     Windows.lstrcatA( wsprintfBuffer, TempBuffer1 );
-     Windows.lstrcatA( wsprintfBuffer, ' ' );
      end;
-
-  Windows.GetDlgItemTextA( CreateCabrilloWindow, integer( ctName ) + 200,
-     @TempBuffer1, SizeOf( TempBuffer1 ) );
-  Windows.GetDlgItemTextA( CreateCabrilloWindow, integer( ctCategoryOperator ) +
-     200, @TempBuffer2, SizeOf( TempBuffer2 ) );
 
   // Issue #998: asm-push wsprintf -> SysUtils.Format. cdecl arg order is
   // ContestName, MyCall, MyGrid, BandString, Name, Address, Section, QSOcount.
@@ -2094,9 +2123,10 @@ procedure ExportToEDIByBand( Band: BandType );
      + 'PSect=%s'#13#10 + '[QSORecords;%u]'#13#10,
      [ string(ContestName),
      string(MyCall), string(MyGrid),
-     string( EDIFBANDSTRINGSARRAY[ Band ] ), string( PAnsiChar( @TempBuffer1 )
-     ), string( PAnsiChar( @wsprintfBuffer ) ),
-     string( PAnsiChar( @TempBuffer2 ) ), QSOTotals[ Band, Both ] ] ) );
+     string( EDIFBANDSTRINGSARRAY[ Band ] ),
+     CabrilloTagText( ctName ),
+     AddressLine,
+     CabrilloTagText( ctCategoryOperator ), QSOTotals[ Band, Both ] ] ) );
 
   ReadVersionBlock;
 1:
@@ -2540,43 +2570,26 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         // Fetch a Cabrillo summary tag's text into TempBuffer2, returning its length
         // (0 = empty) so every existing "= 0" / "[0] = #0" check keeps working.
         //
-        // In the GUI these fields live in the CreateCabrilloWindow dialog, which
-        // both loads them from and saves them to tr4w.ini [REPORT] (see uCbrSum).
-        // Headless /EXPORT (tr4w.exe "<cfg>" /EXPORT) never creates that dialog, so
-        // the old GetDlgItemTextA(CreateCabrilloWindow, ...) read a null window and
-        // returned empty: the LOCATION guard below then aborted every WFD/ARRL10
-        // batch export, and the header dropped NAME/CLUB/ADDRESS/etc.  When no dialog
-        // exists, read the SAME ini key the dialog would have loaded, so the batch
-        // file is the valid, complete Cabrillo a sponsor expects.
+        // THE WINDOW-OR-STORE FORK MOVED TO uCbrSum.CabrilloTagText.  It used to
+        // stand here, and here only, which is what made it a defect waiting to
+        // happen: the interactive path read dialog controls by id and headless
+        // /EXPORT read settings\tr4w.json, through two different pieces of code
+        // that had already drifted once -- the ini arm honoured the buffer size
+        // and the json arm did not.  One answer now, asked the same way by both.
+        //
+        // Why the fallback exists at all: /EXPORT never opens the window, and
+        // reading a control off a zero HWND returned empty, so the LOCATION
+        // guard below aborted every Winter Field Day and ARRL10 batch export in
+        // silence and the header dropped NAME/CLUB/ADDRESS.
+        //
+        // Still a buffer here rather than a string, because every caller below
+        // tests the length or TempBuffer2[0] and rewriting those is a separate
+        // change from removing the HWND.
         function GetCabrilloTagText( Tag: CabrilloTags ): integer;
-          var
-            section: PAnsiChar;
           begin
-          if CreateCabrilloWindow <> 0 then
-             begin
-             Result := Windows.GetDlgItemTextA( CreateCabrilloWindow,
-                integer( Tag ) + 200, @TempBuffer2, SizeOf( TempBuffer2 ) );
-             end
-          else
-             begin
-             if ErmakSpecification then
-                begin
-                section := ERMAKSECTION;
-                end
-             else
-                begin
-                section := CABRILLOSECTION;
-                end;
-             // FROM settings\tr4w.json, seeded once from the ini. This read is
-             // what the LOCATION guard below depends on, and it is why deleting
-             // tr4w.ini used to abort every Winter Field Day and ARRL10 batch
-             // export in silence.  Both sections live there since 2026-08-17,
-             // so the section is now only an argument -- the ini fork that used
-             // to stand here is gone.
-             Result := integer( HeaderTagText( section,
-                CabrilloTagsArray[ Tag ].ctrTag, @TempBuffer2,
-                SizeOf( TempBuffer2 ) ) );
-             end;
+          uAnsiStr.StrPLCopy( @TempBuffer2, AnsiString( CabrilloTagText( Tag ) ),
+             SizeOf( TempBuffer2 ) - 1 );
+          Result := integer( uAnsiStr.StrLen( @TempBuffer2 ) );
           end;
 
       begin
