@@ -72,6 +72,18 @@ type
       QTCs: integer;
       Notes: integer;
       Deleted: integer;
+      Skipped: integer;
+
+      { HOW MANY WOULD REACH A CABRILLO FILE -- GoodLookingQSO's count.
+
+        Reported because without it the summary misleads. A florida_qp log
+        imported as "5 record(s): 5 QSO, 0 QTC, 0 note, 0 deleted" -- every
+        number true -- while TWO of those five are skipped and would never be
+        exported. The reader concludes the log is five good QSOs.
+
+        This is the number an operator would compare against his own count, so
+        it is the one that has to be there. }
+      Exportable: integer;
 
       { Empty when Ok. Otherwise a sentence, already fit to show. }
       Message: string;
@@ -143,6 +155,14 @@ begin
                   if rec.ceQSO_Deleted then
                      begin
                      Inc(Result.Deleted);
+                     end;
+                  if rec.ceQSO_Skiped then
+                     begin
+                     Inc(Result.Skipped);
+                     end;
+                  if GoodLookingQSO(rec) then
+                     begin
+                     Inc(Result.Exportable);
                      end;
                except
                   on E: Exception do

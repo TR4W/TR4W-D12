@@ -165,6 +165,23 @@ begin
    CheckTrue(res.RecordsWritten > good,
              'which is more than export would emit');
 
+   { The report has to SAY so. Without this figure the summary reads
+     "5 record(s): 5 QSO, 0 deleted" -- every number true, and the reader
+     concludes the log is five good QSOs. }
+   CheckEquals(good, res.Exportable,
+               'and the result says how many would actually export');
+   CheckEquals(3, res.Exportable, 'which is three');
+
+   { WHY those two are not exportable, stated so the test still means something
+     if the fixture is ever replaced: they are neither deleted nor skipped --
+     they are a W4THY-style county-line PAIR (HIL and PIN) whose MODE was never
+     recorded, so Mode = NoMode and GoodLookingQSO rejects them.
+
+     Which also proves the mapper round-trips NoMode: it is stored as 'NON',
+     ADIFModeString[NoMode], and read back as NoMode rather than as nothing. }
+   CheckEquals(0, res.Deleted, 'neither of them is deleted');
+   CheckEquals(0, res.Skipped, 'and neither is skipped');
+
    Scrub(fn);
 end;
 

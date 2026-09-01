@@ -39,6 +39,9 @@ uses
   MMSystem,
   Windows,
   SysUtils,
+  { /IMPORTLOG. The unit pulls in the log database and the mapper, which is
+    why the switch runs before any of them are otherwise needed. }
+  uLogImport,
   LCLTranslator,
   MainUnit,
   BeepUnit,
@@ -594,6 +597,75 @@ end;
   case where the reason for showing it is that no language was given.
 
   Returns True when it handled the command line and the program should stop. }
+{ tr4w.exe /IMPORTLOG <source.trw> [<target.db>]
+
+  Returns the process exit code: 0 converted, 1 misused, 2 the import failed.
+  Distinguished so a script can tell "you called me wrongly" from "that log
+  would not read", which are different things to somebody converting a season.
+
+  REPORTS THROUGH EarlyTrace, NOT logger, and that is not a preference.
+
+  `logger` EXISTS by the time this runs -- it is created a few lines above --
+  but it has NO APPENDER: the level and the rolling file appender are
+  configured from tr4w.ini, which is read much later in the boot. So the first
+  working version of this ran, imported 1,316 QSOs correctly, exited 0, and
+  wrote NOTHING to tr4w.log. A tool whose only output is its exit code is a
+  tool nobody can debug.
+
+  EarlyTrace exists for exactly this window and writes to tr4w-early.log beside
+  the executable. }
+function RunLogImport: integer;
+var
+   source: string;
+   target: string;
+   res: TLogImportResult;
+begin
+   source := ParamStr(2);
+   target := ParamStr(3);
+
+   if source = '' then
+      begin
+      EarlyTrace('[ImportLog] usage: tr4w.exe /IMPORTLOG <log.trw> [<log.db>]');
+      Result := 1;
+      Exit;
+      end;
+
+   { Beside the source, same name. Somebody converting logs in place should not
+     have to name each destination, and putting it anywhere else would separate
+     a log from its own history. }
+   if target = '' then
+      begin
+      target := ChangeFileExt(source, '.db');
+      end;
+
+   EarlyTrace(SysUtils.Format('[ImportLog] %s -> %s', [source, target]));
+
+   res := ImportBinaryLog(source, target);
+
+   if not res.Ok then
+      begin
+      EarlyTrace(SysUtils.Format('[ImportLog] FAILED: %s', [res.Message]));
+      Result := 2;
+      Exit;
+      end;
+
+   { Counted by KIND, because those are the numbers an operator recognises, and
+     because a QTC count of zero on a WAE log is the sign that something
+     filtered what it should not have. }
+   EarlyTrace(SysUtils.Format(
+      '[ImportLog] %d record(s): %d QSO, %d QTC, %d note, ' +
+      '%d deleted, %d skipped -- %d would export',
+      [res.RecordsWritten, res.QSOs, res.QTCs, res.Notes,
+       res.Deleted, res.Skipped, res.Exportable]));
+
+   if res.Message <> '' then
+      begin
+      EarlyTrace(SysUtils.Format('[ImportLog] note: %s', [res.Message]));
+      end;
+
+   Result := 0;
+end;
+
 function ShowCommandLineUsage: boolean;
 var
    i:    integer;
@@ -633,6 +705,9 @@ begin
       '  --lang <code>      run in this language' + sLineBreak +
       '  --lang=<code>      the same' + sLineBreak +
       '  /EXPORT            headless ADIF and Cabrillo export, then exit' + sLineBreak +
+      '  /IMPORTLOG <log.trw> [<log.db>]' + sLineBreak +
+      '                     convert a binary log to a SQLite log, then exit' + sLineBreak +
+      '                     (reports to tr4w-early.log; exit 0 ok, 2 failed)' + sLineBreak +
       '  -h, -?, --help     this message' + sLineBreak + sLineBreak +
       'Languages in this build:' + sLineBreak +
       '  ' + AvailableLanguages + sLineBreak + sLineBreak +
@@ -796,6 +871,33 @@ begin
    // InstallCrashLog directly.  See the uCrashLogLCL header for
    // why that is a second unit and not a define.
    InstallCrashLogLCL;
+
+   { /IMPORTLOG -- AS EARLY AS IT CAN REPORT, AND NO EARLIER.
+
+     It was first placed at the very top of RunTR4W, on the reasoning that an
+     import needs no configuration, no CTY.DAT, no window and no radio init --
+     which is true. It hung there, silently, with no window and no output: the
+     routine reports through `logger`, and the logger is created HERE, a couple
+     of hundred lines further down. The nil call faulted straight into the
+     crash handler that had not been installed yet either.
+
+     "Before anything else" was the wrong instinct. The right rule is BEFORE
+     ANYTHING WITH SIDE EFFECTS, and after the two facilities that exist to
+     make failure visible. So it sits directly after InstallCrashLogLCL and
+     still before the settings registry, the config load, CTY.DAT, the main
+     window and every network and radio thread.
+
+     /EXPORT is the opposite case and is correctly far below: it exports the
+     LOADED contest, so it needs the whole config-and-log boot first.
+
+     NO DIALOG, deliberately: a message box would make this unusable from a
+     script, which is how a season of logs gets converted. It reports through
+     tr4w.log and the exit code. A menu item is where this belongs for a single
+     log, and that comes with the UI work. }
+   if UpperCase(ParamStr(1)) = '/IMPORTLOG' then
+      begin
+      Halt(RunLogImport);
+      end;
 
    { THE SETTINGS REGISTRY, AND THIS IS THE 'once at startup' ITS OWN COMMENT
      PROMISES.  Nothing called it.  DeclareAllSettings was reached only from
