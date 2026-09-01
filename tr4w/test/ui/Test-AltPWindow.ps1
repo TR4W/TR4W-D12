@@ -43,6 +43,15 @@ param(
    # so the floor is the bank size. The 'other messages' window is not a bank
    # and builds 9 or 13; pass -MinRows for that.
    [int]    $MinRows  = 12,
+   # THE WINDOW MUST REFUSE TO GET SMALLER THAN THIS.  Derived, not
+   # invented: lvMessages states Constraints 560x150 and sits at
+   # left 8 / top 60 with 8 and 50 of margin, so the smallest client
+   # that still shows it is 576 x 260.  The floors here are under those
+   # by a frame's worth, because the probe measures the WINDOW and the
+   # arithmetic is on the CLIENT -- the test is 'it stopped', not 'it
+   # stopped at exactly N'.
+   [int]    $MinFloorWidth  = 520,
+   [int]    $MinFloorHeight = 220,
    [int]    $SettleMs = 8000,
    [int]    $OpenMs   = 2500
 )
@@ -116,8 +125,50 @@ try
          }
       else
          {
-         Write-Output "Test-AltPWindow: PASS -- Alt-P opened with $($last.Rows) row(s)."
+         Write-Output "  Alt-P opened with $($last.Rows) row(s)."
          }
+      }
+
+   # --- and it must not be shrinkable into uselessness ---------------------
+   #
+   # A SECOND, INDEPENDENT DEFECT IN THE SAME WINDOW (NY4I, 2026-08-31): it
+   # had rows and could still be dragged down to nothing but its title bar.
+   # ApplyContentMinimumSize was CALLED and did nothing, because it skipped
+   # every control anchored to an edge and Alt-P has no other kind.
+   #
+   # Measured against the LIVE window rather than re-read from the .lfm: the
+   # constraint only counts if it reached WM_GETMINMAXINFO.
+   $altp = Find-TR4WWindowByTitle -ProcessId $started.Process.Id `
+                                  -Title 'List of messages' -Exclude $started.Hwnd
+   if ($altp -eq [IntPtr]::Zero)
+      {
+      Write-Output 'Test-AltPWindow: FAIL -- the Alt-P window could not be found by title.'
+      $rc = 1
+      }
+   else
+      {
+      $floor = Measure-TR4WWindowFloor -Hwnd $altp
+      if ($null -eq $floor)
+         {
+         Write-Output 'Test-AltPWindow: FAIL -- GetWindowRect failed on the Alt-P window.'
+         $rc = 1
+         }
+      else
+         {
+         Write-Output ("  smallest it will go: {0} x {1}" -f $floor.Width, $floor.Height)
+         if (($floor.Width -lt $MinFloorWidth) -or ($floor.Height -lt $MinFloorHeight))
+            {
+            Write-Output ("Test-AltPWindow: FAIL -- shrank to {0} x {1}, expected no smaller than {2} x {3}." -f `
+                          $floor.Width, $floor.Height, $MinFloorWidth, $MinFloorHeight)
+            Write-Output '  The window has no working minimum size and its content can be hidden entirely.'
+            $rc = 1
+            }
+         }
+      }
+
+   if ($rc -eq 0)
+      {
+      Write-Output 'Test-AltPWindow: PASS -- rows present and the window has a floor.'
       }
 }
 finally

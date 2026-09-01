@@ -369,10 +369,22 @@ procedure FillStopBitsCombo(const aCombo: TComboBox; const aSelected: integer);
   typed MinHeight of 460 against a designed 524 clipped CATEGORY-POWER and
   CATEGORY-TRANSMITTER with nothing on screen to say so.
 
-  ONLY VISIBLE, TOP-LEFT-ANCHORED CONTROLS COUNT. A control anchored right or
-  bottom MOVES with the form, so its position at this instant says nothing about
-  how small the form may become; including one would pin the form to whatever
-  size it happened to have when this ran. A hidden control is not content.
+  EVERY VISIBLE CONTROL COUNTS, EACH ACCORDING TO HOW IT IS ANCHORED. The first
+  version counted only top-left-anchored controls and SKIPPED anything anchored
+  right or bottom, on the reasoning that such a control travels with the edge so
+  its position at this instant says nothing about the minimum. True as far as it
+  goes, and IT FAILED OPEN: on a form where EVERY control is anchored to an edge
+  -- which is what a resizable window looks like -- there was nothing left to
+  measure, the routine took its "say nothing rather than guess" exit, and the
+  form got NO minimum at all. Alt-P called this and could still be dragged down
+  to a title bar (NY4I, 2026-08-31).
+
+  So each axis is answered by how the control behaves ON THAT AXIS. A control
+  anchored to ONE edge moves, and needs its own size plus the margin it keeps. A
+  control anchored to BOTH stretches, and needs its two margins plus a floor for
+  what is left in the middle -- Constraints.MinWidth/MinHeight when the control
+  states one, and a small documented default when it does not. A hidden control
+  is not content.
 
   Call it once the form is laid out -- OnShow, or after any code that builds
   rows -- and call it again if the layout changes. }
@@ -1066,11 +1078,77 @@ begin
 end;
 
 
-procedure ApplyContentMinimumSize(const aForm: TForm);
+{ The client extent one control needs along one axis, given how it is anchored.
+
+  THREE CASES, and the middle one is the whole fix.
+
+    fixed     (near edge only, or neither)  its position plus its size
+    moves     (far edge only)               its size plus the far margin, since
+                                            the near margin is what collapses
+    stretches (both edges)                  near margin + a content floor + far
+                                            margin, because both margins are
+                                            preserved and only the middle shrinks
+
+  aMinContent is what the control may shrink TO, not what it measures now. }
+function NeededExtent(const aPos, aSize, aClient, aMinContent: integer;
+                      const aNearAnchored, aFarAnchored: boolean): integer;
 var
-   i           : integer;
-   c           : TControl;
-   maxR, maxB  : integer;
+   farMargin: integer;
+begin
+   farMargin := aClient - aPos - aSize;
+   if farMargin < 0 then
+      begin
+      farMargin := 0;
+      end;
+
+   if aNearAnchored and aFarAnchored then
+      begin
+      Result := aPos + aMinContent + farMargin;
+      end
+   else if aFarAnchored then
+      begin
+      Result := aSize + farMargin;
+      end
+   else
+      begin
+      Result := aPos + aSize;
+      end;
+end;
+
+{ What a stretching control may shrink to: its own constraint when it states
+  one, the floor otherwise, and never more than it was designed at -- a
+  constraint wider than the design would demand a window bigger than the
+  designer drew. }
+function ShrinkFloor(const aConstraint, aDesigned, aFloor: integer): integer;
+begin
+   if aConstraint > 0 then
+      begin
+      Result := aConstraint;
+      end
+   else
+      begin
+      Result := aFloor;
+      end;
+
+   if Result > aDesigned then
+      begin
+      Result := aDesigned;
+      end;
+end;
+
+procedure ApplyContentMinimumSize(const aForm: TForm);
+const
+   { The floor for a control that stretches and says nothing about its own
+     minimum. Below roughly this there is no room for a column, a caption and a
+     scrollbar. A form that knows better states it on the control:
+     Constraints.MinWidth / MinHeight are read first and this is the fallback. }
+   MIN_STRETCH_WIDTH  = 120;
+   MIN_STRETCH_HEIGHT = 60;
+var
+   i             : integer;
+   c             : TControl;
+   maxR, maxB    : integer;
+   needW, needH  : integer;
    slackW, slackH: integer;
 begin
    if aForm = nil then
@@ -1090,31 +1168,29 @@ begin
          Continue;
          end;
 
-      { A right- or bottom-anchored control travels with the edge, so where it
-        sits right now is not a statement about the minimum. }
-      if akRight in c.Anchors then
-         begin
-         Continue;
-         end;
-      if akBottom in c.Anchors then
-         begin
-         Continue;
-         end;
+      needW := NeededExtent(c.Left, c.Width, aForm.ClientWidth,
+                            ShrinkFloor(c.Constraints.MinWidth, c.Width,
+                                        MIN_STRETCH_WIDTH),
+                            akLeft in c.Anchors, akRight in c.Anchors);
 
-      if c.Left + c.Width > maxR then
+      needH := NeededExtent(c.Top, c.Height, aForm.ClientHeight,
+                            ShrinkFloor(c.Constraints.MinHeight, c.Height,
+                                        MIN_STRETCH_HEIGHT),
+                            akTop in c.Anchors, akBottom in c.Anchors);
+
+      if needW > maxR then
          begin
-         maxR := c.Left + c.Width;
+         maxR := needW;
          end;
-      if c.Top + c.Height > maxB then
+      if needH > maxB then
          begin
-         maxB := c.Top + c.Height;
+         maxB := needH;
          end;
       end;
 
    if (maxR = 0) or (maxB = 0) then
       begin
-      { Nothing measurable -- an empty form, or every control anchored to an
-        edge. Say nothing rather than pin the form to its current size. }
+      { Genuinely nothing to measure -- an empty form. }
       Exit;
       end;
 

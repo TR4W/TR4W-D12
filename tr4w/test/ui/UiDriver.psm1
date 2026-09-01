@@ -26,6 +26,13 @@ public static extern int GetWindowThreadProcessId(System.IntPtr h, out int pid);
 public static extern bool IsWindowVisible(System.IntPtr h);
 [DllImport("user32.dll")]
 public static extern bool PostMessageW(System.IntPtr hWnd, uint msg, System.IntPtr wp, System.IntPtr lp);
+[DllImport("user32.dll", CharSet = CharSet.Unicode)]
+public static extern int GetWindowTextW(System.IntPtr h, System.Text.StringBuilder s, int n);
+public struct RECT { public int L; public int T; public int R; public int B; }
+[DllImport("user32.dll")]
+public static extern bool GetWindowRect(System.IntPtr h, out RECT r);
+[DllImport("user32.dll")]
+public static extern bool SetWindowPos(System.IntPtr h, System.IntPtr after, int x, int y, int cx, int cy, uint flags);
 '@
 
 # ENUMERATE BY PID, do not FindWindow by class. Two reasons, and the first is not
@@ -281,7 +288,80 @@ function Resolve-TR4WHarnessConfig
                              Message = $message; Failure = $null }
 }
 
+# A VISIBLE TOP-LEVEL WINDOW OF THIS PROCESS WHOSE TITLE STARTS WITH $Title.
+#
+# StartsWith, not equality: several windows append state to their caption once
+# they are up, and a test that has to predict the suffix is a test that breaks
+# for the wrong reason.
+function Find-TR4WWindowByTitle
+{
+   param([Parameter(Mandatory = $true)][int]    $ProcessId,
+         [Parameter(Mandatory = $true)][string] $Title,
+         [System.IntPtr] $Exclude = [System.IntPtr]::Zero)
+
+   $script:uiDrvTitled = [IntPtr]::Zero
+   $cb = [Win32.UiDrv+EnumWindowsProc]{
+      param($h, $l)
+      $owner = 0
+      [void][Win32.UiDrv]::GetWindowThreadProcessId($h, [ref]$owner)
+      if (($owner -eq $ProcessId) -and [Win32.UiDrv]::IsWindowVisible($h) -and ($h -ne $Exclude))
+         {
+         $sb = New-Object System.Text.StringBuilder 512
+         [void][Win32.UiDrv]::GetWindowTextW($h, $sb, 512)
+         if ($sb.ToString().StartsWith($Title, [System.StringComparison]::OrdinalIgnoreCase))
+            {
+            $script:uiDrvTitled = $h
+            return $false
+            }
+         }
+      return $true
+   }
+   [void][Win32.UiDrv]::EnumWindows($cb, [IntPtr]::Zero)
+   return $script:uiDrvTitled
+}
+
+# HOW SMALL WILL THIS WINDOW ACTUALLY GO?
+#
+# Asks the window manager to make it absurdly small and reports what came back.
+# The answer is the window's own, because Constraints.MinWidth/MinHeight reach
+# Windows through WM_GETMINMAXINFO -- so this measures the LIVE constraint
+# rather than re-deriving what the code intended, which is the only version of
+# the question worth asking.
+#
+# WRITTEN BECAUSE ApplyContentMinimumSize FAILED OPEN. It skipped every control
+# anchored to an edge, so on a form where all of them are it measured nothing
+# and set no constraint at all -- and Alt-P could be dragged down to its title
+# bar with the program looking entirely healthy (NY4I, 2026-08-31). Nothing else
+# in the tree can see that: it is not a compile error, not a lint, and the
+# window is correct in every other respect.
+#
+# Cross-process SetWindowPos is safe here even against a MODAL window: it is an
+# API call, not a posted message, and the modal loop is pumping.
+function Measure-TR4WWindowFloor
+{
+   param([Parameter(Mandatory = $true)][System.IntPtr] $Hwnd,
+         [int] $TryWidth  = 80,
+         [int] $TryHeight = 60,
+         [int] $SettleMs  = 400)
+
+   $SWP_NOMOVE   = 0x0002
+   $SWP_NOZORDER = 0x0004
+   $SWP_NOACTIVATE = 0x0010
+
+   [void][Win32.UiDrv]::SetWindowPos($Hwnd, [IntPtr]::Zero, 0, 0, $TryWidth, $TryHeight,
+                                     $SWP_NOMOVE -bor $SWP_NOZORDER -bor $SWP_NOACTIVATE)
+   Start-Sleep -Milliseconds $SettleMs
+
+   $r = New-Object Win32.UiDrv+RECT
+   if (-not [Win32.UiDrv]::GetWindowRect($Hwnd, [ref] $r))
+      {
+      return $null
+      }
+   return [pscustomobject]@{ Width = $r.R - $r.L; Height = $r.B - $r.T }
+}
+
 Export-ModuleMember -Function Resolve-TR4WExe, Find-TR4WMainWindow, Assert-NoRunningTR4W,
                               Start-TR4WForDriving, Send-TR4WMenuCommand,
                               Stop-TR4WForDriving, Get-TR4WLogMark, Get-TR4WLogSince,
-                              Resolve-TR4WHarnessConfig
+                              Resolve-TR4WHarnessConfig, Find-TR4WWindowByTitle,
+                              Measure-TR4WWindowFloor
