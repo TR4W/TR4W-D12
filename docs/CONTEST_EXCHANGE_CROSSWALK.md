@@ -269,7 +269,8 @@ Not omissions — destinations. Listed so nobody looks for a field to fill them.
 |---|---|
 | `exchange_sent` | **Phase C**, at log time. Finding 1 |
 | `my_county`, `my_grid`, `my_state` | **Phase C** — tier 3, from the station globals at the moment of the QSO |
-| `freq_rx_hz` | split working. The record has one `Frequency`; nothing is lost, there was never a second |
+| `freq_rx_hz` | **written as a copy of `freq_tx_hz`**, and `is_split` as 0. The record carries ONE `Frequency` and no split state, so that is the honest limit of a binary log rather than a claim about the contact. NY4I, 2026-09-01: not split means the two ARE the same, and split should be **stated, not inferred from a NULL** — NULL would otherwise mean both "same as tx" and "not known". Live logging can do better (the radio knows) in Phase C |
+| `is_split` | as above — explicit, never inferred |
 | `snr_sent`, `snr_received` | WSJT-X dB reports, which the record squeezes into `RSTReceived` |
 | `cty_itu_zone` | the contest factory. `QTH.Zone` is one byte for both zones |
 | the eleven specific `rcvd_*` | the contest factory. Finding 2 |

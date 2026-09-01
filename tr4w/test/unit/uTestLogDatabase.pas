@@ -405,6 +405,13 @@ begin
    { Identity. The pair is how two stations agree that two rows are the same
      contact, and computer_id is how a station knows which QSOs are its own. }
    Pin('exchange_id',      'ContestExchange.id -- the EXCHANGE, shared by county-line QSOs');
+
+   { Split, stated rather than inferred (NY4I, 2026-09-01). freq_rx_hz is NOT
+     NULL and equals freq_tx_hz when not split, so "what was I receiving on"
+     needs no knowledge of split at all -- and NULL keeps its one meaning
+     instead of standing for both "same as tx" and "not known". }
+   Pin('freq_rx_hz',       'always populated -- equals tx when not split');
+   Pin('is_split',         'stated, not inferred from a NULL rx frequency');
    Pin('session_id',       'ceQSOID1 -- half the multi-op network identity');
    Pin('session_seq',      'ceQSOID2 -- the other half, and the WAE QTC link');
    Pin('computer_id',      'ceComputerID -- which station logged it');

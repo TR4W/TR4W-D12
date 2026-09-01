@@ -560,7 +560,8 @@ const
      ReadRecord, and the round-trip test fails if the three disagree. }
    QSO_COLUMNS =
       'guid, exchange_id, session_id, session_seq, computer_id, operator_id, record_kind, ' +
-      'qso_at, callsign, standard_call, freq_tx_hz, band, mode, submode, ' +
+      'qso_at, callsign, standard_call, freq_tx_hz, freq_rx_hz, is_split, ' +
+      'band, mode, submode, ' +
       'exchange_received, rst_sent, rst_received, serial_sent, serial_received, ' +
       'rcvd_zone, rcvd_name, rcvd_age, rcvd_check, rcvd_precedence, rcvd_class, ' +
       'rcvd_power, rcvd_chapter, rcvd_prefecture, rcvd_member_no, rcvd_qth, ' +
@@ -575,7 +576,8 @@ const
    { The same list without the guid -- see PrepareStatements for why. }
    QSO_COLUMNS_NO_GUID =
       'exchange_id, session_id, session_seq, computer_id, operator_id, record_kind, ' +
-      'qso_at, callsign, standard_call, freq_tx_hz, band, mode, submode, ' +
+      'qso_at, callsign, standard_call, freq_tx_hz, freq_rx_hz, is_split, ' +
+      'band, mode, submode, ' +
       'exchange_received, rst_sent, rst_received, serial_sent, serial_received, ' +
       'rcvd_zone, rcvd_name, rcvd_age, rcvd_check, rcvd_precedence, rcvd_class, ' +
       'rcvd_power, rcvd_chapter, rcvd_prefecture, rcvd_member_no, rcvd_qth, ' +
@@ -589,7 +591,8 @@ const
 
    QSO_PARAMS =
       ':guid, :exchange_id, :session_id, :session_seq, :computer_id, :operator_id, :record_kind, ' +
-      ':qso_at, :callsign, :standard_call, :freq_tx_hz, :band, :mode, :submode, ' +
+      ':qso_at, :callsign, :standard_call, :freq_tx_hz, :freq_rx_hz, :is_split, ' +
+      ':band, :mode, :submode, ' +
       ':exchange_received, :rst_sent, :rst_received, :serial_sent, :serial_received, ' +
       ':rcvd_zone, :rcvd_name, :rcvd_age, :rcvd_check, :rcvd_precedence, :rcvd_class, ' +
       ':rcvd_power, :rcvd_chapter, :rcvd_prefecture, :rcvd_member_no, :rcvd_qth, ' +
@@ -752,6 +755,16 @@ begin
    BindText(P('callsign'), AnsiString(aQso.Callsign));
    BindText(P('standard_call'), AnsiString(aQso.QTH.StandardCall));
    P('freq_tx_hz').AsLargeInt := aQso.Frequency;
+
+   { RX EQUALS TX AND SPLIT IS FALSE, because ContestExchange says nothing
+     about either -- it carries ONE Frequency and no split state. That is
+     the honest limit of the record rather than an assertion about the
+     contact, and writing rx makes "what was I receiving on" answerable
+     without every caller having to know about split. Live logging can do
+     better, because the radio object knows; that arrives in Phase C with
+     the other tier-3 facts. }
+   P('freq_rx_hz').AsLargeInt := aQso.Frequency;
+   P('is_split').AsInteger := 0;
    BindText(P('band'), BandToken(aQso.Band));
    BindText(P('mode'), ModeToken(aQso.Mode));
    BindText(P('submode'), ExtModeToken(aQso.ExtMode));

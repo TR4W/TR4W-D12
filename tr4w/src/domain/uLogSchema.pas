@@ -245,10 +245,33 @@ const
       '    record_kind       TEXT NOT NULL DEFAULT ''QSO'','#10 +
       '    qso_at            INTEGER NOT NULL,   -- unix UTC seconds'#10 +
       '    callsign          TEXT NOT NULL,'#10 +
-      '    -- TWO frequencies. Split is not an edge case in a contest, and one'#10 +
-      '    -- column cannot say "listening 14025, transmitting 14200".'#10 +
+      '    -- TWO frequencies, BOTH ALWAYS POPULATED, plus an explicit flag.'#10 +
+      '    --'#10 +
+      '    -- Split is not an edge case in a contest, and one column cannot say'#10 +
+      '    -- "listening 14025, transmitting 14200". The first draft left'#10 +
+      '    -- freq_rx_hz NULL when not split; NY4I asked for the other way'#10 +
+      '    -- round, and he is right on both counts:'#10 +
+      '    --'#10 +
+      '    --   WHEN NOT SPLIT THE TWO ARE THE SAME, so writing rx = tx says'#10 +
+      '    --   what was true rather than leaving the reader to work it out.'#10 +
+      '    --   Every "what was I receiving on" query then works without'#10 +
+      '    --   knowing about split at all.'#10 +
+      '    --'#10 +
+      '    --   AND SPLIT IS STATED, NOT INFERRED. "NULL means not split"'#10 +
+      '    --   overloads NULL with two different facts -- "the same as tx" and'#10 +
+      '    --   "not known" -- which are not the same thing and would become'#10 +
+      '    --   indistinguishable the first time something could not read the'#10 +
+      '    --   radio.'#10 +
+      '    --'#10 +
+      '    -- NOTE FOR IMPORTS: ContestExchange carries ONE Frequency and no'#10 +
+      '    -- split state at all, so every QSO imported from a binary log has'#10 +
+      '    -- rx = tx and is_split = 0. That is not a guess about the contact;'#10 +
+      '    -- it is the honest limit of what the .TRW records. Live logging can'#10 +
+      '    -- do better -- the radio object knows -- and that arrives with the'#10 +
+      '    -- other tier-3 facts in Phase C.'#10 +
       '    freq_tx_hz        INTEGER NOT NULL,'#10 +
-      '    freq_rx_hz        INTEGER,            -- NULL when not split'#10 +
+      '    freq_rx_hz        INTEGER NOT NULL,'#10 +
+      '    is_split          INTEGER NOT NULL DEFAULT 0,'#10 +
       '    band              TEXT NOT NULL,'#10 +
       '    mode              TEXT NOT NULL,'#10 +
       '    submode           TEXT,'#10 +
