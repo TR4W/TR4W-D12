@@ -44,11 +44,13 @@ unit uAltPForm;
 interface
 
 uses
-   Classes, SysUtils, Forms, Controls, ComCtrls, StdCtrls, Buttons, LCLType,
+   Classes, SysUtils, Forms, Controls, ComCtrls, StdCtrls, ExtCtrls, Buttons,
+   LCLType,
    uTR4WStrings;
 
 type
    TfrmAltP = class(TForm)
+      rgBank: TRadioGroup;
       lvMessages: TListView;
       btnEdit: TBitBtn;
       btnClose: TBitBtn;
@@ -57,6 +59,7 @@ type
       procedure MessagesDblClick(Sender: TObject);
       procedure EditClick(Sender: TObject);
       procedure CloseClick(Sender: TObject);
+      procedure BankClick(Sender: TObject);
    end;
 
 { THE VIEW'S SIDE OF THE SEAM.  uAltP calls these; it never touches a control. }
@@ -71,13 +74,38 @@ procedure AltPClear;
 { AnsiString THROUGHOUT, not string.  These land in LCL TListItem.Caption and
   SubItems, which are AnsiString (TTranslateString); a UnicodeString API would
   be converted back at every single row. }
-procedure AltPAddRow(const aCommand, aMessage, aCaption: AnsiString);
+{ aKey is the message's KEY ORDINAL -- Ord(Key) - Ord(F1), so 0..35 across the
+  three banks -- or -1 for a row that is not a function key (the 'other
+  messages' window).  THE ROW'S POSITION IS NOT ITS IDENTITY: with a bank
+  filter, row 0 is F1, CONTROLF1 or ALTF1 depending on what is showing, and
+  every rule that keyed off the row index would quietly mean something else.
+  See AltPSelectedKey. }
+procedure AltPAddRow(const aCommand, aMessage, aCaption: AnsiString;
+                     const aKey: integer);
 procedure AltPEndUpdate;
 
 { Selection, by row index.  AltPSelect also scrolls the row into view, which is
   what the LVM_ENSUREVISIBLE at the end of DisplaymessagesList asked for. }
 procedure AltPSelect(const aIndex: integer);
 function  AltPSelectedIndex: integer;
+
+{ The KEY ordinal of the selected row, or -1.  This is what a rule about
+  'F1 and F2 are not editable' must ask, not the row number. }
+function  AltPSelectedKey: integer;
+
+{ Select by key ordinal rather than by position, and scroll it into view.
+  Answers False when that key is not in the bank on show. }
+function  AltPSelectByKey(const aKey: integer): boolean;
+
+{ The bank on show: 0 standard, 1 control, 2 alt.  The window filters to one
+  because F1-F12 fit without scrolling and the other twenty-four are rarely
+  programmed (NY4I, 2026-08-31). }
+function  AltPBank: integer;
+procedure AltPSetBank(const aBank: integer);
+
+{ Hidden for the 'other messages' window, whose rows are not function keys
+  and have no bank. }
+procedure AltPShowBankFilter(const aVisible: boolean);
 function  AltPRowCount: integer;
 
 { One cell of one row.  The message editor pre-fills itself from the row the
@@ -144,7 +172,8 @@ begin
       end;
 end;
 
-procedure AltPAddRow(const aCommand, aMessage, aCaption: AnsiString);
+procedure AltPAddRow(const aCommand, aMessage, aCaption: AnsiString;
+                     const aKey: integer);
 var
    row: TListItem;
 begin
@@ -155,6 +184,10 @@ begin
 
    row := TR4WAltPForm.lvMessages.Items.Add;
    row.Caption := aCommand;
+
+   { The key travels WITH the row.  Data is a Pointer, so the ordinal is
+     carried as one; +1 keeps -1 distinguishable from nil. }
+   row.Data := Pointer(PtrInt(aKey + 1));
 
    { SubItems are positional and BOTH must be added even when empty, or the
      Caption column lands in the Message column for that row.  The Win32 code
@@ -199,6 +232,74 @@ begin
    if TR4WAltPForm <> nil then
       begin
       Result := TR4WAltPForm.lvMessages.ItemIndex;
+      end;
+end;
+
+function AltPSelectedKey: integer;
+var
+   lv: TListView;
+begin
+   Result := -1;
+   if TR4WAltPForm = nil then
+      begin
+      Exit;
+      end;
+
+   lv := TR4WAltPForm.lvMessages;
+   if (lv.ItemIndex < 0) or (lv.ItemIndex >= lv.Items.Count) then
+      begin
+      Exit;
+      end;
+
+   Result := PtrInt(lv.Items[lv.ItemIndex].Data) - 1;
+end;
+
+function AltPSelectByKey(const aKey: integer): boolean;
+var
+   lv: TListView;
+   i : integer;
+begin
+   Result := False;
+   if TR4WAltPForm = nil then
+      begin
+      Exit;
+      end;
+
+   lv := TR4WAltPForm.lvMessages;
+   for i := 0 to lv.Items.Count - 1 do
+      begin
+      if (PtrInt(lv.Items[i].Data) - 1) = aKey then
+         begin
+         lv.ItemIndex := i;
+         lv.Items[i].MakeVisible(False);
+         Result := True;
+         Exit;
+         end;
+      end;
+end;
+
+function AltPBank: integer;
+begin
+   Result := 0;
+   if (TR4WAltPForm <> nil) and (TR4WAltPForm.rgBank.ItemIndex >= 0) then
+      begin
+      Result := TR4WAltPForm.rgBank.ItemIndex;
+      end;
+end;
+
+procedure AltPSetBank(const aBank: integer);
+begin
+   if (TR4WAltPForm <> nil) and (aBank >= 0) and (aBank <= 2) then
+      begin
+      TR4WAltPForm.rgBank.ItemIndex := aBank;
+      end;
+end;
+
+procedure AltPShowBankFilter(const aVisible: boolean);
+begin
+   if TR4WAltPForm <> nil then
+      begin
+      TR4WAltPForm.rgBank.Visible := aVisible;
       end;
 end;
 
@@ -269,6 +370,18 @@ begin
 
    Caption := RC_LISTOFMESS;
 
+   if rgBank.Items.Count = 0 then
+      begin
+      rgBank.Items.Add(TC_BANKSTANDARD);
+      rgBank.Items.Add(TC_BANKCONTROL);
+      rgBank.Items.Add(TC_BANKALT);
+      rgBank.ItemIndex := 0;
+      end;
+   { NO GROUP CAPTION.  The three labels say what they are, and a heading
+     would need a constant that says nothing the radios do not.  Cleared
+     rather than left, because the .lfm text is a designer placeholder. }
+   rgBank.Caption := '';
+
    { BUILT HERE, NOT IN THE .lfm.  Designer columns would carry English
      captions forever, which is the trap; and a collection in the .lfm is
      what uStationsForm avoids too.  Widths are the Win32 dialog's.
@@ -327,6 +440,15 @@ begin
    if Assigned(AltPFormOnEdit) then
       begin
       AltPFormOnEdit;
+      end;
+end;
+
+procedure TfrmAltP.BankClick(Sender: TObject);
+begin
+   { Re-fill for the newly chosen bank.  The owner decides what is in it. }
+   if Assigned(AltPFormOnFill) then
+      begin
+      AltPFormOnFill;
       end;
 end;
 

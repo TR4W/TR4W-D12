@@ -267,6 +267,9 @@ resourcestring
    TC_NOTENOUGHINFOINEXCHANGE            = 'Not enough info in exchange!!';
    TC_IMPROPERDOMESITCQTH                = 'Improper domestic QTH!!';
    TC_IGNOREDUNKNOWNQTH                  = 'Ignored, not a known QTH:';
+   TC_BANKSTANDARD                       = 'Standard';
+   TC_BANKCONTROL                        = 'Control';
+   TC_BANKALT                            = 'Alt';
    TC_IMPROPERDOMESITCQTHORMISSINGNAME   = 'Improper domestic QTH or missing name!!';
    TC_MISSINGQTHANDORNAME                = 'Missing QTH and/or name!!';
    TC_NOQSONUMBERFOUND                   = 'No QSO number found!!';

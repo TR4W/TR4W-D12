@@ -119,6 +119,10 @@ var
     off the end of the array as soon as it passed 127. This is the same
     fault as the Ctrl-P crash, reached through Alt-P instead. }
   Key                                   : AnsiChar;
+  { The bank's first and last key.  AnsiChar for the reason above -- these
+    index the same memory arrays. }
+  BankFirst                             : AnsiChar;
+  BankLast                              : AnsiChar;
   TempString                            : ShortString;
   { The row being built.  The Win32 path had no equivalent: it wrote each
     column straight into a TLVItem and null-terminated the source
@@ -183,7 +187,7 @@ begin
              RowMessage := OthermessagesArray[TempInt].omCWMessage^;
              end;
 
-          AltPAddRow(RowCommand, RowMessage, '');
+          AltPAddRow(RowCommand, RowMessage, '', -1);
           end;
 
        if TempMode = CW then
@@ -198,14 +202,24 @@ begin
              RowCommand := AnsiString(OtherShortMessagesArray[TempInt].osmCommand);
              RowMessage := AnsiChar(OtherShortMessagesArray[TempInt].osmMessage[0]);
 
-             AltPAddRow(RowCommand, RowMessage, '');
+             AltPAddRow(RowCommand, RowMessage, '', -1);
              end;
           end;
 
+       AltPShowBankFilter(False);
        goto 1;
        end;
 
-  for Key := F1 to AltF12 do
+  { ONE BANK AT A TIME.  F1-F12 fit without scrolling; the Control and Alt
+    banks are rarely programmed and pushed the list to 36 rows, most of them
+    empty (NY4I, 2026-08-31).  The filter is the view's radio group; which
+    keys are in a bank is this unit's business. }
+
+  AltPShowBankFilter(True);
+  BankFirst := AnsiChar(Ord(F1) + AltPBank * 12);
+  BankLast  := AnsiChar(Ord(BankFirst) + 11);
+
+  for Key := BankFirst to BankLast do
      begin
      RowMessage := '';
      RowCaption := '';
@@ -269,7 +283,7 @@ begin
         RowCaption := TempMessagePointer^;
         end;
 
-     AltPAddRow(RowCommand, RowMessage, RowCaption);
+     AltPAddRow(RowCommand, RowMessage, RowCaption, Ord(Key) - Ord(F1));
      end;
   1:
   AltPEndUpdate;
@@ -286,16 +300,47 @@ begin
                   [AltPRowCount, Ord(mt), Ord(MessageMode), LastSelectedMessage]);
      end;
 
-  { LVM_SETITEMSTATE + LVM_ENSUREVISIBLE, in one call. }
-  AltPSelect(LastSelectedMessage);
+  { BY KEY, not by row.  LastSelectedMessage is a key ordinal (0..35) and
+    always was -- ResolveFunctionKeyRow computes (aKey - 112) + 0/12/24,
+    which is Ord(Key) - Ord(F1).  It merely happened to equal the row index
+    while the list showed all thirty-six in order.  With a bank filter it
+    does not, and selecting by row would land on a different message. }
+
+  if not AltPSelectByKey(LastSelectedMessage) then
+     begin
+     { Not in this bank -- the other-messages window, or a stale key.
+       Fall back to the first row rather than leaving nothing selected. }
+     AltPSelect(0);
+     end;
 end;
 
 procedure EditMessage;
+var
+  Row: integer;
 begin
-  LastSelectedMessage := AltPSelectedIndex;
-  if LastSelectedMessage = -1 then Exit;
-  if MesWindow = ExMsgWin then if LastSelectedMessage in [0, 1] then Exit;
-  ShowEditMessage(AltPParentHandle, LastSelectedMessage);
+  Row := AltPSelectedIndex;
+  if Row = -1 then
+     begin
+     Exit;
+     end;
+
+  { REMEMBERED BY KEY so the next open lands on the same message whichever
+    bank is showing then. }
+  LastSelectedMessage := AltPSelectedKey;
+
+  { F1 and F2 of the EXCHANGE window are derived -- 'Set by the MY CALL' and
+    'Set by S&P EXCHANGE' -- and are not editable.  ASKED OF THE KEY, not of
+    the row: with a bank filter, rows 0 and 1 are CONTROLF1/CONTROLF2 or
+    ALTF1/ALTF2 depending on what is showing, and the old row test would have
+    silently refused to edit those while letting the real F1/F2 through. }
+
+  if (MesWindow = ExMsgWin) and
+     (LastSelectedMessage in [0, 1]) then
+     begin
+     Exit;
+     end;
+
+  ShowEditMessage(AltPParentHandle, Row);
 end;
 
 

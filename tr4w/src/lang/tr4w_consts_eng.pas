@@ -265,6 +265,11 @@
   TC_NOTENOUGHINFOINEXCHANGE            = 'Not enough info in exchange!!';
   TC_IMPROPERDOMESITCQTH                = 'Improper domestic QTH!!';
   TC_IGNOREDUNKNOWNQTH                  = 'Ignored, not a known QTH:';
+  { Alt-P bank filter.  F1-F12, Ctrl+F1-F12 and Alt+F1-F12 are three banks of
+    twelve; the window shows one at a time. }
+  TC_BANKSTANDARD                       = 'Standard';
+  TC_BANKCONTROL                        = 'Control';
+  TC_BANKALT                            = 'Alt';
   TC_IMPROPERDOMESITCQTHORMISSINGNAME   = 'Improper domestic QTH or missing name!!';
   TC_MISSINGQTHANDORNAME                = 'Missing QTH and/or name!!';
   TC_NOQSONUMBERFOUND                   = 'No QSO number found!!';

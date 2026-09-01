@@ -36,10 +36,13 @@ param(
    [string] $Repo = (Split-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) -Parent),
    [string] $Exe,
    [string] $Config,
-   # F1..F12, Control F1..F12 and Alt F1..F12 is 36 rows for a CQ or exchange
-   # window; the "other messages" window builds 9 or 13. One is the floor that
-   # says "it was filled at all", which is the regression being guarded.
-   [int]    $MinRows  = 1,
+   # TWELVE, because the window shows ONE BANK of function keys -- F1..F12,
+   # Control F1..F12 or Alt F1..F12 (NY4I, 2026-08-31: the Control and Alt
+   # banks are rarely programmed and made a 36-row list of mostly empties).
+   # A floor of 1 would still pass if the filter broke and produced one row,
+   # so the floor is the bank size. The 'other messages' window is not a bank
+   # and builds 9 or 13; pass -MinRows for that.
+   [int]    $MinRows  = 12,
    [int]    $SettleMs = 8000,
    [int]    $OpenMs   = 2500
 )
