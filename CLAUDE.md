@@ -1086,6 +1086,84 @@ the log-database work, all of which started as a raw call and did not need to be
 | `Windows.ReadFile` for the binary log | `TFileStream`. The semantics that mattered (a short read is EOF) are expressible either way |
 | a hardcoded `'sqlite3.dll'` | FPC's own `{$IFDEF WINDOWS}` / `'libsqlite3.' + SharedSuffix` (`sqlite3.inc:28-30`) |
 
+### AND NO NEW DIRECT CALLS INTO A DLL
+
+NY4I, 2026-09-01:
+
+> *"One other item to sweep is any DLL usage. This can be saved until the
+> cross-platform step, but as long as our memory or CLAUDE.md retains that,
+> there should be no new direct calls to DLL files."*
+
+**The SWEEP waits for the cross-platform work. The RULE starts now**, because
+the cost of a new binding is paid later by whoever does that work, and it is
+always cheaper not to add one.
+
+So: **a new `external '<something>.dll'`, or a new `LoadLibrary` /
+`GetProcAddress` pair, needs a reason in the code and is a decision, not a
+detail.** Ask first whether FPC, the LCL or an existing wrapper already does it
+-- that question has now answered itself three times in one day (see the table
+above).
+
+**Sized 2026-09-01, so the eventual sweep starts from a number.** 274 external
+declarations bound to a library:
+
+| bound to | count | what it means for cross-platform |
+|---|---:|---|
+| `winmm` (via `mmsyst`) | 189 | Win32 API. Replacing the FUNCTION, not the binding -- sound and timers |
+| `libhamlib-4.dll` (`HAMLIB_DLL`) | 36 | **Only the NAME is Windows.** HamLib ships `.so` and `.dylib`; this is one constant, not a port |
+| `user32` | 15 | Win32 API |
+| `comdlg32` | 10 | Win32 API -- and the LCL has dialogs for all of it |
+| `setupapi` | 10 | Win32 API -- device enumeration |
+| `InpOut32.dll` | 3 | **genuinely Windows-only**: direct LPT port access for legacy CW keying |
+| `hid` | 2 | Win32 API |
+| `kernel32`, `comctl32`, `ws2_32`, `shlwapi`, `msvcrt` | 7 | Win32 API |
+| `Plugins/tr4wSortLog.dll` | 1 | a TR4W plugin |
+
+Plus **26 `LoadLibrary` / `GetProcAddress` sites**, the largest groups in
+`MainUnit` (9), `uDialogs` (5), `uMP3Recorder` (4) and `uIO` (4).
+
+**The shape of that work is already visible in the table**: most of it is Win32
+API where the port replaces the FUNCTION (`comdlg32` is LCL dialogs, `winmm` is
+sound and timers), one entry is a single constant wearing a Windows file name,
+and exactly one -- `InpOut32` -- is genuinely Windows-only and should stay
+behind a conditional.
+
+#### HamLib is the worked example, and it is the EASY one
+
+NY4I, 2026-09-01: *"One obvious example is hamlib. TR4QT has a reference to
+interacting with hamlib on Windows, Mac and Linux. We may need the same helper
+class to abstract that for this program."*
+
+**TR4QT's answer is worth knowing because the calling code has NO platform
+knowledge in it at all.** `HamlibRadio.cpp` simply does
+`#include <hamlib/rig.h>`; the platform difference lives entirely in the build
+(`CMakeLists.txt:92-125`), which finds `libhamlib.dll.a` or `hamlib.lib` on
+Windows, `libhamlib.dylib` on macOS, and the system `/usr/include/hamlib` on
+Linux. **One place knows; nothing else does.**
+
+**We are already most of the way there and did not notice.** All 36 bindings go
+through a single constant -- `uHamLibDirect.pas:11`:
+
+```pascal
+  HAMLIB_DLL = 'libhamlib-4.dll';
+```
+
+So this is **one constant, not a port**. HamLib genuinely ships `.so` and
+`.dylib`; only the NAME here is Windows.
+
+**It is deliberately NOT changed yet, and that restraint is the point.** The
+Windows name is known; the others are not guessable from here --
+Linux uses a versioned soname (`libhamlib.so.4`) and macOS its own
+(`libhamlib.4.dylib`), and `SharedSuffix` alone does not produce either. Writing
+an unverified file name would be the same class of mistake as the hardcoded
+`'sqlite3.dll'` this rule came from, just pointing the other way. **Verify each
+name on the platform, then change the constant.**
+
+**The generalisation, when the sweep happens:** one unit that owns the NAME of
+every shipped library -- HamLib, SQLite, OpenSSL, InpOut32 -- per platform, the
+way FPC's own `sqlite3.inc` does. That is the "helper class" above, and its value
+is that the answer is in one file rather than at 274 declarations.
+
 **THE PChar AUDIT IS OWED AND IT IS SIZED.** Measured 2026-09-01:
 
 | | |
