@@ -256,7 +256,7 @@ record type** with a boolean of the same name. Not this field.)*
 | 15 | `PostalCode_old` | **dead — zero references in the tree.** The name says it |
 | 16, 18, 29, 35, 38, 40, 42, 44, 50, 54, 65 | `ZERO_01` … `ZERO_13` | `DummyByte` alignment padding for the on-disk layout. Meaningless outside the binary format we are leaving |
 | 36 | `Radio` | `InterfacedRadioType` — the radio **model**. A station setting, not a fact about a contact. **Flagged for NY4I rather than assumed**: if a multi-op wants to know which rig made a QSO, `radio_nr` (field 31) already answers the useful form of it |
-| 62 | `ceContest` | belongs on the **contest row** (`contest_type`), not on ten thousand QSO rows. One log is one contest — `CHECK (id = 1)` |
+| 62 | `ceContest` | on the **contest row**, not on ten thousand QSO rows — one log is one contest, measured across all 13 corpus logs. **BUT IT IS RESTORED ON READ** (`TLogRepository.SetContest`/`LogContest`): `PostUnit` branches on `POTA` while EXPORTING, so a QSO loaded as `DUMMYCONTEST` exports wrongly. Not persisting it per row is not the same as not needing it |
 | 71 | `sReserved` | `string[49]` of spare bytes. Its last byte was harvested for `ceXQSO` (issue #750), which is exactly what reserved space is for and exactly what a database does not need |
 
 ---
