@@ -59,6 +59,7 @@ uses
    Controls,
    StdCtrls,
    ExtCtrls,
+   Buttons,          { TBitBtn -- the only LCL button that wraps its caption }
    uTR4WStrings;
 
 type
@@ -79,7 +80,7 @@ type
       procedure RowClick(Sender: TObject);
    private
       FRowText  : array[1..10] of TLabel;
-      FRowButton: array[1..10] of TButton;
+      FRowButton: array[1..10] of TBitBtn;
       FArrow    : TLabel;
       FRows     : integer;
 
@@ -132,8 +133,45 @@ const
    ARROW_W    = 55;
    ARROW_H    = 17;
 
+   { THE WIDTH THE CONTENT ACTUALLY NEEDS, derived from the constants above
+     rather than typed into the .lfm a second time.
+
+     The rows end at the marker, not at the text: ARROW_LEFT + ARROW_W is 473,
+     and the panel's stated minimum was 460 -- so at the smallest size the
+     '< Next' marker hung over the edge and was clipped (NY4I, screenshot,
+     2026-09-01).  The command strip needs its own figure: eight buttons at
+     5 + i * 58, the last ending at 5 + 7 * 58 + 55.
+
+     Applied in HandleShow because a constraint computed from constants cannot
+     be expressed in the designer, and a number copied there by hand is the
+     thing that was wrong. }
+   ROWS_MIN_W     = ARROW_LEFT + ARROW_W + 7;
+   COMMANDS_MIN_W = 5 + 7 * 58 + 55 + 5;
+
 var
    GForm: TfrmQTCSend = nil;
+
+{ THE OPERATOR'S QRV MESSAGE -- 'QTC 3/10' or whatever he has configured.
+
+  READ FROM INDEX 1, AND THE REASON IS UGLY.  QRVString is declared
+  `array[0..160] of AnsiChar` and is used as a SHORTSTRING BY HAND: LOGWAE
+  writes `QRVString[0] := AnsiChar(TF.Format(@QRVString[1], 'QTC %u/%u', ...))`,
+  so byte 0 holds the LENGTH and the text begins at 1.  Reading from 0 put the
+  length byte on the front -- it rendered as a box glyph in front of the caption
+  (NY4I, screenshot, 2026-09-01).  Every other reader in the tree already says
+  @QRVString[1]; the conversion of this window was the odd one out.
+
+  Lint-PCharAnsi flags @X[1] because that is normally a ShortString being read
+  past its length with no terminator.  Not here: TF.Format is wsprintfA, which
+  NUL-terminates what it writes, so bytes 1.. are a genuine C string and the
+  length byte at 0 is the redundant half.  Hence the suppression -- and hence
+  ONE reader rather than the two the fix started with.
+
+  The suppression is inline below, because Lint-PCharAnsi reads the LINE. }
+function QRVMessage: AnsiString;
+begin
+   Result := AnsiString(PAnsiChar(@QRVString[1]));   // lint:wide-ok -- wsprintfA NUL-terminates from byte 1; byte 0 is a length
+end;
 
 { WHICH COMMAND A BUTTON IS.  Tag, not caption and not position: the second
   button's caption is QRVString, which is configurable, and matching on it
@@ -145,13 +183,23 @@ const
        QTC_SEND_CALL, QTC_SEND_NUMBER, QTC_SEND_ALL, QTC_SEND_STOP);
 var
    i  : integer;
-   btn: TButton;
+   btn: TBitBtn;
 begin
    for i := 0 to High(CMD_ID) do
       begin
-      { Owned by the PANEL, not the form: the panel is emptied and rebuilt on
+      { TBitBtn, NOT TButton, AND THE DIFFERENCE IS NOT DECORATION.  These
+        buttons are 55px wide and hold captions like 'N&EXT [return]' and the
+        operator's QRV message; the Win32 originals were created with
+        BS_MULTILINE and wrapped over three lines in that width.
+
+        TWin32WSButton does not set BS_MULTILINE and TWin32WSBitBtn does
+        (win32wsbuttons.pp:577), so a TButton simply clips: NY4I's screenshot at
+        the minimum size shows 'EXT [retur'.  Nothing warns -- the caption is
+        assigned, the button works, and the text is drawn short.
+
+        Owned by the PANEL, not the form: the panel is emptied and rebuilt on
         every open and DestroyComponents frees what it owns. }
-      btn := TButton.Create(pnlCommands);
+      btn := TBitBtn.Create(pnlCommands);
       btn.Parent := pnlCommands;
       btn.SetBounds(5 + i * 58, 6, 55, 50);
       btn.Tag     := CMD_ID[i];
@@ -160,7 +208,7 @@ begin
       if CMD_ID[i] = QTC_SEND_QRVSTRING then
          begin
          { The operator's own QRV message, whatever it is. }
-         btn.Caption := AnsiString(PAnsiChar(@QRVString[0]));
+         btn.Caption := QRVMessage;
          end
       else
          begin
@@ -176,7 +224,7 @@ procedure TfrmQTCSend.BuildRows;
 var
    i  : integer;
    lbl: TLabel;
-   btn: TButton;
+   btn: TBitBtn;
    y  : integer;
 begin
    FRows := NumberMessagesToBeSent;
@@ -196,7 +244,7 @@ begin
         stayed disabled forever, and a line could not be repeated.  The intent
         is not in doubt: there is a handler, an enable, and a caption for it.
         See the commit that converted this window. }
-      btn := TButton.Create(pnlRows);
+      btn := TBitBtn.Create(pnlRows);
       btn.Parent := pnlRows;
       btn.SetBounds(BTN_LEFT, y, BTN_W, ROW_H);
       btn.Caption := AnsiString(SysUtils.Format('&%d', [i mod 10]));
@@ -283,7 +331,7 @@ begin
    { '<QRV message> for <callsign>' -- the Win32 title, from the same
      resourcestring. }
    Caption := AnsiString(SysUtils.Format(TC_QTC_FOR,
-                 [AnsiString(PAnsiChar(@QRVString[0])), string(QTCCallsign)]));
+                 [QRVMessage, string(QTCCallsign)]));
 
    { REBUILT EVERY TIME, NOT ONCE.  The number of rows is the size of THIS
      QTC book -- one to ten, decided by NumberMessagesToBeSent when the window
@@ -300,6 +348,11 @@ begin
    BuildRows;
 
    RefreshProgress;
+
+   { BEFORE ApplyContentMinimumSize, which reads these. }
+   pnlRows.Constraints.MinWidth     := ROWS_MIN_W;
+   pnlCommands.Constraints.MinWidth := COMMANDS_MIN_W;
+
    ApplyContentMinimumSize(Self);
 
    { REPORTED, so a harness can see it -- the Alt-P precedent: a converted
@@ -365,13 +418,13 @@ end;
 procedure TfrmQTCSend.CommandClick(Sender: TObject);
 begin
    { The eight commands, by Tag.  Was a WM_COMMAND case on the child id. }
-   QTCSendCommand((Sender as TButton).Tag);
+   QTCSendCommand((Sender as TBitBtn).Tag);
 end;
 
 procedure TfrmQTCSend.RowClick(Sender: TObject);
 begin
    { Resend one line.  Was the 301..310 arm. }
-   SendQTC((Sender as TButton).Tag);
+   SendQTC((Sender as TBitBtn).Tag);
 end;
 
 function QTCSendForm: TfrmQTCSend;

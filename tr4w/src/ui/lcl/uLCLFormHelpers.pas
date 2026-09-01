@@ -1219,12 +1219,24 @@ begin
    slackW := aForm.ClientWidth - maxR;
    slackH := aForm.ClientHeight - maxB;
 
-   { Both read at this instant, so (Width - ClientWidth) never appears. }
-   if slackW > 0 then
+   { Both read at this instant, so (Width - ClientWidth) never appears.
+
+     >= 0, NOT > 0.  Slack of exactly ZERO means the form is designed at
+     precisely the size its content needs -- which is the most likely size for
+     a form somebody laid out carefully, and it was the one case that set NO
+     CONSTRAINT AT ALL.  The QTC send window is 480 wide holding 480 of
+     content, so every minimum computed for it was silently discarded and it
+     dragged down to a title bar like the rest (2026-09-01).
+
+     NEGATIVE slack -- content wider than the form it is in -- is deliberately
+     still ignored here rather than forcing the window to grow: that is a
+     LAYOUT defect, not a minimum, and uTextFitAudit's overhang check reports
+     it by name. Silently inflating the window would hide it. }
+   if slackW >= 0 then
       begin
       aForm.Constraints.MinWidth := aForm.Width - slackW;
       end;
-   if slackH > 0 then
+   if slackH >= 0 then
       begin
       aForm.Constraints.MinHeight := aForm.Height - slackH;
       end;
