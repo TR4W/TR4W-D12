@@ -232,6 +232,7 @@ uses
   uAboutForm in 'src\ui\lcl\uAboutForm.pas',
   uAltPForm in 'src\ui\lcl\uAltPForm.pas',
   uCabrilloSummaryForm in 'src\ui\lcl\uCabrilloSummaryForm.pas',
+  uFileViewForm in 'src\ui\lcl\uFileViewForm.pas',
   uFunctionKeysForm in 'src\ui\lcl\uFunctionKeysForm.pas',
   uBandPlanForm in 'src\ui\lcl\uBandPlanForm.pas',
   uLegacyIniPrompt in 'src\ui\lcl\uLegacyIniPrompt.pas',

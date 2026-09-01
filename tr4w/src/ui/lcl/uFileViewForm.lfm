@@ -1,0 +1,67 @@
+object frmFileView: TfrmFileView
+  Left = 0
+  Height = 600
+  Top = 0
+  Width = 820
+  Caption = 'File viewer (assigned at run time)'
+  ClientHeight = 600
+  ClientWidth = 820
+  KeyPreview = True
+  LCLVersion = '4.8.0.0'
+  Menu = mnuMain
+  Position = poMainFormCenter
+  OnClose = HandleClose
+  OnKeyDown = HandleKeyDown
+  OnShow = HandleShow
+  object memView: TMemo
+    Left = 0
+    Height = 600
+    Top = 0
+    Width = 820
+    Align = alClient
+    Constraints.MinHeight = 220
+    Constraints.MinWidth = 420
+    ReadOnly = True
+    ScrollBars = ssBoth
+    TabOrder = 0
+    WordWrap = False
+  end
+  object mnuMain: TMainMenu
+    object mnuFile: TMenuItem
+      Caption = 'File'
+      object mnuOpenInEditor: TMenuItem
+        Caption = 'Open in text editor'
+        OnClick = OpenInEditorClick
+      end
+      object mnuExplore: TMenuItem
+        Caption = 'Explore'
+        OnClick = ExploreClick
+      end
+      object mnuSendLog: TMenuItem
+        Caption = 'Send log'
+        Visible = False
+        OnClick = SendLogClick
+      end
+      object mnuSep1: TMenuItem
+        Caption = '-'
+      end
+      object mnuExit: TMenuItem
+        Caption = 'Exit'
+        OnClick = ExitClick
+      end
+    end
+    object mnuEdit: TMenuItem
+      Caption = 'Edit'
+      object mnuCopy: TMenuItem
+        Caption = 'Copy'
+        ShortCut = 16451
+        OnClick = CopyClick
+      end
+      object mnuSelectAll: TMenuItem
+        Caption = 'Select all'
+        ShortCut = 16449
+        OnClick = SelectAllClick
+      end
+    end
+  end
+end

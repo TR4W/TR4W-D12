@@ -59,8 +59,6 @@ type
   LHANDLE = Cardinal;
   PLHANDLE = ^Cardinal;
 
-  TEditStreamCallBack = function(dwCookie: LONGINT; pbBuff: PByte; cb: LONGINT; var pcb: LONGINT): LONGINT; stdcall;
-
   PMapiRecipDesc = ^TMapiRecipDesc;
 {$EXTERNALSYM MapiRecipDesc}
   MapiRecipDesc = packed record
@@ -121,49 +119,20 @@ type
     ulReserved: Cardinal
     ): Cardinal stdcall;
 
-{$EXTERNALSYM _editstream}
-  _editstream = record
-    dwCookie: LONGINT;
-    dwError: LONGINT;
-    pfnCallback: TEditStreamCallBack;
-  end;
+(* THE RICH-EDIT STREAMING MACHINERY IS DELETED, not ported (2026-09-01).
 
-const
-  EM_STREAMIN                           = WM_USER + 73;
-  EM_SETBKGNDCOLOR                      = WM_USER + 67;
-  ES_SAVESEL                            = $00008000;
+   The viewer created a RICHED32 control, built an _editstream record with a
+   callback, and pushed the file through EM_STREAMIN with SF_TEXT -- a
+   rich-text control used exclusively to display PLAIN TEXT.
+   ui/lcl/uFileViewForm shows the same file in a read-only TMemo, so the
+   stream record, TEditStreamCallBack, OpenCallback (a wrapper round
+   ReadFile), the
+   SF_/EM_/ReadError constants and the RichEditViewer handle all go with it.
 
-  { stream formats }
+   MainUnit.RichEditOperation STAYS.  This window was one of its two callers
+   and no longer takes a reference on RICHED32.DLL; the MMTTY window is the
+   other and still does. *)
 
-const
-{$EXTERNALSYM SF_TEXT}
-  SF_TEXT                               = $0001;
-{$EXTERNALSYM SF_RTF}
-  SF_RTF                                = $0002;
-{$EXTERNALSYM SF_RTFNOOBJS}
-  SF_RTFNOOBJS                          = $0003; { outbound only }
-{$EXTERNALSYM SF_TEXTIZED}
-  SF_TEXTIZED                           = $0004; { outbound only }
-{$EXTERNALSYM SF_UNICODE}
-  SF_UNICODE                            = $0010; { Unicode file of some kind }
-
-  { Flag telling stream operations to operate on the selection only }
-  { EM_STREAMIN will replace the current selection }
-  { EM_STREAMOUT will stream out the current selection }
-
-{$EXTERNALSYM SFF_SELECTION}
-  SFF_SELECTION                         = $8000;
-
-  { Flag telling stream operations to operate on the common RTF keyword only }
-  { EM_STREAMIN will accept the only common RTF keyword }
-  { EM_STREAMOUT will stream out the only common RTF keyword }
-
-{$EXTERNALSYM SFF_PLAINRTF}
-  SFF_PLAINRTF                          = $4000;
-  ReadError                             = $0001;
-
-function FullLogDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-function OpenCallback(dwCookie: LONGINT; pbBuff: PByte; cb: LONGINT; var pcb: LONGINT): LONGINT; stdcall;
 procedure SendMail(Address: PAnsiChar; BugReport: boolean);
 
 var
@@ -171,7 +140,6 @@ var
 //  MapiLogOn                             : TFNMapiLogOn;
 //  MapiLogOff                            : TFNMapiLogOff;
   MapiSendMail                          : TFNMapiSendMail;
-  RichEditViewer                        : HWND;
 
 
 // the full-log viewer.
@@ -184,107 +152,8 @@ var
 procedure ShowFullLog;
 
 implementation
-uses MainUnit;
 
-function FullLogDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-label
-  1;
-var
-  TempHWND                              : HWND;
-  lpStream                              : _editstream;
-  Menu                                  : HMENU;
-begin
-  Result := False;
-  case Msg of
-    WM_TIMER:
-      begin
-        Windows.KillTimer(hwnddlg, 1);
-        if not TF.tOpenFileForRead(TempHWND, PreviewFileNameAddress) then Exit;
-        lpStream.dwCookie := TempHWND;
-        lpStream.dwError := 0;
-        lpStream.pfnCallback := @OpenCallback;
-        SendMessage(RichEditViewer, EM_STREAMIN, SF_TEXT, LONGINT(@lpStream));
-        CloseHandle(TempHWND);
-      end;
-
-    WM_INITDIALOG:
-      begin
-        //Windows.SetMenu(hwnddlg, LoadMenu(hInstance, 'E'));
-
-        Windows.SetMenu(hwnddlg, CreateTR4WMenu(@E_MENU_ARRAY, E_MENU_ARRAY_SIZE, False));
-
-        RichEditViewer := CreateRichEdit(hwnddlg);
-
-//        SendMessage(RichEditViewer, EM_SETBKGNDCOLOR, 0, $0000FFff);
-
-        if PreviewFileIsCabrillo then
-           begin
-           Menu := GetMenu(hwnddlg);
-           if ContestsArray[Contest].Email <> nil then
-              begin
-              TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_EDITOR_SENDLOGTO)), ContestsArray[Contest].Email);
-              AppendMenuA(Menu, MF_CHECKED + MF_STRING, 105, wsprintfBuffer);
-              end;
-
-           //if Contest in [DARCWAEDCCW, DARCWAEDCSSB, RUSSIANDX, IARU, ARRL160, ARRL10, ARRLSSCW, ARRLSSSSB, ARRLDXCW, ARRLDXSSB, CQ160CW, CQ160SSB, CQWPXCW, CQWPXSSB, CQWWCW, CQWWSSB, CQWWRTTY] then
-            // AppendMenu(Menu, MF_STRING, 106, 'Contribute log for SCP database');
-           end;
-//        RichEditViewer := Get101Window(hwnddlg);
-        SetWindowTextA(hwnddlg, PreviewFileNameAddress);
-        Windows.SetTimer(hwnddlg, 1, 50, nil);
-      end;
-
-{$IFDEF LANG_RUS}
-    WM_HELP: ShowHelp('ru_fileviewwindow');
-{$ENDIF}
-
-    WM_COMMAND:
-
-      case wParam of
-        101:
-          begin
-            // Issue #986 -- open in the system default text editor, not Notepad.
-            OpenInDefaultTextEditor(PreviewFileNameAddress);
-          end;
-{
-        102:
-          begin
-            TempHWND := LoadLibrary('Mapi32.dll');
-            if TempHWND <> 0 then
-            begin
-              @MAPISendDocuments := GetProcAddress(TempHWND, 'MAPISendDocuments');
-              if @MAPISendDocuments <> nil then
-                MAPISendDocuments(hwnddlg, ';', PreviewFileNameAddress, @MyCall[1], 0);
-              FreeLibrary(TempHWND);
-            end;
-          end;
-}
-        105: SendMail(ContestsArray[Contest].Email, False);
-        106: SendMail('logs@supercheckpartial.com', False);
-        107: RunExplorer(PreviewFileNameAddress);
-        103: SendMessage(RichEditViewer, WM_COPY, 0, 0);
-        104: SendMessage(RichEditViewer, EM_SETSEL, 0, -1);
-        102, 2: goto 1;
-      end;
-
-    WM_SIZE: tListBoxClientAlign(hwnddlg);
-    WM_CLOSE: 1:
-      begin
-        PreviewFileIsCabrillo := False;
-        EndDialog(hwnddlg, 0);
-      end;
-
-    WM_NCDESTROY:
-      begin
-        //            if MMTTYRichEdit = INVALID_HANDLE_VALUE then
-        begin
-          RichEditOperation(False);
-//          FreeLibrary(RICHED32DLLHANDLE);
-//          RICHED32DLLHANDLE := 0;
-        end;
-      end;
-  end;
-end;
+uses MainUnit, uFileViewForm;
 
 procedure SendMail(Address: PAnsiChar; BugReport: boolean);
 var
@@ -347,27 +216,9 @@ begin
      end;
 end;
 
-function OpenCallback(dwCookie: LONGINT; pbBuff: PByte; cb: LONGINT; var pcb: LONGINT): LONGINT; stdcall;
-//var
-//  lpNumberOfBytesRead                   : DWORD;
-begin
-  Windows.ReadFile(dwCookie, pbBuff^, cb, Cardinal(pcb), nil);
-//  pcb := _lread(dwCookie, pbBuff, cb);
-  if pcb <= 0 {-1} then
-     begin
-     pcb := 0;
-     Result := ReadError;
-     end
-  else
-     begin
-     Result := NoError;
-     end;
-end;
-
-
 procedure ShowFullLog;
 begin
-   CreateModalDialog(450, 300, tr4whandle, @FullLogDlgProc, 0);
+   ShowFileViewWindow;
 end;
 end.
 

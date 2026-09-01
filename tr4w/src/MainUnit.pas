@@ -7386,11 +7386,12 @@ end;
 procedure FilePreview;
 begin
   if tSilentExport then Exit;   // batch /EXPORT: no modal preview window
-  // TryToLoadRICHED32DLL;
-  // if RICHED32DLLHANDLE = 0 then RICHED32DLLHANDLE := Windows.LoadLibrary('RICHED32.DLL');
-  RichEditOperation(True);
-  //DialogBox(hInstance, MAKEINTRESOURCE(69), 0, @FullLogDlgProc);
-  //tDialogBox(69, @FullLogDlgProc);
+
+  { RichEditOperation(True) STOOD HERE and is gone with the RichEdit: the
+    viewer shows the file in a TMemo now and takes no reference on
+    RICHED32.DLL.  The refcount itself stays -- the MMTTY window is its other
+    caller -- and leaving the Load here without the matching Unload in the
+    viewer's teardown would have leaked the library for the session. }
   ShowFullLog;
   { The preview opens ON TOP of the station-information window, which is still
     modal underneath it.  Was SetFocus on a global HWND. }
