@@ -5446,10 +5446,6 @@ begin
 
       end;
 
-    menu_run_devicemanager:
-      // tEnumeratePorts;
-      RunWindowsUtility('rundll32.exe devmgr.dll, DeviceManager_Execute');
-
     menu_ctrl_execute_config: // 4.67.5
       begin
         if OpenFileDlg(nil, tr4whandle, PAnsiChar(WinAnsi(TC_CONFIGURATION_FILE +

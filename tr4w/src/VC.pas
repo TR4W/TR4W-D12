@@ -2488,7 +2488,11 @@ const
   menu_pingserver                       = 10563;
   menu_runserver                        = 10564;
   menu_WA7BNM_calendar                   = 10565;
-  menu_run_devicemanager                = 10566;
+  { 10566 was menu_run_devicemanager, removed 2026-09-01 -- TR4W shelled out
+    to `rundll32.exe devmgr.dll, DeviceManager_Execute`, which is not how an
+    application does this any more (NY4I). The NUMBER is left retired rather
+    than reused: menu ids reach this program as WM_COMMAND, so recycling one
+    means an old accelerator or a stale window can fire the new item. }
   menu_get_offset                       = 10567;
 //  menu_wa7bnm_calendar                  = 10568;
   menu_3830_scores_posting              = 10569;     //4.51.8

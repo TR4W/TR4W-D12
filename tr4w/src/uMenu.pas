@@ -76,7 +76,7 @@ const
     // per-slot entries to ONE item opening the Preferences window, removing
     // the MAXWORD-1 submenu marker, the two Radio entries and the MAXWORD-2
     // terminator, and adding one item (net -3).
-    T_MENU_ARRAY_SIZE                     = 176 + 1 {MMTTY window}{$IFDEF LANG_RUS} + 3{$ENDIF} + 2 {RC_RESET_RADIO_PORTS, separator, Repeat POTA Parks} + 2 {HamScore Resync (Tools) + HamScore Status (Windows menu), Issue #783} + 1 {3830 Score under File-Reports} + 1 {Edit Cabrillo Summary under Tools, Issue #914} + 1 {Download TRMASTER.DTA, 2026-08-16} - 1 {Appearance removed, 2026-08-16} - 1 {Synchronize PC time removed, 2026-08-25 -- setting the clock needs UAC}
+    T_MENU_ARRAY_SIZE                     = 176 + 1 {MMTTY window}{$IFDEF LANG_RUS} + 3{$ENDIF} + 2 {RC_RESET_RADIO_PORTS, separator, Repeat POTA Parks} + 2 {HamScore Resync (Tools) + HamScore Status (Windows menu), Issue #783} + 1 {3830 Score under File-Reports} + 1 {Edit Cabrillo Summary under Tools, Issue #914} + 1 {Download TRMASTER.DTA, 2026-08-16} - 1 {Appearance removed, 2026-08-16} - 1 {Synchronize PC time removed, 2026-08-25 -- setting the clock needs UAC} - 1 {Device Manager removed, 2026-09-01 -- an application does not shell out to mmc}
                                             - 0 {Check for Updates taken OFF the menu 2026-08-28 -- see the row below};
 
 var
@@ -311,7 +311,6 @@ var
     (mrText: ''; mrId: menu_beaconsmonitor),
     (mrText: ''; mrId: menu_windowsmanager),
     (mrText: ''; mrId: menu_settimezone),
-    (mrText: ''; mrId: menu_run_devicemanager),
     (mrText: ''; mrId: 0),
     (mrText: ''; mrId: menu_pingserver),
     (mrText: ''; mrId: menu_runserver),
@@ -571,7 +570,6 @@ begin
    Inc(i); T_MENU_ARRAY[i].mrText := RC_BEACONSM;
    Inc(i); T_MENU_ARRAY[i].mrText := RC_WINCONTROL;
    Inc(i); T_MENU_ARRAY[i].mrText := RC_SETTIMEZONE;
-   Inc(i); T_MENU_ARRAY[i].mrText := RC_DEVICEMANAGER;
    Inc(i); T_MENU_ARRAY[i].mrText := '-';
    Inc(i); T_MENU_ARRAY[i].mrText := RC_PING;
    Inc(i); T_MENU_ARRAY[i].mrText := RC_RUNSERVER;
