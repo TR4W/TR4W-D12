@@ -133,6 +133,9 @@ var
 
 implementation
 uses
+  { The SQLite shadow -- an IMPLEMENTATION-section use, so no interface
+    cycle. It never raises and never blocks logging: see uLogShadow. }
+  uLogShadow,
    uPlatformProcess,   // RunProgram / RunWindowsUtility -- the only launchers
   SysUtils,         // SystemTimeToDateTime / DateTimeToSystemTime
   MainUnit,
@@ -750,6 +753,13 @@ begin
 
   sWriteFile(LogHandle, EditableQSORXData, SizeOf(ContestExchange));
   CloseLogFile;
+
+  { The binary log addresses this record by a byte offset; the shadow by the
+    same record's POSITION. Divided here rather than inside the shadow, so the
+    record size stays a fact of the binary format and does not leak into the
+    database layer. }
+  ShadowUpdateQSOAtIndex(IndexInMap div SizeOf(ContestExchange),
+                         EditableQSORXData);
   if FullLogEditHandle <> 0 then
      begin
      ListView_DeleteItem(LogEditListView, FullLogEditIndex);

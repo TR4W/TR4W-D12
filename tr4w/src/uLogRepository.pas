@@ -140,6 +140,27 @@ type
 
       function NewestRowId: Int64;
 
+      { The id of the Nth row in id order, counting from zero -- 0 for a log
+        with fewer rows than that.
+
+        THE BINARY LOG ADDRESSES A RECORD BY ITS ORDINAL POSITION, which is what
+        the QSO editor has (a byte offset divided by the record size). This
+        converts that to a row handle WITHOUT assuming id = position + 1: the
+        ids happen to be contiguous today, but an assumption that only holds
+        while nothing has ever been deleted is one that breaks silently the
+        first time something is. }
+      function RowIdAtIndex(aIndex: Int64): Int64;
+
+      { The multi-op network's own key, which uNet.FindAndUpdateQSOInLog uses to
+        find a QSO by scanning the whole log backwards.
+
+        REFUSES (0, 0) and returns False. That pair is stamped only on the
+        network path, so it is the DEFAULT for every other QSO -- 1,314 of
+        winter_fd's 1,316 rows carry it -- and an unguarded UPDATE would rewrite
+        all of them with one record. }
+      function UpdateQSOBySessionIds(aSessionId, aSessionSeq: Int64;
+                                     const aQso: ContestExchange): boolean;
+
       function LoadQSO(aRowId: Int64; out aQso: ContestExchange): boolean;
 
       { By the guid rather than the row.  Kept because the guid is the identity
@@ -1156,6 +1177,74 @@ begin
    finally
       q.Free;
    end;
+end;
+
+function TLogRepository.RowIdAtIndex(aIndex: Int64): Int64;
+var
+   q: TSQLQuery;
+begin
+   Result := 0;
+   if aIndex < 0 then
+      begin
+      Exit;
+      end;
+
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := FDatabase.Connection;
+      q.SQL.Text := 'SELECT id FROM qso ORDER BY id LIMIT 1 OFFSET :n';
+      q.ParamByName('n').AsLargeInt := aIndex;
+      q.Open;
+      if not q.EOF then
+         begin
+         Result := q.Fields[0].AsLargeInt;
+         end;
+      q.Close;
+   finally
+      q.Free;
+   end;
+end;
+
+function TLogRepository.UpdateQSOBySessionIds(aSessionId, aSessionSeq: Int64;
+                                              const aQso: ContestExchange): boolean;
+var
+   rowId: Int64;
+   q: TSQLQuery;
+begin
+   Result := False;
+
+   { THE GUARD IS THE POINT. (0, 0) is what ceQSOID1/ceQSOID2 hold on every QSO
+     that did not go through the network path, which is nearly all of them.
+     Without this, one edited record would overwrite the whole log. }
+   if (aSessionId = 0) and (aSessionSeq = 0) then
+      begin
+      Exit;
+      end;
+
+   rowId := 0;
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := FDatabase.Connection;
+      q.SQL.Text := 'SELECT id FROM qso WHERE session_id = :sid ' +
+                    'AND session_seq = :sseq ORDER BY id DESC LIMIT 1';
+      q.ParamByName('sid').AsLargeInt := aSessionId;
+      q.ParamByName('sseq').AsLargeInt := aSessionSeq;
+      q.Open;
+      if not q.EOF then
+         begin
+         rowId := q.Fields[0].AsLargeInt;
+         end;
+      q.Close;
+   finally
+      q.Free;
+   end;
+
+   if rowId = 0 then
+      begin
+      Exit;
+      end;
+
+   Result := UpdateQSO(rowId, aQso);
 end;
 
 function TLogRepository.RecordCount: Int64;

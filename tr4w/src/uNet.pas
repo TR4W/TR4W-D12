@@ -1213,6 +1213,9 @@ begin
             begin
             tSetFilePointer(FilePointer * SizeOf(ContestExchange), FILE_END);
             sWriteFile(LogHandle, RXData, SizeOf(ContestExchange));
+            { The shadow finds the same QSO by the same key -- one indexed
+              statement instead of this backwards scan. }
+            ShadowUpdateQSOBySessionIds(RXData);
             Result := True;
             goto 2;
             end;

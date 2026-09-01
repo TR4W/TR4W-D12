@@ -48,16 +48,16 @@ http://www.gnu.org/licenses/gpl-3.0.txt
                                                uNet.UpdateRec,
                                                uQTCS.SetSendedQSOs)
 
-    NOT yet       editing an arbitrary QSO    (uEditQSO -- needs the file
-                                               offset mapped to a row)
-                  the network's own update    (uNet.FindAndUpdateQSOInLog --
-                                               keys on (ceQSOID1, ceQSOID2))
+                  editing an arbitrary QSO    (uEditQSO, by record position)
+                  the network's own update    (uNet.FindAndUpdateQSOInLog,
+                                               by (ceQSOID1, ceQSOID2))
                   ADIF import                 (MainUnit.ImportFromADIF)
 
-  Those three make the shadow DRIFT from the binary log, which is why the shadow
-  is rebuilt from the .TRW whenever the two disagree on how many records they
-  hold -- see EnsureOpen. Rebuilding is cheap (1,316 QSOs in 63 ms) and the
-  .TRW is authoritative, so it costs nothing to be certain. }
+  ALL EIGHT WRITE SITES ARE NOW SHADOWED. The drift rebuild in EnsureOpen stays
+  anyway, and not as a formality: a session that ran with the shadow switched
+  off after a failure, or a log edited by an older build, still leaves the two
+  out of step. Rebuilding is cheap (1,316 QSOs in 63 ms) and the .TRW is
+  authoritative, so disagreement is settled rather than hoped about. }
 unit uLogShadow;
 
 {$I tr4w.inc}
@@ -74,6 +74,14 @@ procedure ShadowAppendQSO(const aQso: ContestExchange);
 { Rewrites the shadow's newest row -- what the three "seek back one record"
   sites do to the binary log.  Never raises. }
 procedure ShadowUpdateNewestQSO(const aQso: ContestExchange);
+
+{ Rewrites the row matching a record's POSITION in the binary log -- what the
+  QSO editor does with a byte offset.  Never raises. }
+procedure ShadowUpdateQSOAtIndex(aRecordIndex: Int64; const aQso: ContestExchange);
+
+{ Rewrites the row the multi-op network identifies by (ceQSOID1, ceQSOID2).
+  Does nothing when that pair is unset.  Never raises. }
+procedure ShadowUpdateQSOBySessionIds(const aQso: ContestExchange);
 
 { Closes it, if it was ever opened.  Safe to call when it was not. }
 procedure ShadowClose;
@@ -334,6 +342,85 @@ begin
       on E: Exception do
          begin
          Disable('rewriting the newest QSO', E);
+         end;
+   end;
+end;
+
+procedure ShadowUpdateQSOAtIndex(aRecordIndex: Int64; const aQso: ContestExchange);
+var
+   rowId: Int64;
+   rebuilt: boolean;
+begin
+   if GDisabled then
+      begin
+      Exit;
+      end;
+
+   try
+      if not EnsureOpen(rebuilt) then
+         begin
+         Exit;
+         end;
+      if rebuilt then
+         begin
+         { The rebuild has just re-read the binary log, which already carries
+           this edit -- the caller writes before calling here. }
+         Exit;
+         end;
+
+      rowId := GRepository.RowIdAtIndex(aRecordIndex);
+      if rowId <= 0 then
+         begin
+         { The shadow is short of that record. EnsureOpen's drift check will
+           rebuild at the next open; saying so here is what makes that visible
+           rather than mysterious. }
+         if logger <> nil then
+            begin
+            logger.Warn('[LogShadow] no row at record index %d -- the shadow ' +
+                        'will be rebuilt from the binary log', [aRecordIndex]);
+            end;
+         Exit;
+         end;
+
+      GRepository.UpdateQSO(rowId, aQso);
+      GRepository.Commit;
+   except
+      on E: Exception do
+         begin
+         Disable('rewriting a QSO by position', E);
+         end;
+   end;
+end;
+
+procedure ShadowUpdateQSOBySessionIds(const aQso: ContestExchange);
+var
+   rebuilt: boolean;
+begin
+   if GDisabled then
+      begin
+      Exit;
+      end;
+
+   try
+      if not EnsureOpen(rebuilt) then
+         begin
+         Exit;
+         end;
+      if rebuilt then
+         begin
+         Exit;
+         end;
+
+      { False when the pair is unset or matches nothing. Not an error: the
+        binary side scans the whole log and finds nothing either. }
+      if GRepository.UpdateQSOBySessionIds(aQso.ceQSOID1, aQso.ceQSOID2, aQso) then
+         begin
+         GRepository.Commit;
+         end;
+   except
+      on E: Exception do
+         begin
+         Disable('rewriting a QSO by its network key', E);
          end;
    end;
 end;

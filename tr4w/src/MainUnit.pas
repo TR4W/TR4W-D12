@@ -563,6 +563,9 @@ const
 implementation
 
 uses
+  { The SQLite shadow -- an IMPLEMENTATION-section use, so no interface
+    cycle. It never raises and never blocks logging: see uLogShadow. }
+  uLogShadow,
 {$IF tDebugMode}
   // uDocumentation,
 {$IFEND}
@@ -10037,6 +10040,9 @@ begin
                 end;
 
              CalculateQSOPoints(TempRXData);
+             { Imported QSOs reach the shadow too -- the binary write is the
+               next statement, and this one cannot raise. }
+             ShadowAppendQSO(TempRXData);
              tWriteFile(LogHandle, TempRXData, SizeOf(ContestExchange),
                lpNumberOfBytesWritten);
              inc(QSOCounter);
