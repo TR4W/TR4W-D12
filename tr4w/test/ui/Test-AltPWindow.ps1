@@ -86,7 +86,10 @@ try
 
    $written = Get-TR4WLogSince -LogPath $log -Mark $mark
    $hits = @($written -split "`n" |
-             Where-Object { $_ -match '\[AltP\] filled (\d+) row\(s\), window=(\d+) mode=(\d+), selecting (-?\d+)' } |
+             # window and mode are ENUM NAMES, not ordinals -- the line used to log
+             # Ord() and 'mode=1' had to be decoded against VC.pas.  \w+ here, and
+             # this test failing when the format changed is the point of it.
+             Where-Object { $_ -match '\[AltP\] filled (\d+) row\(s\), window=(\w+) mode=(\w+), selecting (-?\d+)' } |
              ForEach-Object {
                 [pscustomobject]@{ Rows = [int]$Matches[1]; Window = $Matches[2]
                                    Mode = $Matches[3]; Selected = [int]$Matches[4] }

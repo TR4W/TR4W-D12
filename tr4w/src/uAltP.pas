@@ -25,6 +25,7 @@ interface
 
 uses
   SysUtils,   { Format -- replaced TF.Format/wsprintfA }
+  TypInfo,    { GetEnumName -- log enums by NAME, never by ordinal }
   Tree,
   LogCW,
   TF,
@@ -296,8 +297,22 @@ begin
 
   if logger.IsDebugEnabled then
      begin
-     logger.Debug('[AltP] filled %d row(s), window=%d mode=%d, selecting %d',
-                  [AltPRowCount, Ord(mt), Ord(MessageMode), LastSelectedMessage]);
+     { BY NAME, NOT BY ORDINAL.  This line logged Ord(MessageMode) and read
+       'mode=1', which took a trip to VC.pas to learn means Digital and not
+       Phone -- ModeType is (CW, Digital, Phone, ...) and the obvious reading
+       is wrong (NY4I, 2026-08-31).  Worse, an ordinal is not stable: insert a
+       mode and every historical log line silently means something else.
+
+       GetEnumName is the same answer the radio registry reached, and for the
+       same reason -- see RadioTypeToken, where a hand-maintained parallel
+       table drifted from the enum and silently pointed four Kenwoods at the
+       wrong driver. }
+
+     logger.Debug('[AltP] filled %d row(s), window=%s mode=%s, selecting %d',
+                  [AltPRowCount,
+                   GetEnumName(TypeInfo(MesWindowType), Ord(mt)),
+                   GetEnumName(TypeInfo(ModeType), Ord(MessageMode)),
+                   LastSelectedMessage]);
      end;
 
   { BY KEY, not by row.  LastSelectedMessage is a key ordinal (0..35) and
@@ -316,7 +331,8 @@ end;
 
 procedure EditMessage;
 var
-  Row: integer;
+  Row        : integer;
+  SelectedKey: AnsiChar;
 begin
   Row := AltPSelectedIndex;
   if Row = -1 then
@@ -334,8 +350,16 @@ begin
     ALTF1/ALTF2 depending on what is showing, and the old row test would have
     silently refused to edit those while letting the real F1/F2 through. }
 
+  { THE KEYS, NOT THEIR NUMBERS.  This read `in [0, 1]`, and 0 and 1 are F1
+    and F2 only because of where they sit in the AnsiChar key constants --
+    the same class of thing as logging Ord(mode) and having to look up what
+    1 means (NY4I, 2026-08-31).  Naming the keys says the rule out loud:
+    the EXCHANGE window's F1 and F2 are derived, not stored. }
+
+  SelectedKey := AnsiChar(Ord(F1) + LastSelectedMessage);
+
   if (MesWindow = ExMsgWin) and
-     (LastSelectedMessage in [0, 1]) then
+     (SelectedKey in [F1, F2]) then
      begin
      Exit;
      end;

@@ -11,6 +11,7 @@ object frmAltP: TfrmAltP
   LCLVersion = '4.8.0.0'
   Position = poMainFormCenter
   OnKeyDown = HandleKeyDown
+  OnResize = HandleResize
   OnShow = HandleShow
   object rgBank: TRadioGroup
     Left = 8

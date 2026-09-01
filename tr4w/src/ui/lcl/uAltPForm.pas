@@ -60,6 +60,9 @@ type
       procedure EditClick(Sender: TObject);
       procedure CloseClick(Sender: TObject);
       procedure BankClick(Sender: TObject);
+      procedure HandleResize(Sender: TObject);
+   private
+      procedure SizeColumns;
    end;
 
 { THE VIEW'S SIDE OF THE SEAM.  uAltP calls these; it never touches a control. }
@@ -404,6 +407,8 @@ begin
      naming 'Terminal' -- see the unit header. }
    lvMessages.Font.Pitch := fpFixed;
 
+   SizeColumns;
+
    { AFTER the columns exist, and every time the window opens -- the memories
      may have been edited since.  This is the WM_INITDIALOG call. }
 
@@ -441,6 +446,58 @@ begin
       begin
       AltPFormOnEdit;
       end;
+end;
+
+{ THE COLUMNS FILL THE WINDOW.  Anchoring stretches the CONTROL; a TListView's
+  columns keep the widths they were given, so widening the window left the
+  three columns ending around 750px with dead space beside them -- visible
+  the moment anyone resizes it (NY4I, 2026-08-31).
+
+  IN THE DESIGNED PROPORTIONS, not equal thirds: the command is a fixed-width
+  key name, the message is the long one, the caption is short.  The Win32
+  dialog's 270/340/155 carry that judgement and are kept as the ratio.
+
+  The last column takes the rounding remainder so the three always sum to the
+  full width -- distributing it by ratio leaves a one or two pixel gap that
+  shows as a sliver of the wrong colour at the right edge. }
+procedure TfrmAltP.SizeColumns;
+const
+   DESIGN_W: array[0..2] of integer = (270, 340, 155);
+var
+   avail, total, i, used, w: integer;
+begin
+   if lvMessages.Columns.Count < 3 then
+      begin
+      Exit;
+      end;
+
+   { Less a little for the vertical scrollbar, so a full-width row does not
+     provoke a horizontal one -- the same allowance the cluster console makes. }
+   avail := lvMessages.ClientWidth - 4;
+   if avail < 60 then
+      begin
+      Exit;      { mid-layout, or minimised }
+      end;
+
+   total := DESIGN_W[0] + DESIGN_W[1] + DESIGN_W[2];
+   used  := 0;
+
+   for i := 0 to 1 do
+      begin
+      w := (avail * DESIGN_W[i]) div total;
+      lvMessages.Columns[i].Width := w;
+      used := used + w;
+      end;
+
+   lvMessages.Columns[2].Width := avail - used;
+end;
+
+procedure TfrmAltP.HandleResize(Sender: TObject);
+begin
+   { Live, not debounced.  Three column widths is nothing to compute, and a
+     debounce would leave the columns visibly stale during the drag -- which
+     is what the radio panel's borrowed timer did before it was removed. }
+   SizeColumns;
 end;
 
 procedure TfrmAltP.BankClick(Sender: TObject);
