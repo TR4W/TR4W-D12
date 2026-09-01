@@ -168,7 +168,7 @@ const
      the build's narrowing ceiling counts and which would be silently lossy if
      any of this were ever not ASCII.  SQL keywords and our own column names
      are ASCII by construction, so AnsiString is both correct and free. *)
-   LOG_SCHEMA_STATEMENTS: array[0..9] of AnsiString = (
+   LOG_SCHEMA_STATEMENTS: array[0..10] of AnsiString = (
 
       (* ONE ROW.  This is the log's own identity and its entry declaration,
         frozen when the log is created (tier 2). *)
@@ -433,6 +433,10 @@ const
       (* "What else was this contact?" -- the query qso_set_id exists to answer,
         asked once per record by the ADIF exporter. *)
       'CREATE INDEX idx_qso_set      ON qso(qso_set_id)',
+
+      (* Finding the set a contact already has, when another QSO of the same
+         exchange arrives -- see SaveQSOGroupingByExchangeId. *)
+      'CREATE INDEX idx_qso_exchange ON qso(exchange_id)',
       'CREATE INDEX idx_qso_dupe     ON qso(callsign, band, mode) WHERE deleted = 0',
 
       (* The outbound queues are a WHERE clause, not a data structure. *)

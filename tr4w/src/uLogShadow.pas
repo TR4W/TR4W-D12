@@ -92,7 +92,10 @@ function ShadowIsActive: boolean;
 implementation
 
 uses
-   SysUtils, MainUnit, uLogDatabase, uLogRepository, uLogImport, uLogBinaryFile;
+   SysUtils, MainUnit, uLogDatabase, uLogRepository, uLogImport, uLogBinaryFile,
+   (* The canonical sent-exchange builder -- the same one the UDP broadcast
+      uses, so the database and the broadcast cannot disagree. *)
+   uExchangeBuilder;
 
 var
    GDatabase: TLogDatabase = nil;
@@ -248,6 +251,7 @@ end;
 procedure ShadowAppendQSO(const aQso: ContestExchange);
 var
    rebuilt: boolean;
+   rowId: Int64;
 begin
    if GDisabled then
       begin
@@ -278,6 +282,24 @@ begin
         property to rely on. *)
       if rebuilt then
          begin
+         (* THE REBUILD ALREADY IMPORTED THIS QSO, so appending would duplicate
+            it -- but the import cannot know what was SENT, and this call can.
+            Skipping outright therefore lost the sent exchange of the first QSO
+            of every session, which is exactly the field this work exists to
+            capture. Measured: row 1 came back with exchange_sent NULL while
+            row 2 carried it.
+
+            The record just written to the binary log is its LAST one, so the
+            row the rebuild just imported is the newest -- update that one with
+            what only the live path knows. *)
+         GRepository.SetNextSentExchange(
+            AnsiString(BuildSentExchangeText(aQso)));
+         rowId := GRepository.NewestRowId;
+         if rowId > 0 then
+            begin
+            GRepository.UpdateQSO(rowId, aQso);
+            GRepository.Commit;
+            end;
          Exit;
          end;
 
@@ -288,6 +310,23 @@ begin
          begin
          GRepository.SetContest(aQso.ceContest);
          end;
+
+      (* WHAT WAS SENT, CAPTURED NOW -- this is TR4W-D12 issue #2 being fixed
+        rather than worked around.
+
+        The binary record has no field for the sent exchange, so today it is
+        rebuilt from station globals at EXPORT time: correct a typo in MY NAME
+        or move house, and every past QSO retroactively claims to have sent the
+        new value. Two of the four corpus known-divergences are that defect.
+
+        BuildSentExchangeText is the canonical builder already used for the UDP
+        broadcast, and it reads the LIVE CQExchange template. Calling it here,
+        at the moment of the QSO, records what actually went out -- including a
+        stale grid if the operator changed one mid-contest, because that is
+        what was sent. An event source records the event, not today's opinion
+        of it. *)
+      GRepository.SetNextSentExchange(
+         AnsiString(BuildSentExchangeText(aQso)));
 
       (* The same grouping rule the importer uses -- a county line logged
         live must relate its rows exactly as an imported one does. *)

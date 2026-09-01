@@ -84,7 +84,7 @@ type
       FLastGuid: AnsiString;
       FLastSetId: AnsiString;
       FSetIdForNextSave: AnsiString;
-      FPreviousExchangeId: AnsiString;
+      FSentExchangeForNextSave: AnsiString;
       FContest: ContestType;
 
       FUpdate: TSQLQuery;
@@ -94,7 +94,7 @@ type
       procedure LoadContest;
       function LastInsertedRowId: Int64;
       procedure BindInto(aQuery: TSQLQuery; const aQso: ContestExchange;
-                         const aGuid: AnsiString; aWithGuid: boolean);
+                         const aGuid: AnsiString; aInserting: boolean);
       procedure BindRecord(const aQso: ContestExchange; const aGuid: AnsiString);
       procedure BindUpdate(const aQso: ContestExchange);
       procedure ReadRecord(aQuery: TSQLQuery; out aQso: ContestExchange);
@@ -129,6 +129,26 @@ type
         CLEARED AFTER EVERY SAVE, deliberately: a sticky set id would silently
         pull the next unrelated QSO into the same contact, and that is a defect
         nobody would see until an ADIF export merged two contacts. *)
+      (* WHAT THIS QSO SENT, captured for the next save.
+
+         THE RECORD HAS NO FIELD FOR IT, which is TR4W-D12 issue #2 in one
+         sentence: the sent exchange is rebuilt from station globals at EXPORT
+         time, so correcting a typo or changing a grid retroactively rewrites
+         what every past QSO claims to have sent. Two of the four corpus
+         known-divergences are that defect.
+
+         So it is captured HERE, at log time, by the caller that knows --
+         uExchangeBuilder.BuildSentExchangeText, which reads the live
+         CQExchange template and substitutes this QSO's serial.
+
+         AN IMPORT LEAVES IT EMPTY, and must. A binary log does not record what
+         was sent, and inventing it from today's globals would be exactly the
+         bug this column exists to fix, committed by the tool meant to fix it.
+
+         Cleared after every save, like the QSO set, so one contact cannot
+         inherit another's exchange. *)
+      procedure SetNextSentExchange(const aSentExchange: AnsiString);
+
       procedure SetNextQSOSet(const aSetId: AnsiString);
 
       (* SAVE, PUTTING CONSECUTIVE QSOs THAT SHARE A ContestExchange.id INTO ONE
@@ -659,7 +679,8 @@ const
       'computer_id, operator_id, record_kind, ' +
       'qso_at, callsign, standard_call, freq_tx_hz, freq_rx_hz, is_split, ' +
       'band, mode, submode, ' +
-      'exchange_received, rst_sent, rst_received, serial_sent, serial_received, ' +
+      'exchange_sent, exchange_received, ' +
+      'rst_sent, rst_received, serial_sent, serial_received, ' +
       'rcvd_zone, rcvd_name, rcvd_age, rcvd_check, rcvd_precedence, rcvd_class, ' +
       'rcvd_power, rcvd_chapter, rcvd_prefecture, rcvd_member_no, rcvd_qth, ' +
       'rcvd_random, random_sent, rcvd_kids, qtc_call, domestic_qth, ' +
@@ -670,13 +691,22 @@ const
       'name_sent, mp3_recorded, clear_dupe_sheet, clear_mult_sheet, ' +
       'radio_nr, operator_call, deleted, sent_to_server, server_dirty';
 
-   (* The same list without the guid -- see PrepareStatements for why. *)
-   QSO_COLUMNS_NO_GUID =
-      'exchange_id, qso_set_id, session_id, session_seq, ' +
+   (* THE UPDATABLE COLUMNS: the same list WITHOUT guid and WITHOUT
+     qso_set_id.
+
+     Both are identity rather than content, and an edit changes what a QSO
+     SAYS, not which row it is or which contact it belonged to. Leaving
+     qso_set_id in here was a real defect, caught by a live run: the update
+     had no set id to bind, wrote an empty string, and the first QSO of the
+     session lost its membership of the county-line pair it had just been
+     grouped into. Every subsequent edit would have done the same. *)
+   QSO_COLUMNS_UPDATABLE =
+      'exchange_id, session_id, session_seq, ' +
       'computer_id, operator_id, record_kind, ' +
       'qso_at, callsign, standard_call, freq_tx_hz, freq_rx_hz, is_split, ' +
       'band, mode, submode, ' +
-      'exchange_received, rst_sent, rst_received, serial_sent, serial_received, ' +
+      'exchange_sent, exchange_received, ' +
+      'rst_sent, rst_received, serial_sent, serial_received, ' +
       'rcvd_zone, rcvd_name, rcvd_age, rcvd_check, rcvd_precedence, rcvd_class, ' +
       'rcvd_power, rcvd_chapter, rcvd_prefecture, rcvd_member_no, rcvd_qth, ' +
       'rcvd_random, random_sent, rcvd_kids, qtc_call, domestic_qth, ' +
@@ -692,7 +722,8 @@ const
       ':computer_id, :operator_id, :record_kind, ' +
       ':qso_at, :callsign, :standard_call, :freq_tx_hz, :freq_rx_hz, :is_split, ' +
       ':band, :mode, :submode, ' +
-      ':exchange_received, :rst_sent, :rst_received, :serial_sent, :serial_received, ' +
+      ':exchange_sent, :exchange_received, ' +
+      ':rst_sent, :rst_received, :serial_sent, :serial_received, ' +
       ':rcvd_zone, :rcvd_name, :rcvd_age, :rcvd_check, :rcvd_precedence, :rcvd_class, ' +
       ':rcvd_power, :rcvd_chapter, :rcvd_prefecture, :rcvd_member_no, :rcvd_qth, ' +
       ':rcvd_random, :random_sent, :rcvd_kids, :qtc_call, :domestic_qth, ' +
@@ -811,7 +842,7 @@ begin
    FUpdate := TSQLQuery.Create(nil);
    FUpdate.DataBase := FDatabase.Connection;
    FUpdate.SQL.Text := UPDATE_HEAD +
-                       AssignmentsFor(QSO_COLUMNS_NO_GUID) +
+                       AssignmentsFor(QSO_COLUMNS_UPDATABLE) +
                        UPDATE_TAIL;
    FUpdate.Prepare;
 end;
@@ -826,7 +857,7 @@ end;
 procedure TLogRepository.BindInto(aQuery: TSQLQuery;
                                   const aQso: ContestExchange;
                                   const aGuid: AnsiString;
-                                  aWithGuid: boolean);
+                                  aInserting: boolean);
 
    (* AnsiString, because that is what ParamByName takes. Declaring it `string`
      narrowed on every one of sixty-odd binds. *)
@@ -836,7 +867,7 @@ procedure TLogRepository.BindInto(aQuery: TSQLQuery;
    end;
 
 begin
-   if aWithGuid then
+   if aInserting then
       begin
       P('guid').AsString := aGuid;
       end;
@@ -847,13 +878,18 @@ begin
      every save so the NEXT QSO cannot silently join a set it has nothing to do
      with. Empty means "a set of one", filled in below with the row's own
      guid. *)
-   if FSetIdForNextSave <> '' then
+   (* INSERT ONLY. An update must not rewrite which contact this QSO belonged
+     to -- see QSO_COLUMNS_UPDATABLE. *)
+   if aInserting then
       begin
-      P('qso_set_id').AsString := FSetIdForNextSave;
-      end
-   else
-      begin
-      P('qso_set_id').AsString := aGuid;
+      if FSetIdForNextSave <> '' then
+         begin
+         P('qso_set_id').AsString := FSetIdForNextSave;
+         end
+      else
+         begin
+         P('qso_set_id').AsString := aGuid;
+         end;
       end;
 
    (* Identity. session_id/session_seq are ceQSOID1/ceQSOID2 -- the pair
@@ -885,6 +921,7 @@ begin
    (* The received exchange as rendered. There is no sent counterpart in the
      record -- crosswalk finding 1. *)
    BindText(P('exchange_received'), AnsiString(aQso.ExchString));
+   BindText(P('exchange_sent'), FSentExchangeForNextSave);
 
    P('rst_sent').AsInteger := aQso.RSTSent;
    P('rst_received').AsInteger := aQso.RSTReceived;
@@ -1153,11 +1190,13 @@ begin
    BindRecord(aQso, FLastGuid);
    FInsert.ExecSQL;
 
-   (* CLEARED IMMEDIATELY. A sticky set id would quietly pull the next
+   (* CLEARED IMMEDIATELY, BOTH OF THEM. A sticky set id would quietly pull the next
      unrelated QSO into this contact, and an ADIF export would then merge two
      contacts into one record -- visible to nobody until a park credit went
-     missing. *)
+     missing. A sticky sent exchange would attribute one QSO's exchange to
+     the next -- the same class of error against a different column. *)
    FSetIdForNextSave := '';
+   FSentExchangeForNextSave := '';
 
    Result := LastInsertedRowId;
 end;
@@ -1392,22 +1431,62 @@ function TLogRepository.SaveQSOGroupingByExchangeId(
    const aQso: ContestExchange): Int64;
 var
    thisId: AnsiString;
+   existing: AnsiString;
+   q: TSQLQuery;
 begin
    thisId := AnsiString(aQso.id);
 
-   (* Same contact as the one just saved: join its set. *)
-   if (thisId <> '') and (thisId = FPreviousExchangeId) and (FLastSetId <> '') then
+   (* ASKED OF THE DATABASE, not remembered from the previous save.
+
+     The first version compared against the last exchange id this instance had
+     written, on the reasoning that a county line is logged consecutively. True,
+     and not enough: the FIRST QSO of a session is grouped inside the importer's
+     repository during the shadow rebuild, and the SECOND arrives at a freshly
+     constructed one that remembers nothing. Measured on the live county-line
+     harness -- two rows that should have been one contact came back as two
+     sets, and only COUNT(DISTINCT) showed it, because two UUIDv7 values minted
+     in the same millisecond share a long prefix and looked identical when
+     truncated for display.
+
+     One indexed lookup is also simply more correct: same exchange means same
+     contact whether or not the rows were written consecutively, or by the same
+     object, or in the same session. *)
+   if thisId <> '' then
       begin
-      SetNextQSOSet(FLastSetId);
+      existing := '';
+      q := TSQLQuery.Create(nil);
+      try
+         q.DataBase := FDatabase.Connection;
+         q.SQL.Text := 'SELECT qso_set_id FROM qso WHERE exchange_id = :x ' +
+                       'ORDER BY id DESC LIMIT 1';
+         q.ParamByName('x').AsString := thisId;
+         q.Open;
+         if not q.EOF then
+            begin
+            existing := AnsiString(q.Fields[0].AsString);
+            end;
+         q.Close;
+      finally
+         q.Free;
+      end;
+
+      if existing <> '' then
+         begin
+         SetNextQSOSet(existing);
+         end;
       end;
 
    Result := SaveQSO(aQso);
-   FPreviousExchangeId := thisId;
 end;
 
 procedure TLogRepository.SetNextQSOSet(const aSetId: AnsiString);
 begin
    FSetIdForNextSave := aSetId;
+end;
+
+procedure TLogRepository.SetNextSentExchange(const aSentExchange: AnsiString);
+begin
+   FSentExchangeForNextSave := aSentExchange;
 end;
 
 function TLogRepository.RelatedRowIds(aRowId: Int64): TInt64Array;
