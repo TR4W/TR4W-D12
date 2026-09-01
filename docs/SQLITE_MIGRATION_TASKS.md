@@ -8,6 +8,27 @@ ORDER and the exit criteria.** It does not restate the schema.
 
 ---
 
+## Where this stands, 2026-09-01
+
+**A1, A2, A3, A4 and B1 are DONE.** The crosswalk, the 23 columns it found
+missing, the shared binary reader, the mapper, and the exhaustive round-trip
+test over real corpus logs. **22,312 unit tests, 0 failures; corpus 22/0/4.**
+
+**B1 moved forward from Phase B, deliberately.** The importer needs the field
+mapping, so writing it in A and repointing call sites in B is one definition
+instead of two -- the alternative was a mapping inside the importer that B would
+then have had to extract. Phase B is now purely task B2: the thirteen sites.
+
+**Five defects were found by running the mapper over real logs**, not by reading
+them, and every one would have reached an operator. They are recorded in
+[`CONTEST_EXCHANGE_CROSSWALK.md`](CONTEST_EXCHANGE_CROSSWALK.md) as findings 1-5;
+the sharpest is that `ContestExchange.id` identifies the EXCHANGE, not the QSO --
+county-line contacts share it, so it cannot be the unique row key.
+
+**Next: B2**, repointing the 8 writes and 5 reads.
+
+---
+
 ## Why there is a list at all
 
 NY4I, 2026-09-01, on being shown the mapper plan:
@@ -78,10 +99,10 @@ did not move disappears at the moment it is most needed.
 
 | # | task |
 |---|---|
-| **A1** | **The `ContestExchange` crosswalk -- all 71 fields.** Each mapped to a column, or recorded as not persisted **with the reason**. Not a summary: the list is the deliverable |
-| **A2** | **Add the missing columns.** Free right now -- the schema is version 1 and nothing has written a log. It stops being free the day an operator has one |
-| **A3** | **The `.trw` importer.** `test\logdump\logdump.lpr` already reads `TLogHeader` + records and is cross-checked against ADIF export by `test\python\verify_adif_export.py`. That is the reader; do not write a second one |
-| **A4** | **The exhaustive pin test**, in the same commit as A3: `.trw` -> rows -> `ContestExchange`, field by field |
+| **A1** | **DONE.** **The `ContestExchange` crosswalk -- all 71 fields.** Each mapped to a column, or recorded as not persisted **with the reason**. Not a summary: the list is the deliverable |
+| **A2** | **DONE (23 columns).** **Add the missing columns.** Free right now -- the schema is version 1 and nothing has written a log. It stops being free the day an operator has one |
+| **A3** | **DONE (the reader; `uLogBinaryFile`).** **The `.trw` importer.** `test\logdump\logdump.lpr` already reads `TLogHeader` + records and is cross-checked against ADIF export by `test\python\verify_adif_export.py`. That is the reader; do not write a second one |
+| **A4** | **DONE.** **The exhaustive pin test**: `.trw` -> rows -> `ContestExchange`, field by field |
 
 **Already found missing in A1, before it is even written:** `ceComputerID` (the
 multi-op station letter -- it identifies whose QSO a record is and drives the
@@ -103,8 +124,8 @@ what `logdump` reads. **No contest-factory work.**
 
 | # | task |
 |---|---|
-| **B1** | `TLogRepository` -- `Save` / `Load` over `ContestExchange` as a value type |
-| **B2** | Repoint the 8 writes and 5 reads |
+| ~~**B1**~~ | **DONE IN PHASE A** -- `TLogRepository`, `Save` / `Load` over `ContestExchange` as a value type. Moved because the importer needs the field mapping, and writing it twice was the alternative |
+| **B2** | **NEXT.** Repoint the 8 writes and 5 reads |
 | **B3** | Keep the corpus runnable across the switch -- export from the database, diff against the same frozen D7 references |
 
 **Exit:** corpus **22 passed / 0 failed / 4 known** with the log in SQLite.
