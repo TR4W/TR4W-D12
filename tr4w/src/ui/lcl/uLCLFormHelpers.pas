@@ -1181,6 +1181,7 @@ var
    maxR, maxB    : integer;
    needW, needH  : integer;
    slackW, slackH: integer;
+   newW, newH    : integer;
 begin
    if aForm = nil then
       begin
@@ -1261,6 +1262,39 @@ begin
    aForm.Constraints.MinWidth  := aForm.Width - slackW;
    aForm.Constraints.MinHeight := aForm.Height - slackH;
 
+   { AND APPLIED, NOT MERELY DECLARED.
+
+     Setting Constraints on a form that is ALREADY SHOWING does not resize it:
+     the LCL enforces them the next time the bounds change.  This routine is
+     called from OnShow -- it has to be, because that is when the content
+     exists -- and ShowModalOverWin32Parent centres and shows BEFORE OnShow
+     fires.  So the window opened at its designed size with its content clipped,
+     and jumped to the correct size the instant the operator touched a corner
+     (NY4I, screenshot, 2026-09-01).
+
+     A minimum that is right and unapplied looks exactly like a minimum that is
+     wrong, which is how this survived three passes over the same routine.
+
+     NOT RE-CENTRED afterwards, deliberately.  Growing pushes the window right
+     and down by half the shortfall -- tens of pixels -- and re-centring here
+     would move a window that had RESTORED a saved position, which is a worse
+     failure than being slightly off centre.  The centring nuance is noted in
+     ShowModalOverWin32Parent's header and belongs there if it is ever wanted. }
+   newW := aForm.Width;
+   newH := aForm.Height;
+   if newW < aForm.Constraints.MinWidth then
+      begin
+      newW := aForm.Constraints.MinWidth;
+      end;
+   if newH < aForm.Constraints.MinHeight then
+      begin
+      newH := aForm.Constraints.MinHeight;
+      end;
+   if (newW <> aForm.Width) or (newH <> aForm.Height) then
+      begin
+      aForm.SetBounds(aForm.Left, aForm.Top, newW, newH);
+      end;
+
    { REPORTED, because every one of the three cases above failed SILENTLY and
      looked identical from outside: a window that could be dragged too small.
      The numbers say which control set the bound and how much room it thought it
@@ -1268,10 +1302,11 @@ begin
    if logger <> nil then
       begin
       logger.Debug('[MinSize] %s: client %dx%d, content %dx%d, ' +
-                   'slack %dx%d -> min %dx%d',
+                   'slack %dx%d -> min %dx%d, window now %dx%d',
                    [aForm.Name, aForm.ClientWidth, aForm.ClientHeight,
                     maxR, maxB, slackW, slackH,
-                    aForm.Constraints.MinWidth, aForm.Constraints.MinHeight]);
+                    aForm.Constraints.MinWidth, aForm.Constraints.MinHeight,
+                    aForm.Width, aForm.Height]);
       end;
 end;
 
