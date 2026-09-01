@@ -203,6 +203,9 @@ const
 
 implementation
 uses
+   { The SQLite shadow -- an IMPLEMENTATION-section use, so no interface
+     cycle. uLogShadow never raises and never blocks logging. }
+   uLogShadow,
   uMainForm,   { the call field, named -- wh[] round 3 }
   uNetworkForm,   { the station list is a TListView on a form now }
   uCFG,
@@ -1393,6 +1396,7 @@ var
   begin
     tSetFilePointer(-1 * SizeOf(ContestExchange), FILE_CURRENT);
     sWriteFile(LogHandle, TempRXData, SizeOf(ContestExchange));
+    ShadowUpdateNewestQSO(TempRXData);
     inc(SendedQSOs);
     WaitForSingleObject(tNet_Event, 1000);
     // Runs on the sync WORKER thread and the window is an LCL form now, so this

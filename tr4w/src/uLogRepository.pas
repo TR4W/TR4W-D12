@@ -87,6 +87,7 @@ type
 
       procedure PrepareStatements;
       procedure LoadContest;
+      function LastInsertedRowId: Int64;
       procedure BindInto(aQuery: TSQLQuery; const aQso: ContestExchange;
                          const aGuid: AnsiString; aWithGuid: boolean);
       procedure BindRecord(const aQso: ContestExchange; const aGuid: AnsiString);
@@ -148,6 +149,14 @@ type
       { Non-deleted QSOs, counted by the database rather than tracked here --
         section 9a: no stored derived values, no in-memory mirror. }
       function QSOCount: integer;
+
+      { EVERY row, including deleted ones and non-QSO record kinds.
+
+        Distinct from QSOCount on purpose: this is the number that compares
+        against a binary log's record count, and the binary log holds the
+        deleted records too. Using QSOCount there would report drift on every
+        log that contains a deleted QSO. }
+      function RecordCount: Int64;
 
       procedure Commit;
 
@@ -1006,12 +1015,9 @@ begin
    FLastGuid := NewRowGuid(aQso);
    BindRecord(aQso, FLastGuid);
    FInsert.ExecSQL;
-   Result := NewestRowId;
+   Result := LastInsertedRowId;
 end;
 
-{ last_insert_rowid() rather than MAX(id): it is per-connection and unaffected by
-  anything another connection does, and it is what SQLite provides for exactly
-  this. MAX(id) would also be wrong the moment a row is deleted. }
 procedure TLogRepository.LoadContest;
 var
    q: TSQLQuery;
@@ -1086,7 +1092,40 @@ begin
    end;
 end;
 
+{ MAX(id), NOT last_insert_rowid(), AND THE DIFFERENCE WAS A DEFECT.
+
+  They answer different questions. last_insert_rowid() is "the row THIS
+  CONNECTION just inserted" -- right for SaveQSO, and ZERO on a connection that
+  has not inserted anything yet. NewestRowId is what DeleteLastContact and the
+  other "seek back one record" sites ask, and the first thing a restarted
+  session might do is delete the last contact of a log it has just opened.
+  Written the first way, that would have silently done nothing.
+
+  MAX(id) is right here because rows are never hard-deleted -- `deleted` is a
+  flag -- so the newest row stays the newest. }
 function TLogRepository.NewestRowId: Int64;
+var
+   q: TSQLQuery;
+begin
+   Result := 0;
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := FDatabase.Connection;
+      q.SQL.Text := 'SELECT MAX(id) FROM qso';
+      q.Open;
+      if (not q.EOF) and (not q.Fields[0].IsNull) then
+         begin
+         Result := q.Fields[0].AsLargeInt;
+         end;
+      q.Close;
+   finally
+      q.Free;
+   end;
+end;
+
+{ The row THIS connection just inserted, which is what SaveQSO must return even
+  if another connection has since added rows. }
+function TLogRepository.LastInsertedRowId: Int64;
 var
    q: TSQLQuery;
 begin
@@ -1100,6 +1139,23 @@ begin
          begin
          Result := q.Fields[0].AsLargeInt;
          end;
+      q.Close;
+   finally
+      q.Free;
+   end;
+end;
+
+function TLogRepository.RecordCount: Int64;
+var
+   q: TSQLQuery;
+begin
+   Result := 0;
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := FDatabase.Connection;
+      q.SQL.Text := 'SELECT COUNT(*) FROM qso';
+      q.Open;
+      Result := q.Fields[0].AsLargeInt;
       q.Close;
    finally
       q.Free;

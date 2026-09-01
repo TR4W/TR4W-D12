@@ -99,6 +99,9 @@ procedure ShowQTCSend;
 
 implementation
 uses
+   { The SQLite shadow -- an IMPLEMENTATION-section use, so no interface
+     cycle. uLogShadow never raises and never blocks logging. }
+   uLogShadow,
   uNet,
   LOGSUBS2,
   LOGWAE,
@@ -325,6 +328,7 @@ begin
         TempRXData.ceWasSendInQTC := True;
         tSetFilePointer(-1 * SizeOf(ContestExchange), FILE_CURRENT);
         sWriteFile(LogHandle, TempRXData, SizeOf(ContestExchange));
+        ShadowUpdateNewestQSO(TempRXData);
         if SendRecordToServer(NET_EDITEDQSO_ID, TempRXData) then
            begin
            Sleep(50);

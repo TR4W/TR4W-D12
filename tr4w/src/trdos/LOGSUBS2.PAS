@@ -157,7 +157,10 @@ uses
   uExchangeBuilder, // Canonical SentExchange builder for UDP broadcast
   uUDPBroadcastConfig, // TUDPStream / usContact, usScore, usLookup
   uUDPBroadcaster,
-  uPanadapterRestore;   { StopPanadapterRestore -- the start-up retry timer }
+  uPanadapterRestore,   { StopPanadapterRestore -- the start-up retry timer }
+  { The SQLite shadow -- an IMPLEMENTATION-section use, so no interface
+    cycle. It never raises and never blocks logging: see uLogShadow. }
+  uLogShadow;
 procedure PutContactIntoLogFile(LogString: string {Str80});
 
 begin
@@ -588,6 +591,9 @@ begin
   InvertBoolean(tLastLogEntryIsDeleted);
   tSetFilePointer(-1 * SizeOf(ContestExchange), FILE_END);
   sWriteFile(LogHandle, TempRXData, SizeOf(ContestExchange));
+  { The binary log rewrites its last record in place; the shadow rewrites its
+    newest row. }
+  ShadowUpdateNewestQSO(TempRXData);
   SendRecordToServer(NET_EDITEDQSO_ID, TempRXData);
   CloseLogFile;
   LoadinLog;
@@ -2529,6 +2535,12 @@ begin
        inc(tRestartInfo.riTotalRecordsInLog);
        end;
   CloseLogFile;
+
+  { THE SQLITE SHADOW -- step B2, and the binary log above is still the
+    authority. AFTER CloseLogFile on purpose: the contact is safely on disk
+    before anything else is attempted, and ShadowAppendQSO cannot raise. See
+    uLogShadow. }
+  ShadowAppendQSO(RXData);
   tSetWindowRedraw(wh[mweEditableLog], False);
   if tLogIndex = LinesInEditableLog then
      begin
