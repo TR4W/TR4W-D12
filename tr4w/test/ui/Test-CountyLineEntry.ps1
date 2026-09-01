@@ -66,7 +66,16 @@ param(
    # on its valid counties, but the operator must be TOLD what was ignored --
    # a mistyped second county used to vanish in silence, costing a QSO nobody
    # could see was missing.
-   [string]   $ExpectIgnored = ''
+   [string]   $ExpectIgnored = '',
+   # KEEP THE PREVIOUS RUN'S LOG instead of starting clean, so the next launch
+   # RESUMES a contest rather than beginning one.  That is the only way to
+   # exercise the shadow database's plain-reopen path: with the .TRW deleted the
+   # record counts disagree, the drift check fires, and the shadow is REBUILT --
+   # a different path that recreates the file.  Expect the QSO assertions to
+   # fail on a repeat run with the same callsign (the counties are already in
+   # the exchange window); this switch is for inspecting what a REOPEN does to
+   # the database, not for asserting on the entry.
+   [switch]   $KeepLog
 )
 
 Set-StrictMode -Version Latest
@@ -185,7 +194,7 @@ if (-not (Test-Path -LiteralPath $cfgPath))
 # already worked, so the SECOND run with the same callsign found the previous
 # run's counties already in the exchange window and logged five QSOs instead
 # of four.  Only this harness's own files are removed, never a real contest.
-if ($Config -like 'uitest-*')
+if (($Config -like 'uitest-*') -and (-not $KeepLog))
    {
    foreach ($ext in @('.TRW', '.RST', '.DAT', '.ADI', '.CBR'))
       {

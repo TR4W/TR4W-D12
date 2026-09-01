@@ -113,16 +113,7 @@ var
 
    GTriedToOpen: boolean = False;
 
-   (* Written once per session, the first time the shadow is usable.
-
-      It was first written only when the contest CHANGED, inside
-      ShadowAppendQSO -- which never fired: the first QSO opens the shadow by
-      rebuilding from the binary log, and ImportBinaryLog sets the contest
-      itself, so by the time the second QSO arrived the contest already matched
-      and the block was skipped. The whole entry declaration stayed NULL, which
-      is exactly the defect it exists to fix, so the guard is now "have we
-      written it" rather than "did something change". *)
-   GDeclarationWritten: boolean = False;
+   (* THERE IS NO "written already" FLAG, ON PURPOSE -- see EnsureOpen. *)
 
 function ShadowIsActive: boolean;
 begin
@@ -219,10 +210,28 @@ end;
 
   aRebuilt tells the caller the shadow was just built FROM THE BINARY LOG, which
   matters more than it looks -- see ShadowAppendQSO. *)
-function EnsureOpen(out aRebuilt: boolean): boolean;
+(* aAppendPending -- THE CALLER IS PART WAY THROUGH ADDING A QSO.
+
+   The binary record is written and the file CLOSED before ShadowAppendQSO is
+   called (LOGSUBS2.tAddQSOToLog, and that order is deliberate: the contact must
+   be durable before anything else is attempted). So during an append the log
+   holds exactly ONE record more than the shadow, and that is AGREEMENT, not
+   drift.
+
+   Reading it as drift is what the first version did, and the cost was not
+   theoretical: EVERY RESUMED SESSION RE-IMPORTED THE WHOLE LOG on its first
+   QSO, and the plain-reopen path below was never once taken -- dead code that
+   looked live. Measured on the county-line harness with -KeepLog: "shadow holds
+   2 record(s), the log holds 3", on a shadow that was perfectly in step.
+
+   AN EXACT EXPECTATION, NOT A TOLERANCE. Accepting a difference of one in
+   either direction would have been fewer lines and would have made a genuinely
+   lost record invisible -- which is the one thing this check exists to catch. *)
+function EnsureOpen(out aRebuilt: boolean; aAppendPending: boolean): boolean;
 var
    dbName: string;
    trwCount: Int64;
+   expected: Int64;
    res: TLogImportResult;
 
    (* Returns False rather than raising: the caller is a try/except that would
@@ -283,7 +292,32 @@ begin
         that ran with the shadow switched off, leave the two out of step. The
         .TRW is authoritative and rebuilding is cheap, so disagreement is
         settled by rebuilding rather than by hoping. *)
-      if (trwCount >= 0) and (GRepository.RecordCount <> trwCount) then
+      if aRebuilt then
+         begin
+         (* JUST REBUILT FROM THE LOG, so it cannot be out of step with it --
+            and checking anyway would rebuild a SECOND time on every new log.
+            The import copies the WHOLE binary log, the QSO being appended
+            included, so the shadow legitimately holds trwCount here while an
+            append expects trwCount - 1. Setting expected from aAppendPending
+            regardless made those disagree by exactly one, every time.
+
+            Skipping is not a shortcut past the check: an import that fell short
+            of the log would have already raised, and RebuildFromBinary returning
+            False is handled above. *)
+         expected := GRepository.RecordCount;
+         end
+      else if aAppendPending then
+         begin
+         (* The record being appended is already in the log and not yet in the
+            shadow. See the note on the parameter. *)
+         expected := trwCount - 1;
+         end
+      else
+         begin
+         expected := trwCount;
+         end;
+
+      if (trwCount >= 0) and (GRepository.RecordCount <> expected) then
          begin
          if not RebuildFromBinary(
                    Format('shadow holds %d record(s), the log holds %d',
@@ -299,15 +333,32 @@ begin
          GRepository := TLogRepository.Create(GDatabase);
          end;
 
-      (* THE ENTRY DECLARATION, ONCE THE SHADOW IS USABLE -- and on BOTH paths,
-         rebuilt or merely opened. Reading it again later would reintroduce
-         issue #2 at the header level: what an entry DECLARED is a fact about
-         the entry, not about today. *)
-      if not GDeclarationWritten then
-         begin
-         GRepository.SetEntryDeclaration(ReadEntryDeclaration);
-         GDeclarationWritten := True;
-         end;
+      (* THE ENTRY DECLARATION, REFRESHED EVERY TIME THE SHADOW OPENS -- not
+         captured once, and the distinction is NY4I's correction:
+
+           "You shouldn't be putting those in the QSO records, because those can
+            change. For example, I'm halfway through the contest, decide to
+            change my category from unassisted to assisted. So the only time
+            that's particularly relevant is when I do the Cabrillo submission."
+
+         THE CATEGORY FIELDS ARE NOT EVENT-SOURCE DATA. What a QSO SENT is a
+         fact about that QSO at that instant, and freezing it is the whole point
+         of exchange_sent. A CATEGORY is a fact about the SUBMISSION: switch to
+         assisted at 0300 and the entry IS assisted, all of it, including the
+         QSOs made before you switched. There is no earlier truth being
+         protected, so freezing one at log creation would simply serve a stale
+         category to a sponsor months later.
+
+         The FIRST version of this wrote it once and never again, which is the
+         right shape for exchange_sent and the wrong one here.
+
+         SO WHY STORE IT AT ALL, when the header store already has it? Because
+         the point of this migration is a log file that describes itself: hand
+         somebody a .db and it should carry its own submission metadata. The
+         header store stays authoritative at submission time; this is a copy
+         kept current, and it is refreshed rather than merged so it cannot
+         drift into a third opinion. *)
+      GRepository.SetEntryDeclaration(ReadEntryDeclaration);
 
       Result := True;
    except
@@ -330,7 +381,9 @@ begin
       end;
 
    try
-      if not EnsureOpen(rebuilt) then
+      (* True: tAddQSOToLog has already written this QSO to the binary log,
+         so the log being one ahead of the shadow is expected. *)
+      if not EnsureOpen(rebuilt, True) then
          begin
          Exit;
          end;
@@ -427,7 +480,7 @@ begin
       end;
 
    try
-      if not EnsureOpen(rebuilt) then
+      if not EnsureOpen(rebuilt, False) then
          begin
          Exit;
          end;
@@ -469,7 +522,7 @@ begin
       end;
 
    try
-      if not EnsureOpen(rebuilt) then
+      if not EnsureOpen(rebuilt, False) then
          begin
          Exit;
          end;
@@ -514,7 +567,7 @@ begin
       end;
 
    try
-      if not EnsureOpen(rebuilt) then
+      if not EnsureOpen(rebuilt, False) then
          begin
          Exit;
          end;
