@@ -143,6 +143,27 @@ begin
             while reader.ReadNext(rec) do
                begin
                Inc(Result.RecordsRead);
+
+               { THE CONTEST COMES FROM THE RECORDS, because a binary log has no
+                 header that says which one it is. Taken from the first, then
+                 checked against the rest: "one log is one contest" is measured
+                 (all thirteen corpus logs carry exactly one) but it is an
+                 assumption about somebody else's file, so a log that breaks it
+                 says so rather than silently keeping the first answer. }
+               if Result.RecordsRead = 1 then
+                  begin
+                  repo.SetContest(rec.ceContest);
+                  end
+               else if (rec.ceContest <> repo.LogContest) and
+                       (Result.Message = '') then
+                  begin
+                  Result.Message := SysUtils.Format(
+                     'Record %d is contest %d but the log started as %d. The ' +
+                     'first one is what the log records; TR4W stores one ' +
+                     'contest per log.',
+                     [Result.RecordsRead, Ord(rec.ceContest),
+                      Ord(repo.LogContest)]);
+                  end;
                try
                   repo.SaveQSO(rec);
                   Inc(Result.RecordsWritten);

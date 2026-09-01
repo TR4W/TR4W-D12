@@ -115,6 +115,12 @@ begin
    SameInt('ceOperatorID', a.ceOperatorID, b.ceOperatorID);
    SameInt('ceRecordKind', Ord(a.ceRecordKind), Ord(b.ceRecordKind));
 
+   { COMPARED, even though it is stored on the CONTEST row rather than the QSO
+     row. That is exactly why it needs checking: nothing else would notice a
+     QSO coming back as DUMMYCONTEST, and PostUnit branches on
+     `rec.ceContest = POTA` while exporting. }
+   SameInt('ceContest', Ord(a.ceContest), Ord(b.ceContest));
+
    { when and what }
    SameInt('tSysTime', integer(QSOTimeToUnixUTC(a.tSysTime)),
                        integer(QSOTimeToUnixUTC(b.tSysTime)));
@@ -220,6 +226,10 @@ begin
       db.CreateNew(fn);
       repo := TLogRepository.Create(db);
       try
+         { The contest lives on the contest row, so it has to be set before a
+           QSO can round-trip completely -- which is what the importer does
+           from the first record it reads. }
+         repo.SetContest(before.ceContest);
          rowId := repo.SaveQSO(before);
          repo.Commit;
          CheckTrue(repo.LoadQSO(rowId, after), 'the saved QSO reads back');
@@ -639,6 +649,13 @@ begin
                      if not GoodLookingQSO(before) then
                         begin
                         Continue;
+                        end;
+                     { As the importer does: the contest comes from the records,
+                       because a binary log has no header that names it. Without
+                       this every QSO reads back as DUMMYCONTEST. }
+                     if n = 0 then
+                        begin
+                        repo.SetContest(before.ceContest);
                         end;
                      New(rec);
                      rec^ := before;

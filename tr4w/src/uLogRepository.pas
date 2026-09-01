@@ -80,11 +80,13 @@ type
       FInsert: TSQLQuery;
       FSelect: TSQLQuery;
       FLastGuid: AnsiString;
+      FContest: ContestType;
 
       FUpdate: TSQLQuery;
       FSelectById: TSQLQuery;
 
       procedure PrepareStatements;
+      procedure LoadContest;
       procedure BindInto(aQuery: TSQLQuery; const aQso: ContestExchange;
                          const aGuid: AnsiString; aWithGuid: boolean);
       procedure BindRecord(const aQso: ContestExchange; const aGuid: AnsiString);
@@ -121,6 +123,20 @@ type
       { The newest row, which is what the three "seek back one record" sites
         want: DeleteLastContact, uNet.UpdateRec and uQTCS.SetSendedQSOs all
         rewrite the record they have just written. }
+      { THE LOG'S CONTEST, WHICH IS NOT ON THE QSO ROW.
+
+        ceContest is stored once, on the contest row, because one log is one
+        contest -- and that is measured rather than assumed: all thirteen corpus
+        logs carry exactly one distinct ContestType.
+
+        IT MUST STILL BE RESTORED ON READ. It is not decoration: PostUnit
+        branches on `rec.ceContest = POTA` while EXPORTING, MainUnit reads
+        ContestsArray[..].CountyLineAllowed from it during ADIF import, and
+        HamScore emits it as <contestnr>. A QSO loaded with ceContest left at
+        DUMMYCONTEST would export as the wrong contest, silently. }
+      procedure SetContest(aContest: ContestType);
+      function LogContest: ContestType;
+
       function NewestRowId: Int64;
 
       function LoadQSO(aRowId: Int64; out aQso: ContestExchange): boolean;
@@ -173,7 +189,7 @@ procedure AnsiToCharArray(var aBuffer: array of AnsiChar; const aValue: AnsiStri
 implementation
 
 uses
-   uADIF, uLogBinaryFile, ZONECONT;
+   uADIF, uLogBinaryFile, ZONECONT, TF;
 
 { --------------------------------------------------------------------------- }
 { sentinels -- crosswalk finding 3                                            }
@@ -644,7 +660,9 @@ begin
          'A log repository needs an open contest log.');
       end;
    FDatabase := aDatabase;
+   FContest := DUMMYCONTEST;
    PrepareStatements;
+   LoadContest;
 end;
 
 destructor TLogRepository.Destroy;
@@ -893,6 +911,10 @@ begin
    aQso.ceOperatorID := byte(F('operator_id').AsInteger);
    aQso.ceRecordKind := TokenToRecordKind(S('record_kind'));
 
+   { FROM THE CONTEST ROW, not from the QSO row -- see SetContest. Without this
+     every loaded QSO reports DUMMYCONTEST and exports as the wrong contest. }
+   aQso.ceContest := FContest;
+
    aQso.tSysTime := UnixUTCToQSOTime(F('qso_at').AsLargeInt);
    aQso.Callsign := S('callsign');
    aQso.QTH.StandardCall := S('standard_call');
@@ -990,6 +1012,80 @@ end;
 { last_insert_rowid() rather than MAX(id): it is per-connection and unaffected by
   anything another connection does, and it is what SQLite provides for exactly
   this. MAX(id) would also be wrong the moment a row is deleted. }
+procedure TLogRepository.LoadContest;
+var
+   q: TSQLQuery;
+   token: ShortString;
+begin
+   FContest := DUMMYCONTEST;
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := FDatabase.Connection;
+      q.SQL.Text := 'SELECT contest_type FROM contest WHERE id = 1';
+      q.Open;
+      if not q.EOF then
+         begin
+         token := q.Fields[0].AsString;
+         { GetContestFromString scans ContestTypeSA, so the pair are true
+           inverses. It is reused rather than reimplemented -- though it does
+           contain an lstrcmpA and a string address, which the PChar sweep in
+           CLAUDE.md will want. Recorded there rather than forked here. }
+         FContest := GetContestFromString(token);
+         end;
+      q.Close;
+   finally
+      q.Free;
+   end;
+end;
+
+function TLogRepository.LogContest: ContestType;
+begin
+   Result := FContest;
+end;
+
+procedure TLogRepository.SetContest(aContest: ContestType);
+var
+   q: TSQLQuery;
+   token: AnsiString;
+   friendly: AnsiString;
+begin
+   FContest := aContest;
+   token := AnsiString(ContestTypeSA[aContest]);
+
+   friendly := AnsiString(ContestsArray[aContest].FriendlyName);
+   if friendly = '' then
+      begin
+      friendly := token;
+      end;
+
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := FDatabase.Connection;
+      { ONE ROW, enforced by the schema's CHECK (id = 1). Written or replaced,
+        so setting it twice is not an error -- an import discovers the contest
+        from the first record and would otherwise have to know whether it had
+        already said so. }
+      q.SQL.Text :=
+         'INSERT INTO contest (id, guid, contest_type, contest_name, ' +
+         'created_at, my_call) VALUES (1, :guid, :ct, :cn, :created, :call) ' +
+         'ON CONFLICT(id) DO UPDATE SET contest_type = :ct2, contest_name = :cn2';
+      q.ParamByName('guid').AsString := NewUUIDv7(0);
+      q.ParamByName('ct').AsString := token;
+      q.ParamByName('cn').AsString := friendly;
+      q.ParamByName('created').AsLargeInt := DateTimeToUnix(Now);
+      { MY CALL IS NOT IN THE BINARY LOG. The record carries ceOperator, which
+        is the OPERATOR and is not the same thing at a multi-op station, so
+        guessing would be worse than leaving it empty. Phase E fills it from
+        the contest configuration. }
+      q.ParamByName('call').AsString := '';
+      q.ParamByName('ct2').AsString := token;
+      q.ParamByName('cn2').AsString := friendly;
+      q.ExecSQL;
+   finally
+      q.Free;
+   end;
+end;
+
 function TLogRepository.NewestRowId: Int64;
 var
    q: TSQLQuery;
