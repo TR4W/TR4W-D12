@@ -43,6 +43,7 @@ type
       procedure TestDupeIndexExists;
 
       { file identity }
+      procedure TestConnectionPragmasActuallyApply;
       procedure TestApplicationIdIsStamped;
       procedure TestForeignDatabaseIsRefused;
       procedure TestNewerSchemaIsRefused;
@@ -603,6 +604,47 @@ end;
   file identity
   --------------------------------------------------------------------------- }
 
+{ THE THREE CONNECTION-LEVEL PRAGMAS, READ BACK.
+
+  They cannot go through TSQLConnection.ExecuteDirect: sqldb.pp:1492 starts a
+  transaction unconditionally, and SQLite refuses journal_mode and synchronous
+  inside one -- while SILENTLY IGNORING foreign_keys, which is the dangerous
+  member of the three. So they go through TSQLite3Connection.execsql, the
+  connector's own transaction-free path, reached by descending from it.
+
+  This test exists because "requested" and "in force" are different things and
+  the difference is invisible: a log whose foreign keys were quietly never
+  switched on looks exactly like one where they were. }
+procedure TLogDatabaseTests.TestConnectionPragmasActuallyApply;
+var
+   db: TLogDatabase;
+   fn: string;
+begin
+   BeginTest('TestConnectionPragmasActuallyApply');
+   fn := TempLogName('pragmas.db');
+   Scrub(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+
+      { On ordinary local storage this is 'wal'. It is READ BACK rather than
+        assumed because SQLite refuses WAL on a network share and says nothing
+        -- and a multi-op station is exactly where a log ends up on one. }
+      CheckEquals('wal', db.JournalMode,
+                  'journal_mode is WAL on local storage');
+
+      { The silent one. ApplyPragmas raises if this comes back off, so reaching
+        here at all is half the proof; asserting it states the other half. }
+      CheckTrue(db.ForeignKeysEnforced,
+                'foreign key enforcement is actually ON, not merely requested');
+   finally
+      db.Free;
+   end;
+
+   Scrub(fn);
+end;
+
 procedure TLogDatabaseTests.TestApplicationIdIsStamped;
 var
    db: TLogDatabase;
@@ -864,6 +906,7 @@ begin
    TestMessageIsKeyedByKindModeAndKey;
    TestDupeIndexExists;
 
+   TestConnectionPragmasActuallyApply;
    TestApplicationIdIsStamped;
    TestForeignDatabaseIsRefused;
    TestNewerSchemaIsRefused;

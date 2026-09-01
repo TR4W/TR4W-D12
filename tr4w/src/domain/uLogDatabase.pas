@@ -60,10 +60,46 @@ unit uLogDatabase;
 interface
 
 uses
-   Classes, SysUtils, db, sqldb, sqlite3conn, sqlite3dyn;
+   Classes, SysUtils, db, sqldb, sqlite3conn;
 
 type
    ELogDatabaseError = class(Exception);
+
+   { A CONNECTION THAT CAN RUN A CONNECTION-LEVEL PRAGMA.
+
+     Not a workaround -- it is FPC's own mechanism, reached the way FPC intends.
+     TSQLite3Connection.execsql is PROTECTED and is the connector's
+     transaction-free execution path: it is what BEGIN, COMMIT and ROLLBACK go
+     through (sqlite3conn.pp:802-827), and what DoInternalConnect uses to apply
+     PRAGMA foreign_keys from Params. A descendant is how a protected method is
+     reached; that is what protected means.
+
+     WHY THIS IS NEEDED AT ALL. TSQLConnection.ExecuteDirect cannot run these
+     pragmas, and that is in the source rather than a quirk we measured --
+     sqldb.pp:1492:
+
+         if not ATransaction.Active then
+           ATransaction.MaybeStartTransaction;
+
+     It starts a transaction unconditionally, and SQLite refuses journal_mode
+     and synchronous inside one (and silently ignores foreign_keys). Committing
+     first does not help: ExecuteDirect opens a NEW transaction before running
+     the statement.
+
+     WHY NOT sqlite3_exec DIRECTLY, which is what this unit did until
+     2026-09-01: because execsql already does it, takes a native `string`, and
+     does the error handling -- reading SQLite's message, freeing it, and
+     raising EDatabaseError. Calling the C function ourselves meant a PAnsiChar
+     cast, a ppansichar out-parameter and a hand-rolled sqlite3_free in code
+     that has no business owning any of it. NY4I asked why, given
+     ExecuteDirect takes a string; the answer was that ExecuteDirect is the
+     wrong method, not that a C call was unavoidable. }
+   TLogConnection = class(TSQLite3Connection)
+   public
+      { ANSISTRING, matching execsql's own parameter exactly. Declaring it
+        `string` -- which tr4w.inc makes UTF-16 -- narrows on every call. }
+      procedure ExecutePragma(const aSQL: AnsiString);
+   end;
 
    { The outcome of CheckIntegrity.  A record and not a boolean because the
      answer an operator needs is WHICH check failed and what it said -- SQLite's
@@ -80,7 +116,7 @@ type
      that uses them. }
    TLogDatabase = class(TObject)
    private
-      FConnection: TSQLite3Connection;
+      FConnection: TLogConnection;
       FTransaction: TSQLTransaction;
       FFileName: string;
       FJournalMode: string;
@@ -148,7 +184,7 @@ type
         assumed. See ApplyPragmas for why that distinction is not pedantry. }
       property ForeignKeysEnforced: boolean read FForeignKeysEnforced;
 
-      property Connection: TSQLite3Connection read FConnection;
+      property Connection: TLogConnection read FConnection;
       property Transaction: TSQLTransaction read FTransaction;
    end;
 
@@ -200,6 +236,12 @@ implementation
 
 uses
    uLogSchema, uAppPaths;
+
+procedure TLogConnection.ExecutePragma(const aSQL: AnsiString);
+begin
+   { One line, and the whole point: `execsql` is protected on the ancestor. }
+   execsql(aSQL);
+end;
 
 { ---------------------------------------------------------------------------
   PE architecture
@@ -338,6 +380,16 @@ begin
 
    dllArch := DescribePEArchitecture(dllPath);
 
+   {$IFNDEF WINDOWS}
+   { Off Windows the file is ELF or Mach-O and the PE reader can say nothing
+     about it. Stopping here beats reporting a perfectly good shared library
+     as corrupt because it is not a format it was never going to be. }
+   Result := Format('%s is present. TR4W cannot check its architecture on ' +
+                    'this platform, so if loading failed, verify by hand that ' +
+                    'it matches this %s build.', [dllPath, ourArch]);
+   Exit;
+   {$ENDIF}
+
    if dllArch = '' then
       begin
       Result := Format('%s exists but is not a valid Windows library -- it has ' +
@@ -424,30 +476,21 @@ end;
   called sqlite3_open.  Everything else in this unit still goes through sqldb;
   this is the narrow exception, not a pattern to copy. }
 procedure TLogDatabase.ExecPragmaRaw(const aPragma: AnsiString);
-var
-   rc: integer;
-   errMsg: PAnsiChar;
-   detail: string;
 begin
-   errMsg := nil;
-   rc := sqlite3_exec(FConnection.Handle, PAnsiChar(aPragma),
-                      nil, nil, @errMsg);
-   if rc <> SQLITE_OK then
-      begin
-      detail := '';
-      if errMsg <> nil then
+   try
+      FConnection.ExecutePragma(aPragma);
+   except
+      { execsql raises EDatabaseError carrying SQLite's own message. Re-raised
+        with the file and the statement, because "Safety level may not be
+        changed inside a transaction" is a sentence about SQLite, not about
+        which log would not open. }
+      on E: Exception do
          begin
-         detail := ' -- ' + string(AnsiString(errMsg));
-         sqlite3_free(errMsg);
+         raise ELogDatabaseError.CreateFmt(
+            'The contest log "%s" would not accept "%s": %s',
+            [FFileName, aPragma, E.Message]);
          end;
-      raise ELogDatabaseError.CreateFmt(
-         'The contest log "%s" would not accept "%s" (SQLite error %d%s).',
-         [FFileName, aPragma, rc, detail]);
-      end;
-   if errMsg <> nil then
-      begin
-      sqlite3_free(errMsg);
-      end;
+   end;
 end;
 
 function TLogDatabase.PragmaAsString(const aPragma: AnsiString): AnsiString;
@@ -641,7 +684,7 @@ end;
 constructor TLogDatabase.Create;
 begin
    inherited Create;
-   FConnection := TSQLite3Connection.Create(nil);
+   FConnection := TLogConnection.Create(nil);
    FTransaction := TSQLTransaction.Create(nil);
    FConnection.Transaction := FTransaction;
 end;

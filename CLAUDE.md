@@ -1053,9 +1053,70 @@ conversion, and the pointer version had already caused two crashes with no
 exception text (a pointer cast of an empty string, and an `openstring` parameter
 whose `High()` is 255 in Delphi mode, writing 255 bytes into a `string[3]`).
 
-**The genuine exceptions, which stay:** the SQLite C API takes a `PAnsiChar` by
-definition (`sqlite3_exec`), as do the Win32 `...A` entry points and byte-exact
-serial I/O. Those are transports. Everything above them passes strings.
+**The genuine exceptions, which stay:** the Win32 `...A` entry points and
+byte-exact serial I/O. Those are transports. Everything above them passes
+strings.
+
+### THE RULE: PREFER THE FPC/LAZARUS CLASS. A RAW CALL CARRIES ITS JUSTIFICATION.
+
+NY4I, 2026-09-01:
+
+> *"You have to justify every raw call, as that thinking can cause cross-platform
+> issues. You want to use the FPC/Laz classes and justify why if you cannot."*
+
+And:
+
+> *"You are also going to have to justify every PAnsiChar or PChar in use when
+> this is all done."*
+
+**This is a rule about REACHING FOR THINGS, not only about strings.** The failure
+mode is not ugliness -- it is that a raw call quietly assumes Windows. A
+hardcoded `'sqlite3.dll'` names a file that cannot exist on macOS or Linux; a PE
+header reader says nothing true about an ELF `.so`; `Windows.ReadFile` has no
+counterpart at all. Each of those is a cross-platform defect written in the
+present tense, and none of them fails today.
+
+**So: reach for the FPC or LCL class first. If you cannot, the reason goes in the
+code, beside the call.** "It was quicker" is not one. Three worked examples from
+the log-database work, all of which started as a raw call and did not need to be:
+
+| reached for | what was already there |
+|---|---|
+| `sqlite3_exec` for pragmas | `TSQLite3Connection.execsql` -- native `string`, owns the error handling. It is `protected`, so a descendant reaches it |
+| `Windows.ReadFile` for the binary log | `TFileStream`. The semantics that mattered (a short read is EOF) are expressible either way |
+| a hardcoded `'sqlite3.dll'` | FPC's own `{$IFDEF WINDOWS}` / `'libsqlite3.' + SharedSuffix` (`sqlite3.inc:28-30`) |
+
+**THE PChar AUDIT IS OWED AND IT IS SIZED.** Measured 2026-09-01:
+
+| | |
+|---|---|
+| `PChar`/`PAnsiChar`/`PWideChar` outside the Win32 API headers | **920 mentions across 112 units** |
+| inside `uCommctrl`, `MMSystem`, `HtmlHelp` | 234, and inherent -- those units DECLARE the Win32 API |
+
+That is the work, and it is not a sweep: each one is either a genuine transport
+boundary that keeps its `PChar` and gains a comment saying why, or it is a
+habit. The five log units (`uLogSchema`, `uLogDatabase`, `uLogBinaryFile`,
+`uLogRepository`, `uLogImport`) currently have **none of either**, which is the
+standard to hold new code to.
+
+**AND ONE THAT LOOKED GENUINE AND WAS NOT**, which is the more useful lesson.
+The log database first ran its connection-level pragmas through `sqlite3_exec`,
+justified as "the C API takes a `PAnsiChar` by definition". True of that
+function, and beside the point -- NY4I asked why, given
+`TSQLConnection.ExecuteDirect` takes a string.
+
+The answer was that `ExecuteDirect` is the **wrong method**, not that a C call
+was unavoidable. It cannot run those pragmas because `sqldb.pp:1492` starts a
+transaction unconditionally. But `TSQLite3Connection.execsql` is the
+connector's own transaction-free path -- what `BEGIN`/`COMMIT`/`ROLLBACK` go
+through -- takes a native `string`, and already owns the `PAnsiChar`, the error
+message and the `sqlite3_free`. It is `protected`, so a descendant reaches it,
+which is what `protected` is for.
+
+**Before reaching for a C call, check whether the wrapper already has a method
+that does it.** The replacement is shorter, raises a proper `EDatabaseError`
+carrying SQLite's own message, and left the five log units with **no `PChar` of
+any kind**.
 
 - **The program passes `string`s.** Pointers, lengths, `ZeroMemory` and `s[1]` belong *inside* the
   transport where the bytes are actually written. Prefer `Foo(const s: string)` over
