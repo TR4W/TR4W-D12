@@ -947,6 +947,47 @@ begin
 
 end;
 
+{ THE QTC-PER-STATION TABLE EXISTS WHEN IT IS USED.
+
+  ACCESS VIOLATION SAVING A QTC BOOK (NY4I, 2026-09-01, crash log naming
+  IncrementQTCCount <- SaveQTCS <- QTCSendCommand). QTCDataArray is a POINTER
+  and had exactly one allocation site -- `if QTCsEnabled then New(QTCDataArray)`
+  in LogCfg -- so whether the table exists depended on a config flag read at
+  config-load time, while whether it is USED depends on the operator pressing a
+  button in a window whose menu item is enabled by the CONTEST alone
+  (MainUnit's `Contest in [DARCWAEDCCW..DARCWAEDCSSB]`). Two different gates for
+  one feature, and nothing checked they agreed.
+
+  NOT A PORT REGRESSION: the D7 tree at C:\TR4W has the same single gated
+  allocation, the same nil guard in LOGDUPE, and the same UNGUARDED
+  dereferences here (checked 2026-09-01). Somebody knew -- LOGDUPE tests
+  `QTCDataArray <> nil` before zeroing it -- but the knowledge stayed in the one
+  routine that had it.
+
+  ALLOCATED ON DEMAND, BY THE CODE THAT USES IT, which removes the ordering
+  question rather than answering it. LogCfg's line is left alone: it is harmless
+  and it is where the table is sized for a contest that declares QTCs up front.
+
+  AND ZEROED, which New alone does not do. LOGDUPE zeroes it when clearing the
+  dupe sheet, so the uninitialised case was survivable only because
+  NumberQTCStations happens to start at 0 and the code never reads past it. That
+  is an invariant held by two globals that nothing keeps in step. }
+procedure EnsureQTCDataArray;
+begin
+  if QTCDataArray <> nil then
+     begin
+     Exit;
+     end;
+
+  New(QTCDataArray);
+  Windows.ZeroMemory(QTCDataArray, SizeOf(QTCDataArrayType));
+
+  { A table that has just been created holds no stations.  Said here rather than
+    assumed, because the count is a SEPARATE global and this is the one place
+    that can know the two are consistent. }
+  NumberQTCStations := 0;
+end;
+
 function NumberQTCsThisStation(Call: CallString): integer;
 
 var
@@ -957,6 +998,8 @@ begin
      begin
      Exit;
      end;
+
+  EnsureQTCDataArray;
 
   for Station := 0 to NumberQTCStations - 1 do
     if QTCDataArray^[Station].Call = Call then
@@ -971,6 +1014,8 @@ var
   Station: integer;
 begin
   inc(TotalNumberQTCsProcessed);
+  EnsureQTCDataArray;
+
   if NumberQTCStations = 0 then
      begin
      QTCDataArray^[NumberQTCStations].Call := Call;
@@ -986,13 +1031,26 @@ begin
        Exit;
        end;
 
-  //  if NumberQTCStations > 499 then showint(NumberQTCStations);
-  //  if NumberQTCStations < 0 then showint(NumberQTCStations);
+  { THE TABLE IS array[0..499] AND THIS IS THE ONLY THING THAT WRITES PAST ITS
+    END.  The bound check stood here as two commented-out `showint` calls --
+    somebody saw it, reached for a debug print, and left it.  A 500th station is
+    not reachable in any real contest, but the consequence if it ever were is a
+    silent write over whatever follows the table, which is the worst outcome
+    available.  Counted, reported once, and the QSO still logs. }
+  if NumberQTCStations > High(QTCDataArrayType) then
+     begin
+     if logger <> nil then
+        begin
+        logger.Warn('[QTC] more than %d stations have sent QTCs; ' +
+                    'the per-station count for %s is not being kept',
+                    [Length(QTCDataArrayType), string(Call)]);
+        end;
+     Exit;
+     end;
 
   QTCDataArray^[NumberQTCStations].Call := Call;
   QTCDataArray^[NumberQTCStations].NumberQTCs := 1;
   inc(NumberQTCStations);
-  //  Windows.SetWindowTextA(tr4whandle, inttopchar(NumberQTCStations));
 end;
 
 function ProperSalutation(Call: CallString): string;
