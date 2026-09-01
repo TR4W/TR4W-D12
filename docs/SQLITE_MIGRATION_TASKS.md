@@ -10,9 +10,22 @@ ORDER and the exit criteria.** It does not restate the schema.
 
 ## Where this stands, 2026-09-01
 
-**A1, A2, A3, A4 and B1 are DONE.** The crosswalk, the 23 columns it found
-missing, the shared binary reader, the mapper, and the exhaustive round-trip
-test over real corpus logs. **22,312 unit tests, 0 failures; corpus 22/0/4.**
+**PHASE A IS COMPLETE, plus B1.** The crosswalk, the 23 columns it found
+missing, the shared binary reader, the mapper, the exhaustive round-trip test
+over real corpus logs, the importer, and `/IMPORTLOG` to reach it.
+**22,398 unit tests, 0 failures; corpus 22/0/4.**
+
+**It is provable rather than merely built:**
+
+```
+tr4w.exe /IMPORTLOG winter_fd.trw      1,316 QSOs in 63 ms
+  qso rows 1316 · distinct guid 1316 · user_version 1
+  application_id 0x54523457 · integrity ok
+```
+
+(From Git Bash, prefix `MSYS_NO_PATHCONV=1` -- MSYS rewrites `/IMPORTLOG` into a
+Windows path and TR4W then treats it as a contest `.cfg`. The same applies to
+`/EXPORT`.)
 
 **B1 moved forward from Phase B, deliberately.** The importer needs the field
 mapping, so writing it in A and repointing call sites in B is one definition
@@ -125,11 +138,37 @@ what `logdump` reads. **No contest-factory work.**
 | # | task |
 |---|---|
 | ~~**B1**~~ | **DONE IN PHASE A** -- `TLogRepository`, `Save` / `Load` over `ContestExchange` as a value type. Moved because the importer needs the field mapping, and writing it twice was the alternative |
-| **B2** | **NEXT.** Repoint the 8 writes and 5 reads |
+| **B2** | **NEXT, and it is not purely mechanical -- see below** |
 | **B3** | Keep the corpus runnable across the switch -- export from the database, diff against the same frozen D7 references |
 
 **Exit:** corpus **22 passed / 0 failed / 4 known** with the log in SQLite.
 **No contest-factory work.**
+
+### B2 is not thirteen identical edits — two of them are UPDATEs
+
+Found while sizing it. Most of the eight writes APPEND a record, and
+`TLogRepository.SaveQSO` is exactly that. But `uEditQSO:751` and
+`LOGSUBS2:2526` **seek to a record's position and rewrite it in place** -- the
+editable log and the rescore path. Those are UPDATEs, and the repository has no
+update, because an update needs a way to say WHICH ROW.
+
+That is a decision, not an edit:
+
+- the file addresses a record by its **ordinal position**;
+- the database addresses a row by `guid` -- which the importer MINTS, so an
+  existing `.trw` record has no guid until it is imported;
+- `(session_id, session_seq)` is the multi-op network's own identity for a QSO
+  and would work, but it is not unique for county-line pairs any more than
+  `exchange_id` is.
+
+**The likely answer is that the in-memory `ContestExchange` carries its row guid
+once a log is opened from the database** -- so an edit updates the row it came
+from -- but that is exactly the sort of thing to settle with NY4I rather than
+choose at 3am. **Recorded here rather than guessed.**
+
+**A safer first half is available**: repoint the six pure APPENDS, leave the two
+edits on the binary path, and the corpus stays green throughout because reads
+have not moved yet.
 
 ## Phase C -- event sourcing, which is the payoff
 
