@@ -842,7 +842,8 @@ Read the specific doc before acting in its area — these are current and this f
 | Radio bench status | `docs/RADIO_BENCH_STATUS.md`, `docs/BENCH_TEST_PLAN_2026-08-01.md` |
 | Legacy removal plan | `docs/LEGACY_DEPENDENCY_AUDIT.md`, `docs/PHASE_INVENTORIES.md` |
 | CW keyer factory | `docs/CW_Keyer_Factory_Plan.md` |
-| Adding a contest | `docs/ADDING_A_NEW_CONTEST.md` |
+| Adding a contest -- the DATA (a new `ContestType`, `FCONTEST` init, a `.cfg`) | `docs/ADDING_A_NEW_CONTEST.md` |
+| **Adding a contest to the FACTORY -- the class, and which oracle sees what** | **`docs/ADDING_A_CONTEST.md`** -- read section 4 before believing a green run: the golden corpus is BLIND to scoring, and `test-contest-factory.sh` is the only thing that is not |
 | **Roadmap (what's next)** | **`docs/ROADMAP.md`** |
 | **The order the three big pieces go in** | **`docs/DOMAIN_LAYER_SEQUENCE.md`** |
 | **Band map -> LCL (read before touching `uBandmap`/`uSpots`)** | **`docs/BANDMAP_LCL_DESIGN.md`** |
