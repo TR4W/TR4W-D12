@@ -121,6 +121,19 @@ function LogSourceRecordCount: Int64;
 function LogSourceReadFromEnd(aOffsetFromEnd: Int64;
                               out aQso: ContestExchange): boolean;
 
+(* THE RECORD AT aIndex, 0-BASED, IN LOG ORDER.
+
+  What the QSO editor and the search results address. They held a BYTE OFFSET
+  into the .TRW until B5 and each rebuilt it as
+  index * SizeOf(ContestExchange) + SizeOfTLogHeader, which restated the file
+  layout in three unrelated units and produced an off-by-one on the way back
+  (see VC.IndexOfItemInLogForEdit).
+
+  Independent of any sequential read in progress. False when there is no such
+  record. *)
+function LogSourceReadAtIndex(aIndex: Int64;
+                              out aQso: ContestExchange): boolean;
+
 (* The file the current source reads -- for diagnostics and for the corpus
   driver to report which store produced an artifact. *)
 function LogSourceDescription: string;
@@ -373,6 +386,42 @@ begin
          begin
          (* The seek this replaces, unchanged: negative from FILE_END. *)
          tSetFilePointer(-1 * aOffsetFromEnd * SizeOf(ContestExchange), FILE_END);
+         Windows.ReadFile(LogHandle, aQso, SizeOf(ContestExchange), bytesRead, nil);
+         Result := bytesRead = SizeOf(ContestExchange);
+         end;
+      end;
+end;
+
+function LogSourceReadAtIndex(aIndex: Int64;
+                              out aQso: ContestExchange): boolean;
+var
+   total: Int64;
+   rowId: Int64;
+   bytesRead: Cardinal;
+begin
+   FillChar(aQso, SizeOf(aQso), 0);
+   Result := False;
+   total := LogSourceRecordCount;
+   if (aIndex < 0) or (aIndex >= total) then
+      begin
+      Exit;
+      end;
+
+   case LogSourceKind of
+      lsDatabase:
+         begin
+         rowId := GRepository.RowIdAtIndex(aIndex);
+         if rowId > 0 then
+            begin
+            Result := GRepository.LoadQSO(rowId, aQso);
+            end;
+         end;
+      else
+         begin
+         (* The header sits ahead of record 0. This is the ONE place that fact
+            is written down now. *)
+         tSetFilePointer(SizeOfTLogHeader + aIndex * SizeOf(ContestExchange),
+                         FILE_BEGIN);
          Windows.ReadFile(LogHandle, aQso, SizeOf(ContestExchange), bytesRead, nil);
          Result := bytesRead = SizeOf(ContestExchange);
          end;

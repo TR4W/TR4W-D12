@@ -136,6 +136,8 @@ uses
   { The SQLite shadow -- an IMPLEMENTATION-section use, so no interface
     cycle. It never raises and never blocks logging: see uLogShadow. }
   uLogShadow,
+  (* Which store a log READ comes from -- step B4/B5. *)
+  uLogSource,
    uPlatformProcess,   // RunProgram / RunWindowsUtility -- the only launchers
   SysUtils,         // SystemTimeToDateTime / DateTimeToSystemTime
   MainUnit,
@@ -162,15 +164,19 @@ begin
 
    IndexInMap := IndexOfItemInLogForEdit;
 
-   if not OpenLogFile then
+   (* A RECORD INDEX NOW, not a byte offset -- see VC.IndexOfItemInLogForEdit.
+      Read through the seam, so this reads whichever store the program reads. *)
+   if not LogSourceOpen then
       begin
       Exit;
       end;
 
-   tSetFilePointer(IndexInMap, FILE_BEGIN);
-   Windows.ReadFile(LogHandle, EditableQSORXData, SizeOf(ContestExchange),
-     lpNumberOfBytesRead, nil);
-   CloseLogFile;
+   if not LogSourceReadAtIndex(IndexInMap, EditableQSORXData) then
+      begin
+      LogSourceClose;
+      Exit;
+      end;
+   LogSourceClose;
 
    if EditableQSORXData.ceRecordKind = rkNote then
       begin
@@ -746,7 +752,11 @@ begin
      Exit;
      end;
 
-  tSetFilePointer(IndexInMap, FILE_BEGIN);
+  (* The binary write still addresses BYTES, so the record index is turned
+     into one HERE -- the only place in this unit that knows the file layout,
+     and it goes away with the binary write at the end of B5. *)
+  tSetFilePointer(SizeOfTLogHeader + IndexInMap * SizeOf(ContestExchange),
+                  FILE_BEGIN);
 
   EditableQSORXData.ceNeedSendToServerAE := True;
   SendRecordToServer(NET_EDITEDQSO_ID, EditableQSORXData);
@@ -754,12 +764,18 @@ begin
   sWriteFile(LogHandle, EditableQSORXData, SizeOf(ContestExchange));
   CloseLogFile;
 
-  { The binary log addresses this record by a byte offset; the shadow by the
-    same record's POSITION. Divided here rather than inside the shadow, so the
-    record size stays a fact of the binary format and does not leak into the
-    database layer. }
-  ShadowUpdateQSOAtIndex(IndexInMap div SizeOf(ContestExchange),
-                         EditableQSORXData);
+  (* NO DIVISION ANY MORE, AND THAT DIVISION WAS A BUG.
+
+     This read `IndexInMap div SizeOf(ContestExchange)` to turn a byte offset
+     back into a record position. SizeOfTLogHeader and SizeOf(ContestExchange)
+     are BOTH 376 bytes, so the offset of record k is (k + 1) * 376 and the
+     division returned k + 1: every edit updated the row AFTER the one the
+     operator was editing. Both stores held a QSO the operator never touched,
+     and the one they did edit kept its old values.
+
+     IndexInMap is the record index itself now, so there is nothing to
+     convert. *)
+  ShadowUpdateQSOAtIndex(IndexInMap, EditableQSORXData);
   if FullLogEditHandle <> 0 then
      begin
      ListView_DeleteItem(LogEditListView, FullLogEditIndex);

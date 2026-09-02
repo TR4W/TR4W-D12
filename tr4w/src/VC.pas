@@ -3008,6 +3008,19 @@ var
   StartCPU                              : DWORD;
   StopCPU                               : DWORD;
 
+  (* WHICH QSO THE EDITOR IS ABOUT TO EDIT, AS A 0-BASED RECORD INDEX.
+
+    It was a BYTE OFFSET into the .TRW until B5, and that carried two defects
+    at once, neither visible to the compiler:
+
+      Every producer had to rebuild the offset as
+      index * SizeOf(ContestExchange) + SizeOfTLogHeader, so the file layout
+      was restated in three unrelated units.
+
+      uEditQSO turned it back with `IndexInMap div SizeOf(ContestExchange)` to
+      address the database row -- and SizeOfTLogHeader and
+      SizeOf(ContestExchange) are BOTH 376 bytes, so that division returned
+      index + 1. Every edit updated the row AFTER the one being edited. *)
   IndexOfItemInLogForEdit               : integer;
 
 

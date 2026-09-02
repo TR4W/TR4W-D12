@@ -123,7 +123,9 @@ procedure EditFullLog;
       begin
       Exit;
       end;
-   IndexOfItemInLogForEdit := FullLogEditIndex * SizeOf(ContestExchange) + SizeOfTLogHeader;
+   (* This window lists the WHOLE log, so its row number is the record index.
+      It used to be multiplied back into a byte offset here. *)
+   IndexOfItemInLogForEdit := FullLogEditIndex;
    OpenEditQSOWindow(FullLogEditHandle);
    end;
 

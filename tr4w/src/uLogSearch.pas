@@ -177,7 +177,10 @@ begin
                  if Index <= MAXSEARCHINDEX then
                     begin
                     tAddContestExchangeToLog(TempRXData, LogSearchListView, LogSearchListViewIndex);
-                    LogSearchIndexesArray[Index] := CurrentRecord * SizeOf(ContestExchange) + SizeOfTLogHeader;
+                    (* THE RECORD INDEX, not a byte offset into the .TRW.
+                       CurrentRecord is already 0-based and counted per record
+                       read, so the file layout does not need restating. *)
+                    LogSearchIndexesArray[Index] := CurrentRecord;
                     inc(Index);
                     goto NextRecord;
                     end;

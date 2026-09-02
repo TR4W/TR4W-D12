@@ -7179,16 +7179,26 @@ begin
   Size := LogSourceRecordCount;
   LogSourceClose;
 
-  if Size > LinesInEditableLog
-    then
+  (* THE EDITABLE LOG SHOWS THE LAST LinesInEditableLog RECORDS, so a listview
+    row maps to a record index by adding however many are scrolled off the top.
+
+    THIS ARITHMETIC WAS BROKEN BY B4 AND IS FIXED HERE. Size used to be
+    GetFileSize -- BYTES -- and the old expression read
+
+        Size - LinesInEditableLog * RecSize + row * RecSize
+
+    which is header + (N - Lines + row) * RecSize: a correct byte offset, but
+    only because Size was bytes. B4 changed Size to a record COUNT to get the
+    store out of the comparison above, and left this expression alone, so it
+    then mixed a count with byte arithmetic and addressed a QSO nowhere near
+    the one selected. It went unnoticed because it needs a log LONGER than the
+    editable-log window to reach, and no test has one.
+
+    Both branches are the same statement now, which is the other half of the
+    point -- the guard above chooses the offset, not a different formula. *)
+  if Size > LinesInEditableLog then
      begin
-     IndexOfItemInLogForEdit := Size - LinesInEditableLog *
-       SizeOf(ContestExchange) + IndexOfItemInLogForEdit * SizeOf(ContestExchange)
-     end
-  else
-     begin
-     IndexOfItemInLogForEdit := IndexOfItemInLogForEdit * SizeOf(ContestExchange)
-       + SizeOf(TLogHeader);
+     IndexOfItemInLogForEdit := Size - LinesInEditableLog + IndexOfItemInLogForEdit;
      end;
 
   ;

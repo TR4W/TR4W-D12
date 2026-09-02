@@ -1394,12 +1394,26 @@ label
   1;
 var
   SendedQSOs                            : integer;
+  (* WHICH record the scan is standing on, 0-based.  See UpdateRec. *)
+  RecordIndex                           : integer;
 
   procedure UpdateRec;
   begin
     tSetFilePointer(-1 * SizeOf(ContestExchange), FILE_CURRENT);
     sWriteFile(LogHandle, TempRXData, SizeOf(ContestExchange));
-    ShadowUpdateNewestQSO(TempRXData);
+
+    (* BY INDEX, NOT "THE NEWEST" -- and calling it "the newest" was wrong.
+
+       CommitChangesInLocalLog scans FORWARD from ReadVersionBlock, so the seek
+       above is -1 from CURRENT: the record just read, anywhere in the log. The
+       database call said ShadowUpdateNewestQSO, which rewrote the LAST row.
+       So a QSO was marked as sent to the server in the binary log while a
+       different one was marked in the database -- and since B4 the database is
+       what every window and every export reads.
+
+       The three sites that legitimately mean "the newest" all seek FILE_END;
+       this one never did. *)
+    ShadowUpdateQSOAtIndex(RecordIndex, TempRXData);
     inc(SendedQSOs);
     WaitForSingleObject(tNet_Event, 1000);
     // Runs on the sync WORKER thread and the window is an LCL form now, so this
@@ -1413,9 +1427,11 @@ begin
   if not OpenLogFile then Exit;
 
   ReadVersionBlock;
+  RecordIndex := -1;
   1:
   if ReadLogFile then
      begin
+     inc(RecordIndex);
 
      if TempRXData.ceSendToServer = False then
         begin

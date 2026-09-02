@@ -51,6 +51,7 @@ type
       procedure TestUpdateReplacesTheRow;
       procedure TestUpdateOfAMissingRowSaysSo;
       procedure TestWholeCorpusLogRoundTrips;
+      procedure TestIndexAddressesTheSameRecordAsAReadInOrder;
    public
       procedure RunAllTests; override;
    end;
@@ -877,6 +878,100 @@ begin
       end;
 end;
 
+(* ADDRESSING A RECORD BY INDEX MUST LAND ON THE SAME ONE AS COUNTING TO IT.
+
+  Written because it did not. The QSO editor held a BYTE OFFSET into the .TRW
+  and converted it back with `IndexInMap div SizeOf(ContestExchange)` --
+  and SizeOfTLogHeader and SizeOf(ContestExchange) are BOTH 376 bytes, so the
+  offset of record k is (k + 1) * 376 and that division returned k + 1. Every
+  edit updated the row AFTER the one being edited: the QSO the operator
+  corrected kept its old values, and a QSO they never touched silently took
+  the new ones.
+
+  Nothing failed. No exception, no warning, and the corpus could not see it
+  because the corpus never edits. The offset is gone -- an index is carried
+  from end to end now -- and this pins the contract that made it wrong, on
+  EVERY record rather than on one: read the log in order, and separately
+  address record i by index, and require them to be the same QSO. An
+  off-by-one anywhere in that chain fails here. *)
+procedure TLogRepositoryTests.TestIndexAddressesTheSameRecordAsAReadInOrder;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   qso, sequential, byIndex: ContestExchange;
+   fn: string;
+   i: integer;
+   rowId: Int64;
+   calls: array[0..5] of AnsiString;
+begin
+   BeginTest('TestIndexAddressesTheSameRecordAsAReadInOrder');
+   fn := TempLogName('byindex.db');
+   Scrub(fn);
+
+   calls[0] := 'W1AW';  calls[1] := 'K2ABC'; calls[2] := 'N3XYZ';
+   calls[3] := 'W4TA';  calls[4] := 'NY4I';  calls[5] := 'K6QQQ';
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         for i := 0 to High(calls) do
+            begin
+            FillChar(qso, SizeOf(qso), 0);
+            qso.ceRecordKind := rkQSO;
+            qso.Callsign := calls[i];
+            qso.NumberReceived := i + 1;
+            qso.tSysTime.qtYear := 26;
+            qso.tSysTime.qtMonth := 6;
+            qso.tSysTime.qtDay := 1;
+            CheckTrue(repo.SaveQSO(qso) > 0, 'saved ' + string(calls[i]));
+            end;
+
+         CheckEquals(Length(calls), repo.RecordCount,
+                     'every QSO is in the log');
+
+         (* Walk it in order and, at each step, address the SAME position by
+            index. The two must agree on every record -- not just the first,
+            which an off-by-one would still get right when it reads past the
+            end and comes back empty. *)
+         repo.OpenSequentialRead;
+         try
+            for i := 0 to High(calls) do
+               begin
+               CheckTrue(repo.ReadNext(sequential),
+                         'the sequential read has a record at position ' + IntToStr(i));
+
+               rowId := repo.RowIdAtIndex(i);
+               CheckTrue(rowId > 0, 'index ' + IntToStr(i) + ' names a row');
+               CheckTrue(repo.LoadQSO(rowId, byIndex),
+                         'and that row loads');
+
+               CheckEquals(string(calls[i]), string(sequential.Callsign),
+                           'read in order, position ' + IntToStr(i));
+               CheckEquals(string(calls[i]), string(byIndex.Callsign),
+                           'addressed by index, position ' + IntToStr(i));
+               CheckEquals(i + 1, byIndex.NumberReceived,
+                           'and it is the same QSO, not its neighbour');
+               end;
+         finally
+            repo.CloseSequentialRead;
+         end;
+
+         (* Off the end returns nothing rather than the last record again --
+            the other half of the off-by-one, and the half that turns a wrong
+            answer into a silent no-op. *)
+         CheckEquals(0, repo.RowIdAtIndex(Length(calls)),
+                     'one past the end names no row');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+   Scrub(fn);
+end;
+
 procedure TLogRepositoryTests.RunAllTests;
 begin
    TestOneQSORoundTrips;
@@ -892,6 +987,7 @@ begin
    TestUpdateReplacesTheRow;
    TestUpdateOfAMissingRowSaysSo;
    TestWholeCorpusLogRoundTrips;
+   TestIndexAddressesTheSameRecordAsAReadInOrder;
 
    if (FDir <> '') and DirectoryExists(FDir) then
       begin

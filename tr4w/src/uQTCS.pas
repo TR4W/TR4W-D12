@@ -311,14 +311,18 @@ var
   pNumberOfBytesRead                    : Cardinal;
  
   SignedQSOs                            : integer;
+  (* WHICH record the scan is standing on, 0-based.  See the update below. *)
+  RecordIndex                           : integer;
 begin
   if not OpenLogFile then Exit;
   ReadVersionBlock;
   SignedQSOs := 1;
+  RecordIndex := -1;
   1:
   Windows.ReadFile(LogHandle, TempRXData, SizeOf(ContestExchange), pNumberOfBytesRead, nil);
   if pNumberOfBytesRead = SizeOf(ContestExchange) then
      begin
+     inc(RecordIndex);
      if TempRXData.ceWasSendInQTC = True then
         begin
         goto 1;
@@ -328,7 +332,19 @@ begin
         TempRXData.ceWasSendInQTC := True;
         tSetFilePointer(-1 * SizeOf(ContestExchange), FILE_CURRENT);
         sWriteFile(LogHandle, TempRXData, SizeOf(ContestExchange));
-        ShadowUpdateNewestQSO(TempRXData);
+
+        (* BY INDEX, NOT "THE NEWEST" -- and calling it "the newest" was wrong.
+
+           This scan runs FORWARD from ReadVersionBlock, so the seek above is
+           -1 from CURRENT: the record just read, anywhere in the log. The
+           database call beside it said ShadowUpdateNewestQSO, which rewrote
+           the LAST row instead. So the binary log marked the right QSO as sent
+           in a QTC and the database marked a different one -- and since B4 the
+           database is what every window and every export reads.
+
+           The three sites that legitimately mean "the newest" all seek
+           FILE_END; this one never did. *)
+        ShadowUpdateQSOAtIndex(RecordIndex, TempRXData);
         if SendRecordToServer(NET_EDITEDQSO_ID, TempRXData) then
            begin
            Sleep(50);
