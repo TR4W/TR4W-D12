@@ -380,6 +380,11 @@ pointer(sqlite3_trace_v2) :=
    GetProcedureAddress(SQLiteLibraryHandle, 'sqlite3_trace_v2');
 ```
 
+**DECIDED (NY4I, 2026-09-02): this is the path.** *"The SQLiteLibraryHandle
+path is better."* Not a default arrived at by elimination -- it was chosen over
+the alternative of using the two deprecated entry points FPC already declares,
+which would have needed no new declaration at all.
+
 **And the connection handle needs no trick either.** `TSQLConnection.Handle` is
 a PUBLIC property (`sqldb.pp:293`) returning `TSQLite3Connection.fhandle`, so the
 `psqlite3` is simply `psqlite3(FConnection.Handle)`. No descendant access
@@ -425,15 +430,27 @@ already-open handle to it, so this code names no file on any platform. That is
 the same shape as the HamLib conclusion in CLAUDE.md -- *one place knows, and
 nothing else does* -- reached here for free instead of by writing a wrapper.
 
-**Contributing `trace_v2` back to FPC is the honest endgame, and it is small.**
-NY4I raised it and it is the right instinct: the gap is not ours, it is that
-`sqlite3.inc` stopped at the two deprecated v1 entry points. Upstream it is
-three declarations and one line in `LoadAddresses` -- the same pattern as the
-190-odd entries already there. Worth doing AFTER our own version has run against
-a real contest log, so the patch is offered with evidence rather than as a
-theory. Until then our declaration is deliberately shaped to MATCH what
-`sqlite3.inc` would declare, so adopting the upstream version later is a
-deletion and not a rewrite.
+**Contributing `trace_v2` upstream to FPC is A LAST RESORT, not the plan.**
+NY4I raised it and then bounded it: *"but that is only a last resort."* The gap
+is genuinely upstream's -- `sqlite3.inc` stopped at the two deprecated v1 entry
+points -- and the patch would be small, three declarations plus one line in
+`LoadAddresses`. But it is work on someone else's release schedule to obtain
+something `SQLiteLibraryHandle` already gives us today, so it is worth raising
+only if the local declaration turns out to be carried for a long time and we
+would rather it stopped being local.
+
+Our declaration is therefore shaped deliberately to MATCH what `sqlite3.inc`
+would declare, so that adopting an upstream version later is a deletion rather
+than a rewrite.
+
+**And the deprecated pair was CONSIDERED AND REJECTED, so nobody re-proposes
+it.** `sqlite3_trace` + `sqlite3_profile` are declared by FPC today and would
+need no new surface whatsoever -- that is their entire appeal, and it is why the
+question was asked. Against it: SQLite deprecates both, FPC flags both
+`deprecated`, a DLL built with `SQLITE_OMIT_DEPRECATED` omits them so the nil
+test is required either way, and covering both events takes two callbacks where
+`trace_v2` takes one mask. The saving was one declaration; the cost was building
+new work on an entry point its own authors have retired.
 
 **PROFILE reports nanoseconds**, not milliseconds -- an `sqlite3_uint64`. See
 <https://sqlite.org/c3ref/trace_v2.html>.
