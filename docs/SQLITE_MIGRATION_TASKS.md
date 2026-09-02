@@ -340,6 +340,35 @@ backwards scan of the whole log into one indexed statement.
 contest-factory work at all** -- which is the concrete answer to "does the
 database have to wait for the factory".
 
+## Tooling -- asked for while the SQLite work is live
+
+| # | task |
+|---|---|
+| **T1** | **`sqlTrace`: an extended trace option that logs the SQL we actually run.** NY4I, 2026-09-02, and the key is already in his `settings/tr4w.json` under `logging`, beside `hamlibTrace` and `telnetDebug` -- which is the pattern to follow. Register a callback with **`sqlite3_trace_v2()`** on the log connection when the flag is true, with an event mask of **`SQLITE_TRACE_STMT or SQLITE_TRACE_PROFILE`**: `STMT` gives the statement as it begins (expanded SQL, or the comment text for a trigger), `PROFILE` gives the statement plus its run time in **nanoseconds** when it finishes. References: <https://sqlite.org/c3ref/trace_v2.html> and <https://runebook.dev/en/docs/sqlite/c3ref/profile>. |
+
+**Read this before starting T1, because the obvious implementation breaks a rule
+this repo already paid for.**
+
+- **`sqlite3_trace_v2` is a raw C binding, and there is a standing rule against
+  adding new ones** (CLAUDE.md, *"no new direct calls into a DLL"* and *"prefer
+  the FPC/Lazarus class; a raw call carries its justification"*). Check first
+  whether `TSQLite3Connection` already exposes what is wanted -- the same
+  question has answered itself three times in this migration, most recently when
+  `sqlite3_exec` turned out to be `TSQLite3Connection.execsql`. If a raw call is
+  genuinely needed, the justification goes **beside the call**, and it must go
+  through the connector's own already-loaded library handle rather than a new
+  `LoadLibrary`.
+- **The callback is `cdecl` and is called on the thread doing the work.** Log
+  from it, do nothing else, and never re-enter SQLite from inside it.
+- **`sqlTrace` is a `logging` key, so it needs THREE halves like every other
+  one**: read it in `LoadFromJSON`, write it in `SaveToJSON`, and add it to the
+  known-key list in `CollectUnknownKeys`. Miss the third and the very feature
+  being added reports itself as an unknown option.
+- **Expanded SQL can contain bound parameter VALUES** -- callsigns, and any
+  password that ever passes through a query. It is a debug switch, off by
+  default, and the log is a file an operator mails to a developer. Say so where
+  the option is defined.
+
 ## Phase D -- the editable log
 
 | # | task |

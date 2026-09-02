@@ -2126,6 +2126,7 @@ var
    previousCATWTR: RadioPtr;
    loadErr: string;
    before, after: string;
+   i: integer;
 begin
    aError := '';
    Result := True;
@@ -2184,6 +2185,34 @@ begin
          aError := loadErr;
          Result := False;
          Exit;
+         end;
+
+      (* ANYTHING IN settings\tr4w.json THIS BUILD DOES NOT KNOW.
+
+        AT ERROR, WHICH IS WHAT NY4I ASKED FOR (2026-09-02): "I do not
+        necessarily have an issue if the unknown option is deleted (if it
+        cannot be helped). But if so, an ERROR log message would be the bare
+        minimum to do. People should really not be adding unknown json options
+        to the file."
+
+        AND IT CANNOT REALLY BE HELPED. SaveToJSON builds each section from a
+        fixed list of AddPair calls, so an unrecognised key is not preserved --
+        it is gone the next time anything writes the file, which Preferences
+        does on OK. Saying so in the message is the difference between an
+        operator losing a line silently and losing one they were warned about.
+
+        THE COMMON CASE IS A TYPO, not an invention: 'hamLibTrace' for
+        'hamlibTrace' looks exactly like a setting that is not working, and
+        without this there is nothing anywhere that tells them apart.
+
+        ONCE, AT STARTUP. LoadConfig has a dozen call sites -- a profile change
+        reloads the store -- and this belongs at the one that happens once. *)
+      for i := 0 to store.UnknownKeys.Count - 1 do
+         begin
+         logger.Error('[Config] settings\tr4w.json: "%s" is not a setting this ' +
+                      'build knows. It is IGNORED, and it will be REMOVED the ' +
+                      'next time settings are saved.',
+                      [store.UnknownKeys[i]]);
          end;
 
       // Published BEFORE the profile check: whether TR4W offers a TCI server

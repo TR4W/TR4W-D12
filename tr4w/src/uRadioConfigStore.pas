@@ -385,6 +385,7 @@ type
       FBandPlan: TObjectList<TBandPlanEntry>;
       FColors: TObjectList<TElementColors>;
       FClusters: TObjectList<TClusterDefinition>;
+      FUnknownKeys: TStringList;
       FActiveClusterName: string;
       { The rotator that turns. ONE at a time (NY4I, 2026-08-16).
 
@@ -596,6 +597,26 @@ type
         no.  Recorded so the question is asked ONCE: a prompt that returns every
         start is not a choice, it is nagging. }
       property KeepLegacyIni: boolean read FKeepLegacyIni write FKeepLegacyIni;
+
+      (* KEYS IN settings\tr4w.json THAT THIS BUILD DOES NOT KNOW, as
+        'section.key', collected while loading.
+
+        REPORTED BY THE CALLER, NOT HERE. This unit deliberately has no logger
+        -- it is the store, and keeping it free of MainUnit is what lets it be
+        unit-tested. uRadioConfigApply owns the reporting.
+
+        WHY IT IS WORTH REPORTING AT ALL. SaveToJSON builds each section from a
+        fixed list of keys, so anything this build does not recognise is
+        SILENTLY DROPPED the next time the file is written -- there is no
+        preservation and no warning. NY4I added an unknown key deliberately to
+        see what happened and nothing did (2026-09-02): "I do not necessarily
+        have an issue if the unknown option is deleted (if it cannot be
+        helped). But if so, an ERROR log message would be the bare minimum."
+
+        A TYPO IS THE COMMON CASE. 'hamLibTrace' for 'hamlibTrace' reads as a
+        setting that does nothing, and without this it looks identical to a
+        setting that is not working. *)
+      property UnknownKeys: TStringList read FUnknownKeys;
 
       // Offers a TCI server so other programs can reach the radio THIS
       // program has the COM port open on.  Station-wide, not a property of any
@@ -1423,6 +1444,7 @@ begin
    FHeaders := TStringList.Create;
    FHeaders.CaseSensitive := False;   // section names are matched like ini's
    FClusters := TObjectList<TClusterDefinition>.Create(True);
+   FUnknownKeys := TStringList.Create;
 
    FCommands := TStringList.Create;
    FCommands.CaseSensitive := False;
@@ -1499,6 +1521,7 @@ begin
    FreeAndNil(FColors);
    FreeAndNil(FProfiles);
    FreeAndNil(FRadios);
+   FreeAndNil(FUnknownKeys);
    inherited Destroy;
 end;
 
@@ -2158,6 +2181,64 @@ begin
       end;
 end;
 
+(* WHICH KEYS IN THIS SECTION DOES THE BUILD NOT KNOW?
+
+  aKnown IS THE SAME LIST SaveToJSON WRITES, and the two must be kept in step by
+  hand -- there is no reflection here to derive one from the other. A key added
+  to the writer and not to this list reports itself as unknown on the next
+  load, which is a loud and harmless failure; the reverse never happens, because
+  a key nobody writes cannot appear.
+
+  NESTED OBJECTS ARE NOT DESCENDED INTO. This checks the FLAT sections whose
+  keys are a fixed vocabulary. `commands` is not one of them: its keys are CFGCA
+  command names applied verbatim through CheckCommand, which reports an unknown
+  name in its own terms.
+
+  SILENT ON A nil SECTION -- an absent section is not an unknown key. *)
+procedure CollectUnknownKeys(const aSectionName: string;
+                             const aObj: TJSONObject;
+                             const aKnown: array of string;
+                             const aInto: TStringList);
+var
+   i, k:  integer;
+   name:  string;
+   known: boolean;
+begin
+   if (aObj = nil) or (aInto = nil) then
+      begin
+      Exit;
+      end;
+
+   for i := 0 to aObj.Count - 1 do
+      begin
+      (* JSONPairName rather than .Pairs[], the portable idiom this unit
+        already uses -- FPC's fpjson has no Pairs property. *)
+      name := JSONPairName(aObj, i);
+
+      known := False;
+      for k := Low(aKnown) to High(aKnown) do
+         begin
+         (* CASE-SENSITIVE, deliberately. JSON keys are case-sensitive and
+           'hamLibTrace' genuinely is not 'hamlibTrace' -- reporting it is the
+           entire point. *)
+         if name = aKnown[k] then
+            begin
+            known := True;
+            Break;
+            end;
+         end;
+
+      if not known then
+         begin
+         (* AnsiString() EXPLICITLY: TStringList.Add takes the RTL string,
+           which is AnsiString, while tr4w.inc makes ours UnicodeString. A
+           JSON setting name is ASCII by construction, so the conversion is
+           safe -- saying so is the point. *)
+         aInto.Add(AnsiString(aSectionName + '.' + name));
+         end;
+      end;
+end;
+
 function JSONBool(const aObj: TJSONObject; const aKey: string; const aDefault: boolean): boolean;
 var
    v: TJSONValue;
@@ -2722,6 +2803,40 @@ begin
    FHamLibAsyncOnly := JSONBool(logging, 'hamlibAsyncOnly', False);
    FHamLibTrace     := JSONBool(logging, 'hamlibTrace',     False);
    FTelnetDebug     := JSONBool(logging, 'telnetDebug',     False);
+
+   (* WHAT DID THIS FILE CONTAIN THAT WE DO NOT UNDERSTAND?
+
+     ASKED FOR THE FLAT SECTIONS ONLY -- general, logging and tci -- because
+     those have a fixed vocabulary that SaveToJSON writes from a list. The
+     structured sections (radios, profiles, keyers, rotators, clusters,
+     bandPlan, colors, the Cabrillo headers) are collections whose keys are
+     data, and `commands` holds CFGCA command names that CheckCommand already
+     rejects by name.
+
+     THE LISTS BELOW MUST MATCH SaveToJSON's AddPair CALLS. There is no
+     reflection to derive one from the other, so they are kept in step by hand
+     and a mismatch is self-announcing: a key the writer emits but this list
+     omits is reported as unknown on the very next load.
+
+     COLLECTED, NOT LOGGED. uRadioConfigApply reports these -- see UnknownKeys
+     for why this unit has no logger. *)
+   FUnknownKeys.Clear;
+
+   CollectUnknownKeys('general', general,
+      ['activeProfile', 'autoConnect', 'keepLegacyIni', 'activeCluster',
+       'activeRotatorId', 'activeRotator', 'latestConfigFile',
+       'gridPromptShown',
+       (* NOT written by SaveToJSON -- it is a LEGACY key still READ as a
+          fallback for tci.enabled, so a file carrying one from an older
+          build is understood, not unknown. *)
+       'tciServer'], FUnknownKeys);
+
+   CollectUnknownKeys('logging', logging,
+      ['level', 'hamlibDebug', 'hamlibAsyncOnly', 'hamlibTrace',
+       'telnetDebug'], FUnknownKeys);
+
+   CollectUnknownKeys('tci', tci,
+      ['enabled', 'port', 'bindAll', 'debug', 'maxTxSeconds'], FUnknownKeys);
 
    // Retired CFGCA rows.  Whatever is here is applied verbatim by the apply
    // layer through CheckCommand, so an unknown name simply fails there rather

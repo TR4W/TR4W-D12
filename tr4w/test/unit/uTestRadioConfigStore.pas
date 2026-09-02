@@ -50,6 +50,7 @@ type
       procedure Test_RoundTripsProfiles;
       procedure Test_SaveRemovesDeletedSections;
       procedure Test_LoadOfEmptyFileYieldsEmptyStore;
+      procedure Test_UnknownJSONKeysAreCollected;
       procedure Test_AddRejectsBlankAndDuplicateNames;
       procedure Test_NameMatchingIsCaseInsensitive;
       procedure Test_RenameFixesProfileReferences;
@@ -431,6 +432,63 @@ begin
       end;
    finally
       ini.Free;
+   end;
+end;
+
+(* A KEY THIS BUILD DOES NOT KNOW IS COLLECTED AND NAMED.
+
+  WHY IT MATTERS RATHER THAN BEING A NICETY: SaveToJSON builds each section from
+  a fixed list of AddPair calls, so an unrecognised key is not preserved -- it
+  is GONE the next time anything writes settings\tr4w.json. Before this, that
+  happened with no message of any kind. NY4I put an unknown key in the file
+  deliberately to find out what the program did about it, and the answer was
+  nothing.
+
+  THE FIXTURE IS HIS ACTUAL KEY, 'logging.sqlTrace', so this test fails if the
+  reporting is ever wired away.
+
+  AND THE NEGATIVE HALF IS THE IMPORTANT HALF: every KNOWN key in the same
+  section must NOT be reported. A check that only proves the unknown one is
+  found would pass just as well if the routine reported everything. *)
+procedure TRadioConfigStoreTests.Test_UnknownJSONKeysAreCollected;
+var
+   store: TRadioConfigStore;
+   root:  TJSONObject;
+begin
+   BeginTest('Test_UnknownJSONKeysAreCollected');
+
+   root := TJSONObject(TJSONObject.ParseJSONValue(
+      '{"version":1,' +
+      ' "logging":{"level":"DEBUG","hamlibTrace":false,"sqlTrace":true},' +
+      ' "general":{"activeProfile":"x","autoConnect":true,"nonsense":1},' +
+      ' "tci":{"enabled":false,"bindAll":true}}'));
+   try
+      store := TRadioConfigStore.Create;
+      try
+         store.LoadFromJSON(root);
+
+         CheckEquals(2, store.UnknownKeys.Count,
+                     'exactly the two unknown keys, and nothing else');
+         CheckTrue(store.UnknownKeys.IndexOf('logging.sqlTrace') >= 0,
+                   'the key NY4I added is reported by name');
+         CheckTrue(store.UnknownKeys.IndexOf('general.nonsense') >= 0,
+                   'an unknown key in another flat section is reported too');
+
+         (* The known keys, one per section, none of which may be named. *)
+         CheckTrue(store.UnknownKeys.IndexOf('logging.level') < 0,
+                   'a known key is not reported');
+         CheckTrue(store.UnknownKeys.IndexOf('logging.hamlibTrace') < 0,
+                   'a known boolean is not reported');
+         CheckTrue(store.UnknownKeys.IndexOf('general.activeProfile') < 0,
+                   'a known general key is not reported');
+         CheckTrue(store.UnknownKeys.IndexOf('tci.bindAll') < 0,
+                   'bindAll is what the WRITER emits, so it must be known -- ' +
+                   'this caught bindAddress being guessed for it');
+      finally
+         store.Free;
+      end;
+   finally
+      root.Free;
    end;
 end;
 
@@ -1953,6 +2011,7 @@ begin
    Test_RoundTripsProfiles;
    Test_SaveRemovesDeletedSections;
    Test_LoadOfEmptyFileYieldsEmptyStore;
+   Test_UnknownJSONKeysAreCollected;
    Test_PasswordRoundTripsAsPlaintext;
    Test_TCISectionRoundTrips;
    Test_TCIMigratesFromGeneralTciServer;

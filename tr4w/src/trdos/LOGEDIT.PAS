@@ -1410,18 +1410,60 @@ procedure EditableLog.DeleteLastLogEntry;
 begin
 end;
 
+(* THE NAME FROM A RECENT QSO -- READ FROM THE LOG, NOT FROM THE WIDGET.
+
+  THIS WAS THE LAST PLACE THE LISTVIEW WAS THE MODEL. It asked the control for
+  the text of a cell, which meant the QSO data a CW message sends existed, at
+  that moment, only as characters in a Win32 widget. That is what blocks the
+  editable log from becoming an LCL virtual list: a TListView's TListItems would
+  be EMPTY while the control was full, so this call would return nothing and no
+  compiler would say a word. (The other such read, in LastEntry, was repointed
+  at B4 and its old body is still commented out below it.)
+
+  WHAT `Entry` MEANS, and it is a ROW, not a record. The editable log shows the
+  last LinesInEditableLog records with the NEWEST at the bottom, so row
+  LinesInEditableLog-1 is the most recent QSO. The single caller is Ctrl-W in
+  LogSend, which passes 4 -- and LinesInEditableLog is 5 (VC.pas:2856), so it
+  has always meant "the last name logged". The literal 4 is a row index that
+  happens to be the bottom row.
+
+  SO THE CONVERSION IS row -> OFFSET-FROM-THE-END, which is what
+  LogSourceReadFromEnd already takes: offset 1 is the newest. Row r is
+  (LinesInEditableLog - r) back from the end, so row 4 gives 1. Expressed this
+  way the routine no longer depends on how many rows the window happens to show
+  being the same as how many records exist -- it asks the log a question the log
+  can answer.
+
+  ONE BEHAVIOUR CHANGE, AND IT IS A FIX. With FEWER than LinesInEditableLog
+  QSOs in the log the widget filled from row 0 upward, so row 4 was EMPTY and
+  Ctrl-W sent nothing at all -- silently, on the first four QSOs of every
+  contest. Reading the log gives the newest QSO's name instead. Anyone who
+  wants the old behaviour back wants a bug back.
+
+  A LOG-BACKED READ CAN FAIL, and an empty Str20 is the right answer when it
+  does -- the caller appends the result to a CW buffer, where '' sends nothing.
+  That is exactly what the widget returned when the row was empty. *)
 function EditableLog.LastName(Entry: integer): Str20;
-
-{ Revised for use with UK postal groups too in 6.27 }
-
 var
-  i: integer;
+  rec: ContestExchange;
 begin
+  Result := '';
 
-  i := ListView_GetItemText(wh[mweEditableLog], Entry,
-    Ord(ColumnsArray[logColName].pos), @Result[1], 100);
-  Result[0] := AnsiChar(i);
+  if not LogSourceOpen then
+     begin
+     Exit;
+     end;
 
+  try
+     (* LogSourceReadFromEnd is independent of any sequential read in progress,
+       so this cannot disturb a cursor another caller has open. *)
+     if LogSourceReadFromEnd(LinesInEditableLog - Entry, rec) then
+        begin
+        Result := rec.Name;
+        end;
+  finally
+     LogSourceClose;
+  end;
 end;
 
 function EditableLog.LastEntry(InMyLog: boolean; let: LastEntryType):
