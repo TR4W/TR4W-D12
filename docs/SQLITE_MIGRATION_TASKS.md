@@ -346,28 +346,97 @@ database have to wait for the factory".
 |---|---|
 | **T1** | **`sqlTrace`: an extended trace option that logs the SQL we actually run.** NY4I, 2026-09-02, and the key is already in his `settings/tr4w.json` under `logging`, beside `hamlibTrace` and `telnetDebug` -- which is the pattern to follow. Register a callback with **`sqlite3_trace_v2()`** on the log connection when the flag is true, with an event mask of **`SQLITE_TRACE_STMT or SQLITE_TRACE_PROFILE`**: `STMT` gives the statement as it begins (expanded SQL, or the comment text for a trigger), `PROFILE` gives the statement plus its run time in **nanoseconds** when it finishes. References: <https://sqlite.org/c3ref/trace_v2.html> and <https://runebook.dev/en/docs/sqlite/c3ref/profile>. |
 
-**Read this before starting T1, because the obvious implementation breaks a rule
-this repo already paid for.**
+### T1 is DESIGNED, not just proposed -- measured 2026-09-02
 
-- **`sqlite3_trace_v2` is a raw C binding, and there is a standing rule against
-  adding new ones** (CLAUDE.md, *"no new direct calls into a DLL"* and *"prefer
-  the FPC/Lazarus class; a raw call carries its justification"*). Check first
-  whether `TSQLite3Connection` already exposes what is wanted -- the same
-  question has answered itself three times in this migration, most recently when
-  `sqlite3_exec` turned out to be `TSQLite3Connection.execsql`. If a raw call is
-  genuinely needed, the justification goes **beside the call**, and it must go
-  through the connector's own already-loaded library handle rather than a new
-  `LoadLibrary`.
-- **The callback is `cdecl` and is called on the thread doing the work.** Log
-  from it, do nothing else, and never re-enter SQLite from inside it.
-- **`sqlTrace` is a `logging` key, so it needs THREE halves like every other
-  one**: read it in `LoadFromJSON`, write it in `SaveToJSON`, and add it to the
-  known-key list in `CollectUnknownKeys`. Miss the third and the very feature
-  being added reports itself as an unknown option.
-- **Expanded SQL can contain bound parameter VALUES** -- callsigns, and any
-  password that ever passes through a query. It is a debug switch, off by
-  default, and the log is a file an operator mails to a developer. Say so where
-  the option is defined.
+NY4I pointed at FPC's `sqlite_trace_func` and asked whether a binding was needed
+at all. Chasing that answered the whole design.
+
+**First, the unit in that screenshot is the wrong SQLite.** `sqlite.pp` is FPC's
+**SQLite 2** unit, and `sqlite_trace_func(pointer, PAnsiChar)` is the v1 shape --
+no timing, and not the library we link.
+
+**What FPC 3.2.2 actually offers for SQLite 3** (`packages/sqlite/src/sqlite3.inc`):
+
+| | |
+|---|---|
+| `xTrace` / `sqlite3_trace` | line 505/508 -- declared, and marked **`deprecated`** |
+| `xProfile` / `sqlite3_profile` | line 506/509 -- declared, **`deprecated`** |
+| `sqlite3_trace_v2` | **not declared at all** |
+| `SQLITE_TRACE_STMT` / `_PROFILE` | **not declared at all** |
+| `SQLiteLibraryHandle: TLibHandle` | line 1173, **in the INTERFACE** -- public |
+
+**And the shipped DLL is SQLite 3.53.4 and exports all three**
+(`sqlite3_trace_v2`, `sqlite3_trace`, `sqlite3_profile` -- checked in
+`target/sqlite3.dll`).
+
+**So the "new DLL binding" objection dissolves.** `SQLiteLibraryHandle` is the
+handle FPC has ALREADY loaded, from the name in `SQLiteDefaultLibrary` -- which
+is FPC's own per-platform constant, `'sqlite3.dll'` on Windows and
+`'libsqlite3.' + SharedSuffix` elsewhere. Resolving through it is neither a new
+library nor a hardcoded file name, which is what the rule is actually about:
+
+```pascal
+pointer(sqlite3_trace_v2) :=
+   GetProcedureAddress(SQLiteLibraryHandle, 'sqlite3_trace_v2');
+```
+
+**And the connection handle needs no trick either.** `TSQLConnection.Handle` is
+a PUBLIC property (`sqldb.pp:293`) returning `TSQLite3Connection.fhandle`, so the
+`psqlite3` is simply `psqlite3(FConnection.Handle)`. No descendant access
+required, unlike `execsql`.
+
+**Therefore: use `trace_v2`, not the deprecated pair.** The v1 route would need
+nothing new at all, which is its whole appeal -- but SQLite deprecates both, FPC
+flags both `deprecated`, they are omitted entirely from a DLL built with
+`SQLITE_OMIT_DEPRECATED`, and covering both events needs two callbacks where
+`trace_v2` takes one mask. Nothing is bought by it.
+
+**What to write:**
+
+| | |
+|---|---|
+| declare | the callback type (`cdecl`), `SQLITE_TRACE_STMT = $01`, `SQLITE_TRACE_PROFILE = $02`, and the `sqlite3_trace_v2` function variable |
+| resolve | from `SQLiteLibraryHandle`, once, on first use |
+| register | on `TLogDatabase.OpenConnection` when `sqlTrace` is true, mask `SQLITE_TRACE_STMT or SQLITE_TRACE_PROFILE` |
+| unregister | pass a nil callback before closing |
+
+**Four things that will still bite:**
+
+- **A nil pointer means an OLD DLL, not a bug.** `trace_v2` arrived in SQLite
+  3.14 (2016). Resolve, test for nil, and LOG THAT TRACING IS UNAVAILABLE --
+  never call it. A nil call is an access violation with no message.
+- **The callback is `cdecl` and runs on whichever thread is executing the
+  statement.** Log and return. Never re-enter SQLite from inside it -- no
+  queries, and in particular no `sqlite3_expanded_sql` follow-up work beyond
+  what the callback already hands you.
+- **`sqlTrace` is a `logging` key, so it needs THREE halves**: read it in
+  `LoadFromJSON`, write it in `SaveToJSON`, and add it to the known-key list in
+  `CollectUnknownKeys`. Miss the third and the feature reports ITSELF as an
+  unknown option -- which is exactly how the reporting was proved to work.
+- **Traced SQL can contain bound parameter VALUES** -- callsigns, and any
+  password that passes through a query. It is off by default and the log is a
+  file operators mail to developers. Say so where the option is defined.
+
+**NO `{$IFDEF WINDOWS}` / `{$IFDEF DARWIN}` IS NEEDED HERE, and that is the
+result worth keeping.** NY4I expected some would be unavoidable. They are not,
+for one reason: the platform difference is the LIBRARY NAME, and we never say
+it. FPC's `SQLiteDefaultLibrary` holds it and `SQLiteLibraryHandle` is the
+already-open handle to it, so this code names no file on any platform. That is
+the same shape as the HamLib conclusion in CLAUDE.md -- *one place knows, and
+nothing else does* -- reached here for free instead of by writing a wrapper.
+
+**Contributing `trace_v2` back to FPC is the honest endgame, and it is small.**
+NY4I raised it and it is the right instinct: the gap is not ours, it is that
+`sqlite3.inc` stopped at the two deprecated v1 entry points. Upstream it is
+three declarations and one line in `LoadAddresses` -- the same pattern as the
+190-odd entries already there. Worth doing AFTER our own version has run against
+a real contest log, so the patch is offered with evidence rather than as a
+theory. Until then our declaration is deliberately shaped to MATCH what
+`sqlite3.inc` would declare, so adopting the upstream version later is a
+deletion and not a rewrite.
+
+**PROFILE reports nanoseconds**, not milliseconds -- an `sqlite3_uint64`. See
+<https://sqlite.org/c3ref/trace_v2.html>.
 
 ## Phase D -- the editable log
 
