@@ -228,21 +228,6 @@ function SQLiteLibraryPath: string;
 const
    SQLITE_LIBRARY_NAME = 'sqlite3.dll';
 
-   (* PRAGMA application_id -- four bytes at offset 68 of every log we create,
-     which is 'TR4W' in ASCII.  Taken from TR4QT, which uses 0x54523451 ('TR4Q')
-     for the same purpose (Database.h:49) and refuses to open a database whose
-     id is set to something else (Database.cpp:161).
-
-     WHY IT IS WORTH THE FOUR BYTES.  Without it, "is this file one of ours"
-     can only be answered by opening it and guessing from the tables present,
-     and question 8 settled that a TR4QT log is NOT an interop target -- so the
-     two must be distinguishable rather than merely different.  It also makes
-     the file identifiable to `file`, to SQLite's own tooling and to anyone
-     staring at a hex dump five years from now.
-
-     NOT MENTIONED IN THE PLAN DOCUMENT, and found by reading TR4QT at NY4I's
-     suggestion on 2026-09-01. *)
-   LOG_APPLICATION_ID = $54523457;   (* 'TR4W' *)
 
 implementation
 

@@ -431,7 +431,30 @@ uses
   uFlexDiscovery,
   uStrSearch,
   NetworkMessageUtils,
-  uTR4WStrings;
+  uTR4WStrings,
+   uContestFileKind;   (* what kind of file did the operator pick as a contest *)
+
+(* A resourcestring, NOT a TC_ constant in the language tables.
+
+  resourcestring IS THE DIRECTION (NY4I, 2026-08-13: resourcestring plus one
+  binary per platform), and these two strings are new, so they start where
+  everything is going rather than where everything has been. A new TC_ would
+  have to be added to sixteen catalogues to reach a translator; a
+  resourcestring is harvested by Lazarus and merged with po_merge --pot.
+
+  BOTH TAKE THE FILE NAME, because "that is not a valid file" without saying
+  WHICH file is the failure being fixed here, not a smaller version of it. *)
+resourcestring
+   SContestFileForeignDatabase =
+      'This file is a database, but it was not created by TR4W:' + sLineBreak +
+      sLineBreak + '%s' + sLineBreak + sLineBreak +
+      'TR4W cannot open another program''s log. Choose a TR4W log (.db) or a ' +
+      'contest configuration file (.cfg).';
+
+   SContestFileNotRecognised =
+      'This file is not a TR4W log and is not a contest configuration file:' +
+      sLineBreak + sLineBreak + '%s' + sLineBreak + sLineBreak +
+      'Choose a TR4W log (.db) or a contest configuration file (.cfg).';
 
 // ---------------------------------------------------------------------------
 // EnsureCountryFile
@@ -1151,6 +1174,59 @@ begin
      // WHICH .cfg AM I ACTUALLY EDITING -- the question this defect turned
      // on, and nothing in the log answered it.
      logger.Info('Contest configuration file: ' + StrPas(@TR4W_CFG_FILENAME[0]));
+
+     (* WHAT KIND OF FILE IS IT? ASKED HERE BECAUSE THIS IS WHERE THE NAME
+       ENTERS THE PROGRAM -- the New Contest dialog and ParamStr(1) both land
+       in TR4W_CFG_FILENAME, and the fully-qualifying block above is already
+       here for exactly that reason. One check covers both doors.
+
+       WITHOUT IT THE PROGRAM DIED WITH NOTHING ON SCREEN. Anything that is
+       not a text config reached the line parser, which raises a modal warning
+       BEFORE THE MAIN WINDOW EXISTS -- so a .db looked like a hang ("The
+       program does not show the UI but is still running") and a .png
+       "appeared to die quietly" (NY4I, 2026-09-02). In neither case was the
+       operator told what was wrong with the file they had just picked.
+
+       WE STOP FOR TWO KINDS AND ONLY TWO. A foreign database and an
+       unrecognised binary are both definitely-wrong answers to "which contest
+       do you want", and there is nothing sensible to do but say so and stop.
+
+       A MISSING FILE DELIBERATELY KEEPS TODAY'S BEHAVIOUR. It is not an
+       operator mistake in the same way -- SaveNewContest writes a .cfg that
+       does not exist until the moment it does, and a headless /EXPORT is
+       scripted against paths this program does not own. Turning that into a
+       hard stop would be a change of behaviour smuggled in with a bug fix, so
+       it is logged and left alone.
+
+       HALT(1), NOT HALT. This is a failed start, and a script that runs
+       /EXPORT over a directory should be able to tell that from a clean one. *)
+     case ClassifyContestFile(StrPas(@TR4W_CFG_FILENAME[0])) of
+        cfkForeignDatabase:
+           begin
+           logger.Error('Contest file is a database created by another ' +
+                        'program: %s', [StrPas(@TR4W_CFG_FILENAME[0])]);
+           ShowMessage(SysUtils.Format(SContestFileForeignDatabase,
+                                       [StrPas(@TR4W_CFG_FILENAME[0])]));
+           Halt(1);
+           end;
+
+        cfkUnrecognised:
+           begin
+           logger.Error('Contest file is neither a TR4W log database nor a ' +
+                        'text configuration file: %s',
+                        [StrPas(@TR4W_CFG_FILENAME[0])]);
+           ShowMessage(SysUtils.Format(SContestFileNotRecognised,
+                                       [StrPas(@TR4W_CFG_FILENAME[0])]));
+           Halt(1);
+           end;
+
+        cfkMissing:
+           begin
+           logger.Warn('Contest file does not exist or cannot be read; ' +
+                       'continuing with defaults: %s',
+                       [StrPas(@TR4W_CFG_FILENAME[0])]);
+           end;
+     end;
      end;
 
 

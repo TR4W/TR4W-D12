@@ -103,7 +103,8 @@ uses
    uUDPBroadcaster,
    uUDPBroadcastConfig,
    uTR4WConfigFile,
-   uRotatorControl;   // OpenRotatorPorts -- the library opens its own ports
+   uRotatorControl,   // OpenRotatorPorts -- the library opens its own ports
+   uContestFileKind;  // a .db chosen as the contest must not be line-parsed
 
 type
   // One single-valued tr4w.ini key already applied this load pass, plus the raw
@@ -686,6 +687,39 @@ begin
      begin
      ClearContestCFGCommands;
      end;
+  (* A CONTEST FILE THAT IS A DATABASE IS NOT PARSED AS TEXT.
+
+    The operator can now choose a .db in the New Contest dialog -- it is the
+    PRIMARY filter there, because a .db is what a contest is. The chosen file
+    still arrives in TR4W_CFG_FILENAME, which is correct and is not the bug:
+    every other name is derived from that one by STEM, so a .db yields exactly
+    the right TR4W_LOG_FILENAME and the right database. The one thing that must
+    not happen is feeding those bytes to a line parser.
+
+    SKIPPING THE READ IS THE CORRECT BEHAVIOUR, not damage control. Phase E2
+    moved the contest's configuration INTO the log, and uProgramMain calls
+    LogStoreApplyContestConfig a few statements after this one -- deliberately
+    after, so it overrides. A contest opened as a .db is therefore fully
+    configured without this read ever happening. NY4I's own criterion: "when
+    done, the .cfg file should not be necessary."
+
+    THE FILE IS ALREADY KNOWN TO BE ONE OF OURS. uProgramMain classified it
+    when the name entered the program and stopped for anything else, so the
+    only kinds that reach here are a TR4W database and a text config. Asking
+    again is cheap and keeps this correct for any future caller that did not
+    go through startup.
+
+    cfgCFG ONLY: tr4w.ini and the common-messages file are text by definition
+    and are not chosen by the operator. *)
+  if (ConfigFileName = cfgCFG) and
+     (ClassifyContestFile(string(StrPas(CFGFilesArray[ConfigFileName]))) = cfkTR4WDatabase) then
+     begin
+     logger.Info('[Config] %s is a log database, not a text .cfg -- the ' +
+                 'contest configuration comes from the log itself',
+                 [CFGFilesArray[ConfigFileName]]);
+     Exit;
+     end;
+
   logger.Info('[Config] Loading %s', [CFGFilesArray[ConfigFileName]]);
   EnumerateLinesInFile(CFGFilesArray[ConfigFileName], EnmuCFGFile, True);
 

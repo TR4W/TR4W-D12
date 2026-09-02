@@ -150,6 +150,28 @@ unit uLogSchema;
 interface
 
 const
+   (* MOVED HERE FROM uLogDatabase ON 2026-09-02, beside user_version, because
+     the two are the same kind of fact: a stamp in the file header that says
+     what this database IS. Its old home linked sqldb, which meant asking "is
+     this one of our logs" pulled in the whole database layer -- and the
+     question is asked, deliberately, of files we do NOT want to hand to that
+     layer. See uContestFileKind. *)
+   (* PRAGMA application_id -- four bytes at offset 68 of every log we create,
+     which is 'TR4W' in ASCII.  Taken from TR4QT, which uses 0x54523451 ('TR4Q')
+     for the same purpose (Database.h:49) and refuses to open a database whose
+     id is set to something else (Database.cpp:161).
+
+     WHY IT IS WORTH THE FOUR BYTES.  Without it, "is this file one of ours"
+     can only be answered by opening it and guessing from the tables present,
+     and question 8 settled that a TR4QT log is NOT an interop target -- so the
+     two must be distinguishable rather than merely different.  It also makes
+     the file identifiable to `file`, to SQLite's own tooling and to anyone
+     staring at a hex dump five years from now.
+
+     NOT MENTIONED IN THE PLAN DOCUMENT, and found by reading TR4QT at NY4I's
+     suggestion on 2026-09-01. *)
+   LOG_APPLICATION_ID = $54523457;   (* 'TR4W' *)
+
    (* PRAGMA user_version in every log we create.  Bump ONLY with a migration
      step, and read docs\SQLITE_LOG_SCHEMA_PLAN.md section 8 first: an added
      column is ALTER TABLE ADD COLUMN guarded by PRAGMA table_info, not a

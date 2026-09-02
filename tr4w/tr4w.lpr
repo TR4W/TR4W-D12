@@ -101,6 +101,7 @@ uses
   uKeyerState in 'src\domain\uKeyerState.pas',
   uLogBinaryFile in 'src\uLogBinaryFile.pas',
   uLogSchema in 'src\domain\uLogSchema.pas',
+uContestFileKind in 'src\domain\uContestFileKind.pas',
   uLogRepository in 'src\uLogRepository.pas',
   uLogImport in 'src\uLogImport.pas',
   uLogDatabase in 'src\domain\uLogDatabase.pas',

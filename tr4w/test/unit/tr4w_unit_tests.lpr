@@ -268,9 +268,11 @@ uses
    uLogBinaryFile       in '..\..\src\uLogBinaryFile.pas',
    uTestLogBinaryFile   in 'uTestLogBinaryFile.pas',
    uLogSchema           in '..\..\src\domain\uLogSchema.pas',
+uContestFileKind           in '..\..\src\domain\uContestFileKind.pas',
    uLogRepository       in '..\..\src\uLogRepository.pas',
    uTestLogRepository   in 'uTestLogRepository.pas',
    uTestLogNaming       in 'uTestLogNaming.pas',
+uTestContestFileKind       in 'uTestContestFileKind.pas',
    uLogImport           in '..\..\src\uLogImport.pas',
    uTestLogImport       in 'uTestLogImport.pas',
    uLogDatabase         in '..\..\src\domain\uLogDatabase.pas',
@@ -386,6 +388,7 @@ begin
    RegisterSuite(TLogDatabaseTests.Create('LogDatabase'));
    RegisterSuite(TLogRepositoryTests.Create('LogRepository'));
    RegisterSuite(TLogNamingTests.Create('LogNaming'));
+   RegisterSuite(TContestFileKindTests.Create('ContestFileKind'));
    RegisterSuite(TLogImportTests.Create('LogImport'));
    RegisterSuite(TClusterTokensTests.Create('ClusterTokens'));
    RegisterSuite(TSplitReassertTests.Create('SplitReassert'));
