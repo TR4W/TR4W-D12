@@ -566,6 +566,7 @@ uses
   { The SQLite shadow -- an IMPLEMENTATION-section use, so no interface
     cycle. It never raises and never blocks logging: see uLogStore. }
   uLogStore,
+  uEditableLogView,   // one definition of "which record is row N"
   (* Which store a log READ comes from -- step B4.  Its implementation
      uses this unit back, which is legal: both edges are
      implementation-section. *)
@@ -7223,9 +7224,21 @@ begin
 
     Both branches are the same statement now, which is the other half of the
     point -- the guard above chooses the offset, not a different formula. *)
-  if Size > LinesInEditableLog then
+  (* THE SAME MAPPING THE LOADER USED, from the same expression.
+
+    THIS HALF WAS ALREADY RIGHT AND THE LOADER WAS WRONG, which is precisely
+    why having two of them was the defect: being correct here bought nothing
+    while the rows had been filled by a different rule, so a double click
+    opened the QSO ABOVE the one clicked on any log longer than the window.
+
+    -1 IS A REAL ANSWER AND IS CHECKED. A row below the last QSO of a short log
+    is blank; opening the editor on it would edit whatever index the arithmetic
+    happened to produce. *)
+  IndexOfItemInLogForEdit := EditableLogRowToRecord(Size, LinesInEditableLog,
+                                                    IndexOfItemInLogForEdit);
+  if IndexOfItemInLogForEdit < 0 then
      begin
-     IndexOfItemInLogForEdit := Size - LinesInEditableLog + IndexOfItemInLogForEdit;
+     Exit;
      end;
 
   ;
@@ -7694,16 +7707,15 @@ begin
      end;
   LogSourceRewind;
 
-  (* Size IS A RECORD COUNT NOW, not a byte length, so the division is gone. *)
-  FirstRecord := Size - 1;
-  if FirstRecord > LinesInEditableLog then
-     begin
-     FirstRecord := FirstRecord - LinesInEditableLog
-     end
-  else
-     begin
-     FirstRecord := 0;
-     end;
+  (* WHICH RECORD DOES THE EDITABLE LOG START AT?
+
+    ONE EXPRESSION, IN uEditableLogView, SHARED WITH THE DOUBLE-CLICK HANDLER.
+    It was computed here and again in EditableLogWindowDblClick, and the two
+    disagreed by one -- see that unit's header for the model, and for the two
+    defects the disagreement caused. Extracted rather than merely corrected,
+    because two correct copies are one edit away from being two different
+    copies again. *)
+  FirstRecord := EditableLogFirstRecord(Size, LinesInEditableLog);
   Sheet.DisposeOfMemoryAndZeroTotals;
   // LoadingInLogFile := True;
   1:

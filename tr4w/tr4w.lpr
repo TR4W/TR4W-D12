@@ -102,6 +102,7 @@ uses
   uLogBinaryFile in 'src\uLogBinaryFile.pas',
   uLogSchema in 'src\domain\uLogSchema.pas',
 uContestFileKind in 'src\domain\uContestFileKind.pas',
+uEditableLogView in 'src\domain\uEditableLogView.pas',
   uLogRepository in 'src\uLogRepository.pas',
   uLogImport in 'src\uLogImport.pas',
   uLogDatabase in 'src\domain\uLogDatabase.pas',
