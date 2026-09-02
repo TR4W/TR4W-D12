@@ -3636,6 +3636,33 @@ begin
      end;
 
 
+  (* CLOSE THE LOG DATABASE. NOTHING ELSE EVER DID.
+
+    THE SYMPTOM WAS STRAY FILES: every contest left a .db-wal and a .db-shm
+    behind (NY4I, 2026-09-02). SQLite deletes both when the LAST connection
+    closes cleanly, and keeps them when a process "exits without cleanly
+    shutting down the database connection" -- which is precisely what this
+    program did, on every run.
+
+    THE CAUSE IS THREE LINES BELOW: ExitProcess. It terminates immediately, so
+    no unit finalization runs, no destructor runs, and TLogDatabase.Destroy --
+    which does close the connection properly -- was never reached. LogStoreClose
+    existed, was correct, and had NO CALLERS anywhere in the tree.
+
+    SO THE STRAY FILES WERE THE SMALL HALF OF IT. LogStoreClose also runs
+    CaptureConfigurationOnClose, so the contest configuration was never recorded
+    into the log at close either. A .db-wal is visible; that is not.
+
+    BEFORE THE LOGGER GOES, deliberately -- the capture reports its own failures
+    through it, and this is the last moment those reach the file.
+
+    LEFT-OVER FILES FROM EARLIER RUNS ARE NOT OURS TO DELETE. A -wal holds
+    COMMITTED transactions that are not yet checkpointed into the .db, so
+    removing one by hand loses QSOs. The only safe disposal is the one SQLite
+    documents: open the database and close it cleanly -- which, from this commit
+    on, simply happens the next time that contest is opened. *)
+  LogStoreClose;
+
   if Assigned(logger) then
      begin
      logger.Info('------------------------------Program shutdown----------------------------');

@@ -999,4 +999,22 @@ begin
    FreeAndNil(GDatabase);
 end;
 
+(* A BACKSTOP FOR THE EXIT PATHS THAT ARE NOT tr4w_ShutDown.
+
+  THE TWO EXITS ARE NOT THE SAME AND NEITHER COVERS THE OTHER. The interactive
+  program leaves through ExitProcess, which runs NO finalization at all -- so
+  this section is dead on that path and the explicit call in tr4w_ShutDown is
+  the one that works. The headless modes leave through Halt (/EXPORT, /RESCORE,
+  /IMPORTLOG and the startup refusals), which DOES run finalization but never
+  reaches tr4w_ShutDown -- so there the explicit call is the dead one and this
+  section is what closes the database.
+
+  Corpus runs are the headless case, and they were leaving a -wal behind on
+  every one of the thirteen logs.
+
+  SAFE TO RUN TWICE: LogStoreClose is FreeAndNil throughout and
+  CaptureConfigurationOnClose returns immediately once GRepository is nil. *)
+finalization
+   LogStoreClose;
+
 end.
