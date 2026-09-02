@@ -184,9 +184,9 @@ end;
 
 function ShadowFileName: string;
 begin
-   (* Beside the binary log, same name. A log and its shadow travel together or
-     the shadow is worse than useless. *)
-   Result := ChangeFileExt(string(StrPas(TR4W_LOG_FILENAME)), '.db');
+   (* The rule itself is uLogDatabase.LogDatabaseFileName -- it outlives this
+     unit, which B5 deletes. *)
+   Result := LogDatabaseFileName(string(StrPas(TR4W_LOG_FILENAME)));
 end;
 
 (* How many records the binary log holds, or -1 if it cannot be read. *)

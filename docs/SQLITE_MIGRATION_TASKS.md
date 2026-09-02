@@ -38,7 +38,13 @@ them, and every one would have reached an operator. They are recorded in
 the sharpest is that `ContestExchange.id` identifies the EXCHANGE, not the QSO --
 county-line contacts share it, so it cannot be the unique row key.
 
-**Next: B2**, repointing the 8 writes and 5 reads.
+**B3 IS GREEN.** `bash tr4w/test/corpus/compare-stores.sh` -- **13 logs, 1,855
+QSOs, 0 differences.** Exported from the database, TR4W produces BYTE-IDENTICAL
+ADIF and Cabrillo to exporting from the binary log, and the golden corpus still
+reads 22/0/4 against the D7 references.
+
+**Next: B4** -- flip the remaining readers, then B5 to stop writing the .TRW.
+B2 is done (all eight write sites), and C1/C2 with it.
 
 ---
 
@@ -139,10 +145,69 @@ what `logdump` reads. **No contest-factory work.**
 |---|---|
 | ~~**B1**~~ | **DONE IN PHASE A** -- `TLogRepository`, `Save` / `Load` over `ContestExchange` as a value type. Moved because the importer needs the field mapping, and writing it twice was the alternative |
 | **B2** | **NEXT, and it is not purely mechanical -- see below** |
-| **B3** | Keep the corpus runnable across the switch -- export from the database, diff against the same frozen D7 references |
+| **B3** | **THE EQUIVALENCE GATE, and now the pivot of the whole migration** -- export from the DATABASE and diff against the same frozen D7 references. See below |
 
 **Exit:** corpus **22 passed / 0 failed / 4 known** with the log in SQLite.
 **No contest-factory work.**
+
+### B3 IS THE GATE, AND THE `.TRW` IS A TEST BENCH -- NY4I, 2026-09-01
+
+> *"Going forward, there's nothing we care about that's reading TR4W log files.
+> So this is strictly a test bench for you to validate what you're doing in the
+> SQL file. Once we're convinced of the SQL file, I'd say we completely abandon
+> the TR log file. I'm not even sure it's relevant to be reading it. And once we
+> start working on the edit window and the editable log window, I don't think we
+> deal anything with the TR log file at that point. So we just need to get to the
+> point where we're satisfied with the log file and then say, okay, that corpus
+> is done, now we're gonna have a new corpus that uses the database."*
+
+**This removes the constraint the earlier phases were shaped around.** There is
+no external reader to stay compatible with, so the binary log has exactly one
+remaining job -- being the thing the database is checked AGAINST -- and it holds
+that job only until B3 is green.
+
+**THE NEW CORPUS NEEDS NO NEW REFERENCES, which is the point.** The 26 frozen
+artifacts were written by **D7, a different program**, and that independence is
+the entire value of the oracle. Only the SOURCE changes:
+
+| | today | after B3 |
+|---|---|---|
+| source | 13 D7-written `.TRW` | 13 `.db`, converted ONCE by `/IMPORTLOG` |
+| exporter | reads the binary log | reads the database |
+| reference | **the same 26 D7 files** | **the same 26 D7 files** |
+
+So the pivot is a fixture conversion, not a re-baselining -- and re-baselining an
+oracle against the program it is meant to police would have destroyed it. **Run
+BOTH sources against the references before dropping the binary one**: two
+independent paths agreeing on 26 byte-exact artifacts is the proof, and it is
+available only while both exist.
+
+### Then the read flip, and the retirement -- IN THIS ORDER
+
+| # | task |
+|---|---|
+| **B4** | **Flip the readers.** Export, the editable log and search source from the database. The binary log is still written |
+| **B5** | **Stop writing it.** `uLogShadow` is deleted -- it is an adapter with nothing left to adapt -- and with it the drift check, the rebuild-from-binary and the `.TRW` writer |
+
+**KEEP THE `.TRW` READER. DELETE EVERYTHING ELSE.** `uLogBinaryFile`'s reader is
+a tested leaf reached by `/IMPORTLOG`, and it is what lets an operator bring a
+4.x or D7 log into 5.x. NY4I is right that nothing READS these logs going
+forward, and a one-time importer is not that -- it is the door out of the old
+format, and deleting it is the one step here that cannot be undone cheaply.
+Its cost is a unit nobody calls during a contest.
+
+### THE POSTURE INVERTS AT B5, and it will not do so by itself
+
+Today a shadow failure is free: `uLogShadow` swallows every exception, reports
+once, switches off, and the binary log carries the contest regardless. **That
+rule is correct only while there is a fallback.** After B5 there is none, and
+code that quietly stands down after a write failure is code that silently stops
+logging a contest.
+
+So B5 is not only deletions: every `except` that currently disables the shadow
+becomes an error the operator is TOLD about. This is a deliberate reversal, and
+if it is not made deliberately it will not be made at all -- the code reaches
+that state unchanged and looks fine.
 
 ### B2 is mostly UPDATEs, not appends — and the first sizing of it was wrong
 
@@ -211,7 +276,7 @@ database have to wait for the factory".
 
 | # | task |
 |---|---|
-| **D1** | `uLogEdit` and `uLogSearch` as an LCL **virtual list** (`OwnerData` / `OnData`) |
+| **D1** | `uLogEdit` and `uLogSearch` as an LCL **virtual list** (`OwnerData` / `OnData`), **against the database and never the binary log** -- NY4I: *"once we start working on the edit window and the editable log window, I don't think we deal anything with the TR log file at that point."* So D comes after B4, and its byte-offset seeking (`uEditQSO:751`) is not ported, it is deleted |
 
 These are the last two hand-built Win32 dialogs and NY4I parked them here on
 purpose: *"I suspect those are so coupled to the sqlite database it would be

@@ -131,6 +131,10 @@ type
 
       FUpdate: TSQLQuery;
       FSelectById: TSQLQuery;
+      (* Created on demand by OpenSequentialRead -- an export is rare and a
+         prepared statement held open for the life of the repository would keep
+         a read transaction open with it. *)
+      FCursor: TSQLQuery;
 
       procedure PrepareStatements;
       procedure LoadContest;
@@ -301,6 +305,24 @@ type
         all of them with one record. *)
       function UpdateQSOBySessionIds(aSessionId, aSessionSeq: Int64;
                                      const aQso: ContestExchange): boolean;
+
+      (* SEQUENTIAL READ, IN LOG ORDER -- what an export walks.
+
+         A CURSOR RATHER THAN A LIST, because the binary reader it replaces is
+         one: the thirteen export loops in PostUnit are shaped "open, read the
+         next record into TempRXData, decide, repeat", and handing them an array
+         instead would mean rewriting every loop to prove a mapping. This way
+         the loops do not change at all, so a difference in the exported bytes
+         can only have come from the STORE.
+
+         ORDER BY id, which is insertion order, which is log order: the binary
+         log is append-only and the rowid is an AUTOINCREMENT assigned in the
+         same sequence. Ordering by time would NOT be the same thing -- QSO
+         times come from the operator's clock and go backwards across a UTC
+         correction. *)
+      procedure OpenSequentialRead;
+      function ReadNext(out aQso: ContestExchange): boolean;
+      procedure CloseSequentialRead;
 
       function LoadQSO(aRowId: Int64; out aQso: ContestExchange): boolean;
 
@@ -855,6 +877,9 @@ end;
 
 destructor TLogRepository.Destroy;
 begin
+   (* Before the prepared statements: it holds an open result set on the
+      same connection. *)
+   CloseSequentialRead;
    FInsert.Free;
    FSelect.Free;
    FSelectById.Free;
@@ -1661,6 +1686,41 @@ begin
    BindRecord(aQso, aGuid);
    FInsert.ExecSQL;
    Result := LastInsertedRowId;
+end;
+
+procedure TLogRepository.OpenSequentialRead;
+begin
+   CloseSequentialRead;
+   FCursor := TSQLQuery.Create(nil);
+   FCursor.DataBase := FDatabase.Connection;
+   (* THE SAME QSO_COLUMNS the writer binds and ReadRecord reads. One column
+      list, so a column added to the schema cannot reach the writer and miss
+      the exporter. *)
+   FCursor.SQL.Text := 'SELECT ' + QSO_COLUMNS + ' FROM qso ORDER BY id';
+   FCursor.Open;
+end;
+
+function TLogRepository.ReadNext(out aQso: ContestExchange): boolean;
+begin
+   Result := (FCursor <> nil) and (not FCursor.EOF);
+   if Result then
+      begin
+      ReadRecord(FCursor, aQso);
+      FCursor.Next;
+      end
+   else
+      begin
+      FillChar(aQso, SizeOf(aQso), 0);
+      end;
+end;
+
+procedure TLogRepository.CloseSequentialRead;
+begin
+   if FCursor <> nil then
+      begin
+      FCursor.Close;
+      FreeAndNil(FCursor);
+      end;
 end;
 
 function TLogRepository.LoadQSO(aRowId: Int64;

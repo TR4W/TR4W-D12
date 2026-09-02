@@ -181,6 +181,8 @@ uses
   uConfigValues,
   uCrashLog,
   uCrashLogLCL,
+  (* Which store /EXPORT reads its QSOs from -- step B3. *)
+  uLogSource,
   uCFG,
   uCRC32,
   uMP3Recorder,
@@ -705,6 +707,7 @@ begin
       '  --lang <code>      run in this language' + sLineBreak +
       '  --lang=<code>      the same' + sLineBreak +
       '  /EXPORT            headless ADIF and Cabrillo export, then exit' + sLineBreak +
+      '  /EXPORT /EXPORTDB  the same, reading QSOs from the SQLite log' + sLineBreak +
       '  /IMPORTLOG <log.trw> [<log.db>]' + sLineBreak +
       '                     convert a binary log to a SQLite log, then exit' + sLineBreak +
       '                     (reports to tr4w-early.log; exit 0 ok, 2 failed)' + sLineBreak +
@@ -1372,6 +1375,34 @@ begin
   // history -- must be excluded by the driver, since that would block batch.)
   if SameText(ParamStr(2), '/EXPORT') then
      begin
+     (* /EXPORTDB -- READ THE QSOs FROM THE SQLITE LOG INSTEAD OF THE .TRW.
+
+        Step B3's equivalence gate. The exporters themselves are unchanged and
+        do not know which store they are reading; only uLogSource does. So the
+        corpus can run the SAME export twice, over the SAME thirteen logs,
+        against the SAME frozen D7 references -- and two independent readers
+        agreeing on 26 byte-exact artifacts is the proof that the database can
+        replace the binary log.
+
+        A THIRD ARGUMENT RATHER THAN A SEPARATE MODE, so there is no second
+        export path to keep in step with this one. *)
+     (* BOTH SIDES CONVERTED EXPLICITLY. ParamStr returns a UnicodeString and
+        this SameText resolves to the AnsiString overload, so the bare call
+        narrows implicitly -- and the warning sits on the ARGUMENT, not on the
+        literal, which is why converting only the literal did not silence it.
+        The /EXPORT line just above has the same shape and is one of the 1429
+        the build already counts; this one does not add a 1430th.
+
+        Safe here because a switch name is ASCII. An argument carrying
+        characters outside the ANSI codepage converts to something that does
+        not match '/EXPORTDB' -- which is the right answer: it was not that
+        switch. *)
+     if SameText(AnsiString(ParamStr(3)), AnsiString('/EXPORTDB')) then
+        begin
+        LogSourceKind := lsDatabase;
+        EarlyTrace('[Export] reading QSOs from ' + LogSourceDescription);
+        end;
+
      // tSilentExport was set when the logger was created -- see there for why.
      ExportToADIF;
      CreateCabrilloFile;

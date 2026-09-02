@@ -62,6 +62,18 @@ interface
 uses
    Classes, SysUtils, db, sqldb, sqlite3conn;
 
+(* THE DATABASE THAT BELONGS TO A BINARY LOG -- beside it, same name, '.db'.
+
+  IT LIVES HERE RATHER THAN IN uLogShadow because uLogShadow is scheduled for
+  deletion at B5 and this rule is not: after the binary log stops being written
+  the name is still how an existing log is found. A rule that outlives its unit
+  should not be declared in it.
+
+  A PARAMETER, NOT THE TR4W_LOG_FILENAME GLOBAL, so this unit keeps having no
+  dependency on the program's globals -- which is what lets it be tested and
+  what keeps the domain layer a domain layer. *)
+function LogDatabaseFileName(const aBinaryLogPath: string): string;
+
 type
    ELogDatabaseError = class(Exception);
 
@@ -236,6 +248,11 @@ implementation
 
 uses
    uLogSchema, uAppPaths;
+
+function LogDatabaseFileName(const aBinaryLogPath: string): string;
+begin
+   Result := ChangeFileExt(aBinaryLogPath, '.db');
+end;
 
 procedure TLogConnection.ExecutePragma(const aSQL: AnsiString);
 begin

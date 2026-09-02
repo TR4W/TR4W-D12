@@ -421,6 +421,8 @@ uses
   // uAnsiStr.StrPCopy for ANSI (PAnsiChar) buffers under D12
   uCbrSum,
   MainUnit,
+  (* Which store an export reads from -- step B3. *)
+  uLogSource,
   uCFG;
 // mo.DomList (ADIF CNTY long-name lookup) is reachable via the
 // interface-section 'uses uMults' clause above.
@@ -1149,16 +1151,17 @@ function CalculateTotals: boolean;
         end;
      end;
 
-  if not OpenLogFile then
+  (* THE SOURCE SEAM -- step B3.  See ExportToADIF above. *)
+  if not LogSourceOpen then
      begin
      Exit;
      end;
   FirstRecord  := true;
   PreviousBand := NoBand;
 
-  ReadVersionBlock;
+  LogSourceRewind;
 1:
-  if ReadLogFile then
+  if LogSourceNext( TempRXData ) then
      begin
      if TempRXData.ceQSO_Deleted = true then
         begin
@@ -2206,7 +2209,7 @@ procedure ExportToEDIByBand( Band: BandType );
      goto 1;
      end;
   CloseHandle( tReportFileWrite );
-  CloseLogFile;
+  LogSourceClose;
 
   PreviewFileNameAddress := tReportsFilename;
   FilePreview;
@@ -2462,7 +2465,10 @@ procedure ExportToADIF;
      Exit;
      end;
 
-  if not OpenLogFile then
+  (* THE SOURCE SEAM -- step B3. Reads the .TRW as it always has, or the
+     SQLite log under /EXPORTDB, and the loop below does not know which.
+     See uLogSource for why the loop shape is preserved exactly. *)
+  if not LogSourceOpen then
      begin
      CloseHandle( tReportFileWrite );
      Exit;
@@ -2477,8 +2483,12 @@ procedure ExportToADIF;
 
   // Read all "good" QSOs from the log into an in-memory array.
   SetLength( records, 0 );
-  ReadVersionBlock;
-  while ReadLogFile do
+  LogSourceRewind;
+  (* INTO TempRXData, not into a local: GoodLookingQSO reads that global. The
+     same coupling the binary loop had, made visible rather than removed --
+     removing it belongs to B4, and doing it here would put a second change
+     inside the one comparison this step exists to make. *)
+  while LogSourceNext( TempRXData ) do
      begin
      if GoodLookingQSO then
         begin
@@ -2496,7 +2506,7 @@ procedure ExportToADIF;
   sWriteFileFromString( tReportFileWrite, adifStr );
 
   CloseHandle( tReportFileWrite );
-  CloseLogFile;
+  LogSourceClose;
   PreviewFileNameAddress := tReportsFilename;
   FilePreview;
   end;
@@ -3697,7 +3707,8 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
           logger.debug( 'Before operators sort' );
           for Index := 0 to slOperators.Count - 1 do
              begin
-             logger.debug( '   %s', [ slOperators.Names[ Index ] ] );
+             logger.debug( '   %s = %s', [ slOperators.Names[ Index ],
+                slOperators.ValueFromIndex[ Index ] ] );
              end;
           slOperators.CustomSort( SLOperatorsSortProc );
           // Result := slOperators.DelimitedText;
@@ -3729,8 +3740,38 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       begin
       i1     := StrToIntDef( List.ValueFromIndex[ Index1 ], 0 );
       i2     := StrToIntDef( List.ValueFromIndex[ Index2 ], 0 );
-      Result := i2 - i1; // This sorts in ascending count order
-      /// //Result := i1 - i2;    // This sorts in descendiong count order
+      Result := i2 - i1;   (* most QSOs first -- DESCENDING, whatever the
+                              comment here used to say *)
+
+      (* A TOTAL ORDER, NOT A PARTIAL ONE -- and this is a defect fix, not
+         tidying.
+
+         Returning 0 for two operators with the same QSO count leaves their
+         order to the sort, and FPC's is not stable. TStringList.CustomSort
+         reaches TStringList.QuickSort, which picks its pivot at RANDOM:
+
+             Pivot := L + Random(R - L); // they say random is best
+                       -- rtl/objpas/classes/stringl.inc:1741, FPC 3.2.2
+
+         TR4W calls Randomize, so the seed differs per run and the tie breaks
+         differently each time. MEASURED on arrl_fd_2026_ny4i, where N4KIN has
+         22 QSOs and NY4I and AF4O have 6 each: six exports of the SAME log by
+         the SAME binary gave 'N4KIN, AF4O, NY4I' four times and 'N4KIN, NY4I,
+         AF4O' twice. The sort's INPUT was identical every run -- same names,
+         same order, same counts, confirmed from the debug log -- so the
+         variation was entirely the pivot.
+
+         That is a SUBMITTED FILE changing between identical runs. Nothing was
+         wrong with the content and nothing failed; it simply was not
+         reproducible, which is the kind of thing nobody notices until two
+         people compare their copies of the same log.
+
+         Alphabetical is an arbitrary tie-break, and arbitrary is fine here.
+         STABLE is the requirement. *)
+      if Result = 0 then
+         begin
+         Result := CompareText( List.Names[ Index1 ], List.Names[ Index2 ] );
+         end;
       end;
 
   (* ---------------------------------------------------------------------------- *)
