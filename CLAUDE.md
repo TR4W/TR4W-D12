@@ -556,17 +556,48 @@ marking them `csOwned` — that moved their EDITING. Their STORAGE is still `tr4
 
 | status | rows | edited in | stored in |
 |---|---:|---|---|
-| `csOld`/`csNew` | 6 | Ctrl-J | `tr4w.ini` |
-| `csOwned` | 96 | **Preferences** | **`tr4w.ini`** |
-| `csJSON` | 314 | Preferences | `settings\tr4w.json` |
+| `csOld`/`csNew` | 6 | Ctrl-J | — |
+| `csOwned` | 96 | **another dialog** | **JSON — but not the `commands` section** |
+| `csJSON` | 314 | Preferences | `settings\tr4w.json`, `commands` |
 | `csRem` | 91 | — withdrawn | — |
 
-**Re-measured 2026-09-02** — `grep -c "crS: <status>;" tr4w/src/uCFG.pas`,
-over 508 rows. The figures above it were 2026-08-21's and had drifted a long
-way: `csJSON` nearly doubled (166 → 314) while `csOwned` fell from 247 to 96.
-**102 settings still store in `tr4w.ini`**, which is the whole answer to "why
-does startup still open it" — and the number to watch, because when it reaches
-zero the read can go.
+**`tr4w.ini` STORES NOTHING. The "stored in" column above said it did until
+2026-09-02 and that was wrong** — twice over, because the first correction that
+day only refreshed the counts and left the wrong model in place. NY4I: *"You are
+stale on the ini file. Look at the file. It has nothing in it. All those were
+moved to the json file."* He was right; the file on his station is 67 bytes of
+sentinel text.
+
+**The error was reading `csOwned` as a storage answer**, which is the exact
+confusion the bold paragraph above warns about — and then attaching freshly
+measured counts to it, which made a stale claim look verified. `csOwned` is a UI
+marker and says NOTHING about where a value lives.
+
+Measured 2026-09-02 by matching all 508 `crCommand` rows against the keys
+actually present in a real `settings/tr4w.json`:
+
+| where a value actually lives | rows |
+|---|---:|
+| `tr4w.json` → `commands` | 243 keys present |
+| `tr4w.json` → a STRUCTURED store, under a different name | the other 63 `csOwned` |
+| the contest `.cfg` | the function-key and CQ/QSL message memories |
+| `tr4w.ini` | **none** |
+
+The 63 are not missing, they are *renamed*: `RADIO ONE TYPE` → `radios[]`,
+`KEYER RADIO ONE OUTPUT PORT` → `keyers[].port`, `PSTROTATOR IP ADDRESS` →
+`rotators[].ipAddress`. Searching the `commands` section alone under-reports the
+migration badly, which is how the wrong figure survived a re-measurement.
+
+**So why does startup still log `[Config] Loading …tr4w.ini`?** Because
+`ReadInConfigFile(cfgINI)` is unconditional, not because it contributes
+anything. `uLegacyIniPrompt`'s header already states the intended rule — the
+file is *"READ ONCE per installation, to carry an existing configuration into
+the store, and then never again"* — and that startup read is the one place still
+breaking it. It is skipped now when the file is absent or holds no commands.
+Removing it outright is a decision, not a cleanup: on a station that has a
+`tr4w.json` **and** a still-populated `tr4w.ini`, seeding does not re-run (the
+guard in `uRadioConfigApply` fires only when there is no store), so that read is
+the only thing applying its `csOwned` rows.
 
 So a setting can appear in the new Preferences UI and still not persist on a station whose
 `tr4w.ini` is read-only or absent. `SetCFGCommandValue` reports that now instead of losing it

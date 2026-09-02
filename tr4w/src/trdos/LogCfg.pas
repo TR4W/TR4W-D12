@@ -104,7 +104,8 @@ uses
    uUDPBroadcastConfig,
    uTR4WConfigFile,
    uRotatorControl,   // OpenRotatorPorts -- the library opens its own ports
-   uContestFileKind;  // a .db chosen as the contest must not be line-parsed
+   uContestFileKind,  // a .db chosen as the contest must not be line-parsed
+   Classes;           // TStringList -- FileHasCommands
 
 type
   // One single-valued tr4w.ini key already applied this load pass, plus the raw
@@ -623,6 +624,79 @@ begin
  // n4af }
 end;
 
+(* DOES THIS FILE ACTUALLY CONTAIN ANY COMMANDS?
+
+  A command line is `KEY = VALUE`, so a file with no '=' on any live line has
+  nothing for the parser to do however many bytes it has. NY4I's tr4w.ini is 67
+  bytes of sentinel prose and is exactly that case.
+
+  BY CONTENT rather than by size, because "empty" is not the only shape this
+  takes: a file left holding only comments, or only a [SECTION] header, is
+  equally inert and equally not worth announcing.
+
+  DELIBERATELY CHEAP AND DELIBERATELY WRONG-SAFE. It answers True the moment it
+  sees one candidate line and stops; if it cannot read the file at all it
+  answers True, so the real parser runs and reports the failure in its own
+  terms. Never guess a file empty on the strength of an error. *)
+function FileHasCommands(const aFileName: PAnsiChar): boolean;
+var
+   lines: TStringList;
+   i:     integer;
+   s:     string;
+   name:  AnsiString;
+begin
+   Result := True;
+
+   (* HELD ONCE AS AnsiString, which is what both RTL calls below take.
+     Converting to `string` first would make it UnicodeString -- tr4w.inc sets
+     {$MODESWITCH UnicodeStrings} -- and then narrow straight back at the call,
+     which is a round trip that only the build ratchet notices. *)
+   name := AnsiString(aFileName);
+
+   if not FileExists(name) then
+      begin
+      (* Nothing to read. The parser would open nothing and find nothing. *)
+      Result := False;
+      Exit;
+      end;
+
+   lines := TStringList.Create;
+   try
+      try
+         lines.LoadFromFile(name);
+      except
+         (* Unreadable -- let the real parser meet it and say why. *)
+         Exit;
+      end;
+
+      Result := False;
+
+      for i := 0 to lines.Count - 1 do
+         begin
+         s := Trim(lines[i]);
+
+         if s = '' then
+            begin
+            Continue;
+            end;
+
+         (* The ini's own comment forms, plus a section header. *)
+         if (s[1] = ';') or (s[1] = '#') or (s[1] = '[') then
+            begin
+            Continue;
+            end;
+
+         if Pos('=', s) > 0 then
+            begin
+            Result := True;
+            Exit;
+            end;
+         end;
+   finally
+      lines.Free;
+   end;
+end;
+
 procedure ReadInConfigFile(ConfigFileName: TCFGType);
 
 { This procedure will read in the config file which contains the
@@ -711,6 +785,37 @@ begin
 
     cfgCFG ONLY: tr4w.ini and the common-messages file are text by definition
     and are not chosen by the operator. *)
+  (* AN EMPTY OR ABSENT tr4w.ini IS NOT OPENED, AND NOT ANNOUNCED.
+
+    NY4I, 2026-09-02: "We also need to stop trying to open tr4w.ini." On his
+    station the file is 67 bytes of sentinel text and holds no commands -- every
+    station setting is in settings\tr4w.json, either in its `commands` section
+    or in one of the structured stores (radios, keyers, rotators, profiles,
+    colours, band plan) under a different name.
+
+    THE LOG LINE WAS THE WHOLE VISIBLE SYMPTOM. "[Config] Loading ...tr4w.ini"
+    at every start reads as a dependency the program no longer has, and that is
+    the trap uLegacyIniPrompt already describes: a file that looks like
+    configuration but is ignored costs the next person an hour.
+
+    WHY THE TEST IS "HAS NO COMMANDS" AND NOT "HAS BEEN MIGRATED". Skipping
+    whenever settings\tr4w.json exists would be the bolder rule and it is NOT
+    safe: SeedMigratedCommandsFromIni runs only when there is no store at all
+    (uRadioConfigApply.pas:2133), so a station that has a store AND a still
+    populated tr4w.ini has this read as the ONLY thing applying its csOwned
+    rows. Skipping a file with nothing in it cannot lose anything; skipping a
+    file with something in it can.
+
+    NOTHING ABOUT THE MIGRATION CHANGES HERE -- only the case where there is
+    provably nothing to do. *)
+  if (ConfigFileName = cfgINI) and
+     (not FileHasCommands(CFGFilesArray[ConfigFileName])) then
+     begin
+     logger.Info('[Config] %s holds no commands -- not read. Station settings ' +
+                 'come from the JSON store.', [CFGFilesArray[ConfigFileName]]);
+     Exit;
+     end;
+
   if (ConfigFileName = cfgCFG) and
      (ClassifyContestFile(string(StrPas(CFGFilesArray[ConfigFileName]))) = cfkTR4WDatabase) then
      begin
