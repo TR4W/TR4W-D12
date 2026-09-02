@@ -2441,6 +2441,109 @@ was reaching the panel to be suppressed in the first place.
 
 ---
 
+## Added 2026-09-02 -- THE .TRW IS GONE. NOTHING BELOW HAS BEEN RUN BY AN OPERATOR.
+
+**TR4W now logs a contest entirely to SQLite.** No `.TRW` is written, created, or
+read except once, to migrate an existing log in. Every gate is green -- 28 lints,
+22,624 unit tests, corpus 24/0/2, plus three new suites -- and **not one of them
+puts a human in front of the program**. The corpus exports; it never logs a QSO,
+edits one, deletes one, or opens a log window.
+
+### DECISIONS FIRST -- these are yours, not bench runs
+
+- [ ] **MULTI-OP SYNCHRONISATION DOES NOT WORK, ON PURPOSE.** Log comparison
+  CRC32'd the raw bytes of the `.TRW` at both ends. There is no `.TRW` here, and
+  **`tr4wserver` still keeps one**, so even a new digest computed at this end
+  would have nothing to agree with. It now REPORTS, once per session, that
+  nothing was compared -- explicitly not a claim the logs match. Reporting
+  "identical" would skip a sync an operator needed; reporting "different" would
+  resync on every connect against a log this build cannot read.
+  **The question for you: does the server move to SQLite, or does the new
+  protocol have to speak to a binary-log server?**
+
+- [ ] **RESTART.BIN.** You said "I guess this is obsolete now" -- agreed, and it
+  is untouched. It is derived state in a side file, exactly like the `.TRW` was.
+  Confirm it goes into the database and it comes off this list.
+
+- [ ] **THE LOG NOW OVERRIDES `settings	r4w.json` FOR CONTEST SETTINGS.**
+  `csJSON` means the JSON store owns a row, which is right for a STATION
+  setting. `CONTEST` and the `CATEGORY-*` tags are properties of a CONTEST, so
+  the log applies them as a trusted caller. That is a precedence change and it
+  is the one in this batch most likely to surprise you.
+
+- [ ] **A CONFIG CHANGE MADE MID-CONTEST IS WRITTEN AT LOG CLOSE, NOT WHEN IT IS
+  MADE.** Kill TR4W and the settings changed that session are not in the log --
+  though every QSO is, because QSOs commit as they are made. Recording changes as
+  they happen belongs with the settings work; say if it should come sooner.
+
+### BENCH RUNS -- no automated gate reaches any of this
+
+- [ ] **Log a contest, properly.** Work a run of QSOs, watch the editable log
+  fill, check the totals and the dupe sheet. The whole write path changed: the
+  binary write is gone from `tAddQSOToLog` and `riTotalRecordsInLog` now follows
+  the append rather than a byte count.
+
+- [ ] **Alt-Y, twice.** Delete the last contact and restore it. It reads the
+  newest QSO through the seam instead of seeking back one record, and writes
+  through the repository.
+
+- [ ] **Edit a QSO in a log LONGER than the editable-log window.** This is the
+  one I would run first. The editable-log selection arithmetic was broken by B4
+  and fixed in the same session, and *it needs a log longer than the window to
+  reach* -- no fixture has one. Separately, an edit used to write to the QSO
+  AFTER the one selected (a `div` that returned index+1 because the header and a
+  record are both 376 bytes). Both are fixed and pinned by a unit test; neither
+  has been seen by a person.
+
+- [ ] **Open the log window twice in one session.** A reload used to append to
+  the list instead of rebuilding it -- caught by `Lint-Win32Dialogs` counting
+  `wh[]` uses, not by any test.
+
+- [ ] **Search the log, then edit a result.** Search results carry a record
+  INDEX now, not a byte offset.
+
+- [ ] **Migrate a real 4.x log.** Point this build at a contest whose `.TRW` you
+  care about and confirm every QSO arrives. It happens ONCE, silently, on first
+  open. The corpus does this thirteen times, but with logs I chose.
+
+- [ ] **Make the log unwritable and log a QSO.** The failure posture INVERTED
+  with the `.TRW`: a write failure used to be swallowed because the binary log
+  carried the contest, and now puts a modal in front of you saying the log is not
+  being saved. **That dialog has never been seen by anyone.** Worth deliberately
+  triggering once -- a read-only `.db`, or the file open in another tool.
+
+### KNOWN-FAILING MEASUREMENTS -- recorded, not hidden
+
+- [ ] **`test-cfg-not-needed.sh` is 11 of 13.** With the `.cfg` emptied to zero
+  bytes, eleven logs export byte-identically. `arrl_dx_cw` and `general_qso` do
+  not, and NOT because a setting is missing: every command in both files is
+  captured and applied. It is ORDERING -- `MY CALL` arrives from the log later
+  than the `.cfg` used to supply it, so country and continent derived from the
+  callsign during config load are computed while it is empty. In ARRL-DX that
+  decides whether a received exchange renders as a power or a section, and all 66
+  QSOs come out `DX`. The fix is to recompute callsign-derived state after every
+  source has contributed. The two rows stay in the test as a FAILING measurement
+  rather than being excluded.
+
+- [ ] **`Test-CountyLineEntry` failed once under load, then passed four times.**
+  Ran immediately after three heavy corpus passes; the control-wait deadline is
+  10s and startup does radio band interrogation. A harness flake, not a product
+  fault -- but it will waste somebody's time. I have not tuned the threshold on
+  one data point.
+
+### AND ONE THING THE GATES DID CATCH, WORTH KNOWING
+
+The corpus ran a **14-hour-old binary for an entire session**. It executes
+`tr4w/target/tr4w.exe`, which is where `FullBuild.ps1` puts the app;
+`Build-App.ps1` writes `build-out/` and does not touch `target/`. Every green
+corpus result reported before that discovery measured code that never ran -- and
+the run that finally used the new binary turned 22/0/4 into 24/0/2 on the spot.
+**A regression would have hidden exactly as well.** The script now REFUSES to run
+against a stale binary rather than warning, because a warning above a 30-line
+pass list is a warning nobody reads.
+
+---
+
 ## Known and accepted — no action, listed so they are not re-reported
 
 - **CW-by-CAT keys one character per `KY` command** when typing into the
