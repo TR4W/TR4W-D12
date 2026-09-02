@@ -392,6 +392,30 @@ begin
 //  if TempDomesticQTHDataFileName <> nil then
 //    TF.Format(DomQTHDataFileName, '%sDOM\%s.DOM', TR4W_PATH_NAME, TempDomesticQTHDataFileName);
 
+  (* A .DOM BESIDE THE LOG OVERRIDES THE SHIPPED ONE, AND THAT IS A FEATURE.
+
+     The shipped files -- target\dom\*.dom, installed by full.nsi's "Domestic
+     multiplier files" section -- are program RESOURCES, in the same category as
+     CTY.DAT and TRMASTER.DTA. They are not specific to a contest, an operator or
+     a date. TR4W never writes the override; an operator places it deliberately.
+
+     WHY IT EXISTS, from NY4I, 2026-09-02: "we have had to make changes over the
+     years to a DOM. Contest operators are hesitant to upgrade especially right
+     before a contest. So changing an entry in a single DOM file is less risk
+     than installing the latest version with the new DOM file."
+
+     That is the whole justification and it is an operational one, not a
+     technical one. A section gets renamed a fortnight before a contest; the fix
+     is one line in one file, and the alternative is asking somebody to install a
+     new build of their logger days before they use it in anger. Nobody sensible
+     does that.
+
+     SO IT SURVIVES THE MOVE TO A SINGLE .db ARTIFACT. Whatever replaces this --
+     a domestic table in the log, most likely, so the override travels with the
+     contest instead of relying on a filename convention -- has to keep the
+     property that MATTERS: correcting one entry must not require upgrading the
+     program. A design that only lets the shipped file be replaced by a new
+     install has thrown the feature away while appearing to keep it. *)
   if DomQTHDataFileName[0] <> #0 then
      begin
      if fileexists(TR4W_DOM_FILENAME) then                       // 4.100.2
