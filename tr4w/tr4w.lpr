@@ -327,6 +327,13 @@ uses
   uRadioIcom9700 in 'src\radioFactory\uRadioIcom9700.pas',
   uRadioIcom7610 in 'src\radioFactory\uRadioIcom7610.pas',
   uRadioIcom7300 in 'src\radioFactory\uRadioIcom7300.pas',
+  (* THE CONTEST FACTORY -- phase F.  A contest unit self-registers from its
+     own initialization section, so adding a contest touches its own unit and
+     this list, exactly as adding a radio does. *)
+  uContestBase in 'src\contestFactory\uContestBase.pas',
+  uContestRegistry in 'src\contestFactory\uContestRegistry.pas',
+  uContestFactory in 'src\contestFactory\uContestFactory.pas',
+  uContestARRLDX in 'src\contestFactory\uContestARRLDX.pas',
   uRadioIcom705 in 'src\radioFactory\uRadioIcom705.pas',
   uRadioIcom7110 in 'src\radioFactory\uRadioIcom7110.pas',
   uRadioIcom7300MK2 in 'src\radioFactory\uRadioIcom7300MK2.pas',

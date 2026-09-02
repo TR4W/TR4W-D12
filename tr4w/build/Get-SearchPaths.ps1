@@ -133,6 +133,7 @@ function Get-Tr4wSearchPaths
    $paths.Add((Join-Path $src 'lang'))
    $paths.Add((Join-Path $src 'domain'))
    $paths.Add((Join-Path $src 'radioFactory'))
+   $paths.Add((Join-Path $src 'contestFactory'))
    $paths.Add((Join-Path $src 'rotatorFactory'))
 
    if ($For -ne 'Server')

@@ -756,6 +756,8 @@ implementation
 uses uNet,
    (* Which store a log READ comes from -- step B4.  See uLogSource. *)
    uLogSource,
+   (* The contest factory -- phase F. *)
+   uContestFactory,
   PostUnit,
   MainUnit,
   uRotatorControl,   // RotorControl delegates here -- see its body
@@ -6356,6 +6358,23 @@ begin
     '') then
      begin
      RXData.QSOPoints := QSOPointsDXPhone;
+     Exit;
+     end;
+
+  (* THE CONTEST FACTORY GETS FIRST REFUSAL -- phase F.
+
+     A contest with a class scores itself and returns; one without falls through
+     to the case below, untouched. That is the strangler seam, and it is placed
+     HERE rather than at the top of the routine on purpose: the four
+     QSO POINTS ... overrides above are configuration, they apply to every
+     contest, and a contest class replacing them would silently ignore a setting
+     an operator had made.
+
+     So a contest class replaces exactly one thing -- its arm of this case. *)
+  if ActiveContest(Contest) <> nil then
+     begin
+     ActiveContest(Contest).RefreshStation;
+     ActiveContest(Contest).CalculateQSOPoints(RXData);
      Exit;
      end;
 

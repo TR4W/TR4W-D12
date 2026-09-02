@@ -185,6 +185,8 @@ uses
   uLogSource,
   (* The log carries its own contest configuration -- phase E2. *)
   uLogStore,
+  (* ContestFactoryEnabled -- phase F. *)
+  uContestFactory,
   uCFG,
   uCRC32,
   uMP3Recorder,
@@ -1439,6 +1441,15 @@ begin
      changed. tr4w/test/corpus/test-rescore.sh asserts it. *)
   if SameText(AnsiString(ParamStr(2)), AnsiString('/RESCORE')) then
      begin
+     (* /NOFACTORY -- rescore through the LEGACY case instead of the contest
+        factory, so the two can be diffed against each other. See
+        uContestFactory.ContestFactoryEnabled for why that is the only exact
+        measurement available. *)
+     if SameText(AnsiString(ParamStr(3)), AnsiString('/NOFACTORY')) then
+        begin
+        ContestFactoryEnabled := False;
+        EarlyTrace('[Rescore] the contest factory is OFF for this run');
+        end;
      EarlyTrace('[Rescore] recomputing scoring for every QSO');
      tUpdateLog(actRescore);
      EarlyTrace('[Rescore] done');
