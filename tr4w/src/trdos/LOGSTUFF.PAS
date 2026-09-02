@@ -1363,6 +1363,8 @@ var
   TempString, TempString2: Str10 {Str20};
   isClassValid: boolean;
   dx: boolean;
+  factoryError: string;
+  resolvedQTH: string;
 
   // ParseExchange writes up to 10 characters through a `var Str10`, and
   // RXData.ceClass is a string[3] -- FOUR bytes.  The two calls below used to
@@ -1449,7 +1451,34 @@ begin
         end;
      if Result then // If class passes, check QTH is DX
         begin
-        if TempString = 'DX' then
+        (* WHAT A DX STATION MAY SEND IS THE CONTEST'S RULE -- phase F.
+
+           This was the last `if contest = ...` in this routine: Winter Field
+           Day accepts 'MX' where ARRL Field Day does not. Both now answer for
+           themselves, so the two contests differ in two separate files rather
+           than in one branch here.
+
+           The contest returns what to STORE as well as whether it is legal,
+           because an EMPTY exchange resolves to 'DX' -- a DX station sending
+           only a class means DX -- and that substitution is a decision, not
+           formatting. *)
+        if ActiveContest(Contest) <> nil then
+           begin
+           Result := ActiveContest(Contest).ValidateDXQTH(string(TempString),
+                                                          resolvedQTH,
+                                                          factoryError);
+           (* VIA AnsiString: a UnicodeString assigned straight to a
+              ShortString narrows, but an AnsiString to a ShortString does not
+              -- CLAUDE.md states exactly that, and it is why the step is here
+              rather than a cast. The values are 'DX', 'MX' or what the operator
+              typed into a Str10, so nothing can be lost. *)
+           RXData.QTHString := AnsiString(resolvedQTH);
+           if not Result then
+              begin
+              ExchangeErrorMessage := factoryError;
+              end;
+           end
+        else if TempString = 'DX' then
            begin
            RXData.QTHString := 'DX';
            end
@@ -1457,10 +1486,6 @@ begin
            begin
            // Set this to DX
            RXData.QTHString := 'DX';
-           end
-        else if ((contest = WINTERFIELDDAY) and (TempString = 'MX')) then
-           begin
-           RxData.QTHString := 'MX';
            end
         else
            begin

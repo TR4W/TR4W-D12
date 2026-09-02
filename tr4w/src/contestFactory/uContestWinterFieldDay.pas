@@ -67,6 +67,9 @@ type
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
       function ValidateClass(const aClass: string;
                              out aErrorMessage: string): boolean; override;
+      function ValidateDXQTH(const aQTH: string;
+                             out aResolved: string;
+                             out aErrorMessage: string): boolean; override;
       function DisplayName: string; override;
    end;
 
@@ -97,6 +100,14 @@ function TContestWinterFieldDay.ValidateClass(const aClass: string;
 begin
    Result := ValidateCountAndLetterClass(aClass, 'IOHM',
                                          TC_IMPROPERWINTERFIELDDAYCLASS, aErrorMessage);
+end;
+
+(* DX, or MX. Winter Field Day accepts MX where ARRL Field Day does not -- the second place these two differ today, after the class letters. *)
+function TContestWinterFieldDay.ValidateDXQTH(const aQTH: string;
+                          out aResolved: string;
+                          out aErrorMessage: string): boolean;
+begin
+   Result := ValidateDXQTHAllowing(aQTH, 'MX', aResolved, aErrorMessage);
 end;
 
 function TContestWinterFieldDay.DisplayName: string;

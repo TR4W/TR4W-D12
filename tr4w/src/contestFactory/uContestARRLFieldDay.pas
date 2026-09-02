@@ -67,6 +67,9 @@ type
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
       function ValidateClass(const aClass: string;
                              out aErrorMessage: string): boolean; override;
+      function ValidateDXQTH(const aQTH: string;
+                             out aResolved: string;
+                             out aErrorMessage: string): boolean; override;
       function DisplayName: string; override;
    end;
 
@@ -97,6 +100,14 @@ function TContestARRLFieldDay.ValidateClass(const aClass: string;
 begin
    Result := ValidateCountAndLetterClass(aClass, 'ABCDEF',
                                          TC_IMPROPERARRLFIELDDAYCLASS, aErrorMessage);
+end;
+
+(* DX and nothing else. A DX station sends its class and the word DX. *)
+function TContestARRLFieldDay.ValidateDXQTH(const aQTH: string;
+                          out aResolved: string;
+                          out aErrorMessage: string): boolean;
+begin
+   Result := ValidateDXQTHAllowing(aQTH, '', aResolved, aErrorMessage);
 end;
 
 function TContestARRLFieldDay.DisplayName: string;

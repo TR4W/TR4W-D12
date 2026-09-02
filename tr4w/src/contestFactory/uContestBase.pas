@@ -193,6 +193,25 @@ type
       function ValidateClass(const aClass: string;
                              out aErrorMessage: string): boolean; virtual;
 
+      (* WHAT A DX STATION MAY SEND AS ITS QTH.
+
+         The second contest decision inside
+         ProcessClassAndDomesticOrDXQTHExchange, and it reads
+         `if ((contest = WINTERFIELDDAY) and (TempString = 'MX'))` -- Winter
+         Field Day accepts MX where ARRL Field Day does not.
+
+         aResolved is what to STORE, which is not always what was typed: an
+         EMPTY exchange resolves to 'DX', because a DX station sending only a
+         class is taken to mean DX. Returning a separate value rather than
+         editing the input keeps that substitution visible at the call site.
+
+         The base accepts nothing, since a contest with no DX side has no rule
+         to state -- and, as with ValidateClass, nothing reaches it: only the
+         two Field Days use this exchange type. *)
+      function ValidateDXQTH(const aQTH: string;
+                             out aResolved: string;
+                             out aErrorMessage: string): boolean; virtual;
+
       (* Re-reads the station snapshot from the program's globals.
 
          CALLED BEFORE EVERY SCORE rather than once at construction. MyCountry is
@@ -218,6 +237,13 @@ type
                                            const aValidLetters: string;
                                            const aBadClassMessage: string;
                                            out aErrorMessage: string): boolean;
+
+      (* Mechanism for ValidateDXQTH: 'DX' and empty always pass, plus whatever
+         else the contest allows. *)
+      function ValidateDXQTHAllowing(const aQTH: string;
+                                     const aAlsoAllowed: string;
+                                     out aResolved: string;
+                                     out aErrorMessage: string): boolean;
    end;
 
    TContestClass = class of TContestBase;
@@ -297,6 +323,44 @@ begin
       tighten. *)
    aErrorMessage := '';
    Result := True;
+end;
+
+function TContestBase.ValidateDXQTH(const aQTH: string;
+                                    out aResolved: string;
+                                    out aErrorMessage: string): boolean;
+begin
+   aResolved := aQTH;
+   aErrorMessage := '';
+   Result := False;
+end;
+
+(* The two answers every Field-Day-shaped contest gives, with the extras it
+  allows passed in. 'DX' and an empty exchange are common to both runnings;
+  Winter Field Day adds 'MX'. *)
+function TContestBase.ValidateDXQTHAllowing(const aQTH: string;
+                                            const aAlsoAllowed: string;
+                                            out aResolved: string;
+                                            out aErrorMessage: string): boolean;
+begin
+   aErrorMessage := '';
+   Result := True;
+
+   if (aQTH = 'DX') or (aQTH = '') then
+      begin
+      (* An empty exchange from a DX station means DX -- the class alone. *)
+      aResolved := 'DX';
+      Exit;
+      end;
+
+   if (aAlsoAllowed <> '') and (aQTH = aAlsoAllowed) then
+      begin
+      aResolved := aQTH;
+      Exit;
+      end;
+
+   aResolved := aQTH;
+   aErrorMessage := TC_ARRLFIELDDAYIMPROPERDXEXCHANGE;
+   Result := False;
 end;
 
 function TContestBase.ValidateCountAndLetterClass(const aClass: string;
