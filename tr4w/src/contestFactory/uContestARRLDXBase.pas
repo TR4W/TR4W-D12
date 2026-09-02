@@ -30,12 +30,24 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   WHAT IS TAKEN FROM TR4QT IS THE STRUCTURE, NOT THE RULES. The standing note on
   that project is that it is useful ABOVE the engine and is "never" an authority
   on scoring, multipliers or exchange -- it is a reimplementation, not a
-  specification, and it is not independent corroboration of anything. Its
-  ARRLDXBase header says "3 points per QSO" and "W/VE stations may ONLY work DX
-  stations"; TR4W expresses that second rule as zero points plus InhibitMults
-  rather than by refusing the QSO, and TR4W's behaviour is what must be
-  preserved. So the rules below come from LOGSTUFF's ARRLDXQSOPointMethod arm,
-  moved verbatim, and test-contest-factory.sh holds them to it.
+  specification, and not independent corroboration of anything.
+
+  AND THE TWO PROGRAMS GENUINELY DIFFER HERE, WHICH IS WHY THAT MATTERS.
+  TR4QT's ARRLDXBase says "W/VE stations may ONLY work DX stations", and it
+  means it literally -- NY4I, 2026-09-02: "when TR4QT says we do not work them,
+  we never been we will not allow it to be logged. But they would be zero
+  points as TR4W does today." TR4QT REFUSES THE CONTACT; TR4W LOGS IT AT ZERO
+  POINTS and sets InhibitMults.
+
+  THIS CODE KEEPS TR4W'S BEHAVIOUR, and test-contest-factory.sh holds it to it
+  byte for byte. Whether TR4W should instead refuse the entry is a DECISION,
+  not a port detail: it changes what an operator can do at the keyboard, and it
+  is the kind of thing that has to be right in a contest rather than discovered
+  in one. TR4QT expresses the refusal through isValidQSO, which is on the list
+  of virtuals TContestBase grows into -- so there is somewhere for it to go
+  when the decision is made.
+
+  The rules below are LOGSTUFF's ARRLDXQSOPointMethod arm, moved verbatim.
 
   CHOSEN AS THE FIRST FAMILY BECAUSE IT IS PROVABLE, not because it is easy.
   arrl_dx_cw_2025_ny4i is a 66-QSO golden-corpus set with a D7-written

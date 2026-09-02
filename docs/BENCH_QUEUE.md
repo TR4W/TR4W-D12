@@ -2476,6 +2476,20 @@ edits one, deletes one, or opens a log window.
   though every QSO is, because QSOs commit as they are made. Recording changes as
   they happen belongs with the settings work; say if it should come sooner.
 
+- [ ] **DOES TR4W REFUSE A QSO ITS CONTEST DOES NOT ALLOW, OR LOG IT AT ZERO?**
+  A contest-factory decision, surfaced by comparing against TR4QT. TR4QT's
+  ARRLDXBase says "W/VE stations may ONLY work DX stations" and means it
+  literally -- NY4I: *"when TR4QT says we do not work them... we will not allow
+  it to be logged. But they would be zero points as TR4W does today."*
+
+  TR4W logs the contact at zero points and sets `InhibitMults`. The factory
+  preserves that exactly, and `test-contest-factory.sh` holds it there. Changing
+  it alters what an operator can do at the keyboard, so it is a decision rather
+  than a port detail -- and the kind that has to be right in a contest rather
+  than discovered in one. TR4QT expresses the refusal through `isValidQSO`,
+  which is on the list of virtuals `TContestBase` grows into, so there is
+  somewhere for it to go.
+
 ### BENCH RUNS -- no automated gate reaches any of this
 
 - [ ] **Log a contest, properly.** Work a run of QSOs, watch the editable log
