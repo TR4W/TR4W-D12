@@ -10729,7 +10729,44 @@ var
   sXmit: string;
   sCategory: string;
   classSet: boolean;
+  factoryError: string;
 begin
+  (* THE CONTEST DECIDES WHAT ITS CLASS LOOKS LIKE -- phase F.
+
+     NY4I, 2026-09-02: "Shouldn't this class have a function called
+     ValidExchange where we move the exchange rules? Basically, anywhere the
+     main program goes through a case statement on the contest type."
+
+     This routine is that case statement in miniature, and holds TWO
+     contest-specific facts: which letters are legal (A-F for ARRL Field Day,
+     I/O/H/M for Winter Field Day) and which message to show. Both are now the
+     contest class's, so adding a contest with a class no longer means editing
+     a shared routine, and the two Field Days -- which "keep diverging with rule
+     changes each year" -- diverge in separate files instead of inside one `if`.
+
+     THE BASE ACCEPTS ANYTHING, AND THAT CANNOT LOOSEN ANYTHING -- checked
+     rather than assumed. The legacy routine REJECTS every non-Field-Day
+     contest: its letter test is (contest = ARRLFIELDDAY and ...) or
+     (contest = WINTERFIELDDAY and ...), so any letter from any other contest
+     falls into the "something else here" arm, empties the category and fails.
+     A permissive base would therefore be a real change -- if anything else
+     reached here.
+
+     Nothing does. ValidClass is called only from
+     ProcessClassAndDomesticOrDXQTHExchange, which ProcessExchange dispatches
+     only for ClassDomesticOrDXQTHExchange, and exactly TWO rows in
+     ContestsArray carry that exchange type: ARRL Field Day and Winter Field
+     Day. Both now have classes, so the base default is unreachable. *)
+  if ActiveContest(Contest) <> nil then
+     begin
+     Result := ActiveContest(Contest).ValidateClass(string(sClass), factoryError);
+     if not Result then
+        begin
+        ExchangeErrorMessage := factoryError;
+        end;
+     Exit;
+     end;
+
   classSet := false;
   for i := 1 to length(sClass) do
      begin

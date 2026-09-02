@@ -88,6 +88,20 @@ type
       yet. *)
    TStationContext = record
       MyCountry: CallString;
+      MyContinent: ContinentType;
+
+      (* THE ZONE AS AN INTEGER, converted once here rather than at each use.
+
+         MyZone is a STRING global, and the scoring arms that want it all do
+         `Val(MyZone, MyZoneValue, Result)` and then compare. Doing that per QSO
+         in every contest that scores by zone is the sort of repetition that
+         eventually disagrees with itself -- and a Val whose error code nobody
+         reads is a 0 that looks like zone 0.
+
+         MyZoneValid says whether the conversion worked, so a contest can tell
+         "zone 0" from "no zone set" instead of scoring against a silent 0. *)
+      MyZone: integer;
+      MyZoneValid: boolean;
    end;
 
    TContestBase = class
@@ -114,6 +128,36 @@ type
          a bench session asks. Defaults to the enum's own spelling. *)
       function DisplayName: string; virtual;
 
+      (* THE THREE IDENTIFIERS EVERY CONTEST HAS, and TR4QT's
+         docs/CONTEST_DEVELOPMENT.md says a contest class "must" define all
+         three: the WA7BNM calendar id, the Cabrillo CONTEST: name, and the
+         ADIF CONTEST_ID.
+
+         NY4I: "We also need something in the classes where we set the cabrillo
+         name and adif name in the factory."
+
+         THEY DEFAULT TO ContestsArray, WHICH IS WHERE THEY LIVE TODAY -- so
+         moving a contest into the factory does not oblige it to restate three
+         things that are already correct, and a contest with no class still
+         answers. A class overrides when the table is wrong or empty for it.
+         That is the strangler again: the table is the current answer, the class
+         is the eventual one, and they can disagree only where somebody has
+         deliberately made them.
+
+         THE CABRILLO FALLBACK IS REPRODUCED EXACTLY. PostUnit uses the enum's
+         own spelling when CABName is empty, which is most contests -- so the
+         default here is that same two-step, not just the field. Returning ''
+         for the 150-odd contests with no CABName would put an empty CONTEST:
+         line in their headers.
+
+         ADIF IS THE OTHER WAY ROUND AND IS LEFT THAT WAY: an empty ADIFName
+         means the contest has no ADIF CONTEST_ID, which is a real answer --
+         GetContestByADIFName matches on it -- so this returns '' rather than
+         inventing one from the enum. *)
+      function CabrilloName: string; virtual;
+      function ADIFContestId: string; virtual;
+      function WA7BNMId: integer; virtual;
+
       (* SCORING. Sets aQso.QSOPoints, and nothing else -- multipliers and dupe
          state are decided elsewhere and a scorer that changed them would make
          the order of the two calls significant.
@@ -123,6 +167,32 @@ type
          exactly this, so a contest that does not score is not a special case. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); virtual;
 
+      (* IS THIS RECEIVED CLASS LEGAL FOR THIS CONTEST?
+
+         NY4I, 2026-09-02, on where the exchange rules go: "Shouldn't this class
+         have a function called ValidExchange where we move the exchange rules?
+         Basically, anywhere the main program goes through a case statement on
+         the contest type."
+
+         LOGSTUFF.ValidClass is that case statement in miniature and shows why
+         it has to move. One function holds TWO contest-specific facts -- which
+         letters are legal (A-F for ARRL Field Day, I/O/H/M for Winter Field
+         Day) and which error to show -- so adding a contest with a class means
+         editing a shared routine, and the two Field Days, which NY4I says
+         "keep diverging with rule changes each year", diverge inside a single
+         `if contest = ...`.
+
+         THE BASE ACCEPTS EVERYTHING, because most contests have no class at
+         all and "no rule" is the honest answer for them rather than a special
+         case. A contest with a class overrides.
+
+         TR4QT names the equivalent validateReceivedExchange and gives it the
+         same shape -- a boolean with the message out by reference, so the
+         caller can put the text where it belongs without the rule knowing
+         about a UI. *)
+      function ValidateClass(const aClass: string;
+                             out aErrorMessage: string): boolean; virtual;
+
       (* Re-reads the station snapshot from the program's globals.
 
          CALLED BEFORE EVERY SCORE rather than once at construction. MyCountry is
@@ -131,6 +201,23 @@ type
          contest object holding the value from startup would score the rest of
          the log against a station that has moved. It is a few field copies. *)
       procedure RefreshStation;
+   protected
+      (* THE PARSE, WHICH IS MECHANISM AND NOT A RULE.
+
+         A Field-Day-shaped class is a transmitter COUNT followed by one
+         CATEGORY letter -- "2A", "1O", "10F". Splitting digits from letters and
+         checking there is exactly one of the latter is the same work whoever
+         asks; WHICH letters are legal, and what to say when they are not, is
+         the contest's.
+
+         So the loop lives here once and the rule arrives as two parameters.
+         Duplicating this into every contest with a class would be duplicating
+         the part that CANNOT differ, which is the opposite of the split that
+         makes the two Field Days independent. *)
+      function ValidateCountAndLetterClass(const aClass: string;
+                                           const aValidLetters: string;
+                                           const aBadClassMessage: string;
+                                           out aErrorMessage: string): boolean;
    end;
 
    TContestClass = class of TContestBase;
@@ -138,6 +225,10 @@ type
 implementation
 
 uses
+   SysUtils,
+   (* TC_IMPROPERTRANSMITTERCOUNT -- the one message that is NOT contest
+      specific: every class-carrying contest counts transmitters the same way. *)
+   uTR4WStrings,
    (* THE ONE PLACE IN THE FACTORY THAT TOUCHES THE PROGRAM'S GLOBALS.
       LOGWIND holds MyCountry. Keeping this in the base means a contest class
       is a function of (station, QSO) and nothing else. *)
@@ -151,8 +242,18 @@ begin
 end;
 
 procedure TContestBase.RefreshStation;
+var
+   code: integer;
 begin
    FStation.MyCountry := MyCountry;
+   FStation.MyContinent := MyContinent;
+
+   Val(string(MyZone), FStation.MyZone, code);
+   FStation.MyZoneValid := (code = 0) and (MyZone <> '');
+   if not FStation.MyZoneValid then
+      begin
+      FStation.MyZone := 0;
+      end;
 end;
 
 function TContestBase.DisplayName: string;
@@ -160,9 +261,125 @@ begin
    Result := string(ContestTypeSA[FContest]);
 end;
 
+function TContestBase.CabrilloName: string;
+begin
+   (* PostUnit's rule, not just the field -- see the note on the declaration. *)
+   if Length(ContestsArray[FContest].CABName) = 0 then
+      begin
+      Result := string(ContestTypeSA[FContest]);
+      end
+   else
+      begin
+      Result := string(ContestsArray[FContest].CABName);
+      end;
+end;
+
+function TContestBase.ADIFContestId: string;
+begin
+   Result := string(ContestsArray[FContest].ADIFName);
+end;
+
+function TContestBase.WA7BNMId: integer;
+begin
+   Result := ContestsArray[FContest].WA7BNM;
+end;
+
 procedure TContestBase.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    aQso.QSOPoints := 0;
+end;
+
+function TContestBase.ValidateClass(const aClass: string;
+                                    out aErrorMessage: string): boolean;
+begin
+   (* Most contests have no class. Accepting anything is what "this contest has
+      no such rule" means -- not a permissive default somebody forgot to
+      tighten. *)
+   aErrorMessage := '';
+   Result := True;
+end;
+
+function TContestBase.ValidateCountAndLetterClass(const aClass: string;
+                                                  const aValidLetters: string;
+                                                  const aBadClassMessage: string;
+                                                  out aErrorMessage: string): boolean;
+var
+   i: integer;
+   (* THE COUNT AS A NUMBER, not a string to convert back.
+
+      The legacy loop builds "2" as text and then StrToIntDefs it, which is a
+      round trip through a string for a value it just read a digit at a time --
+      and a narrowing conversion at the end, because the RTL's StrToIntDef here
+      takes an AnsiString. Accumulating is shorter, has no conversion, and the
+      digit COUNT is kept separately so an empty class can still be told from
+      a class of "0". *)
+   count: integer;
+   countDigits: integer;
+   category: string;
+   categorySet: boolean;
+begin
+   Result := False;
+   aErrorMessage := '';
+   count := 0;
+   countDigits := 0;
+   category := '';
+   categorySet := False;
+
+   for i := 1 to Length(aClass) do
+      begin
+      if aClass[i] in ['0'..'9'] then
+         begin
+         inc(countDigits);
+         (* Capped so a long run of digits cannot overflow into a value that
+            happens to land back inside 1..99. Anything past two digits is
+            already invalid. *)
+         if countDigits <= 3 then
+            begin
+            count := count * 10 + (Ord(aClass[i]) - Ord('0'));
+            end
+         else
+            begin
+            count := 1000;
+            end;
+         end
+      else if Pos(UpCase(aClass[i]), aValidLetters) > 0 then
+         begin
+         (* A SECOND letter empties the category rather than appending, so "2AB"
+            fails on the length test below. Reproduced from the legacy loop,
+            where it reads as a break with sCategory cleared. *)
+         if categorySet then
+            begin
+            category := '';
+            Break;
+            end
+         else
+            begin
+            categorySet := True;
+            category := category + aClass[i];
+            end;
+         end
+      else
+         begin
+         (* Anything else at all -- a letter this contest does not use, or
+            punctuation. Empties the category so the message below is the
+            contest's own, rather than a generic one. *)
+         category := '';
+         Break;
+         end;
+      end;
+
+   if (countDigits = 0) or (not (count in [1..99])) then
+      begin
+      aErrorMessage := TC_IMPROPERTRANSMITTERCOUNT;
+      end
+   else if Length(category) <> 1 then
+      begin
+      aErrorMessage := aBadClassMessage;
+      end
+   else
+      begin
+      Result := True;
+      end;
 end;
 
 end.
