@@ -191,6 +191,8 @@ implementation
 
 uses
   uMainForm,   { the exchange field, named -- wh[] round 3 }
+   (* Which store a log READ comes from -- step B4.  See uLogSource. *)
+   uLogSource,
   //OZCHR,
   uNet,
   uMaster,
@@ -1431,16 +1433,27 @@ label
   ExitLabel;
 begin
   Windows.ZeroMemory(@Result, SizeOf(Result));
-  if not OpenLogFile then
+  if not LogSourceOpen then
      begin
      Exit;
      end;
-  records := Windows.GetFileSize(LogHandle, nil) div SizeOf(ContestExchange);
+  (* A RECORD COUNT, AND THE LOOP BOUND CHANGED WITH IT -- deliberately, and it
+    is not an off-by-one.
 
-  for Offset := 1 to records - 1 do
+    This was `GetFileSize div SizeOf(ContestExchange)`, which counts the HEADER
+    as a record: it returns N + 1, so `1 to records - 1` walked 1..N and did
+    reach every QSO. It was right only because SizeOfTLogHeader and
+    SizeOf(ContestExchange) are BOTH 376 bytes. Nothing requires that, and one
+    field added to TLogHeader would have silently dropped the oldest QSO from
+    every reverse scan -- with no error, just a slightly wrong answer.
+
+    LogSourceRecordCount returns N, so the bound becomes `1 to records`, which
+    walks the same 1..N. Same records, stated rather than coincidental. *)
+  records := LogSourceRecordCount;
+
+  for Offset := 1 to records do
      begin
-     tSetFilePointer(-1 * Offset * SizeOf(ContestExchange), FILE_END);
-     if not ReadLogFile then
+     if not LogSourceReadFromEnd(Offset, TempRXData) then
         begin
         goto ExitLabel;
         end;
@@ -1479,7 +1492,7 @@ begin
         end;
      end;
   ExitLabel:
-  CloseLogFile;
+  LogSourceClose;
   {
     Result := '';
     for Index := LinesInEditableLog - 1 downto 0 do

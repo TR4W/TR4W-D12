@@ -82,6 +82,8 @@ implementation
 
 uses
   uLCLFormHelpers,   // ShowModalOverWin32Parent -- ownership and centring
+   (* Which store a log READ comes from -- step B4.  See uLogSource. *)
+   uLogSource,
   Windows,
   TF,
   PostUnit,         // Contest, ContestExchange
@@ -124,12 +126,12 @@ begin
    // anything, and bailed out if it could not.  Preserved: it is a liveness
    // check on the local log, and drawing a comparison against a log that cannot
    // be opened would be worse than showing nothing.
-   if not OpenLogFile then
+   if not LogSourceOpen then
       begin
       Close;
       Exit;
       end;
-   CloseLogFile;
+   LogSourceClose;
 
    lvCompare.Items.BeginUpdate;
    try

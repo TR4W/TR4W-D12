@@ -150,6 +150,8 @@ function ConvertBandTypeToUDPContactBand(band: BandType): string;
 implementation
 uses
   uProcessCommand,
+   (* Which store a log READ comes from -- step B4.  See uLogSource. *)
+   uLogSource,
   MainUnit,
   uRadioPolling,
   uYCCCSO2R,
@@ -3010,15 +3012,15 @@ var
   nCount: Integer;
 begin
   nCount := 0;
-  if not OpenLogFile then
+  if not LogSourceOpen then
      begin
      logger.Error('[SendFullLogToHamScore] Could not open log file');
      CloseHandle(tReportFileWrite);
      Exit;
      end;
   try
-    ReadVersionBlock;
-    while ReadLogFile do  // fills global TempRXData
+    LogSourceRewind;
+    while LogSourceNext( TempRXData ) do  // fills global TempRXData
        begin
        if GoodLookingQSO then
           begin
@@ -3026,7 +3028,7 @@ begin
           HamScoreOnLog(TempRXData);
           end;
        end;
-    CloseLogFile;
+    LogSourceClose;
     Logger.Info('[SendFullLogToHamScore] Enqueued %d QSO(s) for RTC resync', [nCount]);
   except
     on E: Exception do
@@ -3041,7 +3043,7 @@ var nCount: integer;
    saveDecimalSeparator: char;
 begin
    nCount := 0;
-   if not OpenLogFile then
+   if not LogSourceOpen then
       begin
       logger.error('[SendFullLogToUDP] Could not open log file');
       CloseHandle(tReportFileWrite);
@@ -3052,8 +3054,8 @@ begin
    try
       //DecimalSeparator := '.'; // Set this so we use . as reqired by ADIF and not localized separator ny4i
 
-      ReadVersionBlock;
-      while ReadLogFile do  // This reads the log into TempRXData global (bad design)
+      LogSourceRewind;
+      while LogSourceNext( TempRXData ) do  // fills the TempRXData global
          begin
          if GoodLookingQSO then
             begin

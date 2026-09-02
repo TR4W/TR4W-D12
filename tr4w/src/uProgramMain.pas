@@ -707,7 +707,8 @@ begin
       '  --lang <code>      run in this language' + sLineBreak +
       '  --lang=<code>      the same' + sLineBreak +
       '  /EXPORT            headless ADIF and Cabrillo export, then exit' + sLineBreak +
-      '  /EXPORT /EXPORTDB  the same, reading QSOs from the SQLite log' + sLineBreak +
+      '  /EXPORT /EXPORTDB  the same, forcing the SQLite log as the source' + sLineBreak +
+      '  /EXPORT /EXPORTTRW the same, forcing the binary .TRW as the source' + sLineBreak +
       '  /IMPORTLOG <log.trw> [<log.db>]' + sLineBreak +
       '                     convert a binary log to a SQLite log, then exit' + sLineBreak +
       '                     (reports to tr4w-early.log; exit 0 ok, 2 failed)' + sLineBreak +
@@ -1386,22 +1387,27 @@ begin
 
         A THIRD ARGUMENT RATHER THAN A SEPARATE MODE, so there is no second
         export path to keep in step with this one. *)
-     (* BOTH SIDES CONVERTED EXPLICITLY. ParamStr returns a UnicodeString and
-        this SameText resolves to the AnsiString overload, so the bare call
-        narrows implicitly -- and the warning sits on the ARGUMENT, not on the
-        literal, which is why converting only the literal did not silence it.
-        The /EXPORT line just above has the same shape and is one of the 1429
-        the build already counts; this one does not add a 1430th.
+     (* EITHER STORE, FORCED EXPLICITLY, so compare-stores.sh states which one
+        it wants instead of inheriting whatever the default happens to be. That
+        matters now that the default has moved: a comparison that silently
+        followed the default would compare a store against itself and pass.
 
-        Safe here because a switch name is ASCII. An argument carrying
-        characters outside the ANSI codepage converts to something that does
-        not match '/EXPORTDB' -- which is the right answer: it was not that
-        switch. *)
+        BOTH SIDES CONVERTED EXPLICITLY. ParamStr returns a UnicodeString and
+        this SameText resolves to the AnsiString overload, so a bare call
+        narrows implicitly -- and the warning sits on the ARGUMENT, not on the
+        literal, which is why converting only the literal does not silence it.
+        Safe because a switch name is ASCII: an argument carrying characters
+        outside the ANSI codepage converts to something that matches neither,
+        which is the right answer -- it was not one of these switches. *)
      if SameText(AnsiString(ParamStr(3)), AnsiString('/EXPORTDB')) then
         begin
         LogSourceKind := lsDatabase;
-        EarlyTrace('[Export] reading QSOs from ' + LogSourceDescription);
+        end
+     else if SameText(AnsiString(ParamStr(3)), AnsiString('/EXPORTTRW')) then
+        begin
+        LogSourceKind := lsBinary;
         end;
+     EarlyTrace('[Export] reading QSOs from ' + LogSourceDescription);
 
      // tSilentExport was set when the logger was created -- see there for why.
      ExportToADIF;

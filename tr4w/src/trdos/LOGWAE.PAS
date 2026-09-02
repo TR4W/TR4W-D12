@@ -92,6 +92,8 @@ function NumberAvailableQTCsForThisCall(Call: CallString): integer;
 
 implementation
 uses uQTCR,
+   (* Which store a log READ comes from -- step B4.  See uLogSource. *)
+   uLogSource,
   MainUnit;
 
 function QTCQuickEditResponse(Prompt: Str80;
@@ -245,13 +247,13 @@ var
   QTCs                                  : integer;
 begin
   Result := 0;
-  if not OpenLogFile then Exit;
+  if not LogSourceOpen then Exit;
   QTCs := 0;
-  ReadVersionBlock;
+  LogSourceRewind;
   Windows.ZeroMemory(@QTCsToBeSendArray, SizeOf(QTCsToBeSendArray));
   QTCsToBeSendArray[1].qsID := NET_THIS_QTC_WAS__SEND_ID;
   1:
-  if ReadLogFile then
+  if LogSourceNext( TempRXData ) then
      begin
      if GoodLookingQSO then
        if TempRXData.ceDupe = False then
@@ -273,7 +275,7 @@ begin
      goto 1;
      end;
   2:
-  CloseLogFile;
+  LogSourceClose;
   Result := QTCs;
 {
   NumberQTCsPending := TotalPendingQTCs;

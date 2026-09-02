@@ -566,6 +566,10 @@ uses
   { The SQLite shadow -- an IMPLEMENTATION-section use, so no interface
     cycle. It never raises and never blocks logging: see uLogShadow. }
   uLogShadow,
+  (* Which store a log READ comes from -- step B4.  Its implementation
+     uses this unit back, which is legal: both edges are
+     implementation-section. *)
+  uLogSource,
 {$IF tDebugMode}
   // uDocumentation,
 {$IFEND}
@@ -7164,14 +7168,18 @@ begin
      begin
      Exit;
      end;
-  if not OpenLogFile then
+  if not LogSourceOpen then
      begin
      Exit;
      end;
-  Size := Windows.GetFileSize(LogHandle, nil);
-  CloseLogFile;
+  (* RECORDS, NOT BYTES.  The test is "does the log hold more QSOs than the
+    editable-log window shows", which was asked by rebuilding the byte length
+    the file would have at that many records.  Asked directly it survives the
+    store change, and it says what it means. *)
+  Size := LogSourceRecordCount;
+  LogSourceClose;
 
-  if Size > LinesInEditableLog * SizeOf(ContestExchange) + SizeOf(TLogHeader)
+  if Size > LinesInEditableLog
     then
      begin
      IndexOfItemInLogForEdit := Size - LinesInEditableLog *

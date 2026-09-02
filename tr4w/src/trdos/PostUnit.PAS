@@ -1228,7 +1228,7 @@ function CalculateTotals: boolean;
           end;
      goto 1;
      end;
-  CloseLogFile;
+  LogSourceClose;
   // OperatingTime := OperatingTime div 60;
   CalculateTotals := true;
   end;
@@ -1315,7 +1315,7 @@ function GenerateAllTotalsPerHour: boolean;
   Windows.ZeroMemory( @PLeftOnBiState.BandsThisMinute,
      SizeOf( PLeftOnBiState.BandsThisMinute ) );
 
-  if not OpenLogFile then
+  if not LogSourceOpen then
      begin
      Exit;
      end;
@@ -1328,10 +1328,10 @@ function GenerateAllTotalsPerHour: boolean;
   TotalLogQSOs      := 0;
   LineNumber        := 0;
 
-  ReadVersionBlock;
+  LogSourceRewind;
 1:
 
-  if ReadLogFile then
+  if LogSourceNext( TempRXData ) then
      begin
      if GoodLookingQSO then
         begin
@@ -1409,7 +1409,7 @@ function GenerateAllTotalsPerHour: boolean;
   FinishOutLastHour;
   CheckTimeOnByBand( CurrentHourIndex );
 
-  CloseLogFile;
+  LogSourceClose;
   GenerateAllTotalsPerHour := true;
   end;
 
@@ -1798,15 +1798,15 @@ procedure ContinentReport;
      Exit;
      end;
 
-  if not OpenLogFile then
+  if not LogSourceOpen then
      begin
      Exit;
      end;
 
   TotalLogQSOs := 0;
-  ReadVersionBlock;
+  LogSourceRewind;
 1:
-  if ReadLogFile then
+  if LogSourceNext( TempRXData ) then
      begin
      // if CorrectContestExchange then
      if GoodLookingQSO then
@@ -1865,7 +1865,7 @@ procedure ContinentReport;
         end;
      goto 1;
      end;
-  CloseLogFile;
+  LogSourceClose;
 
   WriteLn( FileWrite );
   WriteLnVarCenter( FileWrite, ContestTitle );
@@ -1975,14 +1975,14 @@ function GenerateCountryMultiplierTotals: boolean;
   begin
   GenerateCountryMultiplierTotals := False;
   Windows.ZeroMemory( CountryMultTotals, SizeOf( CountryMultiplierArray ) );
-  if not OpenLogFile then
+  if not LogSourceOpen then
      begin
      Exit;
      end;
-  ReadVersionBlock;
+  LogSourceRewind;
   TotalLogQSOs := 0;
 1:
-  if ReadLogFile then
+  if LogSourceNext( TempRXData ) then
      begin
      if GoodLookingQSO then
         begin
@@ -2006,7 +2006,7 @@ function GenerateCountryMultiplierTotals: boolean;
         end;
      goto 1;
      end;
-  CloseLogFile;
+  LogSourceClose;
   GenerateCountryMultiplierTotals := true;
   end;
 
@@ -2122,7 +2122,7 @@ procedure ExportToEDIByBand( Band: BandType );
      Exit;
      end;
 
-  if not OpenLogFile then
+  if not LogSourceOpen then
      begin
      CloseHandle( tReportFileWrite );
      Exit;
@@ -2154,9 +2154,9 @@ procedure ExportToEDIByBand( Band: BandType );
      AddressLine,
      CabrilloTagText( ctCategoryOperator ), QSOTotals[ Band, Both ] ] ) );
 
-  ReadVersionBlock;
+  LogSourceRewind;
 1:
-  if ReadLogFile then
+  if LogSourceNext( TempRXData ) then
      begin
      if GoodLookingQSO then
         begin
@@ -2525,7 +2525,7 @@ procedure ExportToCSV; // n4af 04/18/14 new procedure added
      Exit;
      end;
 
-  if not OpenLogFile then
+  if not LogSourceOpen then
      begin
      CloseHandle( tReportFileWrite );
      Exit;
@@ -2537,10 +2537,10 @@ procedure ExportToCSV; // n4af 04/18/14 new procedure added
 
   // sWriteFile(tReportFileWrite, wsprintfBuffer, nNumberOfBytesToWrite);
 
-  ReadVersionBlock;
+  LogSourceRewind;
 1:
 
-  if ReadLogFile then
+  if LogSourceNext( TempRXData ) then
      begin
      if GoodLookingQSO then
         begin
@@ -2563,7 +2563,7 @@ procedure ExportToCSV; // n4af 04/18/14 new procedure added
      end;
 
   CloseHandle( tReportFileWrite );
-  CloseLogFile;
+  LogSourceClose;
   PreviewFileNameAddress := tReportsFilename;
   FilePreview;
   end;
@@ -2845,12 +2845,12 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
 
       logger.Info( 'In tGenerateLogPortionOfCabrilloFile' );
 
-      if not OpenLogFile then
+      if not LogSourceOpen then
          begin
          Exit;
          end;
 
-      ReadVersionBlock;
+      LogSourceRewind;
 
       try
         try
@@ -2862,7 +2862,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
 
           previousqsonr := 0;
         1:
-          if ReadLogFile then
+          if LogSourceNext( TempRXData ) then
              begin
              inc( contacts );
              // slOperators.Add(TempRXData.ceOperator);
@@ -3146,7 +3146,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
              end;
           sWriteFileFromString( tReportFileWrite, 'END-OF-LOG: ' );
 
-          CloseLogFile;
+          LogSourceClose;
           Result := true;
         except
           on E: Exception do
@@ -3278,14 +3278,14 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       begin
       GenerateZoneMultiplierTotals := False;
       Windows.ZeroMemory( CountryMultTotals, SizeOf( CountryMultiplierArray ) );
-      if not OpenLogFile then
+      if not LogSourceOpen then
          begin
          Exit;
          end;
       // TotalLogQSOs := 0;
-      ReadVersionBlock;
+      LogSourceRewind;
     1:
-      if ReadLogFile then
+      if LogSourceNext( TempRXData ) then
          begin
          if GoodLookingQSO then
             begin
@@ -3307,7 +3307,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
             end;
          goto 1;
          end;
-      CloseLogFile;
+      LogSourceClose;
       GenerateZoneMultiplierTotals := true;
       end;
 
@@ -3412,22 +3412,22 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
 
       NumberBadZones := 0;
       MakeReportFileName( 'PossibleBadZone.txt' );
-      if not OpenLogFile then
+      if not LogSourceOpen then
          begin
          Exit;
          end;
 
       if not OpenFileForWrite( FileWrite, ReportsFilename ) then
          begin
-         CloseLogFile;
+         LogSourceClose;
          Exit;
          end;
 
       QSONumber := 0;
 
-      ReadVersionBlock;
+      LogSourceRewind;
     1:
-      if ReadLogFile then
+      if LogSourceNext( TempRXData ) then
          begin
 
          if GoodLookingQSO then
@@ -3445,7 +3445,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
 
          goto 1;
          end;
-      CloseLogFile;
+      LogSourceClose;
       WriteLn( FileWrite, 'There were ', NumberBadZones,
          ' questionable zones found.' );
       WriteLn( FileWrite );
@@ -3480,14 +3480,14 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         FileWrite: HWND;
         sr: PAnsiChar;
       begin
-      if not OpenLogFile then
+      if not LogSourceOpen then
          begin
          Exit;
          end;
       MakeReportFileName( 'BandChange.txt' );
       if not tOpenFileForWrite( FileWrite, @ReportsFilename[ 1 ] ) then
          begin
-         CloseLogFile;
+         LogSourceClose;
          Exit;
          end;
       QSONumber         := 0;
@@ -3498,9 +3498,9 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       // Write(QSONumber);
       FirstQSO := true;
 
-      ReadVersionBlock;
+      LogSourceRewind;
     1:
-      if ReadLogFile then
+      if LogSourceNext( TempRXData ) then
          begin
 
          if GoodLookingQSO then
@@ -3563,7 +3563,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
             [ NumberTwoXmtrQSOs ] ) );
          end;
 
-      CloseLogFile;
+      LogSourceClose;
       CloseHandle( FileWrite );
       FilePreview;
       end;
@@ -3616,20 +3616,20 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         Minutes, Hour: integer;
       begin
       MakeReportFileName( 'Notes.txt' );
-      if not OpenLogFile then
+      if not LogSourceOpen then
          begin
          Exit;
          end;
 
       if not tOpenFileForWrite( tReportFileWrite, @ReportsFilename[ 1 ] ) then
          begin
-         CloseLogFile;
+         LogSourceClose;
          Exit;
          end;
 
-      ReadVersionBlock;
+      LogSourceRewind;
     1:
-      if ReadLogFile then
+      if LogSourceNext( TempRXData ) then
          begin
          if TempRXData.ceRecordKind = rkNote then
             begin
@@ -3646,7 +3646,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
 
          goto 1;
          end;
-      CloseLogFile;
+      LogSourceClose;
       CloseHandle( tReportFileWrite );
       FilePreview;
       end;
@@ -3683,12 +3683,12 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         Index: integer;
       begin
       Result := '';
-      if not OpenLogFile then
+      if not LogSourceOpen then
          begin
          Exit;
          end;
 
-      ReadVersionBlock;
+      LogSourceRewind;
 
       try
         try
@@ -3696,14 +3696,14 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
           slOperators.Duplicates := dupIgnore;
           slOperators.Sorted     := False;
 
-          while ReadLogFile do
+          while LogSourceNext( TempRXData ) do
              begin
              // slOperators.Add(TempRXData.ceOperator);
              slOperators.Values[ TempRXData.ceOperator ] :=
                 IntToStr( StrToIntDef( slOperators.Values
                 [ TempRXData.ceOperator ], 0 ) + 1 );
              end;
-          CloseLogFile;
+          LogSourceClose;
           logger.debug( 'Before operators sort' );
           for Index := 0 to slOperators.Count - 1 do
              begin

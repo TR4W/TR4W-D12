@@ -68,10 +68,20 @@ type
    TLogSourceKind = (lsBinary, lsDatabase);
 
 var
-   (* THE DEFAULT IS THE BINARY LOG AND MUST STAY THAT WAY until B3 is green.
-      An operator's export cannot depend on a store nothing has verified yet.
-      Set from the /EXPORTDB switch, which exists for the corpus. *)
-   LogSourceKind: TLogSourceKind = lsBinary;
+   (* THE DEFAULT IS THE DATABASE -- STEP B4, THE READ FLIP.
+
+      It was lsBinary until B3 proved the two stores produce identical bytes:
+      13 corpus logs, 1,855 QSOs, zero differences in ADIF and Cabrillo. That
+      measurement is the entire warrant for this line, and it is re-runnable --
+      tr4w/test/corpus/compare-stores.sh, which forces each store explicitly and
+      is therefore unaffected by whatever this default happens to be.
+
+      WHAT STILL WRITES THE .TRW: everything. B4 moves READS only. The binary
+      log remains authoritative on disk, the shadow keeps it in step, and a
+      reader that cannot make the database current REFUSES rather than quietly
+      falling back -- see LogSourceOpen. Writes move at B5, and that is also
+      where this variable and the whole two-store idea stop being needed. *)
+   LogSourceKind: TLogSourceKind = lsDatabase;
 
 (* Opens the log for a sequential read.  False if it cannot be read at all. *)
 function LogSourceOpen: boolean;
@@ -87,6 +97,30 @@ function LogSourceNext(out aQso: ContestExchange): boolean;
 
 procedure LogSourceClose;
 
+(* HOW MANY QSO RECORDS THE LOG HOLDS.  -1 if it cannot be read.
+
+  Callers asked this with Windows.GetFileSize(LogHandle) arithmetic, which is
+  three separate assumptions about the store: that it is a file, that its
+  records are fixed width, and that its header is one record long. A count is
+  the question they were actually asking.
+
+  A TRAP THIS REPLACES. SizeOfTLogHeader and SizeOf(ContestExchange) are BOTH
+  376 bytes, so `GetFileSize div SizeOf(ContestExchange)` returns N + 1, and
+  LOGEDIT's `for Offset := 1 to records - 1` therefore covered all N records --
+  correct only because the two sizes coincide. Nothing says they must, and a
+  field added to TLogHeader would have silently dropped the oldest QSO from
+  every reverse scan. This returns N. *)
+function LogSourceRecordCount: Int64;
+
+(* THE aOffsetFromEnd'th RECORD BACK FROM THE END: 1 is the last one logged.
+
+  What a reverse scan wants, and what `tSetFilePointer(-n * SizeOf(rec),
+  FILE_END)` meant. Independent of any sequential read in progress, so a caller
+  may use it without disturbing an open cursor. False when there is no such
+  record. *)
+function LogSourceReadFromEnd(aOffsetFromEnd: Int64;
+                              out aQso: ContestExchange): boolean;
+
 (* The file the current source reads -- for diagnostics and for the corpus
   driver to report which store produced an artifact. *)
 function LogSourceDescription: string;
@@ -94,10 +128,14 @@ function LogSourceDescription: string;
 implementation
 
 uses
-   (* NOT uLogShadow: that unit is deleted at B5 and this one is not, so it
-      must not depend on it. The database's name comes from the rule in
-      uLogDatabase, which is where it outlives the shadow. *)
-   SysUtils, MainUnit, uLogDatabase, uLogRepository,
+   (* uLogShadow for ShadowEnsureCurrent ONLY -- see LogSourceOpen. At B3 this
+      clause said the dependency must not exist, on the grounds that uLogShadow
+      is deleted at B5. That had it backwards: the call is needed exactly while
+      two stores exist, so it dies with the unit rather than outliving it.
+
+      The database's NAME still comes from uLogDatabase, which does outlive the
+      shadow. *)
+   SysUtils, Windows, MainUnit, uLogDatabase, uLogRepository, uLogShadow,
    (* TempRXData, which is declared in PostUnit's INTERFACE and is what
       MainUnit.ReadLogFile fills. PostUnit uses this unit in ITS
       implementation, so the pair is circular -- normal in this tree and
@@ -115,13 +153,70 @@ var
    GDatabase: TLogDatabase = nil;
    GRepository: TLogRepository = nil;
 
+   (* True between LogSourceOpen and LogSourceClose, for the nesting guard. *)
+   GOpen: boolean = False;
+
+(* THE READ SOURCE IS A SINGLE GLOBAL CURSOR, so it cannot be opened twice --
+  and neither could the thing it replaces: MainUnit's OpenLogFile stores one
+  handle in the LogHandle global, so a nested open OVERWRITES it, leaks the
+  first, and then CloseLogFile shuts the inner one while the outer loop believes
+  it is still reading.
+
+  That is a real hazard in this file's shape. PostUnit's readers each open and
+  close, and one of them -- GetOperatorsFromLog -- is called from inside another
+  reader's routine. It happens to be called BEFORE that routine's own open (line
+  2705 against 2848) so the two never overlap, but nothing enforces that and
+  nothing would say so if a later edit moved one line.
+
+  So the nesting that the binary path handles SILENTLY AND BADLY is reported
+  here instead. Not fixed by allowing it: allowing it would make the two arms
+  behave differently, and the entire value of this seam is that they do not. *)
+procedure WarnIfAlreadyOpen;
+begin
+   if GOpen and (logger <> nil) then
+      begin
+      logger.Warn('[LogSource] opened while already open. The previous read is ' +
+                  'abandoned -- the binary path silently did the same thing, ' +
+                  'so this is a latent bug being made visible, not a new one.');
+      end;
+end;
+
 function LogSourceOpen: boolean;
 begin
+   WarnIfAlreadyOpen;
+   GOpen := True;
    case LogSourceKind of
       lsDatabase:
          begin
          LogSourceClose;
          try
+            (* THE DATABASE MUST EXIST AND MATCH BEFORE IT CAN BE READ.
+
+               uLogShadow owns that guarantee -- it is the unit that keeps the
+               two stores in step -- so this asks rather than reimplements. A
+               headless export of a log this build has never appended to gets
+               the database built from the .TRW right here, which is what lets
+               the corpus fixtures (a .TRW and nothing else) be read from
+               SQLite at all.
+
+               THE DEPENDENCY ON uLogShadow IS DELIBERATE AND TEMPORARY, and it
+               corrects what this unit said at B3. The reason given then -- that
+               uLogShadow is deleted at B5 -- was the wrong way round: the need
+               for this call lasts exactly as long as TWO STORES exist, which is
+               exactly uLogShadow's lifetime. At B5 the call and the unit go
+               together. *)
+            if not ShadowEnsureCurrent then
+               begin
+               if logger <> nil then
+                  begin
+                  logger.Error('[LogSource] the SQLite log could not be made ' +
+                               'current from %s -- refusing to read. The binary ' +
+                               'log is untouched.', [DatabasePath]);
+                  end;
+               Result := False;
+               Exit;
+               end;
+
             GDatabase := TLogDatabase.Create;
             (* The name rule lives in uLogDatabase. Deriving it a
                second time here is how the two would come to disagree. *)
@@ -192,6 +287,7 @@ end;
 
 procedure LogSourceClose;
 begin
+   GOpen := False;
    case LogSourceKind of
       lsDatabase:
          begin
@@ -205,6 +301,80 @@ begin
       else
          begin
          CloseLogFile;
+         end;
+      end;
+end;
+
+function LogSourceRecordCount: Int64;
+var
+   sizeBytes: DWORD;
+begin
+   case LogSourceKind of
+      lsDatabase:
+         begin
+         if GRepository <> nil then
+            begin
+            Result := GRepository.RecordCount;
+            end
+         else
+            begin
+            Result := -1;
+            end;
+         end;
+      else
+         begin
+         Result := -1;
+         if LogHandle = INVALID_HANDLE_VALUE then
+            begin
+            Exit;
+            end;
+         sizeBytes := Windows.GetFileSize(LogHandle, nil);
+         if sizeBytes = INVALID_FILE_SIZE then
+            begin
+            Exit;
+            end;
+         if sizeBytes < SizeOfTLogHeader then
+            begin
+            Result := 0;
+            Exit;
+            end;
+         Result := (Int64(sizeBytes) - SizeOfTLogHeader) div SizeOf(ContestExchange);
+         end;
+      end;
+end;
+
+function LogSourceReadFromEnd(aOffsetFromEnd: Int64;
+                              out aQso: ContestExchange): boolean;
+var
+   total: Int64;
+   rowId: Int64;
+   bytesRead: Cardinal;
+begin
+   FillChar(aQso, SizeOf(aQso), 0);
+   Result := False;
+   total := LogSourceRecordCount;
+   if (aOffsetFromEnd < 1) or (total < aOffsetFromEnd) then
+      begin
+      Exit;
+      end;
+
+   case LogSourceKind of
+      lsDatabase:
+         begin
+         (* RowIdAtIndex is 0-based from the START, in id order -- which is log
+            order. Offset 1 (the last record) is index total - 1. *)
+         rowId := GRepository.RowIdAtIndex(total - aOffsetFromEnd);
+         if rowId > 0 then
+            begin
+            Result := GRepository.LoadQSO(rowId, aQso);
+            end;
+         end;
+      else
+         begin
+         (* The seek this replaces, unchanged: negative from FILE_END. *)
+         tSetFilePointer(-1 * aOffsetFromEnd * SizeOf(ContestExchange), FILE_END);
+         Windows.ReadFile(LogHandle, aQso, SizeOf(ContestExchange), bytesRead, nil);
+         Result := bytesRead = SizeOf(ContestExchange);
          end;
       end;
 end;

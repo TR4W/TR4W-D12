@@ -89,6 +89,21 @@ procedure ShadowClose;
 (* False after a failure has switched it off, or before anything opened it. *)
 function ShadowIsActive: boolean;
 
+(* MAKES THE SQLITE LOG EXIST AND MATCH THE BINARY ONE, and returns whether it
+  can be relied on.  Its file name is uLogDatabase.LogDatabaseFileName.
+
+  THIS IS WHAT A READER NEEDS AND A WRITER DID NOT. While only writes were
+  shadowed, the database was built lazily by the first append and no one else
+  cared. A READ can now come first -- a headless export of a log this build has
+  never appended to, or an operator opening the log window before working
+  anybody -- and it must not find an absent or stale file.
+
+  Rebuild-when-absent and the drift check already existed for the write path;
+  this exposes them. Never raises: on failure the shadow disables itself and
+  this returns False, which is the caller's cue to say so rather than to
+  silently read the wrong store. *)
+function ShadowEnsureCurrent: boolean;
+
 implementation
 
 uses
@@ -182,6 +197,38 @@ begin
    Result.Email    := AnsiString(CabrilloTagText(ctEmail));
 end;
 
+(* Moves a database aside, with the -wal and -shm beside it.
+
+  ALL THREE OR THE RENAME IS A CORRUPTION. A -wal left behind belongs to the
+  file that is no longer there, and SQLite would either ignore it -- losing
+  every transaction it holds -- or graft it onto the NEW database of the same
+  name. Renaming them together keeps the orphan openable and the fresh one
+  clean. Failures are reported, never raised: this runs on the path that is
+  trying to avoid losing data, and it must not be the thing that loses it. *)
+procedure RenameAside(const aDbName, aOrphanName: string);
+
+   procedure MoveOne(const aFrom, aTo: string);
+   begin
+      if not FileExists(aFrom) then
+         begin
+         Exit;
+         end;
+      if not RenameFile(aFrom, aTo) then
+         begin
+         if logger <> nil then
+            begin
+            logger.Error('[LogShadow] could not move %s aside to %s. The file ' +
+                         'is left where it is.', [aFrom, aTo]);
+            end;
+         end;
+   end;
+
+begin
+   MoveOne(aDbName, aOrphanName);
+   MoveOne(aDbName + '-wal', aOrphanName + '-wal');
+   MoveOne(aDbName + '-shm', aOrphanName + '-shm');
+end;
+
 function ShadowFileName: string;
 begin
    (* The rule itself is uLogDatabase.LogDatabaseFileName -- it outlives this
@@ -232,6 +279,8 @@ var
    dbName: string;
    trwCount: Int64;
    expected: Int64;
+   orphan: string;
+   orphanRows: Int64;
    res: TLogImportResult;
 
    (* Returns False rather than raising: the caller is a try/except that would
@@ -317,7 +366,94 @@ begin
          expected := trwCount;
          end;
 
-      if (trwCount >= 0) and (GRepository.RecordCount <> expected) then
+      (* A REBUILD MUST NEVER DESTROY THE FULLER STORE.
+
+         THE BINARY LOG IS APPEND-ONLY. Deletes mark a record, they do not
+         remove it, so its record count can rise and can stay the same -- it
+         cannot legitimately FALL. A count that has fallen does not mean the
+         shadow drifted; it means the binary log was lost, truncated, or newly
+         created, and rebuilding the database from it would replace real QSOs
+         with nothing.
+
+         MEASURED, and it is not a corner case. Move a .TRW aside and start
+         TR4W: the program CREATES a fresh log -- 376 bytes, a header and no
+         records -- because that is what it does for a new contest. The shadow
+         then read "shadow holds 101, the log holds 0", called it drift, and
+         rebuilt. 101 QSOs became 0, in one startup, with an INFO line as the
+         only trace. The export that followed produced an empty ADIF and
+         returned success.
+
+         So the database is KEPT and the anomaly is reported. It is the store
+         that still has the contest in it; the empty log beside it is the
+         damaged one. Reconciliation runs in one direction only. *)
+      if (trwCount >= 0) and (trwCount < GRepository.RecordCount) then
+         begin
+         (* THE BINARY LOG HAS SHRUNK, WHICH IT CANNOT LEGITIMATELY DO.
+
+            It is append-only -- a delete MARKS a record rather than removing
+            it -- so a fall in its count means it was lost, truncated, or newly
+            created. Two very different things produce it and NOTHING HERE CAN
+            TELL THEM APART:
+
+              the .TRW was lost mid-contest, and the database is now the only
+              copy of those QSOs;
+
+              the operator (or a test) reset the log to start again, and the
+              database holds the PREVIOUS contest.
+
+            TLogHeader carries no identity that would separate them -- version
+            string, description, warning, all byte-identical in every TR4W log
+            ever written -- so there is no honest way to choose.
+
+            Both naive answers are wrong, and both were tried. Rebuilding
+            DESTROYS a contest: measured, 101 QSOs became 0 in one startup, with
+            an INFO line as the only trace and a successful empty export after
+            it. Keeping the database RESURRECTS one: the county-line harness
+            resets its log every run and inherited three QSOs from the run
+            before.
+
+            So neither. The database is MOVED ASIDE, intact, and a fresh one is
+            built to match the log. Nothing is destroyed, nothing is silently
+            carried into a contest it does not belong to, and the error below
+            says exactly where the QSOs went -- which is the part that makes
+            this recoverable rather than merely safe. *)
+         orphan := dbName + '.orphaned-' +
+                   FormatDateTime('yyyymmdd-hhnnss', Now);
+         orphanRows := GRepository.RecordCount;
+
+         (* Closed first, so SQLite checkpoints the WAL into the file being
+            renamed. Renaming a database out from under an open connection
+            would orphan the -wal beside it and lose the newest transactions --
+            the very QSOs most worth keeping. *)
+         FreeAndNil(GRepository);
+         FreeAndNil(GDatabase);
+         RenameAside(dbName, orphan);
+
+         if logger <> nil then
+            begin
+            logger.Error('[LogShadow] the binary log holds %d record(s) but the ' +
+                         'SQLite log held %d. The binary log is append-only and ' +
+                         'cannot shrink, so it has been lost, truncated or ' +
+                         'recreated -- and nothing here can tell that apart from ' +
+                         'a deliberate reset. The %d QSO(s) have NOT been ' +
+                         'deleted: the database was moved to %s. A fresh one is ' +
+                         'being built to match the log. If the binary log was ' +
+                         'lost rather than reset, that file is your contest.',
+                         [trwCount, orphanRows, orphanRows, orphan]);
+            end;
+
+         if not RebuildFromBinary('the shadow was orphaned to ' + orphan) then
+            begin
+            GDisabled := True;
+            Result := False;
+            Exit;
+            end;
+         aRebuilt := True;
+         GDatabase := TLogDatabase.Create;
+         GDatabase.Open(dbName);
+         GRepository := TLogRepository.Create(GDatabase);
+         end
+      else if (trwCount >= 0) and (GRepository.RecordCount <> expected) then
          begin
          if not RebuildFromBinary(
                    Format('shadow holds %d record(s), the log holds %d',
@@ -588,6 +724,15 @@ begin
          Disable('rewriting a QSO by its network key', E);
          end;
    end;
+end;
+
+function ShadowEnsureCurrent: boolean;
+var
+   rebuilt: boolean;
+begin
+   (* aAppendPending FALSE: nobody is part way through adding a QSO here, so the
+      log and the shadow should agree exactly. *)
+   Result := EnsureOpen(rebuilt, False);
 end;
 
 procedure ShadowClose;

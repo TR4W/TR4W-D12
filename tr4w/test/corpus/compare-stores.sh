@@ -18,6 +18,11 @@
 # corpus, and a store that lost a field the references happen not to exercise
 # would pass the corpus and fail this.
 #
+# BOTH RUNS FORCE THEIR STORE (/EXPORTTRW and /EXPORTDB) rather than letting
+# one of them inherit the default.  Since B4 the default is the database, so a
+# run that inherited it would compare the database against ITSELF and pass
+# while proving nothing -- the exact failure this script exists to prevent.
+#
 # Usage:  bash tr4w/test/corpus/compare-stores.sh
 #
 # Requires a built app.  Guard that TR4W is not running -- a live instance
@@ -60,7 +65,7 @@ for d in "$REPO_ROOT"/tr4w/test/corpus/*/; do
    qsos=$(python -c "import sqlite3;print(sqlite3.connect('$WORK.db').execute('SELECT COUNT(*) FROM qso').fetchone()[0])" 2>/dev/null || echo '?')
 
    rm -f "$WORK.ADI" ./*.LOG
-   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT >/dev/null 2>&1
+   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT /EXPORTTRW >/dev/null 2>&1
    binout=$(mktemp -d); cp "$WORK.ADI" "$binout/" 2>/dev/null; cp ./*.LOG "$binout/" 2>/dev/null
 
    rm -f "$WORK.ADI" ./*.LOG

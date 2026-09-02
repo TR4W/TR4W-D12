@@ -49,7 +49,7 @@ procedure ShowLogEdit;
 
 implementation
 
-uses MainUnit;
+uses MainUnit, uLogSource;
 
 function LogEditDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 label
@@ -66,18 +66,18 @@ var
             Windows.SetWindowTextW(hwnddlg, PWideChar(UnicodeString(RC_VIEWEDITLOG2)));
             LogEditListView := CreateEditableLog(hwnddlg, 0, 0, 790, 420, True);
             i := 0;
-            if not OpenLogFile then
+            if not LogSourceOpen then
                begin
                Exit;
                end;
-            ReadVersionBlock;
+            LogSourceRewind;
             2:
-            if ReadLogFile then
+            if LogSourceNext( TempRXData ) then
                begin
                tAddContestExchangeToLog(TempRXData, LogEditListView, i);
                goto 2;
                end;
-            CloseLogFile;
+            LogSourceClose;
             EnsureListViewColumnVisible(LogEditListView);
             Windows.SetFocus(LogEditListView);
             ListView_SetItemState( LogEditListView

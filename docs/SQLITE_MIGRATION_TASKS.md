@@ -43,7 +43,18 @@ QSOs, 0 differences.** Exported from the database, TR4W produces BYTE-IDENTICAL
 ADIF and Cabrillo to exporting from the binary log, and the golden corpus still
 reads 22/0/4 against the D7 references.
 
-**Next: B4** -- flip the remaining readers, then B5 to stop writing the .TRW.
+**B4 IS DONE.** Every log READ goes through `uLogSource` and the default is the
+database: `tr4w/test/corpus/export-d12-corpus.sh` passes **22/0/4 against the D7
+references while reading from SQLite**, and an export still produces all 101 QSOs
+with the `.TRW` deleted from disk.
+
+Still on the binary log, deliberately: the eight WRITE sites, and the five
+read-modify-write sites that read a record in order to rewrite it
+(`DeleteLastContact`, `uNet` x2, `uQTCS`, `uEditQSO`, and MainUnit's
+memory-mapped rescore). Flipping only their read half would have them read one
+store and write another. They move at B5.
+
+**Next: B5** -- stop writing the .TRW; delete `uLogShadow` and the drift logic.
 B2 is done (all eight write sites), and C1/C2 with it.
 
 ---

@@ -754,6 +754,8 @@ function InSameFederalOkrug(HisCallsign: CallString): boolean;
 implementation
 
 uses uNet,
+   (* Which store a log READ comes from -- step B4.  See uLogSource. *)
+   uLogSource,
   PostUnit,
   MainUnit,
   uRotatorControl,   // RotorControl delegates here -- see its body
@@ -6176,13 +6178,13 @@ begin
      end;
   TempIndex := 0;
   FirstTime := True;
-  if not OpenLogFile then
+  if not LogSourceOpen then
      begin
      Exit;
      end;
-  ReadVersionBlock;
+  LogSourceRewind;
   1:
-  if ReadLogFile then
+  if LogSourceNext( TempRXData ) then
      begin
 
      if ((Band = TempRXData.Band) or not QSOByBand) and
@@ -6206,7 +6208,7 @@ begin
      begin
      EnsureListViewColumnVisible(tPreviousDupeQSOsWndHandle);
      end;
-  CloseLogFile;
+  LogSourceClose;
 end;
 
 procedure SlowDown;
@@ -6287,16 +6289,21 @@ function LogFileLooksOkay: boolean;
 
 begin
   Result := False;
-  if not OpenLogFile then
+  if not LogSourceOpen then
      begin
      Exit;
      end;
-  if Windows.GetFileSize(LogHandle, nil) = tRestartInfo.riTotalRecordsInLog
-    {QSOTotals[All, Both] } * SizeOf(ContestExchange) + SizeOfTLogHeader then
+  (* A COUNT, NOT A FILE SIZE.  This asked GetFileSize whether the log held
+    exactly riTotalRecordsInLog records, by reconstructing the byte length the
+    file ought to have.  That is three assumptions about the store -- that it is
+    a file, that its records are fixed width, and that its header is one record
+    long -- to answer a question about HOW MANY.  Same test, asked directly, and
+    it now means the same thing whichever store is behind it. *)
+  if LogSourceRecordCount = tRestartInfo.riTotalRecordsInLog then
      begin
      Result := True;
      end;
-  CloseLogFile;
+  LogSourceClose;
 
   
 end;

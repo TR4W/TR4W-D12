@@ -53,7 +53,8 @@ procedure EditLogInSearch;
 procedure ShowLogSearch;
 
 implementation
-uses MainUnit, SysUtils;   // Issue #997: SysUtils for Format/StrPCopy
+(* uLogSource: which store a log READ comes from -- step B4. *)
+uses MainUnit, SysUtils, uLogSource;   // Issue #997: SysUtils for Format/StrPCopy
 const
   MAXSEARCHINDEX                        = 255;
 var
@@ -149,14 +150,14 @@ begin
               LogSearchListViewIndex := 0;
               tMode := ModeType(tCB_GETCURSEL(hwnddlg, 201));
               tBand := BandType(tCB_GETCURSEL(hwnddlg, 202));
-              if not OpenLogFile then Exit;
+              if not LogSourceOpen then Exit;
               ListView_DeleteAllItems(LogSearchListView);
               CurrentRecord := -1;
               Index := 0;
               StartCPU := GetTickCount;
-              ReadVersionBlock;
+              LogSourceRewind;
               NextRecord:
-              if ReadLogFile then
+              if LogSourceNext( TempRXData ) then
                  begin
                  inc(CurrentRecord);
                  if tBand <> AllBands then if TempRXData.Band <> tBand then goto NextRecord;
@@ -181,7 +182,7 @@ begin
                     goto NextRecord;
                     end;
                  end;
-              CloseLogFile;
+              LogSourceClose;
               // Issue #997: asm-push wsprintf -> SysUtils.Format.
               // TC_ENTRIESPERMS = '%u entries per %u ms'; args = index, elapsed ms.
               StrPCopy(wsprintfBuffer, SysUtils.Format(TC_ENTRIESPERMS,
