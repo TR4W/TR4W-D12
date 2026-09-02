@@ -6398,7 +6398,6 @@ begin
      So a contest class replaces exactly one thing -- its arm of this case. *)
   if ActiveContest(Contest) <> nil then
      begin
-     ActiveContest(Contest).RefreshStation;
      ActiveContest(Contest).CalculateQSOPoints(RXData);
      Exit;
      end;

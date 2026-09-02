@@ -70,13 +70,63 @@ type
       function ValidateDXQTH(const aQTH: string;
                              out aResolved: string;
                              out aErrorMessage: string): boolean; override;
+
+      function FormatsExchange: boolean; override;
+      function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
+                                          const aQso: ContestExchange): string; override;
+      function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                              const aQso: ContestExchange;
+                                              const aHisQTH: string): string; override;
+      function FormatADIFSentExchange(const aMy: TMyStationExchange;
+                                      const aQso: ContestExchange): string; override;
       function DisplayName: string; override;
+
+      (* THE WHOLE ContestsArray ROW, STATED HERE.
+
+         NY4I: "All that content would be represented or processed in the
+         contest class."
+
+         Every one of these currently returns what the array holds, so this
+         changes no behaviour -- it moves the ANSWER, so that reading this one
+         file tells you what ARRL Field Day is without cross-referencing a
+         200-row table by enum position. When the array goes, these are already
+         the definition.
+
+         The array row this replaces, verbatim:
+
+           Email: 'fieldday@arrl.org';  DF: 'arrlsect';  WA7BNM: 57;
+           QRZRUID: 0;  Pxm: NoPrefixMults;  ZnM: NoZoneMults;
+           AIE: NoInitialExchange;  {DM: NoDomesticMults;}  P: 0;
+           AE: ClassDomesticOrDXQTHExchange;  XM: ARRLDXCC;
+           QP: ARRLFieldDayQSOPointMethod;  ADIFName: 'ARRL-FIELD-DAY';
+           CABName: 'ARRL-FD';  FriendlyName: 'ARRL Field Day'
+
+         NOTE DM IS COMMENTED OUT IN THE ARRAY. Its value therefore comes from
+         whatever the record initialises to, not from NoDomesticMults being
+         chosen -- so DomesticMultiplierType is deliberately NOT overridden
+         here. Stating a value would be inventing one, and Field Day's sections
+         ARE its domestic multipliers, so the right answer is not obviously
+         "none". Left reading the array until somebody establishes what it
+         should be. *)
+      function CabrilloName: string; override;
+      function ADIFContestId: string; override;
+      function WA7BNMId: integer; override;
+      function SubmissionEmail: string; override;
+      function DomesticFileName: string; override;
+      function FriendlyName: string; override;
+      function PrefixMultiplierType: PrefixMultType; override;
+      function ZoneMultiplierType: ZoneMultType; override;
+      function DXMultiplierType: DXMultType; override;
+      function InitialExchangeKind: InitialExchangeType; override;
+      function ExchangeKind: ExchangeType; override;
+      function IsUSQSOParty: boolean; override;
+      function CountyLineAllowed: boolean; override;
    end;
 
 implementation
 
 uses
-   uTR4WStrings, uContestRegistry;
+   SysUtils, uTR4WStrings, uContestRegistry;
 
 procedure TContestARRLFieldDay.CalculateQSOPoints(var aQso: ContestExchange);
 begin
@@ -110,9 +160,116 @@ begin
    Result := ValidateDXQTHAllowing(aQTH, '', aResolved, aErrorMessage);
 end;
 
+(* THE EXCHANGE IS CLASS AND SECTION, both ways round.
+
+   Widths are the legacy arms' exactly -- '%-3s %-7s' with a TRAILING SPACE on
+   the sent side and none on the received. Cabrillo is a column format and a
+   width is not cosmetic: a submitted log with the columns a character out is a
+   log a robot scorer reads wrongly.
+
+   THE RECEIVED QTH IS THE QSO'S OWN, not the his-QTH the exporter selected.
+   The legacy arm says so with an `if Contest in [ARRLFIELDDAY, WINTERFIELDDAY]`
+   that overwrote csQTHString just before use (issue 407) -- one more contest
+   test, now expressed by simply not using the parameter. *)
+function TContestARRLFieldDay.FormatsExchange: boolean;
+begin
+   Result := True;
+end;
+
+function TContestARRLFieldDay.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange): string;
+begin
+   Result := Format('%-3s %-7s ', [aMy.MyFDClass, aMy.MySection]);
+end;
+
+function TContestARRLFieldDay.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aHisQTH: string): string;
+begin
+   Result := Format('%-3s %-7s', [string(aQso.ceClass), string(aQso.QTHString)]);
+end;
+
+function TContestARRLFieldDay.FormatADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string;
+begin
+   Result := Format('%-3s %-7s ', [aMy.MyFDClass, aMy.MySection]);
+end;
+
 function TContestARRLFieldDay.DisplayName: string;
 begin
    Result := 'ARRL Field Day';
+end;
+
+function TContestARRLFieldDay.CabrilloName: string;
+begin
+   (* The CONTEST: line of a submitted log. Not the same string as the ADIF id
+      below, which is the trap the identifiers exist to make visible. *)
+   Result := 'ARRL-FD';
+end;
+
+function TContestARRLFieldDay.ADIFContestId: string;
+begin
+   Result := 'ARRL-FIELD-DAY';
+end;
+
+function TContestARRLFieldDay.WA7BNMId: integer;
+begin
+   Result := 57;
+end;
+
+function TContestARRLFieldDay.SubmissionEmail: string;
+begin
+   Result := 'fieldday@arrl.org';
+end;
+
+function TContestARRLFieldDay.DomesticFileName: string;
+begin
+   (* domrrlsect.dom -- the ARRL/RAC section list, an INSTALLED RESOURCE.
+      A <logstem>.DOM beside the log still overrides it; see LogCfg. *)
+   Result := 'arrlsect';
+end;
+
+function TContestARRLFieldDay.FriendlyName: string;
+begin
+   Result := 'ARRL Field Day';
+end;
+
+function TContestARRLFieldDay.PrefixMultiplierType: PrefixMultType;
+begin
+   Result := NoPrefixMults;
+end;
+
+function TContestARRLFieldDay.ZoneMultiplierType: ZoneMultType;
+begin
+   Result := NoZoneMults;
+end;
+
+function TContestARRLFieldDay.DXMultiplierType: DXMultType;
+begin
+   Result := ARRLDXCC;
+end;
+
+function TContestARRLFieldDay.InitialExchangeKind: InitialExchangeType;
+begin
+   Result := NoInitialExchange;
+end;
+
+function TContestARRLFieldDay.ExchangeKind: ExchangeType;
+begin
+   Result := ClassDomesticOrDXQTHExchange;
+end;
+
+function TContestARRLFieldDay.IsUSQSOParty: boolean;
+begin
+   Result := False;
+end;
+
+function TContestARRLFieldDay.CountyLineAllowed: boolean;
+begin
+   (* False: Field Day has no county line. The flag exists for the single-state
+      QSO parties, where a station on a boundary legitimately logs the same
+      band and mode twice with different QTH. *)
+   Result := False;
 end;
 
 initialization

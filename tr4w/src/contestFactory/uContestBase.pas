@@ -104,6 +104,31 @@ type
       MyZoneValid: boolean;
    end;
 
+   (* THE MY-STATION HALF OF AN EXCHANGE.
+
+      IT LIVED IN uCabrilloExchange AND HAD TO MOVE. That unit needs to ask a
+      contest how to format its exchange, and the contest needs this record to
+      answer -- which is a cycle if the type stays there. It is contest-model
+      data rather than Cabrillo data anyway: uADIFExchange already shares it,
+      with a note saying "two records that differ by one field are two records
+      that drift".
+
+      uCabrilloExchange re-exports it as an alias, so every existing caller and
+      both units' tests are untouched. *)
+   TMyStationExchange = record
+      MyState     : string;
+      MyGrid      : string;
+      MyName      : string;
+      MyZone      : string;
+      MyFDClass   : string;
+      MySection   : string;
+      MyCheck     : string;
+      MyPrec      : string;
+      MyFOCNumber : string;
+      MyPostalCode: string;
+      MyPark      : string;
+   end;
+
    TContestBase = class
    private
       FContest: ContestType;
@@ -157,6 +182,41 @@ type
       function CabrilloName: string; virtual;
       function ADIFContestId: string; virtual;
       function WA7BNMId: integer; virtual;
+
+      (* THE REST OF THE ContestsArray ROW.
+
+         NY4I: "we also have to capture the details from the ContestArray such as
+         CABName and ADIFName. All that content would be represented or processed
+         in the contest class."
+
+         So every field of the row gets an accessor, not only the three
+         identifiers, and every one DEFAULTS TO THE ARRAY. That is what makes the
+         move incremental: a contest states what it wants to own and inherits the
+         rest, and a contest with no class is unaffected because nothing reads
+         these unless a class exists.
+
+         WHY ACCESSORS RATHER THAN A COPY OF THE ROW. A copied record would be a
+         second definition, and the two would drift the moment somebody edited
+         the array -- which is the exact failure the radio factory hit with
+         RadioParametersArray. Reading through means there is still one answer
+         until a contest deliberately overrides.
+
+         SubmissionEmail and DomesticFileName are PAnsiChar in the array, which
+         is why they arrive as string here: a contest class should not be handing
+         out pointers into a const table. *)
+      function SubmissionEmail: string; virtual;
+      function DomesticFileName: string; virtual;
+      function FriendlyName: string; virtual;
+      function QRZRUId: integer; virtual;
+      function PrefixMultiplierType: PrefixMultType; virtual;
+      function ZoneMultiplierType: ZoneMultType; virtual;
+      function DXMultiplierType: DXMultType; virtual;
+      function DomesticMultiplierType: DomesticMultType; virtual;
+      function InitialExchangeKind: InitialExchangeType; virtual;
+      function ExchangeKind: ExchangeType; virtual;
+      function QSOPointMethod: QSOPointMethodType; virtual;
+      function IsUSQSOParty: boolean; virtual;
+      function CountyLineAllowed: boolean; virtual;
 
       (* SCORING. Sets aQso.QSOPoints, and nothing else -- multipliers and dupe
          state are decided elsewhere and a scorer that changed them would make
@@ -212,14 +272,49 @@ type
                              out aResolved: string;
                              out aErrorMessage: string): boolean; virtual;
 
-      (* Re-reads the station snapshot from the program's globals.
+      (* DOES THIS CONTEST FORMAT ITS OWN EXCHANGE COLUMNS?
 
-         CALLED BEFORE EVERY SCORE rather than once at construction. MyCountry is
-         recomputed whenever MY CALL changes -- from the .cfg, from the log's
-         stored configuration, from the operator editing it mid-contest -- and a
-         contest object holding the value from startup would score the rest of
-         the log against a station that has moved. It is a few field copies. *)
-      procedure RefreshStation;
+         False by default, so a contest that has only had its SCORING moved does
+         not silently take over its Cabrillo and ADIF output as well. Each
+         responsibility arrives when it is actually lifted, and the ones that
+         have not are still the legacy case's. *)
+      function FormatsExchange: boolean; virtual;
+
+      (* THE TWO CABRILLO EXCHANGE COLUMNS, and the ADIF sent exchange.
+
+         aHisQTH is the his-QTH PostUnit has already selected (DoingDomesticMults
+         / LiteralDomesticQTH / ...), passed in rather than recomputed, because
+         choosing it is the exporter's job and formatting it is the contest's.
+
+         Only called when FormatsExchange is True. *)
+      function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
+                                          const aQso: ContestExchange): string; virtual;
+      function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                              const aQso: ContestExchange;
+                                              const aHisQTH: string): string; virtual;
+      function FormatADIFSentExchange(const aMy: TMyStationExchange;
+                                      const aQso: ContestExchange): string; virtual;
+
+      (* Hands the contest the station it is operating as.
+
+         PUSHED IN, NOT READ. An earlier version had the base reach into LOGWIND
+         for MyCountry, which put the display layer in the dependency graph of
+         every contest class -- and, worse, of anything that wanted to ASK a
+         contest something. uCabrilloExchange and uADIFExchange are
+         dependency-light on purpose and have unit tests that would then have
+         needed the program's globals booted.
+
+         So the direction is inverted: uContestFactory reads the globals and
+         hands the result down. A contest class now depends on VC, SysUtils and
+         the string constants, which means a test can construct one and ask it
+         to score a QSO without starting TR4W.
+
+         SET BEFORE EVERY SCORE rather than once at construction: MyCountry is
+         recomputed whenever MY CALL changes -- from the config, from the log's
+         stored settings, from the operator editing it mid-contest -- and a
+         contest holding the startup value would score the rest of the log
+         against a station that has moved. *)
+      procedure SetStation(const aStation: TStationContext);
    protected
       (* THE PARSE, WHICH IS MECHANISM AND NOT A RULE.
 
@@ -254,32 +349,17 @@ uses
    SysUtils,
    (* TC_IMPROPERTRANSMITTERCOUNT -- the one message that is NOT contest
       specific: every class-carrying contest counts transmitters the same way. *)
-   uTR4WStrings,
-   (* THE ONE PLACE IN THE FACTORY THAT TOUCHES THE PROGRAM'S GLOBALS.
-      LOGWIND holds MyCountry. Keeping this in the base means a contest class
-      is a function of (station, QSO) and nothing else. *)
-   LOGWIND;
+   uTR4WStrings;
 
 constructor TContestBase.Create(aContest: ContestType);
 begin
    inherited Create;
    FContest := aContest;
-   RefreshStation;
 end;
 
-procedure TContestBase.RefreshStation;
-var
-   code: integer;
+procedure TContestBase.SetStation(const aStation: TStationContext);
 begin
-   FStation.MyCountry := MyCountry;
-   FStation.MyContinent := MyContinent;
-
-   Val(string(MyZone), FStation.MyZone, code);
-   FStation.MyZoneValid := (code = 0) and (MyZone <> '');
-   if not FStation.MyZoneValid then
-      begin
-      FStation.MyZone := 0;
-      end;
+   FStation := aStation;
 end;
 
 function TContestBase.DisplayName: string;
@@ -310,6 +390,82 @@ begin
    Result := ContestsArray[FContest].WA7BNM;
 end;
 
+function TContestBase.SubmissionEmail: string;
+begin
+   Result := string(ContestsArray[FContest].Email);
+end;
+
+function TContestBase.DomesticFileName: string;
+begin
+   Result := string(ContestsArray[FContest].DF);
+end;
+
+function TContestBase.FriendlyName: string;
+begin
+   (* Same two-step as CabrilloName: the array's own note says "If blank, use
+      ContestTypeSA[ct]". *)
+   if Length(ContestsArray[FContest].FriendlyName) = 0 then
+      begin
+      Result := string(ContestTypeSA[FContest]);
+      end
+   else
+      begin
+      Result := string(ContestsArray[FContest].FriendlyName);
+      end;
+end;
+
+function TContestBase.QRZRUId: integer;
+begin
+   Result := ContestsArray[FContest].QRZRUID;
+end;
+
+function TContestBase.PrefixMultiplierType: PrefixMultType;
+begin
+   Result := ContestsArray[FContest].PxM;
+end;
+
+function TContestBase.ZoneMultiplierType: ZoneMultType;
+begin
+   Result := ContestsArray[FContest].ZnM;
+end;
+
+function TContestBase.DXMultiplierType: DXMultType;
+begin
+   Result := ContestsArray[FContest].XM;
+end;
+
+function TContestBase.DomesticMultiplierType: DomesticMultType;
+begin
+   Result := ContestsArray[FContest].DM;
+end;
+
+function TContestBase.InitialExchangeKind: InitialExchangeType;
+begin
+   Result := ContestsArray[FContest].AIE;
+end;
+
+function TContestBase.ExchangeKind: ExchangeType;
+begin
+   Result := ContestsArray[FContest].AE;
+end;
+
+function TContestBase.QSOPointMethod: QSOPointMethodType;
+begin
+   Result := ContestsArray[FContest].QP;
+end;
+
+function TContestBase.IsUSQSOParty: boolean;
+begin
+   (* The array calls this P and comments it "US QSO Party"; it is a Byte used
+      as a flag. *)
+   Result := ContestsArray[FContest].P <> 0;
+end;
+
+function TContestBase.CountyLineAllowed: boolean;
+begin
+   Result := ContestsArray[FContest].CountyLineAllowed;
+end;
+
 procedure TContestBase.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    aQso.QSOPoints := 0;
@@ -323,6 +479,30 @@ begin
       tighten. *)
    aErrorMessage := '';
    Result := True;
+end;
+
+function TContestBase.FormatsExchange: boolean;
+begin
+   Result := False;
+end;
+
+function TContestBase.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                 const aQso: ContestExchange): string;
+begin
+   Result := '';
+end;
+
+function TContestBase.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                     const aQso: ContestExchange;
+                                                     const aHisQTH: string): string;
+begin
+   Result := '';
+end;
+
+function TContestBase.FormatADIFSentExchange(const aMy: TMyStationExchange;
+                                             const aQso: ContestExchange): string;
+begin
+   Result := '';
 end;
 
 function TContestBase.ValidateDXQTH(const aQTH: string;

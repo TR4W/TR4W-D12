@@ -41,27 +41,23 @@ interface
 
 uses
   VC,
-  SysUtils;
+  SysUtils,
+  (* TMyStationExchange, and TContestBase for the arms a contest formats
+     itself.  uContestBase depends on VC, SysUtils and the string constants and
+     nothing else, precisely so this unit and its tests stay light. *)
+  uContestBase;
 
 type
   // The My-station fields the exchange arms read.  Strings so the unit needs no
   // globals; PostUnit fills these from MyState / MyGrid / ... at the call site.
-  TMyStationExchange = record
-    MyState     : string;
-    MyGrid      : string;
-    MyName      : string;
-    MyZone      : string;     // StrToInt'd internally (matches the old cMyZone := StrToInt(MyZone))
-    MyFDClass   : string;
-    MySection   : string;
-    MyCheck     : string;
-    MyPrec      : string;
-    MyFOCNumber : string;
-    MyPostalCode: string;
-    { Added 2026-08-24 for uADIFExchange, which shares this record rather
-      than declaring a near-identical one.  The Cabrillo arms do not read
-      it; two records that differ by one field are two records that drift. }
-    MyPark      : string;
-  end;
+  //
+  // DECLARED IN uContestBase NOW, and aliased here so every caller and both
+  // units' tests are untouched.  It had to move: this unit asks a contest how
+  // to format its own exchange, and the contest needs the record to answer,
+  // which is a cycle while the type lives here.  uADIFExchange already shared
+  // it -- "two records that differ by one field are two records that drift" --
+  // so there was never more than one, only a question of where it belongs.
+  TMyStationExchange = uContestBase.TMyStationExchange;
 
 // Builds the MY-EXCHANGE (MyEx) and HIS-EXCHANGE (HisEx) Cabrillo columns for
 // one QSO, dispatching on ActiveExchange.  RSTSentIn/RSTReceivedIn are the
@@ -81,7 +77,16 @@ function FormatCabrilloExchange(
     const RSTSentIn, RSTReceivedIn, HisQTH, PrevQTH : string;
     contacts       : integer;
     var   pnr      : integer;
-    out   MyEx, HisEx : string) : boolean;
+    out   MyEx, HisEx : string;
+    (* THE CONTEST OBJECT, OR nil.
+
+       PASSED IN RATHER THAN LOOKED UP, so this unit keeps no dependency on the
+       factory's lifetime or on the program's globals -- its tests construct a
+       contest, or pass nil, and get a deterministic answer either way.
+
+       nil means "no class for this contest yet", which is most of them, and the
+       case below runs exactly as before. *)
+    aContest       : TContestBase = nil) : boolean;
 
 implementation
 
@@ -116,7 +121,16 @@ function FormatCabrilloExchange(
     const RSTSentIn, RSTReceivedIn, HisQTH, PrevQTH : string;
     contacts       : integer;
     var   pnr      : integer;
-    out   MyEx, HisEx : string) : boolean;
+    out   MyEx, HisEx : string;
+    (* THE CONTEST OBJECT, OR nil.
+
+       PASSED IN RATHER THAN LOOKED UP, so this unit keeps no dependency on the
+       factory's lifetime or on the program's globals -- its tests construct a
+       contest, or pass nil, and get a deterministic answer either way.
+
+       nil means "no class for this contest yet", which is most of them, and the
+       case below runs exactly as before. *)
+    aContest       : TContestBase = nil) : boolean;
 var
   // Mirror the PostUnit per-QSO locals (as strings/ints instead of PChar).
   RSTSent, RSTReceived, csQTHString, csName,
@@ -152,6 +166,24 @@ begin
   nrSent      := rx.NumberSent;
   nrReceived  := rx.NumberReceived;
   HisZone     := rx.Zone;
+
+  (* THE CONTEST FORMATS ITS OWN EXCHANGE IF IT HAS BEEN MOVED -- phase F.
+
+     A contest class answers FormatsExchange = True only once its Cabrillo
+     columns have actually been lifted into it, so a contest whose SCORING is in
+     the factory does not silently take over its export as well. Everything else
+     falls into the case below, unchanged.
+
+     THE WIDTHS ARE THE CONTRACT. Cabrillo is a column format and these strings
+     are what a robot scorer reads, so a moved arm has to reproduce its widths
+     exactly -- including a trailing space where the legacy arm had one. *)
+  if (aContest <> nil) and aContest.FormatsExchange then
+     begin
+     MyEx := aContest.FormatCabrilloSentExchange(my, rx);
+     HisEx := aContest.FormatCabrilloReceivedExchange(my, rx, HisQTH);
+     Result := True;
+     Exit;
+     end;
 
   case ActiveExchange of
 
@@ -429,6 +461,9 @@ begin
 
     ClassDomesticOrDXQTHExchange:
       begin
+        (* Reached only when the contest has no class -- both contests that use
+           this exchange type now format it themselves, above. Kept because a
+           contest can be un-registered and this must still work. *)
         SetMyEx('%-3s %-7s ', [my.MyFDClass, my.MySection]);
         if Contest in [ARRLFIELDDAY, WINTERFIELDDAY] then
            begin

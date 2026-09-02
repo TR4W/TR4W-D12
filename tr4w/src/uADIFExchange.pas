@@ -49,8 +49,9 @@ interface
 uses
   VC,
   SysUtils,
-  uCabrilloExchange;   // TMyStationExchange -- ONE record, not a second copy
-                       // that drifts from it
+  uCabrilloExchange,   // TMyStationExchange -- ONE record, not a second copy
+  (* TContestBase -- a contest formats its own exchange, phase F. *)
+  uContestBase;
 
 { Builds the ADIF MY-exchange string for one QSO, dispatching on
   ActiveExchange.
@@ -66,7 +67,11 @@ function FormatADIFMyExchange(
     Contest        : ContestType;
     const rx       : ContestExchange;
     const my       : TMyStationExchange;
-    aGoodQSO       : boolean) : string;
+    aGoodQSO       : boolean;
+    (* THE CONTEST OBJECT, OR nil -- see the same parameter on
+       uCabrilloExchange.FormatCabrilloExchange. Passed in rather than looked
+       up, so this unit and its tests stay free of the factory's lifetime. *)
+    aContest       : TContestBase = nil) : string;
 
 implementation
 
@@ -105,7 +110,11 @@ function FormatADIFMyExchange(
     Contest        : ContestType;
     const rx       : ContestExchange;
     const my       : TMyStationExchange;
-    aGoodQSO       : boolean) : string;
+    aGoodQSO       : boolean;
+    (* THE CONTEST OBJECT, OR nil -- see the same parameter on
+       uCabrilloExchange.FormatCabrilloExchange. Passed in rather than looked
+       up, so this unit and its tests stay free of the factory's lifetime. *)
+    aContest       : TContestBase = nil) : string;
       var
         // HisCallsign                           : PChar;
         cMyZone: integer;
@@ -233,6 +242,14 @@ function FormatADIFMyExchange(
 
         if GoodLookingQSO then
            begin
+
+           (* THE CONTEST FORMATS ITS OWN ADIF EXCHANGE IF IT HAS BEEN
+              MOVED -- phase F, and the same seam as the Cabrillo one. *)
+           if (aContest <> nil) and aContest.FormatsExchange then
+              begin
+              Result := aContest.FormatADIFSentExchange(my, rx);
+              Exit;
+              end;
 
            { Make Exchanges Strings }
            case ActiveExchange of

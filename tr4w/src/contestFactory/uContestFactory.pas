@@ -78,7 +78,31 @@ procedure ReleaseActiveContest;
 implementation
 
 uses
-   SysUtils, uContestRegistry;
+   SysUtils,
+   (* THE ONE UNIT IN THE FACTORY THAT TOUCHES THE PROGRAM'S GLOBALS.
+
+      LOGWIND holds MyCountry, MyContinent and MyZone. Keeping that here rather
+      than in TContestBase is what lets a contest class -- and anything that
+      asks one a question, such as uCabrilloExchange -- stay free of the display
+      layer and testable without booting TR4W. *)
+   LOGWIND,
+   uContestRegistry;
+
+(* The station as the program currently has it. *)
+function CurrentStation: TStationContext;
+var
+   code: integer;
+begin
+   Result.MyCountry := MyCountry;
+   Result.MyContinent := MyContinent;
+
+   Val(string(MyZone), Result.MyZone, code);
+   Result.MyZoneValid := (code = 0) and (MyZone <> '');
+   if not Result.MyZoneValid then
+      begin
+      Result.MyZone := 0;
+      end;
+end;
 
 var
    GActive: TContestBase = nil;
@@ -98,6 +122,13 @@ begin
    if GHaveActive and (GActiveFor = aContest) then
       begin
       Result := GActive;
+      if Result <> nil then
+         begin
+         (* Refreshed on every request, not only when the contest changes: MY
+            CALL can be edited mid-contest and everything derived from it moves
+            with it. *)
+         Result.SetStation(CurrentStation);
+         end;
       Exit;
       end;
 
@@ -109,6 +140,7 @@ begin
    if cls <> nil then
       begin
       GActive := cls.Create(aContest);
+      GActive.SetStation(CurrentStation);
       end;
 
    Result := GActive;

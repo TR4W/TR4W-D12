@@ -423,6 +423,8 @@ uses
   MainUnit,
   (* Which store an export reads from -- step B3. *)
   uLogSource,
+  (* ActiveContest -- the contest formats its own exchange, phase F. *)
+  uContestFactory,
   uCFG;
 // mo.DomList (ADIF CNTY long-name lookup) is reachable via the
 // interface-section 'uses uMults' clause above.
@@ -3118,7 +3120,10 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                    ContestName, TempRXData, myStationEx, RSTSent,
                    RSTReceived, string( csQTHString ),
                    string(PreviousQTHString), contacts, pnr,
-                   CABRILLO_MYEX, CABRILLO_HISEX );
+                   CABRILLO_MYEX, CABRILLO_HISEX,
+                   { The contest formats its own columns if it has been moved
+                     into the factory; nil is the ordinary answer today. }
+                   ActiveContest( Contest ) );
                 // ----------------------------
 
                 // Issue #998: StrUpper (ASCII a-z only) on the old PChar buffer -> UpperCase
@@ -3726,7 +3731,9 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       my.MyPark       := string(MyPark);
 
       Result := FormatADIFMyExchange(ActiveExchange, Contest, TempRXData, my,
-                                     GoodLookingQSO);
+                                     GoodLookingQSO,
+                                     { nil unless this contest formats its own }
+                                     ActiveContest( Contest ));
       end;
   (* ---------------------------------------------------------------------------- *)
     function GetOperatorsFromLog: string;
