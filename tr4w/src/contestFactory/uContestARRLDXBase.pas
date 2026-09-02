@@ -76,11 +76,68 @@ uses
 
 type
    TContestARRLDXBase = class(TContestBase)
+   protected
+      function GetFormatsExchange: boolean; override;
    public
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+
+      function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
+                                          const aQso: ContestExchange;
+                                          const aRSTSent: string): string; override;
+      function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                              const aQso: ContestExchange;
+                                              const aRSTReceived: string;
+                                              const aHisQTH: string): string; override;
+      function FormatADIFSentExchange(const aMy: TMyStationExchange;
+                                      const aQso: ContestExchange): string; override;
    end;
 
 implementation
+
+uses
+   SysUtils;
+
+(* THE EXCHANGE IS RST AND EITHER A STATE OR A POWER.
+
+   W/VE send their state or province; DX send their power. One arm serves both
+   because which one you send follows from who you are, and the exporter has
+   already resolved that: aMy.MyState holds whichever applies to us, and the
+   received side is simply the QSO's Power field, which is where the parser puts
+   a state as readily as a number.
+
+   THE FOCMARATHON HALF OF THE LEGACY ARM IS NOT HERE. RSTPowerExchange is
+   shared, and inside it sits `if Contest = FOCMARATHON` swapping in the FOC
+   membership number. That is FOC Marathon's rule, not ARRL DX's, and it stays in
+   the legacy case until FOC Marathon gets a class of its own -- copying it here
+   would put one contest's rule in another contest's file, which is the shape
+   this factory exists to remove. *)
+function TContestARRLDXBase.GetFormatsExchange: boolean;
+begin
+   Result := True;
+end;
+
+function TContestARRLDXBase.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                       const aQso: ContestExchange;
+                                                       const aRSTSent: string): string;
+begin
+   Result := Format('%-3s %-7s', [aRSTSent, aMy.MyState]);
+end;
+
+function TContestARRLDXBase.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                           const aQso: ContestExchange;
+                                                           const aRSTReceived: string;
+                                                           const aHisQTH: string): string;
+begin
+   (* The QSO's OWN Power, not the his-QTH the exporter selected -- the legacy
+      arm reads rx.Power here and ignores csQTHString. *)
+   Result := Format('%-3s %-7s', [aRSTReceived, string(aQso.Power)]);
+end;
+
+function TContestARRLDXBase.FormatADIFSentExchange(const aMy: TMyStationExchange;
+                                                   const aQso: ContestExchange): string;
+begin
+   Result := Format('%-3d %-7s', [aQso.RSTSent, aMy.MyState]);
+end;
 
 procedure TContestARRLDXBase.CalculateQSOPoints(var aQso: ContestExchange);
 var

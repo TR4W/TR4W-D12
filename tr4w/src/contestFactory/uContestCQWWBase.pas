@@ -54,11 +54,74 @@ uses
 
 type
    TContestCQWWBase = class(TContestBase)
+   protected
+      function GetFormatsExchange: boolean; override;
    public
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+
+      function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
+                                          const aQso: ContestExchange;
+                                          const aRSTSent: string): string; override;
+      function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                              const aQso: ContestExchange;
+                                              const aRSTReceived: string;
+                                              const aHisQTH: string): string; override;
+      function FormatADIFSentExchange(const aMy: TMyStationExchange;
+                                      const aQso: ContestExchange): string; override;
    end;
 
 implementation
+
+uses
+   SysUtils;
+
+(* THE EXCHANGE IS RST AND A CQ ZONE, zero-padded to two digits.
+
+   '%-7.2d' is a width of 7 with a PRECISION of 2 -- zone 3 prints as "03",
+   left-aligned in seven columns. The precision is the part that matters and the
+   part that looks like a typo: CQ WW zones are conventionally two digits, and a
+   log full of "3" where the sponsor expects "03" is a formatting difference a
+   robot scorer sees.
+
+   THE JIDX HALF OF THE LEGACY ARM IS NOT HERE. RSTZoneExchange is shared, and
+   inside it `if Contest in [JIDXSSB, JIDXCW]` takes the zone from MyState
+   instead -- that is JIDX's rule and stays in the legacy case until JIDX has a
+   class. *)
+(* THE ZONE COMES FROM aMy, NOT FROM Station.MyZone, and that is not
+   interchangeable. PostUnit.ZoneSentForThisContest decides which zone a contest
+   actually sends -- the ITU zone for an ITUZones contest, the CQ zone
+   otherwise -- and puts the answer in aMy.MyZone. Station.MyZone is the raw
+   global, which is always the CQ zone. Reading the snapshot here would undo
+   that fix for every ITU contest that later shares this shape.
+
+   AnsiString() EXPLICITLY: StrToIntDef resolves to the AnsiString overload, so a
+   bare call narrows implicitly. A zone is ASCII digits, so the conversion is
+   safe; saying so is the point. *)
+function TContestCQWWBase.GetFormatsExchange: boolean;
+begin
+   Result := True;
+end;
+
+function TContestCQWWBase.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aRSTSent: string): string;
+begin
+   Result := Format('%-3s %-7.2d', [aRSTSent, StrToIntDef(AnsiString(aMy.MyZone), 0)]);
+end;
+
+function TContestCQWWBase.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aRSTReceived: string;
+                                           const aHisQTH: string): string;
+begin
+   Result := Format('%-3s %-7.2d', [aRSTReceived, aQso.Zone]);
+end;
+
+function TContestCQWWBase.FormatADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string;
+begin
+   Result := Format('%-3d %-7.2d', [aQso.RSTSent, StrToIntDef(AnsiString(aMy.MyZone), 0)]);
+end;
 
 procedure TContestCQWWBase.CalculateQSOPoints(var aQso: ContestExchange);
 begin

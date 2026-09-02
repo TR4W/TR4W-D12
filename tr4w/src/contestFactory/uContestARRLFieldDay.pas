@@ -96,9 +96,11 @@ type
                              out aErrorMessage: string): boolean; override;
 
       function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                          const aQso: ContestExchange): string; override;
+                                          const aQso: ContestExchange;
+                                          const aRSTSent: string): string; override;
       function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                               const aQso: ContestExchange;
+                                              const aRSTReceived: string;
                                               const aHisQTH: string): string; override;
       function FormatADIFSentExchange(const aMy: TMyStationExchange;
                                       const aQso: ContestExchange): string; override;
@@ -186,13 +188,15 @@ begin
 end;
 
 function TContestARRLFieldDay.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                       const aQso: ContestExchange): string;
+                                       const aQso: ContestExchange;
+                                       const aRSTSent: string): string;
 begin
    Result := Format('%-3s %-7s ', [aMy.MyFDClass, aMy.MySection]);
 end;
 
 function TContestARRLFieldDay.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                            const aQso: ContestExchange;
+                                           const aRSTReceived: string;
                                            const aHisQTH: string): string;
 begin
    Result := Format('%-3s %-7s', [string(aQso.ceClass), string(aQso.QTHString)]);

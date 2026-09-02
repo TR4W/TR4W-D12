@@ -53,11 +53,62 @@ uses
 
 type
    TContestCQWPXBase = class(TContestBase)
+   protected
+      function GetFormatsExchange: boolean; override;
    public
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+
+      function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
+                                          const aQso: ContestExchange;
+                                          const aRSTSent: string): string; override;
+      function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                              const aQso: ContestExchange;
+                                              const aRSTReceived: string;
+                                              const aHisQTH: string): string; override;
+      function FormatADIFSentExchange(const aMy: TMyStationExchange;
+                                      const aQso: ContestExchange): string; override;
    end;
 
 implementation
+
+uses
+   SysUtils;
+
+(* THE EXCHANGE IS RST AND A SERIAL NUMBER.
+
+   THE SENT WIDTH IS COMPUTED, NOT CONSTANT, and that is issue 177 rather than
+   cleverness: '%.*d' with a precision of `3 - Ord(nrSent < 0)` gives C's '%03d'
+   semantics, where the SIGN counts inside the width. -1 prints as "-01", not
+   "-001". Delphi's '%.3d' pads DIGITS and would print "-001", so the two differ
+   for exactly the negative sentinel that means "no serial".
+
+   The ADIF side uses a plain '%03d' because ADIF is not column-aligned and the
+   legacy arm never applied the sign rule there. *)
+function TContestCQWPXBase.GetFormatsExchange: boolean;
+begin
+   Result := True;
+end;
+
+function TContestCQWPXBase.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aRSTSent: string): string;
+begin
+   Result := Format('%-3s %.*d ', [aRSTSent, 3 - Ord(aQso.NumberSent < 0), aQso.NumberSent]);
+end;
+
+function TContestCQWPXBase.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aRSTReceived: string;
+                                           const aHisQTH: string): string;
+begin
+   Result := Format('%-3s %-3.3u', [aRSTReceived, aQso.NumberReceived]);
+end;
+
+function TContestCQWPXBase.FormatADIFSentExchange(const aMy: TMyStationExchange;
+                                   const aQso: ContestExchange): string;
+begin
+   Result := Format('%-3d %03d ', [aQso.RSTSent, aQso.NumberSent]);
+end;
 
 procedure TContestCQWPXBase.CalculateQSOPoints(var aQso: ContestExchange);
 begin

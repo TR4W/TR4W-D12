@@ -318,15 +318,20 @@ type
       
       (* THE TWO CABRILLO EXCHANGE COLUMNS, and the ADIF sent exchange.
 
-         aHisQTH is the his-QTH PostUnit has already selected (DoingDomesticMults
-         / LiteralDomesticQTH / ...), passed in rather than recomputed, because
-         choosing it is the exporter's job and formatting it is the contest's.
+         WHAT IS PASSED IN, AND WHY EACH OF IT. aRSTSent and aRSTReceived are the
+         ALREADY-FORMATTED display strings -- PostUnit decides whether a report
+         reads 599 or 59 and it is not the contest's business; aHisQTH is the
+         his-QTH the exporter already selected (DoingDomesticMults /
+         LiteralDomesticQTH / ...), for the same reason. Choosing them is the
+         exporter's job; arranging them into columns is the contest's.
 
          Only called when FormatsExchange is True. *)
       function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                          const aQso: ContestExchange): string; virtual;
+                                          const aQso: ContestExchange;
+                                          const aRSTSent: string): string; virtual;
       function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                               const aQso: ContestExchange;
+                                              const aRSTReceived: string;
                                               const aHisQTH: string): string; virtual;
       function FormatADIFSentExchange(const aMy: TMyStationExchange;
                                       const aQso: ContestExchange): string; virtual;
@@ -523,13 +528,15 @@ begin
 end;
 
 function TContestBase.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                                 const aQso: ContestExchange): string;
+                                                 const aQso: ContestExchange;
+                                                 const aRSTSent: string): string;
 begin
    Result := '';
 end;
 
 function TContestBase.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                                      const aQso: ContestExchange;
+                                                     const aRSTReceived: string;
                                                      const aHisQTH: string): string;
 begin
    Result := '';

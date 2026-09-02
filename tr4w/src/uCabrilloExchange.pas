@@ -179,8 +179,8 @@ begin
      exactly -- including a trailing space where the legacy arm had one. *)
   if (aContest <> nil) and aContest.FormatsExchange then
      begin
-     MyEx := aContest.FormatCabrilloSentExchange(my, rx);
-     HisEx := aContest.FormatCabrilloReceivedExchange(my, rx, HisQTH);
+     MyEx := aContest.FormatCabrilloSentExchange(my, rx, RSTSent);
+     HisEx := aContest.FormatCabrilloReceivedExchange(my, rx, RSTReceived, HisQTH);
      Result := True;
      Exit;
      end;
