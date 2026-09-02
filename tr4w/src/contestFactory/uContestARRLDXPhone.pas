@@ -44,7 +44,7 @@ uses
 type
    TContestARRLDXPhone = class(TContestARRLDXBase)
    public
-      function DisplayName: string; override;
+      function GetDisplayName: string; override;
    end;
 
 implementation
@@ -52,7 +52,7 @@ implementation
 uses
    VC, uContestRegistry;
 
-function TContestARRLDXPhone.DisplayName: string;
+function TContestARRLDXPhone.GetDisplayName: string;
 begin
    Result := 'ARRL International DX Contest - Phone';
 end;

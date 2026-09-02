@@ -34,7 +34,7 @@ uses
 type
    TContestARRLSSSSB = class(TContestARRLSSBase)
    public
-      function DisplayName: string; override;
+      function GetDisplayName: string; override;
    end;
 
 implementation
@@ -42,7 +42,7 @@ implementation
 uses
    VC, uContestRegistry;
 
-function TContestARRLSSSSB.DisplayName: string;
+function TContestARRLSSSSB.GetDisplayName: string;
 begin
    Result := 'ARRL Sweepstakes - Phone';
 end;

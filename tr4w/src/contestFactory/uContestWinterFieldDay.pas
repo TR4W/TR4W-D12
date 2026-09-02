@@ -71,7 +71,7 @@ type
                              out aResolved: string;
                              out aErrorMessage: string): boolean; override;
 
-      function FormatsExchange: boolean; override;
+      function GetFormatsExchange: boolean; override;
       function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
                                           const aQso: ContestExchange): string; override;
       function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
@@ -79,7 +79,7 @@ type
                                               const aHisQTH: string): string; override;
       function FormatADIFSentExchange(const aMy: TMyStationExchange;
                                       const aQso: ContestExchange): string; override;
-      function DisplayName: string; override;
+      function GetDisplayName: string; override;
    end;
 
 implementation
@@ -130,7 +130,7 @@ end;
    The legacy arm says so with an `if Contest in [ARRLFIELDDAY, WINTERFIELDDAY]`
    that overwrote csQTHString just before use (issue 407) -- one more contest
    test, now expressed by simply not using the parameter. *)
-function TContestWinterFieldDay.FormatsExchange: boolean;
+function TContestWinterFieldDay.GetFormatsExchange: boolean;
 begin
    Result := True;
 end;
@@ -154,7 +154,7 @@ begin
    Result := Format('%-3s %-7s ', [aMy.MyFDClass, aMy.MySection]);
 end;
 
-function TContestWinterFieldDay.DisplayName: string;
+function TContestWinterFieldDay.GetDisplayName: string;
 begin
    Result := 'Winter Field Day';
 end;

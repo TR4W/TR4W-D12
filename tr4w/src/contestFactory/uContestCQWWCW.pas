@@ -34,7 +34,7 @@ uses
 type
    TContestCQWWCW = class(TContestCQWWBase)
    public
-      function DisplayName: string; override;
+      function GetDisplayName: string; override;
    end;
 
 implementation
@@ -42,7 +42,7 @@ implementation
 uses
    VC, uContestRegistry;
 
-function TContestCQWWCW.DisplayName: string;
+function TContestCQWWCW.GetDisplayName: string;
 begin
    Result := 'CQ World Wide DX - CW';
 end;

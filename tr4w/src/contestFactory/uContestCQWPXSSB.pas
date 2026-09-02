@@ -34,7 +34,7 @@ uses
 type
    TContestCQWPXSSB = class(TContestCQWPXBase)
    public
-      function DisplayName: string; override;
+      function GetDisplayName: string; override;
    end;
 
 implementation
@@ -42,7 +42,7 @@ implementation
 uses
    VC, uContestRegistry;
 
-function TContestCQWPXSSB.DisplayName: string;
+function TContestCQWPXSSB.GetDisplayName: string;
 begin
    Result := 'CQ WPX - SSB';
 end;

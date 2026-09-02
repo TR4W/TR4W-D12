@@ -44,7 +44,7 @@ uses
 type
    TContestARRLDXCW = class(TContestARRLDXBase)
    public
-      function DisplayName: string; override;
+      function GetDisplayName: string; override;
    end;
 
 implementation
@@ -52,7 +52,7 @@ implementation
 uses
    VC, uContestRegistry;
 
-function TContestARRLDXCW.DisplayName: string;
+function TContestARRLDXCW.GetDisplayName: string;
 begin
    Result := 'ARRL International DX Contest - CW';
 end;

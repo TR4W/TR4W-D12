@@ -35,7 +35,7 @@ type
    TContestFloridaQP = class(TContestFixedPoints)
    public
       constructor Create(aContest: ContestType); override;
-      function DisplayName: string; override;
+      function GetDisplayName: string; override;
    end;
 
 implementation
@@ -49,7 +49,7 @@ begin
    SetPoints(2, 1);
 end;
 
-function TContestFloridaQP.DisplayName: string;
+function TContestFloridaQP.GetDisplayName: string;
 begin
    Result := 'Florida QSO Party';
 end;

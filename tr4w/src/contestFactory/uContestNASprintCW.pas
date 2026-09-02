@@ -35,7 +35,7 @@ type
    TContestNASprintCW = class(TContestFixedPoints)
    public
       constructor Create(aContest: ContestType); override;
-      function DisplayName: string; override;
+      function GetDisplayName: string; override;
    end;
 
 implementation
@@ -49,7 +49,7 @@ begin
    SetPoints(1, 1);
 end;
 
-function TContestNASprintCW.DisplayName: string;
+function TContestNASprintCW.GetDisplayName: string;
 begin
    Result := 'North American Sprint - CW';
 end;

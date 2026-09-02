@@ -35,7 +35,7 @@ type
    TContestNASprintRTTY = class(TContestFixedPoints)
    public
       constructor Create(aContest: ContestType); override;
-      function DisplayName: string; override;
+      function GetDisplayName: string; override;
    end;
 
 implementation
@@ -49,7 +49,7 @@ begin
    SetPoints(1, 1);
 end;
 
-function TContestNASprintRTTY.DisplayName: string;
+function TContestNASprintRTTY.GetDisplayName: string;
 begin
    Result := 'North American Sprint - RTTY';
 end;

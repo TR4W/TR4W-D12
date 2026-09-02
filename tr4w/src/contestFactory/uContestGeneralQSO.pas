@@ -35,7 +35,7 @@ type
    TContestGeneralQSO = class(TContestFixedPoints)
    public
       constructor Create(aContest: ContestType); override;
-      function DisplayName: string; override;
+      function GetDisplayName: string; override;
    end;
 
 implementation
@@ -49,7 +49,7 @@ begin
    SetPoints(1, 1);
 end;
 
-function TContestGeneralQSO.DisplayName: string;
+function TContestGeneralQSO.GetDisplayName: string;
 begin
    Result := 'General QSO';
 end;

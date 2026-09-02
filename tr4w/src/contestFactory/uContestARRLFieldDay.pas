@@ -71,7 +71,7 @@ type
                              out aResolved: string;
                              out aErrorMessage: string): boolean; override;
 
-      function FormatsExchange: boolean; override;
+      function GetFormatsExchange: boolean; override;
       function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
                                           const aQso: ContestExchange): string; override;
       function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
@@ -79,7 +79,7 @@ type
                                               const aHisQTH: string): string; override;
       function FormatADIFSentExchange(const aMy: TMyStationExchange;
                                       const aQso: ContestExchange): string; override;
-      function DisplayName: string; override;
+      function GetDisplayName: string; override;
 
       (* THE WHOLE ContestsArray ROW, STATED HERE.
 
@@ -108,19 +108,19 @@ type
          ARE its domestic multipliers, so the right answer is not obviously
          "none". Left reading the array until somebody establishes what it
          should be. *)
-      function CabrilloName: string; override;
-      function ADIFContestId: string; override;
-      function WA7BNMId: integer; override;
-      function SubmissionEmail: string; override;
-      function DomesticFileName: string; override;
-      function FriendlyName: string; override;
-      function PrefixMultiplierType: PrefixMultType; override;
-      function ZoneMultiplierType: ZoneMultType; override;
-      function DXMultiplierType: DXMultType; override;
-      function InitialExchangeKind: InitialExchangeType; override;
-      function ExchangeKind: ExchangeType; override;
-      function IsUSQSOParty: boolean; override;
-      function CountyLineAllowed: boolean; override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetWA7BNMId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetDomesticFileName: string; override;
+      function GetFriendlyName: string; override;
+      function GetPrefixMultiplierType: PrefixMultType; override;
+      function GetZoneMultiplierType: ZoneMultType; override;
+      function GetDXMultiplierType: DXMultType; override;
+      function GetInitialExchangeKind: InitialExchangeType; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetIsUSQSOParty: boolean; override;
+      function GetCountyLineAllowed: boolean; override;
    end;
 
 implementation
@@ -171,7 +171,7 @@ end;
    The legacy arm says so with an `if Contest in [ARRLFIELDDAY, WINTERFIELDDAY]`
    that overwrote csQTHString just before use (issue 407) -- one more contest
    test, now expressed by simply not using the parameter. *)
-function TContestARRLFieldDay.FormatsExchange: boolean;
+function TContestARRLFieldDay.GetFormatsExchange: boolean;
 begin
    Result := True;
 end;
@@ -195,76 +195,76 @@ begin
    Result := Format('%-3s %-7s ', [aMy.MyFDClass, aMy.MySection]);
 end;
 
-function TContestARRLFieldDay.DisplayName: string;
+function TContestARRLFieldDay.GetDisplayName: string;
 begin
    Result := 'ARRL Field Day';
 end;
 
-function TContestARRLFieldDay.CabrilloName: string;
+function TContestARRLFieldDay.GetCabrilloName: string;
 begin
    (* The CONTEST: line of a submitted log. Not the same string as the ADIF id
       below, which is the trap the identifiers exist to make visible. *)
    Result := 'ARRL-FD';
 end;
 
-function TContestARRLFieldDay.ADIFContestId: string;
+function TContestARRLFieldDay.GetADIFContestId: string;
 begin
    Result := 'ARRL-FIELD-DAY';
 end;
 
-function TContestARRLFieldDay.WA7BNMId: integer;
+function TContestARRLFieldDay.GetWA7BNMId: integer;
 begin
    Result := 57;
 end;
 
-function TContestARRLFieldDay.SubmissionEmail: string;
+function TContestARRLFieldDay.GetSubmissionEmail: string;
 begin
    Result := 'fieldday@arrl.org';
 end;
 
-function TContestARRLFieldDay.DomesticFileName: string;
+function TContestARRLFieldDay.GetDomesticFileName: string;
 begin
    (* domrrlsect.dom -- the ARRL/RAC section list, an INSTALLED RESOURCE.
       A <logstem>.DOM beside the log still overrides it; see LogCfg. *)
    Result := 'arrlsect';
 end;
 
-function TContestARRLFieldDay.FriendlyName: string;
+function TContestARRLFieldDay.GetFriendlyName: string;
 begin
    Result := 'ARRL Field Day';
 end;
 
-function TContestARRLFieldDay.PrefixMultiplierType: PrefixMultType;
+function TContestARRLFieldDay.GetPrefixMultiplierType: PrefixMultType;
 begin
    Result := NoPrefixMults;
 end;
 
-function TContestARRLFieldDay.ZoneMultiplierType: ZoneMultType;
+function TContestARRLFieldDay.GetZoneMultiplierType: ZoneMultType;
 begin
    Result := NoZoneMults;
 end;
 
-function TContestARRLFieldDay.DXMultiplierType: DXMultType;
+function TContestARRLFieldDay.GetDXMultiplierType: DXMultType;
 begin
    Result := ARRLDXCC;
 end;
 
-function TContestARRLFieldDay.InitialExchangeKind: InitialExchangeType;
+function TContestARRLFieldDay.GetInitialExchangeKind: InitialExchangeType;
 begin
    Result := NoInitialExchange;
 end;
 
-function TContestARRLFieldDay.ExchangeKind: ExchangeType;
+function TContestARRLFieldDay.GetExchangeKind: ExchangeType;
 begin
    Result := ClassDomesticOrDXQTHExchange;
 end;
 
-function TContestARRLFieldDay.IsUSQSOParty: boolean;
+function TContestARRLFieldDay.GetIsUSQSOParty: boolean;
 begin
    Result := False;
 end;
 
-function TContestARRLFieldDay.CountyLineAllowed: boolean;
+function TContestARRLFieldDay.GetCountyLineAllowed: boolean;
 begin
    (* False: Field Day has no county line. The flag exists for the single-state
       QSO parties, where a station on a boundary legitimately logs the same

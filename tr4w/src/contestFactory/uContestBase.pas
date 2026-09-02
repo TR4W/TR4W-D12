@@ -134,6 +134,41 @@ type
       FContest: ContestType;
       FStation: TStationContext;
    protected
+      (* THE GETTERS BEHIND THE PROPERTIES BELOW.
+
+         PROPERTIES RATHER THAN BARE FUNCTIONS, on NY4I's question and to match
+         the radio factory, which publishes 27 of them in the same shape --
+         `property radioPort: integer read GetRadioPort write SetRadioPort`.
+
+         The call syntax is identical either way in Pascal, so this changes no
+         caller. What it buys is the seam: a property can later gain a check
+         before the value is returned, a setter, or a cached field, without any
+         call site moving -- and a descendant overrides the GETTER, so the
+         property stays declared once.
+
+         The split is WHAT A CONTEST IS versus WHAT IT DOES. These are the
+         former. CalculateQSOPoints, ValidateClass, ValidateDXQTH and the
+         exchange formatters take arguments and do work, so they stay
+         methods. *)
+      function GetDisplayName: string; virtual;
+      function GetCabrilloName: string; virtual;
+      function GetADIFContestId: string; virtual;
+      function GetWA7BNMId: integer; virtual;
+      function GetSubmissionEmail: string; virtual;
+      function GetDomesticFileName: string; virtual;
+      function GetFriendlyName: string; virtual;
+      function GetQRZRUId: integer; virtual;
+      function GetPrefixMultiplierType: PrefixMultType; virtual;
+      function GetZoneMultiplierType: ZoneMultType; virtual;
+      function GetDXMultiplierType: DXMultType; virtual;
+      function GetDomesticMultiplierType: DomesticMultType; virtual;
+      function GetInitialExchangeKind: InitialExchangeType; virtual;
+      function GetExchangeKind: ExchangeType; virtual;
+      function GetQSOPointMethod: QSOPointMethodType; virtual;
+      function GetIsUSQSOParty: boolean; virtual;
+      function GetFormatsExchange: boolean; virtual;
+      function GetCountyLineAllowed: boolean; virtual;
+
       (* WHICH CONTEST THIS INSTANCE IS -- READABLE BY SUBCLASSES, AND NOT TO BE
          BRANCHED ON.
 
@@ -149,10 +184,28 @@ type
    public
       constructor Create(aContest: ContestType); virtual;
 
+      property DisplayName: string read GetDisplayName;
+      property CabrilloName: string read GetCabrilloName;
+      property ADIFContestId: string read GetADIFContestId;
+      property WA7BNMId: integer read GetWA7BNMId;
+      property SubmissionEmail: string read GetSubmissionEmail;
+      property DomesticFileName: string read GetDomesticFileName;
+      property FriendlyName: string read GetFriendlyName;
+      property QRZRUId: integer read GetQRZRUId;
+      property PrefixMultiplierType: PrefixMultType read GetPrefixMultiplierType;
+      property ZoneMultiplierType: ZoneMultType read GetZoneMultiplierType;
+      property DXMultiplierType: DXMultType read GetDXMultiplierType;
+      property DomesticMultiplierType: DomesticMultType read GetDomesticMultiplierType;
+      property InitialExchangeKind: InitialExchangeType read GetInitialExchangeKind;
+      property ExchangeKind: ExchangeType read GetExchangeKind;
+      property QSOPointMethod: QSOPointMethodType read GetQSOPointMethod;
+      property IsUSQSOParty: boolean read GetIsUSQSOParty;
+      property FormatsExchange: boolean read GetFormatsExchange;
+      property CountyLineAllowed: boolean read GetCountyLineAllowed;
+
       (* THE CONTEST'S NAME, for logging and for the "which class am I" question
          a bench session asks. Defaults to the enum's own spelling. *)
-      function DisplayName: string; virtual;
-
+      
       (* THE THREE IDENTIFIERS EVERY CONTEST HAS, and TR4QT's
          docs/CONTEST_DEVELOPMENT.md says a contest class "must" define all
          three: the WA7BNM calendar id, the Cabrillo CONTEST: name, and the
@@ -179,10 +232,7 @@ type
          means the contest has no ADIF CONTEST_ID, which is a real answer --
          GetContestByADIFName matches on it -- so this returns '' rather than
          inventing one from the enum. *)
-      function CabrilloName: string; virtual;
-      function ADIFContestId: string; virtual;
-      function WA7BNMId: integer; virtual;
-
+                  
       (* THE REST OF THE ContestsArray ROW.
 
          NY4I: "we also have to capture the details from the ContestArray such as
@@ -204,20 +254,7 @@ type
          SubmissionEmail and DomesticFileName are PAnsiChar in the array, which
          is why they arrive as string here: a contest class should not be handing
          out pointers into a const table. *)
-      function SubmissionEmail: string; virtual;
-      function DomesticFileName: string; virtual;
-      function FriendlyName: string; virtual;
-      function QRZRUId: integer; virtual;
-      function PrefixMultiplierType: PrefixMultType; virtual;
-      function ZoneMultiplierType: ZoneMultType; virtual;
-      function DXMultiplierType: DXMultType; virtual;
-      function DomesticMultiplierType: DomesticMultType; virtual;
-      function InitialExchangeKind: InitialExchangeType; virtual;
-      function ExchangeKind: ExchangeType; virtual;
-      function QSOPointMethod: QSOPointMethodType; virtual;
-      function IsUSQSOParty: boolean; virtual;
-      function CountyLineAllowed: boolean; virtual;
-
+                                                                              
       (* SCORING. Sets aQso.QSOPoints, and nothing else -- multipliers and dupe
          state are decided elsewhere and a scorer that changed them would make
          the order of the two calls significant.
@@ -278,8 +315,7 @@ type
          not silently take over its Cabrillo and ADIF output as well. Each
          responsibility arrives when it is actually lifted, and the ones that
          have not are still the legacy case's. *)
-      function FormatsExchange: boolean; virtual;
-
+      
       (* THE TWO CABRILLO EXCHANGE COLUMNS, and the ADIF sent exchange.
 
          aHisQTH is the his-QTH PostUnit has already selected (DoingDomesticMults
@@ -362,12 +398,12 @@ begin
    FStation := aStation;
 end;
 
-function TContestBase.DisplayName: string;
+function TContestBase.GetDisplayName: string;
 begin
    Result := string(ContestTypeSA[FContest]);
 end;
 
-function TContestBase.CabrilloName: string;
+function TContestBase.GetCabrilloName: string;
 begin
    (* PostUnit's rule, not just the field -- see the note on the declaration. *)
    if Length(ContestsArray[FContest].CABName) = 0 then
@@ -380,27 +416,27 @@ begin
       end;
 end;
 
-function TContestBase.ADIFContestId: string;
+function TContestBase.GetADIFContestId: string;
 begin
    Result := string(ContestsArray[FContest].ADIFName);
 end;
 
-function TContestBase.WA7BNMId: integer;
+function TContestBase.GetWA7BNMId: integer;
 begin
    Result := ContestsArray[FContest].WA7BNM;
 end;
 
-function TContestBase.SubmissionEmail: string;
+function TContestBase.GetSubmissionEmail: string;
 begin
    Result := string(ContestsArray[FContest].Email);
 end;
 
-function TContestBase.DomesticFileName: string;
+function TContestBase.GetDomesticFileName: string;
 begin
    Result := string(ContestsArray[FContest].DF);
 end;
 
-function TContestBase.FriendlyName: string;
+function TContestBase.GetFriendlyName: string;
 begin
    (* Same two-step as CabrilloName: the array's own note says "If blank, use
       ContestTypeSA[ct]". *)
@@ -414,54 +450,54 @@ begin
       end;
 end;
 
-function TContestBase.QRZRUId: integer;
+function TContestBase.GetQRZRUId: integer;
 begin
    Result := ContestsArray[FContest].QRZRUID;
 end;
 
-function TContestBase.PrefixMultiplierType: PrefixMultType;
+function TContestBase.GetPrefixMultiplierType: PrefixMultType;
 begin
    Result := ContestsArray[FContest].PxM;
 end;
 
-function TContestBase.ZoneMultiplierType: ZoneMultType;
+function TContestBase.GetZoneMultiplierType: ZoneMultType;
 begin
    Result := ContestsArray[FContest].ZnM;
 end;
 
-function TContestBase.DXMultiplierType: DXMultType;
+function TContestBase.GetDXMultiplierType: DXMultType;
 begin
    Result := ContestsArray[FContest].XM;
 end;
 
-function TContestBase.DomesticMultiplierType: DomesticMultType;
+function TContestBase.GetDomesticMultiplierType: DomesticMultType;
 begin
    Result := ContestsArray[FContest].DM;
 end;
 
-function TContestBase.InitialExchangeKind: InitialExchangeType;
+function TContestBase.GetInitialExchangeKind: InitialExchangeType;
 begin
    Result := ContestsArray[FContest].AIE;
 end;
 
-function TContestBase.ExchangeKind: ExchangeType;
+function TContestBase.GetExchangeKind: ExchangeType;
 begin
    Result := ContestsArray[FContest].AE;
 end;
 
-function TContestBase.QSOPointMethod: QSOPointMethodType;
+function TContestBase.GetQSOPointMethod: QSOPointMethodType;
 begin
    Result := ContestsArray[FContest].QP;
 end;
 
-function TContestBase.IsUSQSOParty: boolean;
+function TContestBase.GetIsUSQSOParty: boolean;
 begin
    (* The array calls this P and comments it "US QSO Party"; it is a Byte used
       as a flag. *)
    Result := ContestsArray[FContest].P <> 0;
 end;
 
-function TContestBase.CountyLineAllowed: boolean;
+function TContestBase.GetCountyLineAllowed: boolean;
 begin
    Result := ContestsArray[FContest].CountyLineAllowed;
 end;
@@ -481,7 +517,7 @@ begin
    Result := True;
 end;
 
-function TContestBase.FormatsExchange: boolean;
+function TContestBase.GetFormatsExchange: boolean;
 begin
    Result := False;
 end;

@@ -57,7 +57,7 @@ type
    TContestIARU = class(TContestBase)
    public
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
-      function DisplayName: string; override;
+      function GetDisplayName: string; override;
    end;
 
 implementation
@@ -88,7 +88,7 @@ begin
       end;
 end;
 
-function TContestIARU.DisplayName: string;
+function TContestIARU.GetDisplayName: string;
 begin
    Result := 'IARU HF World Championship';
 end;
