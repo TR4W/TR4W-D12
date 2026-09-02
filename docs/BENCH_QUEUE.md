@@ -2465,7 +2465,7 @@ edits one, deletes one, or opens a log window.
   is untouched. It is derived state in a side file, exactly like the `.TRW` was.
   Confirm it goes into the database and it comes off this list.
 
-- [ ] **THE LOG NOW OVERRIDES `settings	r4w.json` FOR CONTEST SETTINGS.**
+- [ ] **THE LOG NOW OVERRIDES `settings\tr4w.json` FOR CONTEST SETTINGS.**
   `csJSON` means the JSON store owns a row, which is right for a STATION
   setting. `CONTEST` and the `CATEGORY-*` tags are properties of a CONTEST, so
   the log applies them as a trusted caller. That is a precedence change and it
@@ -2506,11 +2506,24 @@ edits one, deletes one, or opens a log window.
   care about and confirm every QSO arrives. It happens ONCE, silently, on first
   open. The corpus does this thirteen times, but with logs I chose.
 
-- [ ] **Make the log unwritable and log a QSO.** The failure posture INVERTED
-  with the `.TRW`: a write failure used to be swallowed because the binary log
-  carried the contest, and now puts a modal in front of you saying the log is not
-  being saved. **That dialog has never been seen by anyone.** Worth deliberately
-  triggering once -- a read-only `.db`, or the file open in another tool.
+- [x] **Make the log unwritable and log a QSO. CONFIRMED 2026-09-02 (NY4I).**
+  He set `GENERAL QSO.db` read-only and got exactly the intended stop:
+
+      THE CONTEST LOG IS NOT BEING SAVED.
+      Writing to the log database failed in opening the shadow:
+      ESQLDatabaseError -- TLogConnection : attempt to write a readonly database
+      QSOs made from now on are NOT being recorded. Stop and fix this before
+      working anyone else. The log written so far is intact in
+      C:\tr4w-d12\tr4w\target\2026 GENERAL QSO NY4I\GENERAL QSO.db.
+
+  The inverted posture works: the operator is stopped rather than logging into
+  nothing. Note it fires at OPEN, not at the first QSO -- SQLite needs to write
+  the `-wal` and `-shm` beside the database to open it in WAL mode -- which is
+  the better moment for it to happen.
+
+  **It also caught a stale string: "in opening the shadow".** There is no shadow
+  any more; the message says "opening the log", and the remaining `[LogShadow]`
+  tags in the log are `[LogStore]`. Fixed.
 
 ### KNOWN-FAILING MEASUREMENTS -- recorded, not hidden
 

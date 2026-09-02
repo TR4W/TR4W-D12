@@ -1,0 +1,14 @@
+﻿curl https://api.worldradioleague.com/v1/me --header "Authorization: Bearer wrl_live_DDDASMCNY3C04JRB_3L0F39GXYWLE0mJXouehu5vspglBSZMS_aju8bliJ2w"
+
+
+curl https://api.worldradioleague.com/v1/contacts --request POST --header "Content-Type: application/json" --header "Authorization: Bearer wrl_live_DDDASMCNY3C04JRB_3L0F39GXYWLE0mJXouehu5vspglBSZMS_aju8bliJ2w" --data '{"programId": "TR4W","call": "W4AFC","timestamp": "2026-09-02T04:43:12Z", "freq": 14.031, "band": "20m",  "mode": "CW"
+}'
+
+Returned form above POST{"data":{"id":"5624bdde-f998-4582-a2eb-ab9a6d907d7b","logbookId":"8838d3d1-827f-4e01-818e-45f92f096f5e","call":"W4AFC","stationCallsign":"NY4I","timestamp":"2026-09-02T04:43:12+00:00","freq":14.031,"band":20,"mode":"CW","rstSent":null,"rstRcvd":null,"txPwr":null,"notes":null,"operator":"NY4I","name":null,"gridsquare":null,"qth":null,"state":null,"dxcc":null,"myGridsquare":null,"distance":null,"isDuplicate":false,"createdAt":"2026-09-02T04:45:13.656412+00:00","updatedAt":"2026-09-02T04:45:13.656412+00:00","enrichment":"pending"},"meta":{"logbookResolution":"configured"},"error":null}
+
+Save the contact GUID returned as that is how we change of delete it
+
+curl https://api.worldradioleague.com/v1/contacts/5624bdde-f998-4582-a2eb-ab9a6d907d7b --request PATCH --header 'Content-Type: application/json' --header 'Authorization: Bearer wrl_live_DDDASMCNY3C04JRB_3L0F39GXYWLE0mJXouehu5vspglBSZMS_aju8bliJ2w'  --data '{"freq": "14.041", "notes": "Corrected report"}'
+
+Delete a contact
+curl https://api.worldradioleague.com/v1/contacts/5624bdde-f998-4582-a2eb-ab9a6d907d7b --request DELETE --header 'Authorization: Bearer wrl_live_DDDASMCNY3C04JRB_3L0F39GXYWLE0mJXouehu5vspglBSZMS_aju8bliJ2w'

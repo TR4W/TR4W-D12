@@ -455,7 +455,7 @@ var
    begin
       if logger <> nil then
          begin
-         logger.Info('[LogShadow] building %s from the binary log (%s)',
+         logger.Info('[LogStore] building %s from the binary log (%s)',
                      [dbName, aWhy]);
          end;
       FreeAndNil(GRepository);
@@ -468,7 +468,7 @@ var
       Result := res.Ok;
       if (not Result) and (logger <> nil) then
          begin
-         logger.Error('[LogShadow] could not build the shadow: %s', [res.Message]);
+         logger.Error('[LogStore] could not build the log: %s', [res.Message]);
          end;
    end;
 
@@ -566,7 +566,7 @@ begin
    except
       on E: Exception do
          begin
-         Disable('opening the shadow', E);
+         Disable('opening the log', E);
          Result := False;
          end;
    end;
@@ -743,7 +743,7 @@ begin
            rather than mysterious. *)
          if logger <> nil then
             begin
-            logger.Warn('[LogShadow] no row at record index %d -- the shadow ' +
+            logger.Warn('[LogStore] no row at record index %d -- the shadow ' +
                         'will be rebuilt from the binary log', [aRecordIndex]);
             end;
          Exit;
