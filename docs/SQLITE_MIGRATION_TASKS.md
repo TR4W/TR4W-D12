@@ -375,12 +375,50 @@ sets `EXCHANGE RECEIVED`, `DOMESTIC MULTIPLIER`, `QSO POINT METHOD`,
 
 | # | task |
 |---|---|
-| **F1** | `ContestExchange` becomes a class. With B1 in place this is a parameter type on the repository, not a rewrite |
+| **F1** | `ContestExchange` becomes a class. With B1 in place this is a parameter type on the repository, not a rewrite. **BLOCKED ON B5 -- see below** |
 | **F2** | Harvest per-contest initial state out of `FCONTEST.PAS`; the `config` table becomes the factory's input rather than a file |
 | **F3** | `case Contest of` -> the factory: scoring, multipliers, exchange parsing |
 | **F4** | The **sending** half of the rover problem. `MyGrid` is substituted textually into the F-key memories once, at `FCONTEST.PAS:481-482`, so an operator who edits it mid-contest **keeps sending the old grid and exports the new one**. C fixes the export half; only the factory fixes this half |
 
 ---
+
+## B5 IS THE CRITICAL PATH, AND IT IS ONE DECISION WIDE
+
+**Recorded 2026-09-02.** Three separate tasks all wait on the same thing, and it
+is not obvious from the task list that they do:
+
+| | why it waits on B5 |
+|---|---|
+| **F1** -- `ContestExchange` becomes a class | **The record layout IS the file format.** A class cannot be block-written, and adding a field changes `SizeOf(ContestExchange)` -- the `.TRW` record stride. Every existing log fails the stride check and all 13 fixtures with it |
+| **C1's payoff** -- export the sent exchange | `exchange_sent` is stored but the record has no field to carry it back, for the same reason. The record has ~11 spare bytes; a sent exchange needs 20-40 |
+| **D1** -- the editable log | Its byte-offset addressing is gone, but the log it addresses is still a flat file |
+
+So "finish F" runs through B5, and **B5 is blocked on exactly one question**: the
+multi-op log CRC32 is a wire value computed over the raw `.TRW` bytes at both
+ends, and a database has no canonical bytes.
+
+### Three ways out, for NY4I to pick
+
+1. **Define a row digest.** Both ends compute a hash over an ordered projection
+   of the QSOs. Correct and clean, but it is a protocol change: `tr4wserver`
+   still keeps a `.TRW`, so either it moves too or the digest must be
+   computable from both stores -- and a 4.x station in the same multi-op will
+   never agree with a 5.x one.
+
+2. **Keep writing the `.TRW` purely as the sync artifact.** Everything else
+   moves: the class conversion, the sent exchange, the editable log. The cost is
+   one redundant write per QSO and the binary format staying alive. **This
+   unblocks every item above today**, and it is the only option that does not
+   touch the network protocol.
+
+3. **Drop CRC-based sync.** Compare QSO counts and let the existing
+   record-by-record resynchronisation settle differences. Simplest, and it
+   changes when a resync is triggered rather than how it works.
+
+**Nothing here is guessable from the source**, which is why the work stopped at
+this line rather than picking one. Option 2 is the recommendation if the aim is
+to keep moving: it is reversible, it costs one write, and it leaves the protocol
+decision for when the server moves.
 
 ## If the factory is to come earlier
 
