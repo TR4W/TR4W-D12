@@ -707,6 +707,7 @@ begin
       '  --lang <code>      run in this language' + sLineBreak +
       '  --lang=<code>      the same' + sLineBreak +
       '  /EXPORT            headless ADIF and Cabrillo export, then exit' + sLineBreak +
+      '  /RESCORE           recompute every QSO''s scoring, then exit' + sLineBreak +
       '  /EXPORT /EXPORTDB  the same, forcing the SQLite log as the source' + sLineBreak +
       '  /EXPORT /EXPORTTRW the same, forcing the binary .TRW as the source' + sLineBreak +
       '  /IMPORTLOG <log.trw> [<log.db>]' + sLineBreak +
@@ -823,7 +824,20 @@ begin
    // while READING THE CONFIG could still open a modal and block a headless run
    // with no one there to dismiss it".  Same argument; it just had to apply
    // sooner.
-   tSilentExport := SameText(ParamStr(2), '/EXPORT');
+   (* EVERY HEADLESS SWITCH, not just /EXPORT.
+
+      /RESCORE was added beside /EXPORT and this line was not, so it ran in
+      INTERACTIVE mode: the config parser hit "TAIL END CW MESSAGE=TU \" in a
+      corpus .cfg, raised its "Invalid statement in config file" warning as a
+      MODAL DIALOG, and the process sat there forever with nobody to click OK.
+      NY4I saw it hang on the bench.
+
+      A LIST, so the next headless mode cannot repeat it. The failure is not
+      that the flag was missed once -- it is that "am I headless" was expressed
+      as an equality test against one switch name, which silently answers NO for
+      every switch added afterwards. *)
+   tSilentExport := SameText(AnsiString(ParamStr(2)), AnsiString('/EXPORT')) or
+                    SameText(AnsiString(ParamStr(2)), AnsiString('/RESCORE'));
 
    EarlyTrace('startup: checking the single-instance mutex');
    tMutex := CreateMutex(nil, False, tr4w_ClassName);
@@ -1374,6 +1388,27 @@ begin
   // CreateCabrilloFile each derive their own filename and, called directly,
   // pop no dialog.  (Contests that show a startup dialog -- e.g. IARU call
   // history -- must be excluded by the driver, since that would block batch.)
+  (* /RESCORE -- REWALK THE LOG AND RECOMPUTE EVERY QSO'S SCORING, THEN EXIT.
+
+     It exists to make the rescore TESTABLE. Its only callers are interactive --
+     a menu action, an ADIF import, saving an edited QSO -- so nothing in the
+     three suites ever ran it, and B5 rewrote it completely: it used to
+     memory-map the .TRW PAGE_READWRITE and mutate records where they lay.
+
+     A rescore must be IDEMPOTENT. Running it twice in a row has to leave the
+     log identical the second time, because the second pass recomputes the same
+     values from the same QSOs. That is a property the memory map had for free
+     and the row version has to earn, and it is exactly what exercises the
+     read-modify-write loop: read every row, recompute, write back only what
+     changed. tr4w/test/corpus/test-rescore.sh asserts it. *)
+  if SameText(AnsiString(ParamStr(2)), AnsiString('/RESCORE')) then
+     begin
+     EarlyTrace('[Rescore] recomputing scoring for every QSO');
+     tUpdateLog(actRescore);
+     EarlyTrace('[Rescore] done');
+     Halt(0);
+     end;
+
   if SameText(ParamStr(2), '/EXPORT') then
      begin
      (* /EXPORTDB -- READ THE QSOs FROM THE SQLITE LOG INSTEAD OF THE .TRW.

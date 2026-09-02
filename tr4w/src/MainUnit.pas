@@ -8429,8 +8429,11 @@ label
 var
   MapFin: Cardinal;
   MapBase: Pointer;
-  RescoredRXData: ContestExchangePtr;
-  LogSize: Cardinal;
+  (* A RECORD, not a pointer into a memory map. *)
+  RescoredRXData: ContestExchange;
+  (* What it looked like before this pass, so only real changes are written. *)
+  RescoredBefore: ContestExchange;
+  LogSize: Int64;
   QSOCounter: Cardinal;
   // Snapshot of fields that actRescore can mutate, captured before the
   // rescore work so we can log a single line per record describing the
@@ -8447,42 +8450,33 @@ var
   beforeDupe      : Boolean;
 begin
 
-  if not OpenLogFile then
+  (* ROWS, NOT A MEMORY MAP -- step B5.
+
+    This mapped the whole .TRW PAGE_READWRITE and walked it by pointer,
+    mutating records where they lay and flushing the view at the end. It was a
+    good fit for a flat file of fixed-width records and it is not portable to
+    anything else: there is no file to map now.
+
+    THE LOOP BODY IS UNCHANGED. Every statement in it operated on
+    RescoredRXData, which is a local record here instead of a pointer into a
+    mapping. Rewriting the body as well would have meant a difference in the
+    rescore could have come from the rewrite rather than from the store.
+
+    ONLY CHANGED ROWS ARE WRITTEN, which the mapping got for free: a record the
+    rescore did not touch was simply left alone in the file. CompareMem against
+    a snapshot restores that property, and it matters -- a rescore of a
+    thousand-QSO log would otherwise issue a thousand UPDATEs to write back
+    values that never changed. *)
+  if not LogSourceOpen then
      begin
      Exit;
      end;
-  LogSize := Windows.GetFileSize(LogHandle, nil);
-  if UpdAction <> actGetCRC32 then
-     begin
-     if LogSize <= SizeOf(TLogHeader) then
-        begin
-        goto 2;
-        end;
-     LogSize := ((LogSize - SizeOf(TLogHeader)) div SizeOfContestExchange);
-     end;
-  QSOCounter := 0;
-  MapFin := Windows.CreateFileMapping(LogHandle, nil, PAGE_READWRITE, 0, 0,
-    nil);
-  if MapFin = 0 then
+  LogSize := LogSourceRecordCount;
+  if LogSize <= 0 then
      begin
      goto 2;
      end;
-
-  MapBase := Windows.MapViewOfFile(MapFin, FILE_MAP_ALL_ACCESS, 0, 0, 0);
-  if MapBase = nil then
-     begin
-     goto 3;
-     end;
-  // Issue #997: asm pointer-arith that assumed EAX still held MapViewOfFile's
-  // return -> explicit (same pattern as the advance-by-record near the end of
-  // this function).
-  RescoredRXData := Pointer(Cardinal(MapBase) + SizeOfTLogHeader);
-
-  if UpdAction = actGetCRC32 then
-     begin
-     tCRC32 := GetCRC32(MapBase^, LogSize);
-     goto 4;
-     end;
+  QSOCounter := 0;
 
   if UpdAction = actRescore then
      begin
@@ -8490,17 +8484,22 @@ begin
      Sheet.DisposeOfMemoryAndZeroTotals;
      end;
   1:
+  if not LogSourceReadAtIndex(QSOCounter, RescoredRXData) then
+     begin
+     goto 4;
+     end;
+  RescoredBefore := RescoredRXData;
 
-  if RescoredRXData^.ceRecordKind = rkQSO then
+  if RescoredRXData.ceRecordKind = rkQSO then
      begin
      if UpdAction = actSetClearDupesheetBit then
         begin
-        RescoredRXData^.ceClearDupeSheet := True;
+        RescoredRXData.ceClearDupeSheet := True;
         end;
 
      if UpdAction = actResetClearDupesheetBit then
         begin
-        RescoredRXData^.ceClearDupeSheet := False;
+        RescoredRXData.ceClearDupeSheet := False;
         end;
 
      if UpdAction = actRescore then
@@ -8516,25 +8515,25 @@ begin
        // the historical points, but a consistent visual signal is
        // more useful at a glance).  The contact still exports to
        // ADIF and Cabrillo (with the `X-QSO:` prefix instead of `QSO:`).
-       if RescoredRXData^.ceQSO_Deleted = False then
-         if RescoredRXData^.ceQSO_Skiped = False then
-         if RescoredRXData^.ceXQSO then
+       if RescoredRXData.ceQSO_Deleted = False then
+         if RescoredRXData.ceQSO_Skiped = False then
+         if RescoredRXData.ceXQSO then
             begin
-            RescoredRXData^.QSOPoints := 0;
-            RescoredRXData^.ceDupe    := False;
+            RescoredRXData.QSOPoints := 0;
+            RescoredRXData.ceDupe    := False;
             end
          else
             begin
             // Snapshot before rescore so we can report what (if anything) changed.
-            beforeCountryID  := RescoredRXData^.QTH.CountryID;
-            beforePrefix     := RescoredRXData^.Prefix;
-            beforeDXQTH      := RescoredRXData^.DXQTH;
-            beforeDomMult    := RescoredRXData^.DomesticMult;
-            beforeDXMult     := RescoredRXData^.DXMult;
-            beforePrefixMult := RescoredRXData^.PrefixMult;
-            beforeZoneMult   := RescoredRXData^.ZoneMult;
-            beforeQSOPoints  := RescoredRXData^.QSOPoints;
-            beforeDupe       := RescoredRXData^.ceDupe;
+            beforeCountryID  := RescoredRXData.QTH.CountryID;
+            beforePrefix     := RescoredRXData.Prefix;
+            beforeDXQTH      := RescoredRXData.DXQTH;
+            beforeDomMult    := RescoredRXData.DomesticMult;
+            beforeDXMult     := RescoredRXData.DXMult;
+            beforePrefixMult := RescoredRXData.PrefixMult;
+            beforeZoneMult   := RescoredRXData.ZoneMult;
+            beforeQSOPoints  := RescoredRXData.QSOPoints;
+            beforeDupe       := RescoredRXData.ceDupe;
 
             if DoingPrefixMults then
                begin
@@ -8545,12 +8544,12 @@ begin
                // /M doesn't get misread as a GB prefix.  Without this the
                // rescore wipes the correct USA lookup done at log-time and
                // restamps the record as DX=G.
-               ctyLocateCallStripRover(RescoredRXData^.Callsign, RescoredRXData.QTH);
-               SetPrefix(RescoredRXData^);
+               ctyLocateCallStripRover(RescoredRXData.Callsign, RescoredRXData.QTH);
+               SetPrefix(RescoredRXData);
                end;
             // if (RXData.Prefix <> '') and DoingPrefixMults then
             {
-          if RescoredRXData^.Callsign = 'RP7X' then
+          if RescoredRXData.Callsign = 'RP7X' then
           asm
           nop
           end;
@@ -8565,8 +8564,8 @@ begin
                // /M doesn't get misread as a GB prefix.  Without this the
                // rescore wipes the correct USA lookup done at log-time and
                // restamps the record as DX=G.
-               ctyLocateCallStripRover(RescoredRXData^.Callsign, RescoredRXData.QTH);
-               GetDXQTH(RescoredRXData^);
+               ctyLocateCallStripRover(RescoredRXData.Callsign, RescoredRXData.QTH);
+               GetDXQTH(RescoredRXData);
                //.DXQTH := RescoredRXData.QTH.CountryID;
                end;
 
@@ -8585,83 +8584,83 @@ begin
           }
             {rk4wwq}
 
-            if RescoredRXData^.id = '' then
+            if RescoredRXData.id = '' then
                begin
-               RescoredRXData^.id := GetGUID;
+               RescoredRXData.id := GetGUID;
                end;
 
-            Sheet.SetMultFlags(RescoredRXData^);
-            CalculateQSOPoints(RescoredRXData^);
-            if (not tAllowDupeQSOs) and (RescoredRXData^.ceClearDupeSheet = False)
-              and (VisibleLog.CallIsADupe(RescoredRXData^.Callsign,
-              RescoredRXData^.Band, RescoredRXData^.Mode)) then
+            Sheet.SetMultFlags(RescoredRXData);
+            CalculateQSOPoints(RescoredRXData);
+            if (not tAllowDupeQSOs) and (RescoredRXData.ceClearDupeSheet = False)
+              and (VisibleLog.CallIsADupe(RescoredRXData.Callsign,
+              RescoredRXData.Band, RescoredRXData.Mode)) then
                begin
-               RescoredRXData^.QSOPoints := 0;
-               RescoredRXData^.ceDupe := True;
+               RescoredRXData.QSOPoints := 0;
+               RescoredRXData.ceDupe := True;
                end
             else
                begin
-               RescoredRXData^.ceDupe := False;
+               RescoredRXData.ceDupe := False;
                end;
 
             // Report whenever actRescore actually mutated a record.  One line
             // per changed record makes silent rescore-induced corruption
             // (rover-call DX=G, mult-flag flip, points change, etc.) visible.
-            if (beforeCountryID  <> RescoredRXData^.QTH.CountryID) or
-               (beforePrefix     <> RescoredRXData^.Prefix)        or
-               (beforeDXQTH      <> RescoredRXData^.DXQTH)         or
-               (beforeDomMult    <> RescoredRXData^.DomesticMult)  or
-               (beforeDXMult     <> RescoredRXData^.DXMult)        or
-               (beforePrefixMult <> RescoredRXData^.PrefixMult)    or
-               (beforeZoneMult   <> RescoredRXData^.ZoneMult)      or
-               (beforeQSOPoints  <> RescoredRXData^.QSOPoints)     or
-               (beforeDupe       <> RescoredRXData^.ceDupe) then
+            if (beforeCountryID  <> RescoredRXData.QTH.CountryID) or
+               (beforePrefix     <> RescoredRXData.Prefix)        or
+               (beforeDXQTH      <> RescoredRXData.DXQTH)         or
+               (beforeDomMult    <> RescoredRXData.DomesticMult)  or
+               (beforeDXMult     <> RescoredRXData.DXMult)        or
+               (beforePrefixMult <> RescoredRXData.PrefixMult)    or
+               (beforeZoneMult   <> RescoredRXData.ZoneMult)      or
+               (beforeQSOPoints  <> RescoredRXData.QSOPoints)     or
+               (beforeDupe       <> RescoredRXData.ceDupe) then
                begin
                logger.Info('[actRescore] %s [%d] changed: ' +
                   'CountryID [%s]->[%s] Prefix [%s]->[%s] DXQTH [%s]->[%s] ' +
                   'DomMult %s->%s DXMult %s->%s PrefixMult %s->%s ZoneMult %s->%s ' +
                   'QSOPoints %d->%d Dupe %s->%s',
-                  [string(RescoredRXData^.Callsign), QSOCounter,
-                   string(beforeCountryID),  string(RescoredRXData^.QTH.CountryID),
-                   string(beforePrefix),     string(RescoredRXData^.Prefix),
-                   string(beforeDXQTH),      string(RescoredRXData^.DXQTH),
-                   BoolToStr(beforeDomMult,    True), BoolToStr(RescoredRXData^.DomesticMult, True),
-                   BoolToStr(beforeDXMult,     True), BoolToStr(RescoredRXData^.DXMult,       True),
-                   BoolToStr(beforePrefixMult, True), BoolToStr(RescoredRXData^.PrefixMult,   True),
-                   BoolToStr(beforeZoneMult,   True), BoolToStr(RescoredRXData^.ZoneMult,     True),
-                   beforeQSOPoints, RescoredRXData^.QSOPoints,
-                   BoolToStr(beforeDupe, True), BoolToStr(RescoredRXData^.ceDupe, True)]);
+                  [string(RescoredRXData.Callsign), QSOCounter,
+                   string(beforeCountryID),  string(RescoredRXData.QTH.CountryID),
+                   string(beforePrefix),     string(RescoredRXData.Prefix),
+                   string(beforeDXQTH),      string(RescoredRXData.DXQTH),
+                   BoolToStr(beforeDomMult,    True), BoolToStr(RescoredRXData.DomesticMult, True),
+                   BoolToStr(beforeDXMult,     True), BoolToStr(RescoredRXData.DXMult,       True),
+                   BoolToStr(beforePrefixMult, True), BoolToStr(RescoredRXData.PrefixMult,   True),
+                   BoolToStr(beforeZoneMult,   True), BoolToStr(RescoredRXData.ZoneMult,     True),
+                   beforeQSOPoints, RescoredRXData.QSOPoints,
+                   BoolToStr(beforeDupe, True), BoolToStr(RescoredRXData.ceDupe, True)]);
                end;
 
-            Sheet.AddQSOToSheets(@RescoredRXData^, False);
-            CallsignsList.AddCallsign(RescoredRXData^.Callsign,
-              RescoredRXData^.Mode, RescoredRXData^.Band,
-              RescoredRXData^.ceClearDupeSheet);
+            Sheet.AddQSOToSheets(@RescoredRXData, False);
+            CallsignsList.AddCallsign(RescoredRXData.Callsign,
+              RescoredRXData.Mode, RescoredRXData.Band,
+              RescoredRXData.ceClearDupeSheet);
             end;
 
      if UpdAction = actClearMults then
         begin
-        RescoredRXData^.ceClearMultSheet := True;
-        RescoredRXData^.DomesticMult := False;
-        RescoredRXData^.DXMult := False;
-        RescoredRXData^.PrefixMult := False;
-        RescoredRXData^.ZoneMult := False;
+        RescoredRXData.ceClearMultSheet := True;
+        RescoredRXData.DomesticMult := False;
+        RescoredRXData.DXMult := False;
+        RescoredRXData.PrefixMult := False;
+        RescoredRXData.ZoneMult := False;
         end;
      end;
+  (* The mapping wrote back implicitly; this says so. *)
+  if not CompareMem(@RescoredBefore, @RescoredRXData, SizeOf(ContestExchange)) then
+     begin
+     LogStoreUpdateQSOAtIndex(QSOCounter, RescoredRXData);
+     end;
+
   inc(QSOCounter);
   if QSOCounter <> LogSize then
      begin
-     // Issue #997: asm pointer arith -> Pascal (advance to the next log record).
-     RescoredRXData := Pointer(Cardinal(RescoredRXData) + SizeOfContestExchange);
      goto 1;
      end;
   4:
-  FlushViewOfFile(MapBase, 0);
-  Windows.UnmapViewOfFile(MapBase);
-  3:
-  CloseHandle(MapFin);
   2:
-  CloseLogFile;
+  LogSourceClose;
 
   if UpdAction = actRescore then
      begin

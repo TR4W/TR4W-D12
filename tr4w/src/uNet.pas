@@ -1227,24 +1227,60 @@ begin
   DrawMenuBar(tr4whandle);
 end;
 
+(* Said once per session -- see below. *)
+var
+  GLogCompareUnavailableReported: boolean = False;
+
 procedure ProcessServerLogInfo(s: PLogFileInformation);
 var
   IdenticalLogs                         : boolean;
 begin
-  tUpdateLog(actGetCRC32);
-  s^.liLocalCRC32 := tCRC32;
-  if not OpenLogFile then Exit;
+  (* MULTI-OP LOG COMPARISON DOES NOT WORK, AND MUST NOT PRETEND TO -- B5.
+
+     HOW IT WORKED: both ends CRC32'd THE RAW BYTES OF THEIR OWN .TRW -- this
+     client through tUpdateLog(actGetCRC32) over a memory map, the server at
+     tr4wserverUnit:925 over its own file -- and the two numbers were compared,
+     with file length beside them.
+
+     Neither exists here now. There is no .TRW to hash and no file whose length
+     means anything, and tr4wserver still keeps its binary log, so even a new
+     digest computed at this end would have nothing on the other side to agree
+     with. This is not a port that has been deferred: "are these two logs the
+     same" belongs to the NEW MULTI-STATION PROTOCOL, which will ask it over
+     ROWS.
+
+     SO IT REFUSES RATHER THAN GUESSES. Both tempting shapes are wrong:
+
+       Reporting the logs IDENTICAL tells an operator their log matches the
+       server when nothing was compared -- silently skipping a synchronisation
+       they needed.
+
+       Reporting them DIFFERENT launches a full resynchronisation on every
+       connect, against a server log this build can no longer read.
+
+     Said once per session: a multi-op station connects and reconnects, and a
+     message per attempt is noise that gets ignored. *)
+  if not GLogCompareUnavailableReported then
+     begin
+     GLogCompareUnavailableReported := True;
+     if logger <> nil then
+        begin
+        logger.Error('[Net] LOG COMPARISON WITH THE SERVER IS UNAVAILABLE. It ' +
+                     'compared a CRC32 of the raw .TRW bytes at both ends, and ' +
+                     'this station no longer keeps a .TRW -- the log is SQLite. ' +
+                     'NOTHING HAS BEEN COMPARED; this is not a report that the ' +
+                     'logs match. Awaiting the new multi-station protocol.');
+        end;
+     end;
+
+  s^.liLocalCRC32 := 0;
+  s^.liLocalLogSize := 0;
+
+  (* True only so that nothing downstream acts on a comparison that did not
+     happen. The error above is what tells the operator. *)
   IdenticalLogs := True;
-//  b := Windows.GetFileInformationByHandle(LogHandle, c);
-  s^.liLocalLogSize := Windows.GetFileSize(LogHandle, nil);
-  CloseLogFile;
-//  if b then
   begin
 
-    if s^.liLocalCRC32 <> s^.liSeverCRC32 then
-       begin
-       IdenticalLogs := False;
-       end;
 //IdenticalLogs=
 //    if tUSQ <> 0 then IdenticalLogs := False;
 //    if tUSQE <> 0 then IdenticalLogs := False;
