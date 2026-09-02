@@ -144,6 +144,7 @@ type
       procedure BindRecord(const aQso: ContestExchange; const aGuid: AnsiString);
       procedure BindUpdate(const aQso: ContestExchange);
       procedure ReadRecord(aQuery: TSQLQuery; out aQso: ContestExchange);
+      function CountRows(const aSQL: AnsiString): integer;
    public
       constructor Create(aDatabase: TLogDatabase);
       destructor Destroy; override;
@@ -281,6 +282,33 @@ type
       (* Writes the entry declaration onto the contest row.  Call once, when
          the log is created -- see TLogEntryDeclaration for why never again. *)
       procedure SetEntryDeclaration(const aDeclaration: TLogEntryDeclaration);
+
+      (* CONFIGURATION AND PROGRAM MESSAGES INTO THE LOG -- phase E.
+
+         NY4I: "the configuration info for a database should go into the
+         database file too. That includes anything that goes into the .CFG file
+         including Program Messages (Alt-P)... when done, the .cfg file should
+         not be necessary."
+
+         UPSERTS, because these are CURRENT STATE and not history. An operator
+         who changes QSO POINT METHOD mid-contest has changed it; there is no
+         earlier value the log needs to defend, which is the opposite of
+         exchange_sent and the same reasoning as the entry declaration.
+
+         aSource is the schema's precedence field and it is load-bearing rather
+         than descriptive: with no .cfg file left, 'contest' versus 'station' is
+         the only thing that says an explicit contest setting outranks the
+         station default. uCFG.CommandCameFromContestCFG already knows which is
+         which -- this does not re-derive it. *)
+      procedure SaveConfigValue(const aCommand, aValue, aSource: AnsiString);
+      procedure SaveMessage(const aKind, aMode, aKeyId, aText,
+                            aCaption: AnsiString);
+
+      (* How many rows each holds -- for verifying a capture actually captured
+         something, which is the failure a silent upsert loop would otherwise
+         hide. *)
+      function ConfigCount: integer;
+      function MessageCount: integer;
       function LogContest: ContestType;
 
       function NewestRowId: Int64;
@@ -1343,6 +1371,96 @@ begin
    finally
       q.Free;
    end;
+end;
+
+procedure TLogRepository.SaveConfigValue(const aCommand, aValue,
+                                         aSource: AnsiString);
+var
+   q: TSQLQuery;
+begin
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := FDatabase.Connection;
+      (* ON CONFLICT rather than a SELECT-then-INSERT-or-UPDATE: the command is
+         the primary key, so SQLite already knows how to decide, and doing it in
+         one statement means a capture cannot half-apply. *)
+      q.SQL.Text :=
+         'INSERT INTO config (command, value, source, set_at) ' +
+         'VALUES (:command, :value, :source, :set_at) ' +
+         'ON CONFLICT(command) DO UPDATE SET ' +
+         '  value = excluded.value, ' +
+         '  source = excluded.source, ' +
+         '  set_at = excluded.set_at';
+      q.ParamByName('command').AsString := aCommand;
+      q.ParamByName('value').AsString := aValue;
+      q.ParamByName('source').AsString := aSource;
+      q.ParamByName('set_at').AsLargeInt := DateTimeToUnix(Now);
+      q.ExecSQL;
+   finally
+      q.Free;
+   end;
+end;
+
+procedure TLogRepository.SaveMessage(const aKind, aMode, aKeyId, aText,
+                                     aCaption: AnsiString);
+var
+   q: TSQLQuery;
+begin
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := FDatabase.Connection;
+      q.SQL.Text :=
+         'INSERT INTO message (kind, mode, key_id, text, caption) ' +
+         'VALUES (:kind, :mode, :key_id, :text, :caption) ' +
+         'ON CONFLICT(kind, mode, key_id) DO UPDATE SET ' +
+         '  text = excluded.text, ' +
+         '  caption = excluded.caption';
+      q.ParamByName('kind').AsString := aKind;
+      q.ParamByName('mode').AsString := aMode;
+      q.ParamByName('key_id').AsString := aKeyId;
+      q.ParamByName('text').AsString := aText;
+      q.ParamByName('caption').AsString := aCaption;
+      q.ExecSQL;
+   finally
+      q.Free;
+   end;
+end;
+
+(* THE WHOLE STATEMENT, not a table name to splice in.
+
+  It took a table name and concatenated it first. That is a worse shape for two
+  independent reasons: a table name cannot be bound as a parameter, so the only
+  safe form is a literal anyway -- and the concatenation itself narrowed, since
+  the literal is a UnicodeString and SQL.Text here is not, which cost a
+  ratchet slot for nothing. Passing the finished statement removes both. *)
+function TLogRepository.CountRows(const aSQL: AnsiString): integer;
+var
+   q: TSQLQuery;
+begin
+   Result := 0;
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := FDatabase.Connection;
+      q.SQL.Text := aSQL;
+      q.Open;
+      if not q.EOF then
+         begin
+         Result := q.Fields[0].AsInteger;
+         end;
+      q.Close;
+   finally
+      q.Free;
+   end;
+end;
+
+function TLogRepository.ConfigCount: integer;
+begin
+   Result := CountRows('SELECT COUNT(*) FROM config');
+end;
+
+function TLogRepository.MessageCount: integer;
+begin
+   Result := CountRows('SELECT COUNT(*) FROM message');
 end;
 
 function TLogRepository.LogContest: ContestType;

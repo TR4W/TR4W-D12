@@ -114,6 +114,12 @@ uses
    (* The Cabrillo header's tag table -- CabrilloTagText answers from the live
       window when it is open and from the store otherwise. *)
    uCbrSum,
+   (* CFGCA and the value/provenance accessors -- phase E1. *)
+   uCFG,
+   (* GetCQMemoryString / GetEXMemoryString -- the program's own accessors. *)
+   LogCW,
+   (* KeyId, which is the spelling a .cfg already uses for a function key. *)
+   Tree,
    (* MyPark, which is not a Cabrillo tag: it is a per-log fact TR4W keeps as
       its own global. *)
    LOGWIND;
@@ -213,7 +219,16 @@ procedure RenameAside(const aDbName, aOrphanName: string);
          begin
          Exit;
          end;
-      if not RenameFile(aFrom, aTo) then
+      (* SysUtils. EXPLICITLY, and this is not decoration.
+
+         Tree exports `procedure RenameFile(OldName, NewName: string)` -- a
+         PROCEDURE, no result. Adding Tree to this unit's uses clause for KeyId
+         silently redefined a call that had been compiling for days, and the
+         diagnostic was "Type mismatch" on the second argument, which points
+         nowhere near the cause. This tree resolves names by use ORDER
+         (CLAUDE.md says so about SysUtils.SysErrorMessage vs TF's), so a unit
+         added for one identifier can change the meaning of another. *)
+      if not SysUtils.RenameFile(aFrom, aTo) then
          begin
          if logger <> nil then
             begin
@@ -227,6 +242,135 @@ begin
    MoveOne(aDbName, aOrphanName);
    MoveOne(aDbName + '-wal', aOrphanName + '-wal');
    MoveOne(aDbName + '-shm', aOrphanName + '-shm');
+end;
+
+(* THE CONFIGURATION AND THE PROGRAM MESSAGES, INTO THE LOG -- PHASE E1.
+
+  NY4I: "the configuration info for a database should go into the database file
+  too. That includes anything that goes into the .CFG file including Program
+  Messages (Alt-P)... when done, the .cfg file should not be necessary."
+
+  E1 WRITES. Nothing reads these yet, and that split is deliberate: writing them
+  cannot change how the program behaves, so it can be verified by looking at a
+  real log rather than by trusting a reading of the code. E2 makes them
+  authoritative, and that is the step that can break a contest.
+
+  EVERY LIVE ROW, NOT THE ONES THAT LOOK CONTEST-SHAPED. Choosing a subset would
+  mean this unit deciding which settings matter, which is exactly the judgement
+  that leaves an operator's log missing the one thing they changed. Only csRem
+  is skipped, because csRem means the command was WITHDRAWN -- recognised so an
+  old config does not error, applied by nothing.
+
+  THE SOURCE COLUMN IS NOT DESCRIPTIVE. With no .cfg left, 'contest' versus
+  'station' is the only thing that will say an explicit contest setting outranks
+  the station default. uCFG already tracks it -- CommandCameFromContestCFG --
+  and this asks rather than re-deriving, because a second derivation of a
+  precedence rule is a second answer waiting to differ.
+
+  ONE TRANSACTION for four hundred-odd upserts. Left to itself sqldb would
+  commit each one, and under WAL that is a flush apiece on a path that runs at
+  every log open. *)
+(* 'CW' or 'PHONE' -- the two values the message table's mode column is
+  specified to hold.  ADIFModeString is the wrong source for this: it answers
+  'SSB' for Phone, which is the ADIF spelling and not this schema's. *)
+function MessageModeName(aMode: ModeType): AnsiString;
+begin
+   if aMode = CW then
+      begin
+      Result := 'CW';
+      end
+   else
+      begin
+      Result := 'PHONE';
+      end;
+end;
+
+procedure CaptureConfiguration;
+var
+   i: integer;
+   cmd: string;
+   src: AnsiString;
+   mode: ModeType;
+   key: AnsiChar;
+   memText: ShortString;
+begin
+   for i := 1 to CommandsArraySize do
+      begin
+      if CFGCA[i].crS = csRem then
+         begin
+         Continue;
+         end;
+      if CFGCA[i].crCommand = nil then
+         begin
+         Continue;
+         end;
+
+      cmd := string(StrPas(CFGCA[i].crCommand));
+      if cmd = '' then
+         begin
+         Continue;
+         end;
+
+      if CommandCameFromContestCFG(cmd) then
+         begin
+         src := 'contest';
+         end
+      else
+         begin
+         src := 'station';
+         end;
+
+      GRepository.SaveConfigValue(AnsiString(cmd),
+                                  AnsiString(CFGCommandValueAsString(cmd)), src);
+      end;
+
+   (* THE FUNCTION-KEY MEMORIES, both kinds and both modes. GetCQMemoryString /
+      GetEXMemoryString are the accessors the program itself uses, and KeyId is
+      the spelling AppendConfigFile already writes into a .cfg -- so a message
+      round-trips through the same names it has always had. *)
+   for mode := CW to Phone do
+      begin
+      for key := F1 to AltF12 do
+         begin
+         (* ONLY KEYS THE PROGRAM CAN NAME.
+
+            F1..AltF12 is a CHARACTER range, not an enumeration of function
+            keys, so iterating it walks every code in between -- and several of
+            those are not function keys at all. KeyId answers '' for them.
+
+            That is not a cosmetic problem: the message table is keyed
+            (kind, mode, key_id), so every unnamed key collapses onto the SAME
+            row and each one silently overwrites the last. The first capture
+            recorded a 'CQ/CW' memory of "QRL?" under an empty key, which is
+            one of those codes winning the race.
+
+            A key the program cannot name is also one a .cfg could never have
+            expressed -- AppendConfigFile writes "CQ MEMORY " + KeyId(...) --
+            so there is nothing here that a config file could round-trip. *)
+         if KeyId(Char(key)) = '' then
+            begin
+            Continue;
+            end;
+
+         memText := GetCQMemoryString(mode, key);
+         if memText <> '' then
+            begin
+            GRepository.SaveMessage('CQ', MessageModeName(mode),
+                                    AnsiString(KeyId(Char(key))),
+                                    AnsiString(memText), '');
+            end;
+
+         memText := GetEXMemoryString(mode, key);
+         if memText <> '' then
+            begin
+            GRepository.SaveMessage('EX', MessageModeName(mode),
+                                    AnsiString(KeyId(Char(key))),
+                                    AnsiString(memText), '');
+            end;
+         end;
+      end;
+
+   GRepository.Commit;
 end;
 
 function ShadowFileName: string;
@@ -495,6 +639,11 @@ begin
          kept current, and it is refreshed rather than merged so it cannot
          drift into a third opinion. *)
       GRepository.SetEntryDeclaration(ReadEntryDeclaration);
+
+      (* PHASE E1, and refreshed on every open for the same reason the entry
+         declaration is: a setting changed between sessions is the CURRENT
+         setting, and the log should say so. *)
+      CaptureConfiguration;
 
       Result := True;
    except

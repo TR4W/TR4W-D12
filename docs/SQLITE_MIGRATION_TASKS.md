@@ -92,7 +92,26 @@ including the contests whose exchange is the ITU zone, while `MY ITU ZONE` was
 read by no export path. `PostUnit.ZoneSentForThisContest` decides from
 `ContestsArray[Contest].ZnM`.
 
-**Next: E** -- configuration and messages into the log.
+**E1 IS DONE: the log carries its own configuration.** Every live `CFGCA` row
+and every named function-key memory is captured into the `config` and `message`
+tables at each log open. Measured on `iaru_hf`: **410 config rows (7 `contest`,
+403 `station`) and 40 messages.**
+
+E1 only WRITES. Nothing reads these yet, and the split is deliberate: writing
+cannot change how the program behaves, so it is verifiable by looking at a real
+log rather than by trusting a reading of the code. **E2 is the step that can
+break a contest**, because it makes the stored values authoritative and that
+interacts with the `csJSON` / `csOwned` / `tr4w.ini` precedence NY4I designed.
+
+**A useful confirmation fell out of it.** The `contest`-sourced rows include
+`CATEGORY-ASSISTED=ASSISTED`, `CATEGORY-BAND=ALL` and `CATEGORY-OPERATOR=MULTI-OP`
+-- exactly the three tags section 12c reports as ABSENT from the generated
+Cabrillo. So the `.cfg` values are parsed and recorded; they are dropped at
+APPLICATION, because those rows are `csJSON` and therefore inert. The fix is a
+config-layer one and the data to prove it is now in the log.
+
+**Next: E2** -- read them at log open, and decide the precedence against
+`tr4w.ini`.
 B2 is done (all eight write sites), and C1/C2 with it.
 
 ---
