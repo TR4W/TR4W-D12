@@ -19,11 +19,27 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  *)
 
-(* ARRL INTERNATIONAL DX -- the first contest moved into the factory.
+(* ARRL INTERNATIONAL DX -- WHAT CW AND PHONE SHARE.
 
-  CHOSEN BECAUSE IT IS PROVABLE, not because it is easy. arrl_dx_cw_2025_ny4i is
-  a 66-QSO golden-corpus set with a D7-written reference, so this move is
-  checked byte for byte by something that was not written alongside it.
+  THE FAMILY SHAPE IS TR4QT'S, and deliberately so. NY4I pointed at
+  src/contests/ARRLDXBase.{h,cpp} with ARRLDXCWContest and ARRLDXPhoneContest
+  beside it: a base holding the rules both modes share, and a thin subclass per
+  mode carrying only identity and mode validation. That is the right
+  decomposition and there is no reason to invent a different one.
+
+  WHAT IS TAKEN FROM TR4QT IS THE STRUCTURE, NOT THE RULES. The standing note on
+  that project is that it is useful ABOVE the engine and is "never" an authority
+  on scoring, multipliers or exchange -- it is a reimplementation, not a
+  specification, and it is not independent corroboration of anything. Its
+  ARRLDXBase header says "3 points per QSO" and "W/VE stations may ONLY work DX
+  stations"; TR4W expresses that second rule as zero points plus InhibitMults
+  rather than by refusing the QSO, and TR4W's behaviour is what must be
+  preserved. So the rules below come from LOGSTUFF's ARRLDXQSOPointMethod arm,
+  moved verbatim, and test-contest-factory.sh holds them to it.
+
+  CHOSEN AS THE FIRST FAMILY BECAUSE IT IS PROVABLE, not because it is easy.
+  arrl_dx_cw_2025_ny4i is a 66-QSO golden-corpus set with a D7-written
+  reference.
 
   THE SCORING IS THE ARRLDXQSOPointMethod ARM, MOVED VERBATIM. Not tidied, not
   restructured: the point of the first move is to show the seam carries
@@ -37,7 +53,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   inherited from the legacy code and is left exactly as it was; untangling it is
   a change of behaviour and belongs in its own commit, against its own
   measurement. *)
-unit uContestARRLDX;
+unit uContestARRLDXBase;
 
 {$I tr4w.inc}
 
@@ -47,17 +63,14 @@ uses
    VC, uContestBase;
 
 type
-   TContestARRLDX = class(TContestBase)
+   TContestARRLDXBase = class(TContestBase)
    public
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    end;
 
 implementation
 
-uses
-   uContestRegistry;
-
-procedure TContestARRLDX.CalculateQSOPoints(var aQso: ContestExchange);
+procedure TContestARRLDXBase.CalculateQSOPoints(var aQso: ContestExchange);
 var
    rxCty: CallString;
 begin
@@ -88,14 +101,9 @@ begin
       end;
 end;
 
-initialization
-   (* BOTH MODES, because they are two contests to an operator and two rows in
-      ContestsArray, and share every scoring rule. One class, two
-      registrations -- the radio factory's "one model, one registration" rule
-      says the same thing from the other side: an operator picks ARRL-DX-CW or
-      ARRL-DX-SSB, so both must be selectable, even though one class serves
-      them. *)
-   RegisterContest(ARRLDXCW, TContestARRLDX);
-   RegisterContest(ARRLDXSSB, TContestARRLDX);
+(* NOTHING IS REGISTERED HERE. A family base is not a contest an operator can
+  select, and registering it for both modes -- which is what this unit did
+  before the split -- makes "which class serves ARRL-DX-CW" answerable only by
+  reading the base. Each mode registers itself, in its own unit. *)
 
 end.
