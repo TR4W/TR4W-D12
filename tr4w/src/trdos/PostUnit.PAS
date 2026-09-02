@@ -427,6 +427,57 @@ uses
 // mo.DomList (ADIF CNTY long-name lookup) is reachable via the
 // interface-section 'uses uMults' clause above.
 
+(* THE ZONE THIS CONTEST'S EXCHANGE ACTUALLY CARRIES -- step C3.
+
+  MyZone IS ONE GLOBAL DOING TWO JOBS. It holds the CQ zone, and every exchange
+  arm that sends "my zone" sends it -- including the contests whose exchange is
+  the ITU zone. MY ITU ZONE is a separate config command that, until now, NO
+  EXPORT PATH READ: its only consumer was uGetScores.
+
+  Measured against the D7 reference on iaru_hf_2026_ny4i: D7 sent 8, the ITU
+  zone; this program sent the CQ zone. An IARU entrant therefore submitted the
+  wrong zone on every QSO -- not a corpus artifact, a scoring error in a real
+  contest.
+
+  THE RULE IS THE CONTEST TABLE, NOT A LIST OF CONTEST NAMES. ContestsArray
+  already records which zone a contest is about, in ZnM, and that is the fact
+  being asked for. Keying off the exchange SHAPE instead would have been wrong
+  in both directions: CROATIAN and GAGARIN-CUP use RSTZoneOrDomesticQTH -- the
+  same arm as CQ-160 -- and both are ITUZones contests, while CQ-160 is not. The
+  shape and the zone kind cut across each other.
+
+  ORDER OF PREFERENCE, and the fallback matters as much as the override:
+
+MY ITU ZONE, when the operator set it. Issue #930 added it precisely for
+countries that span several ITU zones, where no lookup can be right.
+
+CTY.DAT's ITU zone for our own callsign, when they did not. This is what
+makes the fix work for the ordinary operator who never heard of the setting
+-- and it is what makes the corpus reference reproduce.
+
+MyZone, if neither is available, which is exactly today's behaviour. *)
+function ZoneSentForThisContest: string;
+   var
+      ituFromCty: Byte;
+   begin
+   if ContestsArray[ Contest ].ZnM = ITUZones then
+      begin
+      if MyITUZone > 0 then
+         begin
+         Result := IntToStr( MyITUZone );
+         Exit;
+         end;
+      ituFromCty := ctyGetITUZone( string( MyCall ) );
+      if ituFromCty > 0 then
+         begin
+         Result := IntToStr( ituFromCty );
+         Exit;
+         end;
+      end;
+   Result := string( MyZone );
+   end;
+
+
 procedure WriteADIFField( sFieldName: string; sFieldValue: string );
   var
     sBuffer: string;
@@ -3056,7 +3107,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 myStationEx.MyState      := string( MyState );
                 myStationEx.MyGrid       := string( MyGrid );
                 myStationEx.MyName       := string( MyName );
-                myStationEx.MyZone       := string( MyZone );
+                myStationEx.MyZone       := ZoneSentForThisContest;
                 myStationEx.MyFDClass    := string( MyFDClass );
                 myStationEx.MySection    := string( MySection );
                 myStationEx.MyCheck      := string( MyCheck );
@@ -3568,6 +3619,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       FilePreview;
       end;
 
+
     function GoodLookingQSO: boolean;
       begin
       Result := False;
@@ -3664,7 +3716,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       my.MyState      := string(MyState);
       my.MyGrid       := string(MyGrid);
       my.MyName       := string(MyName);
-      my.MyZone       := string(MyZone);
+      my.MyZone       := ZoneSentForThisContest;
       my.MyFDClass    := string(MyFDClass);
       my.MySection    := string(MySection);
       my.MyCheck      := string(MyCheck);

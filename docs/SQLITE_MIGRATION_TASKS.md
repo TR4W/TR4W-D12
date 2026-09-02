@@ -54,7 +54,45 @@ read-modify-write sites that read a record in order to rewrite it
 memory-mapped rescore). Flipping only their read half would have them read one
 store and write another. They move at B5.
 
-**Next: B5** -- stop writing the .TRW; delete `uLogShadow` and the drift logic.
+**B5 IS BLOCKED ON A DECISION ONLY NY4I CAN MAKE, and the blocker is not the
+writes.** They are ready: every mutation already goes to the database beside the
+binary log, and removing the binary half is mechanical.
+
+**THE LOG CRC32 IS A WIRE VALUE.** Multi-op synchronisation decides whether two
+logs are identical by comparing a CRC32 **of the raw .TRW bytes**, computed
+independently at each end:
+
+| | |
+|---|---|
+| client | `uNet.ProcessServerLogInfo` -> `tUpdateLog(actGetCRC32)`, which CRCs the memory-mapped `.TRW`, plus `GetFileSize` |
+| server | `tr4wserverUnit:925` -> `GetCRC32(MapBase^, dwSize)` over ITS `.TRW` |
+| compared | `if s^.liLocalCRC32 <> s^.liSeverCRC32 then` |
+
+A database has no canonical bytes, so this cannot be ported -- it has to be
+**redefined**, and redefining it is a protocol change touching two programs:
+
+1. **What replaces it.** A digest over an ordered projection of the rows is the
+   obvious answer, but it has to be specified exactly -- which columns, in which
+   order, with what normalisation -- because both ends must compute it
+   identically from different code.
+2. **`tr4wserver` still keeps a `.TRW`.** B5 does not move it. Either the server
+   moves to SQLite too, or the digest is defined so both stores can produce it.
+3. **Mixed versions.** A 4.x station and a 5.x station in the same multi-op need
+   to agree, or they will decide their logs differ forever and resynchronise
+   endlessly. Whether that matters is NY4I's call, not a reading of the code.
+
+Nothing here is guessable from the source, which is why B5 stops at this line
+rather than picking an answer. **Everything else in B5 is ready to go the moment
+it is decided.**
+
+**C3 IS DONE and it closed two corpus divergences: 22/0/4 -> 24/0/2.** It was
+not the storage change the task list expected -- it was a live scoring bug.
+`MyZone` holds the CQ zone and every arm that sends "my zone" sent it,
+including the contests whose exchange is the ITU zone, while `MY ITU ZONE` was
+read by no export path. `PostUnit.ZoneSentForThisContest` decides from
+`ContestsArray[Contest].ZnM`.
+
+**Next: E** -- configuration and messages into the log.
 B2 is done (all eight write sites), and C1/C2 with it.
 
 ---

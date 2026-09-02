@@ -34,14 +34,23 @@
 #
 #     MyName is '' at export, so SetMyEx drops it (uCabrilloExchange.pas:172).
 #
-# AND ONE OF THESE WILL STILL DIVERGE AFTER EVENT SOURCING.  D7 sent 8, the ITU
-# zone.  The live store's MY ZONE is 5, the CQ zone; MY ITU ZONE is a separate
-# command that NO EXPORT PATH READS (its only consumer is uGetScores.pas:433).
-# MyZone is one global doing double duty, so storing "MyZone" per QSO would
-# store the wrong number.  Store the zone that was SENT.  That is the general
-# rule anyway and this is the case that proves it -- see
-# docs/SQLITE_LOG_SCHEMA_PLAN.md section 12a.
-iaru_hf_2026_ny4i       event-source: sent zone empty -> 0 (MyZone '' under /EXPORT; D7 sent ITU 8)
+# THE IARU ROWS ARE CLOSED (2026-09-02, step C3) AND THE DIAGNOSIS ABOVE WAS
+# INCOMPLETE.  It said the sent zone was empty because MyZone is '' under
+# /EXPORT.  The real fault was worse and not headless-only: MyZone holds the CQ
+# zone, and EVERY exchange arm that sends "my zone" sent it -- including the
+# contests whose exchange is the ITU zone.  MY ITU ZONE existed and no export
+# path read it.  An IARU entrant submitted the wrong zone on every QSO of a real
+# contest, and the corpus had this filed as a headless-export artifact.
+#
+# PostUnit.ZoneSentForThisContest decides from ContestsArray[Contest].ZnM, which
+# is the table that already records which zone a contest is about, and falls back
+# to CTY.DAT's ITU zone for our own call when MY ITU ZONE is unset -- which is
+# what makes it right for an operator who never heard of the setting, and what
+# makes this reference reproduce: ctyGetITUZone('NY4I') = 8, exactly what D7 sent.
+#
+# Keying off the exchange SHAPE would have been wrong in both directions:
+# CROATIAN and GAGARIN-CUP share CQ-160's arm and are ITUZones contests; CQ-160
+# is not.  So the fix reaches more contests than the one that exposed it.
 general_qso_2026_w1aw4  event-source: sent name missing (MyName '' under /EXPORT; D7 sent TOM)
 
 # ---------------------------------------------------------------------------

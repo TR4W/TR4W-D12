@@ -32,6 +32,31 @@ here="tr4w/test/corpus"
 . "$here/corpus-lib.sh"
 EXE_NAME="${TR4W_EXE:-tr4w.exe}"
 EXE="tr4w/target/$EXE_NAME"
+
+# THE BINARY MUST NOT BE OLDER THAN THE ONE JUST BUILT.
+#
+# This runs tr4w/target/tr4w.exe, which is where FullBuild.ps1 puts the app.
+# Build-App.ps1 -- the fast iteration path -- writes build-out/ instead and does
+# NOT touch target/.  So "edit, Build-App, run the corpus" silently measures the
+# PREVIOUS binary, and the corpus reports PASS for code that was never run.
+#
+# That is not hypothetical: it happened for a whole session on 2026-09-02.  Every
+# green corpus result was against a build 14 hours old, and the run that finally
+# used the new binary turned 22/0/4 into 24/0/2 -- two divergences had already
+# been fixed and the corpus could not see it.  A regression would have hidden
+# exactly as well.
+#
+# Refusing is the only safe answer: a warning in a 30-line pass list is a
+# warning nobody reads.
+BUILD_OUT="build-out/app-i386-win32/tr4w_fpc.exe"
+if [ -f "$BUILD_OUT" ] && [ -f "$EXE" ] && [ "$BUILD_OUT" -nt "$EXE" ]; then
+   echo "corpus: REFUSING TO RUN -- $EXE is older than $BUILD_OUT." >&2
+   echo "        The corpus would measure the previous build and report PASS" >&2
+   echo "        for code that never ran.  Copy it into place first:" >&2
+   echo "          cp $BUILD_OUT $EXE" >&2
+   echo "        (or run FullBuild.ps1, which puts it there itself)." >&2
+   exit 1
+fi
 ONLY="${1:-}"
 # Sets whose load pops an interactive dialog would BLOCK batch -- skip them.
 #
