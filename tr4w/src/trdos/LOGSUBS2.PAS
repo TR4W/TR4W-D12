@@ -161,8 +161,8 @@ uses
   uUDPBroadcaster,
   uPanadapterRestore,   { StopPanadapterRestore -- the start-up retry timer }
   { The SQLite shadow -- an IMPLEMENTATION-section use, so no interface
-    cycle. It never raises and never blocks logging: see uLogShadow. }
-  uLogShadow;
+    cycle. It never raises and never blocks logging: see uLogStore. }
+  uLogStore;
 procedure PutContactIntoLogFile(LogString: string {Str80});
 
 begin
@@ -550,16 +550,17 @@ var
   p                                     : string;   // was PAnsiChar; holds a resourcestring now
 
 begin
-  if not OpenLogFile then Exit;
-  tSetFilePointer(-1 * SizeOf(ContestExchange), FILE_END);
-  Windows.ReadFile(LogHandle, TempRXData, SizeOf(ContestExchange), lpNumberOfBytesRead, nil);
+  (* THE NEWEST QSO, FROM THE LOG -- whichever store that is. The seek to
+     -1 record from FILE_END that stood here was the binary spelling of
+     "the last one". *)
+  if not LogSourceOpen then Exit;
   if
-    (lpNumberOfBytesRead <> SizeOf(ContestExchange)) or
+    (not LogSourceReadFromEnd(1, TempRXData)) or
     (TempRXData.ceRecordKind <> rkQSO) or
     (TempRXData.ceQSO_Skiped <> tLastLogEntryIsDeleted)
     then
      begin
-     CloseLogFile;
+     LogSourceClose;
      Exit;
      end;
   if tLastLogEntryIsDeleted then
@@ -591,13 +592,11 @@ begin
      HamScoreOnDelete(TempRXData);
      end;
   InvertBoolean(tLastLogEntryIsDeleted);
-  tSetFilePointer(-1 * SizeOf(ContestExchange), FILE_END);
-  sWriteFile(LogHandle, TempRXData, SizeOf(ContestExchange));
-  { The binary log rewrites its last record in place; the shadow rewrites its
-    newest row. }
-  ShadowUpdateNewestQSO(TempRXData);
+  (* Rewrites the newest row. The seek-and-write it replaces addressed the same
+     record as "the last SizeOf(ContestExchange) bytes of the file". *)
+  LogStoreUpdateNewestQSO(TempRXData);
   SendRecordToServer(NET_EDITEDQSO_ID, TempRXData);
-  CloseLogFile;
+  LogSourceClose;
   LoadinLog;
   ShowMessage(p);
   //  QuickDisplay(p);
@@ -2522,27 +2521,21 @@ var
 begin
   Result := False;
   if tPreviousDupeQSOsShowed then ShowPreviousDupeQSOsWnd(False); //DestroyPreviousDupeQSOsWnd;
-  LogHandle := CreateFileA(TR4W_LOG_FILENAME, GENERIC_WRITE, FILE_SHARE_WRITE, nil, OPEN_EXISTING, FILE_FLAG_WRITE_THROUGH, 0);
-  if LogHandle = INVALID_HANDLE_VALUE then
-     begin
-     //    showwarning(SysErrorMessage(GetLastError));
-         ShowSysErrorMessage('SAVE_LOG');
-         Exit;
-     end;
-//  if not OpenLogFile then Exit;
-  tSetFilePointer(0, FILE_END);
-  if tWriteFile(LogHandle, RXData, SizeOf(ContestExchange), lpNumberOfBytesWritten) then
-    if lpNumberOfBytesWritten = SizeOf(ContestExchange) then
-       begin
-       inc(tRestartInfo.riTotalRecordsInLog);
-       end;
-  CloseLogFile;
 
-  { THE SQLITE SHADOW -- step B2, and the binary log above is still the
-    authority. AFTER CloseLogFile on purpose: the contact is safely on disk
-    before anything else is attempted, and ShadowAppendQSO cannot raise. See
-    uLogShadow. }
-  ShadowAppendQSO(RXData);
+  (* THE QSO GOES TO THE DATABASE, AND NOWHERE ELSE -- step B5.
+
+     The .TRW write that stood here is gone: a CreateFileA, a seek to
+     FILE_END and a raw record write. The call below has been making the same
+     contact in SQLite since B2, and until now the binary log was the
+     authority and this was the copy. It is the other way round now, and then
+     it is simply the log.
+
+     riTotalRecordsInLog was incremented from the byte count of a successful
+     write. It follows the append itself now -- the thing being counted is
+     QSOs, and it was only ever expressed in bytes because the store was a
+     file. *)
+  LogStoreAppendQSO(RXData);
+  inc(tRestartInfo.riTotalRecordsInLog);
   tSetWindowRedraw(wh[mweEditableLog], False);
   if tLogIndex = LinesInEditableLog then
      begin

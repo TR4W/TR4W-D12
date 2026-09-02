@@ -64,7 +64,7 @@ uses
 
 (* THE DATABASE THAT BELONGS TO A BINARY LOG -- beside it, same name, '.db'.
 
-  IT LIVES HERE RATHER THAN IN uLogShadow because uLogShadow is scheduled for
+  IT LIVES HERE RATHER THAN IN uLogStore because uLogStore is scheduled for
   deletion at B5 and this rule is not: after the binary log stops being written
   the name is still how an existing log is found. A rule that outlives its unit
   should not be declared in it.

@@ -564,8 +564,8 @@ implementation
 
 uses
   { The SQLite shadow -- an IMPLEMENTATION-section use, so no interface
-    cycle. It never raises and never blocks logging: see uLogShadow. }
-  uLogShadow,
+    cycle. It never raises and never blocks logging: see uLogStore. }
+  uLogStore,
   (* Which store a log READ comes from -- step B4.  Its implementation
      uses this unit back, which is legal: both edges are
      implementation-section. *)
@@ -7561,8 +7561,11 @@ procedure LoadinLog;
 label
   1, 2, start;
 var
-  pNumberOfBytesRead: Cardinal;
-  Size: Cardinal;
+  (* Int64 AND SIGNED, because it holds LogSourceRecordCount, which answers -1
+    for "cannot be read". As a Cardinal the guard below was always false and the
+    build's always-false ratchet said so. It was a Cardinal when it held
+    GetFileSize, which cannot be negative. *)
+  Size: Int64;
   CurrentRecord, FirstRecord: integer;
   TempMode: ModeType;
 
@@ -7573,93 +7576,54 @@ begin
   T1 := Windows.GetTickCount;
   // m :=0;
 {$IFEND}
-  LogHandle := CreateFileA
-    (
-    TR4W_LOG_FILENAME,
-    GENERIC_WRITE or GENERIC_READ,
-    FILE_SHARE_WRITE or FILE_SHARE_READ,
-    nil,
-    OPEN_ALWAYS,
-    FILE_FLAG_SEQUENTIAL_SCAN,
-    0
-    );
-  if LogHandle = INVALID_HANDLE_VALUE then
+  (* THE LOG IS THE DATABASE -- step B5.
+
+    WHAT STOOD HERE, AND WHY NONE OF IT SURVIVES. A CreateFileA with
+    OPEN_ALWAYS, so opening a contest created the .TRW as a side effect; a read
+    of the four-byte version string with a conversion prompt when it did not
+    match; and a check that the file length was a whole number of
+    SizeOf(ContestExchange) records. Every one of those is a question about a
+    FLAT FILE OF FIXED-WIDTH RECORDS, and the answers are now the database's own:
+    TLogDatabase verifies application_id and user_version when it opens, and a
+    row cannot be half a record.
+
+    THE CONVERSION PROMPT GOES WITH THEM. A .TRW written by an older TR4W is not
+    opened and upgraded in place any more -- it is MIGRATED, once, the first
+    time this build opens that contest, by the importer in uLogStore. An
+    operator sees their QSOs either way; the difference is that the old path
+    rewrote their log file and the new one leaves it untouched.
+
+    LogSourceOpen is what creates or migrates: see uLogStore.EnsureOpen. *)
+  if not LogSourceOpen then
      begin
      Exit;
      end;
 
-  // PreviousBand := NoBand;
+  (* RESET THE VIEW BEFORE REFILLING IT.
+
+     These three sat between the CreateFileA and the header check, and went with
+     that block when it was replaced -- which is a reload appending to the list
+     instead of rebuilding it, and two counters starting from wherever the last
+     load left them. Nothing failed: the harness opens a fresh contest, so the
+     list is empty either way and the bug only shows on a SECOND load.
+
+     Lint-Win32Dialogs caught it, by counting wh[] uses and noticing one had
+     gone -- a ratchet meant for tracking the LCL conversion, catching a
+     deletion nobody meant to make. *)
   CurrentRecord := 0;
-  // LoadingInLogFile := True;
   tLogIndex := 0;
   ListView_DeleteAllItems(wh[mweEditableLog]);
 
-
-  Size := Windows.GetFileSize(LogHandle, nil);
-
-  if Size >= SizeOf(TLogHeader) then
+  Size := LogSourceRecordCount;
+  if Size < 0 then
      begin
-     Windows.ReadFile(LogHandle, TempBuffer1, SizeOf(TLogHeader),
-       pNumberOfBytesRead, nil);
-     TempBuffer1[4] := #0; //temp
-     if PInteger(@TempBuffer1)^ <> CURRENTVERSIONASINTEGER then
-        begin
-        // If the file is NEWER than this program we cannot safely open or convert
-        // it. Show a clear error and stop — never attempt a downgrade conversion.
-        if StrPas(TempBuffer1) > LOGVERSION then
-           begin
-           logger.Fatal('Log file version ' + StrPas(TempBuffer1) +
-              ' is newer than this program (' + LOGVERSION + ').' +
-              ' Upgrade TR4W to open this log.');
-           ShowMessage(
-              'This log file was created by a newer version of TR4W (' +
-              StrPas(TempBuffer1) + ').' + #13#10 +
-              'This program understands up to version ' + LOGVERSION + '.' + #13#10 +
-              'Please upgrade TR4W to open this log.');
-           CloseLogFile;
-           Halt;
-           end;
- 
-        TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_DIFVERSION)), _LOGFILE, LogHeader.lhVersionString,
-          TempBuffer1);
-        showwarning(wsprintfBuffer);
-        CloseLogFile;
-        if not AskConvertLog(TempBuffer1) then
-           begin
-           logger.Fatal(wsprintfBuffer);
-           halt;
-           end
-        else
-           begin
-           goto start;
-           end;
-        end
-     else
-        begin
-        (* When adding something to ContestExchange, this causes an error since
-      the size is wrong. From this code, it appears the the TRW file is
-      simply a serialization of the ContestExchanges. So the size of the
-      file should always be evenly divisible by the SizeOf(ContestExchange).
-      NY4I 3 JUL 2020
-      *)
-        if (Size mod SizeOf(ContestExchange)) <> 0 {SizeOf(TLogHeader)} then
-           begin
-           showwarning(TC_ERRORINLOGFILE);
-           CloseLogFile;
-           logger.Fatal('Log file is not the correct size');
-           halt; // 4.84.3
-           end;
-
-        end;
-     end
-  else
-     begin
-     // LogHeader.lhContest := Contest;
-     sWriteFile(LogHandle, LogHeader, SizeOf(TLogHeader));
-     goto 2;
+     LogSourceClose;
+     Exit;
      end;
+  LogSourceRewind;
 
-  FirstRecord := (Size div SizeOf(ContestExchange)) - 1;
+  (* Size IS A RECORD COUNT NOW, not a byte length, so the division is gone. *)
+  FirstRecord := Size - 1;
   if FirstRecord > LinesInEditableLog then
      begin
      FirstRecord := FirstRecord - LinesInEditableLog
@@ -7671,7 +7635,7 @@ begin
   Sheet.DisposeOfMemoryAndZeroTotals;
   // LoadingInLogFile := True;
   1:
-  if ReadLogFile then
+  if LogSourceNext(TempRXData) then
      begin
      if CurrentRecord >= FirstRecord then
         begin
@@ -7779,7 +7743,7 @@ begin
      end;
   2:
   // LoadingInLogFile := False;
-  CloseLogFile;
+  LogSourceClose;
   // DispalyLoadedQSOs(-1);
   IntitialExLoaded := True;
   Sheet.SetUpRemainingMultiplierArrays;
@@ -10058,11 +10022,9 @@ begin
                 end;
 
              CalculateQSOPoints(TempRXData);
-             { Imported QSOs reach the shadow too -- the binary write is the
-               next statement, and this one cannot raise. }
-             ShadowAppendQSO(TempRXData);
-             tWriteFile(LogHandle, TempRXData, SizeOf(ContestExchange),
-               lpNumberOfBytesWritten);
+             (* Into the log -- which is the database. The binary write that
+                followed this is gone with the .TRW. *)
+             LogStoreAppendQSO(TempRXData);
              inc(QSOCounter);
              if QSOCounter mod 100 = 0 then
                 begin

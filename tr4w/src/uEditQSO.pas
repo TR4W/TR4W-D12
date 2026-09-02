@@ -134,8 +134,8 @@ var
 implementation
 uses
   { The SQLite shadow -- an IMPLEMENTATION-section use, so no interface
-    cycle. It never raises and never blocks logging: see uLogShadow. }
-  uLogShadow,
+    cycle. It never raises and never blocks logging: see uLogStore. }
+  uLogStore,
   (* Which store a log READ comes from -- step B4/B5. *)
   uLogSource,
    uPlatformProcess,   // RunProgram / RunWindowsUtility -- the only launchers
@@ -752,17 +752,12 @@ begin
      Exit;
      end;
 
-  (* The binary write still addresses BYTES, so the record index is turned
-     into one HERE -- the only place in this unit that knows the file layout,
-     and it goes away with the binary write at the end of B5. *)
-  tSetFilePointer(SizeOfTLogHeader + IndexInMap * SizeOf(ContestExchange),
-                  FILE_BEGIN);
-
   EditableQSORXData.ceNeedSendToServerAE := True;
   SendRecordToServer(NET_EDITEDQSO_ID, EditableQSORXData);
 
-  sWriteFile(LogHandle, EditableQSORXData, SizeOf(ContestExchange));
-  CloseLogFile;
+  (* The seek-and-write that stood here is gone with the binary log, and with it
+     the last place in this unit that knew the file layout. *)
+  LogSourceClose;
 
   (* NO DIVISION ANY MORE, AND THAT DIVISION WAS A BUG.
 
@@ -775,7 +770,7 @@ begin
 
      IndexInMap is the record index itself now, so there is nothing to
      convert. *)
-  ShadowUpdateQSOAtIndex(IndexInMap, EditableQSORXData);
+  LogStoreUpdateQSOAtIndex(IndexInMap, EditableQSORXData);
   if FullLogEditHandle <> 0 then
      begin
      ListView_DeleteItem(LogEditListView, FullLogEditIndex);

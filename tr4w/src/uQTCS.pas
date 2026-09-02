@@ -100,8 +100,8 @@ procedure ShowQTCSend;
 implementation
 uses
    { The SQLite shadow -- an IMPLEMENTATION-section use, so no interface
-     cycle. uLogShadow never raises and never blocks logging. }
-   uLogShadow,
+     cycle. uLogStore never raises and never blocks logging. }
+   uLogStore,
   uNet,
   LOGSUBS2,
   LOGWAE,
@@ -330,21 +330,19 @@ begin
      if (TempRXData.ceQSOID1 = QTCsToBeSendArray[SignedQSOs].qsQSOID1) and (TempRXData.ceQSOID2 = QTCsToBeSendArray[SignedQSOs].qsQSOID2) then
         begin
         TempRXData.ceWasSendInQTC := True;
-        tSetFilePointer(-1 * SizeOf(ContestExchange), FILE_CURRENT);
-        sWriteFile(LogHandle, TempRXData, SizeOf(ContestExchange));
 
         (* BY INDEX, NOT "THE NEWEST" -- and calling it "the newest" was wrong.
 
            This scan runs FORWARD from ReadVersionBlock, so the seek above is
            -1 from CURRENT: the record just read, anywhere in the log. The
-           database call beside it said ShadowUpdateNewestQSO, which rewrote
+           database call beside it said LogStoreUpdateNewestQSO, which rewrote
            the LAST row instead. So the binary log marked the right QSO as sent
            in a QTC and the database marked a different one -- and since B4 the
            database is what every window and every export reads.
 
            The three sites that legitimately mean "the newest" all seek
            FILE_END; this one never did. *)
-        ShadowUpdateQSOAtIndex(RecordIndex, TempRXData);
+        LogStoreUpdateQSOAtIndex(RecordIndex, TempRXData);
         if SendRecordToServer(NET_EDITEDQSO_ID, TempRXData) then
            begin
            Sleep(50);

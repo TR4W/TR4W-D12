@@ -204,8 +204,10 @@ const
 implementation
 uses
    { The SQLite shadow -- an IMPLEMENTATION-section use, so no interface
-     cycle. uLogShadow never raises and never blocks logging. }
-   uLogShadow,
+     cycle. uLogStore never raises and never blocks logging. }
+   uLogStore,
+  (* Which store a log read comes from. *)
+  uLogSource,
   uMainForm,   { the call field, named -- wh[] round 3 }
   uNetworkForm,   { the station list is a TListView on a form now }
   uCFG,
@@ -1202,27 +1204,19 @@ var
 begin
   Result := False;
   FilePointer := -1;
-  if not OpenLogFile then Exit;
+
+  (* ONE INDEXED STATEMENT INSTEAD OF A BACKWARDS SCAN OF THE WHOLE LOG.
+
+     This walked the .TRW from the end, one record at a time, comparing
+     (ceQSOID1, ceQSOID2) until it found the QSO -- then seeked back and
+     rewrote it in place. The database has an index on exactly that pair, so
+     the search and the write are a single UPDATE ... WHERE.
+
+     The scan and its FilePointer are gone with the binary log. FilePointer is
+     kept only because the surrounding routine still reports it. *)
+  if not LogSourceOpen then Exit;
   begin
-    1:
-    tSetFilePointer(FilePointer * SizeOf(ContestExchange), FILE_END);
-    if ReadLogFile then
-       begin
-       if TempRXData.ceQSOID1 = RXData.ceQSOID1 then
-         if TempRXData.ceQSOID2 = RXData.ceQSOID2 then
-            begin
-            tSetFilePointer(FilePointer * SizeOf(ContestExchange), FILE_END);
-            sWriteFile(LogHandle, RXData, SizeOf(ContestExchange));
-            { The shadow finds the same QSO by the same key -- one indexed
-              statement instead of this backwards scan. }
-            ShadowUpdateQSOBySessionIds(RXData);
-            Result := True;
-            goto 2;
-            end;
-       dec(FilePointer);
-       goto 1;
-       end;
-    2:
+    Result := LogStoreUpdateQSOBySessionIds(RXData);
     CloseLogFile;
   end;
 end;
@@ -1399,21 +1393,19 @@ var
 
   procedure UpdateRec;
   begin
-    tSetFilePointer(-1 * SizeOf(ContestExchange), FILE_CURRENT);
-    sWriteFile(LogHandle, TempRXData, SizeOf(ContestExchange));
 
     (* BY INDEX, NOT "THE NEWEST" -- and calling it "the newest" was wrong.
 
        CommitChangesInLocalLog scans FORWARD from ReadVersionBlock, so the seek
        above is -1 from CURRENT: the record just read, anywhere in the log. The
-       database call said ShadowUpdateNewestQSO, which rewrote the LAST row.
+       database call said LogStoreUpdateNewestQSO, which rewrote the LAST row.
        So a QSO was marked as sent to the server in the binary log while a
        different one was marked in the database -- and since B4 the database is
        what every window and every export reads.
 
        The three sites that legitimately mean "the newest" all seek FILE_END;
        this one never did. *)
-    ShadowUpdateQSOAtIndex(RecordIndex, TempRXData);
+    LogStoreUpdateQSOAtIndex(RecordIndex, TempRXData);
     inc(SendedQSOs);
     WaitForSingleObject(tNet_Event, 1000);
     // Runs on the sync WORKER thread and the window is an LCL form now, so this

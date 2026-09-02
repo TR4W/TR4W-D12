@@ -22,7 +22,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 (* WHERE AN EXPORT READS ITS QSOs FROM -- STEP B3, THE EQUIVALENCE GATE.
 
   TR4W has two copies of the log now: the binary .TRW it has always written and
-  the SQLite database written beside it (uLogShadow). B3 asks the one question
+  the SQLite database written beside it (uLogStore). B3 asks the one question
   that decides whether the second can replace the first:
 
     EXPORTED FROM THE DATABASE, DOES THE PROGRAM PRODUCE THE SAME BYTES?
@@ -141,14 +141,14 @@ function LogSourceDescription: string;
 implementation
 
 uses
-   (* uLogShadow for ShadowEnsureCurrent ONLY -- see LogSourceOpen. At B3 this
-      clause said the dependency must not exist, on the grounds that uLogShadow
+   (* uLogStore for LogStoreEnsureOpen ONLY -- see LogSourceOpen. At B3 this
+      clause said the dependency must not exist, on the grounds that uLogStore
       is deleted at B5. That had it backwards: the call is needed exactly while
       two stores exist, so it dies with the unit rather than outliving it.
 
       The database's NAME still comes from uLogDatabase, which does outlive the
       shadow. *)
-   SysUtils, Windows, MainUnit, uLogDatabase, uLogRepository, uLogShadow,
+   SysUtils, Windows, MainUnit, uLogDatabase, uLogRepository, uLogStore,
    (* TempRXData, which is declared in PostUnit's INTERFACE and is what
       MainUnit.ReadLogFile fills. PostUnit uses this unit in ITS
       implementation, so the pair is circular -- normal in this tree and
@@ -205,20 +205,20 @@ begin
          try
             (* THE DATABASE MUST EXIST AND MATCH BEFORE IT CAN BE READ.
 
-               uLogShadow owns that guarantee -- it is the unit that keeps the
+               uLogStore owns that guarantee -- it is the unit that keeps the
                two stores in step -- so this asks rather than reimplements. A
                headless export of a log this build has never appended to gets
                the database built from the .TRW right here, which is what lets
                the corpus fixtures (a .TRW and nothing else) be read from
                SQLite at all.
 
-               THE DEPENDENCY ON uLogShadow IS DELIBERATE AND TEMPORARY, and it
+               THE DEPENDENCY ON uLogStore IS DELIBERATE AND TEMPORARY, and it
                corrects what this unit said at B3. The reason given then -- that
-               uLogShadow is deleted at B5 -- was the wrong way round: the need
+               uLogStore is deleted at B5 -- was the wrong way round: the need
                for this call lasts exactly as long as TWO STORES exist, which is
-               exactly uLogShadow's lifetime. At B5 the call and the unit go
+               exactly uLogStore's lifetime. At B5 the call and the unit go
                together. *)
-            if not ShadowEnsureCurrent then
+            if not LogStoreEnsureOpen then
                begin
                if logger <> nil then
                   begin

@@ -196,7 +196,14 @@ if (-not (Test-Path -LiteralPath $cfgPath))
 # of four.  Only this harness's own files are removed, never a real contest.
 if (($Config -like 'uitest-*') -and (-not $KeepLog))
    {
-   foreach ($ext in @('.TRW', '.RST', '.DAT', '.ADI', '.CBR'))
+   # THE .db IS THE LOG SINCE B5, so resetting the contest means deleting it --
+   # not the .TRW, which is no longer written at all.  Left out, the previous
+   # run's QSOs simply stayed and this harness logged its two on top of them.
+   # The -wal and -shm go with it: a WAL left beside a deleted database is
+   # either ignored, losing what it holds, or grafted onto the next database
+   # of the same name.
+   foreach ($ext in @('.TRW', '.RST', '.DAT', '.ADI', '.CBR',
+                      '.db', '.db-wal', '.db-shm'))
       {
       $stale = Join-Path $target ([System.IO.Path]::GetFileNameWithoutExtension($Config) + $ext)
       if (Test-Path -LiteralPath $stale) { Remove-Item -LiteralPath $stale -Force }
