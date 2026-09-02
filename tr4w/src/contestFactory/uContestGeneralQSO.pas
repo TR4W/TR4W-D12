@@ -29,11 +29,12 @@ unit uContestGeneralQSO;
 interface
 
 uses
-   VC, uContestFixedPoints;
+   VC, uContestBase, uContestFixedPoints;
 
 type
    TContestGeneralQSO = class(TContestFixedPoints)
    protected
+      function GetFormatsExchange: boolean; override;
       (* THE GETTERS BEHIND TContestBase's PROPERTIES.
 
          PROTECTED, MATCHING THE BASE. Left public -- which is what the first
@@ -45,12 +46,22 @@ type
       function GetDisplayName: string; override;
    public
       constructor Create(aContest: ContestType); override;
+
+      function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
+                                          const aQso: ContestExchange;
+                                          const aRSTSent: string): string; override;
+      function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                              const aQso: ContestExchange;
+                                              const aRSTReceived: string;
+                                              const aHisQTH: string): string; override;
+      function FormatADIFSentExchange(const aMy: TMyStationExchange;
+                                      const aQso: ContestExchange): string; override;
    end;
 
 implementation
 
 uses
-   uContestRegistry;
+   SysUtils, uContestRegistry;
 
 constructor TContestGeneralQSO.Create(aContest: ContestType);
 begin
@@ -61,6 +72,40 @@ end;
 function TContestGeneralQSO.GetDisplayName: string;
 begin
    Result := 'General QSO';
+end;
+
+(* THE EXCHANGE IS RST, A NAME AND A QTH -- the plain ragchew-style log.
+
+   SYMMETRIC, which is rare enough here to be worth saying: both sides use the
+   same three widths, because General QSO has no rule about who sends what. It
+   is the fallback contest, so there is nothing contest-specific to encode.
+
+   THE SHARED ARM STAYS: RSTNameAndQTHExchange serves other contests that have
+   no class. *)
+function TContestGeneralQSO.GetFormatsExchange: boolean;
+begin
+   Result := True;
+end;
+
+function TContestGeneralQSO.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
+                                            const aQso: ContestExchange;
+                                            const aRSTSent: string): string;
+begin
+   Result := Format('%-3s %-5s %-7s', [aRSTSent, aMy.MyName, aMy.MyState]);
+end;
+
+function TContestGeneralQSO.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                const aQso: ContestExchange;
+                                                const aRSTReceived: string;
+                                                const aHisQTH: string): string;
+begin
+   Result := Format('%-3s %-5s %-7s', [aRSTReceived, string(aQso.Name), aHisQTH]);
+end;
+
+function TContestGeneralQSO.FormatADIFSentExchange(const aMy: TMyStationExchange;
+                                        const aQso: ContestExchange): string;
+begin
+   Result := Format('%-3d %-5s %-7s', [aQso.RSTSent, aMy.MyName, aMy.MyState]);
 end;
 
 initialization

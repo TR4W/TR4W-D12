@@ -29,11 +29,12 @@ unit uContestNASprintCW;
 interface
 
 uses
-   VC, uContestFixedPoints;
+   VC, uContestBase, uContestFixedPoints;
 
 type
    TContestNASprintCW = class(TContestFixedPoints)
    protected
+      function GetFormatsExchange: boolean; override;
       (* THE GETTERS BEHIND TContestBase's PROPERTIES.
 
          PROTECTED, MATCHING THE BASE. Left public -- which is what the first
@@ -45,12 +46,22 @@ type
       function GetDisplayName: string; override;
    public
       constructor Create(aContest: ContestType); override;
+
+      function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
+                                          const aQso: ContestExchange;
+                                          const aRSTSent: string): string; override;
+      function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                              const aQso: ContestExchange;
+                                              const aRSTReceived: string;
+                                              const aHisQTH: string): string; override;
+      function FormatADIFSentExchange(const aMy: TMyStationExchange;
+                                      const aQso: ContestExchange): string; override;
    end;
 
 implementation
 
 uses
-   uContestRegistry;
+   SysUtils, uContestRegistry;
 
 constructor TContestNASprintCW.Create(aContest: ContestType);
 begin
@@ -61,6 +72,68 @@ end;
 function TContestNASprintCW.GetDisplayName: string;
 begin
    Result := 'North American Sprint - CW';
+end;
+
+(* THE EXCHANGE IS SERIAL, NAME AND STATE-OR-DX.
+
+   'DX' IS SUBSTITUTED ON BOTH SIDES when there is no state, which is the
+   Sprint's way of saying "outside North America" -- an empty column would be
+   read by a scorer as a missing field rather than as a legitimate answer.
+
+   THE WIDTHS ARE DELIBERATELY ASYMMETRIC and this is not a typo: sent is
+   `%-4d %-7s %-8s` and received is `%-4u %-5s %-4s`. Both carry the 4.88.3
+   marker in the legacy source, so they were set to those numbers together and
+   on purpose.
+
+   THE SHARED ARM STAYS: SSB-SPRINT uses the same body and has no class yet, so
+   QSONumberNameDomesticOrDXQTHExchange is still live. *)
+function TContestNASprintCW.GetFormatsExchange: boolean;
+begin
+   Result := True;
+end;
+
+function TContestNASprintCW.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
+                                            const aQso: ContestExchange;
+                                            const aRSTSent: string): string;
+begin
+   if aMy.MyState = '' then
+      begin
+      Result := Format('%-4d %-7s %-8s', [aQso.NumberSent, aMy.MyName, 'DX']);
+      end
+   else
+      begin
+      Result := Format('%-4d %-7s %-8s', [aQso.NumberSent, aMy.MyName, aMy.MyState]);
+      end;
+end;
+
+function TContestNASprintCW.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                const aQso: ContestExchange;
+                                                const aRSTReceived: string;
+                                                const aHisQTH: string): string;
+begin
+   (* Tested on aQso.QTHString and formatted from aHisQTH, matching the
+      legacy arm exactly. *)
+   if aQso.QTHString = '' then
+      begin
+      Result := Format('%-4u %-5s %-4s', [aQso.NumberReceived, string(aQso.Name), 'DX']);
+      end
+   else
+      begin
+      Result := Format('%-4u %-5s %-4s', [aQso.NumberReceived, string(aQso.Name), aHisQTH]);
+      end;
+end;
+
+function TContestNASprintCW.FormatADIFSentExchange(const aMy: TMyStationExchange;
+                                        const aQso: ContestExchange): string;
+begin
+   if aMy.MyState = '' then
+      begin
+      Result := Format('%-4d %-7s %-8s', [aQso.NumberSent, aMy.MyName, 'DX']);
+      end
+   else
+      begin
+      Result := Format('%-4d %-7s %-8s', [aQso.NumberSent, aMy.MyName, aMy.MyState]);
+      end;
 end;
 
 initialization

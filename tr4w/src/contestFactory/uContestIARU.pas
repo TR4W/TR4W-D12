@@ -56,6 +56,7 @@ uses
 type
    TContestIARU = class(TContestBase)
    protected
+      function GetFormatsExchange: boolean; override;
       (* THE GETTERS BEHIND TContestBase's PROPERTIES.
 
          PROTECTED, MATCHING THE BASE. Left public -- which is what the first
@@ -67,12 +68,22 @@ type
       function GetDisplayName: string; override;
    public
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+
+      function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
+                                          const aQso: ContestExchange;
+                                          const aRSTSent: string): string; override;
+      function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                              const aQso: ContestExchange;
+                                              const aRSTReceived: string;
+                                              const aHisQTH: string): string; override;
+      function FormatADIFSentExchange(const aMy: TMyStationExchange;
+                                      const aQso: ContestExchange): string; override;
    end;
 
 implementation
 
 uses
-   uContestRegistry;
+   SysUtils, uContestRegistry;
 
 procedure TContestIARU.CalculateQSOPoints(var aQso: ContestExchange);
 begin
@@ -100,6 +111,77 @@ end;
 function TContestIARU.GetDisplayName: string;
 begin
    Result := 'IARU HF World Championship';
+end;
+
+(* THE EXCHANGE IS RST AND EITHER A SOCIETY ABBREVIATION OR AN ITU ZONE.
+
+   WHICH ONE FOLLOWS FROM WHO IS SENDING, on both sides independently: a society
+   station sends its abbreviation, everybody else sends a zone. So our side asks
+   whether aMy.MyState is set and his side asks whether the QSO carried a QTH
+   string -- the same question asked of the two stations.
+
+   THE ZONE IS THE ITU ZONE, AND aMy.MyZone IS WHERE THAT LIVES.
+   PostUnit.ZoneSentForThisContest resolves CQ-versus-ITU per contest and puts
+   the answer there; Station.MyZone is the raw global and is always the CQ zone.
+   Reading the snapshot here would re-break the very contest that made the
+   distinction necessary. See the header of this unit.
+
+   %-7u FOR HIS ZONE AND %-7d FOR OURS, reproduced exactly. His is a
+   word from the QSO record, ours is a converted integer, and the legacy arm
+   spelled them differently. The output is identical for every legal zone; the
+   spellings are kept so a future reader diffing against the legacy sees no
+   difference at all.
+
+   THE SHARED ARM STAYS: RSTZoneOrDomesticQTH sits on the same body and belongs
+   to contests that have no class yet. *)
+function TContestIARU.GetFormatsExchange: boolean;
+begin
+   Result := True;
+end;
+
+function TContestIARU.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
+                                            const aQso: ContestExchange;
+                                            const aRSTSent: string): string;
+begin
+   if aMy.MyState <> '' then
+      begin
+      Result := Format('%-3s %-7s', [aRSTSent, aMy.MyState]);
+      end
+   else
+      begin
+      Result := Format('%-3s %-7d', [aRSTSent, StrToIntDef(AnsiString(aMy.MyZone), 0)]);
+      end;
+end;
+
+function TContestIARU.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                const aQso: ContestExchange;
+                                                const aRSTReceived: string;
+                                                const aHisQTH: string): string;
+begin
+   (* aQso.QTHString, not aHisQTH: the legacy arm TESTS rx.QTHString and then
+      formats csQTHString, which the exporter set from it. The test and the
+      value are the same source. *)
+   if aQso.QTHString <> '' then
+      begin
+      Result := Format('%-3s %-7s', [aRSTReceived, aHisQTH]);
+      end
+   else
+      begin
+      Result := Format('%-3s %-7u', [aRSTReceived, aQso.Zone]);
+      end;
+end;
+
+function TContestIARU.FormatADIFSentExchange(const aMy: TMyStationExchange;
+                                        const aQso: ContestExchange): string;
+begin
+   if aMy.MyState <> '' then
+      begin
+      Result := Format('%-3d %-7s', [aQso.RSTSent, aMy.MyState]);
+      end
+   else
+      begin
+      Result := Format('%-3d %-7d', [aQso.RSTSent, StrToIntDef(AnsiString(aMy.MyZone), 0)]);
+      end;
 end;
 
 initialization
