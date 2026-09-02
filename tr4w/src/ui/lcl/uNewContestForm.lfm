@@ -168,7 +168,7 @@ object frmNewContest: TfrmNewContest
   object dlgOpen: TOpenDialog
     Title = 'Open configuration file'
     DefaultExt = '.cfg'
-    Filter = 'TR4W configuration files|*.cfg|All files|*.*'
+    Filter = 'TR4W contest logs|*.db|TR4W configuration files (older)|*.cfg|All files|*.*'
     Options = [ofPathMustExist, ofFileMustExist, ofEnableSizing, ofViewDetail]
   end
 end

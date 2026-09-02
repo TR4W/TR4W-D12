@@ -2539,6 +2539,42 @@ edits one, deletes one, or opens a log window.
   any more; the message says "opening the log", and the remaining `[LogShadow]`
   tags in the log are `[LogStore]`. Fixed.
 
+- [ ] **CREATE A NEW CONTEST.** The highest-risk item in this batch, because
+  contest creation has NO automated coverage of any kind -- the corpus is handed
+  ready-made logs and never makes one, and no harness drives the new-contest
+  dialog. What changed:
+
+  **No folder.** A contest was `target\<year> <contest> <call>\` holding eight
+  files; it is now one `.db` in one directory. NY4I: *"There is really no reason
+  for a folder for each one anymore."*
+
+  **The name follows TR4QT** -- `CONTEST YYYY-MM-DD CALL.db`, so a logs
+  directory sorts by contest then date. TR4QT drops the callsign; TR4W keeps it,
+  because an operator who runs one contest as two calls otherwise gets one name
+  for two logs. `uLogNaming` is a pure function with six unit tests, including
+  that a `/` in a callsign separates rather than vanishing (W1AW/4 must not
+  become W1AW4, which is a different real station) and that `..\` in a typed
+  contest name cannot climb out of the logs directory.
+
+  **No `.cfg` is written.** The dialog's settings are applied straight into the
+  config layer and captured into the log, which is the same journey with the
+  file taken out. The ordering is preserved deliberately: `CONTEST` is applied
+  LAST, as it was the last line of the file, because its hook builds the
+  contest's state from the values set above it.
+
+  **The POTA special case is gone** -- it existed to put the date in the folder
+  name, and every log's name carries its date now.
+
+  Worth checking specifically: that a created contest appears in the list next
+  time, that the name reads well for a POTA activation, and that two contests
+  created on the same day with different calls do not collide.
+
+- [ ] **OPEN AN EXISTING .cfg CONTEST AND CONFIRM IT MIGRATES.** The dialog
+  lists `.db` files, plus any `.cfg` that has no `.db` beside it -- which is how
+  an upgrading operator still sees the contests they already have. Opening one
+  builds the database from the `.TRW`, after which it is listed as a `.db` and
+  the `.cfg` stops appearing, because the same contest must not show twice.
+
 ### KNOWN-FAILING MEASUREMENTS -- recorded, not hidden
 
 - [ ] **`test-cfg-not-needed.sh` is 11 of 13.** With the `.cfg` emptied to zero

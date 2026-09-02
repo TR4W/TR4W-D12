@@ -325,19 +325,54 @@ procedure TfrmNewContest.PopulateFiles(const aDir: string);
 var
    found: TSearchRec;
    names: TStringList;
+   (* FindFirst takes a RawByteString, so a pattern built inline narrows
+      implicitly -- and there are two call sites now, not one. Built as a
+      string and converted EXPLICITLY at the call: a directory path is
+      filesystem bytes either way, and saying so beats the compiler doing it
+      silently. *)
+   base: string;
+   pat: string;
 begin
+   base := IncludeTrailingPathDelimiter(aDir);
    FBrowsedFile := '';
    dlgOpen.InitialDir := aDir;
    names := TStringList.Create;
    try
       names.Sorted := True;
-      if FindFirst(IncludeTrailingPathDelimiter(aDir) + '*.CFG',
-                   faAnyFile, found) = 0 then
+      (* THE LOGS ARE .db FILES NOW, one per contest, flat in one directory.
+
+         A .CFG IS STILL LISTED WHEN IT HAS NO .db BESIDE IT, and that is the
+         migration path rather than an oversight: an operator upgrading has
+         contests that exist only as a .cfg and a .TRW, and refusing to show
+         them would strand every log they already have. Opening one migrates it
+         -- uLogStore builds the database from the binary log on first open --
+         after which the .db exists and the .cfg stops being listed, because the
+         same contest must not appear twice.
+
+         names is Sorted, so the two passes interleave by name rather than
+         showing every .db and then every .cfg. *)
+      pat := base + '*.db';
+      if FindFirst(RawByteString(pat), faAnyFile, found) = 0 then
          begin
          repeat
             if (found.Attr and faDirectory) = 0 then
                begin
                names.Add(found.Name);
+               end;
+         until FindNext(found) <> 0;
+         FindClose(found);
+         end;
+
+      pat := base + '*.CFG';
+      if FindFirst(RawByteString(pat), faAnyFile, found) = 0 then
+         begin
+         repeat
+            if (found.Attr and faDirectory) = 0 then
+               begin
+               if not FileExists(base + ChangeFileExt(found.Name, '.db')) then
+                  begin
+                  names.Add(found.Name);
+                  end;
                end;
          until FindNext(found) <> 0;
          FindClose(found);

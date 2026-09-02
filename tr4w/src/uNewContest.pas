@@ -75,7 +75,9 @@ uses
   uNewContestForm,     // the designed form this unit now drives
   MainUnit,
   uRadioConfigApply,   // GetLatestConfigFile -- the last contest, from tr4w.json
-  uCFG;                // SetCFGCommandValue -- the one route to a [COMMANDS] value
+  uCFG,
+  (* The log file name and its rule -- one artifact, one directory. *)
+  uLogNaming;                // SetCFGCommandValue -- the one route to a [COMMANDS] value
 
 const
 
@@ -465,11 +467,39 @@ begin
   frmNewContest.EnableOK(res);
 end;
 
+(* Applies one setting the new-contest dialog collected, AS THE CONTEST'S.
+
+  Two halves and both are load-bearing. NoteCommandFromContestCFG records that
+  THIS CONTEST asked for it, which is what makes uLogStore store it with
+  source = 'contest' and apply it back on the next open. CheckCommand with
+  aApplyJSONOwned = True applies it now -- True because CONTEST and the
+  CATEGORY tags are csJSON rows and the default refuses those outright. *)
+procedure ApplyNewContestCommand(const aCommand, aValue: string);
+var
+   key, val: ShortString;
+begin
+   if Trim(aCommand) = '' then
+      begin
+      Exit;
+      end;
+
+   NoteCommandFromContestCFG(aCommand);
+
+   FillChar(key, SizeOf(key), 0);
+   FillChar(val, SizeOf(val), 0);
+   key := ShortString(AnsiString(aCommand));
+   val := ShortString(AnsiString(aValue));
+
+   if not CheckCommand(@key, val, True) then
+      begin
+      logger.Warn('[NewContest] %s = %s was refused by CFGCA and is not set.',
+                  [aCommand, aValue]);
+      end;
+end;
+
 procedure SaveNewContest;
 var
-  f                                     : HWND;
   i                                     : Cardinal;
-  BytesToWrite                          : Cardinal;
 begin
   begin
       {callsign}
@@ -495,22 +525,28 @@ begin
     Windows.lstrcpynA(TempBuffer2, PAnsiChar(WinAnsi(frmNewContest.ContestName)),
                       SizeOf(TempBuffer2));
 
-    if TempBuffer2 = 'POTA' then
-       begin
-       TF.Format(wsprintfBuffer, '%s%s %s %s %s\', TR4W_PATH_NAME, GetYearString, TempBuffer2, GetDateString, TempBuffer1);
-       end
-    else
-       begin
-       TF.Format(wsprintfBuffer, '%s%s %s %s\', TR4W_PATH_NAME, GetYearString, TempBuffer2, TempBuffer1);
-       end;
+    (* ONE FILE, IN ONE DIRECTORY -- no folder per contest.
 
-    Windows.CreateDirectoryA(wsprintfBuffer, nil);
+       NY4I, 2026-09-02: "There is really no reason for a folder for each one
+       anymore." It was not arbitrary: a contest used to produce eight files --
+       the .CFG, the .TRW, the .RST, an .ADI and a .LOG when exported,
+       SERVERLOG.TMP, REMAININGMULTS.TXT and sometimes a .DOM override -- and
+       grouping them was the only way to keep a directory legible. With a
+       single .db that reason is gone, and a folder holding one file is a level
+       of nesting an operator opens for nothing.
+
+       THE POTA SPECIAL CASE GOES WITH IT. It existed to put the DATE in the
+       folder name, because two activations of the same park on different days
+       would otherwise collide. Every log's name carries its date now, so POTA
+       needs no special case -- it was the general rule, arriving early. *)
   end;
 
-  {CFGFileName}
-  Windows.lstrcpynA(TempBuffer1, PAnsiChar(WinAnsi(frmNewContest.ContestName)),
-                    SizeOf(TempBuffer1));
-  TF.Format(TR4W_CFG_FILENAME, '%s%s.CFG', wsprintfBuffer, TempBuffer1);
+  { THE LOG FILE. Named by uLogNaming, where the rule and its tests live; this
+    supplies the three facts and nothing else. }
+  TF.Format(TR4W_CFG_FILENAME, '%s%s', TR4W_PATH_NAME,
+            PAnsiChar(WinAnsi(ContestLogFileName(frmNewContest.ContestName,
+                                                 Now,
+                                                 frmNewContest.MyCall))));
 
   if FileExists(TR4W_CFG_FILENAME) then
      begin
@@ -518,32 +554,41 @@ begin
      if YesOrNo(string(PAnsiChar(@SYSERRORBUFFER[0]))) = IDno then Exit;
      end;
 
-  f := CreateFileA(TR4W_CFG_FILENAME, GENERIC_WRITE, FILE_SHARE_WRITE, nil, CREATE_ALWAYS, FILE_ATTRIBUTE_ARCHIVE, 0);
-  if f <> INVALID_HANDLE_VALUE then
+  { THE SETTINGS ARE APPLIED, NOT WRITTEN TO A FILE.
+
+    This built a .cfg line by line and let ReadInConfigFile apply it back. There
+    is no .cfg now, so the values go straight into the config layer and
+    uLogStore captures them into the log when it is created -- the same journey
+    with the file taken out of the middle.
+
+    MARKED AS THE CONTEST'S, which is the half that is easy to miss.
+    NoteCommandFromContestCFG records provenance, and a value recorded as a
+    STATION setting is stored in the log but never applied back FROM it -- so
+    the contest would come up wrong on its next open. This is the same call
+    ReadInConfigFile makes for every line of a contest .cfg. }
+  ClearContestCFGCommands;
+  ApplyNewContestCommand('MY CALL', frmNewContest.MyCall);
+
+  { The row's LABEL is the command name and its field is the value, which is
+    why the label is read back rather than held in a parallel array. A row the
+    contest never asked for is empty and is skipped. }
+  for i := 1 to CSAS do
      begin
-
-     Windows.lstrcpynA(TempBuffer1, PAnsiChar(WinAnsi(frmNewContest.MyCall)),
-                       SizeOf(TempBuffer1));
-     BytesToWrite := TF.Format(wsprintfBuffer, ';Created by ' + TR4W_CURRENTVERSION + #13#10#13#10'[COMMANDS]'#13#10'MY CALL=%s'#13#10, TempBuffer1);
-     sWriteFile(f, wsprintfBuffer, BytesToWrite);
-
-     { The row's LABEL is the command name and its field is the value, which is
-       why the label is read back rather than held in a parallel array. A row
-       the contest never asked for is empty and is skipped, exactly as the
-       zero-length GetWindowTextA did. }
-     for i := 1 to CSAS do
+     if Trim(frmNewContest.RowText(i)) = '' then
         begin
-        if Trim(frmNewContest.RowText(i)) = '' then
-           begin
-           Continue;
-           end;
-        Windows.lstrcpynA(TempBuffer1, PAnsiChar(WinAnsi(frmNewContest.RowCaption(i))),
-                          SizeOf(TempBuffer1));
-        Windows.lstrcpynA(TempBuffer2, PAnsiChar(WinAnsi(frmNewContest.RowText(i))),
-                          SizeOf(TempBuffer2));
-        BytesToWrite := TF.Format(wsprintfBuffer, '%s=%s'#13#10, TempBuffer1, TempBuffer2);
-        sWriteFile(f, wsprintfBuffer, BytesToWrite);
+        Continue;
         end;
+     ApplyNewContestCommand(frmNewContest.RowCaption(i), frmNewContest.RowText(i));
+     end;
+
+  { CONTEST LAST, AND THAT IS NOT COSMETIC. It was the last line the .cfg
+    carried, so it was applied last, and its crA hook builds the contest's
+    state -- exchange type, multipliers, domestic file -- from the values set
+    above it. Applied first, it would build that state from whatever the
+    previous contest left behind. }
+  ApplyNewContestCommand('CONTEST', frmNewContest.ContestName);
+
+  begin
 
      // TERMINATE THE LAST LINE (2026-08-16). Every other line this routine
      // writes ends #13#10; this one did not, so every .cfg TR4W creates ended
@@ -559,28 +604,7 @@ begin
      // Pre-existing in D7 (uNewContest.pas:660 there), not a port regression.
      // Existing .cfg files are unaffected -- this only changes what is newly
      // written, and TR4W already reads an unterminated last line correctly.
-     Windows.lstrcpynA(TempBuffer1, PAnsiChar(WinAnsi(frmNewContest.ContestName)),
-                       SizeOf(TempBuffer1));
-     BytesToWrite := TF.Format(wsprintfBuffer, 'CONTEST=%s'#13#10, TempBuffer1);
-     sWriteFile(f, wsprintfBuffer, BytesToWrite);
-
-     CloseHandle(f);
-
-     // If the user confirmed overwriting an existing contest, delete any
-     // existing .TRW log file.  LoadinLog fatally halts if the file size
-     // is not an exact multiple of SizeOf(ContestExchange), which will be
-     // true of any .TRW from a previous (different) contest.
-     Windows.lstrcpyA(TempBuffer1, TR4W_CFG_FILENAME);
-     TempBuffer1[lstrlenA(TempBuffer1) - 3] := 'T';
-     TempBuffer1[lstrlenA(TempBuffer1) - 2] := 'R';
-     TempBuffer1[lstrlenA(TempBuffer1) - 1] := 'W';
-     Windows.DeleteFileA(TempBuffer1); // no-op (returns False) if no .TRW exists
-
      { The modal form closes itself -- ShowNewContest reads Choice. }
-     end
-  else
-     begin
-     ShowSysErrorMessage('CFG FILE');
      end;
 
 end;
