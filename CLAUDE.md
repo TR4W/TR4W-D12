@@ -557,9 +557,16 @@ marking them `csOwned` — that moved their EDITING. Their STORAGE is still `tr4
 | status | rows | edited in | stored in |
 |---|---:|---|---|
 | `csOld`/`csNew` | 6 | Ctrl-J | `tr4w.ini` |
-| `csOwned` | 247 | **Preferences** | **`tr4w.ini`** |
-| `csJSON` | 166 | Preferences | `settings\tr4w.json` |
-| `csRem` | 89 | — withdrawn | — |
+| `csOwned` | 96 | **Preferences** | **`tr4w.ini`** |
+| `csJSON` | 314 | Preferences | `settings\tr4w.json` |
+| `csRem` | 91 | — withdrawn | — |
+
+**Re-measured 2026-09-02** — `grep -c "crS: <status>;" tr4w/src/uCFG.pas`,
+over 508 rows. The figures above it were 2026-08-21's and had drifted a long
+way: `csJSON` nearly doubled (166 → 314) while `csOwned` fell from 247 to 96.
+**102 settings still store in `tr4w.ini`**, which is the whole answer to "why
+does startup still open it" — and the number to watch, because when it reaches
+zero the read can go.
 
 So a setting can appear in the new Preferences UI and still not persist on a station whose
 `tr4w.ini` is read-only or absent. `SetCFGCommandValue` reports that now instead of losing it
