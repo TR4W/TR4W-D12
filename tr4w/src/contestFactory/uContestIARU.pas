@@ -55,9 +55,18 @@ uses
 
 type
    TContestIARU = class(TContestBase)
+   protected
+      (* THE GETTERS BEHIND TContestBase's PROPERTIES.
+
+         PROTECTED, MATCHING THE BASE. Left public -- which is what the first
+         conversion did, because a class body with no section defaults to
+         public -- BOTH X.CabrilloName and X.GetCabrilloName are callable on
+         this object. Two ways to ask the same question is exactly the
+         ambiguity a property removes, so the getter is not part of the
+         surface: callers use the property, descendants override the getter. *)
+      function GetDisplayName: string; override;
    public
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
-      function GetDisplayName: string; override;
    end;
 
 implementation

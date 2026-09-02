@@ -63,6 +63,30 @@ uses
 
 type
    TContestARRLFieldDay = class(TContestBase)
+   protected
+      (* THE GETTERS BEHIND TContestBase's PROPERTIES.
+
+         PROTECTED, MATCHING THE BASE. Left public -- which is what the first
+         conversion did, because a class body with no section defaults to
+         public -- BOTH X.CabrilloName and X.GetCabrilloName are callable on
+         this object. Two ways to ask the same question is exactly the
+         ambiguity a property removes, so the getter is not part of the
+         surface: callers use the property, descendants override the getter. *)
+      function GetFormatsExchange: boolean; override;
+      function GetDisplayName: string; override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetWA7BNMId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetDomesticFileName: string; override;
+      function GetFriendlyName: string; override;
+      function GetPrefixMultiplierType: PrefixMultType; override;
+      function GetZoneMultiplierType: ZoneMultType; override;
+      function GetDXMultiplierType: DXMultType; override;
+      function GetInitialExchangeKind: InitialExchangeType; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetIsUSQSOParty: boolean; override;
+      function GetCountyLineAllowed: boolean; override;
    public
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
       function ValidateClass(const aClass: string;
@@ -71,7 +95,6 @@ type
                              out aResolved: string;
                              out aErrorMessage: string): boolean; override;
 
-      function GetFormatsExchange: boolean; override;
       function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
                                           const aQso: ContestExchange): string; override;
       function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
@@ -79,7 +102,6 @@ type
                                               const aHisQTH: string): string; override;
       function FormatADIFSentExchange(const aMy: TMyStationExchange;
                                       const aQso: ContestExchange): string; override;
-      function GetDisplayName: string; override;
 
       (* THE WHOLE ContestsArray ROW, STATED HERE.
 
@@ -108,19 +130,6 @@ type
          ARE its domestic multipliers, so the right answer is not obviously
          "none". Left reading the array until somebody establishes what it
          should be. *)
-      function GetCabrilloName: string; override;
-      function GetADIFContestId: string; override;
-      function GetWA7BNMId: integer; override;
-      function GetSubmissionEmail: string; override;
-      function GetDomesticFileName: string; override;
-      function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
-      function GetZoneMultiplierType: ZoneMultType; override;
-      function GetDXMultiplierType: DXMultType; override;
-      function GetInitialExchangeKind: InitialExchangeType; override;
-      function GetExchangeKind: ExchangeType; override;
-      function GetIsUSQSOParty: boolean; override;
-      function GetCountyLineAllowed: boolean; override;
    end;
 
 implementation
