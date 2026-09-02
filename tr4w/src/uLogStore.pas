@@ -95,6 +95,18 @@ procedure LogStoreClose;
 (* False after a failure has switched it off, or before anything opened it. *)
 function LogStoreIsUsable: boolean;
 
+(* APPLIES THE CONTEST CONFIGURATION THE LOG CARRIES -- phase E2.
+
+  NY4I: "when done, the .cfg file should not be necessary."
+
+  This is what makes that true. A contest .cfg is read once, when the log is
+  created, and captured; from then on the LOG says what the contest is and the
+  file is not consulted. Returns how many commands it applied, so a caller can
+  tell "this log has none" from "this log has been read".
+
+  ONLY source = 'contest'. See TLogRepository.LoadContestConfig for why. *)
+function LogStoreApplyContestConfig: integer;
+
 (* MAKES THE SQLITE LOG EXIST AND MATCH THE BINARY ONE, and returns whether it
   can be relied on.  Its file name is uLogDatabase.LogDatabaseFileName.
 
@@ -113,7 +125,8 @@ function LogStoreEnsureOpen: boolean;
 implementation
 
 uses
-   SysUtils, MainUnit, uLogDatabase, uLogRepository, uLogImport, uLogBinaryFile,
+   SysUtils, Classes, MainUnit, uLogDatabase, uLogRepository, uLogImport,
+   uLogBinaryFile,
    (* The canonical sent-exchange builder -- the same one the UDP broadcast
       uses, so the database and the broadcast cannot disagree. *)
    uExchangeBuilder,
@@ -307,8 +320,20 @@ begin
          Continue;
          end;
 
-      if CommandCameFromContestCFG(cmd) then
+      if CommandCameFromContestCFG(cmd) or (cmd = 'MY CALL') then
          begin
+         (* MY CALL IS A CONTEST SETTING AND HAS TO BE NAMED AS ONE.
+
+            CommandCameFromContestCFG says no for it, and not because it came
+            from the station config: LogCfg SKIPS the "MY CALL" line while
+            reading a .cfg when a callsign is already set (it has its own
+            first-command rule), so NoteCommandFromContestCFG never fires and
+            the row is recorded as 'station' by default.
+
+            It is the ENTRY'S callsign -- which is why C2 already stores it on
+            the contest row -- and without it here, a log opened with an empty
+            .cfg halts on "No callsign specified" while its own callsign sits
+            in the config table unread. *)
          src := 'contest';
          end
       else
@@ -419,6 +444,8 @@ var
    dbName: string;
    trwCount: Int64;
    expected: Int64;
+   (* True only on the open that CREATED this log -- see the capture below. *)
+   isNewLog: boolean;
    res: TLogImportResult;
 
    (* Returns False rather than raising: the caller is a try/except that would
@@ -454,6 +481,7 @@ begin
       end;
 
    GTriedToOpen := True;
+   isNewLog := False;
    try
       dbName := LogDatabaseFileName(string(StrPas(TR4W_LOG_FILENAME)));
 
@@ -505,6 +533,7 @@ begin
             -- and that refusal is right for every other caller. Creating one
             is a decision, and this is the one place entitled to make it. *)
          GDatabase.CreateNew(dbName);
+         isNewLog := True;
          end;
 
       GRepository := TLogRepository.Create(GDatabase);
@@ -512,10 +541,26 @@ begin
 
       GRepository.SetEntryDeclaration(ReadEntryDeclaration);
 
-      (* PHASE E1, and refreshed on every open for the same reason the entry
-         declaration is: a setting changed between sessions is the CURRENT
-         setting, and the log should say so. *)
-      CaptureConfiguration;
+      (* THE CONFIGURATION IS CAPTURED WHEN THE LOG IS MADE, AND ONLY THEN.
+
+         E1 refreshed it on every open, which was right while nothing read it
+         back. It is exactly wrong now that something does: the stored
+         configuration IS the contest's configuration, so overwriting it at
+         open with whatever the .cfg happens to say would hand authority back
+         to the file this work exists to retire -- and would silently discard
+         anything the operator had changed.
+
+         A MIGRATED LOG COUNTS AS NEW, and must: it has just been built from a
+         binary log that carried no configuration at all, so the .cfg read at
+         startup is the only description of that contest in existence. Skipping
+         the capture there would leave it with none.
+
+         Changes made DURING a contest are written back at LogStoreClose --
+         see there, and see the limitation it states. *)
+      if isNewLog or aRebuilt then
+         begin
+         CaptureConfiguration;
+         end;
 
       Result := True;
    except
@@ -745,6 +790,159 @@ begin
    end;
 end;
 
+function LogStoreApplyContestConfig: integer;
+var
+   rebuilt: boolean;
+   rows: TStringList;
+   i: integer;
+   cmd, val: string;
+   (* A NAMED LOCAL, so PAnsiChar below points at a string that is still alive.
+      PAnsiChar of a temporary is a dangling pointer -- Delphi's allocator hid
+      that and FPC's does not. *)
+   cmdName: ShortString;
+   valAsShort: ShortString;
+begin
+   Result := 0;
+   if GDisabled then
+      begin
+      Exit;
+      end;
+
+   try
+      if not EnsureOpen(rebuilt, False) then
+         begin
+         Exit;
+         end;
+
+      rows := TStringList.Create;
+      try
+         GRepository.LoadContestConfig(rows);
+         for i := 0 to rows.Count - 1 do
+            begin
+            cmd := rows.Names[i];
+            val := rows.ValueFromIndex[i];
+            if cmd = '' then
+               begin
+               Continue;
+               end;
+
+            (* CheckCommand WITH aApplyJSONOwned = TRUE -- the mechanism uCFG
+               already provides for exactly this, in its own words:
+
+                 "Default False keeps every existing caller, above all the ini
+                  loader, exactly as it was. A trusted caller passes True and
+                  the row behaves like any other."
+
+               THE LOG IS THAT TRUSTED CALLER. csJSON means settings\tr4w.json
+               owns the row, which is right for a STATION setting; CONTEST and
+               the CATEGORY tags are properties of THIS CONTEST, and the log is
+               where they now live.
+
+               TWO WRONG ROUTES WERE TRIED FIRST, and both failed the same way.
+               SetCFGCommandValue is the "operator changed a setting" path: it
+               applies AND PERSISTS, and refuses csJSON outright with "Refusing
+               to write tr4w.ini". ProcessConfigInstruction is the .cfg reader's
+               line handler, and it calls CheckCommand with the default -- so it
+               skips csJSON rows silently and returns True, reporting success
+               for a command it did not apply.
+
+               Measured with an emptied .cfg: CONTEST, CATEGORY-POWER,
+               CATEGORY-OPERATOR, CATEGORY-BAND, CATEGORY-MODE and
+               CATEGORY-TRANSMITTER were all refused, the contest was never set,
+               and THE EXPORT PRODUCED NOTHING -- while the log held every one
+               of those values.
+
+               Nothing here needs persisting: the value came OUT of the log,
+               which is where it is stored. What is wanted is the application
+               only -- the same range checks, type conversion and crA hook a
+               .cfg line gets. *)
+            (* A SHORTSTRING, AND ITS ADDRESS -- NOT PAnsiChar OF AN AnsiString.
+
+               CheckCommand declares its first parameter PAnsiChar and then
+               compares with StrComp(@Command[1], ...) -- skipping a byte. That
+               is only right if what was passed is a pointer to a SHORTSTRING,
+               whose byte 0 is the length and whose first character is at [1].
+               Every existing caller does that: ProcessConfigInstruction passes
+               @ID with ID a ShortString.
+
+               Handing it PAnsiChar of an AnsiString points at the first
+               CHARACTER, so the comparison started one in: 'CONTEST' was
+               matched as 'ONTEST', no row was found, and every command came
+               back rejected -- with a warning that plausibly blamed the value.
+
+               The declared type cannot catch this; both are PAnsiChar. *)
+            (* ONLY WHAT ACTUALLY DIFFERS.
+
+               Re-applying a command that already holds the stored value is not
+               free, because a row's crA hook is not required to be idempotent
+               and at least one is not. CONTEST's rebuilds the domestic-file
+               name, and running it twice produced
+
+                   dom\iaruhq.domiaruhq.dom
+
+               -- the name appended to itself. The file could not be opened, the
+               contest loaded no domestic data, and the export produced NOTHING.
+               All seven settings had applied successfully; applying them was
+               the problem.
+
+               Skipping the no-ops also makes this a genuine no-op when the .cfg
+               and the log agree, which is every log created by this build --
+               and is why the corpus does not move. *)
+            if CFGCommandValueAsString(cmd) = val then
+               begin
+               inc(Result);
+               Continue;
+               end;
+
+            FillChar(cmdName, SizeOf(cmdName), 0);
+            FillChar(valAsShort, SizeOf(valAsShort), 0);
+            cmdName := ShortString(AnsiString(cmd));
+
+            (* PLAIN ASSIGNMENT, NOT ShortString(val).
+
+               THE CAST IS NOT A CONVERSION. FPC reinterprets the string's
+               POINTER as a ShortString -- the first byte of the pointer becomes
+               the length -- so CheckCommand received garbage and rejected every
+               command, silently and with a perfectly plausible warning saying
+               the build would not accept the value. The value was fine; it
+               never arrived.
+
+               CLAUDE.md lists this under "Strings and buffers" and it has now
+               cost two separate sessions of this migration. Assignment converts
+               and truncates correctly; the cast compiles and lies. *)
+            valAsShort := ShortString(AnsiString(val));
+            if CheckCommand(@cmdName, valAsShort, True) then
+               begin
+               inc(Result);
+               end
+            else
+               begin
+               (* Reported rather than skipped in silence: a command the log
+                  carries and this build will not accept is either a setting
+                  withdrawn since the log was made or a value out of range, and
+                  both are things an operator would want to know rather than
+                  discover by its absence. *)
+               if logger <> nil then
+                  begin
+                  logger.Warn('[LogStore] the log sets %s = %s and this build ' +
+                              'would not accept it (CFGCA row %d). The command ' +
+                              'is left at its current value.',
+                              [cmd, val, FindCFGCommand(cmd)]);
+                  end;
+               end;
+            end;
+      finally
+         rows.Free;
+      end;
+   except
+      on E: Exception do
+         begin
+         Disable('applying the contest configuration', E);
+         Result := 0;
+         end;
+   end;
+end;
+
 function LogStoreEnsureOpen: boolean;
 var
    rebuilt: boolean;
@@ -754,8 +952,49 @@ begin
    Result := EnsureOpen(rebuilt, False);
 end;
 
+(* WHAT THE CONTEST'S CONFIGURATION IS WHEN THE OPERATOR STOPS.
+
+  The capture at creation records what the contest STARTED as. An operator who
+  changes QSO POINT METHOD, or edits an F-key memory, halfway through has
+  changed the contest's configuration, and the log has to carry the new value or
+  it is not self-describing.
+
+  ON CLOSE RATHER THAN ON EVERY CHANGE, and the limitation is worth stating
+  plainly: SetCFGCommandValue is called from dozens of places, several of them
+  DURING config load, so hooking it would mean writing to the store before it is
+  open and re-recording the file the load just read. Closing is the one moment
+  the configuration is definitely settled.
+
+  THE COST IS A CRASH. Kill TR4W mid-contest and the settings changed in that
+  session are not in the log, though every QSO is -- QSOs are committed as they
+  are made. Recording changes as they happen is the fix, and it belongs with
+  the settings work rather than here. *)
+procedure CaptureConfigurationOnClose;
+begin
+   if (GRepository = nil) or GDisabled then
+      begin
+      Exit;
+      end;
+   try
+      CaptureConfiguration;
+   except
+      on E: Exception do
+         begin
+         (* Reported, not raised: this runs while shutting down, and a failure
+            to record a setting must not stop the program closing its log. *)
+         if logger <> nil then
+            begin
+            logger.Error('[LogStore] the configuration could not be recorded ' +
+                         'on close: %s -- %s. QSOs are unaffected.',
+                         [E.ClassName, E.Message]);
+            end;
+         end;
+   end;
+end;
+
 procedure LogStoreClose;
 begin
+   CaptureConfigurationOnClose;
    FreeAndNil(GRepository);
    FreeAndNil(GDatabase);
 end;

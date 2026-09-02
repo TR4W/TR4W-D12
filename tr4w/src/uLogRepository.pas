@@ -307,6 +307,21 @@ type
       (* How many rows each holds -- for verifying a capture actually captured
          something, which is the failure a silent upsert loop would otherwise
          hide. *)
+      (* THE COMMANDS THIS CONTEST SET, as command/value pairs, in the order
+         SQLite returns them.
+
+         source = 'contest' ONLY, and that is the whole precedence rule. Those
+         are the rows a contest .cfg set; the 'station' rows are a RECORD of
+         what the station config was when the log was made -- kept so the log
+         describes itself, applied by nothing, because tr4w.ini and
+         settings\tr4w.json still own station settings.
+
+         Applying everything was measured wrong once already, in a different
+         guise: ApplyStoredCommands takes today's station settings over the
+         log's own .cfg and took the corpus from 21/1/4 to 8/14/4, which is why
+         it is skipped under /EXPORT. *)
+      procedure LoadContestConfig(aInto: TStrings);
+
       function ConfigCount: integer;
       function MessageCount: integer;
       function LogContest: ContestType;
@@ -1446,6 +1461,36 @@ begin
       if not q.EOF then
          begin
          Result := q.Fields[0].AsInteger;
+         end;
+      q.Close;
+   finally
+      q.Free;
+   end;
+end;
+
+procedure TLogRepository.LoadContestConfig(aInto: TStrings);
+var
+   q: TSQLQuery;
+begin
+   if aInto = nil then
+      begin
+      Exit;
+      end;
+   aInto.Clear;
+
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := FDatabase.Connection;
+      q.SQL.Text := 'SELECT command, value FROM config ' +
+                    'WHERE source = ''contest'' ORDER BY command';
+      q.Open;
+      while not q.EOF do
+         begin
+         (* NameValueSeparator is '=', which is also what a .cfg line uses --
+            so a value containing one would split wrongly. It cannot here: the
+            name comes from a column, not from parsing. *)
+         aInto.Add(q.Fields[0].AsString + '=' + q.Fields[1].AsString);
+         q.Next;
          end;
       q.Close;
    finally

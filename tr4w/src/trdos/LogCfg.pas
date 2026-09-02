@@ -70,6 +70,15 @@ function LoadInSeparateConfigFile(FileName: ShortString;
   Call: CallString): boolean;
 
 procedure LookForCommands(var ContestConfigFileTitle: Str20);
+(* Is the assembled configuration usable?  False, with the reason shown, when
+  something required is missing.
+
+  IN THE INTERFACE since 2026-09-02: it used to be called only from inside
+  ReadInConfigFile, halfway through assembling the configuration. uProgramMain
+  asks it once every source has contributed -- including the log's own contest
+  settings, which arrive after every file. *)
+function ConfigurationOkay: boolean;
+
 procedure ReadInConfigFile(ConfigFileName: TCFGType);
 procedure TryRunPaddleAndFootSwitchThread;
 procedure tSetupExchangeNumbers;
@@ -675,7 +684,18 @@ begin
   // and CWEnabled represent the same thing and SetCWState always sets both.)
   CWEnabled := Config.CWEnable;
 
-  if ConfigFileName = cfgCFG then if not ConfigurationOkay then halt;
+  (* THE CONFIGURATION IS NOT COMPLETE HERE, SO IT IS NOT CHECKED HERE.
+
+    This halted the program if MyCall was empty after reading the contest .cfg
+    -- halfway through assembling the configuration, with the common messages
+    and the log's own settings still to come. That was harmless while the .cfg
+    was the last word on a contest. It is not now: the log carries the contest's
+    configuration, and a .cfg that no longer holds MY CALL is the intended end
+    state, not an error.
+
+    ConfigurationOkay is called from uProgramMain once every source has
+    contributed. Same check, same halt, asked when the answer means something. *)
+  // (moved) if ConfigFileName = cfgCFG then if not ConfigurationOkay then halt;
 end;
 
 procedure LookForCommands(var ContestConfigFileTitle: Str20);
@@ -955,9 +975,30 @@ var
   //
   // Station defaults <- contest overrides, with the .cfg needing no storage of
   // its own: it only needs to be SEEN.
-  if (CurrentConfigFile = cfgCFG) and CommandIsJSONOwned(string(ID)) then
+  (* EVERY command the CONTEST .cfg sets is recorded as the contest's, not only
+    the csJSON ones -- phase E3.
+
+    This note was added for a narrower job: stopping ApplyStoredCommands from
+    overwriting a contest's csJSON setting with the station's stored value. So
+    it only fired for csJSON rows, and "which commands did this contest set"
+    was answered correctly for six of them and silently wrongly for everything
+    else.
+
+    That is not sufficient once the LOG has to carry the contest. Measured on
+    michigan_qp: the .cfg sets MY STATE=WAYN, which is csOwned, so it was never
+    noted, was stored as a STATION setting, and was not applied from the log --
+    every QSO exported with a sent QTH of "DX" instead of "WAYN".
+
+    The note is now made for every command in the contest file. It is a record
+    of PROVENANCE and nothing else; what is done with the value is unchanged
+    below. *)
+  if CurrentConfigFile = cfgCFG then
      begin
      NoteCommandFromContestCFG(string(ID));
+     end;
+
+  if (CurrentConfigFile = cfgCFG) and CommandIsJSONOwned(string(ID)) then
+     begin
      if CheckCommand(@ID, CMD, True) then
         begin
         logger.Info('[Config] %s = %s from the contest .cfg -- overrides the stored value for this contest',

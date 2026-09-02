@@ -183,6 +183,8 @@ uses
   uCrashLogLCL,
   (* Which store /EXPORT reads its QSOs from -- step B3. *)
   uLogSource,
+  (* The log carries its own contest configuration -- phase E2. *)
+  uLogStore,
   uCFG,
   uCRC32,
   uMP3Recorder,
@@ -1200,6 +1202,40 @@ begin
 
   ReadInConfigFile(cfgCFG);          //n4af 4.31.5
   ReadInConfigFile(cfgCommMes);      //common messages gets precedence - n4af
+
+  (* THE LOG'S OWN CONTEST CONFIGURATION WINS -- phase E2.
+
+     NY4I: "when done, the .cfg file should not be necessary."
+
+     AFTER the files above, so it overrides them, and that ordering is the whole
+     point: a contest .cfg is read once, when the log is created, and captured
+     into the log. From then on the LOG says what the contest is. An operator
+     who deletes the .cfg, or opens the log on another machine, gets the same
+     contest.
+
+     WHY THIS IS NOT THE MISTAKE ApplyStoredCommands MAKES. That one applies
+     TODAY'S STATION SETTINGS over the log's own .cfg, which is why it is
+     skipped under /EXPORT -- measured, it took the corpus from 21/1/4 to
+     8/14/4. This applies the LOG'S OWN captured settings, which for a log
+     created by this build are the .cfg's own values. On a log whose .cfg has
+     not changed it is a no-op, and the corpus says so: 24/0/2 either way.
+
+     NOT SKIPPED UNDER /EXPORT, deliberately and unlike ApplyStoredCommands. A
+     headless export of a log should be configured the way that log is
+     configured; that is the entire reason this exists. *)
+  logger.Info('[Startup] the log applied %d contest setting(s)',
+              [LogStoreApplyContestConfig]);
+
+  (* NOW the configuration is complete, so now it is checked.
+
+     This lived inside ReadInConfigFile(cfgCFG) and halted there -- before the
+     common messages and before the log's own settings. A log whose .cfg has
+     been emptied, which is the end state this work is for, died with "No
+     callsign specified" while the callsign sat in the log. *)
+  if not ConfigurationOkay then
+     begin
+     halt;
+     end;
 
   // The radio library (settings\tr4w.json) is the FORMAT OF RECORD for radio
   // settings, so it gets the last word -- after every config file above, and

@@ -7406,6 +7406,21 @@ end;
 procedure ShowMessageParent(Text: string; Parent: HWND);
 begin
   logger.Info('Sending to MessageBox: ' + Text);
+  (* NO MODAL WHEN THERE IS NO OPERATOR.
+
+     showwarning in TF has had this guard for a while, with a comment describing
+     exactly this failure -- and its three siblings here never got it, so the
+     rule held for warnings and not for messages. Two headless runs hung on it
+     in one session: "Invalid statement in config file" during /RESCORE, and
+     "RESTART.BIN is for a different contest" during a batch export. Both sat
+     forever with nobody to click OK.
+
+     The text is already in the log above, which is what a headless run has
+     instead of a screen. *)
+  if tSilentExport then
+     begin
+     Exit;
+     end;
   MessageBoxW(Parent, PChar(Text), 'TR4W', MB_OK or MB_ICONINFORMATION
     {or MB_RTLREADING } or MB_TASKMODAL);
 end;
@@ -7413,6 +7428,21 @@ end;
 procedure ShowMessage2(Text: string);
 begin
   logger.Info('Sending to MessageBox: ' + Text);
+  (* NO MODAL WHEN THERE IS NO OPERATOR.
+
+     showwarning in TF has had this guard for a while, with a comment describing
+     exactly this failure -- and its three siblings here never got it, so the
+     rule held for warnings and not for messages. Two headless runs hung on it
+     in one session: "Invalid statement in config file" during /RESCORE, and
+     "RESTART.BIN is for a different contest" during a batch export. Both sat
+     forever with nobody to click OK.
+
+     The text is already in the log above, which is what a headless run has
+     instead of a screen. *)
+  if tSilentExport then
+     begin
+     Exit;
+     end;
   MessageBoxW(tr4whandle, PChar(Text), nil, MB_OK or MB_ICONINFORMATION
     {or MB_RTLREADING } or MB_TASKMODAL);
 end;
@@ -7421,6 +7451,21 @@ procedure ShowMessage(Text: string);
 //var MsgInfo : TMsgBoxParams;
 begin
   logger.Info('Sending to MessageBox: ' + Text);
+  (* NO MODAL WHEN THERE IS NO OPERATOR.
+
+     showwarning in TF has had this guard for a while, with a comment describing
+     exactly this failure -- and its three siblings here never got it, so the
+     rule held for warnings and not for messages. Two headless runs hung on it
+     in one session: "Invalid statement in config file" during /RESCORE, and
+     "RESTART.BIN is for a different contest" during a batch export. Both sat
+     forever with nobody to click OK.
+
+     The text is already in the log above, which is what a headless run has
+     instead of a screen. *)
+  if tSilentExport then
+     begin
+     Exit;
+     end;
   MessageBoxW(tr4whandle, PChar(Text), 'TR4W', MB_OK or MB_ICONINFORMATION
     {or MB_RTLREADING } or MB_TASKMODAL);
 
