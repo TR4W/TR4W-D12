@@ -499,6 +499,51 @@ custom-draw rule, in a tree that has just been bitten twice by exactly that.
 treatment in `tAddContestExchangeToLog`; X-QSO was the one that surfaced
 because it is the one NY4I tested.
 
+### THE ROW'S APPEARANCE IS THREE RULES IN ONE PROCEDURE, AND ONE OF THEM IS DOS
+
+**NY4I, 2026-09-02, on Alt-Y:** *"the way that TR4W leaves a row blank when you
+delete the last record with ALT-Y. That is a very DOS way to do it."*
+
+He is right, and it is worth knowing WHY it looks like that: **Alt-Y is not a
+delete.** It toggles `ceQSO_Skiped` on the newest record and is REVERSIBLE --
+its own message says *"Use Alt-Y to restore it"* (`LOGSUBS2.PAS:583`). The
+record stays in the log, so it keeps its row, and the row is blanked. A hole
+where a QSO was.
+
+**THREE FLAGS DRIVE ROW APPEARANCE AND ALL THREE ARE HANDLED DIFFERENTLY**, all
+inside `tAddContestExchangeToLog`:
+
+| flag | set by | shows as |
+|---|---|---|
+| `ceQSO_Skiped` | Alt-Y, reversible | a BLANK row |
+| `ceXQSO` | the editor's checkbox | grey -- and only in the main window |
+| `ceQSO_Deleted` | the editor's checkbox | an `RC_DELETED` caption |
+
+**So the row-appearance rule is stated three ways in one procedure and not at
+all in the other windows.** That is the same shape as the X-QSO greying gap
+above, and it has the same fix: the rule belongs beside the column text, stated
+once, where every window asking "what does this QSO look like" can reach it.
+
+**RECOMMENDED, and it is NY4I's call: mark the row, do not blank it and do not
+hide it.** Hiding is what a delete normally looks like, but Alt-Y is a TOGGLE:
+a row that vanishes makes the undo undiscoverable and renumbers the log under
+the operator mid-contest. Marked-and-visible also matches the X-QSO treatment,
+so one rule covers both, and the blank row -- which carries no information at
+all -- goes away either way.
+
+**AND THE FIXED ROW COUNT GOES WITH IT** (NY4I): the main window's editable log
+becomes a scrolling view that follows the newest QSO, not `LinesInEditableLog`
+rows. `EditableLogFirstRecord` / `EditableLogRowToRecord` exist to keep the
+fixed-window arithmetic honest until then, and are deleted with it.
+
+**AND THE `ROW COUNT` SETTING IS RETIRED WITH IT** (NY4I: *"The ROW COUNT option
+goes away too"*). It is a csJSON row today, so retiring it is the three-part
+move CLAUDE.md describes -- `csRem`, the `RegisterStoredSetting`, and
+`MIGRATED_COMMANDS` -- and `Lint-SettingsMigration` fails the build if those
+three disagree. `LinesInEditableLog` (`VC.pas:2856`) goes with it, along with
+its readers in `LoadinLog`, `LOGSUBS2`'s trim and the window sizing in
+`MainUnit`.
+
 These are the last two hand-built Win32 dialogs and NY4I parked them here on
 purpose: *"I suspect those are so coupled to the sqlite database it would be
 better to do those two right after the log is moved to a database."* They fall
