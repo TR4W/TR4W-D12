@@ -23,6 +23,55 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## 2026-09-03 overnight -- Log Edit converted, and what it turned up
+
+**Everything here needs a bench run; none of it is checkable from a script.**
+
+### Confirmed by NY4I during the session, not waiting
+
+- Logging works again after the CONTEST fix. The title bar shows the contest.
+- The main editable log renders again after the column-width unit bug.
+- Log Edit columns are measured and distributed, and the grid no longer
+  visibly redraws -- the third attempt was the right one (a row cache; the
+  cost was two database reads per row per paint, not the column arithmetic).
+
+### Waiting for a bench run
+
+1. **View / Edit Log, converted to an LCL virtual list.** Open it on a contest
+   log and check: the columns are readable and fill the window; X-QSO rows are
+   grey and deleted rows red -- *neither was ever true in this window*; a
+   double click opens the QSO you clicked; Escape closes it; resizing
+   redistributes without flicker. Then scroll a LONG log: past 512 rows the
+   cache stops helping and `LogSourceReadAtIndex` does the work again.
+
+2. **THE OWNER GAP IS NOT ONLY THIS WINDOW.** `ShowModalOverWin32Parent`
+   disables the parent but never sets an owner, so switching to another program
+   and back raises the MAIN window and leaves the modal behind it -- still
+   modal, now invisible. NY4I hit it on Log Edit and it is fixed there with
+   `PopupParent`. **Every other dialog shown through that helper has the same
+   gap.** Fixing it inside the helper would fix all of them at once, but the
+   helper takes an HWND and would have to find the form behind it. Worth doing;
+   worth doing deliberately.
+
+3. **Column widths now live in the log, not a `.cfg`.** Drag a divider, close
+   the contest cleanly, reopen it, and confirm the width came back -- and that
+   a column you did NOT drag still sizes itself. Only a width the operator set
+   is captured, which is what the `.cfg` used to hold.
+
+### Found and worth knowing
+
+4. **NOTHING IN THIS TREE RENDERS A ROW, so a display regression passes every
+   gate.** That is how a blank editable log shipped: the capture wrote a
+   character count where a pixel width was expected, and the corpus -- which
+   runs `/EXPORT` and never creates the main window -- passed 24/24 throughout.
+   A cheap harness that builds one row and pins the strings would have caught
+   it. This is the single biggest hole in the current gates.
+
+5. **Lazarus holding a unit open silently reverts edits.** It saved a stale
+   buffer over `uLogEditForm.pas`, dropping 132 lines, and left the original in
+   `srcackup\`. The directory is ignored now. If the IDE is open, assume any
+   file it has loaded may be rewritten.
+
 ## Added 2026-09-01 -- BOTH WAE QTC WINDOWS, AND NOBODY HAS RUN THEM
 
 ### [ ] Hand `docs/QTC_BENCH_HANDOFF.md` to N4AF
@@ -558,7 +607,16 @@ flags / Name Sent / Inhibit Mults / Dupe are greyed, S&P / Deleted / X-QSO edit
 and save, X-QSO still exports with its Cabrillo prefix, callsign typing updates
 country / prefix / DX QTH, and note and skipped records behave.
 
-~~[AGENT - Editing a QSO is changing the Operator field to just the first character.]~~ We have to add a mechanism to check the fields in the qso record upon entry to the edit field is the exact same as when we leave except for the dirty field. In  the test log, I changed the contact for W1SSB and it updated operator to just N. The sanctity of a QSO is paramount] 
+~~[AGENT - Editing a QSO is changing the Operator field to just the first
+character.]~~ **FIXED and verified by reading, 2026-09-03.** `uEditQSO` converts
+through `WinAnsi`, zero-fills the array, bounds the copy and leaves room for the
+terminator; the comment there records the original failure (`'NY4I'` stored as
+`'N',#0,'Y',#0,...` and read back at the first `#0`). The commented-out
+`GetDlgItemTextA` attempts left beside it are deleted -- NY4I: "I do not want
+code that is commented so you trip on it and find it next time."
+
+**THE SECOND HALF OF THAT NOTE IS STILL OPEN AND IS THE BIGGER ASK.** We have to
+add a mechanism to check the fields in the qso record upon entry to the edit field is the exact same as when we leave except for the dirty field. In  the test log, I changed the contact for W1SSB and it updated operator to just N. The sanctity of a QSO is paramount] 
 **FIXED 2026-08-28 (`1e53f410`).** `ceOperator` is `array[0..10] of AnsiChar`,
 and the save did `Move(tempOperator[1], ..., length * sizeof(char))` with `char`
 two bytes wide under `{$MODESWITCH UnicodeStrings}` -- so 'NY4I' was written as

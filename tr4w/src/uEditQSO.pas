@@ -682,14 +682,6 @@ begin
      begin
      Move(ansiOperator[1], EditableQSORXData.ceOperator[0], operatorLen);
      end;
-  //EditableQSORXData.ceOperator[1] := Char(Windows.GetDlgItemTextA(eq_handle,
-  //  FLD_OPERATOR, @EditableQSORXData.ceOperator,
-  //  Windows.lstrlen(EditableQSORXData.ceOperator) - 1));
-
-  //EditableQSORXData.ceOperator[0] := AnsiChar(Windows.GetDlgItemTextA(eq_handle,
-  //  FLD_OPERATOR, @EditableQSORXData.ceOperator[1],
-   // Windows.lstrlen(EditableQSORXData.ceOperator) - 1));
-
   IndexInMap := IndexOfItemInLogForEdit;
   {SAP}
   EditableQSORXData.ceSearchAndPounce :=
