@@ -186,6 +186,18 @@ procedure TR4WEditableLogSetCount(const aCount: integer);
 (* Forget cached rows -- after an edit, a rescore or a reload. *)
 procedure TR4WEditableLogRefresh;
 
+(* WHERE THE LIST SITS.
+
+  THROUGH THE LCL, NEVER SetWindowPos. CLAUDE.md states the rule for forms and
+  it is just as true for a control on one: "the LCL holds its own bounds and
+  pushes the designed ones back down when it shows". The main window sized this
+  control with three SetWindowPos calls; against an LCL control they move the
+  window on screen and leave the LCL believing the old rectangle, and the next
+  realign puts it back. Created at height 0 -- which is what the Win32 control
+  was created at, sized later by those same calls -- that meant a control the
+  LCL kept at zero height and an editable log that rendered as blank paper. *)
+procedure TR4WEditableLogSetBounds(const aLeft, aTop, aWidth, aHeight: integer);
+
 (* Put the newest QSO in view, which is where an operator looks. *)
 procedure TR4WEditableLogScrollToEnd;
 
@@ -1203,6 +1215,112 @@ begin
    TR4WEditableLog.Items.Count := aCount;
 end;
 
+(* MEASURED AND DISTRIBUTED, the same way uLogEditForm does it and for the same
+  reason: ColumnsArray[].Width is a COUNT OF CHARACTERS, and the Win32 control
+  turned it into pixels with a magic factor that depended on the font it had
+  been given. Measuring against the font the control is actually using is the
+  only version that survives a font change.
+
+  COMPUTED FIRST, APPLIED ONCE, inside BeginUpdate/EndUpdate -- writing widths
+  as they are calculated draws the intermediate state, which is an animation an
+  operator can watch. *)
+procedure SizeMainLogColumns;
+var
+   c:      LogColumnsType;
+   i:      integer;
+   charW:  integer;
+   wanted: integer;
+   total:  integer;
+   slack:  integer;
+   given:  integer;
+   widths: array of integer;
+begin
+   if (TR4WEditableLog = nil) or (TR4WEditableLog.Columns.Count = 0) then
+      begin
+      Exit;
+      end;
+
+   TR4WEditableLog.Canvas.Font.Assign(TR4WEditableLog.Font);
+   charW := TR4WEditableLog.Canvas.TextWidth('0');
+   if charW < 1 then
+      begin
+      charW := 7;
+      end;
+
+   SetLength(widths, TR4WEditableLog.Columns.Count);
+   total := 0;
+   i := 0;
+   for c := Low(LogColumnsType) to High(LogColumnsType) do
+      begin
+      if not ColumnsArray[c].Enable then
+         begin
+         Continue;
+         end;
+      if i > High(widths) then
+         begin
+         Break;
+         end;
+      wanted := (ColumnsArray[c].Width * charW) + charW;
+      if wanted < TR4WEditableLog.Canvas.TextWidth(AnsiString(ColumnsArray[c].Text)) + charW then
+         begin
+         wanted := TR4WEditableLog.Canvas.TextWidth(AnsiString(ColumnsArray[c].Text)) + charW;
+         end;
+      widths[i] := wanted;
+      total := total + wanted;
+      Inc(i);
+      end;
+
+   if (TR4WEditableLog.ClientWidth > total) and (total > 0) then
+      begin
+      slack := TR4WEditableLog.ClientWidth - total;
+      given := 0;
+      for i := 0 to High(widths) do
+         begin
+         if i = High(widths) then
+            begin
+            widths[i] := widths[i] + (slack - given);
+            end
+         else
+            begin
+            wanted := (widths[i] * slack) div total;
+            widths[i] := widths[i] + wanted;
+            given := given + wanted;
+            end;
+         end;
+      end;
+
+   TR4WEditableLog.Columns.BeginUpdate;
+   try
+      for i := 0 to High(widths) do
+         begin
+         if TR4WEditableLog.Columns[i].Width <> widths[i] then
+            begin
+            TR4WEditableLog.Columns[i].Width := widths[i];
+            end;
+         end;
+   finally
+      TR4WEditableLog.Columns.EndUpdate;
+   end;
+end;
+
+procedure TR4WEditableLogSetBounds(const aLeft, aTop, aWidth, aHeight: integer);
+
+begin
+
+   if TR4WEditableLog = nil then
+
+      begin
+
+      Exit;
+
+      end;
+
+   TR4WEditableLog.SetBounds(aLeft, aTop, aWidth, aHeight);
+
+   SizeMainLogColumns;
+
+end;
+
 procedure TR4WEditableLogScrollToEnd;
 begin
    if (TR4WEditableLog = nil) or (TR4WEditableLog.Items.Count = 0) then
@@ -1317,6 +1435,11 @@ begin
 
       Visible := True;
       Result  := Handle;
+      end;
+
+   SizeMainLogColumns;
+   with TR4WEditableLog do
+      begin
       end;
 end;
 

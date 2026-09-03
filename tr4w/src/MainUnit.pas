@@ -4120,8 +4120,12 @@ begin
     wh[mweEditableLog] STILL HOLDS AN HWND -- the list's own -- so the thirty
     call sites that set colours, read the header, ask which row is selected or
     set a column width keep working unchanged. *)
+  (* A REAL HEIGHT AT CREATION. The Win32 control was created at height 0 and
+    sized afterwards by CheckEditableWindowHeight; an LCL control created at
+    zero stays at zero as far as the LCL is concerned, and renders as nothing.
+    Same formula that routine uses, so the layout is unchanged. *)
   wh[mweEditableLog] := CreateTR4WEditableLog(0, ws * 7,
-    MainWindowChildsWidth, EditableLogHeight);
+    MainWindowChildsWidth, 30 + LinesInEditableLog * (ws + 2));
   SetListViewColor(mweEditableLog);
   DispalayLogGridLines;
 
@@ -9709,8 +9713,8 @@ begin
   // shows whole -- the list's static edge then forms a clean bottom border
   // matching the top.  (Reported: editable-log bottom row cut off.)
   h := 30 + LinesInEditableLog * (ws + 2) {EditableLogWindowHeight};
-  Windows.SetWindowPos(wh[mweEditableLog], HWND_TOP, 0, ws * 7,
-    MainWindowChildsWidth, h, SWP_SHOWWINDOW);
+  (* Through the LCL -- see TR4WEditableLogSetBounds. *)
+  TR4WEditableLogSetBounds(0, ws * 7, MainWindowChildsWidth, h);
 
   guard := 0;
   while (ListView_GetCountPerPage(wh[mweEditableLog]) > LinesInEditableLog)
@@ -9718,8 +9722,7 @@ begin
      begin
      h := h - 1;
      Inc(guard);
-     Windows.SetWindowPos(wh[mweEditableLog], HWND_TOP, 0, ws * 7,
-       MainWindowChildsWidth, h, SWP_SHOWWINDOW);
+     TR4WEditableLogSetBounds(0, ws * 7, MainWindowChildsWidth, h);
      end;
 
   guard := 0;
@@ -9728,8 +9731,7 @@ begin
      begin
      h := h + 1;
      Inc(guard);
-     Windows.SetWindowPos(wh[mweEditableLog], HWND_TOP, 0, ws * 7,
-       MainWindowChildsWidth, h, SWP_SHOWWINDOW);
+     TR4WEditableLogSetBounds(0, ws * 7, MainWindowChildsWidth, h);
      end;
 end;
 
