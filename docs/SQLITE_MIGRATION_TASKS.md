@@ -461,6 +461,44 @@ new work on an entry point its own authors have retired.
 |---|---|
 | **D1** | `uLogEdit` and `uLogSearch` as an LCL **virtual list** (`OwnerData` / `OnData`), **against the database and never the binary log** -- NY4I: *"once we start working on the edit window and the editable log window, I don't think we deal anything with the TR log file at that point."* So D comes after B4, and its byte-offset seeking (`uEditQSO:751`) is not ported, it is deleted |
 
+### D1 MUST GREY X-QSO ROWS -- a known, deliberately unfixed defect
+
+**Found on the bench 2026-09-02 and NOT fixed, on NY4I's call:** *"if the
+view/edit window is still windows dialog, then save that and fix on the LCL
+form."*
+
+**What happens today.** An X-QSO applied from View -> Edit Log is WRITTEN
+correctly -- verified in the database, `is_xqso = 1` on the record the operator
+chose -- but the row does not grey out in that window, so it looks as though
+nothing happened. The main window greys it correctly, which is what makes the
+Edit Log window look broken rather than incomplete.
+
+**Why.** The greying is `NM_CUSTOMDRAW`, and it exists in exactly ONE place:
+`uMainWindowProc.pas:574`, the main window's proc. It returns
+`CDRF_NOTIFYITEMDRAW` at `CDDS_PREPAINT`, then at `CDDS_ITEMPREPAINT` sets
+`clrText := $00808080` when the row's per-item `lParam` is 1 -- the flag
+`MainUnit.SetRowXQSOFlag` stashes when the row is added. `LogEditDlgProc`
+handles `NM_DBLCLK` and nothing else, so its rows are never asked about.
+`uLogSearch` has the same gap.
+
+**Why it was not simply copied over.** Adding an `NM_CUSTOMDRAW` arm to
+`LogEditDlgProc` is perhaps fifteen lines, plus the `DWL_MSGRESULT` dance a
+DIALOG proc needs and a window proc does not -- and all of it is deleted the
+moment this window becomes a form. It would also be a SECOND copy of the
+custom-draw rule, in a tree that has just been bitten twice by exactly that.
+
+**So this is an acceptance criterion for D1, not a bug to fix first:**
+
+- an X-QSO row is visibly distinct in the Edit Log window and in Log Search,
+  not only in the main window;
+- the rule is stated ONCE. On a virtual list this is a font colour in the draw
+  or data event, so the per-item `lParam` smuggling and `SetRowXQSOFlag`
+  disappear with it -- the row can simply ask the record.
+
+**And check the other flags while there.** `ceQSO_Deleted` gets a caption
+treatment in `tAddContestExchangeToLog`; X-QSO was the one that surfaced
+because it is the one NY4I tested.
+
 These are the last two hand-built Win32 dialogs and NY4I parked them here on
 purpose: *"I suspect those are so coupled to the sqlite database it would be
 better to do those two right after the log is moved to a database."* They fall
