@@ -1,7 +1,7 @@
 {
-  "type.HWND": 505,
+  "type.HWND": 503,
   "array.wh": 37,
-  "CreateModalDialog": 4,
+  "CreateModalDialog": 3,
   "tDialogBox": 0,
   "DialogBox*": 2,
   "CreateDialogIndirectParam": 1,

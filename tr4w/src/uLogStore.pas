@@ -1283,6 +1283,16 @@ end;
   SAFE TO RUN TWICE: LogStoreClose is FreeAndNil throughout and
   CaptureConfigurationOnClose returns immediately once GRepository is nil. *)
 finalization
-   LogStoreClose;
+   try
+      LogStoreClose;
+   except
+      on E: Exception do
+         begin
+         (* Finalization order is not ours to choose and a unit this one
+           depends on may already be gone. A crash HERE loses the whole
+           run for a close that has usually already happened in
+           tr4w_ShutDown. *)
+         end;
+   end;
 
 end.

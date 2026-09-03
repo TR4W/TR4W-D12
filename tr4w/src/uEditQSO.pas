@@ -141,7 +141,6 @@ uses
    uPlatformProcess,   // RunProgram / RunWindowsUtility -- the only launchers
   SysUtils,         // SystemTimeToDateTime / DateTimeToSystemTime
   MainUnit,
-  uLogEdit,
   uEditQSOForm,     // the LCL form, and the id-to-control accessors
   uHamScore,         // Issue #783 -- HamScoreOnEdit / HamScoreOnDelete hooks
   uConfigValues;
@@ -788,14 +787,16 @@ begin
      IndexInMap is the record index itself now, so there is nothing to
      convert. *)
   LogStoreUpdateQSOAtIndex(IndexInMap, EditableQSORXData);
-  if FullLogEditHandle <> 0 then
-     begin
-     ListView_DeleteItem(LogEditListView, FullLogEditIndex);
-     tAddContestExchangeToLog(EditableQSORXData, LogEditListView,
-       FullLogEditIndex);
-     ListView_SetItemState(LogEditListView, FullLogEditIndex - 1, LVIS_FOCUSED or
-       LVIS_SELECTED, LVIS_FOCUSED or LVIS_SELECTED);
-     end;
+  (* THE LOG EDIT WINDOW REFRESHES ITSELF NOW.
+
+    This deleted a row out of the old Win32 dialog's listview and re-inserted
+    it, because that list held the rows and nothing else could have known the
+    QSO had changed. uLogEditForm is a VIRTUAL list: it holds no rows, so it
+    re-reads the record the next time it paints, and it invalidates itself
+    after the editor closes. Nothing here needs to know it exists.
+
+    The three globals this used -- FullLogEditHandle, LogEditListView,
+    FullLogEditIndex -- went with the dialog. *)
 
   tUpdateLog(actRescore);
   LoadinLog;

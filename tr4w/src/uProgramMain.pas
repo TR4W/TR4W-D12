@@ -164,7 +164,6 @@ uses
   uGetServerLog,
   TF,
   uFreqTimeFormat,
-  uLogEdit,
   uIntercom,
   uLogCompare,
   uMixW,
