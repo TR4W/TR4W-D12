@@ -366,14 +366,22 @@ var
        The cause is normally a .cfg path that is not fully qualified, now
        fixed at the source in uProgramMain -- but a read-only or missing
        .cfg fails here too, and the operator cannot guess either. }
-     if not Windows.WritePrivateProfileStringA(MESSAGES_SECTION, PAnsiChar(aKey),
-                                              aValue, @TR4W_CFG_FILENAME) then
-        begin
-        logger.Warn('[EditMessage] "%s" could NOT be saved to "%s" (error %d) -- ' +
-                    'it will not survive a restart',
-                    [aKey, StrPas(@TR4W_CFG_FILENAME[0]), Windows.GetLastError]);
-        end;
+     (* APPLIED HERE, PERSISTED BY THE LOG.
 
+       An INI write to TR4W_CFG_FILENAME stood here, and that name is a .db
+       now -- so it asked Windows to parse a SQLite database as an INI and
+       rewrite it. Slow enough to freeze the program and no business being
+       attempted at all.
+
+       IT WAS ALSO REDUNDANT, which is the better reason to delete it than the
+       danger. CheckCommand below puts the message into the running program,
+       and uLogStore.CaptureConfiguration walks every function-key memory at
+       close -- GetCQMemoryString / GetExMemoryString over both modes and every
+       named key -- and writes them to the log's `message` table. That is where
+       they come back from. NY4I's log holds 36 of them.
+
+       So the memory is applied now and saved with the log, and the file that
+       used to hold it is not a file this program writes. *)
      CheckCommand(@k, aCheckValue);
   end;
 

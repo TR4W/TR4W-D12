@@ -202,7 +202,6 @@ procedure RunPlugin(PluginNumber: integer);
 procedure LoadInPlugins();
 procedure OpenListOfMessages;
 procedure OpenStationInformationWindow(const aOnAccept: TCabrilloSummaryAction);
-procedure RenameCommands();
 procedure RichEditOperation(Load: boolean);
 function GetAddMultBand(Mult: TAdditionalMultByBand; Band: BandType): BandType;
 procedure scWK_RESET; // n4af 4.43.10
@@ -9509,20 +9508,24 @@ begin
             // The likely causes are worth naming because the operator cannot
             // guess them: no contest is loaded, so TR4W_CFG_FILENAME is not a
             // real path; or the .cfg is read-only.
-            if Windows.WritePrivateProfileStringA('COMMANDS', @KeyName[1],
-                                                  @WidthStr[1], @TR4W_CFG_FILENAME) then
-               begin
-               logger.Debug('[ColumnWidth] %s = %d saved to %s',
-                            [StrPas(ColumnCanonicalName[TempColumn]), NewWidth,
-                             StrPas(@TR4W_CFG_FILENAME[0])]);
-               end
-            else
-               begin
-               logger.Warn('[ColumnWidth] %s = %d could NOT be saved to "%s" -- ' +
-                           'it will not survive a restart',
-                           [StrPas(ColumnCanonicalName[TempColumn]), NewWidth,
-                            StrPas(@TR4W_CFG_FILENAME[0])]);
-               end;
+            (* APPLIED HERE, PERSISTED BY THE LOG.
+
+              An INI write into TR4W_CFG_FILENAME stood here, and that name is
+              a .db -- so dragging a column divider asked Windows to parse a
+              SQLite database as an INI and rewrite it. Three of NY4I's freezes
+              ended on this routine's own log line.
+
+              CheckCommand accepts 'COLUMN WIDTH <token>' (uCFG.pas:1664, inside
+              CheckCommand), so the value applies to the running program the
+              same way any other command does -- and uLogStore.CaptureConfiguration
+              writes the widths into the log's config table at close, beside the
+              function-key memories, from where the startup apply restores them.
+
+              SO THE WIDTH IS STILL PER CONTEST, which is what the .cfg gave. It
+              is simply in the contest's own file now rather than beside it. *)
+            CheckCommand(@KeyName[1], WidthStr);
+            logger.Debug('[ColumnWidth] %s = %d applied',
+                         [StrPas(ColumnCanonicalName[TempColumn]), NewWidth]);
             end;
          matched := True;
          Exit;
@@ -10317,8 +10320,11 @@ begin
     if CFGCA[i].crAddress = Command then
        begin
        InvertBoolean(Command^);
-       Windows.WritePrivateProfileStringA(_COMMANDS, CFGCA[i].crCommand,
-         BA[Command^], TR4W_INI_FILENAME);
+       (* THROUGH SetCFGCommandValue, which applies AND persists through the
+         configuration store. The ini write that stood here reached a file
+         nothing reads: INSERT MODE, its only caller'''s row, is csJSON. *)
+       SetCFGCommandValue(string(StrPas(CFGCA[i].crCommand)),
+                          string(StrPas(BA[Command^])));
        RunCommandRedrawProc(i);
        end;
 end;
@@ -10808,24 +10814,16 @@ begin
   ShowAltP;
 end;
 
-procedure RenameCommand(Old, New: PAnsiChar);
-begin
-  if GetPrivateProfileStringA(_COMMANDS, Old, nil, TempBuffer1,
-    SizeOf(TempBuffer1), TR4W_INI_FILENAME) = 0 then
-     begin
-     Exit;
-     end;
-  Windows.WritePrivateProfileStringA(_COMMANDS, Old, nil, TR4W_INI_FILENAME);
-  Windows.WritePrivateProfileStringA(_COMMANDS, New, TempBuffer1,
-    TR4W_INI_FILENAME);
-end;
+(* THE DVP -> DVK RENAME IS GONE, AND SO IS THE MECHANISM.
 
-procedure RenameCommands();
-begin
-  RenameCommand('DVP ENABLE', 'DVK ENABLE');
-  RenameCommand('DVP PATH', 'DVK PATH');
-  RenameCommand('DVP RECORDER', 'DVK RECORDER');
-end;
+  RenameCommand read a key out of tr4w.ini, deleted it and wrote it back under
+  a new name. It existed to carry three settings across a rename, in a file
+  this program no longer writes and which is empty on a migrated station -- so
+  it read nothing and did nothing, three times, on every start.
+
+  All three rows live in settings\tr4w.json now (DVK ENABLE, DVK PATH, DVK
+  RECORDER), where they arrived through the ordinary migration. A rename helper
+  for the ini has nothing left to rename. *)
 
 procedure PTTOn;
 label

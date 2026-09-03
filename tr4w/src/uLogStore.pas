@@ -302,6 +302,7 @@ var
    value: AnsiString;
    renderable: boolean;
    mode: ModeType;
+   Column: LogColumnsType;
    key: AnsiChar;
    memText: ShortString;
 begin
@@ -407,6 +408,37 @@ begin
          end;
 
       GRepository.SaveConfigValue(AnsiString(cmd), value, src);
+      end;
+
+   (* THE EDITABLE-LOG COLUMN WIDTHS.
+
+     These are not CommandsArray rows -- CheckCommand special-cases
+     'COLUMN WIDTH <token>' (uCFG.pas:1664) rather than holding one row per
+     column -- so the loop above cannot reach them and they need naming here,
+     exactly as the function-key memories do below.
+
+     THEY USED TO LIVE IN THE CONTEST .cfg, written by
+     MainUnit.SaveColumnWidthToConfig. That write is gone: TR4W_CFG_FILENAME is
+     a .db now, and asking the INI API to rewrite a SQLite file froze the
+     program. Capturing them keeps the behaviour an operator sees -- widths
+     survive a restart, and they are per contest, because they are in the
+     contest's own file.
+
+     SOURCE 'contest' BECAUSE THAT IS WHERE THEY CAME FROM, and because the
+     startup apply reads contest-scoped rows. A width recorded as 'station'
+     would be captured and never restored, which is worse than not capturing
+     it: it looks saved. *)
+   for Column := Low(LogColumnsType) to High(LogColumnsType) do
+      begin
+      if not ColumnsArray[Column].Enable then
+         begin
+         Continue;
+         end;
+
+      GRepository.SaveConfigValue(
+         AnsiString('COLUMN WIDTH ' + string(StrPas(ColumnCanonicalName[Column]))),
+         AnsiString(IntToStr(ColumnsArray[Column].Width)),
+         'contest');
       end;
 
    (* THE FUNCTION-KEY MEMORIES, both kinds and both modes. GetCQMemoryString /

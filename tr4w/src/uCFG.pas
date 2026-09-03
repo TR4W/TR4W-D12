@@ -202,6 +202,23 @@ function CFGCommandIsFreqList(const aCommand: string): boolean;
 
 // Apply a value to a command and persist it.  Returns False when CFGCA REFUSES
 // the value, in which case nothing is written -- see the implementation.
+(* HOW A [COMMANDS] VALUE IS MADE PERMANENT.
+
+  A HOOK RATHER THAN A CALL, because the direction of the units forbids the
+  call: the store lives in uRadioConfigApply, which uses uCFG. uSettingsLegacy
+  already inverts the same dependency with ActiveStoreProvider, and this is that
+  pattern for the one route that is not Preferences.
+
+  ASSIGNED AT STARTUP by uRadioConfigApply. Unassigned means "no store", and
+  SetCFGCommandValue then applies the value and says out loud that it will not
+  survive -- rather than writing tr4w.ini, which is what it used to do and which
+  nothing reads any more. *)
+type
+   TPersistCommandValue = function(const aCommand, aValue: string): boolean;
+
+var
+   PersistCommandValue: TPersistCommandValue = nil;
+
 function SetCFGCommandValue(const aCommand, aValue: string): boolean;
 
 // Run the row's redraw handler -- CommandsProcArray[crP] -- so that a changed
@@ -1479,20 +1496,44 @@ begin
    // when someone eventually does, it FAILS LOUDLY instead of half-working:
    // the fix is to register the setting with RegisterStoredSetting, which
    // writes the JSON store, rather than RegisterLegacySetting.
-   if CommandIsJSONOwned(aCommand) then
-      begin
-      logger.Error('[SetCFGCommandValue] "%s" is csJSON -- settings\tr4w.json owns it. '
-                 + 'Refusing to write tr4w.ini. Use RegisterStoredSetting for this row.',
-                   [aCommand]);
-      Result := False;
-      Exit;
-      end;
+   (* csJSON ROWS ARE NO LONGER REFUSED HERE.
+
+     This used to return False for them, because the only thing below was a
+     write to tr4w.ini and a csJSON row does not read that file -- so applying
+     and "saving" it was a lie. The route below is the JSON store now, which is
+     exactly where a csJSON row belongs, so the refusal has nothing left to
+     protect.
+
+     It was not harmless while it stood: uAutoCQForm saves AUTO-CQ DELAY TIME
+     through here and that row IS csJSON, so every save was refused and logged
+     as an error. *)
 
    Result := CheckCommand(@keyShort, valueShort);
    if Result then
       begin
-      Windows.WritePrivateProfileStringA(_COMMANDS, @keyShort[1], @valueShort[1],
-                                         TR4W_INI_FILENAME);
+      (* PERSISTED THROUGH THE STORE, NOT INTO tr4w.ini.
+
+        The ini write that stood here reached a file this program no longer
+        reads: on a migrated station it is empty and read-only, so the value
+        applied and was gone on restart -- silently, because
+        WritePrivateProfileStringA reports failure through a BOOL nobody
+        checked.
+
+        Unassigned hook means there is genuinely nowhere to put it, and that is
+        worth saying rather than pretending. *)
+      if Assigned(PersistCommandValue) then
+         begin
+         if not PersistCommandValue(aCommand, aValue) then
+            begin
+            logger.Error('[SetCFGCommandValue] "%s" applied but NOT saved -- the ' +
+                         'configuration store refused it.', [aCommand]);
+            end;
+         end
+      else
+         begin
+         logger.Warn('[SetCFGCommandValue] "%s" applied but not saved: no ' +
+                     'configuration store is available yet.', [aCommand]);
+         end;
       end;
 
    { SAY WHAT CHANGED.  NY4I asked for this (bench queue): a configuration

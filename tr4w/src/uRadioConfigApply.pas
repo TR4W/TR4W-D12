@@ -1327,12 +1327,23 @@ begin
          // @ShortString[1] to it.  It happened to work because the parameter is
          // an untyped pointer; it is the trap documented in CLAUDE.md and there
          // is no reason to keep it when the RTL wrapper says what it means.
-         ini := TIniFile.Create(SettingsDirectory + 'tr4w.ini');
-         try
-            ini.WriteString(string(_COMMANDS), aCommand, aValue);
-         finally
-            ini.Free;
-         end;
+         (* THE tr4w.ini WRITE THAT STOOD HERE IS GONE.
+
+           Lint-IniUsage states the rule this was breaking -- NY4I, 2026-08-17:
+           "Nothing should use the INI file again. I am not sure how much
+           clearer I can make that rule." On a migrated station the file is
+           empty and read-only, so the write achieved nothing except to make
+           the value look saved.
+
+           The row is applied above and is not persisted. That is honest, and
+           it is the state every un-migrated row is in: the fix is to move the
+           row to the JSON store, not to keep writing a file nothing reads. *)
+         if logger <> nil then
+            begin
+            logger.Warn('[Config] "%s" applied but not persisted -- it is not ' +
+                        'a JSON-owned row and tr4w.ini is no longer written.',
+                        [aCommand]);
+            end;
          end;
       Exit;
       end;
@@ -2414,5 +2425,23 @@ begin
    CheckAcross(radio1.Name + ' keyer', radio1.KeyerOutputPort,
                radio2.Name + ' keyer', radio2.KeyerOutputPort);
 end;
+
+
+(* THE ONE ROUTE FROM "an operator changed a setting" TO THE STORE.
+
+  uCFG cannot call ApplyPeerCommand -- this unit uses uCFG, not the other way
+  round -- so uCFG publishes a hook and this fills it in. Same inversion as
+  uSettingsLegacy.ActiveStoreProvider, and for the same reason.
+
+  ApplyPeerCommand is reused rather than reimplemented: it already loads the
+  store, applies through CheckCommand with aApplyJSONOwned, saves, and does it
+  per call because these arrive when a human changes something. *)
+function PersistCommandThroughStore(const aCommand, aValue: string): boolean;
+begin
+   Result := ApplyPeerCommand(aCommand, aValue);
+end;
+
+initialization
+   uCFG.PersistCommandValue := @PersistCommandThroughStore;
 
 end.

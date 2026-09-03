@@ -1257,7 +1257,6 @@ begin
 
   SetUpFileNames;
 
-  RenameCommands;
 
 
   LoadTR4WPOSFILE;
