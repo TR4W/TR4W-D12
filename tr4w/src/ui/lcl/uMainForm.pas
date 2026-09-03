@@ -1209,10 +1209,21 @@ procedure TR4WEditableLogSetCount(const aCount: integer);
 begin
    if TR4WEditableLog = nil then
       begin
+      if logger <> nil then
+         begin
+         logger.Warn('[EditableLog] SetCount(%d) but there is no control', [aCount]);
+         end;
       Exit;
       end;
    TR4WEditableLogRefresh;
    TR4WEditableLog.Items.Count := aCount;
+   if logger <> nil then
+      begin
+      logger.Info('[EditableLog] count=%d bounds=(%d,%d,%d,%d) visible=%s',
+                  [aCount, TR4WEditableLog.Left, TR4WEditableLog.Top,
+                   TR4WEditableLog.Width, TR4WEditableLog.Height,
+                   BoolToStr(TR4WEditableLog.Visible, True)]);
+      end;
 end;
 
 (* MEASURED AND DISTRIBUTED, the same way uLogEditForm does it and for the same
@@ -1435,6 +1446,25 @@ begin
 
       Visible := True;
       Result  := Handle;
+      end;
+
+   (* THREE NUMBERS THAT SETTLE IT. Two attempts at making this control draw
+     have been guesses; this reports what it actually IS. *)
+   if logger <> nil then
+      begin
+      logger.Info('[EditableLog] created: bounds=(%d,%d,%d,%d) visible=%s ' +
+                  'parent=%s columns=%d count=%d handle=%d',
+                  [TR4WEditableLog.Left, TR4WEditableLog.Top,
+                   TR4WEditableLog.Width, TR4WEditableLog.Height,
+                   BoolToStr(TR4WEditableLog.Visible, True),
+                   BoolToStr(TR4WEditableLog.Parent <> nil, True),
+                   TR4WEditableLog.Columns.Count,
+                   TR4WEditableLog.Items.Count,
+                   PtrUInt(TR4WEditableLog.Handle)]);
+      end;
+
+   with TR4WEditableLog do
+      begin
       end;
 
    SizeMainLogColumns;

@@ -7766,12 +7766,7 @@ begin
   Size := LogSourceRecordCount;
   if Size < 0 then
      begin
-     (* THE WHOLE LOG IS REACHABLE NOW, and the newest QSO is where an operator
-    looks -- so the list is pointed at the end rather than the top. *)
-  TR4WEditableLogSetCount(tRestartInfo.riTotalRecordsInLog);
-  TR4WEditableLogScrollToEnd;
-
-  LogSourceClose;
+     LogSourceClose;
      Exit;
      end;
   LogSourceRewind;
@@ -7900,6 +7895,25 @@ begin
   2:
   // LoadingInLogFile := False;
   LogSourceClose;
+
+  (* THE LIST IS TOLD HOW MANY RECORDS THERE ARE, ONCE, AFTER THE WALK.
+
+    It is a virtual list: nothing is inserted during the loop, so this call is
+    what makes the log appear at all.
+
+    IT WAS BRIEFLY INSIDE THE `Size < 0` ERROR BRANCH ABOVE, where it ran only
+    when the log could NOT be read -- so the grid was blank, and two attempts
+    at fixing the CONTROL found nothing wrong with it because nothing was.
+    Instrumentation settled it in one run: "created ... columns=14 count=0" and
+    then no count line at all.
+
+    Size, not riTotalRecordsInLog: that total counts QTC and note records as it
+    walks, and the list is indexed over log RECORDS. *)
+  if Size > 0 then
+     begin
+     TR4WEditableLogSetCount(Size);
+     TR4WEditableLogScrollToEnd;
+     end;
   // DispalyLoadedQSOs(-1);
   IntitialExLoaded := True;
   Sheet.SetUpRemainingMultiplierArrays;
