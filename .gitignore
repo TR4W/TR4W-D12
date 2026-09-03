@@ -246,3 +246,7 @@ i18n/*.mo
 # comes from tr4w.res -- so this is a third copy of the same image and exactly
 # the kind of duplicate that drifts.
 tr4w/tr4w.ico
+
+# Lazarus writes the previous version here when it saves a unit it had open.
+# Not source: it is a stale editor buffer by definition.
+tr4w/src/backup/
