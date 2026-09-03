@@ -148,7 +148,9 @@ procedure GoToNextMultDisplayedBandMapFrequency;
 function tAddQSOToLog(RXData: ContestExchange): boolean;
 function ConvertBandTypeToUDPContactBand(band: BandType): string;
 implementation
+
 uses
+  uMainForm,          // the editable log is an LCL virtual list
   uProcessCommand,
    (* Which store a log READ comes from -- step B4.  See uLogSource. *)
    uLogSource,
@@ -2536,15 +2538,18 @@ begin
      file. *)
   LogStoreAppendQSO(RXData);
   inc(tRestartInfo.riTotalRecordsInLog);
-  tSetWindowRedraw(wh[mweEditableLog], False);
-  if tLogIndex = LinesInEditableLog then
-     begin
-     ListView_DeleteItem(wh[mweEditableLog], 0);
-     tLogIndex := LinesInEditableLog - 1;
-     end;
-  tAddContestExchangeToLog(RXData, wh[mweEditableLog], tLogIndex);
-  EnsureListViewColumnVisible(wh[mweEditableLog]);
-  tSetWindowRedraw(wh[mweEditableLog], True);
+  (* ONE MORE RECORD, AND SHOW IT.
+
+    THE TRIM IS GONE WITH THE FIXED WINDOW. This deleted row 0 and re-added at
+    LinesInEditableLog-1, which is what kept the log at five rows -- and the
+    equality test in it is what broke when a load left tLogIndex one too high:
+    the trim never fired again and the list grew for the rest of the session.
+    A virtual list has no rows to trim.
+
+    tLogIndex is not touched here any more. It counted rows in a widget; the
+    widget has no rows. *)
+  TR4WEditableLogSetCount(tRestartInfo.riTotalRecordsInLog);
+  TR4WEditableLogScrollToEnd;
   Result := True;
 //  SendStationStatus;
 end;

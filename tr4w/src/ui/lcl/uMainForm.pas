@@ -40,7 +40,8 @@ unit uMainForm;
 interface
 
 uses
-  Windows, Classes, Forms, Controls, Graphics, StdCtrls, ExtCtrls, LCLType,
+  Windows, Classes, Forms, Controls, Graphics, StdCtrls, ExtCtrls, ComCtrls,
+  LCLType,
   LMessages,
   VC,                // TMainWindowElement -- the main window's own elements
   uMainWindowProc;   // TTR4WEntryField, EntryEvents -- the fields' key handlers
@@ -77,6 +78,11 @@ type
       the signatures were identical, because printed out they are. }
     procedure lstPossibleCallDrawItem(Control: TWinControl; Index: integer;
                                       ARect: TRect; State: TOwnerDrawState);
+  public
+    (* The editable log's virtual-list handlers. See CreateTR4WEditableLog. *)
+    procedure MainLogData(Sender: TObject; Item: TListItem);
+    procedure MainLogCustomDrawItem(Sender: TCustomListView; Item: TListItem;
+                                    State: TCustomDrawState; var DefaultDraw: boolean);
   end;
 
 type
@@ -155,6 +161,34 @@ function CreateTR4WPossibleCallList(const aLeft, aTop, aWidth, aHeight,
                                     aId, aItemHeight, aColumnWidth: integer): HWND;
 
 
+(* THE EDITABLE LOG -- an LCL virtual list, returning its HWND.
+
+  REPLACES CreateEditableLog's CreateWindowExW FOR THE MAIN WINDOW. That control
+  was created with LVS_NOSCROLL and filled with the last LinesInEditableLog
+  records, which is why the log showed five rows and had no scrollbar. NY4I:
+  "I do not see my vertical scroll bar and I still see the qso window as a fixed
+  5."
+
+  OwnerData, SO IT HOLDS NO ROWS. It knows the record count and asks OnData for
+  what it is about to paint, so the whole contest is scrollable without the
+  thousands of LVM_INSERTITEM messages that filling it would cost.
+
+  IT STILL RETURNS AN HWND, and wh[mweEditableLog] still holds it. Roughly thirty
+  call sites set colours, read the header, ask which row is selected and set
+  column widths through that handle; they keep working because a TListView has
+  one. What could NOT survive is the FILLING -- LVM_INSERTITEM against an
+  OwnerData list does nothing -- and those sites are converted with this. *)
+function CreateTR4WEditableLog(const aLeft, aTop, aWidth, aHeight: integer): HWND;
+
+(* The row count the list reports. Called when the log grows or is reloaded. *)
+procedure TR4WEditableLogSetCount(const aCount: integer);
+
+(* Forget cached rows -- after an edit, a rescore or a reload. *)
+procedure TR4WEditableLogRefresh;
+
+(* Put the newest QSO in view, which is where an operator looks. *)
+procedure TR4WEditableLogScrollToEnd;
+
 function CreateTR4WMainForm(const aMenu: HMENU): HWND;
 
 var
@@ -163,6 +197,7 @@ var
     of the program continues to work in tr4whandle. }
   TR4WMainForm: TTR4WMainForm = nil;
   TR4WCallEdit: TEdit = nil;
+  TR4WEditableLog: TListView = nil;
   TR4WExchangeEdit: TEdit = nil;
 
 { THE ENTRY FIELDS.
@@ -275,7 +310,10 @@ uses
    uTCIServer,         // WM_TCI_APPLY
    uGetServerLog,      // WM_USER_HEADLESS_SYNC_REPLACE
    SysUtils,           // Format -- the window-procedure guard
-   uCrashLog;          // OnMainThread / ReportOffMainThread / LogCaughtException
+   uCrashLog,          // OnMainThread / ReportOffMainThread / LogCaughtException
+   uLogSource,         // the virtual log list reads through the seam
+   uConfigValues,      // Config.ShowGridLines
+   MainUnit;           // LogRowTextFor, Config -- see CreateTR4WEditableLog
 
 var
    { The LCL's own window procedure for the main form, saved when TR4W's is
@@ -1079,6 +1117,206 @@ begin
    if Assigned(PossibleCallDrawProc) then
       begin
       PossibleCallDrawProc(Control, Index, ARect, State);
+      end;
+end;
+
+type
+   (* One row, remembered -- the same shape uLogEditForm uses and for the same
+     reason: a virtual list asks twice per row (text, then colour) and each ask
+     was a database read plus a run of the 360-line row builder. *)
+   TMainRowCache = record
+      Index:   integer;
+      Text:    TLogRowText;
+      Deleted: boolean;
+      XQSO:    boolean;
+   end;
+   PMainRowCache = ^TMainRowCache;
+
+const
+   MAIN_CACHE_ROWS = 512;
+
+var
+   GMainRowCache: array[0..MAIN_CACHE_ROWS - 1] of TMainRowCache;
+
+procedure TR4WEditableLogRefresh;
+var
+   i: integer;
+begin
+   for i := Low(GMainRowCache) to High(GMainRowCache) do
+      begin
+      GMainRowCache[i].Index := -1;
+      end;
+   if TR4WEditableLog <> nil then
+      begin
+      TR4WEditableLog.Invalidate;
+      end;
+end;
+
+function MainRow(aIndex: integer): PMainRowCache;
+var
+   rec: ContestExchange;
+   c:   LogColumnsType;
+begin
+   Result := @GMainRowCache[aIndex mod MAIN_CACHE_ROWS];
+   if Result^.Index = aIndex then
+      begin
+      Exit;
+      end;
+
+   Result^.Index := -1;
+   for c := Low(LogColumnsType) to High(LogColumnsType) do
+      begin
+      Result^.Text[c] := '';
+      end;
+   Result^.Deleted := False;
+   Result^.XQSO    := False;
+
+   (* OPENED AND CLOSED PER MISS, not held. The main window lives for the whole
+     contest and the log is written underneath it by every QSO; holding a read
+     cursor open across that is asking for a stale view. A miss is rare -- the
+     cache covers twenty screens. *)
+   if not LogSourceOpen then
+      begin
+      Exit;
+      end;
+   try
+      if not LogSourceReadAtIndex(aIndex, rec) then
+         begin
+         Exit;
+         end;
+      LogRowTextFor(rec, Result^.Text);
+      Result^.Deleted := rec.ceQSO_Deleted;
+      Result^.XQSO    := rec.ceXQSO;
+      Result^.Index   := aIndex;
+   finally
+      LogSourceClose;
+   end;
+end;
+
+procedure TR4WEditableLogSetCount(const aCount: integer);
+begin
+   if TR4WEditableLog = nil then
+      begin
+      Exit;
+      end;
+   TR4WEditableLogRefresh;
+   TR4WEditableLog.Items.Count := aCount;
+end;
+
+procedure TR4WEditableLogScrollToEnd;
+begin
+   if (TR4WEditableLog = nil) or (TR4WEditableLog.Items.Count = 0) then
+      begin
+      Exit;
+      end;
+   TR4WEditableLog.Items[TR4WEditableLog.Items.Count - 1].MakeVisible(False);
+end;
+
+(* METHODS OF THE FORM, not plain procedures. OnData and OnCustomDrawItem are
+  `of object` -- a bare procedure will not assign to them, and the compiler says
+  so rather than letting a dangling Self through. *)
+procedure TTR4WMainForm.MainLogData(Sender: TObject; Item: TListItem);
+var
+   e:     PMainRowCache;
+   c:     LogColumnsType;
+   first: boolean;
+begin
+   e := MainRow(Item.Index);
+
+   first := True;
+   Item.SubItems.Clear;
+   for c := Low(LogColumnsType) to High(LogColumnsType) do
+      begin
+      if not ColumnsArray[c].Enable then
+         begin
+         Continue;
+         end;
+      if first then
+         begin
+         Item.Caption := e^.Text[c];
+         first := False;
+         end
+      else
+         begin
+         Item.SubItems.Add(e^.Text[c]);
+         end;
+      end;
+end;
+
+(* X-QSO grey and deleted red, from the RECORD.
+
+  The Win32 control did this through NM_CUSTOMDRAW in uMainWindowProc, reading a
+  flag smuggled into the row's per-item lParam by SetRowXQSOFlag. A virtual row
+  knows its own record, so the smuggling goes. *)
+procedure TTR4WMainForm.MainLogCustomDrawItem(Sender: TCustomListView; Item: TListItem;
+                                              State: TCustomDrawState; var DefaultDraw: boolean);
+var
+   e: PMainRowCache;
+begin
+   DefaultDraw := True;
+   e := MainRow(Item.Index);
+
+   if e^.Deleted then
+      begin
+      Sender.Canvas.Font.Color := clRed;
+      end
+   else if e^.XQSO then
+      begin
+      Sender.Canvas.Font.Color := clGray;
+      end;
+end;
+
+function CreateTR4WEditableLog(const aLeft, aTop, aWidth, aHeight: integer): HWND;
+var
+   c:   LogColumnsType;
+   col: TListColumn;
+begin
+   Result := 0;
+   if TR4WMainForm = nil then
+      begin
+      Exit;
+      end;
+
+   TR4WEditableLogRefresh;
+
+   if TR4WEditableLog = nil then
+      begin
+      TR4WEditableLog := TListView.Create(TR4WMainForm);
+      TR4WEditableLog.Parent := TR4WMainForm;
+      end;
+
+   with TR4WEditableLog do
+      begin
+      SetBounds(aLeft, aTop, aWidth, aHeight);
+      ViewStyle  := vsReport;
+      OwnerData  := True;
+      ReadOnly   := True;
+      RowSelect  := True;
+      GridLines  := Config.ShowGridLines;
+      Color      := tr4wColorsArray[TWindows[mweEditableLog].mweBackG];
+      Font.Color := tr4wColorsArray[TWindows[mweEditableLog].mweColor];
+      OnData           := TR4WMainForm.MainLogData;
+      OnCustomDrawItem := TR4WMainForm.MainLogCustomDrawItem;
+
+      Columns.BeginUpdate;
+      try
+         Columns.Clear;
+         for c := Low(LogColumnsType) to High(LogColumnsType) do
+            begin
+            if not ColumnsArray[c].Enable then
+               begin
+               Continue;
+               end;
+            col := Columns.Add;
+            col.Caption := AnsiString(ColumnsArray[c].Text);
+            col.Width   := 40;
+            end;
+      finally
+         Columns.EndUpdate;
+      end;
+
+      Visible := True;
+      Result  := Handle;
       end;
 end;
 

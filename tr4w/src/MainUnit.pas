@@ -263,9 +263,8 @@ procedure LoadinLog;
   a rendered row, so restructuring them would have been unverifiable.
 
   Filled by LogRowTextFor. *)
-type
-  TLogRowText = array[LogColumnsType] of string;
-  PLogRowText = ^TLogRowText;
+(* TLogRowText and PLogRowText are declared in VC, beside LogColumnsType --
+  both the filler here and the LCL forms that read it need them. *)
 
 procedure tAddContestExchangeToLog(RXData: ContestExchange; ListViewHandle:
   HWND; var Index: integer);
@@ -4109,8 +4108,20 @@ begin
   MainWindowTextWriter := @WriteMainWindowText;
 
   wh[mweWholeScreen] := tr4whandle;
-  wh[mweEditableLog] := CreateEditableLog(tr4whandle, 0, ws * 7,
-    MainWindowChildsWidth, 0 {EditableLogWindowHeight}, False);
+  (* THE EDITABLE LOG IS AN LCL VIRTUAL LIST NOW -- see uMainForm.
+
+    CreateEditableLog is still here and still builds the Win32 control for Log
+    Search, which has not been converted. For the MAIN window it is gone: that
+    control was created with LVS_NOSCROLL and only ever held
+    LinesInEditableLog rows, which is why there was no scrollbar and why the
+    log showed five QSOs of a contest. NY4I: "I do not see my vertical scroll
+    bar and I still see the qso window as a fixed 5."
+
+    wh[mweEditableLog] STILL HOLDS AN HWND -- the list's own -- so the thirty
+    call sites that set colours, read the header, ask which row is selected or
+    set a column width keep working unchanged. *)
+  wh[mweEditableLog] := CreateTR4WEditableLog(0, ws * 7,
+    MainWindowChildsWidth, EditableLogHeight);
   SetListViewColor(mweEditableLog);
   DispalayLogGridLines;
 
@@ -7751,7 +7762,12 @@ begin
   Size := LogSourceRecordCount;
   if Size < 0 then
      begin
-     LogSourceClose;
+     (* THE WHOLE LOG IS REACHABLE NOW, and the newest QSO is where an operator
+    looks -- so the list is pointed at the end rather than the top. *)
+  TR4WEditableLogSetCount(tRestartInfo.riTotalRecordsInLog);
+  TR4WEditableLogScrollToEnd;
+
+  LogSourceClose;
      Exit;
      end;
   LogSourceRewind;
@@ -7772,7 +7788,10 @@ begin
      begin
      if CurrentRecord >= FirstRecord then
         begin
-        tAddContestExchangeToLog(TempRXData, wh[mweEditableLog], tLogIndex);
+        (* NOTHING IS INSERTED ANY MORE. The list is virtual: it is told how
+          many records there are once, below, and asks for the ones it paints.
+          Inserting here was thousands of LVM_INSERTITEM messages on load and
+          is what limited the window to a tail of the log. *)
         end;
 
      if TempRXData.ceSendToServer = False then

@@ -2374,6 +2374,15 @@ type
     );
 
 type
+  (* THE TEXT OF ONE LOG ROW, COLUMN BY COLUMN.
+
+    HERE RATHER THAN IN MainUnit BECAUSE BOTH SIDES NEED IT AND NEITHER OWNS
+    IT: MainUnit fills it (LogRowTextFor) and the LCL forms read it, and
+    uMainForm cannot use MainUnit in its interface. LogColumnsType is declared
+    three lines below, which is the other half of the same vocabulary. *)
+  TLogRowText = array[LogColumnsType] of string;
+  PLogRowText = ^TLogRowText;
+
   TLogColumnsInfo = record
     Text: string;
     Width: Byte;
