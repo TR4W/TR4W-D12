@@ -53,6 +53,24 @@ uses
    VC, uLogSource, MainUnit;
 
 type
+   (* ONE ROW, REMEMBERED.
+
+     WHY A CACHE AT ALL. A virtual list asks for what it is about to paint, and
+     it asks TWICE per row -- once in OnData for the text and again in
+     OnCustomDrawItem for the colour. Each of those was a SQLite read plus a
+     run of the 360-line row builder, so a single repaint of a dozen visible
+     rows was two dozen queries. NY4I could watch it: "It is still not smooth
+     and I can watch the grid redraw."
+
+     The columns were never the slow part. Painting was. *)
+   TLogRowCacheEntry = record
+      Index:   integer;   (* the record this holds, or -1 for empty *)
+      Text:    TLogRowText;
+      Deleted: boolean;
+      XQSO:    boolean;
+   end;
+   PLogRowCacheEntry = ^TLogRowCacheEntry;
+
    TfrmLogEdit = class(TForm)
       lvLog: TListView;
       procedure FormCreate(Sender: TObject);
@@ -66,6 +84,9 @@ type
                                     State: TCustomDrawState; var DefaultDraw: boolean);
    private
       FOpen: boolean;
+      FCache: array of TLogRowCacheEntry;
+      function  Row(aIndex: integer): PLogRowCacheEntry;
+      procedure DropCache;
       procedure BuildColumns;
       procedure SizeColumns;
    end;
@@ -114,9 +135,68 @@ begin
    ShowModalOverWin32Parent(frmLogEdit, tr4whandle);
 end;
 
+(* DIRECT-MAPPED, AND BOUNDED. A slot per index modulo the cache size: no
+  eviction policy to get wrong, no list to walk, and the memory does not grow
+  with the log -- which is the whole reason the list is virtual. Rows near each
+  other collide only when they are CACHE_ROWS apart, and a repaint touches a
+  contiguous run, so in practice a paint hits the cache for every row after the
+  first pass over it.
+
+  512 rows is roughly twenty screens; a scroll re-reads only what scrolls in. *)
+const
+   CACHE_ROWS = 512;
+
+function TfrmLogEdit.Row(aIndex: integer): PLogRowCacheEntry;
+var
+   rec: ContestExchange;
+   c:   LogColumnsType;
+begin
+   Result := @FCache[aIndex mod CACHE_ROWS];
+   if Result^.Index = aIndex then
+      begin
+      Exit;
+      end;
+
+   Result^.Index := -1;
+   for c := Low(LogColumnsType) to High(LogColumnsType) do
+      begin
+      Result^.Text[c] := '';
+      end;
+   Result^.Deleted := False;
+   Result^.XQSO    := False;
+
+   if not FOpen then
+      begin
+      Exit;
+      end;
+   if not LogSourceReadAtIndex(aIndex, rec) then
+      begin
+      Exit;
+      end;
+
+   LogRowTextFor(rec, Result^.Text);
+   Result^.Deleted := rec.ceQSO_Deleted;
+   Result^.XQSO    := rec.ceXQSO;
+   Result^.Index   := aIndex;
+end;
+
+(* AFTER ANYTHING THAT CAN CHANGE THE LOG. Cheaper and more honest than trying
+  to work out which rows moved: an edit can renumber everything after it. *)
+procedure TfrmLogEdit.DropCache;
+var
+   i: integer;
+begin
+   SetLength(FCache, CACHE_ROWS);
+   for i := 0 to High(FCache) do
+      begin
+      FCache[i].Index := -1;
+      end;
+end;
+
 procedure TfrmLogEdit.FormCreate(Sender: TObject);
 begin
    FOpen := False;
+   DropCache;
    BuildColumns;
 end;
 
@@ -285,6 +365,7 @@ begin
       Exit;
       end;
 
+   DropCache;
    lvLog.Items.Count := LogSourceRecordCount;
    lvLog.Invalidate;
 end;
@@ -326,23 +407,11 @@ end;
 
 procedure TfrmLogEdit.lvLogData(Sender: TObject; Item: TListItem);
 var
-   rec:  ContestExchange;
-   rowText: TLogRowText;
-   c:    LogColumnsType;
+   e:     PLogRowCacheEntry;
+   c:     LogColumnsType;
    first: boolean;
 begin
-   if not FOpen then
-      begin
-      Exit;
-      end;
-
-   if not LogSourceReadAtIndex(Item.Index, rec) then
-      begin
-      Item.Caption := '';
-      Exit;
-      end;
-
-   LogRowTextFor(rec, rowText);
+   e := Row(Item.Index);
 
    first := True;
    Item.SubItems.Clear;
@@ -355,18 +424,14 @@ begin
 
       if first then
          begin
-         Item.Caption := rowText[c];
+         Item.Caption := e^.Text[c];
          first := False;
          end
       else
          begin
-         Item.SubItems.Add(rowText[c]);
+         Item.SubItems.Add(e^.Text[c]);
          end;
       end;
-
-   (* The record itself is not kept -- Data would have to be freed and the row
-     is re-read whenever it is repainted anyway. The X-QSO flag is re-read in
-     the custom draw for the same reason. *)
 end;
 
 (* X-QSO AND DELETED ROWS ARE VISIBLY DIFFERENT, IN EVERY WINDOW.
@@ -382,24 +447,16 @@ end;
 procedure TfrmLogEdit.lvLogCustomDrawItem(Sender: TCustomListView; Item: TListItem;
                                           State: TCustomDrawState; var DefaultDraw: boolean);
 var
-   rec: ContestExchange;
+   e: PLogRowCacheEntry;
 begin
    DefaultDraw := True;
-   if not FOpen then
-      begin
-      Exit;
-      end;
+   e := Row(Item.Index);
 
-   if not LogSourceReadAtIndex(Item.Index, rec) then
-      begin
-      Exit;
-      end;
-
-   if rec.ceQSO_Deleted then
+   if e^.Deleted then
       begin
       Sender.Canvas.Font.Color := clRed;
       end
-   else if rec.ceXQSO then
+   else if e^.XQSO then
       begin
       Sender.Canvas.Font.Color := clGray;
       end;
@@ -426,6 +483,7 @@ begin
       OpenEditQSOWindow(Self.Handle);
    finally
       FOpen := LogSourceOpen;
+      DropCache;
       lvLog.Items.Count := LogSourceRecordCount;
       lvLog.Invalidate;
    end;
