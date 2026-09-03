@@ -30,7 +30,6 @@ uses
   uWin32Compat,   // IDI_WARNING -- the FPC gap list
 
   PostUnit,
-  uCommctrl,
   Windows,
   LogDupe,
   Messages

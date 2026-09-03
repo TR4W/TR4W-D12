@@ -153,7 +153,6 @@ uses
   uDialogs,
   Version,
   VC,
-  uCommctrl,
   uGradient,
   uMessages,
   uWinManager,

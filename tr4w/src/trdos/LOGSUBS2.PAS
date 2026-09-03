@@ -35,7 +35,6 @@ uses
 //  uStack,
   uStations,
   uCallsigns,
-  uCommctrl,
   //  uMMTTY,
   //uEditQSO,  // Issue 165 NY4I Removed this from here as there was a circular reference. It did not appear to be needed.
   uTelnet,

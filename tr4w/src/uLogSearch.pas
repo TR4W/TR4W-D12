@@ -24,6 +24,9 @@ unit uLogSearch;
 interface
 
 uses
+  (* the Log Search list is still a raw Win32 list view.
+    That window is not converted yet; this uses entry goes with it. *)
+  uCommctrl,
   TF,
   VC,
   Windows,
@@ -32,7 +35,6 @@ uses
   LogStuff,
   LogDupe,
   PostUnit,
-  uCommctrl,
   uEditQSO,
 utils_text,
   Messages

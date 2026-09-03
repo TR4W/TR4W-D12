@@ -190,6 +190,28 @@ type
 
   PrefixRecPtr = ^PrefixRec;
 
+  (* THE COUNTRY PREFIX TABLE.
+
+    A PLAIN DYNAMIC ARRAY. It was an HDSA -- comctl32's "dynamic structure
+    array" -- which is a UI library's private allocator holding the country
+    lookup, and it is worse than it sounds. uCommctrl quotes Microsoft's own
+    documentation beside the declarations: DSA_GetItem "is not exported by
+    name. To use it, you must use GetProcAddress and request ordinal 322 from
+    ComCtl32.dll", and DSA_DeleteItem "is available through Windows XP Service
+    Pack 2. It might be altered or unavailable in subsequent versions."
+
+    So the callsign-to-country lookup, which is on the hot path of every QSO,
+    rested on undocumented by-ordinal exports Microsoft reserves the right to
+    withdraw -- to store a sorted array of 14-byte records. FPC's own dynamic
+    array does that, with bounds the compiler knows, and it is the same
+    contiguous block underneath: the binary search still indexes, and
+    ctyPrefixesTableRecords still counts.
+
+    It also removes comctl32 from the DATA layer entirely, which is the point
+    on the way to a non-Windows build: there is no DSA on macOS or Linux to
+    port to, and nothing to replace because the replacement is the language. *)
+  TPrefixTable = array of PrefixRec;
+
   CountryInfoRecord = record
     {06}ID: DXMultiplierString;
     {01}dummy: Byte;
@@ -210,7 +232,7 @@ type
     ctyVersion: array[0..15] of AnsiChar;
     ctyTable: CountryInfoArrayType;
     ctyNumberCountries: longint;   // 4.42.6
-    ctyPrefixesTable: HDSA;
+    ctyPrefixesTable: TPrefixTable;
     ctyPrefixesTableRecords: longword;
     ctyZoneMode: ZoneModeType;
     ctyTempQTHRecord: QTHRecord;
@@ -266,6 +288,12 @@ procedure ctyLoadInR150SList;
 
 var
   CTY                                   : CTYInterface;
+
+
+const
+   (* The growth quantum DSA_Create was given, kept so the allocation pattern
+     is unchanged. *)
+   PREFIX_TABLE_GROW = 100;
 
 implementation
 
@@ -381,14 +409,20 @@ begin
       begin
 
       for TempIndex := 0 to CTY.CTYPrefixesTableRecords - 1 do
-        if StrComp(PrefixRecPtr(DSA_GetItemPtr(CTY.CTYPrefixesTable, TempIndex))^.Prefix, pr.Prefix) = 0 then
+        if StrComp(CTY.ctyPrefixesTable[TempIndex].Prefix, pr.Prefix) = 0 then
            begin
-           DSA_SetItem(CTY.CTYPrefixesTable, TempIndex, pr);
+           CTY.ctyPrefixesTable[TempIndex] := pr^;
            Exit;
            end;
       end;
 
-  DSA_InsertItem(CTY.CTYPrefixesTable, CTY.CTYPrefixesTableRecords, pr);
+  if CTY.CTYPrefixesTableRecords >= Length(CTY.ctyPrefixesTable) then
+     begin
+     SetLength(CTY.ctyPrefixesTable,
+               Length(CTY.ctyPrefixesTable) + PREFIX_TABLE_GROW);
+     end;
+
+  CTY.ctyPrefixesTable[CTY.CTYPrefixesTableRecords] := pr^;
   inc(CTY.CTYPrefixesTableRecords);
 end;
 
@@ -419,9 +453,9 @@ begin
   CTY.ctyTable[Index1].VisibleInRM := 1;
   for c := 0 to CTY.CTYPrefixesTableRecords - 1 do
      begin
-     if PrefixRecPtr(DSA_GetItemPtr(CTY.CTYPrefixesTable, c))^.Country = Index1 then
+     if CTY.ctyPrefixesTable[c].Country = Index1 then
         begin
-        PrefixRecPtr(DSA_GetItemPtr(CTY.CTYPrefixesTable, c))^.Country := Index2;
+        CTY.ctyPrefixesTable[c].Country := Index2;
         end;
      end;
 
@@ -485,9 +519,14 @@ begin
      goto 2;
      end;
 
-  if CTY.CTYPrefixesTable = 0 then
+  (* GROWN IN BLOCKS, not per prefix. DSA_Create's second argument was its
+    growth quantum (100 records); SetLength on every append would be a
+    reallocation per prefix over a CTY.DAT of ~2,000, so the capacity is
+    raised in the same steps and ctyPrefixesTableRecords -- not Length --
+    remains the count of live records. *)
+  if Length(CTY.ctyPrefixesTable) = 0 then
      begin
-     CTY.CTYPrefixesTable := DSA_Create(SizeOf(PrefixRec), 100);
+     SetLength(CTY.ctyPrefixesTable, PREFIX_TABLE_GROW);
      end;
 
   p := MapBase;
@@ -739,19 +778,19 @@ begin
         while (iJ >= 0) and (
         //aSort[iJ] > aSort[iJ + iK]
           StrComp(
-          PrefixRecPtr(DSA_GetItemPtr(CTY.CTYPrefixesTable, iJ))^.Prefix,
-          PrefixRecPtr(DSA_GetItemPtr(CTY.CTYPrefixesTable, iJ + iK))^.Prefix
+          CTY.ctyPrefixesTable[iJ].Prefix,
+          CTY.ctyPrefixesTable[iJ + iK].Prefix
           ) > 0
           ) do
            begin
-           DSA_GetItem(CTY.CTYPrefixesTable, iJ, @wTemp1);
+           wTemp1 := CTY.ctyPrefixesTable[iJ];
            //wTemp := aSort[iJ];
 
-           DSA_GetItem(CTY.CTYPrefixesTable, iJ + iK, @wTemp2);
+           wTemp2 := CTY.ctyPrefixesTable[iJ + iK];
 
-           DSA_SetItem(CTY.CTYPrefixesTable, iJ, @wTemp2);
+           CTY.ctyPrefixesTable[iJ] := wTemp2;
    //        aSort[iJ] := aSort[iJ + iK];
-           DSA_SetItem(CTY.CTYPrefixesTable, iJ + iK, @wTemp1);
+           CTY.ctyPrefixesTable[iJ + iK] := wTemp1;
    //        aSort[iJ + iK] := wTemp;
 
            if iJ > iK then
@@ -777,7 +816,7 @@ begin
 
   for iI := CTY.ctyPrefixesTableRecords - 1 downto 0 do
   begin
-    TempPtr := PrefixRecPtr(DSA_GetItemPtr(CTY.CTYPrefixesTable, iI));
+    TempPtr := @CTY.ctyPrefixesTable[iI];
 {$IF tDebugMode}
     sWriteFile(h, wsprintfBuffer, ctyDbgFmt(wsprintfBuffer, '%04u %-15s %u'#13#10, iI, @TempPtr^.Prefix, TempPtr.Country));
 {$IFEND}
@@ -832,7 +871,7 @@ begin
      begin
      i := (l + h) shr 1;
 
-     c := StrComp(PrefixRecPtr(DSA_GetItemPtr(CTY.CTYPrefixesTable, i))^.Prefix, s);
+     c := StrComp(CTY.ctyPrefixesTable[i].Prefix, s);
      if c < 0 then l := i + 1 else
                                  begin
                                  h := i - 1;
@@ -903,7 +942,7 @@ begin
 
          if CTY.ctyCountryMode = ARRLCountryMode then
             begin
-            if CTY.ctyTable[PrefixRecPtr(DSA_GetItemPtr(CTY.CTYPrefixesTable, TempIndex))^.Country].ID[1] <> '*' then
+            if CTY.ctyTable[CTY.ctyPrefixesTable[TempIndex].Country].ID[1] <> '*' then
                begin
                goto FillRecord;
                end;
@@ -955,10 +994,10 @@ begin
 
         if CTY.ctyCountryMode = ARRLCountryMode then
            begin
-           if CTY.ctyTable[PrefixRecPtr(DSA_GetItemPtr(CTY.CTYPrefixesTable, TempIndex))^.Country].ID[1] = '*' then Continue;
+           if CTY.ctyTable[CTY.ctyPrefixesTable[TempIndex].Country].ID[1] = '*' then Continue;
            end;
 
-        if not PrefixRecPtr(DSA_GetItemPtr(CTY.CTYPrefixesTable, TempIndex))^.FullCallsigns then
+        if not CTY.ctyPrefixesTable[TempIndex].FullCallsigns then
            begin
            goto FillRecord;
            end;
@@ -971,7 +1010,7 @@ begin
 
   CTY.ctyLastIndex := TempIndex;
 
-  TempPrefixRec := DSA_GetItemPtr(CTY.CTYPrefixesTable, TempIndex);
+  TempPrefixRec := @CTY.ctyPrefixesTable[TempIndex];
   QTH.Continent := CTY.ctyTable[TempPrefixRec^.Country].DefaultContinent;
 
   QTH.CountryID := CTY.ctyTable[TempPrefixRec.Country].ID;
@@ -1128,7 +1167,7 @@ var
 begin
   if ctyLocateCall(Call, CTY.ctyTempQTHRecord) then
      begin
-     TempPrefixRec := DSA_GetItemPtr(CTY.CTYPrefixesTable, CTY.ctyLastIndex);
+     TempPrefixRec := @CTY.ctyPrefixesTable[CTY.ctyLastIndex];
 
      Result := 0;
  //     Result := CTY.ctyTempQTHRecord.Zone;

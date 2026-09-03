@@ -28,7 +28,6 @@ uses
   CFGCMD,
   TF,
   VC,
-  uCommctrl,
   utils_file,
   Windows,
   Messages,

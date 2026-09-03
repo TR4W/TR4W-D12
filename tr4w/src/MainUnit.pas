@@ -85,7 +85,6 @@ uses
   uIntercom,
   uGetServerLog,
   uMessages,
-  uCommctrl,
   uMixW,
   LPT,
   uQTCS,
@@ -116,6 +115,12 @@ uses
   uEditQSO,
   uSynTime,
   uBeacons,
+  (* THE LAST TWO WIN32 LIST WINDOWS. CreateEditableLog builds a raw
+    comctl32 list view, and Log Search and the previous-dupe window are still
+    its only callers -- the main log and View/Edit Log are an LCL grid now
+    (uLogGrid). This uses entry goes when those two are converted; nothing
+    else in this unit needs it. *)
+  uCommctrl,
   uDialogs,
   uLogSearch,
   Windows,

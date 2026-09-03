@@ -42,7 +42,6 @@ uses
   uSpots,
   uLogCompare,
   uIntercom,
-  uCommctrl,
   CFGCMD,
   //Country9,
   LogSCP,
@@ -130,7 +129,6 @@ procedure SetStatusByte;
 procedure SendStationStatus(ssType: StationStatusType);
 procedure SendMessageStatus;
 procedure TryConnectToNetwork;
-function InitListViewImageLists(hwndLV: HWND): boolean;
 function SendToNet(var buf; Len: integer): integer;
 
 { IS THE MULTI-OP LINK UP?  Replaces `NetSocket <> 0`, which three other units
@@ -1341,7 +1339,6 @@ procedure AddNewClient(ClientID: integer);
 var
   elvi                                  : TLVItem;
 begin
-  //  InitListViewImageLists(NetworkListViewhandle);
 
   elvi.Mask := LVIF_PARAM;
   elvi.iItem := TotalClients;
@@ -1351,30 +1348,6 @@ begin
   ListView_InsertItem(wh[mweNetwork], elvi);
   inc(TotalClients);
   PosInClientsList[ClientID] := TotalClients;
-end;
-
-function InitListViewImageLists(hwndLV: HWND): boolean;
-var
-  hiconItem                             : HICON; // icon for list view items
-  //  himlLarge                        : HImageList; // image list for icon view
-  himlSmall                             : HImageList; // image list for other views
-begin
-
-  //  himlLarge := ImageList_Create(GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON), Cardinal(True), 1, 1);
-  himlSmall := ImageList_Create(15, 15, Cardinal(True), 1, 1);
-
-  // Add an icon to each image list.
-  hiconItem := LoadIcon(hInstance, 'MAINICON');
-  //  hiconItem := LoadIcon(0, IDI_WINLOGO);
-  //  ImageList_AddIcon(himlLarge, hiconItem);
-  ImageList_AddIcon(himlSmall, hiconItem);
-  DeleteObject(hiconItem);
-
-  // Assign the image lists to the list view control.
-//  ListView_SetImageList(hwndLV, himlLarge, LVSIL_NORMAL);
-
-  ListView_SetImageList(hwndLV, himlSmall, LVSIL_SMALL);
-  Result := True;
 end;
 
 procedure ShowConnectionStatus(Operation: string);

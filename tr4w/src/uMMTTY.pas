@@ -28,7 +28,6 @@ uses
   //  Richedit,
   TF,
   VC,
-  uCommctrl,
   Windows,
   Messages,
   LogK1EA,

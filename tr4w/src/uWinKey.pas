@@ -24,8 +24,10 @@ unit uWinKey;
 interface
 
 uses
-  LogRadio,
+  (* CreateUpDownControl -- the WinKeyer settings dialog is still a raw Win32 dialog.
+    That window is not converted yet; this uses entry goes with it. *)
   uCommctrl,
+  LogRadio,
   Messages,
   Windows,
   VC,

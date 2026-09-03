@@ -54,7 +54,6 @@ uses
   //  uDXSSpotsFilter,
   Tree,
   LogPack,
-  uCommctrl,
   Messages
   ,
   uTR4WStrings,

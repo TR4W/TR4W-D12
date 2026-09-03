@@ -27,7 +27,6 @@ uses
   uConfigValues,
   SysUtils,
   uMenu,
-  uCommctrl,
   uCTYDAT,
   uSpots,
   TF,

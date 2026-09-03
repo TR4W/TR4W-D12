@@ -24,13 +24,15 @@ unit uGetServerLog;
 interface
 
 uses
+  (* LVM_SETITEMCOUNT -- the server-log list is still a raw Win32 list view.
+    That window is not converted yet; this uses entry goes with it. *)
+  uCommctrl,
 
   TF,
   VC,
   utils_net,
   WinSock2,
   utils_file,
-  uCommctrl,
   Windows,
   Messages,
   LogStuff,

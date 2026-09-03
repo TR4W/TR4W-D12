@@ -27,11 +27,14 @@ uses
   SysUtils,
 utils_text,
   uWinKey,
+  (* PBM_SETMARQUEE -- the tour-duration progress bar is still a raw Win32
+    common control. That window is not converted yet; this uses entry goes
+    with it. The editable log no longer needs anything from here. *)
+  uCommctrl,
   uMults,
   uCTYDAT,
   uCallsigns,
   TF,
-  uCommctrl,
   Messages,
   Version,
   VC,

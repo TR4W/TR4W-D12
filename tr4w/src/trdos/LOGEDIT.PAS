@@ -36,7 +36,6 @@ uses
   Tree,
   TF,
   VC,
-  uCommctrl,
   Messages,
   LogWind,
   LogDupe,

@@ -56,7 +56,6 @@ uses
 
   TF,
   VC,
-  uCommctrl,
   Windows,
   Messages {,
   LogWind};

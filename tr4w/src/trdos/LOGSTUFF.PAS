@@ -34,7 +34,6 @@ uses {Dos, Printer,}Tree,
   uRussiaOblasts,
   uCallSignRoutines,
   uCTYDAT,
-  uCommctrl,
   TF,
   VC,
   Math,
@@ -58,6 +57,9 @@ uses {Dos, Printer,}Tree,
   SysUtils, // ny4i 4.44.9
   StrUtils, // 4.90.11
   uRegex,
+  (* ListView_DeleteAllItems -- the previous-dupe window is still a raw Win32
+    list view. That window is not converted yet; this uses entry goes with it. *)
+  uCommctrl,
   uMults,
   Windows
   ,

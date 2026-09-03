@@ -46,7 +46,6 @@ uses
   LOGSUBS2,
   LogDupe,
   LogStuff,
-  uCommctrl,
   ZoneCont,
   LogK1EA,
   LogEdit,
