@@ -176,14 +176,15 @@ end;
   off-screen. *)
 procedure TfrmLogEdit.SizeColumns;
 var
-   c:        LogColumnsType;
-   i:        integer;
-   charW:    integer;
-   wanted:   integer;
-   total:    integer;
-   avail:    integer;
-   slack:    integer;
-   given:    integer;
+   c:       LogColumnsType;
+   i:       integer;
+   charW:   integer;
+   wanted:  integer;
+   total:   integer;
+   avail:   integer;
+   slack:   integer;
+   given:   integer;
+   widths:  array of integer;
 begin
    if lvLog.Columns.Count = 0 then
       begin
@@ -197,16 +198,23 @@ begin
       charW := 7;
       end;
 
-   (* Pass one: what each column needs. *)
-   i := 0;
+   SetLength(widths, lvLog.Columns.Count);
+
+   (* PASS ONE -- WHAT EACH COLUMN NEEDS, INTO AN ARRAY AND NOT INTO THE
+     WIDGET. Writing the widths as they were computed is what NY4I could
+     SEE: "the columns all compress to the left, then it extended to the
+     right again", and the same animation on every resize. Each assignment
+     to Columns[i].Width repaints, so the intermediate state of a two-pass
+     calculation was being drawn. *)
    total := 0;
+   i := 0;
    for c := Low(LogColumnsType) to High(LogColumnsType) do
       begin
       if not ColumnsArray[c].Enable then
          begin
          Continue;
          end;
-      if i >= lvLog.Columns.Count then
+      if i > High(widths) then
          begin
          Break;
          end;
@@ -217,39 +225,56 @@ begin
          wanted := lvLog.Canvas.TextWidth(AnsiString(ColumnsArray[c].Text)) + charW;
          end;
 
-      lvLog.Columns[i].Width := wanted;
+      widths[i] := wanted;
       total := total + wanted;
       Inc(i);
       end;
 
-   (* Pass two: hand out what is left, in proportion to what each asked for. *)
+   (* PASS TWO -- the leftover, in proportion, still only in the array. *)
    avail := lvLog.ClientWidth;
-   if (avail <= total) or (total <= 0) then
+   if (avail > total) and (total > 0) then
       begin
-      Exit;
-      end;
-
-   slack := avail - total;
-   given := 0;
-   for i := 0 to lvLog.Columns.Count - 1 do
-      begin
-      if i = lvLog.Columns.Count - 1 then
+      slack := avail - total;
+      given := 0;
+      for i := 0 to High(widths) do
          begin
-         (* THE LAST COLUMN TAKES THE REMAINDER, so integer division cannot
-           leave a one-pixel gap at the right edge. *)
-         lvLog.Columns[i].Width := lvLog.Columns[i].Width + (slack - given);
-         end
-      else
-         begin
-         wanted := (lvLog.Columns[i].Width * slack) div total;
-         lvLog.Columns[i].Width := lvLog.Columns[i].Width + wanted;
-         given := given + wanted;
+         if i = High(widths) then
+            begin
+            widths[i] := widths[i] + (slack - given);
+            end
+         else
+            begin
+            wanted := (widths[i] * slack) div total;
+            widths[i] := widths[i] + wanted;
+            given := given + wanted;
+            end;
          end;
       end;
+
+   (* ONE PAINT. BeginUpdate/EndUpdate around the only loop that touches the
+     control, and a width that is already right is not written at all -- which
+     is why re-opening the window was smooth even before this: the assignments
+     were no-ops and the LCL skipped them. *)
+   lvLog.Columns.BeginUpdate;
+   try
+      for i := 0 to High(widths) do
+         begin
+         if lvLog.Columns[i].Width <> widths[i] then
+            begin
+            lvLog.Columns[i].Width := widths[i];
+            end;
+         end;
+   finally
+      lvLog.Columns.EndUpdate;
+   end;
 end;
 
+(* SIZED BEFORE THE ROWS ARE COUNTED, so the first paint already has the final
+  columns. Sizing afterwards meant the window appeared with the .lfm's
+  placeholder widths and then corrected itself in view. *)
 procedure TfrmLogEdit.FormShow(Sender: TObject);
 begin
+   SizeColumns;
    (* HELD OPEN FOR THE LIFE OF THE WINDOW. OnData fires per painted row, so
      opening and closing the source per row would reopen the database
      thousands of times while the operator scrolls. *)
@@ -261,7 +286,6 @@ begin
       end;
 
    lvLog.Items.Count := LogSourceRecordCount;
-   SizeColumns;
    lvLog.Invalidate;
 end;
 
