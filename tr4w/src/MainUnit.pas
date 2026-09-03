@@ -9717,36 +9717,34 @@ end;
 
 procedure CheckEditableWindowHeight;
 var
-  h, guard: integer;
+  h: integer;
 begin
-  // Size the editable-log list so ALL LinesInEditableLog loaded rows are fully
-  // visible.  The old loop shrank to the largest height where only
-  // LinesInEditableLog-1 rows fit, which always left the next (loaded) row
-  // clipped at the bottom with no border.  Instead: shrink if too many rows
-  // fit, then grow to the SMALLEST height where every LinesInEditableLog row
-  // shows whole -- the list's static edge then forms a clean bottom border
-  // matching the top.  (Reported: editable-log bottom row cut off.)
-  h := 30 + LinesInEditableLog * (ws + 2) {EditableLogWindowHeight};
-  (* Through the LCL -- see TR4WEditableLogSetBounds. *)
+  (* THE TWO SHRINK/GROW LOOPS THAT STOOD HERE ARE GONE, AND THEY ARE WHAT LEFT
+    THE LOG BLANK.
+
+    They set the height and then nudged it a pixel at a time -- up to 200 times
+    each, under a guard -- until ListView_GetCountPerPage reported exactly
+    LinesInEditableLog rows. That was the fixed-five window made exact: size the
+    control so five whole rows fit and no sixth is half-shown.
+
+    IT CANNOT WORK AGAINST A VIRTUAL LIST, and it fails in the worst direction.
+    GetCountPerPage on an OwnerData list that has not been given a count yet
+    does not answer the question the loop is asking, the condition never became
+    false, and the guard ran all 200 iterations -- subtracting 200 from a height
+    of 150. Measured on NY4I's machine: created at bounds=(0,154,1012,150),
+    and by the time the row count was set, bounds=(0,154,1012,0). A control of
+    zero height draws nothing, which is exactly what he saw twice.
+
+    THE QUESTION ITSELF IS RETIRED. The list scrolls now, so there is no reason
+    to make a whole number of rows fit: a partly visible row at the bottom edge
+    is what the scrollbar is for. The height is the log area's height and
+    nothing measures rows to get it.
+
+    LinesInEditableLog SURVIVES ONLY AS THAT HEIGHT, and it goes when the
+    ROW COUNT setting is retired -- at which point this reads as the window
+    layout it always was. *)
+  h := 30 + LinesInEditableLog * (ws + 2);
   TR4WEditableLogSetBounds(0, ws * 7, MainWindowChildsWidth, h);
-
-  guard := 0;
-  while (ListView_GetCountPerPage(wh[mweEditableLog]) > LinesInEditableLog)
-        and (guard < 200) do
-     begin
-     h := h - 1;
-     Inc(guard);
-     TR4WEditableLogSetBounds(0, ws * 7, MainWindowChildsWidth, h);
-     end;
-
-  guard := 0;
-  while (ListView_GetCountPerPage(wh[mweEditableLog]) < LinesInEditableLog)
-        and (guard < 200) do
-     begin
-     h := h + 1;
-     Inc(guard);
-     TR4WEditableLogSetBounds(0, ws * 7, MainWindowChildsWidth, h);
-     end;
 end;
 
 function CheckCommandInCallsignWindow: boolean;
