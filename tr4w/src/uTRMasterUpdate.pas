@@ -15,16 +15,22 @@ unit uTRMasterUpdate;
 interface
 
 uses
-   Windows, Messages, uMainThread;
+   Windows, Messages;
 
 const
 
    TRMASTER_DOWNLOAD_URL = 'https://tr4w.net/TRMASTER.DTA';
    // NY4I's own copy, 2026-08-16.  ~3.5 MB.
 
-procedure DownloadTRMasterAsync(const ATargetFile: string; const ACallback: TMainThreadCallback);
+type
+   (* Raised ON THE MAIN THREAD when the download finishes. *)
+   TTRMasterDownloadDoneEvent = procedure(Sender: TObject;
+                                          aSucceeded: boolean) of object;
+
+procedure DownloadTRMasterAsync(const ATargetFile: string;
+                                const aOnDone: TTRMasterDownloadDoneEvent);
 // Starts a background thread that downloads TRMASTER.DTA to ATargetFile and
-// Hands the result to ACallback on the main thread.
+// raises aOnDone on the main thread when it finishes.
 
 function DownloadTRMasterFile(const ATargetFile: string): boolean;
 // Synchronous: downloads on the CALLING thread and returns success.
@@ -49,19 +55,23 @@ type
    TTRMasterDownloadThread = class(TThread)
    private
       FTargetFile: string;
-      FCallback: TMainThreadCallback;
+      FSucceeded: boolean;
+      FOnDone:    TTRMasterDownloadDoneEvent;
+      procedure ReportDone(Sender: TObject);
    protected
       procedure Execute; override;
    public
-      constructor Create(const ATargetFile: string; const ACallback: TMainThreadCallback);
+      constructor Create(const ATargetFile: string;
+                         const aOnDone: TTRMasterDownloadDoneEvent);
    end;
 
 constructor TTRMasterDownloadThread.Create(const ATargetFile: string;
-   const ACallback: TMainThreadCallback);
+   const aOnDone: TTRMasterDownloadDoneEvent);
 begin
    inherited Create(True);  // suspended; caller calls Resume
    FTargetFile     := ATargetFile;
-   FCallback := ACallback;
+   FOnDone         := aOnDone;
+   OnTerminate     := ReportDone;
    FreeOnTerminate := True;
 end;
 
@@ -69,20 +79,39 @@ procedure TTRMasterDownloadThread.Execute;
 begin
    if DownloadTRMasterFile(FTargetFile) then
       begin
-      RunOnMainThread(FCallback, 1);
+      FSucceeded := True;
       end
    else
       begin
-      RunOnMainThread(FCallback, 0);
+      FSucceeded := False;
       end;
 end;
 
-procedure DownloadTRMasterAsync(const ATargetFile: string; const ACallback: TMainThreadCallback);
+(* THE RESULT COMES BACK AS AN EVENT, ON THE MAIN THREAD.
+
+  TThread.OnTerminate is raised through Synchronize by the RTL itself
+  (rtl/win/tthread.inc:46-50), so a handler assigned here runs on the main
+  thread with nothing else needed -- no queue, no posted message, no window
+  handle. The thread stores its result during Execute and the event carries it
+  out.
+
+  TYPED, so the caller is handed a boolean or a date rather than an integer
+  whose meaning lives in a comment. *)
+procedure TTRMasterDownloadThread.ReportDone(Sender: TObject);
+begin
+   if Assigned(FOnDone) then
+      begin
+      FOnDone(Self, FSucceeded);
+      end;
+end;
+
+procedure DownloadTRMasterAsync(const ATargetFile: string;
+                                const aOnDone: TTRMasterDownloadDoneEvent);
 var
    Thread: TTRMasterDownloadThread;
 begin
    logger.Info('[TRMaster] downloading to %s', [ATargetFile]);
-   Thread := TTRMasterDownloadThread.Create(ATargetFile, ACallback);
+   Thread := TTRMasterDownloadThread.Create(ATargetFile, aOnDone);
    Thread.Resume;
 end;
 

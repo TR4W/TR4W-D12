@@ -1630,12 +1630,12 @@ begin
 
   // Load POTA parks database off the UI thread (file may be ~3 MB / 50k entries).
   // TPOTALoadThread parses the CSV and posts WM_POTA_LOAD_DONE when done.
-  LoadPOTAParksAsync(PotaLoadFinished);
+  LoadPOTAParksAsync(BackgroundEvents.PotaParksParsed);
 
   // Silent background CTY version check — posts WM_CTY_VERSION_CHECKED when done.
   // Config is already loaded at this point so CTYUpdateCheckOnStartup is valid.
   if CTYUpdateCheckOnStartup then
-     CheckCTYVersionAsync(CTYVersionChecked);
+     CheckCTYVersionAsync(BackgroundEvents.CTYVersionChecked);
 
   // MY GRID, if it has never been set.
   //

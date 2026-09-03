@@ -20,17 +20,29 @@ unit uMainThread;
   call from any thread, and it exists on every platform the LCL targets. There
   is no handle, no message id and nothing for a window procedure to claim.
 
-  NOT uMainThreadWork, AND THE DIFFERENCE IS NOT COSMETIC. That unit runs a
-  NAMED job, coalesced: asking twice while one is pending runs it once, which
-  is exactly right for a poll loop refreshing a display and exactly wrong here.
-  These calls each carry their own datum and several carry OWNERSHIP -- two
-  finished POTA parses collapsed into one would leak a TStringList and lose a
-  result. It also takes no argument to carry a datum in.
+  WHEN TO REACH FOR THIS, AND WHEN NOT TO -- THERE ARE THREE MECHANISMS.
 
-  So: a repeated request to redraw something -> uMainThreadWork. A distinct
-  result being handed over once -> here. Both sit on
-  Application.QueueAsyncCall; the difference is whether two asks are the same
-  ask.
+  1. A THREAD THAT HAS FINISHED wants its result handled: give the thread a
+     TYPED EVENT and raise it from TThread.OnTerminate, which the RTL already
+     raises through Synchronize on the main thread
+     (rtl/win/tthread.inc:46-50). No queue, no unit, nothing custom. That is
+     what uPOTAParks, uCTYUpdate and uTRMasterUpdate do, and it is the first
+     thing to try.
+
+  2. A REPEATED REQUEST TO REDRAW SOMETHING, from a poll loop: uMainThreadWork,
+     which runs a NAMED job and COALESCES -- two asks while one is pending run
+     once. Right for a display refresh; wrong for a result, where two would
+     have to be two.
+
+  3. WHAT IS LEFT, AND WHY THIS UNIT EXISTS: a thread that is STILL RUNNING
+     handing over one distinct datum, mid-life. uTCIServer is the case and
+     currently the only one -- an Indy connection thread queues an apply and
+     carries on serving the connection. OnTerminate is no use (the thread is
+     not ending), Synchronize would block the connection against
+     TTCIServer.Stop, and TThread.Queue would purge the callback if that
+     thread exited first.
+
+  IF THIS UNIT EVER HAS NO CALLERS, DELETE IT rather than finding it a use.
 
   OWNERSHIP. aData is passed through untouched, so a caller may hand over a
   pointer -- a TStringList of parsed parks, a command object -- exactly as it

@@ -38,7 +38,7 @@ unit uPOTAParks;
 interface
 
 uses
-   Windows, Messages, Classes, SysUtils, IdHTTP, IdSSLOpenSSL, uMainThread;
+   Windows, Messages, Classes, SysUtils, IdHTTP, IdSSLOpenSSL;
 
 const
    POTA_PARKS_URL        = 'https://pota.app/all_parks_ext.csv';
@@ -75,13 +75,23 @@ function NormalizePOTAPark(const AToken: string; const AMyPark: string): string;
 // Start an asynchronous download of the parks CSV from pota.app.
 // Saves to ATargetFile. On completion posts WM_POTA_DOWNLOAD_DONE to ACallback.
 // The main thread should handle that message by calling LoadPOTAParks.
-procedure DownloadPOTAParksAsync(const ATargetFile: string; const ACallback: TMainThreadCallback);
+type
+   (* Both raised ON THE MAIN THREAD -- see the note in the implementation. *)
+   TPOTADownloadDoneEvent = procedure(Sender: TObject;
+                                      aSucceeded: boolean) of object;
+
+   (* aParks is the parsed list and THE HANDLER TAKES OWNERSHIP of it. *)
+   TPOTAParksParsedEvent  = procedure(Sender: TObject;
+                                      aParks: TStringList) of object;
+
+procedure DownloadPOTAParksAsync(const ATargetFile: string;
+                                 const aOnDone: TPOTADownloadDoneEvent);
 
 // Start an asynchronous load of an already-downloaded parks CSV.
 // Does all parsing off the UI thread. On completion posts WM_POTA_LOAD_DONE
 // to ACallback with lParam = parsed TStringList pointer.
 // The main thread MUST call ApplyLoadedParks(lParam) from that handler.
-procedure LoadPOTAParksAsync(const ACallback: TMainThreadCallback);
+procedure LoadPOTAParksAsync(const aOnParsed: TPOTAParksParsedEvent);
 
 // Apply a pre-parsed parks list delivered via WM_POTA_LOAD_DONE lParam.
 // Must be called on the main thread. Takes ownership of the TStringList.
@@ -451,17 +461,21 @@ end;
 type
    TPOTALoadThread = class(TThread)
    private
-      FCallback: TMainThreadCallback;
+      FParks:     TStringList;
+      FOnParsed:  TPOTAParksParsedEvent;
+      procedure ReportParsed(Sender: TObject);
    protected
       procedure Execute; override;
    public
-      constructor Create(const ACallback: TMainThreadCallback);
+      constructor Create(const aOnParsed: TPOTAParksParsedEvent);
    end;
 
-constructor TPOTALoadThread.Create(const ACallback: TMainThreadCallback);
+constructor TPOTALoadThread.Create(const aOnParsed: TPOTAParksParsedEvent);
 begin
    inherited Create(True);  // Create suspended
-   FCallback := ACallback;
+   FOnParsed       := aOnParsed;
+   FParks          := nil;
+   OnTerminate     := ReportParsed;
    FreeOnTerminate := True;
 end;
 
@@ -493,12 +507,9 @@ begin
             NewParks.Add(Ref + '=' + Name);
             end;
          end;
-      (* The parsed list goes to the main thread; ownership transfers on
-        receipt. RunOnMainThread cannot refuse the handoff, which
-        PostMessage could -- and a refusal here leaked the list and
-        lost the parks in silence. *)
-      RunOnMainThread(FCallback, PtrInt(NewParks));
-      NewParks := nil;   (* the callback owns it now *)
+      (* Held for ReportParsed, which runs on the main thread. *)
+      FParks := NewParks;
+      NewParks := nil;
    except
       // Silently discard on any file/parse error
    end;
@@ -509,11 +520,46 @@ begin
       end;
 end;
 
-procedure LoadPOTAParksAsync(const ACallback: TMainThreadCallback);
+(* THE RESULTS COME BACK AS EVENTS, ON THE MAIN THREAD.
+
+  TThread.OnTerminate is raised through Synchronize by the RTL itself
+  (rtl/win/tthread.inc:46-50), so a handler assigned here runs on the main
+  thread with nothing else needed -- no queue, no posted message, no window
+  handle. Each thread stores its result during Execute and the event carries it
+  out.
+
+  OWNERSHIP OF THE PARSED LIST passes to the handler, exactly as it did through
+  the old lParam -- but it cannot now be lost on the way. A posted message could
+  be REFUSED (a full queue, a closed window), and the sender had already let go
+  of the list, so the parks vanished and the TStringList leaked. An event either
+  has a handler or does not, and the thread can see which. *)
+procedure TPOTALoadThread.ReportParsed(Sender: TObject);
+begin
+   if FParks = nil then
+      begin
+      Exit;
+      end;
+
+   if Assigned(FOnParsed) then
+      begin
+      FOnParsed(Self, FParks);   (* the handler owns it now *)
+      end
+   else
+      begin
+      (* NOBODY IS LISTENING, so nothing takes ownership and this frees it.
+        The posted-message version could not do this: it had already released
+        the list by the time it learned the post was refused. *)
+      FParks.Free;
+      end;
+
+   FParks := nil;
+end;
+
+procedure LoadPOTAParksAsync(const aOnParsed: TPOTAParksParsedEvent);
 var
    Thread: TPOTALoadThread;
 begin
-   Thread := TPOTALoadThread.Create(ACallback);
+   Thread := TPOTALoadThread.Create(aOnParsed);
    Thread.Resume;
 end;
 
@@ -538,19 +584,23 @@ type
    TPOTADownloadThread = class(TThread)
    private
       FTargetFile: string;
-      FCallback: TMainThreadCallback;
+      FSucceeded: boolean;
+      FOnDone:    TPOTADownloadDoneEvent;
+      procedure ReportDone(Sender: TObject);
    protected
       procedure Execute; override;
    public
-      constructor Create(const ATargetFile: string; const ACallback: TMainThreadCallback);
+      constructor Create(const ATargetFile: string;
+                         const aOnDone: TPOTADownloadDoneEvent);
    end;
 
 constructor TPOTADownloadThread.Create(const ATargetFile: string;
-   const ACallback: TMainThreadCallback);
+   const aOnDone: TPOTADownloadDoneEvent);
 begin
    inherited Create(True);  // Create suspended
    FTargetFile := ATargetFile;
-   FCallback := ACallback;
+   FOnDone         := aOnDone;
+   OnTerminate     := ReportDone;
    FreeOnTerminate := True;
 end;
 
@@ -578,14 +628,23 @@ begin
 
    // aData = 1 (ok), 0 (failed).
    // Main thread calls LoadPOTAParks and shows result via QuickDisplay.
-   RunOnMainThread(FCallback, PtrInt(Ord(Success)));
+   FSucceeded := Success;
 end;
 
-procedure DownloadPOTAParksAsync(const ATargetFile: string; const ACallback: TMainThreadCallback);
+procedure TPOTADownloadThread.ReportDone(Sender: TObject);
+begin
+   if Assigned(FOnDone) then
+      begin
+      FOnDone(Self, FSucceeded);
+      end;
+end;
+
+procedure DownloadPOTAParksAsync(const ATargetFile: string;
+                                 const aOnDone: TPOTADownloadDoneEvent);
 var
    Thread: TPOTADownloadThread;
 begin
-   Thread := TPOTADownloadThread.Create(ATargetFile, ACallback);
+   Thread := TPOTADownloadThread.Create(ATargetFile, aOnDone);
    Thread.Resume;
 end;
 

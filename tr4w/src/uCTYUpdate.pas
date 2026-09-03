@@ -19,13 +19,27 @@ unit uCTYUpdate;
 interface
 
 uses
-   Windows, Messages, Classes, SysUtils, IdHTTP, IdSSLOpenSSL, uMainThread;
+   Windows, Messages, Classes, SysUtils, IdHTTP, IdSSLOpenSSL;
 
-procedure CheckCTYVersionAsync(const ACallback: TMainThreadCallback);
+type
+   (* Both raised ON THE MAIN THREAD -- see the note in the implementation.
+
+     aLatestDate is the date of the CTY.DAT on country-files.com, or 0 when
+     there is nothing newer or the check could not be made. ONE VALUE WHERE
+     THERE USED TO BE TWO: the old message carried a found/not-found flag
+     beside the date, and "not found" only ever came with a date of 0, so the
+     date alone says it and there is no pair to fall out of step. *)
+   TCTYVersionCheckedEvent = procedure(Sender: TObject;
+                                       aLatestDate: integer) of object;
+   TCTYDownloadDoneEvent   = procedure(Sender: TObject;
+                                       aSucceeded: boolean) of object;
+
+procedure CheckCTYVersionAsync(const aOnChecked: TCTYVersionCheckedEvent);
 // Starts a background thread that fetches the RSS feed and compares the
 // latest version to the installed CTY.DAT. Posts WM_CTY_VERSION_CHECKED.
 
-procedure DownloadCTYAsync(const ATargetFile: string; const ACallback: TMainThreadCallback);
+procedure DownloadCTYAsync(const ATargetFile: string;
+                           const aOnDone: TCTYDownloadDoneEvent);
 // Starts a background thread that downloads cty.dat to ATargetFile.
 // Hands the result to ACallback on the main thread.
 
@@ -243,17 +257,21 @@ end;
 type
    TCTYVersionCheckThread = class(TThread)
    private
-      FCallback: TMainThreadCallback;
+      FLatestDate: integer;
+      FOnChecked:  TCTYVersionCheckedEvent;
+      procedure ReportChecked(Sender: TObject);
    protected
       procedure Execute; override;
    public
-      constructor Create(const ACallback: TMainThreadCallback);
+      constructor Create(const aOnChecked: TCTYVersionCheckedEvent);
    end;
 
-constructor TCTYVersionCheckThread.Create(const ACallback: TMainThreadCallback);
+constructor TCTYVersionCheckThread.Create(const aOnChecked: TCTYVersionCheckedEvent);
 begin
    inherited Create(True);  // suspended; caller calls Resume
-   FCallback := ACallback;
+   FOnChecked      := aOnChecked;
+   FLatestDate     := 0;
+   OnTerminate     := ReportChecked;
    FreeOnTerminate := True;
 end;
 
@@ -293,24 +311,21 @@ begin
             if latestDate > installedDate then
                begin
                logger.Info('[CTYUpdate] Update available — notifying user');
-               RunOnMainThread(FCallback, PtrInt(latestDate));
+               FLatestDate := latestDate;
                end
             else
                begin
                logger.Info('[CTYUpdate] CTY is up to date');
-               RunOnMainThread(FCallback, 0);   (* nothing newer *)
                end;
             end
          else
             begin
             logger.Warn('[CTYUpdate] Failed to parse RSS feed');
-            RunOnMainThread(FCallback, 0);   (* nothing newer *)
             end;
       except
          on E: Exception do
             begin
             logger.Error('[CTYUpdate] Version check failed: %s', [E.Message]);
-            RunOnMainThread(FCallback, 0);   (* nothing newer *)
             end;
       end;
    finally
@@ -327,19 +342,23 @@ type
    TCTYDownloadThread = class(TThread)
    private
       FTargetFile: string;
-      FCallback: TMainThreadCallback;
+      FSucceeded: boolean;
+      FOnDone:    TCTYDownloadDoneEvent;
+      procedure ReportDone(Sender: TObject);
    protected
       procedure Execute; override;
    public
-      constructor Create(const ATargetFile: string; const ACallback: TMainThreadCallback);
+      constructor Create(const ATargetFile: string;
+                         const aOnDone: TCTYDownloadDoneEvent);
    end;
 
 constructor TCTYDownloadThread.Create(const ATargetFile: string;
-   const ACallback: TMainThreadCallback);
+   const aOnDone: TCTYDownloadDoneEvent);
 begin
    inherited Create(True);  // suspended; caller calls Resume
    FTargetFile     := ATargetFile;
-   FCallback := ACallback;
+   FOnDone         := aOnDone;
+   OnTerminate     := ReportDone;
    FreeOnTerminate := True;
 end;
 
@@ -347,11 +366,11 @@ procedure TCTYDownloadThread.Execute;
 begin
    if DownloadFileToPath(CTY_DOWNLOAD_URL, FTargetFile) then
       begin
-      RunOnMainThread(FCallback, 1)
+      FSucceeded := True
       end
    else
       begin
-      RunOnMainThread(FCallback, 0);
+      FSucceeded := False;
       end;
 end;
 
@@ -359,19 +378,46 @@ end;
 // Public API
 // ---------------------------------------------------------------------------
 
-procedure CheckCTYVersionAsync(const ACallback: TMainThreadCallback);
+(* THE RESULT COMES BACK AS AN EVENT, ON THE MAIN THREAD.
+
+  TThread.OnTerminate is raised through Synchronize by the RTL itself
+  (rtl/win/tthread.inc:46-50), so a handler assigned here runs on the main
+  thread with nothing else needed -- no queue, no posted message, no window
+  handle. The thread stores its result during Execute and the event carries it
+  out.
+
+  TYPED, so the caller is handed a boolean or a date rather than an integer
+  whose meaning lives in a comment. *)
+procedure TCTYVersionCheckThread.ReportChecked(Sender: TObject);
+begin
+   if Assigned(FOnChecked) then
+      begin
+      FOnChecked(Self, FLatestDate);
+      end;
+end;
+
+procedure TCTYDownloadThread.ReportDone(Sender: TObject);
+begin
+   if Assigned(FOnDone) then
+      begin
+      FOnDone(Self, FSucceeded);
+      end;
+end;
+
+procedure CheckCTYVersionAsync(const aOnChecked: TCTYVersionCheckedEvent);
 var
    Thread: TCTYVersionCheckThread;
 begin
-   Thread := TCTYVersionCheckThread.Create(ACallback);
+   Thread := TCTYVersionCheckThread.Create(aOnChecked);
    Thread.Resume;
 end;
 
-procedure DownloadCTYAsync(const ATargetFile: string; const ACallback: TMainThreadCallback);
+procedure DownloadCTYAsync(const ATargetFile: string;
+                           const aOnDone: TCTYDownloadDoneEvent);
 var
    Thread: TCTYDownloadThread;
 begin
-   Thread := TCTYDownloadThread.Create(ATargetFile, ACallback);
+   Thread := TCTYDownloadThread.Create(ATargetFile, aOnDone);
    Thread.Resume;
 end;
 

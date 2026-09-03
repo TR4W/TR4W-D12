@@ -94,13 +94,29 @@ function EntryEvents: TTR4WEntryEvents;
 
 function WindowProc(TRHWND: HWND; Msg: UINT; wParam: wParam; lParam: lParam): longword; stdcall;
 
-(* RESULTS ARRIVING FROM BACKGROUND THREADS. Passed to the async starters by
-  whoever starts them; run on the main thread by uMainThread. *)
-procedure PotaDownloadFinished(aData: PtrInt);
-procedure PotaLoadFinished(aData: PtrInt);
-procedure TRMasterDownloadFinished(aData: PtrInt);
-procedure CTYVersionChecked(aData: PtrInt);
-procedure CTYDownloadFinished(aData: PtrInt);
+type
+   { RESULTS ARRIVING FROM BACKGROUND THREADS.
+
+     METHODS, not plain procedures, because that is what an Object Pascal event
+     is -- `of object` -- and these are assigned to the OnDone / OnParsed /
+     OnChecked events the download and parse threads publish. NY4I, 2026-09-03:
+     "does fpc not use onevent declarations in classes so the threads can raise
+     an event the main program handles? Callback seems like it is still native
+     fpc/laz". He is right, and the first version of this was a bare procedure
+     pointer -- the C shape, not the Pascal one.
+
+     THE SAME SHAPE AS TTR4WEntryEvents above: one instance, created on first
+     use, holding handler methods for a unit that is otherwise procedural. }
+   TTR4WBackgroundEvents = class
+      procedure PotaDownloadFinished(Sender: TObject; aSucceeded: boolean);
+      procedure PotaParksParsed(Sender: TObject; aParks: TStringList);
+      procedure TRMasterDownloadFinished(Sender: TObject; aSucceeded: boolean);
+      procedure CTYVersionChecked(Sender: TObject; aLatestDate: integer);
+      procedure CTYDownloadFinished(Sender: TObject; aSucceeded: boolean);
+   end;
+
+{ The instance the async starters are handed. }
+function BackgroundEvents: TTR4WBackgroundEvents;
 
 implementation
 
@@ -698,18 +714,33 @@ end;
   session. }
 (* ============================ RESULTS ARRIVING FROM BACKGROUND THREADS ====
 
-  Each of these runs ON THE MAIN THREAD, handed here by RunOnMainThread. They
-  were arms of WindowProc; the bodies are unchanged apart from taking their one
-  argument as a parameter instead of digging it out of wParam/lParam.
+  Each of these runs ON THE MAIN THREAD: they are assigned to TThread.OnTerminate
+  events, which the RTL raises through Synchronize. They were arms of
+  WindowProc; the bodies are unchanged apart from taking typed parameters
+  instead of digging values out of wParam/lParam.
 
-  They are passed to the async starters BY the code that starts them -- see
-  MainUnit and uProgramMain -- so a background unit no longer needs a window
-  handle, and this unit no longer needs to know the operation exists. *)
+  They are assigned to events the threads publish, by the code that starts
+  them -- see MainUnit and uProgramMain -- so a background unit no longer
+  needs a window handle, and this unit no longer needs to know the
+  operation exists. *)
 
-(* aData: 1 = the file saved, 0 = the download failed. *)
-procedure PotaDownloadFinished(aData: PtrInt);
+var
+   { Created on first use by BackgroundEvents. }
+   TR4WBackgroundEvents: TTR4WBackgroundEvents = nil;
+
+function BackgroundEvents: TTR4WBackgroundEvents;
 begin
-   if aData = 1 then
+   if TR4WBackgroundEvents = nil then
+      begin
+      TR4WBackgroundEvents := TTR4WBackgroundEvents.Create;
+      end;
+   Result := TR4WBackgroundEvents;
+end;
+
+procedure TTR4WBackgroundEvents.PotaDownloadFinished(Sender: TObject;
+                                                     aSucceeded: boolean);
+begin
+   if aSucceeded then
       begin
       if LoadPOTAParks(POTAParksFilePath) > 0 then
          begin
@@ -726,14 +757,14 @@ begin
       end;
 end;
 
-(* aData is the parsed TStringList -- ApplyLoadedParks takes ownership. *)
-procedure PotaLoadFinished(aData: PtrInt);
+(* ApplyLoadedParks takes ownership of aParks. *)
+procedure TTR4WBackgroundEvents.PotaParksParsed(Sender: TObject;
+                                                aParks: TStringList);
 begin
-   ApplyLoadedParks(aData);
+   ApplyLoadedParks(LPARAM(aParks));
 end;
 
-(* aData: 1 = the file saved, 0 = the download failed.
-
+(* 
   WHY THIS DOES NOT RELOAD SCP, unlike the CTY handler below.
   ctyLoadInCountryFile is a clean, idempotent reload entry point. TRMASTER has
   no equivalent: LOGSCP loads it LAZILY into a heap index array behind three
@@ -747,9 +778,10 @@ end;
   operator to restart is honest and costs one restart; guessing at TRDOS load
   state is not worth a wrong callsign hint. A proper reload belongs with the
   SQLite log work, not here. *)
-procedure TRMasterDownloadFinished(aData: PtrInt);
+procedure TTR4WBackgroundEvents.TRMasterDownloadFinished(Sender: TObject;
+                                                         aSucceeded: boolean);
 begin
-   if aData = 1 then
+   if aSucceeded then
       begin
       QuickDisplay(PAnsiChar(TC_TRMASTERDTADOWNLOADEDRESTARTTR4WUS));
       end
@@ -759,14 +791,12 @@ begin
       end;
 end;
 
-(* aData is the latest CTY.DAT date, or 0 when there is nothing newer.
-
-  ONE VALUE WHERE THERE WERE TWO. The message carried wParam=1/0 alongside the
-  date, and wParam=0 only ever came with a date of 0 -- so the date alone says
-  it, and there is no pair to get out of step. *)
-procedure CTYVersionChecked(aData: PtrInt);
+(* aLatestDate is the date of the CTY.DAT on country-files.com, or 0 when
+  there is nothing newer. *)
+procedure TTR4WBackgroundEvents.CTYVersionChecked(Sender: TObject;
+                                                  aLatestDate: integer);
 begin
-   if aData = 0 then
+   if aLatestDate = 0 then
       begin
       Exit;
       end;
@@ -774,14 +804,14 @@ begin
    (* A silent startup notice -- no MessageBox, nothing that blocks. *)
    Format(wsprintfBuffer,
       'Newer CTY.DAT available (dated %d). Press Alt-O to download.',
-      aData);
+      aLatestDate);
    QuickDisplay(wsprintfBuffer);
 end;
 
-(* aData: 1 = the file saved, 0 = the download failed. *)
-procedure CTYDownloadFinished(aData: PtrInt);
+procedure TTR4WBackgroundEvents.CTYDownloadFinished(Sender: TObject;
+                                                    aSucceeded: boolean);
 begin
-   if aData = 1 then
+   if aSucceeded then
       begin
       QuickDisplay(PAnsiChar(TC_CTYDATDOWNLOADEDRELOADING));
       (* RELOADED ON THE MAIN THREAD. The CTY tables have no locking, so a
