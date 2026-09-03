@@ -4108,30 +4108,28 @@ begin
   MainWindowTextWriter := @WriteMainWindowText;
 
   wh[mweWholeScreen] := tr4whandle;
-  (* THE EDITABLE LOG IS AN LCL VIRTUAL LIST NOW -- see uMainForm.
+  (* THE EDITABLE LOG IS AN LCL GRID -- see uLogGrid.
 
-    CreateEditableLog is still here and still builds the Win32 control for Log
-    Search, which has not been converted. For the MAIN window it is gone: that
-    control was created with LVS_NOSCROLL and only ever held
-    LinesInEditableLog rows, which is why there was no scrollbar and why the
-    log showed five QSOs of a contest. NY4I: "I do not see my vertical scroll
-    bar and I still see the qso window as a fixed 5."
+    IT HAS NO WINDOW HANDLE. wh[mweEditableLog] is not assigned and nothing
+    reaches this control except through the routines uMainForm exports. The
+    thirty call sites that used to set a colour, read the header, ask which row
+    was selected or set a column width through that handle are those routines
+    now.
 
-    wh[mweEditableLog] STILL HOLDS AN HWND -- the list's own -- so the thirty
-    call sites that set colours, read the header, ask which row is selected or
-    set a column width keep working unchanged. *)
-  (* A REAL HEIGHT AT CREATION. The Win32 control was created at height 0 and
-    sized afterwards by CheckEditableWindowHeight; an LCL control created at
-    zero stays at zero as far as the LCL is concerned, and renders as nothing.
-    Same formula that routine uses, so the layout is unchanged. *)
-  wh[mweEditableLog] := CreateTR4WEditableLog(0, ws * 7,
+    WHAT THE WIN32 CONTROL COST, since the replacement is only justified by it:
+    it was created with LVS_NOSCROLL and held LinesInEditableLog rows, so there
+    was no scrollbar and the log showed five QSOs of a contest (NY4I: "I do not
+    see my vertical scroll bar and I still see the qso window as a fixed 5").
+    It was created at height 0 and sized afterwards, and a loop that sized it by
+    counting visible rows drove that height back to 0 against a virtual list.
+    And one line in LOGWIND replaced its window style wholesale, which stripped
+    LVS_OWNERDATA and left the log blank. None of those are expressible against
+    a control the LCL draws. *)
+  CreateTR4WEditableLog(0, ws * 7,
     MainWindowChildsWidth, 30 + LinesInEditableLog * (ws + 2));
-  SetListViewColor(mweEditableLog);
   DispalayLogGridLines;
 
-  Windows.GetWindowRect(wh[mweEditableLog], temprect);
-
-  EditableLogHeight := temprect.Bottom - temprect.Top;
+  EditableLogHeight := TR4WEditableLogBoundsHeight;
 
   Windows.GetWindowRect(tr4whandle, temprect);
   Windows.SetWindowPos(tr4whandle, HWND_TOP, 0, 0, ws * 46, 6
@@ -5686,12 +5684,9 @@ begin
      end;
 
   // if tr4w_ExchangeWindowActive = False then if tr4w_CallWindowActive = False then
-  if ActiveMainWindow = awEditableLog then
-    if TempHWND = wh[mweEditableLog] then
-       begin
-       EditableLogWindowDblClick;
-       Exit;
-       end;
+  (* The grid raises its own OnDblClick -- see TTR4WMainForm.MainLogDblClick.
+    This arm tested a window handle against the log's, and there is no handle
+    to test. *)
 
   // check if membership # entered
   // n4af 4.67.2 check for reverse lookup of membership #
@@ -7254,8 +7249,10 @@ var
   Size: Cardinal;
 begin
 
-  IndexOfItemInLogForEdit := ListView_GetNextItem(wh[mweEditableLog], -1,
-    LVNI_SELECTED);
+  (* THE GRID'S OWN SELECTION, AS A RECORD INDEX. The list view answered in
+    ROWS and the row was an offset into a five-row window, which is where the
+    row/record mismatch on double-click came from. *)
+  IndexOfItemInLogForEdit := TR4WEditableLogSelectedRecord;
   if IndexOfItemInLogForEdit = -1 then
      begin
      Exit;
@@ -7761,7 +7758,7 @@ begin
      deletion nobody meant to make. *)
   CurrentRecord := 0;
   tLogIndex := 0;
-  ListView_DeleteAllItems(wh[mweEditableLog]);
+  TR4WEditableLogSetCount(0);
 
   Size := LogSourceRecordCount;
   if Size < 0 then
@@ -7928,7 +7925,8 @@ begin
   //
   // EnsureListViewColumnVisible is a no-op for any column with no override, so
   // running it on an empty log costs nothing and changes nothing else.
-  EnsureListViewColumnVisible(wh[mweEditableLog]);
+  (* The grid distributes its own column widths on every resize and on a
+    column rebuild -- see TLogGrid.SizeColumns. *)
   ReCalculateHourDisplay;
 {$IF tDebugMode}
   QuickDisplay(inttopchar(Windows.GetTickCount - T1));
@@ -8515,7 +8513,7 @@ begin
 
   if ActiveMainWindow <> awEditableLog then
      begin
-     uCommctrl.ListView_EnsureVisible(wh[mweEditableLog], tLogIndex - 1, True);
+     TR4WEditableLogScrollToEnd;
      end;
 end;
 
@@ -8623,9 +8621,8 @@ begin
   InAct_Freq := InactiveRadioptr.LastDisplayedFreq;
   so2r_swap := true;
   1:
-  Windows.SetFocus(wh[mweEditableLog]);
-  ListView_SetItemState(wh[mweEditableLog], tLogIndex - 1, LVIS_FOCUSED or
-    LVIS_SELECTED, LVIS_FOCUSED or LVIS_SELECTED);
+  TR4WEditableLogFocus;
+  TR4WEditableLogScrollToEnd;
   //   processreturn;
         // LogEnsureVisible;
 end;
@@ -8987,15 +8984,28 @@ begin
   Result := lpNumberOfBytesWritten = SizeOf(ContestExchange);
 end;
 
+(* THE PREVIOUS-DUPE LIST AND THE LOG SHARE THE SAME RECTANGLE, so showing one
+  hides the other. This paired two window handles in an array indexed by the
+  boolean; the log is an LCL grid with no handle, so the two sides are written
+  out. *)
 procedure ShowPreviousDupeQSOsWnd(show: boolean);
-const
-  ewha: array[boolean] of PLongword = (@tPreviousDupeQSOsWndHandle,
-    @wh[mweEditableLog]);
 begin
   tPreviousDupeQSOsShowed := show;
-  Windows.SetWindowPos(ewha[show]^, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE);
-  Windows.SetWindowPos(ewha[not show]^, HWND_TOP, 0, 0, MainWindowChildsWidth,
-    EditableLogHeight, SWP_NOMOVE);
+
+  TR4WEditableLogShow(not show);
+  if show then
+     begin
+     Windows.ShowWindow(tPreviousDupeQSOsWndHandle, SW_SHOW);
+     end
+  else
+     begin
+     Windows.ShowWindow(tPreviousDupeQSOsWndHandle, SW_HIDE);
+     end;
+  if show then
+     begin
+     Windows.SetWindowPos(tPreviousDupeQSOsWndHandle, HWND_TOP, 0, 0,
+       MainWindowChildsWidth, EditableLogHeight, SWP_NOMOVE);
+     end;
   // Windows.SetWindowPos(ewha[show], HWND_TOP, 0, 0, ws * 46, 6 + MainWindowCaptionAndHeader + OffsetY + ws * 14, SWP_NOMOVE);
   // Windows.ShowWindow(tPreviousDupeQSOsWndHandle, integer(show));
   // Windows.AnimateWindow(tPreviousDupeQSOsWndHandle, 100, AW_HIDE * (integer(show) + 1) or AW_VER_POSITIVE * (integer(show) + 1));

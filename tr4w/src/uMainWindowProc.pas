@@ -513,156 +513,26 @@ begin
       end;
 
     WM_WINDOWPOSCHANGING: WINDOWPOSCHANGINGPROC(PWindowPos(lParam));
-    WM_NOTIFY:
-      begin
-        with PNMHdr(lParam)^ do
+    (* WM_NOTIFY IS GONE, AND WITH IT THE LAST WIN32 KNOWLEDGE OF THE LOG.
 
-          if (hWndFrom = wh[mweEditableLog]) then
-            case code of
+      Every arm in it answered for the editable log's list-view control: the
+      double-click, arrow-down off the last row, the X-QSO grey, the focus
+      change, and the two header arms that saved a dragged column width. The
+      log is an LCL grid now (uLogGrid) and each of those is an event on the
+      control -- see TTR4WMainForm.MainLogDblClick, MainLogKeyDown,
+      MainLogEnter and MainLogHeaderSized, and TLogGrid.DrawCell for the
+      colours.
 
-              NM_DBLCLK: EditableLogWindowDblClick;
+      ONE OF THOSE ARMS WAS A REAL DEFECT AND IS WORTH KEEPING THE REASONING
+      FOR, because it can recur anywhere this tree compares a notification
+      code. NMHDR.code is UNSIGNED as FPC's Windows unit declares it, while
+      every HDN_/NM_/LVN_ constant is NEGATIVE (HDN_ENDTRACKW = -327).
+      Comparing the two promotes both to a wider type, so the code arrived as
+      4294966969 and never matched: the operator dragged a column, nothing was
+      saved, nothing was logged. Delphi declares that field as Integer, which
+      is why it worked before the FPC port. A grid reports a column resize as
+      a method call with an integer index, so the comparison does not exist. *)
 
-              // ARROW-DOWN OFF THE LAST ROW RETURNS FOCUS TO THE CALL WINDOW.
-              //
-              // Moved here from the message loop (tr4w.lpr, the one
-              // `Msg.HWND = wh[mweEditableLog]` keyboard arm) as part of Phase
-              // 3b.  The loop dies in 3c, and every arm in it has to find a
-              // home that outlives it.
-              //
-              // LVN_KEYDOWN, and NOT an LCL TListView.  A ListView notifies its
-              // PARENT of key presses, which is a native mechanism that works
-              // whoever owns the message pump.  Converting this control to a
-              // TListView instead would have been the obvious move and is the
-              // wrong one: TR4W drives it through EIGHTEEN raw API call sites
-              // -- insert, delete, item state, column widths -- while a
-              // TListView keeps its own Items/Columns model.  That model would
-              // be EMPTY while the control was full, and any property change
-              // forcing RecreateWnd would rebuild the control from it and wipe
-              // the visible log.  Mid-contest.
-              LVN_KEYDOWN:
-                begin
-                if PLVKeyDown(lParam)^.wVKey = VK_DOWN then
-                   begin
-                   // Only when the selection is already on the last row --
-                   // otherwise Down just moves down the log, as it should.
-                   if ListView_GetNextItem(wh[mweEditableLog], LVNI_ALL, LVNI_SELECTED)
-                      = tLogIndex - 1 then
-                      begin
-                      // Traced like every other key path in this program -- and
-                      // for a reason beyond consistency: a focus transition is
-                      // otherwise invisible to any test that is not the
-                      // operator's eyes.  Cross-process focus reads report
-                      // nothing when the program is not in the foreground, so
-                      // the log is the only observable this behaviour has.
-                      logger.Trace('[EditableLog] VK_DOWN on the last row -> focus to the call window');
-                      tCallWindowSetFocus;
-                      end;
-                   end;
-                end;
-
-              // Issue #750: gray out the editable-log row for X-QSO
-              // records.  The X-QSO flag is stashed in the row's
-              // per-item lParam by tAddContestExchangeToLog ->
-              // SetRowXQSOFlag.  We must return CDRF_NOTIFYITEMDRAW
-              // at the table-level prepaint to be called back per
-              // item; then at item prepaint, replace the text colour
-              // with mid-gray ($808080) when the item's lParam is 1.
-              // CDRF_NEWFONT tells the listview to apply the new
-              // colour.  Exit; bypasses the trailing DefWindowProc
-              // call so our Result is what gets returned to the
-              // listview's parent-wndproc dispatch.
-              NM_CUSTOMDRAW:
-                begin
-                  lplvcd := PNMLVCustomDraw(lParam);
-                  case lplvcd.nmcd.dwDrawStage of
-                     CDDS_PREPAINT:
-                        begin
-                        Result := CDRF_NOTIFYITEMDRAW;
-                        Exit;
-                        end;
-                     CDDS_ITEMPREPAINT:
-                        begin
-                        if lplvcd.nmcd.lItemlParam = 1 then
-                           lplvcd.clrText := $00808080; // mid-gray
-                        Result := CDRF_NEWFONT;
-                        Exit;
-                        end;
-                  end;
-                end;
-
-              NM_SETFOCUS:
-                begin
-                  ActiveMainWindow := awEditableLog;
-                end;
-              NM_KILLFOCUS:
-                begin
-                end;
-            end
-          else if (hWndFrom = ListView_GetHeader(wh[mweEditableLog])) then
-            begin
-            // HDN_DIVIDERDBLCLICK: operator double-clicked the divider
-            // to auto-fit.  Do EVERYTHING here (auto-fit, padding,
-            // save) instead of deferring to a follow-up HDN_ENDTRACK:
-            // per Win32, HDN_ENDTRACK only fires for end-of-drag.  The
-            // OS's internal auto-fit during double-click does not
-            // generate one, so a flag-based "wait for HDN_ENDTRACK"
-            // approach silently drops the save.
-            //
-            // We run the auto-fit ourselves with LVSCW_AUTOSIZE_USEHEADER,
-            // add COLUMN_DOUBLECLICK_PAD_PX for breathing room, apply
-            // that to the column, and save.  Returning a non-zero
-            // Result suppresses the default header auto-fit; Exit
-            // bypasses DefWindowProc which would otherwise overwrite
-            // Result with its own return value.
-            // SIGNED, and this is the whole defect.
-            //
-            // NMHDR.code as the Windows unit declares it for FPC is UNSIGNED,
-            // while every HDN_/NM_/LVN_ notification constant is NEGATIVE
-            // (HDN_ENDTRACKW = HDN_FIRST - 27 = -327).  Comparing the two
-            // promotes both to a wider type, so the code arrives as 4294966969
-            // and never equals -327.  Delphi's Windows.pas declares that field
-            // as Integer, which is why this worked before the FPC port and
-            // fails silently after it: the operator drags a column, nothing is
-            // saved, and nothing is logged.
-            //
-            // Proved rather than assumed (2026-08-22): the log printed
-            // `code=-327` and `ENDTRACKW=-327` on one line -- %d reinterprets
-            // the bits -- and `eq(ENDTRACKW)=0` on the next.
-            hdrCode := Integer(code);
-
-            if (hdrCode = HDN_DIVIDERDBLCLICKA) or (hdrCode = HDN_DIVIDERDBLCLICKW) then
-               begin
-               HDNotifyPtr := PHDNotify(lParam);
-               hdrColIdx := HDNotifyPtr^.Item;
-               ListView_SetColumnWidth(wh[mweEditableLog], hdrColIdx,
-                                       LVSCW_AUTOSIZE_USEHEADER);
-               hdrNewWidth := ListView_GetColumnWidth(wh[mweEditableLog],
-                                                     hdrColIdx)
-                              + COLUMN_DOUBLECLICK_PAD_PX;
-               ListView_SetColumnWidth(wh[mweEditableLog], hdrColIdx,
-                                       hdrNewWidth);
-               SaveColumnWidthToConfig(hdrColIdx, hdrNewWidth);
-               Result := 1; // suppress default header auto-fit
-               Exit;
-               end
-            else if (hdrCode = HDN_ENDTRACK) or (hdrCode = HDN_ENDTRACKW) then
-               begin
-               // Normal end-of-drag: save the dragged width exactly
-               // as the operator left it.  No padding here -- the
-               // operator explicitly chose this width.
-               HDNotifyPtr := PHDNotify(lParam);
-               if (HDNotifyPtr^.pItem <> nil) and
-                  ((HDNotifyPtr^.pItem^.mask and HDI_WIDTH) <> 0) then
-                  SaveColumnWidthToConfig(HDNotifyPtr^.Item,
-                                          HDNotifyPtr^.pItem^.cxy)
-               else
-                  // pItem unavailable — fall back to querying the ListView directly
-                  SaveColumnWidthToConfig(HDNotifyPtr^.Item,
-                     ListView_GetColumnWidth(wh[mweEditableLog],
-                                             HDNotifyPtr^.Item));
-               end;
-            end;
-      end;
     // WM_MEASUREITEM and WM_DRAWITEM for the possible-call list are GONE.
     // Phase 3b made it a designed LCL TListBox, so its item height is a property
     // and its drawing is OnDrawItem on the control -- see uMainForm.lfm and

@@ -3435,20 +3435,8 @@ begin
 end;
 
 procedure DispalayLogGridLines;
-var
-  Style                                 : integer;
 begin
-  if Config.ShowGridlines then
-     begin
-     Style := LVS_EX_GRIDLINES or LVS_EX_FULLROWSELECT
-     end
-  else
-     begin
-     Style := LVS_EX_FULLROWSELECT;
-     end;
-
-  ListView_SetExtendedListViewStyle(wh[mweEditableLog], Style);
-  Windows.SetWindowLong(wh[mweEditableLog], GWL_STYLE, $5000A005);
+  TR4WEditableLogSetGridLines(Config.ShowGridlines);
 
   CheckEditableWindowHeight;
 end;

@@ -10,24 +10,6 @@ object frmLogEdit: TfrmLogEdit
   OnClose = FormClose
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
-  OnResize = FormResize
   OnShow = FormShow
   Position = poMainFormCenter
-  object lvLog: TListView
-    Left = 0
-    Height = 460
-    Top = 0
-    Width = 900
-    Align = alClient
-    Columns = <>
-    GridLines = True
-    OwnerData = True
-    ReadOnly = True
-    RowSelect = True
-    TabOrder = 0
-    ViewStyle = vsReport
-    OnCustomDrawItem = lvLogCustomDrawItem
-    OnData = lvLogData
-    OnDblClick = lvLogDblClick
-  end
 end

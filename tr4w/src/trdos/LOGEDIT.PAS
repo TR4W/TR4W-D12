@@ -1535,21 +1535,6 @@ begin
      end;
   ExitLabel:
   LogSourceClose;
-  {
-    Result := '';
-    for Index := LinesInEditableLog - 1 downto 0 do
-    begin
-      Windows.ZeroMemory(@Result, SizeOf(Result));
-      i := ListView_GetItemText(wh[mweEditableLog], Index, Ord(logColCallsign), @Result[1], CallstringLength - 1);
-      if i > 0 then
-      begin
-        Result[0] := CHR(i);
-        if IsAGoodCall(Result) then Break else
-        //Result := '';
-          Windows.ZeroMemory(@Result, SizeOf(Result));
-      end;
-    end;
-  }
 end;
 
 {
