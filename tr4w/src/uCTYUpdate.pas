@@ -19,23 +19,15 @@ unit uCTYUpdate;
 interface
 
 uses
-   Windows, Messages, Classes, SysUtils, IdHTTP, IdSSLOpenSSL;
+   Windows, Messages, Classes, SysUtils, IdHTTP, IdSSLOpenSSL, uMainThread;
 
-const
-   WM_CTY_VERSION_CHECKED = WM_APP + 210;
-   // wParam=1: update available, lParam=latest version date integer (e.g. 20251218)
-   // wParam=0: already up to date or check failed silently
-
-   WM_CTY_DOWNLOAD_DONE = WM_APP + 211;
-   // wParam=1: file saved successfully; wParam=0: download failed
-
-procedure CheckCTYVersionAsync(ANotifyWnd: HWND);
+procedure CheckCTYVersionAsync(const ACallback: TMainThreadCallback);
 // Starts a background thread that fetches the RSS feed and compares the
 // latest version to the installed CTY.DAT. Posts WM_CTY_VERSION_CHECKED.
 
-procedure DownloadCTYAsync(const ATargetFile: string; ANotifyWnd: HWND);
+procedure DownloadCTYAsync(const ATargetFile: string; const ACallback: TMainThreadCallback);
 // Starts a background thread that downloads cty.dat to ATargetFile.
-// Posts WM_CTY_DOWNLOAD_DONE on completion.
+// Hands the result to ACallback on the main thread.
 
 function DownloadCTYFile(const ATargetFile: string): boolean; overload;
 // Downloads cty.dat to ATargetFile and returns True on success. SYNCHRONOUS:
@@ -251,17 +243,17 @@ end;
 type
    TCTYVersionCheckThread = class(TThread)
    private
-      FNotifyWnd: HWND;
+      FCallback: TMainThreadCallback;
    protected
       procedure Execute; override;
    public
-      constructor Create(ANotifyWnd: HWND);
+      constructor Create(const ACallback: TMainThreadCallback);
    end;
 
-constructor TCTYVersionCheckThread.Create(ANotifyWnd: HWND);
+constructor TCTYVersionCheckThread.Create(const ACallback: TMainThreadCallback);
 begin
    inherited Create(True);  // suspended; caller calls Resume
-   FNotifyWnd      := ANotifyWnd;
+   FCallback := ACallback;
    FreeOnTerminate := True;
 end;
 
@@ -301,24 +293,24 @@ begin
             if latestDate > installedDate then
                begin
                logger.Info('[CTYUpdate] Update available — notifying user');
-               PostMessage(FNotifyWnd, WM_CTY_VERSION_CHECKED, 1, latestDate);
+               RunOnMainThread(FCallback, PtrInt(latestDate));
                end
             else
                begin
                logger.Info('[CTYUpdate] CTY is up to date');
-               PostMessage(FNotifyWnd, WM_CTY_VERSION_CHECKED, 0, 0);
+               RunOnMainThread(FCallback, 0);   (* nothing newer *)
                end;
             end
          else
             begin
             logger.Warn('[CTYUpdate] Failed to parse RSS feed');
-            PostMessage(FNotifyWnd, WM_CTY_VERSION_CHECKED, 0, 0);
+            RunOnMainThread(FCallback, 0);   (* nothing newer *)
             end;
       except
          on E: Exception do
             begin
             logger.Error('[CTYUpdate] Version check failed: %s', [E.Message]);
-            PostMessage(FNotifyWnd, WM_CTY_VERSION_CHECKED, 0, 0);
+            RunOnMainThread(FCallback, 0);   (* nothing newer *)
             end;
       end;
    finally
@@ -335,19 +327,19 @@ type
    TCTYDownloadThread = class(TThread)
    private
       FTargetFile: string;
-      FNotifyWnd:  HWND;
+      FCallback: TMainThreadCallback;
    protected
       procedure Execute; override;
    public
-      constructor Create(const ATargetFile: string; ANotifyWnd: HWND);
+      constructor Create(const ATargetFile: string; const ACallback: TMainThreadCallback);
    end;
 
 constructor TCTYDownloadThread.Create(const ATargetFile: string;
-   ANotifyWnd: HWND);
+   const ACallback: TMainThreadCallback);
 begin
    inherited Create(True);  // suspended; caller calls Resume
    FTargetFile     := ATargetFile;
-   FNotifyWnd      := ANotifyWnd;
+   FCallback := ACallback;
    FreeOnTerminate := True;
 end;
 
@@ -355,11 +347,11 @@ procedure TCTYDownloadThread.Execute;
 begin
    if DownloadFileToPath(CTY_DOWNLOAD_URL, FTargetFile) then
       begin
-      PostMessage(FNotifyWnd, WM_CTY_DOWNLOAD_DONE, 1, 0)
+      RunOnMainThread(FCallback, 1)
       end
    else
       begin
-      PostMessage(FNotifyWnd, WM_CTY_DOWNLOAD_DONE, 0, 0);
+      RunOnMainThread(FCallback, 0);
       end;
 end;
 
@@ -367,19 +359,19 @@ end;
 // Public API
 // ---------------------------------------------------------------------------
 
-procedure CheckCTYVersionAsync(ANotifyWnd: HWND);
+procedure CheckCTYVersionAsync(const ACallback: TMainThreadCallback);
 var
    Thread: TCTYVersionCheckThread;
 begin
-   Thread := TCTYVersionCheckThread.Create(ANotifyWnd);
+   Thread := TCTYVersionCheckThread.Create(ACallback);
    Thread.Resume;
 end;
 
-procedure DownloadCTYAsync(const ATargetFile: string; ANotifyWnd: HWND);
+procedure DownloadCTYAsync(const ATargetFile: string; const ACallback: TMainThreadCallback);
 var
    Thread: TCTYDownloadThread;
 begin
-   Thread := TCTYDownloadThread.Create(ATargetFile, ANotifyWnd);
+   Thread := TCTYDownloadThread.Create(ATargetFile, ACallback);
    Thread.Resume;
 end;
 

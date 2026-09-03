@@ -5358,7 +5358,7 @@ begin
     menu_download_latest_cty_dat:
       begin
       QuickDisplay(PAnsiChar(TC_DOWNLOADINGCTYDAT));
-      DownloadCTYAsync(string(PAnsiChar(@TR4W_CTY_FILENAME)), tr4whandle);
+      DownloadCTYAsync(string(PAnsiChar(@TR4W_CTY_FILENAME)), CTYDownloadFinished);
       end;
 
     // CHECK FOR UPDATES.  uCheckLatestVersion has existed complete, with a
@@ -5381,13 +5381,13 @@ begin
     menu_download_trmaster:
       begin
       QuickDisplay(TC_DOWNLOADINGTRMASTERDTA);
-      DownloadTRMasterAsync(TRMasterDownloadTarget, tr4whandle);
+      DownloadTRMasterAsync(TRMasterDownloadTarget, TRMasterDownloadFinished);
       end;
 
     menu_download_pota_parks:
       begin
       QuickDisplay(TC_DOWNLOADINGPOTAPARKS);
-      DownloadPOTAParksAsync(POTAParksFilePath, tr4whandle);
+      DownloadPOTAParksAsync(POTAParksFilePath, PotaDownloadFinished);
       end;
 
     menu_repeat_pota_parks:

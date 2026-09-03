@@ -86,8 +86,21 @@ var
 
 function EntryEvents: TTR4WEntryEvents;
 
+(* RESULTS ARRIVING FROM BACKGROUND THREADS. Passed to the async starters by
+  whoever starts them; run on the main thread by uMainThread. *)
+
+
+
 
 function WindowProc(TRHWND: HWND; Msg: UINT; wParam: wParam; lParam: lParam): longword; stdcall;
+
+(* RESULTS ARRIVING FROM BACKGROUND THREADS. Passed to the async starters by
+  whoever starts them; run on the main thread by uMainThread. *)
+procedure PotaDownloadFinished(aData: PtrInt);
+procedure PotaLoadFinished(aData: PtrInt);
+procedure TRMasterDownloadFinished(aData: PtrInt);
+procedure CTYVersionChecked(aData: PtrInt);
+procedure CTYDownloadFinished(aData: PtrInt);
 
 implementation
 
@@ -551,93 +564,24 @@ begin
         ShowFMessages(0);
       end;
 
-    WM_POTA_DOWNLOAD_DONE:
-      begin
-      // Fired by the async download thread (see uPOTAParks).
-      // wParam=1: file saved OK; wParam=0: download failed.
-      if wParam = 1 then
-         begin
-         if LoadPOTAParks(POTAParksFilePath) > 0 then
-            QuickDisplay(PAnsiChar(TC_POTAPARKSLOADED))
-         else
-            QuickDisplay(PAnsiChar(TC_POTAPARKSFILECOULDLOADED));
-         end
-      else
-         QuickDisplay(PAnsiChar(TC_POTAPARKSDOWNLOADFAILED));
-      end;
+    (* SIX ARMS FOR BACKGROUND RESULTS ARE GONE FROM HERE.
 
-    WM_TRMASTER_DOWNLOAD_DONE:
-      begin
-      // Fired by the async download thread (see uTRMasterUpdate).
-      // wParam=1: file saved OK; wParam=0: download failed.
-      //
-      // WHY THIS DOES NOT RELOAD SCP, unlike the CTY handler above.
-      // ctyLoadInCountryFile is a clean, idempotent reload entry point.
-      // TRMASTER has no equivalent: LOGSCP loads it LAZILY into a heap index
-      // array behind three flags (TRMasterFileOpen, IndexArrayAllocated,
-      // MasterFileExists) plus a cached OperatorNameSet built once, and the
-      // only close routine, SCPDisableAndDeAllocateFileBuffer, also sets
-      // SCPDisabledByApplication -- it disables SCP rather than reloading it.
-      //
-      // A partial reload that left OperatorNameSet stale, or SCP disabled,
-      // would be wrong data during a contest and would look like nothing at
-      // all. Telling the operator to restart is honest and costs one restart;
-      // guessing at TRDOS load state is not worth a wrong callsign hint.
-      // A proper CD.ReloadTRMaster belongs with the SQLite log work, not here.
-      if wParam = 1 then
-         begin
-         QuickDisplay(PAnsiChar(TC_TRMASTERDTADOWNLOADEDRESTARTTR4WUS));
-         end
-      else
-         begin
-         QuickDisplay(PAnsiChar(TC_TRMASTERDTADOWNLOADFAILED));
-         end;
-      end;
+      A worker thread that finished -- a CTY download, a TRMASTER download, a
+      POTA parse, a TCI apply -- used to hand its result over by POSTING A
+      WINDOW MESSAGE to the main window, which meant each one needed a message
+      id, a window handle for the thread to post to, and an arm in this
+      procedure. None of that is about the work.
 
-    WM_POTA_LOAD_DONE:
-      begin
-      // Fired by TPOTALoadThread after parsing the CSV off the UI thread.
-      // lParam is the parsed TStringList — ApplyLoadedParks takes ownership.
-      ApplyLoadedParks(lParam);
-      end;
+      They are plain procedures now, below, run on the main thread by
+      uMainThread.RunOnMainThread (Application.QueueAsyncCall). The thread is
+      handed the procedure when it is started, so this unit no longer has to
+      know a background operation exists.
 
-    WM_TCI_APPLY:
-      begin
-      // Posted by a TCI connection thread (see uTCIServer). lParam is the apply
-      // command; TCIRunQueuedApply runs it here on the main thread and frees it.
-      //
-      // A posted message rather than TThread.Queue because a queueing thread
-      // that exits purges its own callback, and rather than Synchronize because
-      // that would block an Indy connection thread against TTCIServer.Stop.
-      TCIRunQueuedApply(lParam);
-      end;
-
-    WM_CTY_VERSION_CHECKED:
-      begin
-      if wParam = 1 then
-         begin
-         // Silent startup notice — no MessageBox, no blocking
-         Format(wsprintfBuffer,
-            'Newer CTY.DAT available (dated %d). Press Alt-O to download.',
-            lParam);
-         QuickDisplay(wsprintfBuffer);
-         end;
-      end;
-
-    WM_CTY_DOWNLOAD_DONE:
-      begin
-      if wParam = 1 then
-         begin
-         QuickDisplay(PAnsiChar(TC_CTYDATDOWNLOADEDRELOADING));
-         // Reload on main thread — CTY tables have no locking, so background
-         // reload would race with callsign lookups. Message handler is a safe
-         // quiescent point.
-         ctyLoadInCountryFile(TR4W_CTY_FILENAME, False, True);
-         QuickDisplay(PAnsiChar(TC_CTYDATRELOADEDSUCCESSFULLY));
-         end
-      else
-         QuickDisplay(PAnsiChar(TC_CTYDATDOWNLOADFAILED));
-      end;
+      IT ALSO CLOSES A SILENT FAILURE. PostMessage returns False when the
+      target queue is full or the window is gone; where the lParam carried
+      OWNERSHIP -- the POTA park list, the TCI command -- a refused post lost
+      the result and leaked the object. Two of the four sites checked the
+      return value. RunOnMainThread cannot refuse. *)
 
     WM_CTLCOLORLISTBOX, WM_CTLCOLOREDIT, WM_CTLCOLORSTATIC:
       begin
@@ -752,6 +696,106 @@ end;
   the accessors it calls still guard their own preconditions.  What changes is
   that being wrong about that now costs a log line instead of the operator's
   session. }
+(* ============================ RESULTS ARRIVING FROM BACKGROUND THREADS ====
+
+  Each of these runs ON THE MAIN THREAD, handed here by RunOnMainThread. They
+  were arms of WindowProc; the bodies are unchanged apart from taking their one
+  argument as a parameter instead of digging it out of wParam/lParam.
+
+  They are passed to the async starters BY the code that starts them -- see
+  MainUnit and uProgramMain -- so a background unit no longer needs a window
+  handle, and this unit no longer needs to know the operation exists. *)
+
+(* aData: 1 = the file saved, 0 = the download failed. *)
+procedure PotaDownloadFinished(aData: PtrInt);
+begin
+   if aData = 1 then
+      begin
+      if LoadPOTAParks(POTAParksFilePath) > 0 then
+         begin
+         QuickDisplay(PAnsiChar(TC_POTAPARKSLOADED));
+         end
+      else
+         begin
+         QuickDisplay(PAnsiChar(TC_POTAPARKSFILECOULDLOADED));
+         end;
+      end
+   else
+      begin
+      QuickDisplay(PAnsiChar(TC_POTAPARKSDOWNLOADFAILED));
+      end;
+end;
+
+(* aData is the parsed TStringList -- ApplyLoadedParks takes ownership. *)
+procedure PotaLoadFinished(aData: PtrInt);
+begin
+   ApplyLoadedParks(aData);
+end;
+
+(* aData: 1 = the file saved, 0 = the download failed.
+
+  WHY THIS DOES NOT RELOAD SCP, unlike the CTY handler below.
+  ctyLoadInCountryFile is a clean, idempotent reload entry point. TRMASTER has
+  no equivalent: LOGSCP loads it LAZILY into a heap index array behind three
+  flags (TRMasterFileOpen, IndexArrayAllocated, MasterFileExists) plus a cached
+  OperatorNameSet built once, and the only close routine,
+  SCPDisableAndDeAllocateFileBuffer, also sets SCPDisabledByApplication -- it
+  disables SCP rather than reloading it.
+
+  A partial reload that left OperatorNameSet stale, or SCP disabled, would be
+  wrong data during a contest and would look like nothing at all. Telling the
+  operator to restart is honest and costs one restart; guessing at TRDOS load
+  state is not worth a wrong callsign hint. A proper reload belongs with the
+  SQLite log work, not here. *)
+procedure TRMasterDownloadFinished(aData: PtrInt);
+begin
+   if aData = 1 then
+      begin
+      QuickDisplay(PAnsiChar(TC_TRMASTERDTADOWNLOADEDRESTARTTR4WUS));
+      end
+   else
+      begin
+      QuickDisplay(PAnsiChar(TC_TRMASTERDTADOWNLOADFAILED));
+      end;
+end;
+
+(* aData is the latest CTY.DAT date, or 0 when there is nothing newer.
+
+  ONE VALUE WHERE THERE WERE TWO. The message carried wParam=1/0 alongside the
+  date, and wParam=0 only ever came with a date of 0 -- so the date alone says
+  it, and there is no pair to get out of step. *)
+procedure CTYVersionChecked(aData: PtrInt);
+begin
+   if aData = 0 then
+      begin
+      Exit;
+      end;
+
+   (* A silent startup notice -- no MessageBox, nothing that blocks. *)
+   Format(wsprintfBuffer,
+      'Newer CTY.DAT available (dated %d). Press Alt-O to download.',
+      aData);
+   QuickDisplay(wsprintfBuffer);
+end;
+
+(* aData: 1 = the file saved, 0 = the download failed. *)
+procedure CTYDownloadFinished(aData: PtrInt);
+begin
+   if aData = 1 then
+      begin
+      QuickDisplay(PAnsiChar(TC_CTYDATDOWNLOADEDRELOADING));
+      (* RELOADED ON THE MAIN THREAD. The CTY tables have no locking, so a
+        background reload would race with callsign lookups; arriving here is a
+        safe quiescent point. *)
+      ctyLoadInCountryFile(TR4W_CTY_FILENAME, False, True);
+      QuickDisplay(PAnsiChar(TC_CTYDATRELOADEDSUCCESSFULLY));
+      end
+   else
+      begin
+      QuickDisplay(PAnsiChar(TC_CTYDATDOWNLOADFAILED));
+      end;
+end;
+
 function WindowProc(TRHWND: HWND; Msg: UINT; wParam: wParam; lParam: lParam): longword; stdcall;
 begin
   Result := 0;

@@ -53,6 +53,12 @@ unit uMainThreadWork;
   FAsyncCall.CritSec (lcl/include/application.inc:2327), so it really is safe
   from a worker thread.
 
+  NOT uMainThread.RunOnMainThread, which arrived 2026-09-03 for the other
+  half of this problem: a background thread handing over ONE distinct result,
+  often owning a pointer with it. That must not coalesce and needs an argument,
+  neither of which this does. A repeated request to redraw something belongs
+  here; a result handed over once belongs there.
+
   AND IT COALESCES, which is the half that is not about threads.  A job already
   waiting is not queued twice, and the request costs a compare-and-swap.  That
   matters because these are asked for from a poll loop -- the bandmap's lesson,

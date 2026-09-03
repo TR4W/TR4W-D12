@@ -38,21 +38,19 @@ unit uPOTAParks;
 interface
 
 uses
-   Windows, Messages, Classes, SysUtils, IdHTTP, IdSSLOpenSSL;
+   Windows, Messages, Classes, SysUtils, IdHTTP, IdSSLOpenSSL, uMainThread;
 
 const
    POTA_PARKS_URL        = 'https://pota.app/all_parks_ext.csv';
    POTA_PARKS_FILENAME   = 'pota_parks.csv';
 
-   // Posted to ANotifyWnd when async download completes.
-   // wParam = 1 (download OK, file saved), 0 (download failed).
+   // Posted to ACallback when async download completes.
+   // aData = 1 (ok), 0 (failed).
    // Main thread should call LoadPOTAParks then QuickDisplay the result.
-   WM_POTA_DOWNLOAD_DONE = WM_APP + 200;
 
-   // Posted to ANotifyWnd when async startup load completes.
+   // Posted to ACallback when async startup load completes.
    // lParam = TStringList pointer (already parsed; main thread owns it after this).
    // Main thread must call ApplyLoadedParks(lParam) from the handler.
-   WM_POTA_LOAD_DONE = WM_APP + 201;
 
 // Returns full path to the parks CSV (same directory as tr4w.exe).
 function POTAParksFilePath: string;
@@ -75,15 +73,15 @@ function GetPOTAParkName(const AReference: string): string;
 function NormalizePOTAPark(const AToken: string; const AMyPark: string): string;
 
 // Start an asynchronous download of the parks CSV from pota.app.
-// Saves to ATargetFile. On completion posts WM_POTA_DOWNLOAD_DONE to ANotifyWnd.
+// Saves to ATargetFile. On completion posts WM_POTA_DOWNLOAD_DONE to ACallback.
 // The main thread should handle that message by calling LoadPOTAParks.
-procedure DownloadPOTAParksAsync(const ATargetFile: string; ANotifyWnd: HWND);
+procedure DownloadPOTAParksAsync(const ATargetFile: string; const ACallback: TMainThreadCallback);
 
 // Start an asynchronous load of an already-downloaded parks CSV.
 // Does all parsing off the UI thread. On completion posts WM_POTA_LOAD_DONE
-// to ANotifyWnd with lParam = parsed TStringList pointer.
+// to ACallback with lParam = parsed TStringList pointer.
 // The main thread MUST call ApplyLoadedParks(lParam) from that handler.
-procedure LoadPOTAParksAsync(ANotifyWnd: HWND);
+procedure LoadPOTAParksAsync(const ACallback: TMainThreadCallback);
 
 // Apply a pre-parsed parks list delivered via WM_POTA_LOAD_DONE lParam.
 // Must be called on the main thread. Takes ownership of the TStringList.
@@ -453,17 +451,17 @@ end;
 type
    TPOTALoadThread = class(TThread)
    private
-      FNotifyWnd: HWND;
+      FCallback: TMainThreadCallback;
    protected
       procedure Execute; override;
    public
-      constructor Create(ANotifyWnd: HWND);
+      constructor Create(const ACallback: TMainThreadCallback);
    end;
 
-constructor TPOTALoadThread.Create(ANotifyWnd: HWND);
+constructor TPOTALoadThread.Create(const ACallback: TMainThreadCallback);
 begin
    inherited Create(True);  // Create suspended
-   FNotifyWnd := ANotifyWnd;
+   FCallback := ACallback;
    FreeOnTerminate := True;
 end;
 
@@ -495,9 +493,12 @@ begin
             NewParks.Add(Ref + '=' + Name);
             end;
          end;
-      // Post the parsed list to the main thread. Ownership transfers on receipt.
-      PostMessage(FNotifyWnd, WM_POTA_LOAD_DONE, 0, LPARAM(NewParks));
-      NewParks := nil;  // Ownership passed via PostMessage
+      (* The parsed list goes to the main thread; ownership transfers on
+        receipt. RunOnMainThread cannot refuse the handoff, which
+        PostMessage could -- and a refusal here leaked the list and
+        lost the parks in silence. *)
+      RunOnMainThread(FCallback, PtrInt(NewParks));
+      NewParks := nil;   (* the callback owns it now *)
    except
       // Silently discard on any file/parse error
    end;
@@ -508,11 +509,11 @@ begin
       end;
 end;
 
-procedure LoadPOTAParksAsync(ANotifyWnd: HWND);
+procedure LoadPOTAParksAsync(const ACallback: TMainThreadCallback);
 var
    Thread: TPOTALoadThread;
 begin
-   Thread := TPOTALoadThread.Create(ANotifyWnd);
+   Thread := TPOTALoadThread.Create(ACallback);
    Thread.Resume;
 end;
 
@@ -537,19 +538,19 @@ type
    TPOTADownloadThread = class(TThread)
    private
       FTargetFile: string;
-      FNotifyWnd: HWND;
+      FCallback: TMainThreadCallback;
    protected
       procedure Execute; override;
    public
-      constructor Create(const ATargetFile: string; ANotifyWnd: HWND);
+      constructor Create(const ATargetFile: string; const ACallback: TMainThreadCallback);
    end;
 
 constructor TPOTADownloadThread.Create(const ATargetFile: string;
-   ANotifyWnd: HWND);
+   const ACallback: TMainThreadCallback);
 begin
    inherited Create(True);  // Create suspended
    FTargetFile := ATargetFile;
-   FNotifyWnd := ANotifyWnd;
+   FCallback := ACallback;
    FreeOnTerminate := True;
 end;
 
@@ -575,16 +576,16 @@ begin
    // address.
    Success := DownloadFileToPath(POTA_PARKS_URL, FTargetFile);
 
-   // Notify main thread: wParam=1 success, 0 failure.
+   // aData = 1 (ok), 0 (failed).
    // Main thread calls LoadPOTAParks and shows result via QuickDisplay.
-   PostMessage(FNotifyWnd, WM_POTA_DOWNLOAD_DONE, Ord(Success), 0);
+   RunOnMainThread(FCallback, PtrInt(Ord(Success)));
 end;
 
-procedure DownloadPOTAParksAsync(const ATargetFile: string; ANotifyWnd: HWND);
+procedure DownloadPOTAParksAsync(const ATargetFile: string; const ACallback: TMainThreadCallback);
 var
    Thread: TPOTADownloadThread;
 begin
-   Thread := TPOTADownloadThread.Create(ATargetFile, ANotifyWnd);
+   Thread := TPOTADownloadThread.Create(ATargetFile, ACallback);
    Thread.Resume;
 end;
 

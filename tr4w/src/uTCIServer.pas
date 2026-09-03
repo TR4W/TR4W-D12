@@ -79,7 +79,8 @@ interface
 uses
    Windows, SysUtils, Classes, SyncObjs,
    VC, LOGRADIO,
-   uWebSocketServer, uTCIProtocol;
+   uWebSocketServer, uTCIProtocol,
+   uMainThread;   (* RunOnMainThread -- an apply runs on the main thread *)
 
 const
    TCI_SERVER_DEFAULT_PORT = 50001;
@@ -118,10 +119,10 @@ const
      same way (WM_POTA_LOAD_DONE). }
    WM_TCI_APPLY = WM_APP + 220;   // 200/201 POTA, 210/211 CTY
 
-{ Runs an apply posted with WM_TCI_APPLY and frees it. aLParam is the command
+{ Runs an apply posted with WM_TCI_APPLY and frees it. aData is the command
   object. Exposed because the message is handled in tr4w.lpr, which has no
   business knowing the command classes -- they stay in the implementation. }
-procedure TCIRunQueuedApply(aLParam: LPARAM);
+procedure TCIRunQueuedApply(aData: PtrInt);
 
 type
    { Per-connection TCI state.  Owned by the TWSServerSession that carries it
@@ -392,30 +393,30 @@ begin
       Exit;
       end;
 
-   if tr4whandle = 0 then
-      begin
-      logger.Warn('[TCI-SRV] no main window; apply discarded');
-      aCmd.Free;
-      Exit;
-      end;
+   (* ONTO THE MAIN THREAD, and the handoff cannot be refused.
 
-   if not PostMessage(tr4whandle, WM_TCI_APPLY, 0, LPARAM(aCmd)) then
-      begin
-      logger.Warn('[TCI-SRV] PostMessage refused the apply (error %d); discarded',
-                  [GetLastError]);
-      aCmd.Free;
-      end;
+     This posted WM_TCI_APPLY to the main window, which needed a window to
+     exist and could fail -- and on failure the command was freed and the
+     apply silently lost. RunOnMainThread has neither problem, and there is no
+     main-window check left to make because there is no window in it.
+
+     A posted message rather than TThread.Queue because a queueing thread that
+     exits purges its own callback, and rather than Synchronize because that
+     would block an Indy connection thread against TTCIServer.Stop.
+     QueueAsyncCall has neither behaviour: it is not tied to the calling
+     thread lifetime and it does not wait. *)
+   RunOnMainThread(TCIRunQueuedApply, PtrInt(aCmd));
 end;
 
-procedure TCIRunQueuedApply(aLParam: LPARAM);
+procedure TCIRunQueuedApply(aData: PtrInt);
 begin
-   if aLParam = 0 then
+   if aData = 0 then
       begin
       Exit;
       end;
 
    // Run frees the command, including when Execute raises.
-   TTCIApplyCommand(aLParam).Run;
+   TTCIApplyCommand(aData).Run;
 end;
 
 constructor TTCIApplyFreq.Create(aServer: TTCIServer; aRig: RadioPtr;

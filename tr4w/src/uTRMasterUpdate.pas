@@ -15,19 +15,16 @@ unit uTRMasterUpdate;
 interface
 
 uses
-   Windows, Messages;
+   Windows, Messages, uMainThread;
 
 const
-   WM_TRMASTER_DOWNLOAD_DONE = WM_APP + 212;
-   // wParam=1: file saved successfully; wParam=0: download failed.
-   // (WM_APP+210 and +211 are uCTYUpdate's -- keep these distinct.)
 
    TRMASTER_DOWNLOAD_URL = 'https://tr4w.net/TRMASTER.DTA';
    // NY4I's own copy, 2026-08-16.  ~3.5 MB.
 
-procedure DownloadTRMasterAsync(const ATargetFile: string; ANotifyWnd: HWND);
+procedure DownloadTRMasterAsync(const ATargetFile: string; const ACallback: TMainThreadCallback);
 // Starts a background thread that downloads TRMASTER.DTA to ATargetFile and
-// posts WM_TRMASTER_DOWNLOAD_DONE when it finishes.
+// Hands the result to ACallback on the main thread.
 
 function DownloadTRMasterFile(const ATargetFile: string): boolean;
 // Synchronous: downloads on the CALLING thread and returns success.
@@ -52,19 +49,19 @@ type
    TTRMasterDownloadThread = class(TThread)
    private
       FTargetFile: string;
-      FNotifyWnd:  HWND;
+      FCallback: TMainThreadCallback;
    protected
       procedure Execute; override;
    public
-      constructor Create(const ATargetFile: string; ANotifyWnd: HWND);
+      constructor Create(const ATargetFile: string; const ACallback: TMainThreadCallback);
    end;
 
 constructor TTRMasterDownloadThread.Create(const ATargetFile: string;
-   ANotifyWnd: HWND);
+   const ACallback: TMainThreadCallback);
 begin
    inherited Create(True);  // suspended; caller calls Resume
    FTargetFile     := ATargetFile;
-   FNotifyWnd      := ANotifyWnd;
+   FCallback := ACallback;
    FreeOnTerminate := True;
 end;
 
@@ -72,20 +69,20 @@ procedure TTRMasterDownloadThread.Execute;
 begin
    if DownloadTRMasterFile(FTargetFile) then
       begin
-      PostMessage(FNotifyWnd, WM_TRMASTER_DOWNLOAD_DONE, 1, 0);
+      RunOnMainThread(FCallback, 1);
       end
    else
       begin
-      PostMessage(FNotifyWnd, WM_TRMASTER_DOWNLOAD_DONE, 0, 0);
+      RunOnMainThread(FCallback, 0);
       end;
 end;
 
-procedure DownloadTRMasterAsync(const ATargetFile: string; ANotifyWnd: HWND);
+procedure DownloadTRMasterAsync(const ATargetFile: string; const ACallback: TMainThreadCallback);
 var
    Thread: TTRMasterDownloadThread;
 begin
    logger.Info('[TRMaster] downloading to %s', [ATargetFile]);
-   Thread := TTRMasterDownloadThread.Create(ATargetFile, ANotifyWnd);
+   Thread := TTRMasterDownloadThread.Create(ATargetFile, ACallback);
    Thread.Resume;
 end;
 

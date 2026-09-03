@@ -327,10 +327,6 @@ uses
    // to spell them as literal integers to avoid exactly these six lines; three
    // of the eight literals were wrong and each failure was silent. Six units in
    // an implementation clause is the cheaper mistake.
-   uPOTAParks,         // WM_POTA_DOWNLOAD_DONE / WM_POTA_LOAD_DONE
-   uCTYUpdate,         // WM_CTY_VERSION_CHECKED / WM_CTY_DOWNLOAD_DONE
-   uTRMasterUpdate,    // WM_TRMASTER_DOWNLOAD_DONE
-   uTCIServer,         // WM_TCI_APPLY
    uGetServerLog,      // WM_USER_HEADLESS_SYNC_REPLACE
    SysUtils,           // Format -- the window-procedure guard
    uCrashLog,          // OnMainThread / ReportOffMainThread / LogCaughtException
@@ -432,12 +428,15 @@ begin
              // wrong about a value at all. What it can still be wrong about is
              // MEMBERSHIP -- a new message nobody adds here -- and that is what
              // Lint-AppMessages exists to catch.
-             (aMsg = WM_POTA_DOWNLOAD_DONE) or
-             (aMsg = WM_POTA_LOAD_DONE) or
-             (aMsg = WM_CTY_VERSION_CHECKED) or
-             (aMsg = WM_CTY_DOWNLOAD_DONE) or
-             (aMsg = WM_TRMASTER_DOWNLOAD_DONE) or
-             (aMsg = WM_TCI_APPLY) or
+             // SIX BACKGROUND-RESULT MESSAGES LEFT THIS LIST ON 2026-09-03,
+             // with the arms that answered them: WM_POTA_DOWNLOAD_DONE,
+             // WM_POTA_LOAD_DONE, WM_CTY_VERSION_CHECKED, WM_CTY_DOWNLOAD_DONE,
+             // WM_TRMASTER_DOWNLOAD_DONE and WM_TCI_APPLY. A worker thread
+             // hands its result over through uMainThread.RunOnMainThread now,
+             // so there is no message, no id to register and nothing to claim.
+             // The comment above about QueueAsyncCall having no id anyone can
+             // forget to register is no longer describing one case -- it is how
+             // every background result arrives.
              // NOT a WM_APP message -- WM_USER + 200 -- and the fourth one this
              // list was dropping. It is SENT, not posted, by uGetServerLog so
              // the multi-op log replace happens on the UI thread; unclaimed, it
