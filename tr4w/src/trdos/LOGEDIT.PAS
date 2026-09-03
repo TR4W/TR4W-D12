@@ -1512,7 +1512,7 @@ begin
         begin
         Continue;
         end;
-     if TempRXData.ceQSO_Skiped then
+     if TempRXData.ceQSO_Deleted then
         begin
         Continue;
         end;

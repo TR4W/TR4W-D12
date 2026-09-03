@@ -1119,7 +1119,11 @@ begin
    BindBool(P('is_run'), not aQso.ceSearchAndPounce);
 
    BindBool(P('is_xqso'), aQso.ceXQSO);
-   BindBool(P('is_skipped'), aQso.ceQSO_Skiped);
+   (* is_skipped IS WRITTEN AS FALSE AND NEVER READ BACK INTO ITS OWN FIELD.
+     The column stays because dropping it is a schema migration for a fact
+     nothing consumes; what it MEANT is now ceQSO_Deleted, and the reader folds
+     any historical 1 into that. See ceQSO_Skiped in VC.pas. *)
+   BindBool(P('is_skipped'), False);
    BindBool(P('sent_in_qtc'), aQso.ceWasSendInQTC);
    BindBool(P('name_sent'), aQso.NameSent);
    BindBool(P('mp3_recorded'), aQso.MP3Record);
@@ -1273,7 +1277,9 @@ begin
    aQso.ceDupe := FieldBool(F('is_dupe'));
    aQso.ceSearchAndPounce := not FieldBool(F('is_run'));
    aQso.ceXQSO := FieldBool(F('is_xqso'));
-   aQso.ceQSO_Skiped := FieldBool(F('is_skipped'));
+   (* NEVER POPULATED FROM THE DATABASE. What this column meant is folded
+     into ceQSO_Deleted below -- see ceQSO_Skiped in VC.pas. *)
+   aQso.ceQSO_Skiped := False;
    aQso.ceWasSendInQTC := FieldBool(F('sent_in_qtc'));
    aQso.NameSent := FieldBool(F('name_sent'));
    aQso.MP3Record := FieldBool(F('mp3_recorded'));
@@ -1282,7 +1288,13 @@ begin
 
    aQso.ceRadio := RadioType(F('radio_nr').AsInteger);
    AnsiToCharArray(aQso.ceOperator, S('operator_call'));
-   aQso.ceQSO_Deleted := FieldBool(F('deleted'));
+   (* THE LEGACY FOLD, AND IT HAS TO BE HERE RATHER THAN WHERE is_skipped IS
+     READ, thirteen lines above: `deleted` is not in aQso yet at that point, so
+     an OR there would be against a stale value and this line would then
+     overwrite it. A database written before the unification can carry
+     is_skipped = 1 on a row whose deleted is 0 -- those QSOs would come back
+     UNDELETED without this. *)
+   aQso.ceQSO_Deleted := FieldBool(F('deleted')) or FieldBool(F('is_skipped'));
    aQso.ceSendToServer := FieldBool(F('sent_to_server'));
    aQso.ceNeedSendToServerAE := FieldBool(F('server_dirty'));
 end;
@@ -1482,7 +1494,18 @@ begin
    try
       q.DataBase := FDatabase.Connection;
       q.SQL.Text := 'SELECT command, value FROM config ' +
-                    'WHERE source = ''contest'' ORDER BY command';
+                    (* OR command = 'CONTEST', because a log written before
+                       2026-09-03 stored it as a STATION setting -- the capture
+                       only marked a row contest-scoped if a .cfg had supplied
+                       it, and a contest created by the New Contest dialog has
+                       no .cfg. Such a log reopens with Contest = DUMMYCONTEST
+                       and ActiveExchange = UnknownExchange, and NO QSO CAN BE
+                       LOGGED. Guarding only the writer would leave every log
+                       written before today permanently unusable. *)
+
+                    'WHERE source = ''contest'' OR command = ''CONTEST'' ' +
+
+                    'ORDER BY command';
       q.Open;
       while not q.EOF do
          begin

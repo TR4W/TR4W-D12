@@ -150,7 +150,21 @@ function CommandCameFromContestCFG(const aCommand: string): boolean;
 function FindCFGCommand(const aCommand: string): integer;
 
 // A command's current value as text, rendered per its crType/crKind.
-function CFGCommandValueAsString(const aCommand: string): string;
+function CFGCommandValueAsString(const aCommand: string): string; overload;
+
+(* THE SAME THING, AND WHETHER IT WORKED.
+
+  NOT EVERY COMMAND HAS A VALUE THAT CAN BE WRITTEN DOWN. Some are ACTIONS
+  (REMINDER prompts the operator for a time), some are MULTI-VALUED (the
+  ctFreqList pair appear once per band-plan entry). The renderer's else arm
+  already warns about those and returns '' -- but '' is also a perfectly good
+  value for a string setting, so a caller cannot tell the two apart.
+
+  ONE CASE STATEMENT, TWO ENTRY POINTS: the plain function delegates here and
+  discards the flag, so the list of renderable types stays in one place. A
+  caller that must not store an unrenderable command asks this one. *)
+function CFGCommandValueAsString(const aCommand: string;
+                                 out aRenderable: boolean): string; overload;
 
 // The values a ckArray command will ACCEPT, as text, in the table's own order.
 // Empty for any other kind.
@@ -1111,6 +1125,14 @@ end;
 
 function CFGCommandValueAsString(const aCommand: string): string;
 var
+   renderable: boolean;
+begin
+   Result := CFGCommandValueAsString(aCommand, renderable);
+end;
+
+function CFGCommandValueAsString(const aCommand: string;
+                                 out aRenderable: boolean): string;
+var
    idx: integer;
    listIdx: integer;
    p: PAnsiChar;
@@ -1130,6 +1152,8 @@ begin
    // unsupported type returns '' rather than guessing at bytes.  uOption.pas
    // has a fuller version inline for Ctrl+J; it is not shared because Ctrl+J is
    // being retired, and the two are not worth coupling on the way out.
+   (* True unless the case below falls through to its else. *)
+   aRenderable := True;
    Result := '';
    idx := FindCFGCommand(aCommand);
    if idx < 0 then
@@ -1232,6 +1256,7 @@ begin
          // the blank.  COMPUTER ID (ctAlphaChar) shipped that way; it is above
          // now, and this else is why the next one will be found by reading a
          // log rather than by a mis-saved setting.
+         aRenderable := False;
          logger.Warn('[CFGCommandValueAsString] %s: crType %d is not rendered here',
                      [aCommand, Ord(CFGCA[idx].crType)]);
    end;

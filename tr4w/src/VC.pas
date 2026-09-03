@@ -1686,7 +1686,29 @@ type
 {01}  ceOperatorID:        Byte;
 {01}  ceRecordKind:        LogRecordKind;
 
-{01}  ceQSO_Skiped:        boolean;
+(* LEGACY, AND KEPT ONLY BECAUSE THE BYTES ARE.
+
+     ceQSO_Skiped WAS a second delete flag -- Alt-Y set this one, the QSO
+     editor's checkbox set ceQSO_Deleted, and EVERY consumer treated the two
+     identically: PostUnit skipped the record for either (1219-1225), the
+     rescore excluded both, and the only difference anywhere was cosmetic -- a
+     blank row versus a "DELETED" caption. Two names for one fact.
+
+     UNIFIED INTO ceQSO_Deleted ON 2026-09-02 (NY4I: "The misspelled Skiped(sic)
+     is almost legend in this code base but it seems it is unneeded. so yes
+     let's just unify them into the Deleted name").
+
+     WHY THE FIELD STAYS WHEN THE MEANING DOES NOT. ContestExchange is read as
+     RAW BYTES out of the .TRW -- 376 per record, Windows.ReadFile straight into
+     the record -- so removing a field moves every field after it and misreads
+     every binary log an operator has, plus all thirteen golden-corpus fixtures.
+     It is blitted over the multi-station wire for the same reason. The SLOT
+     survives; nothing reads it.
+
+     FOLDED AT THE THREE PLACES OLD DATA ENTERS: the v1_5 and v1_6 log upgraders
+     and the database reader. Never written again. If you are adding a consumer,
+     you want ceQSO_Deleted. *)
+{01}  ceQSO_Skiped:        boolean;   // legacy -- see above; use ceQSO_Deleted
 {01}  ceSendToServer:      boolean;
 {01}  ceNeedSendToServerAE:    boolean;
 {01}  ceDupe:              boolean;

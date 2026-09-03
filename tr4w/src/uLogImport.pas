@@ -40,7 +40,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     deleted QSOs   kept on purpose. An operator deletes a contact and the log
                    still records that it happened; Cabrillo X-QSO and the
                    other station's NIL protection depend on it.
-    skipped QSOs   ceQSO_Skiped, which scoring reads.
+    skipped QSOs   folded into ceQSO_Deleted -- see ceQSO_Skiped in VC.pas.
     QTC records    rkQTCR / rkQTCS -- a whole WAE contest's traffic.
     notes          rkNote.
 
@@ -179,10 +179,10 @@ begin
                      begin
                      Inc(Result.Deleted);
                      end;
-                  if rec.ceQSO_Skiped then
-                     begin
-                     Inc(Result.Skipped);
-                     end;
+                  (* Skipped and Deleted were counted apart when they were two
+                     flags. One flag now, so this counter only ever reported the
+                     same records twice; it is left in the result record because
+                     callers print it, and it stays at zero. *)
                   if GoodLookingQSO(rec) then
                      begin
                      Inc(Result.Exportable);

@@ -798,10 +798,50 @@ begin
         end;
 {$IFEND}
 
-        if (LoWord(wParam) >= 10000) and (LoWord(wParam) <= 10700) then
-           ProcessMenu(wParam);
-        if (LoWord(wParam) >= 10700) and (LoWord(wParam) <= 10750) then
-            RunPlugin(LoWord(wParam));
+        (* A MENU COMMAND HAS lParam = 0. A CONTROL NOTIFICATION DOES NOT.
+
+          WM_COMMAND carries three different things and Windows tells them
+          apart by lParam, not by the id: for a menu item it is 0, for an
+          accelerator it is 0, and for a CONTROL it is that control's HWND.
+          These two tests read only LoWord(wParam), so every notification from
+          a control whose id happened to fall between 10000 and 10750 ran a
+          MENU COMMAND -- or, past 10700, tried to load a plugin.
+
+          THIS IS A CONSEQUENCE OF THE LCL CONVERSION AND COULD NOT HAVE BITTEN
+          BEFORE IT. When the main window was built by hand every child control
+          was given its id here, and none of them were in that range. The
+          window is a TForm now and the LCL assigns ids to its children, so the
+          entry fields, panels and lists carry whatever numbers it hands out.
+
+          MEASURED FROM A CRASH NY4I CAUGHT IN THE DEBUGGER, 2026-09-03:
+          wParam = 67119598, which is LoWord 10734 and HiWord 1024 -- and 1024
+          is EN_UPDATE, an edit control telling its parent the text changed.
+          lParam was 159459822, the control's handle. That reached RunPlugin as
+          "plugin number 34", indexed PluginsArray[34] in an array[1..16], read
+          rubbish as a file name, got a nil entry point from LoadLibrary and
+          called address zero.
+
+          THE CRASH WAS THE LUCKY OUTCOME. Ids in the LOWER range go to
+          ProcessMenu, which runs a real menu action -- silently, on every
+          keystroke that updates an entry field. That is the shape of "it just
+          will not log a contact": the program is busy doing something else
+          each time you type. *)
+        if lParam = 0 then
+           begin
+           if (LoWord(wParam) >= 10000) and (LoWord(wParam) <= 10700) then
+              begin
+              ProcessMenu(wParam);
+              end;
+
+           (* > 10700, not >= : the two ranges overlapped at exactly 10700, so
+              that one id was dispatched BOTH ways. Plugin ids start at
+              10700 + LoadedPlugins with LoadedPlugins >= 1, so nothing is
+              lost. *)
+           if (LoWord(wParam) > 10700) and (LoWord(wParam) <= 10750) then
+              begin
+              RunPlugin(LoWord(wParam));
+              end;
+           end;
 
         // The call and exchange notification arms USED TO BE HERE, dispatched
         // by comparing lParam against wh[mweCall] / wh[mweExchange].  They are

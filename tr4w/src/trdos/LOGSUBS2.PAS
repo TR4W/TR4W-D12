@@ -557,7 +557,7 @@ begin
   if
     (not LogSourceReadFromEnd(1, TempRXData)) or
     (TempRXData.ceRecordKind <> rkQSO) or
-    (TempRXData.ceQSO_Skiped <> tLastLogEntryIsDeleted)
+    (TempRXData.ceQSO_Deleted <> tLastLogEntryIsDeleted)
     then
      begin
      LogSourceClose;
@@ -566,7 +566,7 @@ begin
   if tLastLogEntryIsDeleted then
      begin
 
-     TempRXData.ceQSO_Skiped := False;
+     TempRXData.ceQSO_Deleted := False;
      p := TC_YOUHAVERESTOREDTHELASTDELETED;
      LogContactToUDP(TempRXData);
      if Assigned(externalLogger) then
@@ -579,7 +579,7 @@ begin
      end
   else
      begin
-     TempRXData.ceQSO_Skiped := True;
+     TempRXData.ceQSO_Deleted := True;
      p := TC_YOUHAVEDELETEDTHELASTLOGENTRY;
      SendDeletedContactToUDP(TempRXData);
      if Assigned(externalLogger) then
@@ -2945,7 +2945,7 @@ begin
             // IsClaimedQso=0 -- same wire-format meaning as a skipped
             // QSO from the consumer's perspective.  N1MM uses the
             // same convention.
-            #9 + '<IsClaimedQso>' + Format('%d',[IfThen(RxData.ceQSO_Skiped or RxData.ceXQSO,0,1)]) + '</IsClaimedQso>' + sLineBreak +
+            #9 + '<IsClaimedQso>' + Format('%d',[IfThen(RxData.ceQSO_Deleted or RxData.ceXQSO,0,1)]) + '</IsClaimedQso>' + sLineBreak +
             #9 + '<oldtimestamp>' + sTimestamp + '</oldtimestamp>' + sLineBreak +
             #9 + '<oldcall>' + RXData.Callsign + '</oldcall>' + sLineBreak +
             // SentExchange built from CQExchange template, not the

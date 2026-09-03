@@ -141,7 +141,7 @@ function GoodLookingQSO(const aRecord: ContestExchange): boolean;
 begin
    Result :=
       (aRecord.ceRecordKind = rkQSO)     and
-      (not aRecord.ceQSO_Skiped)         and
+      (not aRecord.ceQSO_Deleted)        and
       (aRecord.Band <> NoBand)           and
       (aRecord.Mode <> NoMode)           and
       (not aRecord.ceQSO_Deleted);
@@ -307,6 +307,19 @@ begin
       begin
       Exit;
       end;
+
+   (* THE LEGACY DELETE FLAG IS FOLDED HERE, AT THE ONE DOOR OLD RECORDS COME
+     THROUGH. A .TRW written before 2026-09-02 carries ceQSO_Skiped -- Alt-Y set
+     it -- and nothing downstream reads that field any more. Folding it in the
+     DATABASE reader is not enough: the importer reads a .TRW through THIS
+     routine and then writes is_skipped as False, so the deletion would be lost
+     on the way in and the QSO would come back scored and exported.
+
+     MEASURED, NOT REASONED: without this the golden corpus went from 24 passed
+     to 16 passed / 8 FAILED -- eight logs whose deleted QSOs reappeared in the
+     Cabrillo. See ceQSO_Skiped in VC.pas. *)
+   aRecord.ceQSO_Deleted := aRecord.ceQSO_Deleted or aRecord.ceQSO_Skiped;
+   aRecord.ceQSO_Skiped  := False;
 
    Inc(FRecordsRead);
    Result := True;

@@ -192,7 +192,7 @@ begin
          end;
       end;
 
-   if (EditableQSORXData.ceQSO_Skiped) or
+   if (EditableQSORXData.ceQSO_Deleted) or
       (EditableQSORXData.ceRecordKind <> rkQSO) then
       begin
       Exit;

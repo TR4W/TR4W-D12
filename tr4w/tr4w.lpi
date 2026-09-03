@@ -13,7 +13,6 @@
       <Title Value="TR4W"/>
       <UseAppBundle Value="False"/>
       <ResourceType Value="res"/>
-      <Icon Value="0"/>
     </General>
     <i18n>
       <EnableI18N Value="True"/>
@@ -43,7 +42,7 @@
         <PackageName Value="LCL"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="379">
+    <Units Count="416">
       <Unit0>
         <Filename Value="tr4w.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -151,6 +150,7 @@
       <Unit23>
         <Filename Value="src/trdos/LOGSTUFF.PAS"/>
         <IsPartOfProject Value="True"/>
+        <UnitName Value="LogStuff"/>
       </Unit23>
       <Unit24>
         <Filename Value="src/trdos/LOGWAE.PAS"/>
@@ -1661,7 +1661,9 @@
       <Unit375>
         <Filename Value="src/ui/lcl/uServerLogForm.pas"/>
         <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmServerLog"/>
         <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
       </Unit375>
       <Unit376>
         <Filename Value="src/radioFactory/uRadioIcom7110.pas"/>
@@ -1675,6 +1677,159 @@
         <Filename Value="src/uAppPaths.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit378>
+      <Unit379>
+        <Filename Value="src/domain/uRadioState.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit379>
+      <Unit380>
+        <Filename Value="src/domain/uKeyerState.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit380>
+      <Unit381>
+        <Filename Value="src/uLogBinaryFile.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit381>
+      <Unit382>
+        <Filename Value="src/domain/uLogSchema.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit382>
+      <Unit383>
+        <Filename Value="src/domain/uContestFileKind.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit383>
+      <Unit384>
+        <Filename Value="src/domain/uEditableLogView.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit384>
+      <Unit385>
+        <Filename Value="src/uLogRepository.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit385>
+      <Unit386>
+        <Filename Value="src/uLogImport.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit386>
+      <Unit387>
+        <Filename Value="src/domain/uLogDatabase.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit387>
+      <Unit388>
+        <Filename Value="src/ui/lcl/uAltPForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+      </Unit388>
+      <Unit389>
+        <Filename Value="src/ui/lcl/uCabrilloSummaryForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+      </Unit389>
+      <Unit390>
+        <Filename Value="src/ui/lcl/uFileViewForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+      </Unit390>
+      <Unit391>
+        <Filename Value="src/ui/lcl/uQTCSendForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+      </Unit391>
+      <Unit392>
+        <Filename Value="src/ui/lcl/uQTCReceiveForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+      </Unit392>
+      <Unit393>
+        <Filename Value="src/contestFactory/uContestBase.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit393>
+      <Unit394>
+        <Filename Value="src/contestFactory/uContestRegistry.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit394>
+      <Unit395>
+        <Filename Value="src/contestFactory/uContestFactory.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit395>
+      <Unit396>
+        <Filename Value="src/contestFactory/uContestARRLDXBase.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit396>
+      <Unit397>
+        <Filename Value="src/contestFactory/uContestARRLDXCW.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit397>
+      <Unit398>
+        <Filename Value="src/contestFactory/uContestARRLDXPhone.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit398>
+      <Unit399>
+        <Filename Value="src/contestFactory/uContestFixedPoints.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit399>
+      <Unit400>
+        <Filename Value="src/contestFactory/uContestARRLSSCW.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit400>
+      <Unit401>
+        <Filename Value="src/contestFactory/uContestARRLSSSSB.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit401>
+      <Unit402>
+        <Filename Value="src/contestFactory/uContestGeneralQSO.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit402>
+      <Unit403>
+        <Filename Value="src/contestFactory/uContestNASprintCW.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit403>
+      <Unit404>
+        <Filename Value="src/contestFactory/uContestNASprintRTTY.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit404>
+      <Unit405>
+        <Filename Value="src/contestFactory/uContestFloridaQP.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit405>
+      <Unit406>
+        <Filename Value="src/contestFactory/uContestARRLFieldDay.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit406>
+      <Unit407>
+        <Filename Value="src/contestFactory/uContestARRLSSBase.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit407>
+      <Unit408>
+        <Filename Value="src/contestFactory/uContestCQWPXBase.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit408>
+      <Unit409>
+        <Filename Value="src/contestFactory/uContestCQWPXCW.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit409>
+      <Unit410>
+        <Filename Value="src/contestFactory/uContestCQWPXSSB.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit410>
+      <Unit411>
+        <Filename Value="src/contestFactory/uContestCQWWBase.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit411>
+      <Unit412>
+        <Filename Value="src/contestFactory/uContestCQWWCW.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit412>
+      <Unit413>
+        <Filename Value="src/contestFactory/uContestCQWWSSB.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit413>
+      <Unit414>
+        <Filename Value="src/contestFactory/uContestIARU.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit414>
+      <Unit415>
+        <Filename Value="src/contestFactory/uContestWinterFieldDay.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit415>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -1684,7 +1839,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="src;src/trdos;Include;include/Core;include/System;include/Protocols;$(ProjOutDir)"/>
-      <OtherUnitFiles Value="src;src/trdos;src/utils;src/lang;src/radioFactory;src/rotatorFactory;src/ui/lcl;Include;include/Core;include/System;include/Protocols;C:/FPC/3.2.2/units/i386-win32/regexpr/;C:/FPC/3.2.2/units/i386-win32/fcl-json/;$(LazarusDir)/components/datetimectrls"/>
+      <OtherUnitFiles Value="src;src/trdos;src/utils;src/lang;src/domain;src/radioFactory;src/contestFactory;src/rotatorFactory;src/ui/lcl;Include;include/Core;include/System;include/Protocols;C:/FPC/3.2.2/units/i386-win32/regexpr/;C:/FPC/3.2.2/units/i386-win32/fcl-json/;$(LazarusDir)/components/datetimectrls"/>
       <UnitOutputDirectory Value="../build-out/laz-$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Parsing>
@@ -1711,7 +1866,7 @@
     </Other>
   </CompilerOptions>
   <Debugging>
-    <Exceptions Count="3">
+    <Exceptions Count="5">
       <Item1>
         <Name Value="EIdSocketError"/>
       </Item1>
@@ -1721,6 +1876,12 @@
       <Item3>
         <Name Value="EAbort"/>
       </Item3>
+      <Item4>
+        <Name Value="Exception"/>
+      </Item4>
+      <Item5>
+        <Name Value="ESerialError"/>
+      </Item5>
     </Exceptions>
   </Debugging>
 </CONFIG>

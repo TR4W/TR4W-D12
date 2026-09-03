@@ -190,6 +190,31 @@ begin
   if (Screen.ActiveCustomForm <> nil) and
      (fsModal in Screen.ActiveCustomForm.FormState) then
      begin
+     (* WHICH FORM, AND IS IT EVEN ON SCREEN?
+
+       THIS GUARD SUPPRESSES EVERY ACCELERATOR, and Enter is one -- id 10651,
+       the keystroke that logs a QSO. So a form that is modal when it should
+       not be stops the operator logging, silently, for the rest of the
+       session, while every other key still works because no other key comes
+       through here.
+
+       NY4I is chasing exactly that shape (2026-09-03): logging stopped after
+       editing a QSO, Escape still clears the field, and nothing is reported.
+       frmEditQSO is created once and never freed, so it stays in
+       Screen.CustomForms for the life of the run; if fsModal survives the
+       close -- and ShowEditQSO catches exceptions, which is one way it could --
+       the guard fires forever afterwards.
+
+       LOGGED, NOT GUESSED AT. Visible is included because a form that is
+       hidden and still fsModal is the smoking gun rather than a normal state.
+       At INFO, not DEBUG: this is rare and it explains a dead keyboard. *)
+     if logger <> nil then
+        begin
+        logger.Info('[Input] accelerator suppressed: %s is modal ' +
+                    '(visible=%s). Key=%d.',
+                    [Screen.ActiveCustomForm.Name,
+                     BoolToStr(Screen.ActiveCustomForm.Visible, True), Key]);
+        end;
      Exit;
      end;
 
@@ -225,6 +250,17 @@ begin
   // POSTED, NOT SENT -- exactly what TranslateAccelerator did.  The command runs
   // after this key has finished being delivered, so a handler that opens a
   // modal dialog does not do it from inside the LCL's key dispatch.
+  (* WHAT WAS ACTUALLY POSTED -- instrumentation, 2026-09-03.
+
+    The trace above only fires for keys with a MODIFIER, so a bare Enter --
+    accelerator 10651, the keystroke that logs a QSO -- produced no evidence
+    at all of having been seen. That is the one key worth being certain about,
+    so it is logged unconditionally at DEBUG. *)
+  if (logger <> nil) and (Key = VK_RETURN) then
+     begin
+     logger.Debug('[Input] Enter -> accelerator %d posted', [id]);
+     end;
+
   Windows.PostMessage(tr4whandle, WM_COMMAND, id, 0);
   Key := VK_UNKNOWN;
 end;

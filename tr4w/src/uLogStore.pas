@@ -299,6 +299,8 @@ var
    i: integer;
    cmd: string;
    src: AnsiString;
+   value: AnsiString;
+   renderable: boolean;
    mode: ModeType;
    key: AnsiChar;
    memText: ShortString;
@@ -316,6 +318,44 @@ begin
 
       cmd := string(StrPas(CFGCA[i].crCommand));
       if cmd = '' then
+         begin
+         Continue;
+         end;
+
+      (* CONTEST IS THE CONTEST. It is not a station preference that happens
+        to be stored in a log, and it must be captured as contest-scoped even
+        when nothing read a .cfg -- which is now the ORDINARY case, because a
+        contest created by the New Contest dialog has a .db and no .cfg at all.
+
+        WITHOUT THIS THE LOG CANNOT BE REOPENED USEFULLY, and the failure is
+        total and silent. Measured on NY4I's own log, 2026-09-03: 410 captured
+        rows, of which exactly ONE was contest-scoped -- MY CALL. On the next
+        open, Contest stayed DUMMYCONTEST, so FCONTEST never ran
+        `ActiveExchange := ContestsArray[Contest].AE` and ActiveExchange
+        remained UnknownExchange. ProcessExchange's case has no else, so it
+        returned False without a word and NO QSO COULD BE LOGGED AT ALL. The
+        operator sees Enter do nothing.
+
+        CommandCameFromContestCFG ANSWERS FALSE FOR A CONTEST THAT NEVER HAD A
+        .cfg, which is exactly backwards for this row: the newer the contest,
+        the less likely it is to be recorded as belonging to one. MY CALL was
+        already special-cased here for the same reason; CONTEST is the other
+        half of that pair and was missed. *)
+      (* CONTEST IS NOT CAPTURED AT ALL. NY4I, 2026-09-03: "the config row has
+        outlived its usefulness since we can store that in the .db file."
+
+        The contest table holds contest_type, written once when the log is
+        created and never recomputed. This row was a SECOND copy, rewritten on
+        every clean exit from whatever the running program believed at the
+        time -- so one bad session poisoned it permanently. That is not
+        hypothetical: NY4I's log opened without a contest, exited cleanly, and
+        this wrote CONTEST = DUMMY CONTEST into it. Every open afterwards read
+        it back and refused it, and the log could never be used again while
+        the contest table said CQ-WW-SSB the whole time.
+
+        One of the two was a fact about the log; the other was a fact about a
+        session. Only one of them belongs in the file. *)
+      if cmd = 'CONTEST' then
          begin
          Continue;
          end;
@@ -341,8 +381,32 @@ begin
          src := 'station';
          end;
 
-      GRepository.SaveConfigValue(AnsiString(cmd),
-                                  AnsiString(CFGCommandValueAsString(cmd)), src);
+      (* A COMMAND WHOSE VALUE CANNOT BE WRITTEN DOWN IS NOT CAPTURED.
+
+        THIS HUNG THE PROGRAM, and headlessly it hung it forever. REMINDER is
+        an ACTION, not a setting -- applying it calls QuickEditResponse('Enter
+        time for reminder') and waits for a human (HELP.PAS:642). It was being
+        captured with an empty value and re-applied on every open, so a batch
+        /EXPORT sat at a prompt nobody could see. Measured on the golden corpus:
+        general_qso aborted every run, and the count of failures moved around
+        because it depended on which sets had been opened.
+
+        THE ctFreqList PAIR ARE THE SAME MISTAKE WITH A WORSE ENDING. BAND MAP
+        CUTOFF FREQUENCY and FREQUENCY MEMORY appear ONCE PER ENTRY in the band
+        plan; capturing one blank value and applying it can replace an
+        operator's whole band plan with nothing (see uCFG's note on
+        CFGCommandIsMultiValued).
+
+        THE RENDERER ALREADY KNEW -- it warned '%s: crType %d is not rendered
+        here' and returned ''. What it could not do was say so to a caller,
+        because '' is a legitimate value for a string setting. Now it can. *)
+      value := AnsiString(CFGCommandValueAsString(cmd, renderable));
+      if not renderable then
+         begin
+         Continue;
+         end;
+
+      GRepository.SaveConfigValue(AnsiString(cmd), value, src);
       end;
 
    (* THE FUNCTION-KEY MEMORIES, both kinds and both modes. GetCQMemoryString /
@@ -823,10 +887,13 @@ var
    rows: TStringList;
    i: integer;
    cmd, val: string;
+   renderable: boolean;
    (* A NAMED LOCAL, so PAnsiChar below points at a string that is still alive.
       PAnsiChar of a temporary is a dangling pointer -- Delphi's allocator hid
       that and FPC's does not. *)
    cmdName: ShortString;
+   valName: ShortString;
+   idx: integer;
    valAsShort: ShortString;
 begin
    Result := 0;
@@ -844,12 +911,111 @@ begin
       rows := TStringList.Create;
       try
          GRepository.LoadContestConfig(rows);
+         (* THE CONTEST COMES FROM THE CONTEST TABLE, NOT FROM A CAPTURED
+           SETTING -- and it is applied FIRST, because everything else depends
+           on it. FoundContest sets the Contest enum, ActiveExchange and the
+           domestic file; until it has run, ProcessExchange has no arm to take
+           and no QSO can be logged.
+
+           WHY THE TABLE AND NOT THE config ROW. contest_type is written once,
+           when the log is created, and never recomputed. The captured CONTEST
+           row is rewritten on every clean exit from whatever the running
+           program believed at the time -- so a single bad session poisons it
+           permanently, which is exactly what happened. One of the two is a
+           fact about the log; the other is a fact about a session.
+
+           A captured CONTEST row is ignored below for the same reason. *)
+         (* ONLY WHEN NOTHING ELSE HAS ANSWERED. If a contest .cfg was read it
+           has already set this, and it is the better source: the table'''s
+           contest_type is derived at IMPORT from the first record'''s ceContest
+           ordinal, and a .TRW written under an older ContestType layout maps
+           that ordinal to the wrong name. Measured 2026-09-03: the golden
+           corpus'''s winter_fd log is stamped ALRS-UA1DZ-CUP while its .CFG says
+           WINTER FIELD DAY, and applying the table unconditionally broke that
+           set'''s export and made the factory A/B disagree.
+
+           So the table answers the case it exists for -- a log with no .cfg at
+           all, which is every contest created by the New Contest dialog -- and
+           stays out of the way otherwise. *)
+         if (GRepository.LogContest <> DUMMYCONTEST) and
+            ((CFGCommandValueAsString('CONTEST') = '') or
+             (CFGCommandValueAsString('CONTEST') =
+              string(ContestTypeSA[DUMMYCONTEST]))) then
+            begin
+            cmdName := ShortString(AnsiString('CONTEST'));
+            valName := ShortString(AnsiString(
+               ContestTypeSA[GRepository.LogContest]));
+            (* ONLY IF IT IS NOT ALREADY RIGHT. FoundContest is NOT
+               idempotent -- re-running it appends to the domestic file name
+               (dom\iaruhq.domiaruhq.dom), and applying it unconditionally on
+               every open took the golden corpus from 20 passed to 10 passed /
+               14 failed in one run. The comparison is against the CFGCA row
+               because that is what the hook maintains; the VALUE comes from
+               the contest table because that is what is trustworthy. *)
+            if (CFGCommandValueAsString('CONTEST') <> string(valName)) and
+               CheckCommand(@cmdName, valName, True) then
+               begin
+               if logger <> nil then
+                  begin
+                  logger.Info('[LogStore] contest: %s (from the log)',
+                              [string(valName)]);
+                  end;
+               end
+            else if logger <> nil then
+               begin
+               logger.Error('[LogStore] the log names contest "%s" and this ' +
+                            'build did not accept it.', [string(valName)]);
+               end;
+            end;
+
          for i := 0 to rows.Count - 1 do
             begin
             cmd := rows.Names[i];
+
+            (* Applied above, from the contest table. *)
+            if cmd = 'CONTEST' then
+               begin
+               Continue;
+               end;
+
             val := rows.ValueFromIndex[i];
             if cmd = '' then
                begin
+               Continue;
+               end;
+
+            (* AN ACTION IS NOT A SETTING, AND APPLYING ONE HANGS THE PROGRAM.
+
+              REMINDER is the case that found this. It is a COMMAND, not a
+              value: applying it calls QuickEditResponse('Enter time for
+              reminder') and waits for the operator (HELP.PAS:642). In a
+              headless /EXPORT that waits forever; in the interactive program it
+              is worse, because the prompt takes the keyboard in the quick
+              command window and the operator sees a log that has simply stopped
+              accepting QSOs -- NY4I, 2026-09-02: "stuck at entering the zone 4".
+
+              THE GUARD IS HERE, ON THE APPLY, AND NOT ONLY ON THE CAPTURE.
+              CaptureConfiguration no longer stores these, but every log written
+              before that fix already has them -- 410 rows including REMINDER
+              and the two ctFreqList commands. Guarding only the writer would
+              leave every existing log broken and unopenable, and the operator
+              with no way to tell why. A reader that can be handed bad data has
+              to defend itself.
+
+              SAME QUESTION THE CAPTURE ASKS, so the two cannot drift: can this
+              command's value be written down at all? If it cannot, it was never
+              a setting and there is nothing here to restore. Reported once per
+              command rather than silently, because a log carrying rows this
+              build refuses is worth knowing about. *)
+            CFGCommandValueAsString(cmd, renderable);
+            if not renderable then
+               begin
+               if logger <> nil then
+                  begin
+                  logger.Warn('[LogStore] "%s" is an action, not a setting -- ' +
+                              'ignored. It was captured by a build that should ' +
+                              'not have stored it.', [cmd]);
+                  end;
                Continue;
                end;
 
@@ -915,7 +1081,30 @@ begin
                Skipping the no-ops also makes this a genuine no-op when the .cfg
                and the log agree, which is every log created by this build --
                and is why the corpus does not move. *)
-            if CFGCommandValueAsString(cmd) = val then
+            (* SKIP A NO-OP ONLY WHERE APPLYING IT REALLY WOULD BE ONE.
+
+               A ROW WITH A crA HOOK DOES MORE THAN STORE A VALUE, and CONTEST
+               is the one that matters: its hook runs FoundContest, which sets
+               the Contest enum, ActiveExchange and the domestic file. The
+               stored STRING can already match while none of that has happened
+               -- which is precisely the state a log-backed contest starts in,
+               because nothing parsed a .cfg to make it happen.
+
+               MEASURED 2026-09-03: startup logged "the log applied 2 contest
+               setting(s)" while the title bar showed NO CONTEST. CONTEST was
+               counted here and skipped, so ActiveExchange stayed
+               UnknownExchange; ProcessExchange's case has no else, so it
+               returned False in silence and no QSO could be logged at all.
+               The count was the most misleading part -- it reported success
+               for the very row it had declined to apply.
+
+               THE COMPARISON STAYS FOR ORDINARY ROWS, which is what it was
+               added for: CONTEST's hook is NOT idempotent, and re-applying it
+               appended to the domestic file name. Both facts are true, and the
+               crA test is what separates them. *)
+            idx := FindCFGCommand(cmd);
+            if (CFGCommandValueAsString(cmd) = val) and
+               (idx >= 0) and (CFGCA[idx].crA = 0) then
                begin
                inc(Result);
                Continue;
@@ -998,6 +1187,26 @@ end;
   the settings work rather than here. *)
 procedure CaptureConfigurationOnClose;
 begin
+   (* A BATCH EXPORT DOES NOT REWRITE THE LOG IT IS EXPORTING.
+
+     The program already says so at startup -- "batch /EXPORT: settings are
+     READ-ONLY for this run" -- and this was quietly contradicting it, writing
+     roughly four hundred config rows into the log on the way out of a run
+     whose whole purpose is to read.
+
+     IT WAS ALSO MAKING THE GOLDEN CORPUS FLAKY. A different set aborted on
+     every run once the capture started happening, because each of the thirteen
+     exports now did a few hundred extra writes at close and the next run read
+     back whatever that left. A regression oracle that changes its answer
+     between runs is worse than no oracle.
+
+     THE CAPTURE IS FOR AN INTERACTIVE SESSION, where the operator has actually
+     changed something. *)
+   if tSilentExport then
+      begin
+      Exit;
+      end;
+
    if (GRepository = nil) or GDisabled then
       begin
       Exit;

@@ -39,6 +39,7 @@ type
       procedure CompareQSO(const a, b: ContestExchange; const where: string);
    protected
       procedure TestOneQSORoundTrips;
+      procedure Test_LegacySkippedIsReadAsDeleted;
       procedure TestSentinelsBecomeNullAndComeBack;
       procedure TestEveryRowGetsItsOwnGuid;
       procedure TestCountyLineQSOsShareAnExchangeId;
@@ -180,7 +181,12 @@ begin
    SameBool('ceDupe', a.ceDupe, b.ceDupe);
    SameBool('ceSearchAndPounce', a.ceSearchAndPounce, b.ceSearchAndPounce);
    SameBool('ceXQSO', a.ceXQSO, b.ceXQSO);
-   SameBool('ceQSO_Skiped', a.ceQSO_Skiped, b.ceQSO_Skiped);
+   (* ceQSO_Skiped IS DELIBERATELY NOT ROUND-TRIPPED. It is a legacy slot kept
+      so the 376-byte binary record still reads; the database never stores it
+      and the reader always returns False. Asserting equality here would pin
+      the behaviour that was just removed. The FOLD is tested separately -- see
+      the fold is exercised by Test_LegacySkippedIsReadAsDeleted, and
+      ceQSO_Deleted itself is already asserted below. *)
    SameBool('ceWasSendInQTC', a.ceWasSendInQTC, b.ceWasSendInQTC);
    SameBool('NameSent', a.NameSent, b.NameSent);
    SameBool('MP3Record', a.MP3Record, b.MP3Record);
@@ -238,6 +244,76 @@ begin
          repo.Commit;
          CheckTrue(repo.LoadQSO(rowId, after), 'the saved QSO reads back');
          CompareQSO(before, after, 'cqww first QSO');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+
+   Scrub(fn);
+end;
+
+(* A DATABASE WRITTEN BEFORE THE FLAGS WERE UNIFIED STILL HIDES ITS DELETIONS.
+
+  ceQSO_Skiped and ceQSO_Deleted were two flags meaning one thing until
+  2026-09-02. Logs written before that can carry `is_skipped = 1` on a row whose
+  `deleted` is 0 -- Alt-Y set the first, the editor's checkbox set the second.
+  The reader folds the legacy column in, so those QSOs stay deleted.
+
+  WITHOUT THE FOLD THEY COME BACK FROM THE DEAD: silently un-deleted, counted
+  for score, and exported in the Cabrillo. That is a worse failure than losing
+  them, because the operator has no reason to look.
+
+  THE COLUMN IS WRITTEN DIRECTLY, because it has to be. The save path binds
+  is_skipped to False now, so there is no way to produce this row through the
+  API -- which is exactly why the fold needs a test rather than an argument. *)
+procedure TLogRepositoryTests.Test_LegacySkippedIsReadAsDeleted;
+var
+   db:     TLogDatabase;
+   repo:   TLogRepository;
+   reader: TLogBinaryReader;
+   before, after: ContestExchange;
+   fn:     string;
+   rowId:  Int64;
+   got:    boolean;
+begin
+   BeginTest('Test_LegacySkippedIsReadAsDeleted');
+
+   fn := TempLogName('legacyskipped.db');
+   reader := TLogBinaryReader.Create(CorpusLog('cqww_ssb_2025_ny4i'));
+   try
+      got := reader.ReadNext(before);
+      CheckTrue(got, 'the fixture has a QSO');
+   finally
+      reader.Free;
+   end;
+
+   (* Saved NOT deleted, so the only thing that can delete it is the fold. *)
+   before.ceQSO_Deleted := False;
+   before.ceQSO_Skiped  := False;
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         repo.SetContest(before.ceContest);
+         rowId := repo.SaveQSO(before);
+         repo.Commit;
+
+         CheckTrue(repo.LoadQSO(rowId, after), 'the QSO reads back');
+         CheckFalse(after.ceQSO_Deleted, 'not deleted before the legacy column is set');
+
+         (* Forge the pre-unification shape: skipped set, deleted clear. *)
+         db.Connection.ExecuteDirect(
+            'UPDATE qso SET is_skipped = 1, deleted = 0 WHERE id = ' +
+            IntToStr(rowId));
+         db.Transaction.Commit;
+
+         CheckTrue(repo.LoadQSO(rowId, after), 'the forged row reads back');
+         CheckTrue(after.ceQSO_Deleted,
+                   'a legacy is_skipped row comes back DELETED, not alive');
       finally
          repo.Free;
       end;
@@ -975,6 +1051,7 @@ end;
 procedure TLogRepositoryTests.RunAllTests;
 begin
    TestOneQSORoundTrips;
+   Test_LegacySkippedIsReadAsDeleted;
    TestSentinelsBecomeNullAndComeBack;
    TestEveryRowGetsItsOwnGuid;
    TestCountyLineQSOsShareAnExchangeId;

@@ -420,7 +420,7 @@ begin
 
    (* The two states that are NOT deleted, and are not each other. *)
    Pin('is_xqso',          'ceXQSO -- kept for NIL protection, not claimed');
-   Pin('is_skipped',       'ceQSO_Skiped -- read by the scoring paths');
+   Pin('is_skipped',       'LEGACY -- written False, folded into deleted on read');
 
    (* Multiplier outcome, per QSO. Not the multipliers TABLE, which stays out. *)
    Pin('mult_domestic',    'DomesticMult');

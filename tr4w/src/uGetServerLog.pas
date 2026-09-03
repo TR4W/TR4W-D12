@@ -241,7 +241,7 @@ begin
         if ((TempRXData.Band <> NoBand) and
           (TempRXData.Mode <> NoMode) and
           (not TempRXData.ceQSO_Deleted)) and
-          (TempRXData.ceQSO_Skiped = False) then inc(TotalQ);
+          (TempRXData.ceQSO_Deleted = False) then inc(TotalQ);
 
         if not HeadlessSyncMode then
            begin

@@ -1220,10 +1220,8 @@ function CalculateTotals: boolean;
         begin
         goto 1;
         end;
-     if TempRXData.ceQSO_Skiped then
-        begin
-        goto 1;
-        end;
+     (* ceQSO_Skiped was tested here as a SECOND delete flag, immediately
+        after ceQSO_Deleted and doing the same thing. One flag now. *)
      if TempRXData.ceRecordKind <> rkQSO then
         begin
         goto 1;
@@ -3515,7 +3513,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
     RESULT := False;
 
     if (
-    (TempRXData.ceQSO_Skiped = False) and
+    (TempRXData.ceQSO_Deleted = False) and
     (TempRXData.Band <> NoBand) and
     (TempRXData.Mode <> NoMode) and
     (TempRXData.ceQSO_Dupe = False) and
@@ -3633,7 +3631,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
          begin
          Exit;
          end;
-      if TempRXData.ceQSO_Skiped = true then
+      if TempRXData.ceQSO_Deleted = true then
          begin
          Exit;
          end;

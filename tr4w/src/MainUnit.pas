@@ -567,6 +567,7 @@ uses
     cycle. It never raises and never blocks logging: see uLogStore. }
   uLogStore,
   uEditableLogView,   // one definition of "which record is row N"
+  uContestFileKind,   // a .db is not an INI -- see SaveColumnWidthToConfig
   (* Which store a log READ comes from -- step B4.  Its implementation
      uses this unit back, which is legal: both edges are
      implementation-section. *)
@@ -922,6 +923,24 @@ var
   SavedRSTSent : Integer;
 begin
    Result := False;
+
+   (* WHY DID ENTER DO NOTHING? -- instrumentation, 2026-09-03.
+
+     ParametersOkay is the gate between pressing Enter and a QSO existing, and
+     it refuses SILENTLY: TryLogContact returns False and the operator sees a
+     log that simply did not grow. NY4I has been hitting exactly that and there
+     was nothing anywhere in the log to say whether the keystroke arrived, or
+     arrived and was refused.
+
+     Both lines below are cheap and fire once per Enter, so they can stay --
+     "the operator pressed Enter and no QSO appeared" is a question worth being
+     able to answer from a log file rather than from a debugger. *)
+   if logger <> nil then
+      begin
+      logger.Debug('[Log] Enter: call="%s" exch="%s" band=%d mode=%d',
+                   [string(CallWindowString), string(ExchangeWindowString),
+                    Ord(ActiveBand), Ord(ActiveMode)]);
+      end;
 
    if ParametersOkay(CallWindowString, ExchangeWindowString, ActiveBand,
                      ActiveMode, ActiveRadioPtr.LastDisplayedFreq
@@ -4610,6 +4629,14 @@ var
   //http : TidHttp;
  // page : String;
 begin
+
+   (* WHICH COMMAND ARRIVED -- instrumentation 2026-09-03. The Enter
+     accelerator (10651) is posted and TryLogContact is never reached;
+     this says whether ProcessMenu is the link that drops it. *)
+   if logger <> nil then
+      begin
+      logger.Debug('[Menu] ProcessMenu(%d)', [menuID]);
+      end;
   LowordWparam := LoWord(menuID);
 
   if LowordWparam >= menu_windows_bandmap then
@@ -5576,6 +5603,12 @@ var
 label
   SetFreq;
 begin
+
+   (* instrumentation 2026-09-03 -- see ProcessMenu above. *)
+   if logger <> nil then
+      begin
+      logger.Debug('[Menu] ProcessReturn entered');
+      end;
   tDispalyOnAirTime;
   TempHWND := Windows.GetFocus;
 
@@ -7750,7 +7783,7 @@ begin
         end;
 
      if TempRXData.ceRecordKind = rkQSO then
-       if (not TempRXData.ceQSO_Skiped) and (TempRXData.Band <> NoBand) and
+       if (not TempRXData.ceQSO_Deleted) and (TempRXData.Band <> NoBand) and
          (TempRXData.Mode <> NoMode) then
           begin
           // Issue #954: feed the serial high-water mark.  This counts every
@@ -8025,12 +8058,19 @@ begin
      ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
      end;
 
-  if RXData.ceQSO_Skiped then
-     begin
-     elvi.pszText := nil;
-     ListView_InsertItem(ListViewHandle, elvi);
-     Exit;
-     end;
+  (* THE BLANK ROW IS GONE WITH THE SECOND FLAG.
+
+    This arm inserted a row with NO TEXT for a ceQSO_Skiped record -- the thing
+    Alt-Y left behind, and what NY4I called "a very DOS way to do it". It was
+    only reachable because skipped and deleted were two flags; they are one now,
+    so a deleted QSO falls into the arm below and says DELETED instead of
+    showing a hole in the log.
+
+    HIDING IT ENTIRELY IS THE DESTINATION, not this change: deleted QSOs stop
+    being listed at all, with a "Show deleted QSOs" toggle in the Edit Log
+    window to bring them back and restore them. That needs the virtual list, so
+    it lands with D1. Saying DELETED is strictly better than saying nothing in
+    the meantime. *)
 
   if RXData.ceQSO_Deleted then
      begin
@@ -8600,7 +8640,7 @@ begin
        // more useful at a glance).  The contact still exports to
        // ADIF and Cabrillo (with the `X-QSO:` prefix instead of `QSO:`).
        if RescoredRXData.ceQSO_Deleted = False then
-         if RescoredRXData.ceQSO_Skiped = False then
+         if RescoredRXData.ceQSO_Deleted = False then
          if RescoredRXData.ceXQSO then
             begin
             RescoredRXData.QSOPoints := 0;
@@ -9393,6 +9433,31 @@ begin
        end;
 end;
 
+(* COLUMN WIDTHS ARE NOT WRITTEN INTO A LOG DATABASE.
+
+  THIS ROUTINE WRITES WITH WritePrivateProfileStringA INTO TR4W_CFG_FILENAME,
+  and that name is a .db now. Windows' profile API does not know that: it opens
+  the file, PARSES THE WHOLE THING as an INI, and rewrites it. Against a SQLite
+  database that is slow enough to look like a hang and has no business
+  happening at all.
+
+  MEASURED THREE TIMES, 2026-09-03: the last line in the log before the program
+  stopped responding was this routine's own debug line -- "column 1 is now 118
+  wide", then "column 13 is now 97 wide". Once while the Edit Log window was
+  open, once on shutdown, and NY4I had not touched a column divider on either
+  occasion.
+
+  THE DATABASE SURVIVED, which is luck rather than design: integrity_check
+  still reports ok, so the API evidently declined to write a file it could not
+  parse. It is not a guarantee, and it is not worth relying on.
+
+  BY CONTENT, NOT BY EXTENSION -- ClassifyContestFile, the same test the config
+  loader uses. A log an operator renamed to .cfg is still a database.
+
+  WHERE THIS SHOULD END UP: a column width is a UI preference and belongs in
+  settings\tr4w.json with the rest of the window layout, not in the contest
+  file at all. Recorded rather than done, because that is a settings migration
+  and this is a hang. *)
 procedure SaveColumnWidthToConfig(ColIndex: Integer; NewWidth: Integer);
 var
    TempColumn: LogColumnsType;
@@ -9410,6 +9475,14 @@ begin
    // Without 1 and 2 spelled out, a silent log looked the same as a working one.
    logger.Debug('[ColumnWidth] header reports column %d is now %d wide',
                 [ColIndex, NewWidth]);
+
+   (* See the note above this routine. *)
+   if ClassifyContestFile(StrPas(@TR4W_CFG_FILENAME[0])) <> cfkTextConfig then
+      begin
+      logger.Debug('[ColumnWidth] not saved -- the contest file is not a text ' +
+                   '.cfg (%s)', [StrPas(@TR4W_CFG_FILENAME[0])]);
+      Exit;
+      end;
 
    matched := False;
    for TempColumn := Low(LogColumnsType) to High(LogColumnsType) do
@@ -10584,10 +10657,47 @@ var
   module: HWND;
   TempFunc: Tmain;
 begin
+  (* NOTHING HERE CHECKED ANYTHING, and all three checks are needed.
+
+    The loader is careful -- it tests the entry point before it adds a menu
+    item -- and this, the thing that runs the plugin, tested neither the index
+    nor the library nor the function. An access violation at address $00000000
+    was the result (NY4I, 2026-09-03, caught in the debugger at the call
+    below). The id that got here was not a plugin at all; see the WM_COMMAND
+    note in uMainWindowProc, which is the real defect. This is the second line
+    of defence, and it should have been the first. *)
+  if (PluginNumber - 10700 < Low(PluginsArray)) or
+     (PluginNumber - 10700 > High(PluginsArray)) then
+     begin
+     logger.Error('[Plugin] command %d is not a plugin -- there are %d, so the ' +
+                  'valid range is %d..%d. Ignored.',
+                  [PluginNumber, High(PluginsArray),
+                   10700 + Low(PluginsArray), 10700 + High(PluginsArray)]);
+     Exit;
+     end;
+
   TF.Format(TempBuffer1, '%sPlugins\%s', TR4W_PATH_NAME, PluginsArray[PluginNumber
     - 10700]);
+
   module := LoadLibraryA(TempBuffer1);
+  if module = 0 then
+     begin
+     logger.Error('[Plugin] cannot load %s -- %s',
+                  [StrPas(TempBuffer1), SysErrorMessage(GetLastError)]);
+     Exit;
+     end;
+
   TempFunc := GetProcAddress(module, 'main');
+  if not Assigned(TempFunc) then
+     begin
+     (* A DLL WITH NO `main` IS NOT A TR4W PLUGIN. Calling what
+       GetProcAddress returned is a call to address zero. *)
+     logger.Error('[Plugin] %s exports no "main" -- not a TR4W plugin.',
+                  [StrPas(TempBuffer1)]);
+     FreeLibrary(module);
+     Exit;
+     end;
+
   CreatedReport := nil;
   ReLoadLog := False;
   MakeRescore := False;
@@ -11245,7 +11355,10 @@ begin
         newRXData.ceComputerID := oldRXData_v1_5.ceComputerID;
         newRXData.ceOperatorID := oldRXData_v1_5.ceOperatorID;
         newRXData.ceRecordKind := oldRXData_v1_5.ceRecordKind;
-        newRXData.ceQSO_Skiped := oldRXData_v1_5.ceQSO_Skiped;
+        (* FOLDED, NOT COPIED: a v1_5 log's "skipped" is a deletion. See the
+           note on ceQSO_Skiped in VC.pas. *)
+        newRXData.ceQSO_Deleted := newRXData.ceQSO_Deleted or
+                                   oldRXData_v1_5.ceQSO_Skiped;
         newRXData.ceSendToServer := oldRXData_v1_5.ceSendToServer;
         newRXData.ceNeedSendToServerAE := oldRXData_v1_5.ceNeedSendToServerAE;
         newRXData.ceDupe := oldRXData_v1_5.ceDupe;
@@ -11337,7 +11450,9 @@ begin
         newRXData.ceComputerID := oldRXData_v1_6.ceComputerID;
         newRXData.ceOperatorID := oldRXData_v1_6.ceOperatorID;
         newRXData.ceRecordKind := oldRXData_v1_6.ceRecordKind;
-        newRXData.ceQSO_Skiped := oldRXData_v1_6.ceQSO_Skiped;
+        (* FOLDED, NOT COPIED -- see the v1_5 arm above. *)
+        newRXData.ceQSO_Deleted := newRXData.ceQSO_Deleted or
+                                   oldRXData_v1_6.ceQSO_Skiped;
         newRXData.ceSendToServer := oldRXData_v1_6.ceSendToServer;
         newRXData.ceNeedSendToServerAE := oldRXData_v1_6.ceNeedSendToServerAE;
         newRXData.ceDupe := oldRXData_v1_6.ceDupe;
