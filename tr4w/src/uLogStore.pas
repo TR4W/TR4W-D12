@@ -536,6 +536,18 @@ begin
          isNewLog := True;
          end;
 
+      (* WHICH FILE IS THIS LOG? NY4I asked for it, 2026-09-02: "The log should
+        show the name of the database file. If not, it should."
+
+        IT IS THE FIRST QUESTION EVERY REPORT NEEDS and nothing answered it.
+        Diagnosing an edit that would not stick meant working out the path from
+        the contest name; if a write and a read ever land on different files,
+        this line is what shows it. Logged ONCE per open, not per statement. *)
+      if logger <> nil then
+         begin
+         logger.Info('[LogStore] log database: %s', [dbName]);
+         end;
+
       GRepository := TLogRepository.Create(GDatabase);
 
 
@@ -728,11 +740,26 @@ begin
          begin
          Exit;
          end;
-      if rebuilt then
+      (* A REBUILD USED TO MEAN "THE EDIT IS ALREADY IN THE BINARY LOG", AND
+        THAT STOPPED BEING TRUE. This exited here on the reasoning that the
+        caller wrote to the .TRW before calling and the rebuild had just
+        re-read it. uEditQSO's seek-and-write is gone, so nothing puts the edit
+        anywhere but this call -- exiting would DISCARD it, silently, which is
+        the same class of defect as the OpenLogFile gate in that unit.
+
+        SO THE UPDATE PROCEEDS. A rebuild here only happens on the one-time
+        migration of an existing .TRW, and after it the row for this record
+        exists and is exactly what the migration produced -- which is the
+        record WITHOUT the operator's edit. Applying it is the correct
+        finish to the migration, not a race with it.
+
+        REPORTED EITHER WAY, because a rebuild in the middle of saving an edit
+        is worth knowing about and this branch said nothing at all. *)
+      if rebuilt and (logger <> nil) then
          begin
-         (* The rebuild has just re-read the binary log, which already carries
-           this edit -- the caller writes before calling here. *)
-         Exit;
+         logger.Info('[LogStore] the log was rebuilt while saving an edit to ' +
+                     'record %d; applying the edit on top of the rebuild',
+                     [aRecordIndex]);
          end;
 
       rowId := GRepository.RowIdAtIndex(aRecordIndex);

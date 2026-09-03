@@ -747,17 +747,34 @@ begin
      HamScoreOnEdit(EditableQSORxData);
      end;
 
-  if not OpenLogFile then
-     begin
-     Exit;
-     end;
+  (* THE `if not OpenLogFile then Exit` THAT STOOD HERE DISCARDED EVERY EDIT.
+
+    OpenLogFile is CreateFileA(TR4W_LOG_FILENAME, ..., OPEN_EXISTING) -- it
+    opens the BINARY .TRW. This build does not create one, so on any contest
+    started under it the call returned False and this routine RETURNED, before
+    SendRecordToServer and before LogStoreUpdateQSOAtIndex. Nothing was written
+    and nothing was said: the dialog closed as though it had saved.
+
+    FOUND FROM A BENCH REPORT, not from a test (NY4I, 2026-09-02): X-QSO would
+    not stick. It was never about X-QSO -- no field of any edited QSO was ever
+    saved, and X-QSO is simply the one he tried. The directory listing is what
+    gave it away: a .db, a -wal, a -shm and NO .TRW.
+
+    IT WAS A GATE ON A FILE THIS ROUTINE NO LONGER USES. The seek-and-write it
+    once guarded was removed when the store moved (see the note below); the
+    guard outlived the code it guarded, which is the failure mode of a check
+    kept "just in case" after its subject is gone.
+
+    AND IT LEAKED. On a station that still HAD a .TRW the call succeeded, set
+    the global LogHandle, and nothing here ever closed it -- a handle per edit.
+
+    THE LogSourceClose THAT FOLLOWED IT IS GONE TOO. It closed a source this
+    routine never opened: LoadQSOIntoEditForm opens and closes its own around
+    the read (uEditQSO.pas:169-179), so this was unbalanced in the other
+    direction. LogStoreUpdateQSOAtIndex opens what it needs. *)
 
   EditableQSORXData.ceNeedSendToServerAE := True;
   SendRecordToServer(NET_EDITEDQSO_ID, EditableQSORXData);
-
-  (* The seek-and-write that stood here is gone with the binary log, and with it
-     the last place in this unit that knew the file layout. *)
-  LogSourceClose;
 
   (* NO DIVISION ANY MORE, AND THAT DIVISION WAS A BUG.
 
