@@ -59,6 +59,7 @@ type
       procedure FormShow(Sender: TObject);
       procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
       procedure FormKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
+      procedure FormResize(Sender: TObject);
       procedure lvLogData(Sender: TObject; Item: TListItem);
       procedure lvLogDblClick(Sender: TObject);
       procedure lvLogCustomDrawItem(Sender: TCustomListView; Item: TListItem;
@@ -66,6 +67,7 @@ type
    private
       FOpen: boolean;
       procedure BuildColumns;
+      procedure SizeColumns;
    end;
 
 (* Opens it modally over the main window. *)
@@ -76,7 +78,8 @@ implementation
 {$R *.lfm}
 
 uses
-   uEditQSO, uLCLFormHelpers;
+   uEditQSO, uLCLFormHelpers,
+   uMainForm;   (* TR4WMainForm -- this form's owner; see ShowLogEditForm *)
 
 var
    frmLogEdit: TfrmLogEdit = nil;
@@ -88,8 +91,26 @@ begin
       frmLogEdit := TfrmLogEdit.Create(Application);
       end;
 
-   (* Over the main window, which is still a Win32 HWND to everything that
-     matters here -- the same helper every converted dialog uses. *)
+   (* THE MAIN WINDOW IS THIS FORM'S OWNER, AND SAYING SO IS WHAT KEEPS IT ON
+     TOP. ShowModalOverWin32Parent disables the parent -- which stops clicks --
+     but never establishes an OWNER relationship, so Windows does not know the
+     two belong together: switching to another program and back brought the
+     MAIN window forward and left this one behind it, still modal and now
+     invisible (NY4I, 2026-09-03).
+
+     PopupParent is the LCL's own way to say it, and it works because the main
+     window is a TForm now. Before the conversion the only way to express this
+     was SetWindowLongPtr(GWLP_HWNDPARENT) against a raw handle.
+
+     EVERY CONVERTED DIALOG SHOWN THIS WAY HAS THE SAME GAP. Fixing it in
+     ShowModalOverWin32Parent would fix all of them at once, but that helper
+     takes an HWND and would have to find the form behind it; recorded in the
+     bench queue rather than guessed at here. *)
+   if TR4WMainForm <> nil then
+      begin
+      frmLogEdit.PopupParent := TR4WMainForm;
+      end;
+
    ShowModalOverWin32Parent(frmLogEdit, tr4whandle);
 end;
 
@@ -120,12 +141,111 @@ begin
             end;
 
          col := lvLog.Columns.Add;
-         col.Caption := ColumnsArray[c].Text;
-         col.Width   := ColumnsArray[c].Width * 8;
+         (* AnsiString() explicitly: a column caption is ASCII and the LCL
+           property is a TTranslateString, so the conversion is real. *)
+         col.Caption := AnsiString(ColumnsArray[c].Text);
+         (* A PLACEHOLDER. SizeColumns measures and distributes -- see there. *)
+         col.Width := 40;
          end;
    finally
       lvLog.Columns.EndUpdate;
    end;
+end;
+
+(* COLUMNS MEASURED, THEN THE SLACK DISTRIBUTED.
+
+  ColumnsArray[c].Width is a COUNT OF CHARACTERS -- the Win32 listview
+  multiplied it by a magic factor (17 for this window, 5 for the main one,
+  MainUnit.pas:7938-7947) and the result depended on whichever font had been
+  set. Multiplying by a guess is what produced columns two characters wide.
+
+  SO IT IS MEASURED against the font the list is actually using, with a digit
+  as the reference glyph because every numeric column is the width of its
+  digits, and the header caption is taken into account so a heading is never
+  clipped by a narrow column.
+
+  THEN THE LEFTOVER IS GIVEN AWAY IN PROPORTION, which is what NY4I asked for:
+  the columns fill the grid rather than huddling at the left with dead space to
+  the right. Proportional rather than all-to-the-last, so widening the window
+  makes Callsign grow more than Band -- the wide columns are the ones with
+  something to show.
+
+  NOTHING SHRINKS BELOW ITS MEASURED WIDTH. If the log genuinely needs more
+  room than the window has, the list scrolls horizontally; squeezing every
+  column to fit would make all of them unreadable instead of some of them
+  off-screen. *)
+procedure TfrmLogEdit.SizeColumns;
+var
+   c:        LogColumnsType;
+   i:        integer;
+   charW:    integer;
+   wanted:   integer;
+   total:    integer;
+   avail:    integer;
+   slack:    integer;
+   given:    integer;
+begin
+   if lvLog.Columns.Count = 0 then
+      begin
+      Exit;
+      end;
+
+   lvLog.Canvas.Font.Assign(lvLog.Font);
+   charW := lvLog.Canvas.TextWidth('0');
+   if charW < 1 then
+      begin
+      charW := 7;
+      end;
+
+   (* Pass one: what each column needs. *)
+   i := 0;
+   total := 0;
+   for c := Low(LogColumnsType) to High(LogColumnsType) do
+      begin
+      if not ColumnsArray[c].Enable then
+         begin
+         Continue;
+         end;
+      if i >= lvLog.Columns.Count then
+         begin
+         Break;
+         end;
+
+      wanted := (ColumnsArray[c].Width * charW) + charW;
+      if wanted < lvLog.Canvas.TextWidth(AnsiString(ColumnsArray[c].Text)) + charW then
+         begin
+         wanted := lvLog.Canvas.TextWidth(AnsiString(ColumnsArray[c].Text)) + charW;
+         end;
+
+      lvLog.Columns[i].Width := wanted;
+      total := total + wanted;
+      Inc(i);
+      end;
+
+   (* Pass two: hand out what is left, in proportion to what each asked for. *)
+   avail := lvLog.ClientWidth;
+   if (avail <= total) or (total <= 0) then
+      begin
+      Exit;
+      end;
+
+   slack := avail - total;
+   given := 0;
+   for i := 0 to lvLog.Columns.Count - 1 do
+      begin
+      if i = lvLog.Columns.Count - 1 then
+         begin
+         (* THE LAST COLUMN TAKES THE REMAINDER, so integer division cannot
+           leave a one-pixel gap at the right edge. *)
+         lvLog.Columns[i].Width := lvLog.Columns[i].Width + (slack - given);
+         end
+      else
+         begin
+         wanted := (lvLog.Columns[i].Width * slack) div total;
+         lvLog.Columns[i].Width := lvLog.Columns[i].Width + wanted;
+         given := given + wanted;
+         end;
+      end;
 end;
 
 procedure TfrmLogEdit.FormShow(Sender: TObject);
@@ -141,7 +261,14 @@ begin
       end;
 
    lvLog.Items.Count := LogSourceRecordCount;
+   SizeColumns;
    lvLog.Invalidate;
+end;
+
+(* Re-measured on every resize, which is the point of distributing at all. *)
+procedure TfrmLogEdit.FormResize(Sender: TObject);
+begin
+   SizeColumns;
 end;
 
 procedure TfrmLogEdit.FormClose(Sender: TObject; var CloseAction: TCloseAction);
