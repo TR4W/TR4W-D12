@@ -379,6 +379,7 @@ procedure SpaceBarProc;
 procedure SpaceBarProc2;
 
 procedure FindAndSaveRectOfAllWindows;
+procedure sm1;
 function TryKillAutoCQ: boolean;
 procedure RunAutoCQ;
 
@@ -3204,6 +3205,11 @@ begin
         tr4w_WindowsArray[tipos].WndRect := temprect;
         end;
      end;
+end;
+
+procedure sm1;
+begin
+  ShowMessage(TR4W_INI_FILENAME);
 end;
 
 function TryKillAutoCQ: boolean;

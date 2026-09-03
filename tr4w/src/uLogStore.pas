@@ -435,9 +435,31 @@ begin
          Continue;
          end;
 
+      (* ONLY A WIDTH THE OPERATOR ACTUALLY SET, AND IN PIXELS.
+
+        THIS CAPTURED THE WRONG NUMBER AND BLANKED THE MAIN LOG. It wrote
+        ColumnsArray[].Width, which is a COUNT OF CHARACTERS -- 9, 3, 12 -- and
+        the value in a COLUMN WIDTH command is a PIXEL width: CheckCommand puts
+        it in ColumnWidthOverride and MainUnit.pas:9514 hands that straight to
+        ListView_SetColumnWidth. So every column came back a few pixels wide and
+        the editable log rendered as blank paper with a striped edge (NY4I,
+        2026-09-03, with a screenshot).
+
+        ColumnWidthOverride IS THE RIGHT SOURCE, and zero is the right reason to
+        skip: the override is only set when SaveColumnWidthToConfig runs, which
+        is only when a divider is dragged or double-clicked. That is also what
+        the old .cfg held -- a COLUMN WIDTH line existed for the columns an
+        operator had touched and for no others, so an untouched column keeps the
+        character-count default rather than being pinned to whatever pixel width
+        it happened to have. *)
+      if ColumnWidthOverride[Column] <= 0 then
+         begin
+         Continue;
+         end;
+
       GRepository.SaveConfigValue(
          AnsiString('COLUMN WIDTH ' + string(StrPas(ColumnCanonicalName[Column]))),
-         AnsiString(IntToStr(ColumnsArray[Column].Width)),
+         AnsiString(IntToStr(ColumnWidthOverride[Column])),
          'contest');
       end;
 
