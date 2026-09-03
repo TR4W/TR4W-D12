@@ -1149,11 +1149,23 @@ const
 
 var
    GMainRowCache: array[0..MAIN_CACHE_ROWS - 1] of TMainRowCache;
+   (* One line, the first time a row is fetched -- enough to say whether
+     the list is blank because it cannot READ or because it cannot DRAW. *)
+   GMainRowReported: boolean = False;
+   (* Whether the read seam has been opened for this list. LogSourceOpen's
+     database arm CLOSES AND REOPENS the store on every call, so calling it per
+     cache miss -- from inside a paint -- would tear it down repeatedly. Opened
+     once, and again only when the log is known to have changed. *)
+   GMainSourceOpen: boolean = False;
 
 procedure TR4WEditableLogRefresh;
 var
    i: integer;
 begin
+   (* THE LOG HAS CHANGED, so the open source is stale as well as the rows.
+     Reopened on the next fetch rather than here: this is called from inside
+     LoadinLog, which is holding the seam itself at the time. *)
+   GMainSourceOpen := False;
    for i := Low(GMainRowCache) to High(GMainRowCache) do
       begin
       GMainRowCache[i].Index := -1;
@@ -1183,26 +1195,50 @@ begin
    Result^.Deleted := False;
    Result^.XQSO    := False;
 
-   (* OPENED AND CLOSED PER MISS, not held. The main window lives for the whole
-     contest and the log is written underneath it by every QSO; holding a read
-     cursor open across that is asking for a stale view. A miss is rare -- the
-     cache covers twenty screens. *)
-   if not LogSourceOpen then
+   (* OPENED, NOT OPENED-AND-CLOSED.
+
+     LogSourceOpen is not a cheap probe: its database arm calls LogSourceClose
+     and reopens the store every time. Doing that per cache miss -- from inside
+     a PAINT -- tears the source down under anything else that was reading, and
+     the close in the finally that used to be here did it again on the way out.
+     uLogEditForm opens once and holds it, and that window works.
+
+     A read source left open costs nothing: the log is WRITTEN through
+     uLogStore, not through this seam. *)
+   if not GMainSourceOpen then
       begin
+      GMainSourceOpen := LogSourceOpen;
+      end;
+
+   if not GMainSourceOpen then
+      begin
+      if (not GMainRowReported) and (logger <> nil) then
+         begin
+         GMainRowReported := True;
+         logger.Error('[EditableLog] row %d: LogSourceOpen FAILED -- the list ' +
+                      'will paint blank', [aIndex]);
+         end;
       Exit;
       end;
-   try
-      if not LogSourceReadAtIndex(aIndex, rec) then
+   if not LogSourceReadAtIndex(aIndex, rec) then
          begin
+         if (not GMainRowReported) and (logger <> nil) then
+            begin
+            GMainRowReported := True;
+            logger.Error('[EditableLog] row %d: LogSourceReadAtIndex FAILED', [aIndex]);
+            end;
          Exit;
+         end;
+      if (not GMainRowReported) and (logger <> nil) then
+         begin
+         GMainRowReported := True;
+         logger.Info('[EditableLog] row %d read OK: call="%s"',
+                     [aIndex, string(rec.Callsign)]);
          end;
       LogRowTextFor(rec, Result^.Text);
       Result^.Deleted := rec.ceQSO_Deleted;
       Result^.XQSO    := rec.ceXQSO;
-      Result^.Index   := aIndex;
-   finally
-      LogSourceClose;
-   end;
+   Result^.Index   := aIndex;
 end;
 
 procedure TR4WEditableLogSetCount(const aCount: integer);
