@@ -100,10 +100,6 @@ var
   Ask this, and reopen if it says no. *)
 function LogSourceIsOpen: boolean;
 
-(* Let go of the read snapshot, so the next read sees what another connection
-  has committed since. See TLogRepository.RefreshSnapshot. *)
-procedure LogSourceRefreshSnapshot;
-
 function LogSourceOpen: boolean;
 
 (* Positions at the first QSO -- the ReadVersionBlock equivalent.  Call after
@@ -183,8 +179,8 @@ begin
 end;
 
 var
-   GDatabase: TLogDatabase = nil;
-   GRepository: TLogRepository = nil;
+   (* NO CONNECTION OF ITS OWN. It reads through uLogStore's -- see
+     LogStoreRepository, and Repo below. *)
 
    (* True between LogSourceOpen and LogSourceClose, for the nesting guard. *)
    GOpen: boolean = False;
@@ -214,12 +210,13 @@ begin
       end;
 end;
 
-procedure LogSourceRefreshSnapshot;
+(* THE REPOSITORY THIS UNIT READS THROUGH -- uLogStore's, never its own.
+
+  Nil is an ordinary answer: the store may not be open, or a failure may have
+  disabled it. Every caller below checks. *)
+function Repo: TLogRepository;
 begin
-   if (LogSourceKind = lsDatabase) and (GRepository <> nil) then
-      begin
-      GRepository.RefreshSnapshot;
-      end;
+   Result := LogStoreRepository;
 end;
 
 function LogSourceIsOpen: boolean;
@@ -227,7 +224,7 @@ begin
    case LogSourceKind of
       lsDatabase:
          begin
-         Result := GRepository <> nil;
+         Result := Repo <> nil;
          end;
       else
          begin
@@ -272,12 +269,16 @@ begin
                Exit;
                end;
 
-            GDatabase := TLogDatabase.Create;
-            (* The name rule lives in uLogDatabase. Deriving it a
-               second time here is how the two would come to disagree. *)
-            GDatabase.Open(DatabasePath);
-            GRepository := TLogRepository.Create(GDatabase);
-            Result := True;
+            (* NOTHING IS OPENED HERE ANY MORE. LogStoreEnsureOpen above has
+               made the one connection exist and be current; this unit reads
+               through it. Opening a second one on the same file is what left
+               the grid a QSO behind -- see LogStoreRepository. *)
+            Result := Repo <> nil;
+            if (not Result) and (logger <> nil) then
+               begin
+               logger.Error('[LogSource] the log store reports no repository ' +
+                            'after a successful open -- refusing to read.');
+               end;
          except
             on E: Exception do
                begin
@@ -308,9 +309,9 @@ begin
    case LogSourceKind of
       lsDatabase:
          begin
-         if GRepository <> nil then
+         if Repo <> nil then
             begin
-            GRepository.OpenSequentialRead;
+            Repo.OpenSequentialRead;
             end;
          end;
       else
@@ -325,7 +326,7 @@ begin
    case LogSourceKind of
       lsDatabase:
          begin
-         Result := (GRepository <> nil) and GRepository.ReadNext(aQso);
+         Result := (Repo <> nil) and Repo.ReadNext(aQso);
          end;
       else
          begin
@@ -346,12 +347,15 @@ begin
    case LogSourceKind of
       lsDatabase:
          begin
-         if GRepository <> nil then
+         (* THE CURSOR, NOT THE CONNECTION. The connection belongs to
+            uLogStore and is closed by LogStoreClose at shutdown. Freeing it
+            here would take the log out from under the writer, and it is what
+            made "open while already open" destructive rather than merely
+            untidy. *)
+         if Repo <> nil then
             begin
-            GRepository.CloseSequentialRead;
+            Repo.CloseSequentialRead;
             end;
-         FreeAndNil(GRepository);
-         FreeAndNil(GDatabase);
          end;
       else
          begin
@@ -367,9 +371,9 @@ begin
    case LogSourceKind of
       lsDatabase:
          begin
-         if GRepository <> nil then
+         if Repo <> nil then
             begin
-            Result := GRepository.RecordCount;
+            Result := Repo.RecordCount;
             end
          else
             begin
@@ -418,10 +422,10 @@ begin
          begin
          (* RowIdAtIndex is 0-based from the START, in id order -- which is log
             order. Offset 1 (the last record) is index total - 1. *)
-         rowId := GRepository.RowIdAtIndex(total - aOffsetFromEnd);
+         rowId := Repo.RowIdAtIndex(total - aOffsetFromEnd);
          if rowId > 0 then
             begin
-            Result := GRepository.LoadQSO(rowId, aQso);
+            Result := Repo.LoadQSO(rowId, aQso);
             end;
          end;
       else
@@ -452,10 +456,10 @@ begin
    case LogSourceKind of
       lsDatabase:
          begin
-         rowId := GRepository.RowIdAtIndex(aIndex);
+         rowId := Repo.RowIdAtIndex(aIndex);
          if rowId > 0 then
             begin
-            Result := GRepository.LoadQSO(rowId, aQso);
+            Result := Repo.LoadQSO(rowId, aQso);
             end;
          end;
       else

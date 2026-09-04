@@ -1399,11 +1399,6 @@ begin
          end;
       end;
 
-   (* LET GO OF THE READ SNAPSHOT FIRST. The QSO was just committed on
-     uLogStore's connection; this one cannot see it until its own read
-     transaction ends. *)
-   LogSourceRefreshSnapshot;
-
    n := LogSourceRecordCount;
 
    (* WHAT THE LOG SAYS versus what the grid is showing, every time a QSO is

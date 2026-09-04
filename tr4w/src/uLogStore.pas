@@ -65,7 +65,8 @@ unit uLogStore;
 interface
 
 uses
-   VC;
+   VC,
+   uLogRepository;   (* TLogRepository -- see LogStoreRepository *)
 
 (* Appends a QSO to the shadow.  Call AFTER the binary record is written.
   Never raises. *)
@@ -93,6 +94,24 @@ function LogStoreUpdateQSOBySessionIds(const aQso: ContestExchange): boolean;
 procedure LogStoreClose;
 
 (* False after a failure has switched it off, or before anything opened it. *)
+(* THE ONE CONNECTION TO THE LOG DATABASE.
+
+  THERE USED TO BE TWO. uLogSource opened a second TLogDatabase on the same
+  file to read through, and the consequence was not a tidiness problem: a
+  reader connection sits in a read transaction, which in WAL mode pins its view
+  of the database, so QSOs COMMITTED by this connection were invisible to it.
+  The main window grid was permanently one QSO behind while View/Edit Log --
+  which opened a fresh connection each time -- showed the contact (NY4I,
+  2026-09-04). That was patched by ending the read transaction; NY4I chose the
+  root fix instead, which is this.
+
+  ONE CONNECTION CANNOT BE STALE AGAINST ITSELF, and every future reader of the
+  log gets that for free rather than having to know to ask.
+
+  Nil when nothing has opened the store, or when a failure has disabled it --
+  so a caller checks, exactly as it checks LogStoreIsUsable. *)
+function LogStoreRepository: TLogRepository;
+
 function LogStoreIsUsable: boolean;
 
 (* APPLIES THE CONTEST CONFIGURATION THE LOG CARRIES -- phase E2.
@@ -125,7 +144,9 @@ function LogStoreEnsureOpen: boolean;
 implementation
 
 uses
-   SysUtils, Classes, MainUnit, uLogDatabase, uLogRepository, uLogImport,
+   (* uLogRepository is in the INTERFACE uses now -- LogStoreRepository's
+      return type. *)
+   SysUtils, Classes, MainUnit, uLogDatabase, uLogImport,
    uLogBinaryFile,
    (* The canonical sent-exchange builder -- the same one the UDP broadcast
       uses, so the database and the broadcast cannot disagree. *)
@@ -154,6 +175,18 @@ var
    GTriedToOpen: boolean = False;
 
    (* THERE IS NO "written already" FLAG, ON PURPOSE -- see EnsureOpen. *)
+
+function LogStoreRepository: TLogRepository;
+begin
+   if GDisabled then
+      begin
+      Result := nil;
+      end
+   else
+      begin
+      Result := GRepository;
+      end;
+end;
 
 function LogStoreIsUsable: boolean;
 begin
