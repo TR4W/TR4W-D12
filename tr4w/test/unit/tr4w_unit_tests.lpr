@@ -269,12 +269,10 @@ uses
    uTestLogBinaryFile   in 'uTestLogBinaryFile.pas',
    uLogSchema           in '..\..\src\domain\uLogSchema.pas',
 uContestFileKind           in '..\..\src\domain\uContestFileKind.pas',
-uEditableLogView           in '..\..\src\domain\uEditableLogView.pas',
    uLogRepository       in '..\..\src\uLogRepository.pas',
    uTestLogRepository   in 'uTestLogRepository.pas',
    uTestLogNaming       in 'uTestLogNaming.pas',
 uTestContestFileKind       in 'uTestContestFileKind.pas',
-uTestEditableLogView       in 'uTestEditableLogView.pas',
    uLogImport           in '..\..\src\uLogImport.pas',
    uTestLogImport       in 'uTestLogImport.pas',
    uLogDatabase         in '..\..\src\domain\uLogDatabase.pas',
@@ -391,7 +389,6 @@ begin
    RegisterSuite(TLogRepositoryTests.Create('LogRepository'));
    RegisterSuite(TLogNamingTests.Create('LogNaming'));
    RegisterSuite(TContestFileKindTests.Create('ContestFileKind'));
-   RegisterSuite(TEditableLogViewTests.Create('EditableLogView'));
    RegisterSuite(TLogImportTests.Create('LogImport'));
    RegisterSuite(TClusterTokensTests.Create('ClusterTokens'));
    RegisterSuite(TSplitReassertTests.Create('SplitReassert'));

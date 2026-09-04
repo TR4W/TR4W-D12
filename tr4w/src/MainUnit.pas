@@ -592,7 +592,6 @@ uses
   { The SQLite shadow -- an IMPLEMENTATION-section use, so no interface
     cycle. It never raises and never blocks logging: see uLogStore. }
   uLogStore,
-  uEditableLogView,   // one definition of "which record is row N"
   uLogEditForm,       // View / Edit Log -- an LCL virtual list now; also
                       // SaveLogEditLayout, see SaveTR4WPOSFILE
   uContestFileKind,   // a .db is not an INI -- see SaveColumnWidthToConfig
@@ -7307,68 +7306,59 @@ end;
 
 procedure EditableLogWindowDblClick;
 var
-  Size: Cardinal;
+  Size: Int64;
 begin
+  (* THE GRID ANSWERS IN RECORDS, AND THAT IS THE WHOLE ANSWER.
 
-  (* THE GRID'S OWN SELECTION, AS A RECORD INDEX. The list view answered in
-    ROWS and the row was an offset into a five-row window, which is where the
-    row/record mismatch on double-click came from. *)
+    THE ROW-TO-RECORD MAPPING THAT STOOD HERE IS GONE, and leaving it in place
+    is why a double click stopped opening the editor at all (NY4I, 2026-09-04:
+    "when I double-click on a contact in the log grid, the edit dialog is not
+    appearing").
+
+    The mapping existed because the Win32 list view showed the LAST
+    LinesInEditableLog records, so a row was an offset into a five-row window
+    and the record index had to be reconstructed. The grid shows the WHOLE log
+    and its SelectedRecord is already a record index -- so running it through
+    that mapping converted a correct answer into a wrong one, and for any row
+    at or beyond LinesInEditableLog the mapping answered -1, the guard below
+    took it as "not a record", and the routine returned in silence.
+
+    That is the same class of defect as the two duplicated facts in the grid
+    itself: a translation that was necessary under the old model, left in place
+    under the new one, where it is not a no-op but an error. *)
   IndexOfItemInLogForEdit := TR4WEditableLogSelectedRecord;
-  if IndexOfItemInLogForEdit = -1 then
-     begin
-     Exit;
-     end;
-  if not LogSourceOpen then
-     begin
-     Exit;
-     end;
-  (* RECORDS, NOT BYTES.  The test is "does the log hold more QSOs than the
-    editable-log window shows", which was asked by rebuilding the byte length
-    the file would have at that many records.  Asked directly it survives the
-    store change, and it says what it means. *)
-  Size := LogSourceRecordCount;
-  LogSourceClose;
-
-  (* THE EDITABLE LOG SHOWS THE LAST LinesInEditableLog RECORDS, so a listview
-    row maps to a record index by adding however many are scrolled off the top.
-
-    THIS ARITHMETIC WAS BROKEN BY B4 AND IS FIXED HERE. Size used to be
-    GetFileSize -- BYTES -- and the old expression read
-
-        Size - LinesInEditableLog * RecSize + row * RecSize
-
-    which is header + (N - Lines + row) * RecSize: a correct byte offset, but
-    only because Size was bytes. B4 changed Size to a record COUNT to get the
-    store out of the comparison above, and left this expression alone, so it
-    then mixed a count with byte arithmetic and addressed a QSO nowhere near
-    the one selected. It went unnoticed because it needs a log LONGER than the
-    editable-log window to reach, and no test has one.
-
-    Both branches are the same statement now, which is the other half of the
-    point -- the guard above chooses the offset, not a different formula. *)
-  (* THE SAME MAPPING THE LOADER USED, from the same expression.
-
-    THIS HALF WAS ALREADY RIGHT AND THE LOADER WAS WRONG, which is precisely
-    why having two of them was the defect: being correct here bought nothing
-    while the rows had been filled by a different rule, so a double click
-    opened the QSO ABOVE the one clicked on any log longer than the window.
-
-    -1 IS A REAL ANSWER AND IS CHECKED. A row below the last QSO of a short log
-    is blank; opening the editor on it would edit whatever index the arithmetic
-    happened to produce. *)
-  IndexOfItemInLogForEdit := EditableLogRowToRecord(Size, LinesInEditableLog,
-                                                    IndexOfItemInLogForEdit);
   if IndexOfItemInLogForEdit < 0 then
      begin
      Exit;
      end;
 
-  ;
+  (* STILL BOUNDS-CHECKED AGAINST THE LOG. SelectedRecord is checked against
+    the count the grid was last given, which is not quite the same as what the
+    log holds now -- and the editor addresses a record by index. *)
+  if not LogSourceOpen then
+     begin
+     Exit;
+     end;
+  Size := LogSourceRecordCount;
+  LogSourceClose;
 
-  // tDialogBox(46, @EditQSODlgProc);
+  if IndexOfItemInLogForEdit >= Size then
+     begin
+     Exit;
+     end;
+
+  (* WHICH RECORD IS ABOUT TO BE EDITED. A double click that opens nothing and
+    one that opens the WRONG QSO look identical from the keyboard, and the
+    difference between them is one line of arithmetic -- which is exactly what
+    went wrong here. *)
+  if logger <> nil then
+     begin
+     logger.Debug('[EditableLog] double-click -> editing record %d',
+                  [IndexOfItemInLogForEdit]);
+     end;
+
   OpenEditQSOWindow(tr4whandle);
   FrmSetFocus;
-
 end;
 
 procedure tWinHelp(WindowHelpID: Byte);
@@ -7829,27 +7819,19 @@ begin
      end;
   LogSourceRewind;
 
-  (* WHICH RECORD DOES THE EDITABLE LOG START AT?
+  (* WHICH RECORD THE EDITABLE LOG STARTS AT IS NO LONGER A QUESTION.
 
-    ONE EXPRESSION, IN uEditableLogView, SHARED WITH THE DOUBLE-CLICK HANDLER.
-    It was computed here and again in EditableLogWindowDblClick, and the two
-    disagreed by one -- see that unit's header for the model, and for the two
-    defects the disagreement caused. Extracted rather than merely corrected,
-    because two correct copies are one edit away from being two different
-    copies again. *)
-  FirstRecord := EditableLogFirstRecord(Size, LinesInEditableLog);
+    It was, while the list held the LAST LinesInEditableLog records and the
+    loader had to skip the rest. The grid is virtual and shows the WHOLE log,
+    so the loader inserts nothing and skips nothing, and the guard that used
+    this is gone with it.
+
+    uEditableLogView, which owned that expression, is deleted with it. *)
   Sheet.DisposeOfMemoryAndZeroTotals;
   // LoadingInLogFile := True;
   1:
   if LogSourceNext(TempRXData) then
      begin
-     if CurrentRecord >= FirstRecord then
-        begin
-        (* NOTHING IS INSERTED ANY MORE. The list is virtual: it is told how
-          many records there are once, below, and asks for the ones it paints.
-          Inserting here was thousands of LVM_INSERTITEM messages on load and
-          is what limited the window to a tail of the log. *)
-        end;
 
      if TempRXData.ceSendToServer = False then
         begin

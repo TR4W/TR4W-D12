@@ -761,13 +761,16 @@ begin
       widest := MIN_COLUMN_WIDTH;
       end;
 
-   ColWidths[aCol] := widest;
+   (* PERSISTED, BUT NOT FROM HERE. TCustomGrid.DblClick calls HeaderSized
+     itself when this changes a width (grids.pas:7217-7222), so raising it
+     again would save the same width twice -- and the second write is the one
+     that would look like a defect later, because nothing here would say why.
 
-   (* PERSISTED, through the same event a dragged divider raises. The Win32
-     version had a defect here worth not repeating: it deferred the save to a
-     follow-up HDN_ENDTRACK, which the OS does not send for a double-click, so
-     the width was fitted and never saved. *)
-   HeaderSized(True, aCol);
+     The Win32 version had the opposite bug and it is worth not repeating: it
+     deferred the save to a follow-up HDN_ENDTRACK, which Windows does not send
+     for a double-click, so the column was fitted and the width silently never
+     stored. *)
+   ColWidths[aCol] := widest;
 end;
 
 procedure TLogGrid.Reload;

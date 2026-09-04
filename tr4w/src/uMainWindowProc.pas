@@ -622,12 +622,14 @@ begin
 
     WM_COMMAND:
       begin
-        case wParam of
-          66:
-            begin
-              EditableLogWindowDblClick;
-            end;
-        end;
+        (* THE EDITABLE LOG'S DOUBLE CLICK IS NOT A WINDOW MESSAGE ANY MORE.
+
+          `case wParam of 66:` reached EditableLogWindowDblClick, because the
+          Win32 list view notified its PARENT and the parent had to dispatch.
+          The log is an LCL grid: it raises OnDblClick on itself, and
+          TTR4WMainForm.MainLogDblClick answers. NY4I, 2026-09-04: "this is an
+          LCL form so does it makes sense for there to be a WM_COMMAND involved
+          anymore?" -- no, and nothing had posted 66 for some time. *)
 {$IF tDebugMode}
         if HiWord(wParam) = BN_CLICKED then
         begin
