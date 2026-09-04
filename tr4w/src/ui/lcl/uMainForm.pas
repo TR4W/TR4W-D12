@@ -81,11 +81,8 @@ type
                                       ARect: TRect; State: TOwnerDrawState);
   public
     (* The editable log's row supply and its double-click. See uLogGrid. *)
-    procedure MainLogFetchRow(Sender: TObject; const aIndex: Int64;
-                              out aText: TLogRowText;
-                              out aDeleted: boolean;
-                              out aXQSO: boolean;
-                              var aOK: boolean);
+    procedure MainLogFetchRows(Sender: TObject; const aFirstIndex: Int64;
+                               var aRows: array of TLogGridRow);
     procedure BuildLogGrid;
     procedure MainLogDblClick(Sender: TObject);
     procedure MainLogKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
@@ -1195,25 +1192,16 @@ end;
   same log. LogRowTextFor turns the record into the fourteen strings a row
   shows and is the same routine the log file's own export uses, so what is on
   screen and what is written out cannot disagree. *)
-procedure TTR4WMainForm.MainLogFetchRow(Sender: TObject; const aIndex: Int64;
-                                        out aText: TLogRowText;
-                                        out aDeleted: boolean;
-                                        out aXQSO: boolean;
-                                        var aOK: boolean);
+procedure TTR4WMainForm.MainLogFetchRows(Sender: TObject;
+                                         const aFirstIndex: Int64;
+                                         var aRows: array of TLogGridRow);
 var
-   qso: ContestExchange;
+   qsos: array of ContestExchange;
+   got:  integer;
+   i:    integer;
 begin
-   aOK      := False;
-   aDeleted := False;
-   aXQSO    := False;
-   FillChar(aText, SizeOf(aText), 0);
-
-   (* REOPENED ONLY IF IT IS ACTUALLY SHUT, and asked of the source rather
-     than remembered here. LogSourceOpen's database arm closes and reopens on
-     every call, so it must not be called per row -- but a flag saying "I
-     opened it" is worse: thirty-three sites in twelve units close this source,
-     and the first one to do so left the grid blank for good. See
-     LogSourceIsOpen. *)
+   (* OPENED ONCE, NOT PER BATCH. LogSourceOpen ensures the one connection
+     exists; it is not reopened per fetch. *)
    if not LogSourceIsOpen then
       begin
       if not LogSourceOpen then
@@ -1222,15 +1210,18 @@ begin
          end;
       end;
 
-   if not LogSourceReadAtIndex(aIndex, qso) then
-      begin
-      Exit;
-      end;
+   SetLength(qsos, Length(aRows));
+   got := LogSourceReadRange(aFirstIndex, qsos);
 
-   LogRowTextFor(qso, aText);
-   aDeleted := qso.ceQSO_Deleted;
-   aXQSO    := qso.ceXQSO;
-   aOK      := True;
+   for i := 0 to got - 1 do
+      begin
+      (* LogRowTextFor is the same routine the export uses, so what is on
+        screen and what is written out cannot disagree. *)
+      LogRowTextFor(qsos[i], aRows[Low(aRows) + i].Text);
+      aRows[Low(aRows) + i].Deleted := qsos[i].ceQSO_Deleted;
+      aRows[Low(aRows) + i].XQSO    := qsos[i].ceXQSO;
+      aRows[Low(aRows) + i].Valid   := True;
+      end;
 end;
 
 (* A DOUBLE-CLICK OPENS THE QSO UNDER THE POINTER.
@@ -1252,7 +1243,7 @@ procedure TTR4WMainForm.BuildLogGrid;
 begin
    TR4WEditableLog := TLogGrid.Create(Self);
    TR4WEditableLog.Parent        := Self;
-   TR4WEditableLog.OnFetchRow    := MainLogFetchRow;
+   TR4WEditableLog.OnFetchRows   := MainLogFetchRows;
    TR4WEditableLog.OnDblClick    := MainLogDblClick;
    TR4WEditableLog.OnKeyDown     := MainLogKeyDown;
    TR4WEditableLog.OnEnter       := MainLogEnter;
@@ -1510,10 +1501,7 @@ end;
   was the wrong question anyway -- the answer it wanted is in the log. *)
 function TR4WEditableLogCallsignAt(const aIndex: Int64): string;
 var
-   text:    TLogRowText;
-   deleted: boolean;
-   xqso:    boolean;
-   ok:      boolean;
+   rows: array[0 .. 0] of TLogGridRow;
 begin
    Result := '';
    if TR4WMainForm = nil then
@@ -1521,11 +1509,11 @@ begin
       Exit;
       end;
 
-   ok := False;
-   TR4WMainForm.MainLogFetchRow(nil, aIndex, text, deleted, xqso, ok);
-   if ok then
+   rows[0].Valid := False;
+   TR4WMainForm.MainLogFetchRows(nil, aIndex, rows);
+   if rows[0].Valid then
       begin
-      Result := text[logColCallsign];
+      Result := rows[0].Text[logColCallsign];
       end;
 end;
 

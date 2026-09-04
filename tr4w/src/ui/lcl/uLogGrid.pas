@@ -51,30 +51,43 @@ type
      aDeleted and aXQSO are the two states a row is drawn in, and they are
      properties of the QSO rather than of the display, which is why they come
      back from the fetch instead of being asked for separately. *)
-   TLogRowFetchEvent = procedure(Sender: TObject;
-                                 const aIndex: Int64;
-                                 out aText: TLogRowText;
-                                 out aDeleted: boolean;
-                                 out aXQSO: boolean;
-                                 var aOK: boolean) of object;
-
-   TLogGridCacheEntry = record
-      Index:   Int64;
-      Valid:   boolean;
+   (* ONE ROW AS THE GRID HOLDS IT. *)
+   TLogGridRow = record
+      Text:    TLogRowText;
       Deleted: boolean;
       XQSO:    boolean;
-      Text:    TLogRowText;
+      Valid:   boolean;
+   end;
+
+   (* HOW THE GRID GETS ITS ROWS -- A RUN OF THEM, NOT ONE.
+
+     aFirstIndex is a RECORD index into the log, not a screen row; the grid
+     does that arithmetic itself and the owner never sees a scroll position.
+     Fill aRows for as many as exist, leaving Valid False for the rest.
+
+     A RUN RATHER THAN A ROW because the store underneath is a database. Asked
+     one row at a time it compiled three statements per row -- a row count, an
+     O(n) OFFSET walk and a load -- which is what made a repaint expensive and
+     made a cache look compulsory. *)
+   TLogRowsFetchEvent = procedure(Sender: TObject;
+                                  const aFirstIndex: Int64;
+                                  var aRows: array of TLogGridRow) of object;
+
+   TLogGridCacheEntry = record
+      Index: Int64;
+      Row:   TLogGridRow;
    end;
    PLogGridCacheEntry = ^TLogGridCacheEntry;
 
    TLogGrid = class(TDrawGrid)
    private
       FRecordCount: Int64;
-      FOnFetchRow:  TLogRowFetchEvent;
+      FOnFetchRows: TLogRowsFetchEvent;
       FColumnOf:    array of LogColumnsType;
       FCache:       array of TLogGridCacheEntry;
 
       function  Fetch(const aIndex: Int64): PLogGridCacheEntry;
+      procedure FillBatch(const aFirstIndex: Int64);
       procedure SetRecordCount(const aValue: Int64);
       function  GetSelectedRecord: Int64;
       procedure SetSelectedRecord(const aValue: Int64);
@@ -108,7 +121,7 @@ type
       (* How many log records exist. Setting it is what makes the log appear. *)
       property RecordCount: Int64 read FRecordCount write SetRecordCount;
 
-      property OnFetchRow: TLogRowFetchEvent read FOnFetchRow write FOnFetchRow;
+      property OnFetchRows: TLogRowsFetchEvent read FOnFetchRows write FOnFetchRows;
    end;
 
 implementation
@@ -119,7 +132,23 @@ const
      rather than an LRU because the access pattern is a contiguous window --
      index mod N collides only between rows N apart, which are never on screen
      together. *)
+   (* WHY A CACHE AT ALL, with a number attached -- section 9a asks for exactly
+     that and the first version of this file did not have one.
+
+     DrawCell is called PER CELL. A log row is fourteen columns, so painting one
+     row asks for it fourteen times; without somewhere to put the answer that is
+     fourteen fetches for one row, and it stays fourteen however cheap the fetch
+     becomes. That is a property of the control, not a performance guess.
+
+     512 entries, direct-mapped: index mod N collides only between rows N apart,
+     which are never on screen together. *)
    CACHE_ROWS = 512;
+
+   (* HOW MANY ROWS ONE FETCH ASKS FOR. A screenful is a handful, but the fetch
+     costs an OFFSET walk to reach its first row whatever its size, so a batch
+     amortises that over the rows that follow -- and scrolling asks for the next
+     ones anyway. *)
+   BATCH_ROWS = 64;
 
    (* Breathing room either side of a cell's text. *)
    CELL_PAD = 3;
@@ -306,37 +335,71 @@ var
 begin
    for i := Low(FCache) to High(FCache) do
       begin
-      FCache[i].Valid := False;
-      FCache[i].Index := -1;
+      FCache[i].Row.Valid := False;
+      FCache[i].Index     := -1;
       end;
    Invalidate;
 end;
 
+(* THE ROW AT aIndex, FETCHING A BATCH AROUND IT ON A MISS.
+
+  The batch starts on a BATCH_ROWS boundary rather than at aIndex, so scrolling
+  through the log asks for each batch once instead of shifting the window by a
+  row at a time and re-fetching almost the same rows. *)
 function TLogGrid.Fetch(const aIndex: Int64): PLogGridCacheEntry;
-var
-   ok: boolean;
 begin
    Result := @FCache[aIndex mod CACHE_ROWS];
 
-   if Result^.Valid and (Result^.Index = aIndex) then
+   if Result^.Row.Valid and (Result^.Index = aIndex) then
       begin
       Exit;
       end;
 
-   Result^.Index   := aIndex;
-   Result^.Valid   := False;
-   Result^.Deleted := False;
-   Result^.XQSO    := False;
-   FillChar(Result^.Text, SizeOf(Result^.Text), 0);
+   FillBatch((aIndex div BATCH_ROWS) * BATCH_ROWS);
 
-   if not Assigned(FOnFetchRow) then
+   Result := @FCache[aIndex mod CACHE_ROWS];
+   if Result^.Index <> aIndex then
       begin
-      Exit;
+      (* The batch did not reach it -- past the end of the log, or evicted by a
+        collision within the batch itself, which cannot happen while
+        BATCH_ROWS <= CACHE_ROWS. *)
+      Result^.Index      := aIndex;
+      Result^.Row.Valid  := False;
+      end;
+end;
+
+procedure TLogGrid.FillBatch(const aFirstIndex: Int64);
+var
+   rows: array[0 .. BATCH_ROWS - 1] of TLogGridRow;
+   i:    integer;
+   e:    PLogGridCacheEntry;
+   idx:  Int64;
+begin
+   for i := Low(rows) to High(rows) do
+      begin
+      rows[i].Valid   := False;
+      rows[i].Deleted := False;
+      rows[i].XQSO    := False;
+      FillChar(rows[i].Text, SizeOf(rows[i].Text), 0);
       end;
 
-   ok := False;
-   FOnFetchRow(Self, aIndex, Result^.Text, Result^.Deleted, Result^.XQSO, ok);
-   Result^.Valid := ok;
+   if Assigned(FOnFetchRows) then
+      begin
+      FOnFetchRows(Self, aFirstIndex, rows);
+      end;
+
+   for i := Low(rows) to High(rows) do
+      begin
+      idx := aFirstIndex + i;
+      if idx >= FRecordCount then
+         begin
+         Break;
+         end;
+
+      e := @FCache[idx mod CACHE_ROWS];
+      e^.Index := idx;
+      e^.Row   := rows[i];
+      end;
 end;
 
 procedure TLogGrid.SetRecordCount(const aValue: Int64);
@@ -489,19 +552,19 @@ begin
    Canvas.Font.Color  := Font.Color;
 
    e := Fetch(aRow - FixedRows);
-   if not e^.Valid then
+   if not e^.Row.Valid then
       begin
       Canvas.FillRect(aRect);
       Exit;
       end;
 
-   s := e^.Text[c];
+   s := e^.Row.Text[c];
 
-   if e^.Deleted then
+   if e^.Row.Deleted then
       begin
       Canvas.Font.Color := clRed;
       end
-   else if e^.XQSO then
+   else if e^.Row.XQSO then
       begin
       Canvas.Font.Color := clGray;
       end;

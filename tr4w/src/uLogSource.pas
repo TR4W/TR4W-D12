@@ -150,6 +150,16 @@ function LogSourceReadFromEnd(aOffsetFromEnd: Int64;
 function LogSourceReadAtIndex(aIndex: Int64;
                               out aQso: ContestExchange): boolean;
 
+(* A RUN OF RECORDS FROM aFirstIndex, in log order. Fills aRows and returns how
+  many were read -- fewer than asked for at the end of the log.
+
+  WHAT A GRID ASKS FOR, AND THEREFORE WHAT THE SEAM SHOULD OFFER. Reading a
+  screenful one index at a time cost three SQL statements per row, each
+  compiled and thrown away, one of them an O(n) OFFSET walk and one a full
+  row count. One statement for the run instead. *)
+function LogSourceReadRange(aFirstIndex: Int64;
+                            var aRows: array of ContestExchange): integer;
+
 (* The file the current source reads -- for diagnostics and for the corpus
   driver to report which store produced an artifact. *)
 function LogSourceDescription: string;
@@ -447,6 +457,9 @@ var
 begin
    FillChar(aQso, SizeOf(aQso), 0);
    Result := False;
+   (* CHEAP NOW, AND IT WAS NOT. This bounds check ran a SELECT row count --
+      a full table scan -- on every single row fetch, 1.3 ms of it at 8,448
+      rows. TLogRepository caches the count and invalidates it on insert. *)
    total := LogSourceRecordCount;
    if (aIndex < 0) or (aIndex >= total) then
       begin
@@ -470,6 +483,42 @@ begin
                          FILE_BEGIN);
          Windows.ReadFile(LogHandle, aQso, SizeOf(ContestExchange), bytesRead, nil);
          Result := bytesRead = SizeOf(ContestExchange);
+         end;
+      end;
+end;
+
+function LogSourceReadRange(aFirstIndex: Int64;
+                            var aRows: array of ContestExchange): integer;
+var
+   i: integer;
+begin
+   Result := 0;
+   if Length(aRows) <= 0 then
+      begin
+      Exit;
+      end;
+
+   case LogSourceKind of
+      lsDatabase:
+         begin
+         if Repo <> nil then
+            begin
+            Result := Repo.ReadRange(aFirstIndex, aRows);
+            end;
+         end;
+      else
+         begin
+         (* THE BINARY LOG NEEDS NO BATCHING: a record is a seek and a read at
+            a computed offset, with no statement to compile and nothing that
+            grows with the log. The loop IS the batch. *)
+         for i := Low(aRows) to High(aRows) do
+            begin
+            if not LogSourceReadAtIndex(aFirstIndex + (i - Low(aRows)), aRows[i]) then
+               begin
+               Break;
+               end;
+            Inc(Result);
+            end;
          end;
       end;
 end;

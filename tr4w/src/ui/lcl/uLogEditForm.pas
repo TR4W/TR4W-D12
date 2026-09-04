@@ -59,11 +59,8 @@ type
       FGrid: TLogGrid;
       FOpen: boolean;
 
-      procedure GridFetchRow(Sender: TObject; const aIndex: Int64;
-                             out aText: TLogRowText;
-                             out aDeleted: boolean;
-                             out aXQSO: boolean;
-                             var aOK: boolean);
+      procedure GridFetchRows(Sender: TObject; const aFirstIndex: Int64;
+                              var aRows: array of TLogGridRow);
       procedure GridDblClick(Sender: TObject);
       procedure ReloadFromLog;
    end;
@@ -126,7 +123,7 @@ begin
      the address operator. uMainForm is {$MODE Delphi} and assigns the same
      kind of handler without one -- the two forms are not inconsistent, their
      compiler modes are. *)
-   FGrid.OnFetchRow := @GridFetchRow;
+   FGrid.OnFetchRows := @GridFetchRows;
    FGrid.OnDblClick := @GridDblClick;
    FGrid.BuildColumns;
 end;
@@ -189,22 +186,17 @@ end;
   SetRowXQSOFlag, and neither this window nor Log Search had that arm -- so an
   X-QSO looked identical to a claimed QSO in both, which is the defect NY4I hit
   on 2026-09-02. A row that knows its own record needs no smuggling. *)
-procedure TfrmLogEdit.GridFetchRow(Sender: TObject; const aIndex: Int64;
-                                   out aText: TLogRowText;
-                                   out aDeleted: boolean;
-                                   out aXQSO: boolean;
-                                   var aOK: boolean);
+procedure TfrmLogEdit.GridFetchRows(Sender: TObject;
+                                    const aFirstIndex: Int64;
+                                    var aRows: array of TLogGridRow);
 var
-   rec: ContestExchange;
+   qsos: array of ContestExchange;
+   got:  integer;
+   i:    integer;
 begin
-   aOK      := False;
-   aDeleted := False;
-   aXQSO    := False;
-   FillChar(aText, SizeOf(aText), 0);
-
-   (* THE SAME SELF-HEALING CHECK THE MAIN LOG MAKES, and for the same reason:
-     FOpen records that THIS FORM opened the source, which is not the same fact
-     as the source being open. The QSO editor this window launches closes it. *)
+   (* THE SAME SELF-HEALING CHECK THE MAIN LOG MAKES: FOpen records that THIS
+     FORM opened the source, which is not the same fact as the source being
+     open. The QSO editor this window launches closes it. *)
    if not LogSourceIsOpen then
       begin
       if not LogSourceOpen then
@@ -213,15 +205,16 @@ begin
          end;
       end;
 
-   if not LogSourceReadAtIndex(aIndex, rec) then
-      begin
-      Exit;
-      end;
+   SetLength(qsos, Length(aRows));
+   got := LogSourceReadRange(aFirstIndex, qsos);
 
-   LogRowTextFor(rec, aText);
-   aDeleted := rec.ceQSO_Deleted;
-   aXQSO    := rec.ceXQSO;
-   aOK      := True;
+   for i := 0 to got - 1 do
+      begin
+      LogRowTextFor(qsos[i], aRows[Low(aRows) + i].Text);
+      aRows[Low(aRows) + i].Deleted := qsos[i].ceQSO_Deleted;
+      aRows[Low(aRows) + i].XQSO    := qsos[i].ceXQSO;
+      aRows[Low(aRows) + i].Valid   := True;
+      end;
 end;
 
 procedure TfrmLogEdit.GridDblClick(Sender: TObject);
