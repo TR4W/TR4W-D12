@@ -61,6 +61,10 @@ const
      status line says so rather than quietly truncating. *)
    MAX_SEARCH_RESULTS = 5000;
 
+   (* The name this window's bounds are stored under, in the same layout store
+     every other window uses. *)
+   LAYOUT_NAME = 'SearchLog';
+
 type
    (* A MATCH: the record, and WHERE IT IS IN THE LOG.
 
@@ -102,6 +106,7 @@ type
                               var aRows: array of TLogGridRow);
       procedure GridDblClick(Sender: TObject);
       procedure RunSearch;
+      procedure ApplyMinimumWidth;
       function  Matches(const aQso: ContestExchange;
                         const aCall, aOperator: AnsiString;
                         aBand: BandType; aMode: ModeType): boolean;
@@ -117,6 +122,7 @@ implementation
 
 uses
    uEditQSO,
+   uLCLFormHelpers,   (* SaveFormBounds / TryRestoreFormBounds *)
    uMainForm;   (* TR4WMainForm -- this form's owner *)
 
 var
@@ -182,6 +188,9 @@ end;
 
 procedure TfrmLogSearch.FormShow(Sender: TObject);
 begin
+   (* WHERE IT WAS LAST TIME. *)
+   TryRestoreFormBounds(Self, LAYOUT_NAME);
+
    (* SEEDED FROM THE ENTRY FIELD. The Win32 version did the same, falling back
      to the call an operator had just escaped out of. *)
    if CallWindowString <> '' then
@@ -193,9 +202,12 @@ begin
       edtCall.Text := string(AnsiString(EscapeDeletedCallEntry));
       end;
 
+   ApplyMinimumWidth;
+
    if logger <> nil then
       begin
-      logger.Info('[LogSearch] window opened, seeded with "%s"', [edtCall.Text]);
+      logger.Info('[LogSearch] window opened, seeded with "%s", min width %d',
+                  [edtCall.Text, Constraints.MinWidth]);
       end;
 
    RunSearch;
@@ -205,6 +217,12 @@ end;
 procedure TfrmLogSearch.FormClose(Sender: TObject; var CloseAction: TCloseAction);
 begin
    tmrSearch.Enabled := False;
+
+   (* WHERE IT WAS, so it comes back there. NY4I: "the position of the search
+     window should be saved (as all window positions should be saved) and
+     restored upon reopening." *)
+   SaveFormBounds(Self, LAYOUT_NAME, True);
+
    CloseAction := caHide;
 end;
 
@@ -273,6 +291,42 @@ begin
       end;
 
    Result := True;
+end;
+
+(* THE NARROWEST THIS WINDOW MAY BE.
+
+  NY4I, 2026-09-04: "i should not be able to resize smaller than a form that
+  shows all the columns." Dragging it narrower simply dropped columns off the
+  right-hand edge with nothing to say they existed.
+
+  COMPUTED, NOT WRITTEN DOWN, so adding a column to a contest cannot leave the
+  constraint stale.
+
+  RE-APPLIED AFTER EVERY SEARCH, and that is the part the first version got
+  wrong: at FormShow the grid holds no rows, so it measures its headings and
+  answers far too small. The results are what has to fit.
+
+  The filter row has its own floor -- the Operator box is the right-most
+  control on it, and it was being clipped at the old hardcoded minimum. *)
+procedure TfrmLogSearch.ApplyMinimumWidth;
+var
+   fitWidth: integer;
+   rowWidth: integer;
+begin
+   if FGrid = nil then
+      begin
+      Exit;
+      end;
+
+   fitWidth := FGrid.MinimumWidth + (Width - FGrid.ClientWidth);
+
+   rowWidth := edtOperator.Left + edtOperator.Width + 12;
+   if rowWidth > fitWidth then
+      begin
+      fitWidth := rowWidth;
+      end;
+
+   Constraints.MinWidth := fitWidth;
 end;
 
 procedure TfrmLogSearch.RunSearch;
@@ -358,6 +412,8 @@ begin
                    GetTickCount64 - started,
                    BoolToStr(FTruncated, ' TRUNCATED', '')]);
       end;
+
+   ApplyMinimumWidth;
 
    if FTruncated then
       begin

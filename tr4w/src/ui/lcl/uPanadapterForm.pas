@@ -1213,49 +1213,26 @@ begin
 end;
 
 procedure TfrmPanadapter.RestoreBounds;
-var
-   store: TWindowLayoutStore;
-   saved, desktop, overlap: TRect;
-   visible: boolean;
 begin
-   store := TWindowLayoutStore.Create;
-   try
-      if not LoadWindowLayout(TR4WConfigFileName, store) then
-         begin
-         Exit;
-         end;
+   (* THE SHARED HELPER, since 2026-09-04 -- SaveFormBounds and
+     TryRestoreFormBounds in uLCLFormHelpers. The store read, the desktop
+     overlap check and the poDesigned-before-SetBounds rule were all here and
+     are all needed by any form that remembers where it was; the Search window
+     was the second, and a second copy would drift.
 
-      { LEGACY KEY.  Before 2026-08-26 there was one panadapter and one row,
-        'Panadapter'.  Slot 1 inherits it rather than silently losing the
-        operator's saved position on the upgrade. }
-      if not store.TryGetLayout(LayoutName, saved, visible) then
-         begin
-         if (FSlot <> 1) or (not store.TryGetLayout('Panadapter', saved, visible)) then
-            begin
-            Exit;
-            end;
-         end;
+     THE LEGACY KEY STAYS HERE because it is this window's history, not a
+     general rule: before 2026-08-26 there was one panadapter and one row,
+     'Panadapter'. Slot 1 inherits it rather than silently losing the
+     operator's saved position on the upgrade. *)
+   if TryRestoreFormBounds(Self, LayoutName) then
+      begin
+      Exit;
+      end;
 
-      // A monitor that is no longer attached leaves a well-formed rect that
-      // puts the window where nobody can reach it.  Any overlap with the
-      // virtual desktop is enough; Windows nudges a partly-off window back.
-      desktop := Rect(Screen.DesktopLeft, Screen.DesktopTop,
-                      Screen.DesktopLeft + Screen.DesktopWidth,
-                      Screen.DesktopTop  + Screen.DesktopHeight);
-
-      if not IntersectRect(overlap, saved, desktop) then
-         begin
-         Exit;
-         end;
-
-      // poDesigned FIRST, or the LCL re-applies its own rule when the form is
-      // shown and throws the restored position away.
-      Position := poDesigned;
-      SetBounds(saved.Left, saved.Top,
-                saved.Right - saved.Left, saved.Bottom - saved.Top);
-   finally
-      store.Free;
-   end;
+   if FSlot = 1 then
+      begin
+      TryRestoreFormBounds(Self, 'Panadapter');
+      end;
 end;
 
 { THE LIVE RECTANGLE, in the LCL's own units.  Left/Top/Width/Height, never
@@ -1274,29 +1251,17 @@ begin
 end;
 
 procedure TfrmPanadapter.SaveCurrentBounds(const aVisible: boolean);
-var
-   store: TWindowLayoutStore;
 begin
-   // Minimised or maximised bounds are not what to restore.
    if WindowState <> wsNormal then
       begin
       Exit;
       end;
 
-   store := TWindowLayoutStore.Create;
-   try
-      // SetLayout on an EMPTY store: SaveWindowLayout re-reads the file and
-      // overlays these entries, so every other window's row survives without
-      // this one having to know they exist.
-      store.SetLayout(LayoutName, LiveBounds, aVisible);
-      SaveWindowLayout(TR4WConfigFileName, store);
+   SaveFormBounds(Self, LayoutName, aVisible);
 
-      FSavedBounds := LiveBounds;
-      FSavedVisible := aVisible;
-      FHaveSaved := True;
-   finally
-      store.Free;
-   end;
+   FSavedBounds  := LiveBounds;
+   FSavedVisible := aVisible;
+   FHaveSaved    := True;
 end;
 
 { SPAN STEPPING: THE WINDOW ASKS FOR A DETENT, THE RADIO DECIDES WHAT ONE IS.

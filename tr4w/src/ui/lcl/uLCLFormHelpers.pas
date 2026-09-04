@@ -268,6 +268,33 @@ procedure ShowWithoutTakingFocus(const aForm: TCustomForm);
 procedure OwnFormByMainWindow(const aForm: TCustomForm);
 procedure CentreOverMainWindow(const aForm: TCustomForm);
 
+(* WHERE A FORM WAS LAST TIME.
+
+  EXTRACTED FROM uPanadapterForm ON 2026-09-04, when the Search window needed
+  the same thing -- NY4I: "the position of the search window should be saved
+  (as all window positions should be saved) and restored upon reopening."
+
+  Copying it would have copied three separately-earned corrections, and copies
+  drift:
+
+    * THE LCL'S OWN UNITS, never GetWindowRect. Mixing the two is what made the
+      function-key window grow by its frame height on every restart
+      (2026-08-25).
+    * Position := poDesigned BEFORE SetBounds, or the LCL re-applies its own
+      placement rule when the form is shown and throws the restored position
+      away.
+    * SetLayout onto an EMPTY store. SaveWindowLayout re-reads the file and
+      overlays, so every other window's row survives without this one having to
+      know they exist.
+
+  A rect saved on a monitor that is no longer attached is well formed and puts
+  the window where nobody can reach it, so a restore that does not overlap the
+  desktop at all is declined and the caller keeps its own default. *)
+procedure SaveFormBounds(const aForm: TCustomForm; const aName: string;
+                         const aVisible: boolean);
+function TryRestoreFormBounds(const aForm: TCustomForm;
+                              const aName: string): boolean;
+
 function AskForText(const aCaption, aPrompt: string; var aValue: string): boolean;
 
 // Install the node class on a tree. Call BEFORE adding any node.
@@ -451,6 +478,8 @@ uses
    Windows,    // EnableWindow / IsWindowEnabled -- see ShowModalOverWin32Parent
    uMainForm,  // TR4WMainForm -- the owner every dialog should have had
    Types,      // TRect
+   uWindowLayoutStore,  // the bounds, keyed by name
+   uTR4WConfigFile,     // TR4WConfigFileName, Load/SaveWindowLayout
    Graphics,   // TFont -- EffectiveFontHeight
    SysUtils,
    StrUtils,
@@ -1504,6 +1533,82 @@ begin
    Result := Int64(GetTickCount64 - FStart);
 end;
 
+
+(* The live rectangle, in the LCL's own units -- see the note on the
+  declaration for why this is not GetWindowRect. *)
+function LiveFormBounds(const aForm: TCustomForm): TRect;
+begin
+   Result := Rect(aForm.Left, aForm.Top,
+                  aForm.Left + aForm.Width, aForm.Top + aForm.Height);
+end;
+
+procedure SaveFormBounds(const aForm: TCustomForm; const aName: string;
+                         const aVisible: boolean);
+var
+   store: TWindowLayoutStore;
+begin
+   if (aForm = nil) or (aName = '') then
+      begin
+      Exit;
+      end;
+
+   (* Minimised or maximised bounds are not what to restore. *)
+   if aForm.WindowState <> wsNormal then
+      begin
+      Exit;
+      end;
+
+   store := TWindowLayoutStore.Create;
+   try
+      store.SetLayout(aName, LiveFormBounds(aForm), aVisible);
+      SaveWindowLayout(TR4WConfigFileName, store);
+   finally
+      store.Free;
+   end;
+end;
+
+function TryRestoreFormBounds(const aForm: TCustomForm;
+                              const aName: string): boolean;
+var
+   store: TWindowLayoutStore;
+   saved, desktop, overlap: TRect;
+   visible: boolean;
+begin
+   Result := False;
+   if (aForm = nil) or (aName = '') then
+      begin
+      Exit;
+      end;
+
+   store := TWindowLayoutStore.Create;
+   try
+      if not LoadWindowLayout(TR4WConfigFileName, store) then
+         begin
+         Exit;
+         end;
+
+      if not store.TryGetLayout(aName, saved, visible) then
+         begin
+         Exit;
+         end;
+
+      desktop := Rect(Screen.DesktopLeft, Screen.DesktopTop,
+                      Screen.DesktopLeft + Screen.DesktopWidth,
+                      Screen.DesktopTop  + Screen.DesktopHeight);
+
+      if not IntersectRect(overlap, saved, desktop) then
+         begin
+         Exit;
+         end;
+
+      aForm.Position := poDesigned;
+      aForm.SetBounds(saved.Left, saved.Top,
+                      saved.Right - saved.Left, saved.Bottom - saved.Top);
+      Result := True;
+   finally
+      store.Free;
+   end;
+end;
 
 initialization
 

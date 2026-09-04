@@ -38,6 +38,8 @@ interface
 
 uses
    Classes, SysUtils, Graphics, Grids, Controls, StdCtrls,
+   LCLIntf, LCLType,   (* GetSystemMetrics / SM_CXVSCROLL -- the LCL's own,
+                       not the Windows unit *)
    VC;   (* LogColumnsType, TLogRowText, ColumnsArray, tr4wColorsArray *)
 
 type
@@ -151,6 +153,17 @@ type
 
       (* Share the width out among the visible columns -- see the body. *)
       procedure SizeColumns;
+
+      (* THE NARROWEST THE GRID CAN BE AND STILL SHOW EVERY COLUMN.
+
+        For a form to refuse to be resized below it. Without this an operator
+        drags the window narrow and columns simply fall off the right-hand edge
+        with nothing to say they exist -- NY4I, 2026-09-04: "i should not be
+        able to resize smaller than a form that shows all the columns."
+
+        Measured the same way lgsFitAndFill measures, so the two agree by
+        construction rather than by both being kept up to date. *)
+      function MinimumWidth: integer;
 
       (* Forget every cached row and repaint. The log changed under us. *)
       procedure Reload;
@@ -608,6 +621,57 @@ begin
    Canvas.Font.Color  := FMatchTextColor;
    Canvas.TextOut(x0, aRect.Top + ((aRect.Bottom - aRect.Top) -
                                    Canvas.TextHeight(run)) div 2, run);
+end;
+
+function TLogGrid.MinimumWidth: integer;
+var
+   i, k:   integer;
+   c:      LogColumnsType;
+   w:      integer;
+begin
+   Result := 0;
+   if (Length(FColumnOf) = 0) or (not HandleAllocated) then
+      begin
+      Exit;
+      end;
+
+   Canvas.Font.Assign(Font);
+
+   for i := 0 to High(FColumnOf) do
+      begin
+      c := FColumnOf[i];
+
+      if FSizing = lgsDeclared then
+         begin
+         (* The declared width IS the requirement: those columns do not shrink
+           to their contents. *)
+         w := ColumnsArray[c].Width * ws;
+         end
+      else
+         begin
+         w := Canvas.TextWidth(ColumnsArray[c].Text);
+         for k := Low(FCache) to High(FCache) do
+            begin
+            if FCache[k].Row.Valid and
+               (Canvas.TextWidth(FCache[k].Row.Text[c]) > w) then
+               begin
+               w := Canvas.TextWidth(FCache[k].Row.Text[c]);
+               end;
+            end;
+         Inc(w, CELL_PAD * 2);
+         end;
+
+      if w < MIN_COLUMN_WIDTH then
+         begin
+         w := MIN_COLUMN_WIDTH;
+         end;
+
+      Inc(Result, w);
+      end;
+
+   (* The grid lines between columns, and room for a vertical scrollbar so the
+     narrowest allowed width does not itself provoke a horizontal one. *)
+   Inc(Result, Length(FColumnOf) + GetSystemMetrics(SM_CXVSCROLL) + 2);
 end;
 
 function TLogGrid.AnyRowCached: boolean;
