@@ -42,7 +42,7 @@
         <PackageName Value="LCL"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="416">
+    <Units Count="417">
       <Unit0>
         <Filename Value="tr4w.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -1830,6 +1830,11 @@
         <Filename Value="src/contestFactory/uContestWinterFieldDay.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit415>
+      <Unit416>
+        <Filename Value="src/ui/lcl/uLogEditForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+      </Unit416>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

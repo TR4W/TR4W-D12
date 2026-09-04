@@ -2923,6 +2923,14 @@ msgctxt "uappstrings.siniretiretitle"
 msgid "Old settings file"
 msgstr ""
 
+#: uappstrings.snetcomputeridinuse
+#, object-pascal-format
+msgid ""
+"Computer ID %s is already in use by another station on this network.\n"
+"\n"
+"Change COMPUTER ID to a letter no other station is using, then reconnect."
+msgstr ""
+
 #: ulclformhelpers.tc_prefs_activelabel
 msgctxt "ulclformhelpers.tc_prefs_activelabel"
 msgid "Active profile: "
@@ -3096,6 +3104,26 @@ msgstr ""
 
 #: ulclformhelpers.tc_radioedit_typerequired
 msgid "Choose a radio type."
+msgstr ""
+
+#: uprogrammain.scontestfileforeigndatabase
+#, object-pascal-format
+msgid ""
+"This file is a database, but it was not created by TR4W:\n"
+"\n"
+"%s\n"
+"\n"
+"TR4W cannot open another program's log. Choose a TR4W log (.db) or a contest configuration file (.cfg)."
+msgstr ""
+
+#: uprogrammain.scontestfilenotrecognised
+#, object-pascal-format
+msgid ""
+"This file is not a TR4W log and is not a contest configuration file:\n"
+"\n"
+"%s\n"
+"\n"
+"Choose a TR4W log (.db) or a contest configuration file (.cfg)."
 msgstr ""
 
 #: usettingscaptions.rs_advanced_handlogmode
@@ -4888,6 +4916,18 @@ msgstr ""
 msgid "Bn. ch. = %d"
 msgstr ""
 
+#: utr4wstrings.tc_bankalt
+msgid "Alt"
+msgstr ""
+
+#: utr4wstrings.tc_bankcontrol
+msgid "Control"
+msgstr ""
+
+#: utr4wstrings.tc_bankstandard
+msgid "Standard"
+msgstr ""
+
 #: utr4wstrings.tc_belgium
 msgid "Belgium"
 msgstr ""
@@ -5700,6 +5740,10 @@ msgstr ""
 
 #: utr4wstrings.tc_ifoundcontestnameidonounderstandlo
 msgid "I found a contest name I do no understand in your LOGCFG.DAT file."
+msgstr ""
+
+#: utr4wstrings.tc_ignoredunknownqth
+msgid "Ignored, not a known QTH:"
 msgstr ""
 
 #: utr4wstrings.tc_ignorespeedpot
