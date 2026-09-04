@@ -33,6 +33,11 @@ public struct RECT { public int L; public int T; public int R; public int B; }
 public static extern bool GetWindowRect(System.IntPtr h, out RECT r);
 [DllImport("user32.dll")]
 public static extern bool SetWindowPos(System.IntPtr h, System.IntPtr after, int x, int y, int cx, int cy, uint flags);
+public delegate bool EnumChildProc(System.IntPtr h, System.IntPtr p);
+[DllImport("user32.dll")]
+public static extern bool EnumChildWindows(System.IntPtr parent, EnumChildProc cb, System.IntPtr p);
+[DllImport("user32.dll")]
+public static extern int GetDlgCtrlID(System.IntPtr h);
 '@
 
 # ENUMERATE BY PID, do not FindWindow by class. Two reasons, and the first is not
@@ -383,8 +388,89 @@ function Measure-TR4WWindowFloor
    return [pscustomobject]@{ Width = $r.R - $r.L; Height = $r.B - $r.T }
 }
 
+
+# THE CALL AND EXCHANGE ENTRY FIELDS, BY CONTROL ID.
+#
+# EXTRACTED FROM Test-CountyLineEntry.ps1 ON 2026-09-04, when a second harness
+# needed to type into the call window.  Copying it would have copied three
+# separately-earned corrections along with it, and copies drift:
+#
+#   * POLLED, NOT CHECKED ONCE.  Start-TR4WForDriving returns as soon as the
+#     MAIN window exists, which is earlier than the entry fields being shown --
+#     so a single check passed when run alone and failed on a launch that
+#     followed a kill.  That reads as a program fault and is a harness race.
+#   * NORMALISED THROUGH Int64.  A value assigned inside the delegate comes back
+#     boxed as a String however it was cast, and every later IntPtr call then
+#     refuses to convert it.
+#   * VISIBILITY IS CHECKED, not just existence -- the window can exist before
+#     it is shown, and posting into it then goes nowhere.
+#
+# Returns @{ Call = <IntPtr>; Exchange = <IntPtr> }, either of which may be
+# IntPtr::Zero if it never appeared; the caller reports that in its own words.
+function Find-TR4WEntryFields
+{
+   param(
+      [Parameter(Mandatory = $true)][IntPtr] $Hwnd,
+      [int] $CallId     = 73,
+      [int] $ExchangeId = 88,
+      [int] $TimeoutMs  = 10000
+   )
+
+   $script:uidCall   = [IntPtr]::Zero
+   $script:uidExch   = [IntPtr]::Zero
+   $script:uidCallId = $CallId
+   $script:uidExchId = $ExchangeId
+
+   $cb = [Win32.UiDrv+EnumChildProc]{
+      param($h, $l)
+      switch ([Win32.UiDrv]::GetDlgCtrlID($h)) {
+         $script:uidCallId { $script:uidCall = [IntPtr]$h }
+         $script:uidExchId { $script:uidExch = [IntPtr]$h }
+      }
+      return $true
+   }
+
+   $callH    = [IntPtr]::Zero
+   $exchH    = [IntPtr]::Zero
+   $deadline = (Get-Date).AddMilliseconds($TimeoutMs)
+
+   while ((Get-Date) -lt $deadline)
+      {
+      $script:uidCall = [IntPtr]::Zero
+      $script:uidExch = [IntPtr]::Zero
+      [void][Win32.UiDrv]::EnumChildWindows($Hwnd, $cb, [IntPtr]::Zero)
+
+      $callH = [IntPtr][int64]"$script:uidCall"
+      $exchH = [IntPtr][int64]"$script:uidExch"
+
+      if (($callH -ne [IntPtr]::Zero) -and [Win32.UiDrv]::IsWindowVisible($callH))
+         {
+         break
+         }
+      Start-Sleep -Milliseconds 150
+      }
+
+   return @{ Call = $callH; Exchange = $exchH }
+}
+
+# One character at a time, into a control that already exists and is visible.
+function Send-TR4WText
+{
+   param(
+      [Parameter(Mandatory = $true)][IntPtr] $Hwnd,
+      [Parameter(Mandatory = $true)][string] $Text,
+      [int] $PerCharMs = 40
+   )
+   foreach ($ch in $Text.ToCharArray())
+      {
+      [void][Win32.UiDrv]::PostMessageW($Hwnd, 0x0102, [IntPtr][int][char]$ch, [IntPtr]0)
+      Start-Sleep -Milliseconds $PerCharMs
+      }
+}
+
 Export-ModuleMember -Function Resolve-TR4WExe, Find-TR4WMainWindow, Assert-NoRunningTR4W,
                               Start-TR4WForDriving, Send-TR4WMenuCommand,
                               Stop-TR4WForDriving, Get-TR4WLogMark, Get-TR4WLogSince,
                               Resolve-TR4WHarnessConfig, Find-TR4WWindowByTitle,
-                              Measure-TR4WWindowFloor
+                              Measure-TR4WWindowFloor,
+                              Find-TR4WEntryFields, Send-TR4WText

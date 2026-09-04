@@ -220,65 +220,18 @@ if ($started.Failure) { Write-Output "Test-CountyLineEntry: $($started.Failure)"
 
 $rc = 0
 
-function Send-Text
-{
-   param([IntPtr] $Hwnd, [string] $Text)
-   foreach ($ch in $Text.ToCharArray())
-      {
-      [void][W.Cty]::PostMessageW($Hwnd, $WM_CHAR, [IntPtr][int][char]$ch, [IntPtr]0)
-      Start-Sleep -Milliseconds 40
-      }
-}
+# Send-Text AND THE ENTRY-FIELD SEARCH THAT FOLLOWED IT ARE IN UiDriver NOW
+# (Find-TR4WEntryFields, Send-TR4WText). A second harness needed to type into
+# the call window on 2026-09-04; copying forty lines would have copied three
+# separately-earned corrections with them, and copies drift.
 
 try
 {
-   # NAMED hCall / hExch, NOT call / exch.  PowerShell variable names are
-   # CASE-INSENSITIVE, so $script:call and this script's own -Call parameter are
-   # the SAME variable: the delegate overwrote the callsign with a window handle
-   # and the run typed "41948776" into the call field.  Test-Typing.ps1 uses
-   # $script:call safely only because its parameter is named $Text.
-   $script:hCall = [IntPtr]::Zero
-   $script:hExch = [IntPtr]::Zero
-   $cb = [W.Cty+EnumProc]{
-      param($h, $l)
-      # CAST AT THE ASSIGNMENT. The delegate's untyped $h arrives boxed as a
-      # String under StrictMode, and every later IntPtr call then fails to
-      # convert it -- once here is cheaper than at each use.
-      switch ([W.Cty]::GetDlgCtrlID($h)) {
-         73 { $script:hCall = [IntPtr]$h }
-         88 { $script:hExch = [IntPtr]$h }
-      }
-      return $true
-   }
-   # POLLED, NOT CHECKED ONCE.  Start-TR4WForDriving returns as soon as the MAIN
-   # window exists, which is earlier than the entry fields being shown -- so a
-   # single check passed when run alone and failed on the 3rd, 4th and 5th case
-   # of -AllCases, where each launch follows a kill.  That reads as a program
-   # fault and is a harness race.  Re-enumerated each pass because the handles
-   # do not exist until the controls do.
-   $callH    = [IntPtr]::Zero
-   $exchH    = [IntPtr]::Zero
-   $deadline = (Get-Date).AddMilliseconds(10000)
-
-   while ((Get-Date) -lt $deadline)
-      {
-      $script:hCall = [IntPtr]::Zero
-      $script:hExch = [IntPtr]::Zero
-      [void][W.Cty]::EnumChildWindows($started.Hwnd, $cb, [IntPtr]::Zero)
-
-      # NORMALISED HERE.  A value set inside the delegate comes back boxed as a
-      # String however it was cast at the assignment, and every later IntPtr
-      # call then refuses to convert it.  Int64 is the round trip that holds.
-      $callH = [IntPtr][int64]"$script:hCall"
-      $exchH = [IntPtr][int64]"$script:hExch"
-
-      if (($callH -ne [IntPtr]::Zero) -and ($exchH -ne [IntPtr]::Zero) -and
-          [W.Cty]::IsWindowVisible($callH))
-         {
-         break
-         }
-      Start-Sleep -Milliseconds 150
-      }
+   $fields = Find-TR4WEntryFields -Hwnd $started.Hwnd `
+                                  -CallId $CALLSIGNWINDOWID `
+                                  -ExchangeId $EXCHANGEWINDOWID
+   $callH = $fields.Call
+   $exchH = $fields.Exchange
 
    if ($callH -eq [IntPtr]::Zero -or $exchH -eq [IntPtr]::Zero)
       {
@@ -286,16 +239,10 @@ try
       Stop-TR4WForDriving -Process $started.Process
       exit 1
       }
-   if (-not [W.Cty]::IsWindowVisible($callH))
-      {
-      Write-Output 'Test-CountyLineEntry: FAIL -- the callsign window exists but never became VISIBLE'
-      Stop-TR4WForDriving -Process $started.Process
-      exit 1
-      }
 
    Write-Output ("typing call '{0}' then exchange '{1}'" -f $Call, $Exchange)
 
-   Send-Text -Hwnd $callH -Text $Call
+   Send-TR4WText -Hwnd $callH -Text $Call
    Start-Sleep -Milliseconds 400
 
    # THE OPERATOR'S SEQUENCE, NOT A SHORTCUT: call, Enter, exchange, Enter.
@@ -309,7 +256,7 @@ try
    # Posted straight at the exchange window rather than sending TAB: a
    # cross-process post cannot give a control real focus, so moving between
    # fields by keystroke is not reliable -- addressing the window by id is.
-   Send-Text -Hwnd $exchH -Text $Exchange
+   Send-TR4WText -Hwnd $exchH -Text $Exchange
    Start-Sleep -Milliseconds 400
 
    # RETURN IS AN ACCELERATOR, NOT A KEYSTROKE.  Posting WM_CHAR #13 at the

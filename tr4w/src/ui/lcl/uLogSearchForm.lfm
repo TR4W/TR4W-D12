@@ -1,0 +1,101 @@
+object frmLogSearch: TfrmLogSearch
+  Left = 180
+  Height = 380
+  Top = 160
+  Width = 820
+  Caption = 'Search Log'
+  KeyPreview = True
+  ClientHeight = 380
+  ClientWidth = 820
+  Constraints.MinHeight = 220
+  Constraints.MinWidth = 520
+  OnClose = FormClose
+  OnCreate = FormCreate
+  OnKeyDown = FormKeyDown
+  OnShow = FormShow
+  Position = poMainFormCenter
+  object lblCall: TLabel
+    Left = 10
+    Height = 15
+    Top = 14
+    Width = 50
+    Caption = 'Callsign'
+    ParentColor = False
+  end
+  object edtCall: TEdit
+    Left = 70
+    Height = 23
+    Top = 10
+    Width = 120
+    CharCase = ecUppercase
+    OnChange = FilterChanged
+    TabOrder = 0
+  end
+  object lblMode: TLabel
+    Left = 205
+    Height = 15
+    Top = 14
+    Width = 34
+    Caption = 'Mode'
+    ParentColor = False
+  end
+  object cboMode: TComboBox
+    Left = 250
+    Height = 23
+    Top = 10
+    Width = 110
+    ItemHeight = 15
+    OnChange = FilterChanged
+    Style = csDropDownList
+    TabOrder = 1
+  end
+  object lblBand: TLabel
+    Left = 375
+    Height = 15
+    Top = 14
+    Width = 31
+    Caption = 'Band'
+    ParentColor = False
+  end
+  object cboBand: TComboBox
+    Left = 420
+    Height = 23
+    Top = 10
+    Width = 110
+    ItemHeight = 15
+    OnChange = FilterChanged
+    Style = csDropDownList
+    TabOrder = 2
+  end
+  object lblOperator: TLabel
+    Left = 545
+    Height = 15
+    Top = 14
+    Width = 50
+    Caption = 'Operator'
+    ParentColor = False
+  end
+  object edtOperator: TEdit
+    Left = 600
+    Height = 23
+    Top = 10
+    Width = 120
+    CharCase = ecUppercase
+    OnChange = FilterChanged
+    TabOrder = 3
+  end
+  object lblStatus: TLabel
+    Left = 10
+    Height = 15
+    Top = 356
+    Width = 4
+    Anchors = [akLeft, akRight, akBottom]
+    Caption = ''
+    ParentColor = False
+  end
+  object tmrSearch: TTimer
+    Enabled = False
+    Interval = 250
+    OnTimer = SearchTimer
+  end
+end
