@@ -82,6 +82,9 @@ type
       procedure DrawCell(aCol, aRow: integer; aRect: TRect;
                          aState: TGridDrawState); override;
       procedure DoOnResize; override;
+
+      (* The first moment the columns can be measured -- see SizeColumns. *)
+      procedure InitializeWnd; override;
    public
       constructor Create(aOwner: TComponent); override;
 
@@ -237,6 +240,21 @@ begin
       Exit;
       end;
 
+   (* NOT BEFORE THERE IS A WINDOW TO MEASURE IN.
+
+     Canvas on a control with no handle allocated raises, and this is reached
+     from BuildColumns, which a form calls from its OnCreate -- before the form
+     is shown and therefore before either has a handle. That is an access
+     violation on opening View/Edit Log, which is what it did (NY4I,
+     2026-09-04: "I also cannot open the view/edit log window").
+
+     InitializeWnd calls this again the moment the handle exists, so nothing is
+     lost by declining now. *)
+   if not HandleAllocated then
+      begin
+      Exit;
+      end;
+
    Canvas.Font.Assign(Font);
 
    for i := 0 to High(FColumnOf) do
@@ -273,6 +291,12 @@ end;
 procedure TLogGrid.DoOnResize;
 begin
    inherited DoOnResize;
+   SizeColumns;
+end;
+
+procedure TLogGrid.InitializeWnd;
+begin
+   inherited InitializeWnd;
    SizeColumns;
 end;
 

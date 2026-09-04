@@ -1382,6 +1382,8 @@ begin
 end;
 
 procedure TR4WEditableLogRefreshCount;
+var
+   n: Int64;
 begin
    if TR4WEditableLog = nil then
       begin
@@ -1397,7 +1399,20 @@ begin
          end;
       end;
 
-   TR4WEditableLog.RecordCount := LogSourceRecordCount;
+   n := LogSourceRecordCount;
+
+   (* WHAT THE LOG SAYS versus what the grid is showing, every time a QSO is
+     logged. One line, because "the contact did not appear" has three
+     completely different causes -- the count did not move, the count moved and
+     the rows did not, or this was never called -- and they are indistinguishable
+     from the screen. *)
+   if logger <> nil then
+      begin
+      logger.Debug('[EditableLog] refresh: log has %d record(s), grid had %d',
+                   [n, TR4WEditableLog.RecordCount]);
+      end;
+
+   TR4WEditableLog.RecordCount := n;
 end;
 
 procedure TR4WEditableLogSetCount(const aCount: Int64);
