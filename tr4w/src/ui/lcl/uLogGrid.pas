@@ -480,10 +480,13 @@ var
    c:      LogColumnsType;
    w:      integer;
    want:   array of integer;
+   fixed:  array of boolean;
    total:  integer;
+   share:  integer;
    spare:  integer;
    given:  integer;
    avail:  integer;
+   last:   integer;
 begin
    if (FRecordCount > 0) and (not AnyRowCached) then
       begin
@@ -492,11 +495,26 @@ begin
 
    Canvas.Font.Assign(Font);
    SetLength(want, Length(FColumnOf));
+   SetLength(fixed, Length(FColumnOf));
    total := 0;
+   share := 0;
+   last  := -1;
 
    for i := 0 to High(FColumnOf) do
       begin
       c := FColumnOf[i];
+
+      (* A WIDTH THE OPERATOR DRAGGED IS NOT A SUGGESTION. It wins, and it is
+        excluded from the surplus below -- otherwise the column they sized by
+        hand would be stretched away from the width they chose the moment the
+        window got wider. *)
+      if ColumnWidthOverride[c] > 0 then
+         begin
+         want[i]  := ColumnWidthOverride[c];
+         fixed[i] := True;
+         Inc(total, want[i]);
+         Continue;
+         end;
 
       (* The heading is a floor: a column narrower than its own name is
         unreadable however short its values are. *)
@@ -520,8 +538,11 @@ begin
          w := MIN_COLUMN_WIDTH;
          end;
 
-      want[i] := w;
+      want[i]  := w;
+      fixed[i] := False;
       Inc(total, w);
+      Inc(share, w);
+      last := i;
       end;
 
    (* Less the grid lines, and room for a vertical scrollbar so a full-width
@@ -529,21 +550,26 @@ begin
    avail := ClientWidth - Length(FColumnOf) - 2;
    spare := avail - total;
 
-   if (spare > 0) and (total > 0) then
+   if (spare > 0) and (share > 0) then
       begin
       given := 0;
       for i := 0 to High(FColumnOf) do
          begin
-         if i = High(FColumnOf) then
+         if fixed[i] then
             begin
-            (* THE LAST COLUMN TAKES THE REMAINDER, so integer division cannot
-              leave a few pixels of blank grid -- which is the whole complaint
-              this routine exists to answer. *)
+            Continue;
+            end;
+
+         if i = last then
+            begin
+            (* THE LAST FREE COLUMN TAKES THE REMAINDER, so integer division
+              cannot leave a few pixels of blank grid -- which is the whole
+              complaint this routine exists to answer. *)
             Inc(want[i], spare - given);
             end
          else
             begin
-            k := (spare * want[i]) div total;
+            k := (spare * want[i]) div share;
             Inc(want[i], k);
             Inc(given, k);
             end;

@@ -1278,6 +1278,21 @@ begin
    TR4WEditableLog.OnKeyDown     := MainLogKeyDown;
    TR4WEditableLog.OnEnter       := MainLogEnter;
    TR4WEditableLog.OnHeaderSized := MainLogHeaderSized;
+
+   (* FITTED TO THE CONTENTS AND STRETCHED TO THE WINDOW, like the two dialog
+     grids -- NY4I, 2026-09-04.
+
+     THE DECLARED WIDTHS CLIPPED. ColumnsArray[].Width is a DOS-era count of
+     CHARACTERS multiplied by ws, which for a proportional font is arbitrary:
+     Freq had four of them and showed "21300...." for a frequency that needs
+     eight. The Win32 list view did exactly the same thing, so this is not a
+     regression being fixed -- it is the original being improved on, and the
+     cost is that the layout is no longer pixel-identical to it.
+
+     A COLUMN THE OPERATOR HAS DRAGGED STILL WINS. SizeColumnsToFit keeps an
+     overridden width and leaves it out of the surplus, so a hand-sized column
+     stays where it was put. *)
+   TR4WEditableLog.Sizing := lgsFitAndFill;
 end;
 
 procedure TTR4WMainForm.MainLogDblClick(Sender: TObject);
@@ -1294,6 +1309,10 @@ begin
    TR4WPreviousDupes := TLogGrid.Create(Self);
    TR4WPreviousDupes.Parent     := Self;
    TR4WPreviousDupes.OnFetchRows := DupesFetchRows;
+
+   (* The same sizing as the log it stands in for, or the B4 list would lay its
+     columns out differently from the window it replaces. *)
+   TR4WPreviousDupes.Sizing := lgsFitAndFill;
    TR4WPreviousDupes.Visible    := False;
 
    ApplyMainFontTo(TR4WPreviousDupes.Font);
