@@ -43,7 +43,9 @@ implementation
 
 uses
   Classes, SysUtils, StrUtils, Forms, Controls, LCLType, LMessages,
-  Windows,          { GetKeyState, PostMessage -- see the note on TelnetHasFocus }
+  Windows,          { GetKeyState -- see the note on TelnetHasFocus }
+  uMainThread,      { RunOnMainThread -- the accelerator runs deferred }
+  uMainWindowProc,  { DispatchCommandId -- the one command dispatch }
   uAccelerators,    { ACCELERATORS -- the one table }
   uConfigValues,    { Config.KeypadCWMemories }
   uCrashLog,        { LogCaughtException }
@@ -250,7 +252,7 @@ begin
   // POSTED, NOT SENT -- exactly what TranslateAccelerator did.  The command runs
   // after this key has finished being delivered, so a handler that opens a
   // modal dialog does not do it from inside the LCL's key dispatch.
-  (* WHAT WAS ACTUALLY POSTED -- instrumentation, 2026-09-03.
+  (* WHAT WAS ACTUALLY DISPATCHED -- instrumentation, 2026-09-03.
 
     The trace above only fires for keys with a MODIFIER, so a bare Enter --
     accelerator 10651, the keystroke that logs a QSO -- produced no evidence
@@ -258,10 +260,21 @@ begin
     so it is logged unconditionally at DEBUG. *)
   if (logger <> nil) and (Key = VK_RETURN) then
      begin
-     logger.Debug('[Input] Enter -> accelerator %d posted', [id]);
+     logger.Debug('[Input] Enter -> accelerator %d dispatched', [id]);
      end;
 
-  Windows.PostMessage(tr4whandle, WM_COMMAND, id, 0);
+  (* RUN IT, BUT NOT FROM INSIDE THE KEY DISPATCH.
+
+    DEFERRED, WHICH IS WHAT THE POSTED MESSAGE WAS FOR. This was
+    PostMessage(tr4whandle, WM_COMMAND, id, 0) -- the accelerator became a
+    Win32 message so that the command ran after the keystroke had finished
+    being delivered, which matters because a handler may open a modal dialog.
+    RunOnMainThread gives exactly that and needs no window, no message id and
+    nothing in a window procedure to answer it.
+
+    DispatchCommandId is the same routine the menu goes through, so a command
+    cannot behave differently depending on whether it was clicked or typed. *)
+  RunOnMainThread(DispatchCommandId, id);
   Key := VK_UNKNOWN;
 end;
 

@@ -42,6 +42,12 @@ unit uMainThread;
      TTCIServer.Stop, and TThread.Queue would purge the callback if that
      thread exited first.
 
+  4. DEFERRING WORK FROM THE MAIN THREAD ITSELF, which is not about threads at
+     all: run this AFTER the current event finishes. uAppInputHooks uses it for
+     an accelerator, because the command may open a modal dialog and must not
+     do so from inside the LCL key dispatch. That is exactly what posting a
+     WM_COMMAND to the main window bought, without the window or the message.
+
   IF THIS UNIT EVER HAS NO CALLERS, DELETE IT rather than finding it a use.
 
   OWNERSHIP. aData is passed through untouched, so a caller may hand over a

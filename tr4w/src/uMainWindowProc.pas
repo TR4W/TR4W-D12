@@ -118,6 +118,14 @@ type
 { The instance the async starters are handed. }
 function BackgroundEvents: TTR4WBackgroundEvents;
 
+(* RUN ONE COMMAND ID -- a menu row, an accelerator, a plugin.
+
+  ONE DEFINITION OF WHICH RANGE MEANS WHAT. This lived inside the WM_COMMAND
+  arm, so the only way to run a command was to post that message to the main
+  window -- which is what the accelerator handler did, and why a keystroke had
+  to become a Win32 message before anything happened. *)
+procedure DispatchCommandId(aId: PtrInt);
+
 implementation
 
 { MINIMAL, and measured rather than inherited.  Lifting this out of tr4w.lpr
@@ -658,19 +666,7 @@ begin
           each time you type. *)
         if lParam = 0 then
            begin
-           if (LoWord(wParam) >= 10000) and (LoWord(wParam) <= 10700) then
-              begin
-              ProcessMenu(wParam);
-              end;
-
-           (* > 10700, not >= : the two ranges overlapped at exactly 10700, so
-              that one id was dispatched BOTH ways. Plugin ids start at
-              10700 + LoadedPlugins with LoadedPlugins >= 1, so nothing is
-              lost. *)
-           if (LoWord(wParam) > 10700) and (LoWord(wParam) <= 10750) then
-              begin
-              RunPlugin(LoWord(wParam));
-              end;
+           DispatchCommandId(LoWord(wParam));
            end;
 
         // The call and exchange notification arms USED TO BE HERE, dispatched
@@ -723,6 +719,22 @@ end;
   them -- see MainUnit and uProgramMain -- so a background unit no longer
   needs a window handle, and this unit no longer needs to know the
   operation exists. *)
+
+procedure DispatchCommandId(aId: PtrInt);
+begin
+   if (aId >= 10000) and (aId <= 10700) then
+      begin
+      ProcessMenu(aId);
+      end;
+
+   (* > 10700, not >= : the two ranges overlapped at exactly 10700, so that one
+     id was dispatched BOTH ways. Plugin ids start at 10700 + LoadedPlugins
+     with LoadedPlugins >= 1, so nothing is lost. *)
+   if (aId > 10700) and (aId <= 10750) then
+      begin
+      RunPlugin(aId);
+      end;
+end;
 
 var
    { Created on first use by BackgroundEvents. }
