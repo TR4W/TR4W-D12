@@ -2778,7 +2778,6 @@ var
   tr4whandle                            : HWND;
   tr4w_WinClass                         : TWndClass = (Style: CS_DBLCLKS; hbrBackground: COLOR_BTNFACE + 1; {lpszMenuName: 'T'; } lpszClassName: tr4w_ClassName; );
   tr4w_main_menu                        : HMENU;
-  tr4w_accelerators                     : hAccel;
 
   DupeInfoCallWindowCleared             : boolean = True;
 

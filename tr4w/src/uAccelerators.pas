@@ -183,11 +183,20 @@ const
     (acId: 10651; acCtrl: false; acAlt: false; acShift: false; acKey: $0D; acDisplay: 'Enter'; acInstall: true)    // no menu_ constant
   );
 
-{ The table Windows applies. Replaces LoadAccelerators(hInstance, 'T') -- so the
-  binding no longer comes from a binary resource nobody can diff. The caller owns
-  the handle and should DestroyAcceleratorTable it; TR4W builds one at startup
-  and keeps it for the life of the program, exactly as it did with the resource. }
-function BuildAcceleratorTable: HACCEL;
+{ THE WIN32 ACCELERATOR TABLE IS GONE, AND IT HAD BEEN INERT SINCE THE LCL
+  MIGRATION.
+
+  BuildAcceleratorTable called CreateAcceleratorTable and the result was stored
+  in tr4w_accelerators, which nothing then read: the only thing that can apply
+  an HACCEL is TranslateAccelerator, and the hand-rolled GetMessage loop that
+  called it was deleted when the program moved to Application.Run. So startup
+  allocated a Win32 accelerator table, checked it was non-zero, and left it to
+  be reclaimed at exit.
+
+  ACCELERATORS ITSELF STAYS. It is the one table saying which keystroke means
+  which command, and uAppInputHooks reads it directly in an LCL key handler --
+  which is the mechanism now. Only the half that handed a copy to Windows is
+  deleted. }
 
 { What the menu should show for a command, or '' when it has no binding.
   ONE source for both halves: the menu caption is now derived from the same row
@@ -195,44 +204,6 @@ function BuildAcceleratorTable: HACCEL;
 function AcceleratorDisplayFor(const aId: Word): string;
 
 implementation
-
-function BuildAcceleratorTable: HACCEL;
-var
-   tbl: array of TAccel;
-   i:   integer;
-begin
-   // Only the installable rows. A display-only row is in the table so the MENU
-   // can show its keystroke; handing it to Windows would create a SECOND binding
-   // for a key something else already answers.
-   SetLength(tbl, 0);
-   for i := Low(ACCELERATORS) to High(ACCELERATORS) do
-      begin
-      if not ACCELERATORS[i].acInstall then
-         begin
-         Continue;
-         end;
-      SetLength(tbl, Length(tbl) + 1);
-      // FVIRTKEY on every row: acKey is a virtual-key code, not a character.
-      // Without it Windows would compare against the ASCII value and Alt+1
-      // would never match.
-      tbl[High(tbl)].fVirt := FVIRTKEY;
-      if ACCELERATORS[i].acCtrl then
-         begin
-         tbl[High(tbl)].fVirt := tbl[High(tbl)].fVirt or FCONTROL;
-         end;
-      if ACCELERATORS[i].acAlt then
-         begin
-         tbl[High(tbl)].fVirt := tbl[High(tbl)].fVirt or FALT;
-         end;
-      if ACCELERATORS[i].acShift then
-         begin
-         tbl[High(tbl)].fVirt := tbl[High(tbl)].fVirt or FSHIFT;
-         end;
-      tbl[High(tbl)].key := ACCELERATORS[i].acKey;
-      tbl[High(tbl)].cmd := ACCELERATORS[i].acId;
-      end;
-   Result := CreateAcceleratorTable(tbl[0], Length(tbl));
-end;
 
 function AcceleratorDisplayFor(const aId: Word): string;
 var

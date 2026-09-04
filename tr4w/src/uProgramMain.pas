@@ -1462,24 +1462,16 @@ begin
 {$IFDEF AUTOSPOT}
    ShowMessage(TC_AUTOSPOTENABLEDTESTMODEONLY); // Hard on relays - be careful
 {$ENDIF}
-  // ONE Pascal table, not the 'T' resource -- and not the ELEVEN copies of it
-  // that had drifted apart across the language .RES files (see
-  // docs\ACCELERATOR_AUDIT.md).  TranslateAccelerator below is unchanged;
-  // only where the table comes from has changed, which is what lets the menu
-  // caption and the binding be derived from one row.
-  tr4w_accelerators := BuildAcceleratorTable;
-  // FAIL LOUD. A table that failed to build leaves tr4w_accelerators = 0 and
-  // TranslateAccelerator then quietly does nothing -- the program runs and the
-  // whole keyboard is dead, with nothing in the log to say why. The count is
-  // logged either way so a shrinking table is visible in a bug report.
-  if tr4w_accelerators = 0 then
-     begin
-     logger.Error('[Accelerators] CreateAcceleratorTable FAILED -- no keyboard shortcuts will work');
-     end
-  else
-     begin
-     logger.Info('[Accelerators] %d binding(s) installed', [Length(ACCELERATORS)]);
-     end;
+  (* ONE Pascal table, not the 'T' resource -- and not the ELEVEN copies of it
+    that had drifted apart across the language .RES files (see
+    docs\ACCELERATOR_AUDIT.md). That table is still the one source for both
+    the binding and the menu caption; what has gone is the copy handed to
+    Windows. *)
+  (* THE WIN32 ACCELERATOR TABLE WAS BUILT HERE AND NEVER USED. An HACCEL is
+    applied by TranslateAccelerator and nothing else, and the message loop that
+    called it went when the program moved to Application.Run -- so this
+    allocated a Win32 resource, checked it, and dropped it. Keystrokes reach
+    commands through uAppInputHooks, reading the same ACCELERATORS table. *)
 
   RegisterClass(tr4w_WinClass);
 
