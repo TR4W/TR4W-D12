@@ -352,6 +352,10 @@ function  CreateMainElement(const aElement: TMainWindowElement;
                             const aStyle: cardinal;
                             const aLeft, aTop, aWidth, aHeight: integer): HWND;
 function  MainElement(const aElement: TMainWindowElement): TPanel;
+(* Shrinks an element's caption font when the text is wider than its panel.
+  See the body -- an interim until stage 3 gives these controls anchors. *)
+procedure FitElementCaption(const aElement: TMainWindowElement);
+
 procedure SetElementText(const aElement: TMainWindowElement; const aText: string);
 procedure SetElementColors(const aElement: TMainWindowElement;
                            const aBack, aText: TColor);
@@ -656,6 +660,15 @@ var
 
    GElements: array[TMainWindowElement] of TPanel;
 
+   (* The font height SetElementFont asked for, per element -- see
+     FitElementCaption. Zero until the element has been given one. *)
+   GElementFontHeight: array[TMainWindowElement] of integer;
+
+   (* A canvas to measure on. A TPanel's own Canvas is not reliably reachable
+     across LCL versions, and measuring must not depend on the control being
+     realised -- an element is written long before the window is shown. *)
+   GMeasure: TBitmap = nil;
+
 function MainElement(const aElement: TMainWindowElement): TPanel;
 begin
    Result := GElements[aElement];
@@ -810,6 +823,88 @@ begin
    if GElements[aElement].Caption <> aText then
       begin
       GElements[aElement].Caption := aText;
+
+      (* A LONGER VALUE MAY NOT FIT THE ROW ITS ELEMENT WAS GIVEN. *)
+      FitElementCaption(aElement);
+      end;
+end;
+
+(* SHRINK THE CAPTION UNTIL IT FITS, AND NO FURTHER.
+
+  TWindows[] gives every element a width in `ws` units -- a DOS-era character
+  count -- and some values simply need more room than their row allows. The
+  radio name is the standing example: RADIO ONE NAME is four units wide and
+  "7100-18V" is eight characters, so it ran into the panel border (NY4I,
+  2026-09-04, twice).
+
+  THE PROPER FIX IS ANCHORS AND AUTOSIZE, which is stage 3 of the designer
+  work: a control sized by its content cannot be too small for it. This is the
+  interim, and it is the behaviour NY4I already asked for elsewhere -- "the font
+  should adjust similar to the way the radio1 and radio2 forms work".
+
+  IT ALWAYS STARTS FROM THE REQUESTED HEIGHT, so a panel that shrank for a long
+  value returns to the common size when a short one arrives. A caption that
+  fits is left alone, which is the overwhelmingly common case and costs one
+  measurement.
+
+  MEASURED ON A SCRATCH CANVAS rather than the control's: an element is written
+  long before the window is shown, and asking an unrealised control to measure
+  is the access violation this tree has already paid for once. *)
+procedure FitElementCaption(const aElement: TMainWindowElement);
+const
+   (* Below this the text is not worth reading, and a caption that still does
+     not fit is better clipped than illegible. *)
+   MIN_FONT_HEIGHT = 9;
+var
+   p:      TPanel;
+   want:   integer;
+   avail:  integer;
+   height: integer;
+begin
+   p := GElements[aElement];
+   if (p = nil) or (p.Caption = '') then
+      begin
+      Exit;
+      end;
+
+   want := GElementFontHeight[aElement];
+   if want <= 0 then
+      begin
+      Exit;      (* no font has been asked for yet *)
+      end;
+
+   if GMeasure = nil then
+      begin
+      GMeasure := TBitmap.Create;
+      GMeasure.SetSize(1, 1);
+      end;
+
+   (* Less the bevel, so a caption is not judged to fit and then drawn over the
+     border it was measured against. *)
+   avail := p.Width - 4;
+   if avail <= 0 then
+      begin
+      Exit;
+      end;
+
+   height := want;
+   while height > MIN_FONT_HEIGHT do
+      begin
+      GMeasure.Canvas.Font.Name := p.Font.Name;
+      GMeasure.Canvas.Font.Style := p.Font.Style;
+      GMeasure.Canvas.Font.Height := -height;
+
+      if GMeasure.Canvas.TextWidth(p.Caption) <= avail then
+         begin
+         Break;
+         end;
+
+      Dec(height);
+      end;
+
+   if p.Font.Height <> -height then
+      begin
+      p.Font.Height := -height;
       end;
 end;
 
@@ -904,6 +999,11 @@ begin
    // give visibly larger text than the Win32 original.
    GElements[aElement].Font.Name := aName;
    GElements[aElement].Font.Height := -aHeight;
+
+   (* THE HEIGHT THIS ELEMENT WAS ASKED FOR, kept so FitElementCaption has
+     something to shrink FROM and something to return to. Without it a caption
+     that shrank once could never grow back when a shorter value arrived. *)
+   GElementFontHeight[aElement] := aHeight;
    if aBold then
       begin
       GElements[aElement].Font.Style := [fsBold];
