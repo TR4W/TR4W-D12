@@ -64,6 +64,9 @@ $lints = @(
    # binary. uAppPaths owns both; this keeps them owned.
    @{ Name = 'Lint-AppPaths';        Arg = $src;     NeedsFpc = $false }
    @{ Name = 'Lint-LazarusSearchPath'; Arg = $Tr4wDir; NeedsFpc = $false }
+   # THE DESIGNED MAIN-WINDOW PANELS AND TWindows[] ARE ONE LAYOUT, and the
+   # .lfm half is generated. Two copies drift in silence -- see the script.
+   @{ Name = 'Lint-MainElements'; Arg = $Tr4wDir; NeedsFpc = $false }
    # THE DOMAIN LAYER STAYS ONE.  Shipped with the first domain unit rather
    # than after it: a `uses Forms` in src\domain\ arrives in a commit that is
    # about something else, and nothing would point at it.

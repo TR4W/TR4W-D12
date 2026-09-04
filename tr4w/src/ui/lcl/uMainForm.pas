@@ -67,6 +67,57 @@ type
       REPOSITIONED at run time -- see CreateTR4WPossibleCallList. }
     lstPossibleCall: TListBox;
 
+    { BEGIN GENERATED MAIN-WINDOW ELEMENT FIELDS -- tools/gen_main_elements.py }
+    { DESIGNED, in uMainForm.lfm, so pressing F12 in Lazarus shows them.
+      REPOSITIONED at run time from TWindows[] -- see CreateMainElement.
+
+      PUBLISHED so the streaming loader binds each one, and so
+      Lint-FormFields can check the .lfm and this list agree. }
+    pnlAutoSendCount: TPanel;
+    pnlBandMode: TPanel;
+    pnlBeamHeading: TPanel;
+    pnlClock: TPanel;
+    pnlCodeSpeed: TPanel;
+    pnlComputerID: TPanel;
+    pnlCountryName: TPanel;
+    pnlCQQSOCounter: TPanel;
+    pnlCQTotal: TPanel;
+    pnlCurrentOperator: TPanel;
+    pnlDate: TPanel;
+    pnlDupeInfoCall: TPanel;
+    pnlFootSwitch: TPanel;
+    pnlFullTime: TPanel;
+    pnlLocator: TPanel;
+    pnlHourRate: TPanel;
+    pnlInsert: TPanel;
+    pnlLastQSOTime: TPanel;
+    pnlLocalTime: TPanel;
+    pnlMasterStatus: TPanel;
+    pnlNewMultStatus: TPanel;
+    pnlMultNeedsHeader: TPanel;
+    pnlName: TPanel;
+    pnlOnAirTimeCounter: TPanel;
+    pnlOpMode: TPanel;
+    pnlPaddle: TPanel;
+    pnlQSOsWithThisStation: TPanel;
+    pnlPTTStatus: TPanel;
+    pnlQSOB4Status: TPanel;
+    pnlQSONeedsHeader: TPanel;
+    pnlQSONumber: TPanel;
+    pnlQuickCommand: TPanel;
+    pnlRadioOneFreq: TPanel;
+    pnlRadioOne: TPanel;
+    pnlRadioTwoFreq: TPanel;
+    pnlRadioTwo: TPanel;
+    pnlRate: TPanel;
+    pnlSPQSOCounter: TPanel;
+    pnlTenMinuts: TPanel;
+    pnlTotalScore: TPanel;
+    pnlUserInfo: TPanel;
+    pnlWinKey: TPanel;
+    pnlWSJTX: TPanel;
+    { END GENERATED MAIN-WINDOW ELEMENT FIELDS }
+
     { THE EVENT IS THE FORM'S, and is wired in uMainForm.lfm so it is visible in
       the designer.  It delegates to PossibleCallDrawProc, which MainUnit sets:
       the drawing reads PossibleCallList and the colour table, and this unit has
@@ -293,6 +344,10 @@ procedure SetEntryColors(const aEdit: TEdit; const aBack, aText: TColor);
   from TWindows[] in character cells scaled by `ws`, which changes with the
   font.  A designed layout would have to duplicate that table, and the table is
   what the rest of the program reads.  See the note on the form class above. }
+(* Binds the designed panels to their elements. Called once, by
+  CreateTR4WMainForm. *)
+procedure BindMainElements;
+
 function  CreateMainElement(const aElement: TMainWindowElement;
                             const aStyle: cardinal;
                             const aLeft, aTop, aWidth, aHeight: integer): HWND;
@@ -544,6 +599,61 @@ function ElementOnMainThreadColors(const aElement: TMainWindowElement;
   --------------------------------------------------------------------------- }
 
 var
+   { BEGIN GENERATED MAIN-WINDOW ELEMENT MAP -- tools/gen_main_elements.py }
+   { Each element and the component that shows it.  Generated from the same
+     table as the .lfm, so a row added to TWindows[] cannot reach one and
+     miss the other. }
+   ELEMENT_COMPONENTS: array[0 .. 42] of
+      record
+         Element: TMainWindowElement;
+         Name:    string;
+      end = (
+      (Element: mweAutoSendCount; Name: 'pnlAutoSendCount'),
+      (Element: mweBandMode; Name: 'pnlBandMode'),
+      (Element: mweBeamHeading; Name: 'pnlBeamHeading'),
+      (Element: mweClock; Name: 'pnlClock'),
+      (Element: mweCodeSpeed; Name: 'pnlCodeSpeed'),
+      (Element: mweComputerID; Name: 'pnlComputerID'),
+      (Element: mweCountryName; Name: 'pnlCountryName'),
+      (Element: mweCQQSOCounter; Name: 'pnlCQQSOCounter'),
+      (Element: mweCQTotal; Name: 'pnlCQTotal'),
+      (Element: mweCurrentOperator; Name: 'pnlCurrentOperator'),
+      (Element: mweDate; Name: 'pnlDate'),
+      (Element: mweDupeInfoCall; Name: 'pnlDupeInfoCall'),
+      (Element: mweFootSwitch; Name: 'pnlFootSwitch'),
+      (Element: mweFullTime; Name: 'pnlFullTime'),
+      (Element: mweLocator; Name: 'pnlLocator'),
+      (Element: mweHourRate; Name: 'pnlHourRate'),
+      (Element: mweInsert; Name: 'pnlInsert'),
+      (Element: mweLastQSOTime; Name: 'pnlLastQSOTime'),
+      (Element: mweLocalTime; Name: 'pnlLocalTime'),
+      (Element: mweMasterStatus; Name: 'pnlMasterStatus'),
+      (Element: mweNewMultStatus; Name: 'pnlNewMultStatus'),
+      (Element: mweMultNeedsHeader; Name: 'pnlMultNeedsHeader'),
+      (Element: mweName; Name: 'pnlName'),
+      (Element: mweOnAirTimeCounter; Name: 'pnlOnAirTimeCounter'),
+      (Element: mweOpMode; Name: 'pnlOpMode'),
+      (Element: mwePaddle; Name: 'pnlPaddle'),
+      (Element: mweQSOsWithThisStation; Name: 'pnlQSOsWithThisStation'),
+      (Element: mwePTTStatus; Name: 'pnlPTTStatus'),
+      (Element: mweQSOB4Status; Name: 'pnlQSOB4Status'),
+      (Element: mweQSONeedsHeader; Name: 'pnlQSONeedsHeader'),
+      (Element: mweQSONumber; Name: 'pnlQSONumber'),
+      (Element: mweQuickCommand; Name: 'pnlQuickCommand'),
+      (Element: mweRadioOneFreq; Name: 'pnlRadioOneFreq'),
+      (Element: mweRadioOne; Name: 'pnlRadioOne'),
+      (Element: mweRadioTwoFreq; Name: 'pnlRadioTwoFreq'),
+      (Element: mweRadioTwo; Name: 'pnlRadioTwo'),
+      (Element: mweRate; Name: 'pnlRate'),
+      (Element: mweSPQSOCounter; Name: 'pnlSPQSOCounter'),
+      (Element: mweTenMinuts; Name: 'pnlTenMinuts'),
+      (Element: mweTotalScore; Name: 'pnlTotalScore'),
+      (Element: mweUserInfo; Name: 'pnlUserInfo'),
+      (Element: mweWinKey; Name: 'pnlWinKey'),
+      (Element: mweWSJTX; Name: 'pnlWSJTX')
+      );
+   { END GENERATED MAIN-WINDOW ELEMENT MAP }
+
    GElements: array[TMainWindowElement] of TPanel;
 
 function MainElement(const aElement: TMainWindowElement): TPanel;
@@ -556,6 +666,26 @@ begin
    Result := ControlUsable(GElements[aElement]);
 end;
 
+(* THE ELEMENT'S PANEL -- FOUND, NOT CREATED.
+
+  IT USED TO BUILD ONE HERE. Every status readout on the main window was a
+  TPanel constructed at run time, which is why opening tr4w.lpi and pressing
+  F12 showed an empty form: there was nothing in the .lfm to show. NY4I,
+  2026-09-04: "I should be able to open Lazarus and hit F12 to see the main
+  form. Then I will see each item as a LCL control that I could change
+  something if I so desired."
+
+  They are designed components now -- 43 of them, generated into uMainForm.lfm
+  from the same TWindows[] table this routine reads, by
+  tools/gen_main_elements.py. BindMainElements matches each one to its element
+  once, and this applies the style and the bounds exactly as before.
+
+  NOTHING ABOUT THE RUNTIME LAYOUT CHANGES. The .lfm carries those positions
+  computed at the default scale, purely so the designer shows something
+  recognisable; the real placement is still TWindows[e].mweiX * ws with ws
+  following the operator's font size. That is what keeps CLAUDE.md's note --
+  "freezing them into a designed layout would be a regression" -- true: nothing
+  is frozen. *)
 function CreateMainElement(const aElement: TMainWindowElement;
                            const aStyle: cardinal;
                            const aLeft, aTop, aWidth, aHeight: integer): HWND;
@@ -568,20 +698,30 @@ begin
       Exit;
       end;
 
-   p := TPanel.Create(TR4WMainForm);
-   p.Parent := TR4WMainForm;
-   GElements[aElement] := p;
+   p := GElements[aElement];
+   if p = nil then
+      begin
+      (* A ROW IN TWindows[] WITH NO COMPONENT. Regenerating the .lfm fixes it;
+        saying so is better than silently drawing nothing, which is what the
+        Win32 version did for the previous-dupe window for years. *)
+      if logger <> nil then
+         begin
+         logger.Error('[MainWindow] element %d has no designed component -- ' +
+                      'run tools/gen_main_elements.py', [Ord(aElement)]);
+         end;
+      Exit;
+      end;
 
-   // THE WIN32 STYLE BITS, ONE AT A TIME.  Every one of them has a property,
-   // which is the whole reason this control can stop being painted by a
-   // WM_CTLCOLORSTATIC handler.
-   //
-   //   SS_SUNKEN    -> BevelOuter bvLowered
-   //   SS_CENTER    -> Alignment taCenter, SS_LEFT -> taLeftJustify
-   //   WS_VISIBLE   -> Visible (uVisStyle omits it; those elements start hidden)
-   //   WS_DISABLED  -> Enabled False (DefStyleDis)
-   //   SS_NOPREFIX  -> no counterpart needed: a TPanel caption is not an
-   //                   accelerator string, so there is no '&' to suppress.
+   (* THE WIN32 STYLE BITS, ONE AT A TIME. Every one of them has a property,
+     which is the whole reason this control is not painted by a
+     WM_CTLCOLORSTATIC handler.
+
+       SS_SUNKEN    -> BevelOuter bvLowered
+       SS_CENTER    -> Alignment taCenter, SS_LEFT -> taLeftJustify
+       WS_VISIBLE   -> Visible (uVisStyle omits it; those elements start hidden)
+       WS_DISABLED  -> Enabled False (DefStyleDis)
+       SS_NOPREFIX  -> no counterpart needed: a TPanel caption is not an
+                       accelerator string, so there is no '&' to suppress. *)
    if (aStyle and SS_SUNKEN) <> 0 then
       begin
       p.BevelOuter := bvLowered;
@@ -604,9 +744,9 @@ begin
    p.ParentColor := False;
    p.ParentFont := False;
 
-   // AutoSize BEFORE SetBounds.  LCL controls autosize by default and a
-   // streamed or assigned size is silently overridden; this tree has paid for
-   // that once already (see CreateTR4WEntryField).
+   (* AutoSize BEFORE SetBounds. LCL controls autosize by default and a
+     streamed or assigned size is silently overridden; this tree has paid for
+     that once already (see CreateTR4WEntryField). *)
    p.AutoSize := False;
    p.SetBounds(aLeft, aTop, aWidth, aHeight);
 
@@ -614,6 +754,46 @@ begin
    p.Visible := (aStyle and WS_VISIBLE) <> 0;
 
    Result := p.Handle;
+end;
+
+(* MATCH EVERY DESIGNED PANEL TO ITS ELEMENT, ONCE.
+
+  By NAME, from the generated table, because a component streamed from a .lfm
+  is reached through FindComponent -- the published field is assigned by the
+  loader, but the ELEMENT it belongs to is knowledge only TWindows[] has.
+
+  Reported rather than assumed: a missing component means the .lfm and the
+  table have diverged, and the next thing that happens is a status readout
+  that never updates and nothing to say why. *)
+procedure BindMainElements;
+var
+   i: integer;
+   c: TComponent;
+begin
+   if TR4WMainForm = nil then
+      begin
+      Exit;
+      end;
+
+   for i := Low(ELEMENT_COMPONENTS) to High(ELEMENT_COMPONENTS) do
+      begin
+      c := TR4WMainForm.FindComponent(ELEMENT_COMPONENTS[i].Name);
+
+      if c is TPanel then
+         begin
+         GElements[ELEMENT_COMPONENTS[i].Element] := TPanel(c);
+         end
+      else
+         begin
+         GElements[ELEMENT_COMPONENTS[i].Element] := nil;
+         if logger <> nil then
+            begin
+            logger.Error('[MainWindow] uMainForm.lfm has no TPanel named %s -- ' +
+                         'run tools/gen_main_elements.py',
+                         [ELEMENT_COMPONENTS[i].Name]);
+            end;
+         end;
+      end;
 end;
 
 procedure SetElementText(const aElement: TMainWindowElement; const aText: string);
@@ -1885,6 +2065,11 @@ begin
    //          afterwards with the real geometry, which it can only compute once
    //          the editable-log ListView exists and has been measured.
    TR4WMainForm := TTR4WMainForm.Create(nil);
+
+   (* THE DESIGNED PANELS ARE NOW MATCHED TO THEIR ELEMENTS. Before anything
+     asks for one -- CreateMainElement, SetMainWindowText, the colour pass --
+     because every one of those looks the element up in GElements. *)
+   BindMainElements;
 
    // Touching Handle is what forces the window to exist.
    Result := TR4WMainForm.Handle;
