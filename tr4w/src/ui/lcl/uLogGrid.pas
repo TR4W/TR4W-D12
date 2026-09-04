@@ -98,6 +98,10 @@ type
 
       (* The first moment the columns can be measured -- see SizeColumns. *)
       procedure InitializeWnd; override;
+
+      (* Double-clicking a column divider fits the column to its contents --
+        see the body. *)
+      procedure AutoAdjustColumn(aCol: integer); override;
    public
       constructor Create(aOwner: TComponent); override;
 
@@ -150,6 +154,10 @@ const
      ones anyway. *)
    BATCH_ROWS = 64;
 
+   (* Breathing room after an auto-fit, so the widest value does not sit hard
+     against the divider. The Win32 original used 12 for the same reason. *)
+   DIVIDER_DBLCLICK_PAD = 12;
+
    (* Breathing room either side of a cell's text. *)
    CELL_PAD = 3;
 
@@ -171,7 +179,10 @@ begin
      rather than jumping when it is released. goColSizing lets the operator
      drag a column edge, which is the feature the old header-tracking code in
      uMainWindowProc existed to provide and no longer has to. *)
-   Options := [goRowSelect, goThumbTracking, goColSizing, goVertLine, goHorzLine];
+   (* goDblClickAutoSize: double-clicking a divider fits the column -- see
+     AutoAdjustColumn. *)
+   Options := [goRowSelect, goThumbTracking, goColSizing, goDblClickAutoSize,
+               goVertLine, goHorzLine];
 
    FixedCols     := 0;
    FixedRows     := 1;
@@ -327,6 +338,75 @@ procedure TLogGrid.InitializeWnd;
 begin
    inherited InitializeWnd;
    SizeColumns;
+end;
+
+(* DOUBLE-CLICK ON A COLUMN DIVIDER FITS THE COLUMN TO WHAT IS IN IT.
+
+  goDblClickAutoSize brings the LCL as far as calling this; the base does
+  nothing, because a TDrawGrid holds no text to measure. The text is in the row
+  cache, so this measures that.
+
+  THE ROWS IT CAN SEE, WHICH IS NOT EVERY ROW, and the distinction is worth
+  stating rather than pretending. The grid is virtual: only the cached rows
+  exist in memory, so a column is fitted to the widest value among those and
+  its own heading. Measuring the whole log would mean reading every record --
+  a contest log is tens of thousands -- to answer a double-click.
+
+  That is also what the Win32 original did without saying so:
+  LVSCW_AUTOSIZE_USEHEADER measured the items the list view HELD, and it held
+  only the tail of the log.
+
+  The width is saved: HeaderSized raises OnHeaderSized, the same path a dragged
+  divider takes, so the operator's choice persists either way. *)
+procedure TLogGrid.AutoAdjustColumn(aCol: integer);
+var
+   i:     integer;
+   c:     LogColumnsType;
+   w:     integer;
+   widest: integer;
+begin
+   if (aCol < 0) or (aCol > High(FColumnOf)) then
+      begin
+      Exit;
+      end;
+
+   if not HandleAllocated then
+      begin
+      Exit;
+      end;
+
+   c := FColumnOf[aCol];
+   Canvas.Font.Assign(Font);
+
+   widest := Canvas.TextWidth(ColumnsArray[c].Text);
+
+   for i := Low(FCache) to High(FCache) do
+      begin
+      if not FCache[i].Row.Valid then
+         begin
+         Continue;
+         end;
+
+      w := Canvas.TextWidth(FCache[i].Row.Text[c]);
+      if w > widest then
+         begin
+         widest := w;
+         end;
+      end;
+
+   widest := widest + CELL_PAD * 2 + DIVIDER_DBLCLICK_PAD;
+   if widest < MIN_COLUMN_WIDTH then
+      begin
+      widest := MIN_COLUMN_WIDTH;
+      end;
+
+   ColWidths[aCol] := widest;
+
+   (* PERSISTED, through the same event a dragged divider raises. The Win32
+     version had a defect here worth not repeating: it deferred the save to a
+     follow-up HDN_ENDTRACK, which the OS does not send for a double-click, so
+     the width was fitted and never saved. *)
+   HeaderSized(True, aCol);
 end;
 
 procedure TLogGrid.Reload;

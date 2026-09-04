@@ -1027,14 +1027,31 @@ one use. Three failures in a single day, all ordinary documentation:
 Each cost a build. NY4I: *"Please make sure you use `(*` and `*)` around all your
 block comments to avoid this problem."*
 
-There is no cost to the wider rule -- nothing in this tree writes `*)` -- and
-the narrower one required every author to notice that a rule about commenting out
-code was really a rule about braces.
+The wider rule costs almost nothing, and the narrower one required every author
+to notice that a rule about commenting out code was really a rule about braces.
 
 It gets worse as the cross-platform work lands (NY4I, 2026-08-31): every
 `{$IFDEF WINDOWS}` / `{$IFDEF DARWIN}` pair adds another closing brace a brace
-comment cannot survive. `(* *)` has no such collision — nothing in this tree
-writes `*)`.
+comment cannot survive.
+
+### THE ONE THING THAT CLOSES A `(* *)` COMMENT: SQL `COUNT(*)`
+
+This file claimed "nothing in this tree writes `*)`" until 2026-09-04, and that
+was wrong the moment anyone documented a query. **`COUNT(*)` ends with a star
+and a close paren**, so a comment explaining what a count costs terminates in
+the middle of its own sentence and the remainder becomes code. Three of them in
+one commit -- `uLogRepository`, `uLogSource`, `uLogGrid`.
+
+Write **"a row count"**, or `COUNT( * )`, or name the column. The same applies
+to any prose that ends a parenthesis with a star: a glob such as `src/*` inside
+brackets does it too.
+
+**AND DO NOT FIX IT WITH A BLANKET REPLACE.** Search-and-replacing that text
+across those files also rewrote four LIVE SQL STRINGS -- `SELECT COUNT(*) FROM
+qso` became `SELECT a row count FROM qso`. That compiles, and it is a broken
+query inside a green build. The comment and the statement are the same
+characters and only the context differs, so change them by hand and read the
+diff before committing.
 
 The rule applies to the EXPLANATORY comment above a commented-out block too. That
 one was written as a brace comment while quoting brace characters in its own prose,
