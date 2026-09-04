@@ -124,6 +124,11 @@ if ($needBuild)
       # this is the source dir and FPC compiles it for i386 -- the same line
       # Get-SearchPaths adds for the app.
       Join-Path $Laz "components\datetimectrls"
+      # TR4W'S OWN CONTROLS.  A form may legitimately use a class this tree
+      # DEFINES -- TElementPanel is the main window's status readout -- and
+      # the checker cannot resolve a class it cannot link.  Source, not units:
+      # these are compiled for i386 here, the same way datetimectrls above is.
+      Join-Path $PSScriptRoot "..\src\ui\lcl"
    )
 
    $args = @("-M`delphi", "-P$Cpu", "-T$Os", '-B', "-FU$toolOut", "-o$toolExe")

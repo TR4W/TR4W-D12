@@ -122,7 +122,7 @@ def generate():
         width = int(w) * WS
         height = int(h) * WS
 
-        out.append('  object %s: TPanel' % component_name(element))
+        out.append('  object %s: TElementPanel' % component_name(element))
         out.append('    Left = %d' % left)
         out.append('    Height = %d' % height)
         out.append('    Top = %d' % top)
@@ -159,8 +159,14 @@ def strip_generated(raw, made):
     i = 0
     while i < len(lines):
         stripped = lines[i].strip()
-        if stripped.startswith('object ') and stripped.endswith(': TPanel'):
-            name = stripped[len('object '):-len(': TPanel')]
+        # BOTH CLASS NAMES.  These were plain TPanels until TElementPanel gave
+        # them the off-thread report and the caption fit; a strip that knew
+        # only the new name would leave the old blocks in place and append a
+        # second copy of every element.
+        if (stripped.startswith('object ')
+                and (stripped.endswith(': TElementPanel')
+                     or stripped.endswith(': TPanel'))):
+            name = stripped[len('object '):stripped.rindex(':')]
             if name in wanted:
                 i += 1
                 while i < len(lines) and lines[i].strip() != 'end':

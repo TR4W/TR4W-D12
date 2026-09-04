@@ -43,6 +43,7 @@ uses
   Windows, Classes, Forms, Controls, Graphics, StdCtrls, ExtCtrls, ComCtrls,
   LCLType,
   LMessages,
+  uElementPanel,     // TElementPanel -- the 43 status readouts
   uLogGrid,          // TLogGrid -- the editable log is one
   VC,                // TMainWindowElement -- the main window's own elements
   uMainWindowProc;   // TTR4WEntryField, EntryEvents -- the fields' key handlers
@@ -73,49 +74,49 @@ type
 
       PUBLISHED so the streaming loader binds each one, and so
       Lint-FormFields can check the .lfm and this list agree. }
-    pnlAutoSendCount: TPanel;
-    pnlBandMode: TPanel;
-    pnlBeamHeading: TPanel;
-    pnlClock: TPanel;
-    pnlCodeSpeed: TPanel;
-    pnlComputerID: TPanel;
-    pnlCountryName: TPanel;
-    pnlCQQSOCounter: TPanel;
-    pnlCQTotal: TPanel;
-    pnlCurrentOperator: TPanel;
-    pnlDate: TPanel;
-    pnlDupeInfoCall: TPanel;
-    pnlFootSwitch: TPanel;
-    pnlFullTime: TPanel;
-    pnlLocator: TPanel;
-    pnlHourRate: TPanel;
-    pnlInsert: TPanel;
-    pnlLastQSOTime: TPanel;
-    pnlLocalTime: TPanel;
-    pnlMasterStatus: TPanel;
-    pnlNewMultStatus: TPanel;
-    pnlMultNeedsHeader: TPanel;
-    pnlName: TPanel;
-    pnlOnAirTimeCounter: TPanel;
-    pnlOpMode: TPanel;
-    pnlPaddle: TPanel;
-    pnlQSOsWithThisStation: TPanel;
-    pnlPTTStatus: TPanel;
-    pnlQSOB4Status: TPanel;
-    pnlQSONeedsHeader: TPanel;
-    pnlQSONumber: TPanel;
-    pnlQuickCommand: TPanel;
-    pnlRadioOneFreq: TPanel;
-    pnlRadioOne: TPanel;
-    pnlRadioTwoFreq: TPanel;
-    pnlRadioTwo: TPanel;
-    pnlRate: TPanel;
-    pnlSPQSOCounter: TPanel;
-    pnlTenMinuts: TPanel;
-    pnlTotalScore: TPanel;
-    pnlUserInfo: TPanel;
-    pnlWinKey: TPanel;
-    pnlWSJTX: TPanel;
+    pnlAutoSendCount: TElementPanel;
+    pnlBandMode: TElementPanel;
+    pnlBeamHeading: TElementPanel;
+    pnlClock: TElementPanel;
+    pnlCodeSpeed: TElementPanel;
+    pnlComputerID: TElementPanel;
+    pnlCountryName: TElementPanel;
+    pnlCQQSOCounter: TElementPanel;
+    pnlCQTotal: TElementPanel;
+    pnlCurrentOperator: TElementPanel;
+    pnlDate: TElementPanel;
+    pnlDupeInfoCall: TElementPanel;
+    pnlFootSwitch: TElementPanel;
+    pnlFullTime: TElementPanel;
+    pnlLocator: TElementPanel;
+    pnlHourRate: TElementPanel;
+    pnlInsert: TElementPanel;
+    pnlLastQSOTime: TElementPanel;
+    pnlLocalTime: TElementPanel;
+    pnlMasterStatus: TElementPanel;
+    pnlNewMultStatus: TElementPanel;
+    pnlMultNeedsHeader: TElementPanel;
+    pnlName: TElementPanel;
+    pnlOnAirTimeCounter: TElementPanel;
+    pnlOpMode: TElementPanel;
+    pnlPaddle: TElementPanel;
+    pnlQSOsWithThisStation: TElementPanel;
+    pnlPTTStatus: TElementPanel;
+    pnlQSOB4Status: TElementPanel;
+    pnlQSONeedsHeader: TElementPanel;
+    pnlQSONumber: TElementPanel;
+    pnlQuickCommand: TElementPanel;
+    pnlRadioOneFreq: TElementPanel;
+    pnlRadioOne: TElementPanel;
+    pnlRadioTwoFreq: TElementPanel;
+    pnlRadioTwo: TElementPanel;
+    pnlRate: TElementPanel;
+    pnlSPQSOCounter: TElementPanel;
+    pnlTenMinuts: TElementPanel;
+    pnlTotalScore: TElementPanel;
+    pnlUserInfo: TElementPanel;
+    pnlWinKey: TElementPanel;
+    pnlWSJTX: TElementPanel;
     { END GENERATED MAIN-WINDOW ELEMENT FIELDS }
 
     { THE EVENT IS THE FORM'S, and is wired in uMainForm.lfm so it is visible in
@@ -352,10 +353,6 @@ function  CreateMainElement(const aElement: TMainWindowElement;
                             const aStyle: cardinal;
                             const aLeft, aTop, aWidth, aHeight: integer): HWND;
 function  MainElement(const aElement: TMainWindowElement): TPanel;
-(* Shrinks an element's caption font when the text is wider than its panel.
-  See the body -- an interim until stage 3 gives these controls anchors. *)
-procedure FitElementCaption(const aElement: TMainWindowElement);
-
 procedure SetElementText(const aElement: TMainWindowElement; const aText: string);
 procedure SetElementColors(const aElement: TMainWindowElement;
                            const aBack, aText: TColor);
@@ -658,16 +655,8 @@ var
       );
    { END GENERATED MAIN-WINDOW ELEMENT MAP }
 
-   GElements: array[TMainWindowElement] of TPanel;
+   GElements: array[TMainWindowElement] of TElementPanel;
 
-   (* The font height SetElementFont asked for, per element -- see
-     FitElementCaption. Zero until the element has been given one. *)
-   GElementFontHeight: array[TMainWindowElement] of integer;
-
-   (* A canvas to measure on. A TPanel's own Canvas is not reliably reachable
-     across LCL versions, and measuring must not depend on the control being
-     realised -- an element is written long before the window is shown. *)
-   GMeasure: TBitmap = nil;
 
 function MainElement(const aElement: TMainWindowElement): TPanel;
 begin
@@ -778,6 +767,12 @@ end;
   Reported rather than assumed: a missing component means the .lfm and the
   table have diverged, and the next thing that happens is a status readout
   that never updates and nothing to say why. *)
+(* uCrashLog's reporter, in the shape uElementPanel asks for. *)
+procedure ReportElementOffThread(const aSite: string; const aCaller: CodePointer);
+begin
+   ReportOffMainThread(aSite, aCaller);
+end;
+
 procedure BindMainElements;
 var
    i: integer;
@@ -792,16 +787,16 @@ begin
       begin
       c := TR4WMainForm.FindComponent(ELEMENT_COMPONENTS[i].Name);
 
-      if c is TPanel then
+      if c is TElementPanel then
          begin
-         GElements[ELEMENT_COMPONENTS[i].Element] := TPanel(c);
+         GElements[ELEMENT_COMPONENTS[i].Element] := TElementPanel(c);
          end
       else
          begin
          GElements[ELEMENT_COMPONENTS[i].Element] := nil;
          if logger <> nil then
             begin
-            logger.Error('[MainWindow] uMainForm.lfm has no TPanel named %s -- ' +
+            logger.Error('[MainWindow] uMainForm.lfm has no TElementPanel named %s -- ' +
                          'run tools/gen_main_elements.py',
                          [ELEMENT_COMPONENTS[i].Name]);
             end;
@@ -822,89 +817,11 @@ begin
       end;
    if GElements[aElement].Caption <> aText then
       begin
+      (* THE PANEL FITS ITS OWN CAPTION and reports an off-thread write --
+        see TElementPanel. Both used to happen here and in SetMainWindowText,
+        which is why a direct `pnlRadioOne.Caption := s` could not have been
+        safe before. *)
       GElements[aElement].Caption := aText;
-
-      (* A LONGER VALUE MAY NOT FIT THE ROW ITS ELEMENT WAS GIVEN. *)
-      FitElementCaption(aElement);
-      end;
-end;
-
-(* SHRINK THE CAPTION UNTIL IT FITS, AND NO FURTHER.
-
-  TWindows[] gives every element a width in `ws` units -- a DOS-era character
-  count -- and some values simply need more room than their row allows. The
-  radio name is the standing example: RADIO ONE NAME is four units wide and
-  "7100-18V" is eight characters, so it ran into the panel border (NY4I,
-  2026-09-04, twice).
-
-  THE PROPER FIX IS ANCHORS AND AUTOSIZE, which is stage 3 of the designer
-  work: a control sized by its content cannot be too small for it. This is the
-  interim, and it is the behaviour NY4I already asked for elsewhere -- "the font
-  should adjust similar to the way the radio1 and radio2 forms work".
-
-  IT ALWAYS STARTS FROM THE REQUESTED HEIGHT, so a panel that shrank for a long
-  value returns to the common size when a short one arrives. A caption that
-  fits is left alone, which is the overwhelmingly common case and costs one
-  measurement.
-
-  MEASURED ON A SCRATCH CANVAS rather than the control's: an element is written
-  long before the window is shown, and asking an unrealised control to measure
-  is the access violation this tree has already paid for once. *)
-procedure FitElementCaption(const aElement: TMainWindowElement);
-const
-   (* Below this the text is not worth reading, and a caption that still does
-     not fit is better clipped than illegible. *)
-   MIN_FONT_HEIGHT = 9;
-var
-   p:      TPanel;
-   want:   integer;
-   avail:  integer;
-   height: integer;
-begin
-   p := GElements[aElement];
-   if (p = nil) or (p.Caption = '') then
-      begin
-      Exit;
-      end;
-
-   want := GElementFontHeight[aElement];
-   if want <= 0 then
-      begin
-      Exit;      (* no font has been asked for yet *)
-      end;
-
-   if GMeasure = nil then
-      begin
-      GMeasure := TBitmap.Create;
-      GMeasure.SetSize(1, 1);
-      end;
-
-   (* Less the bevel, so a caption is not judged to fit and then drawn over the
-     border it was measured against. *)
-   avail := p.Width - 4;
-   if avail <= 0 then
-      begin
-      Exit;
-      end;
-
-   height := want;
-   while height > MIN_FONT_HEIGHT do
-      begin
-      GMeasure.Canvas.Font.Name := p.Font.Name;
-      GMeasure.Canvas.Font.Style := p.Font.Style;
-      GMeasure.Canvas.Font.Height := -height;
-
-      if GMeasure.Canvas.TextWidth(p.Caption) <= avail then
-         begin
-         Break;
-         end;
-
-      Dec(height);
-      end;
-
-   if p.Font.Height <> -height then
-      begin
-      p.Font.Height := -height;
       end;
 end;
 
@@ -1000,10 +917,10 @@ begin
    GElements[aElement].Font.Name := aName;
    GElements[aElement].Font.Height := -aHeight;
 
-   (* THE HEIGHT THIS ELEMENT WAS ASKED FOR, kept so FitElementCaption has
-     something to shrink FROM and something to return to. Without it a caption
-     that shrank once could never grow back when a shorter value arrived. *)
-   GElementFontHeight[aElement] := aHeight;
+   (* THE HEIGHT THIS ELEMENT WAS ASKED FOR. The panel keeps it so it has
+     something to shrink FROM and something to return to -- see
+     TElementPanel.BaseFontHeight. *)
+   GElements[aElement].BaseFontHeight := aHeight;
    if aBold then
       begin
       GElements[aElement].Font.Style := [fsBold];
@@ -2170,6 +2087,11 @@ begin
      asks for one -- CreateMainElement, SetMainWindowText, the colour pass --
      because every one of those looks the element up in GElements. *)
    BindMainElements;
+
+   (* THE DETECTOR THE SetMainWindowText FUNNEL USED TO BE. Injected rather
+     than referenced, so uElementPanel stays a leaf the lintlfm checker can
+     link -- see TElementOffThreadReport. *)
+   ElementOffThreadReport := @ReportElementOffThread;
 
    // Touching Handle is what forces the window to exist.
    Result := TR4WMainForm.Handle;

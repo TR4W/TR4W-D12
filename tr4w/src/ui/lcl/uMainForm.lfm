@@ -22,7 +22,7 @@ object TR4WMainForm: TTR4WMainForm
     TabOrder = 0
     OnDrawItem = lstPossibleCallDrawItem
   end
-  object pnlAutoSendCount: TPanel
+  object pnlAutoSendCount: TElementPanel
     Left = 272
     Height = 17
     Top = 244
@@ -35,7 +35,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 0
   end
-  object pnlBandMode: TPanel
+  object pnlBandMode: TElementPanel
     Left = 0
     Height = 17
     Top = 244
@@ -48,7 +48,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 1
   end
-  object pnlBeamHeading: TPanel
+  object pnlBeamHeading: TElementPanel
     Left = 544
     Height = 17
     Top = 102
@@ -61,7 +61,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 2
   end
-  object pnlClock: TPanel
+  object pnlClock: TElementPanel
     Left = 136
     Height = 17
     Top = 244
@@ -74,7 +74,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 3
   end
-  object pnlCodeSpeed: TPanel
+  object pnlCodeSpeed: TElementPanel
     Left = 0
     Height = 17
     Top = 295
@@ -87,7 +87,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 4
   end
-  object pnlComputerID: TPanel
+  object pnlComputerID: TElementPanel
     Left = 136
     Height = 17
     Top = 261
@@ -100,7 +100,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 5
   end
-  object pnlCountryName: TPanel
+  object pnlCountryName: TElementPanel
     Left = 476
     Height = 17
     Top = 244
@@ -113,7 +113,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 6
   end
-  object pnlCQQSOCounter: TPanel
+  object pnlCQQSOCounter: TElementPanel
     Left = 646
     Height = 17
     Top = 261
@@ -126,7 +126,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 7
   end
-  object pnlCQTotal: TPanel
+  object pnlCQTotal: TElementPanel
     Left = 646
     Height = 17
     Top = 278
@@ -139,7 +139,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 8
   end
-  object pnlCurrentOperator: TPanel
+  object pnlCurrentOperator: TElementPanel
     Left = 714
     Height = 17
     Top = 312
@@ -152,7 +152,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 9
   end
-  object pnlDate: TPanel
+  object pnlDate: TElementPanel
     Left = 68
     Height = 17
     Top = 244
@@ -165,7 +165,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 10
   end
-  object pnlDupeInfoCall: TPanel
+  object pnlDupeInfoCall: TElementPanel
     Left = 391
     Height = 34
     Top = 17
@@ -178,7 +178,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 11
   end
-  object pnlFootSwitch: TPanel
+  object pnlFootSwitch: TElementPanel
     Left = 714
     Height = 17
     Top = 295
@@ -192,7 +192,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 12
   end
-  object pnlFullTime: TPanel
+  object pnlFullTime: TElementPanel
     Left = 0
     Height = 17
     Top = 0
@@ -205,7 +205,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 13
   end
-  object pnlLocator: TPanel
+  object pnlLocator: TElementPanel
     Left = 561
     Height = 17
     Top = 312
@@ -218,7 +218,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 14
   end
-  object pnlHourRate: TPanel
+  object pnlHourRate: TElementPanel
     Left = 476
     Height = 17
     Top = 278
@@ -231,7 +231,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 15
   end
-  object pnlInsert: TPanel
+  object pnlInsert: TElementPanel
     Left = 714
     Height = 17
     Top = 244
@@ -244,7 +244,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 16
   end
-  object pnlLastQSOTime: TPanel
+  object pnlLastQSOTime: TElementPanel
     Left = 561
     Height = 17
     Top = 261
@@ -257,7 +257,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 17
   end
-  object pnlLocalTime: TPanel
+  object pnlLocalTime: TElementPanel
     Left = 646
     Height = 17
     Top = 244
@@ -270,7 +270,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 18
   end
-  object pnlMasterStatus: TPanel
+  object pnlMasterStatus: TElementPanel
     Left = 187
     Height = 17
     Top = 295
@@ -283,7 +283,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 19
   end
-  object pnlNewMultStatus: TPanel
+  object pnlNewMultStatus: TElementPanel
     Left = 187
     Height = 17
     Top = 312
@@ -296,7 +296,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 20
   end
-  object pnlMultNeedsHeader: TPanel
+  object pnlMultNeedsHeader: TElementPanel
     Left = 544
     Height = 17
     Top = 51
@@ -309,7 +309,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 21
   end
-  object pnlName: TPanel
+  object pnlName: TElementPanel
     Left = 425
     Height = 17
     Top = 244
@@ -322,7 +322,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 22
   end
-  object pnlOnAirTimeCounter: TPanel
+  object pnlOnAirTimeCounter: TElementPanel
     Left = 476
     Height = 17
     Top = 261
@@ -335,7 +335,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 23
   end
-  object pnlOpMode: TPanel
+  object pnlOpMode: TElementPanel
     Left = 476
     Height = 17
     Top = 312
@@ -348,7 +348,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 24
   end
-  object pnlPaddle: TPanel
+  object pnlPaddle: TElementPanel
     Left = 646
     Height = 17
     Top = 295
@@ -362,7 +362,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 25
   end
-  object pnlQSOsWithThisStation: TPanel
+  object pnlQSOsWithThisStation: TElementPanel
     Left = 391
     Height = 17
     Top = 244
@@ -375,7 +375,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 26
   end
-  object pnlPTTStatus: TPanel
+  object pnlPTTStatus: TElementPanel
     Left = 425
     Height = 17
     Top = 312
@@ -388,7 +388,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 27
   end
-  object pnlQSOB4Status: TPanel
+  object pnlQSOB4Status: TElementPanel
     Left = 187
     Height = 17
     Top = 278
@@ -401,7 +401,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 28
   end
-  object pnlQSONeedsHeader: TPanel
+  object pnlQSONeedsHeader: TElementPanel
     Left = 544
     Height = 17
     Top = 0
@@ -414,7 +414,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 29
   end
-  object pnlQSONumber: TPanel
+  object pnlQSONumber: TElementPanel
     Left = 187
     Height = 34
     Top = 244
@@ -427,7 +427,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 30
   end
-  object pnlQuickCommand: TPanel
+  object pnlQuickCommand: TElementPanel
     Left = 0
     Height = 17
     Top = 329
@@ -440,7 +440,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 31
   end
-  object pnlRadioOneFreq: TPanel
+  object pnlRadioOneFreq: TElementPanel
     Left = 0
     Height = 17
     Top = 261
@@ -453,7 +453,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 32
   end
-  object pnlRadioOne: TPanel
+  object pnlRadioOne: TElementPanel
     Left = 0
     Height = 17
     Top = 278
@@ -466,7 +466,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 33
   end
-  object pnlRadioTwoFreq: TPanel
+  object pnlRadioTwoFreq: TElementPanel
     Left = 68
     Height = 17
     Top = 261
@@ -480,7 +480,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 34
   end
-  object pnlRadioTwo: TPanel
+  object pnlRadioTwo: TElementPanel
     Left = 68
     Height = 17
     Top = 278
@@ -494,7 +494,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 35
   end
-  object pnlRate: TPanel
+  object pnlRate: TElementPanel
     Left = 561
     Height = 17
     Top = 278
@@ -507,7 +507,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 36
   end
-  object pnlSPQSOCounter: TPanel
+  object pnlSPQSOCounter: TElementPanel
     Left = 714
     Height = 17
     Top = 261
@@ -520,7 +520,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 37
   end
-  object pnlTenMinuts: TPanel
+  object pnlTenMinuts: TElementPanel
     Left = 0
     Height = 17
     Top = 17
@@ -533,7 +533,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 38
   end
-  object pnlTotalScore: TPanel
+  object pnlTotalScore: TElementPanel
     Left = 391
     Height = 17
     Top = 0
@@ -546,7 +546,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 39
   end
-  object pnlUserInfo: TPanel
+  object pnlUserInfo: TElementPanel
     Left = 255
     Height = 17
     Top = 312
@@ -559,7 +559,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 40
   end
-  object pnlWinKey: TPanel
+  object pnlWinKey: TElementPanel
     Left = 646
     Height = 17
     Top = 312
@@ -573,7 +573,7 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 41
   end
-  object pnlWSJTX: TPanel
+  object pnlWSJTX: TElementPanel
     Left = 136
     Height = 17
     Top = 278

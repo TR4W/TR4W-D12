@@ -43,7 +43,8 @@ uses
    Buttons,    // TSpeedButton -- the beacon monitor's push-like radio group
    Menus,      // TPopupMenu / TMenuItem -- the band map's context menu
    Dialogs,         // TOpenDialog -- the New Contest file picker
-   DateTimePicker;  // TDateTimePicker -- the Edit QSO date/time field
+   DateTimePicker,  // TDateTimePicker -- the Edit QSO date/time field
+   uElementPanel;   // TElementPanel -- the main window's status readouts
 
 const
    { Stands in for a collection item's unnamed class -- see the parser. Not a
@@ -357,6 +358,13 @@ begin
                     TUpDown,
                     // Spin
                     TSpinEdit, TFloatSpinEdit,
+                    // TR4W's OWN, from the ui/lcl folder. A control this
+                    // tree DEFINES is as legitimate a class name as an LCL
+                    // one, and this lint cannot check a form that uses one
+                    // without being able to resolve it -- TElementPanel
+                    // arrived with the main window's 43 status readouts and
+                    // failed every property on all of them.
+                    TElementPanel,
                     // Grids
                     TStringGrid, TDrawGrid,
                     // Buttons
