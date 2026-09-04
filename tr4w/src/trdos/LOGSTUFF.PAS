@@ -606,7 +606,6 @@ var
   WSJTXMulticastGroup: Str20 = '';   // e.g. '224.0.0.1' to join WSJT-X multicast group
   psw: integer = 0;
   tPreviousDupeQSOsShowed: boolean;
-  tPreviousDupeQSOsWndHandle: HWND;
   //const  tr4w_StartSendingNowKey                    : ;
   udp: TIdUDPClient; // ny4i 4.44.9 Uses to broadcast info
   //procedure AgeReceivedStamp(Exchange: ContestExchange; var LogString: Str80);
@@ -768,6 +767,8 @@ function BandIsEnabledForContest(const aBand: BandType): boolean;
 implementation
 
 uses uNet,
+   (* The B4 list is an LCL grid on the main form -- TR4WPreviousDupesSet. *)
+   uMainForm,
    (* Which store a log READ comes from -- step B4.  See uLogSource. *)
    uLogSource,
    (* The contest factory -- phase F. *)
@@ -6249,19 +6250,20 @@ label
     indicated. }
 
 var
-  TempIndex: integer;
-  FirstTime: boolean;
+  found: array of ContestExchange;
+  count: integer;
 begin
   if Call = '' then
      begin
      Exit;
      end;
-  TempIndex := 0;
-  FirstTime := True;
+
   if not LogSourceOpen then
      begin
      Exit;
      end;
+
+  count := 0;
   LogSourceRewind;
   1:
   if LogSourceNext( TempRXData ) then
@@ -6272,23 +6274,27 @@ begin
 
        if TempRXData.Callsign = Call then
           begin
-          if FirstTime then
-             begin
-             ShowPreviousDupeQSOsWnd(True);
-             ListView_DeleteAllItems(tPreviousDupeQSOsWndHandle);
-             FirstTime := False;
-             end;
-          tAddContestExchangeToLog(TempRXData, tPreviousDupeQSOsWndHandle,
-            TempIndex);
+          (* COLLECTED, THEN HANDED OVER ONCE.
 
+            This used to add each QSO to a list view as it found it, through
+            tPreviousDupeQSOsWndHandle -- a handle NOTHING EVER ASSIGNED. It
+            was always 0, so every call on it was a no-op and this window has
+            never shown anything; the only visible effect was the editable log
+            being hidden to make room for it. See TR4WPreviousDupesSet. *)
+          SetLength(found, count + 1);
+          found[count] := TempRXData;
+          Inc(count);
           end;
      goto 1;
      end;
-  if not FirstTime then
-     begin
-     EnsureListViewColumnVisible(tPreviousDupeQSOsWndHandle);
-     end;
+
   LogSourceClose;
+
+  if count > 0 then
+     begin
+     TR4WPreviousDupesSet(found);
+     TR4WPreviousDupesShow(True);
+     end;
 end;
 
 procedure SlowDown;

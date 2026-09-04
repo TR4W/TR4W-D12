@@ -393,7 +393,6 @@ procedure FlashCallWindow;
 procedure ProcessCommandLine;
 procedure PutCallToCallWindow(Call: CallString);
 procedure SetColumnsWidth;
-procedure EnsureListViewColumnVisible(h: HWND);
 procedure SaveColumnWidthToConfig(ColIndex: Integer; NewWidth: Integer);
 procedure ExecuteConfigurationFile(const f: AnsiString);
 procedure CheckEditableWindowHeight;
@@ -7960,16 +7959,10 @@ begin
   UpdateWindows;
   Sheet.SaveRestartFile;
 
-  // UNCONDITIONAL.  This used to run only when the log already had QSOs
-  // (`riTotalRecordsInLog > 0`), so starting a NEW contest -- or opening one
-  // whose log is still empty -- restored none of the operator's column widths.
-  // The widths are a property of how they like to read the screen, not of
-  // whether anyone has been worked yet.
-  //
-  // EnsureListViewColumnVisible is a no-op for any column with no override, so
-  // running it on an empty log costs nothing and changes nothing else.
-  (* The grid distributes its own column widths on every resize and on a
-    column rebuild -- see TLogGrid.SizeColumns. *)
+  (* THE COLUMN WIDTHS ARE THE GRID'S OWN BUSINESS NOW. It sizes them on every
+    resize and on a column rebuild, honouring the operator's saved overrides --
+    see TLogGrid.SizeColumns. EnsureListViewColumnVisible, which restored them
+    by hand through a window handle, is deleted. *)
   ReCalculateHourDisplay;
 {$IF tDebugMode}
   QuickDisplay(inttopchar(Windows.GetTickCount - T1));
@@ -9027,31 +9020,14 @@ begin
   Result := lpNumberOfBytesWritten = SizeOf(ContestExchange);
 end;
 
-(* THE PREVIOUS-DUPE LIST AND THE LOG SHARE THE SAME RECTANGLE, so showing one
-  hides the other. This paired two window handles in an array indexed by the
-  boolean; the log is an LCL grid with no handle, so the two sides are written
-  out. *)
+(* THE B4 LIST AND THE LOG SHARE ONE RECTANGLE, so showing either hides the
+  other. Both are LCL grids now -- see TR4WPreviousDupesShow, which owns the
+  swap. This held two window handles in an array indexed by the boolean, and
+  one of them was never assigned. *)
 procedure ShowPreviousDupeQSOsWnd(show: boolean);
 begin
   tPreviousDupeQSOsShowed := show;
-
-  TR4WEditableLogShow(not show);
-  if show then
-     begin
-     Windows.ShowWindow(tPreviousDupeQSOsWndHandle, SW_SHOW);
-     end
-  else
-     begin
-     Windows.ShowWindow(tPreviousDupeQSOsWndHandle, SW_HIDE);
-     end;
-  if show then
-     begin
-     Windows.SetWindowPos(tPreviousDupeQSOsWndHandle, HWND_TOP, 0, 0,
-       MainWindowChildsWidth, EditableLogHeight, SWP_NOMOVE);
-     end;
-  // Windows.SetWindowPos(ewha[show], HWND_TOP, 0, 0, ws * 46, 6 + MainWindowCaptionAndHeader + OffsetY + ws * 14, SWP_NOMOVE);
-  // Windows.ShowWindow(tPreviousDupeQSOsWndHandle, integer(show));
-  // Windows.AnimateWindow(tPreviousDupeQSOsWndHandle, 100, AW_HIDE * (integer(show) + 1) or AW_VER_POSITIVE * (integer(show) + 1));
+  TR4WPreviousDupesShow(show);
 end;
 
 procedure TryPutSpaceinExchangeWindow;
@@ -9590,30 +9566,6 @@ begin
        end;
 end;
 
-procedure EnsureListViewColumnVisible(h: HWND);
-var
-  TempColumn: LogColumnsType;
-  ActualWidth: Integer;
-begin
-  for TempColumn := logColBand to High(LogColumnsType) do
-    if ColumnsArray[TempColumn].Enable then
-       begin
-       if ColumnWidthOverride[TempColumn] > 0 then
-          begin
-          // User has manually sized this column — restore their saved width
-          ListView_SetColumnWidth(h, ColumnsArray[TempColumn].pos, ColumnWidthOverride[TempColumn]);
-          ActualWidth := ListView_GetColumnWidth(h, ColumnsArray[TempColumn].pos);
-          logger.Debug('EnsureListViewColumnVisible: %s pos=%d override=%d actual=%d',
-             [ColumnsArray[TempColumn].Text, ColumnsArray[TempColumn].pos,
-              ColumnWidthOverride[TempColumn], ActualWidth]);
-          end
-       else if (TempColumn >= logColNumberReceive) and ColumnAutoSize then
-         // Original auto-size behavior: unchanged from before Issue 866
-          begin
-          ListView_SetColumnWidth(h, integer(TempColumn), LVSCW_AUTOSIZE_USEHEADER);
-          end;
-       end;
-end;
 
 (* COLUMN WIDTHS ARE NOT WRITTEN INTO A LOG DATABASE.
 

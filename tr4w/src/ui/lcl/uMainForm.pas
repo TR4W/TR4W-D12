@@ -84,6 +84,9 @@ type
     procedure MainLogFetchRows(Sender: TObject; const aFirstIndex: Int64;
                                var aRows: array of TLogGridRow);
     procedure BuildLogGrid;
+    procedure BuildDupesGrid;
+    procedure DupesFetchRows(Sender: TObject; const aFirstIndex: Int64;
+                             var aRows: array of TLogGridRow);
     procedure MainLogDblClick(Sender: TObject);
     procedure MainLogKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
     procedure MainLogEnter(Sender: TObject);
@@ -222,6 +225,24 @@ procedure TR4WEditableLogShow(const aVisible: boolean);
 (* The callsign in one row, read from the log. *)
 function  TR4WEditableLogCallsignAt(const aIndex: Int64): string;
 
+(* PREVIOUS QSOs WITH THE STATION BEING WORKED -- the "B4" list.
+
+  IT SHARES THE EDITABLE LOG'S RECTANGLE and the two swap: showing one hides
+  the other. That is what the Win32 version intended.
+
+  IT NEVER WORKED. tPreviousDupeQSOsWndHandle was declared and used and NEVER
+  ASSIGNED -- always 0 -- so ListView_DeleteAllItems, tAddContestExchangeToLog
+  and ShowWindow were all no-ops on a null handle, and the only thing that did
+  happen was the editable log being hidden to make room for a window that did
+  not exist. With AUTO DISPLAY DUPE QSO on, working a dupe blanked the log area
+  and showed nothing. Found 2026-09-04 while converting it.
+
+  The records are held here rather than re-read: the caller has them in hand
+  from its scan, and a handful of dupes is not worth a second pass. *)
+procedure TR4WPreviousDupesSet(const aQsos: array of ContestExchange);
+procedure TR4WPreviousDupesShow(const aVisible: boolean);
+procedure TR4WPreviousDupesSetBounds(const aLeft, aTop, aWidth, aHeight: integer);
+
 function CreateTR4WMainForm(const aMenu: HMENU): HWND;
 
 var
@@ -231,6 +252,10 @@ var
   TR4WMainForm: TTR4WMainForm = nil;
   TR4WCallEdit: TEdit = nil;
   TR4WEditableLog: TLogGrid = nil;
+
+  { The B4 list -- see TR4WPreviousDupesSet.  Created on first use, because a
+    contest may never show one. }
+  TR4WPreviousDupes: TLogGrid = nil;
   TR4WExchangeEdit: TEdit = nil;
 
 { THE ENTRY FIELDS.
@@ -1166,6 +1191,11 @@ begin
       end;
 end;
 
+var
+   (* The QSOs the B4 list is showing. Held rather than re-read: the caller
+     found them by scanning the log and there are only ever a handful. *)
+   GDupeQsos: array of ContestExchange;
+
 (* THE EDITABLE LOG.
 
   A TLogGrid -- see uLogGrid for why it is a grid the LCL draws rather than a
@@ -1255,6 +1285,53 @@ begin
    EditableLogWindowDblClick;
 end;
 
+(* THE B4 LIST, BUILT LIKE THE LOG AND SHOWING THE SAME COLUMNS.
+
+  Hidden until something asks for it, and sharing the editable log's bounds --
+  see TR4WPreviousDupesShow. *)
+procedure TTR4WMainForm.BuildDupesGrid;
+begin
+   TR4WPreviousDupes := TLogGrid.Create(Self);
+   TR4WPreviousDupes.Parent     := Self;
+   TR4WPreviousDupes.OnFetchRows := DupesFetchRows;
+   TR4WPreviousDupes.Visible    := False;
+
+   ApplyMainFontTo(TR4WPreviousDupes.Font);
+   TR4WPreviousDupes.DefaultRowHeight := ws + 2;
+   TR4WPreviousDupes.Color      := tr4wColorsArray[TWindows[mweEditableLog].mweBackG];
+   TR4WPreviousDupes.Font.Color := tr4wColorsArray[TWindows[mweEditableLog].mweColor];
+   TR4WPreviousDupes.BuildColumns;
+
+   if TR4WEditableLog <> nil then
+      begin
+      TR4WPreviousDupes.BoundsRect := TR4WEditableLog.BoundsRect;
+      end;
+end;
+
+(* THE RECORDS ARE ALREADY IN MEMORY -- the caller scanned the log to find
+  them, so painting costs no database work. aFirstIndex indexes THOSE, not the
+  log. *)
+procedure TTR4WMainForm.DupesFetchRows(Sender: TObject; const aFirstIndex: Int64;
+                                       var aRows: array of TLogGridRow);
+var
+   i: integer;
+   m: Int64;
+begin
+   for i := Low(aRows) to High(aRows) do
+      begin
+      m := aFirstIndex + (i - Low(aRows));
+      if (m < 0) or (m >= Length(GDupeQsos)) then
+         begin
+         Break;
+         end;
+
+      LogRowTextFor(GDupeQsos[m], aRows[i].Text);
+      aRows[i].Deleted := GDupeQsos[m].ceQSO_Deleted;
+      aRows[i].XQSO    := GDupeQsos[m].ceXQSO;
+      aRows[i].Valid   := True;
+      end;
+end;
+
 (* ARROW-DOWN OFF THE LAST ROW RETURNS FOCUS TO THE CALL WINDOW.
 
   The whole log is reachable now, so "the last row" is the last RECORD rather
@@ -1341,6 +1418,54 @@ begin
    TR4WEditableLog.BuildColumns;
    TR4WEditableLog.Visible := True;
    TR4WEditableLogRefresh;
+end;
+
+procedure TR4WPreviousDupesSet(const aQsos: array of ContestExchange);
+var
+   i: integer;
+begin
+   if TR4WMainForm = nil then
+      begin
+      Exit;
+      end;
+
+   if TR4WPreviousDupes = nil then
+      begin
+      TR4WMainForm.BuildDupesGrid;
+      end;
+
+   SetLength(GDupeQsos, Length(aQsos));
+   for i := Low(aQsos) to High(aQsos) do
+      begin
+      GDupeQsos[i - Low(aQsos)] := aQsos[i];
+      end;
+
+   TR4WPreviousDupes.Reload;
+   TR4WPreviousDupes.RecordCount := Length(GDupeQsos);
+end;
+
+procedure TR4WPreviousDupesShow(const aVisible: boolean);
+begin
+   if (TR4WPreviousDupes = nil) and aVisible and (TR4WMainForm <> nil) then
+      begin
+      TR4WMainForm.BuildDupesGrid;
+      end;
+
+   if TR4WPreviousDupes <> nil then
+      begin
+      TR4WPreviousDupes.Visible := aVisible;
+      end;
+
+   (* THE TWO SHARE ONE RECTANGLE, so showing either hides the other. *)
+   TR4WEditableLogShow(not aVisible);
+end;
+
+procedure TR4WPreviousDupesSetBounds(const aLeft, aTop, aWidth, aHeight: integer);
+begin
+   if TR4WPreviousDupes <> nil then
+      begin
+      TR4WPreviousDupes.SetBounds(aLeft, aTop, aWidth, aHeight);
+      end;
 end;
 
 procedure TR4WEditableLogApplyColors;
