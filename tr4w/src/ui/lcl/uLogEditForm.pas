@@ -123,6 +123,11 @@ begin
      the address operator. uMainForm is {$MODE Delphi} and assigns the same
      kind of handler without one -- the two forms are not inconsistent, their
      compiler modes are. *)
+   (* FITTED AND STRETCHED, not the declared widths. This is a window the
+     operator resizes, and declared widths leave a band of empty grid down the
+     right-hand side of a wide one. The MAIN window log keeps the declared
+     widths -- its layout is what an operator has been reading for years. *)
+   FGrid.Sizing := lgsFitAndFill;
    FGrid.OnFetchRows := @GridFetchRows;
    FGrid.OnDblClick := @GridDblClick;
    FGrid.BuildColumns;

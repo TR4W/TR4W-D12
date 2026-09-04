@@ -79,16 +79,56 @@ type
    end;
    PLogGridCacheEntry = ^TLogGridCacheEntry;
 
+   (* HOW THE COLUMNS GET THEIR WIDTHS.
+
+     lgsDeclared -- ColumnsArray[].Width * ws, which is what CreateEditableLog
+       did and what the MAIN WINDOW log must keep: its widths are part of a
+       layout an operator has been reading for years, and the window is sized
+       to them rather than the other way round.
+
+     lgsFitAndFill -- each column as narrow as its contents allow, then the
+       leftover shared out so the grid fills the window. For a window the
+       operator resizes, where declared widths leave a band of empty grid down
+       the right-hand side (NY4I, 2026-09-04: "we do have the resize issue
+       where the window does not scale. notice the white space").
+
+     The DX cluster achieves the same END by scaling its FONT, because it is a
+     monospace console of fixed column count. A grid has real columns, so it
+     distributes those instead. *)
+   TLogGridSizing = (lgsDeclared, lgsFitAndFill);
+
    TLogGrid = class(TDrawGrid)
    private
       FRecordCount: Int64;
       FOnFetchRows: TLogRowsFetchEvent;
+      FSizing:      TLogGridSizing;
+
+      (* WHAT THE OPERATOR TYPED, SHOWN WHERE IT MATCHED. Empty means no
+        highlighting, which is every window except the search. *)
+      FMatchText:      string;
+      FMatchColumn:    LogColumnsType;
+      FMatchColor:     TColor;
+      FMatchTextColor: TColor;
+
+      (* Re-entrancy guard. Writing ColWidths repaints, a repaint fetches, and
+        a fetch may ask to be re-sized -- which would be unbounded. *)
+      FSizingNow:   boolean;
+
+      (* Set when the rows change, so a fit-and-fill grid measures the NEW
+        contents once rather than on every paint. *)
+      FNeedsFit:    boolean;
       FColumnOf:    array of LogColumnsType;
       FCache:       array of TLogGridCacheEntry;
 
       function  Fetch(const aIndex: Int64): PLogGridCacheEntry;
       procedure FillBatch(const aFirstIndex: Int64);
+      procedure SizeColumnsAsDeclared;
+      procedure SizeColumnsToFit;
+      function  AnyRowCached: boolean;
       procedure SetRecordCount(const aValue: Int64);
+      procedure SetMatchText(const aValue: string);
+      procedure DrawMatchIn(const aRect: TRect; const aText: string;
+                            aTextLeft: integer);
       function  GetSelectedRecord: Int64;
       procedure SetSelectedRecord(const aValue: Int64);
    protected
@@ -126,6 +166,26 @@ type
       property RecordCount: Int64 read FRecordCount write SetRecordCount;
 
       property OnFetchRows: TLogRowsFetchEvent read FOnFetchRows write FOnFetchRows;
+
+      (* Declared widths, or fitted to the contents and stretched to the
+        window. See TLogGridSizing. *)
+      property Sizing: TLogGridSizing read FSizing write FSizing;
+
+      (* THE TYPED TEXT, HIGHLIGHTED WHERE IT MATCHED -- searching for "TV"
+        marks the TV in N6TV (NY4I, 2026-09-04).
+
+        Case-insensitive, and only in MatchColumn: a callsign search that lit
+        up matching characters in the date or the frequency would be noise.
+        Set MatchText to '' to turn it off, which is the default. *)
+      property MatchText: string read FMatchText write SetMatchText;
+      property MatchColumn: LogColumnsType read FMatchColumn write FMatchColumn;
+
+      (* Definable, because legibility depends on the operator's colours. The
+        default is the find-in-page convention -- black on yellow -- which
+        reads on the white row background AND on the selection blue, where a
+        change of TEXT colour alone would not. *)
+      property MatchColor: TColor read FMatchColor write FMatchColor;
+      property MatchTextColor: TColor read FMatchTextColor write FMatchTextColor;
    end;
 
 implementation
@@ -183,6 +243,14 @@ begin
      AutoAdjustColumn. *)
    Options := [goRowSelect, goThumbTracking, goColSizing, goDblClickAutoSize,
                goVertLine, goHorzLine];
+
+   FSizing    := lgsDeclared;
+
+   FMatchText      := '';
+   FMatchColumn    := logColCallsign;
+   FMatchColor     := $0080FFFF;   (* BGR: a soft yellow *)
+   FMatchTextColor := clBlack;
+   FNeedsFit  := True;
 
    FixedCols     := 0;
    FixedRows     := 1;
@@ -269,11 +337,6 @@ end;
        against the declared width.
     3. Otherwise Width * ws. *)
 procedure TLogGrid.SizeColumns;
-var
-   i:      integer;
-   c:      LogColumnsType;
-   w:      integer;
-   header: integer;
 begin
    if Length(FColumnOf) = 0 then
       begin
@@ -285,8 +348,8 @@ begin
      Canvas on a control with no handle allocated raises, and this is reached
      from BuildColumns, which a form calls from its OnCreate -- before the form
      is shown and therefore before either has a handle. That is an access
-     violation on opening View/Edit Log, which is what it did (NY4I,
-     2026-09-04: "I also cannot open the view/edit log window").
+     violation on opening a window, which is what it did (NY4I, 2026-09-04:
+     "I also cannot open the view/edit log window").
 
      InitializeWnd calls this again the moment the handle exists, so nothing is
      lost by declining now. *)
@@ -295,6 +358,58 @@ begin
       Exit;
       end;
 
+   if FSizingNow then
+      begin
+      Exit;
+      end;
+
+   FSizingNow := True;
+   try
+      case FSizing of
+         lgsFitAndFill:
+            begin
+            SizeColumnsToFit;
+            end;
+         else
+            begin
+            SizeColumnsAsDeclared;
+            end;
+         end;
+   finally
+      FSizingNow := False;
+   end;
+end;
+
+(* THE WIDTHS AS THE ORIGINAL SET THEM.
+
+  ColumnsArray[].Width IS A COUNT IN `ws` UNITS, NOT CHARACTERS AND NOT PIXELS.
+  CreateEditableLog set each column to Width * ws -- ws being the main window's
+  scale unit, WindowSize + 12 -- and that is the whole rule. There was no
+  redistribution of leftover width.
+
+  GETTING THIS WRONG IS WHAT MADE THE GRID LOOK NOTHING LIKE THE PROGRAM. The
+  first version multiplied by the width of a character instead, which is a
+  third of ws, so every column came out cramped; then it handed ALL the
+  leftover width to the callsign column, which became about five hundred pixels
+  with the callsign at its left edge -- an empty channel down the middle of the
+  window, with Freq and Op jammed together at the right.
+
+  THREE CASES, and they are the original's, in order:
+
+    1. The operator has dragged this column -- ColumnWidthOverride, in pixels.
+       Their width wins over everything.
+    2. ColumnAutoSize, for columns from logColNumberReceive rightwards: fit the
+       header. LVSCW_AUTOSIZE_USEHEADER fits the wider of header and content,
+       and a virtual grid has no content to measure, so it is the header text
+       against the declared width.
+    3. Otherwise Width * ws. *)
+procedure TLogGrid.SizeColumnsAsDeclared;
+var
+   i:      integer;
+   c:      LogColumnsType;
+   w:      integer;
+   header: integer;
+begin
    Canvas.Font.Assign(Font);
 
    for i := 0 to High(FColumnOf) do
@@ -325,6 +440,188 @@ begin
          end;
 
       ColWidths[i] := w;
+      end;
+end;
+
+(* AS NARROW AS THE CONTENTS ALLOW, THEN STRETCHED TO FILL THE WINDOW.
+
+  For a window the operator resizes. Declared widths do not grow with it, so a
+  wide window showed a band of grid with nothing in it down the right-hand
+  side, and the selected row's highlight stopped in the middle of the window.
+
+  MEASURED FROM THE ROWS THE GRID HAS, which for a search is all of them and
+  for a long log is the cached window. The first batch is fetched here if the
+  cache is empty, because sizing before any row exists would fit every column
+  to its heading and never revisit it.
+
+  THE SURPLUS IS SHARED IN PROPORTION to what each column asked for, so the
+  callsign grows more than the zone. Handing it all to one column is what the
+  main log did wrong.
+
+  A DEFICIT IS LEFT ALONE: if the contents genuinely need more room than the
+  window has, the columns keep their widths and the grid scrolls, rather than
+  squeezing every column until nothing is readable. *)
+procedure TLogGrid.SizeColumnsToFit;
+var
+   i, k:   integer;
+   c:      LogColumnsType;
+   w:      integer;
+   want:   array of integer;
+   total:  integer;
+   spare:  integer;
+   given:  integer;
+   avail:  integer;
+begin
+   if (FRecordCount > 0) and (not AnyRowCached) then
+      begin
+      FillBatch(0);
+      end;
+
+   Canvas.Font.Assign(Font);
+   SetLength(want, Length(FColumnOf));
+   total := 0;
+
+   for i := 0 to High(FColumnOf) do
+      begin
+      c := FColumnOf[i];
+
+      (* The heading is a floor: a column narrower than its own name is
+        unreadable however short its values are. *)
+      w := Canvas.TextWidth(ColumnsArray[c].Text);
+
+      for k := Low(FCache) to High(FCache) do
+         begin
+         if not FCache[k].Row.Valid then
+            begin
+            Continue;
+            end;
+         if Canvas.TextWidth(FCache[k].Row.Text[c]) > w then
+            begin
+            w := Canvas.TextWidth(FCache[k].Row.Text[c]);
+            end;
+         end;
+
+      Inc(w, CELL_PAD * 2);
+      if w < MIN_COLUMN_WIDTH then
+         begin
+         w := MIN_COLUMN_WIDTH;
+         end;
+
+      want[i] := w;
+      Inc(total, w);
+      end;
+
+   (* Less the grid lines, and room for a vertical scrollbar so a full-width
+     fit does not provoke a horizontal one. *)
+   avail := ClientWidth - Length(FColumnOf) - 2;
+   spare := avail - total;
+
+   if (spare > 0) and (total > 0) then
+      begin
+      given := 0;
+      for i := 0 to High(FColumnOf) do
+         begin
+         if i = High(FColumnOf) then
+            begin
+            (* THE LAST COLUMN TAKES THE REMAINDER, so integer division cannot
+              leave a few pixels of blank grid -- which is the whole complaint
+              this routine exists to answer. *)
+            Inc(want[i], spare - given);
+            end
+         else
+            begin
+            k := (spare * want[i]) div total;
+            Inc(want[i], k);
+            Inc(given, k);
+            end;
+         end;
+      end;
+
+   for i := 0 to High(FColumnOf) do
+      begin
+      ColWidths[i] := want[i];
+      end;
+end;
+
+procedure TLogGrid.SetMatchText(const aValue: string);
+begin
+   if FMatchText = aValue then
+      begin
+      Exit;
+      end;
+
+   FMatchText := aValue;
+   Invalidate;
+end;
+
+(* THE MATCHED RUN, PAINTED OVER THE TEXT THAT IS ALREADY THERE.
+
+  Drawn as a background swatch rather than a change of text colour, because the
+  row underneath may already be red (deleted), grey (X-QSO) or drawn on the
+  selection blue -- a fourth text colour would be illegible against at least
+  one of them, and invisible against another.
+
+  ONLY WHEN THE WHOLE VALUE FITS. If the text is ellipsised the run may be
+  partly or wholly cut, and there is no honest place to put the swatch; leaving
+  it off is better than marking the wrong characters.
+
+  LEFT-ALIGNED COLUMNS ONLY, for the same reason -- the prefix width IS the
+  offset when text starts at the left edge, and is not when it is centred or
+  right-aligned. The callsign, which is what this is for, is left-aligned. *)
+procedure TLogGrid.DrawMatchIn(const aRect: TRect; const aText: string;
+                               aTextLeft: integer);
+var
+   at:     integer;
+   x0, x1: integer;
+   run:    string;
+begin
+   if (FMatchText = '') or (aText = '') then
+      begin
+      Exit;
+      end;
+
+   at := Pos(UpperCase(FMatchText), UpperCase(aText));
+   if at <= 0 then
+      begin
+      Exit;
+      end;
+
+   if Canvas.TextWidth(aText) > (aRect.Right - aRect.Left) then
+      begin
+      Exit;
+      end;
+
+   run := Copy(aText, at, Length(FMatchText));
+   x0  := aTextLeft + Canvas.TextWidth(Copy(aText, 1, at - 1));
+   x1  := x0 + Canvas.TextWidth(run);
+
+   if x1 > aRect.Right then
+      begin
+      Exit;
+      end;
+
+   Canvas.Brush.Color := FMatchColor;
+   Canvas.Brush.Style := bsSolid;
+   Canvas.FillRect(Rect(x0, aRect.Top + 1, x1, aRect.Bottom - 1));
+
+   Canvas.Brush.Style := bsClear;
+   Canvas.Font.Color  := FMatchTextColor;
+   Canvas.TextOut(x0, aRect.Top + ((aRect.Bottom - aRect.Top) -
+                                   Canvas.TextHeight(run)) div 2, run);
+end;
+
+function TLogGrid.AnyRowCached: boolean;
+var
+   i: integer;
+begin
+   Result := False;
+   for i := Low(FCache) to High(FCache) do
+      begin
+      if FCache[i].Row.Valid then
+         begin
+         Result := True;
+         Exit;
+         end;
       end;
 end;
 
@@ -480,6 +777,15 @@ begin
       e^.Index := idx;
       e^.Row   := rows[i];
       end;
+
+   (* NOW THAT THERE IS SOMETHING TO MEASURE. Once per change of contents, not
+     per batch -- and SizeColumns guards its own re-entry, because writing a
+     column width repaints and a repaint fetches. *)
+   if FNeedsFit and (FSizing = lgsFitAndFill) then
+      begin
+      FNeedsFit := False;
+      SizeColumns;
+      end;
 end;
 
 procedure TLogGrid.SetRecordCount(const aValue: Int64);
@@ -493,6 +799,7 @@ begin
       end;
 
    FRecordCount := n;
+   FNeedsFit    := True;
    Reload;
 
    (* One header row plus the records. RowCount is an integer, and a log that
@@ -665,6 +972,12 @@ begin
    Inc(aRect.Left, CELL_PAD);
    Dec(aRect.Right, CELL_PAD);
    Canvas.TextRect(aRect, aRect.Left, aRect.Top, s, style);
+
+   if (c = FMatchColumn) and (ColumnsArray[c].Align = LVCFMT_LEFT) then
+      begin
+      DrawMatchIn(aRect, s, aRect.Left);
+      end;
+
    Canvas.Brush.Style := bsSolid;
 end;
 

@@ -156,6 +156,11 @@ begin
    FGrid.Width      := ClientWidth;
    FGrid.Height     := ClientHeight - 40 - 24;
    FGrid.Anchors    := [akLeft, akTop, akRight, akBottom];
+   (* FITTED AND STRETCHED, not the declared widths. This is a window the
+     operator resizes, and declared widths leave a band of empty grid down the
+     right-hand side of a wide one. The MAIN window log keeps the declared
+     widths -- its layout is what an operator has been reading for years. *)
+   FGrid.Sizing := lgsFitAndFill;
    FGrid.OnFetchRows := @GridFetchRows;
    FGrid.OnDblClick  := @GridDblClick;
    ApplyMainFontTo(FGrid.Font);
@@ -296,6 +301,7 @@ begin
      every keystroke that clears the box scans the whole log to list it. *)
    if (call = '') and (oper = '') then
       begin
+      FGrid.MatchText   := '';
       lblStatus.Caption := '';
       Exit;
       end;
@@ -334,6 +340,10 @@ begin
       FMatches[found].Qso   := qso;
       Inc(found);
       end;
+
+   (* WHAT WAS SEARCHED FOR, SO THE GRID CAN SHOW WHERE IT MATCHED. Set before
+     the count, so the first paint already has it. *)
+   FGrid.MatchText := string(call);
 
    FGrid.Reload;
    FGrid.RecordCount := found;
