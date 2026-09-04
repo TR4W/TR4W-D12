@@ -202,9 +202,15 @@ begin
    aXQSO    := False;
    FillChar(aText, SizeOf(aText), 0);
 
-   if not FOpen then
+   (* THE SAME SELF-HEALING CHECK THE MAIN LOG MAKES, and for the same reason:
+     FOpen records that THIS FORM opened the source, which is not the same fact
+     as the source being open. The QSO editor this window launches closes it. *)
+   if not LogSourceIsOpen then
       begin
-      Exit;
+      if not LogSourceOpen then
+         begin
+         Exit;
+         end;
       end;
 
    if not LogSourceReadAtIndex(aIndex, rec) then

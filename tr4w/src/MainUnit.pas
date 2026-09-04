@@ -7962,7 +7962,7 @@ begin
     walks, and the list is indexed over log RECORDS. *)
   if Size > 0 then
      begin
-     TR4WEditableLogSetCount(Size);
+     TR4WEditableLogRefreshCount;
      TR4WEditableLogScrollToEnd;
      end;
   // DispalyLoadedQSOs(-1);

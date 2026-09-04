@@ -2547,7 +2547,7 @@ begin
 
     tLogIndex is not touched here any more. It counted rows in a widget; the
     widget has no rows. *)
-  TR4WEditableLogSetCount(tRestartInfo.riTotalRecordsInLog);
+  TR4WEditableLogRefreshCount;
   TR4WEditableLogScrollToEnd;
   Result := True;
 //  SendStationStatus;

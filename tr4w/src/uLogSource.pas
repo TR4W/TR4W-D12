@@ -84,6 +84,22 @@ var
    LogSourceKind: TLogSourceKind = lsDatabase;
 
 (* Opens the log for a sequential read.  False if it cannot be read at all. *)
+(* WHETHER A READ CAN BE MADE RIGHT NOW.
+
+  THE REAL STATE, NOT A FLAG SOMEBODY SET. Thirty-three call sites in twelve
+  units call LogSourceClose -- PostUnit alone has seventeen -- so a caller that
+  remembers "I opened it" in a boolean of its own is remembering something any
+  other unit can invalidate without telling it.
+
+  That is not hypothetical. The main window log kept exactly such a flag and
+  went blank the moment a QSO was logged: LogSourceRecordCount answers -1 when
+  the source is shut, LogSourceReadAtIndex then rejects every index as past the
+  end, and the whole grid paints empty -- including the contact just entered
+  (NY4I, 2026-09-04).
+
+  Ask this, and reopen if it says no. *)
+function LogSourceIsOpen: boolean;
+
 function LogSourceOpen: boolean;
 
 (* Positions at the first QSO -- the ReadVersionBlock equivalent.  Call after
@@ -191,6 +207,20 @@ begin
       logger.Warn('[LogSource] opened while already open. The previous read is ' +
                   'abandoned -- the binary path silently did the same thing, ' +
                   'so this is a latent bug being made visible, not a new one.');
+      end;
+end;
+
+function LogSourceIsOpen: boolean;
+begin
+   case LogSourceKind of
+      lsDatabase:
+         begin
+         Result := GRepository <> nil;
+         end;
+      else
+         begin
+         Result := LogHandle <> INVALID_HANDLE_VALUE;
+         end;
       end;
 end;
 

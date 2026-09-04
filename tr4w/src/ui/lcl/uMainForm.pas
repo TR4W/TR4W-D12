@@ -183,6 +183,19 @@ function CreateTR4WPossibleCallList(const aLeft, aTop, aWidth, aHeight,
   left the log blank for three sessions. *)
 procedure CreateTR4WEditableLog(const aLeft, aTop, aWidth, aHeight: integer);
 
+(* THE ROW COUNT, TAKEN FROM THE LOG ITSELF.
+
+  ONE DEFINITION, because there were two and they could disagree. LoadinLog set
+  the grid from LogSourceRecordCount while the logging path set it from
+  tRestartInfo.riTotalRecordsInLog -- a counter maintained by hand, in two
+  units, and reset to zero by a third. Two numbers for "how many records are in
+  the log" is how a freshly logged QSO can shrink the grid instead of growing
+  it.
+
+  It also opens the source if something has closed it, so the count and the
+  rows come from the same place in the same state. *)
+procedure TR4WEditableLogRefreshCount;
+
 (* How many log records exist. Setting it is what makes the log appear. *)
 procedure TR4WEditableLogSetCount(const aCount: Int64);
 
@@ -1156,14 +1169,6 @@ begin
       end;
 end;
 
-var
-   (* Whether the read seam has been opened for this grid. LogSourceOpen's
-     database arm CLOSES AND REOPENS the store on every call, so opening it per
-     row -- from inside a paint -- would tear the connection down while
-     scrolling. Opened once, and again only when the log is known to have
-     changed. *)
-   GMainSourceOpen: boolean = False;
-
 (* THE EDITABLE LOG.
 
   A TLogGrid -- see uLogGrid for why it is a grid the LCL draws rather than a
@@ -1177,11 +1182,6 @@ var
 
 procedure TR4WEditableLogRefresh;
 begin
-   (* THE LOG HAS CHANGED, so the source is stale as well as the rows.
-     Reopened on the next fetch rather than here: this is called from inside
-     LoadinLog, which is holding the seam itself at the time. *)
-   GMainSourceOpen := False;
-
    if TR4WEditableLog <> nil then
       begin
       TR4WEditableLog.Reload;
@@ -1208,18 +1208,18 @@ begin
    aXQSO    := False;
    FillChar(aText, SizeOf(aText), 0);
 
-   (* OPENED ONCE, NOT PER ROW. LogSourceOpen's database arm CLOSES AND
-     REOPENS the store on every call, so calling it per cache miss -- from
-     inside a paint -- would tear the connection down and rebuild it while
-     scrolling. *)
-   if not GMainSourceOpen then
+   (* REOPENED ONLY IF IT IS ACTUALLY SHUT, and asked of the source rather
+     than remembered here. LogSourceOpen's database arm closes and reopens on
+     every call, so it must not be called per row -- but a flag saying "I
+     opened it" is worse: thirty-three sites in twelve units close this source,
+     and the first one to do so left the grid blank for good. See
+     LogSourceIsOpen. *)
+   if not LogSourceIsOpen then
       begin
-      GMainSourceOpen := LogSourceOpen;
-      end;
-
-   if not GMainSourceOpen then
-      begin
-      Exit;
+      if not LogSourceOpen then
+         begin
+         Exit;
+         end;
       end;
 
    if not LogSourceReadAtIndex(aIndex, qso) then
@@ -1379,6 +1379,25 @@ begin
       begin
       TR4WEditableLog.Options := TR4WEditableLog.Options - [goVertLine, goHorzLine];
       end;
+end;
+
+procedure TR4WEditableLogRefreshCount;
+begin
+   if TR4WEditableLog = nil then
+      begin
+      Exit;
+      end;
+
+   if not LogSourceIsOpen then
+      begin
+      if not LogSourceOpen then
+         begin
+         TR4WEditableLog.RecordCount := 0;
+         Exit;
+         end;
+      end;
+
+   TR4WEditableLog.RecordCount := LogSourceRecordCount;
 end;
 
 procedure TR4WEditableLogSetCount(const aCount: Int64);
