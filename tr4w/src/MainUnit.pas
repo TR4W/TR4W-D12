@@ -652,6 +652,7 @@ uses
   uWin32Compat,   // AnimateWindow -- see that unit for the whole FPC gap list
   ExtCtrls,           // TTimer -- the window-layout autosave
   DateUtils,          // MilliSecondsBetween -- the start-up timing
+  uLogSearchForm,     // SaveLogSearchLayout -- not a tw_ window, see SaveTR4WPOSFILE
   uWindowLayoutStore, // the window layout, keyed by name
   uTR4WConfigFile,   // TR4WConfigFileName / Save- LoadWindowLayout
   uWSJTXState,       // the state the WSJT-X indicator paints from
@@ -2161,6 +2162,10 @@ begin
   // gives them the 5-second autosave AND the save-at-exit backstop without a
   // second mechanism writing the same file.
   SavePanadapterLayout;
+
+  (* AND THE SEARCH WINDOW, for the same reason and by the same route: it is
+    not a tw_ window either, so the loop above cannot see it. *)
+  SaveLogSearchLayout;
 end;
 
 // Issue #739: a saved window rectangle can land off-screen when the monitor it

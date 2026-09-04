@@ -102,6 +102,9 @@ type
       FMatches:   array of TLogSearchMatch;
       FTruncated: boolean;
 
+      (* Restored ONCE, before the first Show -- see ShowLogSearchForm. *)
+      FBoundsRestored: boolean;
+
       procedure GridFetchRows(Sender: TObject; const aFirstIndex: Int64;
                               var aRows: array of TLogGridRow);
       procedure GridDblClick(Sender: TObject);
@@ -111,6 +114,22 @@ type
                         const aCall, aOperator: AnsiString;
                         aBand: BandType; aMode: ModeType): boolean;
    end;
+
+(* THE LIVE BOUNDS, WITHOUT WAITING FOR THE WINDOW TO CLOSE.
+
+  NY4I asked the right question (2026-09-04): "are you saving the window
+  position before the window is closed or when the program terminates, or
+  both?" It was CLOSE ONLY, which means an operator who moves the window and
+  then quits with it still open saves nothing at all.
+
+  That is not a new mistake -- it is the one uPanadapterForm already made and
+  fixed on 2026-08-26, in the same words. Riding SaveTR4WPOSFILE gives this
+  window the 5-second autosave AND the save-at-exit backstop without a second
+  mechanism writing the same file.
+
+  Does nothing when the window has never been opened, so a session that never
+  used Search does not write a row for it. *)
+procedure SaveLogSearchLayout;
 
 (* Opens it, non-modal, over the main window. Seeds the callsign from the entry
   field, which is what the operator is almost always looking for. *)
@@ -143,8 +162,42 @@ begin
       frmLogSearch.PopupParent := TR4WMainForm;
       end;
 
+   (* BOUNDS BEFORE Show, AND ONLY THE FIRST TIME.
+
+     BEFORE, because the LCL applies the form's Position rule as it shows the
+     window -- so a restore from OnShow is overwritten a moment later by
+     poMainFormCenter and the window opens centred every time. That is exactly
+     what it did (NY4I, 2026-09-04: "the search window position did not save").
+     The bounds WERE being saved: the SearchLog row was in settings\tr4w.json
+     with the right rectangle in it. Only the restore was too late.
+
+     ONLY THE FIRST TIME, because reshowing must not drag the window back to
+     where it was when TR4W started -- an operator who moves it, closes it and
+     reopens it expects it where they left it, and the close has already
+     written that.
+
+     This is the same pattern uPanadapterForm uses, for the same reasons; its
+     comment is where I should have read it. *)
+   if not frmLogSearch.FBoundsRestored then
+      begin
+      frmLogSearch.FBoundsRestored := True;
+      TryRestoreFormBounds(frmLogSearch, LAYOUT_NAME);
+      end;
+
    frmLogSearch.Show;
    frmLogSearch.BringToFront;
+end;
+
+procedure SaveLogSearchLayout;
+begin
+   if frmLogSearch = nil then
+      begin
+      Exit;
+      end;
+
+   (* THE LIVE VISIBILITY, so quitting with the window open records it as open
+     -- which is the point of saving at exit as well as at close. *)
+   SaveFormBounds(frmLogSearch, LAYOUT_NAME, frmLogSearch.Visible);
 end;
 
 procedure TfrmLogSearch.FormCreate(Sender: TObject);
@@ -188,9 +241,6 @@ end;
 
 procedure TfrmLogSearch.FormShow(Sender: TObject);
 begin
-   (* WHERE IT WAS LAST TIME. *)
-   TryRestoreFormBounds(Self, LAYOUT_NAME);
-
    (* SEEDED FROM THE ENTRY FIELD. The Win32 version did the same, falling back
      to the call an operator had just escaped out of. *)
    if CallWindowString <> '' then
@@ -206,8 +256,9 @@ begin
 
    if logger <> nil then
       begin
-      logger.Info('[LogSearch] window opened, seeded with "%s", min width %d',
-                  [edtCall.Text, Constraints.MinWidth]);
+      logger.Info('[LogSearch] window opened at (%d,%d) %dx%d, seeded with "%s", ' +
+                  'min width %d',
+                  [Left, Top, Width, Height, edtCall.Text, Constraints.MinWidth]);
       end;
 
    RunSearch;
