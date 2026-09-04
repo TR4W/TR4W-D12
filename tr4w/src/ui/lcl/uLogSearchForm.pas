@@ -115,6 +115,22 @@ type
                         aBand: BandType; aMode: ModeType): boolean;
    end;
 
+(* THE LOG HAS GAINED A QSO -- RUN THE SEARCH AGAIN.
+
+  NY4I, 2026-09-04: "I had N6 in the search window so I was showing N6TV. I
+  then worked a new N6 station in the log. It would be nice if when we added a
+  new station to the log, the search ran one more time. That way the new N6
+  station would appear in search."
+
+  This is what a non-modal window costs and is worth: it stays open beside the
+  log while the operator works, so it has to stay TRUE while the operator
+  works. A results list that silently describes the log as it was ten QSOs ago
+  is worse than one that was never opened.
+
+  Does nothing when the window is closed or was never opened, so the logging
+  path pays nothing for a window nobody is using. *)
+procedure LogSearchRefreshIfOpen;
+
 (* THE LIVE BOUNDS, WITHOUT WAITING FOR THE WINDOW TO CLOSE.
 
   NY4I asked the right question (2026-09-04): "are you saving the window
@@ -186,6 +202,20 @@ begin
 
    frmLogSearch.Show;
    frmLogSearch.BringToFront;
+end;
+
+procedure LogSearchRefreshIfOpen;
+begin
+   if (frmLogSearch = nil) or (not frmLogSearch.Visible) then
+      begin
+      Exit;
+      end;
+
+   (* THROUGH THE DEBOUNCE, not straight into RunSearch. A run of QSOs logged
+     quickly -- a pile-up, or the pending-county drain that logs several from
+     one exchange -- would otherwise scan the log once per contact, on the
+     thread the operator is typing on. The timer collapses them into one. *)
+   frmLogSearch.FilterChanged(nil);
 end;
 
 procedure SaveLogSearchLayout;

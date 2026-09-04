@@ -593,7 +593,8 @@ uses
     cycle. It never raises and never blocks logging: see uLogStore. }
   uLogStore,
   uEditableLogView,   // one definition of "which record is row N"
-  uLogEditForm,       // View / Edit Log -- an LCL virtual list now
+  uLogEditForm,       // View / Edit Log -- an LCL virtual list now; also
+                      // SaveLogEditLayout, see SaveTR4WPOSFILE
   uContestFileKind,   // a .db is not an INI -- see SaveColumnWidthToConfig
   (* Which store a log READ comes from -- step B4.  Its implementation
      uses this unit back, which is legal: both edges are
@@ -2166,6 +2167,7 @@ begin
   (* AND THE SEARCH WINDOW, for the same reason and by the same route: it is
     not a tw_ window either, so the loop above cannot see it. *)
   SaveLogSearchLayout;
+  SaveLogEditLayout;
 end;
 
 // Issue #739: a saved window rectangle can land off-screen when the monitor it

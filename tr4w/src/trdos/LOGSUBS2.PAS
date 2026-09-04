@@ -150,6 +150,7 @@ implementation
 
 uses
   uMainForm,          // the editable log is an LCL virtual list
+  uLogSearchForm,     // LogSearchRefreshIfOpen -- Search is non-modal
   uProcessCommand,
    (* Which store a log READ comes from -- step B4.  See uLogSource. *)
    uLogSource,
@@ -2549,6 +2550,11 @@ begin
     widget has no rows. *)
   TR4WEditableLogRefreshCount;
   TR4WEditableLogScrollToEnd;
+
+  (* AND ANY OTHER WINDOW SHOWING THE LOG. Search is non-modal and stays open
+    beside the log, so a QSO logged while it is up has to reach it -- see
+    LogSearchRefreshIfOpen. *)
+  LogSearchRefreshIfOpen;
   Result := True;
 //  SendStationStatus;
 end;

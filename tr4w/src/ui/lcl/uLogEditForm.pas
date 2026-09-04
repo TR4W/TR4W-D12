@@ -49,6 +49,11 @@ uses
    uLogGrid,
    VC, uLogSource, MainUnit;
 
+const
+   (* The name this window's bounds are stored under, in the same layout store
+     every other window uses. *)
+   LAYOUT_NAME = 'ViewEditLog';
+
 type
    TfrmLogEdit = class(TForm)
       procedure FormCreate(Sender: TObject);
@@ -59,11 +64,25 @@ type
       FGrid: TLogGrid;
       FOpen: boolean;
 
+      (* Restored ONCE, before the first show -- see ShowLogEditForm. *)
+      FBoundsRestored: boolean;
+
       procedure GridFetchRows(Sender: TObject; const aFirstIndex: Int64;
                               var aRows: array of TLogGridRow);
       procedure GridDblClick(Sender: TObject);
       procedure ReloadFromLog;
    end;
+
+(* THE LIVE BOUNDS, WITHOUT WAITING FOR THE WINDOW TO CLOSE.
+
+  Saving on close alone means an operator who moves the window and then quits
+  with it open saves nothing. Riding SaveTR4WPOSFILE gives this window the
+  5-second autosave and the save-at-exit backstop, the same route the
+  panadapters and the Search window take.
+
+  Does nothing when the window has never been opened, so a session that never
+  used it does not write a row for it. *)
+procedure SaveLogEditLayout;
 
 (* Opens it modally over the main window. *)
 procedure ShowLogEditForm;
@@ -73,7 +92,8 @@ implementation
 {$R *.lfm}
 
 uses
-   uEditQSO, uLCLFormHelpers,
+   uEditQSO,
+   uLCLFormHelpers,   (* SaveFormBounds / TryRestoreFormBounds *)
    uMainForm;   (* TR4WMainForm -- this form's owner; see ShowLogEditForm *)
 
 var
@@ -105,7 +125,33 @@ begin
       frmLogEdit.PopupParent := TR4WMainForm;
       end;
 
+   (* BOUNDS BEFORE THE WINDOW IS SHOWN, AND ONLY THE FIRST TIME.
+
+     BEFORE, because the LCL applies the form's Position rule as it shows the
+     window -- restoring any later is overwritten a moment afterwards and the
+     window opens centred every time, which is exactly what the Search window
+     did until 2026-09-04.
+
+     ONLY THE FIRST TIME, because reopening must not drag the window back to
+     where it was when TR4W started; the operator has moved it since and the
+     close has already written that. *)
+   if not frmLogEdit.FBoundsRestored then
+      begin
+      frmLogEdit.FBoundsRestored := True;
+      TryRestoreFormBounds(frmLogEdit, LAYOUT_NAME);
+      end;
+
    ShowModalOverWin32Parent(frmLogEdit, tr4whandle);
+end;
+
+procedure SaveLogEditLayout;
+begin
+   if frmLogEdit = nil then
+      begin
+      Exit;
+      end;
+
+   SaveFormBounds(frmLogEdit, LAYOUT_NAME, frmLogEdit.Visible);
 end;
 
 procedure TfrmLogEdit.FormCreate(Sender: TObject);
@@ -140,6 +186,16 @@ procedure TfrmLogEdit.FormShow(Sender: TObject);
 begin
    FOpen := LogSourceOpen;
    ReloadFromLog;
+
+   (* WHERE IT OPENED. A restored position can only be checked against the
+     stored one if the window says where it ended up -- without this, "the
+     position did not save" and "the position did not restore" look identical
+     and have different causes. *)
+   if logger <> nil then
+      begin
+      logger.Info('[LogEdit] window opened at (%d,%d) %dx%d',
+                  [Left, Top, Width, Height]);
+      end;
 end;
 
 procedure TfrmLogEdit.ReloadFromLog;
@@ -162,6 +218,10 @@ begin
       LogSourceClose;
       FOpen := False;
       end;
+
+   (* Where it was, so it comes back there. *)
+   SaveFormBounds(Self, LAYOUT_NAME, True);
+
    CloseAction := caHide;
 end;
 
