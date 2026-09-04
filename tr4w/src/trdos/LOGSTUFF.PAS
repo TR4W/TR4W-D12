@@ -751,6 +751,18 @@ function ValidClass(sClass: Str10): boolean;
 
 //function GetFederalOkrug(OblastDigit, OblastChar: Char): FederalOkrugs;
 function InSameFederalOkrug(HisCallsign: CallString): boolean;
+
+(* IS THIS BAND IN PLAY FOR THIS CONTEST?
+
+  WARC BANDS ENABLE and VHF BANDS ENABLE, against the WARC/VHF classification
+  in BandChangeArray. Exposed as a QUESTION rather than as the table, so no
+  caller can get the classification subtly different.
+
+  It answers for the BANDS AN OPERATOR MAY WORK, which is what the Search
+  window's band list needs when there is nothing to search: without it that
+  list offered 10G and 24G to a station working 20m and 15m (NY4I,
+  2026-09-04). *)
+function BandIsEnabledForContest(const aBand: BandType): boolean;
 //function IsR150Country(OblastDigit, OblastChar: Char): boolean;
 
 implementation
@@ -766,6 +778,73 @@ uses uNet,
   uPOTAParks,
   uPendingCounties,
   Classes; // TStringList — used by ProcessRSTAndDomesticQTHExchange
+
+(* THE BAND TABLE, AT UNIT LEVEL.
+
+  IT WAS A LOCAL CONST OF RadioCanWorkBand, which is why nothing outside that
+  one routine could ask what it knows -- and the Search window needs exactly
+  that.
+
+  MOVED, NOT COPIED. A second table of which bands are WARC and which are VHF
+  is the kind of duplicate that drifts in silence: the copy is only wrong the
+  day somebody adds 60m to one of them. *)
+const
+  MAXBANDS = 21;
+  BandChangeArray: array[1..MAXBANDS] of BandChangeType =
+    (
+
+    (bcBand: Band160; bcWARC: False; bcVHF: False),
+    (bcBand: Band80; bcWARC: False; bcVHF: False),
+//    (bcBand: Band60; bcWARC: True; bcVHF: False),
+    (bcBand: Band40; bcWARC: False; bcVHF: False),
+    (bcBand: Band30; bcWARC: True; bcVHF: False),
+    (bcBand: Band20; bcWARC: False; bcVHF: False),
+    (bcBand: Band17; bcWARC: True; bcVHF: False),
+    (bcBand: Band15; bcWARC: False; bcVHF: False),
+    (bcBand: Band12; bcWARC: True; bcVHF: False),
+    (bcBand: Band10; bcWARC: False; bcVHF: False),
+    (bcBand: Band6; bcWARC: False; bcVHF: True),
+    (bcBand: Band2; bcWARC: False; bcVHF: True),
+    (bcBand: Band222; bcWARC: False; bcVHF: True),
+    (bcBand: Band432; bcWARC: False; bcVHF: True),
+    (bcBand: Band902; bcWARC: False; bcVHF: True),
+    (bcBand: Band1296; bcWARC: False; bcVHF: True),
+    (bcBand: Band2304; bcWARC: False; bcVHF: True),
+    (bcBand: Band3456; bcWARC: False; bcVHF: True),
+    (bcBand: Band5760; bcWARC: False; bcVHF: True),
+    (bcBand: Band10G; bcWARC: False; bcVHF: True),
+    (bcBand: Band24G; bcWARC: False; bcVHF: True),
+    (bcBand: BandLight; bcWARC: False; bcVHF: True)
+    );
+
+function BandIsEnabledForContest(const aBand: BandType): boolean;
+var
+   i: integer;
+begin
+   Result := False;
+
+   for i := Low(BandChangeArray) to High(BandChangeArray) do
+      begin
+      if BandChangeArray[i].bcBand <> aBand then
+         begin
+         Continue;
+         end;
+
+      if BandChangeArray[i].bcWARC and (not WARCBandsEnabled) then
+         begin
+         Exit;
+         end;
+
+      if BandChangeArray[i].bcVHF and (not VHFBandsEnabled) then
+         begin
+         Exit;
+         end;
+
+      Result := True;
+      Exit;
+      end;
+end;
+
 
 // Can this radio transmit on the frequency TR4W would tune for `Band`?
 //
@@ -802,34 +881,6 @@ procedure BandChange(var ActiveBand: BandType; Direction: DirectionType;
 
 label
   NextBand;
-const
-  MAXBANDS = 21;
-  BandChangeArray: array[1..MAXBANDS] of BandChangeType =
-    (
-
-    (bcBand: Band160; bcWARC: False; bcVHF: False),
-    (bcBand: Band80; bcWARC: False; bcVHF: False),
-//    (bcBand: Band60; bcWARC: True; bcVHF: False),
-    (bcBand: Band40; bcWARC: False; bcVHF: False),
-    (bcBand: Band30; bcWARC: True; bcVHF: False),
-    (bcBand: Band20; bcWARC: False; bcVHF: False),
-    (bcBand: Band17; bcWARC: True; bcVHF: False),
-    (bcBand: Band15; bcWARC: False; bcVHF: False),
-    (bcBand: Band12; bcWARC: True; bcVHF: False),
-    (bcBand: Band10; bcWARC: False; bcVHF: False),
-    (bcBand: Band6; bcWARC: False; bcVHF: True),
-    (bcBand: Band2; bcWARC: False; bcVHF: True),
-    (bcBand: Band222; bcWARC: False; bcVHF: True),
-    (bcBand: Band432; bcWARC: False; bcVHF: True),
-    (bcBand: Band902; bcWARC: False; bcVHF: True),
-    (bcBand: Band1296; bcWARC: False; bcVHF: True),
-    (bcBand: Band2304; bcWARC: False; bcVHF: True),
-    (bcBand: Band3456; bcWARC: False; bcVHF: True),
-    (bcBand: Band5760; bcWARC: False; bcVHF: True),
-    (bcBand: Band10G; bcWARC: False; bcVHF: True),
-    (bcBand: Band24G; bcWARC: False; bcVHF: True),
-    (bcBand: BandLight; bcWARC: False; bcVHF: True)
-    );
 
 var
   TempInteger: integer;

@@ -75,12 +75,13 @@ object frmLogSearch: TfrmLogSearch
     Caption = 'Operator'
     ParentColor = False
   end
-  object edtOperator: TEdit
+  object cboOperator: TComboBox
     Left = 600
     Height = 23
     Top = 10
     Width = 120
     CharCase = ecUppercase
+    ItemHeight = 15
     OnChange = FilterChanged
     TabOrder = 3
   end
