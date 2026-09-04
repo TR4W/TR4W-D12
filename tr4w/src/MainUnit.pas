@@ -29,6 +29,7 @@ interface
 
 uses
   uMainWindowProc, // TTR4WEntryField -- CreateCallOrExchangeWin names the field
+  Graphics,        // TFont -- ApplyMainFontTo, for controls the LCL draws
   uConfigValues,   // Config.CodeSpeedIncrement
   ShellAPI,
   Types,               // TRect -- the OnDrawItem signature qualifies it as
@@ -416,6 +417,8 @@ procedure CallWindowChange;
 procedure ExchangeWindowChange;
 procedure CreateFonts;
 //procedure CreateMWFonts;
+function MainFontCellHeight: integer;
+procedure ApplyMainFontTo(aFont: TFont);
 function tCreateFont(nHeight, fnWeight: integer; lpszFace: PChar): HFONT;
 function DrawWindows(lParam: lParam; wParam: wParam): Cardinal;
 //function DrawEdit(lParam: lParam; wParam: wParam): Cardinal;
@@ -4458,6 +4461,46 @@ begin
   QueueToolWindowRestore;
 end;
 
+(* THE HEIGHT OF THE MAIN WINDOW FONT, IN PIXELS.
+
+  ONE DEFINITION, because there are two consumers and the arithmetic is not
+  obvious. CreateFonts asks tCreateFont for ws - 2 + FontSize, and tCreateFont
+  then adds FontSize - 1 of its own before calling CreateFontW -- so the height
+  Windows is actually given is ws + 2*FontSize - 3, and nothing said so.
+
+  A positive lfHeight is a CHARACTER CELL height, which is what TFont.Height
+  means in the LCL too, so the same number serves both. *)
+function MainFontCellHeight: integer;
+begin
+   Result := ws + 2 * FontSize - 3;
+end;
+
+(* THE MAIN WINDOW FONT, AS AN LCL FONT.
+
+  For controls the LCL draws -- the editable log is the first -- which cannot
+  use the HFONT that MainFont holds. Same family, same height, same weight, so
+  the log is in the typeface the operator chose for the window rather than
+  whatever the control defaulted to. *)
+procedure ApplyMainFontTo(aFont: TFont);
+begin
+   if aFont = nil then
+      begin
+      Exit;
+      end;
+
+   aFont.Name   := string(MainFontName);
+   aFont.Height := MainFontCellHeight;
+
+   if BoldFont then
+      begin
+      aFont.Style := aFont.Style + [fsBold];
+      end
+   else
+      begin
+      aFont.Style := aFont.Style - [fsBold];
+      end;
+end;
+
 function tCreateFont(nHeight, fnWeight: integer; lpszFace: PChar): HFONT;
 begin
   Result := Windows.CreateFontW
@@ -4488,7 +4531,10 @@ begin
 
  DeleteObject(MainFixedFont);
  MainFixedFont := tCreateFont(12+BandMapSize-2,FW_BOLD * Ord(BoldFont), @MainFontName[1]);
- MainFont := tCreateFont(ws - 2+FontSize, FW_BOLD * ord(BoldFont), @MainFontName[1]);
+(* THE MAIN WINDOW FONT, ONCE. ApplyMainFontTo below hands the same three
+    values to an LCL control -- see there before changing this line. *)
+ MainFont := tCreateFont(MainFontCellHeight - FontSize + 1,
+    FW_BOLD * ord(BoldFont), @MainFontName[1]);
  CATWindowFont := tCreateFont(22, FW_EXTRABOLD, 'Lucida Console');
 
  MainWindowEditFont := tCreateFont(ws + 3, FW_EXTRABOLD, lcfn);

@@ -118,6 +118,13 @@ const
      together. *)
    CACHE_ROWS = 512;
 
+   (* Breathing room either side of a cell's text. *)
+   CELL_PAD = 3;
+
+   (* No column narrower than this, whatever the table says -- a zero-width
+     column is invisible and cannot be dragged back. *)
+   MIN_COLUMN_WIDTH = 8;
+
 constructor TLogGrid.Create(aOwner: TComponent);
 begin
    inherited Create(aOwner);
@@ -140,11 +147,19 @@ begin
    RowCount      := 1;
    ScrollBars    := ssAutoVertical;
    BorderStyle   := bsSingle;
-   DefaultRowHeight := 16;
-   Color         := tr4wColorsArray[trWhite];
-   Font.Color    := tr4wColorsArray[trBlack];
-   Font.Name     := 'Courier New';
-   Font.Size     := 9;
+   (* THE SAME HEIGHT THE REST OF THE WINDOW IS LAID OUT WITH.
+     CheckEditableWindowHeight sizes this control as
+     30 + LinesInEditableLog * (ws + 2), so a row is ws + 2 and the arithmetic
+     on both sides of the layout agrees. *)
+   DefaultRowHeight := ws + 2;
+
+   Color      := tr4wColorsArray[trWhite];
+   Font.Color := tr4wColorsArray[trBlack];
+
+   (* THE FONT IS THE MAIN WINDOW'S, applied by the owner through
+     MainUnit.ApplyMainFontTo -- the operator chooses it, and a log in a
+     different typeface from the rest of the window is exactly what the first
+     version of this looked like. *)
 end;
 
 (* WHICH COLUMNS ARE SHOWN, AND IN WHICH ORDER.
@@ -186,25 +201,36 @@ begin
    SizeColumns;
 end;
 
-(* THE WIDTHS.
+(* THE WIDTHS, AS THE ORIGINAL SET THEM.
 
-  ColumnsArray[].Width IS A COUNT OF CHARACTERS, not pixels -- it was written
-  for a fixed-pitch DOS display and the Win32 port passed it to a control that
-  wanted pixels, which is why narrow columns clipped their own headers. It is
-  multiplied by the width of a character in the grid's actual font here, which
-  is the only place that conversion happens.
+  ColumnsArray[].Width IS A COUNT IN `ws` UNITS, NOT CHARACTERS AND NOT PIXELS.
+  CreateEditableLog set each column to Width * ws -- ws being the main window's
+  scale unit, WindowSize + 12 -- and that is the whole rule. There was no
+  redistribution of leftover width.
 
-  Any width left over after every column has what it asked for goes to the
-  callsign column, because that is the field an operator reads across the room
-  and the one whose contents vary most in length. *)
+  GETTING THIS WRONG IS WHAT MADE THE GRID LOOK NOTHING LIKE THE PROGRAM. The
+  first version multiplied by the width of a character instead, which is a
+  third of ws, so every column came out cramped; then it handed ALL the
+  leftover width to the callsign column, which became about five hundred pixels
+  with the callsign at its left edge. That is the empty channel down the middle
+  of the window in NY4I's screenshot, and the reason Freq and Op were jammed
+  together at the right.
+
+  THREE CASES, and they are the original's, in order:
+
+    1. The operator has dragged this column -- ColumnWidthOverride, in pixels.
+       Their width wins over everything.
+    2. ColumnAutoSize, for columns from logColNumberReceive rightwards: fit the
+       header. LVSCW_AUTOSIZE_USEHEADER fits the wider of header and content,
+       and a virtual grid has no content to measure, so it is the header text
+       against the declared width.
+    3. Otherwise Width * ws. *)
 procedure TLogGrid.SizeColumns;
 var
    i:      integer;
-   charW:  integer;
-   want:   integer;
-   total:  integer;
-   spare:  integer;
-   callIx: integer;
+   c:      LogColumnsType;
+   w:      integer;
+   header: integer;
 begin
    if Length(FColumnOf) = 0 then
       begin
@@ -212,38 +238,35 @@ begin
       end;
 
    Canvas.Font.Assign(Font);
-   charW := Canvas.TextWidth('0');
-   if charW <= 0 then
-      begin
-      charW := 8;
-      end;
-
-   total  := 0;
-   callIx := -1;
 
    for i := 0 to High(FColumnOf) do
       begin
-      want := (ColumnsArray[FColumnOf[i]].Width * charW) + charW;
+      c := FColumnOf[i];
 
-      (* Never narrower than its own heading, or the header row clips. *)
-      if want < Canvas.TextWidth(ColumnsArray[FColumnOf[i]].Text) + charW then
+      if ColumnWidthOverride[c] > 0 then
          begin
-         want := Canvas.TextWidth(ColumnsArray[FColumnOf[i]].Text) + charW;
+         w := ColumnWidthOverride[c];
+         end
+      else
+         begin
+         w := ColumnsArray[c].Width * ws;
+
+         if (c >= logColNumberReceive) and ColumnAutoSize then
+            begin
+            header := Canvas.TextWidth(ColumnsArray[c].Text) + CELL_PAD * 2;
+            if header > w then
+               begin
+               w := header;
+               end;
+            end;
          end;
 
-      ColWidths[i] := want;
-      Inc(total, want);
-
-      if FColumnOf[i] = logColCallsign then
+      if w < MIN_COLUMN_WIDTH then
          begin
-         callIx := i;
+         w := MIN_COLUMN_WIDTH;
          end;
-      end;
 
-   spare := ClientWidth - total - 4;
-   if (spare > 0) and (callIx >= 0) then
-      begin
-      ColWidths[callIx] := ColWidths[callIx] + spare;
+      ColWidths[i] := w;
       end;
 end;
 
@@ -345,20 +368,21 @@ end;
 
 (* PAINTING ONE CELL.
 
-  THE HEADER ROW IS DRAWN HERE TOO rather than by a fixed-cell style, so that
-  its font and colours are the grid's own and it cannot end up looking like a
-  Windows control on one machine and like the log on another.
+  TRUNCATED WITH AN ELLIPSIS, which is what the list view did and what the
+  program has always looked like: a date too wide for its column reads
+  `03-09-...` and a frequency reads `14070...`. Clipping instead -- the first
+  version of this -- ran neighbouring columns together, so `14070` and `NY4I`
+  appeared as `14070NY4I` with no way to tell there were two values.
 
   A DELETED QSO IS RED AND AN X-QSO IS GREY. Those two rules were in a
-  custom-draw handler on each of the two list views; they are one rule now. *)
+  custom-draw handler on each of two list views; they are one rule now. *)
 procedure TLogGrid.DrawCell(aCol, aRow: integer; aRect: TRect;
                             aState: TGridDrawState);
 var
    e:     PLogGridCacheEntry;
    s:     string;
    c:     LogColumnsType;
-   x:     integer;
-   tw:    integer;
+   style: TTextStyle;
 begin
    if (aCol < 0) or (aCol > High(FColumnOf)) then
       begin
@@ -368,68 +392,88 @@ begin
    c := FColumnOf[aCol];
 
    Canvas.Font.Assign(Font);
-   Canvas.Brush.Color := Color;
-   Canvas.Font.Color  := Font.Color;
+
+   (* ALIGNMENT COMES FROM ColumnsArray as the Win32 LVCFMT_ constants it has
+     always carried -- read as the numbers they are rather than renamed and
+     migrated, because the CFG files and the corpus references carry them. *)
+   FillChar(style, SizeOf(style), 0);
+   style.SingleLine  := True;
+   style.Layout      := tlCenter;
+   style.EndEllipsis := True;
+   style.Wordbreak   := False;
+   style.Clipping    := True;
+   style.Opaque      := False;
+
+   case ColumnsArray[c].Align of
+      LVCFMT_RIGHT:
+         begin
+         style.Alignment := taRightJustify;
+         end;
+      LVCFMT_CENTER:
+         begin
+         style.Alignment := taCenter;
+         end;
+      else
+         begin
+         style.Alignment := taLeftJustify;
+         end;
+      end;
 
    if aRow < FixedRows then
       begin
-      s := ColumnsArray[c].Text;
-      Canvas.Brush.Color := tr4wColorsArray[trBtnFace];
-      end
-   else
+      (* THE HEADER, drawn by the LCL so it looks like every other header in
+        the program -- the fixed colour and the frame -- with the caption over
+        it. *)
+      inherited DrawCell(aCol, aRow, aRect, aState);
+      Canvas.Brush.Style := bsClear;
+      Canvas.Font.Color  := Font.Color;
+      (* Plain arithmetic, not InflateRect -- that is a Win32 API and this
+        unit names no platform. *)
+      Inc(aRect.Left, CELL_PAD);
+      Dec(aRect.Right, CELL_PAD);
+      Canvas.TextRect(aRect, aRect.Left, aRect.Top, ColumnsArray[c].Text, style);
+      Canvas.Brush.Style := bsSolid;
+      Exit;
+      end;
+
+   Canvas.Brush.Color := Color;
+   Canvas.Font.Color  := Font.Color;
+
+   e := Fetch(aRow - FixedRows);
+   if not e^.Valid then
       begin
-      e := Fetch(aRow - FixedRows);
-      if not e^.Valid then
-         begin
-         Canvas.FillRect(aRect);
-         Exit;
-         end;
+      Canvas.FillRect(aRect);
+      Exit;
+      end;
 
-      s := e^.Text[c];
+   s := e^.Text[c];
 
-      if e^.Deleted then
-         begin
-         Canvas.Font.Color := clRed;
-         end
-      else if e^.XQSO then
-         begin
-         Canvas.Font.Color := clGray;
-         end;
+   if e^.Deleted then
+      begin
+      Canvas.Font.Color := clRed;
+      end
+   else if e^.XQSO then
+      begin
+      Canvas.Font.Color := clGray;
+      end;
 
-      if gdSelected in aState then
-         begin
-         Canvas.Brush.Color := clHighlight;
-         end;
+   (* THE SELECTED ROW. clHighlight/clHighlightText rather than a colour from
+     tr4wColorsArray, because that palette names COLOURS and has no role for a
+     selection -- see docs/COLOR_ROLES_DESIGN.md. They are also the colours an
+     operator's high-contrast theme changes. *)
+   if gdSelected in aState then
+      begin
+      Canvas.Brush.Color := clHighlight;
+      Canvas.Font.Color  := clHighlightText;
       end;
 
    Canvas.FillRect(aRect);
 
-   (* ALIGNMENT. ColumnsArray states it per column and the values are the
-     Win32 LVCFMT_ constants, which are what the CFG files and the corpus
-     references have always carried -- so they are read here as the numbers
-     they are rather than renamed and migrated. *)
-   tw := Canvas.TextWidth(s);
-   case ColumnsArray[c].Align of
-      LVCFMT_RIGHT:
-         begin
-         x := aRect.Right - tw - 2;
-         end;
-      LVCFMT_CENTER:
-         begin
-         x := aRect.Left + ((aRect.Right - aRect.Left) - tw) div 2;
-         end;
-      else
-         begin
-         x := aRect.Left + 2;
-         end;
-      end;
-
-   if x < aRect.Left + 1 then
-      begin
-      x := aRect.Left + 1;
-      end;
-
-   Canvas.TextRect(aRect, x, aRect.Top + 1, s);
+   Canvas.Brush.Style := bsClear;
+   Inc(aRect.Left, CELL_PAD);
+   Dec(aRect.Right, CELL_PAD);
+   Canvas.TextRect(aRect, aRect.Left, aRect.Top, s, style);
+   Canvas.Brush.Style := bsSolid;
 end;
 
 end.

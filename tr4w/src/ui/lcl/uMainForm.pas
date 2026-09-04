@@ -1339,6 +1339,13 @@ begin
       end;
 
    TR4WEditableLog.SetBounds(aLeft, aTop, aWidth, aHeight);
+
+   (* THE OPERATOR'S OWN FONT, and the row height that goes with it. Without
+     this the grid drew in the LCL default and looked like a different program
+     from the window around it (NY4I, 2026-09-04). *)
+   ApplyMainFontTo(TR4WEditableLog.Font);
+   TR4WEditableLog.DefaultRowHeight := ws + 2;
+
    TR4WEditableLogApplyColors;
    TR4WEditableLog.BuildColumns;
    TR4WEditableLog.Visible := True;
