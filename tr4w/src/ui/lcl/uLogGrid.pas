@@ -381,13 +381,38 @@ begin
    Row := FixedRows + integer(aValue);
 end;
 
+(* THE NEWEST QSO IN VIEW -- WHICH MEANS MOVING THE VIEWPORT, NOT THE
+  SELECTION.
+
+  Setting Row moves the SELECTED row. On a grid that does not have focus that
+  does not necessarily bring the row into view, so the last line of this used
+  to be all there was and the log looked frozen: the count grew, the rows were
+  correct, and the operator went on looking at the same eight rows near the top
+  while every new contact landed below the bottom edge (NY4I, 2026-09-04).
+
+  IT PASSED A UI TEST ANYWAY, and that is the part worth remembering. The
+  harness logged into an EMPTY log, so two records both fitted on screen and
+  nothing ever had to scroll. A test that cannot reach the state the defect
+  lives in reports PASS with complete confidence. *)
 procedure TLogGrid.ScrollToEnd;
+var
+   last: integer;
+   top:  integer;
 begin
    if FRecordCount <= 0 then
       begin
       Exit;
       end;
-   Row := RowCount - 1;
+
+   last := RowCount - 1;
+   Row  := last;
+
+   top := last - VisibleRowCount + 1;
+   if top < FixedRows then
+      begin
+      top := FixedRows;
+      end;
+   TopRow := top;
 end;
 
 (* PAINTING ONE CELL.

@@ -1438,9 +1438,21 @@ end;
 
 procedure TR4WEditableLogScrollToEnd;
 begin
-   if TR4WEditableLog <> nil then
+   if TR4WEditableLog = nil then
       begin
-      TR4WEditableLog.ScrollToEnd;
+      Exit;
+      end;
+
+   TR4WEditableLog.ScrollToEnd;
+
+   (* WHERE THE VIEW ACTUALLY ENDED UP. "The grid did not update" and "the new
+     row is below the bottom edge" look identical on screen and have nothing in
+     common as causes. *)
+   if logger <> nil then
+      begin
+      logger.Debug('[EditableLog] scrolled: rows=%d selected=%d topRow=%d visible=%d',
+                   [TR4WEditableLog.RowCount, TR4WEditableLog.Row,
+                    TR4WEditableLog.TopRow, TR4WEditableLog.VisibleRowCount]);
       end;
 end;
 
