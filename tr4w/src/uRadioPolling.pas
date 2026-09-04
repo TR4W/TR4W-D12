@@ -1538,7 +1538,10 @@ begin
          end;
       end;
 
-   tDispalyOnAirTime;
+   (* THE MAIN THREAD DRAWS IT, not this one. tDispalyOnAirTime writes a
+     main-window element, and this is the radio polling thread -- see
+     mtOnAirTime. *)
+   RequestMainThreadJob(mtOnAirTime);
 
    // STATE, NOT A WIDGET. This ran
    //
@@ -1680,5 +1683,6 @@ initialization
    RegisterMainThreadJob(mtSwitchToSearchAndPounce, @RunSwitchToSearchAndPounce);
    RegisterMainThreadJob(mtBandModeDisplay, @RunBandModeDisplay);
    RegisterMainThreadJob(mtMainWindowElementColors, @RefreshMainWindowElementColors);
+   RegisterMainThreadJob(mtOnAirTime, @tDispalyOnAirTime);
 
 end.

@@ -110,7 +110,28 @@ type
 
       { The active radio changed band or mode: refresh everything that shows
         either.  Pure repaint, and already behind a change test. }
-      mtBandModeDisplay
+      mtBandModeDisplay,
+
+      { THE ON-AIR CLOCK, ticked by the radio polling thread.
+
+        THE ELEVENTH OFF-THREAD WRITER, and the one uWSJTX's note left "for its
+        own change": ten of the eleven were one batch behind a single call and
+        were marshalled together on 2026-08-30; this one is a clock tick on a
+        different thread and was parked.
+
+        Found again in NY4I's own log, by the report SetMainWindowText carries:
+
+          [Thread] SetMainWindowText called from thread 18976, NOT the main
+          thread -- caller TDISPALYONAIRTIME, line 3690 of LOGWIND.PAS
+
+        It has to move before that call site can become a plain property
+        assignment, because the funnel's report is the only thing standing
+        between a cross-thread control write and nobody noticing.
+
+        COALESCED, which is the whole reason this unit exists rather than
+        uMainThread: the poll loop asks on every pass and the clock only needs
+        drawing once per turn of the main loop. }
+      mtOnAirTime
    );
 
    TMainThreadProc = procedure;
