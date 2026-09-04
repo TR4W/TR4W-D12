@@ -100,6 +100,10 @@ var
   Ask this, and reopen if it says no. *)
 function LogSourceIsOpen: boolean;
 
+(* Let go of the read snapshot, so the next read sees what another connection
+  has committed since. See TLogRepository.RefreshSnapshot. *)
+procedure LogSourceRefreshSnapshot;
+
 function LogSourceOpen: boolean;
 
 (* Positions at the first QSO -- the ReadVersionBlock equivalent.  Call after
@@ -207,6 +211,14 @@ begin
       logger.Warn('[LogSource] opened while already open. The previous read is ' +
                   'abandoned -- the binary path silently did the same thing, ' +
                   'so this is a latent bug being made visible, not a new one.');
+      end;
+end;
+
+procedure LogSourceRefreshSnapshot;
+begin
+   if (LogSourceKind = lsDatabase) and (GRepository <> nil) then
+      begin
+      GRepository.RefreshSnapshot;
       end;
 end;
 

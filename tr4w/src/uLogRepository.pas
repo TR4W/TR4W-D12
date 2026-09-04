@@ -385,6 +385,23 @@ type
         log that contains a deleted QSO. *)
       function RecordCount: Int64;
 
+      (* DROP THE READ SNAPSHOT.
+
+        A connection sees the database as it was when its read transaction
+        began, and sqldb leaves that transaction open after a query -- so rows
+        another connection COMMITS afterwards stay invisible to this one,
+        indefinitely.
+
+        The log is written through uLogStore's connection and read through
+        uLogSource's, which are two different connections on one file. A QSO
+        logged during a contest therefore did not appear in the main window
+        grid, while View/Edit Log -- which opens a fresh connection every time
+        -- showed it (NY4I, 2026-09-04). The grid was one behind, permanently.
+
+        Rolling back is how a READ transaction is ended: nothing was written on
+        this connection. *)
+      procedure RefreshSnapshot;
+
       procedure Commit;
 
       property Database: TLogDatabase read FDatabase;
@@ -1959,6 +1976,22 @@ begin
    finally
       q.Free;
    end;
+end;
+
+procedure TLogRepository.RefreshSnapshot;
+begin
+   (* NOT MID-WALK. An export reading sequentially wants exactly the snapshot
+     it started with -- a log that does not change under it -- and ending the
+     transaction would close its cursor. *)
+   if (FCursor <> nil) and FCursor.Active then
+      begin
+      Exit;
+      end;
+
+   if FDatabase.Transaction.Active then
+      begin
+      FDatabase.Transaction.Rollback;
+      end;
 end;
 
 procedure TLogRepository.Commit;
