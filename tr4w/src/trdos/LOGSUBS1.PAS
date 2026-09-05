@@ -27,7 +27,6 @@ uses
   uNet,
   uWinKey,
   uYCCCSO2R,
-  uMixW,
   uMMTTY,
   VC,
   uCallSignRoutines,
@@ -219,10 +218,6 @@ begin // 1
         begin // 3
         RITClear;
         Delete(Message, pos('>', Message), 1);
-        end // 2
-     else
-        begin
-        SendMessageToMixW(Message);
         end;
 
      end; // 1
@@ -483,11 +478,6 @@ begin
 
   tExchangeWindowSetFocus;
   ExchangeHasBeenSent := True;
-  if ActiveMode = Digital then
-     begin
-     SendMessageToMixW('<RXANDCLEAR>');
-     end;
-
   SendSerialNumberChange(sntReserved);
 end;
 
@@ -520,7 +510,6 @@ begin
      Exit;
      end;
 
-  //    if ActiveMode = Digital then SendMessageToMixW('<TX>');
   if AutoQSLCount > 0 then
      begin
      dec(AutoQSLCount);
@@ -567,7 +556,6 @@ begin
             end;
      end;
 
-  //    if ActiveMode = Digital then SendMessageToMixW('<RXANDCLEAR>');
 
   SeventyThreeMessageSent := Result;
 end;

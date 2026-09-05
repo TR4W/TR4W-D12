@@ -165,7 +165,6 @@ uses
   uFreqTimeFormat,
   uIntercom,
   uLogCompare,
-  uMixW,
   uCallsigns,
   uSpots,
   uSpotAge,
@@ -1734,10 +1733,6 @@ begin
       if not YCCCOpen then
          logger.Warn('YCCC SO2R box not found or failed to open');
       end;
-
-{$IFDEF MIXWMODE}
-  tEnableMenuItem(menu_windows_mmtty, MF_ENABLED);
-{$ENDIF}
 
   CD.MasterFileExists := FileExists(CD.ActiveFilename);
 

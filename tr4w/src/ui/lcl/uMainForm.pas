@@ -349,9 +349,9 @@ procedure SetEntryColors(const aEdit: TEdit; const aBack, aText: TColor);
   CreateTR4WMainForm. *)
 procedure BindMainElements;
 
-function  CreateMainElement(const aElement: TMainWindowElement;
+procedure CreateMainElement(const aElement: TMainWindowElement;
                             const aStyle: cardinal;
-                            const aLeft, aTop, aWidth, aHeight: integer): HWND;
+                            const aLeft, aTop, aWidth, aHeight: integer);
 function  MainElement(const aElement: TMainWindowElement): TPanel;
 procedure SetElementText(const aElement: TMainWindowElement; const aText: string);
 procedure SetElementColors(const aElement: TMainWindowElement;
@@ -376,7 +376,7 @@ procedure RestoreMainWindowBounds(const aSaved: TRect);
 
 (* Let the operator resize the main window vertically. Width is pinned:
   see the note at the call site. *)
-procedure MakeMainWindowResizeable(const aWidth, aHeight: integer);
+procedure MakeMainWindowResizeable(const aOuterWidth, aClientHeight: integer);
 
 procedure AnchorMainWindowControls;
 
@@ -743,13 +743,23 @@ end;
   following the operator's font size. That is what keeps CLAUDE.md's note --
   "freezing them into a designed layout would be a regression" -- true: nothing
   is frozen. *)
-function CreateMainElement(const aElement: TMainWindowElement;
+(* NO HANDLE IS RETURNED, AND NONE IS CREATED.
+
+  This used to end `Result := p.Handle`, which the caller stored in wh[]. That
+  array is written for every element and READ BY NOTHING -- measured 2026-09-05,
+  its only live readers are the server log's list view (CreateListView and
+  LOGWIND.SetListViewColor), which fills its own entries.
+
+  Touching Handle is not a read, it is a CONSTRUCTION: it forces the window into
+  existence there and then. Doing that for 110 panels at startup, to populate an
+  array nobody consults, is work the operator pays for on every launch. The LCL
+  creates each handle when the form is shown, which is when it is needed. *)
+procedure CreateMainElement(const aElement: TMainWindowElement;
                            const aStyle: cardinal;
-                           const aLeft, aTop, aWidth, aHeight: integer): HWND;
+                           const aLeft, aTop, aWidth, aHeight: integer);
 var
    p: TPanel;
 begin
-   Result := 0;
    if TR4WMainForm = nil then
       begin
       Exit;
@@ -809,8 +819,6 @@ begin
 
    p.Enabled := (aStyle and WS_DISABLED) = 0;
    p.Visible := (aStyle and WS_VISIBLE) <> 0;
-
-   Result := p.Handle;
 end;
 
 (* MATCH EVERY DESIGNED PANEL TO ITS ELEMENT, ONCE.
@@ -1003,20 +1011,55 @@ begin
    TR4WMainForm.BoundsRect := r;
 end;
 
-procedure MakeMainWindowResizeable(const aWidth, aHeight: integer);
+procedure MakeMainWindowResizeable(const aOuterWidth, aClientHeight: integer);
 begin
    if TR4WMainForm = nil then
       begin
       Exit;
       end;
 
-   (* THE CONSTRAINTS GO ON BEFORE THE BORDER STYLE CHANGES, so there is no
-     moment where the window is draggable without a floor. *)
-   TR4WMainForm.Constraints.MinHeight := aHeight;
-   TR4WMainForm.Constraints.MinWidth := aWidth;
-   TR4WMainForm.Constraints.MaxWidth := aWidth;
+   (* THE BORDER STYLE IS SET IN THE .lfm, NOT HERE, AND THAT IS THE WHOLE
+     POINT OF THIS ROUTINE'S SHAPE.
 
-   TR4WMainForm.BorderStyle := bsSizeable;
+     Assigning BorderStyle at run time calls RecreateWnd -- confirmed in
+     lcl/interfaces/win32/win32wsforms.pp, TWin32WSCustomForm.SetFormBorderStyle
+     is literally `RecreateWnd(AForm)`. The main window CANNOT survive that:
+
+       * tr4whandle is captured once, in CreateTR4WMainForm, and every
+         Windows.* call in the program uses it. A recreated form has a new
+         HWND, so the old one is dead and every call against it does nothing.
+         That is why the contest name stopped appearing in the title -- LOGWIND
+         sets it with SetWindowTextA(tr4whandle, ...).
+       * The GWL_WNDPROC subclass is installed on that handle. Recreating drops
+         it, so WM_CLOSE never reached ExitProgram: closing the main window left
+         the program running with Radio 1, Radio 2 and the DX cluster still up.
+       * SetMenu was called on that handle too.
+       * A sizeable frame is thicker than a fixed one, so the client area
+         shrank under a layout already computed for the old frame -- the
+         "compressed" bottom.
+
+     Four symptoms, one line. It is a design-time property now.
+
+     SIZED BY ITS CLIENT AREA, not its outer size, for the same reason: the
+     caller knows how much room the controls need, and how thick the frame is
+     is the widget set's business. The old code set an OUTER height of
+     `6 + MainWindowCaptionAndHeader + EditableLogHeight + ws * 14` where
+     MainWindowCaptionAndHeader is SM_CYMENU + SM_CYCAPTION -- so the 6 was a
+     frame allowance for bsSingle specifically, and the client height it
+     actually wanted is what is passed here. Same geometry as before, and it
+     stays right whatever the border is.
+
+     The WIDTH is still set as an OUTER width, deliberately: that is what the
+     original did, and changing it to a client width would make the window
+     about sixteen pixels wider than every previous version. *)
+   TR4WMainForm.Width := aOuterWidth;
+   TR4WMainForm.ClientHeight := aClientHeight;
+
+   (* Measured after sizing rather than computed, so the floor is exactly the
+     height the layout just took. *)
+   TR4WMainForm.Constraints.MinHeight := TR4WMainForm.Height;
+   TR4WMainForm.Constraints.MinWidth := TR4WMainForm.Width;
+   TR4WMainForm.Constraints.MaxWidth := TR4WMainForm.Width;
 end;
 
 procedure AnchorMainWindowControls;

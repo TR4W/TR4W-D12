@@ -4,7 +4,7 @@ object TR4WMainForm: TTR4WMainForm
   Top = 30
   Width = 806
   BorderIcons = [biSystemMenu, biMinimize]
-  BorderStyle = bsSingle
+  BorderStyle = bsSizeable
   Caption = 'TR4W'
   ClientHeight = 370
   ClientWidth = 806

@@ -208,6 +208,7 @@ uses
   uLogSource,
   uMainForm,   { the call field, named -- wh[] round 3 }
   uNetworkForm,   { the station list is a TListView on a form now }
+  Controls,       { TCaption -- see ShowConnectionStatus }
   uCFG,
   LOGSUBS2,
   uRadioPolling,
@@ -1108,9 +1109,7 @@ end;
 
 procedure DisplayClientStatus(Index: integer);
 var
-  elvi                                  : TLVItem;
   i, i2                                 : integer;
-  h                                     : HWND;
 //  p                                     : PChar;
   TempBuffer                            : array[0..31] of AnsiChar;
 const
@@ -1118,8 +1117,8 @@ const
 begin
   i := PosInClientsList[Index] - 1;
   CurrentDisplayedRow := Index;
-  elvi.Mask := LVIF_TEXT;
-  h := wh[mweNetwork];
+  //  elvi.Mask := LVIF_TEXT;      //AGENT_DEPRECATED
+  //  h := wh[mweNetwork];         //AGENT_DEPRECATED  -- never assigned; always 0
 
   if StatusArray[Index].ssComputerID = #0 then
      begin
@@ -1170,8 +1169,9 @@ begin
     sstPTT:
       begin
         SetClientCell(i, 6 - 1, string(PTTStatusString[PTTStatusType((StatusArray[Index].ssStatusByte and (1 shl 0)) <> 0)]));
-        //ListView_Update(h, I);
-        ListView_RedrawItems(h, i, i);
+        (* A TListView repaints an item when its text changes; this forced
+          a repaint on a Win32 handle that is always 0. *)
+        //ListView_RedrawItems(h, i, i);   //AGENT_DEPRECATED
       end;
 
     sstOpMode:
@@ -1335,36 +1335,63 @@ begin
 
 end;
 
+(* THE ROW IS CREATED WHEN IT IS FIRST WRITTEN, not here.
+
+  This inserted an item into wh[mweNetwork] -- a handle that is never assigned,
+  because the station list is a TListView on uNetworkForm now. The insert has
+  therefore been doing nothing, and nothing was lost by it: SetCell adds rows on
+  demand, precisely because a status can arrive for a station before anything
+  has drawn it. *)
 procedure AddNewClient(ClientID: integer);
-var
-  elvi                                  : TLVItem;
 begin
-
-  elvi.Mask := LVIF_PARAM;
-  elvi.iItem := TotalClients;
-  elvi.iSubItem := 0;
-
-  //  elvi.iImage := 0;
-  ListView_InsertItem(wh[mweNetwork], elvi);
+  //  elvi.Mask := LVIF_PARAM;                        //AGENT_DEPRECATED
+  //  elvi.iItem := TotalClients;                     //AGENT_DEPRECATED
+  //  elvi.iSubItem := 0;                             //AGENT_DEPRECATED
+  //  ListView_InsertItem(wh[mweNetwork], elvi);      //AGENT_DEPRECATED
   inc(TotalClients);
   PosInClientsList[ClientID] := TotalClients;
 end;
 
+(* THE NETWORK WINDOW'S TITLE, AS A CAPTION AND AN RTL FORMAT.
+
+  Two Win32 habits in two lines. The window is TR4WNetworkForm now, so its
+  title is a property -- writing it through tr4w_WindowsArray[].WndHandle only
+  worked while that cached handle stayed valid, which is how the MAIN window's
+  title came to go blank when its form was recreated.
+
+  And TF.Format is a wsprintf shim: it took the resourcestring as a PAnsiChar,
+  every argument as a PAnsiChar, and wrote into a fixed buffer. SysUtils.Format
+  takes the string and an array of const, so TC_NETWORK ('Network : %s %s:%d')
+  is passed as itself, ServerAddress converts from its ShortString on the way
+  in, and ServerPort goes as an integer rather than being pushed as bytes. No
+  buffer, no WinAnsi round trip, no pointer into a ShortString's first byte. *)
 procedure ShowConnectionStatus(Operation: string);
 begin
-  TF.Format(@NetBuffer, PAnsiChar(WinAnsi(TC_NETWORK)), PAnsiChar(WinAnsi(Operation)), @ServerAddress[1], ServerPort);
-  Windows.SetWindowTextA(tr4w_WindowsArray[tw_NETWINDOW_INDEX].WndHandle, @NetBuffer);
+  //TF.Format(@NetBuffer, PAnsiChar(WinAnsi(TC_NETWORK)), PAnsiChar(WinAnsi(Operation)), @ServerAddress[1], ServerPort); //AGENT_DEPRECATED
+  //Windows.SetWindowTextA(tr4w_WindowsArray[tw_NETWINDOW_INDEX].WndHandle, @NetBuffer); //AGENT_DEPRECATED
+  if TR4WNetworkForm <> nil then
+     begin
+     TR4WNetworkForm.Caption := TCaption(Format(TC_NETWORK,
+                                  [Operation, string(ServerAddress), ServerPort]));
+     end;
 end;
 
 procedure DisplayMessageStatus(Index: integer; Msg: TMessageState);
 var
-  elvi                                  : TLVItem;
   i                                     : integer;
-  h                                     : HWND;
   ProgressBarArray                      : array[0..25] of AnsiChar;
   ProgressBarPos                        : integer;
 begin
-  Windows.FillMemory(@ProgressBarArray[0], SizeOf(ProgressBarArray), Byte('|'));
+  (* FillChar, not Windows.FillMemory -- the RTL does this and does not need a
+    platform. FillMemory IS FillChar with its arguments in a different order, so
+    this is the same fill, minus a Win32 dependency for a byte loop.
+
+    NOTE FOR THE LARGER JOB (ROADMAP §5): ProgressBarArray is not a control. It
+    is 26 characters of '|' written into a station-list CELL, so the "progress
+    bar" an operator sees in the multi-op list is TEXT. That is one of the three
+    unrelated things called a progress bar here, and the reason NY4I wants them
+    unified on one component. *)
+  FillChar(ProgressBarArray[0], SizeOf(ProgressBarArray), Byte('|'));
   ProgressBarPos := Msg.msCWElements div 6;
   if ProgressBarPos > SizeOf(ProgressBarArray) - 1 then
      begin
@@ -1372,8 +1399,8 @@ begin
      end;
   ProgressBarArray[ProgressBarPos] := #0;
   i := PosInClientsList[Index] - 1;
-  elvi.Mask := LVIF_TEXT;
-  h := wh[mweNetwork];
+  //  elvi.Mask := LVIF_TEXT;      //AGENT_DEPRECATED
+  //  h := wh[mweNetwork];         //AGENT_DEPRECATED  -- never assigned; always 0
   SetClientCell(i, 10, string(PAnsiChar(@ProgressBarArray)));
   SetClientCell(i, 11, string(Msg.msCWMessage));
 end;

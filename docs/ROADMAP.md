@@ -789,6 +789,34 @@ code review, and it is the reason the FMX twins should not be deleted yet.
   `Build-Server.ps1`.
 - **Delete the FMX twins** (`src/ui/fmx/`) and `FullBuild-D12-deprecated.ps1` — *after* §4, not
   before.
+- **The progress displays should be one component, and it should be `TProgressBar`**
+  (NY4I, 2026-09-05). Three unrelated things wear that name today:
+  - `TProgressBar` for the Last-hour, Rate and tour-duration bars, converted from
+    `msctls_progress32` on 2026-09-05.
+  - `ProgressBarArray` in `uNet` -- **not a control at all**: an `array[0..25] of AnsiChar`
+    filled with `'|'` and written into a station-list cell, so that "bar" is TEXT. It was
+    filled by `Windows.FillMemory`; now `FillChar`.
+  - the tour bar's marquee, which was a window-style rewrite until the same day.
+
+  **ATGauge was considered and set aside.** It is genuinely cross-platform, but it ships in
+  ATFlatControls, a third-party package, and **is not in a stock Lazarus install** -- measured
+  2026-09-05 against `C:\Lazarus`, no `atgauge*` or `atflatcontrols*` anywhere. The definition
+  of done is "clone onto any PC with FPC and Lazarus installed, run `FullBuild.ps1`, get the
+  setup exe", so adopting it means vendoring it or installing it from the build. NY4I:
+  *"ProgressBar would be better since it is a native LCL control."*
+
+  **SO THE OPEN QUESTION IS NOT WHICH CONTROL, IT IS WHETHER THE NATIVE ONE BEHAVES OFF
+  WINDOWS.** NY4I: *"we will have to verify how it is done on a Mac and Linux. It may work
+  there now."* Two specifics to check when a non-Windows build exists, because both are
+  places `TProgressBar` is thin over a native widget:
+  - `Style := pbstMarquee` -- the indeterminate mode the tour bar uses. GTK and Cocoa both
+    have an equivalent; whether the LCL maps it is the question.
+  - bar COLOUR. It cannot be set portably, and on Windows it already cannot be set at all
+    under visual styles -- `PBM_SETBARCOLOR` is ignored, which is why the Last-hour and Rate
+    bars are the theme colour rather than the red and blue the old code asked for. Any design
+    that needs a coloured bar needs a custom-drawn one on every platform, so decide that
+    before it is designed in.
+
 - **Totals grid is 4 rows** and WFD+digital needs 5; widening overruns the log area. Owed to the
   main-window work in §2.
 - **`ActiveCWKeyer` precedence** (CAT → WinKeyer → YCCC → CPU) is an artifact of if/else ordering,

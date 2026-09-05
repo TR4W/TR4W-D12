@@ -28,7 +28,6 @@ utils_text,
   MMSystem,
   uWinKey,
   uYCCCSO2R,
-  uMixW,
   uMMTTY,
   TF,
   VC,
@@ -268,7 +267,6 @@ begin
       end;
   if ActiveMode = Digital then
      begin
-     //    SendMessageToMixW(Msg);
          if ActiveRadioPtr.tPTTStatus = PTT_OFF then
            if Config.PTTEnable then
               begin
@@ -512,17 +510,6 @@ begin
        end;
         end;
      Exit;
-     end;
-
-  if (ActiveMode = Digital) then
-     begin
-     SendMessageToMixW('<TX>' + Msg + '<RXANDCLEAR>');
-       {
-      PTTOn;
-      PostMmttyMessage(RXM_PTT, $00000002);
-      AddStringToBuffer(Msg, Config.CWTone);
-      PostMessage(MMTTYEXE_Handle, MSG_MMTTY, RXM_PTT, $00000001);
-      }
      end;
 
   {

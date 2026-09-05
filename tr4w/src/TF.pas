@@ -33,9 +33,6 @@ uses
   uTR4WStrings;
 
 type
-  TServerBrowseDialogA0 = function(HWND: HWND; pchBuffer: Pointer; cchBufSize: DWORD): BOOL; stdcall;
-
-type
   MYDLGTEMPLATE = packed record
    {04}Style: DWORD;
    {04}dwExtendedStyle: DWORD;
@@ -114,9 +111,7 @@ var
   IQPrompt                              : array[0..63] of AnsiChar;
 
 function CreateRichEdit(hwndParent: HWND): HWND;
-function Createmsctls_progress32(X, Y, Width, Height: integer; hwndParent: HWND; HMENU: HMENU): HWND;
 
-function CreateOwnerDrawListBox(dwStyle: DWORD; hwndParent: HWND): HWND;
 function EnumerateLinesInFile(FileName: PAnsiChar; Func: TEnumLinesFunc; UpperCase: boolean): boolean;
 function tGetDateFormat(DT: TQSOTime): PAnsiChar; //assembler;
 procedure UnableToFindFileMessage(FileName: string);
@@ -124,11 +119,9 @@ function DeleteSlashes(p: PAnsiChar): PAnsiChar;
 function SetParameterInArray(ArrayPtr: PInteger; ArrayLength: integer; aVar: PInteger; ValueToSet: integer): boolean;
 function GetGUID: string;
 function GetValueFromArray(PCharArrayAddress: PAnsiChar; ArraySize: Byte; const CMD: AnsiString): Byte;
-function StrPosPartial(const Str1, Str2: PAnsiChar): PAnsiChar;
 function GetDialogItemText(h: HWND; Control: integer): ShortString;
 function GetNumberFromCharBuffer(p: PAnsiChar): integer;
 procedure tLoadKeyboardLayout;
-function StrComp_JOH_IA32_6(const Str1, Str2: PAnsiChar): integer;
 function GetContestFromString(ContestString: ShortString): ContestType;
 function STToInt64(St: SYSTEMTIME): int64;
 function RealToStr2(Num: REAL): string;
@@ -154,26 +147,17 @@ function tCreateThread(lpStartAddress: TFNThreadStartRoutine; var lpThreadId: DW
    why both go in the same commit. *)
 function tWM_SETFONT(h: HWND; Font: HFONT): HWND;
 procedure tLB_SETCOLUMNWIDTH(h: HWND; Width: integer);
-function tLB_GETCURSEL(h: HWND): integer;
-function tLB_SETCURSEL(h: HWND; pos: wParam): integer;
 procedure tCB_SETCURSEL(ParentHandle: HWND; Control: integer; pos: Cardinal);
 procedure tCB_ADDSTRING(ParentHandle: HWND; Control: integer; s: string);
 procedure tCB_ADDSTRING_PCHAR(ParentHandle: HWND; Control: integer; s: string);
 function tLB_ADDSTRING(h: HWND; Text: PAnsiChar): integer;
-function tLB_RESETCONTENT(h: HWND): integer;
 function tCB_GETCURSEL(ParentHandle: HWND; Control: integer): integer;
 
-procedure tSetWindowText(WindowHandle: HWND; s: string);
 procedure tSetWindowRedraw(wnd: HWND; Redraw: boolean);
 function SystemTimeToString(SysTime: SYSTEMTIME): string;
-procedure SelectParentDir(h: HWND);
 
 //function StrLen(const Str: PChar): Cardinal;
 function tWindowsExist(wID: WindowsType): boolean;
-
-function GetWindowByHandle(h: HWND): WindowsType;
-
-procedure tEnableMenuItem(uIDEnableItem: UINT; uEnable: UINT);
 
 
 procedure showwarning(Text: string);
@@ -185,30 +169,19 @@ function RITFreqToPchar(i: integer): string;
 function FreqToPChar(i: integer): string;
 function FreqToPChar2(i: integer): string;
 function FreqToPCharWithoutHZ(i: integer): string;
-function kHzToPChar(Freq: Word): string;
 //function InitSysMonthCal32: boolean;
 function MillisecondsToFormattedString(msecs: Cardinal; WithMsec: boolean): string;
 
 //function Pos(Substr: string; S: string): Integer;
-function ArrayToString(const a: array of Char): string;
 procedure InvertBoolean(var b: boolean);
 function inttopchar(i: integer): PAnsiChar;
 procedure DragWindow(h: HWND);
 //procedure SaveStructure(Address: Pointer; Count: integer; FileName: string);
 procedure EnableWindowTrue(h: HWND; nIDDlgItem: integer);
 procedure EnableWindowFalse(h: HWND; nIDDlgItem: integer);
-function _StrInt64(Val: int64; Width: integer): ShortString;
-function ShowServerDialog(AHandle: THandle): string;
 //function tShellexecute(HWND: HWND; Operation, FileName, Parameters, Directory: PChar; showCmd: integer): hInst; // 4.75.3
-function tSetDlgItemIntFalse(hDlg: HWND; nIDDlgItem: integer; uValue: UINT): BOOL; stdcall;
-function tSetDlgItemIntSigned(hDlg: HWND; nIDDlgItem: integer; uValue: integer): BOOL; stdcall;
 function CreateModalDialog(Width, Height: integer; ParentHWND: HWND; lpDialogFunc: TFNDlgProc; dwInitParam: lParam): integer;
-function CreateListBox(X, Y, nWidth, nHeight: Word; hwndParent: HWND; HMENU: HMENU): HWND;
 function CreateButton(dwStyle: Cardinal; lpWindowName: string; X, Y, nWidth: integer; hwndParent: HWND; HMENU: HMENU): HWND;
-function CreateStatic(lpWindowName: string; X, Y, nWidth: integer; hwndParent: HWND; HMENU: HMENU): HWND;
-function CreateEdit(dwStyle: Cardinal; X, Y, Width, Height: integer; hwndParent: HWND; HMENU: HMENU): HWND;
-function CreateListView2(X, Y, nWidth, nHeight: Word; hwndParent: HWND): HWND;
-function CreateComboBox(hwndParent: HWND; HMENU: HMENU): HWND;
 function SendDlgItemMessage(hDlg: HWND; nIDDlgItem: integer; Msg: UINT): LONGINT; stdcall;
 
 function tOpenFileForRead(var h: HWND; FileName: PAnsiChar): boolean;
@@ -360,26 +333,6 @@ begin
   Result := uFreqTimeFormat.FreqToPCharWithoutHZ(i);   // Issue #997: extracted
 end;
 
-function kHzToPChar(Freq: Word): string;
-begin
-  Result := uFreqTimeFormat.kHzToPChar(Freq);   // Issue #997: extracted
-end;
-
-function ArrayToString(const a: array of Char): string;
-begin
-  if Length(a)>0 then
-    // Genuinely wide on both sides: under D12 `Char` IS WideChar and Result is
-    // a UnicodeString, so PChar here is PWideChar and the element stride
-    // matches.  Do not "fix" this one to PAnsiChar.
-     begin
-     SetString(Result, PChar(@a[0]), Length(a))   // lint:wide-ok
-     end
-  else
-     begin
-     Result := '';
-     end;
-end;
-
 {
 }
 
@@ -441,16 +394,6 @@ begin
   Windows.SendDlgItemMessage(h, 101, LB_SETCOLUMNWIDTH, wParam(Width), 0);
 end;
 
-function tLB_GETCURSEL(h: HWND): integer;
-begin
-  Result := SendMessage(h, LB_GETCURSEL, 0, 0);
-end;
-
-function tLB_SETCURSEL(h: HWND; pos: wParam): integer;
-begin
-  Result := SendMessage(h, LB_SETCURSEL, pos, 0);
-end;
-
 procedure tCB_SETCURSEL(ParentHandle: HWND; Control: integer; pos: Cardinal);
 begin
   Windows.SendDlgItemMessage(ParentHandle, integer(Control), CB_SETCURSEL, wParam(pos), 0);
@@ -476,12 +419,6 @@ begin
   Result := -1;
   if h = 0 then Exit;
   Result := SendMessageA(h, LB_ADDSTRING, 0, integer(Text));
-end;
-
-function tLB_RESETCONTENT(h: HWND): integer;
-begin
-  if h = 0 then Exit;
-  Result := SendMessage(h, LB_RESETCONTENT, 0, 0);
 end;
 
 {------------------------------------------------------------------}
@@ -570,83 +507,6 @@ end;
 
 {From System}
 
-function _StrInt64(Val: int64; Width: integer): ShortString;
-var
-  d                                     : array[0..31] of AnsiChar; { need 19 digits and a sign }
-  i, k                                  : integer;
-  sign                                  : boolean;
-  spaces                                : integer;
-begin
-  { Produce an ASCII representation of the number in reverse order }
-
-  Windows.ZeroMemory(@Result, SizeOf(Result));
-  i := 0;
-  sign := Val < 0;
-  repeat
-    d[i] := AnsiChar(Abs(Val mod 10) + Ord('0'));
-    inc(i);
-    Val := Val div 10;
-  until Val = 0;
-  if sign then
-     begin
-     d[i] := '-';
-     inc(i);
-     end;
-
-  { Fill the Result with the appropriate number of blanks }
-  if Width > 255 then
-     begin
-     Width := 255;
-     end;
-  k := 1;
-  spaces := Width - i;
-  while k <= spaces do
-     begin
-     Result[k] := ' ';
-     inc(k);
-     end;
-
-  { Fill the Result with the number }
-  while i > 0 do
-     begin
-     dec(i);
-     Result[k] := d[i];
-     inc(k);
-     end;
-
-  { Result is k-1 characters long }
-  SetLength(Result, k - 1);
-
-end;
-
-function ShowServerDialog(AHandle: THandle): string;
-var
-  ServerBrowseDialogA0                  : TServerBrowseDialogA0;
-  LANMAN_DLL                            : DWORD;
-  Buffer                                : array[0..256] of AnsiChar;
-  bLoadLib                              : boolean;
-begin
-  LANMAN_DLL := GetModuleHandle('NTLANMAN.DLL');
-  if LANMAN_DLL = 0 then
-     begin
-     LANMAN_DLL := LoadLibrary('NTLANMAN.DLL');
-     bLoadLib := True;
-     end;
-  if LANMAN_DLL <> 0 then
-     begin
-     @ServerBrowseDialogA0 := GetProcAddress(LANMAN_DLL, {'ShareAsDialogA0'} 'ServerBrowseDialogA0');
-     ServerBrowseDialogA0(AHandle, @Buffer, 256);
-       //         if Buffer[0] = '\' then
-     begin
-       Result := Buffer;
-     end;
-     if bLoadLib then
-        begin
-        FreeLibrary(LANMAN_DLL);
-        end;
-     end;
-end;
-
 {
 function Pos(Substr: string; S: string): Integer;
 begin
@@ -678,18 +538,6 @@ begin
 end;
 }
 
-procedure tSetWindowText(WindowHandle: HWND; s: string);
-begin
-  { Cast to AnsiString at the boundary rather than letting the compiler do it.
-    This deliberately calls the A variant, as the rest of the program does, but
-    PChar is PWideChar under D12 -- so today this resolves to the AnsiString
-    overload of SetWindowTextA via an IMPLICIT PWideChar->AnsiString conversion
-    (W1057).  Same bytes reach Windows either way; making it explicit says the
-    narrowing is intended and compiles under FPC, whose RTL offers only the
-    LPCSTR form. }
-  Windows.SetWindowTextA(WindowHandle, PAnsiChar(WinAnsi(s)));
-end;
-
 procedure tSetWindowRedraw(wnd: HWND; Redraw: boolean);
 begin
   SendMessage(wnd, WM_SETREDRAW, integer(Redraw), 0);
@@ -699,12 +547,6 @@ function SystemTimeToString(SysTime: SYSTEMTIME): string;
 begin
   // Issue #997: extracted to uFreqTimeFormat (golden-master tested).
   Result := uFreqTimeFormat.SystemTimeToString(SysTime);
-end;
-
-function StrComp_JOH_IA32_6(const Str1, Str2: PAnsiChar): integer;
-begin
-  // Issue #997: extracted to uStrSearch (golden-master tested).
-  Result := uStrSearch.StrComp_JOH_IA32_6(Str1, Str2);
 end;
 
 procedure tLoadKeyboardLayout;
@@ -810,45 +652,9 @@ asm
 end;
 }
 
-function tSetDlgItemIntFalse(hDlg: HWND; nIDDlgItem: integer; uValue: UINT): BOOL; stdcall;
-begin
-  Windows.SetDlgItemInt(hDlg, nIDDlgItem, uValue, False);
-end;
-
-function tSetDlgItemIntSigned(hDlg: HWND; nIDDlgItem: integer; uValue: integer): BOOL; stdcall;
-begin
-  Windows.SetDlgItemInt(hDlg, nIDDlgItem, uValue, True);
-end;
-
-function GetWindowByHandle(h: HWND): WindowsType;
-var
-  wt                                    : WindowsType;
-begin
-  for wt := Low(WindowsType) to High(WindowsType) do
-    if tr4w_WindowsArray[wt].WndHandle = h then
-       begin
-       Result := wt;
-       Break;
-       end;
-end;
-
 function tWindowsExist(wID: WindowsType): boolean;
 begin
   Result := tr4w_WindowsArray[wID].WndHandle <> 0;
-end;
-
-procedure tEnableMenuItem(uIDEnableItem: UINT; uEnable: UINT);
-begin
-  EnableMenuItem(tr4w_main_menu, uIDEnableItem, uEnable);
-  DrawMenuBar(tr4whandle);
-end;
-
-
-
-function StrPosPartial(const Str1, Str2: PAnsiChar): PAnsiChar;
-begin
-  // Issue #997: extracted to uStrSearch (golden-master tested).
-  Result := uStrSearch.StrPosPartial(Str1, Str2);
 end;
 
 // StrPos removed (D12): callers use uAnsiStr.StrPos directly -- the
@@ -962,21 +768,6 @@ end;
 procedure ShowSysErrorMessage(ID: PAnsiChar);
 begin
   showwarning(SysUtils.Format('%s: %s', [string(ID), SysUtils.SysErrorMessage(Windows.GetLastError)]));
-end;
-
-procedure SelectParentDir(h: HWND);
-var
-  i                                     : integer;
-const
-  c                                     = '[..]';
-begin
-  i := Windows.SendMessageA(h, LB_FINDSTRING, -1, integer(PAnsiChar(c)));
-  if i <> LB_ERR then
-     begin
-     Windows.SendMessage(h, LB_DELETESTRING, i, 0);
-     Windows.SendMessageA(h, LB_INSERTSTRING, 0, integer(PAnsiChar(c)));
-     end;
-  tLB_SETCURSEL(h, 0);
 end;
 
 { What the trampoline carries across.  Heap-allocated by tCreateThread and
@@ -1256,61 +1047,14 @@ begin
   uStrSearch.StrU(Str);
 end;
 
-function CreateComboBox(hwndParent: HWND; HMENU: HMENU): HWND;
-begin
-  Result := CreateWindowExW(WS_EX_STATICEDGE, COMBOBOX, nil,
-
-    CBS_DROPDOWN or CBS_AUTOHSCROLL or CBS_SORT or CBS_HASSTRINGS or WS_CHILD or WS_VISIBLE or WS_VSCROLL or WS_TABSTOP
-
-    , 0, 0, 0, 23, hwndParent, HMENU, hInstance, nil);
-  tWM_SETFONT(Result, MSSansSerifFont);
-end;
-
-function CreateListView2(X, Y, nWidth, nHeight: Word; hwndParent: HWND): HWND;
-begin
-  Result := CreateWindowExW(WS_EX_STATICEDGE, LISTVIEW, nil, LVS_REPORT or LVS_SINGLESEL or LVS_SHOWSELALWAYS or LVS_NOSORTHEADER or WS_VISIBLE or WS_CHILD or WS_TABSTOP, X, Y, nWidth, nHeight, hwndParent, 101, hInstance, nil);
-  tWM_SETFONT(Result, MSSansSerifFont);
-end;
-
-function CreateListBox(X, Y, nWidth, nHeight: Word; hwndParent: HWND; HMENU: HMENU): HWND;
-begin
-  Result := CreateWindowExW(WS_EX_STATICEDGE, LISTBOX, nil, LBS_NOINTEGRALHEIGHT or LBS_NOTIFY or LBS_SORT or WS_VSCROLL or WS_VISIBLE or WS_CHILD or WS_TABSTOP, X, Y, nWidth, nHeight, hwndParent, HMENU, hInstance, nil);
-  tWM_SETFONT(Result, MSSansSerifFont);
-end;
-
-function CreateStatic(lpWindowName: string; X, Y, nWidth: integer; hwndParent: HWND; HMENU: HMENU): HWND;
-begin
-  // W, matching CreateButton and CreateEdit. lpWindowName is a string, and
-  // the A entry point would cost a lossy trip through the machine codepage.
-  Result := CreateWindowW('Static', PWideChar(lpWindowName), SS_SUNKEN or SS_center or WS_CHILD or WS_VISIBLE, X, Y, nWidth, 23 {nHeight}, hwndParent, HMENU, hInstance, nil);
-  tWM_SETFONT(Result, MSSansSerifFont);
-end;
-
 function CreateButton(dwStyle: Cardinal; lpWindowName: string; X, Y, nWidth: integer; hwndParent: HWND; HMENU: HMENU): HWND;
 begin
-  // CreateWindowExW, matching CreateEdit below. lpWindowName is a string --
+  // CreateWindowExW. lpWindowName is a string --
   // UnicodeString here -- and the A entry point would need a lossy round trip
   // through the machine codepage, which is precisely what would mangle an
   // accented button caption in the languages this is all for.
   Result := CreateWindowExW(0, 'Button', PWideChar(lpWindowName), dwStyle or WS_CHILD or BS_TEXT or WS_VISIBLE or WS_TABSTOP, X, Y, nWidth, 23 {nHeight}, hwndParent, HMENU, hInstance, nil);
   tWM_SETFONT(Result, MSSansSerifFont);
-end;
-
-function CreateEdit(dwStyle: Cardinal; X, Y, Width, Height: integer; hwndParent: HWND; HMENU: HMENU): HWND;
-begin
-  Result := CreateWindowExW(WS_EX_CLIENTEDGE or WS_EX_NOPARENTNOTIFY, EditPChar, nil, dwStyle or WS_CHILD or WS_VISIBLE or WS_TABSTOP, X, Y, Width, Height, hwndParent, HMENU, hInstance, nil);
-  tWM_SETFONT(Result, MSSansSerifFont);
-end;
-
-function CreateOwnerDrawListBox(dwStyle: DWORD; hwndParent: HWND): HWND;
-begin
-  Result := CreateWindowExW(WS_EX_STATICEDGE, LISTBOX, nil, dwStyle, 0, 0, 0, 0, hwndParent, 101, hInstance, nil);
-  tWM_SETFONT(Result, MSSansSerifFont);
-end;
-
-function Createmsctls_progress32(X, Y, Width, Height: integer; hwndParent: HWND; HMENU: HMENU): HWND;
-begin
-  Result := CreateWindowW('msctls_progress32', nil, WS_CHILD or WS_VISIBLE or PBS_SMOOTH, X, Y, Width, Height, hwndParent, HMENU, hInstance, nil);
 end;
 
 function CreateRichEdit(hwndParent: HWND): HWND;

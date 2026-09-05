@@ -25,6 +25,7 @@ unit uTelnet;
 interface
 
 uses
+  Classes,         // TStringList -- the DX-cluster alert list
   Menus,           // TMenuItem -- the commands popup is an LCL menu now
   uConfigValues,   // Config -- migrated settings
   // ClipBrd (Vcl.ClipBrd) was listed here and never referenced -- there is no
@@ -142,7 +143,13 @@ var
   TelLastMenuParent: TMenuItem;
 
   telnet_callsign_alert_list_loaded: boolean;
-  TelnetCallsignAlertList: HWND;
+  (* THE DX-CLUSTER ALERT LIST -- A LIST, NOT A WINDOW.
+
+    This was an HWND: a LISTBOX created at 0,0,0,0 inside the Telnet window,
+    invisible, existing only to hold callsigns and answer LB_FINDSTRINGEXACT.
+    A hidden control used as a data structure costs a window handle, a parent
+    and a message round trip per spot -- to answer a set-membership question. *)
+  TelnetCallsignAlertList: TStringList = nil;
 implementation
 uses uNet,
   Forms,             // Application.QueueAsyncCall -- the event transport
@@ -1712,20 +1719,19 @@ begin
      SpotsList.AddSpot(TempSpot, True);
      end;
 
-  { A REAL Win32 BOUNDARY -- LB_FINDSTRINGEXACT wants a null-terminated
-    PAnsiChar -- BUT THE SOURCE WAS A SHORTSTRING, which has no terminator.  The
-    search therefore ran past the callsign into whatever followed FCall in the
-    spot record, and matched or missed accordingly.
+  (* THE Win32 BOUNDARY THAT WAS HERE IS GONE, not fixed a second time.
 
-    An AnsiString HELD IN A LOCAL across the call is the supported way to reach
-    that boundary: it is terminated, and the local keeps it alive -- PAnsiChar of
-    a temporary would dangle under FPC, which this tree has already been bitten
-    by (see the radio-name note in uCallsigns.DisplayDupeSheet). }
-  if telnet_callsign_alert_list_loaded then
+    LB_FINDSTRINGEXACT wanted a NUL-terminated PAnsiChar while the source is a
+    ShortString, which has none -- so the search ran past the callsign into
+    whatever followed FCall in the spot record, and matched or missed on that.
+    The fix was an AnsiString held in a local, to keep a valid pointer alive
+    across the call.
+
+    A TStringList takes a string. No pointer, no terminator, no lifetime to get
+    right: the class of bug is unreachable rather than handled. *)
+  if telnet_callsign_alert_list_loaded and (TelnetCallsignAlertList <> nil) then
     begin
-    alertCall := AnsiString(TempSpot.FCall);
-    if Windows.SendMessageA(TelnetCallsignAlertList, LB_FINDSTRINGEXACT, -1,
-      LPARAM(PAnsiChar(alertCall))) <> LB_ERR then
+    if TelnetCallsignAlertList.IndexOf(AnsiString(TempSpot.FCall)) >= 0 then
        begin
        Stringtype := tstAlert;
 
@@ -1970,13 +1976,26 @@ end;
 
 procedure EmunDXCLUSTERALERTLISTTXT(FileString: PShortString);
 begin
-  if telnet_callsign_alert_list_loaded = False then
+  if TelnetCallsignAlertList = nil then
      begin
-     TelnetCallsignAlertList := CreateWindowA('LISTBOX', nil, $50210003, 0, 0, 0, 0,
-       tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle, 0, hInstance, nil);
+     TelnetCallsignAlertList := TStringList.Create;
+     (* Sorted makes the lookup a binary search where the listbox scanned
+       linearly; dupIgnore because the file may name a call twice. *)
+     TelnetCallsignAlertList.Sorted := True;
+     TelnetCallsignAlertList.Duplicates := dupIgnore;
      end;
 
-  tLB_ADDSTRING(TelnetCallsignAlertList, @FileString^[1]);
+  (* EMPTIED ON EVERY RELOAD. TelnetFormShowHandler clears the flag and re-reads
+    the file on each show, so without this the list would double every time. The
+    Win32 version leaked an entire listbox at that point instead. *)
+  if not telnet_callsign_alert_list_loaded then
+     begin
+     TelnetCallsignAlertList.Clear;
+     end;
+
+  //  TelnetCallsignAlertList := CreateWindowA('LISTBOX', ...);  //AGENT_DEPRECATED
+  //  tLB_ADDSTRING(TelnetCallsignAlertList, @FileString^[1]);   //AGENT_DEPRECATED
+  TelnetCallsignAlertList.Add(AnsiString(FileString^));
   telnet_callsign_alert_list_loaded := True;
 end;
 

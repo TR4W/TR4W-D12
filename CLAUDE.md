@@ -377,19 +377,81 @@ band map, stations, SCP/master, both dupe sheets, the five remaining-multiplier
 windows, PostScores, HamScore, Intercom, MP3 Recorder, both radio panels, and
 Network — then **Telnet and MMTTY**, which this file listed as the last two
 holdouts until 2026-08-26. `uTelnetForm` and `uMMTTYForm` are in `tr4w.lpr`;
-the DX cluster window landed in `00e9a987`. `Lint-Win32Dialogs[ui]` is at 748.
+the DX cluster window landed in `00e9a987`.
 
-**AND SO IS EVERY DIALOG THAT USED `tDialogBox` (2026-08-29) — WHICH IS NOT
-EVERY DIALOG.** Corrected 2026-08-31: that claim tracked one creation path and
-missed `CreateModalDialog` (in `TF.pas`), through which **eight hand-built Win32
-dialogs are still live**: `uAltP`, `uCbrSum`, `uErmak`, `uFileView`, `uLogEdit`,
-`uLogSearch`, `uQTCR`, `uQTCS`. `uQTCR` also subclasses its edit controls with
-`SetWindowLong(GWL_WNDPROC)`, which makes it the heaviest of them.
+### DO NOT WRITE A COUNT OR A LIST OF SURVIVORS HERE. MEASURE IT.
 
-All five that set a title did it with `PWideChar(<resourcestring>)` — a POINTER
-CAST, not a conversion — so every one showed a garbled caption ("????????" on
-Alt-P, NY4I 2026-08-31, being 16 caption bytes read as 8 UTF-16 units). Fixed;
-the conversions themselves are still owed.
+This section stated `Lint-Win32Dialogs[ui]` was "at 748" and named **eight**
+hand-built Win32 dialogs as still live: `uAltP`, `uCbrSum`, `uErmak`,
+`uFileView`, `uLogEdit`, `uLogSearch`, `uQTCR`, `uQTCS`. By 2026-09-05 the
+count was 499, `uLogEdit` no longer existed, and **every one of those dialogs
+had been converted.** An agent read that list, repeated it to NY4I as current
+fact, and wasted his time — twice in one session. NY4I: *"stale info in
+CLAUDE.md wastes my time."*
+
+The [Overview](#overview) already says counts are not stated here because a
+stale count is believed. The same is true of a list of what is left, and more
+so: it decays every time someone finishes a conversion.
+
+**So ask the tree, and the answers take seconds:**
+
+```powershell
+.\build\Lint-Win32Dialogs.ps1 -Group ui         # the count, per creation kind
+.\build\Lint-Win32Dialogs.ps1 -Group platform   # the non-UI Win32 call sites
+```
+
+```bash
+# what still BUILDS a Win32 dialog or control (comments excluded by eye)
+grep -rn "CreateModalDialog\|DialogBoxParam\|DialogBoxIndirect\|CreateWindowEx" tr4w/src --include='*.[pP][aA][sS]'
+```
+
+**WHEN YOU DELETE OR CONVERT SOMETHING, FIX THIS FILE IN THE SAME COMMIT.** It
+is a map, and a map that describes a road removed last month is worse than no
+map — an agent trusts it, states it, and the reader has to catch it.
+
+### Retiring a line: delete it, or mark it `//AGENT_DEPRECATED`
+
+A conversion leaves lines that are dead but still useful to read — the Win32
+call whose window is now an LCL control, next to the property that replaced it.
+**Deleting is the default.** Where the old code genuinely helps diagnose the new,
+comment it and mark it (NY4I, 2026-09-05):
+
+```pascal
+//Windows.SetWindowTextA(QSONeedWindowsHandles1[Band], BandStringsArray[Band]); //AGENT_DEPRECATED
+```
+
+**`Lint-Win32Dialogs` needs no teaching to skip these** — it counts CODE ONLY,
+because `build/PascalSource.psm1` strips comments and string literals first.
+Measured with a two-line fixture, one commented and one live: `CreateWindowEx`
+counted **1**, not 2.
+
+**Which is exactly why the marker earns its keep.** Comment-blind counting means
+commenting out *live* code lowers the Win32 numbers, and a ratchet that falls
+because work was HIDDEN looks identical to one that falls because work was DONE.
+`Lint-AgentDeprecated` closes that: a marked line must actually be commented out
+(a marker on live code fails the build), and every marked line is listed on each
+run so the pile stays visible and gets swept. They are a staging post on the way
+to deletion, not a destination.
+
+**And do not search `tr4w/src` alone for whether something still exists.**
+`src/backup/` (the IDE's copies) and `src/graphify-out/` (a cache) are gitignored
+snapshots that can be days old. A search for `CreateQSONeedWindows` found it in
+`src/backup/MainUnit.pas` long after the live routine was deleted. The lints
+already exclude both; a hand-run `grep` does not.
+
+*Measured 2026-09-05, and offered as a worked example of the commands above
+rather than as a fact to cite later:* the only UI left that genuinely builds
+Win32 windows is the **WinKeyer settings dialog** (`uWinKey`, `CreateWindowExW`
+plus `CreateUpDownControl`) and the **server log's list view**
+(`CreateEditableLog` / `CreateListView`). `uErmak` still holds a
+`CreateModalDialog` but has no caller and is in no `uses` clause — a compiled
+file nothing can reach. `uWinTimer` creates a message-only window, which is
+platform code and not UI.
+
+The garbled-caption defect those dialogs shared is fixed: all five that set a
+title did it with `PWideChar(<resourcestring>)` — a POINTER CAST, not a
+conversion, so each showed "????????" (NY4I 2026-08-31; 16 caption bytes read
+as 8 UTF-16 units).
 
 The last `tDialogBox` template in use was **73**, the server-log synchronize
 window; it is
@@ -626,9 +688,13 @@ moving a setting are in [`docs/CFG_MIGRATION_PLAN.md`](docs/CFG_MIGRATION_PLAN.m
 ### 5. Radio control — the factory
 
 **All radios go through the factory.** `src/radioFactory/` holds one unit per family base and one per
-model. **100 registrations** — 99 `RegisterRadio` (enum-keyed) plus one `RegisterRadioById` (TCI, a
-string-id radio with no enum member) — covering every selectable `InterfacedRadioType` except
+model. Registrations are `RegisterRadio` (enum-keyed) plus one `RegisterRadioById` (TCI, a
+string-id radio with no enum member), covering every selectable `InterfacedRadioType` except
 `NoInterfacedRadio`.
+
+**The count is not written here** — it said "100" while `Lint-RadioRegistry` reported 101, which is
+the same drift the [Win32 section](#do-not-write-a-count-or-a-list-of-survivors-here-measure-it)
+records. `.\build\Run-Lints.ps1` prints it on every build; that number is the true one.
 
 - **Base class:** `src/radioFactory/uFactoryRadioBase.pas` (`TFactoryRadioBase`).
   `uNetRadioBase.pas` is gone; `uRadioFactory.pas` moved into `src/radioFactory/`.
@@ -771,7 +837,14 @@ extending the `case`.
   compile-time switch was deleted 2026-08-18 (NY4I: "the boolean controls it now").  It
   had been `= True` for the life of this tree, so all 20 of its `{$IF}` blocks always
   compiled; one `{$IF NOT MMTTYMODE}` block and one `{$ELSE}` arm never did.
-- **MixW** (`uMixW.pas`).
+- ~~**MixW** (`uMixW.pas`)~~ **DELETED 2026-09-05** (NY4I: *"you can remove all traces
+  of mixw. I confused it with a different program"*). It was never working code: the
+  whole unit body sat inside `{$IFDEF MIXWMODE}`, a define that existed **nowhere** in
+  the tree, and defining it would not have helped -- the var block holding `MixW`,
+  `MixWLoaded` and `MixWConnectionStatusWnd` was commented out, so was the `p` that
+  `DisplayMixWConnection` assigns, and `tw_MixWWINDOW_INDEX` was never declared in
+  `VC.pas` at all. `SendMessageToMixW` therefore compiled to an empty procedure, and
+  its six live callers did nothing.
 
 ### 9. DX tools
 

@@ -86,7 +86,6 @@ uses
   uIntercom,
   uGetServerLog,
   uMessages,
-  uMixW,
   LPT,
   uQTCS,
   uQTCR,
@@ -1673,10 +1672,6 @@ begin
         OpMode2 := SearchAndPounceOpMode;
         ShowFMessages(0);
         end;
-     if ActiveMode = Digital then
-        begin
-        SendMessageToMixW('<TX>');
-        end;
      // CheckInactiveRigCallingCQ;
      if not tAutoSendMode then
         begin
@@ -1898,12 +1893,6 @@ begin
     MessageEnable then
 
      begin
-     if ActiveMode = Digital then
-       // ny4i Issue153 Just reformatted these few 'IFs' for readability
-        begin
-        SendMessageToMixW('<TX>');
-        end;
-
      // Multi-county exchanges (e.g. "DAL/BAY", "DAL BAY") are handled at the
      // parser level: ProcessRSTAndDomesticQTHExchange splits and queues the
      // extras, and the drain loop in TryLogContact logs the additional QSOs
@@ -1915,11 +1904,6 @@ begin
           begin
           Exit;
           end;
-
-     if ActiveMode = Digital then
-        begin
-        SendMessageToMixW('<RXANDCLEAR>');
-        end;
 
      if ActiveMode in [Phone, FM] then
         begin
@@ -2813,8 +2797,14 @@ end;
 
 procedure FrmSetFocus;
 begin
-  // ChangeFocus('FrmSetFocus');
-  Windows.SetFocus(tr4whandle);
+  (* THE FORM TAKES FOCUS, not a handle. Windows.SetFocus against the
+    cached tr4whandle is the same trap the title bar fell into. CanFocus
+    guards the case TWinControl.SetFocus raises on and the API ignored:
+    a form that is not yet visible. *)
+  if (TR4WMainForm <> nil) and TR4WMainForm.CanFocus then
+     begin
+     TR4WMainForm.SetFocus;
+     end;
 end;
 
 function GetRealVirtualKey(var Key: integer): Byte;
@@ -4040,10 +4030,14 @@ begin
 
   EditableLogHeight := TR4WEditableLogBoundsHeight;
 
-  Windows.GetWindowRect(tr4whandle, temprect);
-  Windows.SetWindowPos(tr4whandle, HWND_TOP, 0, 0, ws * 46, 6
-    + MainWindowCaptionAndHeader + EditableLogHeight + ws * 14,
-    {SWP_SHOWWINDOW or }SWP_NOMOVE);
+  (* THE WINDOW IS SIZED AT THE END OF THIS ROUTINE, by
+    MakeMainWindowResizeable, and no longer here.
+
+    What stood here was a SetWindowPos giving an OUTER size, preceded by a
+    GetWindowRect whose result was never read. One routine owns the size now,
+    and it sets the CLIENT height -- which is the measurement this layout
+    actually cares about and the one that does not change when the border
+    does. *)
    { Round the four corners of the main window - radius 12px, adjust as needed }
   for e := Low(TMainWindowElement) to High(TMainWindowElement) do
      begin
@@ -4054,7 +4048,13 @@ begin
      // AN LCL TPanel, not a Win32 STATIC.  Same metadata, same arithmetic --
      // TWindows[] is still the layout -- and the style bits become properties.
      // See CreateMainElement.
-     wh[e] := CreateMainElement(
+     (* wh[e] WAS WRITTEN HERE AND READ BY NOTHING. Measured 2026-09-05: the
+       only live readers of wh[] are the server log's list view. Storing a
+       handle for each element meant CreateMainElement had to CREATE one --
+       touching TWinControl.Handle constructs the window -- so 110 windows were
+       forced into existence at startup to fill an array nobody consults. *)
+     //  wh[e] := CreateMainElement(   //AGENT_DEPRECATED
+     CreateMainElement(
        e,
        TWindows[e].mweiStyle and (not (Cardinal(Config.NoBorder) * SS_SUNKEN)),
        TWindows[e].mweiX * ws,
@@ -4291,12 +4291,32 @@ begin
     piece of work. Pinning MinWidth = MaxWidth says that honestly rather than
     offering a resize that does nothing useful.
 
-    MinHeight is the layout's own height -- the height this routine just
-    computed -- so the window can grow but never shrink far enough to eat the
-    entry fields, which is what a bare bsSizeable would allow. *)
+    MinHeight is the layout's own height, so the window can grow but never
+    shrink far enough to eat the entry fields, which is what a bare bsSizeable
+    would allow.
+
+    THE SECOND ARGUMENT IS A CLIENT HEIGHT. The old sizing call asked for an
+    OUTER height of `6 + MainWindowCaptionAndHeader + EditableLogHeight +
+    ws * 14`, where MainWindowCaptionAndHeader is SM_CYMENU + SM_CYCAPTION --
+    so the caption and menu terms were there to convert a client measurement
+    into an outer one, and the 6 was a frame allowance for the fixed border.
+    Handing over the client height directly drops both conversions and the
+    assumption about how thick the frame is.
+
+    SIZE FIRST, THEN ANCHOR, AND THE ORDER IS LOAD-BEARING. An anchor holds a
+    control at a fixed DISTANCE from an edge, captured from wherever the
+    control is when the parent next resizes. Every control above was just
+    positioned in absolute coordinates by the ws arithmetic, for the finished
+    layout -- so if the form's client height changes AFTER anchoring, each
+    bottom-anchored control is dragged by that delta and lands somewhere the
+    arithmetic never put it.
+
+    The delta is near zero at the default font size, because the .lfm form
+    height and the computed height agree to a pixel there. It is not zero at
+    any other WindowSize, which is exactly the kind of defect that ships
+    looking fine on the machine it was written on. *)
+  MakeMainWindowResizeable(ws * 46, 6 + EditableLogHeight + ws * 14);
   AnchorMainWindowControls;
-  MakeMainWindowResizeable(ws * 46,
-    6 + MainWindowCaptionAndHeader + EditableLogHeight + ws * 14);
 
   { Ask DWM to round window corners natively (Windows 11+, no-op on older) }
   ApplyDWMRoundedCorners;
@@ -4696,7 +4716,9 @@ begin
       ShowLPTDialog;
     // tDialogBox(64, @LPTDlgProc);
 
-    // menu_winkeyer2: tDialogBox(67, @WinKeyer2SettingsDlgProc);
+    (* The old per-slot WinKeyer settings dialog was deleted 2026-09-05. It
+      had no launcher -- this line, commented out -- and Preferences had
+      already taken the job, which is what the live arm below does. *)
     menu_winkeyer2: RunOptionsDialog(cfWK);
 
     menu_alt_WkMode: // 4.60.1
@@ -5974,6 +5996,7 @@ procedure RefreshRadioWindowCaption(const ID: WindowsType);
 var
    radioCaption, rigName: string;
    Radio: RadioPtr;
+   lclForm: TCustomForm;
 begin
    if not (ID in [tw_RADIOINTERFACEWINDOW1_INDEX, tw_RADIOINTERFACEWINDOW2_INDEX]) then
       begin
@@ -6007,8 +6030,21 @@ begin
       radioCaption := radioCaption + ' ' + rigName;
       end;
 
-   Windows.SetWindowTextW(tr4w_WindowsArray[ID].WndHandle,
-                          PWideChar(WideString(radioCaption)));
+   (* THE PANEL IS AN LCL FORM; its title is a property. LclFormFor answers for
+     both radio slots, and the guard above has already established the window
+     exists.
+
+     PWideChar(WideString(...)) is also the exact shape that produced garbled
+     captions elsewhere in this tree -- there it was a POINTER CAST of a
+     resourcestring rather than a conversion. Here the WideString() made it a
+     real conversion, so it worked; it is going because the Win32 call it fed
+     is going, not because it was broken. *)
+   //Windows.SetWindowTextW(tr4w_WindowsArray[ID].WndHandle, PWideChar(WideString(radioCaption))); //AGENT_DEPRECATED
+   lclForm := LclFormFor(ID);
+   if lclForm <> nil then
+      begin
+      lclForm.Caption := TCaption(radioCaption);
+      end;
 end;
 
 { Both radio panels, after anything that can repoint a slot. }
@@ -6094,7 +6130,6 @@ begin
   Windows.CheckMenuItem(tr4w_main_menu, 10199 + Ord(ID), MF_CHECKED);
   tr4w_WindowsArray[ID].WndVisible := True;
 
-  // if ID = tw_MixWWINDOW_INDEX then TryToLoadRICHED32DLL;
  {
   if ID = tw_RADIOINTERFACEWINDOW2_INDEX then
   h := CreateDialogParam(hInstance, MAKEINTRESOURCE(tw_RADIOINTERFACEWINDOW1_INDEX), tr4whandle, tr4w_WindowsArray[tw_RADIOINTERFACEWINDOW1_INDEX].WndProcAdr, integer(ID))
@@ -6363,6 +6398,23 @@ begin
      end
   else
      begin
+     (* IS THIS BRANCH STILL REACHABLE? Measured 2026-09-05: EVERY WindowsType
+       value is answered by LclFormFor -- there is no window left that is not an
+       LCL form. But the test above is on the form OBJECT, not on the enum, so
+       this can still be entered before a form has been constructed.
+
+       NOT commented out, and deliberately. This is the window-positioning path,
+       and silently doing nothing here is the exact failure that lost the band
+       map's saved position (see the note above). Instrumented instead: if this
+       line never appears in a log, the branch is dead and can go on evidence
+       rather than on a guess. *)
+     if logger <> nil then
+        begin
+        logger.Warn('[OpenTR4WWindow] %s positioned by the Win32 fallback -- no LCL ' +
+                    'form object yet. If this never appears, that branch is dead.',
+                    [WindowNames[ID]]);
+        end;
+
      Windows.SetWindowPos(tr4w_WindowsArray[ID].WndHandle, HWND_TOP,
        tr4w_WindowsArray[ID].WndRect.Left,
        tr4w_WindowsArray[ID].WndRect.Top,

@@ -23,6 +23,93 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## 2026-09-05 overnight -- the main window has no Win32 children left
+
+**Two commits plus follow-on work.** `839aeb1f` replaced the last sixty-seven raw
+Win32 STATICs on the main form with designed LCL panels; `d568e5e3` made the
+window resizeable. Everything below is a LOOK-AT-IT item -- lints 31/31, unit
+tests 22513/0 and the corpus 24/0/2 were all green while the four regressions in
+the second group were on screen.
+
+### Already confirmed by NY4I, not waiting
+
+- The form is correct again after the border-style fix (title bar, menu,
+  close-quits, and the un-compressed bottom).
+
+### KNOWN BAD, and NY4I is deciding how it should behave
+
+1. **The log grid does not grow when the window is dragged taller.** The window
+   resizes and the lower band follows the bottom edge, but the grid keeps its
+   height. NY4I: *"it does not really make much sense to resize the form if the
+   log grid is not resized"* -- and then *"hold on that as I need to think about
+   how I want it to work."* **Do not 'fix' this before that decision.** The grid
+   carries `Anchors = [akLeft, akTop, akRight, akBottom]`, so the anchor is not
+   the whole story and the cause is still open.
+
+### Waiting for a bench run
+
+2. **The score totals grid (top left).** Eight columns by four rows under seven
+   band headers, all designed panels now. Check: the numbers land in the right
+   cells; the CURRENT BAND's header is highlighted and the others are not; the
+   highlight MOVES with a band change and leaves nothing behind. That last part
+   is a fixed defect worth confirming -- the Win32 version repainted headers 1
+   to 6 of seven, so the "All" column's highlight could go stale.
+
+3. **The QSO-need and mult-need strips (top right).** Type a callsign that is
+   needed on some bands and not others. Check: only the needed bands appear;
+   the CW/SSB rows appear only in a by-mode contest and read `CW:` / `SSB:`;
+   a non-by-mode contest shows one row reading `Both:` for mults and a blank
+   label for QSOs. The mult strip takes its colours from `mweNewMultStatus`
+   (yellow-on-black by default) and the QSO strip from `mweWholeScreen`; if
+   either is the wrong colour, `uMainGrids.ApplyElementColors` is where.
+
+4. **A one-pixel column shift, top left.** The band columns used to start one
+   pixel INSIDE the label column (label is `ws * 5` = 85, the columns began at
+   `2 * round(ws * 2.5)` = 84). They now start after it. Nobody should be able
+   to see this; it is here because it moved every totals column by a pixel and
+   an operator comparing screenshots might notice.
+
+5. **The Last-hour and Rate progress bars.** Now `TProgressBar`. They should
+   fill as before. THEY WILL BE THE THEME COLOUR, not red and blue: the code
+   asked for those with `PBM_SETBARCOLOR`, which comctl32 v6 ignores under
+   visual styles, so they have not been red or blue for as long as the app has
+   shipped a v6 manifest. Confirm you are happy with that before it is called
+   done -- restoring the colours means owner-drawing the bar.
+
+6. **Tour duration (needs `TOUR DURATION` non-zero).** The readout and its bar
+   appear on the quick-command row, the bar tracks the minutes, and at the top
+   of the tour it switches to MARQUEE and back. The marquee used to be driven by
+   `SetWindowLong(GWL_STYLE)` rewriting the window style wholesale -- the same
+   move that blanked the log grid for three sessions -- and is now
+   `Style := pbstMarquee`.
+
+7. **The window's height across a restart.** Drag it taller, quit, relaunch.
+   The height should come back. EXPECT ONE ODDITY THE FIRST TIME: the saved rect
+   was written by the old code as an OUTER rect and is now read as LCL bounds,
+   so the first launch after this change may come up slightly shorter than you
+   left it. It self-corrects on the next save. If it is still wrong on the
+   SECOND restart, that is a real defect.
+
+8. **The Network window title.** Connect to a TR4WServer. The title should read
+   `Network : <operation> <address>:<port>`. It is `Format` + a `Caption`
+   property now instead of a wsprintf shim writing through a cached HWND.
+
+9. **Both radio panel titles.** Open Radio 1 and Radio 2. Each should read
+   `Radio 1`/`Radio 2` plus the rig name when one is configured, and just
+   `Radio 1`/`Radio 2` when none is. Same conversion as the item above.
+
+### One thing to READ, not to do
+
+10. **Grep the log for `positioned by the Win32 fallback`.** Every `WindowsType`
+    now maps to an LCL form, so the raw `SetWindowPos` path in `OpenTR4WWindow`
+    looks dead -- but it is guarded by a nil test on the FORM OBJECT rather than
+    by the enum, so it could still fire before a form is built. It is
+    instrumented rather than deleted, because silently doing nothing there is
+    what lost the band map's saved position. **If that line never appears after
+    a few sessions, the branch can be deleted on evidence.**
+
+---
+
 ## 2026-09-03 overnight -- Log Edit converted, and what it turned up
 
 **Everything here needs a bench run; none of it is checkable from a script.**
@@ -71,6 +158,71 @@ at what they cover; this is the list of what they cannot see.
    buffer over `uLogEditForm.pas`, dropping 132 lines, and left the original in
    `srcackup\`. The directory is ignored now. If the IDE is open, assume any
    file it has loaded may be rewritten.
+
+### Added later the same night -- Win32 removal, inside out
+
+11. **The main window still draws everything.** `CreateMainElement` no longer
+    returns a window handle, and the element loop no longer stores one in
+    `wh[]`. That array was written for all 110 panels and READ BY NOTHING (its
+    only live readers are the server log's list view), and storing a handle
+    forced `TWinControl.Handle`, which CONSTRUCTS the window -- so 110 windows
+    were being created at startup to fill a dead array. The LCL now builds each
+    handle when the form is shown. **Check the main window looks unchanged and
+    nothing is blank**; the headless corpus exercises form creation and passed,
+    but it does not look at pixels.
+
+12. **The multi-op station list.** Connect two stations. Rows should appear and
+    fill as before. `AddNewClient` used to insert a row into `wh[mweNetwork]` --
+    a handle never assigned since that list became a `TListView` -- so the
+    insert did nothing; rows are created on demand by `SetCell`. Also gone: a
+    `ListView_RedrawItems` against the same zero handle after a PTT change.
+    **If a row is ever missing, or a PTT change does not repaint, this is why.**
+
+13. **The DX-cluster callsign alert list.** Put a call in
+    `DXCLUSTER_ALERT_LIST.TXT`, open Telnet, and let that call be spotted. It
+    should still beep and show "New DX Cluster spot: ... ". The list was a
+    HIDDEN Win32 LISTBOX created at 0,0,0,0 and searched with
+    LB_FINDSTRINGEXACT -- a data structure built out of a window. It is a sorted
+    TStringList now. **Also worth one deliberate negative test**: a call that is
+    NOT in the file must not alert. The old lookup handed a ShortString where a
+    NUL-terminated pointer was wanted and could match on trailing bytes from the
+    rest of the spot record, so a false positive was possible; that is now
+    unreachable rather than guarded.
+
+---
+
+14. **NETWORK TIME BROADCAST -- A REAL DEFECT, NOW FIXED, AND THE ONE ITEM
+    HERE THAT COULD HAVE COST QSOs.** `TF.GetTime` had its ENTIRE body
+    commented out, so all four `var` parameters came back uninitialised. The
+    compiler cannot warn about that -- they are `var`, so it assumes the callee
+    writes them. Its two live callers are LOGEDIT's *"Do you want to send time
+    to computers on the network?"* (Ctrl-J style prompt, two sites), which then
+    call `GetDate` -- which IS implemented -- format both, and broadcast a
+    `MultiTimeMessage` to every station in the multi-op network. **So the
+    message carried a correct date and a garbage time, and receiving stations
+    set their clocks from it.** Now reads `GetSystemTime` (UTC), matching
+    `GetDate` directly above it.
+    **TEST:** two stations networked, answer Y to that prompt, confirm the
+    receiving station's clock is correct rather than nonsense. Worth doing
+    before any multi-op weekend.
+
+15. **Radio configuration, after 468 lines came out of `uCAT.pas`.** The
+    per-slot CAT dialog was deleted on 2026-08-29 but ~465 lines of its
+    supporting machinery were left orphaned -- port combos, radio-type combo,
+    default-network-port helpers -- with no callers. Deleted now. What SURVIVES
+    and is used by Preferences: `DiscoverNetworkRadios`,
+    `CloseCATAndKeyerForThisRadio`, `GroupRadioIniKeys`, `CATWTR`.
+    **TEST:** open Preferences, add/edit a radio, check the COM-port drop-down
+    still lists and greys ports correctly, that a network radio discovers, and
+    that the settings survive a restart.
+
+16. **`TF.pas` lost 243 lines of unused Win32 wrappers**, including all six
+    `TF.Create*` control factories (static, edit, combo, list box, list view,
+    owner-draw list box) -- every one with zero callers, because the dialogs
+    that used them were deleted during the LCL conversion rather than wrapped.
+    No behaviour should change. **TEST:** nothing specific; if a window that
+    still uses TF's messaging helpers misbehaves (WinKeyer settings, server
+    log), this is where to look.
 
 ## Added 2026-09-01 -- BOTH WAE QTC WINDOWS, AND NOBODY HAS RUN THEM
 
@@ -379,10 +531,13 @@ nothing ever passes to `DialogBox`.
   carrying the external-logger implementation, so this is either work to finish
   or code to delete -- it should not stay in limbo. **The one worth your time.** [AGENT: Yes the external loggers should be a factory. I believe it is so I am not sure why the Generics aftect this. I could see there being an external logger status indicator but a better UX might be an external status panel. That way we could show the time of the last WSJT-X message, the last status sent form ExternalLOggers, the last exchange with Hamscore. Sort of a status window on these items. But new windows can wait and the external logger works now.]
 
-- [ ] **`MixW2DlgProc` and `WinKeyer2SettingsDlgProc` have zero references.**
-  Their units are live (MixW integration, WinKeyer driver) but those two
-  dialogs are never opened. Is the WinKeyer settings dialog reachable from a
-  menu, or has Preferences replaced it? If replaced, both procedures can go.
+- [x] ~~**`MixW2DlgProc` and `WinKeyer2SettingsDlgProc` have zero references.**~~
+  **ANSWERED 2026-09-05: Preferences replaced it.** `menu_winkeyer2` is live and
+  runs `RunOptionsDialog(cfWK)`; the `tDialogBox(67, @WinKeyer2SettingsDlgProc)`
+  that used to open the old dialog is commented out beside it. So the WinKeyer
+  settings dialog is superseded, not lost, and converting it to LCL would have
+  resurrected a window somebody deliberately replaced.
+  MixW is deleted outright (NY4I: he had confused it with another program).
 
 - [ ] **The main window's start-up paint is still unexplained** -- grid lines,
   then data. The `WM_SETREDRAW` bracket was tried, made no visible difference,

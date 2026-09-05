@@ -27,10 +27,12 @@ uses
   SysUtils,
 utils_text,
   uWinKey,
-  (* PBM_SETMARQUEE -- the tour-duration progress bar is still a raw Win32
-    common control. That window is not converted yet; this uses entry goes
-    with it. The editable log no longer needs anything from here. *)
+  (* ListView_SetTextBkColor and friends, for the SERVER LOG's list view --
+    the last raw Win32 list in the tree. The editable log stopped needing
+    anything from here when it became a grid, and PBM_SETMARQUEE went with the
+    tour-duration progress bar, which is a TProgressBar now. *)
   uCommctrl,
+  Controls,        { TCaption -- see DisplayContestTitle }
   uMults,
   uCTYDAT,
   uCallsigns,
@@ -1385,10 +1387,39 @@ begin
   SendStationStatus(sstBandModeFreq);
 end;
 
+(* THE TITLE BAR IS A CAPTION PROPERTY. Nothing more than that is needed, and
+  anything more than that is a liability.
+
+  This used to format into wsprintfBuffer and hand the bytes to
+  SetWindowTextA(tr4whandle, ...) -- a raw Win32 write against a handle cached
+  once at startup. That worked only for as long as the handle stayed valid, and
+  it stopped the moment the form's window was recreated: the title simply went
+  blank, with nothing to say why (NY4I, 2026-09-05).
+
+  A caption assignment cannot fail that way. The LCL owns the window, so it
+  reapplies the caption whenever it rebuilds one, and the string never becomes
+  a pointer to anything. It also drops the @ContestTitle[1] ShortString pointer
+  this was passing as a format argument. *)
 procedure DisplayContestTitle;
 begin
-  TF.Format(wsprintfBuffer, TR4W_CURRENTVERSION + ' - %s'{$IF tDebugMode} + ' - DEBUG MODE'{$IFEND}, @ContestTitle[1]);
-  Windows.SetWindowTextA(tr4whandle, wsprintfBuffer);
+  (* CONVERTED EXPLICITLY, and the derivation is worth stating because the
+    declaration looks like it needs no conversion at all.
+
+      Controls.TCaption        = TTranslateString
+      LCLType.TTranslateString = type String
+
+    So TCaption IS "string" -- but that String is resolved where the LCL is
+    COMPILED, and the LCL is not built with UnicodeStrings. It is an
+    AnsiString there, while tr4w.inc puts our units on the other side of
+    that switch. The compiler names the mismatch exactly: "Implicit string
+    type conversion with potential data loss from UnicodeString to
+    TTranslateString".
+
+    A real conversion, not a reinterpret -- LCL captions are UTF-8, so
+    nothing is lost. Stated once, here, rather than adding another row to a
+    narrowing count of 1462 that nobody can audit. *)
+  TR4WMainForm.Caption := TCaption(TR4W_CURRENTVERSION + ' - ' + string(ContestTitle)
+                                   {$IF tDebugMode} + ' - DEBUG MODE'{$IFEND});
 end;
 
 procedure DisplayCodeSpeed {(WPM: integer; SendingEnabled: boolean; DVPEnabled: boolean; Mode: ModeType)};
@@ -3890,7 +3921,9 @@ end;
 
 procedure UpadateMainWindow;
 begin
-  Windows.InvalidateRect(tr4whandle, nil, True);
+  (* The form repaints itself; InvalidateRect on the cached handle was
+    a Win32 call standing in for one property-level method. *)
+  TR4WMainForm.Invalidate;
 end;
 
 procedure RefreshMainWindowColors;
@@ -3933,7 +3966,9 @@ begin
   RefreshEntryFieldColors;
   RefreshMainWindowElementColors;
 
-  Windows.InvalidateRect(tr4whandle, nil, True);
+  (* The form repaints itself; InvalidateRect on the cached handle was
+    a Win32 call standing in for one property-level method. *)
+  TR4WMainForm.Invalidate;
 end;
 
 procedure UpadateAutoSend;

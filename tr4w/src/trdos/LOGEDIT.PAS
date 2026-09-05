@@ -126,7 +126,6 @@ type
 
     //    procedure SetUpEditableLog;
     procedure ShowDomesticMultiplierStatus(DomesticQTH: Str10); // Gav 4.44.8
-    procedure ShowMissingMultiplierReport(h: HWND);
     procedure ShowMultiplierStatus(Call: CallPtr {CallString});
     procedure ShowRemainingMultipliers;
     procedure ShowRemMultsInWindow(Window: WindowsType; rmt:
@@ -1623,134 +1622,15 @@ begin
   MasterCallsUpdated;
 end;
 
-procedure EditableLog.ShowMissingMultiplierReport(h: HWND);
-
-var
-  Country: integer;
-  TempRow, TempColumn, NumberCountriesDisplayed, Hits: integer;
-  StartBand, EndBand, Band: BandType;
-  Mode: ModeType;
-  ID: CallString;
-  BandHits: array[BandType] of boolean;
-  TempHWND: HWND;
-  RectBlackOrWhite: Byte;
-  TempParametr: Cardinal;
-  Counter160_10: integer;
-const
-  rows = 25;
-begin
-
-  //   if ActiveDXMult = NoDXMults then Exit;
-  //   if not MultByBand then Exit;
-
-  VisibleDupeSheetRemoved := True;
-  NumberCountriesDisplayed := 0;
-
-  if ActiveBand <= Band10 then
-     begin
-     StartBand := Band160;
-     EndBand := Band10;
-     end
-  else if ActiveBand >= Band6 then
-     begin
-     StartBand := Band6;
-     EndBand := BandLight;
-     end;
-  if MultByMode then
-     begin
-     Mode := ActiveMode
-     end
-  else
-     begin
-     Mode := Both;
-     end;
-
-  for Country := 0 to CTY.ctyNumberCountries - 1 do
-     begin
-     Hits := 0;
-
-     //         TempString := CountryTable.GetCountryName(Country);
- //    CompressFormat(ID, CompressedMult);
-
-     Windows.ZeroMemory(@BandHits, SizeOf(BandHits));
-
-     for Band := StartBand to EndBand do
-        begin
-        BandHits[Band] := False;
-
-        //      NumberMults := mo.MTotals[Band, Mode, rmDX]; // Sheet.MultSheet.Totals[Band, Mode].NumberDXMults;
-
-        if not mo.IsDXMult(Country, Band, Mode) then
-           begin
-           inc(Hits);
-           BandHits[Band] := True;
-           end;
-        end;
-
-     if (Hits >= MultReportMinimumBands) and (Hits < 6) and
-       (NumberCountriesDisplayed < 100) then
-        begin
-
-        Windows.ZeroMemory(@ID, SizeOf(ID));
-        ID := CTY.ctyTable[Country].ID;
-
-        TempRow := ((NumberCountriesDisplayed mod rows)) * 15 + 5;
-        TempColumn := ((((NumberCountriesDisplayed div rows)))) * 135 + 5;
-        //               GoToXY (Column, Row);
-        TempParametr := SS_SUNKEN;
-        if Hits > 3 then
-           begin
-           TempParametr := WS_BORDER;
-           end;
-        TempHWND :=
-          tCreateStaticWindow(string(ID), WS_CHILD or TempParametr or SS_center or
-            WS_VISIBLE, TempColumn, TempRow, 40, 14, h, 0);
-
-        //               TempString := ID;
-
-        //               while length(TempString) < 6 do
-        //                  TempString := ' ' + TempString;
-
-                       //               Write (TempString, ' ');
-  //               TempColumn := ((((NumberCountriesDisplayed div 16)) ) + 0) * 300 + 5;
-        Counter160_10 := TempColumn + 43;
-        for Band := Band160 to Band10 do
-           begin
-           if BandHits[Band] then
-              begin
-              RectBlackOrWhite := SS_BLACKFRAME
-              end
-           else
-              begin
-              RectBlackOrWhite := SS_WHITERECT;
-              end;
-
-           tCreateStaticWindow('',
-             RectBlackOrWhite or WS_CHILD or WS_VISIBLE,
-             Counter160_10, TempRow, 13, 13, h, 0);
-
-           inc(Counter160_10, 14);
-
-           end;
-
-        inc(NumberCountriesDisplayed);
-        end;
-     end;
-
-  TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_MISSINGMULTSREPORT)), NumberCountriesDisplayed,
-    MultReportMinimumBands);
-
-  Windows.SetWindowTextA(h, wsprintfBuffer);
-
-  //       GoToXY (8, 17);
-  //       Write ('Countries on at least ', MultReportMinimumBands, ' but not all bands.  Any key to exit.');
-  //       RestorePreviousWindow;
-
-  //       REPEAT UNTIL NewKeyPressed;
-  //       Key := NewReadKey;
-  //       IF Key = NullKey THEN Key := NewReadKey;
-
-end;
+(* EditableLog.ShowMissingMultiplierReport(h: HWND) was removed 2026-09-05 --
+  it had zero callers anywhere in the tree (a full-tree case-insensitive
+  search found only its own declaration and this implementation) and its
+  body was raw Win32: tCreateStaticWindow (CreateWindowEx of SS_* static
+  controls) laid out by hand under a caller-supplied HWND, finished with
+  Windows.SetWindowTextA(h, ...). Nothing on the LCL side is affected --
+  there was no live caller to repoint. If a "missing multiplier report"
+  window is wanted again, it should be a designed LCL form, not a caller
+  that hands this routine a raw HWND to draw into. *)
 
 function QuickEditResponseWithPartials(Prompt: Str80; MaxInputLength: integer):
   Str80;
