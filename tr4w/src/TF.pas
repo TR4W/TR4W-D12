@@ -1075,16 +1075,41 @@ begin
    Result := (v >= i) and (v <= k);
 end;
 
+(* THIS BODY WAS ENTIRELY COMMENTED OUT, AND IT IS NOT DEAD CODE.
+
+  Every statement was commented, so all four var parameters came back
+  UNINITIALISED -- whatever happened to be on the stack. Pascal gives no
+  warning for that and the compiler cannot: they are `var` parameters, so it
+  assumes the callee writes them.
+
+  IT MATTERS BECAUSE ITS TWO LIVE CALLERS BROADCAST THE RESULT. LOGEDIT's
+  "Do you want to send time to computers on the network?" (two sites, 1845 and
+  1968) calls this, then GetDate, then formats both into a MultiTimeMessage and
+  sends it to every station in the multi-op network. GetDate IS implemented, so
+  the message carried a correct date and a garbage time -- and the receiving
+  stations set their clocks from it. In a contest, timestamps decide whether a
+  QSO counts.
+
+  Found 2026-09-05 while auditing TF for dead Win32 wrappers.
+
+  UTC, deliberately, matching GetDate immediately above: it reads GetSystemTime,
+  which is UTC, and a contest log is kept in UTC. The commented-out body agreed
+  -- it read the UTC record -- so this restores the intent rather than choosing
+  a new one.
+
+  Sec100 is HUNDREDTHS, per the parameter name; wMilliseconds is thousandths.
+  The old commented line assigned milliseconds straight across, which would
+  have been wrong by a factor of ten had it ever run. No current caller reads
+  Sec100, but a wrong value waiting to be used is not worth leaving. *)
 procedure GetTime(var Hour, Minute, Second, Sec100: Word);
+var
+  St                                    : SYSTEMTIME;
 begin
-  //DecodeTime(Now, Hour, Minute, Second, Sec100);
-{
-  tGetSystemTime;
-  Hour := UTC.wHour;
-  Minute := UTC.wMinute;
-  Second := UTC.wSecond;
-  Sec100 := UTC.wMilliseconds;
-}
+  GetSystemTime(St);
+  Hour := St.wHour;
+  Minute := St.wMinute;
+  Second := St.wSecond;
+  Sec100 := St.wMilliseconds div 10;
 end;
 
 procedure GetDate(var Year, Month, Day, DayOfWeek: Word);
