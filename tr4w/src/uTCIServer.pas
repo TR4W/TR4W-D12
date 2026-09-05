@@ -199,6 +199,36 @@ type
       FPTTKeyedAt: cardinal;
       FWatchdog: TTCIWatchdogThread;
 
+      (* THE OUTSTANDING QUEUED APPLIES, so this server can detach them.
+
+        A queued apply holds a raw pointer to the server and is run LATER, by
+        the main thread.  Nothing tied the two lifetimes, so a server destroyed
+        while an apply was still in the LCL's async queue left the command
+        pointing at freed memory -- and the queue is drained rather than
+        discarded, by TApplication.Destroy, so the command RUNS.
+
+        Measured, on the unit-test binary: every test that drives a TCI command
+        queues an apply, the suite never turns the LCL loop, and at shutdown
+        TApplication.Destroy ran them all against a server freed in TearDown --
+        FServer.FLock.Enter on recycled heap, SIGSEGV, exit 217 AFTER
+        'All tests passed'.  The app has the same race on any teardown that
+        overlaps a queued apply; it survives only because its loop turns often
+        enough that the window is small.
+
+        A separate lock from FLock on purpose: a command's Execute takes FLock,
+        so guarding this with FLock too would nest the two and impose an
+        ordering nothing else needs.  Nothing takes FCmdLock while holding
+        FLock -- ApplyModulation releases FLock before it posts. *)
+      FCmdLock:  TCriticalSection;
+      FCommands: TFPList;
+
+      (* TObject rather than TTCIApplyCommand because the command classes are
+        implementation-only; the bodies cast.  Private is enough -- the
+        commands live in this unit, and a unit is its own friend. *)
+      procedure AttachCommand(aCmd: TObject);
+      procedure DetachCommand(aCmd: TObject);
+      procedure DetachAllCommands;
+
       procedure SessionOpened(Session: TWSServerSession);
       procedure SessionClosed(Session: TWSServerSession);
       procedure TextArrived(Session: TWSServerSession; const Text: string);
@@ -250,6 +280,20 @@ type
       // Drops the transmit session without unkeying -- for a key that was
       // refused before it reached the radio.
       procedure ReleasePTTOwnership(Session: TWSServerSession);
+
+      (* HOW MANY APPLIES ARE QUEUED AND NOT YET RUN.
+
+        Exposed for the tests, and it is the only part of the register that can
+        be OBSERVED rather than inferred.  The failure this guards against is a
+        use-after-free at shutdown, and a use-after-free cannot be pinned by
+        watching for a fault: whether it faults depends on whether the heap has
+        been recycled yet.  Measured -- draining the queue from a test ran a
+        command against a freed server and did not crash, so a test written
+        that way PASSES with the fix reverted.
+
+        So the assertion is structural instead: while an apply is pending it is
+        registered with its server, and that is what Destroy relies on. *)
+      function OutstandingApplyCount: integer;
    end;
 
 var
@@ -300,9 +344,15 @@ uses
 // is a plain `procedure of object` that both compilers accept.  The command
 // owns itself and frees in Run's finally, so a raising Execute cannot leak it.
 //
-// Lifetime note: a command queued but never drained (shutdown between the queue
-// and the next message pump) is leaked.  That was equally true of the closures,
-// which captured the same values into a compiler-generated object.
+// Lifetime note, CORRECTED.  This said a command queued but never drained was
+// LEAKED.  It is not: TApplication.Destroy drains the async queue on its way
+// out rather than discarding it, so the command runs -- and if the server died
+// first, it runs against freed memory.  A leak would have been the harmless
+// outcome; what actually happened was a use-after-free at shutdown.
+//
+// So every command REGISTERS with its server for as long as it is pending, and
+// TTCIServer.Destroy cancels whatever is still outstanding.  A cancelled
+// command still runs and still frees itself -- it just does nothing.
 
 type
    TTCIApplyCommand = class abstract
@@ -312,6 +362,9 @@ type
       procedure Execute; virtual; abstract;
    public
       constructor Create(aServer: TTCIServer; aRig: RadioPtr);
+      (* THE SERVER IS GOING AWAY AND THIS COMMAND MUST NOT TOUCH IT.  Called
+        only by TTCIServer.DetachAllCommands.  Run still frees the command. *)
+      procedure Cancel;
       procedure Run;
    end;
 
@@ -366,6 +419,21 @@ begin
    inherited Create;
    FServer := aServer;
    FRig    := aRig;
+
+   (* REGISTERED WHILE PENDING.  Attaching in the constructor rather than in
+     PostTCIApply keeps the register honest for a command that is built and
+     then never posted: it is still attached, so a Destroy in between cancels
+     it instead of leaving the caller holding a command that outlived its
+     server. *)
+   if FServer <> nil then
+      begin
+      FServer.AttachCommand(Self);
+      end;
+end;
+
+procedure TTCIApplyCommand.Cancel;
+begin
+   FServer := nil;
 end;
 
 procedure TTCIApplyCommand.Run;
@@ -373,7 +441,25 @@ begin
    // Frees in the finally so a raising Execute cannot leak the command.  After
    // this returns nothing may touch Self.
    try
-      Execute;
+      (* DETACH BEFORE EXECUTE, not after: Execute may raise, and the finally
+        below frees the command either way.  Detaching afterwards would leave a
+        freed pointer in the server's register for DetachAllCommands to call
+        Cancel on.
+
+        A nil FServer means Cancel got here first -- the server is gone, and
+        every Execute below reads it.  Doing nothing is the whole point.
+
+        THE INVARIANT THIS RELIES ON: a command runs on the main thread (the
+        LCL drains the async queue there) and TTCIServer.Destroy is called on
+        the main thread too -- MainUnit.pas shutdown, and the tests' TearDown.
+        So a detach cannot interleave with an Execute already past its check.
+        Destroying the server from a background thread would break that, which
+        is why it is written down rather than assumed. *)
+      if FServer <> nil then
+         begin
+         FServer.DetachCommand(Self);
+         Execute;
+         end;
    finally
       Free;
    end;
@@ -802,6 +888,12 @@ var
 begin
    inherited Create;
    FLock := TCriticalSection.Create;
+
+   (* Before FWS and the watchdog: both can reach code that builds an apply,
+     and an unbuilt register would be the first thing it touched. *)
+   FCmdLock  := TCriticalSection.Create;
+   FCommands := TFPList.Create;
+
    FPort := TCI_SERVER_DEFAULT_PORT;
    FPTTOwner := nil;
    FPTTKeyedAt := 0;
@@ -822,6 +914,59 @@ begin
    FWatchdog := TTCIWatchdogThread.Create(Self);
 end;
 
+(* THE OUTSTANDING-APPLY REGISTER.  See the field declaration for why it
+  exists and why it has its own lock. *)
+
+procedure TTCIServer.AttachCommand(aCmd: TObject);
+begin
+   FCmdLock.Enter;
+   try
+      FCommands.Add(aCmd);
+   finally
+      FCmdLock.Leave;
+   end;
+end;
+
+procedure TTCIServer.DetachCommand(aCmd: TObject);
+begin
+   FCmdLock.Enter;
+   try
+      FCommands.Remove(aCmd);
+   finally
+      FCmdLock.Leave;
+   end;
+end;
+
+function TTCIServer.OutstandingApplyCount: integer;
+begin
+   FCmdLock.Enter;
+   try
+      Result := FCommands.Count;
+   finally
+      FCmdLock.Leave;
+   end;
+end;
+
+(* Cancels every apply still pending.  The commands are NOT freed here: each
+  one is owned by the queue entry that will run it, and Run frees it there.
+  Freeing them now would leave the LCL's async queue holding freed pointers --
+  the same defect, moved. *)
+procedure TTCIServer.DetachAllCommands;
+var
+   i: integer;
+begin
+   FCmdLock.Enter;
+   try
+      for i := 0 to FCommands.Count - 1 do
+         begin
+         TTCIApplyCommand(FCommands[i]).Cancel;
+         end;
+      FCommands.Clear;
+   finally
+      FCmdLock.Leave;
+   end;
+end;
+
 destructor TTCIServer.Destroy;
 begin
    Stop;
@@ -832,7 +977,16 @@ begin
       FreeAndNil(FWatchdog);
       end;
    FreeAndNil(FWS);
+
+   (* AFTER FWS AND THE WATCHDOG, BEFORE FLock.  The client threads are gone by
+     here, so nothing can attach a new command behind this call; and every
+     command that is still queued must be cancelled before the lock it would
+     enter is freed on the next line. *)
+   DetachAllCommands;
+
    FreeAndNil(FLock);
+   FreeAndNil(FCommands);
+   FreeAndNil(FCmdLock);
    inherited Destroy;
 end;
 

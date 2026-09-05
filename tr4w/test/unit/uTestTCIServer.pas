@@ -98,6 +98,9 @@ type
       procedure Test_Trx_MapsToRadios;
       procedure Test_Trx_OutOfRangeIsNil;
 
+      // Lifetime: a queued apply must not outlive the server it points at
+      procedure Test_Shutdown_QueuedApplyIsRegisteredWithItsServer;
+
    public
       procedure RunAllTests; override;
    end;
@@ -868,6 +871,66 @@ begin
    end;
 end;
 
+(* A QUEUED APPLY MUST NOT OUTLIVE THE SERVER IT POINTS AT.
+
+  A set command queues an apply onto the main thread and returns; the apply runs
+  when the LCL next drains its async queue.  Nothing in this suite turns that
+  loop, so before TTCIServer kept a register of outstanding commands, every
+  apply this file provoked sat in the queue until TApplication.Destroy drained
+  it during unit finalization -- against a server freed in StopServer long
+  before.
+
+  THAT FAILED IN THE WORST AVAILABLE WAY.  The crash came after the summary
+  printed, so the binary reported 'All tests passed' and then exited 217, and
+  FullBuild.ps1 -- which gates on the exit code, correctly -- stopped the build
+  saying the unit tests had failed while the counts said 0 failed.  Nothing in
+  that pointed at TCI.
+
+  WHAT THIS TEST DELIBERATELY DOES NOT DO, because the first version of it did:
+  it does not drain the queue here to provoke the fault.  A use-after-free only
+  faults once the heap has been recycled, and draining early ran the stale
+  command harmlessly -- so that test PASSED with the fix reverted, and by
+  emptying the queue it also removed the shutdown crash that was the real
+  signal.  It made the suite green on broken code, which is worse than having
+  no test.
+
+  So the assertion is structural and deterministic: while an apply is pending
+  it is REGISTERED with its server, which is the fact Destroy depends on to
+  cancel it.  Leaving the queue undrained also preserves the exit-code signal
+  at shutdown. *)
+procedure TTCIServerTests.Test_Shutdown_QueuedApplyIsRegisteredWithItsServer;
+var
+   c: TWebSocketClient;
+begin
+   BeginTest('Test_Shutdown_QueuedApplyIsRegisteredWithItsServer');
+   if not StartServer then
+      begin
+      Check(False, 'no port');
+      Exit;
+      end;
+   try
+      CheckTrue(Connect(c), '');
+      try
+         WaitForQuiet(WAIT_MS);
+         RxClear;
+         (* The confirmation goes out AFTER the apply has been queued, so
+           waiting for it is what makes the count below meaningful rather than
+           a race with the connection thread. *)
+         c.SendText('vfo:0,0,50313000;');
+         CheckTrue(WaitForPrefix('vfo:0,0,', WAIT_MS), 'the tune was accepted');
+         CheckTrue(FServer.OutstandingApplyCount > 0,
+                   'the pending apply is registered with its server');
+      finally
+         c.Free;
+      end;
+   finally
+      (* Frees the server, which cancels that registered apply.  The command
+        stays in the LCL queue and is drained at shutdown, where it now finds
+        a nil server and does nothing. *)
+      StopServer;
+   end;
+end;
+
 procedure TTCIServerTests.Test_Set_GlobalSplitEnableIsAccepted;
 var
    c: TWebSocketClient;
@@ -1077,6 +1140,8 @@ begin
 
    Test_Trx_MapsToRadios;
    Test_Trx_OutOfRangeIsNil;
+
+   Test_Shutdown_QueuedApplyIsRegisteredWithItsServer;
 end;
 
 end.
