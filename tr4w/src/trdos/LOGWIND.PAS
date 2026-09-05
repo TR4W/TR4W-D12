@@ -1602,7 +1602,7 @@ begin
       end;
   end;
   TR4WMainForm.pnlHourRate.Caption := wsprintfBuffer;
-  SendMessage(LastProgressBar, PBM_SETPOS, TempInteger, 0);
+  SetProgressPosition(mpbLastHour, TempInteger);
 end;
 
 procedure DisplayRate(Rate: Cardinal);
@@ -1612,28 +1612,12 @@ begin
   if not AlarmSet then
      begin
 
-     {        REMOVECANDIDATE
-          case HourDisplay of
-            ThisHour:
-              begin
-                TempString := 'This hr = ' + IntToStr(TotalThisHour);
-                SendMessage(LastProgressBar, PBM_SETPOS, TotalThisHour, 0);
-              end;
-            LastSixtyMins:
-              begin
-                TempString := 'Last 60 = ' + IntToStr(TotalLastSixty);
-                SendMessage(LastProgressBar, PBM_SETPOS, TotalLastSixty, 0);
-              end;
-          end;
-
-          tSetWindowText(HourRateWindowHandle, TempString);
-      }
      //    tSetWindowText(RateWindowHandle, 'Rate = ' + IntToStr(Rate));
 
    TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_RATE)), Rate);
 
    TR4WMainForm.pnlRate.Caption := wsprintfBuffer;
-   SendMessage(RateProgressBar, PBM_SETPOS, Rate, 0);
+   SetProgressPosition(mpbRate, Rate);
      end;
 end;
 
@@ -3868,17 +3852,16 @@ var
 begin
   if TourDuration = 0 then Exit;
   IntegerTime := UTC.wMinute mod TourDuration;
-  Windows.SendMessage(TorDurationPrBarWindow, PBM_SETPOS, IntegerTime, 0);
+  SetProgressPosition(mpbTourDuration, IntegerTime);
 
   TF.Format(TempBuffer2, PAnsiChar(WinAnsi(TC_NEWTOUR)), IntegerTime, TourDuration);
 
 //  Windows.SetDlgItemTextA(ReminderDlgHandle, 102, TempBuffer2);
-  Windows.SetWindowTextA(TorDurationWindow, TempBuffer2);
+  SetTourDurationText(TempBuffer2);
 
   if IntegerTime = 1 then
      begin
-     SendMessage(TorDurationPrBarWindow, PBM_SETMARQUEE, wParam(False), 40);
-     Windows.SetWindowLong(TorDurationPrBarWindow {GetDlgItem(ReminderDlgHandle, 101)}, GWL_STYLE, $50000001);
+     SetProgressMarquee(mpbTourDuration, False);
      end;
 
   if IntegerTime = 0 then
@@ -3888,8 +3871,7 @@ begin
         tClearDupesheet;
         end;
      if (Sheet.tAutoReset and MultReset) then tClearMultsheet; // 4.52.11
-     SendMessage(TorDurationPrBarWindow, PBM_SETMARQUEE, wParam(True), 40);
-     Windows.SetWindowLong(TorDurationPrBarWindow {GetDlgItem(ReminderDlgHandle, 101)}, GWL_STYLE, $50000009);
+     SetProgressMarquee(mpbTourDuration, True);
      end;
 end;
 

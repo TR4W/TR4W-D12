@@ -419,14 +419,11 @@ procedure CreateFonts;
 function MainFontCellHeight: integer;
 procedure ApplyMainFontTo(aFont: TFont);
 function tCreateFont(nHeight, fnWeight: integer; lpszFace: PChar): HFONT;
-function DrawWindows(lParam: lParam; wParam: wParam): Cardinal;
 //function DrawEdit(lParam: lParam; wParam: wParam): Cardinal;
 procedure ProcessMenu(menuID: integer);
 procedure ProcessTAB(lowparam: Word);
 procedure ProcessReturn;
 procedure CreateMainWindow;
-procedure CreateMultsWindows;
-procedure CreateQSONeedWindows;
 procedure CallWindowKeyDownProc(wParam: integer);
 procedure CallWindowKeyUpProc;
 procedure ExchangeWindowKeyDownProc(wParam: integer);
@@ -456,12 +453,6 @@ procedure CloseTR4WWindow(ID: WindowsType);
   So: if this ID is an LCL form, ask the FORM to close. Its OnClose sets
   caHide and calls CloseTR4WWindow itself. }
 procedure RequestCloseTR4WWindow(ID: WindowsType);
-function CreateTR4WStaticWindow(X: Word; Y: Word; w: Word; Style: Cardinal):
-  HWND;
-function CreateTR4WStaticWindowID(X: Word; Y: Word; w: Word; Style: Cardinal;
-  ID: HMENU): HWND;
-function nfCreateTR4WStaticWindow(Text: PAnsiChar; X: Word; Y: Word; w: Word; Style:
-  Cardinal): HWND;
 
 procedure SetOpMode(OperationMode: OpModeType);
 
@@ -501,7 +492,6 @@ function ParametersOkay(Call: CallString;
 
 procedure PossibleCallsProc(PCDRAWITEMSTRUCT: PDrawItemStruct);
 
-procedure CreateTotalWindow;
 procedure EditableLogWindowDblClick;
 procedure tClearDupeInfoCall;
 procedure tCleareCallWindow;
@@ -532,8 +522,6 @@ function tCreateComboBoxWindow(dwStyle: DWORD; X, Y, nWidth,
   {nHeight: integer; }hwndParent: HWND; HMENU: HMENU): HWND;
 
 procedure UpdateWindows;
-function CreateProgress32InMainWindow(Left: integer; Top: integer; Color:
-  integer): HWND;
 procedure tUpdateLog(UpdAction: UpadateAction);
 //procedure SelectFileOfFolder(Parent: HWND; FileName: PChar; Mask: PChar; SelectType: CFGType);
 
@@ -3944,75 +3932,6 @@ begin
 
 end;
 
-procedure CreateQSONeedWindows;
-var
-  Band: BandType;
-  w: integer;
-begin
-  w := (ws * 2);
-  for Band := Band160 to Band10 do
-     begin
-     QSONeedWindowsHandles1[Band] := CreateTR4WStaticWindow(MainWindowChildsWidth
-       - RightTopWidth + (integer(Band) + 1) * w, ws, w - 2,
-       QSOMULTSWINDOWSTYLE);
-     Windows.SetWindowTextA(QSONeedWindowsHandles1[Band], BandStringsArray[Band])
-     end;
-  QSONeedWindowHandle1 := CreateTR4WStaticWindow(MainWindowChildsWidth -
-    RightTopWidth, ws, w, QSOMULTSMODEWINDOWSTYLE);
-  Windows.SetWindowTextA(QSONeedWindowHandle1, nil);
-
-  if QSOByMode then
-     begin
-     for Band := Band160 to Band10 do
-        begin
-        QSONeedWindowsHandles2[Band] :=
-          CreateTR4WStaticWindow(MainWindowChildsWidth - RightTopWidth +
-          (integer(Band) + 1) * w, ws * 2, w - 2, QSOMULTSWINDOWSTYLE);
-        Windows.SetWindowTextA(QSONeedWindowsHandles2[Band], BandStringsArray[Band])
-        end;
-     QSONeedWindowHandle2 := CreateTR4WStaticWindow(MainWindowChildsWidth -
-       RightTopWidth, ws * 2, w, QSOMULTSMODEWINDOWSTYLE);
-     Windows.SetWindowTextA(QSONeedWindowHandle1, 'CW:');
-     Windows.SetWindowTextA(QSONeedWindowHandle2, 'SSB:');
-     end;
-end;
-
-procedure CreateMultsWindows;
-var
-  Band: BandType;
-  w: integer;
-begin
-  w := (ws * 2);
-  for Band := Band160 to Band10 do
-     begin
-     MultsWindowsHandles1[Band] := CreateTR4WStaticWindowID(MainWindowChildsWidth
-       - RightTopWidth + (integer(Band) + 1) * w, ws * 4, w - 2,
-       QSOMULTSWINDOWSTYLE, MULTSARRAYWINDOW);
-     Windows.SetWindowTextA(MultsWindowsHandles1[Band], BandStringsArray[Band])
-     end;
-  MultWindowHandle1 := CreateTR4WStaticWindow(MainWindowChildsWidth -
-    RightTopWidth, ws * 4, w, QSOMULTSMODEWINDOWSTYLE);
-  Windows.SetWindowTextA(MultWindowHandle1, 'Both:');
-
-  if MultByMode then
-     begin
-     for Band := Band160 to Band10 do
-        begin
-        MultsWindowsHandles2[Band] :=
-          CreateTR4WStaticWindowID(MainWindowChildsWidth - RightTopWidth +
-          (integer(Band) + 1) * w, ws * 5, w - 2, QSOMULTSWINDOWSTYLE,
-          MULTSARRAYWINDOW);
-        Windows.SetWindowTextA(MultsWindowsHandles2[Band], BandStringsArray[Band])
-        end;
-     MultWindowHandle2 := CreateTR4WStaticWindow(MainWindowChildsWidth -
-       RightTopWidth, ws * 5, w, QSOMULTSMODEWINDOWSTYLE);
-     Windows.SetWindowTextA(MultWindowHandle1, 'CW:');
-     Windows.SetWindowTextA(MultWindowHandle2, 'SSB:');
-     end;
-end;
-
-
-
 procedure ApplyDWMRoundedCorners;
 { On Windows 11: ask the DWM compositor to round window corners natively
   (title bar included) via DwmSetWindowAttribute(DWMWA_WINDOW_CORNER_PREFERENCE).
@@ -4225,10 +4144,14 @@ begin
   Radio2.FreqElement := mweRadioTwoFreq;
   Radio2.NameElement := mweRadioTwo;
 
-  LastProgressBar := CreateProgress32InMainWindow(ws * 28 {col6},
-    EditableLogHeight + 10 * ws {Line4}, $000000FF);
-  RateProgressBar := CreateProgress32InMainWindow(ws * 33 {col8},
-    EditableLogHeight + 10 * ws {Line4}, $00FF0000);
+  (* DESIGNED IN uMainForm.lfm; positioned here, like every other element.
+    The two colour arguments these calls used to carry are gone -- see the
+    note on the progress bars in uMainForm, they had not reached the screen
+    since the comctl32 v6 manifest was added. *)
+  SetProgressBounds(mpbLastHour, ws * 28 {col6},
+    EditableLogHeight + 10 * ws {Line4}, 5 * ws, ws);
+  SetProgressBounds(mpbRate, ws * 33 {col8},
+    EditableLogHeight + 10 * ws {Line4}, 5 * ws, ws);
 
   wh[mweExchange] := CreateCallOrExchangeWin(EditableLogHeight + ws * 8
     {+ round(ws * 1.5)} + MainWindowEditHeight + 1, EXCHANGEWINDOWID, efExchange);
@@ -4245,14 +4168,15 @@ begin
      SetElementBounds(mweQuickCommand, 0, EditableLogHeight + ws * 12,
                       ws * 33, ws);
      ShowElement(mweQuickCommand, True);
-     TorDurationWindow := CreateTR4WStaticWindow(38 * ws {col9}, EditableLogHeight
-       + ws * 12 {Line7}, 8 * ws, defStyle);
-     TorDurationPrBarWindow := CreateProgress32InMainWindow(33 * ws {col8},
-       EditableLogHeight + ws * 12 {Line7}, $0000FFFF);
-     SendMessage(TorDurationPrBarWindow, PBM_SETRANGE, 0, MakeLParam(0,
-       TourDuration));
-     SendMessage(TorDurationPrBarWindow, PBM_SETBKCOLOR, 0, $000000);
-     SendMessage(TorDurationPrBarWindow, PBM_SETSTEP, 1, 0);
+     SetTourDurationBounds(38 * ws {col9},
+       EditableLogHeight + ws * 12 {Line7}, 8 * ws, ws);
+     ShowTourDurationText(True);
+
+     SetProgressBounds(mpbTourDuration, 33 * ws {col8},
+       EditableLogHeight + ws * 12 {Line7}, 5 * ws, ws);
+     SetProgressMax(mpbTourDuration, TourDuration);
+     ShowProgressBar(mpbTourDuration, True);
+
      ShowTourDuration;
      end;
 
@@ -4273,7 +4197,6 @@ begin
   // The form's OnDrawItem is wired in uMainForm.lfm and delegates to this.
   PossibleCallDrawProc := @PossibleCallsDrawItem;
 
-  CreateTotalWindow;
 
   TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_RULESONQRZRU)), ContestTypeSA[Contest]);
   ModifyMenuA(tr4w_main_menu, menu_qrzru_calendar, MF_BYCOMMAND + MF_STRING,
@@ -4544,70 +4467,6 @@ begin
  {Dupesheet,Telnet}
  LucidaConsoleFont := tCreateFont(13, FW_BOLD * ord(BoldFont){FW_DONTCARE}, 'Lucida Console');
 {*)}
-end;
-
-function DrawWindows(lParam: lParam; wParam: wParam): Cardinal;
-label
-  DrawWindow;
-var
-  TempBrush: HBRUSH;
-  TempWindowColor: integer;
-begin
-  TempWindowColor := 0;
-
-  TempBrush := tr4wBrushArray[TWindows[mweWholeScreen].mweBackG];
-  //tr4wBrushArray[trBtnFace];
-  TempWindowColor := tr4wColorsArray[TWindows[mweWholeScreen].mweColor];
-
-  (* THE MAIN-WINDOW ELEMENTS WERE TESTED HERE, by scanning wh[] for a matching
-     handle. They are all LCL controls now and the form subclass forwards their
-     WM_CTLCOLOR* to the LCL, so the scan never matched.
-
-     MEASURED, not assumed. A counter read 48 queries and 7 matches on
-     2026-08-27, and every match was the possible-call list -- whose
-     WM_CTLCOLORLISTBOX was simply missing from that fork. With it added the
-     count went to 41 queries, 0 matches, and the scan came out with its
-     function.
-
-     What still arrives is the two windows below, which are not
-     TMainWindowElement at all: the totals-window headers and the mults array.
-     This function retires with them. *)
-
-  if TotWinCurrrentColumn in [1..7] then
-     begin
-     if lParam = integer(TotWinheadHandles[TotWinCurrrentColumn]) then
-        begin
-        TempBrush := tr4wBrushArray[trBlue];
-        TempWindowColor := tr4wColorsArray[trWhite];
-        goto DrawWindow;
-        end;
-     {
-    if (lParam = integer(TotWinHandles[TotWinCurrrentColumn, 0])) or
-    (lParam = integer(TotWinHandles[TotWinCurrrentColumn, 1])) or
-    (lParam = integer(TotWinHandles[TotWinCurrrentColumn, 2])) or
-    (lParam = integer(TotWinHandles[TotWinCurrrentColumn, 3]) )then
-    begin
-    TempBrush := tr4wBrushArray[trWhite];
-    goto DrawWindow;
-    end;
-    }
-     end;
-
-  if Windows.GetDlgCtrlID(HWND(lParam)) = MULTSARRAYWINDOW then
-     begin
-     TempBrush := tr4wBrushArray[TWindows[mweNewMultStatus].mweBackG];
-     //tr4wBrushArray[trYellow];
-     TempWindowColor := tr4wColorsArray[TWindows[mweNewMultStatus].mweColor];
-     //tr4wColorsArray[trBlack];
-     goto DrawWindow;
-     end;
-
-  // Exit;
-
-  DrawWindow:
-  SetBkMode(HDC(wParam), TRANSPARENT);
-  SetTextColor(HDC(wParam), TempWindowColor);
-  Result := TempBrush;
 end;
 
 // Issue #20 -- shared body for Ctrl-P (short path) and Alt-Ctrl-P (long path).
@@ -6564,27 +6423,6 @@ begin
   FrmSetFocus;
 end;
 
-function CreateTR4WStaticWindow(X: Word; Y: Word; w: Word; Style: Cardinal):
-  HWND;
-begin
-  Result := tCreateStaticWindow('', Style, X, Y, w, ws, tr4whandle, 0);
-  tWM_SETFONT(Result, MainFont);
-end;
-
-function CreateTR4WStaticWindowID(X: Word; Y: Word; w: Word; Style: Cardinal;
-  ID: HMENU): HWND;
-begin
-  Result := tCreateStaticWindow('', Style, X, Y, w, ws, tr4whandle, ID);
-  tWM_SETFONT(Result, MainFont);
-end;
-
-function nfCreateTR4WStaticWindow(Text: PAnsiChar; X: Word; Y: Word; w: Word; Style:
-  Cardinal): HWND;
-begin
-  Result := tCreateStaticWindow(Text, Style, X, Y, w, ws, tr4whandle, 0);
-  tWM_SETFONT(Result, MainFont);
-end;
-
 procedure ProcessFuntionKeys(Key: integer);
 begin
   GetRealVirtualKey(Key);
@@ -7177,107 +7015,6 @@ begin
     DT_VCENTER);
 end;
 
-procedure CreateTotalWindow;
-var
-  r: integer;
-  c, LabelWidth, Right, X: integer;
-const
-  w = 2.5;
-begin
-
-  // Bounds from the arrays themselves, so widening the grid is a one-line
-  // change in VC.pas rather than a hunt for every loop that repeated a literal.
-  for r := 0 to High(TotWinHandles[0]) do
-     begin
-     for c := 0 to High(TotWinHandles) do
-        begin
-
-        if c = 0 then
-           begin
-           LabelWidth := ws * 5 {ws2 * 20};
-           Right := 0;
-           end
-        else
-           begin
-           LabelWidth := round(ws * w) {ws2 * 10};
-           if c = 7 then
-              begin
-              LabelWidth := round(ws * 3);
-              end;
-           Right := round(ws * 2.5); //ws2 * 10 + 2 - 2;
-           end;
-
-        TotWinHandles[c, r] :=
-          CreateTR4WStaticWindow(
-          Right + c * (round(ws * w)),
-          ws * 2 + r * ws,
-          LabelWidth,
-          defStyle and (not (Cardinal(Config.NoBorder) * SS_SUNKEN))
-          );
-
-        end;
-     end;
-  for c := 1 to 7 do
-     begin
-     X := Right + c * (round(ws * w) {+ 2});
-     if c = 7 then
-        begin
-        TotWinheadHandles[7] :=
-          tCreateStaticWindow('',
-          (defStyle + SS_CENTERIMAGE) and (not (Cardinal(Config.NoBorder) * SS_SUNKEN))
-          , X, 0, round(ws * 3) {ws2 * 10}, ws * 2, tr4whandle, 0)
-        end
-     else
-
-        begin
-        TotWinheadHandles[c] :=
-
-        tCreateStaticWindow(
-
-          '',
-          (defStyle + SS_CENTERIMAGE) and (not (Cardinal(Config.NoBorder) * SS_SUNKEN)),
-          X,
-          0,
-          round(ws * w) {ws2 * 10},
-          ws * 2,
-          tr4whandle,
-          999 + c);
-        end;
-     // Issue #997: asm tWM_SETFONT (EAX = TotWinheadHandles[c]; both branches store it).
-     tWM_SETFONT(TotWinheadHandles[c], MainFont);
-
-     end;
-
-  // TotalScoreWindowHandle := CreateTR4WStaticWindow(X, 0, MainWindowChildsWidth - RightTopWidth - X, defStyle);
-  {
-  DupeInfoCallWindowHandle :=
-
-  tCreateStaticWindow(
-  nil,
-  defStyle,
-  X,
-  ws,
-  MainWindowChildsWidth - RightTopWidth - X,
-  StaticWindowHeight * 2,
-  tr4whandle,
-  0);
-  tWM_SETFONT(DupeInfoCallWindowHandle, MainFont);
-  }
-{$IF tDebugMode}
-  X := X + round(ws * 3) {ws2 * 10};
-  CPUButtonHandle := tCreateButtonWindow(0, '', BS_FLAT + WS_CHILD or BS_TEXT
-    or
-    BS_PUSHLIKE or WS_VISIBLE, X, ws * 4, MainWindowChildsWidth - RightTopWidth
-    -
-    X, ws * 2, tr4whandle, 0);
-{$IFEND}
-
-  // Windows.EnableWindow(TotWinheadHandles[7], False);
-  // TotWinheadHandles[c] := CreateTR4WStaticWindow(310, 1, 35);
- // UpdateTotals2;
-
-end;
-
 procedure EditableLogWindowDblClick;
 var
   Size: Int64;
@@ -7338,19 +7075,6 @@ end;
 procedure tWinHelp(WindowHelpID: Byte);
 begin
   // WinHelp(tr4whandle, TR4W_HLP_FILENAME, HELP_CONTEXT, Cardinal(WindowHelpID));
-end;
-
-function CreateProgress32InMainWindow(Left: integer; Top: integer; Color:
-  integer): HWND;
-
-begin
-  Result := Createmsctls_progress32(Left, Top, 5 * ws, ws, tr4whandle, 0);
-  SendMessage(Result, PBM_SETBARCOLOR, 0, Color);
-  SendMessage(Result, PBM_SETBKCOLOR, 0, 16777215);
-  SendMessage(Result, PBM_SETSTEP, 1, 0);
-  SendMessage(Result, PBM_SETRANGE, 0, 0 or tr4w_MAX_RATE shl 16
-    {MakeLParam(0, tr4w_MAX_RATE)});
-
 end;
 
 {

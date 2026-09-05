@@ -607,11 +607,14 @@ begin
       the result and leaked the object. Two of the four sites checked the
       return value. RunOnMainThread cannot refuse. *)
 
-    WM_CTLCOLORLISTBOX, WM_CTLCOLOREDIT, WM_CTLCOLORSTATIC:
-      begin
-        Result := DrawWindows(lParam, wParam);
-        if Result <> 0 then Exit;
-      end;
+    (* THE WM_CTLCOLOR* ARM IS GONE, and so is DrawWindows (2026-09-04).
+
+      It answered these three messages for whichever children TR4W still
+      painted itself. The last of those were the totals grid and the two
+      need strips -- sixty-seven raw STATICs -- and they are designed
+      TElementPanels in uMainGrids now, each of which paints from its own
+      Color. uMainForm forwards all three messages to the LCL
+      unconditionally, so nothing reaches this procedure to answer. *)
 
     WM_CLOSE:
       begin

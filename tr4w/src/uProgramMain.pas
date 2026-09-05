@@ -248,6 +248,7 @@ uses
   uKeyerEditForm,
   uRadioEditForm,
   uMainForm,
+  uMainGrids,   { the totals grid and the two need strips }
   uPrefsForm,
   uJSON,
   uHTTPDownload,
@@ -1479,8 +1480,14 @@ begin
   SetUpExchangeInformation(ActiveExchange, ExchangeInformation);
   SetColumnsWidth;
   CreateMainWindow;
-  CreateMultsWindows;
-  CreateQSONeedWindows;
+
+  (* The totals grid and the two need strips. These were CreateMultsWindows and
+    CreateQSONeedWindows, which BUILT sixty-seven Win32 STATICs; the panels are
+    designed in uMainForm.lfm now, so the work here is to find them and to say
+    which rows this contest uses. *)
+  BindMainGrids;
+  PositionMainGrids;
+  ConfigureNeedRows(QSOByMode, MultByMode);
 
   SetUpGlobalsAndInitialize;
 

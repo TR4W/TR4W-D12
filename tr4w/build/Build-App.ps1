@@ -139,12 +139,32 @@ if ($errLines.Count -gt 0)
 #
 # A count, not a list, so the ratchet is one number to argue about.  Lower it
 # whenever you fix one; raising it needs a reason in the commit message.
+# WHETHER THE COUNTS BELOW MEAN ANYTHING.
+#
+# FPC emits a warning only for a unit it RECOMPILES.  An incremental build
+# touches a handful of units, so a count taken from its output is a fraction of
+# the tree's real total -- and a build that failed part way through is a
+# fraction of even that.  Neither number can be compared against a ceiling.
+#
+# This was not theoretical.  $NARROW_CEILING had been ratcheted down to a value
+# a full build could not meet, so `main` did not build; and an aborted build in
+# the same session printed "1133 (ceiling 1427) -- down from 1427, lower it",
+# which is a guard asking to be weakened on the strength of a failure.
+#
+# So: judge only a build that was FULL and that SUCCEEDED.  Anything else
+# reports its count as indicative and neither fails nor invites a lower ceiling.
+$countsAreComplete = (-not $Incremental) -and ($rc -eq 0)
+$countsCaveat = if ($Incremental) { 'INCREMENTAL build -- only recompiled units are counted' }
+                elseif ($rc -ne 0) { 'build FAILED -- units after the error were never compiled' }
+                else { '' }
+
 $WARN_CEILING = 6
 
 $warnLines = $output | Select-String -Pattern 'Comparison might be always (false|true)'
 Write-Host "range warnings: $($warnLines.Count) (ceiling $WARN_CEILING)"
+if ($countsCaveat) { Write-Host "  NOT JUDGED: $countsCaveat" }
 
-if ($warnLines.Count -gt $WARN_CEILING)
+if ($countsAreComplete -and ($warnLines.Count -gt $WARN_CEILING))
    {
    Write-Host ''
    $warnLines | ForEach-Object { Write-Host "  $($_.Line.Trim())" }
@@ -156,7 +176,7 @@ if ($warnLines.Count -gt $WARN_CEILING)
    exit 1
    }
 
-if ($warnLines.Count -lt $WARN_CEILING)
+if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
    {
    Write-Host "  down from $WARN_CEILING -- lower `$WARN_CEILING in this script and commit it with the fix."
    }
@@ -193,12 +213,27 @@ if ($warnLines.Count -lt $WARN_CEILING)
 # UnicodeStrings. So each assignment narrows. There are 139 of these tree-wide
 # and they all have that one cause; they will go together or not at all, and a
 # form that avoided them would be a form whose text cannot be translated.
-$NARROW_CEILING = 1427
+#
+# RE-BASELINED 1427 -> 1462 ON 2026-09-05, AND THAT IS NOT A REGRESSION BEING
+# WAVED THROUGH. 1427 was never a number a full build produced: measured on the
+# committed tree, with none of this change present, a full build reports 1461.
+# The ceiling had been ratcheted down against an INCREMENTAL build, which counts
+# only the units it recompiled -- so `main` did not build at all, and had not
+# for several commits. The guard above is the actual fix; this is the number it
+# should have been holding.
+#
+# The +1 that this change adds is one Caption assignment in uMainGrids, and it
+# is the same unavoidable narrowing as the other 139: the LCL is compiled with
+# 8-bit strings, tr4w.inc puts our units in UnicodeStrings, and TCaption is an
+# AnsiString. Every other new boundary in the change was typed as TCaption so
+# the conversion happens once, at the control, instead of at each caller.
+$NARROW_CEILING = 1462
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"
+if ($countsCaveat) { Write-Host "  NOT JUDGED: $countsCaveat" }
 
-if ($narrowLines.Count -gt $NARROW_CEILING)
+if ($countsAreComplete -and ($narrowLines.Count -gt $NARROW_CEILING))
    {
    Write-Host ''
    $narrowLines | Select-Object -First 15 | ForEach-Object { Write-Host "  $($_.Line.Trim())" }
@@ -211,7 +246,7 @@ if ($narrowLines.Count -gt $NARROW_CEILING)
    exit 1
    }
 
-if ($narrowLines.Count -lt $NARROW_CEILING)
+if ($countsAreComplete -and ($narrowLines.Count -lt $NARROW_CEILING))
    {
    Write-Host "  down from $NARROW_CEILING -- lower `$NARROW_CEILING in this script and commit it with the fix."
    }

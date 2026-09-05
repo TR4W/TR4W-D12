@@ -190,6 +190,7 @@ implementation
 
 uses
   uMainForm,   { the exchange field, named -- wh[] round 3 }
+  uMainGrids,  { the QSO-need and mult-need band strips }
    (* Which store a log READ comes from -- step B4.  See uLogSource. *)
    uLogSource,
   //OZCHR,
@@ -1009,18 +1010,10 @@ begin
   if MultByMode then
      begin
      CreateModeSpecificMultiplierInfo(Call, TempMult, CW, OutputValue);
-     for Band := Band160 to Band10 do
-        begin
-        Windows.ShowWindow(MultsWindowsHandles1[Band], integer((OutputValue and (1
-          shl integer(Band))) <> 0));
-        end;
+     SetMultNeedBands(CW, OutputValue);
 
      CreateModeSpecificMultiplierInfo(Call, TempMult, Phone, OutputValue);
-     for Band := Band160 to Band10 do
-        begin
-        Windows.ShowWindow(MultsWindowsHandles2[Band], integer((OutputValue and (1
-          shl integer(Band))) <> 0))
-        end
+     SetMultNeedBands(Phone, OutputValue);
 
      end
   else
@@ -1037,11 +1030,7 @@ begin
           OutputValue := 0;
           end;
 
-     for Band := Band160 to Band10 do
-        begin
-        Windows.ShowWindow(MultsWindowsHandles1[Band], integer((OutputValue and (1
-          shl integer(Band))) <> 0))
-        end
+     SetMultNeedBands(Both, OutputValue);
 
      end;
 end;
@@ -1153,28 +1142,16 @@ begin
   if QSOByMode then
      begin
      CreateModeSpecificQSOInfo(Call, CW, OutputString);
-     for Band := Band160 to Band10 do
-        begin
-        Windows.ShowWindow(QSONeedWindowsHandles1[Band], integer((OutputString and
-          (1 shl integer(Band))) <> 0));
-        end;
+     SetQSONeedBands(CW, OutputString);
 
      CreateModeSpecificQSOInfo(Call, Phone, OutputString);
-     for Band := Band160 to Band10 do
-        begin
-        Windows.ShowWindow(QSONeedWindowsHandles2[Band], integer((OutputString and
-          (1 shl integer(Band))) <> 0));
-        end;
+     SetQSONeedBands(Phone, OutputString);
 
      end
   else
      begin
      CreateModeSpecificQSOInfo(Call, Both, OutputString);
-     for Band := Band160 to Band10 do
-        begin
-        Windows.ShowWindow(QSONeedWindowsHandles1[Band], integer((OutputString and
-          (1 shl integer(Band))) <> 0));
-        end;
+     SetQSONeedBands(Both, OutputString);
      end;
 
 
@@ -1202,28 +1179,16 @@ begin
   if QSOByMode then
      begin
      CreateModeSpecificQSOInfo(Call^, CW, OutputString);
-     for Band := Band160 to Band10 do
-        begin
-        Windows.ShowWindow(QSONeedWindowsHandles1[Band], integer((OutputString and
-          (1 shl integer(Band))) <> 0));
-        end;
+     SetQSONeedBands(CW, OutputString);
 
      CreateModeSpecificQSOInfo(Call^, Phone, OutputString);
-     for Band := Band160 to Band10 do
-        begin
-        Windows.ShowWindow(QSONeedWindowsHandles2[Band], integer((OutputString and
-          (1 shl integer(Band))) <> 0));
-        end;
+     SetQSONeedBands(Phone, OutputString);
 
      end
   else
      begin
      CreateModeSpecificQSOInfo(Call^, Both, OutputString);
-     for Band := Band160 to Band10 do
-        begin
-        Windows.ShowWindow(QSONeedWindowsHandles1[Band], integer((OutputString and
-          (1 shl integer(Band))) <> 0));
-        end;
+     SetQSONeedBands(Both, OutputString);
      end;
 
 end;

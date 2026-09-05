@@ -49,7 +49,15 @@ procedure ClearTotals(StartColumn: integer);
 implementation
 
 uses
-   Log4D;
+   Log4D,
+   (* The totals grid itself. It was eight columns of Win32 STATICs whose
+     handles this unit reached through a global array; it is designed LCL
+     panels now and this unit addresses cells by (column, row).
+
+     THE NOTE BELOW ABOUT NOT DRAGGING IN MainUnit still holds as intent, and
+     uMainGrids is deliberately narrow -- but the compiler bug that made it
+     urgent was dcc32's, and dcc32 has been gone from this tree since August. *)
+   uMainGrids;
 
 var
    // This unit's own reference to the program's log category, rather than
@@ -61,50 +69,17 @@ var
 
 procedure TotalTextOut(s: string; X, Y: integer);
 begin
-  // THE GRID IS FIXED AT 8 x 4 and the callers do not check.  MainUnit creates
-  // exactly `for r := 0 to 3` x `for c := 0 to 7` static windows (~5310), and
-  // VC.pas sizes both arrays [0..7, 0..3] to match -- so a cell outside that
-  // has no window to write to.
-  //
-  // WriteLeftColumnText and iTotalTextOut both do a bare `inc(Row)` with no
-  // bound, and enough conditional rows (CW + Phone + Digital, or the mult
-  // labels) reach Row = 4.  NY4I hit exactly that at startup 2026-08-07:
-  //   uTotal.TotalTextOut ('DX Mults', 0, 4)   <- Y is one past the end
-  //
-  // WITH RANGE CHECKING OFF -- this project's setting -- it does not raise, and
-  // what it does instead depends on X, because Delphi lays array[0..7, 0..3]
-  // out with the FIRST index outermost: [X,Y] is element X*4 + Y of 32.
-  //
-  //   X = 0 (the left column):  [0,4] is element 4, which IS [1,0].  The label
-  //       silently overwrites the NEXT COLUMN's top cell.  Wrong, but contained.
-  //
-  //   X = 7 (DisplayBandTotals sets Column := 7 for AllBands):  [7,4] is
-  //       element 32 -- ONE PAST THE LAST.  TotWinHandles[7,4] reads into
-  //       TotWinHandlesFilled, and TotWinHandlesFilled[7,4] WRITES PAST IT INTO
-  //       TotWinheadHandles[1] (VC.pas:2604), which is a live window handle.
-  //
-  // That second case is the dangerous one and it is why this guard exists: a
-  // corrupted HWND fails later, somewhere else, depending on what the window
-  // manager happens to be doing -- which matches "ran fine for many sessions,
-  // then didn't" and a corpus set that failed only periodically.  Guarded here
-  // rather than left to each caller to learn to count.
-  if (X < Low(TotWinHandles)) or (X > High(TotWinHandles)) or
-     (Y < Low(TotWinHandles[0])) or (Y > High(TotWinHandles[0])) then
-     begin
-     // REPORTED, not swallowed: a dropped label means the totals window is
-     // showing fewer categories than the contest actually has, and an operator
-     // needs some way to discover that beyond noticing a blank line.
-     logger.Warn('[TotalTextOut] cell (%d,%d) is outside the %dx%d totals grid; ' +
-                 'text "%s" not shown',
-                 [X, Y, High(TotWinHandles) + 1, High(TotWinHandles[0]) + 1, s]);
-     Exit;
-     end;
+   (* THE GRID IS FIXED AT 8 x 4 AND THE CALLERS DO NOT CHECK.
 
-  // D12: s is native string; '' is the "clear" signal nil used to be.
-  if s = '' then
-    if TotWinHandlesFilled[X, Y] = False then Exit;
-  Windows.SetWindowTextW(TotWinHandles[X, Y], PChar(s));
-  TotWinHandlesFilled[X, Y] := s <> '';
+     WriteLeftColumnText and iTotalTextOut both do a bare `inc(Row)` with no
+     bound, and enough conditional rows -- CW plus Phone plus Digital, or the
+     mult labels -- reach Row = 4. NY4I hit exactly that at startup
+     2026-08-07:  uTotal.TotalTextOut ('DX Mults', 0, 4).
+
+     THE GUARD, AND THE ACCOUNT OF WHAT IT PREVENTED, MOVED TO
+     uMainGrids.SetTotalsCell -- with the grid, so that one place knows the
+     grid's shape. It is still reported and still not swallowed. *)
+   SetTotalsCell(X, Y, s);
 end;
 
 procedure WriteLeftColumnText(Text: string);
@@ -124,12 +99,6 @@ begin
 
   if Number = 0 then TempPchar := nil else TempPchar := inttopchar(Number);
   TotalTextOut(TempPchar, Column, Row);
-{
-  if Number = 0 then
-    Windows.SetWindowTextA(TotWinHandles[Column, Row], nil)
-  else
-    Windows.SetWindowTextA(TotWinHandles[Column, Row], inttopchar(Number));
-}
 end;
 
 procedure DisplayBandTotals(Band: BandType);
@@ -186,7 +155,7 @@ begin
      //      Windows.SendMessage(TotWinheadHandles[Column], BM_SETCHECK, BST_CHECKED, 0);
    TotWinCurrrentColumn := Column;
      end;
-  Windows.SetWindowTextA(TotWinheadHandles[Column], {col_title} BandStringsArrayWithOutSpaces[Band]);
+  SetTotalsHeader(Column, BandStringsArrayWithOutSpaces[Band]);
 
   Row := -1;
   MultDisplayEnable := True;
@@ -514,22 +483,26 @@ begin
     end;
 }
      end;
-  for i := 1 to 6 do
-     begin
-     InvalidateRect(TotWinheadHandles[i], nil, True);
-     end;
+  (* REPAINT THE BAND HEADERS SO THE CURRENT COLUMN IS THE HIGHLIGHTED ONE.
+
+    This was an InvalidateRect loop that forced a WM_CTLCOLORSTATIC and let
+    DrawWindows decide the colours from TotWinCurrrentColumn. Setting the
+    colour directly says the same thing in one step -- and fixes a gap the loop
+    had: it ran 1 to 6 of seven headers, so the All column never repainted and
+    its highlight could be left behind. *)
+  HighlightTotalsColumn(TotWinCurrrentColumn);
 end;
 
 procedure ClearTotals(StartColumn: integer);
 var
   c, r                             : integer;
 begin
-   // Bounds from the arrays, not literals -- see VC.pas:2601. Clearing fewer
-   // rows than exist would leave a stale label behind when a contest with more
-   // categories is followed by one with fewer.
-   for c := StartColumn to High(TotWinHandles) do
+   (* Bounds from uMainGrids' constants, not literals. Clearing fewer rows than
+     exist would leave a stale label behind when a contest with more categories
+     is followed by one with fewer. *)
+   for c := StartColumn to TOTALS_COLUMNS - 1 do
       begin
-      for r := 0 to High(TotWinHandles[0]) do
+      for r := 0 to TOTALS_ROWS - 1 do
          begin
          TotalTextOut('', c, r);
          end;

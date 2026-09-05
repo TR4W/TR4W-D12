@@ -74,6 +74,9 @@ function Get-FmxControls {
             # A control the LCL positions itself. Its designed coordinates are
             # overwritten at run time, so measuring them means nothing.
             Align = 'alNone'
+            # Hidden in the .lfm: shown by code, which also arranges the
+            # row it appears on. See the note in Test-Overlaps.
+            Hidden = $false
          }
          $nodes += $node
          $stack.Add($node) | Out-Null
@@ -104,6 +107,7 @@ function Get-FmxControls {
       elseif ($line -match '^ClientWidth\s*=\s*(-?[\d.]+)')  { $top.CW = [double]$Matches[1] }
       elseif ($line -match '^ClientHeight\s*=\s*(-?[\d.]+)') { $top.CH = [double]$Matches[1] }
       elseif ($line -match '^Align\s*=\s*(al[A-Za-z]+)')     { $top.Align = $Matches[1] }
+      elseif ($line -match '^Visible\s*=\s*False')         { $top.Hidden = $true }
    }
 
    return $nodes
@@ -124,6 +128,17 @@ function Test-Overlaps {
       for ($i = 0; $i -lt $items.Count; $i++) {
          for ($j = $i + 1; $j -lt $items.Count; $j++) {
             $a = $items[$i]; $b = $items[$j]
+
+            # A CONTROL HIDDEN AT DESIGN TIME TAKES TURNS WITH WHAT IT SITS ON.
+            # The tour-duration readout and its bar share the quick-command
+            # row, and the code that reveals them narrows that panel to fit --
+            # so the overlap exists only in the picture, never on screen. Same
+            # "exactly one at a time" case as the section panels above.
+            #
+            # NARROW ON PURPOSE: both visible still collides, which is the
+            # defect this lint was written for.
+            if ($a.Hidden -or $b.Hidden) { continue }
+
             $xo = ($a.X -lt ($b.X + $b.W)) -and ($b.X -lt ($a.X + $a.W))
             $yo = ($a.Y -lt ($b.Y + $b.H)) -and ($b.Y -lt ($a.Y + $a.H))
             if ($xo -and $yo) {

@@ -99,6 +99,150 @@ def component_name(element):
     return 'pnl' + element[3:]
 
 
+def panel_block(name, left, top, width, height, taborder,
+                caption='', sunken=True, alignment='taCenter',
+                enabled=True, visible=True):
+    """One TElementPanel, as .lfm object text.
+
+    ONE EMITTER for every panel this script writes.  The property ORDER matters
+    beyond tidiness: --check compares the generated text to the file byte for
+    byte, so two emitters that agreed on content but not on order would make
+    the check fail with nothing actually wrong.
+    """
+    out = ['  object %s: TElementPanel' % name,
+           '    Left = %d' % left,
+           '    Height = %d' % height,
+           '    Top = %d' % top,
+           '    Width = %d' % width,
+           '    Alignment = %s' % alignment,
+           '    AutoSize = False',
+           '    BevelOuter = %s' % ('bvLowered' if sunken else 'bvNone'),
+           "    Caption = '%s'" % caption.replace("'", "''")]
+    if not enabled:
+        out.append('    Enabled = False')
+    out.append('    ParentColor = False')
+    out.append('    ParentFont = False')
+    out.append('    TabOrder = %d' % taborder)
+    if not visible:
+        out.append('    Visible = False')
+    out.append('  end')
+    return out
+
+
+# ---------------------------------------------------------------------------
+# THE TWO GRIDS THAT ARE NOT IN TWindows[].
+#
+#   The score totals grid (8 columns x 4 rows, plus 7 band headers) and the
+#   QSO-need / mult-need band strips top right.  They were sixty-seven raw
+#   Win32 STATICs created in code -- MainUnit's CreateTotalWindows,
+#   CreateQSONeedWindows and CreateMultsWindows -- and they were the last
+#   children of the main form that were not LCL controls.
+#
+#   They are generated here rather than hand-typed for the same reason the
+#   TWindows[] panels are: their geometry is a FORMULA, and a hand-typed copy
+#   of a formula drifts.  The formulas below are the ones the deleted creators
+#   used, at the default scale.
+#
+#   Not from TWindows[] because they are not elements: they are addressed by
+#   (column, row) and by (row, band), which is what uMainGrids exposes.
+
+TOT_COLS = 8                 # TotWinHandles: array[0..7, 0..3]
+TOT_ROWS = 4
+TOT_HEAD_FIRST = 1           # TotWinheadHandles: array[1..7]
+
+# BandStringsArray, Band160..Band10 -- the six HF contest bands the strips show.
+NEED_BANDS = ['160', '80', '40', '20', '15', '10']
+
+# MainUnit: MainWindowChildsWidth := 46 * ws;  RightTopWidth := 14 * ws.
+NEED_LEFT = (46 - 14) * WS
+
+
+def totals_blocks(taborder):
+    """The score totals grid, from CreateTotalWindows' own arithmetic.
+
+    Column 0 is the wide label column; column 7 ("All") is wider than the band
+    columns between them.  The header row sits above the cells and is what
+    carries the current-band highlight.
+    """
+    colw = round(WS * 2.5)
+    label_w = WS * 5
+    out, names = [], []
+    extent = [0, 0]
+
+    def cell_geometry(c):
+        # THE BAND COLUMNS START AFTER THE LABEL COLUMN, not one pixel inside
+        # it.  Column 0 is WS * 5 to line up with the clock panels above it
+        # (TWindows[] gives those 5 units), while the pitch is round(WS * 2.5)
+        # = 42 -- so the old (c + 1) * colw put column 1 at 84 against a label
+        # column ending at 85.  uMainGrids.TotalsColumnGeometry is the runtime
+        # twin of this and carries the full note.
+        if c == 0:
+            return 0, label_w
+        return label_w + (c - 1) * colw, (round(WS * 3) if c == 7 else colw)
+
+    for c in range(TOT_COLS):
+        left, width = cell_geometry(c)
+        for r in range(TOT_ROWS):
+            name = 'pnlTotalCell_%d_%d' % (c, r)
+            top = WS * 2 + r * WS
+            out += panel_block(name, left, top, width, WS, taborder,
+                               alignment=('taLeftJustify' if c == 0 else 'taCenter'))
+            names.append(name)
+            taborder += 1
+            extent[0] = max(extent[0], left + width)
+            extent[1] = max(extent[1], top + WS)
+
+    for c in range(TOT_HEAD_FIRST, TOT_COLS):
+        left, width = cell_geometry(c)
+        name = 'pnlTotalHead_%d' % c
+        out += panel_block(name, left, 0, width, WS * 2, taborder)
+        names.append(name)
+        taborder += 1
+        extent[0] = max(extent[0], left + width)
+        extent[1] = max(extent[1], WS * 2)
+
+    return out, names, extent, taborder
+
+
+def needs_blocks(taborder):
+    """The QSO-need and mult-need band strips.
+
+    THE CELLS ARE CREATED HIDDEN and revealed per band.  That is not a
+    decision made here: the Win32 style they used, uVisStyleNoSun, omits
+    WS_VISIBLE, so every cell started hidden and ShowWindow drove it.  A
+    generated `Visible = True` would put six band labels permanently on screen.
+
+    Row 1 is CW when the contest counts by mode and Both when it does not; row
+    2 is SSB and is shown only in the by-mode case.  The row LABEL is visible
+    from the start and right-aligned, as its own style (SS_RIGHT, WS_VISIBLE)
+    said.
+    """
+    w = WS * 2
+    out, names = [], []
+    extent = [0, 0]
+
+    for kind, row_tops in (('QSONeed', (WS, WS * 2)),
+                           ('MultNeed', (WS * 4, WS * 5))):
+        for row, top in enumerate(row_tops, start=1):
+            label = 'pnl%sR%dLabel' % (kind, row)
+            out += panel_block(label, NEED_LEFT, top, w, WS, taborder,
+                               sunken=False, alignment='taRightJustify')
+            names.append(label)
+            taborder += 1
+
+            for i, band in enumerate(NEED_BANDS):
+                name = 'pnl%sR%d_%s' % (kind, row, band)
+                left = NEED_LEFT + (i + 1) * w
+                out += panel_block(name, left, top, w - 2, WS, taborder,
+                                   caption=band, sunken=False, visible=False)
+                names.append(name)
+                taborder += 1
+                extent[0] = max(extent[0], left + w - 2)
+            extent[1] = max(extent[1], top + WS)
+
+    return out, names, extent, taborder
+
+
 def generate():
     order, by = read_rows()
     out = []
@@ -122,38 +266,24 @@ def generate():
         width = int(w) * WS
         height = int(h) * WS
 
-        out.append('  object %s: TElementPanel' % component_name(element))
-        out.append('    Left = %d' % left)
-        out.append('    Height = %d' % height)
-        out.append('    Top = %d' % top)
-        out.append('    Width = %d' % width)
-        out.append('    Alignment = %s' % ('taCenter' if centre else 'taLeftJustify'))
-        out.append('    AutoSize = False')
-        out.append('    BevelOuter = %s' % ('bvLowered' if sunken else 'bvNone'))
-        out.append("    Caption = '%s'" % text.replace("'", "''"))
-        if not enabled:
-            out.append('    Enabled = False')
-        out.append('    ParentColor = False')
-        out.append('    ParentFont = False')
-        out.append('    TabOrder = %d' % len(made))
-        if not visible:
-            out.append('    Visible = False')
-        out.append('  end')
+        out += panel_block(component_name(element), left, top, width, height,
+                           len(made), caption=text, sunken=sunken,
+                           alignment=('taCenter' if centre else 'taLeftJustify'),
+                           enabled=enabled, visible=visible)
         made.append(element)
 
         extent[0] = max(extent[0], left + width)
         extent[1] = max(extent[1], top + height)
 
-    return made, CRLF.join(out), extent
+    return made, out, extent
 
 
-def strip_generated(raw, made):
+def strip_generated(raw, wanted):
     """Remove the top-level objects this script owns, by name.
 
     A regeneration must not append a second copy, and the names are the only
     handle there is -- see the note above on why there are no marker comments.
     """
-    wanted = set(component_name(e) for e in made)
     lines = raw.split(CRLF)
     out = []
     i = 0
@@ -208,10 +338,21 @@ def size_form(raw, extent):
 
 
 def main():
-    made, block, extent = generate()
+    made, lines, extent = generate()
+
+    grid_lines, grid_names, grid_extent, _ = totals_blocks(len(made))
+    need_lines, need_names, need_extent, _ = needs_blocks(len(made) + len(grid_names))
+
+    lines = lines + grid_lines + need_lines
+    names = [component_name(e) for e in made] + grid_names + need_names
+    for e in (grid_extent, need_extent):
+        extent[0] = max(extent[0], e[0])
+        extent[1] = max(extent[1], e[1])
+
+    block = CRLF.join(lines)
 
     raw = io.open(LFM, 'rb').read().decode('utf-8-sig')
-    body = strip_generated(raw, made)
+    body = strip_generated(raw, set(names))
 
     cut = body.rstrip().rfind(CRLF + 'end')
     if cut < 0:
@@ -225,12 +366,14 @@ def main():
             raise SystemExit(
                 'uMainForm.lfm is out of date with VC.pas TWindows[].\n'
                 'Run: python tools/gen_main_elements.py')
-        print('gen_main_elements: %d element(s), .lfm is current' % len(made))
+        print('gen_main_elements: %d panel(s), .lfm is current' % len(names))
         return
 
     io.open(LFM, 'wb').write(new.encode('utf-8'))
-    print('gen_main_elements: %d element(s) at ws=%d, form %dx%d'
-          % (len(made), WS, extent[0] + FORM_MARGIN, extent[1] + FORM_MARGIN))
+    print('gen_main_elements: %d panel(s) at ws=%d (%d element, %d totals, '
+          '%d needs), form %dx%d'
+          % (len(names), WS, len(made), len(grid_names), len(need_names),
+             extent[0] + FORM_MARGIN, extent[1] + FORM_MARGIN))
 
 
 if __name__ == '__main__':

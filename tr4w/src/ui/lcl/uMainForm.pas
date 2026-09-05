@@ -368,6 +368,40 @@ procedure SetElementFont(const aElement: TMainWindowElement;
                          const aName: string; const aHeight: integer;
                          const aBold: boolean);
 
+(* Decide which window edge every control on the main window holds to, so the
+  window can be resized. Called once, after the layout is built. *)
+(* THE THREE PROGRESS BARS, AND THE TOUR-DURATION READOUT BESIDE ONE OF THEM.
+
+  Designed TProgressBars now, where they were msctls_progress32 windows driven
+  by PBM_* messages from LOGWIND. Every message had a property:
+
+     PBM_SETPOS       -> Position          PBM_SETRANGE   -> Max
+     PBM_SETSTEP      -> Step              PBM_SETMARQUEE -> Style pbstMarquee
+
+  THE TWO THAT DID NOT ARE PBM_SETBARCOLOR AND PBM_SETBKCOLOR, and they were
+  already doing nothing: tr4w.lpr ships a manifest asking for comctl32 version
+  6, and under visual styles the common control IGNORES both and draws in the
+  theme colour. The red and blue those calls asked for have not been on screen
+  for as long as the manifest has. Dropped rather than reimplemented, because
+  reimplementing them means owner-drawing the bar.
+
+  ALSO GONE: a SetWindowLong(GWL_STYLE) pair that switched the tour bar in and
+  out of marquee mode by rewriting its window style wholesale. That is the same
+  move that blanked the log grid for three sessions -- see uLogGrid. *)
+type
+   TMainProgressBar = (mpbLastHour, mpbRate, mpbTourDuration);
+
+procedure SetProgressBounds(const aBar: TMainProgressBar;
+                            const aLeft, aTop, aWidth, aHeight: integer);
+procedure SetProgressMax(const aBar: TMainProgressBar; const aMax: integer);
+procedure SetProgressPosition(const aBar: TMainProgressBar; const aValue: integer);
+procedure SetProgressMarquee(const aBar: TMainProgressBar; const aOn: boolean);
+procedure ShowProgressBar(const aBar: TMainProgressBar; const aVisible: boolean);
+
+procedure SetTourDurationBounds(const aLeft, aTop, aWidth, aHeight: integer);
+procedure SetTourDurationText(const aText: TCaption);
+procedure ShowTourDurationText(const aVisible: boolean);
+
 { THREE THINGS THAT USED TO BE INJECTED KEYSTROKES.
 
   Each was a PostMessage into an entry field's window -- a space, the
@@ -479,9 +513,15 @@ begin
              // delivered.  This is its mirror image, and it is the second time
              // this control has been hit by it -- see the WM_CTLCOLORLISTBOX
              // forward at line 835.
-             (aMsg = WM_CTLCOLORLISTBOX) or
-             (aMsg = WM_CTLCOLOREDIT) or
-             (aMsg = WM_CTLCOLORSTATIC) or
+             (* THE THREE WM_CTLCOLOR* MESSAGES ARE NO LONGER CLAIMED (2026-09-05).
+               Every child of this form is an LCL control that paints from its own
+               Color -- the totals grid and the two need strips were the last that
+               were not -- so there is nothing for TR4W to answer and WindowProc has
+               no arm for them. Unclaimed is exactly right: the fallthrough at the
+               end of the subclass proc chains them to the LCL.
+
+               Left claimed, they would be SWALLOWED -- the trap the note above
+               describes, and what Lint-AppMessages caught. *)
              (aMsg = WM_LBUTTONDOWN) or
              (aMsg = WM_SETFOCUS) or
              (aMsg = WM_TIMECHANGE) or
@@ -658,6 +698,10 @@ var
 
    GElements: array[TMainWindowElement] of TElementPanel;
 
+   { Bound by BindMainElements from uMainForm.lfm, alongside the elements. }
+   GProgressBars: array[TMainProgressBar] of TProgressBar;
+   GTourDurationText: TElementPanel;
+
 
 function MainElement(const aElement: TMainWindowElement): TPanel;
 begin
@@ -815,6 +859,128 @@ begin
                          [ELEMENT_COMPONENTS[i].Name]);
             end;
          end;
+      end;
+
+   GProgressBars[mpbLastHour] := TProgressBar(TR4WMainForm.FindComponent('pbLastHour'));
+   GProgressBars[mpbRate] := TProgressBar(TR4WMainForm.FindComponent('pbRate'));
+   GProgressBars[mpbTourDuration] :=
+      TProgressBar(TR4WMainForm.FindComponent('pbTourDuration'));
+   GTourDurationText :=
+      TElementPanel(TR4WMainForm.FindComponent('pnlTourDuration'));
+end;
+
+function ProgressBarOf(const aBar: TMainProgressBar): TProgressBar;
+begin
+   Result := GProgressBars[aBar];
+   if not ControlUsable(Result) then
+      begin
+      Result := nil;
+      end;
+end;
+
+procedure SetProgressBounds(const aBar: TMainProgressBar;
+                            const aLeft, aTop, aWidth, aHeight: integer);
+var
+   p: TProgressBar;
+begin
+   p := ProgressBarOf(aBar);
+   if p <> nil then
+      begin
+      p.SetBounds(aLeft, aTop, aWidth, aHeight);
+      end;
+end;
+
+procedure SetProgressMax(const aBar: TMainProgressBar; const aMax: integer);
+var
+   p: TProgressBar;
+begin
+   p := ProgressBarOf(aBar);
+   if p <> nil then
+      begin
+      p.Max := aMax;
+      end;
+end;
+
+procedure SetProgressPosition(const aBar: TMainProgressBar; const aValue: integer);
+var
+   p: TProgressBar;
+begin
+   p := ProgressBarOf(aBar);
+   if p = nil then
+      begin
+      Exit;
+      end;
+
+   (* CLAMPED, because PBM_SETPOS was. The common control silently pinned a
+     value outside its range; TProgressBar.Position raises nothing either, but
+     the LCL stores what it is given and a later Max change would show it. The
+     callers pass live rates and hour counts, which do exceed the range. *)
+   if aValue < p.Min then
+      begin
+      p.Position := p.Min;
+      end
+   else if aValue > p.Max then
+      begin
+      p.Position := p.Max;
+      end
+   else
+      begin
+      p.Position := aValue;
+      end;
+end;
+
+procedure SetProgressMarquee(const aBar: TMainProgressBar; const aOn: boolean);
+var
+   p: TProgressBar;
+begin
+   p := ProgressBarOf(aBar);
+   if p = nil then
+      begin
+      Exit;
+      end;
+
+   if aOn then
+      begin
+      p.Style := pbstMarquee;
+      end
+   else
+      begin
+      p.Style := pbstNormal;
+      end;
+end;
+
+procedure ShowProgressBar(const aBar: TMainProgressBar; const aVisible: boolean);
+var
+   p: TProgressBar;
+begin
+   p := ProgressBarOf(aBar);
+   if p <> nil then
+      begin
+      p.Visible := aVisible;
+      end;
+end;
+
+procedure SetTourDurationBounds(const aLeft, aTop, aWidth, aHeight: integer);
+begin
+   if ControlUsable(GTourDurationText) then
+      begin
+      GTourDurationText.SetBounds(aLeft, aTop, aWidth, aHeight);
+      end;
+end;
+
+procedure SetTourDurationText(const aText: TCaption);
+begin
+   if ControlUsable(GTourDurationText) and (GTourDurationText.Caption <> aText) then
+      begin
+      GTourDurationText.Caption := aText;
+      end;
+end;
+
+procedure ShowTourDurationText(const aVisible: boolean);
+begin
+   if ControlUsable(GTourDurationText) then
+      begin
+      GTourDurationText.Visible := aVisible;
       end;
 end;
 
@@ -1248,56 +1414,6 @@ begin
    Queue(daClearCallAndFocus);
 end;
 
-{ Is this handle one of the main window's own elements?  Asked by the
-  WM_CTLCOLORSTATIC fork below for the same reason as the entry fields: a
-  control that owns its colours must not also be painted by TR4W. }
-function IsMainElementHandle(const aWnd: HWND): boolean;
-var
-   e: TMainWindowElement;
-begin
-   Result := False;
-   if aWnd = 0 then
-      begin
-      Exit;
-      end;
-
-   for e := Low(TMainWindowElement) to High(TMainWindowElement) do
-      begin
-      if ControlUsable(GElements[e]) and (GElements[e].Handle = aWnd) then
-         begin
-         Result := True;
-         Exit;
-         end;
-      end;
-end;
-
-{ Is this handle one of the two entry fields?  Asked by the WM_CTLCOLOREDIT arm
-  below, which is the only caller and the reason this is not exported.
-
-  ControlUsable rather than a bare nil test, so a control whose window has not
-  been created yet cannot have .Handle read -- reading it would CREATE the
-  handle, from inside a window procedure, for a control the caller was only
-  asking about. }
-function IsEntryFieldHandle(const aWnd: HWND): boolean;
-begin
-   Result := False;
-   if aWnd = 0 then
-      begin
-      Exit;
-      end;
-
-   Result := (ControlUsable(TR4WCallEdit)     and (TR4WCallEdit.Handle     = aWnd)) or
-             (ControlUsable(TR4WExchangeEdit) and (TR4WExchangeEdit.Handle = aWnd));
-end;
-
-function IsPossibleCallHandle(const aWnd: HWND): boolean;
-{ Guarded the same way as IsEntryFieldHandle: the control is nil on the
-  headless /EXPORT path, where no form is ever built. }
-begin
-   Result := ControlUsable(TR4WMainForm.lstPossibleCall)
-             and (TR4WMainForm.lstPossibleCall.Handle = aWnd);
-end;
-
 function TR4WFormSubclassProcBody(TRHWND: HWND; Msg: UINT;
                                   wParam: wParam; lParam: lParam): longword; stdcall;
 begin
@@ -1330,14 +1446,6 @@ begin
       why nobody noticed. It is the last main-window element on the Win32
       colour path, and with it forwarded the whole WM_CTLCOLOR* arm of
       WindowProcBody has nothing left to answer. *)
-   if ((Msg = WM_CTLCOLOREDIT)    and IsEntryFieldHandle(HWND(lParam))) or
-      ((Msg = WM_CTLCOLORSTATIC)  and IsMainElementHandle(HWND(lParam))) or
-      ((Msg = WM_CTLCOLORLISTBOX) and IsPossibleCallHandle(HWND(lParam)))  then
-      begin
-      Result := Windows.CallWindowProc(GLCLFormProc, TRHWND, Msg, wParam, lParam);
-      Exit;
-      end;
-
    if IsTR4WsOwnMessage(Msg) then
       begin
       Result := uMainWindowProc.WindowProc(TRHWND, Msg, wParam, lParam);
@@ -2503,6 +2611,19 @@ begin
 end;
 
 initialization
+   (* THE SAME REGISTRATION uElementPanel MAKES, AND FOR THE SAME REASON.
+
+     The streaming loader resolves a class by NAME, and it only knows the names
+     it has been given: a component with a published field on the form class is
+     found through that field's type, and one without has to be registered.
+     None of the four controls added to this form in 2026-09 has a field.
+
+     WITHOUT IT THE WHOLE FORM FAILS TO LOAD, at the first TProgressBar, with
+     EClassNotFound -- which is how the golden corpus went from 24 passing to
+     26 failing in one step. Not "the bars are missing": the main window never
+     finishes streaming, so the headless export dies before writing anything. *)
+   RegisterClass(TProgressBar);
+
    InitCriticalSection(GPendingLock);
 
 finalization
