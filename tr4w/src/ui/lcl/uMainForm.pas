@@ -370,6 +370,16 @@ procedure SetElementFont(const aElement: TMainWindowElement;
 
 (* Decide which window edge every control on the main window holds to, so the
   window can be resized. Called once, after the layout is built. *)
+(* Put the main window back where -- and at what height -- it was left.
+  Reads the rect FindAndSaveRectOfAllWindows wrote. *)
+procedure RestoreMainWindowBounds(const aSaved: TRect);
+
+(* Let the operator resize the main window vertically. Width is pinned:
+  see the note at the call site. *)
+procedure MakeMainWindowResizeable(const aWidth, aHeight: integer);
+
+procedure AnchorMainWindowControls;
+
 (* THE THREE PROGRESS BARS, AND THE TOUR-DURATION READOUT BESIDE ONE OF THEM.
 
   Designed TProgressBars now, where they were msctls_progress32 windows driven
@@ -957,6 +967,138 @@ begin
    if p <> nil then
       begin
       p.Visible := aVisible;
+      end;
+end;
+
+procedure RestoreMainWindowBounds(const aSaved: TRect);
+var
+   r: TRect;
+begin
+   if TR4WMainForm = nil then
+      begin
+      Exit;
+      end;
+
+   r := TR4WMainForm.BoundsRect;
+
+   (* A SAVED RECT WITH NO SIZE IS A FIRST RUN, or a file written before the
+     window could be resized -- keep the laid-out height in that case rather
+     than collapsing the window to nothing. *)
+   r.Left := aSaved.Left;
+   r.Top := aSaved.Top;
+
+   if (aSaved.Bottom - aSaved.Top) > 0 then
+      begin
+      r.Bottom := r.Top + (aSaved.Bottom - aSaved.Top);
+      end
+   else
+      begin
+      r.Bottom := r.Top + TR4WMainForm.Height;
+      end;
+
+   (* WIDTH IS THE LAYOUT'S, NEVER THE FILE'S -- Constraints pin it, and
+     handing the LCL a width it will refuse just makes the two disagree. *)
+   r.Right := r.Left + TR4WMainForm.Width;
+
+   TR4WMainForm.BoundsRect := r;
+end;
+
+procedure MakeMainWindowResizeable(const aWidth, aHeight: integer);
+begin
+   if TR4WMainForm = nil then
+      begin
+      Exit;
+      end;
+
+   (* THE CONSTRAINTS GO ON BEFORE THE BORDER STYLE CHANGES, so there is no
+     moment where the window is draggable without a floor. *)
+   TR4WMainForm.Constraints.MinHeight := aHeight;
+   TR4WMainForm.Constraints.MinWidth := aWidth;
+   TR4WMainForm.Constraints.MaxWidth := aWidth;
+
+   TR4WMainForm.BorderStyle := bsSizeable;
+end;
+
+procedure AnchorMainWindowControls;
+var
+   e: TMainWindowElement;
+
+   procedure AnchorToBottom(const aControl: TWinControl);
+   begin
+      if ControlUsable(aControl) then
+         begin
+         aControl.Anchors := [akLeft, akBottom];
+         end;
+   end;
+
+begin
+   if TR4WMainForm = nil then
+      begin
+      Exit;
+      end;
+
+   (* WHICH EDGE EACH CONTROL BELONGS TO -- IN ONE PLACE, ON PURPOSE.
+
+     The main window is three horizontal bands: seven rows of status above the
+     log, the log, and everything below it. Until now that was expressed as
+     ARITHMETIC -- TWindows[e].mweiY * ws + mweB * EditableLogHeight -- so the
+     lower band's position was computed from the log's height and the window
+     could not be resized at all, because nothing would have moved.
+
+     mweB IS the band. It has always been the band; it was just being used as a
+     multiplier. Read as an anchor instead, the same one bit says: rows above
+     the log hold to the TOP, rows below hold to the BOTTOM, and the log takes
+     up the slack between them.
+
+     The arithmetic STAYS -- it is what lays the window out initially, and it
+     is what follows the operator's font-size setting, which no anchor can do.
+     Anchors decide only what happens when the window is RESIZED, which
+     previously was nothing.
+
+     Scattering `Anchors := ...` through the six routines that create these
+     controls would have made the policy unreadable and left the next control
+     to be added with no obvious rule to follow. One routine, called once, after
+     everything exists. *)
+   for e := Low(TMainWindowElement) to High(TMainWindowElement) do
+      begin
+      if not ControlUsable(GElements[e]) then
+         begin
+         Continue;
+         end;
+
+      if TWindows[e].mweB = 0 then
+         begin
+         GElements[e].Anchors := [akLeft, akTop];
+         end
+      else
+         begin
+         GElements[e].Anchors := [akLeft, akBottom];
+         end;
+      end;
+
+   (* THE LOG IS THE ONE CONTROL THAT ABSORBS THE CHANGE. Held to all four
+     edges, it grows and shrinks with the window while both bands keep their
+     size. That is what makes a taller window mean MORE QSOs on screen. *)
+   if ControlUsable(TR4WEditableLog) then
+      begin
+      TR4WEditableLog.Anchors := [akLeft, akTop, akRight, akBottom];
+      end;
+
+   (* The rest of the lower band, which is not in TWindows[] and so has no
+     mweB to read: the two entry fields, the possible-call strip, the three
+     progress bars and the tour readout. *)
+   AnchorToBottom(TR4WCallEdit);
+   AnchorToBottom(TR4WExchangeEdit);
+   AnchorToBottom(GTourDurationText);
+   AnchorToBottom(GProgressBars[mpbLastHour]);
+   AnchorToBottom(GProgressBars[mpbRate]);
+   AnchorToBottom(GProgressBars[mpbTourDuration]);
+
+   (* The possible-call strip spans the window, so it follows the right edge
+     as well as the bottom. *)
+   if ControlUsable(TR4WMainForm.lstPossibleCall) then
+      begin
+      TR4WMainForm.lstPossibleCall.Anchors := [akLeft, akRight, akBottom];
       end;
 end;
 

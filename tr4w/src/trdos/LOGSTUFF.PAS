@@ -789,6 +789,24 @@ uses uNet,
   MOVED, NOT COPIED. A second table of which bands are WARC and which are VHF
   is the kind of duplicate that drifts in silence: the copy is only wrong the
   day somebody adds 60m to one of them. *)
+(* THE COUNT IS COMPILER-ENFORCED, so it does not need "hardening".
+
+  MAXBANDS is the array's own BOUND, which means the initialiser below cannot
+  quietly disagree with it. Measured on FPC 3.2.2, both directions:
+
+    too many initialisers -> Fatal: Syntax error, ")" expected but "," found
+    too few               -> Error: Expected another 1 array elements
+
+  So uncommenting the Band60 row below without bumping the 21 fails the build,
+  at that line. It does not truncate and it does not drift.
+
+  Written down because the shape -- a hand-looking count above a long literal
+  list -- reads like the classic drift hazard, and the tempting "fix" of
+  deriving MAXBANDS := High(BandChangeArray) only moves the same literal into
+  the bound while losing the name. The genuinely unbounded form, `array of`,
+  would make this a dynamic array and MAXBANDS a RUNTIME value, which the wrap
+  arithmetic and the `attempts > MAXBANDS * 2` belt below would both still
+  accept -- silently. That would be a step backwards. *)
 const
   MAXBANDS = 21;
   BandChangeArray: array[1..MAXBANDS] of BandChangeType =

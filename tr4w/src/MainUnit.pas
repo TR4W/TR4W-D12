@@ -3040,6 +3040,11 @@ end;
 function LclFormFor(const ID: WindowsType): TCustomForm;
 begin
    case ID of
+     (* THE MAIN WINDOW ANSWERS HERE TOO NOW. It was absent, so its rect was
+       saved with GetWindowRect -- an OUTER rect -- while every other window
+       saved BoundsRect. That mismatch did not show while only Left and Top
+       were restored; it would the moment the height was. *)
+     tw_MAINWINDOW_INDEX:           Result := TR4WMainForm;
      tw_FUNCTIONKEYSWINDOW_INDEX:   Result := TR4WFunctionKeysForm;
      tw_BANDMAPWINDOW_INDEX:        Result := TR4WBandMapForm;
      tw_STATIONS_INDEX:             Result := TR4WStationsForm;
@@ -4272,6 +4277,27 @@ begin
 
   // AppendMenu(GetSubMenu(tr4w_main_menu, menu_rescore), MF_POPUP , 11010, 'NepItem');
   // InsertMenu(tr4w_main_menu, menu_rescore, MF_BYCOMMAND, 177, 'aa');
+  (* THE MAIN WINDOW BECOMES RESIZEABLE, AND THE LOG IS WHAT GROWS.
+
+    Everything above is unchanged: the layout is still computed from TWindows[]
+    scaled by ws, which is what follows the operator's font-size setting. What
+    is new is that the controls now know which edge they belong to, so the
+    window can be dragged taller and the extra height goes to the log instead
+    of nowhere.
+
+    THE HEIGHT IS THE ONLY FREE DIMENSION FOR NOW. The bands are laid out in
+    fixed ws-scaled columns across the full width, so a wider window would just
+    add empty space on the right; the columns following the width is a separate
+    piece of work. Pinning MinWidth = MaxWidth says that honestly rather than
+    offering a resize that does nothing useful.
+
+    MinHeight is the layout's own height -- the height this routine just
+    computed -- so the window can grow but never shrink far enough to eat the
+    entry fields, which is what a bare bsSizeable would allow. *)
+  AnchorMainWindowControls;
+  MakeMainWindowResizeable(ws * 46,
+    6 + MainWindowCaptionAndHeader + EditableLogHeight + ws * 14);
+
   { Ask DWM to round window corners natively (Windows 11+, no-op on older) }
   ApplyDWMRoundedCorners;
 end;
@@ -4349,10 +4375,26 @@ end;
   windows, and windows belong to the thread that owns the loop. }
 procedure OpenOtherWindows;
 begin
-  Windows.SetWindowPos(tr4whandle, HWND_TOP,
-    tr4w_WindowsArray[tw_MAINWINDOW_INDEX].WndRect.Left,
-    tr4w_WindowsArray[tw_MAINWINDOW_INDEX].WndRect.Top, 0, 0, SWP_NOSIZE or
-    SWP_SHOWWINDOW);
+  (* POSITION *AND* HEIGHT, THROUGH THE FORM.
+
+    SWP_NOSIZE stood here because the window could not be resized, so its size
+    was never worth restoring. It can be now, and an operator who drags the log
+    taller expects to find it that way next time.
+
+    Through BoundsRect, not SetWindowPos, and that is the whole reason this is
+    not a two-line change: the LCL keeps its own idea of a form's bounds and
+    pushes it back down when the form shows, so a raw SetWindowPos is silently
+    undone. The same rule already governs every tool window.
+
+    THE TWO SIDES MUST SPEAK THE SAME UNITS. LclFormFor now answers for the main
+    window, so FindAndSaveRectOfAllWindows saves BoundsRect and this reads it
+    back -- one object answering both questions, which is exactly the fix the
+    note in that routine records. Saving an outer rect and restoring it as a
+    client rect is what grew a window by its frame on every restart.
+
+    THE WIDTH IS DELIBERATELY NOT RESTORED: MakeMainWindowResizeable pins it, so
+    the layout decides it, not a saved file. *)
+  RestoreMainWindowBounds(tr4w_WindowsArray[tw_MAINWINDOW_INDEX].WndRect);
   // ...and tell the LCL, which cannot see a raw SWP_SHOWWINDOW.  Without this
   // the form's Visible stays False and it never shows its CHILD CONTROLS --
   // which is how the callsign and exchange fields came to be created, sized and
