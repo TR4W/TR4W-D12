@@ -1397,7 +1397,18 @@ begin
   logger.info('Current program version = %s',[TR4W_CURRENTVERSION]);
   logger.info('Current TR4W Server version = %s',[TR4WSERVER_CURRENTVERSION]);
   logger.info('Current log version = %s',[LOGVERSION]);
-  logger.info('HamLib version = %s',[GetHamLibVersion]);
+  // THE FILE, NOT THE VERSION, AND DELIBERATELY WITHOUT LOADING IT.
+  //
+  // This called GetHamLibVersion, which loaded libhamlib-4.dll on every start
+  // -- on stations with no HamLib radio, which is nearly all of them. Worse,
+  // the version it printed could not be obtained at all in the case that
+  // actually needed diagnosing: a wrong-architecture DLL kills the process in
+  // the LOADER, before this line or any other runs, leaving an empty log.
+  //
+  // DescribeHamLibDll reads the PE header off disk instead, so the path and
+  // architecture reach tr4w.log whether or not the library is usable, and the
+  // version is logged by the driver when a HamLib radio is actually opened.
+  logger.info('HamLib DLL = %s',[DescribeHamLibDll]);
   // INFO, not DEBUG: this is the first thing anyone asks a tester for, and at
   // DEBUG it is absent from exactly the logs that get sent in. HamLib version on
   // the line above is info for the same reason.

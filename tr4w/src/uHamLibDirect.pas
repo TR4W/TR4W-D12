@@ -249,77 +249,167 @@ const
   Core API Functions
 -----------------------------------------------------------------------------}
 
+(*
+   HAMLIB IS LOADED ON DEMAND, NOT BY THE WINDOWS LOADER.
+
+   Every function below used to be declared `external HAMLIB_DLL`, which is a
+   STATIC import: FPC writes the name into the PE import table and Windows
+   resolves it during process creation. Three consequences, none of them
+   intended, all measured on 2026-09-05:
+
+   1. THE DLL LOADED WHETHER OR NOT A HAMLIB RADIO EXISTED. TR4W never called
+      it; the loader loaded it. A station with no HamLib rig configured -- the
+      overwhelming majority -- still could not start without the file present
+      and correct.
+
+   2. A WRONG-ARCHITECTURE COPY KILLED THE PROCESS WITH NOTHING LOGGED. A
+      WSJT-X install puts C:/WSJT/wsjtx/bin on the MACHINE path, present every
+      boot whether or not WSJT-X runs, and ships a 64-bit libhamlib-4.dll. A
+      32-bit TR4W that failed to find its own copy first got that one and died
+      with 0xC000007B before a line of our code ran. tr4w.log and
+      tr4w-early.log were both EMPTY -- the crash handler had not been
+      installed yet either.
+
+   3. NO DIAGNOSIS WAS POSSIBLE. A check inside TR4W cannot report a failure
+      that happens before TR4W starts. That is why this is a loader change and
+      not a message-box change.
+
+   EnsureHamLib does the work the loader used to do, at a moment we choose:
+   it locates the DLL, CHECKS ITS ARCHITECTURE AGAINST THIS PROCESS, loads it,
+   and resolves every entry point -- reporting exactly which step failed.
+
+   WHY MOST ENTRY POINTS ARE PLAIN VARIABLES AND FIVE ARE FUNCTIONS.
+   Everything except rig_init, rig_set_debug, rig_get_caps_int, rigerror and
+   rig_strrmode takes a PRIG, and a non-nil PRIG can ONLY have come from
+   rig_init -- which calls EnsureHamLib and returns nil if it fails. So "the
+   library is loaded" is an INVARIANT carried by the argument itself, not an
+   assumption about call order. The five that take no PRIG are real functions
+   that ensure the load themselves.
+
+   CROSS-PLATFORM: only the NAME here is Windows. HamLib ships .so and .dylib,
+   so a port changes HAMLIB_DLL and nothing else -- see the helper-class note
+   in CLAUDE.md.
+*)
+
+// True once the library is loaded and every entry point resolved. Idempotent:
+// safe to call from any of the entry points, and it only tries once.
+function EnsureHamLib: Boolean;
+
+// Empty until EnsureHamLib has failed. Written for an operator, not a
+// developer: it names the path tried and, on a mismatch, both architectures.
+function HamLibLoadError: string;
+
+// The full path actually loaded, or the file that was rejected. Empty before
+// the first attempt.
+function HamLibDllPath: string;
+
+// WITHOUT LOADING ANYTHING. Reports where the DLL is, its architecture, and
+// whether that matches this process -- by reading the file's PE header. This
+// is what startup logs, so a mismatch appears in tr4w.log as a sentence
+// instead of as a process that never started.
+function DescribeHamLibDll: string;
+
+// Resolve an OPTIONAL entry point -- one that some builds of HamLib do not
+// export, so its absence is not an error. Returns nil if the library is
+// unusable or the name is not there. Callers that need a REQUIRED entry point
+// do not use this: those are resolved by EnsureHamLib and are never nil once
+// it has succeeded.
+//
+// It exists so that no other unit has to open the library itself. The driver
+// used to call LoadLibrary(HAMLIB_DLL) with a bare name to reach
+// rig_set_debug_file, which is the same PATH search that produced the
+// 0xC000007B described above -- and could load a SECOND, different copy.
+function HamLibProcAddress(const aName: AnsiString): Pointer;
+
 // Debug control
-procedure rig_set_debug(debug_level: rig_debug_level_e); cdecl; external HAMLIB_DLL;
+procedure rig_set_debug(debug_level: rig_debug_level_e); cdecl;
 // rig_set_debug_file is loaded dynamically at runtime (may not exist in all builds)
 // Use MSVCRT fopen to obtain a C FILE* compatible with HamLib's debug stream
+// msvcrt is a system DLL that is always present and always matches the
+// process, so a static import of it carries none of the risk described above.
 function msvcrt_fopen(filename: PAnsiChar; mode: PAnsiChar): Pointer; cdecl; external 'msvcrt.dll' name 'fopen';
 
-// Initialization and cleanup
-function rig_init(rig_model: Integer): PRIG; cdecl; external HAMLIB_DLL;
+// Initialization and cleanup.
+//
+// THE GATE. This is the only way to obtain a PRIG, so it is the only place the
+// library has to be ensured. Returns nil if HamLib cannot be loaded -- which
+// the driver already handles, because rig_init could always return nil.
+function rig_init(rig_model: Integer): PRIG; cdecl;
 // Model-level capability lookup (no open rig needed).  With
 // RIG_CAPS_TARGETABLE_VFO it returns the backend's caps->targetable_vfo
 // bitmask -- the AUTHORITATIVE answer to "can VFO B be read without physically
 // switching the rig".  Probing with rig_get_freq(RIG_VFO_B) cannot answer
 // that: on a non-targetable rig HamLib EMULATES the read by swapping VFOs, so
 // the probe succeeds and the swap is exactly the side effect being probed for.
-function rig_get_caps_int(rig_model: Integer; rig_caps: Integer): UInt64; cdecl; external HAMLIB_DLL;
-function rig_open(rig: PRIG): Integer; cdecl; external HAMLIB_DLL;
-function rig_close(rig: PRIG): Integer; cdecl; external HAMLIB_DLL;
-function rig_cleanup(rig: PRIG): Integer; cdecl; external HAMLIB_DLL;
+// Takes a model id rather than a PRIG, so it ensures the load itself.
+// Returns 0 if HamLib is unavailable -- the same "no capability" answer the
+// caller already handles.
+function rig_get_caps_int(rig_model: Integer; rig_caps: Integer): UInt64; cdecl;
+
+var
+  rig_open:    function(rig: PRIG): Integer; cdecl;
+  rig_close:   function(rig: PRIG): Integer; cdecl;
+  rig_cleanup: function(rig: PRIG): Integer; cdecl;
 
 // Configuration
-function rig_set_conf(rig: PRIG; token: hamlib_token_t; const val: PAnsiChar): Integer; cdecl; external HAMLIB_DLL;
-function rig_get_conf(rig: PRIG; token: hamlib_token_t; val: PAnsiChar): Integer; cdecl; external HAMLIB_DLL;
-function rig_token_lookup(rig: PRIG; const name: PAnsiChar): hamlib_token_t; cdecl; external HAMLIB_DLL;
+var
+  rig_set_conf:     function(rig: PRIG; token: hamlib_token_t; const val: PAnsiChar): Integer; cdecl;
+  rig_get_conf:     function(rig: PRIG; token: hamlib_token_t; val: PAnsiChar): Integer; cdecl;
+  rig_token_lookup: function(rig: PRIG; const name: PAnsiChar): hamlib_token_t; cdecl;
 
 {-----------------------------------------------------------------------------
   Frequency Control
 -----------------------------------------------------------------------------}
 
-function rig_set_freq(rig: PRIG; vfo: vfo_t; freq: freq_t): Integer; cdecl; external HAMLIB_DLL;
-function rig_get_freq(rig: PRIG; vfo: vfo_t; var freq: freq_t): Integer; cdecl; external HAMLIB_DLL;
+var
+  rig_set_freq: function(rig: PRIG; vfo: vfo_t; freq: freq_t): Integer; cdecl;
+  rig_get_freq: function(rig: PRIG; vfo: vfo_t; var freq: freq_t): Integer; cdecl;
 
 {-----------------------------------------------------------------------------
   Mode Control
 -----------------------------------------------------------------------------}
 
-function rig_set_mode(rig: PRIG; vfo: vfo_t; mode: rmode_t; width: pbwidth_t): Integer; cdecl; external HAMLIB_DLL;
-function rig_get_mode(rig: PRIG; vfo: vfo_t; var mode: rmode_t; var width: pbwidth_t): Integer; cdecl; external HAMLIB_DLL;
+var
+  rig_set_mode: function(rig: PRIG; vfo: vfo_t; mode: rmode_t; width: pbwidth_t): Integer; cdecl;
+  rig_get_mode: function(rig: PRIG; vfo: vfo_t; var mode: rmode_t; var width: pbwidth_t): Integer; cdecl;
 
 {-----------------------------------------------------------------------------
   VFO Control
 -----------------------------------------------------------------------------}
 
-function rig_set_vfo(rig: PRIG; vfo: vfo_t): Integer; cdecl; external HAMLIB_DLL;
-function rig_get_vfo(rig: PRIG; var vfo: vfo_t): Integer; cdecl; external HAMLIB_DLL;
+var
+  rig_set_vfo: function(rig: PRIG; vfo: vfo_t): Integer; cdecl;
+  rig_get_vfo: function(rig: PRIG; var vfo: vfo_t): Integer; cdecl;
 
 {-----------------------------------------------------------------------------
   PTT Control
 -----------------------------------------------------------------------------}
 
-function rig_set_ptt(rig: PRIG; vfo: vfo_t; ptt: ptt_t): Integer; cdecl; external HAMLIB_DLL;
-function rig_get_ptt(rig: PRIG; vfo: vfo_t; var ptt: ptt_t): Integer; cdecl; external HAMLIB_DLL;
+var
+  rig_set_ptt: function(rig: PRIG; vfo: vfo_t; ptt: ptt_t): Integer; cdecl;
+  rig_get_ptt: function(rig: PRIG; vfo: vfo_t; var ptt: ptt_t): Integer; cdecl;
 
 {-----------------------------------------------------------------------------
   Split Operation
 -----------------------------------------------------------------------------}
 
-function rig_set_split_freq(rig: PRIG; vfo: vfo_t; tx_freq: freq_t): Integer; cdecl; external HAMLIB_DLL;
-function rig_get_split_freq(rig: PRIG; vfo: vfo_t; var tx_freq: freq_t): Integer; cdecl; external HAMLIB_DLL;
-function rig_set_split_mode(rig: PRIG; vfo: vfo_t; tx_mode: rmode_t; tx_width: pbwidth_t): Integer; cdecl; external HAMLIB_DLL;
-function rig_get_split_mode(rig: PRIG; vfo: vfo_t; var tx_mode: rmode_t; var tx_width: pbwidth_t): Integer; cdecl; external HAMLIB_DLL;
-function rig_set_split_vfo(rig: PRIG; vfo: vfo_t; split: Integer; tx_vfo: vfo_t): Integer; cdecl; external HAMLIB_DLL;
-function rig_get_split_vfo(rig: PRIG; vfo: vfo_t; var split: Integer; var tx_vfo: vfo_t): Integer; cdecl; external HAMLIB_DLL;
+var
+  rig_set_split_freq: function(rig: PRIG; vfo: vfo_t; tx_freq: freq_t): Integer; cdecl;
+  rig_get_split_freq: function(rig: PRIG; vfo: vfo_t; var tx_freq: freq_t): Integer; cdecl;
+  rig_set_split_mode: function(rig: PRIG; vfo: vfo_t; tx_mode: rmode_t; tx_width: pbwidth_t): Integer; cdecl;
+  rig_get_split_mode: function(rig: PRIG; vfo: vfo_t; var tx_mode: rmode_t; var tx_width: pbwidth_t): Integer; cdecl;
+  rig_set_split_vfo:  function(rig: PRIG; vfo: vfo_t; split: Integer; tx_vfo: vfo_t): Integer; cdecl;
+  rig_get_split_vfo:  function(rig: PRIG; vfo: vfo_t; var split: Integer; var tx_vfo: vfo_t): Integer; cdecl;
 
 {-----------------------------------------------------------------------------
   RIT/XIT Control
 -----------------------------------------------------------------------------}
 
-function rig_set_rit(rig: PRIG; vfo: vfo_t; rit: shortfreq_t): Integer; cdecl; external HAMLIB_DLL;
-function rig_get_rit(rig: PRIG; vfo: vfo_t; var rit: shortfreq_t): Integer; cdecl; external HAMLIB_DLL;
-function rig_set_xit(rig: PRIG; vfo: vfo_t; xit: shortfreq_t): Integer; cdecl; external HAMLIB_DLL;
-function rig_get_xit(rig: PRIG; vfo: vfo_t; var xit: shortfreq_t): Integer; cdecl; external HAMLIB_DLL;
+var
+  rig_set_rit: function(rig: PRIG; vfo: vfo_t; rit: shortfreq_t): Integer; cdecl;
+  rig_get_rit: function(rig: PRIG; vfo: vfo_t; var rit: shortfreq_t): Integer; cdecl;
+  rig_set_xit: function(rig: PRIG; vfo: vfo_t; xit: shortfreq_t): Integer; cdecl;
+  rig_get_xit: function(rig: PRIG; vfo: vfo_t; var xit: shortfreq_t): Integer; cdecl;
 
 {-----------------------------------------------------------------------------
   Function settings (on/off capabilities) — rig_get_func / rig_set_func
@@ -334,18 +424,21 @@ const
   RIG_FUNC_RIT = setting_t(1) shl 24;  // RIT on/off state (hamlib rig.h bit 24)
   RIG_FUNC_XIT = setting_t(1) shl 31;  // XIT on/off state (hamlib rig.h bit 31)
 
-function rig_get_func(rig: PRIG; vfo: vfo_t; func: setting_t; var status: Integer): Integer; cdecl; external HAMLIB_DLL;
-function rig_set_func(rig: PRIG; vfo: vfo_t; func: setting_t; status: Integer): Integer; cdecl; external HAMLIB_DLL;
+var
+  rig_get_func: function(rig: PRIG; vfo: vfo_t; func: setting_t; var status: Integer): Integer; cdecl;
+  rig_set_func: function(rig: PRIG; vfo: vfo_t; func: setting_t; status: Integer): Integer; cdecl;
 
 {-----------------------------------------------------------------------------
   Utility Functions
 -----------------------------------------------------------------------------}
 
-// Get error message for error code
-function rigerror(errnum: Integer): PAnsiChar; cdecl; external HAMLIB_DLL;
+// Get error message for error code.
+// Takes no PRIG -- it exists to explain a FAILED call, including a failed
+// rig_init -- so it ensures the load itself and returns nil if unavailable.
+function rigerror(errnum: Integer): PAnsiChar; cdecl;
 
-// Mode string conversion
-function rig_strrmode(mode: rmode_t): PAnsiChar; cdecl; external HAMLIB_DLL;
+// Mode string conversion. Same reasoning as rigerror.
+function rig_strrmode(mode: rmode_t): PAnsiChar; cdecl;
 
 {-----------------------------------------------------------------------------
   Transceive Mode
@@ -380,18 +473,20 @@ type
 
 // Enable or disable transceive mode.
 // Must be called after rig_open. Returns RIG_ENIMPL if backend does not support it.
-function rig_set_trn(rig: PRIG; trn: Integer): Integer; cdecl; external HAMLIB_DLL;
+var
+  rig_set_trn: function(rig: PRIG; trn: Integer): Integer; cdecl;
 
 // Register a callback to be invoked when the radio pushes unsolicited changes.
 // arg is passed back verbatim to each callback invocation (use as Self pointer).
-function rig_set_freq_callback(rig: PRIG; cb: TRigFreqCallback;
-                                arg: Pointer): Integer; cdecl; external HAMLIB_DLL;
-function rig_set_mode_callback(rig: PRIG; cb: TRigModeCallback;
-                                arg: Pointer): Integer; cdecl; external HAMLIB_DLL;
-function rig_set_vfo_callback(rig: PRIG;  cb: TRigVFOCallback;
-                               arg: Pointer): Integer; cdecl; external HAMLIB_DLL;
-function rig_set_ptt_callback(rig: PRIG;  cb: TRigPTTCallback;
-                               arg: Pointer): Integer; cdecl; external HAMLIB_DLL;
+var
+  rig_set_freq_callback: function(rig: PRIG; cb: TRigFreqCallback;
+                                  arg: Pointer): Integer; cdecl;
+  rig_set_mode_callback: function(rig: PRIG; cb: TRigModeCallback;
+                                  arg: Pointer): Integer; cdecl;
+  rig_set_vfo_callback:  function(rig: PRIG; cb: TRigVFOCallback;
+                                  arg: Pointer): Integer; cdecl;
+  rig_set_ptt_callback:  function(rig: PRIG; cb: TRigPTTCallback;
+                                  arg: Pointer): Integer; cdecl;
 
 {-----------------------------------------------------------------------------
   Helper Functions (Delphi-specific)
@@ -421,25 +516,423 @@ procedure RigSetTimeout(rig: PRIG; timeoutMs: Integer);
 
 implementation
 
+uses
+  uAppPaths,  // DataFilePath -- the ONE place that knows where shipped files live
+  DynLibs;    // LoadLibrary/GetProcedureAddress that take a string and are not
+              // Windows-specific. Preferred over the Win32 entry points: this
+              // is the one place that knows how a shared library is opened, and
+              // on macOS or Linux only HAMLIB_DLL's value has to change.
+
+var
+  GHamLibModule : TLibHandle = NilHandle;
+  GHamLibTried  : Boolean    = False;
+  GHamLibOK     : Boolean    = False;
+  GHamLibError  : string     = '';
+  GHamLibPath   : string     = '';
+
+  // The five entry points that take no PRIG are reached through these, so the
+  // public names can be real functions that ensure the load first.
+  p_rig_set_debug    : procedure(debug_level: rig_debug_level_e); cdecl;
+  p_rig_init         : function(rig_model: Integer): PRIG; cdecl;
+  p_rig_get_caps_int : function(rig_model: Integer; rig_caps: Integer): UInt64; cdecl;
+  p_rigerror         : function(errnum: Integer): PAnsiChar; cdecl;
+  p_rig_strrmode     : function(mode: rmode_t): PAnsiChar; cdecl;
+
+const
+  IMAGE_MACHINE_I386  = $014C;
+  IMAGE_MACHINE_AMD64 = $8664;
+  IMAGE_MACHINE_ARM64 = $AA64;
+
+(*
+   THE PE MACHINE TYPE OF A FILE ON DISK, WITHOUT LOADING IT.
+
+   This is the whole point of the exercise: once the image is loaded the
+   question is already settled, and if the architecture is wrong the load is
+   what kills us. Reading two fields out of the header answers it first, and
+   costs a file open.
+
+   SysUtils.FileOpen rather than Windows.ReadFile -- the semantics that matter
+   here (seek, read, a short read is a malformed file) are expressible either
+   way, and only one of them survives a port.
+
+   AND rather than TFileStream, whose constructor takes an AnsiString: this
+   path comes from DataFilePath or PATH and can sit under a profile name with
+   non-ASCII characters, so handing it to an AnsiString parameter narrows it
+   and can open the wrong file or none. FileOpen has a UnicodeString overload
+   that carries the name to the OS intact.
+*)
+function PEMachineOf(const aPath: string): Word;
+var
+  h     : THandle;
+  peOfs : LongInt;
+  sig   : LongWord;
+  found : Word;
+begin
+   Result := 0;
+   if not FileExists(aPath) then
+      begin
+      Exit;
+      end;
+
+   h := FileOpen(aPath, fmOpenRead or fmShareDenyNone);
+   if h = THandle(-1) then
+      begin
+      Exit;
+      end;
+   try
+      // e_lfanew: where the PE header starts.
+      if FileSeek(h, Int64($3C), fsFromBeginning) <> Int64($3C) then
+         begin
+         Exit;
+         end;
+      if FileRead(h, peOfs, SizeOf(peOfs)) <> SizeOf(peOfs) then
+         begin
+         Exit;
+         end;
+      if peOfs <= 0 then
+         begin
+         Exit;
+         end;
+      if FileSeek(h, Int64(peOfs), fsFromBeginning) <> Int64(peOfs) then
+         begin
+         Exit;
+         end;
+      if FileRead(h, sig, SizeOf(sig)) <> SizeOf(sig) then
+         begin
+         Exit;
+         end;
+      if sig <> $00004550 then                  // the PE signature
+         begin
+         Exit;
+         end;
+      if FileRead(h, found, SizeOf(found)) <> SizeOf(found) then
+         begin
+         Exit;
+         end;
+      Result := found;
+   finally
+      // An unreadable or truncated file is not a diagnosis: every path above
+      // leaves Result 0, which reads as "unknown" and lets the load attempt
+      // produce the real error.
+      FileClose(h);
+   end;
+end;
+
+function MachineName(aMachine: Word): string;
+begin
+   case aMachine of
+      IMAGE_MACHINE_I386  : Result := 'x86 (32-bit)';
+      IMAGE_MACHINE_AMD64 : Result := 'x64 (64-bit)';
+      IMAGE_MACHINE_ARM64 : Result := 'ARM64';
+   else
+      Result := Format('machine type 0x%.4x', [aMachine]);
+   end;
+end;
+
+(*
+   DERIVED FROM THE COMPILER'S OWN TARGET, NEVER HARDCODED. TR4W is moving to
+   64-bit, at which point the mismatch inverts and the 32-bit DLLs become the
+   wrong ones. A check written as "64-bit is bad" would then pass the broken
+   case and fail the good one.
+*)
+function ThisProcessMachine: Word;
+begin
+{$IF DEFINED(CPUI386)}
+   Result := IMAGE_MACHINE_I386;
+{$ELSEIF DEFINED(CPUX86_64)}
+   Result := IMAGE_MACHINE_AMD64;
+{$ELSEIF DEFINED(CPUAARCH64)}
+   Result := IMAGE_MACHINE_ARM64;
+{$ELSE}
+   Result := 0;   // unknown target: skip the check rather than guess wrong
+{$IFEND}
+end;
+
+(*
+   WHERE THE LIBRARY SHOULD COME FROM, AS A FULL PATH.
+
+   TR4W'S OWN COPY FIRST, and then loaded BY THAT PATH -- which is what takes
+   the environment out of the decision. Passing a bare name lets the OS search,
+   and on Windows that search reaches PATH, where a WSJT-X install contributes
+   a 64-bit libhamlib-4.dll from a directory on the MACHINE path. That is how a
+   32-bit TR4W came to be handed a 64-bit DLL.
+
+   DataFilePath, not ExtractFilePath(ParamStr(0)): a shipped read-only file is
+   exactly what this is, and uAppPaths owns that rule per platform -- the
+   working directory on Windows (NY4I, 2026-08-31, chosen because it keeps
+   working when the binary is run from build-out), Contents/Resources on macOS,
+   the XDG data directory on Linux. Resolving it here would be a fourth copy of
+   a rule that has already caused one defect by existing twice.
+
+   Only if TR4W has no copy do we fall back to searching PATH ourselves -- with
+   FileSearch, so that we still end up holding a real path to check and to name
+   in an error, rather than letting the loader pick silently.
+*)
+function LocateHamLib: string;
+begin
+   Result := DataFilePath(HAMLIB_DLL);
+   if FileExists(Result) then
+      begin
+      Exit;
+      end;
+   Result := FileSearch(HAMLIB_DLL, GetEnvironmentVariable('PATH'));
+
+   // ALWAYS A FULL PATH. FileSearch answers relative to whatever entry matched
+   // -- including the current directory, which it searches first -- and
+   // "libhamlib-4.dll is 64-bit" without a directory is precisely the report
+   // that cannot be acted on. WHICH copy is the entire question here.
+   if Result <> '' then
+      begin
+      Result := ExpandFileName(Result);
+      end;
+end;
+
+function EnsureHamLib: Boolean;
+var
+  wanted  : Word;
+  found   : Word;
+  missing : string;
+
+   // Resolving by name, recording every miss rather than stopping at the
+   // first: a half-resolved library is the one failure mode that would still
+   // crash later, and the operator wants the whole list in one message.
+   // AnsiString because that is what GetProcedureAddress takes, and because a
+   // C export name IS ASCII -- so this is the exact type for the value, not a
+   // narrowing of a wider one.
+   function Need(const aName: AnsiString): Pointer;
+   begin
+      Result := GetProcedureAddress(GHamLibModule, aName);
+      if Result = nil then
+         begin
+         missing := missing + ' ' + aName;
+         end;
+   end;
+
+begin
+   if GHamLibTried then
+      begin
+      Result := GHamLibOK;
+      Exit;
+      end;
+   GHamLibTried := True;
+   GHamLibOK    := False;
+   GHamLibError := '';
+   missing      := '';
+
+   GHamLibPath := LocateHamLib;
+   if GHamLibPath = '' then
+      begin
+      GHamLibError := Format('%s was not found beside %s or anywhere on PATH.',
+                             [HAMLIB_DLL, ExtractFileName(ParamStr(0))]);
+      Result := False;
+      Exit;
+      end;
+
+   wanted := ThisProcessMachine;
+   found  := PEMachineOf(GHamLibPath);
+   if (wanted <> 0) and (found <> 0) and (found <> wanted) then
+      begin
+      // The message an operator can act on: which file, and which way round.
+      GHamLibError := Format('%s is %s, but TR4W is %s.  That file cannot be ' +
+                             'loaded by this program.  The matching copy ships ' +
+                             'in the TR4W program folder; this one was found at %s.',
+                             [ExtractFileName(GHamLibPath), MachineName(found),
+                              MachineName(wanted), ExtractFilePath(GHamLibPath)]);
+      Result := False;
+      Exit;
+      end;
+
+   GHamLibModule := LoadLibrary(GHamLibPath);
+   if GHamLibModule = NilHandle then
+      begin
+      GHamLibError := Format('%s could not be loaded (%s).',
+                             [GHamLibPath, GetLoadErrorStr]);
+      Result := False;
+      Exit;
+      end;
+
+   @p_rig_set_debug    := Need('rig_set_debug');
+   @p_rig_init         := Need('rig_init');
+   @p_rig_get_caps_int := Need('rig_get_caps_int');
+   @p_rigerror         := Need('rigerror');
+   @p_rig_strrmode     := Need('rig_strrmode');
+
+   @rig_open              := Need('rig_open');
+   @rig_close             := Need('rig_close');
+   @rig_cleanup           := Need('rig_cleanup');
+   @rig_set_conf          := Need('rig_set_conf');
+   @rig_get_conf          := Need('rig_get_conf');
+   @rig_token_lookup      := Need('rig_token_lookup');
+   @rig_set_freq          := Need('rig_set_freq');
+   @rig_get_freq          := Need('rig_get_freq');
+   @rig_set_mode          := Need('rig_set_mode');
+   @rig_get_mode          := Need('rig_get_mode');
+   @rig_set_vfo           := Need('rig_set_vfo');
+   @rig_get_vfo           := Need('rig_get_vfo');
+   @rig_set_ptt           := Need('rig_set_ptt');
+   @rig_get_ptt           := Need('rig_get_ptt');
+   @rig_set_split_freq    := Need('rig_set_split_freq');
+   @rig_get_split_freq    := Need('rig_get_split_freq');
+   @rig_set_split_mode    := Need('rig_set_split_mode');
+   @rig_get_split_mode    := Need('rig_get_split_mode');
+   @rig_set_split_vfo     := Need('rig_set_split_vfo');
+   @rig_get_split_vfo     := Need('rig_get_split_vfo');
+   @rig_set_rit           := Need('rig_set_rit');
+   @rig_get_rit           := Need('rig_get_rit');
+   @rig_set_xit           := Need('rig_set_xit');
+   @rig_get_xit           := Need('rig_get_xit');
+   @rig_get_func          := Need('rig_get_func');
+   @rig_set_func          := Need('rig_set_func');
+   @rig_set_trn           := Need('rig_set_trn');
+   @rig_set_freq_callback := Need('rig_set_freq_callback');
+   @rig_set_mode_callback := Need('rig_set_mode_callback');
+   @rig_set_vfo_callback  := Need('rig_set_vfo_callback');
+   @rig_set_ptt_callback  := Need('rig_set_ptt_callback');
+
+   if missing <> '' then
+      begin
+      // FAIL CLOSED. A partially resolved library would work until it reached
+      // the one entry point that is nil, and then crash with no explanation --
+      // exactly the class of failure this change exists to remove.
+      GHamLibError := Format('%s loaded but is missing:%s', [GHamLibPath, missing]);
+      UnloadLibrary(GHamLibModule);
+      GHamLibModule := NilHandle;
+      Result := False;
+      Exit;
+      end;
+
+   GHamLibOK := True;
+   Result    := True;
+end;
+
+function HamLibLoadError: string;
+begin
+   Result := GHamLibError;
+end;
+
+function HamLibDllPath: string;
+begin
+   Result := GHamLibPath;
+end;
+
+function HamLibProcAddress(const aName: AnsiString): Pointer;
+begin
+   if EnsureHamLib then
+      begin
+      Result := GetProcedureAddress(GHamLibModule, aName);
+      end
+   else
+      begin
+      Result := nil;
+      end;
+end;
+
+function DescribeHamLibDll: string;
+var
+  path   : string;
+  found  : Word;
+  wanted : Word;
+begin
+   path := LocateHamLib;
+   if path = '' then
+      begin
+      Result := Format('%s not found (no HamLib radio can be used)', [HAMLIB_DLL]);
+      Exit;
+      end;
+   found  := PEMachineOf(path);
+   wanted := ThisProcessMachine;
+   if (wanted <> 0) and (found <> 0) and (found <> wanted) then
+      begin
+      Result := Format('%s is %s but TR4W is %s -- IT CANNOT BE LOADED',
+                       [path, MachineName(found), MachineName(wanted)]);
+      end
+   else
+      begin
+      Result := Format('%s, %s, not loaded until a HamLib radio is used',
+                       [path, MachineName(found)]);
+      end;
+end;
+
+(*
+   THE FIVE THAT TAKE NO PRIG.
+
+   Each ensures the load and then returns the library's answer, or a value the
+   caller already treats as "not available": nil from rig_init is what the
+   driver has always checked for, and 0 from rig_get_caps_int is "no such
+   capability".
+*)
+procedure rig_set_debug(debug_level: rig_debug_level_e); cdecl;
+begin
+   if EnsureHamLib then
+      begin
+      p_rig_set_debug(debug_level);
+      end;
+end;
+
+function rig_init(rig_model: Integer): PRIG; cdecl;
+begin
+   if EnsureHamLib then
+      begin
+      Result := p_rig_init(rig_model);
+      end
+   else
+      begin
+      Result := nil;
+      end;
+end;
+
+function rig_get_caps_int(rig_model: Integer; rig_caps: Integer): UInt64; cdecl;
+begin
+   if EnsureHamLib then
+      begin
+      Result := p_rig_get_caps_int(rig_model, rig_caps);
+      end
+   else
+      begin
+      Result := 0;
+      end;
+end;
+
+function rigerror(errnum: Integer): PAnsiChar; cdecl;
+begin
+   if EnsureHamLib then
+      begin
+      Result := p_rigerror(errnum);
+      end
+   else
+      begin
+      Result := nil;
+      end;
+end;
+
+function rig_strrmode(mode: rmode_t): PAnsiChar; cdecl;
+begin
+   if EnsureHamLib then
+      begin
+      Result := p_rig_strrmode(mode);
+      end
+   else
+      begin
+      Result := nil;
+      end;
+end;
+
 function GetHamLibVersion: string;
 var
-  hLib: HMODULE;
   pVersion: ^PAnsiChar;
 begin
-  Result := 'unknown';
-  hLib := GetModuleHandle(HAMLIB_DLL);
-  if hLib = 0 then
-     begin
-     hLib := LoadLibrary(HAMLIB_DLL);
-     end;
-  if hLib <> 0 then
-     begin
-     pVersion := GetProcAddress(hLib, 'hamlib_version2');
-     if pVersion <> nil then
-        begin
-        Result := string(pVersion^);
-        end;
-     end;
+   Result := 'unknown';
+   if not EnsureHamLib then
+      begin
+      Exit;
+      end;
+   // hamlib_version2 is exported DATA, not a function -- the address is of a
+   // PAnsiChar, so it is dereferenced once.
+   pVersion := GetProcedureAddress(GHamLibModule, 'hamlib_version2');
+   if pVersion <> nil then
+      begin
+      Result := string(pVersion^);
+      end;
 end;
 
 function RigErrorToString(errcode: Integer): string;

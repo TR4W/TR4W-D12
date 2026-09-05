@@ -325,7 +325,6 @@ procedure EnableHamLibTrace;
 type
   TSetDebugFile = procedure(stream: Pointer); cdecl;
 var
-  hLib: HMODULE;
   pSetDebugFile: TSetDebugFile;
   traceFile: Pointer;
   tracePath: string;
@@ -340,17 +339,11 @@ begin
      Exit;
      end;
 
-  hLib := GetModuleHandle(HAMLIB_DLL);
-  if hLib = 0 then
-     begin
-     hLib := LoadLibrary(HAMLIB_DLL);
-     end;
-
-  @pSetDebugFile := nil;
-  if hLib <> 0 then
-     begin
-     @pSetDebugFile := GetProcAddress(hLib, 'rig_set_debug_file');
-     end;
+  // THROUGH THE LOADER THAT ALREADY OWNS THIS LIBRARY. This opened it a second
+  // time by bare name, which is the PATH search that can pick up a different
+  // copy entirely -- a 64-bit one from a WSJT-X install, on a machine where
+  // TR4W's own copy loaded correctly moments earlier.
+  @pSetDebugFile := HamLibProcAddress('rig_set_debug_file');
 
   rig_set_debug(RIG_DEBUG_TRACE);
 
@@ -457,6 +450,20 @@ begin
      begin
      rig_set_debug(RIG_DEBUG_WARN);
      end;
+
+  // THE LIBRARY IS LOADED HERE, at the first moment a HamLib radio is actually
+  // wanted -- not by the Windows loader at every startup. Asking explicitly,
+  // rather than relying on rig_init to do it, is what lets the REASON be
+  // reported: rig_init can only answer nil, and "returned nil" was the whole
+  // diagnosis a missing or wrong-architecture DLL used to get.
+  if not EnsureHamLib then
+     begin
+     logger.Error('[THamLibDirect.Connect] HamLib is not usable: %s', [HamLibLoadError]);
+     Result := RIG_EIO;
+     Exit;
+     end;
+  logger.Info('[THamLibDirect.Connect] HamLib %s loaded from %s',
+              [GetHamLibVersion, HamLibDllPath]);
 
   // Initialize rig
   logger.Debug('[THamLibDirect.Connect] Calling rig_init(%d)', [HamLibModelID]);
