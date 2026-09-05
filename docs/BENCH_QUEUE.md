@@ -191,20 +191,38 @@ the second group were on screen.
 
 ---
 
-14. **NETWORK TIME BROADCAST -- A REAL DEFECT, NOW FIXED, AND THE ONE ITEM
-    HERE THAT COULD HAVE COST QSOs.** `TF.GetTime` had its ENTIRE body
-    commented out, so all four `var` parameters came back uninitialised. The
-    compiler cannot warn about that -- they are `var`, so it assumes the callee
-    writes them. Its two live callers are LOGEDIT's *"Do you want to send time
-    to computers on the network?"* (Ctrl-J style prompt, two sites), which then
-    call `GetDate` -- which IS implemented -- format both, and broadcast a
-    `MultiTimeMessage` to every station in the multi-op network. **So the
-    message carried a correct date and a garbage time, and receiving stations
-    set their clocks from it.** Now reads `GetSystemTime` (UTC), matching
-    `GetDate` directly above it.
-    **TEST:** two stations networked, answer Y to that prompt, confirm the
-    receiving station's clock is correct rather than nonsense. Worth doing
-    before any multi-op weekend.
+14. **The time sent to the multi-op network was uninitialised stack.** Fixed
+    in `8149ebb1`. `TF.GetTime` had its entire body commented out, so all four
+    `var` parameters came back as whatever was on the stack -- and nothing could
+    warn, because `var` parameters are assumed to be written by the callee. Two
+    live callers in LOGEDIT (the *"send time to computers on the network?"*
+    prompt) formatted those values with a correct date from `GetDate` and put
+    them on the wire.
+
+    **THE COMMIT MESSAGE OVERSTATES THE CONSEQUENCE, and this note is the
+    correction.** It says receiving stations set their clocks from the message.
+    They do not, for two independent reasons NY4I pointed out and the tree
+    confirms:
+
+    * `MultiTimeMessage` is declared in `LOGSTUFF.PAS:86` as
+      `{ TR6.75 - Reception only from CT Network }` -- TR4W SENDS it and has no
+      handler that receives it. The garbage went onto the wire and nothing in
+      TR4W consumed it.
+    * The real clock sync is a DIFFERENT path -- `uNet.pas:418`,
+      `Windows.SetSystemTime(NetTimeSyncPtr.tsTime)`, driven by the TR4WServer
+      time-sync record and not by `GetTime` at all. NY4I: *"since we are not
+      running as admin, changing it is not possible"* -- and that call already
+      reports the failure (`ShowSysErrorMessage('SET SYSTEM TIME')`), so it is
+      not a silent downgrade.
+
+    So this was a real defect -- uninitialised memory formatted and transmitted
+    -- with a much smaller blast radius than the commit claims. It is worth a
+    check, not a panic.
+
+    **TEST (revised):** two stations networked, answer Y to that prompt, and
+    confirm the time in the transmitted message is the correct UTC time rather
+    than nonsense. Do NOT expect the receiving station's clock to change; it
+    will not, and that is correct.
 
 15. **Radio configuration, after 468 lines came out of `uCAT.pas`.** The
     per-slot CAT dialog was deleted on 2026-08-29 but ~465 lines of its
