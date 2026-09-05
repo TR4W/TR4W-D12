@@ -1586,7 +1586,7 @@ begin
   SystemTimeChanging;
   DisplayRate(0);
   tDispalyMyComputerID;
-  SetMainWindowText(mweCurrentOperator, CurrentOperator);
+  TR4WMainForm.pnlCurrentOperator.Caption := string(CurrentOperator);
 
   ntBeepInit;
   OpenOtherWindows;
@@ -1770,7 +1770,6 @@ begin
     SetCommand('MY GRID');
 
 //  Format(wsprintfBuffer, 'cty.dat: "%s" version', CTY.ctyTable[cty.ctyVersion].Name);
-//  SetMainWindowText(mweBeamHeading, wsprintfBuffer);
 
 {$IF tKeyerDebug}
 //  CreateModalDialog(150, 90, tr4whandle, @KeyerDebugDlgProc, 0);

@@ -1545,7 +1545,6 @@ begin
 
    // STATE, NOT A WIDGET. This ran
    //
-   //     SetMainWindowText(mwePTTStatus, PTTStatusString[...tPTTStatus]);
    //
    // and it is reached from ProcessFilteredStatus, on the RADIO POLLING THREAD
    // -- a serial reader assigning a control's caption. Now it records the fact

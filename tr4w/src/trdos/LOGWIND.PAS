@@ -1212,7 +1212,7 @@ begin
   Grid[5] := #0;
   // Grid is a GridString -- a ShortString -- so PAnsiChar(@Grid[1]) read past
   // its length into whatever followed.  See the radio-name fix (56a8ae97).
-  SetMainWindowText(mweLocator, string(Grid));
+  TR4WMainForm.pnlLocator.Caption := string(Grid);
 //windows.CopyMemory(@TempBuffer1,
 {  asm
   mov eax,Grid
@@ -1305,7 +1305,7 @@ begin
        //            TempString := ' ' + TempString;
 
      // TempString is a Str40 local; same ShortString hazard.
-     SetMainWindowText(mweBeamHeading, string(TempString));
+     TR4WMainForm.pnlBeamHeading.Caption := string(TempString);
        //        Showmessage (TempString);
        //        RestorePreviousWindow;
      end;
@@ -1353,7 +1353,7 @@ begin
 
   TF.Format(wsprintfBuffer, TWO_STRINGS, BandStringsArray[Band], ModeStringArray[Mode]);
 
-  SetMainWindowText(mweBandMode, wsprintfBuffer);
+  TR4WMainForm.pnlBandMode.Caption := wsprintfBuffer;
 
   if MultByBand then MultBand := ActiveBand else MultBand := AllBands;
   if MultByMode then MultMode := ActiveMode else MultMode := Both;
@@ -1413,7 +1413,7 @@ begin
         tPChar := '%u NO CW';
         end;
      TF.Format(wsprintfBuffer, tPChar, CodeSpeed);
-     SetMainWindowText(mweCodeSpeed, wsprintfBuffer);
+     TR4WMainForm.pnlCodeSpeed.Caption := wsprintfBuffer;
      ActiveRadioPtr.SpeedMemory := CodeSpeed;
      end;
 
@@ -1434,7 +1434,7 @@ begin
         begin
         tPChar := 'DVK Dis.';
         end;
-     SetMainWindowText(mweCodeSpeed, tPChar);
+     TR4WMainForm.pnlCodeSpeed.Caption := tPChar;
      end;
 
 
@@ -1474,7 +1474,7 @@ begin
      begin
      s := TC_OVERRIDE;
      end;
-  SetMainWindowText(mweInsert, s);
+  TR4WMainForm.pnlInsert.Caption := s;
 end;
 
 procedure DisplayNamePercentage({TotalNamesSent: integer; QSONumber: integer});
@@ -1511,14 +1511,14 @@ begin
        begin
        Windows.lstrcatA(wsprintfBuffer, 'L');
        end;
-  SetMainWindowText(mweQSONumber, wsprintfBuffer);
+  TR4WMainForm.pnlQSONumber.Caption := wsprintfBuffer;
 end;
 
 
 procedure DisplayQTCNumber(QTCNumber: integer);
 begin
   TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_HAVEQTCS)), QTCNumber);
-  SetMainWindowText(mweUserInfo, wsprintfBuffer);
+  TR4WMainForm.pnlUserInfo.Caption := wsprintfBuffer;
 end;
 
 procedure DisplayCountryName(Call: CallString);
@@ -1530,7 +1530,7 @@ begin
   DisplayLocalTime(Country);
   if tCountryNamePrevState = Country then Exit;
   tCountryNamePrevState := Country;
-  SetMainWindowText(mweCountryName, ctyGetCountryNamePchar(Country));
+  TR4WMainForm.pnlCountryName.Caption := ctyGetCountryNamePchar(Country);
 end;
 
 procedure DisplayQSOsWithThisStation(QSOs: integer);
@@ -1548,7 +1548,7 @@ begin
      begin
      p := nil;
      end;
-  SetMainWindowText(mweQSOsWithThisStation, p);
+  TR4WMainForm.pnlQSOsWithThisStation.Caption := p;
 end;
 
 procedure DisplayRadio(Radio: RadioType);
@@ -1565,18 +1565,18 @@ begin
   // Converting the ShortString directly uses the length byte, which is the
   // whole fix.  Not a port regression: D7 passes @Radio1.RadioName[1] the same
   // way (LOGWIND.PAS:1845) and has the same defect.
-  SetMainWindowText(mweRadioOne, string(Radio1.RadioName));
-  SetMainWindowText(mweRadioTwo, string(Radio2.RadioName));
+  TR4WMainForm.pnlRadioOne.Caption := string(Radio1.RadioName);
+  TR4WMainForm.pnlRadioTwo.Caption := string(Radio2.RadioName);
 end;
 
 procedure DisplayQSOsByOpMode;
 begin
 
   TF.Format(wsprintfBuffer, ' CQ: %u', tRestartInfo.riQSOByOpMode[CQOpMode]);
-  SetMainWindowText(mweCQQSOCounter, wsprintfBuffer);
+  TR4WMainForm.pnlCQQSOCounter.Caption := wsprintfBuffer;
 
   TF.Format(wsprintfBuffer, ' SP: %u', tRestartInfo.riQSOByOpMode[SearchAndPounceOpMode]);
-  SetMainWindowText(mweSPQSOCounter, wsprintfBuffer);
+  TR4WMainForm.pnlSPQSOCounter.Caption := wsprintfBuffer;
 end;
 
 procedure DisplayHour;
@@ -1601,7 +1601,7 @@ begin
         TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_BAND_CHANGES)), tThisHourBandChanges);
       end;
   end;
-  SetMainWindowText(mweHourRate, wsprintfBuffer);
+  TR4WMainForm.pnlHourRate.Caption := wsprintfBuffer;
   SendMessage(LastProgressBar, PBM_SETPOS, TempInteger, 0);
 end;
 
@@ -1632,7 +1632,7 @@ begin
 
    TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_RATE)), Rate);
 
-   SetMainWindowText(mweRate, wsprintfBuffer);
+   TR4WMainForm.pnlRate.Caption := wsprintfBuffer;
    SendMessage(RateProgressBar, PBM_SETPOS, Rate, 0);
      end;
 end;
@@ -1657,7 +1657,7 @@ begin
   // in EAX for the `push eax` -- a fragile Delphi-7 codegen assumption that 64-bit
   // would break.  TC_PTS = '%d Pts'.
   TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_PTS)), Score);
-  SetMainWindowText(mweTotalScore, wsprintfBuffer);
+  TR4WMainForm.pnlTotalScore.Caption := wsprintfBuffer;
 
   //  tSetWindowText(TotalScoreWindowHandle, IntToStr(Score) + ' Pts');
 
@@ -1700,7 +1700,7 @@ end;
 
 procedure SetTextInQuickCommandWindow(Text: string);
 begin
-  SetMainWindowText(mweQuickCommand, Text);
+  TR4WMainForm.pnlQuickCommand.Caption := Text;
 end;
 
 procedure ClearQuickDisplayText;
@@ -1996,7 +1996,7 @@ begin
 
   if ShowTime then
      begin
-     SetMainWindowText(mweFullTime, GetFullTimeString(False));
+     TR4WMainForm.pnlFullTime.Caption := GetFullTimeString(False);
 
      if tElapsedTimeFromLastQSO <> 0 then
         begin
@@ -2007,11 +2007,12 @@ begin
      // so the PAnsiChar TempPchar intermediary is gone; '' is the empty signal.
      if TenMinuteRule <> NoTenMinuteRule then
         begin
-        SetMainWindowText(mweTenMinuts, ElaspedTimeString(TenMinuteTime.Time))
+        TR4WMainForm.pnlTenMinuts.Caption :=
+           ElaspedTimeString(TenMinuteTime.Time)
         end
      else
         begin
-        SetMainWindowText(mweTenMinuts, '');
+        TR4WMainForm.pnlTenMinuts.Caption := '';
         end;
      end;
 
@@ -2044,11 +2045,11 @@ begin
         // TR4W no longer repaints the band map once a minute for nobody.
         SpotsList.DecrementSpotsTimes;
         end;
-     SetMainWindowText(mweClock, GetTimeString);
+     TR4WMainForm.pnlClock.Caption := GetTimeString;
 
      if UTC.wMinute = 0 then
         begin
-        SetMainWindowText(mweDate, GetDateString);
+        TR4WMainForm.pnlDate.Caption := GetDateString;
         TotalThisHour := 0;
         tThisHourBandChanges := 0;
 
@@ -3270,13 +3271,13 @@ begin
    // this very read -- zeroing the buffer so the PAnsiChar scan would find a
    // terminator -- and it is left in place as an initializer, no longer as the
    // thing that makes this line correct.
-   SetMainWindowText(mweUserInfo, string(InfoString));
+   TR4WMainForm.pnlUserInfo.Caption := string(InfoString);
 
      //         Write(InfoString);
      end
   else
      begin
-     SetMainWindowText(mweUserInfo, '');
+     TR4WMainForm.pnlUserInfo.Caption := '';
      end;
 
   //  RestorePreviousWindow;
@@ -3493,7 +3494,7 @@ begin
                            [LOCAL.wHour, LOCAL.wMinute, DayTagArray[LOCAL.wDayOfWeek]]);
       end;
 
-   SetMainWindowText(mweLocalTime, s);
+   TR4WMainForm.pnlLocalTime.Caption := s;
 end;
 
 
@@ -3682,14 +3683,14 @@ if (T2 > 0)  then
    d := Windows.GetTickCount;
     if (d div 1000) mod 2 = 0 then
        begin
-       SetMainWindowText(mweOnAirTimeCounter,MillisecondsToFormattedString(d - StartCPU, False)) ;     //  4.115.3
+       TR4WMainForm.pnlOnAirTimeCounter.Caption := MillisecondsToFormattedString(d - StartCPU, False);     //  4.115.3
        end;
    end
    else
       begin
-      SetMainWindowText(mweOnAirTimeCounter,MillisecondsToFormattedString(0, False))
+      TR4WMainForm.pnlOnAirTimeCounter.Caption :=
+         MillisecondsToFormattedString(0, False)
       end
-//  SetMainWindowText(mweOnAirTimeCounter,MillisecondsToFormattedString(TimeSpentByBand[AllBands] * 1000, False));
 end;
 
 
@@ -3699,7 +3700,7 @@ Procedure modified by N4AF to also display total OFF TIME.
 If it total elapsed drops, enter was pressed so
  save into var d2 contents of tElapsedTimeFromLastQSO on procedure exit to compare to value on entry.
 set Constant T1 to length of break time
-normally onairtime = elapse since firstSetMainWindowText(mweOnAirTimeCounter,MillisecondsToFormattedString(Windows.GetTickCount-StartCPU, False));  qso. But when elapsed > break, we must save the elapsed time and
+normally onairtime = elapse since firstTR4WMainForm.pnlOnAirTimeCounter.Caption := MillisecondsToFormattedString(Windows.GetTickCount-StartCPU, False);  qso. But when elapsed > break, we must save the elapsed time and
 subtract break time from it.
 Then when elapsed next drops below break length, add saved elapsed to current elapsed.
 }
@@ -3722,7 +3723,7 @@ var
 
   if (k div 1000) mod 2 = 0 then         // if 5 seconds elapsed
      begin
-     SetMainWindowText(mweLastQSOTime, MillisecondsToFormattedString(k, False));     // display elapsed since last qso
+     TR4WMainForm.pnlLastQSOTime.Caption := MillisecondsToFormattedString(k, False);     // display elapsed since last qso
      end;
      tDispalyOnAirTime;
 end;
@@ -3730,7 +3731,7 @@ end;
 procedure tDispalyMyComputerID;
 begin
   CID_TWO_BYTES[0] := ComputerID;
-  SetMainWindowText(mweComputerID, string(PAnsiChar(@CID_TWO_BYTES)));
+  TR4WMainForm.pnlComputerID.Caption := string(PAnsiChar(@CID_TWO_BYTES));
 end;
 
 procedure tDispalyPaddleAndFootSwitchStatus;
@@ -3748,7 +3749,7 @@ end;
 procedure tDisplayCQTotal;
 begin
   TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_CQTOTAL)), tRestartInfo.riCQTotalCounter);
-  SetMainWindowText(mweCQTotal, wsprintfBuffer);
+  TR4WMainForm.pnlCQTotal.Caption := wsprintfBuffer;
 end;
 
 function CQLabel(Callsign: CallString): boolean;

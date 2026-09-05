@@ -94,7 +94,10 @@ implementation
 uses uQTCR,
    (* Which store a log READ comes from -- step B4.  See uLogSource. *)
    uLogSource,
-  MainUnit;
+  MainUnit,
+   (* SetEntryText / TR4WCallEdit -- the QTC callsign goes into the ENTRY
+     FIELD, which is a TEdit and not one of the status panels. *)
+   uMainForm;
 
 function QTCQuickEditResponse(Prompt: Str80;
   var QTCAction: QTCActionType;
@@ -178,7 +181,7 @@ begin
     // QTCCallsign is a CallString -- a ShortString -- and a GLOBAL, so a
     // shorter reassignment leaves the tail of the previous call behind it,
     // exactly as the radio name did (56a8ae97).
-    SetMainWindowText(mweCall, string(QTCCallsign));
+    SetEntryText(TR4WCallEdit, string(QTCCallsign));
       {
           QTCHeaderString := QuickEditResponse(PChar('Enter QTC #/# (max of ' + MaxQTCString + ') or RETURN if QRU'), 8);
 

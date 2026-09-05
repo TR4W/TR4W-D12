@@ -16,7 +16,7 @@
     "TF.CreateOwnerDrawListBox":  2,
     "TF.CreateRichEdit":  3,
     "CreateOKCancelButtons":  2,
-    "SetMainWindowText":  65,
+    "SetMainWindowText":  0,
     "tCreateStaticWindow":  13,
     "CreateTR4WStaticWindow":  14
 }

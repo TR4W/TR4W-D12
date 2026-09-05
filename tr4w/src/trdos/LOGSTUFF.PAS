@@ -1286,7 +1286,7 @@ begin
      p := nil;
      end;
 
-  SetMainWindowText(mweName, p);
+  TR4WMainForm.pnlName.Caption := p;
 end;
 
 procedure SayName(Call: CallString);

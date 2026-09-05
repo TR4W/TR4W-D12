@@ -615,7 +615,7 @@ uses
   uMainForm,
   uAboutForm,   // ShowAboutBox -- the designed About box        // the main window IS
   uBandMapForm,        // CreateTR4WBandMapWindow -- the band map tool window
-  uCrashLog,           // OnMainThread -- see WriteMainWindowText
+  uCrashLog,           // LogCaughtException, OnMainThread
   uStateBridge,        // InstallStateBridge -- the domain/UI crossing
   uMainThreadWork,     // mtMainWindowElementColors
   uStationsForm,       // CreateTR4WStationsWindow -- the stations tool window
@@ -1018,7 +1018,7 @@ begin
       // n4af issue 158
          begin
          DupeInfoCallWindowState := diNone;
-         SetMainWindowText(mweDupeInfoCall, '');
+         TR4WMainForm.pnlDupeInfoCall.Caption := '';
          end;
     // showint(1);
       tCleareCallWindow;
@@ -1428,7 +1428,7 @@ begin
      if WindowDupeCheck then //RemoveWindow(ExchangeWindow);
        // Windows.SetWindowTextA(ExchangeWindowHandle, '');
         begin
-        SetMainWindowText(mweExchange, '');
+        SetEntryText(TR4WExchangeEdit, '');
         end;
      // RestorePreviousWindow;
 
@@ -1463,60 +1463,36 @@ end;
   gone -- uWSJTX already writes it (uWSJTX.pas:438), and a paint handler that
   mutates what it is painting cannot be called from a text setter without
   recursing. }
-{ What SetMainWindowText calls.  Sets the caption, then re-evaluates the five
-  live colour rules -- which DrawWindows used to do on every repaint and nothing
-  does now unless it is asked.  See RefreshMainWindowElementColors. }
-procedure WriteMainWindowText(Window: TMainWindowElement; const Text: string);
-begin
-  { NOT EVERY ELEMENT IS A PANEL, AND THIS ROUTING IS NOT OPTIONAL.
+(* WriteMainWindowText IS GONE, AND SO IS THE FUNNEL IT SERVED.
 
-    The creation loop skips any element with mweiStyle <= 2, because those are
-    not Win32 statics -- they are the call and exchange TEdits, the possible-call
-    list and the two list views.  So GElements[] is nil for them, SetElementText
-    finds no control, and the write goes NOWHERE.
+  Every main-window readout used to be written through
+  SetMainWindowText(mweClock, s), which routed the write, re-evaluated the five
+  live colour rules and reported an off-thread caller. NY4I's done-criterion
+  for this phase, recorded in Lint-Win32Dialogs, was that it stop: "the above
+  SetMainWindowText will be moved to something like edLocator.Text := ..".
 
-    That is a regression I shipped this afternoon and NY4I found on the bench
-    the same evening: with an INITIAL EXCHANGE of Zone, typing a callsign no
-    longer filled the zone, because MainUnit:6531 writes it with
-    SetMainWindowText(mweExchange, ...).  Before the conversion that reached
-    SetWindowTextW(wh[mweExchange]) and wh[mweExchange] IS the TEdit's handle;
-    afterwards it reached a nil panel and returned quietly.
+  ALL THREE OF ITS JOBS SURVIVE, on the control rather than in a funnel:
 
-    Two other call sites were dead the same way: clearing the exchange on an
-    operating-mode change (SetOpMode), and LOGWAE putting a QTC callsign into
-    the call field.
+    the ROUTING   -- a call site now names the control it writes, so
+                     SetEntryText(TR4WExchangeEdit, ...) cannot be confused
+                     with a panel. That routing existed because ONE path served
+                     both kinds, and its comment records what that cost: three
+                     writes reaching a nil panel and returning quietly.
 
-    THE FIX IS HERE RATHER THAN AT THE THREE CALL SITES because SetMainWindowText
-    is the ONE write path for every element and has ~75 callers; a rule that
-    each caller must know what kind of control backs its element is the rule
-    that just failed. }
-  case Window of
-    mweCall:     SetEntryText(TR4WCallEdit, Text);
-    mweExchange: SetEntryText(TR4WExchangeEdit, Text);
-  else
-    SetElementText(Window, Text);
-  end;
+    the COLOURS   -- TElementPanel raises ElementCaptionChanged and uMainForm
+                     answers by REQUESTING the sweep as a coalescing job, which
+                     is better than the direct call this made: the element-init
+                     loop now costs one sweep rather than forty-three.
 
-  if OnMainThread then
-     begin
-     RefreshMainWindowElementColors;
-     end
-  else
-     begin
-     RequestMainThreadJob(mtMainWindowElementColors);
-     end;
-end;
+    the DETECTOR  -- TElementPanel.RealSetText asks whether it is on the main
+                     thread, and it sees EVERY caption assignment including a
+                     direct one. That is what made removing the funnel safe,
+                     and it is what NY4I asked about before agreeing to it.
 
-{ THE WSJT-X INDICATOR'S BACKGROUND, DECIDED ONCE.
+  A dispatcher holding an ELEMENT rather than a control -- the init loop, the
+  marshalled panel update -- calls uMainForm.SetElementText, which is a plain
+  Caption write and not a second funnel. *)
 
-  Two places need this answer -- the sweep below, which repaints every element
-  from the table and would otherwise reset the indicator to trBtnFace, and
-  uStateBridge, which repaints it the moment the link comes up. Two copies of
-  the RULE is how they drift; one function with two callers is not duplication.
-
-  It reads WSJTXState, not wsjtx.Connected: the domain state is what the rest of
-  the view already reads for this element's text and visibility, and appearance
-  disagreeing with visibility is exactly the class of defect this replaces. }
 function WSJTXIndicatorBack: tr4wColors;
 begin
    if (WSJTXState <> nil) and WSJTXState.Connected then
@@ -1617,7 +1593,7 @@ begin
   OpMode := OperationMode;
   OpMode2 := OperationMode;
   SearchAndPounceMode := OpMode = SearchAndPounceOpMode;
-  SetMainWindowText(mweOpMode, OpModeString[OperationMode]);
+  TR4WMainForm.pnlOpMode.Caption := OpModeString[OperationMode];
   if OperationMode = CQOpMode then
      begin
      EditingCallsignSent := False;
@@ -3025,8 +3001,8 @@ begin
      tCleareCallWindow; // 4.139.2
      Result := True;
      logger.debug('[TuneOnFreqFromCallWindow] Clearing Mults and QSO Needs Headers');
-     SetMainWindowText(mweMultNeedsHeader, PAnsiChar(''));
-     SetMainWindowText(mweQSONeedsHeader, PAnsiChar(''));
+     TR4WMainForm.pnlMultNeedsHeader.Caption := PAnsiChar('');
+     TR4WMainForm.pnlQSONeedsHeader.Caption := PAnsiChar('');
      end;
 
   {
@@ -3225,7 +3201,7 @@ begin
      begin
      Windows.KillTimer(tr4whandle, AUTOCQ_TIMER_HANDLE);
      tAutoCQMode := False;
-     SetMainWindowText(mweOpMode, 'CQ');
+     TR4WMainForm.pnlOpMode.Caption := 'CQ';
      QuickDisplay('');
      Result := True;
      end;
@@ -3240,7 +3216,7 @@ begin
      SetUpToSendOnActiveRadio;
      SetOpMode(CQOpMode);
      tAutoCQMode := True;
-     SetMainWindowText(mweOpMode, 'AutoCQ');
+     TR4WMainForm.pnlOpMode.Caption := 'AutoCQ';
      SendFunctionKeyMessage(AutoCQMemory, OpMode);
      tDisplayAutoCQStatus;
      end;
@@ -3389,7 +3365,7 @@ end;
 // TALKS TO THE CONTROL, NOT TO A WINDOW.  It used to ask Windows:
 //
 //     Value := GetDlgItemInt(tr4whandle, EXCHANGEWINDOWID, lpTranslated, False);
-//     SetMainWindowText(mweExchange, ...);
+//     SetEntryText(TR4WExchangeEdit, ...);
 //     PlaceCaretToTheEnd(wh[mweExchange]);
 //
 // -- three Win32 calls addressing an LCL TEdit by dialog-item id and by HWND.
@@ -3886,12 +3862,10 @@ begin
 
   // Split warning is driven by DisplayCurrentStatus (uRadioPolling) on confirmed
   // state transitions — not here, where CurrentStatus.Split may be stale.
-  // SetMainWindowText(mweName, nil);
   // CallDataBase.ClearDataEntry;
-  SetMainWindowText(mweName, '');
-  SetMainWindowText(mweUserInfo, '');
+  TR4WMainForm.pnlName.Caption := '';
+  TR4WMainForm.pnlUserInfo.Caption := '';
 
-  // SetMainWindowText(mweUserInfo, nil); //N4AF 4.31.3
   if Contest = WAG then //n4af 4.31.4
      begin
      WagCheck; //n4af
@@ -4117,8 +4091,6 @@ begin
   //                      hInstance, nil)
   tr4whandle := CreateTR4WMainForm(tr4w_main_menu);
   tr4w_WindowsArray[tw_MAINWINDOW_INDEX].WndHandle := tr4whandle;
-  // TF writes every element's text through this; see SetMainWindowText there.
-  MainWindowTextWriter := @WriteMainWindowText;
 
   wh[mweWholeScreen] := tr4whandle;
   (* THE EDITABLE LOG IS AN LCL GRID -- see uLogGrid.
@@ -4179,7 +4151,10 @@ begin
 
      if TWindows[e].mweText <> '' then
         begin
-        SetMainWindowText(e, TWindows[e].mweText)
+        (* BY ELEMENT, because this is a loop over all of them. Direct
+          property access is for the sites that name one; a dispatcher needs
+          the indexed setter, and uMainForm's is a plain Caption write. *)
+        SetElementText(e, TWindows[e].mweText)
         end
      end;
 
@@ -5492,7 +5467,7 @@ begin
               if IsAGoodUSCall(TempCallString) then
                  begin
                  Windows.CopyMemory(@CurrentOperator, @TempCallstring[1], 6);
-                 SetMainWindowText(mweCurrentOperator, CurrentOperator);
+                 TR4WMainForm.pnlCurrentOperator.Caption := CurrentOperator;
                  Sheet.SaveRestartFile; // Issue 661 ny4i
                  SendStationStatus(sstOperator);
                  end
@@ -5504,7 +5479,7 @@ begin
            else if IsAGoodCall(TempCallString) then
               begin
               Windows.CopyMemory(@CurrentOperator, @TempCallstring[1], 6);
-              SetMainWindowText(mweCurrentOperator, CurrentOperator);
+              TR4WMainForm.pnlCurrentOperator.Caption := CurrentOperator;
               Sheet.SaveRestartFile; // Issue 661 ny4i
               SendStationStatus(sstOperator);
               end
@@ -7414,7 +7389,7 @@ end;
 procedure tCleareExchangeWindow;
 begin
   // Windows.SetWindowTextA(ExchangeWindowHandle, nil);
-  // SetMainWindowText(mweExchange, nil);
+  // SetEntryText(TR4WExchangeEdit, nil);
   SetEntryText(TR4WExchangeEdit, '');
   
 end;
@@ -7423,7 +7398,7 @@ procedure tSetExchWindInitExchangeEntry;
 begin
   // D12: InitialExchangeEntry + SetMainWindowText are native string now, so the
   // Str80 local, its ZeroMemory, and the @ie[1] ASCIIZ view are all gone.
-  SetMainWindowText(mweExchange, InitialExchangeEntry(CallWindowString));
+  SetEntryText(TR4WExchangeEdit, InitialExchangeEntry(CallWindowString));
   if Config.LeaveCursorInCallWindow then
      begin
      tCallWindowSetFocus;
@@ -9356,9 +9331,9 @@ begin
      begin
      GetSystemTime(UTC);
      end;
-  SetMainWindowText(mweClock, GetTimeString);
-  SetMainWindowText(mweFullTime, GetFullTimeString(False));
-  SetMainWindowText(mweDate, GetDateString);
+  TR4WMainForm.pnlClock.Caption := GetTimeString;
+  TR4WMainForm.pnlFullTime.Caption := GetFullTimeString(False);
+  TR4WMainForm.pnlDate.Caption := GetDateString;
 end;
 
 procedure DefTR4WProc(Msg: Cardinal; var lp: integer; wnd: HWND);

@@ -175,12 +175,12 @@ begin
 
    if not WSJTXEnabled then
       begin
-      SetMainWindowText(mweWSJTX, '');
+      TR4WMainForm.pnlWSJTX.Caption := '';
       ShowElement(mweWSJTX, False);
       Exit;
       end;
 
-   SetMainWindowText(mweWSJTX, 'WSJTX');
+   TR4WMainForm.pnlWSJTX.Caption := 'WSJTX';
 
    { THE SAME RULE THE SWEEP USES -- MainUnit.WSJTXIndicatorBack.  Not a second
      copy of "green means connected": two writers for one property is how they
@@ -240,7 +240,7 @@ begin
       caption := string(PTTStatusString[PTT_OFF]);
       end;
 
-   SetMainWindowText(mwePTTStatus, caption);
+   TR4WMainForm.pnlPTTStatus.Caption := caption;
 end;
 
 procedure TStateBridge.PTTChanged;
@@ -289,7 +289,7 @@ begin
       caption := 'WK';
       end;
 
-   SetMainWindowText(mweWinKey, caption);
+   TR4WMainForm.pnlWinKey.Caption := caption;
 
    { Was EnableElement(mweWinKey, wkActive) inside wkDispayState, reached from
      BOTH WinKey read threads. }

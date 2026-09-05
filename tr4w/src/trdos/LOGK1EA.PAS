@@ -726,7 +726,6 @@ begin
         begin
         TREscapeCommFunction(hand, SerialOn);
         end;
- //    SetMainWindowText(mweInsert, inttopchar(hand));
      end
   else
      begin

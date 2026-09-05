@@ -136,13 +136,7 @@ function PCharToInt(p: PAnsiChar): integer;
 function BooleanToStr(b: boolean): string;
 //function CenterString(s: string; count: byte): string;
 procedure strU(var Str: OpenString);
-procedure SetMainWindowText(Window: TMainWindowElement; Text: string);
 function IntegerBetween(v: integer; i: integer; k: integer): boolean;
-
-var
-   { Assigned by MainUnit at startup -- see SetMainWindowText for why this is a
-     seam and not a uses clause. }
-   MainWindowTextWriter: procedure(Window: TMainWindowElement; const Text: string) = nil;
 
 // ValExt removed -- see the note at its old implementation site.  Callers use
 // the RTL `Val` intrinsic, which is what uCTYDAT already does.
@@ -983,49 +977,6 @@ begin
      Windows.SendMessageA(h, LB_INSERTSTRING, 0, integer(PAnsiChar(c)));
      end;
   tLB_SETCURSEL(h, 0);
-end;
-
-{ THE ONE WRITE PATH FOR ALL FORTY-TWO ELEMENTS, and the reason it goes through
-  a procedure variable rather than calling uMainForm directly: TF sits UNDER the
-  UI -- half the program uses it, including tr4wserver-adjacent code -- and a
-  uses clause pointing up at the LCL would drag the widget set into everything.
-  MainUnit assigns MainWindowTextWriter once, at startup.
-
-  The mweE bookkeeping is kept exactly.  It means "the last thing written was
-  empty", and it is what makes a second clear a no-op. }
-procedure SetMainWindowText(Window: TMainWindowElement; Text: string);
-begin
-  { THE LAST BLIND SPOT IN THE OFF-THREAD REPORT, and it is one frame wide.
-
-    uMainForm's accessors report their own caller, which for every main-window
-    write is WriteMainWindowText -- the funnel. So eight bench runs all named
-    the same address and none of them named the code that actually asked for
-    the write. "Which callers write an element off the main thread" is the
-    question step 4 is scoped by, and it could not be answered from the funnel.
-
-    Asked HERE because this is the entry point ~75 callers use, so
-    get_caller_addr names one of them rather than naming us.
-
-    The write itself is unchanged and still goes through: SetElementText defers
-    and RefreshMainWindowElementColors is requested as a main-thread job. This
-    reports, it does not gate. }
-  if not OnMainThread then
-     begin
-     ReportOffMainThread('SetMainWindowText', get_caller_addr(get_frame));
-     end;
-
-  if (Text = '') then
-    if TWindows[Window].mweE then
-       begin
-       Exit;
-       end;
-
-  if Assigned(MainWindowTextWriter) then
-     begin
-     MainWindowTextWriter(Window, Text);
-     end;
-
-  TWindows[Window].mweE := (Text = '');
 end;
 
 { What the trampoline carries across.  Heap-allocated by tCreateThread and

@@ -422,6 +422,7 @@ uses
    SysUtils,           // Format -- the window-procedure guard
    uCrashLog,          // OnMainThread / ReportOffMainThread / LogCaughtException
    Grids,              // TGridOptions -- see TR4WEditableLogSetGridLines
+   uMainThreadWork,    // RequestMainThreadJob -- the colour sweep, coalesced
    uLogSource,         // the virtual log list reads through the seam
    uConfigValues,      // Config.ShowGridLines
    MainUnit;           // LogRowTextFor, Config -- see CreateTR4WEditableLog
@@ -767,6 +768,19 @@ end;
   Reported rather than assumed: a missing component means the .lfm and the
   table have diverged, and the next thing that happens is a status readout
   that never updates and nothing to say why. *)
+(* THE FIVE LIVE COLOUR RULES, RE-EVALUATED AFTER A CAPTION CHANGE.
+
+  ALWAYS AS A JOB, never called straight through, and that is an improvement on
+  what WriteMainWindowText did rather than a copy of it. Jobs COALESCE: the
+  element-initialisation loop writes forty-three captions and gets ONE colour
+  sweep out of it, where the old path ran forty-three. It is also the answer
+  for a write that arrives off the main thread, which the old path had to test
+  for separately. *)
+procedure RequestElementColourRefresh;
+begin
+   RequestMainThreadJob(mtMainWindowElementColors);
+end;
+
 (* uCrashLog's reporter, in the shape uElementPanel asks for. *)
 procedure ReportElementOffThread(const aSite: string; const aCaller: CodePointer);
 begin
@@ -2092,6 +2106,7 @@ begin
      than referenced, so uElementPanel stays a leaf the lintlfm checker can
      link -- see TElementOffThreadReport. *)
    ElementOffThreadReport := @ReportElementOffThread;
+   ElementCaptionChanged  := @RequestElementColourRefresh;
 
    // Touching Handle is what forces the window to exist.
    Result := TR4WMainForm.Handle;

@@ -486,7 +486,7 @@ begin
         begin
         DupeInfoCallWindowState := diDupe;
         TF.Format(wsprintfBuffer, '%s DUPE!! on %s%s', @DupeInfoCall[1], BandStringsArray[InActiveRadioPtr.BandMemory], ModeStringArray[InActiveRadioPtr.ModeMemory]);
-        SetMainWindowText(mweDupeInfoCall, wsprintfBuffer {DupeInfoCall + ' DUPE!! on ' + BandStringsArray[InActiveRadioPtr.BandMemory] + ModeString[InActiveRadioPtr.ModeMemory]});
+        TR4WMainForm.pnlDupeInfoCall.Caption := wsprintfBuffer {DupeInfoCall + ' DUPE!! on ' + BandStringsArray[InActiveRadioPtr.BandMemory] + ModeString[InActiveRadioPtr.ModeMemory]};
         if DupeCheckSound <> DupeCheckNoSound then
            begin
            DoABeep(ThreeHarmonics);
@@ -507,7 +507,7 @@ begin
            DupeInfoCallWindowState := diNotDupeMult;
            end;
         TF.Format(wsprintfBuffer, '%s OK!!'#13#10'Space bar for %s%s', @DupeInfoCall[1], BandStringsArray[InActiveRadioPtr.BandMemory], ModeStringArray[InActiveRadioPtr.ModeMemory]);
-        SetMainWindowText(mweDupeInfoCall, wsprintfBuffer {DupeInfoCall + ' DUPE!! on ' + BandStringsArray[InActiveRadioPtr.BandMemory] + ModeString[InActiveRadioPtr.ModeMemory]});
+        TR4WMainForm.pnlDupeInfoCall.Caption := wsprintfBuffer {DupeInfoCall + ' DUPE!! on ' + BandStringsArray[InActiveRadioPtr.BandMemory] + ModeString[InActiveRadioPtr.ModeMemory]};
         if TwoRadioState <> TwoRadiosDisabled then
            begin
            TwoRadioState := CallReady;

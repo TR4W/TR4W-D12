@@ -77,6 +77,22 @@ type
    TElementOffThreadReport = procedure(const aSite: string;
                                        const aCaller: CodePointer);
 
+   (* WHAT TO DO AFTER A CAPTION CHANGES, beyond drawing it.
+
+     FIVE MAIN-WINDOW COLOURS ARE LIVE RULES rather than fixed properties --
+     the WSJT-X indicator, the PTT state and three others -- and they were
+     re-evaluated by WriteMainWindowText on every text change, because
+     "DrawWindows used to do it on every repaint and nothing does now unless it
+     is asked".
+
+     A plain `pnlWSJTX.Caption := s` does not ask, so converting the call sites
+     would have dropped it -- silently, with a one-second timer as the only
+     backstop. It moves here instead, where every caption write passes.
+
+     Injected for the same reason the report is: this unit must stay linkable
+     by a checker that has only the LCL. *)
+   TElementCaptionChanged = procedure;
+
    TElementPanel = class(TPanel)
    private
       FBaseFontHeight: integer;
@@ -96,6 +112,9 @@ type
 var
    (* Set by uMainForm to uCrashLog's reporter. See TElementOffThreadReport. *)
    ElementOffThreadReport: TElementOffThreadReport = nil;
+
+   (* Set by uMainForm. See TElementCaptionChanged. *)
+   ElementCaptionChanged: TElementCaptionChanged = nil;
 
 implementation
 
@@ -135,6 +154,12 @@ begin
 
    inherited RealSetText(aValue);
    FitCaption;
+
+   (* THE LIVE COLOUR RULES, re-evaluated because the text just changed. *)
+   if Assigned(ElementCaptionChanged) then
+      begin
+      ElementCaptionChanged;
+      end;
 end;
 
 procedure TElementPanel.FitCaption;

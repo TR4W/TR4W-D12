@@ -62,7 +62,7 @@ procedure ClearAltD;
 
 begin
 DupeInfoCallWindowState := diNone;
-SetMainWindowText(mweDupeInfoCall, '');
+TR4WMainForm.pnlDupeInfoCall.Caption := '';
 DupeInfoCallWindowCleared := True;
 ShowElement(mweDupeInfoCall, True);
 

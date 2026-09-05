@@ -150,7 +150,9 @@ implementation
 uses
   SysUtils, SyncObjs,
   Forms,       // Application.QueueAsyncCall -- the transport
-  TF,          // SetMainWindowText -- the only supported way to write an element
+  uMainForm,   // SetElementText -- writing an element BY ELEMENT, which is
+               // what a dispatcher has; the named sites assign the panel
+               // directly
   uCrashLog;   // LogCaughtException -- a failed hand-off must not be silent
 
 type
@@ -394,11 +396,15 @@ begin
            end;
          end;
 
-      // Target is 0 for an element -- there is no window to test, and
-      // SetMainWindowText guards its own control.
+      (* Target is 0 for an element -- there is no window to test, and
+        SetElementText guards its own control.
+
+        BY ELEMENT, because a marshalled update carries an element ID and not
+        a control: this is a dispatcher, and naming a panel here is not
+        possible. *)
       if upd.Kind = puElement then
          begin
-         SetMainWindowText(TMainWindowElement(upd.ControlId), upd.Text);
+         SetElementText(TMainWindowElement(upd.ControlId), upd.Text);
          end;
    finally
       upd.Free;
