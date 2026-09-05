@@ -48,18 +48,31 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+Import-Module (Join-Path $PSScriptRoot 'UiDriver.psm1') -Force
+
 $tr4w = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $repo = Split-Path $tr4w -Parent
 
-if (-not $Exe) {
-   foreach ($candidate in @(
-      (Join-Path $repo 'build-out\app-i386-win32\tr4w_fpc.exe'),
-      (Join-Path $tr4w 'target\tr4w.exe'))) {
-      if (Test-Path $candidate) { $Exe = $candidate; break }
-   }
+# SHARED -- see Resolve-TR4WExe in UiDriver.psm1.
+#
+# This was a private copy that took build-out FIRST, UNCONDITIONALLY, while the
+# shared one picks the FRESHER of build-out and target. They are not the same
+# rule, and on 2026-09-05 they resolved to different binaries two hours apart:
+# eight harnesses drove the current build and this one drove a stale one, which
+# is the exact drift Resolve-TR4WExe's own header records ("the harness was
+# testing an artifact nobody had built").
+#
+# A deliberate install is still respected -- whichever is newer wins -- and -Exe
+# overrides both.
+try {
+   $Exe = Resolve-TR4WExe -Exe $Exe -Repo $repo
 }
-if (-not $Exe -or -not (Test-Path $Exe)) {
+catch {
    Write-Output 'Invoke-FieldCheck: no tr4w binary found -- build first.'
+   exit 1
+}
+if (-not (Test-Path $Exe)) {
+   Write-Output "Invoke-FieldCheck: binary not found: $Exe"
    exit 1
 }
 

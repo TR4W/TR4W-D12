@@ -45,6 +45,8 @@ param(
 # The paths the param block can no longer work out for itself.
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 if (-not $Repo) { $Repo = Split-Path (Split-Path (Split-Path $here -Parent) -Parent) -Parent }
+
+Import-Module (Join-Path $here 'UiDriver.psm1') -Force
 if (-not $Exe)
    {
    # The binary Build-App.ps1 refreshes -- NOT the installed one under
@@ -53,15 +55,12 @@ if (-not $Exe)
    # backslashes: a literal Windows path written through a
    # backslash-interpreting tool turns into tabs, which is what
    # Lint-PathEscapes exists to catch.
-   $built = Join-Path (Join-Path $Repo 'build-out') (Join-Path 'app-i386-win32' 'tr4w_fpc.exe')
-   if (Test-Path -LiteralPath $built)
-      {
-      $Exe = $built
-      }
-   else
-      {
-      $Exe = Join-Path (Join-Path $Repo 'tr4w') (Join-Path 'target' 'tr4w.exe')
-      }
+   # SHARED -- see Resolve-TR4WExe in UiDriver.psm1. This was a private copy
+   # that took build-out FIRST, UNCONDITIONALLY; the shared one picks the
+   # FRESHER of the two, so a deliberate install is respected and a forgotten
+   # one cannot mislead. Measured 2026-09-05: the two rules resolved to binaries
+   # two hours apart, and this harness was driving the stale one.
+   $Exe = Resolve-TR4WExe -Exe '' -Repo $Repo
    }
 
 $target = Join-Path $Repo 'tr4w\target'
@@ -172,7 +171,17 @@ while ((Get-Date) -lt $deadline -and $main -eq [IntPtr]::Zero)
       exit 1
       }
    Start-Sleep -Milliseconds 200
-   $main = FindTop $proc.Id 'TR4W' ''
+   # SHARED -- see Find-TR4WMainWindow in UiDriver.psm1.
+   #
+   # THIS ASKED FindTop FOR CLASS 'TR4W', EXACTLY, AND THAT CANNOT MATCH.
+   # Phase 3a made the main window an LCL TForm, and an LCL form's Win32 class
+   # is 'Window' -- hardcoded in the widgetset, with no override. The shared
+   # finder accepts either name, so it still drives a pre-3a binary for
+   # comparison; this private copy accepted only the old one and had therefore
+   # been reporting "main window never appeared" against every healthy build
+   # since the conversion. Proven 2026-09-05: it failed identically on a binary
+   # FullBuild had just produced and every other harness passed on.
+   $main = Find-TR4WMainWindow -ProcessId $proc.Id
    }
 
 if ($main -eq [IntPtr]::Zero)

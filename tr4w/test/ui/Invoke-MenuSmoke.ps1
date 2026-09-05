@@ -120,14 +120,64 @@ if (-not (Test-Path -LiteralPath $Exe))
 # This script's guard is now the SHARED one -- see UiDriver.psm1.  It was the
 # only copy that had it; lifting it out is what gave the other two scripts a
 # readable failure on a fresh clone.
-$cfg = Resolve-TR4WHarnessConfig -Repo $Repo -TargetDir $target -Config $Config -Caller 'Invoke-MenuSmoke'
-if ($cfg.Message) { Write-Output "Invoke-MenuSmoke: $($cfg.Message)" }
-if ($cfg.Failure)
+# TWO RADIO MODE = TRUE, AND THAT IS WHY THIS WRITES ITS OWN CONFIG.
+#
+# 10302 is Alt+D, DupeCheckOnInactiveRadio, and the FIRST thing it does is
+# refuse when two-radio mode is off (LOGSUBS2.PAS:449):
+#
+#    if not Config.TwoRadioMode then
+#       begin
+#       QuickDisplay(TC_ALTDCOMMANDDISABLED);   'Alt-D command requires TWO RADIO MODE = TRUE'
+#       Exit;
+#       end;
+#
+# The shared uitest.cfg does not set it, so the program was CORRECT to open no
+# window and this runner reported a failure for it anyway -- every run since
+# 10302 was added to $ExpectsWindow. A red result that is right about nothing
+# trains people to ignore the runner, which is the opposite of what the
+# ExpectsWindow check is for.
+#
+# The fix is to satisfy the precondition rather than to drop 10302 from the
+# list: with two-radio mode on, the command reaches ShowAltD and the assertion
+# tests the window it was added to test.
+#
+# WRITTEN, NOT ADDED TO uitest.cfg, because that file is shared by every
+# harness here and two-radio mode is not a neutral setting -- it changes what
+# Alt+R, the radio panels and the interlock do. Same pattern as
+# Test-CountyLineEntry's uitest-cqp.cfg: one file, this harness's own, left in
+# place so the recorded config path stays valid.
+if (-not $Config)
    {
-   Write-Output "Invoke-MenuSmoke: $($cfg.Failure)"
+   $Config     = 'uitest-so2r.cfg'
+   $smokePath  = Join-Path $target $Config
+   if (-not (Test-Path -LiteralPath $smokePath))
+      {
+      $body = @(
+         ';Written by Invoke-MenuSmoke.ps1 -- safe to delete.'
+         ''
+         '[COMMANDS]'
+         'MY CALL=NY4I'
+         'CONTEST=CQ-WW-SSB'
+         'CATEGORY-OPERATOR=SINGLE-OP'
+         'CATEGORY-BAND=ALL'
+         'CATEGORY-MODE=SSB'
+         'CATEGORY-POWER=HIGH'
+         'CATEGORY-TRANSMITTER=TWO'
+         'CATEGORY-ASSISTED=ASSISTED'
+         'TWO RADIO MODE=TRUE'
+      )
+      # CRLF, like every other file this tree writes -- see Lint-LineEndings.
+      [System.IO.File]::WriteAllText($smokePath, (($body -join "`r`n") + "`r`n"))
+      Write-Output "Invoke-MenuSmoke: wrote $Config (two-radio, for Alt+D)"
+      }
+   }
+
+$configPath = Join-Path $target $Config
+if (-not (Test-Path -LiteralPath $configPath))
+   {
+   Write-Output "Invoke-MenuSmoke: no config at $configPath"
    exit 1
    }
-$configPath = $cfg.Path
 
 try { Assert-NoRunningTR4W }
 catch { Write-Output "Invoke-MenuSmoke: $_"; exit 1 }

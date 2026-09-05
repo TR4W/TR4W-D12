@@ -260,6 +260,126 @@ if ($rc -ne 0)
    exit 1
    }
 
+# THE BINARY NEEDS ITS DLLs BESIDE IT, AND THEY MUST MATCH ITS ARCHITECTURE.
+#
+# WHY THIS EXISTS.  build-out/app-<cpu>-<os>/ held only .o/.ppu files and the
+# linked exe -- no DLLs.  Windows searches the EXE'S OWN DIRECTORY first, then
+# system dirs, then the CURRENT directory, then PATH.  target/tr4w.exe sits
+# beside its seven DLLs so it resolves them on the first step and is immune to
+# the environment; the build-out binary resolved NOTHING there and fell through
+# to PATH.
+#
+# That is not hypothetical.  A WSJT-X install puts C:/WSJT/wsjtx/bin on the
+# MACHINE path -- present every boot, for every process, whether or not WSJT-X
+# is running -- and it ships a 64-bit libhamlib-4.dll.  A 32-bit TR4W handed a
+# 64-bit DLL dies in the LOADER with 0xC000007B (STATUS_INVALID_IMAGE_FORMAT).
+#
+# AND NOTHING IN TR4W CAN REPORT THAT.  libhamlib-4.dll is a STATIC import (37
+# `external HAMLIB_DLL` declarations in uHamLibDirect.pas put it in the PE
+# import table), so the loader resolves it before a single line of our code
+# runs.  No log line, no message box, no crash handler -- tr4w.log and
+# tr4w-early.log are both empty for this failure.  The check therefore has to
+# happen HERE, at build time, because at run time it is already too late.
+#
+# ARCHITECTURE IS DERIVED FROM $Cpu, NEVER HARDCODED.  TR4W is moving to 64-bit,
+# and at that point the mismatch INVERTS: the 32-bit DLLs become the wrong ones.
+# A check written as "64-bit is bad" would then pass the broken case and fail
+# the good one, which is worse than no check at all.
+function Get-PEMachineType
+   {
+   param([Parameter(Mandatory = $true)][string] $Path)
+
+   $fs = [IO.File]::OpenRead($Path)
+   try
+      {
+      $br = New-Object IO.BinaryReader($fs)
+      $fs.Position = 0x3C
+      $peOffset = $br.ReadInt32()
+      if ($peOffset -le 0 -or $peOffset -ge $fs.Length - 6) { return 0 }
+      $fs.Position = $peOffset
+      if ($br.ReadUInt32() -ne 0x00004550) { return 0 }    # the PE signature
+      return [int] $br.ReadUInt16()
+      }
+   finally
+      {
+      $fs.Dispose()
+      }
+   }
+
+$MACHINE_NAMES = @{ 0x014C = 'x86 (32-bit)'; 0x8664 = 'x64 (64-bit)'; 0x01C0 = 'ARM'; 0xAA64 = 'ARM64' }
+$expectMachine = switch ($Cpu)
+   {
+   'i386'   { 0x014C }
+   'x86_64' { 0x8664 }
+   default  { 0 }
+   }
+
+$dllSource = Join-Path $TR4W_DIR 'target'
+$exeDir    = Split-Path $exe -Parent
+$staged    = 0
+$badArch   = @()
+
+$dlls = @()
+if (Test-Path $dllSource) { $dlls = @(Get-ChildItem -Path $dllSource -Filter '*.dll' -File) }
+
+# VALIDATE EVERY DLL BEFORE STAGING ANY OF THEM, and that order is the whole
+# point rather than a tidiness preference. The first cut of this checked and
+# copied in one pass, so a rejected DLL had ALREADY been written next to the
+# binary by the time the build failed -- leaving build-out poisoned with the
+# very file the guard had just refused, ready to fail the next launch with the
+# 0xC000007B this exists to prevent. Measured 2026-09-05: the negative-control
+# run did exactly that, and the next harness run inherited it.
+foreach ($dll in $dlls)
+   {
+   if ($expectMachine -eq 0) { break }
+   $m = Get-PEMachineType -Path $dll.FullName
+   if ($m -ne 0 -and $m -ne $expectMachine)
+      {
+      $got  = if ($MACHINE_NAMES.ContainsKey($m))             { $MACHINE_NAMES[$m] }             else { "0x{0:X4}" -f $m }
+      $want = if ($MACHINE_NAMES.ContainsKey($expectMachine)) { $MACHINE_NAMES[$expectMachine] } else { "0x{0:X4}" -f $expectMachine }
+      $badArch += "  $($dll.Name) is $got, but this build targets $want"
+      }
+   }
+
+if ($badArch.Count -gt 0)
+   {
+   Write-Host ''
+   Write-Host 'BUILD FAILED: a shipped runtime DLL is the wrong architecture.'
+   $badArch | ForEach-Object { Write-Host $_ }
+   Write-Host ''
+   Write-Host '  These are loaded by the Windows LOADER, before any TR4W code runs, so a'
+   Write-Host '  mismatch is a bare 0xC000007B at launch with NOTHING written to tr4w.log.'
+   Write-Host "  Replace the file(s) in $dllSource with builds for this target."
+   Write-Host '  Nothing was staged -- the output directory is unchanged.'
+   exit 1
+   }
+
+# Same directory means the binary already sits with its DLLs (FullBuild links
+# straight into target). Nothing to stage.
+if ($exeDir -ne $dllSource)
+   {
+   foreach ($dll in $dlls)
+      {
+      $dest = Join-Path $exeDir $dll.Name
+      $need = -not (Test-Path $dest)
+      if (-not $need)
+         {
+         $d = Get-Item $dest
+         $need = ($d.Length -ne $dll.Length) -or ($d.LastWriteTimeUtc -lt $dll.LastWriteTimeUtc)
+         }
+      if ($need)
+         {
+         Copy-Item -LiteralPath $dll.FullName -Destination $dest -Force
+         $staged++
+         }
+      }
+   }
+
+if ($staged -gt 0)
+   {
+   Write-Host "  staged $staged runtime DLL(s) beside $([IO.Path]::GetFileName($exe))"
+   }
+
 Write-Host ''
 Write-Host "BUILD OK -> $exe"
 
