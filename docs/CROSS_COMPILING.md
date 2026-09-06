@@ -67,6 +67,41 @@ rebuild them.
 
 ---
 
+## The inner loop: `tools/Compile-Linux.ps1`
+
+```powershell
+.\tools\Compile-Linux.ps1 VC.pas
+.\tools\Compile-Linux.ps1 utils\uAnsiStr.pas -All
+```
+
+It compiles ONE unit (and everything it uses) for x86_64-linux and prints either
+`COMPILES FOR LINUX` or the first few errors. It does not link and produces
+nothing shippable. **Use it the way a linter is used**: point it at a unit you
+have just gated and read the first error, which names the exact identifier or
+unit still bound to Windows -- far better than reading the source and guessing.
+
+## Status, 2026-09-06
+
+**`VC.pas` compiles for Linux**, and with it the first TR4W units ever to do so:
+`uBandLookup`, `uCRC32`, `uADIF`. Before this the answer was zero, because VC is
+on every unit's path.
+
+What VC needed, found by compiling rather than by reading:
+
+| what | answer |
+|---|---|
+| the types | `LCLType` -- and on Windows they are ALIASES to the same `Windows` types, so nothing changed here |
+| `WM_USER`, `MAX_PATH`, the `SS_*` styles | declared in VC; published integers `LCLType` does not carry |
+| `SYSTEMTIME` | **declared with Win32's exact layout off Windows.** Not FPC's `SysUtils.TSystemTime`, which orders its fields `Year, Month, Day, DayOfWeek` where Win32 has `wYear, wMonth, wDayOfWeek, wDay` -- and `TNetTimeSync` is a packed record **sent between multi-op stations**, so that layout is on the wire and in every `.TRW` |
+| `OSVERSIONINFO`, `STICKYKEYS`, `Msg: TMsg` | gated: Windows-only, no wire or file format to preserve |
+| `GetSysColor(COLOR_BTNFACE)` | gated. The LCL answer is `Graphics.ColorToRGB(clBtnFace)` and VC **cannot use it** -- `Graphics` is LCL and `tr4wserver` excludes the LCL deliberately. Asking the widget set for a system colour belongs in the colour module (`docs/COLOR_ROLES_DESIGN.md`), not in the types unit's initialization |
+| `Log4D` | one call. It still carries its Kylix-era `{$IFDEF LINUX}` branch with an `OutputDebugString` of its own; only the `W` entry point TR4W named was Windows-only |
+
+**Two conditionals in VC, asking different questions**, and confusing them broke
+the server build within a minute: `TR4W_NO_LCL` asks WHICH PROGRAM (set by
+`Build-Server.ps1`, because `tr4wserver` has no LCL on its search path), and
+`WINDOWS` asks WHICH PLATFORM.
+
 ## What this DOES and DOES NOT prove
 
 **Does:** that a unit's non-Windows branch parses, resolves its identifiers and
