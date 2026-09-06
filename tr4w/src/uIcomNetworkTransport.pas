@@ -26,7 +26,8 @@ unit uIcomNetworkTransport;
 
   Architecture:
     - Two TIdUDPServer instances (control + CI-V) with threaded OnUDPRead callbacks
-    - Windows SetTimer for keepalive/ping/token timers
+    - TTimer for keepalive/ping/token timers (was Windows SetTimer against a
+      message-only window; see HandleTimer)
     - Critical section protects all socket sends
     - CI-V data extracted from UDP packets and forwarded via OnCivData callback
 
@@ -50,6 +51,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, SyncObjs, StrUtils,
+  ExtCtrls,   // TTimer -- the six protocol timers; see HandleTimer
   IdUDPServer, IdSocketHandle, IdGlobal, IdComponent,
   uIcomNetworkTypes, uFactoryRadioBase, Log4D,
   uAnsiStr;
@@ -99,8 +101,14 @@ type
     FCommonCap: Word;
     FGUID: array[0..15] of Byte;
 
-    // Timers
-    FTimerWnd: HWND;                 // Hidden window for timer messages
+    (* Timers.  Indexed by the ICOM_TIMER_* id the protocol code already
+      uses, so a call site reads the same as it did when these were SetTimer
+      ids against a window.  Created on first use; 5004 is unassigned and its
+      slot simply stays nil. *)
+    FTimers: array[ICOM_TIMER_PING..ICOM_TIMER_LOGIN] of TTimer;
+    (* What FTimerWnd <> 0 used to mean at six guard sites: the connection is
+      up and its timers may run.  It was standing in for this. *)
+    FTimersLive: boolean;
     FLastCivData: LongWord;          // GetTickCount of last CI-V data
     FLastPingReceived: LongWord;     // GetTickCount of last ping request from radio (0 = never)
     FStartTick: LongWord;            // GetTickCount at connect start
@@ -164,6 +172,11 @@ type
     function GetCivDataFresh: Boolean;
 
     // Internal - timer callbacks
+    procedure HandleTimer(Sender: TObject);
+    procedure StartTimer(const aId: integer; const aMs: integer);
+    procedure StopTimer(const aId: integer);
+    procedure StopAllTimers;
+    procedure FreeTimers;
     procedure StopTimers;
     procedure OnPingTimer;
     procedure OnIdleTimer;
@@ -230,48 +243,88 @@ var
 
 function BytesToHexStr(const Data; DataLen: Integer): string; forward;
 
-// Timer window procedure — dispatches to the transport instance stored in GWL_USERDATA
-function TimerWndProc(Wnd: HWND; Msg: UINT; wParam: WPARAM; lParam: LPARAM): LRESULT; stdcall;
-var
-  Inst: TIcomNetworkTransport;
+(* THE SIX TIMERS, AS TTimers.
+
+  They were SetTimer/KillTimer ids against a registered, message-only window
+  whose procedure recovered the instance from GWL_USERDATA -- Self smuggled
+  through a window handle, because a window procedure is a bare callback with
+  nowhere else to put it. A TTimer is an object and its OnTimer is a method, so
+  the instance travels the way an instance normally does.
+
+  ADDRESSED BY THE SAME IDS, deliberately: StartTimer(ICOM_TIMER_PING, ms) became StartTimer(ICOM_TIMER_PING, ms), so every call site reads as
+  it did and the protocol code did not have to be re-read to change the timer
+  mechanism. The id travels back in the timer's Tag.
+
+  THEY ALREADY FIRED ON THE MAIN THREAD, which is why this is a swap and not a
+  redesign: this unit has no message pump of its own, so WM_TIMER was only ever
+  dispatched by Application.Run. NY4I, 2026-09-06: "If the TTimer has to fire on
+  the main thread, so be it." If a bench run shows a keepalive being delayed
+  behind UI work, the answer is a threaded timer, not a window. *)
+procedure TIcomNetworkTransport.HandleTimer(Sender: TObject);
 begin
-  Inst := TIcomNetworkTransport(GetWindowLong(Wnd, GWL_USERDATA));
-  if (Msg = WM_TIMER) and Assigned(Inst) then
-     begin
-     case wParam of
-       ICOM_TIMER_PING:          Inst.OnPingTimer;
-       ICOM_TIMER_IDLE:          Inst.OnIdleTimer;
-       ICOM_TIMER_TOKEN:         Inst.OnTokenRenewalTimer;
-       ICOM_TIMER_CIV_WATCHDOG:  Inst.OnCivWatchdogTimer;
-       ICOM_TIMER_AYT:           Inst.OnAYTTimer;
-       ICOM_TIMER_LOGIN:         Inst.OnLoginTimer;
-     end;
-     Result := 0;
-     end
-  else
-     begin
-     Result := DefWindowProc(Wnd, Msg, wParam, lParam);
-     end;
+   case TTimer(Sender).Tag of
+     ICOM_TIMER_PING:          OnPingTimer;
+     ICOM_TIMER_IDLE:          OnIdleTimer;
+     ICOM_TIMER_TOKEN:         OnTokenRenewalTimer;
+     ICOM_TIMER_CIV_WATCHDOG:  OnCivWatchdogTimer;
+     ICOM_TIMER_AYT:           OnAYTTimer;
+     ICOM_TIMER_LOGIN:         OnLoginTimer;
+   end;
 end;
 
-const
-  TIMER_WND_CLASS = 'IcomNetworkTimerWnd';
-
+(* CREATED ON FIRST USE, so a transport that never logs in never makes one.
+  Interval is set before Enabled, because a TTimer is born enabled with a
+  1000 ms default -- the difference that the CW-by-CAT timer tests caught when
+  that timer moved off its own SetTimer wrapper. *)
+procedure TIcomNetworkTransport.StartTimer(const aId: integer;
+                                           const aMs: integer);
 var
-  TimerWndClassRegistered: Boolean = False;
-
-procedure RegisterTimerWndClass;
-var
-  WC: TWndClass;
+   tm: TTimer;
 begin
-  if TimerWndClassRegistered then Exit;
+   tm := FTimers[aId];
+   if tm = nil then
+      begin
+      tm := TTimer.Create(nil);
+      tm.Enabled := False;
+      tm.Tag     := aId;
+      tm.OnTimer := HandleTimer;
+      FTimers[aId] := tm;
+      end;
 
-  FillChar(WC, SizeOf(WC), 0);
-  WC.lpfnWndProc := @TimerWndProc;
-  WC.hInstance := HInstance;
-  WC.lpszClassName := TIMER_WND_CLASS;
-  Windows.RegisterClass(WC);
-  TimerWndClassRegistered := True;
+   tm.Enabled  := False;
+   tm.Interval := aMs;
+   tm.Enabled  := True;
+end;
+
+procedure TIcomNetworkTransport.StopTimer(const aId: integer);
+begin
+   if FTimers[aId] <> nil then
+      begin
+      FTimers[aId].Enabled := False;
+      end;
+end;
+
+procedure TIcomNetworkTransport.StopAllTimers;
+var
+   i: integer;
+begin
+   for i := Low(FTimers) to High(FTimers) do
+      begin
+      if FTimers[i] <> nil then
+         begin
+         FTimers[i].Enabled := False;
+         end;
+      end;
+end;
+
+procedure TIcomNetworkTransport.FreeTimers;
+var
+   i: integer;
+begin
+   for i := Low(FTimers) to High(FTimers) do
+      begin
+      FreeAndNil(FTimers[i]);
+      end;
 end;
 
 // ============================================================================
@@ -291,10 +344,6 @@ begin
   FControlTxBuf := TList.Create;
   FCivTxBuf := TList.Create;
 
-  FTimerWnd := 0;
-
-  // Register timer window class
-  RegisterTimerWndClass;
 end;
 
 destructor TIcomNetworkTransport.Destroy;
@@ -305,6 +354,7 @@ begin
      end;
 
   ClearAllBuffers;
+  FreeTimers;
   FreeAndNil(FControlTxBuf);
   FreeAndNil(FCivTxBuf);
   FreeAndNil(FSendLock);
@@ -359,31 +409,7 @@ begin
     // Create sockets
     CreateSockets;
 
-    (* A MESSAGE-ONLY WINDOW AND A RAW SetWindowLong, AND THEY STAY.
-
-      Self travels in GWL_USERDATA so the window procedure can find the
-      instance -- there is one of these per connected radio, and a window
-      procedure is a bare C callback with nowhere else to put it.
-
-      NOT an LCL TTimer, and the reason is the thread rather than the API. This
-      transport owns five timers (AYT, ping, idle, token renewal, CI-V
-      watchdog) that pace a network protocol, and they run on the transport's
-      own thread alongside its sockets. A TTimer fires on the MAIN thread, so
-      moving them would put a radio's keepalive behind whatever the UI is
-      doing -- a behaviour change to a protocol, dressed as a cleanup.
-
-      The cross-platform answer is a timed wait on the transport thread rather
-      than either of these; that belongs with the socket layer, not here. *)
-    FTimerWnd := CreateWindowW(TIMER_WND_CLASS, '', 0,
-      0, 0, 0, 0, 0, 0, HInstance, nil);
-    if FTimerWnd = 0 then
-       begin
-       logger.Error('[IcomTransport:' + FRadioName + '] Failed to create timer window');
-       DestroySockets;
-       Result := -1;
-       Exit;
-       end;
-    SetWindowLong(FTimerWnd, GWL_USERDATA, LongInt(Self));
+    FTimersLive := True;
 
     // Calculate our ID from the control socket's local port
     FMyId := CalculateMyIdFromSocket(FControlSocket);
@@ -396,18 +422,15 @@ begin
     SetState(icsWaitingForHere);
 
     // Start AYT retry timer
-    SetTimer(FTimerWnd, ICOM_TIMER_AYT, FAYTInterval, nil);
+    StartTimer(ICOM_TIMER_AYT, FAYTInterval);
 
   except
     on E: Exception do
        begin
        logger.Error('[IcomTransport:' + FRadioName + '] Exception during connect: %s', [E.Message]);
        DestroySockets;
-       if FTimerWnd <> 0 then
-          begin
-          DestroyWindow(FTimerWnd);
-          FTimerWnd := 0;
-          end;
+       StopAllTimers;
+       FTimersLive := False;
        Result := -1;
        end;
   end;
@@ -466,13 +489,8 @@ begin
   logger.Debug('[IcomTransport:' + FRadioName + '] Disconnect: DestroySockets done');
   ClearAllBuffers;
 
-  if FTimerWnd <> 0 then
-     begin
-     logger.Debug('[IcomTransport:' + FRadioName + '] Disconnect: DestroyWindow');
-     SetWindowLong(FTimerWnd, GWL_USERDATA, 0);
-     DestroyWindow(FTimerWnd);
-     FTimerWnd := 0;
-     end;
+  StopAllTimers;
+  FTimersLive := False;
 
   FCivStreamOpen := False;
   SetState(icsDisconnected);
@@ -890,12 +908,12 @@ begin
                           [FRemoteId]);
 
               // Kill AYT timer
-              KillTimer(FTimerWnd, ICOM_TIMER_AYT);
+              StopTimer(ICOM_TIMER_AYT);
 
               // Start Ping + Idle timers HERE (matches wfview lines 610-611)
               // These run during the entire handshake, not just after full connect
-              SetTimer(FTimerWnd, ICOM_TIMER_PING, ICOM_PING_INTERVAL, nil);
-              SetTimer(FTimerWnd, ICOM_TIMER_IDLE, ICOM_IDLE_INTERVAL, nil);
+              StartTimer(ICOM_TIMER_PING, ICOM_PING_INTERVAL);
+              StartTimer(ICOM_TIMER_IDLE, ICOM_IDLE_INTERVAL);
 
               // Send "Are You Ready" (seq=1, untracked, like wfview)
               SendControlPacket(ICOM_PKT_ARE_YOU_READY, FControlSocket,
@@ -919,7 +937,7 @@ begin
               FCivStreamOpen := True;
 
               // Start watchdog timer for CI-V data
-              SetTimer(FTimerWnd, ICOM_TIMER_CIV_WATCHDOG, ICOM_CIV_WATCHDOG_INTERVAL, nil);
+              StartTimer(ICOM_TIMER_CIV_WATCHDOG, ICOM_CIV_WATCHDOG_INTERVAL);
 
               FLastCivData := GetTickCount;
               logger.Info('[IcomTransport:' + FRadioName + '] Fully connected to %s, CI-V stream open', [FRadioName]);
@@ -1035,7 +1053,7 @@ begin
               [FToken, FAuthStartId]);
 
   // Start token renewal timer (matches wfview line 706)
-  SetTimer(FTimerWnd, ICOM_TIMER_TOKEN, ICOM_TOKEN_RENEWAL_INTERVAL, nil);
+  StartTimer(ICOM_TIMER_TOKEN, ICOM_TOKEN_RENEWAL_INTERVAL);
 
   // Send Token Acknowledgment
   SendTokenAck;
@@ -1632,14 +1650,14 @@ begin
      FState := NewState;
 
      // Manage the login retry timer
-     if (NewState = icsWaitingForLogin) and (FTimerWnd <> 0) then
+     if (NewState = icsWaitingForLogin) and FTimersLive then
         begin
         FLoginRetryCount := 0;
-        SetTimer(FTimerWnd, ICOM_TIMER_LOGIN, ICOM_LOGIN_TIMEOUT, nil);
+        StartTimer(ICOM_TIMER_LOGIN, ICOM_LOGIN_TIMEOUT);
         end
-     else if FTimerWnd <> 0 then
+     else if FTimersLive then
         begin
-        KillTimer(FTimerWnd, ICOM_TIMER_LOGIN);
+        StopTimer(ICOM_TIMER_LOGIN);
         end;
 
      if Assigned(FOnStateChange) then
@@ -1679,14 +1697,14 @@ end;
 
 procedure TIcomNetworkTransport.StopTimers;
 begin
-  if FTimerWnd = 0 then Exit;
+  if not FTimersLive then Exit;
 
-  KillTimer(FTimerWnd, ICOM_TIMER_PING);
-  KillTimer(FTimerWnd, ICOM_TIMER_IDLE);
-  KillTimer(FTimerWnd, ICOM_TIMER_TOKEN);
-  KillTimer(FTimerWnd, ICOM_TIMER_CIV_WATCHDOG);
-  KillTimer(FTimerWnd, ICOM_TIMER_AYT);
-  KillTimer(FTimerWnd, ICOM_TIMER_LOGIN);
+  StopTimer(ICOM_TIMER_PING);
+  StopTimer(ICOM_TIMER_IDLE);
+  StopTimer(ICOM_TIMER_TOKEN);
+  StopTimer(ICOM_TIMER_CIV_WATCHDOG);
+  StopTimer(ICOM_TIMER_AYT);
+  StopTimer(ICOM_TIMER_LOGIN);
 
   logger.Debug('[IcomTransport:' + FRadioName + '] All timers stopped');
 end;
@@ -1754,7 +1772,7 @@ procedure TIcomNetworkTransport.OnAYTTimer;
 begin
   if FState <> icsWaitingForHere then
      begin
-     KillTimer(FTimerWnd, ICOM_TIMER_AYT);
+     StopTimer(ICOM_TIMER_AYT);
      Exit;
      end;
 
@@ -1763,7 +1781,7 @@ begin
      begin
      logger.Error('[IcomTransport:' + FRadioName + '] Radio not found at %s:%d after %d retries',
                   [FRadioAddress, FControlPort, ICOM_AYT_MAX_RETRIES]);
-     KillTimer(FTimerWnd, ICOM_TIMER_AYT);
+     StopTimer(ICOM_TIMER_AYT);
      Disconnect;
      Exit;
      end;
@@ -1780,8 +1798,8 @@ begin
     0, FRadioAddress, FControlPort, 0);
 
   // Update timer interval
-  KillTimer(FTimerWnd, ICOM_TIMER_AYT);
-  SetTimer(FTimerWnd, ICOM_TIMER_AYT, FAYTInterval, nil);
+  StopTimer(ICOM_TIMER_AYT);
+  StartTimer(ICOM_TIMER_AYT, FAYTInterval);
 
   logger.Debug('[IcomTransport:' + FRadioName + '] AYT retry %d/%d, interval=%dms',
                [FAYTRetryCount, ICOM_AYT_MAX_RETRIES, FAYTInterval]);
@@ -1791,7 +1809,7 @@ procedure TIcomNetworkTransport.OnLoginTimer;
 begin
   if FState <> icsWaitingForLogin then
      begin
-     KillTimer(FTimerWnd, ICOM_TIMER_LOGIN);
+     StopTimer(ICOM_TIMER_LOGIN);
      Exit;
      end;
 
@@ -1800,7 +1818,7 @@ begin
      begin
      logger.Error('[IcomTransport:' + FRadioName + '] No login response after %d retries - giving up',
                   [ICOM_LOGIN_MAX_RETRIES]);
-     KillTimer(FTimerWnd, ICOM_TIMER_LOGIN);
+     StopTimer(ICOM_TIMER_LOGIN);
      Disconnect;
      Exit;
      end;
@@ -1862,10 +1880,10 @@ begin
   Inc(SeqCounter);
 
   // Reset idle timer — only fire idle if no tracked packet sent for 100ms
-  if FTimerWnd <> 0 then
+  if FTimersLive then
      begin
-     KillTimer(FTimerWnd, ICOM_TIMER_IDLE);
-     SetTimer(FTimerWnd, ICOM_TIMER_IDLE, ICOM_IDLE_INTERVAL, nil);
+     StopTimer(ICOM_TIMER_IDLE);
+     StartTimer(ICOM_TIMER_IDLE, ICOM_IDLE_INTERVAL);
      end;
 end;
 

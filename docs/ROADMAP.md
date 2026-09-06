@@ -663,6 +663,45 @@ the copies-drift failure `CLAUDE.md` warns about, on the code that renders the l
 
 ---
 
+## 2b. The main window's message procedure — the last of the Win32 loop
+
+**The loop itself is already gone**: the program runs `Application.Run`, and the
+hand-rolled `GetMessage`/`TranslateMessage`/`DispatchMessage` loop went with the
+LCL migration. What remains is its *procedure*: `uMainForm` installs
+`TR4WFormSubclassProc` in front of the LCL's with `SetWindowLongPtr(GWL_WNDPROC)`,
+`IsTR4WsOwnMessage` decides what TR4W claims, and `uMainWindowProc.WindowProc`
+answers it in nine arms. **NY4I, 2026-09-06: removing all traces of the Win32
+message loop is the goal.**
+
+**This is the last thing standing between the main window and a widget set that
+is not Win32**, and it is nine separate decisions, not one refactor. Six are
+ordinary LCL events; two are genuine platform notifications with no LCL
+equivalent; one is a Windows nicety.
+
+| claimed message | what it does | where it goes |
+|---|---|---|
+| `WM_CLOSE` | quit path | `OnCloseQuery` / `OnClose` |
+| `WM_SIZE` | layout follow-up | `OnResize` — the anchors already do the work |
+| `WM_LBUTTONDOWN` | `DragWindow` on the caption | `OnMouseDown` |
+| `WM_SETFOCUS` | focus the entry field | `OnActivate` |
+| `WM_COMMAND` | menu ids | `TMenuItem.OnClick`. Control notifications are already chained to the LCL and need nothing |
+| `WM_USER_*` | worker → UI hand-offs | `Application.QueueAsyncCall`, which `uNet` already uses for exactly this |
+| `WM_TIMECHANGE` | the system clock moved | **no LCL event.** A small platform unit behind `{$IFDEF WINDOWS}` |
+| `WM_DISPLAYCHANGE` | a monitor came or went | **no LCL event**, and it drives `RevalidateOpenWindowsOnScreen`. Same answer |
+| `WM_WINDOWPOSCHANGING` | snaps the window to the screen edge within 20 px | Windows-only nicety. `OnChangeBounds` cannot veto mid-drag, so either it is gated or the feature is dropped — **a decision, not a port** |
+
+**Order matters and the cheap half is first.** The six LCL-event arms can move
+one at a time, each verifiable by using the program; every one that moves comes
+out of `IsTR4WsOwnMessage`, and **a message removed there but still answered in
+`WindowProc` is silently swallowed** — that is the trap `Lint-AppMessages`
+exists for and it has caught it twice (`WM_NOTIFY`, `WM_DRAWITEM`). When the
+list is down to the last three, the subclass install and
+`uMainWindowProc` go together.
+
+**Do not start this before the entry fields' key handling is understood.**
+`WindowProc` is 869 lines and the arms above are only the top of it; the rest is
+keyboard routing that predates the LCL controls.
+
 ## 3. 64-bit — much closer than the old roadmap says
 
 The D12 roadmap called this *"⛔ Not started"*. **Measured 2026-08-14, that is no longer true.**

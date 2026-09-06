@@ -2332,8 +2332,16 @@ begin
      is exactly how it was found the first time, when assigning Font after this
      line recreated the handle and threw the id away. There is no LCL property
      for it; the id is a Win32 window attribute and the harness is a Win32
-     client. *)
+     client.
+
+     GATED, because the harnesses are Windows too -- Test-Typing.ps1 is
+     PowerShell calling user32. On macOS or Linux there is neither a dialog id
+     nor a script asking for one, and NY4I is trialling AutoIt in place of
+     GetDlgCtrlID (2026-09-06). When those two scripts stop needing an id this
+     goes entirely rather than staying behind a gate. *)
+   {$IFDEF WINDOWS}
    Windows.SetWindowLong(Result, GWL_ID, aId);
+   {$ENDIF}
 end;
 
 procedure ShowTR4WMainForm;

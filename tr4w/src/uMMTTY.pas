@@ -161,6 +161,47 @@ var
   OldMMTTYRichEditProc                  : Pointer;
 
 implementation
+
+(* THE WHOLE IMPLEMENTATION IS WINDOWS-ONLY, AND THAT IS THE FEATURE, NOT A
+  PORTING GAP.
+
+  MMTTY is a separate Windows EXE -- launched with WinExec, not loaded as a
+  library -- and every interaction with it is a Win32 window message:
+  PostMessage to its top-level window, SendMessage to a RichEdit control, and a
+  subclassed window procedure for the double-click that copies a decoded
+  callsign. None of that has a macOS or Linux counterpart to port it to; the
+  RTTY engine itself does not run there. So on another platform the three
+  exported routines do nothing, and MMTTY.mmttyEngine stays 0, which is what
+  every caller already treats as "not running".
+
+  NY4I, 2026-09-06: "put the mmtty code under a {$IF WINDOWS}... that implicitly
+  means any related items like ShowWindow" -- the ShowWindow pair in
+  uMainWindowProc is gated in the same change.
+
+  {$IFDEF WINDOWS}, not {$IF WINDOWS}: WINDOWS is a symbol FPC DEFINES for a
+  Windows target, not a boolean constant. {$IF} would ask for the value of an
+  identifier named WINDOWS and, under FPC's compile-time evaluator, an
+  unresolved identifier degrades to a string of its own name instead of
+  erroring -- so it would evaluate quietly and wrongly.
+
+  WHAT STILL BLOCKS A NON-WINDOWS COMPILE OF THIS UNIT, written down rather
+  than guessed at because THERE IS NO CROSS TARGET INSTALLED HERE (FPC has
+  i386-win32 and nothing else, so the other branch cannot be compiled even
+  once):
+
+    * the INTERFACE's `uses Windows, Messages` -- HWND, UINT, WPARAM/LPARAM,
+      TColorRef, LF_FACESIZE, WM_USER. LCLType declares the handle and message
+      types for every widget set and is the likely answer; EM_SETCHARFORMAT is
+      WM_USER + 68 and can be the number.
+    * MMTTYObject's HWND fields, which about twenty other units read.
+
+  Those are TYPE declarations. An empty procedure body is safe to write without
+  a compiler; a type alias chosen from memory is not, and writing one would be
+  the same class of mistake as the unverified library file name CLAUDE.md
+  records under the HamLib note. *)
+
+{$IFDEF WINDOWS}
+
 uses
   uMainForm,          // QueuePasteIntoCallField -- the call field is a control
   uPlatformProcess,   // RunWindowsUtility -- the only launcher
@@ -334,6 +375,31 @@ begin
   Result := CallWindowProc(OldMMTTYRichEditProc, hwnddlg, Msg, wParam, lParam);
 
 end;
+
+{$ELSE}
+
+(* NO RTTY ENGINE OFF WINDOWS, so these do nothing and say so.
+
+  Not stubs that pretend: MMTTY.mmttyEngine is left 0, which every caller
+  already reads as "the engine is not running" -- the same state as a Windows
+  machine where the operator has not configured MMTTY ENGINE. So the callers
+  need no gate of their own to behave correctly here. *)
+
+procedure mmttyProcessMessage(wp: integer; lp: integer);
+begin
+end;
+
+procedure PostMmttyMessage(Command: integer; lParam: integer);
+begin
+end;
+
+function NewMMTTYRichEditProc(hwnddlg: HWND; Msg: UINT; wParam: wParam;
+                              lParam: lParam): integer; stdcall;
+begin
+   Result := 0;
+end;
+
+{$ENDIF}
 
 end.
 

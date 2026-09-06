@@ -542,20 +542,25 @@ begin
 
     WM_SIZE:
       begin
-        (* ShowWindow ON ANOTHER PROGRAM'S WINDOW, which is why it is not an
-          LCL call and cannot become one.
+        (* ShowWindow ON ANOTHER PROGRAM'S WINDOW, AND WINDOWS-ONLY.
 
           MMTTY is a separate EXE -- WinExec'd, not a DLL -- and MMTTYEngine is
           its top-level HWND, found by window class. TR4W minimises and
           restores it alongside itself so the RTTY window does not sit on the
           desktop after the logger is minimised. The LCL has no vocabulary for
           a window it does not own; ShowWindow is the interface another process
-          exposes. This is platform integration, not UI. *)
+          exposes.
+
+          GATED because MMTTY IS a Windows program -- there is nothing to
+          minimise on macOS or Linux, so this is not a call to be ported but a
+          feature that does not exist there (NY4I, 2026-09-06). *)
+        {$IFDEF WINDOWS}
         if MMTTY.MMTTYEngine <> 0 then
         begin
           if wParam = SIZE_MINIMIZED then Windows.ShowWindow(MMTTY.MMTTYEngine, SW_SHOWMINNOACTIVE);
           if wParam = SIZE_RESTORED then Windows.ShowWindow(MMTTY.MMTTYEngine, SW_RESTORE);
         end;
+        {$ENDIF}
       end;
 
     WM_WINDOWPOSCHANGING: WINDOWPOSCHANGINGPROC(PWindowPos(lParam));

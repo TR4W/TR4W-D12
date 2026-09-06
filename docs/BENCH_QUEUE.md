@@ -2723,6 +2723,25 @@ edits one, deletes one, or opens a log window.
 
 ### BENCH RUNS -- no automated gate reaches any of this
 
+- [ ] **An Icom NETWORK radio -- IC-7610/IC-705/IC-9700 over LAN.** Connect,
+  leave it connected for several minutes, work a few QSOs, then disconnect and
+  reconnect. What is being checked is that the link STAYS up: the six protocol
+  timers (are-you-there, ping, idle, token renewal, CI-V watchdog, login retry)
+  are `TTimer`s now instead of `SetTimer` ids against a hidden window.
+
+  **They already fired on the main thread**, which is why this is a swap rather
+  than a redesign -- the transport has no message pump of its own, so `WM_TIMER`
+  was only ever dispatched by `Application.Run`. NY4I, 2026-09-06: *"If the
+  TTimer has to fire on the main thread, so be it. We can test to see if there
+  is any consequence and if so, investigate some third party timers."* So the
+  thing to watch for is a keepalive arriving LATE while the UI is busy --
+  scrolling the band map or opening Preferences while connected is the way to
+  provoke it. A disconnect after ~30 s of idle is what a missed token renewal
+  looks like.
+
+  **Icom LAN is on the unproven list already** (`docs/RADIO_BENCH_STATUS.md`),
+  so this is the same run, with one more thing to watch.
+
 - [ ] **CW BY CAT, on a radio that keys over the control link** (Elecraft,
   Kenwood, Icom, Flex). Send a few F-key messages at different speeds and check
   the busy window still ends when the message does -- particularly a message
