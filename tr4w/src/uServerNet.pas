@@ -82,6 +82,14 @@ type
       FPeerName:  string;
       FAdmitted:  boolean;
       FRefused:   boolean;
+      (* THE HANDLE AS IT WAS WHEN THE CLIENT WAS ADMITTED.
+
+        Handle asks the CONNECTION for its binding, and by the time SyncDrop
+        runs the socket is gone and it answers 0 -- which matches no entry in
+        ClientsSoocketsArray, so the slot was never freed. The log gave it
+        away: 'client 6', 'client 7', 'client 8' on successive reconnects.
+        After maxclients cycles the server would quietly stop accepting. *)
+      FHandle:    Cardinal;
 
    public
       { Public for the same reason as the methods: the handlers are members of
@@ -242,7 +250,8 @@ begin
 
    FRefused  := False;
    FAdmitted := True;
-   logger.Info('[Net] client %s (%s) admitted', [FPeerIP, FPeerName]);
+   FHandle   := Handle;
+   logger.Info('[Net] client %s (%s) admitted as %d', [FPeerIP, FPeerName, FHandle]);
 end;
 
 (* THE SYNC PORT'S HANDSHAKE, which is the password check and nothing else.
@@ -264,7 +273,7 @@ procedure TServerConn.SyncParse;
 begin
    Move(FBuf[0], ServerBuffer[0], FLen);
    BytesRCVD := BytesRCVD + Cardinal(FLen);
-   ProcessClientBuffer(Handle, FLen);
+   ProcessClientBuffer(FHandle, FLen);
 end;
 
 procedure TServerConn.SyncDrop;
@@ -274,8 +283,9 @@ begin
       FAdmitted := False;
       { Said out loud: at a multi-op, "when did that station drop" is the
         question, and the old code logged nothing at all here. }
-      logger.Info('[Net] client %s disconnected', [FPeerIP]);
-      DeleteSocketFromArray(Handle);
+      logger.Info('[Net] client %s (%d) disconnected', [FPeerIP, FHandle]);
+      { FHandle, not Handle: see the field. }
+      DeleteSocketFromArray(FHandle);
       DisplayClients;
       end;
 end;
@@ -288,6 +298,15 @@ end;
   this protocol expects the client to speak first -- the original slept 200 ms
   after accept() and then read ten bytes. A read belongs where reads are
   allowed to block, which is OnExecute. *)
+(* EVERY FAULT IN HERE IS REPORTED.
+
+  Indy catches whatever escapes OnExecute and closes the connection, so a bug
+  in the read path is indistinguishable from a client hanging up: the log shows
+  a clean disconnect and nothing else. That is exactly what NY4I saw --
+  connect, handshake, 'Computer ID A accepted', gone, five seconds later again.
+
+  So the body is wrapped and the reason is written down. Re-raised, because
+  Indy still has to close the connection; what changes is that we know why. *)
 procedure TServerEvents.MainExecute(AContext: TIdContext);
 var
    c:   TServerConn;
@@ -295,6 +314,7 @@ var
    raw: TIdBytes;
 begin
    c := TServerConn(AContext);
+   try
 
    if not c.FAdmitted then
       begin
@@ -363,6 +383,29 @@ begin
       end;
 
    TThread.Synchronize(nil, c.SyncParse);
+
+   except
+      { A closed connection is ORDINARY and is not a fault: the client quit,
+        or the link dropped. Indy signals it by raising, and saying "error"
+        about a normal disconnect would be worse than saying nothing. }
+      on E: EIdConnClosedGracefully do
+         begin
+         logger.Debug('[Net] %s closed the connection', [c.FPeerIP]);
+      end;
+      { EIdSocketError lives in IdStack and is not worth a uses entry for one
+        arm; EIdException covers it and everything else Indy raises. }
+      on E: EIdException do
+         begin
+         logger.Info('[Net] %s: %s: %s', [c.FPeerIP, E.ClassName, E.Message]);
+         end;
+      on E: Exception do
+         begin
+         { THIS is the one that was invisible. }
+         logger.Error('[Net] %s: unhandled %s in the read path: %s',
+                      [c.FPeerIP, E.ClassName, E.Message]);
+         raise;
+         end;
+   end;
 end;
 
 procedure TServerEvents.MainConnect(AContext: TIdContext);
@@ -559,6 +602,17 @@ begin
    c := ContextOf(aHandle);
    if c = nil then
       begin
+      (* A SEND TO A CLIENT THAT IS NOT THERE, AND IT USED TO BE SILENT.
+
+        SendMessageToClients walks ClientsSoocketsArray and calls sSend for
+        every non-zero slot, so a slot left behind by a client that has gone
+        makes this fire once per broadcast, for ever, with no trace. That is
+        how a leaked slot stayed invisible.
+
+        The slot leak itself is fixed -- see TServerConn.FHandle -- and this
+        says so if another one appears. *)
+      logger.Warn('[Net] send to %d: no such client (a stale entry in the '
+                  + 'client table?)', [aHandle]);
       Exit;
       end;
 
