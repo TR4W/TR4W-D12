@@ -87,6 +87,12 @@ begin
         try
            PortNumber := ini.ReadInteger(_TR4WSERVER, 'PORT', 1061);
            SetServerPort(PortNumber);
+
+           (* WHICH INTERFACE TO BIND TO. Absent or empty means all of them,
+             which is what this server has always done. See
+             tr4wserverUnit.ServerBindAddress. *)
+           ServerBindAddress := Trim(ini.ReadString(_TR4WSERVER,
+                                                    'BIND ADDRESS', ''));
            sAllowTimeSynchronizing := ini.ReadInteger(_TR4WSERVER, 'ALLOW TIME SYNCHRONIZING', 1) = 1;
            SerialNumberLockoutEnable := ini.ReadInteger(_TR4WSERVER, 'SERIAL NUMBER LOCKOUT', 0) = 1;
            SetSerialLockout(SerialNumberLockoutEnable);
@@ -102,6 +108,15 @@ begin
         finally
            ini.Free;
         end;
+
+        (* THE DROP-DOWN IS FILLED BEFORE ANYTHING LISTENS.
+
+          It has to be: the operator chooses there and RunServer reads the
+          choice. It can be, because GetLocalAddresses brings Indy's stack up
+          itself instead of borrowing one from a running server -- which is the
+          nil-GStack trap that made this program vanish with no window this
+          morning, answered properly rather than by moving the call. *)
+        ShowBindAddresses;
 
         (* NO WSAStartup, NO MSWSOCK, NO SEPARATE SYNC LISTENER.
 

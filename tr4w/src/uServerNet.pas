@@ -122,10 +122,27 @@ type
       property WriteLock: TCriticalSection read FWriteLock;
    end;
 
-{ Starts both listeners.  False and a logged reason if either port is taken --
-  the old code showed a message box from inside bind() and this keeps that,
-  since a server that cannot listen has nothing else to say. }
-function StartServerNet(const aPort: word; const aSyncPort: word): boolean;
+(* EVERY LOCAL IPv4 ADDRESS, USABLE BEFORE ANYTHING IS LISTENING.
+
+  IncUsage/DecUsage is the point. GStack is nil until something creates it, and
+  activating a server is what usually does -- which is why reading
+  GStack.LocalAddress before StartServerNet made the program vanish with no
+  window and no log line this morning. The drop-down has to be filled BEFORE
+  the operator presses Start, so this brings the stack up itself and puts it
+  back down.
+
+  GetLocalAddressList rather than the AddLocalAddressesToList shorthand: the
+  shorthand is marked deprecated in the vendored Indy and this build's warning
+  count is a ratchet. Filtering to Id_IPv4 is exactly what it did. *)
+procedure GetLocalAddresses(const aList: TStrings);
+
+{ Starts both listeners on aBindIP -- EMPTY MEANS EVERY INTERFACE, which is
+  what this server has always done and stays the default.  False and a logged
+  reason if either port is taken -- the old code showed a message box from
+  inside bind() and this keeps that, since a server that cannot listen has
+  nothing else to say. }
+function StartServerNet(const aPort: word; const aSyncPort: word;
+                        const aBindIP: string): boolean;
 
 procedure StopServerNet;
 
@@ -144,6 +161,7 @@ implementation
 
 uses
    IdSocketHandle, IdIOHandlerSocket,
+   IdStack,       { TIdStack.IncUsage, GStack, TIdStackLocalAddressList }
    tr4wserverUnit,
    Log4D;
 
@@ -525,7 +543,58 @@ begin
    Result := (GMain <> nil) and GMain.Active;
 end;
 
-function StartServerNet(const aPort: word; const aSyncPort: word): boolean;
+procedure GetLocalAddresses(const aList: TStrings);
+var
+   addrs: TIdStackLocalAddressList;
+   i:     integer;
+begin
+   aList.Clear;
+
+   TIdStack.IncUsage;
+   try
+      addrs := TIdStackLocalAddressList.Create;
+      try
+         GStack.GetLocalAddressList(addrs);
+         for i := 0 to addrs.Count - 1 do
+            begin
+            if addrs[i].IPVersion = Id_IPv4 then
+               begin
+               aList.Add(addrs[i].IPAddress);
+               end;
+            end;
+      finally
+         addrs.Free;
+      end;
+   finally
+      TIdStack.DecUsage;
+   end;
+end;
+
+(* BIND ONE LISTENER, to one address or to all of them.
+
+  Both servers want the identical lines, and a copy is where a difference
+  hides. An empty aBindIP leaves Bindings empty, which is how Indy spells
+  "every interface" -- the behaviour this program has always had. *)
+procedure BindListener(const aServer: TIdTCPServer; const aPort: word;
+                       const aBindIP: string);
+begin
+   aServer.Bindings.Clear;
+   aServer.DefaultPort := aPort;
+
+   if aBindIP <> '' then
+      begin
+      with aServer.Bindings.Add do
+         begin
+         IP   := aBindIP;
+         Port := aPort;
+         end;
+      end;
+end;
+
+function StartServerNet(const aPort: word; const aSyncPort: word;
+                        const aBindIP: string): boolean;
+var
+   where: string;
 begin
    Result := False;
    try
@@ -536,24 +605,38 @@ begin
 
       GMain := TIdTCPServer.Create(nil);
       GMain.ContextClass  := TServerConn;
-      GMain.DefaultPort   := aPort;
       GMain.OnConnect     := GEvents.MainConnect;
       GMain.OnExecute     := GEvents.MainExecute;
       GMain.OnDisconnect  := GEvents.MainDisconnect;
+      BindListener(GMain, aPort, aBindIP);
       GMain.Active        := True;
 
       GSync := TIdTCPServer.Create(nil);
       GSync.ContextClass  := TServerConn;
-      GSync.DefaultPort   := aSyncPort;
       GSync.OnExecute     := GEvents.SyncExecute;
+      BindListener(GSync, aSyncPort, aBindIP);
       GSync.Active        := True;
 
       Result := True;
-      logger.Info('[Net] listening on %d, log sync on %d', [aPort, aSyncPort]);
+
+      { SAY WHICH. "It is listening" and "it is listening where you told it to"
+        are different facts, and only the second one helps when a client cannot
+        connect. }
+      if aBindIP = '' then
+         begin
+         where := 'all interfaces';
+         end
+      else
+         begin
+         where := aBindIP;
+         end;
+      logger.Info('[Net] listening on %s port %d, log sync on %d',
+                  [where, aPort, aSyncPort]);
    except
       on E: Exception do
          begin
-         logger.Error('[Net] cannot listen on %d: %s', [aPort, E.Message]);
+         logger.Error('[Net] cannot listen on %s port %d: %s',
+                      [aBindIP, aPort, E.Message]);
          ServerMessageBox('The server cannot listen on port ' + IntToStr(aPort)
             + '.' + sLineBreak + sLineBreak + E.Message
             + sLineBreak + sLineBreak

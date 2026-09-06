@@ -69,7 +69,7 @@ type
       lblPortCaption:    TLabel;
       edtPort:           TEdit;
       lblIPCaption:      TLabel;
-      lblIP:             TLabel;
+      cboBind:           TComboBox;
       btnStart:          TButton;
       btnStop:           TButton;
       grpClients:        TGroupBox;
@@ -110,7 +110,21 @@ var
 procedure SetServerVersion(const aText: string);
 procedure SetServerPort(const aPort: integer);
 function  GetServerPort(const aDefault: integer): integer;
-procedure SetServerIP(const aText: string);
+
+(* WHICH ADDRESSES THE OPERATOR MAY BIND TO, and which to preselect.
+
+  This was SetServerIP, a LABEL showing one address out of several -- and not
+  the one the listener used, because the listener had no Bindings at all and
+  bound to everything. It reported a guess as though it were a fact.
+
+  "All interfaces" is row 0 and means the empty string: the behaviour this
+  server has always had, and the right default -- a contest station that binds
+  to the wrong NIC loses its network at the worst possible moment. *)
+procedure SetBindAddresses(const aAddresses: TStrings; const aPreferred: string);
+
+{ The chosen address, or EMPTY for every interface. }
+function GetBindAddress: string;
+
 procedure SetServerRunning(const aRunning: boolean);
 procedure SetSerialLockout(const aEnabled: boolean);
 
@@ -157,12 +171,58 @@ begin
       end;
 end;
 
-procedure SetServerIP(const aText: string);
+(* THE ITEM TEXT IS THE VALUE, for every row but the first.
+
+  No parallel array and nothing stashed in Objects: rows 1..n ARE the
+  addresses, so there is one representation of the choice and it cannot drift
+  out of step with what is displayed. Row 0 is the only special case, and it is
+  the empty string. *)
+const
+   ALL_INTERFACES = 'All interfaces (0.0.0.0)';
+
+procedure SetBindAddresses(const aAddresses: TStrings; const aPreferred: string);
+var
+   at: integer;
 begin
-   if frmServer <> nil then
+   if frmServer = nil then
       begin
-      frmServer.lblIP.Caption := TCaption(aText);
+      Exit;
       end;
+
+   frmServer.cboBind.Items.BeginUpdate;
+   try
+      frmServer.cboBind.Items.Clear;
+      frmServer.cboBind.Items.Add(ALL_INTERFACES);
+      frmServer.cboBind.Items.AddStrings(aAddresses);
+   finally
+      frmServer.cboBind.Items.EndUpdate;
+   end;
+
+   { A preference naming an address that no longer exists -- a NIC removed, a
+     DHCP lease moved -- simply does not match, and row 0 is the answer. The
+     caller says so out loud; here it is only a lookup. }
+   at := 0;
+   if aPreferred <> '' then
+      begin
+      at := frmServer.cboBind.Items.IndexOf(aPreferred);
+      if at < 1 then
+         begin
+         at := 0;
+         end;
+      end;
+
+   frmServer.cboBind.ItemIndex := at;
+end;
+
+function GetBindAddress: string;
+begin
+   Result := '';
+   if (frmServer = nil) or (frmServer.cboBind.ItemIndex <= 0) then
+      begin
+      Exit;
+      end;
+
+   Result := frmServer.cboBind.Items[frmServer.cboBind.ItemIndex];
 end;
 
 (* START AND STOP ARE ONE STATE, not two enables that a caller has to keep in
@@ -176,6 +236,8 @@ begin
       frmServer.btnStart.Enabled := not aRunning;
       frmServer.btnStop.Enabled  := aRunning;
       frmServer.edtPort.Enabled  := not aRunning;
+      { Fixed while it is bound, exactly like the port beside it. }
+      frmServer.cboBind.Enabled  := not aRunning;
       end;
 end;
 

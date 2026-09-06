@@ -122,7 +122,7 @@ behaviour — see note 7 below.
 from, inside this repository. It is not D7 heritage and pushing to it would not reach another
 project. It is simply stale.
 **Toolchain:** **FreePascal 3.2.2 + the Lazarus LCL.** ~~Delphi 12 Athens~~ was left behind on
-2026-08-13 once FPC passed the unit tests, the golden corpus (22/0/4) and shipped the
+2026-08-13 once FPC passed the unit tests, the golden corpus and shipped the
 installer. `tr4w/FullBuild-D12-deprecated.ps1` still exists but **no longer works**: deleting the
 FMX twins on 2026-08-17 removed units its uses clause needs, so a Delphi build can only be
 reproduced by checking out a commit before that. **DCC32 was retired earlier and is long gone.**
@@ -138,7 +138,7 @@ from the website today gets 4.x, and that is deliberate until the bench block be
 `FullBuild.ps1`, get the setup `.exe`. **That passes**, and is re-verifiable with
 `tr4w/build/Test-FreshClone.ps1`. Out of scope, unchanged: 64-bit, SQLite, the contest factory.
 
-Done: the build system, the lints, the unit tests (10,211/0), the golden corpus (22/0/4), the LCL
+Done: the build system, the lints, the unit tests (10,211/0), the golden corpus, the LCL
 port of all four designed forms, `tr4wserver` (**the 2026-08-23 regression is fixed** — see
 [Multi-user networking](#6-multi-user-networking)), the NSIS installer, and `release.yml`.
 
@@ -190,7 +190,7 @@ build.
 ## Build System
 
 **The toolchain is FreePascal 3.2.2 + the Lazarus LCL.** Delphi 12 is behind us (2026-08-13): the
-FPC build passes the unit tests and the golden corpus (22/0/4), runs the LCL UI, and is what
+FPC build passes the unit tests and the golden corpus, runs the LCL UI, and is what
 `FullBuild.ps1` ships. The Delphi script is kept as `FullBuild-D12-deprecated.ps1` for reference —
 **don't run both**, they write the same file names from different compilers.
 
@@ -331,7 +331,13 @@ It links only leaf `src` units, so **the TRDOS contest engine is not unit-covere
 byte-diffs both artifacts — ADIF and Cabrillo — against frozen D7 references (13 sets × 2 = 26
 comparisons).
 
-- **Baseline: `22 passed, 0 failed, 4 known-divergence, 0 awaiting-candidate` = GREEN.**
+- **Baseline: `24 passed, 0 failed, 2 known-divergence, 0 awaiting-candidate` = GREEN**, and
+  **every export run must also exit 0.**
+- **THE EXIT CODE IS PART OF THE RESULT, since 2026-09-06.** The corpus used to discard it, and
+  for at least two days all THIRTEEN `/EXPORT` runs were dying with an `EAccessViolation` while it
+  reported `24 passed, 0 failed` — the artifacts are written before the exit, so the byte
+  comparison could not see it. A non-zero exit now fails the run and names the code (`217` is
+  FPC's unhandled exception; `3221225477` is an access violation).
 - **Rebuild the app first**, and **guard that TR4W is not running** (`Get-Process -Name tr4w`) — a
   running instance collides on `target/` and every set reports a false FAIL.
 - Run the corpus, **read the result, then commit**. Never chain the corpus run and `git commit` in
@@ -1005,6 +1011,7 @@ Read the specific doc before acting in its area — these are current and this f
 | Icom scope findings for upstream (pasteable, cites no third project) | `docs/AETHERSDR_ICOM_SCOPE_REPORT.md` |
 | **Multi-user networking: the protocol, and where its analysis is wrong** | **`docs/TR4W_NETWORKING_ANALYSIS.md`** — TR4QT's analysis, copied whole. **Read the provenance block at the top before believing any V1 claim**: three were checked against this tree and do not hold, and the V2 design in it is TR4QT's, not a plan for this repo |
 | TCI server | `docs/TCI_SERVER_DESIGN.md` — and `docs/TCIServPlanning.txt`, its **superseded** precursor, kept for the reasoning only |
+| **Driving TR4W over WebSocket (DESIGN, nothing built)** | **`docs/CONTROL_CHANNEL_DESIGN.md`** — why the UI harness is nailed to Win32, why AutoIt is not the way out (its ControlID *is* `GetDlgCtrlID`), and the `input.*` / `command.*` split that keeps a test hook from becoming a weak public API |
 | Release process | `docs/RELEASE_WORKFLOW.md` (sections 5-8; 1-4 superseded by BUILD.md), `docs/FORK_PROCESS.md` |
 | **WAE QTC windows: the bench script nobody has run** | **`docs/QTC_BENCH_HANDOFF.md`** — for N4AF. Both QTC windows converted with no harness and no operator who can judge them; three items in it are decisions, not checks |
 | Hardware test plan | `tr4w/docs/D12_HARDWARE_TEST_PLAN.md` |

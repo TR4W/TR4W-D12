@@ -119,7 +119,8 @@ var
 implementation
 
 uses
-   SysUtils;
+   SysUtils,
+   InterfaceBase;   { WidgetSet -- see the finalization }
 
 const
    (* Below this the text is not worth reading, and a caption that still does
@@ -213,6 +214,34 @@ initialization
    RegisterClass(TElementPanel);
 
 finalization
-   GMeasure.Free;
+   (* ONLY WHILE THERE IS STILL A WIDGETSET TO FREE IT WITH.
+
+     Freeing a TBitmap calls LCLIntf.DeleteObject, which reads the WidgetSet
+     global and calls a virtual method on it. If the widgetset has already gone
+     that is a null dereference -- and it is not hypothetical: every one of the
+     golden corpus's THIRTEEN headless /EXPORT runs died right here, and the
+     corpus reported `24 passed, 0 failed` through all of them because it
+     compares artifacts and the artifacts are written before the exit
+     (2026-09-06; the same thirteen crashes are in the log from 04 September).
+
+     /EXPORT reaches this with a bitmap to free because it still BUILDS the
+     main window -- BindMainGrids and PositionMainGrids run just above the
+     export -- so a caption gets fitted, and then Halt(0) goes straight to
+     FinalizeUnits.
+
+     THE ANSWER IS NOT TO REORDER THE UNITS. Finalization order is reverse
+     initialization order: a property of the entire uses graph, 446 lines of it
+     in tr4w.lpr, with Interfaces reached through one unit's IMPLEMENTATION
+     section. A fix pinned to that ordering holds until somebody adds a unit
+     and then fails exactly as quietly as this did.
+
+     THE INVARIANT, which is what generalises: A UNIT-LEVEL GLOBAL HOLDING A
+     GDI HANDLE CANNOT ASSUME THE WIDGETSET OUTLIVES IT. So it asks. When the
+     widgetset has gone, the handle is left to Windows, which reclaims every
+     GDI object a process owns as that process exits. *)
+   if WidgetSet <> nil then
+      begin
+      FreeAndNil(GMeasure);
+      end;
 
 end.

@@ -36,13 +36,14 @@ object frmServer: TfrmServer
     Caption = 'IP:'
     ParentColor = False
   end
-  object lblIP: TLabel
+  object cboBind: TComboBox
     Left = 88
-    Height = 15
-    Top = 38
-    Width = 6
-    Caption = '-'
-    ParentColor = False
+    Height = 23
+    Top = 34
+    Width = 308
+    ItemHeight = 15
+    Style = csDropDownList
+    TabOrder = 0
   end
   object lblPortCaption: TLabel
     Left = 16
@@ -57,7 +58,7 @@ object frmServer: TfrmServer
     Height = 23
     Top = 62
     Width = 72
-    TabOrder = 0
+    TabOrder = 1
     Text = '1061'
   end
   object btnStart: TButton
@@ -67,7 +68,7 @@ object frmServer: TfrmServer
     Width = 100
     Caption = 'Start'
     OnClick = btnStartClick
-    TabOrder = 1
+    TabOrder = 2
   end
   object btnStop: TButton
     Left = 296
@@ -77,7 +78,7 @@ object frmServer: TfrmServer
     Cancel = True
     Caption = 'Stop'
     OnClick = btnStopClick
-    TabOrder = 2
+    TabOrder = 3
   end
   object grpClients: TGroupBox
     Left = 16
@@ -87,7 +88,7 @@ object frmServer: TfrmServer
     Caption = 'Clients'
     ClientHeight = 156
     ClientWidth = 376
-    TabOrder = 3
+    TabOrder = 4
     object lstClients: TListBox
       Left = 8
       Height = 140
@@ -170,6 +171,6 @@ object frmServer: TfrmServer
     Width = 176
     Caption = 'Serial number lockout'
     Enabled = False
-    TabOrder = 4
+    TabOrder = 5
   end
 end

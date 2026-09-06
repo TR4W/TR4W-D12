@@ -292,6 +292,23 @@ function tUpdateServerLog(UpdAction: UpadateAction): boolean;
 procedure SendConfirmMessage(s: TSocket);
 procedure SerialNumbersChanged;
 procedure UpdateSerialNumbersStatus(s: TSocket; Status: TSerialNumberType);
+(* THE ADDRESS TO BIND TO, from TR4WSERVER.INI key BIND ADDRESS.
+
+  EMPTY MEANS EVERY INTERFACE and is the default. A station that must always
+  bind to one NIC says so once in the ini; everybody else gets what this server
+  has always done.
+
+  READ-ONLY, like every other key in that file -- nothing in this program
+  writes it. So the ini decides where the drop-down STARTS and the operator
+  decides where it ends up for this session. *)
+var
+  ServerBindAddress: string = '';
+
+{ Fills the drop-down and preselects ServerBindAddress. Called before the
+  server starts, which is why it can be: GetLocalAddresses brings Indy's stack
+  up itself rather than needing a live listener. }
+procedure ShowBindAddresses;
+
 procedure RunServerThread;
 procedure RunServer;
 procedure GetServerLogCRC32;
@@ -327,6 +344,45 @@ function CorrectPassword(s: TSocket; BytesReceived: integer): boolean;
 //procedure SendMFToClients;
 
 implementation
+
+procedure ShowBindAddresses;
+var
+  addrs: TStringList;
+begin
+  addrs := TStringList.Create;
+  try
+     try
+        GetLocalAddresses(addrs);
+     except
+        (* A STACK THAT CANNOT BE ENUMERATED IS NOT A REASON NOT TO START.
+          The list is a convenience; binding to all interfaces needs no
+          address at all, so the failure is reported and the drop-down offers
+          the one entry that always works. *)
+        on E: Exception do
+           begin
+           logger.Warn('[Net] cannot list local addresses (%s): %s',
+                       [E.ClassName, E.Message]);
+           addrs.Clear;
+           end;
+     end;
+
+     (* SAY SO WHEN THE PREFERENCE NO LONGER EXISTS. A NIC removed or a DHCP
+       lease moved leaves BIND ADDRESS naming something that is not there, and
+       the drop-down quietly falls back to all interfaces. Quietly is the
+       problem: the operator asked for one interface and would get every one
+       of them with nothing said. *)
+     if (ServerBindAddress <> '') and (addrs.IndexOf(ServerBindAddress) < 0) then
+        begin
+        logger.Warn('[Net] BIND ADDRESS %s is not a local address on this ' +
+                    'machine -- binding to all interfaces instead',
+                    [ServerBindAddress]);
+        end;
+
+     SetBindAddresses(addrs, ServerBindAddress);
+  finally
+     addrs.Free;
+  end;
+end;
 
 procedure RunServerThread;
 begin
@@ -383,25 +439,18 @@ begin
     PortNumber + 1. Indy owns the accept loop and the per-client threads; the
     reporting on failure is unchanged, and still a message box, because a
     server that cannot listen has nothing else to say. *)
-  if not StartServerNet(PortNumber, PortNumber + 1) then
+  (* BIND WHERE THE OPERATOR ASKED. Empty is every interface, which is what
+    this has always done and is still the default. *)
+  if not StartServerNet(PortNumber, PortNumber + 1, GetBindAddress) then
      begin
      goto UnSucc;
      end;
 
-  (* THE ADDRESS TO TELL OPERATORS, AND IT MUST COME AFTER THE LISTENERS.
-
-    Was Gethostname + gethostbyname + iNet_ntoa -- three WinSock calls to print
-    one string. GStack.LocalAddress is the same answer from whatever stack the
-    platform has.
-
-    AFTER StartServerNet, NOT BEFORE, and that ordering is the whole of a bug:
-    GStack is declared `TIdStack = nil` and is created by TIdStack.IncUsage,
-    which is what activating an Indy server does. Reading it first was a null
-    dereference -- and because start-up ran before Application.Run there was no
-    handler and no window, so the program vanished with 'TR4WServer starting'
-    as the last line in its log (NY4I, 2026-09-06: "It seems to die quietly. I
-    never saw a UI"). *)
-  SetServerIP(GStack.LocalAddress);
+  (* NOTHING TO REPORT HERE ANY MORE. This read GStack.LocalAddress and put it
+    in a label -- one address out of several, chosen by the stack, next to a
+    listener that was bound to all of them. The drop-down above now says what
+    the server is bound to because it is what SET it, and StartServerNet logs
+    the same fact. *)
 
   { ONE state, not two enables kept in step by hand -- see SetServerRunning. }
   SetServerRunning(True);

@@ -125,6 +125,28 @@ towin(){ cygpath -d "$1"; }   # DOS 8.3 short path -- NO spaces, so Git-Bash->ex
 # nothing can't keep passing on a stale file (run-golden-diff.sh runs below in
 # GOLDEN_STRICT mode -- a set with a ref but no FRESH candidate is a FAIL).
 rm -f "$here"/*/cand.adi "$here"/*/cand.cbr 2>/dev/null
+# WHAT AN EXIT CODE MEANS, IN WORDS.
+#
+# Windows reports a fault as its NTSTATUS, so an access violation arrives here
+# as 3221225477 -- 0xC0000005, which reads as noise. A guard whose output has
+# to be decoded before it can be acted on is one that gets ignored.
+exit_reason() {
+   case "$1" in
+      124)        echo "timed out (45 s) -- a dialog, or a hang" ;;
+      3)          echo "refused: another TR4W instance holds the mutex" ;;
+      3221225477) echo "CRASHED: access violation (0xC0000005)" ;;
+      3221225725) echo "CRASHED: stack overflow (0xC00000FD)" ;;
+      3221225620) echo "CRASHED: illegal instruction (0xC000001D)" ;;
+      21474836*)  echo "CRASHED: fatal exception ($1)" ;;
+      3221225*)   echo "CRASHED: fatal exception ($1)" ;;
+      *)          echo "exited $1" ;;
+   esac
+}
+
+# Sets whose exporter did not exit 0, named so the summary can list them.
+bad_exit=0
+bad_slugs=""
+
 n=0
 for m in "$here"/*/manifest.json; do
    slug=$(corpus_manifest_get "$m" slug)
@@ -148,6 +170,18 @@ for m in "$here"/*/manifest.json; do
    # MSYS_NO_PATHCONV: stop Git Bash from mangling the /EXPORT flag into a path.
    # per-set timeout: a stray load dialog can't hang the whole run
    ( cd tr4w/target && MSYS_NO_PATHCONV=1 timeout 45 "./$EXE_NAME" "$(towin "$cfg")" /EXPORT >/dev/null 2>&1 )
+   rc=$?
+
+   # THE EXIT CODE IS EVIDENCE AND IT WAS BEING THROWN AWAY.
+   #
+   # An export that writes both artifacts correctly and THEN crashes produced a
+   # clean 24/0/2 here for at least two days (see the header). Judged where the
+   # set is still known, the way every other check in this loop is.
+   if [ "$rc" -ne 0 ]; then
+      printf '  ^^^^^^ %-26s %s\n' "$slug" "$(exit_reason "$rc")"
+      bad_exit=$((bad_exit+1))
+      bad_slugs="$bad_slugs $slug($rc)"
+   fi
 
    # SAY WHY, HERE, WHERE THE SET IS STILL KNOWN.  A set that wrote nothing
    # surfaces 26 exports later as a bare "no fresh candidate", by which point
@@ -175,6 +209,25 @@ echo "exported $n set(s)"; echo
 
 if [ -z "$ONLY" ]; then
    GOLDEN_STRICT=1 bash "$here/pull-d12-candidates.sh"
+   sweep_rc=$?
 else
    echo "(single-set smoke test -- run with no args for the full export + sweep)"
+   sweep_rc=0
 fi
+
+# A CRASHING EXPORTER FAILS THE RUN, EVEN WITH 26 BYTE-PERFECT ARTIFACTS.
+#
+# Repeated after the sweep on purpose: the per-set line above is thirty lines
+# up by the time the summary prints, and the summary is the line people read.
+if [ "$bad_exit" -gt 0 ]; then
+   echo
+   echo "=== CORPUS FAILED: $bad_exit of $n export run(s) did not exit 0 ==="
+   echo "    $bad_slugs"
+   echo "    The artifacts above may still compare byte-perfect -- they are"
+   echo "    written before the exporter exits. An export that cannot exit"
+   echo "    cleanly is a defect the byte comparison cannot see, which is why"
+   echo "    this is judged separately."
+   exit 1
+fi
+
+exit $sweep_rc
