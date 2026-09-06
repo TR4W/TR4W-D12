@@ -254,7 +254,6 @@ uses
   utils_text,
   utils_math,
   utils_file,
-  uWinTimer,
   uWSJTX,
   uHamScore,
   uExchangeBuilder,

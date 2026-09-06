@@ -447,7 +447,7 @@ begin
 
       // The parent is uAltP's window, which is still a raw Win32 dialog, so it
       // needs the explicit disable -- LCL ShowModal only disables LCL forms.
-      ShowModalOverWin32Parent(frmEditMessage, aParent);
+      ShowModalOverWin32Parent(frmEditMessage);
    except
       on E: Exception do
          begin

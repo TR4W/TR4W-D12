@@ -542,6 +542,15 @@ begin
 
     WM_SIZE:
       begin
+        (* ShowWindow ON ANOTHER PROGRAM'S WINDOW, which is why it is not an
+          LCL call and cannot become one.
+
+          MMTTY is a separate EXE -- WinExec'd, not a DLL -- and MMTTYEngine is
+          its top-level HWND, found by window class. TR4W minimises and
+          restores it alongside itself so the RTTY window does not sit on the
+          desktop after the logger is minimised. The LCL has no vocabulary for
+          a window it does not own; ShowWindow is the interface another process
+          exposes. This is platform integration, not UI. *)
         if MMTTY.MMTTYEngine <> 0 then
         begin
           if wParam = SIZE_MINIMIZED then Windows.ShowWindow(MMTTY.MMTTYEngine, SW_SHOWMINNOACTIVE);

@@ -846,7 +846,7 @@ begin
       // Every caller is still a raw Win32 window -- the main window, Log Edit
       // or Log Search -- and Screen.DisableForms walks LCL forms only, so
       // without this the parent stays clickable underneath a modal.
-      ShowModalOverWin32Parent(frmEditQSO, aParent);
+      ShowModalOverWin32Parent(frmEditQSO);
    except
       on E: Exception do
          begin

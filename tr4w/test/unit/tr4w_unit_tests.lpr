@@ -82,8 +82,7 @@ uses
    uGridDistance        in '..\..\src\uGridDistance.pas',
    uTestGridDistance    in 'uTestGridDistance.pas',
    utils_file           in '..\..\src\utils\utils_file.pas',
-   uWinTimer            in '..\..\src\utils\uWinTimer.pas',
-   uTestWinTimer        in 'uTestWinTimer.pas',
+   uTestCWByCATTimer    in 'uTestCWByCATTimer.pas',
    uRadioConfigStore    in '..\..\src\uRadioConfigStore.pas',
    uTestRadioConfigStore in 'uTestRadioConfigStore.pas',
    uRotatorBase in '..\..\src\rotatorFactory\uRotatorBase.pas',
@@ -392,7 +391,7 @@ begin
    RegisterSuite(TLogImportTests.Create('LogImport'));
    RegisterSuite(TClusterTokensTests.Create('ClusterTokens'));
    RegisterSuite(TSplitReassertTests.Create('SplitReassert'));
-   RegisterSuite(TWinTimerTests.Create('WinTimer'));
+   RegisterSuite(TCWByCATTimerTests.Create('CWByCATTimer'));
    RegisterSuite(TRadioConfigStoreTests.Create('RadioConfigStore'));
    RegisterSuite(TRadioConfigLegacyMapTests.Create('RadioConfigLegacyMap'));
    RegisterSuite(TKeyerConfigStoreTests.Create('KeyerConfigStore'));

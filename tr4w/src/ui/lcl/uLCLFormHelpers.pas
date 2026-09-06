@@ -220,7 +220,7 @@ type
   aParent = 0, or an already-disabled parent, is handled: nothing is disabled and
   nothing is re-enabled, so this never enables a window that was disabled for
   some other reason. }
-function ShowModalOverWin32Parent(const aForm: TCustomForm; const aParent: HWND): integer;
+function ShowModalOverWin32Parent(const aForm: TCustomForm): integer;
 
 { MAKE THE TR4W MAIN WINDOW THE FORM'S OWNER, AND CENTRE OVER IT.
 
@@ -475,7 +475,7 @@ function TryParseHexByte(const aText: string; out aValue: integer): boolean;
 implementation
 
 uses
-   Windows,    // EnableWindow / IsWindowEnabled -- see ShowModalOverWin32Parent
+   Windows,    // still needed by other helpers in this unit
    uMainForm,  // TR4WMainForm -- the owner every dialog should have had
    Types,      // TRect
    uWindowLayoutStore,  // the bounds, keyed by name
@@ -555,9 +555,7 @@ begin
                    owner.Top  + ((owner.Bottom - owner.Top)  - aForm.Height) div 2,
                    aForm.Width, aForm.Height);
 end;
-function ShowModalOverWin32Parent(const aForm: TCustomForm; const aParent: HWND): integer;
-var
-   reEnable: boolean;
+function ShowModalOverWin32Parent(const aForm: TCustomForm): integer;
 begin
    // EVERY MODAL COMES THROUGH HERE, which is why ownership is applied here
    // and not in sixteen ShowBlah routines. See OwnFormByMainWindow.
@@ -567,75 +565,47 @@ begin
       CentreOverMainWindow(aForm);
       end;
 
-   { HAND-ROLLED MODALITY IS FOR A RAW WIN32 PARENT ONLY, AND DEFEATS THE LCL
-     ON ITS OWN FORMS.
+   (* THE MANUAL DISABLE IS GONE (2026-09-06), AND IT IS GONE BY ENUMERATION.
 
-     NY4I, 2026-08-25: after entering a split frequency the main window lost
-     focus -- no visible owner, and the call field had to be clicked before '-'
-     worked again.
+     It disabled aParent for the life of the modal, because Screen.DisableForms
+     walks CustomForms -- LCL forms only -- and Telnet and MMTTY were raw Win32
+     dialogs the LCL did not know about. Both became forms on 2026-08-26, and
+     the comment here always said the branch would self-delete when they did.
 
-     Disabling a window that HAS focus makes Windows drop that focus at once.
-     TCustomForm.ShowModal then records what to restore --
+     It was also actively harmful while it ran. Disabling a window that HAS
+     focus makes Windows drop that focus at once; TCustomForm.ShowModal then
+     records what to restore (customform.inc:3013) and finds nothing, so its
+     RestoreFocusState puts nothing back. NY4I, 2026-08-25: after entering a
+     split frequency the main window lost focus and the call field had to be
+     clicked before '-' worked again.
 
-         ActiveWindow    := GetActiveWindow;
-         SavedFocusState := SaveFocusState;        (customform.inc:3013)
+     PROVED, not argued from the conversion. Every aParent any caller passes,
+     traced to where the value comes from:
 
-     -- and by then there was nothing focused to record, so the matching
-     RestoreFocusState in its finally put nothing back.  Re-activating the
-     top-level window afterwards does not focus a CHILD, which is why the call
-     field stayed dead.
+       ShowSendKeyboardCW   MainUnit:4901        tr4whandle
+       ShowInputQuery       LOGWIND:1733         tr4whandle
+       ShowEditMessage      uAltP:367            TR4WAltPForm.Handle
+       ShowMessagesList     uEditMessageForm     Self.Handle
+       OpenEditQSOWindow    MainUnit:7087        tr4whandle
+       OpenEditQSOWindow    uLogEditForm:308     Self.Handle
+       OpenEditQSOWindow    uLogSearchForm:768   Self.Handle
+       ShowBandPlan         uPrefsForm:3373      0
+       the other fourteen                        0
 
-     It was redundant as well as harmful.  The Win32 widgetset reports
-     lcModalWindow = LCL_CAPABILITY_NO (win32object.inc:591), so ShowModal calls
-     Screen.DisableForms itself, disables every other form, re-enables them on
-     the way out and restores the focused control.  We were doing its job badly.
+     tr4whandle is the main FORM's handle. Controls.FindControl answers for
+     every one, so the guard was always False. aParent had no other use -- the
+     centring below is CentreOverMainWindow's -- so the parameter goes too.
 
-     BUT NOT FOR EVERY CALLER.  Screen.DisableForms walks CustomForms -- LCL
-     forms ONLY (screen.inc).  Telnet and MMTTY are still raw Win32 dialogs and
-     the LCL does not know they exist, so a modal raised over one genuinely
-     needs the manual disable.  That is what the aParent HWND has been for.
+     THE NAME IS KEPT ON PURPOSE. It appears in about thirty comments across
+     the form units, most of them explaining why a window does NOT disable its
+     parent by hand; renaming it would leave those reading as though they
+     described something else. What it means now is "show this form modally,
+     owned and centred by the main window". *)
 
-     THIS BRANCH SELF-DELETES.  When those two windows become forms it has no
-     callers left, and the aParent parameter goes with it.
-
-     BOTH ARE FORMS NOW (2026-08-26), so it is PROBABLY already dead -- and
-     "probably" is why it is still here.  The branch is self-guarding: an LCL
-     parent is found by FindControl and skipped, a raw Win32 parent is not.
-     Deleting it on a traced argument would be a guess about seven aParent
-     chains; the log line below decides it on evidence instead.  If it never
-     appears, the branch and the parameter can both go. }
-   reEnable := (aParent <> 0) and
-               (Controls.FindControl(aParent) = nil) and
-               Windows.IsWindow(aParent) and
-               Windows.IsWindowEnabled(aParent);
-
-   if reEnable then
-      begin
-      if logger <> nil then
-         begin
-         logger.Warn('[Modal] %s was raised over a NON-LCL parent (hwnd=%d) -- '
-                     + 'the manual EnableWindow path is still reachable.',
-                     [aForm.ClassName, aParent]);
-         end;
-      Windows.EnableWindow(aParent, False);
-      end;
-
-   try
-      Result := aForm.ShowModal;
-   finally
-      // RE-ENABLE BEFORE THE FORM GOES, and in a finally: an exception escaping
-      // ShowModal would otherwise leave the parent permanently dead, which the
-      // operator experiences as a frozen window with no dialog on screen.
-      if reEnable then
-         begin
-         Windows.EnableWindow(aParent, True);
-         // Windows gives focus to nothing in particular after re-enabling, so
-         // put it back where the dialog manager would have left it.  A raw Win32
-         // dialog has no LCL focus state to restore, so window granularity is
-         // all there is here.
-         Windows.SetActiveWindow(aParent);
-         end;
-   end;
+   (* NO try/finally ANY MORE. It existed to re-enable aParent if an exception
+     escaped ShowModal -- otherwise the operator got a frozen window with no
+     dialog on it. With nothing disabled there is nothing to undo. *)
+   Result := aForm.ShowModal;
 end;
 
 { ------------------------------------------------------------- helpers ---- }

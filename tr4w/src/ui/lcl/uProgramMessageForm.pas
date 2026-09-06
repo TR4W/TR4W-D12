@@ -162,7 +162,7 @@ begin
       // disable here, but ShowModalOverWin32Parent is also where the main
       // window is made the owner and the form is centred over it -- see
       // OwnFormByMainWindow.  A bare ShowModal skips both.
-      ShowModalOverWin32Parent(frmProgramMessage, 0);
+      ShowModalOverWin32Parent(frmProgramMessage);
 
       // AFTER the chooser has gone, exactly as EndDialog-then-OpenListOfMessages
       // did.  Closing with the window button or Escape chooses nothing, and then

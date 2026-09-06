@@ -181,7 +181,7 @@ begin
       // Screen.DisableForms already covers it.  Going through the helper anyway
       // costs nothing (it no-ops on an already-disabled window) and keeps the
       // call correct if this picker is ever opened from somewhere still Win32.
-      ShowModalOverWin32Parent(frmMessagesList, aParent);
+      ShowModalOverWin32Parent(frmMessagesList);
 
       if frmMessagesList.FPicked then
          begin

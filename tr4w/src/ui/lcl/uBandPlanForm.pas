@@ -521,7 +521,7 @@ begin
       // The parent is the settings dialog, which is still a raw Win32 window,
       // so it needs the explicit disable -- LCL ShowModal only disables LCL
       // forms.  This is the inner half of that pair; the outer is Phase 4c.
-      ShowModalOverWin32Parent(frmBandPlan, aParent);
+      ShowModalOverWin32Parent(frmBandPlan);
    except
       on E: Exception do
          begin

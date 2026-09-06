@@ -359,7 +359,21 @@ begin
     // Create sockets
     CreateSockets;
 
-    // Create timer window — store Self in GWL_USERDATA for per-instance dispatch
+    (* A MESSAGE-ONLY WINDOW AND A RAW SetWindowLong, AND THEY STAY.
+
+      Self travels in GWL_USERDATA so the window procedure can find the
+      instance -- there is one of these per connected radio, and a window
+      procedure is a bare C callback with nowhere else to put it.
+
+      NOT an LCL TTimer, and the reason is the thread rather than the API. This
+      transport owns five timers (AYT, ping, idle, token renewal, CI-V
+      watchdog) that pace a network protocol, and they run on the transport's
+      own thread alongside its sockets. A TTimer fires on the MAIN thread, so
+      moving them would put a radio's keepalive behind whatever the UI is
+      doing -- a behaviour change to a protocol, dressed as a cleanup.
+
+      The cross-platform answer is a timed wait on the transport thread rather
+      than either of these; that belongs with the socket layer, not here. *)
     FTimerWnd := CreateWindowW(TIMER_WND_CLASS, '', 0,
       0, 0, 0, 0, 0, 0, HInstance, nil);
     if FTimerWnd = 0 then

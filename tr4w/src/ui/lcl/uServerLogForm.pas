@@ -371,7 +371,7 @@ begin
          begin
          frmServerLog := TfrmServerLog.Create(Application);
          end;
-      ShowModalOverWin32Parent(frmServerLog, 0);
+      ShowModalOverWin32Parent(frmServerLog);
    except
       on E: Exception do
          begin

@@ -277,7 +277,7 @@ begin
          begin
          GForm := TfrmFileView.Create(Application);
          end;
-      ShowModalOverWin32Parent(GForm, 0);
+      ShowModalOverWin32Parent(GForm);
    except
       on E: Exception do
          begin

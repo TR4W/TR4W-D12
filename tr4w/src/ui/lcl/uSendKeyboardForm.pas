@@ -323,7 +323,7 @@ begin
 
       // The parent may be a QTC window, which is still a raw Win32 window --
       // see the helper.
-      ShowModalOverWin32Parent(frmSendKeyboard, aParent);
+      ShowModalOverWin32Parent(frmSendKeyboard);
    except
       on E: Exception do
          begin

@@ -523,7 +523,7 @@ begin
          begin
          GForm := TfrmQTCSend.Create(Application);
          end;
-      ShowModalOverWin32Parent(GForm, 0);
+      ShowModalOverWin32Parent(GForm);
    except
       on E: Exception do
          begin

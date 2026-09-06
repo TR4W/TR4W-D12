@@ -141,7 +141,7 @@ begin
       TryRestoreFormBounds(frmLogEdit, LAYOUT_NAME);
       end;
 
-   ShowModalOverWin32Parent(frmLogEdit, tr4whandle);
+   ShowModalOverWin32Parent(frmLogEdit);
 end;
 
 procedure SaveLogEditLayout;

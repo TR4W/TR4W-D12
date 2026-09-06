@@ -2504,9 +2504,13 @@ function LclFormFor(const ID: WindowsType): TCustomForm; forward;
    position (2026-08-25), and the rule in CLAUDE.md came out of it: position a
    form through its properties.
 
-   The HWND fallback stays for the same reason the one in OpenTR4WWindow does:
-   this is the positioning path, and a window that silently does not move is the
-   failure being fixed.  It is reported rather than assumed dead. *)
+   THE HWND FALLBACK IS GONE, PROVED RATHER THAN ASSUMED. It was a
+   SetWindowPos on tr4w_WindowsArray[aID].WndHandle when LclFormFor returned
+   nil. The caller only reaches here for a window whose handle is non-zero and
+   passes IsWindow -- and a tw_ window HAS a handle only because
+   OpenTR4WWindow built its form, which is the object LclFormFor returns. So
+   nil form and live handle cannot both be true, and the fallback could only
+   ever have run with nothing to move. *)
 procedure MoveWindowTo(const aID: WindowsType; const aLeft, aTop: integer);
 var
    frm: TCustomForm;
@@ -2520,13 +2524,9 @@ begin
 
    if logger <> nil then
       begin
-      logger.Warn('[Revalidate] %s moved by the Win32 fallback -- no LCL form '
-                  + 'object. If this never appears, that branch is dead.',
-                  [WindowNames[aID]]);
+      logger.Warn('[Revalidate] %s has a window but no LCL form object -- not '
+                  + 'moved. This should be unreachable.', [WindowNames[aID]]);
       end;
-
-   Windows.SetWindowPos(tr4w_WindowsArray[aID].WndHandle, 0, aLeft, aTop, 0, 0,
-      SWP_NOSIZE or SWP_NOZORDER or SWP_NOACTIVATE);
 end;
 
 /// <summary>
@@ -6278,13 +6278,16 @@ begin
   // right (NY4I, 2026-08-24: "it just states Radio 1").
   //
   // Setting the property keeps the two in step and costs one Win32 call less.
+  //
+  // NO else ARM ANY MORE, and the reason is a proof rather than a measurement:
+  // the ONLY path that leaves lclForm nil is the final else above, whose first
+  // statement is `h := 0`. So lclForm = nil implies h = 0, and the
+  // SetWindowTextW(h, menuText) that stood here could only ever have been
+  // handed a null handle -- doing nothing, silently, on top of an Error that
+  // arm already logs.
   if lclForm <> nil then
      begin
      lclForm.Caption := string(PWideChar(@menuText[0]));
-     end
-  else
-     begin
-     Windows.SetWindowTextW(h, menuText);
      end;
   {
   Windows.GetMenuStringA(tr4w_main_menu, 10199 + Ord(ID), wsprintfBuffer, SizeOf(wsprintfBuffer), MF_BYCOMMAND);
@@ -6399,36 +6402,23 @@ begin
   //
   // Same shape as the caption fix a few lines below: write the PROPERTY and let
   // the LCL do the Win32 call, or the two disagree and the widget set wins.
+  (* THE WIN32 POSITIONING FALLBACK IS GONE, AND THIS ONE WAS SETTLED BY
+    READING RATHER THAN BY WAITING FOR A LOG LINE.
+
+    It asked "is this branch still reachable?" and was instrumented on
+    2026-09-05 so evidence could answer. The answer is in the code: the only
+    path that leaves lclForm nil is the final else above, and its FIRST
+    STATEMENT is `h := 0`. tr4w_WindowsArray[ID].WndHandle is assigned from h.
+    So the SetWindowPos that stood here was always given a null handle -- it
+    could not position anything, which is the same silent nothing that lost the
+    band map's saved position and the reason the branch was kept.
+
+    The Error that arm logs names the window id and says every tool window must
+    build an LCL form. That is the report; this was never more than a Win32
+    call that failed quietly underneath it. *)
   if lclForm <> nil then
      begin
      lclForm.BoundsRect := tr4w_WindowsArray[ID].WndRect;
-
-     end
-  else
-     begin
-     (* IS THIS BRANCH STILL REACHABLE? Measured 2026-09-05: EVERY WindowsType
-       value is answered by LclFormFor -- there is no window left that is not an
-       LCL form. But the test above is on the form OBJECT, not on the enum, so
-       this can still be entered before a form has been constructed.
-
-       NOT commented out, and deliberately. This is the window-positioning path,
-       and silently doing nothing here is the exact failure that lost the band
-       map's saved position (see the note above). Instrumented instead: if this
-       line never appears in a log, the branch is dead and can go on evidence
-       rather than on a guess. *)
-     if logger <> nil then
-        begin
-        logger.Warn('[OpenTR4WWindow] %s positioned by the Win32 fallback -- no LCL ' +
-                    'form object yet. If this never appears, that branch is dead.',
-                    [WindowNames[ID]]);
-        end;
-
-     Windows.SetWindowPos(tr4w_WindowsArray[ID].WndHandle, HWND_TOP,
-       tr4w_WindowsArray[ID].WndRect.Left,
-       tr4w_WindowsArray[ID].WndRect.Top,
-       tr4w_WindowsArray[ID].WndRect.Right - tr4w_WindowsArray[ID].WndRect.Left,
-       tr4w_WindowsArray[ID].WndRect.Bottom - tr4w_WindowsArray[ID].WndRect.Top,
-       TempFlag);
      end;
 
   // TELL THE LCL THE WINDOW IS UP -- IT CANNOT SEE A RAW SWP_SHOWWINDOW.

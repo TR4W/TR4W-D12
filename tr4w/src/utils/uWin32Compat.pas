@@ -47,8 +47,13 @@ const
    DEVICE_NOTIFY_WINDOW_HANDLE  = $00000000;
    DEVICE_NOTIFY_SERVICE_HANDLE = $00000001;
 
-   // Parent handle that makes CreateWindowEx produce a MESSAGE-ONLY window:
-   // never shown, never enumerated, receives no broadcasts.  uWinTimer's sink.
+   (* Parent handle that makes CreateWindowEx produce a MESSAGE-ONLY window:
+     never shown, never enumerated, receives no broadcasts.
+
+     uWinTimer was its only user and is deleted (2026-09-06) -- the CW-by-CAT
+     timer is an LCL TTimer now. Kept because uIcomNetworkTransport builds the
+     same kind of window for its keepalive timers, and because a constant the
+     Windows headers define is the wrong thing to delete and re-derive. *)
    HWND_MESSAGE = HWND(-3);
 
 type

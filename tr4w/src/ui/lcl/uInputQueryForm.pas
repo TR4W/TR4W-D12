@@ -189,7 +189,7 @@ begin
          frmInputQuery := TfrmInputQuery.Create(Application);
          end;
 
-      ShowModalOverWin32Parent(frmInputQuery, aParent);
+      ShowModalOverWin32Parent(frmInputQuery);
    except
       on E: Exception do
          begin

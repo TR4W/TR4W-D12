@@ -604,7 +604,7 @@ begin
          GForm := TfrmCabrilloSummary.Create(Application);
          end;
       GForm.Action := aAction;
-      ShowModalOverWin32Parent(GForm, 0);
+      ShowModalOverWin32Parent(GForm);
    except
       on E: Exception do
          begin

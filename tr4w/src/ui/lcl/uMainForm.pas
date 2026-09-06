@@ -2317,6 +2317,22 @@ begin
       end;
 
    Result := edit.Handle;
+
+   (* THE DIALOG CONTROL ID IS FOR THE UI TEST HARNESSES, and it is the reason
+     this raw call stays.
+
+     An LCL control has no dialog id -- nothing in TR4W asks for one, and the
+     last GetDlgItem against this window went with the Win32 children. But two
+     harnesses drive the real binary and find these fields the only way an
+     outside process can, by walking EnumChildWindows and reading
+     GetDlgCtrlID: tr4w/test/ui/Test-Typing.ps1 and Test-CountyLineEntry.ps1,
+     both looking for 73 (callsign) and 88 (exchange), the ids VC.pas declares.
+
+     Delete this line and both tests fail with "no control with id 73" -- which
+     is exactly how it was found the first time, when assigning Font after this
+     line recreated the handle and threw the id away. There is no LCL property
+     for it; the id is a Win32 window attribute and the harness is a Win32
+     client. *)
    Windows.SetWindowLong(Result, GWL_ID, aId);
 end;
 

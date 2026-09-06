@@ -40,7 +40,18 @@ uses
    VC,
    Windows,
    utils_text,
-   uWinTimer,   // TWinTimer -- was VCL ExtCtrls.TTimer; see that unit's header
+   ExtCtrls,    (* TTimer -- the CW-by-CAT busy window.
+
+                    This was VCL's ExtCtrls.TTimer, then uWinTimer.TWinTimer --
+                    a hand-rolled SetTimer against a message-only window, added
+                    in August because linking ExtCtrls dragged the whole VCL in
+                    for one timer, and because SetTimer needs no widget set
+                    while TR4W still owned its own message loop.
+
+                    Neither reason survives: the framework is the LCL and it is
+                    linked anyway, and the loop is Application.Run. LCL's TTimer
+                    IS SetTimer against a message-only window, so this is the
+                    same mechanism with the hand-rolling removed. *)
    uFactoryRadioBase,
    uRadioElecraftK4,
    uRadioFactory,
@@ -286,7 +297,7 @@ type
 
       CommandPause: integer;
       nextExtendedMode : ExtendedModeType;
-      tmrCWByCAT: TWinTimer;
+      tmrCWByCAT: TTimer;
       EventHandlers : TEventHandlers;
       procedure AddCommandToBuffer;
       function  CheckAutoCallTerminate: boolean;
@@ -735,7 +746,7 @@ procedure TEventHandlers.OnTimerTick(Sender : TObject);
 var callInactive: boolean;
 begin
   DebugMsg('TimerTick event fired');
-  TWinTimer(Sender).Enabled := false;
+  TTimer(Sender).Enabled := false;
   if IsCWByCATActive(ActiveRadioPtr) then
      begin
      if ActiveRadioPtr.CWByCAT_Sending then
@@ -1764,7 +1775,7 @@ begin
             QuickDisplayError('Radio "' + string(Self.RadioName) + '" could not be created -- not connected. Check its configuration.');
             end;
          Self.EventHandlers := EventHandlers;
-         Self.tmrCWByCAT := TWinTimer.Create(nil);
+         Self.tmrCWByCAT := TTimer.Create(nil);
          Self.tmrCWByCAT.Enabled := false;
          Self.tmrCWByCAT.OnTimer := Self.EventHandlers.OnTimerTick;
          with FilteredStatus do
@@ -1837,7 +1848,7 @@ begin
 
          // Initialize timer and event handlers — must happen for all radio paths
          Self.EventHandlers := EventHandlers;
-         Self.tmrCWByCAT := TWinTimer.Create(nil);
+         Self.tmrCWByCAT := TTimer.Create(nil);
          Self.tmrCWByCAT.Enabled := false;
          Self.tmrCWByCAT.OnTimer := Self.EventHandlers.OnTimerTick;
          // Reset filtered status
@@ -1947,7 +1958,7 @@ begin
 
    { Initialize the radio variables }
 
-   Self.tmrCWByCAT := TWinTimer.Create(nil);
+   Self.tmrCWByCAT := TTimer.Create(nil);
    Self.tmrCWByCAT.Enabled := false;
    Self.EventHandlers := EventHandlers;
    Self.tmrCWByCAT.OnTimer := Self.EventHandlers.OnTimerTick;

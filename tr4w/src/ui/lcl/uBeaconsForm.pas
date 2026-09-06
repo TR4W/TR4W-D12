@@ -317,7 +317,7 @@ begin
       // disable here, but ShowModalOverWin32Parent is also where the main
       // window is made the owner and the form is centred over it -- see
       // OwnFormByMainWindow.  A bare ShowModal skips both.
-      ShowModalOverWin32Parent(frmBeacons, 0);
+      ShowModalOverWin32Parent(frmBeacons);
    except
       on E: Exception do
          begin

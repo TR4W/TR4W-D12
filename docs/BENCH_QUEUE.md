@@ -2723,6 +2723,31 @@ edits one, deletes one, or opens a log window.
 
 ### BENCH RUNS -- no automated gate reaches any of this
 
+- [ ] **CW BY CAT, on a radio that keys over the control link** (Elecraft,
+  Kenwood, Icom, Flex). Send a few F-key messages at different speeds and check
+  the busy window still ends when the message does -- particularly a message
+  whose length is EXTENDED mid-send, which is `AddTimeToCWByCATTimer`.
+
+  **What changed.** `tmrCWByCAT` was a `TWinTimer` -- a hand-rolled `SetTimer`
+  wrapper written in August because linking VCL's `ExtCtrls` for one timer
+  meant linking the VCL. The framework is the LCL now and is linked anyway, and
+  `uWinTimer`'s own header said the swap was gated on the message loop moving,
+  which it has. It is an `ExtCtrls.TTimer`.
+
+  **The seven unit tests moved with it** (`uTestCWByCATTimer`) and one of them
+  failed on the swap, which is why they were repointed rather than deleted:
+  `TWinTimer` was born DISABLED and `TTimer` is born ENABLED with a 1000 ms
+  interval. Harmless here -- all three LOGRADIO constructions disable it before
+  assigning `OnTimer` -- but it is exactly the class of difference that shows
+  up as CW timing being subtly wrong on the air and nowhere else.
+
+  **And one thing NOT fixed, deliberately.** `uRadioPolling:935` sets
+  `rig.tmrCWByCAT.Enabled := False` from the POLLING THREAD. `KillTimer` works
+  from the thread that owns the timer, so that call was already reaching across
+  threads under `TWinTimer` and still does. Not a regression and not made
+  worse; it is a threading question about CW timing rather than a Win32 one,
+  and it wants a decision, not a patch.
+
 - [ ] **The server-log SYNCHRONIZE window -- NEEDS A SECOND STATION.** Its
   QSO list was the last hand-built Win32 window in the program and is a
   `TLogGrid` now (2026-09-06). Connect to a multi-op server, open Log Compare

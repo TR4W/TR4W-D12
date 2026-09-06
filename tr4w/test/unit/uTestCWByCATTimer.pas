@@ -1,8 +1,18 @@
-unit uTestWinTimer;
+unit uTestCWByCATTimer;
 {$I ..\..\src\tr4w.inc}
 
 {
-  Pins TWinTimer, the WM_TIMER timer that replaced VCL's TTimer in LOGRADIO.
+  Pins the timer behaviour LOGRADIO's CW-by-CAT busy window depends on.
+
+  THE COMPONENT UNDER TEST CHANGED AND THE TESTS DID NOT, WHICH IS THE
+  POINT.  They were written for TWinTimer, a hand-rolled SetTimer
+  wrapper added when linking VCL's ExtCtrls for one timer meant linking
+  the VCL.  The framework is the LCL now and is linked anyway, so
+  tmrCWByCAT is an ExtCtrls.TTimer and uWinTimer is deleted
+  (2026-09-06).  These seven assertions are what made that swap
+  checkable rather than hopeful -- so the file is named for the
+  BEHAVIOUR rather than for whichever component supplies it, which is
+  what it was really pinning all along.
 
   WHY THESE TESTS EXIST.  The one consumer is tmrCWByCAT -- the CW-by-CAT busy
   window -- so a behaviour difference here does not show up as a compile error
@@ -15,17 +25,17 @@ unit uTestWinTimer;
   THE MESSAGE PUMP.  WM_TIMER is delivered to the thread's message queue, and a
   console test EXE has no loop -- so these tests pump one themselves.  That is
   also a faithful test of the real arrangement: in TR4W the timer's window is
-  serviced by the main loop in tr4w.lpr.
+  serviced by Application.Run.
 }
 
 interface
 
 uses
    Windows, Messages, SysUtils, Classes,
-   uTR4WTestFramework, uWinTimer;
+   uTR4WTestFramework, ExtCtrls;
 
 type
-   TWinTimerTests = class(TTestCase)
+   TCWByCATTimerTests = class(TTestCase)
    private
       FFired: integer;
       FLastSender: TObject;
@@ -48,18 +58,18 @@ type
 
 implementation
 
-procedure TWinTimerTests.HandleTimer(Sender: TObject);
+procedure TCWByCATTimerTests.HandleTimer(Sender: TObject);
 begin
    Inc(FFired);
    FLastSender := Sender;
    if FDisableOnFire then
       begin
       // Exactly what LOGRADIO's OnTimerTick does, to get one-shot behaviour.
-      TWinTimer(Sender).Enabled := False;
+      TTimer(Sender).Enabled := False;
       end;
 end;
 
-function TWinTimerTests.PumpUntilFired(wanted: integer; budgetMs: Cardinal): Cardinal;
+function TCWByCATTimerTests.PumpUntilFired(wanted: integer; budgetMs: Cardinal): Cardinal;
 var
    started: Cardinal;
    msg: TMsg;
@@ -77,40 +87,68 @@ begin
    Result := GetTickCount - started;
 end;
 
-procedure TWinTimerTests.Test_StartsDisabled;
+procedure TCWByCATTimerTests.Test_StartsDisabled;
 var
-   t: TWinTimer;
+   t: TTimer;
 begin
    BeginTest('Test_StartsDisabled');
-   // DELIBERATE DIFFERENCE from VCL TTimer, which is born Enabled with
-   // Interval 1000 and starts a real timer you then switch off.  Every TR4W
-   // call site assigns Enabled := False straight after Create, so nothing
-   // changes for them -- and a timer that does nothing until asked is safer.
-   t := TWinTimer.Create(nil);
+
+   (* THE ONE ASSERTION THAT CHANGED WITH THE COMPONENT, AND IT IS WHY THESE
+     TESTS WERE KEPT RATHER THAN DELETED.
+
+     TWinTimer was born DISABLED -- a deliberate difference from TTimer, which
+     is born Enabled with Interval 1000 and arms a real system timer you then
+     switch off. Swapping the component back to TTimer reverses that, and this
+     test failed the moment it was, which is exactly the job it was written
+     for: a CW-timing difference that no compile error and no crash would
+     report.
+
+     IT IS SAFE HERE, and the reason is the call sites rather than the
+     component. All three constructions in LOGRADIO read
+
+         Self.tmrCWByCAT := TTimer.Create(nil);
+         Self.tmrCWByCAT.Enabled := False;
+         ... OnTimer := Self.EventHandlers.OnTimerTick;
+
+     -- disabled before a handler exists, so the armed default cannot reach
+     anything. So what the CW path actually depends on is not "a new timer is
+     disabled" but "that sequence yields a timer that does not fire", and that
+     is what is pinned now. Asserting the old invariant would be asserting a
+     property of a component this program no longer has. *)
+
+   FFired := 0;
+   FDisableOnFire := False;
+
+   t := TTimer.Create(nil);
    try
-      CheckFalse(t.Enabled, 'a new timer is disabled');
-      CheckEquals(1000, t.Interval, 'Interval still defaults to TTimer''s 1000');
+      t.Enabled := False;            { as LOGRADIO does, before the handler }
+      t.OnTimer := HandleTimer;
+      t.Interval := 20;
+
+      PumpUntilFired(1, 250);
+      CheckEquals(0, FFired, 'LOGRADIO''s construction sequence does not fire');
+      CheckFalse(t.Enabled, 'and leaves the timer disabled');
    finally
       t.Free;
    end;
 end;
 
-procedure TWinTimerTests.Test_FiresAndPassesItselfAsSender;
+procedure TCWByCATTimerTests.Test_FiresAndPassesItselfAsSender;
 var
-   t: TWinTimer;
+   t: TTimer;
 begin
    BeginTest('Test_FiresAndPassesItselfAsSender');
    FFired := 0;
    FLastSender := nil;
    FDisableOnFire := False;
-   t := TWinTimer.Create(nil);
+   t := TTimer.Create(nil);
    try
       t.OnTimer := HandleTimer;
       t.Interval := 20;
       t.Enabled := True;
       PumpUntilFired(1, 2000);
       CheckTrue(FFired >= 1, 'the timer fired');
-      // Sender must be the timer itself, or `TWinTimer(Sender).Enabled := False`
+      // Sender must be the timer itself, or `TTimer(Sender).Enabled := False`
       // in LOGRADIO's handler would be operating on the wrong object.
       CheckTrue(FLastSender = t, 'Sender is the timer object');
    finally
@@ -118,9 +156,9 @@ begin
    end;
 end;
 
-procedure TWinTimerTests.Test_HandlerCanDisableFromInside;
+procedure TCWByCATTimerTests.Test_HandlerCanDisableFromInside;
 var
-   t: TWinTimer;
+   t: TTimer;
 begin
    BeginTest('Test_HandlerCanDisableFromInside');
    // This IS the CW-by-CAT pattern: arm for the length of the message, fire
@@ -129,7 +167,7 @@ begin
    // cleared over and over.
    FFired := 0;
    FDisableOnFire := True;
-   t := TWinTimer.Create(nil);
+   t := TTimer.Create(nil);
    try
       t.OnTimer := HandleTimer;
       t.Interval := 15;
@@ -146,15 +184,15 @@ begin
    end;
 end;
 
-procedure TWinTimerTests.Test_ZeroIntervalDoesNotFire;
+procedure TCWByCATTimerTests.Test_ZeroIntervalDoesNotFire;
 var
-   t: TWinTimer;
+   t: TTimer;
 begin
    BeginTest('Test_ZeroIntervalDoesNotFire');
    // VCL semantics: Interval 0 means no timer, even when Enabled.
    FFired := 0;
    FDisableOnFire := False;
-   t := TWinTimer.Create(nil);
+   t := TTimer.Create(nil);
    try
       t.OnTimer := HandleTimer;
       t.Interval := 0;
@@ -166,14 +204,14 @@ begin
    end;
 end;
 
-procedure TWinTimerTests.Test_DisabledDoesNotFire;
+procedure TCWByCATTimerTests.Test_DisabledDoesNotFire;
 var
-   t: TWinTimer;
+   t: TTimer;
 begin
    BeginTest('Test_DisabledDoesNotFire');
    FFired := 0;
    FDisableOnFire := False;
-   t := TWinTimer.Create(nil);
+   t := TTimer.Create(nil);
    try
       t.OnTimer := HandleTimer;
       t.Interval := 15;
@@ -185,9 +223,9 @@ begin
    end;
 end;
 
-procedure TWinTimerTests.Test_SettingIntervalRestartsARunningTimer;
+procedure TCWByCATTimerTests.Test_SettingIntervalRestartsARunningTimer;
 var
-   t: TWinTimer;
+   t: TTimer;
    elapsed: Cardinal;
 begin
    BeginTest('Test_SettingIntervalRestartsARunningTimer');
@@ -200,7 +238,7 @@ begin
    // CW busy windows silently shorten, and this test is what says so.
    FFired := 0;
    FDisableOnFire := False;
-   t := TWinTimer.Create(nil);
+   t := TTimer.Create(nil);
    try
       t.OnTimer := HandleTimer;
       t.Interval := 400;
@@ -225,9 +263,9 @@ begin
    end;
 end;
 
-procedure TWinTimerTests.Test_DestroyWhileRunningIsSafe;
+procedure TCWByCATTimerTests.Test_DestroyWhileRunningIsSafe;
 var
-   t: TWinTimer;
+   t: TTimer;
    msg: TMsg;
    i: integer;
 begin
@@ -238,7 +276,7 @@ begin
    // freed object.
    FFired := 0;
    FDisableOnFire := False;
-   t := TWinTimer.Create(nil);
+   t := TTimer.Create(nil);
    t.OnTimer := HandleTimer;
    t.Interval := 10;
    t.Enabled := True;
@@ -256,7 +294,7 @@ begin
    CheckEquals(0, FFired, 'no callback after Free');
 end;
 
-procedure TWinTimerTests.RunAllTests;
+procedure TCWByCATTimerTests.RunAllTests;
 begin
    Test_StartsDisabled;
    Test_FiresAndPassesItselfAsSender;
