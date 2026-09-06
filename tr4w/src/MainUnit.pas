@@ -2059,47 +2059,8 @@ procedure SaveTR4WPOSFILE;
 var
   store: TWindowLayoutStore;
   i: WindowsType;
-  mainWin, mainForm: TRect;   { [MainPos] diagnostic -- see below }
 begin
   FindAndSaveRectOfAllWindows;
-
-  (* WHY THE MAIN WINDOW'S POSITION IS NAMED HERE, at INFO, on every write.
-
-    NY4I, 2026-09-06: the main window does not come back where it was left.
-    settings/tr4w.json holds left=0 top=30 -- EXACTLY uMainForm.lfm's designed
-    Left and Top -- while its width and height are live values. Size tracks the
-    real window and position does not, and that asymmetry is what has to be
-    explained before anything is changed.
-
-    Both numbers are printed because they are read from different places: the
-    save takes BoundsRect from the FORM, and GetWindowRect is what the window
-    actually is. If they disagree, the LCL has not been told the window moved
-    and the save is the broken end. If they agree, the save is right and the
-    restore is being overridden.
-
-    This writes only when the autosave saw a change, not every tick. REMOVE IT
-    once the answer is in. *)
-  if logger <> nil then
-     begin
-     Windows.GetWindowRect(tr4w_WindowsArray[tw_MAINWINDOW_INDEX].WndHandle,
-                           mainWin);
-     if TR4WMainForm <> nil then
-        begin
-        mainForm := TR4WMainForm.BoundsRect;
-        end
-     else
-        begin
-        mainForm := Rect(0, 0, 0, 0);
-        end;
-     logger.Info('[MainPos] SAVING (%d,%d,%d,%d) -- form BoundsRect=(%d,%d,%d,%d) '
-                 + 'window GetWindowRect=(%d,%d,%d,%d)',
-                 [tr4w_WindowsArray[tw_MAINWINDOW_INDEX].WndRect.Left,
-                  tr4w_WindowsArray[tw_MAINWINDOW_INDEX].WndRect.Top,
-                  tr4w_WindowsArray[tw_MAINWINDOW_INDEX].WndRect.Right,
-                  tr4w_WindowsArray[tw_MAINWINDOW_INDEX].WndRect.Bottom,
-                  mainForm.Left, mainForm.Top, mainForm.Right, mainForm.Bottom,
-                  mainWin.Left, mainWin.Top, mainWin.Right, mainWin.Bottom]);
-     end;
 
   store := TWindowLayoutStore.Create;
   try
