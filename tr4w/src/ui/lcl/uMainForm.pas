@@ -987,6 +987,18 @@ begin
       Exit;
       end;
 
+   (* [MainPos] -- the restore end of the save/restore question NY4I raised on
+     2026-09-06. Paired with the [MainPos] SAVING line in SaveTR4WPOSFILE and
+     the [MainPos] SHOWN line below. REMOVE ALL THREE once answered. *)
+   if logger <> nil then
+      begin
+      logger.Info('[MainPos] RESTORE asked for (%d,%d,%d,%d); form is at '
+                  + '(%d,%d,%d,%d)',
+                  [aSaved.Left, aSaved.Top, aSaved.Right, aSaved.Bottom,
+                   TR4WMainForm.BoundsRect.Left, TR4WMainForm.BoundsRect.Top,
+                   TR4WMainForm.BoundsRect.Right, TR4WMainForm.BoundsRect.Bottom]);
+      end;
+
    r := TR4WMainForm.BoundsRect;
 
    (* A SAVED RECT WITH NO SIZE IS A FIRST RUN, or a file written before the
@@ -2357,6 +2369,18 @@ begin
    Windows.SetWindowPos(TR4WMainForm.Handle, 0, r.Left, r.Top,
                         r.Right - r.Left, r.Bottom - r.Top,
                         SWP_NOZORDER or SWP_NOACTIVATE);
+
+   (* [MainPos] -- where the window ACTUALLY is once it is up. If this differs
+     from what RESTORE was asked for, the restore is the broken end; if it
+     matches and the next run's SAVING line does not, the save is. *)
+   if logger <> nil then
+      begin
+      Windows.GetWindowRect(TR4WMainForm.Handle, r);
+      logger.Info('[MainPos] SHOWN at (%d,%d,%d,%d); form BoundsRect=(%d,%d,%d,%d)',
+                  [r.Left, r.Top, r.Right, r.Bottom,
+                   TR4WMainForm.BoundsRect.Left, TR4WMainForm.BoundsRect.Top,
+                   TR4WMainForm.BoundsRect.Right, TR4WMainForm.BoundsRect.Bottom]);
+      end;
 end;
 
 
