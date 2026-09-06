@@ -70,6 +70,22 @@ type
       FTCP:      TIdTCPClient;
       FReader:   TNetReader;
       FStopping: boolean;
+      (* IS THE LINK UP -- ANSWERED HERE, NEVER BY ASKING INDY.
+
+        FTCP.Connected LOOKS like a read-only question and is not. It calls
+        TIdIOHandler.Connected, which calls CheckForDisconnect, which calls
+        Close and frees the binding. Asking it from the main thread while the
+        reader thread is inside a read destroys the handler under the reader:
+        an access violation on the reader thread, the link reported lost, and
+        five seconds later a reconnect that does it again (NY4I, 2026-09-06).
+
+        Fifteen call sites ask NetIsConnected, one of them a five-second timer,
+        so the question must be free of side effects. A boolean written by the
+        three places that know -- a completed handshake, the reader's exit,
+        Disconnect -- is that. Its word-sized write is atomic; a reader can be
+        at most one tick stale, and a send on a link that has just dropped
+        raises and is caught, which is what the code already does. *)
+      FConnected: boolean;
       FOnData:         TNetDataEvent;
       FOnDisconnected: TNetErrorEvent;
       function GetIsConnected: boolean;
@@ -178,6 +194,11 @@ begin
             end;
          end;
    finally
+      { DOWN BEFORE ANYONE IS TOLD. The handler runs QuickDisplay and the
+        reconnect logic, and both ask IsConnected; if the flag were still set
+        they would read a link that no longer has a reader behind it. }
+      FOwner.FConnected := False;
+
       if (not FOwner.FStopping) and Assigned(FOwner.FOnDisconnected) then
          begin
          FOwner.FOnDisconnected(closeText);
@@ -202,7 +223,8 @@ end;
 
 function TNetClient.GetIsConnected: boolean;
 begin
-   Result := (FTCP <> nil) and FTCP.Connected;
+   { The flag, not FTCP.Connected -- see the field. }
+   Result := FConnected;
 end;
 
 function TNetClient.Connect(const aHost: string; const aPort: word;
@@ -296,35 +318,59 @@ begin
    // timeout: the reader polls with CheckForDataOnSource instead.
    FTCP.ReadTimeout := IdTimeoutInfinite;
 
+   (* THE LINK IS UP ONLY NOW. A socket the server has not acknowledged is not
+     a usable link, which is why the handshake is inside Connect. Set before
+     the reader starts, so the reader cannot clear it before it is set. *)
+   FConnected := True;
+
    FReader := TNetReader.Create(Self);
    Result := True;
 end;
 
+(* THE READER STOPS FIRST, AND THEN THE SOCKET CLOSES.
+
+  It used to be the other way round -- close the IOHandler to unblock a reader
+  sitting in a read -- and that is the same cross-thread teardown that made the
+  status poll fatal: two threads closing and using one handler.
+
+  It is not needed. The reader polls with a 250 ms timeout and tests Terminated
+  every time round, so it stops on its own within a quarter of a second without
+  anyone reaching into its handler. Waiting for it first buys the invariant
+  worth having: WHILE THE READER EXISTS IT IS THE ONLY THING THAT TOUCHES THE
+  IOHANDLER FOR READING, and once it is gone the close is unopposed.
+
+  WaitFor cannot deadlock here. Both reader callbacks -- OnData and
+  OnDisconnected -- marshal with Application.QueueAsyncCall, which posts and
+  returns; neither is a Synchronize waiting on the thread being blocked. *)
 procedure TNetClient.Disconnect;
 begin
    FStopping := True;
-   try
-      if (FTCP <> nil) and FTCP.Connected then
-         begin
-         FTCP.Disconnect;
-         end;
-      // Closing the IOHandler is what unblocks a reader sitting in a read.
-      if (FTCP <> nil) and (FTCP.IOHandler <> nil) then
-         begin
-         FTCP.IOHandler.CloseGracefully;
-         end;
-   except
-      on E: Exception do
-         begin
-         logger.Debug('[NetClient] Disconnect: %s', [E.Message]);
-         end;
-      end;
+   FConnected := False;
 
    if FReader <> nil then
       begin
       FReader.Terminate;
       FReader.WaitFor;
       FreeAndNil(FReader);
+      end;
+
+   try
+      if FTCP <> nil then
+         begin
+         { Unconditional: Indy's Disconnect copes with a link that is already
+           down, and the FTCP.Connected that used to guard it is the very call
+           this change exists to stop making. }
+         FTCP.Disconnect;
+         if FTCP.IOHandler <> nil then
+            begin
+            FTCP.IOHandler.CloseGracefully;
+            end;
+         end;
+   except
+      on E: Exception do
+         begin
+         logger.Debug('[NetClient] Disconnect: %s', [E.Message]);
+         end;
       end;
 end;
 

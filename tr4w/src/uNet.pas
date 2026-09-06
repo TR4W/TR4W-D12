@@ -955,6 +955,18 @@ procedure TryConnectToNetwork;
 var
   announce: boolean;
 begin
+  (* NOT OVER A LIVE LINK.
+
+    Connect's first act is Disconnect, so calling this while connected does not
+    "reconnect" -- it silently kills a working link and builds a new one. The
+    network window's timer checks NetIsConnected before calling, but the
+    invariant belongs with the routine that owns it rather than with one of its
+    callers, and this is the exact failure that was chased on 2026-09-06. *)
+  if NetIsConnected then
+     begin
+     Exit;
+     end;
+
   { REFUSED, AND NOTHING HAS CHANGED SINCE.  Silent on purpose: the operator has
     already been told once, and repeating it every five seconds would be the
     same defect in a different costume. }

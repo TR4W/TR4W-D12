@@ -97,6 +97,15 @@ type
         not to the unit. }
       property PeerIP: string read FPeerIP write FPeerIP;
 
+      (* THE KEY THIS CLIENT IS REGISTERED UNDER, and the only one to match on.
+
+        Handle asks the CONNECTION for its binding and answers 0 the moment
+        that binding is gone, so a lookup by Handle misses a client that is
+        still in the list -- measured, with the whole handshake succeeding and
+        the reply then dropped (2026-09-06). AddSocketToArray was given
+        FHandle; ContextOf must ask for FHandle. *)
+      property AdmittedHandle: Cardinal read FHandle;
+
       { Public because the handlers below are methods of a DIFFERENT class in
         this unit, and a private member is visible only to its own. }
       procedure SyncHandshake;
@@ -250,7 +259,7 @@ begin
 
    FRefused  := False;
    FAdmitted := True;
-   FHandle   := Handle;
+   { FHandle is set in MainConnect, where the binding is certain to be readable. }
    logger.Info('[Net] client %s (%s) admitted as %d', [FPeerIP, FPeerName, FHandle]);
 end;
 
@@ -422,6 +431,16 @@ begin
    c.FAdmitted := False;
    c.FRefused  := False;
 
+   (* THE HANDLE, CAPTURED WHILE IT CAN STILL BE READ.
+
+     Everything that sends to this client finds it by handle, including the
+     handshake's own acknowledgement -- so the value has to be valid from the
+     moment the context exists, not from the moment the handshake finishes.
+     The binding is right here (PeerIP and PeerPort come off it) and the handle
+     never changes afterwards; only the ability to ask for it does, which is
+     exactly why this is remembered rather than fetched. *)
+   c.FHandle := c.Handle;
+
    (* SAY SO THE MOMENT A SOCKET ARRIVES.
 
      Nothing was logged here, and the handshake is the first thing that speaks
@@ -567,14 +586,24 @@ end;
   said, so the lookup lives here rather than the identity changing everywhere.
   LockList/UnlockList because Indy owns the list and a client can disconnect
   between the engine deciding to write and the write happening. *)
+(* FIND AN ADMITTED CLIENT BY THE HANDLE IT WAS ADMITTED UNDER.
+
+  AdmittedHandle, NOT Handle -- see the property. Handle asks the CONNECTION
+  for its binding and answers 0 the moment that binding is gone, so a lookup by
+  Handle misses a client that is still in the list. Measured, with the whole
+  handshake succeeding and the reply then silently dropped: "looking for 1068,
+  list has 1 context(s): 0" (2026-09-06). AddSocketToArray was given FHandle,
+  so ContextOf must ask for FHandle -- one key, or no match.
+
+  A zero never matches, which is correct: a context that has connected but not
+  finished the handshake has nothing that could be sent to it. *)
 function ContextOf(const aHandle: Cardinal): TServerConn;
 var
    list: TIdContextList;
    i:    integer;
-   seen: string;   { [CtxDiag] temporary }
 begin
    Result := nil;
-   if GMain = nil then
+   if (aHandle = 0) or (GMain = nil) then
       begin
       Exit;
       end;
@@ -583,24 +612,11 @@ begin
    try
       for i := 0 to list.Count - 1 do
          begin
-         if TServerConn(list[i]).Handle = aHandle then
+         if TServerConn(list[i]).AdmittedHandle = aHandle then
             begin
             Result := TServerConn(list[i]);
             Exit;
             end;
-         end;
-
-      { [CtxDiag] TEMPORARY. Say what the list actually holds when a live
-        client cannot be found in it. Remove once the cause is known. }
-      if logger <> nil then
-         begin
-         seen := '';
-         for i := 0 to list.Count - 1 do
-            begin
-            seen := seen + IntToStr(TServerConn(list[i]).Handle) + ' ';
-            end;
-         logger.Warn('[CtxDiag] looking for %d, list has %d context(s): %s',
-                     [aHandle, list.Count, seen]);
          end;
    finally
       GMain.Contexts.UnlockList;
