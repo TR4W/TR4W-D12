@@ -140,21 +140,6 @@ type
   UDPType = (udpContactInfo, udpContactReplace, udpContactDelete, udpLookupInfo);
   LastEntryType = (letCallsign, letQTHString);
 
-  TR4WDLGTEMPLATE = {packed } record
-    Style: DWORD;
-    dwExtendedStyle: DWORD;
-    cdit: Word;
-    X: SHORT;
-    Y: SHORT;
-    cx: SHORT;
-    cy: SHORT;
-    B1: Byte;
-    B2: Byte;
-    b3: Byte;
-//    b4: Byte;
-//    B5: Byte;
-  end;
-
   TRichEditObject = record
     reLibModule: HMODULE;
     reUsers: Cardinal;
@@ -203,9 +188,6 @@ type
   TIdText = AnsiString;
 
 const
-
-  MAINTR4WDLGTEMPLATE                   : TR4WDLGTEMPLATE =
-    (Style: DS_MODALFRAME or DS_3DLOOK or WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_THICKFRAME; dwExtendedStyle: WS_EX_DLGMODALFRAME or WS_EX_TOOLWINDOW);
 
   ZoneModeTypeSA                        : array[ZoneModeType] of PAnsiChar = ('CQ Zone', 'ITU Zone');
 
@@ -290,7 +272,6 @@ const
 //     would silently switch on blocks that have been dead for years.
 const
   WINKEYDEBUG                           = False;
-  tKeyerDebug                           = False;
 
   CWDEBUG                               = False;
   SCPDEBUG                              = False;
@@ -2729,7 +2710,6 @@ var
   MorseRunner_Number                    : HWND;
 {$IFEND}
 
-  tKeyerDebugWindowHandle               : HWND;
   tShowDomesticMultiplierName           : boolean;
   tRemMultsColumnWidth                  : integer;
   tInputDialogWarning                   : boolean;
@@ -2756,7 +2736,6 @@ var
 
 
 
-  CPUButtonHandle                       : HWND = INVALID_HANDLE_VALUE;
 
 
 

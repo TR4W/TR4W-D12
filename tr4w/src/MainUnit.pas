@@ -394,8 +394,6 @@ procedure ClearMultSheet_CtrlC;
 procedure tClearMultSheet;
 procedure ReCalculateHourDisplay;
 procedure SetRemMultsColumnWidth;
-function KeyerDebugDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam:
-  lParam): BOOL; stdcall;
 procedure CheckInactiveRigCallingCQ;
 procedure tAltI;
 procedure tr4w_alt_n_transmit_frequency;
@@ -464,7 +462,6 @@ procedure ProcessFuntionKeys(Key: integer);
 procedure CreateDirectoryIfNotExist;
 procedure CheckAndSetInitialExchangeCursorPos;
 procedure ClearInfoWindows;
-procedure CPUButtonProc;
 procedure TREscapeCommFunction(hFile: THandle; dwFunc: Byte);
 function Get_Ctl_Code(nr: integer): Cardinal;
 procedure DebugMsg(s: string); // ny4i
@@ -5008,12 +5005,8 @@ begin
     menu_ctrl_showQSONumber:
       begin
 
-{$IF tDebugMode}
-        CPUButtonProc;
-{$ELSE}
         TF.Format(wsprintfBuffer, 'QSO number %u', TotalContacts);
         ShowMessage(wsprintfBuffer);
-{$IFEND}
       end;
 
     menu_ctrl_logqsowithoutcw:
@@ -6556,85 +6549,9 @@ begin
   CleanUpDisplay;
 end;
 
-procedure CPUButtonProc;
-label
-  1;
-
-var
-  Start, Stop: int64;
-
-begin
-
-  Start := GetCPU;
-{$IF tDebugMode}
-  // GenerateSupportedContestsNew;
-  // uDocumentation.MakeContestsPagesHTML;
-  // GenerateSupportedContestsNew;
-  // uDocumentation.MakeCommandsListForIniFile;
-
-{$IFEND}
-
-  Stop := GetCPU;
-  if Stop - Start < MAXLONG then
-     begin
-     Windows.SetWindowTextA(CPUButtonHandle, inttopchar(Stop - Start));
-     end;
-
-end;
-
 procedure TREscapeCommFunction(hFile: THandle; dwFunc: Byte);
 begin
   EscapeCommFunction(hFile, Cardinal(dwFunc));
-{$IF tKeyerDebug}
-  if (hFile = Radio1.tCATPortHandle) or (hFile = Radio1.tKeyerPortHandle) then
-     begin
-     if dwFunc = SETRTS then
-        begin
-        Windows.SendDlgItemMessage(tKeyerDebugWindowHandle, 102, BM_SETCHECK,
-          BST_CHECKED, 0);
-        end;
-     if dwFunc = CLRRTS then
-        begin
-        Windows.SendDlgItemMessage(tKeyerDebugWindowHandle, 102, BM_SETCHECK,
-          BST_UNCHECKED, 0);
-        end;
-
-     if dwFunc = SETDTR then
-        begin
-        Windows.SendDlgItemMessage(tKeyerDebugWindowHandle, 103, BM_SETCHECK,
-          BST_CHECKED, 0);
-        end;
-     if dwFunc = CLRDTR then
-        begin
-        Windows.SendDlgItemMessage(tKeyerDebugWindowHandle, 103, BM_SETCHECK,
-          BST_UNCHECKED, 0);
-        end;
-     end;
-  if (hFile = Radio2.tCATPortHandle) or (hFile = Radio2.tKeyerPortHandle) then
-     begin
-     if dwFunc = SETRTS then
-        begin
-        Windows.SendDlgItemMessage(tKeyerDebugWindowHandle, 105, BM_SETCHECK,
-          BST_CHECKED, 0);
-        end;
-     if dwFunc = CLRRTS then
-        begin
-        Windows.SendDlgItemMessage(tKeyerDebugWindowHandle, 105, BM_SETCHECK,
-          BST_UNCHECKED, 0);
-        end;
-
-     if dwFunc = SETDTR then
-        begin
-        Windows.SendDlgItemMessage(tKeyerDebugWindowHandle, 106, BM_SETCHECK,
-          BST_CHECKED, 0);
-        end;
-     if dwFunc = CLRDTR then
-        begin
-        Windows.SendDlgItemMessage(tKeyerDebugWindowHandle, 106, BM_SETCHECK,
-          BST_UNCHECKED, 0);
-        end;
-     end;
-{$IFEND}
 
 end;
 
@@ -9600,32 +9517,6 @@ begin
      begin
      frm.Mults.SetCellWidth(Width);
      end;
-end;
-
-function KeyerDebugDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam:
-  lParam): BOOL; stdcall;
-begin
-  Result := False;
-  case Msg of
-    WM_INITDIALOG:
-      begin
-        tKeyerDebugWindowHandle := hwnddlg;
-        Windows.SetWindowPos(hwnddlg, HWND_TOP, 0, 0, 200, 200, SWP_SHOWWINDOW);
-
-        Windows.SetWindowTextA(hwnddlg, 'TWO RADIO debug');
-
-        CreateButton(BS_CHECKBOX, 'RTS1', 10, 10, 50, hwnddlg, 102);
-        CreateButton(BS_CHECKBOX, 'DTR1', 10, 30, 50, hwnddlg, 103);
-
-        CreateButton(BS_CHECKBOX, 'RTS2', 70, 10, 50, hwnddlg, 105);
-        CreateButton(BS_CHECKBOX, 'DTR2', 70, 30, 50, hwnddlg, 106);
-
-      end;
-
-    WM_CLOSE: EndDialog(hwnddlg, 0);
-
-  end;
-
 end;
 
 procedure CheckInactiveRigCallingCQ;

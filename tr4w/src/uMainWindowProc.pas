@@ -633,14 +633,6 @@ begin
           TTR4WMainForm.MainLogDblClick answers. NY4I, 2026-09-04: "this is an
           LCL form so does it makes sense for there to be a WM_COMMAND involved
           anymore?" -- no, and nothing had posted 66 for some time. *)
-{$IF tDebugMode}
-        if HiWord(wParam) = BN_CLICKED then
-        begin
-          if lParam = integer(CPUButtonHandle) then CPUButtonProc;
-          FrmSetFocus;
-        end;
-{$IFEND}
-
         (* A MENU COMMAND HAS lParam = 0. A CONTROL NOTIFICATION DOES NOT.
 
           WM_COMMAND carries three different things and Windows tells them

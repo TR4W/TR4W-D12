@@ -171,7 +171,6 @@ function inttopchar(i: integer): PAnsiChar;
 procedure DragWindow(h: HWND);
 //procedure SaveStructure(Address: Pointer; Count: integer; FileName: string);
 //function tShellexecute(HWND: HWND; Operation, FileName, Parameters, Directory: PChar; showCmd: integer): hInst; // 4.75.3
-function CreateButton(dwStyle: Cardinal; lpWindowName: string; X, Y, nWidth: integer; hwndParent: HWND; HMENU: HMENU): HWND;
 function SendDlgItemMessage(hDlg: HWND; nIDDlgItem: integer; Msg: UINT): LONGINT; stdcall;
 
 function tOpenFileForRead(var h: HWND; FileName: PAnsiChar): boolean;
@@ -915,16 +914,6 @@ begin
   // make the in-place upcase contract explicit (the old by-value asm modified
   // the caller's string anyway -- see uStrSearch / the LogCfg note).
   uStrSearch.StrU(Str);
-end;
-
-function CreateButton(dwStyle: Cardinal; lpWindowName: string; X, Y, nWidth: integer; hwndParent: HWND; HMENU: HMENU): HWND;
-begin
-  // CreateWindowExW. lpWindowName is a string --
-  // UnicodeString here -- and the A entry point would need a lossy round trip
-  // through the machine codepage, which is precisely what would mangle an
-  // accented button caption in the languages this is all for.
-  Result := CreateWindowExW(0, 'Button', PWideChar(lpWindowName), dwStyle or WS_CHILD or BS_TEXT or WS_VISIBLE or WS_TABSTOP, X, Y, nWidth, 23 {nHeight}, hwndParent, HMENU, hInstance, nil);
-  tWM_SETFONT(Result, MSSansSerifFont);
 end;
 
 function CreateRichEdit(hwndParent: HWND): HWND;

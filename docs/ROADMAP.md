@@ -782,6 +782,16 @@ code review, and it is the reason the FMX twins should not be deleted yet.
 
 ## 5. Smaller, well-defined items
 
+- **An RTS/DTR line monitor, if it is wanted again, is a designed form** (deleted 2026-09-06).
+  `KeyerDebugDlgProc` showed four checkboxes -- RTS1/DTR1/RTS2/DTR2 -- mirrored from
+  `TREscapeCommFunction` so you could watch the keying lines move on both radios. It was a Win32
+  dialog template raised from `{$IF tKeyerDebug}`, and **tKeyerDebug has been `False` for the life
+  of this tree**, so no operator has ever seen it. Deleted rather than converted, because
+  converting a window nobody has run is guesswork: four `TCheckBox`es on a small `TForm` and the
+  same two-line mirror in `TREscapeCommFunction` would rebuild it in an afternoon, against a real
+  requirement rather than a guessed one. The same commit removed `CPUButtonProc`, which timed an
+  empty `{$IF tDebugMode}` block and wrote the answer to a window handle nothing ever assigned.
+
 - **The unit tests link the LCL**, transitively via `uCAT` → `uPrefsForm`. A test binary should not
   depend on a UI toolkit; the cut belongs at the `uCAT` seam.
 - **`tr4wserver.exe` has no version resource.** `tr4w.exe` gets one from `Version.pas`.

@@ -1784,14 +1784,6 @@ begin
 
 //  Format(wsprintfBuffer, 'cty.dat: "%s" version', CTY.ctyTable[cty.ctyVersion].Name);
 
-{$IF tKeyerDebug}
-//  CreateModalDialog(150, 90, tr4whandle, @KeyerDebugDlgProc, 0);
-//  CreateDialog(hInstance, MAKEINTRESOURCE(72), 0, @KeyerDebugDlgProc);
-  CreateDialogIndirectParam(hInstance, PDlgTemplate(@MAINTR4WDLGTEMPLATE)^, tr4whandle, @KeyerDebugDlgProc, 0);
-  FrmSetFocus;
-
-{$IFEND}
-
 {$IF MORSERUNNER}
   GetMorseRunnerWindow;
 {$IFEND}
