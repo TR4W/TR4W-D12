@@ -93,6 +93,10 @@ tr4w/tr4w.log
 *.RST
 *.TRW
 *.LOG
+# tr4wserver's single-instance lock. Created on start, held open for the
+# life of the process; its CONTENT is nothing and its existence is not the
+# signal -- the exclusive open is. Never committed.
+tr4wserver.lock
 
 # ADIF exports. The program writes these constantly -- /EXPORT mode, the Post
 # menu, and every corpus run -- and they are operating data, not source. A

@@ -62,6 +62,7 @@ uses
   Controls,      // mrYes -- the modal results MessageDlg answers with
   uAnsiStr,      // StrPLCopy over PAnsiChar; SysUtils' is PWideChar
   uAppPaths,     // LogFilePath -- where a written file goes, per platform
+  uLogConfig,    // CreateTR4WLogLayout -- the same timestamps the client writes
   uServerForm,   // the readouts, by name instead of by control number
   Messages;
 const
@@ -348,7 +349,19 @@ begin
     does not. *)
   appender := TLogRollingFileAppender.Create('name',
                  LogFilePath('tr4wserver.log'));
-  appender.Layout := TLogPatternLayout.Create('%d ' + TTCCPattern);
+
+  (* THE CLIENT'S LAYOUT, NOT A SECOND COPY OF THE PATTERN.
+
+    This built its own TLogPatternLayout and never set the dateFormat option,
+    so %d fell back to Log4D's default -- ShortDateFormat, which is a DATE AND
+    NO TIME. Every line read '8/29/2026 30304 [20516] debug', where the only
+    clue to WHEN was a millisecond tick since start (NY4I, 2026-09-06: "the log
+    header timestamp is pretty weak"). On a contest server, where the question
+    is always "what happened at 0247z", that is close to useless.
+
+    CreateTR4WLogLayout is what the client calls and it sets the option, giving
+    '06 Sep 2026 01:30:37.910'. One layout, one place to change it. *)
+  appender.Layout := CreateTR4WLogLayout;
   TLogBasicConfigurator.Configure(appender);
   logger := TLogLogger.GetLogger('TR4WServer');
   logger.Level := All;
@@ -364,12 +377,7 @@ begin
   DisplaySENDBytes;
   DisplayClients;
 //  Windows.ZeroMemory(@ClientsSoocketsArray, SizeOf(ClientsSoocketsArray));
-  (* THE ADDRESS TO TELL OPERATORS, FROM INDY'S STACK.
 
-    Was Gethostname + gethostbyname + iNet_ntoa -- three WinSock calls to
-    print one string. GStack.LocalAddress is the same answer and is whatever
-    the platform's stack says. *)
-  SetServerIP(GStack.LocalAddress);
   (* BOTH LISTENERS, IN ONE CALL. This was socket/bind/listen plus a
     WSAAsyncSelect naming a window, and RunSyncListener was the same again on
     PortNumber + 1. Indy owns the accept loop and the per-client threads; the
@@ -379,6 +387,21 @@ begin
      begin
      goto UnSucc;
      end;
+
+  (* THE ADDRESS TO TELL OPERATORS, AND IT MUST COME AFTER THE LISTENERS.
+
+    Was Gethostname + gethostbyname + iNet_ntoa -- three WinSock calls to print
+    one string. GStack.LocalAddress is the same answer from whatever stack the
+    platform has.
+
+    AFTER StartServerNet, NOT BEFORE, and that ordering is the whole of a bug:
+    GStack is declared `TIdStack = nil` and is created by TIdStack.IncUsage,
+    which is what activating an Indy server does. Reading it first was a null
+    dereference -- and because start-up ran before Application.Run there was no
+    handler and no window, so the program vanished with 'TR4WServer starting'
+    as the last line in its log (NY4I, 2026-09-06: "It seems to die quietly. I
+    never saw a UI"). *)
+  SetServerIP(GStack.LocalAddress);
 
   { ONE state, not two enables kept in step by hand -- see SetServerRunning. }
   SetServerRunning(True);

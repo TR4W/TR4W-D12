@@ -245,15 +245,44 @@ begin
   Application.Initialize;
   Application.CreateForm(TfrmServer, frmServer);
 
+  (* THE WINDOW BEFORE THE WORK, so a failure has somewhere to be reported.
+
+    Start-up used to run before anything was shown, and when it raised -- a nil
+    GStack, as it turned out -- the process ended with no window, no dialog and
+    a log that stopped mid-sentence. The old Win32 version had the same shape
+    of failure when its DIALOG resource went missing, and that hid for weeks.
+    A program that can exit without saying why will eventually do it. *)
+  frmServer.Show;
+  Application.ProcessMessages;
+
   ServerStopQuery      := @ConfirmStop;
   ServerStopRequested  := @RequestStop;
   ServerStartRequested := @RequestStart;
 
   SetServerVersion(FullServerVersion);
 
-  { Read the ini, open the log, start listening -- everything the dialog did
-    before its window appeared, and no longer wearing a message id. }
-  ServerStartUp;
+  (* AND START-UP REPORTS ITS OWN FAILURE.
+
+    Everything below -- the ini, the log file, binding the ports -- can fail,
+    and before Application.Run there is no LCL handler to catch it. Without
+    this the operator gets a program that disappears; with it they get the
+    reason, in the log and on the screen. *)
+  try
+     ServerStartUp;
+  except
+     on E: Exception do
+        begin
+        if logger <> nil then
+           begin
+           logger.Error('[Startup] failed: %s: %s', [E.ClassName, E.Message]);
+           end;
+        MessageDlg('TR4WSERVER',
+                   'The server could not start:' + sLineBreak + sLineBreak +
+                   E.ClassName + ': ' + E.Message + sLineBreak + sLineBreak +
+                   'See tr4wserver.log.', mtError, [mbOK], 0);
+        Application.Terminate;
+        end;
+  end;
 
   Application.Run;
 
