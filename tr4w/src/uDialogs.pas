@@ -162,14 +162,11 @@ const
   //function ChangeIconDialog(hOwner: HWND; var FileName: string; var IconIndex: integer): boolean;
 
   //����� ������� "����"
-function SelectColor(hWin: HWND; FullOpen: boolean): TColorRef;
 
 //����� ������� "������� � �������..." ��� �����
 //function OpenWith(hOpen: HWND; FileName: string): integer;
 
 //�������� ������� ��� ������ ��������
-// Edit1 . Text := SelectFolder(Form1.Handle, nil, '�������� �������...', '', True);
-//function SelectFolder(hSelFolder: HWND; Text, Title: PChar; OutPutDir: string; showPath: BOOL): string;
 
 // ������ ������ ���������� � ������� "������� �����"
 //function SelectDirPlus(HWND: HWND; const Caption: string; const Root: WideString; Directory: string): string;
@@ -181,8 +178,6 @@ function OpenFileDlg(Title: PAnsiChar; hOpenFileOwner: HWND; FilterString: PAnsi
 //procedure OpenPathDlg(hOpenFile: HWND; hControl: HWND; FilterString: PChar);
 
 //�������� ������� ��� ���������� �����
-//SaveFileDlg(Handle, Memo1.Handle, '��������� �������� (*.txt)'#0'*.txt'#0#0)
-procedure SaveFileDlg(hSaveFile: HWND; hControl: HWND; FilterString: PAnsiChar);
 
 //����� ������� Windows "��������..."
 //ShowProperties(Handle, 'C:\windows\regedit.exe');
@@ -225,7 +220,6 @@ function TR4W_OFNHookProc(wnd: HWND; Msg: UINT; wParam: wParam; lParam: lParam):
 
 //function RestartDialog(ParentWnd: HWND; Reason: PAnsiChar; Flags: LONGINT): HResult; stdcall;
 
-procedure SelectFolder(Parent: HWND; var Folder: FileNameType);
 
 type
 
@@ -446,9 +440,6 @@ function GetOpenFileNameW(var OpenFile: TOpenFilenameW): BOOL; stdcall;
 
 function GetOpenFileName(var OpenFile: TOpenFileName): BOOL; stdcall;
 
-function GetSaveFileNameA(var OpenFile: TOpenFilenameA): BOOL; stdcall;
-function GetSaveFileNameW(var OpenFile: TOpenFilenameW): BOOL; stdcall;
-function GetSaveFileName(var OpenFile: TOpenFileName): BOOL; stdcall;
 
 function CommDlgExtendedError: DWORD; stdcall;
 
@@ -514,49 +505,9 @@ const
   RFF_NOLABEL                           = 8; // Removes the edit box label.
   RFF_NOSEPARATEMEM                     = 14; // Removes the Separate Memory Space check box (Windows NT only).
 
-type
-  PChooseColorA = ^TChooseColorA;
-  PChooseColorW = ^TChooseColorW;
-  PChooseColor = PChooseColorA;
-  TChooseColorA = packed record
-    lStructSize: DWORD;
-    hwndOwner: HWND;
-    hInstance: HWND;
-    rgbResult: COLORREF;
-    lpCustColors: ^COLORREF;
-    Flags: DWORD;
-    lCustData: lParam;
-    lpfnHook: function(wnd: HWND; Message: UINT; wParam: wParam; lParam: lParam): UINT stdcall;
-    lpTemplateName: PAnsiChar;
-  end;
-  TChooseColorW = packed record
-    lStructSize: DWORD;
-    hwndOwner: HWND;
-    hInstance: HWND;
-    rgbResult: COLORREF;
-    lpCustColors: ^COLORREF;
-    Flags: DWORD;
-    lCustData: lParam;
-    lpfnHook: function(wnd: HWND; Message: UINT; wParam: wParam; lParam: lParam): UINT stdcall;
-    lpTemplateName: PWideChar;
-  end;
-  TCHOOSECOLOR = TChooseColorA;
-
-function ChooseColorA(var CC: TChooseColorA): BOOL; stdcall;
-function ChooseColorW(var CC: TChooseColorW): BOOL; stdcall;
-function ChooseColor(var CC: TCHOOSECOLOR): BOOL; stdcall;
-
 const
-  CC_RGBINIT                            = $00000001;
-  CC_FULLOPEN                           = $00000002;
-  CC_PREVENTFULLOPEN                    = $00000004;
-  CC_SHOWHELP                           = $00000008;
-  CC_ENABLEHOOK                         = $00000010;
-  CC_ENABLETEMPLATE                     = $00000020;
-  CC_ENABLETEMPLATEHANDLE               = $00000040;
-  CC_SOLIDCOLOR                         = $00000080;
-  CC_ANYCOLOR                           = $00000100;
-
+  (* The CC_* ChooseColor flags went with ChooseColor itself: SelectColor was
+    their only consumer and it had no callers. *)
   OpenMMTTYFlags                        = OFN_ENABLESIZING or OFN_NOREADONLYRETURN or OFN_EXPLORER or OFN_FILEMUSTEXIST or OFN_PATHMUSTEXIST or OFN_LONGNAMES or OFN_HIDEREADONLY;
   OpenCFGFlags                          =
     OFN_ENABLESIZING or
@@ -577,9 +528,6 @@ implementation
 uses MainUnit;
 //const   myshell32                         = 'shell32.dll';
 
-function ChooseColorA; external 'comdlg32.dll' Name 'ChooseColorA';
-function ChooseColorW; external 'comdlg32.dll' Name 'ChooseColorW';
-function ChooseColor; external 'comdlg32.dll' Name 'ChooseColorA';
 
 //procedure RunFileDlgW; EXTERNAL shell32 Index 61;
 //procedure RunFileDlg; EXTERNAL shell32 Index 61;
@@ -597,34 +545,8 @@ function GetOpenFileNameW; external 'comdlg32.dll' Name 'GetOpenFileNameW';
 
 function GetOpenFileName; external 'comdlg32.dll' Name 'GetOpenFileNameA';
 
-function GetSaveFileNameA; external 'comdlg32.dll' Name 'GetSaveFileNameA';
-function GetSaveFileNameW; external 'comdlg32.dll' Name 'GetSaveFileNameW';
-function GetSaveFileName; external 'comdlg32.dll' Name 'GetSaveFileNameA';
 function CommDlgExtendedError; external 'comdlg32.dll' Name 'CommDlgExtendedError';
 
-
-function SelectColor(hWin: HWND; FullOpen: boolean): TColorRef;
-var
-  custColors                            : array[0..15] of COLORREF; // ������ � ���������������� �������
-  CC                                    : TCHOOSECOLOR;
-begin
-  CC.lStructSize := SizeOf(TCHOOSECOLOR);
-  CC.hwndOwner := hWin;
-  if FullOpen
-    then CC.Flags := CC_RGBINIT or CC_FULLOPEN
-  else
-     begin
-     CC.Flags := CC_RGBINIT;
-     end;
-  CC.hInstance := hWin;
-  CC.lpCustColors := @custColors[0];
-  CC.rgbResult := GetSysColor(COLOR_BTNFACE);
-  if ChooseColor(CC) then
-     begin
-     SetClassLong(hWin, GCL_HBRBACKGROUND { or GCL_CBCLSEXTRA}, CreateSolidBrush(CC.rgbResult));
-     Result := CC.rgbResult;
-     end else Result := INVALID_HANDLE_VALUE;
-end;
 
 function TR4W_OFNHookProc(wnd: HWND; Msg: UINT; wParam: wParam; lParam: lParam): UINT {boolean} stdcall;
 var
@@ -735,71 +657,6 @@ begin
 
   1:
   FreeLibrary(CommDlgLibHandle);
-end;
-
-
-procedure SaveFileDlg(hSaveFile: HWND; hControl: {THandle wli} HWND; FilterString: PAnsiChar);
-begin
-  ofn.lStructSize := SizeOf(TOpenFileName);
-  ofn.hwndOwner := hSaveFile;
-  ofn.hInstance := hInstance;
-  ofn.lpstrFilter := FilterString;
-  ofn.lpstrFile := wsprintfBuffer {Lenin_Buffer};
-  ofn.lpstrDefExt := 'txt';
-  ofn.nMaxFile := MAXSIZE;
-  ofn.Flags := OFN_FILEMUSTEXIST or OFN_PATHMUSTEXIST or OFN_LONGNAMES or OFN_HIDEREADONLY;
-  if GetSaveFileName(ofn) then
-     begin
-     hFile := CreateFileA(wsprintfBuffer {Lenin_Buffer}, GENERIC_READ or GENERIC_WRITE, FILE_SHARE_READ or
-       FILE_SHARE_WRITE, nil, CREATE_NEW, FILE_ATTRIBUTE_ARCHIVE, 0);
-     hMemory := GlobalAlloc(GMEM_MOVEABLE or GMEM_ZEROINIT, MemSize);
-     pMemory := GlobalLock(hMemory);
-     SizeReadWrite := SendMessageA(hControl, WM_GETTEXT, MemSize - 1, integer(pMemory));
-     tWriteFile(hFile, pMemory^, SizeReadWrite, SizeReadWrite);
-     SendMessage(hControl, EM_SETSEL, 0, 0);
-     sFilePath := ofn.lpstrFile;
-     sFile := PAnsiChar(@ofn.lpstrFile[ofn.nFileOffset]);
-     CloseHandle(hFile);
-     GlobalUnlock(DWORD(pMemory));
-     GlobalFree(hMemory);
-     EnableMenuItem(hWndMenu, 1030, MF_ENABLED);
-     ModifyFlag := 0;
-     end;
-end;
-
-procedure SelectFolder(Parent: HWND; var Folder: FileNameType);
-var
-  lpItemID                              : PItemIDList;
-  BrowseInfo                            : TBrowseInfo;
-  DisplayName                           : array[0..MAX_PATH] of AnsiChar;
-  SHBrowseForFolder                     : TSHBrowseForFolder;
-  SHGetPathFromIDList                   : TSHGetPathFromIDList;
-begin
-  if Shell32LibHandle = 0 then
-     begin
-     Shell32LibHandle := LoadLibrary('shell32.dll');
-     end;
-  if Shell32LibHandle <> 0 then
-     begin
-     @SHBrowseForFolder := GetProcAddress(Shell32LibHandle, 'SHBrowseForFolderA');
-     @SHGetPathFromIDList := GetProcAddress(Shell32LibHandle, 'SHGetPathFromIDListA');
-     if @SHBrowseForFolder <> nil then
-        begin
-        Windows.ZeroMemory(@BrowseInfo, SizeOf(TBrowseInfo));
-        BrowseInfo.hwndOwner := tr4whandle;
-        BrowseInfo.pszDisplayName := DisplayName;
-        BrowseInfo.ulFlags := BIF_RETURNONLYFSDIRS;
-        lpItemID := SHBrowseForFolder(BrowseInfo);
-        if lpItemId <> nil then
-           begin
-           SHGetPathFromIDList(lpItemID, Folder);
-           GlobalFreePtr(lpItemID);
-           end;
-        end;
-     FreeLibrary(Shell32LibHandle);
-     end;
-
-
 end;
 
 
