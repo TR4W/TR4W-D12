@@ -359,7 +359,6 @@ procedure MakeTestLog;
 //function TryToCheckTheLatestVersion: boolean;
 procedure tGetSystemTime;
 procedure SystemTimeChanging;
-procedure DefTR4WProc(Msg: Cardinal; var lp: integer; wnd: HWND);
 function AddRecordToLogAndSendToNetwork(var CE: ContestExchange): boolean;
 procedure CompleteCallsign;
 function NewCallWindowProcedure(hwnddlg: HWND; Msg: UINT; wParam: wParam;
@@ -488,7 +487,6 @@ procedure tCleareCallWindow;
 procedure tCleareExchangeWindow;
 procedure tSetExchWindInitExchangeEntry;
 procedure HandleRepeatPOTAParks;
-procedure tListBoxClientAlign(Parent: HWND);
 //function AddCallsignAndExchangeToInitialExchangesList(Call: CallString; InitialExchangeString: CallString): boolean;
 //function FindStringInInitCallsignListBox(s: CallString; var Index: integer): boolean;
 
@@ -496,9 +494,6 @@ procedure tWinHelp(WindowHelpID: Byte);
 
 function AskConvertLog(sVersion: string): boolean; // ny4i
 
-function tCreateStaticWindow(lpWindowName: string;
-  dwStyle: DWORD; X, Y, nWidth, nHeight: integer; hwndParent: HWND;
-  HMENU: HMENU): HWND;
 
 
 
@@ -5494,10 +5489,8 @@ begin
 
     menu_ctrl_execute_config: // 4.67.5
       begin
-        if OpenFileDlg(nil, tr4whandle, PAnsiChar(WinAnsi(TC_CONFIGURATION_FILE +
-          ' (*.cfg)'#0'*.cfg'#0#0)), TR4W_EXECONFIGFILE_FILENAME, OFN_HIDEREADONLY
-          or
-          OFN_ENABLESIZING) then
+        if OpenFileDlg('', TC_CONFIGURATION_FILE + ' (*.cfg)|*.cfg',
+                       TR4W_EXECONFIGFILE_FILENAME, False) then
           // TR4W_EXECONFIGFILE_FILENAME is a NUL-terminated AnsiChar array, NOT
           // a ShortString.  The ShortString() variable cast that used to be here
           // reinterpreted the path's FIRST CHARACTER as the length byte -- 'C'
@@ -7177,38 +7170,6 @@ begin
 
   tCallWindowSetFocus;
   QuickDisplay('2nd op: type callsign, verify exchange, then Enter - ' + ExchStr);
-end;
-
-procedure tListBoxClientAlign(Parent: HWND);
-var
-  TR: TRect;
-begin
-  Windows.GetClientRect(Parent, TR);
-  if Parent = tr4w_WindowsArray[tw_BANDMAPWINDOW_INDEX].WndHandle then
-     begin
-     TR.Bottom := TR.Bottom - 25;
-     end;
-  Windows.SetWindowPos(Windows.GetDlgItem(Parent, 101), HWND_TOP, 0, 0, TR.Right
-    - TR.Left, TR.Bottom - TR.Top, SWP_SHOWWINDOW);
-end;
-
-function tCreateStaticWindow(lpWindowName: string;
-  dwStyle: DWORD; X, Y, nWidth, nHeight: integer; hwndParent: HWND;
-  HMENU: HMENU): HWND;
-//var
-  //x1, y1, x2, y2, x3, y3: integer;
-begin
-  {x1 := 20;
-  y1 := 20;
-  x2 := 160;
-  y2 := 200;
-  x3 := 3;
-  y3 := 3;
-  }
-  //Result := CreateRoundRectRgn(x1,y1,x2,y2,x3,y3);
-  Result := CreateWindowExW(0 {WS_EX_DLGMODALFRAME}, 'Static', PChar(lpWindowName),
-    dwStyle, X, Y, nWidth, nHeight, hwndParent, HMENU, hInstance, nil);
-  tWM_SETFONT(Result, MSSansSerifFont);
 end;
 
 procedure UpdateWindows;
@@ -9000,17 +8961,6 @@ begin
   TR4WMainForm.pnlDate.Caption := GetDateString;
 end;
 
-procedure DefTR4WProc(Msg: Cardinal; var lp: integer; wnd: HWND);
-begin
-  case Msg of
-    WM_EXITSIZEMOVE: FrmSetFocus;
-    WM_WINDOWPOSCHANGING: WINDOWPOSCHANGINGPROC(PWindowPos(lp));
-    WM_SIZE: tListBoxClientAlign(wnd);
-    WM_LBUTTONDOWN: DragWindow(wnd);
-    
-  end;
-end;
-
 function AddRecordToLogAndSendToNetwork(var CE: ContestExchange): boolean;
 begin
   CE.ceQSOID1 := STARTTIMEOFTHETR4W;
@@ -9832,10 +9782,8 @@ begin
   // GetOpenFileName wants: description#0patterns#0#0.  (The commented original
   // ended with a single #0; that is the one thing not copied verbatim.)
   Windows.ZeroMemory(@TR4W_ADIF_FILENAME, SizeOf(TR4W_ADIF_FILENAME));
-  if not OpenFileDlg(nil, tr4whandle,
-                     'ADIF (*.adi, *.adif)'#0'*.adi;*.adif'#0#0,
-                     TR4W_ADIF_FILENAME,
-                     OFN_FILEMUSTEXIST or OFN_HIDEREADONLY or OFN_ENABLESIZING) then
+  if not OpenFileDlg('', 'ADIF (*.adi, *.adif)|*.adi;*.adif',
+                     TR4W_ADIF_FILENAME, True) then
      begin
      Exit;   // operator cancelled
      end;

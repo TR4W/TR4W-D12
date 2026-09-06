@@ -2825,7 +2825,6 @@ var
 
   CATWindowFont                         : HFONT;
 
-  MSSansSerifFont                       : HFONT;
   LucidaConsoleFont                     : HFONT;
 
   TerminalFont                          : HFONT;

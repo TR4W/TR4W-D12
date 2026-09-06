@@ -2723,6 +2723,19 @@ edits one, deletes one, or opens a log window.
 
 ### BENCH RUNS -- no automated gate reaches any of this
 
+- [ ] **The two file choosers are TOpenDialog now.** Open a contest
+  configuration (Commands -> Execute configuration file) and import an ADIF.
+  Check that the filter drop-down reads sensibly, that the chosen path comes
+  back complete -- a long path is the case to try, since it is copied into a
+  MAX_PATH `FileNameType` buffer -- and that Cancel still leaves everything
+  alone.
+
+  What changed: `OpenFileDlg` was a hand-rolled `GetOpenFileNameA` reached
+  through `LoadLibrary('comdlg32.dll')`, taking `PAnsiChar` and a
+  `#0`-separated filter. It is `TOpenDialog` now, and the filter is written
+  `'Description|mask'` at both call sites. **No automated gate opens a file
+  dialog**, so nothing here was proved by the build.
+
 - [ ] **`NO CAPTION = TRUE`, on any tool window.** Set it in Preferences
   (Appearance), open the band map and the function keys window, and check that
   the title bars are gone, that the windows still land where they were saved,
