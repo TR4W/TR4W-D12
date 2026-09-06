@@ -34,6 +34,7 @@ uses
   uCRC32,
   uComputerID,   // the station-id rule, kept away from the sockets so it can be tested
   Classes,       // TStringList -- the client list is built and handed over whole
+  uServerNet,    // the transport: Indy, not WSAAsyncSelect
   uServerForm,   // the readouts, by name instead of by control number
   Messages;
 const
@@ -274,7 +275,6 @@ procedure RunServerThread;
 procedure RunServer;
 procedure GetServerLogCRC32;
 function sSend(s: TSocket; var buf; Len: integer; mt: DebugMessageType): integer;
-function sRecv(s: TSocket; var buf; Len: integer): integer;
 function ServerMessageBox(const Text: string; uType: UINT): integer;
 procedure InitServerLogger;
 procedure ScanLogForSerialsNumbers;
@@ -282,15 +282,13 @@ procedure StopServer;
 procedure AddSocketToArray(soc: Cardinal; IP: PAnsiChar; Name: PAnsiChar);
 procedure DeleteSocketFromArray(soc: Cardinal);
 procedure SendMessageToClients(From: Cardinal; Count: integer; ToAll: boolean; mt: DebugMessageType);
+procedure ProcessClientBuffer(aSocket: Cardinal; aBytes: integer);
 procedure DisplayRCVDBytes;
 procedure DisplaySENDBytes;
 procedure DisplayClients;
 procedure DisplayServerLogSize;
 //procedure SetServerIcon(Icon: PChar);
 procedure UpdateQSOInServerlog(CE: ContestExchange);
-function Load_MSWSOCK: boolean;
-function RunSyncListener: boolean;
-function TransmitServerLog(s: TSocket): DWORD; stdcall;
 function OpenServerLog(dwCreationDistribution: DWORD): boolean;
 procedure CloseServerLog;
 procedure AddContestExchangeToBuffer(CE: ContestExchange);
@@ -308,40 +306,6 @@ function CorrectPassword(s: TSocket; BytesReceived: integer): boolean;
 //procedure SendMFToClients;
 
 implementation
-
-function RunSyncListener: boolean;
-label
-  UnSucc;
-begin
-  Result := False;
-  ListenerSocket := socket(AF_INET, SOCK_STREAM, IPPROTO_IP {IPPROTO_TCP});
-  if ListenerSocket = INVALID_SOCKET then
-     begin
-     goto UnSucc;
-     end;
-  mysaddr.sin_family := AF_INET;
-  mysaddr.sin_port := htons(PortNumber + 1);
-  mysaddr.sin_addr.S_addr := 0;
-  // D12 RTL: bind takes `var name: TSockAddr` where the vendored D7 WinSock2
-  // took `const Addr: PSockAddr`, so the old @mysaddr is now wrong.  TSockAddr
-  // is `sockaddr` and mysaddr is `sockaddr_in` -- both 16 bytes -- and a var
-  // parameter demands an EXACT type match, hence the cast.
-  if WinSock2.bind(ListenerSocket, TSockAddr(mysaddr), SizeOf(mysaddr)) <> 0 then
-     begin
-     goto UnSucc;
-     end;
-  if listen(ListenerSocket, maxclients) <> 0 then
-     begin
-     goto UnSucc;
-     end;
-
-  { The SINK, not the form -- see RunServer. }
-  WSAAsyncSelect(ListenerSocket, ServerSocketSink, WM_SOCK_NET_SYNLISTNER, FD_ACCEPT);
-  Result := True;
-  Exit;
-  UnSucc:
-  ServerMessageBox('Failed to run sync listener', MB_OK or MB_ICONWARNING or MB_TOPMOST);
-end;
 
 procedure RunServerThread;
 begin
@@ -375,33 +339,18 @@ begin
   Gethostname(@ServerBuffer, 128);
   myhostent := WinSock2.gethostbyname(@ServerBuffer);
   SetServerIP(String(PAnsiChar(iNet_ntoa(PInAddr(myhostent^.h_addr_list^)^))));
-  ServerSocket := socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-  if ServerSocket = INVALID_SOCKET then Exit;
-  mysaddr.sin_family := AF_INET;
-  mysaddr.sin_port := htons(PortNumber);
-  mysaddr.sin_addr.S_addr := 0;
-  // D12 RTL: bind takes `var name: TSockAddr` where the vendored D7 WinSock2
-  // took `const Addr: PSockAddr`, so the old @mysaddr is now wrong.  TSockAddr
-  // is `sockaddr` and mysaddr is `sockaddr_in` -- both 16 bytes -- and a var
-  // parameter demands an EXACT type match, hence the cast.
-  if WinSock2.bind(ServerSocket, TSockAddr(mysaddr), SizeOf(mysaddr)) <> 0 then
-     begin
-     logger.Error('bind() failed on port ' + IntToStr(PortNumber) + ', error ' + IntToStr(GetLastError));
-     ServerMessageBox('bind() failed. Check that the port is not already in use. '
-                      + 'See tr4wserver.log for details.' + sLineBreak + sLineBreak
-                      + SysUtils.SysErrorMessage(GetLastError),
-                      MB_OK or MB_ICONWARNING or MB_TOPMOST);
- //    tf.ShowSysErrorMessage('BIND');
-     goto UnSucc;
-     end;
-  if listen(ServerSocket, maxclients) <> 0 then
+  (* BOTH LISTENERS, IN ONE CALL. This was socket/bind/listen plus a
+    WSAAsyncSelect naming a window, and RunSyncListener was the same again on
+    PortNumber + 1. Indy owns the accept loop and the per-client threads; the
+    reporting on failure is unchanged, and still a message box, because a
+    server that cannot listen has nothing else to say. *)
+  if not StartServerNet(PortNumber, PortNumber + 1) then
      begin
      goto UnSucc;
      end;
+
   { ONE state, not two enables kept in step by hand -- see SetServerRunning. }
   SetServerRunning(True);
-  { The SINK, not the form: socket events are not UI messages. }
-  WSAAsyncSelect(ServerSocket, ServerSocketSink, WM_SOCK_NET_ACCEPT, FD_ACCEPT);
 //  SetServerIcon(IDI_APPLICATION);
 //  DisplayClients;
   Exit;
@@ -410,19 +359,23 @@ begin
 
 end;
 
+(* SHUT THE LISTENERS DOWN AND FORGET THE CLIENTS.
+
+  Was: cancel each client's WSAAsyncSelect, closesocket it, then the same for
+  the listening socket. Indy closes the connections when the server goes
+  inactive, so what is left here is the engine's own bookkeeping. *)
 procedure StopServer;
 var
-  i                                     : integer;
+  i: integer;
 begin
-  for i := 1 to maxclients do if ClientsSoocketsArray[i].clSocket <> 0 then
-                                 begin
-                                 WSAAsyncSelect(ClientsSoocketsArray[i].clSocket, ServerSocketSink, 0, 0);
-                                 closesocket(ClientsSoocketsArray[i].clSocket);
-                                 ClientsSoocketsArray[i].clSocket := 0;
-                                 end;
-  WSAAsyncSelect(ServerSocket, ServerSocketSink, 0, 0);
-  closesocket(ServerSocket);
+  StopServerNet;
+
+  for i := 1 to maxclients do
+     begin
+     ClientsSoocketsArray[i].clSocket := 0;
+     end;
   nclients := 0;
+  SetServerRunning(False);
 end;
 
 procedure SendMessageToClients(From: Cardinal; Count: integer; ToAll: boolean; mt: DebugMessageType);
@@ -472,6 +425,224 @@ begin
        dec(nclients);
        Break;
        end;
+end;
+
+(* ONE CLIENT'S BYTES, PARSED. EXTRACTED FROM THE DIALOG PROCEDURE, NOT
+  REWRITTEN.
+
+  This was the WM_SOCK_NET_RX arm of TR4wServerDlgProc: 190 lines of message
+  ids, forwarding rules and log writes, with two labels and four gotos. It is
+  the multi-op protocol, nothing in this tree tests it, and the surest way to
+  break a contest would be to retype it. So it moved verbatim -- the only edits
+  are the two identifiers that used to be dialog-procedure locals (wp is
+  aSocket, BytesReceived is aBytes) and the removal of the read itself.
+
+  THE READ IS THE TRANSPORT'S JOB NOW. The arm began by calling sRecv and
+  treating <= 0 as a disconnect; Indy reads, and says a connection closed by
+  raising rather than by returning zero. See uServerNet.
+
+  RUNS ON THE MAIN THREAD. uServerNet marshals with Synchronize, so every
+  routine called from here -- SendMessageToClients, the log writes, the
+  readouts -- sees exactly the single-threaded world it always did. That is
+  deliberate: Indy gives each client a thread, and letting those threads into
+  this would turn a protocol parser into a concurrency problem. *)
+procedure ProcessClientBuffer(aSocket: Cardinal; aBytes: integer);
+label
+  1, CheckBuffer;
+var
+  counter: Cardinal;
+begin
+        Bufindex := 0;
+        counter := 0;
+        //            if br mod 5 <> 0 then MessageBox(ApplicationHandle, PChar(IntToStr(br)), 'recv', MB_YESNO or MB_ICONQUESTION or MB_TOPMOST or MB_DEFBUTTON2);
+
+        CheckBuffer:
+
+        case PWORD(@ServerBuffer[Bufindex])^ of
+
+          NET_MESSAGESTATE_ID:
+            begin
+              SendMessageToClients(aSocket, SizeOf(TMessageState), True, dmMessage);
+              Bufindex := Bufindex + SizeOf(TMessageState);
+            end;
+
+          NET_STATIONSTATUS_ID:
+            begin
+              SendMessageToClients(aSocket, SizeOf(TStationState), True, dmStationStatus);
+              Bufindex := Bufindex + SizeOf(TStationState);
+              if Bufindex = aBytes then goto 1;
+            end;
+
+          NET_NETWORKDXSPOT_ID:
+            begin
+              SendMessageToClients(aSocket, SizeOf(TNetDXSpot), False, dmDXSpot);
+              Bufindex := Bufindex + SizeOf(TNetDXSpot);
+            end;
+
+          NET_TIMESYN_ID:
+            begin
+              if sAllowTimeSynchronizing then SendMessageToClients(aSocket, SizeOf(TNetTimeSync), False, dmTimeSyn);
+              Bufindex := Bufindex + SizeOf(TNetTimeSync);
+            end;
+
+          NET_PARAMETER_ID:
+            begin
+              SendMessageToClients(aSocket, SizeOf(TParameterToNetwork), False, dmParam);
+              Bufindex := Bufindex + SizeOf(TParameterToNetwork);
+            end;
+
+          NET_INTERCOMMESSAGE_ID:
+            begin
+              SendMessageToClients(aSocket, SizeOf(TIntercomMessage), True, dmIntercom);
+              Bufindex := Bufindex + SizeOf(TIntercomMessage);
+            end;
+
+          NET_EDITEDQSO_ID:
+            begin
+              SendMessageToClients(aSocket, SizeOf(TNetQSOInformation), False, dmEditQSO);
+              EditedQSOPtr := @ServerBuffer[Bufindex];
+              logger.Debug('NET_EDITEDQSO: call=' + string(EditedQSOPtr^.qiInformation.Callsign) +
+                ' band=' + IntToStr(Ord(EditedQSOPtr^.qiInformation.Band)) +
+                ' mode=' + IntToStr(Ord(EditedQSOPtr^.qiInformation.Mode)) +
+                ' exch=' + string(EditedQSOPtr^.qiInformation.ExchString));
+              UpdateQSOInServerlog(EditedQSOPtr^.qiInformation);
+              SendConfirmMessage(aSocket);
+
+              Bufindex := Bufindex + SizeOf(TNetQSOInformation);
+            end;
+
+          NET_OFFLINEQSO_ID:
+            begin
+              ServerNewQSOPtr := @ServerBuffer[Bufindex];
+              if OpenServerLog(OPEN_EXISTING) then
+              begin
+                SetFilePointer(ServerLogHandle, 0, nil, FILE_END);
+                WriteFile(ServerLogHandle, ServerNewQSOPtr.qiInformation, SizeOf(ContestExchange), BytesWritten, nil);
+                FlushFileBuffers(ServerLogHandle);
+                DisplayServerLogSize;
+                CloseServerLog;
+                SendConfirmMessage(aSocket);
+              end;
+              Bufindex := Bufindex + SizeOf(TNetQSOInformation);
+            end;
+
+          NET_QSOINFO_ID:
+            begin
+              ServerNewQSOPtr := @ServerBuffer[Bufindex];
+              logger.Debug('NET_QSOINFO: call=' + string(ServerNewQSOPtr^.qiInformation.Callsign) +
+                ' band=' + IntToStr(Ord(ServerNewQSOPtr^.qiInformation.Band)) +
+                ' mode=' + IntToStr(Ord(ServerNewQSOPtr^.qiInformation.Mode)) +
+                ' exch=' + string(ServerNewQSOPtr^.qiInformation.ExchString));
+              SendMessageToClients(aSocket, SizeOf(TNetQSOInformation), False, dmQSOInfo);
+              if OpenServerLog(OPEN_EXISTING) then
+              begin
+                SetFilePointer(ServerLogHandle, 0, nil, FILE_END);
+                WriteFile(ServerLogHandle, ServerNewQSOPtr.qiInformation, SizeOf(ContestExchange), BytesWritten, nil);
+                FlushFileBuffers(ServerLogHandle);
+                DisplayServerLogSize;
+                CloseServerLog;
+              end
+              else
+                AddContestExchangeToBuffer(ServerNewQSOPtr.qiInformation);
+              Bufindex := Bufindex + SizeOf(TNetQSOInformation);
+            end;
+
+          NET_CLIENTSTATUS_ID:
+            begin
+              SetStatus(TClientStatusPtr(@ServerBuffer[Bufindex])^, aSocket);
+              inc(Bufindex, SizeOf(TClientStatus));
+            end;
+
+          NET_SPOTVIANETWORK_ID:
+            begin
+              SendSpotViaNet(TSendSpotViaNetworkPtr(@ServerBuffer[Bufindex])^, aSocket);
+              inc(Bufindex, SizeOf(TSendSpotViaNetwork));
+            end;
+
+          NET_COMPUTERID_ID:
+            begin
+              SetComputerID(TComputerNetIDPtr(@ServerBuffer[Bufindex])^.ciComputerID, aSocket);
+              Bufindex := Bufindex + SizeOf(TComputerNetID);
+            end;
+{
+          NET_MULTSFREQUENCIES_ID:
+            begin
+              Windows.CopyMemory(@ServerMF, @ServerBuffer[Bufindex + 2], SizeOf(MultsFrequencies));
+              SendMFToClients;
+              Bufindex := Bufindex + SizeOf(NetMultsFrequencies);
+            end;
+}
+          NET_SERVERMESSAGE_ID:
+            begin
+              ServerMessagePtr := @ServerBuffer[Bufindex];
+              case ServerMessagePtr.smMessage of
+{
+                SM_CLEARSERVERLOG_MESSAGE:
+                  begin
+                    if ClearServerLog then SendMessageToClients(aSocket, SizeOf(TServerMessage), True, dmClearLogs);
+                  end;
+}
+
+                SM_SERIAL_NUMBER_CHANGED:
+                  begin
+                    if SerialNumberLockoutEnable then
+                      UpdateSerialNumbersStatus(aSocket, TSerialNumberType(ServerMessagePtr.smParam));
+                  end;
+
+                SM_CLEARALLLOGS_MESSAGE:
+                  begin
+                    if ClearServerLog then SendMessageToClients(aSocket, SizeOf(TServerMessage), True, dmClearLogs);
+                  end;
+
+                SM_CLEAR_DUPESHEET_MESSAGE:
+                  begin
+                    if tUpdateServerLog(actSetClearDupesheetBit) then SendMessageToClients(aSocket, SizeOf(TServerMessage), True, dmClearLogs);
+                  end;
+
+                SM_CLEAR_MULTSHEET_MESSAGE:
+                  begin
+                    if tUpdateServerLog(actClearMults) then SendMessageToClients(aSocket, SizeOf(TServerMessage), True, dmClearLogs);
+                  end;
+{
+                SM_SORTLOG_MESSAGE:
+                  begin
+                    if OpenServerLog(OPEN_EXISTING) then
+                    begin
+                      SortServerLog;
+                      CloseServerLog;
+                    end;
+                  end;
+}
+                SM_SERVERLOG_CHANGED_MESSAGE:
+                  begin
+                    SendMessageToClients(aSocket, SizeOf(TServerMessage), False, dmClearLogs);
+                  end;
+
+                SM_GETSTATUS_MESSAGE:
+                  SendMessageToClients(aSocket, SizeOf(TServerMessage), False, dmClearLogs);
+
+              end;
+              Bufindex := Bufindex + SizeOf(TServerMessage);
+
+            end;
+
+        end;
+
+        if Bufindex = aBytes then goto 1;
+
+        if PDWORD(@ServerBuffer[Bufindex])^ = NET_LOGINFO_MESSAGE then
+        begin
+          SendLogFileInformation(aSocket);
+          Bufindex := Bufindex + SizeOf(NET_LOGINFO_MESSAGE);
+          if Bufindex = aBytes then goto 1;
+        end;
+
+        inc(counter);
+
+        if counter < 25 then goto CheckBuffer;
+        1:
+        DisplayRCVDBytes;
+
 end;
 
 (* THE FOUR READOUTS. Each was a control NUMBER written straight into the
@@ -585,76 +756,17 @@ begin
 end;
 
 
-function Load_MSWSOCK: boolean;
-begin
-  Result := True;
-  MSWSOCK_DLL := LoadLibrary('MSWSOCK.DLL');
-  if MSWSOCK_DLL <> 0 then
-     begin
+(* Load_MSWSOCK AND TransmitServerLog ARE GONE, AND SO IS THE REASON FOR THEM.
 
-     @TransmitFile := GetProcAddress(MSWSOCK_DLL, 'TransmitFile');
-     if @TransmitFile = nil then
-        begin
-        Result := False;
-        end;
+  The log-sync listener answered with TransmitFile -- a WinSock EXTENSION that
+  lives in MSWSOCK.DLL rather than ws2_32, so it had to be reached with
+  LoadLibrary and GetProcAddress -- and TransmitServerLog was the fallback for
+  the Windows versions that lacked it, running on a thread of its own from
+  CreateThread.
 
- //    @AcceptEx := GetProcAddress(MSWSOCK_DLL, 'AcceptEx');
- //    if @AcceptEx = nil then RESULT := False;
-
-     end
-  else
-     begin
-     Result := False;
-     end;
-
-  if Result = False then
-     begin
-     ServerMessageBox('Failed to load in MSWSOCK.DLL', MB_OK or MB_ICONWARNING or MB_TOPMOST);
-     end;
-end;
-
-function TransmitServerLog(s: TSocket): DWORD; stdcall;
-label
-  1;
-var
-  TempCardinal                          : Cardinal;
-  i                                     : integer;
-  //  tGetNetLogEvent                  : HWND;
-  //  r                                : integer;
-//  ServerTFDSet                          : TFDSet;
-//  ServerTTimeVal                        : TTimeVal;
-begin
-  //  tGetNetLogEvent := WSACreateEvent;
-  //  WinSock2.WSAEventSelect(s, tGetNetLogEvent, FD_WRITE);
-//  ServerTFDSet.fd_array[0] := s;
-//  ServerTFDSet.fd_count := 1;
-//  ServerTTimeVal.tv_sec := 5;
-//  ServerTTimeVal.tv_usec := 0;
-  sSend(s, ServerLogFileInformation.liServerLogSize, SizeOf(ServerLogFileInformation.liServerLogSize), dmTransmitFile);
-
-//  Send(s, ServerLogFileInformation.liInformation, SizeOf(TByHandleFileInformation), 0);
-
-  1:
-  Windows.ReadFile(ServerLogHandle, ServerBuffer, SizeOf(ServerBuffer), TempCardinal, nil);
-
-  if TempCardinal > 0 then
-     begin
-      //  WSAWaitForMultipleEvents(1, @tGetNetLogEvent, False, 5500, False);
-      //  I := SELECT(0, nil, @ServerTFDSet, nil, @ServerTTimeVal);
-//      if I < 1 then r := r + I;
-    i := sSend(s, ServerBuffer, TempCardinal, dmTransmitFile);
-    if DWORD(i) = TempCardinal then
-       begin
-       Sleep(10);
-       end;
-    goto 1;
-  end;
-  //  MessageBox(ApplicationHandle, PChar(IntToStr(r)), _TR4WSERVER, MB_OK or MB_ICONWARNING or MB_TOPMOST);
-  //  WSACloseEvent(tGetNetLogEvent);
-  CloseServerLog;
-  closesocket(s);
-  WriteContestExchangesBufferToServerLog;
-end;
+  Indy writes a stream. uServerNet.SyncExecute opens the log as a TFileStream
+  and hands it to IOHandler.Write, on the connection's own thread, which is
+  what that CreateThread was for. *)
 
 function OpenServerLog(dwCreationDistribution: DWORD): boolean;
 begin
@@ -955,9 +1067,13 @@ begin
   CloseServerLog;
 end;
 
+(* THE WIRE WRITE, THROUGH INDY. Was WinSock's Send() on a raw handle; the
+  handle is still how the engine names a client, and uServerNet turns it back
+  into a connection. Everything else here -- the byte accounting, the readout,
+  the debug file -- is unchanged. *)
 function sSend(s: TSocket; var buf; Len: integer; mt: DebugMessageType): integer;
 begin
-  Result := Send(s, buf, Len, 0);
+  Result := SendToClient(s, buf, Len);
   BytesSEND := BytesSEND + DWORD(Result);
   DisplaySENDBytes;
 {$IF SERVERDEBUG}
@@ -965,27 +1081,6 @@ begin
 {$IFEND}
 
 end;
-
-function sRecv(s: TSocket; var buf; Len: integer): integer;
-var
-  i    : integer;
-  sHex : string;
-begin
-  Result := recv(s, buf, Len, 0);
-  BytesRCVD := BytesRCVD + DWORD(Result);
-  DisplayRCVDBytes;
-  logger.Debug('sRecv: ' + IntToStr(Result) + ' bytes received');
-  if logger.IsEnabledFor(Trace) and (Result > 0) then
-     begin
-     sHex := '';
-     for i := 0 to Result - 1 do
-        begin
-        sHex := sHex + IntToHex(PByteArray(@buf)^[i], 2) + ' ';
-        end;
-     logger.Trace('sRecv data: ' + sHex);
-     end;
-end;
-
 function tUpdateServerLog(UpdAction: UpadateAction): boolean;
 label
   1, 2, 3;
