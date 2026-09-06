@@ -113,6 +113,37 @@ const
   SS_NOTIFY             = $00000100;
   SS_SUNKEN             = $00001000;
 
+(* SYSTEMTIME OFF WINDOWS, WITH WIN32'S EXACT LAYOUT -- AND THAT IS THE POINT.
+
+  This is not a convenience alias. TNetTimeSync is a PACKED RECORD SENT BETWEEN
+  MULTI-OP STATIONS and tsTime is a field of the log record, so this layout is
+  on the wire and on disk in every .TRW an operator owns.
+
+  NOT FPC's SysUtils.TSystemTime, which is NOT layout-compatible: it orders its
+  fields Year, Month, Day, DayOfWeek where Win32 orders them wYear, wMonth,
+  wDayOfWeek, wDay. Substituting it would silently swap the day and the
+  day-of-week -- a wire and file format change wearing the clothes of a
+  portability fix.
+
+  ON WINDOWS THIS BLOCK DOES NOT EXIST and the name comes from the Windows unit
+  exactly as before, so none of the use sites change on either platform. *)
+{$IFNDEF WINDOWS}
+type
+  SYSTEMTIME = record
+    wYear:         Word;
+    wMonth:        Word;
+    wDayOfWeek:    Word;
+    wDay:          Word;
+    wHour:         Word;
+    wMinute:       Word;
+    wSecond:       Word;
+    wMilliseconds: Word;
+  end;
+  TSystemTime  = SYSTEMTIME;
+  PSystemTime  = ^SYSTEMTIME;
+  LPSYSTEMTIME = PSystemTime;
+{$ENDIF}
+
 {$INCLUDE w.pas}
 
 
@@ -3010,9 +3041,25 @@ var
   tr4w_WindowsArray                     : array[WindowsType] of TWndEntry;
   tFontsColorsArray                     : array[0..1] of TColorsFontsEntry;
 
+  (* THREE WINDOWS-ONLY GLOBALS, and unlike SYSTEMTIME above there is nothing
+    to preserve: no wire format, no file format, and no non-Windows meaning.
+    They are absent elsewhere so their users -- all Windows-only code -- fail
+    loudly and in the right place rather than inheriting a dependency from the
+    tree's TYPE unit.
+
+      tr4w_osverinfo       GetVersionEx.
+      StickyKeysAtStartup  SystemParametersInfo(SPI_GETSTICKYKEYS): stops a run
+                           of shift keys switching Sticky Keys on mid-contest.
+                           No counterpart elsewhere -- no other platform has the
+                           misfeature to defend against. ny4i Issue 126.
+      Msg                  the Win32 MSG the hand-rolled message loop read. That
+                           loop is already gone; this goes with its procedure --
+                           see docs/ROADMAP.md 2b. *)
+  {$IFDEF WINDOWS}
   tr4w_osverinfo                        : OSVERSIONINFO {= (dwOSVersionInfoSize: SizeOf(OSVERSIONINFO))};
   StickyKeysAtStartup                   : STICKYKEYS; // ny4i Issue 126
   Msg                                   : TMsg;
+  {$ENDIF}
   EditingCallsignSent                   : boolean; //???????????? ??? autosend, ????? ?????????? backspace
   ControlAMode                          : boolean; //????? Ctrl+A
   StartCPU                              : DWORD;
@@ -4380,7 +4427,22 @@ begin
 end;
 //rd4wa -
 begin
+  (* THE BUTTON-FACE COLOUR COMES FROM THE SYSTEM, ON THE SYSTEM THAT HAS ONE.
+
+    GetSysColor is Win32. The LCL's cross-platform equivalent is
+    Graphics.ColorToRGB(clBtnFace), and VC CANNOT USE IT: Graphics is an LCL
+    unit and tr4wserver is a console program whose search paths exclude the LCL
+    on purpose -- pulling it in here would break that build, which is exactly
+    what happened when this unit's types moved to LCLType.
+
+    So elsewhere the array simply keeps the value it was declared with. That is
+    honest rather than ideal: asking the widget set for a system colour belongs
+    in the COLOUR module -- the one that already owns roles and theming, see
+    docs/COLOR_ROLES_DESIGN.md -- not in the initialization section of the
+    types unit. This line moving there is a step in that plan, not a port. *)
+  {$IFDEF WINDOWS}
   tr4wColorsArray[trBtnFace] := GetSysColor(COLOR_BTNFACE);
+  {$ENDIF}
 //  Windows.CopyMemory(@TR4W_FLOPPY_FILENAME, PChar('LOGBACK.TRW'), 11);
 //  tr4wColorsArray[trSelected] := GetSysColor(COLOR_ACTIVECAPTION);
 end.

@@ -3207,7 +3207,23 @@ begin
     under FPC once our units use UnicodeStrings and PChar is PWideChar.  This
     call is behaviour-identical on Delphi and correct on both compilers; the
     UnicodeString cast is a no-op wherever `string` already is one. }
+  (* THE W VARIANT IS WINDOWS-ONLY, and Log4D already had the other half.
+
+    This unit still carries its Kylix-era {$IFDEF LINUX} branch, which supplies
+    an OutputDebugString of its own that simply WriteLns -- the sensible
+    equivalent where there is no debugger channel to write to. What was missing
+    was only that this call names the W entry point, which that branch does not
+    have and could not have.
+
+    So the gate is on the PLATFORM and the non-Windows arm uses the shim the
+    unit already provides. Added 2026-09-06 while making VC.pas compile for
+    Linux; Log4D was the second unit in the chain and this was its only
+    blocker. *)
+  {$IFDEF WINDOWS}
   OutputDebugStringW(PWideChar(UnicodeString(Message)));
+  {$ELSE}
+  OutputDebugString(PChar(Message));
+  {$ENDIF}
 end;
 
 { TLogStreamAppender ----------------------------------------------------------}
