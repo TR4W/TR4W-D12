@@ -2334,41 +2334,72 @@ end;
 
 procedure ShowTR4WMainForm;
 var
-   r: TRect;
+   r: TRect;      { [MainPos] diagnostic only }
+   want: TRect;   { the bounds the program asked for, in the form's own units }
 begin
    if not Assigned(TR4WMainForm) then
       begin
       Exit;
       end;
 
-   // READ THE REAL BOUNDS BACK FIRST.  Everything that sizes this window --
-   // CreateMainWindow, CheckEditableWindowHeight, SetWindowSize -- does it with
-   // a raw SetWindowPos on tr4whandle, so the LCL's own idea of the form's
-   // bounds is still the placeholder CreateNew was given.  Setting Visible then
-   // makes the LCL apply THAT, and the window collapses to the placeholder:
-   // NY4I, 2026-08-18, "the screen is quite small and only a partial view" --
-   // a 400x200 window with the menu wrapped onto two lines.
-   //
-   // Reconciling instead of assigning: read what the window actually is and
-   // tell the LCL, rather than deciding here what it should be. The program
-   // owns its geometry; this only stops the framework overwriting it.
-   Windows.GetWindowRect(TR4WMainForm.Handle, r);
-   TR4WMainForm.SetBounds(r.Left, r.Top, r.Right - r.Left, r.Bottom - r.Top);
+   (* ASK THE FORM WHAT THE PROGRAM WANTS, NOT THE WINDOW.
+
+     This used to begin with
+
+       Windows.GetWindowRect(TR4WMainForm.Handle, r);
+       TR4WMainForm.SetBounds(r.Left, r.Top, ...);
+
+     and that line is what stopped the main window coming back where the
+     operator left it. MEASURED, from NY4I's log (2026-09-06):
+
+       [MainPos] RESTORE asked for (2201,270,3213,734); form is at (0,30,1012,494)
+       [MainPos] SHOWN     at      (0,30,1028,553);  form BoundsRect=(0,30,1012,494)
+
+     A HIDDEN LCL FORM DOES NOT REALIZE ITS BOUNDS IMMEDIATELY. Assigning
+     BoundsRect updates the form; the HWND is moved when the form is shown.
+     RestoreMainWindowBounds had just set 2201,270 and this ran BEFORE the show
+     -- so GetWindowRect answered for a window still at the designed 0,30, and
+     SetBounds wrote that back INTO the form. The restore was overwritten by a
+     measurement of the thing it had not yet been applied to, and the
+     SetWindowPos below pinned the window there so nothing could recover it.
+
+     It was wrong in its units as well: 1028x553 is the OUTER rect, and the
+     form's own bounds for the same window are 1012x494. Feeding an outer size
+     to SetBounds is what grew the function-key window by its frame on every
+     restart -- see the note in LclFormFor -- and this was that mistake on the
+     main window.
+
+     AND ITS PREMISE HAD EXPIRED. It said the LCL's bounds were "still the
+     placeholder CreateNew was given", because CreateMainWindow,
+     CheckEditableWindowHeight and SetWindowSize all sized this window with a
+     raw SetWindowPos on tr4whandle. None of them does now: the form is built
+     with Create and its .lfm, MakeMainWindowResizeable sizes it through
+     Width / ClientHeight / Constraints, CheckEditableWindowHeight sizes the LOG
+     control, and SetWindowSize only computes metrics. The log says so too --
+     the form's bounds before the restore were the real 1012x464, not the .lfm's
+     806x370.
+
+     So the geometry the program wants is what the FORM holds. Read it, show,
+     and put it back if the framework adjusted it -- through BoundsRect, in the
+     form's own units, which is the one thing the old code was right about:
+     showing the form makes the LCL apply menu height and border metrics of its
+     own, and TR4W's layout is computed from the font-size setting and is not a
+     number the framework can improve on. *)
+   want := TR4WMainForm.BoundsRect;
 
    TR4WMainForm.Visible := True;
 
-   // AND PUT IT BACK.  Telling the LCL the bounds is not enough: showing the
-   // form makes it apply its own adjustments -- menu height, border metrics --
-   // and the window came out 1018x705 where TR4W had made it 1012x656.  Close
-   // enough to look almost right, which is worse than obviously wrong.
-   //
-   // TR4W computes that geometry from the font-size setting and the MEASURED
-   // height of the log ListView; it is not a number the framework can improve
-   // on.  So the raw rect is restored after the show, and the LCL is left
-   // holding a correct BoundsRect either way.
-   Windows.SetWindowPos(TR4WMainForm.Handle, 0, r.Left, r.Top,
-                        r.Right - r.Left, r.Bottom - r.Top,
-                        SWP_NOZORDER or SWP_NOACTIVATE);
+   (* FIELD BY FIELD, not EqualRect: `Windows` is first in this unit's uses
+     clause, so an unqualified EqualRect binds to the user32 entry point rather
+     than to the RTL's -- a Win32 call for four integer comparisons, and the
+     kind that only shows up when someone counts them. *)
+   if (TR4WMainForm.BoundsRect.Left   <> want.Left)  or
+      (TR4WMainForm.BoundsRect.Top    <> want.Top)   or
+      (TR4WMainForm.BoundsRect.Right  <> want.Right) or
+      (TR4WMainForm.BoundsRect.Bottom <> want.Bottom) then
+      begin
+      TR4WMainForm.BoundsRect := want;
+      end;
 
    (* [MainPos] -- where the window ACTUALLY is once it is up. If this differs
      from what RESTORE was asked for, the restore is the broken end; if it
