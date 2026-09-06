@@ -2723,6 +2723,23 @@ edits one, deletes one, or opens a log window.
 
 ### BENCH RUNS -- no automated gate reaches any of this
 
+- [ ] **The server-log SYNCHRONIZE window -- NEEDS A SECOND STATION.** Its
+  QSO list was the last hand-built Win32 window in the program and is a
+  `TLogGrid` now (2026-09-06). Connect to a multi-op server, open Log Compare
+  -> Synchronize, tick "show server log content", and press Get Log. Check
+  that rows appear AS THE DOWNLOAD RUNS rather than all at the end, that the
+  columns match the main window's log, that X-QSO and deleted rows are
+  visually distinct, and that "Create a new log" still replaces the local log.
+
+  **What changed and why it needs an operator.** The rows used to be inserted
+  one at a time by the download WORKER THREAD with `ListView_InsertItem` --
+  safe by accident, as every raw Win32 call from a worker was. An LCL control
+  cannot be touched off the main thread, so the worker now fills a
+  preallocated array and the grid asks for the rows it is painting. The count
+  the grid may read is published through `ReportSyncProgress`, which is
+  already a `SendMessage`. **Nothing automated exercises this path** -- it
+  needs a real server with a real log, which is why it sits with item 45.
+
 - [ ] **The two file choosers are TOpenDialog now.** Open a contest
   configuration (Commands -> Execute configuration file) and import an ADIF.
   Check that the filter drop-down reads sensibly, that the chosen path comes

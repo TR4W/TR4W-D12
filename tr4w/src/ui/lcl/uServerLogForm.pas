@@ -24,12 +24,34 @@ unit uServerLogForm;
   replace the local log with it. Reached from the log-comparison form's
   Synchronize button.
 
-  WHY THE LIST IS STILL A RAW WIN32 LISTVIEW. It is the shared EDITABLE LOG
-  control -- CreateEditableLog, the same one the main window uses -- and that
-  control is deliberately deferred until the log moves to SQLite: about 150
-  ListView_* call sites depend on its handle, 19 of them on the editable log
-  itself (docs/ROADMAP.md). Converting it here would fork it. So the form hosts
-  it in pnlLog and hands out the handle, exactly as the dialog did.
+  THE LIST IS A TLogGrid (2026-09-06), AND THE REASON IT WAS NOT HAD EXPIRED.
+
+  This said the list was "the shared EDITABLE LOG control -- CreateEditableLog,
+  the same one the main window uses -- and that control is deliberately
+  deferred until the log moves to SQLite: about 150 ListView_* call sites
+  depend on its handle, 19 of them on the editable log itself". NY4I,
+  2026-09-06: "This does not make much sense. sqlite is already the database."
+
+  He was right, and every clause of it was false by then:
+
+    * The main window's log is a TLogGrid and both edit windows are forms, so
+      CreateEditableLog had ONE live caller -- this one. Nothing was shared and
+      nothing would have forked.
+    * SQLite IS the store. docs/SQLITE_MIGRATION_TASKS.md: "B4 IS DONE. Every
+      log READ goes through uLogSource and the default is the database."
+    * ListView_* was 34 mentions across 13 files, FOUR of them live, all inside
+      CreateEditableLog itself. Not 150.
+
+  And the deferral never applied here in the first place: this window does not
+  show the CONTEST log. It shows the multi-op server's log, downloaded over a
+  second socket into TR4W_SYN_FILENAME. Where the local log lives is beside the
+  point.
+
+  THE GRID IS VIRTUAL BECAUSE THE FILLER IS A WORKER THREAD. RunSyncThread put
+  rows in one at a time with ListView_InsertItem, which was safe by accident;
+  an LCL control cannot be touched off the main thread. So the worker fills a
+  preallocated array (uGetServerLog) and the grid asks for the rows it paints.
+  Read the note on the row store there before changing either half.
 
   THE CAPTIONS COME FROM THE RC_ CONSTANTS, NOT FROM THE .lfm.
 
@@ -76,6 +98,8 @@ uses
   uGetServerLog,   // WM_USER_SYNC_PROGRESS -- a `message` directive is part of
                    // the class DECLARATION, so its constant has to resolve in
                    // the interface; this cannot move to the implementation uses
+  uLogGrid,        // TLogGrid and TLogGridRow -- both named in the class
+                   // declaration below, so this cannot move down either
   uTR4WStrings;
 
 type
@@ -103,6 +127,13 @@ type
     procedure chkShowContentChange(Sender: TObject);
   private
     FReplaceLog: boolean;
+    { The downloaded server log.  Built in code rather than in the .lfm: TLogGrid
+      is not a registered designer component, and the main window's log is built
+      the same way. }
+    FLog: TLogGrid;
+    procedure BuildLogGrid;
+    procedure LogFetchRows(Sender: TObject; const aFirstIndex: Int64;
+                           var aRows: array of TLogGridRow);
     { Progress from the download thread.  See the note on the worker thread in
       the unit header: this arrives via SendMessage and therefore runs on the
       main thread. }
@@ -122,7 +153,7 @@ uses
   uLCLFormHelpers,    // ShowModalOverWin32Parent -- ownership and centring
   VC,                 // TR4W_SYN_FILENAME
   TF,                 // tCreateThread
-  MainUnit,           // CreateEditableLog, ShowHelp, logger
+  MainUnit,           // LogRowTextFor, ShowHelp, logger
   Log4D;
 
 var
@@ -156,11 +187,7 @@ begin
    AmountQSOsFromServer := 0;
    Windows.ZeroMemory(@SynQSOTotalArray, SizeOf(SynQSOTotalArray));
 
-   // The editable log, hosted rather than converted.  Parented to the PANEL,
-   // not to the form: a panel has a real window handle and reserves the space
-   // in the designer, so the raw child cannot land on top of a button.
-   ServerLogListView := CreateEditableLog(pnlLog.Handle, 0, 0,
-                                          pnlLog.Width, pnlLog.Height, True);
+   BuildLogGrid;
 
    // The thread reports here.  Set LAST, so a report cannot arrive before the
    // controls it names have been initialised.
@@ -193,12 +220,75 @@ begin
    Action := caHide;
 end;
 
+(* THE GRID, PARENTED TO THE PANEL. The panel reserves the space in the
+  designer, so the grid cannot land on top of a button, and aligning to it
+  means the grid follows when the form is resized.
+
+  lgsFitAndFill rather than the main window's declared widths: this window is
+  resizable and has no layout computed around the log's column widths, so
+  leaving a band of empty grid down the right-hand side would be the defect
+  NY4I named on 2026-09-04.
+
+  Wired INSIDE the class, unqualified: Lint-FormEvents does not count a dotted
+  name as wiring, because that is also how an implementation header is spelled. *)
+procedure TfrmServerLog.BuildLogGrid;
+begin
+   if FLog <> nil then
+      begin
+      Exit;
+      end;
+
+   FLog := TLogGrid.Create(Self);
+   FLog.Parent      := pnlLog;
+   FLog.Align       := alClient;
+   FLog.Sizing      := lgsFitAndFill;
+   FLog.OnFetchRows := LogFetchRows;
+   FLog.BuildColumns;
+end;
+
+(* ONE RUN OF ROWS, FROM THE ARRAY THE DOWNLOAD THREAD FILLED.
+
+  LogRowTextFor is the same routine the main window's log and the export use,
+  so the server's log is read in the columns the operator already knows. The
+  X-QSO and deleted flags come back with the row rather than being asked for
+  separately -- they are properties of the QSO, not of the display, which is
+  what lets the grid grey a row without the per-item lParam smuggling the list
+  view needed. *)
+procedure TfrmServerLog.LogFetchRows(Sender: TObject; const aFirstIndex: Int64;
+                                     var aRows: array of TLogGridRow);
+var
+   i:   integer;
+   rec: ContestExchange;
+begin
+   for i := Low(aRows) to High(aRows) do
+      begin
+      aRows[i].Valid := TryGetServerLogRow(aFirstIndex + (i - Low(aRows)), rec);
+      if not aRows[i].Valid then
+         begin
+         Continue;
+         end;
+
+      LogRowTextFor(rec, aRows[i].Text);
+      aRows[i].Deleted := rec.ceQSO_Deleted;
+      aRows[i].XQSO    := rec.ceXQSO;
+      end;
+end;
+
 procedure TfrmServerLog.WMSyncProgress(var aMsg: TMessage);
 begin
    case aMsg.WParam of
       SYNC_FIELD_RECORDS:
          begin
          lblRecords.Caption := IntToStr(aMsg.LParam);
+         (* AND THIS IS WHERE THE GRID LEARNS HOW MUCH THERE IS. The worker
+           reports every ten records; telling the grid here is what makes the
+           rows appear as they arrive, and it is the ONLY count the grid is
+           given -- so it can never ask for a row the worker has not written.
+           See the row store in uGetServerLog. *)
+         if (FLog <> nil) and showresverlogcontent then
+            begin
+            FLog.RecordCount := aMsg.LParam;
+            end;
          end;
       SYNC_FIELD_BYTES:
          begin

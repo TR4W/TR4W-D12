@@ -24,10 +24,6 @@ unit uGetServerLog;
 interface
 
 uses
-  (* LVM_SETITEMCOUNT -- the server-log list is still a raw Win32 list view.
-    That window is not converted yet; this uses entry goes with it. *)
-  uCommctrl,
-
   TF,
   VC,
   utils_net,
@@ -61,6 +57,28 @@ procedure RunSyncThread;
   window having closed mid-download. }
 procedure ReportSyncProgress(aField: integer; aValue: integer);
 
+(* THE DOWNLOADED SERVER LOG, AS RECORDS, FOR THE SYNC WINDOW'S GRID.
+
+  RunSyncThread is a WORKER, and it used to fill a Win32 list view a row at a
+  time with ListView_InsertItem -- safe by accident, as every raw Win32 call
+  from a worker was. An LCL control cannot be touched off the main thread, so
+  the grid is VIRTUAL: the worker fills this array and the grid asks for the
+  rows it is painting, on the thread that owns them.
+
+  NO LOCK, AND THE REASON IS THE ALLOCATION AND NOT THE ACCESS. The array is
+  sized ONCE by ResetServerLogRows, from the record count the download already
+  knows -- the same number the old LVM_SETITEMCOUNT carried -- so it never
+  reallocates under a reader. Which rows the grid may read is published through
+  ReportSyncProgress, a SendMessage, which is the ordering barrier; the grid is
+  never told a count the worker has not finished writing. TryGetServerLogRow
+  bounds-checks anyway, because a window that closes mid-download is ordinary
+  rather than exceptional. *)
+procedure ResetServerLogRows(const aCount: integer);
+procedure SetServerLogRow(const aIndex: integer;
+                          const aRecord: ContestExchange);
+function TryGetServerLogRow(const aIndex: integer;
+                            out aRecord: ContestExchange): boolean;
+
 var
 
   NewServerLogHandle                    : HWND;
@@ -70,7 +88,6 @@ var
   ServerLogFormWnd                      : HWND;
   SynQSOTotalArray                      : QSOTotalArray;
   SyncMode                              : boolean;
-  ServerLogListView                     : HWND;
   LogSyncThreadID                       : Cardinal;
   showresverlogcontent                  : boolean = True;
   HeadlessSyncMode                      : boolean = False;  // Issue #912 - run sync without any dialog UI
@@ -104,6 +121,38 @@ uses SysUtils,   { Format, StrPCopy -- replaced TF.Format/wsprintfA }
   ui\lcl\uServerLogForm now, and every arm of that case statement is a method
   on the form. Only the parts a CONSOLE-reachable unit may own stayed here: the
   download thread, the log replacement, and the progress seam below. }
+
+var
+   GServerLogRows: array of ContestExchange;
+
+procedure ResetServerLogRows(const aCount: integer);
+begin
+   if aCount < 0 then
+      begin
+      SetLength(GServerLogRows, 0);
+      Exit;
+      end;
+   SetLength(GServerLogRows, aCount);
+end;
+
+procedure SetServerLogRow(const aIndex: integer;
+                          const aRecord: ContestExchange);
+begin
+   if (aIndex >= 0) and (aIndex < Length(GServerLogRows)) then
+      begin
+      GServerLogRows[aIndex] := aRecord;
+      end;
+end;
+
+function TryGetServerLogRow(const aIndex: integer;
+                            out aRecord: ContestExchange): boolean;
+begin
+   Result := (aIndex >= 0) and (aIndex < Length(GServerLogRows));
+   if Result then
+      begin
+      aRecord := GServerLogRows[aIndex];
+      end;
+end;
 
 procedure ReportSyncProgress(aField: integer; aValue: integer);
 begin
@@ -150,7 +199,7 @@ var
   TotalBytes, TotalRecords, TotalQ      : integer;
   lpNumberOfBytesWritten                : Cardinal;
   TempRXData                            : ContestExchange;
-  IndexInServerLogListView              : integer;
+  ServerLogFillIndex                    : integer;
   tGetNetLogEvent                       : HWND;
   FirstPacket                           : boolean;
   Offset                                : integer;
@@ -226,15 +275,17 @@ begin
         end;
      if (not HeadlessSyncMode) and showresverlogcontent then
         begin
-        SendMessage(ServerLogListView, LVM_SETITEMCOUNT, TotalBytes div SizeOf(ContestExchange), 0);
+        (* SIZED ONCE, HERE. See the note on the row store: this is what makes
+          the array safe to fill from this thread and read from the other. *)
+        ResetServerLogRows(TotalBytes div SizeOf(ContestExchange));
         end;
      Windows.SetFilePointer(NewServerLogHandle, SizeOfTLogHeader, nil, FILE_BEGIN);
 
-     IndexInServerLogListView := 0;
-     if not HeadlessSyncMode then
-        begin
-        tSetWindowRedraw(ServerLogListView, False);
-        end;
+     ServerLogFillIndex := 0;
+     (* THE tSetWindowRedraw FREEZE/THAW PAIR IS GONE. It stopped a list view
+       repainting itself once per inserted row. A virtual grid paints only what
+       is on screen and is not told about rows at all, so there is nothing to
+       freeze. *)
      2:
      Windows.ReadFile(NewServerLogHandle, TempRXData, SizeOf(ContestExchange), lpNumberOfBytesWritten, nil);
      if lpNumberOfBytesWritten = SizeOf(ContestExchange) then
@@ -253,14 +304,11 @@ begin
               end;
            if showresverlogcontent then
               begin
-              tAddContestExchangeToLog(TempRXData, ServerLogListView, IndexInServerLogListView);
+              SetServerLogRow(ServerLogFillIndex, TempRXData);
+              Inc(ServerLogFillIndex);
               end;
            end;
         goto 2;
-        end;
-     if not HeadlessSyncMode then
-        begin
-        tSetWindowRedraw(ServerLogListView, True);
         end;
      end;
   if not HeadlessSyncMode then

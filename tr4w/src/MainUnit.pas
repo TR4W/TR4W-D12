@@ -115,11 +115,13 @@ uses
   uEditQSO,
   uSynTime,
   uBeacons,
-  (* THE LAST TWO WIN32 LIST WINDOWS. CreateEditableLog builds a raw
-    comctl32 list view, and Log Search and the previous-dupe window are still
-    its only callers -- the main log and View/Edit Log are an LCL grid now
-    (uLogGrid). This uses entry goes when those two are converted; nothing
-    else in this unit needs it. *)
+  (* uCommctrl IS STILL HERE FOR TLVItem, and for nothing else in this unit.
+
+    It used to be for CreateEditableLog's raw comctl32 list view. Every window
+    that had one is an LCL grid now, so the ListView_* calls are gone -- but
+    BuildLogRow still carries a column and its text in a TLVItem, which is a
+    comctl32 record. Replacing that with a plain (column, text) pair retires
+    this entry; see the note in BuildLogRow. *)
   uCommctrl,
   uDialogs,
   uLogSearch,
@@ -253,30 +255,26 @@ procedure ShowHelp(Topic: PChar);
 procedure LoadinLog;
 (* THE TEXT OF ONE LOG ROW, COLUMN BY COLUMN.
 
-  WHY THIS EXISTS. tAddContestExchangeToLog is the only thing that knows how a
-  QSO is displayed -- 360 lines and 36 columns of it -- and it writes STRAIGHT
-  INTO A WIN32 LISTVIEW. A virtual list cannot use that: OnData asks "what is
-  the text of row N, column C" and there was nowhere to ask.
+  BuildLogRow is the only thing that knows how a QSO is displayed -- 360 lines
+  and 36 columns of it. It used to write STRAIGHT INTO A WIN32 LISTVIEW, which
+  a virtual grid cannot use: the grid asks "what is the text of row N, column
+  C" and there was nowhere to ask.
 
-  SO THE ROUTINE IS UNCHANGED AND ONLY ITS DESTINATION MOVED. Every condition,
-  every goto and every special case is exactly where it was; the 31 widget
-  calls now go through two local helpers that write EITHER to the listview (as
-  before) or into this array. That is deliberate: the conditionals are where a
-  display bug would hide, and nothing in the corpus or the unit tests looks at
-  a rendered row, so restructuring them would have been unverifiable.
+  SO THE ROUTINE WAS LEFT ALONE AND ONLY ITS DESTINATION MOVED. Every
+  condition, every goto and every special case is where it always was, and the
+  31 widget calls became one helper writing into this array. That was
+  deliberate: the conditionals are where a display bug would hide, and nothing
+  in the corpus or the unit tests looks at a rendered row, so restructuring
+  them would have been unverifiable.
 
-  Filled by LogRowTextFor. *)
-(* TLogRowText and PLogRowText are declared in VC, beside LogColumnsType --
-  both the filler here and the LCL forms that read it need them. *)
+  THE LISTVIEW HALF IS NOW GONE TOO (2026-09-06), with the last window that
+  had one -- so this is not one of two destinations any more, it is the only
+  one. tAddContestExchangeToLog, which was the other, is deleted.
 
-procedure tAddContestExchangeToLog(RXData: ContestExchange; ListViewHandle:
-  HWND; var Index: integer);
-
-(* THE SAME ROW, AS TEXT, FOR A CALLER THAT IS NOT A WIN32 LISTVIEW. *)
+  TLogRowText and PLogRowText are declared in VC, beside LogColumnsType: both
+  the filler here and the LCL forms that read it need them. *)
 procedure LogRowTextFor(const RXData: ContestExchange; out aText: TLogRowText);
 
-function CreateEditableLog(Parent: HWND; X, Y, Width, Height: integer;
-  DefaultSize: boolean): HWND;
 
 procedure GenerateCallsignsList(FileName: PAnsiChar);
 procedure MakeAllCallsignsList;
@@ -7614,105 +7612,6 @@ begin
      end;
 end;
 
-function CreateEditableLog(Parent: HWND; X, Y, Width, Height: integer;
-  DefaultSize: boolean): HWND;
-var
-  { tagLVCOLUMNW: the list view is created with CreateWindowExW and
-    ColumnsArray[].Text is a UnicodeString (tr4w.inc sets MODESWITCH
-    UnicodeStrings for all 426 units), so the W path carries the header
-    through with no conversion and no temporary to keep alive. }
-  elvc: tagLVCOLUMNW;
-  Column: LogColumnsType;
-  Factor: integer;
-  Style: Cardinal;
-const
-  style1 = WS_CHILD or WS_VISIBLE or LVS_REPORT or LVS_NOSORTHEADER or
-    LVS_NOSCROLL or {LVS_NOCOLUMNHEADER or }LVS_SINGLESEL
-  {or LVS_NOCOLUMNHEADER};
-  style2 = WS_CHILD or WS_VISIBLE or LVS_REPORT or LVS_NOSORTHEADER or
-    WS_TABSTOP;
-begin
-  if DefaultSize then
-     begin
-     Style := style2
-     end
-  else
-     begin
-     Style := style1;
-     end;
-  Factor := ws;
-  Result := CreateWindowExW(Cardinal(not Config.NoBorder) * WS_EX_STATICEDGE,
-    WC_LISTVIEW, nil, Style + integer(Config.NoColumnHeader) * LVS_NOCOLUMNHEADER, X,
-    Y,
-    Width, Height, Parent, 0, hInstance, nil);
-  // Issue #997: asm tWM_SETFONT (EAX = Result above).
-  tWM_SETFONT(Result, MainFont);
-  if DefaultSize then
-     begin
-     Factor := 17;
-     tWM_SETFONT(Result, MainFixedFont);
-     end;
-  ListView_SetExtendedListViewStyle(Result, LVS_EX_FULLROWSELECT);
-  // ListView_SetExtendedListViewStyle(Result, LVS_EX_TRACKSELECT );
-
-  elvc.Mask := LVCF_TEXT or LVCF_WIDTH or LVCF_FMT;
-  for Column := logColBand to High(LogColumnsType) {Pred(logColDummy)} do
-    if ColumnsArray[Column].Enable then
-       begin
-       elvc.fmt := ColumnsArray[Column].Align;
-       // PWideChar, NOT PAnsiChar. Text is a UnicodeString; casting it to
-       // PAnsiChar reinterprets UTF-16 bytes as ANSI, so 'Band' (42 00 61 00
-       // ...) reads as 'B' followed by a terminator. That is what every
-       // header did on 2026-08-27 when this field stopped being a PAnsiChar.
-       elvc.pszText := PWideChar(ColumnsArray[Column].Text);
-       elvc.cx := ColumnsArray[Column].Width * Factor;
-       uCommctrl.ListView_InsertColumnW(Result, ColumnsArray[Column].pos, elvc);
-
-       // The header text AS INSERTED, with its length. A header that renders
-       // as one letter is either a one-letter string or a terminator landing
-       // in the wrong place, and those two have completely different causes;
-       // reading the string here separates them without a debugger.
-       logger.Debug('EditableLog column: idx=%d pos=%d cx=%d len=%d text="%s"',
-          [Ord(Column), ColumnsArray[Column].pos, elvc.cx,
-           Length(ColumnsArray[Column].Text), ColumnsArray[Column].Text]);
-       end;
-
-  Windows.SendMessage(Result, LVM_SETSELECTEDCOLUMN,
-    ColumnsArray[logColCallsign].pos, 0);
-
-  // ListView_SetColumnWidth(Result, integer(logColBand), ws * 4);
-
-end;
-
-// Stash the X-QSO flag on a fully-populated editable-log row in the
-// row's per-item lParam slot.  Used by the NM_CUSTOMDRAW handler in
-// tr4w.lpr to gray out X-QSO rows without re-reading the binary log
-// on every paint.  Called from tAddContestExchangeToLog after the
-// row's text subitems are all set -- doing this as a separate
-// LVM_SETITEM with LVIF_PARAM avoids the bug where putting LVIF_PARAM
-// in the shared TLVItem mask causes every subsequent SetItem (one per
-// subitem column) to also try to set lParam, which Windows rejects
-// for subitems (lParam is per-item, not per-subitem).  Issue #750.
-procedure SetRowXQSOFlag(ListViewHandle: HWND; rowIndex: Integer;
-                         isXQSO: Boolean);
-var
-   lvi: TLVItem;
-begin
-   FillChar(lvi, SizeOf(lvi), 0);
-   lvi.Mask     := LVIF_PARAM;
-   lvi.iItem    := rowIndex;
-   lvi.iSubItem := 0;
-   if isXQSO then
-      begin
-      lvi.lParam := 1
-      end
-   else
-      begin
-      lvi.lParam := 0;
-      end;
-   SendMessage(ListViewHandle, LVM_SETITEM, 0, LPARAM(@lvi));
-end;
-
 (* WHERE A COLUMN'S TEXT GOES.
 
   The 31 widget calls in BuildLogRow became this one. With aCollect nil the
@@ -7744,27 +7643,23 @@ begin
       end;
 end;
 
-procedure EmitCol(ListViewHandle: HWND; var elvi: TLVItem;
-                  aCollect: PLogRowText; aInsert: boolean);
-begin
-   if aCollect <> nil then
-      begin
-      aCollect^[ColumnAtPos(elvi.iSubItem)] := string(AnsiString(elvi.pszText));
-      Exit;
-      end;
+(* THE LIST-VIEW HALF IS GONE (2026-09-06), because its last caller is.
 
-   if aInsert then
-      begin
-      ListView_InsertItem(ListViewHandle, elvi);
-      end
-   else
-      begin
-      ListView_SetItem(ListViewHandle, elvi);
-      end;
+  It was
+
+     if aInsert then ListView_InsertItem(...) else ListView_SetItem(...);
+
+  reached only when aCollect was nil, which meant "write straight into a Win32
+  list view". The one window still doing that -- the multi-op server-log sync
+  dialog -- is a TLogGrid now, so nothing passes nil and those were the last
+  two live ListView_ calls in the program. aInsert distinguished the first
+  column from the rest and has nothing left to distinguish. *)
+procedure EmitCol(var elvi: TLVItem; aCollect: PLogRowText);
+begin
+   aCollect^[ColumnAtPos(elvi.iSubItem)] := string(AnsiString(elvi.pszText));
 end;
 
-procedure BuildLogRow(RXData: ContestExchange; ListViewHandle: HWND;
-  var Index: integer; aCollect: PLogRowText);
+procedure BuildLogRow(RXData: ContestExchange; aCollect: PLogRowText);
 label
   SetItem, Domestic; //n4af
 var
@@ -7775,32 +7670,25 @@ var
   RowTextAnsi: AnsiString;   // the same, for the rkNote and deleted-QSO captions
 begin
 
+  (* elvi IS A CARRIER, NOT A LIST-VIEW ITEM, and has been since the last
+    list view went. Only two of its fields are read: iSubItem names the column
+    by POSITION and pszText holds that column's text. iItem numbered a row in a
+    widget and is gone with it, and so is the var Index that fed it.
+
+    Replacing the struct with a plain (column, text) pair is a real
+    simplification -- it also retires the PAnsiChar buffers below -- but it
+    touches all 31 emit sites in a routine full of labels and gotos, so it is a
+    change of its own. *)
   elvi.Mask := LVIF_TEXT;
-  elvi.iItem := Index;
-
-  if aCollect = nil then
-     begin
-     inc(Index);
-     end;
   elvi.iSubItem := ColumnsArray[logColBand].pos; //Ord(logColBand);
-
-  // Issue #750: stash the X-QSO flag in the row's per-item lParam so the
-  // editable log's NM_CUSTOMDRAW handler (tr4w.lpr WM_NOTIFY) can gray
-  // out the row without re-reading the binary log on every paint.  This
-  // happens in SetRowXQSOFlag below, AFTER all the text subitems are
-  // set: lParam is per-item, not per-subitem, and including LVIF_PARAM
-  // in elvi.Mask here would cause every subsequent ListView_SetItem
-  // (via the asm `call setitem` thunks below) to also try to set
-  // lParam on a subitem, which Windows rejects -- only the first
-  // column would render.  Issue #750 v0.1 hit exactly that bug.
 
   if RXData.ceRecordKind = rkNote then
      begin
      RowTextAnsi := WinAnsi(RC_NOTE);   elvi.pszText := PAnsiChar(RowTextAnsi);
-     EmitCol(ListViewHandle, elvi, aCollect, True);
+     EmitCol(elvi, aCollect);
      elvi.iSubItem := ColumnsArray[logColCallsign].pos; //(logColCallsign);
      elvi.pszText := @RXData.Prefix;
-     EmitCol(ListViewHandle, elvi, aCollect, False);   // Issue #997: was asm call setitem
+     EmitCol(elvi, aCollect);   // Issue #997: was asm call setitem
      end;
 
   (* THE BLANK ROW IS GONE WITH THE SECOND FLAG.
@@ -7820,7 +7708,7 @@ begin
   if RXData.ceQSO_Deleted then
      begin
      RowTextAnsi := WinAnsi(RC_DELETED);   elvi.pszText := PAnsiChar(RowTextAnsi);
-     EmitCol(ListViewHandle, elvi, aCollect, True);
+     EmitCol(elvi, aCollect);
      Exit;
      end;
 
@@ -7833,7 +7721,7 @@ begin
     ModeStringArray[RXData.Mode]);
 
   elvi.pszText := LogDisplayBuffer;
-  EmitCol(ListViewHandle, elvi, aCollect, True);
+  EmitCol(elvi, aCollect);
 
   {
   aYear := (RXData.tSysTime.qtYear + 2000) mod 100;
@@ -7851,18 +7739,18 @@ begin
   elvi.iSubItem := ColumnsArray[logColDate].pos;
   // elvi.pszText := LogDisplayBuffer;
   elvi.pszText := tGetDateFormat(RXData.tSysTime);
-  EmitCol(ListViewHandle, elvi, aCollect, False);   // Issue #997: was asm call setitem
+  EmitCol(elvi, aCollect);   // Issue #997: was asm call setitem
 
   TF.Format(LogDisplayBuffer, '%02d:%02d', RXData.tSysTime.qtHour,
     RXData.tSysTime.qtMinute);
   elvi.iSubItem := ColumnsArray[logColTime].pos; //Ord(logColTime);
   elvi.pszText := LogDisplayBuffer;
-  EmitCol(ListViewHandle, elvi, aCollect, False);   // Issue #997: was asm call setitem
+  EmitCol(elvi, aCollect);   // Issue #997: was asm call setitem
 
   CID_TWO_BYTES[0] := RXData.ceComputerID;
   elvi.iSubItem := ColumnsArray[logColComputerID].pos; //Ord(logColComputerID);
   elvi.pszText := @CID_TWO_BYTES;
-  EmitCol(ListViewHandle, elvi, aCollect, False);   // Issue #997: was asm call setitem
+  EmitCol(elvi, aCollect);   // Issue #997: was asm call setitem
 
   if RXData.ceRecordKind = rkNote then
      begin
@@ -7872,7 +7760,7 @@ begin
      begin
      elvi.iSubItem := ColumnsArray[logColNumberSent].pos; //Ord(logColNumberSent);
      elvi.pszText := inttopchar(RXData.NumberSent {+10020});
-     EmitCol(ListViewHandle, elvi, aCollect, False);   // Issue #997: was asm call setitem
+     EmitCol(elvi, aCollect);   // Issue #997: was asm call setitem
      end;
 
   elvi.iSubItem := ColumnsArray[logColCallsign].pos; //Ord(logColCallsign);
@@ -7886,7 +7774,7 @@ begin
      begin
      elvi.pszText := @RXData.Callsign[1]; //@RXData.Callsign[1];
      end;
-  EmitCol(ListViewHandle, elvi, aCollect, False);   // Issue #997: was asm call setitem
+  EmitCol(elvi, aCollect);   // Issue #997: was asm call setitem
 
   if ColumnsArray[logColNumberReceive].Enable then
     if RXData.NumberReceived <> -1 then
@@ -7894,7 +7782,7 @@ begin
        elvi.iSubItem := ColumnsArray[logColNumberReceive].pos;
        //Ord(logColNumberReceive);
        elvi.pszText := inttopchar(RXData.NumberReceived);
-       EmitCol(ListViewHandle, elvi, aCollect, False);   // Issue #997: was asm call setitem
+       EmitCol(elvi, aCollect);   // Issue #997: was asm call setitem
        end;
 
   if RXData.ceRecordKind in [rkQTCR, rkQTCS] then
@@ -7902,11 +7790,11 @@ begin
      elvi.iSubItem := ColumnsArray[logColQTC].pos; //Ord(logColQTC);
      TF.Format(LogDisplayBuffer, '%04d %s', RXData.NumberSent, @RXData.Kids[1]);
      elvi.pszText := LogDisplayBuffer;
-     EmitCol(ListViewHandle, elvi, aCollect, False);   // Issue #997: was asm call setitem
+     EmitCol(elvi, aCollect);   // Issue #997: was asm call setitem
 
      elvi.iSubItem := ColumnsArray[logColNumberSent].pos; //Ord(logColNumberSent);
      elvi.pszText := @RXData.RandomCharsReceived[1];
-     EmitCol(ListViewHandle, elvi, aCollect, False);   // Issue #997: was asm call setitem
+     EmitCol(elvi, aCollect);   // Issue #997: was asm call setitem
      Exit;
      end;
 
@@ -7914,14 +7802,14 @@ begin
      begin
      elvi.iSubItem := ColumnsArray[logColClass].pos; //Ord(logColDXMult);
      elvi.pszText := @RXData.ceClass[1];
-     EmitCol(ListViewHandle, elvi, aCollect, False);   // Issue #997: was asm call setitem
+     EmitCol(elvi, aCollect);   // Issue #997: was asm call setitem
      end;
 
   if ColumnsArray[logColDXMult].Enable then
      begin
      elvi.iSubItem := ColumnsArray[logColDXMult].pos; //Ord(logColDXMult);
      elvi.pszText := @RXData.DXQTH[1];
-     EmitCol(ListViewHandle, elvi, aCollect, False);   // Issue #997: was asm call setitem
+     EmitCol(elvi, aCollect);   // Issue #997: was asm call setitem
      end;
 
   if ColumnsArray[logColZoneMult].Enable then
@@ -7930,7 +7818,7 @@ begin
         begin
         elvi.iSubItem := ColumnsArray[logColZoneMult].pos; //Ord(logColZoneMult);
         elvi.pszText := inttopchar(RXData.Zone);
-        EmitCol(ListViewHandle, elvi, aCollect, False);   // Issue #997: was asm call setitem
+        EmitCol(elvi, aCollect);   // Issue #997: was asm call setitem
         end;
      end;
 
@@ -7941,14 +7829,14 @@ begin
         begin
         elvi.iSubItem := ColumnsArray[logColPower].pos;
         elvi.pszText := @RXData.Power[1];
-        EmitCol(ListViewHandle, elvi, aCollect, False);   // Issue #997: was asm call setitem
+        EmitCol(elvi, aCollect);   // Issue #997: was asm call setitem
         end;
      end
   else if (ColumnsArray[logColFOC].Enable) then
      begin
      elvi.iSubItem := ColumnsArray[logColFOC].pos;
      elvi.pszText := @RXData.Power[1];
-     EmitCol(ListViewHandle, elvi, aCollect, False);   // Issue #997: was asm call setitem
+     EmitCol(elvi, aCollect);   // Issue #997: was asm call setitem
 
      end;
 
@@ -7956,7 +7844,7 @@ begin
      begin
      elvi.iSubItem := ColumnsArray[logColPrefixMult].pos; //Ord(logColPrefixMult);
      elvi.pszText := @RXData.Prefix[1];
-     EmitCol(ListViewHandle, elvi, aCollect, False);   // Issue #997: was asm call setitem
+     EmitCol(elvi, aCollect);   // Issue #997: was asm call setitem
      end;
 
   Mults := 0;
@@ -7997,7 +7885,7 @@ begin
      MultString[Mults] := #0;
      elvi.iSubItem := ColumnsArray[logColTotalMults].pos; //Ord(logColTotalMults);
      elvi.pszText := MultString; //inttopchar(Mults);
-     EmitCol(ListViewHandle, elvi, aCollect, False);   // Issue #997: was asm call setitem
+     EmitCol(elvi, aCollect);   // Issue #997: was asm call setitem
      end;
 
   if ColumnsArray[logColPrecedence].Enable then
@@ -8005,7 +7893,7 @@ begin
      elvi.iSubItem := ColumnsArray[logColPrecedence].pos; //rd(logColPrecedence);
      CID_TWO_BYTES[0] := RXData.Precedence;
      elvi.pszText := CID_TWO_BYTES;
-     EmitCol(ListViewHandle, elvi, aCollect, False);   // Issue #997: was asm call setitem
+     EmitCol(elvi, aCollect);   // Issue #997: was asm call setitem
      end;
 
   if ColumnsArray[logColCheck].Enable then
@@ -8014,7 +7902,7 @@ begin
      begin
        elvi.iSubItem := ColumnsArray[logColCheck].pos; //Ord(logColCheck);
        elvi.pszText := inttopchar(RXData.Check);
-       EmitCol(ListViewHandle, elvi, aCollect, False);   // Issue #997: was asm call setitem
+       EmitCol(elvi, aCollect);   // Issue #997: was asm call setitem
      end;
      end;
 
@@ -8024,7 +7912,7 @@ begin
         begin
         elvi.iSubItem := ColumnsArray[logColChapter].pos; //Ord(logColCheck);
         elvi.pszText := @RXData.Chapter[1];
-        EmitCol(ListViewHandle, elvi, aCollect, False);   // Issue #997: was asm call setitem
+        EmitCol(elvi, aCollect);   // Issue #997: was asm call setitem
         end;
      end;
 
@@ -8046,12 +7934,12 @@ begin
         begin
         elvi.pszText := @RXData.QTHString[1];
         end;
-     EmitCol(ListViewHandle, elvi, aCollect, False);   // Issue #997: was asm call setitem
+     EmitCol(elvi, aCollect);   // Issue #997: was asm call setitem
      end;
 
   elvi.iSubItem := ColumnsArray[logColPoints].pos; //Ord(logColPoints);
   elvi.pszText := inttopchar(RXData.QSOPoints);
-  EmitCol(ListViewHandle, elvi, aCollect, False);   // Issue #997: was asm call setitem
+  EmitCol(elvi, aCollect);   // Issue #997: was asm call setitem
 
   if ColumnsArray[logColAge].Enable then
      begin
@@ -8059,7 +7947,7 @@ begin
      begin
        elvi.iSubItem := ColumnsArray[logColAge].pos; //Ord(logColAge);
        elvi.pszText := inttopchar(RXData.Age);
-       EmitCol(ListViewHandle, elvi, aCollect, False);   // Issue #997: was asm call setitem
+       EmitCol(elvi, aCollect);   // Issue #997: was asm call setitem
      end;
      end;
 
@@ -8067,7 +7955,7 @@ begin
      begin
      elvi.iSubItem := ColumnsArray[logColKids].pos; //Ord(logColAge);
      elvi.pszText := @RXData.Kids[1];
-     EmitCol(ListViewHandle, elvi, aCollect, False);   // Issue #997: was asm call setitem
+     EmitCol(elvi, aCollect);   // Issue #997: was asm call setitem
      end;
 
   if ColumnsArray[logColName].Enable then
@@ -8076,7 +7964,7 @@ begin
         begin
         elvi.iSubItem := ColumnsArray[logColName].pos; //Ord(logColName);
         elvi.pszText := @RXData.Name[1];
-        EmitCol(ListViewHandle, elvi, aCollect, False);   // Issue #997: was asm call setitem
+        EmitCol(elvi, aCollect);   // Issue #997: was asm call setitem
         end;
      end;
   if RXData.ceSearchAndPounce then
@@ -8085,14 +7973,14 @@ begin
      elvi.iSubItem := ColumnsArray[logColSearchAndPounce].pos;
      //Ord(logColSearchAndPounce);
      elvi.pszText := '$';
-     EmitCol(ListViewHandle, elvi, aCollect, False);   // Issue #997: was asm call setitem
+     EmitCol(elvi, aCollect);   // Issue #997: was asm call setitem
      end;
 
   if RXData.ceDupe then
      begin
      elvi.iSubItem := ColumnsArray[logColDupe].pos; //Ord(logColDupe);
      elvi.pszText := 'D';
-     EmitCol(ListViewHandle, elvi, aCollect, False);   // Issue #997: was asm call setitem
+     EmitCol(elvi, aCollect);   // Issue #997: was asm call setitem
      end;
 
   if RXData.Frequency <> 0 then
@@ -8104,22 +7992,23 @@ begin
      // end).  W-flip tracked with the ListView A->W surface.
      FreqAnsi := AnsiString(FreqToPChar {FreqToPCharWithoutHZ}(RXData.Frequency));
      elvi.pszText := PAnsiChar(FreqAnsi);
-     EmitCol(ListViewHandle, elvi, aCollect, False);   // Issue #997: was asm call setitem
+     EmitCol(elvi, aCollect);   // Issue #997: was asm call setitem
      end;
 
   if RXData.ceOperator[0] <> #0 then
      begin
      elvi.iSubItem := ColumnsArray[logColOperator].pos;
      elvi.pszText := RXData.ceOperator;
-     EmitCol(ListViewHandle, elvi, aCollect, False);   // Issue #997: was asm call setitem
+     EmitCol(elvi, aCollect);   // Issue #997: was asm call setitem
      end;
 
-  // Issue #750: stash the X-QSO flag on the just-built row so the
-  // NM_CUSTOMDRAW handler (tr4w.lpr WM_NOTIFY) can gray out X-QSO
-  // rows without re-reading the binary log.  Uses elvi.iItem because
-  // the var-parameter Index has already been inc'd (the row we just
-  // populated is at elvi.iItem, which equals Index - 1 by now).
-  SetRowXQSOFlag(ListViewHandle, elvi.iItem, RXData.ceXQSO);
+  (* THE X-QSO FLAG NO LONGER TRAVELS IN A ROW'S lParam.
+
+    SetRowXQSOFlag stashed it there so the main window's NM_CUSTOMDRAW handler
+    could grey the row without re-reading the log. Both ends are gone: the log
+    is a TLogGrid, and TLogGridRow carries Deleted and XQSO as fields, read
+    straight off the record by whoever fetches it. The flag is a property of
+    the QSO, and it is now stored as one. *)
 
   Exit;
 
@@ -8127,26 +8016,16 @@ begin
 end;
 
 
-(* THE ROW AS THE LISTVIEW HAS ALWAYS HAD IT. *)
-procedure tAddContestExchangeToLog(RXData: ContestExchange; ListViewHandle:
-  HWND; var Index: integer);
-begin
-   BuildLogRow(RXData, ListViewHandle, Index, nil);
-end;
-
-(* THE ROW AS TEXT, for a caller that draws it itself. The handle and index are
-  unused when collecting and are passed as nothing. *)
+(* THE ROW AS TEXT, which is now the only way a row is built. *)
 procedure LogRowTextFor(const RXData: ContestExchange; out aText: TLogRowText);
 var
-   ignored: integer;
    c: LogColumnsType;
 begin
    for c := Low(LogColumnsType) to High(LogColumnsType) do
       begin
       aText[c] := '';
       end;
-   ignored := 0;
-   BuildLogRow(RXData, 0, ignored, @aText);
+   BuildLogRow(RXData, @aText);
 end;
 
 procedure LogEnsureVisible;

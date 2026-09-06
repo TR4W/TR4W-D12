@@ -439,23 +439,39 @@ snapshots that can be days old. A search for `CreateQSONeedWindows` found it in
 `src/backup/MainUnit.pas` long after the live routine was deleted. The lints
 already exclude both; a hand-run `grep` does not.
 
-*Measured 2026-09-06, and offered as a worked example of the commands above
-rather than as a fact to cite later:* **one** UI window is still built by hand
-— the **shared editable log** (`CreateEditableLog`, a `CreateWindowExW` of
-`WC_LISTVIEW`), hosted by `uServerLogForm` and by the main window. It is
-**deferred on purpose** until the log moves to SQLite; see
-[`docs/ROADMAP.md`](docs/ROADMAP.md) §2. `uWinTimer` and
-`uIcomNetworkTransport` create message-only windows, which is platform code and
-not UI.
+*Measured 2026-09-06:* **no UI window is built by hand any more.** The last
+one was the multi-op server-log sync list (`CreateEditableLog`, a
+`CreateWindowExW` of `WC_LISTVIEW`), and it is a `TLogGrid`. There are **no
+live `ListView_*` calls left**, and the only `CreateWindowEx` in the tree
+builds `uWinTimer`'s message-only window — platform code, not UI, as is
+`uIcomNetworkTransport`'s.
 
-**And that is the third day running that this paragraph was wrong the day
-after it was written.** On 2026-09-05 it named the WinKeyer settings dialog,
-the server log's list view *and* `uErmak`; by 2026-09-06 the WinKeyer dialog
-was a form, `uErmak` and `CreateListView` had been deleted, and only one of
-the three was still true. **Run the two commands above.** Everything else on
-the count is either a REPORTED fallback kept until a log line proves it dead
+**DO NOT READ THAT AS "DONE" AND DO NOT CITE IT.** The commands above are the
+answer; this line is a worked example of running them, and it has been wrong
+the day after it was written four days running:
+
+| written | what it claimed was left | true the next day? |
+|---|---|---|
+| 2026-09-04 | eight hand-built dialogs, `uLogEdit` among them | no — `uLogEdit` did not exist |
+| 2026-09-05 | WinKeyer settings, the server log's list, `uErmak` | no — one of three |
+| 2026-09-06 (am) | the server log's list, *"deferred until the log moves to SQLite"* | **no, and the REASON was wrong too** |
+
+That last one is the instructive failure, because the count was right and the
+reasoning was not. NY4I: *"This does not make much sense. sqlite is already the
+database."* He was right on every clause — `docs/SQLITE_MIGRATION_TASKS.md`
+says **B4 is done and reads come from the database**; the main window's log had
+been a `TLogGrid` for days so nothing was "shared"; and the `ListView_*` count
+the deferral rested on was **34 mentions, 4 of them live**, not the ~150 the
+comment claimed. The window did not even show the contest log — it shows the
+*server's* log, arriving over a socket, so log storage was never relevant.
+
+**A stale REASON is worse than a stale count**, because a count invites a
+re-measurement and a reason invites agreement. The paragraph had been carried
+forward from a comment instead of being checked. Everything still on the Win32
+count is now either a REPORTED fallback kept until a log line proves it dead
 (`OpenTR4WWindow`, `MoveWindowTo`, `ShowModalOverWin32Parent`) or genuine
-platform code.
+platform code — and if you are about to repeat that sentence, run the commands
+first.
 
 The garbled-caption defect those dialogs shared is fixed: all five that set a
 title did it with `PWideChar(<resourcestring>)` — a POINTER CAST, not a

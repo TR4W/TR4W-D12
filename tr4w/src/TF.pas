@@ -146,7 +146,6 @@ function tCreateThread(lpStartAddress: TFNThreadStartRoutine; var lpThreadId: DW
    why both go in the same commit. *)
 function tWM_SETFONT(h: HWND; Font: HFONT): HWND;
 
-procedure tSetWindowRedraw(wnd: HWND; Redraw: boolean);
 function SystemTimeToString(SysTime: SYSTEMTIME): string;
 
 //function StrLen(const Str: PChar): Cardinal;
@@ -482,11 +481,6 @@ begin
   if myhostent <> nil then Result := iNet_ntoa(PInAddr(myhostent^.h_addr_list^)^);
 end;
 }
-
-procedure tSetWindowRedraw(wnd: HWND; Redraw: boolean);
-begin
-  SendMessage(wnd, WM_SETREDRAW, integer(Redraw), 0);
-end;
 
 function SystemTimeToString(SysTime: SYSTEMTIME): string;
 begin
