@@ -909,12 +909,22 @@ begin
   uStrSearch.StrU(Str);
 end;
 
+(* THE MMTTY RICH EDIT, AND WINDOWS-ONLY WITH IT.
+
+  Its one caller is uMMTTYForm, which hosts the RTTY engine's output. MMTTY is
+  a separate Windows EXE and RICHED32 is a Windows control; on another platform
+  there is no engine to show, so this returns 0 -- the same "not running" state
+  every MMTTY caller already handles. See uMMTTY's implementation gate. *)
 function CreateRichEdit(hwndParent: HWND): HWND;
 begin
+{$IFDEF WINDOWS}
   Result := CreateWindowW('RichEdit', nil,
     ES_MULTILINE or ES_AUTOVSCROLL or ES_NOHIDESEL or ES_READONLY or ES_SAVESEL or WS_CHILD or WS_VISIBLE or WS_BORDER or WS_VSCROLL or WS_HSCROLL,
     0, 0, 0, 0, hwndParent, 101, hInstance, nil);
   tWM_SETFONT(Result, LucidaConsoleFont);
+{$ELSE}
+   Result := 0;
+{$ENDIF}
 end;
 
 function IntegerBetween(v: integer; i: integer; k: integer): boolean;

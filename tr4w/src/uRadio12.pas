@@ -37,26 +37,5 @@ uses
   LOGSUBS2,
   MainUnit;
 
-// One mode label: flat, left-aligned, in the dialog's own font, four pixels to
-// the right of the VFO frequency static it belongs to.
-procedure CreateModeLabel(const aParent: HWND; const aId: integer; const aTop: integer);
-const
-   VFO_LEFT   = 50;    // the VFO statics' X
-   VFO_WIDTH  = 135;   // and their width
-   VFO_HEIGHT = 23;    // CreateStatic's fixed height
-   GAP        = 4;
-   MODE_WIDTH = 55;
-var
-  h: HWND;
-begin
-   h := Windows.CreateWindowA('STATIC', '',
-      WS_CHILD or WS_VISIBLE or SS_LEFT,
-      VFO_LEFT + VFO_WIDTH + GAP, aTop, MODE_WIDTH, VFO_HEIGHT,
-      aParent, aId, hInstance, nil);
-
-   Windows.SendMessage(h, WM_SETFONT,
-      Windows.SendMessage(aParent, WM_GETFONT, 0, 0), 1);
-end;
-
 end.
 

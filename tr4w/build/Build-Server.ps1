@@ -34,7 +34,21 @@ if (-not (Test-Path $out)) { New-Item -ItemType Directory -Path $out | Out-Null 
 # Always a full build here, so always clear first -- see Clear-Tr4wUnitOutput.
 $cleared = Clear-Tr4wUnitOutput -OutDir $out
 if ($cleared -gt 0) { Write-Host "  cleared $cleared stale artifact(s) from $out" }
-$fpcArgs = @("-Mdelphi", "-P$Cpu", "-T$Os", '-Sc', '-B', "-FU$out", "-o$exe")
+# -dTR4W_NO_LCL: THE ONE THING THAT SAYS "this program has no widget set".
+#
+# tr4wserver is a console program and its search paths deliberately exclude the
+# LCL -- that exclusion is the only guard on the boundary (see CLAUDE.md, the
+# uCrashLog -> Forms edge that broke this build for nine days). When VC.pas
+# moved its types from Windows to LCLType on 2026-09-06 the server stopped
+# compiling within the minute, which is the guard working.
+#
+# VC needs HWND and friends from SOMEWHERE. Which one is a property of the
+# PROGRAM, not of the compiler or the platform, so it is a build-time define
+# rather than a {$IFDEF FPC}: that was the wrong axis last time and could not
+# have helped. On Windows both answers are the same types anyway -- LCLType's
+# HWND IS Windows.HWND there -- so this changes nothing but where the
+# declaration is read from.
+$fpcArgs = @("-Mdelphi", "-P$Cpu", "-T$Os", '-Sc', '-B', '-dTR4W_NO_LCL', "-FU$out", "-o$exe")
 foreach ($p in (Get-Tr4wSearchPaths -Tr4wDir $TR4W_DIR -Toolchain $tc -For Server)) { $fpcArgs += "-Fu$p" }
 foreach ($p in (Get-Tr4wIncludePaths -Tr4wDir $TR4W_DIR)) { $fpcArgs += "-Fi$p" }
 $fpcArgs += 'tr4wserver.lpr'

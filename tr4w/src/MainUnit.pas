@@ -3677,8 +3677,15 @@ begin
   // actually happened.  Here it does.
   HamScoreShutdown;
 
-  Windows.UnregisterClass(tr4w_ClassName, hInstance);
-  // ny4i Issue 145. UnregisterClass was not qualifies and it conflicted with classes.UnregisterClass
+  (* NOTHING TO UNREGISTER. The matching RegisterClass in uProgramMain is gone
+    (2026-09-06): it registered a window class that no CreateWindowEx names,
+    because the main window is an LCL form. Unregistering a class that was
+    never registered simply fails, which is why this never reported anything.
+
+    The original carried a note worth keeping: the call had to be qualified,
+    because an unqualified UnregisterClass binds to Classes.UnregisterClass --
+    a completely different routine that deregisters a streaming class. ny4i,
+    Issue 145. *)
   ExitProcess(hInstance);
 
 end;

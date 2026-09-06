@@ -23,11 +23,95 @@ interface
 
 uses
 
+  (* LCLType, NOT Windows, AND THIS IS THE UNIT THE WHOLE PORT WAITED ON.
+
+    VC is the source of truth for types, so every unit that uses it inherited a
+    hard dependency on the Windows unit -- which is why a Linux compile of a
+    leaf like uDXSpotParse failed in VC.pas rather than in the leaf.
+
+    LCLType declares HWND, HFONT, HBRUSH, HMENU, HDC, TLogFont, MAXWORD, the
+    COLOR_* system-colour indices and the raster-op constants for EVERY widget
+    set -- and on Windows they are ALIASES TO THE IDENTICAL Windows
+    declarations (`HWND = Windows.HWND` here, `HWND = type TLCLHandle`
+    elsewhere). So on this platform the swap changes no type at all, which is
+    what makes it a low-risk change to the most load-bearing unit in the tree
+    rather than a rewrite. THandle is System's and TRect is Types', both
+    portable.
+
+    TWO CONDITIONALS, ASKING TWO DIFFERENT QUESTIONS. Getting them confused is
+    how the server build broke within a minute of this change.
+
+    TR4W_NO_LCL asks WHICH PROGRAM. Build-Server.ps1 sets it and nothing else
+    does: tr4wserver is a console program whose unit search paths exclude the
+    LCL deliberately -- that exclusion is the only guard on the boundary, and
+    it is what caught this. It cannot see LCLType, so it reads the same
+    declarations from Windows. Not {$IFDEF FPC}: which compiler is the wrong
+    axis for "does this program have a widget set", and CLAUDE.md records the
+    time that mistake cost nine days.
+
+    WINDOWS asks WHICH PLATFORM, and gates FOUR API STRUCTS that LCLType does
+    not carry and should not:
+
+      SYSTEMTIME     the program's clock (UTC) -- and tsTime, A FIELD OF THE
+                     LOG RECORD, so its layout is on disk in every .TRW an
+                     operator owns. Replacing it is a decision about the log
+                     FORMAT, taken with the SQLite work, not a uses clause.
+      OSVERSIONINFO  GetVersionEx; five readers.
+      STICKYKEYS     SystemParametersInfo(SPI_GETSTICKYKEYS) -- stops a run of
+                     shift keys switching Sticky Keys on mid-contest. Five
+                     readers, and no counterpart elsewhere because no other
+                     platform has the misfeature to defend against.
+
+    On another platform those three globals are simply absent, and their users
+    -- all of them Windows-only code -- then fail loudly and in the right place
+    instead of inheriting a dependency from the tree's TYPE unit. *)
+
+  {$IFDEF TR4W_NO_LCL}
   Windows,
-  Messages,
+  {$ELSE}
+  LCLType,
+    {$IFDEF WINDOWS}
+    Windows,
+    {$ENDIF}
+  {$ENDIF}
+  Types,
   Log4D,
   Version,
   uTR4WStrings;
+
+(* THE THREE THINGS LCLType DOES NOT CARRY, declared here because w.pas is
+  included below and needs WM_USER 56 times.
+
+  These are ordinary integers with published, fixed values -- not a
+  reimplementation of anything. Two of the three are not really Windows'
+  any more:
+
+  MAX_PATH sizes FileNameType, a TR4W type. 260 is the Win32 limit the format
+  was designed around and changing it would change the on-disk layout, so the
+  number stays whatever the platform thinks.
+
+  THE SS_* VALUES ARE TR4W'S OWN ELEMENT FLAGS NOW, not static-control styles.
+  Nothing passes them to CreateWindowEx any more -- the main window's elements
+  are TElementPanels, and uMainForm.CreateMainElement reads exactly FOUR bits
+  out of the style word: SS_SUNKEN -> BevelOuter, SS_CENTER -> Alignment,
+  WS_DISABLED -> Enabled, WS_VISIBLE -> Visible. SS_NOTIFY, SS_NOPREFIX and
+  WS_CHILD are inert and survive only because they are ORed into the constants
+  the TWindows[] table uses.
+
+  So the honest next step is a proper `set of (esSunken, esCentre, esVisible,
+  esDisabled)` on that field, which deletes these six outright. That is a
+  change to 43 table rows and three readers, and it is NOT this change: this
+  one is a uses clause, and every table row is byte-identical after it. *)
+const
+  WM_USER               = $0400;
+  MAX_PATH              = 260;
+
+  SS_LEFT               = $00000000;
+  SS_CENTER             = $00000001;
+  SS_RIGHT              = $00000002;
+  SS_NOPREFIX           = $00000080;
+  SS_NOTIFY             = $00000100;
+  SS_SUNKEN             = $00001000;
 
 {$INCLUDE w.pas}
 
@@ -2226,7 +2310,10 @@ const
   tNEWAsInteger                         = $2057454E;
 
 const
-  CallsignExchangeWinStyle              = WS_CHILD or WS_VISIBLE or ES_UPPERCASE or WS_TABSTOP or ES_AUTOHSCROLL {or ES_OEMCONVERT  } or ES_NOHIDESEL;
+  (* CallsignExchangeWinStyle IS GONE (2026-09-06): the Win32 edit style for
+    the callsign and exchange fields, which are LCL TEdits with CharCase and
+    AutoSize properties instead. It had NO READER, and it was the last thing in
+    this unit that needed ES_UPPERCASE, ES_AUTOHSCROLL and ES_NOHIDESEL. *)
 
   QSOMULTSWINDOWSTYLE                   = uVisStyleNoSun;
   QSOMULTSMODEWINDOWSTYLE               = WS_CHILD or SS_NOTIFY or SS_RIGHT or SS_NOPREFIX or WS_VISIBLE;
@@ -2722,7 +2809,12 @@ var
   DifferentContests                     : boolean;
 
   tr4whandle                            : HWND;
-  tr4w_WinClass                         : TWndClass = (Style: CS_DBLCLKS; hbrBackground: COLOR_BTNFACE + 1; {lpszMenuName: 'T'; } lpszClassName: tr4w_ClassName; );
+  (* tr4w_WinClass IS GONE (2026-09-06). It was the TWndClass TR4W
+    registered for its own main window; that window is an LCL form and the
+    variable had no reader anywhere in the tree. TWndClass is the one type
+    here that LCLType does not carry and could not sensibly carry -- it is
+    a Win32 window-class record -- so the dead variable was the whole of
+    what still needed it. *)
   tr4w_main_menu                        : HMENU;
 
   DupeInfoCallWindowCleared             : boolean = True;

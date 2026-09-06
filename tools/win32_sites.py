@@ -63,7 +63,15 @@ SWITCHES = read_switches()
 # The kinds Lint-Win32Dialogs tracks, plus the operate-on-a-window calls it does
 # not -- those are the ones this tree keeps finding by accident.
 PATTERNS = {
-    'CreateWindowEx':   r'\bCreateWindowEx[AW]?\s*\(',
+    # CreateWindowEx AND the bare CreateWindow. The pattern was
+    # CreateWindowEx[AW]? and therefore missed
+    # `Windows.CreateWindowA('STATIC', ...)` in uRadio12 and
+    # `CreateWindowW('RichEdit', ...)` in TF -- neither had ever appeared in
+    # a count this tool produced. Found 2026-09-06 by READING A FILE, not by
+    # running this, which is exactly why it is worth a comment: a counter
+    # that silently under-reports is worse than no counter, because it is
+    # believed.
+    'CreateWindowEx':   r'\bCreateWindow(Ex)?[AW]?\s*\(',
     'CreateModalDialog': r'\bCreateModalDialog\s*\(',
     'DialogBox':        r'\bDialogBox(Param|Indirect|IndirectParam)?[AW]?\s*\(',
     'CreateDialog':     r'\bCreateDialog(Param|Indirect|IndirectParam)?[AW]?\s*\(',

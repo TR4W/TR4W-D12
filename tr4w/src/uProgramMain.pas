@@ -1448,22 +1448,19 @@ begin
   SetWindowSize;
   CreateFonts;
 
-  // Set OUTSIDE the `with`, deliberately.  Inside it, the bare name HInstance
-  // binds to WNDCLASS's OWN hInstance field, not to the module handle -- which
-  // is why this used to read SysInit.hInstance.  SysInit is a Delphi-only unit
-  // (FPC keeps HInstance in System), and rather than pick a qualifier that has
-  // to be right on two compilers, the assignment simply moves to where the
-  // unqualified name is already unambiguous.
-  tr4w_WinClass.hInstance := HInstance;
+  (* THE WINDOW CLASS IS NOT REGISTERED ANY MORE, BECAUSE NOTHING INSTANTIATES
+    IT. This filled tr4w_WinClass -- icon, cursor, background brush and
+    lpfnWndProc := @WindowProc -- and called RegisterClass below.
 
-  with tr4w_WinClass do
-  begin
-    // a NAMED resource -- MAKEINTRESOURCE on a string was always a no-op
-    HICON := LoadIconW(tr4w_WinClass.hInstance, 'MAINICON');
-    lpfnWndProc := @WindowProc;
-    HCURSOR := LoadCursor(0, IDC_ARROW);
-    hbrBackground := tr4wBrushArray[TWindows[mweWholeScreen].mweBackG {trBtnFace}];
-  end;
+    A registered class does nothing on its own; it matters only to a
+    CreateWindowEx that names it. The one call that did is commented out in
+    MainUnit ("Was: CreateWindowExW($00010100, tr4w_ClassName, ...)"): the main
+    window is an LCL form, and WindowProc reaches it through the GWL_WNDPROC
+    subclass in uMainForm, never through this class. The icon and brush set
+    here were never painted by anything.
+
+    tr4w_ClassName survives and is still used -- as the MUTEX NAME for the
+    single-instance check, which is a string and not a window class. *)
 
   //tr4w_main_menu := LoadMenu(hInstance, 'T');
   tr4w_main_menu := CreateTR4WMenu(@T_MENU_ARRAY, T_MENU_ARRAY_SIZE, False);
@@ -1481,8 +1478,6 @@ begin
     called it went when the program moved to Application.Run -- so this
     allocated a Win32 resource, checked it, and dropped it. Keystrokes reach
     commands through uAppInputHooks, reading the same ACCELERATORS table. *)
-
-  RegisterClass(tr4w_WinClass);
 
 
   SetUpExchangeInformation(ActiveExchange, ExchangeInformation);
