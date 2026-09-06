@@ -2723,6 +2723,28 @@ edits one, deletes one, or opens a log window.
 
 ### BENCH RUNS -- no automated gate reaches any of this
 
+- [ ] **`NO CAPTION = TRUE`, on any tool window.** Set it in Preferences
+  (Appearance), open the band map and the function keys window, and check that
+  the title bars are gone, that the windows still land where they were saved,
+  and that they are still movable and closable. Then set it back to FALSE and
+  check the captions come back on the next open.
+
+  **This has almost certainly never worked.** Until 2026-09-06 the setting ran
+  `SetWindowLong(h, GWL_STYLE, GetWindowLong(h, GWL_STYLE) - WS_POPUP)` --
+  SUBTRACTION from a style word rather than `and not`, taking away a bit
+  ($80000000) that an LCL top-level form does not have set, so the DWORD wrapped
+  and the remaining style bits were whatever the borrow left. It also named the
+  wrong bit: a caption is WS_CAPTION. A second block then shrank the outer
+  height by `SM_CYSMCAPTION` to compensate for a caption that had not been
+  removed.
+
+  It is `lclForm.BorderStyle := bsNone` now, applied before the saved
+  `BoundsRect`, with the handle re-read because changing BorderStyle recreates
+  the window. The compensation block is gone. **The setting defaults to False
+  and no automated gate touches it**, so this is the only way to find out
+  whether the new behaviour is the one an operator wants -- and whether the
+  windows are still usable without a title bar to drag.
+
 - [ ] **Log a contest, properly.** Work a run of QSOs, watch the editable log
   fill, check the totals and the dupe sheet. The whole write path changed: the
   binary write is gone from `tAddQSOToLog` and `riTotalRecordsInLog` now follows

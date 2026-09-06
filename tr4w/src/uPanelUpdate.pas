@@ -134,8 +134,13 @@ type
     it is used by uRadioPolling, which the form unit must be free to reference.
     uRadioPanelForm installs these in its initialization.
 
-    Returning False means "not mine" and the Win32 path runs, so a panel that
-    has not been converted is unaffected. }
+    RETURNING False IS NOW A REPORTED DEFECT, not a fallback.  It meant
+    "not mine, use the Win32 path", and that path is gone (2026-09-06): every
+    caller targets rig^.tRadioInterfaceWndHandle, which MainUnit assigns from
+    TfrmRadioPanel.Handle and from nowhere else.  SetDlgItemTextA against an
+    LCL form finds no dialog item, changes nothing, and returns as though it
+    worked -- so an id the hook does not know would have vanished in silence.
+    Now it is logged, once per id, and the update is dropped loudly. }
   TPanelTextHook = function(const aPanel: HWND; const aControlId: integer;
                             const aText: string): boolean;
   TPanelEnableHook = function(const aPanel: HWND; const aControlId: integer;
@@ -153,6 +158,8 @@ uses
   uMainForm,   // SetElementText -- writing an element BY ELEMENT, which is
                // what a dispatcher has; the named sites assign the panel
                // directly
+  MainUnit,    // the global `logger` -- an unclaimed panel id is reported,
+               // not swallowed
   uCrashLog;   // LogCaughtException -- a failed hand-off must not be silent
 
 type
@@ -352,10 +359,36 @@ begin
    end;
 end;
 
+(* ONCE PER CONTROL ID, because the radio thread posts on every poll.
+
+   An unclaimed id is a coding defect -- the hook and the poller disagree about
+   what a panel shows -- and a defect that repeats twice a second is one nobody
+   reads.  The set is deliberately keyed on the id alone: a given id means the
+   same thing on both panels, and both panels install the same hook. *)
+var
+  gUnclaimed: set of Byte = [];
+
+procedure ReportUnclaimed(const aKind: string; const aControlId: integer);
+begin
+   if (aControlId >= 0) and (aControlId <= 255) then
+      begin
+      if Byte(aControlId) in gUnclaimed then
+         begin
+         Exit;
+         end;
+      Include(gUnclaimed, Byte(aControlId));
+      end;
+
+   if logger <> nil then
+      begin
+      logger.Error('[Panel] no radio-panel control claimed %s update for id %d '
+                   + '-- the update was dropped', [aKind, aControlId]);
+      end;
+end;
+
 procedure TPanelRunner.Apply(Data: PtrInt);
 var
   upd: TPanelUpdate;
-  ansi: AnsiString;
 begin
    upd := TPanelUpdate(Data);
    if upd = nil then
@@ -371,17 +404,10 @@ begin
          case upd.Kind of
            puText:
               begin
-              // THE FORM FIRST.  See TPanelTextHook: a converted panel takes
-              // the update through its own control, and False means this is
-              // still a Win32 dialog.
               if (not Assigned(PanelTextHook)) or
                  (not PanelTextHook(upd.Target, upd.ControlId, upd.Text)) then
                  begin
-                 // SetDlgItemTextA explicitly, not the generic name: under FPC
-                 // the generic binds to the W variant and would write UTF-16
-                 // into a control expecting ANSI. See CLAUDE.md on 1bea7af4.
-                 ansi := AnsiString(upd.Text);
-                 Windows.SetDlgItemTextA(upd.Target, upd.ControlId, PAnsiChar(ansi));
+                 ReportUnclaimed('text', upd.ControlId);
                  end;
               end;
            puEnable:
@@ -389,8 +415,7 @@ begin
               if (not Assigned(PanelEnableHook)) or
                  (not PanelEnableHook(upd.Target, upd.ControlId, upd.Enabled)) then
                  begin
-                 Windows.EnableWindow(Windows.GetDlgItem(upd.Target, upd.ControlId),
-                                      upd.Enabled);
+                 ReportUnclaimed('enable', upd.ControlId);
                  end;
               end;
            end;

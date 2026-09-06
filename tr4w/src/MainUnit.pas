@@ -2498,6 +2498,44 @@ begin
 
 end;
 
+{ Defined below, next to the rest of the window-opening code; the rescue path
+  above it is the one caller that needs it early. }
+function LclFormFor(const ID: WindowsType): TCustomForm; forward;
+
+(* MOVE THE FORM, NOT THE WINDOW.
+
+   Every tool window is an LCL form, and a form keeps its own idea of where it
+   is.  SetWindowPos moves the native window without telling it, so Left/Top go
+   stale -- and the next time anything makes the LCL push its bounds down, the
+   window jumps back.  That is exactly how the band map lost NY4I's saved
+   position (2026-08-25), and the rule in CLAUDE.md came out of it: position a
+   form through its properties.
+
+   The HWND fallback stays for the same reason the one in OpenTR4WWindow does:
+   this is the positioning path, and a window that silently does not move is the
+   failure being fixed.  It is reported rather than assumed dead. *)
+procedure MoveWindowTo(const aID: WindowsType; const aLeft, aTop: integer);
+var
+   frm: TCustomForm;
+begin
+   frm := LclFormFor(aID);
+   if (frm <> nil) and frm.HandleAllocated then
+      begin
+      frm.SetBounds(aLeft, aTop, frm.Width, frm.Height);
+      Exit;
+      end;
+
+   if logger <> nil then
+      begin
+      logger.Warn('[Revalidate] %s moved by the Win32 fallback -- no LCL form '
+                  + 'object. If this never appears, that branch is dead.',
+                  [WindowNames[aID]]);
+      end;
+
+   Windows.SetWindowPos(tr4w_WindowsArray[aID].WndHandle, 0, aLeft, aTop, 0, 0,
+      SWP_NOSIZE or SWP_NOZORDER or SWP_NOACTIVATE);
+end;
+
 /// <summary>
 /// Re-validate OPEN window positions after a live display-topology change
 /// (monitor added/removed, resolution change).  Symmetric:
@@ -2540,11 +2578,8 @@ begin
             begin
             // Untouched, and its original monitor is back -> send it home.
             tr4w_WindowsArray[i].WndRect := RelocState[i].OrigRect;
-            Windows.SetWindowPos(h, 0,
-               RelocState[i].OrigRect.Left,
-               RelocState[i].OrigRect.Top,
-               0, 0,
-               SWP_NOSIZE or SWP_NOZORDER or SWP_NOACTIVATE);
+            MoveWindowTo(i, RelocState[i].OrigRect.Left,
+                            RelocState[i].OrigRect.Top);
             RelocState[i].Relocated := False;
             if logger.IsInfoEnabled then
                begin
@@ -2565,11 +2600,8 @@ begin
          EnsureRectOnScreen(i, CascadeIndex);
          if RelocState[i].Relocated then
             begin
-            Windows.SetWindowPos(h, 0,
-               tr4w_WindowsArray[i].WndRect.Left,
-               tr4w_WindowsArray[i].WndRect.Top,
-               0, 0,
-               SWP_NOSIZE or SWP_NOZORDER or SWP_NOACTIVATE);
+            MoveWindowTo(i, tr4w_WindowsArray[i].WndRect.Left,
+                            tr4w_WindowsArray[i].WndRect.Top);
             end;
          end;
       end;
@@ -6051,7 +6083,6 @@ const
 var
   TempFlag: Cardinal;
   h: HWND;
-  temprect: TRect;
   Radio: RadioPtr;
   i: integer;
   // The LCL form this window IS, when it is one, so the show at the bottom does
@@ -6269,15 +6300,35 @@ begin
   for TempFlag := 0 to 100 do if wsprintfBuffer[TempFlag] = #9 then wsprintfBuffer[TempFlag] := #0;
   Windows.SetWindowTextA(h, wsprintfBuffer);
   }
-  tr4w_WindowsArray[ID].WndHandle := h;
+  (* NO CAPTION IS BorderStyle, AND THE OLD LINE COULD NOT HAVE WORKED.
 
-  if Config.NoCaption then
-    // if ID <> tw_FUNCTIONKEYSWINDOW_INDEX then
+     It was
+
+       Windows.SetWindowLong(h, GWL_STYLE, GetWindowLong(h, GWL_STYLE) - WS_POPUP);
+
+     -- SUBTRACTION from a style word, not `and not`.  WS_POPUP is $80000000 and
+     an LCL top-level form is created WS_OVERLAPPED, so the bit being taken away
+     was NOT SET: the DWORD wraps and the remaining style bits are whatever the
+     borrow leaves.  It also removes the wrong thing even when it works -- the
+     caption is WS_CAPTION, which the commented-out line above it named.
+
+     A second block further down then shrank the outer height by SM_CYSMCAPTION
+     to make room for the caption's disappearance.  With bsNone the LCL removes
+     the frame itself and reports the new size, so there is nothing to
+     compensate and that block is gone with this one.
+
+     BEFORE the saved BoundsRect is applied, and the handle re-read: changing
+     BorderStyle recreates the window, and `h` would otherwise name a destroyed
+     one.  NO CAPTION defaults to False and nobody has bench-tested it either
+     way -- see docs/BENCH_QUEUE.md. *)
+
+  if Config.NoCaption and (lclForm <> nil) then
      begin
-     Windows.SetWindowLong(h, GWL_STYLE, GetWindowLong(h, GWL_STYLE) -
-    //   WS_CAPTION);
-         WS_POPUP);
+     lclForm.BorderStyle := bsNone;
+     h := lclForm.Handle;
      end;
+
+  tr4w_WindowsArray[ID].WndHandle := h;
 
   Radio := nil;
   if ID = tw_RADIOINTERFACEWINDOW1_INDEX then
@@ -6388,16 +6439,6 @@ begin
        tr4w_WindowsArray[ID].WndRect.Bottom - tr4w_WindowsArray[ID].WndRect.Top,
        TempFlag);
      end;
-
-  if Config.NoCaption then
-    if TempFlag = NORESIZEEDWINDOW then
-       begin
-       Windows.GetWindowRect(h, temprect);
-       temprect.Bottom := temprect.Bottom - GetSystemMetrics(SM_CYSMCAPTION);
-       Windows.SetWindowPos(h, HWND_TOP, temprect.Left, temprect.Top,
-         temprect.Right - temprect.Left, temprect.Bottom - temprect.Top,
-         SWP_SHOWWINDOW);
-       end;
 
   // TELL THE LCL THE WINDOW IS UP -- IT CANNOT SEE A RAW SWP_SHOWWINDOW.
   //
