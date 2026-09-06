@@ -571,6 +571,7 @@ function ContextOf(const aHandle: Cardinal): TServerConn;
 var
    list: TIdContextList;
    i:    integer;
+   seen: string;   { [CtxDiag] temporary }
 begin
    Result := nil;
    if GMain = nil then
@@ -587,6 +588,19 @@ begin
             Result := TServerConn(list[i]);
             Exit;
             end;
+         end;
+
+      { [CtxDiag] TEMPORARY. Say what the list actually holds when a live
+        client cannot be found in it. Remove once the cause is known. }
+      if logger <> nil then
+         begin
+         seen := '';
+         for i := 0 to list.Count - 1 do
+            begin
+            seen := seen + IntToStr(TServerConn(list[i]).Handle) + ' ';
+            end;
+         logger.Warn('[CtxDiag] looking for %d, list has %d context(s): %s',
+                     [aHandle, list.Count, seen]);
          end;
    finally
       GMain.Contexts.UnlockList;
