@@ -702,6 +702,101 @@ list is down to the last three, the subclass install and
 `WindowProc` is 869 lines and the arms above are only the top of it; the rest is
 keyboard routing that predates the LCL controls.
 
+### The two with no LCL event: ONE TIMER, and it is better than the messages
+
+NY4I asked whether a timer that checks both the clock and the screen is the
+cross-platform answer. **It is, and for `WM_TIMECHANGE` it is strictly better
+than what Windows gives us.** Both are "notice that the world changed" with no
+latency requirement, so one `TTimer` serves both — call it `uPlatformWatch`,
+raising `OnClockStepped(aDeltaMs)` and `OnMonitorsChanged`.
+
+**The clock — compare wall time against a monotonic clock.** `SysUtils` declares
+`GetTickCount64: QWord` for every platform (`sysutilh.inc`, implemented in
+`rtl/unix` and `rtl/win`). Keep the last pair; on each tick compare how far
+`Now` moved against how far `GetTickCount64` moved. A divergence beyond a
+tolerance (~2 s) IS a clock step, and the difference is its size.
+
+Why that beats `WM_TIMECHANGE`: **Windows does not send it for an NTP slew**,
+only for a set. A logger whose QSO timestamps just moved should know either
+way, and the polling form also reports the MAGNITUDE, which the message does
+not. Same code on every platform. The one thing to be aware of is that a laptop
+resuming from suspend can look like a step on Linux (`CLOCK_MONOTONIC` may
+exclude suspend); benign here, since all TR4W does is re-read UTC and repaint
+the three clock panels.
+
+**The monitors — poll `Screen`.** Checked in the LCL source: there is **no
+monitor-change notification of any kind** — no `OnMonitorsChanged`, no handler
+list. What it does expose is `Screen.MonitorCount` and `Screen.Monitors[i]` with
+`BoundsRect`, `WorkareaRect` and `Primary`. So build a cheap signature from the
+count and each monitor's bounds, compare it, and call
+`RevalidateOpenWindowsOnScreen` when it differs. Topology changes are
+human-scale: every fifth tick is plenty.
+
+**Cost, since this tree treats performance as a requirement:** once a second,
+`Now` plus `GetTickCount64` plus a subtraction; the monitor signature every few
+seconds is a handful of integer compares. Nothing measurable.
+
+**And one thing to DELETE rather than port while in there.** The
+`WM_DISPLAYCHANGE` arm also sets `tEightBitsPerPixel := wParam <= 8`, read in
+exactly two places in `uGradient` to collapse a gradient to a single colour on a
+256-colour display. On any screen made this century it is False forever. It is
+palette-era code, and the port question for it is not "how do we do this on
+GTK" but "why is this still here".
+
+## 2c. macOS and Linux — there is a cross target now, and it found the blocker
+
+**`docs/CROSS_COMPILING.md` has the recipe.** An x86_64-linux FPC built from
+`fpcupdeluxe`'s own source with the Win32 compiler, plus `tools/wsl-binutils/` —
+a small shim that hands assembling and linking to the `as` and `ld` that Ubuntu
+under WSL already ships. No downloads, no `sudo`, and the Win32 toolchain is
+untouched. Proven end to end on 2026-09-06: a Linux ELF compiled on Windows and
+run under WSL.
+
+**Why it matters more than it sounds.** Windows-only code was going behind
+`{$IFDEF WINDOWS}` with an `{$ELSE}` branch that could not be compiled even
+once. That is writing unverified code and calling it portable — the same class
+of mistake as the unverified library file name in the HamLib note.
+
+### What it measured on its first run
+
+| | |
+|---|---:|
+| units and includes under `src/` | 439 |
+| that name `Windows` | **151** |
+| that do not | **288** |
+
+**But 288 is not the number of units that compile, because the binding is
+TRANSITIVE — and `VC.pas` is on almost every unit's path.** Point the cross
+compiler at a leaf like `uDXSpotParse` and the first error is not in that unit,
+it is `VC.pas(26,3) Fatal: Can't find unit Windows`.
+
+### And `VC.pas`'s dependency is eleven type names
+
+Measured, comment-aware — the whole of what `VC.pas` takes from `Windows`:
+
+| | |
+|---|---:|
+| `HWND` | 8 |
+| `HFONT` | 6 |
+| `TRect` | 3 |
+| `DWORD` | 3 |
+| `HBRUSH`, `THandle` | 2 each |
+| `MAX_PATH`, `TWndClass`, `HMENU`, `TLogFont`, one `Windows.` call | 1 each |
+
+**`LCLType` declares almost all of them, for every widget set — and on Windows
+they are ALIASES to the very same `Windows` types** (`lcltype.pp`: `HWND = type
+TLCLHandle` on other platforms, `HWND = Windows.HWND` on this one). `THandle`
+is `System.THandle`, RTL and portable. `TRect` comes from `Types`.
+
+So the swap is nearly type-identical on Windows, which is what makes it a
+low-risk change rather than a rewrite — and it unblocks the 288 units that do
+not name `Windows` themselves. **`TWndClass` and `TLogFont` are the two that are
+genuinely Win32**, one use each, and both want reading before they move.
+
+**This is the first thing to do**, ahead of gating anything else: `VC.pas` is the
+source of truth for types and everything waits behind it. It is also exactly the
+kind of change to make with the full gates green and nothing else in flight.
+
 ## 3. 64-bit — much closer than the old roadmap says
 
 The D12 roadmap called this *"⛔ Not started"*. **Measured 2026-08-14, that is no longer true.**

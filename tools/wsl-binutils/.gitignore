@@ -1,0 +1,5 @@
+wslbinutil.exe
+x86_64-linux-as.exe
+x86_64-linux-ld.exe
+*.o
+*.ppu
