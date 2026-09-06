@@ -378,6 +378,18 @@ begin
    c.FPeerName := '?';
    c.FAdmitted := False;
    c.FRefused  := False;
+
+   (* SAY SO THE MOMENT A SOCKET ARRIVES.
+
+     Nothing was logged here, and the handshake is the first thing that speaks
+     -- so a client that CONNECTED and then said nothing, or connected to the
+     wrong port, or was refused by a firewall halfway, all looked identical
+     from this side: an empty log. NY4I, 2026-09-06: "server shows no
+     indication of activity."
+
+     A connection is the first fact the server has about a client and it should
+     be the first line about it. *)
+   logger.Info('[Net] connection from %s:%d', [c.FPeerIP, AContext.Binding.PeerPort]);
 end;
 
 procedure TServerEvents.MainDisconnect(AContext: TIdContext);
