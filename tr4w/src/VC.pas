@@ -2752,72 +2752,22 @@ var
      {Main window windows handles}
   NCWP                                  : Pointer;
 
-//  CallWindowHandle                      : HWND;
-//  ExchangeWindowHandle             : HWND;
-//  RateWindowHandle                      : HWND;
 
-//  RadioOneWindowHandle                  : HWND;
-//  RadioTwoWindowHandle                  : HWND;
 
-//  BandModeWindowHandle                  : HWND;
-//  HourRateWindowHandle                  : HWND;
-//  CodeSpeedWindowHandle                 : HWND;
-//  DateWindowHandle                      : HWND;
-//  NameSentWindowHandle                  : HWND;
-//  LastQSOWindowHandle                   : HWND;
-//  OpModeWindowHandle                    : HWND;
-//  ClockWindowHandle                     : HWND;
-//  UserInfoWindowHandle                  : HWND;
-//  FullTimeWindowHandle                  : HWND;
-//  QSONumberWindowHandle                 : HWND;
-//  InsertWindowHandle                    : HWND;
-//  TotalScoreWindowHandle                : HWND;
-//  PTTStatusWindowHandle                 : HWND;
-//  CountryNameWindowHandle               : HWND;
-//  LocatorWindowHandle                   : HWND;
-//  BeamHeadingWindowHandle               : HWND;
-//  LocalTimeWindowHandle                 : HWND;
-//  QIHeaderWindowHandle                  : HWND;
-//  QsoInformationWindowHandle  : HWND;
-//  MIHeaderWindowHandle                  : HWND;
-//  MultiplierInformationWindowHandle: HWND;
-//  QuickCommandWindowHandle              : HWND;
 
-//  FreqOneWindowHandle         : HWND;
-//  FreqTwoWindowHandle         : HWND;
 
-//  AutoSendCountWindowHandle             : HWND;
-//  B4StatusWindowHandle                  : HWND;
-//  MasterStatusWindowHandle              : HWND;
-//  NewMultIndicatorWindowHandle          : HWND;
   CPUButtonHandle                       : HWND = INVALID_HANDLE_VALUE;
 
-//  _PossibleCallWindow                   : HWND;
-  //  _EditableLogWindow                    : HWND;
-
-//  _NewELogWindow                        : HWND;
-
-//  TenMinutsWindow                       : HWND;
-//  _PTTCounterWindow                     : HWND;
 
 
-//  PaddleWindowHandle                    : HWND;
-//  FootSwWindowHandle                    : HWND;
-//  WinKey2WindowHandle                   : HWND;
-//  CurrentOperatorWindowHandle           : HWND;
 
-//  CQQSOCounterWindowHandle              : HWND;
-//  SPQSOCounterWindowHandle              : HWND;
 
-//  MyComputerIDWindowHandle              : HWND;
-  FunctionKeysWindowHandles             : array[112..123] of HWND;
+
+
 
 
   DupeInfoCallWindowState               : DupeInfoState;
-//  CQTotalWindowHandle                   : HWND;
-//  QSOsWithThisStationWindowHandle       : HWND;
   IntitialExLoaded                      : boolean;
-  DupeInfoCallWindowHandle              : HWND;
 
 
 var
@@ -2870,7 +2820,11 @@ var
   CompleteCallsignMask                  : CallString;
   StationsCallsignsMask                 : CallString;
 //  tLV_ITEM                              : TLVItem;
-  LogHandle                             : HWND;
+  (* A FILE HANDLE, not a window. It goes to SetFilePointer, ReadFile,
+    SetEndOfFile, GetFileSize and CloseHandle. It was declared HWND and
+    compiled, because every Win32 handle is pointer-sized -- so the type said
+    "window" for years while the code said "file". *)
+  LogHandle                             : THandle;
   CID_TWO_BYTES                         : array[0..1] of AnsiChar = (#73, #0);
 
 //  NET_CLEARLOG_MESSAGE                  : DWORD = 3030001000;
@@ -2918,7 +2872,9 @@ var
 
   CWThreadCounter                       : Cardinal;
   CWThreadID                            : Cardinal;
-  CWThreadHandle                        : HWND;
+  (* A THREAD HANDLE, not a window: assigned from tCreateThread, passed to
+    SetThreadPriority and CloseHandle. Same mistyping as LogHandle above. *)
+  CWThreadHandle                        : THandle;
   BnadmapThreadID                       : Cardinal;
 
   {AutoCQ variables}

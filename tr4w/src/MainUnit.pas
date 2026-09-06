@@ -196,7 +196,6 @@ var
   Inact_Freq: Cardinal = 0;
   Inact_Band: BandType;
   so2r_swap: boolean = false;
-function CreateToolTip(Control: HWND; Text: string): HWND;
 
 function IsWin64: Boolean;
 function ConvertPortTypeToCOMString(port: PortType): string;
@@ -213,7 +212,6 @@ procedure SetCommand(c: PAnsiChar);
 procedure ChangeFocus(Text: PAnsiChar);
 procedure ImportFromADIF;
 procedure CheckQuestionMark;
-function Get101Window(h: HWND): HWND;
 function TelnetWantsClipboardKey(const aMsg: TMsg): boolean;   // Issue #23
 procedure InvertBooleanCommand(Command: PBoolean);
 procedure RunExplorer(Command: PAnsiChar);
@@ -360,7 +358,6 @@ procedure StartSendingNow(FromKeyBoard: boolean);
 procedure ClearLog;
 procedure ReadVersionBlock;
 procedure MakeTestLog;
-procedure PlaceCaretToTheEnd(wnd: HWND);
 //function TryToCheckTheLatestVersion: boolean;
 procedure tGetSystemTime;
 procedure SystemTimeChanging;
@@ -387,7 +384,6 @@ function TryKillAutoCQ: boolean;
 procedure RunAutoCQ;
 
 procedure TestMP;
-procedure tSetWindowLeft(h: HWND; Left: integer);
 procedure FlashCallWindow;
 procedure ProcessCommandLine;
 procedure PutCallToCallWindow(Call: CallString);
@@ -3332,24 +3328,12 @@ begin
 
 end;
 
-procedure tSetWindowLeft(h: HWND; Left: integer);
-var
-  tr4w_ThisWindowRect: TRect;
-
-begin
-  Windows.GetWindowRect(h, tr4w_ThisWindowRect);
-  MapWindowPoints(0, tr4whandle, tr4w_ThisWindowRect, 2);
-  Windows.SetWindowPos(h, HWND_TOP, Left, tr4w_ThisWindowRect.Top, 0, 0,
-    SWP_NOSIZE);
-end;
-
 // ALT+I -- INCREMENT THE NUMBER IN THE EXCHANGE FIELD.
 //
 // TALKS TO THE CONTROL, NOT TO A WINDOW.  It used to ask Windows:
 //
 //     Value := GetDlgItemInt(tr4whandle, EXCHANGEWINDOWID, lpTranslated, False);
 //     SetEntryText(TR4WExchangeEdit, ...);
-//     PlaceCaretToTheEnd(wh[mweExchange]);
 //
 // -- three Win32 calls addressing an LCL TEdit by dialog-item id and by HWND.
 // It stopped working (NY4I, 2026-08-23: "It did not work which is why I
@@ -9096,11 +9080,6 @@ begin
   PutCallToCallWindow(TempCallsign);
 end;
 
-procedure PlaceCaretToTheEnd(wnd: HWND);
-begin
-  SendMessage(wnd, EM_SETSEL, 255, 255); // hh
-end;
-
 {
 function TryToCheckTheLatestVersion: boolean;
 begin
@@ -10231,11 +10210,6 @@ begin
   ShowMessage(Format(TC_SCANNOTEDITEDHERE, [cmd]));
 end;
 
-function Get101Window(h: HWND): HWND;
-begin
-  Result := Windows.GetDlgItem(h, 101)
-end;
-
 procedure InvertBooleanCommand(Command: PBoolean);
 var
   i: integer;
@@ -10494,48 +10468,6 @@ end;
 //
 // Actual LPT access in TR4W goes through DLPortIO / inpout32.dll, which is a
 // real driver. That path is untouched.
-
-function CreateToolTip(Control: HWND; Text: string): HWND;
-const
-  TOOLTIPS_CLASS = 'tooltips_class32';
-  TTS_ALWAYSTIP = $01;
-  TTS_NOPREFIX = $02;
-  TTS_BALLOON = $40;
-  TTF_SUBCLASS = $0010;
-  TTF_TRANSPARENT = $0100;
-  TTF_TRACK = $0020;
-  TTF_CENTERTIP = $0002;
-  TTF_ABSOLUTE = $0080;
-  TTM_ADDTOOL = $0400 + 4;   // TTM_ADDTOOLA (ANSI). $0400+50 is TTM_ADDTOOLW, which reads our ANSI PChar as UTF-16 -> garbage/CJK.
-  TTM_SETTITLE = (WM_USER + 32);
-  ICC_WIN95_CLASSES = $000000FF;
-
-var
-  ti: TOOLINFO;
-  TextAnsi: AnsiString;   // must outlive the SendMessage below
-begin
-  Result := CreateWindowW(TOOLTIPS_CLASS, nil, WS_POPUP or TTS_NOPREFIX
-    {or TTS_BALLOON } or TTS_ALWAYSTIP, 100, 100, 100, 100, Control, 0,
-    hInstance,
-    nil);
-  if Result <> 0 then
-     begin
-     SetWindowPos(Result, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOACTIVATE or SWP_NOMOVE
-       or SWP_NOSIZE);
-     Windows.ZeroMemory(@ti, SizeOf(ti));
-     ti.cbSize := SizeOf(ti);
-     //ti.uFlags := 0;//TTF_ABSOLUTE or TTF_TRACK;
-     ti.uFlags := {TTF_CENTERTIP or }TTF_TRANSPARENT or TTF_SUBCLASS;
-     ti.HWND := Control;
-     // STAYS ON THE ANSI PAIRING -- TOOLINFO here is the A struct and
-     // TTM_ADDTOOL above is TTM_ADDTOOLA; see the note on that constant. So
-     // the conversion happens here, into a variable that outlives the call.
-     TextAnsi := WinAnsi(Text);
-     ti.lpszText := PAnsiChar(TextAnsi);
-     Windows.GetClientRect(Control, ti.rect);
-     SendMessage(Result, TTM_ADDTOOL, 0, integer(@ti));
-     end;
-end;
 
 {$IF MORSERUNNER}
 
