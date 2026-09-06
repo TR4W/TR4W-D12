@@ -119,7 +119,6 @@ function DeleteSlashes(p: PAnsiChar): PAnsiChar;
 function SetParameterInArray(ArrayPtr: PInteger; ArrayLength: integer; aVar: PInteger; ValueToSet: integer): boolean;
 function GetGUID: string;
 function GetValueFromArray(PCharArrayAddress: PAnsiChar; ArraySize: Byte; const CMD: AnsiString): Byte;
-function GetDialogItemText(h: HWND; Control: integer): ShortString;
 function GetNumberFromCharBuffer(p: PAnsiChar): integer;
 procedure tLoadKeyboardLayout;
 function GetContestFromString(ContestString: ShortString): ContestType;
@@ -146,12 +145,6 @@ function tCreateThread(lpStartAddress: TFNThreadStartRoutine; var lpThreadId: DW
    the only remaining reference to the CreateCabrilloWindow global, which is
    why both go in the same commit. *)
 function tWM_SETFONT(h: HWND; Font: HFONT): HWND;
-procedure tLB_SETCOLUMNWIDTH(h: HWND; Width: integer);
-procedure tCB_SETCURSEL(ParentHandle: HWND; Control: integer; pos: Cardinal);
-procedure tCB_ADDSTRING(ParentHandle: HWND; Control: integer; s: string);
-procedure tCB_ADDSTRING_PCHAR(ParentHandle: HWND; Control: integer; s: string);
-function tLB_ADDSTRING(h: HWND; Text: PAnsiChar): integer;
-function tCB_GETCURSEL(ParentHandle: HWND; Control: integer): integer;
 
 procedure tSetWindowRedraw(wnd: HWND; Redraw: boolean);
 function SystemTimeToString(SysTime: SYSTEMTIME): string;
@@ -177,10 +170,7 @@ procedure InvertBoolean(var b: boolean);
 function inttopchar(i: integer): PAnsiChar;
 procedure DragWindow(h: HWND);
 //procedure SaveStructure(Address: Pointer; Count: integer; FileName: string);
-procedure EnableWindowTrue(h: HWND; nIDDlgItem: integer);
-procedure EnableWindowFalse(h: HWND; nIDDlgItem: integer);
 //function tShellexecute(HWND: HWND; Operation, FileName, Parameters, Directory: PChar; showCmd: integer): hInst; // 4.75.3
-function CreateModalDialog(Width, Height: integer; ParentHWND: HWND; lpDialogFunc: TFNDlgProc; dwInitParam: lParam): integer;
 function CreateButton(dwStyle: Cardinal; lpWindowName: string; X, Y, nWidth: integer; hwndParent: HWND; HMENU: HMENU): HWND;
 function SendDlgItemMessage(hDlg: HWND; nIDDlgItem: integer; Msg: UINT): LONGINT; stdcall;
 
@@ -388,39 +378,6 @@ begin
   Result := h;
 end;
 
-procedure tLB_SETCOLUMNWIDTH(h: HWND; Width: integer);
-begin
-  if h = 0 then Exit;
-  Windows.SendDlgItemMessage(h, 101, LB_SETCOLUMNWIDTH, wParam(Width), 0);
-end;
-
-procedure tCB_SETCURSEL(ParentHandle: HWND; Control: integer; pos: Cardinal);
-begin
-  Windows.SendDlgItemMessage(ParentHandle, integer(Control), CB_SETCURSEL, wParam(pos), 0);
-end;
-
-function tCB_GETCURSEL(ParentHandle: HWND; Control: integer): integer;
-begin
-  Result := SendDlgItemMessage(ParentHandle, integer(Control), CB_GETCURSEL);
-end;
-
-procedure tCB_ADDSTRING(ParentHandle: HWND; Control: integer; s: string);
-begin
-  Windows.SendDlgItemMessageW(ParentHandle, integer(Control), CB_ADDSTRING, 0, LPARAM(PChar(s)));
-end;
-
-procedure tCB_ADDSTRING_PCHAR(ParentHandle: HWND; Control: integer; s: string);
-begin
-  Windows.SendDlgItemMessageW(ParentHandle, integer(Control), CB_ADDSTRING, 0, LPARAM(PChar(s)));
-end;
-
-function tLB_ADDSTRING(h: HWND; Text: PAnsiChar): integer;
-begin
-  Result := -1;
-  if h = 0 then Exit;
-  Result := SendMessageA(h, LB_ADDSTRING, 0, integer(Text));
-end;
-
 {------------------------------------------------------------------}
 {  Function to convert int to string. (No sys utils = smaller EXE)  }
 {------------------------------------------------------------------}
@@ -494,16 +451,6 @@ end;
 }
 {
 }
-
-procedure EnableWindowTrue(h: HWND; nIDDlgItem: integer);
-begin
-  Windows.EnableWindow(GetDlgItem(h, nIDDlgItem), True);
-end;
-
-procedure EnableWindowFalse(h: HWND; nIDDlgItem: integer);
-begin
-  Windows.EnableWindow(GetDlgItem(h, nIDDlgItem), False);
-end;
 
 {From System}
 
@@ -592,29 +539,6 @@ begin
        Exit;
        end;
   Result := DUMMYCONTEST;
-end;
-
-function GetDialogItemText(h: HWND; Control: integer): ShortString;
-var
-  Len                                   : integer;
-  TempHWND                              : HWND;
-begin
-
-  if Control = -1 then
-     begin
-     TempHWND := h
-     end
-  else
-     begin
-     TempHWND := Windows.GetDlgItem(h, Control);
-     end;
-  Len := Windows.SendMessageA(TempHWND, WM_GETTEXTLENGTH, 0, 0);
-  Windows.ZeroMemory(@Result, SizeOf(Result));
-  SetLength(Result, Len);
-  if Len <> 0 then
-     begin
-     Windows.SendMessageA(TempHWND, WM_GETTEXT, Len + 1, LONGINT(Pointer(@Result[1])));
-     end;
 end;
 
 function GetNumberFromCharBuffer(p: PAnsiChar): integer;
@@ -984,60 +908,6 @@ end;
 
 
 
-
-function CreateModalDialog(Width, Height: integer; ParentHWND: HWND; lpDialogFunc: TFNDlgProc; dwInitParam: lParam): integer;
-type
-  TDLGTEMPLATEEX = packed record
-    dlgVer: Word;
-    signature: Word;
-    helpID: DWORD;
-    exStyle: DWORD;
-    Style: DWORD;
-    cDlgItems: Word;
-    X: Word;
-    Y: Word;
-    cx: Word;
-    cy: Word;
-    Menu: Word;
-    windowClass: Word;
-    Title: LPWSTR;
-    ttt: array[0..127 - 5] of AnsiChar;
-  end;
-  PDLGTEMPLATEEX = ^TDLGTEMPLATEEX;
-
-const
-  ms                                    = DS_SETFONT or DS_CENTER or WS_SYSMENU or DS_MODALFRAME or WS_CAPTION or WS_VISIBLE;
-
-var
-//  tempDLGTEMPLATE                       : MYDLGTEMPLATE;
-  tempDLGTEMPLATEex                     : TDLGTEMPLATEEX;
-  p                                     : PDlgTemplate;
- 
-begin
-  p := @ {tempDLGTEMPLATEex } tempDLGTEMPLATE;
-
-  Windows.ZeroMemory(@tempDLGTEMPLATE, SizeOf(tempDLGTEMPLATE));
-  Windows.ZeroMemory(@tempDLGTEMPLATEex, SizeOf(tempDLGTEMPLATEex));
-{
-  tempDLGTEMPLATEex.dlgVer := $ffff;
-  tempDLGTEMPLATEex.signature := 1;
-  tempDLGTEMPLATEex.cx := Width;
-  tempDLGTEMPLATEex.cy := Height;
-  tempDLGTEMPLATEex.Style := DS_SETFONT or DS_CENTER or WS_SYSMENU or DS_MODALFRAME or WS_CAPTION or WS_VISIBLE;
-//  tempDLGTEMPLATEex.cDlgItems:
-}
-
-  tempDLGTEMPLATE.X := 10;
-  tempDLGTEMPLATE.Y := 10;
-
-  tempDLGTEMPLATE.cx := Width;
-  tempDLGTEMPLATE.cy := Height;
-  tempDLGTEMPLATE.Style := DS_SETFONT or DS_CENTER or WS_SYSMENU or DS_MODALFRAME or WS_CAPTION or WS_VISIBLE;
-
-  Result := DialogBoxIndirectParam(hInstance, p^, ParentHWND, lpDialogFunc, dwInitParam);
-
-//  if Result = -1 then MessageBox(0, SysErrorMessage(GetLastError), nil, MB_OK or MB_ICONINFORMATION {or MB_RTLREADING } or MB_TASKMODAL);
-end;
 
 procedure strU(var Str: OpenString);
 begin

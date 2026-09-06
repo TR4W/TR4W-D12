@@ -27,11 +27,6 @@ uses
   SysUtils,
 utils_text,
   uWinKey,
-  (* ListView_SetTextBkColor and friends, for the SERVER LOG's list view --
-    the last raw Win32 list in the tree. The editable log stopped needing
-    anything from here when it became a grid, and PBM_SETMARQUEE went with the
-    tour-duration progress bar, which is a TProgressBar now. *)
-  uCommctrl,
   Controls,        { TCaption -- see DisplayContestTitle }
   uMults,
   uCTYDAT,
@@ -1012,17 +1007,6 @@ procedure DisplayCountryInformation(FileName: Str80; Call: CallString);
 procedure FlashQickDisplay;
 procedure ShowTourDuration;
 procedure DisplayAutoQSLInterval;
-procedure SetListViewColor(Window: TMainWindowElement);
-
-{ WHICH ELEMENTS ARE LIST VIEWS, recorded by the one routine that makes them.
-
-  CreateListView adds itself here.  Nothing else should: the point is that the
-  fact is stated by the code that knows it, so it cannot drift the way a list
-  written out somewhere else would.
-
-  RefreshMainWindowColors is the reader -- see there for why it has to know. }
-var
-   ListViewElements: set of TMainWindowElement = [];
 
 // Put a changed set of element colours on screen NOW.  See the implementation
 // for why an InvalidateRect alone is not enough.
@@ -3906,19 +3890,6 @@ begin
      end;
 end;
 
-procedure SetListViewColor(Window: TMainWindowElement);
-//var rgb: cardinal;
-begin
-  if wh[Window] = 0 then Exit;
-  ListView_SetTextBkColor(wh[Window], tr4wColorsArray[TWindows[Window].mweBackG]);
-  ListView_SetBkColor(wh[Window], tr4wColorsArray[TWindows[Window].mweBackG]);
-  ListView_SetTextColor(wh[Window], tr4wColorsArray[TWindows[Window].mweColor]);
-  
-
-//  Windows.SendMessage(wh[Window], LVM_REDRAWITEMS, 0, LinesInEditableLog - 1);
-  Windows.InvalidateRect(wh[Window], nil, True);
-end;
-
 procedure UpadateMainWindow;
 begin
   (* The form repaints itself; InvalidateRect on the cached handle was
@@ -3951,13 +3922,16 @@ begin
      Exit;      // startup, before the main window exists
      end;
 
-  for e in ListViewElements do
-     begin
-     if wh[e] <> 0 then
-        begin
-        SetListViewColor(e);
-        end;
-     end;
+  (* THE LIST-VIEW COLOUR PASS IS GONE, because it could not run.
+
+    ListViewElements was filled by exactly one statement -- Include(...) --
+    inside MainUnit.CreateListView, and CreateListView had no caller. The
+    set was therefore always empty and this loop always did nothing.
+
+    The main window has no Win32 list view left: the log is a TLogGrid and
+    the elements are TElementPanels, both of which paint from their own
+    Color. The SERVER logs list view is a different routine entirely
+    (CreateEditableLog) and is unaffected. *)
 
   // A THIRD KIND, for the same reason as the list views: the call and exchange
   // fields are LCL TEdits and paint from their own Color / Font.Color, so a

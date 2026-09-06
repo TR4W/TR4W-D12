@@ -277,8 +277,6 @@ procedure LogRowTextFor(const RXData: ContestExchange; out aText: TLogRowText);
 
 function CreateEditableLog(Parent: HWND; X, Y, Width, Height: integer;
   DefaultSize: boolean): HWND;
-procedure CreateListView(Parent: WindowsType; Window: TMainWindowElement; Style:
-  integer);
 
 procedure GenerateCallsignsList(FileName: PAnsiChar);
 procedure MakeAllCallsignsList;
@@ -504,17 +502,8 @@ function AskConvertLog(sVersion: string): boolean; // ny4i
 function tCreateStaticWindow(lpWindowName: string;
   dwStyle: DWORD; X, Y, nWidth, nHeight: integer; hwndParent: HWND;
   HMENU: HMENU): HWND;
-function tCreateButtonWindow(dwxStyle: DWORD; lpWindowName: string;
-  dwStyle: DWORD; X, Y, nWidth, nHeight: integer; hwndParent: HWND;
-  HMENU: HMENU): HWND;
 
-function tCreateEditWindow(dwxStyle: DWORD; lpWindowName: string;
-  dwStyle: DWORD; X, Y, nWidth, nHeight: integer; hwndParent: HWND;
-  HMENU: HMENU): HWND;
-procedure CreateOKCancelButtons(nWidthhwndParent: HWND);
 
-function tCreateComboBoxWindow(dwStyle: DWORD; X, Y, nWidth,
-  {nHeight: integer; }hwndParent: HWND; HMENU: HMENU): HWND;
 
 procedure UpdateWindows;
 procedure tUpdateLog(UpdAction: UpadateAction);
@@ -7245,17 +7234,6 @@ begin
     - TR.Left, TR.Bottom - TR.Top, SWP_SHOWWINDOW);
 end;
 
-function tCreateComboBoxWindow(dwStyle: DWORD; X, Y, nWidth,
-  {nHeight: integer;}hwndParent: HWND; HMENU: HMENU): HWND;
-begin
-  // Result := CreateWindowExW(WS_EX_NOPARENTNOTIFY {WS_EX_STATICEDGE}, COMBOBOX, nil, dwStyle, X, Y, nWidth, 300 {nHeight}, hwndParent, HMENU, hInstance, nil);
-  Result := CreateWindowExW(WS_EX_NOPARENTNOTIFY {WS_EX_STATICEDGE}, COMBOBOX,
-    nil, dwStyle, X, Y, nWidth, 340 {nHeight}, hwndParent, HMENU, hInstance,
-    nil);
-  // 4.117.3
-  tWM_SETFONT(Result, MSSansSerifFont);
-end;
-
 function tCreateStaticWindow(lpWindowName: string;
   dwStyle: DWORD; X, Y, nWidth, nHeight: integer; hwndParent: HWND;
   HMENU: HMENU): HWND;
@@ -7273,40 +7251,6 @@ begin
   Result := CreateWindowExW(0 {WS_EX_DLGMODALFRAME}, 'Static', PChar(lpWindowName),
     dwStyle, X, Y, nWidth, nHeight, hwndParent, HMENU, hInstance, nil);
   tWM_SETFONT(Result, MSSansSerifFont);
-end;
-
-function tCreateButtonWindow(dwxStyle: DWORD; lpWindowName: string;
-  dwStyle: DWORD; X, Y, nWidth, nHeight: integer; hwndParent: HWND;
-  HMENU: HMENU): HWND;
-begin
-  Result := CreateWindowExW(dwxStyle, 'Button', PChar(lpWindowName), dwStyle, X, Y,
-    nWidth, nHeight, hwndParent, HMENU, hInstance, nil);
-  tWM_SETFONT(Result, MSSansSerifFont);
-end;
-
-function tCreateEditWindow(dwxStyle: DWORD; lpWindowName: string;
-  dwStyle: DWORD; X, Y, nWidth, nHeight: integer; hwndParent: HWND;
-  HMENU: HMENU): HWND;
-begin
-  Result := CreateWindowExW(dwxStyle, 'Edit', PChar(lpWindowName), dwStyle, X, Y,
-    nWidth, nHeight, hwndParent, HMENU, hInstance, nil);
-  tWM_SETFONT(Result, MSSansSerifFont);
-end;
-
-procedure CreateOKCancelButtons(nWidthhwndParent: HWND);
-var
-  temprect: TRect;
-  X, Y: integer;
-const
-  button_width = 80;
-begin
-  Windows.GetClientRect(nWidthhwndParent, temprect);
-  X := (temprect.Right div 2) - (button_width + 5);
-  Y := temprect.Bottom - temprect.Top - 27 {35};
-  // ny4i changed this for the Cabrillo dialog as the buttons were too close to the last text field. The window may need to be a bit longer.
-  CreateButton(0, rsMbOK, X, Y, button_width, nWidthhwndParent, 1);
-  CreateButton(0, rsMbCancel, X + button_width + 10, Y, button_width,
-    nWidthhwndParent, 2);
 end;
 
 procedure UpdateWindows;
@@ -7819,41 +7763,6 @@ begin
 
   // ListView_SetColumnWidth(Result, integer(logColBand), ws * 4);
 
-end;
-
-procedure CreateListView(Parent: WindowsType; Window: TMainWindowElement; Style:
-  integer);
-begin
-  wh[Window] :=
-    CreateWindowEx
-    (
-    WS_EX_STATICEDGE,
-    WC_LISTVIEW,
-    nil,
-    Style or WS_CHILD or WS_VISIBLE or LVS_REPORT or LVS_SINGLESEL or
-    LVS_SHOWSELALWAYS or LVS_NOSORTHEADER or integer(Config.NoColumnHeader) *
-    LVS_NOCOLUMNHEADER,
-    0,
-    0,
-    0,
-    0,
-    tr4w_WindowsArray[Parent].WndHandle,
-    101,
-    hInstance,
-    nil
-    );
-
-  tWM_SETFONT(wh[Window], MainFixedFont);
-
-  // SAY SO.  RefreshMainWindowColors has to re-push the colours into a list
-  // view when they change -- a list view keeps its own copy and will not read
-  // TWindows again -- and this is the only place that knows which elements are
-  // list views.
-  Include(ListViewElements, Window);
-  SetListViewColor(Window);
-
-  ListView_SetExtendedListViewStyle(wh[Window], integer(Config.ShowGridlines) *
-    LVS_EX_GRIDLINES or LVS_EX_FULLROWSELECT);
 end;
 
 // Stash the X-QSO flag on a fully-populated editable-log row in the
