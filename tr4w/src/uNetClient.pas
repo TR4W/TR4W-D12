@@ -124,7 +124,8 @@ type
 implementation
 
 uses
-   MainUnit;   // logger
+   MainUnit,    // logger
+   uCrashLog;   // LogCaughtException -- a fault here names itself
 
 const
    { How long a read waits before looking at Terminated again.  The same reason
@@ -187,7 +188,21 @@ begin
                begin
                if not FOwner.FStopping then
                   begin
-                  closeText := E.Message;
+                  closeText := E.ClassName + ': ' + E.Message;
+
+                  (* WHERE, NOT JUST WHAT.
+
+                    This logged E.Message alone, and for the defect that made
+                    the link reconnect for ever that string was "Access
+                    violation" -- naming no unit, no routine and no object,
+                    and equally consistent with two completely different
+                    causes. It cost a round trip to NY4I to tell them apart.
+
+                    LogCaughtException writes the class, the message and a
+                    backtrace, so a fault on this thread identifies itself the
+                    first time it happens. It is the RTL-only half of the
+                    crash reporter and links without a widget set. *)
+                  LogCaughtException('TNetReader.Execute', E);
                   end;
                Break;
                end;

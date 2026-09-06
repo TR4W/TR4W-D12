@@ -1583,9 +1583,33 @@ begin
      end;
 end;
 
-begin
+(* THE INITIALIZATION SECTION.
+
+  It existed and set one variable. The two objects the reader thread hands its
+  bytes through were declared `= nil` and created NOWHERE -- so NetDataArrived's
+  first statement, GNetLock.Acquire, faulted on the first byte of every
+  connection and the multi-op link has not received one since the Indy
+  conversion (found 2026-09-06, from a reader-thread access violation two
+  milliseconds after each connect).
+
+  HERE, rather than in a routine somebody has to call. They are unit-scoped
+  singletons with no dependencies and no configuration; giving them a lifetime
+  as long as the unit's removes the question of whether the thing that creates
+  them ran, which is the question that was answered wrongly for weeks. *)
+initialization
   STARTTIMEOFTHETR4W := Windows.GetTickCount;
 //GetDiskFreeSpace(nil,STARTTIMEOFTHETR4W,STARTTIMEOFTHETR4W,STARTTIMEOFTHETR4W,STARTTIMEOFTHETR4W);
+
+  GNetLock    := SyncObjs.TCriticalSection.Create;
+  GNetDrainer := TNetDrainer.Create;
+
+finalization
+  (* SAFE BY ORDER, not by a lock. Unit finalization runs after the program
+    body has returned, and ExitProgram calls NetDisconnect long before that --
+    which now stops the reader thread and waits for it. So nothing is inside
+    the lock, or about to take it, when it goes. *)
+  FreeAndNil(GNetDrainer);
+  FreeAndNil(GNetLock);
 
 end.
 {
