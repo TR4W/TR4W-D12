@@ -107,10 +107,27 @@ const
      waits for those same connection threads. That is a deadlock, not a
      trade-off.
 
-     Application.QueueAsyncCall is lifetime-independent and non-blocking, but the
-     LCL only drains it from Application.Idle / ProcessMessages / HandleMessage,
-     and TR4W runs its own GetMessage loop rather than Application.Run. It would
-     never be delivered.
+     Application.QueueAsyncCall is lifetime-independent and non-blocking. IT WAS
+     UNDELIVERABLE WHEN THIS WAS WRITTEN AND IT IS NOT ANY MORE, so read the
+     rest of this paragraph as history rather than as a reason: the LCL drains
+     that queue from Application.Idle / ProcessMessages / HandleMessage, and
+     TR4W ran its own GetMessage loop rather than Application.Run, so nothing
+     ever drained it. Phase 3c deleted that loop on 2026-08-23 and the program
+     runs Application.Run now (uProgramMain). The queue is drained -- uNet.pas
+     hands its received bytes to the main thread exactly this way,
+     and so does MainUnit's deferred startup work.
+
+     THE POSTED MESSAGE STAYS HERE ANYWAY, and deliberately. The three reasons
+     above are untouched by that change, this mechanism is proven against live
+     radio control, and re-marshalling PTT and split for tidiness buys nothing
+     today.
+
+     BUT NEW CODE SHOULD PREFER QueueAsyncCall. It has the same two properties
+     that made a posted message right -- it does not block the sender and it is
+     not tied to any thread's lifetime -- without needing a window handle, and
+     the handle is the half of this that does not survive the cross-platform
+     port. PostMessage has no macOS or Linux equivalent; QueueAsyncCall is the
+     LCL's own and works everywhere the widgetset does.
 
      A posted message has none of those problems: it does not block the sender,
      it is not tied to any thread's lifetime, and it is drained by TR4W's OWN

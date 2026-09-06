@@ -2336,9 +2336,33 @@ begin
 
      GATED, because the harnesses are Windows too -- Test-Typing.ps1 is
      PowerShell calling user32. On macOS or Linux there is neither a dialog id
-     nor a script asking for one, and NY4I is trialling AutoIt in place of
-     GetDlgCtrlID (2026-09-06). When those two scripts stop needing an id this
-     goes entirely rather than staying behind a gate. *)
+     nor a script asking for one.
+
+     AUTOIT IS NOT THE WAY OUT OF THIS, and this comment said it was: that NY4I
+     was trialling AutoIt "in place of GetDlgCtrlID" (2026-09-06). AutoIt's
+     ControlID *is* GetDlgCtrlID -- ControlSetText and ControlClick resolve a
+     control by reading the same user32 window attribute this line writes, so
+     deleting the line loses the field for AutoIt exactly as it does for
+     Test-Typing.ps1. Its other way of naming a control, ClassNameNN, is worse
+     here rather than better: every LCL control reports the Win32 class
+     'Window' -- hardcoded in the widgetset with no override, measured in
+     test\ui\UiDriver.psm1 -- so the entry fields would be addressed by
+     enumeration order among a hundred and ten identically-classed siblings,
+     which is the brittle binding a stable id exists to avoid.
+
+     WHAT DOES RETIRE THIS LINE is an in-process channel, because the id is
+     only half of what ties the harness to Windows. The other half is
+     PostMessage(WM_CHAR), which has no macOS or Linux equivalent at all --
+     gating the id alone buys no portability, it only makes a Windows-only
+     dependency compile cleanly elsewhere.
+
+     /FIELDCHECK is the shape to copy (uProgramMain.pas -> RunEditQSOFieldCheck
+     in uEditQSOForm): it puts values through LCL controls directly, reports
+     through an exit code and a text file, and touches no window handle, so it
+     would run unchanged on any platform. uWebSocketServer -- transport only,
+     no TCI knowledge -- is the intended carrier for the same idea driven from
+     outside. When Test-Typing.ps1 and Test-CountyLineEntry.ps1 stop walking
+     child windows this goes entirely rather than staying behind a gate. *)
    {$IFDEF WINDOWS}
    Windows.SetWindowLong(Result, GWL_ID, aId);
    {$ENDIF}

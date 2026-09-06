@@ -25,6 +25,28 @@ interface
 
 uses
   SysUtils,
+  (* WINDOWS AND WINSOCK2 ARE HERE FOR TYPE NAMES ONLY.
+
+    Measured 2026-09-06: there is not one live Win32 API CALL left in this unit
+    or in tr4wserver.lpr -- every Windows. reference the compiler can see is
+    inside a comment. What still binds these two units in is a handful of TYPE
+    declarations, and they are not all alike:
+
+      TSocket        the client's identity, ~40 sites. It is a Cardinal on
+                     every platform; making that explicit is a rename, not a
+                     port, and it is the next thing to do here.
+      HWND           ApplicationHandle, which was the message box's parent.
+                     MessageDlg does not need one, so this goes with it.
+      SYSTEMTIME     inside a protocol record -- on the WIRE between stations.
+                     VC declares a layout-identical version off Windows; this
+                     unit should use that, not its own.
+      sockaddr_in,
+      POverlapped,
+      BOOL           leftovers of bind() and TransmitFile, both deleted. Dead
+                     declarations, and they can simply go.
+
+    Removing the two uses entries is therefore a real piece of work rather than
+    a line edit, and it is written down here rather than half-done. *)
   Windows,
   WinSock2,
   VC,
@@ -35,6 +57,10 @@ uses
   uComputerID,   // the station-id rule, kept away from the sockets so it can be tested
   Classes,       // TStringList -- the client list is built and handed over whole
   uServerNet,    // the transport: Indy, not WSAAsyncSelect
+  IdStack,       // GStack.LocalAddress -- the IP readout
+  Dialogs,       // MessageDlg -- was MessageBoxW
+  Controls,      // mrYes -- the modal results MessageDlg answers with
+  uAnsiStr,      // StrPLCopy over PAnsiChar; SysUtils' is PWideChar
   uServerForm,   // the readouts, by name instead of by control number
   Messages;
 const
@@ -52,18 +78,7 @@ type
   TRANSMIT_FILE_BUFFERS = _TRANSMIT_FILE_BUFFERS;
   PTRANSMIT_FILE_BUFFERS = ^TRANSMIT_FILE_BUFFERS;
   LPTRANSMIT_FILE_BUFFERS = ^TRANSMIT_FILE_BUFFERS;
-  TTransmitFileBuffers = TRANSMIT_FILE_BUFFERS;
-  PTransmitFileBuffers = LPTRANSMIT_FILE_BUFFERS;
 
-  TTransmitFile = function
-    (
-    hSocket: TSocket;
-    hFile: HWND;
-    nNumberOfBytesToWrite, nNumberOfBytesPerSend: DWORD;
-    lpOverlapped: POverlapped;
-    lpTransmitBuffers: LPTRANSMIT_FILE_BUFFERS;
-    dwReserved: DWORD
-    ): BOOL; stdcall;
 
   TAcceptEx = function
     (
@@ -176,7 +191,6 @@ var
 
   Server_TRANSMIT_FILE_BUFFERS          : _TRANSMIT_FILE_BUFFERS;
 
-  TransmitFile                          : TTransmitFile;
 //  AcceptEx                              : TAcceptEx;
 
 //  LogArrayPtr                           : ServerLogArray;
@@ -222,7 +236,12 @@ var
 
   hIpAddr                               : HWND;
   ApplicationHandle                     : HWND;
-  ServerLogHandle                       : HWND = INVALID_HANDLE_VALUE;
+  (* THE SERVER LOG, AS A STREAM.
+
+    Was `ServerLogHandle: HWND` and thirty-odd Win32 calls against it. A
+    TFileStream is the RTL's, works on every platform FPC targets, and knows
+    its own size -- which is most of what the old code asked the handle for. *)
+  ServerLog                             : TFileStream = nil;
   ServerTempLogHandle                   : HWND = INVALID_HANDLE_VALUE;
 
   LogArraySize                          : integer;
@@ -336,9 +355,12 @@ begin
   DisplaySENDBytes;
   DisplayClients;
 //  Windows.ZeroMemory(@ClientsSoocketsArray, SizeOf(ClientsSoocketsArray));
-  Gethostname(@ServerBuffer, 128);
-  myhostent := WinSock2.gethostbyname(@ServerBuffer);
-  SetServerIP(String(PAnsiChar(iNet_ntoa(PInAddr(myhostent^.h_addr_list^)^))));
+  (* THE ADDRESS TO TELL OPERATORS, FROM INDY'S STACK.
+
+    Was Gethostname + gethostbyname + iNet_ntoa -- three WinSock calls to
+    print one string. GStack.LocalAddress is the same answer and is whatever
+    the platform's stack says. *)
+  SetServerIP(GStack.LocalAddress);
   (* BOTH LISTENERS, IN ONE CALL. This was socket/bind/listen plus a
     WSAAsyncSelect naming a window, and RunSyncListener was the same again on
     PortNumber + 1. Indy owns the accept loop and the per-client threads; the
@@ -355,7 +377,7 @@ begin
 //  DisplayClients;
   Exit;
   UnSucc:
-  closesocket(ServerSocket);
+
 
 end;
 
@@ -400,10 +422,21 @@ begin
   for i := 1 to maxclients do
     if ClientsSoocketsArray[i].clSocket = 0 then
        begin
-       Windows.ZeroMemory(@ClientsSoocketsArray[i].clSocket, SizeOf(TClientEntry) - 4); //skip clSerialNumber
+       (* FillChar and StrPLCopy, not ZeroMemory and lstrcpyA.
+
+         The `- 4` is preserved and is not an accident: it skips
+         clSerialNumber, which survives a client reconnecting. StrPLCopy also
+         BOUNDS the copy, which lstrcpyA did not -- a reverse-DNS name longer
+         than 31 characters would have run off the end of clName. *)
+       FillChar(ClientsSoocketsArray[i].clSocket, SizeOf(TClientEntry) - 4, 0);
        ClientsSoocketsArray[i].clSocket := soc;
-       lstrcpyA(@ClientsSoocketsArray[i].clIPAdr[0], IP);
-       lstrcpyA(@ClientsSoocketsArray[i].clName[0], Name);
+       uAnsiStr.StrPLCopy(@ClientsSoocketsArray[i].clIPAdr[0], AnsiString(IP),
+                          High(ClientsSoocketsArray[i].clIPAdr));
+       if Name <> nil then
+          begin
+          uAnsiStr.StrPLCopy(@ClientsSoocketsArray[i].clName[0], AnsiString(Name),
+                             High(ClientsSoocketsArray[i].clName));
+          end;
        if Name = nil then
           begin
           ClientsSoocketsArray[i].clName[0] := '?';
@@ -516,9 +549,9 @@ begin
               ServerNewQSOPtr := @ServerBuffer[Bufindex];
               if OpenServerLog(OPEN_EXISTING) then
               begin
-                SetFilePointer(ServerLogHandle, 0, nil, FILE_END);
-                WriteFile(ServerLogHandle, ServerNewQSOPtr.qiInformation, SizeOf(ContestExchange), BytesWritten, nil);
-                FlushFileBuffers(ServerLogHandle);
+                ServerLog.Seek(0, soEnd);
+                ServerLog.WriteBuffer(ServerNewQSOPtr.qiInformation, SizeOf(ContestExchange));
+                FileFlush(ServerLog.Handle);
                 DisplayServerLogSize;
                 CloseServerLog;
                 SendConfirmMessage(aSocket);
@@ -536,9 +569,9 @@ begin
               SendMessageToClients(aSocket, SizeOf(TNetQSOInformation), False, dmQSOInfo);
               if OpenServerLog(OPEN_EXISTING) then
               begin
-                SetFilePointer(ServerLogHandle, 0, nil, FILE_END);
-                WriteFile(ServerLogHandle, ServerNewQSOPtr.qiInformation, SizeOf(ContestExchange), BytesWritten, nil);
-                FlushFileBuffers(ServerLogHandle);
+                ServerLog.Seek(0, soEnd);
+                ServerLog.WriteBuffer(ServerNewQSOPtr.qiInformation, SizeOf(ContestExchange));
+                FileFlush(ServerLog.Handle);
                 DisplayServerLogSize;
                 CloseServerLog;
               end
@@ -696,7 +729,7 @@ end;
 procedure DisplayServerLogSize;
 begin
   ServerCRC32Changed := True;
-  SetServerLogQSOs((Windows.GetFileSize(ServerLogHandle, nil) - 4) div SizeOf(ContestExchange));
+  SetServerLogQSOs((ServerLog.Size - 4) div SizeOf(ContestExchange));
 end;
 {
 procedure SetServerIcon(Icon: PChar);
@@ -735,15 +768,15 @@ begin
   if OpenServerLog(OPEN_EXISTING) then
      begin
      1:
-     SetFilePointer(ServerLogHandle, FilePointer * SizeOf(ContestExchange), nil, FILE_END);
-     Windows.ReadFile(ServerLogHandle, TempCE, SizeOf(ContestExchange), pNumberOfBytesRead, nil);
+     ServerLog.Seek(FilePointer * SizeOf(ContestExchange), soEnd);
+     pNumberOfBytesRead := ServerLog.Read(TempCE, SizeOf(ContestExchange));
      if pNumberOfBytesRead = SizeOf(ContestExchange) then
         begin
         if TempCE.ceQSOID1 = CE.ceQSOID1 then
           if TempCE.ceQSOID2 = CE.ceQSOID2 then
              begin
-             SetFilePointer(ServerLogHandle, FilePointer * SizeOf(ContestExchange), nil, FILE_END);
-             WriteFile(ServerLogHandle, CE, SizeOf(ContestExchange), pNumberOfBytesRead, nil);
+             ServerLog.Seek(FilePointer * SizeOf(ContestExchange), soEnd);
+             ServerLog.WriteBuffer(CE, SizeOf(ContestExchange));
              ServerCRC32Changed := True;
              goto 2;
              end;
@@ -768,23 +801,50 @@ end;
   and hands it to IOHandler.Write, on the connection's own thread, which is
   what that CreateThread was for. *)
 
+(* OPEN, AND THE PARAMETER IS STILL THE WIN32 DISPOSITION -- deliberately.
+
+  Every caller says OPEN_EXISTING or OPEN_ALWAYS, and those two words carry the
+  intent exactly: "the log must already be there" and "make one if it is not".
+  Renaming them would touch a dozen call sites to say the same thing, so the
+  constants stay as the vocabulary and only the mechanism changed.
+
+  fmShareDenyNone matches the old FILE_SHARE_READ or FILE_SHARE_WRITE: the sync
+  listener reads this file while the server writes it. *)
 function OpenServerLog(dwCreationDistribution: DWORD): boolean;
+var
+   name: string;
 begin
   Result := False;
   if ServerLogOpened then Exit;
-  ServerLogHandle := CreateFileA(@ServerLogFileName, GENERIC_READ or GENERIC_WRITE, FILE_SHARE_READ or FILE_SHARE_WRITE, nil, dwCreationDistribution, FILE_ATTRIBUTE_ARCHIVE, 0);
-  Result := ServerLogHandle <> INVALID_HANDLE_VALUE;
-  ServerLogOpened := Result;
 
+  name := String(PAnsiChar(@ServerLogFileName[0]));
+  try
+     if (dwCreationDistribution = OPEN_ALWAYS) and (not FileExists(name)) then
+        begin
+        ServerLog := TFileStream.Create(name, fmCreate or fmShareDenyNone);
+        end
+     else
+        begin
+        ServerLog := TFileStream.Create(name, fmOpenReadWrite or fmShareDenyNone);
+        end;
+     Result := True;
+  except
+     on E: Exception do
+        begin
+        { REPORTED. The Win32 version returned INVALID_HANDLE_VALUE and the
+          reason was in GetLastError, which nothing read. }
+        logger.Error('[Log] cannot open %s: %s', [name, E.Message]);
+        FreeAndNil(ServerLog);
+        Result := False;
+        end;
+  end;
+
+  ServerLogOpened := Result;
 end;
 
 procedure CloseServerLog;
 begin
-  if ServerLogHandle <> INVALID_HANDLE_VALUE then
-     begin
-     CloseHandle(ServerLogHandle);
-     end;
-  ServerLogHandle := INVALID_HANDLE_VALUE;
+  FreeAndNil(ServerLog);
   ServerLogOpened := False;
 end;
 
@@ -805,12 +865,12 @@ begin
      ContestExchangesBufferIndex := 0;
      Exit;
      end;
-  SetFilePointer(ServerLogHandle, 0, nil, FILE_END);
+  ServerLog.Seek(0, soEnd);
   for c := 1 to ContestExchangesBufferIndex do
      begin
-     WriteFile(ServerLogHandle, ContestExchangesBuffer[c], SizeOf(ContestExchange), lpNumberOfBytesWritten, nil);
+     ServerLog.WriteBuffer(ContestExchangesBuffer[c], SizeOf(ContestExchange));
      end;
-  FlushFileBuffers(ServerLogHandle);
+  FileFlush(ServerLog.Handle);
   DisplayServerLogSize;
   CloseServerLog;
   ContestExchangesBufferIndex := 0;
@@ -821,12 +881,12 @@ var
   pNumberOfBytesRead                    : Cardinal;
 begin
   if not OpenServerLog(OPEN_EXISTING) then Exit;
-  ServerLogFileInformation.liServerLogSize := Windows.GetFileSize(ServerLogHandle, nil);
+  ServerLogFileInformation.liServerLogSize := ServerLog.Size;
   ServerLogFileInformation.liContest := DUMMYCONTEST;
   if ServerLogFileInformation.liServerLogSize > SizeOfTLogHeader then
      begin
-     SetFilePointer(ServerLogHandle, SizeOfTLogHeader, nil, FILE_BEGIN);
-     Windows.ReadFile(ServerLogHandle, TempCE, SizeOf(TempCE), pNumberOfBytesRead, nil);
+     ServerLog.Seek(SizeOfTLogHeader, soBeginning);
+     pNumberOfBytesRead := ServerLog.Read(TempCE, SizeOf(TempCE));
      ServerLogFileInformation.liContest := TempCE.ceContest;
      end;
   CloseServerLog;
@@ -839,8 +899,8 @@ function ClearServerLog: boolean;
 begin
   Result := False;
   if not OpenServerLog(OPEN_EXISTING) then Exit;
-  SetFilePointer(ServerLogHandle, SizeOfTLogHeader, nil, FILE_BEGIN);
-  SetEndOfFile(ServerLogHandle);
+  ServerLog.Seek(SizeOfTLogHeader, soBeginning);
+  ServerLog.Size := ServerLog.Position;
   DisplayServerLogSize;
   CloseServerLog;
   ScanLogForSerialsNumbers;
@@ -855,9 +915,22 @@ var
 begin
 {$IF SERVERDEBUG}
   if not ServerDebugMode then Exit;
-  h := CreateFile(@ServerDebugFileName, GENERIC_READ or GENERIC_WRITE, FILE_SHARE_READ or FILE_SHARE_WRITE, nil, OPEN_ALWAYS, FILE_ATTRIBUTE_ARCHIVE, 0);
+  (* THE DEBUG FILE, APPENDED THROUGH A STREAM.
+
+    Was CreateFile + SetFilePointer(FILE_END) + WriteFile + CloseHandle. Only
+    compiled under SERVERDEBUG, which is why it outlived the rest. *)
+  if FileExists(String(PAnsiChar(@ServerDebugFileName[0]))) then
+     begin
+     dbg := TFileStream.Create(String(PAnsiChar(@ServerDebugFileName[0])),
+                               fmOpenWrite or fmShareDenyNone);
+     end
+  else
+     begin
+     dbg := TFileStream.Create(String(PAnsiChar(@ServerDebugFileName[0])),
+                               fmCreate or fmShareDenyNone);
+     end;
   if h = INVALID_HANDLE_VALUE then Exit;
-  SetFilePointer(h, 0, nil, FILE_END);
+  dbg.Seek(0, soEnd);
 
   // Was six manual pushes, a wsprintf, and `add esp,32` to unwind. Three
   // separate defects came out with the assembly, none of which the compiler
@@ -875,8 +948,8 @@ begin
      [FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now), s, Count,
       BytesRCVD, BytesSEND, string(comment)]));
 
-  WriteFile(h, PAnsiChar(line)^, Length(line), lpNumberOfBytesWritten, nil);
-  CloseHandle(h);
+  dbg.WriteBuffer(PAnsiChar(line)^, Length(line));
+  dbg.Free;
 {$IFEND}
 end;
 
@@ -1038,33 +1111,35 @@ begin
   Result := True;
 end;
 
+(* THE LOG'S CRC, READ INTO MEMORY INSTEAD OF MAPPED.
+
+  Was CreateFileMapping + MapViewOfFile over the whole file, for a read-only
+  scan. Memory mapping is a Win32 API with no portable equivalent worth the
+  conditional, and it bought nothing here: the CRC has to touch every byte
+  anyway, so a read is the same work without the mapping.
+
+  A contest log is a few megabytes -- 376 bytes per QSO, so ten thousand QSOs
+  is under four -- which is why holding it is reasonable. If that ever stops
+  being true the answer is a chunked CRC, not a mapping. *)
 procedure GetServerLogCRC32;
-label
-  1, 3;
 var
-  dwSize                                : integer;
-  MapFin                                : Cardinal;
-  MapBase                               : Pointer;
+  buf: TBytes;
 begin
   if not ServerCRC32Changed then Exit;
   ServerCRC32 := 0;
   if not OpenServerLog(OPEN_EXISTING) then Exit;
-  dwSize := Windows.GetFileSize(ServerLogHandle, nil);
-  MapFin := Windows.CreateFileMapping(ServerLogHandle, nil, PAGE_READWRITE, 0, 0, nil);
-  if MapFin = 0 then Exit;
-  MapBase := Windows.MapViewOfFile(MapFin, FILE_MAP_ALL_ACCESS, 0, 0, 0);
-  if MapBase = nil then
-     begin
-     goto 3;
-     end;
-
-  ServerCRC32 := uCRC32.GetCRC32(MapBase^, dwSize);
-  ServerCRC32Changed := False;
-
-  FlushViewOfFile(MapBase, 0);
-  Windows.UnmapViewOfFile(MapBase);
-  3: CloseHandle(MapFin);
-  CloseServerLog;
+  try
+     SetLength(buf, ServerLog.Size);
+     if Length(buf) > 0 then
+        begin
+        ServerLog.Position := 0;
+        ServerLog.ReadBuffer(buf[0], Length(buf));
+        ServerCRC32 := uCRC32.GetCRC32(buf[0], Length(buf));
+        end;
+     ServerCRC32Changed := False;
+  finally
+     CloseServerLog;
+  end;
 end;
 
 (* THE WIRE WRITE, THROUGH INDY. Was WinSock's Send() on a raw handle; the
@@ -1090,11 +1165,23 @@ var
   RescoredRXData                        : ContestExchangePtr;
   LogSize                               : Cardinal;
   QSOCounter                            : Cardinal;
+  LogBuf                                : TBytes;
 begin
   Result := False;
   if not OpenServerLog(OPEN_EXISTING) then Exit;
 
-  LogSize := Windows.GetFileSize(ServerLogHandle, nil);
+  (* READ, MODIFY, WRITE BACK -- instead of mapping the file.
+
+    This was CreateFileMapping + MapViewOfFile over the whole log, walked with
+    pointer arithmetic and flushed with FlushViewOfFile. Memory mapping is
+    Win32 with no portable equivalent worth a conditional, and what it was
+    doing is a read-modify-write of every QSO record.
+
+    The walk below is UNCHANGED -- same pointer arithmetic, same labels, same
+    per-record rules -- it just runs over a buffer this routine owns rather
+    than over a view of the file. The write-back is at the end, and only when
+    something actually changed. *)
+  LogSize := ServerLog.Size;
 
   if LogSize <= SizeOf(TLogHeader) then
      begin
@@ -1103,19 +1190,11 @@ begin
   LogSize := ((LogSize - SizeOf(TLogHeader)) div SizeOfContestExchange);
   QSOCounter := 0;
 
-  MapFin := Windows.CreateFileMapping(ServerLogHandle, nil, PAGE_READWRITE, 0, 0, nil);
-  if MapFin = 0 then
-     begin
-     goto 2;
-     end;
+  SetLength(LogBuf, ServerLog.Size);
+  ServerLog.Position := 0;
+  ServerLog.ReadBuffer(LogBuf[0], Length(LogBuf));
 
-  MapBase := Windows.MapViewOfFile(MapFin, FILE_MAP_ALL_ACCESS, 0, 0, 0);
-  if MapBase = nil then
-     begin
-     goto 3;
-     end;
-  // Issue #997: asm pointer-arith (EAX = MapViewOfFile return) -> explicit.
-  RescoredRXData := Pointer(Cardinal(MapBase) + SizeOfTLogHeader);
+  RescoredRXData := Pointer(PByte(@LogBuf[0]) + SizeOfTLogHeader);
 
   1:
 
@@ -1147,10 +1226,11 @@ begin
   Result := True;
   ServerCRC32Changed := True;
 
-  FlushViewOfFile(MapBase, 0);
-  Windows.UnmapViewOfFile(MapBase);
-  3:
-  CloseHandle(MapFin);
+  { Back to disk in one write, then flushed -- FlushViewOfFile's job. }
+  ServerLog.Position := 0;
+  ServerLog.WriteBuffer(LogBuf[0], Length(LogBuf));
+  FileFlush(ServerLog.Handle);
+
   2:
   CloseServerLog;
 
@@ -1164,7 +1244,28 @@ end;
 
 function ServerMessageBox(const Text: string; uType: UINT): integer;
 begin
-  Result := MessageBoxW(ApplicationHandle, PChar(Text), _TR4WSERVER, uType);
+  (* THE LCL'S DIALOG, NOT MessageBoxW.
+
+    uType carried Win32 MB_* flags. Only two shapes were ever used -- a warning
+    with OK, and a yes/no question -- so the flag is read for MB_YESNO and
+    everything else is an OK box. The result is still IDYES/IDNO/IDOK because
+    the callers compare against those. *)
+  if (uType and MB_YESNO) = MB_YESNO then
+     begin
+     if MessageDlg(String(_TR4WSERVER), Text, mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+        begin
+        Result := IDYES;
+        end
+     else
+        begin
+        Result := IDNO;
+        end;
+     end
+  else
+     begin
+     MessageDlg(String(_TR4WSERVER), Text, mtWarning, [mbOK], 0);
+     Result := IDOK;
+     end;
 end;
 
 procedure ScanLogForSerialsNumbers;
@@ -1178,9 +1279,9 @@ begin
   if not OpenServerLog(OPEN_EXISTING) then Exit;
   NextNumberToSend := 0;
 
-  SetFilePointer(ServerLogHandle, SizeOf(ContestExchange), nil, FILE_BEGIN);
+  ServerLog.Seek(SizeOf(ContestExchange), soBeginning);
   Next:
-  Windows.ReadFile(ServerLogHandle, TempCE, SizeOf(ContestExchange), i, nil);
+  i := ServerLog.Read(TempCE, SizeOf(ContestExchange));
   if i = SizeOf(ContestExchange) then
      begin
      if NextNumberToSend < TempCE.NumberSent then

@@ -10,7 +10,10 @@ uses
     hooks, which only the interfaces unit supplies. *)
   Interfaces,
   Forms,
-  Classes,        // AllocateHWnd -- the socket sink; see the header
+  Classes,        // TFileStream -- the single-instance lock
+  IniFiles,       // TIniFile -- the settings, was GetPrivateProfile*
+  Dialogs,        // ShowMessage -- was MessageBox
+  uAnsiStr,       // StrPLCopy over PAnsiChar; SysUtils' is PWideChar
   uServerForm,    // the window, at last a designed one
   Windows,
   Messages,
@@ -41,6 +44,9 @@ uses
 {$R *.res}                       // the Lazarus project resource -- icons
 
 { Declared ahead of ServerStartUp, which calls it on a failed start. }
+var
+   GLock: TFileStream = nil;
+
 procedure ServerShutDown; forward;
 
 (* START-UP. Was the WM_INITDIALOG arm, and it was never really a window
@@ -49,29 +55,47 @@ procedure ServerShutDown; forward;
 procedure ServerStartUp;
 var
   BytesReceived: integer;
+  ini: TIniFile;
 begin
 //        SendMessage(hwnddlg, WM_SETICON, ICON_SMALL, LoadIcon(0, IDI_APPLICATION));
         SetServerVersion(FullServerVersion);
 
         ApplicationHandle := frmServer.Handle;
         InitServerLogger;
-        PortNumber := GetPrivateProfileInt(_TR4WSERVER, 'PORT', 1061, _TR4WSERVERINIFILE);
-        SetServerPort(PortNumber);
-        sAllowTimeSynchronizing := GetPrivateProfileInt(_TR4WSERVER, 'ALLOW TIME SYNCHRONIZING', 1, _TR4WSERVERINIFILE) = 1;
-        SerialNumberLockoutEnable := GetPrivateProfileInt(_TR4WSERVER, 'SERIAL NUMBER LOCKOUT', 0, _TR4WSERVERINIFILE) = 1;
-        SetSerialLockout(SerialNumberLockoutEnable);
+        (* THE SETTINGS, THROUGH TIniFile.
+
+          Was GetPrivateProfileInt and GetPrivateProfileStringA -- Win32 API on
+          a .ini file. TIniFile is the RTL's, reads the same file format, and
+          works wherever FPC does.
+
+          THE ...A SPELLING MATTERED AND THE REASON IS WORTH KEEPING: the
+          password is compared BYTE FOR BYTE against what the client sends, and
+          under a Unicode binding the generic name bound to
+          GetPrivateProfileStringW, which filled an AnsiChar buffer with UTF-16
+          ('T'#0'R'#0'4'#0...). The compare matched byte 0 and failed on the #0
+          at byte 1, so EVERY CLIENT WAS REJECTED -- including with no ini file
+          at all, because the default goes through the same call. TIniFile
+          returns a string and the conversion is explicit, so that whole class
+          of bug is gone rather than avoided. *)
+        ini := TIniFile.Create(String(PAnsiChar(_TR4WSERVERINIFILE)));
+        try
+           PortNumber := ini.ReadInteger(_TR4WSERVER, 'PORT', 1061);
+           SetServerPort(PortNumber);
+           sAllowTimeSynchronizing := ini.ReadInteger(_TR4WSERVER, 'ALLOW TIME SYNCHRONIZING', 1) = 1;
+           SerialNumberLockoutEnable := ini.ReadInteger(_TR4WSERVER, 'SERIAL NUMBER LOCKOUT', 0) = 1;
+           SetSerialLockout(SerialNumberLockoutEnable);
 
 //        tGetLogTimeout := GetPrivateProfileInt(_TR4WSERVER, 'GET LOG TIMEOUT', 50, _TR4WSERVERINIFILE);
 {$IF SERVERDEBUG}
-        ServerDebugMode := GetPrivateProfileInt(_TR4WSERVER, 'DEBUG', 0, _TR4WSERVERINIFILE) = 1;
+           ServerDebugMode := ini.ReadInteger(_TR4WSERVER, 'DEBUG', 0) = 1;
 {$IFEND}
-        // MUST be the ...A variant.  tr4wServerPassword is array[0..10] of AnsiChar
-        // and is compared byte-for-byte against what the client sends, but under D12
-        // the generic name binds to GetPrivateProfileStringW, which filled the buffer
-        // with UTF-16 ('T'#0'R'#0'4'#0...).  The compare then matched byte 0 and failed
-        // on the #0 at byte 1, so EVERY client was rejected -- including with no INI
-        // file present, because the DEFAULT value goes through the same call.
-        GetPrivateProfileStringA(_TR4WSERVER, 'SERVER PASSWORD', _TR4WSERVER, @tr4wServerPassword, 11, _TR4WSERVERINIFILE);
+           uAnsiStr.StrPLCopy(@tr4wServerPassword[0],
+              AnsiString(ini.ReadString(_TR4WSERVER, 'SERVER PASSWORD',
+                                        String(PAnsiChar(_TR4WSERVER)))),
+              High(tr4wServerPassword));
+        finally
+           ini.Free;
+        end;
 
         (* NO WSAStartup, NO MSWSOCK, NO SEPARATE SYNC LISTENER.
 
@@ -79,13 +103,20 @@ begin
           LoadLibrary that fetched it; and both listeners come up together
           inside RunServer -- see uServerNet.StartServerNet. *)
 
-        BytesReceived := Windows.GetModuleFileName(0, @ServerLogFileName, SizeOf(ServerLogFileName));
-        ServerLogFileName[BytesReceived - 14] := #0;
-        Windows.lstrcat(@ServerLogFileName, 'SERVERLOG.TRW');
+        (* THE LOG SITS BESIDE THE EXECUTABLE.
+
+          Was GetModuleFileName followed by lstrcat, and by a magic 14 --
+          the length of 'tr4wserver.exe' -- poked in as a NUL to chop the file
+          name off. Rename the binary and the path was silently wrong.
+          ExtractFilePath(ParamStr(0)) says the same thing and cannot be
+          off by a character. *)
+        uAnsiStr.StrPLCopy(@ServerLogFileName[0],
+           AnsiString(ExtractFilePath(ParamStr(0)) + 'SERVERLOG.TRW'),
+           High(ServerLogFileName));
 {$IF SERVERDEBUG}
-        BytesReceived := Windows.GetModuleFileName(0, @ServerDebugFileName, SizeOf(ServerDebugFileName));
-        ServerDebugFileName[BytesReceived - 14] := #0;
-        Windows.lstrcat(@ServerDebugFileName, 'DEBUG.TXT');
+        uAnsiStr.StrPLCopy(@ServerDebugFileName[0],
+           AnsiString(ExtractFilePath(ParamStr(0)) + 'DEBUG.TXT'),
+           High(ServerDebugFileName));
 {$IFEND}
 {
         BytesReceived := Windows.GetModuleFileName(0, @MultsFrequenciesFileName, SizeOf(MultsFrequenciesFileName));
@@ -94,12 +125,11 @@ begin
         LoadinMultsFrequencies;
 }
         if OpenServerLog(OPEN_ALWAYS) then
-          if ServerLogHandle <> INVALID_HANDLE_VALUE then
           begin
-            if (Windows.GetFileSize(ServerLogHandle, nil) mod SizeOf(ContestExchange)) <> 0 then
+            if (ServerLog.Size mod SizeOf(ContestExchange)) <> 0 then
             begin
               logger.Error('serverlog.trw size mismatch: file size ' +
-                IntToStr(Windows.GetFileSize(ServerLogHandle, nil)) +
+                IntToStr(ServerLog.Size) +
                 ' is not a multiple of record size ' + IntToStr(SizeOf(ContestExchange)));
               ServerMessageBox(
                 'serverlog.trw cannot be opened: the file size is not a multiple of the ' +
@@ -110,8 +140,10 @@ begin
                 MB_OK or MB_ICONWARNING or MB_TOPMOST);
               begin ServerShutDown; Exit; end;
             end;
-            if Windows.GetFileSize(ServerLogHandle, nil) = 0 then
-              WriteFile(ServerLogHandle, LogHeader, SizeOfTLogHeader, BytesWritten, nil);
+            if ServerLog.Size = 0 then
+              begin
+              ServerLog.WriteBuffer(LogHeader, SizeOfTLogHeader);
+              end;
 
             DisplayServerLogSize;
             CloseServerLog;
@@ -128,7 +160,9 @@ begin
         RunServerThread;
 
         tr4w_osverinfo.dwOSVersionInfoSize := SizeOf(OSVERSIONINFO);
-        Windows.GetVersionEx(tr4w_osverinfo);
+        { GetVersionEx went with TransmitFile: ServerOS existed only to say
+          whether MSWSOCK's TransmitFile was available, and Indy writes a
+          stream. }
         ServerOS := tr4w_osverinfo.dwPlatformId;
 {
         Windows.SendDlgItemMessage(ApplicationHandle, 109, WM_SETFONT,
@@ -174,8 +208,28 @@ begin
 end;
 
 begin
-  if CreateMutex(nil, False, _TR4WSERVER) = 0 then Exit;
-  if GetLastError = ERROR_ALREADY_EXISTS then Exit;
+  (* ONE SERVER AT A TIME, WITHOUT A NAMED MUTEX.
+
+    Was CreateMutex + ERROR_ALREADY_EXISTS -- a Win32 kernel object with no
+    portable equivalent. A lock file held open exclusively says the same thing
+    on every platform: the second instance cannot open it and stops.
+
+    The file is beside the executable, next to the log it guards. It is left
+    behind on a crash, which costs nothing: what matters is the exclusive OPEN,
+    not the file's existence. *)
+  try
+     GLock := TFileStream.Create(ExtractFilePath(ParamStr(0)) + 'tr4wserver.lock',
+                                 fmCreate or fmShareExclusive);
+  except
+     { Another copy holds it. Say so and go -- the original exited in silence,
+       which is why "it just does not start" was a support question. }
+     on E: Exception do
+        begin
+        ShowMessage('TR4WSERVER is already running.');
+        Exit;
+        end;
+  end;
+
 
   Application.Initialize;
   Application.CreateForm(TfrmServer, frmServer);
