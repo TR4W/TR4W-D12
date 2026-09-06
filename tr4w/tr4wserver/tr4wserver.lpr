@@ -14,6 +14,7 @@ uses
   IniFiles,       // TIniFile -- the settings, was GetPrivateProfile*
   Dialogs,        // ShowMessage -- was MessageBox
   uAnsiStr,       // StrPLCopy over PAnsiChar; SysUtils' is PWideChar
+  uAppPaths,      // where written files go, per platform
   uServerForm,    // the window, at last a designed one
   Windows,
   Messages,
@@ -77,7 +78,12 @@ begin
           at all, because the default goes through the same call. TIniFile
           returns a string and the conversion is explicit, so that whole class
           of bug is gone rather than avoided. *)
-        ini := TIniFile.Create(String(PAnsiChar(_TR4WSERVERINIFILE)));
+        (* NAMED EXPLICITLY. _TR4WSERVERINIFILE is the bare 'TR4WSERVER.INI',
+          which resolves against the working directory -- right on Windows and
+          nowhere sensible elsewhere. DataFilePath, not SettingsFilePath: this
+          file has always sat beside the program, not in a settings\ folder,
+          and moving it would lose every operator's configuration. *)
+        ini := TIniFile.Create(DataFilePath(String(PAnsiChar(_TR4WSERVERINIFILE))));
         try
            PortNumber := ini.ReadInteger(_TR4WSERVER, 'PORT', 1061);
            SetServerPort(PortNumber);
@@ -110,12 +116,17 @@ begin
           name off. Rename the binary and the path was silently wrong.
           ExtractFilePath(ParamStr(0)) says the same thing and cannot be
           off by a character. *)
+        (* THE CONTEST LOG, VIA uAppPaths.
+
+          Was GetModuleFileName + lstrcat with a magic 14 -- the length of
+          'tr4wserver.exe' -- poked in as a NUL to chop the file name off.
+          Rename the binary and the path was silently wrong. *)
         uAnsiStr.StrPLCopy(@ServerLogFileName[0],
-           AnsiString(ExtractFilePath(ParamStr(0)) + 'SERVERLOG.TRW'),
+           AnsiString(LogFilePath('SERVERLOG.TRW')),
            High(ServerLogFileName));
 {$IF SERVERDEBUG}
         uAnsiStr.StrPLCopy(@ServerDebugFileName[0],
-           AnsiString(ExtractFilePath(ParamStr(0)) + 'DEBUG.TXT'),
+           AnsiString(LogFilePath('DEBUG.TXT')),
            High(ServerDebugFileName));
 {$IFEND}
 {
@@ -218,7 +229,7 @@ begin
     behind on a crash, which costs nothing: what matters is the exclusive OPEN,
     not the file's existence. *)
   try
-     GLock := TFileStream.Create(ExtractFilePath(ParamStr(0)) + 'tr4wserver.lock',
+     GLock := TFileStream.Create(LogFilePath('tr4wserver.lock'),
                                  fmCreate or fmShareExclusive);
   except
      { Another copy holds it. Say so and go -- the original exited in silence,

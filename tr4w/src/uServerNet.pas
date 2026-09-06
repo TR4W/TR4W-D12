@@ -84,6 +84,11 @@ type
       FRefused:   boolean;
 
    public
+      { Public for the same reason as the methods: the handlers are members of
+        a DIFFERENT class in this unit, and private means private to the class,
+        not to the unit. }
+      property PeerIP: string read FPeerIP write FPeerIP;
+
       { Public because the handlers below are methods of a DIFFERENT class in
         this unit, and a private member is visible only to its own. }
       procedure SyncHandshake;
@@ -143,6 +148,40 @@ var
    GMain:   TIdTCPServer = nil;
    GSync:   TIdTCPServer = nil;
    GEvents: TServerEvents = nil;
+
+(* THE WIRE, IN HEX.
+
+  sRecv used to do this and went with the WinSock read. It is the first thing
+  anyone wants when a client will not connect: not "the handshake failed" but
+  the bytes that failed it.
+
+  Capped, because a full 4 KB read is 12 KB of hex and the interesting part of
+  any TR4W message is its first few bytes -- the two-byte id and what follows. *)
+function HexOf(const aBuf; const aLen: integer): string;
+const
+   MAX_BYTES = 64;
+var
+   p: PByte;
+   i, n: integer;
+begin
+   Result := '';
+   n := aLen;
+   if n > MAX_BYTES then
+      begin
+      n := MAX_BYTES;
+      end;
+
+   p := @aBuf;
+   for i := 0 to n - 1 do
+      begin
+      Result := Result + IntToHex(p[i], 2) + ' ';
+      end;
+
+   if aLen > n then
+      begin
+      Result := Result + Format('... (%d more)', [aLen - n]);
+      end;
+end;
 
 { ------------------------------------------------------------ TServerConn }
 
@@ -233,6 +272,9 @@ begin
    if FAdmitted then
       begin
       FAdmitted := False;
+      { Said out loud: at a multi-op, "when did that station drop" is the
+        question, and the old code logged nothing at all here. }
+      logger.Info('[Net] client %s disconnected', [FPeerIP]);
       DeleteSocketFromArray(Handle);
       DisplayClients;
       end;
@@ -271,6 +313,15 @@ begin
 
       c.FLen := got;
       Move(raw[0], c.FBuf[0], got);
+
+      { The handshake in particular: a wrong password looks identical to a
+        wrong protocol until you see the bytes. }
+      logger.Debug('[Net] handshake: %d bytes from %s', [got, c.FPeerIP]);
+      if logger.IsTraceEnabled then
+         begin
+         logger.Trace('[Net] rx %s: %s', [c.FPeerIP, HexOf(c.FBuf[0], got)]);
+         end;
+
       TThread.Synchronize(nil, c.SyncHandshake);
 
       if c.FRefused then
@@ -303,6 +354,14 @@ begin
 
    c.FLen := got;
    Move(raw[0], c.FBuf[0], got);
+
+   { The wire trace sRecv used to write, now naming the station it came from. }
+   logger.Debug('[Net] %d bytes from %s', [got, c.FPeerIP]);
+   if logger.IsTraceEnabled then
+      begin
+      logger.Trace('[Net] rx %s: %s', [c.FPeerIP, HexOf(c.FBuf[0], got)]);
+      end;
+
    TThread.Synchronize(nil, c.SyncParse);
 end;
 
@@ -496,6 +555,10 @@ begin
       try
          c.Connection.IOHandler.Write(RawToBytes(aBuf, aLen));
          Result := aLen;
+         if logger.IsTraceEnabled then
+            begin
+            logger.Trace('[Net] tx %s: %s', [c.FPeerIP, HexOf(aBuf, aLen)]);
+            end;
       except
          on E: Exception do
             begin

@@ -61,6 +61,7 @@ uses
   Dialogs,       // MessageDlg -- was MessageBoxW
   Controls,      // mrYes -- the modal results MessageDlg answers with
   uAnsiStr,      // StrPLCopy over PAnsiChar; SysUtils' is PWideChar
+  uAppPaths,     // LogFilePath -- where a written file goes, per platform
   uServerForm,   // the readouts, by name instead of by control number
   Messages;
 const
@@ -338,7 +339,15 @@ end;
 // tr4wserver.lpr calls this at WM_INITDIALOG.
 procedure InitServerLogger;
 begin
-  appender := TLogRollingFileAppender.Create('name', 'tr4wserver.log');
+  (* THROUGH uAppPaths, LIKE EVERYTHING ELSE THIS PROGRAM OPENS.
+
+    It was the bare relative name 'tr4wserver.log', which resolves against the
+    working directory -- correct on Windows, and wrong on macOS and Linux where
+    the application directory is read-only and a written file belongs in the
+    user's home. LogFilePath knows which platform it is on; a relative name
+    does not. *)
+  appender := TLogRollingFileAppender.Create('name',
+                 LogFilePath('tr4wserver.log'));
   appender.Layout := TLogPatternLayout.Create('%d ' + TTCCPattern);
   TLogBasicConfigurator.Configure(appender);
   logger := TLogLogger.GetLogger('TR4WServer');
