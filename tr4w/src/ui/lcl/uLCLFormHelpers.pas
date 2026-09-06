@@ -596,7 +596,14 @@ begin
      needs the manual disable.  That is what the aParent HWND has been for.
 
      THIS BRANCH SELF-DELETES.  When those two windows become forms it has no
-     callers left, and the aParent parameter goes with it. }
+     callers left, and the aParent parameter goes with it.
+
+     BOTH ARE FORMS NOW (2026-08-26), so it is PROBABLY already dead -- and
+     "probably" is why it is still here.  The branch is self-guarding: an LCL
+     parent is found by FindControl and skipped, a raw Win32 parent is not.
+     Deleting it on a traced argument would be a guess about seven aParent
+     chains; the log line below decides it on evidence instead.  If it never
+     appears, the branch and the parameter can both go. }
    reEnable := (aParent <> 0) and
                (Controls.FindControl(aParent) = nil) and
                Windows.IsWindow(aParent) and
@@ -604,6 +611,12 @@ begin
 
    if reEnable then
       begin
+      if logger <> nil then
+         begin
+         logger.Warn('[Modal] %s was raised over a NON-LCL parent (hwnd=%d) -- '
+                     + 'the manual EnableWindow path is still reachable.',
+                     [aForm.ClassName, aParent]);
+         end;
       Windows.EnableWindow(aParent, False);
       end;
 

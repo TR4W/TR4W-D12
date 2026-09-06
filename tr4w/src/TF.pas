@@ -171,7 +171,6 @@ function inttopchar(i: integer): PAnsiChar;
 procedure DragWindow(h: HWND);
 //procedure SaveStructure(Address: Pointer; Count: integer; FileName: string);
 //function tShellexecute(HWND: HWND; Operation, FileName, Parameters, Directory: PChar; showCmd: integer): hInst; // 4.75.3
-function SendDlgItemMessage(hDlg: HWND; nIDDlgItem: integer; Msg: UINT): LONGINT; stdcall;
 
 function tOpenFileForRead(var h: HWND; FileName: PAnsiChar): boolean;
 
@@ -922,11 +921,6 @@ begin
     ES_MULTILINE or ES_AUTOVSCROLL or ES_NOHIDESEL or ES_READONLY or ES_SAVESEL or WS_CHILD or WS_VISIBLE or WS_BORDER or WS_VSCROLL or WS_HSCROLL,
     0, 0, 0, 0, hwndParent, 101, hInstance, nil);
   tWM_SETFONT(Result, LucidaConsoleFont);
-end;
-
-function SendDlgItemMessage(hDlg: HWND; nIDDlgItem: integer; Msg: UINT): LONGINT; stdcall;
-begin
-  Result := Windows.SendDlgItemMessage(hDlg, nIDDlgItem, Msg, 0, 0);
 end;
 
 function IntegerBetween(v: integer; i: integer; k: integer): boolean;

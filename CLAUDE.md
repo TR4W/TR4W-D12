@@ -439,14 +439,23 @@ snapshots that can be days old. A search for `CreateQSONeedWindows` found it in
 `src/backup/MainUnit.pas` long after the live routine was deleted. The lints
 already exclude both; a hand-run `grep` does not.
 
-*Measured 2026-09-05, and offered as a worked example of the commands above
-rather than as a fact to cite later:* the only UI left that genuinely builds
-Win32 windows is the **WinKeyer settings dialog** (`uWinKey`, `CreateWindowExW`
-plus `CreateUpDownControl`) and the **server log's list view**
-(`CreateEditableLog` / `CreateListView`). `uErmak` still holds a
-`CreateModalDialog` but has no caller and is in no `uses` clause — a compiled
-file nothing can reach. `uWinTimer` creates a message-only window, which is
-platform code and not UI.
+*Measured 2026-09-06, and offered as a worked example of the commands above
+rather than as a fact to cite later:* **one** UI window is still built by hand
+— the **shared editable log** (`CreateEditableLog`, a `CreateWindowExW` of
+`WC_LISTVIEW`), hosted by `uServerLogForm` and by the main window. It is
+**deferred on purpose** until the log moves to SQLite; see
+[`docs/ROADMAP.md`](docs/ROADMAP.md) §2. `uWinTimer` and
+`uIcomNetworkTransport` create message-only windows, which is platform code and
+not UI.
+
+**And that is the third day running that this paragraph was wrong the day
+after it was written.** On 2026-09-05 it named the WinKeyer settings dialog,
+the server log's list view *and* `uErmak`; by 2026-09-06 the WinKeyer dialog
+was a form, `uErmak` and `CreateListView` had been deleted, and only one of
+the three was still true. **Run the two commands above.** Everything else on
+the count is either a REPORTED fallback kept until a log line proves it dead
+(`OpenTR4WWindow`, `MoveWindowTo`, `ShowModalOverWin32Parent`) or genuine
+platform code.
 
 The garbled-caption defect those dialogs shared is fixed: all five that set a
 title did it with `PWideChar(<resourcestring>)` — a POINTER CAST, not a
