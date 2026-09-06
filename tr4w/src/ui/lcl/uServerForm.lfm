@@ -1,0 +1,175 @@
+object frmServer: TfrmServer
+  Left = 0
+  Height = 372
+  Top = 0
+  Width = 420
+  BorderIcons = [biSystemMenu, biMinimize]
+  BorderStyle = bsSingle
+  Caption = 'TR4WSERVER'
+  ClientHeight = 372
+  ClientWidth = 420
+  OnClose = HandleClose
+  OnShow = HandleShow
+  Position = poScreenCenter
+  LCLVersion = '3.0'
+  object lblVersionCaption: TLabel
+    Left = 16
+    Height = 15
+    Top = 14
+    Width = 48
+    Caption = 'Version:'
+    ParentColor = False
+  end
+  object lblVersion: TLabel
+    Left = 88
+    Height = 15
+    Top = 14
+    Width = 6
+    Caption = '-'
+    ParentColor = False
+  end
+  object lblIPCaption: TLabel
+    Left = 16
+    Height = 15
+    Top = 38
+    Width = 20
+    Caption = 'IP:'
+    ParentColor = False
+  end
+  object lblIP: TLabel
+    Left = 88
+    Height = 15
+    Top = 38
+    Width = 6
+    Caption = '-'
+    ParentColor = False
+  end
+  object lblPortCaption: TLabel
+    Left = 16
+    Height = 15
+    Top = 66
+    Width = 27
+    Caption = 'Port:'
+    ParentColor = False
+  end
+  object edtPort: TEdit
+    Left = 88
+    Height = 23
+    Top = 62
+    Width = 72
+    TabOrder = 0
+    Text = '1061'
+  end
+  object btnStart: TButton
+    Left = 184
+    Height = 25
+    Top = 61
+    Width = 100
+    Caption = 'Start'
+    OnClick = btnStartClick
+    TabOrder = 1
+  end
+  object btnStop: TButton
+    Left = 296
+    Height = 25
+    Top = 61
+    Width = 100
+    Cancel = True
+    Caption = 'Stop'
+    OnClick = btnStopClick
+    TabOrder = 2
+  end
+  object grpClients: TGroupBox
+    Left = 16
+    Height = 176
+    Top = 100
+    Width = 380
+    Caption = 'Clients'
+    ClientHeight = 156
+    ClientWidth = 376
+    TabOrder = 3
+    object lstClients: TListBox
+      Left = 8
+      Height = 140
+      Top = 8
+      Width = 360
+      ItemHeight = 0
+      ScrollWidth = 358
+      TabOrder = 0
+      TopIndex = -1
+    end
+  end
+  object lblClientsCaption: TLabel
+    Left = 16
+    Height = 15
+    Top = 288
+    Width = 47
+    Caption = 'Clients:'
+    ParentColor = False
+  end
+  object lblClients: TLabel
+    Left = 128
+    Height = 15
+    Top = 288
+    Width = 7
+    Caption = '0'
+    ParentColor = False
+  end
+  object lblRcvdCaption: TLabel
+    Left = 16
+    Height = 15
+    Top = 310
+    Width = 84
+    Caption = 'Received (KB):'
+    ParentColor = False
+  end
+  object lblRcvd: TLabel
+    Left = 128
+    Height = 15
+    Top = 310
+    Width = 7
+    Caption = '0'
+    ParentColor = False
+  end
+  object lblSentCaption: TLabel
+    Left = 216
+    Height = 15
+    Top = 310
+    Width = 57
+    Caption = 'Sent (KB):'
+    ParentColor = False
+  end
+  object lblSent: TLabel
+    Left = 320
+    Height = 15
+    Top = 310
+    Width = 7
+    Caption = '0'
+    ParentColor = False
+  end
+  object lblQSOsCaption: TLabel
+    Left = 216
+    Height = 15
+    Top = 288
+    Width = 84
+    Caption = 'QSOs in log:'
+    ParentColor = False
+  end
+  object lblQSOs: TLabel
+    Left = 320
+    Height = 15
+    Top = 288
+    Width = 7
+    Caption = '0'
+    ParentColor = False
+  end
+  object chkSerialLockout: TCheckBox
+    Left = 16
+    Height = 19
+    Top = 336
+    Width = 176
+    Caption = 'Serial number lockout'
+    Enabled = False
+    TabOrder = 4
+  end
+end

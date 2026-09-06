@@ -16,8 +16,22 @@
 #             in both, one binding FMX controls and one binding LCL ones, and
 #             the test project names neither explicitly, so search ORDER is the
 #             only thing choosing. (tr4w.lpr picks correctly with {$IFDEF FPC}.)
-#   Server -- no LCL and no ui\ at all. tr4wserver is a console program; adding
-#             the LCL would link a widgetset into something with no UI.
+#   Server -- the SAME as App for the LCL, since 2026-09-06: tr4wserver is an
+#             LCL application now, not a Win32 dialog program, so it needs
+#             ui\lcl and the LCL units like anything else with a window.
+#
+#             THAT REMOVED A GUARD, AND IT IS WORTH KNOWING WHICH. The LCL
+#             exclusion was the only automatic check that a unit had not
+#             quietly grown a widget-set dependency; it caught VC.pas moving to
+#             LCLType within a minute, and its absence let the uCrashLog ->
+#             Forms edge hide for three days. There is no program left in this
+#             tree without a widget set, so it has nothing left to guard.
+#             Lint-LinuxCompile replaces it -- same class of defect, against
+#             the platform that now matters.
+#
+#             THE SQLITE EXCLUSION BELOW IS UNTOUCHED and guards a different
+#             boundary for a different reason. Read it before assuming Server
+#             is now simply App.
 
 # ---------------------------------------------------------------------------
 # INCLUDE paths -- a SEPARATE list from the unit paths, and it has to be.
@@ -121,11 +135,9 @@ function Get-Tr4wSearchPaths
       }
 
    # ui\lcl BEFORE src -- see the header. Harmless for the app (tr4w.lpr names
-   # its units with explicit paths) and load-bearing for the tests.
-   if ($For -ne 'Server')
-      {
-      $paths.Add((Join-Path $src 'ui\lcl'))
-      }
+   # its units with explicit paths) and load-bearing for the tests. Server has
+   # it too since it became an LCL application: uServerForm lives there.
+   $paths.Add((Join-Path $src 'ui\lcl'))
 
    $paths.Add($src)
    $paths.Add((Join-Path $src 'trdos'))
@@ -136,22 +148,19 @@ function Get-Tr4wSearchPaths
    $paths.Add((Join-Path $src 'contestFactory'))
    $paths.Add((Join-Path $src 'rotatorFactory'))
 
-   if ($For -ne 'Server')
-      {
-      # Lazarus ships an x86_64 fpc binary but carries LCL units for BOTH
-      # targets, and their PPU format matches FPC 3.2.2, so the i386 compiler
-      # consumes them directly -- no cross-compiler and no Lazarus fpc needed.
-      $paths.Add((Join-Path $laz "lcl\units\$cpu-$os"))
-      $paths.Add((Join-Path $laz "lcl\units\$cpu-$os\$os"))
-      $paths.Add((Join-Path $laz "components\lazutils\lib\$cpu-$os"))
-      $paths.Add((Join-Path $laz "packager\units\$cpu-$os"))
-      # TDateTimePicker for the Edit QSO date/time field. Lazarus ships
-      # datetimectrls but prebuilds it for x86_64 only, so this is the SOURCE
-      # directory -- FPC compiles datetimepicker.pas for i386 into our own
-      # output dir. Derived from LAZARUS_DIR like everything else above, so a
-      # fresh clone still builds.
-      $paths.Add((Join-Path $laz 'components\datetimectrls'))
-      }
+   # Lazarus ships an x86_64 fpc binary but carries LCL units for BOTH
+   # targets, and their PPU format matches FPC 3.2.2, so the i386 compiler
+   # consumes them directly -- no cross-compiler and no Lazarus fpc needed.
+   $paths.Add((Join-Path $laz "lcl\units\$cpu-$os"))
+   $paths.Add((Join-Path $laz "lcl\units\$cpu-$os\$os"))
+   $paths.Add((Join-Path $laz "components\lazutils\lib\$cpu-$os"))
+   $paths.Add((Join-Path $laz "packager\units\$cpu-$os"))
+   # TDateTimePicker for the Edit QSO date/time field. Lazarus ships
+   # datetimectrls but prebuilds it for x86_64 only, so this is the SOURCE
+   # directory -- FPC compiles datetimepicker.pas for i386 into our own
+   # output dir. Derived from LAZARUS_DIR like everything else above, so a
+   # fresh clone still builds.
+   $paths.Add((Join-Path $laz 'components\datetimectrls'))
 
    # regexpr supplies TRegExpr, which uRegex.pas uses in place of TPerlRegEx --
    # the vendored PCRE library is twenty Borland-format .obj files and FPC's

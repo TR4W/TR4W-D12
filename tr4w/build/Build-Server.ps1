@@ -34,21 +34,13 @@ if (-not (Test-Path $out)) { New-Item -ItemType Directory -Path $out | Out-Null 
 # Always a full build here, so always clear first -- see Clear-Tr4wUnitOutput.
 $cleared = Clear-Tr4wUnitOutput -OutDir $out
 if ($cleared -gt 0) { Write-Host "  cleared $cleared stale artifact(s) from $out" }
-# -dTR4W_NO_LCL: THE ONE THING THAT SAYS "this program has no widget set".
+# -dTR4W_NO_LCL IS GONE, and it lived for about two hours.
 #
-# tr4wserver is a console program and its search paths deliberately exclude the
-# LCL -- that exclusion is the only guard on the boundary (see CLAUDE.md, the
-# uCrashLog -> Forms edge that broke this build for nine days). When VC.pas
-# moved its types from Windows to LCLType on 2026-09-06 the server stopped
-# compiling within the minute, which is the guard working.
-#
-# VC needs HWND and friends from SOMEWHERE. Which one is a property of the
-# PROGRAM, not of the compiler or the platform, so it is a build-time define
-# rather than a {$IFDEF FPC}: that was the wrong axis last time and could not
-# have helped. On Windows both answers are the same types anyway -- LCLType's
-# HWND IS Windows.HWND there -- so this changes nothing but where the
-# declaration is read from.
-$fpcArgs = @("-Mdelphi", "-P$Cpu", "-T$Os", '-Sc', '-B', '-dTR4W_NO_LCL', "-FU$out", "-o$exe")
+# It existed because tr4wserver was the one program in this tree with no widget
+# set, so VC.pas had to be told where to read HWND from. tr4wserver is an LCL
+# application now (2026-09-06) and reads LCLType like everything else, so the
+# define has nothing to select and VC's branch on it is deleted with it.
+$fpcArgs = @("-Mdelphi", "-P$Cpu", "-T$Os", '-Sc', '-B', "-FU$out", "-o$exe")
 foreach ($p in (Get-Tr4wSearchPaths -Tr4wDir $TR4W_DIR -Toolchain $tc -For Server)) { $fpcArgs += "-Fu$p" }
 foreach ($p in (Get-Tr4wIncludePaths -Tr4wDir $TR4W_DIR)) { $fpcArgs += "-Fi$p" }
 $fpcArgs += 'tr4wserver.lpr'
@@ -134,16 +126,18 @@ function Test-PEHasDialogId
    return $false
 }
 
-if (-not (Test-PEHasDialogId -Path $exe -Id 100))
-   {
-   Write-Host "tr4wserver build FAILED -- DIALOG 100 is not in $exe" -ForegroundColor Red
-   Write-Host "  The program is a dialog: DialogBox(hInstance, MAKEINTRESOURCE(100), ...)." -ForegroundColor Red
-   Write-Host "  Without the template it starts, exits 0, and shows nothing." -ForegroundColor Red
-   Write-Host "  Check the {`$R} directives in tr4wserver.lpr -- FPC resolves them by" -ForegroundColor Red
-   Write-Host "  BASENAME, so a same-named .res anywhere on the path can shadow the right one." -ForegroundColor Red
-   exit 1
-   }
+# THE DIALOG ASSERTION IS RETIRED WITH THE DIALOG (2026-09-06).
+#
+# It checked that DIALOG 100 was really in the linked binary, because the whole
+# program was DialogBox(hInstance, MAKEINTRESOURCE(100), ...) and a missing
+# template made it start, exit 0 and show nothing -- which happened, and stayed
+# invisible for weeks. tr4wserver is an LCL application now: its window is
+# uServerForm.lfm, streamed by the LCL, and a missing form is a loud run-time
+# error rather than a silent exit.
+#
+# Test-PEHasDialogId is kept above and unused ON PURPOSE. It is forty lines of
+# PE resource-directory walking that took real effort to get right, the client
+# still ships dialog resources, and deleting it would mean writing it again.
 
 Write-Host "BUILD OK -> $exe"
-Write-Host "  DIALOG 100 present in the binary"
 exit 0

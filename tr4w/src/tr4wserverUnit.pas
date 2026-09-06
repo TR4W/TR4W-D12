@@ -33,6 +33,8 @@ uses
   TF,
   uCRC32,
   uComputerID,   // the station-id rule, kept away from the sockets so it can be tested
+  Classes,       // TStringList -- the client list is built and handed over whole
+  uServerForm,   // the readouts, by name instead of by control number
   Messages;
 const
 
@@ -201,6 +203,10 @@ var
   ClientsSoocketsArray                  : array[1..MAXCLIENTS] of TClientEntry;
   ServerBuffer                          : array[0..4096 - 1] of AnsiChar;
   tr4wServerPassword                    : array[0..010] of AnsiChar;
+  (* The message-only window that receives WM_SOCK_*. Owned by the program
+    (tr4wserver.lpr); declared here because RunServer and RunSyncListener are
+    the ones that name it in WSAAsyncSelect. Goes when Indy lands. *)
+  ServerSocketSink                      : HWND = 0;
   ServerLogFileName                     : array[0..255] of AnsiChar;
 {$IF SERVERDEBUG}
   ServerDebugFileName                   : array[0..255] of Char;
@@ -329,7 +335,8 @@ begin
      goto UnSucc;
      end;
 
-  WSAAsyncSelect(ListenerSocket, ApplicationHandle, WM_SOCK_NET_SYNLISTNER, FD_ACCEPT);
+  { The SINK, not the form -- see RunServer. }
+  WSAAsyncSelect(ListenerSocket, ServerSocketSink, WM_SOCK_NET_SYNLISTNER, FD_ACCEPT);
   Result := True;
   Exit;
   UnSucc:
@@ -367,7 +374,7 @@ begin
 //  Windows.ZeroMemory(@ClientsSoocketsArray, SizeOf(ClientsSoocketsArray));
   Gethostname(@ServerBuffer, 128);
   myhostent := WinSock2.gethostbyname(@ServerBuffer);
-  Windows.SendDlgItemMessageA(ApplicationHandle, tsIPADDRESS, WM_SETTEXT, 0, integer(iNet_ntoa(PInAddr(myhostent^.h_addr_list^)^)));
+  SetServerIP(String(PAnsiChar(iNet_ntoa(PInAddr(myhostent^.h_addr_list^)^))));
   ServerSocket := socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if ServerSocket = INVALID_SOCKET then Exit;
   mysaddr.sin_family := AF_INET;
@@ -391,9 +398,10 @@ begin
      begin
      goto UnSucc;
      end;
-  Windows.EnableWindow(GetDlgItem(ApplicationHandle, 103), False);
-  Windows.EnableWindow(GetDlgItem(ApplicationHandle, 104), True);
-  WSAAsyncSelect(ServerSocket, ApplicationHandle, WM_SOCK_NET_ACCEPT, FD_ACCEPT);
+  { ONE state, not two enables kept in step by hand -- see SetServerRunning. }
+  SetServerRunning(True);
+  { The SINK, not the form: socket events are not UI messages. }
+  WSAAsyncSelect(ServerSocket, ServerSocketSink, WM_SOCK_NET_ACCEPT, FD_ACCEPT);
 //  SetServerIcon(IDI_APPLICATION);
 //  DisplayClients;
   Exit;
@@ -408,11 +416,11 @@ var
 begin
   for i := 1 to maxclients do if ClientsSoocketsArray[i].clSocket <> 0 then
                                  begin
-                                 WSAAsyncSelect(ClientsSoocketsArray[i].clSocket, ApplicationHandle, 0, 0);
+                                 WSAAsyncSelect(ClientsSoocketsArray[i].clSocket, ServerSocketSink, 0, 0);
                                  closesocket(ClientsSoocketsArray[i].clSocket);
                                  ClientsSoocketsArray[i].clSocket := 0;
                                  end;
-  WSAAsyncSelect(ServerSocket, ApplicationHandle, 0, 0);
+  WSAAsyncSelect(ServerSocket, ServerSocketSink, 0, 0);
   closesocket(ServerSocket);
   nclients := 0;
 end;
@@ -466,42 +474,58 @@ begin
        end;
 end;
 
+(* THE FOUR READOUTS. Each was a control NUMBER written straight into the
+  Win32 dialog -- 108, 112, 109, 115 -- with the meaning of the number living in
+  a .res nobody could open in a designer. They name what they are reporting now
+  and uServerForm decides where it appears; see that unit's header. *)
+
 procedure DisplayRCVDBytes;
 begin
+  { Still throttled to whole kilobytes. This fires on EVERY recv, so the guard
+    is not cosmetic -- it is why a busy multi-op does not repaint per packet. }
   if (BytesRCVD - LastDisplayedBytesRCVD) < 1024 then Exit;
-  SetDlgItemInt(ApplicationHandle, 108, BytesRCVD div 1024, False);
+  SetBytesReceivedKB(BytesRCVD div 1024);
   LastDisplayedBytesRCVD := BytesRCVD
 end;
 
 procedure DisplaySENDBytes;
 begin
   if (BytesSEND - LastDisplayedBytesSEND) < 1024 then Exit;
-  SetDlgItemInt(ApplicationHandle, 112, BytesSEND div 1024, False);
+  SetBytesSentKB(BytesSEND div 1024);
   LastDisplayedBytesSEND := BytesSEND;
 end;
 
 procedure DisplayClients;
 var
-  i                                     : integer;
-  s1, s2                                : PChar;
+  i     : integer;
+  lines : TStringList;
 begin
-  Windows.SendDlgItemMessage(ApplicationHandle, 109, LB_RESETCONTENT, 0, 0);
-  for i := 1 to maxclients do
-    if ClientsSoocketsArray[i].clSocket <> 0 then
-       begin
-       TF.Format(DisplayBuffer, '%s: %s', ClientsSoocketsArray[i].clIPAdr, ClientsSoocketsArray[i].clName);
-       Windows.SendDlgItemMessageA(ApplicationHandle, 109, LB_ADDSTRING, 0, integer(@DisplayBuffer));
-       end;
+  (* THE WHOLE LIST AT ONCE. This was LB_RESETCONTENT followed by one
+    LB_ADDSTRING per client, built through TF.Format into a shared AnsiChar
+    buffer. A TStringList says the same thing and the form assigns it in one
+    step, so there is no window in which the list is half-rebuilt. *)
+  lines := TStringList.Create;
+  try
+     for i := 1 to maxclients do
+       if ClientsSoocketsArray[i].clSocket <> 0 then
+          begin
+          lines.Add(Format('%s: %s',
+                           [String(PAnsiChar(@ClientsSoocketsArray[i].clIPAdr[0])),
+                            String(PAnsiChar(@ClientsSoocketsArray[i].clName[0]))]));
+          end;
+     SetClientList(lines);
+  finally
+     lines.Free;
+  end;
 
-  TF.Format(DisplayBuffer, 'TR4WSERVER [%d]', nclients);
-  Windows.SetWindowTextA(ApplicationHandle, DisplayBuffer);
-  Windows.SetDlgItemInt(ApplicationHandle, tsCLIENTS, nclients, False);
+  { The count, and the title bar with it -- see SetClientCount. }
+  SetClientCount(nclients);
 end;
 
 procedure DisplayServerLogSize;
 begin
   ServerCRC32Changed := True;
-  SetDlgItemInt(ApplicationHandle, 115, (Windows.GetFileSize(ServerLogHandle, nil) - 4) div SizeOf(ContestExchange), False);
+  SetServerLogQSOs((Windows.GetFileSize(ServerLogHandle, nil) - 4) div SizeOf(ContestExchange));
 end;
 {
 procedure SetServerIcon(Icon: PChar);

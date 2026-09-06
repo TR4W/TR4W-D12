@@ -140,6 +140,21 @@ $lints = @(
    # Phase 0 of the TMainMenu migration, so anything it finds later is
    # attributable to that work rather than pre-existing.
    @{ Name = 'Lint-MenuDispatch';    Arg = $src;     NeedsFpc = $false }
+
+   # THE SUCCESSOR TO THE SERVER'S LCL EXCLUSION (2026-09-06).
+   #
+   # tr4wserver was the one program here with no widget set, and the LCL's
+   # absence from its search paths was the only AUTOMATIC check that a unit had
+   # not quietly grown a widget-set dependency. It caught VC.pas moving to
+   # LCLType within a minute; its absence let uCrashLog -> Forms hide for three
+   # days. tr4wserver is an LCL application now, so that guard has nothing left
+   # to guard.
+   #
+   # This replaces it: a pinned set of units that must still compile for
+   # x86_64-linux. Same class of defect -- a unit acquiring a platform
+   # dependency -- against the platform that now matters. It SKIPS, loudly, on a
+   # machine with no cross compiler (docs/CROSS_COMPILING.md).
+   @{ Name = 'Lint-LinuxCompile';    Arg = $null;    NeedsFpc = $false }
 )
 
 $failed  = 0

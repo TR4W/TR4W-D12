@@ -4,6 +4,14 @@
 
 {$IMPORTEDDATA OFF}
 uses
+  (* Interfaces FIRST, and it must be: it is what links the widget set. Without
+    it the program compiles and fails at the LINK with a page of
+    "Undefined symbol: WSRegisterMenuItem" -- the LCL's widgetset registration
+    hooks, which only the interfaces unit supplies. *)
+  Interfaces,
+  Forms,
+  Classes,        // AllocateHWnd -- the socket sink; see the header
+  uServerForm,    // the window, at last a designed one
   Windows,
   Messages,
   SysUtils,
@@ -13,33 +21,23 @@ uses
   Log4D,        // the dialog proc logs through tr4wserverUnit's logger
   VC in '..\src\vc.pas';
 
-{ TWO resources, and their FILENAMES MUST DIFFER.
+(* THE DIALOG RESOURCE IS GONE, AND WITH IT A WHOLE CLASS OF FAILURE.
 
-  FPC resolves a resource directive by BASENAME -- written here without its
-  braces, since a directive inside a brace comment closes the comment. It uses
-  the directory as a search hint, not a
-  constraint, and the compilation runs with the server directory as the working
-  directory -- so while the dialog resource was also called tr4wserver.res, the
-  directive below found the SIBLING of that name (the Lazarus project resource,
-  icons) and linked it instead. No warning: FPC compiled a resource, the link
-  succeeded, and the binary simply had no DIALOG in it.
+  There used to be two resources here, and a long note about why their file
+  NAMES had to differ: FPC resolves a resource directive by BASENAME and treats
+  the directory as a hint, so when the Lazarus project resource arrived also
+  called tr4wserver.res it shadowed the dialog one. The program then linked,
+  started, found no DIALOG 100, fell out of end. and exited 0 with no window and
+  nothing in any log. That was live for weeks, and invisible because the server
+  had stopped compiling in the meantime.
 
-  The program is a dialog: its whole body is
+  The window is a designed form now, streamed by the LCL from uServerForm, so
+  there is no template to shadow and a missing form is a loud run-time error
+  instead of a silent exit.
 
-      DialogBox(hInstance, MAKEINTRESOURCE(100), 0, @TR4wServerDlgProc);
-
-  DialogBox returns -1 for a template it cannot find, the program falls out of
-  end., and the process exits 0 with no window and nothing in any log. That is
-  what "tr4wserver quit immediately" was.
-
-  Live since 2026-08-13, when 820ef560 added the Lazarus tr4wserver.res -- and
-  invisible because the server stopped compiling ten days later and nobody ran
-  it in between.
-
-  So the dialog file is res\tr4wserver_dialog.res now, which no sibling shadows.
-  Build-Server.ps1 asserts the linked binary really has DIALOG 100; a resource
-  that goes missing again fails the build instead of the program. }
-{$R res\tr4wserver_dialog.res}   // DIALOG 100 -- the server's main window
+  res\tr4wserver_dialog.res is left on disk rather than deleted: it is the only
+  record of what the original window looked like, and the conversion wants
+  checking against it on the bench before it goes. *)
 {$R *.res}                       // the Lazarus project resource -- icons
 
 function TR4wServerDlgProc(hwnddlg: HWND; uMsg: UINT; wp: wParam; lp: lParam): BOOL; stdcall;
@@ -449,7 +447,9 @@ begin
             AddSocketToArray(client_socket, WinSock2.iNet_ntoa(client_addr.sin_addr), myhostent.h_Name);
 
           DisplayClients;
-          WinSock2.WSAAsyncSelect(client_socket, hwnddlg, WM_SOCK_NET_RX, FD_READ or FD_CLOSE or FD_CONNECT);
+          { ServerSocketSink, not hwnddlg: the socket sink is the window that
+            answers WM_SOCK_*, and this arm may be entered from either. }
+          WinSock2.WSAAsyncSelect(client_socket, ServerSocketSink, WM_SOCK_NET_RX, FD_READ or FD_CLOSE or FD_CONNECT);
 //          SendMFToClients;
           SendLogFileInformation(client_socket);
           SerialNumbersChanged;
@@ -458,9 +458,101 @@ begin
   end;
 end;
 
+(* THE SOCKET SINK.
+
+  WSAAsyncSelect delivers FD_ACCEPT, FD_READ and FD_CLOSE as WINDOW MESSAGES,
+  so the transport needs an HWND. This is the smallest one that will do: a
+  message-only window from AllocateHWnd whose only job is to hand those three
+  messages to the same dialog procedure that has always answered them.
+
+  NOT THE FORM'S HANDLE. Routing socket events through the form would make the
+  form part of the transport -- the entanglement this change exists to undo --
+  and uServerForm's header says it does not know what a socket is.
+
+  THIS WHOLE CLASS IS WHAT THE INDY CHANGE DELETES. One window, one method. *)
+type
+   TSocketSink = class
+      procedure WndProc(var aMsg: TMessage);
+   end;
+
+procedure TSocketSink.WndProc(var aMsg: TMessage);
+begin
+   case aMsg.Msg of
+     WM_SOCK_NET_RX,
+     WM_SOCK_NET_ACCEPT,
+     WM_SOCK_NET_SYNLISTNER:
+        begin
+        TR4wServerDlgProc(ServerSocketSink, aMsg.Msg, aMsg.WParam, aMsg.LParam);
+        aMsg.Result := 0;
+        end;
+   else
+     aMsg.Result := DefWindowProc(ServerSocketSink, aMsg.Msg,
+                                  aMsg.WParam, aMsg.LParam);
+   end;
+end;
+
+var
+   GSink: TSocketSink = nil;
+
+(* The operator pressed Stop, or closed the window.  The question is the
+  dialog's, word for word -- only the engine knows whether anyone is
+  connected. *)
+function ConfirmStop: boolean;
+begin
+   Result := True;
+   if nclients <> 0 then
+      begin
+      Result := ServerMessageBox(
+         'Do you really want to disconnect servers`s clients?',
+         MB_YESNO or MB_ICONQUESTION or MB_TOPMOST or MB_DEFBUTTON2) <> IDNO;
+      end;
+end;
+
+procedure RequestStop;
+begin
+   { The WM_CLOSE arm, reached by a call rather than by a message: StopServer,
+     FreeLibrary(MSWSOCK_DLL), WSACleanup.  Its PostQuitMessage is harmless
+     here -- Application.Terminate is what actually ends the loop. }
+   TR4wServerDlgProc(ServerSocketSink, WM_CLOSE, 0, 0);
+end;
+
+procedure RequestStart;
+begin
+   { Start was disabled from the moment the server came up, so this is only
+     reachable if a future change re-enables it.  RunServer is idempotent
+     enough to say so rather than to be silently ignored. }
+   logger.Warn('Start pressed while the server is already listening -- ignored');
+end;
+
 begin
   if CreateMutex(nil, False, _TR4WSERVER) = 0 then Exit;
   if GetLastError = ERROR_ALREADY_EXISTS then Exit;
-  DialogBox(hInstance, MAKEINTRESOURCE(100), 0, @TR4wServerDlgProc);
+
+  Application.Initialize;
+  Application.CreateForm(TfrmServer, frmServer);
+
+  { The sink BEFORE start-up: RunServer's WSAAsyncSelect names it. }
+  GSink := TSocketSink.Create;
+  ServerSocketSink := Classes.AllocateHWnd(GSink.WndProc);
+
+  ServerStopQuery      := @ConfirmStop;
+  ServerStopRequested  := @RequestStop;
+  ServerStartRequested := @RequestStart;
+
+  SetServerVersion(FullServerVersion);
+
+  { WM_INITDIALOG, by name.  It reads the ini, opens the log, binds and
+    listens -- everything the dialog did before its window appeared. The FORM's
+    handle, because ApplicationHandle is what ServerMessageBox parents to. }
+  TR4wServerDlgProc(frmServer.Handle, WM_INITDIALOG, 0, 0);
+
+  Application.Run;
+
+  if ServerSocketSink <> 0 then
+     begin
+     Classes.DeallocateHWnd(ServerSocketSink);
+     ServerSocketSink := 0;
+     end;
+  GSink.Free;
 end.
 

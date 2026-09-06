@@ -38,19 +38,14 @@ uses
     rather than a rewrite. THandle is System's and TRect is Types', both
     portable.
 
-    TWO CONDITIONALS, ASKING TWO DIFFERENT QUESTIONS. Getting them confused is
-    how the server build broke within a minute of this change.
+    TR4W_NO_LCL IS GONE AND THE STORY IS SHORT. For about two hours VC chose
+    between LCLType and Windows on a define Build-Server.ps1 set, because
+    tr4wserver was the one program here with no widget set. It is an LCL
+    application now (2026-09-06) and reads LCLType like everything else, so
+    there is nothing left to choose.
 
-    TR4W_NO_LCL asks WHICH PROGRAM. Build-Server.ps1 sets it and nothing else
-    does: tr4wserver is a console program whose unit search paths exclude the
-    LCL deliberately -- that exclusion is the only guard on the boundary, and
-    it is what caught this. It cannot see LCLType, so it reads the same
-    declarations from Windows. Not {$IFDEF FPC}: which compiler is the wrong
-    axis for "does this program have a widget set", and CLAUDE.md records the
-    time that mistake cost nine days.
-
-    WINDOWS asks WHICH PLATFORM, and gates FOUR API STRUCTS that LCLType does
-    not carry and should not:
+    The remaining conditional asks WHICH PLATFORM, and gates FOUR API STRUCTS
+    that LCLType does not carry and should not:
 
       SYSTEMTIME     the program's clock (UTC) -- and tsTime, A FIELD OF THE
                      LOG RECORD, so its layout is on disk in every .TRW an
@@ -66,13 +61,9 @@ uses
     -- all of them Windows-only code -- then fail loudly and in the right place
     instead of inheriting a dependency from the tree's TYPE unit. *)
 
-  {$IFDEF TR4W_NO_LCL}
-  Windows,
-  {$ELSE}
   LCLType,
-    {$IFDEF WINDOWS}
-    Windows,
-    {$ENDIF}
+  {$IFDEF WINDOWS}
+  Windows,
   {$ENDIF}
   Types,
   Log4D,
