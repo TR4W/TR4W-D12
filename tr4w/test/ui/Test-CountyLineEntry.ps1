@@ -307,7 +307,14 @@ try
       {
       Write-Output 'Test-CountyLineEntry: INCONCLUSIVE -- no "[LogContact] QSO" line at all.'
       Write-Output '  Either nothing was logged, or debug logging is off.'
-      Write-Output '  Set DEBUG LOG LEVEL = DEBUG under [COMMANDS] in settings\tr4w.ini and re-run.'
+      # NOT tr4w.ini, and NOT the contest .cfg. The level is a STRUCTURED
+      # store key -- StartupLogLevel reads root['logging']['level'] out of
+      # settings\tr4w.json during start-up. tr4w.ini stores nothing any
+      # more, and a DEBUG LOG LEVEL line in the .cfg is accepted and logged
+      # as "overrides the stored value for this contest" while changing
+      # nothing: the logger's level is already fixed by then (measured
+      # 2026-09-06 -- 86 debug lines, zero trace).
+      Write-Output '  Set "level" : "DEBUG" in the logging section of settings\tr4w.json and re-run.'
       $rc = 2
       }
    else

@@ -171,13 +171,13 @@ var
   window. Phase 3c then moves the keyboard onto this control's own events and
   DELETES the Msg.HWND comparisons -- which it can only do once the control is
   an LCL control able to raise them. }
-function CreateTR4WEntryField(const aLeft, aTop, aWidth, aHeight: integer;
-                              const aId: integer;
-                              const aBorder: boolean;
-                              const aField: TTR4WEntryField;
-                              const aFontName: string = '';
-                              const aFontHeight: integer = 0;
-                              const aFontBold: boolean = False): HWND;
+procedure CreateTR4WEntryField(const aLeft, aTop, aWidth, aHeight: integer;
+                               const aId: integer;
+                               const aBorder: boolean;
+                               const aField: TTR4WEntryField;
+                               const aFontName: string = '';
+                               const aFontHeight: integer = 0;
+                               const aFontBold: boolean = False);
 
 { Creates the main form and returns its handle, which becomes tr4whandle.
   aMenu is TR4W's own menu, built by CreateTR4WMenu -- CreateWindowExW used to
@@ -218,8 +218,8 @@ procedure ShowTR4WMainForm;
   The DRAWING is attached by the caller through TR4WMainForm.lstPossibleCall: it
   reads PossibleCallList and the colour table, which this unit has no business
   knowing about. }
-function CreateTR4WPossibleCallList(const aLeft, aTop, aWidth, aHeight,
-                                    aId, aItemHeight, aColumnWidth: integer): HWND;
+procedure CreateTR4WPossibleCallList(const aLeft, aTop, aWidth, aHeight,
+                                     aId, aItemHeight, aColumnWidth: integer);
 
 
 (* THE EDITABLE LOG -- the contest log on the main window.
@@ -2165,10 +2165,9 @@ begin
       end;
 end;
 
-function CreateTR4WPossibleCallList(const aLeft, aTop, aWidth, aHeight,
-                                    aId, aItemHeight, aColumnWidth: integer): HWND;
+procedure CreateTR4WPossibleCallList(const aLeft, aTop, aWidth, aHeight,
+                                     aId, aItemHeight, aColumnWidth: integer);
 begin
-   Result := 0;
    if TR4WMainForm = nil then
       begin
       Exit;
@@ -2205,18 +2204,17 @@ begin
       // either -- it indexes PossibleCallList by the item's ORDINAL.  This
       // list's whole job is to have the right NUMBER of items.  Giving them
       // captions would invent a second source of truth for what each row says.
-      Result := Handle;
       end;
 end;
 
 
-function CreateTR4WEntryField(const aLeft, aTop, aWidth, aHeight: integer;
-                              const aId: integer;
-                              const aBorder: boolean;
-                              const aField: TTR4WEntryField;
-                              const aFontName: string = '';
-                              const aFontHeight: integer = 0;
-                              const aFontBold: boolean = False): HWND;
+procedure CreateTR4WEntryField(const aLeft, aTop, aWidth, aHeight: integer;
+                               const aId: integer;
+                               const aBorder: boolean;
+                               const aField: TTR4WEntryField;
+                               const aFontName: string = '';
+                               const aFontHeight: integer = 0;
+                               const aFontBold: boolean = False);
 var
    edit: TEdit;
 begin
@@ -2316,8 +2314,6 @@ begin
          end;
       end;
 
-   Result := edit.Handle;
-
    (* THE DIALOG CONTROL ID IS FOR THE UI TEST HARNESSES, and it is the reason
      this raw call stays.
 
@@ -2338,17 +2334,44 @@ begin
      PowerShell calling user32. On macOS or Linux there is neither a dialog id
      nor a script asking for one.
 
-     AUTOIT IS NOT THE WAY OUT OF THIS, and this comment said it was: that NY4I
-     was trialling AutoIt "in place of GetDlgCtrlID" (2026-09-06). AutoIt's
-     ControlID *is* GetDlgCtrlID -- ControlSetText and ControlClick resolve a
-     control by reading the same user32 window attribute this line writes, so
-     deleting the line loses the field for AutoIt exactly as it does for
-     Test-Typing.ps1. Its other way of naming a control, ClassNameNN, is worse
-     here rather than better: every LCL control reports the Win32 class
-     'Window' -- hardcoded in the widgetset with no override, measured in
-     test\ui\UiDriver.psm1 -- so the entry fields would be addressed by
-     enumeration order among a hundred and ten identically-classed siblings,
-     which is the brittle binding a stable id exists to avoid.
+     AUTOIT CAN ADDRESS THESE FIELDS WITHOUT THIS LINE, so it is a real option
+     and not a dead end. NY4I is trialling it (2026-09-06) and demonstrated it
+     against a running v5.0.2.
+
+     Half of that is worth stating carefully, because an earlier version of this
+     comment got it wrong in both directions. AutoIt's ControlID *is*
+     GetDlgCtrlID, so its id-based targeting does die with this line. But its
+     OTHER way of naming a control, ClassNameNN, does not -- a TEdit is a NATIVE
+     Win32 EDIT control under the win32 widgetset, so AutoIt sees class 'Edit'
+     and can take the callsign field as instance 2 of it. The claim that "every
+     LCL control reports the class Window" was an over-generalisation from the
+     FORM's class and is false for this control.
+
+     MEASURED on the running program, 2026-09-06, by attaching
+     test\ui\Dump-WindowTree.ps1 to it -- 167 windows in the process:
+
+       Window  140     (the form and every TElementPanel)
+       Button    8
+       Edit      4     id 1001, 1001 on the DX Cluster window
+                       id   88 (exchange), 73 (callsign) on the main window
+
+     WHAT THE ID BUYS IS THE FAILURE MODE, NOT THE ACCESS. An instance number is
+     ENUMERATION ORDER, and enumeration order here is not creation order: this
+     unit is asked for the callsign field first (MainUnit calls for mweCall
+     before mweExchange) and the callsign field enumerates SECOND. The number is
+     a z-order artifact.
+
+     That matters because of the trap documented forty lines above -- assigning
+     Font after this line RECREATES the handle. A recreated handle moves in the
+     z-order, so the same event that produced "no control with id 73 (the
+     callsign window)" and pointed straight at the cause would instead silently
+     renumber the instances. Keystrokes would land in the exchange field,
+     ExchangeWindowKeyDownProc does not emit the trace Test-Typing.ps1 asserts
+     on, and the test would fail as "the keyboard is not routed" -- true-looking,
+     loud, and aimed at the wrong subsystem.
+
+     So this is a trade, not an impossibility: an id fails truthfully, an
+     instance fails misleadingly, and the id costs one gated line.
 
      WHAT DOES RETIRE THIS LINE is an in-process channel, because the id is
      only half of what ties the harness to Windows. The other half is
@@ -2363,8 +2386,15 @@ begin
      no TCI knowledge -- is the intended carrier for the same idea driven from
      outside. When Test-Typing.ps1 and Test-CountyLineEntry.ps1 stop walking
      child windows this goes entirely rather than staying behind a gate. *)
+   (* edit.Handle READ HERE, inside the gate, rather than into a Result the
+     caller never wanted. This used to be `Result := edit.Handle` forty lines
+     up, which made every caller hold an HWND so that this one Windows-only
+     line could have one -- and the only place any of them went was wh[], which
+     nothing read. Reading it here still forces handle creation at the same
+     point in the sequence, so the font-before-handle ordering above is
+     unaffected. *)
    {$IFDEF WINDOWS}
-   Windows.SetWindowLong(Result, GWL_ID, aId);
+   Windows.SetWindowLong(edit.Handle, GWL_ID, aId);
    {$ENDIF}
 end;
 

@@ -194,7 +194,14 @@ try
    # -- so say which it is.
    if ($seen.Count -eq 0) {
       Write-Output 'Test-Typing: INCONCLUSIVE -- no CallWindowKeyDownProc trace at all.'
-      Write-Output '  Set DEBUG LOG LEVEL = TRACE under [COMMANDS] in settings\tr4w.ini and re-run.'
+      # NOT tr4w.ini, and NOT the contest .cfg. The level is a STRUCTURED
+      # store key -- StartupLogLevel reads root['logging']['level'] out of
+      # settings\tr4w.json during start-up. tr4w.ini stores nothing any
+      # more, and a DEBUG LOG LEVEL line in the .cfg is accepted and logged
+      # as "overrides the stored value for this contest" while changing
+      # nothing: the logger's level is already fixed by then (measured
+      # 2026-09-06 -- 86 debug lines, zero trace).
+      Write-Output '  Set "level" : "TRACE" in the logging section of settings\tr4w.json and re-run.'
       $rc = 2
    }
    elseif (($seen -join '') -eq $Text.ToUpper()) {

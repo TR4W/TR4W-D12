@@ -870,7 +870,6 @@ var
 //  DomesticMultIsRussianOblast           : boolean;
 
   AlertColor                            : tr4wColors = trAlert;
-  wh                                    : array[TMainWindowElement] of HWND;
 
   TWindows                              : array[TMainWindowElement] of TMainWindowElementInfo =
     (

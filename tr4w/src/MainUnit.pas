@@ -291,7 +291,7 @@ procedure tExchangeWindowSetFocus;
 procedure tRuntPaddleAndFootSwitchThread;
 //procedure TryToLoadRICHED32DLL;
 procedure InitializeQSO;
-function CreateCallOrExchangeWin(Top, ID: integer; const aField: TTR4WEntryField): HWND;
+procedure CreateCallOrExchangeWin(Top, ID: integer; const aField: TTR4WEntryField);
 procedure TimeApplet(i: Cardinal);
 
 { ASK THE OPERATOR, WITHOUT AN HWND.
@@ -4008,7 +4008,6 @@ begin
   tr4whandle := CreateTR4WMainForm(tr4w_main_menu);
   tr4w_WindowsArray[tw_MAINWINDOW_INDEX].WndHandle := tr4whandle;
 
-  wh[mweWholeScreen] := tr4whandle;
   (* THE EDITABLE LOG IS AN LCL GRID -- see uLogGrid.
 
     IT HAS NO WINDOW HANDLE. wh[mweEditableLog] is not assigned and nothing
@@ -4137,7 +4136,7 @@ begin
      SetElementFont(mweQSONumber, 'Lucida Console', ws + 3, True);
      end;
 
-  wh[mweCall] := CreateCallOrExchangeWin(EditableLogHeight + ws * 8 {Line2},
+  CreateCallOrExchangeWin(EditableLogHeight + ws * 8 {Line2},
     CALLSIGNWINDOWID, efCall);
 
 {$IF OZCR2008}
@@ -4160,7 +4159,7 @@ begin
   SetProgressBounds(mpbRate, ws * 33 {col8},
     EditableLogHeight + 10 * ws {Line4}, 5 * ws, ws);
 
-  wh[mweExchange] := CreateCallOrExchangeWin(EditableLogHeight + ws * 8
+  CreateCallOrExchangeWin(EditableLogHeight + ws * 8
     {+ round(ws * 1.5)} + MainWindowEditHeight + 1, EXCHANGEWINDOWID, efExchange);
 
   TR4WExchangeEdit.MaxLength := 35;   // created immediately above
@@ -4193,7 +4192,7 @@ begin
   //
   // What moved: WM_MEASUREITEM and WM_DRAWITEM were answered by the main window
   // proc for this one control id, and are now ItemHeight and OnDrawItem.
-  wh[mwePossibleCall] := CreateTR4WPossibleCallList(
+  CreateTR4WPossibleCallList(
     0, EditableLogHeight + ws * 13 {line6}, MainWindowChildsWidth, ws,
     MainWindowPCLID, ws, 5 * ws {the old LB_SETCOLUMNWIDTH});
   SetPossibleCallFont(string(MainFontName),
@@ -7347,7 +7346,7 @@ begin
      end;
 end;
 
-function CreateCallOrExchangeWin(Top, ID: integer; const aField: TTR4WEntryField): HWND;
+procedure CreateCallOrExchangeWin(Top, ID: integer; const aField: TTR4WEntryField);
 begin
   // PHASE 3b: an LCL TEdit, addressed by its Handle exactly as before.  The
   // message loop still routes keystrokes by comparing Msg.HWND against
@@ -7361,17 +7360,17 @@ begin
   // 2026-08-28). Same three numbers MainWindowEditFont is built from.
   if LuconSZLoadded then
      begin
-     Result := CreateTR4WEntryField(ws * 15 {col4}, Top, 13 * ws,
-                                    MainWindowEditHeight, ID,
-                                    not Config.NoBorder, aField,
-                                    'Lucida Console SZ', ws + 3, True);
+     CreateTR4WEntryField(ws * 15 {col4}, Top, 13 * ws,
+                          MainWindowEditHeight, ID,
+                          not Config.NoBorder, aField,
+                          'Lucida Console SZ', ws + 3, True);
      end
   else
      begin
-     Result := CreateTR4WEntryField(ws * 15 {col4}, Top, 13 * ws,
-                                    MainWindowEditHeight, ID,
-                                    not Config.NoBorder, aField,
-                                    'Lucida Console', ws + 3, True);
+     CreateTR4WEntryField(ws * 15 {col4}, Top, 13 * ws,
+                          MainWindowEditHeight, ID,
+                          not Config.NoBorder, aField,
+                          'Lucida Console', ws + 3, True);
      end;
   // THE SHAPE, NOT AN HFONT.  tWM_SETFONT(Result, MainWindowEditFont) sent a
   // WM_SETFONT to an LCL TEdit, which paints from its own TFont and ignores it,
@@ -7379,7 +7378,22 @@ begin
   // MainFont -- the call window read smaller than the band, date and time
   // beside it (NY4I, 2026-08-28).  Same three numbers MainWindowEditFont is
   // created from: ws + 3, extra-bold, Lucida Console (SZ when it loaded).
-  SendMessage(Result, EM_LIMITTEXT, 12, 0);
+  (* EM_LIMITTEXT IS MaxLength, and the idiom was already three lines from
+    here. This was SendMessage(Result, EM_LIMITTEXT, 12, 0) -- reaching for the
+    control by handle -- while the line immediately below this routine's second
+    call site says TR4WExchangeEdit.MaxLength := 35. Same control, same
+    property, one of them going through a window handle.
+
+    Unchanged in effect: both fields were limited to 12 here and the exchange
+    was then raised to 35 by its caller, and both still are. *)
+  if aField = efCall then
+     begin
+     TR4WCallEdit.MaxLength := 12;
+     end
+  else
+     begin
+     TR4WExchangeEdit.MaxLength := 12;
+     end;
 end;
 
 procedure TimeApplet(i: Cardinal);
