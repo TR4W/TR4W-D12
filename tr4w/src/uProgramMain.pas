@@ -1462,7 +1462,9 @@ begin
     single-instance check, which is a string and not a window class. *)
 
   //tr4w_main_menu := LoadMenu(hInstance, 'T');
-  tr4w_main_menu := CreateTR4WMenu(@T_MENU_ARRAY, T_MENU_ARRAY_SIZE, False);
+  (* NO HMENU IS BUILT HERE ANY MORE. The main window builds its own menu,
+    as a TMainMenu from the same T_MENU_ARRAY -- see
+    uMenu.BuildTR4WMainMenu and CreateTR4WMainForm. *)
 
 {$IFDEF AUTOSPOT}
    ShowMessage(TC_AUTOSPOTENABLEDTESTMODEONLY); // Hard on relays - be careful
@@ -1715,7 +1717,11 @@ begin
      // program whether or not the band map existed.  The band map form owns
      // a TTimer now -- a window refreshes itself, and the timer lives and
      // dies with the window.
-     for c := menu_alt_increment_time_1 to menu_alt_increment_time_0 do EnableMenuItem(tr4w_main_menu, c, MF_GRAYED + MF_BYCOMMAND);
+     { Hand-log mode: the time-increment rows do nothing, so grey them. }
+     for c := menu_alt_increment_time_1 to menu_alt_increment_time_0 do
+        begin
+        SetMenuEnabled(c, False);
+        end;
      end
   else
      begin

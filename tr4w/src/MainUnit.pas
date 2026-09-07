@@ -418,6 +418,22 @@ procedure RepeatLastCWMessage;
   in the CAT dialog. Safe when a panel is closed. }
 procedure RefreshRadioWindowCaptions;
 
+(* SET A MENU ITEM'S ENABLED / CHECKED / CAPTION BY COMMAND ID, or do nothing
+  if the menu has no such row.
+
+  These replace CheckMenuItem / EnableMenuItem / ModifyMenu on the menu HANDLE.
+  MenuItemById answers nil for an id the menu does not contain, and that is an
+  ORDINARY outcome here -- the POTA rows are hidden outside a POTA contest, and
+  the window menu is asked about ids a given build may not have. Reaching a nil
+  would be an access violation inside a menu handler, so the guard lives in one
+  place rather than at twenty call sites. *)
+procedure SetMenuEnabled(const aId: word; const aEnabled: boolean);
+procedure SetMenuChecked(const aId: word; const aChecked: boolean);
+procedure SetMenuCaption(const aId: word; const aText: string);
+
+{ The item's caption, or '' when the menu has no such row. }
+function MenuCaption(const aId: word): string;
+
 procedure OpenTR4WWindow(ID: WindowsType);
 procedure OpenOtherWindows;
 procedure CloseTR4WWindow(ID: WindowsType);
@@ -547,6 +563,7 @@ const
 implementation
 
 uses
+  Menus,              // TMenuItem -- the menu is a TMainMenu now
    uWindowTable,   { tr4w_WindowsArray, tWindowsExist -- moved out of VC/TF }
   { The SQLite shadow -- an IMPLEMENTATION-section use, so no interface
     cycle. It never raises and never blocks logging: see uLogStore. }
@@ -3933,7 +3950,7 @@ begin
   //                      WS_SYSMENU or WS_MINIMIZEBOX,
   //                      0, 30, MainWindowWidth, 0, 0, tr4w_main_menu,
   //                      hInstance, nil)
-  tr4whandle := CreateTR4WMainForm(tr4w_main_menu);
+  tr4whandle := CreateTR4WMainForm;
   tr4w_WindowsArray[tw_MAINWINDOW_INDEX].WndForm := TR4WMainForm;
 
   (* THE EDITABLE LOG IS AN LCL GRID -- see uLogGrid.
@@ -4132,13 +4149,12 @@ begin
   PossibleCallDrawProc := @PossibleCallsDrawItem;
 
 
-  TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_RULESONQRZRU)), ContestTypeSA[Contest]);
-  ModifyMenuA(tr4w_main_menu, menu_qrzru_calendar, MF_BYCOMMAND + MF_STRING,
-    menu_qrzru_calendar, wsprintfBuffer);
-
-  TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_RULESONSM3CER)), ContestTypeSA[Contest]);
-  ModifyMenuA(tr4w_main_menu, menu_WA7BNM_calendar, MF_BYCOMMAND + MF_STRING,
-    menu_WA7BNM_calendar, wsprintfBuffer);
+  (* THE CONTEST'S NAME IN TWO MENU CAPTIONS. Was ModifyMenuA, which rewrites
+    the row through the menu handle; Caption is the property that row has. *)
+  SetMenuCaption(menu_qrzru_calendar,
+                 SysUtils.Format(TC_RULESONQRZRU, [string(ContestTypeSA[Contest])]));
+  SetMenuCaption(menu_WA7BNM_calendar,
+                 SysUtils.Format(TC_RULESONSM3CER, [string(ContestTypeSA[Contest])]));
   if (pos('CQ-WW', ContestTypeSA[Contest]) <> 0) or (pos('IARU-HF',
     ContestTypeSA[Contest]) <> 0) then //n4af 4.35.5 // 4.115.4
      begin
@@ -4150,22 +4166,17 @@ begin
      end;
   if ContestsArray[Contest].QRZRUID = 0 then
      begin
-     Windows.EnableMenuItem(tr4w_main_menu, menu_qrzru_calendar, MF_BYCOMMAND or
-       MF_GRAYED);
+     SetMenuEnabled(menu_qrzru_calendar, False);
      end;
   if ContestsArray[Contest].WA7BNM = 0 then
      begin
-     Windows.EnableMenuItem(tr4w_main_menu, menu_WA7BNM_calendar, MF_BYCOMMAND or
-       MF_GRAYED);
+     SetMenuEnabled(menu_WA7BNM_calendar, False);
      end;
   if Contest = WRTC then
      begin
-     Windows.EnableMenuItem(tr4w_main_menu, menu_windows_trmasterdta, MF_BYCOMMAND
-       or MF_GRAYED);
-     Windows.EnableMenuItem(tr4w_main_menu, menu_windows_telnet, MF_BYCOMMAND or
-       MF_GRAYED);
-     Windows.EnableMenuItem(tr4w_main_menu, menu_windows_getscores, MF_BYCOMMAND
-       or MF_GRAYED);
+     SetMenuEnabled(menu_windows_trmasterdta, False);
+     SetMenuEnabled(menu_windows_telnet, False);
+     SetMenuEnabled(menu_windows_getscores, False);
      end;
 
   EnableNetworkMenuItem(MF_GRAYED + MF_BYPOSITION);
@@ -4179,20 +4190,27 @@ begin
 
   if not (Contest in [DARCWAEDCCW..DARCWAEDCSSB]) then
      begin
-     Windows.EnableMenuItem(tr4w_main_menu, menu_ctrl_qtcfunctions, MF_BYCOMMAND
-       or MF_GRAYED);
+     SetMenuEnabled(menu_ctrl_qtcfunctions, False);
      end;
 
-  // Remove POTA-specific menu items entirely when not in a POTA contest.
-  // DeleteMenu is used rather than MF_GRAYED so the items are invisible —
-  // they are irrelevant outside POTA and would clutter the menu.
-  // Note: once deleted they are not re-added if the operator switches contests
-  // mid-session, but that is consistent with TR4W's existing per-contest menu
-  // state pattern (other items are also only grayed/deleted at load time).
+  (* HIDE the POTA-specific rows outside a POTA contest -- invisible rather
+    than greyed, because they are irrelevant there and would only clutter the
+    menu.
+
+    Visible := False, NOT a Free. DeleteMenu removed the row from the menu
+    handle; freeing the TMenuItem would leave the id index holding a dangling
+    pointer, and nothing needs the row back -- as the original note says, they
+    were never re-added if the operator switched contests mid-session. *)
   if Contest <> POTA then
      begin
-     Windows.DeleteMenu(tr4w_main_menu, menu_download_pota_parks, MF_BYCOMMAND);
-     Windows.DeleteMenu(tr4w_main_menu, menu_repeat_pota_parks,   MF_BYCOMMAND);
+     if MenuItemById(menu_download_pota_parks) <> nil then
+        begin
+        MenuItemById(menu_download_pota_parks).Visible := False;
+        end;
+     if MenuItemById(menu_repeat_pota_parks) <> nil then
+        begin
+        MenuItemById(menu_repeat_pota_parks).Visible := False;
+        end;
      end;
   // if ContestsArray[Contest].e <> 0 then
   ErmakSpecification := ((ContestsBooleanArray[Contest] and (1 shl ERMAK_BIT))
@@ -4200,8 +4218,7 @@ begin
 
   if ErmakSpecification then
      begin
-     ModifyMenuW(tr4w_main_menu, menu_cabrillo, MF_BYCOMMAND + MF_STRING,
-       menu_cabrillo, ERMAK_);
+     SetMenuCaption(menu_cabrillo, ERMAK_);
      end;
 
   // AppendMenu(GetSubMenu(tr4w_main_menu, menu_rescore), MF_POPUP , 11010, 'NepItem');
@@ -4576,7 +4593,7 @@ begin
           { Exists but hidden -- the case that used to close it again. }
           lclForm.Visible := True;
           lclForm.BringToFront;
-          Windows.CheckMenuItem(tr4w_main_menu, LowordWparam, MF_CHECKED);
+          SetMenuChecked(LowordWparam, True);
           tr4w_WindowsArray[ID].WndVisible := True;
           end
        else
@@ -5993,6 +6010,60 @@ begin
 end;
 
 
+(* SET A MENU ITEM'S ENABLED / CHECKED / CAPTION, or do nothing if there is no
+  such item.
+
+  MenuItemById answers nil for an id the menu does not contain, and that is an
+  ORDINARY outcome: two rows are removed on some contests, and the window menu
+  is asked about ids that a given build may not have. Reaching a nil here would
+  be an access violation inside a menu handler -- a fault that surfaces
+  mid-contest -- so the guard lives in one place rather than at twenty call
+  sites. *)
+procedure SetMenuEnabled(const aId: word; const aEnabled: boolean);
+var
+   item: TMenuItem;
+begin
+   item := MenuItemById(aId);
+   if item <> nil then
+      begin
+      item.Enabled := aEnabled;
+      end;
+end;
+
+procedure SetMenuChecked(const aId: word; const aChecked: boolean);
+var
+   item: TMenuItem;
+begin
+   item := MenuItemById(aId);
+   if item <> nil then
+      begin
+      item.Checked := aChecked;
+      end;
+end;
+
+procedure SetMenuCaption(const aId: word; const aText: string);
+var
+   item: TMenuItem;
+begin
+   item := MenuItemById(aId);
+   if item <> nil then
+      begin
+      item.Caption := TCaption(aText);
+      end;
+end;
+
+{ The item's caption, or '' when the menu has no such row. }
+function MenuCaption(const aId: word): string;
+var
+   item: TMenuItem;
+begin
+   Result := '';
+   if MenuItemById(aId) <> nil then
+      begin
+      Result := string(MenuItemById(aId).Caption);
+      end;
+end;
+
 procedure OpenTR4WWindow(ID: WindowsType);
 const
   NORESIZEEDWINDOW = SWP_SHOWWINDOW or SWP_NOSIZE;
@@ -6027,9 +6098,8 @@ var
   // The LCL form this window IS, when it is one, so the show at the bottom does
   // not have to ask a second time which windows are forms.
   lclForm: TCustomForm;
-  // Local, so a failed GetMenuStringW leaves an EMPTY caption rather than
-  // whatever the shared TempBuffer1 happened to be holding.
-  menuText: array[0..255] of WideChar;
+  { The window's title, taken from its menu row -- see below. }
+  menuTitle: string;
 begin
   if Contest = WRTC then
     if ID in [tw_MASTERWINDOW_INDEX, tw_TELNETWINDOW_INDEX,
@@ -6063,7 +6133,7 @@ begin
      Exit;
      end;
 
-  Windows.CheckMenuItem(tr4w_main_menu, 10199 + Ord(ID), MF_CHECKED);
+  SetMenuChecked(10199 + Ord(ID), True);
   tr4w_WindowsArray[ID].WndVisible := True;
 
  {
@@ -6207,20 +6277,24 @@ begin
   // built with AppendMenuW, and an ANSI round trip here would decode a Cyrillic
   // caption through whatever codepage the machine happens to be running.
   //
-  // A LOCAL buffer, not the shared TempBuffer1 -- when this call returns
-  // nothing the buffer keeps whatever the last caller left in it, and that is
-  // exactly how the FPC menu defect first showed itself: three windows titled
-  // with stale bytes rather than titled empty.
-  FillChar(menuText, SizeOf(menuText), 0);
-  Windows.GetMenuStringW(tr4w_main_menu, 10199 + Ord(ID), menuText,
-    Length(menuText), MF_BYCOMMAND);
+  (* THE WINDOW'S TITLE IS ITS MENU ROW'S TEXT, with the accelerator cut off.
 
-  for i := 0 to Length(menuText) - 1 do
-    if menuText[i] = #9 then
-       begin
-       menuText[i] := #0;
-       Break;
-       end;
+    Was GetMenuStringW into a local WideChar buffer, then a scan for the tab.
+    MenuCaption returns the row's Caption, and the shortcut is still whatever
+    follows a tab -- BuildTR4WMainMenu appends it there, exactly as the Win32
+    walk did.
+
+    THE LOCAL BUFFER IS GONE WITH THE CALL, and so is the trap it existed for:
+    a failed GetMenuStringW left whatever the previous caller had put in the
+    shared buffer, which is how three windows once came up titled with stale
+    bytes rather than titled empty. MenuCaption answers '' for a row that is
+    not there. *)
+  menuTitle := MenuCaption(10199 + Ord(ID));
+  i := Pos(#9, menuTitle);
+  if i > 0 then
+     begin
+     menuTitle := Copy(menuTitle, 1, i - 1);
+     end;
 
   // THROUGH THE FORM WHEN IT IS ONE, and this is not tidiness -- SetWindowTextW
   // writes the native title BEHIND the LCL's back, leaving Caption holding
@@ -6244,7 +6318,7 @@ begin
   // arm already logs.
   if lclForm <> nil then
      begin
-     lclForm.Caption := string(PWideChar(@menuText[0]));
+     lclForm.Caption := TCaption(menuTitle);
      end;
   {
   Windows.GetMenuStringA(tr4w_main_menu, 10199 + Ord(ID), wsprintfBuffer, SizeOf(wsprintfBuffer), MF_BYCOMMAND);
@@ -6488,7 +6562,7 @@ begin
      end;
   tr4w_WindowsArray[ID].WndForm := nil;
   tr4w_WindowsArray[ID].WndVisible := False;
-  Windows.CheckMenuItem(tr4w_main_menu, 10199 + Ord(ID), MF_UNCHECKED);
+  SetMenuChecked(10199 + Ord(ID), False);
   FrmSetFocus;
 end;
 
@@ -10157,10 +10231,15 @@ var
   hFindFile: THandle;
   module: THandle;
   TempFunc: Ttr4wGetPlugin;
-  pop: HMENU;
+  exitItem:   TMenuItem;   { the Exit row -- the plugins group sits above it }
+  pluginMenu: TMenuItem;   { the Plugins popup, once one plugin has loaded }
+  pluginItem: TMenuItem;
 const
   MAXLOADEDPLUGINS = 10;
 begin
+  { A LOCAL, so it holds rubbish until it is set -- and it is TESTED
+    before the first plugin creates it. }
+  pluginMenu := nil;
   TF.Format(TempBuffer1, '%sPlugins\tr4w*.dll', TR4W_PATH_NAME);
 
   hFindFile := Windows.FindFirstFileA(TempBuffer1, lpFindFileData);
@@ -10184,24 +10263,50 @@ begin
      TempFunc := GetProcAddress(module, 'tr4wGetPlugin');
      if @TempFunc <> nil then
         begin
+        (* THE PLUGINS SUBMENU, inserted above Exit.
+
+          Was CreatePopupMenu + InsertMenuA(MF_POPUP) + AppendMenuA. A
+          TMenuItem with children IS a popup, and Insert takes the POSITION of
+          the row to sit above -- which is what MF_BYCOMMAND + menu_exit meant.
+
+          Each plugin row gets the same OnClick as every other item and carries
+          its id in Tag, so 10700 + n reaches RunPlugin through
+          DispatchCommandId exactly as it did through WM_COMMAND. *)
         if LoadedPlugins = 0 then
            begin
-           pop := CreatePopupMenu;
-           Windows.InsertMenuA(tr4w_main_menu, menu_exit, MF_BYCOMMAND or MF_POPUP,
-             pop, 'Plugins');
+           exitItem := MenuItemById(menu_exit);
+           if exitItem <> nil then
+              begin
+              pluginMenu := TMenuItem.Create(TR4WMainForm);
+              pluginMenu.Caption := 'Plugins';
+              exitItem.Parent.Insert(exitItem.MenuIndex, pluginMenu);
+              end;
            end;
         inc(LoadedPlugins);
-        Windows.AppendMenuA(pop, MF_STRING, 10700 + LoadedPlugins, TempFunc());
+        if pluginMenu <> nil then
+           begin
+           pluginItem := TMenuItem.Create(TR4WMainForm);
+           pluginItem.Caption := TCaption(string(TempFunc()));
+           pluginItem.Tag     := 10700 + LoadedPlugins;
+           pluginItem.OnClick := TR4WMainForm.MenuItemClick;
+           pluginMenu.Add(pluginItem);
+           end;
         Windows.lstrcatA(PluginsArray[LoadedPlugins], lpFindFileData.cFileName);
         end;
      FreeLibrary(module);
      goto Next;
      end;
   Windows.FindClose(hFindFile);
+  { A separator above Exit, so the plugin rows are visibly their own group. }
   if LoadedPlugins > 0 then
      begin
-     Windows.InsertMenuA(tr4w_main_menu, menu_exit, MF_BYCOMMAND or MF_SEPARATOR,
-       0, nil);
+     exitItem := MenuItemById(menu_exit);
+     if exitItem <> nil then
+        begin
+        pluginItem := TMenuItem.Create(TR4WMainForm);
+        pluginItem.Caption := '-';
+        exitItem.Parent.Insert(exitItem.MenuIndex, pluginItem);
+        end;
      end;
 
 end;

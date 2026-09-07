@@ -168,6 +168,21 @@ type
     procedure BuildDupesGrid;
     procedure DupesFetchRows(Sender: TObject; const aFirstIndex: Int64;
                              var aRows: array of TLogGridRow);
+    (* EVERY MENU ITEM'S OnClick.
+
+      Was the WM_COMMAND arm of TR4W's own window procedure -- the last reason
+      that procedure was subclassed in front of this form. Each item carries
+      its command id in Tag, so one handler serves the whole menu.
+
+      PUBLIC, NOT PUBLISHED: BuildTR4WMainMenu assigns it to 140 items in code,
+      so nothing looks it up by name and Lint-FormEvents would report a
+      published handler no .lfm wires. *)
+    procedure MenuItemClick(Sender: TObject);
+
+    { Builds the main menu from T_MENU_ARRAY and adopts it. A METHOD, so
+      the handler below is named without a qualifier -- see the note there. }
+    procedure InstallMenu;
+
     procedure MainLogDblClick(Sender: TObject);
     procedure MainLogKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
     procedure MainLogEnter(Sender: TObject);
@@ -324,7 +339,7 @@ procedure TR4WPreviousDupesSet(const aQsos: array of ContestExchange);
 procedure TR4WPreviousDupesShow(const aVisible: boolean);
 procedure TR4WPreviousDupesSetBounds(const aLeft, aTop, aWidth, aHeight: integer);
 
-function CreateTR4WMainForm(const aMenu: HMENU): HWND;
+function CreateTR4WMainForm: HWND;
 
 var
   { The form itself.  Exposed because Phase 3b parents LCL controls onto it and
@@ -493,6 +508,8 @@ uses
    // an implementation clause is the cheaper mistake.
    uFunctionKeys,      // ShowFMessages -- the F-key strip, on activate
    uMMTTY,             // MMTTY.MMTTYEngine -- see MainFormWindowStateChange
+   Menus,              // TMenuItem -- the menu is a TMainMenu now
+   uMenu,              // BuildTR4WMainMenu -- the menu from T_MENU_ARRAY
    uSystemWatch,       // the clock/display poll -- see SystemWatchTick
    uGetServerLog,      // the headless-sync state
    SysUtils,           // Format -- the window-procedure guard
@@ -520,7 +537,6 @@ var
 function IsTR4WsOwnMessage(const aMsg: UINT): boolean;
 begin
    Result := (aMsg = WM_CLOSE) or
-             (aMsg = WM_COMMAND) or
              // WM_NOTIFY, WM_DRAWITEM AND WM_MEASUREITEM ARE DELIBERATELY
              // ABSENT, and removing them from this list is the FIX, not an
              // omission.
@@ -1807,6 +1823,29 @@ begin
    TR4WEditableLog.Sizing := lgsFitAndFill;
 end;
 
+procedure TTR4WMainForm.InstallMenu;
+begin
+   (* MenuItemClick UNQUALIFIED, and that is not style.
+
+     Lint-FormEvents treats a DOTTED name as the implementation header
+     rather than a reference, so TR4WMainForm.MenuItemClick read as "declared
+     but never wired" -- a handler assigned to 140 menu items. Inside a
+     method of the same class the bare name is the method reference, and
+     the form building its own menu is where this belongs anyway. *)
+   Menu := BuildTR4WMainMenu(Self, MenuItemClick);
+end;
+
+procedure TTR4WMainForm.MenuItemClick(Sender: TObject);
+begin
+   (* NO `if lParam = 0` GUARD, because the ambiguity is gone rather than
+     handled. WM_COMMAND carried three different things and Windows told them
+     apart by lParam -- 0 for a menu item, 0 for an accelerator, the control's
+     HWND for a notification -- and reading only LoWord(wParam) is what turned
+     an edit control's EN_UPDATE into "plugin number 34" and crashed TR4W
+     (2026-09-03). An OnClick can only be a menu click. *)
+   DispatchCommandId(TMenuItem(Sender).Tag);
+end;
+
 procedure TTR4WMainForm.SystemWatchTick(Sender: TObject);
 begin
    if SystemClockJumped then
@@ -2549,7 +2588,7 @@ begin
 end;
 
 
-function CreateTR4WMainForm(const aMenu: HMENU): HWND;
+function CreateTR4WMainForm: HWND;
 begin
    // Create, NOT CreateNew.  CreateNew deliberately does not load a .lfm, and
    // that is what made this form unopenable in the designer.
@@ -2599,10 +2638,13 @@ begin
    GLCLFormProc := Pointer(Windows.SetWindowLongPtr(Result, GWL_WNDPROC,
                                                     LONG_PTR(@TR4WFormSubclassProc)));
 
-   if aMenu <> 0 then
-      begin
-      Windows.SetMenu(Result, aMenu);
-      end;
+   (* THE MENU IS THE FORM'S, built from T_MENU_ARRAY as a TMainMenu.
+
+     Was SetMenu(Result, aMenu) with an HMENU built by CreateTR4WMenu and
+     handed in. A native menu reports a click as WM_COMMAND to its owner
+     window, which is why this form had a window procedure in front of it;
+     a TMenuItem raises OnClick. *)
+   TR4WMainForm.InstallMenu;
 end;
 
 

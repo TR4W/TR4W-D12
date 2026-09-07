@@ -1,3 +1,38 @@
+# ############################################################
+# THIS HARNESS NO LONGER TESTS ANYTHING. DO NOT QUOTE A GREEN RUN.
+# ############################################################
+#
+# It posts WM_COMMAND with TR4W command ids. The main menu became a
+# TMainMenu on 2026-09-07, and a TMenuItem's NATIVE command id is assigned
+# by the LCL -- 140 where TR4W says 10551. Tag carries TR4W's id for
+# dispatch, but nothing outside the process can read a Tag, so these posts
+# reach nothing.
+#
+# Measured rather than assumed:
+#
+#     Beacons open BEFORE: 0
+#     after TR4W id 10551 : 0     <- nothing happened
+#     the LCL id for it is 140
+#     after LCL id 140     : 1    <- the LCL's id works
+#
+# AND IT STILL REPORTS EVERY COMMAND "ALIVE" WITH WINDOWS APPEARING,
+# because the windows it counts are the ones the saved layout restores at
+# start-up. Passing without testing is the worst thing a gate can do, which
+# is why this notice is at the top and in the output rather than in a
+# commit message.
+#
+# NY4I, 2026-09-07: leave it. Driving TR4W by posting Win32 command ids is a
+# Windows-only hook, and docs\CONTROL_CHANNEL_DESIGN.md is the designed
+# replacement -- it makes the same point about the other half of this
+# harness family: AutoIt's ControlID *is* GetDlgCtrlID, and
+# PostMessage(WM_CHAR) has no macOS or Linux equivalent at all.
+#
+# What still works, and is what to reach for meanwhile:
+#   Dump-Menu.ps1        the menu as Windows has it -- the oracle that
+#                        proved this conversion changed no row
+#   Dump-WindowTree.ps1  geometry
+#   Test-Typing.ps1      keystroke routing, which does not use command ids
+#
 # The per-phase GUI gate for the Win32-to-LCL migration.
 #
 # Posts a list of WM_COMMAND ids at the running program and asserts it survives
@@ -257,5 +292,10 @@ if ($bad.Count -gt 0)
    exit 1
    }
 
-Write-Output ("Invoke-MenuSmoke: {0} command(s) survived; the {1} expected to open a window did. Still NOT a check that any window is CORRECT." -f $results.Count, @($ExpectsWindow).Count)
+Write-Output ""
+Write-Output "Invoke-MenuSmoke: THIS RESULT MEANS NOTHING. It posts WM_COMMAND with"
+Write-Output "   TR4W command ids, and the main menu is a TMainMenu whose native ids are"
+Write-Output "   the LCL's -- so the posts reach nothing and the windows counted are the"
+Write-Output "   ones the saved layout restored. See the header. Use Dump-Menu.ps1 or"
+Write-Output "   Test-Typing.ps1 instead."
 exit 0

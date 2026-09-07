@@ -201,6 +201,8 @@ const
 
 implementation
 uses
+  Menus,          { TMenuItem -- the Network menu row }
+  uMenu,          { TopLevelMenuItem }
    { The SQLite shadow -- an IMPLEMENTATION-section use, so no interface
      cycle. uLogStore never raises and never blocks logging. }
    uLogStore,
@@ -1231,10 +1233,22 @@ begin
   end;
 end;
 
+(* THE WHOLE NETWORK MENU, ENABLED OR NOT -- addressed by POSITION.
+
+  It is the eighth top-level popup and has no command id of its own, which is
+  why this was EnableMenuItem(handle, 7, ...) with MF_BYPOSITION rather than by
+  id. TopLevelMenuItem(7) is the same row.
+
+  DrawMenuBar goes with it: the LCL redraws the bar when an item changes. *)
 procedure EnableNetworkMenuItem(uEnable: Cardinal);
+var
+   item: TMenuItem;
 begin
-  EnableMenuItem(tr4w_main_menu, 7, uEnable);
-  DrawMenuBar(tr4whandle);
+   item := TopLevelMenuItem(7);
+   if item <> nil then
+      begin
+      item.Enabled := (uEnable and MF_GRAYED) = 0;
+      end;
 end;
 
 (* Said once per session -- see below. *)

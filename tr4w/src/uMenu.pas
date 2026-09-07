@@ -24,6 +24,9 @@ unit uMenu;
 interface
 
 uses
+  Classes,         // TComponent, TNotifyEvent
+  Controls,        // TCaption -- what a menu caption actually is
+  Menus,           // TMainMenu, TMenuItem
   VC,
   uAccelerators,   // AcceleratorDisplayFor -- the shortcut text a menu item shows
   Windows,
@@ -56,6 +59,28 @@ type
 { Fill the menu captions from the resourcestrings. See the implementation. }
 procedure InitializeMenuText;
 function CreateTR4WMenu(m: PMenuRecord; s: integer; popup: boolean): HMENU;
+
+(* THE MAIN MENU AS AN LCL TMainMenu, from the same T_MENU_ARRAY.
+
+  Every item gets Tag = its command id and OnClick = aOnClick, so one handler
+  dispatches the whole menu and no window message is involved. A separator is a
+  row whose caption starts with '-', exactly as the Win32 walk read it.
+
+  ShortCut is deliberately NOT set -- see the implementation. *)
+function BuildTR4WMainMenu(const aOwner: TComponent;
+                           const aOnClick: TNotifyEvent): TMainMenu;
+
+{ THE ITEM WITH THIS COMMAND ID, or nil.
+
+  Replaces reaching into the menu HANDLE by id -- CheckMenuItem, EnableMenuItem,
+  ModifyMenu, DeleteMenu, GetMenuString. The index is built by
+  BuildTR4WMainMenu during the same walk, so it cannot describe a menu that was
+  not created. }
+function MenuItemById(const aId: word): TMenuItem;
+
+{ The top-level popup at this position -- uNet enables and disables the whole
+  Network menu, which it addressed by POSITION and not by id. }
+function TopLevelMenuItem(const aIndex: integer): TMenuItem;
 const
   // GONE 2026-08-17: menu_messages no longer owns Alt+P.  NY4I -- "menu alt p
   // should be alt-p" -- moved that keystroke to 10317 menu_alt_p, whose caption
@@ -628,6 +653,138 @@ begin
    Inc(i); E_MENU_ARRAY[i].mrText := TC_EDITOR_EDIT;
    Inc(i); E_MENU_ARRAY[i].mrText := TC_EDITOR_COPY + #9'Ctrl+C';
    Inc(i); E_MENU_ARRAY[i].mrText := TC_EDITOR_SELECTALL + #9'Ctrl+A';
+end;
+
+(* THE ID INDEX. A plain dynamic array of (id, item): the menu has under two
+  hundred rows and every lookup is a one-off in response to something the
+  operator did, so a linear scan is the right shape -- no hashing, nothing to
+  keep in step, and it is emptied and refilled whenever the menu is rebuilt. *)
+type
+   TMenuIdEntry = record
+      Id:   word;
+      Item: TMenuItem;
+   end;
+
+var
+   GMenuIndex: array of TMenuIdEntry;
+   GMainMenu:  TMainMenu = nil;
+
+function MenuItemById(const aId: word): TMenuItem;
+var
+   i: integer;
+begin
+   Result := nil;
+   for i := 0 to High(GMenuIndex) do
+      begin
+      if GMenuIndex[i].Id = aId then
+         begin
+         Result := GMenuIndex[i].Item;
+         Exit;
+         end;
+      end;
+end;
+
+function TopLevelMenuItem(const aIndex: integer): TMenuItem;
+begin
+   Result := nil;
+   if (GMainMenu <> nil) and (aIndex >= 0) and
+      (aIndex < GMainMenu.Items.Count) then
+      begin
+      Result := GMainMenu.Items[aIndex];
+      end;
+end;
+
+function BuildTR4WMainMenu(const aOwner: TComponent;
+                           const aOnClick: TNotifyEvent): TMainMenu;
+var
+   i:        integer;
+   row:      MenuRecord;
+   curr:     TMenuItem;   { where items are being added }
+   latest:   TMenuItem;   { the top-level popup most recently opened }
+   item:     TMenuItem;
+   caption:  string;
+   shortcut: string;
+begin
+   Result     := TMainMenu.Create(aOwner);
+   GMainMenu  := Result;
+   GMenuIndex := nil;
+
+   latest := Result.Items;
+   curr   := Result.Items;
+
+   for i := 0 to T_MENU_ARRAY_SIZE do
+      begin
+      row := T_MENU_ARRAY[i];
+
+      (* A TOP-LEVEL POPUP. Was CreatePopupMenu + AppendMenuW(Result, MF_POPUP);
+        a TMenuItem with children IS a popup, so there is nothing to create
+        separately. *)
+      if row.mrId = MAXWORD then
+         begin
+         item := TMenuItem.Create(aOwner);
+         { TCaption: the LCL keeps captions as UTF-8 AnsiString, so the
+           conversion is written down rather than left implicit. }
+         item.Caption := TCaption(row.mrText);
+         Result.Items.Add(item);
+         latest := item;
+         curr   := item;
+         Continue;
+         end;
+
+      { A SUBMENU of the popup most recently opened. }
+      if row.mrId = MAXWORD - 1 then
+         begin
+         item := TMenuItem.Create(aOwner);
+         item.Caption := TCaption(row.mrText);
+         latest.Add(item);
+         curr := item;
+         Continue;
+         end;
+
+      { Back out of the submenu. }
+      if row.mrId = MAXWORD - 2 then
+         begin
+         curr := latest;
+         Continue;
+         end;
+
+      item := TMenuItem.Create(aOwner);
+
+      if (row.mrText <> '') and (row.mrText[1] = '-') then
+         begin
+         { A separator is a caption of '-' to the LCL, as it was MF_SEPARATOR
+           to Windows. }
+         item.Caption := '-';
+         end
+      else
+         begin
+         (* THE SHORTCUT TEXT COMES FROM THE ACCELERATOR TABLE, as it did for
+           the Win32 walk -- one row produces both the binding and the label so
+           they cannot disagree (docs\ACCELERATOR_AUDIT.md).
+
+           AND TMenuItem.ShortCut IS DELIBERATELY NOT SET. It would make the
+           LCL bind the key TOO, on top of uAccelerators, and two things
+           answering one keystroke is the defect that audit exists about. The
+           caption keeps the tab form, which a native menu renders
+           right-aligned exactly as before. *)
+         caption  := row.mrText;
+         shortcut := AcceleratorDisplayFor(row.mrId);
+         if shortcut <> '' then
+            begin
+            caption := caption + #9 + shortcut;
+            end;
+
+         item.Caption := TCaption(caption);
+         item.Tag     := row.mrId;
+         item.OnClick := aOnClick;
+
+         SetLength(GMenuIndex, Length(GMenuIndex) + 1);
+         GMenuIndex[High(GMenuIndex)].Id   := row.mrId;
+         GMenuIndex[High(GMenuIndex)].Item := item;
+         end;
+
+      curr.Add(item);
+      end;
 end;
 
 function CreateTR4WMenu(m: PMenuRecord; s: integer; popup: boolean): HMENU;

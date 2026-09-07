@@ -575,56 +575,28 @@ begin
         Msg := 0;
       end;
 
-    WM_COMMAND:
-      begin
-        (* THE EDITABLE LOG'S DOUBLE CLICK IS NOT A WINDOW MESSAGE ANY MORE.
+    (* WM_COMMAND IS GONE, AND WITH IT THE MENU'S LAST NEED FOR THIS
+      PROCEDURE.
 
-          `case wParam of 66:` reached EditableLogWindowDblClick, because the
-          Win32 list view notified its PARENT and the parent had to dispatch.
-          The log is an LCL grid: it raises OnDblClick on itself, and
-          TTR4WMainForm.MainLogDblClick answers. NY4I, 2026-09-04: "this is an
-          LCL form so does it makes sense for there to be a WM_COMMAND involved
-          anymore?" -- no, and nothing had posted 66 for some time. *)
-        (* A MENU COMMAND HAS lParam = 0. A CONTROL NOTIFICATION DOES NOT.
+      The main menu is a TMainMenu built from the same T_MENU_ARRAY --
+      uMenu.BuildTR4WMainMenu -- with each item carrying its command id in
+      Tag and raising OnClick. TTR4WMainForm.MenuItemClick calls the same
+      DispatchCommandId this arm called.
 
-          WM_COMMAND carries three different things and Windows tells them
-          apart by lParam, not by the id: for a menu item it is 0, for an
-          accelerator it is 0, and for a CONTROL it is that control's HWND.
-          These two tests read only LoWord(wParam), so every notification from
-          a control whose id happened to fall between 10000 and 10750 ran a
-          MENU COMMAND -- or, past 10700, tried to load a plugin.
+      THE `if lParam = 0` GUARD GOES WITH IT, and that is a class of bug
+      removed rather than moved. WM_COMMAND carries three different things
+      and Windows tells them apart by lParam, not by the id: 0 for a menu
+      item, 0 for an accelerator, and the CONTROL'S HWND for a
+      notification. Reading only LoWord(wParam) is how an edit control's
+      EN_UPDATE arrived as wParam 67119598 -- LoWord 10734, HiWord 1024 --
+      and reached RunPlugin as "plugin number 34", indexing an
+      array[1..16], reading rubbish as a file name and calling address
+      zero (NY4I in the debugger, 2026-09-03). The crash was the LUCKY
+      outcome: ids in the lower range ran a real menu action silently on
+      every keystroke that updated an entry field.
 
-          THIS IS A CONSEQUENCE OF THE LCL CONVERSION AND COULD NOT HAVE BITTEN
-          BEFORE IT. When the main window was built by hand every child control
-          was given its id here, and none of them were in that range. The
-          window is a TForm now and the LCL assigns ids to its children, so the
-          entry fields, panels and lists carry whatever numbers it hands out.
-
-          MEASURED FROM A CRASH NY4I CAUGHT IN THE DEBUGGER, 2026-09-03:
-          wParam = 67119598, which is LoWord 10734 and HiWord 1024 -- and 1024
-          is EN_UPDATE, an edit control telling its parent the text changed.
-          lParam was 159459822, the control's handle. That reached RunPlugin as
-          "plugin number 34", indexed PluginsArray[34] in an array[1..16], read
-          rubbish as a file name, got a nil entry point from LoadLibrary and
-          called address zero.
-
-          THE CRASH WAS THE LUCKY OUTCOME. Ids in the LOWER range go to
-          ProcessMenu, which runs a real menu action -- silently, on every
-          keystroke that updates an entry field. That is the shape of "it just
-          will not log a contact": the program is busy doing something else
-          each time you type. *)
-        if lParam = 0 then
-           begin
-           DispatchCommandId(LoWord(wParam));
-           end;
-
-        // The call and exchange notification arms USED TO BE HERE, dispatched
-        // by comparing lParam against wh[mweCall] / wh[mweExchange].  They are
-        // OnChange / OnEnter / OnExit on the controls themselves now -- see
-        // TTR4WEntryEvents.  Phase 3d.
-
-
-      end;
+      An OnClick can only be a menu click, so the ambiguity does not exist
+      to be got wrong. *)
 
   end; {of case}
 
