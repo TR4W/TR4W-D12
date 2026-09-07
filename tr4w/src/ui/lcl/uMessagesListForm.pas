@@ -78,7 +78,6 @@ uses
   uMessagesList,    // GetInsertableCommand, LastSelectedCommand
   MainUnit,         // logger
   uLCLFormHelpers,
-  uHostedFormWindows,
   Log4D;
 
 var
@@ -88,7 +87,6 @@ procedure TfrmMessagesList.HandleShow(Sender: TObject);
 var
   i: integer;
 begin
-   RegisterHostedFormHandle(Self.Handle);
 
    Caption := string(TC_LIST_OF_COMMAND);
 
@@ -109,7 +107,6 @@ end;
 
 procedure TfrmMessagesList.HandleClose(Sender: TObject; var Action: TCloseAction);
 begin
-   UnregisterHostedFormHandle(Self.Handle);
    Action := caHide;
 end;
 

@@ -108,7 +108,6 @@ uses
   LogRadio,     // SetRadioFreq, RadioOne
   uBeacons,     // BEACONS, BeaconsNames, FreqArray -- the data stayed put
   MainUnit,     // logger
-  uHostedFormWindows,
   Log4D;
 
 const
@@ -200,7 +199,6 @@ var
   ts: TTextStyle;
   btn: TSpeedButton;
 begin
-   RegisterHostedFormHandle(Self.Handle);
 
    Caption := RC_BEACONSM;
 
@@ -265,7 +263,6 @@ end;
 procedure TfrmBeacons.HandleClose(Sender: TObject; var Action: TCloseAction);
 begin
    tmrSlot.Enabled := False;
-   UnregisterHostedFormHandle(Self.Handle);
    Action := caHide;
 end;
 

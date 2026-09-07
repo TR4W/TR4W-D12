@@ -108,7 +108,6 @@ uses
    uFileView,             { SendMail -- the MAPI half, which is not a window }
    uMenu,                 { OpenInDefaultTextEditor, RunExplorer }
    uLCLFormHelpers,       { ApplyContentMinimumSize, ShowModalOverWin32Parent }
-   uHostedFormWindows,
    MainUnit,              { logger }
    Log4D;
 
@@ -185,7 +184,6 @@ end;
 
 procedure TfrmFileView.HandleShow(Sender: TObject);
 begin
-   RegisterHostedFormHandle(Self.Handle);
 
    ApplyCaptions;
 
@@ -221,7 +219,6 @@ begin
      close and took its RichEdit with it. }
    memView.Lines.Clear;
 
-   UnregisterHostedFormHandle(Self.Handle);
    Action := caHide;
 end;
 

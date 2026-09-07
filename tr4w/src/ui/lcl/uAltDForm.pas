@@ -88,7 +88,6 @@ uses
   uDupeSheet,          // ClearAltD
   LogWind,
   MainUnit,            // tClearDupeInfoCall, logger
-  uHostedFormWindows,
   Log4D;
 
 var
@@ -96,7 +95,6 @@ var
 
 procedure TfrmAltD.HandleShow(Sender: TObject);
 begin
-   RegisterHostedFormHandle(Self.Handle);
 
    Caption := RC_DUPECHECKOAR;
 
@@ -125,7 +123,6 @@ end;
 
 procedure TfrmAltD.HandleClose(Sender: TObject; var Action: TCloseAction);
 begin
-   UnregisterHostedFormHandle(Self.Handle);
    Action := caHide;
 end;
 

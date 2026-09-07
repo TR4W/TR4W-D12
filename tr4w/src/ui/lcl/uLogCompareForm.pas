@@ -91,7 +91,6 @@ uses
   uNet,             // DifferentContests, tUSQ, tUSQE
   uServerLogForm,   // ShowServerLogSync -- a designed form since 2026-08-29
   MainUnit,         // OpenLogFile / CloseLogFile, ProcessMenu, logger
-  uHostedFormWindows,
   Log4D;
 
 var
@@ -111,7 +110,6 @@ procedure TfrmLogCompare.HandleShow(Sender: TObject);
 var
   col: TListColumn;
 begin
-   RegisterHostedFormHandle(Self.Handle);
 
    Caption                := RC_DIFFINLOG;
    btnSynchronize.Caption := string(RC_SYNCHRONIZE);
@@ -195,7 +193,6 @@ end;
 
 procedure TfrmLogCompare.HandleClose(Sender: TObject; var Action: TCloseAction);
 begin
-   UnregisterHostedFormHandle(Self.Handle);
    Action := caHide;
 
    // AFTER this window has gone, as before: the original called EndDialog and

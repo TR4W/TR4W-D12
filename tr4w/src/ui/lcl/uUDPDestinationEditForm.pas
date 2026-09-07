@@ -106,7 +106,6 @@ implementation
 {$R *.lfm}
 
 uses
-   uHostedFormWindows,
    Dialogs,
    uLCLFormHelpers,
    uLCLTranslate,
@@ -323,12 +322,10 @@ end;
 
 procedure TfrmUDPDestinationEdit.FormShow(Sender: TObject);
 begin
-   RegisterHostedFormHandle(Self.Handle);
 end;
 
 procedure TfrmUDPDestinationEdit.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-   UnregisterHostedFormHandle(Self.Handle);
    Action := caHide;
    // Closing with the window button means Cancel: the operator did not accept.
    if Assigned(FOnDone) then

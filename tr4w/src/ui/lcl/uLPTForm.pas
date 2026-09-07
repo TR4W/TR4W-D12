@@ -94,7 +94,6 @@ uses
   LogWind,
   MainUnit,    // logger
   uLCLFormHelpers,
-  uHostedFormWindows,
   Log4D;
 
 const
@@ -141,7 +140,6 @@ procedure TfrmLPT.HandleShow(Sender: TObject);
 var
   i: integer;
 begin
-   RegisterHostedFormHandle(Self.Handle);
 
    Caption := 'LPT';
    BuildTables;
@@ -190,7 +188,6 @@ end;
 
 procedure TfrmLPT.HandleClose(Sender: TObject; var Action: TCloseAction);
 begin
-   UnregisterHostedFormHandle(Self.Handle);
    Action := caHide;
 end;
 

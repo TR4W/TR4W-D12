@@ -117,7 +117,6 @@ uses
    uQTCS,                 { the send state and the send routines }
    LogWind,               { QuickDisplay }
    uLCLFormHelpers,       { ApplyContentMinimumSize, ShowModalOverWin32Parent }
-   uHostedFormWindows,
    MainUnit,              { ProcessMenu, YesOrNo, logger }
    Log4D;
 
@@ -390,7 +389,6 @@ end;
 
 procedure TfrmQTCSend.HandleShow(Sender: TObject);
 begin
-   RegisterHostedFormHandle(Self.Handle);
 
    { '<QRV message> for <callsign>' -- the Win32 title, from the same
      resourcestring. }
@@ -451,7 +449,6 @@ begin
       QuickDisplay(TC_QTCABORTEDBYOPERATOR);
       end;
 
-   UnregisterHostedFormHandle(Self.Handle);
    Action := caHide;
 end;
 

@@ -130,7 +130,6 @@ uses
   uSettingsLegacy,     // ActiveStoreProvider -- the same store Preferences writes
   MainUnit,        // logger
   uLCLFormHelpers,
-  uHostedFormWindows,
   Log4D;
 
 const
@@ -163,7 +162,6 @@ var
   b: BandType;
   row: integer;
 begin
-   RegisterHostedFormHandle(Self.Handle);
 
    Caption := RC_BANDPLAN;
 
@@ -212,7 +210,6 @@ begin
    // window is not part of the band plan they are cancelling.
    SaveCurrentBounds;
 
-   UnregisterHostedFormHandle(Self.Handle);
    Action := caHide;
 end;
 

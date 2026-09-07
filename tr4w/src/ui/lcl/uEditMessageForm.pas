@@ -126,7 +126,6 @@ uses
   LogWind,
   MainUnit,       // ActiveMode, SetCommand, logger
   uLCLFormHelpers,
-  uHostedFormWindows,
   Log4D;
 
 const
@@ -148,7 +147,6 @@ procedure TfrmEditMessage.HandleShow(Sender: TObject);
   end;
 
 begin
-   RegisterHostedFormHandle(Self.Handle);
 
    Caption            := RC_PROGRMESS;
    lblMessage.Caption := string(RC_MESSAGE);
@@ -180,7 +178,6 @@ end;
 
 procedure TfrmEditMessage.HandleClose(Sender: TObject; var Action: TCloseAction);
 begin
-   UnregisterHostedFormHandle(Self.Handle);
    Action := caHide;
 end;
 

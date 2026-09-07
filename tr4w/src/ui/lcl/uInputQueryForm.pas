@@ -81,7 +81,6 @@ uses
   MainUnit,    // tLoadKeyboardLayout, logger
   uInputQuery, // IQresult, IQMaxInputLength -- still the caller's contract
   uLCLFormHelpers,
-  uHostedFormWindows,
   Log4D;
 
 var
@@ -89,7 +88,6 @@ var
 
 procedure TfrmInputQuery.HandleShow(Sender: TObject);
 begin
-   RegisterHostedFormHandle(Self.Handle);
 
    Caption := 'TR4W';
    lblPrompt.Caption := string(IQPrompt);
@@ -162,7 +160,6 @@ begin
    // HandleShow and neither button ran, so the caller reads ''.  That is what
    // the original did by falling through WM_CLOSE without touching IQresult.
    tLoadKeyboardLayout;
-   UnregisterHostedFormHandle(Self.Handle);
    Action := caHide;
 end;
 

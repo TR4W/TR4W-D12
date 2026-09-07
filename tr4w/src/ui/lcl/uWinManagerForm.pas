@@ -76,7 +76,6 @@ uses
   VC,              // RC_WINCONTROL2, tr4whandle
   uWinManager,     // ManageWindow -- the caller reads it there
   MainUnit,        // logger
-  uHostedFormWindows,
   Log4D;
 
 var
@@ -145,7 +144,6 @@ end;
 
 procedure TfrmWinManager.HandleShow(Sender: TObject);
 begin
-   RegisterHostedFormHandle(Self.Handle);
 
    Caption   := RC_WINCONTROL2;
    FAccepted := False;
@@ -176,7 +174,6 @@ begin
       ManageWindow := 0;
       end;
 
-   UnregisterHostedFormHandle(Self.Handle);
    Action := caHide;
 end;
 

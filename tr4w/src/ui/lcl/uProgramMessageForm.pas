@@ -80,7 +80,6 @@ implementation
 uses
   uLCLFormHelpers,   // ShowModalOverWin32Parent -- ownership and centring
   MainUnit,    // MesWindow, OpenListOfMessages, logger
-  uHostedFormWindows,
   Log4D;
 
 var
@@ -88,7 +87,6 @@ var
 
 procedure TfrmProgramMessage.HandleShow(Sender: TObject);
 begin
-   RegisterHostedFormHandle(Self.Handle);
 
    FChosen := False;
 
@@ -104,7 +102,6 @@ end;
 
 procedure TfrmProgramMessage.HandleClose(Sender: TObject; var Action: TCloseAction);
 begin
-   UnregisterHostedFormHandle(Self.Handle);
    Action := caHide;
 end;
 

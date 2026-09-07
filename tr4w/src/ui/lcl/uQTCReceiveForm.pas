@@ -154,7 +154,6 @@ uses
    LogCW,                 { SendStringAndStop }
    uQTCR,                 { the validation and the save }
    uLCLFormHelpers,       { ApplyContentMinimumSize, ShowModalOverWin32Parent }
-   uHostedFormWindows,
    MainUnit,              { ProcessMenu, YesOrNo, logger }
    Log4D;
 
@@ -351,7 +350,6 @@ end;
 
 procedure TfrmQTCReceive.HandleShow(Sender: TObject);
 begin
-   RegisterHostedFormHandle(Self.Handle);
 
    Caption          := RC_RECVQTC;
    lblCallsign.Caption := TC_QTC_CALLSIGN;
@@ -411,7 +409,6 @@ end;
 
 procedure TfrmQTCReceive.HandleClose(Sender: TObject; var Action: TCloseAction);
 begin
-   UnregisterHostedFormHandle(Self.Handle);
    Action := caHide;
 end;
 

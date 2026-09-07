@@ -83,7 +83,6 @@ uses
   uNet,         // SendSpotViaNetwork, SendToNet
   uTelnet,      // TelnetIsConnected, SendViaTelnetSocket
   MainUnit,     // logger
-  uHostedFormWindows,
   Log4D;
 
 var
@@ -95,7 +94,6 @@ var
   freq: integer;
   lastCall: CallString;
 begin
-   RegisterHostedFormHandle(Self.Handle);
 
    Caption               := RC_SENDSPOT;
    lblCallsign.Caption   := string(RC_CALLSIGN);
@@ -138,7 +136,6 @@ end;
 
 procedure TfrmSendSpot.HandleClose(Sender: TObject; var Action: TCloseAction);
 begin
-   UnregisterHostedFormHandle(Self.Handle);
    Action := caHide;
 end;
 

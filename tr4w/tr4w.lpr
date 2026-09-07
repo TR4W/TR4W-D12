@@ -214,7 +214,6 @@ uContestFileKind in 'src\domain\uContestFileKind.pas',
   uPlatformProcess in 'src\utils\uPlatformProcess.pas',
   uRegex in 'src\utils\uRegex.pas',
   uWin32Compat in 'src\utils\uWin32Compat.pas',
-  uHostedFormWindows in 'src\utils\uHostedFormWindows.pas',
   // The LCL side of hosting a toolkit in TR4W's own loop.  FPC-only:
   // Delphi cannot compile the LCL, just as FPC cannot compile FMX.
   uLCLCoexist in 'src\ui\lcl\uLCLCoexist.pas',

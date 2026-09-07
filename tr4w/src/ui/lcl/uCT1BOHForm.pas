@@ -73,7 +73,6 @@ uses
   PostUnit,    // CalculateTotals
   LogWind,     // TimeSpentByBand, ContinentQSOCount
   MainUnit,    // logger
-  uHostedFormWindows,
   Log4D;
 
 const
@@ -107,7 +106,6 @@ var
   bandTotals: array[1..7] of integer;
   pct: integer;
 begin
-   RegisterHostedFormHandle(Self.Handle);
 
    Caption := RC_CT1BOHIS2;
 
@@ -182,7 +180,6 @@ end;
 
 procedure TfrmCT1BOH.HandleClose(Sender: TObject; var Action: TCloseAction);
 begin
-   UnregisterHostedFormHandle(Self.Handle);
    Action := caHide;
 end;
 

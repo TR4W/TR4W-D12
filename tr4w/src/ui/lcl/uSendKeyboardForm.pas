@@ -93,7 +93,6 @@ uses
   MainUnit,       // ProcessMenu, ActiveMode, IsCWByCATActive,
                   // CWByCATBufferTerminator, logger
   uLCLFormHelpers,
-  uHostedFormWindows,
   Log4D,
   uMMTTY;      // PostMmttyMessage on close
 
@@ -125,7 +124,6 @@ end;
 
 procedure TfrmSendKeyboard.HandleShow(Sender: TObject);
 begin
-   RegisterHostedFormHandle(Self.Handle);
 
    FOldPos      := 0;
    FStopSending := False;
@@ -174,7 +172,6 @@ begin
 
    PostMmttyMessage(RXM_PTT, RXM_PTT_SWITCH_TO_RX_AFTER_THE_TRANSMISSION_IS_COMPLETED);
 
-   UnregisterHostedFormHandle(Self.Handle);
    Action := caHide;
 end;
 

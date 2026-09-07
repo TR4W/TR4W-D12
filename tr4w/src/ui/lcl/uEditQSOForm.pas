@@ -253,7 +253,6 @@ implementation
 uses
   uEditQSO,           // the load and save halves, which stayed put
   uLCLFormHelpers,    // ShowModalOverWin32Parent -- every caller is still Win32
-  uHostedFormWindows,
   MainUnit,           // logger
   uConfigValues,      // Config.ConfirmEditChanges
   uDialogs,           // YesOrNo
@@ -508,7 +507,6 @@ end;
 // ------------------------------------------------------------------- the form
 procedure TfrmEditQSO.HandleShow(Sender: TObject);
 begin
-   RegisterHostedFormHandle(Self.Handle);
 
    // LoadQSOIntoEditForm answers False for the records this dialog refuses to
    // edit -- a note, a skipped QSO, anything that is not rkQSO, or a log that
@@ -541,7 +539,6 @@ end;
 
 procedure TfrmEditQSO.HandleClose(Sender: TObject; var Action: TCloseAction);
 begin
-   UnregisterHostedFormHandle(Self.Handle);
    Action := caHide;
    AfterEditQSOClosed;
 end;

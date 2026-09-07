@@ -120,7 +120,6 @@ implementation
 {$R *.lfm}
 
 uses
-   uHostedFormWindows,
    Dialogs,
    uLCLFormHelpers,
    uLCLTranslate,
@@ -393,12 +392,10 @@ end;
 
 procedure TfrmKeyerEdit.HandleShow(Sender: TObject);
 begin
-   RegisterHostedFormHandle(Self.Handle);
 end;
 
 procedure TfrmKeyerEdit.HandleClose(Sender: TObject; var Action: TCloseAction);
 begin
-   UnregisterHostedFormHandle(Self.Handle);
    Action := caHide;
    // Closing with the window button means Cancel: the operator did not accept.
    if Assigned(FOnDone) then

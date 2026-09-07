@@ -126,7 +126,6 @@ uses
    PostUnit,              { ErmakOverlayCategory, NumberErmakOverlayCategories }
    uCabrilloHeader,       { the header store, settings\tr4w.json }
    uLCLFormHelpers,       { ApplyContentMinimumSize, ShowModalOverWin32Parent }
-   uHostedFormWindows,
    MainUnit,              { logger }
    Log4D;
 
@@ -493,7 +492,6 @@ end;
 
 procedure TfrmCabrilloSummary.HandleShow(Sender: TObject);
 begin
-   RegisterHostedFormHandle(Self.Handle);
 
    { ASSIGNED HERE, NOT LEFT IN THE .lfm.  A designed caption is English
      forever; RC_STATIONINFO is in the catalogues. }
@@ -530,7 +528,6 @@ begin
    { EVERY exit saves, including Cancel and the window button.  That is what the
      Win32 WM_CLOSE / ExitAndClose path did. }
    SaveValues;
-   UnregisterHostedFormHandle(Self.Handle);
    Action := caHide;
 end;
 

@@ -95,7 +95,6 @@ uses
   Tree,        // AutoCQDelayTime
   uCFG,        // SetCFGCommandValue -- the one route to a [COMMANDS] value
   MainUnit,    // RunAutoCQ, logger
-  uHostedFormWindows,
   Log4D;
 
 var
@@ -126,7 +125,6 @@ end;
 
 procedure TfrmAutoCQ.HandleShow(Sender: TObject);
 begin
-   RegisterHostedFormHandle(Self.Handle);
 
    Caption              := RC_AUTOCQ2;
    lblMemoryKey.Caption := string(RC_PRESSMKYWTR);
@@ -156,7 +154,6 @@ end;
 
 procedure TfrmAutoCQ.HandleClose(Sender: TObject; var Action: TCloseAction);
 begin
-   UnregisterHostedFormHandle(Self.Handle);
    Action := caHide;
 end;
 

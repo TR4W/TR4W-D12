@@ -1228,7 +1228,6 @@ uses
    IniFiles,
    Generics.Collections,
    Generics.Defaults,
-   uHostedFormWindows,
    Dialogs,
    uTR4WConfigFile,
    uRadioConfigApply,
@@ -7738,7 +7737,6 @@ end;
 
 procedure TPrefsForm.FormShow(Sender: TObject);
 begin
-   RegisterHostedFormHandle(Self.Handle);
 
    // A FRESH SEARCH BOX ON EVERY OPENING.  This form is a cached singleton
    // shown modeless (ShowPreferences reuses gPrefsForm), so everything about it
@@ -7796,7 +7794,6 @@ begin
          end;
       end;
 
-   UnregisterHostedFormHandle(Self.Handle);
    // Hide, never free: freeing a form from inside its own event handler is the
    // classic way to crash on the way out, and reopening should be instant.
    Action := caHide;
