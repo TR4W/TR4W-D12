@@ -787,7 +787,7 @@ function EnumerateLinesInFile(FileName: PAnsiChar; Func: TEnumLinesFunc; UpperCa
 label
   2, 3, LastLine;
 var
-  h                                     : HWND;
+  h                                     : THandle;
   FileSize                              : Cardinal;
   MapFin                                : Cardinal;
   MapBase                               : PAnsiChar;

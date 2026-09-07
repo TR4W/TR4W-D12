@@ -2640,7 +2640,7 @@ end;
 // procedure from literals a few lines further on.
 procedure SeedLayoutFromLegacyPOSFile;
 var
-   h: HWND;
+   h: THandle;
    pNumberOfBytesRead: Cardinal;
 begin
    if not TF.tOpenFileForRead(h, TR4W_POS_FILENAME) then
@@ -2980,13 +2980,6 @@ begin
   end;
   }
 end;
-
-{
-procedure TR4W_WM_SetTest(h: HWND; Control: Byte; Text: string);
-begin
- Windows.SetDlgItemTextA(h, integer(Control), PChar(Text));
-end;
-}
 
 { THE FORM BEHIND A WINDOW INDEX, or nil for one that is still a Win32 dialog
   or has not been created yet.
@@ -4539,7 +4532,7 @@ var
   LowordWparam: integer;
   ID: WindowsType;
   lclForm: TCustomForm;   { the window-menu toggle asks it whether it is visible }
-  focus: HWND;
+  focus: TWinControl;   { the control to put focus back on -- see below }
   TempCallstring: CallString;
   //http : TidHttp;
  // page : String;
@@ -4823,7 +4816,14 @@ begin
         // main window, not the function-key window -- and the nested modal plus
         // the single SendKeyboardWindow handle leaves the dialog unclosable.
         if SendKeyboardInputDialogOpen then Exit;
-        focus := GetFocus;
+        (* PUT FOCUS BACK AFTER THE MODAL, ASKED OF THE LCL.
+
+          Was GetFocus into an HWND and SetFocus(handle) afterwards. That
+          restores the native focus window; Screen.ActiveControl restores the
+          CONTROL the LCL believes is focused, which is what everything else in
+          this program reads. Nil is possible -- nothing focused -- and
+          assigning nil back is a no-op, so no guard is needed. *)
+        focus := Screen.ActiveControl;
         if ActiveMode = CW then
           if not Config.CWEnable then
              begin
@@ -4836,7 +4836,12 @@ begin
           -- the main window is the only parent this call has. }
         // DialogBox(hInstance, MAKEINTRESOURCE(60), tCardinal, @SendKeyboardCWDlgProc);
         ShowSendKeyboardCW;
-        SetFocus(focus);
+        { focus.SetFocus, not Screen.ActiveControl := -- that property is
+          read-only in the LCL; the control focuses itself. }
+        if (focus <> nil) and focus.CanFocus then
+           begin
+           focus.SetFocus;
+           end;
       end;
     // tDialogBox(60, @SendKeyboardCWDlgProc);
 
@@ -5512,7 +5517,6 @@ end;
 
 procedure ProcessReturn;
 var
-  TempHWND: HWND;
   revnr: string[6];
 
 label
@@ -5525,7 +5529,6 @@ begin
       logger.Debug('[Menu] ProcessReturn entered');
       end;
   tDispalyOnAirTime;
-  TempHWND := Windows.GetFocus;
 
   // ENTER IN THE TELNET COMMAND BOX SENDS.  Was a GetParent comparison against
   // the combo's raw handle -- a combo box being two windows is why the parent
@@ -5547,8 +5550,14 @@ begin
   // would run its double-click arm.  Synthesising a notification in order to
   // reach a routine is a Win32 idiom for "I have no way to call that"; the form
   // exposes the action.
+  (* DOES THE SPOT GRID HAVE FOCUS? Asked of the LCL.
+
+    Was `Windows.GetFocus` into a TempHWND, compared against
+    grdSpots.Handle -- a native handle pulled back out of an LCL control to be
+    matched against another one. Screen.ActiveControl is the same question with
+    no handle at either end, and it is what the LCL keeps up to date. *)
   if (TR4WBandMapForm <> nil) and
-     (TempHWND = TR4WBandMapForm.grdSpots.Handle) then
+     (Screen.ActiveControl = TR4WBandMapForm.grdSpots) then
      begin
      TR4WBandMapForm.SpotsDblClick(nil);
      Exit;
@@ -6013,7 +6022,6 @@ const
     );
 var
   TempFlag: Cardinal;
-  h: HWND;
   Radio: RadioPtr;
   i: integer;
   // The LCL form this window IS, when it is one, so the show at the bottom does
@@ -6193,11 +6201,6 @@ begin
 
     Nil form means no window, which is exactly what the error arm above leaves,
     so the old `h := 0` there is this line instead. *)
-  h := 0;
-  if lclForm <> nil then
-     begin
-     h := lclForm.Handle;
-     end;
 
   // The window's caption is its MENU ITEM's text with the accelerator cut off,
   // so this reads back what CreateTR4WMenu wrote. W on both sides: the menu is
@@ -6273,7 +6276,6 @@ begin
   if Config.NoCaption and (lclForm <> nil) then
      begin
      lclForm.BorderStyle := bsNone;
-     h := lclForm.Handle;
      end;
 
   tr4w_WindowsArray[ID].WndForm := lclForm;
@@ -8022,7 +8024,7 @@ end;
 
 procedure GenerateCallsignsList(FileName: PAnsiChar);
 var
-  h: HWND;
+  h: THandle;
   i: integer;
   nNumberOfBytesToWrite: Cardinal;
   InitialExchange: CallString;
@@ -8059,7 +8061,7 @@ end;
 
 procedure MakeAllCallsignsList;
 var
-  h: HWND;
+  h: THandle;
   i: integer;
   counter: integer;
   QSOs: integer;
@@ -8455,7 +8457,7 @@ end;
 
 function OpenLogFile {(dwCreationDisposition: DWORD)}: boolean;
 var
-  h: HWND;
+  h: THandle;
 begin
   h := CreateFileA(
     TR4W_LOG_FILENAME,
@@ -8661,7 +8663,7 @@ end;
 
 procedure MakeTestLog;
 var
-  h: HWND;
+  h: THandle;
   i: integer;
 begin
 
@@ -9737,7 +9739,7 @@ end;
 
 procedure ChangeFocus(Text: PAnsiChar);
 var
-  h: HWND;
+  h: THandle;
   t: Cardinal;
   r: integer;
 begin
