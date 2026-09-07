@@ -47,10 +47,10 @@ unit uTCIServer;
      but they must NEVER call the radio.  RadioObject.SetRadioFreq writes
      globals (tCommandedQSYFreq, the auto-S&P hook) and the display routines
      around it are main-thread things.  So every write is marshalled onto the
-     main thread by POSTING WM_TCI_APPLY to TR4W's own message loop.  It was
-     TThread.Queue until 2026-08-14, which is a race: a connection thread that
-     queues an apply and then exits purges its own callback.  See WM_TCI_APPLY
-     for why neither Synchronize nor QueueAsyncCall can replace it here.
+     main thread by RunOnMainThread (uMainThread), which is QueueAsyncCall.
+     It was TThread.Queue until 2026-08-14, which is a race: a connection
+     thread that queues an apply and then exits purges its own callback.  See
+     TCIQueueApply for why Synchronize is wrong here too.
 
   2. THE RADIO POLLING THREAD calls PublishRadioState through the
      RadioStatusPublished hook.  It must not be blocked: a slow observer
@@ -129,16 +129,20 @@ const
      port. PostMessage has no macOS or Linux equivalent; QueueAsyncCall is the
      LCL's own and works everywhere the widgetset does.
 
-     A posted message has none of those problems: it does not block the sender,
-     it is not tied to any thread's lifetime, and it is drained by TR4W's OWN
-     message loop, which is the one mechanism here that is not borrowed. It is
-     also already the house pattern -- uPOTAParks hands a parsed list over the
-     same way (WM_POTA_LOAD_DONE). }
-   WM_TCI_APPLY = WM_APP + 220;   // 200/201 POTA, 210/211 CTY
+     RunOnMainThread has none of those problems: it does not block the sender,
+     it is not tied to any thread's lifetime, and the LCL drains it.
 
-{ Runs an apply posted with WM_TCI_APPLY and frees it. aData is the command
-  object. Exposed because the message is handled in tr4w.lpr, which has no
-  business knowing the command classes -- they stay in the implementation. }
+     THE MESSAGE ID THAT USED TO LIVE HERE IS GONE (2026-09-07).  This said
+     "a posted message", and named WM_TCI_APPLY = WM_APP + 220, until the day
+     it was checked: the hand-off had been RunOnMainThread since the main
+     window stopped being a Win32 window, the id had no reference outside its
+     own declaration, and the paragraph above still explained why POSTING was
+     the right answer.  The mechanism had changed and its justification had
+     not, which is the harder half to notice. }
+
+{ Runs a queued apply and frees it. aData is the command object.  Exposed
+  because RunOnMainThread takes a plain procedure, and the command classes stay
+  in the implementation. }
 procedure TCIRunQueuedApply(aData: PtrInt);
 
 type
@@ -498,16 +502,16 @@ begin
 
    (* ONTO THE MAIN THREAD, and the handoff cannot be refused.
 
-     This posted WM_TCI_APPLY to the main window, which needed a window to
-     exist and could fail -- and on failure the command was freed and the
-     apply silently lost. RunOnMainThread has neither problem, and there is no
+     This posted a message to the main window, which needed a window to exist
+     and could fail -- and on failure the command was freed and the apply
+     silently lost. RunOnMainThread has neither problem, and there is no
      main-window check left to make because there is no window in it.
 
-     A posted message rather than TThread.Queue because a queueing thread that
-     exits purges its own callback, and rather than Synchronize because that
-     would block an Indy connection thread against TTCIServer.Stop.
-     QueueAsyncCall has neither behaviour: it is not tied to the calling
-     thread lifetime and it does not wait. *)
+     NOT TThread.Queue, because a queueing thread that exits purges its own
+     callback.  NOT Synchronize, because that would block an Indy connection
+     thread against TTCIServer.Stop.  QueueAsyncCall -- which is what
+     RunOnMainThread is -- has neither behaviour: it is not tied to the calling
+     thread's lifetime and it does not wait. *)
    RunOnMainThread(TCIRunQueuedApply, PtrInt(aCmd));
 end;
 

@@ -45,6 +45,18 @@ $UNITS = @(
    @{ Unit = 'uBandLookup.pas'; Since = '2026-09-06' }
    @{ Unit = 'uCRC32.pas';      Since = '2026-09-06' }
    @{ Unit = 'uADIF.pas';       Since = '2026-09-06' }
+   # Added 2026-09-07, the day the Windows gates went in.  Each of these was
+   # Windows-only that morning: ComPortEnumerator is SetupAPI, uSerialPort is
+   # the vendored FPC serial unit, uYCCCSO2R is HID.  They are here because
+   # they COMPILED, not because the gate looked right.
+   #
+   # That distinction earned itself immediately: this check found that the
+   # vendored serial merge had given SerBreak the Windows default (250) in an
+   # interface whose Unix body declares 0, which no Windows build could see.
+   @{ Unit = 'uAppPaths.pas';         Since = '2026-09-07' }
+   @{ Unit = 'ComPortEnumerator.pas'; Since = '2026-09-07' }
+   @{ Unit = 'uSerialPort.pas';       Since = '2026-09-07' }
+   @{ Unit = 'uYCCCSO2R.pas';         Since = '2026-09-07' }
 )
 
 if (-not (Test-Path $fpc))

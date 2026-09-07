@@ -73,7 +73,9 @@ uses
   uCheckLatestVersion,
   // uMakeHelpFile,
   uAltP,
-  MMSystem,
+{$IFDEF WINDOWS}
+  MMSystem,     // sndPlaySound + timeKillEvent, both gated at their call site
+{$ENDIF}
   uCRC32,
   uCFG,
   uWinKey,
@@ -1107,9 +1109,17 @@ begin
      if DVPOn then
         begin
         tExitFromDVPThread := True;
+{$IFDEF WINDOWS}
+        (* Stop the file, then cancel the duration timer that would otherwise
+          signal tDVP_Event again after the thread has gone.  Both are winmm
+          and both are gated with their counterparts in LOGDVP -- read the
+          note at the top of that unit for what replaces them. *)
         sndPlaySound(nil, SND_ASYNC);
+{$ENDIF}
         Windows.SetEvent(tDVP_Event);
+{$IFDEF WINDOWS}
         timeKillEvent(tDVPTimerEventID);
+{$ENDIF}
         DVPOn := False;
         PTTOff;
         DisplayCodeSpeed;
@@ -5173,9 +5183,15 @@ begin
           form now -- so this is the only thing left, derived at the one call
           that needs it. It wants an operator who knows what this feature is
           supposed to do, not a reader of the source. *)
+{$IFDEF WINDOWS}
+        (* $313 IS AN UNDOCUMENTED MESSAGE and that is precisely why it is
+          gated rather than translated: nobody here knows what the receiving
+          window does with it, so there is nothing to reimplement.  It wants an
+          operator who knows what this feature is supposed to do. *)
         Windows.GetWindowRect(ManageForm.Handle, tr4w_TempRect);
         SendMessage(ManageForm.Handle, $313, 0, MakeLong(tr4w_TempRect.Left,
           tr4w_TempRect.Top + 20));
+{$ENDIF}
         FrmSetFocus;
       end;
 

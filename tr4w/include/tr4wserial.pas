@@ -141,7 +141,16 @@ function SerGetRI(Handle: TSerialHandle): Boolean;
   NOTE THAT on Linux, the only reliable mSec parameter is zero which results in
   a break of around 250 mSec. Might be completely ineffective on Solaris.
  }
+(* THE DEFAULT DIFFERS BY PLATFORM, and upstream serial.pp declares it twice
+  for that reason -- 250 on Windows, 0 on Unix.  The note above says why: zero
+  is the only reliable value on Linux.  Merging the two interfaces into one
+  file made that difference invisible, and the single Windows value did not
+  match the Unix body: caught by Compile-Linux.ps1 on 2026-09-07. *)
+{$IFDEF WINDOWS}
 procedure SerBreak(Handle: TSerialHandle; mSec: LongInt= 250; sync: boolean= true);
+{$ELSE}
+procedure SerBreak(Handle: TSerialHandle; mSec: LongInt= 0; sync: boolean= true);
+{$ENDIF}
 
 type    TSerialIdle= procedure(h: TSerialHandle);
 

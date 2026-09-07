@@ -88,12 +88,12 @@ procedure DownloadPOTAParksAsync(const ATargetFile: string;
                                  const aOnDone: TPOTADownloadDoneEvent);
 
 // Start an asynchronous load of an already-downloaded parks CSV.
-// Does all parsing off the UI thread. On completion posts WM_POTA_LOAD_DONE
-// to ACallback with lParam = parsed TStringList pointer.
-// The main thread MUST call ApplyLoadedParks(lParam) from that handler.
+// Does all parsing off the UI thread. On completion it calls aOnParsed on the
+// main thread with the parsed TStringList pointer.
+// That handler MUST call ApplyLoadedParks with the pointer it was given.
 procedure LoadPOTAParksAsync(const aOnParsed: TPOTAParksParsedEvent);
 
-// Apply a pre-parsed parks list delivered via WM_POTA_LOAD_DONE lParam.
+// Apply a pre-parsed parks list delivered by the callback above.
 // Must be called on the main thread. Takes ownership of the TStringList.
 procedure ApplyLoadedParks(ALParam: LPARAM);
 

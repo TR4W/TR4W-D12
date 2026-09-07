@@ -31,13 +31,45 @@ uses
   Messages,
 utils_text,
 utils_file,
-  Windows,
-  MMSystem,
+  Windows,      // still raw Win32 throughout -- a SEPARATE sweep, see below
+{$IFDEF WINDOWS}
+  MMSystem,     // sndPlaySoundA + timeSetEvent, the two gated calls
+{$ENDIF}
   LogRadio,
   LogWind,
   uCTYDAT,
   Tree;
 
+(* VOICE KEYING, AND WHAT IS GATED HERE.
+
+  TWO different things wear the name DVP in this unit and only one of them runs:
+
+   * THE DVP CARD -- an ISA voice card of the DOS era, addressed through a
+     shared memory segment.  Every statement that touched it is commented out
+     (SetTransmitControl, the {WLI} lines), DVPInit is the only thing that sets
+     DVPSetUp, and NOTHING CALLS DVPInit.  So DVPCommand, the record/listen
+     paths and the gain controls are unreachable in this build.
+
+   * DVK WAV PLAYBACK -- PlayWAVFile, driven by Config.DVKEnable.  THIS is what
+     an operator hears when a function key sends voice, and it rests on exactly
+     two multimedia calls: sndPlaySoundA to start the file, and timeSetEvent to
+     signal tDVP_Event when its duration is up so the thread can drop PTT.
+
+  THOSE TWO CALLS ARE WHAT IS GATED, together with the MMSystem import -- so
+  winmm, which has no counterpart on either target platform, is now a
+  conditional dependency of TR4W rather than an unconditional one.
+
+  THE REST OF THIS UNIT IS STILL RAW WIN32 AND IS NOT GATED: CreateFile,
+  CloseHandle, ZeroMemory and a thread started by handle.  That is a portable
+  rewrite (TFileStream, TThread), not a conditional, and it belongs to the
+  cross-platform sweep rather than to this change.  Gating it would only move
+  the failure from a compile error to a silent no-op.
+
+  The replacement for the two gated calls is NOT guessed at here: fpsound plays
+  a WAV cross-platform but does not report when it FINISHED, which is the whole
+  reason the timer exists.  A player that reports completion removes both calls
+  at once.  See docs/PLATFORM_CLOCK_ABSTRACTION.md, which measures the same
+  winmm dependency for CW element timing and lands in the same place. *)
 type
   PlayResult = (prOK, prCantPlay, prExitThread);
 
@@ -86,7 +118,7 @@ procedure tWriteCallsignToMissingCallsignsFile(Callsign: PAnsiChar);
 
 procedure EnumMISSINGCALLSIGNSTXT(FileString: PShortString);
 
-function tsndPlaySound(lpszSoundName: PAnsiChar): BOOL;
+function tsndPlaySound(lpszSoundName: PAnsiChar): boolean;
 function PlayWAVFile(f: PAnsiChar; DisplayError: boolean): PlayResult;
 
 implementation
@@ -167,11 +199,16 @@ type
 //  SharedMemory                          : SharedMemoryPointer;
 
 function DVPActive: boolean;
-
-
-
 begin
+   (* THIS BODY WAS EMPTY -- in this tree AND in the D7 source it was copied
+     from -- so the result was whatever the register happened to hold, at six
+     call sites that gate voice keying on it.  Two of those bodies are empty,
+     but the other four spin waiting for playback or call DVPStopPlayback.
 
+     False is the TRUE answer, not a safe default: DVPSetUp is set only by
+     DVPInit, and nothing calls DVPInit.  There is no DVP card in this build to
+     be active. *)
+   Result := False;
 end;
 
 procedure SetTransmitControl(Bytes: Byte);
@@ -586,7 +623,7 @@ begin
   CloseHandle(h);
 end;
 
-function tsndPlaySound(lpszSoundName: PAnsiChar): BOOL;
+function tsndPlaySound(lpszSoundName: PAnsiChar): boolean;
 begin
   Result := False;
 {
@@ -604,7 +641,14 @@ begin
      begin
      PTTOn;
      end;
+{$IFDEF WINDOWS}
   Result := sndPlaySoundA(lpszSoundName {WAVFileToPlay}, SND_ASYNC or SND_NODEFAULT);
+{$ELSE}
+  (* No WAV playback off Windows yet -- see the note at the top of this unit.
+    Reporting False sends PlayWAVFile down its DisplayError path, which puts the
+    reason on the screen; it does not pretend the message was sent. *)
+  Result := False;
+{$ENDIF}
 end;
 
 function PlayWAVFile(f: PAnsiChar; DisplayError: boolean): PlayResult;
@@ -655,9 +699,16 @@ begin
         end
      else
         begin
+{$IFDEF WINDOWS}
+        (* winmm signals tDVP_Event when the file's own duration is up, and the
+          wait is what holds PTT down for exactly as long as the audio lasts.
+          The two halves must be replaced together. *)
         tDVPTimerEventID := timeSetEvent(Duration, 0, TFNTimeCallBack(tDVP_Event), 0, TIME_CALLBACK_EVENT_SET);
         WaitForSingleObject(tDVP_Event, 30000);
         if tExitFromDVPThread then Result := prExitThread else Result := prOK;
+{$ENDIF}
+        (* Off Windows tsndPlaySound cannot have succeeded, so this arm is
+          unreachable there and Result stays prCantPlay. *)
         end;
      end;
 end;

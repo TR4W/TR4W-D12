@@ -23,7 +23,6 @@ uses
   uMMTTY,
   uCallSignRoutines,
   uIO,
-  MMSystem,
   utils_net,
   utils_text,
   utils_file,
@@ -645,7 +644,14 @@ begin
          Break;  // timed out
          end;
       // WAIT_OBJECT_0 + 1 = message available — pump it so SendMessage unblocks
+{$IFDEF WINDOWS}
+      (* MsgWaitForMultipleObjects woke us for a MESSAGE rather than the thread,
+        and this peek is what lets the sender through so it can finish and the
+        thread can exit.  It is a property of the Win32 message queue; where
+        there is no queue there is nothing to unblock, and the wait above is a
+        plain object wait. *)
       PeekMessage(Msg, 0, 0, 0, PM_NOREMOVE);
+{$ENDIF}
    until False;
 end;
 

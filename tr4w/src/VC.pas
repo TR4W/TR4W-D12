@@ -2319,9 +2319,14 @@ const
 
 const
 
-  WM_SOCK                               = $5F4; //WM_APP + 115;
-  WM_SOCK_SYNC_TIME                     = WM_SOCK + 1;
-  WM_SOCK_NET                           = WM_SOCK + 2;
+  (* WM_SOCK, WM_SOCK_SYNC_TIME and WM_SOCK_NET are GONE (2026-09-07).
+
+    They were the ids WSAAsyncSelect delivered socket readiness on, back when
+    the network link was a raw socket whose events arrived as WINDOW MESSAGES
+    to a hidden network window.  The client is Indy now (TNetClient, and
+    TDXClusterClient before it), the reader owns its own thread, and nothing
+    has referenced any of the three since.  Measured before deleting: zero
+    uses outside this declaration. *)
 
   StatusEquality                        = 1;
   tr4w_MAX_RATE                         = 200;

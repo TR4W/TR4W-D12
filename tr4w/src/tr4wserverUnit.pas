@@ -235,7 +235,10 @@ var
   net_mywsadata                         : TWSAData;
   myhostent                             : Phostent;
 
-  ApplicationHandle                     : HWND;
+  (* ApplicationHandle is GONE (2026-09-07).  It held frmServer.Handle and was
+    read by NOTHING -- a leftover from when the server WAS a Win32 dialog and
+    its socket events were posted to that handle.  It was the last HWND in
+    tr4wserver. *)
   (* THE SERVER LOG, AS A STREAM.
 
     Was `ServerLogHandle: HWND` and thirty-odd Win32 calls against it. A
@@ -278,10 +281,9 @@ var
   SendLogTo                             : Cardinal;
   ServerCRC32                           : Cardinal;
   ServerCRC32Changed                    : boolean = True;
-const
-  WM_SOCK_NET_RX                        = WM_USER + 131;
-  WM_SOCK_NET_ACCEPT                    = WM_USER + 132;
-  WM_SOCK_NET_SYNLISTNER                = WM_SOCK_NET_ACCEPT + 1;
+(* The server's own WSAAsyncSelect message ids stood here and are GONE
+  (2026-09-07), the same way and for the same reason as VC.pas's -- see the
+  note there.  The const block went with them; they were all it held. *)
 
 //procedure SortServerLog;
 //function SortServerLogArrayShell: boolean;

@@ -40,8 +40,25 @@ unit uYCCCSO2R;
 
 interface
 
-uses
-   Windows;
+(* THE YCCC SO2R+ BOX IS REACHED OVER USB HID, AND HID HERE IS WINDOWS-ONLY.
+
+  Enumeration is SetupAPI by VID/PID and the transfers are hid.dll plus
+  overlapped ReadFile/WriteFile on the device handle -- three Windows APIs with
+  no POSIX counterpart at all (Linux is hidraw or libusb, macOS is IOHIDManager).
+
+  So the IMPLEMENTATION is gated and the INTERFACE is not.  Nothing declared
+  below is a Win32 type -- the `uses Windows` that stood here was never needed
+  -- so every caller keeps compiling, and off Windows ycccActive simply stays
+  False.  That is the flag the rest of the program already tests before it
+  reaches for this box (uCWKeyerYCCC selects itself on it), so a caller falls
+  through to its next keyer instead of believing a fake success.
+
+  THE CROSS-PLATFORM ANSWER IS KNOWN AND DEFERRED (NY4I, 2026-09-07):
+  HIDAPI.pas -- https://github.com/dioannidis/HIDAPI.pas -- binds the hidapi
+  library, which ships on all three platforms.  It is a real dependency
+  decision (a new shared library to ship and name per platform, exactly the
+  question the DLL rule in CLAUDE.md exists for), not a mechanical swap, and it
+  needs the box on the bench to verify.  Gated today, ported deliberately. *)
 
 { Global enable flag - target of the 'YCCC SO2R ENABLE' config command }
 var
@@ -72,7 +89,10 @@ procedure YCCCSetSpeed(wpm: integer);
 
 implementation
 
+{$IFDEF WINDOWS}
+
 uses
+   Windows,
    Log4D, SysUtils,
    TF;   { tCreateThread -- guarded worker threads }
 
@@ -751,5 +771,60 @@ begin
    logger.Debug('YCCC CW speed ' + IntToStr(wpm) + ' wpm');
    YCCCSendCmd(CMD_KEYER_SPEED, FKeyerSpeed);
 end;
+
+{$ELSE}
+
+(* NO HID OFF WINDOWS YET -- see the note at the top of this unit for what
+  replaces this (HIDAPI.pas) and why it is a decision rather than a sweep.
+
+  Every routine is present so callers compile unchanged.  YCCCOpen reports
+  FAILURE rather than succeeding quietly, and ycccActive therefore stays False,
+  which is what makes the CW keyer chain pick its next interface instead of
+  sending into a box that is not there. *)
+
+function YCCCOpen: boolean;
+begin
+   Result := False;
+end;
+
+procedure YCCCClose;
+begin
+end;
+
+procedure YCCCSetActiveRadio(radio: integer);
+begin
+end;
+
+procedure YCCCSetStereo(stereo: boolean);
+begin
+end;
+
+procedure YCCCSetRxMode(rx2: boolean; stereo: boolean);
+begin
+end;
+
+procedure YCCCAddCWMessageToBuffer(const msg: string);
+begin
+end;
+
+procedure YCCCFlushCWBuffer;
+begin
+end;
+
+function YCCCCWBusy: boolean;
+begin
+   Result := False;
+end;
+
+function YCCCDeleteLastChar: boolean;
+begin
+   Result := False;
+end;
+
+procedure YCCCSetSpeed(wpm: integer);
+begin
+end;
+
+{$ENDIF}
 
 end.

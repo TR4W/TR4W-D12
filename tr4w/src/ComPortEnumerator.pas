@@ -69,13 +69,39 @@ unit ComPortEnumerator;
 interface
 
 uses
+   {$IFDEF WINDOWS}
    Windows,
+   uWin32Compat,   // RegisterDeviceNotificationW -- the FPC gap list
+   {$ENDIF}
    SysUtils,
    Classes,
-   VC,   // for MAX_SERIAL_PORT -- see below
-   uWin32Compat;   // RegisterDeviceNotificationW -- the FPC gap list
+   VC;   // for MAX_SERIAL_PORT -- see below
 
 const
+   (* ENUMERATION IS WINDOWS-ONLY, AND THE CALLER CAN ASK.
+
+     Everything below that FINDS a port is SetupAPI plus the SERIALCOMM registry
+     map, and neither exists off Windows.  The portable half of this unit -- the
+     records, the name parsing, and matching a remembered port against a list --
+     is not gated, so the shape of the answer is the same everywhere; only the
+     source of the list is missing.
+
+     On a platform with no implementation Refresh yields an EMPTY list, which is
+     indistinguishable from "this machine has no serial ports".  That is exactly
+     the silent downgrade this tree keeps being bitten by, so ASK THIS CONSTANT
+     and tell the operator the list is unavailable instead of showing them
+     nothing and letting them conclude their adapter is broken.
+
+     What the implementation will be, when it is written: POSIX has no
+     enumeration API at all.  Linux reads /sys/class/tty/ (each entry with a
+     `device` symlink is real, and the USB ones carry vendor strings a few
+     directories up), and macOS asks IOKit for IOSerialBSDClient, giving
+     /dev/cu.usbserial-* plus a friendly name.  Two different mechanisms, both
+     of them a day's work with hardware to test against -- which is why this is
+     a gate and not a stub pretending to be a port. *)
+   ComPortEnumerationSupported =
+      {$IFDEF WINDOWS} True {$ELSE} False {$ENDIF};
+
    // Highest COM number TR4W can address, taken from the PortType enum itself
    // rather than restated here.  A second copy of this number is precisely the
    // bug being fixed: the old ceiling of 20 lived in FIVE places (the enum, its
@@ -149,7 +175,10 @@ type
 function ComPortNumber(const APortName: string): Integer;
 
 // ---------------------------------------------------------------------------
-// Serial-port arrival/removal notification.
+// Serial-port arrival/removal notification.  WINDOWS ONLY -- it is a WM_
+// message filter, so its very signature (HWND, WPARAM) is Win32.  The portable
+// equivalent is not a translation of this: udev on Linux and IOKit notification
+// on macOS both deliver on a file descriptor, not to a window.
 //
 // Wrapped here rather than in the dialog so the Win32 detail (the DBT_* codes
 // and the DEV_BROADCAST_DEVICEINTERFACE filter, none of which Delphi 12 declares)
@@ -160,6 +189,7 @@ function ComPortNumber(const APortName: string): Integer;
 // this is offered to the DIALOG and not used inside the enumerator itself.
 // ---------------------------------------------------------------------------
 
+{$IFDEF WINDOWS}
 // Ask Windows to tell AWnd when a serial port appears or disappears.
 // Returns nil on failure; notifications are simply not delivered in that case,
 // which degrades to the previous refresh-on-drop-down behaviour.
@@ -172,6 +202,7 @@ procedure UnregisterComPortNotification(var AHandle: Pointer);
 // Other WM_DEVICECHANGE events (query-remove, config changes) are deliberately
 // ignored -- acting on them would churn the list for no visible benefit.
 function IsComPortArrivalOrRemoval(AWParam: WPARAM): Boolean;
+{$ENDIF}
 
 implementation
 
@@ -179,6 +210,8 @@ implementation
 // is exactly what we want here -- the point is to not require setupapi.dll at
 // load time -- so silence the noise rather than leave six warnings in the build.
 {$WARN SYMBOL_PLATFORM OFF}
+
+{$IFDEF WINDOWS}
 
 const
    SetupApiDll = 'setupapi.dll';
@@ -287,6 +320,8 @@ begin
    Result := (AWParam = DBT_DEVICEARRIVAL) or (AWParam = DBT_DEVICEREMOVECOMPLETE);
 end;
 
+{$ENDIF}
+
 function ComPortNumber(const APortName: string): Integer;
 var
    trimmed: string;
@@ -324,7 +359,9 @@ begin
       end;
 end;
 
-{ helpers }
+{$IFDEF WINDOWS}
+
+{ helpers -- all four read the Windows device tree }
 
 // Reads one SPDRP_* string property.  Returns '' when the device has none,
 // which is normal -- not every port reports a friendly name.
@@ -485,6 +522,8 @@ begin
    end;
 end;
 
+{$ENDIF}
+
 { TComPortEnumerator }
 
 constructor TComPortEnumerator.Create;
@@ -492,6 +531,8 @@ begin
    inherited Create;
    Refresh;
 end;
+
+{$IFDEF WINDOWS}
 
 procedure TComPortEnumerator.Refresh;
 var
@@ -608,6 +649,19 @@ begin
 
    FPorts := found;
 end;
+
+{$ELSE}
+
+(* No enumeration off Windows -- see ComPortEnumerationSupported above for what
+  the implementation would be and why it is not guessed at here.  Refresh is
+  still a legal call and still leaves the object in a consistent state; a caller
+  that shows this list without testing the constant will show an empty one. *)
+procedure TComPortEnumerator.Refresh;
+begin
+   SetLength(FPorts, 0);
+end;
+
+{$ENDIF}
 
 function TComPortEnumerator.Count: Integer;
 begin

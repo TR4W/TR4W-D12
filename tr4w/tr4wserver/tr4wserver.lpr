@@ -61,7 +61,6 @@ begin
 //        SendMessage(hwnddlg, WM_SETICON, ICON_SMALL, LoadIcon(0, IDI_APPLICATION));
         SetServerVersion(FullServerVersion);
 
-        ApplicationHandle := frmServer.Handle;
         InitServerLogger;
         (* THE SETTINGS, THROUGH TIniFile.
 

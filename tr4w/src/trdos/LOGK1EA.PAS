@@ -36,7 +36,9 @@ uses
   BeepUnit,
 //  DLPortIO,
   uIO,
-  MMSystem,
+{$IFDEF WINDOWS}
+  MMSystem,     // the CW element clock -- see tCWSleep
+{$ENDIF}
   Messages,
   Windows;
 //procedure TimerInterrupt(uTimerID, uMessage: UINT; dwUser, dw1, dw2: DWORD) stdcall;
@@ -1975,7 +1977,13 @@ var
 begin
 //tCWSleep(15, tCW_Event);
 
+{$IFDEF WINDOWS}
+  (* Ask Windows for 1 ms scheduler resolution for the life of this thread.
+    There is no counterpart elsewhere -- Linux and macOS simply do not let a
+    process ask -- so off Windows this is nothing, and tCWSleep's accuracy is
+    whatever the platform gives. *)
   timeBeginPeriod(1);
+{$ENDIF}
   Sleep(20);
 
 //  tSetPriorityClass(REALTIME_PRIORITY_CLASS);
@@ -2031,7 +2039,9 @@ begin
 //  if TwoRadioState = SendingExchange then CheckTwoRadioState(ContactDone);
 
 //  tSetPriorityClass(NORMAL_PRIORITY_CLASS);
+{$IFDEF WINDOWS}
   timeEndPeriod(1);
+{$ENDIF}
 
   if not CloseHandle(CWThreadHandle) then
      begin
@@ -2202,7 +2212,24 @@ begin
   Start := GetCPU;
 {$IFEND}
 
+  (* THIS IS THE CW ELEMENT CLOCK, and it is the most timing-sensitive thing
+    in the program: millsec is one dit or one dah.
+
+    Windows gets a winmm one-shot with 1 ms resolution and waits on the event.
+    The `else` arm below is the EXISTING fallback for when winmm refuses, and
+    off Windows it is the only arm -- so CW there is timed by Sleep, whose
+    granularity is the scheduler's, not a millisecond.
+
+    THAT IS NOT GOOD ENOUGH TO KEY WITH and it is not pretending to be: it is
+    a compiling placeholder so the rest of the port can proceed.  The real
+    answer is a per-platform high-resolution timer, assessed with measurements
+    in docs/PLATFORM_CLOCK_ABSTRACTION.md part 2 -- which is also where the
+    Apple Silicon reference lives. *)
+{$IFDEF WINDOWS}
   t := timeSetEvent(millsec, 1, TFNTimeCallBack(myEvent), 0, TIME_ONESHOT + TIME_CALLBACK_EVENT_SET);
+{$ELSE}
+  t := 0;
+{$ENDIF}
   if t <> 0 then
      begin
      WaitForSingleObject(myEvent, INFINITE);

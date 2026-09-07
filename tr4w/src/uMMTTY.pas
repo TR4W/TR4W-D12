@@ -28,8 +28,10 @@ uses
   //  Richedit,
   TF,
   VC,
-  Windows,
+{$IFDEF WINDOWS}
+  Windows,      // TCharFormatA and the window-proc signature -- both gated below
   Messages,
+{$ENDIF}
   LogK1EA,
   LogWind,
   Tree;
@@ -132,11 +134,17 @@ type
 
   MMTTYObject = record
     mmttyMSG: Cardinal;
-    mmttyEngine: HWND;
-    mmttyRichEdit: HWND;
+    (* THandle, not HWND: these ARE window handles and always will be -- MMTTY
+      is a Windows program -- but THandle is the same type without naming a
+      unit the rest of this interface no longer needs.  Zero means "no engine",
+      which is the state every caller already tests. *)
+    mmttyEngine: THandle;
+    mmttyRichEdit: THandle;
     mmttyTXIsOn: boolean;
     mmttyTwoBytes: array[0..1] of AnsiChar;
-    mmttyCF: TCharFormatA;
+{$IFDEF WINDOWS}
+    mmttyCF: TCharFormatA;   // a RICHED32 struct; there is no off-Windows form of it
+{$ENDIF}
     mmttyCallProcess: TCallSignProcessObject;
     mmttyLastCallsign: CallString;
     mmttyCurrentPos: integer;
@@ -144,7 +152,12 @@ type
 
 procedure mmttyProcessMessage(wp: integer; lp: integer);
 procedure PostMmttyMessage(Command: integer; lParam: integer);
+{$IFDEF WINDOWS}
+(* A Win32 window procedure -- it is installed by SetWindowLong as the rich
+  edit's subclass, so it has no meaning where there is no window to subclass.
+  Declared inside the gate for that reason, rather than stubbed. *)
 function NewMMTTYRichEditProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): integer; stdcall;
+{$ENDIF}
 
 var
 
@@ -391,12 +404,6 @@ end;
 
 procedure PostMmttyMessage(Command: integer; lParam: integer);
 begin
-end;
-
-function NewMMTTYRichEditProc(hwnddlg: HWND; Msg: UINT; wParam: wParam;
-                              lParam: lParam): integer; stdcall;
-begin
-   Result := 0;
 end;
 
 {$ENDIF}

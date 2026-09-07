@@ -114,6 +114,15 @@ begin
    RunWindowsUtility(SysUtils.Format('"%s" -t -s -u -r',
                                      [string(PAnsiChar(TR4W_MMTTYPATH))]));
 
+{$IFDEF WINDOWS}
+   (* THE OUTPUT PANE IS A RICHED32 CONTROL, AND IT STAYS ONE.  The engine
+     writes into it by window message -- that is MMTTY's interface, not a
+     choice this program makes -- so the handle, the character format struct
+     and the registered message are all Win32 and all gated together.
+
+     Off Windows none of it runs, MMTTY.mmttyEngine stays 0, and the form shows
+     an empty pane, which is what it shows on Windows with no engine
+     configured. *)
    MMTTY.mmttyMSG := RegisterWindowMessage('MMTTY');
    MMTTY.MMTTYRichEdit := CreateRichEdit(Handle);
 
@@ -124,6 +133,9 @@ begin
    MMTTY.mmttyCF.dwMask := CFM_COLOR + CFM_FACE + CFM_BOLD;
    SendMessage(MMTTY.MMTTYRichEdit, EM_SETCHARFORMAT, SCF_SELECTION,
                integer(@MMTTY.mmttyCF));
+{$ELSE}
+   MMTTY.mmttyCallProcess.cpEnable := True;
+{$ENDIF}
 
    HandleResize(Sender);
 end;

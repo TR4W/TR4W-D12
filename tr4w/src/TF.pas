@@ -107,7 +107,13 @@ var
   GetDateStringBuffer                   : array[0..15] of AnsiChar;
   IQPrompt                              : array[0..63] of AnsiChar;
 
+{$IFDEF WINDOWS}
+(* WINDOWS ONLY, DECLARATION AND ALL.  Its one caller is the MMTTY window, and
+  MMTTY is a separate Windows EXE showing its output in a RICHED32 control --
+  there is nothing to create anywhere else.  Gating the DECLARATION rather than
+  just the body is what lets TF stop naming HWND. *)
 function CreateRichEdit(hwndParent: HWND): HWND;
+{$ENDIF}
 
 function EnumerateLinesInFile(FileName: PAnsiChar; Func: TEnumLinesFunc; UpperCase: boolean): boolean;
 function tGetDateFormat(DT: TQSOTime): PAnsiChar; //assembler;
@@ -141,7 +147,10 @@ function tCreateThread(lpStartAddress: TFNThreadStartRoutine; var lpThreadId: DW
    SelectFileOfFolder, has been inside a brace comment for years.  It also held
    the only remaining reference to the CreateCabrilloWindow global, which is
    why both go in the same commit. *)
-function tWM_SETFONT(h: HWND; Font: HFONT): HWND;
+(* tWM_SETFONT IS GONE.  It wrapped one SendMessage and had exactly one caller
+  -- CreateRichEdit, three lines below its own body -- so it was a name for a
+  line rather than an abstraction, and it cost TF two more HWNDs in its
+  interface.  The send is now written where it happens. *)
 
 function SystemTimeToString(SysTime: SYSTEMTIME): string;
 
@@ -165,7 +174,11 @@ function MillisecondsToFormattedString(msecs: Cardinal; WithMsec: boolean): stri
 //function Pos(Substr: string; S: string): Integer;
 procedure InvertBoolean(var b: boolean);
 function inttopchar(i: integer): PAnsiChar;
+{$IFDEF WINDOWS}
+(* Hands the drag to the system's own move loop -- see the note at its only
+  caller, TTR4WMainForm.MainFormMouseDown, which is gated to match. *)
 procedure DragWindow(h: HWND);
+{$ENDIF}
 //procedure SaveStructure(Address: Pointer; Count: integer; FileName: string);
 //function tShellexecute(HWND: HWND; Operation, FileName, Parameters, Directory: PChar; showCmd: integer): hInst; // 4.75.3
 
@@ -417,16 +430,12 @@ begin
 end;
 
 
+{$IFDEF WINDOWS}
 procedure DragWindow(h: HWND);
 begin
   PostMessage(h, WM_SYSCOMMAND, $F012, 0);
 end;
-
-function tWM_SETFONT(h: HWND; Font: HFONT): HWND;
-begin
-  SendMessage(h, WM_SETFONT, wParam(Font), 0);
-  Result := h;
-end;
+{$ENDIF}
 
 {------------------------------------------------------------------}
 {  Function to convert int to string. (No sys utils = smaller EXE)  }
@@ -954,17 +963,15 @@ end;
   a separate Windows EXE and RICHED32 is a Windows control; on another platform
   there is no engine to show, so this returns 0 -- the same "not running" state
   every MMTTY caller already handles. See uMMTTY's implementation gate. *)
+{$IFDEF WINDOWS}
 function CreateRichEdit(hwndParent: HWND): HWND;
 begin
-{$IFDEF WINDOWS}
   Result := CreateWindowW('RichEdit', nil,
     ES_MULTILINE or ES_AUTOVSCROLL or ES_NOHIDESEL or ES_READONLY or ES_SAVESEL or WS_CHILD or WS_VISIBLE or WS_BORDER or WS_VSCROLL or WS_HSCROLL,
     0, 0, 0, 0, hwndParent, 101, hInstance, nil);
-  tWM_SETFONT(Result, LucidaConsoleFont);
-{$ELSE}
-   Result := 0;
-{$ENDIF}
+  SendMessage(Result, WM_SETFONT, wParam(LucidaConsoleFont), 0);
 end;
+{$ENDIF}
 
 function IntegerBetween(v: integer; i: integer; k: integer): boolean;
 begin
