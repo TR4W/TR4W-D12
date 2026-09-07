@@ -127,6 +127,8 @@ uses
   MainUnit,
   LogStuff;
 
+{$IFDEF WINDOWS}
+
 const
   DVPGetPtr                             = 0;
   DVPRecRX                              = 2;
@@ -641,14 +643,7 @@ begin
      begin
      PTTOn;
      end;
-{$IFDEF WINDOWS}
   Result := sndPlaySoundA(lpszSoundName {WAVFileToPlay}, SND_ASYNC or SND_NODEFAULT);
-{$ELSE}
-  (* No WAV playback off Windows yet -- see the note at the top of this unit.
-    Reporting False sends PlayWAVFile down its DisplayError path, which puts the
-    reason on the screen; it does not pretend the message was sent. *)
-  Result := False;
-{$ENDIF}
 end;
 
 function PlayWAVFile(f: PAnsiChar; DisplayError: boolean): PlayResult;
@@ -699,19 +694,149 @@ begin
         end
      else
         begin
-{$IFDEF WINDOWS}
         (* winmm signals tDVP_Event when the file's own duration is up, and the
           wait is what holds PTT down for exactly as long as the audio lasts.
           The two halves must be replaced together. *)
         tDVPTimerEventID := timeSetEvent(Duration, 0, TFNTimeCallBack(tDVP_Event), 0, TIME_CALLBACK_EVENT_SET);
         WaitForSingleObject(tDVP_Event, 30000);
         if tExitFromDVPThread then Result := prExitThread else Result := prOK;
-{$ENDIF}
-        (* Off Windows tsndPlaySound cannot have succeeded, so this arm is
-          unreachable there and Result stays prCantPlay. *)
         end;
      end;
 end;
 
-end.
+{$ELSE}
 
+(* ===================================================================
+   NO VOICE KEYER OFF WINDOWS -- AND IT SAYS SO ON THE SCREEN.
+
+   Everything above is Win32: the multimedia calls, but also the file reads
+   (Windows.ReadFile / CloseHandle), the buffer clears and the playback
+   thread.  Gating the whole implementation rather than each call keeps the
+   Windows path byte-for-byte unchanged and puts ONE boundary here instead of
+   a dozen scattered ones.
+
+   THE POINT OF THIS BLOCK IS THE QuickDisplay (NY4I, 2026-09-07).  A stub
+   that quietly does nothing is the failure this tree keeps paying for: an
+   operator hits a function key, no audio comes out, nothing is written
+   anywhere, and the bug report is "voice doesn't work".  Every routine an
+   operator can REACH says why instead.  The internal ones stay silent --
+   they are called from the ones that already spoke.
+
+   The port is small and is described at the top of this unit: it is
+   sndPlaySoundA and timeSetEvent, plus a portable rewrite of the file reads.
+   NOTE that it cannot be checked by tools/Compile-Linux.ps1 yet -- LOGDVP's
+   uses clause reaches MainUnit and LogWind, which are not portable -- so
+   this gate is reviewed by eye, not proven by a compiler.  That is a weaker
+   guarantee than the gates in ComPortEnumerator and uYCCCSO2R, and it is
+   stated rather than glossed.
+   =================================================================== *)
+
+resourcestring
+   SDVPNotOnThisPlatform =
+      'Voice keying is Windows-only in this build -- no audio was sent.';
+   SDVPRecordNotOnThisPlatform =
+      'Voice recording is Windows-only in this build.';
+
+procedure ReportNoVoiceKeyer;
+begin
+   QuickDisplay(SDVPNotOnThisPlatform);
+end;
+
+function DVPActive: boolean;
+begin
+   (* Same answer as on Windows, and for the same reason: nothing calls
+     DVPInit, so there is no DVP card to be active.  Callers branch on this
+     before they reach anything below, which is why most of these stubs are
+     never entered. *)
+   Result := False;
+end;
+
+function DVPMessagePlaying: boolean;
+begin
+   Result := False;
+end;
+
+procedure StopBackCopy;
+begin
+end;
+
+procedure SaveBackCopy(QSONumber: integer; Seconds: integer);
+begin
+end;
+
+procedure DVPCommand(Command: integer; FileName: Str80; UseDVPPath: boolean);
+begin
+   ReportNoVoiceKeyer;
+end;
+
+procedure DVPListenMessage(FileName: Str80; UseDVPPath: boolean);
+begin
+   ReportNoVoiceKeyer;
+end;
+
+procedure DVPRecordMessage(FileName: Str80; OnAir: boolean);
+begin
+   QuickDisplay(SDVPRecordNotOnThisPlatform);
+end;
+
+procedure DVPInit;
+begin
+end;
+
+procedure DVPUnInit;
+begin
+end;
+
+procedure DVPStopPlayback;
+begin
+   (* Silent on purpose: stopping something that never started is not a
+     failure the operator needs told about, and this is called on every
+     keystroke that interrupts sending. *)
+end;
+
+procedure SetMicGain(Gain: Byte);
+begin
+end;
+
+procedure SetOutGain(Gain: Byte);
+begin
+end;
+
+function tGetWAVDurationFromHeader(FileName: PAnsiChar; var Duration: Cardinal;
+                                   DisplayError: boolean): boolean;
+begin
+   Duration := 0;
+   Result := False;
+end;
+
+procedure tDVPPlayThreadproc;
+begin
+end;
+
+procedure tWriteCallsignToMissingCallsignsFile(Callsign: PAnsiChar);
+begin
+end;
+
+procedure EnumMISSINGCALLSIGNSTXT(FileString: PShortString);
+begin
+end;
+
+function tsndPlaySound(lpszSoundName: PAnsiChar): boolean;
+begin
+   (* Internal -- PlayWAVFile is the caller and it reports for both. *)
+   Result := False;
+end;
+
+function PlayWAVFile(f: PAnsiChar; DisplayError: boolean): PlayResult;
+begin
+   (* THE LIVE PATH.  This is what a function key configured with a .WAV
+     reaches, so this is the one that must not fail in silence.  It reports
+     regardless of DisplayError: that flag distinguishes a missing FILE from a
+     working one, and this is neither. *)
+   ReportNoVoiceKeyer;
+   Result := prCantPlay;
+end;
+
+{$ENDIF}
+
+end.
