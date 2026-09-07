@@ -141,7 +141,7 @@ var
      which is the same 1000-based id the Win32 menu used. }
    TelnetFormOnMenu: procedure(const aId: integer) = nil;
 
-function CreateTR4WTelnetWindow: HWND;
+procedure CreateTR4WTelnetWindow;
 
 { ---- the console -------------------------------------------------------- }
 { Every one of these is a no-op when the window is not open: the headless
@@ -267,7 +267,7 @@ begin
    Result := (TR4WTelnetForm <> nil) and TR4WTelnetForm.HandleAllocated;
 end;
 
-function CreateTR4WTelnetWindow: HWND;
+procedure CreateTR4WTelnetWindow;
 begin
    if TR4WTelnetForm = nil then
       begin
@@ -275,7 +275,6 @@ begin
       end;
 
    OwnFormByMainWindow(TR4WTelnetForm);
-   Result := TR4WTelnetForm.Handle;
 end;
 
 { THE TOOLBAR GLYPHS.

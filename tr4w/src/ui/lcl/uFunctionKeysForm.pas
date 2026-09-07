@@ -105,7 +105,7 @@ var
   FunctionKeyRightDoubleClicked: TFunctionKeyProc = nil;
 
 { Create the window and return its handle, for OpenTR4WWindow's seam. }
-function CreateTR4WFunctionKeysWindow: HWND;
+procedure CreateTR4WFunctionKeysWindow;
 
 implementation
 
@@ -256,7 +256,7 @@ begin
       end;
 end;
 
-function CreateTR4WFunctionKeysWindow: HWND;
+procedure CreateTR4WFunctionKeysWindow;
 var
    f: TfrmFunctionKeys;
    i: integer;
@@ -288,7 +288,6 @@ begin
    // by the very change that exists to remove it.
    OwnFormByMainWindow(f);
 
-   Result := f.Handle;
 end;
 
 end.

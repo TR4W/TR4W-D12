@@ -46,7 +46,7 @@ type
 var
    TR4WHamScoreForm: TfrmHamScore = nil;
 
-function CreateTR4WHamScoreWindow: HWND;
+procedure CreateTR4WHamScoreWindow;
 
 implementation
 
@@ -137,7 +137,7 @@ begin
    FrmSetFocus;
 end;
 
-function CreateTR4WHamScoreWindow: HWND;
+procedure CreateTR4WHamScoreWindow;
 begin
    if TR4WHamScoreForm = nil then
       begin
@@ -146,7 +146,6 @@ begin
 
    OwnFormByMainWindow(TR4WHamScoreForm);
 
-   Result := TR4WHamScoreForm.Handle;
 end;
 
 end.

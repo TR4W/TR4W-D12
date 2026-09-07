@@ -31,7 +31,7 @@ type
 var
    TR4WIntercomForm: TfrmIntercom = nil;
 
-function CreateTR4WIntercomWindow: HWND;
+procedure CreateTR4WIntercomWindow;
 
 implementation
 
@@ -74,7 +74,7 @@ begin
    ProcessMenu(menu_send_message);
 end;
 
-function CreateTR4WIntercomWindow: HWND;
+procedure CreateTR4WIntercomWindow;
 begin
    if TR4WIntercomForm = nil then
       begin
@@ -83,7 +83,6 @@ begin
 
    OwnFormByMainWindow(TR4WIntercomForm);
 
-   Result := TR4WIntercomForm.Handle;
 end;
 
 end.

@@ -76,7 +76,7 @@ type
       property Slot: integer read FSlot write FSlot;
    end;
 
-function CreateTR4WRadioPanelWindow(const aID: WindowsType): HWND;
+procedure CreateTR4WRadioPanelWindow(const aID: WindowsType);
 function RadioPanelForm(const aID: WindowsType): TfrmRadioPanel;
 
 { Repaint both panels' active-radio tint.  Replaces the pair of InvalidateRect
@@ -485,7 +485,7 @@ begin
    ApplyLayoutScale(Self, FDesign, FDesignW, FDesignH, 100);
 end;
 
-function CreateTR4WRadioPanelWindow(const aID: WindowsType): HWND;
+procedure CreateTR4WRadioPanelWindow(const aID: WindowsType);
 var
    slot: integer;
 begin
@@ -515,7 +515,6 @@ begin
 
    ApplyContentMinimumSize(GForms[slot]);
 
-   Result := GForms[slot].Handle;
    GForms[slot].SyncActiveTint;
    GForms[slot].UpdateSpectrumButton;
 end;

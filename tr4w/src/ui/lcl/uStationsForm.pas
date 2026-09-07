@@ -62,7 +62,7 @@ var
      Same shape as uBandMapView, and the reason there is no uses cycle here. }
    StationsOnShow: procedure = nil;
 
-function CreateTR4WStationsWindow: HWND;
+procedure CreateTR4WStationsWindow;
 
 { The view operations.  All of them are no-ops when the window is not open --
   the headless /EXPORT path never builds a form, and uStations is reachable from
@@ -415,7 +415,7 @@ begin
    TR4WStationsForm.Caption := aCaption;
 end;
 
-function CreateTR4WStationsWindow: HWND;
+procedure CreateTR4WStationsWindow;
 begin
    if TR4WStationsForm = nil then
       begin
@@ -428,7 +428,6 @@ begin
    // clause.
    OwnFormByMainWindow(TR4WStationsForm);
 
-   Result := TR4WStationsForm.Handle;
 end;
 
 end.

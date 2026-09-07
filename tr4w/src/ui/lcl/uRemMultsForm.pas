@@ -78,7 +78,7 @@ var
    RemMultsResolve: procedure(const aTag: PtrInt; out aText: string;
                               out aWorked: boolean) = nil;
 
-function CreateTR4WRemMultsWindow(const aIndex: WindowsType): HWND;
+procedure CreateTR4WRemMultsWindow(const aIndex: WindowsType);
 function RemMultsForm(const aIndex: WindowsType): TfrmRemMults;
 
 { Which multiplier type this window shows.  Four are pinned; the generic one
@@ -252,7 +252,7 @@ begin
    grdMults.Canvas.TextOut(aRect.Left + 2, aRect.Top, cellText);
 end;
 
-function CreateTR4WRemMultsWindow(const aIndex: WindowsType): HWND;
+procedure CreateTR4WRemMultsWindow(const aIndex: WindowsType);
 var
    slot: integer;
 begin
@@ -266,7 +266,6 @@ begin
 
    OwnFormByMainWindow(GForms[slot]);
 
-   Result := GForms[slot].Handle;
 end;
 
 end.

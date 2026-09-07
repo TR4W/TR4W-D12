@@ -85,7 +85,7 @@ var
   is. }
    DupeSheetOnClose: procedure(const aIndex: WindowsType) = nil;
 
-function CreateTR4WDupeSheetWindow(const aIndex: WindowsType): HWND;
+procedure CreateTR4WDupeSheetWindow(const aIndex: WindowsType);
 function DupeSheetForm(const aIndex: WindowsType): TfrmDupeSheet;
 
 { The writer holds a HANDLE -- Radio.tDupeSheetWnd -- not a form, and changing
@@ -257,7 +257,7 @@ begin
                             TTextStyle(grdDupes.Canvas.TextStyle));
 end;
 
-function CreateTR4WDupeSheetWindow(const aIndex: WindowsType): HWND;
+procedure CreateTR4WDupeSheetWindow(const aIndex: WindowsType);
 var
    slot: integer;
 begin
@@ -273,7 +273,6 @@ begin
    // SetWindowLongPtr(GWL_HWNDPARENT).
    OwnFormByMainWindow(GForms[slot]);
 
-   Result := GForms[slot].Handle;
 end;
 
 end.

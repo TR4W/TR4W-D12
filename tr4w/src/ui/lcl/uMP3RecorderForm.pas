@@ -46,7 +46,7 @@ type
 var
    TR4WMP3RecorderForm: TfrmMP3Recorder = nil;
 
-function CreateTR4WMP3RecorderWindow: HWND;
+procedure CreateTR4WMP3RecorderWindow;
 
 implementation
 
@@ -136,7 +136,7 @@ begin
    pbPeak.Position := peak;
 end;
 
-function CreateTR4WMP3RecorderWindow: HWND;
+procedure CreateTR4WMP3RecorderWindow;
 begin
    if TR4WMP3RecorderForm = nil then
       begin
@@ -145,7 +145,6 @@ begin
 
    OwnFormByMainWindow(TR4WMP3RecorderForm);
 
-   Result := TR4WMP3RecorderForm.Handle;
 end;
 
 end.

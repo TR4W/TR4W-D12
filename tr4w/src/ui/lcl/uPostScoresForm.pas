@@ -40,7 +40,7 @@ type
 var
    TR4WPostScoresForm: TfrmPostScores = nil;
 
-function CreateTR4WPostScoresWindow: HWND;
+procedure CreateTR4WPostScoresWindow;
 
 { THE STATUS LINE, SAFE FROM ANY THREAD.  Does nothing when the window is not
   open, which is what the old SetDlgItemTextA against a zero handle did. }
@@ -173,7 +173,7 @@ begin
    RunPOSTGetScoresThread;
 end;
 
-function CreateTR4WPostScoresWindow: HWND;
+procedure CreateTR4WPostScoresWindow;
 begin
    if TR4WPostScoresForm = nil then
       begin
@@ -182,7 +182,6 @@ begin
 
    OwnFormByMainWindow(TR4WPostScoresForm);
 
-   Result := TR4WPostScoresForm.Handle;
 end;
 
 finalization

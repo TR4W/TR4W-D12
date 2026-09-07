@@ -71,7 +71,7 @@ type
 var
    TR4WMMTTYForm: TfrmMMTTY = nil;
 
-function CreateTR4WMMTTYWindow: HWND;
+procedure CreateTR4WMMTTYWindow;
 
 implementation
 
@@ -86,7 +86,7 @@ uses
    uMMTTY,            { the MMTTY record and its protocol }
    uLCLFormHelpers;   { OwnFormByMainWindow }
 
-function CreateTR4WMMTTYWindow: HWND;
+procedure CreateTR4WMMTTYWindow;
 begin
    if TR4WMMTTYForm = nil then
       begin
@@ -94,7 +94,6 @@ begin
       end;
 
    OwnFormByMainWindow(TR4WMMTTYForm);
-   Result := TR4WMMTTYForm.Handle;
 end;
 
 { WHAT WM_INITDIALOG DID.

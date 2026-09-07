@@ -62,7 +62,7 @@ var
 var
    TR4WMasterForm: TfrmMaster = nil;
 
-function CreateTR4WMasterWindow: HWND;
+procedure CreateTR4WMasterWindow;
 
 implementation
 
@@ -172,7 +172,7 @@ begin
    grdMaster.Canvas.TextOut(aRect.Left + 2, aRect.Top, Calls.TextAt(idx));
 end;
 
-function CreateTR4WMasterWindow: HWND;
+procedure CreateTR4WMasterWindow;
 begin
    if TR4WMasterForm = nil then
       begin
@@ -181,7 +181,6 @@ begin
 
    OwnFormByMainWindow(TR4WMasterForm);
 
-   Result := TR4WMasterForm.Handle;
 end;
 
 end.

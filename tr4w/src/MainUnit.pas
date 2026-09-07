@@ -6100,27 +6100,27 @@ begin
   lclForm := nil;
   if ID = tw_FUNCTIONKEYSWINDOW_INDEX then
      begin
-     h := CreateTR4WFunctionKeysWindow;
+     CreateTR4WFunctionKeysWindow;
      lclForm := TR4WFunctionKeysForm;
      end
   else if ID = tw_BANDMAPWINDOW_INDEX then
      begin
-     h := CreateTR4WBandMapWindow;
+     CreateTR4WBandMapWindow;
      lclForm := TR4WBandMapForm;
      end
   else if ID = tw_STATIONS_INDEX then
      begin
-     h := CreateTR4WStationsWindow;
+     CreateTR4WStationsWindow;
      lclForm := TR4WStationsForm;
      end
   else if ID = tw_TELNETWINDOW_INDEX then
      begin
-     h := CreateTR4WTelnetWindow;
+     CreateTR4WTelnetWindow;
      lclForm := TR4WTelnetForm;
      end
   else if ID = tw_MMTTYWINDOW_INDEX then
      begin
-     h := CreateTR4WMMTTYWindow;
+     CreateTR4WMMTTYWindow;
      lclForm := TR4WMMTTYForm;
      end
   else if (ID = tw_REMMULTSWINDOW_INDEX)  or
@@ -6130,44 +6130,44 @@ begin
           (ID = tw_STATIONS_RM_PREFIX)    then
      begin
      // FIVE INSTANCES of one form -- the widest of the converted windows.
-     h := CreateTR4WRemMultsWindow(ID);
+     CreateTR4WRemMultsWindow(ID);
      lclForm := RemMultsForm(ID);
      end
   else if ID = tw_NETWINDOW_INDEX then
      begin
-     h := CreateTR4WNetworkWindow;
+     CreateTR4WNetworkWindow;
      lclForm := TR4WNetworkForm;
      end
   else if (ID = tw_RADIOINTERFACEWINDOW1_INDEX) or
           (ID = tw_RADIOINTERFACEWINDOW2_INDEX) then
      begin
      // TWO INSTANCES of one form -- an SO2R station has both open.
-     h := CreateTR4WRadioPanelWindow(ID);
+     CreateTR4WRadioPanelWindow(ID);
      lclForm := RadioPanelForm(ID);
      end
   else if ID = tw_MP3RECORDER then
      begin
-     h := CreateTR4WMP3RecorderWindow;
+     CreateTR4WMP3RecorderWindow;
      lclForm := TR4WMP3RecorderForm;
      end
   else if ID = tw_INTERCOMWINDOW_INDEX then
      begin
-     h := CreateTR4WIntercomWindow;
+     CreateTR4WIntercomWindow;
      lclForm := TR4WIntercomForm;
      end
   else if ID = tw_HAMSCOREWINDOW_INDEX then
      begin
-     h := CreateTR4WHamScoreWindow;
+     CreateTR4WHamScoreWindow;
      lclForm := TR4WHamScoreForm;
      end
   else if ID = tw_POSTSCORESWINDOW_INDEX then
      begin
-     h := CreateTR4WPostScoresWindow;
+     CreateTR4WPostScoresWindow;
      lclForm := TR4WPostScoresForm;
      end
   else if ID = tw_MASTERWINDOW_INDEX then
      begin
-     h := CreateTR4WMasterWindow;
+     CreateTR4WMasterWindow;
      lclForm := TR4WMasterForm;
      end
   else if (ID = tw_DUPESHEETWINDOW1_INDEX) or
@@ -6175,7 +6175,7 @@ begin
      begin
      // TWO INSTANCES, which is why this one takes the index: the dupe sheet is
      // per radio and both can be open at once.
-     h := CreateTR4WDupeSheetWindow(ID);
+     CreateTR4WDupeSheetWindow(ID);
      lclForm := DupeSheetForm(ID);
      end
   else
@@ -6198,13 +6198,27 @@ begin
         REPORTED RATHER THAN SILENT, because that is the case this branch now
         exists for. A new tw_ window added without an arm gets a log line naming
         the id instead of a window that does not appear. *)
-     h := 0;
      if logger <> nil then
         begin
         logger.Error('[Windows] OpenTR4WWindow has no arm for window id %d ' +
                      '(%s) -- every tool window must build an LCL form',
                      [Ord(ID), WindowNames[ID]]);
         end;
+     end;
+
+  (* THE HANDLE, DERIVED FROM THE FORM, ONCE.
+
+    Each arm above used to take an HWND back from its creator AND set lclForm
+    to the same object -- the window named twice, once as a thing and once as a
+    number. Fourteen functions returned a handle so that this one routine could
+    put it in WndHandle, which is why fourteen units declared HWND at all.
+
+    Nil form means no window, which is exactly what the error arm above leaves,
+    so the old `h := 0` there is this line instead. *)
+  h := 0;
+  if lclForm <> nil then
+     begin
+     h := lclForm.Handle;
      end;
 
   // The window's caption is its MENU ITEM's text with the accelerator cut off,

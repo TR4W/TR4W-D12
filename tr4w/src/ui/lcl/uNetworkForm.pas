@@ -52,7 +52,7 @@ type
 var
    TR4WNetworkForm: TfrmNetwork = nil;
 
-function CreateTR4WNetworkWindow: HWND;
+procedure CreateTR4WNetworkWindow;
 
 implementation
 
@@ -209,7 +209,7 @@ begin
    item.SubItems[aCol - 1] := aText;
 end;
 
-function CreateTR4WNetworkWindow: HWND;
+procedure CreateTR4WNetworkWindow;
 begin
    if TR4WNetworkForm = nil then
       begin
@@ -218,7 +218,6 @@ begin
 
    OwnFormByMainWindow(TR4WNetworkForm);
 
-   Result := TR4WNetworkForm.Handle;
 end;
 
 end.
