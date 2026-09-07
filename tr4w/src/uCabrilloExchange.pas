@@ -184,6 +184,13 @@ begin
      Result := True;
      Exit;
      end;
+(*
+   [AGENT]
+   First look at how TR4QT did the contest exchanges and consider its approach.
+   This code should be moved to the contestfactory. As several contests can share an exchange type, this can be an overridden function in the contest class
+   that calls the inherited base class GetCabrilloExchange. The ActiveExchange type of the contest should be know and the MyEx and HisEx can be returned.
+   This is a suggestion as I am open to other ways to do this.
+*)
 
   case ActiveExchange of
 

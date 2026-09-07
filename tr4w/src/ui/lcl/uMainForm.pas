@@ -161,12 +161,45 @@ type
       says that to the LCL. *)
     procedure MainFormCloseQuery(Sender: TObject; var CanClose: boolean);
 
-    (* DRAG THE WINDOW BY ITS BODY.
+    (* DRAG THE WINDOW BY ITS BODY -- three handlers, and no Win32 at all.
 
-      Was the WM_LBUTTONDOWN arm. It matters when Config.NoCaption is on and
-      there is no title bar to grab -- see DragWindow. *)
+      It matters when Config.NoCaption is on and there is no title bar to grab.
+
+      WAS TF.DragWindow, WHICH POSTED WM_SYSCOMMAND / SC_MOVE. That handed the
+      drag to the system's own move loop -- a Win32 idiom inherited from the
+      original program, not how an LCL application moves a window (NY4I,
+      2026-09-07: "is that the way this is typically done in an LCL
+      application?"). It is not; this is.
+
+      Three consequences beyond portability:
+
+        THE SNAP CAME WITH IT. Edge snapping used to be reachable only from
+        WMWindowPosChanging, because only the system move loop generated the
+        message it hangs on. Both drags now call the same uWindowSnap routine.
+
+        IT CAN BE TESTED. SC_MOVE takes over the mouse, so a body drag could
+        not be driven from outside the process at all -- Test-MainWindowEvents
+        says so in its own header. Posted mouse messages drive these handlers.
+
+        MOUSE POSITION IS TRACKED IN SCREEN COORDINATES, VIA ClientToScreen
+        ON THE EVENT'S OWN X,Y. Two things had to be true at once and only
+        this satisfies both.
+
+        SCREEN space, because client space breaks the moment a snap fires:
+        the window jumps to the edge, the next MouseMove arrives relative to
+        the MOVED window, and the drag walks away from the pointer.
+
+        From the EVENT, not from Mouse.CursorPos, because CursorPos reads the
+        physical pointer -- so a drag driven by posted messages would not move
+        the window at all, and the harness could only test this by seizing the
+        real mouse. ClientToScreen converts using the form's position at the
+        instant of the event, which is what makes the result absolute. *)
     procedure MainFormMouseDown(Sender: TObject; Button: TMouseButton;
                                 Shift: TShiftState; X, Y: integer);
+    procedure MainFormMouseMove(Sender: TObject; Shift: TShiftState;
+                                X, Y: integer);
+    procedure MainFormMouseUp(Sender: TObject; Button: TMouseButton;
+                              Shift: TShiftState; X, Y: integer);
 
     (* MINIMISED OR RESTORED -- take MMTTY with us.
 
@@ -174,6 +207,13 @@ type
       SIZE_RESTORED. That is the window STATE, not its size, and WindowState
       says it without decoding anything. *)
     procedure MainFormWindowStateChange(Sender: TObject);
+  private
+    { Body-drag state. PRIVATE, not published: Lint-FormFields requires every
+      published field to have a component behind it, and these are not
+      controls. }
+    FDragging:       boolean;
+    FDragMouseOrigin: TPoint;   // screen position of the pointer when it went down
+    FDragFormOrigin:  TPoint;   // Left/Top of the form at that same moment
   public
     (* The editable log's row supply and its double-click. See uLogGrid. *)
     procedure MainLogFetchRows(Sender: TObject; const aFirstIndex: Int64;
@@ -531,7 +571,7 @@ uses
    // this unit and a cycle back to here is legal.
    //
    LOGSUBS2,           // ExitProgram -- the close path, see MainFormCloseQuery
-   TF,                 // DragWindow -- see MainFormMouseDown
+   uWindowSnap,        // SnapWindowToEdges -- shared by both drag paths
    uFunctionKeys,      // ShowFMessages -- the F-key strip, on activate
    uMMTTY,             // MMTTY.MMTTYEngine -- see MainFormWindowStateChange
    Menus,              // TMenuItem -- the menu is a TMainMenu now
@@ -1722,18 +1762,68 @@ end;
 procedure TTR4WMainForm.MainFormMouseDown(Sender: TObject; Button: TMouseButton;
                                           Shift: TShiftState; X, Y: integer);
 begin
-   (* DRAG BY THE BODY, for a window with no title bar to grab.
-
-     DragWindow posts WM_SYSCOMMAND $F012 -- SC_MOVE with a caption hit-test --
-     which hands the drag to the system's own move loop. There is no
-     cross-platform equivalent, so it is gated rather than pretended away; with
-     a caption the frame already does this and nothing is lost. *)
-   {$IFDEF WINDOWS}
-   if Button = mbLeft then
+   if Button <> mbLeft then
       begin
-      DragWindow(Handle);
+      Exit;
       end;
-   {$ENDIF}
+
+   FDragging        := True;
+   FDragMouseOrigin := ClientToScreen(Point(X, Y));
+   FDragFormOrigin  := Point(Left, Top);
+
+   (* CAPTURE, because a drag routinely leaves the window behind. Without it
+     the pointer crosses onto another control or off the form and the moves
+     stop arriving here, so the window sticks mid-drag and only catches up if
+     the pointer wanders back. The system move loop did this implicitly. *)
+   MouseCapture := True;
+end;
+
+procedure TTR4WMainForm.MainFormMouseMove(Sender: TObject; Shift: TShiftState;
+                                          X, Y: integer);
+var
+   here: TPoint;
+   work: TRect;
+   newL: integer;
+   newT: integer;
+begin
+   if not FDragging then
+      begin
+      Exit;
+      end;
+
+   here := ClientToScreen(Point(X, Y));
+   newL := FDragFormOrigin.X + (here.X - FDragMouseOrigin.X);
+   newT := FDragFormOrigin.Y + (here.Y - FDragMouseOrigin.Y);
+
+   (* THE SIZE PASSED HERE IS THE LCL'S, AND THAT IS THE RIGHT ONE FOR THIS
+     PATH. Width and Height are what Left and Top are measured against, so the
+     window lands flush with its VISIBLE edge against the work area.
+
+     WMWindowPosChanging passes a different number for the same window, and
+     the difference is real rather than an inconsistency to iron out: the
+     message carries the OUTER size, which on Windows includes the invisible
+     resize border -- 1028 where the LCL says 1012, measured 2026-09-07. Each
+     path snaps in the coordinate space its own numbers are expressed in. *)
+   work := Screen.WorkAreaRect;
+   SnapWindowToEdges(newL, newT, Width, Height,
+                     work.Left, work.Top, work.Right, work.Bottom);
+
+   if (newL <> Left) or (newT <> Top) then
+      begin
+      SetBounds(newL, newT, Width, Height);
+      end;
+end;
+
+procedure TTR4WMainForm.MainFormMouseUp(Sender: TObject; Button: TMouseButton;
+                                        Shift: TShiftState; X, Y: integer);
+begin
+   if not FDragging then
+      begin
+      Exit;
+      end;
+
+   FDragging    := False;
+   MouseCapture := False;
 end;
 
 (* SNAP TO THE SCREEN EDGES while the window is being moved.
@@ -1745,8 +1835,6 @@ end;
   is the LCL's own, read when it is used -- so this now follows a taskbar that
   moves. *)
 procedure TTR4WMainForm.WMWindowPosChanging(var aMsg: TLMWindowPosMsg);
-const
-   SNAP = 20;
 var
    p:    PWindowPos;
    work: TRect;
@@ -1776,23 +1864,8 @@ begin
      (measured 2026-09-07). Test-MainWindowEvents therefore drives these arms
      the way a drag does, with a real size in the message. *)
    work := Screen.WorkAreaRect;
-
-   if (p^.X < SNAP) and (p^.X > -SNAP) then
-      begin
-      p^.X := 0;
-      end;
-   if (p^.Y < SNAP) and (p^.Y > -SNAP) then
-      begin
-      p^.Y := 0;
-      end;
-   if Abs(work.Bottom - (p^.cy + p^.Y)) < SNAP then
-      begin
-      p^.Y := work.Bottom - p^.cy;
-      end;
-   if Abs(work.Right - (p^.cx + p^.X)) < SNAP then
-      begin
-      p^.X := work.Right - p^.cx;
-      end;
+   SnapWindowToEdges(p^.X, p^.Y, p^.cx, p^.cy,
+                     work.Left, work.Top, work.Right, work.Bottom);
 end;
 
 procedure TTR4WMainForm.MenuItemClick(Sender: TObject);

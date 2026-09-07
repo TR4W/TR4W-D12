@@ -12,6 +12,8 @@ object TR4WMainForm: TTR4WMainForm
   OnActivate = MainFormActivate
   OnCloseQuery = MainFormCloseQuery
   OnMouseDown = MainFormMouseDown
+  OnMouseMove = MainFormMouseMove
+  OnMouseUp = MainFormMouseUp
   OnWindowStateChange = MainFormWindowStateChange
   ShowInTaskBar = stAlways
   LCLVersion = '4.8.0.0'

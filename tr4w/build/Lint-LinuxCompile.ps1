@@ -57,6 +57,7 @@ $UNITS = @(
    @{ Unit = 'ComPortEnumerator.pas'; Since = '2026-09-07' }
    @{ Unit = 'uSerialPort.pas';       Since = '2026-09-07' }
    @{ Unit = 'uYCCCSO2R.pas';         Since = '2026-09-07' }
+   @{ Unit = 'uWindowSnap.pas';       Since = '2026-09-07' }
 )
 
 if (-not (Test-Path $fpc))

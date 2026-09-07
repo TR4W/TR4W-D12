@@ -174,11 +174,13 @@ function MillisecondsToFormattedString(msecs: Cardinal; WithMsec: boolean): stri
 //function Pos(Substr: string; S: string): Integer;
 procedure InvertBoolean(var b: boolean);
 function inttopchar(i: integer): PAnsiChar;
-{$IFDEF WINDOWS}
-(* Hands the drag to the system's own move loop -- see the note at its only
-  caller, TTR4WMainForm.MainFormMouseDown, which is gated to match. *)
-procedure DragWindow(h: HWND);
-{$ENDIF}
+(* DragWindow IS GONE (2026-09-07). It posted WM_SYSCOMMAND / SC_MOVE to hand
+  a drag to the system's own move loop -- a Win32 idiom carried over from the
+  original program, and not how an LCL application moves a window.
+
+  Its one caller, TTR4WMainForm.MainFormMouseDown, does the drag itself now
+  with OnMouseDown/Move/Up. That is portable, it can be driven by a test, and
+  it shares the edge-snap rule with the caption drag (uWindowSnap). *)
 //procedure SaveStructure(Address: Pointer; Count: integer; FileName: string);
 //function tShellexecute(HWND: HWND; Operation, FileName, Parameters, Directory: PChar; showCmd: integer): hInst; // 4.75.3
 
@@ -429,13 +431,6 @@ begin
   Result := IntToPCharBuffer;
 end;
 
-
-{$IFDEF WINDOWS}
-procedure DragWindow(h: HWND);
-begin
-  PostMessage(h, WM_SYSCOMMAND, $F012, 0);
-end;
-{$ENDIF}
 
 {------------------------------------------------------------------}
 {  Function to convert int to string. (No sys utils = smaller EXE)  }

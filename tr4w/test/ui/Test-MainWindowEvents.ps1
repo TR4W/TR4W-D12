@@ -19,12 +19,16 @@
    failure happened on 2026-08-18 and was found by NY4I on the bench, not by a
    gate.
 
-   WHAT IT DOES NOT COVER. OnMouseDown hands the drag to the system's own move
-   loop (SC_MOVE), which cannot be driven from outside the process without
-   taking over the mouse. This checks that a left-button press on the body is
-   SURVIVED and that the window is still there afterwards -- the regression it
-   can actually catch is a handler that faults or that moves the window when
-   nobody dragged it.
+   THE BODY DRAG IS NOW DRIVEN FOR REAL. It used to hand the drag to the
+   system's own move loop (SC_MOVE), which cannot be driven from outside the
+   process without seizing the mouse -- so all this could check was that a
+   press was SURVIVED. TR4W moves the window itself now, in
+   OnMouseDown/Move/Up, and those fire on POSTED messages: down, a few moves,
+   up, and the window is expected to have travelled by the offset asked for.
+
+   That is why the handlers convert with ClientToScreen on the event's own
+   X,Y rather than reading Mouse.CursorPos -- CursorPos would follow the
+   physical pointer, and this test moves no pointer at all.
 
    WHAT SNAP PROVES. SetWindowPos is an ordinary API call, so it generates a
    real WM_WINDOWPOSCHANGING in the target process; if the handler is not
@@ -58,6 +62,7 @@ $SNAP        = 20        # must match the handler's own constant
 # carries one too.
 $SWP_QUIET   = 0x0004 -bor 0x0010
 $WM_CLOSE    = 0x0010
+$WM_MOUSEMOVE = 0x0200
 $WM_LBTNDOWN = 0x0201
 $WM_LBTNUP   = 0x0202
 $BM_CLICK    = 0x00F5
@@ -71,6 +76,17 @@ function Get-Rect
       throw 'GetWindowRect failed'
       }
    return $r
+}
+
+# One mouse message, with the coordinates packed the way Windows packs them.
+# wParam carries the button state -- 1 = MK_LBUTTON -- which the LCL reads to
+# build the Shift set, and a MOUSEMOVE with no button is how a drag is proved
+# to have ENDED.
+function Send-Mouse
+{
+   param([System.IntPtr] $Hwnd, [int] $Msg, [int] $X, [int] $Y, [int] $Button)
+   $lp = ($Y -shl 16) -bor ($X -band 0xFFFF)
+   [void][Win32.UiDrv]::PostMessageW($Hwnd, $Msg, [IntPtr]$Button, [IntPtr]$lp)
 }
 
 function Move-To
@@ -150,28 +166,90 @@ try
          ((($r.L + $w) -eq $wa.Right) -and (($r.T + $h) -eq $wa.Bottom)) `
          ("right edge $($r.L + $w) vs $($wa.Right), bottom $($r.T + $h) vs $($wa.Bottom)")
 
-   # -------------------------------------------------------- a press on the body
+   # ------------------------------------------------- a press that is NOT a drag
+   #
+   # The control for the drag below: down and up at the same point must leave
+   # the window exactly where it was. A handler that moves on the press alone
+   # passes a drag test and fails this one.
    $r = Move-To -Hwnd $hwnd -X 300 -Y 220 -W $w -H $h
-   [void][Win32.UiDrv]::PostMessageW($hwnd, $WM_LBTNDOWN, [IntPtr]1, [IntPtr]((40 -shl 16) -bor 40))
-   [void][Win32.UiDrv]::PostMessageW($hwnd, $WM_LBTNUP,   [IntPtr]0, [IntPtr]((40 -shl 16) -bor 40))
-   Start-Sleep -Milliseconds 600
-   $alive = -not $run.Process.HasExited
-   $r2 = $null
-   if ($alive)
+   Send-Mouse -Hwnd $hwnd -Msg $WM_LBTNDOWN -X 40 -Y 40 -Button 1
+   Send-Mouse -Hwnd $hwnd -Msg $WM_LBTNUP   -X 40 -Y 40 -Button 0
+   Start-Sleep -Milliseconds 400
+   if ($run.Process.HasExited)
       {
-      $r2 = Get-Rect -Hwnd $hwnd
-      }
-   if ($alive)
-      {
-      $why = "the window moved to $($r2.L),$($r2.T) with nobody dragging it"
-      $ok  = ($r2.L -eq $r.L) -and ($r2.T -eq $r.T)
+      Check 'a left-button press on the body is survived' $false `
+            "the process died, exit code $($run.Process.ExitCode)"
       }
    else
       {
-      $why = "the process died, exit code $($run.Process.ExitCode)"
-      $ok  = $false
+      $r2 = Get-Rect -Hwnd $hwnd
+      Check 'a press with no movement does not move the window' `
+            (($r2.L -eq $r.L) -and ($r2.T -eq $r.T)) `
+            "the window moved to $($r2.L),$($r2.T) with nobody dragging it"
       }
-   Check 'a left-button press on the body is survived' $ok $why
+
+   # ------------------------------------------------------- dragging by the body
+   #
+   # Mid-screen, and a distance well clear of SNAP in both directions, so this
+   # measures the drag and nothing else. Several moves rather than one, because
+   # a handler that only reads the FIRST move looks correct with a single step.
+   #
+   # THE CLIENT COORDINATE IS COMPENSATED FOR HOW FAR THE WINDOW HAS ALREADY
+   # MOVED, AND IT MUST BE. A drag is anchored in SCREEN space: hold the mouse
+   # still and the window stops, however far it has travelled. So when the
+   # window moves out from under a stationary pointer, the CLIENT coordinate
+   # that pointer reports changes by the same amount in the opposite direction
+   # -- which is exactly what the handler's ClientToScreen undoes.
+   #
+   # Posting a fixed client coordinate instead simulates a pointer glued to the
+   # window, which no mouse does. It compounds: four steps of 30 px moved the
+   # window 30, then 60, then 90, then 120 -- 300 px for a 120 px drag
+   # (measured 2026-09-07). That looked like a handler defect and was a test
+   # that modelled the wrong thing.
+   $DX = 120
+   $DY = 90
+   $r = Move-To -Hwnd $hwnd -X 400 -Y 300 -W $w -H $h
+   if (-not $run.Process.HasExited)
+      {
+      Send-Mouse -Hwnd $hwnd -Msg $WM_LBTNDOWN -X 60 -Y 60 -Button 1
+      foreach ($step in 1..4)
+         {
+         $now = Get-Rect -Hwnd $hwnd
+         Send-Mouse -Hwnd $hwnd -Msg $WM_MOUSEMOVE `
+                    -X (60 + [int]($DX * $step / 4) - ($now.L - $r.L)) `
+                    -Y (60 + [int]($DY * $step / 4) - ($now.T - $r.T)) -Button 1
+         Start-Sleep -Milliseconds 80
+         }
+      $now = Get-Rect -Hwnd $hwnd
+      Send-Mouse -Hwnd $hwnd -Msg $WM_LBTNUP `
+                 -X (60 + $DX - ($now.L - $r.L)) `
+                 -Y (60 + $DY - ($now.T - $r.T)) -Button 0
+      Start-Sleep -Milliseconds 400
+      }
+
+   if ($run.Process.HasExited)
+      {
+      Check 'dragging the body moves the window' $false `
+            "the process died, exit code $($run.Process.ExitCode)"
+      }
+   else
+      {
+      $r2 = Get-Rect -Hwnd $hwnd
+      Check 'dragging the body moves the window by the drag distance' `
+            ((($r2.L - $r.L) -eq $DX) -and (($r2.T - $r.T) -eq $DY)) `
+            ("asked to move by $DX,$DY and it moved by " +
+             "$($r2.L - $r.L),$($r2.T - $r.T)")
+
+      # And the button is released: a further move with no button down must be
+      # ignored. A handler that never clears its dragging flag leaves the
+      # window following the mouse forever, which is the worst way to find out.
+      Send-Mouse -Hwnd $hwnd -Msg $WM_MOUSEMOVE -X 400 -Y 400 -Button 0
+      Start-Sleep -Milliseconds 300
+      $r3 = Get-Rect -Hwnd $hwnd
+      Check 'a move after the button is released does not drag' `
+            (($r3.L -eq $r2.L) -and ($r3.T -eq $r2.T)) `
+            "the window kept moving after mouse-up, to $($r3.L),$($r3.T)"
+      }
 
    # ------------------------------------------------------------------- the close
    if (-not $run.Process.HasExited)
