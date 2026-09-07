@@ -337,7 +337,7 @@ begin
     TXM_HANDLE:
       begin
         MMTTY.MMTTYEngine := lp;
-        PostMmttyMessage(RXM_HANDLE, tr4whandle);
+        PostMmttyMessage(RXM_HANDLE, MainWindowHandle);
       end;
 
     TXM_CHAR:

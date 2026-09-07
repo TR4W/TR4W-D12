@@ -83,7 +83,7 @@ type
   end;
 
 const
-  ACCELERATORS: array[0..96] of TAcceleratorRow = (
+  ACCELERATORS: array[0..95] of TAcceleratorRow = (
     (acId: 10002; acCtrl: false; acAlt: true ; acShift: false; acKey: $58; acDisplay: 'Alt+X'; acInstall: true),   // menu_exit
     (acId: 10003; acCtrl: true ; acAlt: true ; acShift: false; acKey: $42; acDisplay: 'Ctrl+Alt+B'; acInstall: true),   // menu_cabrillo
     (acId: 10100; acCtrl: true ; acAlt: false; acShift: false; acKey: $4A; acDisplay: 'Ctrl+J'; acInstall: true),   // menu_options
@@ -177,7 +177,12 @@ const
     (acId: 10514; acCtrl: true ; acAlt: false; acShift: false; acKey: $22; acDisplay: 'Ctrl+PgDn'; acInstall: true),   // menu_inactiveradio_cwspeeddown
     (acId: 10517; acCtrl: true ; acAlt: true ; acShift: false; acKey: $49; acDisplay: 'Ctrl+Alt+I'; acInstall: true),   // menu_login
     (acId: 10557; acCtrl: true ; acAlt: true ; acShift: false; acKey: $4D; acDisplay: 'Ctrl+Alt+M'; acInstall: true),   // menu_windowsmanager
-    (acId: 10602; acCtrl: false; acAlt: true ; acShift: false; acKey: $48; acDisplay: 'Alt+H'; acInstall: true),   // menu_contents
+    (* Alt+H IS GONE (2026-09-07) with Help -> Contents and the CHM viewer.
+
+      Note acInstall was TRUE: unlike the menu row and its handler, both of
+      which were {$IFDEF LANG_RUS}, this accelerator was installed in EVERY
+      build -- so Alt+H has been dispatching command id 10602 to nothing at all
+      in the English program. *)
     (acId: 10603; acCtrl: false; acAlt: true ; acShift: false; acKey: $4F; acDisplay: 'Alt+O'; acInstall: true),   // menu_download_latest_cty_dat
     (acId: 10608; acCtrl: true ; acAlt: false; acShift: false; acKey: $54; acDisplay: 'Ctrl+T'; acInstall: true),   // menu_repeat_pota_parks
     (acId: 10651; acCtrl: false; acAlt: false; acShift: false; acKey: $0D; acDisplay: 'Enter'; acInstall: true)    // no menu_ constant

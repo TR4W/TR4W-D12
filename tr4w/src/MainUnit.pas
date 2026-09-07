@@ -63,7 +63,6 @@ uses
   uIO,
   utils_file,
   { $ IF LANG = 'RUS'}
-  HtmlHelp,
   { $ IFEND}
 
   // ShellAPI,
@@ -246,7 +245,6 @@ function GetTR4WBandFromNetworkBand(band: TRadioBand): BandType;
 procedure GetTRModeAndExtendedModeFromNetworkMode(netMode: TRadioMode; var mode:
   ModeType; var extMode: extendedModeType);
 
-procedure ShowHelp(Topic: PChar);
 procedure LoadinLog;
 (* THE TEXT OF ONE LOG ROW, COLUMN BY COLUMN.
 
@@ -397,6 +395,16 @@ procedure tClearDupesheet_Ctrl_K;
 procedure tClearDupesheet;
 procedure tr4w_add_note_in_log;
 procedure tr4w_log_qso_without_cw;
+(* THE MAIN WINDOW'S NATIVE HANDLE, derived, never cached.
+
+  For the handful of Windows-only APIs that take one -- DWM, HtmlHelp, MAPI
+  and MMTTY -- and for nothing else. Everything that merely wants to parent,
+  own, show or address a window has an LCL form to do it with.
+
+  Answers 0 before the form exists, which is what every caller's guard already
+  tested tr4whandle for. *)
+function MainWindowHandle: THandle;
+
 procedure tr4w_ShutDown;
 procedure CallWindowChange;
 procedure ExchangeWindowChange;
@@ -3871,59 +3879,42 @@ begin
 
 end;
 
-procedure ApplyDWMRoundedCorners;
-{ On Windows 11: ask the DWM compositor to round window corners natively
-  (title bar included) via DwmSetWindowAttribute(DWMWA_WINDOW_CORNER_PREFERENCE).
-  On Windows 10 fallback: clip the window region with CreateRoundRectRgn,
-  which rounds the visible corners of the title bar and client area. }
-const
-   CORNER_RADIUS = 20;
-type
-   TDwmSetWindowAttribute = function(hwnd: HWND; dwAttribute: DWORD;
-                                     pvAttribute: Pointer;
-                                     cbAttribute: DWORD): HRESULT; stdcall;
-var
-   hDwm: THandle;
-   DwmSetAttr: TDwmSetWindowAttribute;
-   preference: DWORD;
-   hr: HRESULT;
-   R: TRect;
-   Rgn: HRGN;
+function MainWindowHandle: THandle;
 begin
-   if tr4whandle = 0 then
+   if TR4WMainForm = nil then
       begin
+      Result := 0;
       Exit;
       end;
-
-   { Try Windows 11 DWM path first }
-   hr := -1; { assume failure until proven otherwise }
-   hDwm := LoadLibrary('dwmapi.dll');
-   if hDwm <> 0 then
-      begin
-      try
-         DwmSetAttr := GetProcAddress(hDwm, 'DwmSetWindowAttribute');
-         if Assigned(DwmSetAttr) then
-            begin
-            preference := 2; { DWMWCP_ROUND }
-            hr := DwmSetAttr(tr4whandle, 33 { DWMWA_WINDOW_CORNER_PREFERENCE },
-                             @preference, SizeOf(preference));
-            end;
-      finally
-         FreeLibrary(hDwm);
-      end;
-      end;
-
-   { Windows 10 fallback: clip window region to a rounded rectangle }
-   if hr <> 0 then
-      begin
-      Windows.GetWindowRect(tr4whandle, R);
-      Rgn := CreateRoundRectRgn(0, 0,
-               R.Right - R.Left,
-               R.Bottom - R.Top,
-               CORNER_RADIUS, CORNER_RADIUS);
-      SetWindowRgn(tr4whandle, Rgn, True);
-      end;
+   Result := TR4WMainForm.Handle;
 end;
+
+(* THE ROUNDED-CORNER CODE IS GONE (2026-09-07). The window wears whatever
+  corners the platform gives it.
+
+  ApplyDWMRoundedCorners asked the DWM compositor for Windows 11 corners --
+  DwmSetWindowAttribute(DWMWA_WINDOW_CORNER_PREFERENCE, DWMWCP_ROUND) -- with a
+  Windows 10 fallback that clipped the window to a CreateRoundRectRgn.
+
+  THE LCL HAS NO EQUIVALENT, and that was checked rather than assumed: neither
+  DWMWA_WINDOW_CORNER_PREFERENCE nor DWMWCP appears anywhere in Lazarus, and the
+  widgetset touches DwmApi in exactly one place (win32winapi.inc:1834) for
+  DWMWA_EXTENDED_FRAME_BOUNDS. So this could only ever have been a raw Win32
+  call, and it brought a LoadLibrary/GetProcAddress/FreeLibrary of its own on
+  every invocation -- duplicating work FPC's DwmApi unit already does at unit
+  initialisation.
+
+  NY4I, 2026-09-07: "remove the win32 specific rounded corners code to be pure
+  LCL. We will live with it or write a cross platform class we can use on our
+  code, but that is not needed now."
+
+  A DEFECT DIES WITH IT, worth recording in case the cross-platform version is
+  ever written. The callers' comment said "DWM rounding is compositor-managed;
+  no reapplication needed after move" -- true of the Windows 11 path and NOT of
+  the fallback, which sized a region from the window as it stood at that
+  instant. The main window became resizable earlier the same day, so on Windows
+  10 the region would have stopped matching the frame the first time an operator
+  dragged it. *)
 
 { See the WSJT-X note inside CreateMainWindow. }
 const
@@ -3947,7 +3938,10 @@ begin
   //                      WS_SYSMENU or WS_MINIMIZEBOX,
   //                      0, 30, MainWindowWidth, 0, 0, tr4w_main_menu,
   //                      hInstance, nil)
-  tr4whandle := CreateTR4WMainForm;
+  (* THE FORM IS THE WINDOW. This assigned its Handle to tr4whandle, a global
+    that no longer exists -- the three Windows-only callers that still need a
+    native handle ask MainWindowHandle for a fresh one. *)
+  CreateTR4WMainForm;
   tr4w_WindowsArray[tw_MAINWINDOW_INDEX].WndForm := TR4WMainForm;
 
   (* THE EDITABLE LOG IS AN LCL GRID -- see uLogGrid.
@@ -4261,8 +4255,6 @@ begin
   MakeMainWindowResizeable(ws * 46, 6 + EditableLogHeight + ws * 14);
   AnchorMainWindowControls;
 
-  { Ask DWM to round window corners natively (Windows 11+, no-op on older) }
-  ApplyDWMRoundedCorners;
 end;
 
 { Loud above this, trace below it.  A window that takes a fifth of a second
@@ -4363,9 +4355,6 @@ begin
   // which is how the callsign and exchange fields came to be created, sized and
   // positioned correctly and never drawn.
   ShowTR4WMainForm;
-     { DWM rounding is compositor-managed; no reapplication needed after move }
-    ApplyDWMRoundedCorners;
-
   QueueToolWindowRestore;
 end;
 
@@ -5245,13 +5234,6 @@ begin
 
     menu_home_page:
       OpenUrl('https://tr4w.net/'); // n4af 04.42.5
-
-{$IFDEF LANG_RUS}
-    menu_contents:
-      // WinHelp(tr4whandle, TR4W_HLP_FILENAME, HELP_CONTENTS, 0);
-      // Shellexecute(0, 'open', TR4W_HLP_FILENAME, nil, nil, SW_SHOWNORMAL);
-      ShowHelp('index');
-{$ENDIF}
 
     menu_download_latest_cty_dat:
       begin
@@ -6133,12 +6115,12 @@ begin
   SetMenuChecked(10199 + Ord(ID), True);
   tr4w_WindowsArray[ID].WndVisible := True;
 
- {
-  if ID = tw_RADIOINTERFACEWINDOW2_INDEX then
-  h := CreateDialogParam(hInstance, MAKEINTRESOURCE(tw_RADIOINTERFACEWINDOW1_INDEX), tr4whandle, tr4w_WindowsArray[tw_RADIOINTERFACEWINDOW1_INDEX].WndProcAdr, integer(ID))
-  else
-  h := CreateDialogParam(hInstance, MAKEINTRESOURCE(ID), tr4whandle, tr4w_WindowsArray[ID].WndProcAdr, integer(ID));
- }
+ 
+ // if ID = tw_RADIOINTERFACEWINDOW2_INDEX then
+ // h := CreateDialogParam(hInstance, MAKEINTRESOURCE(tw_RADIOINTERFACEWINDOW1_INDEX), tr4whandle, tr4w_WindowsArray[tw_RADIOINTERFACEWINDOW1_INDEX].WndProcAdr, integer(ID))
+ // else
+ // h := CreateDialogParam(hInstance, MAKEINTRESOURCE(ID), tr4whandle, tr4w_WindowsArray[ID].WndProcAdr, integer(ID));
+
 
   //h := CreateDialogParam(hInstance, MAKEINTRESOURCE(wi[ID]), tr4whandle, tr4w_WindowsArray[ID].WndProcAdr, integer(ID));
 
@@ -9846,18 +9828,20 @@ begin
        end;
 end;
 
-procedure ShowHelp(Topic: PChar);
-{$IFDEF LANG_RUS}
-var
-  HelpBuffer: string;
-{$ENDIF}
-begin
-{$IFDEF LANG_RUS}
-  HelpBuffer := SysUtils.Format('%str4w_manual_' + LANG + '.chm::/%s.html',
-    [string(TR4W_PATH_NAME), string(Topic)]);
-  HtmlHelp.hh(tr4whandle {GetDesktopWindow()}, PChar(HelpBuffer), HH_DISPLAY_TOPIC, 0);
-{$ENDIF}
-end;
+(* ShowHelp IS GONE (2026-09-07), with the CHM help system it drove.
+
+  NY4I: "remove references to htmlhelp as that is not a thing anymore."
+
+  IT HAD ALREADY STOPPED WORKING, which is the part worth recording. The whole
+  body sat inside {$IFDEF LANG_RUS} and TR4W builds English only, so it
+  compiled to an empty procedure -- for the life of the FPC tree. Its two call
+  sites were a Help menu arm that is itself inside {$IFDEF LANG_RUS} and so was
+  never compiled either, and a Help button on the server-log window that
+  therefore did nothing when clicked. That button is removed with it rather
+  than left as an affordance that answers nothing.
+
+  src\HtmlHelp.pas went too: a LoadLibrary of hhctrl.ocx, the HH_* command
+  constants, and an ANSI/wide entry-point pair. *)
 
 procedure RunExplorer(Command: PAnsiChar);
 var

@@ -231,8 +231,15 @@ begin
 
      94 until 2026-08-29, when Ctrl+O went with the Missing Mults report --
      its menu row was commented out by N4AF back in 4.37.10 and the MULTS
-     window shows the same thing, so the accelerator was the only way in. }
-   CheckEquals(93, installed, 'installed bindings (the table read out of the binary)');
+     window shows the same thing, so the accelerator was the only way in.
+
+     93 until 2026-09-07, when Alt+H went with the CHM help system. Its menu
+     row and its handler were both guarded by a LANG_RUS conditional and so
+     were never in an English build -- but acInstall was TRUE, so the KEY was
+     installed in every
+     build and had been firing command id 10602 into nothing. Exactly the
+     failure the 2026-08-29 note above describes, sitting one entry below it. }
+   CheckEquals(92, installed, 'installed bindings (the table read out of the binary)');
    CheckEquals(4, displayOnly, 'display-only rows');
 
    // Named individually: each is here for a DIFFERENT reason and losing any one

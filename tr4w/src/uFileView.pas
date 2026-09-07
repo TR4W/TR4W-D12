@@ -205,7 +205,7 @@ begin
      lpRecips.lpszAddress := TempBuffer;
      lpRecips.ulRecipClass := MAPI_TO;
 
-     MapiResult := MapiSendMail(0, tr4whandle, lpMessage, MAPI_LOGON_UI or MAPI_DIALOG, 0);
+     MapiResult := MapiSendMail(0, MainWindowHandle, lpMessage, MAPI_LOGON_UI or MAPI_DIALOG, 0);
      if MapiResult > 1 then
         begin
         TF.Format(wsprintfBuffer, 'Send Mail Error: %u', MapiResult);

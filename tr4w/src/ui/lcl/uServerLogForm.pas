@@ -115,14 +115,12 @@ type
     btnGetLog: TButton;
     btnCreateNewLog: TButton;
     chkShowContent: TCheckBox;
-    btnHelp: TButton;
     btnClose: TButton;
     pnlLog: TPanel;
     procedure HandleShow(Sender: TObject);
     procedure HandleClose(Sender: TObject; var Action: TCloseAction);
     procedure btnGetLogClick(Sender: TObject);
     procedure btnCreateNewLogClick(Sender: TObject);
-    procedure btnHelpClick(Sender: TObject);
     procedure btnCloseClick(Sender: TObject);
     procedure chkShowContentChange(Sender: TObject);
   private
@@ -171,7 +169,6 @@ begin
    btnGetLog.Caption          := string(RC_GETSERVLOG);
    btnCreateNewLog.Caption    := string(RC_CREATEAUNL);
    chkShowContent.Caption     := string(RC_SHOWSERVLOGC);
-   btnHelp.Caption            := string(HELP_WORD);
    btnClose.Caption           := string(CLOSE_WORD);
 
    FReplaceLog := False;
@@ -342,13 +339,6 @@ procedure TfrmServerLog.btnCreateNewLogClick(Sender: TObject);
 begin
    FReplaceLog := True;
    Close;
-end;
-
-procedure TfrmServerLog.btnHelpClick(Sender: TObject);
-begin
-   // QUALIFIED: TControl publishes a parameterless ShowHelp, so an unqualified
-   // call inside a form method resolves to the LCL's and fails on the argument.
-   MainUnit.ShowHelp('rulogsynchronize');
 end;
 
 procedure TfrmServerLog.btnCloseClick(Sender: TObject);

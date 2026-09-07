@@ -2783,7 +2783,8 @@ const
 //  menu_send_bug                         = 10605;
   menu_wiki_rus                         = 10604;
   menu_download_latest_cty_dat             = 10603;  // 4.75.3
-  menu_contents                         = 10602;
+  (* menu_contents (10602) IS GONE (2026-09-07) with the CHM help system --
+    the menu row, the Alt+H accelerator and the handler all removed. *)
   menu_about                            = 10601;
   menu_historytxt                       = 10600;
 
@@ -2816,7 +2817,20 @@ var
 //  CMDLowerCase                          : ShortString;
   DifferentContests                     : boolean;
 
-  tr4whandle                            : HWND;
+  (* tr4whandle IS GONE (2026-09-07). It cached the main window's HWND, set
+    once in CreateMainWindow and read by everything that wanted a window to
+    parent, own or address.
+
+    Almost all of that has converted -- the last dialog, the last message box,
+    the last popup menu and the last timer are all LCL now -- and what remains
+    is six Windows-only API calls that genuinely take an HWND. Those ask
+    MainUnit.MainWindowHandle, which derives it from the form each time.
+
+    A CACHED HANDLE WAS THE HAZARD, not the handle. MainUnit's own note on
+    FrmSetFocus says so: "Windows.SetFocus against the cached tr4whandle is the
+    same trap the title bar fell into" -- the LCL recreates a form's handle on
+    some property changes, and the cached copy then addresses a window that no
+    longer exists. *)
   (* tr4w_WinClass IS GONE (2026-09-06). It was the TWndClass TR4W
     registered for its own main window; that window is an LCL form and the
     variable had no reader anywhere in the tree. TWndClass is the one type

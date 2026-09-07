@@ -372,10 +372,12 @@ var
 
     (mrText: ''; mrId: MAXWORD),        // n4af 4.42.5
  //{
-{$IFDEF LANG_RUS}
-    (mrText: ''; mrId: menu_contents),
-    (mrText: ''; mrId: 0),
-{$ENDIF}
+    (* Help -> Contents IS GONE (2026-09-07) with the CHM help system. It was
+      {$IFDEF LANG_RUS}-guarded here AND in ProcessMenu, so an English build
+      had neither the row nor a handler -- but Lint-MenuDispatch reads source
+      text without evaluating conditionals, so it saw a row and an arm and was
+      satisfied. Removing the arm alone made it report the row as unhandled,
+      which is how the pair surfaced at all. *)
 //    (mrText: RC_SEND_BUG; mrId: menu_send_bug),
 //    (mrText: '-'; mrId: 0),
     (mrText: ''; mrId: menu_home_page),

@@ -107,15 +107,6 @@ object frmServerLog: TfrmServerLog
     TabOrder = 2
     OnChange = chkShowContentChange
   end
-  object btnHelp: TButton
-    Left = 698
-    Height = 23
-    Top = 8
-    Width = 75
-    Caption = 'Help'
-    TabOrder = 3
-    OnClick = btnHelpClick
-  end
   object btnClose: TButton
     Left = 698
     Height = 23

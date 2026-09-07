@@ -1860,8 +1860,6 @@ end;
 // -- the operator would have no way to tell a reconnecting cluster from a dead
 // one -- so every attempt is announced in the console.
 procedure ArmTelnetRetry;
-var
-  wnd: HWND;
 begin
   if not Config.tConnectionAtStartup then
      begin
@@ -1885,7 +1883,10 @@ begin
      begin
      Exit;   // window gone; nothing to reconnect into
      end;
-  wnd := tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndForm.Handle;
+  (* NOTHING READ THAT HANDLE. `wnd := ...WndForm.Handle` stood here and was
+    never used again -- the reconnect notice goes to AddStringToTelnetConsole
+    and the retry to a TTimer, neither of which wants a window. The nil test
+    above is NOT dead and stays: it asks whether the form still exists. *)
 
   // TF.Format is wsprintf-style: positional arguments, not an open array.
   TF.Format(wsprintfBuffer, 'Reconnecting to %s:%u in %u seconds...',
