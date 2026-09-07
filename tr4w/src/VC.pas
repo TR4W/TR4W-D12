@@ -309,6 +309,11 @@ const
     Distinct so a corpus or CI run can tell it apart from an export
     that ran and produced the wrong bytes. }
   EXITCODE_ALREADY_RUNNING              = 3;
+
+  { A headless run that was given no usable contest file. Distinct from 3
+    (another instance) and from 1 (a file that IS there and is the wrong
+    kind), because those three want different things done about them. }
+  EXITCODE_NO_CONTEST_FILE              = 4;
   MASKEVENT                             = False;
   ICOM_LONG_MODECOMMAND                 = True ;
 

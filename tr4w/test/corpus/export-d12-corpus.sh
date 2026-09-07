@@ -134,6 +134,7 @@ exit_reason() {
    case "$1" in
       124)        echo "timed out (45 s) -- a dialog, or a hang" ;;
       3)          echo "refused: another TR4W instance holds the mutex" ;;
+      4)          echo "refused: no usable contest file was passed" ;;
       3221225477) echo "CRASHED: access violation (0xC0000005)" ;;
       3221225725) echo "CRASHED: stack overflow (0xC00000FD)" ;;
       3221225620) echo "CRASHED: illegal instruction (0xC000001D)" ;;

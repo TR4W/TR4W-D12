@@ -589,6 +589,43 @@ end;
 
   Anything starting with - or / is a switch. TR4W's own /EXPORT uses the slash
   form and takes no value. }
+(* IS THIS A HEADLESS RUN? Asked of the WHOLE command line.
+
+  A headless mode has no operator, so nothing may open a dialog and nothing may
+  wait for an answer -- see the note at the assignment of tSilentExport for the
+  two ways this was got wrong before.
+
+  /FIELDCHECK is deliberately absent: it is handled far earlier, halts before
+  any of this, and never reaches a contest file. *)
+function IsHeadlessSwitch(const aArg: string): boolean;
+begin
+   (* THE CASTS ARE EXPLICIT AND THEY ARE THE POINT. SameText resolves to the
+     AnsiString overload here, so without them aArg and both literals are
+     narrowed SILENTLY -- which is what the build ratchet counts. Qualifying
+     it as SysUtils.SameText does not help: the literals still narrow.
+
+     A switch name is ASCII, so the conversion is lossless by construction.
+     Saying so explicitly is the difference between a conversion that was
+     thought about and one that just happened. *)
+   Result := SameText(AnsiString(aArg), AnsiString('/EXPORT')) or
+             SameText(AnsiString(aArg), AnsiString('/RESCORE'));
+end;
+
+function HasHeadlessSwitch: boolean;
+var
+   i: integer;
+begin
+   Result := False;
+   for i := 1 to ParamCount do
+      begin
+      if IsHeadlessSwitch(ParamStr(i)) then
+         begin
+         Result := True;
+         Exit;
+         end;
+      end;
+end;
+
 function FirstNonSwitchArgument: string;
 var
    i:   integer;
@@ -864,8 +901,14 @@ begin
       that the flag was missed once -- it is that "am I headless" was expressed
       as an equality test against one switch name, which silently answers NO for
       every switch added afterwards. *)
-   tSilentExport := SameText(AnsiString(ParamStr(2)), AnsiString('/EXPORT')) or
-                    SameText(AnsiString(ParamStr(2)), AnsiString('/RESCORE'));
+   (* AND IT IS NOT A POSITION EITHER.  The list above fixed "one switch
+      name"; this fixes the other half of the same mistake -- both arms tested
+      ParamStr(2) SPECIFICALLY, so `tr4w.exe /EXPORT` with no contest file in
+      front of it answered NO and started an interactive session.
+
+      The switch is looked for wherever it appears now. IsHeadlessSwitch owns
+      the list, so there is one place to add the next one. *)
+   tSilentExport := HasHeadlessSwitch;
 
    EarlyTrace('startup: checking the single-instance mutex');
    tMutex := CreateMutex(nil, False, tr4w_ClassName);
@@ -1122,6 +1165,26 @@ begin
     goto CommandLine;
   end;
 
+  (* NO CONTEST FILE, AND NOBODY TO ASK FOR ONE.
+
+    ShowNewContest is MODAL. Reached headless it opens the New Contest window
+    and waits forever, and because the mutex is already held every LATER
+    headless run exits 3 -- so one bad invocation reads as thirteen broken
+    exports rather than as the single failure it is. That is exactly how it
+    presented: a corpus run reporting 0 passed, 26 failed, with twelve of the
+    thirteen sets never having run at all.
+
+    The startup line for this mode already PROMISES "no prompt will open".
+    This is the line that makes the promise true. *)
+  if tSilentExport then
+     begin
+     logger.Error('[Startup] headless run with no contest file -- refusing. ' +
+                  'Pass the .cfg or the .db as an argument.');
+     EarlyTrace('startup: headless with no contest file -- refusing rather '
+                + 'than opening New Contest, which nobody could answer');
+     Halt(EXITCODE_NO_CONTEST_FILE);
+     end;
+
   begin
     ShowNewContest;
     if TR4W_CFG_FILENAME[0] = '_' then Exit;
@@ -1222,6 +1285,24 @@ begin
 
         cfkMissing:
            begin
+           (* INTERACTIVELY this is recoverable -- the operator gets a default
+             configuration and can fix it on screen.
+
+             HEADLESS IT IS NOT. The caller NAMED a file; if it cannot be read,
+             every artifact produced from here is built from defaults over an
+             empty log, and it is written to the paths the caller expected.
+             The corpus would then compare real bytes against those, and report
+             a content difference -- which sends the reader looking for a
+             scoring or export regression that does not exist. Fail where the
+             cause is. *)
+           if tSilentExport then
+              begin
+              logger.Error('Contest file does not exist or cannot be read, ' +
+                           'and this is a headless run: %s',
+                           [StrPas(@TR4W_CFG_FILENAME[0])]);
+              Halt(EXITCODE_NO_CONTEST_FILE);
+              end;
+
            logger.Warn('Contest file does not exist or cannot be read; ' +
                        'continuing with defaults: %s',
                        [StrPas(@TR4W_CFG_FILENAME[0])]);
