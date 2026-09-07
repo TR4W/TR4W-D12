@@ -1,47 +1,68 @@
 unit uSerialPort;
 {$I tr4w.inc}
 
-// The FPC mode and the UnicodeStrings modeswitch now come from tr4w.inc above,
-// which every unit in the tree includes.  They are not optional here: without
-// UnicodeStrings the unit compiles with an 8-bit `string`, and PWideChar(PortStr)
-// below silently reinterprets AnsiString bytes as UTF-16 -- CreateFileW then
-// fails with ERROR_INVALID_NAME (123) and no diagnostic anywhere.
+(* THE ONE SERIAL PORT OBJECT. One instance per open port, owned by whatever
+  opened it -- a radio, a rotator, a keyer -- never shared and never in a
+  global table.
+
+  IT SPEAKS NO WIN32. The body was CreateFileW / GetCommState / SetCommState /
+  SetCommTimeouts / ReadFile / WriteFile / PurgeComm until 2026-09-07, which
+  made every serial device in TR4W a Windows-only device. It now calls
+  tr4wserial, which is FreePascal's own serial unit vendored so that it also
+  exists on macOS -- see the header of tr4w\include\tr4wserial.pas for why a
+  unit the RTL already ships had to be copied.
+
+  WHAT CHANGED IN BEHAVIOUR, because two things did and neither is visible:
+
+  1. DTR AND RTS ARE NOT ASSERTED BY OPENING A PORT. The Win32 body set the
+     DCB's fDtrControl/fRtsControl bits itself; SerSetParams zeroes the DCB and
+     never touches them, so both lines come up LOW. OpenRaw therefore sets them
+     explicitly from ARts/ADtr, which is what the caller always passed and what
+     the radio factory has always carried per radio. A rig powered or enabled
+     off one of those lines would otherwise come up dead, silently.
+
+  2. READS ARE TIMED, NOT NON-BLOCKING. SerRead sets ReadIntervalTimeout to
+     MAXDWORD -- return immediately with whatever is buffered -- which would
+     spin a reader thread at 100% CPU. SerReadTimeout is the form that waits,
+     and ReadTimeoutMs (10 ms, the value the Win32 body used) is what it waits
+     for. Any read here is on a reading thread, so blocking is correct; nothing
+     sets tr4wserial's SerialIdle hook and nothing should, because that exists
+     for calls made on the main thread.
+
+  GONE, AND NOTHING CALLED THEM (checked across src, test and every .lpr):
+  Open and its TSerialBaudRate / TSerialParity / TSerialStopBits enums, the
+  untyped Read and Write, and the Handle property. The enums also declared
+  Mark and Space parity and 1.5 stop bits, which no caller ever selected and
+  which FreePascal's serial unit cannot express -- so they were a promise this
+  class could not have kept anyway. *)
 
 interface
 
 uses
-  Windows, SysUtils;
+  SysUtils,
+  tr4wserial;
 
 type
   ESerialError = class(Exception);
 
-  TSerialBaudRate = (
-    sbr110, sbr300, sbr600, sbr1200, sbr2400, sbr4800,
-    sbr9600, sbr19200, sbr38400, sbr57600, sbr115200
-  );
-
-  TSerialParity = (spNone, spOdd, spEven, spMark, spSpace);
-  TSerialStopBits = (ssb1, ssb1_5, ssb2);
-
   TSerialPort = class
   private
-    FHandle: THandle;
+    FHandle: TSerialHandle;
     FPortName: string;
+    FReadTimeoutMs: integer;
     function GetIsOpen: Boolean;
-    function BaudToConst(ABaud: TSerialBaudRate): DWORD;
-    function ParityToConst(AParity: TSerialParity): Byte;
-    function StopBitsToConst(AStopBits: TSerialStopBits): Byte;
     procedure CheckHandle;
+    function DeviceName: string;
   public
     constructor Create(const APortName: string);
     destructor Destroy; override;
 
-    procedure Open(
-      ABaud: TSerialBaudRate = sbr9600;
-      ADataBits: Byte = 8;
-      AParity: TSerialParity = spNone;
-      AStopBits: TSerialStopBits = ssb1
-    );
+    (* Open with the numbers the radio registry stores.
+
+      AParity is 0/1/2 -- uRadioRegistry's PARITY_NONE/ODD/EVEN, whose ordinals
+      happen to be TParityType's as well, which is why this takes a byte rather
+      than the enum. Anything else raises rather than silently opening a port
+      with parity the caller did not ask for. *)
     procedure OpenRaw(
       ABaudRate: DWORD;
       ADataBits: Byte;
@@ -52,183 +73,79 @@ type
     );
     procedure Close;
 
-    function Read(var Buffer; Count: DWORD): DWORD;
-    function Write(const Buffer; Count: DWORD): DWORD;
     function ReadString(MaxLen: Integer): string;
     procedure WriteString(const S: string);
-    // Byte-exact I/O for binary protocols (e.g. Icom CI-V). A serial port is a
-    // byte stream: text goes through WriteString (encoded to ASCII bytes here),
-    // binary goes through WriteBytes/ReadBytes. Never write a UTF-16 string's
-    // code units as if they were wire bytes.
+    (* Byte-exact I/O for binary protocols (e.g. Icom CI-V). A serial port is a
+      byte stream: text goes through WriteString (encoded to ASCII bytes here),
+      binary goes through WriteBytes/ReadBytes. Never write a UTF-16 string's
+      code units as if they were wire bytes. *)
     procedure WriteBytes(const Data: TBytes);
     function ReadBytes(MaxLen: Integer): TBytes;
 
-    property Handle: THandle read FHandle;
     property PortName: string read FPortName;
     property IsOpen: Boolean read GetIsOpen;
+    (* How long a read waits for the first byte. Ten milliseconds is what the
+      Win32 body's COMMTIMEOUTS asked for and what the reading threads were
+      written against. *)
+    property ReadTimeoutMs: integer read FReadTimeoutMs write FReadTimeoutMs;
   end;
 
 implementation
+
+const
+  (* SerOpen answers 0 on failure, NOT INVALID_HANDLE_VALUE -- it maps the
+    Windows sentinel onto zero itself so that one test works on both
+    platforms. *)
+  NO_PORT = TSerialHandle(0);
+
+  READ_TIMEOUT_MS_DEFAULT = 10;
 
 { TSerialPort }
 
 constructor TSerialPort.Create(const APortName: string);
 begin
-  inherited Create;
-  FHandle := INVALID_HANDLE_VALUE;
-  FPortName := APortName;  // e.g. 'COM1', 'COM3', 'COM10'
+   inherited Create;
+   FHandle := NO_PORT;
+   FPortName := APortName;          (* 'COM1', 'COM10', '/dev/ttyUSB0' *)
+   FReadTimeoutMs := READ_TIMEOUT_MS_DEFAULT;
 end;
 
 destructor TSerialPort.Destroy;
 begin
-  Close;
-  inherited Destroy;
+   Close;
+   inherited Destroy;
 end;
 
 function TSerialPort.GetIsOpen: Boolean;
 begin
-  Result := FHandle <> INVALID_HANDLE_VALUE;
+   Result := FHandle <> NO_PORT;
 end;
 
 procedure TSerialPort.CheckHandle;
 begin
-  if not IsOpen then
-     begin
-     raise ESerialError.Create('Serial port not open');
-     end;
+   if not IsOpen then
+      begin
+      raise ESerialError.Create('Serial port not open');
+      end;
 end;
 
-function TSerialPort.BaudToConst(ABaud: TSerialBaudRate): DWORD;
+(* THE PORT NAME THE PLATFORM WANTS.
+
+  On Windows a COM port above 9 can only be opened through the \\.\ device
+  namespace -- 'COM10' fails and '\\.\COM10' works -- and the prefix is
+  harmless below 10, so it is applied to every COMn name. A name that already
+  carries it, or that is not a COMn at all, is passed through untouched.
+
+  Everywhere else the name is a path and there is nothing to decorate. *)
+function TSerialPort.DeviceName: string;
 begin
-  case ABaud of
-    sbr110:     Result := CBR_110;
-    sbr300:     Result := CBR_300;
-    sbr600:     Result := CBR_600;
-    sbr1200:    Result := CBR_1200;
-    sbr2400:    Result := CBR_2400;
-    sbr4800:    Result := CBR_4800;
-    sbr9600:    Result := CBR_9600;
-    sbr19200:   Result := CBR_19200;
-    sbr38400:   Result := CBR_38400;
-    sbr57600:   Result := CBR_57600;
-    sbr115200:  Result := CBR_115200;
-  else
-    Result := CBR_9600;
-  end;
-end;
-
-function TSerialPort.ParityToConst(AParity: TSerialParity): Byte;
-begin
-  case AParity of
-    spNone:  Result := NOPARITY;
-    spOdd:   Result := ODDPARITY;
-    spEven:  Result := EVENPARITY;
-    spMark:  Result := MARKPARITY;
-    spSpace: Result := SPACEPARITY;
-  else
-    Result := NOPARITY;
-  end;
-end;
-
-function TSerialPort.StopBitsToConst(AStopBits: TSerialStopBits): Byte;
-begin
-  case AStopBits of
-    ssb1:    Result := ONESTOPBIT;
-    ssb1_5:  Result := ONE5STOPBITS;
-    ssb2:    Result := TWOSTOPBITS;
-  else
-    Result := ONESTOPBIT;
-  end;
-end;
-
-procedure TSerialPort.Open(
-  ABaud: TSerialBaudRate;
-  ADataBits: Byte;
-  AParity: TSerialParity;
-  AStopBits: TSerialStopBits);
-var
-  DCB: TDCB;
-  Timeouts: COMMTIMEOUTS;
-  PortStr: string;
-begin
-  if IsOpen then
-     begin
-     Exit;
-     end;
-
-  // For COM10+ you MUST use the \\.\ prefix
-  if Pos('\\.\', FPortName) = 0 then
-     begin
-     PortStr := '\\.\' + FPortName
-     end
-  else
-     begin
-     PortStr := FPortName;
-     end;
-
-  FHandle := CreateFileW(
-    PWideChar(PortStr),
-    GENERIC_READ or GENERIC_WRITE,
-    0,
-    nil,
-    OPEN_EXISTING,
-    FILE_ATTRIBUTE_NORMAL,
-    0
-  );
-  if FHandle = INVALID_HANDLE_VALUE then
-     begin
-     raise ESerialError.CreateFmt('Cannot open %s (error %d)',
-       [FPortName, GetLastError]);
-     end;
-
-  // Configure line settings
-  FillChar(DCB, SizeOf(DCB), 0);
-  DCB.DCBlength := SizeOf(DCB);
-  if not GetCommState(FHandle, DCB) then
-     begin
-     CloseHandle(FHandle);
-     FHandle := INVALID_HANDLE_VALUE;
-     raise ESerialError.Create('GetCommState failed');
-     end;
-
-  DCB.BaudRate := BaudToConst(ABaud);
-  DCB.ByteSize := ADataBits;
-  DCB.Parity   := ParityToConst(AParity);
-  DCB.StopBits := StopBitsToConst(AStopBits);
-  // Flags are set via Flags field in Delphi 7
-  DCB.Flags := DCB.Flags or $0001;  // fBinary = 1
-  if AParity <> spNone then
-     begin
-     DCB.Flags := DCB.Flags or $0002;  // fParity = 1
-     end;
-  // Disable DTR and RTS - not used for CAT control, raising them can interfere with radio
-  DCB.Flags := DCB.Flags and not $0030;  // fDtrControl bits 4-5 = 0 (DTR_CONTROL_DISABLE)
-  DCB.Flags := DCB.Flags and not $3000;  // fRtsControl bits 12-13 = 0 (RTS_CONTROL_DISABLE)
-
-  if not SetCommState(FHandle, DCB) then
-     begin
-     CloseHandle(FHandle);
-     FHandle := INVALID_HANDLE_VALUE;
-     raise ESerialError.Create('SetCommState failed');
-     end;
-
-  // Non-blocking timeouts for thread-based reading
-  FillChar(Timeouts, SizeOf(Timeouts), 0);
-  Timeouts.ReadIntervalTimeout         := 10;   // Max 10ms between characters
-  Timeouts.ReadTotalTimeoutMultiplier  := 0;    // No per-byte timeout
-  Timeouts.ReadTotalTimeoutConstant    := 10;   // Max 10ms total wait
-  Timeouts.WriteTotalTimeoutMultiplier := 10;
-  Timeouts.WriteTotalTimeoutConstant   := 50;
-
-  if not SetCommTimeouts(FHandle, Timeouts) then
-     begin
-     CloseHandle(FHandle);
-     FHandle := INVALID_HANDLE_VALUE;
-     raise ESerialError.Create('SetCommTimeouts failed');
-     end;
-
-  // Clear buffers
-  PurgeComm(FHandle, PURGE_RXCLEAR or PURGE_TXCLEAR);
+   Result := FPortName;
+   {$IFDEF WINDOWS}
+   if (Pos('\\.\', Result) = 0) and (Copy(UpperCase(Result), 1, 3) = 'COM') then
+      begin
+      Result := '\\.\' + Result;
+      end;
+   {$ENDIF}
 end;
 
 procedure TSerialPort.OpenRaw(
@@ -239,202 +156,113 @@ procedure TSerialPort.OpenRaw(
   ARts: Boolean;
   ADtr: Boolean);
 var
-  DCB: TDCB;
-  Timeouts: COMMTIMEOUTS;
-  PortStr: string;
+   parity: TParityType;
 begin
-  if IsOpen then
-     begin
-     Exit;
-     end;
+   if IsOpen then
+      begin
+      Exit;
+      end;
 
-  // For COM10+ you MUST use the \\.\ prefix
-  if Pos('\\.\', FPortName) = 0 then
-     begin
-     PortStr := '\\.\' + FPortName
-     end
-  else
-     begin
-     PortStr := FPortName;
-     end;
+   if AParity > Ord(High(TParityType)) then
+      begin
+      raise ESerialError.CreateFmt(
+         'Cannot open %s: parity %d is not none, odd or even',
+         [FPortName, AParity]);
+      end;
+   parity := TParityType(AParity);
 
-  FHandle := CreateFileW(
-    PWideChar(PortStr),
-    GENERIC_READ or GENERIC_WRITE,
-    0,
-    nil,
-    OPEN_EXISTING,
-    FILE_ATTRIBUTE_NORMAL,
-    0
-  );
-  if FHandle = INVALID_HANDLE_VALUE then
-     begin
-     raise ESerialError.CreateFmt('Cannot open %s (error %d)',
-       [FPortName, GetLastError]);
-     end;
+   (* EXPLICIT, not implicit. tr4wserial is FPC RTL code and compiles without
+     the UnicodeStrings modeswitch, so its String is an AnsiString and the
+     assignment would narrow silently. A device name is ASCII on every
+     platform TR4W runs on -- COMn, /dev/ttyUSB0, /dev/cu.usbserial-A50285BI
+     -- so there is nothing to lose, but the conversion is written down. *)
+   FHandle := SerOpen(AnsiString(DeviceName));
+   if FHandle = NO_PORT then
+      begin
+      raise ESerialError.CreateFmt('Cannot open %s', [FPortName]);
+      end;
 
-  // Configure line settings
-  FillChar(DCB, SizeOf(DCB), 0);
-  DCB.DCBlength := SizeOf(DCB);
-  if not GetCommState(FHandle, DCB) then
-     begin
-     CloseHandle(FHandle);
-     FHandle := INVALID_HANDLE_VALUE;
-     raise ESerialError.Create('GetCommState failed');
-     end;
+   (* No flow control, which is what the Win32 body asked for: it set fBinary
+     and nothing else, so neither CTS output control nor XON/XOFF was ever in
+     play on a TR4W serial link. *)
+   SerSetParams(FHandle, ABaudRate, ADataBits, parity, AStopBits, []);
 
-  // Use raw values directly
-  DCB.BaudRate := ABaudRate;
-  DCB.ByteSize := ADataBits;
-  DCB.Parity   := AParity;
+   (* EXPLICIT, because SerSetParams leaves both lines low. See the note at the
+     top of the unit -- this is the one behaviour that does not survive the
+     move on its own. *)
+   SerSetDTR(FHandle, ADtr);
+   SerSetRTS(FHandle, ARts);
 
-  // Convert stop bits: 1=ONESTOPBIT(0), 2=TWOSTOPBITS(2)
-  if AStopBits = 1 then
-     begin
-     DCB.StopBits := ONESTOPBIT
-     end
-  else if AStopBits = 2 then
-     begin
-     DCB.StopBits := TWOSTOPBITS
-     end
-  else
-     begin
-     DCB.StopBits := ONESTOPBIT;  // Default to 1
-     end;
-
-  // Flags are set via Flags field in Delphi 7
-  DCB.Flags := DCB.Flags or $0001;  // fBinary = 1
-  if AParity <> 0 then  // 0 = no parity
-     begin
-     DCB.Flags := DCB.Flags or $0002;  // fParity = 1
-     end;
-  // DTR control: bits 4-5. 0=$00=DISABLE, 1=$10=ENABLE
-  DCB.Flags := DCB.Flags and not $0030;  // clear fDtrControl bits first
-  if ADtr then
-     begin
-     DCB.Flags := DCB.Flags or $0010;     // DTR_CONTROL_ENABLE
-     end;
-  // RTS control: bits 12-13. 0=$0000=DISABLE, 1=$1000=ENABLE
-  DCB.Flags := DCB.Flags and not $3000;  // clear fRtsControl bits first
-  if ARts then
-     begin
-     DCB.Flags := DCB.Flags or $1000;     // RTS_CONTROL_ENABLE
-     end;
-
-  if not SetCommState(FHandle, DCB) then
-     begin
-     CloseHandle(FHandle);
-     FHandle := INVALID_HANDLE_VALUE;
-     raise ESerialError.Create('SetCommState failed');
-     end;
-
-  // Non-blocking timeouts for thread-based reading
-  FillChar(Timeouts, SizeOf(Timeouts), 0);
-  Timeouts.ReadIntervalTimeout         := 10;   // Max 10ms between characters
-  Timeouts.ReadTotalTimeoutMultiplier  := 0;    // No per-byte timeout
-  Timeouts.ReadTotalTimeoutConstant    := 10;   // Max 10ms total wait
-  Timeouts.WriteTotalTimeoutMultiplier := 10;
-  Timeouts.WriteTotalTimeoutConstant   := 50;
-
-  if not SetCommTimeouts(FHandle, Timeouts) then
-     begin
-     CloseHandle(FHandle);
-     FHandle := INVALID_HANDLE_VALUE;
-     raise ESerialError.Create('SetCommTimeouts failed');
-     end;
-
-  // Clear buffers
-  PurgeComm(FHandle, PURGE_RXCLEAR or PURGE_TXCLEAR);
+   SerFlushInput(FHandle);
+   SerFlushOutput(FHandle);
 end;
 
 procedure TSerialPort.Close;
 begin
-  if IsOpen then
-     begin
-     CloseHandle(FHandle);
-     FHandle := INVALID_HANDLE_VALUE;
-     end;
-end;
-
-function TSerialPort.Read(var Buffer; Count: DWORD): DWORD;
-begin
-  CheckHandle;
-  if not ReadFile(FHandle, Buffer, Count, Result, nil) then
-     begin
-     raise ESerialError.CreateFmt('ReadFile failed (error %d)', [GetLastError]);
-     end;
-end;
-
-function TSerialPort.Write(const Buffer; Count: DWORD): DWORD;
-begin
-  CheckHandle;
-  if not WriteFile(FHandle, Buffer, Count, Result, nil) then
-     begin
-     raise ESerialError.CreateFmt('WriteFile failed (error %d)', [GetLastError]);
-     end;
+   if IsOpen then
+      begin
+      SerClose(FHandle);
+      FHandle := NO_PORT;
+      end;
 end;
 
 function TSerialPort.ReadString(MaxLen: Integer): string;
-var
-  Buffer: array[0..1023] of AnsiChar;
-  BytesRead: DWORD;
-  Len: Integer;
 begin
-  Result := '';
-  if MaxLen > SizeOf(Buffer) then
-     begin
-     Len := SizeOf(Buffer)
-     end
-  else
-     begin
-     Len := MaxLen;
-     end;
-
-  BytesRead := Read(Buffer, Len);
-  if BytesRead > 0 then
-     begin
-     SetString(Result, Buffer, BytesRead);
-     end;
+   Result := string(TEncoding.ASCII.GetString(ReadBytes(MaxLen)));
 end;
 
 procedure TSerialPort.WriteString(const S: string);
 begin
-  // Serial is a byte stream. Encode the (ASCII CAT) text to its wire bytes
-  // rather than writing UTF-16 code units. D12: Length(S) is a code-unit
-  // count, not a byte count -- the old Write(S[1], Length(S)) sent
-  // "F<00>A<00>..." for "FA...", breaking every serial radio.
-  WriteBytes(TEncoding.ASCII.GetBytes(S));
+   (* Serial is a byte stream. Encode the (ASCII CAT) text to its wire bytes
+     rather than writing the string's own code units: with UnicodeStrings,
+     Length(S) is a code-unit count and not a byte count, and writing S[1]
+     directly sent "F<00>A<00>..." for "FA...", breaking every serial radio. *)
+   WriteBytes(TEncoding.ASCII.GetBytes(S));
 end;
 
 procedure TSerialPort.WriteBytes(const Data: TBytes);
 begin
-  if Length(Data) > 0 then
-     begin
-     Write(Data[0], Length(Data));
-     end;
+   if Length(Data) = 0 then
+      begin
+      Exit;
+      end;
+   CheckHandle;
+   if SerWrite(FHandle, Data[0], Length(Data)) <> Length(Data) then
+      begin
+      raise ESerialError.CreateFmt('Short write on %s (%d byte(s))',
+                                   [FPortName, Length(Data)]);
+      end;
 end;
 
 function TSerialPort.ReadBytes(MaxLen: Integer): TBytes;
 var
-  Buffer: array[0..1023] of Byte;
-  BytesRead: DWORD;
-  Len: Integer;
+   buffer: array[0..1023] of byte;
+   want:   Integer;
+   got:    LongInt;
 begin
-  if MaxLen > SizeOf(Buffer) then
-     begin
-     Len := SizeOf(Buffer)
-     end
-  else
-     begin
-     Len := MaxLen;
-     end;
+   Result := nil;
+   CheckHandle;
 
-  BytesRead := Read(Buffer, Len);
-  SetLength(Result, BytesRead);
-  if BytesRead > 0 then
-     begin
-     Move(Buffer[0], Result[0], BytesRead);
-     end;
+   want := MaxLen;
+   if want > SizeOf(buffer) then
+      begin
+      want := SizeOf(buffer);
+      end;
+   if want <= 0 then
+      begin
+      Exit;
+      end;
+
+   (* SerReadTimeout, not SerRead: SerRead returns whatever happens to be
+     buffered, immediately, which turns a reading thread into a spin loop. *)
+   got := SerReadTimeout(FHandle, buffer, want, FReadTimeoutMs);
+   if got <= 0 then
+      begin
+      Exit;
+      end;
+
+   SetLength(Result, got);
+   Move(buffer[0], Result[0], got);
 end;
 
 end.
