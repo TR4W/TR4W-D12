@@ -50,6 +50,16 @@ fi
 
 SRC="$REPO/tr4w/src"
 OUT="${TMPDIR:-/tmp}/tr4w-darwin"
+
+# CLEARED EVERY RUN, and searched.
+#
+# Both halves were missing and together they produced a phantom failure: a
+# STALE .ppu from an earlier run made FPC recompile a unit it should have
+# reused, and the recompile failed on a dependency that resolves perfectly
+# well when compiled directly -- "Can't find unit version used by VC", for a
+# Version.pas sitting right there. Compiling the same unit by hand then
+# succeeded, which is the signature of stale state rather than broken source.
+rm -rf "$OUT"
 mkdir -p "$OUT"
 
 # The unit search path, smallest set that works. Kept explicit rather than
@@ -63,6 +73,7 @@ FU="$FU -Fu$LAZROOT/lcl/units/$ARCH"
 FU="$FU -Fu$LAZROOT/components/lazutils/lib/$ARCH"
 FU="$FU -Fu$SRC -Fu$SRC/utils -Fu$SRC/trdos -Fu$SRC/radioFactory -Fu$SRC/domain"
 FU="$FU -Fu$REPO/tr4w/include"
+FU="$FU -Fu$OUT"   # units built earlier in this run
 
 compile_one() {
    unit=$1
