@@ -1,5 +1,26 @@
 # Walks EVERY navigation section in Preferences and reports what each one shows.
 #
+# ############################################################################
+# THIS SCRIPT CANNOT OPEN PREFERENCES ANY MORE, AND ITS FAILURE IS NOT A BUG
+# IN THE PROGRAM. Read this before chasing "FAIL: Preferences never opened".
+#
+# It gets there by posting WM_COMMAND with TR4W's own command id 10111. The
+# main menu became a TMainMenu on 2026-09-07, and a TMenuItem's NATIVE command
+# id is assigned by the LCL -- 140, not 10111 -- so an externally posted
+# WM_COMMAND names nothing and the program correctly ignores it. Invoke-MenuSmoke
+# has the same dependency and the same note; NY4I decided to leave the mechanism
+# alone rather than reintroduce Win32 ids for a test's benefit.
+#
+# So a FAIL here says the harness is stale, not that Preferences is broken. It
+# needs a way in that does not use command ids -- the control channel in
+# docs\CONTROL_CHANNEL_DESIGN.md is the intended one -- and until then the
+# sections it used to walk are unverified by anything automatic.
+#
+# Everything BELOW the opening step still works and is worth keeping: the
+# section walk, the log-based verdict, and the reasoning about why window
+# enumeration cannot answer the question.
+# ############################################################################
+#
 # The golden corpus and the unit tests are both blind to the UI, and a section
 # that fails to populate does not raise -- it just comes up empty, which is
 # exactly how the nav tree itself came up empty for a whole session without one

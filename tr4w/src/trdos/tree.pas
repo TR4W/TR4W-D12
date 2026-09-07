@@ -979,6 +979,8 @@ var
 implementation
 
 uses
+  Dialogs,         (* QuestionDlg -- OkayToDeleteExistingFile, was MessageBoxA *)
+  Controls,        (* mrYes / mrNo -- the modal results QuestionDlg answers *)
   uCallCompress,   // pre-migration: extracted callsign-compression primitives (golden-tested)
   LogStuff,
   uNet,
@@ -2737,7 +2739,15 @@ end;
 function OkayToDeleteExistingFile(FileName: PAnsiChar): boolean;
 begin
   TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_ALREADYEXISTSOKAYTODELETE)), FileName);
-  Result := MessageBoxA(0, wsprintfBuffer, 'TR4W', MB_YESNO or MB_ICONWARNING) = IDYES;
+
+  (* YES IS THE DEFAULT BUTTON, as it was: MB_YESNO with no MB_DEFBUTTON2
+    focuses the first button, and QuestionDlg's 'IsDefault' marker applies to
+    the button BEFORE it (LCL promptdialog.inc:900) -- so it goes after mrYes,
+    not at the end. That is the opposite of YesOrNo in MainUnit, where No is
+    deliberately the default and the marker sits last; getting it wrong here
+    would put a delete one reflexive Enter away instead of two. *)
+  Result := QuestionDlg('TR4W', LclText(string(wsprintfBuffer)), mtWarning,
+                        [mrYes, 'IsDefault', mrNo], 0) = mrYes;
 end;
 
 function OkayToProceed: boolean;

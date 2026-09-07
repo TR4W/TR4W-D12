@@ -4695,9 +4695,15 @@ begin
       Exit;
       end;
 
-   if MessageBoxA(Self.Handle,
-                  PAnsiChar(WinAnsi(Format(TC_PREFS_CONFIRMREMOVE, [radio.Name]))),
-                  'TR4W', MB_YESNO or MB_ICONQUESTION) <> IDYES then
+   (* AN LCL FORM WAS ASKING FOR ITS OWN NATIVE HANDLE so that a Win32 message
+     box could be owned by it -- Self.Handle, PAnsiChar, WinAnsi and all. A
+     QuestionDlg is application-modal and the LCL owns the ownership.
+
+     Yes stays the default: MB_YESNO with no MB_DEFBUTTON2 focused the first
+     button, and QuestionDlg's 'IsDefault' marker applies to the button BEFORE
+     it, so it goes after mrYes. *)
+   if QuestionDlg('TR4W', LclText(Format(TC_PREFS_CONFIRMREMOVE, [radio.Name])),
+                  mtConfirmation, [mrYes, 'IsDefault', mrNo], 0) <> mrYes then
       begin
       Exit;
       end;
@@ -7614,9 +7620,14 @@ begin
    conflicts := DescribePortConflicts(FStore, prof);
    if conflicts <> '' then
       begin
-      if MessageBoxA(Self.Handle,
-                     PAnsiChar(WinAnsi(Format(TC_PREFS_PORTCONFLICT, [conflicts]))),
-                     'TR4W', MB_YESNO or MB_ICONWARNING or MB_DEFBUTTON2) <> IDYES then
+      (* MB_DEFBUTTON2 MADE **NO** THE DEFAULT HERE, and that is deliberate --
+        this asks whether to activate a profile whose ports collide. The marker
+        therefore sits last, applying to mrNo, exactly as YesOrNo in MainUnit
+        does and the opposite of the remove-radio prompt above. Getting it the
+        wrong way round would put a known-broken profile one reflexive Enter
+        away. *)
+      if QuestionDlg('TR4W', LclText(Format(TC_PREFS_PORTCONFLICT, [conflicts])),
+                     mtWarning, [mrYes, mrNo, 'IsDefault'], 0) <> mrYes then
          begin
          Exit;
          end;
@@ -7768,17 +7779,21 @@ begin
    // dismiss.
    if FDirty then
       begin
-      answer := MessageBoxA(Self.Handle,
-                            PAnsiChar(WinAnsi(TC_PREFS_UNSAVED)),
-                            PAnsiChar(WinAnsi(TC_PREFS_UNSAVEDTITLE)),
-                            MB_YESNOCANCEL or MB_ICONQUESTION);
-      if answer = IDCANCEL then
+      (* THREE BUTTONS, and the caption is this prompt's own rather than a
+        blanket 'TR4W'. MB_YESNOCANCEL focused Yes, which QuestionDlg does for
+        the first button anyway; the marker is written out so that stays true
+        if the order is ever edited. *)
+      answer := QuestionDlg(LclText(TC_PREFS_UNSAVEDTITLE),
+                            LclText(TC_PREFS_UNSAVED),
+                            mtConfirmation,
+                            [mrYes, 'IsDefault', mrNo, mrCancel], 0);
+      if answer = mrCancel then
          begin
          Action := caNone;
          Exit;
          end;
 
-      if answer = IDYES then
+      if answer = mrYes then
          begin
          // A save that fails (validation, a bad path) must NOT close the window
          // and lose the work it just refused to store.

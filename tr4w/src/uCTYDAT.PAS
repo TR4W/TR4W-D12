@@ -810,7 +810,7 @@ begin
   Windows.ZeroMemory(@CTY.ctyMaxLengthIndexArray, SizeOf(CTY.ctyMaxLengthIndexArray));
 
 {$IF tDebugMode}
-  MessageBox(0, TC_DEBUGMODECREATEDPREFIXESTXT, 'debug mode', MB_OK or MB_ICONINFORMATION {or MB_RTLREADING } or MB_TASKMODAL);
+  MessageDlg('debug mode', string(TC_DEBUGMODECREATEDPREFIXESTXT), mtInformation, [mbOK], 0);
   utils_file.tOpenFileForWrite(h, 'prefixes.txt');
 {$IFEND}
 

@@ -637,20 +637,17 @@ procedure CreateCabrilloFile;
        if scp.SendFile( tReportsFilename ) then
           begin
           logger.Info( '%s file uploaded to SCP', [ tReportsFilename ] );
-          // ShowMessage('Log file successfully uploaded to SuperCheckPartial');
-          MessageBoxW( tr4whandle,
-             'Log file successfully uploaded to SuperCheckPartial', nil,
-             MB_OK or MB_ICONINFORMATION { or MB_RTLREADING } or MB_TASKMODAL );
+          (* MainUnit.ShowMessage, which is what the commented-out line above
+            was reaching for. It carries the headless guard as well, so a
+            /EXPORT run cannot stop here waiting for an OK. *)
+          ShowMessage( 'Log file successfully uploaded to SuperCheckPartial' );
           end
        else
           begin
           logger.Error( 'Error sending %s to SCP', [ tReportsFilename ] );
           logger.Error( scp.errorResult );
-          // ShowMessage(PChar('Error uploading log file to SuperCheckPartial' + #13#10 + scp.errorResult));
-          MessageBoxW( tr4whandle,
-             pchar( 'Error uploading log file to SuperCheckPartial' + #13#10 +
-             scp.errorResult ), nil, MB_OK or
-             MB_ICONINFORMATION { or MB_RTLREADING } or MB_TASKMODAL );
+          ShowMessage( 'Error uploading log file to SuperCheckPartial' +
+                       sLineBreak + scp.errorResult );
           end;
      finally
        scp.Free;

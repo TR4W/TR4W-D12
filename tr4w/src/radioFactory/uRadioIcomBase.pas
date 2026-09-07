@@ -366,6 +366,12 @@ type
 
 implementation
 
+uses
+   (* showwarning -- the app's warning path. IMPLEMENTATION-section, so a
+     radio driver does not impose TF on everything that uses this unit, and
+     the cycle back through TF is legal. *)
+   TF;
+
 var
   logger: TLogLogger;
 
@@ -2096,12 +2102,22 @@ begin
                  else
                     begin
                     logger.Warn('[%s] CI-V Transceive is OFF — frequency/mode will not update automatically', [radioModel]);
-                    MessageBoxW(0,
-                      PChar(radioModel + ': CI-V Transceive is disabled on this radio.' + #13#10 +
-                      'Frequency and mode will not update automatically in network mode.' + #13#10 + #13#10 +
-                      'To fix: Set > Connectors > CI-V Transceive = ON'),
-                      'TR4W - Radio Configuration Warning',
-                      MB_OK or MB_ICONWARNING or MB_TASKMODAL);
+                    (* THIS RUNS ON THE READING THREAD, and that is why it
+                      goes through showwarning rather than putting up its own
+                      dialog. Win32 will show a MessageBox from any thread, on
+                      that thread's own modal loop; an LCL MessageDlg from a
+                      worker is not safe. showwarning marshals to the main
+                      thread for us, logs the same text, and skips the modal
+                      entirely on a headless /EXPORT run -- none of which this
+                      call site had.
+
+                      The caption becomes plain 'TR4W'. The old one said
+                      'TR4W - Radio Configuration Warning'; the text names the
+                      radio and the setting, so nothing is lost that the box
+                      does not already say. *)
+                    showwarning(radioModel + ': CI-V Transceive is disabled on this radio.' + sLineBreak +
+                      'Frequency and mode will not update automatically in network mode.' + sLineBreak + sLineBreak +
+                      'To fix: Set > Connectors > CI-V Transceive = ON');
                     end;
                  end;
               end

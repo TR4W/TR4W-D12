@@ -836,7 +836,7 @@ procedure ShowNote(CE: ContestExchange);
 begin
   TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(RC_NOTE + ' :'#13#10#13#10'%s')),
     @EditableQSORXData.Prefix);
-  ShowMessageParent(wsprintfBuffer);
+  ShowMessage(string(wsprintfBuffer));
 end;
 
 procedure OpenEditQSOWindow;

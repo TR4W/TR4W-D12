@@ -223,7 +223,14 @@ const
 implementation
 
 uses Log4D, uFreqTimeFormat, uStrSearch, uAnsiStr,   // Issue #997: freq/time formatters + PChar search helpers extracted + golden-tested
-     uCrashLog;   // LogCaughtException, OnMainThread, ReportOffMainThread
+     uCrashLog,   // LogCaughtException, OnMainThread, ReportOffMainThread
+     (* THE LCL'S DIALOGS, for showwarning, and uMainThread to get onto the
+       main thread first. This does not undo the weight this unit is careful
+       about: what it avoids is MainUnit and the radio factory behind it, not
+       the LCL, which all three programs -- the app, tr4wserver and the unit
+       tests -- link already. *)
+     Dialogs,
+     uMainThread;
 
 // Own Log4D logger (initialized at the foot of this unit), replacing the former
 // MainUnit.logger borrow.  MainUnit was used for NOTHING ELSE here -- three
@@ -270,15 +277,63 @@ function Format(Output: PAnsiChar; Format: PAnsiChar; P1, P2, p3, p4, p5, p6, p7
 // trimmed string). TF's version was a duplicate that returned PAnsiChar into a
 // static buffer, untrimmed; the trailing-CRLF difference is cosmetic.
 
+(* Shows the warning once we are known to be on the main thread. Called
+  directly, or through uMainThread when showwarning was reached from a worker.
+  aData is a PString this routine owns and disposes. *)
+type
+  (* ^string, NOT PString. FPC declares PString as ^AnsiString under {$H+},
+    so carrying our UTF-16 text through one would narrow it on the way in and
+    widen it again on the way out -- a round trip through the system code page
+    for no reason, in the one path that exists to report a problem. *)
+  PWarningText = ^string;
+
+procedure ShowWarningOnMainThread(aData: PtrInt);
+var
+  text: PWarningText;
+begin
+  text := PWarningText(aData);
+  try
+     MessageDlg('TR4W', LclText(text^), mtWarning, [mbOK], 0);
+  finally
+     Dispose(text);
+  end;
+end;
+
 procedure showwarning(Text: string);
+var
+  carried: PWarningText;
 begin
   logger.Warn(Text);
+
   // Silent/batch export (/EXPORT) runs headless with no operator to dismiss a
   // modal -- a MessageBox would block the run indefinitely (e.g. the ARRL10 /
   // Winter Field Day "LOCATION field is empty" check in PostUnit). The warning
   // is already in the log above; skip the modal in that mode.
   if tSilentExport then Exit;
-  MessageBoxW(0, PChar(Text), 'TR4W', MB_OK or MB_ICONWARNING or MB_SYSTEMMODAL or MB_TOPMOST);
+
+  (* THE THREAD GUARD LIVES HERE, not at the call sites, because at least one
+    caller is not on the main thread: uRadioIcomBase warns about CI-V Transceive
+    being off from inside the CI-V parser, which runs on TReadingThread.
+
+    MessageBoxW did not care -- Win32 will put up a message box from any thread,
+    on that thread's own modal loop. An LCL MessageDlg is not safe that way, so
+    swapping one for the other at the call site would have turned a working
+    warning into an intermittent fault in a driver. Marshalling in the one place
+    every warning already passes through makes every caller safe, including the
+    ones nobody has audited.
+
+    MB_SYSTEMMODAL and MB_TOPMOST are gone with the Win32 call. They existed to
+    beat TR4W's always-on-top main window; an application-modal LCL dialog does
+    not need them -- the same reasoning YesOrNo recorded when it converted. *)
+  if OnMainThread then
+     begin
+     MessageDlg('TR4W', LclText(Text), mtWarning, [mbOK], 0);
+     Exit;
+     end;
+
+  New(carried);
+  carried^ := Text;
+  RunOnMainThread(@ShowWarningOnMainThread, PtrInt(carried));
 end;
 
 function FreqToPChar2(i: integer): string;

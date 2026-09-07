@@ -275,9 +275,9 @@ procedure GenerateCallsignsList(FileName: PAnsiChar);
 procedure MakeAllCallsignsList;
 
 procedure showint(Num: integer);
+(* ShowMessage2 and ShowMessageParent are GONE (2026-09-07) -- see the body.
+  One had no callers, the other had one and was identical. *)
 procedure ShowMessage(Text: string);
-procedure ShowMessage2(Text: string);
-procedure ShowMessageParent(Text: string);
 procedure ShowSyserror(ErrorCode: Cardinal);
 procedure FilePreview;
 
@@ -2833,8 +2833,8 @@ end;
 
 procedure ShowSyserror(ErrorCode: Cardinal);
 begin
-  MessageBoxW(0, PChar(SysUtils.SysErrorMessage(ErrorCode)), 'TR4W', MB_OK or
-    MB_ICONERROR or MB_TASKMODAL);
+  (* MB_TASKMODAL was asking by hand for what an LCL dialog is by default. *)
+  MessageDlg('TR4W', LclText(SysUtils.SysErrorMessage(ErrorCode)), mtError, [mbOK], 0);
 end;
 
 function YesOrNo(const Text: string): integer;
@@ -7231,65 +7231,27 @@ begin
   //ShowMessage(wsprintfBuffer);
 end;
 
-procedure ShowMessageParent(Text: string);
-begin
-  logger.Info('Sending to MessageBox: ' + Text);
-  (* NO MODAL WHEN THERE IS NO OPERATOR.
+(* ONE ROUTINE, WHERE THERE WERE THREE.
 
-     showwarning in TF has had this guard for a while, with a comment describing
-     exactly this failure -- and its three siblings here never got it, so the
-     rule held for warnings and not for messages. Two headless runs hung on it
-     in one session: "Invalid statement in config file" during /RESCORE, and
-     "RESTART.BIN is for a different contest" during a batch export. Both sat
-     forever with nobody to click OK.
+  ShowMessage, ShowMessage2 and ShowMessageParent differed in exactly one thing
+  -- the caption Win32 was given: 'TR4W', nil, and 'TR4W' again -- and carried
+  three verbatim copies of the twelve-line headless guard between them. Measured
+  2026-09-07: ShowMessage2 had NO callers at all, and ShowMessageParent had one,
+  in uEditQSO, which now calls this. Its own comment already said the owner
+  window it was named for had gone.
 
-     The text is already in the log above, which is what a headless run has
-     instead of a screen. *)
-  if tSilentExport then
-     begin
-     Exit;
-     end;
-  (* THE LCL'S, AND NO OWNER WINDOW.
-
-    Was MessageBoxW(Parent, ...), and Parent came from EditQSOFormHandle --
-    an LCL form asked for its native handle so a Win32 message box could be
-    owned by it. ShowMessage is application-modal and the LCL owns the
-    ownership. MB_TASKMODAL was asking for the same thing by hand. *)
-  ShowMessage(Text);
-end;
-
-procedure ShowMessage2(Text: string);
-begin
-  logger.Info('Sending to MessageBox: ' + Text);
-  (* NO MODAL WHEN THERE IS NO OPERATOR.
-
-     showwarning in TF has had this guard for a while, with a comment describing
-     exactly this failure -- and its three siblings here never got it, so the
-     rule held for warnings and not for messages. Two headless runs hung on it
-     in one session: "Invalid statement in config file" during /RESCORE, and
-     "RESTART.BIN is for a different contest" during a batch export. Both sat
-     forever with nobody to click OK.
-
-     The text is already in the log above, which is what a headless run has
-     instead of a screen. *)
-  if tSilentExport then
-     begin
-     Exit;
-     end;
-  MessageBoxW(tr4whandle, PChar(Text), nil, MB_OK or MB_ICONINFORMATION
-    {or MB_RTLREADING } or MB_TASKMODAL);
-end;
-
+  MB_TASKMODAL was asking by hand for what an LCL dialog is by default, and
+  tr4whandle was only ever the owner of the box. *)
 procedure ShowMessage(Text: string);
-//var MsgInfo : TMsgBoxParams;
 begin
   logger.Info('Sending to MessageBox: ' + Text);
+
   (* NO MODAL WHEN THERE IS NO OPERATOR.
 
      showwarning in TF has had this guard for a while, with a comment describing
-     exactly this failure -- and its three siblings here never got it, so the
-     rule held for warnings and not for messages. Two headless runs hung on it
-     in one session: "Invalid statement in config file" during /RESCORE, and
+     exactly this failure -- and its siblings here never got it, so the rule
+     held for warnings and not for messages. Two headless runs hung on it in one
+     session: "Invalid statement in config file" during /RESCORE, and
      "RESTART.BIN is for a different contest" during a batch export. Both sat
      forever with nobody to click OK.
 
@@ -7299,9 +7261,8 @@ begin
      begin
      Exit;
      end;
-  MessageBoxW(tr4whandle, PChar(Text), 'TR4W', MB_OK or MB_ICONINFORMATION
-    {or MB_RTLREADING } or MB_TASKMODAL);
 
+  MessageDlg('TR4W', LclText(Text), mtInformation, [mbOK], 0);
 end;
 
 procedure FilePreview;

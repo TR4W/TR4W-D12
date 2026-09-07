@@ -35,6 +35,9 @@ procedure RunTR4W;
 implementation
 
 uses
+  (* QuestionDlg / MessageDlg and their results -- the CTY download prompt
+    and the --help text, both of which were MessageBoxW. *)
+  Dialogs, Controls,
    uAppTimers,   (* StartAppTimer / StopAppTimer -- LCL TTimers, not SetTimer *)
   Messages,
   MMSystem,
@@ -532,8 +535,12 @@ begin
                'Download it now?';
      end;
 
-  if MessageBoxW(0, PChar(prompt), 'TR4W',
-     MB_YESNO or MB_ICONQUESTION or MB_SYSTEMMODAL or MB_TOPMOST) <> IDYES then
+  (* Yes is the default, as MB_YESNO made it -- the marker applies to the
+    button before it. MB_SYSTEMMODAL and MB_TOPMOST are gone with the Win32
+    call; this runs before the main window exists, so there is nothing for it
+    to have to appear over. *)
+  if QuestionDlg('TR4W', LclText(prompt), mtConfirmation,
+     [mrYes, 'IsDefault', mrNo], 0) <> mrYes then
      begin
      logger.Fatal('Unable to load ' + ctyPath +
                   ' -- operator declined the download');
@@ -724,7 +731,9 @@ begin
       Exit;
       end;
 
-   MessageBoxW(0, PWideChar(
+   (* THE USAGE TEXT, in an LCL dialog. The PWideChar cast is gone with the
+     Win32 call -- MessageDlg takes the string. *)
+   MessageDlg('TR4W', LclText(
       'TR4W ' + TR4W_CURRENTVERSION_NUMBER + sLineBreak + sLineBreak +
       'Usage:  tr4w.exe [<contest>.cfg] [options]' + sLineBreak + sLineBreak +
       '  <contest>.cfg      open this contest configuration' + sLineBreak +
@@ -742,7 +751,7 @@ begin
       '  ' + AvailableLanguages + sLineBreak + sLineBreak +
       'A catalogue in languages\<code>\tr4w.po beside the exe overrides' + sLineBreak +
       'the embedded one.'),
-      'TR4W', MB_OK or MB_ICONINFORMATION);
+      mtInformation, [mbOK], 0);
    Result := True;
 end;
 

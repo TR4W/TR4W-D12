@@ -78,10 +78,33 @@ function StrPLCopy(Dest: PAnsiChar; const Source: AnsiString; MaxLen: Cardinal):
   retires with the last of them -- an LCL form needs none of it. }
 function WinAnsi(const s: string): RawByteString;
 
+{ TEXT FOR AN LCL DIALOG, which takes an AnsiString and wants UTF-8 in it.
+
+  THE MIRROR IMAGE OF WinAnsi, and it exists for the opposite reason. tr4w.inc
+  makes `string` UTF-16; the LCL is compiled without that, so its `string`
+  parameters are AnsiString, and it sets DefaultSystemCodePage to 65001 so that
+  those hold UTF-8. Passing our UTF-16 straight in therefore does the RIGHT
+  thing at run time -- and the compiler still calls it a narrowing conversion
+  "with potential data loss", because in general Unicode -> Ansi is one.
+
+  Here it is not: UTF-16 to UTF-8 loses nothing. Saying so explicitly is what
+  CLAUDE.md asks for -- convert at the boundary rather than letting the
+  assignment do it silently -- and it keeps the narrowing ceiling meaningful,
+  which is the point of the ceiling.
+
+  RawByteString for the same reason WinAnsi uses it: the bytes carry no
+  code-page tag, so nothing can convert them a second time on the way in. }
+function LclText(const s: string): RawByteString;
+
 implementation
 
 uses
    Windows;   // WideCharToMultiByte, CP_ACP
+
+function LclText(const s: string): RawByteString;
+begin
+   Result := RawByteString(UTF8Encode(s));
+end;
 
 function WinAnsi(const s: string): RawByteString;
 var
