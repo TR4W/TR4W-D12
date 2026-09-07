@@ -124,24 +124,19 @@ const
   VBR_METHOD_NEW                        = 2;
   VBR_METHOD_MTRH                       = 3;
   VBR_METHOD_ABR                        = 4;
-type
-  MCI_DGV_OPEN_PARMS = record
-    dwCallback: PDWORD;
-    wDeviceID: UINT;
-    lpstrDeviceType: LPTSTR;
-    lpstrElementName: LPTSTR;
-    lpstrAlias: LPTSTR;
-    dwStyle: DWORD;
-    hwndParent: HWND;
-  end;
-
 const
+  (* THE MCI DIGITAL-VIDEO BLOCK IS GONE (2026-09-07) -- record and five flags,
+    none of them ever used.
 
-  MCI_DGV_OPEN_WS                       = $00010000;
-  MCI_DGV_OPEN_PARENT                   = $00020000;
-  MCI_DGV_OPEN_NOSTATIC                 = $00040000;
-  MCI_DGV_OPEN_16BIT                    = $00080000;
-  MCI_DGV_OPEN_32BIT                    = $00100000;
+    MCI_DGV_OPEN_PARMS and MCI_DGV_OPEN_WS / _PARENT / _NOSTATIC / _16BIT /
+    _32BIT are the parameters for opening an MCI digital-video device. This
+    unit records audio through waveIn and encodes it with lame_enc.dll: there
+    is no mciSendCommand anywhere in it, no MCI_OPEN, and the record type was
+    referenced only by its own declaration. The hwndParent field in it was one
+    of the last HWND mentions in the tree and belonged to an API nothing calls.
+
+    Found while re-checking a claim I had stated as fact -- that every
+    remaining HWND was a Windows-only feature in use. Two were not. *)
 
   MP3RecorderDurationSA                 : array[TMP3RecorderDuration] of PAnsiChar = ('EACH QSO', 'EACH HOUR', 'NON-STOP');
   Freq                                  = 11025;

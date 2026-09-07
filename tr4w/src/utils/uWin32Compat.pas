@@ -36,25 +36,30 @@ uses
    Windows;
 
 const
-   // MAKEINTRESOURCE aliases the `windows` unit stops one short of.  Delphi's
-   // Winapi.Windows declares all of these; FPC declares only the older
-   // IDI_EXCLAMATION / IDI_ASTERISK / IDI_HAND spellings they alias.
-   IDI_WARNING     = IDI_EXCLAMATION;
-   IDI_ERROR       = IDI_HAND;
-   IDI_INFORMATION = IDI_ASTERISK;
+   (* THE IDI_ ALIASES ARE GONE (2026-09-07) -- IDI_WARNING, IDI_ERROR and
+     IDI_INFORMATION had no reader. uLogCompare listed this unit for IDI_WARNING
+     and never used it; uInputQueryForm went the other way and says why in its
+     own comment, that it wants IDI_EXCLAMATION because the Win32 headers define
+     WARNING as an alias of it. Nothing needed the alias. *)
 
    // Device-notification flags -- see RegisterDeviceNotificationW below.
    DEVICE_NOTIFY_WINDOW_HANDLE  = $00000000;
    DEVICE_NOTIFY_SERVICE_HANDLE = $00000001;
 
-   (* Parent handle that makes CreateWindowEx produce a MESSAGE-ONLY window:
-     never shown, never enumerated, receives no broadcasts.
+   (* HWND_MESSAGE IS GONE (2026-09-07). It was the parent handle that makes
+     CreateWindowEx produce a message-only window.
 
-     uWinTimer was its only user and is deleted (2026-09-06) -- the CW-by-CAT
-     timer is an LCL TTimer now. Kept because uIcomNetworkTransport builds the
-     same kind of window for its keepalive timers, and because a constant the
-     Windows headers define is the wrong thing to delete and re-derive. *)
-   HWND_MESSAGE = HWND(-3);
+     THE COMMENT THAT KEPT IT WAS WRONG ON ITS OWN TERMS. It already recorded
+     that uWinTimer, its only user, had been deleted on 2026-09-06 -- and then
+     kept the constant "because uIcomNetworkTransport builds the same kind of
+     window for its keepalive timers". It does not: that unit contains no
+     CreateWindowEx, no RegisterClass and no reference to this constant.
+
+     Nothing in live code calls CreateWindowEx at all any more -- checked with
+     the comment-stripping parser, six matches and all six in src\backup. There
+     is no message-only window to parent, so there is nothing for this to do.
+
+     NY4I asked what the LCL alternative was. There is nothing to replace. *)
 
 type
    HDEVNOTIFY = Pointer;

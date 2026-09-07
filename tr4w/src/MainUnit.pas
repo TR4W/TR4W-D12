@@ -644,7 +644,6 @@ uses
   uPendingCounties,
   uCTYUpdate,
   uTRMasterUpdate,  // Download TRMASTER.DTA (Super Check Partial)
-  uWin32Compat,   // AnimateWindow -- see that unit for the whole FPC gap list
   ExtCtrls,           // TTimer -- the window-layout autosave
   DateUtils,          // MilliSecondsBetween -- the start-up timing
   uLogSearchForm,     // SaveLogSearchLayout -- not a tw_ window, see SaveTR4WPOSFILE

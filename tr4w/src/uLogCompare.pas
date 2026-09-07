@@ -27,7 +27,6 @@ uses
   SysUtils,
   VC,
   TF,
-  uWin32Compat,   // IDI_WARNING -- the FPC gap list
 
   PostUnit,
   Windows,
