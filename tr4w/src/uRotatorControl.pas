@@ -126,6 +126,28 @@ type
         every send. Without this the log would gain a line per attempt for a
         rotator that is simply switched off, which buries anything real. }
       PortReported: boolean;
+      (* THIS ROTATOR'S SERIAL PORT, and it is ITS OWN.
+
+        NY4I, 2026-09-07: "Two rotator boxes cannot share one serial port. [...]
+        the individual rotator controller should have its own serial port [...]
+        The reason is we can define multiple rotators on unique serial ports and
+        then add them to the station profile or keep them both live."
+
+        So a definition names a port and owns it, and defining a second rotator
+        means giving it a different one. This replaces two things that both got
+        it wrong: CPUKeyer.SerialPortConfigured_Handle[], the CW keyer's array,
+        which rotators reached into because it happened to hold open COM ports;
+        and a port-keyed table here that briefly replaced it, carrying forward
+        a claim from the older code that two rotators might share a line.
+
+        THE CODE ALREADY DISAGREED WITH THAT CLAIM. TRotatorBase.TurnFrame takes
+        an azimuth and nothing else -- no driver emits an address byte -- so two
+        controllers on one wire would receive identical frames and turn
+        together. There was never a way to address the second one.
+
+        nil until the first successful open, which is the state a rotator whose
+        controller is switched off spends most of its life in. *)
+      Link: TSerialPort;
       { The driver's outlet. A METHOD on the live rotator rather than a closure
         capturing it: same effect, and it names the owner instead of implying it.
         Each driver is handed ITS OWN rotator's SendBytes, which is what stops
@@ -137,24 +159,6 @@ type
 var
    GLive: TObjectList<TLiveRotator> = nil;
 
-   (* ONE PORT OBJECT PER PORT, owned here.
-
-     Not one per rotator, and not the CPU keyer's array either. Two rotators
-     may share a line -- an antenna switch on one wire is a real arrangement --
-     so the port is keyed by PORT and the rotators that name it get the same
-     object; opening it twice is what would make the second rotator fail with
-     "access denied" rather than work.
-
-     It replaces CPUKeyer.SerialPortConfigured_Handle[], which is the CW
-     keyer's table and had nothing to do with rotators beyond both wanting a
-     COM port. Indexed by PortType so the shape is unchanged and the sharing
-     stays obvious; nil means "not open", which is the state a rotator that is
-     switched off spends most of its life in. *)
-   GPorts: array[PortType] of TSerialPort;
-
-   (* The finalization's loop variable. A unit's finalization section cannot
-     declare one. *)
-   rotatorPort: PortType;
 
 // Forward: SendBytes is a method on the type declared above, but the routine it
 // delegates to needs PortFromName and the driver's UsesSerialPort, so it lives
@@ -168,6 +172,9 @@ function OpenPortFor(const aLive: TLiveRotator): boolean; forward;
 
 destructor TLiveRotator.Destroy;
 begin
+   (* The rotator owns its port, so it closes it. Nothing else can be holding
+     it: a port belongs to exactly one controller. *)
+   FreeAndNil(Link);
    FreeAndNil(Driver);
    inherited Destroy;
 end;
@@ -272,14 +279,14 @@ begin
      closed port as its cue. Same idea as MaintainSerialLink on the radios --
      an open port is not a working link. *)
    try
-      GPorts[aLive.Port].WriteBytes(frame);
+      aLive.Link.WriteBytes(frame);
    except
       on E: Exception do
          begin
          logger.Warn('[uRotatorControl] %s: write to %s failed (%s) -- closing '
                      + 'the port; it will be reopened on the next command',
                      [aLive.Name, string(PortTypeSA[aLive.Port]), E.Message]);
-         GPorts[aLive.Port].Close;
+         aLive.Link.Close;
          // Say it again when it comes back.
          aLive.PortReported := False;
          Exit;
@@ -465,22 +472,21 @@ begin
       Exit;
       end;
 
-   port := GPorts[aLive.Port];
-   if (port <> nil) and port.IsOpen then
+   if (aLive.Link <> nil) and aLive.Link.IsOpen then
       begin
       Result := True;
       Exit;
       end;
 
-   if port = nil then
+   if aLive.Link = nil then
       begin
-      (* Ord(PortType) IS the COM number -- Serial1 = 1 -- which is the same
-        rule the radio factory uses to name its port. The object outlives any
-        one open: it is created once per port and reopened as the controller
-        comes and goes. *)
-      port := TSerialPort.Create(Format('COM%d', [Ord(aLive.Port)]));
-      GPorts[aLive.Port] := port;
+      (* Ord(PortType) IS the COM number -- Serial1 = 1 -- the same rule the
+        radio factory, the WinKeyer and the CW keyer all use. The object
+        outlives any one open: it is created once and reopened as the
+        controller comes and goes. *)
+      aLive.Link := TSerialPort.Create(Format('COM%d', [Ord(aLive.Port)]));
       end;
+   port := aLive.Link;
 
    baud := aLive.BaudRate;
    if baud = 0 then
@@ -557,18 +563,15 @@ begin
          Continue;
          end;
 
-      (* TWO ROTATORS MAY SHARE A PORT -- an antenna switch on one line is a
-        real arrangement -- and opening it twice is what would make the second
-        fail with "access denied" rather than work.
+      (* EACH ROTATOR OPENS ITS OWN PORT, and two of them naming the same one
+        is a configuration error rather than an arrangement to support: the
+        second open fails and says so, once, through OpenPortFor's existing
+        report.
 
-        A scan of the earlier rotators for the same port stood here to prevent
-        that. It is no longer needed: GPorts is keyed by PORT, so the second
-        rotator finds the first one's object already open and OpenPortFor
-        returns immediately. The rule is now in the data rather than in a
-        loop that had to remember it.
-
-        The baud rate computed here was dead as well -- OpenPortFor works it
-        out from the same two fields. *)
+        A scan of the earlier rotators for a duplicate port stood here, to stop
+        the second open from being attempted at all. It was defending the
+        opposite model. The baud rate computed beside it was dead as well --
+        OpenPortFor works it out from the same two fields. *)
       OpenPortFor(GLive[i]);
       end;
 end;
@@ -622,13 +625,5 @@ initialization
 
 finalization
    FreeAndNil(GLive);
-   (* THE PORTS OUTLIVE THE ROTATORS THAT NAMED THEM, because they are keyed by
-     port and not by rotator -- so they are closed here, once, rather than in
-     TLiveRotator.Destroy where a shared line would be closed by whichever
-     rotator happened to be freed first. *)
-   for rotatorPort := Low(PortType) to High(PortType) do
-      begin
-      FreeAndNil(GPorts[rotatorPort]);
-      end;
 
 end.
