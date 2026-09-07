@@ -1506,8 +1506,8 @@ begin
    idKey    := AnsiString(aCommand);
    cmdValue := AnsiString(aValue);
 
-   Windows.ZeroMemory(@keyShort, SizeOf(keyShort));
-   Windows.ZeroMemory(@valueShort, SizeOf(valueShort));
+   FillChar(keyShort, SizeOf(keyShort), 0);
+   FillChar(valueShort, SizeOf(valueShort), 0);
    keyShort   := ShortString(idKey);
    valueShort := ShortString(cmdValue);
 
@@ -1899,8 +1899,7 @@ begin
 
                ctDirectory, ctFileName:
                   begin
-                     Windows.CopyMemory(CFGCA[i].crAddress, @CustomCMD[1],
-                        length(CustomCMD));
+                     Move(CustomCMD[1], CFGCA[i].crAddress^, length(CustomCMD));
                      FileNameType(CFGCA[i].crAddress^)[length(CustomCMD)]
                         := #0;
                   end;

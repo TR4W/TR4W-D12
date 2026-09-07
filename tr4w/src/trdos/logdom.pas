@@ -208,8 +208,8 @@ var
 
 begin
 
-  Windows.ZeroMemory(@Multiplier, SizeOf(Multiplier)); //  Multiplier := '';
-  Windows.ZeroMemory(@QTH, SizeOf(QTH)); //    QTH := '';
+  FillChar(Multiplier, SizeOf(Multiplier), 0); //  Multiplier := '';
+  FillChar(QTH, SizeOf(QTH), 0); //    QTH := '';
    GetDomQTH := False;
 
   strU(InputString);
@@ -451,7 +451,7 @@ begin
      end;
 
 //  if RemainingDomMults = nil then New(RemainingDomMults);
-//  if not IncludedFile then Windows.ZeroMemory(RemainingDomMults, SizeOf(RemainingDomMultArrayType));
+//  if not IncludedFile then FillChar(RemainingDomMults^, SizeOf(RemainingDomMultArrayType), 0);
 
   if not IncludedFile then
      begin

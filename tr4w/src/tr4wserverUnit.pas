@@ -432,7 +432,7 @@ begin
   DisplayRCVDBytes;
   DisplaySENDBytes;
   DisplayClients;
-//  Windows.ZeroMemory(@ClientsSoocketsArray, SizeOf(ClientsSoocketsArray));
+//  FillChar(ClientsSoocketsArray, SizeOf(ClientsSoocketsArray), 0);
 
   (* BOTH LISTENERS, IN ONE CALL. This was socket/bind/listen plus a
     WSAAsyncSelect naming a window, and RunSyncListener was the same again on
@@ -687,7 +687,7 @@ begin
 {
           NET_MULTSFREQUENCIES_ID:
             begin
-              Windows.CopyMemory(@ServerMF, @ServerBuffer[Bufindex + 2], SizeOf(MultsFrequencies));
+              Move(ServerBuffer[Bufindex + 2], ServerMF, SizeOf(MultsFrequencies));
               SendMFToClients;
               Bufindex := Bufindex + SizeOf(NetMultsFrequencies);
             end;

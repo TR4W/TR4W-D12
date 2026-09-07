@@ -428,7 +428,7 @@ begin
          begin
          TF.Format(wsprintfBuffer, '%sdom\%s', TR4W_PATH_NAME, DomQTHDataFileName);
          end;
-      Windows.ZeroMemory(@DomQTHDataFileName, SizeOf(DomQTHDataFileName));
+      FillChar(DomQTHDataFileName, SizeOf(DomQTHDataFileName), 0);
       Windows.lstrcatA(DomQTHDataFileName, wsprintfBuffer);
       if not DomQTHTable.LoadInDomQTHFile(DomQTHDataFileName) then
          begin
@@ -514,7 +514,7 @@ begin
 //  TailEnding := False;
 
   {Before restart.bin load}
-  Windows.CopyMemory(@FreqMemory, @DefaultFreqMemory, SizeOf(TFreqMemoryType));
+  Move(DefaultFreqMemory, FreqMemory, SizeOf(TFreqMemoryType));
 
   Sheet.SheetInitAndLoad;
   LoadBandMap;

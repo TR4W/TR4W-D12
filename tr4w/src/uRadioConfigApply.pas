@@ -806,8 +806,8 @@ begin
          Continue;
          end;
 
-      Windows.ZeroMemory(@keyShort, SizeOf(keyShort));
-      Windows.ZeroMemory(@valueShort, SizeOf(valueShort));
+      FillChar(keyShort, SizeOf(keyShort), 0);
+      FillChar(valueShort, SizeOf(valueShort), 0);
       keyShort   := ShortString(AnsiString(name));
       valueShort := ShortString(AnsiString(value));
 
@@ -841,7 +841,7 @@ begin
    // `FREQUENCY MEMORY=` ones -- and a TIniFile collapses duplicates, so it
    // would read one of each and silently drop the rest.  This is the exact
    // counterpart of the WritePrivateProfileSectionA that used to write it.
-   Windows.ZeroMemory(@buf, SizeOf(buf));
+   FillChar(buf, SizeOf(buf), 0);
    n := Windows.GetPrivateProfileSectionA('BAND PLAN', @buf[0], SizeOf(buf),
                                           PAnsiChar(WinAnsi(TR4W_INI_FILENAME)));
    if n = 0 then
@@ -1099,8 +1099,8 @@ begin
    // hook; the store is only what makes it survive a restart.  Recording a
    // value CFGCA rejected would put it in the file for the next start to
    // stumble over.
-   Windows.ZeroMemory(@keyShort, SizeOf(keyShort));
-   Windows.ZeroMemory(@valueShort, SizeOf(valueShort));
+   FillChar(keyShort, SizeOf(keyShort), 0);
+   FillChar(valueShort, SizeOf(valueShort), 0);
    keyShort   := ShortString(AnsiString(aCommand));
    valueShort := ShortString(AnsiString(aValue));
 
@@ -1142,8 +1142,8 @@ begin
          Exit;   // not stored: the ini or the .cfg keeps whatever it set
          end;
 
-      Windows.ZeroMemory(@keyShort, SizeOf(keyShort));
-      Windows.ZeroMemory(@valueShort, SizeOf(valueShort));
+      FillChar(keyShort, SizeOf(keyShort), 0);
+      FillChar(valueShort, SizeOf(valueShort), 0);
       keyShort   := ShortString(AnsiString(aCommand));
       valueShort := ShortString(AnsiString(value));
 
@@ -1765,8 +1765,8 @@ begin
       idKey    := AnsiString(rendered[i].Key);
       cmdValue := AnsiString(rendered[i].Value);
 
-      Windows.ZeroMemory(@keyShort, SizeOf(keyShort));
-      Windows.ZeroMemory(@valueShort, SizeOf(valueShort));
+      FillChar(keyShort, SizeOf(keyShort), 0);
+      FillChar(valueShort, SizeOf(valueShort), 0);
       keyShort   := ShortString(idKey);
       valueShort := ShortString(cmdValue);
 

@@ -430,7 +430,7 @@ begin
       begin
       //    ActiveRadioPtr.ICOM_COMMAND_CUSTOM := scFileName;
       //    ActiveRadioPtr.CommandsTempBuffer
-            Windows.CopyMemory(@ActiveRadioPtr.CommandsTempBuffer[1], @scFileName[1], length(scFileName));
+            Move(scFileName[1], ActiveRadioPtr.CommandsTempBuffer[1], length(scFileName));
             ActiveRadioPtr.CommandsTempBuffer[0] := AnsiChar(length(scFileName));
             ActiveRadioPtr.AddCommandToBuffer;
       end
@@ -449,7 +449,7 @@ begin
      end
   else if InActiveRadioPtr.RadioModel in [IC78..IC9700, OMNI6] then
      begin
-     Windows.CopyMemory(@InActiveRadioPtr.CommandsTempBuffer[1], @scFileName[1], length(scFileName));
+     Move(scFileName[1], InActiveRadioPtr.CommandsTempBuffer[1], length(scFileName));
      InActiveRadioPtr.CommandsTempBuffer[0] := AnsiChar(length(scFileName));
      InActiveRadioPtr.AddCommandToBuffer;
      end
@@ -469,7 +469,7 @@ begin
      end
   else if Radio1.RadioModel in [IC78..IC9700, OMNI6] then
      begin
-     Windows.CopyMemory(@Radio1.CommandsTempBuffer[1], @scFileName[1], length(scFileName));
+     Move(scFileName[1], Radio1.CommandsTempBuffer[1], length(scFileName));
      Radio1.CommandsTempBuffer[0] := AnsiChar(length(scFileName));
      Radio1.AddCommandToBuffer;
      end
@@ -489,7 +489,7 @@ begin
      end
   else if Radio2.RadioModel in [IC78..IC9700, OMNI6] then
      begin
-     Windows.CopyMemory(@Radio2.CommandsTempBuffer[1], @scFileName[1], length(scFileName));
+     Move(scFileName[1], Radio2.CommandsTempBuffer[1], length(scFileName));
      Radio2.CommandsTempBuffer[0] := AnsiChar(length(scFileName));
      Radio2.AddCommandToBuffer;
      end
@@ -740,7 +740,7 @@ begin
   if scFileName <> '' then
      begin
      NetIntercomMessage.imSender := ComputerID;
-     Windows.ZeroMemory(@NetIntercomMessage.imMessage, SizeOf(NetIntercomMessage.imMessage));
+     FillChar(NetIntercomMessage.imMessage, SizeOf(NetIntercomMessage.imMessage), 0);
      NetIntercomMessage.imMessage := scFileName;
      SendToNet(NetIntercomMessage, SizeOf(NetIntercomMessage));
      Exit;
@@ -774,8 +774,8 @@ begin
   if Radio1.FilteredStatus.VFO[VFOA].Frequency = 0 then Exit;
   if Radio2.FilteredStatus.VFO[VFOA].Frequency = 0 then Exit;
 
-  Windows.CopyMemory(@R2VFO, @Radio1.FilteredStatus.VFO[VFOA], SizeOf(VFOStatusType));
-  Windows.CopyMemory(@R1VFO, @Radio2.FilteredStatus.VFO[VFOA], SizeOf(VFOStatusType));
+  Move(Radio1.FilteredStatus.VFO[VFOA], R2VFO, SizeOf(VFOStatusType));
+  Move(Radio2.FilteredStatus.VFO[VFOA], R1VFO, SizeOf(VFOStatusType));
 
   Radio1.SetRadioFreq(R1VFO.Frequency, R1VFO.Mode, 'A');
   Radio2.SetRadioFreq(R2VFO.Frequency, R2VFO.Mode, 'A');

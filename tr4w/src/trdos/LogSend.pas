@@ -369,7 +369,7 @@ begin
             TempString := ExchangeWindowString;
             GetRidOfPrecedingSpaces(TempString);
             GetRidOfPostcedingSpaces(TempString);
-            Windows.ZeroMemory(@TempReceivedData, SizeOf(TempReceivedData));
+            FillChar(TempReceivedData, SizeOf(TempReceivedData), 0);
             ProcessExchange(TempString, TempReceivedData);
             if TempReceivedData.Name <> '' then
                begin

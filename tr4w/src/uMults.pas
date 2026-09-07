@@ -109,9 +109,9 @@ end;
 
 procedure MultsObject.ClearAllMults;
 begin
-  Windows.ZeroMemory(@ZoneMultsArray, SizeOf(ZoneMultsArray));
-  Windows.ZeroMemory(@DXMultsArray, SizeOf(DXMultsArray));
-  Windows.ZeroMemory(@MTotals, SizeOf(MTotals));
+  FillChar(ZoneMultsArray, SizeOf(ZoneMultsArray), 0);
+  FillChar(DXMultsArray, SizeOf(DXMultsArray), 0);
+  FillChar(MTotals, SizeOf(MTotals), 0);
   PrfList.ClearDupes;
   DomList.ClearDupes;
 end;

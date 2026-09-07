@@ -901,9 +901,9 @@ begin
            LineSize := FilePos - StartPos;
            if LineSize > 0 then
               begin
-              Windows.ZeroMemory(@TempString, SizeOf(TempString));
+              FillChar(TempString, SizeOf(TempString), 0);
               TempString[0] := AnsiChar(LineSize);
-              Windows.CopyMemory(@TempString[1], @MapBase[StartPos], LineSize);
+              Move(MapBase[StartPos], TempString[1], LineSize);
               if UpperCase then
                  begin
                  strU(TempString);

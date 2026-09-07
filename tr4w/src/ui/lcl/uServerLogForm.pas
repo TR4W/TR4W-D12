@@ -186,7 +186,7 @@ begin
    chkShowContent.Checked  := showresverlogcontent;
 
    AmountQSOsFromServer := 0;
-   Windows.ZeroMemory(@SynQSOTotalArray, SizeOf(SynQSOTotalArray));
+   FillChar(SynQSOTotalArray, SizeOf(SynQSOTotalArray), 0);
 
    BuildLogGrid;
 

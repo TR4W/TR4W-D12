@@ -659,7 +659,7 @@ var
 
 begin
   MultString := 0;
-  Windows.ZeroMemory(@TempRXData, SizeOf(ContestExchange));
+  FillChar(TempRXData, SizeOf(ContestExchange), 0);
   TempRXData.Band := Band;
   TempRXData.Mode := Mode;
   SetExtendedModeFromMode(TempRXData);
@@ -834,7 +834,7 @@ begin
 
   if DoingDXMults or DoingZoneMults or DoingPrefixMults then
      begin
-     Windows.ZeroMemory(@TempRXData, SizeOf(TempRXData));
+     FillChar(TempRXData, SizeOf(TempRXData), 0);
      ctyLocateCall(Call, TempRXData.QTH);
      if TempRXData.QTH.Country = UNKNOWN_COUNTRY then
         begin
@@ -1439,7 +1439,7 @@ var
 label
   ExitLabel;
 begin
-  Windows.ZeroMemory(@Result, SizeOf(Result));
+  FillChar(Result, SizeOf(Result), 0);
   if not LogSourceOpen then
      begin
      Exit;
@@ -1495,7 +1495,7 @@ begin
         end
      else
         begin
-        Windows.ZeroMemory(@Result, SizeOf(Result));
+        FillChar(Result, SizeOf(Result), 0);
         end;
      end;
   ExitLabel:

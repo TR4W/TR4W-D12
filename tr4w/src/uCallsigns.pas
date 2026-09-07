@@ -347,11 +347,11 @@ begin
        (FCount - Index) * SizeOf(TCallsignItem));
      end;
 
-  Windows.ZeroMemory(@FList^[Index], SizeOf(FList^[Index]));
+  FillChar(FList^[Index], SizeOf(FList^[Index]), 0);
   FList^[Index].FCall := s;
 //  with FList^[Index] do
 //  begin
-//    Windows.ZeroMemory(@FDupesArray, SizeOf(TDupesArray));
+//    FillChar(FDupesArray, SizeOf(TDupesArray), 0);
 //    FQSOs := 0;
 //    FCall := s;
 //    FInExchange := '';
@@ -638,7 +638,7 @@ var
 begin
   for Index := 0 to FCount - 1 do
      begin
-     Windows.ZeroMemory(@FList^[Index].FDupesArray, SizeOf(TDupesArray));
+     FillChar(FList^[Index].FDupesArray, SizeOf(TDupesArray), 0);
      FList^[Index].FQSOs := 0;
        {
             for Band := Band160 to AllBands do

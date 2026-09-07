@@ -1509,8 +1509,7 @@ begin
    // DebugRadioTempBuffer call removed with the NEWER_DEBUG cleanup (2026-08-16).
    // Its whole body was inside {$IF NEWER_DEBUG}, so with that off it had
    // already been a no-op -- the routine went, this call site did not.
-   Windows.CopyMemory(@CommandsBuffer[CommandsBufferPointer],
-      @CommandsTempBuffer, Ord(CommandsTempBuffer[0]));
+   Move(CommandsTempBuffer, CommandsBuffer[CommandsBufferPointer], Ord(CommandsTempBuffer[0]));
    Inc(CommandsBufferPointer);
    //TLogger.GetInstance.Debug('Leaving AddCommandToBuffer');
 end;

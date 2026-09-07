@@ -331,7 +331,7 @@ begin
    for i := 1 to QTCsReceived do
       begin
       IncrementQTCCount(QTCCallsign);
-      Windows.ZeroMemory(@QTCRXData, SizeOf(ContestExchange));
+      FillChar(QTCRXData, SizeOf(ContestExchange), 0);
       QTCRXData.ceRecordKind := rkQTCR;
       QTCRXData.Callsign := QTCCallsign;
       {Time}

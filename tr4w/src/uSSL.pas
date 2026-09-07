@@ -124,7 +124,7 @@ begin
      begin
 
      FCount := 0;
-     Windows.ZeroMemory(@TotalMults, SizeOf(TotalMults));
+     FillChar(TotalMults, SizeOf(TotalMults), 0);
  //    FTotalMults := 0;
      SetCapacity(0);
      end;
@@ -235,7 +235,7 @@ begin
        (FCount - Index) * SizeOf(TStringItem));
      end;
 
-  Windows.ZeroMemory(@FList^[Index], SizeOf(FList^[Index]));
+  FillChar(FList^[Index], SizeOf(FList^[Index]), 0);
   FList^[Index].FMult := s;
   inc(FCount);
 end;
@@ -263,7 +263,7 @@ var
 begin
   for Index := 0 to FCount - 1 do
      begin
-     Windows.ZeroMemory(@FList^[Index].FArray, SizeOf(TDupesArray));
+     FillChar(FList^[Index].FArray, SizeOf(TDupesArray), 0);
      end;
 end;
 

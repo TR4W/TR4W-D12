@@ -120,7 +120,7 @@ var
 begin
 
 
-  Windows.ZeroMemory(@QTCCallsign, 13);
+  FillChar(QTCCallsign, 13, 0);
   QTCCallsign := CallWindowString;
   if QTCCallsign = '' then
      begin
@@ -253,7 +253,7 @@ begin
   if not LogSourceOpen then Exit;
   QTCs := 0;
   LogSourceRewind;
-  Windows.ZeroMemory(@QTCsToBeSendArray, SizeOf(QTCsToBeSendArray));
+  FillChar(QTCsToBeSendArray, SizeOf(QTCsToBeSendArray), 0);
   QTCsToBeSendArray[1].qsID := NET_THIS_QTC_WAS__SEND_ID;
   1:
   if LogSourceNext( TempRXData ) then

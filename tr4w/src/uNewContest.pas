@@ -667,7 +667,7 @@ begin
    // FROM settings\tr4w.json, not tr4w.ini (NY4I, 2026-08-16). An empty
    // result is the ordinary first-run state and simply hides the button.
    latest := GetLatestConfigFile;
-   Windows.ZeroMemory(@TR4W_LATESTCFG_FILENAME, SizeOf(FileNameType));
+   FillChar(TR4W_LATESTCFG_FILENAME, SizeOf(FileNameType), 0);
    Windows.lstrcpynA(TR4W_LATESTCFG_FILENAME, PAnsiChar(WinAnsi(latest)),
                      SizeOf(FileNameType));
 
@@ -724,9 +724,7 @@ begin
          begin
          case frmNewContest.Choice of
             nccOpenSelected: OpenSelectedConfig;
-            nccLatest:       Windows.CopyMemory(@TR4W_CFG_FILENAME,
-                                                @TR4W_LATESTCFG_FILENAME,
-                                                SizeOf(FileNameType));
+            nccLatest:       Move(TR4W_LATESTCFG_FILENAME, TR4W_CFG_FILENAME, SizeOf(FileNameType));
             nccCreate:       SaveNewContest;
          end;
          end

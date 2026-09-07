@@ -1157,7 +1157,7 @@ begin
   if s <> '' then
   begin
     // D12: ParamStr returns a wide UnicodeString.  The old
-    // CopyMemory(@buf, @s[1], length(s)) copied WIDE bytes into the ANSI
+    // Move(s[1], buf, length(s)) copied WIDE bytes into the ANSI
     // FileNameType buffer using a CHARACTER count -> "C",#0,":",#0,... ->
     // the cfg path was truncated to "C", config never loaded, and startup
     // died with "No callsign specified".  Copy the ANSI form instead.
@@ -1857,7 +1857,7 @@ begin
   // setting, so it lives in the store's `general` section beside activeProfile
   // rather than in `commands`, and it is deliberately not registered — nothing
   // in Preferences edits it and it is absent from the search index.
-  Windows.CopyMemory(@TR4W_LATESTCFG_FILENAME, @TR4W_CFG_FILENAME, SizeOf(FileNameType));
+  Move(TR4W_CFG_FILENAME, TR4W_LATESTCFG_FILENAME, SizeOf(FileNameType));
   SetLatestConfigFile(string(PAnsiChar(@TR4W_LATESTCFG_FILENAME)));
 {$IFEND}
 

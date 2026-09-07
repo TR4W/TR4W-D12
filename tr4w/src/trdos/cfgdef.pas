@@ -196,7 +196,7 @@ begin
 //  Config.EscapeExitsSearchAndPounce := True;
   //   ExchangeFunctionKeyMenu := '';
 
-//  windows.ZeroMemory(@ExchangeInformation, sizeof(ExchangeInformation));
+//  FillChar(ExchangeInformation, sizeof(ExchangeInformation), 0);
 {
  ExchangeInformation.Age := False;
  ExchangeInformation.Check := False;

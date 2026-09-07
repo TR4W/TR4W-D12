@@ -257,8 +257,8 @@ begin
                  TR4WMMTTYForm.Caption := string(AnsiString(PAnsiChar(@MMTTY.mmttyCallProcess.cpBuffer[0])));
                  end;
 
-              Windows.ZeroMemory(@MMTTY.mmttyLastCallsign, SizeOf(MMTTY.mmttyLastCallsign));
-              Windows.CopyMemory(@MMTTY.mmttyLastCallsign[1], @MMTTY.mmttyCallProcess.cpBuffer, MMTTY.mmttyCallProcess.cpPos);
+              FillChar(MMTTY.mmttyLastCallsign, SizeOf(MMTTY.mmttyLastCallsign), 0);
+              Move(MMTTY.mmttyCallProcess.cpBuffer, MMTTY.mmttyLastCallsign[1], MMTTY.mmttyCallProcess.cpPos);
               MMTTY.mmttyLastCallsign[0] := AnsiChar(MMTTY.mmttyCallProcess.cpPos);
               isDupe := VisibleLog.CallIsADupe(MMTTY.mmttyLastCallsign, ActiveBand, ActiveMode);
   //            PutCallToCallWindow(MMTTY.mmttyLastCallsign);
@@ -290,7 +290,7 @@ begin
 
               end;
 
-     Windows.ZeroMemory(@MMTTY.mmttyCallProcess, SizeOf(MMTTY.mmttyCallProcess));
+     FillChar(MMTTY.mmttyCallProcess, SizeOf(MMTTY.mmttyCallProcess), 0);
      MMTTY.mmttyCallProcess.cpEnable := True;
      MMTTY.mmttyCallProcess.cpStartPos := MMTTY.mmttyCurrentPos;
      Exit;

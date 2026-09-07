@@ -169,9 +169,9 @@ begin
   if module <> 0 then
      begin
      @MapiSendMail := GetProcAddress(module, 'MAPISendMail');
-     Windows.ZeroMemory(@lpMessage, SizeOf(TMapiMessage));
-     Windows.ZeroMemory(@lpRecips, SizeOf(TMapiRecipDesc));
-     Windows.ZeroMemory(@Files, SizeOf(Files));
+     FillChar(lpMessage, SizeOf(TMapiMessage), 0);
+     FillChar(lpRecips, SizeOf(TMapiRecipDesc), 0);
+     FillChar(Files, SizeOf(Files), 0);
 
      lpMessage.lpRecips := @lpRecips;
      lpMessage.lpFiles := @Files;

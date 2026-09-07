@@ -573,7 +573,7 @@ begin
   DVPOn := False;
   DVPThreadID := 0;
   DisplayCodeSpeed;
-  Windows.ZeroMemory(@DVPMessagesArray, SizeOf(DVPMessagesArray));
+  FillChar(DVPMessagesArray, SizeOf(DVPMessagesArray), 0);
   BackToInactiveRadioAfterQSO;
 end;
 
@@ -604,7 +604,7 @@ begin
      end;
 
   NextRead:
-  Windows.ZeroMemory(@TempBuffer, SizeOf(TempBuffer));
+  FillChar(TempBuffer, SizeOf(TempBuffer), 0);
   Windows.ReadFile(h, TempBuffer, SizeOf(TempBuffer), lpNumberOfBytesRead, nil);
   if lpNumberOfBytesRead > 0 then
      begin
@@ -660,7 +660,7 @@ begin
   if Config.DVKLocalizedMessagesEnable then
     if CallWindowString <> '' then
        begin
-       Windows.ZeroMemory(@countrtyId, SizeOf(countrtyId));
+       FillChar(countrtyId, SizeOf(countrtyId), 0);
        countrtyId := ctyGetCountryID(CallWindowString);
        if (countrtyId <> '') then
           begin

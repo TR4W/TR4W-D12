@@ -117,7 +117,7 @@ var
    p: PAnsiChar;
    entry: string;
 begin
-   Windows.ZeroMemory(@buf, SizeOf(buf));
+   FillChar(buf, SizeOf(buf), 0);
    sect := AnsiString(aSection);
    n := Windows.GetPrivateProfileSectionA(PAnsiChar(sect), @buf, SizeOf(buf),
                                           @TR4W_INI_FILENAME[0]);

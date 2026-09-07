@@ -1787,7 +1787,7 @@ begin
      Exit;
      end;
 
-  Windows.ZeroMemory(@TempSpot, SizeOf(TempSpot));
+  FillChar(TempSpot, SizeOf(TempSpot), 0);
 
   if PInteger(@Call[1])^ = tCQAsInteger then
      begin

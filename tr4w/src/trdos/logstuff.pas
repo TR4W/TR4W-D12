@@ -1055,7 +1055,7 @@ begin
      end;
 
   New(QTCDataArray);
-  Windows.ZeroMemory(QTCDataArray, SizeOf(QTCDataArrayType));
+  FillChar(QTCDataArray^, SizeOf(QTCDataArrayType), 0);
 
   { A table that has just been created holds no stations.  Said here rather than
     assumed, because the count is a SEPARATE global and this is the one place
@@ -1291,7 +1291,7 @@ begin
   Call := RootCall(Call);
 
   NameCallsignPutUp := Call;
-  Windows.ZeroMemory(@Name, SizeOf(Name));
+  FillChar(Name, SizeOf(Name), 0);
   Name := CD.GetName(Call);
 
   if Name <> '' then
@@ -1452,9 +1452,9 @@ begin
   if DomesticCountryCall(RXData.Callsign) then
      begin
      dx := false;
-     Windows.ZeroMemory(@RXData.ceClass, SizeOf(RXData.ceClass));
+     FillChar(RXData.ceClass, SizeOf(RXData.ceClass), 0);
      // Both ZOT added to prevent errors with bad data in log from corrected entry ny4i
-     Windows.ZeroMemory(@RXData.QTHString, SizeOf(RXData.QTHString));
+     FillChar(RXData.QTHString, SizeOf(RXData.QTHString), 0);
      classTemp := '';
      ParseExchange(Exchange, classTemp, RXData.QTHString, TempString);
      RXData.ceClass := classTemp;   // truncates to 3; see classTemp's note
@@ -1462,14 +1462,14 @@ begin
      if RXData.QTHString[1] in ['0'..'9'] then
        // This is the code that flips it around if given in section class order // ny4i
         begin
-        Windows.ZeroMemory(@TempString, SizeOf(TempString));
-        Windows.ZeroMemory(@TempString2, SizeOf(TempString2));
+        FillChar(TempString, SizeOf(TempString), 0);
+        FillChar(TempString2, SizeOf(TempString2), 0);
 
         TempString := RXData.ceClass;
         TempString2 := RXData.QTHString;
 
-        Windows.ZeroMemory(@RXData.ceClass, SizeOf(RXData.ceClass));
-        Windows.ZeroMemory(@RXData.QTHString, SizeOf(RXData.QTHString));
+        FillChar(RXData.ceClass, SizeOf(RXData.ceClass), 0);
+        FillChar(RXData.QTHString, SizeOf(RXData.QTHString), 0);
 
         RXData.ceClass := TempString2;
         RXData.QTHString := TempString;
@@ -1495,9 +1495,9 @@ begin
      begin
      dx := true;
      {ParseExchange (Exchange, RXData.Class, RXData.QTHString, TempString);} {pre 6.68 statement}
-     Windows.ZeroMemory(@RXData.ceClass, SizeOf(RXData.ceClass));
+     FillChar(RXData.ceClass, SizeOf(RXData.ceClass), 0);
      // Both ZOT added to prevent errors with bad data in log from corrected entry ny4i
-     Windows.ZeroMemory(@RXData.QTHString, SizeOf(RXData.QTHString));
+     FillChar(RXData.QTHString, SizeOf(RXData.QTHString), 0);
 
      classTemp := '';
      ParseExchange(Exchange, classTemp, TempString, TempString2);
@@ -3267,8 +3267,8 @@ var
 begin
   ProcessQSONumberPrecedenceCheckDomesticQTHExchange := False;
 
-  Windows.ZeroMemory(@SSEx, SizeOf(SSEx));
-  Windows.ZeroMemory(@Entries, SizeOf(Entries));
+  FillChar(SSEx, SizeOf(SSEx), 0);
+  FillChar(Entries, SizeOf(Entries), 0);
   if length(Exchange) < 6 then
      begin
      Exit;
@@ -6723,13 +6723,13 @@ begin
 
     ALRSUA1DZCupQSOPointMethod:
       begin
-        Windows.ZeroMemory(@Grid1, SizeOf(Grid1));
-        Windows.ZeroMemory(@Grid2, SizeOf(Grid2));
+        FillChar(Grid1, SizeOf(Grid1), 0);
+        FillChar(Grid2, SizeOf(Grid2), 0);
 
         russianRegion1 := rtUnknownRegion;
         russianRegion2 := rtUnknownRegion;
 
-        Windows.ZeroMemory(@TempOblast, SizeOf(TempOblast));
+        FillChar(TempOblast, SizeOf(TempOblast), 0);
         if RussianID(MyCountry) then
            begin
            TempOblast := GetOblast(MyCall);
@@ -6737,7 +6737,7 @@ begin
              Char(TempOblast[2]));
            end;
 
-        Windows.ZeroMemory(@TempOblast, SizeOf(TempOblast));
+        FillChar(TempOblast, SizeOf(TempOblast), 0);
         if RussianID(RXData.Callsign) then
            begin
            TempOblast := GetOblast(RXData.Callsign);
@@ -9939,7 +9939,7 @@ var
   copyCounter: Cardinal;
   isN: boolean;
 begin
-  Windows.ZeroMemory(@ParsedRecord, SizeOf(ParsedRecord));
+  FillChar(ParsedRecord, SizeOf(ParsedRecord), 0);
 
   if e = '' then
      begin
@@ -9972,7 +9972,7 @@ begin
         if en > 0 then
            begin
            isN := True;
-           Windows.ZeroMemory(@TmpBuf, SizeOf(TmpBuf));
+           FillChar(TmpBuf, SizeOf(TmpBuf), 0);
            for copyCounter := St to en do
               begin
               if not (e[copyCounter] in ['0'..'9']) then
@@ -9990,7 +9990,7 @@ begin
               end
            else
               begin
-              Windows.CopyMemory(@ParsedRecord.prStrings[ParsedRecord.prTotalStrings], @TmpBuf, SizeOf(TmpBuf));
+              Move(TmpBuf, ParsedRecord.prStrings[ParsedRecord.prTotalStrings], SizeOf(TmpBuf));
               inc(ParsedRecord.prTotalStrings);
               end;
 
@@ -10013,7 +10013,7 @@ var
   Number: boolean;
   PositionCounter: integer;
 begin
-  Windows.ZeroMemory(@ParserArray, SizeOf(ParserArray));
+  FillChar(ParserArray, SizeOf(ParserArray), 0);
   if ExchangeString = '' then
      begin
      Result := False;
@@ -10145,13 +10145,13 @@ begin
   if Contest = ALRS_UA1DZ_CUP then
      begin
 
-     Windows.ZeroMemory(@Oblast, SizeOf(Oblast));
+     FillChar(Oblast, SizeOf(Oblast), 0);
      Oblast := Tree.GetOblast(RXData.Callsign);
      RussianRegionHis := GetRussiaOblastByTwoChars(Char(Oblast[1]), Char(Oblast[2]));
      RXData.DomesticQTH := RXData.QTHString;
      if (RussianID(MyCall)) then
         begin
-        Windows.ZeroMemory(@Oblast, SizeOf(Oblast));
+        FillChar(Oblast, SizeOf(Oblast), 0);
         Oblast := Tree.GetOblast(MyCall);
         RussianRegionMy := GetRussiaOblastByTwoChars(Char(Oblast[1]), Char(Oblast[2]));
         if not (RussianRegionMy in [rtUA1A, rtUA1C]) then

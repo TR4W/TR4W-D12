@@ -384,7 +384,7 @@ var
 {
           NET_MULTSFREQUENCIES_ID:
             begin
-              Windows.CopyMemory(@MF, @NetBuffer[Bufindex + 2], SizeOf(MultsFrequencies));
+              Move(NetBuffer[Bufindex + 2], MF, SizeOf(MultsFrequencies));
               DisplayMultsFrequencies;
               Bufindex := Bufindex + SizeOf(NetMultsFrequencies);
               if Bufindex - 1 >= I then Exit;
@@ -532,8 +532,7 @@ var
                     // array and carry on.
                     if DisconnectedClient in [1..26] then
                        begin
-                       Windows.ZeroMemory(@StatusArray[DisconnectedClient],
-                                          SizeOf(TStationState));
+                       FillChar(StatusArray[DisconnectedClient], SizeOf(TStationState), 0);
                        DisplayClientStatus(DisconnectedClient);
                        end;
                   end;
@@ -575,7 +574,7 @@ var
         if IntPtr^ = Ord('D') + Ord('I') * $100 + Ord('S') * $10000 + Ord('C') * $1000000 then
         begin
           I := integer(NetBuffer[Bufindex + 4]);
-          Windows.ZeroMemory(@StatusArray[I], SizeOf(TStationState));
+          FillChar(StatusArray[I], SizeOf(TStationState), 0);
           DisplayClientStatus(I);
           Bufindex := Bufindex + SizeOf(sDISMESSAGE);
           if Bufindex - 1 >= I then Exit;
@@ -743,7 +742,7 @@ var
    i: integer;
 begin
    NetDisconnect;
-   Windows.ZeroMemory(@StatusArray, SizeOf(StatusArray));
+   FillChar(StatusArray, SizeOf(StatusArray), 0);
    for i := 1 to 26 do
       begin
       DisplayClientStatus(i);
@@ -800,7 +799,7 @@ begin
   GNetPending := nil;
   ServerSerialNumber := 0;
   EnableNetworkMenuItem(MF_GRAYED + MF_BYPOSITION);
-  Windows.ZeroMemory(@MF, SizeOf(MultsFrequencies));
+  FillChar(MF, SizeOf(MultsFrequencies), 0);
 //  DisplayMultsFrequencies;
 end;
 
@@ -817,8 +816,8 @@ begin
   case ssType of
     sstComputerNameAndID:
       begin
-        Windows.ZeroMemory(@MyStationState.ssName, SizeOf(MyStationState.ssName));
-        Windows.CopyMemory(@MyStationState.ssName, @ComputerName[1], Ord(ComputerName[0]));
+        FillChar(MyStationState.ssName, SizeOf(MyStationState.ssName), 0);
+        Move(ComputerName[1], MyStationState.ssName, Ord(ComputerName[0]));
         MyStationState.ssComputerID := ComputerID;
       end;
 
@@ -863,7 +862,7 @@ begin
       end;
 
     sstOperator:
-      Windows.CopyMemory(@MyStationState.ssOperator, @CurrentOperator, SizeOf(OperatorType));
+      Move(CurrentOperator, MyStationState.ssOperator, SizeOf(OperatorType));
   end;
 
   MyStationState.ssType := ssType;
@@ -1060,7 +1059,7 @@ begin
      // the network WINDOW the socket's event sink -- all of that is TNetClient's
      // now, and the handshake happens inside Connect because a link the server
      // has not acknowledged is not a link.
-     ZeroMemory(@StatusArray, SizeOf(StatusArray));
+     FillChar(StatusArray, SizeOf(StatusArray), 0);
      NetQSOInfoToSend.qiComputerID := Windows.GetTickCount;
 
  //    sCIDMESSAGE[4] := Char(Ord(ComputerID) - Ord('A') + 1);
@@ -1554,7 +1553,7 @@ end;
 
 procedure ShowServerMessage(ServMess: TServerMessage);
 begin
-//  Windows.ZeroMemory(@s, SizeOf(s));
+//  FillChar(s, SizeOf(s), 0);
   case ServMess.smMessage of
     SM_SERVERLOG_CHANGED_MESSAGE:
       begin

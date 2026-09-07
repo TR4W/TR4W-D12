@@ -613,7 +613,7 @@ procedure ClearContestExchange(var Exchange: ContestExchange);
 
 begin
   logger.Trace('>>> Entering ClearContestExchange');
-  Windows.ZeroMemory(@Exchange, SizeOf(ContestExchange));
+  FillChar(Exchange, SizeOf(ContestExchange), 0);
   Exchange.Band := NoBand;
   Exchange.Mode := NoMode;
   Exchange.ExtMode := eNoMode;
@@ -1216,19 +1216,19 @@ begin
 
     end;
 
-  Windows.ZeroMemory(@RemMultMatrix, SizeOf(RemMultMatrix));
+  FillChar(RemMultMatrix, SizeOf(RemMultMatrix), 0);
 }
-  Windows.ZeroMemory(@QSOTotals, SizeOf(QSOTotals));
-  Windows.ZeroMemory(@MaxSerialSent, SizeOf(MaxSerialSent));  // Issue #954: rebuilt by LoadinLog
-  Windows.ZeroMemory(@ContinentQSOCount, SizeOf(ContinentQSOCount));
+  FillChar(QSOTotals, SizeOf(QSOTotals), 0);
+  FillChar(MaxSerialSent, SizeOf(MaxSerialSent), 0);  // Issue #954: rebuilt by LoadinLog
+  FillChar(ContinentQSOCount, SizeOf(ContinentQSOCount), 0);
 
-//  Windows.ZeroMemory(@MultSheet, SizeOf(MultSheet));
+//  FillChar(MultSheet, SizeOf(MultSheet), 0);
 
   if QTCsEnabled then
      begin
      if QTCDataArray <> nil then
         begin
-        Windows.ZeroMemory(QTCDataArray, SizeOf(QTCDataArrayType));
+        FillChar(QTCDataArray^, SizeOf(QTCDataArrayType), 0);
         end;
      NumberQTCBooksSent := 0;
      NumberQTCStations := 0;
@@ -1243,7 +1243,7 @@ begin
   tRestartInfo.riTotalRecordsInLog := 0;
   tUSQ := 0;
   tUSQE := 0;
-  Windows.ZeroMemory(@tRestartInfo.riQSOByOpMode, SizeOf(tRestartInfo.riQSOByOpMode));
+  FillChar(tRestartInfo.riQSOByOpMode, SizeOf(tRestartInfo.riQSOByOpMode), 0);
   tThisHourPreviousBand := NoBand;
 end;
 
@@ -1660,7 +1660,7 @@ end;
 procedure SetUpExchangeInformation(ActiveExchange: ExchangeType; var ExchangeInformation: ExchangeInformationRecord);
 
 begin
-  //windows.ZeroMemory(@ExchangeInformation,sizeof(ExchangeInformation));
+  //FillChar(ExchangeInformation, sizeof(ExchangeInformation), 0);
 
   with ExchangeInformation do
      begin

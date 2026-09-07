@@ -95,8 +95,7 @@ begin
   TF.Format(TR4W_COMM_HELP_FILENAME, '%scommands_help_' + LANG + '.ini',
     TR4W_PATH_NAME);
 
-  Windows.CopyMemory(@TR4W_LOG_PATH_NAME, @TR4W_CFG_FILENAME,
-    SizeOf(TR4W_LOG_PATH_NAME));
+  Move(TR4W_CFG_FILENAME, TR4W_LOG_PATH_NAME, SizeOf(TR4W_LOG_PATH_NAME));
   for i := SizeOf(TR4W_LOG_PATH_NAME) - 1 downto 0 do
      begin
      if TR4W_LOG_PATH_NAME[i] = '\' then
@@ -173,7 +172,7 @@ var
 const
   Code599 = '599';
 begin
-  Windows.ZeroMemory(@OldMyZone, SizeOf(OldMyZone));
+  FillChar(OldMyZone, SizeOf(OldMyZone), 0);
 
   if MyState <> '' then
     if ActiveExchange = RSTZoneAndPossibleDomesticQTHExchange then
@@ -328,7 +327,7 @@ begin
            end
         else
            begin
-           Windows.ZeroMemory(@TmpBuf, SizeOf(TmpBuf));
+           FillChar(TmpBuf, SizeOf(TmpBuf), 0);
            TF.Format(TmpBuf, '%s_cty',
              QSOParties[ContestsArray[Contest].p].InsideStateDOMFile);
            TempDomesticQTHDataFileName := @TmpBuf;
@@ -342,7 +341,7 @@ begin
         begin
         //      TempInt := StrLen(ContestsArray[Contest].DF);
         //      DomesticQTHDataFileName[0] := CHR(TempInt);
-        //      Windows.CopyMemory(@DomesticQTHDataFileName[1], ContestsArray[Contest].DF, TempInt);
+        //      Move(ContestsArray[Contest].DF^, DomesticQTHDataFileName[1], TempInt);
         TempDomesticQTHDataFileName := ContestsArray[Contest].DF;
         end;
      end;
@@ -1754,7 +1753,7 @@ var
   TempQTH: VC.QTHRecord;
 begin
   //  CTY.ctyLastCountryCall := '';
-  Windows.ZeroMemory(@CTY.ctyLastLocatedCall, SizeOf(CTY.ctyLastLocatedCall));
+  FillChar(CTY.ctyLastLocatedCall, SizeOf(CTY.ctyLastLocatedCall), 0);
   //  CTY.ctyLastLocatedCall := '';
   ctyLocateCall(MyCall, TempQTH);
   MyCountry := TempQTH.CountryID;
@@ -1766,7 +1765,7 @@ procedure RecalculateMyCountryContinentAndZoneNew(Call: CallString);
 var
   TempQTH: VC.QTHRecord;
 begin
-  Windows.ZeroMemory(@CTY.ctyLastLocatedCall, SizeOf(CTY.ctyLastLocatedCall));
+  FillChar(CTY.ctyLastLocatedCall, SizeOf(CTY.ctyLastLocatedCall), 0);
 
   if MyCountryIsSet then
      begin

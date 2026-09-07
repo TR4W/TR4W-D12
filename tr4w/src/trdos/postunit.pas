@@ -546,7 +546,7 @@ procedure CreateCabrilloFile;
   TF.Format( tReportsFilename, '%s%s.LOG', TR4W_LOG_PATH_NAME, @MyCall[ 1 ] );
   DeleteSlashes( tReportsFilename );
 
-  Windows.ZeroMemory( @Radio1IDs, SizeOf( Radio1IDs ) );
+  FillChar(Radio1IDs, SizeOf( Radio1IDs ), 0);
 
   (* THE TRANSMITTER-1 PROMPT IS HELD SHUT DELIBERATELY (2026-09-01).
 
@@ -1190,7 +1190,7 @@ function CalculateTotals: boolean;
   NumberDates := 0;
   // OperatingTime := 0;
   CalculateTotals := False;
-  ZeroMemory( @TimeSpentByBand, SizeOf( TimeSpentByBand ) );
+  FillChar(TimeSpentByBand, SizeOf( TimeSpentByBand ), 0);
   for Band   := Band160 to AllBands do
      begin
      for Mode := CW to Both do
@@ -1347,7 +1347,7 @@ function GenerateAllTotalsPerHour: boolean;
     TempMults: integer;
   begin
   Result := False;
-  Windows.ZeroMemory( LogHourTotals, SizeOf( LogHourTotalArray ) );
+  FillChar(LogHourTotals^, SizeOf( LogHourTotalArray ), 0);
 
   { Initialize the time on band status }
 
@@ -1360,8 +1360,7 @@ function GenerateAllTotalsPerHour: boolean;
      LastHourIndex  := -1;
      DoingBreak     := False;
      end;
-  Windows.ZeroMemory( @PLeftOnBiState.BandsThisMinute,
-     SizeOf( PLeftOnBiState.BandsThisMinute ) );
+  FillChar(PLeftOnBiState.BandsThisMinute, SizeOf( PLeftOnBiState.BandsThisMinute ), 0);
 
   if not LogSourceOpen then
      begin
@@ -1839,8 +1838,8 @@ procedure ContinentReport;
     FileWrite: Text;
   begin
   MakeReportFileName( 'Continent List.txt' );
-  Windows.ZeroMemory( @TempQSOTotals, SizeOf( TempQSOTotals ) );
-  Windows.ZeroMemory( @ContTotals, SizeOf( ContTotals ) );
+  FillChar(TempQSOTotals, SizeOf( TempQSOTotals ), 0);
+  FillChar(ContTotals, SizeOf( ContTotals ), 0);
   if not OpenFileForWrite( FileWrite, ReportsFilename ) then
      begin
      Exit;
@@ -2022,7 +2021,7 @@ function GenerateCountryMultiplierTotals: boolean;
     1;
   begin
   GenerateCountryMultiplierTotals := False;
-  Windows.ZeroMemory( CountryMultTotals, SizeOf( CountryMultiplierArray ) );
+  FillChar(CountryMultTotals^, SizeOf( CountryMultiplierArray ), 0);
   if not LogSourceOpen then
      begin
      Exit;
@@ -3093,7 +3092,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 {
                 ActiveExchange := RSTQSONumberExchange;
                 nrReceived := StrToIntDef(TempRXData.ceClass, 0);
-                Windows.ZeroMemory(@CABRILLO_RST_RCVD, SizeOf(CABRILLO_RST_RCVD));
+                FillChar(CABRILLO_RST_RCVD, SizeOf(CABRILLO_RST_RCVD), 0);
                 Windows.lstrcat(CABRILLO_RST_RCVD, '599');
               }
                 { Make Exchanges Strings }
@@ -3159,8 +3158,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 previousqsonr := nrReceived mod 1000;
                 end;
 
-             Windows.ZeroMemory( @PreviousQTHString,
-                SizeOf( PreviousQTHString ) );
+             FillChar(PreviousQTHString, SizeOf( PreviousQTHString ), 0);
              PreviousQTHString := TempRXData.QTHString;
 
              if TempRXData.ceRecordKind in [ rkQTCR, rkQTCS ] then
@@ -3328,7 +3326,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         1;
       begin
       GenerateZoneMultiplierTotals := False;
-      Windows.ZeroMemory( CountryMultTotals, SizeOf( CountryMultiplierArray ) );
+      FillChar(CountryMultTotals^, SizeOf( CountryMultiplierArray ), 0);
       if not LogSourceOpen then
          begin
          Exit;
@@ -3653,7 +3651,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         P: PAnsiChar;
       begin
       P := @ReportsFilename[ 1 ];
-      Windows.ZeroMemory( @ReportsFilename, SizeOf( ReportsFilename ) );
+      FillChar(ReportsFilename, SizeOf( ReportsFilename ), 0);
       lstrcpyA( P, TR4W_LOG_PATH_NAME );
       lstrcatA( P, ShortFileName );
       ReportsFilename[ 0 ]   := AnsiChar( Windows.lstrlenA( P ) );

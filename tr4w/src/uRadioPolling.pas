@@ -841,8 +841,8 @@ begin
        PTTStatusChanged;
      end;
    }
-   Windows.ZeroMemory(@rig^.CurrentStatus, SizeOf(rig^.CurrentStatus));
-   Windows.ZeroMemory(@rig^.FilteredStatus, SizeOf(rig^.FilteredStatus));
+   FillChar(rig^.CurrentStatus, SizeOf(rig^.CurrentStatus), 0);
+   FillChar(rig^.FilteredStatus, SizeOf(rig^.FilteredStatus), 0);
    rig.CurrentStatus.Mode := NoMode;
    rig.FilteredStatus.Mode := NoMode;
    rig.LastDisplayedFreq := 0;
@@ -1496,7 +1496,7 @@ begin
 
    PurgeComm(rig^.tCATPortHandle, PURGE_RXCLEAR or PURGE_RXABORT);
 
-   Windows.ZeroMemory(@rig.tBuf, SizeOf(rig.tBuf));
+   FillChar(rig.tBuf, SizeOf(rig.tBuf), 0);
 
 
    // The per-model legacy dispatch that used to live here is GONE.

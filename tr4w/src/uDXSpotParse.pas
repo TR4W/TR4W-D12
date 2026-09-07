@@ -213,7 +213,7 @@ procedure LineToBuf(const Line: AnsiString; var Buf: TDXLineBuf);
 var
    copyLen: integer;
 begin
-   Windows.ZeroMemory(@Buf, SizeOf(Buf));
+   FillChar(Buf, SizeOf(Buf), 0);
    copyLen := Length(Line);
    if copyLen > SizeOf(Buf) - 1 then
       begin
@@ -908,7 +908,7 @@ begin
 
    // Safe: TSpotRecord holds only value types (its callsigns are ShortStrings),
    // so there is nothing here for a wipe to leak.
-   Windows.ZeroMemory(@Spot, SizeOf(TSpotRecord));
+   FillChar(Spot, SizeOf(TSpotRecord), 0);
    Spot.FBand := NoBand;
    Spot.FMode := NoMode;
 

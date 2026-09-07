@@ -273,7 +273,7 @@ begin
   for I := 1 to QTCWasSend do 
      begin
      IncrementQTCCount(QTCCallsign);
-     Windows.ZeroMemory(@QTCRXData, SizeOf(ContestExchange));
+     FillChar(QTCRXData, SizeOf(ContestExchange), 0);
      QTCRXData.ceRecordKind := rkQTCS;
  //    tGetQSOSystemTime(QTCRXData.tSysTime);
  //    QTCRXData.Band := ActiveBand;

@@ -3530,7 +3530,7 @@ begin
      begin
      i := 80;
      end;
-  Windows.ZeroMemory(@TempRXData, SizeOf(ContestExchange));
+  FillChar(TempRXData, SizeOf(ContestExchange), 0);
   TempRXData.ceRecordKind := rkNote;
   Windows.MoveMemory(@TempRXData.Prefix, @s[1], i);
   AddRecordToLogAndSendToNetwork(TempRXData);
@@ -4632,7 +4632,7 @@ begin
     menu_import_adif:
       begin
         ImportFromADIF;
-        (*Windows.ZeroMemory(@TR4W_ADIF_FILENAME, SizeOf(TR4W_ADIF_FILENAME));
+        (*FillChar(TR4W_ADIF_FILENAME, SizeOf(TR4W_ADIF_FILENAME), 0);
         if OpenFileDlg(nil, tr4whandle, 'ADIF (*.adi)'#0'*.adi', TR4W_ADIF_FILENAME, OFN_HIDEREADONLY or OFN_ENABLESIZING or OFN_FILEMUSTEXIST) then
         begin
         if QSOTotals[All, Both] > 0 then
@@ -5013,8 +5013,7 @@ begin
     menu_send_message:
       begin
         NetIntercomMessage.imSender := ComputerID;
-        Windows.ZeroMemory(@NetIntercomMessage.imMessage,
-          SizeOf(NetIntercomMessage.imMessage));
+        FillChar(NetIntercomMessage.imMessage, SizeOf(NetIntercomMessage.imMessage), 0);
         tInputDialogLowerCase := True;
         NetIntercomMessage.imMessage :=
           QuickEditResponse(TC_MESSAGETOSENDVIANETWORK, 80);
@@ -5346,7 +5345,7 @@ begin
 
     menu_login:
       begin
-        Windows.ZeroMemory(@TempCallstring, SizeOf(TempCallstring));
+        FillChar(TempCallstring, SizeOf(TempCallstring), 0);
         TempCallstring := QuickEditResponse(TC_CURRENT_OPERATOR_CALLSIGN, 6);
         if length(TempCallstring) > 0 then
            begin
@@ -5357,7 +5356,7 @@ begin
               begin
               if IsAGoodUSCall(TempCallString) then
                  begin
-                 Windows.CopyMemory(@CurrentOperator, @TempCallstring[1], 6);
+                 Move(TempCallstring[1], CurrentOperator, 6);
                  TR4WMainForm.pnlCurrentOperator.Caption := CurrentOperator;
                  Sheet.SaveRestartFile; // Issue 661 ny4i
                  SendStationStatus(sstOperator);
@@ -5369,7 +5368,7 @@ begin
               end
            else if IsAGoodCall(TempCallString) then
               begin
-              Windows.CopyMemory(@CurrentOperator, @TempCallstring[1], 6);
+              Move(TempCallstring[1], CurrentOperator, 6);
               TR4WMainForm.pnlCurrentOperator.Caption := CurrentOperator;
               Sheet.SaveRestartFile; // Issue 661 ny4i
               SendStationStatus(sstOperator);
@@ -5479,7 +5478,7 @@ begin
 
     menu_ctrl_shdxcallsign:
       begin
-        Windows.ZeroMemory(@TempCallstring, SizeOf(TempCallstring));
+        FillChar(TempCallstring, SizeOf(TempCallstring), 0);
         if CallWindowString <> '' then
            begin
            TempCallstring := CallWindowString
@@ -6734,7 +6733,7 @@ begin
   LogBadQSOString := '';
 
   { Need this in case we exit soon }
-  Windows.ZeroMemory(@RData.Callsign, SizeOf(RData.Callsign));
+  FillChar(RData.Callsign, SizeOf(RData.Callsign), 0);
   RData.ID := GetGUID;
   RData.Callsign := Call;
   if (ExchangeString = '') and not (ActiveExchange in [RSTNameAndQTHExchange,
@@ -6767,7 +6766,7 @@ begin
      begin
      end;
   logger.debug('[ParametersOkay] Setting RData.QTHString to zero');
-  Windows.ZeroMemory(@RData.QTHString, SizeOf(RData.QTHString));
+  FillChar(RData.QTHString, SizeOf(RData.QTHString), 0);
 
   if ParameterOkayMode = QSLAndLog then
      begin
@@ -6857,7 +6856,7 @@ begin
 
   if RData.RSTSent = 0 then
      begin
-     Windows.ZeroMemory(@RData.RSTSent, SizeOf(RData.RSTSent));
+     FillChar(RData.RSTSent, SizeOf(RData.RSTSent), 0);
      if ActiveMode in [Phone, FM] then
         begin
         RData.RSTSent := LogRSSent;
@@ -7177,7 +7176,7 @@ end;
 
 procedure tClearDupeInfoCall;
 begin
-  Windows.ZeroMemory(@DupeInfoCall, SizeOf(DupeInfoCall));
+  FillChar(DupeInfoCall, SizeOf(DupeInfoCall), 0);
 end;
 
 procedure tCleareCallWindow;
@@ -8092,12 +8091,12 @@ begin
   sWriteFileFromString(h, ';callsign exchange'#13#10#13#10);
   for i := 0 to CallsignsList.Count - 1 do
      begin
-     Windows.ZeroMemory(@InitialExchange, SizeOf(InitialExchange));
+     FillChar(InitialExchange, SizeOf(InitialExchange), 0);
      InitialExchange := CallsignsList.GetIniitialExchangeByIndex(i);
      if InitialExchange <> '' then
 
         begin
-        Windows.ZeroMemory(@Callsign, SizeOf(Callsign));
+        FillChar(Callsign, SizeOf(Callsign), 0);
         Callsign := CallsignsList.Get(i);
         // if tPos(Callsign, '/') = 0 then
         begin
@@ -8148,7 +8147,7 @@ begin
                 #13#10#13#10' %u QSOs:'#13#10' -----------------'#13#10#13#10,
                 QSOs));
               end;
-           ZeroMemory(@TempCall, SizeOf(TempCall));
+           FillChar(TempCall, SizeOf(TempCall), 0);
            TempCall := CallsignsList.Get(i);
            sWriteFile(h, wsprintfBuffer, TF.Format(wsprintfBuffer,
              ' %4u. %s '#13#10, counter, @TempCall[1]));
@@ -8346,9 +8345,8 @@ begin
 
             if DoingPrefixMults then
                begin
-               Windows.ZeroMemory(@RescoredRXData.QTH, SizeOf(RescoredRXData.QTH));
-               Windows.ZeroMemory(@RescoredRXData.DXQTH,
-                 SizeOf(RescoredRXData.DXQTH));
+               FillChar(RescoredRXData.QTH, SizeOf(RescoredRXData.QTH), 0);
+               FillChar(RescoredRXData.DXQTH, SizeOf(RescoredRXData.DXQTH), 0);
                // State-QP rover (KG1S/MON): strip suffix for country lookup so
                // /M doesn't get misread as a GB prefix.  Without this the
                // rescore wipes the correct USA lookup done at log-time and
@@ -8366,9 +8364,8 @@ begin
 
             if DoingZoneMults or DoingDXMults then
                begin
-               Windows.ZeroMemory(@RescoredRXData.QTH, SizeOf(RescoredRXData.QTH));
-               Windows.ZeroMemory(@RescoredRXData.DXQTH,
-                 SizeOf(RescoredRXData.DXQTH));
+               FillChar(RescoredRXData.QTH, SizeOf(RescoredRXData.QTH), 0);
+               FillChar(RescoredRXData.DXQTH, SizeOf(RescoredRXData.DXQTH), 0);
                // State-QP rover (KG1S/MON): strip suffix for country lookup so
                // /M doesn't get misread as a GB prefix.  Without this the
                // rescore wipes the correct USA lookup done at log-time and
@@ -8647,7 +8644,7 @@ begin
      Exit;
      end;
 
-  Windows.ZeroMemory(@tRestartInfo, SizeOf(tRestartInfo));
+  FillChar(tRestartInfo, SizeOf(tRestartInfo), 0);
   ReadVersionBlock;
   SetEndOfFile(LogHandle);
   CloseLogFile;
@@ -9339,7 +9336,7 @@ var
 
 begin
   // 4.71.2 attempt to allow longer column width for long DOM MULTS by setting SHOW DOMESTIC MULTIPLIER NAME to TRUE
-  // windows.ZeroMemory(@RemMultsColumnWidthArray, sizeof(RemMultsColumnWidthArray));
+  // FillChar(RemMultsColumnWidthArray, sizeof(RemMultsColumnWidthArray), 0);
 
   if (tShowDomesticMultiplierName) or (DoingPrefixMults) then
      begin
@@ -9633,7 +9630,7 @@ begin
   // The filter is a DOUBLE-NUL terminated pair of C strings, which is what
   // GetOpenFileName wants: description#0patterns#0#0.  (The commented original
   // ended with a single #0; that is the one thing not copied verbatim.)
-  Windows.ZeroMemory(@TR4W_ADIF_FILENAME, SizeOf(TR4W_ADIF_FILENAME));
+  FillChar(TR4W_ADIF_FILENAME, SizeOf(TR4W_ADIF_FILENAME), 0);
   if not OpenFileDlg('', 'ADIF (*.adi, *.adif)|*.adi;*.adif',
                      TR4W_ADIF_FILENAME, True) then
      begin

@@ -1259,7 +1259,7 @@ begin
 
         Str(Heading, HeadingString);
 
-        Windows.ZeroMemory(@TempString, SizeOf(TempString));
+        FillChar(TempString, SizeOf(TempString), 0);
         TempString := CountryID + '   ' + HeadingString + '';
 
         if DistanceMode <> NoDistanceDisplay then
@@ -2976,7 +2976,7 @@ begin
   if Call = '' then Exit;
   FoundCall := CD.GetEntry(Call, data);
 
-  Windows.ZeroMemory(@InfoString, SizeOf(InfoString));
+  FillChar(InfoString, SizeOf(InfoString), 0);
 //  InfoString := '';
 
   case UserInfoShown of
@@ -3472,9 +3472,9 @@ begin
    if Country <> UNKNOWN_COUNTRY then
       begin
       GetSystemTime(UTC);
-      Windows.ZeroMemory(@TZ, SizeOf(TZ));
+      FillChar(TZ, SizeOf(TZ), 0);
       TZ.Bias := ctyGetCountryUTCOffset(Country);
-      Windows.ZeroMemory(@LOCAL, SizeOf(LOCAL));
+      FillChar(LOCAL, SizeOf(LOCAL), 0);
 
       { On failure LOCAL stays zeroed and the display reads 00:00 with the
         Sunday tag. That is what it did before; kept deliberately rather than
@@ -3651,7 +3651,7 @@ procedure tDisplayAutoCQStatus;
 var
   ID                                    : Str10;
 begin
-  Windows.ZeroMemory(@ID, SizeOf(ID));
+  FillChar(ID, SizeOf(ID), 0);
   ID := KeyId(AutoCQMemory);
   TF.Format(QuickDisplayBuffer, PAnsiChar(WinAnsi(TC_REPEATING)), @ID[1], AutoCQDelayTime);
   SetTextInQuickCommandWindow(QuickDisplayBuffer);

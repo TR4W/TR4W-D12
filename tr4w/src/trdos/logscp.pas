@@ -1438,7 +1438,7 @@ procedure CallDatabase.ClearDataEntry(var data: DataBaseEntryRecord);
 
 begin
 
-  Windows.ZeroMemory(@data, SizeOf(DataBaseEntryRecord));
+  FillChar(data, SizeOf(DataBaseEntryRecord), 0);
   {
     with data do
     begin
