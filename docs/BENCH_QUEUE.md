@@ -821,8 +821,17 @@ it) and F5 (a bad callsign is accepted). Still open:**
   after a change does not prompt, and whether it SHOULD depends on the
   `CONFIRM EDIT CHANGES` question below, so treat these two as one item.
 - [x] `CONFIRM EDIT CHANGES = TRUE` still prompts before saving.
-- [ ] **Play** is enabled only when the QSO has an MP3 and the file exists; with
-  no MP3 player configured it prompts to set one. [AGENT: I can confirm Play is not enabled as there is no MP3 file. We have to work on the recording system to get an MP3 file. I do not even know where these would go or the name of one to test it.]
+- [x] ~~**Play** is enabled only when the QSO has an MP3 and the file exists;
+  with no MP3 player configured it prompts to set one.~~ **WITHDRAWN
+  2026-09-07: THE BUTTON IS GONE.** NY4I had already reported it could not be
+  tested -- *"I do not even know where these would go or the name of one to
+  test it"* -- and that turned out to be the answer rather than a gap: the
+  built-in MP3 recorder is removed and recording moves to QSOCapture, so
+  nothing writes the file this button expected. MakeMP3Filename built a path
+  from the QSO's call, band and time -- a naming convention belonging to
+  TR4W's own recorder, describing nothing an external recorder produces. See
+  the commit that removed it for the future path (QSOCapture returning a
+  filename for the contactinfo GUID).
 - [ ] [AGENT: The Tab order on the edit QSO dialog is a bit off. The check boxes for Deleted and X-QSO should be entered after tabbing out of Operator. And after RST received, the next in the tab order should be Operator.]
 
 **Not a defect, do not report:** the RST fields still refuse a minus sign. That
@@ -1039,8 +1048,9 @@ list is that "identical" is the pass condition.
 SPACE in it** -- they used to build `'"%s" "%s"'` by hand and now pass the file
 as an argument, so quoting is no longer their problem:
 
-- [ ] **Play** on a QSO in Edit QSO starts the configured **MP3 player** with
-  the recording.
+- [x] ~~**Play** on a QSO in Edit QSO starts the configured **MP3 player**
+  with the recording.~~ **WITHDRAWN 2026-09-07** -- same reason as the Edit QSO
+  item above: the button no longer exists.
 - [ ] The **DVK recorder** starts from the program-message editor with the file
   to record.
 - [x] **Open in editor** (file preview, history.txt) opens the operator's
@@ -1242,6 +1252,14 @@ now, and 21 of them store to `settings\tr4w.json` instead of `tr4w.ini`.
 - [ ] **`MP3 RECORDER DURATION` and `BAND MAP SPLIT MODE`** -- same test, and
   the second one has a redraw handler (`crP: 1`), so the band map should change
   WITHOUT a restart.
+
+  **`MP3 RECORDER DURATION` NOW CONFIGURES NOTHING (2026-09-07).** The recorder
+  it belonged to is gone. The row is KEPT because CommandsArray addresses its
+  list-valued settings by INDEX -- `crAddress: pointer(N)` into ListParamArray
+  -- so deleting it silently repoints other settings, and ListParamArray's
+  lpVar is dereferenced with no nil check. So test that it still round-trips
+  like any other drop-down; do NOT expect it to affect anything. Removing the
+  Preferences card for it is owed work, listed in the removal commit.
 - [ ] **A Cabrillo category, e.g. `CATEGORY-POWER`.** These are contest-scoped.
   Set one, then load a contest `.cfg` that names the same key: **the contest
   must win.** That precedence already existed (`CommandCameFromContestCFG`);
@@ -2797,7 +2815,19 @@ edits one, deletes one, or opens a log window.
   `'Description|mask'` at both call sites. **No automated gate opens a file
   dialog**, so nothing here was proved by the build.
 
-- [ ] **`NO CAPTION = TRUE`, on any tool window.** Set it in Preferences
+- [ ] **`NO CAPTION = TRUE`, on any tool window.**
+
+  **THE PREFERENCES LABEL IS WRONG AND WILL MISLEAD THIS TEST (found
+  2026-09-07).** It reads *"Main window has no title bar"*
+  (`RS_APPEARANCE_NOCAPTION`), and the setting does NOT touch the main window:
+  it is applied in `MainUnit.OpenTR4WWindow`, so it reaches the TOOL windows
+  only. The main form's BorderStyle is `bsSizeable` in its `.lfm` and nothing
+  overrides it at run time. Do not report "the main window still has its title
+  bar" as a defect -- that is the label's fault, not the code's. Correcting the
+  string is deferred because it is translated: changing the msgid drops the
+  existing catalogue entries, so it wants doing with `po_merge`.
+
+  Set it in Preferences
   (Appearance), open the band map and the function keys window, and check that
   the title bars are gone, that the windows still land where they were saved,
   and that they are still movable and closable. Then set it back to FALSE and
