@@ -210,7 +210,7 @@ var
   wkCWThreadID                          : Cardinal;
 
 //  wkThreadHWND                          : HWND = INVALID_HANDLE_VALUE;
-  WinKeyHandle                          : HWND = INVALID_HANDLE_VALUE;
+  WinKeyHandle                          : THandle = INVALID_HANDLE_VALUE;
 
   wkBuffer                              : array[0..7] of Byte;
   wkREADBuffer                          : array[0..32] of Byte;

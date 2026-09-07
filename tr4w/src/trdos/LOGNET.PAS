@@ -22,8 +22,24 @@ unit LogNet;
 
 {$IMPORTEDDATA OFF}
 
-{ Has all of the lower level network interface routines in it.  Sits above
-  LogK1EA which has the serial port support stuff in it }
+(* Has all of the lower level network interface routines in it.
+
+  IT DOES NOT SIT ABOVE LOGK1EA FOR SERIAL, whatever this comment said until
+  2026-09-07. LOGK1EA owns the HANDLE TABLE -- CPUKeyer.SerialPortConfigured_
+  Handle, an array[TSerialPortRange] of THandle -- and nothing else about a
+  port. The open, the DCB and the timeouts are TREE.PAS (TryToOpenCOMPort and
+  InitializeSerialPort), and they always were.
+
+  Nor is that the only serial stack in the program. There are four, none of
+  them sharing code:
+
+    tree.pas + LOGK1EA's table   CPU keyer, PTT, packet, rotators
+    uSerialPort.TSerialPort      the whole radio factory
+    uWinKey.pas                  its own CreateFileA and DCB
+    uYCCCSO2R.pas                a HID device path, not a COM port
+
+  None of them uses FreePascal's `serial` unit. All four are the raw Win32
+  comm API, so all four are Windows-only. *)
 
 interface
 

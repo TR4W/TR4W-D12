@@ -1095,7 +1095,10 @@ end;
 
 procedure DisplayCurrentStatus(rig: RadioPtr);
 var
-   h: HWND;
+   (* THE PANEL SLOT, and it is an ordinary integer -- TRadioRecord declares
+     tRadioPanelSlot: integer and PostPanelText takes one. It was typed HWND,
+     which it has not been since the radio panels became designed forms. *)
+   h: integer;
    //fa: integer;
 begin
    //logger.Debug('Entering DisplayCurrentStatus');

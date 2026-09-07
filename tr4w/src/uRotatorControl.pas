@@ -82,7 +82,8 @@ uses
    Tree,
    utils_file,   // sWriteFile
    LOGSTUFF,     // SendPSTRotorCommand -- the UDP socket, reused not rebuilt
-   LOGK1EA,      // CPUKeyer.SerialPortConfigured_Handle -- the open port handles
+   LOGK1EA,      // CPUKeyer.SerialPortConfigured_Handle -- the port handle TABLE.
+                 // The open itself is Tree.InitializeSerialPort; see LOGNET's header.
    LOGWIND,      // RotatorType / RotatorTypeSA, for the legacy seed
    Windows,      // FILE_ATTRIBUTE_NORMAL, for InitializeSerialPort
    uRotatorRegistry,
@@ -442,7 +443,7 @@ end;
 function OpenPortFor(const aLive: TLiveRotator): boolean;
 var
    baud: integer;
-   h: HWND;
+   h: THandle;
 begin
    Result := False;
    if (aLive = nil) or (not aLive.Driver.UsesSerialPort) or (aLive.Port = NoPort) then

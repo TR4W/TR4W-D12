@@ -837,7 +837,7 @@ function InitializeSerialPort(
     does not even say WHAT failed to open. Pass False and report it
     yourself with the context you have. Defaulted True, so no existing
     caller changes behaviour. }
-  ReportFailure: boolean = True): HWND;
+  ReportFailure: boolean = True): THandle;
 
 function KeyId(Key: Char): string;
 
@@ -913,7 +913,7 @@ procedure EigthNote(Pitch: integer);
 
 //function Get_Tstrings_from_string(s: string; ts: tstringLIST): boolean;
 procedure QuickBeep;
-function TryToOpenCOMPort(portnr: Cardinal {Byte}; dwFlagsAndAttributes: DWORD): HWND;
+function TryToOpenCOMPort(portnr: Cardinal {Byte}; dwFlagsAndAttributes: DWORD): THandle;
 const
   NoteVeryLoA                           = 220;
   NoteVeryLoASharp                      = 235;
@@ -2465,7 +2465,7 @@ function InitializeSerialPort(
     does not even say WHAT failed to open. Pass False and report it
     yourself with the context you have. Defaulted True, so no existing
     caller changes behaviour. }
-  ReportFailure: boolean = True): HWND;
+  ReportFailure: boolean = True): THandle;
 var
   DCB                                   : TDCB;
   CommTimeouts                          : TCommTimeouts;
@@ -4152,7 +4152,7 @@ begin
   SpeakerBeep(1000, 300);
 end;
 
-function TryToOpenCOMPort(portnr: Cardinal {Byte}; dwFlagsAndAttributes: DWORD): HWND;
+function TryToOpenCOMPort(portnr: Cardinal {Byte}; dwFlagsAndAttributes: DWORD): THandle;
 begin
   TF.Format(wsprintfBuffer, _COM, portnr);
 
