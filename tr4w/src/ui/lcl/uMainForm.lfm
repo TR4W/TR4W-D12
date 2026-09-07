@@ -9,6 +9,8 @@ object TR4WMainForm: TTR4WMainForm
   ClientHeight = 370
   ClientWidth = 806
   Color = clBtnFace
+  OnActivate = MainFormActivate
+  OnWindowStateChange = MainFormWindowStateChange
   ShowInTaskBar = stAlways
   LCLVersion = '4.8.0.0'
   object pbLastHour: TProgressBar

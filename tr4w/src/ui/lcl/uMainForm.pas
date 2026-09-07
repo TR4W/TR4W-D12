@@ -131,6 +131,26 @@ type
       the signatures were identical, because printed out they are. }
     procedure lstPossibleCallDrawItem(Control: TWinControl; Index: integer;
                                       ARect: TRect; State: TOwnerDrawState);
+    (* WIRED IN uMainForm.lfm, so they live in the IMPLICIT PUBLISHED REGION --
+      everything above the first visibility keyword. The streaming loader
+      resolves a handler by NAME through RTTI, and method RTTI exists only for
+      published members. The handlers further down are `public` and work
+      because they are ASSIGNED IN CODE; nothing looks them up. *)
+
+    (* THE MAIN WINDOW WAS GIVEN FOCUS -- put it in the right entry field.
+
+      Was the WM_SETFOCUS arm of TR4W's own window procedure. OnActivate is the
+      LCL's event for it, and is kept correct by the LCL's own focus handling
+      in a way WM_SETFOCUS on the form is not: the form's native window and the
+      focused CONTROL are different questions. *)
+    procedure MainFormActivate(Sender: TObject);
+
+    (* MINIMISED OR RESTORED -- take MMTTY with us.
+
+      Was the WM_SIZE arm, which decoded wParam for SIZE_MINIMIZED and
+      SIZE_RESTORED. That is the window STATE, not its size, and WindowState
+      says it without decoding anything. *)
+    procedure MainFormWindowStateChange(Sender: TObject);
   public
     (* The editable log's row supply and its double-click. See uLogGrid. *)
     procedure MainLogFetchRows(Sender: TObject; const aFirstIndex: Int64;
@@ -462,6 +482,8 @@ uses
    // to spell them as literal integers to avoid exactly these six lines; three
    // of the eight literals were wrong and each failure was silent. Six units in
    // an implementation clause is the cheaper mistake.
+   uFunctionKeys,      // ShowFMessages -- the F-key strip, on activate
+   uMMTTY,             // MMTTY.MMTTYEngine -- see MainFormWindowStateChange
    uGetServerLog,      // WM_USER_HEADLESS_SYNC_REPLACE
    SysUtils,           // Format -- the window-procedure guard
    uCrashLog,          // OnMainThread / ReportOffMainThread / LogCaughtException
@@ -533,11 +555,9 @@ begin
                Left claimed, they would be SWALLOWED -- the trap the note above
                describes, and what Lint-AppMessages caught. *)
              (aMsg = WM_LBUTTONDOWN) or
-             (aMsg = WM_SETFOCUS) or
              (aMsg = WM_TIMECHANGE) or
              (aMsg = WM_DISPLAYCHANGE) or
-             (aMsg = WM_WINDOWPOSCHANGING) or
-             (aMsg = WM_SIZE);
+             (aMsg = WM_WINDOWPOSCHANGING);
              (* NOT ONE WORKER-THREAD MESSAGE IS CLAIMED HERE ANY MORE.
 
                This list used to end with eight of them -- results posted
@@ -1777,6 +1797,45 @@ begin
      overridden width and leaves it out of the surplus, so a hand-sized column
      stays where it was put. *)
    TR4WEditableLog.Sizing := lgsFitAndFill;
+end;
+
+procedure TTR4WMainForm.MainFormActivate(Sender: TObject);
+begin
+   if ActiveMainWindow = awExchangeWindow then
+      begin
+      tExchangeWindowSetFocus;
+      end
+   else
+      begin
+      tCallWindowSetFocus;
+      end;
+   ShowFMessages(0);
+end;
+
+procedure TTR4WMainForm.MainFormWindowStateChange(Sender: TObject);
+begin
+   (* ShowWindow ON ANOTHER PROGRAM'S WINDOW, AND WINDOWS-ONLY.
+
+     MMTTY is a separate EXE -- WinExec'd, not a DLL -- and MMTTYEngine is its
+     top-level HWND, found by window class. TR4W minimises and restores it
+     alongside itself so the RTTY window does not sit on the desktop after the
+     logger is minimised. The LCL has no vocabulary for a window it does not
+     own; ShowWindow is the interface another process exposes.
+
+     GATED because MMTTY IS a Windows program -- there is nothing to minimise
+     on macOS or Linux, so this is not a call to be ported but a feature that
+     does not exist there (NY4I, 2026-09-06). *)
+   {$IFDEF WINDOWS}
+   if MMTTY.MMTTYEngine = 0 then
+      begin
+      Exit;
+      end;
+
+   case WindowState of
+     wsMinimized: Windows.ShowWindow(MMTTY.MMTTYEngine, SW_SHOWMINNOACTIVE);
+     wsNormal:    Windows.ShowWindow(MMTTY.MMTTYEngine, SW_RESTORE);
+   end;
+   {$ENDIF}
 end;
 
 procedure TTR4WMainForm.MainLogDblClick(Sender: TObject);
