@@ -83,7 +83,7 @@ type
   end;
 
 const
-  ACCELERATORS: array[0..95] of TAcceleratorRow = (
+  ACCELERATORS: array[0..94] of TAcceleratorRow = (
     (acId: 10002; acCtrl: false; acAlt: true ; acShift: false; acKey: $58; acDisplay: 'Alt+X'; acInstall: true),   // menu_exit
     (acId: 10003; acCtrl: true ; acAlt: true ; acShift: false; acKey: $42; acDisplay: 'Ctrl+Alt+B'; acInstall: true),   // menu_cabrillo
     (acId: 10100; acCtrl: true ; acAlt: false; acShift: false; acKey: $4A; acDisplay: 'Ctrl+J'; acInstall: true),   // menu_options
@@ -99,7 +99,7 @@ const
     (acId: 10210; acCtrl: true ; acAlt: false; acShift: true ; acKey: $37; acDisplay: 'Ctrl+Shift+7'; acInstall: true),   // menu_windows_intercom
     (acId: 10211; acCtrl: true ; acAlt: false; acShift: true ; acKey: $38; acDisplay: 'Ctrl+Shift+8'; acInstall: true),   // menu_windows_getscores
     (acId: 10212; acCtrl: true ; acAlt: false; acShift: true ; acKey: $39; acDisplay: 'Ctrl+Shift+9'; acInstall: true),   // menu_windows_stations
-    (acId: 10216; acCtrl: true ; acAlt: false; acShift: true ; acKey: $30; acDisplay: 'Ctrl+Shift+0'; acInstall: true),   // menu_windows_mp3recorder
+    (* Ctrl+Shift+0 went with the MP3 recorder window, 2026-09-07. *)
     (acId: 10300; acCtrl: false; acAlt: true ; acShift: false; acKey: $41; acDisplay: 'Alt+A'; acInstall: true),   // menu_alt_wkmode
     (acId: 10301; acCtrl: false; acAlt: true ; acShift: false; acKey: $43; acDisplay: 'Alt+C'; acInstall: true),   // menu_alt_autocqresume
     (acId: 10302; acCtrl: false; acAlt: true ; acShift: false; acKey: $44; acDisplay: 'Alt+D'; acInstall: true),   // menu_alt_dupecheck

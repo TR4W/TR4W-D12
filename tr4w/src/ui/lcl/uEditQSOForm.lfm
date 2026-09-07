@@ -576,16 +576,6 @@ object frmEditQSO: TfrmEditQSO
     TabOrder = 31
     OnChange = FieldChanged
   end
-  object btnPlay: TButton
-    Left = 483
-    Height = 23
-    Top = 323
-    Width = 90
-    Caption = '&Play'
-    Enabled = False
-    TabOrder = 32
-    OnClick = btnPlayClick
-  end
   object lblNumberRcvd: TLabel
     Left = 8
     Height = 17

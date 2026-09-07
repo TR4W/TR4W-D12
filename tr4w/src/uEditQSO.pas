@@ -29,7 +29,6 @@ interface
 uses
   //  shellapi,
   uCTYDAT,
-  uMP3Recorder,
   uStations,
   WinSock2,
   uNet,
@@ -64,7 +63,6 @@ procedure OpenEditQSOWindow;
 // function below still reads field by field, by the SAME control ids.
 function  LoadQSOIntoEditForm: boolean;
 procedure CallsignChangedInEditForm;
-procedure PlayMP3ForEditedQSO;
 procedure AfterEditQSOClosed;
 function SaveQSOToEditableLog: boolean;
 function CheckSystemTimeRecord(Time: TQSOTime): boolean;
@@ -90,7 +88,7 @@ const
 
   FLD_SAVE_BUTTON = 123;
   FLD_CANCEL_BUTTON = 124;
-  FLD_PLAY_BUTTON = 201;
+  (* FLD_PLAY_BUTTON (201) went with the MP3 play button, 2026-09-07. *)
 
   FLD_SAP = 125;
 
@@ -182,13 +180,14 @@ begin
       Exit;
       end;
 
-   if EditableQSORXData.MP3Record then
-      begin
-      if FileExists(DeleteSlashes(MakeMP3Filename(@EditableQSORXData))) then
-         begin
-         EditQSOSetEnabled(FLD_PLAY_BUTTON, True);
-         end;
-      end;
+   (* THE PLAY BUTTON IS GONE (2026-09-07), with the recorder that made the
+     files it played. MakeMP3Filename built a path under Config.MP3Path from the
+     QSO's call, band and time -- a naming convention that belonged to TR4W's own
+     recorder and describes nothing an external recorder writes. NY4I chose to
+     remove playback rather than keep it pointing at a directory nothing fills.
+
+     EditableQSORXData.MP3Record is still read from the log; it simply has no
+     button to enable. *)
 
    if (EditableQSORXData.ceQSO_Deleted) or
       (EditableQSORXData.ceRecordKind <> rkQSO) then
@@ -370,22 +369,6 @@ begin
       begin
       EditQSOSetText(FLD_DXQTH, string(EditableQSORXData.QTH.CountryID));
       end;
-end;
-
-procedure PlayMP3ForEditedQSO;
-begin
-   // No player configured is not a failure -- it is a prompt to configure one,
-   // which is what the Win32 arm did before it gave up.
-   if Config.MP3Player[0] = #0 then
-      begin
-      SetCommand('MP3 PLAYER');
-      Exit;
-      end;
-
-   // The operator's own player, with the file as an ARGUMENT rather than
-   // pasted into a command line -- see uPlatformProcess on quoting.
-   RunProgram(string(Config.MP3Player),
-              [string(PAnsiChar(DeleteSlashes(MakeMP3Filename(@EditableQSORXData))))]);
 end;
 
 procedure AfterEditQSOClosed;

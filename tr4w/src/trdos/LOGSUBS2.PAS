@@ -27,7 +27,6 @@ uses
   utils_net,
   utils_text,
   utils_file,
-  uMP3Recorder,
   uWinKey,
   uAltD,
   uCTYDAT,
@@ -1564,11 +1563,12 @@ begin
      RXData.ceQSOID1 := STARTTIMEOFTHETR4W;
      RXData.ceQSOID2 := Windows.GetTickCount;
      RXData.ceOperator := CurrentOperator;
-     if RecorderDuration = rdEachQSO then
-       if SaveLastQSOToMP3File(@RXData) then
-          begin
-          RXData.MP3Record := True;
-          end;
+     (* THE PER-QSO RECORDING HOOK IS GONE (2026-09-07) with the built-in MP3
+       recorder. RXData.MP3Record itself STAYS: it is a field of
+       ContestExchange, which is the on-disk log record, and it is persisted as
+       mp3_recorded in the SQLite log and migrated forward from v1.5 and v1.6
+       logs. Removing the field would change the log format; nothing writes it
+       now, and old logs keep whatever they recorded. *)
      if not SendRecordToServer(NET_QSOINFO_ID, RXData) then
         begin
         inc(tUSQ);

@@ -44,7 +44,6 @@ uses
    LogSCP,
    TF,
    FCONTEST,
-   uMP3Recorder,
    ZoneCont,
    utils_text,
    //Country9,
@@ -290,6 +289,35 @@ const
    DITDAHRATIO_ARRAY: array[0..03] of integer = (3, 4, 5, 6);
    LEADING_ZEROS_ARRAY: array[0..03] of integer = (0, 1, 2, 3);
 
+(* WHAT IS LEFT OF THE MP3 RECORDER, and only because the two tables below are
+  addressed BY INDEX.
+
+  CommandsArray reaches its list- and array-valued settings with
+  `crAddress: pointer(N)`, where N indexes ArrayRecordArray or ListParamArray.
+  Deleting a row from either shifts every row above it and silently repoints
+  other settings at the wrong variable -- the same hazard as the tw_ window
+  enum, whose ordinal drives menu ids.
+
+  So those two rows stay and their COMMANDS are marked csRem (withdrawn), the
+  mechanism this tree already uses for ninety-odd retired settings: not shown in
+  Preferences, not stored. These declarations exist to keep the rows VALID --
+  ListParamArray's lpVar is dereferenced with no nil check (uCFG:1196, :1848),
+  so a blanked row would be a latent access violation rather than a tidy hole.
+
+  Nothing reads them. The recorder they configured went on 2026-09-07;
+  recording is QSOCapture's job now. *)
+type
+   TMP3RecorderDuration = (rdEachQSO, rdEachHour, rdNonStop);
+
+const
+   MP3RecorderDurationSA: array[TMP3RecorderDuration] of PAnsiChar =
+      ('EACH QSO', 'EACH HOUR', 'NON-STOP');
+
+var
+   RecorderDuration: TMP3RecorderDuration = rdEachQSO;
+   RecorderBitrate:  integer = 0;
+
+const
    // Integer commnand pointers
    ArrayRecordArray: array[1..16] of ArrayRecord =
       (

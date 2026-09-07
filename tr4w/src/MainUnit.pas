@@ -74,7 +74,6 @@ uses
   // uMakeHelpFile,
   uAltP,
   MMSystem,
-  uMP3Recorder,
   uCRC32,
   uCFG,
   uWinKey,
@@ -622,7 +621,6 @@ uses
   uPostScoresForm,         // CreateTR4WPostScoresWindow
   uHamScoreForm,           // CreateTR4WHamScoreWindow
   uIntercomForm,           // CreateTR4WIntercomWindow
-  uMP3RecorderForm,        // CreateTR4WMP3RecorderWindow
   uRadioPanelForm,         // CreateTR4WRadioPanelWindow -- both radios
   uNetworkForm,            // CreateTR4WNetworkWindow
   uRemMultsForm,       // CreateTR4WRemMultsWindow -- all five mult windows
@@ -6087,7 +6085,7 @@ const
     tw_REMMULTSWINDOW_INDEX,
     tw_REMMULTSWINDOW_INDEX,
     tw_REMMULTSWINDOW_INDEX,
-    tw_MP3RECORDER,
+    tw_Unused17,                 // was tw_MP3RECORDER; the slot keeps its ordinal
     tw_REMMULTSWINDOW_INDEX,
     tw_MASTERWINDOW_INDEX,
     tw_HAMSCOREWINDOW_INDEX,   // Issue #783 Phase 4 -- HamScore status window
@@ -6203,11 +6201,14 @@ begin
      CreateTR4WRadioPanelWindow(ID);
      lclForm := RadioPanelForm(ID);
      end
-  else if ID = tw_MP3RECORDER then
-     begin
-     CreateTR4WMP3RecorderWindow;
-     lclForm := TR4WMP3RecorderForm;
-     end
+  (* THE MP3 RECORDER WINDOW IS GONE (2026-09-07). Recording moves to
+    QSOCapture, which slices QSOs from TR4W's own N1MM-format contactinfo UDP
+    broadcasts -- verified working on NY4I's station before this was removed.
+
+    What went with it: the waveIn capture engine, the lame_enc.dll binding, the
+    per-QSO and hourly recording hooks, and the Edit QSO play button. The tw_
+    slot itself is kept as tw_Unused17 because menu ids are derived from the
+    ordinal. *)
   else if ID = tw_INTERCOMWINDOW_INDEX then
      begin
      CreateTR4WIntercomWindow;

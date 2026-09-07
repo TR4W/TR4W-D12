@@ -8,7 +8,7 @@
   "window.Query": 0,
   "serial.CommAPI": 9,
   "registry": 13,
-  "audio.MMSystem": 10,
+  "audio.MMSystem": 0,
   "lpt.inpout32": 10,
   "mmtty.WindowMsg": 1
 }

@@ -1026,7 +1026,6 @@ uses
   //  OZCHR,
 //  uStack,
   uNet,
-  uMP3Recorder,
   uStations,
   uSpots,
   uRemMults,
@@ -2053,12 +2052,7 @@ begin
         TotalThisHour := 0;
         tThisHourBandChanges := 0;
 
-        if MP3RecorderMode = mprRec then
-          if RecorderDuration = rdEachHour then
-             begin
-             CloseTempMP3File;
-             OpenTempMP3File;
-             end;
+        (* The hourly MP3 rotate went with the built-in recorder (2026-09-07). *)
         end;
 
      if NumberReminderRecords > 0 then

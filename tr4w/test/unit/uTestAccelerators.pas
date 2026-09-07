@@ -238,8 +238,12 @@ begin
      were never in an English build -- but acInstall was TRUE, so the KEY was
      installed in every
      build and had been firing command id 10602 into nothing. Exactly the
-     failure the 2026-08-29 note above describes, sitting one entry below it. }
-   CheckEquals(92, installed, 'installed bindings (the table read out of the binary)');
+     failure the 2026-08-29 note above describes, sitting one entry below it.
+
+     92 until 2026-09-07, when Ctrl+Shift+0 went with the MP3 recorder window.
+     Recording moved to QSOCapture, which slices QSOs from TR4W's own
+     contactinfo UDP broadcasts. }
+   CheckEquals(91, installed, 'installed bindings (the table read out of the binary)');
    CheckEquals(4, displayOnly, 'display-only rows');
 
    // Named individually: each is here for a DIFFERENT reason and losing any one

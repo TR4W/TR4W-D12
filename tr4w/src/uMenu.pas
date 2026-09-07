@@ -101,7 +101,7 @@ const
     // per-slot entries to ONE item opening the Preferences window, removing
     // the MAXWORD-1 submenu marker, the two Radio entries and the MAXWORD-2
     // terminator, and adding one item (net -3).
-    T_MENU_ARRAY_SIZE                     = 176 + 1 {MMTTY window}{$IFDEF LANG_RUS} + 3{$ENDIF} + 2 {RC_RESET_RADIO_PORTS, separator, Repeat POTA Parks} + 2 {HamScore Resync (Tools) + HamScore Status (Windows menu), Issue #783} + 1 {3830 Score under File-Reports} + 1 {Edit Cabrillo Summary under Tools, Issue #914} + 1 {Download TRMASTER.DTA, 2026-08-16} - 1 {Appearance removed, 2026-08-16} - 1 {Synchronize PC time removed, 2026-08-25 -- setting the clock needs UAC} - 1 {Device Manager removed, 2026-09-01 -- an application does not shell out to mmc}
+    T_MENU_ARRAY_SIZE                     = 176 + 1 {MMTTY window}{$IFDEF LANG_RUS} + 3{$ENDIF} + 2 {RC_RESET_RADIO_PORTS, separator, Repeat POTA Parks} + 2 {HamScore Resync (Tools) + HamScore Status (Windows menu), Issue #783} + 1 {3830 Score under File-Reports} + 1 {Edit Cabrillo Summary under Tools, Issue #914} + 1 {Download TRMASTER.DTA, 2026-08-16} - 1 {Appearance removed, 2026-08-16} - 1 {Synchronize PC time removed, 2026-08-25 -- setting the clock needs UAC} - 1 {Device Manager removed, 2026-09-01 -- an application does not shell out to mmc} - 1 {MP3 Recorder removed, 2026-09-07 -- recording moves to QSOCapture}
                                             - 0 {Check for Updates taken OFF the menu 2026-08-28 -- see the row below};
 
 var
@@ -219,7 +219,7 @@ var
     (mrText: ''; mrId: menu_windows_getscores),
     (mrText: ''; mrId: menu_windows_hamscore),  // Issue #783 Phase 4
     (mrText: ''; mrId: menu_windows_stations),
-    (mrText: ''; mrId: menu_windows_mp3recorder),
+    (* The MP3 recorder row went with the recorder, 2026-09-07. *)
     (mrText: ''; mrId: menu_windows_mmtty),
  //}
 

@@ -2382,7 +2382,12 @@ type
    {14}tw_STATIONS_RM_DX,
    {15}tw_STATIONS_RM_DOM,
    {16}tw_STATIONS_RM_ZONE,
-   {17}tw_MP3RECORDER,
+   (* {17} WAS tw_MP3RECORDER. The slot is KEPT, deliberately: menu ids are
+     derived from the ordinal -- SetMenuChecked(10199 + Ord(ID)) -- so deleting
+     a member would renumber every window above it onto the wrong menu row.
+     Saved window positions are keyed by NAME and would survive; the menu
+     check-marks would not. *)
+   {17}tw_Unused17,
    {18}tw_STATIONS_RM_PREFIX,
    {19}tw_DUPESHEETWINDOW2_INDEX,
    {20}tw_HAMSCOREWINDOW_INDEX,
@@ -2412,7 +2417,7 @@ const
     'Main', 'BandMap', 'DupeSheet1', 'FunctionKeys', 'Master',
     'RemMults', 'Radio1', 'Radio2', 'Telnet', 'Network',
     'MMTTY', 'Intercom', 'PostScores', 'Stations', 'StationsRMDX',
-    'StationsRMDOM', 'StationsRMZone', 'MP3Recorder', 'StationsRMPrefix',
+    'StationsRMDOM', 'StationsRMZone', 'Unused17', 'StationsRMPrefix',
     'DupeSheet2', 'HamScore', 'Dummy11');
 
 type
@@ -2672,7 +2677,7 @@ const
 
 //  menu_windows_stack                    = 10216;
 //  menu_windows_mf                       = 10217;
-  menu_windows_mp3recorder              = 10216;
+  (* menu_windows_mp3recorder (10216) went with the recorder, 2026-09-07. *)
   menu_windows_dupesheet2               = 10218;
 
   menu_alt_wkmode                       = 10300;

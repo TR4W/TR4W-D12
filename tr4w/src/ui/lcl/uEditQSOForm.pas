@@ -104,7 +104,7 @@ type
 
     dtpDateTime: TDateTimePicker;
 
-    btnPlay, btnSave, btnCancel: TButton;
+    btnSave, btnCancel: TButton;
 
     procedure HandleShow(Sender: TObject);
     procedure HandleClose(Sender: TObject; var Action: TCloseAction);
@@ -114,7 +114,6 @@ type
     procedure CallsignChanged(Sender: TObject);
     procedure btnSaveClick(Sender: TObject);
     procedure btnCancelClick(Sender: TObject);
-    procedure btnPlayClick(Sender: TObject);
   end;
 
 type
@@ -126,7 +125,7 @@ type
   end;
 
 const
-  EDITQSO_FIELDS: array[0..68] of TEditQSOField = (
+  EDITQSO_FIELDS: array[0..67] of TEditQSOField = (
      (Id: 101; Name: 'lblBand'),
      (Id: 102; Name: 'lblCallsign'),
      (Id: 103; Name: 'lblComputerID'),
@@ -194,8 +193,7 @@ const
      (Id: 167; Name: 'edtOperator'),
      (Id: 168; Name: 'lblOperator'),
      (Id: 170; Name: 'chkXQSO'),
-     (Id: 180; Name: 'dtpDateTime'),
-     (Id: 201; Name: 'btnPlay'));
+     (Id: 180; Name: 'dtpDateTime'));
 
 // ----------------------------------------------------------------------------
 // THE ACCESSOR SHIM.  These stand in for GetDialogItemText / GetDlgItemInt /
@@ -636,11 +634,6 @@ begin
       begin
       btnSave.Enabled := False;
       end;
-end;
-
-procedure TfrmEditQSO.btnPlayClick(Sender: TObject);
-begin
-   PlayMP3ForEditedQSO;
 end;
 
 // The probe for one edit box: longer than any limit it declares, so a limit
