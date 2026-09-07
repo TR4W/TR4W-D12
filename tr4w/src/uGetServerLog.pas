@@ -38,6 +38,15 @@ uses
   Tree
   ,
   uTR4WStrings;
+(* WHAT THE HEADLESS SYNC DOES WHEN THE DOWNLOAD IS FINISHED, on the main
+  thread.
+
+  Was the WM_USER_HEADLESS_SYNC_REPLACE arm of uMainWindowProc.WindowProc,
+  reached by SendMessage from the download worker. Every piece of state it
+  touches belongs to THIS unit, which is why that arm made the window procedure
+  use uGetServerLog. It is a procedure now, handed to RunOnMainThread. *)
+procedure HeadlessSyncFinished(aData: PtrInt);
+
 procedure ReplaceLogByServerLog(Replace: boolean);
 procedure RunSyncThread;
 
@@ -97,7 +106,6 @@ const
   // drive the post-download replace.  Cannot do this from the worker because
   // LoadinLog (called by ReplaceLogByServerLog) accesses ListView controls,
   // and Win32 controls require all messages from their creating thread.
-  WM_USER_HEADLESS_SYNC_REPLACE = WM_USER + 200;
 
   // Progress, worker -> sync window.  wParam is one of SYNC_FIELD_*, lParam the
   // value.  Same reasoning as above, generalised: see ReportSyncProgress.
@@ -114,6 +122,7 @@ const
 
 implementation
 uses SysUtils,   { Format, StrPCopy -- replaced TF.Format/wsprintfA }
+   uMainThread,  { RunOnMainThread -- the finished handoff, see HeadlessSyncFinished }
   MainUnit;
 
 { GetServerLogDlgProc STOOD HERE and went with dialog template 73 on
@@ -161,6 +170,18 @@ begin
       Exit;
       end;
    Windows.SendMessage(ServerLogFormWnd, WM_USER_SYNC_PROGRESS, aField, aValue);
+end;
+
+procedure HeadlessSyncFinished(aData: PtrInt);
+begin
+   if NewServerLogHandle <> INVALID_HANDLE_VALUE then
+      begin
+      CloseHandle(NewServerLogHandle);
+      NewServerLogHandle := INVALID_HANDLE_VALUE;
+      end;
+   ReplaceLogByServerLog(True);
+   logger.Info('Auto-sync: local log replaced with server log.');
+   HeadlessSyncMode := False;
 end;
 
 procedure ReplaceLogByServerLog(Replace: boolean);
@@ -322,18 +343,25 @@ begin
      end;
   e:
   LogSyncThreadID := 0;
-  // Issue #912: headless mode drives the replace from the UI thread via
-  // SendMessage.  LoadinLog (called by ReplaceLogByServerLog) accesses
-  // Win32 ListView controls, which require their creating thread.
-  // SendMessage blocks here until the UI handler returns, which is fine -
-  // the worker thread is about to exit anyway.
+  (* Issue #912: the replace runs on the UI thread, because LoadinLog touches
+    controls and a control belongs to the thread that made it.
+
+    RunOnMainThread, not SendMessage(tr4whandle, WM_USER_...). The message
+    needed an id, the main window's HANDLE, an entry in uMainForm's list of
+    messages TR4W claims, and an arm in the window procedure -- none of which
+    is about the work. It is the same move the other six background results
+    made.
+
+    QUEUED RATHER THAN BLOCKING, and that is safe here rather than merely
+    convenient: this is the last statement in the branch, the branch is the
+    last in the routine, and the handler takes nothing from this thread. *)
   if HeadlessSyncMode then
      begin
      if TotalQ > 0 then
         begin
         logger.Info('Auto-sync: download complete (%d records, %d QSOs).  Marshalling replace to UI thread.',
                     [TotalRecords, TotalQ]);
-        SendMessage(tr4whandle, WM_USER_HEADLESS_SYNC_REPLACE, 0, 0);
+        RunOnMainThread(@HeadlessSyncFinished, 0);
         end
      else
         begin

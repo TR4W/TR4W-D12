@@ -537,54 +537,34 @@ begin
              (aMsg = WM_TIMECHANGE) or
              (aMsg = WM_DISPLAYCHANGE) or
              (aMsg = WM_WINDOWPOSCHANGING) or
-             (aMsg = WM_SIZE) or
-             // The messages TR4W posts to itself from worker threads, BY THEIR
-             // CONSTANTS.
-             //
-             // These were written out as literal values, with a comment saying
-             // that avoided "depending on five more units for four integers".
-             // Measured 2026-08-20: THREE OF THE EIGHT WERE WRONG, and every one
-             // of them failed in total silence -- the message simply chained to
-             // the LCL, which does not know it, and the handler in
-             // uMainWindowProc.WindowProc never ran.
-             //
-             //   WM_APP + 213 was claimed for WM_CTY_VERSION_CHECKED, which is
-             //     actually WM_APP + 210. 213 is not any message at all.
-             //   WM_APP + 100 was claimed for WM_TRAYBALLON, which was
-             //     actually WM_SOCK + 3 = $5F7. Not close. (That message and
-             //     uTrayBalloon are gone now -- the tray feature was not
-             //     wanted -- but the mistake is left described because it is
-             //     the CLASS of error this list must not repeat.)
-             //   WM_PANEL_UPDATE (WM_APP + 230) was never added, so the radio
-             //     panel marshalling seam never delivered a single update --
-             //     which is why RIT/XIT/SPLIT stayed yellow on the bench and
-             //     survived two wrong diagnoses before this one. (That message
-             //     no longer exists: uPanelUpdate hands its payload to
-             //     Application.QueueAsyncCall now, which has no id anyone can
-             //     forget to register. The example stands -- it is the CLASS of
-             //     error this list must not repeat.)
-             //
-             // The units cost is real and it is worth paying. A list of integers
-             // that must agree with constants declared elsewhere cannot be
-             // checked by anything; a list of the constants themselves cannot be
-             // wrong about a value at all. What it can still be wrong about is
-             // MEMBERSHIP -- a new message nobody adds here -- and that is what
-             // Lint-AppMessages exists to catch.
-             // SIX BACKGROUND-RESULT MESSAGES LEFT THIS LIST ON 2026-09-03,
-             // with the arms that answered them: WM_POTA_DOWNLOAD_DONE,
-             // WM_POTA_LOAD_DONE, WM_CTY_VERSION_CHECKED, WM_CTY_DOWNLOAD_DONE,
-             // WM_TRMASTER_DOWNLOAD_DONE and WM_TCI_APPLY. A worker thread
-             // hands its result over through uMainThread.RunOnMainThread now,
-             // so there is no message, no id to register and nothing to claim.
-             // The comment above about QueueAsyncCall having no id anyone can
-             // forget to register is no longer describing one case -- it is how
-             // every background result arrives.
-             // NOT a WM_APP message -- WM_USER + 200 -- and the fourth one this
-             // list was dropping. It is SENT, not posted, by uGetServerLog so
-             // the multi-op log replace happens on the UI thread; unclaimed, it
-             // chained to the LCL, the replace never ran, and the sending thread
-             // blocked to be told nothing happened.
-             (aMsg = WM_USER_HEADLESS_SYNC_REPLACE);
+             (aMsg = WM_SIZE);
+             (* NOT ONE WORKER-THREAD MESSAGE IS CLAIMED HERE ANY MORE.
+
+               This list used to end with eight of them -- results posted
+               back from a CTY download, a TRMASTER download, a POTA parse,
+               a TCI apply, the panel-update seam and the headless log sync.
+               Six left on 2026-09-03 and the last, WM_USER_HEADLESS_SYNC_REPLACE,
+               on 2026-09-07. A thread hands its result to
+               uMainThread.RunOnMainThread now: no message, no id, nothing to
+               claim.
+
+               THE LESSON IS KEPT BECAUSE IT IS WHY THIS LIST IS WRITTEN IN
+               CONSTANTS. The eight were once literal integers, on the
+               argument that naming them would cost five units for four
+               numbers -- and measured on 2026-08-20, THREE OF THE EIGHT WERE
+               WRONG. WM_APP + 213 was claimed for a message that is
+               WM_APP + 210; WM_APP + 100 for one that was WM_SOCK + 3;
+               WM_PANEL_UPDATE was never added at all, so the radio panel's
+               marshalling delivered nothing and RIT/XIT/SPLIT stayed yellow
+               on the bench through two wrong diagnoses. Every one failed in
+               SILENCE: an unclaimed message chains to the LCL, which does
+               not know it.
+
+               A list of integers that must agree with constants declared
+               elsewhere cannot be checked by anything; a list of the
+               constants themselves cannot be wrong about a value. It can
+               still be wrong about MEMBERSHIP -- a message nobody adds --
+               and Lint-AppMessages exists to catch that. *)
 end;
 
 { TR4W'S WINDOW PROCEDURE, INSTALLED ON THE FORM'S HWND AHEAD OF THE LCL'S.
