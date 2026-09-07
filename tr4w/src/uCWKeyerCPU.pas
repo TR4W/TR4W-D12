@@ -49,6 +49,7 @@ type
 implementation
 
 uses
+   uAppTimers,   (* StartAppTimer / StopAppTimer -- LCL TTimers, not SetTimer *)
    Windows,    // SetThreadPriority / THREAD_PRIORITY_TIME_CRITICAL
    Log4D,
    TF,         // tCreateThread
@@ -86,7 +87,10 @@ begin
 {$IF OZCR2008}
       if tMessagesExhangeEnable then
          begin
-         SetTimer(tr4whandle, UPDATE_NET_CW_MESSAGE, 250, @SendMessageStatus);
+         (* SendMessageStatus is a plain procedure and this passed it as a
+           Win32 TIMERPROC -- the same stack mismatch LOGWIND had. See
+           uAppTimers. *)
+         StartAppTimer(atNetCWStatus, 250, @SendMessageStatus);
          end;
 {$IFEND}
       end;

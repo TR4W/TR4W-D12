@@ -381,7 +381,7 @@ procedure StartDVK(MemorySwitch: integer);
 procedure SendCWBufferStart;
 procedure CWThreadProc;
 procedure tDoABeep;
-procedure tAutoCQTimerProc(uTimerID, uMessage: UINT; dwUser, dw1, dw2: DWORD) stdcall;
+procedure AutoCQTick;
 procedure tCWSleep(millsec, myEvent: Cardinal);
 procedure tPaddleFootSwitchThreadProc;
 
@@ -408,6 +408,7 @@ var
 implementation
 
 uses
+   uAppTimers,   (* StartAppTimer / StopAppTimer -- LCL TTimers, not SetTimer *)
   (* FIRST IN THE CLAUSE, deliberately. Every other unit here then takes
     precedence over it, so adding SysUtils to a unit this old cannot quietly
     re-point an existing unqualified call at a different routine. What this
@@ -2065,7 +2066,7 @@ begin
 {$IFEND}
   if tAutoCQMode = True then
      begin
-     tAutoCQTimerID := SetTimer(tr4whandle, AUTOCQ_TIMER_HANDLE, AutoCQDelayTime, @tAutoCQTimerProc);
+     StartAppTimer(atAutoCQ, AutoCQDelayTime, @AutoCQTick);
      end;
 
 end;
@@ -2163,11 +2164,16 @@ begin
 
 end;
 
-procedure tAutoCQTimerProc(uTimerID, uMessage: UINT; dwUser, dw1, dw2: DWORD) stdcall;
+(* THE AUTO-CQ REPEAT FIRED. A plain procedure now, not a Win32 TIMERPROC:
+  it never read any of the four arguments Windows passed it, and a TNotifyEvent
+  cannot be handed a callback of the wrong shape. *)
+procedure AutoCQTick;
 var
   TempChar                              : Char;
 begin
-  Windows.KillTimer(tr4whandle, AUTOCQ_TIMER_HANDLE);
+  (* ONE SHOT. The Win32 timer was killed on entry and re-armed by whoever
+    wanted another CQ; that is unchanged. *)
+  StopAppTimer(atAutoCQ);
   if OpMode = SearchAndPounceOpMode then
      begin
      TryKillAutoCQ;

@@ -1019,6 +1019,7 @@ procedure UpadateAutoSend;
 implementation
 
 uses
+   uAppTimers,   (* StartAppTimer / StopAppTimer -- LCL TTimers, not SetTimer *)
    uWindowTable,   { tr4w_WindowsArray, tWindowsExist -- moved out of VC/TF }
   uFlasher,    { the quick-display flash is a timer now }
   uMainForm,   { the call field, named -- wh[] round 3 }
@@ -1690,11 +1691,16 @@ begin
   if length(Prompt) > 0 then
      begin
      FlashQickDisplay;
-     if ClearQuickDisplayTimer <> 0 then
+     if AppTimerRunning(atQuickDisplayClear) then
         begin
-        Windows.KillTimer(tr4whandle, ClearQuickDisplayTimer);
+        StopAppTimer(atQuickDisplayClear);
         end;
-     ClearQuickDisplayTimer := Windows.SetTimer(tr4whandle, QUICK_REPORT_TIMER_HANDLE, 30000, @ClearQuickDisplayText);
+     (* THIS WAS A LATENT STACK BUG, not just an unportable call.
+       ClearQuickDisplayText is a plain procedure and SetTimer calls a TIMERPROC
+       -- stdcall, four arguments, callee-popped on i386 -- so every one of
+       these ticks returned leaving the stack four arguments deep. The @
+       operator is what let it compile. See uAppTimers. *)
+     StartAppTimer(atQuickDisplayClear, 30000, @ClearQuickDisplayText);
      end;
 end;
 
@@ -1707,8 +1713,7 @@ procedure ClearQuickDisplayText;
 begin
   SetTextInQuickCommandWindow('');
 //  Windows.AnimateWindow(wh[mweQuickCommand], 500, AW_HIDE or AW_HOR_POSITIVE);
-  Windows.KillTimer(tr4whandle, ClearQuickDisplayTimer);
-  ClearQuickDisplayTimer := 0;
+  StopAppTimer(atQuickDisplayClear);
 end;
 
 procedure QuickDisplayError(Prompt: string);

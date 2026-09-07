@@ -35,6 +35,7 @@ procedure RunTR4W;
 implementation
 
 uses
+   uAppTimers,   (* StartAppTimer / StopAppTimer -- LCL TTimers, not SetTimer *)
   Messages,
   MMSystem,
   Windows,
@@ -1710,7 +1711,7 @@ begin
 
   if not tHandLogMode then
      begin
-     SetTimer(tr4whandle, ONE_SECOND_TIMER_HANDLE, 1000, @OneSecTimerProc);
+     StartAppTimer(atOneSecond, 1000, @OneSecondTick);
      // The 250 ms band map refresh timer stood here: a SetTimer on the MAIN
      // window, armed once and never killed, ticking for the life of the
      // program whether or not the band map existed.  The band map form owns

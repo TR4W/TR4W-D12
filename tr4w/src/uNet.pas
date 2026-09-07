@@ -201,6 +201,7 @@ const
 
 implementation
 uses
+   uAppTimers,   (* StartAppTimer / StopAppTimer -- LCL TTimers, not SetTimer *)
   Menus,          { TMenuItem -- the Network menu row }
   uMenu,          { TopLevelMenuItem }
    { The SQLite shadow -- an IMPLEMENTATION-section use, so no interface
@@ -910,7 +911,7 @@ begin
   SendToNet(MyMessageState, SizeOf(TMessageState));
   if MyMessageState.msCWElements < 1 then
      begin
-     KillTimer(tr4whandle, UPDATE_NET_CW_MESSAGE);
+     StopAppTimer(atNetCWStatus);
      end;
 end;
 

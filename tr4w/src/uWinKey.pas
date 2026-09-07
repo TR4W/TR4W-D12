@@ -287,6 +287,7 @@ implementation
 
 
 uses
+   uAppTimers,   (* StartAppTimer / StopAppTimer -- LCL TTimers, not SetTimer *)
   uMainForm,   { the main window's elements are LCL controls }
   uKeyerState, { the keyer's state. This unit runs on read threads and must not
                  name a control -- see wkDispayState and wkOpen }
@@ -865,7 +866,7 @@ begin
         if tAutoCQMode = True then
            begin
             
-           tAutoCQTimerID := SetTimer(tr4whandle, AUTOCQ_TIMER_HANDLE, AutoCQDelayTime, @tAutoCQTimerProc);
+           StartAppTimer(atAutoCQ, AutoCQDelayTime, @AutoCQTick);
            end;
       end;
 

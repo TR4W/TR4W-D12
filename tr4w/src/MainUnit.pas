@@ -324,10 +324,12 @@ procedure TimeApplet(i: Cardinal);
   name is a single function again. *)
 function YesOrNo(const Text: string): integer;
 function YesOrNo2(const Text: string): integer;
-procedure PTTOffWhenStopWAV(uTimerID, uMessage: UINT; dwUser, dw1, dw2: DWORD)
-  stdcall;
-procedure OneSecTimerProc(uTimerID, uMessage: UINT; dwUser, dw1, dw2: DWORD)
-  stdcall;
+(* PTTOffWhenStopWAV IS GONE (2026-09-07). It was a Win32 TIMERPROC that
+  nothing ever registered -- no SetTimer, no timeSetEvent, anywhere in the tree
+  -- so the PTT it was meant to drop after a WAV finished was never dropped by
+  it. WAV_STOP_PTT_TIMER_IDENTIFIER was read only inside it and was never
+  assigned a timer id either, which made its KillTimer a call against zero. *)
+procedure OneSecondTick;
 
 procedure SaveTR4WPOSFILE;
 procedure StartLayoutAutosave;
@@ -562,6 +564,7 @@ const
 implementation
 
 uses
+   uAppTimers,   (* StartAppTimer / StopAppTimer -- LCL TTimers, not SetTimer *)
   Menus,              // TMenuItem -- the menu is a TMainMenu now
    uWindowTable,   { tr4w_WindowsArray, tWindowsExist -- moved out of VC/TF }
   { The SQLite shadow -- an IMPLEMENTATION-section use, so no interface
@@ -2782,8 +2785,9 @@ begin
   wkSendAdminCommand(wkRESET);
 end;
 
-procedure OneSecTimerProc(uTimerID, uMessage: UINT; dwUser, dw1, dw2: DWORD)
-  stdcall;
+(* The clock and rate displays, once a second. A plain procedure now -- it read
+  none of the four arguments a TIMERPROC is given. *)
+procedure OneSecondTick;
 begin
   UpdateTimeAndRateDisplays(True, True);
 
@@ -2791,17 +2795,6 @@ begin
   // Windows.SetWindowTextA(tr4whandle, inttopchar({GetHeapStatus.TotalFree}AllocMemSize));
  // Windows.SetWindowTextA(InsertWindowHandle, inttopchar(FreeMemCount));
 {$IFEND}
-end;
-
-procedure PTTOffWhenStopWAV(uTimerID, uMessage: UINT; dwUser, dw1, dw2: DWORD)
-  stdcall;
-begin
-  // ShowMessage('end;');
-  Windows.KillTimer(tr4whandle, WAV_STOP_PTT_TIMER_IDENTIFIER);
-  PTTOff;
-  WAV_STOP_PTT_TIMER_IDENTIFIER := 0;
-  DVPOn := False;
-  DisplayCodeSpeed;
 end;
 
 procedure FrmSetFocus;
@@ -3148,7 +3141,7 @@ begin
   Result := False;
   if tAutoCQMode = True then
      begin
-     Windows.KillTimer(tr4whandle, AUTOCQ_TIMER_HANDLE);
+     StopAppTimer(atAutoCQ);
      tAutoCQMode := False;
      TR4WMainForm.pnlOpMode.Caption := 'CQ';
      QuickDisplay('');

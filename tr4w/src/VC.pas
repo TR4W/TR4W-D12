@@ -2560,19 +2560,18 @@ const
   SecsPerDay                            = MinsPerDay * 60;
   MSecsPerDay                           = SecsPerDay * 1000;
 
-  {timers}
-  ONE_SECOND_TIMER_HANDLE               = 1;
-  QUICK_REPORT_TIMER_HANDLE             = 2;
-  BEACONS_ONE_SECOND_TIMER_HANDLE       = 3;
-  // BANDMAP_BLINK_TIMER_HANDLE            = 4;
-  REMINDER_ONE_SECOND_TIMER_HANDLE      = 5;
-  WAV_PTT_TIMER_HANDLE                  = 6;
-  AUTOCQ_TIMER_HANDLE                   = 7;
-  NETSTATUS_TIMER_HANDLE                = 8;
-  ALARM_WAKEUP_TIMER_HANDLE             = 9;
-  CLOSE_ALARM_WAKEUP_HANDLE             = 10;
-  UPDATE_NET_CW_MESSAGE                 = 11;
-  BANDMAP_REFRESH_TIMER_HANDLE          = 12;
+  (* THE WIN32 TIMER IDS ARE GONE (2026-09-07).
+
+    Twelve constants numbering the timers TR4W passed to SetTimer against
+    tr4whandle. FOUR of them were ever used -- 1, 2, 7 and 11 -- and the timers
+    they named are LCL TTimers now, in uAppTimers, where they are named rather
+    than numbered. The other eight were dead: no SetTimer, no KillTimer, no
+    reference of any kind, and one of them (4) had already been commented out.
+
+    Numbering them was itself the hazard. WAV_STOP_PTT_TIMER_IDENTIFIER, below
+    this block until today, was killed inside a TIMERPROC nothing registered --
+    so it was always zero and the kill was against timer id 0. A named enum
+    cannot be zero by accident. *)
 
   {menu items & accelerators}
 
@@ -2815,7 +2814,6 @@ var
   tInputDialogPassword                  : boolean;       // Issue #783 -- mask input as '*' bullets
   tInputDialogPreviousValue             : ShortString;
 //  CMDLowerCase                          : ShortString;
-  ClearQuickDisplayTimer                : Cardinal;
   DifferentContests                     : boolean;
 
   tr4whandle                            : HWND;
@@ -2931,7 +2929,6 @@ var
   TerminalFont                          : HFONT;
   Fontstructure                         : TLogFont;
 
-  WAV_STOP_PTT_TIMER_IDENTIFIER         : integer;
 
   tLogIndex                             : integer;
   // SHOW ALL SERIAL PORTS.  The radio dialog's port list normally shows only the
@@ -2957,7 +2954,6 @@ var
 
   {AutoCQ variables}
   tAutoCQMode                           : boolean;
-  tAutoCQTimerID                        : Cardinal;
   tAutoSendMode                         : boolean;
 
   TR4W_PATH_NAME                        : FileNameType;
