@@ -35,7 +35,8 @@ uses
   TF,
   VC,
   //Country9,
-  Windows,
+  LCLType,
+  DateUtils,   // TryEncodeDateTime / DecodeDateTime -- replace SYSTEMTIME
   uCallSignRoutines,
   utils_file,
   LogCW,
@@ -154,7 +155,7 @@ var
   lpNumberOfBytesRead: Cardinal;
   bt: BandType;
   extMode: ExtendedModeType;
-  TempSysTime: SYSTEMTIME;
+  qsoWhen: TDateTime;
 begin
    Result := False;
 
@@ -256,14 +257,39 @@ begin
    // that writes back to the log. A TDateTimePicker takes a TDateTime; there is
    // no format string to get wrong and no message constant to bind to the wrong
    // width.
-   Windows.ZeroMemory(@TempSysTime, SizeOf(TempSysTime));
-   TempSysTime.wYear   := EditableQSORXData.tSysTime.qtYear + 2000;
-   TempSysTime.wMonth  := EditableQSORXData.tSysTime.qtMonth;
-   TempSysTime.wDay    := EditableQSORXData.tSysTime.qtDay;
-   TempSysTime.wHour   := EditableQSORXData.tSysTime.qtHour;
-   TempSysTime.wMinute := EditableQSORXData.tSysTime.qtMinute;
-   TempSysTime.wSecond := EditableQSORXData.tSysTime.qtSecond;
-   EditQSOSetDateTime(SystemTimeToDateTime(TempSysTime));
+   (* DateUtils, NOT a Win32 SYSTEMTIME. The record existed only to be handed
+     to SystemTimeToDateTime -- so the whole detour is one EncodeDateTime, and
+     SYSTEMTIME was the only thing left in this unit needing the Windows unit.
+
+     TryEncodeDateTime RATHER THAN EncodeDateTime, and that is a fix rather
+     than a translation: a log record with a zeroed or damaged date -- month 0,
+     day 0 -- used to be handed to SystemTimeToDateTime, which is documented as
+     undefined for input it would not itself have produced. EncodeDateTime
+     raises EConvertError on the same input, which in a dialog that OPENS on a
+     QSO would be an exception instead of a date field. Try* reports it, and
+     the QSO still opens showing the epoch. *)
+   if not TryEncodeDateTime(EditableQSORXData.tSysTime.qtYear + 2000,
+                            EditableQSORXData.tSysTime.qtMonth,
+                            EditableQSORXData.tSysTime.qtDay,
+                            EditableQSORXData.tSysTime.qtHour,
+                            EditableQSORXData.tSysTime.qtMinute,
+                            EditableQSORXData.tSysTime.qtSecond,
+                            0, qsoWhen) then
+      begin
+      qsoWhen := 0;
+      if logger <> nil then
+         begin
+         logger.Warn('[EditQSO] QSO has an unusable date (%d-%d-%d %d:%d:%d) ' +
+                     '-- showing the epoch instead',
+                     [EditableQSORXData.tSysTime.qtYear + 2000,
+                      EditableQSORXData.tSysTime.qtMonth,
+                      EditableQSORXData.tSysTime.qtDay,
+                      EditableQSORXData.tSysTime.qtHour,
+                      EditableQSORXData.tSysTime.qtMinute,
+                      EditableQSORXData.tSysTime.qtSecond]);
+         end;
+      end;
+   EditQSOSetDateTime(qsoWhen);
 
    EditQSOSetText(FLD_COMPUTERID, string(EditableQSORXData.ceComputerID));
    EditQSOSetInt(FLD_QSOPOINTS, EditableQSORXData.QSOPoints);
@@ -351,13 +377,12 @@ var
 begin
    TempString := EditQSOGetText(FLD_CALLSIGN);
 
-   Windows.ZeroMemory(@EditableQSORXData.QTH, SizeOf(EditableQSORXData.QTH));
+   FillChar(EditableQSORXData.QTH, SizeOf(EditableQSORXData.QTH), 0);
    ctyLocateCall(TempString, EditableQSORXData.QTH);
 
    if DoingPrefixMults then
       begin
-      Windows.ZeroMemory(@EditableQSORXData.Prefix,
-        SizeOf(EditableQSORXData.Prefix));
+      FillChar(EditableQSORXData.Prefix, SizeOf(EditableQSORXData.Prefix), 0);
       SetPrefix(EditableQSORXData);
       EditQSOSetText(FLD_PREFIX, string(EditableQSORXData.Prefix));
       end;
@@ -401,7 +426,7 @@ var
   TempWord: Word;
   //  TempPointer                           : PWORD;
   TempByte: Byte;
-  TempSysTime: SYSTEMTIME;
+  qsoY, qsoMo, qsoD, qsoH, qsoMi, qsoS, qsoMs: word;
 begin
   Result := True;
 
@@ -426,23 +451,27 @@ begin
 
   //EditableQSORXData.QTH
 
-  DateTimeToSystemTime(EditQSOGetDateTime, TempSysTime);
+  (* DecodeDateTime, not DateTimeToSystemTime -- see the note in the reader
+    above. The guard on the year is unchanged: a date before 2000 leaves
+    qtYear alone rather than storing a negative, because qtYear is a byte
+    holding years-since-2000. *)
+  DecodeDateTime(EditQSOGetDateTime, qsoY, qsoMo, qsoD, qsoH, qsoMi, qsoS, qsoMs);
 
-  if TempSysTime.wYear >= 2000 then
+  if qsoY >= 2000 then
      begin
-     EditableQSORXData.tSysTime.qtYear := TempSysTime.wYear - 2000;
+     EditableQSORXData.tSysTime.qtYear := qsoY - 2000;
      end;
-  EditableQSORXData.tSysTime.qtMonth := TempSysTime.wMonth;
-  EditableQSORXData.tSysTime.qtDay := TempSysTime.wDay;
+  EditableQSORXData.tSysTime.qtMonth := qsoMo;
+  EditableQSORXData.tSysTime.qtDay := qsoD;
   //Time
-  EditableQSORXData.tSysTime.qtSecond := TempSysTime.wSecond;
-  EditableQSORXData.tSysTime.qtMinute := TempSysTime.wMinute;
-  EditableQSORXData.tSysTime.qtHour := TempSysTime.wHour;
+  EditableQSORXData.tSysTime.qtSecond := qsoS;
+  EditableQSORXData.tSysTime.qtMinute := qsoMi;
+  EditableQSORXData.tSysTime.qtHour := qsoH;
 
 
     {Callsign}
   //  EditableQSORXData.Callsign := GetDialogItemText(eq_handle, 118);
-  Windows.ZeroMemory(@EditableQSORXData.Callsign, SizeOf(CallString));
+  FillChar(EditableQSORXData.Callsign, SizeOf(CallString), 0);
   EditableQSORXData.Callsign := EditQSOGetText(FLD_CALLSIGN);
 
   if not IsAGoodCall(EditableQSORXData.Callsign) then
@@ -455,7 +484,7 @@ begin
   //  LocateCall(EditableQSORXData.Callsign, EditableQSORXData.QTH, true);
   if ActiveDXMult <> NoDXMults then
      begin
-     ZeroMemory(@EditableQSORXData.DXQTH, SizeOf(EditableQSORXData.DXQTH));
+     FillChar(EditableQSORXData.DXQTH, SizeOf(EditableQSORXData.DXQTH), 0);
      EditableQSORXData.DXQTH := EditableQSORXData.QTH.CountryID;
      end;
 
@@ -487,7 +516,7 @@ begin
      lpNumberOfBytesWritten := Cardinal(EditQSOGetInt(FLD_FREQUENCY, lpTranslated));
      end;
   //if lpNumberOfBytesWritten < MAXDWORD then
-  ZeroMemory(@EditableQSORXData.Frequency, SizeOf(EditableQSORXData.Frequency));
+  FillChar(EditableQSORXData.Frequency, SizeOf(EditableQSORXData.Frequency), 0);
   EditableQSORXData.Frequency := lpNumberOfBytesWritten;
 
   {ComputerID}
@@ -509,31 +538,29 @@ begin
   lpNumberOfBytesWritten := Cardinal(EditQSOGetInt(FLD_AGE, lpTranslated));
   if lpNumberOfBytesWritten < MAXBYTE then
      begin
-     ZeroMemory(@EditableQSORXData.Age, SizeOf(EditableQSORXData.Age));
+     FillChar(EditableQSORXData.Age, SizeOf(EditableQSORXData.Age), 0);
      EditableQSORXData.Age := lpNumberOfBytesWritten;
      end;
 
   {Chapter}
-  ZeroMemory(@EditableQSORXData.Chapter, SizeOf(EditableQSORXData.Chapter));
+  FillChar(EditableQSORXData.Chapter, SizeOf(EditableQSORXData.Chapter), 0);
   EditableQSORXData.Chapter := EditQSOGetText(FLD_CHAPTER);
   {Check}
-  ZeroMemory(@EditableQSORXData.Check, SizeOf(EditableQSORXData.Check));
+  FillChar(EditableQSORXData.Check, SizeOf(EditableQSORXData.Check), 0);
   EditableQSORXData.Check := EditQSOGetInt(FLD_CHECK, lpTranslated);
   {ClassCE}
-  ZeroMemory(@EditableQSORXData.ceClass, SizeOf(EditableQSORXData.ceClass));
+  FillChar(EditableQSORXData.ceClass, SizeOf(EditableQSORXData.ceClass), 0);
   EditableQSORXData.ceClass := EditQSOGetText(FLD_CLASS);
 
   {NumberSent}
-  ZeroMemory(@EditableQSORXData.NumberSent,
-    SizeOf(EditableQSORXData.NumberSent));
+  FillChar(EditableQSORXData.NumberSent, SizeOf(EditableQSORXData.NumberSent), 0);
   EditableQSORXData.NumberSent := EditQSOGetInt(FLD_NUMBERSEND, lpTranslated);
 
   {NumberReceived}
   TempInteger := EditQSOGetInt(FLD_NUMBERRECEIVED, lpTranslated);
   if lpTranslated then
      begin
-     ZeroMemory(@EditableQSORXData.NumberReceived,
-       SizeOf(EditableQSORXData.NumberReceived));
+     FillChar(EditableQSORXData.NumberReceived, SizeOf(EditableQSORXData.NumberReceived), 0);
      EditableQSORXData.NumberReceived := TempInteger;
      end;
 
@@ -542,7 +569,7 @@ begin
 //  EditableQSORXData.DomMultQTH[0] := AnsiChar(Windows.GetDlgItemTextA(eq_handle, FLD_DOMMULTQTH, @EditableQSORXData.DomMultQTH[1], SizeOf(EditableQSORXData.DomMultQTH) - 1));
 
   {Prefix}
-  ZeroMemory(@EditableQSORXData.Prefix, SizeOf(EditableQSORXData.Prefix));
+  FillChar(EditableQSORXData.Prefix, SizeOf(EditableQSORXData.Prefix), 0);
   EditableQSORXData.Prefix := EditQSOGetText(FLD_PREFIX);
 
   {Zone}
@@ -550,26 +577,25 @@ begin
   TempByte := Byte(EditQSOGetInt(FLD_ZONE, lpTranslated));
   if lpTranslated then
      begin
-     ZeroMemory(@EditableQSORXData.Zone, SizeOf(EditableQSORXData.Zone));
+     FillChar(EditableQSORXData.Zone, SizeOf(EditableQSORXData.Zone), 0);
      EditableQSORXData.Zone := TempByte
      end
   else
      begin
      if TempByte = 0 then
         begin
-        ZeroMemory(@EditableQSORXData.Zone, SizeOf(EditableQSORXData.Zone));
+        FillChar(EditableQSORXData.Zone, SizeOf(EditableQSORXData.Zone), 0);
         EditableQSORXData.Zone := DUMMYZONE;
         end;
      end;
 
   {Name}
-  ZeroMemory(@EditableQSORXData.Name, SizeOf(EditableQSORXData.Name));
+  FillChar(EditableQSORXData.Name, SizeOf(EditableQSORXData.Name), 0);
   EditableQSORXData.Name := EditQSOGetText(FLD_NAME);
 
   {QTHString}
   // The next line was commented out - so test this well ny4i Issue112
-  Windows.ZeroMemory(@EditableQSORXData.QTHString,
-    SizeOf(EditableQSORXData.QTHString));
+  FillChar(EditableQSORXData.QTHString, SizeOf(EditableQSORXData.QTHString), 0);
   EditableQSORXData.QTHString := EditQSOGetText(FLD_QTHSTRING);
   if DoingDomesticMults then
      begin
@@ -583,14 +609,13 @@ begin
   //windows.GetDlgItemTextA(eq_handle,FLD_POSTALCODE,EditableQSORXData.PostalCode,sizeof(PostalCodeString));
 
   {Power}
-  ZeroMemory(@EditableQSORXData.Power, SizeOf(EditableQSORXData.Power));
+  FillChar(EditableQSORXData.Power, SizeOf(EditableQSORXData.Power), 0);
   EditableQSORXData.Power :=
     EditQSOGetText(FLD_POWER);
 
   {Precedence}
   TempString := EditQSOGetText(FLD_PRECEDENCE);
-  ZeroMemory(@EditableQSORXData.Precedence,
-    SizeOf(EditableQSORXData.Precedence));
+  FillChar(EditableQSORXData.Precedence, SizeOf(EditableQSORXData.Precedence), 0);
   if TempString <> '' then
      begin
      EditableQSORXData.Precedence := AnsiChar(TempString[1]);
@@ -600,8 +625,7 @@ begin
   TempByte := Byte(EditQSOGetInt(FLD_PREFECTURE, lpTranslated));
   if lpTranslated then
      begin
-     ZeroMemory(@EditableQSORXData.Prefecture,
-       SizeOf(EditableQSORXData.Prefecture));
+     FillChar(EditableQSORXData.Prefecture, SizeOf(EditableQSORXData.Prefecture), 0);
      EditableQSORXData.Prefecture := TempByte;
      end;
 
@@ -609,8 +633,7 @@ begin
   TempWord := Word(EditQSOGetInt(FLD_TENTENNUM, lpTranslated));
   if lpTranslated then
      begin
-     ZeroMemory(@EditableQSORXData.TenTenNum,
-       SizeOf(EditableQSORXData.TenTenNum));
+     FillChar(EditableQSORXData.TenTenNum, SizeOf(EditableQSORXData.TenTenNum), 0);
      EditableQSORXData.TenTenNum := TempWord;
      end;
 
@@ -618,7 +641,7 @@ begin
   TempInteger := EditQSOGetInt(FLD_RSTSEND, lpTranslated);
   if lpTranslated then
      begin
-     ZeroMemory(@EditableQSORXData.RSTSent, SizeOf(EditableQSORXData.RSTSent));
+     FillChar(EditableQSORXData.RSTSent, SizeOf(EditableQSORXData.RSTSent), 0);
      EditableQSORXData.RSTSent := TempInteger {TempWord};
      end;
 
@@ -626,8 +649,7 @@ begin
   TempInteger := EditQSOGetInt(FLD_RSTRECEIVED, lpTranslated);
   if lpTranslated then
      begin
-     ZeroMemory(@EditableQSORXData.RSTReceived,
-       SizeOf(EditableQSORXData.RSTReceived));
+     FillChar(EditableQSORXData.RSTReceived, SizeOf(EditableQSORXData.RSTReceived), 0);
      EditableQSORXData.RSTReceived := TempInteger {TempWord};
      end;
 
