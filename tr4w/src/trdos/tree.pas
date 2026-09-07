@@ -823,21 +823,6 @@ function QSOTimeToSeconds(t: TQSOTime): integer;
 //procedure Congrats;
 
 {PROCEDURE}
-function InitializeSerialPort(
-  SerialPort: PortType;
-  BaudRate: Cardinal;
-  Bits: Byte;
-  Parity: ParityType;
-  StopBits: Byte;
-  dwFlagsAndAttributes: DWORD;
-  EvtChar: Char;
-  { A FAILED OPEN IS NOT ALWAYS WORTH A MODAL. showwarning puts up a
-    SYSTEM-MODAL, topmost box; for a USB adapter that is merely unplugged
-    that is an ambush at startup, and it names only the port number, so it
-    does not even say WHAT failed to open. Pass False and report it
-    yourself with the context you have. Defaulted True, so no existing
-    caller changes behaviour. }
-  ReportFailure: boolean = True): THandle;
 
 function KeyId(Key: Char): string;
 
@@ -913,7 +898,6 @@ procedure EigthNote(Pitch: integer);
 
 //function Get_Tstrings_from_string(s: string; ts: tstringLIST): boolean;
 procedure QuickBeep;
-function TryToOpenCOMPort(portnr: Cardinal {Byte}; dwFlagsAndAttributes: DWORD): THandle;
 const
   NoteVeryLoA                           = 220;
   NoteVeryLoASharp                      = 235;
@@ -2451,104 +2435,17 @@ end;
 
 {PROCEDURE}
 
-function InitializeSerialPort(
-  SerialPort: PortType;
-  BaudRate: Cardinal;
-  Bits: Byte;
-  Parity: ParityType;
-  StopBits: Byte;
-  dwFlagsAndAttributes: DWORD;
-  EvtChar: Char;
-  { A FAILED OPEN IS NOT ALWAYS WORTH A MODAL. showwarning puts up a
-    SYSTEM-MODAL, topmost box; for a USB adapter that is merely unplugged
-    that is an ambush at startup, and it names only the port number, so it
-    does not even say WHAT failed to open. Pass False and report it
-    yourself with the context you have. Defaulted True, so no existing
-    caller changes behaviour. }
-  ReportFailure: boolean = True): THandle;
-var
-  DCB                                   : TDCB;
-  CommTimeouts                          : TCommTimeouts;
-  com_port_name                         : Byte;
-  Parity_byte                           : Byte;
-  WinAPIstopBits                        : Byte;
-begin
-  Result := INVALID_HANDLE_VALUE;
-  if tGetPortType(SerialPort) = SerialInterface then
-     begin
-     com_port_name := Ord(SerialPort)
-     end
-  else
-     begin
-     Exit;
-     end;
-  Result := TryToOpenCOMPort(com_port_name, dwFlagsAndAttributes);
-  if Result = INVALID_HANDLE_VALUE then
-     begin
-     if ReportFailure then
-        begin
-        showwarning(SysUtils.Format('COM%d:'#13'%s', [com_port_name, SysUtils.SysErrorMessage(GetLastError)]));
-        end;
-     Exit;
-     end;
+(* THE D7 SERIAL OPENER IS GONE (2026-09-07).
 
-  if not SetupComm(Result, 512, 512) then
-     begin
-     //showwarning('SetupComm');
-     Exit;
-     end;
+  InitializeSerialPort and TryToOpenCOMPort lived here: CreateFileA on
+  \\.\COMn, a DCB, COMMTIMEOUTS, and a handle stashed in the CW keyer's
+  array. Every serial device in the program went through them -- radios,
+  rotators, the CPU keyer -- which is what made a keyer unit look like the
+  home of serial support.
 
-  {-------DCB--------}
-  if not GetCommState(Result, DCB) then
-     begin
-     Result := INVALID_HANDLE_VALUE;
-     Exit;
-
-     end;
-  if Parity = tNoParity then
-     begin
-     Parity_byte := 0;
-     end;
-  if Parity = EvenParity then
-     begin
-     Parity_byte := 1;
-     end;
-  if Parity = OddParity then
-     begin
-     Parity_byte := 2;
-     end;
-
-  DCB.Parity := Parity_byte;
-  DCB.BaudRate := BaudRate;
-  DCB.ByteSize := Bits;
-  DCB.EvtChar := AnsiChar(EvtChar);
-
-  WinAPIstopBits := ONESTOPBIT;
-  if StopBits = 2 then
-     begin
-     WinAPIstopBits := TWOSTOPBITS;
-     end;
-
-  DCB.StopBits := WinAPIstopBits;
-  DCB.Flags := dcb_Binary or dcb_DtrControlEnable or dcb_RtsControlEnable;
-
-  if not SetCommState(Result, DCB) then
-     begin
-     Result := INVALID_HANDLE_VALUE;
-     Exit;
-
-     end;
-  {-------DCB--------}
-
-  TREscapeCommFunction(Result, CLRDTR); //CW
-  TREscapeCommFunction(Result, CLRRTS); //PTT
-
-  Windows.ZeroMemory(@CommTimeouts, SizeOf(CommTimeouts));
-
-  if not SetCommTimeouts(Result, CommTimeouts) then Exit;
-  CPUKeyer.SerialPortConfigured_Handle[SerialPort] := Result;
-
-end;
+  All of it is uSerialPort.TSerialPort now, over FreePascal's own serial
+  unit, and nothing called these two any more. They were also the reason
+  this unit declared a COM port opener as returning HWND. *)
 
 function LineInput(Prompt: Str160;
   InitialString: Str160;
@@ -4150,21 +4047,6 @@ procedure QuickBeep;
 
 begin
   SpeakerBeep(1000, 300);
-end;
-
-function TryToOpenCOMPort(portnr: Cardinal {Byte}; dwFlagsAndAttributes: DWORD): THandle;
-begin
-  TF.Format(wsprintfBuffer, _COM, portnr);
-
-  Result :=
-    CreateFileA(
-    wsprintfBuffer,
-    GENERIC_READ or GENERIC_WRITE,
-    0,
-    nil,
-    OPEN_EXISTING,
-    dwFlagsAndAttributes,
-    0);
 end;
 
 function tGetBandFromString(BandStr: ShortString): BandType;

@@ -40,6 +40,8 @@ uses
    VC,
    Windows,
    utils_text,
+   (* TSerialPort -- a serial keyer port on the radio record. *)
+   uSerialPort,
    ExtCtrls,    (* TTimer -- the CW-by-CAT busy window.
 
                     This was VCL's ExtCtrls.TTimer, then uWinTimer.TWinTimer --
@@ -287,7 +289,20 @@ type
       tCATPortHandle: THandle;
 
       tKeyerPort:       PortType;
+      (* THE LPT BASE ADDRESS, and since 2026-09-07 only that.
+
+        It used to hold a COM handle as well, for a serial keyer, so one field
+        meant two unrelated things depending on tKeyerPort -- an LPT port
+        address for the parallel arms and a file handle for the serial ones. A
+        serial keyer's port is tKeyerSerialPort below. *)
       tKeyerPortHandle: THandle;
+
+      (* THE SERIAL KEYER'S PORT, nil unless tKeyerPort is a serial one.
+
+        The CW and PTT lines are driven through this -- SetDTR / SetRTS -- and
+        the object is owned by CPUKeyer.SerialPortObject, not by the radio: two
+        radios may nominate the same keyer port. *)
+      tKeyerSerialPort: TSerialPort;
 
       tr4w_keyer_rts_state: tr4w_RTSDTRType; //keyer RTS
       tr4w_keyer_DTR_state: tr4w_RTSDTRType; //keyer DTR
@@ -661,6 +676,10 @@ procedure VFOBumpUp;
 // that deletion nothing -- in this unit or any other -- referenced them.  The
 // Yaesu families own their own framing now: uRadioYaesuBinary.pas,
 // uRadioYaesuASCII.pas and the FT-817 group.
+
+(* Drive this radio's PTT line. See the body for why it lives here.
+  MainUnit is the only caller. *)
+function DrivePTTLine(const aRadio: RadioPtr; const aOn: boolean): boolean;
 
 implementation
 
@@ -2584,6 +2603,7 @@ begin
       TempRadio.tCATPortHandle := INVALID_HANDLE_VALUE;
 
       TempRadio.tKeyerPortHandle := INVALID_HANDLE_VALUE;
+      TempRadio.tKeyerSerialPort := nil;
       TempRadio.tr4w_keyer_rts_state := RtsDtr_PTT;
       TempRadio.tr4w_keyer_DTR_state := RtsDtr_CW;
       TempRadio.tr4w_cat_rts_state := RtsDtr_OFF; //CAT RTS
@@ -2605,6 +2625,56 @@ begin
 end;
 
 
+
+(* DRIVE THE LINE NOMINATED FOR PTT. True when it actually drove one.
+
+  IT LIVES HERE, not with the keyer, because everything it reads belongs to the
+  radio: which line the operator nominated, and the serial port that radio's
+  keyer is on. MainUnit is the caller, from both the PTT-on and PTT-off paths,
+  and it uses the True/False answer to decide whether to redraw the PTT label
+  -- exactly as the old `handle <> INVALID_HANDLE_VALUE` test did.
+
+  It replaces two copies of: build a Win32 escape code (SETRTS / SETDTR or
+  CLRRTS / CLRDTR), test a raw handle, push the code at it. Choosing the LINE
+  and choosing the DIRECTION are separate decisions and read as such now.
+
+  DTR WINS IF BOTH LINES ARE MARKED PTT, because both call sites tested RTS
+  first and then let the DTR test overwrite the answer. Almost certainly a
+  configuration nobody has -- but it is behaviour, and it is preserved.
+
+  SerialInvert is deliberately NOT consulted: it never was on this path. It is
+  a CW-keying inversion, and PTT does not use it. *)
+function DrivePTTLine(const aRadio: RadioPtr; const aOn: boolean): boolean;
+var
+  useDTR, useRTS: boolean;
+begin
+  Result := False;
+  if (aRadio = nil) or (aRadio^.tKeyerSerialPort = nil) then
+     begin
+     Exit;
+     end;
+
+  useRTS := aRadio^.tr4w_keyer_rts_state = RtsDtr_PTT;
+  useDTR := aRadio^.tr4w_keyer_DTR_state = RtsDtr_PTT;
+  if useDTR then
+     begin
+     useRTS := False;
+     end;
+  if not (useDTR or useRTS) then
+     begin
+     Exit;
+     end;
+
+  if useDTR then
+     begin
+     aRadio^.tKeyerSerialPort.SetDTR(aOn);
+     end
+  else
+     begin
+     aRadio^.tKeyerSerialPort.SetRTS(aOn);
+     end;
+  Result := True;
+end;
 
 initialization
    InitRadios;

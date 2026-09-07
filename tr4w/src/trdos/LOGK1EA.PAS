@@ -28,6 +28,9 @@ uses
   uConfigValues,   // Config -- migrated settings
   {Dos, Crt, SlowTree,} Tree,
   uWinKey,
+  (* TSerialPort -- the keyer keys on one. In the INTERFACE clause because
+    K1EAKeyer.SerialPortObject is declared there. *)
+  uSerialPort,
   TF,
   VC,
   BeepUnit,
@@ -142,7 +145,17 @@ type
     OldInt0BVector, OldInt0CVector: Pointer;
 
     //wli      SerialPortConfigured: array[Serial1..Serial9] of boolean;
-    SerialPortConfigured_Handle: array[TSerialPortRange] of THandle;
+    (* THE KEYER'S OWN SERIAL PORTS, as objects.
+
+      This was an array of raw THandles opened by Tree.InitializeSerialPort,
+      and for years it was ALSO where the radios' CAT ports and the rotators'
+      ports lived -- which is what made LOGNET's header claim serial had been
+      "consolidated" into this unit. Both of those have their own TSerialPort
+      now, so this array holds what its name always implied: the ports the CPU
+      keyer keys on.
+
+      nil means not open. *)
+    SerialPortObject: array[TSerialPortRange] of TSerialPort;
 
     //    SerialPortOutputBuffer: array[Serial1..Serial9] of CharacterBuffer;
     //    SerialPortInputBuffer: array[Serial1..Serial9] of CharacterBuffer;
@@ -179,13 +192,11 @@ type
 //    procedure PTTUnForce;
     procedure SetSpeed(Speed: integer {byte});
 
-    {PROCEDURE}function SetUpSerialPort(port: PortType;
-      BaudRate: Word;
-      Bits: integer;
-      Parity: ParityType;
-      StopBits: SHORTINT;
-      DefaultDelay: SHORTINT): HWND;
-
+    (* SetUpSerialPort IS GONE (2026-09-07) -- it had no live caller. Its three
+      references, two in LOGNET and one in LOGPACK, are all commented out and
+      have been for years, so this opened nothing; it was simply one of the
+      last two callers of Tree.InitializeSerialPort keeping that routine
+      alive. *)
     procedure UnInitializeKeyer;
   end;
 
@@ -276,7 +287,8 @@ var
 //    CurtisModeA: False;
     CodeSpeed: 35;
     KeyerInitialized: False;
-    SerialPortConfigured_Handle: (INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE)
+    (* nil, once for every port in the range. *)
+    SerialPortObject: (nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
     );
 
   DVKDelay                              : integer;
@@ -396,6 +408,13 @@ var
 implementation
 
 uses
+  (* FIRST IN THE CLAUSE, deliberately. Every other unit here then takes
+    precedence over it, so adding SysUtils to a unit this old cannot quietly
+    re-point an existing unqualified call at a different routine. What this
+    unit wants from it -- Format, Exception, FreeAndNil -- is written
+    SysUtils.Format explicitly, because TF also exports a Format and it is a
+    C-style one taking PChars. *)
+  SysUtils,
   uMainForm,   { QueueStartSendingKey -- the call field is a control }
   uProcessCommand,
   uTelnet,
@@ -581,37 +600,60 @@ begin
 
 end;
 
+(* DRIVE THE LINE THE OPERATOR NOMINATED FOR CW.
+
+  aKeyDown is what the KEY is doing; whether that asserts or releases the line
+  is SerialInvert's business, for a keying interface wired the other way up.
+
+  The old code said this by arithmetic on a Win32 escape CODE -- CLRDTR is 6
+  and SETDTR is 5, so `dec` turned a release into an assert, and `inc` in the
+  other routine turned an assert into a release. It worked and it explained
+  nothing; `aKeyDown xor SerialInvert` is the same truth table with the meaning
+  left in.
+
+  RTS WINS IF BOTH LINES ARE MARKED CW, because the original tested DTR first
+  and then let the RTS test overwrite the answer. That is almost certainly a
+  configuration nobody has, but it is behaviour and it is preserved. *)
+procedure DriveCWLine(const aRadio: RadioPtr; const aKeyDown: boolean);
+var
+  useDTR, useRTS: boolean;
+  assert: boolean;
+begin
+  if (aRadio = nil) or (aRadio^.tKeyerSerialPort = nil) then
+     begin
+     Exit;
+     end;
+
+  useDTR := aRadio^.tr4w_keyer_DTR_state = RtsDtr_CW;
+  useRTS := aRadio^.tr4w_keyer_rts_state = RtsDtr_CW;
+  if useRTS then
+     begin
+     useDTR := False;
+     end;
+  if not (useDTR or useRTS) then
+     begin
+     Exit;
+     end;
+
+  assert := aKeyDown xor SerialInvert;
+  if useDTR then
+     begin
+     aRadio^.tKeyerSerialPort.SetDTR(assert);
+     end
+  else
+     begin
+     aRadio^.tKeyerSerialPort.SetRTS(assert);
+     end;
+end;
+
 procedure TurnOffActivePort;
 
 var
-  SerialOff                             : Cardinal;
-  hand                                  : HWND;
   TempByte                              : Byte;
 begin
-  if ActiveRadioPtr.tKeyerPortHandle = INVALID_HANDLE_VALUE then Exit;
-//  ActivePortOn := (PTTAsserted or PTTForcedOn or PTTFootSwitch) and Config.PTTEnable;
-
    if ActiveRadioPtr.tKeyerPort in SerialPorts then
       begin
-      SerialOff := 0;
-      if ActiveRadioPtr.tr4w_keyer_DTR_state = RtsDtr_CW then
-         begin
-         SerialOff := CLRDTR;
-         end;
-      if ActiveRadioPtr.tr4w_keyer_rts_state = RtsDtr_CW then
-         begin
-         SerialOff := CLRRTS;
-         end;
-      if SerialOff = 0 then Exit;
-      if SerialInvert then
-         begin
-         dec(SerialOff);
-         end;
-      hand := ActiveRadioPtr.tKeyerPortHandle; //ActiveRadioPtr.tKeyerPortHandle;
-      if hand <> INVALID_HANDLE_VALUE then
-         begin
-         TREscapeCommFunction(hand, SerialOff);
-         end;
+      DriveCWLine(ActiveRadioPtr, False);
       end
   else
 
@@ -691,47 +733,22 @@ end;
 procedure TurnOnActivePort;
 
 var
-  SerialOn                              : Cardinal;
   { PTT will always be on if Config.PTTEnable. }
-
-  hand                                  : HWND;
   TempByte                              : Byte;
 begin
-  if ActiveRadioPtr.tKeyerPortHandle = INVALID_HANDLE_VALUE then
-     begin
-     logger.debug('[TurnOnActivePort] Exiting early due to ActiveRadioPtr.tKeyerPortHandle = INVALID_HANDLE_VALUE');
-     Exit;
-     end;
-//  ActivePortOn := True;
-//  CountsSinceLastCW := 0;
-
   if ActiveRadioPtr.tKeyerPort in SerialPorts then
      begin
-     SerialOn := 0;
-     if ActiveRadioPtr.tr4w_keyer_DTR_state = RtsDtr_CW then
-        begin
-        SerialOn := SETDTR;
-        end;
-     if ActiveRadioPtr.tr4w_keyer_rts_state = RtsDtr_CW then
-        begin
-        SerialOn := SETRTS;
-        end;
-     if SerialOn = 0 then Exit;
-     if SerialInvert then
-        begin
-        inc(SerialOn);
-        end;
-     hand := ActiveRadioPtr.tKeyerPortHandle; //ActiveRadioPtr.tKeyerPortHandle;
-     if hand <> INVALID_HANDLE_VALUE then
-        begin
-        TREscapeCommFunction(hand, SerialOn);
-        end;
+     DriveCWLine(ActiveRadioPtr, True);
      end
   else
      begin
+     if ActiveRadioPtr.tKeyerPortHandle = INVALID_HANDLE_VALUE then
+        begin
+        logger.debug('[TurnOnActivePort] Exiting early: no LPT keyer port');
+        Exit;
+        end;
      if ActiveRadioPtr.tKeyerPort in [Parallel1..Parallel3] then
         begin
-        if ActiveRadioPtr.tKeyerPortHandle = INVALID_HANDLE_VALUE then Exit;
         TempByte := GetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl);
         DriverBitOperation(TempByte, CW_SIGNAL, boSet0);
             {17PIN}
@@ -968,37 +985,6 @@ procedure K1EAKeyer.ClearSerialPortInputBuffer(port: PortType);
 begin
   //  SerialPortInputBuffer[Port].ClearBuffer;
 end;
-
-function K1EAKeyer.SetUpSerialPort(port: PortType;
-  BaudRate: Word;
-  Bits: integer;
-  Parity: ParityType;
-  StopBits: SHORTINT;
-  DefaultDelay: SHORTINT): HWND;
-
-{ Sets up up the serial port hardware and initializes both the send and
-  receive buffers }
-
-begin
-  { Setup the hardware }
-
-  Result := InitializeSerialPort(port, BaudRate, Bits, Parity, StopBits, FILE_ATTRIBUTE_NORMAL, #0);
-  if Result = INVALID_HANDLE_VALUE then Exit; //wli
-  CPUKeyer.SerialPortConfigured_Handle[port] := Result;
-  { Initialize output buffer }
-
-//ua4wli  SerialPortOutputBuffer[port].InitializeBuffer;
-//ua4wli  SerialPortInputBuffer[port].InitializeBuffer;
-
-  { Set up send delays }
-
-//ua4wli SerialPortDefaultDelay[port] := DefaultDelay;
-//ua4wli  SerialPortDelay[port] := 0;
-
-  { Enable TimerInterrupt to check this port }
-
-end;
-
 
 procedure K1EAKeyer.AddCharacterToCWBuffer(Character: Char);
 
@@ -1685,11 +1671,110 @@ begin
 
 end;
 
+(* OPEN THE KEYER PORT A RADIO NAMES, and leave its lines where the operator
+  asked for them.
+
+  ONE ROUTINE, TWO CALLERS. Radio1's and Radio2's arms of InitializeKeyer were
+  the same forty lines written out twice, differing only in which radio record
+  they read -- so a fix to one reached the other only if somebody noticed. The
+  Yaesu stop-bits warning, the open, the idle line states: all of it, twice.
+
+  THE PORT OBJECT IS SHARED, keyed by port, and that is deliberate here: both
+  radios may nominate the same keyer port and it can only be opened once. (That
+  is a keyer arrangement and not a rotator one -- two rotator controllers cannot
+  share a line, and uRotatorControl says so.)
+
+  THE SETTINGS ARE THE ONES Tree.InitializeSerialPort USED, exactly: 8 data
+  bits, no parity, two stop bits only when the radio asks for 2 (0 meant one,
+  and the Yaesu check below is why 0 is a value anyone passes), and DTR/RTS
+  control enabled in the DCB followed immediately by a release of both lines.
+  That last pair is what OpenRaw(..., True, True) then SetDTR/SetRTS(False)
+  reproduces: enabled, but idle. *)
+procedure OpenKeyerPortFor(const aRadio: RadioPtr);
+var
+  port: TSerialPort;
+  stopBits: Byte;
+begin
+  if (aRadio = nil) or (not (aRadio^.tKeyerPort in SerialPorts)) then
+     begin
+     Exit;
+     end;
+
+  port := CPUKeyer.SerialPortObject[aRadio^.tKeyerPort];
+
+  if (port = nil) or (not port.IsOpen) then
+     begin
+     if logger.IsErrorEnabled then
+        begin
+        if (uRadioRegistry.ManufacturerOf(aRadio^.RadioModel) = 'Yaesu') and
+           (aRadio^.RadioKeyerStopBits <> 0) then
+           begin
+           logger.Error('***** Keyer stop bits not set to 0 for a Yaesu radio');
+           end;
+        end;
+
+     if port = nil then
+        begin
+        (* Ord(PortType) IS the COM number, the same rule the radios, the
+          rotators and the WinKeyer all use. *)
+        port := TSerialPort.Create(SysUtils.Format('COM%d', [Ord(aRadio^.tKeyerPort)]));
+        CPUKeyer.SerialPortObject[aRadio^.tKeyerPort] := port;
+        end;
+
+     if aRadio^.RadioKeyerStopBits = 2 then
+        begin
+        stopBits := 2;
+        end
+     else
+        begin
+        stopBits := 1;
+        end;
+
+     try
+        port.OpenRaw(aRadio^.RadioBaudRate, 8, stopBits, 0, True, True);
+        (* Both lines released, as InitializeSerialPort did on every open.
+          Whatever the operator nominated below then asserts what it wants. *)
+        port.SetDTR(False);
+        port.SetRTS(False);
+     except
+        on E: Exception do
+           begin
+           logger.Warn('[Keyer] %s is not available for keying: %s',
+                       [string(PortTypeSA[aRadio^.tKeyerPort]), E.Message]);
+           Exit;
+           end;
+     end;
+     end;
+
+  if not port.IsOpen then
+     begin
+     Exit;
+     end;
+
+  aRadio^.tKeyerSerialPort := port;
+
+  if aRadio^.tr4w_keyer_DTR_state = RtsDtr_ON then
+     begin
+     port.SetDTR(True);
+     end;
+  if aRadio^.tr4w_keyer_DTR_state = RtsDtr_OFF then
+     begin
+     port.SetDTR(False);
+     end;
+  if aRadio^.tr4w_keyer_rts_state = RtsDtr_ON then
+     begin
+     port.SetRTS(True);
+     end;
+  if aRadio^.tr4w_keyer_rts_state = RtsDtr_OFF then
+     begin
+     port.SetRTS(False);
+     end;
+
+  CPUKeyer.KeyerInitialized := True;
+end;
+
 procedure K1EAKeyer.InitializeKeyer;
 
-var
-  //SerialPort                            : PortType;
-  hand                                  : Cardinal;
 begin
 
   DoingDVK := ActiveDVKPort <> NoPort;
@@ -1710,45 +1795,8 @@ begin
   PTTDelayCount := 0;
 //  TurnOffActivePort;
 
-  if Radio1.tKeyerPort in SerialPorts then
-     begin
-     hand := CPUKeyer.SerialPortConfigured_Handle[Radio1.tKeyerPort {ActiveKeyerPort}];
-     if hand = INVALID_HANDLE_VALUE then
-        begin
-        if logger.IsErrorEnabled then
-           begin
-           if (uRadioRegistry.ManufacturerOf(radio1.RadioModel) = 'Yaesu') and (radio1.RadioKeyerStopBits <> 0) then
-              begin
-              logger.Error('***** Keyer stop bits not set to 0 for a Yaesu radio');
-              end;
-           end;
-        hand := InitializeSerialPort(Radio1.tKeyerPort, Radio1.RadioBaudRate, 8, Tree.tNoParity, Radio1.RadioKeyerStopBits, FILE_ATTRIBUTE_NORMAL, #0);
-        end;
-     if hand <> INVALID_HANDLE_VALUE then
-        begin
-        if hand <> INVALID_HANDLE_VALUE then
-           begin
-           Radio1.tKeyerPortHandle := hand;
-           if Radio1.tr4w_keyer_DTR_state = RtsDtr_ON then
-              begin
-              TREscapeCommFunction(hand, SETDTR);
-              end;
-           if Radio1.tr4w_keyer_DTR_state = RtsDtr_OFF then
-              begin
-              TREscapeCommFunction(hand, CLRDTR);
-              end;
-           if Radio1.tr4w_keyer_rts_state = RtsDtr_ON then
-              begin
-              TREscapeCommFunction(hand, SETRTS);
-              end;
-           if Radio1.tr4w_keyer_rts_state = RtsDtr_OFF then
-              begin
-              TREscapeCommFunction(hand, CLRRTS);
-              end;
-           KeyerInitialized := True;
-           end;
-        end;
-     end;
+  (* THE SAME FORTY LINES STOOD HERE FOR EACH RADIO. See OpenKeyerPortFor. *)
+  OpenKeyerPortFor(@Radio1);
 
   if Radio1.tKeyerPort in [Parallel1..Parallel3] then
      begin
@@ -1757,45 +1805,7 @@ begin
      KeyerInitialized := True;
      end;
 
-  if (Radio2.tKeyerPort >= Serial1) and (Radio2.tKeyerPort <= Serial20) then
-     begin
-     hand := CPUKeyer.SerialPortConfigured_Handle[Radio2.tKeyerPort {Radio2.tr4w_KeyerPort}];
-     if hand = INVALID_HANDLE_VALUE then
-        begin
-        if logger.IsErrorEnabled then
-           begin
-           if (uRadioRegistry.ManufacturerOf(radio2.RadioModel) = 'Yaesu') and (radio2.RadioKeyerStopBits <> 0) then
-              begin
-              logger.Error('***** Keyer stop bits not set to 0 for a Yaesu radio');
-              end;
-           end;
-        hand := InitializeSerialPort(Radio2.tKeyerPort, Radio2.RadioBaudRate, 8, Tree.tNoParity, Radio2.RadioKeyerStopBits, FILE_ATTRIBUTE_NORMAL, #0);
-        end;
-     if hand <> INVALID_HANDLE_VALUE then
-        begin
-        if hand <> INVALID_HANDLE_VALUE then
-           begin
-           Radio2.tKeyerPortHandle := hand;
-           if Radio2.tr4w_keyer_DTR_state = RtsDtr_ON then
-              begin
-              TREscapeCommFunction(hand, SETDTR);
-              end;
-           if Radio2.tr4w_keyer_DTR_state = RtsDtr_OFF then
-              begin
-              TREscapeCommFunction(hand, CLRDTR);
-              end;
-           if Radio2.tr4w_keyer_rts_state = RtsDtr_ON then
-              begin
-              TREscapeCommFunction(hand, SETRTS);
-              end;
-           if Radio2.tr4w_keyer_rts_state = RtsDtr_OFF then
-              begin
-              TREscapeCommFunction(hand, CLRRTS);
-              end;
-           KeyerInitialized := True;
-           end;
-        end;
-     end;
+  OpenKeyerPortFor(@Radio2);
 
   if (Radio2.tKeyerPort >= Parallel1) and (Radio2.tKeyerPort <= Parallel3) then
      begin
@@ -1814,13 +1824,18 @@ var
   SerialPort                            : PortType;
 
 begin
+  (* IT NEVER ACTUALLY CLOSED ANYTHING. The old body set the array slot to
+    INVALID_HANDLE_VALUE and THEN called CloseHandle on the slot it had just
+    overwritten -- so every serial keyer port TR4W opened stayed open for the
+    life of the process, and the operator found out by not being able to
+    reopen it. Two statements in the wrong order, invisible in review because
+    both name the right thing. *)
   for SerialPort := Serial1 to Serial20 do
-    if CPUKeyer.SerialPortConfigured_Handle[SerialPort] <> INVALID_HANDLE_VALUE then
-       begin
-       CPUKeyer.SerialPortConfigured_Handle[SerialPort] := INVALID_HANDLE_VALUE;
-       CloseHandle(CPUKeyer.SerialPortConfigured_Handle[SerialPort]);
-
-       end;
+     begin
+     FreeAndNil(CPUKeyer.SerialPortObject[SerialPort]);
+     end;
+  Radio1.tKeyerSerialPort := nil;
+  Radio2.tKeyerSerialPort := nil;
 
 //  DestroyDlPortio;
 

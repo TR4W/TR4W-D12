@@ -25,21 +25,23 @@ unit LogNet;
 (* Has all of the lower level network interface routines in it.
 
   IT DOES NOT SIT ABOVE LOGK1EA FOR SERIAL, whatever this comment said until
-  2026-09-07. LOGK1EA owns the HANDLE TABLE -- CPUKeyer.SerialPortConfigured_
-  Handle, an array[TSerialPortRange] of THandle -- and nothing else about a
-  port. The open, the DCB and the timeouts are TREE.PAS (TryToOpenCOMPort and
-  InitializeSerialPort), and they always were.
+  2026-09-07, and there is no longer anywhere for it to sit: TR4W has ONE
+  serial transport, uSerialPort.TSerialPort, over FreePascal's own serial unit
+  (vendored as tr4wserial, because FPC does not build that unit for macOS).
 
-  Nor is that the only serial stack in the program. There are four, none of
-  them sharing code:
+  There were FOUR stacks when this note was written, none of them sharing code
+  and all of them raw Win32:
 
-    tree.pas + LOGK1EA's table   CPU keyer, PTT, packet, rotators
-    uSerialPort.TSerialPort      the whole radio factory
-    uWinKey.pas                  its own CreateFileA and DCB
-    uYCCCSO2R.pas                a HID device path, not a COM port
+    tree.pas + LOGK1EA's handle table   CPU keyer, PTT, packet, rotators
+    uSerialPort.TSerialPort             the radio factory
+    uWinKey.pas                         its own CreateFileA and DCB
+    uYCCCSO2R.pas                       a HID device path, not a COM port
 
-  None of them uses FreePascal's `serial` unit. All four are the raw Win32
-  comm API, so all four are Windows-only. *)
+  The first three are one now. tree.pas has no serial code at all -- both
+  InitializeSerialPort and TryToOpenCOMPort are deleted -- and LOGK1EA's array
+  holds TSerialPort objects for the ports the CW KEYER keys on, which is what
+  its name always implied. Rotators own their ports; the WinKeyer owns its one.
+  The YCCC box is a HID device and is a different thing entirely. *)
 
 interface
 

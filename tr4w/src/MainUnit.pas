@@ -10375,23 +10375,12 @@ begin
        begin
        if TempPortInterface = SerialInterface then
           begin
-          TempPTTValue := 0;
-          if ActiveRadioPtr.tr4w_keyer_rts_state = RtsDtr_PTT then
+          (* WHICH LINE, AND ASSERT IT -- see LOGK1EA.DrivePTTLine. This built a
+            Win32 escape code (SETRTS / SETDTR) and pushed it at a raw handle;
+            choosing the line and choosing the direction are separate things
+            now, and the port is the keyer's TSerialPort. *)
+          if DrivePTTLine(ActiveRadioPtr, True) then
              begin
-             TempPTTValue := SETRTS;
-             end;
-          if ActiveRadioPtr.tr4w_keyer_DTR_state = RtsDtr_PTT then
-             begin
-             TempPTTValue := SETDTR;
-             end;
-
-          if TempPTTValue = 0 then
-             begin
-             Exit;
-             end;
-          if ActiveRadioPtr.tKeyerPortHandle <> INVALID_HANDLE_VALUE then
-             begin
-             TREscapeCommFunction(ActiveRadioPtr.tKeyerPortHandle, TempPTTValue);
              goto DrawPTTLabel;
              end;
           Exit;
@@ -10460,23 +10449,8 @@ begin
      begin
      if TempPortInterface = SerialInterface then
         begin
-        PTT_value := 0;
-        if ActiveRadioPtr.tr4w_keyer_rts_state = RtsDtr_PTT then
+        if DrivePTTLine(ActiveRadioPtr, False) then
            begin
-           PTT_value := CLRRTS;
-           end;
-        if ActiveRadioPtr.tr4w_keyer_DTR_state = RtsDtr_PTT then
-           begin
-           PTT_value := CLRDTR;
-           end;
-        if PTT_value = 0 then
-           begin
-           Exit;
-           end;
-
-        if ActiveRadioPtr.tKeyerPortHandle <> INVALID_HANDLE_VALUE then
-           begin
-           TREscapeCommFunction(ActiveRadioPtr.tKeyerPortHandle, PTT_value);
            goto DrawPTTLabel;
            end;
         Exit;

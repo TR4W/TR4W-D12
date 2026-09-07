@@ -191,27 +191,22 @@ begin
      CATWTR^.ShutDownRadioInterface;
      end;
 
-  // Still done for a serial port: a radio with no factory object (the legacy
-  // fallback path) keeps its handle in that table, and closing an already
-  // invalid handle is guarded.
-  if CATWTR^.tCATPortType in SerialPorts then
-     begin
-     if CPUKeyer.SerialPortConfigured_Handle[CATWTR^.tCATPortType] <> INVALID_HANDLE_VALUE then
-        begin
-        Windows.CloseHandle(CPUKeyer.SerialPortConfigured_Handle[CATWTR^.tCATPortType]);
-        CPUKeyer.SerialPortConfigured_Handle[CATWTR^.tCATPortType] := INVALID_HANDLE_VALUE;
-        end;
-     end;
+  (* THE CAT PORT IS THE FACTORY OBJECT'S, and by the time this runs it is
+    already closed -- ShutDownRadioInterface above does it. The block that
+    stood here also reached into the CW keyer's handle table for a CAT port,
+    which was only ever true on the legacy fallback path; that path is gone,
+    every radio goes through the factory, and the factory owns its own
+    TSerialPort.
+
+    So this closes the KEYER port and nothing else, which is the only thing
+    that table has ever legitimately held. *)
   CATWTR^.tCATPortHandle := INVALID_HANDLE_VALUE;
 
   {Close Keyer Port}
   if CATWTR^.tKeyerPort in SerialPorts then
      begin
-     if CPUKeyer.SerialPortConfigured_Handle[CATWTR^.tKeyerPort] <> INVALID_HANDLE_VALUE then
-        begin
-        Windows.CloseHandle(CPUKeyer.SerialPortConfigured_Handle[CATWTR^.tKeyerPort]);
-        CPUKeyer.SerialPortConfigured_Handle[CATWTR^.tKeyerPort] := INVALID_HANDLE_VALUE;
-        end;
+     CATWTR^.tKeyerSerialPort := nil;
+     FreeAndNil(CPUKeyer.SerialPortObject[CATWTR^.tKeyerPort]);
      end;
   CATWTR^.tKeyerPortHandle := INVALID_HANDLE_VALUE;
 

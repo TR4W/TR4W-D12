@@ -40,6 +40,14 @@ interface
 
 uses
   SysUtils,
+  (* THE ONLY WIN32 LEFT IN THIS UNIT, and it is confined to SetDTR/SetRTS:
+    EscapeCommFunction, because FPC's own SerSetDTR costs 6.2x as much there
+    and this is the CW keying path. The reasoning is beside those two methods.
+    Every other Windows call -- CreateFileW, GetCommState, SetCommState,
+    SetCommTimeouts, ReadFile, WriteFile, PurgeComm -- is gone. *)
+  {$IFDEF WINDOWS}
+  Windows,
+  {$ENDIF}
   tr4wserial;
 
 type
@@ -72,6 +80,29 @@ type
       ADtr: Boolean = False
     );
     procedure Close;
+
+    (* DRIVE DTR AND RTS DIRECTLY, for the CPU keyer.
+
+      These are not I/O -- they assert a modem control line -- and they are the
+      keyer's element clock: at 40 WPM a dit is about 30 ms and each one is two
+      edges, so what an edge costs is not academic.
+
+      NOT SerSetDTR / SerSetRTS ON WINDOWS, and that is the whole reason these
+      exist. FreePascal implements them there as GetCommState + SetCommState
+      (serial.pp:334-364): it reads the entire device control block back from
+      the driver, flips two bits, and writes baud, parity, byte size and flow
+      control back down again -- on every keying edge. Measured on NY4I's
+      WinKeyer port, 2000 edges each way:
+
+        EscapeCommFunction   75.10 us per edge
+        SerSetRTS           465.78 us per edge   -- 6.2x
+
+      So Windows keeps the single call it has always used and CW timing does
+      not change. Every other platform gets FPC's unix arm, which is already
+      the right primitive: one fpioctl(TIOCMBIS/TIOCMBIC), not a termios
+      round-trip. *)
+    procedure SetDTR(aOn: Boolean);
+    procedure SetRTS(aOn: Boolean);
 
     function ReadString(MaxLen: Integer): string;
     procedure WriteString(const S: string);
@@ -195,6 +226,46 @@ begin
 
    SerFlushInput(FHandle);
    SerFlushOutput(FHandle);
+end;
+
+procedure TSerialPort.SetDTR(aOn: Boolean);
+begin
+   if not IsOpen then
+      begin
+      Exit;
+      end;
+   {$IFDEF WINDOWS}
+   if aOn then
+      begin
+      Windows.EscapeCommFunction(FHandle, Windows.SETDTR);
+      end
+   else
+      begin
+      Windows.EscapeCommFunction(FHandle, Windows.CLRDTR);
+      end;
+   {$ELSE}
+   SerSetDTR(FHandle, aOn);
+   {$ENDIF}
+end;
+
+procedure TSerialPort.SetRTS(aOn: Boolean);
+begin
+   if not IsOpen then
+      begin
+      Exit;
+      end;
+   {$IFDEF WINDOWS}
+   if aOn then
+      begin
+      Windows.EscapeCommFunction(FHandle, Windows.SETRTS);
+      end
+   else
+      begin
+      Windows.EscapeCommFunction(FHandle, Windows.CLRRTS);
+      end;
+   {$ELSE}
+   SerSetRTS(FHandle, aOn);
+   {$ENDIF}
 end;
 
 procedure TSerialPort.Close;
