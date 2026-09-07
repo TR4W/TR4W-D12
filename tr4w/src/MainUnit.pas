@@ -246,11 +246,6 @@ function GetTR4WBandFromNetworkBand(band: TRadioBand): BandType;
 procedure GetTRModeAndExtendedModeFromNetworkMode(netMode: TRadioMode; var mode:
   ModeType; var extMode: extendedModeType);
 
-{$IF MORSERUNNER}
-function GetMorseRunnerWindow: boolean;
-function EnumMorseRunnerChildProc(wnd: HWND; l: lParam): BOOL; stdcall;
-{$IFEND}
-
 procedure ShowHelp(Topic: PChar);
 procedure LoadinLog;
 (* THE TEXT OF ONE LOG ROW, COLUMN BY COLUMN.
@@ -940,12 +935,6 @@ begin
                     {LastDisplayedFreq[ActiveRadio]},
                     ReceivedData) then
       begin
-{$IF MORSERUNNER}
-      if MorseRunnerWindow <> 0 then
-         begin
-         Windows.SendMessage(MorseRunner_Number, WM_KEYDOWN, VK_RETURN, 0);
-         end;
-{$IFEND}
       ReceivedData.ceSearchAndPounce := OpMode = SearchAndPounceOpMode;
       ReceivedData.ceComputerID := ComputerID;
 
@@ -1054,14 +1043,6 @@ begin
      end;
 
   // SetOpMode(CQOpMode); // n4af 4.46.12
-
-{$IF MORSERUNNER}
-  if MorseRunnerWindow <> 0 then
-     begin
-     Windows.SendMessage(MorseRunnerWindow, WM_COMMAND, 0, 0);
-     end;
-  Exit;
-{$IFEND}
 
   TryKillAutoCQ;
 
@@ -3770,13 +3751,6 @@ begin
         end;
      end;
 
-{$IF MORSERUNNER}
-  if MorseRunnerWindow <> 0 then
-     begin
-     Windows.SendMessageA(MorseRunner_Number, WM_SETTEXT, 0,
-       integer(@ExchangeWindowString[1]));
-     end;
-{$IFEND}
 end;
 
 procedure WagCheck; //added by n4af at behest of wag contest mgr
@@ -3907,14 +3881,6 @@ begin
      begin
      SendStationStatus(sstCallsign);
      end;
-
-{$IF MORSERUNNER}
-  if MorseRunnerWindow <> 0 then
-     begin
-     Windows.SendMessageA(MorseRunner_Callsign, WM_SETTEXT, 0,
-       integer(@CallWindowString[1]));
-     end;
-{$IFEND}
 
 end;
 
@@ -5519,14 +5485,15 @@ end;
 
 procedure ProcessTAB(lowparam: Word);
 begin
-{$IF NOT MORSERUNNER}
+  (* Was guarded by the NOT arm of the MorseRunner switch -- the arm that
+    actually compiled. MorseRunner is gone, so this is simply what ProcessTAB
+    does. *)
   if lowparam = menu_spmode_ortab then
     if OpMode = CQOpMode then
        begin
        SetOpMode(SearchAndPounceOpMode);
        Exit;
        end;
-{$IFEND}
 
   // ChangeFocus('ProcessTAB');
 
@@ -6504,15 +6471,6 @@ procedure ProcessFuntionKeys(Key: integer);
 begin
   GetRealVirtualKey(Key);
 
-{$IF MORSERUNNER}
-  if Key in [VK_F1..VK_F8] then
-    if MorseRunnerWindow <> 0 then
-       begin
-       Windows.SendMessage(MorseRunnerWindow, WM_COMMAND, Key - 96, 0);
-       end;
-  Exit;
-{$IFEND}
-
   if (OpMode2 = SearchAndPounceOpMode) then
      begin
      ProcessExchangeFunctionKey(CHR(Key))
@@ -7270,9 +7228,6 @@ begin
     FocusEntry(TR4WCallEdit);
     // Windows.SetWindowTextA(InsertWindowHandle, inttopchar(Windows.GetTickCount));
 
-{$IF MORSERUNNER}
-    // Windows.SendMessage(MorseRunner_Callsign, WM_SETFOCUS, 0, 0);
-{$IFEND}
   end;
 end;
 
@@ -10136,49 +10091,6 @@ end;
 //
 // Actual LPT access in TR4W goes through DLPortIO / inpout32.dll, which is a
 // real driver. That path is untouched.
-
-{$IF MORSERUNNER}
-
-function GetMorseRunnerWindow: boolean;
-begin
-  Result := False;
-  MorseRunnerWindow := Windows.FindWindow('TMainForm', 'Morse Runner');
-  if MorseRunnerWindow = 0 then
-     begin
-     Exit;
-     end;
-  MorseRunnerWindowsCounter := 0;
-  EnumChildWindows(MorseRunnerWindow, @EnumMorseRunnerChildProc, 0);
-end;
-
-function EnumMorseRunnerChildProc(wnd: HWND; l: lParam): BOOL; stdcall;
-begin
-  Windows.GetClassNameA(wnd, wsprintfBuffer, SizeOf(wsprintfBuffer));
-  if Windows.lstrcmpA(wsprintfBuffer, 'TEdit') = 0 then
-     begin
-     if MorseRunnerWindowsCounter = 0 then
-        begin
-        MorseRunner_MyCallsign := wnd;
-        end;
-     if MorseRunnerWindowsCounter = 1 then
-        begin
-        MorseRunner_Number := wnd;
-        end;
-     if MorseRunnerWindowsCounter = 2 then
-        begin
-        MorseRunner_RST := wnd;
-        end;
-     if MorseRunnerWindowsCounter = 3 then
-        begin
-        MorseRunner_Callsign := wnd;
-        end;
-     inc(MorseRunnerWindowsCounter);
-     end;
-  Result := True;
-
-end;
-
-{$IFEND}
 
 procedure RunPlugin(PluginNumber: integer);
 var

@@ -1777,10 +1777,6 @@ begin
 
 //  Format(wsprintfBuffer, 'cty.dat: "%s" version', CTY.ctyTable[cty.ctyVersion].Name);
 
-{$IF MORSERUNNER}
-  GetMorseRunnerWindow;
-{$IFEND}
-
 
    if WSJTXEnabled then
       begin

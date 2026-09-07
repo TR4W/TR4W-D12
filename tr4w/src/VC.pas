@@ -310,7 +310,6 @@ const
     that ran and produced the wrong bytes. }
   EXITCODE_ALREADY_RUNNING              = 3;
   MASKEVENT                             = False;
-  MORSERUNNER                           = False;
   ICOM_LONG_MODECOMMAND                 = True ;
 
 // LANG is selected by passing -DLANG_xxx to DCC32 (e.g. -DLANG_RUS).
@@ -2809,14 +2808,6 @@ var
   MultBand                              : BandType;
   MultMode                              : ModeType;
 //  tNTPServer                            : ShortString = 'pool.ntp.org';
-{$IF MORSERUNNER}
-  MorseRunnerWindow                     : HWND;
-  MorseRunnerWindowsCounter             : integer;
-  MorseRunner_MyCallsign                : HWND;
-  MorseRunner_Callsign                  : HWND;
-  MorseRunner_RST                       : HWND;
-  MorseRunner_Number                    : HWND;
-{$IFEND}
 
   tShowDomesticMultiplierName           : boolean;
   tRemMultsColumnWidth                  : integer;
