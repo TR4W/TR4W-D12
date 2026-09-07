@@ -355,7 +355,7 @@ label
 var
   Head                                  : WavHeader;
   r                                     : REAL;
-  h                                     : HWND;
+  h                                     : THandle;   (* A FILE handle, not a window. *)
   lpNumberOfBytesRead                   : Cardinal;
 begin
   Result := False;
@@ -550,7 +550,7 @@ label
   1, CallsignFound, NextRead;
 var
   TempBuffer                            : array[0..1024 - 1] of AnsiChar;
-  h                                     : HWND;
+  h                                     : THandle;   (* A FILE handle, not a window. *)
   lpNumberOfBytesRead                   : Cardinal;
   p                                     : PAnsiChar;
 begin

@@ -27,7 +27,6 @@ interface
 uses
 
   VC,
-  uCommctrl,
   Windows,
   uCallSignRoutines,
   utils_text,
@@ -476,7 +475,7 @@ var
   MapFin                                : Cardinal;
   MapBase                               : Pointer;
   p                                     : PAnsiChar;
-  h                                     : HWND;
+  h                                     : THandle;   (* A FILE handle, not a window. *)
   i                                     : Cardinal;
   s                                     : Cardinal;
   b                                     : array[0..31] of AnsiChar;

@@ -1544,7 +1544,7 @@ var
  // Mode                                  : ModeType;
   RestartVersion                        : Str10;
   NameOfContest                         : Str80;
-  h                                     : HWND;
+  h                                     : THandle;   (* A FILE handle, not a window. *)
 begin
   DisposeOfMemoryAndZeroTotals;
 

@@ -150,7 +150,17 @@ type
    end;
 
    RadioObject = object
-      tDupeSheetWnd:     HWND;
+      (* THIS RADIO'S DUPE SHEET, or nil when it is closed.
+
+        It was tDupeSheetWnd: HWND -- the window handle -- and it did two jobs
+        with it: nil-vs-zero told the caller whether the sheet was open, and
+        the value was a key to look the form back up by. Holding the FORM does
+        both directly, and removes a search over every dupe-sheet form that
+        existed only to undo the conversion to a handle.
+
+        TObject rather than TfrmDupeSheet so this unit does not have to use an
+        LCL form unit; uCallsigns, which is the only reader, casts. *)
+      tDupeSheetForm:    TObject;
       tDisableCIVTransceive: boolean;
       tPTTStatus:        PTTStatusType;
       tTwoRadioMode:     TRMode;
@@ -1645,7 +1655,6 @@ end;
 
 procedure RadioObject.SetUpRadioInterface;
 var
-   hand: HWND;
 //   TempCardinal: cardinal;
    dwFlagsAndAttributes: DWORD;
    EvtChar: char;

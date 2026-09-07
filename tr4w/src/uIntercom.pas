@@ -67,7 +67,7 @@ var
     UnicodeString here would be narrowed back at each use.  The content is a
     timestamp, a callsign character and a message; there is nothing to lose. }
   Line                             : AnsiString;
-  h                                : HWND;
+  h                                : THandle;   (* A FILE handle, not a window. *)
   lpThreadId                       : DWORD;
 begin
   if tr4w_WindowsArray[tw_INTERCOMWINDOW_INDEX].WndForm = nil then

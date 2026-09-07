@@ -1137,8 +1137,6 @@ begin
 end;
 
 procedure Disconnect;
-var
-  StackTelHandle: HWND;
 begin
   // NOT gated on TELNET DEBUG any more.  "Did the teardown run?" turned out to
   // be the one question the log could not answer: three failed connects in a
@@ -1153,11 +1151,10 @@ begin
   // would otherwise fire after the link is gone, or against the next session.
   CancelClusterLogin;
 
-  StackTelHandle := 0;
-  if tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndForm <> nil then
-     begin
-     StackTelHandle := tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndForm.Handle;
-     end;
+  (* A LOCAL HELD THE TELNET WINDOW'S HANDLE HERE and nothing ever read it --
+    assigned 0, then reassigned from the form, then never mentioned again. The
+    third dead handle-fetch of this exact shape found today; the other two were
+    in LOGWIND.QuickEditResponse and uTelnet.ArmTelnetRetry. *)
 
   // Issue #23 -- show a disconnect message only if we were actually connected.
   // A failed connect routes through here too but never connected, so

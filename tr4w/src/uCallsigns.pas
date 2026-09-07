@@ -512,7 +512,6 @@ end;
   ever looked. }
 procedure TCallsignsList.DisplayDupeSheet(Radio: RadioPtr {dBand: BandType; dMode: ModeType});
 var
-  TempDSHandle                          : HWND;
   frm                                   : TfrmDupeSheet;
   i, Index                              : integer;
 
@@ -522,10 +521,10 @@ var
   rn                                    : AnsiString;   // the radio name, length-correct
 begin
 //  if not Sheet.DupeSheetEnable then Exit;
-  TempDSHandle := Radio.tDupeSheetWnd;
-  if TempDSHandle = 0 then Exit;
-
-  frm := DupeSheetFormForHandle(TempDSHandle);
+  (* THE FORM, DIRECTLY. This read a handle off the radio, checked it against
+    zero, and then searched every dupe-sheet form for the one whose .Handle
+    matched. nil is the same answer in one step. *)
+  frm := TfrmDupeSheet(Radio.tDupeSheetForm);
   if frm = nil then Exit;
 
   Band := Radio.BandMemory;
@@ -602,12 +601,12 @@ begin
 
    if aIndex = tw_DUPESHEETWINDOW2_INDEX then
       begin
-      Radio2.tDupeSheetWnd := frm.Handle;
+      Radio2.tDupeSheetForm := frm;
       CallsignsList.DisplayDupeSheet(@Radio2);
       end
    else
       begin
-      Radio1.tDupeSheetWnd := frm.Handle;
+      Radio1.tDupeSheetForm := frm;
       CallsignsList.DisplayDupeSheet(@Radio1);
       end;
 end;
@@ -619,11 +618,11 @@ procedure DupeSheetWindowClosed(const aIndex: WindowsType);
 begin
    if aIndex = tw_DUPESHEETWINDOW2_INDEX then
       begin
-      Radio2.tDupeSheetWnd := 0;
+      Radio2.tDupeSheetForm := nil;
       end
    else
       begin
-      Radio1.tDupeSheetWnd := 0;
+      Radio1.tDupeSheetForm := nil;
       end;
 end;
 

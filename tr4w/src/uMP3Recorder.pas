@@ -243,7 +243,9 @@ var
   beEncodeChunk                         : TbeEncodeChunk;
   beCloseStream                         : TbeCloseStream;
 
-  LAMEENCDLL                            : HWND;
+  (* LoadLibrary('lame_enc.dll') answers a LIBRARY handle. TLibHandle is
+    what FPC's LoadLibrary returns and it is portable; HWND was neither. *)
+  LAMEENCDLL                            : TLibHandle;
 
 procedure waveInProc(hwi: HWAVEIN; uMsg: UINT; dwInstance: DWORD; dwParam1: DWORD; dwParam2: DWORD); stdcall;
 procedure StopRecorder;

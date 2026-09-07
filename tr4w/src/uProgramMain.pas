@@ -41,7 +41,6 @@ uses
    uAppTimers,   (* StartAppTimer / StopAppTimer -- LCL TTimers, not SetTimer *)
   uSystemWatch, (* RefreshColourDepth -- the one colour-depth probe *)
   Messages,
-  MMSystem,
   Windows,
   SysUtils,
   { /IMPORTLOG. The unit pulls in the log database and the mapper, which is

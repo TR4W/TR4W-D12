@@ -59,7 +59,6 @@ uses {Dos, Printer,}Tree,
   uRegex,
   (* ListView_DeleteAllItems -- the previous-dupe window is still a raw Win32
     list view. That window is not converted yet; this uses entry goes with it. *)
-  uCommctrl,
   uMults,
   Windows
   ,

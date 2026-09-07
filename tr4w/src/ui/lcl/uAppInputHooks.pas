@@ -85,20 +85,41 @@ var
   STILL AN HWND TEST, and it stays one until the telnet window is a form.  The
   loop asked the same question of a TMsg; this asks it of the focus, which is
   the same question with the message taken out of it. }
+(* IS THE OPERATOR TYPING IN THE DX CLUSTER WINDOW?
+
+  If so this hook keeps its hands off the keystroke entirely, because the main
+  accelerator table would otherwise eat the ordinary editing keys: Ctrl-C is
+  menu_ctrl_clearmultsheet (10424), Ctrl-V is menu_ctrl_execute_config (10426)
+  and Ctrl-A is menu_ctrl_sendkeyboardinput (10400). That is Issue #23 -- a
+  Ctrl-C meant to copy a spot cleared the mult sheet instead.
+
+  ASKED OF THE LCL, NOT OF WINDOWS. This was GetFocus plus IsChild against the
+  form's HWND -- a Win32 question about a window this code does not own, and
+  two HWND locals to hold the answer. Screen.ActiveControl is the same question
+  in the framework's own terms, and GetParentForm walks the parent chain for
+  us, so a control nested any number of panels deep still answers correctly --
+  which is what IsChild was there to do.
+
+  It also stops being a Windows question, which is the point: GetFocus and
+  IsChild do not exist on GTK or Cocoa. *)
 function TelnetHasFocus: boolean;
 var
-  h, focus: HWND;
+  focused: TWinControl;
 begin
   Result := False;
-  { Derived, not stored: GetFocus and IsChild are Win32 questions about the
-    focused window, which is not an object this code owns. }
+
   if tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndForm = nil then
      begin
      Exit;
      end;
-  h := tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndForm.Handle;
-  focus := Windows.GetFocus;
-  Result := (focus = h) or Windows.IsChild(h, focus);
+
+  focused := Screen.ActiveControl;
+  if focused = nil then
+     begin
+     Exit;
+     end;
+
+  Result := GetParentForm(focused) = tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndForm;
 end;
 
 function TTR4WInputHooks.AcceleratorFor(const aKey: word;

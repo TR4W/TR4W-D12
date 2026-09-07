@@ -44,7 +44,8 @@ const
   BeepFileName                          : PAnsiChar = @FileNameStr[0];
   DevName                               : PAnsiChar = @FileNameStr[3];
 var
-  hBeep                                 : HWND = INVALID_HANDLE_VALUE;
+  (* CreateFileA on the beep device -- a FILE handle, not a window. *)
+  hBeep                                 : THandle = INVALID_HANDLE_VALUE;
   OwnDevName                            : LongBool;
 
 implementation

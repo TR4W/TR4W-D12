@@ -23,7 +23,7 @@ var
 function FileExists(FileName: PAnsiChar): boolean;
 { This function will return TRUE if the filename specified exists. }
 var
-  h                                     : HWND;
+  h                                     : THandle;   (* FindFirstFileA: a FIND handle. *)
 begin
   Result := False;
   h := Windows.FindFirstFileA(FileName, tr4w_FIND_DATA);

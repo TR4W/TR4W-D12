@@ -52,7 +52,12 @@ var
   GradientFillFunction                  : TGradientFill;
 type
   TGradientDirection = (gdHorizontal, gdVertical);
-function GradientRect(canvashandle: HWND; const ARect: TRect; Color1, Color2: tcolor; Direction: TGradientDirection): boolean;
+(* HDC, NOT HWND. This declared its first parameter as a window handle and
+  was never given one: every caller passes a DEVICE CONTEXT -- MainUnit's dc,
+  PCDRAWITEMSTRUCT^.HDC, and uRemMultsForm's grdMults.Canvas.Handle -- and it
+  hands the value straight to GradientFillFunction, whose first argument is an
+  HDC. The two are the same width, so nothing ever complained. *)
+function GradientRect(canvashandle: HDC; const ARect: TRect; Color1, Color2: tcolor; Direction: TGradientDirection): boolean;
 function ColorToRGB(Color: tcolor): Cardinal {LONGINT};
 function InitTriVertex(XPos, YPos: integer; Color: tcolor): TTriVertex;
 implementation
@@ -77,7 +82,7 @@ begin
   Result.g := GetGValue(iColor);
   Result.b := GetBValue(iColor);
 end;
-function GradientRect(canvashandle: HWND; const ARect: TRect; Color1, Color2: tcolor; Direction: TGradientDirection): boolean;
+function GradientRect(canvashandle: HDC; const ARect: TRect; Color1, Color2: tcolor; Direction: TGradientDirection): boolean;
 // Function to initialise a TTriVertex
 //const
 //  Flag                             : array[TGradientDirection] of LONGINT = ($00000000 {GRADIENT_FILL_RECT_H}, $00000001 {GRADIENT_FILL_RECT_V});

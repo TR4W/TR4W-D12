@@ -994,7 +994,7 @@ end;
 
 procedure WriteToServerDebugFile(Count: Cardinal; s: TSocket; comment: PChar; mt: DebugMessageType);
 var
-  h                                     : HWND;
+  h                                     : THandle;   (* A FILE handle, not a window. *)
   lpNumberOfBytesWritten                : Cardinal;
   line                                  : AnsiString;
 begin

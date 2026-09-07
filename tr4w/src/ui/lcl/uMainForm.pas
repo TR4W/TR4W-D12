@@ -363,7 +363,11 @@ procedure TR4WPreviousDupesSet(const aQsos: array of ContestExchange);
 procedure TR4WPreviousDupesShow(const aVisible: boolean);
 procedure TR4WPreviousDupesSetBounds(const aLeft, aTop, aWidth, aHeight: integer);
 
-function CreateTR4WMainForm: HWND;
+(* Builds the main window. It RETURNED ITS HWND until 2026-09-07, for the one
+  caller that assigned tr4whandle -- and that global is gone, so the result had
+  no reader and the signature was the last thing making this an HWND-shaped
+  operation. *)
+procedure CreateTR4WMainForm;
 
 var
   { The form itself.  Exposed because Phase 3b parents LCL controls onto it and
@@ -2544,7 +2548,7 @@ begin
 end;
 
 
-function CreateTR4WMainForm: HWND;
+procedure CreateTR4WMainForm;
 begin
    // Create, NOT CreateNew.  CreateNew deliberately does not load a .lfm, and
    // that is what made this form unopenable in the designer.
@@ -2585,12 +2589,16 @@ begin
    ElementOffThreadReport := @ReportElementOffThread;
    ElementCaptionChanged  := @RequestElementColourRefresh;
 
-   // Touching Handle is what forces the window to exist.
-   Result := TR4WMainForm.Handle;
+   (* FORCE THE WINDOW INTO EXISTENCE, and say so.
 
-   // INSTALL TR4W'S PROCEDURE IN FRONT OF THE LCL'S, keeping the LCL's to
-   // chain to.  After Handle has forced the window into existence, before
-   // anything is shown.
+     This read `Result := TR4WMainForm.Handle` under the comment "Touching
+     Handle is what forces the window to exist" -- the RESULT was incidental and
+     the SIDE EFFECT was the point, which is exactly what HandleNeeded is for.
+     Nothing wants the handle any more.
+
+     A note about installing TR4W's window procedure in front of the LCL's used
+     to follow. There is no subclass. *)
+   TR4WMainForm.HandleNeeded;
 
    (* THE MENU IS THE FORM'S, built from T_MENU_ARRAY as a TMainMenu.
 

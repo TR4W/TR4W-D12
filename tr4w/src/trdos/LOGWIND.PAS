@@ -2758,7 +2758,7 @@ procedure SaveBandMap;
 var
   i                                     : integer;
   Spot                                  : TSpotRecord;
-  h                                     : HWND;
+  h                                     : THandle;   (* A FILE handle, not a window. *)
 begin
   if not tOpenFileForWrite(h, TR4W_BANDMAPBIN_FILENAME) then Exit;
   if SpotsList.Count > 0 then
@@ -2786,7 +2786,7 @@ var
   i                                     : integer;
   c                                     : integer;
   Spot                                  : TSpotRecord;
-  h                                     : HWND;
+  h                                     : THandle;   (* A FILE handle, not a window. *)
   lpNumberOfBytesRead                   : Cardinal;
 begin
   if not TF.tOpenFileForRead(h, TR4W_BANDMAPBIN_FILENAME) then Exit;

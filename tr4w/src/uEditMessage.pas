@@ -31,7 +31,6 @@ uses
   utils_file,
   Windows,
   Messages,
-  MMSystem,
   Tree,
   LogWind
 

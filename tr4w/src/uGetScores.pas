@@ -109,7 +109,9 @@ var
    ssl  : TIdSSLIOHandlerSocketOpenSSL;
    PostBody  : TStringStream;
    sURL      : string;
-   h         : HWND;
+   (* A FILE handle -- tOpenFileForWrite, sWriteFile, CloseHandle. Not a
+     window, and never was. *)
+   h         : THandle;
 begin
    ShowGetScoresStatus(TC_CONNECT);
    MakePOSTRequestNew; // fills GetScoresBuffer with the URL-encoded POST body

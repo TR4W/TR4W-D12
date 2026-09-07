@@ -117,7 +117,6 @@ uses
   uCFG,           // CheckCommand
   Tree,           // GetRealPath
   utils_file,     // tOpenFileForWrite, sWriteFile, GetRealPath, waveheader
-  uCommctrl,      // ListView_GetItemText
   uConfigValues,  // Config.DVKRecorder, Config.DVKPath
   uMessagesList,  // ShowMessagesList, LastSelectedCommand
   uEditMessage,   // DeleteEscapeChars -- still this unit's own routine

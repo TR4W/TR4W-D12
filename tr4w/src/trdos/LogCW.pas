@@ -25,7 +25,6 @@ interface
 uses
   uConfigValues,
 utils_text,
-  MMSystem,
   uWinKey,
   uYCCCSO2R,
   uMMTTY,

@@ -88,9 +88,10 @@ var
 procedure CreateTR4WDupeSheetWindow(const aIndex: WindowsType);
 function DupeSheetForm(const aIndex: WindowsType): TfrmDupeSheet;
 
-{ The writer holds a HANDLE -- Radio.tDupeSheetWnd -- not a form, and changing
-  that would spread this conversion into RadioPtr.  One lookup keeps it here. }
-function DupeSheetFormForHandle(const aWnd: HWND): TfrmDupeSheet;
+(* DupeSheetFormForHandle IS GONE (2026-09-07). It searched every dupe-sheet
+  form for the one whose .Handle matched a value the caller had stored from
+  that same form moments earlier. The radio holds the FORM now
+  -- RadioObject.tDupeSheetForm -- so there is nothing to look up. *)
 
 implementation
 
@@ -126,30 +127,6 @@ end;
 function DupeSheetForm(const aIndex: WindowsType): TfrmDupeSheet;
 begin
    Result := GForms[SlotOf(aIndex)];
-end;
-
-function DupeSheetFormForHandle(const aWnd: HWND): TfrmDupeSheet;
-var
-   i: integer;
-begin
-   Result := nil;
-   if aWnd = 0 then
-      begin
-      Exit;
-      end;
-
-   for i := Low(GForms) to High(GForms) do
-      begin
-      // HandleAllocated first: reading .Handle on a form whose window has not
-      // been created would CREATE it, from inside whatever is asking.
-      if (GForms[i] <> nil)         and
-         GForms[i].HandleAllocated  and
-         (GForms[i].Handle = aWnd)  then
-         begin
-         Result := GForms[i];
-         Exit;
-         end;
-      end;
 end;
 
 procedure TfrmDupeSheet.HandleCreate(Sender: TObject);

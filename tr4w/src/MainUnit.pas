@@ -121,7 +121,6 @@ uses
     BuildLogRow still carries a column and its text in a TLVItem, which is a
     comctl32 record. Replacing that with a plain (column, text) pair retires
     this entry; see the note in BuildLogRow. *)
-  uCommctrl,
   uDialogs,
   uLogSearch,
   Windows,
@@ -213,7 +212,17 @@ procedure SetCommand(c: PAnsiChar);
 procedure ChangeFocus(Text: PAnsiChar);
 procedure ImportFromADIF;
 procedure CheckQuestionMark;
-function TelnetWantsClipboardKey(const aMsg: TMsg): boolean;   // Issue #23
+(* TelnetWantsClipboardKey IS GONE (2026-09-07) -- it had no caller.
+
+  Issue #23: it told the hand-rolled message loop to skip TranslateAccelerator
+  when Ctrl-C/V/X/A/Z was pressed inside the DX cluster window, so the cluster's
+  edit field got the keystroke instead of the main accelerator table stealing it
+  (Ctrl-V was Execute Config File, Ctrl-C was Clear Mult Sheet).
+
+  BOTH HALVES OF THAT ARE GONE. There is no hand-rolled loop -- the program runs
+  Application.Run -- and TranslateAccelerator appears nowhere in live code. An
+  LCL edit control receives its own clipboard keys, which is what made the
+  function unnecessary rather than merely uncalled. *)
 procedure InvertBooleanCommand(Command: PBoolean);
 procedure RunExplorer(Command: PAnsiChar);
 procedure OpenInDefaultTextEditor(FileName: PAnsiChar);   // Issue #986
@@ -9904,42 +9913,6 @@ begin
      // Fallback: Notepad. Windows-only by name, hence the utility route.
      RunWindowsUtility(SysUtils.Format('Notepad %s', [string(FileName)]));
      end;
-end;
-
-// Issue #23 -- let the DX Cluster window's command field handle the standard
-// clipboard/edit keys (Ctrl-C/V/X, plus Select-All/Undo) itself, instead of the
-// main accelerator table stealing them (Ctrl-V = Execute Config File, Ctrl-C =
-// Clear Mult Sheet).  Returns True when aMsg is one of those keystrokes AND
-// focus is inside the telnet (cluster) window, so the main loop can skip
-// TranslateAccelerator and let the keystroke reach the edit via DispatchMessage.
-// Deliberately scoped to the telnet window only for now so other windows can be
-// vetted separately before extending this behavior.
-function TelnetWantsClipboardKey(const aMsg: TMsg): boolean;
-var
-   hTelnet: HWND;
-begin
-   Result := False;
-   if aMsg.message <> WM_KEYDOWN then Exit;
-   if (GetKeyState(VK_CONTROL) and $8000) = 0 then Exit;   // Ctrl not held
-   case aMsg.wParam of
-      Ord('A'), Ord('C'), Ord('V'), Ord('X'), Ord('Z'): ;   // clipboard / edit keys
-   else
-      Exit;
-   end;
-
-   (* STILL A HANDLE, and it has to be: this compares against aMsg.hwnd from a
-     raw message and asks IsChild. It is derived from the form rather than
-     stored as one. *)
-   if tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndForm = nil then Exit;
-   hTelnet := tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndForm.Handle;
-   if aMsg.hwnd = hTelnet then
-      begin
-      Result := True;
-      end
-   else if IsChild(hTelnet, aMsg.hwnd) then
-      begin
-      Result := True;
-      end;
 end;
 
 // CTRL-J NOW OPENS PREFERENCES (NY4I, 2026-08-16).

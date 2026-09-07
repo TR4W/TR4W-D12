@@ -135,7 +135,6 @@ uses
   VC,                 // tr4whandle, wh[], the mwe* elements, tr4wColors
   TF,
   MainUnit,
-  uCommctrl,          // PNMLVCustomDraw, CDDS_*, CDRF_*, ListView_GetHeader
   LogWind,            // QuickDisplay
   uGetServerLog,      // WM_USER_HEADLESS_SYNC_REPLACE + the headless-sync state
   uFunctionKeys,      // ShowFMessages

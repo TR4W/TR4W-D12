@@ -968,7 +968,9 @@ implementation
 
 procedure MakeRevisionHistory();
 var
-  h                                     : HWND;
+  (* CreateFile answers a FILE handle. HWND here was the same mistyping the
+    serial code carried -- same width, so nothing complained. *)
+  h                                     : THandle;
   nNumberOfBytesToWrite                 : Cardinal;
   Version                               : integer;
   Feature                               : integer;
@@ -1051,7 +1053,7 @@ const
     '&#160;</script><br/><br/>';
 
 var
-  h                                     : HWND;
+  h                                     : THandle;   (* CreateFile: a file handle *)
   nNumberOfBytesToWrite                 : Cardinal;
   Version                               : integer;
   Feature                               : integer;
