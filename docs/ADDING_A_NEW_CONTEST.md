@@ -6,7 +6,7 @@
 
 ## 1. Mental model
 
-A "contest" in TR4W is a row of metadata + a small amount of behavior wired in by case-statements keyed on a `ContestType` enum value. The metadata lives in **eight parallel arrays in `VC.pas`** — every array is indexed by `ContestType`, and they must stay perfectly in lockstep. Behavior is wired in three places: `FCONTEST.PAS` (init defaults), `LOGSTUFF.PAS` (scoring), and `uNewContest.pas` (UI prompt).
+A "contest" in TR4W is a row of metadata + a small amount of behavior wired in by case-statements keyed on a `ContestType` enum value. The metadata lives in **eight parallel arrays in `VC.pas`** — every array is indexed by `ContestType`, and they must stay perfectly in lockstep. Behavior is wired in three places: `fcontest.pas` (init defaults), `logstuff.pas` (scoring), and `uNewContest.pas` (UI prompt).
 
 The vast majority of plumbing — exchange parsing, Cabrillo formatting, dupe handling, ADIF export, multiplier tracking — already exists for the common exchange shapes. **Reuse before writing new parsers.**
 
@@ -91,17 +91,17 @@ There are ~50 exchange types. **Almost any common shape is already covered.** Ex
 | `RST + zone` | `RSTZoneExchange` |
 
 Each exchange type already has:
-- A `ProcessXxxExchange` parser in `LOGSTUFF.PAS`
-- Dispatch in `LOGSTUFF.PAS:ProcessExchange` case statement (~line 8691)
-- Dupe handling in `LOGDUPE.PAS`
-- Cabrillo writer for both MY-EXCH and HIS-EXCH in `PostUnit.PAS` (case statements around lines 2603 and 4121)
-- ADIF export support in `PostUnit.PAS:GetMyExchangeForExport`
+- A `ProcessXxxExchange` parser in `logstuff.pas`
+- Dispatch in `logstuff.pas:ProcessExchange` case statement (~line 8691)
+- Dupe handling in `logdupe.pas`
+- Cabrillo writer for both MY-EXCH and HIS-EXCH in `postunit.pas` (case statements around lines 2603 and 4121)
+- ADIF export support in `postunit.pas:GetMyExchangeForExport`
 
 **If you find an existing exchange type that matches, you write zero new parsing/serialization code.**
 
 ### QSO-point methods (`VC.pas:2940+`)
 
-There are ~80 scoring methods. Distance-based, country-based, zone-based, multiplier-conditional — most patterns exist. Check `LOGSTUFF.PAS:CalculateQSOPoints` (case statement starting around line 5796) before writing a new one. Add yours by:
+There are ~80 scoring methods. Distance-based, country-based, zone-based, multiplier-conditional — most patterns exist. Check `logstuff.pas:CalculateQSOPoints` (case statement starting around line 5796) before writing a new one. Add yours by:
 
 1. Adding the enum value
 2. Adding the `PChar` name
@@ -126,9 +126,9 @@ There are ~80 scoring methods. Distance-based, country-based, zone-based, multip
 
 ---
 
-## 4. Behavior knobs in `FCONTEST.PAS`
+## 4. Behavior knobs in `fcontest.pas`
 
-`FCONTEST.PAS:OpenContest` has a giant case statement (`case Contest of`) where contest-specific defaults live. Most contests don't need an entry — the metadata row drives behavior. Add a case branch only if you need to:
+`fcontest.pas:OpenContest` has a giant case statement (`case Contest of`) where contest-specific defaults live. Most contests don't need an entry — the metadata row drives behavior. Add a case branch only if you need to:
 
 ### Band/mode group toggles (coarse-grained)
 
@@ -141,7 +141,7 @@ There are ~80 scoring methods. Distance-based, country-based, zone-based, multip
 | `ActiveBand := Band20;` | Initial band |
 | `ActiveMode := CW;` | Initial mode |
 
-**There is no per-band toggle** (no `Band160Enable`, etc.) and **no per-mode disable**. If your contest restricts to specific bands or modes, enforce it in the QSO-points method by setting `RXData.QSOPoints := 0; RXData.InhibitMults := True;` for out-of-rules QSOs. See the RTC scoring branch in `LOGSTUFF.PAS` for the pattern.
+**There is no per-band toggle** (no `Band160Enable`, etc.) and **no per-mode disable**. If your contest restricts to specific bands or modes, enforce it in the QSO-points method by setting `RXData.QSOPoints := 0; RXData.InhibitMults := True;` for out-of-rules QSOs. See the RTC scoring branch in `logstuff.pas` for the pattern.
 
 ### Function-key memories and SAP exchange strings
 
@@ -169,11 +169,11 @@ SetEXCaptionMemoryString(CW, F4, 'NR');             // status-line label
 
 If the operator changes `MyGrid` mid-contest, function-key memories don't update — same as for `MyZone`. Document this where it matters.
 
-**Phone (SSB) memories** are typically WAV file paths (`CQF1.WAV` etc.) set by `CFGDEF.PAS` defaults. Per-contest Phone defaults are uncommon.
+**Phone (SSB) memories** are typically WAV file paths (`CQF1.WAV` etc.) set by `cfgdef.pas` defaults. Per-contest Phone defaults are uncommon.
 
 ### Reuse the helper procedures
 
-`FCONTEST.PAS` has helpers like `SetUpRSTQSONumberExchange`, `SetUpRSTMyStateExchange`, `SetUpRSTMyZoneExchange`, `SetUpNameAndStateExchange`. They're called from the exchange dispatch (`case ActiveExchange of` around line 1618). If your exchange type matches an existing helper, inheritance is automatic — you may not need to set memories at all.
+`fcontest.pas` has helpers like `SetUpRSTQSONumberExchange`, `SetUpRSTMyStateExchange`, `SetUpRSTMyZoneExchange`, `SetUpNameAndStateExchange`. They're called from the exchange dispatch (`case ActiveExchange of` around line 1618). If your exchange type matches an existing helper, inheritance is automatic — you may not need to set memories at all.
 
 ---
 
@@ -199,9 +199,9 @@ If your contest doesn't need a special prompt, it falls through to the generic f
 
 ### b) The `cMyGrid` ShortString → PChar trap
 
-This bit RTC. `MyGrid` is a `ShortString` (length byte + chars). To pass to `wsprintf` with `%s`, the code copies into a `Str20`, then writes `#0` somewhere to null-terminate. Old `PostUnit.PAS` hardcoded `TempGrid[7] := #0` (assumed 6-char) and `TempGrid[5] := #0` (assumed 4-char) — both wrong for the other length and they leaked uninitialized stack memory into the Cabrillo output.
+This bit RTC. `MyGrid` is a `ShortString` (length byte + chars). To pass to `wsprintf` with `%s`, the code copies into a `Str20`, then writes `#0` somewhere to null-terminate. Old `postunit.pas` hardcoded `TempGrid[7] := #0` (assumed 6-char) and `TempGrid[5] := #0` (assumed 4-char) — both wrong for the other length and they leaked uninitialized stack memory into the Cabrillo output.
 
-**Correct idiom:** `TempGrid[Length(MyGrid) + 1] := #0;` — null at the byte right after the actual content. Works for any length. Fixed in both `PostUnit.PAS:2349` and `PostUnit.PAS:4051` during RTC work.
+**Correct idiom:** `TempGrid[Length(MyGrid) + 1] := #0;` — null at the byte right after the actual content. Works for any length. Fixed in both `postunit.pas:2349` and `postunit.pas:4051` during RTC work.
 
 ### c) `QSONumberAndGridSquare` vs `RSTQSONumberAndGridSquareExchange`
 
@@ -213,9 +213,9 @@ Pick the right one based on whether RST is in the exchange. RST is *optional* pe
 
 ### d) `GetDistanceBetweenGrids` is not Haversine
 
-`LOGGRID.PAS:GetDistanceBetweenGrids` pads 4-char grids to 6-char with `'LL'` (= 11/24 of the way through the sub-square, **not** the center) and uses `Calc_GeoDist`, a Vincenty/Andoyer-style iterative geodesic. Most rules cite the Haversine formula and the geometric **center** of the 4-char square.
+`loggrid.pas:GetDistanceBetweenGrids` pads 4-char grids to 6-char with `'LL'` (= 11/24 of the way through the sub-square, **not** the center) and uses `Calc_GeoDist`, a Vincenty/Andoyer-style iterative geodesic. Most rules cite the Haversine formula and the geometric **center** of the 4-char square.
 
-For contests that require the rules-spec distance value, write a small dedicated helper (`RTCGridDistance` in `LOGGRID.PAS` is the template) that:
+For contests that require the rules-spec distance value, write a small dedicated helper (`RTCGridDistance` in `loggrid.pas` is the template) that:
 1. Pads to grid CENTER algebraically: `lat = -90 + lat_field*10 + lat_sq*1 + 0.5; lon = -180 + lon_field*20 + lon_sq*2 + 1.0`
 2. Uses pure Haversine with `R = 6371 km` and `ArcTan2` (already available via `utils_math.pas`)
 3. Returns `Double` so tier boundaries compare exactly (no integer-rounding off-by-one near the boundary)
@@ -230,7 +230,7 @@ For contests that require the rules-spec distance value, write a small dedicated
 
 `BandType = (Band160, Band80, Band40, Band20, Band15, Band10, Band30, Band17, Band12, Band6, ...)`. The WARC bands (`Band30, Band17, Band12`) come **after** `Band10`, not in frequency order. Watch this if you're filtering by band range.
 
-Also, the `BandTypeToUDPContactBand` array in `LOGSUBS2.PAS:94` had three WARC entries with wrong MHz labels (`'30'/'17'/'12'` instead of `'10'/'18'/'24'`) — fixed during the RTC branch. The values are MHz designators (e.g. `'7'`, `'14'`, `'21'`, `'28'`), NOT meter-band names.
+Also, the `BandTypeToUDPContactBand` array in `logsubs2.pas:94` had three WARC entries with wrong MHz labels (`'30'/'17'/'12'` instead of `'10'/'18'/'24'`) — fixed during the RTC branch. The values are MHz designators (e.g. `'7'`, `'14'`, `'21'`, `'28'`), NOT meter-band names.
 
 ### g) Don't bump version
 
@@ -255,14 +255,14 @@ Working through a new contest, in dependency order:
 - [ ] Identify or write the QSO-points method
   - [ ] If new: add `XxxQSOPointMethod` to `QSOPointMethodType` enum
   - [ ] Add `'Xxx'` to `QSOPointMethodSA`
-  - [ ] Add `XxxQSOPointMethod:` case branch in `LOGSTUFF.PAS:CalculateQSOPoints`
+  - [ ] Add `XxxQSOPointMethod:` case branch in `logstuff.pas:CalculateQSOPoints`
   - [ ] If distance-based, sanity-check against rules' published fixture
 - [ ] Add the contest itself to `VC.pas`:
   - [ ] `ContestType` enum (append at end)
   - [ ] `ContestsArray` row
   - [ ] `ContestTypeSA` `PChar`
   - [ ] `ContestsBooleanArray` row with correct `ciQB/ciQM/ciMB/ciMM`
-- [ ] If the contest needs init defaults, add a `Contest:` case in `FCONTEST.PAS`
+- [ ] If the contest needs init defaults, add a `Contest:` case in `fcontest.pas`
   - [ ] Band/mode group toggles (`HFBandEnable`, `WARCBandsEnabled`, `VHFBandsEnabled`, `DigitalModeEnable`)
   - [ ] `ActiveBand`, `ActiveMode` defaults
   - [ ] CW function-key memories and SAP exchange strings if non-trivial
@@ -283,10 +283,10 @@ For reference, the full RTC change set covered:
 | File | Change |
 |---|---|
 | `VC.pas` | 6 array entries (enum + 5 arrays) |
-| `LOGGRID.PAS` | new `RTCGridDistance` Haversine helper (40 lines) |
-| `LOGSTUFF.PAS` | new `RTCQSOPointMethod:` case branch + 1 new local var |
-| `FCONTEST.PAS` | `RTC:` case with `WARCBandsEnabled` and CW function-key defaults |
+| `loggrid.pas` | new `RTCGridDistance` Haversine helper (40 lines) |
+| `logstuff.pas` | new `RTCQSOPointMethod:` case branch + 1 new local var |
+| `fcontest.pas` | `RTC:` case with `WARCBandsEnabled` and CW function-key defaults |
 | `uNewContest.pas` | 1-word edit: add `RTC` to the 4-char-grid prompt |
-| `PostUnit.PAS` | (bug fix surfaced by RTC, not strictly RTC) `cMyGrid` null-terminator |
+| `postunit.pas` | (bug fix surfaced by RTC, not strictly RTC) `cMyGrid` null-terminator |
 
 Total: ~120 lines of code spread across 6 files. **No new exchange parser, no new Cabrillo writer, no new dupe logic, no new ADIF code.** All reused.

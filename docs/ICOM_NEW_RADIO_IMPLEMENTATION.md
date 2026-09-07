@@ -154,7 +154,7 @@ After `$19` response, TR4W queries: `$03` (freq), `$04` (mode), `$1A $06` (data 
 6. **Check VFO B format** — if not standard `$25 $01`, override `QueryVFOBFrequency`, `SetFrequency`, `ProcessCIVFrame`.
 7. **Register in `uRadioFactory.pas`** — add the new class to the factory's creation logic.
 8. **Register in `uCAT.pas`** — add to `UpdateIcomCredentialsVisibility` so username/password fields appear for network mode.
-9. **Register in `LOGRADIO.PAS`** — add to `SetUpRadioInterface` so the factory creates the correct class.
+9. **Register in `logradio.pas`** — add to `SetUpRadioInterface` so the factory creates the correct class.
 
 ---
 

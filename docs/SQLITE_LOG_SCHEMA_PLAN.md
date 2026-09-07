@@ -42,7 +42,7 @@ and whatever multiplier state we decide to persist.
 **THE `.cfg` FILE GOES AWAY.** NY4I, 2026-09-01: *"the configuration info for a
 database should go into the database file too. That includes anything that goes
 into the .CFG file including Program Messages (Alt-P). The contest specific items
-in the json file will go into this file as well. Parameters set in FContest.pas
+in the json file will go into this file as well. Parameters set in fcontest.pas
 are a good reference too."* And: *"when done, the .cfg file should not be
 necessary."*
 
@@ -186,12 +186,12 @@ the **received** exchange, not the sent one — there is no composed sent-exchan
 string anywhere in the record.
 
 Twelve station values are read live at export, each into a
-`TMyStationExchange` built per QSO (`PostUnit.PAS:3008-3018` →
+`TMyStationExchange` built per QSO (`postunit.pas:3008-3018` →
 `uCabrilloExchange.pas:145-155`): `MyState`, `MyGrid`, `MyName`, `MyZone`,
 `MyFDClass`, `MySection`, `MyCheck`, `MyPrec`, `MyFOCNumber`, `MyPostalCode`,
 `MyPark`, `MyCall`. `MyPark` is NY4I's own example and it is the sharpest:
 every record in an exported POTA log gets today's park
-(`PostUnit.PAS:2226-2227`). See §12 for the full inventory and for four findings
+(`postunit.pas:2226-2227`). See §12 for the full inventory and for four findings
 that change this plan.
 
 ---
@@ -525,7 +525,7 @@ those comments exists because someone otherwise "fixed" the thing they describe.
 from the *names* of the exchange types. The authoritative list of what is
 actually parsed and stored is `ContestExchange` plus the arms of
 `ProcessExchange`, and the two should be reconciled field by field before the
-DDL is final — that is a mechanical pass over `LOGSTUFF.PAS` and
+DDL is final — that is a mechanical pass over `logstuff.pas` and
 `uCabrilloExchange.pas`, and it is the sort of thing that is done once properly
 or wrong forever.
 
@@ -578,12 +578,12 @@ Measured 2026-08-29: **430 references across 34 units.**
 
 | unit | refs | | unit | refs |
 |---|---:|---|---|---:|
-| `trdos/LOGSTUFF.PAS` | 94 | | `uExternalLogger` | 19 |
+| `trdos/logstuff.pas` | 94 | | `uExternalLogger` | 19 |
 | `MainUnit` | 60 | | `uHamScore` | 12 |
-| `trdos/LOGSUBS2.PAS` | 36 | | `trdos/LOGEDIT.PAS` | 11 |
-| `trdos/LOGDUPE.PAS` | 34 | | `uNet` | 10 |
+| `trdos/logsubs2.pas` | 36 | | `trdos/logedit.pas` | 11 |
+| `trdos/logdupe.pas` | 34 | | `uNet` | 10 |
 | `uADIF` | 32 | | `uEditQSO` | 8 |
-| `tr4wserverUnit` | 32 | | `trdos/PostUnit.PAS` | 7 |
+| `tr4wserverUnit` | 32 | | `trdos/postunit.pas` | 7 |
 
 It is not a data structure the log happens to use. It is the currency the contest engine is written
 in — dupe checking, scoring, exchange parsing, ADIF and Cabrillo export, the multi-op server wire
@@ -905,7 +905,7 @@ want one for tests.
 **Rotation and naming** can be taken from TR4QT directly — timestamped
 `<base>_yyyyMMdd_HHmmss.db`, newest-first listing, delete beyond `maxBackups`
 (`BackupManager.cpp:262`). This replaces today's single overwritten destination
-(`LOGSTUFF.PAS:5405`, `CopyFileA` with `bFailIfExists = False`).
+(`logstuff.pas:5405`, `CopyFileA` with `bFailIfExists = False`).
 
 **And `Restore` is half the reason to use this API at all** — NY4I called it the
 more important half, and today there is no restore path of any kind. Same unit,
@@ -1202,7 +1202,7 @@ confirms the `multipliers` table stays out.
 ### 7 in full — backup, generations, and the restore that does not exist
 
 **What happens today, verified rather than recalled.** `SaveLogFileToFloppy`
-(`LOGSTUFF.PAS:5405`) does
+(`logstuff.pas:5405`) does
 
 ```pascal
 Windows.CopyFileA(TR4W_LOG_FILENAME, TR4W_FLOPPY_FILENAME, False)
@@ -1293,14 +1293,14 @@ a handful of visible rows, so no paging and no cache.
 
 ### View / Edit Log: **yes, this is the `TDBGrid` case**
 
-`menu_ctrl_viewlogdat` (Ctrl+L) → `ShowLogEdit` → `uLogEdit.pas:130`. What it
+`menu_ctrl_viewlogdat` (Ctrl+L) → `ShowLogEdit` → `ulogedit.pas:130`. What it
 does today:
 
 - `CreateModalDialog(396, 212, ...)` — a runtime-built Win32 dialog, so it has
   to be converted anyway;
 - hosts the same `CreateEditableLog` ListView at 790×420;
 - **reads the entire log** in a `ReadLogFile` loop, adding every record
-  (`uLogEdit.pas:74-79`);
+  (`ulogedit.pas:74-79`);
 - double-click or the OK button → `EditFullLog` → `OpenEditQSOWindow`.
 
 That is a whole-log browser: read-mostly, off the contest hot path, opened
@@ -1477,7 +1477,7 @@ timestamp):
 
 They are empty because `/EXPORT` deliberately skips `ApplyStoredCommands` and
 applies only `COMPUTER ID` (`uProgramMain.pas:1067-1072`), so both globals sit
-at their `CFGDEF.PAS:294-295` default of `''`.
+at their `cfgdef.pas:294-295` default of `''`.
 
 **But `iaru` will still diverge after event sourcing.** D7 sent `8`, the ITU
 zone. The live store's `MY ZONE` is `5`, the CQ zone; `MY ITU ZONE` is a
@@ -1495,7 +1495,7 @@ looks.
 - Line 13 describes the iaru case as the sent zone *"falls back to MY STATE"*
   and records the candidate as `59  FL`. There is no MY-STATE fallback in that
   arm (`uCabrilloExchange.pas:223-227`); the `FL` was almost certainly the
-  dangling-`PChar` bug since fixed and documented at `PostUnit.PAS:2753-2759`
+  dangling-`PChar` bug since fixed and documented at `postunit.pas:2753-2759`
   (*"'599 001' became 'FL 001' across six corpus sets"*).
 - Line 14 says general_qso has *"MY STATE appended to sent exchange"*. It is the
   **opposite**: `MY NAME` is missing. Nothing is appended.
@@ -1525,9 +1525,9 @@ Cause: those header lines come **only** from `cabrilloHeader` in `tr4w.json`,
 never from the contest `.cfg`. In the GUI the `.cfg` seeds the dialog combos
 (`uCbrSum.pas:207`, `245-248`); headless there is no dialog, the tags are unset
 (`ctrSave: False` for exactly ASSISTED/BAND/OPERATOR, `uCbrSum.pas:102,103,105`),
-and the emit loop skips them (`PostUnit.PAS:2640-2645`). Meanwhile
+and the emit loop skips them (`postunit.pas:2640-2645`). Meanwhile
 `CategoryOperator` **from the `.cfg`** *is* used for the per-QSO transmitter
-digit (`PostUnit.PAS:3028-3036`) — so the QSO lines and the header disagree
+digit (`postunit.pas:3028-3036`) — so the QSO lines and the header disagree
 about the same fact within one file.
 
 **A headless export ships a log to a sponsor with three CATEGORY lines missing
@@ -1547,8 +1547,8 @@ And the effect is **incoherent today**, which is the worst finding here:
 
 - **What is SENT is baked at contest setup.** `CQExchange`,
   `SearchAndPounceExchange` and the F-key memories substitute `MyGrid`
-  textually in `FCONTEST.PAS:481-482`, `611-621`, which runs once from
-  `uProgramMain.pas:1147`. `FCONTEST.PAS` says so outright: *"MyGrid is
+  textually in `fcontest.pas:481-482`, `611-621`, which runs once from
+  `uProgramMain.pas:1147`. `fcontest.pas` says so outright: *"MyGrid is
   substituted at FCONTEST init time … the operator must restart the contest
   setup if MyGrid changes."*
 - **What is EXPORTED is read live.**
@@ -1559,9 +1559,9 @@ nothing reports it. Storing what was sent per QSO fixes the export half; the
 sending half is a contest-factory problem.
 
 Two smaller notes: **`MY COUNTY` does not exist** — no global (commented out at
-`LOGWIND.PAS:702`, and also commented out in the D7 tree), no config command —
+`logwind.pas:702`, and also commented out in the D7 tree), no config command —
 so QSO-party county roving is a new feature, not a port. And `MyPark` *is* read
-live per keystroke (`LOGSTUFF.PAS:5077`), so "a different park is a different
+live per keystroke (`logstuff.pas:5077`), so "a different park is a different
 log" is a **policy we would be introducing**, not a fact the code enforces.
 
 ### 12e. Corrections to `DOMAIN_LAYER_SEQUENCE.md`
@@ -1625,7 +1625,7 @@ Four, all NY4I's, all arriving after the schema was thought settled.
 > *"The configuration info for a database should go into the database file too.
 > That includes anything that goes into the .CFG file including Program Messages
 > (Alt-P). The contest specific items in the json file will go into this file as
-> well. Parameters set in FContest.pas are a good reference too."*
+> well. Parameters set in fcontest.pas are a good reference too."*
 > ... *"when done, the .cfg file should not be necessary."*
 
 Two new tables, `config` and `message`.
@@ -1680,7 +1680,7 @@ reading the DDL back. `key_id` uses `KeyId`'s spelling because
 (`LogCW.pas:1366`).
 
 **Still owed:** the reader and writer. The tables exist and are tested; nothing
-populates them yet. `FCONTEST.PAS` is the reference NY4I named for which
+populates them yet. `fcontest.pas` is the reference NY4I named for which
 parameters are contest-scoped, and it is also where the *sending* half of the
 rover problem lives (§12d) — so read it once, for both.
 

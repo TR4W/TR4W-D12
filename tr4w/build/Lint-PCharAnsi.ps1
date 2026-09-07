@@ -86,7 +86,7 @@ if ($SourceDir) {
 #
 # An earlier version stripped only TRAILING single-line comments, could not see
 # a `{ ... }` block spanning lines, and reported four "violations" inside a
-# commented-out TS-850 block in LOGRADIO.PAS. A linter that fires on
+# commented-out TS-850 block in logradio.pas. A linter that fires on
 # commented-out code is one people learn to ignore, which is worse than no
 # linter.
 Import-Module (Join-Path $PSScriptRoot 'PascalSource.psm1') -Force

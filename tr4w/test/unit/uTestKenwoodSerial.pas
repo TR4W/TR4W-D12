@@ -9,7 +9,7 @@ unit uTestKenwoodSerial;
   the radio accepts is what TR4W has been sending them for years, so "does the
   factory still send what LOGRADIO sent" is the strongest test available.
 
-  THE SPLIT PREFIX. LOGRADIO.PAS:2066 / :2135 send TWO commands:
+  THE SPLIT PREFIX. logradio.pas:2066 / :2135 send TWO commands:
 
       AddToOutputBuffer('FR0;FT1;', 8);     // and 'FR0;FT0;' to clear
 

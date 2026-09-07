@@ -2744,7 +2744,7 @@ begin
      // races with CI-V transceive pushes over network connections — the $06
      // command lands on whichever VFO is active when the radio processes it,
      // which may still be VFO A. $26 $01 targets VFO B unconditionally.
-     // This matches the serial path (LOGRADIO.PAS IcomRadiosThatSupportVFOB).
+     // This matches the serial path (logradio.pas IcomRadiosThatSupportVFOB).
      if mode in [rmAFSK, rmData, rmDataRev] then
         begin
         dataMode := FDataModeID
@@ -2843,7 +2843,7 @@ begin
   // command DIRECTLY -- $17 takes no sub-command.
   //
   // A #$00 was prefixed here until 2026-08-04.  Two independent references send
-  // the text with nothing between: the D7 legacy path (LOGRADIO.PAS:2667 writes
+  // the text with nothing between: the D7 legacy path (logradio.pas:2667 writes
   // ICOM_SEND_CW then the characters) and HamLib (icom_send_morse passes
   // C_SND_CW with subcmd -1, meaning "no sub-command byte").  $00 is also not in
   // the character table the radio documents for this command -- the codes there

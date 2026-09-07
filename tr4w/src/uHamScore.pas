@@ -34,7 +34,7 @@
 
   Integration points
   ------------------
-    LOGSUBS2.PAS:LogContact   -> HamScoreOnLog(RXData)
+    logsubs2.pas:LogContact   -> HamScoreOnLog(RXData)
     uEditQSO.pas              -> HamScoreOnEdit(RXData)
                                  HamScoreOnDelete(RXData)
     Tools menu                -> HamScoreResyncFromScratch (Phase 3)

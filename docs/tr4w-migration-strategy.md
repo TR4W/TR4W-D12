@@ -28,7 +28,7 @@ Read alongside `tr4w-analysis.md` (upstream architectural analysis).
 > retired the last hand-maintained radio sets in `InitRadios`. HamLib-only radios
 > route through `THamLibDirect`, which now derives per-rig capabilities at runtime
 > from the backend's own answers. The **legacy driver path** (`uRadioPolling.pas`
-> driver bodies + `LOGRADIO.PAS` protocol code) is scheduled for **deletion**, not
+> driver bodies + `logradio.pas` protocol code) is scheduled for **deletion**, not
 > maintenance — the `src/` vs `src/radioFactory/` folder boundary *is* the
 > factory/legacy boundary. See `docs/LEGACY_DEPENDENCY_AUDIT.md`,
 > `docs/ADDING_A_RADIO.md`, `docs/RADIO_MIGRATION_ASSUMPTIONS.md`.
@@ -85,18 +85,18 @@ Legend: ✅ written · 🟡 writable now (no refactor) · 🟠 partially writabl
 | **CI-V BCD encode/decode** | ✅ | `uTestIcomCIV.pas` — 32 tests, 0 failures | Targets `uIcomCIV` |
 | **Band↔frequency mapping (modern)** | ✅ | `uTestRadioBand.pas` — centre, edges, round-trip | Targets `uRadioBand.TRadioBand` (used by `TNetRadioBase` descendants only) |
 | **Band↔frequency mapping (legacy `BandType`)** | 🟡 | Legacy `BandType` is used by ~109k lines of contest code; not tested today | Small, self-contained lookup function. Must survive 64-bit `LongInt → Int64` change |
-| **Dupe checking** | 🟠 | `DupeAndMultSheet` in `LogDupe.pas` | Methods like `AddCompressedCallToDupeSheet` and the partial-call lookup are testable with synthetic data **if** the object can be instantiated without its file backing — verify before scheduling |
-| **Exchange parsing** | 🔴 | `ProcessExchange()` and per-exchange handlers in `LOGSTUFF.PAS` | Logic is pure-ish but the monolith drags in globals + Win32. Highest ROI once unblocked — one bad parse = silent wrong score |
-| **Score calculation** | 🔴 | `QSOPoints` and related in `LOGSTUFF.PAS` | Verify against published claimed scores once extracted |
-| **Cabrillo export** | 🔴 | Per-QSO line writer in `PostUnit.PAS` (144k lines) | Lift the line formatter into `uCabrilloFormat.pas`; parse the output string, don't rely on file writing |
+| **Dupe checking** | 🟠 | `DupeAndMultSheet` in `logdupe.pas` | Methods like `AddCompressedCallToDupeSheet` and the partial-call lookup are testable with synthetic data **if** the object can be instantiated without its file backing — verify before scheduling |
+| **Exchange parsing** | 🔴 | `ProcessExchange()` and per-exchange handlers in `logstuff.pas` | Logic is pure-ish but the monolith drags in globals + Win32. Highest ROI once unblocked — one bad parse = silent wrong score |
+| **Score calculation** | 🔴 | `QSOPoints` and related in `logstuff.pas` | Verify against published claimed scores once extracted |
+| **Cabrillo export** | 🔴 | Per-QSO line writer in `postunit.pas` (144k lines) | Lift the line formatter into `uCabrilloFormat.pas`; parse the output string, don't rely on file writing |
 
 ### Tier 1 Extraction Pattern (monolith-bound logic)
 
 Four Tier 1 areas — exchange parsing, score calculation, dupe checking,
 Cabrillo export — live inside two enormous TRDOS units:
 
-- `LOGSTUFF.PAS` (262k lines)
-- `PostUnit.PAS` (144k lines)
+- `logstuff.pas` (262k lines)
+- `postunit.pas` (144k lines)
 
 Pulling either of those into the test EXE drags in every global, every Win32
 window, MainUnit, the lot. The existing tests stay clean because they target
@@ -134,7 +134,7 @@ These are lower risk but important to have before `string`→`UnicodeString` cha
 |------|-------|
 | `TF.pas` utility functions | Format/conversion helpers used everywhere |
 | Config parser (`uCFG.pas`) | Key command parsing, boolean/integer/string types |
-| Country/prefix lookup | `uCTYDAT.pas` — callsign → DXCC entity |
+| Country/prefix lookup | `uctydat.pas` — callsign → DXCC entity |
 | Multiplier tracking | `uMults.pas` — add/check/count multipliers |
 
 ### Coding Conventions for Tests
@@ -196,7 +196,7 @@ effort, not the S–M originally estimated).
 
 **Why:**
 
-1. `LogDupe.pas` (2,570 lines) has a wide `uses` cone: `LogWind` (172k lines),
+1. `logdupe.pas` (2,570 lines) has a wide `uses` cone: `LogWind` (172k lines),
    `LogRadio` (152k lines), `LogSCP`, `Tree`, `uMults`, `uCallsigns`, plus
    `VC`, `TF`, `Windows`. Linking `LogDupe` into the test EXE pulls the
    entire TRDOS layer in — the test runner would effectively *be* tr4w.exe.
@@ -220,7 +220,7 @@ effort, not the S–M originally estimated).
 
 Extract pure dupe-check and partial-call-match logic plus its underlying
 data structures (DupeList, MultList, partial-call arrays) into a new
-`uDupeCheck.pas` following the Tier 1 Extraction Pattern. `LogDupe.pas`
+`uDupeCheck.pas` following the Tier 1 Extraction Pattern. `logdupe.pas`
 keeps the file I/O, UI, and TRDOS-wired glue and forwards in-memory
 operations to the new unit. Expected effort: M–L. Adds another row to
 the roadmap; do not bundle with other items.

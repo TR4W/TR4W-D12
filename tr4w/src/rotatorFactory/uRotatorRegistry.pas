@@ -28,7 +28,7 @@ unit uRotatorRegistry;
   the sake of familiarity.
 
   IDs ARE STRINGS, not an enum.  The legacy RotatorType enum
-  (LOGWIND.PAS:133) is what makes the current code a `case`, and an enum forces
+  (logwind.pas:133) is what makes the current code a `case`, and an enum forces
   every new rotator through a shared type declaration -- which is precisely the
   shared file a factory exists to stop editing.  The ids here are deliberately
   the legacy SPELLINGS ('DCU1', 'ORION', 'YAESU', 'ALFA SPID', 'PSTROTATOR')

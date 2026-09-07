@@ -473,7 +473,7 @@ resourcestring
 // to freeze; do not copy this shape anywhere the window already exists.
 //
 // TARGET PATH. TR4W_CTY_FILENAME is whatever SetUpFileNames resolved -- the
-// contest .cfg directory, else the working directory (FCONTEST.PAS:122-128).
+// contest .cfg directory, else the working directory (fcontest.pas:122-128).
 // We write to exactly that name, so the reload below reads the file we just
 // fetched, and so does every later Alt-O. Note the working directory is not
 // guaranteed writable (an install under Program Files launched from a
@@ -1424,7 +1424,7 @@ begin
   // ApplyAndStoreCommand, so the JSON is already where an operator sets it
   // (NY4I, 2026-08-16).  PostUnit compares each QSO's stored cecomputerid
   // against this global to decide the Cabrillo TRANSMITTER DIGIT
-  // (PostUnit.PAS:3038), so a headless export that never applied it wrote the
+  // (postunit.pas:3038), so a headless export that never applied it wrote the
   // wrong digit on every line -- 2632 of them in the Winter Field Day set.
   //
   // ONE named command, not the store.  ApplyStoredCommands stays skipped under

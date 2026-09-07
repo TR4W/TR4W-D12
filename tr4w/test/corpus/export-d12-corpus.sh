@@ -74,10 +74,10 @@ SKIP=" "
 #
 # WHY THIS EXISTS.  tr4w/target/* is gitignored, so a FRESH CLONE has no
 # settings/tr4w.json -- and LOCATION is read from there
-# (PostUnit.PAS:2552).  Two things then happen, and neither says so:
+# (postunit.pas:2552).  Two things then happen, and neither says so:
 #
 #   * Winter Field Day and ARRL10 REFUSE to export at all.  The guard at
-#     PostUnit.PAS:2567 warns "LOCATION field is empty." and Exits, the program
+#     postunit.pas:2567 warns "LOCATION field is empty." and Exits, the program
 #     returns 0, and no cand.cbr is written.  The sweep below reports "export
 #     aborted or produced no output", which reads as a defect in the EXPORTER.
 #   * Every other Cabrillo carries `LOCATION: <value>` in its header, so a
@@ -104,7 +104,7 @@ fi
 if ! grep -q '"_LOCATION"[[:space:]]*:[[:space:]]*"[^"]\+"' "$SETTINGS"; then
    echo "ERROR: $SETTINGS has no non-empty _LOCATION tag."
    echo "  Winter Field Day and ARRL10 refuse to export without it"
-   echo "  (PostUnit.PAS:2567), and the sweep would blame the exporter."
+   echo "  (postunit.pas:2567), and the sweep would blame the exporter."
    echo "  See docs/CORPUS_FRESH_CLONE_DEFECT.md."
    exit 1
 fi

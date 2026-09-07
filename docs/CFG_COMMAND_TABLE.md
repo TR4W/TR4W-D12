@@ -45,8 +45,8 @@ branch on `crKind` before touching `crAddress`.** This is the single easiest way
 migration that appears to work and corrupts memory.
 
 **And on two rows `crAddress` is a decoy.** The `ctFreqList` pair — `BAND MAP CUTOFF
-FREQUENCY` and `FREQUENCY MEMORY` — point at `tBandMapCutoffFrequency` (`LOGWIND.PAS:60`)
-and `tFrequencyMemory` (`LOGWIND.PAS:601`). Both are declared as plain integers and are
+FREQUENCY` and `FREQUENCY MEMORY` — point at `tBandMapCutoffFrequency` (`logwind.pas:60`)
+and `tFrequencyMemory` (`logwind.pas:601`). Both are declared as plain integers and are
 **never read or written anywhere in the program**; they exist only so the record has
 something to take the address of. The real value goes into a list inside the `crA` function.
 Exporting `crAddress` for these rows would faithfully persist a number nobody maintains.
@@ -461,7 +461,7 @@ and their globals move into the config object.
 
 ### 31 of those are contest-driven ANYWAY — this needs a ruling
 
-Not on NY4I's list, but `FCONTEST.PAS` assigns them when a contest is selected, or they are declared
+Not on NY4I's list, but `fcontest.pas` assigns them when a contest is selected, or they are declared
 `crC:1`. **Migrating one as a flat station setting gives Preferences an editor whose value is
 silently replaced at the next contest selection.** It is the same problem as the three band-enable
 rows just ruled on, and those were not the only ones.

@@ -9,7 +9,7 @@ excluding `~`, `.bakup`, and `.bad` working files.
 
 > **2026-07-30 note:** the radio-factory migration is complete (92 radios in
 > `tr4w/src/radioFactory/`), and the **legacy radio driver path is scheduled for
-> deletion** — `uRadioPolling.pas` driver bodies and the `LOGRADIO.PAS` protocol
+> deletion** — `uRadioPolling.pas` driver bodies and the `logradio.pas` protocol
 > code. That deletion retires those files' remaining Phase-2/3 entries below
 > (e.g. `uRadioPolling`'s and `LOGRADIO`'s rows, and a slice of `LOGK1EA`'s once
 > the CW keyer factory — `docs/CW_Keyer_Factory_Plan.md` — absorbs the CPU
@@ -28,7 +28,7 @@ block must be either:
 - Replaced with equivalent Pascal code, or
 - Gated with `{$IFDEF CPUX86}…{$ENDIF}` plus a 64-bit Pascal alternative.
 
-The top of the list is where to start — `PostUnit.PAS` alone is 28% of
+The top of the list is where to start — `postunit.pas` alone is 28% of
 all blocks in the project.
 
 ### Files sorted by count (descending)
@@ -39,7 +39,7 @@ Legend: ✅ done (asm removed — converted, or all blocks were dead/commented) 
 
 | File | `asm` blocks | Status |
 |------|--------------|--------|
-| ~~tr4w/src/trdos/PostUnit.PAS~~ | 170 | ✅ done (#998) |
+| ~~tr4w/src/trdos/postunit.pas~~ | 170 | ✅ done (#998) |
 | tr4w/src/utils/SysUtils.pas | 58 | ⏭ skip (vendored RTL) |
 | tr4w/src/MainUnit.pas | 56 | 🔧 partial — UI/format/setitem/pointer-arith done; RDTSC `GetCPU`, MM-hooks, LPT IOCTL parked |
 | tr4w/src/MySU.pas | 39 | ⏭ skip (vendored RTL) |
@@ -47,15 +47,15 @@ Legend: ✅ done (asm removed — converted, or all blocks were dead/commented) 
 | tr4w/src/TF.pas | 20 | 🔧 partial — string/format/nop done; `ValExt`/`_Pow10` deferred to mirror clone |
 | ~~tr4w/src/uLogCompare.pas~~ | 17 | ✅ done |
 | ~~tr4w/src/uQTCS.pas~~ | 14 | ✅ done |
-| ~~tr4w/src/trdos/LOGDVP.PAS~~ | 10 | ✅ done |
+| ~~tr4w/src/trdos/logdvp.pas~~ | 10 | ✅ done |
 | tr4w/src/uWinKey.pas | 8 | 🔧 partial — K6VVA_WK_DEBUG block deferred (conditional `{$IF}`) |
-| ~~tr4w/src/trdos/LOGSTUFF.PAS~~ | 8 | ✅ done (rotator converted; floppy block dead/commented) |
+| ~~tr4w/src/trdos/logstuff.pas~~ | 8 | ✅ done (rotator converted; floppy block dead/commented) |
 | ~~tr4w/src/uQTCR.pas~~ | 7 | ✅ done |
 | ~~tr4w/src/uGetScores.pas~~ | 6 | ✅ done (only live block was in dead `MakePOSTRequest`) |
 | tr4w/src/uComObj.pas | 6 | ⏭ skip (vendored RTL) |
 | tr4w/src/trdos/tree.pas | 6 | 🔧 partial — `GetFullTimeString` done; `UpperCase_old` (FastCode) + 3841 = shadow-RTL skip |
 | tr4w/src/trdos/_JCtrl1.pas | 6 | ⏭ skip (backup file, not compiled) |
-| ~~tr4w/src/trdos/LOGWAE.PAS~~ | 6 | ✅ done |
+| ~~tr4w/src/trdos/logwae.pas~~ | 6 | ✅ done |
 | ~~tr4w/src/trdos/JCtrl1.pas~~ | 6 | ✅ done (incl. SSN1 `%c`) |
 | ~~tr4w/src/uTelnet.pas~~ | 5 | ✅ done |
 | ~~tr4w/src/uAltP.pas~~ | 5 | ✅ done |
@@ -68,14 +68,14 @@ Legend: ✅ done (asm removed — converted, or all blocks were dead/commented) 
 | ~~tr4w/src/uIntercom.pas~~ | 4 | ✅ done (setfont + `%C` wsprintf→TF.Format) |
 | ~~tr4w/src/uEditMessage.pas~~ | 4 | ✅ done (setfont; rest commented) |
 | ~~tr4w/src/uCFG.pas~~ | 4 | ✅ done (incl. AdditionalProc typed-call) |
-| ~~tr4w/src/trdos/LOGWIND.PAS~~ | 4 | ✅ done (DisplayTotalScore; rest commented) |
-| ~~tr4w/src/trdos/LOGSUBS2.PAS~~ | 4 | ✅ done |
+| ~~tr4w/src/trdos/logwind.pas~~ | 4 | ✅ done (DisplayTotalScore; rest commented) |
+| ~~tr4w/src/trdos/logsubs2.pas~~ | 4 | ✅ done |
 | tr4w/src/jwamswsock.pas | 4 | ⏭ skip (vendored JEDI WinSock) |
 | ~~tr4w/src/exportto_trlog.pas~~ | 4 | ✅ done |
 | ~~tr4w/src/uRemMults_Zone.pas~~ | 3 | ✅ done |
 | ~~tr4w/src/uCallsigns.pas~~ | 3 | ✅ done (incl. orphan-asm cleanup) |
 | tr4w/src/uCRC32.pas | 3 | ⌛ defer — bit-identical to on-disk log CRCs; D12 `System.Hash` only if byte-equal |
-| tr4w/src/trdos/LOGK1EA.PAS | 3 | 🔧 partial — SetThreadPriority done; DOS `INT $F1`/`OUT $20` parked |
+| tr4w/src/trdos/logk1ea.pas | 3 | 🔧 partial — SetThreadPriority done; DOS `INT $F1`/`OUT $20` parked |
 | ~~tr4w/src/MemProg.pas~~ | 3 | ✅ done |
 | tr4w/src/utils/utils_text.pas | 2 | ⏭ skip (shadow-RTL `StrComp`/`StrUpper`) |
 | ~~tr4w/src/utils/utils_math.pas~~ | 2 | ✅ done (→ `Math` RTL, golden-tested) |
@@ -102,21 +102,21 @@ Legend: ✅ done (asm removed — converted, or all blocks were dead/commented) 
 | ~~tr4w/src/uErmak.pas~~ | 1 | ✅ done |
 | ~~tr4w/src/uDupesheet.pas~~ | 1 | ✅ done |
 | ~~tr4w/src/uCbrSum.pas~~ | 1 | ✅ done |
-| ~~tr4w/src/uCTYDAT.PAS~~ | 1 | ✅ done |
+| ~~tr4w/src/uctydat.pas~~ | 1 | ✅ done |
 | ~~tr4w/src/uCT1BOH.pas~~ | 1 | ✅ done |
 | ~~tr4w/src/uBeacons.pas~~ | 1 | ✅ done (commented/dead) |
 | ~~tr4w/src/uBandmap.pas~~ | 1 | ✅ done |
 | ~~tr4w/src/uAltD.pas~~ | 1 | ✅ done |
 | ~~tr4w/src/uAbout.pas~~ | 1 | ✅ done (FPU → Pascal) |
-| ~~tr4w/src/trdos/ZONECONT.PAS~~ | 1 | ✅ done |
+| ~~tr4w/src/trdos/zonecont.pas~~ | 1 | ✅ done |
 | ~~tr4w/src/trdos/LogCW.pas~~ | 1 | ✅ done (SetThreadPriority) |
-| ~~tr4w/src/trdos/LOGRADIO.PAS~~ | 1 | ✅ done (Yaesu BSWAP → bit ops) |
-| ~~tr4w/src/trdos/LOGGRID.PAS~~ | 1 | ✅ done (commented/dead) |
-| ~~tr4w/src/trdos/LOGEDIT.PAS~~ | 1 | ✅ done (commented/dead) |
+| ~~tr4w/src/trdos/logradio.pas~~ | 1 | ✅ done (Yaesu BSWAP → bit ops) |
+| ~~tr4w/src/trdos/loggrid.pas~~ | 1 | ✅ done (commented/dead) |
+| ~~tr4w/src/trdos/logedit.pas~~ | 1 | ✅ done (commented/dead) |
 
 ### Observations
 
-- **`PostUnit.PAS` is the elephant**: 170 blocks, ~28% of the entire codebase's
+- **`postunit.pas` is the elephant**: 170 blocks, ~28% of the entire codebase's
   inline assembly. Almost certainly all are `wsprintf`-related (see Phase 2
   inventory below — same file, 92 wsprintf calls). The two phases will
   almost certainly clean up together for this file.
@@ -156,14 +156,14 @@ to `wsprintf` will silently produce garbage. Every call must be audited:
 
 | File | `wsprintf` calls |
 |------|------------------|
-| tr4w/src/trdos/PostUnit.PAS | 92 |
+| tr4w/src/trdos/postunit.pas | 92 |
 | tr4w/src/uQTCS.pas | 7 |
 | tr4w/src/TF.pas | 6 |
-| tr4w/src/trdos/LOGDVP.PAS | 5 |
+| tr4w/src/trdos/logdvp.pas | 5 |
 | tr4w/src/MainUnit.pas | 5 |
 | tr4w/src/uGetScores.pas | 4 |
 | tr4w/src/trdos/tree.pas | 4 |
-| tr4w/src/trdos/LOGSTUFF.PAS | 4 |
+| tr4w/src/trdos/logstuff.pas | 4 |
 | tr4w/src/uWinKey.pas | 3 |
 | tr4w/src/trdos/_JCtrl1.pas | 3 |
 | tr4w/src/trdos/JCtrl1.pas | 3 |
@@ -174,8 +174,8 @@ to `wsprintf` will silently produce garbage. Every call must be audited:
 | tr4w/src/uEditQSO.pas | 2 |
 | tr4w/src/uAltP.pas | 2 |
 | tr4w/src/trdos/LogCfg.pas | 2 |
-| tr4w/src/trdos/LOGWIND.PAS | 2 |
-| tr4w/src/trdos/LOGWAE.PAS | 2 |
+| tr4w/src/trdos/logwind.pas | 2 |
+| tr4w/src/trdos/logwae.pas | 2 |
 | tr4w/src/exportto_trlog.pas | 2 |
 | tr4w/src/uSpots.pas | 1 |
 | tr4w/src/uRemMults_Zone.pas | 1 |
@@ -189,14 +189,14 @@ to `wsprintf` will silently produce garbage. Every call must be audited:
 | tr4w/src/uEditMessage.pas | 1 |
 | tr4w/src/uDistance.pas | 1 |
 | tr4w/src/uCFG.pas | 1 |
-| tr4w/src/trdos/LOGSUBS2.PAS | 1 |
-| tr4w/src/trdos/FCONTEST.PAS | 1 |
+| tr4w/src/trdos/logsubs2.pas | 1 |
+| tr4w/src/trdos/fcontest.pas | 1 |
 | tr4w/src/tr4wserverUnit.pas | 1 |
 | tr4w/src/DLPortIO.pas | 1 |
 
 ### Observations
 
-- **`PostUnit.PAS` alone is 92 calls (53% of the total).** This file owns
+- **`postunit.pas` alone is 92 calls (53% of the total).** This file owns
   the Cabrillo export and ADIF export — exactly where formatted strings
   are written to byte-oriented file output, so the calls are likely
   semantically `wsprintfA` already. Should be a mechanical audit: confirm
@@ -210,7 +210,7 @@ to `wsprintf` will silently produce garbage. Every call must be audited:
 ### Recommended Phase 2 ordering
 
 1. Audit `TF.pas` first — its 6 `wsprintf` wrappers shape callers elsewhere.
-2. Audit `PostUnit.PAS` — biggest single concentration; likely a coherent
+2. Audit `postunit.pas` — biggest single concentration; likely a coherent
    fix-once-and-done.
 3. Sweep the long tail of 1–3-call files together in a final cleanup PR.
 

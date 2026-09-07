@@ -98,7 +98,7 @@ The following Pascal units were downloaded and analyzed from the TR4W/TR4W repos
 | `uCAT.pas` | Radio CAT dialog (ID 66) |
 | `uAutoCQ.pas` | Auto CQ window |
 | `uLogCompare.pas` | Log compare window |
-| `uLogEdit.pas` | Log editor window |
+| `ulogedit.pas` | Log editor window |
 | `uFunctionKeys.pas` | Function keys window |
 | `uBeacons.pas` | Beacon window |
 | `uErmak.pas` | Ermak report window |
@@ -119,9 +119,9 @@ The following Pascal units were downloaded and analyzed from the TR4W/TR4W repos
 | `uMissingMults.pas` | Missing multipliers window |
 | `uGetScores.pas` | Score retrieval |
 | `uOption.pas` | Options dialogs |
-| `LOGWIND.PAS` | Log window |
-| `LOGPACK.PAS` | Log packing |
-| `LOGNET.PAS` | Log networking |
+| `logwind.pas` | Log window |
+| `logpack.pas` | Log packing |
+| `lognet.pas` | Log networking |
 | `w.pas` | Window helper routines |
 | `f_.pas` | Form/frame helpers |
 | `t_.pas` | Text/string helpers |

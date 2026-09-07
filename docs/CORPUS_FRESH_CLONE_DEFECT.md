@@ -21,13 +21,13 @@ Not a code defect. `tr4w/target/settings/` is runtime state and is gitignored,
 so a fresh checkout has NO `tr4w.json`. The Cabrillo LOCATION tag is read from
 that file:
 
-`tr4w/src/trdos/PostUnit.PAS:2552` already says so, and says why it matters --
+`tr4w/src/trdos/postunit.pas:2552` already says so, and says why it matters --
 
 > FROM `settings\tr4w.json`, seeded once from the ini. This read is what the
 > LOCATION guard below depends on, and it is why deleting `tr4w.ini` used to
 > abort every Winter Field Day and ARRL10 batch export in silence.
 
-and the guard at `PostUnit.PAS:2567`:
+and the guard at `postunit.pas:2567`:
 
 ```pascal
 if ( Contest = ARRL10 ) or ( Contest = WINTERFIELDDAY ) then

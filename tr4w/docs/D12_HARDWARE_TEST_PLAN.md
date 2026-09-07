@@ -36,7 +36,7 @@ two-station D7↔D12 wire.**
 ## Your station — device matrix & priority (NY4I)
 
 Your gear falls onto TR4W's two radio-control paths. The **serial CAT** path
-(legacy `LOGRADIO.PAS`, or a native Icom driver run over a COM/USB-serial port)
+(legacy `logradio.pas`, or a native Icom driver run over a COM/USB-serial port)
 is the one the `8e0bb61` byte-write fix touched and is the **least validated** —
 it also covers the most of your radios, so it's the priority. The **network**
 path splits into Icom LAN CI-V (`df0017a`, only the 7760 was proven) and non-Icom
@@ -144,7 +144,7 @@ For each radio:
   a K3 set to AI0 reproduced the failure exactly, which is how the diagnosis was
   confirmed before the fix.
 - **A7 — FT1000MP only.** It uses a Yaesu 5-byte binary CAT protocol (its own path
-  in `LOGRADIO.PAS`, with a `FT1000MPCWReverse` quirk). Verify freq/mode set+read
+  in `logradio.pas`, with a `FT1000MPCWReverse` quirk). Verify freq/mode set+read
   *and* that CW normal/reverse is correct — this is the byte path most unlike the
   rest of your kit, so it's the most likely to surface a D12 boundary bug.
 
@@ -348,7 +348,7 @@ QTC callsign field (`LOGWAE:453`) is the same fix and was not staged -- it shows
 only in WAE contests.
 
 Grid/locator is worth a note for whoever checks it next: it is written only from
-`DisplayBeamHeading` (`LOGWIND.PAS:1421`), needs `MyGrid` set and the callsign to
+`DisplayBeamHeading` (`logwind.pas:1421`), needs `MyGrid` set and the callsign to
 resolve to a grid, and `tBeamHeadingPrevState` suppresses a redraw when the grid
 has not changed -- so it takes a call from a different country to force one.
 

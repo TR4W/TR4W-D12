@@ -289,7 +289,7 @@ begin
    savedMode := ActiveMode;
    try
       // ActiveMode MUST be set: it defaults to Digital under MMTTYMODE
-      // (LOGWIND.PAS:485), and AddStringToBuffer's MMTTY branch exits before
+      // (logwind.pas:485), and AddStringToBuffer's MMTTY branch exits before
       // any keyer is reached.  Leaving it at the default made these checks
       // silently exercise nothing.
       ActiveMode := CW;

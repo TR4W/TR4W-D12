@@ -59,7 +59,7 @@ English `.RES` is missing most of these — they exist only in non-English `.RES
 | Res ID | Function             | DlgProc                    | Source Unit          | In ENG .RES? | Notes |
 |--------|----------------------|----------------------------|----------------------|--------------|-------|
 | 40     | CT1BOH info          | ct1bohDlgProc              | uCT1BOH.pas          | No           | |
-| 41     | CT1BOH info (alt)    | (commented out)            | LOGWIND.PAS          | No           | Commented out |
+| 41     | CT1BOH info (alt)    | (commented out)            | logwind.pas          | No           | Commented out |
 | 42     | About TR4W           | AboutDlgProc               | uAbout.pas           | No           | |
 | 43     | List of messages     | MessagesListDlgProc        | uMessagesList.pas    | No           | |
 | 44     | Band plan            | BMCFDlgProc                | uBMCF.pas            | No           | Commented out in uOption.pas |

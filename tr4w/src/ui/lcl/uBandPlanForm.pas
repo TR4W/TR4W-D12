@@ -31,7 +31,7 @@ unit uBandPlanForm;
   THE ROW YOU TYPE IN DOES NOT DECIDE THE BAND -- THE FREQUENCY DOES, and that is
   the surprise worth knowing here. Both loaders derive the band from the value:
   AddBandMapModeCutoffFrequency calls CalculateBandMode(Freq, ...)
-  (LOGWIND.PAS:3177), and F_FREQUENCY_MEMORY does the same (uCFG.pas:1856).
+  (logwind.pas:3177), and F_FREQUENCY_MEMORY does the same (uCFG.pas:1856).
   Typing a 20m frequency into the 80m row therefore updates 20m. Checked rather
   than assumed -- the first reading of this dialog suggested the band came from
   ROW ORDER, which would have made a skipped field shift every later band. It

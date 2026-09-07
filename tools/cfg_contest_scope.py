@@ -96,7 +96,7 @@ and their globals move into the config object.
 
 ### %d of those are contest-driven ANYWAY — this needs a ruling
 
-Not on NY4I's list, but `FCONTEST.PAS` assigns them when a contest is selected, or they are declared
+Not on NY4I's list, but `fcontest.pas` assigns them when a contest is selected, or they are declared
 `crC:1`. **Migrating one as a flat station setting gives Preferences an editor whose value is
 silently replaced at the next contest selection.** It is the same problem as the three band-enable
 rows just ruled on, and those were not the only ones.

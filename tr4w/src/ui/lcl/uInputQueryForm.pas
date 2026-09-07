@@ -39,7 +39,7 @@ unit uInputQueryForm;
 
   MODALITY IS PRESERVED VIA ShowModalOverWin32Parent, and that is not
   decoration.  This dialog's parent is settingswindowhandle when the legacy
-  Settings window is open (LOGWIND.PAS:1992), and LCL's ShowModal disables LCL
+  Settings window is open (logwind.pas:1992), and LCL's ShowModal disables LCL
   forms only.  See the helper's comment.
 }
 

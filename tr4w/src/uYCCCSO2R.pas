@@ -27,7 +27,7 @@
 
   Phase 1 scope:
     - HID device open/close (SetupAPI enumeration by VID/PID)
-    - TX switching  (TX1 / TX2) - driven by SwapRadios in LOGSUBS1.PAS
+    - TX switching  (TX1 / TX2) - driven by SwapRadios in logsubs1.pas
     - RX switching  (RX1 / RX2 mono) - follows TX automatically
     - CW keyer      - replaces WinKeyer when ycccActive is True
     - Speed setting

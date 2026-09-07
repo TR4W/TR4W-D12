@@ -164,7 +164,7 @@ copies, a class assignment aliases, and Pascal reports neither.
 **Where NY4I is more right than the plan admitted.** The QSO half is independent
 of the contest factory. **The configuration half is not.** `EXCHANGE RECEIVED`,
 `QSO POINT METHOD` and `DOMESTIC MULTIPLIER` are contest *definition*, and
-`FCONTEST.PAS` is what interprets them. Storing them is storage; interpreting
+`fcontest.pas` is what interprets them. Storing them is storage; interpreting
 them is the factory. Phase E is drawn on exactly that line.
 
 ---
@@ -506,7 +506,7 @@ delete the last record with ALT-Y. That is a very DOS way to do it."*
 
 He is right, and it is worth knowing WHY it looks like that: **Alt-Y is not a
 delete.** It toggles `ceQSO_Skiped` on the newest record and is REVERSIBLE --
-its own message says *"Use Alt-Y to restore it"* (`LOGSUBS2.PAS:583`). The
+its own message says *"Use Alt-Y to restore it"* (`logsubs2.pas:583`). The
 record stays in the log, so it keeps its row, and the row is blanked. A hole
 where a QSO was.
 
@@ -556,7 +556,7 @@ out of a log that has a model rather than being a project of their own.
 | **E1** | Write `config` + `message` from the current `.cfg` at log creation |
 | **E2** | Read them at log open |
 | **E3** | `.cfg` becomes **import only** -- the stated goal: *"when done, the .cfg file should not be necessary"* |
-| **E4** | **STOP THERE.** Interpretation stays with `FCONTEST.PAS` |
+| **E4** | **STOP THERE.** Interpretation stays with `fcontest.pas` |
 
 E4 is the whole point of drawing the line here. Storing the contest definition is
 storage; deciding what `QSO POINT METHOD = ONE PHONE TWO CW` *means* is the
@@ -574,9 +574,9 @@ sets `EXCHANGE RECEIVED`, `DOMESTIC MULTIPLIER`, `QSO POINT METHOD`,
 | # | task |
 |---|---|
 | **F1** | `ContestExchange` becomes a class. With B1 in place this is a parameter type on the repository, not a rewrite. **BLOCKED ON B5 -- see below** |
-| **F2** | Harvest per-contest initial state out of `FCONTEST.PAS`; the `config` table becomes the factory's input rather than a file |
+| **F2** | Harvest per-contest initial state out of `fcontest.pas`; the `config` table becomes the factory's input rather than a file |
 | **F3** | `case Contest of` -> the factory: scoring, multipliers, exchange parsing |
-| **F4** | The **sending** half of the rover problem. `MyGrid` is substituted textually into the F-key memories once, at `FCONTEST.PAS:481-482`, so an operator who edits it mid-contest **keeps sending the old grid and exports the new one**. C fixes the export half; only the factory fixes this half |
+| **F4** | The **sending** half of the rover problem. `MyGrid` is substituted textually into the F-key memories once, at `fcontest.pas:481-482`, so an operator who edits it mid-contest **keeps sending the old grid and exports the new one**. C fixes the export half; only the factory fixes this half |
 
 ---
 

@@ -7,7 +7,7 @@
 # a guess.  Runs ON THE MAC -- there is no macOS cross compiler on the Windows
 # box -- so the loop is: push from Windows, `git pull` here, run this.
 #
-#   ./tools/compile-darwin.sh uCTYDAT.PAS
+#   ./tools/compile-darwin.sh uctydat.pas
 #   ./tools/compile-darwin.sh utils/utils_file.pas      # subdirectories work
 #   ./tools/compile-darwin.sh --all                     # the pinned list
 #
@@ -115,7 +115,7 @@ uADIF.pas
 utils/utils_file.pas
 VC.pas
 cty.pas
-uCTYDAT.PAS
+uctydat.pas
 uCallSignRoutines.pas
 ComPortEnumerator.pas
 uSerialPort.pas

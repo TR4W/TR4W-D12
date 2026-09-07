@@ -117,7 +117,7 @@ NY4I: *"The TS950 does support the FR and FT commands. Just because the sim may
 not does not mean you can infer the radio doesn't. Challenge those assumptions by
 reading the TR4W legacy code."*
 
-`LOGRADIO.PAS:2066` and `:2135` settle it. TR4W has shipped this for years:
+`logradio.pas:2066` and `:2135` settle it. TR4W has shipped this for years:
 
 ```pascal
 TS140, TS440, TS450, TS480, TS570, TS590, TS690, TS850, TS870, TS890, TS940,

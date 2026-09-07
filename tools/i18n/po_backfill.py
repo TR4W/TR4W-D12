@@ -14,7 +14,7 @@ they went live on screen while being absent from every catalogue in every
 language -- 170 of 550 for Spanish. NY4I found it from the other end: the main
 menu says `Window` and there was no entry to translate (2026-08-27).
 
-169 of those 170 ALREADY HAVE SPANISH, sitting unused in TR4W_CONSTS_ESP.PAS
+169 of those 170 ALREADY HAVE SPANISH, sitting unused in tr4w_consts_esp.pas
 since the per-language-binary days -- RC_WINDOWS is 'Ventanas'. So the entries
 are seeded from each language's own table rather than left blank for a machine
 to guess at. Where a language has no translation the entry still appears, in

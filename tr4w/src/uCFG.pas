@@ -570,7 +570,7 @@ const
 // enabled".  It stored into the same boolean the band map window wrote from
 // WM_INITDIALOG and WM_DESTROY, so closing the window turned the setting off
 // and the next save persisted it -- see the comment on BandMapEnable in
-// LOGWIND.PAS.  csRem with a nil address, not deleted, so an existing .cfg or
+// logwind.pas.  csRem with a nil address, not deleted, so an existing .cfg or
 // tr4w.json that names it still loads and is ignored.
  (crCommand: 'BAND MAP ENABLE';               crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'BAND MAP GUARD BAND';           crAddress: @BandMapGuardBand;               crMin:100;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:1; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),

@@ -8,7 +8,7 @@ unit uTestSerialParams;
   generated from LOGRADIO's own two sources:
 
     baud       RadioParametersArray[<model>].br
-    stop bits  the typeset at LOGRADIO.PAS:1571 --
+    stop bits  the typeset at logradio.pas:1571 --
                  1 for [IC78..IC9700, FT100, ORION], 2 for everything else
     data/parity  8 / none, which LOGRADIO never varied
 

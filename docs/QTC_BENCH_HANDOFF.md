@@ -222,7 +222,7 @@ CATEGORY-TRANSMITTER in the Cabrillo summary used to be *supposed* to prompt for
 "transmiter 1 computers IDs". That prompt is deliberately disabled, because the
 value it collects (`Radio1IDs`) is **read by nothing** — the transmitter-id
 column in the Cabrillo QSO line is derived from something else entirely. See the
-note at that site in `trdos/PostUnit.PAS`, and Part 4.
+note at that site in `trdos/postunit.pas`, and Part 4.
 
 **The QTC-per-station table now allocates itself.** Saving a book used to be able
 to fault with an access violation, because the table counting QTCs per station
@@ -242,7 +242,7 @@ Cabrillo v3 says the QSO line's transmitter id is a single `0` or `1`
 identifying RUN/MULT or RUN1/RUN2, used in the one- and two-transmitter
 categories (M/2, CQWW M/S) and **not** in single-op or M/M.
 
-TR4W emits that column from `trdos/PostUnit.PAS`:
+TR4W emits that column from `trdos/postunit.pas`:
 
 ```pascal
 if CategoryOperator = coMULTIOP then

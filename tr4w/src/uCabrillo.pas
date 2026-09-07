@@ -24,7 +24,7 @@ unit uCabrillo;
     uCabrilloFormat    -- FormatCabrilloFreq / FormatCabrilloMode
     uExchangeBuilder   -- BuildSentExchangeText / BuildRxExchangeText
 
-  ...which are the same pure helpers PostUnit.PAS now imports, so the
+  ...which are the same pure helpers postunit.pas now imports, so the
   Cabrillo lines this unit produces agree with the final-log writer
   on freq, mode, and exchange shape.
 

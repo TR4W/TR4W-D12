@@ -735,7 +735,7 @@ end;
 >
 > Three further client-side paths ask "is this QSO mine?" as
 > `ceComputerID = ComputerID` -- `src/MainUnit.pas:9563`,
-> `src/trdos/LOGEDIT.PAS:1448`, and `src/trdos/PostUnit.PAS:3068`, the last being
+> `src/trdos/logedit.pas:1448`, and `src/trdos/postunit.pas:3068`, the last being
 > the Cabrillo transmitter-id column. Under a shared letter each station treats
 > some of the other's QSOs as its own, for editing and for export, and the log
 > looks like it merged correctly.

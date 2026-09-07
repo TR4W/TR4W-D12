@@ -467,7 +467,7 @@ begin
 
      if BytesRead < Buffer1Bytes then
         begin
-        //{WLI}            ReportError ('File read error!!  Line #721 in LOGSCP.PAS.');
+        //{WLI}            ReportError ('File read error!!  Line #721 in logscp.pas.');
     halt;
         end;
      end;
@@ -478,7 +478,7 @@ begin
 
      if BytesRead < Buffer2Bytes then
         begin
-        //                 ReportError ('File read error!!  Line #721 in LOGSCP.PAS.');
+        //                 ReportError ('File read error!!  Line #721 in logscp.pas.');
     halt;
         end;
      end;
@@ -489,7 +489,7 @@ begin
 
      if BytesRead < Buffer3Bytes then
         begin
-        //{WLI}            ReportError ('File read error!!  Line #721 in LOGSCP.PAS.');
+        //{WLI}            ReportError ('File read error!!  Line #721 in logscp.pas.');
     halt;
         end;
      end;

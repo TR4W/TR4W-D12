@@ -159,7 +159,7 @@ begin
    //
    // UpdateRestartFileEnable is the one worth reading twice: its DECLARATION
    // carried no initialiser, so the obvious default is False -- but
-   // CFGDEF.PAS:577 assigns True in SetConfigurationDefaultValues, which runs
+   // cfgdef.pas:577 assigns True in SetConfigurationDefaultValues, which runs
    // once at startup and before the config files. Taking the declaration at face
    // value would have stopped the restart file being maintained, silently.
    BeginTest('the SCP, band map and log-file defaults survived the move');

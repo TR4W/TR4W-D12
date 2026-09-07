@@ -6,7 +6,7 @@
 # ---------------------------------------------------------------------------
 # WHY THIS EXISTS
 # ---------------------------------------------------------------------------
-# FCONTEST.PAS picks the .dom file at contest setup like this:
+# fcontest.pas picks the .dom file at contest setup like this:
 #
 #     if FoundMyStateInDomFile then                       // operator IS in-state
 #        TempDomesticQTHDataFileName := QSOParties[...].InsideStateDOMFile
@@ -127,7 +127,7 @@ if ($problems.Count -gt 0)
    Write-Host "Lint-DomCoverage: $($problems.Count) domestic multiplier file(s) a defined QSO party needs are not shipping:" -ForegroundColor Red
    $problems | ForEach-Object { Write-Host $_ -ForegroundColor Red }
    Write-Host ""
-   Write-Host "  FCONTEST.PAS uses <base>.dom in-state and <base>_cty.dom out-of-state," -ForegroundColor Yellow
+   Write-Host "  fcontest.pas uses <base>.dom in-state and <base>_cty.dom out-of-state," -ForegroundColor Yellow
    Write-Host "  so BOTH must be in target\dom and named in full.nsi." -ForegroundColor Yellow
    exit 1
    }

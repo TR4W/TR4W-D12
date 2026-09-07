@@ -112,7 +112,7 @@ Alt+I writes to**:
   `WS_VISIBLE`, so it is far above the loop's `<= 2` skip test) -- a display
   label, not an editable field;
 * the only thing that writes it is `DisplayNextQSONumber`
-  (`LOGWIND.PAS:1496`), which renders `NextSerialToSend` -- the serial TR4W is
+  (`logwind.pas:1496`), which renders `NextSerialToSend` -- the serial TR4W is
   about to send;
 * so anything else written into it would be replaced the next time that runs,
   and it could not hold an operator's edit.

@@ -35,7 +35,7 @@ uses
    uCallSignRoutines;
 
 const
-   // Copied verbatim from LOGSTUFF.PAS:10534 -- the pattern TR4W uses today.
+   // Copied verbatim from logstuff.pas:10534 -- the pattern TR4W uses today.
    RX_POTA  = '^([A-Za-z]{2})-(\d{4,5})$';
    RX_GUIDP = '^[{]?[0-9a-fA-F]{8}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?' +
               '[0-9a-fA-F]{4}-?[0-9a-fA-F]{12}[}]?$';

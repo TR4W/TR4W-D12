@@ -91,10 +91,10 @@ Repo: `c:\tr4w-d12`, branch `main`, **FreePascal 3.2.2 + Lazarus LCL** (this lin
 >
 > Plan reviewed and still current, with two
 > post-plan updates from the 2026-07-30 session:
-> 1. **Line-number drift:** `LOGRADIO.PAS`, `LOGSUBS1/2.PAS`, and `uCAT.pas` were
+> 1. **Line-number drift:** `logradio.pas`, `LOGSUBS1/2.PAS`, and `uCAT.pas` were
 >    edited after this plan's references were taken (taxonomy-set retirement,
 >    serial-format work, parity conversion helpers). Anchors like
->    `LOGRADIO.PAS:2379/2398-2404` have shifted — re-grep (`-i`) every cited line
+>    `logradio.pas:2379/2398-2404` have shifted — re-grep (`-i`) every cited line
 >    before editing; the surrounding code is unchanged, only positions moved.
 > 2. **The LOGSUBS1 flush guard now actually works:** the deferred item
 >    "`rcCWFlushDisruptsTiming` flush guard → future dynamic capability" assumed
@@ -107,7 +107,7 @@ Repo: `c:\tr4w-d12`, branch `main`, **FreePascal 3.2.2 + Lazarus LCL** (this lin
 
 ## Context
 
-TR4W has four mutually-exclusive ways to key CW: CW-by-CAT (radio `SendCW` over the CAT link), a WinKeyer device (`uWinKey.pas`), the YCCC SO2R+ box (`uYCCCSO2R.pas`), and the CPU keyer toggling DTR/RTS/LPT (`K1EAKeyer` object in `LOGK1EA.PAS`, driven from `LogCW.pas`). `LogCW.pas` is already the de-facto facade (~200 call sites go through it), but internally each facade procedure re-implements the same 4-way `if/else` dispatch, and the copies have drifted: `FlushCWBuffer` never flushes the WinKeyer, `SetSpeed`'s YCCC arm is commented out, `DeleteLastCharacter` returns garbage on the WinKeyer path. There is no keyer-type enum — selection is three independent booleans (`wkActive`, `ycccActive`, per-radio `CWByCAT`) with precedence that differs between functions. ~12 consumer sites bypass the facade and branch on keyer type themselves.
+TR4W has four mutually-exclusive ways to key CW: CW-by-CAT (radio `SendCW` over the CAT link), a WinKeyer device (`uWinKey.pas`), the YCCC SO2R+ box (`uYCCCSO2R.pas`), and the CPU keyer toggling DTR/RTS/LPT (`K1EAKeyer` object in `logk1ea.pas`, driven from `LogCW.pas`). `LogCW.pas` is already the de-facto facade (~200 call sites go through it), but internally each facade procedure re-implements the same 4-way `if/else` dispatch, and the copies have drifted: `FlushCWBuffer` never flushes the WinKeyer, `SetSpeed`'s YCCC arm is commented out, `DeleteLastCharacter` returns garbage on the WinKeyer path. There is no keyer-type enum — selection is three independent booleans (`wkActive`, `ycccActive`, per-radio `CWByCAT`) with precedence that differs between functions. ~12 consumer sites bypass the facade and branch on keyer type themselves.
 
 This refactor introduces a `TCWKeyer` strategy class with four concrete keyers behind a single explicit selection function, collapsing the drifting dispatch chains into one. It mirrors the strangler pattern already proven on the radio factory (`uFactoryRadioBase.pas` / `uRadioRegistry.pas`).
 
@@ -226,14 +226,14 @@ procedure WarnIfKeyerConfigsConflict;   // call once after config load
 ## Adapter contents (thin delegation, verbatim semantics)
 
 **`TCWKeyerCAT`** (`'CW-by-CAT'`, `[ckDeleteLastChar, ckMessageChaining]`)
-- `SendString`: `if KeyersSwapped then InactiveRadioPtr.SendCW(Msg) else ActiveRadioPtr.SendCW(Msg)` (from LogCW.pas:236-243; Tone ignored). `ActiveRadioPtr/InActiveRadioPtr` are typed consts `@Radio1`/`@Radio2` at `LOGRADIO.PAS:413-414`.
+- `SendString`: `if KeyersSwapped then InactiveRadioPtr.SendCW(Msg) else ActiveRadioPtr.SendCW(Msg)` (from LogCW.pas:236-243; Tone ignored). `ActiveRadioPtr/InActiveRadioPtr` are typed consts `@Radio1`/`@Radio2` at `logradio.pas:413-414`.
 - `SendChar` (from MainUnit.pas:4520-4529 — **ActiveRadioPtr, no swap resolution, no UpCase** — preserved): `ActiveRadioPtr.SendCW(ch); ActiveRadioPtr.SendCW(CWByCATBufferTerminator);` (`CWByCATBufferTerminator = Chr(242)`, MainUnit.pas:480).
 - `StillBeingSent`: `Result := ActiveRadioPtr.CWByCAT_Sending;` (LogCW.pas:382)
 - `DeleteLastChar`: `Result := ActiveRadioPtr.DeleteLastCWCharacter;` (LogCW.pas:402)
 - `Flush`: verbatim LogCW.pas:421-434 — both radios, each gated by `CurrentStatus.Mode = CW` and `IsCWByCATActive(ptr)`, clears `CWByCATBuffer`, calls `StopSendingCW`, keeps DebugMsg lines.
 - `StopSending`: verbatim MainUnit.pas:858-863 (active-if-CAT-active else inactive-if-CAT-active).
 - `SetSpeed`: no-op (D4).
-- Calls `RadioObject` methods only — do NOT bypass into `tFactoryObject`; the commented kludge at `LOGRADIO.PAS:2398-2404` stays until legacy radio removal; this adapter is the future single repoint.
+- Calls `RadioObject` methods only — do NOT bypass into `tFactoryObject`; the commented kludge at `logradio.pas:2398-2404` stays until legacy radio removal; this adapter is the future single repoint.
 
 **`TCWKeyerWinKey`** (`'WinKeyer'`, `[ckTune, ckDeleteLastChar]`)
 - `SendString`: `wkAddCWMessageToInternalBuffer(Msg);` (uWinKey.pas:931)
@@ -280,7 +280,7 @@ All edits in `tr4w\src\trdos\LogCW.pas`; add the five units to implementation us
 5. **`SetSpeed` :594** — keep globals and order: set `DisplayedCodeSpeed`; if Speed > 0: `CodeSpeed := Speed; KeyerCPU.SetSpeed(Speed);` speed-sync block verbatim; `tSetPaddleElementLength; KeyerWinKey.SetSpeed(Speed); KeyerYCCC.SetSpeed(Speed);` (YCCC adapter no-op ⇒ :610 stays dead).
 6. **`InitializeKeyer` :2001** — append `WarnIfKeyerConfigsConflict;` (runs post-config-load via `LogCfg.pas:402`).
 7. **`SendStringAndStop` :538 — NOT rewired**: its terminator arm (:550-553) sends on `ActiveRadioPtr` without swap resolution, unlike AddStringToBuffer — leave verbatim (Q7).
-8. Optional dead-code removal (grep -i first): `KeyerBeingUsed` var LogCW.pas:93 (never read/written; enum `KeyerType` at LOGWIND.PAS:220 stays), commented `NEWCW: TCW` :199, no-op `SetPTT` :614 (zero callers). If any doubt, defer.
+8. Optional dead-code removal (grep -i first): `KeyerBeingUsed` var LogCW.pas:93 (never read/written; enum `KeyerType` at logwind.pas:220 stays), commented `NEWCW: TCW` :199, no-op `SetPTT` :614 (zero callers). If any doubt, defer.
 9. Add facade tests T4-T7.
 
 Gate: full build both, unit tests, corpus 22/0/4, bench checklist items 1-4 minimum (this is the commit that could regress keying).
@@ -294,8 +294,8 @@ Gate: full build both, unit tests, corpus 22/0/4, bench checklist items 1-4 mini
 - **Q6** CAT eligibility tests the ACTIVE radio, message keying targets the swap-resolved radio; autosend CAT chars always target the active radio.
 - **Q7** `SendStringAndStop` terminator → `ActiveRadioPtr` (not swap-resolved) — untouched.
 - **Q8** CPU `SendString` still clears `wkBusy` on thread spawn (4.90.5).
-- **Q9** `RadioObject.SendCW` guard (LOGRADIO.PAS:2379) still uses legacy `RadioSupportsCWByCAT` set, inconsistent with registry-based `IsCWByCATActive` — untouched until legacy radio removal.
-- **Q10** CAT busy is timer-guessed (`tmrCWByCAT`, LOGRADIO.PAS:2272), not read back — untouched.
+- **Q9** `RadioObject.SendCW` guard (logradio.pas:2379) still uses legacy `RadioSupportsCWByCAT` set, inconsistent with registry-based `IsCWByCATActive` — untouched until legacy radio removal.
+- **Q10** CAT busy is timer-guessed (`tmrCWByCAT`, logradio.pas:2272), not read back — untouched.
 
 ## Phase B — migrate bypass call sites (ordered, independently committable)
 
@@ -328,10 +328,10 @@ Exclusive-vs-OR deltas matter only in cross-keyer windows (e.g. `wkBUSY` latched
 `MainUnit.pas:855-864`: keep the `if (ActiveMode = CW)` shell; inner if/else → `KeyerCAT.StopSending;` (adapter body is verbatim :858-863). Behavior identical. Bench Escape during CAT send, both swap states.
 
 ### Deferred (documented, NOT this pass)
-- `LOGSUBS1.PAS:309-314` (`rcCWFlushDisruptsTiming` flush guard) → future dynamic capability on `KeyerCAT`.
-- `LOGSUBS1.PAS:536-540` — checks inactive radio, stops active radio (pre-existing oddity) — leave alone.
-- `LOGSUBS2.PAS:1716-1720` + LogSend terminator appends → future `ckMessageChaining`-gated facade helper (`EndCWMessage`).
-- `LOGK1EA.PAS:1325` commented wkActive branch — dead, ignore.
+- `logsubs1.pas:309-314` (`rcCWFlushDisruptsTiming` flush guard) → future dynamic capability on `KeyerCAT`.
+- `logsubs1.pas:536-540` — checks inactive radio, stops active radio (pre-existing oddity) — leave alone.
+- `logsubs2.pas:1716-1720` + LogSend terminator appends → future `ckMessageChaining`-gated facade helper (`EndCWMessage`).
+- `logk1ea.pas:1325` commented wkActive branch — dead, ignore.
 
 ## Test plan
 
@@ -447,6 +447,6 @@ Git: every command as `git -C /c/tr4w-d12 <subcommand>`, never a leading `cd`.
 - `c:\tr4w-d12\tr4w\src\MainUnit.pas` — IsCWByCATActive, autosend, busy predicates, Escape; most Phase B edits
 - `c:\tr4w-d12\tr4w\src\uFactoryRadioBase.pas` — house style reference (note: it DOES use Virtual;Abstract; TCWKeyer deliberately uses default bodies instead)
 - `c:\tr4w-d12\tr4w\src\uWinKey.pas` — WinKeyer procedural API the adapter wraps; async wkActive
-- `c:\tr4w-d12\tr4w\src\trdos\LOGK1EA.PAS` — CPUKeyer object the CPU adapter wraps
+- `c:\tr4w-d12\tr4w\src\trdos\logk1ea.pas` — CPUKeyer object the CPU adapter wraps
 - `c:\tr4w-d12\tr4w\src\uYCCCSO2R.pas` — YCCC procs the adapter wraps
 - `c:\tr4w-d12\tr4w\test\unit\tr4w_unit_tests.lpr` — unit listing + RegisterSuite pattern

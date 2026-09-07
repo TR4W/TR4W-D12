@@ -786,7 +786,7 @@ end;
 // operator's intent is preserved end-to-end.  Cabrillo emits the literal
 // KG1S/MON; ADIF emits the bare call in the standard <CALL> field plus the
 // full form in a TR4W-specific <APP_TR4W_ROVERCALL> field (handled at
-// export time in PostUnit.PAS).
+// export time in postunit.pas).
 //
 // At submit time (Enter, just before TryLogContact runs), if the operator
 // has not already typed an exchange, move the county from the call's slash-
@@ -2073,7 +2073,7 @@ end;
 // Where every window was left, into the 'windows' section of settings/tr4w.json.
 //
 // THE NAME IS NOW HISTORICAL.  It is kept because ExitProgram in
-// LOGSUBS2.PAS calls it and renaming a routine across the trdos boundary buys
+// logsubs2.pas calls it and renaming a routine across the trdos boundary buys
 // nothing; the file it used to write is described in uWindowLayoutStore.
 //
 // It used to be `sWriteFile(h, tr4w_WindowsArray, SizeOf(tr4w_WindowsArray))` --
@@ -5958,7 +5958,7 @@ end;
   open path calls this itself.
 
   THE GUARD ON rigName IS NOT PADDING. RadioName is INITIALISED to
-  TC_RADIO1/TC_RADIO2 (LOGRADIO.PAS) and only replaced when a definition is
+  TC_RADIO1/TC_RADIO2 (logradio.pas) and only replaced when a definition is
   applied, so appending it unconditionally reads "Radio 1 Radio 1" on a station
   with no radio configured -- the state this panel is most often opened in while
   one is being set up. An emptied slot lands there too, and correctly reads just
@@ -6420,7 +6420,7 @@ begin
      // rest of the UI is in.
      //
      // THE GUARD IS NOT DEFENSIVE PADDING. RadioName is INITIALISED to
-     // TC_RADIO1/TC_RADIO2 in LOGRADIO.PAS:3423 and is only replaced when a
+     // TC_RADIO1/TC_RADIO2 in logradio.pas:3423 and is only replaced when a
      // radio definition from the library is applied, so appending it
      // unconditionally reads "Radio 1 Radio 1" on a station with no radio
      // configured -- which is exactly the state this panel is most often opened
@@ -9880,7 +9880,7 @@ end;
   therefore did nothing when clicked. That button is removed with it rather
   than left as an affordance that answers nothing.
 
-  src\HtmlHelp.pas went too: a LoadLibrary of hhctrl.ocx, the HH_* command
+  src\Htmlhelp.pas went too: a LoadLibrary of hhctrl.ocx, the HH_* command
   constants, and an ANSI/wide entry-point pair. *)
 
 procedure RunExplorer(Command: PAnsiChar);

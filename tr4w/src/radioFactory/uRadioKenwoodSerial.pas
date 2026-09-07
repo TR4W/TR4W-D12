@@ -465,7 +465,7 @@ end;
 procedure TKenwoodSerial.Split(splitOn: boolean);
 begin
   // FR0; FIRST, then FT.  FT alone selects the TX VFO, but the legacy path has
-  // always sent BOTH (LOGRADIO.PAS:2066 / :2135, 'FR0;FT1;' and 'FR0;FT0;') and
+  // always sent BOTH (logradio.pas:2066 / :2135, 'FR0;FT1;' and 'FR0;FT0;') and
   // carries a maintainer's warning about exactly this:
   //
   //   {KK1L: 6.71 For some reason needed this to get the FT1; command to take.

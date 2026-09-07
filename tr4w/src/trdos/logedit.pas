@@ -2271,7 +2271,7 @@ begin
     straight to the operator as the initial exchange.
 
     Inherited from D7, where the same line is commented out (C:\TR4W
-    LOGEDIT.PAS:2302). It rarely bit under Delphi because that stack was
+    logedit.pas:2302). It rarely bit under Delphi because that stack was
     usually zero there; FPC's is not, which is the same way the dangling
     PChar in the Cabrillo writer surfaced. }
   TempString := '';
@@ -2515,7 +2515,7 @@ begin
            { ctyGetZone reports failure with TWO different values, and they
              mean different things: DUMMYZONE (255) when the call could not be
              located at all, and 0 when it WAS located but no zone could be
-             resolved for the active zone mode -- uCTYDAT.PAS initialises
+             resolved for the active zone mode -- uctydat.pas initialises
              Result to 0 and falls back to it.  Guarding on DUMMYZONE alone let
              the 0 through, and Str() then wrote a literal "0" into the
              operator's exchange window as though it were a real zone

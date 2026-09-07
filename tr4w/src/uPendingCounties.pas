@@ -22,7 +22,7 @@ unit uPendingCounties;
 
   When the operator's exchange names more than one county for the same QSO --
   either slash-separated ("DAL/BAY") or space-separated ("DAL BAY") -- the
-  parser in LOGSTUFF.PAS (ProcessRSTAndDomesticQTHExchange) keeps the first
+  parser in logstuff.pas (ProcessRSTAndDomesticQTHExchange) keeps the first
   valid county in RXData.QTHString for the QSO it is currently building, and
   pushes any additional valid counties onto this queue.
 

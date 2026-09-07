@@ -204,7 +204,7 @@ the second group were on screen.
     They do not, for two independent reasons NY4I pointed out and the tree
     confirms:
 
-    * `MultiTimeMessage` is declared in `LOGSTUFF.PAS:86` as
+    * `MultiTimeMessage` is declared in `logstuff.pas:86` as
       `{ TR6.75 - Reception only from CT Network }` -- TR4W SENDS it and has no
       handler that receives it. The garbage went onto the wire and nothing in
       TR4W consumed it.
@@ -1888,7 +1888,7 @@ side by side because getting them backwards would be easy to miss:
 - [x] With `MULTIPLE BANDS = TRUE`, no message and band change works as before.
 
 The CAUSE of NY4I hitting this is not fixed here and is not meant to be: a
-`csJSON` stored setting outlives contest selection, so `FCONTEST.PAS`'s
+`csJSON` stored setting outlives contest selection, so `fcontest.pas`'s
 per-contest initialisation never took effect on a newly selected CQ WW. NY4I
 owns that -- the contest factory harvests those states.
 
@@ -2514,7 +2514,7 @@ against editing "one of your five most recent QSOs (i.e., the QSOs in the
 editable log) using the alt-E command". The Edit QSO dialog **is** that editor
 today -- `MainUnit.pas:6026` opens it from the editable log via
 `IndexOfItemInLogForEdit`. The DOS-era in-place line editor that used to serve
-Alt-E, `EditWindowEditor` in `HELP.PAS`, has its whole body inside a 387-line
+Alt-E, `EditWindowEditor` in `help.pas`, has its whole body inside a 387-line
 block comment (lines 1225-1612) and both of its callers are commented out too,
 so `uEditQSO.pas` is the only live reader of the setting. (The manual's "five" is
 the array bound `NumberEditableLines`, not the selectable row count; NY4I's note

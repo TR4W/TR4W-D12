@@ -39,7 +39,7 @@ def live_resourcestrings(repo):
    constants were when it was written. RC_ constants became resourcestrings in
    the binary during the cut-over, so they were live, on screen, and in NO
    catalogue in ANY language: 170 of 550 for Spanish, of which 169 already had a
-   Spanish translation sitting unused in TR4W_CONSTS_ESP.PAS.
+   Spanish translation sitting unused in tr4w_consts_esp.pas.
 
    That is how RC_WINDOWS -- the main menu's `Window` -- had no entry to fill in
    (NY4I, 2026-08-27), while 'Ventanas' sat in the language table all along.

@@ -122,7 +122,7 @@ type
         Found again in NY4I's own log, by the report SetMainWindowText carries:
 
           [Thread] SetMainWindowText called from thread 18976, NOT the main
-          thread -- caller TDISPALYONAIRTIME, line 3690 of LOGWIND.PAS
+          thread -- caller TDISPALYONAIRTIME, line 3690 of logwind.pas
 
         It has to move before that call site can become a plain property
         assignment, because the funnel's report is the only thing standing

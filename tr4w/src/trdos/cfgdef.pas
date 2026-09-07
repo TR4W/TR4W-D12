@@ -302,7 +302,7 @@ begin
   //  PacketAutoCR := False;
   //  PacketMessMode := False;
   //  PacketReturnPerMinute := 0;
-  //  PacketSpotComment := ''; {KK1L: 6.68} {KK1L: 6.71 moved here from LOGWIND.PAS}
+  //  PacketSpotComment := ''; {KK1L: 6.68} {KK1L: 6.71 moved here from logwind.pas}
   //  PacketSpotDisable := False;
   //  PacketSpotEditEnable := False;
   //  PacketSpotKey := '`';

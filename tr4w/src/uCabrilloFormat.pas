@@ -23,7 +23,7 @@ unit uCabrilloFormat;
 
   WHY THIS UNIT EXISTS
   --------------------
-  The full per-QSO Cabrillo line writer is 1,226 lines inside PostUnit.PAS
+  The full per-QSO Cabrillo line writer is 1,226 lines inside postunit.pas
   with deep global-state and contest-specific branches.  Lifting the whole
   thing out is L-effort and not warranted in the pre-migration window.
 
@@ -37,7 +37,7 @@ unit uCabrilloFormat;
   and are easy to unit-test against the Cabrillo spec
   (https://wwrof.org/cabrillo/cabrillo-qso-data/).
 
-  PostUnit.PAS calls these helpers; the two source-of-truth tables
+  postunit.pas calls these helpers; the two source-of-truth tables
   (tCabrilloFreqString, tCabrilloModeString) live here so any unit that
   used to import them from PostUnit only needs to `uses uCabrilloFormat`
   going forward.

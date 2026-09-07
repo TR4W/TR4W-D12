@@ -253,7 +253,7 @@ begin
          { A model that declares its own reverse byte gets it; the rest fall
            back to plain CW, which is what this line used to do for ALL of
            them. D7 sent /usr/bin/bash3 for the FT-100 and FT-920 when the operator had
-           CW REVERSE set (LOGRADIO.PAS:3403), so for those two the fallback
+           CW REVERSE set (logradio.pas:3403), so for those two the fallback
            was a silent regression. }
          if FModeCWRev <> MODEBYTE_NONE then
             begin

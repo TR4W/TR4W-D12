@@ -10,7 +10,7 @@ that the sims contradict the library).
 This is a build-time text-parse comparison of what each TR4W factory radio
 declares in `FCapabilities.Flags` / `CWSpeedMin..Max` / `SerialParams(...)`
 against what the corresponding HamLib `struct rig_caps` states. The join key is
-the `hamlibID` column of `RadioParametersArray` in `tr4w/src/trdos/LOGRADIO.PAS`.
+the `hamlibID` column of `RadioParametersArray` in `tr4w/src/trdos/logradio.pas`.
 
 **Evidence asymmetry (core rule):** an independent implementation is EVIDENCE
 when it STATES something and close to WORTHLESS when it OMITS something.

@@ -59,7 +59,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
       https://github.com/ny4i/TR4QT/blob/master/docs/kenwood-direct-connection-flow.md
 
   Credentials (NetworkUsername / NetworkPassword) are set by
-  RadioObject.SetUpRadioInterface in LOGRADIO.PAS after the factory
+  RadioObject.SetUpRadioInterface in logradio.pas after the factory
   constructs the instance. If NetworkUsername is empty, the auth
   handshake is skipped (useful for a future simulator path).
 }

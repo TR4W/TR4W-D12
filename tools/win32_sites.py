@@ -226,7 +226,7 @@ def scan(path):
 #
 # tr4wserver is a DIFFERENT PROGRAM: a console app with no LCL, so its Win32
 # use is not part of the app's conversion at all.
-API_HEADERS = ('uCommctrl.pas', 'MMSystem.pas', 'HtmlHelp.pas')
+API_HEADERS = ('uCommctrl.pas', 'MMSystem.pas', 'Htmlhelp.pas')
 OTHER_PROGRAM = ('tr4wserverUnit.pas', 'tr4wserver')
 
 

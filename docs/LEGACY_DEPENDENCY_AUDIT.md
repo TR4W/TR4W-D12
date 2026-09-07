@@ -47,7 +47,7 @@ Where each value really comes from:
 | parity | `CFGDEF:392/412` = `tNoParity` | No, never varied |
 | **stop bits** | `InitRadios` = 2, then **overwritten on every port init** | **YES** |
 
-The per-model stop-bit rule, `LOGRADIO.PAS:1571-1578`, inside
+The per-model stop-bit rule, `logradio.pas:1571-1578`, inside
 `CheckAndInitializePorts_ForThisRadio`, which runs immediately before
 `SetUpRadioInterface`:
 

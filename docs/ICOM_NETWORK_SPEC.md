@@ -74,7 +74,7 @@ TNetRadioBase (existing, unchanged)
 | `src/uRadioFactory.pas` | Add new `TRadioModel` enum entries, factory creation cases |
 | `src/uCAT.pas` | Add username/password fields to dialog, auto-fill port 50001 for Icom network radios |
 | `src/VC.pas` | Add new `InterfacedRadioType` entries for new radios |
-| `src/trdos/LOGRADIO.PAS` | Add `MapRadioModelToFactory` cases for new radios, add network config fields to radio record |
+| `src/trdos/logradio.pas` | Add `MapRadioModelToFactory` cases for new radios, add network config fields to radio record |
 | `src/trdos/CFGCMD.pas` | Add config commands for Icom network username/password |
 
 ---
@@ -425,7 +425,7 @@ TRadioModel = (
 
 ### CRITICAL: Factory/Legacy Boundary Safety
 
-The `MapRadioModelToFactory` function in `LOGRADIO.PAS` is the **sole gatekeeper** between the legacy serial code path and the modern factory path. It maps `InterfacedRadioType` (the legacy enum used in configuration) to `TRadioModel` (the factory enum).
+The `MapRadioModelToFactory` function in `logradio.pas` is the **sole gatekeeper** between the legacy serial code path and the modern factory path. It maps `InterfacedRadioType` (the legacy enum used in configuration) to `TRadioModel` (the factory enum).
 
 **How the boundary works:**
 1. User selects a radio (e.g., FT-991) in the config dialog → stored as `InterfacedRadioType`
@@ -475,7 +475,7 @@ begin
 end;
 ```
 
-**Factory creation:** For Icom radios, `CreateRadioNetwork` creates the appropriate subclass and sets up the network transport. `CreateRadioSerial` creates the same subclass but leaves the transport as nil (uses base class serial). Radios NOT in the factory (FT-991, K3, etc.) never reach this code — they are handled entirely by the legacy serial path in `LOGRADIO.PAS`.
+**Factory creation:** For Icom radios, `CreateRadioNetwork` creates the appropriate subclass and sets up the network transport. `CreateRadioSerial` creates the same subclass but leaves the transport as nil (uses base class serial). Radios NOT in the factory (FT-991, K3, etc.) never reach this code — they are handled entirely by the legacy serial path in `logradio.pas`.
 
 ### 5.7 Radio Config Dialog Updates (`uCAT.pas`)
 
@@ -585,9 +585,9 @@ Worker thread: recvfrom(FCivSocket) → raw UDP datagram
 | IC-905 | $AC | $E0 | Standard ($25) | Standard | **No - must add** | **No - must add** | VHF/UHF/SHF |
 | IC-9700 | $A2 | $E0 | Standard ($25) | Standard | Yes | Yes (RA: $A2) | Already in TR4W (serial) |
 
-**CI-V address source:** The `RA` field in `RadioParametersArray` (LOGRADIO.PAS) is the authoritative source for CI-V addresses for radios already in the codebase. For IC-905 and IC-7300MK2 (not yet in codebase), addresses need verification. The capabilities packet received during handshake also reports the CI-V address and can be used to confirm/override.
+**CI-V address source:** The `RA` field in `RadioParametersArray` (logradio.pas) is the authoritative source for CI-V addresses for radios already in the codebase. For IC-905 and IC-7300MK2 (not yet in codebase), addresses need verification. The capabilities packet received during handshake also reports the CI-V address and can be used to confirm/override.
 
-**New entries required in VC.pas `InterfacedRadioType` and LOGRADIO.PAS `RadioParametersArray`:**
+**New entries required in VC.pas `InterfacedRadioType` and logradio.pas `RadioParametersArray`:**
 - `IC7300MK2` - must be added at end of enum. CI-V address $B6.
 - `IC905` - must be added in the Icom range. CI-V address $AC (to be verified).
 
@@ -666,7 +666,7 @@ ICOM NETWORK PASSWORD = pass
 ### Phase 3: Configuration
 8. Update `uCAT.pas` - Dialog fields for username/password/discover
 9. Update `CFGCMD.pas` - Config commands
-10. Update `VC.pas` and `LOGRADIO.PAS` - Radio type enum entries and mapping
+10. Update `VC.pas` and `logradio.pas` - Radio type enum entries and mapping
 
 ### Phase 4: Testing
 11. Test with IC-7760 hardware (primary test radio)
@@ -680,7 +680,7 @@ ICOM NETWORK PASSWORD = pass
 
 ### 11.1 Resolved Questions
 
-1. **IC-7600 CI-V address:** **RESOLVED.** Confirmed `$7A` from `RadioParametersArray` in LOGRADIO.PAS (RA field).
+1. **IC-7600 CI-V address:** **RESOLVED.** Confirmed `$7A` from `RadioParametersArray` in logradio.pas (RA field).
 2. **IC-905 CI-V address:** **RESOLVED.** Confirmed `$AC`. IC-905 does not exist in the codebase yet — needs to be added to `InterfacedRadioType` and `RadioParametersArray`.
 3. **IC-7850 vs IC-7851:** **RESOLVED.** Confirmed identical from protocol perspective. Both use CI-V address `$8E` in `RadioParametersArray`. Treat as same radio.
 4. **Firewall considerations:** **RESOLVED.** Windows will prompt the user to allow UDP through the firewall on first connection. Document this requirement in user documentation; do not programmatically modify firewall rules.

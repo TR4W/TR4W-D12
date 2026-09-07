@@ -92,11 +92,11 @@
         <IsPartOfProject Value="True"/>
       </Unit8>
       <Unit9>
-        <Filename Value="src/trdos/CFGDEF.PAS"/>
+        <Filename Value="src/trdos/cfgdef.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit9>
       <Unit10>
-        <Filename Value="src/trdos/FCONTEST.PAS"/>
+        <Filename Value="src/trdos/fcontest.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit10>
       <Unit11>
@@ -108,56 +108,56 @@
         <IsPartOfProject Value="True"/>
       </Unit12>
       <Unit13>
-        <Filename Value="src/trdos/LOGDOM.PAS"/>
+        <Filename Value="src/trdos/logdom.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit13>
       <Unit14>
-        <Filename Value="src/trdos/LOGDUPE.PAS"/>
+        <Filename Value="src/trdos/logdupe.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit14>
       <Unit15>
-        <Filename Value="src/trdos/LOGDVP.PAS"/>
+        <Filename Value="src/trdos/logdvp.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit15>
       <Unit16>
-        <Filename Value="src/trdos/LOGEDIT.PAS"/>
+        <Filename Value="src/trdos/logedit.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit16>
       <Unit17>
-        <Filename Value="src/trdos/LOGGRID.PAS"/>
+        <Filename Value="src/trdos/loggrid.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit17>
       <Unit18>
-        <Filename Value="src/trdos/LOGK1EA.PAS"/>
+        <Filename Value="src/trdos/logk1ea.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit18>
       <Unit19>
-        <Filename Value="src/trdos/LOGNET.PAS"/>
+        <Filename Value="src/trdos/lognet.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit19>
       <Unit20>
-        <Filename Value="src/trdos/LOGPACK.PAS"/>
+        <Filename Value="src/trdos/logpack.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit20>
       <Unit21>
-        <Filename Value="src/trdos/LOGRADIO.PAS"/>
+        <Filename Value="src/trdos/logradio.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit21>
       <Unit22>
-        <Filename Value="src/trdos/LOGSCP.PAS"/>
+        <Filename Value="src/trdos/logscp.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit22>
       <Unit23>
-        <Filename Value="src/trdos/LOGSTUFF.PAS"/>
+        <Filename Value="src/trdos/logstuff.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="LogStuff"/>
       </Unit23>
       <Unit24>
-        <Filename Value="src/trdos/LOGWAE.PAS"/>
+        <Filename Value="src/trdos/logwae.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit24>
       <Unit25>
-        <Filename Value="src/trdos/LOGWIND.PAS"/>
+        <Filename Value="src/trdos/logwind.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit25>
       <Unit26>
@@ -165,15 +165,15 @@
         <IsPartOfProject Value="True"/>
       </Unit26>
       <Unit27>
-        <Filename Value="src/trdos/ZONECONT.PAS"/>
+        <Filename Value="src/trdos/zonecont.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit27>
       <Unit28>
-        <Filename Value="src/trdos/LOGSUBS2.PAS"/>
+        <Filename Value="src/trdos/logsubs2.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit28>
       <Unit29>
-        <Filename Value="src/trdos/LOGSUBS1.PAS"/>
+        <Filename Value="src/trdos/logsubs1.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit29>
       <Unit30>
@@ -185,7 +185,7 @@
         <IsPartOfProject Value="True"/>
       </Unit31>
       <Unit32>
-        <Filename Value="src/trdos/PostUnit.PAS"/>
+        <Filename Value="src/trdos/postunit.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit32>
       <Unit33>
@@ -429,7 +429,7 @@
         <IsPartOfProject Value="True"/>
       </Unit92>
       <Unit93>
-        <Filename Value="src/uLogEdit.pas"/>
+        <Filename Value="src/ulogedit.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit93>
       <Unit94>
@@ -521,7 +521,7 @@
         <IsPartOfProject Value="True"/>
       </Unit115>
       <Unit116>
-        <Filename Value="src/HtmlHelp.pas"/>
+        <Filename Value="src/Htmlhelp.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit116>
       <Unit117>
@@ -541,7 +541,7 @@
         <IsPartOfProject Value="True"/>
       </Unit120>
       <Unit121>
-        <Filename Value="src/uCTYDAT.PAS"/>
+        <Filename Value="src/uctydat.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit121>
       <Unit122>

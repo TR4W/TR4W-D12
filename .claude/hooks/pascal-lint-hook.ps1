@@ -35,7 +35,7 @@ $norm = $file -replace '/', '\'
 # Run git against the worktree that actually contains the edited file (not a
 # hardcoded repo path) so diff-scoping works in linked worktrees too.
 $GitDir = Split-Path -Parent $file
-if ($norm -match '~$')          { exit 0 }   # editor backup (e.g. PostUnit.PAS~)
+if ($norm -match '~$')          { exit 0 }   # editor backup (e.g. postunit.pas~)
 if ($norm -match '\\include\\') { exit 0 }   # bundled Indy / third-party
 $isPas = $norm -match '\.pas$'
 # .lpr as well as .dpr: the program files were renamed on 2026-08-29 (this is

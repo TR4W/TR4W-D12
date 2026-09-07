@@ -261,8 +261,8 @@ stronger than convenience.**
 back OUT of the control:
 
 ```
-LOGEDIT.PAS:1380   ListView_GetItemText(wh[mweEditableLog], Entry, ...)
-LOGEDIT.PAS:1449   ListView_GetItemText(wh[mweEditableLog], Index, Ord(logColCall...
+logedit.pas:1380   ListView_GetItemText(wh[mweEditableLog], Entry, ...)
+logedit.pas:1449   ListView_GetItemText(wh[mweEditableLog], Index, Ord(logColCall...
 uQuickEdit.pas:68  ListView_GetItemText(wh[mweEditableLog], 1, ColumnsArray[...]
 ```
 
@@ -652,7 +652,7 @@ section.** `grep -r --include='*.pas'` matches the FILE NAME case-sensitively, a
 UPPERCASE extensions — 27 `.PAS` files against 334 `.pas`. So that glob silently skips the entire
 contest engine. It is how `tAddContestExchangeToLog` was undercounted, and on 2026-08-20 it nearly
 produced a much worse claim: that `SaveTR4WPOSFILE` had no callers and window positions were never
-saved. It is called from `LOGSUBS2.PAS:728` in `ExitProgram`, exactly as in D7.
+saved. It is called from `logsubs2.pas:728` in `ExitProgram`, exactly as in D7.
 
 Use `--include='*.[pP][aA][sS]'` or no glob at all. `.dpr`, `.inc`, `.dpk` and `.lpr` are uniformly
 lowercase in this tree and in `C:\TR4W`, so only `.pas` varies today — but the failure is silent, so
@@ -661,15 +661,15 @@ do not rely on that.
 Re-audited under the correct glob on 2026-08-20, the rest of this section holds: `CreateEditableLog`
 really does have four callers, nothing in trdos calls `CheckSynchronize`, and the cluster path really
 does only set `BandMapNeedsRefresh` rather than repainting (`uTelnet.pas:1771`, with a comment saying
-why). One addition for the panel conversion: `SwapRadios` (`LOGSUBS1.PAS:668-674`) calls
+why). One addition for the panel conversion: `SwapRadios` (`logsubs1.pas:668-674`) calls
 `InvalidateRect` on both radio panels. That is the OPERATOR's thread, so it needs no marshalling — but
 it is a raw-HWND call site that becomes the form's `Invalidate`.
 
 **Related scoping note (same date):** dialog 73 also should NOT be converted before the shared
 editable-log control is. `CreateEditableLog` has four callers — the main window's editable log,
 Log Edit, Log Search and the sync-log dialog — and `tAddContestExchangeToLog` has **seven**, not the
-five first written here: `LOGSTUFF.PAS:6213` also renders into `tPreviousDupeQSOsWndHandle`, an
-EIGHTH window this section did not list, and `LOGSUBS2.PAS:2953` into the main editable log.
+five first written here: `logstuff.pas:6213` also renders into `tPreviousDupeQSOsWndHandle`, an
+EIGHTH window this section did not list, and `logsubs2.pas:2953` into the main editable log.
 (Corrected 2026-08-20 — the original count came from a `grep --include=*.pas`, which is blind to the
 27 UPPERCASE `.PAS` files in `src/trdos`. See the note at the end of this section.) Converting
 73 alone would create a second, LCL implementation of the QSO list beside the Win32 one, which is
@@ -881,7 +881,7 @@ optimism in that: *"let's not make light of the fact that ContestExchange is eve
 contest logic. Changing that is a pretty significant undertaking, and that of anything is probably a
 candidate for a shim more than anything else."*
 
-Measured: **430 references across 34 units** — `LOGSTUFF.PAS` 94, `MainUnit` 60, `LOGSUBS2` 36,
+Measured: **430 references across 34 units** — `logstuff.pas` 94, `MainUnit` 60, `LOGSUBS2` 36,
 `LOGDUPE` 34, and the ADIF, server, external-logger and HamScore paths behind them. This record is
 not a data structure the log happens to use; it is the currency the whole contest engine is written
 in. So it is persisted, not replaced — see `SQLITE_LOG_SCHEMA_PLAN.md` §4d.
@@ -1019,7 +1019,7 @@ code review, and it is the reason the FMX twins should not be deleted yet.
   an empty `begin end`, which is why nobody ever noticed: clicking a tray icon that does not
   exist, to reach a handler that does nothing.
 
-  **This one the compiler CAN vouch for**, unlike `HELP.PAS`. That unit is in no program's uses
+  **This one the compiler CAN vouch for**, unlike `help.pas`. That unit is in no program's uses
   clause, so deleting it proved nothing and it was kept. This one is linked, so removing it from
   `tr4w.lpr` and getting a green `FullBuild` is real evidence. Take the `WM_TRAYBALLON` case
   label and its `VC.pas` constant with it, and `Lint-AppMessages` will confirm the allow-list
@@ -1031,7 +1031,7 @@ code review, and it is the reason the FMX twins should not be deleted yet.
   setting entirely and let the operator **drag the log panel taller**, keeping the fixed-aspect
   regions above and below it as they are. Belongs to the main-window work in §2, because that is
   when the log stops being a hand-placed Win32 child and gains a layout that can express "this one
-  grows". Worth noting while there: `NumberEditableLines = 5` in `LOGWIND.PAS` is a **constant**
+  grows". Worth noting while there: `NumberEditableLines = 5` in `logwind.pas` is a **constant**
   that bounds `LogEntryArray`, so it is a separate thing from the selectable count despite the
   similar name — a resizable log has to reconcile the two.
 

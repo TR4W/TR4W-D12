@@ -701,7 +701,7 @@ begin
             end;
      end;
   // Was `Display` -- a model routine painting a control.  Its caller
-  // (LOGSUBS2.PAS:1710) calls DisplayBandMap immediately afterwards anyway.
+  // (logsubs2.pas:1710) calls DisplayBandMap immediately afterwards anyway.
   RequestRepaint;
 end;
 

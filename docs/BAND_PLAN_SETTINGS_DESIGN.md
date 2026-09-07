@@ -15,10 +15,10 @@ should move to `settings\tr4w.json` keyed by band, and get two grids — frequen
 Read from the code, not from the ini:
 
 ```pascal
-TFreqMemoryType = array[BandType, CW..Phone] of LONGINT;   // LOGWIND.PAS:125
-DefaultFreqMemory : TFreqMemoryType = ( ... );             // LOGWIND.PAS:600
+TFreqMemoryType = array[BandType, CW..Phone] of LONGINT;   // logwind.pas:125
+DefaultFreqMemory : TFreqMemoryType = ( ... );             // logwind.pas:600
 
-BandMapModeCutoffFrequency : array[Band160..Band2] of LONGINT = ( ... );  // LOGWIND.PAS:516
+BandMapModeCutoffFrequency : array[Band160..Band2] of LONGINT = ( ... );  // logwind.pas:516
 ```
 
 | | shape | mode axis | bands |
@@ -33,7 +33,7 @@ why an editor can safely show every cell pre-filled.
 ### The band is DERIVED, never stated
 
 Neither ini line names its band. `F_FREQUENCY_MEMORY` (`uCFG.pas:1827`) and
-`AddBandMapModeCutoffFrequency` (`LOGWIND.PAS:3156`) both call `CalculateBandMode(Freq, …)` and use
+`AddBandMapModeCutoffFrequency` (`logwind.pas:3156`) both call `CalculateBandMode(Freq, …)` and use
 the answer as the array index:
 
 ```pascal
@@ -113,7 +113,7 @@ default" rather than as an omission — and clearing a cell restores the default
 zero.
 
 The Band Map cutoffs go on the Band Map page rather than the new one because that is what they
-affect (`LOGWIND.PAS:3145` uses them to decide a spot's mode), and because the page already exists.
+affect (`logwind.pas:3145` uses them to decide a spot's mode), and because the page already exists.
 
 ## What has to be built
 

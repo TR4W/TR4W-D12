@@ -204,7 +204,7 @@ appropriate "## 4.147.x" month group below, and bump tr4w/src/Version.pas to mat
 
 ### 4.148.16 (2026-06-19) — NY4I
 
-#### Radio Control: K3/KX3/K4 CW-by-CAT short messages (`src/trdos/LOGRADIO.PAS`, `src/uRadioPolling.pas`) — PR #1057
+#### Radio Control: K3/KX3/K4 CW-by-CAT short messages (`src/trdos/logradio.pas`, `src/uRadioPolling.pas`) — PR #1057
 
 - **Short CW-by-CAT messages (`?`, `AGN`) now key reliably on the K3/KX3/K4 over serial.** The radio accepts a short `KY` on its own, so the failure was poll/CW contention on the shared serial port — the `pKenwood2` `IF;` poll flood could step on the `KY` write. Added a per-radio serial critical section so a poll cycle and a CW write can't overlap, plus a poll-pause while a CW-by-CAT message is keying (`CWByCAT_Sending`); both gated on `CWByCAT` so non-CWByCAT / WinKeyer radios run the unchanged path. Short K3/KX3/K4 `KY` text is padded to `maxLen` (the radio trims trailing fill under P1=space) so a short message survives the keyer-abort, and CW elements are counted on the unpadded text so `tmrCWByCAT` isn't inflated. Added a hex dump in `WriteToCATPort` for the non-Icom path so control bytes (e.g. the K3 `Chr(4)` keyer-abort) are visible in traces.
 
@@ -224,7 +224,7 @@ appropriate "## 4.147.x" month group below, and bump tr4w/src/Version.pas to mat
 
 ### 4.148.15 (2026-06-18) — NY4I
 
-#### CW: resend key moved to Ctrl+= (`src/trdos/LOGSUBS1.PAS`, `src/MainUnit.pas`) — PR #1054
+#### CW: resend key moved to Ctrl+= (`src/trdos/logsubs1.pas`, `src/MainUnit.pas`) — PR #1054
 
 - **The "resend last CW message" key moved from `=` to `Ctrl+=`.** `=` collided with Quick QSL Key 2; resend is now `Ctrl+=` (`WM_KEYDOWN`, `VK_OEM_PLUS`), gated to CW mode in the call/exchange windows. Added diagnostic logging around the resend path.
 
@@ -232,7 +232,7 @@ appropriate "## 4.147.x" month group below, and bump tr4w/src/Version.pas to mat
 
 ### 4.148.14 (2026-06-14) — NY4I
 
-#### ADIF Export (`src/trdos/PostUnit.PAS`, `src/uADIF.pas`) — Issue #1050
+#### ADIF Export (`src/trdos/postunit.pas`, `src/uADIF.pas`) — Issue #1050
 
 - **Duplicate `STX_STRING` on Field Day / Winter Field Day removed**: the export tail emitted `STX_STRING` twice for FD/WFD — once from the general `GetMyExchangeForExport` path and again from an explicit `MyFDClass + ' ' + MySection` line. Both contests use `AE = ClassDomesticOrDXQTHExchange`, so the general emitter already produces the identical `"<class> <section>"`; the explicit copy was only meaningful while the general emitter returned its `'Error generating my exchange'` default (pre-#1049). Dropped the explicit emission; `ARRL_SECT` and `CLASS` retained.
 - **`STATE` is now contest-dependent, not inferred from `QTHString`**: `uADIF.EmitADIFRecord` no longer emits `STATE` from a bare 2-char `QTHString` (which mislabeled section-based contests, e.g. ARRL section `EB` → `STATE=EB`). The body emits `STATE` only for single-state QSO parties via `GetStateForContest`; FD/WFD derive `STATE` from the section (`GetStateFromSection`) and emit `DXCC` (291 US / 1 VE) in the tail; POTA emits `DXCC` when the worked exchange is a US state. ARRL-section contests other than FD/WFD (Sweepstakes, ARRL-160) emit `ARRL_SECT` only (no `STATE`) pending the canonical-section fix in #1052.
@@ -241,7 +241,7 @@ appropriate "## 4.147.x" month group below, and bump tr4w/src/Version.pas to mat
 
 ### 4.148.13 (2026-06-14) — NY4I
 
-#### ADIF Export (`src/trdos/PostUnit.PAS`) — Issue #1049
+#### ADIF Export (`src/trdos/postunit.pas`) — Issue #1049
 
 - **`STX_STRING` was `"Error generating my exchange"` on every exported record.** The array-based `ExportToADIF` first reads every QSO into the `records` array via `ReadLogFile`, which overwrites the global `TempRXData` each iteration — so the loop leaves `TempRXData` pointing at the *last* record read (typically a deleted QSO at end of log). `ExportADIFToString` then calls the tail emitter `EmitContestSpecificTailForExport(rec)` per record, but the legacy `GetMyExchangeForExport` and its `GoodLookingQSO` guard read the global `TempRXData`, not `rec`. `GoodLookingQSO` therefore saw `ceQSO_Deleted = True` for every record, the `case ActiveExchange` was skipped, and `Result` stayed at its `'Error generating my exchange'` default. The same staleness would have made serial-number contests reuse the last QSO's sent serial. Fixed by assigning `TempRXData := rec` at the top of `EmitContestSpecificTailForExport`, restoring the "`TempRXData` is the current record" invariant the legacy helpers rely on. Deeper fix (passing `rec` into `GetMyExchangeForExport`) deferred to the Delphi-12 Cabrillo/exchange-formatter capstone.
 
@@ -253,7 +253,7 @@ appropriate "## 4.147.x" month group below, and bump tr4w/src/Version.pas to mat
 
 ### 4.148.12 (2026-06-14) — NY4I
 
-#### Inline-asm removal: TF / radios / utils / server (`src/TF.pas`, `src/uStrSearch.pas`, `src/utils/utils_math.pas`, `src/utils/networkmessageutils.pas`, `src/uIntercom.pas`, `src/uCallsigns.pas`, `src/uCFG.pas`, `src/trdos/LOGRADIO.PAS`, `src/MainUnit.pas`, `src/tr4wserverUnit.pas`) — Issue #997 (PR #1045)
+#### Inline-asm removal: TF / radios / utils / server (`src/TF.pas`, `src/uStrSearch.pas`, `src/utils/utils_math.pas`, `src/utils/networkmessageutils.pas`, `src/uIntercom.pas`, `src/uCallsigns.pas`, `src/uCFG.pas`, `src/trdos/logradio.pas`, `src/MainUnit.pas`, `src/tr4wserverUnit.pas`) — Issue #997 (PR #1045)
 
 - **Continued the inline-asm sweep beyond PostUnit.** Extracted TF's PChar search/upcase helpers into a dependency-light `uStrSearch` (`StrPos`/`StrComp` → `SysUtils`; the `?`-wildcard `StrPosPartial` and ASCII `strU` as pure Pascal) with 38 golden tests; `utils_math` `Tan`/`ArcTan2` → `Math`; `networkmessageutils` `SwapEndian32/16` and the `LOGRADIO` Yaesu BCD byte-swap → portable bit ops; `uIntercom` `wsprintf` → `TF.Format`; `uCFG` untyped-`Pointer` AdditionalProc call → typed call; the memory-mapped-log pointer arithmetic in `MainUnit`/`tr4wserverUnit` → explicit `Pointer(Cardinal(MapBase)+offset)`; removed the last live `asm nop`. `TF.ValExt`/`_Pow10` (RTL-internal float parse) flagged for the mirror clone. `docs/PHASE_INVENTORIES.md` Phase-3 table status-marked.
 
@@ -265,7 +265,7 @@ appropriate "## 4.147.x" month group below, and bump tr4w/src/Version.pas to mat
 
 - **ARRL January/June/September VHF set to `RSTandorGridExchange`** so the Cabrillo exchange carries RST + grid.
 
-#### CW enable/disable state desync (`src/trdos/LogCfg.pas`, `src/trdos/LOGWIND.PAS`) — (PR #1047)
+#### CW enable/disable state desync (`src/trdos/LogCfg.pas`, `src/trdos/logwind.pas`) — (PR #1047)
 
 - **`CW ENABLE` and the runtime CW gate are now kept in step.** Config wrote only `CWEnable`, while the transmit gate/toggle used `CWEnabled` and the speed display OR'd the two — so `CW ENABLE = FALSE` showed "WPM" yet sent nothing until two Alt-K toggles. `ReadInConfigFile` now mirrors `CWEnabled := CWEnable` after each config read; `DisplayCodeSpeed` reads the real gate.
 
@@ -281,7 +281,7 @@ appropriate "## 4.147.x" month group below, and bump tr4w/src/Version.pas to mat
 
 - **Fixed the `nclsTrying`/`nclsFailed` ping-pong** that re-logged both lines every 5 s; the try/fail pair now logs once, then goes silent until the state changes. `tCreateThread` gained an optional `Quiet` flag; thread create/destroy log symmetrically.
 
-#### Band map double-click vs AUTO S&P (`src/trdos/LOGRADIO.PAS`, `src/uRadioPolling.pas`) — Issue #1048 / #795 (PR #1048)
+#### Band map double-click vs AUTO S&P (`src/trdos/logradio.pas`, `src/uRadioPolling.pas`) — Issue #1048 / #795 (PR #1048)
 
 - **A bandmap-commanded QSY no longer trips the #795 "tune the VFO → clear the entry" logic.** `SetRadioFreq` records the commanded VFO-A freq (`tCommandedQSYFreq`); the auto-S&P clear fires only when the radio lands far from it (a genuine manual dial turn). Latent since #795; only bit with `AUTO S&P ENABLE = TRUE`.
 
@@ -293,15 +293,15 @@ appropriate "## 4.147.x" month group below, and bump tr4w/src/Version.pas to mat
 
 ### 4.148.11 (2026-06-12) — NY4I
 
-#### Radio factory: network port + discoverability (`src/uRadioFactory.pas`, `src/uCAT.pas`, `src/trdos/LOGRADIO.PAS`) — Issue #1028 (PR #1030)
+#### Radio factory: network port + discoverability (`src/uRadioFactory.pas`, `src/uCAT.pas`, `src/trdos/logradio.pas`) — Issue #1028 (PR #1030)
 
 - **`uRadioFactory` is now the single source of truth for is-network-radio, default network port, and discoverability** (`ModelForInterfacedType`, `DefaultNetworkPort`, `IsNetworkModel`, `IsDiscoverable`; added `rmKenwoodTS990` reusing the TS-890 class). `uCAT` delegates port/discovery decisions to it; `ApplyDefaultNetworkPort` now replaces a stale different-model default (fixes IC-7760 :50001 → K4 :9200). `LOGRADIO.MapRadioModelToFactory` delegates to the factory.
 
-#### Search & Pounce F1 caption (`src/trdos/CFGDEF.PAS`, `tr4w.dpr`) — Issue #1012
+#### Search & Pounce F1 caption (`src/trdos/cfgdef.pas`, `tr4w.dpr`) — Issue #1012
 
 - **The S&P F1 ("send call") caption is recomputed after config load** (it was computed once in `SetConfigurationDefaultValues`, before config), so it shows "Call" instead of "DE+Call" when `DE ENABLE = FALSE`.
 
-#### CW: replay the last-sent message (`src/trdos/LogCW.pas`, `src/trdos/LOGSUBS1.PAS`)
+#### CW: replay the last-sent message (`src/trdos/LogCW.pas`, `src/trdos/logsubs1.pas`)
 
 - **Capture the actually-sent (expanded) CW characters; `=` in the call window replays exactly what was last sent** (so post-log `@`/`#` macros don't re-expand to blanks).
 
@@ -313,9 +313,9 @@ appropriate "## 4.147.x" month group below, and bump tr4w/src/Version.pas to mat
 
 ### 4.148.10 (2026-06-12) — NY4I
 
-#### Cabrillo log writer: full inline-asm removal (`src/trdos/PostUnit.PAS`) — Issue #998 (PRs #1013–#1025)
+#### Cabrillo log writer: full inline-asm removal (`src/trdos/postunit.pas`) — Issue #998 (PRs #1013–#1025)
 
-- **PostUnit.PAS taken from ~170 inline x86 `asm` blocks to zero.** The dominant idiom (manual cdecl `wsprintf` varargs push + `asm add esp,N` cleanup) and the custom `Format(CABRILLO_*)` external-`wsprintfA` overloads were replaced with standard `SysUtils.Format`; the PChar exchange buffers (`CABRILLO_FIRST_PART`, `CABRILLO_BUFFER`, `CABRILLO_MYEX`/`CABRILLO_HISEX`) became Delphi strings. Done in 10 output-diff-validated sub-batches (report/export routines → Cabrillo header/assembly → all ~33 `case ActiveExchange` arms → QTC block → buffer→string cleanup). 64-bit / Delphi-12 prerequisite.
+- **postunit.pas taken from ~170 inline x86 `asm` blocks to zero.** The dominant idiom (manual cdecl `wsprintf` varargs push + `asm add esp,N` cleanup) and the custom `Format(CABRILLO_*)` external-`wsprintfA` overloads were replaced with standard `SysUtils.Format`; the PChar exchange buffers (`CABRILLO_FIRST_PART`, `CABRILLO_BUFFER`, `CABRILLO_MYEX`/`CABRILLO_HISEX`) became Delphi strings. Done in 10 output-diff-validated sub-batches (report/export routines → Cabrillo header/assembly → all ~33 `case ActiveExchange` arms → QTC block → buffer→string cleanup). 64-bit / Delphi-12 prerequisite.
 - **Two latent bugs fixed.** (a) *EDI export negative serial* — C `%03d` counts the sign in the field width (`-1`→`-01`) whereas Delphi `%.3d` pads digits (`-1`→`-001`); reproduced C semantics with `%.*d` + precision `3-Ord(v<0)`. (b) *CSV export out-of-guard write* — the per-QSO `sWriteFile` sat outside the `GoodLookingQSO` guard, re-emitting the stale buffer for skipped/deleted/non-QSO records; moved inside the guard.
 - Removed a benign 8-byte stack over-pop in the EDI per-QSO block.
 
@@ -325,7 +325,7 @@ appropriate "## 4.147.x" month group below, and bump tr4w/src/Version.pas to mat
 - **39 golden-line unit tests** pin every exchange arm + branch (894 tests total). Replaces per-contest manual Cabrillo diffing with the test harness.
 - Added `uCabrilloExchange` + `uCabrilloFormat` to `tr4w.dpr` (IDE Project Manager + Find-in-Files coverage).
 
-#### Inline-asm removal: small units (`src/uDistance.pas`, `uSpots.pas`, `uLogSearch.pas`, `uNewContest.pas`, `uEditQSO.pas`, `src/trdos/LOGWIND.PAS`) — Issue #997 (PR #1026)
+#### Inline-asm removal: small units (`src/uDistance.pas`, `uSpots.pas`, `uLogSearch.pas`, `uNewContest.pas`, `uEditQSO.pas`, `src/trdos/logwind.pas`) — Issue #997 (PR #1026)
 
 - **Converted the clean `wsprintf`-push idiom to `Format` in 6 units** (every real asm block in each). `LOGWIND.DisplayTotalScore`'s `push eax` had relied on `Score := TotalScore` leaving the value in EAX — a fragile Delphi-7 codegen assumption 64-bit would break.
 
@@ -342,7 +342,7 @@ appropriate "## 4.147.x" month group below, and bump tr4w/src/Version.pas to mat
 
 - **Fixed the duplicate / unclosable Send Keyboard Input dialog**; added an idle-close optimization (skip `FlushCWBuffer` when CW isn't being sent).
 
-#### Exchange parse errors: cursor positioning (`src/trdos/LOGSTUFF.PAS`, `src/MainUnit.pas`) — Issue #1010 (PR #1011)
+#### Exchange parse errors: cursor positioning (`src/trdos/logstuff.pas`, `src/MainUnit.pas`) — Issue #1010 (PR #1011)
 
 - **On an exchange parse error, place the entry cursor after the offending token** (general pattern; FD class/section first).
 
@@ -358,10 +358,10 @@ appropriate "## 4.147.x" month group below, and bump tr4w/src/Version.pas to mat
 
 ### 4.148.7 (2026-06-08) — NY4I
 
-#### Config: restore UPDATE RESTART FILE ENABLE (`src/uCFG.pas`, `src/trdos/LOGSUBS2.PAS`, `src/trdos/CFGDEF.PAS`) — Issue #950 (PR #996)
+#### Config: restore UPDATE RESTART FILE ENABLE (`src/uCFG.pas`, `src/trdos/logsubs2.pas`, `src/trdos/cfgdef.pas`) — Issue #950 (PR #996)
 
-- **The command was a silent no-op in two independent layers, both fixed**: (1) the `CFGCA` entry was marked `crS: csRem` (retired tombstone), so `CheckCommand` (`uCFG.pas`) recognized it — no "invalid statement" warning — but `Exit`ed before applying it, leaving `UpdateRestartFileEnable` untouched; changed to `csOld`. (2) The per-QSO `if UpdateRestartFileEnable then Sheet.SaveRestartFile;` in `LogContact` (`LOGSUBS2.PAS`) was commented out; re-enabled. (The original live calls were lost in the 596-line accidental deletion in `43ce836`, 2020.)
-- **Default restored to True**: `SetConfigurationDefaultValues` (`CFGDEF.PAS`) had `UpdateRestartFileEnable := True` commented out. The per-QSO restart-file save is now on by default; `UPDATE RESTART FILE ENABLE = FALSE` disables it. The save runs on the main thread via the single centralized `DupeAndMultSheet.SaveRestartFile`, so it cannot collide with itself and needs no write queue.
+- **The command was a silent no-op in two independent layers, both fixed**: (1) the `CFGCA` entry was marked `crS: csRem` (retired tombstone), so `CheckCommand` (`uCFG.pas`) recognized it — no "invalid statement" warning — but `Exit`ed before applying it, leaving `UpdateRestartFileEnable` untouched; changed to `csOld`. (2) The per-QSO `if UpdateRestartFileEnable then Sheet.SaveRestartFile;` in `LogContact` (`logsubs2.pas`) was commented out; re-enabled. (The original live calls were lost in the 596-line accidental deletion in `43ce836`, 2020.)
+- **Default restored to True**: `SetConfigurationDefaultValues` (`cfgdef.pas`) had `UpdateRestartFileEnable := True` commented out. The per-QSO restart-file save is now on by default; `UPDATE RESTART FILE ENABLE = FALSE` disables it. The save runs on the main thread via the single centralized `DupeAndMultSheet.SaveRestartFile`, so it cannot collide with itself and needs no write queue.
 - **Documented `crS` / `CFGStatus`** above the `CFGCA` array: `csNew`/`csOld` = active (applied), `csRem` = retired (recognized but not applied + hidden from the Options dialog); flip `csRem→csOld` to re-activate.
 
 #### Build: parallel language compile (`tr4w/FullBuild.ps1`) — PR #995
@@ -376,7 +376,7 @@ appropriate "## 4.147.x" month group below, and bump tr4w/src/Version.pas to mat
 
 - **Captured the technique** for running Delphi VCL forms alongside the legacy raw-Win32 message loop (`Application.ShowMainForm := False`, `TForm.Create(nil)`, `IsDialogMessage` hook) as a reference for the Delphi 12/13 migration.
 
-#### i18n: Spanish (`src/lang/TR4W_CONSTS_ESP.PAS`) — PR #992
+#### i18n: Spanish (`src/lang/tr4w_consts_esp.pas`) — PR #992
 
 - **Spanish translation refinements** to `TC_`/`RC_` constants.
 
@@ -392,7 +392,7 @@ appropriate "## 4.147.x" month group below, and bump tr4w/src/Version.pas to mat
 - **`GetConnection` hardening** (`utils_net.pas`): sets the socket to `INVALID_SOCKET` on every failure path (no stale/double-closed handle for the 6 callers), checks `WSAStartup`/`socket()`, and preserves the real connect error across `closesocket` via `WSASetLastError` (a failed connect previously surfaced "The operation completed successfully").
 - **`TELNET DEBUG` flag + connect UX**: new `TELNET DEBUG` config command (`uCFG`, `TR4W_TELNET_DEBUG` in `VC`) gating INFO logging of RX/TX/window writes and connect/disconnect; `TelnetConnectionError` always logs the WinSock code to the error log. Immediate Connect feedback (status line + Connect grays/Disconnect enables); connect/connected/disconnected/failed messages reuse `TC_CONNECTINGTO`/`TC_CONNECTEDTO`/`TC_DISCONNECTEDFROM`/`TC_FAILEDTOCONNECTTO`; `tstTR4W` status text recolored green→black; Freeze resets per connection. ENG consts: `TC_YOURNOTCONNECTEDTOTHEINTERNET` typo + translator email.
 
-#### Rotator control: PSTRotator, long-path turn, TRACE logging (`src/trdos/LOGSTUFF.PAS`, `src/trdos/LOGWIND.PAS`, `src/uCFG.pas`, `src/MainUnit.pas`) — Issues #732, #20, #989 (PR #990)
+#### Rotator control: PSTRotator, long-path turn, TRACE logging (`src/trdos/logstuff.pas`, `src/trdos/logwind.pas`, `src/uCFG.pas`, `src/MainUnit.pas`) — Issues #732, #20, #989 (PR #990)
 
 - **PSTRotator UDP rotator type** (#732): new `PSTRotator` value in `RotatorType`/`RotatorTypeSA` (`LOGWIND`). `RotorControl` routes `ActiveRotatorType = PSTRotator` to new `SendPSTRotorCommand`, which sends `<PST><AZIMUTH>nnn</AZIMUTH></PST>` over UDP via the shared Indy `udp` client to `PSTRotatorIPAddress`:`PSTRotatorUDPPort` (defaults 127.0.0.1:12000). N1MM broadcast and serial paths untouched. New config commands `PSTROTATOR IP ADDRESS` / `PSTROTATOR UDP PORT` (`CommandsArraySize` +2). Selecting the type is the enable; `ROTATOR TYPE = NONE` disables.
 - **Alt-Ctrl-P long-path turn** (#20): Ctrl-P body extracted into `RedoPossibleCallsAndTurnRotor(longPath)` (`MainUnit`); Ctrl-P → `False` (short), new `menu_alt_ctrl_redoposscalls` (10428) → `True` ((heading + 180) mod 360). Accelerator added to all language `.res`.
@@ -415,14 +415,14 @@ appropriate "## 4.147.x" month group below, and bump tr4w/src/Version.pas to mat
 
 ### 4.148.5 (2026-06-07) — NY4I
 
-#### Cabrillo category compliance & dialog/export fixes (`src/VC.pas`, `src/trdos/PostUnit.PAS`, `src/uCbrSum.pas`, `src/uNewContest.pas`) — Issue #976 (PR #982)
+#### Cabrillo category compliance & dialog/export fixes (`src/VC.pas`, `src/trdos/postunit.pas`, `src/uCbrSum.pas`, `src/uNewContest.pas`) — Issue #976 (PR #982)
 
 - **Category lists brought into spec**: `CATEGORY-TRANSMITTER` `'M/S'` → `'TWO'`; `CATEGORY-MODE` adds `FM` (`cmFM`/`'FM'`); `CATEGORY-TIME` adds `8-HOURS` (`NumberTimeCategories` 3→4); `CATEGORY-OVERLAY` drops `OVER-50`, adds `YOUTH`+`YL` (`NumberOverlayCategories` 5→6); `CATEGORY-STATION` adds `DISTRIBUTED / ROVER-LIMITED / ROVER-UNLIMITED / EXPLORER` → 11 types (`NumberStationCategories` 7→11). Each array's matching `Number*Categories` constant bumped in the same edit. The `cmDIGITAL`↔`'RTTY'` string swap and the Russian `ErmakOverlayCategory` list are deliberately left untouched (audited follow-up / gated behind `ErmakSpecification`).
 - **Cabrillo Summary dialog** (`uCbrSum.pas`): `CATEGORY-STATION` is now a drop-down (`ctrList: True`) populated from the corrected `StationCategory`, with a string-based saved-value restore (`GetPrivateProfileString` → `CB_SELECTSTRING`) for `ctrSave` drop-downs outside the index-based restore range. `CATEGORY-TIME` and `CATEGORY-OVERLAY` now persist (`ctrSave: True`) — they previously had no program-variable backing, so their selection was never saved. **OK now auto-closes after export** (`goto ExitAndClose` after the callback), so a successful export no longer requires clicking Cancel; standalone "Edit Cabrillo Summary" behaviour is unchanged.
 - **New Contest dialog** (`uNewContest.pas`): removed the dangling `CATEGORY-OVERLAY` label (`InitialCommandsSA2[3]` → `nil`) — it had a label but no control was ever created.
 - **Safety**: categories persist by string value (`GetDlgItemText` → `WritePrivateProfileString`), not array index, so reordering/removing entries does not mis-map existing `.cfg` files.
 
-#### WSJT-X dial-frequency band follow with no radio defined (`src/trdos/LOGEDIT.PAS`, `src/uWSJTX.pas`) — Issue #978 (PR #980)
+#### WSJT-X dial-frequency band follow with no radio defined (`src/trdos/logedit.pas`, `src/uWSJTX.pas`) — Issue #978 (PR #980)
 
 - **Follow WSJT-X band when no rig is interfaced**: in the `WSJTX_MESSAGETYPE_STATUSV` handler, when `ActiveRadioPtr.RadioModel = NoInterfacedRadio` **and** `ActiveRadioPtr.tNetObject = nil`, TR4W derives the band from the dial frequency (`GetBandMapBandModeFromFrequency`) and calls the new `GoToBand` on an actual band change. Same multi-band gate as Alt-B (`MULTIPLE BANDS` enabled or no QSOs yet); band only, mode unchanged. With any radio defined it does nothing.
 - **Refactor (pure extraction)**: the Alt-B refresh sequence (dupe sheet, multipliers, band map, spot info, next-QSO-number) is extracted into `RefreshAfterBandChange`; new `GoToBand(NewBand)` jumps to a band then `DisplayBandMode(ActiveBand, ActiveMode, False)` (`UpdateRadio=False`, no rig to tune) + `RefreshAfterBandChange`. `BandDownOrUp` reuses `RefreshAfterBandChange` — Alt-B behaviour is unchanged. Runs on the WSJT-X UDP worker thread, consistent with the rest of that handler.
@@ -431,7 +431,7 @@ appropriate "## 4.147.x" month group below, and bump tr4w/src/Version.pas to mat
 
 - **`TESLA` contest renamed `HF-TESLA`** across `QSOPointMethodSA`, `ContestTypeSA`, and the `ContestInfo` table; populated `WA7BNM: 566`, `CABName: 'HF-TESLA'`, and `FriendlyName: 'TESLA Memorial HF CW Contest'`. Scoring (`TeslaQSOPointMethod`) and contest flags are unchanged.
 
-#### Domestic-QTH exchange error message (`src/trdos/LOGSTUFF.PAS`)
+#### Domestic-QTH exchange error message (`src/trdos/logstuff.pas`)
 
 - **Clearer rejection text**: a failed domestic-QTH lookup in `ProcessClassAndDomesticOrDXQTHExchange` now shows `'Invalid ARRL Section'` instead of the generic (and misspelled) `TC_IMPROPERDOMESITCQTH` constant. Note: this hardcodes the English string, bypassing the i18n constant — to be folded back into the localized constant set during the i18n pass.
 
@@ -459,9 +459,9 @@ appropriate "## 4.147.x" month group below, and bump tr4w/src/Version.pas to mat
 
 ### 4.148.3 (2026-06-05) — NY4I
 
-#### Single/Two Radio Mode consolidation (`src/uCFG.pas`, `src/trdos/LogCfg.pas`, `src/trdos/LOGSUBS1.PAS`, `LOGSUBS2.PAS`, `LOGSTUFF.PAS`, `LOGWIND.PAS`, `src/uBandmap.pas`, `src/trdos/JCtrl1.pas`, `JCTRL2.PAS`) — Issue #965 (PR #971)
+#### Single/Two Radio Mode consolidation (`src/uCFG.pas`, `src/trdos/LogCfg.pas`, `src/trdos/logsubs1.pas`, `logsubs2.pas`, `logstuff.pas`, `logwind.pas`, `src/uBandmap.pas`, `src/trdos/JCtrl1.pas`, `JCTRL2.PAS`) — Issue #965 (PR #971)
 
-- **`TWO RADIO MODE` is now the sole radio-mode setting** (TRUE = two-radio/SO2R, FALSE = single radio, the default); `SINGLE RADIO MODE` is retained only as a deprecated parse-alias so existing `.cfg` files still load. Removed the duplicate `SingleRadioMode` globals (declared in both `LOGSTUFF.PAS` and `LOGWIND.PAS` — two separate variables, a latent write-vs-read mismatch) and re-pointed every reader to `not TwoRadioMode`.
+- **`TWO RADIO MODE` is now the sole radio-mode setting** (TRUE = two-radio/SO2R, FALSE = single radio, the default); `SINGLE RADIO MODE` is retained only as a deprecated parse-alias so existing `.cfg` files still load. Removed the duplicate `SingleRadioMode` globals (declared in both `logstuff.pas` and `logwind.pas` — two separate variables, a latent write-vs-read mismatch) and re-pointed every reader to `not TwoRadioMode`.
 - **`TWO RADIO MODE` wins per config file**: a new per-file `TwoRadioModeWasSet` flag (uCFG, reset in `LogCfg.ReadInConfigFile`) makes a trailing/leftover `SINGLE RADIO MODE` line inert; because the flag resets per file, a contest `.cfg` can still override the mode set by `tr4w.ini`. Added INFO logging of the per-file decision (a `[Config] Loading <file>` banner plus an applied/ignored `[RadioMode]` line) to make a user's mode conflict diagnosable from `tr4w.log`.
 - **`#` accepted as a config comment character**: `EnmuCFGFile` and `RestoreCFGPasswordCase` now skip a column-1 `#` alongside `;` `[` `_` (both passes kept in sync); a `#` in column 1 previously produced an "invalid statement in config file" error.
 - **i18n**: `TC_ALTRCOMMANDDISABLED` / `TC_ALTDCOMMANDDISABLED` reworded to reference `TWO RADIO MODE = TRUE` across all 11 language const files (config keyword kept English; edited byte-safely per codepage).
@@ -474,7 +474,7 @@ appropriate "## 4.147.x" month group below, and bump tr4w/src/Version.pas to mat
 - **Config parser blank-value tolerance**: `CheckCommand` leaves the variable at its default for a blank integer value (e.g. `RADIO ONE TCP PORT=`) with a clear non-fatal notice (new `TC_PARAMETERHASNOVALUE`, all 11 languages) instead of "Invalid statement"; a non-numeric value still fails validation.
 - **Discover button polish**: bitmap resource 853 (magnifier) via `BS_BITMAP`/`BM_SETIMAGE` with `?` fallback; hover tooltip (`TC_TOOLTIP_DISCOVERY`) via the `CreateToolTip` helper (fixed `TTM_ADDTOOL` to the ANSI `$0400+4` variant — `+50` rendered the ANSI PChar as CJK); three discovery dialogs now i18n + radio-type-parameterized (`TC_DISCOVER_NOT_AVAILABLE` / `_NONE_FOUND` / `_MULTI_FOUND`).
 
-#### Contest friendly names (`src/VC.pas`, `src/trdos/PostUnit.PAS`) — PR #967
+#### Contest friendly names (`src/VC.pas`, `src/trdos/postunit.pas`) — PR #967
 
 - **`TContestInfo.FriendlyName`**: new compiled-in human-friendly contest name (blank → fall back to `ContestTypeSA[ct]`); ~130 of 185 live entries filled via an offline WA7BNM cabnames join + hand-fill. Corrected 5 mis-shared WA7BNM ids (ARRL-VHF-JAN, YBDX, OK-OM SSB, BCQP, SST). `PostUnit.ContestFriendlyParens` shows it in parentheses on the summary-sheet `CONTEST:` line and the centered score-report title.
 - **De-asm**: `WriteTitleBlockToSummarySheet`'s two inline-asm `wsprintf` arg-push blocks converted to plain Pascal; footer run/search counts now use the named `riQSOByOpMode[...]` fields instead of raw `[tRestartInfo+$4]` / `[+$8]` offsets.
@@ -536,12 +536,12 @@ appropriate "## 4.147.x" month group below, and bump tr4w/src/Version.pas to mat
 
 ### 4.147.25 (2026-05-31) — NY4I
 
-#### Serial number derived from highest serial sent, not QSO count (`src/trdos/LOGEDIT.PAS`, `LOGDUPE.PAS`, `LOGWIND.PAS`, `LOGSUBS1.PAS`, `LOGSUBS2.PAS`, `LogSend.pas`, `src/MainUnit.pas`, `src/uEditQSO.pas`) — Issues #954, #949
+#### Serial number derived from highest serial sent, not QSO count (`src/trdos/logedit.pas`, `logdupe.pas`, `logwind.pas`, `logsubs1.pas`, `logsubs2.pas`, `LogSend.pas`, `src/MainUnit.pas`, `src/uEditQSO.pas`) — Issues #954, #949
 
 - **Serial no longer rolls backward on X-QSO / mid-log delete** (#954): the next serial was `TotalContacts + 1`, a count of *scoring* QSOs, so marking a QSO X-QSO (or deleting a mid-log QSO) dropped the count — the next serial reverted, was re-sent on the air via the `#` macro, and was re-stamped into `NumberSent` (a duplicate serial). New per-band high-water mark `MaxSerialSent` (`LOGDUPE`) tracks the largest `NumberSent` over non-deleted records **including X-QSO** (they consumed a number); new `NextSerialToSend` / `UpdateMaxSerialSent` (`LOGEDIT`) return `max + 1`, which only ever advances (`UpdateMaxSerialSent` ignores the `$FFFF` ADIF import sentinel and non-positive values). `LoadinLog` and the live add feed the mark; the next-number display (`DisplayNextQSONumber`), the `#` macro (CW + voice), the `NumberSent` stamp, and the CQ-spot labels all moved from `TotalContacts + 1` to `NextSerialToSend`. `TotalContacts`/`QSOTotals` are untouched, so the #750 score grid, status display, every-10 beep, and `AUTO QSO NUMBER DECREMENT` (F2 repeat) are unchanged; networked mode still uses `ServerSerialNumber`.
 - **X-QSO no longer deletes the contact from the external log** (#949): `uEditQSO` marks X-QSO by sending a `contactdelete` to the score feeds (UDP + HamScore) while leaving the external logger (DXKeeper) alone — the contact stays logged externally but drops out of the contest score.
 
-#### Kenwood TS-890 LAN handshake + CR/LF transport, band/RIT/XIT/TX fixes (`src/uRadioKenwoodTS890.pas`, `src/uNetRadioBase.pas`, `src/trdos/LOGRADIO.PAS`, `src/trdos/LOGWIND.PAS`) — PR #951
+#### Kenwood TS-890 LAN handshake + CR/LF transport, band/RIT/XIT/TX fixes (`src/uRadioKenwoodTS890.pas`, `src/uNetRadioBase.pas`, `src/trdos/logradio.pas`, `src/trdos/logwind.pas`) — PR #951
 
 - **Handshake**: the TS-890 LAN login does not send `##TI;`; the old path waited for it and hung after `##ID1;`. It now proceeds straight to authenticated (post-login `##VP;`/`##KN2;`/`##KN0;` + `AI2` init). The 5 s `PS;` keepalive is retained (the radio drops an idle LAN link after ~10 s).
 - **CR/LF transport**: `TNetRadioBase.SendToRadio` appended CR/LF via `WriteLn`; the TS-890's CAT parser rejects the trailing bytes with `?;` once authenticated (the K4 tolerates them, which is why it never surfaced). New `bAddTermination` flag (default `True`; `TKenwoodTS890Radio` sets it `False` → bare `Write`), so every other radio's wire output stays byte-identical.
@@ -596,9 +596,9 @@ appropriate "## 4.147.x" month group below, and bump tr4w/src/Version.pas to mat
 
 ### 4.147.22 (2026-05-29) — NY4I / N4AF
 
-#### Spanish (ESP) + cross-language CFG portability (`tr4w/src/lang/TR4W_CONSTS_ESP.PAS`, `tr4w/target/commands_help_esp.ini` (NEW), `tr4w/src/VC.pas`, `tr4w/src/uCFG.pas`, `tr4w/src/MainUnit.pas`) — Issues #925, #937, #938, PR #939
+#### Spanish (ESP) + cross-language CFG portability (`tr4w/src/lang/tr4w_consts_esp.pas`, `tr4w/target/commands_help_esp.ini` (NEW), `tr4w/src/VC.pas`, `tr4w/src/uCFG.pas`, `tr4w/src/MainUnit.pas`) — Issues #925, #937, #938, PR #939
 
-- **ESP enabled end to end**: filled `TR4W_CONSTS_ESP.PAS` and added the full `commands_help_esp.ini`, putting Spanish on par with the other shipped languages.
+- **ESP enabled end to end**: filled `tr4w_consts_esp.pas` and added the full `commands_help_esp.ini`, putting Spanish on par with the other shipped languages.
 - **`ColumnCanonicalName` (`VC.pas`)**: language-neutral column names (`BAND`/`DATE`/`UTC`/…) for persisting `COLUMN WIDTH` settings in CFG files. CFGs were previously language-locked — one saved by an English build failed to load in a Spanish/Russian/etc. build because `ColumnsArray[].Text` is translated at compile time. The canonical names match the historical English values so existing CFGs keep parsing.
 - **Missing language constants filled** across `tr4w_consts_*.pas` (issue #925), using per-codepage byte-level edits to preserve each file's ANSI encoding and CRLF endings.
 
@@ -606,7 +606,7 @@ appropriate "## 4.147.x" month group below, and bump tr4w/src/Version.pas to mat
 
 ### 4.147.21 (2026-05-29) — NY4I
 
-#### HamScore RTC 3.0 (`src/uHamScore.pas`, `src/uCabrillo.pas` (NEW), `src/uGetScores.pas`, `src/VC.pas`, `src/uCFG.pas`, `src/uExchangeBuilder.pas`, `src/trdos/LOGSUBS2.PAS`, `test/hamscore_mock.py`) — Issues #920, #930, #931, #932, PR #935
+#### HamScore RTC 3.0 (`src/uHamScore.pas`, `src/uCabrillo.pas` (NEW), `src/uGetScores.pas`, `src/VC.pas`, `src/uCFG.pas`, `src/uExchangeBuilder.pas`, `src/trdos/logsubs2.pas`, `test/hamscore_mock.py`) — Issues #920, #930, #931, #932, PR #935
 
 - **RTC 3.0 protocol** (#920): payload wrapped in `<rtc>...</rtc>` with `<dynamicresults>` as a child; `<contactinfo>` blocks use the 3.0 schema (`<ID>` + `<CabrilloString>` + `<timestamp>`). `ExtractDescription` parses the new `Description` JSON field for CFM-with-warning and Error responses. Default `HamScoreURL` set to `http://scoredistributor.net/`.
 - **`dynamicresults` payload completion** (#930): added `<ops>`, `<club>`, `<qth>` blocks (state/section/grid4/grid6/country/continent/zone), assisted/overlay category fields, and `<soft>` / `<version>` split. `ReadCabrilloSummaryField` pulls missing values from `tr4w.ini` `[REPORT]` so no new CFG entries needed for Club/Section/State. `cqzone` always uses `ctyGetCQZone(MyCall)` (`MyZone` global is contest-zone-mode dependent and unsafe here). New `MyITUZone` global + `MY ITU ZONE` CFG, because large countries span multiple ITU zones.
@@ -614,7 +614,7 @@ appropriate "## 4.147.x" month group below, and bump tr4w/src/Version.pas to mat
 - **SST ADIF/CAB names** (#932): SST entry now `ADIFName:'K1USN-SST'; CABName:'K1USNSST'`.
 - **`uCabrillo.pas` (NEW)**: single source of truth for single-QSO Cabrillo line rendering (`BuildSingleQsoCabrilloLine`). Eliminates the prior split between `PostUnit`'s final-log writer and `uExchangeBuilder`'s score-XML fallback that caused "edit didn't reach HamScore" bugs.
 - **`uExchangeBuilder.pas`**: SST/NAQP family arm added so exchange edits flow to HamScore (previously fell through to raw `ExchString`).
-- **`trdos/LOGSUBS2.PAS`**: `DeleteLastContact` (ALT-Y handler) now calls `HamScoreOnDelete`/`HamScoreOnLog` on the delete/restore branches — was silently skipping the hook.
+- **`trdos/logsubs2.pas`**: `DeleteLastContact` (ALT-Y handler) now calls `HamScoreOnDelete`/`HamScoreOnLog` on the delete/restore branches — was silently skipping the hook.
 - **`test/hamscore_mock.py`**: `--description` CLI flag for the 3.0 Description field; pretty-printer + highlights updated; checks for `<rtc>` wrapper presence; banner reminds operator to set `HAMSCORE SEND CONTACT INFO = TRUE`.
 
 #### Build & Release Pipeline (`tr4w/FullBuild.ps1`, `.github/workflows/release.yml`, `tr4w/include/`)
@@ -658,7 +658,7 @@ appropriate "## 4.147.x" month group below, and bump tr4w/src/Version.pas to mat
 - **`BuildRxExchangeText` RTC case** reaffirmed at `serial + ' ' + qth` (no RST), with a comment noting the canonical form is intentionally RST-less.
 - **`tr4w/test/hamscore_mock.py`**: pure-stdlib Python local stand-in for HamScore RTC server. Listens on `127.0.0.1:8765`, decodes Basic auth, pretty-prints XML (wraps TR4W's multi-element bodies in a synthetic root for `xml.dom.minidom`), URL-decodes N1MM-style form-encoded bodies, inline-highlights `SentExchange`/`RxExchange`/`Call`/etc., returns `{"Status":"CFM"}` (overridable via `--response CFM|OK|ResyncLog|Error`).
 
-#### TS-890 LAN protocol + radio bug fixes (`src/uRadioKenwood.pas`, `src/uBandmap.pas`, `src/trdos/LOGRADIO.PAS`) — PR #922
+#### TS-890 LAN protocol + radio bug fixes (`src/uRadioKenwood.pas`, `src/uBandmap.pas`, `src/trdos/logradio.pas`) — PR #922
 
 - **TS-890 LAN keepalive** every 5 seconds, wait for `##TI;` before init commands, parsing of `TB`/`FT`/`RT`/`XT` status responses. Fixes intermittent disconnects and missing band/mode updates over LAN.
 - **`RadioObject.SendCW` uninitialized-locals fix**: `charProcessed` and `sendNow` were read before assignment; under Delphi 7 codegen this surfaced as silent failure to send CW via CAT on Kenwood and Elecraft radios (CW-by-CAT mode). Both initialized to `False` at function entry. Latent since CW-by-CAT was introduced.
@@ -686,14 +686,14 @@ appropriate "## 4.147.x" month group below, and bump tr4w/src/Version.pas to mat
 
 ### 4.147.15 (2026-05-21) — NY4I
 
-#### HamScore RTC payload TRACE log + canonical sent/rx exchanges (`src/uHamScore.pas`, `src/uExchangeBuilder.pas`, `src/trdos/LOGSUBS2.PAS`, `src/MainUnit.pas`, `tr4w.dpr`) — Issue #921 / PR #921
+#### HamScore RTC payload TRACE log + canonical sent/rx exchanges (`src/uHamScore.pas`, `src/uExchangeBuilder.pas`, `src/trdos/logsubs2.pas`, `src/MainUnit.pas`, `tr4w.dpr`) — Issue #921 / PR #921
 
 - **TRACE-level log of outgoing HamScore RTC POST** (URL, effective username, full XML payload) added in `THamScoreUploader.PostToServer`, guarded by `FLogger.IsTraceEnabled` so the payload is only stringified when trace logging is active.
-- **New shared unit `src/uExchangeBuilder.pas`** exporting two plain-text builders (`BuildSentExchangeText`, `BuildRxExchangeText`) consumed by both the HamScore RTC POST and the N1MM-style UDP `ContactInfo` broadcast in `LOGSUBS2.PAS`. Eliminates the prior duplication where `<SentExchange>` echoed `RXData.ExchString` in both code paths.
+- **New shared unit `src/uExchangeBuilder.pas`** exporting two plain-text builders (`BuildSentExchangeText`, `BuildRxExchangeText`) consumed by both the HamScore RTC POST and the N1MM-style UDP `ContactInfo` broadcast in `logsubs2.pas`. Eliminates the prior duplication where `<SentExchange>` echoed `RXData.ExchString` in both code paths.
 - **`BuildSentExchangeText` rebuilds from the contest's `CQExchange` template** set in `LogCfg.pas` at contest start. Substitutes `#` → `NumberSent` and the CW shorthand `5NN` → `599` so scoring consumers see canonical numeric RST. Whitespace collapsed and trimmed. Empty template falls back to `RXData.ExchString`. Future work: per-contest "RTC exchange template" in the radio/contest factory.
 - **`BuildRxExchangeText` dispatches on `RXData.ceContest`** and rebuilds from parsed `ContestExchange` fields in scoring-canonical order so the operator-typed order ("EL88 1234" vs "1234 EL88") no longer leaks into RTC/UDP submissions. Contests covered: `CQWPXCW`/`CQWPXSSB`/`DARCWAEDCCW` (`RST + serial`), `CQWWCW`/`CQWWSSB`/`IARU` (`RST + zone`), `CQ160CW` (`RST + QTHString`), `ARRLDXCW`/`ARRLDXSSB` (`RST + QTHString` US side or `RST + Power` DX side), `ALLASIANCW`/`ALLASIANSSB` (`RST + Age`), `CWOPS` / CWT (`Name + QTHString`), `CWOPEN` (`serial + Name`), `RTC` (`serial + QTHString` — no RST on air), `ARRLFIELDDAY`/`WINTERFIELDDAY` (`ceClass + QTHString`). Unknown contests fall back to `RXData.ExchString` (no regression).
 - **Default RST inference**: `RSTReceivedString` returns `599` on `CW`/`Digital`, `59` on Phone/FM when `RXData.RSTReceived = 0` (operator accepted parser default).
-- **`LOGSUBS2.PAS` UDP `BuildUDPContact`**: both `<SentExchange>` (previously `Trim(RxData.ExchString)`) and `<exchange1>` (previously a 2-case `ActiveExchange` switch falling back to `ExchString`) now route through the shared builders so HamScore RTC and N1MM-style UDP consumers see identical canonical strings.
+- **`logsubs2.pas` UDP `BuildUDPContact`**: both `<SentExchange>` (previously `Trim(RxData.ExchString)`) and `<exchange1>` (previously a 2-case `ActiveExchange` switch falling back to `ExchString`) now route through the shared builders so HamScore RTC and N1MM-style UDP consumers see identical canonical strings.
 - **`uHamScore.pas`** retains thin `BuildSentExchange` / `BuildRxExchange` wrappers that XML-escape the shared text helpers' output.
 
 #### X-QSO "All" column regression in score grid (`src/MainUnit.pas`) — Issue #750 follow-up
@@ -713,9 +713,9 @@ appropriate "## 4.147.x" month group below, and bump tr4w/src/Version.pas to mat
 - **Operator feedback**: INFO log line plus transient `QuickDisplay` toast via new `TC_AUTOSYNCHRONIZINGLOG` constant, added to all 11 language files via byte-level insertion to preserve ANSI codepages + CRLF.
 - **Design doc** committed as `docs/NETWORK_LOG_AUTO_SYNC.md`.
 
-#### 3830 Score report + standalone Cabrillo Summary edit (`src/trdos/PostUnit.PAS`, `src/uCbrSum.pas`, `src/uMenu.pas`, `src/MainUnit.pas`, `src/VC.pas`) — Issue #914
+#### 3830 Score report + standalone Cabrillo Summary edit (`src/trdos/postunit.pas`, `src/uCbrSum.pas`, `src/uMenu.pas`, `src/MainUnit.pas`, `src/VC.pas`) — Issue #914
 
-- **`ExportTo3830Scores` in `PostUnit.PAS`** writes `<logname>_3830Score.txt` matching the 3830scores.com submission-form layout, then auto-previews in the default text editor. New menu entry `menu_3830scores = 10021` under File → Reports.
+- **`ExportTo3830Scores` in `postunit.pas`** writes `<logname>_3830Score.txt` matching the 3830scores.com submission-form layout, then auto-previews in the default text editor. New menu entry `menu_3830scores = 10021` under File → Reports.
 - **Adaptive table layout**: per-band rows always emit all 8 HF/VHF rows (160/80/40/20/15/10/6/2), with additional VHF/UHF rows appended only when non-zero. Mode columns (`CW Qs` / `Ph Qs` / `Dig Qs`) appear only for modes that have logged QSOs. `Ph` reads from `RawQSOTotals[band, Phone]`, which already folds FM via `LoadTotalCount`.
 - **Mults columns adapt to contest type**: per-band Mults column appended iff `MultByBand = TRUE` (CQ-WW, CQ-160). Bottom summary emits per-mode lines (`CW Mults` / `Ph Mults` / `Dig Mults`) + total iff `MultByMode = TRUE` (FQP, NAQP); single `Mults: N` otherwise (CQ-WPX).
 - **Metadata header silently reads `tr4w.ini [REPORT]` keys** (`_OPERATORS`, `_CATEGORY-OPERATOR`, `_CATEGORY-POWER`) — the same keys the Cabrillo Summary dialog writes. `Call Used` reads from `MyCall`. No dialog popup at report time.
@@ -727,7 +727,7 @@ appropriate "## 4.147.x" month group below, and bump tr4w/src/Version.pas to mat
 
 #### ADIF `CONTEST_ID` regression (`src/uADIF.pas`) — Issue #887 follow-up
 
-- **`CONTEST_ID` emission was empty for 156 of TR4W's contests** (including all CQ-WW, CQ-WPX, ARRL-DX, etc.). Issue #887 extracted ADIF export from `PostUnit`/`MainUnit` into `uADIF.pas` but dropped the `ContestTypeSA[]` fallback that `LOGSUBS2.PAS:2782`, `uGetScores.pas:435`, and `uGetScores.pas:564` all still use: when `ContestsArray[ceContest].ADIFName` is empty, fall back to the parallel `ContestTypeSA[]` string (which IS the standard ADIF Contest_ID for the majors — `CQ-WPX-SSB`, `CQ-WW-CW`, `ARRL-DX-CW`, etc.). `EmitADIFField` silently suppresses empty values, so the field was missing entirely from exports. Single-line restore at `uADIF.pas:1294-1297` covers all 156 contests without per-contest data entry.
+- **`CONTEST_ID` emission was empty for 156 of TR4W's contests** (including all CQ-WW, CQ-WPX, ARRL-DX, etc.). Issue #887 extracted ADIF export from `PostUnit`/`MainUnit` into `uADIF.pas` but dropped the `ContestTypeSA[]` fallback that `logsubs2.pas:2782`, `uGetScores.pas:435`, and `uGetScores.pas:564` all still use: when `ContestsArray[ceContest].ADIFName` is empty, fall back to the parallel `ContestTypeSA[]` string (which IS the standard ADIF Contest_ID for the majors — `CQ-WPX-SSB`, `CQ-WW-CW`, `ARRL-DX-CW`, etc.). `EmitADIFField` silently suppresses empty values, so the field was missing entirely from exports. Single-line restore at `uADIF.pas:1294-1297` covers all 156 contests without per-contest data entry.
 
 #### Build hygiene: `cty.dat` no longer re-included via gitignore negation (`.gitignore`)
 
@@ -749,10 +749,10 @@ appropriate "## 4.147.x" month group below, and bump tr4w/src/Version.pas to mat
 
 ### 4.147.11 (2026-05-16) — NY4I
 
-#### Bandmap inactive-radio guards (`uRadioPolling.pas`, `trdos/LOGWIND.PAS`, `uSpots.pas`) — Issue #908
+#### Bandmap inactive-radio guards (`uRadioPolling.pas`, `trdos/logwind.pas`, `uSpots.pas`) — Issue #908
 
-- **SO2R gate at inactive-radio polling path (`uRadioPolling.pas:3138`)**: Gav-added "follow inactive radio when tuned" code was missing the `TwoRadioMode` gate that the older `LOGWIND.PAS:4933` legacy path already had. With `TWO RADIO MODE = FALSE`, an inactive radio's polling thread could still mutate `BandMapBand`/`BandMapMode`. Now gated on `TwoRadioMode`.
-- **Sentinel-value guard at three sites**: `FilteredStatus.Band = NoBand` and `FilteredStatus.Mode = NoMode` are "haven't received from radio yet" sentinels. Three sites propagated them unconditionally into globals (`ActiveBand`/`ActiveMode`/`BandMapBand`/`BandMapMode`), blanking the bandmap on startup when an inactive Icom polling thread fired before its handshake completed. Guard added at `uRadioPolling.pas:3088` (active-radio polling), `uRadioPolling.pas:3138` (inactive-radio polling — confirmed culprit), and `LOGWIND.PAS:4933` (legacy LogWind path).
+- **SO2R gate at inactive-radio polling path (`uRadioPolling.pas:3138`)**: Gav-added "follow inactive radio when tuned" code was missing the `TwoRadioMode` gate that the older `logwind.pas:4933` legacy path already had. With `TWO RADIO MODE = FALSE`, an inactive radio's polling thread could still mutate `BandMapBand`/`BandMapMode`. Now gated on `TwoRadioMode`.
+- **Sentinel-value guard at three sites**: `FilteredStatus.Band = NoBand` and `FilteredStatus.Mode = NoMode` are "haven't received from radio yet" sentinels. Three sites propagated them unconditionally into globals (`ActiveBand`/`ActiveMode`/`BandMapBand`/`BandMapMode`), blanking the bandmap on startup when an inactive Icom polling thread fired before its handshake completed. Guard added at `uRadioPolling.pas:3088` (active-radio polling), `uRadioPolling.pas:3138` (inactive-radio polling — confirmed culprit), and `logwind.pas:4933` (legacy LogWind path).
 - **Diagnostic TRACE logging**: `[DisplayBandMap]` entry state, `[SpotsList.Display]` per-filter rejection breakdown (NextDup/Band/Mode/DupeFlag/CQ/WARC/MultsOnly/VHF) + listbox populate stats, `[ProcessFilteredStatus]` polling-thread state on each active-radio poll, `[BMWriter LOGWIND:4933 inactive-FS]` when the legacy LogWind path fires. TRACE-only — no behavior change at default log levels.
 
 ---
@@ -771,7 +771,7 @@ Three compounding defects in Icom network disconnect handling. Surfaced during I
 
 ### 4.147.09 (2026-05-14) — NY4I / N4AF
 
-#### HamScore RTC Realtime Upload (new `src/uHamScore.pas`, hooks across `LOGSUBS2.PAS`, `uEditQSO.pas`, `uCFG.pas`, `MainUnit.pas`, `tr4w.dpr`) — Issue #783
+#### HamScore RTC Realtime Upload (new `src/uHamScore.pas`, hooks across `logsubs2.pas`, `uEditQSO.pas`, `uCFG.pas`, `MainUnit.pas`, `tr4w.dpr`) — Issue #783
 
 Worker-thread uploader that POSTs contest log data to hamscore.com every 2 minutes per the RTC v2.3.3-xml specification: `<dynamicresults>` plus zero or more `<contactinfo>` / `<contactreplace>` / `<contactdelete>` / `<deletelog>` containers per POST. HTTP Basic auth, callsign as username.
 
@@ -794,7 +794,7 @@ Worker-thread uploader that POSTs contest log data to hamscore.com every 2 minut
 - **Push Now**: signals `FCycleEvent` so the worker wakes before the 2-min timer.
 - **Visibility persists across restart**: `OpenOtherWindows` restore loop and `WndRect` default-init loop both extended from `tw_DUPESHEETWINDOW2_INDEX` to `tw_HAMSCOREWINDOW_INDEX`.
 
-#### Resync Flow (`MainUnit.pas`, `src/trdos/LOGSUBS2.PAS`, `uMenu.pas`) — Issue #783 Phase 3
+#### Resync Flow (`MainUnit.pas`, `src/trdos/logsubs2.pas`, `uMenu.pas`) — Issue #783 Phase 3
 
 - New Tools-menu item `menu_hamscore_resync` (10609): enqueues `<deletelog>` via `HamScoreResyncFromScratch`, then iterates the binary log via new `SendFullLogToHamScore` (mirrors `SendFullLogToUDP`'s `OpenLogFile` / `ReadVersionBlock` / `ReadLogFile` / `GoodLookingQSO` pattern). Spec sections 1.7 + 2.4.
 
@@ -813,19 +813,19 @@ The Ctrl+J Settings listview was displaying every `ctPassword` field in the clea
 
 ### 4.147.08 (2026-05-14) — NY4I / N4AF
 
-#### Generic Network Credentials (`src/uCFG.pas`, `src/uCAT.pas`, `src/trdos/LOGRADIO.PAS`) — Issue #904
+#### Generic Network Credentials (`src/uCFG.pas`, `src/uCAT.pas`, `src/trdos/logradio.pas`) — Issue #904
 
 The Icom-prefixed network-credential config statements rebadged because the Kenwood TS-890 (Issue #436) also needs LAN credentials.
 
-- **Storage rename**: `Radio*.IcomNetworkUsername` / `IcomNetworkPassword` → `Radio*.NetworkUsername` / `NetworkPassword` in `LOGRADIO.PAS`. Three internal call sites in `SetUpRadioInterface` updated.
+- **Storage rename**: `Radio*.IcomNetworkUsername` / `IcomNetworkPassword` → `Radio*.NetworkUsername` / `NetworkPassword` in `logradio.pas`. Three internal call sites in `SetUpRadioInterface` updated.
 - **CFGCA**: new canonical `RADIO ONE/TWO NETWORK USERNAME/PASSWORD` statements; existing `RADIO ONE/TWO ICOM NETWORK USERNAME/PASSWORD` retained as backward-compat aliases at the same storage. `CommandsArraySize` delta bumped +4 → +8.
 - **CAT dialog** (`uCAT.pas`): `UpdateIcomCredentialsVisibility` → `UpdateNetworkCredentialsVisibility`; labels "ICOM USERNAME/PASSWORD" → "NETWORK USERNAME/PASSWORD". On Save, writes the canonical name and deletes the legacy `ICOM NETWORK ...` key (`WritePrivateProfileString` with nil) so the .ini doesn't accumulate stale duplicates.
 
-#### Kenwood TS-890 Native Control (new `src/uRadioKenwoodTS890.pas`, `src/trdos/LOGRADIO.PAS`, `src/uRadioFactory.pas`, `src/uCAT.pas`) — Issue #436
+#### Kenwood TS-890 Native Control (new `src/uRadioKenwoodTS890.pas`, `src/trdos/logradio.pas`, `src/uRadioFactory.pas`, `src/uCAT.pas`) — Issue #436
 
 The TS-890S was previously HamLib-only. Now native serial CAT and direct TCP/IP LAN control.
 
-- **Native serial** (`LOGRADIO.PAS`): `RadioParametersArray[TS890]` → `rt: rtKenwood`; default `BR4800`; `P:0` → `P:1` for polling. Dropped from `HamLibONLYRadios`; added to `KenwoodRadios`, `RadioSupportsCWByCAT`, `RadioSupportsCWSpeedSync`, `RadioSupportsPlayDVK`. Added to every Kenwood case statement that previously listed TS990 (~12 sites: RIT clear/bump, VFO up/down, CW send / KS / KY, memory keyer with `hiMem := 6`, AI/IF parsing in the polling code).
+- **Native serial** (`logradio.pas`): `RadioParametersArray[TS890]` → `rt: rtKenwood`; default `BR4800`; `P:0` → `P:1` for polling. Dropped from `HamLibONLYRadios`; added to `KenwoodRadios`, `RadioSupportsCWByCAT`, `RadioSupportsCWSpeedSync`, `RadioSupportsPlayDVK`. Added to every Kenwood case statement that previously listed TS990 (~12 sites: RIT clear/bump, VFO up/down, CW send / KS / KY, memory keyer with `hiMem := 6`, AI/IF parsing in the polling code).
 - **Native network** (new `TKenwoodTS890Radio` extending `TNetRadioBase`): Speaks Kenwood ASCII CAT over a TCP socket after a 3-step LAN auth handshake: `##CN;` → `##CN1;`, `##ID0<idLen:2><pwLen:2><id><pw>;` → `##ID1;`. Default port 60000.
 - **Auth state machine**: `ksNone` → `ksWaitingForCN` → `ksWaitingForID` → `ksAuthenticated` (or `ksAuthFailed`). All CAT operations are no-ops until authenticated.
 - **Post-auth init**: `AI2; FA; FB; OM0; OM1; KS; TB; FT; RT; XT; ID;`. `ID;` must return `ID024;` for TS-890S.
@@ -836,10 +836,10 @@ The TS-890S was previously HamLib-only. Now native serial CAT and direct TCP/IP 
 - **Filter slots A/B/C** via `FL00/01/02`. `SetFilterHz` no-op (no Hz-based bandwidth-set CAT command picked).
 - **Memory keyer** PB1..PB6.
 - **`SetMode(mode, nrVFOB)` known limitation**: TS-890 OM SET ignores its P1 (VFO) byte per spec, so cross-VFO mode-set isn't possible with one command.
-- **Factory wiring** (`uRadioFactory.pas`): new `rmKenwoodTS890`; `CreateRadioNetwork` case; `ModelToString`, `IsModelSupported`, `GetSupportedModels` updated. `MapRadioModelToFactory` (`LOGRADIO.PAS`) routes `TS890` → `rmKenwoodTS890`. `SetUpRadioInterface` sets credentials before `Connect`.
+- **Factory wiring** (`uRadioFactory.pas`): new `rmKenwoodTS890`; `CreateRadioNetwork` case; `ModelToString`, `IsModelSupported`, `GetSupportedModels` updated. `MapRadioModelToFactory` (`logradio.pas`) routes `TS890` → `rmKenwoodTS890`. `SetUpRadioInterface` sets credentials before `Connect`.
 - **CAT dialog** shows credential fields when the operator picks TS890 + TCP/IP port.
 
-#### Dropdown Alphabetization (`src/VC.pas`, `src/trdos/LOGRADIO.PAS`)
+#### Dropdown Alphabetization (`src/VC.pas`, `src/trdos/logradio.pas`)
 
 TS890, IC905, IC7300MK2 were each appended at the end of `InterfacedRadioType` — operators couldn't find TS890 in the Radio Type combo because it sat below the HamLib-only block. Pascal `case` matches enum members by name not ordinal, so moves don't break case statements.
 
@@ -857,24 +857,24 @@ TS890, IC905, IC7300MK2 were each appended at the end of `InterfacedRadioType` �
 
 ### 4.147.07 (2026-05-14) — NY4I / N4AF
 
-#### RTC Contest (`src/VC.pas`, `src/trdos/LOGGRID.PAS`, `src/trdos/LOGSTUFF.PAS`, `src/trdos/FCONTEST.PAS`, `src/uNewContest.pas`) — Issue #902, PR #903
+#### RTC Contest (`src/VC.pas`, `src/trdos/loggrid.pas`, `src/trdos/logstuff.pas`, `src/trdos/fcontest.pas`, `src/uNewContest.pas`) — Issue #902, PR #903
 
 Real-Time Contest (RTC, contestonlinescore.com) — 4-hour mixed-mode (CW + SSB) HF event. Exchange: serial number + 4-character Maidenhead grid. Distance-based scoring via Haversine between grid centers.
 
 - **Reuse over new infrastructure**: existing `RSTQSONumberAndGridSquareExchange` handles parsing, dupes, Cabrillo, and ADIF. Only contest definition and scoring needed code.
 - **`VC.pas`**: `ContestType.RTC`, `RTCQSOPointMethod`, plus `ContestsArray` / `ContestTypeSA` / `ContestsBooleanArray` / `QSOPointMethodSA` rows. `AE: RSTQSONumberAndGridSquareExchange`, `DM: GridSquares`, `AIE: GridInitialExchange`, `CABName: 'RTC'`, `WA7BNM: 782`, `ciQB1 + ciQM0 + ciMB1 + ciMM0` (per-band dupes, per-band mults, mode-agnostic).
-- **`LOGGRID.PAS`**: new `RTCGridDistance` — pure Haversine between 4-char grid centers, R=6371 km. Verified against rules fixture `FN36 → DM18 = 3664.72 km` (exact). Existing `GetDistanceBetweenGrids` is Vincenty-style and `'LL'`-padded; numerically different, would push borderline QSOs into the wrong scoring tier.
-- **`LOGSTUFF.PAS`**: `RTCQSOPointMethod` case in `CalculateQSOPoints`. Tiers 1/2/3/4 points at <2000 / <4000 / <8000 / ≥8000 km. Out-of-rules QSOs (bands outside 40/20/15/10 or modes other than CW/Phone) score 0 and set `InhibitMults := True`.
-- **`FCONTEST.PAS`**: `RTC` init — `WARCBandsEnabled := False` (kills 30/17/12 at the band-switch level). CW function-key memories: `F3 = '# ' + MyGrid`, `F4 EX = 'NR # ' + MyGrid`, `F5 EX = '@ DE \ # ' + MyGrid`. RST is optional per rules and not transmitted by default. `MyGrid` substituted at FCONTEST init time (same idiom as `MyZone`).
+- **`loggrid.pas`**: new `RTCGridDistance` — pure Haversine between 4-char grid centers, R=6371 km. Verified against rules fixture `FN36 → DM18 = 3664.72 km` (exact). Existing `GetDistanceBetweenGrids` is Vincenty-style and `'LL'`-padded; numerically different, would push borderline QSOs into the wrong scoring tier.
+- **`logstuff.pas`**: `RTCQSOPointMethod` case in `CalculateQSOPoints`. Tiers 1/2/3/4 points at <2000 / <4000 / <8000 / ≥8000 km. Out-of-rules QSOs (bands outside 40/20/15/10 or modes other than CW/Phone) score 0 and set `InhibitMults := True`.
+- **`fcontest.pas`**: `RTC` init — `WARCBandsEnabled := False` (kills 30/17/12 at the band-switch level). CW function-key memories: `F3 = '# ' + MyGrid`, `F4 EX = 'NR # ' + MyGrid`, `F5 EX = '@ DE \ # ' + MyGrid`. RST is optional per rules and not transmitted by default. `MyGrid` substituted at FCONTEST init time (same idiom as `MyZone`).
 - **`uNewContest.pas`**: RTC added to the 4-character-grid prompt branch.
 - **Rule enforcement caveat**: TR4W has no per-band toggle (no `Band160Enable` etc.) and no per-mode disable. WARC is killed via the group toggle. 160 / 80 / digital modes are enforced only in the scoring branch — the operator can still tune and log there, but the QSO scores 0 and is excluded from mults.
 
-#### UDP Wire-Format Bug Fixes (`src/trdos/LOGSUBS2.PAS`) — PR #903
+#### UDP Wire-Format Bug Fixes (`src/trdos/logsubs2.pas`) — PR #903
 
 - **`BandTypeToUDPContactBand[]` WARC labels were meter-band, not MHz**: other entries are MHz strings (`'1.8'`, `'3.5'`, `'7'`, `'14'`, `'21'`, `'28'`, `'50'`, ...), but the WARC slots had `'30'` / `'17'` / `'12'`. Consumers expecting `<band>18</band>` on 17m were silently dropping every WARC QSO. Fixed to `'10'` / `'18'` / `'24'`.
 - **`<IsClaimedQso>` closing tag case-mismatch**: PR #901's X-QSO work emitted `<IsClaimedQso>...</IsClaimedQSO>` — strict XML parsers reject as malformed. Fixed to `</IsClaimedQso>` to match the opening tag.
 
-#### `cMyGrid` Uninitialized-Memory Bug (`src/trdos/PostUnit.PAS`) — PR #903
+#### `cMyGrid` Uninitialized-Memory Bug (`src/trdos/postunit.pas`) — PR #903
 
 - **Cabrillo and ADIF writers leaked stack bytes after short grids**. Line 2349 had `TempGrid[7] := #0;` and line 4051 had `TempGrid[5] := #0;` — both assumed a fixed grid length. For a 4-char grid (e.g. `EL88`), line 2349 left bytes 5–6 holding uninitialized stack memory, which `wsprintf %-7s` then printed as non-printable characters. The mirror at line 4051 silently truncated 6-char grids.
 - Fix: both sites now use `TempGrid[Length(MyGrid) + 1] := #0;` — terminator tracks the actual grid length. Works for 4-, 5-, and 6-char grids.
@@ -889,7 +889,7 @@ Real-Time Contest (RTC, contestonlinescore.com) — 4-hour mixed-mode (CW + SSB)
 
 ### 4.147.06 (2026-05-13) — NY4I / N4AF
 
-#### X-QSO Support (`src/VC.pas`, `src/uEditQSO.pas`, `src/MainUnit.pas`, `src/trdos/LOGSUBS2.PAS`, `src/uADIF.pas`, `res/`) — Issue #750, PR #901
+#### X-QSO Support (`src/VC.pas`, `src/uEditQSO.pas`, `src/MainUnit.pas`, `src/trdos/logsubs2.pas`, `src/uADIF.pas`, `res/`) — Issue #750, PR #901
 
 X-QSO records stay in the log for NIL protection of the worked station but contribute nothing to the score — no QSO count, no multipliers, no points, no presence in the dupe sheet.
 
@@ -923,7 +923,7 @@ X-QSO records stay in the log for NIL protection of the worked station but contr
 - **PING/PONG keep-alive in network mode**: K4 servers (`k4remote.elecraft.com`, K4 in host mode) drop a client that sends nothing for 10 seconds. TR4W's K4 network mode uses AI5 — state changes pushed from radio to client — but the client itself sent nothing during operator idle periods. An operator who tuned once and then sat quietly for >10 s silently lost the connection.
 - Fix: in network mode `Connect` sets `requiresPolling := True; pollingInterval := 1000`. `PollRadioState` branches on `serialPort` — serial sends `IF;FB;` (current behaviour, AI disabled), network sends `PING;`. `ProcessMessage` adds `'PO'` to its `AnsiIndexText` list with an explicit case 17 that logs the PONG response (rather than fall-through, so a future reader sees PONG is handled). PONG refreshes the inbound watchdog via the existing `UpdateLastValidResponse` at the top of `ProcessMessage`.
 
-#### ADIF Export Bug Fixes (`src/uADIF.pas`, `src/trdos/PostUnit.PAS`) — Issue #898, PR #899
+#### ADIF Export Bug Fixes (`src/uADIF.pas`, `src/trdos/postunit.pas`) — Issue #898, PR #899
 
 - **`<SRX_STRING>` no longer prepends `59` for non-RST contests**: `ResolveSRXString` (added in PR #896) normalized `<SRX_STRING>` with an implied RST prefix so it would be symmetric with `<STX_STRING>` for state QSO parties. That assumption breaks for any contest whose exchange has no RST — ARRL Field Day, Winter Field Day, Sweepstakes (CW/SSB). FD export was emitting `<SRX_STRING:9>59 1D WCF` (bogus leading `59`). Fix: move `<SRX_STRING>` emission out of `uADIF.EmitADIFRecord` and into `PostUnit.EmitContestSpecificTailForExport` (the tail-emitter callback). Tail emitter decides shape: POTA → park-ref (existing branch unchanged); `ExchangeInformation.RST = True` → `ResolveSRXString` (state QPs / zone contests); `ExchangeInformation.RST = False` → `ExchString` as-is (FD, SS, Winter FD). `ResolveSRXString` promoted from private helper to public function in `uADIF`'s interface.
 - **`<SRX>` / `<STX>` guard against unset-serial sentinels**: two "unset" sentinels were in use — `$FFFF` (65535, from `uADIF.InitContestExchangeForParse`) and `-1` (live-entry / binary-log paths). Prior guard was `<> $FFFF` only, dating from when these fields were `Word`. Fields are now signed `Integer`, so `-1` stays `-1`. For Field Day where SRX is unused and stays `-1`, `EmitADIFRecord` was producing `<SRX:5>000-1` (`IntToStr(-1) = '-1'` zero-padded to width 5). Fix: require value to be positive AND not the parse sentinel. Applied symmetrically to STX.
@@ -932,7 +932,7 @@ X-QSO records stay in the log for NIL protection of the worked station but contr
 
 ### 4.147.04 (2026-05-12) — NY4I / N4AF
 
-#### ADIF Parser/Emitter Refactor (`src/uADIF.pas`, `src/MainUnit.pas`, `src/trdos/PostUnit.PAS`) — Issue #887, PR #896
+#### ADIF Parser/Emitter Refactor (`src/uADIF.pas`, `src/MainUnit.pas`, `src/trdos/postunit.pas`) — Issue #887, PR #896
 
 - **Extract ADIF code into `uADIF.pas`**: focused, dependency-light unit (deps: `SysUtils`, `StrUtils`, `Log4D`, `VC`, `utils_text`) with pure string-in / string-out entry points so the ADIF format logic can be exercised by unit tests without linking `MainUnit`.
 - **Part 1 — field-list lexer**: `ParseADIFFieldsList` extracted with unit tests.
@@ -959,7 +959,7 @@ End-to-end test harness that cross-checks the `.ADI` produced by `File -> Export
 
 ### 4.147.02 (2026-05-10) — NY4I / N4AF
 
-#### State QSO Party Rover — Slash-in-Call (`src/MainUnit.pas`, `src/trdos/PostUnit.PAS`, `src/trdos/LOGSUBS2.PAS`)
+#### State QSO Party Rover — Slash-in-Call (`src/MainUnit.pas`, `src/trdos/postunit.pas`, `src/trdos/logsubs2.pas`)
 
 - **Rover call format (KG1S/MON)**: a state-QP rover call with a `/COUNTY` suffix is kept literally in the log (so Cabrillo and the on-screen log preserve it end-to-end); the county is pre-filled into the exchange at submit time.
 - **Country lookup**: the slash-suffix is stripped before `ctyLocateCall` in import, live submit, and rescore paths so `/M` no longer mislabels a US rover as country=G.
@@ -1016,14 +1016,14 @@ End-to-end test harness that cross-checks the `.ADI` produced by `File -> Export
 
 ### 4.146.14 (2026-04-17) — NY4I
 
-#### POTA Exchange Parser — Free-Form with State/Section/Name Recognition (`src/trdos/LOGSTUFF.PAS`, `src/trdos/LOGSCP.PAS`, `src/trdos/FCONTEST.PAS`, `src/trdos/tree.pas`) — Issue #877
+#### POTA Exchange Parser — Free-Form with State/Section/Name Recognition (`src/trdos/logstuff.pas`, `src/trdos/logscp.pas`, `src/trdos/fcontest.pas`, `src/trdos/tree.pas`) — Issue #877
 
 - **Free-form exchange**: POTA exchange is now always accepted — blocked saves are gone. Tokens are classified as US state/province (→ DomesticQTH), ARRL section, operator name (→ Name), or free-form notes (→ ExchString).
 - **OperatorNameSet**: sorted list of ~1,300 operator names built from TRMASTER.DTA at contest load; binary search replaces the prior all-alpha character heuristic for name detection.
 - **IsValidPOTAPark regex fix**: updated to require exactly a 2-letter prefix and 4–5 digit park number (e.g. `US-1234`, `K-0001`); rejects RST values and malformed refs.
 - **LooksLikeAPOTAPark**: new helper in `tree.pas`; POTA added to `LooksLikeAGrid` exchange list so grid squares in POTA exchanges are recognised.
 
-#### POTA ADIF Import/Export (`src/MainUnit.pas`, `src/trdos/PostUnit.PAS`) — Issue #877
+#### POTA ADIF Import/Export (`src/MainUnit.pas`, `src/trdos/postunit.pas`) — Issue #877
 
 - **ADIF import**: new fields `SIG`, `SIG_INFO`, `POTA_REF`, `APP_N1MM_ID`, `APP_TR4W_ID` parsed on import. POTA import tries `POTA_REF` → `SIG_INFO` (when `SIG=POTA`) → `STATE` fallback.
 - **ADIF export**: writes `MY_POTA_REF` alongside existing `MY_SIG`/`MY_SIG_INFO` for backward compatibility; conditionally writes `SIG`/`SIG_INFO`/`POTA_REF` only when QTHString is a valid park ref; writes `STATE` or `GRIDSQUARE` from ExchString when applicable; adds `APP_TR4W_ID` (QSO GUID) to all records.
@@ -1033,7 +1033,7 @@ End-to-end test harness that cross-checks the `.ADI` produced by `File -> Export
 
 ### 4.146.13 (2026-04-17) — NY4I
 
-#### Yaesu FTX-1F/FTX-1R Radio Support (`src/trdos/LOGRADIO.PAS`) — Issue #817
+#### Yaesu FTX-1F/FTX-1R Radio Support (`src/trdos/logradio.pas`) — Issue #817
 
 - **FTX-1F/FTX-1R serial CAT**: new polling procedure `pFTX1F` and parser `GetVFOInfoForYaesuFTX1` using the `rtYaesu4` protocol family. The FTX-1 IF response is 30 bytes (vs FTDX10's 28) due to a 5-byte P1 field, shifting all subsequent field positions. C4FM voice modes map to `Phone`/`eC4FM`. HamLib model 1051.
 
@@ -1045,11 +1045,11 @@ End-to-end test harness that cross-checks the `.ADI` produced by `File -> Export
 
 ### 4.146.12 (2026-04-16) — NY4I
 
-#### Log Format v1.7 (`src/VC.pas`, `src/MainUnit.pas`, `src/TF.pas`, `src/trdos/LOGSUBS2.PAS`, `src/uEditQSO.pas`) — Issue #674, closes #768
+#### Log Format v1.7 (`src/VC.pas`, `src/MainUnit.pas`, `src/TF.pas`, `src/trdos/logsubs2.pas`, `src/uEditQSO.pas`) — Issue #674, closes #768
 
 - **QSO GUID field**: `ContestExchange` gains an `id` field (GUID string via `TF.GetGUID`) giving each QSO a unique identifier; `sReserved` adds expansion space and freezes the v1.6 layout as `ContestExchangev1_6`.
 - **Log conversion**: `AskConvertLog` handles v1.5→v1.7 and v1.6→v1.7 with correct typed record reads and a prompt showing the source version. A read-only backup is created before any conversion begins.
-- **UDP broadcast fix**: `uEditQSO` correctly sends delete-then-add when editing a QSO; `LogEditedContactToUDP` added to `LOGSUBS2.PAS`.
+- **UDP broadcast fix**: `uEditQSO` correctly sends delete-then-add when editing a QSO; `LogEditedContactToUDP` added to `logsubs2.pas`.
 
 #### TR4WServer — Standalone Logging, Dependency Cleanup (`tr4wserver/src/tr4wserverUnit.pas`, `tr4wserver/tr4wserver.dpr`, `src/MainUnit.pas`)
 
@@ -1096,18 +1096,18 @@ End-to-end test harness that cross-checks the `.ADI` produced by `File -> Export
 
 ### 4.146.7 / 4.146.8 (2026-04-13) — NY4I
 
-#### Band Map Flicker (`src/uBandmap.pas`, `src/trdos/LOGSUBS2.PAS`, `src/trdos/LOGWIND.PAS`) — Issue #688
+#### Band Map Flicker (`src/uBandmap.pas`, `src/trdos/logsubs2.pas`, `src/trdos/logwind.pas`) — Issue #688
 
 - **Coalesced refresh timer**: rapid spot arrivals and VFO changes now coalesce into a single `DisplayBandMap` call via a 250 ms `BandMapNeedsRefresh` flag instead of redrawing on every event.
 - **WS_EX_COMPOSITED**: applied to the band map dialog so all children paint through DWM's back buffer, eliminating the top-to-bottom repaint sweep.
 - **ValidateRect + RDW_NOERASE**: cancels the pending erase flash after `WM_SETREDRAW(True)` before owner-draw items fill their own backgrounds.
 - **Spot deletion**: `DeleteSpotFromBandmap` now calls `DisplayBandMap` immediately after removing a spot; previously the deleted item stayed visible until the next spot arrival triggered a refresh.
 
-#### Radio — K4 Serial Rate, K3 Shutdown, Icom VFO B (`src/uRadioPolling.pas`, `src/uRadioElecraftK4.pas`, `src/trdos/LOGSUBS2.PAS`, `src/uRadioIcomBase.pas`)
+#### Radio — K4 Serial Rate, K3 Shutdown, Icom VFO B (`src/uRadioPolling.pas`, `src/uRadioElecraftK4.pas`, `src/trdos/logsubs2.pas`, `src/uRadioIcomBase.pas`)
 
 - **K4 serial poll rate**: `pollingInterval` now reads from `FreqPollRate` (`FREQUENCY POLL RATE` config, default 10 ms) instead of being hardcoded at 1000 ms — VFO update responsiveness now matches the K3.
 - **K3/K4 clean shutdown**: `pKenwood2`/`pKenwoodNew` polling threads now check `PollingStopRequested` at the outer loop and inner byte-wait loop, exiting in ~20 ms on quit instead of timing out after 3000 ms.
-- **Icom VFO B mode write**: replaced the old `$07 $01` / `$06` / `$07 $00` sequence with the `$26 $01` extended command on radios that support `FSupportsExtendedVFOBCommands` (e.g. IC-7760), matching the serial path in `LOGRADIO.PAS`.
+- **Icom VFO B mode write**: replaced the old `$07 $01` / `$06` / `$07 $00` sequence with the `$26 $01` extended command on radios that support `FSupportsExtendedVFOBCommands` (e.g. IC-7760), matching the serial path in `logradio.pas`.
 
 #### Cluster — False Split Fix (`src/uTelnet.pas`)
 
@@ -1130,13 +1130,13 @@ End-to-end test harness that cross-checks the `.ADI` produced by `File -> Export
 - **HamLib trace logging**: `HAMLIB TRACE = TRUE` in config redirects HamLib internal debug to `hamlib_trace.log`.
 - **HamLib warning in CAT dialog**: warns when HamLib is selected for a radio with native TR4W support, explaining the RIT/XIT limitation.
 
-#### Added **KX3 support**: added KX3 between K3 and K4 (`LOGRADIO.PAS`, `VC.pas`) — Kenwood protocol, 38400 baud, HamLib ID 2045.
+#### Added **KX3 support**: added KX3 between K3 and K4 (`logradio.pas`, `VC.pas`) — Kenwood protocol, 38400 baud, HamLib ID 2045.
 
 ---
 
 ### 4.146.5 (2026-04-11) — NY4I
 
-#### POTA — Parks on the Air Full Feature Set (`src/trdos/FCONTEST.PAS`, `src/trdos/LOGSTUFF.PAS`, `src/MainUnit.pas`, `src/trdos/LOGSUBS2.PAS`) — Issue #864
+#### POTA — Parks on the Air Full Feature Set (`src/trdos/fcontest.pas`, `src/trdos/logstuff.pas`, `src/MainUnit.pas`, `src/trdos/logsubs2.pas`) — Issue #864
 
 - **Park name lookup**: downloads park name from the POTA API on exchange entry; name is displayed alongside the park reference in the QSO window.
 - **Exchange normalization**: park references are normalized to canonical form (e.g. `K-1234`) before logging and export.
@@ -1148,7 +1148,7 @@ End-to-end test harness that cross-checks the `.ADI` produced by `File -> Export
 - **2nd operator repeat (Ctrl+T)**: new Commands menu item pre-fills the exchange with the last logged park references so a second operator can work the same activation without re-typing parks. Ctrl+T accelerator added to the resource table.
 - **Stealth menu**: POTA menu items are hidden entirely (not just grayed) when the active contest is not POTA.
 
-#### Radio — RIT and SO2R Fixes (`src/trdos/LOGRADIO.PAS`, `src/uFlexRadio6000.pas`)
+#### Radio — RIT and SO2R Fixes (`src/trdos/logradio.pas`, `src/uFlexRadio6000.pas`)
 
 - **SO2R RIT routing**: `RITBumpUp`/`RITBumpDown` always routed to `Radio1.tNetObject` regardless of which radio was active; now correctly routes to the active radio.
 - **FlexRadio RIT accumulation**: RIT offset was stuck after the first bump because Flex does not reliably echo `rit_freq` back; local offset now updated optimistically before sending the CAT command.
@@ -1166,7 +1166,7 @@ End-to-end test harness that cross-checks the `.ADI` produced by `File -> Export
 - **Fixed CTRL-END not moving cursor to band map on the second press.** Root cause: when the band map dialog is re-activated after losing focus, Win32's `DefDlgProc` fires a nested `SetFocus(BandMapListBox)` synchronously *inside* the outer `SetFocus` call from the CTRL-END handler. The outer `SetFocus` then sends `WM_KILLFOCUS` to the now-focused listbox, triggering `LBN_KILLFOCUS` → `KillFocus()` → `SetFocus(wh[mweCall])`, leaving focus on the call window. Fixed with a `BandMapSettingFocus` flag that causes `KillFocus` to exit early while CTRL-END is directing focus to the band map.
 - **Restored Ctrl+End shortcut to move cursor to band map.** The `RC_CURSORINBM_HK` hotkey and its `menu_ctrl_cursorinbandmap` menu entry had been commented out since at least the initial 2014 commit with no documented reason. Re-enabled both. `T_MENU_ARRAY_SIZE` bumped from 175 to 176 to match.
 
-#### POTA — Default CW Memories (`src/trdos/FCONTEST.PAS`)
+#### POTA — Default CW Memories (`src/trdos/fcontest.pas`)
 
 - Added default F1 (`CQ POTA \ \`) and F2 (`CQ POTA CQ POTA \ \ FD`) CW memories and a default QSL message (`73 \ EE`) for the POTA contest type.
 
@@ -1186,19 +1186,19 @@ End-to-end test harness that cross-checks the `.ADI` produced by `File -> Export
 
 ### 4.146.2 (2026-04-07) — NY4I
 
-#### YCCC SO2R Box — OTRSP RX Control and Overlapped I/O (`src/uYCCCSO2R.pas`, `src/trdos/LOGSUBS2.PAS`, `src/uProcessCommand.pas`) — Issue #61
+#### YCCC SO2R Box — OTRSP RX Control and Overlapped I/O (`src/uYCCCSO2R.pas`, `src/trdos/logsubs2.pas`, `src/uProcessCommand.pas`) — Issue #61
 
 - **Rewrote serial I/O to use overlapped (`FILE_FLAG_OVERLAPPED`) mode** so `WriteFile` never blocks the main UI thread. A dedicated write thread drains the command queue via `WaitForMultipleObjects`.
 - **Added `YCCCSetStereo()` and `YCCCSetRxMode()`** for independent RX antenna control per the OTRSP protocol.
 - **Hooked `ToggleStereoPin`** to call `YCCCSetStereo` for stereo/mono RX switching.
-- **Added `OTRSPCommand` procedure** in `LOGSUBS2.PAS` handling the `OTRSP=RX1`, `RX2`, `RXA`, `RXI`, and `STEREO` function key messages.
+- **Added `OTRSPCommand` procedure** in `logsubs2.pas` handling the `OTRSP=RX1`, `RX2`, `RXA`, `RXI`, and `STEREO` function key messages.
 - **Registered `OTRSP` command** and five display-only help entries in `uProcessCommand.pas` commands list.
 
 ---
 
 ### 4.146.1 (2026-04-06) — NY4I
 
-#### FlexRadio 6000 — Split, Alert Color, and UI Fixes (`uFlexRadio6000.pas`, `uNetRadioBase.pas`, `uRadioPolling.pas`, `MainUnit.pas`, `VC.pas`, `uCFG.pas`, `uOption.pas`, `LOGRADIO.PAS`, `tr4w.dpr`) — Issue #855
+#### FlexRadio 6000 — Split, Alert Color, and UI Fixes (`uFlexRadio6000.pas`, `uNetRadioBase.pas`, `uRadioPolling.pas`, `MainUnit.pas`, `VC.pas`, `uCFG.pas`, `uOption.pas`, `logradio.pas`, `tr4w.dpr`) — Issue #855
 
 - **Fixed split indicator not clearing when SmartSDR closes slice 1.** Root cause: `in_use=0` push for slice 1 was not handled. Now clears split state and zeros VFO B frequency/band when slice 1 is deallocated.
 - **Fixed VFO B showing VFO A's frequency when split is disabled.** When split was enabled externally from SmartSDR (`slice 0 tx=0` push), `FSlice0TX` was set to False. On subsequent split disable (`slice 1 tx=0`), only `FSlice1TX` was updated — leaving `FSlice0TX` stale and routing the `transmit freq=` push to VFO B. Fixed: when slice 1 loses TX, `FSlice0TX` is forced True (TX must be returning to slice 0).
@@ -1236,7 +1236,7 @@ Users who had `HAMLIB RIGCTLD PORT`, `HAMLIB RIGCTLD IP ADDRESS`, or `HAMLIB RIG
 - Fixed frequency/mode display staying blank after connect. Root cause: the `OnInitialPollSeeding` WM_TIMER callback was registered on a thread that never pumps a Win32 message queue (the polling thread uses `Sleep()`), so it never fired. Replaced with direct queries (`QueryVFOAFrequency`, `QueryVFOBFrequency`, `QueryMode`, `PollRadioState`) issued by the polling thread the moment `IsConnected` first becomes true. The timer mechanism (`ICOM_TIMER_INITIAL_POLL`, `OnInitialPollSeeding`, `FOnInitialPoll`/`OnInitialPoll`) has been removed entirely.
 - Frequency display is now blanked when the radio disconnects, so stale data is never shown.
 
-#### HamLib — Remove Obsolete rigctld Configuration (`uCFG.pas`, `VC.pas`, `CFGDEF.PAS`, `tr4w.dpr`) — Issue #846
+#### HamLib — Remove Obsolete rigctld Configuration (`uCFG.pas`, `VC.pas`, `cfgdef.pas`, `tr4w.dpr`) — Issue #846
 
 - Deleted `uRadioHamLib.pas` (the old rigctld-based `THamLib` class). All HamLib radio control now goes through `uRadioHamLibDirect.pas` (`THamLibDirect`) which links directly to `libhamlib-4.dll`. The file was already unreferenced — no factory, no polling thread, no `uses` clause pointed to it.
 - Removed four obsolete config parameters: `HAMLIB PATH`, `HAMLIB RIGCTLD PORT`, `HAMLIB RIGCTLD IP ADDRESS`, `HAMLIB RIGCTLD RUN AT STARTUP`, along with their backing variables (`TR4W_HAMLIBPATH`, `TR4W_HAMLIBPORT`, `TR4W_HAMLIBIPADDRESS`, `TR4W_HAMLIBRUNRIGCTLD`) and defaults. `HAMLIB DEBUG` is retained as it applies to the DLL-based path.
@@ -1259,7 +1259,7 @@ Users who had `HAMLIB RIGCTLD PORT`, `HAMLIB RIGCTLD IP ADDRESS`, or `HAMLIB RIG
 #### Bug Fixes
 
 - **CW stop command for Icom network** — Was sending `$17 $01`; corrected to `$17 $FF` (closes issue on CWByCAT-ESC-fix branch). Updated in `uRadioIcomBase.pas` and all three Icom protocol docs.
-- **GridFields multiplier tracking** (`uMults.pas`, `LOGDUPE.PAS`, `LOGSTUFF.PAS`) — `IsDmMult` now accepts a `DomMultType` parameter. For GridFields contests the comparison truncates the query to the 2-char field prefix and prefix-matches against stored 4-char grid keys, so any grid in the same field is correctly recognized as already worked. Full 4-char key retained in storage for Cabrillo export.
+- **GridFields multiplier tracking** (`uMults.pas`, `logdupe.pas`, `logstuff.pas`) — `IsDmMult` now accepts a `DomMultType` parameter. For GridFields contests the comparison truncates the query to the 2-char field prefix and prefix-matches against stored 4-char grid keys, so any grid in the same field is correctly recognized as already worked. Full 4-char key retained in storage for Cabrillo export.
 - **WSJT-X band/freq logging** (`uWSJTX.pas`, `MainUnit.pas`, `VC.pas`) — Use band and frequency from the WSJT-X ADIF record when TR4W has no radio connected; fall back to radio frequency only when WSJT-X omits them (closes issue #822). `GENERALQSO` now uses grid square from any ADIF source (WSJT-X does not always include `PROGRAMID`). `ExchString` falls back to `QTHString` when ADIF leaves it empty. MO QSO Party: fixed `ciMM` multi-mode flag.
 - **Missouri QSO Party dom files** — `missouri.dom` and `missouri_cty.dom` were on disk but excluded by a `.gitignore` rule for `tr4w/target/`; fixed rule so `dom/` negation takes effect.
 

@@ -4,7 +4,7 @@ D:\newsrc\tr4w\src\trdos\CfgCmd.pas
    4032	Radio2.RadioModel := OMNI6;
    5256	RadioPointer^.RadioModel := OMNI6;
 
-D:\newsrc\tr4w\src\trdos\LOGRADIO.PAS
+D:\newsrc\tr4w\src\trdos\logradio.pas
     454	({Name: 'OMNI6';      } BR:BR9600;  P: 1; C: 1; S: 1; T:0; RA: $04; SW: 1; SFOC: $00; SMOC: $00; SPOC: $00; RX: $00; TX: $00; MB: 0; CW: $00; LSB: $00; USB: $00; FM: $00; AM: $00; DIGL: $00; DIGU: $00; rt: rtIcom),
     524	'OMNI6',
     578	'OMNI6',

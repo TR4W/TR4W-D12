@@ -835,7 +835,7 @@ end;
 // corrupts every beam heading and distance.
 //
 // That harness turned out to be unnecessary: NOTHING CALLS THEM. uCTYDAT moved
-// to the RTL `Val` intrinsic under Issue #1033 (see uCTYDAT.PAS around the Lat
+// to the RTL `Val` intrinsic under Issue #1033 (see uctydat.pas around the Lat
 // and Lon parses), and the only other references, in uCFG, were already
 // commented out. _Pow10 was in turn called from nowhere but ValExt.
 //

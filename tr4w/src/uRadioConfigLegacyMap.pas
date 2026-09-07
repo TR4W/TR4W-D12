@@ -133,7 +133,7 @@ const
    FALSEVALUE = 'FALSE';
 
    // The tr4w_RTSDTRType vocabulary is NONE / OFF / ON / CW / PTT
-   // (LOGRADIO.PAS:92).  Empty is not a member of it: CFGCA rejects
+   // (logradio.pas:92).  Empty is not a member of it: CFGCA rejects
    // 'RADIO ONE CAT RTS=' as "Invalid statement in config file", which aborts
    // the whole config load -- it does not merely skip the line.  That is a
    // harder failure than the empty-numeric one, and it is what stopped the

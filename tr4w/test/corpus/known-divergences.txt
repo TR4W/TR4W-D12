@@ -6,7 +6,7 @@
 # the SENT exchange is rebuilt from MY-station globals at export time, NOT
 # stored per QSO.  /EXPORT deliberately skips ApplyStoredCommands and applies
 # only COMPUTER ID (uProgramMain.pas:1067-1072), so those globals sit at their
-# CFGDEF.PAS:294-295 default of '' and the sent half of the exchange is built
+# cfgdef.pas:294-295 default of '' and the sent half of the exchange is built
 # from nothing.  The RECEIVED half is faithful in both sets -- logdump confirms
 # it, and the diff below shows the far station's zones read correctly.
 #
@@ -18,7 +18,7 @@
 #   * iaru was recorded as the sent zone "falling back to MY STATE", candidate
 #     "59  FL".  There is no MY-STATE fallback in that arm
 #     (uCabrilloExchange.pas:223-227).  The FL was the dangling-PChar bug since
-#     fixed and documented at PostUnit.PAS:2753-2759 ("'599 001' became
+#     fixed and documented at postunit.pas:2753-2759 ("'599 001' became
 #     'FL 001' across six corpus sets").  Measured today:
 #
 #       REF   ... NY4I    59  8      W1AW           59  8       1

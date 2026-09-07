@@ -6,7 +6,7 @@
 #
 #   * Lint-PCharAnsi.ps1 carried the careful version below. Its own header
 #     records why: an earlier version stripped only TRAILING `//` comments, fired
-#     on four "violations" inside a commented-out TS-850 block in LOGRADIO.PAS,
+#     on four "violations" inside a commented-out TS-850 block in logradio.pas,
 #     "and a linter that fires on commented-out code is one people learn to
 #     ignore, which is worse than no linter."
 #   * Count-LiveAsm.ps1 carried a three-line regex version instead. It blanks
@@ -56,7 +56,7 @@ function Get-PascalCodeOnlyLine
       #   code  "     asm hst etepeeec.}"
       #
       # which is where Count-LiveAsm's two phantom asm blocks came from
-      # (LOGSTUFF.PAS:3005 and networkmessageutils.pas:170). It also means
+      # (logstuff.pas:3005 and networkmessageutils.pas:170). It also means
       # Lint-PCharAnsi, which carried this code, was scanning half-blanked
       # comment text for the whole time it claimed to have solved exactly this
       # problem. Found 2026-08-17 while lifting the reader into this module.

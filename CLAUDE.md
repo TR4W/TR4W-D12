@@ -21,7 +21,10 @@ what it expects.
 ## MANDATORY: Project guardrails live in the repo
 
 `.claude/settings.json` and `.claude/hooks/` are **tracked**. They carry the hooks every clone needs:
-the `git -C` rule, the case-insensitive Pascal glob rule, the begin/end lint, and the CRLF check.
+the `git -C` rule, the begin/end lint, and the CRLF check. (The Pascal glob rule
+is **gone as of 2026-09-07** -- it blocked `--include=*.pas` because 25 units had
+UPPERCASE extensions, and those are renamed. Its successor
+`build/Lint-UnitFileNames.ps1` fails the build instead of warning a shell.)
 
 **`.claude/settings.local.json` is gitignored and is yours alone** — permission allow-lists, machine
 paths, anything you would not ask another developer to adopt. It wins over `settings.json` where they
@@ -598,23 +601,23 @@ The Role column is what this table is for.
 
 | File | Role |
 |------|------|
-| `LOGSTUFF.PAS` | Contest logging, exchange parsing, QSO validation -- the biggest unit here |
+| `logstuff.pas` | Contest logging, exchange parsing, QSO validation -- the biggest unit here |
 | `tree.pas` | Utility library |
-| `LOGWIND.PAS` | Window management and display |
-| `PostUnit.PAS` | Post-contest processing, Cabrillo export |
-| `HELP.PAS` | Help text |
-| `LOGSCP.PAS` | Super Check Partial |
-| `LOGRADIO.PAS` | **Legacy** radio control — see the radio section below |
-| `LOGSUBS2.PAS` | Core logging subroutines |
+| `logwind.pas` | Window management and display |
+| `postunit.pas` | Post-contest processing, Cabrillo export |
+| `help.pas` | Help text |
+| `logscp.pas` | Super Check Partial |
+| `logradio.pas` | **Legacy** radio control — see the radio section below |
+| `logsubs2.pas` | Core logging subroutines |
 | `LogCW.pas` | CW message memories/function keys; the **facade** over the keyer factory |
-| `LogDupe.pas` | Duplicate checking |
-| `FCONTEST.PAS` | Contest type definitions and defaults |
-| `CFGDEF.PAS` | Configuration parameter defaults |
+| `logdupe.pas` | Duplicate checking |
+| `fcontest.pas` | Contest type definitions and defaults |
+| `cfgdef.pas` | Configuration parameter defaults |
 
-Contest-specific modules: `LOGWAE.PAS` (WAE), `LOGDOM.PAS` (domestic/QSO parties), `LOGK1EA.PAS`
-(also the CPU keyer), `LOGGRID.PAS`, `LOGEDIT.PAS`.
+Contest-specific modules: `logwae.pas` (WAE), `logdom.pas` (domestic/QSO parties), `logk1ea.pas`
+(also the CPU keyer), `loggrid.pas`, `logedit.pas`.
 
-(Files like `LOGRADIO.$$$`, `LOGSUBS2~.PAS`, `PostUnit.PAS.bak` are editor debris, not units.)
+(Files like `LOGRADIO.$$$`, `LOGSUBS2~.PAS`, `postunit.pas.bak` are editor debris, not units.)
 
 ### 2. Type system (`src/VC.pas`, `src/TF.pas`)
 
@@ -718,13 +721,13 @@ moving a setting are in [`docs/CFG_MIGRATION_PLAN.md`](docs/CFG_MIGRATION_PLAN.m
 ### 4. Contest flow
 
 1. Callsign typed → `CallWindowChange`
-2. Super Check Partial → `LogSCP.pas` (TRMASTER.DTA)
-3. Dupe check → `LogDupe.pas`
-4. Country/multiplier → `uCTYDAT.pas` (CTY.DAT), `uMults.pas`
-5. Exchange parsing → `LOGSTUFF.PAS` `ProcessExchange()`
+2. Super Check Partial → `logscp.pas` (TRMASTER.DTA)
+3. Dupe check → `logdupe.pas`
+4. Country/multiplier → `uctydat.pas` (CTY.DAT), `uMults.pas`
+5. Exchange parsing → `logstuff.pas` `ProcessExchange()`
 6. Validation → `ContestExchange` record
 7. Network broadcast → `uNet.pas`
-8. Display update → `LOGWIND.PAS`
+8. Display update → `logwind.pas`
 
 ### 5. Radio control — the factory
 
@@ -767,7 +770,7 @@ records. `.\build\Run-Lints.ps1` prints it on every build; that number is the tr
 - `uRadioPolling.pas` went **4,621 → 1,336 lines** (`a84266bd`): the `case rig^.RadioModel of`
   dispatch and all 37 per-model pollers are gone. Its public surface dropped from 50 exported
   routines to 14. Reachability was *computed* by a call-graph walk, not assumed.
-- `LOGRADIO.PAS` went **4,416 → 3,165 lines** with 11 model dispatches → 0. All seven Icom quirk
+- `logradio.pas` went **4,416 → 3,165 lines** with 11 model dispatches → 0. All seven Icom quirk
   typesets (`IcomRadiosThatSupportRIT`, VFOB, PSKMode, SplitSetOnly, ModeSetNoFilter,
   TXStatusUnreadable, 6to60WPMKeyer) and the last three `RadioSupports*` typesets are deleted;
   ~~`RadioParametersArray` is unreferenced.~~ **Both enum-indexed radio tables are DELETED
@@ -835,7 +838,7 @@ helped: it asks which *compiler*, when the question is which *program* has a wid
 FPC. No conditional can answer that — only the unit graph can, which is why the answer is a second
 unit. **`-SkipServer` now also warns that you have skipped the only guard on that boundary.**
 
-Client side: `src/uNetClient.pas`, `src/uNet.pas`, `src/trdos/LogNet.pas`,
+Client side: `src/uNetClient.pas`, `src/uNet.pas`, `src/trdos/lognet.pas`,
 `src/uGetServerLog.pas`.
 
 **THE CLIENT LINK IS INDY, NOT WINSOCK (2026-08-25).** `uNet` used to drive a raw
@@ -901,7 +904,7 @@ extending the `case`.
   Telnet client is now Indy-based (`TDXClusterClient`, fixing lines lost at TCP segment boundaries),
   spot parsing is extracted and unit-tested, and auto-reconnect is on by default (5s doubling to a
   60s cap, gated on having connected at startup).
-- **Country database** (`uCTYDAT.pas`) — CTY.DAT parsing, callsign → country/zone/continent.
+- **Country database** (`uctydat.pas`) — CTY.DAT parsing, callsign → country/zone/continent.
 
 ### 10. CW keying — the keyer factory
 
@@ -921,7 +924,7 @@ TR4W has four mutually exclusive ways to key CW. Each is now a `TCWKeyer` strate
 
 Base and selection live in `src/uCWKeyerBase.pas`; `src/trdos/LogCW.pas` is the facade. Per-keyer
 capabilities (`ckTune`, `ckDeleteLastChar`, `ckMessageChaining`) let the UI grey what the chosen
-interface cannot do. `LOGDVP.PAS` handles voice.
+interface cannot do. `logdvp.pas` handles voice.
 
 **The CAT repoint (done 2026-08-03) ran in three steps and is worth understanding:**
 
@@ -1043,16 +1046,16 @@ See [`docs/UPDATING_RUNTIME_DLLS.md`](docs/UPDATING_RUNTIME_DLLS.md).
 Read [`docs/ADDING_A_RADIO.md`](docs/ADDING_A_RADIO.md). In short: one new unit in
 `src/radioFactory/` inheriting the right family base, one `RegisterRadio` in its `initialization`,
 capability flags set in the constructor, added to `tr4w.lpr` and the unit-test `.lpr`. **Never** add
-a model check to a base class. **Never** add it to `LOGRADIO.PAS`.
+a model check to a base class. **Never** add it to `logradio.pas`.
 
 ### Add a contest
 Read [`docs/ADDING_A_NEW_CONTEST.md`](docs/ADDING_A_NEW_CONTEST.md). New `ContestType` in `VC.pas`,
-initialisation in `FCONTEST.PAS`, `.cfg` in `target/dom/`. Then verify exchange parsing, multiplier
+initialisation in `fcontest.pas`, `.cfg` in `target/dom/`. Then verify exchange parsing, multiplier
 tracking, scoring, and Cabrillo export — and run the corpus.
 
 ### Modify UI
 `TMainWindowElement` in `VC.pas` → `CreateMainWindow()` in `MainUnit.pas` → display routines in
-`LOGWIND.PAS` → colours in `VC.pas` (`tr4wColors`).
+`logwind.pas` → colours in `VC.pas` (`tr4wColors`).
 
 ### Debug
 `DEBUG LOG LEVEL = DEBUG` under `[COMMANDS]` in `settings/tr4w.ini`; output to `tr4w.log`.
@@ -1180,6 +1183,25 @@ the reasoning rather than the mechanics.
 ### Naming
 - `u*.pas` — modern units; `Log*.pas` — core logging subsystem; `T` prefix — types/classes;
   `mwe` prefix — main window elements. Lowercase filenames in `trdos/`, MixedCase in `src/`.
+- **EVERY PASCAL FILE HAS A LOWERCASE EXTENSION, AND THIS IS LOAD-BEARING**
+  (2026-09-07). FPC resolves a unit by trying `<AsWritten>.pas`,
+  `<lowercase>.pas` and `<UPPERCASE>.PAS` — and it matches those ITSELF against
+  a directory listing rather than asking the operating system, so it is
+  **case-sensitive even on a case-insensitive volume**. A mixed-case base with
+  an uppercase extension (`uCTYDAT.PAS`) therefore matches NONE of the three and
+  is invisible to every `uses` that names it.
+
+  It only bites when the unit is a DEPENDENCY — passed on the command line the
+  name is used verbatim — which is why `uCTYDAT.PAS` compiled alone and failed
+  the moment `uCallSignRoutines` asked for it. **And the Windows-hosted Linux
+  cross-compile cannot see it**, because that compiler inherits case-insensitive
+  lookup from its host: `Lint-LinuxCompile` passed throughout. It took a NATIVE
+  Unix host to surface. `Lint-UnitFileNames` is the guard on this machine.
+
+  A MixedCase *base* name is fine (`uCallSignRoutines.pas`) — the first spelling
+  matches. That is a weaker guarantee than lowercase, and it breaks the day
+  someone writes `uses uCallsignRoutines`; finding those wants a native Unix
+  compile of the whole tree, which is not possible yet.
 - **Pascal identifier search is case-insensitive.** Always `grep -i` for Delphi symbols — TR4W spells
   the same identifier differently at declaration, assignment and use, and a case-sensitive grep has
   already produced a false "dead code" conclusion.
@@ -1200,7 +1222,7 @@ Two silent-corruption traps live here, and neither produces a compiler diagnosti
 
   Nothing is deleted; it reads like file corruption and is not. Converting to CRLF and repeating
   the same designer action inserts perfectly (2026-08-06; 148 tracked `.pas` files were LF at the
-  time, `LOGSTUFF.PAS` and `VC.pas` among them). Fix with
+  time, `logstuff.pas` and `VC.pas` among them). Fix with
   `powershell -File tr4w\build\Lint-LineEndings.ps1 -SourceDir tr4w -Fix`.
 
   **EDIT SOURCE THROUGH `tools/srcfile.py`.** The obvious Python idiom silently converts the file:
@@ -1460,7 +1482,7 @@ DTR/RTS keying).
 2. **The two factories are the exception to "no OOP here."** `src/radioFactory/` and the CW keyer
    are real inheritance with real invariants — hold them to that standard. Everywhere else, expect
    procedural Pascal.
-3. **The legacy radio path is gone, not deprecated.** Don't reach for `LOGRADIO.PAS` or
+3. **The legacy radio path is gone, not deprecated.** Don't reach for `logradio.pas` or
    `uRadioPolling.pas` to fix radio behaviour — the per-model code was deleted 2026-08-02. Read the
    D7 tree at `C:\TR4W` as the authority on old behaviour; fix the factory. (`uCAT.pas` is the live
    config dialog, not legacy.)

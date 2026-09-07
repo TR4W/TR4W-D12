@@ -419,7 +419,7 @@ begin
 
         THIS HUNG THE PROGRAM, and headlessly it hung it forever. REMINDER is
         an ACTION, not a setting -- applying it calls QuickEditResponse('Enter
-        time for reminder') and waits for a human (HELP.PAS:642). It was being
+        time for reminder') and waits for a human (help.pas:642). It was being
         captured with an empty value and re-applied on every open, so a batch
         /EXPORT sat at a prompt nobody could see. Measured on the golden corpus:
         general_qso aborted every run, and the count of failures moved around
@@ -1075,7 +1075,7 @@ begin
 
               REMINDER is the case that found this. It is a COMMAND, not a
               value: applying it calls QuickEditResponse('Enter time for
-              reminder') and waits for the operator (HELP.PAS:642). In a
+              reminder') and waits for the operator (help.pas:642). In a
               headless /EXPORT that waits forever; in the interactive program it
               is worse, because the prompt takes the keyboard in the quick
               command window and the operator sees a log that has simply stopped

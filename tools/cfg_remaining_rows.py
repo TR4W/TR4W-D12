@@ -107,11 +107,11 @@ for r in allrows:
     r['defn'] = [n for n, b, d in blobs if d and pat.search(b)]
 
 # SIGNAL 2, and the first cut of this document was wrong to omit it. A row can
-# be contest-driven without appearing in any .cfg file: FCONTEST.PAS assigns it
+# be contest-driven without appearing in any .cfg file: fcontest.pas assigns it
 # when a contest is selected. WARC BAND ENABLE is exactly that -- crC:0, in no
 # .cfg, and assigned five times by FCONTEST -- so grouping on crC and .cfg alone
 # filed it under "no confirmation needed", which is the opposite of true.
-fc = io.open(os.path.join(SRC, 'trdos', 'FCONTEST.PAS'), encoding='utf-8',
+fc = io.open(os.path.join(SRC, 'trdos', 'fcontest.pas'), encoding='utf-8',
              errors='surrogateescape', newline='').read()
 fc_live = re.sub(r'\{[^}]*\}', ' ', fc)   # a commented assignment is not one
 for r in rows:
@@ -163,7 +163,7 @@ question is answered per row in `CFGCA` today, and NY4I's read is right — **%d
 `csOld` are `crC:0`, i.e. not contest-scoped**, against %d marked `crC:1`.
 
 What follows is therefore not a fresh classification. It is `crC` **checked against what the %d
-contest `.cfg` files on this machine actually contain, and against `FCONTEST.PAS`**, because the
+contest `.cfg` files on this machine actually contain, and against `fcontest.pas`**, because the
 rows worth anyone's attention are the ones where those disagree.
 
 ### The headline: `crC` under-declares by 38 rows
@@ -173,7 +173,7 @@ Counting a row as contest-related if **any** signal says so — `crC:1`, a real 
 The other 113 have no contest signal at all, so the "majority are not contest related" reading is
 right; the count is simply higher than the table admits.
 
-The gap is `FCONTEST.PAS`. Rows like `DX MULTIPLIER` (28 assignments), `S&P EXCHANGE` (19),
+The gap is `fcontest.pas`. Rows like `DX MULTIPLIER` (28 assignments), `S&P EXCHANGE` (19),
 `CQ EXCHANGE` (18) and `WARC BAND ENABLE` (5) are written in code whenever a contest is selected
 while being marked `crC:0`, "write me to `tr4w.ini`". `CFG_COMMAND_TABLE.md` already notes this
 class for the 16 keys visible in `.cfg` files; the `FCONTEST` half more than doubles it.

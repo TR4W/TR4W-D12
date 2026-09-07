@@ -205,7 +205,7 @@ and Cabrillo did not move is gone at exactly the moment it is most needed.
 It wants a log it can query and a display it can update without naming widgets.
 It is also the largest — 120+ contests, `case ActiveExchange` in `PostUnit`,
 scoring, multipliers — and it is where `ContestExchange` becomes an object. It
-also harvests the per-contest initial states out of `FCONTEST.PAS` (NY4I,
+also harvests the per-contest initial states out of `fcontest.pas` (NY4I,
 2026-08-24).
 
 ## The shape

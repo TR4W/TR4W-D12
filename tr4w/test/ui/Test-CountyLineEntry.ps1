@@ -15,7 +15,7 @@
    NOTHING AUTOMATED COULD SEE THAT, WHICH IS WHY THIS EXISTS.  The golden corpus
    reads finished ADIF and Cabrillo from logs written earlier, so it can only
    catch a change against a frozen reference -- there is no CQP set.  The unit
-   tests cannot reach LOGSTUFF.PAS at all: the harness links only leaf units and
+   tests cannot reach logstuff.pas at all: the harness links only leaf units and
    the exchange parsers need the app's globals booted.  So the behaviour was
    verified by hand on a D7 build and by hand again here, twice, which is exactly
    the loop this script is meant to close.
@@ -276,7 +276,7 @@ try
 
    if ($ExpectReject)
       {
-      # The parser names itself when it refuses -- LOGSTUFF.PAS logs
+      # The parser names itself when it refuses -- logstuff.pas logs
       # "Improper Domestic QTH" and sets ExchangeErrorMessage.  Both halves are
       # asserted: a refusal that logged a QSO anyway is the silent-drop defect
       # this whole area exists to prevent.

@@ -4,7 +4,7 @@ Offline cross-check of TR4W's per-radio capability declarations (radio factory,
 Delphi source) against HamLib's rig backend caps structs (C source).
 
 READ-ONLY AUDIT.  Parses source text on both sides -- no runtime import of
-either program -- joins them via the enum -> hamlibID mapping in LOGRADIO.PAS,
+either program -- joins them via the enum -> hamlibID mapping in logradio.pas,
 and writes docs/HAMLIB_CAPS_CROSSCHECK.md.
 
 Evidence asymmetry (project methodology): an independent implementation is
@@ -31,7 +31,7 @@ HAMLIB_ROOT = r"C:\Users\toms\projects\Hamlib"
 
 FACTORY_DIR = os.path.join(TR4W_ROOT, r"tr4w\src\radioFactory")
 VC_PAS = os.path.join(TR4W_ROOT, r"tr4w\src\VC.pas")
-LOGRADIO_PAS = os.path.join(TR4W_ROOT, r"tr4w\src\trdos\LOGRADIO.PAS")
+LOGRADIO_PAS = os.path.join(TR4W_ROOT, r"tr4w\src\trdos\logradio.pas")
 RIGLIST_H = os.path.join(HAMLIB_ROOT, r"include\hamlib\riglist.h")
 RIGS_DIR = os.path.join(HAMLIB_ROOT, "rigs")
 REPORT_PATH = os.path.join(TR4W_ROOT, r"docs\HAMLIB_CAPS_CROSSCHECK.md")
@@ -154,7 +154,7 @@ def parse_enum_names():
 
 
 def parse_hamlib_ids(enum_names):
-   """Positional parse of RadioParametersArray in LOGRADIO.PAS -> enum -> hamlibID.
+   """Positional parse of RadioParametersArray in logradio.pas -> enum -> hamlibID.
 
    Rows are in enum order (stated in the source: 'PLS NOTE VC INTERFACEDRADIOTYPE
    ARRAY AND THE BELOW ARRAY ARE IN THE SAME ORDER OF ENTRY').  The {Name: 'X'}
@@ -171,7 +171,7 @@ def parse_hamlib_ids(enum_names):
    m = re.search(r"RadioParametersArray\s*:\s*array\[InterfacedRadioType\]\s*of\s*"
                  r"TRadioParameters\s*=\s*\(", text)
    if not m:
-      sys.exit("FATAL: RadioParametersArray not found in LOGRADIO.PAS")
+      sys.exit("FATAL: RadioParametersArray not found in logradio.pas")
    start = m.end() - 1     # at the opening '('
    depth = 0
    i = start
@@ -949,7 +949,7 @@ def write_report(registered, strong, weak, serial_findings, cw_findings, agreeme
    L.append("This is a build-time text-parse comparison of what each TR4W factory radio")
    L.append("declares in `FCapabilities.Flags` / `CWSpeedMin..Max` / `SerialParams(...)`")
    L.append("against what the corresponding HamLib `struct rig_caps` states. The join key is")
-   L.append("the `hamlibID` column of `RadioParametersArray` in `tr4w/src/trdos/LOGRADIO.PAS`.")
+   L.append("the `hamlibID` column of `RadioParametersArray` in `tr4w/src/trdos/logradio.pas`.")
    L.append("")
    L.append("**Evidence asymmetry (core rule):** an independent implementation is EVIDENCE")
    L.append("when it STATES something and close to WORTHLESS when it OMITS something.")

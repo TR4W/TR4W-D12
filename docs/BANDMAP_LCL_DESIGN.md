@@ -35,7 +35,7 @@ line references are to the tree at the time of writing.
   SetTimer(tr4whandle, BANDMAP_REFRESH_TIMER_HANDLE, 250, ...)   tr4w.lpr:1061
       |
   BandMapRefreshTimerProc                  MainUnit.pas:2306
-      +-- DisplayBandMap                   LOGWIND.PAS:3491
+      +-- DisplayBandMap                   logwind.pas:3491
              +-- SpotsList.Display         uSpots.pas:242
 ```
 
@@ -59,8 +59,8 @@ raise it: `uTelnet.pas:1769` (a cluster spot), `uRadioPolling.pas:960` and `:100
 (a VFO move).
 
 Other things that repaint, all going straight to `DisplayBandMap` with no
-coalescing: a logged QSO (`LOGSUBS2.PAS:1710`), a log edit (`LOGEDIT.PAS`), the
-once-a-minute age decay (`LOGWIND.PAS:2013`), band and filter changes, `WM_SIZE`,
+coalescing: a logged QSO (`logsubs2.pas:1710`), a log edit (`logedit.pas`), the
+once-a-minute age decay (`logwind.pas:2013`), band and filter changes, `WM_SIZE`,
 and losing focus (`uBandmap.pas:786`).
 
 ## 2. What `Display` actually costs
@@ -130,7 +130,7 @@ screen repaints. Doing it per repaint is O(spots x log) at 4 Hz for an answer th
 changed at most once since the last QSO.
 
 **3.6 -- `sleep(BMDelay)` runs on the UI thread** (uTelnet.pas:1760), inside the
-message handler, once per accepted spot. `BMDelay` is `= 0` (LOGWIND.PAS:629) and
+message handler, once per accepted spot. `BMDelay` is `= 0` (logwind.pas:629) and
 has no CFG row, so it is inert today -- but it is a message-pump sleep sitting in
 the ingest path waiting for someone to give it a value.
 
@@ -266,7 +266,7 @@ the two things the row cannot show: the resolved DXCC country name
 (`ctyGetCountryName`) and the spot count.
 
 **`FNotes` stays 32 bytes for now.** `TSpotRecord` is written raw to `bandmap.bin`
-(LOGWIND.PAS:2727, behind a `BandMapFileVersion` byte) and raw onto the wire inside
+(logwind.pas:2727, behind a `BandMapFileVersion` byte) and raw onto the wire inside
 `TNetDXSpot` (uNet.pas:376) -- widening it is a two-format break and belongs with
 the SQLite contest-file work, not here.
 
@@ -274,7 +274,7 @@ the SQLite contest-file work, not here.
 
 `UpdateSpotsMultiplierStatus` moves to where the answer actually changes: on ingest
 for the new spot only, and a full sweep when the log changes -- the same places
-that already call `UpdateSpotsDupeStatus` (`LOGSUBS2.PAS:1689`). That is 3.5, and
+that already call `UpdateSpotsDupeStatus` (`logsubs2.pas:1689`). That is 3.5, and
 it is what makes a 250 ms tick genuinely cheap rather than nominally cheap.
 
 ### 4.7 The menu, the seam, and everything that stays
@@ -342,7 +342,7 @@ Each step builds and is testable on its own; none of them requires the next.
    **3.5 is NOT in step 1.** Moving `UpdateSpotsMultiplierStatus` off the paint
    path needs the complete list of places the LOG changes. `UpdateWindows`
    (MainUnit.pas:6404) demonstrably covers QSO-logged, log-load, network QSO and
-   WSJT-X, and `LOGSUBS2.PAS:1686` covers the logged QSO directly -- but nothing
+   WSJT-X, and `logsubs2.pas:1686` covers the logged QSO directly -- but nothing
    proves an in-place log EDIT is covered, and a stale multiplier flag presents as
    wrong scoring rather than as an error. It gets its own change, with the site
    list established rather than assumed.

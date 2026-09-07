@@ -158,7 +158,7 @@ if (-not (Test-Path -LiteralPath $Exe))
 # TWO RADIO MODE = TRUE, AND THAT IS WHY THIS WRITES ITS OWN CONFIG.
 #
 # 10302 is Alt+D, DupeCheckOnInactiveRadio, and the FIRST thing it does is
-# refuse when two-radio mode is off (LOGSUBS2.PAS:449):
+# refuse when two-radio mode is off (logsubs2.pas:449):
 #
 #    if not Config.TwoRadioMode then
 #       begin

@@ -123,8 +123,8 @@ carries three record kinds (`UDPType`, `VC.pas:140`), each a distinct XML root:
 
 | kind | root | sent from |
 |---|---|---|
-| `udpContactInfo` | `<contactinfo>` | `LOGSUBS2.PAS:3382`, on logging a QSO |
-| `udpContactReplace` | `<contactreplace>` | `LOGSUBS2.PAS:3388`, on editing one |
+| `udpContactInfo` | `<contactinfo>` | `logsubs2.pas:3382`, on logging a QSO |
+| `udpContactReplace` | `<contactreplace>` | `logsubs2.pas:3388`, on editing one |
 | `udpContactDelete` | `<contactdelete>` | on deleting one |
 
 A listener is the cheapest instrument in the whole suite -- bind a socket, record what

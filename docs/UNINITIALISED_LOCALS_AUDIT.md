@@ -102,11 +102,11 @@ generator that needs no tooling at all.
 
 ### 🔴 Danger, Will Robinson — live code, real consequence
 
-**1. `LOGDUPE.PAS:987,1015` — `FirstAddress` / `LastAddress` (`integer`)**
+**1. `logdupe.pas:987,1015` — `FirstAddress` / `LastAddress` (`integer`)**
 in `DupeAndMultSheet.TwoLetterCrunchProcess`.
 
-**This routine is LIVE** — called from `LOGEDIT.PAS:1839`, `LOGEDIT.PAS:1896`
-and `LOGSUBS2.PAS:1941`, i.e. **while the operator is typing a callsign**.
+**This routine is LIVE** — called from `logedit.pas:1839`, `logedit.pas:1896`
+and `logsubs2.pas:1941`, i.e. **while the operator is typing a callsign**.
 
 Both bounds are uninitialised, and the loop that uses them is:
 
@@ -128,13 +128,13 @@ generated code, or time the routine with instrumented bounds.
 
 ### 🟡 Needs testing / checking
 
-**2. `LOGSUBS1.PAS:1198` — `Key` (`Char`)** in `PacketMemoryRequest`.
+**2. `logsubs1.pas:1198` — `Key` (`Char`)** in `PacketMemoryRequest`.
 `Key := ReadKey` is commented out and `case Key of` runs inside a `repeat`
 loop. If no arm matches and nothing else exits, that is a hang. **I could not
 find an external caller** — it looks dead, but it is a `function` and I did not
 prove the negative. Confirm liveness first; if dead, it is bucket 3.
 
-**3. `LOGSTUFF.PAS:5737-5739` — `Source`, `Serial`, `CheckSum`** in
+**3. `logstuff.pas:5737-5739` — `Source`, `Serial`, `CheckSum`** in
 `WeHaveProcessedThisMessage`. The scariest-looking of the lot — a network
 message-dedupe table keyed on three garbage values, which would suppress new
 messages or re-process old ones. **`GetMultiPortCommand`, its only caller, has
@@ -168,20 +168,20 @@ Indy (`IdStackBSDBase.pas`) are excluded as not ours to fix.
 | file | line | variable |
 |---|---:|---|
 | `CfgCmd.pas` | 177 | `CMD` |
-| `LOGDUPE.PAS` | 987 | `FirstAddress` |
-| `LOGDUPE.PAS` | 1015 | `LastAddress` |
-| `LOGEDIT.PAS` | 1953 | `TempString` |
-| `LOGSCP.PAS` | 468 | `BytesRead` |
-| `LOGSTUFF.PAS` | 5737 | `Source` |
-| `LOGSTUFF.PAS` | 5738 | `Serial` |
-| `LOGSTUFF.PAS` | 5739 | `CheckSum` |
-| `LOGSUBS1.PAS` | 1198 | `Key` |
-| `LOGSUBS2.PAS` | 2803 | `nMultCount` |
-| `LOGWIND.PAS` | 2108 | `Hour` |
+| `logdupe.pas` | 987 | `FirstAddress` |
+| `logdupe.pas` | 1015 | `LastAddress` |
+| `logedit.pas` | 1953 | `TempString` |
+| `logscp.pas` | 468 | `BytesRead` |
+| `logstuff.pas` | 5737 | `Source` |
+| `logstuff.pas` | 5738 | `Serial` |
+| `logstuff.pas` | 5739 | `CheckSum` |
+| `logsubs1.pas` | 1198 | `Key` |
+| `logsubs2.pas` | 2803 | `nMultCount` |
+| `logwind.pas` | 2108 | `Hour` |
 | `LogCW.pas` | 678 | `Buffer` |
-| `PostUnit.PAS` | 1137 | `PreviousQSOTime` |
-| `PostUnit.PAS` | 1426 | `LastHourPrinted` |
-| `PostUnit.PAS` | 3021 | `PreviousQTHString` |
+| `postunit.pas` | 1137 | `PreviousQSOTime` |
+| `postunit.pas` | 1426 | `LastHourPrinted` |
+| `postunit.pas` | 3021 | `PreviousQTHString` |
 | `tree.pas` | 3084 | `FirstWordCursor` |
 | `tree.pas` | 3134 | `FirstWordCursor` |
 | `tree.pas` | 4040 | `TempString` |
@@ -203,20 +203,20 @@ declaration line, `first read` the line the tool flagged.
 | `MainUnit.pas` | `LoadinLog` | `pNumberOfBytesRead` | `Cardinal` | 6963 | 7002 | `pNumberOfBytesRead, nil);` |
 | `MainUnit.pas` | `ReadLogFile` | `lpNumberOfBytesWritten` | `Cardinal` | 8126 | 8129 | `lpNumberOfBytesWritten, nil);` |
 | `tr4wserverUnit.pas` | `WriteContestExchangesBufferToServe` | `lpNumberOfBytesWritten` | `Cardinal` | 612 | 623 | `WriteFile(ServerLogHandle, ContestExchangesBuffer[c], Si` |
-| `trdos/LOGEDIT.PAS` | `TimeAndDateSet` | `TempString` | `Str80` | 1736 | 1752 | `if TempString = '' then` |
-| `trdos/LOGK1EA.PAS` | `OutputBandInfo` | `BandInfoArray` | `array[BandType] of B` | 1604 | 1607 | `Image := BandInfoArray[Band];` |
-| `trdos/LOGRADIO.PAS` | `RadioObject.WriteToCATPort` | `lpNumberOfBytesWritten` | `DWORD` | 954 | 1001 | `lpNumberOfBytesWritten, nil);` |
-| `trdos/LOGRADIO.PAS` | `InitRadios` | `ra` | `array[1..2] of Radio` | 2343 | 2370 | `TempRadio := ra[i];` |
-| `trdos/LOGSTUFF.PAS` | `WeHaveProcessedThisMessage` | `Source` | `Byte` | 5280 | 5291 | `ProcessedMultiMessages[ProcessedMultiMessagesStart].Sour` |
-| `trdos/LOGSTUFF.PAS` | `WeHaveProcessedThisMessage` | `Serial` | `Byte` | 5280 | 5292 | `ProcessedMultiMessages[ProcessedMultiMessagesStart].Seri` |
-| `trdos/LOGSTUFF.PAS` | `WeHaveProcessedThisMessage` | `CheckSum` | `Word` | 5282 | 5293 | `ProcessedMultiMessages[ProcessedMultiMessagesStart].Chec` |
-| `trdos/LOGSUBS1.PAS` | `PacketMemoryRequest` | `Key` | `Char` | 1093 | 1128 | `case Key of` |
-| `trdos/LOGSUBS2.PAS` | `SendScoreToUDP` | `GetScoresModesArray` | `array[ModeType] of P` | 2367 | 2413 | `if GetScoresModesArray[TempMode] <> '   ' then` |
-| `trdos/LOGSUBS2.PAS` | `SendScoreToUDP` | `GetScoresMults` | `array[RemainingMulti` | 2364 | 2424 | `'        ' +  GetScoresMults[m] + '  ' + IntToStr(mo.MTo` |
-| `trdos/LOGSUBS2.PAS` | `SendScoreToUDP` | `GetScoresMultsWRTC` | `array[RemainingMulti` | 2366 | 2435 | `'        ' + GetScoresMultsWRTC[m] + '  ' +` |
-| `trdos/LOGWIND.PAS` | `RefreshMainWindowColors` | `e` | `TMainWindowElement` | 3755 | 3778 | `for e in ListViewElements do` |
-| `trdos/PostUnit.PAS` | `ContinentReport` | `UnknownCalls` | `array [ BandType, 0 ` | 1575 | 1646 | `UnknownCalls[ TempRXData.Band, ContTotals[ TempRXData.Ba` |
-| `trdos/PostUnit.PAS` | `ExportToEDIByBand` | `EDI_ModeCodes` | `array [ ModeType ] o` | 1888 | 1983 | `EDI_ModeCodes[ TempRXData.Mode ], TempRXData.RSTSent,` |
+| `trdos/logedit.pas` | `TimeAndDateSet` | `TempString` | `Str80` | 1736 | 1752 | `if TempString = '' then` |
+| `trdos/logk1ea.pas` | `OutputBandInfo` | `BandInfoArray` | `array[BandType] of B` | 1604 | 1607 | `Image := BandInfoArray[Band];` |
+| `trdos/logradio.pas` | `RadioObject.WriteToCATPort` | `lpNumberOfBytesWritten` | `DWORD` | 954 | 1001 | `lpNumberOfBytesWritten, nil);` |
+| `trdos/logradio.pas` | `InitRadios` | `ra` | `array[1..2] of Radio` | 2343 | 2370 | `TempRadio := ra[i];` |
+| `trdos/logstuff.pas` | `WeHaveProcessedThisMessage` | `Source` | `Byte` | 5280 | 5291 | `ProcessedMultiMessages[ProcessedMultiMessagesStart].Sour` |
+| `trdos/logstuff.pas` | `WeHaveProcessedThisMessage` | `Serial` | `Byte` | 5280 | 5292 | `ProcessedMultiMessages[ProcessedMultiMessagesStart].Seri` |
+| `trdos/logstuff.pas` | `WeHaveProcessedThisMessage` | `CheckSum` | `Word` | 5282 | 5293 | `ProcessedMultiMessages[ProcessedMultiMessagesStart].Chec` |
+| `trdos/logsubs1.pas` | `PacketMemoryRequest` | `Key` | `Char` | 1093 | 1128 | `case Key of` |
+| `trdos/logsubs2.pas` | `SendScoreToUDP` | `GetScoresModesArray` | `array[ModeType] of P` | 2367 | 2413 | `if GetScoresModesArray[TempMode] <> '   ' then` |
+| `trdos/logsubs2.pas` | `SendScoreToUDP` | `GetScoresMults` | `array[RemainingMulti` | 2364 | 2424 | `'        ' +  GetScoresMults[m] + '  ' + IntToStr(mo.MTo` |
+| `trdos/logsubs2.pas` | `SendScoreToUDP` | `GetScoresMultsWRTC` | `array[RemainingMulti` | 2366 | 2435 | `'        ' + GetScoresMultsWRTC[m] + '  ' +` |
+| `trdos/logwind.pas` | `RefreshMainWindowColors` | `e` | `TMainWindowElement` | 3755 | 3778 | `for e in ListViewElements do` |
+| `trdos/postunit.pas` | `ContinentReport` | `UnknownCalls` | `array [ BandType, 0 ` | 1575 | 1646 | `UnknownCalls[ TempRXData.Band, ContTotals[ TempRXData.Ba` |
+| `trdos/postunit.pas` | `ExportToEDIByBand` | `EDI_ModeCodes` | `array [ ModeType ] o` | 1888 | 1983 | `EDI_ModeCodes[ TempRXData.Mode ], TempRXData.RSTSent,` |
 | `trdos/tree.pas` | `FoundDirectory` | `TempString` | `Str80` | 3573 | 3593 | `while TempString[length(TempString)] <> ' ' do` |
 | `uADIFExchange.pas` | `FormatADIFMyExchange` | `PreviousQTHString` | `Str10` | 85 | 167 | `[ TempRXData.RSTSent, PreviousQTHString ] );` |
 | `uDialogs.pas` | `SelectColor` | `custColors` | `array[0..15] of COLO` | 548 | 560 | `CC.lpCustColors := @custColors[0];` |

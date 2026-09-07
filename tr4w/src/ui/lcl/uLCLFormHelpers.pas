@@ -360,7 +360,7 @@ type
 function ComNameToPortValue(const aComName: string): string;
 function IsIcomRadio(const aRegistryId: string): boolean;
 // The role each serial control line performs, spelled EXACTLY as
-// tr4w_RTSDTRTypeSA does (LOGRADIO.PAS:100).  The vocabulary is reproduced here
+// tr4w_RTSDTRTypeSA does (logradio.pas:100).  The vocabulary is reproduced here
 // rather than reached for, because pulling LOGRADIO into a designed FMX form
 // would drag the legacy radio unit into the UI -- but the SPELLING must match
 // character for character: the store holds these strings and CheckCommand

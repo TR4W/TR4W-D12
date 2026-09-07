@@ -157,6 +157,7 @@ $lints = @(
    # dependency -- against the platform that now matters. It SKIPS, loudly, on a
    # machine with no cross compiler (docs/CROSS_COMPILING.md).
    @{ Name = 'Lint-LinuxCompile';    Arg = $null;    NeedsFpc = $false }
+   @{ Name = 'Lint-UnitFileNames'; Arg = $null;    NeedsFpc = $false }
 )
 
 $failed  = 0

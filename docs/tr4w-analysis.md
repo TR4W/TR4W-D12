@@ -249,11 +249,11 @@ TR4W uses a **monolithic procedural architecture** with a **hub-and-spoke** patt
     └───────────┘     └───────────────┘    └─────────────┘
     tree.pas          uRadioFactory.pas    utils_text.pas
     LogCW.pas         uWSJTX.pas           utils_net.pas
-    LogDupe.pas       uTelnet.pas          utils_file.pas
-    LogNet.pas        uBandmap.pas         utils_hw.pas
-    LogRadio.pas      uCFG.pas             utils_math.pas
-    LogStuff.pas      uNet.pas
-    LogGrid.pas       uWinKey.pas
+    logdupe.pas       uTelnet.pas          utils_file.pas
+    lognet.pas        uBandmap.pas         utils_hw.pas
+    logradio.pas      uCFG.pas             utils_math.pas
+    logstuff.pas      uNet.pas
+    loggrid.pas       uWinKey.pas
     ...               uDialogs.pas
                       uCAT.pas
                       ...
@@ -646,11 +646,11 @@ Used for DXKeeper, DXLab Suite, and HRD integration.
 
 | Interface | Mechanism | Files |
 |-----------|-----------|-------|
-| **Serial ports** (COM1-COM20) | `CreateFile('COM1:', ...)`, `SetCommState`, `ReadFile`/`WriteFile` | uCAT.pas, LogRadio.pas |
+| **Serial ports** (COM1-COM20) | `CreateFile('COM1:', ...)`, `SetCommState`, `ReadFile`/`WriteFile` | uCAT.pas, logradio.pas |
 | **Parallel ports** (LPT1-LPT3) | `inpout32.dll` — direct I/O port access | utils_hw.pas, LogCW.pas |
 | **USB** | Via `libusb-1.0.dll` (indirect through HamLib) | libhamlib-4.dll |
-| **Audio input** | `waveInOpen`, `waveInStart`, `waveInAddBuffer` | uMP3Recorder.pas, LOGDVP.pas |
-| **Audio output** | `waveOutOpen`, `waveOutWrite` | LOGDVP.pas, BeepUnit.pas |
+| **Audio input** | `waveInOpen`, `waveInStart`, `waveInAddBuffer` | uMP3Recorder.pas, logdvp.pas |
+| **Audio output** | `waveOutOpen`, `waveOutWrite` | logdvp.pas, BeepUnit.pas |
 | **Network sockets** | WinSock2 (`WSAStartup`, `socket`, `bind`, `sendto`, `recvfrom`) | uNet.pas, uWSJTX.pas, uTelnet.pas |
 
 ### 7.5 Third-Party Source Libraries

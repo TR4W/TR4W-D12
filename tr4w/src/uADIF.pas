@@ -17,7 +17,7 @@ unit uADIF;
     - GetADIFBand / GetADIFMode / GetADIFSubMode (moved)
     - ADIFDateStringToQSOTime / ADIFTimeStringToQSOTime (moved)
     - GetContestByADIFName (moved; cache preserved as unit-private)
-    - IsValidGUID (local copy; avoids dragging trdos/LOGSTUFF.PAS)
+    - IsValidGUID (local copy; avoids dragging trdos/logstuff.pas)
 
   Previously shipped (first incremental commit):
     - ParseADIFFieldsList (the lexer)
@@ -177,7 +177,7 @@ procedure InitADIFRecordTemps(var temps: TADIFRecordTemps);
 
 // Initialize a ContestExchange to a sane "no record yet" state for use
 // by the ADIF parser.  Mirrors the relevant parts of the legacy
-// ClearContestExchange (trdos/LOGDUPE.PAS) -- specifically the
+// ClearContestExchange (trdos/logdupe.pas) -- specifically the
 // sentinels the parser depends on, e.g. Mode = NoMode so the MODE-
 // handler's `if exch.Mode = NoMode` guard fires.  Does NOT touch
 // MainUnit-global fields like ceContest's contest-specific defaults.
@@ -718,7 +718,7 @@ end;
 // IsValidGUID
 //
 // Standalone GUID validator that does NOT depend on TPerlRegEx (the
-// LOGSTUFF.PAS version uses TPerlRegEx, which would drag in a much
+// logstuff.pas version uses TPerlRegEx, which would drag in a much
 // heavier dependency surface).  Accepts:
 //   - 32 raw hex characters (no separators)
 //   - 8-4-4-4-12 hyphenated form (36 characters)
@@ -1386,7 +1386,7 @@ begin
 end;
 
 // Build the SRX_STRING value with RST normalization -- mirrors the
-// commit f048dc7 logic in PostUnit.PAS.
+// commit f048dc7 logic in postunit.pas.
 function ResolveSRXString(const rec: ContestExchange): string;
 var
    rstStr   : string;
@@ -1470,7 +1470,7 @@ begin
       end;
 
    // CONTEST_ID, unless POTA/GENERALQSO (legacy behaviour).
-   // Mirror the fallback used by LOGSUBS2.PAS:2782, uGetScores.pas:435 and 564:
+   // Mirror the fallback used by logsubs2.pas:2782, uGetScores.pas:435 and 564:
    // if ContestsArray[].ADIFName is empty (true for 156 of TR4W's contests),
    // fall back to the parallel ContestTypeSA[] string, which IS the standard
    // ADIF Contest_ID for the major contests (e.g. 'CQ-WPX-SSB', 'CQ-WW-CW',
@@ -1503,7 +1503,7 @@ begin
    // SRX_STRING is NOT emitted here.  The correct shape depends on the
    // contest's exchange convention (does it include an implied RST?
    // is it a park ref?  is it the literal ExchString?), and that
-   // knowledge lives in ExchangeInformation.RST (in trdos/LOGDUPE.PAS)
+   // knowledge lives in ExchangeInformation.RST (in trdos/logdupe.pas)
    // which uADIF deliberately does not depend on.  PostUnit's tail
    // emitter (EmitContestSpecificTailForExport) handles SRX_STRING
    // for all contests using ExchangeInformation -- see Issue #898.

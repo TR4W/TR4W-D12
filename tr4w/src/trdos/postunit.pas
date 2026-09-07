@@ -327,7 +327,7 @@ const
 
   // tCabrilloFreqString and tCabrilloModeString moved to uCabrilloFormat.pas
   // (see this unit's interface uses clause).  The arrays are still referenced
-  // by LOGContactToUDP in LOGSUBS2.PAS, which now also `uses uCabrilloFormat`.
+  // by LOGContactToUDP in logsubs2.pas, which now also `uses uCabrilloFormat`.
   {
     tARRLVESections                       : array[0..NumberSections - 1] of PChar = (
     'AB',
@@ -2307,7 +2307,7 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
   // RST-implied   -> "RST + ExchString"  (ResolveSRXString normalizes)
   // no RST        -> ExchString as-is    (FD, SS, Winter FD, etc.)
   // The "is RST part of this contest's exchange?" knowledge lives in
-  // ExchangeInformation.RST (trdos/LOGDUPE.PAS), which uADIF cannot
+  // ExchangeInformation.RST (trdos/logdupe.pas), which uADIF cannot
   // see without taking a trdos dependency.  POTA's own SRX_STRING is
   // emitted further down -- this branch handles every other contest.
   if rec.ceContest <> POTA then

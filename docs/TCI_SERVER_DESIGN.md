@@ -90,7 +90,7 @@ framing is tested** — there is no `uTestWebSocket.pas`.
 
 **This section's premise was fixed elsewhere before the server was built.** The plan assumed
 `RadioStatusRecord` had no synchronisation of any kind, and proposed a private `TTCIRadioSnapshot`
-plus a lock to work around that. In the meantime a **seqlock** landed in `LOGRADIO.PAS`
+plus a lock to work around that. In the meantime a **seqlock** landed in `logradio.pas`
 (`BeginStatusPublish` / `EndStatusPublish` / `ReadStatusSnapshot`, :784-822, :2978-3035), and the
 poll loop now brackets its whole update — the `CurrentStatus` fill *and* the `FilteredStatus` copy —
 between them (`uRadioPolling.pas`, "THE BATCH BOUNDARY").
@@ -110,12 +110,12 @@ the program already has. What was built instead:
 ### Radio control — the apply path
 
 Client threads must not call the legacy façade directly. `RadioObject.SetRadioFreq`
-(`LOGRADIO.PAS:277/2730`) also writes globals (`tCommandedQSYFreq`, the Issue #795 auto-S&P hook)
+(`logradio.pas:277/2730`) also writes globals (`tCommandedQSYFreq`, the Issue #795 auto-S&P hook)
 and the `uWSJTX` paths call `QuickDisplay` off-thread.
 
 Marshal instead: `TThread.Queue` a small apply closure onto the main thread, which then calls
 `SetRadioFreq` / `SetMode` / `PutRadioIntoSplit` / `PutRadioOutOfSplit` / `tPTTVIACAT`
-(`LOGRADIO.PAS:277, 260-261, 751/2835`). `TThread.Queue` is **proven working** in this program — the
+(`logradio.pas:277, 260-261, 751/2835`). `TThread.Queue` is **proven working** in this program — the
 main loop's fall-through `DispatchMessage` drains it (established during the FMX coexistence bench).
 
 **PTT confirmation, and the death of the kludge.** TCI's contract is that the *server* confirms:

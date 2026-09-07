@@ -147,7 +147,7 @@ the operator's ini rather than merely failing.
   were repointed at some point after 2026-08-17 and the table was never updated.
 * `[REPORT]` and `[ERMAKREPORT]` were listed as **"Done and not to be reopened"**. The MIGRATION
   was done -- `uCabrilloHeader` reads them from JSON with a one-time ini seed -- but **four
-  readers in `PostUnit.PAS` were missed** and went on reading `tr4w.ini` directly: the three
+  readers in `postunit.pas` were missed** and went on reading `tr4w.ini` directly: the three
   Cabrillo-summary fields in the 3830 report (`_OPERATORS`, `_CATEGORY-OPERATOR`,
   `_CATEGORY-POWER`) and the Ermak operator-info loop.
 
@@ -623,7 +623,7 @@ Two things it does not survive, both of which the compiler also catches:
 ### A setting that reaches the EXPORT must not be `csJSON` (proved 2026-08-16)
 
 The warning below was right and still got past us. `COMPUTER ID` was migrated to `csJSON`, and
-`PostUnit.PAS:3021` compares it against each QSO's stored id to decide the Cabrillo **transmitter
+`postunit.pas:3021` compares it against each QSO's stored id to decide the Cabrillo **transmitter
 digit**. Under `/EXPORT` the ini loader skips a `csJSON` row and the JSON apply never runs, so the
 value fell back to its compiled default and **2632 QSO lines in the Winter Field Day set exported
 wrongly**. The corpus caught it: 21/1/4 against a 22/0/4 baseline.
@@ -705,7 +705,7 @@ The old form's nine rows:
 | `BOLD FONT`, `MAIN FONT`                                        | already migrated                                                                                    |
 | `NO BORDER`, `NO CAPTION`, `NO COLUMN HEADER`, `SHOW GRIDLINES` | migrated 2026-08-15, "Main window" group                                                            |
 | `ROW COUNT`, `WINDOW SIZE`                                      | **`ckArray`** — target is an `ArrayRecordArray` entry, not `crAddress`. Different move.             |
-| `REMINDER`                                                      | **not a scalar setting** — Alt-O appends `REMINDER = …` lines (`HELP.PAS:855`); wants a list editor |
+| `REMINDER`                                                      | **not a scalar setting** — Alt-O appends `REMINDER = …` lines (`help.pas:855`); wants a list editor |
 
 **The menu item cannot be removed until the last three land**, or it strips the only editor those
 settings have.
@@ -737,7 +737,7 @@ after that list, and the method is the same two tests, applied before any code i
 1. **Does a contest `.cfg` claim it?** All 74 `.cfg` files under `target/` are scanned. This is not
    ceremony — it is how `LEADING ZEROS` was caught.
 2. **Does anything else write the global?** Live assignments only. Half the apparent writers in
-   `CFGDEF.PAS` are commented out and a naive grep reports them as real.
+   `cfgdef.pas` are commented out and a naive grep reports them as real.
 
 ### The parallel-port wiring — station cabling, not radio settings
 
@@ -797,7 +797,7 @@ at startup — not a repoint. Left `csOld` until that is designed.
 
 **A per-radio CW speed already exists**, which is worth knowing before anyone designs one.
 `SetUpToSendOnRadioOne/Two` (`LogCW.pas:2142+`, tagged KK1L 6.73) does
-`CodeSpeed := RadioN.SpeedMemory` on every change of active radio, and `LOGWIND.PAS:1587` writes the
+`CodeSpeed := RadioN.SpeedMemory` on every change of active radio, and `logwind.pas:1587` writes the
 live speed back with `ActiveRadioPtr.SpeedMemory := CodeSpeed`. So set 30 WPM on radio one and 22 on
 radio two and each is restored as you switch. This is *not* SO2R-gated — it runs on any active-radio
 change. What is missing is only that the two speeds are invisible: nothing displays or configures
@@ -889,7 +889,7 @@ Per *Every parameter is a registry parameter*, that is not a reason to hold a ro
 registry — it is a question about which panel edits it.
 
 *Stands, and is the actual blocker:* **`MY CONTINENT` reaches the export.** With 71 references in
-`LOGSTUFF.PAS` driving scoring, multipliers and DX/domestic decisions, it is squarely in the class
+`logstuff.pas` driving scoring, multipliers and DX/domestic decisions, it is squarely in the class
 that *"A setting that reaches the EXPORT must not be `csJSON`"* below already governs — and that
 section is not a warning, it is a measured result: `COMPUTER ID` went `csJSON`, and 2632 Winter
 Field Day QSO lines exported wrongly.
@@ -911,7 +911,7 @@ operator's current settings.
 
 NY4I asked to see "what is left and where it lands in either settings or some other location".
 This is that answer for the 24 not yet migrated, decided by **who else writes the variable** —
-scanned for live assignments only, because half the apparent writers in `CFGDEF.PAS` are
+scanned for live assignments only, because half the apparent writers in `cfgdef.pas` are
 commented-out lines and a naive grep reports them as real.
 
 ### A. Nothing else writes them — migrate as flat settings (13, see A-bis)
@@ -925,7 +925,7 @@ The stored value is the only source, so these were pure Preferences settings and
 `ALT-D BUFFER ENABLE`, `SAY HI RATE CUTOFF`, `SKIP ACTIVE BAND`, `LEADING ZEROS`,
 `LEADING ZERO CHARACTER`, `SAY HI ENABLE`.
 
-(`LEADING ZERO CHARACTER` is assigned in `CFGDEF.PAS:487`, but `SetConfigurationDefaultValues`
+(`LEADING ZERO CHARACTER` is assigned in `cfgdef.pas:487`, but `SetConfigurationDefaultValues`
 runs **once** at startup and **before** the config files — it is an initial default, not a
 competing owner. Checked rather than assumed, because a defaults procedure that ran on contest
 change would silently reset the setting instead.)
@@ -960,8 +960,8 @@ settled together rather than each inventing an answer.
 
 ### B. ~~Set by the contest~~ **MIGRATED 2026-08-16** (3)
 
-`HF BAND ENABLE`, `WARC BAND ENABLE`, `VHF BAND ENABLE` are assigned by `FCONTEST.PAS` when a
-contest is selected — `ARRLVHFJUN` sets `HFBandEnable := False` (`FCONTEST.PAS:634`), and there are
+`HF BAND ENABLE`, `WARC BAND ENABLE`, `VHF BAND ENABLE` are assigned by `fcontest.pas` when a
+contest is selected — `ARRLVHFJUN` sets `HFBandEnable := False` (`fcontest.pas:634`), and there are
 fourteen such sites.
 
 **Superseded 2026-08-16.** The previous text called these "contest properties wearing a settings
@@ -999,9 +999,9 @@ greyed-hint idiom agreed for the `MY *` family.
 
 | setting             | live writer                                    | what changes it                      |
 | ------------------- | ---------------------------------------------- | ------------------------------------ |
-| `WEIGHT`            | `LOGK1EA.PAS:2120`                             | CW-buffer control codes, mid-message |
-| `FARNSWORTH SPEED`  | `LOGK1EA.PAS:2125+`                            | same                                 |
-| `FARNSWORTH ENABLE` | `LOGK1EA.PAS:2124`                             | same                                 |
+| `WEIGHT`            | `logk1ea.pas:2120`                             | CW-buffer control codes, mid-message |
+| `FARNSWORTH SPEED`  | `logk1ea.pas:2125+`                            | same                                 |
+| `FARNSWORTH ENABLE` | `logk1ea.pas:2124`                             | same                                 |
 | `CW ENABLE`         | `MainUnit.pas:2845`, `LogCW.pas:2289`          | live keystroke toggle                |
 | `CW TONE`           | `MainUnit.pas:2766`, `uProcessCommand.pas:354` | live keystroke toggle                |
 
@@ -1055,7 +1055,7 @@ instead of as an omission. Same idiom the radio editor uses for the CI-V default
 
 **Deferred to the contest factory**, deliberately. The consequence here and now is
 that `MY CONTINENT` was excluded from the `csOwned` batch: 71 references in
-`LOGSTUFF.PAS`, and `/EXPORT` skips the JSON apply, so a row flip could silently
+`logstuff.pas`, and `/EXPORT` skips the JSON apply, so a row flip could silently
 change an exported log for anyone who had overridden it.
 
 The read side already exists — a contest `.cfg` naming a migrated command applies

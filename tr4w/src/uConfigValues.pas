@@ -68,7 +68,7 @@ type
      the row -- an orphan field is harmless, a missing one does not compile. }
    TR4WConfig = record
       { CW SPEED INCREMENT -- how far a speed-up/slow-down keystroke moves.
-        Was a typed constant in LOGWIND.PAS, reached by nine call sites across
+        Was a typed constant in logwind.pas, reached by nine call sites across
         MainUnit and LOGSTUFF.  Range 1..10, enforced by the CFGCA row. }
       CodeSpeedIncrement: integer;
 
@@ -134,7 +134,7 @@ type
       { CW KEYING, PADDLE AND PTT -- migrated 2026-08-14.
 
         Category A by the plan's own test: no code assigns any of them (the
-        apparent writers in CFGDEF.PAS are all commented out), and none of the
+        apparent writers in cfgdef.pas are all commented out), and none of the
         74 contest .cfg files names one. The config table was their only writer.
 
         FOUR OF THEM WERE TYPED CONSTANTS WITH NON-ZERO DEFAULTS, and that is
@@ -186,7 +186,7 @@ type
       { SUPER CHECK PARTIAL, BAND MAP AND LOG FILES, migrated 2026-08-15.
 
         UpdateRestartFileEnable is the odd one: its declaration carries no
-        initialiser, but CFGDEF.PAS:577 assigns True in
+        initialiser, but cfgdef.pas:577 assigns True in
         SetConfigurationDefaultValues. That runs ONCE at startup and BEFORE the
         config files, so it is an initial default and not a competing owner --
         checked rather than assumed, because a defaults routine that ran on

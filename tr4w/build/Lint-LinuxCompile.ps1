@@ -73,7 +73,7 @@ $UNITS = @(
    # was blocked by uCTYDAT, which was blocked by utils_file.
    # Note the subdirectory -- the script joins the name onto tr4w\src.
    @{ Unit = 'utils\utils_file.pas'; Since = '2026-09-07' }
-   @{ Unit = 'uCTYDAT.PAS';           Since = '2026-09-07' }
+   @{ Unit = 'uctydat.pas';           Since = '2026-09-07' }
    @{ Unit = 'uCallSignRoutines.pas'; Since = '2026-09-07' }
 
 )

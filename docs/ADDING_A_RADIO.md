@@ -170,7 +170,7 @@ the next command you implement may divide them differently.
    `.dpr` lines** — nothing else. Verified by doing it: the IC-7110 (2026-08-28)
    appears in no other source file except one CW frame pin, because it keys CW.
 
-   **Do not touch `LOGRADIO.PAS` or `VC.pas`.** LOGRADIO used to hold two tables
+   **Do not touch `logradio.pas` or `VC.pas`.** LOGRADIO used to hold two tables
    indexed by the radio enum — `RadioParametersArray` and
    `InterfacedRadioTypeSA` — which the compiler forced you to extend for every
    new radio. Both are **deleted** (2026-08-28). They were a second definition
@@ -472,7 +472,7 @@ Notes:
 - [ ] Only flags set; no model test added to any base class
 - [ ] `RegisterRadioById` with a unique display name — **not** the enum-keyed
       `RegisterRadio`, which would also need a `VC.pas` member
-- [ ] **Nothing edited in `VC.pas` or `LOGRADIO.PAS`.** If you touched either,
+- [ ] **Nothing edited in `VC.pas` or `logradio.pas`.** If you touched either,
       something is wrong with the design, not with your radio
 - [ ] Unit listed explicitly in `tr4w.lpr` **and** `tr4w_unit_tests.lpr`
       (both are ordinary Pascal program sources that FPC compiles; the Delphi

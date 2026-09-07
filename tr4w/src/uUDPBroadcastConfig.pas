@@ -61,11 +61,11 @@ unit uUDPBroadcastConfig;
   here that needs the program.
 
   THE DEFAULTS ARE NOT INVENTED.  They are the compiled-in initialisers from
-  LOGSTUFF.PAS (ports 12060, rotor 12040, address 127.0.0.1) so that a station
+  logstuff.pas (ports 12060, rotor 12040, address 127.0.0.1) so that a station
   with no udp section in its JSON behaves exactly as one with no UDP lines in
   its ini always did.
 
-  WHAT IS DELIBERATELY ABSENT.  'UDP BROADCAST PORT' is not here.  LOGSTUFF.PAS
+  WHAT IS DELIBERATELY ABSENT.  'UDP BROADCAST PORT' is not here.  logstuff.pas
   declares it "Kept for backward compatibility - no longer used", and it has no
   remaining reader anywhere in the project.  (Its last references were in
   LOGSUBS2~.PAS, an IDE backup copy that was never in the project and has since
@@ -88,7 +88,7 @@ uses
    uJSON;
 
 const
-   // From LOGSTUFF.PAS's initialisers -- see the unit header.
+   // From logstuff.pas's initialisers -- see the unit header.
    UDP_DEFAULT_ADDRESS    = '127.0.0.1';
    UDP_DEFAULT_PORT       = 12060;
    UDP_DEFAULT_ROTORPORT  = 12040;

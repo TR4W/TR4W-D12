@@ -74,7 +74,7 @@ reads *"when loading from internal resource Full needs to be False"*.
 
 **The help side is greenfield.** `uOption.pas`, the Ctrl-J dialog that read
 `commands_help_<LANG>.ini`, was deleted in `4321ce1d`. Preferences has no help pane,
-nothing in `src` reads `TR4W_COMM_HELP_FILENAME` — it is still assigned in `FCONTEST.PAS`
+nothing in `src` reads `TR4W_COMM_HELP_FILENAME` — it is still assigned in `fcontest.pas`
 and never consumed — and **7 help INIs still ship in `target/`, unread**. There is no
 existing behaviour to preserve, so the format is a free choice, and `.po` puts translators
 in one tool for both halves.

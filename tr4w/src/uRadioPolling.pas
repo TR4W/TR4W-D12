@@ -1052,7 +1052,7 @@ begin
       //GAV added this section. Changes BandmapBand & Bandmap Mode to follow inactive radio when inactive radio is tuned
 
       // Issue #908: gate the "follow inactive radio" feature on Config.TwoRadioMode.
-      // The legacy LOGWIND.PAS path checked TwoRadioState <> TwoRadiosDisabled;
+      // The legacy logwind.pas path checked TwoRadioState <> TwoRadiosDisabled;
       // this Gav-added polling path forgot the SO2R gate, so an inactive radio
       // could mutate the bandmap even with TWO RADIO MODE=FALSE.
       //

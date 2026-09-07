@@ -395,19 +395,19 @@ the corpus method built here are what it should be written on top of.
 > **Owned elsewhere.** As of 2026-08-02 this track is being finished by a separate
 > agent session. It is recorded here for completeness and for its one hazard (E-1);
 > **do not work it from this roadmap** — coordinate first, or the two efforts will
-> collide in `uRadioPolling.pas` and `LOGRADIO.PAS`.
+> collide in `uRadioPolling.pas` and `logradio.pas`.
 
 The factory is complete; the legacy path is scheduled for **deletion, not maintenance**.
-Still on disk as of this writing: `uRadioPolling.pas` (4,621 lines) and `LOGRADIO.PAS`
+Still on disk as of this writing: `uRadioPolling.pas` (4,621 lines) and `logradio.pas`
 (3,160 lines).
 
 **Must land before deletion** — from `LEGACY_DEPENDENCY_AUDIT.md`, in its order:
 
 1. ~~**E-1 Port settings into the class constructors.**~~ **ALREADY DONE — this hazard no
-   longer exists.** The roadmap claimed `LOGRADIO.PAS:1571-1578` was the only thing setting
+   longer exists.** The roadmap claimed `logradio.pas:1571-1578` was the only thing setting
    1 stop bit for `[IC78..IC9700, FT100, Orion]`, and that deleting the legacy would give
    every Icom 2 stop bits. That typeset was replaced by `RadioObject.ResolveSerialFrameSettings`
-   (`LOGRADIO.PAS:1562-1606`, commits `8d2880b` / `282d2e9` / `ab4b308`), which resolves
+   (`logradio.pas:1562-1606`, commits `8d2880b` / `282d2e9` / `ab4b308`), which resolves
    `RADIO n SERIAL FORMAT` → `uRadioRegistry.SerialParamsFor` → 8-N-2. **Verified 2026-08-02
    by reading the registry, not the compile:** all 40 Icom units, FT-100 and Orion register
    1 stop bit. The old test also had the Omni VI wrong (outside the range, forced to 2

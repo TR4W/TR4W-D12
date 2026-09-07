@@ -1569,7 +1569,7 @@ end;
 
 procedure DisplayRadio(Radio: RadioType);
 begin
-  // RadioName IS A ShortString (Str20, LOGRADIO.PAS:154), so it is NOT
+  // RadioName IS A ShortString (Str20, logradio.pas:154), so it is NOT
   // null-terminated -- its length lives in byte 0.  PAnsiChar(@RadioName[1])
   // ignored that and read from byte 1 until it happened to find a #0, which
   // means it read STALE BYTES LEFT BY A LONGER PREVIOUS VALUE.
@@ -1580,7 +1580,7 @@ begin
   //
   // Converting the ShortString directly uses the length byte, which is the
   // whole fix.  Not a port regression: D7 passes @Radio1.RadioName[1] the same
-  // way (LOGWIND.PAS:1845) and has the same defect.
+  // way (logwind.pas:1845) and has the same defect.
   TR4WMainForm.pnlRadioOne.Caption := string(Radio1.RadioName);
   TR4WMainForm.pnlRadioTwo.Caption := string(Radio2.RadioName);
 end;

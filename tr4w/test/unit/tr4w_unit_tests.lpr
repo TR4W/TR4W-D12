@@ -122,7 +122,7 @@ uses
    uTestStrSearch       in 'uTestStrSearch.pas',
    uCallCompress        in '..\..\src\uCallCompress.pas',
    uTestCallCompress    in 'uTestCallCompress.pas',
-   uCTYDAT              in '..\..\src\uCTYDAT.PAS',
+   uCTYDAT              in '..\..\src\uctydat.pas',
    uTestCTYDAT          in 'uTestCTYDAT.pas',
    uMults               in '..\..\src\uMults.pas',
    uTestMults           in 'uTestMults.pas',

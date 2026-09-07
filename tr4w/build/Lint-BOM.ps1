@@ -5,7 +5,7 @@
 .DESCRIPTION
    THE FAILURE THIS EXISTS FOR.  On 2026-08-20 six Pascal files silently lost
    their BOM in one session -- VC.pas, MainUnit.pas (twice), tr4w_unit_tests.lpr,
-   HELP.PAS and LogCfg.pas -- between an editor save and a read-modify-write
+   help.pas and LogCfg.pas -- between an editor save and a read-modify-write
    script. EXACTLY ONE produced a diagnostic:
 
       VC.pas(259,19) Fatal: It is not possible to include a file that starts

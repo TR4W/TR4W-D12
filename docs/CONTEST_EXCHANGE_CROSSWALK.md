@@ -60,7 +60,7 @@ the factory knows which the contest wanted.
 
 ### 3. Seven fields carry an "unset" SENTINEL, and it is not zero
 
-`ClearContestExchange` (`LOGDUPE.PAS:612`) does not merely zero the record. It
+`ClearContestExchange` (`logdupe.pas:612`) does not merely zero the record. It
 writes explicit not-set markers, and they are the maximum value of the type
 rather than zero:
 

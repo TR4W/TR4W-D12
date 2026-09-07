@@ -183,7 +183,7 @@ function Get-CommentedBlocks
       # The obvious test -- "raw is not blank and the sanitized line is" --
       # breaks a run at every empty line, and commented-out code is FULL of
       # empty lines because it was formatted code before it was commented. The
-      # first draft split HELP.PAS's single 387-line commented-out procedure
+      # first draft split help.pas's single 387-line commented-out procedure
       # body into a dozen fragments, the largest 42 lines, which understated
       # exactly the blocks this report exists to surface.
       #

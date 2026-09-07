@@ -1803,7 +1803,7 @@ begin
    // CONFIRMED FROM THE RESULT, NOT FROM HAVING ASKED.
    //
    // tPTTVIACAT has THREE gates before anything reaches the radio, and two of
-   // them exit in near-silence (LOGRADIO.PAS:3037):
+   // them exit in near-silence (logradio.pas:3037):
    //   1. 'PTT VIA COMMANDS' false  -> one DEBUG line, nothing sent
    //   2. Config.NoPollDuringPTT           -> no log at all, nothing sent
    //   3. it keys ActiveRadio, NOT the receiver the client addressed

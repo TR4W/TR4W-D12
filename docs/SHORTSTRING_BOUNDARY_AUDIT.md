@@ -48,20 +48,20 @@ LPT.pas
        119  ID               Windows.WritePrivateProfileStringA(_COMMANDS, @ID[1], @CMD[1], TR4W_INI_FILENAME);
   MainUnit.pas
       7375  KeyName          Windows.WritePrivateProfileStringA('COMMANDS', @KeyName[1], @WidthStr[1], @TR4W_CFG_FILENAME);
-  trdos\LOGPACK.PAS
+  trdos\logpack.pas
        725  PacketString     QuickDisplay(string(PAnsiChar(@PacketString[1])));
   trdos\LOGPROM.PAS
       1028  FileName         if FileExists(@FileName[1]) then
       1042  FileName         until (not FileExists(@FileName[1])) or (Key = 'Y');
-  trdos\LOGSTUFF.PAS
+  trdos\logstuff.pas
       1154  Name             p := @Name[1]
-  trdos\LOGWIND.PAS
+  trdos\logwind.pas
       1457  TempString       SetMainWindowText(mweBeamHeading, string(PAnsiChar(@TempString[1])));
       3505  InfoString       SetMainWindowText(mweUserInfo, string(PAnsiChar(@InfoString[1])));
       3881  ID               Format(QuickDisplayBuffer, TC_REPEATING, @ID[1], AutoCQDelayTime);
   trdos\LogCfg.pas
        151  ID               if AnsiStrings.StrComp(CFGCA[I].crCommand, @ID[1]) = 0 then
-  trdos\PostUnit.PAS
+  trdos\postunit.pas
       2733  PreviousQTHString string( PAnsiChar( @PreviousQTHString[ 1 ] ) ), contacts, pnr,
       3349  TempGrid         cMyGrid                          := @TempGrid[ 1 ];
   uAltP.pas
