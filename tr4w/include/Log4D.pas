@@ -67,12 +67,28 @@ unit Log4D;
 
 interface
 
+(* THE GATES IN THIS UNIT WERE ON THE WRONG AXIS, AND macOS IS WHERE IT SHOWED.
+
+  Log4D carries a Kylix-era portable branch -- critical sections built on
+  SyncObjs, its own OutputDebugString that WriteLns -- and every one of those
+  branches asked {$IFDEF LINUX}. FPC defines LINUX on Linux and DARWIN on
+  macOS, so on a Mac the ELSE arm was taken and the unit asked for `Windows`:
+
+      Log4D.pas(75,3) Fatal: Can't find unit Windows used by Log4D
+
+  That one line blocked SEVEN of the fifteen units checked on Darwin
+  (2026-09-07), because VC uses Log4D and everything uses VC. The portable
+  code was already written and simply was not reached.
+
+  The question is never WHICH UNIX -- it is WHETHER WINDOWS. Same mistake, in
+  a different unit, as the {$IFDEF FPC} that once guarded uCrashLog's LCL half:
+  a conditional on an axis that cannot answer the question being asked. *)
 uses
   Classes,
-{$IFDEF LINUX}
-  SyncObjs,
-{$ELSE}
+{$IFDEF WINDOWS}
   Windows,
+{$ELSE}
+  SyncObjs,
 {$ENDIF}
   Contnrs,
   SysUtils;
@@ -157,7 +173,9 @@ type
   TObjectList = TList;
 {$ENDIF}
 
-{$IFDEF LINUX}
+{$IFNDEF WINDOWS}
+  { Windows declares TRTLCriticalSection; everywhere else it is a SyncObjs
+    TCriticalSection wearing the same name, so the code below is identical. }
   TRTLCriticalSection = TCriticalSection;
 {$ENDIF}
 
@@ -1067,7 +1085,9 @@ function StrToBool(Value: string; const Default: Boolean): Boolean;
 function FindEncodingFromName(const Name: string): TEncoding;
 {$ENDIF UNICODE}
 
-{$IFDEF LINUX}
+{$IFNDEF WINDOWS}
+{ The four Win32 critical-section calls, and two more, supplied for every
+  platform that is not Windows -- see the note at the uses clause. }
 procedure EnterCriticalSection(var CS: TCriticalSection);
 procedure LeaveCriticalSection(var CS: TCriticalSection);
 procedure InitializeCriticalSection(var CS: TCriticalSection);
@@ -4330,7 +4350,7 @@ begin
     RendererNames, RendererClasses) as ILogRenderer;
 end;
 
-{$IFDEF LINUX}
+{$IFNDEF WINDOWS}
 procedure EnterCriticalSection(var CS: TCriticalSection);
 begin
   CS.Enter;
@@ -4353,7 +4373,12 @@ end;
 
 function GetCurrentThreadID: Integer;
 begin
-  Result := 0;
+  (* WAS `Result := 0`, so every thread logged as thread 0 -- which makes the
+    %t pattern useless on exactly the platforms this branch exists for, and
+    TR4W runs a thread per radio, per external logger, plus WinKey and the
+    network. The RTL has the real thing; it must be QUALIFIED because this
+    function shadows the name it is calling. *)
+  Result := Integer(System.GetCurrentThreadID);
 end;
 
 procedure OutputDebugString(const S: PChar);
