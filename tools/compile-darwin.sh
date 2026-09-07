@@ -51,15 +51,23 @@ fi
 SRC="$REPO/tr4w/src"
 OUT="${TMPDIR:-/tmp}/tr4w-darwin"
 
-# CLEARED EVERY RUN, and searched.
+# CLEARED BEFORE EVERY UNIT -- see compile_one, which does the clearing.
 #
-# Both halves were missing and together they produced a phantom failure: a
-# STALE .ppu from an earlier run made FPC recompile a unit it should have
-# reused, and the recompile failed on a dependency that resolves perfectly
-# well when compiled directly -- "Can't find unit version used by VC", for a
-# Version.pas sitting right there. Compiling the same unit by hand then
-# succeeded, which is the signature of stale state rather than broken source.
-rm -rf "$OUT"
+# Sharing one directory across the list produces a FALSE FAILURE, and it took
+# a while to corner because each unit compiles perfectly well on its own:
+#
+#     VC.pas   into a clean directory        ok
+#     cty.pas  into a clean directory        ok
+#     VC.pas then cty.pas, same directory    Can't find unit version used by VC
+#
+# The VC.ppu the first compile leaves behind is picked up by the second, and
+# its recorded dependency on Version cannot then be satisfied -- no version.ppu
+# was written and the source is not reconsidered. Nothing is wrong with any of
+# the three files.
+#
+# Isolating each unit is also the right MEANING for this tool: the question is
+# whether a unit compiles ON ITS OWN, not whether it compiles after whatever
+# happened to be built before it.
 mkdir -p "$OUT"
 
 # The unit search path, smallest set that works. Kept explicit rather than
@@ -82,6 +90,8 @@ compile_one() {
       return 2
    fi
    # shellcheck disable=SC2086
+   rm -rf "$OUT"
+   mkdir -p "$OUT"
    if "$FPC" -Mdelphi -Sc -Tdarwin -P$CPU -FU"$OUT" -Fi"$SRC" $FU "$SRC/$unit" \
         > "$OUT/last.log" 2>&1; then
       echo "  DARWIN OK   $unit"
