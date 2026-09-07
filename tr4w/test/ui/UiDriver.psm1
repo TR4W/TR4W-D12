@@ -51,33 +51,73 @@ function Find-TR4WMainWindow
 {
    param([Parameter(Mandatory = $true)][int] $ProcessId)
 
-   $script:uiDrvFound = [IntPtr]::Zero
+   # BY TITLE, NOT JUST BY CLASS -- and this is why.
+   #
+   # CLASS 'TR4W' *OR* 'Window'. Phase 3a made the main window an LCL TForm, and
+   # an LCL form's Win32 class is 'Window' -- hardcoded in the widgetset, with
+   # no override. The old name is still accepted so this harness can drive a
+   # pre-3a binary for comparison.
+   #
+   # THE CLASS FILTER USED TO BE ENOUGH AND IS NOT ANY MORE. This function's own
+   # note said "'Window' is not distinctive, so the other two filters carry the
+   # weight" -- process and visibility -- which was true while every TOOL window
+   # was a Win32 dialog with a class of its own. They are LCL forms now, so a
+   # running TR4W has SEVERAL visible top-level windows of class 'Window':
+   #
+   #   Window   TR4W v.5.0.2 - 2026 CQ-WW-SSB NY4I     <- the main window
+   #   Window   Radio 1 7100-18V
+   #   Window   Radio 2
+   #   Window   Function keys
+   #
+   # EnumWindows walks them in Z-ORDER, so this returned whichever was topmost
+   # -- which depends on what was last activated, including by a person using
+   # the machine while a harness runs. NY4I asked exactly that: "could other
+   # running programs affect this such as if I have the cursor in another window
+   # and am typing?" Yes: it made Test-Typing fail about half the time with
+   # "no control with id 73", because id 73 is a child of the MAIN window and
+   # the search had been handed a tool window.
+   #
+   # Measured 2026-09-07: four visible 'Window'-class top-level windows, exactly
+   # one of which contains control 73.
+   #
+   # So prefer the one whose caption starts with 'TR4W' -- the main window is
+   # titled "TR4W <version> - <contest>" and no tool window is -- and fall back
+   # to the old first-match rule if nothing matches, which keeps a pre-3a or
+   # retitled binary drivable.
+   $script:uiDrvFound    = [IntPtr]::Zero
+   $script:uiDrvFallback = [IntPtr]::Zero
    $cb = [Win32.UiDrv+EnumWindowsProc]{
       param($h, $l)
       $owner = 0
       [void][Win32.UiDrv]::GetWindowThreadProcessId($h, [ref]$owner)
       if (($owner -eq $ProcessId) -and [Win32.UiDrv]::IsWindowVisible($h))
          {
-         # CLASS 'TR4W' *OR* 'Window'. Phase 3a made the main window an LCL
-         # TForm, and an LCL form's Win32 class is 'Window' -- hardcoded in the
-         # widgetset, with no override. The old name is still accepted so this
-         # harness can drive a pre-3a binary for comparison.
-         #
-         # 'Window' is not distinctive, so the other two filters carry the
-         # weight: the window must belong to THIS process and be visible, which
-         # excludes the LCL's own invisible 0x0 helper window of the same class.
          $cls = New-Object System.Text.StringBuilder 256
          [void][Win32.UiDrv]::GetClassNameW($h, $cls, 256)
          if (($cls.ToString() -eq 'TR4W') -or ($cls.ToString() -eq 'Window'))
             {
-            $script:uiDrvFound = $h
-            return $false
+            $txt = New-Object System.Text.StringBuilder 256
+            [void][Win32.UiDrv]::GetWindowTextW($h, $txt, 256)
+            if ($txt.ToString().StartsWith('TR4W', [System.StringComparison]::OrdinalIgnoreCase))
+               {
+               $script:uiDrvFound = $h
+               return $false
+               }
+            if ($script:uiDrvFallback -eq [IntPtr]::Zero)
+               {
+               $script:uiDrvFallback = $h
+               }
             }
          }
       return $true
    }
    [void][Win32.UiDrv]::EnumWindows($cb, [IntPtr]::Zero)
-   return $script:uiDrvFound
+
+   if ($script:uiDrvFound -ne [IntPtr]::Zero)
+      {
+      return $script:uiDrvFound
+      }
+   return $script:uiDrvFallback
 }
 
 # Refuses when TR4W is already running: a second instance dies on the
