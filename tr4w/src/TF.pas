@@ -960,9 +960,11 @@ end;
 (* THE MMTTY RICH EDIT, AND WINDOWS-ONLY WITH IT.
 
   Its one caller is uMMTTYForm, which hosts the RTTY engine's output. MMTTY is
-  a separate Windows EXE and RICHED32 is a Windows control; on another platform
-  there is no engine to show, so this returns 0 -- the same "not running" state
-  every MMTTY caller already handles. See uMMTTY's implementation gate. *)
+  a separate Windows EXE and RICHED32 is a Windows control, so off Windows this
+  function DOES NOT EXIST -- the declaration is gated too, which is what lets TF
+  stop naming HWND in its interface. Its caller is gated to match, and
+  MMTTY.mmttyEngine stays 0 there: the same "not running" state every MMTTY
+  caller already handles. See uMMTTY's implementation gate. *)
 {$IFDEF WINDOWS}
 function CreateRichEdit(hwndParent: HWND): HWND;
 begin
