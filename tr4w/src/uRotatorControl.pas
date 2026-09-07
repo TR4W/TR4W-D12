@@ -80,12 +80,9 @@ implementation
 uses
    VC,
    Tree,
-   utils_file,   // sWriteFile
+   uSerialPort,  // TSerialPort -- the one serial transport, no Win32 here
    LOGSTUFF,     // SendPSTRotorCommand -- the UDP socket, reused not rebuilt
-   LOGK1EA,      // CPUKeyer.SerialPortConfigured_Handle -- the port handle TABLE.
-                 // The open itself is Tree.InitializeSerialPort; see LOGNET's header.
    LOGWIND,      // RotatorType / RotatorTypeSA, for the legacy seed
-   Windows,      // FILE_ATTRIBUTE_NORMAL, for InitializeSerialPort
    uRotatorRegistry,
    MainUnit;     // logger
 
@@ -139,6 +136,25 @@ type
 
 var
    GLive: TObjectList<TLiveRotator> = nil;
+
+   (* ONE PORT OBJECT PER PORT, owned here.
+
+     Not one per rotator, and not the CPU keyer's array either. Two rotators
+     may share a line -- an antenna switch on one wire is a real arrangement --
+     so the port is keyed by PORT and the rotators that name it get the same
+     object; opening it twice is what would make the second rotator fail with
+     "access denied" rather than work.
+
+     It replaces CPUKeyer.SerialPortConfigured_Handle[], which is the CW
+     keyer's table and had nothing to do with rotators beyond both wanting a
+     COM port. Indexed by PortType so the shape is unchanged and the sharing
+     stays obvious; nil means "not open", which is the state a rotator that is
+     switched off spends most of its life in. *)
+   GPorts: array[PortType] of TSerialPort;
+
+   (* The finalization's loop variable. A unit's finalization section cannot
+     declare one. *)
+   rotatorPort: PortType;
 
 // Forward: SendBytes is a method on the type declared above, but the routine it
 // delegates to needs PortFromName and the driver's UsesSerialPort, so it lives
@@ -211,9 +227,7 @@ end;
 
 procedure SendToRotator(const aLive: TLiveRotator; const aBytes: TBytes);
 var
-   buf: array[0..63] of Byte;
-   n: integer;
-   i: integer;
+   frame: TBytes;
 begin
    if Length(aBytes) = 0 then
       begin
@@ -241,40 +255,40 @@ begin
       Exit;
       end;
 
-   n := Length(aBytes);
-   if n > Length(buf) then
-      begin
-      n := Length(buf);
-      end;
-   for i := 0 to n - 1 do
-      begin
-      buf[i] := aBytes[i];
-      end;
+   (* A CAP OF 64 BYTES STOOD HERE, from a fixed local buffer -- the frame was
+     copied into it a byte at a time and silently TRUNCATED if a driver ever
+     produced more. No driver does, which is why nothing ever noticed, and a
+     truncated rotator frame would have been a very quiet defect indeed.
+     TSerialPort takes the bytes, so there is no buffer to overrun. *)
+   frame := Copy(aBytes, 0, Length(aBytes));
 
-   { A WRITE THAT FAILS MEANS THE PORT WENT AWAY, and the handle does not say
+   (* A WRITE THAT FAILS MEANS THE PORT WENT AWAY, and the handle does not say
      so. Retrying the OPEN only covers a port that was never opened -- power
-     the controller off after TR4W has opened it and the handle stays
-     non-invalid, so every later write goes quietly nowhere and the rotator
-     stops turning with nothing to explain it.
+     the controller off after TR4W has opened it and the port object stays
+     open, so every later write goes quietly nowhere and the rotator stops
+     turning with nothing to explain it.
 
-     Closing it here is what makes the NEXT send reopen: OpenPortFor treats
-     INVALID_HANDLE_VALUE as its cue. Same idea as MaintainSerialLink on the
-     radios -- an open handle is not a working link. }
-   if not sWriteFile(CPUKeyer.SerialPortConfigured_Handle[aLive.Port], buf, n) then
-      begin
-      logger.Warn('[uRotatorControl] %s: write to %s failed (%s) -- closing '
-                  + 'the port; it will be reopened on the next command',
-                  [aLive.Name, string(PortTypeSA[aLive.Port]),
-                   SysUtils.SysErrorMessage(GetLastError)]);
-      CloseHandle(CPUKeyer.SerialPortConfigured_Handle[aLive.Port]);
-      CPUKeyer.SerialPortConfigured_Handle[aLive.Port] := INVALID_HANDLE_VALUE;
-      // Say it again when it comes back.
-      aLive.PortReported := False;
-      Exit;
-      end;
+     Closing it here is what makes the NEXT send reopen: RotatorPort treats a
+     closed port as its cue. Same idea as MaintainSerialLink on the radios --
+     an open port is not a working link. *)
+   try
+      GPorts[aLive.Port].WriteBytes(frame);
+   except
+      on E: Exception do
+         begin
+         logger.Warn('[uRotatorControl] %s: write to %s failed (%s) -- closing '
+                     + 'the port; it will be reopened on the next command',
+                     [aLive.Name, string(PortTypeSA[aLive.Port]), E.Message]);
+         GPorts[aLive.Port].Close;
+         // Say it again when it comes back.
+         aLive.PortReported := False;
+         Exit;
+         end;
+   end;
 
    logger.Trace('[uRotatorControl] %s (%s) on %s, %d bytes',
-      [aLive.Name, aLive.Driver.DisplayName, string(PortTypeSA[aLive.Port]), n]);
+      [aLive.Name, aLive.Driver.DisplayName, string(PortTypeSA[aLive.Port]),
+       Length(frame)]);
 end;
 
 procedure ClearLive;
@@ -443,7 +457,7 @@ end;
 function OpenPortFor(const aLive: TLiveRotator): boolean;
 var
    baud: integer;
-   h: THandle;
+   port: TSerialPort;
 begin
    Result := False;
    if (aLive = nil) or (not aLive.Driver.UsesSerialPort) or (aLive.Port = NoPort) then
@@ -451,11 +465,21 @@ begin
       Exit;
       end;
 
-   h := CPUKeyer.SerialPortConfigured_Handle[aLive.Port];
-   if h <> INVALID_HANDLE_VALUE then
+   port := GPorts[aLive.Port];
+   if (port <> nil) and port.IsOpen then
       begin
       Result := True;
       Exit;
+      end;
+
+   if port = nil then
+      begin
+      (* Ord(PortType) IS the COM number -- Serial1 = 1 -- which is the same
+        rule the radio factory uses to name its port. The object outlives any
+        one open: it is created once per port and reopened as the controller
+        comes and goes. *)
+      port := TSerialPort.Create(Format('COM%d', [Ord(aLive.Port)]));
+      GPorts[aLive.Port] := port;
       end;
 
    baud := aLive.BaudRate;
@@ -464,34 +488,46 @@ begin
       baud := aLive.Driver.PreferredBaudRate;
       end;
 
-   // ReportFailure = False: this routine does its own reporting, below.
-   InitializeSerialPort(aLive.Port, baud, 8, tNoParity, 1,
-                        FILE_ATTRIBUTE_NORMAL, #0, False);
+   try
+      (* 8 data bits, no parity, 1 stop bit -- exactly what InitializeSerialPort
+        was called with here.
 
-   Result := CPUKeyer.SerialPortConfigured_Handle[aLive.Port] <> INVALID_HANDLE_VALUE;
+        DTR AND RTS ASSERTED, deliberately, because the Win32 open used to do it
+        for us: it set the DCB's fDtrControl and fRtsControl bits on every port
+        it opened. FPC's SerSetParams does not, so passing True here is what
+        keeps a controller powered or enabled off one of those lines working.
+        Nothing about a rotator protocol wants them, but something on the wire
+        might. *)
+      port.OpenRaw(baud, 8, 1, 0, True, True);
+      Result := port.IsOpen;
+   except
+      on E: Exception do
+         begin
+         Result := False;
+         if not aLive.PortReported then
+            begin
+            // ONCE, not once per attempt.
+            logger.Warn('[uRotatorControl] %s: %s is not available -- %s. It '
+                        + 'will be opened when it appears.',
+                        [aLive.Name, string(PortTypeSA[aLive.Port]), E.Message]);
+            aLive.PortReported := True;
+            end;
+         Exit;
+         end;
+   end;
+
    if Result then
       begin
       logger.Info('[uRotatorControl] %s opened on %s at %d baud',
                   [aLive.Name, string(PortTypeSA[aLive.Port]), baud]);
       // Say it again if it goes away and comes back.
       aLive.PortReported := False;
-      end
-   else if not aLive.PortReported then
-      begin
-      // ONCE, not once per attempt.
-      logger.Warn('[uRotatorControl] %s: %s is not available -- %s. It will be '
-                  + 'opened when it appears.',
-                  [aLive.Name, string(PortTypeSA[aLive.Port]),
-                   SysUtils.SysErrorMessage(GetLastError)]);
-      aLive.PortReported := True;
       end;
 end;
 
 procedure OpenRotatorPorts;
 var
-   i, j: integer;
-   baud: integer;
-   already: boolean;
+   i: integer;
 begin
    { OPEN THE PORTS THE LIVE ROTATORS NAME, which is not what used to happen.
 
@@ -521,29 +557,18 @@ begin
          Continue;
          end;
 
-      // TWO ROTATORS MAY SHARE A PORT -- an antenna switch on one line is a real
-      // arrangement -- and opening it twice is what would make the second fail
-      // with "access denied" rather than work.
-      already := False;
-      for j := 0 to i - 1 do
-         begin
-         if GLive[j].Driver.UsesSerialPort and (GLive[j].Port = GLive[i].Port) then
-            begin
-            already := True;
-            Break;
-            end;
-         end;
-      if already then
-         begin
-         Continue;
-         end;
+      (* TWO ROTATORS MAY SHARE A PORT -- an antenna switch on one line is a
+        real arrangement -- and opening it twice is what would make the second
+        fail with "access denied" rather than work.
 
-      baud := GLive[i].BaudRate;
-      if baud = 0 then
-         begin
-         baud := GLive[i].Driver.PreferredBaudRate;
-         end;
+        A scan of the earlier rotators for the same port stood here to prevent
+        that. It is no longer needed: GPorts is keyed by PORT, so the second
+        rotator finds the first one's object already open and OpenPortFor
+        returns immediately. The rule is now in the data rather than in a
+        loop that had to remember it.
 
+        The baud rate computed here was dead as well -- OpenPortFor works it
+        out from the same two fields. *)
       OpenPortFor(GLive[i]);
       end;
 end;
@@ -597,5 +622,13 @@ initialization
 
 finalization
    FreeAndNil(GLive);
+   (* THE PORTS OUTLIVE THE ROTATORS THAT NAMED THEM, because they are keyed by
+     port and not by rotator -- so they are closed here, once, rather than in
+     TLiveRotator.Destroy where a shared line would be closed by whichever
+     rotator happened to be freed first. *)
+   for rotatorPort := Low(PortType) to High(PortType) do
+      begin
+      FreeAndNil(GPorts[rotatorPort]);
+      end;
 
 end.
