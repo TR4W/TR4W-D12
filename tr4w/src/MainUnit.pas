@@ -316,15 +316,19 @@ procedure TimeApplet(i: Cardinal);
 
   MB_TOPMOST is gone with the HWND.  It existed to beat TR4W's always-on-top
   main window, and an application-modal LCL dialog does not need it. }
-function YesOrNo(const Text: string): integer; overload;
-function YesOrNo2(const Text: string): integer; overload;
+(* THE HWND FORMS ARE GONE, on their own terms.
 
-{ THE HWND FORMS, FOR THE SEVEN CALLERS THAT STILL HAVE A REAL ONE: uQTCR,
-  uQTCS and uNewContest are Win32 DIALOGS, and a message box owned by the
-  dialog it interrupts is not the same thing as one owned by the application.
-  These die when those three convert; do not add callers. }
-function YesOrNo(h: HWND; Text: string): integer; overload;
-function YesOrNo2(h: HWND; Text: PAnsiChar): integer; overload;
+  Two overloads took an owner window and called MessageBoxW/MessageBoxA, under
+  a note that read "THE HWND FORMS, FOR THE SEVEN CALLERS THAT STILL HAVE A
+  REAL ONE: uQTCR, uQTCS and uNewContest are Win32 DIALOGS ... These die when
+  those three convert; do not add callers."
+
+  All three converted. Measured 2026-09-06: all TWENTY-TWO call sites in the
+  tree pass a string and nothing else, so the overloads had no callers at all
+  while the comment still asserted seven. `overload` goes with them -- each
+  name is a single function again. *)
+function YesOrNo(const Text: string): integer;
+function YesOrNo2(const Text: string): integer;
 procedure PTTOffWhenStopWAV(uTimerID, uMessage: UINT; dwUser, dw1, dw2: DWORD)
   stdcall;
 procedure OneSecTimerProc(uTimerID, uMessage: UINT; dwUser, dw1, dw2: DWORD)
@@ -2868,21 +2872,6 @@ begin
       begin
       Result := IDCANCEL;
       end;
-end;
-
-function YesOrNo(h: HWND; Text: string): integer;
-begin
-  // DoABeep(PromptBeep);
-  // Windows.MessageBeep(MB_ICONASTERISK);
-  Result := MessageBoxW(h, PWideChar(Text), 'TR4W', MB_YESNO or MB_ICONQUESTION or
-    MB_TOPMOST or MB_DEFBUTTON2);
-end;
-
-function YesOrNo2(h: HWND; Text: PAnsiChar): integer;
-begin
-  Result := MessageBoxA(h, Text, 'TR4W', MB_OKCANCEL or MB_ICONQUESTION
-    or
-    MB_TOPMOST or MB_DEFBUTTON1);
 end;
 
 function TuneOnFreqFromCallWindow: boolean;
