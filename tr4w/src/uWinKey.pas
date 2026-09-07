@@ -32,6 +32,9 @@ uses
   Windows,
   VC,
   utils_file,
+  (* TSerialPort -- the WinKeyer is on the same transport as the radios and
+    the rotators now. In the INTERFACE clause because WinKeyPort below is. *)
+  uSerialPort,
   TF,
   Tree
   ,
@@ -210,7 +213,14 @@ var
   wkCWThreadID                          : Cardinal;
 
 //  wkThreadHWND                          : HWND = INVALID_HANDLE_VALUE;
-  WinKeyHandle                          : THandle = INVALID_HANDLE_VALUE;
+  (* THE PORT, AS AN OBJECT. This was a raw THandle with its own CreateFileA,
+    DCB and COMMTIMEOUTS -- a third private serial stack beside the radios' and
+    the rotators'. It is the same TSerialPort as both of those now, so a
+    WinKeyer is as portable as a radio is.
+
+    nil means closed, and every routine that used to compare the handle against
+    INVALID_HANDLE_VALUE asks wkPortOpen instead. *)
+  WinKeyPort                            : TSerialPort = nil;
 
   wkBuffer                              : array[0..7] of Byte;
   wkREADBuffer                          : array[0..32] of Byte;
@@ -232,8 +242,6 @@ var
 //  wkSpeedUpValue                        : integer = -1;
 //  wkSpeedDownValue                      : integer = -1;
 
-  wklpCommTimeouts                      : TCommTimeouts;
-  wkDCB                                 : TDCB;
 
   WinKeySettings                        : TWinKeySettings =
     (
@@ -291,6 +299,12 @@ uses
   LogK1EA,
   CFGCMD,
   MainUnit;
+
+(* FORWARD, because the port helpers are defined beside wkOpenPort at the
+  bottom of the unit -- with the routine whose port they belong to -- and
+  almost everything above calls them. *)
+function wkPortOpen: boolean; forward;
+function wkWriteRaw(const Buffer; Count: DWORD): Cardinal; forward;
 
 function wkOpen: boolean;
 var
@@ -356,9 +370,9 @@ begin
         KeyerState.SetIdentity(family, versionByte);
         end;
      end;
-  wklpCommTimeouts.ReadTotalTimeoutConstant := 10 - 0;
-//  wklpCommTimeouts.WriteTotalTimeoutConstant := 1;
-  SetCommTimeouts(WinKeyHandle, wklpCommTimeouts);
+  (* DOWN TO 10 ms, now that identification is done and the reader thread is
+    about to take over. See the note below on why the thread starts last. *)
+  WinKeyPort.ReadTimeoutMs := 10;
 
   wkSendAdminCommand(wkSETWK1MODE);
 
@@ -376,7 +390,7 @@ begin
 //          if WinKeySettings.wksKeyerMode = kmBugMode then TempInteger := TempInteger + 48;
 
   WinKeySettings.wksValueList.vlSpeedinWPM := ActiveRadioPtr.SpeedMemory;
-  sWriteFile(WinKeyHandle, WinKeySettings.wksValueList, SizeOf(TwkValueList));
+  wkWriteRaw(WinKeySettings.wksValueList, SizeOf(TwkValueList));
 //  wkSetupSpeedPot;
   wkSendByte(wkCMD_GETPOT);
 //  wkSendTwoBytes(wkCMD_SETWEIGHTING, WinKeySettings.wkWeighting);
@@ -412,8 +426,8 @@ end;
 function wkSend(const Buffer; nNumberOfBytesToWrite: DWORD): Cardinal;
 begin
   logger.Debug('[wkSend] writing %d byte(s) to WinKeyer', [nNumberOfBytesToWrite]);
-  if WinKeyHandle = INVALID_HANDLE_VALUE then Exit;
-  tWriteFile(WinKeyHandle, Buffer, nNumberOfBytesToWrite, Result);
+  if not wkPortOpen then Exit;
+  Result := wkWriteRaw(Buffer, nNumberOfBytesToWrite);
 end;
 
 procedure wkSendAdminCommand(const Buffer);
@@ -421,8 +435,8 @@ var
   Bytes: array[0..1] of Byte absolute Buffer;
 begin
   logger.Trace('[wkSendAdminCommand] B1=$%s B2=$%s', [IntToHex(Bytes[0], 2), IntToHex(Bytes[1], 2)]);
-  if WinKeyHandle = INVALID_HANDLE_VALUE then Exit;
-  sWriteFile(WinKeyHandle, Buffer, 2);
+  if not wkPortOpen then Exit;
+  wkWriteRaw(Buffer, 2);
 end;
 
 var
@@ -475,9 +489,9 @@ var
   t0: Int64;
 begin
   logger.Trace('[wkSendByte] b=%s ($%s)', [string(Char(b)), IntToHex(b, 2)]);
-  if WinKeyHandle = INVALID_HANDLE_VALUE then Exit;
+  if not wkPortOpen then Exit;
   t0 := wkPerfNow;
-  sWriteFile(WinKeyHandle, b, 1);
+  wkWriteRaw(b, 1);
   wkWriteMsAccum := wkWriteMsAccum + wkPerfMs(t0);
 
 //  wkBuffer[0] := b;
@@ -492,11 +506,11 @@ var
 begin
   logger.Trace('[wkSendTwoBytes] B1=%s ($%s) B2=%s ($%s)',
                [string(Char(B1)), IntToHex(B1, 2), string(Char(B2)), IntToHex(B2, 2)]);
-  if WinKeyHandle = INVALID_HANDLE_VALUE then Exit;
+  if not wkPortOpen then Exit;
   TwoBytesBuffer[0] := B1;
   TwoBytesBuffer[1] := B2;
   t0 := wkPerfNow;
-  tWriteFile(WinKeyHandle, TwoBytesBuffer, 2, Result);
+  Result := wkWriteRaw(TwoBytesBuffer, 2);
   wkWriteMsAccum := wkWriteMsAccum + wkPerfMs(t0);
 
 //  wkSendByte(B1);
@@ -523,7 +537,7 @@ end;
 
 procedure wkSetSpeed(Speed: integer);
 begin
-  if WinKeyHandle = INVALID_HANDLE_VALUE then Exit;
+  if not wkPortOpen then Exit;
   wkSendTwoBytes(wkCMD_SETWPMSPEED, Speed);
   wkCWSpeed := Speed;
 end;
@@ -531,10 +545,27 @@ end;
 
 function wkRead(nNumberOfBytesToRead: DWORD): boolean;
 var
-  lpNumberOfBytesRead                   : DWORD;
+  got: TBytes;
 begin
-  Windows.ReadFile(WinKeyHandle, wkREADBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, nil);
-  Result := lpNumberOfBytesRead = nNumberOfBytesToRead;
+  Result := False;
+  if not wkPortOpen then
+     begin
+     Exit;
+     end;
+  got := WinKeyPort.ReadBytes(nNumberOfBytesToRead);
+  if Length(got) = 0 then
+     begin
+     Exit;
+     end;
+  if DWORD(Length(got)) > DWORD(SizeOf(wkREADBuffer)) then
+     begin
+     SetLength(got, SizeOf(wkREADBuffer));
+     end;
+  Move(got[0], wkREADBuffer[0], Length(got));
+  (* SHORT IS A FAILURE, as it was: the callers ask for an exact number of
+    bytes -- one echo byte, one version byte -- and treat anything less as the
+    device not answering. *)
+  Result := DWORD(Length(got)) = nNumberOfBytesToRead;
 end;
 
 procedure wkClose;
@@ -542,11 +573,12 @@ begin
   wkActive := False;
   wkLastPinConfig := -1;   // device state is no longer ours to assume
   wkDispayState;
-  if WinKeyHandle = INVALID_HANDLE_VALUE then Exit;
+  if not wkPortOpen then Exit;
   wkClearBuffer;
   wkSendAdminCommand(wkHOSTCLOSE);
-  CloseHandle(WinKeyHandle);
-  WinKeyHandle := INVALID_HANDLE_VALUE;
+  (* Closed, not freed: wkOpenPort reopens the same object, and the WinKeyer
+    comes and goes with its USB adapter. *)
+  WinKeyPort.Close;
 end;
 
 function wkHasPendingOutput: boolean;
@@ -582,7 +614,7 @@ procedure wkClearBuffer;            // 4.36.13 GM0GAV
 var
   t0: Int64;
 begin
-  if WinKeyHandle = INVALID_HANDLE_VALUE then Exit;
+  if not wkPortOpen then Exit;
   wkWriteMsAccum := 0;
   t0 := wkPerfNow;
   wkSendByte(wkCMD_CLEARBUFFER);
@@ -611,24 +643,48 @@ end;
 
 procedure wkSetupSpeedPot;
 begin
-  if WinKeyHandle = INVALID_HANDLE_VALUE then Exit;
+  if not wkPortOpen then Exit;
   wkBuffer[0] := wkCMD_SETUPSPEEDPOT;
   wkBuffer[1] := wkMINWPM;
   wkBuffer[2] := wkWPMRANGE;
   wkBuffer[3] := 0;
-  sWriteFile(WinKeyHandle, wkBuffer, 4);
+  wkWriteRaw(wkBuffer, 4);
 end;
 
 function wkTurnPTT(Turn: boolean): boolean;
 begin
   Result := False;
-  if WinKeyHandle = INVALID_HANDLE_VALUE then Exit;
+  if not wkPortOpen then Exit;
   wkBuffer[0] := wkCMD_PTTONOFF;
   wkBuffer[1] := Byte(Turn);
-  Result := sWriteFile(WinKeyHandle, wkBuffer, 2);
+  Result := wkWriteRaw(wkBuffer, 2) = 2;
 {$IF WINKEYDEBUG}
 //  AddStringToTelnetConsole('PTT');
 {$IFEND}
+end;
+
+(* Fill wkThreadReadBuffer from the port and answer how many bytes arrived.
+
+  Both reader threads did this inline with Windows.ReadFile. They are otherwise
+  near-duplicates of each other and always were; this at least gives them one
+  read. A zero answer is the ordinary case -- it means the 10 ms read timeout
+  expired with the device quiet -- and not an error. *)
+function wkReadIntoThreadBuffer: DWORD;
+var
+  got: TBytes;
+begin
+  Result := 0;
+  if not wkPortOpen then
+     begin
+     Exit;
+     end;
+  got := WinKeyPort.ReadBytes(SizeOf(wkThreadReadBuffer));
+  if Length(got) = 0 then
+     begin
+     Exit;
+     end;
+  Move(got[0], wkThreadReadBuffer[0], Length(got));
+  Result := Length(got);
 end;
 
 procedure wkReadThreadProc;
@@ -645,7 +701,7 @@ begin
     if not wkSendNextByteFromHostBuffer then
 
     begin
-      Windows.ReadFile(WinKeyHandle, wkThreadReadBuffer, SizeOf(wkThreadReadBuffer), lpNumberOfBytesRead, nil);
+      lpNumberOfBytesRead := wkReadIntoThreadBuffer;
       if lpNumberOfBytesRead > 0 then
         for i := 0 to lpNumberOfBytesRead - 1 do
         begin
@@ -753,7 +809,7 @@ begin
 
   while wkActive = True do
   begin
-    Windows.ReadFile(WinKeyHandle, wkThreadReadBuffer, SizeOf(wkThreadReadBuffer), lpNumberOfBytesRead, nil);
+    lpNumberOfBytesRead := wkReadIntoThreadBuffer;
     if lpNumberOfBytesRead = 0 then
        begin
        wkSendNextByteFromHostBuffer;
@@ -946,7 +1002,7 @@ const
   WK_RADIO_TWO                          = 8;
   WK_CW_MODE                            = 1;
 begin
-  if WinKeyHandle = INVALID_HANDLE_VALUE then Exit;
+  if not wkPortOpen then Exit;
   if r = @Radio1 then TempByte := WK_RADIO_ONE else TempByte := WK_RADIO_TWO;
   if r.ModeMemory <> Phone then
      begin
@@ -975,42 +1031,82 @@ begin
                [IntToHex(TempByte, 2), wkPerfMs(t0), wkWriteMsAccum]);
 end;
 
+(* Is there a port to talk to? Replaces `WinKeyHandle = INVALID_HANDLE_VALUE`
+  at every guard, and answers False both before the first open and after
+  wkClose. *)
+function wkPortOpen: boolean;
+begin
+  Result := (WinKeyPort <> nil) and WinKeyPort.IsOpen;
+end;
+
+(* Write raw bytes, for the callers that hold an untyped buffer and a length.
+
+  The WinKeyer protocol is binary -- command bytes, a value list, echoed
+  characters -- so this is the byte-exact path and never WriteString. It
+  answers the number of bytes written, as tWriteFile did, so the two callers
+  that report it need no change. *)
+function wkWriteRaw(const Buffer; Count: DWORD): Cardinal;
+var
+  bytes: TBytes;
+begin
+  Result := 0;
+  if (Count = 0) or (not wkPortOpen) then
+     begin
+     Exit;
+     end;
+  SetLength(bytes, Count);
+  Move(Buffer, bytes[0], Count);
+  try
+     WinKeyPort.WriteBytes(bytes);
+     Result := Count;
+  except
+     on E: Exception do
+        begin
+        logger.Warn('[uWinKey] write of %d byte(s) failed: %s', [Count, E.Message]);
+        end;
+  end;
+end;
+
 function wkOpenPort: boolean;
 var
   msg: string;
 begin
   Result := False;
-  // Issue #997: asm wsprintf-push -> TF.Format (_COM = '\\.\COM%u', same as
-  // tree.pas). wksWinKey2Port is a PortType enum -> Ord = the port number.
-  TF.Format(@wkREADBuffer, _COM, Ord(WinKeySettings.wksWinKey2Port));
-  WinKeyHandle := CreateFileA(@wkREADBuffer, GENERIC_READ or GENERIC_WRITE, 0, nil, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL {FILE_FLAG_OVERLAPPED}, 0);
-  if WinKeyHandle = INVALID_HANDLE_VALUE then
+
+  if WinKeyPort = nil then
      begin
-     // SysErrorMessage returns an AnsiString via a hidden var-parameter, not in
-     // eax. Assign to a local so the string data remains alive, then build the
-     // full message with SysUtils.Format. No inline asm / varargs juggling.
-     msg := Format('Winkeyer port COM%d: %s',
-                   [Integer(WinKeySettings.wksWinKey2Port),
-                    SysErrorMessage(GetLastError)]);
-     showwarning(msg);
-     Exit;
+     (* Ord(PortType) IS the COM number -- the same rule the radio factory and
+       the rotators use. This used to build the name with TF.Format into
+       wkREADBuffer, which is also the READ buffer, so the device name and the
+       first reply shared one array. *)
+     WinKeyPort := TSerialPort.Create(
+        Format('COM%d', [Ord(WinKeySettings.wksWinKey2Port)]));
      end;
-  GetCommState(WinKeyHandle, wkDCB);
-  wkDCB.BaudRate := CBR_1200;
-  wkDCB.StopBits := ONESTOPBIT;
-  wkDCB.Parity := NOPARITY;
-  wkDCB.ByteSize := 8;
-  wkDCB.Flags := dcb_DtrControlEnable;
-  SetCommState(WinKeyHandle, wkDCB);
 
-//  wklpOverlapped.hEvent := Windows.CreateEvent(nil, True, False, nil);
-//  SetCommMask(WinKeyHandle, EV_RXCHAR);
+  try
+     (* 1200 baud, 8N1, DTR ASSERTED AND RTS NOT.
 
-  Windows.ZeroMemory(@wklpCommTimeouts, SizeOf(TCommTimeouts));
-  wklpCommTimeouts.ReadTotalTimeoutConstant := 250;
-  SetCommTimeouts(WinKeyHandle, wklpCommTimeouts);
+       The DCB said exactly that -- Flags := dcb_DtrControlEnable, with no RTS
+       bit -- and it is not decoration: a WinKeyer takes its power from DTR on
+       the common builds, so RTS=False DTR=True is the difference between a
+       keyer that works and one that is simply dark. FPC's SerSetParams leaves
+       both lines low, so it is stated here rather than inherited. *)
+     WinKeyPort.OpenRaw(1200, 8, 1, 0, False, True);
+  except
+     on E: Exception do
+        begin
+        msg := Format('Winkeyer port COM%d: %s',
+                      [Integer(WinKeySettings.wksWinKey2Port), E.Message]);
+        showwarning(msg);
+        Exit;
+        end;
+  end;
+
+  (* 250 ms while the device is being identified -- the echo test and the
+    version read are synchronous and a WinKeyer takes its time answering after
+    a host open. wkOpen drops it to 10 ms once the reader thread starts. *)
+  WinKeyPort.ReadTimeoutMs := 250;
   Sleep(200);
-  PurgeComm(WinKeyHandle, PURGE_RXCLEAR);
   wkLastPinConfig := -1;   // freshly opened device: nothing configured yet
   Result := True;
 end;
