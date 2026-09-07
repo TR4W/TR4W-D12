@@ -27,7 +27,11 @@ interface
 uses
 
   VC,
-  Windows,
+  (* LCLType, not Windows: MAXWORD is all this unit wanted from it, and
+    LCLType declares it for every widget set -- see the note at the top of
+    VC.pas. Classes brings TFileStream, which replaces the memory mapping. *)
+  LCLType,
+  Classes,
   uCallSignRoutines,
   utils_text,
   utils_file,
@@ -469,13 +473,26 @@ function ctyLoadInCountryFile(ctyFilename: PAnsiChar; CheckDupe: boolean; LoadRe
 type
   ctyColumns = (cpCountryName, cpCQZone, cpITUZone, cpContinent, cpLatitude, cpLongitude, cpTimeOffset, cpPrimaryPrefix, cpUnDef);
 
-label
-  1, 2;
 var
-  MapFin                                : Cardinal;
-  MapBase                               : Pointer;
+  (* THE FILE IS READ INTO MEMORY, NOT MEMORY-MAPPED (2026-09-07).
+
+    It was CreateFileA + CreateFileMapping + MapViewOfFile, with two labels and
+    two gotos to unwind the three handles on a partial failure. All four calls
+    are Windows-only and there is no portable mapping in the RTL.
+
+    A read costs one allocation of the file's size -- CTY.DAT is about a
+    megabyte, read once at start-up -- and in exchange the unwinding disappears
+    with the handles: TFileStream frees itself, and a dynamic array frees
+    itself. Both labels and both gotos are gone.
+
+    THE PARSE BELOW IS UNCHANGED, DELIBERATELY. `p` still walks bytes by index
+    over the whole file, exactly as it did over the mapped view; only where
+    those bytes come from has changed. This unit decides every country and zone
+    in the log, so the acquisition was worth replacing and the parser was not
+    worth touching in the same commit. *)
+  raw                                   : TBytes;
+  fs                                    : TFileStream;
   p                                     : PAnsiChar;
-  h                                     : THandle;   (* A FILE handle, not a window. *)
   i                                     : Cardinal;
   s                                     : Cardinal;
   b                                     : array[0..31] of AnsiChar;
@@ -503,19 +520,33 @@ begin
 //  Start := GetCPU;
   Result := False;
   z := 0; // 4.79.3
-  h := CreateFileA(ctyFilename, GENERIC_READ, FILE_SHARE_READ, nil, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, 0);
-  if h = INVALID_HANDLE_VALUE then Exit;
 
-  MapFin := Windows.CreateFileMapping(h, nil, PAGE_READONLY, 0, 0, nil);
-  if MapFin = 0 then
-     begin
-     goto 1;
+  (* A MISSING OR UNREADABLE FILE RETURNS False, as it always did -- the old
+    code exited on INVALID_HANDLE_VALUE. TFileStream raises instead, so the
+    same answer is produced by catching it. *)
+  raw := nil;
+  try
+     (* AnsiString, NOT string(AnsiString(...)). The RTL is built without
+       UnicodeStrings, so TFileStream.Create takes an AnsiString -- widening
+       to UnicodeString here only to have the call narrow it back is a silent
+       round trip, and the build ratchet counts it. *)
+     fs := TFileStream.Create(AnsiString(ctyFilename), fmOpenRead or fmShareDenyNone);
+     try
+        SetLength(raw, fs.Size);
+        if Length(raw) > 0 then
+           begin
+           fs.ReadBuffer(raw[0], Length(raw));
+           end;
+     finally
+        fs.Free;
      end;
+  except
+     Exit;
+  end;
 
-  MapBase := Windows.MapViewOfFile(MapFin, FILE_MAP_READ, 0, 0, 0);
-  if MapBase = nil then
+  if Length(raw) = 0 then
      begin
-     goto 2;
+     Exit;
      end;
 
   (* GROWN IN BLOCKS, not per prefix. DSA_Create's second argument was its
@@ -528,16 +559,16 @@ begin
      SetLength(CTY.ctyPrefixesTable, PREFIX_TABLE_GROW);
      end;
 
-  p := MapBase;
+  p := PAnsiChar(@raw[0]);
   c := cpCountryName;
   s := 0;
   e := 0;
   oITU := 0;
   oCQ := 0;
 
-//  Windows.ZeroMemory(@CTY.CTYTable, SizeOf(CountryInfoArrayType));
+//  FillChar(CTY.CTYTable, SizeOf(CountryInfoArrayType), 0);
 
-    Size := Windows.GetFileSize(h, nil);
+    Size := Length(raw);
 
   for i := 0 to Size - 1 do
      begin
@@ -549,8 +580,8 @@ begin
 
             cpCountryName:
               begin
-                Windows.ZeroMemory(@r, SizeOf(r));
-                Windows.CopyMemory(@r.Name, @p[s], l);
+                FillChar(r, SizeOf(r), 0);
+                Move(p[s], r.Name, l);
               end;
 
             cpCQZone:
@@ -558,7 +589,7 @@ begin
                 if r.Name[0] = '!' then
                    begin
                    // Issue #997: removed asm nop (no-op).
-                   Windows.CopyMemory(@r.ID[1], @p[i - l], l);
+                   Move(p[i - l], r.ID[1], l);
                    r.ID[0] := AnsiChar(l);
                    ReplaceCountry(r);
                    c := cpCountryName;
@@ -610,15 +641,15 @@ begin
 
             cpLatitude:
               begin
-                Windows.ZeroMemory(@b, SizeOf(b));
-                Windows.CopyMemory(@b, @p[s], l);
+                FillChar(b, SizeOf(b), 0);
+                Move(p[s], b, l);
                 Val(StrPas(b), Lat, code);   // Issue #1033: was TF.ValExt (asm); RTL Val is equivalent for cty.dat's well-formed decimals
               end;
             cpLongitude:
               begin
 
-                Windows.ZeroMemory(@b, SizeOf(b));
-                Windows.CopyMemory(@b, @p[s], l);
+                FillChar(b, SizeOf(b), 0);
+                Move(p[s], b, l);
                 Val(StrPas(b), Lon, code);   // Issue #1033: was TF.ValExt (asm)
                 if code = 0 then
                    begin
@@ -628,8 +659,8 @@ begin
 
             cpTimeOffset:
               begin
-                Windows.ZeroMemory(@b, SizeOf(b));
-                Windows.CopyMemory(@b, @p[s], l);
+                FillChar(b, SizeOf(b), 0);
+                Move(p[s], b, l);
                 r.UTCOffset := PCharToInt(@b) * 60;
 {
                 for Minutes := 1 to 3 do
@@ -645,7 +676,7 @@ begin
               end;
             cpPrimaryPrefix:
               begin
-                Windows.CopyMemory(@r.ID[1], @p[s], l);
+                Move(p[s], r.ID[1], l);
                 r.ID[0] := AnsiChar(l);
 //                if r.ID = 'UA9' then
 //                  asm nop end;
@@ -692,7 +723,7 @@ begin
 
       ',', ';':
         begin
-          Windows.ZeroMemory(@pr, SizeOf(pr));
+          FillChar(pr, SizeOf(pr), 0);
           if p[s] = '=' then
              begin
              inc(s);
@@ -704,7 +735,7 @@ begin
              begin
              l := (e - s - 1);
              end;
-          Windows.CopyMemory(@pr.Prefix, @p[s], l);
+          Move(p[s], pr.Prefix, l);
           pr.PrefLength := l;
 
           pr.Country := CTY.CTYNumberCountries - 1;
@@ -721,7 +752,11 @@ begin
                 if pr.Prefix[3] = '2' then
                   if pr.Prefix[4] = '0' then
                      begin
-                     Windows.lstrcatA(CTY.CtyVersion, pr.Prefix);
+                     (* StrLCat, not lstrcatA -- the RTL's, and BOUNDED.
+                       ctyVersion is 16 bytes and Prefix is 14, so the
+                       unbounded append this replaces could overrun it by 12.
+                       High() leaves room for the terminator. *)
+                     StrLCat(CTY.CtyVersion, pr.Prefix, High(CTY.CtyVersion));
                      end;
 
           s := i + 1;
@@ -741,16 +776,16 @@ begin
      // the ANSI 'REMAINING MULTS' marker in the byte-mapped file -- this branch is
      // effectively disabled until given a PAnsiChar search. Not exercised by the
      // test (LoadRemainingMults=False); flagged with the remaining-mults feature.
-     p := PAnsiChar(Strpos(MapBase, rm));
+     p := PAnsiChar(Strpos(PAnsiChar(@raw[0]), rm));
      if p <> nil then
         begin
         ctyLoadInRemainingMults(p);
         end;
      end;
 
-  1: Windows.UnmapViewOfFile(MapBase);
-  2: CloseHandle(MapFin);
-  CloseHandle(h);
+  (* NOTHING TO UNWIND. This was `1: UnmapViewOfFile; 2: CloseHandle(MapFin);
+    CloseHandle(h);` -- the two goto targets for a mapping that failed halfway.
+    The stream is already closed and `raw` is freed by the compiler. *)
 
   Result := True;
   ctyShellSort;
@@ -806,7 +841,7 @@ begin
      end;
 
   FillChar(CTY.ctyIndexArray, SizeOf(CTY.ctyIndexArray), -1);
-  Windows.ZeroMemory(@CTY.ctyMaxLengthIndexArray, SizeOf(CTY.ctyMaxLengthIndexArray));
+  FillChar(CTY.ctyMaxLengthIndexArray, SizeOf(CTY.ctyMaxLengthIndexArray), 0);
 
 {$IF tDebugMode}
   MessageDlg('debug mode', string(TC_DEBUGMODECREATEDPREFIXESTXT), mtInformation, [mbOK], 0);
@@ -913,10 +948,10 @@ begin
 
   if Call[1] = '/' then Exit;
 
-  Windows.ZeroMemory(@QTH, SizeOf(QTHRecord));
+  FillChar(QTH, SizeOf(QTHRecord), 0);
   if length(Call) = 0 then Exit;
 
-  Windows.CopyMemory(@TempPrefix, @Call[1], length(Call));
+  Move(Call[1], TempPrefix, length(Call));
   TempPrefix[length(Call)] := #0;
 
   QTH.StandardCall := StandardCallFormat(Call, True);
@@ -956,7 +991,7 @@ begin
 
   if length(Call) = 1 then Exit;
 
-  Windows.CopyMemory(@TempPrefix, @QTH.StandardCall[1], length(QTH.StandardCall));
+  Move(QTH.StandardCall[1], TempPrefix, length(QTH.StandardCall));
   TempPrefix[length(QTH.StandardCall)] := #0;
 
   if GuantanamoBayCallsign then
@@ -1479,8 +1514,8 @@ begin
 
      if p[i] in [' ', #13, #10, ',', ';', #0] then if s <> 0 then
                                                       begin
-                                                      Windows.ZeroMemory(@b, SizeOf(b));
-                                                      Windows.CopyMemory(@b, @p[s], i - s);
+                                                      FillChar(b, SizeOf(b), 0);
+                                                      Move(p[s], b, i - s);
                                                       StrUpper(PAnsiChar(@b));
                                                       for e := 0 to MaxCountries - 1 do
                                                          begin

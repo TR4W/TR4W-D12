@@ -22,7 +22,13 @@ unit uMainWindowProc;
 interface
 
 uses
-  Windows,
+  (* LCLIntf and LCLType, NOT Windows. The LCL declares GetKeyState itself, in
+    its cross-platform WinAPI compatibility layer (winapih.inc), and every
+    widget set implements it -- the LCL's own controls.pp and forms.pp build
+    their TShiftState from it. VK_CONTROL and the two shift codes come from
+    LCLType, which declares them for every platform. *)
+  LCLIntf,
+  LCLType,
   Classes,   // TShiftState, TObject -- the LCL event signatures
   uTR4WStrings;
 
@@ -305,10 +311,16 @@ end;
   through untouched (the loop's `goto TransMess`). }
 procedure TTR4WEntryEvents.EntryKeyDown(var Key: word; const aField: TTR4WEntryField);
 begin
+   (* `GetKeyState(...) < 0` RATHER THAN `and $8000 <> 0`, at all three sites
+     below. It is what the LCL itself writes, and it is not merely style: the
+     mask assumes the result is a 16-bit value whose sign bit lands exactly at
+     $8000. Windows returns SHORT so that holds here, but a widget set free to
+     return a plain negative Integer -- say -128 -- would give `and $8000` = 0,
+     and the key would silently read as UP. The sign test is correct for both. *)
    // Ctrl+= : repeat the exact characters last sent on CW. '=' alone is QUICK
    // QSL KEY 2, so a bare key collides; the Ctrl combo avoids that.
    if (Key = 187 {VK_OEM_PLUS '='}) and (ActiveMode = CW) and
-      ((GetKeyState(VK_CONTROL) and $8000) <> 0) then
+      (GetKeyState(VK_CONTROL) < 0) then
       begin
       RepeatLastCWMessage;
       Key := 0;
@@ -399,7 +411,7 @@ begin
       // Linux build is attempted.
       if ShiftKeyEnable then
          begin
-         if (GetKeyState(VK_LSHIFT) and $8000) <> 0 then
+         if GetKeyState(VK_LSHIFT) < 0 then
             begin
             if OpMode = CQOpMode then
                begin
@@ -411,7 +423,7 @@ begin
                end;
             end;
 
-         if (GetKeyState(VK_RSHIFT) and $8000) <> 0 then
+         if GetKeyState(VK_RSHIFT) < 0 then
             begin
             if OpMode = CQOpMode then
                begin

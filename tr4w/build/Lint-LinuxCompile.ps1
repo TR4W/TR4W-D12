@@ -65,6 +65,17 @@ $UNITS = @(
    @{ Unit = 'uAccelerators.pas';     Since = '2026-09-07' }
    @{ Unit = 'cty.pas';               Since = '2026-09-07' }
    @{ Unit = 'uRussiaOblasts.pas';    Since = '2026-09-07' }
+
+   # Added 2026-09-07 by CONVERTING the Win32 calls, not by gating them.
+   # utils_file was a thin wrapper over CreateFileA/ReadFile/WriteFile and is
+   # now SysUtils FileCreate/FileRead/FileWrite; uCTYDAT memory-mapped CTY.DAT
+   # and now reads it into memory. The CHAIN is the point: uCallSignRoutines
+   # was blocked by uCTYDAT, which was blocked by utils_file.
+   # Note the subdirectory -- the script joins the name onto tr4w\src.
+   @{ Unit = 'utils\utils_file.pas'; Since = '2026-09-07' }
+   @{ Unit = 'uCTYDAT.PAS';           Since = '2026-09-07' }
+   @{ Unit = 'uCallSignRoutines.pas'; Since = '2026-09-07' }
+
 )
 
 if (-not (Test-Path $fpc))
