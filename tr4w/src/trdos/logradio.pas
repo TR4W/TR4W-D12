@@ -179,7 +179,15 @@ type
       FreqElement:         TMainWindowElement;
       NameElement:         TMainWindowElement;
       RadioDisconnected:   Boolean;
-      tLastValidResponse:  Cardinal;   // GetTickCount of last good serial read; drives the serial liveness indicator
+      (* QWord, NOT Cardinal, and the width is load-bearing.
+
+        This holds a millisecond tick and every reader writes
+        `GetTickCount64 - tLastValidResponse`. A 32-bit tick wraps after
+        49.7 days; the subtraction survives ONE wrap by unsigned
+        arithmetic, but only while both operands are the same width.
+        Storing a 64-bit tick in a Cardinal truncates it and puts the
+        wrap back -- and a shack PC is not rebooted weekly. *)
+      tLastValidResponse:  QWord;   // GetTickCount64 of last good serial read; drives the serial liveness indicator
       RadioName:        Str20;
       StartupCommand  : Str50;
       HamLibID:          integer;

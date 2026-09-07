@@ -45,7 +45,7 @@ uses
    LogK1EA,
    idUDPClient, // ny4i 4.44.9
    idGlobal, // ny4i 4.44.9
-   Windows,
+   LCLType,
    StrUtils,
    Math,
    DateUtils,
@@ -57,9 +57,6 @@ uses
 type
    DebugFileMessagetype = (dfmTX, dfmRX, dfmError);
 
-function ReadFromSerialPort(BytesToRead: Cardinal; rig: RadioPtr): boolean;
-function ReadFromCOMPort(b: Cardinal; rig: RadioPtr): boolean;
-function ReadFromCOMPortRaw(b: Cardinal; rig: RadioPtr): boolean;
 procedure SetSerialRadioAlertState(rig: RadioPtr; alertOn: boolean);
 procedure MarkSerialRead(rig: RadioPtr; success: boolean);
 procedure pFactoryRadio(rig: RadioPtr);
@@ -194,11 +191,14 @@ var
    loggedNoConnInfo: Boolean;   // Issue #968 -- log the "no IP/port" skip once, not every cycle
    reconnectDelay: Integer;
    sleepRemaining: Integer;
-   lastPollTick: LongWord;
-   lastHeartbeatTick: LongWord;
-   lastRITXITTick: LongWord;
+   (* QWord, with GetTickCount64. See the note on the 49.7-day wrap in
+     logradio.pas: a truncated 64-bit tick is worse than a 32-bit one,
+     because the subtraction no longer survives the wrap. *)
+   lastPollTick: QWord;
+   lastHeartbeatTick: QWord;
+   lastRITXITTick: QWord;
    authErrBuf: array[0..127] of AnsiChar;
-   handshakeStuckSinceTick: LongWord;  // GetTickCount when we first noticed IsConnected but not IsOperational; 0 = not tracking
+   handshakeStuckSinceTick: QWord;  // GetTickCount64 when we first noticed IsConnected but not IsOperational; 0 = not tracking
    actVFO: TVFO;                       // active (RX) VFO for the aggregate main-window status (ro.GetActiveVFO)
 const
    RECONNECT_INITIAL_DELAY = 1000;    // 1 second initial delay
@@ -269,9 +269,9 @@ begin
                begin
                if handshakeStuckSinceTick = 0 then
                   begin
-                  handshakeStuckSinceTick := GetTickCount
+                  handshakeStuckSinceTick := GetTickCount64
                   end
-               else if (GetTickCount - handshakeStuckSinceTick) > HANDSHAKE_STUCK_MS then
+               else if (GetTickCount64 - handshakeStuckSinceTick) > HANDSHAKE_STUCK_MS then
                   begin
                   logger.Warn('[pFactoryRadio] %s handshake stuck (IsConnected but not IsOperational) for >%d ms; forcing Disconnect for retry',
                      [rig^.RadioName, HANDSHAKE_STUCK_MS]);
@@ -424,10 +424,10 @@ begin
                      logger.Info('[pFactoryRadio] HamLib poll triggered by ASYNC callback');
                      end;
                   THamLibDirect(ro).SendPollRequests;
-                  lastHeartbeatTick := GetTickCount;
+                  lastHeartbeatTick := GetTickCount64;
                   end
                else if not TR4W_HAMLIB_ASYNC_ONLY and
-                       (GetTickCount - lastHeartbeatTick >= LongWord(ro.pollingInterval)) then
+                       (GetTickCount64 - lastHeartbeatTick >= LongWord(ro.pollingInterval)) then
                   begin
                   if TR4W_HAMLIB_DEBUG then
                      begin
@@ -435,23 +435,23 @@ begin
                                  [ro.pollingInterval]);
                      end;
                   THamLibDirect(ro).SendPollRequests;
-                  lastHeartbeatTick := GetTickCount;
+                  lastHeartbeatTick := GetTickCount64;
                   end;
 
                // RIT/XIT slow poll � every 5000ms independently of the main heartbeat.
                // rig_get_rit/xit trigger $07 D0 side-effects in HamLib's Icom driver
                // which dismiss front-panel menus; polling infrequently keeps them usable.
-               if GetTickCount - lastRITXITTick >= 5000 then
+               if GetTickCount64 - lastRITXITTick >= 5000 then
                   begin
                   THamLibDirect(ro).SendRITXITPoll;
-                  lastRITXITTick := GetTickCount;
+                  lastRITXITTick := GetTickCount64;
                   end;
                end
             // For radios that require active polling (Icom, etc.), call PollRadioState
             // Throttled by pollingInterval (e.g. 500ms for network Icom)
             else if Assigned(ro) and ro.requiresPolling then
                begin
-               if (GetTickCount - lastPollTick >= LongWord(ro.pollingInterval)) then
+               if (GetTickCount64 - lastPollTick >= LongWord(ro.pollingInterval)) then
                   begin
                   // MEASURED, K3S over serial at 38400, 2026-08-09, with a
                   // standalone harness (tools/k3watch.py) so TR4W was not in
@@ -506,7 +506,7 @@ begin
                      begin
                      ro.MarkPollSent;
                      ro.PollRadioState;
-                     lastPollTick := GetTickCount;
+                     lastPollTick := GetTickCount64;
                      end;
                   end;
                end;
@@ -669,10 +669,10 @@ begin
          if Assigned(ro) and (ro.serialPort <> NoPort) then
             begin
             if ro.requiresPolling and
-               (GetTickCount - lastPollTick >= LongWord(ro.pollingInterval)) then
+               (GetTickCount64 - lastPollTick >= LongWord(ro.pollingInterval)) then
                begin
                ro.PollRadioState;
-               lastPollTick := GetTickCount;
+               lastPollTick := GetTickCount64;
                end;
 
             // The RADIO owns its link recovery -- throttle, backoff and the
@@ -773,44 +773,20 @@ begin
 
 end;
 
-function ReadFromSerialPort(BytesToRead: Cardinal; rig: RadioPtr): boolean;
-var
-   BytesRead: Cardinal;
-  // s: string;
-begin
-   Result := False;
-   if BytesToRead > SizeOf(rig^.tBuf) then
-      begin
-      Exit;
-      end;
+(* THE LEGACY SERIAL READ PATH IS DELETED (2026-09-07).
 
-   if Windows.ReadFile(rig.tCATPortHandle, rig^.tBuf, BytesToRead, BytesRead, nil
-      {rig^.pOver}) then
-      if BytesToRead = BytesRead then
-         begin
-         Result := True;
-         end;
-   if logger.IsTraceEnabled then
-      begin
-      logger.trace('[ReadFromSerialPort] Read %s from serial port',[String2Hex(AnsiLeftStr(ArrayToString(rig^.tBuf),BytesRead))]);
-      end;
+  ReadFromCOMPort, ReadFromCOMPortRaw and ReadFromSerialPort lived here,
+  and NOTHING CALLED ReadFromCOMPort -- the only textual mentions left were
+  inside log messages. The other two were reachable only from it, and the
+  fourth arm, ReadFromCOMPortOnEvent, is DEFINED NOWHERE AT ALL: its one
+  call sits inside {$IF MASKEVENT}, and MASKEVENT is False, which is how a
+  call to a function that does not exist never broke the build.
 
-end;
+  They were the last of the per-model serial path Track E removed in
+  August; the factory reads through TSerialPort now. They were also every
+  raw serial API left in this unit -- ReadFile, ClearCommError, PurgeComm --
+  and there was never a serial WRITE here at all. *)
 
-{ Blank a radio panel that no longer has a radio behind it.
-
-  ZEROING THE STATUS IS NOT ENOUGH, and the reason is the flicker guard.
-  DisplayCurrentStatus only writes a field when its value DIFFERS from the
-  previous one -- which is right, and is why the panel does not flicker at ten
-  updates a second. But ClearRadioStatus zeroes CURRENT and PREVIOUS together,
-  so the painter sees no change, writes nothing, and the panel keeps the
-  departed radio's frequencies for ever.
-
-  NY4I saw exactly that on 2026-08-31: a profile whose Radio 2 is (none), a
-  panel correctly re-titled "Radio 2", and 14022.54 still sitting in VFO A.
-
-  The ids are the same five DisplayCurrentStatus writes. Blanking a field it
-  does not write would leave one this routine empties and nothing refills. }
 procedure ClearRadioPanel(rig: RadioPtr);
 begin
    { The handle is read from the radio each time rather than held in an HWND
@@ -1320,10 +1296,10 @@ const
 begin
    if success then
       begin
-      rig^.tLastValidResponse := GetTickCount;
+      rig^.tLastValidResponse := GetTickCount64;
       SetSerialRadioAlertState(rig, False);
       end
-   else if (GetTickCount - rig^.tLastValidResponse) > SERIAL_LIVENESS_TIMEOUT_MS then
+   else if (GetTickCount64 - rig^.tLastValidResponse) > SERIAL_LIVENESS_TIMEOUT_MS then
       begin
       SetSerialRadioAlertState(rig, True);
       end;
@@ -1341,144 +1317,11 @@ const
       [TS140, TS440, TS450, TS480, TS570, TS590, TS690, TS850,
        TS870, TS890, TS940, TS950, TS990, TS2000, FLEX];
 
-function ReadFromCOMPortRaw(b: Cardinal; rig: RadioPtr): boolean;
-label
-   1;
-var
-   stat: TComStat;
-   Errs: DWORD;
-   c: Cardinal;
-   SleepMs: Cardinal;
-begin
-{$IF MASKEVENT}
-   if rig^.RadioModel in KenwoodRadios then
-      begin
-      Result := ReadFromCOMPortOnEvent(b, rig);
-      Exit;
-      end;
-{$IFEND}
-
-   //  if Config.NoPollDuringPTT then while rig.tPTTStatus = PTT_ON do Sleep(100);
-   Result := False;
-   c := 0;
-   stat.cbInQue := 0;
-
-   if rig^.RadioModel in [IC78..IC9700, OMNI6] then
-      begin
-      SleepMs := IcomResponseTimeout
-      end
-   else
-      begin
-      if b < 5 then
-         begin
-         SleepMs := 100
-         end
-      else
-         begin
-         SleepMs := 50 {+50};
-         end;
-      if rig^.RadioModel = Orion then
-         begin
-         SleepMs := 100;
-         end;
-      end;
-
-   while stat.cbInQue < {<>}b do
-      begin
-      Sleep(SleepMs);
-      if rig^.tPollCount < 0 then
-         begin
-         Exit;
-         end;
-      if not ClearCommError(rig^.tCATPortHandle, Errs, @stat) then
-
-         begin
-         ShowSysErrorMessage('READ');
-         end;
-
-      inc(c);
-      if c >= b then
-         begin
-         1:
-
-         {To view data in Portmon}
-         if Errs = 0 then
-            begin
-            if stat.cbInQue <> 0 then
-               begin
-               ReadFromSerialPort(stat.cbInQue, rig);
-               end;
-            end
-         else
-            begin
-            logger.Error('In ReadFromCOMPort, Errs <> 0 %d', [Errs]);
-            Sleep(100);
-            end;
-
-         PurgeComm(rig^.tCATPortHandle, PURGE_RXCLEAR or PURGE_RXABORT);
-         ClearCommError(rig^.tCATPortHandle, Errs, @stat);
-         Result := False;
-         Exit;
-         end;
-      end;
-   rig.tBuf[b + 1] := #0;
-   Result := ReadFromSerialPort(b, rig);
-
-   if rig^.RadioModel in [Orion] then
-      begin
-      if rig.tBuf[1] <> '@' then
-         begin
-         goto 1;
-         end;
-      if rig.tBuf[b] <> #$0D then
-         begin
-         goto 1;
-         end;
-      end;
-
-   if rig^.RadioModel in KenwoodRadios then
-      if rig.tBuf[b] <> ';' then
-         begin
-         goto 1;
-         end;
-
-   if rig^.RadioModel in [IC706..OMNI6] then
-      begin
-      if (PWORD(@rig.tBuf[1])^ <> $FEFE) then
-         begin
-         goto 1;
-         end;
-
-      if rig.tBuf[3] = #0 then
-         if not rig.tDisableCIVTransceive then
-            begin
-            rig.tDisableCIVTransceive := True;
-            showwarning(TC_DISBALE_CIV);
-            end;
-
-      if (rig.tBuf[b] <> ICOM_END_OF_MESSAGE_CODE) or
-         (rig.tBuf[4] <> ICOM_CONTROLLER_ADDRESS) then
-         begin
-         goto 1;
-         end;
-      end;
-
-end;
-
-function ReadFromCOMPort(b: Cardinal; rig: RadioPtr): boolean;
-begin
-   Result := ReadFromCOMPortRaw(b, rig);
-   // Serial liveness decorator (shared with pKenwood2's inline loop via
-   // MarkSerialRead): a good read keeps the indicator green; sustained silence
-   // turns it red.  Decorator only -- reconnect is handled elsewhere.
-   MarkSerialRead(rig, Result);
-end;
-
 procedure BeginPolling(rig: RadioPtr); stdcall;
 begin
    logger.debug('Entered BeginPolling');
    ClearRadioStatus(rig);
-   rig^.tLastValidResponse := GetTickCount;   // baseline so the liveness timer can't fire before the first poll
+   rig^.tLastValidResponse := GetTickCount64;   // baseline so the liveness timer can't fire before the first poll
    Sleep(100);  // The polling thread did not start after reset?
 
    { If the radio is a network interface, we do not care what type of radio as
@@ -1492,23 +1335,26 @@ begin
       Exit;   // Nothing else is done here so exit
       end;
 
-   // The rest is for direct (non-hamlib) serial radio interfaces
+   (* REACHING HERE IS A DEFECT, AND IT NOW SAYS SO.
 
-   PurgeComm(rig^.tCATPortHandle, PURGE_RXCLEAR or PURGE_RXABORT);
+     Every radio that connects has a factory object and left through the Exit
+     above. The per-model legacy dispatch that used to follow is long gone, and
+     what remained was a PurgeComm on rig^.tCATPortHandle -- the LAST raw
+     serial call in this unit, on a handle the factory has not owned since
+     Track E, in a branch the comment itself said could no longer be reached.
 
-   FillChar(rig.tBuf, SizeOf(rig.tBuf), 0);
-
-
-   // The per-model legacy dispatch that used to live here is GONE.
-   // Reaching this point now means tFactoryObject was nil, which after
-   // b047988e can no longer happen for a radio that actually connected.
+     Purging a handle nobody opened is not a recovery; it is a silent no-op
+     that made the branch look handled. A radio with no factory object cannot
+     be polled at all, so the honest response is to report it and stop. *)
+   logger.Error('[BeginPolling] radio has no factory object -- it cannot be ' +
+                'polled. This is a defect: every connected radio has one.');
 end;
 
 procedure PTTStatusChanged;
 begin
    if ActiveRadioPtr.tPTTStatus = PTT_ON then
       begin
-      tr4w_PTTStartTime := GetTickCount;
+      tr4w_PTTStartTime := GetTickCount64;
       // PTT ON is a genuine transmit sighting -- latch it, so the PTT-OFF
       // arm below can tell "the message finished" from "the radio has not
       // keyed up yet".  Same latch ProcessFilteredStatus uses; both doors
@@ -1540,7 +1386,7 @@ begin
       if tr4w_PTTStartTime <> 0 then
          begin
          tRestartInfo.riPTTOnTotalTime := tRestartInfo.riPTTOnTotalTime +
-            GetTickCount - tr4w_PTTStartTime;
+            GetTickCount64 - tr4w_PTTStartTime;
          end;
       end;
 

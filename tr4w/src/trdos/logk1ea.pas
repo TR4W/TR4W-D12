@@ -330,7 +330,7 @@ var
   // back to tr4w.ini, so an existing station already has an explicit
   // 'PTT VIA COMMANDS=' line and the file still wins.  This changes fresh
   // installs.
-  tr4w_PTTStartTime                     : DWORD;
+  tr4w_PTTStartTime                     : QWord;   // GetTickCount64
   tElapsedTimeFromLastQSO               : DWORD;
 
 //  tPTTStatus                            : PTTStatusType = PTT_OFF;

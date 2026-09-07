@@ -6,7 +6,7 @@
   "thread.Create": 0,
   "thread.Event": 29,
   "window.Query": 0,
-  "serial.CommAPI": 9,
+  "serial.CommAPI": 5,
   "registry": 13,
   "audio.MMSystem": 0,
   "lpt.inpout32": 10,
