@@ -55,7 +55,7 @@ uses
   uTR4WStrings,
   uAnsiStr;
 
-procedure OpenEditQSOWindow(Parent: HWND);
+procedure OpenEditQSOWindow;
 
 // THE FOUR HALVES THE LCL FORM CALLS BACK INTO (Phase 5, 2026-08-19).
 // The behaviour stayed in this unit -- it owns the log record and the
@@ -836,15 +836,15 @@ procedure ShowNote(CE: ContestExchange);
 begin
   TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(RC_NOTE + ' :'#13#10#13#10'%s')),
     @EditableQSORXData.Prefix);
-  ShowMessageParent(wsprintfBuffer, EditQSOFormHandle);
+  ShowMessageParent(wsprintfBuffer);
 end;
 
-procedure OpenEditQSOWindow(Parent: HWND);
+procedure OpenEditQSOWindow;
 begin
    // ICC_DATE_CLASSES went with the template. It registered the common
    // control class behind SysDateTimePick32 so DialogBox could create one
    // from the resource; a TDateTimePicker brings its own.
-   uEditQSOForm.ShowEditQSO(Parent);
+   uEditQSOForm.ShowEditQSO;
 end;
 
 end.

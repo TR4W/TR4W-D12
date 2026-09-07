@@ -66,7 +66,7 @@ type
 //
 // THE SEAM established in Phase 1: the caller does not know what this is, only
 // that the window opens.  Returns 1 when a command was chosen.
-function ShowMessagesList(const aParent: HWND): integer;
+function ShowMessagesList: integer;
 
 implementation
 
@@ -164,7 +164,7 @@ begin
    Close;
 end;
 
-function ShowMessagesList(const aParent: HWND): integer;
+function ShowMessagesList: integer;
 begin
    Result := 0;
 

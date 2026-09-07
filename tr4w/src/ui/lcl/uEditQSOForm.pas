@@ -220,7 +220,6 @@ procedure EditQSOSetFocusTo(const aId: integer);
 procedure EditQSOCloseForm;
 // The window a message box should be parented on. 0 when the form is not up,
 // which is what MessageBox wants for "no owner" anyway.
-function  EditQSOFormHandle: HWND;
 
 // HEADLESS FIELD ROUND-TRIP.  Puts a probe value into every input control and
 // reads it straight back, reporting any that does not survive. Returns the
@@ -245,7 +244,7 @@ function RunEditQSOFieldCheck: integer;
 // that the window opens.  The HWND parameter survives because the caller varies
 // -- the main window, Log Edit and Log Search each open this over themselves.
 
-procedure ShowEditQSO(const aParent: HWND);
+procedure ShowEditQSO;
 
 implementation
 
@@ -495,16 +494,6 @@ begin
    if (c is TWinControl) and TWinControl(c).CanFocus then
       begin
       TWinControl(c).SetFocus;
-      end;
-end;
-
-function EditQSOFormHandle: HWND;
-begin
-   Result := 0;
-
-   if frmEditQSO <> nil then
-      begin
-      Result := frmEditQSO.Handle;
       end;
 end;
 
@@ -832,7 +821,7 @@ begin
    end;
 end;
 
-procedure ShowEditQSO(const aParent: HWND);
+procedure ShowEditQSO;
 begin
    // The try/except is permanent and deliberate: under FPC an exception that
    // escapes into the main loop is a bare RTE with no class, and it takes the

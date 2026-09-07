@@ -53,9 +53,6 @@ c80: array[0..3] of Byte;
 
   TEnumLinesFunc = procedure(Line: PShortString);
 
-  TShellexecuteFunc = function(HWND: HWND; Operation, FileName, Parameters, Directory: PChar; showCmd: integer): hInst; stdcall;
-
-  //function Shellexecute(HWND: HWND; Operation, FileName, Parameters, Directory: PChar; showCmd: integer): hInst; stdcall;
 const
   LB_STYLE_1                            = LBS_NOTIFY or LBS_OWNERDRAWFIXED or LBS_NOINTEGRALHEIGHT or LBS_MULTICOLUMN or WS_CHILD or WS_VISIBLE or WS_VSCROLL or WS_HSCROLL or WS_TABSTOP;
   LB_STYLE_2                            = LBS_NOTIFY or LBS_OWNERDRAWFIXED or LBS_HASSTRINGS or LBS_NOINTEGRALHEIGHT or LBS_MULTICOLUMN or WS_CHILD or WS_VISIBLE or WS_VSCROLL or WS_HSCROLL or WS_TABSTOP;
@@ -511,15 +508,6 @@ Jari OH6BG
 //  if LoWord(GetKeyboardLayout(0)) = $0419 then
 //     LoadKeyboardLayout('00000409', KLF_ACTIVATE);   // issue 178 force Latin
 end;
-{
-procedure tSetDlgItemTypText(hDlg: HWND; nIDDlgItem: integer; lpString: PChar);
-begin
-  Windows.CopyMemory(@SetDlgItemTextBuffer, lpString + 1, Cardinal(lpString^));
-  SetDlgItemTextBuffer[Cardinal(lpString^)] := #0;
-  Windows.SetDlgItemTextA(hDlg, nIDDlgItem, SetDlgItemTextBuffer);
-end;
-}
-
 function GetContestFromString(ContestString: ShortString): ContestType;
 var
   TempContest                           : ContestType;

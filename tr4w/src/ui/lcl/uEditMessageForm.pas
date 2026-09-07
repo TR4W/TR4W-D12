@@ -103,7 +103,7 @@ type
 //
 // THE SEAM established in Phase 1: the caller does not know what this is, only
 // that the window opens.
-procedure ShowEditMessage(const aParent: HWND; const aMessage: lParam);
+procedure ShowEditMessage(const aMessage: lParam);
 
 implementation
 
@@ -270,7 +270,7 @@ procedure TfrmEditMessage.btnListClick(Sender: TObject);
 begin
    // FMessageSel was saved by OnExit when this button took the focus, so it
    // still holds the caret position in the message field.
-   if ShowMessagesList(Self.Handle) <> 1 then
+   if ShowMessagesList <> 1 then
       begin
       Exit;
       end;
@@ -432,7 +432,7 @@ begin
    Close;
 end;
 
-procedure ShowEditMessage(const aParent: HWND; const aMessage: lParam);
+procedure ShowEditMessage(const aMessage: lParam);
 begin
    // The try/except is permanent and deliberate: under FPC an exception that
    // escapes into the main loop is a bare RTE with no class, and it takes the

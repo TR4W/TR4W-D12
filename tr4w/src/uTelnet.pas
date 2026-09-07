@@ -342,7 +342,6 @@ const
 // ---------------------------------------------------------------------------
 
 var
-  TelCmdTooltip: HWND = 0;                   // tracking tooltip for the preview
   ClusterTooltipText: array[0..511] of AnsiChar; // stable storage for the tip text
 
 // THE TOKEN VOCABULARY -- the half that needs the application's state.

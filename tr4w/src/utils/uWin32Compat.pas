@@ -60,8 +60,6 @@ type
    HDEVNOTIFY = Pointer;
 
 // Show/hide a window with an animation.  Used for the previous-dupe flash.
-function AnimateWindow(hWnd: HWND; dwTime: DWORD; dwFlags: DWORD): BOOL; stdcall;
-   external 'user32.dll' name 'AnimateWindow';
 
 // Serial-port arrival/removal notification, used by ComPortEnumerator.
 // W explicitly: the filter passed is DEV_BROADCAST_DEVICEINTERFACE_W, and the A

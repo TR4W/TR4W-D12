@@ -42,11 +42,6 @@ uses
   is precisely what "never branch on Sender" exists to prevent.
 }
 
-var
-  MessagesKeys                          : array[1..12] of HWND;
-  MessagesValues                        : array[1..12] of HWND;
-
-
 // the program-message box (Tools -> Program message).
 //
 // THE SEAM for the Win32-to-LCL migration (Phase 1, 2026-08-17): the caller

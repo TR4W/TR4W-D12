@@ -223,7 +223,6 @@ var
   (* The message-only window that receives WM_SOCK_*. Owned by the program
     (tr4wserver.lpr); declared here because RunServer and RunSyncListener are
     the ones that name it in WSAAsyncSelect. Goes when Indy lands. *)
-  ServerSocketSink                      : HWND = 0;
   ServerLogFileName                     : array[0..255] of AnsiChar;
 {$IF SERVERDEBUG}
   ServerDebugFileName                   : array[0..255] of Char;
@@ -236,7 +235,6 @@ var
   net_mywsadata                         : TWSAData;
   myhostent                             : Phostent;
 
-  hIpAddr                               : HWND;
   ApplicationHandle                     : HWND;
   (* THE SERVER LOG, AS A STREAM.
 

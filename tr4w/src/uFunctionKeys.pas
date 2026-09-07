@@ -92,7 +92,6 @@ const
     );
 }
 var
-  KeysHandles                           : array[112..123] of HWND;
   ButtonsText                           : array[112..123] of Str40;
 
 //  FKCloseButton                         : HWND;

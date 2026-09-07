@@ -54,16 +54,16 @@ var
 // When the dialog becomes an LCL form, this body changes and nothing else does.
 //
 // Phase 4a, 2026-08-18: that is exactly what happened, and no call site moved.
-procedure ShowInputQuery(const aParent: HWND);
+procedure ShowInputQuery;
 
 implementation
 
 uses
   uInputQueryForm;
 
-procedure ShowInputQuery(const aParent: HWND);
+procedure ShowInputQuery;
 begin
-   uInputQueryForm.ShowInputQuery(aParent);
+   uInputQueryForm.ShowInputQuery;
 end;
 
 end.

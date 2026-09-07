@@ -65,7 +65,6 @@ var
 //  ST_saddr                              : sockaddr_in = (sin_family: AF_INET; sin_port: 31488);
   ST_Buffer                             : array[1..48] of Byte;
   Offset                                : int64;
-  local_time_timer_handle               : HWND;
   NTPStartupThreadID                    : Cardinal;
 const
   NTP_SERVER                            = 'pool.ntp.org';

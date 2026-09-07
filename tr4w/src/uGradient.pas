@@ -52,7 +52,6 @@ var
   GradientFillFunction                  : TGradientFill;
 type
   TGradientDirection = (gdHorizontal, gdVertical);
-function GradientRect2(canvashandle: HWND; const ARect: TRect; Color1, Color2: tcolor; Direction: TGradientDirection): boolean;
 function GradientRect(canvashandle: HWND; const ARect: TRect; Color1, Color2: tcolor; Direction: TGradientDirection): boolean;
 function ColorToRGB(Color: tcolor): Cardinal {LONGINT};
 function InitTriVertex(XPos, YPos: integer; Color: tcolor): TTriVertex;
@@ -77,25 +76,6 @@ begin
   Result.r := GetRValue(iColor);
   Result.g := GetGValue(iColor);
   Result.b := GetBValue(iColor);
-end;
-function GradientRect2(canvashandle: HWND; const ARect: TRect; Color1, Color2: tcolor; Direction: TGradientDirection): boolean;
-var
-  GRect                                 : TGradientRect;
-  Vertex                                : array[0..1] of TTriVertex;
-  Offset                                : Cardinal;
-begin
-  GRect.UpperLeft := 0;
-  GRect.LowerRight := 1;
-  if tEightBitsPerPixel then
-     begin
-     Color2 := Color1;
-     end;
-  Offset := (ARect.Bottom - ARect.Top) div 2;
-  Vertex[0] := InitTriVertex(ARect.Left, ARect.Bottom - Offset, Color1);
-  Vertex[1] := InitTriVertex(ARect.Right, ARect.Bottom, Color2);
-  Vertex[0] := InitTriVertex(ARect.Left, ARect.Top, Color2);
-  Vertex[1] := InitTriVertex(ARect.Right, ARect.Top + Offset, Color1);
-  Result := GradientFillFunction(canvashandle, Vertex[0], 2, @GRect, 1, 1);
 end;
 function GradientRect(canvashandle: HWND; const ARect: TRect; Color1, Color2: tcolor; Direction: TGradientDirection): boolean;
 // Function to initialise a TTriVertex

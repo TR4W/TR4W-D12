@@ -82,7 +82,6 @@ const
 var
 
   flashreminder                         : boolean;
-  ReminderDlgHandle                     : HWND;
   LastSelectedMessage                   : integer;
   // Row to pre-select when the dialog next opens (0 = F1, the historical
   // default). A caller -- e.g. right-click on a function-key button -- sets
@@ -364,7 +363,7 @@ begin
      Exit;
      end;
 
-  ShowEditMessage(AltPParentHandle, Row);
+  ShowEditMessage(Row);
 end;
 
 

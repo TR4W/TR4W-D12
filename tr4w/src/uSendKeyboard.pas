@@ -64,7 +64,7 @@ uses
 // no longer knows this is a Win32 modal dialog, only that the window opens.
 //
 // Phase 4a, 2026-08-18: that is exactly what happened, and no call site moved.
-procedure ShowSendKeyboardCW(const aParent: HWND);
+procedure ShowSendKeyboardCW;
 procedure CloseSendKeyboardInputDialog(StopSending: boolean);
 function SendKeyboardInputDialogOpen: boolean;
 
@@ -73,9 +73,9 @@ implementation
 uses
   uSendKeyboardForm;
 
-procedure ShowSendKeyboardCW(const aParent: HWND);
+procedure ShowSendKeyboardCW;
 begin
-   uSendKeyboardForm.ShowSendKeyboardCW(aParent);
+   uSendKeyboardForm.ShowSendKeyboardCW;
 end;
 
 procedure CloseSendKeyboardInputDialog(StopSending: boolean);

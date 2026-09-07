@@ -61,7 +61,7 @@ procedure DeleteEscapeChars(var s: ShortString);
 // no longer knows this is a Win32 modal dialog, only that the window opens.
 //
 // Phase 4b, 2026-08-19: that is exactly what happened, and no call site moved.
-procedure ShowEditMessage(const aParent: HWND; const aMessage: lParam);
+procedure ShowEditMessage(const aMessage: lParam);
 
 implementation
 
@@ -98,9 +98,9 @@ begin
   s[l + 1] := #0;
 end;
 
-procedure ShowEditMessage(const aParent: HWND; const aMessage: lParam);
+procedure ShowEditMessage(const aMessage: lParam);
 begin
-   uEditMessageForm.ShowEditMessage(aParent, aMessage);
+   uEditMessageForm.ShowEditMessage(aMessage);
 end;
 
 end.

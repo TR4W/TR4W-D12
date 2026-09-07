@@ -113,7 +113,7 @@ type
 //
 // THE SEAM established in Phase 1: the caller does not know what this is, only
 // that the window opens.
-procedure ShowBandPlan(const aParent: HWND);
+procedure ShowBandPlan;
 
 implementation
 
@@ -507,7 +507,7 @@ begin
    Close;
 end;
 
-procedure ShowBandPlan(const aParent: HWND);
+procedure ShowBandPlan;
 begin
    // The try/except is permanent and deliberate: under FPC an exception that
    // escapes into the main loop is a bare RTE with no class, and it takes the

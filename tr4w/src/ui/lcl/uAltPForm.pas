@@ -119,11 +119,6 @@ function  AltPRowCount: integer;
   which the buffer version could not distinguish from an empty cell. }
 function  AltPRowText(const aRow, aCol: integer): AnsiString;
 
-{ The window handle, for ShowEditMessage.  IT STILL TAKES AN HWND -- uEditMessage
-  is a converted form whose entry point kept its Win32 signature, so this is the
-  one place the seam still leaks a handle.  It becomes a TCustomForm when that
-  unit is next touched. }
-function AltPParentHandle: HWND;
 
 var
    TR4WAltPForm: TfrmAltP = nil;
@@ -344,15 +339,6 @@ begin
    if (aCol - 1) < lv.Items[aRow].SubItems.Count then
       begin
       Result := lv.Items[aRow].SubItems[aCol - 1];
-      end;
-end;
-
-function AltPParentHandle: HWND;
-begin
-   Result := 0;
-   if TR4WAltPForm <> nil then
-      begin
-      Result := TR4WAltPForm.Handle;
       end;
 end;
 

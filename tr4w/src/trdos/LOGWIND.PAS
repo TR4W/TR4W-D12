@@ -1731,7 +1731,7 @@ begin
   // branch always took this arm.
   h := tr4whandle;
   //DialogBox(hInstance, MAKEINTRESOURCE(41 {Window}), h, @IQDlgProc);
-  ShowInputQuery(h);
+  ShowInputQuery;
   Result := IQresult;
 end;
 

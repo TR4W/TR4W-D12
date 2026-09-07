@@ -277,7 +277,7 @@ procedure MakeAllCallsignsList;
 procedure showint(Num: integer);
 procedure ShowMessage(Text: string);
 procedure ShowMessage2(Text: string);
-procedure ShowMessageParent(Text: string; Parent: HWND);
+procedure ShowMessageParent(Text: string);
 procedure ShowSyserror(ErrorCode: Cardinal);
 procedure FilePreview;
 
@@ -358,8 +358,6 @@ procedure tGetSystemTime;
 procedure SystemTimeChanging;
 function AddRecordToLogAndSendToNetwork(var CE: ContestExchange): boolean;
 procedure CompleteCallsign;
-function NewCallWindowProcedure(hwnddlg: HWND; Msg: UINT; wParam: wParam;
-  lParam: lParam): UINT; stdcall;
 function GetRealVirtualKey(var Key: integer): Byte;
 procedure Escape_proc;
 function GetCPU: int64;
@@ -4541,7 +4539,6 @@ var
   LowordWparam: integer;
   ID: WindowsType;
   lclForm: TCustomForm;   { the window-menu toggle asks it whether it is visible }
-  tCardinal: HWND;
   focus: HWND;
   TempCallstring: CallString;
   //http : TidHttp;
@@ -4837,9 +4834,8 @@ begin
           BOTH QTC windows are LCL forms now, so ShowModalOverWin32Parent's
           Screen.DisableForms covers them and there is no raw HWND left to name
           -- the main window is the only parent this call has. }
-        tCardinal := tr4whandle;
         // DialogBox(hInstance, MAKEINTRESOURCE(60), tCardinal, @SendKeyboardCWDlgProc);
-        ShowSendKeyboardCW(tCardinal);
+        ShowSendKeyboardCW;
         SetFocus(focus);
       end;
     // tDialogBox(60, @SendKeyboardCWDlgProc);
@@ -7054,7 +7050,7 @@ begin
                   [IndexOfItemInLogForEdit]);
      end;
 
-  OpenEditQSOWindow(tr4whandle);
+  OpenEditQSOWindow;
   FrmSetFocus;
 end;
 
@@ -7162,7 +7158,7 @@ begin
   //ShowMessage(wsprintfBuffer);
 end;
 
-procedure ShowMessageParent(Text: string; Parent: HWND);
+procedure ShowMessageParent(Text: string);
 begin
   logger.Info('Sending to MessageBox: ' + Text);
   (* NO MODAL WHEN THERE IS NO OPERATOR.
@@ -7180,8 +7176,13 @@ begin
      begin
      Exit;
      end;
-  MessageBoxW(Parent, PChar(Text), 'TR4W', MB_OK or MB_ICONINFORMATION
-    {or MB_RTLREADING } or MB_TASKMODAL);
+  (* THE LCL'S, AND NO OWNER WINDOW.
+
+    Was MessageBoxW(Parent, ...), and Parent came from EditQSOFormHandle --
+    an LCL form asked for its native handle so a Win32 message box could be
+    owned by it. ShowMessage is application-modal and the LCL owns the
+    ownership. MB_TASKMODAL was asking for the same thing by hand. *)
+  ShowMessage(Text);
 end;
 
 procedure ShowMessage2(Text: string);
@@ -8601,50 +8602,6 @@ begin
                         end;
                    CallWindowKeyDownProc(integer(StartSendingNowKey));
                    end;
-end;
-
-function NewCallWindowProcedure(hwnddlg: HWND; Msg: UINT; wParam: wParam;
-  lParam: lParam): UINT; stdcall;
-begin
-  Result := 0;
-  // Initialize as it it possible to not be initialized // ny4i Issue 116
-  case Msg of
-
-    WM_CHAR:
-      begin
-        if Char(wParam) = StartSendingNowKey then
-           begin
-           CallWindowKeyDownProc(wParam);
-           end;
-        if (Char(wParam) = QuickQSLKey1) or (Char(wParam) = QuickQSLKey2) then
-           begin
-           QuickQSLProcedure(Char(wParam));
-           end;
-        // wParam := CallsignChar(wParam, False);
-      end;
-
-    WM_SYSKEYDOWN, WM_KEYDOWN:
-      begin
-        if Config.KeypadCWMemories then
-          if wParam in [VK_NUMPAD0..VK_NUMPAD9] then
-             begin
-             if wParam <> VK_NUMPAD0 then
-                begin
-                ProcessFuntionKeys(wParam + 27)
-                end
-             else
-                begin
-                ProcessFuntionKeys(wParam + 37);
-                end;
-             Exit;
-             end;
-      end;
-  end;
-  // if Msg = WM_KEYDOWN then showint(wParam);
-  // if Msg = WM_KEYUP then showint(wParam);
-  // if Msg = WM_char then showint(wParam);
-  Result := CallWindowProc(NCWP, hwnddlg, Msg, wParam, lParam);
-
 end;
 
 procedure ClearLog;
@@ -11063,17 +11020,6 @@ begin
      Result := 'LPT' + IntToStr(Ord(port) - Ord(Parallel1) + 1);
      end;
 end;
-{
-procedure SelectFileOfFolder(Parent: HWND; FileName: PChar; Mask: PChar; SelectType: CFGType);
-begin
- SelectedFileName := FileName;
- SelectedFileNameMask := Mask;
- SelectedFileType := SelectType;
- if SelectType = ctFileName then SelectedFileNameFlag := DDL_ARCHIVE or DDL_READWRITE or DDL_DIRECTORY;
- if SelectType = ctDirectory then SelectedFileNameFlag := DDL_ARCHIVE or DDL_EXCLUSIVE or DDL_DIRECTORY;
- tDialogBox(77, @SelectFileDlgProc);
-end;
-}
 begin
 // The {$IF tDebugMode} SetNewMemMgr call that stood here went with the custom
 // memory manager -- see the note where those hooks used to be defined.

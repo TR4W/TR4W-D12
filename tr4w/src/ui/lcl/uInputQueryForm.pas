@@ -68,7 +68,7 @@ type
 // THE SEAM established in Phase 1: the caller does not know what this is, only
 // that the window opens.  This body changed when the dialog became an LCL form
 // and nothing at any call site did.
-procedure ShowInputQuery(const aParent: HWND);
+procedure ShowInputQuery;
 
 implementation
 
@@ -178,7 +178,7 @@ begin
    Close;
 end;
 
-procedure ShowInputQuery(const aParent: HWND);
+procedure ShowInputQuery;
 begin
    // The try/except is permanent and deliberate: under FPC an exception that
    // escapes into the main loop is a bare RTE with no class, and it takes the

@@ -305,7 +305,7 @@ begin
    LogSourceClose;
    FOpen := False;
    try
-      OpenEditQSOWindow(Self.Handle);
+      OpenEditQSOWindow;
    finally
       FOpen := LogSourceOpen;
       ReloadFromLog;

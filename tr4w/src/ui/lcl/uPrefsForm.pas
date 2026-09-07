@@ -3370,7 +3370,7 @@ end;
 // its handle because it is still a raw Win32 window.
 procedure TPrefsForm.GeneratedBandPlanClick(Sender: TObject);
 begin
-   ShowBandPlan(0);
+   ShowBandPlan;
 end;
 function TPrefsForm.AddGeneratedRows(const aParent: TWinControl; const aKeyPrefix: string;
                                      var aY: integer): integer;

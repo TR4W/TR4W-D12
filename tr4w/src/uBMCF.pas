@@ -53,16 +53,16 @@ uses
 // When the dialog becomes an LCL form, this body changes and nothing else does.
 //
 // Phase 4b, 2026-08-19: that is exactly what happened, and no call site moved.
-procedure ShowBandPlan(const aParent: HWND);
+procedure ShowBandPlan;
 
 implementation
 
 uses
   uBandPlanForm;
 
-procedure ShowBandPlan(const aParent: HWND);
+procedure ShowBandPlan;
 begin
-   uBandPlanForm.ShowBandPlan(aParent);
+   uBandPlanForm.ShowBandPlan;
 end;
 
 end.

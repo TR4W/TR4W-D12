@@ -2832,7 +2832,6 @@ var
   //   tr4w_CurrentThreadId            : DWORD;
 
      {Main window windows handles}
-  NCWP                                  : Pointer;
 
 
 

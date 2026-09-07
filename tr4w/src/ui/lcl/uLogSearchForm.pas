@@ -765,7 +765,7 @@ begin
      the record underneath us. *)
    LogSourceClose;
    try
-      OpenEditQSOWindow(Self.Handle);
+      OpenEditQSOWindow;
    finally
       (* RE-RUN, because the edit may have changed whether the record still
         matches. The Win32 version did this by posting its own Search button. *)
