@@ -39,15 +39,31 @@ unit uWindowTable;
 interface
 
 uses
-   Types,     { TRect }
-   LCLType,   { HWND -- LCLType declares it for every widget set }
-   VC;        { WindowsType, and the tw_ ids that index this array }
+   Types,   { TRect }
+   Forms,   { TCustomForm }
+   VC;      { WindowsType, and the tw_ ids that index this array }
 
 type
    TWndEntry = record
       WndRect:    TRect;
       WndVisible: boolean;
-      WndHandle:  HWND;
+
+      (* THE WINDOW, NOT ITS NUMBER.
+
+        This was WndHandle: HWND, and every question the program asked of it --
+        is it open, where is it, is it visible, is it minimised -- went through
+        a Win32 call to get back to the object that already knew. Naming the
+        form asks the object. NIL IS "CLOSED", carrying exactly what the zero
+        handle carried.
+
+        IT ALSO MAKES A REAL BUG UNREPRESENTABLE. A closed LCL form still has
+        an object and still has a handle, so "a form exists" was NOT "the
+        window is open" -- and the position autosave, which asks each window
+        where it is every five seconds, had to guard against that by hand or it
+        would save a hidden form's bounds over a good saved position. The table
+        holds a form only while the window is open, so those are now one
+        fact. *)
+      WndForm: TCustomForm;
    end;
 
 var
@@ -60,7 +76,7 @@ implementation
 
 function tWindowsExist(wID: WindowsType): boolean;
 begin
-   Result := tr4w_WindowsArray[wID].WndHandle <> 0;
+   Result := tr4w_WindowsArray[wID].WndForm <> nil;
 end;
 
 end.

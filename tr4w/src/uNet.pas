@@ -201,7 +201,6 @@ const
 
 implementation
 uses
-   uWindowTable,   { tr4w_WindowsArray, tWindowsExist -- moved out of VC/TF }
    { The SQLite shadow -- an IMPLEMENTATION-section use, so no interface
      cycle. uLogStore never raises and never blocks logging. }
    uLogStore,

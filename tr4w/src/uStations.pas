@@ -240,7 +240,7 @@ var
   p                                     : string;
   TempIndex                             : integer;
 begin
-  if tr4w_WindowsArray[tw_STATIONS_INDEX].WndHandle = 0 then Exit;
+  if tr4w_WindowsArray[tw_STATIONS_INDEX].WndForm = nil then Exit;
 
   if not OnMainThread then
      begin
@@ -299,7 +299,7 @@ procedure UpdateAllStationsList;
 var
   Index                                 : integer;
 begin
-  if tr4w_WindowsArray[tw_STATIONS_INDEX].WndHandle = 0 then Exit;
+  if tr4w_WindowsArray[tw_STATIONS_INDEX].WndForm = nil then Exit;
   if ActiveBand in [Band6..BandLight] then StationsStartBand := Band6 else StationsStartBand := Band160;
   for Index := 0 to 5 do
      begin
@@ -327,7 +327,7 @@ procedure UpdateCallsignAfterEditing(Before, After: CallString);
 var
   Index                                 : integer;
 begin
-  if tr4w_WindowsArray[tw_STATIONS_INDEX].WndHandle = 0 then Exit;
+  if tr4w_WindowsArray[tw_STATIONS_INDEX].WndForm = nil then Exit;
   if Before = After then Exit;
   Index := FindStationInCallsignColumn(Before);
   if Index = -1 then Exit;
@@ -342,7 +342,7 @@ end;
 
 procedure SetStationsCallsignMask;
 begin
-  if tr4w_WindowsArray[tw_STATIONS_INDEX].WndHandle = 0 then Exit;
+  if tr4w_WindowsArray[tw_STATIONS_INDEX].WndForm = nil then Exit;
   ClearStationsColumn;
   FillStationsColumn;
 end;

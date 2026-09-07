@@ -583,7 +583,7 @@ function SaveLastQSOToMP3File(CE: ContestExchangePtr): boolean;
 begin
   Result := False;
   if MP3RecorderMode = mprStop then Exit;
-  if tr4w_WindowsArray[tw_MP3RECORDER].WndHandle = 0 then Exit;
+  if tr4w_WindowsArray[tw_MP3RECORDER].WndForm = nil then Exit;
 
   Windows.ZeroMemory(@ID3TAG, SizeOf(ID3TAG));
 

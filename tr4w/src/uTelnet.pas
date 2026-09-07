@@ -1154,7 +1154,11 @@ begin
   // would otherwise fire after the link is gone, or against the next session.
   CancelClusterLogin;
 
-  StackTelHandle := tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle;
+  StackTelHandle := 0;
+  if tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndForm <> nil then
+     begin
+     StackTelHandle := tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndForm.Handle;
+     end;
 
   // Issue #23 -- show a disconnect message only if we were actually connected.
   // A failed connect routes through here too but never connected, so
@@ -1878,11 +1882,11 @@ begin
         end;
      end;
 
-  wnd := tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle;
-  if wnd = 0 then
+  if tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndForm = nil then
      begin
      Exit;   // window gone; nothing to reconnect into
      end;
+  wnd := tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndForm.Handle;
 
   // TF.Format is wsprintf-style: positional arguments, not an open array.
   TF.Format(wsprintfBuffer, 'Reconnecting to %s:%u in %u seconds...',

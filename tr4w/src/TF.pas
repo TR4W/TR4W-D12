@@ -225,8 +225,7 @@ const
 
 implementation
 
-uses
-   uWindowTable,   { tr4w_WindowsArray, tWindowsExist -- moved out of VC/TF } Log4D, uFreqTimeFormat, uStrSearch, uAnsiStr,   // Issue #997: freq/time formatters + PChar search helpers extracted + golden-tested
+uses Log4D, uFreqTimeFormat, uStrSearch, uAnsiStr,   // Issue #997: freq/time formatters + PChar search helpers extracted + golden-tested
      uCrashLog;   // LogCaughtException, OnMainThread, ReportOffMainThread
 
 // Own Log4D logger (initialized at the foot of this unit), replacing the former

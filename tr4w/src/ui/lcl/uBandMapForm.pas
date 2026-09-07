@@ -147,7 +147,6 @@ implementation
 {$R *.lfm}
 
 uses
-   uWindowTable,   { tr4w_WindowsArray, tWindowsExist -- moved out of VC/TF }
   SysUtils,
   uLCLFormHelpers,   { OwnFormByMainWindow -- the LCL way to parent a tool window }
   uBandMapView,      { the seam this form fills in }

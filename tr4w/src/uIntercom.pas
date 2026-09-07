@@ -70,7 +70,7 @@ var
   h                                : HWND;
   lpThreadId                       : DWORD;
 begin
-  if tr4w_WindowsArray[tw_INTERCOMWINDOW_INDEX].WndHandle = 0 then
+  if tr4w_WindowsArray[tw_INTERCOMWINDOW_INDEX].WndForm = nil then
      begin
      ProcessMenu(menu_windows_intercom);
      end;

@@ -90,11 +90,13 @@ var
   h, focus: HWND;
 begin
   Result := False;
-  h := tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle;
-  if h = 0 then
+  { Derived, not stored: GetFocus and IsChild are Win32 questions about the
+    focused window, which is not an object this code owns. }
+  if tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndForm = nil then
      begin
      Exit;
      end;
+  h := tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndForm.Handle;
   focus := Windows.GetFocus;
   Result := (focus = h) or Windows.IsChild(h, focus);
 end;

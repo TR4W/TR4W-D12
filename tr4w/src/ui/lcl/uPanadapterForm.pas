@@ -351,7 +351,6 @@ function PanadapterWasOpen(const aSlot: integer): boolean;
 implementation
 
 uses
-   uWindowTable,   { tr4w_WindowsArray, tWindowsExist -- moved out of VC/TF }
    uLCLFormHelpers,     // OwnFormByMainWindow -- LCL PopupParent, not GWL_HWNDPARENT
    Types,               // IntersectRect -- the RTL one, not Windows
    uWindowLayoutStore,  // the bounds, keyed by name

@@ -2529,20 +2529,22 @@ procedure RevalidateOpenWindowsOnScreen;
 var
    i: WindowsType;
    CascadeIndex: integer;
-   h: HWND;
+   frm: TCustomForm;
    live: TRect;
 begin
    CascadeIndex := 0;
    for i := tw_MAINWINDOW_INDEX to tw_HAMSCOREWINDOW_INDEX do
       begin
-      h := tr4w_WindowsArray[i].WndHandle;
-      if (h = 0)            or
-         (not IsWindow(h))  or
-         IsIconic(h) then
+      (* WAS h = 0 / IsWindow(h) / IsIconic(h) -- three Win32 questions about
+        an object we hold. A nil entry is a closed window (IsWindow's job, and
+        the zero test's), and WindowState is what IsIconic was asking. *)
+      frm := tr4w_WindowsArray[i].WndForm;
+      if (frm = nil) or (not frm.HandleAllocated) or
+         (frm.WindowState = wsMinimized) then
          begin
          Continue;
          end;
-      Windows.GetWindowRect(h, live);
+      live := frm.BoundsRect;
 
       if RelocState[i].Relocated then
          begin
@@ -2723,7 +2725,7 @@ begin
      end;
   for i := tw_BANDMAPWINDOW_INDEX to tw_HAMSCOREWINDOW_INDEX do
      begin
-     tr4w_WindowsArray[i].WndHandle := 0;
+     tr4w_WindowsArray[i].WndForm := nil;
      end;
 
   // No WndProcAdr for the band map: OpenTR4WWindow's seam builds an LCL form
@@ -3005,40 +3007,20 @@ end;
 
   So the save asks the FORM when there is one, and Windows only when there is
   not.  Two lists of which windows are forms would drift; there is one. }
+(* THE TABLE ANSWERS THIS NOW.
+
+  This was a twenty-arm case mapping each tw_ id to its form global -- the same
+  mapping OpenTR4WWindow performs when it opens the window, written a second
+  time and kept in step by hand.
+
+  IT ALSO ANSWERED FOR CLOSED WINDOWS, which is the half that mattered. The
+  form globals outlive their windows, so this returned an object for a window
+  the operator had shut, and every caller had to pair it with tWindowsExist for
+  the answer to mean anything. The table holds a form only while the window is
+  open, so the pairing IS the lookup. *)
 function LclFormFor(const ID: WindowsType): TCustomForm;
 begin
-   case ID of
-     (* THE MAIN WINDOW ANSWERS HERE TOO NOW. It was absent, so its rect was
-       saved with GetWindowRect -- an OUTER rect -- while every other window
-       saved BoundsRect. That mismatch did not show while only Left and Top
-       were restored; it would the moment the height was. *)
-     tw_MAINWINDOW_INDEX:           Result := TR4WMainForm;
-     tw_FUNCTIONKEYSWINDOW_INDEX:   Result := TR4WFunctionKeysForm;
-     tw_BANDMAPWINDOW_INDEX:        Result := TR4WBandMapForm;
-     tw_STATIONS_INDEX:             Result := TR4WStationsForm;
-     tw_TELNETWINDOW_INDEX:         Result := TR4WTelnetForm;
-     tw_MMTTYWINDOW_INDEX:          Result := TR4WMMTTYForm;
-     tw_NETWINDOW_INDEX:            Result := TR4WNetworkForm;
-     tw_MP3RECORDER:                Result := TR4WMP3RecorderForm;
-     tw_INTERCOMWINDOW_INDEX:       Result := TR4WIntercomForm;
-     tw_HAMSCOREWINDOW_INDEX:       Result := TR4WHamScoreForm;
-     tw_POSTSCORESWINDOW_INDEX:     Result := TR4WPostScoresForm;
-     tw_MASTERWINDOW_INDEX:         Result := TR4WMasterForm;
-
-     tw_REMMULTSWINDOW_INDEX,
-     tw_STATIONS_RM_DX,
-     tw_STATIONS_RM_DOM,
-     tw_STATIONS_RM_ZONE,
-     tw_STATIONS_RM_PREFIX:         Result := RemMultsForm(ID);
-
-     tw_RADIOINTERFACEWINDOW1_INDEX,
-     tw_RADIOINTERFACEWINDOW2_INDEX: Result := RadioPanelForm(ID);
-
-     tw_DUPESHEETWINDOW1_INDEX,
-     tw_DUPESHEETWINDOW2_INDEX:     Result := DupeSheetForm(ID);
-   else
-     Result := nil;
-   end;
+   Result := tr4w_WindowsArray[ID].WndForm;
 end;
 
 procedure FindAndSaveRectOfAllWindows;
@@ -3083,17 +3065,17 @@ begin
        window reported its hidden bounds, which differ from the saved ones, so
        the autosave saw a change EVERY TICK and rewrote the file every five
        seconds -- overwriting good saved positions with a hidden form's. }
+     (* THE HANDLE TEST IS THE NIL TEST NOW. It was there because LclFormFor
+       answered for CLOSED windows too, and reading a closed form's bounds
+       overwrote a good saved position every tick. The table only holds an open
+       window's form, so the guard is the lookup -- and the GetWindowRect
+       fallback goes with it: it existed for the case where there was no form,
+       which is now the case where there is no window. *)
      lclForm := LclFormFor(tipos);
-     if (tr4w_WindowsArray[tipos].WndHandle <> 0) and
-        (lclForm <> nil) and lclForm.HandleAllocated then
+     TempBool := (lclForm <> nil) and lclForm.HandleAllocated;
+     if TempBool then
         begin
         temprect := lclForm.BoundsRect;
-        TempBool := True;
-        end
-     else
-        begin
-        TempBool := Windows.GetWindowRect(tr4w_WindowsArray[tipos].WndHandle,
-          temprect);
         end;
 
      // VISIBILITY IS ITS OWN QUESTION, asked of Windows rather than inferred
@@ -3110,18 +3092,17 @@ begin
      // wrong means a window the operator closed comes back on the next run.
      // IsWindowVisible answers for a zero handle too (False), which is the
      // closed case.
-     tr4w_WindowsArray[tipos].WndVisible :=
-       Windows.IsWindowVisible(tr4w_WindowsArray[tipos].WndHandle);
+     tr4w_WindowsArray[tipos].WndVisible := (lclForm <> nil) and lclForm.Visible;
      if not TempBool then
         begin
         if logger.IsTraceEnabled then
            begin
-           logger.Trace('[SaveRect] %s (idx=%d) hWnd=%d GetWindowRect=FAIL -> keep saved',
-             [WindowNames[tipos], Ord(tipos), tr4w_WindowsArray[tipos].WndHandle]);
+           logger.Trace('[SaveRect] %s (idx=%d) no open form -> keep saved',
+             [WindowNames[tipos], Ord(tipos)]);
            end;
         Continue;
         end;
-     iconic := IsIconic(tr4w_WindowsArray[tipos].WndHandle);
+     iconic := (lclForm <> nil) and (lclForm.WindowState = wsMinimized);
      if logger.IsTraceEnabled then
         begin
         logger.Trace('[SaveRect] %s (idx=%d) live=(%d,%d,%d,%d) iconic=%d reloc=%d savedWndRect=(%d,%d,%d,%d)',
@@ -3962,7 +3943,7 @@ begin
   //                      0, 30, MainWindowWidth, 0, 0, tr4w_main_menu,
   //                      hInstance, nil)
   tr4whandle := CreateTR4WMainForm(tr4w_main_menu);
-  tr4w_WindowsArray[tw_MAINWINDOW_INDEX].WndHandle := tr4whandle;
+  tr4w_WindowsArray[tw_MAINWINDOW_INDEX].WndForm := TR4WMainForm;
 
   (* THE EDITABLE LOG IS AN LCL GRID -- see uLogGrid.
 
@@ -5960,7 +5941,7 @@ begin
      Win32 SURFACE -- it is the same SetWindowTextW that was inline in
      OpenTR4WWindow, moved. A baseline raised for a variable would be a baseline
      raised for nothing. }
-   if tr4w_WindowsArray[ID].WndHandle = 0 then
+   if tr4w_WindowsArray[ID].WndForm = nil then
       begin
       Exit;
       end;
@@ -6299,7 +6280,7 @@ begin
      h := lclForm.Handle;
      end;
 
-  tr4w_WindowsArray[ID].WndHandle := h;
+  tr4w_WindowsArray[ID].WndForm := lclForm;
 
   Radio := nil;
   if ID = tw_RADIOINTERFACEWINDOW1_INDEX then
@@ -6461,22 +6442,40 @@ begin
      Exit;
      end;
   FindAndSaveRectOfAllWindows;
-  if tr4w_WindowsArray[ID].WndHandle = Radio1.tRadioInterfaceWndHandle then
+  (* WHICH RADIO'S PANEL IS THIS? Asked by comparing handles, because the radio
+    record still keeps tRadioInterfaceWndHandle as an HWND -- repointing the
+    five window handles on RadioPtr is its own change. Derived from the form
+    here so this routine stores no handle of its own. *)
+  if tr4w_WindowsArray[ID].WndForm <> nil then
      begin
-     Radio1.tRadioInterfaceWndHandle := 0;
-     end;
-  if tr4w_WindowsArray[ID].WndHandle = Radio2.tRadioInterfaceWndHandle then
-     begin
-     Radio2.tRadioInterfaceWndHandle := 0;
+     if tr4w_WindowsArray[ID].WndForm.Handle = Radio1.tRadioInterfaceWndHandle then
+        begin
+        Radio1.tRadioInterfaceWndHandle := 0;
+        end;
+     if tr4w_WindowsArray[ID].WndForm.Handle = Radio2.tRadioInterfaceWndHandle then
+        begin
+        Radio2.tRadioInterfaceWndHandle := 0;
+        end;
      end;
   // Drop anything uPanelUpdate remembers about this panel BEFORE the window
   // goes. Windows reuses handles, and a stale 'last posted' entry would then
   // suppress the first update to a completely different window -- a panel
   // that reopens blank and stays blank, with nothing to point at.
-  ForgetPanel(tr4w_WindowsArray[ID].WndHandle);
+  (* ForgetPanel STILL TAKES A HANDLE -- uPanelUpdate keys its "last posted"
+    map by HWND, and repointing that is its own change. Asked of the form so
+    this routine holds no handle of its own. *)
+  if tr4w_WindowsArray[ID].WndForm <> nil then
+     begin
+     ForgetPanel(tr4w_WindowsArray[ID].WndForm.Handle);
 
-  DestroyWindow(tr4w_WindowsArray[ID].WndHandle);
-  tr4w_WindowsArray[ID].WndHandle := 0;
+     (* HIDE, NOT DestroyWindow. The form object is kept and reused -- every
+       creator does `if <form> = nil then Create` -- so destroying the native
+       window behind the LCL's back only forced it to build another one on the
+       next open. Hide is what the framework's own path does two routines up
+       (form.Close -> caHide -> here). *)
+     tr4w_WindowsArray[ID].WndForm.Hide;
+     end;
+  tr4w_WindowsArray[ID].WndForm := nil;
   tr4w_WindowsArray[ID].WndVisible := False;
   Windows.CheckMenuItem(tr4w_main_menu, 10199 + Ord(ID), MF_UNCHECKED);
   FrmSetFocus;
@@ -8650,7 +8649,7 @@ begin
   CloseLogFile;
 
   LoadinLog;
-  if tr4w_WindowsArray[tw_STATIONS_INDEX].WndHandle <> 0 then
+  if tr4w_WindowsArray[tw_STATIONS_INDEX].WndForm <> nil then
      begin
      // Was LVM_DELETEALLITEMS on wh[mweStations].  The rows are a model now, so
      // emptying the control alone would leave the model holding every callsign
@@ -9962,8 +9961,11 @@ begin
       Exit;
    end;
 
-   hTelnet := tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle;
-   if hTelnet = 0 then Exit;
+   (* STILL A HANDLE, and it has to be: this compares against aMsg.hwnd from a
+     raw message and asks IsChild. It is derived from the form rather than
+     stored as one. *)
+   if tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndForm = nil then Exit;
+   hTelnet := tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndForm.Handle;
    if aMsg.hwnd = hTelnet then
       begin
       Result := True;
