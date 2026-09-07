@@ -338,7 +338,6 @@ procedure RevalidateOpenWindowsOnScreen;
 procedure FrmSetFocus;
 procedure tAltE;
 procedure SetWindowSize;
-procedure WINDOWPOSCHANGINGPROC(var p: PWindowPos);
 function OpenLogFile: boolean;
 function tSetFilePointer(lDistanceToMove: LONGINT; dwMoveMethod: DWORD):
   Cardinal;
@@ -3646,7 +3645,12 @@ begin
     because an unqualified UnregisterClass binds to Classes.UnregisterClass --
     a completely different routine that deregisters a streaming class. ny4i,
     Issue 145. *)
-  ExitProcess(hInstance);
+  (* ZERO, NOT hInstance. This passed the MODULE HANDLE as the process exit
+    code, so every clean shutdown of TR4W reported 4194304 ($400000, the
+    default image base) to whatever launched it. Any script that checks an
+    exit code -- a CI step, a harness, an operator's batch file -- reads that
+    as a failure, and it has been the value since the D7 tree. *)
+  ExitProcess(0);
 
 end;
 
@@ -8496,28 +8500,6 @@ begin
      Sheet.SetUpRemainingMultiplierArrays;
      Sheet.SaveRestartFile;
      // LoadingInLogFile := False;
-     end;
-end;
-
-procedure WINDOWPOSCHANGINGPROC(var p: PWindowPos);
-const
-  f = 20;
-begin
-  if (p.X < f) and (p.X > -f) then
-     begin
-     p.X := 0;
-     end;
-  if (p.Y < f) and (p.Y > -f) then
-     begin
-     p.Y := 0;
-     end;
-  if Abs(tWorkingAreaRect.Bottom - (p.cy + p.Y)) < f then
-     begin
-     p.Y := tWorkingAreaRect.Bottom - p.cy;
-     end;
-  if Abs(tWorkingAreaRect.Right - (p.cx + p.X)) < f then
-     begin
-     p.X := tWorkingAreaRect.Right - p.cx;
      end;
 end;
 

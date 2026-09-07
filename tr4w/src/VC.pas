@@ -2941,7 +2941,6 @@ var
   // the device connects, or configuring a station before the hardware is plugged
   // in.  Default False: the filtered list is what an operator wants day to day.
   tShowAllSerialPorts                   : boolean = False;
-  tWorkingAreaRect                      : TRect;
 
 //  tr4w_CallWindowActive                 : boolean;
 //  tr4w_ExchangeWindowActive             : boolean;

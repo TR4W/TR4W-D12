@@ -89,11 +89,6 @@ function EntryEvents: TTR4WEntryEvents;
 (* RESULTS ARRIVING FROM BACKGROUND THREADS. Passed to the async starters by
   whoever starts them; run on the main thread by uMainThread. *)
 
-
-
-
-function WindowProc(TRHWND: HWND; Msg: UINT; wParam: wParam; lParam: lParam): longword; stdcall;
-
 type
    { RESULTS ARRIVING FROM BACKGROUND THREADS.
 
@@ -488,147 +483,20 @@ begin
       end;
 end;
 
-function WindowProcBody(TRHWND: HWND; Msg: UINT; wParam: wParam; lParam: lParam): longword; stdcall;
+(* THE MAIN WINDOWS WIN32 PROCEDURE IS GONE.
 
-label
-  GoToExit, CallDefWindowProc;
-var
-  HDNotifyPtr: PHDNotify;
-  lplvcd: PNMLVCustomDraw;
-  hdrColIdx: Integer;
-  { NMHDR.code SIGNED.  See the note at the assignment: the Windows unit
-    declares that field unsigned for FPC, and every notification constant
-    is negative. }
-  hdrCode: Integer;
-  hdrNewWidth: Integer;
-begin
+  WindowProcBody answered nine messages for a procedure subclassed in front
+  of the LCL forms; WindowProc was the try/except wrapper around it, because
+  an exception leaving a kernel callback kills the process outright. Every
+  one of the nine is an LCL event or an LCL message handler on TTR4WMainForm
+  now -- the list is in uMainForm, where the subclass used to be installed --
+  so there is nothing left for a window procedure to answer, nothing installs
+  one, and the guard guards nothing.
 
-  case Msg of
+  DispatchCommandId below is the useful half of what stood here: it turns a
+  command id into an action, and is reached from a menu items OnClick and
+  from the accelerator hook rather than from LoWord(wParam). *)
 
-//    WM_POWERBROADCAST: ShowMessage(PChar('WM_POWERBROADCAST' + IntToStr(wParam)));
-
-//    WM_MOUSEWHEEL: SetStackPointerOnMouseWheel(SHORT(HiWord(Cardinal(wParam))));
-    //    WM_CONTEXTMENU: if HWND(wParam) = _NewELogWindow then ShowLogPopupMenu(tr4whandle);
-
-    WM_WINDOWPOSCHANGING: WINDOWPOSCHANGINGPROC(PWindowPos(lParam));
-    (* WM_NOTIFY IS GONE, AND WITH IT THE LAST WIN32 KNOWLEDGE OF THE LOG.
-
-      Every arm in it answered for the editable log's list-view control: the
-      double-click, arrow-down off the last row, the X-QSO grey, the focus
-      change, and the two header arms that saved a dragged column width. The
-      log is an LCL grid now (uLogGrid) and each of those is an event on the
-      control -- see TTR4WMainForm.MainLogDblClick, MainLogKeyDown,
-      MainLogEnter and MainLogHeaderSized, and TLogGrid.DrawCell for the
-      colours.
-
-      ONE OF THOSE ARMS WAS A REAL DEFECT AND IS WORTH KEEPING THE REASONING
-      FOR, because it can recur anywhere this tree compares a notification
-      code. NMHDR.code is UNSIGNED as FPC's Windows unit declares it, while
-      every HDN_/NM_/LVN_ constant is NEGATIVE (HDN_ENDTRACKW = -327).
-      Comparing the two promotes both to a wider type, so the code arrived as
-      4294966969 and never matched: the operator dragged a column, nothing was
-      saved, nothing was logged. Delphi declares that field as Integer, which
-      is why it worked before the FPC port. A grid reports a column resize as
-      a method call with an integer index, so the comparison does not exist. *)
-
-    // WM_MEASUREITEM and WM_DRAWITEM for the possible-call list are GONE.
-    // Phase 3b made it a designed LCL TListBox, so its item height is a property
-    // and its drawing is OnDrawItem on the control -- see uMainForm.lfm and
-    // CreateTR4WPossibleCallList.  Both arms only ever served this one control
-    // id, so there is nothing left for them to answer.
-
-
-    WM_LBUTTONDOWN: DragWindow(TRHWND);
-
-    (* SIX ARMS FOR BACKGROUND RESULTS ARE GONE FROM HERE.
-
-      A worker thread that finished -- a CTY download, a TRMASTER download, a
-      POTA parse, a TCI apply -- used to hand its result over by POSTING A
-      WINDOW MESSAGE to the main window, which meant each one needed a message
-      id, a window handle for the thread to post to, and an arm in this
-      procedure. None of that is about the work.
-
-      They are plain procedures now, below, run on the main thread by
-      uMainThread.RunOnMainThread (Application.QueueAsyncCall). The thread is
-      handed the procedure when it is started, so this unit no longer has to
-      know a background operation exists.
-
-      IT ALSO CLOSES A SILENT FAILURE. PostMessage returns False when the
-      target queue is full or the window is gone; where the lParam carried
-      OWNERSHIP -- the POTA park list, the TCI command -- a refused post lost
-      the result and leaked the object. Two of the four sites checked the
-      return value. RunOnMainThread cannot refuse. *)
-
-    (* THE WM_CTLCOLOR* ARM IS GONE, and so is DrawWindows (2026-09-04).
-
-      It answered these three messages for whichever children TR4W still
-      painted itself. The last of those were the totals grid and the two
-      need strips -- sixty-seven raw STATICs -- and they are designed
-      TElementPanels in uMainGrids now, each of which paints from its own
-      Color. uMainForm forwards all three messages to the LCL
-      unconditionally, so nothing reaches this procedure to answer. *)
-
-    WM_CLOSE:
-      begin
-        GoToExit:
-        ExitProgram(True);
-        Msg := 0;
-      end;
-
-    (* WM_COMMAND IS GONE, AND WITH IT THE MENU'S LAST NEED FOR THIS
-      PROCEDURE.
-
-      The main menu is a TMainMenu built from the same T_MENU_ARRAY --
-      uMenu.BuildTR4WMainMenu -- with each item carrying its command id in
-      Tag and raising OnClick. TTR4WMainForm.MenuItemClick calls the same
-      DispatchCommandId this arm called.
-
-      THE `if lParam = 0` GUARD GOES WITH IT, and that is a class of bug
-      removed rather than moved. WM_COMMAND carries three different things
-      and Windows tells them apart by lParam, not by the id: 0 for a menu
-      item, 0 for an accelerator, and the CONTROL'S HWND for a
-      notification. Reading only LoWord(wParam) is how an edit control's
-      EN_UPDATE arrived as wParam 67119598 -- LoWord 10734, HiWord 1024 --
-      and reached RunPlugin as "plugin number 34", indexing an
-      array[1..16], reading rubbish as a file name and calling address
-      zero (NY4I in the debugger, 2026-09-03). The crash was the LUCKY
-      outcome: ids in the lower range ran a real menu action silently on
-      every keystroke that updated an entry field.
-
-      An OnClick can only be a menu click, so the ambiguity does not exist
-      to be got wrong. *)
-
-  end; {of case}
-
-  if Msg = MMTTY.mmttyMSG then mmttyProcessMessage(wParam, lParam);
-
-  CallDefWindowProc:
-  Result := longword(DefWindowProc(TRHWND, Msg, wParam, lParam));
-end;
-
-{ NO EXCEPTION MAY LEAVE A WINDOW PROCEDURE, AND THE REASON IS NOT TIDINESS.
-
-  A window procedure is called BY WINDOWS, across a kernel callback boundary.  A
-  language exception cannot unwind through that boundary, so Windows does not
-  unwind it -- it TERMINATES THE PROCESS with STATUS_FATAL_APP_EXIT
-  (0xC000041D).  Nothing runs on the way out: not ExceptProc, not
-  Application.OnException, not a finally block.  tr4w.log simply stops.
-
-  That is exactly how the 2026-08-23 startup crash presented (NY4I: "we seem to
-  have a fragility issue here").  The Windows Application log recorded TWO codes
-  for one death -- 0xE0465043, which is FreePascal's own SEH exception code, and
-  0xC000041D, the fatal-callback kill -- so the sequence is not in doubt: Pascal
-  raised, the callback boundary refused it, Windows killed us.  The crash
-  reporter added earlier the same day could not help: it was never reached.
-
-  So the boundary gets the guard.  Catch, report with a real backtrace, and
-  return a defined value.  A message handled badly is a glitch; a message that
-  kills the program mid-contest is a lost log.
-
-  THIS IS A BACKSTOP, NOT A LICENCE.  The code below should still not raise, and
-  the accessors it calls still guard their own preconditions.  What changes is
-  that being wrong about that now costs a log line instead of the operator's
-  session. }
 (* ============================ RESULTS ARRIVING FROM BACKGROUND THREADS ====
 
   Each of these runs ON THE MAIN THREAD: they are assigned to TThread.OnTerminate
@@ -757,23 +625,6 @@ begin
       begin
       QuickDisplay(PAnsiChar(TC_CTYDATDOWNLOADFAILED));
       end;
-end;
-
-function WindowProc(TRHWND: HWND; Msg: UINT; wParam: wParam; lParam: lParam): longword; stdcall;
-begin
-  Result := 0;
-  try
-     Result := WindowProcBody(TRHWND, Msg, wParam, lParam);
-  except
-     on E: TObject do
-        begin
-        LogCaughtException(Format('WindowProc msg $%x', [Msg]), E);
-        // DefWindowProc, not 0: for most messages 0 CLAIMS we handled it,
-        // which would suppress default behaviour on top of the fault.
-        // Letting Windows do its default is the smaller lie.
-        Result := longword(DefWindowProc(TRHWND, Msg, wParam, lParam));
-        end;
-  end;
 end;
 
 end.

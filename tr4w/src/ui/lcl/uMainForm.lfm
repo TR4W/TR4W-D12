@@ -10,6 +10,8 @@ object TR4WMainForm: TTR4WMainForm
   ClientWidth = 806
   Color = clBtnFace
   OnActivate = MainFormActivate
+  OnCloseQuery = MainFormCloseQuery
+  OnMouseDown = MainFormMouseDown
   OnWindowStateChange = MainFormWindowStateChange
   ShowInTaskBar = stAlways
   LCLVersion = '4.8.0.0'

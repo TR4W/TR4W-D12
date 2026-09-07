@@ -154,6 +154,20 @@ type
 
     procedure MainFormActivate(Sender: TObject);
 
+    (* THE OPERATOR ASKED TO CLOSE THE PROGRAM.
+
+      Was the WM_CLOSE arm, which called ExitProgram(True) and then zeroed Msg
+      so DefWindowProc would not destroy the window underneath it. CanClose
+      says that to the LCL. *)
+    procedure MainFormCloseQuery(Sender: TObject; var CanClose: boolean);
+
+    (* DRAG THE WINDOW BY ITS BODY.
+
+      Was the WM_LBUTTONDOWN arm. It matters when Config.NoCaption is on and
+      there is no title bar to grab -- see DragWindow. *)
+    procedure MainFormMouseDown(Sender: TObject; Button: TMouseButton;
+                                Shift: TShiftState; X, Y: integer);
+
     (* MINIMISED OR RESTORED -- take MMTTY with us.
 
       Was the WM_SIZE arm, which decoded wParam for SIZE_MINIMIZED and
@@ -177,6 +191,16 @@ type
       PUBLIC, NOT PUBLISHED: BuildTR4WMainMenu assigns it to 140 items in code,
       so nothing looks it up by name and Lint-FormEvents would report a
       published handler no .lfm wires. *)
+    (* EDGE SNAPPING, THROUGH THE LCL'S OWN MESSAGE MAP.
+
+      Was the WM_WINDOWPOSCHANGING arm of a hand-installed window procedure.
+      The win32 widgetset already translates that message into
+      LM_WINDOWPOSCHANGING carrying the same PWindowPos and delivers it here
+      (win32callback.inc), so nothing needs subclassing -- and on a widget set
+      that never sends it, this simply never runs. *)
+    procedure WMWindowPosChanging(var aMsg: TLMWindowPosMsg);
+      message LM_WINDOWPOSCHANGING;
+
     procedure MenuItemClick(Sender: TObject);
 
     { Builds the main menu from T_MENU_ARRAY and adopts it. A METHOD, so
@@ -502,17 +526,15 @@ uses
    // IMPLEMENTATION-section, so these are not imposed on anything that uses
    // this unit and a cycle back to here is legal.
    //
-   // Solely for the message CONSTANTS in IsTR4WsOwnMessage below. The list used
-   // to spell them as literal integers to avoid exactly these six lines; three
-   // of the eight literals were wrong and each failure was silent. Six units in
-   // an implementation clause is the cheaper mistake.
+   LOGSUBS2,           // ExitProgram -- the close path, see MainFormCloseQuery
+   TF,                 // DragWindow -- see MainFormMouseDown
    uFunctionKeys,      // ShowFMessages -- the F-key strip, on activate
    uMMTTY,             // MMTTY.MMTTYEngine -- see MainFormWindowStateChange
    Menus,              // TMenuItem -- the menu is a TMainMenu now
    uMenu,              // BuildTR4WMainMenu -- the menu from T_MENU_ARRAY
    uSystemWatch,       // the clock/display poll -- see SystemWatchTick
    uGetServerLog,      // the headless-sync state
-   SysUtils,           // Format -- the window-procedure guard
+   SysUtils,           // UpperCase
    uCrashLog,          // OnMainThread / ReportOffMainThread / LogCaughtException
    Grids,              // TGridOptions -- see TR4WEditableLogSetGridLines
    uMainThreadWork,    // RequestMainThreadJob -- the colour sweep, coalesced
@@ -520,126 +542,35 @@ uses
    uConfigValues,      // Config.ShowGridLines
    MainUnit;           // LogRowTextFor, Config -- see CreateTR4WEditableLog
 
-var
-   { The LCL's own window procedure for the main form, saved when TR4W's is
-     installed in front of it.  Everything TR4W does not claim chains here. }
-   GLCLFormProc: Pointer = nil;
+(* WHY THIS FORM'S MESSAGE HANDLERS ARE KEYED ON LM_, NOT WM_.
 
-{ The messages TR4W's own window procedure handles.
+  TR4W used to put its own window procedure in front of the LCL's on this
+  form's HWND, so it could answer nine raw Win32 messages. The subclass is
+  gone -- all nine are ordinary LCL events or an LCL message handler, and the
+  list of where each one went is beside the routines they replaced, further
+  down. The REASON the subclass existed is kept, because it is why the
+  replacement is shaped the way it is.
 
-  AN EXPLICIT ALLOW-LIST, not "delegate everything".  The alternative -- pass
-  every message to the legacy proc and let its DefWindowProc fallthrough deal
-  with the rest -- would take WM_PAINT, WM_ERASEBKGND, WM_DESTROY and the LCL's
-  own bookkeeping away from the form and break it in ways that present as
-  painting bugs.  This list is exactly the case labels in
-  uMainWindowProc.WindowProc, so the two must be kept in step; a message added
-  there and not here is silently never delivered. }
-function IsTR4WsOwnMessage(const aMsg: UINT): boolean;
-begin
-   Result := (aMsg = WM_CLOSE) or
-             // WM_NOTIFY, WM_DRAWITEM AND WM_MEASUREITEM ARE DELIBERATELY
-             // ABSENT, and removing them from this list is the FIX, not an
-             // omission.
-             //
-             // WM_NOTIFY joined them on 2026-09-03. Its arms in
-             // uMainWindowProc.WindowProc all answered for the editable log's
-             // list-view control -- the double-click, arrow-down off the last
-             // row, the X-QSO grey, the focus change, and the header arms that
-             // saved a dragged column width. The log is an LCL grid now
-             // (uLogGrid) and every one of those is an event on the control,
-             // so the arms are gone and the claim had to go with them.
-             //
-             // Lint-AppMessages caught it the same run: a claimed message with
-             // no arm is not ignored, it is SWALLOWED, and WM_NOTIFY is how
-             // EVERY common control reports itself. Leaving it claimed would
-             // have broken controls that have nothing to do with the log.
-             //
-             // Their arms in uMainWindowProc.WindowProc were deleted when the
-             // possible-call strip became a designed TListBox -- correctly, as
-             // both only ever served that one control id.  But the message
-             // stayed CLAIMED here, and a claimed message this proc no longer
-             // answers is SWALLOWED: line 841 calls WindowProc and returns
-             // without chaining to the LCL.
-             //
-             // WM_DRAWITEM is sent to the PARENT of an owner-drawn list, so
-             // the LCL form proc never received it and TListBox.OnDrawItem was
-             // never called.  The strip held its rows, reported Visible, sat in
-             // bounds, and painted NOTHING -- measured 2026-08-28: two matching
-             // calls in the model, zero draw calls, for weeks (NY4I).
-             //
-             // The note above says a message added THERE and not HERE is never
-             // delivered.  This is its mirror image, and it is the second time
-             // this control has been hit by it -- see the WM_CTLCOLORLISTBOX
-             // forward at line 835.
-             (* THE THREE WM_CTLCOLOR* MESSAGES ARE NO LONGER CLAIMED (2026-09-05).
-               Every child of this form is an LCL control that paints from its own
-               Color -- the totals grid and the two need strips were the last that
-               were not -- so there is nothing for TR4W to answer and WindowProc has
-               no arm for them. Unclaimed is exactly right: the fallthrough at the
-               end of the subclass proc chains them to the LCL.
-
-               Left claimed, they would be SWALLOWED -- the trap the note above
-               describes, and what Lint-AppMessages caught. *)
-             (aMsg = WM_LBUTTONDOWN) or
-             (aMsg = WM_WINDOWPOSCHANGING);
-             (* NOT ONE WORKER-THREAD MESSAGE IS CLAIMED HERE ANY MORE.
-
-               This list used to end with eight of them -- results posted
-               back from a CTY download, a TRMASTER download, a POTA parse,
-               a TCI apply, the panel-update seam and the headless log sync.
-               Six left on 2026-09-03 and the last, WM_USER_HEADLESS_SYNC_REPLACE,
-               on 2026-09-07. A thread hands its result to
-               uMainThread.RunOnMainThread now: no message, no id, nothing to
-               claim.
-
-               THE LESSON IS KEPT BECAUSE IT IS WHY THIS LIST IS WRITTEN IN
-               CONSTANTS. The eight were once literal integers, on the
-               argument that naming them would cost five units for four
-               numbers -- and measured on 2026-08-20, THREE OF THE EIGHT WERE
-               WRONG. WM_APP + 213 was claimed for a message that is
-               WM_APP + 210; WM_APP + 100 for one that was WM_SOCK + 3;
-               WM_PANEL_UPDATE was never added at all, so the radio panel's
-               marshalling delivered nothing and RIT/XIT/SPLIT stayed yellow
-               on the bench through two wrong diagnoses. Every one failed in
-               SILENCE: an unclaimed message chains to the LCL, which does
-               not know it.
-
-               A list of integers that must agree with constants declared
-               elsewhere cannot be checked by anything; a list of the
-               constants themselves cannot be wrong about a value. It can
-               still be wrong about MEMBERSHIP -- a message nobody adds --
-               and Lint-AppMessages exists to catch that. *)
-end;
-
-{ TR4W'S WINDOW PROCEDURE, INSTALLED ON THE FORM'S HWND AHEAD OF THE LCL'S.
-
-  WHY A SUBCLASS AND NOT A WndProc OVERRIDE.  The first version of this overrode
-  TWinControl.WndProc and matched on TLMessage.msg.  That was wrong, and wrong in
-  a way only a person operating the program could find: THE LCL RENAMES MESSAGES
-  BEFORE ANY FORM SEES THEM.
+  THE LCL RENAMES MESSAGES BEFORE ANY FORM SEES THEM. The first attempt at
+  this overrode TWinControl.WndProc and matched TLMessage.msg against the
+  Win32 numbers:
 
     WM_CLOSE   arrives as LM_CLOSEQUERY                (win32callback.inc:2094)
     WM_COMMAND arrives as CN_COMMAND via Perform, for a raw HMENU        (:2205)
 
-  and WM_DRAWITEM, WM_MEASUREITEM, WM_CTLCOLOR* and WM_LBUTTONDOWN are consumed
-  by the widgetset's own handlers on the way past.  An allow-list keyed on the
-  Win32 numbers therefore never matched: TR4W's menu did nothing, the program
-  could not be closed and had to be killed, and owner-drawn parts of the main
-  window were being drawn by the wrong code.
+  and WM_DRAWITEM, WM_MEASUREITEM, WM_CTLCOLOR* and WM_LBUTTONDOWN are
+  consumed by the widgetset's own handlers on the way past. A test keyed on
+  the Win32 numbers therefore never matched: TR4W's menu did nothing, the
+  program could not be closed and had to be killed, and owner-drawn parts of
+  the main window were drawn by the wrong code.
 
-  Found on the bench by NY4I, 2026-08-18.  No gate here caught it -- the smoke
-  runner asserts only that the process SURVIVED a command, which a program that
-  refuses to exit does very well indeed.
+  Found on the bench by NY4I, 2026-08-18. No gate caught it -- the smoke
+  runner asserts only that the process SURVIVED a command, which a program
+  that refuses to exit does very well indeed.
 
-  Subclassing removes the class of problem rather than the three instances of
-  it: TR4W's procedure sees the RAW Win32 message first, exactly as it did when
-  it owned the window class, and anything it does not claim chains on to the LCL
-  untouched.  What used to fall through to DefWindowProc now falls through to
-  the LCL's proc, which is the right default for a form. }
-{ The entry-field guard, declared here and defined with the accessors it was
-  written for.  IsEntryFieldHandle below is above them in the file because the
-  window procedure that calls it is, and a forward declaration is cheaper than
-  moving either. }
+  So WMWindowPosChanging below is declared `message LM_WINDOWPOSCHANGING`,
+  which is the name the widgetset actually delivers. Everything else is a
+  published event, which cannot be got wrong this way at all. *)
 type
    { AN ELEMENT OPERATION THAT ARRIVED ON THE WRONG THREAD.  See the note on
      ElementOnMainThread for why this exists. }
@@ -1623,91 +1554,29 @@ begin
    Queue(daClearCallAndFocus);
 end;
 
-function TR4WFormSubclassProcBody(TRHWND: HWND; Msg: UINT;
-                                  wParam: wParam; lParam: lParam): longword; stdcall;
-begin
-   { THE ENTRY FIELDS ARE COLOURED BY THE LCL, so their WM_CTLCOLOREDIT never
-     reaches TR4W's DrawWindows at all.
+(* THE WINDOW PROCEDURE IS GONE -- THIS IS AN ORDINARY LCL FORM NOW.
 
-     Not an exclusion inside DrawWindows, because DECLINING IS NOT EXPRESSIBLE
-     THERE.  That function has no "not mine" answer: every path -- including the
-     one where nothing matched -- falls into its DrawWindow label and returns
-     the whole-screen brush, and WindowProcBody's fallthrough is DefWindowProc,
-     not the LCL.  So a control TR4W stopped painting would have been painted
-     by the system default instead of by its own Color, which is worse than
-     what it replaced.  The fork belongs HERE, where chaining to the LCL is
-     already what "not mine" means.
+  TR4W installed its own procedure in front of the LCL's with
+  SetWindowLongPtr(GWL_WNDPROC) so it could answer nine raw Win32 messages.
+  All nine are LCL events or an LCL message handler:
 
-     TEdit.Color and TEdit.Font.Color then decide, and the LCL answers from
-     Brush.Reference.Handle (win32callback.inc:1420).  ONE system paints the
-     control, which is the whole point: while TR4W claimed this message, the
-     Color property on a converted TEdit did nothing at all. }
-   (* AND THE POSSIBLE-CALL LIST, added 2026-08-27 after MEASURING it.
+    WM_CLOSE              OnCloseQuery
+    WM_COMMAND            TMenuItem.OnClick   (the menu is a TMainMenu)
+    WM_SETFOCUS           OnActivate
+    WM_SIZE               OnWindowStateChange
+    WM_LBUTTONDOWN        OnMouseDown
+    WM_TIMECHANGE         a poll -- uSystemWatch
+    WM_DISPLAYCHANGE      a poll -- uSystemWatch
+    WM_WINDOWPOSCHANGING  WMWindowPosChanging, via LM_WINDOWPOSCHANGING
+    WM_USER_HEADLESS_...  uMainThread.RunOnMainThread
 
-      DrawWindows carried a comment saying nothing reached it any more. A
-      counter in CheckWindowAndColor said otherwise: 48 queries, 7 matches,
-      and every match was this one control. WM_CTLCOLORLISTBOX was simply not
-      in the fork above, so the list box's background was still being decided
-      by TR4W while the LCL owned everything else about it.
-
-      The items are owner-drawn through lstPossibleCallDrawItem, so this
-      message only ever governed the background BEYOND the items -- which is
-      why nobody noticed. It is the last main-window element on the Win32
-      colour path, and with it forwarded the whole WM_CTLCOLOR* arm of
-      WindowProcBody has nothing left to answer. *)
-   if IsTR4WsOwnMessage(Msg) then
-      begin
-      Result := uMainWindowProc.WindowProc(TRHWND, Msg, wParam, lParam);
-
-      // Three messages run BOTH handlers, for two different reasons.
-      //
-      // WM_SIZE and WM_WINDOWPOSCHANGING are STRUCTURAL: the LCL tracks its own
-      // idea of the form's bounds from them, and a form whose bookkeeping
-      // disagrees with its HWND misbehaves later in ways hard to trace back.
-      // TR4W's handlers for both are advisory, so running both is correct.
-      //
-      // WM_COMMAND is chained because CLAIMING IT STARVES THE LCL'S OWN
-      // CONTROLS.  A child control's notifications -- EN_CHANGE, EN_SETFOCUS
-      // and the rest -- reach their control only through the parent's
-      // WM_COMMAND, so an LCL TEdit on this form would never raise OnChange or
-      // OnEnter while TR4W swallowed it.  Nothing depends on that yet, which is
-      // exactly why it is worth fixing now: the entry fields cannot stop using
-      // TR4W's hand-rolled EN_* routing until the framework's own routing
-      // works.  TR4W still gets first refusal and still decides; the LCL simply
-      // stops being deaf.
-      if (Msg = WM_SIZE) or (Msg = WM_WINDOWPOSCHANGING) or (Msg = WM_COMMAND) then
-         begin
-         Result := Windows.CallWindowProc(GLCLFormProc, TRHWND, Msg, wParam, lParam);
-         end;
-      Exit;
-      end;
-
-   Result := Windows.CallWindowProc(GLCLFormProc, TRHWND, Msg, wParam, lParam);
-end;
-
-
-{ THE OTHER KERNEL-CALLBACK BOUNDARY, guarded for the same reason as
-  uMainWindowProc.WindowProc -- read the long note there.  An exception raised
-  in here cannot unwind back into Windows, so it does not unwind: the process
-  is terminated with STATUS_FATAL_APP_EXIT and the log simply stops.
-
-  This one matters at least as much as the other, because it runs FIRST: every
-  message reaching the main form comes through here, and what it does not claim
-  it chains to the LCL. }
-function TR4WFormSubclassProc(TRHWND: HWND; Msg: UINT;
-                              wParam: wParam; lParam: lParam): longword; stdcall;
-begin
-   Result := 0;
-   try
-      Result := TR4WFormSubclassProcBody(TRHWND, Msg, wParam, lParam);
-   except
-      on E: TObject do
-         begin
-         LogCaughtException(Format('TR4WFormSubclassProc msg $%x', [Msg]), E);
-         Result := longword(Windows.DefWindowProc(TRHWND, Msg, wParam, lParam));
-         end;
-   end;
-end;
+  WHAT WENT WITH IT is worth naming, because each was a hazard of having a
+  window procedure at all: an allow-list of message ids that had to be kept
+  in step with the case labels by hand and silently dropped anything missing
+  from it -- three of its eight literals were wrong once, and every failure
+  was invisible; a try/except wrapper, because an exception leaving a kernel
+  callback is undefined behaviour; and the rule that TR4W got first refusal
+  on every message, which is what made the LCL deaf to its own controls. *)
 
 procedure TTR4WMainForm.lstPossibleCallDrawItem(Control: TWinControl;
                                                 Index: integer; ARect: TRect;
@@ -1833,6 +1702,93 @@ begin
      method of the same class the bare name is the method reference, and
      the form building its own menu is where this belongs anyway. *)
    Menu := BuildTR4WMainMenu(Self, MenuItemClick);
+end;
+
+procedure TTR4WMainForm.MainFormCloseQuery(Sender: TObject;
+                                           var CanClose: boolean);
+begin
+   (* ExitProgram OWNS THE SHUTDOWN, as it did from the WM_CLOSE arm -- it
+     asks the operator, saves and closes down in order. CanClose stays False
+     because the arm's `Msg := 0` said exactly that: do not let the framework
+     destroy this window on its own. *)
+   CanClose := False;
+   ExitProgram(True);
+end;
+
+procedure TTR4WMainForm.MainFormMouseDown(Sender: TObject; Button: TMouseButton;
+                                          Shift: TShiftState; X, Y: integer);
+begin
+   (* DRAG BY THE BODY, for a window with no title bar to grab.
+
+     DragWindow posts WM_SYSCOMMAND $F012 -- SC_MOVE with a caption hit-test --
+     which hands the drag to the system's own move loop. There is no
+     cross-platform equivalent, so it is gated rather than pretended away; with
+     a caption the frame already does this and nothing is lost. *)
+   {$IFDEF WINDOWS}
+   if Button = mbLeft then
+      begin
+      DragWindow(Handle);
+      end;
+   {$ENDIF}
+end;
+
+(* SNAP TO THE SCREEN EDGES while the window is being moved.
+
+  Within 20 pixels of the left or top edge, or of the work area's right or
+  bottom, the window goes flush. Unchanged from the WM_WINDOWPOSCHANGING arm
+  except for where the work area comes from: tWorkingAreaRect was filled once
+  at start-up by SystemParametersInfo(SPI_GETWORKAREA), and Screen.WorkAreaRect
+  is the LCL's own, read when it is used -- so this now follows a taskbar that
+  moves. *)
+procedure TTR4WMainForm.WMWindowPosChanging(var aMsg: TLMWindowPosMsg);
+const
+   SNAP = 20;
+var
+   p:    PWindowPos;
+   work: TRect;
+begin
+   inherited;
+
+   p := aMsg.WindowPos;
+   if p = nil then
+      begin
+      Exit;
+      end;
+
+   (* THE FAR-EDGE ARMS USE THE SIZE THE MESSAGE CARRIES, AND ONLY THAT.
+
+     A drag fills cx and cy with the window's outer size, which is the case
+     these two arms are for. A programmatic SetWindowPos(..., SWP_NOSIZE) does
+     not: cx and cy are documented as ignored and are whatever the caller left
+     in the structure, usually zero, so the distance comes out a screen width
+     wrong and nothing snaps. That is the RIGHT outcome -- a saved window
+     position being restored at start-up should land where it was saved, not be
+     pulled to an edge -- but it is worth knowing before treating a programmatic
+     move as a test of these arms.
+
+     Taking the size from Width/Height instead was tried and is wrong: LCL
+     reports 1012 for a window Windows measures at 1028, the difference being
+     the invisible resize border, so the snap target lands 16 px past the edge
+     (measured 2026-09-07). Test-MainWindowEvents therefore drives these arms
+     the way a drag does, with a real size in the message. *)
+   work := Screen.WorkAreaRect;
+
+   if (p^.X < SNAP) and (p^.X > -SNAP) then
+      begin
+      p^.X := 0;
+      end;
+   if (p^.Y < SNAP) and (p^.Y > -SNAP) then
+      begin
+      p^.Y := 0;
+      end;
+   if Abs(work.Bottom - (p^.cy + p^.Y)) < SNAP then
+      begin
+      p^.Y := work.Bottom - p^.cy;
+      end;
+   if Abs(work.Right - (p^.cx + p^.X)) < SNAP then
+      begin
+      p^.X := work.Right - p^.cx;
+      end;
 end;
 
 procedure TTR4WMainForm.MenuItemClick(Sender: TObject);
@@ -2635,8 +2591,6 @@ begin
    // INSTALL TR4W'S PROCEDURE IN FRONT OF THE LCL'S, keeping the LCL's to
    // chain to.  After Handle has forced the window into existence, before
    // anything is shown.
-   GLCLFormProc := Pointer(Windows.SetWindowLongPtr(Result, GWL_WNDPROC,
-                                                    LONG_PTR(@TR4WFormSubclassProc)));
 
    (* THE MENU IS THE FORM'S, built from T_MENU_ARRAY as a TMainMenu.
 

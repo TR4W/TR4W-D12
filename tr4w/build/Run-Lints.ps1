@@ -129,10 +129,12 @@ $lints = @(
    # phase: mixing the two would mean a dialog conversion and a serial
    # abstraction moving one number that neither could be read from.
    @{ Name = 'Lint-Win32Dialogs';    Arg = $Tr4wDir; NeedsFpc = $false; Extra = @('-Group', 'platform') }
-   # Every message WindowProc handles must be claimed by IsTR4WsOwnMessage, or
-   # the LCL swallows it. Four were being dropped when this was written, one of
-   # them since the day the marshalling seam was built.
-   @{ Name = 'Lint-AppMessages';     Arg = $src;     NeedsFpc = $false }
+   # RETIRED WITH THE SUBCLASS (2026-09-07). Lint-AppMessages checked that every
+   # message WindowProc handled was claimed by the main form's allow-list, and
+   # vice versa -- four were being dropped when it was written, one of them since
+   # the day the marshalling seam was built. There is no window procedure and no
+   # allow-list now: the nine arms are LCL events, and an event declared but not
+   # wired is caught by Lint-FormEvents instead.
    @{ Name = 'Lint-LFMProperties';   Arg = $src;     NeedsFpc = $true  }
    # Every menu row must have a handler in ProcessMenu. 180 numeric ids wired
    # to a 920-line case, and nothing checked that the two agreed -- a row with
@@ -207,7 +209,15 @@ foreach ($lint in $lints)
    $errFile = Join-Path $tmpDir ("lint-$($queue.Count)-err.txt")
    $proc = Start-Process -FilePath 'powershell' `
                          -ArgumentList (@('-NoProfile', '-ExecutionPolicy', 'Bypass',
-                                          '-File', $path, '-SourceDir', $lint.Arg) +
+                                          '-File', $path) +
+                                        # -SourceDir ONLY WHEN THERE IS ONE. A script whose
+                                        # param() block does not declare it treats the
+                                        # argument as an ERROR, not as noise -- which is why
+                                        # Lint-LinuxCompile failed on every run without ever
+                                        # compiling anything. A script with no param() block
+                                        # at all absorbs it into $args, which is why the two
+                                        # others that ignore it never showed the fault.
+                                        $(if ($null -ne $lint.Arg) { @('-SourceDir', $lint.Arg) } else { @() }) +
                                         # Optional per-entry switches, so one script can be
                                         # listed twice with different arguments rather than
                                         # being copied into a sibling that would drift.

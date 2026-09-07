@@ -363,8 +363,9 @@ a rectangle.
    be captured BEFORE the menu pops, because the operator releases Ctrl/Alt to
    click it (Issue #1001, already commented in the source).
 
-**Verification available:** none of this is provable by build. `Lint-AppMessages`
-will show the two arms gone; the rest is bench -- F1..F12 send, Ctrl/Alt banks
+**Verification available:** none of this is provable by build. ~~`Lint-AppMessages`
+will show the two arms gone~~ -- that lint is retired with the window procedure
+it checked (2026-09-07); the rest is bench -- F1..F12 send, Ctrl/Alt banks
 show the right text, right-click opens the editor on the right row, and the
 window still docks where it was.
 
@@ -515,9 +516,22 @@ So the target is the code a person would write if they started this app in Lazar
 means **no window procedure of our own at all** — the LCL owns it, and behaviour hangs off form
 and control events:
 
+**The first row of this table is DONE (2026-09-07).** There is no window
+procedure of TR4W's anywhere in the program: `WindowProc`, `WindowProcBody`,
+`TR4WFormSubclassProc` and `IsTR4WsOwnMessage` are deleted, nothing calls
+`SetWindowLongPtr(GWL_WNDPROC)`, and the nine messages the subclass answered are
+LCL events or one LCL message handler (`WMWindowPosChanging`, on
+`LM_WINDOWPOSCHANGING`). `Lint-AppMessages`, which existed only to keep the
+procedure's `case` labels and the allow-list in step, went with them.
+
+The three that only an operator normally exercises -- edge snap, drag by the
+body, and closing the program -- are covered by
+`tr4w/test/ui/Test-MainWindowEvents.ps1`, because a handler the streamer cannot
+find still builds clean.
+
 | What the tree does today | What it becomes |
 |---|---|
-| `WindowProc` + `TR4WFormSubclassProc` + `IsTR4WsOwnMessage` | nothing — deleted; the LCL's own proc is the only one |
+| ~~`WindowProc` + `TR4WFormSubclassProc` + `IsTR4WsOwnMessage`~~ | **done** -- deleted; the LCL's own proc is the only one |
 | `WM_COMMAND` → `EN_CHANGE` / `BN_CLICKED` routing | `OnChange`, `OnClick`, `OnEnter` on the control |
 | `WM_DRAWITEM` / `WM_MEASUREITEM` | `Style := lbOwnerDrawFixed` + `OnDrawItem`; `ItemHeight` |
 | `WM_CTLCOLORSTATIC` / `…EDIT` / `…LISTBOX` | `Control.Color`, `Font.Color` |
