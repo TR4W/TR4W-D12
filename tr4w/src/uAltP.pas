@@ -31,8 +31,7 @@ uses
   TF,
   VC,
   uEditMessage,
-  Windows,
-  Messages,
+  LCLType,
   LogWind,
   uTR4WStrings;
 

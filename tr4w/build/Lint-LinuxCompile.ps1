@@ -58,6 +58,13 @@ $UNITS = @(
    @{ Unit = 'uSerialPort.pas';       Since = '2026-09-07' }
    @{ Unit = 'uYCCCSO2R.pas';         Since = '2026-09-07' }
    @{ Unit = 'uWindowSnap.pas';       Since = '2026-09-07' }
+   # Added 2026-09-07 by the LCLType sweep. None of these three used anything
+   # from the Windows unit -- uRussiaOblasts named it as the SOLE entry in its
+   # uses clause and is a callsign-prefix lookup table. Proven by compiling,
+   # not by reading the uses clause.
+   @{ Unit = 'uAccelerators.pas';     Since = '2026-09-07' }
+   @{ Unit = 'cty.pas';               Since = '2026-09-07' }
+   @{ Unit = 'uRussiaOblasts.pas';    Since = '2026-09-07' }
 )
 
 if (-not (Test-Path $fpc))

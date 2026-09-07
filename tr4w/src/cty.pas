@@ -24,7 +24,7 @@ interface
 
 uses
   VC,
-  Windows;
+  LCLType;
 const
   ctydll                                = 'cty.dll';
 

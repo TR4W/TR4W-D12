@@ -24,7 +24,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 interface
 
 uses
-  Windows;   // HWND, for nothing but the seam's shape
+  LCLType;   // HWND, for nothing but the seam's shape
 
 {
   THE AUTO-CQ SEAM.  The dialog itself is now an LCL form --

@@ -29,7 +29,7 @@ uses
   TF,
 
   PostUnit,
-  Windows,
+  LCLType,
   LogDupe,
   Messages
   ;

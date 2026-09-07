@@ -52,7 +52,7 @@ unit uAccelerators;
 interface
 
 uses
-  Windows,
+  LCLType,
   uTR4WStrings;
 
 type

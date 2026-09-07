@@ -26,7 +26,7 @@ interface
 uses
   VC,
   TF,
-  Windows,
+  LCLType,
   Messages;
 
 var

@@ -48,7 +48,7 @@ unit uRemMults;
 interface
 
 uses
-  Windows,      { LoWord / HiWord -- unpacking what MakeLong packed }
+  LCLType,      { LoWord / HiWord -- unpacking what MakeLong packed }
   TF,
   VC,
   uCTYDAT,

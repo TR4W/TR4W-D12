@@ -38,7 +38,7 @@ unit uPOTAParks;
 interface
 
 uses
-   Windows, Messages, Classes, SysUtils, IdHTTP, IdSSLOpenSSL;
+   LCLType, Classes, SysUtils, IdHTTP, IdSSLOpenSSL;
 
 const
    POTA_PARKS_URL        = 'https://pota.app/all_parks_ext.csv';

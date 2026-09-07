@@ -29,8 +29,7 @@ uses
   TF,
   VC,
   utils_file,
-  Windows,
-  Messages,
+  LCLType,
   Tree,
   LogWind
 

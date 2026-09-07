@@ -41,7 +41,7 @@ uses
   // Tree,
   utils_text,      // UpperCase (ANSI ShortString) -- also replaces uStrSearch.StrU (var ShortString)
   VC,
-  Windows;
+  LCLType;
 const
   ARRLSectionCountryString              = ' K VE KC6 KG4 KL KH0 KH1 KH2 KH3 KH4 KH5 KH6 KH7 KH8 KH9 KP1 KP2 KP3 KP4 KP5 ';
   BlackSeaCountriesString               = ' OE ZA EU LZ E7 HA DL 4L I Z3 ER SP UA YO OM S5 TA UR 9A 4O OK HB YU ';

@@ -75,7 +75,7 @@ type
 implementation
 
 uses
-   Windows,    // Sleep -- the interlock's settle delay
+   LCLType,    // Sleep -- the interlock's settle delay
    SysUtils,
    Log4D,
    MainUnit,   // IsCWByCATActive, CWByCATBufferTerminator, DebugMsg, logger

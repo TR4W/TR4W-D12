@@ -19,7 +19,7 @@ unit uCTYUpdate;
 interface
 
 uses
-   Windows, Messages, Classes, SysUtils, IdHTTP, IdSSLOpenSSL;
+   LCLType, Messages, Classes, SysUtils, IdHTTP, IdSSLOpenSSL;
 
 type
    (* Both raised ON THE MAIN THREAD -- see the note in the implementation.

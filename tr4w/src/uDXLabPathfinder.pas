@@ -41,7 +41,7 @@ function  IsDXLabPathfinderRunning: boolean;
 implementation
 
 uses
-  Windows, SysUtils, VC, MainUnit;
+  LCLType, SysUtils, VC, MainUnit;
 
 // ---------------------------------------------------------------------------
 // Raw DDEML Win32 API declarations

@@ -23,8 +23,8 @@ unit uRussiaOblasts;
 
 interface
 
-uses
-  Windows {,  CLCUtils};
+(* NO uses CLAUSE AT ALL. This unit is a lookup table over callsign prefixes
+  and it named Windows -- the sole entry -- without using anything from it. *)
 
 type
 

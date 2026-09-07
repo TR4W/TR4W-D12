@@ -67,7 +67,7 @@ interface
 uses
    (* Windows for MAXBYTE / MAXWORD, which are the sentinels
      ClearContestExchange writes. DateUtils for the unix epoch. *)
-   Windows, Classes, SysUtils, DateUtils, db, sqldb, VC, uLogDatabase;
+   LCLType, Classes, SysUtils, DateUtils, db, sqldb, VC, uLogDatabase;
 
 type
    ELogRepositoryError = class(Exception);
