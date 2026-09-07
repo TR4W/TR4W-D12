@@ -95,7 +95,7 @@ uses
 // Set a child control's text from ANY thread. aPanel = 0, or a panel that has
 // closed, is not an error: the update is dropped, exactly as the guarded
 // `if handle <> 0` at each call site did before.
-procedure PostPanelText(const aPanel: HWND; const aControlId: integer;
+procedure PostPanelText(const aPanel: integer; const aControlId: integer;
   const aText: string);
 
 { Enable or disable one panel control from ANY thread.
@@ -107,7 +107,7 @@ procedure PostPanelText(const aPanel: HWND; const aControlId: integer;
 
   Addressing both kinds the same way also means the coalescing cache is keyed
   the same way for both, which it was not before. }
-procedure PostPanelEnable(const aPanel: HWND; const aControlId: integer;
+procedure PostPanelEnable(const aPanel: integer; const aControlId: integer;
   const aEnabled: boolean);
 
 { Sets one main-window element's text FROM A WORKER THREAD.  Coalesced and
@@ -118,7 +118,7 @@ procedure PostElementText(const aElement: TMainWindowElement; const aText: strin
 // Forget everything remembered about a panel and its children. Call when a
 // panel closes: a window handle can be REUSED by Windows, and a stale cache
 // entry would then suppress the first update to a different window.
-procedure ForgetPanel(const aPanel: HWND);
+procedure ForgetPanel(const aPanel: integer);
 
 type
   { WHERE A MARSHALLED UPDATE LANDS WHEN THE PANEL IS A FORM.
@@ -141,14 +141,28 @@ type
     LCL form finds no dialog item, changes nothing, and returns as though it
     worked -- so an id the hook does not know would have vanished in silence.
     Now it is logged, once per id, and the update is dropped loudly. }
-  TPanelTextHook = function(const aPanel: HWND; const aControlId: integer;
+  TPanelTextHook = function(const aPanel: integer; const aControlId: integer;
                             const aText: string): boolean;
-  TPanelEnableHook = function(const aPanel: HWND; const aControlId: integer;
+  TPanelEnableHook = function(const aPanel: integer; const aControlId: integer;
                               const aEnabled: boolean): boolean;
 
 var
   PanelTextHook: TPanelTextHook = nil;
   PanelEnableHook: TPanelEnableHook = nil;
+
+  (* IS THIS PANEL SLOT OPEN?
+
+    Was IsWindow(upd.Target) -- a Win32 call that worked only while Target was
+    a window HANDLE. It asks whether the panel closed between the post and the
+    apply, which is ORDINARY rather than an error, and is why that branch
+    reports nothing when it fails. When Target became a slot, IsWindow(1) was
+    False and every panel update vanished silently (measured 2026-09-06: 74
+    posts handed over, 0 applied, 0 reported).
+
+    A hook for the same reason the other two are hooks: this unit sits BELOW
+    the forms and cannot ask one whether it exists. Nil means "assume open",
+    so a caller that installs no hook behaves as it did before any of them. *)
+  PanelOpenHook: function(const aPanel: integer): boolean = nil;
 
 implementation
 
@@ -182,7 +196,7 @@ type
   TPanelUpdate = class(TObject)
   public
     Kind: TPanelUpdateKind;
-    Target: HWND;          // the PANEL for puText, the CONTROL for puEnable
+    Target: integer;          // the PANEL for puText, the CONTROL for puEnable
     ControlId: integer;    // for puElement: Ord(TMainWindowElement)
     Text: string;
     Enabled: boolean;
@@ -199,7 +213,7 @@ type
   // hash both in code and in cache lines.
   TLastPosted = record
     Kind: TPanelUpdateKind;
-    Target: HWND;
+    Target: integer;
     ControlId: integer;
     Text: string;
     Enabled: boolean;
@@ -211,7 +225,7 @@ var
   gLast: array of TLastPosted;
 
 // Caller holds the lock. Returns the index, or -1.
-function IndexOf(const aKind: TPanelUpdateKind; const aTarget: HWND;
+function IndexOf(const aKind: TPanelUpdateKind; const aTarget: integer;
   const aControlId: integer): integer;
 var
   i: integer;
@@ -300,7 +314,7 @@ begin
    gLast[slot].Enabled   := aUpdate.Enabled;
 end;
 
-procedure PostPanelText(const aPanel: HWND; const aControlId: integer;
+procedure PostPanelText(const aPanel: integer; const aControlId: integer;
   const aText: string);
 var
   i: integer;
@@ -331,7 +345,7 @@ begin
    end;
 end;
 
-procedure PostPanelEnable(const aPanel: HWND; const aControlId: integer;
+procedure PostPanelEnable(const aPanel: integer; const aControlId: integer;
   const aEnabled: boolean);
 var
   upd: TPanelUpdate;
@@ -399,7 +413,8 @@ begin
    try
       // The panel may have closed between the post and now. That is ordinary,
       // not an error -- the same race the `if handle <> 0` guards covered.
-      if IsWindow(upd.Target) then
+      // See PanelOpenHook for why this is no longer IsWindow.
+      if (not Assigned(PanelOpenHook)) or PanelOpenHook(upd.Target) then
          begin
          case upd.Kind of
            puText:
@@ -463,7 +478,7 @@ begin
   end;
 end;
 
-procedure ForgetPanel(const aPanel: HWND);
+procedure ForgetPanel(const aPanel: integer);
 var
   i: integer;
 begin

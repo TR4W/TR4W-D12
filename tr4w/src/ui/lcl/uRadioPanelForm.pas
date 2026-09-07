@@ -374,30 +374,34 @@ begin
    end;
 end;
 
-function FormForHandle(const aHandle: HWND): TfrmRadioPanel;
-var
-   i: integer;
+(* THE PANEL FOR A SLOT.
+
+  Was FormForSlot: a loop over both forms comparing Handle against an HWND
+  that MainUnit had taken FROM one of these very forms and stored on the radio
+  record. A slot is the identity that round trip was carrying. *)
+function FormForSlot(const aSlot: integer): TfrmRadioPanel;
 begin
    Result := nil;
-   for i := 1 to 2 do
+   if (aSlot >= 1) and (aSlot <= 2) then
       begin
-      if (GForms[i] <> nil) and GForms[i].HandleAllocated and
-         (GForms[i].Handle = aHandle) then
-         begin
-         Result := GForms[i];
-         Exit;
-         end;
+      Result := GForms[aSlot];
       end;
 end;
 
-function PanelTextToForm(const aPanel: HWND; const aControlId: integer;
+{ Whether a slot has an open panel -- see uPanelUpdate.PanelOpenHook. }
+function PanelSlotIsOpen(const aPanel: integer): boolean;
+begin
+   Result := FormForSlot(aPanel) <> nil;
+end;
+
+function PanelTextToForm(const aPanel: integer; const aControlId: integer;
                          const aText: string): boolean;
 var
    f: TfrmRadioPanel;
    lab: TPanel;
 begin
    Result := False;
-   f := FormForHandle(aPanel);
+   f := FormForSlot(aPanel);
    if f = nil then
       begin
       Exit;
@@ -419,13 +423,13 @@ end;
   the rig has that feature ON -- see the header.  102/104 are the VFO frequency
   rows, and there the meaning really is enabled/disabled: the INACTIVE VFO is
   greyed, which a TPanel does natively. }
-function PanelEnableToForm(const aPanel: HWND; const aControlId: integer;
+function PanelEnableToForm(const aPanel: integer; const aControlId: integer;
                            const aEnabled: boolean): boolean;
 var
    f: TfrmRadioPanel;
 begin
    Result := False;
-   f := FormForHandle(aPanel);
+   f := FormForSlot(aPanel);
    if f = nil then
       begin
       Exit;
@@ -522,5 +526,6 @@ end;
 initialization
    PanelTextHook   := @PanelTextToForm;
    PanelEnableHook := @PanelEnableToForm;
+   PanelOpenHook   := @PanelSlotIsOpen;
 
 end.

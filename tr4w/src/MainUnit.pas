@@ -6294,7 +6294,16 @@ begin
 
   if Radio <> nil then
      begin
-     Radio.tRadioInterfaceWndHandle := h;
+     (* THE SLOT, NOT A HANDLE. Which panel this rig draws on is exactly what
+       the ID above just told us. *)
+     if ID = tw_RADIOINTERFACEWINDOW2_INDEX then
+        begin
+        Radio.tRadioPanelSlot := 2;
+        end
+     else
+        begin
+        Radio.tRadioPanelSlot := 1;
+        end;
 
      // NO CONTROL HANDLES ARE TAKEN HERE ANY MORE.  They were GetDlgItem(h,
      // 121..123) and GetDlgItem(h, 105..106), handed to uRadioPolling so it
@@ -6307,13 +6316,9 @@ begin
      // created HERE instead -- thirty lines of GetWindowRect / ScreenToClient
      // arithmetic against controls another unit had just placed, inside the
      // generic opener that has no other business knowing what a radio is.
-     // Still assigned, because uRadioPolling tests them for zero as its "is
-     // the panel open" guard.  They are no longer the route to the controls.
-     Radio.RITWndHandle      := h;
-     Radio.XITWndHandle      := h;
-     Radio.SplitWndHandle    := h;
-     Radio.ModeVFOAWndHandle := h;
-     Radio.ModeVFOBWndHandle := h;
+     // AND THE FIVE ALIASES ARE GONE. RIT/XIT/Split were written here and read
+     // NOWHERE; the two mode handles were read only as `<> 0`, which is what
+     // tRadioPanelSlot answers. All five held the same value as the line above.
 
      // CAPTION: the localized label plus the rig, e.g. "Radio 1 K4" (NY4I,
      // 2026-08-20). The generic caption a few lines up is the MENU text, which
@@ -6442,31 +6447,39 @@ begin
      Exit;
      end;
   FindAndSaveRectOfAllWindows;
-  (* WHICH RADIO'S PANEL IS THIS? Asked by comparing handles, because the radio
-    record still keeps tRadioInterfaceWndHandle as an HWND -- repointing the
-    five window handles on RadioPtr is its own change. Derived from the form
-    here so this routine stores no handle of its own. *)
-  if tr4w_WindowsArray[ID].WndForm <> nil then
+  (* WHICH RADIO'S PANEL IS THIS? The ID says so.
+
+    This compared the closing window's HANDLE against each radio's stored
+    handle to work out which radio to clear -- while the window id it was
+    handed answers directly. *)
+  if ID = tw_RADIOINTERFACEWINDOW1_INDEX then
      begin
-     if tr4w_WindowsArray[ID].WndForm.Handle = Radio1.tRadioInterfaceWndHandle then
-        begin
-        Radio1.tRadioInterfaceWndHandle := 0;
-        end;
-     if tr4w_WindowsArray[ID].WndForm.Handle = Radio2.tRadioInterfaceWndHandle then
-        begin
-        Radio2.tRadioInterfaceWndHandle := 0;
-        end;
+     Radio1.tRadioPanelSlot := 0;
+     end;
+  if ID = tw_RADIOINTERFACEWINDOW2_INDEX then
+     begin
+     Radio2.tRadioPanelSlot := 0;
      end;
   // Drop anything uPanelUpdate remembers about this panel BEFORE the window
   // goes. Windows reuses handles, and a stale 'last posted' entry would then
   // suppress the first update to a completely different window -- a panel
   // that reopens blank and stays blank, with nothing to point at.
-  (* ForgetPanel STILL TAKES A HANDLE -- uPanelUpdate keys its "last posted"
-    map by HWND, and repointing that is its own change. Asked of the form so
-    this routine holds no handle of its own. *)
   if tr4w_WindowsArray[ID].WndForm <> nil then
      begin
-     ForgetPanel(tr4w_WindowsArray[ID].WndForm.Handle);
+     (* ForgetPanel BY SLOT. It keyed its "last posted" cache by window handle,
+       which mattered because Windows REUSES handles -- a stale entry could
+       suppress the first update to a different window. A slot is stable and
+       cannot be recycled, so the hazard the cache-clearing guarded against is
+       gone; clearing it on close is still right, because the panel's contents
+       do not survive being closed. *)
+     if ID = tw_RADIOINTERFACEWINDOW1_INDEX then
+        begin
+        ForgetPanel(1);
+        end
+     else if ID = tw_RADIOINTERFACEWINDOW2_INDEX then
+        begin
+        ForgetPanel(2);
+        end;
 
      (* HIDE, NOT DestroyWindow. The form object is kept and reused -- every
        creator does `if <form> = nil then Create` -- so destroying the native

@@ -193,12 +193,20 @@ type
       tRadioInterfaceThreadHandle: THandle;
       PollingStopRequested: Boolean;
       tPollCount: integer;
-      tRadioInterfaceWndHandle: HWND;
-      RITWndHandle:     HWND;
-      XITWndHandle:     HWND;
-      SplitWndHandle:   HWND;
-      ModeVFOAWndHandle: HWND;  // Issue #566: mode label beside VFO A freq
-      ModeVFOBWndHandle: HWND;  // Issue #566: mode label beside VFO B freq
+      (* WHICH RADIO PANEL THIS RIG DRAWS ON: 1, 2, or 0 for none open.
+
+        Was tRadioInterfaceWndHandle: HWND -- the panel FORM's window handle,
+        stored here so uRadioPolling could post updates against it, which
+        uPanelUpdate then used as an opaque cache key and uRadioPanelForm
+        searched back to the form by comparing handles. The identity carried
+        all the way round that loop is "radio 1 or radio 2"; a slot says it.
+
+        FIVE MORE HANDLES SAT HERE AND ARE GONE. RITWndHandle, XITWndHandle
+        and SplitWndHandle were written and NEVER READ. ModeVFOAWndHandle and
+        ModeVFOBWndHandle were read only as `<> 0` -- an "is the panel open"
+        test -- and were assigned the same value as the panel handle on the
+        line above. All six were `:= h` in one block. *)
+      tRadioPanelSlot: integer;
       tBuf: array[1..512] of AnsiChar;
       active : boolean;
       CurrentStatus:   RadioStatusRecord; { Last reading taken }

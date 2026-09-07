@@ -402,9 +402,9 @@ begin
                logger.Warn('[pFactoryRadio] Auth failed for %s - stopping', [rig^.RadioName]);
                StrPCopy(authErrBuf, rig^.RadioName + ': Auth failed - check credentials');
                QuickDisplayError(authErrBuf);
-               if rig^.tRadioInterfaceWndHandle <> 0 then
+               if rig^.tRadioPanelSlot <> 0 then
                   begin
-                  PostPanelText(rig^.tRadioInterfaceWndHandle, 130, 'AUTH FAILED');
+                  PostPanelText(rig^.tRadioPanelSlot, 130, 'AUTH FAILED');
                   end;
                Break;
                end;
@@ -641,10 +641,10 @@ begin
             // Blank the frequency display immediately. FreqToPChar(0) shows "0.000"
             // which is as misleading as the stale value, so write '' directly.
             PostElementText(rig^.FreqElement, '');
-            if rig^.tRadioInterfaceWndHandle <> 0 then
+            if rig^.tRadioPanelSlot <> 0 then
                begin
-               PostPanelText(rig^.tRadioInterfaceWndHandle, 102, '');
-               PostPanelText(rig^.tRadioInterfaceWndHandle, 104, '');
+               PostPanelText(rig^.tRadioPanelSlot, 102, '');
+               PostPanelText(rig^.tRadioPanelSlot, 104, '');
                end;
             reconnectDelay := RECONNECT_INITIAL_DELAY;  // Reset backoff on new disconnect
             end;
@@ -691,9 +691,9 @@ begin
             logger.Warn('[pFactoryRadio] Authentication failed for %s - not retrying', [rig^.RadioName]);
             StrPCopy(authErrBuf, rig^.RadioName + ': Auth failed - check credentials');
             QuickDisplayError(authErrBuf);
-            if rig^.tRadioInterfaceWndHandle <> 0 then
+            if rig^.tRadioPanelSlot <> 0 then
                begin
-               PostPanelText(rig^.tRadioInterfaceWndHandle, 130, 'AUTH FAILED');
+               PostPanelText(rig^.tRadioPanelSlot, 130, 'AUTH FAILED');
                end;
             Break;
             end;
@@ -817,13 +817,13 @@ begin
      local. Lint-Win32Dialogs counts the TYPE, and this routine adds no Win32
      surface -- the same PostPanelText the painter already uses. A baseline
      raised for a variable is a baseline raised for nothing. }
-   if rig.tRadioInterfaceWndHandle <> 0 then
+   if rig.tRadioPanelSlot <> 0 then
       begin
-      PostPanelText(rig.tRadioInterfaceWndHandle, 102, '');   // VFO A
-      PostPanelText(rig.tRadioInterfaceWndHandle, 104, '');   // VFO B
-      PostPanelText(rig.tRadioInterfaceWndHandle, 105, '');
-      PostPanelText(rig.tRadioInterfaceWndHandle, 106, '');
-      PostPanelText(rig.tRadioInterfaceWndHandle, 120, '');   // RIT
+      PostPanelText(rig.tRadioPanelSlot, 102, '');   // VFO A
+      PostPanelText(rig.tRadioPanelSlot, 104, '');   // VFO B
+      PostPanelText(rig.tRadioPanelSlot, 105, '');
+      PostPanelText(rig.tRadioPanelSlot, 106, '');
+      PostPanelText(rig.tRadioPanelSlot, 120, '');   // RIT
       end;
 
    { The main window's frequency row -- HANDED OVER, not written, because this
@@ -1108,7 +1108,7 @@ begin
       SendRadioInfoToUDP(rig); // ny4i 4.44.9 // Broadcast Radio Info if set
       end;
    //Windows.SetWindowTextA(rig^.FreqWindowHandle, FreqToPChar(rig.CurrentStatus.Freq));
-   h := rig.tRadioInterfaceWndHandle;
+   h := rig.tRadioPanelSlot;   { the PANEL SLOT -- see TRadioRecord }
    //if h = 0 then Exit;
    //tSetWindowRedraw(h,false);
    if rig.CurrentStatus.VFO[VFOA].Frequency <>
@@ -1256,7 +1256,9 @@ begin
       end;
 
    // Update VFO A mode label when mode changes (Issue #566)
-   if (rig.ModeVFOAWndHandle <> 0) and
+   { Was rig.ModeVFOAWndHandle <> 0 -- an alias holding the panel's handle,
+     assigned on the same line as the panel's own. It only ever meant this. }
+   if (rig.tRadioPanelSlot <> 0) and
       (rig.CurrentStatus.VFO[VFOA].ExtendedMode <>
        rig.CurrentStatus.previousVFO[VFOA].ExtendedMode) then
       begin
@@ -1271,7 +1273,8 @@ begin
       end;
 
    // Update VFO B mode label when mode changes (Issue #566)
-   if (rig.ModeVFOBWndHandle <> 0) and
+   { See the VFO A guard above. }
+   if (rig.tRadioPanelSlot <> 0) and
       (rig.CurrentStatus.VFO[VFOB].ExtendedMode <>
        rig.CurrentStatus.previousVFO[VFOB].ExtendedMode) then
       begin
