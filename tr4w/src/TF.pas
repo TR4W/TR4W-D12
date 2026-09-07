@@ -149,7 +149,8 @@ function tWM_SETFONT(h: HWND; Font: HFONT): HWND;
 function SystemTimeToString(SysTime: SYSTEMTIME): string;
 
 //function StrLen(const Str: PChar): Cardinal;
-function tWindowsExist(wID: WindowsType): boolean;
+{ tWindowsExist MOVED to uWindowTable -- it reads the window table, and TF is
+  in tr4wserver's unit graph. }
 
 
 procedure showwarning(Text: string);
@@ -224,7 +225,8 @@ const
 
 implementation
 
-uses Log4D, uFreqTimeFormat, uStrSearch, uAnsiStr,   // Issue #997: freq/time formatters + PChar search helpers extracted + golden-tested
+uses
+   uWindowTable,   { tr4w_WindowsArray, tWindowsExist -- moved out of VC/TF } Log4D, uFreqTimeFormat, uStrSearch, uAnsiStr,   // Issue #997: freq/time formatters + PChar search helpers extracted + golden-tested
      uCrashLog;   // LogCaughtException, OnMainThread, ReportOffMainThread
 
 // Own Log4D logger (initialized at the foot of this unit), replacing the former
@@ -567,11 +569,6 @@ asm
 @@1:
 end;
 }
-
-function tWindowsExist(wID: WindowsType): boolean;
-begin
-  Result := tr4w_WindowsArray[wID].WndHandle <> 0;
-end;
 
 // StrPos removed (D12): callers use uAnsiStr.StrPos directly -- the
 // TF -> uStrSearch -> RTL forwarding was asm-eradication scaffolding, obsolete now.

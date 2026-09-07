@@ -1019,6 +1019,7 @@ procedure UpadateAutoSend;
 implementation
 
 uses
+   uWindowTable,   { tr4w_WindowsArray, tWindowsExist -- moved out of VC/TF }
   uFlasher,    { the quick-display flash is a timer now }
   uMainForm,   { the call field, named -- wh[] round 3 }
   //  OZCHR,

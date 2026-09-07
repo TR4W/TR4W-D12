@@ -2337,13 +2337,11 @@ const
 
   QSOMULTSWINDOWSTYLE                   = uVisStyleNoSun;
   QSOMULTSMODEWINDOWSTYLE               = WS_CHILD or SS_NOTIFY or SS_RIGHT or SS_NOPREFIX or WS_VISIBLE;
-type
-  TWndEntry = packed record
-    WndRect: TRect;
-    WndVisible: boolean;
-    WndHandle: HWND;
-    WndProcAdr: Pointer;
-  end;
+(* TWndEntry MOVED to src\ui\lcl\uWindowTable.pas.
+
+  It is a WINDOW table, and this unit is linked by tr4wserver -- a console
+  program with no widget set. While it lived here WndHandle could only ever be
+  an HWND, because its neighbours have to compile without the LCL. *)
 
 type
   TColorsFontsEntry = packed record
@@ -3019,7 +3017,6 @@ var
   CPUstart, CPUstop                     : int64;
   WindowsOSversion                      : Cardinal;
 
-  tr4w_WindowsArray                     : array[WindowsType] of TWndEntry;
   tFontsColorsArray                     : array[0..1] of TColorsFontsEntry;
 
   (* THREE WINDOWS-ONLY GLOBALS, and unlike SYSTEMTIME above there is nothing

@@ -106,7 +106,8 @@ procedure UUDecode;
 
 implementation
 
-uses LogCfg,
+uses
+   uWindowTable,   { tr4w_WindowsArray, tWindowsExist -- moved out of VC/TF } LogCfg,
   MainUnit;
 
 const

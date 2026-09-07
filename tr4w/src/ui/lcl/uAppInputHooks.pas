@@ -42,6 +42,7 @@ procedure InstallTR4WInputHooks;
 implementation
 
 uses
+   uWindowTable,   { tr4w_WindowsArray, tWindowsExist -- moved out of VC/TF }
   Classes, SysUtils, StrUtils, Forms, Controls, LCLType, LMessages,
   Windows,          { GetKeyState -- see the note on TelnetHasFocus }
   uMainThread,      { RunOnMainThread -- the accelerator runs deferred }

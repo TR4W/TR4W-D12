@@ -188,6 +188,7 @@ procedure UpdateBandMapDupeStatus(RXCall: CallString; RXBand: BandType; RXMode:
 implementation
 
 uses
+   uWindowTable,   { tr4w_WindowsArray, tWindowsExist -- moved out of VC/TF }
   uMainForm,   { the exchange field, named -- wh[] round 3 }
   uMainGrids,  { the QSO-need and mult-need band strips }
    (* Which store a log READ comes from -- step B4.  See uLogSource. *)

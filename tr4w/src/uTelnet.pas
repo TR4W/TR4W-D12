@@ -151,7 +151,8 @@ var
     and a message round trip per spot -- to answer a set-membership question. *)
   TelnetCallsignAlertList: TStringList = nil;
 implementation
-uses uNet,
+uses
+   uWindowTable,   { tr4w_WindowsArray, tWindowsExist -- moved out of VC/TF } uNet,
   Forms,             // Application.QueueAsyncCall -- the event transport
   ExtCtrls,          // TTimer -- the retry and login timers, off the dialog's WM_TIMER
   uTelnetForm,       // the window itself, a designed form since 2026-08-25

@@ -53,7 +53,8 @@ var
   LastItemInIntercomListBox        : integer;
 
 implementation
-uses SysUtils,   { Format -- replaced TF.Format/wsprintfA }
+uses
+   uWindowTable,   { tr4w_WindowsArray, tWindowsExist -- moved out of VC/TF } SysUtils,   { Format -- replaced TF.Format/wsprintfA }
   MainUnit,
   uFlasher,    { the intercom flash is a timer now }
   uIntercomForm,   { the window is a form -- the list box lives there }
