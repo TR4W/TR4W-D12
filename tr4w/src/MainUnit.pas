@@ -10113,7 +10113,7 @@ procedure RunPlugin(PluginNumber: integer);
 var
   CreatedReport: PAnsiChar;
   MakeRescore, ReLoadLog: boolean;
-  module: HWND;
+  module: THandle;
   TempFunc: Tmain;
 begin
   (* NOTHING HERE CHECKED ANYTHING, and all three checks are needed.
@@ -10182,8 +10182,8 @@ label
   1, Next;
 var
   lpFindFileData: TWin32FindDataA;
-  hFindFile: HWND;
-  module: HWND;
+  hFindFile: THandle;
+  module: THandle;
   TempFunc: Ttr4wGetPlugin;
   pop: HMENU;
 const

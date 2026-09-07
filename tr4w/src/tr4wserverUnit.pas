@@ -244,7 +244,7 @@ var
     TFileStream is the RTL's, works on every platform FPC targets, and knows
     its own size -- which is most of what the old code asked the handle for. *)
   ServerLog                             : TFileStream = nil;
-  ServerTempLogHandle                   : HWND = INVALID_HANDLE_VALUE;
+  ServerTempLogHandle                   : THandle = INVALID_HANDLE_VALUE;
 
   LogArraySize                          : integer;
   ENABLE_TCP_NODELAY                    : integer = 1;

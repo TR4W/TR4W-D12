@@ -142,7 +142,7 @@ type
     OldInt0BVector, OldInt0CVector: Pointer;
 
     //wli      SerialPortConfigured: array[Serial1..Serial9] of boolean;
-    SerialPortConfigured_Handle: array[TSerialPortRange] of HWND;
+    SerialPortConfigured_Handle: array[TSerialPortRange] of THandle;
 
     //    SerialPortOutputBuffer: array[Serial1..Serial9] of CharacterBuffer;
     //    SerialPortInputBuffer: array[Serial1..Serial9] of CharacterBuffer;
@@ -230,15 +230,15 @@ var
 //  tHighCWPerformance                    : boolean ;
 //  TimerResolutionIsSet                  : boolean ;
 
-  tPaddlePortBaseAddress                : HWND = INVALID_HANDLE_VALUE;
-  tFootSwitchPortBaseAddress            : HWND = INVALID_HANDLE_VALUE;
-  tRelayControlPortBaseAddress          : HWND = INVALID_HANDLE_VALUE;
-  tActiveStereoPortBaseAddress          : HWND = INVALID_HANDLE_VALUE;
+  tPaddlePortBaseAddress                : THandle = INVALID_HANDLE_VALUE;
+  tFootSwitchPortBaseAddress            : THandle = INVALID_HANDLE_VALUE;
+  tRelayControlPortBaseAddress          : THandle = INVALID_HANDLE_VALUE;
+  tActiveStereoPortBaseAddress          : THandle = INVALID_HANDLE_VALUE;
 
   tUseControlPort                       : boolean;
 
-  TR4W_BeepThread                       : HWND;
-  tPaddleFootSwitchThread               : HWND = INVALID_HANDLE_VALUE;
+  TR4W_BeepThread                       : THandle;
+  tPaddleFootSwitchThread               : THandle = INVALID_HANDLE_VALUE;
 
   tExitFromPaddleFootSwitchThread       : boolean;
   tPTTOnCounter                         : Cardinal;
@@ -360,7 +360,7 @@ procedure DoABeep(TypeOfBeep: BeepType);
 procedure DVKEnableWrite;
 procedure DVKDisableWrite;
 function DVKMessagePlaying: boolean;
-procedure OutputBandInfo(BaseAddress: HWND {ParallelPort: PortType}; Band: BandType; Mode: ModeType);
+procedure OutputBandInfo(BaseAddress: THandle {ParallelPort: PortType}; Band: BandType; Mode: ModeType);
 procedure SetDVKDelay(Delay: integer);
 procedure SetRelayForActiveRadio(Radio: RadioType);
 procedure SetStereoPin(PinNumber: integer; PinSet: boolean); {KK1L: 6.71}
@@ -1826,7 +1826,7 @@ begin
 
 end;
 
-procedure OutputBandInfo(BaseAddress: HWND; Band: BandType; Mode: ModeType);
+procedure OutputBandInfo(BaseAddress: THandle; Band: BandType; Mode: ModeType);
 
 { Outputs the appropriate bits to the parallel port }
 

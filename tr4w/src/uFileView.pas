@@ -157,7 +157,7 @@ uses MainUnit, uFileViewForm;
 
 procedure SendMail(Address: PAnsiChar; BugReport: boolean);
 var
-  module                                : HWND;
+  module                                : THandle;
   lpMessage                             : TMapiMessage;
   Files                                 : array[0..3] of MapiFileDesc;
 

@@ -312,7 +312,7 @@ var
 
   MP3InputBufferIndex                   : Cardinal;
 
-  TempMP3FileHandle                     : HWND;
+  TempMP3FileHandle                     : THandle;
 
   dwWrite                               : Cardinal;
   ToWrite                               : Cardinal;

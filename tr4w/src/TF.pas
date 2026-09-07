@@ -172,7 +172,7 @@ procedure DragWindow(h: HWND);
 //procedure SaveStructure(Address: Pointer; Count: integer; FileName: string);
 //function tShellexecute(HWND: HWND; Operation, FileName, Parameters, Directory: PChar; showCmd: integer): hInst; // 4.75.3
 
-function tOpenFileForRead(var h: HWND; FileName: PAnsiChar): boolean;
+function tOpenFileForRead(var h: THandle; FileName: PAnsiChar): boolean;
 
 procedure GetTime(var Hour, Minute, Second, Sec100: Word);
 procedure GetDate(var Year, Month, Day, DayOfWeek: Word);
@@ -977,7 +977,7 @@ begin
   DayOfWeek := St.wDayOfWeek;
 end;
 
-function tOpenFileForRead(var h: HWND; FileName: PAnsiChar): boolean;
+function tOpenFileForRead(var h: THandle; FileName: PAnsiChar): boolean;
 begin
   h := CreateFileA(FileName, GENERIC_READ, FILE_SHARE_READ, nil, OPEN_EXISTING, FILE_ATTRIBUTE_ARCHIVE, 0);
   Result := h <> INVALID_HANDLE_VALUE;

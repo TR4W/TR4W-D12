@@ -1506,7 +1506,7 @@ procedure SaveTelnetWindowSpots;
 var
   i, Lines: integer;
   TimeString: string;
-  TelnetLogHandle: HWND;
+  TelnetLogHandle: THandle;
   Line: AnsiString;
 begin
   if not tWindowsExist(tw_TELNETWINDOW_INDEX) then

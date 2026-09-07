@@ -111,7 +111,7 @@ type
     function GetNextEntryAddress(var EntryAddress: Pointer): boolean;
     procedure Initialize(var NumberBytes: LONGINT);
     procedure GoAway;
-    procedure LoadCellIntoBuffer(KeyString: CallString; {var } FileRead: HWND {file}; NumberBytes: LONGINT);
+    procedure LoadCellIntoBuffer(KeyString: CallString; {var } FileRead: THandle {file}; NumberBytes: LONGINT);
   end;
 
   PartialCallListEntryPtr = ^PartialCallListEntryType;
@@ -185,7 +185,7 @@ type
     SCPEndOfFile: LONGINT; { Address for end of last entry }
     WorkingDirectory: Str40;
 
-    TRMasterFileRead: HWND {file};
+    TRMasterFileRead: THandle {file};
     TRMasterFileOpen: boolean;
 
     procedure AddInBytes(NumberBytes, X, Y: integer);
@@ -440,7 +440,7 @@ begin
 end;
 
 procedure CellBufferObject.LoadCellIntoBuffer(KeyString: CallString;
-  {var }FileRead: HWND {file};
+  {var }FileRead: THandle {file};
   NumberBytes: LONGINT);
 
 var
@@ -3254,7 +3254,7 @@ procedure CallDatabase.BuildOperatorNameSet(Names: TStringList);
   and adds each non-empty operator name (uppercased) to Names.
   The shared TRMasterFileRead handle and CellBuffer state are untouched. }
 var
-   FileHandle  : HWND;
+   FileHandle  : THandle;
    LocalBuf    : CellBufferObject;
    X           : Integer;
    Y           : Integer;

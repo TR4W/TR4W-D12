@@ -188,7 +188,7 @@ var
   ADIF_FREQ_STRING: array [ 0 .. 15 ] of Char;
 
   tReportsFilename: FileNameType;
-  tReportFileWrite: HWND;
+  tReportFileWrite: THandle;
   PreviewFileNameAddress: PAnsiChar;
   PreviewFileIsCabrillo: boolean;
 
@@ -3531,7 +3531,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         FirstQSO: boolean;
         QSONumber, NumberBandChanges, NumberTwoXmtrQSOs,
            LastBandChangeQSO: integer;
-        FileWrite: HWND;
+        FileWrite: THandle;
         sr: PAnsiChar;
       begin
       if not LogSourceOpen then

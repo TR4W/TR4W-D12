@@ -105,7 +105,7 @@ procedure DriverCreate;
 procedure DriverDestroy;
 procedure NoInpOut32Message;
 procedure DriverBitOperation(var TempByte: Byte; BitToSet: TBitSet; Operation: TBitOperation);
-function OpenLPT(var PortHandle: HWND; LPT: PortType): boolean;
+function OpenLPT(var PortHandle: THandle; LPT: PortType): boolean;
 
 
 
@@ -228,7 +228,7 @@ begin
 end;
 
 
-function OpenLPT(var PortHandle: HWND; LPT: PortType): boolean;
+function OpenLPT(var PortHandle: THandle; LPT: PortType): boolean;
 begin
   Result := False;
   if not DriverIsLoaded() then

@@ -1468,7 +1468,7 @@ procedure DupeAndMultSheet.SaveRestartFile;
 var
  // Band                                  : BandType;
  // Mode                                  : ModeType;
-  FileWrite                             : HWND;
+  FileWrite                             : THandle;
  // Block, Result{, NumberBlocks}           : integer;
 
 begin

@@ -81,7 +81,7 @@ function TryGetServerLogRow(const aIndex: integer;
 
 var
 
-  NewServerLogHandle                    : HWND;
+  NewServerLogHandle                    : THandle;
   AmountQSOsFromServer                  : Cardinal;
   { The form's handle while the sync window is open, 0 otherwise.  Set last in
     HandleShow and cleared FIRST in HandleClose. }
@@ -200,7 +200,7 @@ var
   lpNumberOfBytesWritten                : Cardinal;
   TempRXData                            : ContestExchange;
   ServerLogFillIndex                    : integer;
-  tGetNetLogEvent                       : HWND;
+  tGetNetLogEvent                       : THandle;
   FirstPacket                           : boolean;
   Offset                                : integer;
   LogSize                               : integer;

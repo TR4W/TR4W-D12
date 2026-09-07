@@ -190,7 +190,7 @@ type
 
 
       tRadioInterfaceThreadID: cardinal;
-      tRadioInterfaceThreadHandle: HWND;
+      tRadioInterfaceThreadHandle: THandle;
       PollingStopRequested: Boolean;
       tPollCount: integer;
       tRadioInterfaceWndHandle: HWND;
@@ -213,7 +213,7 @@ type
       // every reader needs converting.
       StatusVersion: cardinal;
       BandOutputPort:  PortType;
-      tBandOutputPortBaseAddress: HWND;
+      tBandOutputPortBaseAddress: THandle;
       FrequencyAdder:  longint;
       FT1000MPCWReverse: boolean;
       CWByCAT:         boolean;                    // ny4i 4.44.5
@@ -276,10 +276,10 @@ type
       ReceiverAddress: integer; { Used for Icom interfaces }
 
       tCATPortType:   PortType;
-      tCATPortHandle: HWND;
+      tCATPortHandle: THandle;
 
       tKeyerPort:       PortType;
-      tKeyerPortHandle: HWND;
+      tKeyerPortHandle: THandle;
 
       tr4w_keyer_rts_state: tr4w_RTSDTRType; //keyer RTS
       tr4w_keyer_DTR_state: tr4w_RTSDTRType; //keyer DTR
