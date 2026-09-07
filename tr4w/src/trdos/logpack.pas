@@ -190,7 +190,7 @@ var
   Packet                                : PacketObject;
   PacketSpotKey                         : Char = '`';
   PacketWindowUp                        : boolean;
-  StartTime                             : Cardinal {TimeRecord};
+  StartTime                             : QWord {TimeRecord};   // GetTickCount64
   PacketInputFileDelay                  : integer;
   PacketSpotPrefixOnly                  : boolean; {KK1L: 6.72}
 

@@ -237,7 +237,7 @@ end;
 function WindowDupeCheck: boolean;
 { Returns TRUE if the call window has a dupe in it. }
 var
-  RememberTime                          : Cardinal {TimeRecord};
+  RememberTime                          : QWord {TimeRecord};   // GetTickCount64
   Dupe                                  : boolean;
 begin
   WindowDupeCheck := False;
@@ -799,7 +799,7 @@ var
 //  Mode                                  : ModeType;
 //  StringLength, Result                  : integer;
 //  PacketByte                            : Byte;
-  TimeMark                              : Cardinal {TimeRecord};
+  TimeMark                              : QWord {TimeRecord};   // GetTickCount64
 begin
   PacketWindowUp := True;
   RITEnable := False;
@@ -964,7 +964,7 @@ var
   FileName, TempString                  : ShortString;
   QSONumberString                       : Str20;
   LastDisplayedTimeElasped, Count, TimeElasped: integer;
-  StartOfLastPhoneMessage               : Cardinal {TimeRecord};
+  StartOfLastPhoneMessage               : QWord {TimeRecord};   // GetTickCount64
   TimeOut                               : Byte;
 begin
   LastDisplayedTimeElasped := 0;
@@ -2263,7 +2263,7 @@ var
 //MTotals                               : MultTotalArrayType;
   TempKey                               : AnsiChar;
   RememberInactiveCQ                    : boolean;
-  RememberTime                          : Cardinal {TimeRecord};
+  RememberTime                          : QWord {TimeRecord};   // GetTickCount64
   begin
 //  ReadInConfigFile('');
   if Config.SayHiEnable then

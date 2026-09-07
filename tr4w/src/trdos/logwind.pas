@@ -148,7 +148,7 @@ type
   TenMinuteTimeRecord = record
     Band: BandType;
     Mode: ModeType;
-    Time: Cardinal {TimeRecord};
+    Time: QWord {TimeRecord};   // GetTickCount64
   end;
 
   UserInfoType = (

@@ -619,7 +619,7 @@ procedure SendKeyboardInput;
 
 var
   Key{, ExtendedKey}                      : Char;
-  TimeMark                              : Cardinal {TimeRecord};
+  TimeMark                              : QWord {TimeRecord};
   Buffer                                : SendBufferType;
   BufferStart, BufferEnd                : integer;
 
@@ -1195,7 +1195,7 @@ procedure MemoryProgram;
 var
   Key, FirstExchangeFunctionKey, FunctionKey: Char;
   TempString                            : Str160;
-  TimeMark                              : Cardinal {TimeRecord};
+  TimeMark                              : QWord {TimeRecord};
 
 begin
   case ActiveMode of

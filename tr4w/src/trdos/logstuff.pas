@@ -57,11 +57,16 @@ uses {Dos, Printer,}Tree,
   SysUtils, // ny4i 4.44.9
   StrUtils, // 4.90.11
   uRegex,
-  (* ListView_DeleteAllItems -- the previous-dupe window is still a raw Win32
-    list view. That window is not converted yet; this uses entry goes with it. *)
   uMults,
-  Windows
-  ,
+  (* LCLType, for MAXWORD -- the only thing this unit still wanted from the
+    Windows unit.
+
+    THE NOTE THAT STOOD HERE WAS STALE: it said the entry was for
+    ListView_DeleteAllItems, because "the previous-dupe window is still a raw
+    Win32 list view". That window was converted; there is no ListView_ call
+    left in this unit, or anywhere in the program. *)
+  LCLType,
+  FileUtil,       // CopyFile -- was Windows.CopyFileA (LazUtils, not LazFileUtils)
   uTR4WStrings,
   uAnsiStr;
 
@@ -287,7 +292,7 @@ type
 
   KeyHistoryRecord = record
     Key: Char;
-    Time: Cardinal {TimeRecord};
+    Time: QWord {TimeRecord};   // GetTickCount64
   end;
 
   DirectionType = (DirectionDown, DirectionUp);
@@ -352,7 +357,7 @@ type
 
   MultiMessageMemoryRecord = record
     Message: string[100];
-    TimeMark: Cardinal {TimeRecord};
+    TimeMark: QWord {TimeRecord};   // GetTickCount64
     RetryCount: Byte;
     QSL: boolean;
     Warnings: Byte;
@@ -425,7 +430,7 @@ var
   DupeInfoCallPrompt: CallString; {KK1L: 6.73}
   DupeSheetFileEnable: boolean;
   DVKPlaying: boolean;
-  DVKStartTime: Cardinal {TimeRecord};
+  DVKStartTime: QWord {TimeRecord};   // GetTickCount64
 
   EscapeDeletedCallEntry: CallString;
   EscapeDeletedExchangeEntry: Str40;
@@ -1365,7 +1370,7 @@ procedure KeyStamp(Key: Char);
 
 begin
   KeyHistory.Key := Key;
-  KeyHistory.Time := GetTickCount;
+  KeyHistory.Time := GetTickCount64;
   {  with KeyHistory do
     begin
       GetTime(Time.Hour, Time.Minute, Time.Second, Time.Sec100);
@@ -5764,9 +5769,15 @@ begin
   TF.Format(QuickDisplayBuffer, PAnsiChar(WinAnsi(TC_SAVINGTO)), TR4W_LOG_FILENAME, TR4W_FLOPPY_FILENAME);
   QuickDisplay(QuickDisplayBuffer);
 
-  if not Windows.CopyFileA(TR4W_LOG_FILENAME, TR4W_FLOPPY_FILENAME, False) then
+  (* CopyFile (LazFileUtils), not Windows.CopyFileA. The False was
+    bFailIfExists -- overwrite -- which is CopyFile's default. *)
+  (* AnsiString, not string(AnsiString(...)): LazUtils is built without
+    UnicodeStrings, so CopyFile takes an AnsiString and widening here only to
+    have the call narrow it back is a silent round trip the ratchet counts. *)
+  if not CopyFile(AnsiString(TR4W_LOG_FILENAME),
+                  AnsiString(TR4W_FLOPPY_FILENAME)) then
      begin
-     ErrorMsg := SysUtils.SysErrorMessage(GetLastError);
+     ErrorMsg := SysUtils.SysErrorMessage(GetLastOSError);
      TF.Format(QuickDisplayBuffer, '%s: %s', TR4W_FLOPPY_FILENAME, PAnsiChar(ErrorMsg));
      QuickDisplay(QuickDisplayBuffer);
      DoABeep(Warning);

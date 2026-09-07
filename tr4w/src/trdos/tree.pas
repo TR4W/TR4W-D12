@@ -742,7 +742,9 @@ procedure DelayOrKeyPressed(DelayTime: integer);
 function DeleteMult(var LogString: Str80; MultString: Str20): boolean;
 
 function ElaspedTimeString(StartTime: Cardinal {TimeRecord}): string {Str20};
-function ElaspedSec100(StartTime: Cardinal {TimeRecord}): LONGINT;
+(* QWord, with GetTickCount64 -- see logradio.pas on the 49.7-day wrap.
+  Widening the callers without widening this would truncate right here. *)
+function ElaspedSec100(StartTime: QWord {TimeRecord}): LONGINT;
 
 function ExpandedString(Input: FourBytes): string;
 procedure ExpandTabs(var InputString: string);
@@ -843,7 +845,7 @@ function Lpt1BaseAddress: Word;
 function Lpt2BaseAddress: Word;
 function Lpt3BaseAddress: Word;
 
-procedure MarkTime(var StartTime: Cardinal {TimeRecord});
+procedure MarkTime(var StartTime: QWord {TimeRecord});
 function MicroTimeElapsed(StartTime: Cardinal {TimeRecord}): LONGINT;
 function MinutesToTimeString(Minutes: integer): string;
 function MultiMessageSourceBand(Source: Byte): BandType;
@@ -1541,9 +1543,9 @@ begin
      end;
 end;
 
-procedure MarkTime(var StartTime: Cardinal {TimeRecord});
+procedure MarkTime(var StartTime: QWord {TimeRecord});
 begin
-  StartTime := GetTickCount;
+  StartTime := GetTickCount64;
 end;
 
 function ElaspedTimeString(StartTime: Cardinal {TimeRecord}): string {Str20};
@@ -1554,7 +1556,7 @@ function ElaspedTimeString(StartTime: Cardinal {TimeRecord}): string {Str20};
 //  Hours, Mins, Secs, TotalSeconds       : LONGINT;
 //  HourString, MinsString, SecsString    : Str20;
 begin
-  Result := MillisecondsToFormattedString(GetTickCount - StartTime, False);
+  Result := MillisecondsToFormattedString(GetTickCount64 - StartTime, False);
   {
     TotalSeconds := ElaspedSec100(StartTime) div 100;
      //   ElaspedTimeString := IntToStr(TotalSeconds);
@@ -1579,14 +1581,16 @@ begin
   }
 end;
 
-function ElaspedSec100(StartTime: Cardinal {TimeRecord}): LONGINT;
+(* QWord, with GetTickCount64 -- see logradio.pas on the 49.7-day wrap.
+  Widening the callers without widening this would truncate right here. *)
+function ElaspedSec100(StartTime: QWord {TimeRecord}): LONGINT;
 
 //var
 //  Hour, Minute, Second, Sec100          : word;
 //  TempMinute, TempSecond, TempSec100    : LONGINT;
 
 begin
-  Result := (GetTickCount - StartTime) mod 1000;
+  Result := (GetTickCount64 - StartTime) mod 1000;
 end;
 
 function ExpandedString(Input: FourBytes): string;
@@ -2651,7 +2655,7 @@ end;
 function MicroTimeElapsed(StartTime: Cardinal {TimeRecord}): LONGINT;
 { Gives answer in Sec100s }
 begin
-  Result := GetTickCount - StartTime;
+  Result := GetTickCount64 - StartTime;
 end;
 
 function MinutesToTimeString(Minutes: integer): string;
