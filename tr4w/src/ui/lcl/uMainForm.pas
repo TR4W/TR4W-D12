@@ -63,6 +63,13 @@ type
     A designed control is still REPOSITIONED by that loop; being in the .lfm
     gives it an editable identity, not a fixed geometry. }
   TTR4WMainForm = class(TForm)
+    (* POLLS FOR THE TWO THINGS WINDOWS USED TO SEND A MESSAGE ABOUT.
+
+      WM_TIMECHANGE and WM_DISPLAYCHANGE had no cross-platform equivalent, and
+      catching them is why a window procedure was subclassed in front of this
+      form at all. NY4I, 2026-09-06: "unless there is an alternative cross
+      platform way, a timer to check both time and screen info?" *)
+    tmrSystemWatch: TTimer;
     { PUBLISHED so the streaming loader finds it in uMainForm.lfm, and so
       Lint-FormFields can check the two agree.  Declared in the designer,
       REPOSITIONED at run time -- see CreateTR4WPossibleCallList. }
@@ -143,6 +150,8 @@ type
       LCL's event for it, and is kept correct by the LCL's own focus handling
       in a way WM_SETFOCUS on the form is not: the form's native window and the
       focused CONTROL are different questions. *)
+    procedure SystemWatchTick(Sender: TObject);
+
     procedure MainFormActivate(Sender: TObject);
 
     (* MINIMISED OR RESTORED -- take MMTTY with us.
@@ -484,7 +493,8 @@ uses
    // an implementation clause is the cheaper mistake.
    uFunctionKeys,      // ShowFMessages -- the F-key strip, on activate
    uMMTTY,             // MMTTY.MMTTYEngine -- see MainFormWindowStateChange
-   uGetServerLog,      // WM_USER_HEADLESS_SYNC_REPLACE
+   uSystemWatch,       // the clock/display poll -- see SystemWatchTick
+   uGetServerLog,      // the headless-sync state
    SysUtils,           // Format -- the window-procedure guard
    uCrashLog,          // OnMainThread / ReportOffMainThread / LogCaughtException
    Grids,              // TGridOptions -- see TR4WEditableLogSetGridLines
@@ -555,8 +565,6 @@ begin
                Left claimed, they would be SWALLOWED -- the trap the note above
                describes, and what Lint-AppMessages caught. *)
              (aMsg = WM_LBUTTONDOWN) or
-             (aMsg = WM_TIMECHANGE) or
-             (aMsg = WM_DISPLAYCHANGE) or
              (aMsg = WM_WINDOWPOSCHANGING);
              (* NOT ONE WORKER-THREAD MESSAGE IS CLAIMED HERE ANY MORE.
 
@@ -1797,6 +1805,40 @@ begin
      overridden width and leaves it out of the surplus, so a hand-sized column
      stays where it was put. *)
    TR4WEditableLog.Sizing := lgsFitAndFill;
+end;
+
+procedure TTR4WMainForm.SystemWatchTick(Sender: TObject);
+begin
+   if SystemClockJumped then
+      begin
+      (* WAS THE WM_TIMECHANGE ARM. GetSystemTime first, exactly as it did:
+        SystemTimeChanging re-reads UTC itself but SKIPS that in hand-log mode,
+        and the arm forced it either way. *)
+      {$IFDEF WINDOWS}
+      GetSystemTime(UTC);
+      {$ENDIF}
+      SystemTimeChanging;
+      if logger <> nil then
+         begin
+         logger.Info('[SystemWatch] the system clock was changed -- readouts refreshed');
+         end;
+      end;
+
+   if DisplayLayoutChanged then
+      begin
+      (* WAS THE WM_DISPLAYCHANGE ARM. Issue #1060: a monitor was added or
+        removed, or the resolution changed -- pull any now-off-screen TR4W
+        window back onto an active monitor. *)
+      (* COLOUR DEPTH HAS NO LCL EQUIVALENT and only uGradient reads it, to
+        collapse a gradient to a flat fill on an 8-bit display. RefreshColourDepth
+        gates itself, so this call needs no conditional. *)
+      RefreshColourDepth;
+      RevalidateOpenWindowsOnScreen;
+      if logger <> nil then
+         begin
+         logger.Info('[SystemWatch] the display layout changed -- windows revalidated');
+         end;
+      end;
 end;
 
 procedure TTR4WMainForm.MainFormActivate(Sender: TObject);

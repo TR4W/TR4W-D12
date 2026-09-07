@@ -507,21 +507,7 @@ begin
 
 //    WM_POWERBROADCAST: ShowMessage(PChar('WM_POWERBROADCAST' + IntToStr(wParam)));
 
-    WM_DISPLAYCHANGE:
-      begin
-        if wParam <= 8 then tEightBitsPerPixel := True else tEightBitsPerPixel := False;
-        // Issue #1060: a monitor was added/removed or resolution changed -- pull
-        // any now-off-screen TR4W window back onto an active monitor.
-        RevalidateOpenWindowsOnScreen;
-      end;
-
 //    WM_MOUSEWHEEL: SetStackPointerOnMouseWheel(SHORT(HiWord(Cardinal(wParam))));
-    WM_TIMECHANGE:
-      begin
-        GetSystemTime(UTC);
-        SystemTimeChanging;
-      end;
-
     //    WM_CONTEXTMENU: if HWND(wParam) = _NewELogWindow then ShowLogPopupMenu(tr4whandle);
 
     WM_WINDOWPOSCHANGING: WINDOWPOSCHANGINGPROC(PWindowPos(lParam));

@@ -13,6 +13,10 @@ object TR4WMainForm: TTR4WMainForm
   OnWindowStateChange = MainFormWindowStateChange
   ShowInTaskBar = stAlways
   LCLVersion = '4.8.0.0'
+  object tmrSystemWatch: TTimer
+    Interval = 2000
+    OnTimer = SystemWatchTick
+  end
   object pbLastHour: TProgressBar
     Left = 476
     Height = 17
