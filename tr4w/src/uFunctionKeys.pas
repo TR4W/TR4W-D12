@@ -99,6 +99,9 @@ var
 implementation
 uses
    uWindowTable,   { tr4w_WindowsArray, tWindowsExist -- moved out of VC/TF }
+  Menus,          { TPopupMenu / TMenuItem -- the right-click menu }
+  uAnsiStr,       { LclText -- a caption is a TTranslateString }
+  Controls,       { Mouse.CursorPos -- where to pop it }
   MainUnit,
   uFunctionKeysForm,   // the panels; this unit supplies what a key press MEANS
   uConfigValues;   // Config.IncludeFKeyNumber
@@ -305,18 +308,57 @@ begin
   ShowFunctionKeyContextMenu(aKey);
 end;
 
+(* THE RIGHT-CLICK MENU, and what it acts on.
+
+  The menu was a raw HMENU: CreatePopupMenu, AppendMenuW, and TrackPopupMenu
+  with TPM_RETURNCMD, which BLOCKS and returns the chosen command id. The code
+  after it then did the work.
+
+  A TPopupMenu cannot be used that way. PopUp is modal on Win32 but the LCL does
+  not promise that everywhere, so anything that reads a result after PopUp
+  returns is relying on a widgetset detail. The work moves into the item's
+  OnClick instead, which is true on every widgetset -- and is what a menu item
+  is for.
+
+  WHICH KEY WAS CLICKED therefore has to survive the pop, hence GPopupRow. It is
+  captured before the menu appears for the same reason the old code captured it:
+  the operator releases Ctrl or Alt to reach the menu, so reading the modifier
+  state afterwards gives the wrong bank (Issue #1001). *)
+type
+  TFKeyPopupHost = class(TObject)
+     procedure EditClicked(Sender: TObject);
+  end;
+
+var
+  GPopup:    TPopupMenu = nil;
+  GPopupHost: TFKeyPopupHost = nil;
+  GPopupRow: integer = -1;
+
+procedure TFKeyPopupHost.EditClicked(Sender: TObject);
+begin
+  if GPopupRow < 0 then
+     begin
+     Exit;
+     end;
+  InitialAltPSelection := GPopupRow;    // captured before the modifier was released
+  OpenListOfMessages;
+
+  // Right-clicking the button + showing the menu (and the modal editor) leaves
+  // focus off the Call window. Restore it -- the Ctrl/Alt bank-switch handler in
+  // the main loop only fires when focus is the Call/Exchange window, so without
+  // this those keys stop updating the F-key labels. Mirrors the left-click
+  // (BN_CLICKED) handler. Issue #1001.
+  FrmSetFocus;
+end;
+
 procedure ShowFunctionKeyContextMenu(const aKey: integer);
-const
-  ID_EDITFKEY                           = 1;
 var
   row                                   : integer;
   prefix                                : string;
   keyName                               : string;
   caption                               : string;
   p                                     : integer;
-  hMenu                                 : Windows.HMENU;   // qualified: an 'HMENU' identifier in this unit's scope shadows the type
-  pt                                    : Windows.TPoint;
-  cmd                                   : integer;
+  pt                                    : TPoint;
 begin
   // Issue #1007: ignore right-click while Alt or Ctrl is held. The window is
   // showing the Alt-F/Ctrl-F bank then, and popping the menu + the FrmSetFocus
@@ -347,31 +389,24 @@ begin
      caption := Copy(caption, 1, p - 1) + keyName + Copy(caption, p + 2, Length(caption));
      end;
 
-  hMenu := Windows.CreatePopupMenu;
-  Windows.AppendMenuW(hMenu, MF_STRING, ID_EDITFKEY, PChar(caption));
-  Windows.GetCursorPos(pt);
-  // NB: do NOT SetForegroundWindow here -- it fires WM_SETFOCUS, whose handler
+  if GPopup = nil then
+     begin
+     GPopupHost := TFKeyPopupHost.Create;
+     GPopup := TPopupMenu.Create(nil);
+     GPopup.Items.Add(NewItem('', 0, False, True, GPopupHost.EditClicked, 0, ''));
+     end;
+
+  // The caption names the key that was clicked, so it is rewritten every time.
+  GPopup.Items[0].Caption := LclText(caption);
+  GPopupRow := row;
+
+  // NB: do NOT SetForegroundWindow here -- it fires the activate handler, which
   // calls ShowFMessages(0) and reverts the function-key window to the plain
   // bank while the menu is up (mismatching an "Edit Ctrl-Fn" label). The app is
   // already foreground on right-click, so the menu dismisses fine without it
   // (same as the band-map popup). Issue #1001.
-  cmd := integer(Windows.TrackPopupMenu(hMenu,
-                 TPM_RETURNCMD or TPM_LEFTALIGN or TPM_TOPALIGN or TPM_LEFTBUTTON,
-                 pt.x, pt.y, 0, tr4whandle, nil));
-  Windows.DestroyMenu(hMenu);
-
-  if cmd = ID_EDITFKEY then
-     begin
-     InitialAltPSelection := row;    // captured before the modifier was released
-     OpenListOfMessages;
-     end;
-
-  // Right-clicking the button + showing the menu (and the modal editor) leaves
-  // focus off the Call window. Restore it -- the Ctrl/Alt bank-switch handler in
-  // the main loop only fires when focus is the Call/Exchange window, so without
-  // this those keys stop updating the F-key labels. Mirrors the left-click
-  // (BN_CLICKED) handler above. Issue #1001.
-  FrmSetFocus;
+  pt := Mouse.CursorPos;
+  GPopup.PopUp(pt.X, pt.Y);
 end;
 
 initialization
@@ -383,5 +418,12 @@ initialization
   uFunctionKeysForm.FunctionKeyClicked            := @FKeyClicked;
   uFunctionKeysForm.FunctionKeyRightClicked       := @FKeyRightClicked;
   uFunctionKeysForm.FunctionKeyRightDoubleClicked := @FKeyRightDoubleClicked;
+
+
+(* The popup outlives any one right-click -- it is built once and re-captioned
+  -- so it is freed here rather than after each PopUp. *)
+finalization
+  FreeAndNil(GPopup);
+  FreeAndNil(GPopupHost);
 
 end.

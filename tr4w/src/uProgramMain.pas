@@ -39,6 +39,7 @@ uses
     and the --help text, both of which were MessageBoxW. *)
   Dialogs, Controls,
    uAppTimers,   (* StartAppTimer / StopAppTimer -- LCL TTimers, not SetTimer *)
+  uSystemWatch, (* RefreshColourDepth -- the one colour-depth probe *)
   Messages,
   MMSystem,
   Windows,
@@ -762,7 +763,6 @@ procedure RunTR4W;
 label
   CommandLine;
 var
-  TempHDC                               : HDC;
   TempColor                             : tr4wColors;
   TempTLogBrush                         : TLogBrush {= (lbStyle: BS_SOLID; lbHatch: 0)};
   c                                     : Cardinal;
@@ -1254,10 +1254,19 @@ begin
   tempStickyKey.cbSize := StickyKeysAtStartup.cbSize;
   tempStickyKey.dwFlags := StickyKeysAtStartup.dwFlags and not (SKF_STICKYKEYSON or SKF_HOTKEYACTIVE);
   SystemParametersInfo( SPI_SETSTICKYKEYS, SizeOf(tempStickyKey), @tempStickyKey, 0 );
-  TempHDC := Windows.GetWindowDC(tr4whandle);
+  (* ONE COLOUR-DEPTH PROBE, and it is not this one.
 
-  tEightBitsPerPixel := Windows.GetDeviceCaps(TempHDC, BITSPIXEL) <= 8;
-  ReleaseDC(tr4whandle, TempHDC);
+    This read the depth off the MAIN WINDOW'S device context. uSystemWatch
+    already has RefreshColourDepth, which reads it off the SCREEN (GetDC(0)),
+    is gated {$IFDEF WINDOWS} inside so callers need no conditional, and is
+    what runs when the display changes -- so the value was being maintained in
+    two places by two different means, and only one of them had ever been
+    revisited.
+
+    Asking the screen is also the more correct question: the answer is a
+    property of the display, not of any particular window, and this ran before
+    the main window was fully up. *)
+  RefreshColourDepth;
 
   SetUpFileNames;
 

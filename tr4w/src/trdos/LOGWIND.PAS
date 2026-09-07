@@ -1723,19 +1723,14 @@ begin
 end;
 
 function QuickEditResponse(Prompt: string; MaxInputLength: Byte): ShortString;
-var
-  h                                     : HWND;
  // Window                                : Byte;
 begin
   TF.Format(IQPrompt, PAnsiChar(WinAnsi(TC_ENTER)), PAnsiChar(WinAnsi(Prompt)));
   IQMaxInputLength := MaxInputLength;
-  // ALWAYS the main window.  This used to prefer settingswindowhandle, which
-  // was non-zero only while the old Win32 settings dialog was open so that a
-  // prompt raised from it got the right parent.  That dialog is gone
-  // (uOption.pas deleted 2026-08-21), so the handle was always 0 and the
-  // branch always took this arm.
-  h := tr4whandle;
-  //DialogBox(hInstance, MAKEINTRESOURCE(41 {Window}), h, @IQDlgProc);
+  (* NOTHING READS A HANDLE HERE ANY MORE. `h := tr4whandle` stood here as the
+    parent for the DialogBox on the line below it, and that line has been
+    commented out since ShowInputQuery became an LCL form -- so the handle was
+    fetched, stored, and never looked at. The local goes with it. *)
   ShowInputQuery;
   Result := IQresult;
 end;
@@ -3923,7 +3918,11 @@ begin
   // Win32 surface (NY4I, 2026-08-22: "it looks windows-like").  CreateListView
   // already knows which elements it made; having it say so costs nothing, works
   // on any widgetset, and cannot drift.
-  if tr4whandle = 0 then
+  (* THE FORM, NOT ITS HANDLE. This asked whether tr4whandle was 0 to mean
+    "the main window does not exist yet" -- true, but indirect, and it goes on
+    to call TR4WMainForm.Invalidate, which is what would actually fault. Ask
+    the thing that would fault. *)
+  if TR4WMainForm = nil then
      begin
      Exit;      // startup, before the main window exists
      end;
