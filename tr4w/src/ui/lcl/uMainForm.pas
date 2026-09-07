@@ -163,7 +163,28 @@ type
 
     (* DRAG THE WINDOW BY ITS BODY -- three handlers, and no Win32 at all.
 
-      It matters when Config.NoCaption is on and there is no title bar to grab.
+      THE REASON WRITTEN HERE UNTIL 2026-09-07 WAS WRONG, and it was wrong in
+      the way that is hardest to catch: it named a real setting that really
+      removes a title bar, and that setting does not apply to THIS window.
+
+      `NO CAPTION` is applied in MainUnit.OpenTR4WWindow, so it reaches the
+      TOOL windows -- band map, function keys, and the rest. The main form's
+      BorderStyle is bsSizeable in the .lfm and nothing overrides it at run
+      time, so the main window keeps its caption whatever that setting says.
+      (Preferences labels it "Main window has no title bar", which is wrong
+      too; docs/BENCH_QUEUE.md has it right, and records that the setting has
+      almost certainly never worked at all.)
+
+      WHAT THIS IS, THEN: pre-existing behaviour with no surviving rationale.
+      The main window's own Win32 procedure carried `WM_LBUTTONDOWN:
+      DragWindow(TRHWND)` right up until it was deleted, and D7 had the same
+      arm in DefTR4WProc -- which was the shared procedure for its CAPTIONLESS
+      TOOL windows, where it made obvious sense. It looks like it was copied
+      onto the main window along with the rest of that procedure.
+
+      It is kept because it is what the program does today and no operator has
+      been asked, not because a reason for it has been found. Removing it is a
+      decision for NY4I, not a cleanup.
 
       WAS TF.DragWindow, WHICH POSTED WM_SYSCOMMAND / SC_MOVE. That handed the
       drag to the system's own move loop -- a Win32 idiom inherited from the
