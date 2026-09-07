@@ -5157,12 +5157,27 @@ begin
       begin
         //tDialogBox(57, @WindowsManagerDlgProc);
         ShowWindowsManager;
-        if ManageWindow = 0 then
+        if ManageForm = nil then
            begin
            Exit;
            end;
-        Windows.GetWindowRect(ManageWindow, tr4w_TempRect);
-        SendMessage(ManageWindow, $313, 0, MakeLong(tr4w_TempRect.Left,
+
+        (* $313 IS AN UNDOCUMENTED MESSAGE AND IS LEFT ALONE ON PURPOSE.
+
+          It appears exactly once in the tree, as a bare number, with no name
+          and no comment: SendMessage(wnd, $313, 0, MakeLong(Left, Top + 20)).
+          It is not any documented window message -- 0x0313 falls in the gap
+          between WM_HOTKEY (0x0312) and WM_PRINT (0x0317) -- so what it is
+          meant to do here cannot be read off the code, and guessing at an LCL
+          equivalent (ManageForm.Top := ... + 20, say) would be inventing
+          behaviour rather than porting it.
+
+          The HANDLE PLUMBING around it is converted -- the dialog hands back a
+          form now -- so this is the only thing left, derived at the one call
+          that needs it. It wants an operator who knows what this feature is
+          supposed to do, not a reader of the source. *)
+        Windows.GetWindowRect(ManageForm.Handle, tr4w_TempRect);
+        SendMessage(ManageForm.Handle, $313, 0, MakeLong(tr4w_TempRect.Left,
           tr4w_TempRect.Top + 20));
         FrmSetFocus;
       end;

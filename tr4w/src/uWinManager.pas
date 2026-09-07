@@ -26,6 +26,7 @@ interface
 uses
   TF,
   VC,
+  Forms,     (* TCustomForm -- ManageForm is the chosen window *)
   Windows,
   Messages;
 
@@ -42,7 +43,12 @@ uses
 }
 
 var
-  ManageWindow                          : HWND;
+  (* THE CHOSEN WINDOW, as the form it is. It was an HWND -- and every row in
+    the dialog's list comes from Screen.Forms, so it had a form in hand,
+    converted it to a handle to carry it, and the caller converted it back.
+
+    nil means nothing chosen, which is the same contract the old zero had. *)
+  ManageForm                            : TCustomForm;
 
 // the Window control dialog.
 //

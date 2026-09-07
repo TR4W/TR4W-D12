@@ -88,13 +88,33 @@ procedure SetServerLogRow(const aIndex: integer;
 function TryGetServerLogRow(const aIndex: integer;
                             out aRecord: ContestExchange): boolean;
 
+type
+  (* WHAT A PROGRESS REPORT IS. A plain procedure, not a method: the worker
+    thread has no object to call and the form installs a unit-level wrapper. *)
+  TSyncProgressProc = procedure(aField: integer; aValue: integer);
+
+  (* One report, carried across the marshalling call. RunOnMainThread takes a
+    single PtrInt, and a field plus a value do not fit in one without packing
+    them -- and a byte count is too big to pack safely. *)
+  PSyncProgress = ^TSyncProgress;
+  TSyncProgress = record
+     Field: integer;
+     Value: integer;
+  end;
+
 var
 
   NewServerLogHandle                    : THandle;
   AmountQSOsFromServer                  : Cardinal;
-  { The form's handle while the sync window is open, 0 otherwise.  Set last in
-    HandleShow and cleared FIRST in HandleClose. }
-  ServerLogFormWnd                      : HWND;
+  { Installed last in HandleShow and cleared FIRST in HandleClose. }
+  (* WHERE A PROGRESS REPORT GOES, or nil while no window is listening.
+
+    This was ServerLogFormWnd: HWND, and ReportSyncProgress SendMessage'd
+    WM_USER_SYNC_PROGRESS at it. A callback says the same thing without a
+    window handle, a private message id or a `message` directive -- and it is
+    the form that installs it, so the form's behaviour is discoverable from the
+    form. *)
+  SyncProgressHandler                   : TSyncProgressProc = nil;
   SynQSOTotalArray                      : QSOTotalArray;
   SyncMode                              : boolean;
   LogSyncThreadID                       : Cardinal;
@@ -109,7 +129,8 @@ const
 
   // Progress, worker -> sync window.  wParam is one of SYNC_FIELD_*, lParam the
   // value.  Same reasoning as above, generalised: see ReportSyncProgress.
-  WM_USER_SYNC_PROGRESS         = WM_USER + 201;
+  (* WM_USER_SYNC_PROGRESS IS GONE (2026-09-07) -- see SyncProgressHandler.
+    A private window message needed a window; a callback does not. *)
 
   SYNC_FIELD_RECORDS        = 1;
   SYNC_FIELD_BYTES          = 2;
@@ -163,13 +184,46 @@ begin
       end;
 end;
 
-procedure ReportSyncProgress(aField: integer; aValue: integer);
+(* Delivers one report on the main thread, and owns the record it was handed. *)
+procedure DeliverSyncProgress(aData: PtrInt);
+var
+   p: PSyncProgress;
 begin
-   if ServerLogFormWnd = 0 then
+   p := PSyncProgress(aData);
+   try
+      if Assigned(SyncProgressHandler) then
+         begin
+         SyncProgressHandler(p^.Field, p^.Value);
+         end;
+   finally
+      Dispose(p);
+   end;
+end;
+
+(* CALLED FROM THE WORKER THREAD, which is why this marshals.
+
+  It was SendMessage to the form's HWND -- which crosses to the window's thread
+  and BLOCKS the worker until the labels have been repainted. RunOnMainThread
+  does not block, and a progress report is exactly the kind of thing that should
+  not hold up the work it is reporting on.
+
+  ASYNC IS SAFE HERE, and the direction matters: SYNC_FIELD_RECORDS also tells
+  the grid how many rows exist, and the grid must never be told about a row the
+  worker has not written yet. A report that arrives LATE understates the count,
+  which is the safe side; only an early one would be a fault, and deferring
+  cannot make a message early. *)
+procedure ReportSyncProgress(aField: integer; aValue: integer);
+var
+   p: PSyncProgress;
+begin
+   if not Assigned(SyncProgressHandler) then
       begin
       Exit;
       end;
-   Windows.SendMessage(ServerLogFormWnd, WM_USER_SYNC_PROGRESS, aField, aValue);
+   New(p);
+   p^.Field := aField;
+   p^.Value := aValue;
+   RunOnMainThread(@DeliverSyncProgress, PtrInt(p));
 end;
 
 procedure HeadlessSyncFinished(aData: PtrInt);

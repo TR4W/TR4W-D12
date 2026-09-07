@@ -135,7 +135,7 @@ type
     { Progress from the download thread.  See the note on the worker thread in
       the unit header: this arrives via SendMessage and therefore runs on the
       main thread. }
-    procedure WMSyncProgress(var aMsg: TMessage); message WM_USER_SYNC_PROGRESS;
+    procedure ApplySyncProgress(const aField, aValue: integer);
   end;
 
 { Opens the dialog modally.  THE SEAM: the caller does not know what this is,
@@ -151,11 +151,15 @@ uses
   uLCLFormHelpers,    // ShowModalOverWin32Parent -- ownership and centring
   VC,                 // TR4W_SYN_FILENAME
   TF,                 // tCreateThread
-  MainUnit,           // LogRowTextFor, ShowHelp, logger
+  MainUnit,           // LogRowTextFor, logger
   Log4D;
 
 var
   frmServerLog: TfrmServerLog = nil;
+
+(* FORWARD: HandleShow installs this, and it is defined beside the method it
+  delegates to, further down. *)
+procedure ApplyServerLogSyncProgress(aField: integer; aValue: integer); forward;
 
 procedure TfrmServerLog.HandleShow(Sender: TObject);
 begin
@@ -188,7 +192,7 @@ begin
 
    // The thread reports here.  Set LAST, so a report cannot arrive before the
    // controls it names have been initialised.
-   ServerLogFormWnd := Self.Handle;
+   SyncProgressHandler := @ApplyServerLogSyncProgress;
 end;
 
 procedure TfrmServerLog.HandleClose(Sender: TObject; var Action: TCloseAction);
@@ -196,7 +200,7 @@ begin
    // FIRST, and before anything is torn down: the worker may still be running,
    // and a report arriving after this point must find no window to talk to
    // rather than a half-destroyed one.  ReportSyncProgress is a no-op on 0.
-   ServerLogFormWnd := 0;
+   SyncProgressHandler := nil;
 
    if NewServerLogHandle <> INVALID_HANDLE_VALUE then
       begin
@@ -271,12 +275,25 @@ begin
       end;
 end;
 
-procedure TfrmServerLog.WMSyncProgress(var aMsg: TMessage);
+(* THE UNIT-LEVEL WRAPPER the worker calls.
+
+  SyncProgressHandler is a plain procedure type, because the worker thread has
+  no object to call. This is the one place that knows the form exists, and it
+  runs on the main thread -- uGetServerLog.ReportSyncProgress marshals. *)
+procedure ApplyServerLogSyncProgress(aField: integer; aValue: integer);
 begin
-   case aMsg.WParam of
+   if frmServerLog <> nil then
+      begin
+      frmServerLog.ApplySyncProgress(aField, aValue);
+      end;
+end;
+
+procedure TfrmServerLog.ApplySyncProgress(const aField, aValue: integer);
+begin
+   case aField of
       SYNC_FIELD_RECORDS:
          begin
-         lblRecords.Caption := IntToStr(aMsg.LParam);
+         lblRecords.Caption := IntToStr(aValue);
          (* AND THIS IS WHERE THE GRID LEARNS HOW MUCH THERE IS. The worker
            reports every ten records; telling the grid here is what makes the
            rows appear as they arrive, and it is the ONLY count the grid is
@@ -284,27 +301,26 @@ begin
            See the row store in uGetServerLog. *)
          if (FLog <> nil) and showresverlogcontent then
             begin
-            FLog.RecordCount := aMsg.LParam;
+            FLog.RecordCount := aValue;
             end;
          end;
       SYNC_FIELD_BYTES:
          begin
-         lblBytes.Caption := IntToStr(aMsg.LParam);
+         lblBytes.Caption := IntToStr(aValue);
          end;
       SYNC_FIELD_QSOS:
          begin
-         lblQSOs.Caption := IntToStr(aMsg.LParam);
+         lblQSOs.Caption := IntToStr(aValue);
          end;
       SYNC_FIELD_SENT:
          begin
-         lblSent.Caption := IntToStr(aMsg.LParam);
+         lblSent.Caption := IntToStr(aValue);
          end;
       SYNC_FIELD_ENABLE_REPLACE:
          begin
          btnCreateNewLog.Enabled := True;
          end;
    end;
-   aMsg.Result := 0;
 end;
 
 procedure TfrmServerLog.btnGetLogClick(Sender: TObject);

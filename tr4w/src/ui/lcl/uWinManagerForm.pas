@@ -20,21 +20,25 @@ unit uWinManagerForm;
   THE WINDOW CONTROL DIALOG, AS AN LCL FORM.  Phase 4b.
 
   Lists every visible TR4W window by title; picking one flashes it, and OK hands
-  its handle back in ManageWindow so the caller can move it.
+  the FORM back in ManageForm so the caller can move it.
 
-  THE OUTPUT IS A GLOBAL, AND ITS ZERO IS MEANINGFUL. MainUnit:4346 tests
-  `ManageWindow = 0` to mean "nothing chosen" before it touches the window. Every
+  THE OUTPUT IS A GLOBAL, AND ITS NIL IS MEANINGFUL. The caller tests
+  `ManageForm = nil` to mean "nothing chosen" before it touches the window. Every
   exit that is not OK or a double-click must therefore clear it -- Cancel,
   Escape, the window button. Setting it only on success and forgetting the
-  clearing paths would leave a STALE handle from the previous opening, and the
+  clearing paths would leave a STALE form from the previous opening, and the
   caller would move whatever window was picked last time.
 
-  WHAT IT STILL DOES IN WIN32, deliberately: EnumWindows to find the windows,
-  GetWindowText to name them, and FlashWindow to point one out. Those are not UI
-  construction, they are the feature -- the dialog exists to enumerate and poke
-  raw HWNDs, and it can only stop doing that when the windows it lists stop being
-  raw HWNDs. Named here rather than hidden so the next reader does not mistake
-  the form for finished.
+  WHAT IS LEFT IN WIN32, AND IT IS ONE CALL: FlashWindow, to point a row out.
+  The LCL has no equivalent, and the handle for it is derived at that one call
+  rather than carried as the row's identity.
+
+  THE REST OF THAT LIST IS GONE, and the note claiming otherwise was stale by
+  the time it was read. It said "EnumWindows to find the windows, GetWindowText
+  to name them ... it can only stop doing that when the windows it lists stop
+  being raw HWNDs" -- but the list has been Screen.Forms for some time (see the
+  note on BuildList), and every window TR4W opens is an LCL form. So the
+  condition that comment set for itself had already been met.
 }
 
 interface
@@ -56,7 +60,7 @@ type
     procedure btnCancelClick(Sender: TObject);
   private
     FAccepted: boolean;
-    function SelectedHandle: HWND;
+    function SelectedForm: TCustomForm;
     procedure Accept;
   end;
 
@@ -74,7 +78,7 @@ uses
   uLCLFormHelpers,   // ShowModalOverWin32Parent -- ownership and centring
   Windows,
   VC,              // RC_WINCONTROL2, tr4whandle
-  uWinManager,     // ManageWindow -- the caller reads it there
+  uWinManager,     // ManageForm -- the caller reads it there
   MainUnit,        // logger
   Log4D;
 
@@ -126,19 +130,19 @@ begin
          Continue;
          end;
 
-      // The HANDLE travels with the row, as it did in the listbox's item data:
-      // the caller moves the chosen window by HWND.  Items.Objects is
-      // pointer-sized and an HWND fits.
-      aList.Items.AddObject(f.Caption, TObject(PtrUInt(f.Handle)));
+      // THE FORM travels with the row. It used to be the form's HANDLE, cast
+      // through PtrUInt into Items.Objects and cast back on the way out -- a
+      // round trip that started and ended with this same object.
+      aList.Items.AddObject(f.Caption, f);
       end;
 end;
 
-function TfrmWinManager.SelectedHandle: HWND;
+function TfrmWinManager.SelectedForm: TCustomForm;
 begin
-   Result := 0;
+   Result := nil;
    if lstWindows.ItemIndex >= 0 then
       begin
-      Result := HWND(PtrUInt(lstWindows.Items.Objects[lstWindows.ItemIndex]));
+      Result := TCustomForm(lstWindows.Items.Objects[lstWindows.ItemIndex]);
       end;
 end;
 
@@ -171,7 +175,7 @@ begin
    // handle from a previous opening would move the wrong window.
    if not FAccepted then
       begin
-      ManageWindow := 0;
+      ManageForm := nil;
       end;
 
    Action := caHide;
@@ -181,12 +185,19 @@ procedure TfrmWinManager.lstWindowsSelectionChange(Sender: TObject; User: boolea
 begin
    // Flashing the window as the selection moves is how the operator tells which
    // row is which -- the titles alone are not always distinct.
-   Windows.FlashWindow(SelectedHandle, True);
+   //
+   // FlashWindow IS GENUINELY WINDOWS-ONLY -- the LCL has no equivalent -- so
+   // the handle is derived here, at the one call that needs it, rather than
+   // carried around as the row's identity.
+   if SelectedForm <> nil then
+      begin
+      Windows.FlashWindow(SelectedForm.Handle, True);
+      end;
 end;
 
 procedure TfrmWinManager.Accept;
 begin
-   ManageWindow := SelectedHandle;
+   ManageForm := SelectedForm;
    FAccepted    := True;
    Close;
 end;
@@ -224,7 +235,7 @@ begin
    except
       on E: Exception do
          begin
-         ManageWindow := 0;   // a failure is not a selection
+         ManageForm := nil;   // a failure is not a selection
          if logger <> nil then
             begin
             logger.Error('ShowWindowsManager failed: ' + E.ClassName + ': ' + E.Message);
