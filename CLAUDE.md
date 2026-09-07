@@ -251,6 +251,16 @@ are in git history. UI harnesses live in `tr4w/test/ui/`.
 PreBuildEvent, so it gated msbuild and nothing else; an FPC build saw none of them. Add a lint by
 editing that one array.
 
+**A WINDOWS GATE IS A GUESS UNTIL A COMPILER DISAGREES.** `tools/Compile-Linux.ps1
+<unit>.pas` builds one unit for x86_64-linux, and `build/Lint-LinuxCompile.ps1`
+pins the set that must keep doing so -- **add a unit the day it first compiles,
+never because the `{$IFDEF WINDOWS}` reads well.** It found a real defect on its
+first use: the vendored `tr4wserial.pas` merge had given `SerBreak` the Windows
+default (`mSec = 250`) in an interface whose Unix body declares `0`, which no
+Windows build could ever see. It is skipped, loudly, where no cross compiler is
+installed. **There is no macOS equivalent yet** -- the Mac mini is reachable as
+`ssh mac-ci` but has no FPC on it.
+
 `Lint-LFMProperties` is the odd one out: it compiles a small FPC helper (`build/lintlfm/`) that links
 the LCL and asks the same RTTI the streaming loader uses, because "does this class publish this
 property, and is this a legal value" cannot be answered by grepping a `published` block. It fails
@@ -380,7 +390,7 @@ strong net, not a proof.
 
 **EVERY tool window is a designed form.** Converted 2026-08-24/25: function keys,
 band map, stations, SCP/master, both dupe sheets, the five remaining-multiplier
-windows, PostScores, HamScore, Intercom, MP3 Recorder, both radio panels, and
+windows, PostScores, HamScore, Intercom, both radio panels, and
 Network — then **Telnet and MMTTY**, which this file listed as the last two
 holdouts until 2026-08-26. `uTelnetForm` and `uMMTTYForm` are in `tr4w.lpr`;
 the DX cluster window landed in `00e9a987`.
@@ -1292,7 +1302,7 @@ declarations bound to a library:
 
 | bound to | count | what it means for cross-platform |
 |---|---:|---|
-| `winmm` (via `mmsyst`) | 189 | **misleading -- `MMSystem.pas` DECLARES the whole API; TR4W calls 5 things at 13 sites.** CW element timing, DVP playback, and audio capture. Measured and written up in [`docs/PLATFORM_CLOCK_ABSTRACTION.md`](docs/PLATFORM_CLOCK_ABSTRACTION.md) part 2 |
+| `winmm` (via `mmsyst`) | **GATED 2026-09-07, and audio capture is gone entirely** | It is CW element timing (`LOGK1EA.tCWSleep`, `timeBeginPeriod`) and DVP WAV playback (`sndPlaySoundA` + `timeSetEvent`), and nothing else -- the `waveIn` capture engine went with the MP3 recorder. Every remaining call and every `MMSystem` import is behind `{$IFDEF WINDOWS}`. The measurement is in [`docs/PLATFORM_CLOCK_ABSTRACTION.md`](docs/PLATFORM_CLOCK_ABSTRACTION.md) part 2; **the CW half's off-Windows fallback is plain `Sleep` and will not key a contest** -- that is a placeholder, stated as one in the code |
 | `libhamlib-4.dll` (`HAMLIB_DLL`) | 36 | **Only the NAME is Windows.** HamLib ships `.so` and `.dylib`; this is one constant, not a port |
 | `user32` | 15 | Win32 API |
 | `comdlg32` | 10 | Win32 API -- and the LCL has dialogs for all of it |
@@ -1303,7 +1313,15 @@ declarations bound to a library:
 | `Plugins/tr4wSortLog.dll` | 1 | a TR4W plugin |
 
 Plus **26 `LoadLibrary` / `GetProcAddress` sites**, the largest groups in
-`MainUnit` (9), `uDialogs` (5), `uMP3Recorder` (4) and `uIO` (4).
+`MainUnit`, `uDialogs` and `uIO`.
+
+**BOTH FIGURES IN THIS SECTION (274 and 26) ARE FROM 2026-09-01 AND ARE NOW
+LOW -- RE-MEASURE BEFORE CITING EITHER.** Three units that carried bindings have
+been deleted since (`uMP3Recorder` with its `lame_enc.dll`, and the hand-written
+Win32 headers `uCommctrl.pas` and `MMSystem.pas`, the latter an RTL duplicate).
+A naive `grep external` over-reports badly -- it matches the constants that hold
+DLL names and identifiers beginning "external" -- so count it properly or do not
+quote a number.
 
 **The shape of that work is already visible in the table**: most of it is Win32
 API where the port replaces the FUNCTION (`comdlg32` is LCL dialogs, `winmm` is
