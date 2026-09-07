@@ -88,6 +88,8 @@ type
       procedure HandleClose(Sender: TObject; var Action: TCloseAction);
       procedure btnStartClick(Sender: TObject);
       procedure btnStopClick(Sender: TObject);
+      procedure HandleKeyDown(Sender: TObject; var Key: word;
+                              Shift: TShiftState);
    private
       FStopping: boolean;
    end;
@@ -318,12 +320,60 @@ begin
       end;
 end;
 
-(* STOP AND CLOSE ARE THE SAME PATH, as they were in the dialog: its WM_COMMAND
-  arm for button 104 fell through a label into the WM_CLOSE arm. Closing the
-  window shuts the server down; there is no "leave it running hidden". *)
+(* STOP STOPS THE LISTENERS. IT NO LONGER CLOSES THE PROGRAM.
+
+  It used to, faithfully copying the dialog this came from -- whose WM_COMMAND
+  arm for button 104 fell through a label into WM_CLOSE -- and that made the
+  port and the bind address unchangeable for the life of the process: the
+  server starts listening during start-up, which disables both, and the only
+  way out of that state ended the program (NY4I, 2026-09-06: "Disconnect closes
+  the program so there is no way to change the interface").
+
+  THE FORM WAS ALREADY WRITTEN FOR THIS. SetServerRunning(False) re-enables
+  btnStart and edtPort, and there is no reading of that line except "stopped,
+  window open, change something, press Start". The state existed; nothing could
+  reach it.
+
+  Closing the window still ends the program -- see HandleClose. *)
 procedure TfrmServer.btnStopClick(Sender: TObject);
 begin
-   Close;
+   { Re-entry: the confirmation is modal and the button is still clickable
+     behind it. Same guard as HandleClose, same reason. }
+   if FStopping then
+      begin
+      Exit;
+      end;
+
+   FStopping := True;
+   try
+      if Assigned(ServerStopQuery) and (not ServerStopQuery()) then
+         begin
+         Exit;
+         end;
+
+      if Assigned(ServerStopRequested) then
+         begin
+         ServerStopRequested();
+         end;
+   finally
+      FStopping := False;
+   end;
+end;
+
+(* ESCAPE CLOSES THE WINDOW, which is what it always did.
+
+  It did it via Cancel = True on the Stop button, back when Stop WAS Close.
+  Now that Stop genuinely stops, leaving Cancel there would have quietly
+  redefined Escape as "disconnect every client" -- a keystroke changing meaning
+  with nothing to announce it. The same pattern as uNetworkForm. *)
+procedure TfrmServer.HandleKeyDown(Sender: TObject; var Key: word;
+                                   Shift: TShiftState);
+begin
+   if Key = VK_ESCAPE then
+      begin
+      Key := 0;
+      Close;
+      end;
 end;
 
 procedure TfrmServer.HandleClose(Sender: TObject; var Action: TCloseAction);

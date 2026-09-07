@@ -8,7 +8,9 @@ object frmServer: TfrmServer
   Caption = 'TR4WSERVER'
   ClientHeight = 372
   ClientWidth = 420
+  KeyPreview = True
   OnClose = HandleClose
+  OnKeyDown = HandleKeyDown
   OnShow = HandleShow
   Position = poScreenCenter
   LCLVersion = '3.0'
@@ -75,7 +77,6 @@ object frmServer: TfrmServer
     Height = 25
     Top = 61
     Width = 100
-    Cancel = True
     Caption = 'Stop'
     OnClick = btnStopClick
     TabOrder = 3

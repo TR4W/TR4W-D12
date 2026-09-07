@@ -478,6 +478,12 @@ begin
      ClientsSoocketsArray[i].clSocket := 0;
      end;
   nclients := 0;
+
+  { SAY SO ON SCREEN. This zeroed the client table and told nobody, which did
+    not matter while stopping also closed the window -- now that the window
+    stays, a stopped server would go on listing stations it no longer has. }
+  DisplayClients;
+
   SetServerRunning(False);
 end;
 

@@ -223,14 +223,39 @@ end;
 procedure RequestStop;
 begin
    ServerShutDown;
+
+   (* RE-ENUMERATE, KEEPING WHAT IS SELECTED.
+
+     The list was built once during start-up, and the reason an operator
+     presses Stop is usually to change where the server listens -- which is
+     exactly when an interface that came up afterwards (a VPN, a cable plugged
+     in) needs to be in it. Reading the selection back into ServerBindAddress
+     first is what preserves it: an empty string is "all interfaces" and
+     reselects row 0. *)
+   ServerBindAddress := GetBindAddress;
+   ShowBindAddresses;
 end;
 
+(* START AGAIN, ON WHATEVER IS IN THE BOXES NOW.
+
+  This used to log "Start pressed while the server is already listening --
+  ignored", and said of itself that it was only reachable "if a future change
+  re-enables it". This is that change: Stop no longer closes the program, so
+  there is a stopped-and-open state to start out of.
+
+  THE PORT IS RE-READ, not just the address. edtPort has been enabled whenever
+  the server is stopped since the form was written; until now that could not
+  happen, so nothing ever read it back. GetServerPort falls back to the current
+  PortNumber, so a box someone has emptied or filled with rubbish keeps the
+  port the server already had rather than trying to bind to zero.
+
+  A failure to bind reports itself inside StartServerNet and leaves the window
+  in the stopped state, which is the useful place to be: the operator picks a
+  different interface or port and presses Start again. *)
 procedure RequestStart;
 begin
-   { Start was disabled from the moment the server came up, so this is only
-     reachable if a future change re-enables it.  RunServer is idempotent
-     enough to say so rather than to be silently ignored. }
-   logger.Warn('Start pressed while the server is already listening -- ignored');
+   PortNumber := GetServerPort(PortNumber);
+   RunServer;
 end;
 
 begin
