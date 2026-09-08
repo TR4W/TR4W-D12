@@ -91,5 +91,19 @@ fpc_darwin_link_flags() {
    _sdk=$(xcrun --show-sdk-path 2>/dev/null) || return 0
    [ -n "$_sdk" ] && [ -d "$_sdk" ] || return 0
    printf ' -XR%s -Fl%s/usr/lib' "$_sdk" "$_sdk"
+
+   # FRAMEWORKS THE LCL REFERENCES BUT DOES NOT ASK FOR.
+   #
+   # Lazarus's cocoawsextctrls.o references UNUserNotificationCenter and
+   # friends -- the UserNotifications framework, which Apple split out of
+   # Foundation. Without it the link ends in a wall of
+   #
+   #     "_OBJC_CLASS_$_UNUserNotificationCenter", referenced from:
+   #     ld: symbol(s) not found for architecture arm64
+   #
+   # which reads as a broken LCL rather than a missing -framework. -k passes
+   # the flag through FPC to ld, and it takes ONE argument, so the framework
+   # name needs its own -k.
+   printf ' -k-framework -kUserNotifications'
    return 0
 }
