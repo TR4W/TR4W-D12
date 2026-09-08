@@ -639,7 +639,7 @@ end;
 // Wait for a thread handle to signal, pumping Windows messages so that
 // cross-thread SendMessage calls (e.g. SetDlgItemText from the polling
 // thread) don't deadlock the main thread.
-procedure WaitForPollingThreadWithMessages(H: THandle; TimeoutMs: DWORD);
+procedure WaitForPollingThreadWithMessages(H: TThreadID; TimeoutMs: DWORD);
 var
    { QWord: see the note at the assignment -- a 32-bit deadline can wrap
      past its own start and end the wait immediately. }
