@@ -60,3 +60,36 @@ fpc_unix_package_paths() {
    done
    return 0
 }
+
+# fpc_darwin_link_flags
+#
+# The macOS SDK, as -XR (sysroot) and -Fl (library path).  Empty off Darwin.
+#
+# WITHOUT THIS, NOTHING LINKS ON A MAC -- not TR4W, not a three-line WriteLn
+# program:
+#
+#     ld: library 'c' not found
+#     Error: Error while linking
+#
+# fpcupdeluxe writes an fpc.cfg pinning
+# /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk, and on a machine where
+# Xcode is the real toolchain that is the WRONG SDK for the ld actually being
+# run.  Both SDKs exist and both contain libc.tbd, which is why the error is so
+# unhelpful: the library is there, and the linker is looking in the other place.
+#
+# xcrun IS THE AUTHORITY.  It answers with whatever SDK this machine's selected
+# developer directory uses, so it stays right when Xcode is updated or when only
+# the Command Line Tools are installed -- neither of which a hardcoded path
+# survives.
+#
+# The two "obsolete flag" warnings FPC 3.2.2 provokes from a modern ld
+# (-macosx_version_min, -multiply_defined) are noise, not failure; the link
+# succeeds through them.
+fpc_darwin_link_flags() {
+   [ "$(uname -s)" = Darwin ] || return 0
+   command -v xcrun >/dev/null 2>&1 || return 0
+   _sdk=$(xcrun --show-sdk-path 2>/dev/null) || return 0
+   [ -n "$_sdk" ] && [ -d "$_sdk" ] || return 0
+   printf ' -XR%s -Fl%s/usr/lib' "$_sdk" "$_sdk"
+   return 0
+}

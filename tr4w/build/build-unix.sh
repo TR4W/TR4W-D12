@@ -413,6 +413,10 @@ set_fpc_packages() {
          # From .../fpc/bin/<arch>/fpc up to .../fpc, then units/<arch>.
          _fpcroot=$(cd "$(dirname "$FPC")/../.." && pwd)
          FPC_PKGS=$(fpc_unix_package_paths "$_fpcroot/units/$ARCH")
+         # And the SDK, without which NOTHING links -- see the note on
+         # fpc_darwin_link_flags. These are LINK flags, not unit paths, so they
+         # ride along in the same variable rather than earning a second one.
+         FPC_PKGS="$FPC_PKGS$(fpc_darwin_link_flags)"
          ;;
       *)
          # A packaged FPC's /etc/fpc.cfg already supplies these.
