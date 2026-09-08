@@ -59,13 +59,14 @@ function  IsDXLabPathfinderRunning: boolean;
   and IsRunning answers False forever, which is the truth. *)
 implementation
 
-{$IFDEF WINDOWS}
+(* ONE uses CLAUSE FOR BOTH ARMS. I split it and got it wrong: the {$ELSE} arm
+  named VC for `logger`, and logger is a MAINUNIT global, not a VC one -- the
+  Linux build said "Identifier not found logger" and the Windows build could
+  not have noticed. All four of these compile on every target, so there was
+  never a reason to have two clauses; only the DDE imports and bodies below
+  need gating. *)
 uses
   LCLType, SysUtils, VC, MainUnit;
-{$ELSE}
-uses
-  VC;   (* logger *)
-{$ENDIF}
 
 {$IFNDEF WINDOWS}
 function StartDXLabPathfinder: boolean;
