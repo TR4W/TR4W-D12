@@ -135,21 +135,21 @@ type
     FBandMemory: array[TRadioBand] of LongInt;
     FTransceiveChecked: Boolean;  // True after we've queried and logged the transceive state once
     FVFOQueryPending: Boolean;    // True while $25 $00/$01 query pair is in flight; prevents flooding
-    FVFOQuerySentTick: DWORD;    // GetTickCount when query was sent; used to expire FVFOQueryPending
+    FVFOQuerySentTick: QWord;    // GetTickCount64 when query was sent; used to expire FVFOQueryPending
     FLastBaseMode: TRadioMode;    // Base mode before data mode overlay (restored when data mode goes off)
     FActiveVFO: TVFO;             // Which VFO is currently active (main); updated via $07 $D2 query/push
     FInitialQueryPending: Boolean; // True after $19 sent; triggers $03/$04 on $19 response
     FFirstMessage: Boolean;        // True until first valid frame received; triggers initial VFO/mode queries
     FTransceiverIDQueried: Boolean; // True once $19 $00 has been sent for this connection (see QueryTransceiverIDOnce)
     FBandEdgesQueried: Boolean;    // True once $02 has been sent for this connection (see QueryBandEdgesOnce)
-    FLastRxByteTick: DWORD;        // GetTickCount when serial RX bytes last arrived (bus-quiet gating)
+    FLastRxByteTick: QWord;        // GetTickCount64 when serial RX bytes last arrived (bus-quiet gating)
     FLastSentCommand: Byte;        // command byte of the last frame sent -- an NG names no command
     FLastSentSubCommand: Byte;     // its sub-command, or $FF when the frame carried none
     FTXBandsUnsupported: Boolean;  // True once this radio has NAKed $1E (see QueryBandEdgesOnce)
     FXITReadUnsupported: Boolean;  // True once this radio has NAKed $21 $02 (XIT on/off read)
     FLastBandEdgeProbeMHz: integer; // MHz the VFO was on when $02 was last read
     FPollPhase: Integer;            // Rotates through query groups to avoid flooding radio
-    FLastSetCWSpeedTick: DWORD;   // GetTickCount at last SetCWSpeed call — suppresses stale echoes
+    FLastSetCWSpeedTick: QWord;   // GetTickCount64 at last SetCWSpeed call — suppresses stale echoes
     FDataModeID: Byte;            // Icom data sub-mode: $01=D1 (default), $02=D2, $03=D3 — configurable via RADIO x ICOM DATA MODE ID
 
     // ---- Bandscope ($27) ----------------------------------------------------
@@ -1475,7 +1475,7 @@ procedure TIcomRadio.ProcessMsg(msg: string);
 begin
   // Stamp the RX clock FIRST -- WaitForBusQuiet in the send thread reads this
   // to avoid transmitting over a response that is still arriving.
-  FLastRxByteTick := GetTickCount;
+  FLastRxByteTick := GetTickCount64;
   logger.trace('[%s.ProcessMsg] CALLED with length: %d', [radioModel, Length(msg)]);
   // Forward to ProcessCIVMessage to maintain compatibility
   ProcessCIVMessage(msg);
@@ -1491,7 +1491,10 @@ begin
       Exit;
       end;
    waited := 0;
-   while (DWORD(GetTickCount - FLastRxByteTick) < CIV_BUS_QUIET_MS) and
+   { The DWORD() cast here forced the subtraction unsigned so the 32-bit
+        wrap could not produce a huge elapsed. Both sides are QWord now and
+        there is no wrap to force anything around. }
+   while ((GetTickCount64 - FLastRxByteTick) < CIV_BUS_QUIET_MS) and
          (waited < CIV_BUS_QUIET_CAP_MS) do
       begin
       Sleep(5);
@@ -1749,7 +1752,7 @@ begin
               begin
               // Active VFO unknown — must query both slots.
               // Guard and timeout prevent flooding under heavy receive traffic.
-              if FVFOQueryPending and (GetTickCount - FVFOQuerySentTick > 2000) then
+              if FVFOQueryPending and (GetTickCount64 - FVFOQuerySentTick > 2000) then
                  begin
                  logger.Warn('[%s] $25 query timed out — clearing pending flag', [radioModel]);
                  FVFOQueryPending := False;
@@ -1758,7 +1761,7 @@ begin
                  begin
                  logger.Debug('[%s] $00 freq push (%d Hz) → querying $25/$26 for both VFOs', [radioModel, freq]);
                  FVFOQueryPending := True;
-                 FVFOQuerySentTick := GetTickCount;
+                 FVFOQuerySentTick := GetTickCount64;
                  // Query freq+mode together per VFO.
                  // IC-9700 (FMainBandProcessingOnly): also refresh mode — $04 push may arrive
                  // separately but $00 push alone doesn't carry mode data for both VFOs.
@@ -2378,7 +2381,7 @@ begin
            // Debounce: ignore radio echo for 500ms after a program-initiated SetCWSpeed.
            // Without this, the radio echoes the old speed back and the polling sync loop
            // overwrites CodeSpeed with the stale value, causing the bouncing.
-           if GetTickCount - FLastSetCWSpeedTick >= 500 then
+           if GetTickCount64 - FLastSetCWSpeedTick >= 500 then
               begin
               localCWSpeed := freq;
               logger.debug('[%s] CW speed from radio: %d WPM (BCD $%.2x $%.2x = value %d)',
@@ -2387,7 +2390,7 @@ begin
            else
               begin
               logger.debug('[%s] CW speed echo suppressed (debounce): %d WPM (sent %d ms ago)',
-                           [radioModel, freq, GetTickCount - FLastSetCWSpeedTick]);
+                           [radioModel, freq, GetTickCount64 - FLastSetCWSpeedTick]);
               end;
            end;
       end;
@@ -2961,7 +2964,7 @@ begin
   // Encode 0-255 value as 2 BCD bytes: hundreds|tens, ones
   bcdHigh := IcomByteToBCD(icomValue div 100);    // 0-2
   bcdLow  := IcomByteToBCD(icomValue mod 100);    // 0-99
-  FLastSetCWSpeedTick := GetTickCount;  // Start debounce window before sending
+  FLastSetCWSpeedTick := GetTickCount64;  // Start debounce window before sending
   SendToRadio(BuildCIVCommand($14, CIV_SUBCMD_CW_SPEED + CivChr(bcdHigh) + CivChr(bcdLow)));
   localCWSpeed := speed;
   logger.debug('[%s.SetCWSpeed] %d WPM -> icomValue=%d -> BCD $%s $%s',

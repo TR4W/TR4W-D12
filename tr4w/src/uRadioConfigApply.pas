@@ -1944,7 +1944,9 @@ var
    slotRadio: RadioPtr;
    previousCATWTR: RadioPtr;
    // Per-phase timing -- see the comment at the first log line below.
-   tStart, tPhase: cardinal;
+   { QWord with GetTickCount64 -- these only ever appear as differences in
+     the phase timings logged below. }
+   tStart, tPhase: QWord;
 begin
    aError := '';
    Result := False;
@@ -1986,7 +1988,7 @@ begin
    // already connected -- is the one worth measuring: everything gets torn down
    // and rebuilt to reach a state that was already true.  Whether that is worth
    // an exception path is a decision to make from numbers, not from a hunch.
-   tStart := GetTickCount;
+   tStart := GetTickCount64;
    logger.Info('[ApplyProfile] Applying profile "%s"', [aProfile.Name]);
 
    // CATWTR is the "radio being configured" that uCAT's helpers work through.
@@ -2015,8 +2017,8 @@ begin
          CloseCATAndKeyerForThisRadio;
          end;
       logger.Info('[ApplyProfile] phase 1 -- both radios stopped: %d ms',
-                  [GetTickCount - tStart]);
-      tPhase := GetTickCount;
+                  [GetTickCount64 - tStart]);
+      tPhase := GetTickCount64;
 
       // Once, across both slots -- the enable flag is one flag for the program.
       ApplyKeyersForProfile(aKeyers, aProfile);
@@ -2053,12 +2055,12 @@ begin
          // be busy, the rig may be off.  That is reported the same way it is
          // for any other connection attempt, and the profile is still active.
          logger.Info('[ApplyProfile] phase 2 -- keys written for both slots: %d ms',
-                     [GetTickCount - tPhase]);
-         tPhase := GetTickCount;
+                     [GetTickCount64 - tPhase]);
+         tPhase := GetTickCount64;
          slotRadio^.CheckAndInitializePorts_ForThisRadio;
          logger.Info('[ApplyProfile] phase 3 -- radio %d port opened: %d ms',
-                     [slot, GetTickCount - tPhase]);
-         tPhase := GetTickCount;
+                     [slot, GetTickCount64 - tPhase]);
+         tPhase := GetTickCount64;
          end;
    finally
       CATWTR := previousCATWTR;
@@ -2079,7 +2081,7 @@ begin
    RefreshRadioWindowCaptions;
 
    logger.Info('[ApplyProfile] profile "%s" active after %d ms total',
-                [aProfile.Name, GetTickCount - tStart]);
+                [aProfile.Name, GetTickCount64 - tStart]);
    Result := True;
 end;
 

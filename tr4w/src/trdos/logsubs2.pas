@@ -617,7 +617,9 @@ end;
 // thread) don't deadlock the main thread.
 procedure WaitForPollingThreadWithMessages(H: THandle; TimeoutMs: DWORD);
 var
-   Deadline: DWORD;
+   { QWord: see the note at the assignment -- a 32-bit deadline can wrap
+     past its own start and end the wait immediately. }
+   Deadline: QWord;
    Remaining: DWORD;
    WaitResult: DWORD;
    Msg: TMsg;
@@ -626,9 +628,9 @@ begin
       begin
       Exit;
       end;
-   Deadline := GetTickCount + TimeoutMs;
+   Deadline := GetTickCount64 + TimeoutMs;
    repeat
-      Remaining := Deadline - GetTickCount;
+      Remaining := Deadline - GetTickCount64;
       if Remaining > TimeoutMs then
          begin
          Break;  // wrapped past deadline
@@ -1568,7 +1570,11 @@ begin
      RXData.ceRadio := ActiveRadio;
      tGetQSOSystemTime(RXData.tSysTime);
      RXData.ceQSOID1 := STARTTIMEOFTHETR4W;
-     RXData.ceQSOID2 := Windows.GetTickCount;
+     (* Cardinal(GetTickCount64) -- TRUNCATED DELIBERATELY. ceQSOID2 is a field
+    of ContestExchange, whose layout is annotated byte-by-byte in VC because
+    it is written to the log file and sent between stations. Its width is
+    not ours to widen. *)
+  RXData.ceQSOID2 := Cardinal(GetTickCount64);
      RXData.ceOperator := CurrentOperator;
      (* THE PER-QSO RECORDING HOOK IS GONE (2026-09-07) with the built-in MP3
        recorder. RXData.MP3Record itself STAYS: it is a field of
