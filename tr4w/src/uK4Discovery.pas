@@ -132,7 +132,11 @@ var
   RecvLen: Integer;
   PeerIP: TIdText;   // var parameter of Indy's ReceiveBuffer -- must match Indy exactly
   PeerPort: Word;
-  StartTime: LongWord;
+  { GetTickCount64, not Windows.GetTickCount64: the RTL declares it for every
+    platform. StartTime widens to QWord with it -- this loop measures a short
+    discovery timeout, so the 32-bit wrap it used to inherit was a hazard it
+    never needed to carry. }
+  StartTime: QWord;
   Reply: string;
   Parsed: TK4DiscoveredRadio;
   Radio: PK4DiscoveredRadio;
@@ -187,8 +191,8 @@ begin
        end;
 
     // Collect replies across all interface sockets for TimeoutMs.
-    StartTime := GetTickCount;
-    while (clients.Count > 0) and ((GetTickCount - StartTime) < LongWord(TimeoutMs)) do
+    StartTime := GetTickCount64;
+    while (clients.Count > 0) and ((GetTickCount64 - StartTime) < LongWord(TimeoutMs)) do
        begin
        for c := 0 to clients.Count - 1 do
           begin

@@ -208,7 +208,11 @@ var
   RecvLen: Integer;
   PeerIP: TIdText;   // var parameter of Indy's ReceiveBuffer -- must match Indy exactly
   PeerPort: Word;
-  StartTime: LongWord;
+  { GetTickCount64, not Windows.GetTickCount64: the RTL declares it for every
+    platform. StartTime widens to QWord with it -- this loop measures a short
+    discovery timeout, so the 32-bit wrap it used to inherit was a hazard it
+    never needed to carry. }
+  StartTime: QWord;
   Parsed: TFlexDiscoveredRadio;
   Radio: PFlexDiscoveredRadio;
   i: Integer;
@@ -241,8 +245,8 @@ begin
          end;
     end;
 
-    StartTime := GetTickCount;
-    while (GetTickCount - StartTime) < LongWord(TimeoutMs) do
+    StartTime := GetTickCount64;
+    while (GetTickCount64 - StartTime) < LongWord(TimeoutMs) do
        begin
        try
           SetLength(RecvBuf, 2048);
