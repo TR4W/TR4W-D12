@@ -50,17 +50,36 @@ unit uIcomNetworkTransport;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, SyncObjs, StrUtils,
+  (* Windows and Messages are gone with the WinSock send path (2026-09-08).
+    What is left of them: GetTickCount64 and Sleep are SysUtils', the thread
+    wait is the RTL's WaitForThreadTerminate, and nothing here handles a
+    window message -- the six protocol timers became LCL TTimers when
+    FTimerWnd was retired. *)
+  SysUtils, Classes, SyncObjs, StrUtils,
   ExtCtrls,   // TTimer -- the six protocol timers; see HandleTimer
   IdUDPServer, IdSocketHandle, IdGlobal, IdComponent,
+  IdStackConsts,   (* Id_SOL_SOCKET / Id_SO_RCVBUF / Id_SOCK_DGRAM -- Indy's
+                     names for what WinSock's SOL_SOCKET, SO_RCVBUF and
+                     SOCK_DGRAM used to supply here. *)
   uIcomNetworkTypes, uFactoryRadioBase, Log4D,
   uAnsiStr;
 
-// Direct WinSock sendto declaration using const/untyped params to avoid
-// type conflicts with Windows unit's TSockAddr vs WinSock2.TSockAddr.
-function ws2_sendto(s: Integer; const buf; len, flags: Integer;
-                    const addr; addrlen: Integer): Integer;
-  stdcall; external 'ws2_32.dll' name 'sendto';
+(* THE ws2_32.dll IMPORT IS GONE (2026-09-08). See SendRawPacket for what
+  replaced it and why the instrumentation around it is shaped as it is.
+
+  NY4I: "On the icom, we have to switch back to indy and we will bench test to
+  determine the issue. Using WinSock is no longer an option." *)
+
+const
+  (* A UDP send to a radio on the LAN is sub-millisecond. Anything past this is
+    contention worth a log line -- the survivable form of the deadlock this
+    instrumentation exists to catch. Deliberately low; noise here is the point. *)
+  SEND_SLOW_MS = 20;
+
+  (* WAIT_TIMEOUT's value ($102), named locally because it came from the
+    Windows unit and this unit no longer uses it. WaitForThreadTerminate
+    returns WaitForSingleObject's result unchanged on Windows. *)
+  WAIT_TIMEOUT_RESULT = $00000102;
 
 type
   TIcomNetworkTransport = class(TObject)
@@ -94,6 +113,12 @@ type
     FAuthSeq: Word;                  // Auth inner payload sequence (big-endian, starts at $30)
     FPingSendSeq: Word;              // Ping sequence (untracked)
 
+    (* HOW MANY SENDS ARE INSIDE INDY RIGHT NOW -- instrumentation for the
+      ws2_32 -> Indy switch, see SendRawPacket. Interlocked, NOT under
+      FSendLock: the lock is what a deadlock would be waiting on, so this has
+      to be readable without taking it. *)
+    FSendInFlight: LongInt;
+
     // Capabilities
     FRadioName: string;              // From capabilities packet
     FCivAddress: Byte;               // CI-V address from capabilities
@@ -109,9 +134,9 @@ type
     (* What FTimerWnd <> 0 used to mean at six guard sites: the connection is
       up and its timers may run.  It was standing in for this. *)
     FTimersLive: boolean;
-    FLastCivData: LongWord;          // GetTickCount of last CI-V data
-    FLastPingReceived: LongWord;     // GetTickCount of last ping request from radio (0 = never)
-    FStartTick: LongWord;            // GetTickCount at connect start
+    FLastCivData: LongWord;          // TickCount32 of last CI-V data
+    FLastPingReceived: LongWord;     // TickCount32 of last ping request from radio (0 = never)
+    FStartTick: LongWord;            // TickCount32 at connect start
     FAYTRetryCount: Integer;         // Are You There retry counter
     FAYTInterval: Integer;           // Current AYT retry interval (backoff)
     FLoginRetryCount: Integer;       // Login retry counter (for stale-session recovery)
@@ -235,11 +260,26 @@ type
 
 implementation
 
-uses
-  WinSock;
+(* NO `uses WinSock` ANY MORE (2026-09-08). Everything it supplied -- sendto,
+  socket, connect, getsockname, inet_addr, inet_ntoa, htons, closesocket and
+  setsockopt -- now goes through Indy, which is already this unit's transport
+  for receiving. *)
 
 var
   logger: TLogLogger;
+
+(* A 32-BIT MILLISECOND TICK, WHICH IS WHAT THIS PROTOCOL IS BUILT ON.
+
+  Was Windows.GetTickCount. The RTL's GetTickCount64 is the portable clock,
+  but the width here is NOT free to change: FStartTick, FLastCivData and
+  FLastPingReceived are LongWord, and TIcomPingPacket.Time is a LongWord
+  ON THE WIRE -- "$11 - Uptime in ms", read by the radio. So this truncates
+  deliberately, and every comparison in this unit is a DIFFERENCE of two of
+  these values, which stays correct across the 49.7-day wrap. *)
+function TickCount32: LongWord; inline;
+begin
+   Result := LongWord(GetTickCount64);
+end;
 
 function BytesToHexStr(const Data; DataLen: Integer): string; forward;
 
@@ -396,8 +436,8 @@ begin
   FCivAddress := 0;
   FAYTRetryCount := 0;
   FAYTInterval := ICOM_AYT_INITIAL_INTERVAL;
-  FStartTick := GetTickCount;
-  FLastCivData := GetTickCount;
+  FStartTick := TickCount32;
+  FLastCivData := TickCount32;
   FCivStreamOpen := False;
 
   ClearAllBuffers;
@@ -562,10 +602,12 @@ procedure TIcomNetworkTransport.CreateSockets;
 
     Socket.Active := True;
 
-    // Increase UDP receive buffer to 256KB to reduce packet loss under load
+    (* Increase the UDP receive buffer to 256KB to reduce packet loss under
+      load. Through Indy's own socket handle rather than WinSock.setsockopt:
+      TIdSocketHandle.SetSockOpt takes an Integer and works on every stack
+      Indy supports. *)
     RcvBufSize := 256 * 1024;
-    WinSock.setsockopt(Binding.Handle, SOL_SOCKET, SO_RCVBUF,
-      PAnsiChar(@RcvBufSize), SizeOf(RcvBufSize));
+    Binding.SetSockOpt(Id_SOL_SOCKET, Id_SO_RCVBUF, RcvBufSize);
 
     logger.Debug('[IcomTransport:' + FRadioName + '] Socket bound to port %d', [Binding.Port]);
   end;
@@ -591,9 +633,9 @@ procedure TIcomNetworkTransport.DestroySockets;
 
    procedure SafeFreeSocket(var Socket: TIdUDPServer; const Name: string);
    var
-      FreeThread: THandle;
-      ThreadId: DWORD;
-      WaitResult: DWORD;
+      FreeThread: TThreadID;
+      ThreadId: TThreadID;
+      WaitResult: DWord;
    begin
       if Socket = nil then
          begin
@@ -618,9 +660,20 @@ procedure TIcomNetworkTransport.DestroySockets;
       FreeThread := BeginThread(nil, 0, @FreeObjectThread, Pointer(Socket), 0, ThreadId);
       if FreeThread <> 0 then
          begin
-         WaitResult := WaitForSingleObject(FreeThread, 500);
-         CloseHandle(FreeThread);
-         if WaitResult = WAIT_TIMEOUT then
+         (* THE RTL's PAIR, because BeginThread above returns a TThreadID and
+           not a Win32 HANDLE. On Windows WaitForThreadTerminate IS
+           WaitForSingleObject (rtl\win\systhrd.inc), so the timeout and the
+           return value are unchanged here.
+
+           OFF WINDOWS THE TIMEOUT IS NOT HONOURED: cthreads implements this
+           as pthread_join, which waits for ever. That matters, because the
+           500 ms is the whole point of this code -- abandoning an Indy
+           destructor that hangs -- so on a non-Windows build a hung destructor
+           would hang the shutdown instead. Recorded rather than papered over;
+           it needs a real answer when this program actually runs there. *)
+         WaitResult := WaitForThreadTerminate(FreeThread, 500);
+         CloseThread(FreeThread);
+         if WaitResult = WAIT_TIMEOUT_RESULT then
             begin
             logger.Warn('[IcomTransport:' + FRadioName + '] DestroySockets: ' + Name + ' Free timed out, abandoning');
             end
@@ -646,43 +699,56 @@ begin
   logger.Debug('[IcomTransport:' + FRadioName + '] DestroySockets: complete');
 end;
 
-// Use the UDP connect trick to find which local interface routes to the radio.
-// A UDP "connect" sets routing without sending any packet, then getsockname
-// returns the local interface IP that the OS would use for that route.
+(* WHICH LOCAL INTERFACE ROUTES TO THE RADIO.
+
+  The UDP "connect" trick, unchanged in substance: connecting a datagram
+  socket sends nothing but does make the OS choose a route, and getsockname
+  then reports the local address it picked. TR4W needs that address because
+  the Icom protocol's session id is derived from it.
+
+  THROUGH INDY NOW, not raw WinSock (2026-09-08) -- socket(), inet_addr(),
+  htons(), connect(), getsockname(), inet_ntoa() and closesocket() were seven
+  Windows-only calls for a question Indy answers with four method calls.
+  TIdSocketHandle.UpdateBindingLocal IS getsockname; the IP property is where
+  it puts the answer. *)
 function TIcomNetworkTransport.GetLocalIPForRoute: string;
 var
-  Sock: TSocket;
-  DestAddr: TSockAddr;
-  LocalAddr: TSockAddr;
-  AddrLen: Integer;
-  DestIP: u_long;
+  Sock: TIdSocketHandle;
 begin
   Result := '';
   try
-    Sock := WinSock.socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if Sock = INVALID_SOCKET then Exit;
+    Sock := TIdSocketHandle.Create(nil);
     try
-      (* A dotted quad. ASCII, and inet_addr rejects anything else. *)
-      DestIP := WinSock.inet_addr(PAnsiChar(AnsiString(FRadioAddress)));
-      if DestIP = INADDR_NONE then Exit;
-
-      FillChar(DestAddr, SizeOf(DestAddr), 0);
-      DestAddr.sin_family := AF_INET;
-      DestAddr.sin_port := WinSock.htons(FControlPort);
-      DestAddr.sin_addr.S_addr := DestIP;
-
-      if WinSock.connect(Sock, DestAddr, SizeOf(DestAddr)) <> 0 then Exit;
-
-      AddrLen := SizeOf(LocalAddr);
-      FillChar(LocalAddr, SizeOf(LocalAddr), 0);
-      if WinSock.getsockname(Sock, LocalAddr, AddrLen) <> 0 then Exit;
-
-      Result := string(WinSock.inet_ntoa(LocalAddr.sin_addr));
+      Sock.AllocateSocket(Id_SOCK_DGRAM);
+      try
+        (* AnsiString EXPLICITLY: Indy's host parameter is AnsiString and this
+          tree's `string` is UnicodeString, so the conversion happens either
+          way -- stated here rather than left implicit. It is lossless: an IPv4
+          dotted quad is ASCII, which is why the WinSock version that stood
+          here could hand it to inet_addr as a PAnsiChar. *)
+        Sock.SetPeer(AnsiString(FRadioAddress), FControlPort);
+        Sock.Connect;
+        Sock.UpdateBindingLocal;
+        Result := Sock.IP;
+      finally
+        Sock.CloseSocket;
+      end;
     finally
-      WinSock.closesocket(Sock);
+      Sock.Free;
     end;
   except
-    Result := '';
+    on E: Exception do
+       begin
+       (* REPORTED, not swallowed. The bare `except Result := ''` that stood
+         here hid the one failure that matters: without a local IP the session
+         id is wrong and the radio rejects the login, which looks like a
+         password problem. *)
+       logger.Error('[IcomTransport:%s] GetLocalIPForRoute failed for %s:%d -- '
+                    + '%s: %s. The session id derived from it will be wrong.',
+                    [FRadioName, FRadioAddress, FControlPort,
+                     E.ClassName, E.Message]);
+       Result := '';
+       end;
   end;
 end;
 
@@ -940,7 +1006,7 @@ begin
               // Start watchdog timer for CI-V data
               StartTimer(ICOM_TIMER_CIV_WATCHDOG, ICOM_CIV_WATCHDOG_INTERVAL);
 
-              FLastCivData := GetTickCount;
+              FLastCivData := TickCount32;
               logger.Info('[IcomTransport:' + FRadioName + '] Fully connected to %s, CI-V stream open', [FRadioName]);
 
               // Notify state change listeners (radio can now send CI-V commands)
@@ -1005,7 +1071,7 @@ begin
         end;
 
      // Ping request addressed to us — radio is alive
-     FLastPingReceived := GetTickCount;
+     FLastPingReceived := TickCount32;
 
      // Send response
      if FromCivSocket then
@@ -1137,8 +1203,7 @@ begin
 
      // Increase UDP receive buffer to 256KB to reduce packet loss under load
      RcvBufSize := 256 * 1024;
-     WinSock.setsockopt(FCivSocket.Bindings[0].Handle, SOL_SOCKET, SO_RCVBUF,
-       PAnsiChar(@RcvBufSize), SizeOf(RcvBufSize));
+     FCivSocket.Bindings[0].SetSockOpt(Id_SOL_SOCKET, Id_SO_RCVBUF, RcvBufSize);
 
      logger.Debug('[IcomTransport:' + FRadioName + '] CI-V socket pre-bound to port %d',
                   [FCivSocket.Bindings[0].Port]);
@@ -1209,7 +1274,7 @@ procedure TIcomNetworkTransport.HandleDataPacket(
 begin
   if DataLen < ICOM_DATA_HDR_SIZE then Exit;
 
-  FLastCivData := GetTickCount;
+  FLastCivData := TickCount32;
 
   // Extract CI-V frames from the data
   ExtractCivFrames(Data, DataLen);
@@ -1342,7 +1407,7 @@ begin
   Pkt.SentID := FMyId;
   Pkt.RcvdID := FRemoteId;
   Pkt.Reply := 0;
-  Pkt.Time := GetTickCount - FStartTick;
+  Pkt.Time := TickCount32 - FStartTick;
 
   FSendLock.Enter;
   try
@@ -1601,41 +1666,120 @@ begin
   SendTrackedPacket(FControlSocket, PktStr, FRadioAddress, FControlPort, FSendSeq);
 end;
 
+(* SEND ONE UDP PACKET -- THROUGH INDY, AND LOUDLY.
+
+  WHAT WAS HERE, AND WHY IT IS NOT ANY MORE. This called sendto() imported
+  straight from ws2_32.dll, with a hand-built sockaddr_in, and said why:
+
+      Use direct WinSock sendto() to avoid TIdUDPServer.SendBuffer deadlock
+      when called from the main thread while Indy read threads are active.
+
+  So the bypass was a real fix for a real hang. It is also Windows-only, and
+  NY4I's call (2026-09-08) is that WinSock is no longer an option: back to
+  Indy, and bench-test to find out what the deadlock actually was.
+
+  WHICH IS WHY EVERY LINE BELOW IS INSTRUMENTED THE WAY IT IS. A deadlock does
+  not come back to report itself -- the send never returns, so anything logged
+  AFTER it is lost. The "about to send" line therefore carries EVERYTHING
+  needed to identify the hang: which socket, which thread and whether it is the
+  main one, how many sends are already in flight, the target, and the length.
+  If tr4w.log ends on an ENTER line with no matching EXIT, that line names the
+  conditions.
+
+  What to look for on the bench:
+
+    * an ENTER with no EXIT -- the deadlock, and the line says which thread and
+      what was in flight;
+    * `inflight=` greater than 1 -- two threads inside Indy's send at once,
+      which is the shape the original comment suspected;
+    * `mainthread=True` on the stuck one -- the specific case it named;
+    * a `SLOW SEND` warning -- Indy blocking for tens of ms without deadlocking
+      is the same contention, survived.
+
+  FSendInFlight is bumped with the RTL's interlocked increment rather than
+  under FSendLock, deliberately: the lock is what a deadlock would be waiting
+  ON, so the counter has to be readable without taking it. *)
 procedure TIcomNetworkTransport.SendRawPacket(Socket: TIdUDPServer;
   const Data; DataLen: Integer; TargetAddr: string; TargetPort: Word);
-type
-  // Minimal sockaddr_in layout - avoids type conflicts between Windows/WinSock2
-  TSockAddrIn4 = packed record
-    sin_family: Word;
-    sin_port:   Word;
-    sin_addr:   LongWord;
-    sin_zero:   array[0..7] of Byte;
-  end;
 var
-  SockHandle: Integer;
-  Addr: TSockAddrIn4;
-  Ret: Integer;
+  Bytes:    TIdBytes;
+  Started:  QWord;
+  Elapsed:  QWord;
+  InFlight: LongInt;
+  IsMain:   boolean;
 begin
-  // Use direct WinSock sendto() to avoid TIdUDPServer.SendBuffer deadlock
-  // when called from the main thread while Indy read threads are active.
+  if Socket = nil then
+     begin
+     logger.Error('[IcomTransport:' + FRadioName + '] SendRawPacket: socket is nil');
+     Exit;
+     end;
+
   if Socket.Bindings.Count = 0 then
      begin
      logger.Error('[IcomTransport:' + FRadioName + '] SendRawPacket: no socket binding');
      Exit;
      end;
 
-  SockHandle := Socket.Bindings[0].Handle;
+  IsMain   := GetCurrentThreadId = MainThreadID;
+  InFlight := System.InterLockedIncrement(FSendInFlight);
+  try
+     (* THE LINE THAT SURVIVES A HANG. Everything a diagnosis needs is here,
+       because if Indy blocks there will be no second line. *)
+     logger.Debug('[IcomTransport:%s] SEND ENTER port=%d -> %s:%d len=%d '
+                  + 'thread=%u mainthread=%s inflight=%d active=%s',
+                  [FRadioName, Socket.Bindings[0].Port, TargetAddr, TargetPort,
+                   DataLen, GetCurrentThreadId, BoolToStr(IsMain, True),
+                   InFlight, BoolToStr(Socket.Active, True)]);
 
-  FillChar(Addr, SizeOf(Addr), 0);
-  Addr.sin_family := 2;  // AF_INET
-  Addr.sin_port   := (TargetPort shr 8) or ((TargetPort and $FF) shl 8);  // htons
-  Addr.sin_addr   := LongWord(inet_addr(PAnsiChar(AnsiString(TargetAddr))));
+     if InFlight > 1 then
+        begin
+        (* Two threads inside the send at once. Not fatal in itself, and
+          exactly the condition the old ws2_32 comment blamed -- so it is
+          worth a line of its own whether or not anything hangs. *)
+        logger.Warn('[IcomTransport:%s] SEND OVERLAP: %d sends in flight '
+                    + '(this one on thread %u, mainthread=%s)',
+                    [FRadioName, InFlight, GetCurrentThreadId,
+                     BoolToStr(IsMain, True)]);
+        end;
 
-  Ret := ws2_sendto(SockHandle, Data, DataLen, 0, Addr, SizeOf(Addr));
-  if Ret < 0 then
-     begin
-     logger.Error('[IcomTransport:' + FRadioName + '] SendRawPacket sendto failed');
+     SetLength(Bytes, 0);
+     Bytes   := RawToBytes(Data, DataLen);
+     Started := GetTickCount64;
+     try
+        (* AnsiString explicitly -- Indy's host parameter, same reason as in
+          GetLocalIPForRoute: an IPv4 dotted quad is ASCII. *)
+        Socket.SendBuffer(AnsiString(TargetAddr), TargetPort, Bytes);
+     except
+        on E: Exception do
+           begin
+           logger.Error('[IcomTransport:%s] SEND FAILED after %d ms -> %s:%d '
+                        + 'len=%d thread=%u: %s: %s',
+                        [FRadioName, GetTickCount64 - Started, TargetAddr,
+                         TargetPort, DataLen, GetCurrentThreadId,
+                         E.ClassName, E.Message]);
+           Exit;
+           end;
      end;
+     Elapsed := GetTickCount64 - Started;
+
+     if Elapsed >= SEND_SLOW_MS then
+        begin
+        (* Survived, but blocked. The same contention as the deadlock, and the
+          only version of it a bench run can see WITHOUT the program stopping,
+          so it is the more likely thing to catch. *)
+        logger.Warn('[IcomTransport:%s] SLOW SEND: %d ms for %d byte(s) -> %s:%d '
+                    + '(thread=%u mainthread=%s inflight=%d)',
+                    [FRadioName, Elapsed, DataLen, TargetAddr, TargetPort,
+                     GetCurrentThreadId, BoolToStr(IsMain, True), InFlight]);
+        end
+     else
+        begin
+        logger.Debug('[IcomTransport:%s] SEND EXIT  %d ms',
+                     [FRadioName, Elapsed]);
+        end;
+  finally
+     System.InterLockedDecrement(FSendInFlight);
+  end;
 end;
 
 // ============================================================================
@@ -1686,10 +1830,10 @@ end;
 // off) even though the connectionless UDP session lingers in icsConnected.  Read
 // from the polling thread; FLastCivData is a LongWord written by the RX thread --
 // an aligned 32-bit read/write is atomic on x86, so no lock is needed.  Unsigned
-// subtraction handles GetTickCount wraparound.  Issue #1062.
+// subtraction handles TickCount32 wraparound.  Issue #1062.
 function TIcomNetworkTransport.GetCivDataFresh: Boolean;
 begin
-  Result := (GetTickCount - FLastCivData) < ICOM_CIV_OPERATIONAL_TIMEOUT_MS;
+  Result := (TickCount32 - FLastCivData) < ICOM_CIV_OPERATIONAL_TIMEOUT_MS;
 end;
 
 // ============================================================================
@@ -1726,10 +1870,10 @@ begin
   // Disconnect here; the polling thread will attempt to reconnect.
   if (FState = icsConnected) and (FLastPingReceived <> 0) then
      begin
-     if GetTickCount - FLastPingReceived > ICOM_PING_DEAD_TIMEOUT_MS then
+     if TickCount32 - FLastPingReceived > ICOM_PING_DEAD_TIMEOUT_MS then
         begin
         logger.Warn('[IcomTransport:' + FRadioName + '] No ping from radio for %d ms — network link lost, disconnecting',
-                    [GetTickCount - FLastPingReceived]);
+                    [TickCount32 - FLastPingReceived]);
         Disconnect;
         end;
      end;
@@ -1759,7 +1903,7 @@ var
 begin
   if not FCivStreamOpen then Exit;
 
-  Elapsed := GetTickCount - FLastCivData;
+  Elapsed := TickCount32 - FLastCivData;
   if Elapsed > ICOM_CIV_TIMEOUT_THRESHOLD then
      begin
      // Matches wfview watchdogTimeout(): if stale 2s, send one CivOpen.
@@ -1899,7 +2043,7 @@ begin
   New(Entry);
   Entry^.Seq := Seq;
   Entry^.Data := Data;
-  Entry^.SendTime := GetTickCount;
+  Entry^.SendTime := TickCount32;
   Entry^.RetransmitCount := 0;
   BufList.Add(Entry);
 

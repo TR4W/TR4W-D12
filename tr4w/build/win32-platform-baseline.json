@@ -4,7 +4,7 @@
     "wsprintf":  0,
     "process.Launch":  1,
     "thread.Create":  0,
-    "thread.Event":  28,
+    "thread.Event":  27,
     "window.Query":  0,
     "serial.CommAPI":  5,
     "registry":  13,

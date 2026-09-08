@@ -3040,26 +3040,49 @@ Nothing here is a bench test. They need an answer, not a radio.
   saying the control port cannot supply them, once per run rather than once per
   poll.
 
-- [ ] **The Icom LAN transport sends through `ws2_32.dll` ON PURPOSE, and it is
-      the last thing keeping `uIcomNetworkTransport` on Windows.**
-  `SendRawPacket` declares `sendto` itself -- `external 'ws2_32.dll'` -- with a
-  hand-rolled `sockaddr_in`. The comment says why, and it is not laziness:
+- [ ] **BENCH: the Icom LAN transport is back on Indy -- find the deadlock.**
+  NY4I, 2026-09-08: *"we have to switch back to indy and we will bench test to
+  determine the issue. Using WinSock is no longer an option."* Done, and
+  **instrumented on purpose** (*"instrument the code around the icom change so
+  get us a leg up on detecting the issue"*).
+
+  `SendRawPacket` had imported `sendto` from `ws2_32.dll` with a hand-built
+  `sockaddr_in`, because of a REAL fix for a REAL hang:
 
       Use direct WinSock sendto() to avoid TIdUDPServer.SendBuffer deadlock
       when called from the main thread while Indy read threads are active.
 
-  So the obvious port -- back to Indy's `SendBuffer` -- reintroduces a deadlock
-  somebody already hit and fixed. `inet_addr` and two `setsockopt` calls on the
-  same sockets come along with it.
+  It now calls `Socket.SendBuffer`. **So the hang may come back** -- that is
+  the point of the bench run, not a risk that slipped through.
 
-  **This unit is deliberately untouched.** It is also the one radio family
-  `RADIO_BENCH_STATUS.md` lists as UNPROVEN (Icom LAN), so a change here cannot
-  be checked by any gate we have -- it needs the radio.
+  **What the log will show, and what to look for.** A deadlock never returns,
+  so nothing logged after the send survives it. Every send therefore logs
+  BEFORE it, carrying everything a diagnosis needs:
 
-  **The question:** leave it Windows-only behind a gate, or find a send path
-  that is both deadlock-free and portable? The rest of the unit is ordinary
-  (`GetTickCount`, a thread wait, `Sleep`) and converts in an afternoon once
-  this is decided -- doing that first would be churn on unproven code.
+      SEND ENTER port=50001 -> 192.168.1.50:50001 len=16 thread=27312
+                 mainthread=True inflight=1 active=True
+
+  | what you see | what it means |
+  |---|---|
+  | an `ENTER` with no matching `EXIT`, and the log stops | the deadlock. The line names the thread, whether it is the main one, and how many sends were already inside Indy |
+  | `SEND OVERLAP` | two or more threads inside the send at once -- the shape the original comment blamed |
+  | `mainthread=True` on the stuck one | exactly the case that comment named |
+  | `SLOW SEND: N ms` | Indy blocked but survived. The same contention, and far likelier to be caught than a full hang -- threshold is 20 ms, deliberately low |
+
+  `FSendInFlight` is maintained with an interlocked increment and NOT under
+  `FSendLock`, because the lock is what a deadlock would be waiting on: the
+  counter has to be readable without taking it.
+
+  **Also converted in the same pass, and also unproven:** `GetLocalIPForRoute`
+  (the UDP-connect routing trick) now uses `TIdSocketHandle` instead of seven
+  raw WinSock calls, and it REPORTS failure instead of swallowing it -- without
+  a local IP the session id is wrong and the radio rejects the login, which
+  looks like a password problem. Two `setsockopt(SO_RCVBUF)` calls became
+  `TIdSocketHandle.SetSockOpt`.
+
+  **Nothing here is checkable by any gate we have** -- Icom LAN is the one
+  radio family `RADIO_BENCH_STATUS.md` lists as UNPROVEN. Build, tests and
+  lints are green and prove only that it compiles.
 
 - [x] **`FoundDirectory` / `FindDirectory` -- DELETED 2026-09-08.**
   NY4I: *"Yes to deleting the founddirectry and finddirectry and calling
