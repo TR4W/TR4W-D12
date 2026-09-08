@@ -129,7 +129,8 @@ function TK4SpectrumTests.FixturePath: string;
 begin
    // ParamStr(0), not the working directory: several suites resolve their data
    // this way and the test exe is required to live in tr4w\test\unit.
-   Result := ExtractFilePath(ParamStr(0)) + 'fixtures\' + FIXTURE_NAME;
+   Result := ExtractFilePath(ParamStr(0)) + 'fixtures' + PathDelim +
+             FIXTURE_NAME;   (* PathDelim -- see uTestADIFFixtures *)
 end;
 
 function TK4SpectrumTests.LoadFixture: TBytes;

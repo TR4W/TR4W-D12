@@ -177,7 +177,8 @@ begin
 
    // Relative to the EXECUTABLE, not the working directory -- the convention
    // every fixture-using suite here follows.
-   path := ExtractFilePath(ParamStr(0)) + 'fixtures\callsigns_lotw_sample.txt';
+   path := ExtractFilePath(ParamStr(0)) + 'fixtures' + PathDelim +
+           'callsigns_lotw_sample.txt';   (* PathDelim -- see uTestADIFFixtures *)
 
    if not FileExists(path) then
       begin

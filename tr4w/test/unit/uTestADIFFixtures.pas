@@ -131,7 +131,14 @@ var
    fullPath : string;
    sl       : TStringList;
 begin
-   fullPath := ExtractFilePath(ParamStr(0)) + 'fixtures\' + relativePath;
+   (* PathDelim, NOT A HARDCODED BACKSLASH, and this one was found by RUNNING
+     the suite rather than compiling it: on Linux it asked for
+     ".../fixtures\name.adi" -- one file whose NAME contains a backslash --
+     and reported "Fixture not found". Every unit had compiled clean.
+
+     SysUtils.PathDelim is the separator for whatever the build targets, so
+     this is portable without a conditional. *)
+   fullPath := ExtractFilePath(ParamStr(0)) + 'fixtures' + PathDelim + relativePath;
    if not FileExists(fullPath) then
       raise Exception.Create('Fixture not found: ' + fullPath);
    sl := TStringList.Create;
@@ -465,7 +472,7 @@ begin
    sList := TStringList.Create;
    try
       sList.LoadFromFile(ExtractFilePath(ParamStr(0)) +
-                         'fixtures\arrlfd_sections.adi');
+                         'fixtures' + PathDelim + 'arrlfd_sections.adi');
       txt := sList.Text;
    finally
       sList.Free;
