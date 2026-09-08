@@ -32,6 +32,34 @@ program tr4w;
 
 //https://groups.google.com/group/tr4w/feeds?hl=ru
 uses
+(* cthreads MUST BE FIRST, AND ONLY ON UNIX (2026-09-08).
+
+  FOUND BY RUNNING, NOT BY COMPILING. Everything built; the unit-test binary
+  then died on its first line of work with
+
+      ESyncObjectException: Failed to create OS basic event with name ""
+
+  which reads like a bug in the empty name and is nothing of the kind. FPC's
+  thread manager is PLUGGABLE, and on Unix the real one is installed by the
+  side effect of LINKING cthreads. Without it `currenttm` stays the no-threads
+  manager, whose NoBasicEventCreate simply `result:=nil` -- and TEvent.Create
+  turns a nil handle into that exception, quoting the name it was given.
+
+  So the name was a red herring; the thread manager was missing. TR4W creates
+  six TEvents across the radio, keyer, HamScore, TCI, WebSocket and network
+  paths, so the APP would have hit exactly the same wall at startup.
+
+  IT HAS TO BE THE FIRST UNIT: cthreads installs the manager in its
+  initialization section, and unit initialization runs in uses order. Anything
+  above it that starts a thread or creates an event gets the no-threads
+  manager. That is why it sits above Interfaces here rather than beside the
+  other RTL units.
+
+  Windows needs none of this -- the Win32 RTL has one thread manager, always
+  installed -- so the gate is UNIX, not "not Windows": macOS needs it too. *)
+{$IFDEF UNIX}
+  cthreads,
+{$ENDIF}
   SysUtils,
   MainUnit in 'src\MainUnit.pas',
   BeepUnit in 'src\trdos\BeepUnit.pas',
