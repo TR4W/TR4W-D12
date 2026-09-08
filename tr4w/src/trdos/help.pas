@@ -60,8 +60,7 @@ uses
   VC,
 
   Country9,
-  Windows,
-  Messages,
+  (* Windows and Messages named nothing this unit uses (2026-09-08). *)
   LogSCP,
   LogK1EA,
   Tree,

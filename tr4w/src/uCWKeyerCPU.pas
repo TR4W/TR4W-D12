@@ -50,7 +50,8 @@ implementation
 
 uses
    uAppTimers,   (* StartAppTimer / StopAppTimer -- LCL TTimers, not SetTimer *)
-   Windows,    // SetThreadPriority / THREAD_PRIORITY_TIME_CRITICAL
+   (* ThreadSetPriority is the RTL's, on every platform, and takes -15..+15
+     where Win32 took its own constants. See the call in StartKeyerThread. *)
    Log4D,
    TF,         // tCreateThread
    MainUnit,   // PTTOn, logger
@@ -83,7 +84,18 @@ begin
       logger.Info('Created CW thread with threadid of %d', [CWThreadID]);
       // Issue #997: priority set on the REAL handle; the old asm pushed a
       // stale EAX and never applied it.  The CW thread runs TIME_CRITICAL.
-      SetThreadPriority(CWThreadHandle, THREAD_PRIORITY_TIME_CRITICAL);
+      (* ThreadSetPriority(h, 15), not SetThreadPriority(h,
+        THREAD_PRIORITY_TIME_CRITICAL). The RTL's scale is -15..+15 and 15 is
+        its top, which is what the Win32 backend maps to TIME_CRITICAL; the
+        handle is a TThreadID from tCreateThread's BeginThread, which is what
+        this function takes.
+
+        OFF WINDOWS THIS IS ADVISORY. A pthread priority change usually needs
+        a real-time scheduling policy and privileges, so it can fail silently
+        -- and CW element timing is the thing that suffers. That is already
+        recorded against the clock work (docs\PLATFORM_CLOCK_ABSTRACTION.md);
+        the Windows behaviour is unchanged. *)
+      ThreadSetPriority(CWThreadHandle, 15);
 {$IF OZCR2008}
       if tMessagesExhangeEnable then
          begin

@@ -75,7 +75,7 @@ implementation
 
 uses
   uLCLFormHelpers,   // ShowModalOverWin32Parent -- ownership and centring
-  Windows,
+  LCLType,           // wParam -- the only thing Windows was here for
   VC,
   TF,
   Tree,                // KeyboardCallsignChar

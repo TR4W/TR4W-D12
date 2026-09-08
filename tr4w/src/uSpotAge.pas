@@ -23,9 +23,11 @@ uses
 
 { Now, in UTC.
 
-  Built from GetSystemTime's fields rather than through SystemTimeToDateTime:
-  Windows.SYSTEMTIME and SysUtils.TSystemTime are separate declarations that
-  merely happen to share a layout. }
+  LocalTimeToUniversal(Now) -- see the body. This used to call
+  Windows.GetSystemTime and rebuild the value from the SYSTEMTIME fields,
+  deliberately NOT through SystemTimeToDateTime, because Windows.SYSTEMTIME and
+  SysUtils.TSystemTime are separate declarations that merely happen to share a
+  layout. Going through TDateTime sidesteps that trap entirely. }
 function UTCNow: TDateTime;
 
 { Whole seconds between the two, never negative.  aStamp at or after aNow is
@@ -34,16 +36,22 @@ function AgeSeconds(const aStamp, aNow: TDateTime): integer;
 
 implementation
 
-uses
-   Windows;
+(* THE SAME INSTANT, WITHOUT ASKING WINDOWS FOR IT.
 
+  Was Windows.GetSystemTime into a SYSTEMTIME and then EncodeDate + EncodeTime
+  to put it back together. LocalTimeToUniversal(Now) is the RTL's own answer on
+  every platform: it takes the local clock and applies the OS's UTC offset,
+  which is what GetSystemTime returns directly.
+
+  RESOLUTION IS UNCHANGED -- Now carries milliseconds and so did the
+  reassembly. The one difference worth knowing is at a DST boundary, where the
+  offset is read at the moment of the call rather than baked into the
+  timestamp; a spot's age is measured in minutes against a decay time in
+  minutes, so a one-hour ambiguity in the same second the clock changes is not
+  something this can observe. *)
 function UTCNow: TDateTime;
-var
-   st: SYSTEMTIME;
 begin
-   Windows.GetSystemTime(st);
-   Result := EncodeDate(st.wYear, st.wMonth, st.wDay) +
-             EncodeTime(st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
+   Result := LocalTimeToUniversal(Now);
 end;
 
 function AgeSeconds(const aStamp, aNow: TDateTime): integer;

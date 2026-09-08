@@ -26,8 +26,8 @@ interface
 uses
   VC,
   TF,
-  Windows,
-  Messages;
+  uAnsiStr;   (* StrLen over PAnsiChar -- was Windows.lstrlenA.
+                 Windows and Messages declared nothing else this unit uses. *)
 
 {
   THE LIST-OF-COMMANDS SEAM.  The dialog itself is now an LCL form --
@@ -108,7 +108,7 @@ begin
      end
   else
      begin
-     p := start + Windows.lstrlenA(start);
+     p := start + uAnsiStr.StrLen(start);
      while (p > start) and (p[-1] = ' ') do
         begin
         Dec(p);

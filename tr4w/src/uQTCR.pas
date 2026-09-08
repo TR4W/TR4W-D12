@@ -58,7 +58,11 @@ uses
   LOGSUBS2,
   uTotal,
   Tree,
-  Windows,
+  (* LCLType, not Windows (2026-09-08). Sleep comes from SysUtils, already in
+    this clause; IDYES and IDNO -- what YesOrNo returns -- are declared by
+    LCLType with the same values Win32 gives them (lcltype.pp: IDYES = 6,
+    IDNO = 7). *)
+  LCLType,
   uTR4WStrings;
 
 const
