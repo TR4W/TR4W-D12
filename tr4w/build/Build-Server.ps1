@@ -1,6 +1,26 @@
 # Builds tr4wserver.lpr with FPC.
 #
-# NO LCL AND NO -WG. tr4wserver is a console program with no UI at all, so it
+# -WG AND -gl, BOTH ADDED 2026-09-08, BECAUSE THE SENTENCE BELOW STOPPED BEING
+# TRUE AND NOTHING NOTICED.
+#
+# tr4wserver.lpr's uses clause now begins `Interfaces, Forms, ... Dialogs,
+# uServerForm` -- it links the widget set and shows a designed form. There is no
+# {$APPTYPE} anywhere under tr4w/tr4wserver/, so without -WG the linked PE keeps
+# subsystem 3 (CONSOLE) and Windows opens a blank console window beside the real
+# one every time an operator starts the server. Build-App.ps1's own note on -WG
+# says exactly this and calls it "NOT cosmetic".
+#
+# -gl for the same reason it is on the app: tr4wserver gained crash logging on
+# 2026-08-29, and without the line-info unit a crash report is bare addresses --
+# logging that cannot be read is logging that was not worth adding.
+#
+# THE STALE CLAIM BELOW IS LEFT IN PLACE AS A WARNING, not deleted, because it is
+# what made the missing switch look deliberate to three separate readers. Its
+# every clause is now false, and the Get-SearchPaths comparison it appeals to is
+# false too: the Server list resolves src\ui\lcl and the i386-win32 LCL, and
+# differs from App only by three SQLite directories.
+#
+# ~~NO LCL AND NO -WG. tr4wserver is a console program with no UI at all, so it
 # links neither the widgetset nor any ui\ unit -- see Get-SearchPaths, which
 # gives 'Server' a deliberately different list rather than one shared superset.
 #
@@ -40,7 +60,9 @@ if ($cleared -gt 0) { Write-Host "  cleared $cleared stale artifact(s) from $out
 # set, so VC.pas had to be told where to read HWND from. tr4wserver is an LCL
 # application now (2026-09-06) and reads LCLType like everything else, so the
 # define has nothing to select and VC's branch on it is deleted with it.
-$fpcArgs = @("-Mdelphi", "-P$Cpu", "-T$Os", '-Sc', '-B', "-FU$out", "-o$exe")
+# -WG, -gl: SEE THE HEADER NOTE. This was `-Sc -B` alone, from when the server
+# genuinely had no UI, and the omission outlived the fact.
+$fpcArgs = @("-Mdelphi", "-P$Cpu", "-T$Os", '-Sc', '-WG', '-gl', '-B', "-FU$out", "-o$exe")
 foreach ($p in (Get-Tr4wSearchPaths -Tr4wDir $TR4W_DIR -Toolchain $tc -For Server)) { $fpcArgs += "-Fu$p" }
 foreach ($p in (Get-Tr4wIncludePaths -Tr4wDir $TR4W_DIR)) { $fpcArgs += "-Fi$p" }
 $fpcArgs += 'tr4wserver.lpr'

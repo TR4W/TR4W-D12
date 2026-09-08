@@ -124,11 +124,55 @@ if ((-not (Test-Path $stamp)) -or ((Get-Content -LiteralPath $stamp -Raw) -ne $w
 
 $env:PATH = "$shim;$env:PATH"
 $output = & $fpc @a $src 2>&1
+$fpcExit = $LASTEXITCODE
 
+# THE COMPILER'S EXIT CODE DECIDES. TEXT ONLY EXPLAINS.
+#
+# This used to grep $output for 'Error:|Fatal:' and call anything else a pass,
+# which meant a run that produced NO OUTPUT AT ALL printed "COMPILES FOR LINUX"
+# and exited 0. That is not a hypothetical shape in this project: CLAUDE.md
+# records the golden corpus reporting "24 passed, 0 failed" for two days while
+# all THIRTEEN of its export runs were dying with an access violation, because
+# it too discarded the exit code.
+#
+# It matters more here than it did there, because Lint-LinuxCompile GATES THE
+# BUILD on this exit code and reports "N unit(s) still compile for
+# x86_64-linux". A wrong answer is not merely missed coverage; it is a green
+# ratchet asserting something nobody checked.
+#
+# What the old form could not see: a compiler that crashed without the word
+# Error, a binutils-shim failure worded differently, an empty $output from a
+# process that never started, and a timeout.
+#
+# THE TEXT SCAN IS KEPT, but only to SHOW the reason -- and disagreement between
+# the two is itself reported, because it means one of these assumptions is wrong
+# and silently picking either answer would hide that.
 $problems = $output | Select-String -Pattern 'Error:|Fatal:'
-if (-not $problems) {
+
+# NO "EMPTY OUTPUT MEANS IT DID NOTHING" GUARD. I wrote one and it was WRONG:
+# a successful compile that reuses cached units prints nothing at all, so it
+# failed every cache hit -- including the whole pinned list on the second run.
+# The exit code already covers the case that guard was reaching for, because a
+# compiler that never started does not exit 0.
+
+if ($fpcExit -eq 0 -and $problems) {
+   Write-Host "Compile-Linux: FPC exited 0 but its output names an error for $Unit." -ForegroundColor Red
+   Write-Host "  The exit code and the text disagree. Reporting FAILURE, because"
+   Write-Host "  whichever is right, this script's assumptions are not."
+   $problems | Select-Object -First 6
+   exit 1
+}
+
+if ($fpcExit -eq 0) {
    Write-Host "COMPILES FOR LINUX: $Unit" -ForegroundColor Green
    exit 0
+}
+
+if (-not $problems) {
+   Write-Host "still Windows-bound: $Unit -- FPC exited $fpcExit" -ForegroundColor Yellow
+   Write-Host "  No 'Error:' or 'Fatal:' line to quote. The whole output follows."
+   $output
+   exit 1
 }
 
 Write-Host "still Windows-bound: $Unit" -ForegroundColor Yellow
