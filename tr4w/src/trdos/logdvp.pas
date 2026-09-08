@@ -28,7 +28,6 @@ uses
   TF,
   VC,
   LogK1EA,
-  Messages,
 utils_text,
 utils_file,
   Windows,      // still raw Win32 throughout -- a SEPARATE sweep, see below

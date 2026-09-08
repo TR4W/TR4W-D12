@@ -45,19 +45,24 @@ utils_text,
   Tree, {Crt, Dos,}
   LogSCP,
   ZoneCont,
-  (* WINDOWS STAYS, AND HERE IS THE WHOLE REMAINING BILL (measured
-    2026-09-08, by removing it and reading the compiler):
+  (* WINDOWS IS GONE FROM THIS UNIT (2026-09-08), and the bill it left --
+    written here the same day -- was paid item by item:
 
       SystemTimeToTzSpecificLocalTime + TIME_ZONE_INFORMATION
-                        DisplayLocalTime. The RTL has no timezone-database
-                        call; this is the one real piece of work in the list
+                        called "the one real piece of work in the list", and
+                        it turned out not to be work at all: the code zeroed
+                        StandardDate and DaylightDate and set only Bias, which
+                        is Win32's documented no-DST case, so it was computing
+                        `local = UTC - Bias` and nothing more. It is two lines
+                        of IncMinute in DisplayLocalTime. There was never a
+                        timezone database involved -- see the note there
       ReadFile / CloseHandle
                         SysUtils.FileRead / FileClose, same as logscp took
       SW_SHOW / SW_HIDE LCLType declares both
 
-    lstrcatA is already gone -- see DisplayNextQSONumber -- and Messages had
+    lstrcatA was already gone -- see DisplayNextQSONumber -- and Messages had
     nothing to declare at all. *)
-  Windows,
+  LCLType,   // SW_SHOW / SW_HIDE
   utils_file,
   BeepUnit,
   uGradient
@@ -2783,7 +2788,7 @@ begin
         sWriteFile(h, Spot, SizeOf(TSpotRecord));
         end;
      end;
-  CloseHandle(h);
+  FileClose(h);
 
 end;
 
@@ -2799,10 +2804,16 @@ var
   c                                     : integer;
   Spot                                  : TSpotRecord;
   h                                     : THandle;   (* A FILE handle, not a window. *)
-  lpNumberOfBytesRead                   : Cardinal;
+  (* SIGNED, and that is the point of the change. Windows.ReadFile reported
+    the count through a Cardinal var parameter and failure through its
+    boolean result; FileRead RETURNS the count and gives -1 on error. Left as
+    a Cardinal, an error would have become 4294967295 and compared unequal to
+    every size below -- which happens to reach the same `goto 1`, but only by
+    luck, and the read of a whole spot would have added garbage. *)
+  lpNumberOfBytesRead                   : Integer;
 begin
   if not TF.tOpenFileForRead(h, TR4W_BANDMAPBIN_FILENAME) then Exit;
-  Windows.ReadFile(h, TempChar, SizeOf(TempChar), lpNumberOfBytesRead, nil);
+  lpNumberOfBytesRead := FileRead(h, TempChar, SizeOf(TempChar));
   if lpNumberOfBytesRead <> SizeOf(TempChar) then
      begin
      goto 1;
@@ -2811,19 +2822,24 @@ begin
      begin
      goto 1;
      end;
-  Windows.ReadFile(h, c, SizeOf(SpotsList.Count), lpNumberOfBytesRead, nil);
+  lpNumberOfBytesRead := FileRead(h, c, SizeOf(SpotsList.Count));
+  if lpNumberOfBytesRead <> SizeOf(SpotsList.Count) then
+     begin
+     (* The count itself is now checked. It was not: a truncated file gave a
+       partly-filled `c` and the loop below then read that many spots. *)
+     goto 1;
+     end;
   if c > 0 then
      begin
      for i := 1 to c do
         begin
-        ReadFile(h, Spot, SizeOf(TSpotRecord), lpNumberOfBytesRead, nil);
-        if lpNumberOfBytesRead = SizeOf(TSpotRecord) then
+        if FileRead(h, Spot, SizeOf(TSpotRecord)) = SizeOf(TSpotRecord) then
            begin
            SpotsList.AddSpot(Spot, False);
            end;
         end;
      end;
-  1: CloseHandle(h);
+  1: FileClose(h);
 end;
 
 

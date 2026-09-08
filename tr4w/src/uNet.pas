@@ -53,9 +53,23 @@ uses
   LogWind,
   PostUnit,
   uGradient,
-  WinSock2,
+  (* WINDOWS STAYS, FOR TWO CALLS, AND BOTH ARE REAL.
+
+    SetEvent      the four synchronisation events (tCW_Event, tCWPaddle_Event,
+                  tDVP_Event, tNet_Event) are Win32 CreateEvent handles made
+                  in uProgramMain and waited on by the CW keyer's element
+                  timing. FPC's RTLEventCreate / TEvent is the portable
+                  replacement and it is a JOB, not a swap: logk1ea's tCWSleep
+                  waits on one of these with a timeout, and CW element timing
+                  is the last thing to convert casually.
+    SetSystemTime SETS THE MACHINE CLOCK, from a time-sync packet. There is no
+                  portable equivalent -- on Unix it is settimeofday and needs
+                  root -- so this is a per-platform decision about whether TR4W
+                  should do it at all, not a translation.
+
+    WinSock2 and Messages are gone: the socket moved to Indy with TNetClient
+    (2026-08-25) and the WSAAsyncSelect window message went with it. *)
   Windows,
-  Messages,
   Tree
 
   ,
@@ -890,7 +904,19 @@ begin
   MyMessageState.msID := NET_MESSAGESTATE_ID;
   if CWMessageToNetwork <> '' then
      begin
-     Windows.MoveMemory(@MyMessageState.msCWMessage[0], @CWMessageToNetwork[1], length(CWMessageToNetwork));
+     (* Move, not Windows.MoveMemory -- AND THE FIRST TWO ARGUMENTS SWAP.
+
+       MoveMemory(Destination, Source, Length) is the Win32 order.
+       Move(Source, Destination, Count) is Pascal's, and it is the reverse.
+       A transliteration that kept the order would compile, run, and copy the
+       message BACKWARDS into the wire record -- silently, on the network
+       path, where the symptom is a garbled CW message at the other station
+       and nothing at all locally.
+
+       They also differ on overlap: MoveMemory handles it (it is RtlMoveMemory)
+       and so does Move, so nothing is lost there. *)
+     Move(CWMessageToNetwork[1], MyMessageState.msCWMessage[0],
+          length(CWMessageToNetwork));
      end;
 
   MyMessageState.msCWMessage[length(CWMessageToNetwork)] := #0;
