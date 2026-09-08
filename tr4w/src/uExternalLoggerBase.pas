@@ -720,7 +720,7 @@ end;
 
 procedure TExternalLoggerBase.ShutdownDrain(timeoutMs: integer);
 var
-   deadline: Cardinal;
+   deadline: QWord;
    pending: integer;
 begin
    if FShuttingDown then
@@ -746,8 +746,17 @@ begin
       begin
       FQueueEvent.SetEvent;
       end;
-   deadline := GetTickCount + Cardinal(timeoutMs);
-   while GetTickCount < deadline do
+   (* GetTickCount64 INTO A QWord, AND THIS FIXES A DEFECT rather than just
+     moving off Windows.
+
+     The old line was `deadline := GetTickCount + Cardinal(timeoutMs)` with
+     `deadline: Cardinal`, compared with `<`. Within timeoutMs of the 49.7-day
+     wrap, the addition wraps to a small number, `GetTickCount < deadline` is
+     false immediately, and the drain returns WITHOUT WAITING -- silently, on
+     a queue it was supposed to flush. A 64-bit deadline cannot wrap in any
+     uptime this program will see. *)
+   deadline := GetTickCount64 + QWord(timeoutMs);
+   while GetTickCount64 < deadline do
       begin
       FQueueLock.Enter;
       try

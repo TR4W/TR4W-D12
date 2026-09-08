@@ -217,7 +217,7 @@ type
       // outside a handler that already owns the session.
       FPTTOwner: TWSServerSession;
       // GetTickCount at the moment a TCI client keyed.  Guarded by FLock.
-      FPTTKeyedAt: cardinal;
+      FPTTKeyedAt: QWord;
       FWatchdog: TTCIWatchdogThread;
 
       (* THE OUTSTANDING QUEUED APPLIES, so this server can detach them.
@@ -1761,7 +1761,8 @@ begin
             // watchdog deadline out for ever.
             if FPTTKeyedAt = 0 then
                begin
-               FPTTKeyedAt := GetTickCount;
+               { GetTickCount64 -- see the note at the elapsed calculation. }
+   FPTTKeyedAt := GetTickCount64;
                end;
             state.OwnsPTT := True;
             accepted := True;
@@ -1825,8 +1826,8 @@ end;
 procedure TTCIServer.CheckTransmitTimeout;
 var
    owner:   TWSServerSession;
-   keyedAt: cardinal;
-   elapsed: cardinal;
+   keyedAt: QWord;
+   elapsed: QWord;
    limit:   cardinal;
 begin
    if TR4W_TCI_MAX_TX_SECONDS <= 0 then
@@ -1851,9 +1852,15 @@ begin
       Exit;
       end;
 
-   // Unsigned subtraction, so the 49.7-day GetTickCount wrap is handled
-   // rather than producing an enormous elapsed and an instant false trip.
-   elapsed := GetTickCount - keyedAt;
+   (* THERE IS NO WRAP TO HANDLE ANY MORE (2026-09-08).
+
+     This said "unsigned subtraction, so the 49.7-day GetTickCount wrap is
+     handled rather than producing an enormous elapsed and an instant false
+     trip" -- correct, and about a 32-bit counter. Both sides are QWord from
+     GetTickCount64 now, which does not wrap in any uptime this program will
+     see, so the subtraction is simply a subtraction. The note is kept because
+     the shape of the code is otherwise unexplained. *)
+   elapsed := GetTickCount64 - keyedAt;
    if elapsed < limit then
       begin
       Exit;

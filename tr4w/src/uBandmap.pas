@@ -168,7 +168,9 @@ begin
   PutRadioOutOfSplit(Radio);
   if (QZBRandomOffsetEnable and (EntryMode = CW)) then
      begin
-     QZBOffset := Windows.GetTickCount mod (MAX_QZB_OFFSET * 2);
+     { GetTickCount64: this wants a varying number, so which 32 bits it
+       lands on does not matter -- but the Windows call did. }
+     QZBOffset := GetTickCount64 mod (MAX_QZB_OFFSET * 2);
      if QZBOffset > MAX_QZB_OFFSET then
         begin
         QZBOffset := QZBOffset - MAX_QZB_OFFSET * 2;

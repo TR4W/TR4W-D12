@@ -1060,7 +1060,11 @@ begin
      // now, and the handshake happens inside Connect because a link the server
      // has not acknowledged is not a link.
      FillChar(StatusArray, SizeOf(StatusArray), 0);
-     NetQSOInfoToSend.qiComputerID := Windows.GetTickCount;
+     (* Cardinal(GetTickCount64) -- TRUNCATED DELIBERATELY. qiComputerID is a
+    field of TNetQSOInformation, which is a PACKED RECORD SENT BETWEEN
+    STATIONS, so its width is on the wire and is not ours to widen. The
+    value is only ever used as a distinguishing number. *)
+  NetQSOInfoToSend.qiComputerID := Cardinal(GetTickCount64);
 
  //    sCIDMESSAGE[4] := Char(Ord(ComputerID) - Ord('A') + 1);
      ComputerNetID.ciComputerID := WireComputerID;
@@ -1611,7 +1615,8 @@ end;
   as long as the unit's removes the question of whether the thing that creates
   them ran, which is the question that was answered wrongly for weeks. *)
 initialization
-  STARTTIMEOFTHETR4W := Windows.GetTickCount;
+  { Cardinal, matching the declaration -- see uNet's STARTTIMEOFTHETR4W. }
+  STARTTIMEOFTHETR4W := Cardinal(GetTickCount64);
 //GetDiskFreeSpace(nil,STARTTIMEOFTHETR4W,STARTTIMEOFTHETR4W,STARTTIMEOFTHETR4W,STARTTIMEOFTHETR4W);
 
   GNetLock    := SyncObjs.TCriticalSection.Create;
