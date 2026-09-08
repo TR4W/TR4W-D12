@@ -3040,6 +3040,24 @@ Nothing here is a bench test. They need an answer, not a radio.
   saying the control port cannot supply them, once per run rather than once per
   poll.
 
+- [ ] **`CompareStringA` now BLOCKS the Linux compile of MainUnit -- and the
+      tests are owed before it can move.**
+  Peeling MainUnit's dependency chain for `Compile-Linux.ps1` (2026-09-08) got
+  through every unit above it and stopped here: `uCallsigns` calls
+  `CompareStringA(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE, ...)`, which is
+  Win32-only.
+
+  **It was left alone on purpose.** That call is one of THREE copies of the
+  same comparison in this tree, they have already drifted, and the standing
+  instruction (NY4I) is that the tests come BEFORE the repoint -- otherwise the
+  differences between the copies, which are usually fixes that never
+  propagated, get normalised away by whoever unifies them. A portability sweep
+  is the wrong context to decide what the right comparison is.
+
+  **So the order is: golden tests over all three copies, diff their behaviour,
+  agree one implementation, then repoint.** Until then MainUnit cannot be
+  compiled for a non-Windows target, and neither can anything above it.
+
 - [ ] **BENCH: the Icom LAN transport is back on Indy -- find the deadlock.**
   NY4I, 2026-09-08: *"we have to switch back to indy and we will bench test to
   determine the issue. Using WinSock is no longer an option."* Done, and
