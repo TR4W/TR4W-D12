@@ -98,6 +98,17 @@ case "$(uname -s)" in
       # enough on its own -- a bare invocation cannot find the RTL.
       FU="-Fu$UNITS/rtl -Fu$UNITS/rtl-objpas -Fu$UNITS/rtl-extra"
       FU="$FU -Fu$UNITS/fcl-base -Fu$UNITS/hash"
+      # univint: MacOSAll, which the LCL's own LCLIntf pulls in on this
+      # platform -- "Can't find unit MacOSAll used by LCLIntf" is what its
+      # absence looks like, and it reads as a broken Lazarus rather than a
+      # missing package.
+      # cocoaint: the Objective-C bridge the cocoa widget set is built on.
+      #
+      # NAMED, NOT GLOBBED. There are 97 package directories here and the
+      # header above records what happens if you add them all: the command line
+      # grows until the compiler stops finding the RTL, and every unit then
+      # fails with "Can't find unit system" -- which reads as a broken install.
+      FU="$FU -Fu$UNITS/univint -Fu$UNITS/cocoaint"
       LCL="$LAZROOT/lcl/units/$ARCH"
       LAZUTILS="$LAZROOT/components/lazutils/lib/$ARCH"
       ;;
