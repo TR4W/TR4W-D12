@@ -26,11 +26,13 @@ interface
 uses
   TF,
   VC,
-  utils_net,
-  WinSock2,
   utils_file,
+  FileUtil,    // CopyFile -- LazUtils, and it is NOT LazFileUtils
+  IdTCPClient, // the log download -- see FetchServerLog
+  IdGlobal,    // TIdBytes, RawToBytes
+  IdException, // EIdConnClosedGracefully and friends, per CLAUDE.md's snag list
+  IdStack,
   Windows,
-  Messages,
   LogStuff,
   LogWind,
   uNet,
@@ -250,89 +252,182 @@ begin
 
      StrPCopy(TempBuffer2, AnsiString(SysUtils.Format('%sLOGBACKUP_%.3d.TRW',
                                       [PAnsiChar(@TR4W_LOG_PATH_NAME), counter])));
-     if Windows.CopyFileA(TR4W_LOG_FILENAME, TempBuffer2, True) = True then
+     (* THE THIRD ARGUMENT WAS DOING THE WORK, so it is worth saying what
+       replaced it.  CopyFileA's bFailIfExists=True is how this loop FINDS a
+       free slot: it tries LOGBACKUP_001, _002, ... and stops at the first
+       name that did not already exist.  An overwriting copy would succeed on
+       the first try and silently destroy backup 001 every time.
+
+       LazUtils' CopyFile expresses that as the ABSENCE of cffOverwriteFile:
+       with empty flags it returns False when the destination exists
+       (fileutil.inc:226).  The one behavioural difference is that it tests
+       with FileExists and then copies, where CopyFileA decided inside one
+       call -- so there is a window between the two.  It does not matter here:
+       the single-instance mutex means no second TR4W is choosing the same
+       slot, and both copies are into the operator's own log directory. *)
+     if FileUtil.CopyFile(AnsiString(TR4W_LOG_FILENAME),
+                          AnsiString(TempBuffer2), []) then
         begin
         StrPCopy(TempBuffer2, AnsiString(SysUtils.Format('%sRSTBACKUP_%.3d.RST',
                                          [PAnsiChar(@TR4W_LOG_PATH_NAME), counter])));
-        Windows.CopyFileA(TR4W_RST_FILENAME, TempBuffer2, False);
+        (* False was bFailIfExists -- overwrite -- which is what
+          cffOverwriteFile says.  Same for the SYN copy below. *)
+        FileUtil.CopyFile(AnsiString(TR4W_RST_FILENAME),
+                          AnsiString(TempBuffer2), [cffOverwriteFile]);
         Break;
         end;
      end;
   if Replace then
      begin
-     Windows.CopyFileA(TR4W_SYN_FILENAME, TR4W_LOG_FILENAME, False);
+     FileUtil.CopyFile(AnsiString(TR4W_SYN_FILENAME),
+                       AnsiString(TR4W_LOG_FILENAME), [cffOverwriteFile]);
      LoadinLog;
      end;
   SendStationStatus(sstQSOs);
 end;
 
+(* THE LOG DOWNLOAD, ON INDY -- and EXTRACTED, which is most of the value.
+
+  This was inline in RunSyncThread: a raw WinSock connect through
+  utils_net.GetConnection, a WSAEventSelect/WSAWaitForMultipleEvents pump, a
+  recv loop, and two `goto`s. Pulling it out gives the network step one entry
+  and one exit, so the caller tests a boolean instead of jumping, and every
+  socket call in TR4W is now Indy's (NY4I, 2026-09-08: "Any remaining socket
+  calls that are not using Indy ... should switch to Indy").
+
+  THE PROTOCOL, which was never written down: connect to the server's port
+  PLUS ONE, write ten bytes of password, then read until the peer stops. The
+  first four bytes are the log size in NATIVE byte order, and the count it
+  states EXCLUDES itself.
+
+  TWO THINGS THAT LOOK LIKE TRANSLATION AND ARE NOT:
+
+  1. ReadInt32(AConvert := False). Indy converts from NETWORK byte order by
+     default; the old code read those four bytes with PInteger, which is
+     native. On a little-endian machine the default would have turned a
+     25,000-byte log into 3,347,644,416 and failed every size check.
+  2. THE FOUR-BYTE HEADER IS NOW READ AS A HEADER. The old loop carried a
+     FirstPacket flag and skipped four bytes of whatever the first recv
+     happened to return -- which is correct only while that recv returns at
+     least four bytes. TCP does not promise that. Reading it explicitly makes
+     a short first segment a non-event instead of a corrupted log, and it
+     deletes the flag and the offset arithmetic.
+
+  ENDING THE TRANSFER IS UNCHANGED IN MEANING: two seconds with nothing
+  arriving, or a close, finishes it -- which is what the 2000 ms
+  WSAWaitForMultipleEvents timeout did. There is no length-prefixed framing to
+  wait on beyond the size field, so silence is still the signal.
+
+  NOT BENCH TESTED. It needs a running tr4wserver and a second station; see
+  BENCH_QUEUE.md. *)
+function FetchServerLog(out aTotalBytes, aLogSize: integer): boolean;
+const
+   CONNECT_TIMEOUT_MS = 5000;
+   IDLE_TIMEOUT_MS    = 2000;   // as the old WSAWaitForMultipleEvents wait
+   PASSWORD_BYTES     = 10;     // fixed by the server, not by the string type
+var
+   Client:    TIdTCPClient;
+   Chunk:     TIdBytes;
+   Available: integer;
+begin
+   Result      := False;
+   aTotalBytes := 0;
+   aLogSize    := 0;
+
+   Client := TIdTCPClient.Create(nil);
+   try
+      (* AnsiString, not string(...).  Indy is built without UnicodeStrings
+        here, so Host is an AnsiString; a cast to the generic string type
+        widens and then narrows again -- a silent round trip the ratchet
+        counts -- the same note logstuff carries about LazUtils' CopyFile. *)
+      Client.Host           := AnsiString(ServerAddress);
+      Client.Port           := ServerPort + 1;
+      Client.ConnectTimeout := CONNECT_TIMEOUT_MS;
+      Client.ReadTimeout    := IDLE_TIMEOUT_MS;
+
+      try
+         Client.Connect;
+      except
+         on E: Exception do
+            begin
+            (* REPORTED, not silent. The WinSock version returned False and
+              the caller showed a generic warning, so a wrong address and a
+              refused connection looked identical. *)
+            logger.Error('[SyncLog] connect to %s:%d failed -- %s',
+                         [Client.Host, Client.Port, E.Message]);
+            Exit;
+            end;
+      end;
+
+      try
+         Client.IOHandler.Write(RawToBytes(ServerPassword[1], PASSWORD_BYTES));
+
+         aLogSize := Client.IOHandler.ReadInt32(False);   // native order
+
+         repeat
+            try
+               Client.IOHandler.CheckForDataOnSource(IDLE_TIMEOUT_MS);
+            except
+               on E: Exception do
+                  begin
+                  (* A close is how a COMPLETE transfer ends, so this is not
+                    an error path -- the size check in the caller decides
+                    whether what arrived is whole. *)
+                  Break;
+                  end;
+            end;
+
+            Available := Client.IOHandler.InputBuffer.Size;
+            if Available = 0 then
+               begin
+               Break;   // idle for the timeout: the server has finished
+               end;
+
+            SetLength(Chunk, 0);
+            Client.IOHandler.InputBuffer.ExtractToBytes(Chunk, Available);
+            sWriteFile(NewServerLogHandle, Chunk[0], Length(Chunk));
+            Inc(aTotalBytes, Length(Chunk));
+
+            if not HeadlessSyncMode then
+               begin
+               ReportSyncProgress(SYNC_FIELD_BYTES, aTotalBytes);
+               end;
+         until False;
+
+         Result := True;
+      except
+         on E: Exception do
+            begin
+            logger.Error('[SyncLog] transfer failed after %d byte(s) -- %s',
+                         [aTotalBytes, E.Message]);
+            end;
+      end;
+   finally
+      Client.Disconnect;
+      Client.Free;
+   end;
+end;
+
 procedure RunSyncThread;
 label
-  e, 1, 2;
+  e, 2;
 var
-  i                                     : integer;
   TotalBytes, TotalRecords, TotalQ      : integer;
   lpNumberOfBytesWritten                : LongInt;   { FileRead's result }
   TempRXData                            : ContestExchange;
   ServerLogFillIndex                    : integer;
-  tGetNetLogEvent                       : THandle;
-  FirstPacket                           : boolean;
-  Offset                                : integer;
   LogSize                               : integer;
 begin
 
   CommitChangesInLocalLog;
 
-  FirstPacket := True;
+  TotalRecords := 0;
+  TotalQ := 0;
 
-  if not GetConnection(LogSyncSocket, @ServerAddress[1], ServerPort + 1, SOCK_STREAM) then
+  if not FetchServerLog(TotalBytes, LogSize) then
      begin
      goto e;
      end;
-{
-  LogSyncSocket :=GetSocket;// socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-  tr4w_saddr.sin_addr.S_addr := inet_addr(tgethostbyname(@ServerAddress[1]));
-  tr4w_saddr.sin_port := htons(ServerPort + 1);
-  if LogSyncSocket = INVALID_SOCKET then goto e;
-  if tConnect(LogSyncSocket, @tr4w_saddr) <> 0 then goto e;
-}
-  WinSock2.Send(LogSyncSocket, ServerPassword[1], 10, 0);
-  //  Sleep(100);
-  TotalBytes := 0;
-  TotalRecords := 0;
-  TotalQ := 0;
-  tGetNetLogEvent := WSACreateEvent;
-  WinSock2.WSAEventSelect(LogSyncSocket, tGetNetLogEvent, FD_READ or FD_CLOSE);
-
-  1:
-  i := WSAWaitForMultipleEvents(1, @tGetNetLogEvent, False, 2000, True);
-  if i = 0 then
-     begin
-
-     i := recv(LogSyncSocket, SyncNetBuffer, SizeOf(SyncNetBuffer), 0);
-     if i > 0 then
-        begin
-        Offset := 0;
-        if FirstPacket then
-           begin
-           Offset := SizeOf(Cardinal);
-           FirstPacket := False;
-           LogSize := PInteger(@SyncNetBuffer)^;
-           end;
-        sWriteFile(NewServerLogHandle, SyncNetBuffer[Offset], i - Offset);
-        TotalBytes := TotalBytes + i - Offset;
-        if not HeadlessSyncMode then
-           begin
-           ReportSyncProgress(SYNC_FIELD_BYTES, TotalBytes);
-           end;
-        end;
-     if i <> 0 then
-        begin
-        goto 1;
-        end;
-     end;
-  WSACloseEvent(tGetNetLogEvent);
-  closesocket(LogSyncSocket);
 
   if TotalBytes > SizeOfTLogHeader then
      begin

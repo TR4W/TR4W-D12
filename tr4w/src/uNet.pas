@@ -36,7 +36,6 @@ uses
   VC,
   TF,
   uNetFraming,   { NetMessageSize -- one table, no per-arm advances }
-  utils_net,
   utils_file,
   uTotal,
   uSpots,

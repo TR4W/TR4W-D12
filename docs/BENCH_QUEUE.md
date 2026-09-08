@@ -3013,6 +3013,50 @@ pass list is a warning nobody reads.
 
 ---
 
+## 2026-09-08 -- THE MULTI-OP LOG SYNC MOVED TO INDY. NOBODY HAS RUN IT.
+
+**This one IS a bench test**, and it is the only change in today's sweep that
+code review cannot settle: it needs a running `tr4wserver` and a second
+station, which this machine does not have.
+
+`uGetServerLog.RunSyncThread` downloaded the server's log through a raw
+WinSock socket -- `utils_net.GetConnection`, `WSAEventSelect`,
+`WSAWaitForMultipleEvents`, `recv`. It is `TIdTCPClient` now
+(`FetchServerLog`), which was the last raw socket in TR4W and let
+`utils_net.pas` be deleted outright.
+
+**WHAT TO RUN:** on a multi-op setup, *Get server log* (the synchronize
+window), against a server holding a log of a few hundred QSOs.
+
+**WHAT TO WATCH, in the order it can go wrong:**
+
+- [ ] **The byte count on the progress display climbs and finishes.** If it
+      sticks at 0, the password write or the size header is wrong.
+- [ ] **The record and QSO counts match what the server reports.** The size
+      check is `LogSize <> TotalBytes`; a mismatch shows *"failed to receive
+      server log"* and is the loudest symptom of a framing error.
+- [ ] **A log LARGER than 4096 bytes** -- that is one old `recv` buffer, so a
+      single-chunk transfer would prove almost nothing about the loop.
+- [ ] **The window does not hang for a station that is off.** Connect failures
+      are now REPORTED (`[SyncLog] connect to <host>:<port> failed`) where the
+      old path returned a bare False, so a wrong address and a refused
+      connection no longer look identical. Check `tr4w.log`.
+
+**TWO CHANGES THAT ARE NOT TRANSLATIONS**, because if this misbehaves they are
+the first places to look:
+
+1. **The 4-byte size header is read as a header** (`ReadInt32(False)`) instead
+      of being skipped off the front of whatever the first `recv` returned.
+      The old form was correct only while that first segment carried at least
+      four bytes, which TCP does not promise.
+2. **`AConvert := False` is load-bearing.** Indy converts from NETWORK byte
+      order by default and the old code read those bytes natively. Left at the
+      default on a little-endian machine, a 25,000-byte log reads as
+      3,347,644,416 and every size check fails.
+
+The transfer still ends on **two seconds of silence or a close**, exactly as
+the old 2000 ms wait did -- there is no framing past the size field.
+
 ## 2026-09-08 -- peeling MainUnit for a Linux compile: DECISIONS OWED
 
 Compiling `MainUnit.pas` for x86_64-linux, unit by unit, to find what still

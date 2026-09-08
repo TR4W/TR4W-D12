@@ -35,7 +35,6 @@ uses
   PostUnit,
   VC,
   TF,
-  utils_net,
   utils_text,
   utils_file,
   uCallSignRoutines,

@@ -206,7 +206,6 @@ uses
   uMessagesList,
   uRussiaOblasts,
   uMenu,
-  utils_net,
   utils_hw,
   uAnsiStr,
   uStickyKeys,

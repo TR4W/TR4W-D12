@@ -23,7 +23,6 @@ uses
   uMMTTY,
   uCallSignRoutines,
   uIO,
-  utils_net,
   utils_text,
   utils_file,
   uWinKey,
@@ -721,12 +720,17 @@ begin
      begin
      Radio2.tFactoryObject.Disconnect;
      end;
-  logger.Info('[ExitProgram] Step 5: WSACleanup');
+  (* STEP 5 WAS WSACleanup, AND IT IS GONE WITH utils_net (2026-09-08).
 
-  if WindowsSocketsInitialised then
-     begin
-     WSACleanup;
-     end;
+    WindowsSocketsInitialised was set in exactly one place -- GetConnection's
+    WSAStartup -- and that function was the last raw socket in TR4W. With it
+    converted to Indy, the flag can never be True, so this block was already
+    dead the moment the conversion landed.
+
+    Calling WSACleanup here would be WORSE than dead, not merely useless:
+    Indy runs its own WSAStartup/WSACleanup pair with its own reference
+    count, and an unmatched WSACleanup from outside that pairing decrements
+    someone else's count. *)
 
   ntBeepClose;
 

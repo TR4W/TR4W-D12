@@ -29,7 +29,6 @@ uses
   VC,
   TF,
 //  tr4wutils,
-utils_net,
   (* Windows is gone (2026-09-08): GetSystemTime for T1/T4 and
     FileTimeToSystemTime for the NTP reply both go through TDateTime now --
     see SystemTimeFromDateTime. *)

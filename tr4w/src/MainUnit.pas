@@ -55,7 +55,6 @@ uses
   uAltD,
   uMessagesList,
   uMMTTY,
-  utils_net,
   utils_text,
   uCallSignRoutines,
   uCallSigns,
