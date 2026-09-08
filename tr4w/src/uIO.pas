@@ -57,18 +57,25 @@ uses
     THE PLATFORM ANSWER, DECIDED 2026-09-08 (NY4I): "LPT stays on windows
     and added for linux. not applicable on mac."
 
-      Windows  keeps inpout32. The 64-bit build of that driver is
-               InpOutx64.dll, and the choice is by BUILD BITNESS rather than
-               by OS: a 32-bit application MUST use InpOut32.dll even on
-               64-bit Windows, because that DLL carries both drivers and
-               picks at runtime. TR4W is 32-bit, so the hardcoded name below
-               is correct TODAY and becomes wrong the day the 64-bit move
-               happens. Details, from the driver author:
-               docs/inpOut32-64_Info.md
-      Linux    GETS A BACK END. Scheduled work, not a maybe. ppdev -- ioctls
-               on /dev/parport0 -- is the route to price first, because the
-               FPC wiki's `ports` + `fpioperm` alternative needs ROOT, and
-               requiring root to key CW is the real objection to it.
+      Windows  keeps inpout32, at BOTH bitnesses -- the guards NEST rather
+               than compete. This {$IFDEF WINDOWS} is the outer one and
+               stays; inside it the DLL NAME depends on the build:
+               InpOutx64.dll for 64-bit, inpout32.dll for 32-bit. That inner
+               branch is not a legacy fallback -- a 32-bit application MUST
+               use InpOut32.dll even on 64-bit Windows, since that DLL
+               carries both drivers and picks at runtime. TR4W is 32-bit, so
+               the hardcoded name below is correct TODAY and becomes wrong
+               the day the 64-bit move happens, not before.
+               Driver author's notes: docs/inpOut32-64_Info.md
+      Linux    WANTED, NOT YET SHOWN TO BE POSSIBLE -- and do not let this
+               comment tell you otherwise. It used to say Linux "gets a back
+               end, ppdev first", which was an assumption dressed as a plan.
+               What is verified is only that the FPC wiki offers a
+               ROOT-requiring route (`ports` + `fpioperm`); ppdev is
+               unchecked, and the real blocker is TIMING -- tCWSleep's
+               non-Windows arm is a plain Sleep that CLAUDE.md says will not
+               key a contest. LPT on Linux is downstream of that clock.
+               BENCH_QUEUE.md lists the four things that must hold.
       macOS    NOT APPLICABLE. No parallel port to talk to, so the no-op
                below is the finished answer there, not a placeholder.
 

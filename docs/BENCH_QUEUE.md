@@ -3185,23 +3185,70 @@ Nothing here is a bench test. They need an answer, not a radio.
        the 32bit (InpOut32) DLL"* -- so the exports (`Out32`, `Inp32`,
        `IsInpOutDriverOpen`) carry over and `LoadInpOut32` needs the name
        swapped, not rewriting.
-     - **IT IS KEYED ON THE BUILD'S BITNESS, NOT ON THE OS**, which is where
-       my earlier framing was wrong. A 32-bit application **must** use
-       `InpOut32.dll` even on 64-bit Windows -- that DLL carries BOTH drivers
-       and picks at runtime. Only a 64-bit build uses `InpOutx64.dll`. So
-       this is `{$IFDEF CPU64}`, not `{$IFDEF WINDOWS}`, and TR4W is 32-bit
-       today: **nothing needs to change until the 64-bit move itself.**
+     - **THE TWO GUARDS NEST -- WINDOWS OUTSIDE, BITNESS INSIDE** (NY4I:
+       *"I think the guard is IFDEF WINDOWS then under it a choice of IFDEF
+       CPU64 or CPU32. It is only WIndows in either case."*). I first called
+       it per-OS, then over-corrected to per-bitness *instead of* per-OS.
+       Both are real and neither replaces the other:
+
+       ```pascal
+       {$IFDEF WINDOWS}
+          {$IFDEF CPU64}
+          INPOUT_LIB = 'InpOutx64.dll';
+          {$ELSE}
+          INPOUT_LIB = 'inpout32.dll';
+          {$ENDIF}
+       {$ENDIF}
+       ```
+
+       The inner `{$ELSE}` is not a legacy fallback: a 32-bit application
+       **must** use `InpOut32.dll` even on 64-bit Windows, because that DLL
+       carries BOTH drivers and picks at runtime. TR4W is 32-bit today, so
+       **nothing changes until the 64-bit move itself.**
      - **THE FIRST LOAD INSTALLS A KERNEL DRIVER AND NEEDS ELEVATION** on
        Vista and later. That is an operational fact about LPT users, not a
        code change, and it belongs in whatever release note covers LPT.
 
      Binaries for both: https://github.com/ellysh/InpOut32/tree/master/bin
-  2. **THE LINUX BACK END -- scheduled, not optional.** Behind `uIO`'s
-     existing surface, so no caller changes. **ppdev first**: ioctls on
-     `/dev/parport0`, needing no special privilege. The FreePascal wiki's
-     route -- unit `ports` for `port[$378]` with `fpioperm` from unit `x86`
-     -- wants ROOT, and requiring root to key CW is the real objection to it,
-     not portability.
+  2. **THE LINUX BACK END -- WANTED, BUT NOT YET SHOWN TO BE POSSIBLE.**
+
+     NY4I: *"It seems like you are assuming it works on Linux."* He is right,
+     and I had drifted into exactly that. **What is actually verified is one
+     sentence of the FreePascal wiki**: unit `ports` gives the `port[$378]`
+     syntax with `fpioperm` from unit `x86` granting access first (Linux
+     x86/x86_64, FreeBSD) -- and *"the program must be run as root."*
+
+     **EVERYTHING ELSE I WROTE HERE WAS ASSERTION.** "ppdev, ioctls on
+     /dev/parport0, needs no special privilege" came from general knowledge,
+     not from anything checked. The FIRST draft of this entry said so
+     honestly -- *"is NOT on that page, so it needs its own look before
+     anyone budgets it"* -- and later edits quietly hardened it into "ppdev
+     first". That is how an unknown becomes a plan without anyone deciding
+     it should.
+
+     **FOUR THINGS MUST HOLD, AND NONE IS ESTABLISHED:**
+
+     a. **FPC can drive ppdev at all.** No ppdev bindings are in the RTL as
+        far as I have looked; it would mean writing the ioctls (PPCLAIM,
+        PPWDATA, PPRDATA) by hand.
+     b. **Permissions are workable.** ppdev is not root, but `/dev/parport0`
+        normally wants membership of `lp`. "Not root" is not "no setup".
+     c. **THE TIMING HOLDS -- AND THIS IS THE REAL BLOCKER.** LPT keying
+        bit-bangs PTT and CW element edges. **TR4W's CW element clock off
+        Windows is ALREADY A PLACEHOLDER**: `logk1ea.tCWSleep`'s non-Windows
+        arm is a plain `Sleep`, and CLAUDE.md says outright it *"will not key
+        a contest"*. Toggling a pin accurately is pointless if nothing can
+        time the elements, so **an LPT back end is DOWNSTREAM of the HPTimer
+        work**, not independent of it. An ioctl-per-edge path also needs its
+        jitter measured, not assumed.
+     d. **The hardware is on the target machine.** Parallel ports are largely
+        gone from modern PCs, and a USB "parallel" adapter is not an LPT port
+        -- this code cannot drive one on any platform.
+
+     **HONEST STATUS: NY4I WANTS IT; WHETHER IT CAN WORK IS OPEN**, and the
+     answer starts at (c). The cheap first step is not code -- it is
+     confirming on a real Linux box with a real parallel port that a pin can
+     be toggled at CW element rates at all.
   3. **macOS is FINISHED, not pending.** There is no parallel port to talk
      to, so the existing no-op is the correct and final answer there. Worth
      stating because a bare `{$IFDEF WINDOWS}` reads like an unfinished port
