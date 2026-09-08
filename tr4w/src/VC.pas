@@ -116,9 +116,17 @@ const
   day-of-week -- a wire and file format change wearing the clothes of a
   portability fix.
 
-  ON WINDOWS THIS BLOCK DOES NOT EXIST and the name comes from the Windows unit
-  exactly as before, so none of the use sites change on either platform. *)
-{$IFNDEF WINDOWS}
+  ON WINDOWS IT IS AN ALIAS TO THE Windows UNIT'S OWN DECLARATION, so the type
+  is identical there and VC is the single place either platform gets it from.
+  That alias is what lets a unit stop saying `uses Windows` for a TYPE -- TF
+  wanted it for nothing else, and TF is reached by 171 units. *)
+{$IFDEF WINDOWS}
+type
+  SYSTEMTIME   = Windows.SYSTEMTIME;
+  TSystemTime  = SYSTEMTIME;
+  PSystemTime  = ^SYSTEMTIME;
+  LPSYSTEMTIME = PSystemTime;
+{$ELSE}
 type
   SYSTEMTIME = record
     wYear:         Word;

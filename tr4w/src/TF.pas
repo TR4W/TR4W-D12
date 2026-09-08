@@ -27,6 +27,7 @@ uses
   VC,
   utils_text,
   Windows,
+  Classes,      // TFileStream -- EnumerateLinesInFile reads rather than maps
   SysUtils,
   ActiveX,
   Messages,
@@ -136,10 +137,21 @@ function IntegerBetween(v: integer; i: integer; k: integer): boolean;
 // ValExt removed -- see the note at its old implementation site.  Callers use
 // the RTL `Val` intrinsic, which is what uCTYDAT already does.
 
+type
+   (* FPC's Windows unit declares TFNThreadStartRoutine as a bare Pointer, so
+     this is the same type under a name TF owns -- see tCreateThread. *)
+   TTR4WThreadStart = Pointer;
+
 { START A WORKER THREAD WHOSE FAULTS ARE NOT SILENT, AND WHOSE ALLOCATIONS ARE
   NOT A RACE.  Two defects, both measured on 2026-08-23, both fixed by routing
   through the RTL instead of calling CreateThread directly.  See the body. }
-function tCreateThread(lpStartAddress: TFNThreadStartRoutine; var lpThreadId: DWORD; Quiet: boolean = False; aParameter: Pointer = nil): THandle;
+(* TTR4WThreadStart, not Windows' TFNThreadStartRoutine.
+
+  FPC declares that as a bare Pointer -- see the note in the body -- so this is
+  the same type under a name TF owns, and every one of the seventeen call sites
+  passes @SomeProc, which is Pointer-compatible either way. It was the only
+  reason this declaration needed the Windows unit. *)
+function tCreateThread(lpStartAddress: TTR4WThreadStart; var lpThreadId: DWORD; Quiet: boolean = False; aParameter: Pointer = nil): THandle;
 
 //function tgethostbyname(h_Name: PAnsiChar): PAnsiChar;
 (* tDialogBox IS DELETED (2026-08-31).  Its last live caller went with the
@@ -573,7 +585,12 @@ var
 begin
   ContestString[Ord(ContestString[0]) + 1] := #0;
   for TempContest := Succ(DUMMYCONTEST) to High(ContestType) do
-    if Windows.lstrcmpA(ContestTypeSA[TempContest], @ContestString[1]) = 0 then
+    (* StrComp, the RTL's, rather than Windows.lstrcmpA. Both compare
+      NUL-terminated bytes and return 0 on equality; lstrcmpA additionally
+      applies the user's LOCALE, which is wrong here -- these are contest
+      identifiers, not display text, and a Turkish locale famously does not
+      fold 'I' the way the rest of this comparison assumes. *)
+    if StrComp(ContestTypeSA[TempContest], @ContestString[1]) = 0 then
        begin
        Result := TempContest;
        Exit;
@@ -730,7 +747,7 @@ end;
 
 procedure ShowSysErrorMessage(ID: PAnsiChar);
 begin
-  showwarning(SysUtils.Format('%s: %s', [string(ID), SysUtils.SysErrorMessage(Windows.GetLastError)]));
+  showwarning(SysUtils.Format('%s: %s', [string(ID), SysUtils.SysErrorMessage(GetLastOSError)]));
 end;
 
 { What the trampoline carries across.  Heap-allocated by tCreateThread and
@@ -776,7 +793,7 @@ begin
   end;
 end;
 
-function tCreateThread(lpStartAddress: TFNThreadStartRoutine; var lpThreadId: DWORD; Quiet: boolean; aParameter: Pointer): THandle;
+function tCreateThread(lpStartAddress: TTR4WThreadStart; var lpThreadId: DWORD; Quiet: boolean; aParameter: Pointer): THandle;
 var
   start: PWorkerStart;
   id: TThreadID;
@@ -848,11 +865,22 @@ end;
 
 function EnumerateLinesInFile(FileName: PAnsiChar; Func: TEnumLinesFunc; UpperCase: boolean): boolean;
 label
-  2, 3, LastLine;
+  LastLine;
 var
-  h                                     : THandle;
+  (* THE FILE IS READ, NOT MEMORY-MAPPED (2026-09-07).
+
+    It was CreateFileMapping + MapViewOfFile with two labels and two gotos to
+    unwind three handles on a partial failure -- all Windows-only, and the RTL
+    has no portable mapping. It is a TFileStream read into a TBytes now: one
+    allocation, and the unwinding disappears with the handles.
+
+    THE SCAN BELOW IS UNCHANGED. MapBase still walks bytes by index over the
+    whole file exactly as it walked the mapped view; only where the bytes come
+    from has changed. This is the same conversion, for the same reason, as
+    uCTYDAT's. *)
+  raw                                   : TBytes;
+  fs                                    : TFileStream;
   FileSize                              : Cardinal;
-  MapFin                                : Cardinal;
   MapBase                               : PAnsiChar;
   StartPos, FilePos                     : Cardinal;
   TempString                            : ShortString;
@@ -861,31 +889,46 @@ var
   NewLine                               : boolean;
 begin
   Result := False;
+  raw := nil;
 
+  (* THE SAME THREE CANDIDATE PATHS as before -- as given, then under the log
+    directory, then under the program directory -- but asked of the file
+    system rather than of three open attempts. *)
   if strpos(FileName, '\') <> nil then
      begin
-     tOpenFileForRead(h, FileName)
+     Format(TempBuffer, '%s', FileName);
      end
   else
      begin
      Format(TempBuffer, '%s%s', TR4W_LOG_PATH_NAME, FileName);
-     if not tOpenFileForRead(h, TempBuffer) then
+     if not FileExists(TempBuffer) then
         begin
         Format(TempBuffer, '%s%s', TR4W_PATH_NAME, FileName);
-        tOpenFileForRead(h, TempBuffer);
         end;
      end;
 
-  if h = INVALID_HANDLE_VALUE then Exit;
+  try
+     fs := TFileStream.Create(AnsiString(TempBuffer), fmOpenRead or fmShareDenyNone);
+     try
+        SetLength(raw, fs.Size);
+        if Length(raw) > 0 then
+           begin
+           fs.ReadBuffer(raw[0], Length(raw));
+           end;
+     finally
+        fs.Free;
+     end;
+  except
+     Exit;
+  end;
 
-  FileSize := Windows.GetFileSize(h, nil);
-  MapFin := Windows.CreateFileMapping(h, nil, PAGE_READONLY, 0, 0, nil);
-  if MapFin = 0 then
+  if Length(raw) = 0 then
      begin
-     goto 2;
+     Exit;
      end;
 
-  MapBase := Windows.MapViewOfFile(MapFin, FILE_MAP_READ, 0, 0, 0);
+  FileSize := Length(raw);
+  MapBase := PAnsiChar(@raw[0]);
 
   Result := True;
 
@@ -938,11 +981,9 @@ begin
      goto LastLine;
      end;
 
-  Windows.UnmapViewOfFile(MapBase);
-  3:
-  CloseHandle(MapFin);
-  2:
-  CloseHandle(h);
+  (* NOTHING TO UNWIND. This was UnmapViewOfFile / CloseHandle(MapFin) /
+    CloseHandle(h), with labels 2 and 3 as the goto targets for a mapping that
+    failed halfway. The stream is closed and `raw` is freed by the compiler. *)
 end;
 
 
