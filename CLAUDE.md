@@ -8,20 +8,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 > summarizes a design, the document listed under [Documentation map](#documentation-map) is
 > authoritative.
 
-## MANDATORY: Git command form
+## ~~MANDATORY: Git command form~~ — RESCINDED 2026-09-07
 
-Run **every** git command as `git -C /c/tr4w-d12 <subcommand>` (e.g. `git -C /c/tr4w-d12 commit ...`,
-`git -C /c/tr4w-d12 push d12 main`). **NEVER** prepend `cd /c/tr4w-d12` (or any `cd`) as the first
-command in a shell block. A `cd` to the already-current directory triggers a permission prompt every
-time — the `-C` flag targets the repo explicitly with no `cd` and no prompt. (A PreToolUse hook in
-`.claude/settings.json` enforces this; if it warns you, fix the command — don't work around it.)
-Substitute your own clone's path: the hook derives it from `$CLAUDE_PROJECT_DIR` and will tell you
-what it expects.
+`git -C /c/tr4w-d12 <subcommand>` is **no longer required**, and the PreToolUse hook that enforced
+it (`.claude/hooks/enforce-git-c.py`) is deleted.
+
+**Why it existed, and why it stopped mattering:** a `cd` to the already-current directory triggered
+a permission prompt on every shell block, back when NY4I approved commands one at a time. That is no
+longer how this session runs, so the rule was costing rewrites and buying nothing (NY4I,
+2026-09-07).
+
+`git -C` remains a perfectly good habit — it is explicit about which tree it acts on, which genuinely
+matters in a multi-repo workspace — but it is a preference now, not a rule, and nothing enforces it.
 
 ## MANDATORY: Project guardrails live in the repo
 
 `.claude/settings.json` and `.claude/hooks/` are **tracked**. They carry the hooks every clone needs:
-the `git -C` rule, the begin/end lint, and the CRLF check. (The Pascal glob rule
+the begin/end lint and the CRLF check. (The `git -C` rule is **gone as of
+2026-09-07** — see the section above. The Pascal glob rule
 is **gone as of 2026-09-07** -- it blocked `--include=*.pas` because 25 units had
 UPPERCASE extensions, and those are renamed. Its successor
 `build/Lint-UnitFileNames.ps1` fails the build instead of warning a shell.)
@@ -32,8 +36,8 @@ overlap. `CLAUDE.local.md` is ignored for the same reason: personal notes, not p
 
 This split was made on 2026-08-29 and it fixed a real gap. `.claude/` had been ignored wholesale, so
 every hook above existed on exactly one machine, and this file had been claiming since August that
-`.claude/settings.json` enforced the `git -C` rule — a file that was not in the repository. A control
-that is real on one clone and absent on the next is worse than no control, because it is believed.
+`.claude/settings.json` enforced a rule, from a file that was not in the repository. A control that
+is real on one clone and absent on the next is worse than no control, because it is believed.
 
 **Hook commands must use `$CLAUDE_PROJECT_DIR`, never an absolute path.** The clones are not in the
 same place — `C:\tr4w-d12` here, `C:\projects\TR4W-D12` elsewhere — and a hardcoded path is a hook
