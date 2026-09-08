@@ -1059,7 +1059,7 @@ begin
      logger.Debug('TryConnectToNetwork -> %s:%d  (will retry every 5s while server is unreachable; further attempts logged only on state change)', [ServerAddress, ServerPort]);
      FConnectLogState := nclsTrying;
      end;
-  if NetThreadID = 0 then
+  if not ThreadStarted(NetThreadID) then
      begin
      FConnectThreadAnnounced := announce;
      tCreateThread(@ConnectThread, NetThreadID, not announce {Quiet on silent retries});
@@ -1172,7 +1172,7 @@ begin
      begin
      logger.Trace('[ConnectThread] Thread %d exiting, NetThreadID cleared', [GetCurrentThreadId]);
      end;
-  NetThreadID := 0;
+  ClearThread(NetThreadID);
 end;
 
 { ONE CELL OF THE STATION LIST.
@@ -1423,7 +1423,7 @@ begin
           else
              begin
              HeadlessSyncMode := True;
-             if LogSyncThreadID = 0 then
+             if not ThreadStarted(LogSyncThreadID) then
                 begin
                 tCreateThread(@RunSyncThread, LogSyncThreadID);
                 end;

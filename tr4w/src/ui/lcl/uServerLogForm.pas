@@ -344,7 +344,7 @@ begin
       Exit;
       end;
 
-   if LogSyncThreadID = 0 then
+   if not ThreadStarted(LogSyncThreadID) then
       begin
       tCreateThread(@RunSyncThread, LogSyncThreadID);
       logger.Info('Created LogSync thread with threadid of %d', [LogSyncThreadID]);

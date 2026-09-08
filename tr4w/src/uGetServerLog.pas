@@ -503,7 +503,7 @@ begin
         end;
      end;
   e:
-  LogSyncThreadID := 0;
+  ClearThread(LogSyncThreadID);
   (* Issue #912: the replace runs on the UI thread, because LoadinLog touches
     controls and a control belongs to the thread that made it.
 

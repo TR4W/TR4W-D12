@@ -312,7 +312,7 @@ begin
             // One handler for resolve and send alike: the answer is the same,
             // and a station with no network is the ordinary case here.
             logger.Warn('[NTP] Could not reach %s: %s', [ntpServer, E.Message]);
-            NTPStartupThreadID := 0;
+            ClearThread(NTPStartupThreadID);
             Exit;
             end;
       end;
@@ -321,7 +321,7 @@ begin
          begin
          logger.Warn('[NTP] No usable response from %s (got %d bytes, wanted 48)',
                      [ntpServer, got]);
-         NTPStartupThreadID := 0;
+         ClearThread(NTPStartupThreadID);
          Exit;
          end;
    finally
@@ -353,7 +353,7 @@ begin
       logger.Info('[NTP] Clock OK: offset=%d ms from %s', [offset, ntpServer]);
       end;
 
-   NTPStartupThreadID := 0;
+   ClearThread(NTPStartupThreadID);
 end;
 
 procedure CheckNTPAtStartup;

@@ -1625,7 +1625,7 @@ end;
 
 function K1EAKeyer.CWStillBeingSent: boolean;
 begin
-  Result := CWThreadID <> 0;
+  Result := ThreadStarted(CWThreadID);
   // CWStillBeingSent := PTTAsserted;
 end;
 
@@ -1643,7 +1643,7 @@ begin
 }
 //  ExitFromCWThread := True;
   CWBufferStart := CWBufferEnd;
-  if CWThreadID <> 0 then
+  if ThreadStarted(CWThreadID) then
      begin
      dec(CWBufferStart);
      if CWBufferStart = -1 then
@@ -2123,7 +2123,7 @@ begin
      ShowSysErrorMessage('CW');
      end;
 
-  CWThreadID := 0;
+  ClearThread(CWThreadID);
 
   BackToInactiveRadioAfterQSO;
 

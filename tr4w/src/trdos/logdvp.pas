@@ -583,7 +583,7 @@ begin
 
   tExitFromDVPThread := False;
   DVPOn := False;
-  DVPThreadID := 0;
+  ClearThread(DVPThreadID);
   DisplayCodeSpeed;
   FillChar(DVPMessagesArray, SizeOf(DVPMessagesArray), 0);
   BackToInactiveRadioAfterQSO;

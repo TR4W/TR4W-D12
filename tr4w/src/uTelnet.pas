@@ -649,7 +649,7 @@ begin
   // CONNECT ON OPEN, and only when nothing is connected yet -- reshowing the
   // window must not dial a second time.
   if Config.tConnectionAtStartup and (not TelnetIsConnected) and
-     (TelThreadID = 0) then
+     (not ThreadStarted(TelThreadID)) then
      begin
      StartTelnetConnect;
      end;
@@ -1055,7 +1055,7 @@ var
   i: integer;
   Host: string;
 begin
-  if TelThreadID <> 0 then
+  if ThreadStarted(TelThreadID) then
      begin
      Exit;   // already connecting / connected
      end;
@@ -1177,7 +1177,7 @@ begin
   // was still terminating, which corrupted state and crashed.  Disconnect
   // itself joins the reader, so both threads are gone before we return.
   ClusterClient.Disconnect;
-  if TelThreadHandle <> 0 then
+  if ThreadStarted(TelThreadHandle) then
      begin
      (* WaitForThreadTerminate / CloseThread -- the RTL's pair for a TThreadID,
        which is what BeginThread returned. On Windows the wait IS
@@ -1188,9 +1188,9 @@ begin
        when this program runs on those platforms. *)
      WaitForThreadTerminate(TelThreadHandle, 5000);
      CloseThread(TelThreadHandle);
-     TelThreadHandle := 0;
+     ClearThread(TelThreadHandle);
      end;
-  TelThreadID := 0;
+  ClearThread(TelThreadID);
   // Session is over: the next TELNET_CLOSED (a late one from the reader, say)
   // must not run this teardown a second time.
   TelnetSessionActive := False;

@@ -76,7 +76,7 @@ begin
       end;
    CPUKeyer.AddStringToCWBuffer(Msg, Tone);
 
-   if CWThreadID = 0 then
+   if not ThreadStarted(CWThreadID) then
       begin
       wkBusy := False;            //  4.90.5 (Q8)
       logger.Info('Calling tCreateThread from TCWKeyerCPU.SendString');

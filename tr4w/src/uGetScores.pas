@@ -94,7 +94,7 @@ uses
 
 procedure RunPOSTGetScoresThread;
 begin
-  if GetScoresThreadID = 0 then
+  if not ThreadStarted(GetScoresThreadID) then
      begin
      logger.Debug('Calling tCreateThread from RunPOSTGetScoresThread');
      GetScoresThreadHandle := tCreateThread(@CreateConnectionAndSendReportToGetScores, GetScoresThreadID);
@@ -168,7 +168,7 @@ begin
 
    http.Free;
    ssl.Free;
-   GetScoresThreadID := 0;
+   ClearThread(GetScoresThreadID);
    { CloseThread, not CloseHandle: tCreateThread is FPC's BeginThread, so
      what this holds is a TThreadID and the RTL has the matching pair. }
    CloseThread(GetScoresThreadHandle);

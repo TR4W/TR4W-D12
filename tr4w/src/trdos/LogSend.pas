@@ -92,7 +92,7 @@ begin
         begin
         DVPMessagesArray[DVPMessagesArrayIndex] := FileName;
         inc(DVPMessagesArrayIndex);
-        if DVPThreadID = 0 then
+        if not ThreadStarted(DVPThreadID) then
            begin
            DVPOn := True;
            tExitFromDVPThread := False;

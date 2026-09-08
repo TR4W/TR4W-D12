@@ -10117,7 +10117,7 @@ begin
   tUpdateLog(actRescore);
   LoadinLog;
   DisplayLoadedQSOs;
-  ImportFromADIFThreadID := 0;
+  ClearThread(ImportFromADIFThreadID);
 
 end; // of ImportFromADIF
 

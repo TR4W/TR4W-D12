@@ -1591,7 +1591,7 @@ begin
 
    logger.Info('[%s.ShutDownRadioInterface] Stopping polling thread', [Self.RadioName]);
    Self.PollingStopRequested := True;
-   if Self.tRadioInterfaceThreadHandle <> 0 then
+   if ThreadStarted(Self.tRadioInterfaceThreadHandle) then
       begin
       (* THE RTL's OWN PAIR, not Win32's. tCreateThread has used FPC's
         BeginThread since 2026-08-23 -- see the note in TF -- so what this
@@ -1601,8 +1601,8 @@ begin
         TThreadID IS a handle. *)
       WaitForThreadTerminate(Self.tRadioInterfaceThreadHandle, 3000);
       CloseThread(Self.tRadioInterfaceThreadHandle);
-      Self.tRadioInterfaceThreadHandle := 0;
-      Self.tRadioInterfaceThreadID := 0;
+      ClearThread(Self.tRadioInterfaceThreadHandle);
+      ClearThread(Self.tRadioInterfaceThreadID);
       end;
    Self.PollingStopRequested := False;
 
