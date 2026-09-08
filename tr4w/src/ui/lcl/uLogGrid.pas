@@ -119,6 +119,11 @@ type
       (* Set when the rows change, so a fit-and-fill grid measures the NEW
         contents once rather than on every paint. *)
       FNeedsFit:    boolean;
+
+      (* WAS THE NEWEST QSO IN VIEW WHEN THE RESIZE STARTED -- see DoSetBounds.
+        Captured against the OLD size, because by the time DoOnResize runs the
+        question can no longer be asked. *)
+      FWasAtEnd:    boolean;
       FColumnOf:    array of LogColumnsType;
       FCache:       array of TLogGridCacheEntry;
 
@@ -127,6 +132,7 @@ type
       procedure SizeColumnsAsDeclared;
       procedure SizeColumnsToFit;
       function  AnyRowCached: boolean;
+      function  AtEnd: boolean;
       procedure SetRecordCount(const aValue: Int64);
       procedure SetMatchText(const aValue: string);
       procedure DrawMatchIn(const aRect: TRect; const aText: string;
@@ -137,6 +143,9 @@ type
       procedure DrawCell(aCol, aRow: integer; aRect: TRect;
                          aState: TGridDrawState); override;
       procedure DoOnResize; override;
+
+      (* The last moment the OLD geometry is still true -- see the body. *)
+      procedure DoSetBounds(aLeft, aTop, aWidth, aHeight: integer); override;
 
       (* The first moment the columns can be measured -- see SizeColumns. *)
       procedure InitializeWnd; override;
@@ -258,6 +267,11 @@ begin
                goVertLine, goHorzLine];
 
    FSizing    := lgsDeclared;
+
+   (* A GRID NOBODY HAS SCROLLED YET IS FOLLOWING THE LOG. Left False, the
+     first resize after startup would be the one resize that does not keep
+     the newest QSO in view. *)
+   FWasAtEnd  := True;
 
    FMatchText      := '';
    FMatchColumn    := logColCallsign;
@@ -715,10 +729,54 @@ begin
       end;
 end;
 
+(* IS THE NEWEST QSO IN VIEW?
+
+  MaxTopLeft.y is the grid's own answer to "as far down as this scrolls" (see
+  ScrollToEnd), so being at or past it is what "at the bottom" means. When the
+  whole log fits, MaxTopLeft.y is FixedRows and the answer is always yes --
+  which is right: a short log is entirely on screen and cannot be behind. *)
+function TLogGrid.AtEnd: boolean;
+begin
+   Result := (FRecordCount <= 0) or (TopRow >= GCache.MaxTopLeft.y);
+end;
+
+(* THE LAST MOMENT THE OLD GEOMETRY IS STILL TRUE.
+
+  DoOnResize needs to know whether the operator was looking at the newest QSO
+  BEFORE the window changed size, and by then the grid has already been
+  re-measured and the question cannot be answered. ChangeBounds calls this
+  first and Resize afterwards, so this is where it is asked. *)
+procedure TLogGrid.DoSetBounds(aLeft, aTop, aWidth, aHeight: integer);
+begin
+   FWasAtEnd := AtEnd;
+   inherited DoSetBounds(aLeft, aTop, aWidth, aHeight);
+end;
+
+(* A RESIZE KEEPS THE NEWEST QSO IN VIEW -- BUT ONLY IF IT ALREADY WAS.
+
+  Growing the window adds room BELOW the rows on screen, so without this the
+  operator gets a band of empty grid under the last QSO and has to scroll to
+  see what they just worked; shrinking it hides the newest contacts behind the
+  bottom edge, which is worse (NY4I, 2026-09-08).
+
+  CONDITIONAL, THOUGH. An operator scrolled back through the log to read an
+  earlier contact, who then drags the window edge, must not be thrown to the
+  end -- they would lose their place for a reason that has nothing to do with
+  what they were doing. Following the log is the behaviour of a view that was
+  ALREADY following it.
+
+  AFTER SizeColumns, DELIBERATELY: re-fitting the columns can add or remove the
+  horizontal scrollbar, which changes how much height the rows have to sit in.
+  Scrolling first would aim at the wrong bottom. *)
 procedure TLogGrid.DoOnResize;
 begin
    inherited DoOnResize;
    SizeColumns;
+
+   if FWasAtEnd then
+      begin
+      ScrollToEnd;
+      end;
 end;
 
 procedure TLogGrid.InitializeWnd;
@@ -940,7 +998,6 @@ end;
 procedure TLogGrid.ScrollToEnd;
 var
    last: integer;
-   top:  integer;
 begin
    if FRecordCount <= 0 then
       begin
@@ -950,12 +1007,30 @@ begin
    last := RowCount - 1;
    Row  := last;
 
-   top := last - VisibleRowCount + 1;
-   if top < FixedRows then
-      begin
-      top := FixedRows;
-      end;
-   TopRow := top;
+   (* ASK FOR THE LAST ROW AND LET THE GRID CLAMP, WHICH IS THE WHOLE FIX.
+
+     This used to compute the top itself, as `last - VisibleRowCount + 1`, and
+     that is off by one ROW every time -- VisibleRowCount INCLUDES the row that
+     is only partly on screen (grids.pas, GetVisibleRowCount: it is simply
+     VisibleGrid.bottom - VisibleGrid.top). So the arithmetic asked for one row
+     more than actually fits, and the newest QSO sat permanently cut in half at
+     the bottom edge (NY4I, 2026-09-08).
+
+     TopRow goes through ScrollGrid, which ends with
+
+         Result.y := Max(FixedRows, Min(Result.y, FGCache.MaxTopLeft.y))
+
+     and CalcMaxTopLeft builds MaxTopLeft.y by walking upwards from the last
+     row while `H <= ScrollHeight` -- the topmost row from which every
+     remaining row fits WHOLE. That is exactly the question this routine is
+     asking, already answered, against the real row heights and the real
+     client height with whatever scrollbars are up. So asking for the last row
+     lands on the true bottom and the LCL owns the arithmetic.
+
+     THE CLAMP HOLDS ONLY BECAUSE goSmoothScroll IS NOT IN Options: with
+     smooth scrolling the grid may stop part-way into a row and carry the
+     remainder in MaxTLOffset. If that option is ever added here, reread this. *)
+   TopRow := last;
 end;
 
 (* PAINTING ONE CELL.

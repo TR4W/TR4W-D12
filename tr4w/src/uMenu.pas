@@ -100,7 +100,7 @@ const
     // per-slot entries to ONE item opening the Preferences window, removing
     // the MAXWORD-1 submenu marker, the two Radio entries and the MAXWORD-2
     // terminator, and adding one item (net -3).
-    T_MENU_ARRAY_SIZE                     = 176 + 1 {MMTTY window}{$IFDEF LANG_RUS} + 3{$ENDIF} + 2 {RC_RESET_RADIO_PORTS, separator, Repeat POTA Parks} + 2 {HamScore Resync (Tools) + HamScore Status (Windows menu), Issue #783} + 1 {3830 Score under File-Reports} + 1 {Edit Cabrillo Summary under Tools, Issue #914} + 1 {Download TRMASTER.DTA, 2026-08-16} - 1 {Appearance removed, 2026-08-16} - 1 {Synchronize PC time removed, 2026-08-25 -- setting the clock needs UAC} - 1 {Device Manager removed, 2026-09-01 -- an application does not shell out to mmc} - 1 {MP3 Recorder removed, 2026-09-07 -- recording moves to QSOCapture}
+    T_MENU_ARRAY_SIZE                     = 176 + 1 {MMTTY window}{$IFDEF LANG_RUS} + 1{$ENDIF} {menu_wiki_rus -- was +3 until 2026-09-08, when Help->Contents and its separator had already gone} + 2 {RC_RESET_RADIO_PORTS, separator, Repeat POTA Parks} + 2 {HamScore Resync (Tools) + HamScore Status (Windows menu), Issue #783} + 1 {3830 Score under File-Reports} + 1 {Edit Cabrillo Summary under Tools, Issue #914} + 1 {Download TRMASTER.DTA, 2026-08-16} - 1 {Appearance removed, 2026-08-16} - 1 {Synchronize PC time removed, 2026-08-25 -- setting the clock needs UAC} - 1 {Device Manager removed, 2026-09-01 -- an application does not shell out to mmc} - 1 {MP3 Recorder removed, 2026-09-07 -- recording moves to QSOCapture}
                                             - 0 {Check for Updates taken OFF the menu 2026-08-28 -- see the row below};
 
 var
@@ -509,7 +509,11 @@ begin
    Inc(i); T_MENU_ARRAY[i].mrText := RC_POSTSCORETOGS;
    Inc(i); T_MENU_ARRAY[i].mrText := 'HamScore RTC Status';
    Inc(i); T_MENU_ARRAY[i].mrText := RC_STATIONS;
-   Inc(i); T_MENU_ARRAY[i].mrText := RC_MP3REC;
+   (* RC_MP3REC stood here. Its ROW went with the MP3 recorder on 2026-09-07
+     and this line did not, so every caption from MMTTY onwards was assigned
+     to the row before it: the fourth top-level popup read "MMTTY" instead of
+     "Alt-", and the menu bar ended "Band  Rescore  -  Clear multsheet in all
+     logs" (NY4I, 2026-09-08). Lint-MenuDispatch counts the two sides now. *)
    Inc(i); T_MENU_ARRAY[i].mrText := 'MMTTY';
    Inc(i); T_MENU_ARRAY[i].mrText := 'Alt-';
    Inc(i); T_MENU_ARRAY[i].mrText := RC_INC_TIME;
@@ -627,10 +631,9 @@ begin
    Inc(i); T_MENU_ARRAY[i].mrText := RC_NET_CLDUPE;
    Inc(i); T_MENU_ARRAY[i].mrText := RC_NET_CLMULT;
    Inc(i); T_MENU_ARRAY[i].mrText := HELP_WORD;
-{$IFDEF LANG_RUS}
-   Inc(i); T_MENU_ARRAY[i].mrText := RC_CONTENTS;
-   Inc(i); T_MENU_ARRAY[i].mrText := '-';
-{$ENDIF}
+   (* RC_CONTENTS and its separator stood here, under the LANG_RUS guard.
+     Help -> Contents lost its ROWS with the CHM help system on 2026-09-07;
+     these two captions stayed behind, exactly as RC_MP3REC did above. *)
    Inc(i); T_MENU_ARRAY[i].mrText := RC_HOMEPAGE;
    Inc(i); T_MENU_ARRAY[i].mrText := RC_Download;
    Inc(i); T_MENU_ARRAY[i].mrText := 'Download TRMASTER.DTA';

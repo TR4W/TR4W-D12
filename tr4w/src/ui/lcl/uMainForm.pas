@@ -1086,9 +1086,27 @@ procedure AnchorMainWindowControls;
 var
    e: TMainWindowElement;
 
+   (* NIL, NOT ControlUsable -- AND THE PROBE PROVED THIS ONE.
+
+     ControlUsable answers `(aCtrl <> nil) and aCtrl.HandleAllocated`, which is
+     right for the entry-field accessors it was written for: SelStart, SelLength
+     and SetFocus genuinely need a window. ANCHORS DO NOT -- they are a property
+     the LCL reads when it aligns children, and the form streamer sets them on
+     controls that have no handle at all.
+
+     This routine runs from CreateMainWindow, BEFORE the form is shown.
+     Measured on the bench 2026-09-08:
+
+       AFTER-ANCHOR EditableLog     handle=False
+       AFTER-ANCHOR CallEdit        handle=True
+       AFTER-ANCHOR lstPossibleCall handle=False
+
+     So the log grid and the possible-call strip were the two controls whose
+     anchors were SILENTLY SKIPPED -- no log line, no failure -- and they are
+     exactly the two that did not move when the window was resized. *)
    procedure AnchorToBottom(const aControl: TWinControl);
    begin
-      if ControlUsable(aControl) then
+      if aControl <> nil then
          begin
          aControl.Anchors := [akLeft, akBottom];
          end;
@@ -1142,7 +1160,7 @@ begin
    (* THE LOG IS THE ONE CONTROL THAT ABSORBS THE CHANGE. Held to all four
      edges, it grows and shrinks with the window while both bands keep their
      size. That is what makes a taller window mean MORE QSOs on screen. *)
-   if ControlUsable(TR4WEditableLog) then
+   if TR4WEditableLog <> nil then
       begin
       TR4WEditableLog.Anchors := [akLeft, akTop, akRight, akBottom];
       end;
@@ -1159,7 +1177,7 @@ begin
 
    (* The possible-call strip spans the window, so it follows the right edge
      as well as the bottom. *)
-   if ControlUsable(TR4WMainForm.lstPossibleCall) then
+   if TR4WMainForm.lstPossibleCall <> nil then
       begin
       TR4WMainForm.lstPossibleCall.Anchors := [akLeft, akRight, akBottom];
       end;
@@ -2371,6 +2389,30 @@ begin
          end;
 
       SetBounds(aLeft, aTop, aWidth, aHeight);
+
+      (* RE-CAPTURE THE ANCHOR BASE, AND THIS IS NOT OPTIONAL FOR THIS CONTROL.
+
+        An anchored control does not remember a rule, it remembers a MEASUREMENT:
+        BaseBounds, plus the BaseParentClientSize they were taken against. The
+        LCL then reproduces that distance whenever the parent resizes.
+
+        lstPossibleCall is the only bottom-anchored control on this form that is
+        DESIGNED rather than built in code, so its base was captured by the
+        streamer against the .lfm's ClientHeight of 370 -- and the SetBounds
+        above then moved it to a runtime position the base knows nothing about.
+        Measured on the bench 2026-09-08, the stored gap to the bottom was
+
+            370 (design ClientHeight) - 458 (runtime bottom) = -88
+
+        so the strip tracked the window's bottom edge perfectly and sat 88
+        pixels BELOW the client area, off screen, at every size. The entry
+        fields are unaffected because they are created in code and have no
+        design-time base to be stale.
+
+        UpdateBaseBounds(True, True, False) stores the bounds AND the parent
+        client size as they are now, which is what makes the anchor mean what
+        the arithmetic above just said. *)
+      UpdateBaseBounds(True, True, False);
 
       // NO ITEM TEXT is set anywhere, and that is faithful rather than lazy.
       // The Win32 control was created WITHOUT LBS_HASSTRINGS: LB_ADDSTRING's
