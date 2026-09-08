@@ -45,7 +45,7 @@ program tr4w_status_trace;
 {$APPTYPE CONSOLE}
 
 uses
-   Windows,
+   (* Windows named nothing this program uses (2026-09-08). *)
    SysUtils,
    TypInfo,
    Log4D,

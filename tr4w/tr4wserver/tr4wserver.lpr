@@ -16,8 +16,17 @@ uses
   uAnsiStr,       // StrPLCopy over PAnsiChar; SysUtils' is PWideChar
   uAppPaths,      // where written files go, per platform
   uServerForm,    // the window, at last a designed one
+  (* WINDOWS STAYS, MEASURED 2026-09-08 by removing it and reading the
+    compiler: OPEN_ALWAYS, MB_OK, MB_ICONWARNING and MB_TOPMOST. Messages went
+    -- it declared nothing.
+
+    AND LCLType IS NOT AVAILABLE HERE, which is the part worth knowing:
+    tr4wserver is a console program and Build-Server.ps1 deliberately keeps the
+    LCL off its search path -- that exclusion is the only guard on the
+    console/LCL boundary (see CLAUDE.md). So the swap that answered these
+    constants in the GUI units cannot be used here; the server needs its own
+    answer when it is ported, most likely a small constants unit of its own. *)
   Windows,
-  Messages,
   SysUtils,
   tr4wserverUnit in '..\src\tr4wserverUnit.pas',
   uCRC32 in '..\src\uCRC32.pas',

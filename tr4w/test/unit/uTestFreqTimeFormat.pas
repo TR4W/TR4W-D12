@@ -18,7 +18,10 @@ unit uTestFreqTimeFormat;
 interface
 
 uses
-   SysUtils, Windows, uTR4WTestFramework, uFreqTimeFormat;
+   { VC, not Windows, for SYSTEMTIME: VC declares it for every platform
+     with Win32's exact layout -- see the note there. That is what the
+     unit under test uses. }
+   SysUtils, VC, uTR4WTestFramework, uFreqTimeFormat;
 
 type
    TFreqTimeFormatTests = class(TTestCase)

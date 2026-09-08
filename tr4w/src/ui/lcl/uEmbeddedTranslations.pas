@@ -68,6 +68,12 @@ function AvailableLanguages: string;
 implementation
 
 uses
+   (* WINDOWS IS REAL HERE, and it is the RESOURCE API: EnumResourceNamesA,
+     FindResourceA, RT_RCDATA, HMODULE. The catalogues are embedded in the
+     .RES and enumerated out of the running image, so this is not a call
+     that can be swapped -- it is a decision about where translations LIVE
+     off Windows (a file beside the binary, most likely). That belongs with
+     the i18n work, not with a portability sweep. *)
    SysUtils, Classes, Windows,
    gettext,           // GetLanguageIDs -- the locale, the platform's own way
    Translations,      // TPOFile, TranslateResourceStrings
