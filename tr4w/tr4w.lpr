@@ -498,10 +498,22 @@ uLogEditForm in 'src\ui\lcl\uLogEditForm.pas',
   other ten is set. -dLANG_RUS would have linked no icon at all. }
 {$R *.res}
 
-{ The manifest stays hand-kept and separate: the build VERIFIES it -- "manifest
+(* The manifest stays hand-kept and separate: the build VERIFIES it -- "manifest
   verified in the binary (parses, visual styles declared)" -- and the .lpi
-  checkbox offers less control over the content. }
+  checkbox offers less control over the content.
+
+  GATED 2026-09-08. A MANIFEST IS A PE CONCEPT and there is no ELF or Mach-O
+  equivalent -- it is what declares visual styles, DPI awareness and the
+  supportedOS list to the Windows loader. Off Windows the file simply cannot
+  be linked, and FPC says so: "Can't open resource file Win11.res".
+
+  Nothing is lost by the gate, because nothing off Windows reads a manifest.
+  Note the consequence for the OS-version code in uProgramMain: that comment
+  says the supportedOS block is what makes Windows report 10.0 rather than 6.2,
+  which is a WINDOWS-ONLY concern and is already gated to match. *)
+{$IFDEF WINDOWS}
 {$R 'Win11.res'}
+{$ENDIF}
 
 begin
    RunTR4W;
