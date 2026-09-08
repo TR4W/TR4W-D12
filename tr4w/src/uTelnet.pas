@@ -45,17 +45,13 @@ uses
   LogRadio,
   uSpots,
   uSpotAge,   // UTCNow
-  Windows,
   LogEdit,
   LogDupe,
   LogWind,
-  WinSock2,
   //  uSpotsFilter,
   //  uDXSSpotsFilter,
   Tree,
   LogPack,
-  Messages
-  ,
   uTR4WStrings,
   uAnsiStr;
 

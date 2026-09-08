@@ -41,10 +41,8 @@ uses
   //TR,
   uSpots,
   Windows,
-  Messages,
   idUDPClient,
   idGlobal,
-  WinSock2,
   PostUnit,
   uCabrilloFormat,  // tCabrilloFreqString moved here from PostUnit (extracted for unit testing)
   uTotal,

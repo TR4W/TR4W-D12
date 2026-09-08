@@ -25,16 +25,22 @@ interface
 
 uses
   SysUtils,
-  (* WINDOWS AND WINSOCK2 ARE HERE FOR TYPE NAMES ONLY.
+  (* WINDOWS AND WINSOCK2 ARE GONE FROM THIS UNIT (2026-09-08).
 
-    Measured 2026-09-06: there is not one live Win32 API CALL left in this unit
-    or in tr4wserver.lpr -- every Windows. reference the compiler can see is
-    inside a comment. What still binds these two units in is a handful of TYPE
-    declarations, and they are not all alike:
+    The note that stood here recorded, on 2026-09-06, that there was not one
+    live Win32 API CALL left in this unit or in tr4wserver.lpr -- every
+    `Windows.` the compiler could see was inside a comment -- and that what
+    still dragged both units in was a handful of TYPE names. That is now done,
+    and each was its own kind of nothing:
 
-      TSocket        the client's identity, ~40 sites. It is a Cardinal on
-                     every platform; making that explicit is a rename, not a
-                     port, and it is the next thing to do here.
+      TClientHandle        the client's identity, 20 sites. IT WAS NEVER A SOCKET:
+                     the server's networking has been Indy for some time, and
+                     every one of these values is passed straight to
+                     uServerNet.SendToClient, whose parameter is a Cardinal.
+                     So the type name outlived the socket by a whole
+                     rewrite. It is TClientHandle now -- an alias for
+                     Cardinal, declared here, named for what it holds. A
+                     rename, not a port, exactly as the old note predicted.
       HWND           ApplicationHandle, which was the message box's parent.
                      MessageDlg does not need one, so this goes with it.
       SYSTEMTIME     inside a protocol record -- on the WIRE between stations.
@@ -47,8 +53,6 @@ uses
 
     Removing the two uses entries is therefore a real piece of work rather than
     a line edit, and it is written down here rather than half-done. *)
-  Windows,
-  WinSock2,
   VC,
   Log4D,        // server logging: InitServerLogger / logger, restored from the fork
   Version,      // TR4WSERVER_CURRENTVERSION, used by FullServerVersion below
@@ -59,42 +63,56 @@ uses
   uServerNet,    // the transport: Indy, not WSAAsyncSelect
   IdStack,       // GStack.LocalAddress -- the IP readout
   Dialogs,       // MessageDlg -- was MessageBoxW
+  LCLType,       // MB_YESNO, IDYES, IDNO, IDOK -- was the Windows unit
   Controls,      // mrYes -- the modal results MessageDlg answers with
   uAnsiStr,      // StrPLCopy over PAnsiChar; SysUtils' is PWideChar
   uAppPaths,     // LogFilePath -- where a written file goes, per platform
   uLogConfig,    // CreateTR4WLogLayout -- the same timestamps the client writes
-  uServerForm,   // the readouts, by name instead of by control number
-  Messages;
+  uServerForm;   // the readouts, by name instead of by control number
+type
+   (* THE CLIENT'S IDENTITY, as uServerNet hands it out.
+
+     Was WinSock2's TClientHandle, which it has not been since the server moved to
+     Indy -- uServerNet.SendToClient takes a Cardinal and always did. Naming
+     it here says what it is and takes WinSock2 out of a unit that has no
+     socket in it. *)
+   TClientHandle = Cardinal;
+
+   (* HOW OpenServerLog SHOULD BEHAVE WHEN THE LOG IS NOT THERE.
+
+     Was Win32's dwCreationDistribution -- OPEN_EXISTING or OPEN_ALWAYS --
+     which is what kept `uses Windows` alive after the body itself had already
+     moved to TFileStream. Only two of the five Win32 values were ever passed,
+     the routine branched on exactly one of them, and CreateFile has not been
+     called here for some time: a Win32 constant surviving as a homegrown
+     boolean.
+
+     An enum says the same thing, cannot be handed a value the routine does
+     not understand, and takes the Windows unit with it. *)
+   TServerLogOpenMode = (
+      slOpenExisting,   // fail if the log is not there
+      slOpenAlways);    // create it if it is not
+
 const
 
   SERVERDEBUG                           = False;
 
-type
-  _TRANSMIT_FILE_BUFFERS = record
-    Head: Pointer {lpvoid};
-    HeadLength: DWORD;
-    Tail: Pointer {lpvoid};
-    TailLength: DWORD;
-  end;
+(* SIX DECLARATIONS FROM THE PRE-INDY SERVER, ALL UNUSED, DELETED 2026-09-08.
 
-  TRANSMIT_FILE_BUFFERS = _TRANSMIT_FILE_BUFFERS;
-  PTRANSMIT_FILE_BUFFERS = ^TRANSMIT_FILE_BUFFERS;
-  LPTRANSMIT_FILE_BUFFERS = ^TRANSMIT_FILE_BUFFERS;
+  _TRANSMIT_FILE_BUFFERS and its three aliases, TAcceptEx, and a commented-out
+  AcceptEx prototype -- scaffolding for an overlapped-I/O accept loop that was
+  never written. Nothing referenced any of them: the one variable of the record
+  type, Server_TRANSMIT_FILE_BUFFERS, was declared and never read or written,
+  and the AcceptEx variable that TAcceptEx existed for is itself commented out.
 
+  They were not free. Between them they named TClientHandle, POverlapped, BOOL and
+  DWORD, which is what held `uses Windows, WinSock2` in a unit whose actual
+  networking has been Indy for some time. Deleting them takes both imports out
+  -- so this is a dependency the compiler was enforcing on behalf of code that
+  does not exist.
 
-  TAcceptEx = function
-    (
-    sListenSocket, sAcceptSocket: TSocket;
-    lpOutputBuffer: PChar;
-    dwReceiveDataLength, dwLocalAddressLength, dwRemoteAddressLength: DWORD;
-    var lpdwBytesReceived: DWORD;
-    lpOverlapped: POverlapped
-    ): BOOL; stdcall;
-{
-  function AcceptEx(sListenSocket, sAcceptSocket: TSocket; lpOutputBuffer: LPVOID;
-  dwReceiveDataLength, dwLocalAddressLength, dwRemoteAddressLength: DWORD;
-  var lpdwBytesReceived: DWORD; lpOverlapped: POVERLAPPED): BOOL; stdcall;
-  }
+  Indy declares its own TRANSMIT_FILE_BUFFERS in IdWinsock2 if anyone ever
+  needs it. *)
 
 type
   TServerLogArray = packed record
@@ -191,7 +209,6 @@ var
 }
 //  NetMF                                 : NetMultsFrequencies = (mfID: NET_MULTSFREQUENCIES_ID);
 
-  Server_TRANSMIT_FILE_BUFFERS          : _TRANSMIT_FILE_BUFFERS;
 
 //  AcceptEx                              : TAcceptEx;
 
@@ -230,10 +247,10 @@ var
 //  MultsFrequenciesFileName              : array[0..255] of Char;
   DisplayBuffer                         : array[0..063] of AnsiChar;
 
-  client_addr                           : sockaddr_in;
-  mysaddr                               : sockaddr_in;
-  net_mywsadata                         : TWSAData;
-  myhostent                             : Phostent;
+  (* FOUR MORE PRE-INDY LEFTOVERS, DELETED 2026-09-08: client_addr, mysaddr
+    (both sockaddr_in), net_mywsadata and myhostent. Declared, never read,
+    never written -- the address and startup structures of a WinSock server
+    that no longer exists. They were the last thing naming WinSock2 here. *)
 
   (* ApplicationHandle is GONE (2026-09-07).  It held frmServer.Handle and was
     read by NOTHING -- a leftover from when the server WAS a Win32 dialog and
@@ -245,18 +262,25 @@ var
     TFileStream is the RTL's, works on every platform FPC targets, and knows
     its own size -- which is most of what the old code asked the handle for. *)
   ServerLog                             : TFileStream = nil;
-  ServerTempLogHandle                   : THandle = INVALID_HANDLE_VALUE;
+  (* ServerTempLogHandle went with them: a THandle initialised to
+    INVALID_HANDLE_VALUE and referenced nowhere, which is the last thing in
+    this unit that named the Windows unit. *)
 
   LogArraySize                          : integer;
   ENABLE_TCP_NODELAY                    : integer = 1;
   Bufindex                              : integer;
-  net_sock_rx                           : integer = 0;
-  net_sock_tx                           : integer = 0;
   nclients                              : integer;
-  addrlen                               : integer = SizeOf(sockaddr_in);
 
-  MSWSOCK_DLL                           : Cardinal;
-  ServerOS                              : Cardinal;
+  (* FIVE MORE UNREFERENCED GLOBALS, DELETED 2026-09-08: net_sock_rx,
+    net_sock_tx, addrlen, MSWSOCK_DLL and ServerOS. Byte counters for a socket
+    this unit no longer owns, the length of a sockaddr_in it never fills, a
+    handle for an mswsock.dll it never loads, and a Windows version it never
+    reads.
+
+    addrlen is the one worth naming: `SizeOf(sockaddr_in)` in its INITIALISER
+    is what kept WinSock2 in the uses clause after every socket call was gone
+    -- a dependency held by an expression that is evaluated once, at compile
+    time, for a variable nothing looks at. *)
   PortNumber                            : Cardinal;
   ContestExchangesBufferIndex           : Cardinal = 0;
 //  SetPointerEvent                       : Cardinal;
@@ -289,9 +313,9 @@ var
 //function SortServerLogArrayShell: boolean;
 
 function tUpdateServerLog(UpdAction: UpadateAction): boolean;
-procedure SendConfirmMessage(s: TSocket);
+procedure SendConfirmMessage(s: TClientHandle);
 procedure SerialNumbersChanged;
-procedure UpdateSerialNumbersStatus(s: TSocket; Status: TSerialNumberType);
+procedure UpdateSerialNumbersStatus(s: TClientHandle; Status: TSerialNumberType);
 (* THE ADDRESS TO BIND TO, from TR4WSERVER.INI key BIND ADDRESS.
 
   EMPTY MEANS EVERY INTERFACE and is the default. A station that must always
@@ -312,8 +336,8 @@ procedure ShowBindAddresses;
 procedure RunServerThread;
 procedure RunServer;
 procedure GetServerLogCRC32;
-function sSend(s: TSocket; var buf; Len: integer; mt: DebugMessageType): integer;
-function ServerMessageBox(const Text: string; uType: UINT): integer;
+function sSend(s: TClientHandle; var buf; Len: integer; mt: DebugMessageType): integer;
+function ServerMessageBox(const Text: string; uType: Cardinal): integer;
 procedure InitServerLogger;
 procedure ScanLogForSerialsNumbers;
 procedure StopServer;
@@ -327,20 +351,20 @@ procedure DisplayClients;
 procedure DisplayServerLogSize;
 //procedure SetServerIcon(Icon: PChar);
 procedure UpdateQSOInServerlog(CE: ContestExchange);
-function OpenServerLog(dwCreationDistribution: DWORD): boolean;
+function OpenServerLog(aMode: TServerLogOpenMode): boolean;
 { Open the log, creating it if it is not there -- see the body. }
 function OpenOrCreateServerLog: boolean;
 procedure CloseServerLog;
 procedure AddContestExchangeToBuffer(CE: ContestExchange);
 procedure WriteContestExchangesBufferToServerLog;
-procedure SendLogFileInformation(s: TSocket);
+procedure SendLogFileInformation(s: TClientHandle);
 function ClearServerLog: boolean;
-procedure WriteToServerDebugFile(Count: Cardinal; s: TSocket; comment: PChar; mt: DebugMessageType);
+procedure WriteToServerDebugFile(Count: Cardinal; s: TClientHandle; comment: PChar; mt: DebugMessageType);
 procedure SendDisconnectMessage(Client: AnsiChar);
-procedure SetComputerID(ID: AnsiChar; s: TSocket);
-procedure SetStatus(Status: TClientStatus; s: TSocket);
-procedure SendSpotViaNet(Status: TSendSpotViaNetwork; s: TSocket);
-function CorrectPassword(s: TSocket; BytesReceived: integer): boolean;
+procedure SetComputerID(ID: AnsiChar; s: TClientHandle);
+procedure SetStatus(Status: TClientStatus; s: TClientHandle);
+procedure SendSpotViaNet(Status: TSendSpotViaNetwork; s: TClientHandle);
+function CorrectPassword(s: TClientHandle; BytesReceived: integer): boolean;
 //procedure LoadinMultsFrequencies;
 //procedure SaveMultsFrequencies;
 //procedure SendMFToClients;
@@ -636,7 +660,7 @@ begin
           NET_OFFLINEQSO_ID:
             begin
               ServerNewQSOPtr := @ServerBuffer[Bufindex];
-              if OpenServerLog(OPEN_EXISTING) then
+              if OpenServerLog(slOpenExisting) then
               begin
                 ServerLog.Seek(0, soEnd);
                 ServerLog.WriteBuffer(ServerNewQSOPtr.qiInformation, SizeOf(ContestExchange));
@@ -656,7 +680,7 @@ begin
                 ' mode=' + IntToStr(Ord(ServerNewQSOPtr^.qiInformation.Mode)) +
                 ' exch=' + string(ServerNewQSOPtr^.qiInformation.ExchString));
               SendMessageToClients(aSocket, SizeOf(TNetQSOInformation), False, dmQSOInfo);
-              if OpenServerLog(OPEN_EXISTING) then
+              if OpenServerLog(slOpenExisting) then
               begin
                 ServerLog.Seek(0, soEnd);
                 ServerLog.WriteBuffer(ServerNewQSOPtr.qiInformation, SizeOf(ContestExchange));
@@ -728,7 +752,7 @@ begin
 {
                 SM_SORTLOG_MESSAGE:
                   begin
-                    if OpenServerLog(OPEN_EXISTING) then
+                    if OpenServerLog(slOpenExisting) then
                     begin
                       SortServerLog;
                       CloseServerLog;
@@ -854,7 +878,7 @@ var
 
 begin
   FilePointer := -1;
-  if OpenServerLog(OPEN_EXISTING) then
+  if OpenServerLog(slOpenExisting) then
      begin
      1:
      ServerLog.Seek(FilePointer * SizeOf(ContestExchange), soEnd);
@@ -907,10 +931,10 @@ end;
   where the note above still holds and the vocabulary is unchanged. *)
 function OpenOrCreateServerLog: boolean;
 begin
-   Result := OpenServerLog(OPEN_ALWAYS);
+   Result := OpenServerLog(slOpenAlways);
 end;
 
-function OpenServerLog(dwCreationDistribution: DWORD): boolean;
+function OpenServerLog(aMode: TServerLogOpenMode): boolean;
 var
    name: string;
 begin
@@ -919,7 +943,7 @@ begin
 
   name := String(PAnsiChar(@ServerLogFileName[0]));
   try
-     if (dwCreationDistribution = OPEN_ALWAYS) and (not FileExists(name)) then
+     if (aMode = slOpenAlways) and (not FileExists(name)) then
         begin
         ServerLog := TFileStream.Create(name, fmCreate or fmShareDenyNone);
         end
@@ -960,7 +984,7 @@ var
   c, lpNumberOfBytesWritten             : Cardinal;
 begin
   if ContestExchangesBufferIndex = 0 then Exit;
-  if not OpenServerLog(OPEN_EXISTING) then
+  if not OpenServerLog(slOpenExisting) then
      begin
      ContestExchangesBufferIndex := 0;
      Exit;
@@ -976,11 +1000,11 @@ begin
   ContestExchangesBufferIndex := 0;
 end;
 
-procedure SendLogFileInformation(s: TSocket);
+procedure SendLogFileInformation(s: TClientHandle);
 var
   pNumberOfBytesRead                    : Cardinal;
 begin
-  if not OpenServerLog(OPEN_EXISTING) then Exit;
+  if not OpenServerLog(slOpenExisting) then Exit;
   ServerLogFileInformation.liServerLogSize := ServerLog.Size;
   ServerLogFileInformation.liContest := DUMMYCONTEST;
   if ServerLogFileInformation.liServerLogSize > SizeOfTLogHeader then
@@ -998,7 +1022,7 @@ end;
 function ClearServerLog: boolean;
 begin
   Result := False;
-  if not OpenServerLog(OPEN_EXISTING) then Exit;
+  if not OpenServerLog(slOpenExisting) then Exit;
   ServerLog.Seek(SizeOfTLogHeader, soBeginning);
   ServerLog.Size := ServerLog.Position;
   DisplayServerLogSize;
@@ -1007,7 +1031,7 @@ begin
   Result := True;
 end;
 
-procedure WriteToServerDebugFile(Count: Cardinal; s: TSocket; comment: PChar; mt: DebugMessageType);
+procedure WriteToServerDebugFile(Count: Cardinal; s: TClientHandle; comment: PChar; mt: DebugMessageType);
 var
   h                                     : THandle;   (* A FILE handle, not a window. *)
   lpNumberOfBytesWritten                : Cardinal;
@@ -1075,7 +1099,7 @@ end;
   operator.  A client that ignores the message stays connected WITHOUT an id,
   which is exactly where every client sits between connecting and announcing --
   so the failure mode is the status quo, not something new. }
-procedure RefuseComputerID(s: TSocket; ID: AnsiChar; const aWhy: string);
+procedure RefuseComputerID(s: TClientHandle; ID: AnsiChar; const aWhy: string);
 begin
   ServerMessage.smMessage := SM_COMPUTERID_IN_USE_MESSAGE;
   ServerMessage.smParam := Ord(ID);
@@ -1099,7 +1123,7 @@ end;
   FIRST COME, FIRST SERVED.  The station already holding the id is operating;
   the one that just arrived is not.  Disturbing the wrong one of those in the
   middle of a contest would be worse than the collision. }
-procedure SetComputerID(ID: AnsiChar; s: TSocket);
+procedure SetComputerID(ID: AnsiChar; s: TClientHandle);
 var
   i                                     : integer;
   mine                                  : integer;
@@ -1161,7 +1185,7 @@ begin
                [ComputerIDLetter(ID), mine]);
 end;
 
-procedure SetStatus(Status: TClientStatus; s: TSocket);
+procedure SetStatus(Status: TClientStatus; s: TClientHandle);
 var
   i                                     : integer;
 begin
@@ -1173,7 +1197,7 @@ begin
        end;
 end;
 
-procedure SendSpotViaNet(Status: TSendSpotViaNetwork; s: TSocket);
+procedure SendSpotViaNet(Status: TSendSpotViaNetwork; s: TClientHandle);
 var
   i                                     : integer;
 begin
@@ -1186,7 +1210,7 @@ begin
          end;
 end;
 
-function CorrectPassword(s: TSocket; BytesReceived: integer): boolean;
+function CorrectPassword(s: TClientHandle; BytesReceived: integer): boolean;
 var
   i                                     : integer;
   Offset                                : integer;
@@ -1227,7 +1251,7 @@ var
 begin
   if not ServerCRC32Changed then Exit;
   ServerCRC32 := 0;
-  if not OpenServerLog(OPEN_EXISTING) then Exit;
+  if not OpenServerLog(slOpenExisting) then Exit;
   try
      SetLength(buf, ServerLog.Size);
      if Length(buf) > 0 then
@@ -1246,7 +1270,7 @@ end;
   handle is still how the engine names a client, and uServerNet turns it back
   into a connection. Everything else here -- the byte accounting, the readout,
   the debug file -- is unchanged. *)
-function sSend(s: TSocket; var buf; Len: integer; mt: DebugMessageType): integer;
+function sSend(s: TClientHandle; var buf; Len: integer; mt: DebugMessageType): integer;
 begin
   Result := SendToClient(s, buf, Len);
   BytesSEND := BytesSEND + DWORD(Result);
@@ -1268,7 +1292,7 @@ var
   LogBuf                                : TBytes;
 begin
   Result := False;
-  if not OpenServerLog(OPEN_EXISTING) then Exit;
+  if not OpenServerLog(slOpenExisting) then Exit;
 
   (* READ, MODIFY, WRITE BACK -- instead of mapping the file.
 
@@ -1336,13 +1360,13 @@ begin
 
 end;
 
-procedure SendConfirmMessage(s: TSocket);
+procedure SendConfirmMessage(s: TClientHandle);
 begin
   ServerMessage.smMessage := SM_RECEIVED_UPDATED_QSO_MESSAGE;
   sSend(s, ServerMessage, SizeOf(ServerMessage), dmROLQ);
 end;
 
-function ServerMessageBox(const Text: string; uType: UINT): integer;
+function ServerMessageBox(const Text: string; uType: Cardinal): integer;
 begin
   (* THE LCL'S DIALOG, NOT MessageBoxW.
 
@@ -1376,7 +1400,7 @@ var
   NextNumberToSend                      : integer;
 begin
   if not SerialNumberLockoutEnable then Exit;
-  if not OpenServerLog(OPEN_EXISTING) then Exit;
+  if not OpenServerLog(slOpenExisting) then Exit;
   NextNumberToSend := 0;
 
   ServerLog.Seek(SizeOf(ContestExchange), soBeginning);
@@ -1419,7 +1443,7 @@ begin
      end;
 end;
 
-procedure UpdateSerialNumbersStatus(s: TSocket; Status: TSerialNumberType);
+procedure UpdateSerialNumbersStatus(s: TClientHandle; Status: TSerialNumberType);
 var
   i                                     : integer;
 begin
