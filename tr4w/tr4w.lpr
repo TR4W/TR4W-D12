@@ -82,7 +82,6 @@ uses
   uSendKeyboard in 'src\uSendKeyboard.pas',
   uRadio12 in 'src\uRadio12.pas',
   uFunctionKeys in 'src\uFunctionKeys.pas',
-  uInet in 'src\uInet.pas',
   uDXClusterClient in 'src\uDXClusterClient.pas',
   uDXSpotParse in 'src\uDXSpotParse.pas',
   uTelnet in 'src\uTelnet.pas',

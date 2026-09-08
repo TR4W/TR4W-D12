@@ -27,7 +27,18 @@ uses
   SysUtils,
   TF,
   VC,
-  Tree, Windows
+  (* WINDOWS WAS HERE AND NOTHING USED IT (removed 2026-09-08).
+
+    This unit is 62 lines whose entire body is WriteLn to a Text file -- it
+    writes the .hhc/.hhk contents files an HTML Help compiler consumes. It
+    referenced no Windows identifier at all: not MessageBox, not CreateFile,
+    not HWND, DWORD, THandle or BOOL. Grepped for every one of them before
+    deleting the word.
+
+    It was the app build's second blocker for x86_64-linux, behind uInet, and
+    it cost one word. That is the shape most of this sweep has had: the import
+    outlived whatever needed it, and nothing on Windows could tell. *)
+  Tree
   ;
 
 var h                                   : Text;

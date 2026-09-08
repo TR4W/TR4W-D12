@@ -119,7 +119,6 @@ uses
   uSendKeyboard,
   uRadio12,
   uFunctionKeys,
-  uInet,
   uDXClusterClient,
   uDXSpotParse,
   uTelnet,
