@@ -290,7 +290,7 @@ var
   tPTTOnCounter                         : Cardinal;
   PaddlePTTOn                           : boolean;
   TR4W_BeepThreadID                     : TThreadID;
-  tPaddleThreadID                       : Cardinal;
+  tPaddleThreadID                       : TThreadID;
   tFlashQDThreadID                      : Cardinal;
 
   tCW_Event                             : Cardinal;
