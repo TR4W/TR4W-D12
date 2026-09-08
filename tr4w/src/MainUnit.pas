@@ -7573,7 +7573,7 @@ end;
 
 procedure tRuntPaddleAndFootSwitchThread;
 begin
-  if tPaddleFootSwitchThread <> INVALID_HANDLE_VALUE then
+  if ThreadStarted(tPaddleFootSwitchThread) then
      begin
      Exit;
      end;

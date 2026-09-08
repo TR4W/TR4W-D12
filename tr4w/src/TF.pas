@@ -165,6 +165,29 @@ type
   reason this declaration needed the Windows unit. *)
 function tCreateThread(lpStartAddress: TTR4WThreadStart; var lpThreadId: TThreadID; Quiet: boolean = False; aParameter: Pointer = nil): TThreadID;
 
+(* "IS THERE A THREAD" AND "THERE IS NO THREAD", AS FUNCTIONS (2026-09-08).
+
+  Two reasons these are not written inline as `<> 0` at each site.
+
+  FIRST, THE COMPARISON IS NOT PORTABLE. TThreadID is a POINTER on the BSD and
+  macOS RTL and an integer on Windows and Linux, so `aThread <> 0` is a type
+  error there -- "Operator is not overloaded: TThreadID = ShortInt". Comparing
+  at pointer width is correct everywhere, and doing it in one place beats
+  casting at a dozen call sites.
+
+  SECOND, AND WORSE, THE TREE HAD TWO DIFFERENT SENTINELS AND ONE OF THEM WAS
+  WRONG. uYCCCSO2R used 0; logk1ea's paddle/footswitch thread used
+  feInvalidHandle -- that is -1, INVALID_HANDLE_VALUE, a FILE-handle sentinel
+  applied to a thread. BeginThread returns ZERO on failure on every platform
+  FPC targets, so -1 was never a value that could arrive, and the guard
+  `if tPaddleFootSwitchThread <> INVALID_HANDLE_VALUE` was TRUE even before a
+  thread had ever been started.
+
+  A global starts zero-filled, which is why the declarations lose their
+  initialisers rather than gaining a cast: zero already means "no thread". *)
+function ThreadStarted(const aThread: TThreadID): boolean;
+procedure ClearThread(var aThread: TThreadID);
+
 //function tgethostbyname(h_Name: PAnsiChar): PAnsiChar;
 (* tDialogBox IS DELETED (2026-08-31).  Its last live caller went with the
    Cabrillo summary dialog; the one that LOOKS like a caller, in MainUnit's
@@ -843,6 +866,16 @@ begin
                                    BackTraceStrFunc(CodePointer(start.Address))]), E);
         end;
   end;
+end;
+
+function ThreadStarted(const aThread: TThreadID): boolean;
+begin
+   Result := PtrUInt(aThread) <> 0;
+end;
+
+procedure ClearThread(var aThread: TThreadID);
+begin
+   aThread := Default(TThreadID);
 end;
 
 function tCreateThread(lpStartAddress: TTR4WThreadStart; var lpThreadId: TThreadID; Quiet: boolean; aParameter: Pointer): TThreadID;

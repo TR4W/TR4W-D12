@@ -280,7 +280,11 @@ var
   tUseControlPort                       : boolean;
 
   TR4W_BeepThread                       : TThreadID;
-  tPaddleFootSwitchThread               : TThreadID = feInvalidHandle;
+  (* NO INITIALISER, AND THE OLD ONE WAS WRONG. It was feInvalidHandle -- -1,
+    a FILE-handle sentinel on a THREAD -- so the "is it running" guard in
+    MainUnit was true before any thread existed. BeginThread returns ZERO on
+    failure; a global is already zero. See TF.ThreadStarted. *)
+  tPaddleFootSwitchThread               : TThreadID;
 
   tExitFromPaddleFootSwitchThread       : boolean;
   tPTTOnCounter                         : Cardinal;

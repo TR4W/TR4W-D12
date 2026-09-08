@@ -224,9 +224,9 @@ var
    FReadOvl:    OVERLAPPED;
    FWriteOvl:   OVERLAPPED;
 
-   FReadThread:  TThreadID = 0;
+   FReadThread:  TThreadID;   (* zero-filled = no thread; see TF.ThreadStarted *)
    FReadThID:    TThreadID   = 0;
-   FWriteThread: TThreadID = 0;
+   FWriteThread: TThreadID;
    FWriteThID:   TThreadID   = 0;
 
    logger: TLogLogger;
@@ -558,7 +558,7 @@ begin
 
    { Start write thread first so queued init commands get sent immediately }
    FWriteThread := tCreateThread(@YCCCWriteThreadProc, FWriteThID);
-   if FWriteThread = 0 then
+   if not ThreadStarted(FWriteThread) then
       begin
       logger.Debug('YCCC write thread creation failed');
       YCCCClose;
@@ -572,7 +572,7 @@ begin
 
    { Start read thread }
    FReadThread := tCreateThread(@YCCCReadThreadProc, FReadThID);
-   if FReadThread = 0 then
+   if not ThreadStarted(FReadThread) then
       begin
       logger.Debug('YCCC read thread creation failed');
       YCCCClose;
@@ -597,7 +597,7 @@ begin
    { Wait for threads to exit cleanly.
      Read thread calls CancelIo on itself when it sees FStopEvent.
      Write thread exits its WaitForMultipleObjects loop. }
-   if FReadThread <> 0 then
+   if ThreadStarted(FReadThread) then
       begin
       (* WaitForThreadTerminate / CloseThread -- the RTL's pair for a TThreadID,
        which is what BeginThread returned. On Windows the wait IS
@@ -608,14 +608,14 @@ begin
        when this program runs on those platforms. *)
       WaitForThreadTerminate(FReadThread, 3000);
       CloseThread(FReadThread);
-      FReadThread := 0;
+      ClearThread(FReadThread);
       end;
 
-   if FWriteThread <> 0 then
+   if ThreadStarted(FWriteThread) then
       begin
       WaitForThreadTerminate(FWriteThread, 3000);
       CloseThread(FWriteThread);
-      FWriteThread := 0;
+      ClearThread(FWriteThread);
       end;
 
    { Now safe to close the device handle }

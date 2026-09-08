@@ -91,6 +91,7 @@ uses
   uIO,         // LPTBaseAA
   LogCfg,      // TryRunPaddleAndFootSwitchThread, InitializeOtherLPTPorts
   LogK1EA,     // the port globals, tUseControlPort, the paddle/footswitch thread
+  TF,          // ClearThread -- "no thread" is zero, and portably so
   LogRadio,    // Radio1 / Radio2 band output ports
   LogWind,
   MainUnit,    // logger
@@ -225,7 +226,7 @@ begin
    if (not DoingPaddle) and (not tDoingFootSwitchEnable) then
       begin
       tExitFromPaddleFootSwitchThread := True;
-      tPaddleFootSwitchThread         := INVALID_HANDLE_VALUE;
+      ClearThread(tPaddleFootSwitchThread);   (* zero, not -1 -- see TF *)
       end
    else
       begin
