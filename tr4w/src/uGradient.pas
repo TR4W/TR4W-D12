@@ -19,7 +19,13 @@ unit uGradient;
 {$IMPORTEDDATA OFF}
 interface
 uses
-  Windows,
+  (* LCLIntf for GradientFill and GetSysColor, LCLType for HDC / TTriVertex /
+    the GRADIENT_FILL_* modes. Windows is gone with the msimg32 loading
+    (2026-09-08). *)
+  LCLIntf,
+  LCLType,
+  Graphics,   (* GetRValue / GetGValue / GetBValue, and the LCL's ColorToRGB *)
+  Types,      (* TRect *)
   VC;
 type
   tcolor = -$7FFFFFFF - 1..$7FFFFFFF;
@@ -40,16 +46,13 @@ type
   // vertices GradientFill should span, and the SDK defines it as two ULONGs.
   // Declared here for the same reason TTriVertex above is -- locally, so the
   // Delphi build keeps using the RTL's own declaration.
-  TGradientRect = packed record
-    UpperLeft: ULONG;
-    LowerRight: ULONG;
-  end;
+  (* TGradientRect was declared here as two ULONGs. LCLType declares it --
+    `TGradientRect = GRADIENTRECT` -- for every widget set, so the local copy
+    is gone and there is one definition again (2026-09-08). *)
 
-  TGradientFill = function(DC: HDC; var P2: TTriVertex; p3: ULONG; p4: Pointer; p5, p6: ULONG): BOOL; stdcall;
-  // Variables used for interfacing to the MSIMG32.DLL
-//function GradientFill(DC: HDC; var P2: TTriVertex; p3: ULONG; p4: Pointer; p5, p6: ULONG): BOOL; stdcall;
-var
-  GradientFillFunction                  : TGradientFill;
+  (* TGradientFill and GradientFillFunction stood here -- the signature of the
+    DLL export and the pointer it was loaded into. Both went with the
+    initialization section; LCLIntf declares the function itself. *)
 type
   TGradientDirection = (gdHorizontal, gdVertical);
 (* HDC, NOT HWND. This declared its first parameter as a window handle and
@@ -62,13 +65,9 @@ function ColorToRGB(Color: tcolor): Cardinal {LONGINT};
 function InitTriVertex(XPos, YPos: integer; Color: tcolor): TTriVertex;
 implementation
 
-const
-  // Winapi.Windows supplies this DLL name; FPC's windows unit does not.
-  msimg32 = 'msimg32.dll';
-
-//uses Unit1;
-//function GradientFill; external msimg32 Name 'GradientFill';
-//function GradientFill; external gdi32 Name 'GdiGradientFill';
+(* An msimg32.dll name constant stood here, in a `const` section with nothing
+  else in it. Nothing loads that library now -- see GradientRect -- so the
+  section goes with it. *)
 type
   TRGB = record
     r, g, b: Byte;
@@ -98,14 +97,19 @@ begin
      end;
   Vertex[0] := InitTriVertex(ARect.Left, ARect.Top, Color1);
   Vertex[1] := InitTriVertex(ARect.Right, ARect.Bottom, Color2);
-  Result := GradientFillFunction(
-    canvashandle,
-    Vertex[0],
-    2,
-    @GRect,
-    1,
-    Cardinal(Direction)
-    );
+  (* LCLIntf.GradientFill, not a pointer fished out of a DLL.
+
+    The LCL declares GradientFill with the SAME Win32 signature for every
+    widget set (lcl\include\winapih.inc) -- DC, vertices, mesh, mode -- so
+    this is the same call with the loading machinery deleted. On Windows it
+    reaches the same GDI routine; elsewhere the widget set draws the gradient
+    itself.
+
+    THE MODE CONSTANTS ARE THE LCL'S NOW TOO: GRADIENT_FILL_RECT_H is 0 and
+    _RECT_V is 1, which is the order TGradientDirection already had, so
+    Cardinal(Direction) keeps meaning what it meant. *)
+  Result := LCLIntf.GradientFill(canvashandle, @Vertex[0], 2, @GRect, 1,
+                                 Longint(Direction));
 end;
 function ColorToRGB(Color: tcolor): Cardinal {LONGINT};
 begin
@@ -130,10 +134,9 @@ begin
      Blue := TempRGB.b shl 8;
      end
 end;
-begin
-  @GradientFillFunction := GetProcAddress(GetModuleHandle(gdi32), 'GdiGradientFill');
-  if not Assigned(GradientFillFunction) then
-     begin
-     @GradientFillFunction := GetProcAddress(LoadLibrary(msimg32), 'GradientFill');
-     end;
+(* THE INITIALIZATION SECTION IS DELETED (2026-09-08). It resolved
+  GdiGradientFill from gdi32 and fell back to GradientFill in msimg32.dll, by
+  GetProcAddress into a function pointer. LCLIntf.GradientFill replaces both,
+  so there is nothing to load, nothing to fall back to, and no window in which
+  the pointer is nil. That also removes one of the tree's LoadLibrary sites. *)
 end.

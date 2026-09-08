@@ -111,7 +111,9 @@ implementation
 
 uses
    uPlatformProcess,   // RunProgram / RunWindowsUtility -- the only launchers
-  Windows,
+  (* Windows is gone (2026-09-08): lParam on ShowEditMessage's signature was
+    the only type wanted and LCLType -- already in this clause -- declares it;
+    the CloseHandle was on a FILE handle. *)
   VC,             // RC_*, TC_*, MesWindow / OtherMsgWin, TR4W_CFG_FILENAME
   TF,             // Format, YesOrNo
   uCFG,           // CheckCommand
@@ -318,7 +320,7 @@ begin
       if tOpenFileForWrite(h, PAnsiChar(path)) then
          begin
          sWriteFile(h, waveheader, Length(waveheader));
-         CloseHandle(h);
+         FileClose(h);   { a FILE handle -- tOpenFileForWrite above }
          end;
       end;
 
