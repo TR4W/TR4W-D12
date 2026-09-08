@@ -1,0 +1,136 @@
+﻿name: Bug Report
+description: Report a problem with TR4W, the Cross-Platform Contest Logger. Every field feeds automated triage — the more precise, the faster the fix.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. New issues are scanned automatically:
+        the required fields below are parsed to route your report to the right component
+        and start an initial investigation, so please fill them out completely.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: One or two sentences describing the problem.
+      placeholder: Enter your issue here.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro-steps
+    attributes:
+      label: Steps to Reproduce
+      description: Exact steps, one per line. Include mode, band, and any relevant settings.
+      placeholder: |
+        1. Open a new contest...
+        2. Configure a radio in Settings
+        3. Radio does not connect
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      placeholder: Frequency should appear on the main window
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      placeholder: Radio never connects
+    validations:
+      required: true
+
+  - type: input
+    id: tr4w-version
+    attributes:
+      label: TR4W Version
+      description: Shown in the About dialog (e.g. 5.2.0).
+      placeholder: "5.2.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      options:
+        - macOS
+        - Windows
+        - Linux / Raspberry Pi
+    validations:
+      required: true
+
+  - type: input
+    id: os-version
+    attributes:
+      label: OS Version
+      placeholder: "macOS 15.5 / Windows 11 24H2 / Debian / Raspberry Pi OS (Trixie)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: connection
+    attributes:
+      label: Radio Connection
+      options:
+        - Serial
+        - Network 
+        - HamLib
+    validations:
+      required: true
+
+  - type: input
+    id: 
+    attributes:
+      label: Hardware Model 
+      description: (If radio issue; your radio, if CW; your keyer, etc.)
+      placeholder: "Elecraft K4 | WinKey 3 | RT-21 Rotor Controller"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected Area
+      description: Pick the closest match — this routes the issue to the right component.
+      options:
+        - Radio Control
+        - Band Map
+        - SO2R
+        - CW keying (Serial Port CW (DTR/RTS), CWByCAT, WinKeyer)
+        - Spectrum / waterfall display
+        - Connection / network (connect, disconnect, stalls)
+        - UI (buttons, popups, layout, settings, resizing)
+        - Hardware devices
+        - External Program Intergration (WSJT-X, logging software)
+        - DX cluster
+        - TCI Radio Control
+        - ADIF / Cabrillo 
+        - Downloading files (CTY.DAT, TRMASTER.DTA, POTA.CSV, lotw_users.txt
+        - Other / not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log Output / Error Messages
+      description: Paste any relevant console output or error text. Leave blank if none.
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Screenshots, frequency/mode where it happens, how often it occurs, anything else useful.
+    validations:
+      required: false
