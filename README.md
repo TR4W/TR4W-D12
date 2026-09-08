@@ -108,13 +108,37 @@ installed through [fpcupdeluxe](https://github.com/LongDirtyAnimAlf/fpcupdeluxe)
 which is the practical way to get both on a Mac.
 
 ```sh
-./tools/compile-native.sh --tree
+./tr4w/build/build-mac.sh          # the four stages, same as Linux
+./tools/compile-native.sh --tree   # just the compile, in seconds
 ```
 
-**This compiles the whole unit graph. It does not yet LINK an application** --
-there is no `build-mac.sh` counterpart to `build-linux.sh`. What the compile
-proves is that every unit TR4W consists of is free of Windows dependencies on a
-third platform, which is a real result and not the same as a program.
+`build-mac.sh` produces a **`TR4W.app` bundle** inside
+`build-out/dist/tr4w-<version>-aarch64-darwin.tar.gz`. The bundle is not
+decoration: a bare Mach-O launched from Finder gets no Dock icon, no menu bar
+and no application activation, because Cocoa decides an app IS an app by
+finding an `Info.plist` in `Contents/`.
+
+**It is NOT signed or notarized**, so Gatekeeper will refuse it on any Mac but
+the one that built it -- and the message a user gets says the app is *damaged*
+rather than unsigned, which sends people looking for a corrupt download. That
+needs an Apple Developer ID and is a distribution decision, not a build step.
+
+### Two things every Mac needs, and neither is TR4W's fault
+
+Both are handled automatically by `tools/fpc-unix-paths.sh`; they are listed
+because their error messages point somewhere else entirely.
+
+- **The SDK must come from `xcrun`.** fpcupdeluxe writes an `fpc.cfg` pinning
+  the CommandLineTools SDK, and where Xcode is the real toolchain that is the
+  wrong one for the `ld` being run. Symptom: `ld: library 'c' not found` -- on
+  a machine where **both** SDKs exist and both contain `libc.tbd`. A three-line
+  `WriteLn` program fails identically, which is the quickest way to prove it is
+  not your project.
+- **FPC 3.2.2 predates Apple's new linker.** It emits Objective-C metadata in
+  the older layout, and Xcode 15+ rejects it: `ld: malformed method list atom`
+  in Lazarus's `cocoawsextctrls.o`. The build passes `-ld_classic`. **That is a
+  dated workaround** -- Apple has deprecated the classic linker, and when it
+  goes the answer becomes a newer FPC rather than an older linker.
 
 `compile-native.sh` finds fpcupdeluxe at `~/fpcupdeluxe` by default; override
 with `FPCROOT` and `LAZROOT`. The widget set defaults to **cocoa** here and
@@ -154,8 +178,10 @@ Honest status, measured rather than hoped:
   x86_64 Linux
 - **19,883 of 19,884 unit tests pass** there; the one failure is a timing
   assumption in a test fixture, not a defect in the program
-- the **whole unit graph compiles on macOS/aarch64** -- see
-  [Building on macOS](#building-on-macos). No application is linked there yet
+- the **application, server and an `.app` bundle all build on macOS/aarch64**
+  -- see [Building on macOS](#building-on-macos). The unit tests link and run
+  there, and stop partway on an access violation in the log repository that has
+  no counterpart on Windows or Linux; that is the next thing to chase
 - **ARM is untested.** Nothing obvious blocks it; nothing has tried it
 - **nobody has run the GUI on any of them.** Building is not running, and a
   contest logger is not proven by a compiler
