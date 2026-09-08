@@ -46,6 +46,9 @@ type
       procedure Test_StrPCopy;
       procedure Test_StrPLCopy;
       procedure Test_StrPLCopy_TruncatesAndTerminates;
+      procedure Test_StrLCopy;
+      procedure Test_StrLCopy_StopsAtEmbeddedNul;
+      procedure Test_StrLCopy_MatchesLstrcpynAMinusOne;
    end;
 
 implementation
@@ -63,6 +66,9 @@ begin
    Test_StrPCopy;
    Test_StrPLCopy;
    Test_StrPLCopy_TruncatesAndTerminates;
+   Test_StrLCopy;
+   Test_StrLCopy_StopsAtEmbeddedNul;
+   Test_StrLCopy_MatchesLstrcpynAMinusOne;
 end;
 
 // ---------------------------------------------------------------------------
@@ -231,6 +237,86 @@ begin
    FillChar(buf, SizeOf(buf), $7F);
    uAnsiStr.StrPLCopy(@buf[0], 'ABC', 0);
    CheckEquals(0, Integer(Byte(buf[0])), 'MaxLen 0 writes only the terminator');
+end;
+
+// ---------------------------------------------------------------------------
+// StrLCopy -- the lstrcpynA replacement.  See the note on it in uAnsiStr: the
+// difference between the two is an off-by-one in the COUNT, which is exactly
+// the kind of thing that survives a code review and not a test.
+// ---------------------------------------------------------------------------
+
+procedure TAnsiStrTests.Test_StrLCopy;
+var
+   src: array[0..15] of AnsiChar;
+   buf: array[0..31] of AnsiChar;
+begin
+   BeginTest('Test_StrLCopy');
+
+   uAnsiStr.StrPCopy(@src[0], 'ABCDEFGH');
+
+   FillChar(buf, SizeOf(buf), $7F);
+   uAnsiStr.StrLCopy(@buf[0], @src[0], 3);
+   CheckEquals('ABC', string(AnsiString(PAnsiChar(@buf[0]))), 'copies MaxLen characters');
+   CheckEquals(0, Integer(Byte(buf[3])), 'terminator at [MaxLen]');
+
+   { A source SHORTER than MaxLen stops at its own NUL. }
+   FillChar(buf, SizeOf(buf), $7F);
+   uAnsiStr.StrLCopy(@buf[0], @src[0], 30);
+   CheckEquals('ABCDEFGH', string(AnsiString(PAnsiChar(@buf[0]))), 'short source copies whole');
+   CheckEquals(8, Integer(uAnsiStr.StrLen(@buf[0])), 'and its length is its own');
+
+   { Zero room is legal and must still terminate. }
+   FillChar(buf, SizeOf(buf), $7F);
+   uAnsiStr.StrLCopy(@buf[0], @src[0], 0);
+   CheckEquals(0, Integer(Byte(buf[0])), 'MaxLen 0 writes only the terminator');
+
+   { A nil either side is a no-op, not a crash. }
+   CheckEquals(0, Integer(PtrUInt(uAnsiStr.StrLCopy(nil, @src[0], 4))), 'nil Dest returns nil');
+end;
+
+procedure TAnsiStrTests.Test_StrLCopy_StopsAtEmbeddedNul;
+var
+   src: array[0..15] of AnsiChar;
+   buf: array[0..31] of AnsiChar;
+begin
+   BeginTest('Test_StrLCopy_StopsAtEmbeddedNul');
+
+   { 'AB' NUL 'CD' -- lstrcpynA stopped at the NUL even with room to spare, and
+     the DX spot parser relies on that: it points into the middle of a received
+     line and asks for more characters than the field it is reading. }
+   FillChar(src, SizeOf(src), 0);
+   src[0] := 'A';  src[1] := 'B';  src[2] := #0;  src[3] := 'C';  src[4] := 'D';
+
+   FillChar(buf, SizeOf(buf), $7F);
+   uAnsiStr.StrLCopy(@buf[0], @src[0], 10);
+
+   CheckEquals(2, Integer(uAnsiStr.StrLen(@buf[0])), 'stopped at the embedded NUL');
+   CheckEquals('AB', string(AnsiString(PAnsiChar(@buf[0]))), 'and copied only what preceded it');
+end;
+
+procedure TAnsiStrTests.Test_StrLCopy_MatchesLstrcpynAMinusOne;
+var
+   src: array[0..15] of AnsiChar;
+   buf: array[0..31] of AnsiChar;
+   i:   integer;
+begin
+   BeginTest('Test_StrLCopy_MatchesLstrcpynAMinusOne');
+
+   { THE PIN THAT MATTERS. lstrcpynA(d, s, n) wrote n-1 characters and a NUL --
+     n bytes in total. StrLCopy(d, s, n-1) must write exactly the same bytes,
+     and touch NOTHING at [n] or beyond. The fill byte proves the second half. }
+   uAnsiStr.StrPCopy(@src[0], 'ABCDEFGH');
+
+   FillChar(buf, SizeOf(buf), $7F);
+   uAnsiStr.StrLCopy(@buf[0], @src[0], 6 - 1);          { was lstrcpynA(..., 6) }
+
+   CheckEquals('ABCDE', string(AnsiString(PAnsiChar(@buf[0]))), '5 characters, as lstrcpynA(6) gave');
+   CheckEquals(0, Integer(Byte(buf[5])), 'the NUL is the 6th byte');
+
+   for i := 6 to 31 do
+      begin
+      CheckEquals($7F, Integer(Byte(buf[i])), 'nothing written past the 6th byte');
+      end;
 end;
 
 end.

@@ -173,7 +173,10 @@ function ParseSplitHint(const Comment: AnsiString; BaseFrequencyHz: integer;
 implementation
 
 uses
-   Windows,
+   (* Windows was here for lstrcpynA on four spot fields; uAnsiStr.StrLCopy
+     replaces it exactly -- see the note on StrLCopy for the off-by-one
+     between the two counts (2026-09-08). *)
+   uAnsiStr,
    SysUtils,            // LowerCase -- the RTL, not a TF shim
    uBandLookup,         // CalculateBandMode -- tree.pas forwards to this unit
    uCallSignRoutines;   // IsAGoodCall
@@ -947,7 +950,11 @@ begin
          // lstrcpynA writes at most n-1 characters plus a NUL, so n-1 characters
          // is exactly the length.
          SetLength(Spot.FSourceCall, i - DX - 6);
-         Windows.lstrcpynA(@Spot.FSourceCall[1], @LineBuf[DX + 6], i - DX - 5);
+         (* uAnsiStr.StrLCopy, and the count loses one. lstrcpynA's count
+           INCLUDED the terminator; StrLCopy's MaxLen counts characters.
+           i - DX - 5 becomes i - DX - 6, which is exactly the SetLength
+           above -- the length and the copy stay one fact. *)
+         uAnsiStr.StrLCopy(@Spot.FSourceCall[1], @LineBuf[DX + 6], i - DX - 6);
          Break;
          end;
       end;
@@ -961,8 +968,9 @@ begin
       if ((LineBuf[i] = ' ') or (LineBuf[i] = ':')) and
          (LineBuf[i + 1] <> ' ') then
          begin
-         Windows.lstrcpynA(@Spot.FFreqString[0], @LineBuf[i + 1],
-                           DX + 24 - i + Offset);
+         { StrLCopy, MaxLen in characters -- one less than lstrcpynA's count. }
+         uAnsiStr.StrLCopy(@Spot.FFreqString[0], @LineBuf[i + 1],
+                           DX + 23 - i + Offset);
 
          TempFrequency := 0;
 
@@ -1017,8 +1025,10 @@ begin
          (LineBuf[i + 1] = ' ') then
          begin
          SetLength(Spot.FCall, i - (DX + 25 + Offset));
-         Windows.lstrcpynA(@Spot.FCall[1], @LineBuf[DX + 26 + Offset],
-                           i - (DX + 24 + Offset));
+         { StrLCopy: one less than lstrcpynA's count, which makes it agree
+           with the SetLength above. }
+         uAnsiStr.StrLCopy(@Spot.FCall[1], @LineBuf[DX + 26 + Offset],
+                           i - (DX + 25 + Offset));
          if not IsAGoodCall(Spot.FCall) then
             begin
             Exit;
@@ -1047,8 +1057,10 @@ begin
    // and rewriting the test would change which lines take this path.  ny4i
    if LineBuf[DX + 39 + Offset] <> '                              ' then
       begin
-      Windows.lstrcpynA(@Spot.FNotes[0], @LineBuf[DX + 39 + Offset], 31);
-      //was 31 but allow for null ny4i
+      { 30 characters plus the terminator, into array[0..31]. The old count
+        of 31 meant the same thing -- lstrcpynA counted the NUL -- which is
+        what NY4I's note beside it was recording. }
+      uAnsiStr.StrLCopy(@Spot.FNotes[0], @LineBuf[DX + 39 + Offset], 30);
 
       // The comment is the 30-column field the note was just copied from.  It
       // is read into a string here rather than uppercased in place: the

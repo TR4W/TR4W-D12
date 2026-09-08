@@ -58,6 +58,25 @@ function StrPos(const Str1, Str2: PAnsiChar): PAnsiChar;
 function StrPCopy(Dest: PAnsiChar; const Source: AnsiString): PAnsiChar;
 function StrPLCopy(Dest: PAnsiChar; const Source: AnsiString; MaxLen: Cardinal): PAnsiChar;
 
+(* COPY AT MOST MaxLen CHARACTERS BETWEEN TWO PAnsiChars, ALWAYS
+  NUL-TERMINATING -- the missing member of this set, and the exact replacement
+  for Win32's lstrcpynA.
+
+  THE OFF-BY-ONE IS THE WHOLE POINT. lstrcpynA(d, s, n) writes at most n-1
+  characters PLUS the NUL -- its count INCLUDES the terminator. StrLCopy's
+  MaxLen counts CHARACTERS and the NUL is extra, which is FPC's own
+  strings.StrLCopy convention. So a faithful conversion of a call site reads
+
+      lstrcpynA(d, s, n)   ->   StrLCopy(d, s, n - 1)
+
+  and getting it wrong writes one byte further than the Win32 version did.
+
+  The source need NOT be NUL-terminated inside MaxLen -- the callers that
+  wanted this point into the middle of a received cluster line -- but a NUL
+  found earlier still stops the copy, as lstrcpynA's did. *)
+function StrLCopy(Dest: PAnsiChar; const Source: PAnsiChar; MaxLen: Cardinal): PAnsiChar;
+
+
 (* WinAnsi IS GONE (2026-09-07), and what it did is worth keeping a note of
   because the reason it existed is the reason it could go.
 
@@ -231,6 +250,32 @@ end;
 function StrPCopy(Dest: PAnsiChar; const Source: AnsiString): PAnsiChar;
 begin
    Result := StrPLCopy(Dest, Source, Cardinal(Length(Source)));
+end;
+
+function StrLCopy(Dest: PAnsiChar; const Source: PAnsiChar; MaxLen: Cardinal): PAnsiChar;
+var
+   count: Cardinal;
+begin
+   Result := Dest;
+   if (Dest = nil) or (Source = nil) then
+      begin
+      Exit;
+      end;
+
+   { Stop at a NUL inside the range, exactly as lstrcpynA did. }
+   count := 0;
+   while (count < MaxLen) and (Source[count] <> #0) do
+      begin
+      Inc(count);
+      end;
+
+   if count > 0 then
+      begin
+      Move(Source^, Dest^, count);
+      end;
+
+   { Always terminate, including the empty case. }
+   Dest[count] := #0;
 end;
 
 function StrPLCopy(Dest: PAnsiChar; const Source: AnsiString; MaxLen: Cardinal): PAnsiChar;
