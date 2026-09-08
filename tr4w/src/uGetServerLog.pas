@@ -32,7 +32,6 @@ uses
   IdGlobal,    // TIdBytes, RawToBytes
   IdException, // EIdConnClosedGracefully and friends, per CLAUDE.md's snag list
   IdStack,
-  Windows,
   LogStuff,
   LogWind,
   uNet,
@@ -228,12 +227,18 @@ begin
    RunOnMainThread(@DeliverSyncProgress, PtrInt(p));
 end;
 
+(* feInvalidHandle, NOT INVALID_HANDLE_VALUE.
+
+  Same value, and that is exactly why it is worth changing: the handle here
+  comes from FileOpen and is closed by FileClose, both RTL, so the only Win32
+  thing left about it was the NAME of the sentinel it is compared against.
+  feInvalidHandle is SysUtils' spelling of it and exists on every target. *)
 procedure HeadlessSyncFinished(aData: PtrInt);
 begin
-   if NewServerLogHandle <> INVALID_HANDLE_VALUE then
+   if NewServerLogHandle <> feInvalidHandle then
       begin
       FileClose(NewServerLogHandle);
-      NewServerLogHandle := INVALID_HANDLE_VALUE;
+      NewServerLogHandle := feInvalidHandle;
       end;
    ReplaceLogByServerLog(True);
    logger.Info('Auto-sync: local log replaced with server log.');
@@ -523,10 +528,10 @@ begin
         begin
         logger.Warn('Auto-sync: download produced %d records and %d QSOs - skipping replace.',
                     [TotalRecords, TotalQ]);
-        if NewServerLogHandle <> INVALID_HANDLE_VALUE then
+        if NewServerLogHandle <> feInvalidHandle then
            begin
            FileClose(NewServerLogHandle);
-           NewServerLogHandle := INVALID_HANDLE_VALUE;
+           NewServerLogHandle := feInvalidHandle;
            end;
         HeadlessSyncMode := False;
         end;

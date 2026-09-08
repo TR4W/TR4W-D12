@@ -103,9 +103,6 @@ type
 
 implementation
 
-uses
-   Windows;   // GetTempPath, for the fixture files
-
 var
    // Every fixture file this suite created, so RunAllTests can remove them.
    // Unit-level rather than a field because the helper below is a plain
@@ -122,7 +119,7 @@ begin
    Inc(gTempIniSeq);
    Result := TempDirectory +
              Format('tr4w_cfgstore_%d_%d.%s',
-                    [GetCurrentProcessId, gTempIniSeq, aExt]);
+                    [GetProcessID, gTempIniSeq, aExt]);
    if FileExists(Result) then
       begin
       SysUtils.DeleteFile(Result);
@@ -133,13 +130,21 @@ begin
       end;
 end;
 
+(* GetProcessID, NOT GetCurrentProcessId.
+
+  FPC's System unit declares GetProcessID on every target it supports; the
+  Win32 spelling was the last thing this suite took from the Windows unit --
+  whose import comment claimed it was there for GetTempPath, which nothing in
+  this file has ever called. A comment that names the wrong reason is worse
+  than none: it makes the import look load-bearing to a reader and dead to a
+  grep, and it was wrong in both directions at once. *)
 function NewTempIni: TMemIniFile;
 var
    path: string;
 begin
    Inc(gTempIniSeq);
    path := TempDirectory +
-           Format('tr4w_cfgstore_%d_%d.ini', [GetCurrentProcessId, gTempIniSeq]);
+           Format('tr4w_cfgstore_%d_%d.ini', [GetProcessID, gTempIniSeq]);
 
    // Start from nothing: a file left behind by an aborted earlier run must not
    // become invisible fixture data.

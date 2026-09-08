@@ -41,7 +41,6 @@ uses
   SysUtils,
   tr4wserverUnit in '..\src\tr4wserverUnit.pas',
   uCRC32 in '..\src\uCRC32.pas',
-  WinSock2,     // Winapi.WinSock2 from the RTL -- the vendored D7 WinSock2.pas is retired
   Log4D,        // the dialog proc logs through tr4wserverUnit's logger
   VC in '..\src\vc.pas';
 

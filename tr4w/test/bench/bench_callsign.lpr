@@ -29,7 +29,9 @@ program bench_callsign;
 uses
    SysUtils,
    Classes,
-   Windows,
+{$IFDEF WINDOWS}
+   Windows,   // QueryPerformanceCounter -- see StartClock
+{$ENDIF}
    RegExpr,
    uRegex,
    uCallSignRoutines;
@@ -44,17 +46,43 @@ const
 var
    gFreq: Int64;
 
+(* THE CLOCK, AND OFF WINDOWS IT IS A WORSE ONE -- SAY SO RATHER THAN PRETEND.
+
+  QueryPerformanceCounter has no RTL equivalent. GetTickCount64 is the
+  portable stand-in and its resolution is ONE MILLISECOND, which for a
+  benchmark that reports per-call times in microseconds means the numbers are
+  only meaningful once a run is long enough to swamp that -- roughly a few
+  thousand iterations per measurement.
+
+  That is acceptable HERE and would not be in shipped code, which is the whole
+  reason this gate is written differently from uWinKey's: this program exists
+  to compare two regex implementations against each other on one machine, so a
+  coarse clock costs precision in the ratio, not correctness. uWinKey's trace
+  measures 15/46/122 ms gaps in a keyer and a 1 ms floor would blur the thing
+  it exists to see.
+
+  If this ever needs real resolution off Windows, the answer is the same
+  uHPTimer that the CW work owes -- not a second fallback here. *)
 procedure StartClock(out aAt: Int64);
 begin
+{$IFDEF WINDOWS}
    QueryPerformanceCounter(aAt);
+{$ELSE}
+   aAt := Int64(GetTickCount64);
+{$ENDIF}
 end;
 
 function StopClock(const aAt: Int64): double;   // milliseconds
 var
    now_: Int64;
 begin
+{$IFDEF WINDOWS}
    QueryPerformanceCounter(now_);
    Result := ((now_ - aAt) * 1000.0) / gFreq;
+{$ELSE}
+   now_ := Int64(GetTickCount64);
+   Result := (now_ - aAt) * 1.0;   // gFreq is 1000 ticks per second here
+{$ENDIF}
 end;
 
 procedure Report(const aName: string; const aMs: double; const aCount: integer;
@@ -85,7 +113,11 @@ begin
       Halt(2);
       end;
 
+{$IFDEF WINDOWS}
    QueryPerformanceFrequency(gFreq);
+{$ELSE}
+   gFreq := 1000;   // GetTickCount64 counts milliseconds
+{$ENDIF}
 
    calls := TStringList.Create;
    calls.LoadFromFile(ParamStr(1));
