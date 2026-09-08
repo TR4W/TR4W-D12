@@ -393,7 +393,20 @@ var
      whole exercise is about. }
    GOffThreadSeen: array of record
       Caller: PtrUInt;
-      Thread: TThreadID;
+      (* PtrUInt, NOT TThreadID, AND NOT AN INTEGER (2026-09-08).
+
+        TThreadID IS A DIFFERENT KIND OF THING ON EACH PLATFORM. FPC's BSD
+        RTL declares `TThreadID = ^TThreadRec` -- a POINTER -- while Windows
+        makes it a DWORD and Linux an integer. Found by compiling on an
+        aarch64 Mac: "Operator is not overloaded: TThreadID = LongInt".
+
+        THIS FIELD ONLY EVER GETS COMPARED FOR EQUALITY. A thread id is an
+        opaque token here; nothing does arithmetic on it, prints it or sends
+        it anywhere. PtrUInt is wide enough for a pointer on every target and
+        for an integer id on every target, so one cast at each of the two use
+        sites makes the comparison exact everywhere and the type honest about
+        what it holds. *)
+      Thread: PtrUInt;
    end;
    GOffThreadCapped: boolean = False;
 
@@ -423,7 +436,7 @@ begin
       for i := 0 to High(GOffThreadSeen) do
          begin
          if (GOffThreadSeen[i].Caller = key) and
-            (GOffThreadSeen[i].Thread = GetCurrentThreadId) then
+            (GOffThreadSeen[i].Thread = PtrUInt(GetCurrentThreadId)) then
             begin
             fresh := False;
             Break;
@@ -440,7 +453,7 @@ begin
          begin
          SetLength(GOffThreadSeen, Length(GOffThreadSeen) + 1);
          GOffThreadSeen[High(GOffThreadSeen)].Caller := key;
-         GOffThreadSeen[High(GOffThreadSeen)].Thread := GetCurrentThreadId;
+         GOffThreadSeen[High(GOffThreadSeen)].Thread := PtrUInt(GetCurrentThreadId);
          end;
    finally
       LeaveCriticalSection(GOffThreadLock);
