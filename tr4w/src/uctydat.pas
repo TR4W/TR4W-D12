@@ -872,9 +872,10 @@ begin
          end;
   end;
 
-{$IF tDebugMode}
-  CloseHandle(h);
-{$IFEND}
+(* A {$IF tDebugMode} CloseHandle(h) stood here and is deleted (2026-09-08).
+  tDebugMode is False in VC, and turning it on would NOT have compiled: `h`
+  in this scope is an integer index into CTY.ctyIndexArray, not a handle.
+  Same shape as the WINKEYDEBUG trace removed from uWinKey. *)
 
   CTY.ctyIndexArray[CHR(Ord('Z') + 1)] := CTY.ctyPrefixesTableRecords - 1;
 

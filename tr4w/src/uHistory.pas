@@ -978,8 +978,11 @@ begin
 //  if not Tree.tOpenFileForWrite(h, 'e:\Program Files\Apache Software Foundation\Apache2.2\tr4w\rev-history.html') then Exit;
 //  if not Tree.tOpenFileForWrite(h, 'd:\Documents and Settings\1.NEWXP\workspace\CMS\xml\releases.xml') then Exit;
 
-  h := CreateFile(BASE + 'CMS\xml\releases.xml', GENERIC_READ + GENERIC_WRITE, FILE_SHARE_READ + FILE_SHARE_WRITE, nil, CREATE_ALWAYS, FILE_ATTRIBUTE_ARCHIVE, 0);
-  if h = INVALID_HANDLE_VALUE then Exit;
+  { FileCreate IS CREATE_ALWAYS: create, or truncate what is already
+    there. It returns -1 where CreateFile returned
+    INVALID_HANDLE_VALUE. }
+  h := FileCreate(BASE + 'CMS\xml\releases.xml');
+  if h = THandle(-1) then Exit;
 
   nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '%s',
 
@@ -1017,7 +1020,7 @@ begin
 
   nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '%s', ']]></content></cms>');
   sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
-  CloseHandle(h);
+  FileClose(h);
 end;
 
 procedure MakeLatestReleasesNotes();
@@ -1064,8 +1067,11 @@ begin
 //  if not Tree.tOpenFileForWrite(h, 'e:\Program Files\Apache Software Foundation\Apache2.2\tr4w\download\latest-releases-notes.html') then Exit;
 //  if not Tree.tOpenFileForWrite(h, 'd:\Documents and Settings\1.NEWXP\workspace\CMS\xml\latest-releases-notes.xml') then Exit;
 
-  h := CreateFile(BASE + 'CMS\xml\latest-releases-notes.xml', GENERIC_READ + GENERIC_WRITE, FILE_SHARE_READ + FILE_SHARE_WRITE, nil, CREATE_ALWAYS, FILE_ATTRIBUTE_ARCHIVE, 0);
-  if h = INVALID_HANDLE_VALUE then Exit;
+  { FileCreate IS CREATE_ALWAYS: create, or truncate what is already
+    there. It returns -1 where CreateFile returned
+    INVALID_HANDLE_VALUE. }
+  h := FileCreate(BASE + 'CMS\xml\latest-releases-notes.xml');
+  if h = THandle(-1) then Exit;
 
   nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '%s',
     '<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">' +
@@ -1142,7 +1148,7 @@ begin
 
     '</table></xsl:template></xsl:stylesheet>');
   sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
-  CloseHandle(h);
+  FileClose(h);
 end;
 
 end.

@@ -29,7 +29,9 @@ uses
   Tree,
   uGradient,
   utils_file,
-  Windows,
+  (* Windows was here for CreateFileA / SetFilePointer / CloseHandle and
+    DWORD; the file work is SysUtils' now and the thread id is the RTL's
+    TThreadID (2026-09-08). *)
   LogEdit,
   LogWind,
   LogStuff,
@@ -68,7 +70,7 @@ var
     timestamp, a callsign character and a message; there is nothing to lose. }
   Line                             : AnsiString;
   h                                : THandle;   (* A FILE handle, not a window. *)
-  lpThreadId                       : DWORD;
+  lpThreadId                       : TThreadID;   { tCreateThread's, which is BeginThread's }
 begin
   if tr4w_WindowsArray[tw_INTERCOMWINDOW_INDEX].WndForm = nil then
      begin
@@ -86,13 +88,27 @@ begin
 
   if Config.IntercomFileEnable then
      begin
-     h := CreateFileA(TR4W_INTERCOM_FILENAME, GENERIC_WRITE or GENERIC_READ, FILE_SHARE_WRITE or FILE_SHARE_READ, nil, OPEN_ALWAYS, FILE_ATTRIBUTE_ARCHIVE, 0);
-     if h <> INVALID_HANDLE_VALUE then
+     (* APPEND, THROUGH THE RTL. Was CreateFileA(..., OPEN_ALWAYS, ...) +
+       SetFilePointer(FILE_END) + CloseHandle.
+
+       OPEN_ALWAYS means "open it, or create it if it is not there", which is
+       two calls here: FileOpen, and FileCreate when that fails. FileOpen
+       returns -1 on failure exactly as CreateFileA returned
+       INVALID_HANDLE_VALUE, and the sWriteFileFromString calls either side are
+       already RTL wrappers -- utils_file has been on SysUtils.FileWrite for a
+       while, so this was the last Win32 step in the sequence. *)
+     h := FileOpen(TR4W_INTERCOM_FILENAME, fmOpenWrite or fmShareDenyNone);
+     if h = THandle(-1) then
         begin
-        SetFilePointer(h, 0, nil, FILE_END);
+        h := FileCreate(TR4W_INTERCOM_FILENAME);
+        end;
+
+     if h <> THandle(-1) then
+        begin
+        FileSeek(h, Int64(0), fsFromEnd);
         sWriteFileFromString(h, Line);
         sWriteFileFromString(h, #13#10);
-        CloseHandle(h);
+        FileClose(h);
         end;
      end;
   // THROUGH THE FORM.  The window is an LCL form (uIntercomForm) and the raw

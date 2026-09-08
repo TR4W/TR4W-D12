@@ -312,7 +312,7 @@ procedure SetSendedQSOs;
 label
   1, 2;
 var
-  pNumberOfBytesRead                    : Cardinal;
+  pNumberOfBytesRead                    : LongInt;   { FileRead's result }
  
   SignedQSOs                            : integer;
   (* WHICH record the scan is standing on, 0-based.  See the update below. *)
@@ -323,7 +323,12 @@ begin
   SignedQSOs := 1;
   RecordIndex := -1;
   1:
-  Windows.ReadFile(LogHandle, TempRXData, SizeOf(ContestExchange), pNumberOfBytesRead, nil);
+  (* FileRead RETURNS the count that ReadFile delivered through a var
+       parameter, and -1 on failure. The variable is signed now so a
+       failure stays negative instead of becoming a huge Cardinal; the
+       test below is unchanged either way, since neither equals the
+       record size. *)
+  pNumberOfBytesRead := FileRead(LogHandle, TempRXData, SizeOf(ContestExchange));
   if pNumberOfBytesRead = SizeOf(ContestExchange) then
      begin
      inc(RecordIndex);

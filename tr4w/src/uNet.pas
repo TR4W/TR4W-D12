@@ -1330,12 +1330,10 @@ begin
           logger.Info('Auto-synchronizing local log from server (CRC mismatch: local %x, server %x)',
                       [s^.liLocalCRC32, s^.liSeverCRC32]);
           QuickDisplay(TC_AUTOSYNCHRONIZINGLOG);
-          NewServerLogHandle := CreateFileA(TR4W_SYN_FILENAME,
-                                           GENERIC_READ or GENERIC_WRITE,
-                                           FILE_SHARE_READ or FILE_SHARE_WRITE,
-                                           nil, CREATE_ALWAYS,
-                                           FILE_ATTRIBUTE_ARCHIVE, 0);
-          if NewServerLogHandle = INVALID_HANDLE_VALUE then
+          { FileCreate is CREATE_ALWAYS -- create or truncate -- and returns
+            -1 for INVALID_HANDLE_VALUE. }
+          NewServerLogHandle := FileCreate(TR4W_SYN_FILENAME);
+          if NewServerLogHandle = THandle(-1) then
              begin
              logger.Error('Auto-sync: could not create %s', [TR4W_SYN_FILENAME]);
              // Fall through to the existing dialog so the operator can react.

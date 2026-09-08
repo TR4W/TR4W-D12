@@ -8218,7 +8218,7 @@ begin
 
         end;
      end;
-  CloseHandle(h);
+  FileClose(h);   { a FILE handle -- sWriteFile above }
 end;
 
 procedure MakeAllCallsignsList;
@@ -8265,7 +8265,7 @@ begin
         end;
      end;
 
-  CloseHandle(h);
+  FileClose(h);   { a FILE handle -- sWriteFile above }
   FilePreview;
 end;
 
@@ -8864,7 +8864,7 @@ begin
      TempRXData.NumberReceived := i + 100;
      sWriteFile(h, TempRXData, SizeOf(ContestExchange));
      end;
-  CloseHandle(h);
+  FileClose(h);   { a FILE handle -- sWriteFile above }
 end;
 
 procedure CompleteCallsign;

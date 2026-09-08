@@ -1533,17 +1533,27 @@ begin
   StrPCopy(wsprintfBuffer, SysUtils.Format('%sDXCluster\dxcluster %s %s.txt',
     [string(PAnsiChar(@TR4W_PATH_NAME)), string(GetDateString), string(TimeString)]));
 
-  TelnetLogHandle := CreateFileA(wsprintfBuffer, GENERIC_WRITE, FILE_SHARE_WRITE,
-    nil, CREATE_NEW, FILE_ATTRIBUTE_ARCHIVE, 0);
+  (* CREATE_NEW MEANT "FAIL IF IT ALREADY EXISTS", and FileCreate does not --
+    it truncates. So the existence test is explicit here rather than lost in the
+    swap. The name carries a date and a time, so a collision means this ran
+    twice in the same second and the first file is the one to keep. *)
+  if FileExists(string(PAnsiChar(@wsprintfBuffer))) then
+     begin
+     TelnetLogHandle := THandle(-1);
+     end
+  else
+     begin
+     TelnetLogHandle := FileCreate(string(PAnsiChar(@wsprintfBuffer)));
+     end;
 
-  if TelnetLogHandle <> INVALID_HANDLE_VALUE then
+  if TelnetLogHandle <> THandle(-1) then
      begin
      for i := 0 to Lines - 1 do
         begin
         Line := AnsiString(TelnetConsoleLine(i)) + #13#10;
         sWriteFile(TelnetLogHandle, Line[1], Length(Line));
         end;
-     CloseHandle(TelnetLogHandle);
+     FileClose(TelnetLogHandle);
      end;
 end;
 

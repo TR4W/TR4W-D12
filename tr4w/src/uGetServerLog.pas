@@ -230,7 +230,7 @@ procedure HeadlessSyncFinished(aData: PtrInt);
 begin
    if NewServerLogHandle <> INVALID_HANDLE_VALUE then
       begin
-      CloseHandle(NewServerLogHandle);
+      FileClose(NewServerLogHandle);
       NewServerLogHandle := INVALID_HANDLE_VALUE;
       end;
    ReplaceLogByServerLog(True);
@@ -272,7 +272,7 @@ label
 var
   i                                     : integer;
   TotalBytes, TotalRecords, TotalQ      : integer;
-  lpNumberOfBytesWritten                : Cardinal;
+  lpNumberOfBytesWritten                : LongInt;   { FileRead's result }
   TempRXData                            : ContestExchange;
   ServerLogFillIndex                    : integer;
   tGetNetLogEvent                       : THandle;
@@ -354,7 +354,8 @@ begin
           the array safe to fill from this thread and read from the other. *)
         ResetServerLogRows(TotalBytes div SizeOf(ContestExchange));
         end;
-     Windows.SetFilePointer(NewServerLogHandle, SizeOfTLogHeader, nil, FILE_BEGIN);
+     { FileSeek from the start -- what SetFilePointer(FILE_BEGIN) did. }
+     FileSeek(NewServerLogHandle, Int64(SizeOfTLogHeader), fsFromBeginning);
 
      ServerLogFillIndex := 0;
      (* THE tSetWindowRedraw FREEZE/THAW PAIR IS GONE. It stopped a list view
@@ -362,7 +363,13 @@ begin
        is on screen and is not told about rows at all, so there is nothing to
        freeze. *)
      2:
-     Windows.ReadFile(NewServerLogHandle, TempRXData, SizeOf(ContestExchange), lpNumberOfBytesWritten, nil);
+     (* FileRead RETURNS the count that ReadFile delivered through a var
+       parameter, and -1 on failure. The variable is signed now so a
+       failure stays negative instead of becoming a huge Cardinal; the
+       test below is unchanged either way, since neither equals the
+       record size. *)
+     lpNumberOfBytesWritten := FileRead(NewServerLogHandle, TempRXData,
+                                       SizeOf(ContestExchange));
      if lpNumberOfBytesWritten = SizeOf(ContestExchange) then
         begin
         inc(TotalRecords);
@@ -423,7 +430,7 @@ begin
                     [TotalRecords, TotalQ]);
         if NewServerLogHandle <> INVALID_HANDLE_VALUE then
            begin
-           CloseHandle(NewServerLogHandle);
+           FileClose(NewServerLogHandle);
            NewServerLogHandle := INVALID_HANDLE_VALUE;
            end;
         HeadlessSyncMode := False;
