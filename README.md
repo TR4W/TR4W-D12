@@ -29,6 +29,137 @@ And there will never be a priced component/subscription service/extra "pro tier"
 
 We do this because we love programming, contesting and giving back to the ham community. That's it.
 
+## Building on Linux
+
+Verified on **Ubuntu 24.04** (Debian-derived) with FPC 3.2.2 and Lazarus 3.0.
+Debian works the same way -- check which Lazarus your release ships, since only
+3.0 has been tested.
+
+### Dependencies
+
+```sh
+sudo apt install build-essential git fpc lazarus
+```
+
+That is enough to **build**. Two more are needed for the full check, and
+neither announces itself, which is why they are listed rather than left to be
+discovered:
+
+```sh
+sudo apt install libsqlite3-dev   # the contest log
+sudo apt install xvfb             # only to RUN the tests on a headless box
+```
+
+| package | why, and what its absence looks like |
+| --- | --- |
+| `fpc` | the compiler. TR4W needs 3.2.2 |
+| `lazarus` | the **LCL** -- the units, not the IDE. Without it: `Can't find unit Interfaces` |
+| `libsqlite3-dev` | the log is SQLite. The runtime `libsqlite3.so.0` is usually already installed; FPC looks for the unversioned `libsqlite3.so` **symlink**, which only `-dev` provides. You get `Can not load SQLite client library "libsqlite3.so"` -- which names the library, not the package |
+| `xvfb` | the test binary links GTK2, so on a headless machine it dies with `Gtk-WARNING: cannot open display:` before running a single test. Run it as `xvfb-run -a ./tr4w_unit_tests_linux`. Not needed on a desktop |
+
+### Build
+
+```sh
+git clone git@github.com:TR4W/TR4W-D12.git
+cd TR4W-D12
+./tr4w/build/build-linux.sh
+```
+
+It discovers the toolchain, sets every unit search path, reads the version from
+`src/Version.pas`, and runs four stages -- **app**, **unit tests**,
+**tr4wserver**, **package** -- reporting each and, for any that fails, its first
+error. When all four pass it writes
+`build-out/dist/tr4w-<version>-<arch>.tar.gz`.
+
+Individual stages: `--app`, `--tests`, `--server`, `--package`, `--list`.
+
+**It also prints the gates that CANNOT run on Linux** -- ten lints needing
+PowerShell, the UI field check that drives the Windows binary, and the PE
+version and manifest checks that have no ELF equivalent. A build that skips a
+gate is not a build that passed it, so the script says which.
+
+### Checking one unit, or the whole tree
+
+```sh
+./tools/compile-native.sh MainUnit.pas    # one unit
+./tools/compile-native.sh --tree          # MainUnit and everything it needs
+./tools/compile-native.sh --all           # the pinned list
+./tools/compile-native.sh --every         # a census of every unit; SLOW
+```
+
+`--tree` is the one to reach for: FPC resolves the graph itself, so it walks the
+tree once -- seconds. `--every` compiles each unit independently with the cache
+cleared between them, which is minutes. What it buys for that price is finding
+units nothing reaches any more.
+
+### Raspberry Pi and other ARM boards
+
+The scripts read the CPU from `uname -m`, so aarch64 (64-bit Pi OS) and arm
+(32-bit) need no flag. **This is untested.** What can be said is that nothing
+obvious blocks it: no live inline assembly anywhere in the tree, no live x86
+port I/O, ARM is little-endian like x86 so the binary logs and the network
+protocol are unaffected, and parallel-port keying is already Windows-only. The
+first command worth running there is `./tools/compile-native.sh --tree`.
+
+## Building on macOS
+
+Verified on **macOS 26 / Apple Silicon (aarch64)** with FPC 3.2.2 and Lazarus
+installed through [fpcupdeluxe](https://github.com/LongDirtyAnimAlf/fpcupdeluxe),
+which is the practical way to get both on a Mac.
+
+```sh
+./tools/compile-native.sh --tree
+```
+
+**This compiles the whole unit graph. It does not yet LINK an application** --
+there is no `build-mac.sh` counterpart to `build-linux.sh`. What the compile
+proves is that every unit TR4W consists of is free of Windows dependencies on a
+third platform, which is a real result and not the same as a program.
+
+`compile-native.sh` finds fpcupdeluxe at `~/fpcupdeluxe` by default; override
+with `FPCROOT` and `LAZROOT`. The widget set defaults to **cocoa** here and
+gtk2 on Linux; override with `LCL_WIDGETSET`.
+
+### What the Mac found that two other platforms could not
+
+Worth reading before dismissing a third target as redundant. **Every one of
+these was invisible to both Windows and Linux**, and none of them is a macOS
+problem -- they are TR4W bugs that only a third type system could expose:
+
+- **`TThreadID` is a POINTER on the BSD RTL** and an integer on Windows and
+  Linux. TR4W stored thread ids in `DWORD`, `Cardinal`, `LongWord` and
+  `THandle` -- all of which are correct on Windows by coincidence. 21
+  declarations and 25 comparisons now use the RTL's own type.
+- **A thread was being tested against a FILE-handle sentinel.** The
+  paddle/footswitch thread was initialised to `INVALID_HANDLE_VALUE` (-1),
+  but `BeginThread` returns **zero** on failure -- so
+  `if tPaddleFootSwitchThread <> INVALID_HANDLE_VALUE` was **true before any
+  thread had ever been started**. A live bug, found because macOS refuses to
+  put -1 in a pointer.
+- **`univint` ships its own `Menus` unit**, which shadowed the LCL's and made
+  `Forms` fail its checksum -- a search-path ORDER bug that reads as a broken
+  Lazarus install. The same trap, with Free Vision's `menus`, was already
+  documented in the Windows probe and had never been carried across.
+- **A registry read that would have compiled and done nothing.** FPC's
+  `fcl-registry` provides a `Registry` unit off Windows backed by an XML file,
+  so adding the package would have made `GetWindowsNTPServer` build -- and then
+  read a W32Time service key that does not exist, forever, in silence.
+
+
+### Where this actually stands
+
+Honest status, measured rather than hoped:
+
+- the **application**, **tr4wserver** and a **tarball** all build natively on
+  x86_64 Linux
+- **19,883 of 19,884 unit tests pass** there; the one failure is a timing
+  assumption in a test fixture, not a defect in the program
+- the **whole unit graph compiles on macOS/aarch64** -- see
+  [Building on macOS](#building-on-macos). No application is linked there yet
+- **ARM is untested.** Nothing obvious blocks it; nothing has tried it
+- **nobody has run the GUI on any of them.** Building is not running, and a
+  contest logger is not proven by a compiler
+
 ## Frequently Asked Questions
 
 - Does TR4W still mean “TRLOG for Windows”?
