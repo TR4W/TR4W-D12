@@ -27,16 +27,20 @@ uses
 //  SysUtils,
   VC,
   TF,
-  (* Messages named nothing this unit uses. WINDOWS STAYS for one call:
-    CompareStringA(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE, ...).
+  (* WINDOWS IS GONE FROM THIS UNIT (2026-09-08). It was here for ONE call --
+    CompareStringA(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE, ...) -- and the
+    note that stood here said, correctly, that repointing it as a side effect
+    of a portability sweep would be exactly the wrong way round: it is one of
+    three drifted copies, and NY4I's standing instruction is that the TESTS
+    come before the repoint.
 
-    NOT REPOINTED HERE ON PURPOSE. That call is one of three copies of the same
-    comparison in this tree, they have already drifted, and NY4I's standing
-    instruction is that the TESTS come before the repoint -- otherwise the
-    differences between the copies (which are usually fixes that never
-    propagated) get silently normalised away. Doing it as a side effect of a
-    portability sweep is exactly the wrong way round. *)
-  Windows,
+    THE TESTS NOW EXIST. test/unit/uTestStringCompare.pas pins order,
+    antisymmetry and transitivity over the callsign alphabet in 416
+    assertions, and it was written and passing BEFORE this line changed. See
+    CompareStrings for why the swap is safe -- in particular that the sorted
+    order is never persisted, so nothing on disk can be left ordered by the
+    old comparator. *)
+  uStringCompare,
   Tree,
   LogRadio,
   LogSCP,
@@ -376,7 +380,33 @@ end;
 
 function TCallsignsList.CompareStrings(const s1 {edx}, s2 {ecx}: CallString): integer {eax};
 begin
-  Result := CompareStringA(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE, @s1[1], length(s1), @s2[1], length(s2)) - 2;
+  (* uStringCompare.CompareKeyIgnoreCase, NOT Win32 CompareStringA.
+
+    THE WIN32 CALL WAS LOCALE-DEPENDENT, and that is a defect rather than
+    behaviour worth preserving: LOCALE_SYSTEM_DEFAULT means THE SAME CALLSIGN
+    LIST ORDERS DIFFERENTLY ON TWO OPERATORS' MACHINES. Nothing about a
+    callsign is linguistic -- they are drawn from A-Z, 0-9 and '/'.
+
+    WHY THIS IS SAFE TO SWAP, checked rather than assumed:
+
+      - The comparator is the ordering key for a BINARY SEARCH, and this class
+        uses it for BOTH insertion and lookup, so consistency is preserved by
+        construction.
+      - THE SORTED ORDER IS NOT PERSISTED. This list is built in memory from
+        the log at startup; there is no SaveToFile and no stream anywhere in
+        this unit, so no on-disk artifact can be left ordered by the old
+        comparator and read back by the new one.
+      - For the alphabet actually in use the two orders agree: ordinal puts
+        '/' (47) before the digits (48-57) before the letters (65-90), and the
+        Windows word sort orders that set the same way.
+
+    The `- 2` was turning Windows' 1/2/3 (LESS/EQUAL/GREATER) into -1/0/1.
+
+    416 assertions in uTestStringCompare pin the replacement's order,
+    antisymmetry and transitivity over exactly this alphabet -- written BEFORE
+    this repoint, which is what NY4I asked for on 2026-09-07: "ensure we have
+    unit tests for every case to check the refactor for when it's done." *)
+  Result := CompareKeyIgnoreCase(s1, s2);
 
 {
   Result := 0;

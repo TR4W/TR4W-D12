@@ -45,7 +45,7 @@ uses
   // Issue #1034: dropped 'TF' (unused here) -- it pulled TF -> MainUnit -> LogStuff,
   // which blocked uSortedStringList (and its uMults consumer) from linking into the test EXE.
   //Country9,
-  SysUtils;   (* CompareText -- see TSortedStringList.CompareStrings *)
+  uStringCompare;   (* CompareKeyIgnoreCase -- the shared comparator *)
 
 type
 
@@ -287,8 +287,13 @@ begin
     before the digits (48-57) before the letters (65-90); the Windows word sort
     orders that set the same way, and does not treat '/' as ignorable. The
     binary search and the insertion use this one comparator, so consistency --
-    not any particular collation -- is what correctness rests on here. *)
-  Result := CompareText(s1, s2);
+    not any particular collation -- is what correctness rests on here.
+    REPOINTED 2026-09-08 to uStringCompare.CompareKeyIgnoreCase. That is a
+    NO-OP here -- it is CompareText with the result normalised to a sign --
+    and it is done so the shared unit has a live caller rather than sitting
+    as untested scaffolding. The reasoning above is why the shared one is
+    ordinal too. *)
+  Result := CompareKeyIgnoreCase(s1, s2);
 end;
 
 procedure TSortedStringList.ClearDupes;
