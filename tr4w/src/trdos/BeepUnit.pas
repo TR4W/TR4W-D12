@@ -43,66 +43,31 @@ uses
 {$ENDIF}
   ;
 
+(* TWO ROUTINES NOW, AND NO DEVICE (2026-09-08).
+
+  ntBeepInit, ntBeepClose and ntBeep are GONE with the \Device\Beep driver
+  they drove. That path opened a DOS device alias this unit defined for
+  itself -- QueryDosDeviceA, DefineDosDeviceA, CreateFileA, DeviceIoControl --
+  and on Windows 10/11 it usually did NOTHING AT ALL: beep.sys is commonly
+  disabled and most machines have no PC speaker, so CreateFile failed, the
+  handle stayed invalid, and every warning beep was silent with nothing said.
+
+  uAudio.BeepAlert replaces it with Windows.Beep, which SYNTHESISES THROUGH
+  THE SOUND CARD. That call was rejected once before, correctly, because it
+  BLOCKS for the duration and the CW sidetone could not afford that -- but the
+  sidetone is gone (NY4I, 2026-09-08) and SpeakerBeep already blocked, with an
+  explicit Sleep(Duration) after the IOCTL. *)
 procedure SpeakerBeep(Tone, Duration: Word);
 procedure NoSound;
-procedure ntBeepInit;
-procedure ntBeepClose;
-procedure ntBeep(Freq, Duration: Cardinal);
-
-{$IFDEF WINDOWS}
-type
-  BEEP_SET_PARAMETERS = record
-    Frequency, Duration: Cardinal;
-  end;
-{$ENDIF}
-
-{$IFDEF WINDOWS}
-const
-  IOCTL_BEEP_SET                        = $10000;
-  FileNameStr                           : array[0..9] of AnsiChar = '\\.\tr4w'#0;
-  BeepFileName                          : PAnsiChar = @FileNameStr[0];
-  DevName                               : PAnsiChar = @FileNameStr[3];
-{$ENDIF}
-{$IFDEF WINDOWS}
-var
-  (* CreateFileA on the beep device -- a FILE handle, not a window. *)
-  hBeep                                 : THandle = INVALID_HANDLE_VALUE;
-  OwnDevName                            : LongBool;
-{$ENDIF}
 
 implementation
 
 uses
-{$IFNDEF WINDOWS}
-  Log4D,
-{$ENDIF}
+  uAudio,   (* every platform decision about sound lives there now *)
   MainUnit,
   LogK1EA,
   LogRadio,
   Tree;
-
-{$IFNDEF WINDOWS}
-(* SAID ONCE, NOT ONCE PER BEEP.
-
-  Every entry point in this unit is a no-op off Windows -- see the gate on the
-  interface uses clause. A contest generates a beep per dupe and per new
-  multiplier, so this reports the first time and then stays quiet. *)
-var
-  GToneWarned: boolean = False;
-
-procedure ReportNoToneGenerator;
-begin
-   if GToneWarned then
-      begin
-      Exit;
-      end;
-   GToneWarned := True;
-   TLogLogger.GetLogger('TR4WDebugLog').Warn(
-      'No tone generator on this platform: the sidetone and every warning beep '
-      + 'are silent. BeepUnit drives the Windows \Device\Beep driver, and the '
-      + 'replacement (a sidetone on its own thread) is owed on Windows too.');
-end;
-{$ENDIF}
 
 {
   DELETED: SetPort, GetPort and Sound -- the PC-speaker path.
@@ -151,112 +116,17 @@ begin
 end;
 
 procedure SpeakerBeep(Tone, Duration: Word);
-
 begin
-  if not BeepEnable then 
+  if not BeepEnable then
      begin
      Exit;
      end;
 
-  ntBeep(Tone, Duration);
-  Sleep(Duration);
-
+  (* THE Sleep IS GONE WITH THE IOCTL, and dropping it is not an oversight.
+    ntBeep returned immediately -- DeviceIoControl fires and returns -- so the
+    Sleep WAS the duration. Windows.Beep blocks for the duration itself, so
+    keeping both would make every alert take twice as long. *)
+  uAudio.BeepAlert(Tone, Duration);
 end;
-
-procedure ntBeepInit;
-begin
-{$IFNDEF WINDOWS}
-  ReportNoToneGenerator;
-{$ELSE}
-  OwnDevName := False;
-
-  if WindowsOSversion = VER_PLATFORM_WIN32_WINDOWS then
-     begin
-     Exit;
-     end;
-     
-  if Windows.QueryDosDeviceA(DevName, wsprintfBuffer, MAX_PATH) = 0 then
-     begin
-     Windows.DefineDosDeviceA(DDD_RAW_TARGET_PATH, DevName, '\Device\Beep');
-     OwnDevName := True;
-
-     hBeep := Windows.CreateFileA(BeepFileName, GENERIC_READ or GENERIC_WRITE, 0, nil, OPEN_EXISTING, 0, 0);
-     ntBeep(32767 - 1, 1);
-     end;
-{$ENDIF}
-end;
-
-procedure ntBeepClose;
-begin
-{$IFDEF WINDOWS}
-  if OwnDevName then
-     begin
-     Windows.DefineDosDeviceA(DDD_REMOVE_DEFINITION, DevName, nil);
-     end;
-  if hBeep <> INVALID_HANDLE_VALUE then
-     begin
-     CloseHandle(hBeep);
-     end;
-{$ENDIF}
-end;
-
-{
-  ntBeep -- the CW sidetone and every warning beep.
-
-  OPEN, and deliberately NOT changed in the same pass that removed the port I/O.
-
-  This drives \Device\Beep (beep.sys) by IOCTL, via a DOS device alias this unit
-  defines for itself in ntBeepInit.  On Windows 10/11 beep.sys is commonly
-  disabled and most machines have no PC speaker, in which case CreateFile fails,
-  hBeep stays INVALID_HANDLE_VALUE, and every beep SILENTLY does nothing -- the
-  exact silent-fallback shape this project treats as a defect.
-
-  Windows.Beep(freq, duration) is the documented modern replacement and does
-  synthesize through the sound card. It is NOT a drop-in here: it BLOCKS for the
-  duration, whereas this IOCTL returns immediately and LOGK1EA does its own
-  `tCWSleep(CWElementLength, ...)` afterwards. Swapping it in directly would
-  double every CW element's timing -- a keyer regression, not a cosmetic one.
-
-  So a real fix is a sidetone rendered on its own thread (waveOut or XAudio2),
-  which is also the only version that survives the move off Win32. Pending that
-  work, this stays as it is -- with the failure documented rather than hidden.
-}
-procedure ntBeep(Freq, Duration: Cardinal);
-{$IFNDEF WINDOWS}
-begin
-  ReportNoToneGenerator;
-end;
-{$ELSE}
-var
-  BeepSetParams                         : BEEP_SET_PARAMETERS;
-  BytesReturned                         : Cardinal;
-begin
-  if hBeep = INVALID_HANDLE_VALUE then 
-     begin
-     Exit;
-     end;
-     
-  if Freq < 37 then 
-     begin
-     Exit;
-     end;
-     
-  if Freq > 32767 then 
-     begin
-     Exit;
-     end;
-     
-  BeepSetParams.Frequency := Freq;
-  BeepSetParams.Duration := Duration;
-  DeviceIoControl(hBeep, 
-                  IOCTL_BEEP_SET, 
-                  @BeepSetParams, 
-                  SizeOf(BEEP_SET_PARAMETERS), 
-                  nil, 
-                  0, 
-                  BytesReturned, 
-                  nil);
-end;
-{$ENDIF}
 
 end.

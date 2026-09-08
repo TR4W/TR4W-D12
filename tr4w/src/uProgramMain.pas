@@ -1764,7 +1764,10 @@ begin
   tDispalyMyComputerID;
   TR4WMainForm.pnlCurrentOperator.Caption := string(CurrentOperator);
 
-  ntBeepInit;
+  (* ntBeepInit is GONE (2026-09-08). It opened a DOS device alias for
+    \Device\Beep at startup -- and on most Windows 10/11 machines that open
+    FAILED, after which every warning beep silently did nothing. uAudio owns
+    the sound now and needs no initialisation. *)
   OpenOtherWindows;
 
   { THE DOMAIN LAYER'S ONE CROSSING INTO THE UI, and it has to be AFTER the

@@ -84,6 +84,12 @@ $UNITS = @(
    # {$I %FPCTARGETOS%} one -- had never been through a compiler until this
    # entry was added.
    @{ Unit = 'uStickyKeys.pas';       Since = '2026-09-08' }
+   # uAudio is NEW code and pinned from birth -- the point of writing it was
+   # that every platform decision about sound lives in one place, and a pin is
+   # what keeps that true. Its Unix arm (aplay/paplay/afplay via RunProgram)
+   # is code no Windows build compiles, so without this nothing would ever
+   # read it.
+   @{ Unit = 'utils' + [char]92 + 'uAudio.pas'; Since = '2026-09-08' }
    @{ Unit = 'GetWinVersionInfo.pas'; Since = '2026-09-08' }
 
 )

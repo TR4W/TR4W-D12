@@ -48,6 +48,7 @@ uses
    VC                   in '..\..\src\VC.pas',
    uAnsiStr             in '..\..\src\utils\uAnsiStr.pas',
    uStringCompare       in '..\..\src\utils\uStringCompare.pas',
+   uAudio               in '..\..\src\utils\uAudio.pas',
    uCFormat             in '..\..\src\utils\uCFormat.pas',
    uFileText            in '..\..\src\utils\uFileText.pas',
    uRegex               in '..\..\src\utils\uRegex.pas',
@@ -56,6 +57,7 @@ uses
    uJSON                in '..\..\src\utils\uJSON.pas',
    uTestAnsiStr         in 'uTestAnsiStr.pas',
    uTestStringCompare   in 'uTestStringCompare.pas',
+   uTestAudio           in 'uTestAudio.pas',
    utils_text           in '..\..\src\utils\utils_text.pas',
    uTestUtilsText       in 'uTestUtilsText.pas',
    uADIF                in '..\..\src\uADIF.pas',
@@ -336,6 +338,7 @@ begin
    RegisterSuite(TFlexRadioUtilsTests.Create('FlexRadioUtils'));
    RegisterSuite(TAnsiStrTests.Create('AnsiStr'));
    RegisterSuite(TStringCompareTests.Create('StringCompare'));
+   RegisterSuite(TAudioTests.Create('Audio'));
    RegisterSuite(TRegexValidatorTests.Create('RegexValidators'));
    RegisterSuite(TUtilsTextTests.Create('UtilsText'));
    RegisterSuite(TADIFLexerTests.Create('ADIFLexer'));

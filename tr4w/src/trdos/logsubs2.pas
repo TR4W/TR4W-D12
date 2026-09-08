@@ -785,7 +785,8 @@ begin
     count, and an unmatched WSACleanup from outside that pairing decrements
     someone else's count. *)
 
-  ntBeepClose;
+  (* ntBeepClose is GONE with ntBeepInit -- there is no device alias to
+    release. See uAudio. *)
 
   { Stop the autosave BEFORE the final save, so a tick cannot fire while the
     program is tearing down and read half-destroyed windows. }
