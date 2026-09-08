@@ -210,7 +210,6 @@ procedure RichEditOperation(Load: boolean);
 function GetAddMultBand(Mult: TAdditionalMultByBand; Band: BandType): BandType;
 procedure scWK_RESET; // n4af 4.43.10
 procedure SetCommand(c: PAnsiChar);
-procedure ChangeFocus(Text: PAnsiChar);
 procedure ImportFromADIF;
 procedure CheckQuestionMark;
 (* TelnetWantsClipboardKey IS GONE (2026-09-07) -- it had no caller.
@@ -990,7 +989,7 @@ begin
       SavedCall    := ReceivedData.Callsign;
       SavedRSTSent := ReceivedData.RSTSent;
 
-      tElapsedTimeFromLastQSO := Windows.GetTickCount;
+      tElapsedTimeFromLastQSO := GetTickCount64;
       UpdateWindows;
     // It is not clear to me why we would call SHowStationInformation again.
       ShowStationInformation(@ReceivedData.Callsign);
@@ -3532,7 +3531,9 @@ begin
      end;
   FillChar(TempRXData, SizeOf(ContestExchange), 0);
   TempRXData.ceRecordKind := rkNote;
-  Windows.MoveMemory(@TempRXData.Prefix, @s[1], i);
+  (* Move, and the arguments reverse: MoveMemory(Dest, Src, Len) but
+    Move(const Src, var Dest, Count). *)
+  Move(s[1], TempRXData.Prefix, i);
   AddRecordToLogAndSendToNetwork(TempRXData);
 end;
 
@@ -6609,7 +6610,10 @@ begin
 
   for i := 0 to length(DirArray) - 1 do
      begin
-     Windows.CreateDirectoryA(DirArray[i], nil);
+     (* ForceDirectories, not CreateDirectoryA: it is the RTL's, it takes a
+       string, and it makes intermediate levels -- which CreateDirectoryA does
+       not, so a nested path silently did nothing here before. *)
+     ForceDirectories(AnsiString(DirArray[i]));
      end;
   // Windows.CreateDirectoryA(GetYearString, nil);
 
@@ -7309,7 +7313,7 @@ begin
   begin
     // ChangeFocus('call');
     FocusEntry(TR4WCallEdit);
-    // Windows.SetWindowTextA(InsertWindowHandle, inttopchar(Windows.GetTickCount));
+    // Windows.SetWindowTextA(InsertWindowHandle, inttopchar(GetTickCount64));
 
   end;
 end;
@@ -7445,7 +7449,7 @@ begin
 
   start:
 {$IF tDebugMode}
-  T1 := Windows.GetTickCount;
+  T1 := GetTickCount64;
   // m :=0;
 {$IFEND}
   (* THE LOG IS THE DATABASE -- step B5.
@@ -7641,7 +7645,7 @@ begin
     by hand through a window handle, is deleted. *)
   ReCalculateHourDisplay;
 {$IF tDebugMode}
-  QuickDisplay(inttopchar(Windows.GetTickCount - T1));
+  QuickDisplay(inttopchar(GetTickCount64 - T1));
   // showint(m);
 {$IFEND}
   if contest = RADIOYOC then // 4.53.2 // 4.72.9
@@ -8813,7 +8817,7 @@ end;
 function AddRecordToLogAndSendToNetwork(var CE: ContestExchange): boolean;
 begin
   CE.ceQSOID1 := STARTTIMEOFTHETR4W;
-  CE.ceQSOID2 := Windows.GetTickCount;
+  CE.ceQSOID2 := GetTickCount64;
   CE.ceComputerID := ComputerID;
   CE.ceContest := Contest;
   CE.Band := ActiveBand;
@@ -9766,23 +9770,13 @@ begin
      end;
 end;
 
-procedure ChangeFocus(Text: PAnsiChar);
-var
-  h: THandle;
-  t: Cardinal;
-  r: integer;
-begin
-  h := CreateFile('D:\TR4W_WinAPI\out\TEST\focus.txt', GENERIC_WRITE or
-    GENERIC_READ, FILE_SHARE_WRITE or FILE_SHARE_READ, nil, OPEN_EXISTING,
-    FILE_FLAG_SEQUENTIAL_SCAN, 0);
-  SetFilePointer(h, 0, nil, FILE_END);
+(* ChangeFocus IS DELETED (2026-09-07). A focus-tracing helper that appended
+  to 'D:\TR4W_WinAPI\out\TEST\focus.txt' -- one developer's absolute path, on
+  a drive letter no other machine has, opened with OPEN_EXISTING so it failed
+  silently everywhere else. Both callers were already commented out.
 
-  // Issue #997: asm wsprintf-push -> TF.Format (cdecl-reverse: GetTickCount, Text).
-  r := TF.Format(TempBuffer1, '%u %s'#13#10, Windows.GetTickCount, Text);
-  Windows.WriteFile(h, TempBuffer1, r, t, nil);
-  CloseHandle(h);
-  // AddStringToTelnetConsole(Text, tstSend);
-end;
+  It held five raw Win32 calls: CreateFile, SetFilePointer, WriteFile,
+  CloseHandle and GetTickCount64. *)
 
 // Offers to set a configuration command now, and takes the operator to WHERE
 // THAT SETTING ACTUALLY LIVES.

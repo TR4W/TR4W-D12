@@ -146,10 +146,26 @@ try
    $h = $before.B - $before.T
 
    # ---------------------------------------------------------------- the control
-   $r = Move-To -Hwnd $hwnd -X 300 -Y 220 -W $w -H $h
+   #
+   # THE POSITION IS COMPUTED, NOT HARDCODED, AND THAT IS THE POINT OF THE
+   # FIX. It used to ask for 300,220 and assert the window stayed -- but
+   # whether 220 is "mid-screen" depends on the WINDOW HEIGHT and the work
+   # area, and on a 1032-tall work area with an 806-tall window the far-edge
+   # snap target is 226. So 220 was SIX PIXELS INSIDE the bottom snap band,
+   # the handler correctly pulled it to 226, and the control case reported a
+   # regression in working code (2026-09-07).
+   #
+   # Centred instead, which is clear of all four bands by construction for any
+   # window that fits on the screen at all.
+   Add-Type -AssemblyName System.Windows.Forms
+   $wa0 = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea
+   $ctlX = [int](($wa0.Left + $wa0.Right - $w) / 2)
+   $ctlY = [int](($wa0.Top + $wa0.Bottom - $h) / 2)
+   $r = Move-To -Hwnd $hwnd -X $ctlX -Y $ctlY -W $w -H $h
    Check 'a mid-screen move is left alone' `
-         (($r.L -eq 300) -and ($r.T -eq 220)) `
-         ("asked for 300,220 and got $($r.L),$($r.T)")
+         (($r.L -eq $ctlX) -and ($r.T -eq $ctlY)) `
+         ("asked for $ctlX,$ctlY and got $($r.L),$($r.T) -- window ${w}x${h}, " +
+          "work area $($wa0.Left),$($wa0.Top)..$($wa0.Right),$($wa0.Bottom)")
 
    # ------------------------------------------------------- snap to left and top
    $r = Move-To -Hwnd $hwnd -X ($SNAP - 5) -Y ($SNAP - 5) -W $w -H $h
