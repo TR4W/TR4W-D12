@@ -23,7 +23,11 @@ unit uFreqTimeFormat;
 
 interface
 
-uses Windows;
+(* VC, not Windows. SYSTEMTIME is the only thing this unit wanted, and VC
+  declares it on BOTH platforms now -- with Win32's exact layout off Windows,
+  because the record is on the wire between multi-op stations and on disk in
+  every .TRW. This unit sits under TF, which 172 units reach. *)
+uses VC;
 
 { D12 modernization: these return native `string` (UTF-16).  They produce pure
   ASCII numeric/time text for the display layer.  The prior PAnsiChar returns
