@@ -3175,13 +3175,27 @@ Nothing here is a bench test. They need an answer, not a radio.
 
   **THE WORK, in priority order:**
 
-  1. **THE x64 DRIVER NAME -- a 64-bit blocker on its own.** `LoadInpOut32`
-     hardcodes `'inpout32.dll'`, and the 64-bit build of the same driver
-     ships under a DIFFERENT FILE NAME. Identical in shape to the
-     `HAMLIB_LIB` per-platform constant that just landed, and it should copy
-     it. **Read the name and the export list off a real x64 build -- do not
-     infer either**, for the same reason the HamLib soname and dylib names
-     are owed a check on their own machines.
+  1. **THE x64 DRIVER NAME -- a 64-bit blocker on its own, AND THE ANSWER IS
+     ALREADY WRITTEN DOWN.** NY4I supplied
+     [`docs/inpOut32-64_Info.md`](inpOut32-64_Info.md) (the driver author's
+     own notes) on 2026-09-08. Read it before starting; it settles three
+     things I had listed as unknowns:
+
+     - **The name is `InpOutx64.dll`**, and *"everything else is the same as
+       the 32bit (InpOut32) DLL"* -- so the exports (`Out32`, `Inp32`,
+       `IsInpOutDriverOpen`) carry over and `LoadInpOut32` needs the name
+       swapped, not rewriting.
+     - **IT IS KEYED ON THE BUILD'S BITNESS, NOT ON THE OS**, which is where
+       my earlier framing was wrong. A 32-bit application **must** use
+       `InpOut32.dll` even on 64-bit Windows -- that DLL carries BOTH drivers
+       and picks at runtime. Only a 64-bit build uses `InpOutx64.dll`. So
+       this is `{$IFDEF CPU64}`, not `{$IFDEF WINDOWS}`, and TR4W is 32-bit
+       today: **nothing needs to change until the 64-bit move itself.**
+     - **THE FIRST LOAD INSTALLS A KERNEL DRIVER AND NEEDS ELEVATION** on
+       Vista and later. That is an operational fact about LPT users, not a
+       code change, and it belongs in whatever release note covers LPT.
+
+     Binaries for both: https://github.com/ellysh/InpOut32/tree/master/bin
   2. **THE LINUX BACK END -- scheduled, not optional.** Behind `uIO`'s
      existing surface, so no caller changes. **ppdev first**: ioctls on
      `/dev/parport0`, needing no special privilege. The FreePascal wiki's

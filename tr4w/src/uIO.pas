@@ -57,9 +57,14 @@ uses
     THE PLATFORM ANSWER, DECIDED 2026-09-08 (NY4I): "LPT stays on windows
     and added for linux. not applicable on mac."
 
-      Windows  keeps inpout32 -- and needs the x64 name, since the 64-bit
-               build of that driver ships under a DIFFERENT file name and
-               the hardcoded one below is a 64-bit blocker on its own.
+      Windows  keeps inpout32. The 64-bit build of that driver is
+               InpOutx64.dll, and the choice is by BUILD BITNESS rather than
+               by OS: a 32-bit application MUST use InpOut32.dll even on
+               64-bit Windows, because that DLL carries both drivers and
+               picks at runtime. TR4W is 32-bit, so the hardcoded name below
+               is correct TODAY and becomes wrong the day the 64-bit move
+               happens. Details, from the driver author:
+               docs/inpOut32-64_Info.md
       Linux    GETS A BACK END. Scheduled work, not a maybe. ppdev -- ioctls
                on /dev/parport0 -- is the route to price first, because the
                FPC wiki's `ports` + `fpioperm` alternative needs ROOT, and

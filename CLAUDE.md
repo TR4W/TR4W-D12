@@ -1024,6 +1024,7 @@ Read the specific doc before acting in its area — these are current and this f
 | VCL coexistence / FMX | `docs/VCL_WIN32_COEXISTENCE.md`, `docs/FMX Migration Discussion.md` |
 | **What is still here only for Delphi (survey, nothing changed)** | **`docs/DELPHI_SHIM_INVENTORY.md`** |
 | Icom network protocol | `docs/ICOM_NETWORK_SPEC.md`, `docs/ICOM_NETWORK_PROTOCOL_GUIDE.md` |
+| **LPT keying: the inpout32/x64 driver** | **`docs/inpOut32-64_Info.md`** -- the driver author's own notes. Read before the 64-bit move: the x64 DLL has a different name, the choice is by build bitness rather than OS, and the first load installs a kernel driver and needs elevation |
 | **Icom bandscope -> panadapter (read before touching `$27`)** | **`docs/ICOM_SPECTRUM_DESIGN.md`** |
 | Icom scope findings for upstream (pasteable, cites no third project) | `docs/AETHERSDR_ICOM_SCOPE_REPORT.md` |
 | **Multi-user networking: the protocol, and where its analysis is wrong** | **`docs/TR4W_NETWORKING_ANALYSIS.md`** — TR4QT's analysis, copied whole. **Read the provenance block at the top before believing any V1 claim**: three were checked against this tree and do not hold, and the V2 design in it is TR4QT's, not a plan for this repo |
@@ -1333,7 +1334,7 @@ declarations bound to a library:
 | `user32` | 15 | Win32 API |
 | `comdlg32` | 10 | Win32 API -- and the LCL has dialogs for all of it |
 | `setupapi` | 10 | Win32 API -- device enumeration |
-| `InpOut32.dll` | 3 | Windows **as written** -- and read no further than that. This row was cited once as proof that LPT keying is Windows by nature; it is not. Linux reaches a parallel port through `ports` + `fpioperm` (root) or ppdev (not), and the driver has an x64 build under a different file name. **LPT KEYING STAYS, AND GAINS LINUX** (NY4I, 2026-09-08: *"LPT stays on windows and added for linux. not applicable on mac"*). Windows needs the x64 driver name -- the hardcoded `'inpout32.dll'` is a 64-bit blocker on its own, same shape as `HAMLIB_LIB`. Linux gets a back end, ppdev first (no root; `ports` + `fpioperm` needs it). macOS is a no-op by design, not a gap |
+| `InpOut32.dll` | 3 | **LPT KEYING STAYS ON WINDOWS, GAINS LINUX, N/A ON MAC** (NY4I, 2026-09-08). This row was once cited as proof that LPT is Windows by nature; it is not. **The x64 DLL is `InpOutx64.dll` and the choice is by BUILD BITNESS, not by OS** -- a 32-bit app must use `InpOut32.dll` even on 64-bit Windows, so the hardcoded name is correct until the 64-bit move and wrong the day after. Exports are unchanged between the two. Linux gets a back end, ppdev first (no root; `ports` + `fpioperm` needs it). Driver author's notes: [`docs/inpOut32-64_Info.md`](docs/inpOut32-64_Info.md) |
 | `hid` | 2 | Win32 API |
 | `kernel32`, `comctl32`, `ws2_32`, `shlwapi`, `msvcrt` | 7 | Win32 API |
 | `Plugins/tr4wSortLog.dll` | 1 | a TR4W plugin |
