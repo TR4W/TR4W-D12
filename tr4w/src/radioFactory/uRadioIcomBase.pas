@@ -53,7 +53,7 @@ interface
 
 
 uses
-  Windows, uFactoryRadioBase, uRadioBand, uIcomNetworkTransport, uIcomNetworkTypes, SysUtils, StrUtils, VC, Log4D,
+  uFactoryRadioBase, uRadioBand, uIcomNetworkTransport, uIcomNetworkTypes, SysUtils, StrUtils, VC, Log4D,
   uIcomCIV, Classes, SyncObjs, uCWFraming,
   uSpectrumTypes, uIcomScope;   // the panadapter seam and the $27 bandscope decoder
 

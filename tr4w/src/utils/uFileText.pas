@@ -62,7 +62,6 @@ function CombinePath(const aDir, aName: string): string;
 implementation
 
 uses
-   Windows,
    Classes;
 
 function FileTextExists(const aFileName: string): Boolean;
@@ -155,22 +154,31 @@ begin
 end;
 
 function TempDirectory: string;
-var
-   buf : array[0..MAX_PATH] of Char;
-   n   : DWORD;
 begin
-   // GetTempPathW rather than either RTL's helper: Delphi's SysUtils has no
-   // GetTempDir and FPC has no TPath, so the Win32 call is the only spelling
-   // both compilers share.  It already returns a trailing backslash, but say
-   // so explicitly rather than rely on it.
-   n := Windows.GetTempPathW(Length(buf), @buf[0]);
-   if (n = 0) or (n > DWORD(Length(buf))) then
+   (* SysUtils.GetTempDir, NOT Windows.GetTempPathW.
+
+     The comment that stood here justified the Win32 call by saying "Delphi's
+     SysUtils has no GetTempDir and FPC has no TPath, so the Win32 call is the
+     only spelling both compilers share". Both halves were true and the premise
+     is not: this tree has one compiler now, and FPC's SysUtils declares
+     GetTempDir on every platform it targets.
+
+     It appends the trailing delimiter itself, so the extra
+     IncludeTrailingPathDelimiter and the MAX_PATH buffer both go with it.
+
+     ONE BEHAVIOUR DIFFERENCE, and it is worth naming rather than discovering:
+     GetTempPathW falls back through TMP, TEMP, USERPROFILE and finally the
+     Windows directory; FPC's reads TEMP then TMP and stops. A Windows machine
+     with neither set would previously have got the Windows directory and now
+     gets the '.\' below -- which is the same answer the old code gave when
+     GetTempPathW failed outright, and a better one than %WINDIR%. *)
+   Result := SysUtils.GetTempDir;
+   if Result = '' then
       begin
-      Result := '.\';
+      Result := '.' + PathDelim;
       Exit;
       end;
 
-   SetString(Result, PChar(@buf[0]), n);   // lint:wide-ok -- buf is Char, filled by GetTempPathW
    Result := IncludeTrailingPathDelimiter(Result);
 end;
 

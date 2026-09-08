@@ -475,7 +475,6 @@ function TryParseHexByte(const aText: string; out aValue: integer): boolean;
 implementation
 
 uses
-   Windows,    // still needed by other helpers in this unit
    uMainForm,  // TR4WMainForm -- the owner every dialog should have had
    Types,      // TRect
    uWindowLayoutStore,  // the bounds, keyed by name

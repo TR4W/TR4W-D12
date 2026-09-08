@@ -174,7 +174,7 @@ uses
 
       The database's NAME still comes from uLogDatabase, which does outlive the
       shadow. *)
-   SysUtils, Windows, MainUnit, uLogDatabase, uLogRepository, uLogStore,
+   SysUtils, MainUnit, uLogDatabase, uLogRepository, uLogStore,
    (* TempRXData, which is declared in PostUnit's INTERFACE and is what
       MainUnit.ReadLogFile fills. PostUnit uses this unit in ITS
       implementation, so the pair is circular -- normal in this tree and
@@ -238,7 +238,9 @@ begin
          end;
       else
          begin
-         Result := LogHandle <> INVALID_HANDLE_VALUE;
+         (* feInvalidHandle is the RTL's name for the same -1 that
+           INVALID_HANDLE_VALUE holds; it just is not Windows-only. *)
+         Result := LogHandle <> THandle(feInvalidHandle);
          end;
       end;
 end;
@@ -376,7 +378,11 @@ end;
 
 function LogSourceRecordCount: Int64;
 var
-   sizeBytes: DWORD;
+   (* Int64, not DWORD. FileSeek reports failure as -1 and returns a 64-bit
+     offset; a DWORD would make the 'sizeBytes < 0' check below unreachable
+     and turn a failed seek into a 4-gigabyte log. *)
+   sizeBytes: Int64;
+   savedPos:  Int64;
 begin
    case LogSourceKind of
       lsDatabase:
@@ -393,12 +399,28 @@ begin
       else
          begin
          Result := -1;
-         if LogHandle = INVALID_HANDLE_VALUE then
+         if LogHandle = THandle(feInvalidHandle) then
             begin
             Exit;
             end;
-         sizeBytes := Windows.GetFileSize(LogHandle, nil);
-         if sizeBytes = INVALID_FILE_SIZE then
+         (* FileSeek to the end and back, rather than Windows.GetFileSize.
+
+           SAVING AND RESTORING THE POSITION IS DELIBERATE. GetFileSize did not
+           move the file pointer and a seek does, and this handle is a MainUnit
+           GLOBAL shared with the legacy log routines -- so a size query that
+           silently repositioned it would be a defect visible only as a wrong
+           QSO somewhere else entirely. Both readers below seek before they
+           read, so nothing here depends on the restore; the next caller might.
+
+           FileSeek reports failure as -1, which is what INVALID_FILE_SIZE
+           reported. *)
+         savedPos := FileSeek(LogHandle, Int64(0), fsFromCurrent);
+         sizeBytes := FileSeek(LogHandle, Int64(0), fsFromEnd);
+         if savedPos >= 0 then
+            begin
+            FileSeek(LogHandle, savedPos, fsFromBeginning);
+            end;
+         if sizeBytes < 0 then
             begin
             Exit;
             end;
@@ -417,7 +439,11 @@ function LogSourceReadFromEnd(aOffsetFromEnd: Int64;
 var
    total: Int64;
    rowId: Int64;
-   bytesRead: Cardinal;
+   (* Integer, not Cardinal: FileRead returns -1 on error where ReadFile
+     reported it out of band, and an unsigned holder would turn that into
+     4294967295 -- still not SizeOf(ContestExchange), so the Result is right
+     either way, but only by luck. *)
+   bytesRead: Integer;
 begin
    FillChar(aQso, SizeOf(aQso), 0);
    Result := False;
@@ -440,9 +466,15 @@ begin
          end;
       else
          begin
-         (* The seek this replaces, unchanged: negative from FILE_END. *)
-         tSetFilePointer(-1 * aOffsetFromEnd * SizeOf(ContestExchange), FILE_END);
-         Windows.ReadFile(LogHandle, aQso, SizeOf(ContestExchange), bytesRead, nil);
+         (* The seek this replaces, unchanged: negative from the end.
+            fsFromEnd is the RTL's FILE_END, and FileSeek/FileRead take the
+            very same THandle -- on Windows they ARE SetFilePointer and
+            ReadFile, which is why this is a spelling change and not a
+            behaviour one. *)
+         FileSeek(LogHandle,
+                  Int64(-1) * aOffsetFromEnd * SizeOf(ContestExchange),
+                  fsFromEnd);
+         bytesRead := FileRead(LogHandle, aQso, SizeOf(ContestExchange));
          Result := bytesRead = SizeOf(ContestExchange);
          end;
       end;
@@ -453,7 +485,11 @@ function LogSourceReadAtIndex(aIndex: Int64;
 var
    total: Int64;
    rowId: Int64;
-   bytesRead: Cardinal;
+   (* Integer, not Cardinal: FileRead returns -1 on error where ReadFile
+     reported it out of band, and an unsigned holder would turn that into
+     4294967295 -- still not SizeOf(ContestExchange), so the Result is right
+     either way, but only by luck. *)
+   bytesRead: Integer;
 begin
    FillChar(aQso, SizeOf(aQso), 0);
    Result := False;
@@ -479,9 +515,10 @@ begin
          begin
          (* The header sits ahead of record 0. This is the ONE place that fact
             is written down now. *)
-         tSetFilePointer(SizeOfTLogHeader + aIndex * SizeOf(ContestExchange),
-                         FILE_BEGIN);
-         Windows.ReadFile(LogHandle, aQso, SizeOf(ContestExchange), bytesRead, nil);
+         FileSeek(LogHandle,
+                  Int64(SizeOfTLogHeader) + aIndex * SizeOf(ContestExchange),
+                  fsFromBeginning);
+         bytesRead := FileRead(LogHandle, aQso, SizeOf(ContestExchange));
          Result := bytesRead = SizeOf(ContestExchange);
          end;
       end;
