@@ -660,7 +660,10 @@ var
    Msg: Windows.TMsg;
 {$ENDIF}
 begin
-   if H = 0 then
+   (* ThreadStarted, not `= 0` -- TThreadID is a pointer on the BSD/macOS RTL
+     and an integer elsewhere, so the ordinal comparison is a type error
+     there. See TF. *)
+   if not ThreadStarted(H) then
       begin
       Exit;
       end;
