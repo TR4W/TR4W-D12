@@ -71,7 +71,9 @@ begin
    // else is using it -- which matters, because TR4W itself may already hold the
    // port for keying when Preferences opens.
    FillChar(buf, SizeOf(buf), 0);
-   Result := Windows.QueryDosDeviceA(PAnsiChar(WinAnsi('LPT' + IntToStr(aNumber))),
+   (* AnsiString, not WinAnsi: the name is 'LPT' and a digit. A code-page
+     conversion of ASCII returns the same bytes it was given. *)
+   Result := Windows.QueryDosDeviceA(PAnsiChar(AnsiString('LPT' + IntToStr(aNumber))),
                                      buf, Length(buf)) <> 0;
 end;
 

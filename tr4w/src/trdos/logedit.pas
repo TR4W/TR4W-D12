@@ -790,7 +790,7 @@ begin
      end;
   DomesticQTHtemp := DomesticQTH;
 
-  TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_MULTNEEDSFOR)), PAnsiChar(WinAnsi(DomesticQTHtemp)));
+  TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_MULTNEEDSFOR)), PAnsiChar(LclText(DomesticQTHtemp)));
 
   logger.debug('[ShowDomesticMultiplierStatus] MultNeedsHeader field set to %s',[DomesticQTHtemp]);
   TR4WMainForm.pnlMultNeedsHeader.Caption := wsprintfBuffer;
@@ -813,7 +813,7 @@ begin
       push eax
     end;
   }
-  TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_MULTNEEDSFOR)), PAnsiChar(integer(Call) + 1));
+  TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_MULTNEEDSFOR)), PAnsiChar(integer(Call) + 1));
   logger.debug('[ShowMultiplierStatus] MultNeedsHeader field set to %s',[Call^]);
   TR4WMainForm.pnlMultNeedsHeader.Caption := wsprintfBuffer;
   SetMultStatus(Call^, '');
@@ -1135,7 +1135,7 @@ begin
      Exit;
      end;
 
-  TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_QSONEEDSFOR)), PAnsiChar(WinAnsi(Call)));
+  TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_QSONEEDSFOR)), PAnsiChar(LclText(Call)));
   TR4WMainForm.pnlQSONeedsHeader.Caption := wsprintfBuffer;
   //  tSetWindowText(QIHeaderWindowHandle, ' QSO needs for ' + Call);
 
@@ -1172,7 +1172,7 @@ begin
      Exit;
      end;
 
-  TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_QSONEEDSFOR)), PAnsiChar(integer(Call) + 1));
+  TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_QSONEEDSFOR)), PAnsiChar(integer(Call) + 1));
   TR4WMainForm.pnlQSONeedsHeader.Caption := wsprintfBuffer;
   //  tSetWindowText(QIHeaderWindowHandle, ' QSO needs for ' + Call);
 

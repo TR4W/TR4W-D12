@@ -1315,7 +1315,7 @@ begin
   //TempInteger := TF.Format(wsprintfBuffer, '%s:'#13#10 + TC_THEREWERECALLS, TR4W_INITIALEX_FILENAME, InitialExCallsigns, InitialExDupes);
   if InitialExCallsigns > 0 then
      begin
-     TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi('%s:' + TC_THEREWERECALLS)), TR4W_INITIALEX_FILENAME, InitialExCallsigns, InitialExDupes);
+     TF.Format(wsprintfBuffer, PAnsiChar(LclText('%s:' + TC_THEREWERECALLS)), TR4W_INITIALEX_FILENAME, InitialExCallsigns, InitialExDupes);
      QuickDisplay(wsprintfBuffer);
      end;
  // ShowMessage(wsprintfBuffer);
@@ -1569,7 +1569,7 @@ begin
      begin
      CloseHandle(h);
 
-     TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_DIFVERSION)), _RESTARTBIN, @RestartVersionNumber[1], @RestartVersion[1]);
+     TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_DIFVERSION)), _RESTARTBIN, @RestartVersionNumber[1], @RestartVersion[1]);
 
      ShowMessage(wsprintfBuffer);
      Exit;

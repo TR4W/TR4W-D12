@@ -505,8 +505,8 @@ begin
       {callsign}
     { The .cfg is written as bytes, so the two working buffers stay ANSI; what
       changed is where the text comes from -- the form, not a control id. }
-    Windows.lstrcpynA(TempBuffer1, PAnsiChar(WinAnsi(frmNewContest.MyCall)),
-                      SizeOf(TempBuffer1));
+    StrLCopy(TempBuffer1, PAnsiChar(AnsiString(frmNewContest.MyCall)),
+             High(TempBuffer1));
     if MainCallsign = '' then
        begin
        // THROUGH THE REGISTRY, NOT STRAIGHT AT THE INI.  'MAIN CALLSIGN' is a
@@ -522,8 +522,8 @@ begin
     DeleteSlashes(TempBuffer1);
 
       {Contest Name}
-    Windows.lstrcpynA(TempBuffer2, PAnsiChar(WinAnsi(frmNewContest.ContestName)),
-                      SizeOf(TempBuffer2));
+    StrLCopy(TempBuffer2, PAnsiChar(AnsiString(frmNewContest.ContestName)),
+             High(TempBuffer2));
 
     (* ONE FILE, IN ONE DIRECTORY -- no folder per contest.
 
@@ -544,13 +544,13 @@ begin
   { THE LOG FILE. Named by uLogNaming, where the rule and its tests live; this
     supplies the three facts and nothing else. }
   TF.Format(TR4W_CFG_FILENAME, '%s%s', TR4W_PATH_NAME,
-            PAnsiChar(WinAnsi(ContestLogFileName(frmNewContest.ContestName,
+            PAnsiChar(AnsiString(ContestLogFileName(frmNewContest.ContestName,
                                                  Now,
                                                  frmNewContest.MyCall))));
 
   if FileExists(TR4W_CFG_FILENAME) then
      begin
-     TF.Format(SYSERRORBUFFER, PAnsiChar(WinAnsi(TC_FOLDERALREADYEXISTSOVERWRITE)), TR4W_CFG_FILENAME);
+     TF.Format(SYSERRORBUFFER, PAnsiChar(LclText(TC_FOLDERALREADYEXISTSOVERWRITE)), TR4W_CFG_FILENAME);
      if YesOrNo(string(PAnsiChar(@SYSERRORBUFFER[0]))) = IDno then Exit;
      end;
 
@@ -668,7 +668,7 @@ begin
    // result is the ordinary first-run state and simply hides the button.
    latest := GetLatestConfigFile;
    FillChar(TR4W_LATESTCFG_FILENAME, SizeOf(FileNameType), 0);
-   Windows.lstrcpynA(TR4W_LATESTCFG_FILENAME, PAnsiChar(WinAnsi(latest)),
+   StrLCopy(TR4W_LATESTCFG_FILENAME, PAnsiChar(AnsiString(latest)),
                      SizeOf(FileNameType));
 
    if (latest <> '') and FileExists(latest) then
@@ -705,9 +705,9 @@ procedure OpenSelectedConfig;
 begin
    { A FULL path already -- the grid can be showing any directory, which is why
      SelectedFile answers with the path and not just the name. }
-   Windows.lstrcpynA(TR4W_CFG_FILENAME,
-                     PAnsiChar(WinAnsi(frmNewContest.SelectedFile)),
-                     SizeOf(FileNameType));
+   StrLCopy(TR4W_CFG_FILENAME,
+            PAnsiChar(AnsiString(frmNewContest.SelectedFile)),
+            High(TR4W_CFG_FILENAME));
 end;
 
 procedure ShowNewContest;

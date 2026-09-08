@@ -675,7 +675,11 @@ begin
         characters or more wrote past it, over ceSentRST and whatever follows.
 
     Convert once, bound it, and leave room for the terminator. }
-  ansiOperator := WinAnsi(EditQSOGetText(FLD_OPERATOR));
+  (* AnsiString: ceOperator is written to the binary log and exported, and
+    every other text field of the record is assigned the same way. WinAnsi
+    would have given this one field a different encoding from its
+    neighbours in the same record. *)
+  ansiOperator := AnsiString(EditQSOGetText(FLD_OPERATOR));
   FillChar(EditableQSORXData.ceOperator, SizeOf(EditableQSORXData.ceOperator), 0);
   operatorLen := Length(ansiOperator);
   if operatorLen > SizeOf(EditableQSORXData.ceOperator) - 1 then
@@ -839,7 +843,7 @@ end;
 
 procedure ShowNote(CE: ContestExchange);
 begin
-  TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(RC_NOTE + ' :'#13#10#13#10'%s')),
+  TF.Format(wsprintfBuffer, PAnsiChar(LclText(RC_NOTE + ' :'#13#10#13#10'%s')),
     @EditableQSORXData.Prefix);
   ShowMessage(string(wsprintfBuffer));
 end;

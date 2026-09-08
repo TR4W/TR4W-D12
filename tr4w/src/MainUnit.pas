@@ -47,6 +47,8 @@ uses
   uFlasher,    { the call-field flash is a timer now }
   StdCtrls,            // TListBox, TOwnerDrawState -- same
   LCLIntf,             // OpenURL / OpenDocument -- the cross-platform launchers
+  FileUtil,            // CopyFile -- QUALIFIED at the call site, because this
+                       // unit also uses Windows and CopyFile is a name in both
   uPlatformProcess,    // RunProgram / RunWindowsUtility -- the only launchers
   Logstuff,
   uADIF,
@@ -6833,7 +6835,7 @@ begin
 
   if not IsAGoodCall(RData.Callsign) then
      begin
-     TF.Format(QuickDisplayBuffer, PAnsiChar(WinAnsi(TC_HASIMPROPERSYNTAX)), @RData.Callsign[1]);
+     TF.Format(QuickDisplayBuffer, PAnsiChar(LclText(TC_HASIMPROPERSYNTAX)), @RData.Callsign[1]);
      QuickDisplay(QuickDisplayBuffer);
      DoABeep(Warning);
      Exit;
@@ -7726,7 +7728,7 @@ begin
 
   if RXData.ceRecordKind = rkNote then
      begin
-     RowTextAnsi := WinAnsi(RC_NOTE);   elvi.pszText := PAnsiChar(RowTextAnsi);
+     RowTextAnsi := LclText(RC_NOTE);   elvi.pszText := PAnsiChar(RowTextAnsi);
      EmitCol(elvi, aCollect);
      elvi.iSubItem := ColumnsArray[logColCallsign].pos; //(logColCallsign);
      elvi.pszText := @RXData.Prefix;
@@ -7749,7 +7751,7 @@ begin
 
   if RXData.ceQSO_Deleted then
      begin
-     RowTextAnsi := WinAnsi(RC_DELETED);   elvi.pszText := PAnsiChar(RowTextAnsi);
+     RowTextAnsi := LclText(RC_DELETED);   elvi.pszText := PAnsiChar(RowTextAnsi);
      EmitCol(elvi, aCollect);
      Exit;
      end;
@@ -9620,7 +9622,7 @@ var
 
   procedure DisplayLoadedQSOs;
   begin
-    TF.Format(QuickDisplayBuffer, PAnsiChar(WinAnsi('%u ' + TC_QSO_IMPORTED)), QSOCounter);
+    TF.Format(QuickDisplayBuffer, PAnsiChar(LclText('%u ' + TC_QSO_IMPORTED)), QSOCounter);
     SetTextInQuickCommandWindow(QuickDisplayBuffer);
   end;
 begin
@@ -9807,7 +9809,7 @@ var
   idx: integer;
   ownedElsewhere: boolean;
 begin
-  TF.Format(TempBuffer1, PAnsiChar(WinAnsi(TC_SET_VALUE_OF_SET_NOW)), c);
+  TF.Format(TempBuffer1, PAnsiChar(LclText(TC_SET_VALUE_OF_SET_NOW)), c);
   if YesOrNo(string(TempBuffer1)) = IDno then
      begin
      Exit;
@@ -10708,7 +10710,20 @@ begin
         end;
      end;
 
-  if not CopyFileA(TR4W_LOG_FILENAME, PAnsiChar(WinAnsi(NewFile)), false) then
+  (* FileUtil.CopyFile, not CopyFileA. The LCL's takes strings on every
+    platform, so the Win32 entry point and the code-page conversion that
+    existed only to feed it go together.
+
+    QUALIFIED, because this unit still uses Windows and BOTH declare a
+    CopyFile. An unqualified call resolves by uses order, which is exactly
+    the kind of silent choice CLAUDE.md warns about for TRect here.
+
+    cffOverwriteFile MATCHES THE OLD BEHAVIOUR: CopyFileA's third argument
+    is bFailIfExists, and it was False, so the copy overwrote. The read-only
+    check above is what actually guards an existing file. ExceptionOnError
+    stays False so a failure still arrives as False, not as an exception. *)
+  if not FileUtil.CopyFile(StrPas(TR4W_LOG_FILENAME), LclText(NewFile),
+                           [cffOverwriteFile], False) then
      begin
      ShowMessage(PAnsiChar(TC_CANNOTBACKUPLOG + StrPas(TR4W_LOG_FILENAME)));
      Exit;

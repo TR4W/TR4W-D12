@@ -748,7 +748,7 @@ begin
       DisplayClientStatus(i);
       end;
    ShowConnectionStatus(TC_DISCONNECTEDFROM);
-   TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_CONNECTIONTOTR4WSERVERLOST)),
+   TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_CONNECTIONTOTR4WSERVERLOST)),
              @ServerAddress[1], ServerPort);
    QuickDisplay(wsprintfBuffer);
 end;
@@ -1557,7 +1557,7 @@ begin
   case ServMess.smMessage of
     SM_SERVERLOG_CHANGED_MESSAGE:
       begin
-        TF.Format(QuickDisplayBuffer, PAnsiChar(WinAnsi(TC_SERVER_LOG_CHANGED)), ServMess.smParam);
+        TF.Format(QuickDisplayBuffer, PAnsiChar(LclText(TC_SERVER_LOG_CHANGED)), ServMess.smParam);
         QuickDisplay(QuickDisplayBuffer);
       end;
     SM_CLEARALLLOGS_MESSAGE: QuickDisplay(TC_ALL_LOGS_NETWORK_CLEARED);

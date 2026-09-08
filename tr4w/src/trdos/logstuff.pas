@@ -5766,7 +5766,7 @@ begin
      Exit;
      end;
 
-  TF.Format(QuickDisplayBuffer, PAnsiChar(WinAnsi(TC_SAVINGTO)), TR4W_LOG_FILENAME, TR4W_FLOPPY_FILENAME);
+  TF.Format(QuickDisplayBuffer, PAnsiChar(LclText(TC_SAVINGTO)), TR4W_LOG_FILENAME, TR4W_FLOPPY_FILENAME);
   QuickDisplay(QuickDisplayBuffer);
 
   (* CopyFile (LazFileUtils), not Windows.CopyFileA. The False was
@@ -5784,7 +5784,7 @@ begin
      end
   else
      begin
-     TF.Format(QuickDisplayBuffer, PAnsiChar(WinAnsi(TC_FILESAVEDTOSUCCESSFULLY)), TR4W_FLOPPY_FILENAME);
+     TF.Format(QuickDisplayBuffer, PAnsiChar(LclText(TC_FILESAVEDTOSUCCESSFULLY)), TR4W_FLOPPY_FILENAME);
      QuickDisplay(QuickDisplayBuffer);
      end;
 end;

@@ -300,7 +300,9 @@ begin
       Exit;
       end;
 
-   path := AnsiString(GetRealPath(Config.DVKPath, PAnsiChar(WinAnsi(msg)), nil));
+   (* tree.GetRealPath joins our own bytes to our own path; nothing here is
+     a Win32 boundary, so there is no ANSI code page in the question. *)
+   path := AnsiString(GetRealPath(Config.DVKPath, PAnsiChar(AnsiString(msg)), nil));
 
    // utils_file.FileExists takes a PAnsiChar; SysUtils' string overload is also
    // in scope, so the cast says which is meant rather than leaving it to the

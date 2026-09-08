@@ -58,29 +58,41 @@ function StrPos(const Str1, Str2: PAnsiChar): PAnsiChar;
 function StrPCopy(Dest: PAnsiChar; const Source: AnsiString): PAnsiChar;
 function StrPLCopy(Dest: PAnsiChar; const Source: AnsiString; MaxLen: Cardinal): PAnsiChar;
 
-{ TEXT FOR A WIN32 ...A ENTRY POINT, in the machine's ANSI code page.
+(* WinAnsi IS GONE (2026-09-07), and what it did is worth keeping a note of
+  because the reason it existed is the reason it could go.
 
-  NOT AnsiString(s). tr4w.inc makes `string` UTF-16 and the LCL sets
-  DefaultSystemCodePage to 65001, so a plain AnsiString cast yields UTF-8
-  BYTES, which an ...A entry point reads as cp1252. That is how the New
-  Contest dialog showed 'Ultimo archivo de configuracion' with each accented
-  letter doubled, in Spanish (NY4I, 2026-08-27).
+  It converted a UTF-16 `string` to bytes in the MACHINE'S ANSI CODE PAGE,
+  named explicitly through WideCharToMultiByte, because AnsiString(s) gives
+  UTF-8 -- the LCL sets DefaultSystemCodePage to 65001 -- and a Win32 '...A'
+  entry point reads UTF-8 as cp1252. That is how the New Contest dialog
+  showed 'Ultimo archivo de configuracion' with every accented letter
+  doubled, in Spanish (NY4I, 2026-08-27).
 
-  AnsiString(CP_ACP) does NOT help: CP_ACP is 0, and 0 means
-  DefaultSystemCodePage -- the value that is wrong here. The code page must
-  be named to the conversion, hence WideCharToMultiByte.
+  SO IT WAS ALWAYS A FUNCTION ABOUT ONE THING: feeding a Win32 '...A' call.
+  Its 73 call sites did not survive the Win32-to-LCL conversion as a group,
+  and the last of them went today, each for its own reason:
 
-  RawByteString so the bytes carry no code-page tag and cannot be converted
-  a second time on the way out. Use it AT the call, PAnsiChar(WinAnsi(s)),
-  so the temporary outlives the statement.
+    42  passed the result as a FORMAT STRING to TF.Format, correct while
+        TF.Format WAS wsprintfA and wrong the moment it became Pascal over
+        SysUtils.Format -- ANSI bytes handed to the RTL, which tags them
+        UTF-8. Those are LclText now.
+     9  fed lstrcpyA/lstrcpynA, which are StrLCopy.
+     4  fed a Win32 call taking ASCII -- a dotted quad, 'LPT2', a resource
+        name. A code-page conversion of ASCII returns what it was given.
+     2  fed CopyFileA and WinExec, both replaced by their FCL/LCL
+        equivalents, which take strings.
+     1  converted an array of AnsiChar to UTF-16 and straight back.
+     rest  passed bytes to a routine that already took a string.
 
-  26 units still run a Win32 dialog proc, so this is not a corner case. It
-  retires with the last of them -- an LCL form needs none of it. }
-function WinAnsi(const s: string): RawByteString;
+  IF A NEW WIN32 '...A' CALL EVER NEEDS THIS, the answer is to use the wide
+  entry point instead. That is the whole lesson: every site above had a
+  destination that wanted a string, and the conversion existed only because
+  something underneath it did not. *)
 
 { TEXT FOR AN LCL DIALOG, which takes an AnsiString and wants UTF-8 in it.
 
-  THE MIRROR IMAGE OF WinAnsi, and it exists for the opposite reason. tr4w.inc
+  THE MIRROR IMAGE OF THE WinAnsi DESCRIBED ABOVE, and the direction that
+  survived it. tr4w.inc
   makes `string` UTF-16; the LCL is compiled without that, so its `string`
   parameters are AnsiString, and it sets DefaultSystemCodePage to 65001 so that
   those hold UTF-8. Passing our UTF-16 straight in therefore does the RIGHT
@@ -92,55 +104,15 @@ function WinAnsi(const s: string): RawByteString;
   assignment do it silently -- and it keeps the narrowing ceiling meaningful,
   which is the point of the ceiling.
 
-  RawByteString for the same reason WinAnsi uses it: the bytes carry no
+  RawByteString for the same reason WinAnsi used it: the bytes carry no
   code-page tag, so nothing can convert them a second time on the way in. }
 function LclText(const s: string): RawByteString;
 
 implementation
 
-{$IFDEF WINDOWS}
-uses
-   Windows;   // WideCharToMultiByte, CP_ACP -- see WinAnsi
-{$ENDIF}
-
 function LclText(const s: string): RawByteString;
 begin
    Result := RawByteString(UTF8Encode(s));
-end;
-
-function WinAnsi(const s: string): RawByteString;
-{$IFDEF WINDOWS}
-var
-   n: integer;
-{$ENDIF}
-begin
-   Result := '';
-   if s = '' then
-      begin
-      Exit;
-      end;
-{$IFDEF WINDOWS}
-   n := WideCharToMultiByte(CP_ACP, 0, PWideChar(s), Length(s), nil, 0, nil, nil);
-   if n <= 0 then
-      begin
-      Exit;
-      end;
-   SetLength(Result, n);
-   WideCharToMultiByte(CP_ACP, 0, PWideChar(s), Length(s),
-                       PAnsiChar(Result), n, nil, nil);
-{$ELSE}
-   (* OFF WINDOWS THERE IS NO ...A ENTRY POINT TO FEED, so "the machine's ANSI
-     code page" names nothing -- the platform's narrow encoding IS UTF-8, and
-     that is what every byte-oriented API there expects.
-
-     This is the same result as LclText, deliberately: on those platforms the
-     two callers want the same bytes, and the distinction WinAnsi exists to
-     draw is a Win32 one. The function is kept rather than gated away at its
-     call sites because there are dozens of them and they are all correct as
-     written -- and because it retires on its own, with the last Win32 dialog
-     proc, exactly as the note above says. *)
-   Result := RawByteString(UTF8Encode(s));
-{$ENDIF}
 end;
 
 function StrLen(const Str: PAnsiChar): Cardinal;

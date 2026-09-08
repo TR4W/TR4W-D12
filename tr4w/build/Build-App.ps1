@@ -191,8 +191,12 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 #
 #   ...to "CallString"    -- TRUNCATION past the declared length
 #   ...to "AnsiString"    -- the non-ASCII characters go through the ANSI
-#                            codepage, which is the mojibake fixed by WinAnsi
-#                            in 9f388029 and by 45dc430c in the log headers
+#                            codepage. That is the mojibake WinAnsi was
+#                            written for in 9f388029, and 45dc430c in the log
+#                            headers -- WinAnsi itself is gone (2026-09-07),
+#                            because the Win32 '...A' calls it fed are gone
+#                            too. LclText, for text going to the LCL, is what
+#                            is left.
 #
 # NOT INVISIBLE -- the compiler warns on every one. But they sit inside 5,600
 # warnings, and nobody reads 5,600 warnings, so in practice they are silent.
@@ -241,8 +245,8 @@ if ($countsAreComplete -and ($narrowLines.Count -gt $NARROW_CEILING))
    Write-Host "BUILD FAILED: $($narrowLines.Count) narrowing conversions, ceiling is $NARROW_CEILING."
    Write-Host '  Each one can lose characters: to a bounded ShortString it TRUNCATES, to'
    Write-Host '  AnsiString it mangles anything outside the ANSI codepage. Convert'
-   Write-Host '  explicitly at the boundary -- uAnsiStr.WinAnsi for bytes going to Win32 --'
-   Write-Host '  rather than letting the assignment do it silently.'
+   Write-Host '  explicitly at the boundary -- uAnsiStr.LclText for text going to the LCL,'
+   Write-Host '  which is UTF-8 -- rather than letting the assignment do it silently.'
    exit 1
    }
 

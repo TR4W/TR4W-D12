@@ -2,7 +2,7 @@
   "ini.Read": 2,
   "ini.Write": 0,
   "wsprintf": 0,
-  "process.Launch": 2,
+  "process.Launch": 1,
   "thread.Create": 0,
   "thread.Event": 29,
   "window.Query": 0,

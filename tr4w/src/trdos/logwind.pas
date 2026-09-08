@@ -1533,7 +1533,7 @@ end;
 
 procedure DisplayQTCNumber(QTCNumber: integer);
 begin
-  TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_HAVEQTCS)), QTCNumber);
+  TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_HAVEQTCS)), QTCNumber);
   TR4WMainForm.pnlUserInfo.Caption := wsprintfBuffer;
 end;
 
@@ -1604,17 +1604,17 @@ begin
     ThisHour:
       begin
         TempInteger := TotalThisHour;
-        TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_THISHR)), TotalThisHour);
+        TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_THISHR)), TotalThisHour);
       end;
     LastSixtyMins:
       begin
         TempInteger := TotalLastSixty;
-        TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_LAST60)), TotalLastSixty);
+        TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_LAST60)), TotalLastSixty);
       end;
     BandChanges, BandChangesThisComputer:
       begin
         TempInteger := tThisHourBandChanges;
-        TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_BAND_CHANGES)), tThisHourBandChanges);
+        TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_BAND_CHANGES)), tThisHourBandChanges);
       end;
   end;
   TR4WMainForm.pnlHourRate.Caption := wsprintfBuffer;
@@ -1630,7 +1630,7 @@ begin
 
      //    tSetWindowText(RateWindowHandle, 'Rate = ' + IntToStr(Rate));
 
-   TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_RATE)), Rate);
+   TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_RATE)), Rate);
 
    TR4WMainForm.pnlRate.Caption := wsprintfBuffer;
    SetProgressPosition(mpbRate, Rate);
@@ -1656,7 +1656,7 @@ begin
   // note below).  The old code relied on `Score := TotalScore` leaving the value
   // in EAX for the `push eax` -- a fragile Delphi-7 codegen assumption that 64-bit
   // would break.  TC_PTS = '%d Pts'.
-  TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_PTS)), Score);
+  TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_PTS)), Score);
   TR4WMainForm.pnlTotalScore.Caption := wsprintfBuffer;
 
   //  tSetWindowText(TotalScoreWindowHandle, IntToStr(Score) + ' Pts');
@@ -1724,7 +1724,7 @@ end;
 function QuickEditResponse(Prompt: string; MaxInputLength: Byte): ShortString;
  // Window                                : Byte;
 begin
-  TF.Format(IQPrompt, PAnsiChar(WinAnsi(TC_ENTER)), PAnsiChar(WinAnsi(Prompt)));
+  TF.Format(IQPrompt, PAnsiChar(LclText(TC_ENTER)), PAnsiChar(LclText(Prompt)));
   IQMaxInputLength := MaxInputLength;
   (* NOTHING READS A HANDLE HERE ANY MORE. `h := tr4whandle` stood here as the
     parent for the DialogBox on the line below it, and that line has been
@@ -3412,7 +3412,7 @@ end;
 
 procedure DispalayDupe;
 begin
-  TF.Format(QuickDisplayBuffer, PAnsiChar(WinAnsi(TC_ISADUPE)), @CallWindowString[1]);
+  TF.Format(QuickDisplayBuffer, PAnsiChar(LclText(TC_ISADUPE)), @CallWindowString[1]);
 
 //  DispalayB4(SW_HIDE);
   QuickDisplay(QuickDisplayBuffer);
@@ -3653,7 +3653,7 @@ var
 begin
   FillChar(ID, SizeOf(ID), 0);
   ID := KeyId(AutoCQMemory);
-  TF.Format(QuickDisplayBuffer, PAnsiChar(WinAnsi(TC_REPEATING)), @ID[1], AutoCQDelayTime);
+  TF.Format(QuickDisplayBuffer, PAnsiChar(LclText(TC_REPEATING)), @ID[1], AutoCQDelayTime);
   SetTextInQuickCommandWindow(QuickDisplayBuffer);
 end;
 
@@ -3742,7 +3742,7 @@ end;
 
 procedure tDisplayCQTotal;
 begin
-  TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_CQTOTAL)), tRestartInfo.riCQTotalCounter);
+  TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_CQTOTAL)), tRestartInfo.riCQTotalCounter);
   TR4WMainForm.pnlCQTotal.Caption := wsprintfBuffer;
 end;
 
@@ -3864,7 +3864,7 @@ begin
   IntegerTime := UTC.wMinute mod TourDuration;
   SetProgressPosition(mpbTourDuration, IntegerTime);
 
-  TF.Format(TempBuffer2, PAnsiChar(WinAnsi(TC_NEWTOUR)), IntegerTime, TourDuration);
+  TF.Format(TempBuffer2, PAnsiChar(LclText(TC_NEWTOUR)), IntegerTime, TourDuration);
 
 //  Windows.SetDlgItemTextA(ReminderDlgHandle, 102, TempBuffer2);
   SetTourDurationText(TempBuffer2);

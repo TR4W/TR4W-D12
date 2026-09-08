@@ -1534,7 +1534,7 @@ begin
                 RXData.QSOPoints := 0;
                       //                              if ReminderPostedCount = 0 then
                 begin
-                  TF.Format(QuickDisplayBuffer, PAnsiChar(WinAnsi(TC_YOUALREADYWORKEDIN)), @RXData.Callsign[1], @RXData.DomMultQTH[1]);
+                  TF.Format(QuickDisplayBuffer, PAnsiChar(LclText(TC_YOUALREADYWORKEDIN)), @RXData.Callsign[1], @RXData.DomMultQTH[1]);
                   QuickDisplay(QuickDisplayBuffer);
                   if DupeCheckSound <> DupeCheckNoSound then
                      begin
@@ -1550,7 +1550,7 @@ begin
         begin
         //                  if ReminderPostedCount = 0 then
     begin
-      TF.Format(QuickDisplayBuffer, PAnsiChar(WinAnsi(TC_ISADUPEANDWILLBELOGGEDWITHZERO)), @RXData.Callsign[1]);
+      TF.Format(QuickDisplayBuffer, PAnsiChar(LclText(TC_ISADUPEANDWILLBELOGGEDWITHZERO)), @RXData.Callsign[1]);
       QuickDisplay(QuickDisplayBuffer);
       if DupeCheckSound <> DupeCheckNoSound then
          begin

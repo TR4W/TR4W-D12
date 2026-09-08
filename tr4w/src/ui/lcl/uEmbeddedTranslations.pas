@@ -366,7 +366,8 @@ begin
       end;
 
    resName := 'TR4W_' + UpperCase(lang);
-   if FindResourceA(HInstance, PAnsiChar(WinAnsi(resName)), RT_RCDATA) = 0 then
+   (* ASCII by construction -- 'TR4W_' and an upper-cased language tag. *)
+   if FindResourceA(HInstance, PAnsiChar(AnsiString(resName)), RT_RCDATA) = 0 then
       begin
       logger.Info('UI language: "' + lang + '" selected by ' + source +
                   ', but no catalogue for it is embedded; using the ' +

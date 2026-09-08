@@ -47,6 +47,11 @@ unit uPlatformProcess;
   phase that owns menus. Until then the guard is here, in one file, rather than
   scattered through MainUnit as seventeen conditionals.
 
+  calc.exe GOES ENTIRELY when that happens (NY4I, 2026-09-07) -- it is not a
+  contest tool and every platform ships one. It is still here today only
+  because removing the call means removing the menu item, and that belongs to
+  the menu phase rather than to this file.
+
   BOTH REPORT FAILURE. The Win32 originals returned a value that was almost
   never checked -- WinExec's "less than 32 means it failed" was tested at
   exactly two of the seventeen call sites -- so a mistyped path in the operator's
@@ -74,14 +79,11 @@ function RunWindowsUtility(const aCommandLine: string;
 implementation
 
 uses
+   Classes,     (* TStrings/TStringList, for the argument list *)
    SysUtils,
-   Process,
-   Log4D
-{$IFDEF WINDOWS}
-   , Windows
-{$ENDIF}
-   ,
-  uAnsiStr;
+   Process,     (* TProcess, TShowWindowOptions, CommandToList *)
+   uAnsiStr,    (* LclText -- the FCL's TProcessString is AnsiString *)
+   Log4D;
 
 var
    logger: TLogLogger = nil;
@@ -95,8 +97,16 @@ begin
    Result := logger;
 end;
 
-function RunProgram(const aExecutable: string;
-                    const aArgs: array of string): boolean;
+(* THE ONE PLACE A PROCESS IS ACTUALLY STARTED.
+
+  Both public routines end here. They differ in how the CALLER states the
+  command -- a list of arguments, or a single command line -- and in nothing
+  else, so the launch itself is written once. It was about to be written twice:
+  WinExec took a line and TProcess takes a list, and the obvious conversion
+  would have left a second copy of everything below. *)
+function Launch(const aExecutable: string;
+                aArgs: TStrings;
+                aShow: TShowWindowOptions): boolean;
 var
    p: TProcess;
    i: integer;
@@ -105,7 +115,7 @@ begin
 
    if Trim(aExecutable) = '' then
       begin
-      Log.Warn('[RunProgram] refused: no executable given');
+      Log.Warn('[Launch] refused: no executable given');
       Exit;
       end;
 
@@ -113,16 +123,19 @@ begin
    try
       try
          p.Executable := aExecutable;
-         for i := Low(aArgs) to High(aArgs) do
+         if aArgs <> nil then
             begin
-            p.Parameters.Add(aArgs[i]);
+            for i := 0 to aArgs.Count - 1 do
+               begin
+               p.Parameters.Add(aArgs[i]);
+               end;
             end;
 
          // NOT poWaitOnExit. Every caller here is "open this thing for the
          // operator" -- waiting would freeze the contest log until they closed
          // their text editor.
          p.Options    := [];
-         p.ShowWindow := swoShowNormal;
+         p.ShowWindow := aShow;
          p.Execute;
          Result := True;
       except
@@ -130,7 +143,7 @@ begin
          // code. Reported, because the Win32 original's failure was invisible.
          on E: Exception do
             begin
-            Log.Error(Format('[RunProgram] %s failed: %s: %s',
+            Log.Error(Format('[Launch] %s failed: %s: %s',
                              [aExecutable, E.ClassName, E.Message]));
          end;
       end;
@@ -139,36 +152,78 @@ begin
    end;
 end;
 
+function RunProgram(const aExecutable: string;
+                    const aArgs: array of string): boolean;
+var
+   args: TStringList;
+   i: integer;
+begin
+   args := TStringList.Create;
+   try
+      for i := Low(aArgs) to High(aArgs) do
+         begin
+         args.Add(aArgs[i]);
+         end;
+      Result := Launch(aExecutable, args, swoShowNormal);
+   finally
+      args.Free;
+   end;
+end;
+
 function RunWindowsUtility(const aCommandLine: string;
                            const aWindow: TLaunchWindow = lwNormal): boolean;
 {$IFDEF WINDOWS}
 var
-   show: integer;
-   rc: UINT;
+   parts: TStringList;
+   exe: string;
+   show: TShowWindowOptions;
 {$ENDIF}
 begin
 {$IFDEF WINDOWS}
+   (* TShowWindowOptions, not SW_SHOWMINIMIZED -- naming the intention in the
+     FCL's terms rather than Win32's is what TLaunchWindow is for, and it is
+     what removes the last `uses Windows` reason from this routine. *)
    if aWindow = lwMinimised then
       begin
-      show := SW_SHOWMINIMIZED;
+      show := swoMinimize;
       end
    else
       begin
-      show := SW_SHOWNORMAL;
+      show := swoShowNormal;
       end;
 
-   // THE LAST WinExec IN TR4W. PAnsiChar(WinAnsi(...)) is a genuine boundary
-   // conversion -- WinExec takes LPCSTR -- and is the kind CLAUDE.md allows.
-   rc := Windows.WinExec(PAnsiChar(WinAnsi(aCommandLine)), show);
+   (* WinExec IS GONE, AND THE CODE-PAGE CONVERSION GOES WITH IT.
 
-   // "Less than 32" is WinExec's own error convention, and it was checked at
-   // two of the seventeen sites this replaced.
-   Result := rc >= 32;
-   if not Result then
-      begin
-      Log.Error(Format('[RunWindowsUtility] "%s" failed, WinExec returned %d',
-                       [aCommandLine, rc]));
-      end;
+     WinExec took an LPCSTR, so the command line had to be narrowed to the
+     machine's ANSI code page first -- which is the only reason this unit ever
+     knew what a code page was. A path holding a character outside that page
+     became '?' and the launch failed with nothing to explain it.
+
+     Process.CommandToList is the FCL's own splitter, the one TProcess.CommandLine
+     used internally, so the quoting rules stay the FCL's rather than becoming
+     ours. Everything after the split is the same launch RunProgram makes.
+
+     THE WINDOWS GUARD STAYS, and it was never about WinExec: these programs are
+     Windows programs by name, and the honest answer elsewhere is to say so. *)
+   parts := TStringList.Create;
+   try
+      (* LclText: CommandToList takes the FCL's TProcessString, an
+        AnsiString, and this unit's `string` is UTF-16. Stated at the
+        boundary rather than left to the assignment. *)
+      CommandToList(LclText(aCommandLine), parts);
+      if parts.Count = 0 then
+         begin
+         Log.Warn('[RunWindowsUtility] refused: empty command line');
+         Result := False;
+         Exit;
+         end;
+
+      exe := parts[0];
+      parts.Delete(0);
+      Result := Launch(exe, parts, show);
+   finally
+      parts.Free;
+   end;
 {$ELSE}
    // REPORTED, NOT SILENT. These are Windows programs; the honest answer on
    // another platform is to say so.

@@ -732,7 +732,9 @@ begin
      Exit;
      end;
 
-  SendViaTelnetSocket(PAnsiChar(WinAnsi(Text)));
+  (* The same plain cast the unit's other SendViaTelnetSocket calls use.
+    Cluster commands are ASCII; re-encoding them was a no-op with a cost. *)
+  SendViaTelnetSocket(PAnsiChar(AnsiString(Text)));
   TelnetRememberCommand(Text);
   TelnetSetCommandText('');
 end;
@@ -793,7 +795,7 @@ begin
         // the NEXT outage starts at 5 s again rather than inheriting the
         // 60 s this one may have crept up to.
         CancelTelnetRetry;
-        TF.Format(wsprintfBuffer, '%s%s:%u', PAnsiChar(WinAnsi(TC_CONNECTEDTO)),
+        TF.Format(wsprintfBuffer, '%s%s:%u', PAnsiChar(LclText(TC_CONNECTEDTO)),
           @PendingTelnetHost[0], PendingTelnetPort);
         AddStringToTelnetConsole(wsprintfBuffer, tstTR4W);
         // (The TelnetBuffer clear that stood here is gone with the buffer
@@ -850,7 +852,7 @@ begin
         // can no longer cost the teardown.
         Disconnect;
 
-        TF.Format(wsprintfBuffer, '%s%s:%u', PAnsiChar(WinAnsi(TC_FAILEDTOCONNECTTO)),
+        TF.Format(wsprintfBuffer, '%s%s:%u', PAnsiChar(LclText(TC_FAILEDTOCONNECTTO)),
           @PendingTelnetHost[0], PendingTelnetPort);
         AddStringToTelnetConsole(wsprintfBuffer, tstError);
         // Keep trying, with a longer gap each time.  A failed RETRY comes
@@ -1112,13 +1114,13 @@ begin
      Exit;
      end;
 
-  Windows.lstrcpynA(PendingTelnetHost, PAnsiChar(WinAnsi(Host)),
+  StrLCopy(PendingTelnetHost, PAnsiChar(AnsiString(Host)),
                     SizeOf(PendingTelnetHost));
 
   // Issue #23 -- immediate visual feedback so connect is not a black box:
   // show the attempt in the window and switch the toolbar to the connected
   // state (grays Connect, enables Disconnect) the instant the user clicks.
-  TF.Format(wsprintfBuffer, '%s%s:%u', PAnsiChar(WinAnsi(TC_CONNECTINGTO)), @PendingTelnetHost[0],
+  TF.Format(wsprintfBuffer, '%s%s:%u', PAnsiChar(LclText(TC_CONNECTINGTO)), @PendingTelnetHost[0],
     PendingTelnetPort);
   AddStringToTelnetConsole(wsprintfBuffer, tstTR4W);
   EnableTelnetToolbatButtons(True);
@@ -1165,7 +1167,7 @@ begin
   // suppress the very message the operator most needs to see.
   if TelnetSessionActive then
      begin
-     TF.Format(wsprintfBuffer, '%s%s:%u', PAnsiChar(WinAnsi(TC_DISCONNECTEDFROM)), @PendingTelnetHost[0],
+     TF.Format(wsprintfBuffer, '%s%s:%u', PAnsiChar(LclText(TC_DISCONNECTEDFROM)), @PendingTelnetHost[0],
        PendingTelnetPort);
      AddStringToTelnetConsole(wsprintfBuffer, tstTR4W);
      end;
@@ -1239,7 +1241,10 @@ begin
     on E: Exception do
        begin
        Result := -1;
-       AddStringToTelnetConsole(PAnsiChar(WinAnsi(E.Message)), tstError);
+       (* AddStringToTelnetConsole takes a STRING. The cast chain widened the
+         message, narrowed it to cp1252 and widened it again, so an accented
+         word in an exception came back mangled on its way to the console. *)
+       AddStringToTelnetConsole(E.Message, tstError);
        Disconnect;
        end;
   end;
@@ -1286,7 +1291,7 @@ begin
    except
       on E: Exception do
          begin
-         AddStringToTelnetConsole(PAnsiChar(WinAnsi(E.Message)), tstError);
+         AddStringToTelnetConsole(E.Message, tstError);
          Disconnect;
          end;
    end;
@@ -1384,7 +1389,7 @@ begin
       Exit;
       end;
 
-   SendViaTelnetSocket(PAnsiChar(WinAnsi(call)));
+   SendViaTelnetSocket(PAnsiChar(AnsiString(call)));
 
    if TelnetPassword <> '' then
       begin

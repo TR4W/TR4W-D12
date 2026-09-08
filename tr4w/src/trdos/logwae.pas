@@ -147,7 +147,7 @@ begin
      DoABeep(Warning);
      p := @QTCCallsign[1];
      // Issue #997: asm wsprintf-push -> TF.Format.
-     TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_SORRYYOUALREADYHAVE10QTCSWITH)), p);
+     TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_SORRYYOUALREADYHAVE10QTCSWITH)), p);
      QuickDisplay(wsprintfBuffer);
      Exit;
      end;
@@ -234,7 +234,7 @@ begin
 
      // Issue #997: asm wsprintf-push -> TF.Format. TC_ISQRVFOR = 'Is %s QRV for %s?';
      // cdecl-reverse pushes -> arg1=QTCCallsign, arg2=QRVString.
-     TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_ISQRVFOR)), @QTCCallsign[1], @QRVString[1]);
+     TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_ISQRVFOR)), @QTCCallsign[1], @QRVString[1]);
 
      if YesOrNo2(string(wsprintfBuffer)) <> IDOK then Exit;
      //tDialogBox(63, @QTCSDlgProc);

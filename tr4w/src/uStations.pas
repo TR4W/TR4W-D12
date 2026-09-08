@@ -319,7 +319,7 @@ begin
      end;
   StationsEndUpdate;
 
-  TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_STATIONSINMODE)), ModeStringArray[ActiveMode]);
+  TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_STATIONSINMODE)), ModeStringArray[ActiveMode]);
   StationsSetCaption(string(PAnsiChar(@wsprintfBuffer)));
 end;
 

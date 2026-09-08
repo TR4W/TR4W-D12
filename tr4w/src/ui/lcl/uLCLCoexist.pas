@@ -119,22 +119,29 @@ uses
    // the uses order guarantees it initialises before Forms.
    Interfaces,
    Forms,
-   LCLType,      { MB_OK, MB_ICONWARNING }
-   uAppStrings,
-  uAnsiStr;  { SAlreadyRunningTitle }
+   Dialogs,      (* MessageDlg *)
+   uAnsiStr,     (* LclText -- MessageDlg's parameters are the LCL's
+                    AnsiString and this unit's `string` is UTF-16 *)
+   uAppStrings;  (* SAlreadyRunningTitle *)
 
 var
    gInitialised: boolean = False;
 
 procedure ReportAlreadyRunning(const aMessage: string);
 begin
-   // PAnsiChar, and this one IS a real byte boundary: TApplication.MessageBox
-   // takes PChar meaning PAnsiChar, while this unit compiles with
-   // {$MODESWITCH UnicodeStrings} so a bare PChar cast would hand it UTF-16 and
-   // it would render the first letter and stop.
-   Application.MessageBox(PAnsiChar(WinAnsi(aMessage)),
-                          PAnsiChar(WinAnsi(SAlreadyRunningTitle)),
-                          MB_OK or MB_ICONWARNING);
+   (* MessageDlg, NOT Application.MessageBox.
+
+     The old call was the only thing here that needed a byte pointer, and the
+     comment that stood in its place explained the cast rather than questioning
+     the call: TApplication.MessageBox takes PChar meaning PAnsiChar, and this
+     unit compiles with {$MODESWITCH UnicodeStrings}, so the text had to be
+     narrowed to bytes first or the box would render one letter and stop.
+
+     MessageDlg takes STRINGS, is what an LCL program written from scratch
+     would call, and drops both the pointer and the code page. It also drops
+     LCLType, which was in the uses clause only for MB_OK and MB_ICONWARNING. *)
+   MessageDlg(LclText(SAlreadyRunningTitle), LclText(aMessage),
+              mtWarning, [mbOK], 0);
 end;
 
 procedure InitLCLApplication;

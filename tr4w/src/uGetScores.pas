@@ -235,7 +235,9 @@ var
    sBody: AnsiString;
    begin
    sBody := AnsiString('xml=<?xml version="1.0"?>') + BuildDynamicResultsXml;
-   lstrcpyA(GetScoresBuffer, PAnsiChar(WinAnsi(sBody)));
+   (* The body is XML built from AnsiString parts and posted as bytes;
+     WinAnsi was re-encoding text that is already the bytes to send. *)
+   StrLCopy(GetScoresBuffer, PAnsiChar(sBody), High(GetScoresBuffer));
    logger.Debug('[MakePOSTRequestNew] %s', [GetScoresBuffer]);
    Result := Windows.lstrlenA(GetScoresBuffer);
    end;

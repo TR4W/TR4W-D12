@@ -842,8 +842,11 @@ begin
    // would read one of each and silently drop the rest.  This is the exact
    // counterpart of the WritePrivateProfileSectionA that used to write it.
    FillChar(buf, SizeOf(buf), 0);
+   (* @TR4W_INI_FILENAME[0], not a conversion of it. It is a FileNameType --
+     array[0..MAX_PATH-1] of AnsiChar -- so WinAnsi was widening bytes to
+     UTF-16 and narrowing them straight back, which can only lose. *)
    n := Windows.GetPrivateProfileSectionA('BAND PLAN', @buf[0], SizeOf(buf),
-                                          PAnsiChar(WinAnsi(TR4W_INI_FILENAME)));
+                                          @TR4W_INI_FILENAME[0]);
    if n = 0 then
       begin
       Exit;

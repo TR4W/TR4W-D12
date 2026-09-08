@@ -2742,7 +2742,7 @@ end;
 
 function OkayToDeleteExistingFile(FileName: PAnsiChar): boolean;
 begin
-  TF.Format(wsprintfBuffer, PAnsiChar(WinAnsi(TC_ALREADYEXISTSOKAYTODELETE)), FileName);
+  TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_ALREADYEXISTSOKAYTODELETE)), FileName);
 
   (* YES IS THE DEFAULT BUTTON, as it was: MB_YESNO with no MB_DEFBUTTON2
     focuses the first button, and QuestionDlg's 'IsDefault' marker applies to
