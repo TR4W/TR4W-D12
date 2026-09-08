@@ -98,8 +98,10 @@ function LclText(const s: string): RawByteString;
 
 implementation
 
+{$IFDEF WINDOWS}
 uses
-   Windows;   // WideCharToMultiByte, CP_ACP
+   Windows;   // WideCharToMultiByte, CP_ACP -- see WinAnsi
+{$ENDIF}
 
 function LclText(const s: string): RawByteString;
 begin
@@ -107,14 +109,17 @@ begin
 end;
 
 function WinAnsi(const s: string): RawByteString;
+{$IFDEF WINDOWS}
 var
    n: integer;
+{$ENDIF}
 begin
    Result := '';
    if s = '' then
       begin
       Exit;
       end;
+{$IFDEF WINDOWS}
    n := WideCharToMultiByte(CP_ACP, 0, PWideChar(s), Length(s), nil, 0, nil, nil);
    if n <= 0 then
       begin
@@ -123,6 +128,19 @@ begin
    SetLength(Result, n);
    WideCharToMultiByte(CP_ACP, 0, PWideChar(s), Length(s),
                        PAnsiChar(Result), n, nil, nil);
+{$ELSE}
+   (* OFF WINDOWS THERE IS NO ...A ENTRY POINT TO FEED, so "the machine's ANSI
+     code page" names nothing -- the platform's narrow encoding IS UTF-8, and
+     that is what every byte-oriented API there expects.
+
+     This is the same result as LclText, deliberately: on those platforms the
+     two callers want the same bytes, and the distinction WinAnsi exists to
+     draw is a Win32 one. The function is kept rather than gated away at its
+     call sites because there are dozens of them and they are all correct as
+     written -- and because it retires on its own, with the last Win32 dialog
+     proc, exactly as the note above says. *)
+   Result := RawByteString(UTF8Encode(s));
+{$ENDIF}
 end;
 
 function StrLen(const Str: PAnsiChar): Cardinal;
