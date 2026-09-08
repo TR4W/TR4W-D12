@@ -27,8 +27,16 @@ uses
 //  SysUtils,
   VC,
   TF,
+  (* Messages named nothing this unit uses. WINDOWS STAYS for one call:
+    CompareStringA(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE, ...).
+
+    NOT REPOINTED HERE ON PURPOSE. That call is one of three copies of the same
+    comparison in this tree, they have already drifted, and NY4I's standing
+    instruction is that the TESTS come before the repoint -- otherwise the
+    differences between the copies (which are usually fixes that never
+    propagated) get silently normalised away. Doing it as a side effect of a
+    portability sweep is exactly the wrong way round. *)
   Windows,
-  Messages,
   Tree,
   LogRadio,
   LogSCP,

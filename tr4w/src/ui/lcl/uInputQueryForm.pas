@@ -75,7 +75,16 @@ implementation
 {$R *.lfm}
 
 uses
+{$IFDEF WINDOWS}
+  (* GATED WITH ITS ONE CALL (2026-09-08). LoadIcon with a standard IDI_
+    ordinal asks the OS for a
+    standard system icon; there is no cross-platform equivalent, and the LCL's
+    own LoadIcon takes a PChar resource name that would need the same
+    MAKEINTRESOURCE arithmetic this code was already burned by once (see
+    HandleShow). Off Windows the dialog simply shows no icon -- decoration,
+    not information: the prompt text says what is being asked. *)
   Windows,     // LoadIcon -- see HandleShow
+{$ENDIF}
   VC,          // the tInputDialog* one-shot flags
   TF,          // IQPrompt, tLoadKeyboardLayout
   MainUnit,    // tLoadKeyboardLayout, logger
@@ -107,11 +116,15 @@ begin
       // IDI_EXCLAMATION, not IDI_WARNING: the Win32 headers define WARNING as
       // an alias for EXCLAMATION and FPC's Windows unit carries only the
       // latter.  Same icon, same ordinal (32515).
+{$IFDEF WINDOWS}
       imgIcon.Picture.Icon.Handle := LoadIcon(0, IDI_EXCLAMATION);
+{$ENDIF}
       end
    else
       begin
+{$IFDEF WINDOWS}
       imgIcon.Picture.Icon.Handle := LoadIcon(0, IDI_QUESTION);
+{$ENDIF}
       end;
 
    if tInputDialogLowerCase then

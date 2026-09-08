@@ -26,6 +26,8 @@ function sWriteFile(hFile: THandle; const Buffer; nNumberOfBytesToWrite: DWORD):
 function sWriteFileFromString(hFile: THandle; sBuffer: AnsiString): boolean;
 function tWriteFile(hFile: THandle; const Buffer; nNumberOfBytesToWrite: DWORD; var lpNumberOfBytesWritten: DWORD): boolean;
 function sReadFile(hFile: THandle; var Buffer; nNumberOfBytesToRead: DWORD): boolean;
+{ How many bytes the open file holds, WITHOUT moving the read position. }
+function sFileSize(hFile: THandle): Int64;
 
 function tOpenFileForWrite(var h: THandle; FileName: PAnsiChar): boolean;
 function OpenFileForWrite(var FileHandle: Text; FileName: string): boolean;
@@ -69,6 +71,24 @@ begin
      begin
      lpNumberOfBytesWritten := 0;
      end;
+end;
+
+(* SIZE WITHOUT MOVING THE POSITION, WHICH IS THE WHOLE DIFFICULTY.
+
+  Callers had Windows.GetFileSize, which answers the question and leaves the
+  file pointer alone. The RTL has no such call -- FileSeek is how you ask, and
+  asking MOVES the pointer. A naive swap therefore looks right and silently
+  changes where the next read starts; logscp does exactly that, taking the
+  size and then reading the index array from the current position.
+
+  So this saves the position, seeks to the end, and puts it back. *)
+function sFileSize(hFile: THandle): Int64;
+var
+  saved: Int64;
+begin
+  saved  := FileSeek(hFile, Int64(0), fsFromCurrent);
+  Result := FileSeek(hFile, Int64(0), fsFromEnd);
+  FileSeek(hFile, saved, fsFromBeginning);
 end;
 
 function sReadFile(hFile: THandle; var Buffer; nNumberOfBytesToRead: DWORD): boolean;

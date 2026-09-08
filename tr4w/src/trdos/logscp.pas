@@ -28,8 +28,12 @@ uses
   VC,
   utils_text,
   utils_file,
-  Windows,
-  Messages,
+  (* Windows and Messages are gone (2026-09-08). What they were here for:
+    GetFileSize      utils_file.sFileSize, which preserves the read position
+                     -- see the note there; the RTL's FileSeek does not
+    SetFilePointer   SysUtils.FileSeek(..., fsFromBeginning)
+    CloseHandle      SysUtils.FileClose, on handles that SysUtils opened
+    Messages         nothing at all *)
   Classes,
   uCallSignRoutines,
   uCTYDAT,
@@ -1915,7 +1919,9 @@ begin
 //    Reset(TRMasterFileRead, 1);
 //    if IORESULT {DosError} {WLI} = 0 then
        begin
-       DTAFileSize := Windows.GetFileSize(TRMasterFileRead, nil) {FileSize(TRMasterFileRead)};
+       { sFileSize, not Windows.GetFileSize -- and it preserves the read
+         position, which the two sReadFile calls below depend on. }
+       DTAFileSize := sFileSize(TRMasterFileRead);
 
        New(SCPIndexArray);
        sReadFile(TRMasterFileRead, SCPIndexArray^, SizeOf(SCPIndexArray^));
@@ -1968,8 +1974,8 @@ begin
 
   NumberBytes := EndingOffset - StartingOffset;
 
-//  Seek(TRMasterFileRead, StartingOffset);
-  Windows.SetFilePointer(TRMasterFileRead, StartingOffset, nil, FILE_BEGIN);
+  { FileSeek from the start -- what SetFilePointer(..., FILE_BEGIN) did. }
+  FileSeek(TRMasterFileRead, Int64(StartingOffset), fsFromBeginning);
 
   CellBuffer.LoadCellIntoBuffer(KeyString, TRMasterFileRead, NumberBytes);
   InitialPartialCall := PartialCall;
@@ -2888,16 +2894,12 @@ begin
 
   Address := Random(Range) + StartingOffset;
 
-  if Address + SizeOf(MiniBuffer) >=
-//  FileSize(TRMasterFileRead)
-  Windows.GetFileSize(TRMasterFileRead, nil)
-    then
+  if Address + SizeOf(MiniBuffer) >= sFileSize(TRMasterFileRead) then
      begin
-     Address := (Windows.GetFileSize(TRMasterFileRead, nil) {FileSize(TRMasterFileRead)} - SizeOf(MiniBuffer)) - 5;
+     Address := (sFileSize(TRMasterFileRead) - SizeOf(MiniBuffer)) - 5;
      end;
 
-//  Seek(TRMasterFileRead, Address);
-  Windows.SetFilePointer(TRMasterFileRead, Address, nil, FILE_BEGIN);
+  FileSeek(TRMasterFileRead, Int64(Address), fsFromBeginning);
 
   sReadFile(TRMasterFileRead, MiniBuffer, SizeOf(MiniBuffer));
 
@@ -2946,7 +2948,7 @@ begin
 
   if TRMasterFileOpen then
      begin
-     CloseHandle(TRMasterFileRead);
+     FileClose(TRMasterFileRead);
      Dispose(SCPIndexArray);
      TRMasterFileOpen := False;
      IndexArrayAllocated := False;
@@ -3302,7 +3304,7 @@ begin
                begin
                NumBytes := BufferArraySize;
                end;
-            Windows.SetFilePointer(FileHandle, StartOffset, nil, FILE_BEGIN);
+            FileSeek(FileHandle, Int64(StartOffset), fsFromBeginning);
             LocalBuf.LoadCellIntoBuffer('', FileHandle, NumBytes);
             while LocalBuf.GetNextEntry(EntryStr) do
                begin
@@ -3316,7 +3318,7 @@ begin
          end;
    finally
       LocalBuf.GoAway;
-      CloseHandle(FileHandle);
+      FileClose(FileHandle);
       end;
 end;
 

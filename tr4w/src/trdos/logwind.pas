@@ -32,7 +32,7 @@ utils_text,
   uCTYDAT,
   uCallsigns,
   TF,
-  Messages,
+  (* Messages declared nothing this unit uses (2026-09-08). *)
   Version,
   VC,
   uInputQuery,
@@ -44,6 +44,18 @@ utils_text,
   Tree, {Crt, Dos,}
   LogSCP,
   ZoneCont,
+  (* WINDOWS STAYS, AND HERE IS THE WHOLE REMAINING BILL (measured
+    2026-09-08, by removing it and reading the compiler):
+
+      SystemTimeToTzSpecificLocalTime + TIME_ZONE_INFORMATION
+                        DisplayLocalTime. The RTL has no timezone-database
+                        call; this is the one real piece of work in the list
+      ReadFile / CloseHandle
+                        SysUtils.FileRead / FileClose, same as logscp took
+      SW_SHOW / SW_HIDE LCLType declares both
+
+    lstrcatA is already gone -- see DisplayNextQSONumber -- and Messages had
+    nothing to declare at all. *)
   Windows,
   utils_file,
   BeepUnit,
@@ -1525,7 +1537,12 @@ begin
   if ServerSerialNumber <> 0 then
     if PreviousSerialNumberType = sntReserved then
        begin
-       Windows.lstrcatA(wsprintfBuffer, 'L');
+       (* Appended with uAnsiStr rather than Win32's lstrcatA, and BOUNDED
+         where lstrcatA was not: it walks to the NUL and keeps writing.
+         wsprintfBuffer is 4096 bytes and this appends one character, so the
+         old call was safe by luck rather than by rule. *)
+       uAnsiStr.StrPLCopy(@wsprintfBuffer[uAnsiStr.StrLen(wsprintfBuffer)],
+                          'L', SizeOf(wsprintfBuffer) - uAnsiStr.StrLen(wsprintfBuffer) - 1);
        end;
   TR4WMainForm.pnlQSONumber.Caption := wsprintfBuffer;
 end;
