@@ -89,7 +89,37 @@ SERVER_DIR="$TR4W_DIR/tr4wserver"
 TEST_DIR="$TR4W_DIR/test/unit"
 OUTROOT="$REPO/build-out"
 
-CPU=x86_64
+# THE CPU COMES FROM THE MACHINE, NOT FROM A CONSTANT (2026-09-08).
+#
+# This said CPU=x86_64, which is right on exactly one of the boxes this is
+# meant to run on. A Raspberry Pi 5 running 64-bit Pi OS is aarch64, and a
+# 32-bit Pi OS is arm -- and hardcoding the wrong one does not fail cleanly:
+# FPC would look for units under a directory that does not exist and report
+# "Can't find unit system", which reads as a broken toolchain.
+#
+# uname -m is the authority. The mapping is to FPC's OWN spelling of each
+# architecture, which is not always the kernel's:
+#
+#     kernel      FPC      what it is
+#     x86_64      x86_64   ordinary 64-bit PC
+#     aarch64     aarch64  Pi 4/5 on 64-bit Pi OS, and Apple Silicon
+#     armv7l      arm      32-bit Pi OS, and older Pis
+#     armv6l      arm      Pi Zero / Pi 1
+#     i686        i386     32-bit PC
+detect_cpu() {
+   case "$(uname -m)" in
+      x86_64|amd64)      echo x86_64 ;;
+      aarch64|arm64)     echo aarch64 ;;
+      armv7l|armv6l|arm) echo arm ;;
+      i386|i486|i586|i686) echo i386 ;;
+      *)
+         echo "Unknown machine $(uname -m) -- add it to detect_cpu." >&2
+         return 2
+         ;;
+   esac
+}
+
+CPU=$(detect_cpu) || exit 2
 OS=linux
 ARCH="$CPU-$OS"
 
