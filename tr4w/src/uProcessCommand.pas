@@ -435,9 +435,17 @@ begin
             ActiveRadioPtr.AddCommandToBuffer;
       end
    else
-//    WriteToSerialCATPort(scFileName, ActiveRadioPtr.tCATPortHandle);
+      (* NO CAT PORT, SO NOTHING TO SEND THROUGH -- and it says so now.
+
+        What stood here was ActiveRadioPtr.WriteToCATPort, the legacy serial write. Its
+        port was never opened by anything -- see the note in logradio,
+        2026-09-08 -- so this arm has silently discarded the command for as
+        long as the factory has owned the radios. A radio reaching here has
+        no factory driver and is not an Icom, which is a configuration the
+        operator needs told about. *)
       begin
-      ActiveRadioPtr.WriteToCATPort(scFileName[1], length(scFileName));
+      logger.Error('[%s] Send-to-radio: no factory driver, so "%s" was not sent.',
+                   [ActiveRadioPtr.RadioName, string(scFileName)]);
       end;
 end;
 
@@ -455,9 +463,17 @@ begin
      end
 //    InActiveRadioPtr.ICOM_COMMAND_CUSTOM := scFileName
   else
-//    WriteToSerialCATPort(scFileName, InActiveRadioPtr.tCATPortHandle);
+     (* NO CAT PORT, SO NOTHING TO SEND THROUGH -- and it says so now.
+
+       What stood here was InActiveRadioPtr.WriteToCATPort, the legacy serial write. Its
+       port was never opened by anything -- see the note in logradio,
+       2026-09-08 -- so this arm has silently discarded the command for as
+       long as the factory has owned the radios. A radio reaching here has
+       no factory driver and is not an Icom, which is a configuration the
+       operator needs told about. *)
      begin
-     InActiveRadioPtr.WriteToCATPort(scFileName[1], length(scFileName));
+     logger.Error('[%s] Send-to-radio: no factory driver, so "%s" was not sent.',
+                  [InActiveRadioPtr.RadioName, string(scFileName)]);
      end;
 end;
 
@@ -475,9 +491,17 @@ begin
      end
 //    Radio1.ICOM_COMMAND_CUSTOM := scFileName
   else
-//    WriteToSerialCATPort(scFileName, Radio1.tCATPortHandle);
+     (* NO CAT PORT, SO NOTHING TO SEND THROUGH -- and it says so now.
+
+       What stood here was Radio1.WriteToCATPort, the legacy serial write. Its
+       port was never opened by anything -- see the note in logradio,
+       2026-09-08 -- so this arm has silently discarded the command for as
+       long as the factory has owned the radios. A radio reaching here has
+       no factory driver and is not an Icom, which is a configuration the
+       operator needs told about. *)
      begin
-     Radio1.WriteToCATPort(scFileName[1], length(scFileName));
+     logger.Error('[%s] Send-to-radio: no factory driver, so "%s" was not sent.',
+                  [Radio1.RadioName, string(scFileName)]);
      end;
 end;
 
@@ -495,9 +519,17 @@ begin
      end
 //    Radio2.ICOM_COMMAND_CUSTOM := scFileName
   else
-//    WriteToSerialCATPort(scFileName, Radio2.tCATPortHandle);
+     (* NO CAT PORT, SO NOTHING TO SEND THROUGH -- and it says so now.
+
+       What stood here was Radio2.WriteToCATPort, the legacy serial write. Its
+       port was never opened by anything -- see the note in logradio,
+       2026-09-08 -- so this arm has silently discarded the command for as
+       long as the factory has owned the radios. A radio reaching here has
+       no factory driver and is not an Icom, which is a configuration the
+       operator needs told about. *)
      begin
-     Radio2.WriteToCATPort(scFileName[1], length(scFileName));
+     logger.Error('[%s] Send-to-radio: no factory driver, so "%s" was not sent.',
+                  [Radio2.RadioName, string(scFileName)]);
      end;
 end;
 

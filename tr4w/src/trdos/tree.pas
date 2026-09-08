@@ -41,8 +41,8 @@ uses
     it -- Messages had nothing to declare at all, no TMessage, no WM_ constant,
     no SendMessage. Windows was real and is now answered by the RTL:
 
-      FindFirstFileW      the routine around it had never worked -- see
-                          FoundDirectory
+      FindFirstFileW      the routine around it had never worked, and both it
+                          and its caller are now deleted
       DeleteFileW         SysUtils.DeleteFile
       SystemTimeToFileTime / FileTimeToSystemTime
                           TDateTime and DateUtils -- see IncSystemTime
@@ -986,8 +986,6 @@ const
 
 procedure WriteLnCenter(Prompt: Str80);
 procedure WriteLnVarCenter(var FileWrite: Text; Prompt: Str80);
-function FoundDirectory(FileName: string; Path: string; var Directory: string): boolean;
-function FindDirectory(FileName: Str80): string;
 function String2Hex(const Buffer: Ansistring): string;
 
 var
@@ -3942,111 +3940,29 @@ begin
 end;
 
 
-(* THIS HAS ALWAYS RETURNED FALSE, AND THE BODY IS NOW HONEST ABOUT IT.
+(* FoundDirectory / FindDirectory ARE DELETED (2026-09-08, NY4I: "Yes to
+  deleting the founddirectry and finddirectry and calling branches").
 
-  What stood here called Windows.FindFirstFileW and then asked
+  They hunted for DOS TR files -- name.dat, TR.EXE, TR.OVR, NAMES.CMQ -- and
+  FindDirectory could not return anything but ''. Two reasons, either of which
+  was enough:
 
-      if s = '' then Exit else ...
+    * FoundDirectory called Windows.FindFirstFileW and then tested a LOCAL
+      STRING NOTHING ASSIGNS. The line that filled it, `S := FSearch(FileName,
+      Path)`, is commented out and marked "wli" -- it went in the DOS-to-
+      Windows port and never came back -- so the test was always '' = '' and
+      the routine always took Exit. It also leaked a search handle per existing
+      file: FindFirstFileW returns a handle and nothing called FindClose.
 
-  where `s` is a LOCAL STRING THAT NOTHING ASSIGNS -- the line that filled it,
-  `S := FSearch(FileName, Path)`, is commented out and marked "wli", part of
-  the DOS-to-Windows port. So `s` was always '' and the routine always took
-  Exit; the else branch, which reads TempString -- also never assigned -- has
-  never run in this program's life. Path was never used at all.
+    * FindDirectory's third branch, `//wli IF FoundDirectory (FileName, GetEnv
+      ('TRLOG'), ...) THEN`, had its condition commented out but not its body,
+      so `FindDirectory := Directory; Exit;` ran UNCONDITIONALLY -- returning a
+      local that nothing had written. Control never reached the four branches
+      below it.
 
-  IT ALSO LEAKED. FindFirstFileW returns a SEARCH HANDLE, not a boolean, and
-  nothing ever called FindClose: every lookup of a file that EXISTS leaked one,
-  on Windows, today.
-
-  So this is not a port and not a behaviour change -- it is the same answer
-  with the dead machinery removed. What to do about the CALLERS is a decision,
-  not a cleanup: FindDirectory below hunts for name.dat, TR.EXE, TR.OVR and
-  NAMES.CMQ -- DOS TR files -- and its two callers have been taking the
-  not-found path for years. Recorded in docs\BENCH_QUEUE.md (2026-09-08).
-
-  Found by compiling for Linux: FindFirstFileW was one of tree.pas's four
-  genuine reasons to name the Windows unit. *)
-function FoundDirectory(FileName: string; Path: string; var Directory: string): boolean;
-
-begin
-  FoundDirectory := False;
-end;
-
-function FindDirectory(FileName: Str80): string;
-
-{ This procedure will attempt to find the directory for the filename
-  passed to it.  It will first check the current working directory, the
-  directory above the working one, then check the environment variable
-  TRLOG.
-
-  If still no luck, it will check to see it can be found in the command
-  string used to execute the program that is running.
-
-  Then it will check the PATH environment string directories.
-
-  Finally, it will check the old \log\name directory.  If it isn't found,
-  it will return a null string.
-
-  If a directory was found, it will end without \. }
-
-var
-  TempString, Directory                 : string;
-
-begin
-  FindDirectory := '';
-
-  if FoundDirectory(FileName, '.', Directory) then
-     begin
-     FindDirectory := Directory;
-     Exit;
-     end;
-
-  if FoundDirectory(FileName, '..', Directory) then
-     begin
-     FindDirectory := Directory;
-     Exit;
-     end;
-
-  //wli     IF FoundDirectory (FileName, GetEnv ('TRLOG'), Directory) THEN
-  begin
-    FindDirectory := Directory;
-    Exit;
-  end;
-
-  { All this will check to see what command was typed in to run the
-    active program and see if a path was specified. }
-
-  TempString := ParamStr(0);
-
-  if StringHas(TempString, '\') then
-     begin
-     while TempString[length(TempString)] <> '\' do
-        begin
-        Delete(TempString, length(TempString), 1);
-        end;
-
-     Delete(TempString, length(TempString), 1);
-
-     if FoundDirectory(FileName, TempString, Directory) then
-        begin
-        FindDirectory := Directory;
-        Exit;
-        end;
-     end;
-
-  //wli     IF FoundDirectory (FileName, GetEnv ('PATH'), Directory) THEN
-  begin
-    FindDirectory := Directory;
-    Exit;
-  end;
-
-  if FoundDirectory(FileName, '\log\name', Directory) then
-     begin
-     FindDirectory := Directory;
-     Exit;
-     end;
-
-end;
+  Callers went with them: help.CheckForName (which had no caller of its own)
+  and the else-arm of logname.NameDictionary.Init, which now says '' outright,
+  because that is what it has always computed. *)
 
 procedure RenameFile(OldName: string; NewName: string);
 

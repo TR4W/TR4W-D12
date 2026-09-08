@@ -1205,12 +1205,12 @@ begin
      end
   else
      begin
-     Directory := FindDirectory('NAMES.CMQ');
-
-     if Directory = '' then
-        begin
-        Directory := FindDirectory('TR.OVR');
-        end;
+     (* '' OUTRIGHT, WHICH IS WHAT THIS ALWAYS COMPUTED. The two
+       tree.FindDirectory calls that stood here -- for NAMES.CMQ, then TR.OVR
+       -- could not return anything else; see the note where FindDirectory
+       used to be. So CMQFileName below has always been '\NAMES.CMQ' when
+       \log\name\names.cmq is absent, and it still is. *)
+     Directory := '';
      end;
 
   CMQFileName := Directory + '\NAMES.CMQ';

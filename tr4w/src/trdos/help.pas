@@ -89,7 +89,6 @@ var
 
 procedure AddReminder;
 procedure Bin64Decode;
-procedure CheckForName;
 procedure DisplayCountryInformation(FileName: Str80; Call: CallString);
 
   CursorX: integer; CursorY: integer;
@@ -767,45 +766,12 @@ begin
 
 end;
 
-procedure CheckForName;
-
-var
-  FileRead, FileWrite              : Text;
-  Directory, CityString, AddressString: Str80;
-
-begin
-  Directory := FindDirectory('name.dat');
-
-  if Directory = '' then
-     begin
-     Directory := FindDirectory('TR.EXE');
-     end;
-
-  if OpenFileForRead(FileRead, Directory + '\name.dat') then
-     begin
-     ReadLn(FileRead, UserNameString);
-     WriteLn('TR Program registered to ', UserNameString);
-     Close(FileRead);
-     end
-  else
-     begin
-     Directory := FindDirectory('TR.OVR');
-
-     UserNameString := GetResponse('Please enter your name and call : ');
-
-     if UserNameString = '' then
-        begin
-        halt;
-        end;
-
-     OpenFileForWrite(FileWrite, Directory + '\name.dat');
-     WriteLn(FileWrite, UserNameString);
-     WriteLn(FileWrite, AddressString);
-     WriteLn(FileWrite, CityString);
-     Close(FileWrite);
-     end;
-end;
-
+(* CheckForName IS DELETED (2026-09-08). It had NO CALLER, and it could not
+  have worked if it had one: it built its path from tree.FindDirectory, which
+  always returned '' (see the note there), then WriteLn'd "TR Program
+  registered to ..." to a console this program does not have and called halt if
+  the operator typed nothing. DOS TR registration, carried forward and never
+  reached. *)
 
 procedure LoadPageBuffer(BufferNumber: integer);
 

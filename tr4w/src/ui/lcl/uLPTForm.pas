@@ -212,16 +212,12 @@ begin
    tDoingFootSwitchEnable := ActiveFootSwitchPort <> NoPort;
    DoingPaddle            := ActivePaddlePort <> NoPort;
 
-   // With the radio's control port in use, the paddle and foot switch are live
-   // whatever the combos say -- they come off the radio, not off an LPT.
-   if tUseControlPort then
-      begin
-      if Radio1.tCATPortHandle <> INVALID_HANDLE_VALUE then
-         begin
-         DoingPaddle            := True;
-         tDoingFootSwitchEnable := True;
-         end;
-      end;
+   (* THE CONTROL-PORT BRANCH IS GONE (2026-09-08). It read "with the radio's
+     control port in use, the paddle and foot switch are live whatever the
+     combos say -- they come off the radio, not off an LPT", and that was true
+     of the intent and never of the code: it required
+     Radio1.tCATPortHandle <> INVALID_HANDLE_VALUE, and nothing ever opened
+     that handle. See logradio. *)
 
    tDispalyPaddleAndFootSwitchStatus;
 

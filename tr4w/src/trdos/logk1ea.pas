@@ -2246,6 +2246,29 @@ begin
 
 end;
 
+(* SAID ONCE, NOT ONCE PER POLL.
+
+  USE CONTROL PORT asks for the paddle and foot switch to come off the radio's
+  serial control port. TR4W cannot do that: the legacy CAT port was the only
+  route and nothing has opened it since the factory took over the radios on
+  2026-08-02. The operator gets one line saying so instead of a silent
+  nothing -- or, as before this change, random keying from an uninitialised
+  status word. *)
+var
+   GControlPortWarned: boolean = False;
+
+procedure ReportControlPortUnavailable;
+begin
+   if GControlPortWarned then
+      begin
+      Exit;
+      end;
+   GControlPortWarned := True;
+   logger.Error('USE CONTROL PORT is set, but the paddle and foot switch cannot be '
+                + 'read from the radio''s control port: TR4W has no control port open. '
+                + 'Use an LPT port, or a keyer that provides them.');
+end;
+
 procedure tPaddleFootSwitchThreadProc;
 label
   Start;
@@ -2301,24 +2324,20 @@ begin
        end
        else
           begin
-          {COM}
-      GetCommModemStatus(Radio1.tCATPortHandle, TempCardinal);
+          (* THE CONTROL-PORT ARM IS GONE (2026-09-08), AND IT WAS WORSE
+            THAN DEAD.
 
-      if TempCardinal and MS_RLSD_ON = 0 then
-         begin
-         if tFootSwitchPressed = True then
-           if FootSwitchMode = Normal then
-              begin
-              PTTOff;
-              end;
-         tFootSwitchPressed := False;
-         end;
-      if TempCardinal and MS_RLSD_ON = MS_RLSD_ON then
-        if tFootSwitchPressed = False then
-           begin
-           tFootSwitchPressed := True;
-           tFootSwitchProcedure;
-           end;
+            It read the modem status lines with
+            GetCommModemStatus(Radio1.tCATPortHandle, TempCardinal). That
+            handle was never opened by anything -- see the note in logradio --
+            so the call failed and left TempCardinal UNINITIALISED, and the
+            tests below it were made against whatever was on the stack. A foot
+            switch or paddle that fired at random is exactly what that
+            produces.
+
+            Reported once per run rather than per poll: this sits inside the
+            keyer's timing loop, so a log line here would flood the file. *)
+          ReportControlPortUnavailable;
           end;
        end;
 
@@ -2346,16 +2365,20 @@ begin
           end
        else
           begin
-          //1.DCD - 128 6.DSR - 32 Dah 8.CTS - 16 Dit  9.RI  - 64
-      GetCommModemStatus(Radio1.tCATPortHandle, TempCardinal);
-      if TempCardinal and MS_CTS_ON = MS_CTS_ON then
-         begin
-         DitContact := True;
-         end;
-      if TempCardinal and MS_DSR_ON = MS_DSR_ON then
-         begin
-         DahContact := True;
-         end;
+          (* THE CONTROL-PORT ARM IS GONE (2026-09-08), AND IT WAS WORSE
+            THAN DEAD.
+
+            It read the modem status lines with
+            GetCommModemStatus(Radio1.tCATPortHandle, TempCardinal). That
+            handle was never opened by anything -- see the note in logradio --
+            so the call failed and left TempCardinal UNINITIALISED, and the
+            tests below it were made against whatever was on the stack. A foot
+            switch or paddle that fired at random is exactly what that
+            produces.
+
+            Reported once per run rather than per poll: this sits inside the
+            keyer's timing loop, so a log line here would flood the file. *)
+          ReportControlPortUnavailable;
           end;
        if (DitContact or DahContact) then
           begin

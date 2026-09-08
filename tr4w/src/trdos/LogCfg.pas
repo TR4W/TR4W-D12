@@ -282,14 +282,13 @@ end;
 procedure TryRunPaddleAndFootSwitchThread;
 begin
 
-  if tUseControlPort then
-    if Radio1.tCATPortHandle <> INVALID_HANDLE_VALUE then
-       begin
-       DoingPaddle := True;
-       tDoingFootSwitchEnable := True;
-       tRuntPaddleAndFootSwitchThread;
-       Exit;
-       end;
+(* THE CONTROL-PORT BRANCH IS GONE (2026-09-08), and it never ran.
+
+  It tested `Radio1.tCATPortHandle <> INVALID_HANDLE_VALUE`. That handle was
+  assigned in two places, both to INVALID_HANDLE_VALUE, and nothing ever
+  opened it -- so the paddle and foot switch could never come off the radio's
+  control port, whatever `USE CONTROL PORT` was set to. The field is deleted;
+  see logradio. *)
 
   if tGetPortType(ActiveFootSwitchPort) = ParallelInterface then
     if OpenLPT(tFootSwitchPortBaseAddress, ActiveFootSwitchPort) then

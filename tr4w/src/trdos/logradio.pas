@@ -317,7 +317,6 @@ type
       ReceiverAddress: integer; { Used for Icom interfaces }
 
       tCATPortType:   PortType;
-      tCATPortHandle: THandle;
 
       tKeyerPort:       PortType;
       (* THE LPT BASE ADDRESS, and since 2026-09-07 only that.
@@ -392,8 +391,6 @@ type
       // says so and says why.
       procedure LogRadioConfiguration;
       procedure CheckAndInitializePorts_ForThisRadio;
-      function WriteToCATPort(const Buffer; nNumberOfBytesToWrite: DWORD): longbool;
-      procedure WriteBufferToCATPort(const Buffer);
       procedure EnableCWBYCATTimer(ms: integer);
       procedure AddTimeToCWByCATTimer(ms: integer);
 
@@ -756,7 +753,6 @@ function IntegerToBCD(Value: DWORD): integer; forward;      // ny4i  // 4.44.5
 function Integer4ToBCD(Value: DWORD): integer; forward;     // ny4i  // 4.44.5
 function ModeTypeToNetMode(mode: ModeType): TRadioMode; forward;
 procedure InitRadios; forward;
-procedure SetK3ExtendedCommandMode; forward;
 function GetRadioParameters(Radio: RadioType; RadioInfoString: string;
    var Freq: longint; var Band: BandType; var Mode: ModeType;
    Polling: boolean; Debug: boolean): boolean; forward;
@@ -904,10 +900,6 @@ begin
 end;
 
 
-procedure SetK3ExtendedCommandMode;
-begin
-   ActiveRadioPtr.WriteBufferToCATPort('K31;');
-end;
 
 
 procedure RITClear;
@@ -1149,105 +1141,21 @@ begin
       end;
 end;
 
-procedure RadioObject.WriteBufferToCATPort(const Buffer);
-begin
-   { uAnsiStr.StrLen, not Win32's lstrlenA: the same NUL scan over PAnsiChar,
-     declared for every platform, and the unit this tree already uses for
-     AnsiChar work. }
-   WriteToCATPort(Buffer, uAnsiStr.StrLen(PAnsiChar(@Buffer)));
-end;
+(* THE LEGACY CAT PORT IS DELETED (2026-09-08).
 
-function RadioObject.WriteToCATPort(const Buffer;
-   nNumberOfBytesToWrite: DWORD): longbool;
-var
-   lpNumberOfBytesWritten: DWORD;
+  NY4I: "delete any unused legacy code including the CAT port."
 
-  // i: integer;
-  // s: string;
-   nLen: integer;
+  tCATPortHandle was assigned in exactly two places in the whole tree, both
+  `:= INVALID_HANDLE_VALUE`, and NOTHING EVER OPENED IT -- there was no
+  CreateFile, and there has been none since the legacy radio path was deleted
+  on 2026-08-02. Every radio's serial link belongs to its factory driver.
 
-begin
-      try
-      if logger.IsTraceEnabled then
-         begin
-         if true then //not (nNumberOfBytesToWrite in [3,6,7]) then
-            begin
-            logger.trace('>>>>Enter WriteToCATPort');
-            SetString(debugStr,PAnsiChar(@Buffer),nNumberOfBytesToWrite);
-            nLen := nNumberOfBytesToWrite; //Ord(Buffer[0]);
-            // Binary traffic traces as hex only (text would be garbage).
-            //
-            // Was `RadioParametersArray[...].rt = rtICOM`, which asked the wrong
-            // question: the property that matters here is whether the bytes are
-            // BINARY, not who made the radio.  The driver already states that --
-            // SerialProtocolIsBinary, set True by TIcomRadio for CI-V -- so ask
-            // it instead of a table.
-            //
-            // SLIGHT BEHAVIOUR CHANGE, and an improvement: any driver that
-            // declares a binary protocol now hex-traces, not just the CI-V ones.
-            // The Yaesu FT-1000MP is the case in point -- its 32-byte status
-            // block is binary (SerialFixedFrameLength implies it) and used to be
-            // logged as text, which is exactly the garbage this branch exists to
-            // avoid.
-            if (Self.tFactoryObject <> nil) and
-               Self.tFactoryObject.SerialProtocolIsBinary then
-               begin
-               logger.trace(Format('[%s] Calling WriteFile to write %u bytes <%s>',
-                  [RadioName, nNumberOfBytesToWrite, BinToHexStr(Buffer, nLen)]));
-               end
-            else
-               begin
-               // Hex alongside the text so non-printable control bytes are visible
-               // -- e.g. the K3 keyer-abort 'KY <04>;RX;' (Chr(4)) shows as plain
-               // 'KY ;RX;' in a text-only trace, hiding the control byte entirely.
-               logger.trace(Format('[%s] Calling WriteFile to write %u bytes <%s> hex[%s]',
-                  [RadioName, nNumberOfBytesToWrite, debugStr, BinToHexStr(Buffer, nLen)]));
-               end;
-            end;
-         end;
-
-      (* THIS WRITE HAS NEVER REACHED A RADIO, AND NOW IT SAYS SO.
-
-        It was Windows.WriteFile(tCATPortHandle, ...). tCATPortHandle is
-        assigned in exactly ONE place in the whole tree --
-
-            logradio.pas: TempRadio.tCATPortHandle := INVALID_HANDLE_VALUE;
-
-        -- and nothing anywhere opens it. There is no CreateFile, and there
-        has not been since the legacy radio path was deleted on 2026-08-02;
-        every radio's serial link belongs to its factory driver now. So the
-        call always failed, the failure was swallowed by the bare `except`
-        below, and the caller got a Result computed from an UNINITIALISED
-        lpNumberOfBytesWritten -- WriteFile does not set it when it fails.
-
-        Reported, not silent, per the house rule: a caller reaching here has a
-        radio with no factory object and no serial port, which is worth a log
-        line rather than a shrug. Whether the whole legacy CAT path should go
-        is a DECISION and is in docs\BENCH_QUEUE.md (2026-09-08). *)
-      logger.Error('[%s] WriteToCATPort: no CAT port is open -- %u byte(s) discarded. '
-                   + 'This radio has no factory driver; the legacy CAT port is never opened.',
-                   [RadioName, nNumberOfBytesToWrite]);
-      lpNumberOfBytesWritten := 0;
-      except // on E : Exception do
-      ; // TLogger.GetInstance.Debug(Format('In WriteToCATPort..WriteFile, %s error raised, with message <%s> ',[E.ClassName,E.Message]));
-      end;
-{
-  if not Windows.WriteFile(tCATPortHandle, Buffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten, pOver) then
-    if pOver <> nil then
-      if GetLastError = ERROR_IO_PENDING then
-      begin
-        Result := True;
-        Exit;
-      end;
-}
-   Result := nNumberOfBytesToWrite = lpNumberOfBytesWritten;
-{$IF NEWER_DEBUG}
-   if not (nNumberOfBytesToWrite in [3,6,7]) then
-      begin
-      DebugMsg('<<<<Exit WriteToCATPort');
-      end;
-{$IFEND}
-end;
+  So everything that hung off it was inert: WriteToCATPort's WriteFile always
+  failed, a bare `except` swallowed the failure, and the caller got a result
+  computed from an UNINITIALISED lpNumberOfBytesWritten. WriteBufferToCATPort
+  and SetK3ExtendedCommandMode (which had no caller of its own) went the same
+  way, and so did the paddle/foot-switch-over-control-port path, which read
+  modem status from the same never-open handle. *)
 
 // Effective data bits / parity / stop bits for this connection, in priority:
 //   1. 'RADIO n SERIAL FORMAT' (e.g. 8N2) when configured and valid;
@@ -1408,8 +1316,11 @@ begin
    ResolveSerialFrameSettings;
    SetUpRadioInterface;
 
-   if (tCATPortHandle <> INVALID_HANDLE_VALUE) or
-      (Self.tFactoryObject <> nil)                 then
+   { Was `(tCATPortHandle <> INVALID_HANDLE_VALUE) or (tFactoryObject <>
+     nil)`. The first half could never be true -- see the note further down --
+     so a radio with no factory object never started a polling thread, and
+     still does not. }
+   if Self.tFactoryObject <> nil then
       begin
       if PollingEnable then
          begin
@@ -1538,9 +1449,13 @@ begin
         Serial CAT framing must be byte-exact: a CI-V or Yaesu-binary command
         corrupted by a string conversion fails silently.  Converting this to a
         `string` would be the wrong direction. }
-      WriteToCATPort(PAnsiChar(@CommandsTempBuffer[1])^, Ord(CommandsTempBuffer[0]) - 1);   // lint:wide-ok
-      // TLogger.GetInstance.Debug('Entering sleep(250)');
-      Sleep(250);
+      (* THE WRITE THAT STOOD HERE WENT TO THE LEGACY CAT PORT, which is
+        never open -- see the note by WriteBufferToCATPort. A radio that
+        reaches this line has no factory driver, so there is nothing to send
+        through; say so rather than sleep 250 ms pretending. *)
+      logger.Error('[%s] AddCommandToBuffer: polling is disabled and this radio '
+                   + 'has no factory driver -- %d command byte(s) discarded.',
+                   [RadioName, Ord(CommandsTempBuffer[0]) - 1]);
       // TLogger.GetInstance.Debug('Returning from sleep(250)');
       // TLogger.GetInstance.Debug('Leaving AddCommandToBuffer via Exit');
       Exit;
@@ -2658,7 +2573,6 @@ begin
 
       TempRadio.RadioNumberBits := 8;
       TempRadio.RadioStopBits  := 2;
-      TempRadio.tCATPortHandle := INVALID_HANDLE_VALUE;
 
       TempRadio.tKeyerPortHandle := INVALID_HANDLE_VALUE;
       TempRadio.tKeyerSerialPort := nil;

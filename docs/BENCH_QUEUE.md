@@ -3024,24 +3024,21 @@ still a decision about what the program is.
 
 Nothing here is a bench test. They need an answer, not a radio.
 
-- [ ] **The legacy CAT port: delete it, or keep the shell?**
-  `RadioObject.tCATPortHandle` is assigned in exactly ONE place in the whole
-  tree -- `logradio.pas`, `:= INVALID_HANDLE_VALUE` -- and **nothing opens it.**
-  No `CreateFile`, and none since the legacy radio path was deleted on
-  2026-08-02; every radio's serial link belongs to its factory driver.
+- [x] **The legacy CAT port -- DELETED 2026-09-08.**
+  NY4I: *"delete any unused legacy code including the CAT port."* Done:
+  `tCATPortHandle`, `WriteToCATPort`, `WriteBufferToCATPort`,
+  `SetK3ExtendedCommandMode` (no caller of its own), the two
+  `INVALID_HANDLE_VALUE` assignments, the polling-thread guard that tested it,
+  the four `uProcessCommand` fall-through arms (which now REPORT that a radio
+  has no factory driver), and the paddle/foot-switch-over-control-port path in
+  `LogCfg`, `uLPTForm` and `logk1ea`.
 
-  So `WriteToCATPort` has never written to anything: the `WriteFile` failed, a
-  bare `except` swallowed it, and the caller got a result computed from an
-  **uninitialised** `lpNumberOfBytesWritten`. It now logs an error and returns
-  False instead (2026-09-08). Its four callers in `uProcessCommand` reach it
-  only when a radio has no factory object AND is not an Icom.
-
-  Also on that handle: `LogCfg.pas:286` compares it, and `logk1ea.pas` calls
-  `GetCommModemStatus` on it twice -- both always take the not-open path.
-
-  **The question:** delete `tCATPortHandle`, `WriteToCATPort`,
-  `WriteBufferToCATPort` and those five call sites outright? It is ~60 lines
-  and would take `GetCommModemStatus` off `logk1ea` with it.
+  **The last of those was worse than dead:** it read the modem status lines
+  with `GetCommModemStatus` on the never-open handle, so the call failed and
+  left `TempCardinal` **uninitialised** -- the foot-switch and paddle tests ran
+  against whatever was on the stack. `USE CONTROL PORT` now logs one line
+  saying the control port cannot supply them, once per run rather than once per
+  poll.
 
 - [ ] **The Icom LAN transport sends through `ws2_32.dll` ON PURPOSE, and it is
       the last thing keeping `uIcomNetworkTransport` on Windows.**
@@ -3064,21 +3061,17 @@ Nothing here is a bench test. They need an answer, not a radio.
   (`GetTickCount`, a thread wait, `Sleep`) and converts in an afternoon once
   this is decided -- doing that first would be churn on unproven code.
 
-- [ ] **`FindDirectory` hunts for DOS TR files and has always returned ''.**
-  `FoundDirectory` in `tree.pas` called `FindFirstFileW` and then tested a
-  local string that NOTHING assigns -- the line that filled it is commented out
-  and marked "wli", from the DOS-to-Windows port -- so it always took `Exit`.
-  It also leaked a find handle per existing file, because `FindFirstFileW`
-  returns a search handle and nothing ever called `FindClose`. The body is now
-  `Result := False`, which is what it always computed.
+- [x] **`FoundDirectory` / `FindDirectory` -- DELETED 2026-09-08.**
+  NY4I: *"Yes to deleting the founddirectry and finddirectry and calling
+  branches."* Both routines are gone from `tree.pas`, with
+  `help.CheckForName` (which had no caller of its own) and the else-arm of
+  `logname.NameDictionary.Init`, which now assigns `''` outright because that
+  is what those calls always produced.
 
-  Its callers look for `name.dat`, `TR.EXE`, `TR.OVR` (`help.pas`) and
-  `NAMES.CMQ` (`logname.pas`) -- DOS TR files -- and have been taking the
-  not-found path for years. `help.pas`'s path `WriteLn`s to a console and calls
-  `halt`.
-
-  **The question:** delete `FoundDirectory` / `FindDirectory` and the branches
-  that call them?
+  Two independent reasons it could never return anything else, either
+  sufficient: `FoundDirectory` tested a local string nothing assigns, and
+  `FindDirectory`'s third branch had its condition commented out but not its
+  body, so it returned unconditionally before reaching the four below it.
 
 ---
 

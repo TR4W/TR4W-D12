@@ -199,8 +199,12 @@ begin
     TSerialPort.
 
     So this closes the KEYER port and nothing else, which is the only thing
-    that table has ever legitimately held. *)
-  CATWTR^.tCATPortHandle := INVALID_HANDLE_VALUE;
+    that table has ever legitimately held.
+
+    AND THE LAST LINE OF IT IS GONE TOO (2026-09-08): tCATPortHandle was
+    assigned here and in one other place, both to INVALID_HANDLE_VALUE, and
+    nothing ever opened it. The field and everything that read it are deleted;
+    see the note in logradio. *)
 
   {Close Keyer Port}
   if CATWTR^.tKeyerPort in SerialPorts then
