@@ -133,10 +133,17 @@ fi
 #     lcl/units/x86_64-linux/gtk2/      the interface for ONE widget set
 #
 # The first alone gets you a long way -- far enough to compile most of TR4W --
-# and then something fails on a unit that looks unrelated. Override with
-# LCL_WIDGETSET if this box has qt5 and not gtk2; gtk2 is the Lazarus default
-# and is what a distro package installs.
-WS="${LCL_WIDGETSET:-gtk2}"
+# and then something fails on a unit that looks unrelated.
+#
+# THE DEFAULT IS PER-PLATFORM, because the widget set IS the platform: cocoa on
+# macOS, gtk2 on Linux. Getting it wrong is not fatal -- the note below lists
+# what is actually present -- but a wrong default sends the reader looking for
+# a broken install rather than a wrong variable. Override with LCL_WIDGETSET
+# for a qt5 box.
+case "$TARGET" in
+   darwin) WS="${LCL_WIDGETSET:-cocoa}" ;;
+   *)      WS="${LCL_WIDGETSET:-gtk2}"  ;;
+esac
 
 if [ -n "$LCL" ] && [ -d "$LCL" ]; then
    FU="$FU -Fu$LCL"
