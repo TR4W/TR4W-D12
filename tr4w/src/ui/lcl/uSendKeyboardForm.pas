@@ -80,7 +80,7 @@ implementation
 {$R *.lfm}
 
 uses
-  Windows,
+  (* Windows: named, and used nowhere in this unit (2026-09-08). *)
   VC,             // RC_SENDINGCW, TC_SENDINGSSBWAVFILENAME, ControlAMode
   Tree,           // RemoveFirstString, GetRidOfPrecedingSpaces
   uConfigValues,  // Config.CWTone, Config.DVKEnable

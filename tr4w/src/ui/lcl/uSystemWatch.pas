@@ -59,7 +59,10 @@ uses
    DateUtils,  { MilliSecondsBetween }
    Forms,      { Screen }
 {$IFDEF WINDOWS}
-   Windows,    { GetDC, GetDeviceCaps -- see RefreshColourDepth }
+   LCLIntf,    { GetDC / GetDeviceCaps / ReleaseDC -- see RefreshColourDepth.
+                 The LCL declares all three, and BITSPIXEL is in LCLType, so
+                 each widget set answers for its own screen. }
+   LCLType,
 {$ENDIF}
    VC;         { tEightBitsPerPixel }
 
@@ -86,13 +89,13 @@ var
 {$ENDIF}
 begin
 {$IFDEF WINDOWS}
-   dc := Windows.GetDC(0);
+   dc := LCLIntf.GetDC(0);
    if dc <> 0 then
       begin
       try
-         tEightBitsPerPixel := Windows.GetDeviceCaps(dc, BITSPIXEL) <= 8;
+         tEightBitsPerPixel := LCLIntf.GetDeviceCaps(dc, BITSPIXEL) <= 8;
       finally
-         Windows.ReleaseDC(0, dc);
+         LCLIntf.ReleaseDC(0, dc);
       end;
       end;
 {$ENDIF}

@@ -33,8 +33,9 @@ uses
   uMults,
   LogEdit,
   PostUnit,
-  Windows,
-  Messages,
+  (* Windows was here for lstrlenA and a file CloseHandle, both of which
+    uAnsiStr -- already in this clause -- and the RTL answer; Messages declared
+    nothing (2026-09-08). *)
   LogStuff,
   LogDupe,
   LogWind,
@@ -147,8 +148,8 @@ begin
          // Save the server response for diagnostics
          if tOpenFileForWrite(h, GetScoresAnswerFileName) then
             begin
-            sWriteFile(h, GetScoresBuffer, lstrlenA(GetScoresBuffer));
-            CloseHandle(h);
+            sWriteFile(h, GetScoresBuffer, uAnsiStr.StrLen(GetScoresBuffer));
+            FileClose(h);   { a FILE handle -- tOpenFileForWrite above }
             end;
          ShowGetScoresStatus(TC_UPLOADEDSUCCESSFULLY);
          end
@@ -241,7 +242,7 @@ var
      WinAnsi was re-encoding text that is already the bytes to send. *)
    StrLCopy(GetScoresBuffer, PAnsiChar(sBody), High(GetScoresBuffer));
    logger.Debug('[MakePOSTRequestNew] %s', [GetScoresBuffer]);
-   Result := Windows.lstrlenA(GetScoresBuffer);
+   Result := uAnsiStr.StrLen(GetScoresBuffer);
    end;
 
 // ---------------------------------------------------------------------------

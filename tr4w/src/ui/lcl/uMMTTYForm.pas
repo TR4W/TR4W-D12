@@ -78,7 +78,12 @@ implementation
 {$R *.lfm}
 
 uses
-   Windows,           { MoveWindow / SendMessage -- the hosted RichEdit }
+{$IFDEF WINDOWS}
+   Windows,           { MoveWindow / SendMessage -- the hosted RichEdit.
+                        MMTTY is a separate WINDOWS program and RICHED32 is a
+                        Windows control, so this whole path is Windows by
+                        nature rather than by habit -- see HandleShow. }
+{$ENDIF}
    VC,                { tw_MMTTYWINDOW_INDEX }
    TF,                { CreateRichEdit }
    MainUnit,          { CloseTR4WWindow, RichEditOperation }
@@ -151,11 +156,18 @@ begin
       Exit;
       end;
 
-   { THE ONE UNAVOIDABLE ONE.  A foreign HWND is not a TControl, so the LCL
+   (* THE ONE UNAVOIDABLE ONE.  A foreign HWND is not a TControl, so the LCL
      cannot lay it out -- Align, Anchors and Parent all address TControls.  The
      SIZE comes from the LCL (ClientWidth/ClientHeight); only the placing of a
-     non-LCL child needs the API. }
+     non-LCL child needs the API.
+
+     GATED 2026-09-08 to match the block that creates the control. Off Windows
+     MMTTYRichEdit is 0 and the guard above has already returned, so this is
+     unreachable there -- but the uses clause is not, and a unit whose code is
+     gated while its imports are not can never compile elsewhere. *)
+{$IFDEF WINDOWS}
    Windows.MoveWindow(MMTTY.MMTTYRichEdit, 0, 0, ClientWidth, ClientHeight, True);
+{$ENDIF}
 end;
 
 { WHAT WM_DESTROY AND WM_NCDESTROY DID -- AND THE ORDER IS THE WHOLE POINT.

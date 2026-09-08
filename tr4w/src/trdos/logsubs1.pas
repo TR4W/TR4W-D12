@@ -33,7 +33,9 @@ uses
   utils_text,
   uTelnet,
   BeepUnit,
-  Windows,
+  (* Windows was here for Sleep alone, and this unit did not already have
+    SysUtils -- which is where the portable Sleep lives (2026-09-08). *)
+  SysUtils,
   //Country9,
   FCONTEST,
   CFGCMD,

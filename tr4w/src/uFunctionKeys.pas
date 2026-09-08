@@ -30,8 +30,12 @@ uses
   uGradient,
   TF,
   VC,
-  Windows,
-  Messages,
+  (* LCLIntf for GetKeyState and LCLType for VK_MENU / VK_CONTROL, not
+    Windows -- the LCL declares the call for every widget set and each one
+    answers for its own keyboard. Messages declared nothing. *)
+  LCLIntf,
+  LCLType,
+  Types,      { TPoint -- was the Windows unit's, and they are the same record }
 utils_text,
   uAltP,
   LogWind,
