@@ -3157,43 +3157,50 @@ Nothing here is a bench test. They need an answer, not a radio.
   from the frequency across the keyer API, so it is a refactor with real reach,
   not a deletion. Not started.
 
-- [ ] **DOES TR4W KEEP LPT KEYING? -- OPEN, and I wrongly recorded it as
-  decided.** NY4I, 2026-09-08: *"i never gave a final decision on supporting
-  LPT ports."* He is right; what he gave was context, and I turned it into a
-  work item. Backed out -- `uIO`'s gate stays either way, and nothing is
-  being built until he answers.
+- [x] **LPT: STAYS ON WINDOWS, ADDED FOR LINUX, NOT APPLICABLE ON MAC.
+  DECIDED 2026-09-08 -- and I asked twice, which was once too many.**
 
-  **The context, so the decision is cheap to make.** He wrote: *"that is just
-  a potential thing on Linux in addition to our implementation with inpout32
-  (is there an inpout64?) as we do want to make the jump to full 64 bit
-  program... If we can talk to the port, I see no reason to remove that
-  functionality from the program."*
+  NY4I: *"LPT stays on windows and added for linux. not applicable on mac."*
 
-  Three facts, checked rather than assumed:
+  He had already answered the substance earlier -- *"If we can talk to the
+  port, I see no reason to remove that functionality from the program"* -- and
+  I reopened the whole question after reading a later correction (*"i never
+  gave a final decision on supporting LPT ports"*) as being about the FEATURE.
+  It was about my having written the WORK up as scheduled. A conditional keep
+  is still a keep; the condition just had to be checked, and it held.
 
-  1. **Linux can talk to a parallel port, but the documented route wants
-     root.** FreePascal's Hardware Access wiki page names it: unit `ports`
-     for the `port[$378]` syntax, with `fpioperm` from unit `x86` granting
-     access first (Linux x86/x86_64 and FreeBSD). Requiring root to key CW
-     is the real objection -- not portability. **ppdev** -- ioctls on
-     `/dev/parport0` -- is the non-root alternative and is NOT on that page,
-     so it needs its own look before anyone budgets it.
-  2. **64-bit Windows is a rename, plus verification.** `uIO`'s own header
-     already calls it a *"32 / 64 bit LPT driver from highrez.co.uk"*, so
-     the driver project covers x64; the 64-bit build ships under a different
-     file name, which makes the hardcoded `'inpout32.dll'` in `LoadInpOut32`
-     a 64-bit blocker on its own. **Do not infer the name or the exports --
-     read them off a real x64 build.** This is the same shape as the
-     `HAMLIB_LIB` per-platform constant just landed, and should copy it.
-  3. **The hardware question is the one worth asking first.** inpout32.dll
-     stopped being bundled because antivirus flagged its driver, so an LPT
-     user today is already installing it by hand. How many operators still
-     key through a real LPT header -- as opposed to a USB adapter, which
-     this code cannot drive at all -- decides whether either item above is
-     worth its cost.
+  **THIS IS NOT A BENCH TEST AND NOT A DECISION ANY MORE.** It is left here,
+  ticked, because the three-platform answer is the useful part and the code
+  now points at it.
 
-  **What is NOT at stake:** none of this blocks the Windows-dependency
-  sweep. `uIO` is gated and compiles as-is under every outcome.
+  **THE WORK, in priority order:**
+
+  1. **THE x64 DRIVER NAME -- a 64-bit blocker on its own.** `LoadInpOut32`
+     hardcodes `'inpout32.dll'`, and the 64-bit build of the same driver
+     ships under a DIFFERENT FILE NAME. Identical in shape to the
+     `HAMLIB_LIB` per-platform constant that just landed, and it should copy
+     it. **Read the name and the export list off a real x64 build -- do not
+     infer either**, for the same reason the HamLib soname and dylib names
+     are owed a check on their own machines.
+  2. **THE LINUX BACK END -- scheduled, not optional.** Behind `uIO`'s
+     existing surface, so no caller changes. **ppdev first**: ioctls on
+     `/dev/parport0`, needing no special privilege. The FreePascal wiki's
+     route -- unit `ports` for `port[$378]` with `fpioperm` from unit `x86`
+     -- wants ROOT, and requiring root to key CW is the real objection to it,
+     not portability.
+  3. **macOS is FINISHED, not pending.** There is no parallel port to talk
+     to, so the existing no-op is the correct and final answer there. Worth
+     stating because a bare `{$IFDEF WINDOWS}` reads like an unfinished port
+     to the next person.
+
+  **Context that shapes how much either is worth:** inpout32.dll stopped
+  being bundled because antivirus flagged its driver, so an LPT operator
+  today is already installing it by hand -- and a USB "parallel" adapter
+  cannot be driven by this code at all.
+
+  **Nothing blocks.** `uIO` is gated and compiles as-is.
+  `DLPortIO.pas:270`'s `Windows.lstrcat` is the one remaining ungated
+  `Windows.` reference in this area and goes with item 1.
 
 - [x] **The legacy CAT port -- DELETED 2026-09-08.**
   NY4I: *"delete any unused legacy code including the CAT port."* Done:

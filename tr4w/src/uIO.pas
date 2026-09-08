@@ -54,9 +54,23 @@ uses
         own. Verify that name and its exports against a real x64 build
         before changing it -- do not infer either.
 
-    WHETHER TR4W KEEPS LPT KEYING AT ALL IS AN OPEN DECISION, and not one
-    this unit gets to settle: it is in BENCH_QUEUE.md awaiting NY4I. The
-    gate below is correct under every outcome, so nothing here blocks. *)
+    THE PLATFORM ANSWER, DECIDED 2026-09-08 (NY4I): "LPT stays on windows
+    and added for linux. not applicable on mac."
+
+      Windows  keeps inpout32 -- and needs the x64 name, since the 64-bit
+               build of that driver ships under a DIFFERENT file name and
+               the hardcoded one below is a 64-bit blocker on its own.
+      Linux    GETS A BACK END. Scheduled work, not a maybe. ppdev -- ioctls
+               on /dev/parport0 -- is the route to price first, because the
+               FPC wiki's `ports` + `fpioperm` alternative needs ROOT, and
+               requiring root to key CW is the real objection to it.
+      macOS    NOT APPLICABLE. No parallel port to talk to, so the no-op
+               below is the finished answer there, not a placeholder.
+
+    So this unit is not waiting to be deleted and not waiting for a decision.
+    It is waiting for a per-platform library name and a Linux back end, both
+    of which go BEHIND the surface below so no caller changes.
+    BENCH_QUEUE.md carries the detail. *)
   Windows,
 {$ENDIF}
   SysUtils;
