@@ -29,25 +29,33 @@ program logdump;
 {$APPTYPE CONSOLE}
 
 uses
-   Windows,
    SysUtils,
    VC in '..\..\src\VC.pas',
    uLogBinaryFile in '..\..\src\uLogBinaryFile.pas';
 
 var
+   (* THandle from SysUtils, not Windows -- FileCreate returns one on every
+     platform, and -1 (feInvalidHandle) is its failure value rather than
+     INVALID_HANDLE_VALUE. *)
    gOutHandle : THandle = 0;
    gOutToFile : Boolean = False;
 
 // --- output helpers -----------------------------------------------------
 
 procedure WriteOut(const s: string);
-var
-   bytesWritten : DWORD;
 begin
    if gOutToFile then
-      Windows.WriteFile(gOutHandle, PChar(s)^, Length(s), bytesWritten, nil)
+      begin
+      (* FileWrite, not Windows.WriteFile.  It returns the count directly
+        instead of through a var parameter, so the DWORD local goes with it.
+        A short write is not checked here for the same reason it was not
+        before: this is a diagnostic dump, and the caller has no recovery. *)
+      FileWrite(gOutHandle, s[1], Length(s));
+      end
    else
+      begin
       Write(s);
+      end;
 end;
 
 procedure WriteLnOut(const s: string);
@@ -316,12 +324,8 @@ begin
 
    if ParamCount = 2 then
       begin
-      gOutHandle := CreateFile(PChar(ParamStr(2)),
-                               GENERIC_WRITE,
-                               FILE_SHARE_READ,
-                               nil, CREATE_ALWAYS,
-                               FILE_ATTRIBUTE_NORMAL, 0);
-      if gOutHandle = INVALID_HANDLE_VALUE then
+      gOutHandle := FileCreate(ParamStr(2));
+      if gOutHandle = THandle(-1) then
          begin
          Writeln(ErrOutput, 'logdump: cannot create output file ',
                  ParamStr(2));
@@ -334,6 +338,8 @@ begin
       DumpLog(ParamStr(1));
    finally
       if gOutToFile then
-         CloseHandle(gOutHandle);
+         begin
+         FileClose(gOutHandle);
+         end;
    end;
 end.

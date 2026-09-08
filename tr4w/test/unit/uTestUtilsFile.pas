@@ -19,7 +19,7 @@ unit uTestUtilsFile;
 interface
 
 uses
-   SysUtils, Windows, uTR4WTestFramework, utils_file;
+   SysUtils, uTR4WTestFramework, utils_file;
 
 type
    TUtilsFileTests = class(TTestCase)
@@ -37,41 +37,55 @@ type
 
 implementation
 
+(* THE RTL'S FILE API, NOT WIN32'S -- and the substitution is not quite
+  one-for-one, so the differences are worth stating.
+
+    - GetTempPathW + GetTempFileNameW become GetTempFileName, which does
+      both.  The Win32 pair CREATED the file as a side effect; this does not,
+      so the write below has to create it -- which FileCreate does anyway.
+    - The failure value is -1 (feInvalidHandle), NOT INVALID_HANDLE_VALUE.
+      Those are the same bit pattern, but only one of them exists off Windows.
+    - FileRead RETURNS the count instead of filling a DWORD var, and returns
+      -1 on error where ReadFile returned False.  The test wants the count, so
+      a negative result must not become a Length.
+
+  What this test is FOR is unchanged: it asks for more bytes than were
+  written, so extra garbage at the tail shows up rather than being clipped. *)
 function TUtilsFileTests.RoundTrip(const s: AnsiString): AnsiString;
 var
-   tmpDir  : array[0..MAX_PATH] of Char;
-   tmpFile : array[0..MAX_PATH] of Char;
+   tmpFile : string;
    h       : THandle;
    buf     : AnsiString;
-   got     : DWORD;
+   got     : Integer;
 begin
    Result := '';
-   GetTempPathW(MAX_PATH, tmpDir);
-   GetTempFileNameW(tmpDir, 'tr4', 0, tmpFile);   // creates a unique temp file
+   tmpFile := GetTempFileName;
 
    // Write phase
-   h := CreateFileW(tmpFile, GENERIC_WRITE, 0, nil, CREATE_ALWAYS,
-                   FILE_ATTRIBUTE_TEMPORARY, 0);
-   Check(h <> INVALID_HANDLE_VALUE, 'temp file opened for write');
+   h := FileCreate(tmpFile);
+   Check(h <> THandle(-1), 'temp file opened for write');
    try
       sWriteFileFromString(h, s);
    finally
-      CloseHandle(h);
+      FileClose(h);
    end;
 
    // Read phase -- request more than we wrote so a length mismatch (extra
    // garbage bytes) would be visible, not silently clipped.
-   h := CreateFileW(tmpFile, GENERIC_READ, 0, nil, OPEN_EXISTING, 0, 0);
-   Check(h <> INVALID_HANDLE_VALUE, 'temp file opened for read');
+   h := FileOpen(tmpFile, fmOpenRead or fmShareDenyNone);
+   Check(h <> THandle(-1), 'temp file opened for read');
    try
       SetLength(buf, Length(s) + 64);
-      got := 0;
-      ReadFile(h, PAnsiChar(buf)^, Length(buf), got, nil);
+      got := FileRead(h, buf[1], Length(buf));
+      if got < 0 then
+         begin
+         got := 0;   // a read error is an empty result, not a negative length
+         end;
       SetLength(buf, got);
       Result := buf;
    finally
-      CloseHandle(h);
-      Windows.DeleteFileW(tmpFile);
+      FileClose(h);
+      SysUtils.DeleteFile(tmpFile);
    end;
 end;
 
