@@ -40,8 +40,16 @@ uses
   Forms,          { Application.QueueAsyncCall -- the warning is main-thread work }
   Dialogs,        { MessageDlg }
   SysUtils,
-  Registry
-  ,
+  (* Registry is WINDOWS-ONLY HERE, and gated with the one function that uses
+    it. FPC's fcl-registry does provide a Registry unit off Windows -- it
+    stores an XML file under the user's home -- but that is emphatically NOT
+    what this code wants: it reads the W32Time SERVICE's configuration out of
+    HKLM, which is a Windows service that does not exist elsewhere and whose
+    key an XML shim would never contain. Linking it would compile and then
+    read nothing, forever, in silence. *)
+{$IFDEF WINDOWS}
+  Registry,
+{$ENDIF}
   uTR4WStrings;
 
 procedure GetInt64AndSysTimeFromBuffer(BufPtr: Byte; var St: SYSTEMTIME);
@@ -138,15 +146,33 @@ begin
 end;
 
 
-// Returns the NTP server configured for Windows W32Time (from registry),
-// falling back to pool.ntp.org if not set.
+(* Returns the NTP server configured for Windows W32Time (from the registry),
+  falling back to pool.ntp.org if not set.
+
+  OFF WINDOWS THE REGISTRY HALF IS SKIPPED AND THE FALLBACK AT THE BOTTOM DOES
+  THE WORK -- Result stays '', so `if Result = '' then Result := NTP_SERVER`
+  hands back pool.ntp.org. That is already the behaviour on any Windows machine
+  where W32Time has no NtpServer value, so this is an existing, exercised path
+  rather than a new one.
+
+  WHAT IS NOT DONE, and is a real gap rather than an oversight: macOS and Linux
+  DO have a configured time server, and it is not read. macOS answers
+  `systemsetup -getnetworktimeserver`; Linux keeps it in
+  /etc/systemd/timesyncd.conf or /etc/ntp.conf depending on the daemon. Each is
+  a different mechanism, none of them a registry, so this wants a small
+  per-platform reader rather than a translation of the code below. Until then
+  an operator whose station syncs to a local NTP box gets pool.ntp.org, which
+  works but is not what they configured. *)
 function GetWindowsNTPServer: string;
 var
+{$IFDEF WINDOWS}
    reg: TRegistry;
+{$ENDIF}
    spacePos: integer;
    commaPos: integer;
 begin
    Result := '';
+{$IFDEF WINDOWS}
    reg := TRegistry.Create(KEY_READ);
    try
       reg.RootKey := HKEY_LOCAL_MACHINE;
@@ -161,6 +187,7 @@ begin
    finally
       reg.Free;
    end;
+{$ENDIF}
    // Multiple servers are space-separated; take the first
    spacePos := Pos(' ', Result);
    if spacePos > 0 then
