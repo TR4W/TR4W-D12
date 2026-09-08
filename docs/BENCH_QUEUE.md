@@ -1249,6 +1249,30 @@ now, and 21 of them store to `settings\tr4w.json` instead of `tr4w.ini`.
 - [ ] **Three station settings, set and restart:** `HOUR DISPLAY`,
   `RATE DISPLAY`, `DUPE CHECK SOUND`. Each should be a drop-down, take effect,
   and still be what you set after a restart. Before today none of that was true. [AGENT - I am changing these but do not see any evidence of a change on the main window]
+- [ ] **ACCENTED TEXT, IN A NON-ENGLISH CATALOGUE, AFTER TF.Format BECAME
+  PASCAL (2026-09-07). UNVERIFIED, AND I INTRODUCED THE DOUBT.**
+
+  73 call sites in 27 units pass `PAnsiChar(WinAnsi(TC_SOMETHING))` as the
+  FORMAT STRING to TF.Format. WinAnsi produces bytes in the machine ANSI code
+  page, which was exactly right while TF.Format was Win32 wsprintfA.
+
+  TF.Format is Pascal now, and uCFormat does `AnsiString(aFormat)` -- which
+  tags those cp1252 bytes with DefaultSystemCodePage, i.e. UTF-8, before
+  SysUtils.Format sees them. Whether the accented characters survive to the
+  screen is NOT something the corpus or the unit tests can see: this is UI
+  text, and the corpus compares ADIF and Cabrillo.
+
+  **This is the exact bug class WinAnsi was written for** -- NY4I saw
+  "Ultimo archivo de configuracion" with every accented letter doubled in
+  Spanish on 2026-08-27.
+
+  TO CHECK: run with a non-English catalogue (Spanish is the most complete)
+  and look at any status line built with TF.Format -- the rate display, the
+  QTC counter, the Telnet connect message. If they are mangled, the fix is
+  probably that WinAnsi is now the WRONG call at those sites and they should
+  pass the string straight through; that is a 73-site change and wants
+  deciding, not guessing.
+
 - [ ] **SERIAL NUMBER PADDING IS DECIDED, AND NOT YET BUILT (NY4I, 2026-09-07).**
 
   The exchange formatters pad serials with a fixed width -- `%03d` in
