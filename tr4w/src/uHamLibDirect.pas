@@ -5,21 +5,42 @@ unit uHamLibDirect;
 interface
 
 uses
-  (* Windows stood here and nothing in this unit needed it (2026-09-08). The
-    library is loaded through DynLibs (see the implementation uses) and
-    PEMachineOf reads the header with SysUtils' FileOpen / FileSeek /
-    FileRead, which are cross-platform.
-
-    WHAT IS STILL WINDOWS HERE IS THE MEANING, NOT THE SYNTAX: HAMLIB_DLL
-    names a .dll, and PEMachineOf asks a PE question that an ELF .so or a
-    Mach-O .dylib cannot answer. HamLib itself ships on all three. That is the
-    worked example in CLAUDE.md -- one constant and one probe, not a port --
-    and it is deliberately NOT guessed at here: the Linux soname and the macOS
-    dylib name get verified on those platforms, not invented on this one. *)
+  (* No Windows: the library loads through DynLibs and the header probe uses
+    SysUtils' FileOpen / FileSeek / FileRead. *)
   SysUtils;
 
 const
-  HAMLIB_DLL = 'libhamlib-4.dll';
+  (* THE LIBRARY TR4W SHIPS, BESIDE THE BINARY -- one name per platform.
+
+    NY4I, 2026-09-08: "the library is usually available to the program as an
+    .so file that has to be in the program directory when we install it."
+
+    So these are not guesses about what a distro happens to install; they are
+    the file names TR4W'S OWN INSTALLER PUTS beside the executable, and the
+    packaging must match them exactly. The forms below are hamlib's normal
+    versioned names on each platform.
+
+    WHY LOADING IT WORKS THE SAME EVERYWHERE, which is not obvious:
+    LocateHamLib resolves this to an ABSOLUTE path (program directory first --
+    see there), and LoadLibrary is given that path. dlopen() with a slash in
+    the name skips the loader's search list entirely and opens exactly that
+    file, so "beside the binary" behaves on Linux and macOS as it does on
+    Windows. The PATH fallback further down is the branch that does NOT
+    translate, and it is only a fallback.
+
+    WHAT IS STILL OWED IS PACKAGING, NOT CODE: hamlib has its own dependencies
+    (libusb and friends), and a dlopen'd library's dependencies are resolved by
+    the loader's normal search, which does NOT include the directory the
+    library was loaded from. The standard idiom is an $ORIGIN rpath on the
+    executable at link time so a bundled set resolves beside it. That belongs
+    in the Linux/macOS build and installer, not here. *)
+{$IF DEFINED(WINDOWS)}
+  HAMLIB_LIB = 'libhamlib-4.dll';
+{$ELSEIF DEFINED(DARWIN)}
+  HAMLIB_LIB = 'libhamlib.4.dylib';
+{$ELSE}
+  HAMLIB_LIB = 'libhamlib.so.4';
+{$IFEND}
 
 {-----------------------------------------------------------------------------
   Type Definitions
@@ -263,7 +284,7 @@ const
 (*
    HAMLIB IS LOADED ON DEMAND, NOT BY THE WINDOWS LOADER.
 
-   Every function below used to be declared `external HAMLIB_DLL`, which is a
+   Every function below used to be declared `external HAMLIB_LIB`, which is a
    STATIC import: FPC writes the name into the PE import table and Windows
    resolves it during process creation. Three consequences, none of them
    intended, all measured on 2026-09-05:
@@ -298,7 +319,7 @@ const
    that ensure the load themselves.
 
    CROSS-PLATFORM: only the NAME here is Windows. HamLib ships .so and .dylib,
-   so a port changes HAMLIB_DLL and nothing else -- see the helper-class note
+   so a port changes HAMLIB_LIB and nothing else -- see the helper-class note
    in CLAUDE.md.
 *)
 
@@ -327,7 +348,7 @@ function DescribeHamLibDll: string;
 // it has succeeded.
 //
 // It exists so that no other unit has to open the library itself. The driver
-// used to call LoadLibrary(HAMLIB_DLL) with a bare name to reach
+// used to call LoadLibrary(HAMLIB_LIB) with a bare name to reach
 // rig_set_debug_file, which is the same PATH search that produced the
 // 0xC000007B described above -- and could load a SECOND, different copy.
 function HamLibProcAddress(const aName: AnsiString): Pointer;
@@ -532,7 +553,7 @@ uses
   DynLibs;    // LoadLibrary/GetProcedureAddress that take a string and are not
               // Windows-specific. Preferred over the Win32 entry points: this
               // is the one place that knows how a shared library is opened, and
-              // on macOS or Linux only HAMLIB_DLL's value has to change.
+              // on macOS or Linux only HAMLIB_LIB's value has to change.
 
 var
   GHamLibModule : TLibHandle = NilHandle;
@@ -681,12 +702,12 @@ end;
 *)
 function LocateHamLib: string;
 begin
-   Result := DataFilePath(HAMLIB_DLL);
+   Result := DataFilePath(HAMLIB_LIB);
    if FileExists(Result) then
       begin
       Exit;
       end;
-   Result := FileSearch(HAMLIB_DLL, GetEnvironmentVariable('PATH'));
+   Result := FileSearch(HAMLIB_LIB, GetEnvironmentVariable('PATH'));
 
    // ALWAYS A FULL PATH. FileSearch answers relative to whatever entry matched
    // -- including the current directory, which it searches first -- and
@@ -734,7 +755,7 @@ begin
    if GHamLibPath = '' then
       begin
       GHamLibError := Format('%s was not found beside %s or anywhere on PATH.',
-                             [HAMLIB_DLL, ExtractFileName(ParamStr(0))]);
+                             [HAMLIB_LIB, ExtractFileName(ParamStr(0))]);
       Result := False;
       Exit;
       end;
@@ -847,7 +868,7 @@ begin
    path := LocateHamLib;
    if path = '' then
       begin
-      Result := Format('%s not found (no HamLib radio can be used)', [HAMLIB_DLL]);
+      Result := Format('%s not found (no HamLib radio can be used)', [HAMLIB_LIB]);
       Exit;
       end;
    found  := PEMachineOf(path);

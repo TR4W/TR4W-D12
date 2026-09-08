@@ -183,22 +183,35 @@ those programs do. I specifically do not want to use rigctld and prefer to bind
 the library. I will keep looking for a mac and linux app that does it that
 way."*
 
-So the work is the binding, and it is small -- `uHamLibDirect` already loads
-through `DynLibs`, resolves every entry point by name, and funnels all 36
-declarations through ONE constant. What is owed:
+**DONE, 2026-09-08: the name is per-platform.** NY4I settled the deployment
+model -- *"the library is usually available to the program as an .so file that
+has to be in the program directory when we install it"* -- so these are the
+files TR4W'S OWN INSTALLER ships beside the binary, not guesses about what a
+distro provides. `HAMLIB_DLL` is `HAMLIB_LIB`; the packaging must match the
+names exactly.
 
-- `HAMLIB_DLL` becomes a per-platform constant, and **the Linux soname and the
-  macOS dylib name must be read off those machines** (`ldconfig -p | grep
-  hamlib`, `otool -L`). Do not infer them: hamlib installs versioned names, and
-  `SharedSuffix` alone produces neither. Rename it `HAMLIB_LIB` while there --
-  `_DLL` is the Windows assumption written into the identifier.
+**And the loading already works the same on all three platforms**, which
+corrects a caution written earlier the same day. `LocateHamLib` resolves the
+name to an ABSOLUTE path -- program directory first -- and `LoadLibrary` is
+given that path. `dlopen()` with a slash in the name skips the loader's search
+list and opens exactly that file, so "beside the binary" behaves on Linux and
+macOS as it does on Windows. The `PATH` fallback is the branch that does not
+translate, and it is only a fallback.
+
+What is still owed, and it is **packaging rather than code**:
+
+- **An `$ORIGIN` rpath on the executable at link time.** Hamlib has its own
+  dependencies (libusb and friends), and a dlopen'd library's dependencies are
+  resolved by the loader's normal search, which does NOT include the directory
+  the library was loaded from. NY4I: *"whatever the best and typical way it is
+  done on linux. no need to reinvent the wheel"* -- and `$ORIGIN` is that
+  idiom. Note it wants `DT_RPATH` rather than `DT_RUNPATH` to cover a dlopen'd
+  library's dependencies, which on modern binutils means passing
+  `--disable-new-dtags`. Verify with `ldd` on the shipped tree.
 - `PEMachineOf` becomes Windows-only behind a neutral name. It already fails
   SAFE off Windows -- an ELF or Mach-O file misses the PE signature, so it
-  returns 0 ("unknown") and lets the load report the real error -- which means
-  a second file-format parser would buy nothing but a better message.
-- `LocateHamLib` searches `PATH`, which is not how a Unix loader finds a
-  library. Decide between shipping a bundled copy and letting the platform
-  loader resolve a bare name.
+  returns 0 ("unknown") and lets the load report the real error -- so a second
+  file-format parser would buy nothing but a better message.
 
 ## What the sweep corrected about ITSELF
 
