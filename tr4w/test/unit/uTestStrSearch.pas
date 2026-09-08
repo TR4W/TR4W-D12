@@ -24,7 +24,18 @@ unit uTestStrSearch;
 interface
 
 uses
-   SysUtils, uTR4WTestFramework, uStrSearch;
+   (* uAnsiStr IS THE POINT, AND IT WAS MISSING (2026-09-08).
+
+     Without it `StrPos` here resolved to SYSUTILS' StrPos -- the RTL's -- and
+     not to TR4W's own in uAnsiStr, which is the one the program actually
+     calls. So this suite has been testing a function TR4W does not use, and
+     passing, which is worse than not testing it.
+
+     A NATIVE LINUX RUN IS WHAT EXPOSED IT: Test_StrPos_EmptyPattern expected
+     -1 and got 3, because the RTL's answer for an empty needle differs
+     between the two platforms while TR4W's own is fixed by its own code. On
+     Windows the RTL happened to agree with the assertion, so nothing showed. *)
+   SysUtils, uTR4WTestFramework, uStrSearch, uAnsiStr;
 
 type
    TStrSearchTests = class(TTestCase)
@@ -153,9 +164,20 @@ procedure TStrSearchTests.Test_StrPos_EmptyPattern;
 var s: PAnsiChar;
 begin
    BeginTest('Test_StrPos_EmptyPattern');
-   // The asm returns nil for an empty pattern (len(str2)=0 -> JE @@2).
+   (* AN EMPTY NEEDLE OCCURS AT OFFSET 0, and that is TR4W's own deliberate
+     behaviour rather than an accident of whichever StrPos is in scope.
+     uAnsiStr.StrPos says so at the site: "An empty needle occurs at the very
+     start. This matches the RTL, and it matters: a caller that searches for a
+     value it did not set would otherwise get nil and take the 'not found'
+     branch."
+
+     THIS ASSERTION USED TO EXPECT -1, describing the hand-written asm that
+     was replaced ("len(str2)=0 -> JE @@2"). It went on passing because it was
+     resolving SysUtils' StrPos, not ours -- see the uses clause. So the test
+     pinned dead behaviour in a function the program does not call. *)
    s := 'ABC';
-   CheckEquals(-1, Off(s, StrPos(s, '')), 'StrPos empty pattern -> nil');
+   CheckEquals(0, Off(s, uAnsiStr.StrPos(s, '')),
+               'an empty needle is found at the start');
 end;
 
 procedure TStrSearchTests.Test_StrPos_PatternLongerThanText;

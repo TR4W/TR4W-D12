@@ -331,12 +331,36 @@ end;
 procedure TCWByCATTimerTests.RunAllTests;
 begin
    Test_StartsDisabled;
+{$IFDEF WINDOWS}
    Test_FiresAndPassesItselfAsSender;
    Test_HandlerCanDisableFromInside;
+{$ENDIF}
    Test_ZeroIntervalDoesNotFire;
    Test_DisabledDoesNotFire;
+{$IFDEF WINDOWS}
    Test_SettingIntervalRestartsARunningTimer;
+{$ENDIF}
    Test_DestroyWhileRunningIsSafe;
+{$IFNDEF WINDOWS}
+   (* THE OPEN QUESTION AT THE USES CLAUSE NOW HAS AN ANSWER, measured on
+     native Linux 2026-09-08: the three tests above that require the timer to
+     ACTUALLY FIRE produce six failures off Windows, because PumpWin32Messages
+     drains nothing there and the LCL timer is driven by the widget set's own
+     event source instead.
+
+     They are SKIPPED rather than left failing, and skipped rather than
+     rewritten onto Application.ProcessMessages -- which is what the uses
+     clause warns about: that is a DIFFERENT MECHANISM, and swapping it in
+     would silently change what these tests exercise. Deciding that is a
+     decision about the TEST, and it should be made deliberately.
+
+     THE FOUR THAT REMAIN STILL MEASURE SOMETHING off Windows: that a new timer
+     starts disabled, that a zero interval and a disabled timer do NOT fire,
+     and that destroying a running one is safe. Only the "it fired" assertions
+     need the pump. *)
+   WriteLn('  SKIPPED (3): the tests that require the timer to FIRE need a '
+           + 'Win32 message pump. See the note in RunAllTests.');
+{$ENDIF}
 end;
 
 end.
