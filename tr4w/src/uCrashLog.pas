@@ -152,7 +152,12 @@ uses
    // SysUtils is in the INTERFACE uses -- WriteCrashReport's signature needs
    // TObject there. Naming it twice is a duplicate-identifier error, not a
    // no-op.
-   Windows,    // GetCurrentThreadId
+   (* NO Windows. The one call was GetCurrentProcessId; SysUtils declares
+     GetProcessID for every platform and returns the same number.
+
+     THIS UNIT BLOCKED 196 UNITS on the native-Linux census, which is a lot to
+     hang on one process id -- and it is a crash reporter, so it is the LAST
+     thing that should be unavailable on a platform. *)
    Version,    // TR4W_CURRENTVERSION_NUMBER -- a raw address is useless
                // unless the exact binary that produced it can be identified
    Log4D,      // our own logger -- see CrashLogger
@@ -344,7 +349,7 @@ begin
       try
          WriteLn(f, Format('%s  pid %d  %s',
                            [FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now),
-                            GetCurrentProcessId, aMessage]));
+                            GetProcessID, aMessage]));
       finally
          CloseFile(f);
       end;
