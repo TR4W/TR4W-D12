@@ -256,7 +256,8 @@ uses
    // Windows, not Winapi.Windows: the rest of the tree spells it the short way
    // and qualifies calls as Windows.<fn>, which only resolves if the unit is
    // named that way here too.
-   Windows,
+   Classes,   (* TStringList -- ReadSectionValues fills one; see the band plan seed *)
+   LCLType,   (* MAXWORD -- the only other thing Windows was here for *)
    StrUtils,   // StartsText -- KeySuffix
    VC,
    uCFG,
@@ -823,8 +824,10 @@ end;
 procedure SeedBandPlanFromIni(const aStore: TRadioConfigStore);
 var
    buf: array[0..8191] of AnsiChar;
-   n, i, start, freq, err: integer;
+   i, freq, err: integer;
    line, key, value: string;
+   ini: TIniFile;
+   lines: TStringList;
    band: BandType;
    mode: ModeType;
    vCutoff, vCW, vSSB: array[BandType] of integer;   // v- prefixed: a local named cw would SHADOW the CW member of ModeType
@@ -836,21 +839,39 @@ begin
       Exit;
       end;
 
-   // GetPrivateProfileSectionA, not TIniFile.  [BAND PLAN] has REPEATED keys --
-   // twelve `BAND MAP CUTOFF FREQUENCY=` lines and up to twenty-four
-   // `FREQUENCY MEMORY=` ones -- and a TIniFile collapses duplicates, so it
-   // would read one of each and silently drop the rest.  This is the exact
-   // counterpart of the WritePrivateProfileSectionA that used to write it.
-   FillChar(buf, SizeOf(buf), 0);
-   (* @TR4W_INI_FILENAME[0], not a conversion of it. It is a FileNameType --
-     array[0..MAX_PATH-1] of AnsiChar -- so WinAnsi was widening bytes to
-     UTF-16 and narrowing them straight back, which can only lose. *)
-   n := Windows.GetPrivateProfileSectionA('BAND PLAN', @buf[0], SizeOf(buf),
-                                          @TR4W_INI_FILENAME[0]);
-   if n = 0 then
-      begin
-      Exit;
+   (* TIniFile.ReadSectionValues, AND THE OLD REASON NOT TO IS MEASURED FALSE.
+
+     The note above says a TIniFile "collapses duplicates, so it would read one
+     of each and silently drop the rest" -- which matters here, because this
+     section legitimately carries twelve BAND MAP CUTOFF FREQUENCY lines and up
+     to twenty-four FREQUENCY MEMORY ones under the same two key names.
+
+     That is true of DELPHI's TIniFile, which is where this code came from. It
+     is NOT true of FPC's: a probe against a fixture with three identical keys
+     returned all three, in order, plus the fourth distinct key
+     (2026-09-08). So the duplicates survive -- PROVIDED the caller ITERATES
+     the returned list, as the loop below does, rather than asking for
+     Values['...'], which would still answer with the first.
+
+     That distinction is the whole reason this is safe, so it is written down
+     rather than left to be rediscovered by whoever "simplifies" the loop into
+     a Values lookup. *)
+   lines := TStringList.Create;
+   try
+      { AnsiString, not string: the FCL's IniFiles is compiled with 8-bit
+        strings, and TR4W_INI_FILENAME is already AnsiChar -- so a `string`
+        cast widens to UTF-16 and narrows straight back, which can only lose. }
+      ini := TIniFile.Create(AnsiString(PAnsiChar(@TR4W_INI_FILENAME[0])));
+      try
+         ini.ReadSectionValues('BAND PLAN', lines);
+      finally
+         ini.Free;
       end;
+
+      if lines.Count = 0 then
+         begin
+         Exit;
+         end;
 
    for band := Low(BandType) to High(BandType) do
       begin
@@ -859,22 +880,10 @@ begin
       vSSB[band]    := 0;
       end;
 
-   // The buffer is a run of null-terminated "key=value" strings ending in a
-   // second null.
-   start := 0;
-   for i := 0 to n do
+   { One 'key=value' per entry now, in file order, duplicates and all. }
+   for i := 0 to lines.Count - 1 do
       begin
-      if buf[i] <> #0 then
-         begin
-         Continue;
-         end;
-      if i = start then
-         begin
-         Break;      // the second null: end of section
-         end;
-
-      line  := string(AnsiString(PAnsiChar(@buf[start])));
-      start := i + 1;
+      line := lines[i];
 
       if Pos('=', line) = 0 then
          begin
@@ -918,6 +927,9 @@ begin
             end;
          end;
       end;
+   finally
+      lines.Free;
+   end;
 
    for band := Low(BandType) to High(BandType) do
       begin

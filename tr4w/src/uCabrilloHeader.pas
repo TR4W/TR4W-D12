@@ -125,7 +125,8 @@ procedure ReadIniSection(const aSection: string; const aInto: TStringList);
 var
    ini: TIniFile;
 begin
-   ini := TIniFile.Create(string(PAnsiChar(@TR4W_INI_FILENAME[0])));
+   { AnsiString, not string -- see the same note in uRadioConfigApply. }
+   ini := TIniFile.Create(AnsiString(PAnsiChar(@TR4W_INI_FILENAME[0])));
    try
       ini.ReadSectionValues(aSection, aInto);
    finally

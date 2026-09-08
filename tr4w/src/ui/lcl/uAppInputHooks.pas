@@ -44,7 +44,8 @@ implementation
 uses
    uWindowTable,   { tr4w_WindowsArray, tWindowsExist -- moved out of VC/TF }
   Classes, SysUtils, StrUtils, Forms, Controls, LCLType, LMessages,
-  Windows,          { GetKeyState -- see the note on TelnetHasFocus }
+  LCLIntf,          { GetKeyState -- the LCL declares it for every widget set,
+                      and each one answers for its own keyboard }
   uMainThread,      { RunOnMainThread -- the accelerator runs deferred }
   uMainWindowProc,  { DispatchCommandId -- the one command dispatch }
   uAccelerators,    { ACCELERATORS -- the one table }

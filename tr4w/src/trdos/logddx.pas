@@ -26,7 +26,7 @@ interface
 uses
   uConfigValues, {Dos, Printer, } Tree,
   VC,
-  Windows,
+  (* Windows was here for Sleep alone; SysUtils declares it (2026-09-08). *)
   Country9,
   ZoneCont,
   LogSCP,

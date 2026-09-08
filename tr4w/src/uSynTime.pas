@@ -30,14 +30,16 @@ uses
   TF,
 //  tr4wutils,
 utils_net,
-  Windows,        { GetSystemTime for T1/T4 -- see the note on NTPStartupCheck }
+  (* Windows is gone (2026-09-08): GetSystemTime for T1/T4 and
+    FileTimeToSystemTime for the NTP reply both go through TDateTime now --
+    see SystemTimeFromDateTime. *)
+  DateUtils,
   Tree,
   uNet,
   IdUDPClient,    { the NTP query -- Indy, not WinSock }
   IdGlobal,       { TIdBytes }
   Forms,          { Application.QueueAsyncCall -- the warning is main-thread work }
   Dialogs,        { MessageDlg }
-  Messages,
   SysUtils,
   Registry
   ,
@@ -72,12 +74,29 @@ const
 
 
 
+(* A TDateTime INTO VC's SYSTEMTIME.
+
+  SysUtils.DateTimeToSystemTime exists and CANNOT be used here: its
+  TSystemTime orders the fields Year, Month, Day, DayOfWeek where Win32 -- and
+  therefore VC's SYSTEMTIME, which is on the wire between stations -- orders
+  them wYear, wMonth, wDayOfWeek, wDay. Substituting it would silently swap the
+  day and the day-of-week. VC's own declaration says so at length; this is that
+  warning applied.
+
+  wDayOfWeek is filled because the Win32 calls this replaces filled it. Win32
+  numbers from 0 = Sunday, SysUtils.DayOfWeek from 1. *)
+procedure SystemTimeFromDateTime(const aWhen: TDateTime; var St: SYSTEMTIME);
+begin
+   DecodeDateTime(aWhen, St.wYear, St.wMonth, St.wDay,
+                  St.wHour, St.wMinute, St.wSecond, St.wMilliseconds);
+   St.wDayOfWeek := DayOfWeek(aWhen) - 1;
+end;
+
 procedure GetInt64AndSysTimeFromBuffer(BufPtr: Byte; var St: SYSTEMTIME);
 const
   t                                     = {4311810304;} $0101010101;
 var
-
-  TEMPFILETIME                          : FILETIME;
+  dt                                    : TDateTime;
   t64                                   : int64;
   Sec                                   : int64;
   msec                                  : int64;
@@ -96,11 +115,26 @@ begin
 
   msec := round((msec / t) * 1000);
 
+  { t64 is 100-nanosecond units since 1601-01-01 -- the FILETIME epoch. The
+    9435484800 is the seconds between 1601-01-01 and 1900-01-01, which is where
+    the NTP timestamp above starts. }
   t64 := (msec + Sec * 1000) * 10000 + 9435484800 * 10000000;
-  TEMPFILETIME := FILETIME(t64);
-  Windows.FileTimeToSystemTime(TEMPFILETIME, St);
 
-  //9435484800-���-�� ������ ����� 1.1.1900 � 1.1.1601
+  (* THE SAME ARITHMETIC, WITHOUT THE WINDOWS CALL. Was
+    FILETIME(t64) + Windows.FileTimeToSystemTime.
+
+    864000000000 is the number of 100ns units in a day, and 109205 is the days
+    from the FILETIME epoch (1601-01-01) to the TDateTime epoch (1899-12-30).
+    That constant is not folklore: FILETIME for 1970-01-01 is
+    116444736000000000, which divided by 864000000000 is 134774, and
+    134774 - 109205 = 25569 -- the TDateTime for 1970-01-01. Checked both ways
+    before it was written down.
+
+    wDayOfWeek is filled because FileTimeToSystemTime filled it, and a caller
+    reading it would otherwise get a stale zero. Win32 numbers from 0 = Sunday
+    and SysUtils.DayOfWeek from 1. *)
+  dt := (t64 / 864000000000.0) - 109205.0;
+  SystemTimeFromDateTime(dt, St);
 
 end;
 
@@ -241,10 +275,11 @@ begin
       pkt[0] := 27;   // LI=0, VN=3, Mode=3 -- an NTP client request
 
       try
-         Windows.GetSystemTime(t1);
+         { UTC now, without the Windows call -- see SystemTimeFromDateTime. }
+   SystemTimeFromDateTime(LocalTimeToUniversal(Now), t1);
          udp.SendBuffer(pkt);
          got := udp.ReceiveBuffer(pkt, 2000);
-         Windows.GetSystemTime(t4);
+         SystemTimeFromDateTime(LocalTimeToUniversal(Now), t4);
       except
          on E: Exception do
             begin
