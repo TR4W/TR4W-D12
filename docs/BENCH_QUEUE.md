@@ -3057,6 +3057,55 @@ the first places to look:
 The transfer still ends on **two seconds of silence or a close**, exactly as
 the old 2000 ms wait did -- there is no framing past the size field.
 
+## 2026-09-08 -- THE RADIO FACTORY TESTER DOES NOT COMPILE, AND HAS NOT FOR A WHILE
+
+**Found by the Windows-dependency sweep, and it is a bench-work problem rather
+than a portability one** -- which is why it is here and not in the sweep doc.
+
+`tr4w/test/RadioFactoryTester.lpr` + `uTestMain.pas` + `uTestMain.dfm` is an
+interactive harness for driving radio commands at real hardware. **NO BUILD
+SCRIPT IN THIS TREE BUILDS IT** -- it is in no `.lpi`, no `.ps1`, and no CI
+step -- so nothing has told anyone it stopped working.
+
+**Compiled by hand on 2026-09-08 it fails with 11 errors**, and they are drift
+against the factory it is supposed to test:
+
+```
+uTestMain.pas(378,8)  Wrong number of parameters for "CreateRadioNetwork"
+uRadioFactory.pas(104) Found declaration:
+                       CreateRadioNetwork(InterfacedRadioType; UnicodeString; LongInt)
+uTestMain.pas(768,19) Identifier not found "rb20m"
+uTestMain.pas(774,19) Identifier not found "rb40m"
+```
+
+So the signature it calls has changed and the band enum members it names no
+longer exist. It is also a **DELPHI VCL FORM with a `.dfm`**, not an `.lfm`,
+which is the other half of why it cannot come back cheaply.
+
+**WHY THIS MATTERS MORE THAN AN UNCOMPILED FILE USUALLY WOULD:** it is a
+RADIO test harness. The bench work is the one thing CI cannot buy (the runner
+proves the tree builds, not that a radio keys), so an operator sitting down
+with a rig is exactly the person who would reach for this -- and lose an hour
+discovering it has rotted.
+
+**THE DECISION IS NY4I'S, and there are three real options:**
+
+1. **DELETE IT.** This is the same shape as the FMX twins, which CLAUDE.md
+   records were deleted precisely because they were "units no build compiled,
+   and they had already drifted". The precedent is established and the
+   argument is the same one.
+2. **FIX AND BUILD IT.** Three call-site errors is not much work, but the
+   `.dfm` has to become an `.lfm` and it needs a build script, or it will rot
+   again the same way -- which is the real cost, not the eleven errors.
+3. **LEAVE IT AND SAY SO IN THE FILE.** Cheapest, and only acceptable if the
+   header states plainly that it does not build, so the next person finds out
+   in ten seconds instead of an hour.
+
+**Nothing blocks on this** -- it is not in any build, so it cannot break one.
+It stays out of the Windows-dependency sweep's count for the same reason: an
+ungated `uses Windows, Messages` in a file no compiler reads is not a
+portability problem yet.
+
 ## 2026-09-08 -- peeling MainUnit for a Linux compile: DECISIONS OWED
 
 Compiling `MainUnit.pas` for x86_64-linux, unit by unit, to find what still

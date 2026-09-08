@@ -31,13 +31,23 @@ unit uTestCWByCATTimer;
 interface
 
 uses
-   (* WINDOWS AND MESSAGES STAY, measured 2026-09-08: this harness pumps a real
-     message loop -- TMsg, PeekMessage, TranslateMessage, DispatchMessage -- so
-     that the LCL TTimer under test can actually fire. The portable equivalent
-     is Application.ProcessMessages, but swapping the pump changes what the test
-     exercises, and that is a decision about the TEST rather than a portability
-     fix. The clock in it is GetTickCount64 now. *)
-   Windows, Messages, SysUtils, Classes,
+   (* WINDOWS AND MESSAGES STAY, AND ARE GATED (2026-09-08).
+
+     This harness pumps a REAL message loop -- TMsg, PeekMessage,
+     TranslateMessage, DispatchMessage -- so that the LCL TTimer under test
+     can actually fire. Off Windows a timer is the widget set's own source, so
+     Application.ProcessMessages is a DIFFERENT MECHANISM rather than another
+     spelling of this one, and swapping it in would quietly change what the
+     test exercises. That is a decision about the TEST, not a portability fix,
+     so the {$ELSE} says so out loud rather than guessing.
+
+     The clock in it is GetTickCount64. The pump itself is now one routine --
+     see PumpWin32Messages -- because it had been copied into two tests, which
+     is how the two copies come to disagree later. *)
+{$IFDEF WINDOWS}
+   Windows, Messages,
+{$ENDIF}
+   SysUtils, Classes,
    uTR4WTestFramework, ExtCtrls;
 
 type
@@ -64,6 +74,30 @@ type
 
 implementation
 
+(* DRAIN THE MESSAGE QUEUE ONCE. The two tests that need it had a copy each,
+  which is the arrangement where one of them later gains a fix and the other
+  does not.
+
+  Off Windows this does nothing AND THAT IS NOT A STUB: there is no Win32
+  queue to drain, the LCL timer is driven by the widget set's own event
+  source, and the Sleep in each caller's loop is what lets it run. Whether
+  these tests then measure anything useful is the open question recorded at
+  the uses clause -- not something this routine can paper over. *)
+procedure PumpWin32Messages;
+{$IFDEF WINDOWS}
+var
+   msg: Windows.TMsg;
+{$ENDIF}
+begin
+{$IFDEF WINDOWS}
+   while PeekMessage(msg, 0, 0, 0, PM_REMOVE) do
+      begin
+      TranslateMessage(msg);
+      DispatchMessage(msg);
+      end;
+{$ENDIF}
+end;
+
 procedure TCWByCATTimerTests.HandleTimer(Sender: TObject);
 begin
    Inc(FFired);
@@ -82,16 +116,11 @@ var
      Two live units had that defect (uExternalLoggerBase, logsubs2) -- a
      harness that lies the same way would hide a real timeout. }
    started: QWord;
-   msg: TMsg;
 begin
    started := GetTickCount64;
    while (FFired < wanted) and (GetTickCount64 - started < budgetMs) do
       begin
-      while PeekMessage(msg, 0, 0, 0, PM_REMOVE) do
-         begin
-         TranslateMessage(msg);
-         DispatchMessage(msg);
-         end;
+      PumpWin32Messages;
       Sleep(1);
       end;
    Result := GetTickCount64 - started;
@@ -276,7 +305,6 @@ end;
 procedure TCWByCATTimerTests.Test_DestroyWhileRunningIsSafe;
 var
    t: TTimer;
-   msg: TMsg;
    i: integer;
 begin
    BeginTest('Test_DestroyWhileRunningIsSafe');
@@ -294,11 +322,7 @@ begin
 
    for i := 1 to 50 do
       begin
-      while PeekMessage(msg, 0, 0, 0, PM_REMOVE) do
-         begin
-         TranslateMessage(msg);
-         DispatchMessage(msg);
-         end;
+      PumpWin32Messages;
       Sleep(1);
       end;
    CheckEquals(0, FFired, 'no callback after Free');
