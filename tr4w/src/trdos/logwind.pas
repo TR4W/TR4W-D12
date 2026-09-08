@@ -32,6 +32,7 @@ utils_text,
   uCTYDAT,
   uCallsigns,
   TF,
+  DateUtils,   (* IncMinute / LocalTimeToUniversal / HourOf -- DisplayLocalTime *)
   (* Messages declared nothing this unit uses (2026-09-08). *)
   Version,
   VC,
@@ -3478,8 +3479,7 @@ procedure DisplayLocalTime(Country: Word);
      The label and goto went with it: the unknown-country case just leaves the
      string empty and falls through to the same assignment. }
 var
-   UTC, LOCAL                            : SYSTEMTIME;
-   TZ                                    : TIME_ZONE_INFORMATION;
+   localTime                             : TDateTime;
    s                                     : string;
 begin
    if tLocalTimePrevState = Country then
@@ -3491,21 +3491,41 @@ begin
    s := '';
    if Country <> UNKNOWN_COUNTRY then
       begin
-      GetSystemTime(UTC);
-      FillChar(TZ, SizeOf(TZ), 0);
-      TZ.Bias := ctyGetCountryUTCOffset(Country);
-      FillChar(LOCAL, SizeOf(LOCAL), 0);
+      (* SUBTRACTION, NOT A TIMEZONE CALL -- AND THAT IS WHAT IT ALWAYS WAS.
 
-      { On failure LOCAL stays zeroed and the display reads 00:00 with the
-        Sunday tag. That is what it did before; kept deliberately rather than
-        quietly showing the previous country's time. }
-      SystemTimeToTzSpecificLocalTime(@TZ, UTC, LOCAL);
+        This was GetSystemTime into a SYSTEMTIME, a zeroed
+        TIME_ZONE_INFORMATION with only Bias set, and
+        SystemTimeToTzSpecificLocalTime. It looked like a timezone conversion
+        and was not: StandardDate and DaylightDate were left ZEROED, which is
+        Win32's documented "this zone has no DST transitions" case, so the API
+        computed local = UTC - Bias and nothing else.
+
+        IT COULD NOT HAVE DONE MORE. The only input is
+        CTY.ctyTable[Country].UTCOffset -- one fixed Smallint per DXCC entity,
+        read from CTY.DAT as hours * 60 (uctydat: `r.UTCOffset :=
+        PCharToInt(@b) * 60`). There is no zone name and no rule set anywhere
+        in the data, so there is nothing a timezone database could be asked.
+
+        The sign is unchanged and is not a guess: Win32 defines Bias as
+        UTC = local + Bias, CTY.DAT's field is positive west of Greenwich, and
+        the old code assigned one to the other directly. So local = UTC - Bias
+        is the same arithmetic, spelled out.
+
+        The zeroed-LOCAL failure case is gone with the call that could fail:
+        there is no call left to fail. An unknown country still leaves s empty,
+        which is the branch above. *)
+      localTime := IncMinute(LocalTimeToUniversal(Now),
+                             -ctyGetCountryUTCOffset(Country));
 
       { SysUtils.Format QUALIFIED: TF exports Format too, as a set of cdecl
         wsprintf overloads taking PAnsiChar, and which one a bare call binds to
-        depends on use-order. }
+        depends on use-order.
+
+        DayOfWeek is 1..7 with Sunday = 1; the table is indexed from 0 as
+        SYSTEMTIME.wDayOfWeek was, so the -1 is load-bearing. }
       s := SysUtils.Format('%.2d:%.2d %s',
-                           [LOCAL.wHour, LOCAL.wMinute, DayTagArray[LOCAL.wDayOfWeek]]);
+                           [HourOf(localTime), MinuteOf(localTime),
+                            DayTagArray[DayOfWeek(localTime) - 1]]);
       end;
 
    TR4WMainForm.pnlLocalTime.Caption := s;

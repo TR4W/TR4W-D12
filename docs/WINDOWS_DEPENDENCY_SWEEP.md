@@ -41,122 +41,284 @@ entry in `BENCH_QUEUE.md`. "Windows stays here" is an acceptable outcome;
 
 ## Conversions already proven in this tree
 
-| Win32 | Replacement | Note |
-|---|---|---|
-| `GetTickCount` | `GetTickCount64` | widen the field to `QWord`. If a 32-bit value is on the wire or in a record, truncate DELIBERATELY and say so -- see `uIcomNetworkTransport.TickCount32` |
-| `GetLastError` | `SysUtils.GetLastOSError` | literally `GetLastError` on Windows, `fpgetErrNo` on Unix |
-| `lstrcatA` / `lstrlenA` | `uAnsiStr.StrPLCopy` / `uAnsiStr.StrLen` | and BOUND it -- `lstrcatA` walks to the NUL and keeps writing |
-| `GetFileSize` | `utils_file.sFileSize` | NOT bare `FileSeek`: seeking MOVES the pointer, and callers depend on it not moving |
-| `SetFilePointer` | `SysUtils.FileSeek(..., fsFromBeginning)` | |
-| `ReadFile` / `WriteFile` / `CloseHandle` | `utils_file.sReadFile` / `sWriteFile` / `SysUtils.FileClose` | the wrappers are already on the RTL |
-| `InitializeCriticalSection` / `DeleteCriticalSection` | `InitCriticalSection` / `DoneCriticalSection` | the RTL's names for the same record, on every platform. Enter/Leave already are |
-| `WaitForSingleObject` + `CloseHandle` on a thread | `WaitForThreadTerminate` + `CloseThread` | `tCreateThread` is `BeginThread`, so it holds a `TThreadID`. Off Windows the TIMEOUT IS IGNORED -- say so at the site |
-| `SetThreadPriority` | `ThreadSetPriority(h, -15..15)` | advisory off Windows; it usually needs a real-time policy |
-| `InterlockedIncrement` | `System.InterLockedIncrement` | same intrinsic |
-| `Sleep` | `SysUtils.Sleep` | already there once `Windows` goes |
-| `DWORD`, `WPARAM`, `HWND`, `SW_*`, `IDYES`/`IDNO` | `LCLType` | on Windows these ARE the `Windows` declarations, so no signature moves |
-| `MAXLONG` | `System.MaxLongint` | |
-| `socket`/`sendto`/`setsockopt`/`inet_addr` | Indy: `TIdSocketHandle`, `SendBuffer`, `SetSockOpt`, `UpdateBindingLocal` | see `uIcomNetworkTransport` -- and read its bench entry first |
-| genuinely Windows | `{$IFDEF WINDOWS}` **and the uses entry with it** | a unit whose CODE is gated but whose USES CLAUSE is not can never compile elsewhere |
+| Win32                                                 | Replacement                                                               | Note                                                                                                                                                     |
+| ----------------------------------------------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GetTickCount`                                        | `GetTickCount64`                                                          | widen the field to `QWord`. If a 32-bit value is on the wire or in a record, truncate DELIBERATELY and say so -- see `uIcomNetworkTransport.TickCount32` |
+| `GetLastError`                                        | `SysUtils.GetLastOSError`                                                 | literally `GetLastError` on Windows, `fpgetErrNo` on Unix                                                                                                |
+| `lstrcatA` / `lstrlenA`                               | `uAnsiStr.StrPLCopy` / `uAnsiStr.StrLen`                                  | and BOUND it -- `lstrcatA` walks to the NUL and keeps writing                                                                                            |
+| `GetFileSize`                                         | `utils_file.sFileSize`                                                    | NOT bare `FileSeek`: seeking MOVES the pointer, and callers depend on it not moving                                                                      |
+| `SetFilePointer`                                      | `SysUtils.FileSeek(..., fsFromBeginning)`                                 |                                                                                                                                                          |
+| `ReadFile` / `WriteFile` / `CloseHandle`              | `utils_file.sReadFile` / `sWriteFile` / `SysUtils.FileClose`              | the wrappers are already on the RTL                                                                                                                      |
+| `InitializeCriticalSection` / `DeleteCriticalSection` | `InitCriticalSection` / `DoneCriticalSection`                             | the RTL's names for the same record, on every platform. Enter/Leave already are                                                                          |
+| `WaitForSingleObject` + `CloseHandle` on a thread     | `WaitForThreadTerminate` + `CloseThread`                                  | `tCreateThread` is `BeginThread`, so it holds a `TThreadID`. Off Windows the TIMEOUT IS IGNORED -- say so at the site                                    |
+| `SetThreadPriority`                                   | `ThreadSetPriority(h, -15..15)`                                           | advisory off Windows; it usually needs a real-time policy                                                                                                |
+| `InterlockedIncrement`                                | `System.InterLockedIncrement`                                             | same intrinsic                                                                                                                                           |
+| `Sleep`                                               | `SysUtils.Sleep`                                                          | already there once `Windows` goes                                                                                                                        |
+| `DWORD`, `WPARAM`, `HWND`, `SW_*`, `IDYES`/`IDNO`     | `LCLType`                                                                 | on Windows these ARE the `Windows` declarations, so no signature moves                                                                                   |
+| `MAXLONG`                                             | `System.MaxLongint`                                                       |                                                                                                                                                          |
+| `socket`/`sendto`/`setsockopt`/`inet_addr`            | Indy: `TIdSocketHandle`, `SendBuffer`, `SetSockOpt`, `UpdateBindingLocal` | see `uIcomNetworkTransport` -- and read its bench entry first                                                                                            |
+| genuinely Windows                                     | `{$IFDEF WINDOWS}` **and the uses entry with it**                         | a unit whose CODE is gated but whose USES CLAUSE is not can never compile elsewhere                                                                      |
 
 ## What is left
 
 `CALLS` needs work, `TYPES` is usually a one-line swap to `LCLType`, `DEAD` means
 the scan found nothing (verify with the compiler -- see step 3).
 
-| Kind | Unit | Calls still referenced | Types still referenced |
-|---|---|---|---|
-| CALLS | `bench_callsign.lpr` | `QueryPerformance` | `BOOL` |
-| CALLS | `DLPortIO.pas` | `GetLastError` `lstrcat` `LoadLibrary` `GetProcAddress` `FreeLibrary` | `DWORD` `THandle` `MAX_PATH` `BOOL` |
-| CALLS | `fcontest.pas` | `lstrcat` | `BOOL` |
-| CALLS | `GetWinVersionInfo.pas` | `GetProcAddress` `GetModuleHandle` `GetSystemMetrics` | `DWORD` `BOOL` |
-| CALLS | `LogCfg.pas` | `GetTickCount` `lstrcat` `wsprintf` | `BOOL` `INVALID_HANDLE_VALUE` |
-| CALLS | `logddx.pas` | `Sleep` | `BOOL` |
-| CALLS | `logdump.lpr` | `CreateFile` `WriteFile` `CloseHandle` | `DWORD` `THandle` `BOOL` `INVALID_HANDLE_VALUE` |
-| CALLS | `logdupe.pas` | `wsprintf` `CloseHandle` | `THandle` `BOOL` `MAXWORD` `MAXLONG` |
-| CALLS | `logdvp.pas` | `GetLastError` `Sleep` `lstrlen` `CreateFile` `ReadFile` `CloseHandle` `WaitForSingleObject` `timeSetEvent` `sndPlaySound` | `HANDLE` `THandle` `BOOL` `INVALID_HANDLE_VALUE` |
-| CALLS | `logedit.pas` | `wsprintf` | `BOOL` `SW_` |
-| CALLS | `logk1ea.pas` | `Sleep` `CloseHandle` `WaitForSingleObject` `SetThreadPriority` `timeBeginPeriod` `timeSetEvent` | `DWORD` `THandle` `BOOL` `INVALID_HANDLE_VALUE` |
-| CALLS | `logstuff.pas` | `GetTickCount` | `BOOL` `MAXWORD` |
-| CALLS | `logsubs1.pas` | `Sleep` | `BOOL` |
-| CALLS | `logsubs2.pas` | `GetTickCount` `Sleep` `wsprintf` `CloseHandle` `WSA` | `DWORD` `HANDLE` `THandle` `BOOL` `SW_` `IDNO` `SYSTEMTIME` |
-| CALLS | `logwind.pas` | `GetTickCount` `wsprintf` `ReadFile` `CloseHandle` `SystemTimeToTz` `GetSystemTime` | `THandle` `BOOL` `SW_` `SYSTEMTIME` |
-| CALLS | `MainUnit.pas` | `GetTickCount` `GetLastError` `Sleep` `lstrcat` `wsprintf` `CloseHandle` `FindFirstFile` `SetEvent` `SetThreadPriority` `LoadLibrary` `GetProcAddress` `FreeLibrary` `ShowWindow` `MoveWindow` `SendMessage` `GetKeyState` `SetFocus` `GetSystemMetrics` `socket` `sendto` `GetSystemTime` `sndPlaySound` `MessageBox` | `DWORD` `WPARAM` `HANDLE` `THandle` `BOOL` `SW_` `VK_` `IDYES` `IDNO` `INVALID_HANDLE_VALUE` `SYSTEMTIME` |
-| CALLS | `tr4w_radio_bench.lpr` | `GetTickCount` `Sleep` | `DWORD` `BOOL` |
-| CALLS | `tr4wserverUnit.pas` | `Sleep` `SendMessage` `socket` `sendto` | `DWORD` `HANDLE` `THandle` `BOOL` `IDYES` `IDNO` `INVALID_HANDLE_VALUE` `SYSTEMTIME` |
-| CALLS | `uAppInputHooks.pas` | `GetTickCount` | `HANDLE` `BOOL` `VK_` |
-| CALLS | `uBandmap.pas` | `GetTickCount` | `HMENU` `BOOL` |
-| CALLS | `uBandPlanForm.pas` | `GetSystemMetrics` | `HANDLE` `BOOL` |
-| CALLS | `uCabrilloHeader.pas` | `GetPrivateProfile` | `DWORD` `BOOL` |
-| CALLS | `uCallsigns.pas` | `wsprintf` `CompareString` | `BOOL` |
-| CALLS | `uCFG.pas` | `lstrcat` `lstrlen` `wsprintf` | `BOOL` `MAXWORD` |
-| CALLS | `uCheckLatestVersion.pas` | `Sleep` `wsprintf` `closesocket` `WSA` | `IDYES` |
-| CALLS | `uDXSpotParse.pas` | `lstrcpy` | `BOOL` |
-| CALLS | `uEditMessageForm.pas` | `CloseHandle` `SetFocus` | `LPARAM` `HANDLE` `THandle` `BOOL` `VK_` `IDNO` |
-| CALLS | `uEditQSO.pas` | `wsprintf` | `BOOL` `MAXWORD` |
-| CALLS | `uExternalLoggerBase.pas` | `GetTickCount` `Sleep` `SetEvent` `socket` `sendto` | `HANDLE` `BOOL` |
-| CALLS | `uFileView.pas` | `wsprintf` `LoadLibrary` `GetProcAddress` `FreeLibrary` | `THandle` `BOOL` |
-| CALLS | `uFlexDiscovery.pas` | `GetTickCount` | `BOOL` |
-| CALLS | `uFunctionKeys.pas` | `GetKeyState` | `VK_` |
-| CALLS | `uGetScores.pas` | `lstrlen` `CloseHandle` | `HANDLE` `THandle` `SYSTEMTIME` |
-| CALLS | `uGetServerLog.pas` | `ReadFile` `CloseHandle` `SetFilePointer` `closesocket` `WSA` | `THandle` `BOOL` `INVALID_HANDLE_VALUE` `FILE_BEGIN` |
-| CALLS | `uGradient.pas` | `LoadLibrary` `GetProcAddress` `GetModuleHandle` `GetSysColor` | `HDC` `BOOL` |
-| CALLS | `uHamScore.pas` | `CloseHandle` `CreateEvent` `SetEvent` | `DWORD` `HANDLE` `THandle` `BOOL` |
-| CALLS | `uHistory.pas` | `wsprintf` `CreateFile` `CloseHandle` `SendMessage` | `THandle` `BOOL` `INVALID_HANDLE_VALUE` |
-| CALLS | `uIcomNetworkDiscovery.pas` | `GetTickCount` | `BOOL` |
-| CALLS | `uIntercom.pas` | `CreateFile` `CloseHandle` `SetFilePointer` | `DWORD` `THandle` `BOOL` `INVALID_HANDLE_VALUE` |
-| CALLS | `uIO.pas` | `LoadLibrary` `GetProcAddress` `FreeLibrary` | `DWORD` `THandle` `BOOL` |
-| CALLS | `uK4Discovery.pas` | `GetTickCount` | `BOOL` |
-| CALLS | `uMMTTYForm.pas` | `MoveWindow` `SendMessage` | `HANDLE` `VK_` |
-| CALLS | `uNet.pas` | `GetTickCount` `Sleep` `wsprintf` `CreateFile` `WaitForSingleObject` `SetEvent` `SendMessage` `sendto` `GetCurrentThreadId` | `BOOL` `INVALID_HANDLE_VALUE` |
-| CALLS | `uPanelUpdate.pas` | `IsWindow` `IsChild` | `BOOL` |
-| CALLS | `uPrefsForm.pas` | `SetFocus` | `BOOL` `VK_` |
-| CALLS | `uProcessCommand.pas` | `sendto` `WinExec` | `BOOL` |
-| CALLS | `uProgramMain.pas` | `GetLastError` `CreateEvent` | `BOOL` `SYSTEMTIME` |
-| CALLS | `uQTCS.pas` | `Sleep` `ReadFile` | `BOOL` `IDNO` |
-| CALLS | `uRadioConfigApply.pas` | `GetTickCount` `GetPrivateProfile` | `BOOL` `MAXWORD` |
-| CALLS | `uRadioPolling.pas` | `GetTickCount` `Sleep` | `BOOL` |
-| CALLS | `uRadioTCI.pas` | `sendto` | `BOOL` |
-| CALLS | `uSendKeyboardForm.pas` | `SetFocus` | `HANDLE` `BOOL` `VK_` |
-| CALLS | `uServerLogForm.pas` | `GetLastError` `CreateFile` `CloseHandle` | `HANDLE` `BOOL` `INVALID_HANDLE_VALUE` |
-| CALLS | `uSimProcess.pas` | `GetLastError` `WriteFile` `CloseHandle` `WaitForSingleObject` | `DWORD` `HANDLE` `THandle` `BOOL` |
-| CALLS | `uStations.pas` | `wsprintf` | `BOOL` |
-| CALLS | `uSynTime.pas` | `Sleep` `GetSystemTime` | `SYSTEMTIME` `FILETIME` |
-| CALLS | `uTCIServer.pas` | `GetTickCount` `SetEvent` | `HANDLE` `BOOL` |
-| CALLS | `uTelnet.pas` | `wsprintf` `CreateFile` `CloseHandle` `WaitForSingleObject` `socket` `WSA` `sendto` | `DWORD` `HANDLE` `THandle` `BOOL` `INVALID_HANDLE_VALUE` |
-| CALLS | `uTestCWByCATTimer.pas` | `GetTickCount` `Sleep` | `HANDLE` `BOOL` |
-| CALLS | `uTestFormatTranslation.pas` | `wsprintf` | -- |
-| CALLS | `uTestLogRepository.pas` | `DeleteFile` | `BOOL` `MAXWORD` |
-| CALLS | `uTestMain.pas` | `Sleep` | `BOOL` |
-| CALLS | `uTestRadioConfigStore.pas` | `DeleteFile` | `BOOL` |
-| CALLS | `uTestTCIServer.pas` | `GetTickCount` `Sleep` | `BOOL` |
-| CALLS | `uTestUtilsFile.pas` | `CreateFile` `ReadFile` `CloseHandle` `DeleteFile` | `DWORD` `THandle` `MAX_PATH` `INVALID_HANDLE_VALUE` |
-| CALLS | `uTestWebSocketLoopback.pas` | `GetTickCount` `Sleep` | `BOOL` |
-| CALLS | `utils_net.pas` | `socket` `closesocket` `inet_addr` `htons` `WSA` | `DWORD` `BOOL` |
-| CALLS | `uWinManager.pas` | `ShowWindow` | -- |
-| CALLS | `uWinManagerForm.pas` | `ShowWindow` `SetFocus` | `HANDLE` `BOOL` |
-| DEAD | `tr4w.lpr` | -- | -- |
-| DEAD | `tr4w_consts_esp.pas` | -- | -- |
-| TYPES | `postunit.pas` | -- | `THandle` `BOOL` `IDYES` `MAXWORD` |
-| TYPES | `tr4w_status_trace.lpr` | -- | `BOOL` |
-| TYPES | `tr4wserver.lpr` | -- | `BOOL` `IDNO` |
-| TYPES | `uCAT.pas` | -- | `BOOL` `INVALID_HANDLE_VALUE` |
-| TYPES | `uEmbeddedTranslations.pas` | -- | `LPARAM` `BOOL` |
-| TYPES | `uLogCompareForm.pas` | -- | `LPARAM` `HANDLE` `BOOL` |
-| TYPES | `uLPTForm.pas` | -- | `HANDLE` `INVALID_HANDLE_VALUE` |
-| TYPES | `uNewContest.pas` | -- | `BOOL` `IDNO` |
-| TYPES | `uRadioEditForm.pas` | -- | `HANDLE` `BOOL` |
-| TYPES | `uTestFreqTimeFormat.pas` | -- | `SYSTEMTIME` |
-| TYPES | `uWin32Compat.pas` | -- | `DWORD` `HANDLE` `THandle` `BOOL` |
+| Kind  | Unit                         | Calls still referenced                                                                                                                                                                                                                                                                                                 | Types still referenced                                                                                    |
+| ----- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| CALLS | `bench_callsign.lpr`         | `QueryPerformance`                                                                                                                                                                                                                                                                                                     | `BOOL`                                                                                                    |
+| CALLS | `DLPortIO.pas`               | `GetLastError` `lstrcat` `LoadLibrary` `GetProcAddress` `FreeLibrary`                                                                                                                                                                                                                                                  | `DWORD` `THandle` `MAX_PATH` `BOOL`                                                                       |
+| CALLS | `fcontest.pas`               | `lstrcat`                                                                                                                                                                                                                                                                                                              | `BOOL`                                                                                                    |
+| CALLS | `GetWinVersionInfo.pas`      | `GetProcAddress` `GetModuleHandle` `GetSystemMetrics`                                                                                                                                                                                                                                                                  | `DWORD` `BOOL`                                                                                            |
+| CALLS | `LogCfg.pas`                 | `GetTickCount` `lstrcat` `wsprintf`                                                                                                                                                                                                                                                                                    | `BOOL` `INVALID_HANDLE_VALUE`                                                                             |
+| CALLS | `logddx.pas`                 | `Sleep`                                                                                                                                                                                                                                                                                                                | `BOOL`                                                                                                    |
+| CALLS | `logdump.lpr`                | `CreateFile` `WriteFile` `CloseHandle`                                                                                                                                                                                                                                                                                 | `DWORD` `THandle` `BOOL` `INVALID_HANDLE_VALUE`                                                           |
+| CALLS | `logdupe.pas`                | `wsprintf` `CloseHandle`                                                                                                                                                                                                                                                                                               | `THandle` `BOOL` `MAXWORD` `MAXLONG`                                                                      |
+| CALLS | `logdvp.pas`                 | `GetLastError` `Sleep` `lstrlen` `CreateFile` `ReadFile` `CloseHandle` `WaitForSingleObject` `timeSetEvent` `sndPlaySound`                                                                                                                                                                                             | `HANDLE` `THandle` `BOOL` `INVALID_HANDLE_VALUE`                                                          |
+| CALLS | `logedit.pas`                | `wsprintf`                                                                                                                                                                                                                                                                                                             | `BOOL` `SW_`                                                                                              |
+| CALLS | `logk1ea.pas`                | `Sleep` `CloseHandle` `WaitForSingleObject` `SetThreadPriority` `timeBeginPeriod` `timeSetEvent`                                                                                                                                                                                                                       | `DWORD` `THandle` `BOOL` `INVALID_HANDLE_VALUE`                                                           |
+| CALLS | `logstuff.pas`               | `GetTickCount`                                                                                                                                                                                                                                                                                                         | `BOOL` `MAXWORD`                                                                                          |
+| CALLS | `logsubs1.pas`               | `Sleep`                                                                                                                                                                                                                                                                                                                | `BOOL`                                                                                                    |
+| CALLS | `logsubs2.pas`               | `GetTickCount` `Sleep` `wsprintf` `CloseHandle` `WSA`                                                                                                                                                                                                                                                                  | `DWORD` `HANDLE` `THandle` `BOOL` `SW_` `IDNO` `SYSTEMTIME`                                               |
+| CALLS | `logwind.pas`                | `GetTickCount` `wsprintf` `ReadFile` `CloseHandle` `SystemTimeToTz` `GetSystemTime`                                                                                                                                                                                                                                    | `THandle` `BOOL` `SW_` `SYSTEMTIME`                                                                       |
+| CALLS | `MainUnit.pas`               | `GetTickCount` `GetLastError` `Sleep` `lstrcat` `wsprintf` `CloseHandle` `FindFirstFile` `SetEvent` `SetThreadPriority` `LoadLibrary` `GetProcAddress` `FreeLibrary` `ShowWindow` `MoveWindow` `SendMessage` `GetKeyState` `SetFocus` `GetSystemMetrics` `socket` `sendto` `GetSystemTime` `sndPlaySound` `MessageBox` | `DWORD` `WPARAM` `HANDLE` `THandle` `BOOL` `SW_` `VK_` `IDYES` `IDNO` `INVALID_HANDLE_VALUE` `SYSTEMTIME` |
+| CALLS | `tr4w_radio_bench.lpr`       | `GetTickCount` `Sleep`                                                                                                                                                                                                                                                                                                 | `DWORD` `BOOL`                                                                                            |
+| CALLS | `tr4wserverUnit.pas`         | `Sleep` `SendMessage` `socket` `sendto`                                                                                                                                                                                                                                                                                | `DWORD` `HANDLE` `THandle` `BOOL` `IDYES` `IDNO` `INVALID_HANDLE_VALUE` `SYSTEMTIME`                      |
+| CALLS | `uAppInputHooks.pas`         | `GetTickCount`                                                                                                                                                                                                                                                                                                         | `HANDLE` `BOOL` `VK_`                                                                                     |
+| CALLS | `uBandmap.pas`               | `GetTickCount`                                                                                                                                                                                                                                                                                                         | `HMENU` `BOOL`                                                                                            |
+| CALLS | `uBandPlanForm.pas`          | `GetSystemMetrics`                                                                                                                                                                                                                                                                                                     | `HANDLE` `BOOL`                                                                                           |
+| CALLS | `uCabrilloHeader.pas`        | `GetPrivateProfile`                                                                                                                                                                                                                                                                                                    | `DWORD` `BOOL`                                                                                            |
+| CALLS | `uCallsigns.pas`             | `wsprintf` `CompareString`                                                                                                                                                                                                                                                                                             | `BOOL`                                                                                                    |
+| CALLS | `uCFG.pas`                   | `lstrcat` `lstrlen` `wsprintf`                                                                                                                                                                                                                                                                                         | `BOOL` `MAXWORD`                                                                                          |
+| CALLS | `uCheckLatestVersion.pas`    | `Sleep` `wsprintf` `closesocket` `WSA`                                                                                                                                                                                                                                                                                 | `IDYES`                                                                                                   |
+| CALLS | `uDXSpotParse.pas`           | `lstrcpy`                                                                                                                                                                                                                                                                                                              | `BOOL`                                                                                                    |
+| CALLS | `uEditMessageForm.pas`       | `CloseHandle` `SetFocus`                                                                                                                                                                                                                                                                                               | `LPARAM` `HANDLE` `THandle` `BOOL` `VK_` `IDNO`                                                           |
+| CALLS | `uEditQSO.pas`               | `wsprintf`                                                                                                                                                                                                                                                                                                             | `BOOL` `MAXWORD`                                                                                          |
+| CALLS | `uExternalLoggerBase.pas`    | `GetTickCount` `Sleep` `SetEvent` `socket` `sendto`                                                                                                                                                                                                                                                                    | `HANDLE` `BOOL`                                                                                           |
+| CALLS | `uFileView.pas`              | `wsprintf` `LoadLibrary` `GetProcAddress` `FreeLibrary`                                                                                                                                                                                                                                                                | `THandle` `BOOL`                                                                                          |
+| CALLS | `uFlexDiscovery.pas`         | `GetTickCount`                                                                                                                                                                                                                                                                                                         | `BOOL`                                                                                                    |
+| CALLS | `uFunctionKeys.pas`          | `GetKeyState`                                                                                                                                                                                                                                                                                                          | `VK_`                                                                                                     |
+| CALLS | `uGetScores.pas`             | `lstrlen` `CloseHandle`                                                                                                                                                                                                                                                                                                | `HANDLE` `THandle` `SYSTEMTIME`                                                                           |
+| CALLS | `uGetServerLog.pas`          | `ReadFile` `CloseHandle` `SetFilePointer` `closesocket` `WSA`                                                                                                                                                                                                                                                          | `THandle` `BOOL` `INVALID_HANDLE_VALUE` `FILE_BEGIN`                                                      |
+| CALLS | `uGradient.pas`              | `LoadLibrary` `GetProcAddress` `GetModuleHandle` `GetSysColor`                                                                                                                                                                                                                                                         | `HDC` `BOOL`                                                                                              |
+| CALLS | `uHamScore.pas`              | `CloseHandle` `CreateEvent` `SetEvent`                                                                                                                                                                                                                                                                                 | `DWORD` `HANDLE` `THandle` `BOOL`                                                                         |
+| CALLS | `uHistory.pas`               | `wsprintf` `CreateFile` `CloseHandle` `SendMessage`                                                                                                                                                                                                                                                                    | `THandle` `BOOL` `INVALID_HANDLE_VALUE`                                                                   |
+| CALLS | `uIcomNetworkDiscovery.pas`  | `GetTickCount`                                                                                                                                                                                                                                                                                                         | `BOOL`                                                                                                    |
+| CALLS | `uIntercom.pas`              | `CreateFile` `CloseHandle` `SetFilePointer`                                                                                                                                                                                                                                                                            | `DWORD` `THandle` `BOOL` `INVALID_HANDLE_VALUE`                                                           |
+| CALLS | `uIO.pas`                    | `LoadLibrary` `GetProcAddress` `FreeLibrary`                                                                                                                                                                                                                                                                           | `DWORD` `THandle` `BOOL`                                                                                  |
+| CALLS | `uK4Discovery.pas`           | `GetTickCount`                                                                                                                                                                                                                                                                                                         | `BOOL`                                                                                                    |
+| CALLS | `uMMTTYForm.pas`             | `MoveWindow` `SendMessage`                                                                                                                                                                                                                                                                                             | `HANDLE` `VK_`                                                                                            |
+| CALLS | `uNet.pas`                   | `GetTickCount` `Sleep` `wsprintf` `CreateFile` `WaitForSingleObject` `SetEvent` `SendMessage` `sendto` `GetCurrentThreadId`                                                                                                                                                                                            | `BOOL` `INVALID_HANDLE_VALUE`                                                                             |
+| CALLS | `uPanelUpdate.pas`           | `IsWindow` `IsChild`                                                                                                                                                                                                                                                                                                   | `BOOL`                                                                                                    |
+| CALLS | `uPrefsForm.pas`             | `SetFocus`                                                                                                                                                                                                                                                                                                             | `BOOL` `VK_`                                                                                              |
+| CALLS | `uProcessCommand.pas`        | `sendto` `WinExec`                                                                                                                                                                                                                                                                                                     | `BOOL`                                                                                                    |
+| CALLS | `uProgramMain.pas`           | `GetLastError` `CreateEvent`                                                                                                                                                                                                                                                                                           | `BOOL` `SYSTEMTIME`                                                                                       |
+| CALLS | `uQTCS.pas`                  | `Sleep` `ReadFile`                                                                                                                                                                                                                                                                                                     | `BOOL` `IDNO`                                                                                             |
+| CALLS | `uRadioConfigApply.pas`      | `GetTickCount` `GetPrivateProfile`                                                                                                                                                                                                                                                                                     | `BOOL` `MAXWORD`                                                                                          |
+| CALLS | `uRadioPolling.pas`          | `GetTickCount` `Sleep`                                                                                                                                                                                                                                                                                                 | `BOOL`                                                                                                    |
+| CALLS | `uRadioTCI.pas`              | `sendto`                                                                                                                                                                                                                                                                                                               | `BOOL`                                                                                                    |
+| CALLS | `uSendKeyboardForm.pas`      | `SetFocus`                                                                                                                                                                                                                                                                                                             | `HANDLE` `BOOL` `VK_`                                                                                     |
+| CALLS | `uServerLogForm.pas`         | `GetLastError` `CreateFile` `CloseHandle`                                                                                                                                                                                                                                                                              | `HANDLE` `BOOL` `INVALID_HANDLE_VALUE`                                                                    |
+| CALLS | `uSimProcess.pas`            | `GetLastError` `WriteFile` `CloseHandle` `WaitForSingleObject`                                                                                                                                                                                                                                                         | `DWORD` `HANDLE` `THandle` `BOOL`                                                                         |
+| CALLS | `uStations.pas`              | `wsprintf`                                                                                                                                                                                                                                                                                                             | `BOOL`                                                                                                    |
+| CALLS | `uSynTime.pas`               | `Sleep` `GetSystemTime`                                                                                                                                                                                                                                                                                                | `SYSTEMTIME` `FILETIME`                                                                                   |
+| CALLS | `uTCIServer.pas`             | `GetTickCount` `SetEvent`                                                                                                                                                                                                                                                                                              | `HANDLE` `BOOL`                                                                                           |
+| CALLS | `uTelnet.pas`                | `wsprintf` `CreateFile` `CloseHandle` `WaitForSingleObject` `socket` `WSA` `sendto`                                                                                                                                                                                                                                    | `DWORD` `HANDLE` `THandle` `BOOL` `INVALID_HANDLE_VALUE`                                                  |
+| CALLS | `uTestCWByCATTimer.pas`      | `GetTickCount` `Sleep`                                                                                                                                                                                                                                                                                                 | `HANDLE` `BOOL`                                                                                           |
+| CALLS | `uTestFormatTranslation.pas` | `wsprintf`                                                                                                                                                                                                                                                                                                             | --                                                                                                        |
+| CALLS | `uTestLogRepository.pas`     | `DeleteFile`                                                                                                                                                                                                                                                                                                           | `BOOL` `MAXWORD`                                                                                          |
+| CALLS | `uTestMain.pas`              | `Sleep`                                                                                                                                                                                                                                                                                                                | `BOOL`                                                                                                    |
+| CALLS | `uTestRadioConfigStore.pas`  | `DeleteFile`                                                                                                                                                                                                                                                                                                           | `BOOL`                                                                                                    |
+| CALLS | `uTestTCIServer.pas`         | `GetTickCount` `Sleep`                                                                                                                                                                                                                                                                                                 | `BOOL`                                                                                                    |
+| CALLS | `uTestUtilsFile.pas`         | `CreateFile` `ReadFile` `CloseHandle` `DeleteFile`                                                                                                                                                                                                                                                                     | `DWORD` `THandle` `MAX_PATH` `INVALID_HANDLE_VALUE`                                                       |
+| CALLS | `uTestWebSocketLoopback.pas` | `GetTickCount` `Sleep`                                                                                                                                                                                                                                                                                                 | `BOOL`                                                                                                    |
+| CALLS | `utils_net.pas`              | `socket` `closesocket` `inet_addr` `htons` `WSA`                                                                                                                                                                                                                                                                       | `DWORD` `BOOL`                                                                                            |
+| CALLS | `uWinManager.pas`            | `ShowWindow`                                                                                                                                                                                                                                                                                                           | --                                                                                                        |
+| CALLS | `uWinManagerForm.pas`        | `ShowWindow` `SetFocus`                                                                                                                                                                                                                                                                                                | `HANDLE` `BOOL`                                                                                           |
+| DEAD  | `tr4w.lpr`                   | --                                                                                                                                                                                                                                                                                                                     | --                                                                                                        |
+| DEAD  | `tr4w_consts_esp.pas`        | --                                                                                                                                                                                                                                                                                                                     | --                                                                                                        |
+| TYPES | `postunit.pas`               | --                                                                                                                                                                                                                                                                                                                     | `THandle` `BOOL` `IDYES` `MAXWORD`                                                                        |
+| TYPES | `tr4w_status_trace.lpr`      | --                                                                                                                                                                                                                                                                                                                     | `BOOL`                                                                                                    |
+| TYPES | `tr4wserver.lpr`             | --                                                                                                                                                                                                                                                                                                                     | `BOOL` `IDNO`                                                                                             |
+| TYPES | `uCAT.pas`                   | --                                                                                                                                                                                                                                                                                                                     | `BOOL` `INVALID_HANDLE_VALUE`                                                                             |
+| TYPES | `uEmbeddedTranslations.pas`  | --                                                                                                                                                                                                                                                                                                                     | `LPARAM` `BOOL`                                                                                           |
+| TYPES | `uLogCompareForm.pas`        | --                                                                                                                                                                                                                                                                                                                     | `LPARAM` `HANDLE` `BOOL`                                                                                  |
+| TYPES | `uLPTForm.pas`               | --                                                                                                                                                                                                                                                                                                                     | `HANDLE` `INVALID_HANDLE_VALUE`                                                                           |
+| TYPES | `uNewContest.pas`            | --                                                                                                                                                                                                                                                                                                                     | `BOOL` `IDNO`                                                                                             |
+| TYPES | `uRadioEditForm.pas`         | --                                                                                                                                                                                                                                                                                                                     | `HANDLE` `BOOL`                                                                                           |
+| TYPES | `uTestFreqTimeFormat.pas`    | --                                                                                                                                                                                                                                                                                                                     | `SYSTEMTIME`                                                                                              |
+| TYPES | `uWin32Compat.pas`           | --                                                                                                                                                                                                                                                                                                                     | `DWORD` `HANDLE` `THandle` `BOOL`                                                                         |
 
 ## Known to stay, with the reason recorded
 
-| Unit | Why |
-|---|---|
-| `uPanelUpdate` | `IsChild` -- the LCL declares `IsWindow` but not `IsChild`, and `IsChild` is the one that matters |
-| `uInputQueryForm` | `LoadIcon` for the standard system icons; off Windows the dialog shows none |
-| `uWinKey` | `QueryPerformanceCounter` -- no RTL equivalent, and `GetTickCount64`'s 1 ms floor would blur what the trace measures |
-| `BeepUnit` | `\Device\Beep` by IOCTL. Off Windows every entry point is a no-op that says so once |
-| `uCallsigns` | `CompareStringA` -- one of three drifted copies; the TESTS come before the repoint |
-| `logwind` | `SystemTimeToTzSpecificLocalTime` -- no RTL timezone-database call. The rest of its list is ordinary |
-| `uHamLibDirect` | nothing, syntactically -- but `HAMLIB_DLL` names a `.dll` and `PEMachineOf` asks a PE question. Verify the soname ON the platform; do not invent it |
+Checked 2026-09-08 against NY4I's [AGENT] notes and a reference pass over
+**cqrlog** and **trlinux** (both under `C:/projects/`), which he named as
+multi-platform FPC/Lazarus siblings. **Three entries that used to be in this
+table are gone, because the reasons were wrong** -- see the section after it.
+
+| Unit                    | Why it stays                                                                                                                                                                                                | Status                                                                                    |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `uWinKey`               | `QueryPerformanceCounter`. There is no RTL equivalent, and `GetTickCount64`'s 1 ms floor would blur the 15/46/122 ms gaps the trace exists to measure. Already gated, with the fallback's cost written down | resolved by `uHPTimer` when it lands; nothing to do here first                            |
+| `BeepUnit`              | the `Device\Beep` IOCTL. **There is no portable answer at all** -- FPC's Unix `Beep` is `Write(#7)` to stdout, and the LCL declares none                                                                    | needs an audio backend; see below                                                         |
+| `uCallsigns`            | `CompareStringA`. One of three drifted copies, and the tests come before the repoint                                                                                                                        | `uStringCompare.pas` exists untracked; needs its test suite                               |
+| `uYCCCSO2R`             | overlapped HID I/O through SetupAPI -- genuine Windows device access                                                                                                                                        | its own question                                                                          |
+| `uTestCWByCATTimer`     | pumps a real `WM_TIMER` loop so the LCL `TTimer` under test fires. Off Windows a timer is the widget set's own source, so `Application.ProcessMessages` is a DIFFERENT mechanism, not another spelling      | gate with an `{$ELSE}`, and extract the duplicated pump first                             |
+| `uHamLibDirect`         | the library file name, and `PEMachineOf`'s PE read                                                                                                                                                          | one constant per platform, verified ON the platform                                       |
+| `uEmbeddedTranslations` | `RT_RCDATA` only, and only on Windows                                                                                                                                                                       | the rest is converted; see below                                                          |
+| `uInputQueryForm`       | `LoadIcon` for the standard dialog icons                                                                                                                                                                    | replaceable by `DialogRes.DialogGlyphs`, which also themes and HiDPI-scales; not yet done |
+| `uPanelUpdate`          | --                                                                                                                                                                                                          | **RESOLVED: it was a bug, not a dependency**                                              |
+| `logwind` (timezone)    | --                                                                                                                                                                                                          | **RESOLVED: no timezone database was ever involved**                                      |
+| `tr4wserver.lpr`        | --                                                                                                                                                                                                          | **RESOLVED: the constraint was stale**                                                    |
+
+## HAMLIB IS A BINDING. NOT `rigctld`. (NY4I, 2026-09-08)
+
+**Do not re-propose the subprocess design.** The reference pass found that
+**both** sibling projects avoid linking hamlib entirely: cqrlog spawns
+`rigctld` and speaks its text protocol over TCP (`src/uRigControl.pas:190-197`,
+`:298-322`), and trlinux does the same through `src/rigctld.pas`. Neither has a
+single `external` hamlib declaration anywhere.
+
+**That is explicitly NOT the direction here.** NY4I: *"in this case, ignore what
+those programs do. I specifically do not want to use rigctld and prefer to bind
+the library. I will keep looking for a mac and linux app that does it that
+way."*
+
+So the work is the binding, and it is small -- `uHamLibDirect` already loads
+through `DynLibs`, resolves every entry point by name, and funnels all 36
+declarations through ONE constant. What is owed:
+
+- `HAMLIB_DLL` becomes a per-platform constant, and **the Linux soname and the
+  macOS dylib name must be read off those machines** (`ldconfig -p | grep
+  hamlib`, `otool -L`). Do not infer them: hamlib installs versioned names, and
+  `SharedSuffix` alone produces neither. Rename it `HAMLIB_LIB` while there --
+  `_DLL` is the Windows assumption written into the identifier.
+- `PEMachineOf` becomes Windows-only behind a neutral name. It already fails
+  SAFE off Windows -- an ELF or Mach-O file misses the PE signature, so it
+  returns 0 ("unknown") and lets the load report the real error -- which means
+  a second file-format parser would buy nothing but a better message.
+- `LocateHamLib` searches `PATH`, which is not how a Unix loader finds a
+  library. Decide between shipping a bundled copy and letting the platform
+  loader resolve a bare name.
+
+## What the sweep corrected about ITSELF
+
+Three reasons in this document were wrong, and **two of them were written on
+2026-09-08, the same day they were disproved**. They are recorded because the
+failure mode is the point, not the units.
+
+**`logwind` did not need a timezone database.** This file said it did. The code
+zeroes `StandardDate` and `DaylightDate` and sets only `TZ.Bias`, which is
+Win32's documented no-DST case -- so `SystemTimeToTzSpecificLocalTime` was
+computing `local = UTC - Bias` and nothing else. It could not have done more:
+the only input is `CTY.ctyTable[Country].UTCOffset`, one fixed `Smallint` per
+DXCC entity, read from CTY.DAT as hours times 60. There is no zone name and no
+rule set anywhere in the data. It is two lines of `IncMinute` now. **PascalTZ
+would be a FEATURE, not a port fix** -- it needs unpacked IANA tzdata and a zone
+NAME per location, and TR4W has a country index.
+
+**`tr4wserver` could use LCLType all along.** This file said it could not,
+because the server build excludes the LCL. That WAS true, and stopped being true
+on 2026-09-06: `build/Get-SearchPaths.ps1:153-156` adds the LCL units for all
+three targets, its own header says *"Server has it too since it became an LCL
+application"*, and the only `-ne 'Server'` exclusion left guards SQLite. The
+program file already used `Interfaces`, `Forms` and `Dialogs`.
+
+**The lesson is not "check twice".** That claim WAS measured -- the import was
+removed and the compiler read -- but measured against a build script that had
+changed two days earlier, and then written down as a standing constraint. **A
+measurement dates as fast as the thing it measured.** Record what you measured
+it against, and prefer a claim the reader can re-run over one they must trust.
+
+**`uEmbeddedTranslations` was not an open decision.** This file called it one --
+"where do translations live off Windows". FPC's **System unit** declares
+`EnumResourceNames`, `FindResource`, `LoadResource`, `SizeofResource`,
+`LockResource` and `Is_IntResource` for every target (`rtl/inc/resh.inc`), with
+the implementation chosen by `fpintres.pp` and ELF and Mach-O readers shipped.
+The embedded design ports as it is; only the `A` suffixes had to go. The one
+genuinely unverified thing is whether `Make-LanguageRes.ps1`'s output survives
+the ELF/Mach-O resource pipeline -- and if it does not, that unit already
+documents a loose-file fallback, so it degrades to the file design rather than
+to English.
+
+**And `uPanelUpdate` was a BUG, not a dependency.** `IsChild` and `IsWindow`
+were testing `Target`, which stopped being a window handle on 2026-09-06 -- it
+is a panel slot, 1 or 2, or 0 for an element. So `not IsWindow(Target)` was
+ALWAYS TRUE, and `ForgetPanel(1)` cleared panel 2's entries and every element
+entry along with its own. Deleting the calls fixed it. Porting them would have
+preserved it.
+
+## Audio: the sidetone has no RTL answer
+
+`BeepUnit` is the one entry in the table with nothing to convert to.
+
+- FPC's Unix `Beep` is `Write(#7); Flush(Output)` (`rtl/unix/sysutils.pp`) --
+  no frequency, no duration, and nothing at all in a GUI process.
+- trlinux DOES solve it, and its INTERFACE is already the shape TR4W needs: a
+  state machine over `LSound(hz)` / `LNoSound` (`beep.pas:29-89`), which maps
+  one-for-one onto `SpeakerBeep` / `NoSound`. Underneath it offers a console
+  `KDMKTONE` ioctl -- the same PC-speaker dead end as the Windows path -- and a
+  synthesised sine written to ALSA from a dedicated thread
+  (`linuxsound.pas:190-247`). **Take the architecture, not the bindings**: that
+  is `{$linklib asound}` with about thirty hand-written externals, Linux only.
+- cqrlog contributes nothing: audio is a user-editable shell script calling
+  `mpg123`. Fine for a voice keyer with half a second of tolerance, useless for
+  a sidetone that must start and stop with the element.
+
+**Two decisions for NY4I:** whether a sidetone is required on Linux/macOS at
+first release, or whether shipping with the WinKeyer's own hardware sidetone is
+acceptable; and which audio dependency, given it must also carry `logdvp`'s WAV
+playback -- evaluate them together, or you buy two.
+
+## Timing: EpikTimer, re-checked
+
+NY4I's [AGENT] note asked about `C:/projects/epikTimer`. The assessment in
+`PLATFORM_CLOCK_ABSTRACTION.md` holds, and its two load-bearing claims were
+re-verified: `epiktimer.pas:425`'s "precision delay" is a bare `Sleep`, so
+adopting it for `tCWSleep` would give the keyer the same fallback it already
+takes when `timeSetEvent` fails; and its conditionals are Windows, Linux and
+FreeBSD with **no Darwin**, with the hardware timebase gated on `{$IFDEF
+CPUI386}` and RDTSC, which Apple Silicon does not have. Right project, wrong
+half: keep it in view as a CLOCK, never as a DELAY.
+
+trlinux has nothing to offer here either -- `keyerwin.pas` carries no timing
+instrumentation at all, and its finest primitive is a 500 microsecond
+`fpNanoSleep` polling loop, coarser than what TR4W has on Windows today.
+**TR4W's `uSerialPort` is already ahead of trlinux's raw termios layer.**
+
+## General cross-platform recommendations
+
+From the reference pass, filtered to what TR4W does not already do.
+
+1. **Namespace platform-dependent keys in `tr4w.json` BEFORE the first
+   non-Windows release.** cqrlog's `PlatformKey` (`src/dUtils.pas:3455-3470`)
+   suffixes every path- or device-bearing key -- `RigCtldPath_mac`, `_flatpak`,
+   `_snap` -- because a sandboxed install and a native one share one `$HOME`,
+   and therefore one config, and each clobbers the other. TR4W has that exposure
+   the day it runs on two platforms: every COM port, keyer port and rotator
+   address. Changing the key shape afterwards is a migration.
+2. **Keep platform conditionals inside named helpers, never at call sites.**
+   `uAppPaths` already does this well. The metric to watch is the `{$IFDEF
+   WINDOWS}` count, and each unit in the table above should end at zero or one.
+3. **Detect the environment by evidence, not by a define** -- cqrlog tests
+   `FileExists('/.flatpak-info')` and `GetEnvironmentVariable('SNAP')`. A
+   compile-time define cannot answer "am I in a sandbox", because the same
+   binary runs both in and out of one.
+4. **Serial enumeration off Windows is a `/dev` glob, and two details are easy
+   to get wrong**: macOS wants `/dev/cu.*` and NOT `/dev/tty.*` (the tty variant
+   blocks on carrier detect), and `/dev/serial/by-id/*` on Linux is stable
+   across plug order -- which matters to an SO2R operator with two USB adapters.
+5. **Decide about Linux serial lockfiles deliberately.** FPC's `serial` unit
+   does not manage the `/var/lock` convention, so two TR4W instances -- or TR4W
+   and another program -- can open the same port with nothing said.
+6. **Keep a per-platform compiler-bug register.** cqrlog documents FPC 3.2.2 on
+   aarch64 with `-O2` miscompiling `TParam.AsFloat` to zero, and routes around
+   it. A silent wrong VALUE on one platform is the worst class of port defect,
+   and TR4W's frequency and score arithmetic is exactly that shape. **Run the
+   golden corpus on Apple Silicon early, at the optimisation level you intend to
+   ship** -- nothing else would surface it.
+7. **Two useful negatives.** cqrlog has no translation infrastructure at all --
+   one `resourcestring` in the whole tree -- so there is nothing to learn from it
+   on i18n, where TR4W is far ahead. And cqrlog is Unix-ONLY, not
+   three-platform: it links `cthreads` unconditionally and its `{$IFDEF
+   WINDOWS}` count is one. Read it as a Linux-and-macOS reference, which is the
+   half TR4W lacks, and not as a model for one tree across three platforms.

@@ -68,13 +68,40 @@ function AvailableLanguages: string;
 implementation
 
 uses
-   (* WINDOWS IS REAL HERE, and it is the RESOURCE API: EnumResourceNamesA,
-     FindResourceA, RT_RCDATA, HMODULE. The catalogues are embedded in the
-     .RES and enumerated out of the running image, so this is not a call
-     that can be swapped -- it is a decision about where translations LIVE
-     off Windows (a file beside the binary, most likely). That belongs with
-     the i18n work, not with a portability sweep. *)
-   SysUtils, Classes, Windows,
+   (* NO Windows -- AND THE REASON THAT STOOD HERE WAS WRONG (2026-09-08).
+
+     It said the resource API "is not a call that can be swapped -- it is a
+     decision about where translations LIVE off Windows". There is no decision
+     to make: FPC's SYSTEM UNIT declares this whole API for every target, in
+     rtl\inc
+esh.inc --
+
+         function EnumResourceNames(ModuleHandle: TFPResourceHMODULE;
+                    ResourceType: PChar; EnumFunc: EnumResNameProc;
+                    lParam: PtrInt): LongBool;
+         function FindResource / LoadResource / SizeofResource / LockResource
+         function Is_IntResource(aStr: PChar): boolean;
+
+     -- with RT_RCDATA defined for the non-Windows case and the implementation
+     picked by fpintres.pp: the PE reader on Windows, its own reader
+     elsewhere. FPC ships elfreader and machoreader to back it. So the
+     embedded design PORTS AS IT IS; only the A suffixes had to go.
+
+     WHAT IS STILL UNVERIFIED, and it is one thing rather than a design: that
+     Make-LanguageRes.ps1's output survives the ELF/Mach-O resource pipeline,
+     where fpcres embeds a section rather than a PE resource directory. If it
+     does not, this unit already documents the fallback -- a loose
+     languages/<lang>/tr4w.po beside the binary wins over the embedded copy
+     -- so the failure degrades to the file design rather than to English. *)
+   SysUtils, Classes,
+{$IFDEF WINDOWS}
+   (* FOR RT_RCDATA ALONE, and only on Windows. The RTL declares the resource
+     FUNCTIONS for every target, but it declares the RT_* constants under
+     {$ifndef MSWINDOWS} -- on Windows they are expected to come from the
+     Windows unit, which is where this one still comes from. One constant, and
+     the rest of the API is the RTL's on both. *)
+   Windows,
+{$ENDIF}
    gettext,           // GetLanguageIDs -- the locale, the platform's own way
    Translations,      // TPOFile, TranslateResourceStrings
    LResources,        // LRSTranslator -- the hook the LFM reader consults
@@ -186,15 +213,18 @@ var
    GActiveLang:      string;
 
 
-function EnumLangProc(hModule: HMODULE; lpType, lpName: PAnsiChar;
+function EnumLangProc(hModule: TFPResourceHMODULE; lpType, lpName: PAnsiChar;
                       lParam: PtrInt): LongBool; stdcall;
-{ EnumResourceNamesA hands an ordinal in the low word when a resource is
-  numbered rather than named; ours are all named TR4W_<CODE>. }
+{ EnumResourceNames hands an ordinal in the low word when a resource is
+  numbered rather than named; ours are all named TR4W_<CODE>.  Is_IntResource
+  is the RTL's own test for that encoding -- it was a hand-rolled
+  `PtrUInt(lpName) <= $FFFF` here, which is the same rule but ours to get
+  wrong. }
 var
    s: string;
 begin
    Result := True;
-   if PtrUInt(lpName) <= $FFFF then
+   if Is_IntResource(lpName) then
       begin
       Exit;
       end;
@@ -213,7 +243,7 @@ begin
    try
       list.Sorted := True;
       list.Duplicates := dupIgnore;
-      EnumResourceNamesA(HInstance, RT_RCDATA, @EnumLangProc, PtrInt(list));
+      EnumResourceNames(HInstance, RT_RCDATA, @EnumLangProc, PtrInt(list));
       Result := Trim(StringReplace(list.Text, sLineBreak, ' ', [rfReplaceAll]));
    finally
       list.Free;
@@ -241,7 +271,7 @@ var
    rs: TResourceStream;
    po: TPOFile;
 begin
-   if (aLang = '') or (FindResourceA(HInstance,
+   if (aLang = '') or (FindResource(HInstance,
           PAnsiChar(AnsiString('LCL_' + UpperCase(aLang))), RT_RCDATA) = 0) then
       begin
       Exit;
@@ -373,7 +403,7 @@ begin
 
    resName := 'TR4W_' + UpperCase(lang);
    (* ASCII by construction -- 'TR4W_' and an upper-cased language tag. *)
-   if FindResourceA(HInstance, PAnsiChar(AnsiString(resName)), RT_RCDATA) = 0 then
+   if FindResource(HInstance, PAnsiChar(AnsiString(resName)), RT_RCDATA) = 0 then
       begin
       logger.Info('UI language: "' + lang + '" selected by ' + source +
                   ', but no catalogue for it is embedded; using the ' +

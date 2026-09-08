@@ -16,17 +16,28 @@ uses
   uAnsiStr,       // StrPLCopy over PAnsiChar; SysUtils' is PWideChar
   uAppPaths,      // where written files go, per platform
   uServerForm,    // the window, at last a designed one
-  (* WINDOWS STAYS, MEASURED 2026-09-08 by removing it and reading the
-    compiler: OPEN_ALWAYS, MB_OK, MB_ICONWARNING and MB_TOPMOST. Messages went
-    -- it declared nothing.
+  (* LCLType. THE COMMENT THAT STOOD HERE WAS WRONG, AND IT WAS WRITTEN THE
+    SAME DAY (2026-09-08).
 
-    AND LCLType IS NOT AVAILABLE HERE, which is the part worth knowing:
-    tr4wserver is a console program and Build-Server.ps1 deliberately keeps the
-    LCL off its search path -- that exclusion is the only guard on the
-    console/LCL boundary (see CLAUDE.md). So the swap that answered these
-    constants in the GUI units cannot be used here; the server needs its own
-    answer when it is ported, most likely a small constants unit of its own. *)
-  Windows,
+    It said "LCLType IS NOT AVAILABLE HERE -- tr4wserver is a console program
+    and Build-Server.ps1 deliberately keeps the LCL off its search path". That
+    HAD been true, and stopped being true on 2026-09-06: Get-SearchPaths.ps1
+    adds the LCL units for ALL THREE targets, its own header says "Server has
+    it too since it became an LCL application", and the only `-ne 'Server'`
+    exclusion left guards SQLite. This program file already uses Interfaces,
+    Forms and Dialogs.
+
+    The reason it was wrong is worth more than the fix: it was MEASURED --
+    the import was removed and the compiler read -- but measured against a
+    build script that had changed two days earlier, and then written down as a
+    standing constraint. A measurement dates as fast as the thing it measured.
+
+    MB_OK, MB_ICONWARNING and IDNO come from LCLType. MB_TOPMOST is not
+    declared there and is not needed: ServerMessageBox has been
+    Dialogs.MessageDlg since the server became an LCL application, and
+    MessageDlg has no topmost concept. OPEN_ALWAYS is gone from here entirely
+    -- see OpenOrCreateServerLog. *)
+  LCLType,
   SysUtils,
   tr4wserverUnit in '..\src\tr4wserverUnit.pas',
   uCRC32 in '..\src\uCRC32.pas',
@@ -158,7 +169,7 @@ begin
         Windows.lstrcat(@MultsFrequenciesFileName, 'MULTS_FREQ.BIN');
         LoadinMultsFrequencies;
 }
-        if OpenServerLog(OPEN_ALWAYS) then
+        if OpenOrCreateServerLog then
           begin
             if (ServerLog.Size mod SizeOf(ContestExchange)) <> 0 then
             begin
@@ -171,7 +182,11 @@ begin
                 'This typically occurs after a server upgrade that changed the log format.' + #13#10 +
                 'Please delete or rename serverlog.trw and restart the server.' + #13#10 +
                 'A new empty log will be created automatically.',
-                MB_OK or MB_ICONWARNING or MB_TOPMOST);
+                { MB_TOPMOST dropped from these three calls (2026-09-08): ServerMessageBox
+                  has been Dialogs.MessageDlg since the server became an LCL
+                  application, and MessageDlg has no topmost concept -- the flag
+                  had already stopped doing anything. }
+                MB_OK or MB_ICONWARNING);
               begin ServerShutDown; Exit; end;
             end;
             if ServerLog.Size = 0 then
@@ -184,7 +199,7 @@ begin
           end
           else
           begin
-            ServerMessageBox('Failed to open/create serverlog.trw', MB_OK or MB_ICONWARNING or MB_TOPMOST);
+            ServerMessageBox('Failed to open/create serverlog.trw', MB_OK or MB_ICONWARNING);
             begin ServerShutDown; Exit; end;
           end;
         //        SortServerLog;
@@ -193,11 +208,15 @@ begin
 //        SetPointerEvent := CreateEvent(nil, False, False, nil);
         RunServerThread;
 
-        tr4w_osverinfo.dwOSVersionInfoSize := SizeOf(OSVERSIONINFO);
-        { GetVersionEx went with TransmitFile: ServerOS existed only to say
-          whether MSWSOCK's TransmitFile was available, and Indy writes a
-          stream. }
-        ServerOS := tr4w_osverinfo.dwPlatformId;
+        (* THE OS VERSION BLOCK IS DELETED (2026-09-08), and the comment that
+          stood here had already explained why it was pointless: "GetVersionEx
+          went with TransmitFile: ServerOS existed only to say whether
+          MSWSOCK's TransmitFile was available, and Indy writes a stream."
+
+          What was left was setting dwOSVersionInfoSize for a call that no
+          longer happens, then copying dwPlatformId -- which nothing had
+          filled -- into ServerOS, which nothing reads. Checked with the
+          comment-blanking reader: one declaration, one write, no readers. *)
 {
         Windows.SendDlgItemMessage(ApplicationHandle, 109, WM_SETFONT,
           integer(Windows.CreateFont(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, Clip_Default_Precis, Default_Quality, 34, 'Courier New')),
@@ -224,7 +243,7 @@ begin
       begin
       Result := ServerMessageBox(
          'Do you really want to disconnect servers`s clients?',
-         MB_YESNO or MB_ICONQUESTION or MB_TOPMOST or MB_DEFBUTTON2) <> IDNO;
+         MB_YESNO or MB_ICONQUESTION or MB_DEFBUTTON2) <> IDNO;
       end;
 end;
 

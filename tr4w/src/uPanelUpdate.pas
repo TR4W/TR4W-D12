@@ -89,13 +89,12 @@ unit uPanelUpdate;
 interface
 
 uses
-  (* WINDOWS IS REAL HERE, and it is exactly two calls: IsChild and IsWindow,
-    in ForgetPanel. The LCL's compatibility layer declares IsWindow but NOT
-    IsChild (lcl\include\winapih.inc), and IsChild is the one that matters --
-    see the note at the call site, where testing IsWindow instead was the
-    actual defect. Checked 2026-09-08 while removing dead `uses Windows`
-    entries elsewhere; this one is not dead. *)
-  Windows,
+  (* WINDOWS IS GONE (2026-09-08), and the comment that stood here was wrong.
+
+    It said the unit needed IsChild and IsWindow, and that IsChild was "the one
+    that matters". Both were operating on a value that has not been a window
+    handle since 2026-09-06 -- see ForgetPanel. Removing them fixes a defect
+    rather than costing one. *)
   VC;      // TMainWindowElement -- what a puElement update addresses
 
 // Set a child control's text from ANY thread. aPanel = 0, or a panel that has
@@ -509,27 +508,37 @@ begin
          //
          // The reason is the call ORDER, and the old comment claiming this line
          // "is what actually clears the RIT/XIT/SPLIT statics" was simply wrong.
-         // CloseTR4WWindow calls ForgetPanel BEFORE DestroyWindow -- deliberately
-         // -- so at this moment the children are still perfectly good windows and
-         // IsWindow says so. Their three puEnable entries therefore SURVIVED the
-         // close holding Enabled=False. Windows reuses handles, so a freshly
-         // created static landing on a remembered HWND made PostControlEnable
-         // match the cache and SKIP the post -- while the new control was created
-         // ENABLED. The panel then showed enabled (yellow) controls that the
-         // cache believed were disabled, and a repaint could not fix it because
-         // they genuinely were enabled.
-         //
-         // MOVING THE CALL AFTER DestroyWindow WOULD NOT BE A FIX. A freed HWND
-         // can be reused immediately, so IsWindow can be true again for an
-         // unrelated window and the stale entry survives anyway. IsChild answers
-         // the question actually being asked, and only works BEFORE the destroy,
-         // which is why the existing order is right and only this test was wrong.
-         //
-         // The IsWindow arm stays as a backstop for an entry whose window died
-         // some other way -- it is now belt-and-braces rather than the mechanism.
-         if (gLast[i].Target = aPanel) or
-            IsChild(aPanel, gLast[i].Target) or
-            (not IsWindow(gLast[i].Target)) then
+         (* MATCH THE SLOT. The two window tests that stood here were tests on
+           a value that stopped being a window handle.
+
+           WHY THE CACHE IS CLEARED AT ALL -- the original reasoning, which is
+           still the reason this routine exists. CloseTR4WWindow calls
+           ForgetPanel BEFORE the window goes, deliberately, so the children
+           are still live at this moment and their puEnable entries would
+           SURVIVE the close holding Enabled=False. Windows reuses handles, so
+           a freshly created control landing on a remembered HWND matched the
+           cache, PostControlEnable skipped the post, and the panel showed
+           enabled controls the cache believed were disabled. A repaint could
+           not fix it, because they genuinely were enabled (bench, 2026-08-20).
+
+           THAT ACCOUNT IS HISTORY NOW, and the code had not kept up. Target
+           has held a PANEL SLOT since 2026-09-06 -- 1 or 2 for puText and
+           puEnable, and 0 for puElement -- because a TLabel is a
+           TGraphicControl and has no handle to hold. See the note on
+           PanelOpenHook, which exists because IsWindow(1) was False and every
+           panel update vanished silently.
+
+           So `IsChild(aPanel, Target)` compared two small integers as window
+           handles, and `not IsWindow(Target)` was ALWAYS TRUE -- which made
+           this condition always true, and ForgetPanel(1) cleared panel 2's
+           entries and every puElement entry along with its own. Benign, in
+           that the next post simply re-sent, but it is not what any of the
+           text above claims and it hid the coalescing the cache is for.
+
+           The slot match is the whole test. puElement entries are excluded
+           explicitly: they belong to the main window, not to either panel,
+           and closing a radio panel has nothing to say about them. *)
+         if (gLast[i].Kind <> puElement) and (gLast[i].Target = aPanel) then
             begin
             Forget(i);
             end;

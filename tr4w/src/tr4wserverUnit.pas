@@ -328,6 +328,8 @@ procedure DisplayServerLogSize;
 //procedure SetServerIcon(Icon: PChar);
 procedure UpdateQSOInServerlog(CE: ContestExchange);
 function OpenServerLog(dwCreationDistribution: DWORD): boolean;
+{ Open the log, creating it if it is not there -- see the body. }
+function OpenOrCreateServerLog: boolean;
 procedure CloseServerLog;
 procedure AddContestExchangeToBuffer(CE: ContestExchange);
 procedure WriteContestExchangesBufferToServerLog;
@@ -897,6 +899,17 @@ end;
 
   fmShareDenyNone matches the old FILE_SHARE_READ or FILE_SHARE_WRITE: the sync
   listener reads this file while the server writes it. *)
+(* THE ONE CALLER OUTSIDE THIS UNIT, BY NAME.
+
+  tr4wserver.lpr was the only OPEN_ALWAYS caller in the tree, and that constant
+  was the last thing keeping the Windows unit in the program file -- everything
+  else it wanted is in LCLType. The four OPEN_EXISTING callers are all in here,
+  where the note above still holds and the vocabulary is unchanged. *)
+function OpenOrCreateServerLog: boolean;
+begin
+   Result := OpenServerLog(OPEN_ALWAYS);
+end;
+
 function OpenServerLog(dwCreationDistribution: DWORD): boolean;
 var
    name: string;
