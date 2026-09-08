@@ -359,7 +359,20 @@ procedure rig_set_debug(debug_level: rig_debug_level_e); cdecl;
 // Use MSVCRT fopen to obtain a C FILE* compatible with HamLib's debug stream
 // msvcrt is a system DLL that is always present and always matches the
 // process, so a static import of it carries none of the risk described above.
+(* THE C RUNTIME IS NOT MSVCRT EVERYWHERE, and this needed a per-platform NAME
+  rather than a gate (2026-09-08). HamLib's debug stream wants a C FILE*, which
+  every platform has -- what differs is which library `fopen` lives in.
+
+  This is the same shape as HAMLIB_LIB three lines of this unit away: one
+  constant whose value is per-platform, not a feature that exists on one system
+  and not another. Both names are verified rather than guessed -- msvcrt.dll is
+  what a 32-bit Windows FPC build already links, and 'c' is FPC's own spelling
+  for libc, which it resolves through the linker rather than by file name. *)
+{$IFDEF WINDOWS}
 function msvcrt_fopen(filename: PAnsiChar; mode: PAnsiChar): Pointer; cdecl; external 'msvcrt.dll' name 'fopen';
+{$ELSE}
+function msvcrt_fopen(filename: PAnsiChar; mode: PAnsiChar): Pointer; cdecl; external 'c' name 'fopen';
+{$ENDIF}
 
 // Initialization and cleanup.
 //

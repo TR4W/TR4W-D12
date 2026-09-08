@@ -2236,11 +2236,45 @@ type
     dwFlags: DWORD;
   end;
 
+(* GATED, AND THE FALLBACK IS AN EXISTING BRANCH RATHER THAN A NEW ONE
+  (2026-09-08). These two are `external 'user32.dll'`, which does not stop a
+  unit COMPILING off Windows -- an import is resolved at LINK time -- so they
+  were invisible to the per-unit probe and surfaced only when the whole program
+  was linked: "ld.bfd: cannot find -luser32.dll".
+
+  Both callers, RectIsOnScreen and EnsureRectOnScreen, ALREADY have a
+  "GetMonitorInfo failed -> leave the saved rect alone" path, written for a real
+  Windows failure. Off Windows that same path is taken, so the fallback is
+  behaviour this program has always had rather than something invented here.
+  Window placement is a path NY4I has already had one bug in (issue #739, and
+  the function-key bar relocating to the corner every restart), so reusing the
+  tested branch is worth more than saving a few lines.
+
+  THE PORTABLE REPLACEMENT EXISTS AND IS NOT A GATE: the LCL's
+  Screen.MonitorFromRect returns a TMonitor with a WorkareaRect, on every
+  platform, which is exactly what these two are for. Doing it here would mean
+  changing placement behaviour in the same commit that makes the program link,
+  and those are two different risks. Repoint it separately. *)
+{$IFDEF WINDOWS}
 function tr4wMonitorFromRect(lprc: PRect; dwFlags: DWORD): Cardinal; stdcall;
   external 'user32.dll' name 'MonitorFromRect';
 function tr4wGetMonitorInfo(hMonitor: Cardinal;
   var lpmi: TTR4WMonitorInfo): BOOL; stdcall;
   external 'user32.dll' name 'GetMonitorInfoA';
+{$ELSE}
+(* The off-Windows stand-ins. GetMonitorInfo returning False is the documented
+  "cannot validate" answer both callers already handle. *)
+function tr4wMonitorFromRect(lprc: PRect; dwFlags: DWORD): Cardinal;
+begin
+   Result := 0;
+end;
+
+function tr4wGetMonitorInfo(hMonitor: Cardinal;
+  var lpmi: TTR4WMonitorInfo): BOOL;
+begin
+   Result := False;
+end;
+{$ENDIF}
 
 type
   TRelocInfo = record
@@ -10233,9 +10267,25 @@ const
 // AssocQueryStringA asks Windows which executable is registered for a file
 // extension (here, ".txt").  Declared directly because Delphi 7's ShlwApi
 // import unit does not expose it.
+(* GATED 2026-09-08 -- a LINK-time import, see the note on the monitor pair.
+
+  Returning a failure HRESULT off Windows is not a degradation: the caller
+  already falls back when no .txt association can be resolved, which is the
+  same situation. What it falls back TO is Notepad, which does not exist on
+  Linux or macOS -- so this is a KNOWN GAP, not a solved problem. The portable
+  answer is xdg-open / open, and it belongs with whatever else needs a
+  "launch the platform's handler" helper rather than being invented here. *)
+{$IFDEF WINDOWS}
 function AssocQueryStringA(flags: DWORD; str: DWORD; pszAssoc, pszExtra,
   pszOut: PAnsiChar; pcchOut: PDWORD): HRESULT; stdcall;
   external 'shlwapi.dll' name 'AssocQueryStringA';
+{$ELSE}
+function AssocQueryStringA(flags: DWORD; str: DWORD; pszAssoc, pszExtra,
+  pszOut: PAnsiChar; pcchOut: PDWORD): HRESULT;
+begin
+   Result := -1;   (* any failure; the caller then uses its fallback *)
+end;
+{$ENDIF}
 
 // Issue #986 -- open FileName in the user's default text editor (the program
 // registered for the ".txt" extension) instead of hard-coding Notepad.  Shared

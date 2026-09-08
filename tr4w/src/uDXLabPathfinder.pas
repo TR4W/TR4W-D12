@@ -38,10 +38,56 @@ function  StartDXLabPathfinder: boolean;
 procedure StopDXLabPathfinder;
 function  IsDXLabPathfinderRunning: boolean;
 
+(* THE WHOLE IMPLEMENTATION IS WINDOWS-ONLY, AND SO IS THE FEATURE
+  (gated 2026-09-08).
+
+  This is DDE -- Dynamic Data Exchange -- talking to DXLab SpotCollector. Both
+  halves of that are Windows: DDEML is a Win32 IPC mechanism with no counterpart
+  on Linux or macOS, and DXLab is a Windows application, so there is nothing to
+  talk TO even if there were a way to talk. This is not a port that has been
+  deferred; it is a feature that does not exist off Windows.
+
+  ITS NINE `external 'user32.dll'` IMPORTS ARE WHY THE PROGRAM WOULD NOT LINK.
+  An import costs nothing at COMPILE time -- it is resolved by the linker -- so
+  this unit compiled cleanly for x86_64-linux while making the whole program
+  fail with "ld.bfd: cannot find -luser32.dll". A per-unit compile probe cannot
+  see this class of dependency at all; only linking the program can.
+
+  THE INTERFACE IS UNCHANGED, so neither caller needs a conditional:
+  MainUnit asks IsDXLabPathfinderRunning before calling Stop, and uProgramMain
+  calls Start. Off Windows Start reports that it did nothing and returns False,
+  and IsRunning answers False forever, which is the truth. *)
 implementation
 
+{$IFDEF WINDOWS}
 uses
   LCLType, SysUtils, VC, MainUnit;
+{$ELSE}
+uses
+  VC;   (* logger *)
+{$ENDIF}
+
+{$IFNDEF WINDOWS}
+function StartDXLabPathfinder: boolean;
+begin
+   (* Reported, not silent: "my DXLab link is not working" is otherwise an
+     unanswerable question, and the answer is not a bug. *)
+   logger.Info('[uDXLabPathfinder] DDE is Windows-only, and so is DXLab ' +
+               'SpotCollector. Not started on this platform.');
+   Result := False;
+end;
+
+procedure StopDXLabPathfinder;
+begin
+   (* Nothing was started. MainUnit guards this with IsDXLabPathfinderRunning
+     anyway, so this exists to keep the interface identical. *)
+end;
+
+function IsDXLabPathfinderRunning: boolean;
+begin
+   Result := False;
+end;
+{$ELSE}
 
 // ---------------------------------------------------------------------------
 // Raw DDEML Win32 API declarations
@@ -367,5 +413,6 @@ function IsDXLabPathfinderRunning: boolean;
 begin
   Result := GRunning;
 end;
+{$ENDIF}
 
 end.

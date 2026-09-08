@@ -54,7 +54,26 @@ type
       procedure RunAllTests; override;
    end;
 
+(* THIS WHOLE SUITE IS WINDOWS-ONLY BY ITS OWN NATURE (gated 2026-09-08).
+
+  It is a DIFFERENTIAL test: it runs each format string through the NEW
+  formatter and through the OLD one, and asserts they agree. The old one IS
+  wsprintfA, a user32 export. Off Windows there is no old formatter to compare
+  against, so there is nothing here to assert -- this is not coverage lost to
+  portability work, it is a comparison with only one side.
+
+  Its four `external 'user32'` imports were part of why the unit-test PROGRAM
+  would not link on Linux ("ld.bfd: cannot find -luser32.dll"), even though this
+  unit compiled there perfectly well: an import is resolved by the linker, not
+  the compiler.
+
+  THE ASSERTION COUNT IS THEREFORE LOWER ON LINUX THAN ON WINDOWS, and that is
+  correct rather than a regression. RunAllTests says so out loud instead of
+  silently contributing nothing, because a suite that quietly does nothing is
+  indistinguishable from a suite that passed. *)
 implementation
+
+{$IFDEF WINDOWS}
 
 { THE OLD IMPLEMENTATION, declared exactly as TF.pas declares it -- cdecl, one
   Win32 export per argument shape. Only the shapes these tests need. }
@@ -260,5 +279,24 @@ begin
    Test_CharSpecifier;
    Test_WidthAndPrecision_Unchanged;
 end;
+
+{$ELSE}
+
+procedure TFormatTranslationTests.Test_ZeroPad_IsTheTrap;          begin end;
+procedure TFormatTranslationTests.Test_TimeFormatters;             begin end;
+procedure TFormatTranslationTests.Test_FileNameFormatters;         begin end;
+procedure TFormatTranslationTests.Test_CharSpecifier;              begin end;
+procedure TFormatTranslationTests.Test_WidthAndPrecision_Unchanged; begin end;
+
+procedure TFormatTranslationTests.RunAllTests;
+begin
+   (* SAID, NOT SILENT. A suite that contributes no assertions and says nothing
+     looks exactly like a suite that passed. *)
+   WriteLn('  SKIPPED: TFormatTranslationTests compares the new formatter '
+           + 'against wsprintfA, which is a user32 export. There is no old '
+           + 'formatter to compare against on this platform.');
+end;
+
+{$ENDIF}
 
 end.
