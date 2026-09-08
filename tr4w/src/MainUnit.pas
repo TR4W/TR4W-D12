@@ -202,7 +202,6 @@ var
 
 function IsWin64: Boolean;
 function ConvertPortTypeToCOMString(port: PortType): string;
-function GetLocalComputerName: string;
 procedure CheckNumber;
 procedure RunPlugin(PluginNumber: integer);
 procedure LoadInPlugins();
@@ -423,7 +422,6 @@ procedure CreateFonts;
 //procedure CreateMWFonts;
 function MainFontCellHeight: integer;
 procedure ApplyMainFontTo(aFont: TFont);
-function tCreateFont(nHeight, fnWeight: integer; lpszFace: PChar): HFONT;
 //function DrawEdit(lParam: lParam; wParam: wParam): Cardinal;
 procedure ProcessMenu(menuID: integer);
 procedure ProcessTAB(lowparam: Word);
@@ -510,7 +508,7 @@ function ParametersOkay(Call: CallString;
   Freq: LONGINT;
   var RData: ContestExchange): boolean;
 
-procedure PossibleCallsProc(PCDRAWITEMSTRUCT: PDrawItemStruct);
+//procedure PossibleCallsProc(PCDRAWITEMSTRUCT: PDrawItemStruct);
 
 procedure EditableLogWindowDblClick;
 procedure tClearDupeInfoCall;
@@ -676,30 +674,34 @@ uses
 
 function GetCPU: int64;
 begin
-  if not Windows.QueryPerformanceCounter(Result) then
-     begin
-     Result := 0;
-     end;
+  (* GetTickCount64, not Windows.QueryPerformanceCounter.
+
+    THE UNIT CHANGES AND THE NAME NO LONGER FITS. This was CPU cycles (a raw
+    RDTSC), then QPC ticks, and it is MILLISECONDS now. Both remaining callers
+    are inside {$IF tDebugMode} and one of them has its arithmetic commented
+    out, so nothing in a shipping build reads either the value or its
+    resolution -- which is the only reason a coarser clock is acceptable here.
+
+    IF SUB-MILLISECOND TIMING IS EVER NEEDED, this is not the function to
+    stretch: the assessment of per-platform high-resolution timers, EpikTimer
+    included, is in docs/PLATFORM_CLOCK_ABSTRACTION.md part 2. The CW element
+    clock in LOGK1EA is the caller that would want it, and it already says in
+    its own comment that its off-Windows arm will not key a contest.
+
+    Monotonic on every platform FPC targets, which the original RDTSC was not:
+    the timestamp counter is per-core, so a thread migrating between cores
+    could read it going backwards. *)
+  Result := int64(GetTickCount64);
 end;
 
-function GetLocalComputerName: string;
-var
-  c1: dword;
-  arrCh: array[0..MAX_PATH] of char;
-begin
-  c1 := MAX_PATH;
-  // Explicitly W: arrCh is an array of (Wide)Char, and the generic name binds
-  // to the ANSI entry point under FPC's windows unit.
-  GetComputerNameW(arrCh, c1);
-  if c1 > 0 then
-     begin
-     result := arrCh
-     end
-  else
-     begin
-     result := '';
-     end;
-end;
+(* MOVED TO uHostName ON 2026-09-07 -- see that unit for why it is a unit.
+
+  In short: there is no portable RTL call for a host name (Windows has
+  GetComputerNameW, Unix has unix.pp's GetHostName, and neither compiles on the
+  other), so a conditional is unavoidable. What was avoidable was having it in
+  the middle of this file. Its two callers -- the HamScore XML in LOGSUBS2 and
+  the PSTRotator XML in uRadioPolling -- now use uHostName.LocalComputerName
+  directly. *)
 
 // Logs additional QSO records when the operator entered multiple POTA park
 // references or multiple counties in a single exchange.  The parser
@@ -4379,13 +4381,17 @@ end;
 
 (* THE HEIGHT OF THE MAIN WINDOW FONT, IN PIXELS.
 
-  ONE DEFINITION, because there are two consumers and the arithmetic is not
-  obvious. CreateFonts asks tCreateFont for ws - 2 + FontSize, and tCreateFont
-  then adds FontSize - 1 of its own before calling CreateFontW -- so the height
-  Windows is actually given is ws + 2*FontSize - 3, and nothing said so.
+  ONE CONSUMER NOW, and it is ApplyMainFontTo. The second was CreateFonts,
+  which built an HFONT for the Win32 main window; that window is LCL and the
+  handle was write-only, so it went on 2026-09-07 along with tCreateFont.
 
-  A positive lfHeight is a CHARACTER CELL height, which is what TFont.Height
-  means in the LCL too, so the same number serves both. *)
+  The arithmetic is kept exactly as it was -- ws + 2*FontSize - 3 -- because it
+  is what the operator's chosen font size has always produced, and this is now
+  the only place it is written down.
+
+  A positive lfHeight was a CHARACTER CELL height, which is what TFont.Height
+  means in the LCL too, which is why the same number carried across unchanged
+  when the main window stopped being a Win32 window. *)
 function MainFontCellHeight: integer;
 begin
    Result := ws + 2 * FontSize - 3;
@@ -4417,69 +4423,44 @@ begin
       end;
 end;
 
-function tCreateFont(nHeight, fnWeight: integer; lpszFace: PChar): HFONT;
+(* SIX FONTS WERE BUILT HERE AND ONE WAS EVER USED.
+
+  tCreateFont IS GONE WITH THEM. It wrapped Windows.CreateFontW and added
+  `FontSize - 1` to whatever height it was handed -- an adjustment that existed
+  for the main window's own text, which the LCL now draws from a TFont. Five of
+  its six results were write-only (see the note in VC.pas), so deleting them
+  left one call, and a one-caller wrapper that silently alters its argument is
+  worse than the call itself.
+
+  WHAT AN LCL APPLICATION DOES INSTEAD, and already does here: set Name, Height
+  and Style on the control's TFont. ApplyMainFontTo below is that, and
+  MainFontCellHeight is the shared arithmetic. Nothing in this program should
+  acquire a new HFONT.
+
+  THE ONE THAT REMAINS IS NOT AN EXCEPTION TO THAT. LucidaConsoleFont is
+  consumed only by TF.CreateRichEdit, which creates a RICHED32 window to host
+  MMTTY's output -- MMTTY is a separate Windows EXE and that is a real Win32
+  control, so WM_SETFONT with an HFONT is its actual API. It is gated to match
+  its consumer, which is what stops this routine reaching for Windows at all
+  off the platform.
+
+  `13 + FontSize - 1` is tCreateFont's arithmetic, written out rather than
+  hidden, so the size the operator sees does not change. *)
+procedure CreateFonts;
 begin
-  Result := Windows.CreateFontW
-    (
-    nHeight + FontSize - 1,
-    0,
-    0,
-    0,
-    fnWeight,
-    0,
-    0,
-    0,
-    DEFAULT_CHARSET {ANSI_CHARSET},
+{$IFDEF WINDOWS}
+  LucidaConsoleFont := Windows.CreateFontW(
+    13 + FontSize - 1,
+    0, 0, 0,
+    FW_BOLD * Ord(BoldFont),
+    0, 0, 0,
+    DEFAULT_CHARSET,
     OUT_DEFAULT_PRECIS,
     Clip_Default_Precis,
     Default_Quality,
     DEFAULT_PITCH,
-    lpszFace
-    );
-end;
-
-procedure CreateFonts;
-var
-  lcfn: PChar;
-begin
-{(*}
- if LuconSZLoadded then lcfn := 'Lucida Console SZ' else lcfn := 'Lucida Console';
-
- DeleteObject(MainFixedFont);
- MainFixedFont := tCreateFont(12+BandMapSize-2,FW_BOLD * Ord(BoldFont), @MainFontName[1]);
-(* THE MAIN WINDOW FONT, ONCE. ApplyMainFontTo below hands the same three
-    values to an LCL control -- see there before changing this line. *)
- MainFont := tCreateFont(MainFontCellHeight - FontSize + 1,
-    FW_BOLD * ord(BoldFont), @MainFontName[1]);
- CATWindowFont := tCreateFont(22, FW_EXTRABOLD, 'Lucida Console');
-
- MainWindowEditFont := tCreateFont(ws + 3, FW_EXTRABOLD, lcfn);
-
- {AutoSend}
- {Alt-P}
- TerminalFont :=
- Windows.CreateFontW(
- 18, 0, 0, 0,
- FW_DONTCARE,
- 0, 0, 0,
- {$IFDEF LANG_UKR}
- EastEurope_Charset
- {$ELSE}
-   {$IFDEF LANG_RUS}
- russian_charset
-   {$ELSE}
- DEFAULT_CHARSET
-   {$ENDIF}
+    'Lucida Console');
 {$ENDIF}
-
-,
- OUT_DEFAULT_PRECIS,
- Clip_Default_Precis,
- Default_Quality, FIXED_PITCH, 'Terminal');
-
- {Dupesheet,Telnet}
- LucidaConsoleFont := tCreateFont(13, FW_BOLD * ord(BoldFont){FW_DONTCARE}, 'Lucida Console');
-{*)}
 end;
 
 // Issue #20 -- shared body for Ctrl-P (short path) and Alt-Ctrl-P (long path).
@@ -7034,68 +7015,68 @@ begin
      end;
 end;
 
-procedure PossibleCallsProc(PCDRAWITEMSTRUCT: PDrawItemStruct);
-label
-  draw;
-const
-  nWidth = 2;
-var
-  TempColor: tcolor;
-  Pen, PenOld: HPEN;
-begin
-
-  if (PCDRAWITEMSTRUCT^.itemAction = ODA_FOCUS) then
-     begin
-     DrawFocusRect(PCDRAWITEMSTRUCT^.HDC, PCDRAWITEMSTRUCT^.rcItem);
-     Exit;
-     end;
-
-  if lobyte(PCDRAWITEMSTRUCT^.itemState) = ODS_SELECTED then
-     begin
-     Pen := CreatePen(PS_SOLID, nWidth, $FF0000 {RGB(255, 0, 0)});
-     SetBkMode(PCDRAWITEMSTRUCT^.HDC, TRANSPARENT);
-     PenOld := SelectObject(PCDRAWITEMSTRUCT^.HDC, Pen);
-
-     Rectangle(PCDRAWITEMSTRUCT^.HDC,
-       PCDRAWITEMSTRUCT^.rcItem.Left + 1,
-       PCDRAWITEMSTRUCT^.rcItem.Top + 1,
-       PCDRAWITEMSTRUCT^.rcItem.Right,
-       PCDRAWITEMSTRUCT^.rcItem.Bottom);
-
-     SelectObject(PCDRAWITEMSTRUCT^.HDC, PenOld);
-     DeleteObject(Pen);
-
-     PCDRAWITEMSTRUCT^.rcItem.Top := PCDRAWITEMSTRUCT^.rcItem.Top + nWidth;
-     PCDRAWITEMSTRUCT^.rcItem.Left := PCDRAWITEMSTRUCT^.rcItem.Left + nWidth;
-     PCDRAWITEMSTRUCT^.rcItem.Right := PCDRAWITEMSTRUCT^.rcItem.Right - nWidth;
-     PCDRAWITEMSTRUCT^.rcItem.Bottom := PCDRAWITEMSTRUCT^.rcItem.Bottom - nWidth;
-     end;
-
-  if PossibleCallList.List[PCDRAWITEMSTRUCT^.ItemID].Dupe then
-     begin
-     TempColor := clred;
-     Windows.SetTextColor(PCDRAWITEMSTRUCT^.HDC, $00FFFFFF);
-     // InflateRect(PCDRAWITEMSTRUCT^.rcItem,-1,-1);
-     end
-  else
-     begin
-     TempColor := tr4wColorsArray[TWindows[mwePossibleCall].mweBackG];
-     //clbtnface;
-     Windows.SetTextColor(PCDRAWITEMSTRUCT^.HDC,
-       tr4wColorsArray[TWindows[mwePossibleCall].mweColor] { $ 00000000});
-     end;
-
-  GradientRect(PCDRAWITEMSTRUCT^.HDC, PCDRAWITEMSTRUCT^.rcItem, TempColor,
-    TempColor {tr4wColorsArray[TWindows[mwePossibleCall].mweBackG]},
-    gdHorizontal);
-
-  SetBkMode(PCDRAWITEMSTRUCT^.HDC, TRANSPARENT);
-  Windows.DrawTextA(PCDRAWITEMSTRUCT^.HDC,
-    @PossibleCallList.List[PCDRAWITEMSTRUCT^.ItemID].Call[1],
-    length(PossibleCallList.List[PCDRAWITEMSTRUCT^.ItemID].Call),
-    PCDRAWITEMSTRUCT^.rcItem, DT_END_ELLIPSIS + DT_SINGLELINE + DT_CENTER +
-    DT_VCENTER);
-end;
+//procedure PossibleCallsProc(PCDRAWITEMSTRUCT: PDrawItemStruct);
+//label
+//  draw;
+//const
+//  nWidth = 2;
+//var
+//  TempColor: tcolor;
+//  Pen, PenOld: HPEN;
+//begin
+//
+//  if (PCDRAWITEMSTRUCT^.itemAction = ODA_FOCUS) then
+//     begin
+//     DrawFocusRect(PCDRAWITEMSTRUCT^.HDC, PCDRAWITEMSTRUCT^.rcItem);
+//     Exit;
+//     end;
+//
+//  if lobyte(PCDRAWITEMSTRUCT^.itemState) = ODS_SELECTED then
+//     begin
+//     Pen := CreatePen(PS_SOLID, nWidth, $FF0000 {RGB(255, 0, 0)});
+//     SetBkMode(PCDRAWITEMSTRUCT^.HDC, TRANSPARENT);
+//     PenOld := SelectObject(PCDRAWITEMSTRUCT^.HDC, Pen);
+//
+//     Rectangle(PCDRAWITEMSTRUCT^.HDC,
+//       PCDRAWITEMSTRUCT^.rcItem.Left + 1,
+//       PCDRAWITEMSTRUCT^.rcItem.Top + 1,
+//       PCDRAWITEMSTRUCT^.rcItem.Right,
+//       PCDRAWITEMSTRUCT^.rcItem.Bottom);
+//
+//     SelectObject(PCDRAWITEMSTRUCT^.HDC, PenOld);
+//     DeleteObject(Pen);
+//
+//     PCDRAWITEMSTRUCT^.rcItem.Top := PCDRAWITEMSTRUCT^.rcItem.Top + nWidth;
+//     PCDRAWITEMSTRUCT^.rcItem.Left := PCDRAWITEMSTRUCT^.rcItem.Left + nWidth;
+//     PCDRAWITEMSTRUCT^.rcItem.Right := PCDRAWITEMSTRUCT^.rcItem.Right - nWidth;
+//     PCDRAWITEMSTRUCT^.rcItem.Bottom := PCDRAWITEMSTRUCT^.rcItem.Bottom - nWidth;
+//     end;
+//
+//  if PossibleCallList.List[PCDRAWITEMSTRUCT^.ItemID].Dupe then
+//     begin
+//     TempColor := clred;
+//     Windows.SetTextColor(PCDRAWITEMSTRUCT^.HDC, $00FFFFFF);
+//     // InflateRect(PCDRAWITEMSTRUCT^.rcItem,-1,-1);
+//     end
+//  else
+//     begin
+//     TempColor := tr4wColorsArray[TWindows[mwePossibleCall].mweBackG];
+//     //clbtnface;
+//     Windows.SetTextColor(PCDRAWITEMSTRUCT^.HDC,
+//       tr4wColorsArray[TWindows[mwePossibleCall].mweColor] { $ 00000000});
+//     end;
+//
+//  GradientRect(PCDRAWITEMSTRUCT^.HDC, PCDRAWITEMSTRUCT^.rcItem, TempColor,
+//    TempColor {tr4wColorsArray[TWindows[mwePossibleCall].mweBackG]},
+//    gdHorizontal);
+//
+//  SetBkMode(PCDRAWITEMSTRUCT^.HDC, TRANSPARENT);
+//  Windows.DrawTextA(PCDRAWITEMSTRUCT^.HDC,
+//    @PossibleCallList.List[PCDRAWITEMSTRUCT^.ItemID].Call[1],
+//    length(PossibleCallList.List[PCDRAWITEMSTRUCT^.ItemID].Call),
+//    PCDRAWITEMSTRUCT^.rcItem, DT_END_ELLIPSIS + DT_SINGLELINE + DT_CENTER +
+//    DT_VCENTER);
+//end;
 
 procedure EditableLogWindowDblClick;
 var

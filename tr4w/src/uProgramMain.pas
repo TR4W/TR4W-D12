@@ -1120,7 +1120,9 @@ begin
 
  Format(TR4W_INI_FILENAME, '%ssettings\tr4w.ini', TR4W_PATH_NAME);
   LuconSZLoadded := AddFontResourceW(TR4W_LC_FILENAME) <> 0;
-  MainFixedFont := tCreateFont(15, FW_BOLD * Ord(BoldFont), @MainFontName[1]);
+  (* The MainFixedFont line that stood here built an HFONT nothing read.
+    See the note in VC.pas: five of the six font handles were write-only
+    once the main window became an LCL form. *)
   CreateDirectoryIfNotExist;
 
   (* --textfit: measure every caption against the room it has, and every control

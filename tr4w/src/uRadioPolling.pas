@@ -37,6 +37,7 @@ uses
    uDupeSheet, // 4.53.7
    uFunctionKeys,
    utils_file,
+   uHostName,   (* LocalComputerName -- the <StationName> element *)
    MainUnit,
    Messages,
    SysUtils,
@@ -1471,7 +1472,7 @@ begin
    sBuf := '<?xml version="1.0" encoding="utf-8"?>' + sLineBreak +
       '<RadioInfo>' + sLineBreak +
       #9 + '<app>TR4W</app>' + sLineBreak +
-      #9 + '<StationName>' +  GetLocalComputerName + '</StationName>' + sLineBreak +
+      #9 + '<StationName>' +  LocalComputerName + '</StationName>' + sLineBreak +
       // Per N1MM RadioInfo spec: RadioNr identifies the packet's subject
       // radio (1 or 2), not whichever radio is currently active.  In SO2R,
       // each radio emits its own packet with its own number.

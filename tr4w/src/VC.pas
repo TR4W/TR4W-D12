@@ -2954,16 +2954,24 @@ var
   LuconSZLoadded                        : boolean;
   MainFontName                          : Str31 = 'Arial';
   MainCallsign                          : CallString;
-  MainFont                              : HFONT;
-  MainFixedFont                         : HFONT;
 
-  MainWindowEditFont                    : HFONT;
+  (* FIVE HFONTs WERE DELETED HERE ON 2026-09-07 -- MainFont, MainFixedFont,
+    MainWindowEditFont, CATWindowFont and TerminalFont -- because every one of
+    them was CREATED AND NEVER READ. Measured comment-stripped across all 533
+    Pascal files in the tree: the only occurrences left were the assignments
+    themselves and these declarations.
 
-  CATWindowFont                         : HFONT;
+    They are what the Win32 main window drew its text with, via WM_SETFONT on
+    an HFONT handle. The LCL conversion replaced that: a control carries a
+    TFont, and MainUnit.ApplyMainFontTo hands it the same family, height and
+    weight. The handles kept being built for a window that no longer used them.
 
+    LucidaConsoleFont SURVIVES, and only just: its single consumer is
+    TF.CreateRichEdit, which is {$IFDEF WINDOWS} already because it hosts
+    MMTTY's RICHED32 output -- a genuine Win32 control belonging to a separate
+    Windows program. WM_SETFONT with an HFONT is the correct API there, so this
+    is the one place an HFONT is still the right answer rather than a leftover. *)
   LucidaConsoleFont                     : HFONT;
-
-  TerminalFont                          : HFONT;
   Fontstructure                         : TLogFont;
 
 

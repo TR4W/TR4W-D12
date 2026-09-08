@@ -87,7 +87,8 @@ uses
   ZoneCont
   ,
   uTR4WStrings,
-  uAnsiStr;
+  uAnsiStr,
+  uHostName;   (* LocalComputerName -- the <NetBiosName> element *)
   var TimeLastScoreBroadcast : TDateTime;
   const BandTypeToUDPContactBand  : array[Band160..BandLight] of PAnsiChar =
     (
@@ -2952,7 +2953,7 @@ begin
             #9 + '<RadioInterfaced>' + Format('%d',[IfThen(ActiveRadioPtr.RadioModel <> NoInterfacedRadio,1,0)]) + '</RadioInterfaced>' + sLineBreak +  // ny4i Issue 82
             #9 + '<NetworkedCompNr>0</NetworkedCompNr>' + sLineBreak + // TODO
             #9 + '<IsOriginal>True</IsOriginal>' + sLineBreak +
-            #9 + '<NetBiosName>' + GetLocalComputerName + '</NetBiosName>' + sLineBreak +
+            #9 + '<NetBiosName>' + LocalComputerName + '</NetBiosName>' + sLineBreak +
             #9 + '<IsRunQSO>' + Format('%d',[IfThen(RxData.ceSearchAndPounce,0,1)]) + '</IsRunQSO>' + sLineBreak +
             #9 + '<StationName>' +  ComputerName + '</StationName>' + sLineBreak + // Issue 263 NY4I
             #9 + '<ID>' + RxData.id + '</ID>' + sLineBreak +
