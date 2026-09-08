@@ -86,7 +86,7 @@ var
   b                                     : cardinal = 0;
   c                                     : cardinal = 0;
   e                                    : cardinal = 0;
-  T2                                    : cardinal = 0;
+  T2                                    : QWord = 0;   { see tDispalyOnAirTime }
   d2                                    : cardinal = 0;
   d3                                    : cardinal = 0;
  // d4                                    : cardinal = 0;
@@ -2851,7 +2851,10 @@ begin
      begin
      TenMinuteTime.Band := Band;
      TenMinuteTime.Mode := Mode;
-     TenMinuteTime.Time := GetTickCount;
+     { GetTickCount64, matching the field's own declaration and comment --
+    MarkTime writes it that way, and this path was writing a 32-bit tick
+    into the same QWord field. }
+  TenMinuteTime.Time := GetTickCount64;
      end;
 end;
 
@@ -3677,7 +3680,7 @@ end;
 
 procedure tDispalyOnAirTime;
 var
-d              : Cardinal;
+d              : QWord;
 //OperatingTime                        : integer;
  // PreviousQSOTime                       : TQSOTime;
  // Switch : boolean;
@@ -3686,12 +3689,12 @@ d              : Cardinal;
   if (CallWinKeyDown) and (not Begin_QSO) then              // 4.115.3   dont start timeer until first entry
      begin
      Begin_QSO := True;
-     StartCPU := Windows.GetTickCount;
+     StartCPU := GetTickCount64;
      end;
 
 if (T2 > 0)  then
    begin
-   d := Windows.GetTickCount;
+   d := GetTickCount64;
     if (d div 1000) mod 2 = 0 then
        begin
        TR4WMainForm.pnlOnAirTimeCounter.Caption := MillisecondsToFormattedString(d - StartCPU, False);     //  4.115.3
@@ -3716,8 +3719,8 @@ subtract break time from it.
 Then when elapsed next drops below break length, add saved elapsed to current elapsed.
 }
 var
-  d                                    : Cardinal;
-  k                                    : Cardinal;
+  d                                    : QWord;
+  k                                    : QWord;
   //l                                    : Cardinal;
   //TimeDifference                       : Integer;
  //n4af 4.35.5
@@ -3728,9 +3731,9 @@ var
  Start := True;
  end;
 
-  d := Windows.GetTickCount - T2;
+  d := GetTickCount64 - T2;
  //d := a;
- k := Windows.GetTickCount - tElapsedTimeFromLastQSO;     // time from last qso
+ k := GetTickCount64 - tElapsedTimeFromLastQSO;     // time from last qso
 
   if (k div 1000) mod 2 = 0 then         // if 5 seconds elapsed
      begin

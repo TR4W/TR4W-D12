@@ -380,7 +380,8 @@ procedure SetUpGlobalsAndInitialize;
 //FileName : str40;
 begin
 
-  StartCPU := GetTickCount;
+  { GetTickCount64 -- StartCPU is QWord, see MainUnit. }
+  StartCPU := GetTickCount64;
   udp := TIdUDPClient.Create(nil); // ny4i Issue #99
   // The broadcaster owns WHETHER and WHERE; this unit owns the socket, so it
   // hands over the transport once the socket exists.  Keeping Indy out of

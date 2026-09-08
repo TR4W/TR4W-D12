@@ -755,7 +755,7 @@ procedure CompressFormat(Call: CallString; var Output: FourBytes);
 procedure DelayOrKeyPressed(DelayTime: integer);
 function DeleteMult(var LogString: Str80; MultString: Str20): boolean;
 
-function ElaspedTimeString(StartTime: Cardinal {TimeRecord}): string {Str20};
+function ElaspedTimeString(StartTime: QWord {TimeRecord}): string {Str20};
 (* QWord, with GetTickCount64 -- see logradio.pas on the 49.7-day wrap.
   Widening the callers without widening this would truncate right here. *)
 function ElaspedSec100(StartTime: QWord {TimeRecord}): LONGINT;
@@ -1560,13 +1560,24 @@ begin
   StartTime := GetTickCount64;
 end;
 
-function ElaspedTimeString(StartTime: Cardinal {TimeRecord}): string {Str20};
+function ElaspedTimeString(StartTime: QWord {TimeRecord}): string {Str20};
 
 { Returns a string in the format HH:MM:SS with how long it has been }
 
 //var
 //  Hours, Mins, Secs, TotalSeconds       : LONGINT;
 //  HourString, MinsString, SecsString    : Str20;
+(* QWord, NOT Cardinal, AND THAT WAS A DEFECT (2026-09-08).
+
+  The body computes `GetTickCount64 - StartTime`, but the parameter was
+  Cardinal -- so a 64-bit tick handed to it was TRUNCATED BY THE CALL, and the
+  subtraction then mixed a full tick with a 32-bit one. Under 49.7 days of
+  uptime the two agree and it works by luck; past that the elapsed time it
+  reports is nonsense.
+
+  Its one caller passes TenMinuteTime.Time, which is declared QWord and
+  commented "GetTickCount64" -- so the field was already right and the
+  signature was quietly undoing it. *)
 begin
   Result := MillisecondsToFormattedString(GetTickCount64 - StartTime, False);
   {

@@ -183,7 +183,10 @@ var
   VE_Switch: boolean = False; // 4.72.5
   PTT_SET: boolean = False; //4.53.9
   InSplit: boolean = False;
-  StartCPU: DWORD;
+  { QWord with GetTickCount64: the on-air timer subtracts this from a tick,
+    and a 32-bit stamp against a 64-bit clock only agrees under 49.7 days
+    of uptime. Written by LogCfg and logwind, read by logwind. }
+  StartCPU: QWord;
   STString: Str10; // 4.56.7
   Switch: boolean = False;
   SwitchNext: boolean = False; // 4.52.3

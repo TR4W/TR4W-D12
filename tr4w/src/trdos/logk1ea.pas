@@ -331,7 +331,9 @@ var
   // 'PTT VIA COMMANDS=' line and the file still wins.  This changes fresh
   // installs.
   tr4w_PTTStartTime                     : QWord;   // GetTickCount64
-  tElapsedTimeFromLastQSO               : DWORD;
+  { QWord: MainUnit already wrote GetTickCount64 into this, which a DWORD
+    silently truncated. Every writer uses the 64-bit clock now. }
+  tElapsedTimeFromLastQSO               : QWord;
 
 //  tPTTStatus                            : PTTStatusType = PTT_OFF;
   {

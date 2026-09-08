@@ -887,7 +887,14 @@ begin
 
         if tr4w_PTTStartTime <> 0 then
            begin
-           tRestartInfo.riPTTOnTotalTime := tRestartInfo.riPTTOnTotalTime + GetTickCount - tr4w_PTTStartTime;
+           (* GetTickCount64, matching tr4w_PTTStartTime's own declaration
+             (QWord, commented "GetTickCount64") and matching what
+             uRadioPolling does with the same two variables. This path was
+             the odd one out: a 32-bit read against a 64-bit stamp, which
+             agrees only while uptime is under 49.7 days. riPTTOnTotalTime
+             stays Cardinal -- it is a field of the restart file. *)
+           tRestartInfo.riPTTOnTotalTime := tRestartInfo.riPTTOnTotalTime +
+              Cardinal(GetTickCount64 - tr4w_PTTStartTime);
            end;
         tDispalyOnAirTime;
         wkPTTOn := False;
@@ -905,7 +912,7 @@ begin
 {$IFEND}
         if wkPTTOn = False then
            begin
-           tr4w_PTTStartTime := GetTickCount;
+           tr4w_PTTStartTime := GetTickCount64;
            end;
         wkPTTOn := True;
       end;

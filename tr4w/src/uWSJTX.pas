@@ -991,7 +991,12 @@ begin
                         SearchAndPounceOpMode;
                       TempRXData.ceComputerID := ComputerID;
                       LogContact(TempRXData, True);
-                      tElapsedTimeFromLastQSO := GetTickCount;   (* SysUtils; portable *)
+                      (* GetTickCount64, and LCLIntf declares it -- as it did
+                        GetTickCount, so this was already portable. The point
+                        is the WIDTH: MainUnit writes the same variable with
+                        GetTickCount64, and one 32-bit writer is what makes a
+                        shared stamp disagree with itself. *)
+                      tElapsedTimeFromLastQSO := GetTickCount64;
                       QueueWSJTXUI(wjPostQSO);
                       //ShowStationInformation(@TempRXData.Callsign);
                       ClearContestExchange(TempRXData);
