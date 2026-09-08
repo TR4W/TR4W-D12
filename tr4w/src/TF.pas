@@ -163,7 +163,7 @@ type
   the same type under a name TF owns, and every one of the seventeen call sites
   passes @SomeProc, which is Pointer-compatible either way. It was the only
   reason this declaration needed the Windows unit. *)
-function tCreateThread(lpStartAddress: TTR4WThreadStart; var lpThreadId: DWORD; Quiet: boolean = False; aParameter: Pointer = nil): THandle;
+function tCreateThread(lpStartAddress: TTR4WThreadStart; var lpThreadId: TThreadID; Quiet: boolean = False; aParameter: Pointer = nil): TThreadID;
 
 //function tgethostbyname(h_Name: PAnsiChar): PAnsiChar;
 (* tDialogBox IS DELETED (2026-08-31).  Its last live caller went with the
@@ -845,7 +845,7 @@ begin
   end;
 end;
 
-function tCreateThread(lpStartAddress: TTR4WThreadStart; var lpThreadId: DWORD; Quiet: boolean; aParameter: Pointer): THandle;
+function tCreateThread(lpStartAddress: TTR4WThreadStart; var lpThreadId: TThreadID; Quiet: boolean; aParameter: Pointer): TThreadID;
 var
   start: PWorkerStart;
   id: TThreadID;
@@ -888,7 +888,7 @@ begin
 
   id := 0;
   Result := BeginThread(tWorkerThreadTrampoline, start, id);
-  lpThreadId := DWORD(id);
+  lpThreadId := id;
 
   // Issue #1041: Quiet suppresses this per-create debug line so the network
   // connect-retry loop (one thread every 5s while the server is unreachable)
