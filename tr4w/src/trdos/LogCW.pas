@@ -34,7 +34,6 @@ utils_text,
   LOGDVP, {SlowTree, }
   Sysutils,
   Tree,
-  Windows,
   LogWind, {Dos,}
   LogRadio,
   LogK1EA,

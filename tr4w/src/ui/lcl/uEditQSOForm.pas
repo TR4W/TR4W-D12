@@ -79,7 +79,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, DateTimePicker,
-  LCLType, Windows,
+  LCLType, 
   uTR4WStrings;
 
 type

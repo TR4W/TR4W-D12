@@ -28,8 +28,6 @@ interface
 uses
   VC,
   TF,
-  Messages,
-  Windows,
   Tree,
   LogWind;
 

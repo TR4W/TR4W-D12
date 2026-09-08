@@ -30,7 +30,6 @@ uses
   uTelnet,
   VC,
   TF,
-  Windows,
   Tree,
   LOGSend,
   LogCW,

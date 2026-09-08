@@ -25,7 +25,6 @@ interface
 uses
   uConfigValues,   // Config -- migrated settings
   SysUtils,
-  Windows,
   LogDom,
   TF,
   VC,

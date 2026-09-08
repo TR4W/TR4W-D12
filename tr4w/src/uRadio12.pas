@@ -26,8 +26,6 @@ interface
 uses
   TF,
   VC,
-  Windows,
-  Messages,
   LogRadio,
   Tree;
 

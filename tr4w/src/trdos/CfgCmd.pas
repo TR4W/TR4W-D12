@@ -26,7 +26,6 @@ interface
 
 uses {SlowTree,} Tree,
 
-  Windows,
   TF,
   VC,
   utils_text,

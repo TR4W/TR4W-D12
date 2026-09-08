@@ -42,7 +42,11 @@ unit uRadioHamLibDirect;
 interface
 
 uses
-  uFactoryRadioBase, uRadioBand, uHamLibDirect, StrUtils, SysUtils, Math, Classes, Log4D, TF, VC, Tree, Windows, uAppPaths;
+  uFactoryRadioBase, uRadioBand, uHamLibDirect, StrUtils, SysUtils, Math, Classes, Log4D, TF, VC, Tree,
+  (* Windows is gone (2026-09-08): the two Win32-spelled critical-section calls
+    became the RTL's InitCriticalSection / DoneCriticalSection, and Enter and
+    Leave were already the RTL's own. *)
+  uAppPaths;
 
 {-----------------------------------------------------------------------------
   Send queue — command types posted from the main thread, executed on the
@@ -382,7 +386,9 @@ begin
   FUseMainSubVFO := False;
   FHasTargetableVFO := False;
   FUrgentQueue := TList.Create;
-  InitializeCriticalSection(FCritSect);
+  { The RTL's names for the same operations on the same TRTLCriticalSection,
+    on every platform -- Windows' spellings came from the Windows unit. }
+  InitCriticalSection(FCritSect);
 
   Self.radioModel := 'HamLib Direct';
   logger.Info('[THamLibDirect] Created HamLib Direct radio instance');
@@ -409,7 +415,7 @@ begin
   // radio is already closed.  Must happen before deleting the critical section.
   DrainUrgentQueue;
   FUrgentQueue.Free;
-  DeleteCriticalSection(FCritSect);
+  DoneCriticalSection(FCritSect);
 
   inherited Destroy;
 end;

@@ -3043,6 +3043,27 @@ Nothing here is a bench test. They need an answer, not a radio.
   `WriteBufferToCATPort` and those five call sites outright? It is ~60 lines
   and would take `GetCommModemStatus` off `logk1ea` with it.
 
+- [ ] **The Icom LAN transport sends through `ws2_32.dll` ON PURPOSE, and it is
+      the last thing keeping `uIcomNetworkTransport` on Windows.**
+  `SendRawPacket` declares `sendto` itself -- `external 'ws2_32.dll'` -- with a
+  hand-rolled `sockaddr_in`. The comment says why, and it is not laziness:
+
+      Use direct WinSock sendto() to avoid TIdUDPServer.SendBuffer deadlock
+      when called from the main thread while Indy read threads are active.
+
+  So the obvious port -- back to Indy's `SendBuffer` -- reintroduces a deadlock
+  somebody already hit and fixed. `inet_addr` and two `setsockopt` calls on the
+  same sockets come along with it.
+
+  **This unit is deliberately untouched.** It is also the one radio family
+  `RADIO_BENCH_STATUS.md` lists as UNPROVEN (Icom LAN), so a change here cannot
+  be checked by any gate we have -- it needs the radio.
+
+  **The question:** leave it Windows-only behind a gate, or find a send path
+  that is both deadlock-free and portable? The rest of the unit is ordinary
+  (`GetTickCount`, a thread wait, `Sleep`) and converts in an afternoon once
+  this is decided -- doing that first would be churn on unproven code.
+
 - [ ] **`FindDirectory` hunts for DOS TR files and has always returned ''.**
   `FoundDirectory` in `tree.pas` called `FindFirstFileW` and then tested a
   local string that NOTHING assigns -- the line that filled it is commented out

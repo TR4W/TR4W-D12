@@ -30,7 +30,6 @@ uses
   StrUtils,
   TF,
   VC,
-  Windows,
   utils_text,
   utils_math,
   uGridDistance

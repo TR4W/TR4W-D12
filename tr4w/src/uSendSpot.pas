@@ -27,15 +27,12 @@ uses
   TF,
   VC,
   uNet,
-  Windows,
   LogStuff,
   LogK1EA,
   LogWind,
   LogRadio,
   LogEdit,
-  WinSock2,
-  PostUnit,
-  Messages;
+  PostUnit;
 
 {
   THE SEND-SPOT SEAM.  The dialog itself is now an LCL form --

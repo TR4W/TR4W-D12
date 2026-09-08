@@ -21,7 +21,7 @@ interface
 
 
 uses Classes, SysUtils, IdSSLOpenSSLHeaders, IdHashSHA, IdHttp, IdGlobal, Log4D, uLogConfig,
-     IdCoderMIME, IdSSLOpenSSL, IdIOHandler, IdIOHandlerSocket, IdLogFile, DateUtils, Windows;
+     IdCoderMIME, IdSSLOpenSSL, IdIOHandler, IdIOHandlerSocket, IdLogFile, DateUtils;
 
 
 const

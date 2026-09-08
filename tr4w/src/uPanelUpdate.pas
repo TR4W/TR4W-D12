@@ -89,6 +89,12 @@ unit uPanelUpdate;
 interface
 
 uses
+  (* WINDOWS IS REAL HERE, and it is exactly two calls: IsChild and IsWindow,
+    in ForgetPanel. The LCL's compatibility layer declares IsWindow but NOT
+    IsChild (lcl\include\winapih.inc), and IsChild is the one that matters --
+    see the note at the call site, where testing IsWindow instead was the
+    actual defect. Checked 2026-09-08 while removing dead `uses Windows`
+    entries elsewhere; this one is not dead. *)
   Windows,
   VC;      // TMainWindowElement -- what a puElement update addresses
 

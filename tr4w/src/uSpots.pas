@@ -30,9 +30,6 @@ uses
   TF,
   uDupesheet,
   LogStuff,
-  WinSock2,
-  Windows,
-  Messages,
   LogDupe,
   LogEdit,
   LogPack,
@@ -856,7 +853,7 @@ begin
      exit;
      end;
 
-  d := MAXLONG;
+  d := MaxLongint  { was Windows.MaxLongint: same $7FFFFFFF, declared by System };
   //  Index2 := 0; // 4.79.3
   for Index := 0 to FCount - 1 do
      begin
@@ -921,7 +918,7 @@ begin
      Exit;
      end;
 
-  d := MAXLONG;
+  d := MaxLongint;
   //  index2 := 0; // 4.79.3
   for Index := 0 to FCount - 1 do
      begin

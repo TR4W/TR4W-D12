@@ -34,9 +34,7 @@ uses
   LogWind,
   LogCfg,
   LogRadio,
-  Tree,
-  Windows,
-  Messages;
+  Tree;
 
 var
 LPTBaseAddressArray                   : array[Parallel1..Parallel3] of Cardinal = ($378, $278, $3BC);  

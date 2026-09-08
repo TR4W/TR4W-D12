@@ -31,7 +31,6 @@ uses
   TF,
   VC,
   utils_text,
-  Windows,
   LogDupe,
   LogEdit,
   LogStuff,

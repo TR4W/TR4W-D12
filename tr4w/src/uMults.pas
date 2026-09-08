@@ -32,7 +32,6 @@ uses
   uCallSignRoutines,
   uCTYDAT,
   //Country9,
-  Windows,
   Log4D;   // Issue #1034: dropped uCallsigns (unused here)
 
 

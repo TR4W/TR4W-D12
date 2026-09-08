@@ -27,8 +27,6 @@ uses
   uAltP,
   TF,
   VC,
-  Windows,
-  Messages,
   Tree;
 
 {

@@ -28,12 +28,10 @@ uses
   uCallsigns,
   VC,
   LogRadio,
-  Windows,
   LogEdit,
   LogStuff,
   LogWind,
-  uGradient,
-  Messages;
+  uGradient;
 
 procedure ClearAltD;
 const

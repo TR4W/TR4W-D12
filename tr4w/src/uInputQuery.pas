@@ -26,8 +26,7 @@ interface
 uses
   VC,
   TF,
-  LCLType,
-  Messages;
+  LCLType;
 
 var
   IQresult                              : ShortString;

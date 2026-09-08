@@ -45,8 +45,7 @@ uses
   // Issue #1034: dropped 'TF' (unused here) -- it pulled TF -> MainUnit -> LogStuff,
   // which blocked uSortedStringList (and its uMults consumer) from linking into the test EXE.
   //Country9,
-  SysUtils,   (* CompareText -- see TSortedStringList.CompareStrings *)
-  Messages;
+  SysUtils;   (* CompareText -- see TSortedStringList.CompareStrings *)
 
 type
 
