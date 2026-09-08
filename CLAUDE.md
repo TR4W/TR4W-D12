@@ -1023,6 +1023,7 @@ Read the specific doc before acting in its area — these are current and this f
 | String/ShortString work | `tr4w/docs/D12_STRING_MODERNIZATION_PLAN.md`, `docs/SHORTSTRING_BOUNDARY_AUDIT.md` |
 | VCL coexistence / FMX | `docs/VCL_WIN32_COEXISTENCE.md`, `docs/FMX Migration Discussion.md` |
 | **What is still here only for Delphi (survey, nothing changed)** | **`docs/DELPHI_SHIM_INVENTORY.md`** |
+| **Win32 ARTIFACTS -- the shapes that compile everywhere and are still wrong** | **`docs/WIN32_ARTIFACT_SWEEP.md`** -- the successor to the portability sweep, and a different question: not "does it compile off Windows" but "is this how FPC/LCL would have written it". Worked example: a multiplier's identity exists only as bits in a grid row's `Objects` pointer |
 | Icom network protocol | `docs/ICOM_NETWORK_SPEC.md`, `docs/ICOM_NETWORK_PROTOCOL_GUIDE.md` |
 | **LPT keying: the inpout32/x64 driver** | **`docs/inpOut32-64_Info.md`** -- the driver author's own notes. Read before the 64-bit move: the x64 DLL has a different name, the choice is by build bitness rather than OS, and the first load installs a kernel driver and needs elevation |
 | **Icom bandscope -> panadapter (read before touching `$27`)** | **`docs/ICOM_SPECTRUM_DESIGN.md`** |
@@ -1125,6 +1126,47 @@ Wrong, and all four are common:
          DoSomething;                    // code indented past begin/end
       end;
 ```
+
+**PREFER A CLASS TO A RECORD.** NY4I, 2026-09-08: *"I prefer objects to
+records unless we are going to bring all of the 80-s back..."* — and, when the
+first version of this rule listed four exemptions: *"Records that MUST stay
+records will require convincing me unless they are interface parameters."*
+
+**SO THERE IS EXACTLY ONE AUTOMATIC EXEMPTION: A LAYOUT DEFINED BY SOMETHING
+OUTSIDE THIS CODE, AT THE BOUNDARY WHERE IT IS PASSED.** A Win32 API struct
+(`TCharFormatA` — the OS names the fields and their order), a C library's
+parameter block, a byte layout another program reads. There the record IS the
+interface, and changing it would be changing the contract.
+
+**"IT GOES OVER THE WIRE" IS NOT AN EXEMPTION.** NY4I, 2026-09-08: *"I can
+persist a TContestExchange over the wire in multiple ways. No record
+required."* He is right, and it is the sharper form of the rule:
+
+**THE CONTRACT IS THE ENCODING, NOT THE TYPE.** A record is one way to produce
+an encoding — the DOS/Win32 way, where the in-memory layout WAS the
+serialization because you wrote the struct straight to a file or a socket.
+Given a serializer, the in-memory type is free to be whatever suits the
+program, and a class suits it better.
+
+So `ContestExchange` and the protocol records are NOT exempt. What is real
+about them is a separate question: the ENCODING has deployed readers — existing
+binary `.dat` logs and older TR4W versions on a multi-op network — so changing
+the BYTES is a compatibility decision. Changing the TYPE behind them is not.
+Keeping those two questions apart is the whole point; the SQLite log work is
+where the encoding one gets answered.
+
+A flags or capability set passed by value is likewise a convenience, not a
+contract.
+
+The worked example of getting this wrong is in
+[`docs/WIN32_ARTIFACT_SWEEP.md`](docs/WIN32_ARTIFACT_SWEEP.md): a multiplier's
+identity packed into an integer and cast to `TObject`, because the Win32
+control it came from had one `lParam` per item.
+
+The worked example of getting this wrong is in
+[`docs/WIN32_ARTIFACT_SWEEP.md`](docs/WIN32_ARTIFACT_SWEEP.md): a multiplier's
+identity packed into an integer and cast to `TObject`, because the Win32
+control it came from had one `lParam` per item.
 
 **EVERY BLOCK COMMENT USES `(* *)`. NEVER `{ }`.** Not only commented-out code --
 **every one**, including the ordinary explanatory comment above a routine.

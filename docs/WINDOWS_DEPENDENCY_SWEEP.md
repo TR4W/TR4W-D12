@@ -49,6 +49,20 @@ when its save had failed, and a `ForgetPanel` that cleared the whole cache
 every time. **The portability work is a reading exercise, and the defects are
 what the reading finds.**
 
+## What comes AFTER this sweep
+
+**A Win32 artifact can compile on every platform and still be wrong.** This
+document asks only "does it compile off Windows"; the shapes inherited from an
+API we no longer call -- a multiplier's identity packed into a grid row's
+`Objects` pointer, an integer cast to `TObject`, a parameter every caller
+ignores -- pass that test and fail the next one.
+
+They are scoped separately, in
+[`WIN32_ARTIFACT_SWEEP.md`](WIN32_ARTIFACT_SWEEP.md), and NY4I separated them
+deliberately (2026-09-08): a portability pass wants the smallest change that
+clears a compiler error, and that pass wants the right shape. Mixing the two
+produces a diff nobody can review.
+
 ## The stop condition
 
 Zero ungated entries, **or** every remaining one has its reason written beside it

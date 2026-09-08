@@ -30,8 +30,11 @@ uses
 
   PostUnit,
   LCLType,
-  LogDupe,
-  Messages
+  LogDupe
+  (* Messages went 2026-09-08. It was here for ONE type -- the lParam on
+    ShowLogCompare -- and LCLType, already imported above, declares LPARAM
+    for every widget set (lcltype.pp:119, a distinct PtrInt). Verified by
+    removing the import and compiling for x86_64-linux, not by grepping. *)
   ;
 
 {

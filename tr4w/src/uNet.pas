@@ -53,20 +53,28 @@ uses
   LogWind,
   PostUnit,
   uGradient,
-  (* WINDOWS STAYS, FOR TWO CALLS, AND BOTH ARE REAL.
+  (* WINDOWS, GATED, FOR ONE CALL.
 
-    SetSystemTime is the ONLY thing left here (2026-09-08). tNet_Event was
-                  the other, and it is a SyncObjs.TEvent now -- see its
-                  declaration for why that one was separable and the three
-                  CW/DVP events are not.
-    SetSystemTime SETS THE MACHINE CLOCK, from a time-sync packet. There is no
-                  portable equivalent -- on Unix it is settimeofday and needs
-                  root -- so this is a per-platform decision about whether TR4W
-                  should do it at all, not a translation.
+    SetSystemTime SETS THE MACHINE CLOCK from a peer's time-sync packet. Not
+                  a missing API -- Unix has settimeofday -- but it needs ROOT,
+                  and a contest logger asking for root so another station can
+                  move the clock is a POLICY question. NY4I's. The call is
+                  gated with an {$ELSE} that reports the packet was ignored,
+                  so a station that declines simply keeps its own time.
 
-    WinSock2 and Messages are gone: the socket moved to Indy with TNetClient
-    (2026-08-25) and the WSAAsyncSelect window message went with it. *)
+    THE IMPORT WAS LEFT UNGATED WHEN THE CALL WAS GATED, EARLIER TODAY, and
+    the cross compiler is what found it -- `uses Windows` fails on Linux
+    whether or not anything inside the unit still needs it. Gating a call
+    without gating the import it exists for is a half-measure that looks
+    finished in a `Windows.` scan.
+
+    tNet_Event WAS the other user and is a SyncObjs.TEvent now; see its
+    declaration for why it was separable and the three CW/DVP events are not.
+    WinSock2 and Messages went with the move to Indy's TNetClient
+    (2026-08-25) -- the WSAAsyncSelect window message went with them. *)
+{$IFDEF WINDOWS}
   Windows,
+{$ENDIF}
   Tree
 
   ,

@@ -102,7 +102,9 @@ uses
     handle -- FileClose), SW_HIDE and IDno (LCLType), WinSock2 (went with the
     WSACleanup deleted alongside utils_net) and Messages (declared nothing
     this unit used). *)
+{$IFDEF WINDOWS}
   Windows,
+{$ENDIF}
   LCLType,      // SW_HIDE, IDno -- was the Windows unit
   Tree,
   ZoneCont
@@ -669,6 +671,7 @@ begin
          begin
          Break;  // wrapped past deadline
          end;
+{$IFDEF WINDOWS}
       WaitResult := MsgWaitForMultipleObjects(1, H, False, Remaining, QS_SENDMESSAGE);
       if WaitResult = WAIT_OBJECT_0 then
          begin
@@ -680,6 +683,22 @@ begin
          logger.Info('[WaitForPollingThread] TIMED OUT after %dms', [TimeoutMs]);
          Break;  // timed out
          end;
+{$ELSE}
+      (* NO MESSAGE QUEUE, SO NOTHING TO PUMP -- AND THEREFORE NOTHING FOR
+        THIS ROUTINE TO ADD. The Win32 version exists to wake on a MESSAGE so
+        the peek below can release a blocked SendMessage; where there is no
+        such queue, waiting on the thread handle is an ordinary wait and the
+        caller's own join does it.
+
+        WaitForThreadTerminate is the RTL's equivalent and takes the same
+        millisecond budget, but H here is a Win32 thread HANDLE from
+        tCreateThread, not a TThreadID, so wiring it up is part of moving the
+        polling thread itself -- not something to fake here. Reported once so
+        a shutdown that hangs off Windows has a line pointing at this. *)
+      logger.Info('[WaitForPollingThread] not implemented on this platform; ' +
+                  'shutdown does not wait for the polling thread');
+      Break;
+{$ENDIF}
       // WAIT_OBJECT_0 + 1 = message available — pump it so SendMessage unblocks
 {$IFDEF WINDOWS}
       (* MsgWaitForMultipleObjects woke us for a MESSAGE rather than the thread,
@@ -813,7 +832,14 @@ begin
 //  SpotsList.Destroy;
   if LuconSZLoadded then
      begin
+{$IFDEF WINDOWS}
+     (* The matching half of an AddFontResource that is equally Windows: this
+       unloads LUCONSZ.TTF at exit. The LCL has no equivalent because font
+       INSTALLATION is per-platform -- on Linux it is fontconfig, on macOS
+       CTFontManager -- so the pair moves together or not at all, and
+       LuconSZLoadded can only be True where the load happened. *)
      RemoveFontResourceW(TR4W_LC_FILENAME);
+{$ENDIF}
      end;
 {$IF SCPDEBUG}
   if scpLoaded then

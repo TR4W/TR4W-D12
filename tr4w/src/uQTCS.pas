@@ -41,8 +41,10 @@ uses
   uDialogs,
   LogWind,
   LogRadio,
-  Messages
-  ,
+  (* Messages dropped 2026-09-08: this unit names nothing from it.
+    Verified by removing the import and compiling for
+    x86_64-linux -- not by grepping, which cannot see a bare type
+    name and would have missed it either way. *)
   uTR4WStrings,
   uAnsiStr;
 
