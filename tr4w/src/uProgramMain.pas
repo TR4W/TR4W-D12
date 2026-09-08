@@ -833,7 +833,6 @@ label
   CommandLine;
 var
   TempColor                             : tr4wColors;
-  TempTLogBrush                         : TLogBrush {= (lbStyle: BS_SOLID; lbHatch: 0)};
   c                                     : Cardinal;
   TempString                            : ShortString;
   // The radio library's complaint, if it has one -- see the call site.
@@ -946,14 +945,26 @@ begin
       the list, so there is one place to add the next one. *)
    tSilentExport := HasHeadlessSwitch;
 
+   (* SINGLE INSTANCE IS ENFORCED ON WINDOWS ONLY, and that is a GAP rather
+     than a decision (2026-09-08). A named mutex is the Win32 idiom; the POSIX
+     equivalent is a lock FILE with the pid in it, which is a small piece of
+     work but a real one -- it has to survive a crash without wedging the next
+     start, which a mutex gets for free from the kernel.
+
+     Off Windows the check is SKIPPED and said so in the log, rather than
+     silently allowing two instances. Two copies of TR4W sharing one contest
+     .dat file is data loss, so this must not stay a silent gap; it is written
+     down here and in the sweep document rather than left for someone to
+     discover during a contest. *)
    EarlyTrace('startup: checking the single-instance mutex');
+{$IFDEF WINDOWS}
    tMutex := CreateMutex(nil, False, tr4w_ClassName);
    if tMutex = 0 then
       begin
       EarlyTrace('startup: CreateMutex FAILED -- exiting');
       Exit;
       end;
-   if GetLastError = ERROR_ALREADY_EXISTS then
+   if GetLastOSError = ERROR_ALREADY_EXISTS then
       begin
       // A HEADLESS RUN NEVER OPENS A DIALOG.  It fails fast and loudly with a
       // distinct exit code instead, so the corpus reports a failure rather than
@@ -974,6 +985,9 @@ begin
       Exit;
       end;
    EarlyTrace('startup: mutex acquired -- this is the only instance');
+{$ELSE}
+   EarlyTrace('startup: single-instance check SKIPPED -- Windows-only');
+{$ENDIF}
 
    (* THE RTL ANSWERS THIS ON EVERY PLATFORM.  GetCurrentDirectoryA was doing
      two jobs -- read the directory, and append a separator by overwriting the
@@ -1173,7 +1187,18 @@ begin
   uMenu.InitializeMenuText;
 
  Format(TR4W_INI_FILENAME, '%ssettings\tr4w.ini', TR4W_PATH_NAME);
+  (* THE PRIVATE FONT IS A WINDOWS FACILITY, and LuconSZLoadded staying False
+    off Windows is the RIGHT answer, not a degraded one: the font genuinely is
+    not loaded there. Its three readers -- MainUnit twice and logsubs2 once --
+    already branch on it, and logsubs2's own comment says "LuconSZLoadded can
+    only be True where the load happened."
+
+    On Linux and macOS a private font is fontconfig's business, not the
+    program's, and the LCL has no AddFontResource equivalent because there is
+    nothing to be equivalent to. *)
+{$IFDEF WINDOWS}
   LuconSZLoadded := AddFontResourceW(TR4W_LC_FILENAME) <> 0;
+{$ENDIF}
   (* The MainFixedFont line that stood here built an HFONT nothing read.
     See the note in VC.pas: five of the six font handles were write-only
     once the main window became an LCL form. *)
@@ -1380,11 +1405,22 @@ begin
 
   InitializeStrings;
 
-  for TempColor := Low(tr4wColors) to High(tr4wColors) do
-  begin
-    TempTLogBrush.lbColor := tr4wColorsArray[TempColor];
-    tr4wBrushArray[TempColor] := CreateBrushIndirect(TempTLogBrush);
-  end;
+  (* THE GDI BRUSH-PER-COLOUR LOOP WAS DELETED HERE (2026-09-08), because
+    NOTHING EVER READ tr4wBrushArray.
+
+    It built one HBRUSH for every entry in tr4wColors with CreateBrushIndirect
+    and stored them in a VC global. Measured across src and tr4w.lpr, that
+    array has exactly three mentions: this assignment, its declaration in
+    VC.pas, and a COMMENTED-OUT line in uMainForm.pas whose own text explains
+    why -- "A form paints" itself now. The brushes were handed to Win32
+    WM_ERASEBKGND handlers that no longer exist.
+
+    So this is the same finding as the note a few lines above about fonts:
+    five of the six font handles became write-only when the main window became
+    an LCL form. These are the brushes' version of it, and they also leaked --
+    nothing ever called DeleteObject on them.
+
+    TempColor survives; it is used by the loop that follows. *)
 
   (* THE OS VERSION, AND AFTER 2026-09-08 IT IS READ BY ALMOST NOTHING.
 
@@ -1592,7 +1628,14 @@ begin
   // from the supportedOS block in W11.manifest; without it Windows reports 6.2
   // (Windows 8) to an unmanifested program forever, so "raw: 10.0" is also a
   // check that the manifest is intact.
+  (* tr4w_osverinfo IS FILLED INSIDE A {$IFDEF WINDOWS} and was READ OUTSIDE
+    one -- which compiled on Windows and on nothing else. Gated to match its
+    source. Off Windows the RTL's own strings are the useful answer. *)
+{$IFDEF WINDOWS}
   logger.info('Windows version = %s %s (raw: %d.%d Build %d)',[GetOSInfo, GetWindowsBuildDetail, tr4w_osverinfo.dwMajorVersion, tr4w_osverinfo.dwMinorVersion, tr4w_osverinfo.dwBuildNumber]);
+{$ELSE}
+  logger.info('OS = %s %s', [{$I %FPCTARGETOS%}, {$I %FPCTARGETCPU%}]);
+{$ENDIF}
   if CTY.CtyRFOblMode then       // n4af 4.42.6
      ctyLoadInRFOblList;
 
