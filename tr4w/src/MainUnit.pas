@@ -211,7 +211,6 @@ var
   Inact_Band: BandType;
   so2r_swap: boolean = false;
 
-function IsWin64: Boolean;
 function ConvertPortTypeToCOMString(port: PortType): string;
 procedure CheckNumber;
 procedure RunPlugin(PluginNumber: integer);
@@ -11199,22 +11198,19 @@ begin
   end; // case
 end;
 
-function IsWin64: Boolean;
-var
-  IsWow64Process: function(hProcess: THandle; var Wow64Process: BOOL): BOOL;
-  stdcall;
-  Wow64Process: BOOL;
-begin
-  Result := False;
-  IsWow64Process := GetProcAddress(GetModuleHandle(Kernel32), 'IsWow64Process');
-  if Assigned(IsWow64Process) then
-     begin
-     if IsWow64Process(GetCurrentProcess, Wow64Process) then
-        begin
-        Result := Wow64Process;
-        end;
-     end;
-end;
+(* IsWin64 IS DELETED (2026-09-08), and it was here TWICE.
+
+  The identical function stood in tree.pas and in MainUnit, and NOTHING in the
+  tree called either one -- checked with the comment-blanking reader, so a
+  mention inside a comment could not fool it. It asked whether a 32-bit build
+  was running under WOW64, via GetProcAddress(GetModuleHandle(Kernel32),
+  'IsWow64Process'), which is Windows and nothing but.
+
+  Two copies of a routine nobody calls is the CLAUDE.md duplication rule with
+  the volume turned up: copies drift, and these two had already begun to --
+  same body, different formatting of the same stdcall declaration. Found by
+  compiling for Linux, where both were among the last reasons two units named
+  the Windows unit. *)
 
 // Written in terms of the ENUM MEMBERS, not raw ordinals.  The previous version
 // hard-coded 1..20 = COM, 21 = socket, 22..25 = LPT, which silently encoded the

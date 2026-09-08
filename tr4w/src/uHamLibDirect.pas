@@ -5,7 +5,18 @@ unit uHamLibDirect;
 interface
 
 uses
-  Windows, SysUtils;
+  (* Windows stood here and nothing in this unit needed it (2026-09-08). The
+    library is loaded through DynLibs (see the implementation uses) and
+    PEMachineOf reads the header with SysUtils' FileOpen / FileSeek /
+    FileRead, which are cross-platform.
+
+    WHAT IS STILL WINDOWS HERE IS THE MEANING, NOT THE SYNTAX: HAMLIB_DLL
+    names a .dll, and PEMachineOf asks a PE question that an ELF .so or a
+    Mach-O .dylib cannot answer. HamLib itself ships on all three. That is the
+    worked example in CLAUDE.md -- one constant and one probe, not a port --
+    and it is deliberately NOT guessed at here: the Linux soname and the macOS
+    dylib name get verified on those platforms, not invented on this one. *)
+  SysUtils;
 
 const
   HAMLIB_DLL = 'libhamlib-4.dll';

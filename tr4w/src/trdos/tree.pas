@@ -33,14 +33,25 @@ uses
   VC,
   uCallSignRoutines,
   SysUtils,
+  DateUtils,    // EncodeDateTime / DecodeDateTime / IncMilliSecond -- IncSystemTime
   utils_text,
   utils_file,
   TF,
-  (* Messages had nothing to declare here -- no TMessage, no WM_ constant, no
-    SendMessage in the code (2026-09-08). Windows below is a different matter
-    and is still real: FindFirstFileW, DeleteFileW, the FILETIME conversions
-    and lstrcatA. *)
-  Windows,
+  (* WINDOWS IS GONE FROM THIS UNIT (2026-09-08), and so is Messages next to
+    it -- Messages had nothing to declare at all, no TMessage, no WM_ constant,
+    no SendMessage. Windows was real and is now answered by the RTL:
+
+      FindFirstFileW      the routine around it had never worked -- see
+                          FoundDirectory
+      DeleteFileW         SysUtils.DeleteFile
+      SystemTimeToFileTime / FileTimeToSystemTime
+                          TDateTime and DateUtils -- see IncSystemTime
+      lstrcatA            string concatenation -- see GetRealPath
+
+    LCLType is what is left: it declares WPARAM for every widget set, and on
+    Windows it is `WPARAM = Windows.WPARAM`, the SAME type -- so
+    KeyboardCallsignChar's signature does not change under any build. *)
+  LCLType,
   uBandLookup,  // CalculateBandMode now lives here so it can be unit-tested without tree.pas's dependency cone
   uTR4WStrings,
   uAnsiStr;
@@ -3931,40 +3942,34 @@ begin
 end;
 
 
+(* THIS HAS ALWAYS RETURNED FALSE, AND THE BODY IS NOW HONEST ABOUT IT.
+
+  What stood here called Windows.FindFirstFileW and then asked
+
+      if s = '' then Exit else ...
+
+  where `s` is a LOCAL STRING THAT NOTHING ASSIGNS -- the line that filled it,
+  `S := FSearch(FileName, Path)`, is commented out and marked "wli", part of
+  the DOS-to-Windows port. So `s` was always '' and the routine always took
+  Exit; the else branch, which reads TempString -- also never assigned -- has
+  never run in this program's life. Path was never used at all.
+
+  IT ALSO LEAKED. FindFirstFileW returns a SEARCH HANDLE, not a boolean, and
+  nothing ever called FindClose: every lookup of a file that EXISTS leaked one,
+  on Windows, today.
+
+  So this is not a port and not a behaviour change -- it is the same answer
+  with the dead machinery removed. What to do about the CALLERS is a decision,
+  not a cleanup: FindDirectory below hunts for name.dat, TR.EXE, TR.OVR and
+  NAMES.CMQ -- DOS TR files -- and its two callers have been taking the
+  not-found path for years. Recorded in docs\BENCH_QUEUE.md (2026-09-08).
+
+  Found by compiling for Linux: FindFirstFileW was one of tree.pas's four
+  genuine reasons to name the Windows unit. *)
 function FoundDirectory(FileName: string; Path: string; var Directory: string): boolean;
 
-var
-  TempString                            : Str80;
-  //{WLI}
-  s                                     : string;
-//  CharPos                               : integer;
-  find_data                             : WIN32_FIND_DATAW;   // W, to match FindFirstFileW
 begin
   FoundDirectory := False;
-
-  //wli
-  //    S := FSearch (FileName, Path);
-  if Windows.FindFirstFileW(PChar(FileName), find_data) <> INVALID_HANDLE_VALUE then
-
-    if s = '' then
-       begin
-       Exit
-       end
-    else
-       begin
-       //wli         TempString := FExpand (S);
-
-     while TempString[length(TempString)] <> '\' do
-        begin
-        Delete(TempString, length(TempString), 1);
-        end;
-
-     Delete(TempString, length(TempString), 1);
-
-     Directory := TempString;
-     FoundDirectory := True;
-       end;
-
 end;
 
 function FindDirectory(FileName: Str80): string;
@@ -4053,8 +4058,11 @@ var
 
 begin
 
-  Windows.DeleteFileW(PChar(NewName));
-  //wli DeleteFile(NewName);
+  { SysUtils.DeleteFile, not Windows.DeleteFileW: same effect, every platform,
+    and it takes the string this routine already has. The result is ignored
+    exactly as the Win32 call's was -- a missing target is the normal case
+    here, and Rename below is what reports a real failure. }
+  SysUtils.DeleteFile(NewName);
 
   Assign(f, OldName);
   Rename(f, NewName);
@@ -4090,13 +4098,34 @@ begin
        end;
 end;
 
+(* MOVE THE PROGRAM'S CLOCK BY Offset MILLISECONDS.
+
+  Its one caller is logwind's Alt-1..Alt-0 "increment time", which passes
+  60 * 1000 * Count -- whole minutes.
+
+  WAS A ROUND TRIP THROUGH FILETIME, which is a Windows type and a Windows
+  epoch: SystemTimeToFileTime, add Offset * 10000 (FILETIME counts 100ns
+  units), FileTimeToSystemTime. The RTL's TDateTime does the same arithmetic
+  on every platform, and DecodeDateTime gives back exactly the fields
+  FileTimeToSystemTime filled -- including wDayOfWeek, which the Win32 call
+  set and which a naive replacement would silently leave stale.
+
+  RESOLUTION IS UNCHANGED. FILETIME's 100ns units bought nothing here: the
+  SYSTEMTIME going in and coming out carries milliseconds, and the offset is
+  in milliseconds. *)
 procedure IncSystemTime(var St: SYSTEMTIME; Offset: int64);
 var
-  TEMPFILETIME                          : FILETIME;
+  dt                                    : TDateTime;
 begin
-  Windows.SystemTimeToFileTime(St, TEMPFILETIME);
-  TEMPFILETIME := FILETIME(int64(TEMPFILETIME) + Offset * 10000);
-  Windows.FileTimeToSystemTime(TEMPFILETIME, St);
+  dt := EncodeDateTime(St.wYear, St.wMonth, St.wDay,
+                       St.wHour, St.wMinute, St.wSecond, St.wMilliseconds);
+  dt := IncMilliSecond(dt, Offset);
+
+  DecodeDateTime(dt, St.wYear, St.wMonth, St.wDay,
+                 St.wHour, St.wMinute, St.wSecond, St.wMilliseconds);
+
+  { Win32 numbers the days from 0 = Sunday; SysUtils.DayOfWeek from 1. }
+  St.wDayOfWeek := DayOfWeek(dt) - 1;
 end;
 
 procedure tGetQSOSystemTime(var Time: TQSOTime);
@@ -4147,26 +4176,41 @@ begin
        end;
 end;
 
+(* BUILT AS A STRING, COPIED ONCE -- AND THE BOUND IS NEW.
+
+  The three appends were Windows.lstrcatA, which is Win32-only and, worse,
+  UNBOUNDED: it walks to the NUL and keeps writing. GETREALPATHBUFFER is 256
+  bytes, and a DVK path plus a country folder plus a file name can exceed that
+  -- at which point the old code wrote past a GLOBAL buffer with no diagnostic
+  of any kind. StrPLCopy takes the size and truncates instead.
+
+  Assembled with ordinary string concatenation, which is what this always was:
+  a path is text, and the pointer arithmetic was the Win32 API showing through.
+  The signature keeps its PAnsiChar in and out because four callers pass and
+  hold one -- changing those is a separate job, and the buffer is still the
+  program-wide one they expect. *)
 function GetRealPath(Path, FileName, AddFolder: PAnsiChar): PAnsiChar;
+var
+  s                                     : AnsiString;
 begin
-  FillChar(GETREALPATHBUFFER, SizeOf(GETREALPATHBUFFER), 0);
   if pPos('\', Config.DVKPath) = -1 then
      begin
-     TF.Format(GETREALPATHBUFFER, '%s%s\', TR4W_PATH_NAME, Path);
+     s := AnsiString(PAnsiChar(@TR4W_PATH_NAME[0])) + AnsiString(Path) + '\';
      end
   else
      begin
-     TF.Format(GETREALPATHBUFFER, '%s\', Path);
+     s := AnsiString(Path) + '\';
      end;
 
   if AddFolder <> nil then
      begin
-     Windows.lstrcatA(GETREALPATHBUFFER, AddFolder);
-     Windows.lstrcatA(GETREALPATHBUFFER, '\');
+     s := s + AnsiString(AddFolder) + '\';
      end;
 
-  Windows.lstrcatA(GETREALPATHBUFFER, FileName);
+  s := s + AnsiString(FileName);
 
+  FillChar(GETREALPATHBUFFER, SizeOf(GETREALPATHBUFFER), 0);
+  uAnsiStr.StrPLCopy(GETREALPATHBUFFER, s, SizeOf(GETREALPATHBUFFER) - 1);
   Result := GETREALPATHBUFFER;
 end;
 
@@ -4300,21 +4344,19 @@ begin
   result := True;
 end;
 
-function IsWin64: Boolean;
-var
-  IsWow64Process : function(hProcess : THandle; var Wow64Process : BOOL): BOOL; stdcall;
-  Wow64Process : BOOL;
-begin
-  Result := False;
-  IsWow64Process := GetProcAddress(GetModuleHandle(Kernel32), 'IsWow64Process');
-  if Assigned(IsWow64Process) then
-     begin
-     if IsWow64Process(GetCurrentProcess, Wow64Process) then
-        begin
-        Result := Wow64Process;
-        end;
-     end;
-end;
+(* IsWin64 IS DELETED (2026-09-08), and it was here TWICE.
+
+  The identical function stood in tree.pas and in MainUnit, and NOTHING in the
+  tree called either one -- checked with the comment-blanking reader, so a
+  mention inside a comment could not fool it. It asked whether a 32-bit build
+  was running under WOW64, via GetProcAddress(GetModuleHandle(Kernel32),
+  'IsWow64Process'), which is Windows and nothing but.
+
+  Two copies of a routine nobody calls is the CLAUDE.md duplication rule with
+  the volume turned up: copies drift, and these two had already begun to --
+  same body, different formatting of the same stdcall declaration. Found by
+  compiling for Linux, where both were among the last reasons two units named
+  the Windows unit. *)
 
 {
 procedure Congrats;

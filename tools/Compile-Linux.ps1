@@ -73,6 +73,10 @@ foreach ($d in @('ui\lcl', 'trdos', 'utils', 'lang', 'domain',
                  'radioFactory', 'contestFactory', 'rotatorFactory')) {
    $fu += (Join-Path $repo "tr4w\src\$d")
 }
+# The vendored Indy 10.6.3.3, same three directories the app build uses.
+foreach ($d in @('Core', 'System', 'Protocols')) {
+   $fu += (Join-Path $repo "tr4w\include\$d")
+}
 Get-ChildItem $pkgs -Directory | ForEach-Object {
    $d = Join-Path $_.FullName 'units\x86_64-linux'
    if (Test-Path $d) { $fu += $d }

@@ -31,7 +31,10 @@ unit uRadioFactory;
 interface
 
 uses
-   Windows, uFactoryRadioBase, uRadioElecraftK4, uRadioFlexAPI, SysUtils, VC;
+   (* LCLType, not Windows (2026-09-08): DWORD on the four baudRate parameters
+     was all this unit ever wanted, and LCLType declares it for every widget
+     set -- on Windows as the same type, so no signature moves. *)
+   LCLType, uFactoryRadioBase, uRadioElecraftK4, uRadioFlexAPI, SysUtils, VC;
 
 type
    TConnectionType = (ctNetwork, ctSerial);

@@ -38,7 +38,20 @@ uses
    TF,
    Tree,
    VC,
-   Windows,
+   (* WINDOWS IS GONE (2026-09-08). What it was here for:
+
+        InterlockedIncrement     System.InterLockedIncrement -- same intrinsic
+        WaitForSingleObject      the RTL's WaitForThreadTerminate; the handle
+        CloseHandle              is a TThreadID from BeginThread, not a HANDLE
+        WriteFile                a port nothing has opened since 2026-08-02
+        DWORD, THandle           LCLType and the RTL declare both
+
+      InitializeCriticalSection / DeleteCriticalSection on CATSerialLock still
+      carry their Win32 spellings and still resolve: on Windows from the
+      Windows unit, elsewhere from Log4D, which adapts those two names to the
+      RTL's InitCriticalSection / DoneCriticalSection. *)
+   LCLType,
+   uAnsiStr,    // StrLen over PAnsiChar -- WriteBufferToCATPort
    utils_text,
    (* TSerialPort -- a serial keyer port on the radio record. *)
    uSerialPort,
@@ -1138,7 +1151,10 @@ end;
 
 procedure RadioObject.WriteBufferToCATPort(const Buffer);
 begin
-   WriteToCATPort(Buffer, lstrlenA(@Buffer));
+   { uAnsiStr.StrLen, not Win32's lstrlenA: the same NUL scan over PAnsiChar,
+     declared for every platform, and the unit this tree already uses for
+     AnsiChar work. }
+   WriteToCATPort(Buffer, uAnsiStr.StrLen(PAnsiChar(@Buffer)));
 end;
 
 function RadioObject.WriteToCATPort(const Buffer;
@@ -1190,8 +1206,28 @@ begin
             end;
          end;
 
-      Windows.WriteFile(tCATPortHandle, Buffer, nNumberOfBytesToWrite,
-         lpNumberOfBytesWritten, nil);
+      (* THIS WRITE HAS NEVER REACHED A RADIO, AND NOW IT SAYS SO.
+
+        It was Windows.WriteFile(tCATPortHandle, ...). tCATPortHandle is
+        assigned in exactly ONE place in the whole tree --
+
+            logradio.pas: TempRadio.tCATPortHandle := INVALID_HANDLE_VALUE;
+
+        -- and nothing anywhere opens it. There is no CreateFile, and there
+        has not been since the legacy radio path was deleted on 2026-08-02;
+        every radio's serial link belongs to its factory driver now. So the
+        call always failed, the failure was swallowed by the bare `except`
+        below, and the caller got a Result computed from an UNINITIALISED
+        lpNumberOfBytesWritten -- WriteFile does not set it when it fails.
+
+        Reported, not silent, per the house rule: a caller reaching here has a
+        radio with no factory object and no serial port, which is worth a log
+        line rather than a shrug. Whether the whole legacy CAT path should go
+        is a DECISION and is in docs\BENCH_QUEUE.md (2026-09-08). *)
+      logger.Error('[%s] WriteToCATPort: no CAT port is open -- %u byte(s) discarded. '
+                   + 'This radio has no factory driver; the legacy CAT port is never opened.',
+                   [RadioName, nNumberOfBytesToWrite]);
+      lpNumberOfBytesWritten := 0;
       except // on E : Exception do
       ; // TLogger.GetInstance.Debug(Format('In WriteToCATPort..WriteFile, %s error raised, with message <%s> ',[E.ClassName,E.Message]));
       end;
@@ -1634,8 +1670,14 @@ begin
    Self.PollingStopRequested := True;
    if Self.tRadioInterfaceThreadHandle <> 0 then
       begin
-      WaitForSingleObject(Self.tRadioInterfaceThreadHandle, 3000);
-      CloseHandle(Self.tRadioInterfaceThreadHandle);
+      (* THE RTL's OWN PAIR, not Win32's. tCreateThread has used FPC's
+        BeginThread since 2026-08-23 -- see the note in TF -- so what this
+        holds is a TThreadID, and WaitForThreadTerminate / CloseThread are
+        what the RTL provides for one on every platform. Same timeout, same
+        semantics; WaitForSingleObject only ever worked because on Windows a
+        TThreadID IS a handle. *)
+      WaitForThreadTerminate(Self.tRadioInterfaceThreadHandle, 3000);
+      CloseThread(Self.tRadioInterfaceThreadHandle);
       Self.tRadioInterfaceThreadHandle := 0;
       Self.tRadioInterfaceThreadID := 0;
       end;
@@ -2386,12 +2428,12 @@ end;
 // the field stores are still in flight.
 procedure BeginStatusPublish(rig: RadioPtr);
 begin
-   Windows.InterlockedIncrement(integer(rig^.StatusVersion));   // -> odd: writing
+   System.InterLockedIncrement(integer(rig^.StatusVersion));   // -> odd: writing
 end;
 
 procedure EndStatusPublish(rig: RadioPtr);
 begin
-   Windows.InterlockedIncrement(integer(rig^.StatusVersion));   // -> even: coherent
+   System.InterLockedIncrement(integer(rig^.StatusVersion));   // -> even: coherent
 end;
 
 // Seqlock read.  Copy, then check the version did not move under us.
@@ -2628,7 +2670,11 @@ begin
       //    TempRadio.ICOM_COMMAND_PTT := #255;
       TempRadio.SpeedMemory := InitialCodeSpeed;
       TempRadio.tIcomFilterWidth := 2;
-      InitializeCriticalSection(TempRadio.CATSerialLock);
+      { THE RTL'S OWN NAMES, on all platforms. InitializeCriticalSection and
+        DeleteCriticalSection are the Win32 spellings and came from the Windows
+        unit; InitCriticalSection / DoneCriticalSection are what the RTL calls
+        the same operations on the same TRTLCriticalSection record, everywhere. }
+      InitCriticalSection(TempRadio.CATSerialLock);
 
       end;
    Radio1.RadioName := TC_RADIO1;
@@ -2696,7 +2742,7 @@ initialization
    InitRadios;
 
 finalization
-   DeleteCriticalSection(Radio1.CATSerialLock);
-   DeleteCriticalSection(Radio2.CATSerialLock);
+   DoneCriticalSection(Radio1.CATSerialLock);
+   DoneCriticalSection(Radio2.CATSerialLock);
 
 end.

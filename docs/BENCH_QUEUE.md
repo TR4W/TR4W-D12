@@ -3013,6 +3013,54 @@ pass list is a warning nobody reads.
 
 ---
 
+## 2026-09-08 -- peeling MainUnit for a Linux compile: DECISIONS OWED
+
+Compiling `MainUnit.pas` for x86_64-linux, unit by unit, to find what still
+binds this program to Windows (`tools/Compile-Linux.ps1`). Most blockers were
+dead `uses` entries or one-line RTL swaps and were simply fixed. **These are
+the ones that are NY4I's call, not mine** -- each is legacy code that is
+provably inert today, so deleting it is safe in the compiler's eyes and is
+still a decision about what the program is.
+
+Nothing here is a bench test. They need an answer, not a radio.
+
+- [ ] **The legacy CAT port: delete it, or keep the shell?**
+  `RadioObject.tCATPortHandle` is assigned in exactly ONE place in the whole
+  tree -- `logradio.pas`, `:= INVALID_HANDLE_VALUE` -- and **nothing opens it.**
+  No `CreateFile`, and none since the legacy radio path was deleted on
+  2026-08-02; every radio's serial link belongs to its factory driver.
+
+  So `WriteToCATPort` has never written to anything: the `WriteFile` failed, a
+  bare `except` swallowed it, and the caller got a result computed from an
+  **uninitialised** `lpNumberOfBytesWritten`. It now logs an error and returns
+  False instead (2026-09-08). Its four callers in `uProcessCommand` reach it
+  only when a radio has no factory object AND is not an Icom.
+
+  Also on that handle: `LogCfg.pas:286` compares it, and `logk1ea.pas` calls
+  `GetCommModemStatus` on it twice -- both always take the not-open path.
+
+  **The question:** delete `tCATPortHandle`, `WriteToCATPort`,
+  `WriteBufferToCATPort` and those five call sites outright? It is ~60 lines
+  and would take `GetCommModemStatus` off `logk1ea` with it.
+
+- [ ] **`FindDirectory` hunts for DOS TR files and has always returned ''.**
+  `FoundDirectory` in `tree.pas` called `FindFirstFileW` and then tested a
+  local string that NOTHING assigns -- the line that filled it is commented out
+  and marked "wli", from the DOS-to-Windows port -- so it always took `Exit`.
+  It also leaked a find handle per existing file, because `FindFirstFileW`
+  returns a search handle and nothing ever called `FindClose`. The body is now
+  `Result := False`, which is what it always computed.
+
+  Its callers look for `name.dat`, `TR.EXE`, `TR.OVR` (`help.pas`) and
+  `NAMES.CMQ` (`logname.pas`) -- DOS TR files -- and have been taking the
+  not-found path for years. `help.pas`'s path `WriteLn`s to a console and calls
+  `halt`.
+
+  **The question:** delete `FoundDirectory` / `FindDirectory` and the branches
+  that call them?
+
+---
+
 ## Known and accepted — no action, listed so they are not re-reported
 
 - **CW-by-CAT keys one character per `KY` command** when typing into the

@@ -26,7 +26,8 @@ interface
 uses
   TF,
   VC,
-  Windows,
+  { Windows stood here with nothing behind it -- not one reference in code
+    (2026-09-08). }
   Tree,
   uCTYDAT,
   utils_text,
