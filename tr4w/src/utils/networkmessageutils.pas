@@ -36,7 +36,12 @@ unit NetworkMessageUtils;
 interface
 
 uses
-  Classes, SysUtils, DateUtils, {Sockets,} IdGlobal, IdStack, IdWinsock2;
+  (* IdWinsock2 DROPPED 2026-09-08. It is Indy's WINDOWS-ONLY socket header,
+    and it was here for htonl in two Unpack overloads -- both of which now use
+    GStack.NetworkToHost, which IdStack already provides and which the Int64
+    overload already used. That single reference was what pulled a Windows-only
+    unit into the dependency graph of everything above it. *)
+  Classes, SysUtils, DateUtils, {Sockets,} IdGlobal, IdStack;
 
   const WSJTX_MESSAGETYPE_HEARTBEATV    = 0;
         WSJTX_MESSAGETYPE_STATUSV       = 1;
@@ -96,13 +101,23 @@ implementation
 
 procedure Unpack(const AData: TIdBytes; var index: Integer; var AValue: LongInt);
 begin
-  // D12 {$R+}: BytesToLongInt (IdGlobal) returns a signed Integer, which for a
-  // high-bit value (e.g. WSJT-X magic $ADBCCBDA) is NEGATIVE.  Passing that to
-  // htonl's unsigned u_long (Cardinal) parameter range-checks, and assigning the
-  // unsigned result back to a signed LongInt range-checks too.  Hard-cast both
-  // ends to keep the bit pattern (what callers compare against, e.g. uWSJTX:
-  // magic = LongInt($ADBCCBDA)).  In D7 htonl was already signed, so neither hit.
-  AValue := LongInt({GStack.HostToNetwork}htonl(Cardinal(BytesToLongInt(AData, index))));
+  (* GStack.NetworkToHost, NOT htonl -- and the portable call was sitting
+    COMMENTED OUT beside the raw one, while the Int64 overload below has been
+    using GStack all along. IdWinsock2 is a WINDOWS-ONLY Indy unit, and this
+    reference was the last thing dragging it into the build: it is what stopped
+    MainUnit compiling for Linux after every TR4W unit beneath it had cleared.
+
+    SAME OPERATION, AND THAT IS CHECKABLE RATHER THAN HOPEFUL: htonl and ntohl
+    are the same byte swap (identity on a big-endian host), so an Unpack
+    calling htonl was already relying on that. NetworkToHost is the one that
+    NAMES the direction this routine is going.
+
+    THE RANGE-CHECK NOTE STILL APPLIES and the casts stay: BytesToLongInt
+    returns a signed Integer, which for a high-bit value such as the WSJT-X
+    magic $ADBCCBDA is NEGATIVE. It has to reach the unsigned parameter as a
+    bit pattern, and come back to a signed LongInt the same way -- callers
+    compare against LongInt($ADBCCBDA). *)
+  AValue := LongInt(GStack.NetworkToHost(UInt32(BytesToLongInt(AData, index))));
   index := index + SizeOf(AValue);
 end;
 
@@ -144,9 +159,9 @@ end;
 
 procedure Unpack(const AData: TIdBytes; var index: Integer; var AValue: Longword);
 begin
-  // Same D12 {$R+} guard as the LongInt overload: cast the signed Integer from
-  // BytesToLongInt to Cardinal before htonl's unsigned parameter.
-  AValue := Longword({GStack.HostToNetwork}htonl(Cardinal(BytesToLongInt(AData, index))));
+  (* GStack.NetworkToHost, as the LongInt overload above -- see the note there
+    for why the casts stay and why this is the same operation htonl was. *)
+  AValue := Longword(GStack.NetworkToHost(UInt32(BytesToLongInt(AData, index))));
   index := index + SizeOf(AValue);
 end;
 
@@ -193,7 +208,11 @@ end;
 
 procedure Pack(var AData: TIdBytes; const AValue: LongInt); overload;
 begin
-  AppendBytes(AData,ToBytes(HToNl(AValue)));
+  (* GStack.HostToNetwork, not HToNl -- the PACK side of the same change that
+    took IdWinsock2 out of the uses clause. Cast back to LongInt so ToBytes
+    picks the same overload it did before; the bit pattern is what goes on
+    the wire either way. *)
+  AppendBytes(AData,ToBytes(LongInt(GStack.HostToNetwork(UInt32(AValue)))));
 end;
 
 procedure Pack(var AData: TIdBytes; const AValue: Int64) overload;
@@ -245,7 +264,8 @@ end;
 
 procedure Pack(var AData: TIdBytes; const AValue: Longword) overload;
 begin
-  AppendBytes(AData,ToBytes(HToNl(AValue)));
+  (* As the LongInt overload above. *)
+  AppendBytes(AData,ToBytes(Longword(GStack.HostToNetwork(UInt32(AValue)))));
 end;
 
 procedure Pack(var AData: TIdBytes; const AValue: Double) overload;

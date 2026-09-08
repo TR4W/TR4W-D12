@@ -163,6 +163,46 @@ index. That is the same direction as
 [`DISPLAY_STATE_MODEL_PLAN.md`](DISPLAY_STATE_MODEL_PLAN.md) and `src/domain/`:
 a typed model the view reads, rather than the view being the storage.
 
+## The one with a deadline attached: `TLVItem` in `BuildLogRow`
+
+**This is the LAST thing stopping `MainUnit` compiling for Linux** (measured
+2026-09-08 -- every other identifier in the unit clears, and every unit beneath
+it in the dependency chain now compiles). So unlike the rest of this document,
+it is not only a tidiness item: the portability work is blocked behind it.
+
+`MainUnit.BuildLogRow` fills a **Win32 `TLVItem`** -- a ListView item struct --
+and hands it to `EmitCol`, 31 times. `EmitCol` reads exactly two fields:
+
+```pascal
+procedure EmitCol(var elvi: TLVItem; aCollect: PLogRowText);
+begin
+   aCollect^[ColumnAtPos(elvi.iSubItem)] := string(AnsiString(elvi.pszText));
+end;
+```
+
+**THERE IS NO LISTVIEW ANY MORE.** A note already in that routine says so: the
+one window still writing to a Win32 list view -- the multi-op server-log sync
+dialog -- is a `TLogGrid`, and those were the last live `ListView_` calls in
+the program. The struct is being used as a **(column, text) parameter carrier**
+and nothing else.
+
+The same note records why it was left: *"Replacing the struct with a plain
+(column, text) pair is a real simplification -- it also retires the PAnsiChar
+buffers below -- but it touches all 31 emit sites in a routine full of labels
+and gotos, so it is a change of its own."* That judgement stands; what is new
+is that the compiler has now named it as the last blocker.
+
+**THE SHAPE:** `EmitCol(aColumn: Integer; const aText: string; aCollect)`, and
+the `elvi` variable stops existing. The `PAnsiChar` casts go with it -- the
+routine currently keeps `RowTextAnsi` alive purely so `pszText` has something
+to point at, which is a lifetime problem invented by the struct.
+
+**THE COST TO BUDGET:** 31 call sites inside `label`/`goto` control flow, and
+**the golden corpus is blind to it** -- it compares exported ADIF and Cabrillo,
+not the on-screen log row, so it stays green through a change that scrambles
+every column. This one wants either a test over `BuildLogRow` written with the
+change, or a careful bench read of the log window.
+
 ## Other artifacts found while doing the portability sweep
 
 Not a survey — these are the ones that surfaced on the way past, so treat the

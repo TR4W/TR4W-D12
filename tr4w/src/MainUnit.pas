@@ -46,6 +46,7 @@ uses
   uFlasher,    { the call-field flash is a timer now }
   StdCtrls,            // TListBox, TOwnerDrawState -- same
   LCLIntf,             // OpenURL / OpenDocument -- the cross-platform launchers
+  LCLType,             // BOOL, SM_CXSCREEN, VK_CONTROL, VK_MENU -- was Windows
   FileUtil,            // CopyFile -- QUALIFIED at the call site, because this
                        // unit also uses Windows and CopyFile is a name in both
   uPlatformProcess,    // RunProgram / RunWindowsUtility -- the only launchers
@@ -207,8 +208,10 @@ uses
     then uMMTTY, which needs UINT, TColorRef and LF_FACESIZE and is
     Windows-only by nature. Clear the chain and the compiler replaces every
     list above with a fact. *)
+{$IFDEF WINDOWS}
   Windows,
   Messages,
+{$ENDIF}
   LogK1EA,
   BeepUnit,
   //LOGDDX,
@@ -571,7 +574,6 @@ procedure ProcessFuntionKeys(Key: integer);
 procedure CreateDirectoryIfNotExist;
 procedure CheckAndSetInitialExchangeCursorPos;
 procedure ClearInfoWindows;
-procedure TREscapeCommFunction(hFile: THandle; dwFunc: Byte);
 function Get_Ctl_Code(nr: integer): Cardinal;
 procedure DebugMsg(s: string); // ny4i
 function IsCWByCATActive(theRadio: RadioPtr): boolean; overload;
@@ -3810,7 +3812,24 @@ begin
     default image base) to whatever launched it. Any script that checks an
     exit code -- a CI step, a harness, an operator's batch file -- reads that
     as a failure, and it has been the value since the D7 tree. *)
+{$IFDEF WINDOWS}
   ExitProcess(0);
+{$ELSE}
+  (* Halt, NOT ExitProcess -- AND THE DIFFERENCE IS REAL, WHICH IS WHY THIS IS
+    NOT A SWAP ON WINDOWS TOO.
+
+    Halt runs FINALIZATION SECTIONS; ExitProcess does not. Every unit with a
+    `finalization` block gets to run one way and not the other, and this tree
+    has several that free objects and close files there -- uNet's GNetLock and
+    tNet_Event among them. Something may be relying on them NOT running, and
+    finding out means reading each one, so unifying the two is a DECISION
+    about shutdown rather than a portability fix.
+
+    Off Windows there is no ExitProcess to choose, so Halt it is; on Windows
+    nothing changes until that decision is made. Recorded in
+    docs/WIN32_ARTIFACT_SWEEP.md. *)
+  Halt(0);
+{$ENDIF}
 
 end;
 
@@ -6779,12 +6798,6 @@ begin
   CleanUpDisplay;
 end;
 
-procedure TREscapeCommFunction(hFile: THandle; dwFunc: Byte);
-begin
-  EscapeCommFunction(hFile, Cardinal(dwFunc));
-
-end;
-
 function Get_Ctl_Code(nr: integer): Cardinal;
 const
   FILE_DEVICE_UNKNOWN = $00000022;
@@ -7533,7 +7546,22 @@ begin
   // stale handle (clobbered by the preceding logger.Info), so this never applied;
   // now set it on the real handle. BEHAVIOR CHANGE: paddle/foot-switch thread now
   // actually runs LOWEST.
+{$IFDEF WINDOWS}
   SetThreadPriority(tPaddleFootSwitchThread, THREAD_PRIORITY_LOWEST);
+{$ELSE}
+  (* FPC HAS ThreadSetPriority, AND IT IS STILL NOT A ONE-LINE SWAP.
+
+    Two mismatches, neither of them cosmetic. The HANDLE: this is a Win32
+    thread handle from tCreateThread, where ThreadSetPriority wants a
+    TThreadID -- so wiring it up is part of moving the paddle thread itself.
+    The SCALE: Win32 has seven named levels and FPC takes -15..15, and on
+    Linux a plain thread cannot raise priority at all without privilege, so
+    "lowest" is the only direction that even works unasked.
+
+    Leaving it unset is the safe failure: the thread runs at normal priority,
+    which is what it did on Windows for years before Issue #997 found the
+    asm was pushing a stale handle and the call never applied at all. *)
+{$ENDIF}
 end;
 {
 procedure TryToLoadRICHED32DLL;

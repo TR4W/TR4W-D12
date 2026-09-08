@@ -18,9 +18,12 @@ unit uCT1BOH;
 {$I tr4w.inc}
 {$IMPORTEDDATA OFF}
 interface
-uses
-  Windows
-  ;
+
+(* NO INTERFACE USES CLAUSE AT ALL (2026-09-08). It held exactly one unit,
+  Windows, and nothing in this file named anything from it -- the note below
+  records that the Win32 dialog and its ListView calls were deleted in Phase
+  4b, and the import outlived them by three weeks. The implementation has its
+  own clause with the one unit that is actually used. *)
 {
   THE CT1BOH SEAM.  The report itself is now an LCL form --
   src\ui\lcl\uCT1BOHForm.pas -- and this unit is the entry point only.

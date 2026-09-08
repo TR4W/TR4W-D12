@@ -35,8 +35,11 @@ uses
   LogCW,
   uCWKeyerBase,   // KeyerCPU -- CPU-keyer-only flush (B3)
   LogWind,
-  LogK1EA,
-  Messages
+  LogK1EA
+  (* Messages dropped 2026-09-08: this unit names nothing from it. It is a
+    90-line forwarding seam -- the dialog is uSendKeyboardForm -- so the
+    import outlived the Win32 window it belonged to. Verified by removing it
+    and compiling for x86_64-linux. *)
   ;
 
 {
