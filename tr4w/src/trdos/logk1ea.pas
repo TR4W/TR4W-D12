@@ -435,7 +435,7 @@ procedure BackToInactiveRadioAfterQSO;
 
 procedure TurnOnActivePort;
 procedure tStartAutoCQ;
-function tStartAutoCallTerminate(idAttach: DWORD): boolean;
+function tStartAutoCallTerminate(idAttach: TThreadID): boolean;
 
 var
   DoingPaddle                           : boolean;
@@ -2129,7 +2129,7 @@ begin
 
 end;
 
-function tStartAutoCallTerminate(idAttach: DWORD): boolean;
+function tStartAutoCallTerminate(idAttach: TThreadID): boolean;
 begin
   Result := False;
   if Config.AutoCallTerminate = True then
