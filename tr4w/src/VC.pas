@@ -254,11 +254,6 @@ type
   UDPType = (udpContactInfo, udpContactReplace, udpContactDelete, udpLookupInfo);
   LastEntryType = (letCallsign, letQTHString);
 
-  TRichEditObject = record
-    reLibModule: HMODULE;
-    reUsers: Cardinal;
-  end;
-
  ExchangeInformationRecord = record
     Age: boolean;
     Chapter: boolean;
@@ -874,7 +869,6 @@ var
   // Falls back to ctyGetITUZone(MyCall) when 0.
   MyITUZone                             : Byte;
 
-  RichEditObject                        : TRichEditObject;
 //  ti                                    : TOOLINFO;
 
   DomesticMultByBand                    : TAdditionalMultByBand;

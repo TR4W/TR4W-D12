@@ -73,6 +73,11 @@ var
 
 procedure CreateTR4WMMTTYWindow;
 
+(* THE RICHED32.DLL REFCOUNT.  Load before the output pane is created,
+  release after it is destroyed -- and read the note on HandleClose before
+  moving either call, because the ORDER is what a past crash turned on. *)
+procedure RichEditOperation(Load: boolean);
+
 implementation
 
 {$R *.lfm}
@@ -86,10 +91,79 @@ uses
 {$ENDIF}
    VC,                { tw_MMTTYWINDOW_INDEX }
    TF,                { CreateRichEdit }
-   MainUnit,          { CloseTR4WWindow, RichEditOperation }
+   MainUnit,          { CloseTR4WWindow -- RichEditOperation is ours now }
    uPlatformProcess,  { RunWindowsUtility -- the only launcher, see MainUnit:49 }
    uMMTTY,            { the MMTTY record and its protocol }
    uLCLFormHelpers;   { OwnFormByMainWindow }
+
+var
+   (* PRIVATE TO THIS UNIT.  Was VC.RichEditObject -- a record in the tree's
+     type unit and a global in its var block, visible everywhere, read by
+     exactly two lines. *)
+   GRichEditLib:   HMODULE = 0;
+   GRichEditUsers: Cardinal = 0;
+
+(* MOVED HERE FROM MainUnit, 2026-09-08 (NY4I: "move the code you wanted for
+  the mmtty file").
+
+  IT BELONGS HERE BECAUSE BOTH CALLERS ARE THIS WINDOW'S LIFECYCLE: MainUnit
+  takes a reference when the MMTTY window is opened, and HandleClose below
+  releases it once the window is destroyed.
+
+  WHY A REFCOUNT FOR ONE USER: uFileView was the other, until its viewer
+  became a TMemo and stopped taking a reference. It is kept rather than
+  collapsed to a boolean because the ORDER matters more than the arithmetic --
+  see HandleClose, where releasing the library while the control still exists
+  unmaps the code its window procedure lives in, and TR4W dies on the first
+  close with no shutdown line in the log.
+
+  RICHED32 IS THIS PROGRAM'S DISPLAY CHOICE, NOT MMTTY'S REQUIREMENT -- see
+  the note in HandleShow. Off Windows this does nothing and says so. *)
+procedure RichEditOperation(Load: boolean);
+{$IFDEF WINDOWS}
+const
+   RICHEDIT_DLL = 'RICHED32.DLL';
+{$ENDIF}
+begin
+{$IFDEF WINDOWS}
+   if Load then
+      begin
+      if GRichEditLib = 0 then
+         begin
+         GRichEditLib := Windows.LoadLibrary(RICHEDIT_DLL);
+         if GRichEditLib = 0 then
+            begin
+            (* REPORTED. The old code stored the 0 and carried on, so a
+              missing RICHED32 surfaced later as a pane that would not
+              create, with nothing saying why. *)
+            logger.Warn('[MMTTY] LoadLibrary(%s) failed (%d) -- the output ' +
+                        'pane will not be created',
+                        [RICHEDIT_DLL, GetLastOSError]);
+            Exit;
+            end;
+         end;
+      Inc(GRichEditUsers);
+      end
+   else
+      begin
+      if GRichEditUsers = 0 then
+         begin
+         Exit;   { unbalanced release -- do not wrap the count round }
+         end;
+      Dec(GRichEditUsers);
+      if GRichEditUsers = 0 then
+         begin
+         FreeLibrary(GRichEditLib);
+         GRichEditLib := 0;
+         end;
+      end;
+{$ELSE}
+   if logger <> nil then
+      begin
+      logger.Info('RichEditOperation is only supported for MMTTY on Windows OSes.');
+      end;
+{$ENDIF}
+end;
 
 procedure CreateTR4WMMTTYWindow;
 begin
@@ -120,13 +194,35 @@ begin
                                      [string(PAnsiChar(TR4W_MMTTYPATH))]));
 
 {$IFDEF WINDOWS}
-   (* THE OUTPUT PANE IS A RICHED32 CONTROL, AND IT STAYS ONE.  The engine
-     writes into it by window message -- that is MMTTY's interface, not a
-     choice this program makes -- so the handle, the character format struct
-     and the registered message are all Win32 and all gated together.
+   (* THE OUTPUT PANE IS A RICHED32 CONTROL, AND THAT IS OUR CHOICE, NOT
+     MMTTY'S.  This comment used to say "the engine writes into it by window
+     message -- that is MMTTY's interface, not a choice this program makes".
+     THAT IS BACKWARDS, and it matters, because it makes a replaceable
+     display look like a fixed protocol requirement (NY4I, 2026-09-08: "I
+     read the interface api but I do not see why that would care").
 
-     Off Windows none of it runs, MMTTY.mmttyEngine stays 0, and the form shows
-     an empty pane, which is what it shows on Windows with no engine
+     WHAT THE PROTOCOL ACTUALLY IS.  MMTTY is handed TR4W's MAIN window
+     handle -- PostMmttyMessage(RXM_HANDLE, MainWindowHandle) in uMMTTY -- and
+     sends TXM_CHAR with ONE CHARACTER in lParam.  THIS program then writes
+     that character into the pane itself, with EM_SETSEL + EM_REPLACESEL.
+     MMTTY does not know a RichEdit exists and could not care which control
+     receives the text.
+
+     WHY A RICHEDIT THEN: per-character formatting.  EM_SETCHARFORMAT with
+     CFM_COLOR + CFM_FACE + CFM_BOLD, so decoded text can be coloured as it
+     arrives (mmttyProcessChar does the dupe check that decides the colour).
+     A plain TMemo cannot colour individual characters; that is the whole
+     requirement.
+
+     SO RICHED32 IS NOT NAILED DOWN BY MMTTY.  Any control that can colour
+     text per character would do, and swapping one in would take RICHED32.DLL,
+     RichEditOperation, TCharFormatA and MMTTYRichEdit out of the tree
+     together.  Not free -- the LCL's base widget set has no rich text control,
+     so it means a package (TRichMemo) or a custom-drawn pane -- but it is a
+     DISPLAY decision, which is a much smaller thing than a protocol one.
+
+     Off Windows none of this runs, MMTTY.mmttyEngine stays 0, and the form
+     shows an empty pane -- which is what it shows on Windows with no engine
      configured. *)
    MMTTY.mmttyMSG := RegisterWindowMessage('MMTTY');
    MMTTY.MMTTYRichEdit := CreateRichEdit(Handle);

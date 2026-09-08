@@ -155,15 +155,9 @@ uses
                                   together or not at all, and logk1ea's
                                   tCWSleep waits on one with a timeout, so
                                   this is CW element timing.
-      LoadLibrary        (~10494) RichEditOperation, holding a refcount on
-                                  RICHED32.DLL. Its only remaining user is
-                                  the MMTTY window -- MMTTY is a separate
-                                  WINDOWS EXE showing output in a RICHED32
-                                  control -- so off Windows the feature
-                                  cannot exist and the {$ELSE} is empty.
-                                  Both its call sites are MMTTY, so this
-                                  probably belongs in uMMTTYForm rather than
-                                  here.
+      (LoadLibrary is GONE -- RichEditOperation moved to uMMTTYForm on
+       2026-09-08, taking the RICHED32 refcount and VC's RichEditObject
+       globals with it. Both its callers were MMTTY window lifecycle.)
 
     ALREADY GATED, and therefore NOT remaining work: CreateFontW,
     GetWindowRect, FindFirstFileA, FindClose, lstrcatA -- five calls the old
@@ -296,7 +290,6 @@ procedure RunPlugin(PluginNumber: integer);
 procedure LoadInPlugins();
 procedure OpenListOfMessages;
 procedure OpenStationInformationWindow(const aOnAccept: TCabrilloSummaryAction);
-procedure RichEditOperation(Load: boolean);
 function GetAddMultBand(Mult: TAdditionalMultByBand; Band: BandType): BandType;
 procedure scWK_RESET; // n4af 4.43.10
 procedure SetCommand(c: PAnsiChar);
@@ -6274,7 +6267,9 @@ begin
         SetCommand('MMTTY ENGINE');
         Exit;
         end;
-     RichEditOperation(True);
+     (* uMMTTYForm owns this now -- both callers are MMTTY window lifecycle,
+       and the pane the DLL backs is that form's. *)
+     uMMTTYForm.RichEditOperation(True);
      end;
 
   if tWindowsExist(ID) then
@@ -10512,29 +10507,6 @@ begin
                  'this platform. See the note above LoadInPlugins.');
      end;
 {$ENDIF}
-end;
-
-procedure RichEditOperation(Load: boolean);
-begin
-
-  if Load then
-     begin
-     if RichEditObject.reLibModule = 0 then
-        begin
-        RichEditObject.reLibModule := Windows.LoadLibrary('RICHED32.DLL');
-        end;
-     inc(RichEditObject.reUsers);
-     end
-  else
-     begin
-     dec(RichEditObject.reUsers);
-     if RichEditObject.reUsers = 0 then
-        begin
-        FreeLibrary(RichEditObject.reLibModule);
-        RichEditObject.reLibModule := 0;
-        end;
-     end;
-
 end;
 
 procedure OpenStationInformationWindow(const aOnAccept: TCabrilloSummaryAction);
