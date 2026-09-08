@@ -31,7 +31,7 @@ unit uTestTCIServer;
 interface
 
 uses
-   Windows, SysUtils, Classes, SyncObjs,
+   SysUtils, Classes, SyncObjs,
    uTR4WTestFramework, uTCIProtocol, uTCIServer, uWebSocketClient, VC, LOGRADIO;
 
 type
@@ -208,22 +208,22 @@ end;
 // only honest way to know it is complete.
 function TTCIServerTests.WaitForQuiet(TimeoutMs: cardinal): boolean;
 var
-   deadline: cardinal;
+   deadline: QWord;
    lastN:    integer;
-   lastMove: cardinal;
+   lastMove: QWord;
 begin
-   deadline := GetTickCount + TimeoutMs;
+   deadline := GetTickCount64 + TimeoutMs;
    lastN := RxCount;
-   lastMove := GetTickCount;
-   while GetTickCount < deadline do
+   lastMove := GetTickCount64;
+   while GetTickCount64 < deadline do
       begin
       Sleep(20);
       if RxCount <> lastN then
          begin
          lastN := RxCount;
-         lastMove := GetTickCount;
+         lastMove := GetTickCount64;
          end
-      else if (RxCount > 0) and (GetTickCount - lastMove >= QUIET_MS) then
+      else if (RxCount > 0) and (GetTickCount64 - lastMove >= QUIET_MS) then
          begin
          Result := True;
          Exit;
@@ -234,10 +234,10 @@ end;
 
 function TTCIServerTests.WaitForPrefix(const Prefix: string; TimeoutMs: cardinal): boolean;
 var
-   deadline: cardinal;
+   deadline: QWord;
 begin
-   deadline := GetTickCount + TimeoutMs;
-   while GetTickCount < deadline do
+   deadline := GetTickCount64 + TimeoutMs;
+   while GetTickCount64 < deadline do
       begin
       if IndexOfPrefix(Prefix) >= 0 then
          begin

@@ -31,6 +31,12 @@ unit uTestCWByCATTimer;
 interface
 
 uses
+   (* WINDOWS AND MESSAGES STAY, measured 2026-09-08: this harness pumps a real
+     message loop -- TMsg, PeekMessage, TranslateMessage, DispatchMessage -- so
+     that the LCL TTimer under test can actually fire. The portable equivalent
+     is Application.ProcessMessages, but swapping the pump changes what the test
+     exercises, and that is a decision about the TEST rather than a portability
+     fix. The clock in it is GetTickCount64 now. *)
    Windows, Messages, SysUtils, Classes,
    uTR4WTestFramework, ExtCtrls;
 
@@ -71,11 +77,15 @@ end;
 
 function TCWByCATTimerTests.PumpUntilFired(wanted: integer; budgetMs: Cardinal): Cardinal;
 var
-   started: Cardinal;
+   { QWord with GetTickCount64: the `deadline := now + timeout` shape wraps
+     past its own start on a 32-bit counter and ends the wait immediately.
+     Two live units had that defect (uExternalLoggerBase, logsubs2) -- a
+     harness that lies the same way would hide a real timeout. }
+   started: QWord;
    msg: TMsg;
 begin
-   started := GetTickCount;
-   while (FFired < wanted) and (GetTickCount - started < budgetMs) do
+   started := GetTickCount64;
+   while (FFired < wanted) and (GetTickCount64 - started < budgetMs) do
       begin
       while PeekMessage(msg, 0, 0, 0, PM_REMOVE) do
          begin
@@ -84,7 +94,7 @@ begin
          end;
       Sleep(1);
       end;
-   Result := GetTickCount - started;
+   Result := GetTickCount64 - started;
 end;
 
 procedure TCWByCATTimerTests.Test_StartsDisabled;

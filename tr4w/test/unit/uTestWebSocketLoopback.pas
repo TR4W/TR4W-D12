@@ -27,7 +27,7 @@ unit uTestWebSocketLoopback;
 interface
 
 uses
-   Windows, SysUtils, Classes, SyncObjs,
+   SysUtils, Classes, SyncObjs,
    uTR4WTestFramework, uWebSocketFraming, uWebSocketClient, uWebSocketServer;
 
 type
@@ -243,10 +243,10 @@ end;
 function TWebSocketLoopbackTests.WaitForSinkCount(Sink: TMessageSink; Want: integer;
                                                   TimeoutMs: cardinal): boolean;
 var
-   deadline: cardinal;
+   deadline: QWord;
 begin
-   deadline := GetTickCount + TimeoutMs;
-   while GetTickCount < deadline do
+   deadline := GetTickCount64 + TimeoutMs;
+   while GetTickCount64 < deadline do
       begin
       if Sink.Count >= Want then
          begin
@@ -260,10 +260,10 @@ end;
 
 function TWebSocketLoopbackTests.WaitForSessions(Want: integer; TimeoutMs: cardinal): boolean;
 var
-   deadline: cardinal;
+   deadline: QWord;
 begin
-   deadline := GetTickCount + TimeoutMs;
-   while GetTickCount < deadline do
+   deadline := GetTickCount64 + TimeoutMs;
+   while GetTickCount64 < deadline do
       begin
       if FServer.SessionCount = Want then
          begin
@@ -277,10 +277,10 @@ end;
 
 function TWebSocketLoopbackTests.WaitForOpened(Want: integer; TimeoutMs: cardinal): boolean;
 var
-   deadline: cardinal;
+   deadline: QWord;
 begin
-   deadline := GetTickCount + TimeoutMs;
-   while GetTickCount < deadline do
+   deadline := GetTickCount64 + TimeoutMs;
+   while GetTickCount64 < deadline do
       begin
       if FOpened >= Want then
          begin
@@ -294,10 +294,10 @@ end;
 
 function TWebSocketLoopbackTests.WaitForClosed(Want: integer; TimeoutMs: cardinal): boolean;
 var
-   deadline: cardinal;
+   deadline: QWord;
 begin
-   deadline := GetTickCount + TimeoutMs;
-   while GetTickCount < deadline do
+   deadline := GetTickCount64 + TimeoutMs;
+   while GetTickCount64 < deadline do
       begin
       if FClosed >= Want then
          begin

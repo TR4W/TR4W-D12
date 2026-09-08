@@ -61,7 +61,6 @@ program tr4w_radio_bench;
 {$APPTYPE CONSOLE}
 
 uses
-   Windows,
    SysUtils,
    Log4D,
    MainUnit,
@@ -150,9 +149,13 @@ type
 function WaitFor(radio: TFactoryRadioBase; pred: TPredicate;
                  timeoutMs: integer; poll: boolean = True): boolean;
 var
-   deadline: LongWord;
+   { QWord with GetTickCount64: the `deadline := now + timeout` shape wraps
+     past its own start on a 32-bit counter and ends the wait immediately.
+     Two live units had that defect (uExternalLoggerBase, logsubs2) -- a
+     harness that lies the same way would hide a real timeout. }
+   deadline: QWord;
 begin
-   deadline := GetTickCount + LongWord(timeoutMs);
+   deadline := GetTickCount64 + LongWord(timeoutMs);
    repeat
       if pred(radio) then
          begin
@@ -164,7 +167,7 @@ begin
          radio.PollRadioState;
          end;
       Sleep(100);
-   until GetTickCount > deadline;
+   until GetTickCount64 > deadline;
    Result := pred(radio);
 end;
 
@@ -230,7 +233,7 @@ end;
 function EnvOr(const Name, Default: string): string;
 var
    buf: array[0..1023] of Char;
-   n: DWORD;
+   n: Cardinal;   { was DWORD, from the Windows unit }
 begin
    n := GetEnvironmentVariable(PChar(Name), buf, Length(buf));
    if (n = 0) or (n >= DWORD(Length(buf))) then
