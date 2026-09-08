@@ -72,7 +72,7 @@ procedure InvalidateCabrilloHeader;
 implementation
 
 uses
-   Windows,
+   IniFiles,   (* TIniFile -- the one-time ini seed; see ReadIniSection *)
    SysUtils,
    Classes,
    uAnsiStr,              // StrPLCopy / StrLen for the PAnsiChar form above
@@ -103,40 +103,34 @@ begin
    Result := TR4WConfigFileName;
 end;
 
-// Read every key in one ini section.  GetPrivateProfileSectionA returns the
-// whole section as consecutive null-terminated 'KEY=VALUE' strings, so this
-// needs no tag list of its own and cannot drift from uCbrSum's table.
-//
-// THE ONLY REMAINING READ OF tr4w.ini IN THIS UNIT, and it runs once per
-// section per installation -- see the seed in EnsureLoaded.
+(* READ EVERY KEY IN ONE INI SECTION -- through the FCL's TIniFile.
+
+  THE ONLY REMAINING READ OF tr4w.ini IN THIS UNIT, and it runs once per
+  section per installation -- see the seed in EnsureLoaded. It stays on the
+  Lint-IniUsage allow-list for that reason; what changed is the mechanism, not
+  the policy.
+
+  Was Windows.GetPrivateProfileSectionA into an 8 KB buffer, which returns the
+  section as consecutive NUL-terminated 'KEY=VALUE' strings, followed by a hand
+  walk splitting each on the first '='. ReadSectionValues fills a TStrings with
+  the same Name=Value pairs, so TStringList.Values indexes it exactly as the
+  loop below used to build it -- and the 8 KB cap goes with the buffer.
+
+  TWO SMALL DIFFERENCES, worth knowing rather than discovering: FPC's TIniFile
+  strips a trailing comment and surrounding quotes where the Win32 SECTION call
+  did not, and it does not require the file to exist -- an absent tr4w.ini
+  yields an empty list instead of a zero return. Both are the safer direction
+  for a one-time seed, and an absent ini is now the normal case. *)
 procedure ReadIniSection(const aSection: string; const aInto: TStringList);
 var
-   buf: array[0..8191] of AnsiChar;
-   sect: AnsiString;
-   n: DWORD;
-   p: PAnsiChar;
-   entry: string;
+   ini: TIniFile;
 begin
-   FillChar(buf, SizeOf(buf), 0);
-   sect := AnsiString(aSection);
-   n := Windows.GetPrivateProfileSectionA(PAnsiChar(sect), @buf, SizeOf(buf),
-                                          @TR4W_INI_FILENAME[0]);
-   if n = 0 then
-      begin
-      Exit;
-      end;
-
-   p := @buf;
-   while p^ <> #0 do
-      begin
-      entry := string(AnsiString(p));
-      if Pos('=', entry) > 1 then
-         begin
-         aInto.Values[Copy(entry, 1, Pos('=', entry) - 1)] :=
-            Copy(entry, Pos('=', entry) + 1, MaxInt);
-         end;
-      Inc(p, Length(AnsiString(p)) + 1);
-      end;
+   ini := TIniFile.Create(string(PAnsiChar(@TR4W_INI_FILENAME[0])));
+   try
+      ini.ReadSectionValues(aSection, aInto);
+   finally
+      ini.Free;
+   end;
 end;
 
 // The cached list for one section, created on demand so a caller never has to

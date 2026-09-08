@@ -77,7 +77,9 @@ unit uTCIServer;
 interface
 
 uses
-   Windows, SysUtils, Classes, SyncObjs,
+   (* Windows went when the wake-up became a SyncObjs TEvent and the clock
+    became GetTickCount64 (2026-09-08). *)
+  SysUtils, Classes, SyncObjs,
    VC, LOGRADIO,
    uWebSocketServer, uTCIProtocol,
    uMainThread;   (* RunOnMainThread -- an apply runs on the main thread *)

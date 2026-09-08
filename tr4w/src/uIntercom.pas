@@ -35,7 +35,8 @@ uses
   LogEdit,
   LogWind,
   LogStuff,
-  Messages;
+  (* Messages: named, and used nowhere (2026-09-08). *)
+  Classes;
 
 procedure AddMessageToIntercomWindow(mes: PAnsiChar; Sender: AnsiChar);
 procedure FlashIntercomListBox;
