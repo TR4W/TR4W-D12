@@ -15,7 +15,7 @@ unit uTRMasterUpdate;
 interface
 
 uses
-   Windows, Messages;
+   Messages;
 
 const
 

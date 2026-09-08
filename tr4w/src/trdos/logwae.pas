@@ -24,8 +24,8 @@ unit LOGWAE;
 interface
 
 uses
+  LCLType,   (* IDOK -- the LCL declares it, and it is the same value *)
   uCallSignRoutines,
-  Windows,
   Tree,
   uQTCS,
   uTotal,

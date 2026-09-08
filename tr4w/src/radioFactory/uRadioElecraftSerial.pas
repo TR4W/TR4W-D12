@@ -60,7 +60,7 @@ unit uRadioElecraftSerial;
 
 interface
 
-uses Windows, uFactoryRadioBase, uRadioKYBase, uRadioElecraftBase,
+uses uFactoryRadioBase, uRadioKYBase, uRadioElecraftBase,
      uRadioBand, StrUtils, SysUtils, Math, TF, Log4D, VC, uCWFraming,
      uElecraftIF;   // shared IF decode -- the K4 uses the same one
 
