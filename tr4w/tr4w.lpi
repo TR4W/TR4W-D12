@@ -42,7 +42,7 @@
         <PackageName Value="LCL"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="417">
+    <Units Count="410">
       <Unit0>
         <Filename Value="tr4w.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -209,1632 +209,1602 @@
         <IsPartOfProject Value="True"/>
       </Unit37>
       <Unit38>
-        <Filename Value="src/uMissingMults.pas"/>
+        <Filename Value="src/uEditQSO.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit38>
       <Unit39>
-        <Filename Value="src/uEditQSO.pas"/>
+        <Filename Value="src/uLogSearch.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit39>
       <Unit40>
-        <Filename Value="src/uLogSearch.pas"/>
+        <Filename Value="src/uBeacons.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit40>
       <Unit41>
-        <Filename Value="src/uBeacons.pas"/>
+        <Filename Value="src/uNet.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit41>
       <Unit42>
-        <Filename Value="src/uNet.pas"/>
+        <Filename Value="src/uTotal.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit42>
       <Unit43>
-        <Filename Value="src/uTotal.pas"/>
+        <Filename Value="src/uMaster.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit43>
       <Unit44>
-        <Filename Value="src/uMaster.pas"/>
+        <Filename Value="src/uRemMults.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit44>
       <Unit45>
-        <Filename Value="src/uRemMults.pas"/>
+        <Filename Value="src/uDupesheet.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit45>
       <Unit46>
-        <Filename Value="src/uDupesheet.pas"/>
+        <Filename Value="src/uSendSpot.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit46>
       <Unit47>
-        <Filename Value="src/uSendSpot.pas"/>
+        <Filename Value="src/uSendKeyboard.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit47>
       <Unit48>
-        <Filename Value="src/uSendKeyboard.pas"/>
+        <Filename Value="src/uRadio12.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit48>
       <Unit49>
-        <Filename Value="src/uOption.pas"/>
+        <Filename Value="src/uFunctionKeys.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit49>
       <Unit50>
-        <Filename Value="src/uRadio12.pas"/>
+        <Filename Value="src/uInet.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit50>
       <Unit51>
-        <Filename Value="src/uFunctionKeys.pas"/>
+        <Filename Value="src/uDXClusterClient.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit51>
       <Unit52>
-        <Filename Value="src/uInet.pas"/>
+        <Filename Value="src/uDXSpotParse.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit52>
       <Unit53>
-        <Filename Value="src/uDXClusterClient.pas"/>
+        <Filename Value="src/uTelnet.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit53>
       <Unit54>
-        <Filename Value="src/uDXSpotParse.pas"/>
+        <Filename Value="src/uBandmap.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit54>
       <Unit55>
-        <Filename Value="src/uTelnet.pas"/>
+        <Filename Value="src/uFileView.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit55>
       <Unit56>
-        <Filename Value="src/uBandmap.pas"/>
+        <Filename Value="src/uAutoCQ.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit56>
       <Unit57>
-        <Filename Value="src/uFileView.pas"/>
+        <Filename Value="src/uCAT.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit57>
       <Unit58>
-        <Filename Value="src/uAutoCQ.pas"/>
+        <Filename Value="src/rotatorFactory/uRotatorBase.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit58>
       <Unit59>
-        <Filename Value="src/uCAT.pas"/>
+        <Filename Value="src/uRotatorControl.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit59>
       <Unit60>
-        <Filename Value="src/rotatorFactory/uRotatorBase.pas"/>
+        <Filename Value="src/rotatorFactory/uRotatorRegistry.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit60>
       <Unit61>
-        <Filename Value="src/uRotatorControl.pas"/>
+        <Filename Value="src/rotatorFactory/uRotatorYaesu.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit61>
       <Unit62>
-        <Filename Value="src/rotatorFactory/uRotatorRegistry.pas"/>
+        <Filename Value="src/rotatorFactory/uRotatorOrion.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit62>
       <Unit63>
-        <Filename Value="src/rotatorFactory/uRotatorYaesu.pas"/>
+        <Filename Value="src/rotatorFactory/uRotatorDCU1.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit63>
       <Unit64>
-        <Filename Value="src/rotatorFactory/uRotatorOrion.pas"/>
+        <Filename Value="src/rotatorFactory/uRotatorAlfaSpid.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit64>
       <Unit65>
-        <Filename Value="src/rotatorFactory/uRotatorDCU1.pas"/>
+        <Filename Value="src/rotatorFactory/uRotatorPSTRotator.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit65>
       <Unit66>
-        <Filename Value="src/rotatorFactory/uRotatorAlfaSpid.pas"/>
+        <Filename Value="src/uSettingsRegistry.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit66>
       <Unit67>
-        <Filename Value="src/rotatorFactory/uRotatorPSTRotator.pas"/>
+        <Filename Value="src/uSettingsLegacy.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit67>
       <Unit68>
-        <Filename Value="src/uSettingsRegistry.pas"/>
+        <Filename Value="src/uSettingsDeclarations.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit68>
       <Unit69>
-        <Filename Value="src/uSettingsLegacy.pas"/>
+        <Filename Value="src/uRadioConfigStore.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit69>
       <Unit70>
-        <Filename Value="src/uSettingsDeclarations.pas"/>
+        <Filename Value="src/uKeyerConfigStore.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit70>
       <Unit71>
-        <Filename Value="src/uRadioConfigStore.pas"/>
+        <Filename Value="src/uKeyerConfigApply.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit71>
       <Unit72>
-        <Filename Value="src/uKeyerConfigStore.pas"/>
+        <Filename Value="src/uUDPBroadcastConfig.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit72>
       <Unit73>
-        <Filename Value="src/uKeyerConfigApply.pas"/>
+        <Filename Value="src/uUDPBroadcaster.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit73>
       <Unit74>
-        <Filename Value="src/uUDPBroadcastConfig.pas"/>
+        <Filename Value="src/uTR4WConfigFile.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit74>
       <Unit75>
-        <Filename Value="src/uUDPBroadcaster.pas"/>
+        <Filename Value="src/uRadioConfigLegacyMap.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit75>
       <Unit76>
-        <Filename Value="src/uTR4WConfigFile.pas"/>
+        <Filename Value="src/uRadioConfigApply.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit76>
       <Unit77>
-        <Filename Value="src/uRadioConfigLegacyMap.pas"/>
+        <Filename Value="src/uDialogs.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit77>
       <Unit78>
-        <Filename Value="src/uRadioConfigApply.pas"/>
+        <Filename Value="src/Version.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit78>
       <Unit79>
-        <Filename Value="src/uDialogs.pas"/>
+        <Filename Value="src/VC.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit79>
       <Unit80>
-        <Filename Value="src/Version.pas"/>
+        <Filename Value="src/uGradient.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit80>
       <Unit81>
-        <Filename Value="src/VC.pas"/>
+        <Filename Value="src/uMessages.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit81>
       <Unit82>
-        <Filename Value="src/uCommctrl.pas"/>
+        <Filename Value="src/uWinManager.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit82>
       <Unit83>
-        <Filename Value="src/uGradient.pas"/>
+        <Filename Value="src/uCbrSum.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit83>
       <Unit84>
-        <Filename Value="src/uMessages.pas"/>
+        <Filename Value="src/uQTCR.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit84>
       <Unit85>
-        <Filename Value="src/uWinManager.pas"/>
+        <Filename Value="src/uQTCS.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit85>
       <Unit86>
-        <Filename Value="src/uCbrSum.pas"/>
+        <Filename Value="src/LPT.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit86>
       <Unit87>
-        <Filename Value="src/uQTCR.pas"/>
+        <Filename Value="src/uGetServerLog.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit87>
       <Unit88>
-        <Filename Value="src/uQTCS.pas"/>
+        <Filename Value="src/TF.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit88>
       <Unit89>
-        <Filename Value="src/LPT.pas"/>
+        <Filename Value="src/uFreqTimeFormat.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit89>
       <Unit90>
-        <Filename Value="src/uGetServerLog.pas"/>
+        <Filename Value="src/uIntercom.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit90>
       <Unit91>
-        <Filename Value="src/TF.pas"/>
+        <Filename Value="src/uLogCompare.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit91>
       <Unit92>
-        <Filename Value="src/uFreqTimeFormat.pas"/>
+        <Filename Value="src/uCallsigns.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit92>
       <Unit93>
-        <Filename Value="src/ulogedit.pas"/>
+        <Filename Value="src/uSpots.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit93>
       <Unit94>
-        <Filename Value="src/uIntercom.pas"/>
+        <Filename Value="src/uGetScores.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit94>
       <Unit95>
-        <Filename Value="src/uLogCompare.pas"/>
+        <Filename Value="src/uStations.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit95>
       <Unit96>
-        <Filename Value="src/uMixW.pas"/>
+        <Filename Value="src/uAltD.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit96>
       <Unit97>
-        <Filename Value="src/uCallsigns.pas"/>
+        <Filename Value="src/uWinKey.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit97>
       <Unit98>
-        <Filename Value="src/uSpots.pas"/>
+        <Filename Value="src/uLPTPortEnumerator.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit98>
       <Unit99>
-        <Filename Value="src/uGetScores.pas"/>
+        <Filename Value="src/uPrefsSearch.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit99>
       <Unit100>
-        <Filename Value="src/uStations.pas"/>
+        <Filename Value="src/uConfigValues.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit100>
       <Unit101>
-        <Filename Value="src/uAltD.pas"/>
+        <Filename Value="src/uCrashLog.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit101>
       <Unit102>
-        <Filename Value="src/uWinKey.pas"/>
+        <Filename Value="src/uCFG.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit102>
       <Unit103>
-        <Filename Value="src/uLPTPortEnumerator.pas"/>
+        <Filename Value="src/uCRC32.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit103>
       <Unit104>
-        <Filename Value="src/uPrefsSearch.pas"/>
+        <Filename Value="src/uAltP.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit104>
       <Unit105>
-        <Filename Value="src/uConfigValues.pas"/>
+        <Filename Value="src/uEditMessage.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit105>
       <Unit106>
-        <Filename Value="src/uCrashLog.pas"/>
+        <Filename Value="src/uCheckLatestVersion.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit106>
       <Unit107>
-        <Filename Value="src/uCFG.pas"/>
+        <Filename Value="src/uProcessCommand.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit107>
       <Unit108>
-        <Filename Value="src/uCRC32.pas"/>
+        <Filename Value="src/uMults.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit108>
       <Unit109>
-        <Filename Value="src/uMP3Recorder.pas"/>
+        <Filename Value="src/uSortedStringList.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit109>
       <Unit110>
-        <Filename Value="src/uAltP.pas"/>
+        <Filename Value="src/uIO.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit110>
       <Unit111>
-        <Filename Value="src/uEditMessage.pas"/>
+        <Filename Value="src/uBMCF.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit111>
       <Unit112>
-        <Filename Value="src/uCheckLatestVersion.pas"/>
+        <Filename Value="src/uctydat.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit112>
       <Unit113>
-        <Filename Value="src/uErmak.pas"/>
+        <Filename Value="src/uCallSignRoutines.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit113>
       <Unit114>
-        <Filename Value="src/uProcessCommand.pas"/>
+        <Filename Value="src/uSynTime.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit114>
       <Unit115>
-        <Filename Value="src/uMults.pas"/>
+        <Filename Value="src/uMMTTY.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit115>
       <Unit116>
-        <Filename Value="src/Htmlhelp.pas"/>
+        <Filename Value="src/uProfiler.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit116>
       <Unit117>
-        <Filename Value="src/uSortedStringList.pas"/>
+        <Filename Value="src/uMessagesList.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit117>
       <Unit118>
-        <Filename Value="src/uQuickEdit.pas"/>
+        <Filename Value="src/uRussiaOblasts.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit118>
       <Unit119>
-        <Filename Value="src/uIO.pas"/>
+        <Filename Value="src/uMenu.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit119>
       <Unit120>
-        <Filename Value="src/uBMCF.pas"/>
+        <Filename Value="src/utils/utils_net.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit120>
       <Unit121>
-        <Filename Value="src/uctydat.pas"/>
+        <Filename Value="src/utils/utils_hw.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit121>
       <Unit122>
-        <Filename Value="src/uCallSignRoutines.pas"/>
+        <Filename Value="src/utils/uAnsiStr.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit122>
       <Unit123>
-        <Filename Value="src/uSynTime.pas"/>
+        <Filename Value="src/utils/uFileText.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit123>
       <Unit124>
-        <Filename Value="src/uMMTTY.pas"/>
+        <Filename Value="src/utils/uRegex.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit124>
       <Unit125>
-        <Filename Value="src/uProfiler.pas"/>
+        <Filename Value="src/utils/uWin32Compat.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit125>
       <Unit126>
-        <Filename Value="src/uMessagesList.pas"/>
+        <Filename Value="src/utils/uJSON.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit126>
       <Unit127>
-        <Filename Value="src/uRussiaOblasts.pas"/>
+        <Filename Value="src/utils/utils_text.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit127>
       <Unit128>
-        <Filename Value="src/uMenu.pas"/>
+        <Filename Value="src/utils/utils_math.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit128>
       <Unit129>
-        <Filename Value="src/utils/utils_net.pas"/>
+        <Filename Value="src/utils/utils_file.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit129>
       <Unit130>
-        <Filename Value="src/utils/utils_hw.pas"/>
+        <Filename Value="src/uWSJTX.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit130>
       <Unit131>
-        <Filename Value="src/utils/uAnsiStr.pas"/>
+        <Filename Value="src/uHamScore.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit131>
       <Unit132>
-        <Filename Value="src/utils/uFileText.pas"/>
+        <Filename Value="src/uExchangeBuilder.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit132>
       <Unit133>
-        <Filename Value="src/utils/uRegex.pas"/>
+        <Filename Value="src/uGridLookup.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit133>
       <Unit134>
-        <Filename Value="src/utils/uWin32Compat.pas"/>
+        <Filename Value="include/Log4D.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit134>
       <Unit135>
-        <Filename Value="src/utils/uHostedFormWindows.pas"/>
+        <Filename Value="src/radioFactory/uFactoryRadioBase.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit135>
       <Unit136>
-        <Filename Value="src/utils/uJSON.pas"/>
+        <Filename Value="src/uSerialPort.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit136>
       <Unit137>
-        <Filename Value="src/utils/utils_text.pas"/>
+        <Filename Value="src/radioFactory/uRadioFactory.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit137>
       <Unit138>
-        <Filename Value="src/utils/utils_math.pas"/>
+        <Filename Value="src/radioFactory/uRadioElecraftK4.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit138>
       <Unit139>
-        <Filename Value="src/utils/utils_file.pas"/>
+        <Filename Value="src/radioFactory/uRadioElecraftSerial.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit139>
       <Unit140>
-        <Filename Value="src/utils/uWinTimer.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuASCII.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit140>
       <Unit141>
-        <Filename Value="src/uWSJTX.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuFTDX10.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit141>
       <Unit142>
-        <Filename Value="src/uHamScore.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuBinary.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit142>
       <Unit143>
-        <Filename Value="src/uExchangeBuilder.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuFT1000MP.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit143>
       <Unit144>
-        <Filename Value="src/uGridLookup.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuFT817Group.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit144>
       <Unit145>
-        <Filename Value="include/Log4D.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuFT817.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit145>
       <Unit146>
-        <Filename Value="src/radioFactory/uFactoryRadioBase.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuFT818.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit146>
       <Unit147>
-        <Filename Value="src/uSerialPort.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuFT857.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit147>
       <Unit148>
-        <Filename Value="src/radioFactory/uRadioFactory.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuFT897.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit148>
       <Unit149>
-        <Filename Value="src/radioFactory/uRadioElecraftK4.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuFT847.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit149>
       <Unit150>
-        <Filename Value="src/radioFactory/uRadioElecraftSerial.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuFT990Group.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit150>
       <Unit151>
-        <Filename Value="src/radioFactory/uRadioYaesuASCII.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuFT990.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit151>
       <Unit152>
-        <Filename Value="src/radioFactory/uRadioYaesuFTDX10.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuFT1000.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit152>
       <Unit153>
-        <Filename Value="src/radioFactory/uRadioYaesuBinary.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuFT840Group.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit153>
       <Unit154>
-        <Filename Value="src/radioFactory/uRadioYaesuFT1000MP.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuFT840.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit154>
       <Unit155>
-        <Filename Value="src/radioFactory/uRadioYaesuFT817Group.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuFT890.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit155>
       <Unit156>
-        <Filename Value="src/radioFactory/uRadioYaesuFT817.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuFT900.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit156>
       <Unit157>
-        <Filename Value="src/radioFactory/uRadioYaesuFT818.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuFT920.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit157>
       <Unit158>
-        <Filename Value="src/radioFactory/uRadioYaesuFT857.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuFT100.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit158>
       <Unit159>
-        <Filename Value="src/radioFactory/uRadioYaesuFT897.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuFT747.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit159>
       <Unit160>
-        <Filename Value="src/radioFactory/uRadioYaesuFT847.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuFT767.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit160>
       <Unit161>
-        <Filename Value="src/radioFactory/uRadioYaesuFT990Group.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuFT991.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit161>
       <Unit162>
-        <Filename Value="src/radioFactory/uRadioYaesuFT990.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuFTDX101.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit162>
       <Unit163>
-        <Filename Value="src/radioFactory/uRadioYaesuFT1000.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuFT710.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit163>
       <Unit164>
-        <Filename Value="src/radioFactory/uRadioYaesuFT840Group.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuFTX1F.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit164>
       <Unit165>
-        <Filename Value="src/radioFactory/uRadioYaesuFT840.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuFT891.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit165>
       <Unit166>
-        <Filename Value="src/radioFactory/uRadioYaesuFT890.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuASCIILegacy.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit166>
       <Unit167>
-        <Filename Value="src/radioFactory/uRadioYaesuFT900.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuFT450.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit167>
       <Unit168>
-        <Filename Value="src/radioFactory/uRadioYaesuFT920.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuFT950.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit168>
       <Unit169>
-        <Filename Value="src/radioFactory/uRadioYaesuFT100.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuFT1200.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit169>
       <Unit170>
-        <Filename Value="src/radioFactory/uRadioYaesuFT747.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuFT2000.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit170>
       <Unit171>
-        <Filename Value="src/radioFactory/uRadioYaesuFT767.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuFTDX3000.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit171>
       <Unit172>
-        <Filename Value="src/radioFactory/uRadioYaesuFT991.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuFTDX5000.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit172>
       <Unit173>
-        <Filename Value="src/radioFactory/uRadioYaesuFTDX101.pas"/>
+        <Filename Value="src/radioFactory/uRadioYaesuFTDX9000.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit173>
       <Unit174>
-        <Filename Value="src/radioFactory/uRadioYaesuFT710.pas"/>
+        <Filename Value="src/radioFactory/uRadioFlexCAT.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit174>
       <Unit175>
-        <Filename Value="src/radioFactory/uRadioYaesuFTX1F.pas"/>
+        <Filename Value="src/radioFactory/uRadioFlex6000.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit175>
       <Unit176>
-        <Filename Value="src/radioFactory/uRadioYaesuFT891.pas"/>
+        <Filename Value="src/radioFactory/uRadioElecraftK3.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit176>
       <Unit177>
-        <Filename Value="src/radioFactory/uRadioYaesuASCIILegacy.pas"/>
+        <Filename Value="src/radioFactory/uRadioElecraftK2.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit177>
       <Unit178>
-        <Filename Value="src/radioFactory/uRadioYaesuFT450.pas"/>
+        <Filename Value="src/radioFactory/uRadioElecraftKX3.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit178>
       <Unit179>
-        <Filename Value="src/radioFactory/uRadioYaesuFT950.pas"/>
+        <Filename Value="src/radioFactory/uRadioKenwoodLAN.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit179>
       <Unit180>
-        <Filename Value="src/radioFactory/uRadioYaesuFT1200.pas"/>
+        <Filename Value="src/uWebSocketFraming.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit180>
       <Unit181>
-        <Filename Value="src/radioFactory/uRadioYaesuFT2000.pas"/>
+        <Filename Value="src/uWebSocketClient.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit181>
       <Unit182>
-        <Filename Value="src/radioFactory/uRadioYaesuFTDX3000.pas"/>
+        <Filename Value="src/uWebSocketServer.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit182>
       <Unit183>
-        <Filename Value="src/radioFactory/uRadioYaesuFTDX5000.pas"/>
+        <Filename Value="src/uTCIProtocol.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit183>
       <Unit184>
-        <Filename Value="src/radioFactory/uRadioYaesuFTDX9000.pas"/>
+        <Filename Value="src/uTCIServer.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit184>
       <Unit185>
-        <Filename Value="src/radioFactory/uRadioFlexCAT.pas"/>
+        <Filename Value="src/radioFactory/uRadioTCI.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit185>
       <Unit186>
-        <Filename Value="src/radioFactory/uRadioFlex6000.pas"/>
+        <Filename Value="src/radioFactory/uRadioKenwoodTS890.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit186>
       <Unit187>
-        <Filename Value="src/radioFactory/uRadioElecraftK3.pas"/>
+        <Filename Value="src/radioFactory/uRadioKenwoodTS990.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit187>
       <Unit188>
-        <Filename Value="src/radioFactory/uRadioElecraftK2.pas"/>
+        <Filename Value="src/uIcomNetworkTypes.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit188>
       <Unit189>
-        <Filename Value="src/radioFactory/uRadioElecraftKX3.pas"/>
+        <Filename Value="src/uIcomNetworkTransport.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit189>
       <Unit190>
-        <Filename Value="src/radioFactory/uRadioKenwoodLAN.pas"/>
+        <Filename Value="src/uIcomNetworkDiscovery.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit190>
       <Unit191>
-        <Filename Value="src/uWebSocketFraming.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcomBase.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit191>
       <Unit192>
-        <Filename Value="src/uWebSocketClient.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom9700.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit192>
       <Unit193>
-        <Filename Value="src/uWebSocketServer.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom7610.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit193>
       <Unit194>
-        <Filename Value="src/uTCIProtocol.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom7300.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit194>
       <Unit195>
-        <Filename Value="src/uTCIServer.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom705.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit195>
       <Unit196>
-        <Filename Value="src/radioFactory/uRadioTCI.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom7300MK2.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit196>
       <Unit197>
-        <Filename Value="src/radioFactory/uRadioKenwoodTS890.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom7600.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit197>
       <Unit198>
-        <Filename Value="src/radioFactory/uRadioKenwoodTS990.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom7760.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit198>
       <Unit199>
-        <Filename Value="src/uIcomNetworkTypes.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom7850.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit199>
       <Unit200>
-        <Filename Value="src/uIcomNetworkTransport.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom7851.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit200>
       <Unit201>
-        <Filename Value="src/uIcomNetworkDiscovery.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom905.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit201>
       <Unit202>
-        <Filename Value="src/radioFactory/uRadioIcomBase.pas"/>
+        <Filename Value="src/GetWinVersionInfo.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit202>
       <Unit203>
-        <Filename Value="src/radioFactory/uRadioIcom9700.pas"/>
+        <Filename Value="src/uSuperCheckPartialFileUpload.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit203>
       <Unit204>
-        <Filename Value="src/radioFactory/uRadioIcom7610.pas"/>
+        <Filename Value="src/uHamLibDirect.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit204>
       <Unit205>
-        <Filename Value="src/radioFactory/uRadioIcom7300.pas"/>
+        <Filename Value="src/radioFactory/uRadioHamLibDirect.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit205>
       <Unit206>
-        <Filename Value="src/radioFactory/uRadioIcom705.pas"/>
+        <Filename Value="src/uExternalLoggerBase.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit206>
       <Unit207>
-        <Filename Value="src/radioFactory/uRadioIcom7300MK2.pas"/>
+        <Filename Value="src/uExternalLogger.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit207>
       <Unit208>
-        <Filename Value="src/radioFactory/uRadioIcom7600.pas"/>
+        <Filename Value="src/uExternalLoggerFactory.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit208>
       <Unit209>
-        <Filename Value="src/radioFactory/uRadioIcom7760.pas"/>
+        <Filename Value="src/uDXLabPathfinder.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit209>
       <Unit210>
-        <Filename Value="src/radioFactory/uRadioIcom7850.pas"/>
+        <Filename Value="src/uYCCCSO2R.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit210>
       <Unit211>
-        <Filename Value="src/radioFactory/uRadioIcom7851.pas"/>
+        <Filename Value="src/uCWKeyerBase.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit211>
       <Unit212>
-        <Filename Value="src/radioFactory/uRadioIcom905.pas"/>
+        <Filename Value="src/uCWKeyerCAT.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit212>
       <Unit213>
-        <Filename Value="src/GetWinVersionInfo.pas"/>
+        <Filename Value="src/uCWKeyerWinKey.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit213>
       <Unit214>
-        <Filename Value="src/uSuperCheckPartialFileUpload.pas"/>
+        <Filename Value="src/uCWKeyerYCCC.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit214>
       <Unit215>
-        <Filename Value="src/uHamLibDirect.pas"/>
+        <Filename Value="src/uCWKeyerCPU.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit215>
       <Unit216>
-        <Filename Value="src/radioFactory/uRadioHamLibDirect.pas"/>
+        <Filename Value="src/radioFactory/uRadioFlexAPI.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit216>
       <Unit217>
-        <Filename Value="src/uExternalLoggerBase.pas"/>
+        <Filename Value="src/radioFactory/uRadioBand.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit217>
       <Unit218>
-        <Filename Value="src/uExternalLogger.pas"/>
+        <Filename Value="src/uBandLookup.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit218>
       <Unit219>
-        <Filename Value="src/uExternalLoggerFactory.pas"/>
+        <Filename Value="src/ComPortEnumerator.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit219>
       <Unit220>
-        <Filename Value="src/uDXLabPathfinder.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom7100.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit220>
       <Unit221>
-        <Filename Value="src/uYCCCSO2R.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom718.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit221>
       <Unit222>
-        <Filename Value="src/uCWKeyerBase.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcomLegacy.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit222>
       <Unit223>
-        <Filename Value="src/uCWKeyerCAT.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcomReadLimited.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit223>
       <Unit224>
-        <Filename Value="src/uCWKeyerWinKey.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcomModern.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit224>
       <Unit225>
-        <Filename Value="src/uCWKeyerYCCC.pas"/>
+        <Filename Value="src/radioFactory/uRadioHamLibOnly.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit225>
       <Unit226>
-        <Filename Value="src/uCWKeyerCPU.pas"/>
+        <Filename Value="src/radioFactory/uCWFraming.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit226>
       <Unit227>
-        <Filename Value="src/radioFactory/uRadioFlexAPI.pas"/>
+        <Filename Value="src/radioFactory/uRadioKYBase.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit227>
       <Unit228>
-        <Filename Value="src/radioFactory/uRadioBand.pas"/>
+        <Filename Value="src/radioFactory/uRadioElecraftBase.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit228>
       <Unit229>
-        <Filename Value="src/uBandLookup.pas"/>
+        <Filename Value="src/radioFactory/uRadioKenwoodBase.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit229>
       <Unit230>
-        <Filename Value="src/ComPortEnumerator.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom78.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit230>
       <Unit231>
-        <Filename Value="src/radioFactory/uRadioIcom7100.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom707.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit231>
       <Unit232>
-        <Filename Value="src/radioFactory/uRadioIcom718.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom725.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit232>
       <Unit233>
-        <Filename Value="src/radioFactory/uRadioIcomLegacy.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom726.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit233>
       <Unit234>
-        <Filename Value="src/radioFactory/uRadioIcomReadLimited.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom728.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit234>
       <Unit235>
-        <Filename Value="src/radioFactory/uRadioIcomModern.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom729.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit235>
       <Unit236>
-        <Filename Value="src/radioFactory/uRadioHamLibOnly.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom735.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit236>
       <Unit237>
-        <Filename Value="src/radioFactory/uCWFraming.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom736.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit237>
       <Unit238>
-        <Filename Value="src/radioFactory/uRadioKYBase.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom737.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit238>
       <Unit239>
-        <Filename Value="src/radioFactory/uRadioElecraftBase.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom738.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit239>
       <Unit240>
-        <Filename Value="src/radioFactory/uRadioKenwoodBase.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom746.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit240>
       <Unit241>
-        <Filename Value="src/radioFactory/uRadioIcom78.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom746PRO.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit241>
       <Unit242>
-        <Filename Value="src/radioFactory/uRadioIcom707.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom756.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit242>
       <Unit243>
-        <Filename Value="src/radioFactory/uRadioIcom725.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom756PRO.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit243>
       <Unit244>
-        <Filename Value="src/radioFactory/uRadioIcom726.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom756PROII.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit244>
       <Unit245>
-        <Filename Value="src/radioFactory/uRadioIcom728.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom756PROIII.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit245>
       <Unit246>
-        <Filename Value="src/radioFactory/uRadioIcom729.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom761.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit246>
       <Unit247>
-        <Filename Value="src/radioFactory/uRadioIcom735.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom765.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit247>
       <Unit248>
-        <Filename Value="src/radioFactory/uRadioIcom736.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom775.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit248>
       <Unit249>
-        <Filename Value="src/radioFactory/uRadioIcom737.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom781.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit249>
       <Unit250>
-        <Filename Value="src/radioFactory/uRadioIcom738.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom910.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit250>
       <Unit251>
-        <Filename Value="src/radioFactory/uRadioIcom746.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom970D.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit251>
       <Unit252>
-        <Filename Value="src/radioFactory/uRadioIcom746PRO.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom7200.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit252>
       <Unit253>
-        <Filename Value="src/radioFactory/uRadioIcom756.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom7410.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit253>
       <Unit254>
-        <Filename Value="src/radioFactory/uRadioIcom756PRO.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom9100.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit254>
       <Unit255>
-        <Filename Value="src/radioFactory/uRadioIcom756PROII.pas"/>
+        <Filename Value="src/radioFactory/uRadioTenTecOmni6.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit255>
       <Unit256>
-        <Filename Value="src/radioFactory/uRadioIcom756PROIII.pas"/>
+        <Filename Value="src/radioFactory/uRadioTenTecOrion.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit256>
       <Unit257>
-        <Filename Value="src/radioFactory/uRadioIcom761.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom7700.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit257>
       <Unit258>
-        <Filename Value="src/radioFactory/uRadioIcom765.pas"/>
+        <Filename Value="src/radioFactory/uRadioIcom7800.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit258>
       <Unit259>
-        <Filename Value="src/radioFactory/uRadioIcom775.pas"/>
+        <Filename Value="src/radioFactory/uRadioRegistry.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit259>
       <Unit260>
-        <Filename Value="src/radioFactory/uRadioIcom781.pas"/>
+        <Filename Value="src/radioFactory/uRadioKenwoodSerial.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit260>
       <Unit261>
-        <Filename Value="src/radioFactory/uRadioIcom910.pas"/>
+        <Filename Value="src/radioFactory/uRadioKenwoodTS570.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit261>
       <Unit262>
-        <Filename Value="src/radioFactory/uRadioIcom970D.pas"/>
+        <Filename Value="src/radioFactory/uRadioKenwoodTS140.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit262>
       <Unit263>
-        <Filename Value="src/radioFactory/uRadioIcom7200.pas"/>
+        <Filename Value="src/radioFactory/uRadioKenwoodTS440.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit263>
       <Unit264>
-        <Filename Value="src/radioFactory/uRadioIcom7410.pas"/>
+        <Filename Value="src/radioFactory/uRadioKenwoodTS450.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit264>
       <Unit265>
-        <Filename Value="src/radioFactory/uRadioIcom9100.pas"/>
+        <Filename Value="src/radioFactory/uRadioKenwoodTS480.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit265>
       <Unit266>
-        <Filename Value="src/radioFactory/uRadioTenTecOmni6.pas"/>
+        <Filename Value="src/radioFactory/uRadioKenwoodTS590.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit266>
       <Unit267>
-        <Filename Value="src/radioFactory/uRadioTenTecOrion.pas"/>
+        <Filename Value="src/radioFactory/uRadioKenwoodTS690.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit267>
       <Unit268>
-        <Filename Value="src/radioFactory/uRadioIcom7700.pas"/>
+        <Filename Value="src/radioFactory/uRadioKenwoodTS850.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit268>
       <Unit269>
-        <Filename Value="src/radioFactory/uRadioIcom7800.pas"/>
+        <Filename Value="src/radioFactory/uRadioKenwoodTS870.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit269>
       <Unit270>
-        <Filename Value="src/radioFactory/uRadioRegistry.pas"/>
+        <Filename Value="src/radioFactory/uRadioKenwoodTS940.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit270>
       <Unit271>
-        <Filename Value="src/radioFactory/uRadioKenwoodSerial.pas"/>
+        <Filename Value="src/radioFactory/uRadioKenwoodTS950.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit271>
       <Unit272>
-        <Filename Value="src/radioFactory/uRadioKenwoodTS570.pas"/>
+        <Filename Value="src/radioFactory/uRadioKenwoodTS2000.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit272>
       <Unit273>
-        <Filename Value="src/radioFactory/uRadioKenwoodTS140.pas"/>
+        <Filename Value="src/uIcomCIV.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit273>
       <Unit274>
-        <Filename Value="src/radioFactory/uRadioKenwoodTS440.pas"/>
+        <Filename Value="src/uMakeHelpFile.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit274>
       <Unit275>
-        <Filename Value="src/radioFactory/uRadioKenwoodTS450.pas"/>
+        <Filename Value="src/uLogConfig.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit275>
       <Unit276>
-        <Filename Value="src/radioFactory/uRadioKenwoodTS480.pas"/>
+        <Filename Value="src/uPOTAParks.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit276>
       <Unit277>
-        <Filename Value="src/radioFactory/uRadioKenwoodTS590.pas"/>
+        <Filename Value="src/uPendingCounties.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit277>
       <Unit278>
-        <Filename Value="src/radioFactory/uRadioKenwoodTS690.pas"/>
+        <Filename Value="src/uCTYUpdate.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit278>
       <Unit279>
-        <Filename Value="src/radioFactory/uRadioKenwoodTS850.pas"/>
+        <Filename Value="src/uADIF.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit279>
       <Unit280>
-        <Filename Value="src/radioFactory/uRadioKenwoodTS870.pas"/>
+        <Filename Value="src/uCabrillo.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit280>
       <Unit281>
-        <Filename Value="src/radioFactory/uRadioKenwoodTS940.pas"/>
+        <Filename Value="src/uCallCompress.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit281>
       <Unit282>
-        <Filename Value="src/radioFactory/uRadioKenwoodTS950.pas"/>
+        <Filename Value="src/radioFactory/uFlexRadioUtils.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit282>
       <Unit283>
-        <Filename Value="src/radioFactory/uRadioKenwoodTS2000.pas"/>
+        <Filename Value="src/uGridDistance.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit283>
       <Unit284>
-        <Filename Value="src/uIcomCIV.pas"/>
+        <Filename Value="src/uK4Discovery.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit284>
       <Unit285>
-        <Filename Value="src/uAbout.pas"/>
+        <Filename Value="src/radioFactory/uFlexDiscovery.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit285>
       <Unit286>
-        <Filename Value="src/uHardWare.pas"/>
+        <Filename Value="src/uStrSearch.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit286>
       <Unit287>
-        <Filename Value="src/uReminder.pas"/>
+        <Filename Value="src/utils/networkmessageutils.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit287>
       <Unit288>
-        <Filename Value="src/uMakeHelpFile.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit288>
-      <Unit289>
-        <Filename Value="src/uLogConfig.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit289>
-      <Unit290>
-        <Filename Value="src/uTrayBalloon.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit290>
-      <Unit291>
-        <Filename Value="src/uPOTAParks.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit291>
-      <Unit292>
-        <Filename Value="src/uPendingCounties.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit292>
-      <Unit293>
-        <Filename Value="src/uCTYUpdate.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit293>
-      <Unit294>
-        <Filename Value="src/uADIF.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit294>
-      <Unit295>
-        <Filename Value="src/uCabrillo.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit295>
-      <Unit296>
-        <Filename Value="src/uCallCompress.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit296>
-      <Unit297>
-        <Filename Value="src/radioFactory/uFlexRadioUtils.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit297>
-      <Unit298>
-        <Filename Value="src/uGridDistance.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit298>
-      <Unit299>
-        <Filename Value="src/uK4Discovery.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit299>
-      <Unit300>
-        <Filename Value="src/radioFactory/uFlexDiscovery.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit300>
-      <Unit301>
-        <Filename Value="src/uStrSearch.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit301>
-      <Unit302>
-        <Filename Value="src/utils/networkmessageutils.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit302>
-      <Unit303>
         <Filename Value="src/ui/lcl/uAltDForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmAltD"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit303>
-      <Unit304>
+      </Unit288>
+      <Unit289>
         <Filename Value="src/ui/lcl/uProgramMessageForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmProgramMessage"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit304>
-      <Unit305>
+      </Unit289>
+      <Unit290>
         <Filename Value="src/ui/lcl/uInputQueryForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmInputQuery"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit305>
-      <Unit306>
+      </Unit290>
+      <Unit291>
         <Filename Value="src/uAccelerators.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit306>
-      <Unit307>
+      </Unit291>
+      <Unit292>
         <Filename Value="src/uMainWindowProc.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit307>
-      <Unit308>
+      </Unit292>
+      <Unit293>
         <Filename Value="src/utils/uHTTPDownload.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit308>
-      <Unit309>
+      </Unit293>
+      <Unit294>
         <Filename Value="src/uTRMasterUpdate.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit309>
-      <Unit310>
+      </Unit294>
+      <Unit295>
         <Filename Value="src/uCabrilloHeader.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit310>
-      <Unit311>
+      </Unit295>
+      <Unit296>
         <Filename Value="src/ui/lcl/uSendSpotForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmSendSpot"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit311>
-      <Unit312>
+      </Unit296>
+      <Unit297>
         <Filename Value="src/ui/lcl/uAutoCQForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmAutoCQ"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit312>
-      <Unit313>
+      </Unit297>
+      <Unit298>
         <Filename Value="src/ui/lcl/uSendKeyboardForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmSendKeyboard"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit313>
-      <Unit314>
+      </Unit298>
+      <Unit299>
         <Filename Value="src/ui/lcl/uEditMessageForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmEditMessage"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit314>
-      <Unit315>
+      </Unit299>
+      <Unit300>
         <Filename Value="src/ui/lcl/uMessagesListForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmMessagesList"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit315>
-      <Unit316>
+      </Unit300>
+      <Unit301>
         <Filename Value="src/ui/lcl/uWinManagerForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmWinManager"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit316>
-      <Unit317>
+      </Unit301>
+      <Unit302>
         <Filename Value="src/ui/lcl/uBandPlanForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmBandPlan"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit317>
-      <Unit318>
+      </Unit302>
+      <Unit303>
         <Filename Value="src/ui/lcl/uLPTForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmLPT"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit318>
-      <Unit319>
+      </Unit303>
+      <Unit304>
         <Filename Value="src/ui/lcl/uCT1BOHForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmCT1BOH"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit319>
-      <Unit320>
+      </Unit304>
+      <Unit305>
         <Filename Value="src/ui/lcl/uLogCompareForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmLogCompare"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit320>
-      <Unit321>
+      </Unit305>
+      <Unit306>
         <Filename Value="src/ui/lcl/uBeaconsForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmBeacons"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit321>
-      <Unit322>
+      </Unit306>
+      <Unit307>
         <Filename Value="src/ui/lcl/uEditQSOForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmEditQSO"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit322>
-      <Unit323>
+      </Unit307>
+      <Unit308>
         <Filename Value="src/uPanelUpdate.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit323>
-      <Unit324>
+      </Unit308>
+      <Unit309>
         <Filename Value="src/uWindowLayoutStore.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit324>
-      <Unit325>
+      </Unit309>
+      <Unit310>
         <Filename Value="src/uADIFExchange.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit325>
-      <Unit326>
+      </Unit310>
+      <Unit311>
         <Filename Value="src/uNetFraming.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit326>
-      <Unit327>
+      </Unit311>
+      <Unit312>
         <Filename Value="src/uNetClient.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit327>
-      <Unit328>
+      </Unit312>
+      <Unit313>
         <Filename Value="src/uBandMapView.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit328>
-      <Unit329>
+      </Unit313>
+      <Unit314>
         <Filename Value="src/ui/lcl/uBandMapForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmBandMap"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit329>
-      <Unit330>
+      </Unit314>
+      <Unit315>
         <Filename Value="src/ui/lcl/uPanadapterForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmPanadapter"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit330>
-      <Unit331>
+      </Unit315>
+      <Unit316>
         <Filename Value="src/uPanadapterRestore.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit331>
-      <Unit332>
+      </Unit316>
+      <Unit317>
         <Filename Value="src/ui/lcl/uStationsForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmStations"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit332>
-      <Unit333>
+      </Unit317>
+      <Unit318>
         <Filename Value="src/domain/uDomainState.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit333>
-      <Unit334>
+      </Unit318>
+      <Unit319>
         <Filename Value="src/domain/uWSJTXState.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit334>
-      <Unit335>
+      </Unit319>
+      <Unit320>
         <Filename Value="src/ui/lcl/uStateBridge.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit335>
-      <Unit336>
+      </Unit320>
+      <Unit321>
         <Filename Value="src/ui/lcl/uFlowGrid.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit336>
-      <Unit337>
+      </Unit321>
+      <Unit322>
         <Filename Value="src/ui/lcl/uDupeSheetForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmDupeSheet"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit337>
-      <Unit338>
+      </Unit322>
+      <Unit323>
         <Filename Value="src/ui/lcl/uMasterForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmMaster"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit338>
-      <Unit339>
+      </Unit323>
+      <Unit324>
         <Filename Value="src/ui/lcl/uPostScoresForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmPostScores"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit339>
-      <Unit340>
+      </Unit324>
+      <Unit325>
         <Filename Value="src/ui/lcl/uHamScoreForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmHamScore"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit340>
-      <Unit341>
+      </Unit325>
+      <Unit326>
         <Filename Value="src/ui/lcl/uIntercomForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmIntercom"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit341>
-      <Unit342>
-        <Filename Value="src/ui/lcl/uMP3RecorderForm.pas"/>
-        <IsPartOfProject Value="True"/>
-        <ComponentName Value="frmMP3Recorder"/>
-        <HasResources Value="True"/>
-        <ResourceBaseClass Value="Form"/>
-      </Unit342>
-      <Unit343>
+      </Unit326>
+      <Unit327>
         <Filename Value="src/ui/lcl/uRadioPanelForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmRadioPanel"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit343>
-      <Unit344>
+      </Unit327>
+      <Unit328>
         <Filename Value="src/ui/lcl/uNetworkForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmNetwork"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit344>
-      <Unit345>
+      </Unit328>
+      <Unit329>
         <Filename Value="src/ui/lcl/uRemMultsForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmRemMults"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit345>
-      <Unit346>
+      </Unit329>
+      <Unit330>
         <Filename Value="src/ui/lcl/uAppInputHooks.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit346>
-      <Unit347>
+      </Unit330>
+      <Unit331>
         <Filename Value="src/uSpotAge.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit347>
-      <Unit348>
+      </Unit331>
+      <Unit332>
         <Filename Value="src/uClusterTokens.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit348>
-      <Unit349>
+      </Unit332>
+      <Unit333>
         <Filename Value="src/uCRC16.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit349>
-      <Unit350>
+      </Unit333>
+      <Unit334>
         <Filename Value="src/uSpectrumTypes.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit350>
-      <Unit351>
+      </Unit334>
+      <Unit335>
         <Filename Value="src/uPanadapterView.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit351>
-      <Unit352>
+      </Unit335>
+      <Unit336>
         <Filename Value="src/utils/uPlatformProcess.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit352>
-      <Unit353>
+      </Unit336>
+      <Unit337>
         <Filename Value="src/ui/lcl/uLCLCoexist.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit353>
-      <Unit354>
+      </Unit337>
+      <Unit338>
         <Filename Value="src/ui/lcl/uLCLTranslate.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit354>
-      <Unit355>
+      </Unit338>
+      <Unit339>
         <Filename Value="src/ui/lcl/uSettingsBinding.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit355>
-      <Unit356>
+      </Unit339>
+      <Unit340>
         <Filename Value="src/uMainThreadWork.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit356>
-      <Unit357>
+      </Unit340>
+      <Unit341>
         <Filename Value="src/ui/lcl/uFlasher.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit357>
-      <Unit358>
+      </Unit341>
+      <Unit342>
         <Filename Value="src/ui/lcl/uAboutForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmAbout"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit358>
-      <Unit359>
+      </Unit342>
+      <Unit343>
         <Filename Value="src/ui/lcl/uFunctionKeysForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmFunctionKeys"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit359>
-      <Unit360>
+      </Unit343>
+      <Unit344>
         <Filename Value="src/ui/lcl/uLegacyIniPrompt.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit360>
-      <Unit361>
+      </Unit344>
+      <Unit345>
         <Filename Value="src/ui/lcl/uIniRetireForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmIniRetire"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit361>
-      <Unit362>
+      </Unit345>
+      <Unit346>
         <Filename Value="src/ui/lcl/uMainForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="TR4WMainForm"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit362>
-      <Unit363>
+      </Unit346>
+      <Unit347>
         <Filename Value="src/radioFactory/uK4Spectrum.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit363>
-      <Unit364>
+      </Unit347>
+      <Unit348>
         <Filename Value="src/radioFactory/uK4SpectrumThread.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit364>
-      <Unit365>
+      </Unit348>
+      <Unit349>
         <Filename Value="src/uAppStrings.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit365>
-      <Unit366>
+      </Unit349>
+      <Unit350>
         <Filename Value="src/ui/lcl/uTelnetForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmTelnet"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit366>
-      <Unit367>
+      </Unit350>
+      <Unit351>
         <Filename Value="src/ui/lcl/uMMTTYForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmMMTTY"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit367>
-      <Unit368>
+      </Unit351>
+      <Unit352>
         <Filename Value="src/uProgramMain.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit368>
-      <Unit369>
+      </Unit352>
+      <Unit353>
         <Filename Value="src/ui/lcl/uNewContestForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmNewContest"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit369>
-      <Unit370>
+      </Unit353>
+      <Unit354>
         <Filename Value="src/ui/lcl/uTextFitAudit.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit370>
-      <Unit371>
+      </Unit354>
+      <Unit355>
         <Filename Value="src/uTR4WStrings.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit371>
-      <Unit372>
+      </Unit355>
+      <Unit356>
         <Filename Value="src/radioFactory/uIcomScope.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit372>
-      <Unit373>
+      </Unit356>
+      <Unit357>
         <Filename Value="src/ui/lcl/uCrashLogLCL.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit373>
-      <Unit374>
+      </Unit357>
+      <Unit358>
         <Filename Value="src/ui/lcl/uEmbeddedTranslations.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit374>
-      <Unit375>
+      </Unit358>
+      <Unit359>
         <Filename Value="src/ui/lcl/uServerLogForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmServerLog"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit375>
-      <Unit376>
+      </Unit359>
+      <Unit360>
         <Filename Value="src/radioFactory/uRadioIcom7110.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit376>
-      <Unit377>
+      </Unit360>
+      <Unit361>
         <Filename Value="src/uSettingsCaptions.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit377>
-      <Unit378>
+      </Unit361>
+      <Unit362>
         <Filename Value="src/uAppPaths.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit378>
-      <Unit379>
+      </Unit362>
+      <Unit363>
         <Filename Value="src/domain/uRadioState.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit379>
-      <Unit380>
+      </Unit363>
+      <Unit364>
         <Filename Value="src/domain/uKeyerState.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit380>
-      <Unit381>
+      </Unit364>
+      <Unit365>
         <Filename Value="src/uLogBinaryFile.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit381>
-      <Unit382>
+      </Unit365>
+      <Unit366>
         <Filename Value="src/domain/uLogSchema.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit382>
-      <Unit383>
+      </Unit366>
+      <Unit367>
         <Filename Value="src/domain/uContestFileKind.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit383>
-      <Unit384>
-        <Filename Value="src/domain/uEditableLogView.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit384>
-      <Unit385>
+      </Unit367>
+      <Unit368>
         <Filename Value="src/uLogRepository.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit385>
-      <Unit386>
+      </Unit368>
+      <Unit369>
         <Filename Value="src/uLogImport.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit386>
-      <Unit387>
+      </Unit369>
+      <Unit370>
         <Filename Value="src/domain/uLogDatabase.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit387>
-      <Unit388>
+      </Unit370>
+      <Unit371>
         <Filename Value="src/ui/lcl/uAltPForm.pas"/>
         <IsPartOfProject Value="True"/>
         <HasResources Value="True"/>
-      </Unit388>
-      <Unit389>
+      </Unit371>
+      <Unit372>
         <Filename Value="src/ui/lcl/uCabrilloSummaryForm.pas"/>
         <IsPartOfProject Value="True"/>
         <HasResources Value="True"/>
-      </Unit389>
-      <Unit390>
+      </Unit372>
+      <Unit373>
         <Filename Value="src/ui/lcl/uFileViewForm.pas"/>
         <IsPartOfProject Value="True"/>
         <HasResources Value="True"/>
-      </Unit390>
-      <Unit391>
+      </Unit373>
+      <Unit374>
         <Filename Value="src/ui/lcl/uQTCSendForm.pas"/>
         <IsPartOfProject Value="True"/>
         <HasResources Value="True"/>
-      </Unit391>
-      <Unit392>
+      </Unit374>
+      <Unit375>
         <Filename Value="src/ui/lcl/uQTCReceiveForm.pas"/>
         <IsPartOfProject Value="True"/>
         <HasResources Value="True"/>
+      </Unit375>
+      <Unit376>
+        <Filename Value="src/contestFactory/uContestBase.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit376>
+      <Unit377>
+        <Filename Value="src/contestFactory/uContestRegistry.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit377>
+      <Unit378>
+        <Filename Value="src/contestFactory/uContestFactory.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit378>
+      <Unit379>
+        <Filename Value="src/contestFactory/uContestARRLDXBase.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit379>
+      <Unit380>
+        <Filename Value="src/contestFactory/uContestARRLDXCW.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit380>
+      <Unit381>
+        <Filename Value="src/contestFactory/uContestARRLDXPhone.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit381>
+      <Unit382>
+        <Filename Value="src/contestFactory/uContestFixedPoints.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit382>
+      <Unit383>
+        <Filename Value="src/contestFactory/uContestARRLSSCW.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit383>
+      <Unit384>
+        <Filename Value="src/contestFactory/uContestARRLSSSSB.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit384>
+      <Unit385>
+        <Filename Value="src/contestFactory/uContestGeneralQSO.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit385>
+      <Unit386>
+        <Filename Value="src/contestFactory/uContestNASprintCW.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit386>
+      <Unit387>
+        <Filename Value="src/contestFactory/uContestNASprintRTTY.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit387>
+      <Unit388>
+        <Filename Value="src/contestFactory/uContestFloridaQP.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit388>
+      <Unit389>
+        <Filename Value="src/contestFactory/uContestARRLFieldDay.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit389>
+      <Unit390>
+        <Filename Value="src/contestFactory/uContestARRLSSBase.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit390>
+      <Unit391>
+        <Filename Value="src/contestFactory/uContestCQWPXBase.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit391>
+      <Unit392>
+        <Filename Value="src/contestFactory/uContestCQWPXCW.pas"/>
+        <IsPartOfProject Value="True"/>
       </Unit392>
       <Unit393>
-        <Filename Value="src/contestFactory/uContestBase.pas"/>
+        <Filename Value="src/contestFactory/uContestCQWPXSSB.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit393>
       <Unit394>
-        <Filename Value="src/contestFactory/uContestRegistry.pas"/>
+        <Filename Value="src/contestFactory/uContestCQWWBase.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit394>
       <Unit395>
-        <Filename Value="src/contestFactory/uContestFactory.pas"/>
+        <Filename Value="src/contestFactory/uContestCQWWCW.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit395>
       <Unit396>
-        <Filename Value="src/contestFactory/uContestARRLDXBase.pas"/>
+        <Filename Value="src/contestFactory/uContestCQWWSSB.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit396>
       <Unit397>
-        <Filename Value="src/contestFactory/uContestARRLDXCW.pas"/>
+        <Filename Value="src/contestFactory/uContestIARU.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit397>
       <Unit398>
-        <Filename Value="src/contestFactory/uContestARRLDXPhone.pas"/>
+        <Filename Value="src/contestFactory/uContestWinterFieldDay.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit398>
       <Unit399>
-        <Filename Value="src/contestFactory/uContestFixedPoints.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit399>
-      <Unit400>
-        <Filename Value="src/contestFactory/uContestARRLSSCW.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit400>
-      <Unit401>
-        <Filename Value="src/contestFactory/uContestARRLSSSSB.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit401>
-      <Unit402>
-        <Filename Value="src/contestFactory/uContestGeneralQSO.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit402>
-      <Unit403>
-        <Filename Value="src/contestFactory/uContestNASprintCW.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit403>
-      <Unit404>
-        <Filename Value="src/contestFactory/uContestNASprintRTTY.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit404>
-      <Unit405>
-        <Filename Value="src/contestFactory/uContestFloridaQP.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit405>
-      <Unit406>
-        <Filename Value="src/contestFactory/uContestARRLFieldDay.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit406>
-      <Unit407>
-        <Filename Value="src/contestFactory/uContestARRLSSBase.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit407>
-      <Unit408>
-        <Filename Value="src/contestFactory/uContestCQWPXBase.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit408>
-      <Unit409>
-        <Filename Value="src/contestFactory/uContestCQWPXCW.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit409>
-      <Unit410>
-        <Filename Value="src/contestFactory/uContestCQWPXSSB.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit410>
-      <Unit411>
-        <Filename Value="src/contestFactory/uContestCQWWBase.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit411>
-      <Unit412>
-        <Filename Value="src/contestFactory/uContestCQWWCW.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit412>
-      <Unit413>
-        <Filename Value="src/contestFactory/uContestCQWWSSB.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit413>
-      <Unit414>
-        <Filename Value="src/contestFactory/uContestIARU.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit414>
-      <Unit415>
-        <Filename Value="src/contestFactory/uContestWinterFieldDay.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit415>
-      <Unit416>
         <Filename Value="src/ui/lcl/uLogEditForm.pas"/>
         <IsPartOfProject Value="True"/>
         <HasResources Value="True"/>
-      </Unit416>
+      </Unit399>
+      <Unit400>
+        <Filename Value="src/ui/lcl/uWindowTable.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit400>
+      <Unit401>
+        <Filename Value="src/uWindowSnap.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit401>
+      <Unit402>
+        <Filename Value="src/utils/uCFormat.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit402>
+      <Unit403>
+        <Filename Value="src/uMainThread.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit403>
+      <Unit404>
+        <Filename Value="src/ui/lcl/uElementPanel.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit404>
+      <Unit405>
+        <Filename Value="src/ui/lcl/uLogGrid.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit405>
+      <Unit406>
+        <Filename Value="src/ui/lcl/uLogSearchForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+      </Unit406>
+      <Unit407>
+        <Filename Value="src/ui/lcl/uSystemWatch.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit407>
+      <Unit408>
+        <Filename Value="src/ui/lcl/uAppTimers.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit408>
+      <Unit409>
+        <Filename Value="src/ui/lcl/uMainGrids.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit409>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

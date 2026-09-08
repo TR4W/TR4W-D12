@@ -875,19 +875,6 @@ msgctxt "tfrmmmtty.caption"
 msgid "MMTTY"
 msgstr ""
 
-#: tfrmmp3recorder.btncontrol.caption
-msgid "..."
-msgstr ""
-
-#: tfrmmp3recorder.caption
-msgctxt "tfrmmp3recorder.caption"
-msgid "MP3 Recorder"
-msgstr ""
-
-#: tfrmmp3recorder.chkrecord.caption
-msgid "Record"
-msgstr ""
-
 #: tfrmnetwork.caption
 msgctxt "tfrmnetwork.caption"
 msgid "Network"

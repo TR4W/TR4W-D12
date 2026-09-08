@@ -158,6 +158,13 @@ $lints = @(
    # machine with no cross compiler (docs/CROSS_COMPILING.md).
    @{ Name = 'Lint-LinuxCompile';    Arg = $null;    NeedsFpc = $false }
    @{ Name = 'Lint-UnitFileNames'; Arg = $null;    NeedsFpc = $false }
+
+   # A DELETED UNIT LEAVES A REFERENCE THE COMMAND-LINE BUILD CANNOT SEE.
+   # tr4w.lpi is read by Lazarus and by nothing else, so an entry pointing at a
+   # deleted file survives every build, lint and test, and surfaces as a modal
+   # dialog the next time the IDE opens -- once per orphan. NY4I hit seventeen
+   # of them on 2026-09-07, accumulated over months. Fix with -Fix.
+   @{ Name = 'Lint-ProjectFiles';  Arg = $null;    NeedsFpc = $false }
 )
 
 $failed  = 0
