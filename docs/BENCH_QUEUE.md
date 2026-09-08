@@ -3106,6 +3106,44 @@ It stays out of the Windows-dependency sweep's count for the same reason: an
 ungated `uses Windows, Messages` in a file no compiler reads is not a
 portability problem yet.
 
+## 2026-09-08 -- THE WARNING BEEPS SHOULD BE AUDIBLE AGAIN. LISTEN.
+
+**One thing to check, and it takes ten seconds: WORK A DUPE AND LISTEN.**
+
+`BeepUnit` drove `\Device\Beep` through a DOS device alias it defined for
+itself (`QueryDosDeviceA` / `DefineDosDeviceA` / `CreateFileA` /
+`DeviceIoControl`). **On most Windows 10/11 machines that did nothing at all**:
+beep.sys is commonly disabled and there is no PC speaker, so `CreateFile`
+failed, the handle stayed invalid, and every alert was silent WITH NOTHING
+LOGGED. If you have not heard a dupe beep in years, that is why.
+
+It is `uAudio.BeepAlert` now, which calls `Windows.Beep` -- synthesised
+through the SOUND CARD, no driver and no speaker hardware involved.
+
+**WHAT TO LISTEN FOR** -- each is a different call in `tDoABeep`, so hearing
+one does not prove the rest:
+
+- [ ] **a dupe** -- `Single`, 2000 Hz for 75 ms
+- [ ] **a new multiplier / congratulations** -- `BeepCongrats`, a five-tone
+      run from 500 Hz down to 300 and up to 800
+- [ ] **a warning** -- `Warning`, 1500 Hz for 150 ms
+- [ ] **a prompt** -- `PromptBeep`, three pulses at 2000 Hz
+- [ ] **`QuickBeep`** -- 1000 Hz for 300 ms
+
+**AND ONE THING TO WATCH RATHER THAN HEAR: TIMING.** `Windows.Beep` BLOCKS for
+the duration, and so did the old path -- `ntBeep` returned immediately and
+`SpeakerBeep` then called `Sleep(Duration)`. **That Sleep is removed**, because
+keeping both would double every alert. If a beep now feels twice as long, or
+the log window stutters on a run of dupes, that is the place to look.
+
+**IF THEY ARE STILL SILENT**, the log will say why -- `uAudio` reports a
+refused tone with its frequency and duration, which the old code never did.
+`[Audio]` is the prefix.
+
+**NOT A PORTABILITY ITEM.** This is a Windows behaviour change on Windows; the
+cross-platform half (aplay/paplay/afplay, and no tone generator on macOS) is
+in `uAudio`'s header and needs a Linux box rather than a bench.
+
 ## 2026-09-08 -- peeling MainUnit for a Linux compile: DECISIONS OWED
 
 Compiling `MainUnit.pas` for x86_64-linux, unit by unit, to find what still
