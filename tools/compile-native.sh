@@ -93,18 +93,41 @@ if [ ! -x "$FPC" ]; then
    echo "No $TARGET compiler at $FPC" >&2
    exit 2
 fi
+# THE WIDGET SET IS A DIRECTORY LEVEL, and missing it is not obvious from the
+# error you get. Lazarus splits its compiled units in two:
+#
+#     lcl/units/x86_64-linux/           the platform-independent LCL
+#     lcl/units/x86_64-linux/gtk2/      the interface for ONE widget set
+#
+# The first alone gets you a long way -- far enough to compile most of TR4W --
+# and then something fails on a unit that looks unrelated. Override with
+# LCL_WIDGETSET if this box has qt5 and not gtk2; gtk2 is the Lazarus default
+# and is what a distro package installs.
+WS="${LCL_WIDGETSET:-gtk2}"
+
 if [ -n "$LCL" ] && [ -d "$LCL" ]; then
    FU="$FU -Fu$LCL"
+   if [ -d "$LCL/$WS" ]; then
+      FU="$FU -Fu$LCL/$WS"
+   else
+      # Say so rather than failing later on a unit that reads as OUR problem.
+      echo "note: no $WS units under $LCL -- set LCL_WIDGETSET to one of:" >&2
+      ls -1 "$LCL" 2>/dev/null | sed 's/^/      /' >&2
+   fi
 fi
 if [ -d "$LAZUTILS" ]; then
    FU="$FU -Fu$LAZUTILS"
 fi
 
 # datetimectrls: uEditQSOForm uses TDateTimePicker, an ordinary LCL component
-# that is NOT part of the LCL package itself.  Distro and fpcupdeluxe layouts
-# differ, so take the compiled units if they are there and fall back to the
-# source, which the compiler can build itself.
-for d in "$LAZROOT"/*/components/datetimectrls/lib/"$ARCH" \
+# that is NOT part of the LCL package itself. Its compiled units carry the
+# WIDGET SET level too -- lib/x86_64-linux/gtk2 -- which is why the plain
+# lib/$ARCH probe found nothing on a distro Lazarus. Distro and fpcupdeluxe
+# layouts differ, so try both, and fall back to the SOURCE directory, which the
+# compiler can build for itself.
+for d in "$LAZROOT"/*/components/datetimectrls/lib/"$ARCH/$WS" \
+         "$LAZROOT"/components/datetimectrls/lib/"$ARCH/$WS" \
+         "$LAZROOT"/*/components/datetimectrls/lib/"$ARCH" \
          "$LAZROOT"/components/datetimectrls/lib/"$ARCH" \
          "$LAZROOT"/*/components/datetimectrls \
          "$LAZROOT"/components/datetimectrls; do
