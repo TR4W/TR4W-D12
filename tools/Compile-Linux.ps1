@@ -88,11 +88,30 @@ Get-ChildItem $pkgs -Directory | ForEach-Object {
 # reads as a defect in Lazarus rather than a missing switch on our side, and
 # cost a diagnosis on 2026-09-08. -Mdelphi turns C operators off; the affected
 # Lazarus units declare {$mode objfpc} but that does not turn them back on.
-$a = @('-Tlinux', '-Px86_64', '-Mdelphi', '-Sc', '-XPx86_64-linux-', "-FE$out", "-FU$out",
+$a = @('-Tlinux', '-Px86_64', '-MObjFPC', '-Sc', '-XPx86_64-linux-', "-FE$out", "-FU$out",
        '-FiC:\Lazarus\lcl\include',
        '-FiC:\Lazarus\components\lazutils',
        "-Fi$(Join-Path $repo 'tr4w\src')")
 foreach ($p in $fu) { $a += "-Fu$p" }
+
+# STALE UNITS FROM A DIFFERENT SWITCH SET ARE INDISTINGUISHABLE FROM A DEFECT.
+#
+# FPC reuses a .ppu whose source has not changed, and it cannot see that the
+# COMPILER SWITCHES changed -- the same rule that makes -Incremental unsafe
+# after a define flip in Build-App. It cost an hour on 2026-09-08: the probe
+# was switched from -Mdelphi to -MObjFPC (which the LCL requires -- Delphi mode
+# packs sets to one byte, so Lazarus's own `Integer(AFont.Style)` in grids.pas
+# will not compile) and the LCL STILL failed, because the scratch directory
+# still held units built the old way. Clearing it by hand fixed it instantly.
+#
+# So the switches are stamped beside the units, and any change wipes them.
+$stamp = Join-Path $out '.switches'
+$want  = ($a -join ' ')
+if ((-not (Test-Path $stamp)) -or ((Get-Content -LiteralPath $stamp -Raw) -ne $want)) {
+   Write-Host 'Compile-Linux: compiler switches changed -- clearing cached units.' -ForegroundColor DarkGray
+   Remove-Item (Join-Path $out '*') -Recurse -Force -ErrorAction SilentlyContinue
+   Set-Content -LiteralPath $stamp -Value $want -NoNewline
+}
 
 $env:PATH = "$shim;$env:PATH"
 $output = & $fpc @a $src 2>&1

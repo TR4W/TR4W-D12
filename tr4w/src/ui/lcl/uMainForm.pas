@@ -40,7 +40,18 @@ unit uMainForm;
 interface
 
 uses
-  Windows, Classes, Forms, Controls, Graphics, StdCtrls, ExtCtrls, ComCtrls,
+{$IFDEF WINDOWS}
+  (* GATED WITH WHAT USES IT (2026-09-08). Both remaining Windows calls in this
+    unit are already inside {$IFDEF WINDOWS} -- ShowWindow on the MMTTY engine's
+    window, and SetWindowLong to give an entry field a control id for the
+    AutoIt-driven UI tests -- but the uses clause was not, so the unit could
+    never have compiled off Windows however well its code was gated. That is
+    the trap TF's clause already documents: a unit whose CODE is behind
+    {$IFDEF WINDOWS} but whose USES clause is not fails on the clause and never
+    reaches the code. *)
+  Windows,
+{$ENDIF}
+  Classes, Forms, Controls, Graphics, StdCtrls, ExtCtrls, ComCtrls,
   LCLType,
   LMessages,
   uElementPanel,     // TElementPanel -- the 43 status readouts

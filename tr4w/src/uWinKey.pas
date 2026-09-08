@@ -27,8 +27,16 @@ uses
   (* CreateUpDownControl -- the WinKeyer settings dialog is still a raw Win32 dialog.
     That window is not converted yet; this uses entry goes with it. *)
   LogRadio,
-  Messages,
+  (* LCLType replaces Messages entirely and Windows almost entirely
+    (2026-09-08): DWORD on the serial read/write signatures is what they were
+    here for, and the one live Win32 UI call was a WINKEYDEBUG trace that could
+    not have compiled, now deleted.
+
+    Windows SURVIVES, gated, for QueryPerformanceCounter alone -- see wkPerfNow. *)
+  LCLType,
+{$IFDEF WINDOWS}
   Windows,
+{$ENDIF}
   VC,
   utils_file,
   (* TSerialPort -- the WinKeyer is on the same transport as the radios and
@@ -463,12 +471,28 @@ var
 // WriteFile, so the next change optimises a measured thing rather than a guess.
 // Note the existing logger.Trace in wkSendByte is OUTSIDE the measured region:
 // if total >> WriteFile, the logging itself is a prime suspect.
+(* THE HIGH-RESOLUTION CLOCK, AND THE ONE PLACE THIS UNIT IS WINDOWS-BOUND.
+
+  QueryPerformanceCounter has no RTL equivalent -- GetTickCount64 is
+  milliseconds, and the gaps being measured here are 15/46/122 ms, so a
+  1 ms floor would blur exactly the thing the trace exists to see.
+
+  OFF WINDOWS IT FALLS BACK TO GetTickCount64 AND SAYS SO IN THE NUMBER: the
+  result is still milliseconds, just quantised to whole ones. That is honest
+  for a diagnostic and wrong for anything that keys a radio -- which is why
+  the real answer is the platform HPTimer in
+  docs\PLATFORM_CLOCK_ABSTRACTION.md and not a second guess here. *)
 function wkPerfNow: Int64;
 begin
+{$IFDEF WINDOWS}
    QueryPerformanceCounter(Result);
+{$ELSE}
+   Result := Int64(GetTickCount64);
+{$ENDIF}
 end;
 
 function wkPerfMs(const StartTick: Int64): Double;
+{$IFDEF WINDOWS}
 var
    nowTick, freq: Int64;
 begin
@@ -482,6 +506,11 @@ begin
       begin
       Result := ((nowTick - StartTick) * 1000.0) / freq;
       end;
+{$ELSE}
+begin
+   { Already milliseconds -- see the note above. }
+   Result := Int64(GetTickCount64) - StartTick;
+{$ENDIF}
 end;
 
 function wkSendByte(b: Byte): Cardinal;
@@ -1141,9 +1170,12 @@ begin
        begin
        wkHostBufferSendIndex := 0;
        end;
-{$IF WINKEYDEBUG}
-    Windows.SetWindowTextA(InsertWindowHandle, inttopchar(wkHostBufferSendIndex));
-{$IFEND}
+    (* A {$IF WINKEYDEBUG} trace stood here, writing the send index into a
+      window with Windows.SetWindowTextA. It is deleted (2026-09-08) rather
+      than gated: WINKEYDEBUG is False in VC and InsertWindowHandle IS NO
+      LONGER DECLARED ANYWHERE, so enabling the switch would not have compiled.
+      The other four copies of this line in the tree are already commented
+      out. *)
     inc(wkWaitingBytesInWK);
     Result := True;
     ;

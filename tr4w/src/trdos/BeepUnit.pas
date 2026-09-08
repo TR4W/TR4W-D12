@@ -24,8 +24,24 @@ interface
 
 uses
   TF,
-  VC,
-  Windows;
+  VC
+{$IFDEF WINDOWS}
+  (* GENUINELY WINDOWS, AND GATED RATHER THAN PORTED (2026-09-08).
+
+    This unit drives \Device\Beep (beep.sys) by IOCTL through a DOS device
+    alias it defines for itself: QueryDosDeviceA, DefineDosDeviceA,
+    CreateFileA, DeviceIoControl. There is no equivalent anywhere else, and
+    there should not be -- the note by ntBeep already says what should replace
+    it ON WINDOWS TOO: a sidetone rendered on its own thread. That is a real
+    piece of work, not a translation, so gating is the honest holding position
+    and porting it now would be guessing at both platforms at once.
+
+    Off Windows every entry point below is a no-op that SAYS SO ONCE, which is
+    the same complaint the ntBeep note makes about the Windows path failing
+    silently when beep.sys is disabled. *)
+  , Windows
+{$ENDIF}
+  ;
 
 procedure SpeakerBeep(Tone, Duration: Word);
 procedure NoSound;
@@ -33,28 +49,60 @@ procedure ntBeepInit;
 procedure ntBeepClose;
 procedure ntBeep(Freq, Duration: Cardinal);
 
+{$IFDEF WINDOWS}
 type
   BEEP_SET_PARAMETERS = record
     Frequency, Duration: Cardinal;
   end;
+{$ENDIF}
 
+{$IFDEF WINDOWS}
 const
   IOCTL_BEEP_SET                        = $10000;
   FileNameStr                           : array[0..9] of AnsiChar = '\\.\tr4w'#0;
   BeepFileName                          : PAnsiChar = @FileNameStr[0];
   DevName                               : PAnsiChar = @FileNameStr[3];
+{$ENDIF}
+{$IFDEF WINDOWS}
 var
   (* CreateFileA on the beep device -- a FILE handle, not a window. *)
   hBeep                                 : THandle = INVALID_HANDLE_VALUE;
   OwnDevName                            : LongBool;
+{$ENDIF}
 
 implementation
 
 uses
+{$IFNDEF WINDOWS}
+  Log4D,
+{$ENDIF}
   MainUnit,
   LogK1EA,
   LogRadio,
   Tree;
+
+{$IFNDEF WINDOWS}
+(* SAID ONCE, NOT ONCE PER BEEP.
+
+  Every entry point in this unit is a no-op off Windows -- see the gate on the
+  interface uses clause. A contest generates a beep per dupe and per new
+  multiplier, so this reports the first time and then stays quiet. *)
+var
+  GToneWarned: boolean = False;
+
+procedure ReportNoToneGenerator;
+begin
+   if GToneWarned then
+      begin
+      Exit;
+      end;
+   GToneWarned := True;
+   TLogLogger.GetLogger('TR4WDebugLog').Warn(
+      'No tone generator on this platform: the sidetone and every warning beep '
+      + 'are silent. BeepUnit drives the Windows \Device\Beep driver, and the '
+      + 'replacement (a sidetone on its own thread) is owed on Windows too.');
+end;
+{$ENDIF}
 
 {
   DELETED: SetPort, GetPort and Sound -- the PC-speaker path.
@@ -117,6 +165,9 @@ end;
 
 procedure ntBeepInit;
 begin
+{$IFNDEF WINDOWS}
+  ReportNoToneGenerator;
+{$ELSE}
   OwnDevName := False;
 
   if WindowsOSversion = VER_PLATFORM_WIN32_WINDOWS then
@@ -132,10 +183,12 @@ begin
      hBeep := Windows.CreateFileA(BeepFileName, GENERIC_READ or GENERIC_WRITE, 0, nil, OPEN_EXISTING, 0, 0);
      ntBeep(32767 - 1, 1);
      end;
+{$ENDIF}
 end;
 
 procedure ntBeepClose;
 begin
+{$IFDEF WINDOWS}
   if OwnDevName then
      begin
      Windows.DefineDosDeviceA(DDD_REMOVE_DEFINITION, DevName, nil);
@@ -144,6 +197,7 @@ begin
      begin
      CloseHandle(hBeep);
      end;
+{$ENDIF}
 end;
 
 {
@@ -168,6 +222,11 @@ end;
   work, this stays as it is -- with the failure documented rather than hidden.
 }
 procedure ntBeep(Freq, Duration: Cardinal);
+{$IFNDEF WINDOWS}
+begin
+  ReportNoToneGenerator;
+end;
+{$ELSE}
 var
   BeepSetParams                         : BEEP_SET_PARAMETERS;
   BytesReturned                         : Cardinal;
@@ -198,5 +257,6 @@ begin
                   BytesReturned, 
                   nil);
 end;
+{$ENDIF}
 
 end.
