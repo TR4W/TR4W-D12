@@ -1200,7 +1200,13 @@ begin
           note at the top of that unit for what replaces them. *)
         sndPlaySound(nil, SND_ASYNC);
 {$ENDIF}
+{$IFDEF WINDOWS}
+        (* GATED WITH THE TIMER THAT SIGNALS IT. tDVP_Event is handed to
+          winmm timeSetEvent in logdvp, so the multimedia timer signals this
+          HANDLE -- which is why it cannot become a SyncObjs.TEvent the way
+          tNet_Event just did. It moves when the element clock does. *)
         Windows.SetEvent(tDVP_Event);
+{$ENDIF}
 {$IFDEF WINDOWS}
         timeKillEvent(tDVPTimerEventID);
 {$ENDIF}
@@ -10317,8 +10323,11 @@ end;
 // path stored a hard-coded 0 and the write path wrote nowhere. Those are
 // kernel-only routines in any case; from ring 3 this was never going to run.
 //
-// Actual LPT access in TR4W goes through DLPortIO / inpout32.dll, which is a
-// real driver. That path is untouched.
+// Actual LPT access in TR4W goes through uIO and inpout32.dll, which is a
+// real driver. That path is untouched. (It used to say "DLPortIO /
+// inpout32.dll"; DLPortIO.pas was the OLDER driver, superseded by the inpout32
+// rewrite and deleted on 2026-09-08 -- it was in no project file and
+// referenced by nothing.)
 
 procedure RunPlugin(PluginNumber: integer);
 var

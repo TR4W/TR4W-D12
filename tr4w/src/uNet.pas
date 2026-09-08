@@ -55,13 +55,10 @@ uses
   uGradient,
   (* WINDOWS STAYS, FOR TWO CALLS, AND BOTH ARE REAL.
 
-    SetEvent      the four synchronisation events (tCW_Event, tCWPaddle_Event,
-                  tDVP_Event, tNet_Event) are Win32 CreateEvent handles made
-                  in uProgramMain and waited on by the CW keyer's element
-                  timing. FPC's RTLEventCreate / TEvent is the portable
-                  replacement and it is a JOB, not a swap: logk1ea's tCWSleep
-                  waits on one of these with a timeout, and CW element timing
-                  is the last thing to convert casually.
+    SetSystemTime is the ONLY thing left here (2026-09-08). tNet_Event was
+                  the other, and it is a SyncObjs.TEvent now -- see its
+                  declaration for why that one was separable and the three
+                  CW/DVP events are not.
     SetSystemTime SETS THE MACHINE CLOCK, from a time-sync packet. There is no
                   portable equivalent -- on Unix it is settimeofday and needs
                   root -- so this is a per-platform decision about whether TR4W
@@ -160,7 +157,21 @@ var
   PreviousSerialNumberType              : TSerialNumberType = sntUnknown {sntFree};
 
   ServerSerialNumber                    : integer;
-  tNet_Event                            : Cardinal;
+  (* A PORTABLE EVENT, NOT A WIN32 HANDLE (2026-09-08).
+
+    THIS ONE WAS SEPARABLE AND THE OTHER THREE ARE NOT, which is the whole
+    reason it moved on its own. tCW_Event, tCWPaddle_Event and tDVP_Event are
+    handed to winmm's timeSetEvent with TIME_CALLBACK_EVENT_SET -- the
+    multimedia timer signals the Win32 HANDLE itself -- so they cannot become
+    a TEvent without replacing the CW element clock. tNet_Event never touches
+    timeSetEvent: it is an ordinary producer/consumer signal between the
+    network reader and the log-sync loop, and TEvent does that on every
+    platform.
+
+    AUTO-RESET, matching CreateEvent(nil, FALSE, FALSE, nil): TEvent's second
+    argument is ManualReset, so False here means the wait consumes the signal
+    exactly as the Win32 one did. *)
+  tNet_Event                            : SyncObjs.TEvent;
   tShowTypedCallsign                    : boolean = True;
   CurrentDisplayedRow                   : integer = 1;
 
@@ -431,6 +442,23 @@ var
                     if NetTimeSyncPtr.tsTime.wHour <= 23 then
                        begin
 
+                       (* SETTING THE MACHINE CLOCK IS A POLICY QUESTION OFF
+                         WINDOWS, NOT A MISSING API.
+
+                         Unix has settimeofday/clock_settime, so this could
+                         be written -- but it needs ROOT, and a contest
+                         logger asking for root so a peer station can move
+                         the system clock is a decision about what TR4W
+                         should be allowed to do, not a translation. It is
+                         NY4I's call, and until it is made the honest
+                         behaviour is to say the packet arrived and was not
+                         acted on, rather than to fail silently or to
+                         pretend the clock was set.
+
+                         The multi-op protocol is unaffected either way: the
+                         sender broadcasts, and a station that declines to
+                         move its clock simply keeps its own time. *)
+{$IFDEF WINDOWS}
                        if Windows.SetSystemTime(NetTimeSyncPtr.tsTime) then
                           begin
                           QuickDisplay(TC_COMPUTERCLOCKISSYNCHRONIZED)
@@ -439,6 +467,12 @@ var
                           begin
                           ShowSysErrorMessage('SET SYSTEM TIME');
                           end;
+{$ELSE}
+                       logger.Info('[Net] time-sync packet ignored: setting ' +
+                                   'the system clock is not implemented on ' +
+                                   'this platform (it needs root, and whether ' +
+                                   'TR4W should do it at all is undecided)');
+{$ENDIF}
                        end;
             end;
 
@@ -568,7 +602,7 @@ var
 
                 SM_RECEIVED_UPDATED_QSO_MESSAGE:
 //                asm                nop end;
-                  Windows.SetEvent(tNet_Event);
+                  tNet_Event.SetEvent;
 
                 SM_SERIAL_NUMBER_CHANGED:
                   begin
@@ -1496,7 +1530,12 @@ var
        this one never did. *)
     LogStoreUpdateQSOAtIndex(RecordIndex, TempRXData);
     inc(SendedQSOs);
-    WaitForSingleObject(tNet_Event, 1000);
+    (* WaitFor, not WaitForSingleObject. Same one-second budget and the same
+      meaning -- wait for the server to acknowledge this QSO, and carry on
+      regardless when it does not. The result is deliberately ignored, as the
+      Win32 return was: a timeout here is not an error, it just means the
+      acknowledgement has not arrived yet. *)
+    tNet_Event.WaitFor(1000);
     // Runs on the sync WORKER thread and the window is an LCL form now, so this
     // goes through the marshalling seam rather than writing a control directly.
     // See uGetServerLog.ReportSyncProgress.
@@ -1645,6 +1684,12 @@ initialization
   GNetLock    := SyncObjs.TCriticalSection.Create;
   GNetDrainer := TNetDrainer.Create;
 
+  (* OWNED HERE NOW, not created in uProgramMain's CreateEvent block with the
+    three CW/DVP events. It is this unit's signal and nothing outside uses it,
+    so its lifetime belongs with GNetLock's rather than in the startup
+    sequence. *)
+  tNet_Event  := SyncObjs.TEvent.Create(nil, False, False, '');
+
 finalization
   (* SAFE BY ORDER, not by a lock. Unit finalization runs after the program
     body has returned, and ExitProgram calls NetDisconnect long before that --
@@ -1652,6 +1697,7 @@ finalization
     the lock, or about to take it, when it goes. *)
   FreeAndNil(GNetDrainer);
   FreeAndNil(GNetLock);
+  FreeAndNil(tNet_Event);
 
 end.
 {

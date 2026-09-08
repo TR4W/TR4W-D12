@@ -34,7 +34,6 @@ uses
   TF,
   VC,
   BeepUnit,
-//  DLPortIO,
   uIO,
 {$IFDEF WINDOWS}
   MMSystem,     // the CW element clock -- see tCWSleep

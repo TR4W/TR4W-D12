@@ -52,12 +52,14 @@ uses
                     the mutex gives free -- deciding whether the pid in a
                     stale file is still alive. Not hard, but a DESIGN with
                     failure modes of its own, not a swap.
-      CreateEvent   x4: tCW_Event, tCWPaddle_Event, tDVP_Event, tNet_Event.
-                    Auto-reset events, waited on by the CW keyer's element
-                    timing (logk1ea's tCWSleep) and by the network reader.
-                    FPC's RTLEventCreate / TEvent is the portable equivalent
-                    and IT IS THE SAME JOB AS uNet's SetEvent -- they are the
-                    same four objects, so both move together or neither does.
+      CreateEvent   x3: tCW_Event, tCWPaddle_Event, tDVP_Event. Auto-reset,
+                    and each is handed to winmm's timeSetEvent with
+                    TIME_CALLBACK_EVENT_SET -- the multimedia timer signals
+                    the HANDLE. That is what welds them to Win32: a TEvent
+                    cannot be passed to winmm, so these move when the element
+                    CLOCK does and not before. (tNet_Event WAS the fourth and
+                    is a SyncObjs.TEvent in uNet now -- it never touched
+                    timeSetEvent.)
       GetVersionEx  already gated below; feeds only Windows-only consumers.
 
     None of this blocks: they are all inside a Windows program's startup, and
@@ -1371,11 +1373,20 @@ begin
     tr4wBrushArray[TempColor] := CreateBrushIndirect(TempTLogBrush);
   end;
 
-  (* THE OS VERSION, and it is read for less than it looks.  Only two live
-    consumers remain: DLPortIO's FRunningWinNT, which is Windows-only code
-    anyway, and BeepUnit's 9x test, which its own comment records as false on
-    every supported Windows.  The record itself is also logged verbatim
-    further down.  All Windows, so the block is gated rather than ported --
+  (* THE OS VERSION, AND AFTER 2026-09-08 IT IS READ BY ALMOST NOTHING.
+
+    This said "only two live consumers remain: DLPortIO's FRunningWinNT ...
+    and BeepUnit's 9x test". DLPORTIO.PAS IS DELETED -- superseded by the
+    inpout32 rewrite in uIO, in no project file, referenced by nothing -- so
+    ONE consumer is left, and it is BeepUnit's `WindowsOSversion =
+    VER_PLATFORM_WIN32_WINDOWS`, which that unit's own comment records as
+    FALSE ON EVERY SUPPORTED WINDOWS.
+
+    So GetVersionEx now feeds a dead branch and a log line. Deleting it
+    outright is plausible and is deliberately NOT done here: the log line is
+    genuinely useful in a bug report, and removing the block is a separate
+    change from removing the unit that motivated this note.  The record is
+    logged verbatim further down.  All Windows, so the block is gated rather than ported --
     off Windows WindowsOSversion stays 0, which makes both tests False, which
     is the answer they should give. *)
 {$IFDEF WINDOWS}
@@ -1848,18 +1859,27 @@ begin
   // long as nothing happens to touch that region in between.  And it checked no
   // result: a failed CreateEvent left a 0 handle, after which every
   // WaitForSingleObject on it fails forever, in silence.
+  (* THREE, NOT FOUR (2026-09-08). tNet_Event left this block: it is a
+    SyncObjs.TEvent owned by uNet's own initialization now, because it was
+    the only one of the four that was separable.
+
+    THESE THREE CANNOT FOLLOW IT, and the reason is not squeamishness about
+    CW timing -- it is that winmm holds them. Each is handed to timeSetEvent
+    with TIME_CALLBACK_EVENT_SET, so the MULTIMEDIA TIMER signals the Win32
+    HANDLE itself (logk1ea's tCWSleep and logdvp's playback wait). A TEvent
+    or a PRTLEvent cannot be passed to winmm at all, so converting these
+    means replacing the element clock -- the HPTimer work in
+    docs/PLATFORM_CLOCK_ABSTRACTION.md -- not swapping an API. *)
   tCW_Event       := CreateEvent(nil, False, False, nil);
   tCWPaddle_Event := CreateEvent(nil, False, False, nil);
   tDVP_Event      := CreateEvent(nil, False, False, nil);
-  tNet_Event      := CreateEvent(nil, False, False, nil);
 
-  if (tCW_Event = 0) or (tCWPaddle_Event = 0) or
-     (tDVP_Event = 0) or (tNet_Event = 0) then
+  if (tCW_Event = 0) or (tCWPaddle_Event = 0) or (tDVP_Event = 0) then
      begin
      // Not fatal -- CW still keys, but tCWSleep falls back to plain Sleep() and
      // the element timing coarsens.  Report it rather than degrade silently.
-     logger.Error('CreateEvent failed (CW=%d paddle=%d DVP=%d net=%d), last error %d',
-        [tCW_Event, tCWPaddle_Event, tDVP_Event, tNet_Event, GetLastError]);
+     logger.Error('CreateEvent failed (CW=%d paddle=%d DVP=%d), last error %d',
+        [tCW_Event, tCWPaddle_Event, tDVP_Event, GetLastOSError]);
      end;
 
 
