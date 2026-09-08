@@ -94,7 +94,8 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, LCLType,
-  Messages,     // TMessage -- named in the class declaration below
+  (* Messages was here for TMessage, which the class declaration no longer
+    names -- the sync progress arrives as an LCL event now (2026-09-08). *)
   uGetServerLog,   // WM_USER_SYNC_PROGRESS -- a `message` directive is part of
                    // the class DECLARATION, so its constant has to resolve in
                    // the interface; this cannot move to the implementation uses
@@ -147,7 +148,8 @@ implementation
 {$R *.lfm}
 
 uses
-  Windows,
+  (* Windows was here for CreateFileA / CloseHandle / GetLastError on the
+    sync file; all three are SysUtils' now. *)
   uLCLFormHelpers,    // ShowModalOverWin32Parent -- ownership and centring
   VC,                 // TR4W_SYN_FILENAME
   TF,                 // tCreateThread
@@ -204,7 +206,7 @@ begin
 
    if NewServerLogHandle <> INVALID_HANDLE_VALUE then
       begin
-      CloseHandle(NewServerLogHandle);
+      FileClose(NewServerLogHandle);
       NewServerLogHandle := INVALID_HANDLE_VALUE;
       end;
 
@@ -328,18 +330,16 @@ begin
    SyncMode := True;
    btnGetLog.Enabled := False;
 
-   NewServerLogHandle := CreateFileA(TR4W_SYN_FILENAME,
-                                     GENERIC_READ or GENERIC_WRITE,
-                                     FILE_SHARE_READ or FILE_SHARE_WRITE,
-                                     nil, CREATE_ALWAYS,
-                                     FILE_ATTRIBUTE_ARCHIVE, 0);
-   if NewServerLogHandle = INVALID_HANDLE_VALUE then
+   { FileCreate is CREATE_ALWAYS -- create or truncate -- and returns -1
+     where CreateFileA returned INVALID_HANDLE_VALUE. }
+   NewServerLogHandle := FileCreate(TR4W_SYN_FILENAME);
+   if NewServerLogHandle = THandle(-1) then
       begin
       // REPORTED, not a silent close.  The dialog used `goto CloseLabel` here,
       // so a log file that could not be created looked exactly like the
       // operator pressing Close.
       logger.Error('Server-log sync: cannot create %s (error %d)',
-                   [string(TR4W_SYN_FILENAME), Windows.GetLastError]);
+                   [string(TR4W_SYN_FILENAME), SysUtils.GetLastOSError]);
       Close;
       Exit;
       end;

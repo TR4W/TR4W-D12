@@ -29,12 +29,10 @@ uses
   TF,
   VC,
   Tree,
-  Windows,
+(* Windows and Messages: named, and used nowhere in this unit (2026-09-08). *)
   uCallsigns,
   LogDupe,
   LogWind,
-  Messages
-  ,
   uTR4WStrings,
   uAnsiStr;
 

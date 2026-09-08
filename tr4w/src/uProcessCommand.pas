@@ -39,7 +39,9 @@ utils_text,
   uIO,
   LOGSUBS1,
   LOGSUBS2,
-  Windows,
+  (* Windows is gone (2026-09-08). The only thing that looked like a call
+    was scWINEXEC, which is TR4W's own command NAME -- it runs through
+    RunWindowsUtility, a wrapper, not through WinExec. *)
   Tree,
   LogWind,
   LogRadio,
