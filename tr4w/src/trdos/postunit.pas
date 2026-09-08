@@ -53,7 +53,7 @@ uses
   ZoneCont,
   Messages,
   LogCW, // 4.53.2
-  Windows,
+  LCLType,
   uCabrilloFormat,
   // tCabrilloFreqString / tCabrilloModeString + per-field formatters (extracted from this unit, see uCabrilloFormat.pas)
   uCabrilloExchange,
@@ -619,10 +619,10 @@ procedure CreateCabrilloFile;
      end;
   if not tGenerateLogPortionOfCabrilloFile then
      begin
-     CloseHandle( tReportFileWrite );
+     FileClose(tReportFileWrite);
      Exit;
      end;
-  CloseHandle( tReportFileWrite );
+  FileClose(tReportFileWrite);
   PreviewFileNameAddress := tReportsFilename;
   PreviewFileIsCabrillo  := true;
   FilePreview;
@@ -683,7 +683,7 @@ procedure SummarySheet;
      end;
   WriteTitleBlockToSummarySheet;
   WriteScoreInformationToSummarySheet;
-  CloseHandle( tReportFileWrite );
+  FileClose(tReportFileWrite);
   FilePreview;
   end;
 
@@ -957,7 +957,7 @@ procedure ExportTo3830Scores;
   buf := buf + sysutils.Format( 'Total Score: %d'#13#10, [ TotalScore ] );
 
   sWriteFileFromString( tReportFileWrite, buf );
-  CloseHandle( tReportFileWrite );
+  FileClose(tReportFileWrite);
   FilePreview;
   end;
 
@@ -2171,7 +2171,7 @@ procedure ExportToEDIByBand( Band: BandType );
 
   if not LogSourceOpen then
      begin
-     CloseHandle( tReportFileWrite );
+     FileClose(tReportFileWrite);
      Exit;
      end;
 
@@ -2255,7 +2255,7 @@ procedure ExportToEDIByBand( Band: BandType );
         end;
      goto 1;
      end;
-  CloseHandle( tReportFileWrite );
+  FileClose(tReportFileWrite);
   LogSourceClose;
 
   PreviewFileNameAddress := tReportsFilename;
@@ -2502,11 +2502,26 @@ procedure ExportToADIF;
     records: TContestExchangeArray;
     dtReportTime: TDateTime;
     adifStr: string;
+    extName: AnsiString;
   begin
   dtReportTime := Now;
-  lstrcpyA( tReportsFilename, TR4W_LOG_FILENAME );
-  tReportsFilename[ Windows.lstrlenA( tReportsFilename ) - 3 ] := #0;
-  lstrcatA( tReportsFilename, 'ADI' );
+  (* ChangeFileExt, which is what the three Win32 string calls here were
+    spelling out: copy the log name, chop the last three characters, append
+    'ADI'. Copied in with Move rather than StrPLCopy -- with UnicodeStrings on,
+    StrPLCopy's Ansi and Wide overloads are ambiguous for a char ARRAY
+    destination, and taking a PAnsiChar to disambiguate would put back the
+    pointer this is removing. The FillChar leaves the buffer NUL-terminated,
+    which tOpenFileForWrite relies on. *)
+  extName := ChangeFileExt(AnsiString(TR4W_LOG_FILENAME), AnsiString('.ADI'));
+  if Length(extName) > High(tReportsFilename) then
+     begin
+     SetLength(extName, High(tReportsFilename));
+     end;
+  FillChar(tReportsFilename, SizeOf(tReportsFilename), 0);
+  if Length(extName) > 0 then
+     begin
+     Move(extName[1], tReportsFilename[0], Length(extName));
+     end;
   if not tOpenFileForWrite( tReportFileWrite, tReportsFilename ) then
      begin
      Exit;
@@ -2517,7 +2532,7 @@ procedure ExportToADIF;
      See uLogSource for why the loop shape is preserved exactly. *)
   if not LogSourceOpen then
      begin
-     CloseHandle( tReportFileWrite );
+     FileClose(tReportFileWrite);
      Exit;
      end;
 
@@ -2552,7 +2567,7 @@ procedure ExportToADIF;
      @EmitContestSpecificTailForExport );
   sWriteFileFromString( tReportFileWrite, adifStr );
 
-  CloseHandle( tReportFileWrite );
+  FileClose(tReportFileWrite);
   LogSourceClose;
   PreviewFileNameAddress := tReportsFilename;
   FilePreview;
@@ -2561,12 +2576,28 @@ procedure ExportToADIF;
 procedure ExportToCSV; // n4af 04/18/14 new procedure added
   label
     1;
+  var
+    extName: AnsiString;
 
   begin
 
-  lstrcpyA( tReportsFilename, TR4W_LOG_FILENAME );
-  tReportsFilename[ Windows.lstrlenA( tReportsFilename ) - 3 ] := #0;
-  lstrcatA( tReportsFilename, 'CSV' );
+  (* ChangeFileExt, which is what the three Win32 string calls here were
+    spelling out: copy the log name, chop the last three characters, append
+    'CSV'. Copied in with Move rather than StrPLCopy -- with UnicodeStrings on,
+    StrPLCopy's Ansi and Wide overloads are ambiguous for a char ARRAY
+    destination, and taking a PAnsiChar to disambiguate would put back the
+    pointer this is removing. The FillChar leaves the buffer NUL-terminated,
+    which tOpenFileForWrite relies on. *)
+  extName := ChangeFileExt(AnsiString(TR4W_LOG_FILENAME), AnsiString('.CSV'));
+  if Length(extName) > High(tReportsFilename) then
+     begin
+     SetLength(extName, High(tReportsFilename));
+     end;
+  FillChar(tReportsFilename, SizeOf(tReportsFilename), 0);
+  if Length(extName) > 0 then
+     begin
+     Move(extName[1], tReportsFilename[0], Length(extName));
+     end;
   if not tOpenFileForWrite( tReportFileWrite, tReportsFilename ) then
      begin
      Exit;
@@ -2574,7 +2605,7 @@ procedure ExportToCSV; // n4af 04/18/14 new procedure added
 
   if not LogSourceOpen then
      begin
-     CloseHandle( tReportFileWrite );
+     FileClose(tReportFileWrite);
      Exit;
      end;
 
@@ -2609,7 +2640,7 @@ procedure ExportToCSV; // n4af 04/18/14 new procedure added
      goto 1;
      end;
 
-  CloseHandle( tReportFileWrite );
+  FileClose(tReportFileWrite);
   LogSourceClose;
   PreviewFileNameAddress := tReportsFilename;
   FilePreview;
@@ -3613,7 +3644,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
          end;
 
       LogSourceClose;
-      CloseHandle( FileWrite );
+      FileClose(FileWrite);
       FilePreview;
       end;
 
@@ -3646,16 +3677,31 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       Result := true;
       end;
 
+    (* THE BUFFER IS BOTH A ShortString AND NUL-TERMINATED, and it has to stay
+      that way -- ReportsFilename[0] carries the length for Pascal, while
+      PreviewFileNameAddress hands the same bytes out as a PAnsiChar. The old
+      code got that by writing THROUGH a pointer into the middle of a
+      ShortString with lstrcpyA/lstrcatA and then patching the length byte.
+
+      Built as a string and copied in once instead. The FillChar keeps the
+      trailing NULs the PAnsiChar reader depends on, and the length is what
+      Pascal actually measured rather than what lstrlenA counted. *)
     procedure MakeReportFileName( ShortFileName: PAnsiChar );
       var
-        P: PAnsiChar;
+        full: AnsiString;
       begin
-      P := @ReportsFilename[ 1 ];
+      full := AnsiString(TR4W_LOG_PATH_NAME) + AnsiString(ShortFileName);
+      if Length(full) > High(ReportsFilename) then
+         begin
+         SetLength(full, High(ReportsFilename));
+         end;
       FillChar(ReportsFilename, SizeOf( ReportsFilename ), 0);
-      lstrcpyA( P, TR4W_LOG_PATH_NAME );
-      lstrcatA( P, ShortFileName );
-      ReportsFilename[ 0 ]   := AnsiChar( Windows.lstrlenA( P ) );
-      PreviewFileNameAddress := P;
+      if Length(full) > 0 then
+         begin
+         Move(full[1], ReportsFilename[1], Length(full));
+         end;
+      ReportsFilename[ 0 ]   := AnsiChar( Length(full) );
+      PreviewFileNameAddress := @ReportsFilename[ 1 ];
       end;
 
     procedure MakeNotesList;
@@ -3697,7 +3743,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
          goto 1;
          end;
       LogSourceClose;
-      CloseHandle( tReportFileWrite );
+      FileClose(tReportFileWrite);
       FilePreview;
       end;
 
