@@ -25,105 +25,42 @@ interface
 uses
   VC,
   TF,
-//  mapi,
-//  CommCtrl,
   uMenu,
-{$IFDEF WINDOWS}
-  (* GENUINELY WINDOWS: this unit sends a file by MAPI --
-    LoadLibrary('Mapi32.dll') and MAPISendMail. That is Microsoft's mail
-    API and has no counterpart elsewhere; a Linux or macOS build wants a
-    different mechanism entirely (xdg-email, or NSSharingService), which
-    is a feature decision rather than a translation. *)
-  Windows,
-{$ENDIF}
+  (* NO Windows AT ALL NOW. It was gated here this morning as "genuinely
+    Windows: this unit sends a file by MAPI" -- which was true until the mail
+    path was deleted a few hours later. Nothing else in the unit wanted it, so
+    the gate went with the feature rather than outliving it. *)
   Tree,
   LogWind,
   PostUnit,
   uTR4WStrings,
   uAnsiStr;
 
-const
-  MAPI_DIALOG                           = $00000008; { Display a send note UI       }
-  MAPI_UNREAD                           = $00000001;
-  MAPI_RECEIPT_REQUESTED                = $00000002;
-  MAPI_SENT                             = $00000004;
+(* THE MAPI MAIL PATH IS DELETED (2026-09-08) -- the constants, the four
+  record types, the three function pointer types, SendMail itself, and the
+  Mapi32.dll loading.
 
-  MAPI_ORIG                             = 0; { Recipient is message originator          }
+  NY4I: "The MAPI utilities are to let the user send email presumably to the
+  Contest sponsor but that is not really how this works anymore. So I do not
+  believe we need to even offer it if we have trouble finding a cross-platform
+  MAPI class that will use the email client setup on the local system."
 
-  MAPI_TO                               = 1; { Recipient is a primary recipient         }
+  AND THERE IS NO SUCH CLASS, which was the question he asked next -- whether
+  Indy could do it without going to full SMTP. It cannot, and that is not a gap
+  in Indy: the only MAPI in the vendored tree is IdCoderTNEF, which DECODES
+  winmail.dat attachments out of a RECEIVED message. Indy implements wire
+  protocols; handing a message to whichever mail client the operator has
+  configured is an OS integration, not a protocol.
 
-  MAPI_CC                               = 2; { Recipient is a copy recipient            }
+  The portable way to reach the local client is a `mailto:` URI through the OS
+  -- OpenURL already does exactly that here -- but mailto CANNOT ATTACH A FILE,
+  and attaching the Cabrillo was the entire point. Sponsors take web uploads
+  now.
 
-  MAPI_BCC                              = 3; { Recipient is blind copy recipient        }
-
-  MAPI_LOGON_UI                         = $00000001; { Display logon UI             }
-  MAPI_NEW_SESSION                      = $00000002; { Don't use shared session     }
-  SUCCESS_SUCCESS                       = 0;
-type
-
-  Flags = Cardinal;
-  LHANDLE = Cardinal;
-  PLHANDLE = ^Cardinal;
-
-  PMapiRecipDesc = ^TMapiRecipDesc;
-{$EXTERNALSYM MapiRecipDesc}
-  MapiRecipDesc = packed record
-    ulReserved: Cardinal; { Reserved for future use                  }
-    ulRecipClass: Cardinal; { Recipient class                          }
-                                { MAPI_TO, MAPI_CC, MAPI_BCC, MAPI_ORIG    }
-    lpszName: LPSTR; { Recipient name                           }
-    lpszAddress: LPSTR; { Recipient address (optional)             }
-    ulEIDSize: Cardinal; { Count in bytes of size of pEntryID       }
-    lpEntryID: Pointer; { System-specific recipient reference      }
-  end;
-  TMapiRecipDesc = MapiRecipDesc;
-
-  PMapiFileDesc = ^TMapiFileDesc;
-  MapiFileDesc = packed record
-    ulReserved: Cardinal; { Reserved for future use (must be 0)     }
-    flFlags: Cardinal; { Flags                                   }
-    nPosition: Cardinal; { character in text to be replaced by attachment }
-    lpszPathName: LPSTR; { Full path name of attachment file       }
-    lpszFileName: LPSTR; { Original file name (optional)           }
-    lpFileType: Pointer; { Attachment file type (can be lpMapiFileTagExt) }
-  end;
-  TMapiFileDesc = MapiFileDesc;
-
-  MapiMessage = packed record
-    ulReserved: Cardinal; { Reserved for future use (M.B. 0)       }
-    lpszSubject: LPSTR; { Message Subject                        }
-    lpszNoteText: LPSTR; { Message Text                           }
-    lpszMessageType: LPSTR; { Message Class                          }
-    lpszDateReceived: LPSTR; { in YYYY/MM/DD HH:MM format             }
-    lpszConversationID: LPSTR; { conversation thread ID                 }
-    flFlags: Cardinal; { unread,return receipt                  }
-    lpOriginator: PMapiRecipDesc; { Originator descriptor                  }
-    nRecipCount: Cardinal; { Number of recipients                   }
-    lpRecips: PMapiRecipDesc; { Recipient descriptors                  }
-    nFileCount: Cardinal; { # of file attachments                  }
-    lpFiles: PMapiFileDesc; { Attachment descriptors                 }
-  end;
-  TMapiMessage = MapiMessage;
-
-  TFNMapiLogOff = function(lhSession: LHANDLE; ulUIParam: Cardinal; flFlags: Flags;
-    ulReserved: Cardinal): Cardinal stdcall;
-
-  TMAPISendDocuments = function(ulUIParam: Cardinal; lpszDelimChar: LPSTR; lpszFilePaths: LPSTR; lpszFileNames: LPSTR; ulReserved: Cardinal): Cardinal; stdcall;
-
-  TFNMapiLogOn = function(ulUIParam: Cardinal; lpszProfileName: LPSTR;
-    lpszPassword: LPSTR; flFlags: Cardinal; ulReserved: Cardinal;
-    lplhSession: PLHANDLE): Cardinal stdcall;
-
-  TFNMapiSendMail = function
-    (
-    lhSession: LHANDLE;
-    ulUIParam: Cardinal;
-    var lpMessage: TMapiMessage;
-//    lpRecips: PMapiRecipDesc;
-//    Files: MapiFileDesc;
-    flFlags: Flags;
-    ulReserved: Cardinal
-    ): Cardinal stdcall;
+  Its one live caller was the file viewer's "Send log" menu item, which goes
+  with it. The bug-report caller in MainUnit had already been commented out;
+  NY4I plans a GitHub issue-form link on a menu instead, which needs none of
+  this. *)
 
 (* THE RICH-EDIT STREAMING MACHINERY IS DELETED, not ported (2026-09-01).
 
@@ -139,14 +76,6 @@ type
    and no longer takes a reference on RICHED32.DLL; the MMTTY window is the
    other and still does. *)
 
-procedure SendMail(Address: PAnsiChar; BugReport: boolean);
-
-var
-  MAPISendDocuments                     : TMAPISendDocuments;
-//  MapiLogOn                             : TFNMapiLogOn;
-//  MapiLogOff                            : TFNMapiLogOff;
-  MapiSendMail                          : TFNMapiSendMail;
-
 
 // the full-log viewer.
 //
@@ -160,67 +89,6 @@ procedure ShowFullLog;
 implementation
 
 uses MainUnit, uFileViewForm;
-
-procedure SendMail(Address: PAnsiChar; BugReport: boolean);
-var
-  module                                : THandle;
-  lpMessage                             : TMapiMessage;
-  Files                                 : array[0..3] of MapiFileDesc;
-
-  lpRecips                              : TMapiRecipDesc;
-  TempBuffer                            : array[0..63] of AnsiChar;
-  MapiResult                            : Cardinal;
-begin
-  module := LoadLibrary('Mapi32.dll');
-  if module <> 0 then
-     begin
-     @MapiSendMail := GetProcAddress(module, 'MAPISendMail');
-     FillChar(lpMessage, SizeOf(TMapiMessage), 0);
-     FillChar(lpRecips, SizeOf(TMapiRecipDesc), 0);
-     FillChar(Files, SizeOf(Files), 0);
-
-     lpMessage.lpRecips := @lpRecips;
-     lpMessage.lpFiles := @Files;
-
-     if BugReport then
-        begin
-        {
-      lpMessage.lpszSubject := '[Bug Report] ' + TR4W_CURRENTVERSION;
-      TF.Format(wsprintfBuffer, 'Version: ' + TR4W_CURRENTVERSION + ' (' + TR4W_CURRENTVERSIONDATE + ')'#13#10'OS: %u.%u %s'#13#10'Attached 3 files.'#13#10#13#10'Description:'#13#10, tr4w_osverinfo.dwMajorVersion, tr4w_osverinfo.dwMinorVersion, tr4w_osverinfo.szCSDVersion);
-      lpMessage.lpszNoteText := wsprintfBuffer;
-      lpMessage.nFileCount := 3;
-
-      Files[0].lpszPathName := TR4W_POS_FILENAME;
-      Files[1].lpszPathName := TR4W_CFG_FILENAME;
-      Files[2].lpszPathName := TR4W_INI_FILENAME;
-}
-        end
-     else
-        begin
-        lpMessage.lpszSubject := @MyCall[1];
-
-        lpMessage.nFileCount := 1;
-        Files[0].lpszPathName := PreviewFileNameAddress;
-        end;
-
-     Files[0].nPosition := ULONG($FFFFFFFF);
-
-     lpMessage.nRecipCount := 1;
-     lpMessage.flFlags := MAPI_UNREAD;
-     TF.Format(TempBuffer, 'SMTP:%s', Address);
-     lpRecips.lpszAddress := TempBuffer;
-     lpRecips.ulRecipClass := MAPI_TO;
-
-     MapiResult := MapiSendMail(0, MainWindowHandle, lpMessage, MAPI_LOGON_UI or MAPI_DIALOG, 0);
-     if MapiResult > 1 then
-        begin
-        TF.Format(wsprintfBuffer, 'Send Mail Error: %u', MapiResult);
-        showwarning(wsprintfBuffer);
-        end;
-
-     FreeLibrary(module);
-     end;
-end;
 
 procedure ShowFullLog;
 begin

@@ -37,11 +37,6 @@ object frmFileView: TfrmFileView
         Caption = 'Explore'
         OnClick = ExploreClick
       end
-      object mnuSendLog: TMenuItem
-        Caption = 'Send log'
-        Visible = False
-        OnClick = SendLogClick
-      end
       object mnuSep1: TMenuItem
         Caption = '-'
       end

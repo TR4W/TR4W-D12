@@ -68,7 +68,6 @@ type
       mnuFile: TMenuItem;
       mnuOpenInEditor: TMenuItem;
       mnuExplore: TMenuItem;
-      mnuSendLog: TMenuItem;
       mnuSep1: TMenuItem;
       mnuExit: TMenuItem;
       mnuEdit: TMenuItem;
@@ -80,7 +79,6 @@ type
       procedure HandleKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
       procedure OpenInEditorClick(Sender: TObject);
       procedure ExploreClick(Sender: TObject);
-      procedure SendLogClick(Sender: TObject);
       procedure ExitClick(Sender: TObject);
       procedure CopyClick(Sender: TObject);
       procedure SelectAllClick(Sender: TObject);
@@ -146,16 +144,20 @@ begin
    mnuCopy.Caption      := TC_EDITOR_COPY;
    mnuSelectAll.Caption := TC_EDITOR_SELECTALL;
 
-   { Only a Cabrillo file can be mailed to a sponsor, and only when the contest
-     table names one.  Hidden rather than greyed: an item offering to send a log
-     to nobody says nothing useful. }
-   mnuSendLog.Visible := PreviewFileIsCabrillo and
-                         (ContestsArray[Contest].Email <> nil);
-   if mnuSendLog.Visible then
-      begin
-      mnuSendLog.Caption := AnsiString(SysUtils.Format(TC_EDITOR_SENDLOGTO,
-                               [AnsiString(ContestsArray[Contest].Email)]));
-      end;
+   (* THE "SEND LOG" ITEM IS GONE (2026-09-08). It mailed the previewed
+     Cabrillo to the address in ContestsArray, through MAPI.
+
+     NY4I: "The MAPI utilities are to let the user send email presumably to the
+     Contest sponsor but that is not really how this works anymore. So I do not
+     believe we need to even offer it if we have trouble finding a
+     cross-platform MAPI class that will use the email client setup on the
+     local system."
+
+     And there is no easy cross-platform equivalent: a `mailto:` URL is the
+     portable way to reach the local mail client, but it cannot ATTACH a file,
+     which is the entire point of sending a log. Sponsors take web uploads now.
+     The address column in ContestsArray is left alone -- it is data, and
+     deleting it is a separate question. *)
 end;
 
 procedure TfrmFileView.LoadPreviewFile;
@@ -241,11 +243,6 @@ end;
 procedure TfrmFileView.ExploreClick(Sender: TObject);
 begin
    RunExplorer(PreviewFileNameAddress);
-end;
-
-procedure TfrmFileView.SendLogClick(Sender: TObject);
-begin
-   SendMail(ContestsArray[Contest].Email, False);
 end;
 
 procedure TfrmFileView.ExitClick(Sender: TObject);
