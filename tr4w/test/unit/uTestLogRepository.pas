@@ -60,9 +60,11 @@ type
 implementation
 
 uses
-   (* Windows for MAXBYTE / MAXWORD -- the not-set markers ClearContestExchange
-     writes, and the values this suite exists to prove never reach the log. *)
-   Windows, SysUtils, Classes, uLogDatabase, uLogSchema, uLogBinaryFile,
+   (* LCLType for MAXBYTE / MAXWORD -- the not-set markers
+     ClearContestExchange writes, and the values this suite exists to prove
+     never reach the log.  It was Windows; LCLType declares both and is what
+     the rest of the tree now uses for them. *)
+   LCLType, SysUtils, Classes, uLogDatabase, uLogSchema, uLogBinaryFile,
    uLogRepository;
 
 function TLogRepositoryTests.TempLogName(const aLeaf: string): string;

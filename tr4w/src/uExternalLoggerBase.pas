@@ -5,7 +5,7 @@ interface
 
 uses
    IdTCPClient, IdComponent, IdTCPConnection,IdThreadComponent, IdExceptionCore, SysUtils,
-   Classes, StrUtils, Log4D, VC, Tree, IdException, IdStack, SyncObjs, Windows;
+   Classes, StrUtils, Log4D, VC, Tree, IdException, IdStack, SyncObjs;
 
 Type TProcessMsgRef = procedure (sMessage: string) of Object;
 

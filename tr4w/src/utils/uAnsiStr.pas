@@ -77,6 +77,27 @@ function StrPLCopy(Dest: PAnsiChar; const Source: AnsiString; MaxLen: Cardinal):
 function StrLCopy(Dest: PAnsiChar; const Source: PAnsiChar; MaxLen: Cardinal): PAnsiChar;
 
 
+(* APPEND TO A NUL-TERMINATED CHARACTER ARRAY, WITH THE ARRAY'S OWN BOUNDS.
+
+  This replaces lstrcatA, and it is deliberately an OPEN ARRAY rather than a
+  pointer plus a size: CLAUDE.md's string rules name exactly this swap, and
+  the reason shows up at the call site -- the four uCFG callers used to pass
+  a bare buffer with no length at all, so nothing could have stopped an
+  overrun and nothing did check.
+
+  Dest must already hold a NUL-terminated string (an all-zero buffer counts).
+  Source is appended, and the result is always terminated inside the array.
+  If the whole of Source will not fit, AS MUCH AS FITS IS APPENDED -- lstrcatA
+  simply wrote past the end, so any bounded behaviour here is new, and
+  truncating is the one that keeps the string valid.
+
+  Returns True when Source fitted whole, so a caller that cares can say so.
+  Every caller today is building a fixed path into a MAX_PATH buffer and
+  cannot overflow it; the result is there so the next one is not silent. *)
+function AppendToBuffer(var Dest: array of AnsiChar;
+                        const Source: AnsiString): boolean;
+
+
 (* WinAnsi IS GONE (2026-09-07), and what it did is worth keeping a note of
   because the reason it existed is the reason it could go.
 
@@ -276,6 +297,54 @@ begin
 
    { Always terminate, including the empty case. }
    Dest[count] := #0;
+end;
+
+function AppendToBuffer(var Dest: array of AnsiChar;
+                        const Source: AnsiString): boolean;
+var
+   used:      Integer;
+   capacity:  Integer;
+   room:      Integer;
+   copied:    Integer;
+   i:         Integer;
+begin
+   (* Low(Dest) is 0 for an open array whatever the caller's array was
+     declared as, so index arithmetic here is in the open array's own terms,
+     not the original type's. *)
+   capacity := High(Dest) - Low(Dest) + 1;
+   if capacity <= 0 then
+      begin
+      Result := Length(Source) = 0;
+      Exit;
+      end;
+
+   (* Where the existing string ends.  A buffer with no NUL in it at all is
+     treated as full -- appending to it is what would have run off the end. *)
+   used := 0;
+   while (used < capacity) and (Dest[used] <> #0) do
+      begin
+      Inc(used);
+      end;
+
+   room := capacity - used - 1;    // -1 leaves space for the terminator
+   if room < 0 then
+      begin
+      room := 0;
+      end;
+
+   copied := Length(Source);
+   if copied > room then
+      begin
+      copied := room;
+      end;
+
+   for i := 0 to copied - 1 do
+      begin
+      Dest[used + i] := Source[i + 1];
+      end;
+
+   Dest[used + copied] := #0;
+   Result := copied = Length(Source);
 end;
 
 function StrPLCopy(Dest: PAnsiChar; const Source: AnsiString; MaxLen: Cardinal): PAnsiChar;

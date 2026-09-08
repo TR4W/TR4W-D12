@@ -48,7 +48,7 @@ uses
    utils_text,
    //Country9,
    CFGCMD,
-   Windows,
+   LCLType,   // MAXWORD, in the crMax column of the command table
    LogStuff,
    LogK1EA,
    LOGWAE,
@@ -1912,7 +1912,16 @@ begin
                         1] := #0;
                      if CFGCA[i].crType = ctURL then
                         begin
-                        Windows.CharLowerA(PAnsiChar(CFGCA[i].crAddress) + 1);
+                        (* Was CharLowerA on PAnsiChar(crAddress) + 1 -- a
+                          pointer to the ShortString's BODY, stepping over
+                          its length byte.  LowerCase over the ShortString
+                          itself says the same thing without the arithmetic,
+                          and is ASCII-only, which is what a URL wants:
+                          CharLowerA folds by the machine's ANSI codepage,
+                          so the same config file lowercased differently on
+                          a Russian and a Western station. *)
+                        PShortString(CFGCA[i].crAddress)^ :=
+                           LowerCase(PShortString(CFGCA[i].crAddress)^);
                         end;
                   end;
 
@@ -2676,19 +2685,27 @@ const
       );
 var
    i: integer;
-   p: PAnsiChar;
 begin
    for i := 1 to SAS do
       begin
-      Windows.lstrcatA(PAnsiChar(integer(SA[i].isString) + 1),
-         SA[i].isPcharString);
-      SA[i].isString^[0] := AnsiChar(lstrlenA(SA[i].isPcharString));
+      (* AN ASSIGNMENT, WRITTEN AS AN APPEND.  This was lstrcatA into
+        PAnsiChar(integer(isString) + 1) -- an INTEGER cast of a pointer,
+        stepping over the length byte -- followed by writing the length by
+        hand.  It only ever behaved as an assignment because these targets
+        are empty when defaults are applied: append to a non-empty one and
+        the hand-written length would have TRUNCATED the old text rather
+        than extending it.  Plain assignment converts and bounds itself. *)
+      SA[i].isString^ := AnsiString(SA[i].isPcharString);
       end;
-   p := 'logback.tr4w';
-   Windows.lstrcatA(TR4W_FLOPPY_FILENAME, p); // 4.56.13
-   Windows.lstrcatA(TR4W_INITIALEX_FILENAME, 'INITIAL.EX');
-   Windows.lstrcatA(Config.MP3Path, 'MP3');
-   Windows.lstrcatA(Config.DVKPath, 'DVK');
+   (* FOUR APPENDS ONTO MAX_PATH BUFFERS.  lstrcatA took the destination as
+     a bare pointer with no length, so nothing here could have stopped an
+     overrun -- and nothing checked.  AppendToBuffer takes the array and
+     reads its own bounds; all four fit, and it says so if one ever stops
+     fitting. *)
+   uAnsiStr.AppendToBuffer(TR4W_FLOPPY_FILENAME, 'logback.tr4w'); // 4.56.13
+   uAnsiStr.AppendToBuffer(TR4W_INITIALEX_FILENAME, 'INITIAL.EX');
+   uAnsiStr.AppendToBuffer(Config.MP3Path, 'MP3');
+   uAnsiStr.AppendToBuffer(Config.DVKPath, 'DVK');
 
 end;
 

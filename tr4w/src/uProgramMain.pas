@@ -209,6 +209,7 @@ uses
   utils_net,
   utils_hw,
   uAnsiStr,
+  uStickyKeys,
   uFileText,
   uPlatformProcess,
   uRegex,
@@ -809,7 +810,6 @@ var
   loadedLang                            : string;
 {$IFEND}
  // logBuffer                             : string;
-  tempStickyKey                         : STICKYKEYS;
  // tc                                    : tcolor;
   sDebugLevel                           : string;
   i                                     : tLogLevels;
@@ -939,7 +939,16 @@ begin
       end;
    EarlyTrace('startup: mutex acquired -- this is the only instance');
 
-   TR4W_PATH_NAME[Windows.GetCurrentDirectoryA(SizeOf(TR4W_PATH_NAME), @TR4W_PATH_NAME)] := '\';
+   (* THE RTL ANSWERS THIS ON EVERY PLATFORM.  GetCurrentDirectoryA was doing
+     two jobs -- read the directory, and append a separator by overwriting the
+     NUL it had just written.  That second half only worked because a global is
+     zero-filled, so the byte AFTER the separator happened to terminate the
+     string; it would have left a stale tail on any second call with a shorter
+     path.  IncludeTrailingPathDelimiter does the separator properly, and
+     StrPLCopy terminates what it copies. *)
+   uAnsiStr.StrPLCopy(TR4W_PATH_NAME,
+                      AnsiString(IncludeTrailingPathDelimiter(GetCurrentDir)),
+                      SizeOf(TR4W_PATH_NAME) - 1);
    Format(TR4W_INI_FILENAME, '%ssettings\tr4w.ini', TR4W_PATH_NAME);
    // The `try` that opened here had its `finally HamScoreShutdown` at the very
    // bottom, after the message loop.  Both are gone: TR4W exits through
@@ -1056,7 +1065,16 @@ begin
 
 
 
-  TR4W_PATH_NAME[Windows.GetCurrentDirectoryA(SizeOf(TR4W_PATH_NAME), @TR4W_PATH_NAME)] := '\';
+  (* THE RTL ANSWERS THIS ON EVERY PLATFORM.  GetCurrentDirectoryA was doing
+    two jobs -- read the directory, and append a separator by overwriting the
+    NUL it had just written.  That second half only worked because a global is
+    zero-filled, so the byte AFTER the separator happened to terminate the
+    string; it would have left a stale tail on any second call with a shorter
+    path.  IncludeTrailingPathDelimiter does the separator properly, and
+    StrPLCopy terminates what it copies. *)
+  uAnsiStr.StrPLCopy(TR4W_PATH_NAME,
+                     AnsiString(IncludeTrailingPathDelimiter(GetCurrentDir)),
+                     SizeOf(TR4W_PATH_NAME) - 1);
 
   { LOAD THE UI LANGUAGE, IF THERE IS ONE.
 
@@ -1332,16 +1350,25 @@ begin
     tr4wBrushArray[TempColor] := CreateBrushIndirect(TempTLogBrush);
   end;
 
+  (* THE OS VERSION, and it is read for less than it looks.  Only two live
+    consumers remain: DLPortIO's FRunningWinNT, which is Windows-only code
+    anyway, and BeepUnit's 9x test, which its own comment records as false on
+    every supported Windows.  The record itself is also logged verbatim
+    further down.  All Windows, so the block is gated rather than ported --
+    off Windows WindowsOSversion stays 0, which makes both tests False, which
+    is the answer they should give. *)
+{$IFDEF WINDOWS}
   tr4w_osverinfo.dwOSVersionInfoSize := SizeOf(OSVERSIONINFO);
   Windows.GetVersionEx(tr4w_osverinfo);
 
   WindowsOSversion := tr4w_osverinfo.dwPlatformId;
+{$ENDIF}
 
-  StickyKeysAtStartup.cbSize := sizeof(STICKYKEYS); // This prevents multiple shift keys from activating sticky keys. It saves settng and restore upon exit. ny4i
-  Windows.SystemParametersInfo(SPI_GETSTICKYKEYS, sizeof(STICKYKEYS), @StickyKeysAtStartup, 0);
-  tempStickyKey.cbSize := StickyKeysAtStartup.cbSize;
-  tempStickyKey.dwFlags := StickyKeysAtStartup.dwFlags and not (SKF_STICKYKEYSON or SKF_HOTKEYACTIVE);
-  SystemParametersInfo( SPI_SETSTICKYKEYS, SizeOf(tempStickyKey), @tempStickyKey, 0 );
+  (* ny4i Issue 126.  Five shift presses in a row switch Sticky Keys on, and a
+    contest operator produces that inside a minute.  The save/restore pair now
+    lives in uStickyKeys with its own private state -- see that unit for the
+    two defects the split into two subsystems had already caused. *)
+  SuspendStickyKeys;
   (* ONE COLOUR-DEPTH PROBE, and it is not this one.
 
     This read the depth off the MAIN WINDOW'S device context. uSystemWatch
@@ -1853,7 +1880,14 @@ begin
 
   if not CD.MasterFileExists then
   begin
-    QuickDisplay(SysUtils.Format(TC_TRMASTERDTAS, [SysUtils.SysErrorMessage(GetLastError)]));
+    (* THE FILENAME, NOT AN OS ERROR CODE.  This reported
+      SysErrorMessage(GetLastError) after a FileExists that returned False --
+      but FileExists sets no error on a plain "not there", so the operator was
+      shown whatever the last unrelated API call had failed with.  Observed
+      text ranged from "The operation completed successfully" to a message
+      about a different file entirely.  The path is the useful fact and it is
+      always true. *)
+    QuickDisplay(SysUtils.Format(TC_TRMASTERDTAS, [CD.ActiveFilename]));
   end;
 
 {$IF not tDebugMode}

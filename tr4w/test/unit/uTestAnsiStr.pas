@@ -49,11 +49,15 @@ type
       procedure Test_StrLCopy;
       procedure Test_StrLCopy_StopsAtEmbeddedNul;
       procedure Test_StrLCopy_MatchesLstrcpynAMinusOne;
+      procedure Test_AppendToBuffer;
+      procedure Test_AppendToBuffer_TruncatesRatherThanOverrunning;
+      procedure Test_AppendToBuffer_TheFourRealCallers;
    end;
 
 implementation
 
 uses
+   SysUtils,   // PathDelim
    uAnsiStr;
 
 procedure TAnsiStrTests.RunAllTests;
@@ -69,6 +73,9 @@ begin
    Test_StrLCopy;
    Test_StrLCopy_StopsAtEmbeddedNul;
    Test_StrLCopy_MatchesLstrcpynAMinusOne;
+   Test_AppendToBuffer;
+   Test_AppendToBuffer_TruncatesRatherThanOverrunning;
+   Test_AppendToBuffer_TheFourRealCallers;
 end;
 
 // ---------------------------------------------------------------------------
@@ -317,6 +324,82 @@ begin
       begin
       CheckEquals($7F, Integer(Byte(buf[i])), 'nothing written past the 6th byte');
       end;
+end;
+
+
+// ---------------------------------------------------------------------------
+// AppendToBuffer -- what replaced lstrcatA.
+//
+// The interesting half is not the append; it is the BOUND.  lstrcatA took a
+// bare pointer, so the four uCFG call sites had no length at all and an
+// overrun would have been silent.  These pin the truncation, which is new
+// behaviour and therefore the part with nothing behind it.
+// ---------------------------------------------------------------------------
+
+procedure TAnsiStrTests.Test_AppendToBuffer;
+var
+   buf: array[0..15] of AnsiChar;
+begin
+   BeginTest('Test_AppendToBuffer');
+
+   FillChar(buf, SizeOf(buf), 0);
+   CheckTrue(uAnsiStr.AppendToBuffer(buf, 'AB'), 'first append fits');
+   CheckEquals('AB', string(AnsiString(PAnsiChar(@buf[0]))), 'appended to an empty buffer');
+
+   CheckTrue(uAnsiStr.AppendToBuffer(buf, 'CD'), 'second append fits');
+   CheckEquals('ABCD', string(AnsiString(PAnsiChar(@buf[0]))), 'appended after what was there');
+
+   { An empty source changes nothing and still reports success. }
+   CheckTrue(uAnsiStr.AppendToBuffer(buf, ''), 'empty source succeeds');
+   CheckEquals('ABCD', string(AnsiString(PAnsiChar(@buf[0]))), 'and leaves the text alone');
+end;
+
+procedure TAnsiStrTests.Test_AppendToBuffer_TruncatesRatherThanOverrunning;
+var
+   buf:  array[0..7] of AnsiChar;
+   wall: array[0..3] of AnsiChar;
+begin
+   BeginTest('Test_AppendToBuffer_TruncatesRatherThanOverrunning');
+
+   { `wall` is declared straight after `buf` so an overrun of one or two bytes
+     lands in something this test can read back.  It is not a guarantee -- the
+     compiler may pad or reorder -- but it has caught the mistake before. }
+   FillChar(wall, SizeOf(wall), $5A);
+   FillChar(buf, SizeOf(buf), 0);
+
+   uAnsiStr.StrPCopy(@buf[0], 'ABCD');
+
+   { 8 bytes of room, 4 used, so 3 characters fit alongside the terminator. }
+   CheckFalse(uAnsiStr.AppendToBuffer(buf, 'EFGHIJ'),
+               'reports that the source did not fit whole');
+   CheckEquals('ABCDEFG', string(AnsiString(PAnsiChar(@buf[0]))),
+               'kept as much as fits');
+   CheckEquals(7, Integer(uAnsiStr.StrLen(@buf[0])),
+               'and left room for the terminator');
+   CheckEquals(0, Integer(Byte(buf[7])), 'terminated inside the array');
+   CheckEquals($5A, Integer(Byte(wall[0])), 'did not write past the end');
+
+   { A buffer with no room left at all is a no-op, not a write. }
+   CheckFalse(uAnsiStr.AppendToBuffer(buf, 'X'), 'a full buffer takes nothing');
+   CheckEquals('ABCDEFG', string(AnsiString(PAnsiChar(@buf[0]))), 'and is unchanged');
+end;
+
+procedure TAnsiStrTests.Test_AppendToBuffer_TheFourRealCallers;
+var
+   path: array[0..259] of AnsiChar;   { FileNameType, the uCFG callers' type }
+begin
+   BeginTest('Test_AppendToBuffer_TheFourRealCallers');
+
+   { uCFG appends onto a path that is already there.  This is the shape of all
+     four sites, and the one lstrcatA got away with because the buffer is
+     MAX_PATH and the suffixes are short. }
+   FillChar(path, SizeOf(path), 0);
+   uAnsiStr.StrPCopy(@path[0], 'C:' + PathDelim + 'TR4W' + PathDelim);
+
+   CheckTrue(uAnsiStr.AppendToBuffer(path, 'logback.tr4w'), 'the real suffix fits');
+   CheckEquals('C:' + PathDelim + 'TR4W' + PathDelim + 'logback.tr4w',
+               string(AnsiString(PAnsiChar(@path[0]))),
+               'and produces the path the caller wanted');
 end;
 
 end.

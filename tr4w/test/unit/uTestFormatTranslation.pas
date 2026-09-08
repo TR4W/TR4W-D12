@@ -40,7 +40,7 @@ unit uTestFormatTranslation;
 interface
 
 uses
-   SysUtils, Windows, uTR4WTestFramework, uFreqTimeFormat;
+   SysUtils, uTR4WTestFramework, uFreqTimeFormat;
 
 type
    TFormatTranslationTests = class(TTestCase)

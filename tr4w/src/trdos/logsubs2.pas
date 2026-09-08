@@ -88,6 +88,7 @@ uses
   ,
   uTR4WStrings,
   uAnsiStr,
+  uStickyKeys,
   uHostName;   (* LocalComputerName -- the <NetBiosName> element *)
   var TimeLastScoreBroadcast : TDateTime;
   const BandTypeToUDPContactBand  : array[Band160..BandLight] of PAnsiChar =
@@ -784,8 +785,14 @@ begin
 {$IFEND}
   FreeAndNil(udp); // ny4i 4.44.9 Destroy the udp object
   FreeAndNil(slElements);
-  // Restore StickyKeys settings // ny4i Issue 126
-  SystemParametersInfo( SPI_SETSTICKYKEYS, SizeOf(StickyKeysAtStartup), @StickyKeysAtStartup, 0 );
+  (* Restore StickyKeys.  ny4i Issue 126.
+
+    This was a bare SystemParametersInfo, ungated, writing back a global that
+    uProgramMain filled in WITHOUT CHECKING whether the read had succeeded --
+    so a failed save wrote zeros over the operator's real settings.  Both
+    halves are uStickyKeys' problem now, and it will not restore what it did
+    not successfully save. *)
+  RestoreStickyKeys;
  logger.Info('[ExitProgram] Calling tr4w_Shutdown');
  tr4w_ShutDown;
  logger.Info('[ExitProgram] Exiting');

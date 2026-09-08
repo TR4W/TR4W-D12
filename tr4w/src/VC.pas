@@ -3057,23 +3057,18 @@ var
 
   tFontsColorsArray                     : array[0..1] of TColorsFontsEntry;
 
-  (* THREE WINDOWS-ONLY GLOBALS, and unlike SYSTEMTIME above there is nothing
+  (* TWO WINDOWS-ONLY GLOBALS, and unlike SYSTEMTIME above there is nothing
     to preserve: no wire format, no file format, and no non-Windows meaning.
     They are absent elsewhere so their users -- all Windows-only code -- fail
     loudly and in the right place rather than inheriting a dependency from the
     tree's TYPE unit.
 
       tr4w_osverinfo       GetVersionEx.
-      StickyKeysAtStartup  SystemParametersInfo(SPI_GETSTICKYKEYS): stops a run
-                           of shift keys switching Sticky Keys on mid-contest.
-                           No counterpart elsewhere -- no other platform has the
-                           misfeature to defend against. ny4i Issue 126.
       Msg                  the Win32 MSG the hand-rolled message loop read. That
                            loop is already gone; this goes with its procedure --
                            see docs/ROADMAP.md 2b. *)
   {$IFDEF WINDOWS}
   tr4w_osverinfo                        : OSVERSIONINFO {= (dwOSVersionInfoSize: SizeOf(OSVERSIONINFO))};
-  StickyKeysAtStartup                   : STICKYKEYS; // ny4i Issue 126
   Msg                                   : TMsg;
   {$ENDIF}
   EditingCallsignSent                   : boolean; //???????????? ??? autosend, ????? ?????????? backspace

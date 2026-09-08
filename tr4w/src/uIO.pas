@@ -32,11 +32,31 @@ uses
   VC,
   TF,
 {$IFDEF WINDOWS}
-  (* GENUINELY WINDOWS, and CLAUDE.md already says so: this is
-    inpout32.dll -- direct LPT port access for legacy CW keying -- which
-    that document lists as the ONE binding in the tree that is Windows-only
-    and should stay behind a conditional. There is no portable equivalent
-    because there is no portable parallel port. *)
+  (* WINDOWS AS WRITTEN. Not Windows by nature -- and an earlier version of
+    this comment claimed the latter, which is wrong on the facts.
+
+    What is here is inpout32.dll: direct LPT port access for legacy CW
+    keying, loaded on demand through LoadLibrary. That IS Win32, so the
+    gate stays. But two things the old comment implied are false, and both
+    matter to anyone reading this before a port:
+
+      - LINUX CAN REACH A PARALLEL PORT. The FreePascal wiki's Hardware
+        Access page names the route: the `ports` unit for the port[$378]
+        syntax, with `fpioperm` from unit `x86` granting access first
+        (implemented for Linux x86/x86_64 and FreeBSD). It needs ROOT,
+        which is the real objection -- not portability. The non-root
+        route the wiki does not cover is ppdev, ioctls on /dev/parport0,
+        and that is the one to price if this is ever done.
+      - THE DRIVER IS NOT 32-BIT-ONLY. The header above already says
+        "32 / 64 bit LPT driver from highrez.co.uk"; the 64-bit build
+        ships under a DIFFERENT FILE NAME, so the hardcoded
+        'inpout32.dll' in LoadInpOut32 below is a 64-bit blocker on its
+        own. Verify that name and its exports against a real x64 build
+        before changing it -- do not infer either.
+
+    WHETHER TR4W KEEPS LPT KEYING AT ALL IS AN OPEN DECISION, and not one
+    this unit gets to settle: it is in BENCH_QUEUE.md awaiting NY4I. The
+    gate below is correct under every outcome, so nothing here blocks. *)
   Windows,
 {$ENDIF}
   SysUtils;
