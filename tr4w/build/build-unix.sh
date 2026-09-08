@@ -261,11 +261,19 @@ find_toolchain() {
    # test is to ask the compiler to find `system` rather than to guess where the
    # distro put it.  /etc/fpc.cfg carries the RTL paths on a packaged install
    # and there is no fixed directory to test.
+   # BEFORE THE PROBE, NOT AFTER. The probe below compiles an empty unit to
+   # prove the RTL is reachable -- and on a host whose config does not supply
+   # the RTL (fpcupdeluxe), it cannot be reachable until these paths exist.
+   # Ordering this wrong reports "its RTL is missing or its config is broken"
+   # on a perfectly good toolchain.
+   set_fpc_packages
+
    FPCVER=$("$FPC" -iV 2>/dev/null)
    probe="${TMPDIR:-/tmp}/tr4w-fpcprobe.$$"
    mkdir -p "$probe"
    printf 'unit tr4wprobe;\ninterface\nimplementation\nend.\n' > "$probe/tr4wprobe.pas"
-   if ! "$FPC" -T$OS -P$CPU -FU"$probe" "$probe/tr4wprobe.pas" > "$probe/log" 2>&1; then
+   # shellcheck disable=SC2086 -- FPC_PKGS is a list of -Fu arguments
+   if ! "$FPC" -T$OS -P$CPU $FPC_PKGS -FU"$probe" "$probe/tr4wprobe.pas" > "$probe/log" 2>&1; then
       say 'TOOLCHAIN NOT FOUND'
       say "  $FPC (version ${FPCVER:-unknown}) cannot compile even an empty unit"
       say "  for $ARCH.  Its RTL is missing or its config is broken:"
@@ -384,6 +392,35 @@ read_version() {
 FU=''
 fu_add() { [ -d "$1" ] && FU="$FU -Fu$1"; return 0; }
 
+# THE FPC PACKAGES, ON A HOST WHOSE CONFIG DOES NOT SUPPLY THEM.
+#
+# A packaged FPC ships /etc/fpc.cfg with a wildcard covering every package, so
+# Linux needs none of this -- see the long note above. FPCUPDELUXE, which is how
+# FPC gets onto a Mac, writes a config that cannot even find `system`, so there
+# the list has to be explicit.
+#
+# It lives in tools/fpc-unix-paths.sh because compile-native.sh needs exactly
+# the same list, and two copies exercised on different machines is how one of
+# them silently falls behind.
+. "$REPO/tools/fpc-unix-paths.sh"
+FPC_PKGS=''
+# NOT COMPUTED HERE. $FPC is found by find_toolchain, which runs after this
+# file is read, so the value is set at the END of that function instead --
+# see set_fpc_packages.
+set_fpc_packages() {
+   case "$OS" in
+      darwin)
+         # From .../fpc/bin/<arch>/fpc up to .../fpc, then units/<arch>.
+         _fpcroot=$(cd "$(dirname "$FPC")/../.." && pwd)
+         FPC_PKGS=$(fpc_unix_package_paths "$_fpcroot/units/$ARCH")
+         ;;
+      *)
+         # A packaged FPC's /etc/fpc.cfg already supplies these.
+         FPC_PKGS=''
+         ;;
+   esac
+}
+
 # search_paths <App|Tests|Server>
 search_paths() {
    FU=''
@@ -435,6 +472,12 @@ search_paths() {
    fu_add "$TR4W_DIR/include/Core"
    fu_add "$TR4W_DIR/include/System"
    fu_add "$TR4W_DIR/include/Protocols"
+
+   # LAST, AND THAT ORDER IS LOAD-BEARING: univint ships its own Menus.ppu and
+   # ahead of the LCL it shadows the LCL's, after which Forms fails its
+   # checksum check and the compiler tries to rebuild it from sources that are
+   # not shipped. Empty on Linux, where the config supplies these already.
+   FU="$FU$FPC_PKGS"
 }
 
 # -Fi is a SEPARATE list and has to be: FPC resolves {$I foo.inc} from the
@@ -780,7 +823,7 @@ case "${1:-}" in
       ;;
 esac
 
-say "TR4W Linux build -- $ARCH"
+say "TR4W $OS build -- $ARCH"
 say "repo: $REPO"
 
 mkdir -p "$OUTROOT"

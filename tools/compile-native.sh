@@ -49,6 +49,7 @@
 set -u
 
 REPO=$(cd "$(dirname "$0")/.." && pwd)
+. "$REPO/tools/fpc-unix-paths.sh"
 SRC="$REPO/tr4w/src"
 OUT="${TMPDIR:-/tmp}/tr4w-native"
 
@@ -108,16 +109,13 @@ case "$(uname -s)" in
       # header above records what happens if you add them all: the command line
       # grows until the compiler stops finding the RTL, and every unit then
       # fails with "Can't find unit system" -- which reads as a broken install.
-      # PKGS, NOT FU -- SEE THE ORDERING NOTE BELOW. These go LAST, after
-      # Lazarus, because their unit names collide with the LCL's.
-      PKGS="-Fu$UNITS/univint -Fu$UNITS/cocoaint"
-      # The rest of what TR4W and the LCL reach for. fcl-json is
-      # jsonscanner, which Lazarus's Translations unit uses; sqlite is the
-      # contest log; openssl is Indy's TLS; regexpr, paszlib and zlib come
-      # in through lazutils and the LCL.
-      for pkg in fcl-json fcl-db fcl-net fcl-process fcl-xml fcl-image \n                 pasjpeg libpng hermes \n                 sqlite openssl regexpr paszlib zlib pthreads chm \n                 rtl-generics rtl-unicode rtl-console iconvenc; do
-         [ -d "$UNITS/$pkg" ] && PKGS="$PKGS -Fu$UNITS/$pkg"
-      done
+      # THE PACKAGE LIST LIVES IN tools/fpc-unix-paths.sh, sourced above --
+      # it was written here AND in tr4w/build/build-unix.sh, which is the
+      # arrangement where one gains a package and the other does not. PKGS,
+      # not FU: these go LAST, after Lazarus, or univint's Menus shadows the
+      # LCL's. See that file for why, and for why the list is named rather
+      # than globbed.
+      PKGS=$(fpc_unix_package_paths "$UNITS")
       LCL="$LAZROOT/lcl/units/$ARCH"
       LAZUTILS="$LAZROOT/components/lazutils/lib/$ARCH"
       ;;
