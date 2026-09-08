@@ -1333,7 +1333,7 @@ declarations bound to a library:
 | `user32` | 15 | Win32 API |
 | `comdlg32` | 10 | Win32 API -- and the LCL has dialogs for all of it |
 | `setupapi` | 10 | Win32 API -- device enumeration |
-| `InpOut32.dll` | 3 | **genuinely Windows-only**: direct LPT port access for legacy CW keying |
+| `InpOut32.dll` | 3 | Windows **as written** -- and read no further than that. This row was cited once as proof that LPT keying is Windows by nature; it is not. Linux reaches a parallel port through `ports` + `fpioperm` (root) or ppdev (not), and the driver has an x64 build under a different file name. **Whether TR4W keeps the feature is NY4I's open decision** -- `BENCH_QUEUE.md`, 2026-09-08 |
 | `hid` | 2 | Win32 API |
 | `kernel32`, `comctl32`, `ws2_32`, `shlwapi`, `msvcrt` | 7 | Win32 API |
 | `Plugins/tr4wSortLog.dll` | 1 | a TR4W plugin |
