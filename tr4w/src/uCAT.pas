@@ -28,8 +28,9 @@ uses
   TF,
   VC,
   uCFG,
-  Windows,
-  Messages,
+  (* LCLType, not Windows: types and constants only, and Messages
+    declared nothing at all (2026-09-08). *)
+  LCLType,
   LogRadio,
   LogCW,
   CFGCMD,

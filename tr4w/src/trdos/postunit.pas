@@ -51,7 +51,7 @@ uses
   LogStuff,
   LogGrid,
   ZoneCont,
-  Messages,
+  (* Messages declared nothing this unit uses (2026-09-08). *)
   LogCW, // 4.53.2
   LCLType,
   uCabrilloFormat,

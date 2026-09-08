@@ -27,7 +27,10 @@ uses
   TF,
   Version,
   VC,
-  Windows,
+  (* LCLType, not Windows (2026-09-08): only TYPES and constants were
+    wanted here, and LCLType declares them -- on Windows AS the Windows
+    declarations, so no signature moves. *)
+  LCLType,
   Tree,
   LogDupe,
   LogGrid,
@@ -118,12 +121,12 @@ var
 //  NewContestAllowReturn                 : boolean;
   SelectedContest                       : ContestType;
 
-const
-
-{(*}
-  {*)}
-
-  sfFLAG                                = DDL_ARCHIVE or DDL_READWRITE or DDL_DIRECTORY;
+(* sfFLAG IS DELETED (2026-09-08), AND WITH IT AN EMPTY `const` BLOCK. It was DDL_ARCHIVE or DDL_READWRITE or
+    DDL_DIRECTORY -- the flag set for a Win32 DlgDirList -- and NOTHING
+    referenced it, checked with the comment-blanking reader. The dialog that
+    would have used it is long converted; the constant was the only thing
+    keeping this unit on the Windows unit. It was the only member of that
+    const section, so the section goes too. *)
 
 { THE CONTEST-SPECIFIC PROMPTS, MOVED VERBATIM.
 

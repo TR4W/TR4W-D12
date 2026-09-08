@@ -85,7 +85,8 @@ implementation
 {$R *.lfm}
 
 uses
-  Windows,
+  (* Windows is gone (2026-09-08): only TYPES and constants were wanted here,
+    and LCLType -- already in this clause -- declares them. *)
   uCFG,        // SetCFGCommandValue -- the one route to a [COMMANDS] value
   uIO,         // LPTBaseAA
   LogCfg,      // TryRunPaddleAndFootSwitchThread, InitializeOtherLPTPorts

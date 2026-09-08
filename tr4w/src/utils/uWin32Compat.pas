@@ -32,6 +32,20 @@ unit uWin32Compat;
 interface
 
 
+(* THE WHOLE UNIT IS WINDOWS-ONLY, AND NOW SAYS SO (2026-09-08).
+
+  That is not a new restriction -- it is what this unit IS. Its entire purpose
+  is to declare the Win32 entry points FPC's `windows` unit does not carry, so
+  off Windows there is nothing here to declare and nothing that could be. It is
+  already empty under Delphi for the same kind of reason, and the header says
+  so.
+
+  Gating the BODY as well as the uses clause matters: a unit whose code is
+  guarded but whose uses clause is not fails on the clause and never reaches
+  the code. Its one consumer, ComPortEnumerator, is Windows-only too -- serial
+  port enumeration through setupapi. *)
+{$IFDEF WINDOWS}
+
 uses
    Windows;
 
@@ -76,6 +90,8 @@ function RegisterDeviceNotificationW(hRecipient: THandle;
 function UnregisterDeviceNotification(Handle: HDEVNOTIFY): BOOL; stdcall;
    external 'user32.dll' name 'UnregisterDeviceNotification';
 
+
+{$ENDIF}
 
 implementation
 

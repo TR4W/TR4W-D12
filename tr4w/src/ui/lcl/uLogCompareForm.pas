@@ -84,7 +84,8 @@ uses
   uLCLFormHelpers,   // ShowModalOverWin32Parent -- ownership and centring
    (* Which store a log READ comes from -- step B4.  See uLogSource. *)
    uLogSource,
-  Windows,
+  (* Windows is gone (2026-09-08): only TYPES and constants were wanted here,
+    and LCLType -- already in this clause -- declares them. *)
   TF,
   PostUnit,         // Contest, ContestExchange
   LogDupe,

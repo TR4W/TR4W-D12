@@ -260,7 +260,10 @@ implementation
 {$R *.lfm}
 
 uses
-   Windows,
+   (* LCLType, not Windows (2026-09-08): only TYPES and constants were
+     wanted here, and LCLType declares them -- on Windows AS the Windows
+     declarations, so no signature moves. *)
+   LCLType,
    StrUtils,
    Generics.Collections,
    Generics.Defaults,
