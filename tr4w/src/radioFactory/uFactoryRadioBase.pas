@@ -20,10 +20,11 @@ unit uFactoryRadioBase;
 interface
 
 uses
-   Windows, IdTCPClient, IdComponent, IdTCPConnection,IdThreadComponent, IdExceptionCore, SysUtils,
-   Classes, StrUtils, Log4D, uLogConfig, VC, Tree, IdException, IdStack, SyncObjs, uSerialPort, uRadioBand,
+  Classes, StrUtils, Log4D, uLogConfig, VC, Tree, IdException, IdStack, SyncObjs, uSerialPort, uRadioBand,
    uCWFraming,   // TCWFrameRule / TCWProsign -- the CW traits a radio declares
    uSpectrumTypes,  // TSpectrumFrame / TSpectrumFrameProc -- the panadapter seam
+   IdTCPClient, IdComponent, IdTCPConnection, IdThreadComponent, IdExceptionCore,
+   SysUtils,
   uTR4WStrings;
 
 Type TProcessMsgRef = procedure (sMessage: string) of Object;
@@ -1119,7 +1120,7 @@ begin
    FPollSentTick := 0;
    FPollHeardReply := False;
    FPollLastFrameTick := 0;
-   FLastSerialReopenTick := GetTickCount;
+   FLastSerialReopenTick := GetTickCount64;
    FSerialReopenDelay := RECONNECT_INITIAL_DELAY;
 end;
 
@@ -1236,14 +1237,14 @@ begin
    if not FStartupArmed then
       begin
       FStartupArmed := True;
-      FStartupArmTick := GetTickCount;
+      FStartupArmTick := GetTickCount64;
       logger.Debug('[%s] Link up - holding startup command %d ms for the radio to settle',
                    [rigLabel, STARTUP_COMMAND_SETTLE_MS]);
       Exit;
       end;
 
-   // LongWord subtraction, so a GetTickCount wrap is handled correctly.
-   if GetTickCount - FStartupArmTick < LongWord(STARTUP_COMMAND_SETTLE_MS) then
+   // LongWord subtraction, so a GetTickCount64 wrap is handled correctly.
+   if GetTickCount64 - FStartupArmTick < LongWord(STARTUP_COMMAND_SETTLE_MS) then
       begin
       Exit;
       end;
@@ -1699,7 +1700,7 @@ begin
       Exit;
       end;
 
-   { GetTickCount64, not GetTickCount: the 32-bit counter wraps every 49.7 days
+   { GetTickCount64, not GetTickCount64: the 32-bit counter wraps every 49.7 days
      and a wrap mid-wait would make the deadline unreachable. }
    deadline := GetTickCount64 + QWord(timeoutMs);
 
@@ -1870,14 +1871,14 @@ begin
       begin
       Exit;      // network radios reconnect via the socket path
       end;
-   if GetTickCount - FLastSerialReopenTick < LongWord(FSerialReopenDelay) then
+   if GetTickCount64 - FLastSerialReopenTick < LongWord(FSerialReopenDelay) then
       begin
       Exit;
       end;
    logger.Info('[MaintainSerialLink] %s silent for %d ms - reopening the port',
                [Self.radioModel, FSerialReopenDelay]);
    ReopenSerialPort;
-   FLastSerialReopenTick := GetTickCount;
+   FLastSerialReopenTick := GetTickCount64;
    FSerialReopenDelay := FSerialReopenDelay * RECONNECT_BACKOFF_MULTIPLIER;
    if FSerialReopenDelay > RECONNECT_MAX_DELAY then
       begin
@@ -1921,7 +1922,7 @@ end;
 procedure TFactoryRadioBase.MarkPollSent;
 begin
    FPollAwaitingReply := True;
-   FPollSentTick := GetTickCount;
+   FPollSentTick := GetTickCount64;
    FPollHeardReply := False;
    FPollLastFrameTick := FPollSentTick;
 end;
@@ -1945,9 +1946,9 @@ begin
       limit := 500;
       end;
 
-   // Unsigned subtraction throughout, so the 49.7-day GetTickCount wrap
+   // Unsigned subtraction throughout, so the 49.7-day GetTickCount64 wrap
    // cannot make a fresh poll look ancient and re-open the flood.
-   if (GetTickCount - FPollSentTick) >= limit then
+   if (GetTickCount64 - FPollSentTick) >= limit then
       begin
       // Timed out.  Poll anyway: polling is how a dead link is DETECTED, and
       // a radio that has stopped answering must not stop being asked.
@@ -1988,7 +1989,7 @@ begin
    // replies would work for Elecraft, where commands and responses pair up,
    // and cannot work for Icom CI-V or the binary Yaesus, which answer in
    // frames that do not map one-to-one onto what was asked.
-   Result := (GetTickCount - FPollLastFrameTick) < POLL_QUIET_MS;
+   Result := (GetTickCount64 - FPollLastFrameTick) < POLL_QUIET_MS;
 end;
 
 procedure TFactoryRadioBase.UpdateLastValidResponse;
@@ -1998,7 +1999,7 @@ begin
    // PollOutstanding, which waits for it to stop.  Note the gate is NOT
    // cleared here: doing that was the bug.
    FPollHeardReply := True;
-   FPollLastFrameTick := GetTickCount;
+   FPollLastFrameTick := GetTickCount64;
    // The radio is talking, so any reopen backoff has served its purpose.
    // Resetting HERE means the recovery bookkeeping cannot drift out of step
    // with liveness -- there is no separate we-are-healthy flag to forget.
