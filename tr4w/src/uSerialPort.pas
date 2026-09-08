@@ -46,7 +46,15 @@ uses
     Every other Windows call -- CreateFileW, GetCommState, SetCommState,
     SetCommTimeouts, ReadFile, WriteFile, PurgeComm -- is gone. *)
   {$IFDEF WINDOWS}
+{$IFDEF WINDOWS}
+  (* GATED WITH ITS CALLS (2026-09-08). SetDTR and SetRTS already carry an
+    {$IFDEF WINDOWS} / {$ELSE} pair -- EscapeCommFunction on Windows, the
+    serial units SerSetDTR / SerSetRTS elsewhere -- so the CODE was ready
+    and only this clause was not. That is the same trap TF documents: a
+    unit whose code is guarded while its imports are not fails on the
+    clause and never reaches the code. *)
   Windows,
+{$ENDIF}
   {$ENDIF}
   tr4wserial;
 

@@ -31,8 +31,14 @@ interface
 uses
   VC,
   TF,
+{$IFDEF WINDOWS}
+  (* GENUINELY WINDOWS, and CLAUDE.md already says so: this is
+    inpout32.dll -- direct LPT port access for legacy CW keying -- which
+    that document lists as the ONE binding in the tree that is Windows-only
+    and should stay behind a conditional. There is no portable equivalent
+    because there is no portable parallel port. *)
   Windows,
-  Messages,
+{$ENDIF}
   SysUtils;
 
 

@@ -28,11 +28,17 @@ uses
 //  mapi,
 //  CommCtrl,
   uMenu,
+{$IFDEF WINDOWS}
+  (* GENUINELY WINDOWS: this unit sends a file by MAPI --
+    LoadLibrary('Mapi32.dll') and MAPISendMail. That is Microsoft's mail
+    API and has no counterpart elsewhere; a Linux or macOS build wants a
+    different mechanism entirely (xdg-email, or NSSharingService), which
+    is a feature decision rather than a translation. *)
   Windows,
+{$ENDIF}
   Tree,
   LogWind,
   PostUnit,
-  Messages,
   uTR4WStrings,
   uAnsiStr;
 
