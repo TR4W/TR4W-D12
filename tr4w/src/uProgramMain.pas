@@ -62,10 +62,24 @@ uses
                     timeSetEvent.)
       GetVersionEx  already gated below; feeds only Windows-only consumers.
 
-    None of this blocks: they are all inside a Windows program's startup, and
-    they are named here so the next reader does not have to re-derive which of
-    them are real. *)
+    GATED 2026-09-08, and the list above is now the list of what is INSIDE
+    the gate. GetVersionEx already was; the three CreateEvents are as of this
+    change; nothing else in this unit names Windows.
+
+    OFF WINDOWS THE THREE HANDLES STAY 0, AND THAT IS THE HONEST ANSWER RATHER
+    THAN A STUB. Every consumer already treats a 0 handle as "no event" -- it
+    is the same state a failed CreateEvent produces, which the block below has
+    always reported and continued from. And the thing they exist to make
+    precise, the CW element clock, is ALREADY a placeholder off Windows:
+    logk1ea.tCWSleep's non-Windows arm is a plain Sleep, which CLAUDE.md says
+    outright "will not key a contest". Gating these does not make Linux CW
+    worse; it makes the program compile while Linux CW remains unimplemented,
+    which is the true state of it.
+
+    This was the LAST ungated `Windows` in the app's unit graph. *)
+{$IFDEF WINDOWS}
   Windows,
+{$ENDIF}
   SysUtils,
   { /IMPORTLOG. The unit pulls in the log database and the mapper, which is
     why the switch runs before any of them are otherwise needed. }
@@ -1872,6 +1886,7 @@ begin
     or a PRTLEvent cannot be passed to winmm at all, so converting these
     means replacing the element clock -- the HPTimer work in
     docs/PLATFORM_CLOCK_ABSTRACTION.md -- not swapping an API. *)
+{$IFDEF WINDOWS}
   tCW_Event       := CreateEvent(nil, False, False, nil);
   tCWPaddle_Event := CreateEvent(nil, False, False, nil);
   tDVP_Event      := CreateEvent(nil, False, False, nil);
@@ -1883,6 +1898,24 @@ begin
      logger.Error('CreateEvent failed (CW=%d paddle=%d DVP=%d), last error %d',
         [tCW_Event, tCWPaddle_Event, tDVP_Event, GetLastOSError]);
      end;
+{$ELSE}
+  (* NOT A STUB, AND NOT SILENT. The three handles keep their initial 0, which
+    is exactly the state a failed CreateEvent leaves on Windows -- a state the
+    branch above has always reported and continued from, so every consumer
+    already handles it.
+
+    Said once at startup because "my CW timing is wrong on Linux" is otherwise
+    an unanswerable question, and because the honest answer is bigger than
+    these three lines: winmm's timeSetEvent is what SIGNALS these handles, so
+    replacing them means replacing the element clock. See
+    docs/PLATFORM_CLOCK_ABSTRACTION.md. *)
+  tCW_Event       := 0;
+  tCWPaddle_Event := 0;
+  tDVP_Event      := 0;
+  logger.Warn('[Timing] CW element, paddle and DVP events are Windows-only ' +
+              'in this build. CW timing falls back to plain Sleep and WILL ' +
+              'NOT key a contest -- see docs/PLATFORM_CLOCK_ABSTRACTION.md.');
+{$ENDIF}
 
 
   if not tHandLogMode then

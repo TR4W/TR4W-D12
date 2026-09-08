@@ -62,6 +62,22 @@ New-Item -ItemType Directory -Force -Path $out | Out-Null
 # LAST, where they can still supply anything nothing above declares.
 $fu = @($rtl, $out,
         'C:\Lazarus\lcl', 'C:\Lazarus\lcl\widgetset', 'C:\Lazarus\lcl\forms',
+        # nonwin32: LAZARUS'S OWN NON-WINDOWS REPLACEMENTS, and leaving it out
+        # made this probe report FALSE FAILURES (added 2026-09-08). It holds
+        # messages.pp -- a `Messages` unit for every target that is not Win32 --
+        # so `uses Messages` IS portable, and Lazarus even ships the compiled
+        # .ppu on the Linux box.
+        #
+        # Without this path the probe said "Can't find unit Messages used by
+        # uNewContest" while the NATIVE Linux compiler built the same unit
+        # without complaint. I was one step from editing a unit that had
+        # nothing wrong with it.
+        #
+        # A false failure is cheaper than a false pass, but it is still a wrong
+        # answer and it wastes the reader's time in the direction of making the
+        # code WORSE. THE NATIVE BOX IS THE AUTHORITY; this probe only has to
+        # agree with it, and where they disagree the probe is what to fix.
+        'C:\Lazarus\lcl\nonwin32',
         'C:\Lazarus\components\lazutils',
         # datetimectrls: uEditQSOForm uses TDateTimePicker, and this directory
         # holds its SOURCE. It is an ordinary LCL component -- pure Lazarus,
