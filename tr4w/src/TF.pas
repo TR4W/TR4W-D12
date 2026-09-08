@@ -26,8 +26,21 @@ uses
 
   VC,
   utils_text,
+(* WINDOWS IS GATED NOW, AND THAT IS WHAT MAKES THE GATE ON CreateRichEdit
+    REAL. A unit whose CODE is behind {$IFDEF WINDOWS} but whose USES clause is
+    not can never compile anywhere else -- the compiler fails on the clause and
+    never reaches the code. NY4I: "do you also need to put ifdef windows around
+    the windows uses declaration?" Yes, and without it the rest is decoration.
+
+    What is still behind it: CreateRichEdit, which builds the RICHED32 control
+    that MMTTY -- a separate Windows program -- writes into. LCLType carries
+    the types (HWND, MAXWORD) for every widget set. *)
+{$IFDEF WINDOWS}
   Windows,
+{$ENDIF}
+  LCLType,
   Classes,      // TFileStream -- EnumerateLinesInFile reads rather than maps
+  DateUtils,    // EncodeDateTime / DecodeDateTime / LocalTimeToUniversal
   SysUtils,
   ActiveX,
   Messages,
@@ -533,12 +546,37 @@ end;
 }
 
 function STToInt64(St: SYSTEMTIME): int64;
-var
-  TEMPFILETIME                          : FILETIME;
 begin
-  Windows.SystemTimeToFileTime(St, TEMPFILETIME);
-  Result := int64(TEMPFILETIME);
-  Result := round(Result / 10000);
+  (* MILLISECONDS SINCE 1601-01-01, which is what the FILETIME this replaces
+    counted -- SystemTimeToFileTime gives 100-nanosecond ticks from that epoch
+    and the old code divided by 10,000.
+
+    The epoch does not actually matter to the only caller: uSynTime computes
+    NTP offsets as STToInt64(t2) - STToInt64(t1), so any consistent origin
+    would do. It is kept anyway, because a function that returns "milliseconds
+    since 1601" and one that returns "milliseconds since something" are not
+    the same function, and TR4WServer links this too.
+
+    A malformed SYSTEMTIME -- month 0 from a truncated packet -- used to make
+    SystemTimeToFileTime fail and leave TEMPFILETIME uninitialised, so the
+    result was whatever the stack held. It reports and returns 0 now. *)
+  Result := 0;
+  try
+     Result := MilliSecondsBetween(EncodeDateTime(St.wYear, St.wMonth, St.wDay,
+                                                  St.wHour, St.wMinute,
+                                                  St.wSecond, St.wMilliseconds),
+                                   EncodeDate(1601, 1, 1));
+  except
+     on E: EConvertError do
+        begin
+        if logger <> nil then
+           begin
+           logger.Warn('[STToInt64] unusable SYSTEMTIME %d-%d-%d %d:%d:%d',
+                       [St.wYear, St.wMonth, St.wDay,
+                        St.wHour, St.wMinute, St.wSecond]);
+           end;
+        end;
+  end;
 end;
 {
 function tgethostbyname(h_Name: PAnsiChar): PAnsiChar;
@@ -1046,11 +1084,32 @@ end;
   The old commented line assigned milliseconds straight across, which would
   have been wrong by a factor of ten had it ever run. No current caller reads
   Sec100, but a wrong value waiting to be used is not worth leaving. *)
+(* THE UTC CLOCK, FROM THE RTL.
+
+  Windows.GetSystemTime filled a SYSTEMTIME with UTC. LocalTimeToUniversal is
+  the RTL's equivalent and works wherever FPC does; the fields are then
+  decoded into the SAME record VC declares, so nothing downstream changes.
+
+  wDayOfWeek IS 0-BASED IN WIN32 and SysUtils.DayOfWeek is 1-based (Sunday=1),
+  hence the -1. Getting that wrong would be invisible until something indexed
+  a day-name array. *)
+procedure FillSystemTimeUTC(var St: SYSTEMTIME);
+var
+  utc: TDateTime;
+  ms:  word;
+begin
+  utc := LocalTimeToUniversal(Now);
+  DecodeDateTime(utc, St.wYear, St.wMonth, St.wDay,
+                 St.wHour, St.wMinute, St.wSecond, ms);
+  St.wMilliseconds := ms;
+  St.wDayOfWeek    := DayOfWeek(utc) - 1;
+end;
+
 procedure GetTime(var Hour, Minute, Second, Sec100: Word);
 var
   St                                    : SYSTEMTIME;
 begin
-  GetSystemTime(St);
+  FillSystemTimeUTC(St);
   Hour := St.wHour;
   Minute := St.wMinute;
   Second := St.wSecond;
@@ -1062,7 +1121,7 @@ var
   St                                    : SYSTEMTIME;
 begin
   //  DecodeDateFully(Date, Year, Month, Day, DayOfWeek);
-  GetSystemTime(St);
+  FillSystemTimeUTC(St);
   Year := St.wYear;
   Month := St.wMonth;
   Day := St.wDay;
@@ -1071,8 +1130,12 @@ end;
 
 function tOpenFileForRead(var h: THandle; FileName: PAnsiChar): boolean;
 begin
-  h := CreateFileA(FileName, GENERIC_READ, FILE_SHARE_READ, nil, OPEN_EXISTING, FILE_ATTRIBUTE_ARCHIVE, 0);
-  Result := h <> INVALID_HANDLE_VALUE;
+  (* FileOpen, not CreateFileA: the RTL's, the same THandle, and the share
+    mode spelled as fmShareDenyNone rather than FILE_SHARE_READ. It returns
+    feInvalidHandle (-1) where CreateFileA returned INVALID_HANDLE_VALUE --
+    the same value, under a name that is not Windows-only. *)
+  h := FileOpen(AnsiString(FileName), fmOpenRead or fmShareDenyNone);
+  Result := h <> THandle(feInvalidHandle);
 end;
 
 {
