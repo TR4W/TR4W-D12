@@ -599,15 +599,22 @@ begin
      Write thread exits its WaitForMultipleObjects loop. }
    if FReadThread <> 0 then
       begin
-      WaitForSingleObject(FReadThread, 3000);
-      CloseHandle(FReadThread);
+      (* WaitForThreadTerminate / CloseThread -- the RTL's pair for a TThreadID,
+       which is what BeginThread returned. On Windows the wait IS
+       WaitForSingleObject, so the timeout behaves exactly as before.
+       OFF WINDOWS THE TIMEOUT IS IGNORED (cthreads joins the thread), so
+       a worker that never exits would hang the teardown there rather
+       than being abandoned. Noted, not solved -- it needs a real answer
+       when this program runs on those platforms. *)
+      WaitForThreadTerminate(FReadThread, 3000);
+      CloseThread(FReadThread);
       FReadThread := 0;
       end;
 
    if FWriteThread <> 0 then
       begin
-      WaitForSingleObject(FWriteThread, 3000);
-      CloseHandle(FWriteThread);
+      WaitForThreadTerminate(FWriteThread, 3000);
+      CloseThread(FWriteThread);
       FWriteThread := 0;
       end;
 

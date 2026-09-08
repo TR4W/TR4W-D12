@@ -169,7 +169,9 @@ begin
    http.Free;
    ssl.Free;
    GetScoresThreadID := 0;
-   CloseHandle(GetScoresThreadHandle);
+   { CloseThread, not CloseHandle: tCreateThread is FPC's BeginThread, so
+     what this holds is a TThreadID and the RTL has the matching pair. }
+   CloseThread(GetScoresThreadHandle);
 end;
 
 { CALLED FROM THE UPLOAD WORKER THREAD as well as from the main one --

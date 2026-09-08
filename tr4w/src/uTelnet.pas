@@ -1184,8 +1184,15 @@ begin
   ClusterClient.Disconnect;
   if TelThreadHandle <> 0 then
      begin
-     WaitForSingleObject(TelThreadHandle, 5000);
-     CloseHandle(TelThreadHandle);
+     (* WaitForThreadTerminate / CloseThread -- the RTL's pair for a TThreadID,
+       which is what BeginThread returned. On Windows the wait IS
+       WaitForSingleObject, so the timeout behaves exactly as before.
+       OFF WINDOWS THE TIMEOUT IS IGNORED (cthreads joins the thread), so
+       a worker that never exits would hang the teardown there rather
+       than being abandoned. Noted, not solved -- it needs a real answer
+       when this program runs on those platforms. *)
+     WaitForThreadTerminate(TelThreadHandle, 5000);
+     CloseThread(TelThreadHandle);
      TelThreadHandle := 0;
      end;
   TelThreadID := 0;
