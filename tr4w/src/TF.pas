@@ -42,7 +42,6 @@ uses
   Classes,      // TFileStream -- EnumerateLinesInFile reads rather than maps
   DateUtils,    // EncodeDateTime / DecodeDateTime / LocalTimeToUniversal
   SysUtils,
-  ActiveX,
   Messages,
   uTR4WStrings;
 
@@ -421,7 +420,11 @@ var
    MyGUID: TGUID;
 begin
    Result := '';
-   if CreateGUID(MyGUID) <> S_OK then
+   (* 0, not S_OK. SysUtils declares CreateGUID for every platform and it
+     returns 0 on success -- S_OK is the same value, but the NAME comes from
+     ActiveX, which was the last Windows-only unit in this clause and was
+     imported for this one comparison. *)
+   if CreateGUID(MyGUID) <> 0 then
       begin
       logger.Warn('Could not create GUID');
       Exit;
