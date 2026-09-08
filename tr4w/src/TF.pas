@@ -237,7 +237,7 @@ const
 
 implementation
 
-uses Log4D, uFreqTimeFormat, uStrSearch, uAnsiStr,   // Issue #997: freq/time formatters + PChar search helpers extracted + golden-tested
+uses Log4D, uFreqTimeFormat, uStrSearch, uAnsiStr, uCFormat,   // Issue #997: freq/time formatters + PChar search helpers extracted + golden-tested
      uCrashLog,   // LogCaughtException, OnMainThread, ReportOffMainThread
      (* THE LCL'S DIALOGS, for showwarning, and uMainThread to get onto the
        main thread first. This does not undo the weight this unit is careful
@@ -263,29 +263,29 @@ uses Log4D, uFreqTimeFormat, uStrSearch, uAnsiStr,   // Issue #997: freq/time fo
 // instead of the generic one, exactly as the radio drivers do.
 var
   logger: TLogLogger;
-function Format(Output: PAnsiChar; Format: PAnsiChar; c: AnsiChar): integer; external user32 Name 'wsprintfA';
 
-function Format(Output: PAnsiChar; Format: PAnsiChar; s1: PAnsiChar; u1: integer; u2: integer; u3: integer; u4: integer; u5: integer; u6: integer; s2: PAnsiChar; s3: PAnsiChar): integer; external user32 Name 'wsprintfA';
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar; p4: PAnsiChar): integer; external user32 Name 'wsprintfA';
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar; p4: PAnsiChar; p5: PAnsiChar): integer; external user32 Name 'wsprintfA';
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar): integer; external user32 Name 'wsprintfA';
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar; i: integer): integer; external user32 Name 'wsprintfA';
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar; i: integer; i2: integer): integer; external user32 Name 'wsprintfA';
 
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; i: integer): integer; external user32 Name 'wsprintfA';
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar): integer; external user32 Name 'wsprintfA';
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar): integer; external user32 Name 'wsprintfA';
 
-function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer; i2: integer; i3: integer): integer; external user32 Name 'wsprintfA';
-function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer; i2: integer; p: PAnsiChar): integer; external user32 Name 'wsprintfA';
-function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer): integer; external user32 Name 'wsprintfA';
-function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer; i2: integer): integer; external user32 Name 'wsprintfA';
-function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer; p: PAnsiChar): integer; external user32 Name 'wsprintfA';
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; i: integer): integer; external user32 Name 'wsprintfA';
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; i: integer; i2: integer): integer; external user32 Name 'wsprintfA';
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; i: integer; P2: PAnsiChar): integer; external user32 Name 'wsprintfA';
-function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer; p: PAnsiChar; i2: integer): integer; external user32 Name 'wsprintfA';
-function Format(Output: PAnsiChar; Format: PAnsiChar; P1, P2, p3, p4, p5, p6, p7: PAnsiChar): integer; external user32 Name 'wsprintfA';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //uses mainunit;
 
 // SysErrorMessage removed (D12): use SysUtils.SysErrorMessage (returns a
@@ -684,7 +684,11 @@ function tGetDateFormat(DT: TQSOTime): PAnsiChar; //assembler;
 begin
 { $ I F LANG <> 'E1212NG'}
 
-  Format(GetDateFormatBuffer, '%02d-%02d-%02d', dt.qtDay, DT.qtMonth, DT.qtYear);
+  (* %.2d, not %02d: this goes through TF.Format, which used to be
+    wsprintfA and zero-padded. The RTL reads a leading 0 as part of the
+    WIDTH and pads with spaces, so a single-digit day would render as
+    ' 7-' rather than '07-'. *)
+  Format(GetDateFormatBuffer, '%.2d-%.2d-%.2d', dt.qtDay, DT.qtMonth, DT.qtYear);
 {
   St.wYear := 2000 + DT.qtYear;
   St.wMonth := dt.qtMonth;
@@ -1040,6 +1044,127 @@ asm
         NOT     ECX
 end;
 }
+
+(* THE Format FAMILY, NOW PASCAL AND NOT user32.
+
+  Twenty overloads, each formerly `external user32 Name 'wsprintfA'` -- a
+  direct binding to Win32's sprintf, called from 555 sites. They are why TF
+  needed the Windows unit, and TF is reached by 171 units, so this was the
+  single largest thing holding the tree to Windows.
+
+  The forwards in the interface are unchanged, so no call site moved and the
+  parameter keeps its name -- a body must match its forward. That second
+  parameter being called `Format` shadows the function inside these bodies,
+  which is exactly what is wanted: it IS the format string.
+
+  The overloads exist because wsprintfA is variadic and Pascal is not: each
+  pins an arity and a type list. They stay for that reason, and because they
+  are what makes 555 call sites type-checked at all.
+
+  uCFormat.CFormatBuf does the work -- see that unit for the one dialect
+  difference that mattered (%02d) and why the callers were respelled instead
+  of translated at run time. *)
+
+function Format(Output: PAnsiChar; Format: PAnsiChar; c: AnsiChar): integer;
+begin
+   Result := CFormatBuf(Output, AnsiString(Format), [AnsiString(c)]);
+end;
+
+function Format(Output: PAnsiChar; Format: PAnsiChar; s1: PAnsiChar; u1: integer; u2: integer; u3: integer; u4: integer; u5: integer; u6: integer; s2: PAnsiChar; s3: PAnsiChar): integer;
+begin
+   Result := CFormatBuf(Output, AnsiString(Format), [AnsiString(s1), u1, u2, u3, u4, u5, u6, AnsiString(s2), AnsiString(s3)]);
+end;
+
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar; p4: PAnsiChar): integer;
+begin
+   Result := CFormatBuf(Output, AnsiString(Format), [AnsiString(p), AnsiString(P2), AnsiString(p3), AnsiString(p4)]);
+end;
+
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar; p4: PAnsiChar; p5: PAnsiChar): integer;
+begin
+   Result := CFormatBuf(Output, AnsiString(Format), [AnsiString(p), AnsiString(P2), AnsiString(p3), AnsiString(p4), AnsiString(p5)]);
+end;
+
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar): integer;
+begin
+   Result := CFormatBuf(Output, AnsiString(Format), [AnsiString(p), AnsiString(P2), AnsiString(p3)]);
+end;
+
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar; i: integer): integer;
+begin
+   Result := CFormatBuf(Output, AnsiString(Format), [AnsiString(p), AnsiString(P2), AnsiString(p3), i]);
+end;
+
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar; i: integer; i2: integer): integer;
+begin
+   Result := CFormatBuf(Output, AnsiString(Format), [AnsiString(p), AnsiString(P2), AnsiString(p3), i, i2]);
+end;
+
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; i: integer): integer;
+begin
+   Result := CFormatBuf(Output, AnsiString(Format), [AnsiString(p), AnsiString(P2), i]);
+end;
+
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar): integer;
+begin
+   Result := CFormatBuf(Output, AnsiString(Format), [AnsiString(p), AnsiString(P2)]);
+end;
+
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar): integer;
+begin
+   Result := CFormatBuf(Output, AnsiString(Format), [AnsiString(p)]);
+end;
+
+function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer; i2: integer; i3: integer): integer;
+begin
+   Result := CFormatBuf(Output, AnsiString(Format), [i, i2, i3]);
+end;
+
+function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer; i2: integer; p: PAnsiChar): integer;
+begin
+   Result := CFormatBuf(Output, AnsiString(Format), [i, i2, AnsiString(p)]);
+end;
+
+function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer): integer;
+begin
+   Result := CFormatBuf(Output, AnsiString(Format), [i]);
+end;
+
+function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer; i2: integer): integer;
+begin
+   Result := CFormatBuf(Output, AnsiString(Format), [i, i2]);
+end;
+
+function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer; p: PAnsiChar): integer;
+begin
+   Result := CFormatBuf(Output, AnsiString(Format), [i, AnsiString(p)]);
+end;
+
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; i: integer): integer;
+begin
+   Result := CFormatBuf(Output, AnsiString(Format), [AnsiString(p), i]);
+end;
+
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; i: integer; i2: integer): integer;
+begin
+   Result := CFormatBuf(Output, AnsiString(Format), [AnsiString(p), i, i2]);
+end;
+
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; i: integer; P2: PAnsiChar): integer;
+begin
+   Result := CFormatBuf(Output, AnsiString(Format), [AnsiString(p), i, AnsiString(P2)]);
+end;
+
+function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer; p: PAnsiChar; i2: integer): integer;
+begin
+   Result := CFormatBuf(Output, AnsiString(Format), [i, AnsiString(p), i2]);
+end;
+
+function Format(Output: PAnsiChar; Format: PAnsiChar; P1, P2, p3, p4, p5, p6, p7: PAnsiChar): integer;
+begin
+   Result := CFormatBuf(Output, AnsiString(Format), [AnsiString(P1), AnsiString(P2), AnsiString(p3), AnsiString(p4), AnsiString(p5), AnsiString(p6), AnsiString(p7)]);
+end;
+
 begin
   logger := TLogLogger.GetLogger('TR4WDebugLog.TF');   // own logger (was MainUnit.logger)
 end.

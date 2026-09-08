@@ -218,13 +218,17 @@ const
 //false,true
   (
     (
-    ('%04u %s %u', '%02u %s %u'),
-    ('%04u  %s  %u', '%02u  %s  %u')
+    (* %.4u / %.2u, not %04u / %02u. These feed TF.Format -- formerly
+      wsprintfA, which zero-padded -- and the result is SENT AS CW. The
+      RTL treats a leading 0 as width and pads with spaces, so QTC 7
+      would go out as '   7' instead of '0007'. *)
+    ('%.4u %s %u', '%.2u %s %u'),
+    ('%.4u  %s  %u', '%.2u  %s  %u')
     )
     ,
     (
-    (ControlS + '%04u %s %u' + ControlF, ControlS + '%02u %s %u' + ControlF),
-    (ControlS + '%04u  %s  %u' + ControlF, ControlS + '%02u  %s  %u' + ControlF)
+    (ControlS + '%.4u %s %u' + ControlF, ControlS + '%.2u %s %u' + ControlF),
+    (ControlS + '%.4u  %s  %u' + ControlF, ControlS + '%.2u  %s  %u' + ControlF)
     )
 
     );

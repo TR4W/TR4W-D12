@@ -1249,6 +1249,31 @@ now, and 21 of them store to `settings\tr4w.json` instead of `tr4w.ini`.
 - [ ] **Three station settings, set and restart:** `HOUR DISPLAY`,
   `RATE DISPLAY`, `DUPE CHECK SOUND`. Each should be a drop-down, take effect,
   and still be what you set after a restart. Before today none of that was true. [AGENT - I am changing these but do not see any evidence of a change on the main window]
+- [ ] **SERIAL NUMBER PADDING IS DECIDED, AND NOT YET BUILT (NY4I, 2026-09-07).**
+
+  The exchange formatters pad serials with a fixed width -- `%03d` in
+  uADIFExchange and uContestCQWPXBase -- and under the RTL that pads with
+  SPACES, so serial 7 exports as `  7`. uTestADIFExchange pins that current
+  output on purpose, with a note saying whether it should be `007` is a
+  contest question rather than a code one.
+
+  **NY4I has answered it, and the answer is neither `  7` nor a fixed `007`:**
+
+  > "check all the QSOs serial numbers. Get the max DIGITSIN(serial) and use
+  > that. So if a station sent 1245 serial numbers, we pad out to 4 digits so
+  > the first serial number would be 0001 and last 1234. Same for someone
+  > making 142 QSOs. 001 for first and 142 for last. This way they align in
+  > the columns."
+
+  So the width is a property of the LOG, not a constant in a format string:
+  one pass over the QSOs for the highest serial, and every serial
+  zero-padded to that many digits. That cannot be expressed as `%03d` at
+  all -- it needs the width passed in, which the RTL supports as `%.*d`.
+
+  NOT DONE. It changes exported Cabrillo and ADIF, so it wants doing with
+  the corpus in front of you: the 13 reference sets were produced by D7 and
+  will differ, and each difference has to be judged rather than accepted.
+
 - [ ] **`MP3 RECORDER DURATION` and `BAND MAP SPLIT MODE`** -- same test, and
   the second one has a redraw handler (`crP: 1`), so the band map should change
   WITHOUT a restart.

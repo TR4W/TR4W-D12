@@ -7783,7 +7783,7 @@ begin
   elvi.pszText := tGetDateFormat(RXData.tSysTime);
   EmitCol(elvi, aCollect);   // Issue #997: was asm call setitem
 
-  TF.Format(LogDisplayBuffer, '%02d:%02d', RXData.tSysTime.qtHour,
+  TF.Format(LogDisplayBuffer, '%.2d:%.2d', RXData.tSysTime.qtHour,
     RXData.tSysTime.qtMinute);
   elvi.iSubItem := ColumnsArray[logColTime].pos; //Ord(logColTime);
   elvi.pszText := LogDisplayBuffer;
@@ -7830,7 +7830,7 @@ begin
   if RXData.ceRecordKind in [rkQTCR, rkQTCS] then
      begin
      elvi.iSubItem := ColumnsArray[logColQTC].pos; //Ord(logColQTC);
-     TF.Format(LogDisplayBuffer, '%04d %s', RXData.NumberSent, @RXData.Kids[1]);
+     TF.Format(LogDisplayBuffer, '%.4d %s', RXData.NumberSent, @RXData.Kids[1]);
      elvi.pszText := LogDisplayBuffer;
      EmitCol(elvi, aCollect);   // Issue #997: was asm call setitem
 

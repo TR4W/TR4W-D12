@@ -31,6 +31,7 @@ uses
     LCLType declares it for every widget set -- see the note at the top of
     VC.pas. Classes brings TFileStream, which replaces the memory mapping. *)
   LCLType,
+  uCFormat,     // CFormatBuf -- was a private wsprintfA binding
   Classes,
   uCallSignRoutines,
   utils_text,
@@ -314,7 +315,15 @@ var
 // Issue #1033: local cdecl binding to wsprintfA. Delphi 7's Windows.wsprintf is
 // not declared varargs, so the former TF.Format (itself just wsprintfA) is bound
 // directly here for the one tDebugMode-only prefix-table dump below.
-function ctyDbgFmt(Output: PChar; Format: PChar; i1: integer; s: PChar; i2: integer): integer; cdecl; external 'user32.dll' name 'wsprintfA';
+(* WAS THE 21st wsprintfA BINDING. Its own private one, missed by a search
+  for TF.Format because it is spelled differently. Debug-only -- the single
+  call is inside {$IF tDebugMode} -- but a user32 binding all the same. *)
+function ctyDbgFmt(Output: PAnsiChar; aFormat: PAnsiChar; i1: integer;
+                   s: PAnsiChar; i2: integer): integer;
+begin
+   Result := CFormatBuf(Output, AnsiString(aFormat),
+                        [i1, AnsiString(s), i2]);
+end;
 
 // ---------------------------------------------------------------------------
 // Issue #1033: helpers lifted VERBATIM from TF / LogGrid so uCTYDAT no longer
@@ -852,7 +861,7 @@ begin
   begin
     TempPtr := @CTY.ctyPrefixesTable[iI];
 {$IF tDebugMode}
-    sWriteFile(h, wsprintfBuffer, ctyDbgFmt(wsprintfBuffer, '%04u %-15s %u'#13#10, iI, @TempPtr^.Prefix, TempPtr.Country));
+    sWriteFile(h, wsprintfBuffer, ctyDbgFmt(wsprintfBuffer, '%.4u %-15s %u'#13#10, iI, @TempPtr^.Prefix, TempPtr.Country));
 {$IFEND}
     CTY.ctyIndexArray[TempPtr^.Prefix[0]] := iI;
 
