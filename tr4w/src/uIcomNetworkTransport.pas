@@ -658,7 +658,12 @@ procedure TIcomNetworkTransport.DestroySockets;
       // If the Indy destructor hangs, we abandon it — ExitProcess cleans up.
       logger.Debug('[IcomTransport:' + FRadioName + '] DestroySockets: Freeing ' + Name);
       FreeThread := BeginThread(nil, 0, @FreeObjectThread, Pointer(Socket), 0, ThreadId);
-      if FreeThread <> 0 then
+      (* PtrUInt, NOT 0. TThreadID is a POINTER on the BSD/macOS RTL and an
+        integer on Windows and Linux, so comparing it to an ordinal is a type
+        error there ("Operator is not overloaded: TThreadID = ShortInt").
+        BeginThread returns a zero/nil id on failure either way, and comparing
+        at pointer width says exactly that on every target. *)
+      if PtrUInt(FreeThread) <> 0 then
          begin
          (* THE RTL's PAIR, because BeginThread above returns a TThreadID and
            not a Win32 HANDLE. On Windows WaitForThreadTerminate IS
@@ -1720,7 +1725,9 @@ begin
      Exit;
      end;
 
-  IsMain   := GetCurrentThreadId = MainThreadID;
+  (* Compared at pointer width -- see the note on FreeThread above. The two
+    sides do not even agree in declared type on macOS. *)
+  IsMain   := PtrUInt(GetCurrentThreadId) = PtrUInt(MainThreadID);
   InFlight := System.InterLockedIncrement(FSendInFlight);
   try
      (* THE LINE THAT SURVIVES A HANG. Everything a diagnosis needs is here,
