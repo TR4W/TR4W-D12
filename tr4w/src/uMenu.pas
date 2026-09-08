@@ -25,11 +25,11 @@ interface
 
 uses
   Classes,         // TComponent, TNotifyEvent
+  LCLType,         // MAXWORD -- the LCL declares it; it is not Windows-only
   Controls,        // TCaption -- what a menu caption actually is
   Menus,           // TMainMenu, TMenuItem
   VC,
   uAccelerators,   // AcceleratorDisplayFor -- the shortcut text a menu item shows
-  Windows,
   uTR4WStrings;
 
 type
@@ -58,7 +58,6 @@ type
 
 { Fill the menu captions from the resourcestrings. See the implementation. }
 procedure InitializeMenuText;
-function CreateTR4WMenu(m: PMenuRecord; s: integer; popup: boolean): HMENU;
 
 (* THE MAIN MENU AS AN LCL TMainMenu, from the same T_MENU_ARRAY.
 
@@ -789,88 +788,19 @@ begin
       end;
 end;
 
-function CreateTR4WMenu(m: PMenuRecord; s: integer; popup: boolean): HMENU;
+(* CreateTR4WMenu IS DELETED (2026-09-07). It built the menu bar with
+  CreateMenu / CreatePopupMenu / AppendMenuW -- HMENU handles, straight Win32
+  -- and it had NO CALLER. BuildTR4WMainMenu above replaced it with LCL
+  TMenuItems, and uMainForm.pas:1769 is the only thing that builds a menu:
 
-var
-  i                                     : integer;
-  uFlags                                : UINT;
-  TempMenuRecord                        : MenuRecord;
-//  TempMenu                              : HMENU;
+      Menu := BuildTR4WMainMenu(Self, MenuItemClick);
 
-  CurrMenu                              : HMENU;
-  LatestMenu                            : HMENU;
-  Caption                               : string;
-  Shortcut                              : string;
-begin
-  if popup then
-     begin
-     Result := CreatePopupMenu
-     end
-  else
-     begin
-     Result := CreateMenu;
-     end;
+  NY4I flagged that the menus were already converted and I had reported them
+  as outstanding work -- because a raw grep for AppendMenuW finds live-looking
+  code and says nothing about whether anything reaches it. Searching for the
+  FUNCTION NAME, not the API, is what answers that.
 
-  LatestMenu := Result;
-  CurrMenu := Result;
-
-  for i := 0 to s do
-     begin
-     TempMenuRecord := PMenuRecord(integer(m) + (SizeOf(MenuRecord) * i))^;
-     uFlags := MF_STRING;
-     // A string is 1-based where the PAnsiChar was 0-based.
-     if TempMenuRecord.mrText <> '' then
-       if TempMenuRecord.mrText[1] = '-' then
-          begin
-          uFlags := MF_SEPARATOR;
-          end;
-
-     if TempMenuRecord.mrId = MAXWORD then
-        begin
-        CurrMenu := CreatePopupMenu;
-        LatestMenu := CurrMenu;
-
-        Windows.AppendMenuW(Result, MF_STRING + MF_POPUP, CurrMenu, PWideChar(TempMenuRecord.mrText));
-        Continue;
-        end;
-
-     if TempMenuRecord.mrId = MAXWORD - 1 then
-        begin
-        CurrMenu := CreatePopupMenu;
-        Windows.AppendMenuW(LatestMenu, MF_STRING + MF_POPUP, CurrMenu, PWideChar(TempMenuRecord.mrText));
-        Continue;
-        end;
-     if TempMenuRecord.mrId = MAXWORD - 2 then
-        begin
-        CurrMenu := LatestMenu;
-        Continue;
-        end;
-     // THE SHORTCUT TEXT COMES FROM THE ACCELERATOR TABLE, not from a constant
-     // concatenated into mrText.  77 rows used to read `RC_EXIT + RC_EXIT_HK`,
-     // which is how the menu came to advertise keys the table did not bind and
-     // vice versa -- Alt+P on two commands, a bare '-' for Ctrl+-, Alt+- for
-     // nothing at all.  One row now produces both the binding and the label, so
-     // they cannot disagree.  See docs\ACCELERATOR_AUDIT.md.
-     { AND THE ROW MUST NOT SPELL THE SHORTCUT ITSELF.  Three did --
-       'Cabrillo'#9'Ctrl+Alt+B', 'Winkeyer'#9'Ctrl+W', 'LPT'#9'Ctrl+Alt+L' --
-       so the operator saw the key TWICE: the row's copy and this one.
-       Found 2026-08-26 by test\ui\Dump-Menu.ps1 on its first run.  The
-       2026-08-17 sweep that removed 77 `RC_x + RC_x_HK` concatenations
-       missed them because they carried a literal tab inside a quoted
-       string rather than an _HK constant. }
-     Caption := TempMenuRecord.mrText;
-     if uFlags = MF_STRING then
-        begin
-        Shortcut := AcceleratorDisplayFor(TempMenuRecord.mrId);
-        if Shortcut <> '' then
-           begin
-           Caption := Caption + #9 + Shortcut;
-           end;
-        end;
-     Windows.AppendMenuW(CurrMenu, uFlags, TempMenuRecord.mrId, PWideChar(Caption));
-     end;
-
-
-end;
+  Its 80 lines are in git history. Deleting them is what actually removed this
+  unit's `uses Windows`. *)
 
 end.

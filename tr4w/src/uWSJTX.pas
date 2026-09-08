@@ -22,7 +22,11 @@ interface
 uses
   // Graphics, Controls, Forms, Dialogs and StdCtrls were listed here and
   // never referenced -- five VCL units linked by a UDP listener.
-  Windows, Messages, SysUtils, Variants, Classes,
+  (* LCLIntf, not Windows: it declares GetRValue/GetGValue/GetBValue -- the
+    colour macros this unit uses to build the WSJT-X colorization hints -- for
+    every platform the LCL targets. *)
+  LCLIntf,
+  SysUtils, Variants, Classes,
   IdComponent, IdUDPBase, IdUDPServer, IdTCPServer, IdUDPClient,
     IdContext,
   IdBaseComponent, IdSocketHandle, IdGlobal, IdStackConsts,
@@ -987,7 +991,7 @@ begin
                         SearchAndPounceOpMode;
                       TempRXData.ceComputerID := ComputerID;
                       LogContact(TempRXData, True);
-                      tElapsedTimeFromLastQSO := Windows.GetTickCount;
+                      tElapsedTimeFromLastQSO := GetTickCount;   (* SysUtils; portable *)
                       QueueWSJTXUI(wjPostQSO);
                       //ShowStationInformation(@TempRXData.Callsign);
                       ClearContestExchange(TempRXData);

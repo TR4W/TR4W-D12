@@ -57,7 +57,7 @@ unit uWebSocketServer;
 interface
 
 uses
-   Windows, SysUtils, Classes, SyncObjs,
+   SysUtils, Classes, SyncObjs,
    IdTCPServer, IdContext, IdGlobal, IdSocketHandle,
    uWebSocketFraming;
 

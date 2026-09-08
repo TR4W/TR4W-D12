@@ -28,7 +28,7 @@ uses
   // Issue #1034: dropped 'TF' (unused here) -- it pulled TF -> MainUnit -> LogStuff,
   // which blocked uSSL (and its uMults consumer) from linking into the test EXE.
   //Country9,
-  Windows,
+  SysUtils,   (* CompareText -- see TSSL.CompareStrings *)
   Messages;
 
 type
@@ -248,13 +248,31 @@ end;
 
 function TSSL.CompareStrings(const s1, s2: Str10): integer;
 begin
-  // CompareStringA (not the unsuffixed CompareString, which is CompareStringW
-  // under D12): s1/s2 are ANSI ShortStrings (Str10).  Passing ANSI bytes to
-  // the wide API compared them as UTF-16 -> garbage ordering in the mult/dupe
-  // binary search -> unbounded list growth + range error (WFD range error at
-  // FArray[Mode]), and silent multiplier miscounts on logs that don't crash.
-  Result := CompareStringA(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE, @s1[1], length(s1), @s2[1], length(s2)) - 2;
-//  RESULT := StrComp(@s1[1], @s2[1]);
+  (* CompareText, NOT CompareStringA -- and the Win32 call had a defect of its
+    own that is worth recording, because it was invisible.
+
+    WHAT IT WAS. CompareStringA with LOCALE_SYSTEM_DEFAULT and NORM_IGNORECASE,
+    minus 2 to turn Windows' 1/2/3 (LESS/EQUAL/GREATER) into -1/0/1. The A
+    suffix was itself a fix: the unsuffixed CompareString binds to the W
+    variant, which read these ANSI ShortStrings as UTF-16 and produced garbage
+    ordering -- unbounded list growth, a range error at FArray[Mode] in Winter
+    FD, and silent multiplier miscounts on logs that did not crash.
+
+    WHY IT STILL HAD TO GO, beyond not existing off Windows: LOCALE_SYSTEM_DEFAULT
+    means the ordering of the multiplier list DEPENDED ON THE OPERATOR'S
+    WINDOWS LOCALE. The same log, opened on two machines, could order its
+    mults differently. Nothing about a contest multiplier is linguistic.
+
+    CompareText is ordinal, case-insensitive, identical on every machine, and
+    it is what the third copy of this routine (TDXSpotsList.CompareStrings,
+    uSpots.pas) has always done by hand.
+
+    SAFE FOR THIS ALPHABET. Mults are A-Z, 0-9 and '/'. Ordinal puts '/' (47)
+    before the digits (48-57) before the letters (65-90); the Windows word sort
+    orders that set the same way, and does not treat '/' as ignorable. The
+    binary search and the insertion use this one comparator, so consistency --
+    not any particular collation -- is what correctness rests on here. *)
+  Result := CompareText(s1, s2);
 end;
 
 procedure TSSL.ClearDupes;
