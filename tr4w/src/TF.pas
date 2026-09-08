@@ -37,12 +37,12 @@ uses
     the types (HWND, MAXWORD) for every widget set. *)
 {$IFDEF WINDOWS}
   Windows,
+  Messages,     // WM_SETFONT, for CreateRichEdit -- gated with what uses it
 {$ENDIF}
   LCLType,
   Classes,      // TFileStream -- EnumerateLinesInFile reads rather than maps
   DateUtils,    // EncodeDateTime / DecodeDateTime / LocalTimeToUniversal
   SysUtils,
-  Messages,
   uTR4WStrings;
 
 type
@@ -776,7 +776,10 @@ procedure UnableToFindFileMessage(FileName: string);
 begin
   // SysUtils.SysErrorMessage returns a (trimmed) string directly -- no cast.
   // (TF's own SysErrorMessage shadows it here and returns PAnsiChar untrimmed.)
-  showwarning(SysUtils.Format('%s'#13#13'%s', [SysUtils.SysErrorMessage(GetLastError), FileName]));
+  // GetLastOSError, not Windows' GetLastError: SysUtils declares it for every
+  // platform and returns the same code the message lookup below expects.
+  showwarning(SysUtils.Format('%s'#13#13'%s',
+              [SysUtils.SysErrorMessage(SysUtils.GetLastOSError), FileName]));
 end;
 
 function DeleteSlashes(p: PAnsiChar): PAnsiChar;

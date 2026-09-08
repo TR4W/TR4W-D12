@@ -137,7 +137,12 @@ implementation
 uses
   SysUtils,
   uCrashLog,          // LogCaughtException -- see the guard on WindowProc
-  Messages,
+  (* Messages stood here and had NOTHING left to declare (2026-09-08). Every
+    WM_ / HDN_ / LVSCW_ name in this file is now inside a COMMENT describing
+    what the window procedure USED to do -- the procedure itself went in
+    744b1ab0 -- and the WM_USER_* ids the live code still posts are declared
+    by the units that own them. It was the first thing standing between
+    MainUnit and a Linux compile, and it was not standing on anything. *)
   VC,                 // tr4whandle, wh[], the mwe* elements, tr4wColors
   TF,
   MainUnit,

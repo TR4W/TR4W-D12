@@ -31,7 +31,6 @@ uses
   uMainWindowProc, // TTR4WEntryField -- CreateCallOrExchangeWin names the field
   Graphics,        // TFont -- ApplyMainFontTo, for controls the LCL draws
   uConfigValues,   // Config.CodeSpeedIncrement
-  ShellAPI,
   Types,               // TRect -- the OnDrawItem signature qualifies it as
                        // Types.TRect because this unit also uses Windows,
                        // whose TRect is a DIFFERENT declaration; a method

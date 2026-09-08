@@ -51,17 +51,32 @@ if (-not (Test-Path $src)) { throw "No such unit: $src" }
 $out = Join-Path $env:TEMP 'tr4w-linux-units'
 New-Item -ItemType Directory -Force -Path $out | Out-Null
 
-$fu = @($rtl)
+# ORDER IS LOAD-BEARING: FPC takes the FIRST unit of a given name it finds, and
+# the names COLLIDE. packages\fv -- Free Vision, FPC's text-mode widget library
+# -- ships a unit called `menus`, so with the packages ahead of Lazarus the
+# LCL's own controls.pp resolved `Menus` to Free Vision's and died with
+# "Identifier not found TPopupMenu" (2026-09-08). That reads as a broken LCL
+# and is a search-path bug. fv also carries `objects`, `drivers` and `app`.
+#
+# So: the RTL, then our own output, then Lazarus, then TR4W, and the packages
+# LAST, where they can still supply anything nothing above declares.
+$fu = @($rtl, $out,
+        'C:\Lazarus\lcl', 'C:\Lazarus\lcl\widgetset', 'C:\Lazarus\lcl\forms',
+        'C:\Lazarus\components\lazutils',
+        (Join-Path $repo 'tr4w\include'),
+        (Join-Path $repo 'tr4w\src'))
+# EVERY source directory the app build uses, from the one list that defines
+# them. Compiling a unit whose dependency lives in src\ui\lcl or src\trdos
+# otherwise fails with "Can't find unit", which says nothing about whether the
+# unit is portable -- it is the probe that is short-sighted, not the code.
+foreach ($d in @('ui\lcl', 'trdos', 'utils', 'lang', 'domain',
+                 'radioFactory', 'contestFactory', 'rotatorFactory')) {
+   $fu += (Join-Path $repo "tr4w\src\$d")
+}
 Get-ChildItem $pkgs -Directory | ForEach-Object {
    $d = Join-Path $_.FullName 'units\x86_64-linux'
    if (Test-Path $d) { $fu += $d }
 }
-$fu += 'C:\Lazarus\lcl', 'C:\Lazarus\lcl\widgetset', 'C:\Lazarus\lcl\forms',
-       'C:\Lazarus\components\lazutils',
-       (Join-Path $repo 'tr4w\include'),
-       (Join-Path $repo 'tr4w\src'),
-       (Join-Path $repo 'tr4w\src\utils'),
-       $out
 
 # -Sc: C-style operators. NOT for TR4W's sake -- nothing here writes `+=` --
 # but for LAZARUS's. Any unit that reaches lazutils dies inside

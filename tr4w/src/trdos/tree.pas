@@ -36,7 +36,10 @@ uses
   utils_text,
   utils_file,
   TF,
-  Messages,
+  (* Messages had nothing to declare here -- no TMessage, no WM_ constant, no
+    SendMessage in the code (2026-09-08). Windows below is a different matter
+    and is still real: FindFirstFileW, DeleteFileW, the FILETIME conversions
+    and lstrcatA. *)
   Windows,
   uBandLookup,  // CalculateBandMode now lives here so it can be unit-tested without tree.pas's dependency cone
   uTR4WStrings,
