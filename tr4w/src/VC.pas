@@ -2908,7 +2908,6 @@ var
   //EditableLogWindowHeight               : integer;
   MainWindowWidth                       : integer;
 //  MainWindowHeight                      : integer;
-  MainWindowCaptionAndHeader            : integer;
   MainWindowChildsWidth                 : integer;
   EditableLogHeight                     : integer;
 

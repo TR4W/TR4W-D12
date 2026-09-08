@@ -75,7 +75,20 @@ uses
   uCheckLatestVersion,
   // uMakeHelpFile,
   uAltP,
+(* THE WINDOWS-ONLY IMPORTS, TOGETHER (2026-09-08, NY4I).
+
+  Windows moved here from its own line further down. A `uses` entry is resolved
+  BEFORE any conditional inside the unit body, so gating the CODE while leaving
+  the clause ungated is a gate that can never fire -- the compiler fails on the
+  clause and never reaches the code. That is the same lesson TF learned; see
+  the note on its own gated block.
+
+  THIS DOES NOT MEAN MainUnit COMPILES OFF WINDOWS. It has plenty of Win32 left
+  in it. What it means is that the ones already gated now have a clause that
+  agrees with them, and the next one to go leaves a shorter list rather than
+  changing nothing measurable. *)
 {$IFDEF WINDOWS}
+  Windows,      // still plenty here -- see the routines that name Windows.
   MMSystem,     // sndPlaySound + timeKillEvent, both gated at their call site
 {$ENDIF}
   uCRC32,
@@ -126,7 +139,6 @@ uses
     this entry; see the note in BuildLogRow. *)
   uDialogs,
   uLogSearch,
-  Windows,
   Messages,
   LogK1EA,
   BeepUnit,
@@ -349,8 +361,7 @@ procedure FrmSetFocus;
 procedure tAltE;
 procedure SetWindowSize;
 function OpenLogFile: boolean;
-function tSetFilePointer(lDistanceToMove: LONGINT; dwMoveMethod: DWORD):
-  Cardinal;
+function tSetFilePointer(lDistanceToMove: LONGINT; aOrigin: Longint): Int64;
 
 procedure CloseLogFile;
 function ReadLogFile: boolean;
@@ -2684,24 +2695,75 @@ end;
 // This does read HWND and WndProcAdr bytes off disk into the array, as it
 // always did; the loader below zeroes the handles and reassigns every window
 // procedure from literals a few lines further on.
+//
+// TFileStream, NOT CreateFile/GetFileSize/ReadFile (2026-09-08, NY4I).  This
+// routine POST-DATES the move to JSON, so it never had a reason to be written
+// against the Win32 file API -- the RTL was already the house style when it was
+// written.  Nothing about reading a fixed-size record needs a Windows handle.
+//
+// THE SEMANTICS ARE DELIBERATELY UNCHANGED where they were load-bearing: the
+// same exact-size gate, the same single whole-array read, the file left in
+// place.  The job is still to reproduce the old loader's result.
+//
+// TWO THINGS THAT ARE BETTER, AND BOTH WERE SILENT BEFORE.  ReadFile's byte
+// count went into pNumberOfBytesRead and was never looked at, so a file that
+// passed the size check and then delivered fewer bytes -- truncated, or being
+// rewritten by another instance -- left the layout array PARTLY overwritten
+// with whatever the read managed, and nothing said so.  ReadBuffer raises on a
+// short read instead.  And every failure path returned in silence, which for a
+// once-per-upgrade migration means an operator loses their window layout with
+// nothing to explain it; it is reported now.
 procedure SeedLayoutFromLegacyPOSFile;
 var
-   h: THandle;
-   pNumberOfBytesRead: Cardinal;
+   fs: TFileStream;
+   (* AnsiString, not string. TR4W_POS_FILENAME is a FileNameType -- an array
+     of AnsiChar -- and TFileStream, FileExists and the rest of the RTL file
+     layer take an AnsiString. Declaring this as the UTF-16 string would
+     widen the bytes on the way in and narrow them back on the way out, for
+     nothing. *)
+   posPath: AnsiString;
 begin
-   if not TF.tOpenFileForRead(h, TR4W_POS_FILENAME) then
+   posPath := StrPas(TR4W_POS_FILENAME);
+
+   // Not an error and not worth a log line: the overwhelming majority of
+   // startups are an operator who never had a .pos file, or whose layout has
+   // already been seeded and now lives in tr4w.json.
+   if not FileExists(posPath) then
       begin
       Exit;
       end;
+
    try
-      if Windows.GetFileSize(h, nil) <> SizeOf(tr4w_WindowsArray) then
+      fs := TFileStream.Create(posPath, fmOpenRead or fmShareDenyNone);
+      try
+         // EXACT size, as before.  A .pos from a build whose window array had
+         // a different member count is not partially usable -- the records
+         // would land at the wrong offsets -- so refusing it is right.
+         if fs.Size <> SizeOf(tr4w_WindowsArray) then
+            begin
+            if logger <> nil then
+               begin
+               logger.Warn('[Layout] %s is %d bytes, expected %d -- not seeding ' +
+                           'the window layout from it',
+                           [posPath, fs.Size, SizeOf(tr4w_WindowsArray)]);
+               end;
+            Exit;
+            end;
+
+         fs.ReadBuffer(tr4w_WindowsArray, SizeOf(tr4w_WindowsArray));
+      finally
+         fs.Free;
+      end;
+   except
+      on E: EStreamError do
          begin
-         Exit;
+         if logger <> nil then
+            begin
+            logger.Warn('[Layout] could not read %s -- %s: %s. The window ' +
+                        'layout stays at its defaults.',
+                        [posPath, E.ClassName, E.Message]);
+            end;
          end;
-      Windows.ReadFile(h, tr4w_WindowsArray, SizeOf(tr4w_WindowsArray),
-         pNumberOfBytesRead, nil);
-   finally
-      CloseHandle(h);
    end;
 end;
 
@@ -4732,7 +4794,18 @@ begin
     menu_alt_setnettime:
       if YesOrNo(TC_SENDTIMETOCOMPUTERSONTHENETWORK) = IDYES then
          begin
-         Windows.GetSystemTime(NetTimeSync.tsTime);
+         (* TF.FillSystemTimeUTC, not Windows.GetSystemTime. Same UTC, same
+           SYSTEMTIME -- VC declares that record on every platform now -- and TF
+           already had this routine for its own GetTime and GetDate, so this is
+           an existing helper gaining a caller rather than a new one.
+
+           WHAT GOES ON THE WIRE IS UNCHANGED, which matters more than usual
+           here: tsTime is sent as the raw bytes of a packed record to every
+           other station in the multi-op, and the receiving end (uNet,
+           NET_TIMESYN_ID) range-checks the fields before it sets the clock. A
+           different layout, or a local-time value, would be a silent
+           cross-version protocol break rather than a visible failure. *)
+         TF.FillSystemTimeUTC(NetTimeSync.tsTime);
          SendToNet(NetTimeSync, SizeOf(NetTimeSync));
          end;
 
@@ -6948,40 +7021,78 @@ end;
   pixels in one step would make any visual difference impossible to attribute,
   and this control repaints on every keystroke in the callsign field.  Converting
   the body to Canvas calls is Phase 7 burn-down and is counted separately. }
+(* THE POSSIBLE-CALL LIST, DRAWN ON THE LCL CANVAS (2026-09-08).
+
+  This is the LIVE owner-draw handler and it is worth saying how it is reached,
+  because a search of the Pascal alone says the opposite:
+
+      uMainForm.lfm:78   OnDrawItem = lstPossibleCallDrawItem   <- the LCL wires it
+        TTR4WMainForm.lstPossibleCallDrawItem
+          PossibleCallDrawProc(...)          <- the seam, guarded by Assigned
+            = @PossibleCallsDrawItem         <- set in CreateMainWindow
+              here
+
+  Nothing in Pascal calls lstPossibleCallDrawItem; the only reference is a
+  STRING in the .lfm, resolved by the streaming loader. So this looked exactly
+  like the dead PossibleCallsProc below it, and is not.
+
+  WHAT CHANGED: the body drew with GDI on an HDC taken from the canvas --
+  CreatePen/SelectObject/Rectangle/DeleteObject, SetBkMode, SetTextColor,
+  DrawTextA, DrawFocusRect -- inside a handler the LCL already calls with a
+  TCanvas. Every one of those has a canvas equivalent, so there was nothing to
+  translate, only something to stop doing:
+
+    CreatePen + SelectObject + Rectangle    Canvas.Pen + Canvas.Rectangle. The
+                                            LCL owns the pen's lifetime, which
+                                            also removes the leak-if-you-return
+                                            shape of the original.
+    GradientRect(dc, r, c, c, ...)          Canvas.FillRect. Both stops were
+                                            the SAME COLOUR, so this was a
+                                            gradient from a colour to itself --
+                                            an expensive flat fill.
+    SetTextColor + DrawTextA                Canvas.Font.Color + Canvas.TextRect
+                                            with a TTextStyle. DT_CENTER,
+                                            DT_VCENTER, DT_SINGLELINE and
+                                            DT_END_ELLIPSIS map one-for-one to
+                                            Alignment, Layout, SingleLine and
+                                            EndEllipsis.
+    DrawTextA on @Call[1]                   a string. The A-variant took a
+                                            pointer into a ShortString and a
+                                            length; TextRect takes the text.
+
+  NO EARLY EXIT ON odFocused -- see the focus rectangle at the end. The Win32
+  original tested itemAction = ODA_FOCUS, a distinct ACTION meaning "draw the
+  focus rectangle only, the item is already on screen". odFocused is a STATE
+  FLAG, set during an ordinary repaint of the focused row, so honouring it the
+  old way drew a rectangle around nothing and returned -- the focused entry
+  rendered as an empty box. Faithful line, wrong axis; kept fixed. *)
 procedure PossibleCallsDrawItem(Control: TWinControl; Index: integer;
                                 ARect: Types.TRect; State: TOwnerDrawState);
 const
   nWidth = 2;
 var
-  TempColor: tcolor;
-  Pen, PenOld: HPEN;
-  dc: HDC;
+  cv: TCanvas;
   r: TRect;
+  style: TTextStyle;
 begin
   if (Index < 0) or (Index > High(PossibleCallList.List)) then
      begin
      Exit;
      end;
 
-  dc := TListBox(Control).Canvas.Handle;
+  cv := TListBox(Control).Canvas;
   r  := ARect;
 
-  (* NO EARLY EXIT ON odFocused -- see the focus rectangle at the end.
-
-     The Win32 original tested itemAction = ODA_FOCUS, which is a distinct
-     ACTION: Windows asked for the focus rectangle alone and the item was
-     already on screen.  odFocused is a STATE FLAG, set while the LCL is
-     asking for an ordinary repaint of the focused row -- so honouring it
-     the old way drew a rectangle around nothing and returned, and the
-     focused entry rendered as an empty box.  Faithful line, wrong axis. *)
   if odSelected in State then
      begin
-     Pen := CreatePen(PS_SOLID, nWidth, $FF0000 {RGB(255, 0, 0)});
-     SetBkMode(dc, TRANSPARENT);
-     PenOld := SelectObject(dc, Pen);
-     Rectangle(dc, r.Left + 1, r.Top + 1, r.Right, r.Bottom);
-     SelectObject(dc, PenOld);
-     DeleteObject(Pen);
+     cv.Pen.Color   := clRed;
+     cv.Pen.Width   := nWidth;
+     cv.Pen.Style   := psSolid;
+     (* bsClear so Rectangle draws the BORDER ONLY. The GDI original got that
+       from whatever brush the DC happened to hold; saying it is the point. *)
+     cv.Brush.Style := bsClear;
+     cv.Rectangle(r.Left + 1, r.Top + 1, r.Right, r.Bottom);
+
      r.Top    := r.Top + nWidth;
      r.Left   := r.Left + nWidth;
      r.Right  := r.Right - nWidth;
@@ -6990,28 +7101,38 @@ begin
 
   if PossibleCallList.List[Index].Dupe then
      begin
-     TempColor := clred;
-     Windows.SetTextColor(dc, $00FFFFFF);
+     cv.Brush.Color := clRed;
+     cv.Font.Color  := clWhite;
      end
   else
      begin
-     TempColor := tr4wColorsArray[TWindows[mwePossibleCall].mweBackG];
-     Windows.SetTextColor(dc, tr4wColorsArray[TWindows[mwePossibleCall].mweColor]);
+     cv.Brush.Color := tr4wColorsArray[TWindows[mwePossibleCall].mweBackG];
+     cv.Font.Color  := tr4wColorsArray[TWindows[mwePossibleCall].mweColor];
      end;
 
-  GradientRect(dc, r, TempColor, TempColor, gdHorizontal);
+  cv.Brush.Style := bsSolid;
+  cv.FillRect(r);
 
-  SetBkMode(dc, TRANSPARENT);
-  Windows.DrawTextA(dc,
-    @PossibleCallList.List[Index].Call[1],
-    length(PossibleCallList.List[Index].Call),
-    r, DT_END_ELLIPSIS + DT_SINGLELINE + DT_CENTER + DT_VCENTER);
+  FillChar(style, SizeOf(style), 0);
+  style.Alignment   := taCenter;     // DT_CENTER
+  style.Layout      := tlCenter;     // DT_VCENTER
+  style.SingleLine  := True;         // DT_SINGLELINE
+  style.EndEllipsis := True;         // DT_END_ELLIPSIS
+  style.Clipping    := True;
+  style.Opaque      := False;        // the fill above already painted it
+
+  (* LclText, not a plain cast: TCanvas.TextRect takes the LCL's AnsiString,
+    which holds UTF-8, and this unit's `string` is UTF-16. Stating the
+    conversion at the boundary is what CLAUDE.md asks for and what keeps the
+    narrowing ceiling meaningful. *)
+  cv.TextRect(r, r.Left, r.Top,
+              LclText(PossibleCallList.List[Index].Call), style);
 
   { OVER the finished item, and over the WHOLE item: ARect, not the r that
     the selection border shrank. }
   if odFocused in State then
      begin
-     DrawFocusRect(dc, ARect);
+     cv.DrawFocusRect(ARect);
      end;
 end;
 
@@ -8183,8 +8304,20 @@ begin
   // EditableLogWindowHeight := //Trunc((LinesInEditableLog + 1) * ewh[ws]) + 1;
   // (LinesInEditableLog + 1) * ws + ws2 + 12;
 
-  MainWindowCaptionAndHeader := Windows.GetSystemMetrics(SM_CYMENU) +
-    Windows.GetSystemMetrics(SM_CYCAPTION);
+  (* NY4I asked whether this still needs GetSystemMetrics. It does not need
+    it at all: MainWindowCaptionAndHeader was ASSIGNED HERE AND READ NOWHERE.
+    Measured comment-stripped across every .pas/.lpr/.inc in the tree outside
+    the vendored include/ -- two occurrences, this line and its declaration in
+    VC.pas, both deleted.
+
+    It was the Win32 main window's non-client height, added to a computed
+    MainWindowHeight; that arithmetic is the commented-out block above, because
+    an LCL form sizes itself and its caption and menu are the LCL's business.
+
+    IF A NON-CLIENT HEIGHT IS EVER WANTED AGAIN, the LCL answer is not
+    GetSystemMetrics -- which LCLIntf does provide cross-platform -- but
+    `Form.Height - Form.ClientHeight`, which is the real number for that form
+    on that window manager rather than a system average. *)
 
   //MainWindowHeight := EditableLogWindowHeight + 14 * ws + 7 + MainWindowCaptionAndHeader;
 
@@ -8463,29 +8596,48 @@ begin
      end;
 end;
 
-function tSetFilePointer(lDistanceToMove: LONGINT; dwMoveMethod: DWORD):
-  Cardinal;
+(* THE BINARY .TRW PRIMITIVES, ON THE RTL (2026-09-08, NY4I).
+
+  These four are one set -- they all act on the LogHandle global -- so they
+  convert together or not at all. FileOpen, FileSeek, FileRead and FileClose
+  take the very same THandle and on Windows ARE CreateFile, SetFilePointer,
+  ReadFile and CloseHandle, so this is a spelling change.
+
+  WHAT THIS IS STILL FOR, since the database is the default read source: the
+  historical .TRW is what an operator upgrading actually has on disk, and it is
+  what the ADIF import appends to and what the version-block reader walks. It
+  is a converter's path, not the log-reading path -- ReCalculateHourDisplay was
+  the last routine using it to ask a question the database can answer, and it
+  no longer does.
+
+  fmShareDenyNone matches FILE_SHARE_READ or FILE_SHARE_WRITE. There is no RTL
+  equivalent of FILE_FLAG_SEQUENTIAL_SCAN and none is wanted: it is a cache
+  hint, not semantics. *)
+function tSetFilePointer(lDistanceToMove: LONGINT; aOrigin: Longint): Int64;
 begin
-  result := Low(cardinal);
-  // Initialize as it was not previously // ny4i Isssue 116
-  SetFilePointer(LogHandle, lDistanceToMove, nil, dwMoveMethod);
+  (* SysUtils' fsFrom* origins, not Win32's dwMoveMethod. The VALUES are
+    identical -- FILE_BEGIN/CURRENT/END and fsFromBeginning/fsFromCurrent/
+    fsFromEnd are both 0/1/2 -- so this is the same seek; what changes is that
+    the two remaining callers no longer import Windows constants.
+
+    Longint, not Classes' TSeekOrigin: fsFrom* ARE Longint constants in
+    SysUtils, and FileSeek's Int64 overload takes a Longint origin. Those two
+    spellings are easy to confuse and the compiler catches it.
+
+    IT RETURNS THE NEW POSITION NOW. The old body threw SetFilePointer's result
+    away and returned Low(Cardinal) unconditionally, so every caller that
+    looked at it saw 0 whether the seek worked or not. No caller did look;
+    returning the truth costs nothing and removes a trap. *)
+  Result := FileSeek(LogHandle, Int64(lDistanceToMove), aOrigin);
 end;
 
-function OpenLogFile {(dwCreationDisposition: DWORD)}: boolean;
+function OpenLogFile: boolean;
 var
   h: THandle;
 begin
-  h := CreateFileA(
-    TR4W_LOG_FILENAME,
-    GENERIC_WRITE or GENERIC_READ,
-    FILE_SHARE_WRITE or FILE_SHARE_READ,
-    nil,
-    OPEN_EXISTING,
-    FILE_FLAG_SEQUENTIAL_SCAN,
-    0
-    );
-  Result := h <> INVALID_HANDLE_VALUE;
-  if Result = True then
+  h := FileOpen(StrPas(TR4W_LOG_FILENAME), fmOpenReadWrite or fmShareDenyNone);
+  Result := h <> THandle(feInvalidHandle);
+  if Result then
      begin
      LogHandle := h;
      end;
@@ -8493,16 +8645,16 @@ end;
 
 procedure CloseLogFile;
 begin
-  CloseHandle(LogHandle);
+  FileClose(LogHandle);
 end;
 
 function ReadLogFile: boolean;
-var
-  lpNumberOfBytesWritten: Cardinal;
 begin
-  Windows.ReadFile(LogHandle, TempRXData, SizeOf(ContestExchange),
-    lpNumberOfBytesWritten, nil);
-  Result := lpNumberOfBytesWritten = SizeOf(ContestExchange);
+  (* FileRead returns the byte count directly, where ReadFile returned it
+    through a var parameter. The test is the same one: a whole record, or the
+    caller stops. *)
+  Result := FileRead(LogHandle, TempRXData, SizeOf(ContestExchange)) =
+            SizeOf(ContestExchange);
 end;
 
 (* THE B4 LIST AND THE LOG SHARE ONE RECTANGLE, so showing either hides the
@@ -8633,7 +8785,11 @@ begin
 
   FillChar(tRestartInfo, SizeOf(tRestartInfo), 0);
   ReadVersionBlock;
-  SetEndOfFile(LogHandle);
+  (* FileTruncate, not SetEndOfFile. SetEndOfFile cuts the file at the
+    CURRENT position, which ReadVersionBlock just set to the end of the
+    header; FileTruncate takes an absolute size, so the position has to be
+    named rather than implied. Same result, and it says what it does. *)
+  FileTruncate(LogHandle, tSetFilePointer(0, fsFromCurrent));
   CloseLogFile;
 
   LoadinLog;
@@ -8674,7 +8830,7 @@ end;
 
 procedure ReadVersionBlock;
 begin
-  tSetFilePointer(SizeOfTLogHeader, FILE_BEGIN);
+  tSetFilePointer(SizeOfTLogHeader, fsFromBeginning);
 end;
 
 procedure MakeTestLog;
@@ -9251,67 +9407,106 @@ begin
   QuickDisplay(TC_MULTSHEETCLEARED);
 end;
 
+(* BAND CHANGES IN THE CURRENT HOUR, FROM THE DATABASE (2026-09-08, NY4I).
+
+  It walks the log BACKWARDS from the newest QSO and stops at the first one
+  from an earlier hour, counting how many times the band changed on the way.
+  That is a question about QSOs, and LogSource answers it -- lsDatabase is the
+  default read source since step B4, so this routine was the odd one out,
+  opening the .TRW by handle and seeking in it by hand.
+
+  THE OLD LOOP BOUND WAS WRONG, and this is the part worth keeping:
+
+      TempFileSize := (Windows.GetFileSize(LogHandle, nil) div 256) * -1;
+
+  A hardcoded 256 for the record size, while the SEEK on the next line used
+  SizeOf(ContestExchange). Those disagree: uTestLogRepository measures both
+  SizeOf(ContestExchange) and SizeOfTLogHeader at 376 BYTES. So the bound was
+  about 1.47x the record count and it also counted the header, and a log whose
+  records were ALL in the current hour would keep seeking past the start of the
+  file. It survived because the `goto 2` normally fires within a few records --
+  the first QSO from a previous hour ends the walk -- so the bad bound was only
+  reachable early in a contest or on a small log.
+
+  LogSourceRecordCount is the count of RECORDS. No header arithmetic, no
+  hardcoded size, and the walk cannot run off the front.
+
+  THE CONTROL FLOW IS THE SAME, with the three labels named for what they did:
+    goto 2  -> Break     a QSO from an earlier hour: the walk is finished
+    goto 3  -> Continue  skip this QSO's band, keep walking
+    goto 1  -> the loop
+
+  TempRXData is still the global GoodLookingQSO reads, so that predicate and
+  everything downstream of it are untouched. *)
 procedure ReCalculateHourDisplay;
-label
-  1, 2, 3;
 var
-  FilePointer: integer;
+  offsetFromEnd: Int64;
+  recordCount: Int64;
   TempBand: BandType;
   TempHour: Byte;
-  TempFileSize: integer;
 begin
-  FilePointer := -1;
   TempBand := NoBand;
   tGetSystemTime;
   TempHour := UTC.wHour;
   tThisHourBandChanges := 0;
-  if not OpenLogFile then
+
+  recordCount := LogSourceRecordCount;
+  if recordCount <= 0 then
      begin
+     DisplayHour;
      Exit;
      end;
-  begin
-    TempFileSize := (Windows.GetFileSize(LogHandle, nil) div 256) * -1;
-    1:
-    tSetFilePointer(FilePointer * SizeOf(ContestExchange), FILE_END);
-    if ReadLogFile then
-       begin
-       if GoodLookingQSO then
-          begin
-          if TempHour = TempRXData.tSysTime.qtHour then
-             begin
-             if tThisHourPreviousBand = NoBand then
-                begin
-                tThisHourPreviousBand := TempRXData.Band;
-                end;
-             if TempBand <> TempRXData.Band then
-                begin
-                if HourDisplay = BandChangesThisComputer then
-                  if TempRXData.ceComputerID <> ComputerID then
-                     begin
-                     goto 3;
-                     end;
-                if TempBand <> NoBand then
-                   begin
-                   inc(tThisHourBandChanges);
-                   end;
-                TempBand := TempRXData.Band;
-                end;
-             end
-          else
-             begin
-             goto 2;
-             end;
-          end;
-       3:
-       dec(FilePointer);
-       if FilePointer <> TempFileSize then
-          begin
-          goto 1;
-          end;
-       end;
-    2:
-    CloseLogFile;
-  end;
+
+  (* A while, not a for: FPC will not take an Int64 loop counter, and the
+    record count is genuinely Int64 -- LogSourceRecordCount answers -1 when it
+    cannot read, which the guard above has already excluded. *)
+  offsetFromEnd := 0;
+  while offsetFromEnd < recordCount do
+     begin
+     (* THE INCREMENT IS AT THE TOP, and it has to be: there are two Continues
+       below, and in a while loop Continue jumps straight to the test. With the
+       increment at the bottom the first skipped QSO would spin forever.
+
+       offsetFromEnd = 1 is the LAST record, which is where the backwards walk
+       starts -- the old code's FilePointer := -1. *)
+     inc(offsetFromEnd);
+     if not LogSourceReadFromEnd(offsetFromEnd, TempRXData) then
+        begin
+        Break;
+        end;
+
+     if not GoodLookingQSO then
+        begin
+        Continue;
+        end;
+
+     if TempHour <> TempRXData.tSysTime.qtHour then
+        begin
+        Break;
+        end;
+
+     if tThisHourPreviousBand = NoBand then
+        begin
+        tThisHourPreviousBand := TempRXData.Band;
+        end;
+
+     if TempBand <> TempRXData.Band then
+        begin
+        if (HourDisplay = BandChangesThisComputer) and
+           (TempRXData.ceComputerID <> ComputerID) then
+           begin
+           Continue;
+           end;
+
+        if TempBand <> NoBand then
+           begin
+           inc(tThisHourBandChanges);
+           end;
+
+        TempBand := TempRXData.Band;
+        end;
+     end;
+
   DisplayHour;
 end;
 
@@ -9647,7 +9842,7 @@ begin
 
      exit;
      end;
-  tSetFilePointer(0, FILE_END);
+  tSetFilePointer(0, fsFromEnd);
   // Now open te file and process
 
   if not FileExists(adifFileName) then
@@ -10121,7 +10316,32 @@ begin
 
 end;
 
+(* THE PLUGIN LOADER, WINDOWS-ONLY FOR NOW AND DELIBERATELY UNDECIDED.
+
+  NY4I, 2026-09-08: "IFDEF WINDOWS the body of LoadInPlugins. Interesting
+  concept but not something I want to propagate nor decide to kill now."
+
+  So this gate is a HOLDING POSITION, not a design. The routine scans
+  Plugins\tr4w*.dll, loads each with LoadLibrary, asks it for tr4wGetPlugin and
+  adds a menu row per plugin -- a Windows DLL plug-in model end to end. Every
+  call in it is Win32: FindFirstFileA, FindNextFileA, LoadLibraryA,
+  GetProcAddress, FreeLibrary, FindClose, and TWin32FindDataA in the var block,
+  which is why the DECLARATIONS are inside the gate too and not just the code.
+
+  WHAT IS NOT DECIDED, and should not be guessed at here: whether TR4W keeps a
+  binary plug-in interface at all. If it does, the portable shape exists --
+  FindAllFiles for the scan, TLibHandle/LoadLibrary/GetProcedureAddress from
+  the RTL's dynlibs for the loading -- and the per-platform part shrinks to the
+  file extension. That is a decision about the product, not a translation, so
+  the gate stays until someone makes it.
+
+  OFF WINDOWS NOTHING LOADS AND LoadedPlugins STAYS 0, which is the same state
+  a Windows machine with an empty Plugins directory reaches. No caller needs a
+  gate of its own; the menu simply has no Plugins group. It says so in the log
+  rather than being silent, because "my plugins are missing" is otherwise
+  unanswerable. *)
 procedure LoadInPlugins();
+{$IFDEF WINDOWS}
 label
   1, Next;
 var
@@ -10134,7 +10354,9 @@ var
   pluginItem: TMenuItem;
 const
   MAXLOADEDPLUGINS = 10;
+{$ENDIF}
 begin
+{$IFDEF WINDOWS}
   { A LOCAL, so it holds rubbish until it is set -- and it is TESTED
     before the first plugin creates it. }
   pluginMenu := nil;
@@ -10206,7 +10428,13 @@ begin
         exitItem.Parent.Insert(exitItem.MenuIndex, pluginItem);
         end;
      end;
-
+{$ELSE}
+  if logger <> nil then
+     begin
+     logger.Info('[Plugins] TR4W plug-ins are Windows DLLs; none are loaded on ' +
+                 'this platform. See the note above LoadInPlugins.');
+     end;
+{$ENDIF}
 end;
 
 procedure RichEditOperation(Load: boolean);

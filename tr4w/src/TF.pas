@@ -210,6 +210,14 @@ function inttopchar(i: integer): PAnsiChar;
 
 function tOpenFileForRead(var h: THandle; FileName: PAnsiChar): boolean;
 
+(* Fill a SYSTEMTIME with the CURRENT UTC, from the RTL.
+
+  The portable replacement for Windows.GetSystemTime, and it was already
+  here serving this unit's own GetTime and GetDate. Exported on 2026-09-08
+  because the multi-op network time-sync in MainUnit wants exactly the same
+  thing, and a second copy of it is the last thing that code needs. *)
+procedure FillSystemTimeUTC(var St: SYSTEMTIME);
+
 procedure GetTime(var Hour, Minute, Second, Sec100: Word);
 procedure GetDate(var Year, Month, Day, DayOfWeek: Word);
 
