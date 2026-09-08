@@ -87,8 +87,6 @@ uses
   Classes,
 {$IFDEF WINDOWS}
   Windows,
-{$ELSE}
-  SyncObjs,
 {$ENDIF}
   Contnrs,
   SysUtils;
@@ -173,11 +171,6 @@ type
   TObjectList = TList;
 {$ENDIF}
 
-{$IFNDEF WINDOWS}
-  { Windows declares TRTLCriticalSection; everywhere else it is a SyncObjs
-    TCriticalSection wearing the same name, so the code below is identical. }
-  TRTLCriticalSection = TCriticalSection;
-{$ENDIF}
 
   { Log-specific exceptions. }
   ELogException = class(Exception);
@@ -1086,12 +1079,39 @@ function FindEncodingFromName(const Name: string): TEncoding;
 {$ENDIF UNICODE}
 
 {$IFNDEF WINDOWS}
-{ The four Win32 critical-section calls, and two more, supplied for every
-  platform that is not Windows -- see the note at the uses clause. }
-procedure EnterCriticalSection(var CS: TCriticalSection);
-procedure LeaveCriticalSection(var CS: TCriticalSection);
-procedure InitializeCriticalSection(var CS: TCriticalSection);
-procedure DeleteCriticalSection(var CS: TCriticalSection);
+(* TWO NAME ADAPTERS, NOT FOUR CALLS AND A TYPE -- CORRECTED 2026-09-08.
+
+  What stood here declared
+
+      TRTLCriticalSection = TCriticalSection;      { SyncObjs, a CLASS }
+
+  on the stated premise that "Windows declares TRTLCriticalSection; everywhere
+  else it is a SyncObjs TCriticalSection wearing the same name". THE PREMISE IS
+  FALSE. Every platform's RTL declares TRTLCriticalSection in the System unit
+  (rtl\<platform>\sysosh.inc) and gives it InitCriticalSection,
+  DoneCriticalSection, EnterCriticalSection and LeaveCriticalSection. It is a
+  RECORD, and it needs no allocation.
+
+  The alias was therefore not a shim, it was a SHADOW: every unit that uses
+  Log4D got Log4D's TRTLCriticalSection instead of the RTL's, and the Enter /
+  Leave wrappers shadowed the RTL's calls of the same name on top of it. That
+  is invisible on Windows, where the branch does not compile at all. Off
+  Windows it broke a unit that had nothing to do with logging -- uCrashLog
+  declares `GOffThreadLock: TRTLCriticalSection` and calls the RTL's
+  InitCriticalSection on it, and the Linux compile said
+
+      uCrashLog.pas(573,38) Error: Call by var for arg no. 1 has to match
+      exactly: Got "TCriticalSection" expected "TRTLCriticalSection"
+
+  The block below already carried evidence of the same trap: GetCurrentThreadID
+  has to qualify System.GetCurrentThreadID because it shadows what it calls.
+
+  ONLY TWO NAMES ARE ACTUALLY MISSING off Windows -- InitializeCriticalSection
+  and DeleteCriticalSection, which are Win32 spellings of the RTL's Init and
+  Done. Enter and Leave exist already, so declaring them here bought nothing
+  and cost a shadow each. *)
+procedure InitializeCriticalSection(var CS: TRTLCriticalSection);
+procedure DeleteCriticalSection(var CS: TRTLCriticalSection);
 function GetCurrentThreadID: Integer;
 procedure OutputDebugString(const S: PChar);
 {$ENDIF}
@@ -4351,24 +4371,17 @@ begin
 end;
 
 {$IFNDEF WINDOWS}
-procedure EnterCriticalSection(var CS: TCriticalSection);
+procedure InitializeCriticalSection(var CS: TRTLCriticalSection);
 begin
-  CS.Enter;
+  { QUALIFIED for the same reason GetCurrentThreadID below is: these two
+    routines carry the Win32 spellings of RTL calls, and an unqualified name
+    would find this unit's own declaration first where the spellings agree. }
+  System.InitCriticalSection(CS);
 end;
 
-procedure LeaveCriticalSection(var CS: TCriticalSection);
+procedure DeleteCriticalSection(var CS: TRTLCriticalSection);
 begin
-  CS.Leave;
-end;
-
-procedure InitializeCriticalSection(var CS: TCriticalSection);
-begin
-  CS := TCriticalSection.Create;
-end;
-
-procedure DeleteCriticalSection(var CS: TCriticalSection);
-begin
-  CS.Free;
+  System.DoneCriticalSection(CS);
 end;
 
 function GetCurrentThreadID: Integer;

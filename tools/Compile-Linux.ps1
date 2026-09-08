@@ -63,8 +63,15 @@ $fu += 'C:\Lazarus\lcl', 'C:\Lazarus\lcl\widgetset', 'C:\Lazarus\lcl\forms',
        (Join-Path $repo 'tr4w\src\utils'),
        $out
 
-$a = @('-Tlinux', '-Px86_64', '-Mdelphi', '-XPx86_64-linux-', "-FE$out", "-FU$out",
+# -Sc: C-style operators. NOT for TR4W's sake -- nothing here writes `+=` --
+# but for LAZARUS's. Any unit that reaches lazutils dies inside
+# lazfileutils.pas(1362) on `Param+=Params[p]` with "Illegal expression", which
+# reads as a defect in Lazarus rather than a missing switch on our side, and
+# cost a diagnosis on 2026-09-08. -Mdelphi turns C operators off; the affected
+# Lazarus units declare {$mode objfpc} but that does not turn them back on.
+$a = @('-Tlinux', '-Px86_64', '-Mdelphi', '-Sc', '-XPx86_64-linux-', "-FE$out", "-FU$out",
        '-FiC:\Lazarus\lcl\include',
+       '-FiC:\Lazarus\components\lazutils',
        "-Fi$(Join-Path $repo 'tr4w\src')")
 foreach ($p in $fu) { $a += "-Fu$p" }
 
