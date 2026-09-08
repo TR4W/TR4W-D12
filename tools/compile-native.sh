@@ -113,7 +113,7 @@ case "$(uname -s)" in
       # jsonscanner, which Lazarus's Translations unit uses; sqlite is the
       # contest log; openssl is Indy's TLS; regexpr, paszlib and zlib come
       # in through lazutils and the LCL.
-      for pkg in fcl-json fcl-db fcl-net fcl-process fcl-xml fcl-image \n                 sqlite openssl regexpr paszlib zlib pthreads \n                 rtl-generics rtl-unicode rtl-console iconvenc; do
+      for pkg in fcl-json fcl-db fcl-net fcl-process fcl-xml fcl-image \n                 pasjpeg libpng hermes \n                 sqlite openssl regexpr paszlib zlib pthreads \n                 rtl-generics rtl-unicode rtl-console iconvenc; do
          [ -d "$UNITS/$pkg" ] && FU="$FU -Fu$UNITS/$pkg"
       done
       LCL="$LAZROOT/lcl/units/$ARCH"
