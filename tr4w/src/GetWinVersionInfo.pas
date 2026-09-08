@@ -17,24 +17,61 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 unit GetWinVersionInfo platform;
 {$I tr4w.inc}
 
+(* THE WHOLE UNIT IS WINDOWS, AND IT SHOULD BE.
+
+  It exists to name the Windows edition an operator is running -- product
+  type, service pack, UBR out of the registry -- for one diagnostic line in
+  tr4w.log. There is no cross-platform version of that question, because the
+  question itself is about Windows.
+
+  So this is not a port: the body is gated whole and there is a small {$ELSE}
+  giving what IS knowable elsewhere. It keeps every caller free of
+  conditionals, which is the rule the sweep is applying everywhere.
+
+  WHY THE FALLBACK IS THE COMPILE-TIME TARGET AND NOT A RUNTIME PROBE: FPC
+  3.2.2 has no portable TOSVersion -- checked, it exists only under
+  rtl/win32 -- so there is nothing in the RTL to ask. {$I %FPCTARGETOS%} at
+  least tells the reader of a log which build they are looking at, which is
+  most of what the line is for. A real answer on Unix is uname(2), and that
+  is worth doing when there is a Unix build to read the log from. *)
 interface
 
+{$IFDEF WINDOWS}
 uses
   Windows;
-
+{$ENDIF}
 
 
 function GetOSInfo: string;
 function GetWindowsBuildDetail: string;
 
+{$IFDEF WINDOWS}
 var
   GetProductInfo: function (dwOSMajorVersion, dwOSMinorVersion,
                             dwSpMajorVersion, dwSpMinorVersion: DWORD;
                             var pdwReturnedProductType: DWORD): BOOL stdcall = nil;
 var
   GetNativeSystemInfo: procedure(var SysInfo: TSystemInfo); stdcall = nil;
+{$ENDIF}
 
 implementation
+
+{$IFNDEF WINDOWS}
+(* NOT A STUB THAT LIES. It says what it knows -- the target this binary was
+  built for -- rather than returning 'Windows' or an empty string that would
+  read as a failed probe. *)
+function GetOSInfo: string;
+begin
+   Result := {$I %FPCTARGETOS%} + ' (' + {$I %FPCTARGETCPU%} + ')';
+end;
+
+function GetWindowsBuildDetail: string;
+begin
+   (* Empty, and the caller already formats it as a trailing detail -- so the
+     log line degrades to the OS name alone rather than to a placeholder. *)
+   Result := '';
+end;
+{$ELSE}
 
 uses Registry, SysUtils;
 
@@ -519,6 +556,7 @@ initialization
 
   @GetNativeSystemInfo := GetProcAddress(GetModuleHandle('KERNEL32.DLL'),
                                          'GetNativeSystemInfo');
+{$ENDIF}
 
 end.
 

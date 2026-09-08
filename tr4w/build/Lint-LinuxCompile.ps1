@@ -75,6 +75,16 @@ $UNITS = @(
    @{ Unit = 'utils\utils_file.pas'; Since = '2026-09-07' }
    @{ Unit = 'uctydat.pas';           Since = '2026-09-07' }
    @{ Unit = 'uCallSignRoutines.pas'; Since = '2026-09-07' }
+   # Added 2026-09-08 by the Windows-dependency sweep.
+   #
+   # uStickyKeys and GetWinVersionInfo are GATED, not converted, and they are
+   # here for exactly that reason: a gate is a guess until a compiler
+   # disagrees, and the {$ELSE} arm of a Windows-only unit is code that NO
+   # Windows build ever compiles. GetWinVersionInfo's fallback -- the
+   # {$I %FPCTARGETOS%} one -- had never been through a compiler until this
+   # entry was added.
+   @{ Unit = 'uStickyKeys.pas';       Since = '2026-09-08' }
+   @{ Unit = 'GetWinVersionInfo.pas'; Since = '2026-09-08' }
 
 )
 

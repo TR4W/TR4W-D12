@@ -40,7 +40,6 @@ uses
   VC,
   //TR,
   uSpots,
-  Windows,
   idUDPClient,
   idGlobal,
   PostUnit,
@@ -80,6 +79,31 @@ uses
   SlowTree,}
   SysUtils,
   DateUtils,
+  (* WINDOWS STAYS HERE, AND THIS IS THE WHOLE REMAINING BILL (measured
+    2026-09-08, by removing the import and reading the compiler):
+
+      MsgWaitForMultipleObjects + TMsg + PeekMessage + QS_SENDMESSAGE
+                        WaitForPollingThread. NOT a plain object wait: it
+                        wakes on a MESSAGE so the peek can let a blocked
+                        SendMessage through, which is what allows the polling
+                        thread to finish and exit. That is a property of the
+                        Win32 message queue -- where there is no queue there
+                        is nothing to unblock and the wait is an ordinary one,
+                        which the {$IFDEF} inside already says.
+      WAIT_OBJECT_0 / WAIT_TIMEOUT
+                        the return codes of that wait, so they go with it.
+      RemoveFontResourceW
+                        unloading LUCONSZ.TTF at exit. The LCL has no
+                        equivalent -- font installation is per-platform and
+                        this is the matching half of an AddFontResource that
+                        is equally Windows.
+
+    Converted in this pass and no longer on the list: CloseHandle (a FILE
+    handle -- FileClose), SW_HIDE and IDno (LCLType), WinSock2 (went with the
+    WSACleanup deleted alongside utils_net) and Messages (declared nothing
+    this unit used). *)
+  Windows,
+  LCLType,      // SW_HIDE, IDno -- was the Windows unit
   Tree,
   ZoneCont
   ,
@@ -620,7 +644,11 @@ var
    Deadline: QWord;
    Remaining: DWORD;
    WaitResult: DWORD;
-   Msg: TMsg;
+   (* QUALIFIED, because LCLType also declares a TMsg and now sits after
+     Windows in the uses clause -- so an unqualified TMsg here would be the
+     LCL record and PeekMessage would refuse it. This is a WIN32 message,
+     inside a {$IFDEF WINDOWS}, so it names the Win32 type. *)
+   Msg: Windows.TMsg;
 begin
    if H = 0 then
       begin
@@ -651,7 +679,7 @@ begin
         thread can exit.  It is a property of the Win32 message queue; where
         there is no queue there is nothing to unblock, and the wait above is a
         plain object wait. *)
-      PeekMessage(Msg, 0, 0, 0, PM_NOREMOVE);
+      Windows.PeekMessage(Msg, 0, 0, 0, PM_NOREMOVE);
 {$ENDIF}
    until False;
 end;
@@ -3040,7 +3068,7 @@ begin
   if not LogSourceOpen then
      begin
      logger.Error('[SendFullLogToHamScore] Could not open log file');
-     CloseHandle(tReportFileWrite);
+     FileClose(tReportFileWrite);   { a FILE handle -- postunit.pas:191 }
      Exit;
      end;
   try
@@ -3071,7 +3099,7 @@ begin
    if not LogSourceOpen then
       begin
       logger.error('[SendFullLogToUDP] Could not open log file');
-      CloseHandle(tReportFileWrite);
+      FileClose(tReportFileWrite);   { a FILE handle -- postunit.pas:191 }
       Exit;
       end;
 
