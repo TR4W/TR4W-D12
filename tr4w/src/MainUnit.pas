@@ -136,53 +136,83 @@ uses
     this entry; see the note in BuildLogRow. *)
   uDialogs,
   uLogSearch,
-  (* WINDOWS STAYS, AND HERE IS THE MEASURED BILL (2026-09-08, by removing the
-    import and reading all 53 errors -- not by grepping). The old note here
-    said only "still plenty here", which is true and useless: it tells the
-    next person to repeat the measurement rather than start from it.
+  (* WINDOWS STAYS, AND THE REMAINING BILL IS SMALL -- SMALLER THAN THE NOTE
+    THAT STOOD HERE CLAIMED (corrected 2026-09-08, NY4I).
 
-    MOST OF IT IS CONSTANTS LCLType ALREADY DECLARES, which is the good news:
+    THE EARLIER MEASUREMENT WAS TAKEN WRONG, and the mistake is the useful
+    part. It removed the import, built for WINDOWS, and reported all 53
+    errors as the bill. But on a Windows build every {$IFDEF WINDOWS} block
+    is LIVE, so that count includes code which is already gated and is not a
+    portability problem at all. It conflated "needs the Windows unit when
+    building for Windows" with "still binds this unit to Windows".
 
-      SW_HIDE, SW_SHOWNORMAL, SWP_NOSIZE, SWP_SHOWWINDOW
-      IDYES, IDNO, IDOK, IDCANCEL
-      VK_CONTROL, VK_MENU
-      MF_GRAYED, MF_BYPOSITION
-      SM_CXSCREEN
-      FW_BOLD, DEFAULT_CHARSET, DEFAULT_PITCH, Default_Quality,
-        OUT_DEFAULT_PRECIS, Clip_Default_Precis
-      BOOL, INVALID_HANDLE_VALUE, LoWord
-      TLVItem, LVIF_TEXT
-      odSelected, odFocused          -- these two are the LCL's own
-                                        TOwnerDrawState, not Windows'
+    Measured properly -- by gate state, not by error count:
 
-    WHAT IS ACTUALLY A CALL, and therefore actually work:
+    UNGATED `Windows.`-QUALIFIED CALLS: TWO.
 
-      ExitProcess            how tr4w_ShutDown leaves. Halt is the portable
-                             one, and the difference is real -- Halt runs
-                             finalization sections, ExitProcess does not.
-                             That makes it a DECISION about shutdown, not a
-                             swap: something may be relying on not running.
+      SetEvent           (~1180)  one of the four CreateEvent objects shared
+                                  with uNet and uProgramMain. They move
+                                  together or not at all, and logk1ea's
+                                  tCWSleep waits on one with a timeout, so
+                                  this is CW element timing.
+      LoadLibrary        (~10494) RichEditOperation, holding a refcount on
+                                  RICHED32.DLL. Its only remaining user is
+                                  the MMTTY window -- MMTTY is a separate
+                                  WINDOWS EXE showing output in a RICHED32
+                                  control -- so off Windows the feature
+                                  cannot exist and the {$ELSE} is empty.
+                                  Both its call sites are MMTTY, so this
+                                  probably belongs in uMMTTYForm rather than
+                                  here.
+
+    ALREADY GATED, and therefore NOT remaining work: CreateFontW,
+    GetWindowRect, FindFirstFileA, FindClose, lstrcatA -- five calls the old
+    note listed as outstanding.
+
+    UNGATED CALLS WRITTEN WITHOUT THE `Windows.` PREFIX: THREE.
+
+      ExitProcess              (~3784) how tr4w_ShutDown leaves. Halt is the
+                                       portable one and the difference is
+                                       REAL -- Halt runs finalization
+                                       sections, ExitProcess does not -- so
+                                       this is a decision about shutdown,
+                                       not a swap.
       SetThreadPriority +
-        THREAD_PRIORITY_LOWEST
-                             FPC has ThreadSetPriority, and the value mapping
-                             is not one-for-one.
-      CreateFontW            LCL font creation, and uFontFactory already
-                             exists for exactly this.
-      FindFirstFileA / FindClose
-                             SysUtils.FindFirst / FindClose, straightforward.
-      GetWindowRect          the form's BoundsRect, per the LCL rule already
-                             written in CLAUDE.md.
-      LoadLibrary            one call; DynLibs is the portable form.
-      lstrcatA               uAnsiStr.AppendToBuffer, added today for uCFG's
-                             four.
-      SetEvent               THE SAME FOUR EVENT OBJECTS as uNet and
-                             uProgramMain -- they move together or not at all.
-      EscapeCommFunction     serial line control; uSerialPort's business.
+        THREAD_PRIORITY_LOWEST (~7505) FPC has ThreadSetPriority; the value
+                                       mapping is not one-for-one.
+      EscapeCommFunction       (~6753) serial line control, and uSerialPort's
+                                       business rather than this unit's.
 
-    NOTHING HERE IS BLOCKED. It is a session of its own, and the order that
-    makes it cheap is: LCLType first (which is most of the list and mechanical),
-    then the seven calls, then the four events last because they are shared
-    with two other units. *)
+    EVERYTHING ELSE UNGATED IS A CONSTANT OR A TYPE LCLType ALREADY DECLARES,
+    and that part is mechanical: IDYES/IDNO/IDOK/IDCANCEL, SW_HIDE,
+    SW_SHOWNORMAL, SWP_NOSIZE, SWP_SHOWWINDOW, VK_CONTROL, VK_MENU,
+    MF_GRAYED, MF_BYPOSITION, SM_CXSCREEN, LVIF_TEXT, TLVItem, BOOL,
+    INVALID_HANDLE_VALUE, LoWord.
+
+    AND TWO ARE NOT WINDOWS AT ALL: odSelected and odFocused are the LCL's
+    own TOwnerDrawState.
+
+    ORDER THAT MAKES IT CHEAP: LCLType first (mechanical, most of the list),
+    then ExitProcess/SetThreadPriority/EscapeCommFunction, then the four
+    shared events LAST because they are not this unit's to move alone.
+
+    HOW TO RE-MEASURE THIS, AND THE LISTS ABOVE ARE NOT THE BEST SOURCE.
+    NY4I, 2026-09-08: "unqualified identifiers reported by the compiler are
+    the best source of truth." He is right, and the lists above are a GREP
+    MODEL of what the compiler would say -- useful, but not authoritative,
+    and the earlier version of this note was wrong precisely because a grep
+    and a Windows-target build were treated as if they were.
+
+    THE AUTHORITATIVE MEASUREMENT IS tools/Compile-Linux.ps1 MainUnit.pas:
+    it takes the NON-Windows arm of every gate, so its "Identifier not found"
+    list is exactly the ungated bill, with no judgement of mine in between.
+
+    IT CANNOT ANSWER YET, AND THAT IS THE REAL BLOCKER. MainUnit's
+    dependencies fail first, so the compiler never reaches this unit. As of
+    2026-09-08 the chain is: logk1ea (FIXED -- feInvalidHandle, this commit),
+    then uMMTTY, which needs UINT, TColorRef and LF_FACESIZE and is
+    Windows-only by nature. Clear the chain and the compiler replaces every
+    list above with a fact. *)
   Windows,
   Messages,
   LogK1EA,

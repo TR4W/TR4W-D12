@@ -38,19 +38,31 @@ uses
   uIO,
 {$IFDEF WINDOWS}
   MMSystem,     // the CW element clock -- see tCWSleep
-{$ENDIF}
-{$IFDEF WINDOWS}
-  (* WHAT IS LEFT, and all of it is gated at the call site:
+  (* WHAT IS LEFT OF Windows, and all of it is gated at the call site:
        timeBeginPeriod / timeSetEvent   the CW element clock -- there is no
                                         counterpart, and the {$ELSE} says so
        WaitForSingleObject              on the event that clock signals
        AttachThreadInput x2             per-thread input queues, a Win32
                                         concept with nothing to map to
      Messages declared nothing. *)
-  Windows;
-{$ELSE}
-  SysUtils;   { Sleep -- the placeholder tCWSleep falls back to }
+  Windows,
 {$ENDIF}
+  (* SysUtils ENDS THE CLAUSE, UNCONDITIONALLY, and both of those matter.
+
+    UNCONDITIONALLY, because the var block below initialises four port
+    handles to feInvalidHandle -- an INTERFACE declaration, which cannot see
+    the implementation clause. It used to be named only in a {$ELSE} arm,
+    which is why swapping INVALID_HANDLE_VALUE for feInvalidHandle compiled
+    for Linux and broke the Windows build.
+
+    ENDING THE CLAUSE, because the alternative is a conditional holding the
+    terminating semicolon -- and then the {$ELSE} arm has to name SOME unit,
+    every candidate is already listed above, and FPC answers "Duplicate
+    identifier". Two attempts at that failed here before this shape.
+
+    This unit calls SysUtils.Format explicitly anyway, because TF exports a
+    C-style Format of its own, so the ordering carries no hidden meaning. *)
+  SysUtils;
 //procedure TimerInterrupt(uTimerID, uMessage: UINT; dwUser, dw1, dw2: DWORD) stdcall;
 const
 
@@ -253,15 +265,19 @@ var
 //  tHighCWPerformance                    : boolean ;
 //  TimerResolutionIsSet                  : boolean ;
 
-  tPaddlePortBaseAddress                : THandle = INVALID_HANDLE_VALUE;
-  tFootSwitchPortBaseAddress            : THandle = INVALID_HANDLE_VALUE;
-  tRelayControlPortBaseAddress          : THandle = INVALID_HANDLE_VALUE;
-  tActiveStereoPortBaseAddress          : THandle = INVALID_HANDLE_VALUE;
+  (* feInvalidHandle, NOT INVALID_HANDLE_VALUE -- same value, but only one of
+    the two names exists off Windows, and these four INITIALISERS were what
+    stopped this unit compiling for Linux. That in turn blocked MainUnit, so
+    the compiler could not be asked what MainUnit itself still needs. *)
+  tPaddlePortBaseAddress                : THandle = feInvalidHandle;
+  tFootSwitchPortBaseAddress            : THandle = feInvalidHandle;
+  tRelayControlPortBaseAddress          : THandle = feInvalidHandle;
+  tActiveStereoPortBaseAddress          : THandle = feInvalidHandle;
 
   tUseControlPort                       : boolean;
 
   TR4W_BeepThread                       : THandle;
-  tPaddleFootSwitchThread               : THandle = INVALID_HANDLE_VALUE;
+  tPaddleFootSwitchThread               : THandle = feInvalidHandle;
 
   tExitFromPaddleFootSwitchThread       : boolean;
   tPTTOnCounter                         : Cardinal;
@@ -431,8 +447,14 @@ uses
     re-point an existing unqualified call at a different routine. What this
     unit wants from it -- Format, Exception, FreeAndNil -- is written
     SysUtils.Format explicitly, because TF also exports a Format and it is a
-    C-style one taking PChars. *)
-  SysUtils,
+    C-style one taking PChars.
+
+    NOT LISTED HERE ANY MORE. It moved to the INTERFACE clause (see the note
+    there -- the port-handle var block needs it), and FPC rejects a unit
+    named in both: "Duplicate identifier SYSUTILS". The precedence intent
+    above survives unchanged, because an implementation clause is searched
+    BEFORE the interface one, so every unit listed here still takes
+    precedence over SysUtils. *)
   uMainForm,   { QueueStartSendingKey -- the call field is a control }
   uProcessCommand,
   uTelnet,
@@ -597,7 +619,7 @@ var
   TempByte                              : Byte;
   Mask                                  : TBitSet;
 begin
-  if tActiveStereoPortBaseAddress = INVALID_HANDLE_VALUE then Exit;
+  if tActiveStereoPortBaseAddress = feInvalidHandle then Exit;
 
   case PinNumber of
     5: Mask := bsBIT3; { Pin five, bit 3 }
@@ -677,7 +699,7 @@ begin
 
     if ActiveRadioPtr.tKeyerPort in [Parallel1..Parallel3] then
        begin
-       if ActiveRadioPtr.tKeyerPortHandle = INVALID_HANDLE_VALUE then Exit;
+       if ActiveRadioPtr.tKeyerPortHandle = feInvalidHandle then Exit;
        TempByte := GetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl);
        DriverBitOperation(TempByte, CW_SIGNAL, boSet1);
          {17PIN}
@@ -760,7 +782,7 @@ begin
      end
   else
      begin
-     if ActiveRadioPtr.tKeyerPortHandle = INVALID_HANDLE_VALUE then
+     if ActiveRadioPtr.tKeyerPortHandle = feInvalidHandle then
         begin
         logger.debug('[TurnOnActivePort] Exiting early: no LPT keyer port');
         Exit;
@@ -791,10 +813,10 @@ begin
         LPTTempByte := 197
       else
         LPTTempByte := 193;
-    if ActiveRadioPtr.tr4w_KeyerPortHandle = INVALID_HANDLE_VALUE then Exit;
+    if ActiveRadioPtr.tr4w_KeyerPortHandle = feInvalidHandle then Exit;
     SetPortByte(ActiveRadioPtr.tr4w_KeyerPortHandle + 2, LPTTempByte);
   }
-  if tRelayControlPortBaseAddress = INVALID_HANDLE_VALUE then Exit;
+  if tRelayControlPortBaseAddress = feInvalidHandle then Exit;
 
   TempRadio := Radio;
 
@@ -1869,7 +1891,7 @@ var
 const
    BandInfoArray                         : array[BandType] of Byte = ($01, $20, $21, $41, $61, $81, $40, $60, $80, $A0, $A1, $C0, $C1, $E0, $E1, $00, $00, $00, $00, $00, $00, $00, $00);
 begin
-  if BaseAddress = INVALID_HANDLE_VALUE then Exit;
+  if BaseAddress = feInvalidHandle then Exit;
   Image := BandInfoArray[Band];
   if Mode = Phone then
      begin
@@ -2393,7 +2415,7 @@ begin
        DahContact := False;
        if not tUseControlPort then
           begin
-          if tPaddlePortBaseAddress <> INVALID_HANDLE_VALUE then
+          if tPaddlePortBaseAddress <> feInvalidHandle then
              begin
              TempByte := GetPortByte(tPaddlePortBaseAddress, otState);
    //          Windows.SetWindowTextA(wh[mweUserInfo], inttopchar(TempByte));

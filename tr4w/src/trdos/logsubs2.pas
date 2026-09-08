@@ -646,9 +646,17 @@ var
    WaitResult: DWORD;
    (* QUALIFIED, because LCLType also declares a TMsg and now sits after
      Windows in the uses clause -- so an unqualified TMsg here would be the
-     LCL record and PeekMessage would refuse it. This is a WIN32 message,
-     inside a {$IFDEF WINDOWS}, so it names the Win32 type. *)
+     LCL record and PeekMessage would refuse it.
+
+     AND GATED, because qualifying it is what made it an UNGATED Windows.
+     reference: the declaration sat outside the {$IFDEF WINDOWS} that its
+     only use is inside. Naming a type to fix a shadowing clash quietly
+     created a platform dependency where an unqualified TMsg had none.
+     (NY4I found this with a state-machine scan of the whole tree,
+     2026-09-08.) *)
+{$IFDEF WINDOWS}
    Msg: Windows.TMsg;
+{$ENDIF}
 begin
    if H = 0 then
       begin
