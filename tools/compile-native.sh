@@ -108,13 +108,15 @@ case "$(uname -s)" in
       # header above records what happens if you add them all: the command line
       # grows until the compiler stops finding the RTL, and every unit then
       # fails with "Can't find unit system" -- which reads as a broken install.
-      FU="$FU -Fu$UNITS/univint -Fu$UNITS/cocoaint"
+      # PKGS, NOT FU -- SEE THE ORDERING NOTE BELOW. These go LAST, after
+      # Lazarus, because their unit names collide with the LCL's.
+      PKGS="-Fu$UNITS/univint -Fu$UNITS/cocoaint"
       # The rest of what TR4W and the LCL reach for. fcl-json is
       # jsonscanner, which Lazarus's Translations unit uses; sqlite is the
       # contest log; openssl is Indy's TLS; regexpr, paszlib and zlib come
       # in through lazutils and the LCL.
       for pkg in fcl-json fcl-db fcl-net fcl-process fcl-xml fcl-image \n                 pasjpeg libpng hermes \n                 sqlite openssl regexpr paszlib zlib pthreads \n                 rtl-generics rtl-unicode rtl-console iconvenc; do
-         [ -d "$UNITS/$pkg" ] && FU="$FU -Fu$UNITS/$pkg"
+         [ -d "$UNITS/$pkg" ] && PKGS="$PKGS -Fu$UNITS/$pkg"
       done
       LCL="$LAZROOT/lcl/units/$ARCH"
       LAZUTILS="$LAZROOT/components/lazutils/lib/$ARCH"
@@ -209,6 +211,29 @@ FU="$FU -Fu$SRC/lang -Fu$SRC/contestFactory"
 FU="$FU -Fu$REPO/tr4w/include"
 FU="$FU -Fu$REPO/tr4w/include/Core -Fu$REPO/tr4w/include/System"
 FU="$FU -Fu$REPO/tr4w/include/Protocols"
+
+# THE FPC PACKAGES GO LAST, AND THIS ORDERING IS LOAD-BEARING (2026-09-08).
+#
+# Unit names COLLIDE between FPC's packages and the LCL. On macOS `univint`
+# ships its own Menus.ppu; with the packages ahead of Lazarus, FPC resolved
+# `Menus` to univint's, the LCL's Forms then failed its checksum check, and the
+# compiler tried to rebuild Forms from sources that are not shipped:
+#
+#     Recompiling Forms, checksum changed for .../univint/Menus.ppu
+#     uMainThread.pas(79,4) Fatal: Can't find unit Forms used by uMainThread
+#
+# That reads as a broken Lazarus install and is a search-path ORDER bug.
+#
+# THIS LESSON WAS ALREADY LEARNED ONCE AND NOT CARRIED ACROSS. tools/Compile-Linux.ps1
+# has the same note about packages\fv -- Free Vision, whose `menus` broke the
+# LCL's controls.pp the same way. Two probes, the same trap, found twice.
+#
+# So: the RTL and our own output first (set above), then Lazarus, then TR4W,
+# then the packages LAST -- where they can still supply anything nothing above
+# declares, and can no longer shadow the widget set.
+if [ -n "${PKGS:-}" ]; then
+   FU="$FU $PKGS"
+fi
 
 mkdir -p "$OUT"
 
