@@ -63,6 +63,15 @@ New-Item -ItemType Directory -Force -Path $out | Out-Null
 $fu = @($rtl, $out,
         'C:\Lazarus\lcl', 'C:\Lazarus\lcl\widgetset', 'C:\Lazarus\lcl\forms',
         'C:\Lazarus\components\lazutils',
+        # datetimectrls: uEditQSOForm uses TDateTimePicker, and this directory
+        # holds its SOURCE. It is an ordinary LCL component -- pure Lazarus,
+        # portable -- so its absence here made a portable form report
+        # "Can't find unit DateTimePicker", which is the short-sighted-probe
+        # failure the comment above describes rather than a Windows binding.
+        # Added 2026-09-08. Note the only compiled units shipped with Lazarus
+        # for it are i386-win32 and x86_64-win64, which is why the SOURCE path
+        # is what matters: this build compiles it for linux itself.
+        'C:\Lazarus\components\datetimectrls',
         (Join-Path $repo 'tr4w\include'),
         (Join-Path $repo 'tr4w\src'))
 # EVERY source directory the app build uses, from the one list that defines

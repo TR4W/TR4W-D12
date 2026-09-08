@@ -108,12 +108,19 @@ only thing that was actually true.
 | 7 | Retire the scaffolding | not started |
 | 8 | The rest of Win32 (non-UI) | not started |
 
-**WHERE THE 644 HWNDs ARE**, because the call counts do not say it and this is
-what the next batch should be chosen against: `MainUnit` 96, `TF` 91, `uCAT` 36,
-`VC` 33, `uDialogs` 29, `uTelnet` 17, then a long tail over 94 files.
-`uCommctrl.pas` and `MMSystem.pas` are excluded from the count and always will
-be -- they are translations of commctrl.h and mmsystem.h, where an HWND appears
-because Windows says so, and they disappear whole when their last consumer does.
+~~**WHERE THE 644 HWNDs ARE**~~ -- **DONE. THE COUNT IS 11** (measured
+2026-09-08 by `Lint-Win32Dialogs.ps1 -Group ui`, and pinned at 11 in
+`win32-ui-baseline.json`). The distribution that stood here -- `MainUnit` 96,
+`TF` 91, `uCAT` 36, `VC` 33, `uDialogs` 29, `uTelnet` 17, a long tail over 94
+files -- is history; run the lint rather than reading a number here.
+
+The paragraph also said `uCommctrl.pas` and `MMSystem.pas` were excluded from
+the count "and always will be", being translations of commctrl.h and mmsystem.h
+that would "disappear whole when their last consumer does". **They did exactly
+that** -- MMSystem duplicated the RTL's and went, uCommctrl's last consumer was
+`MainUnit`'s log-row builder and went with it -- so the exclusion is deleted
+rather than honoured, and the 11 above is TR4W's own code with nothing held out
+of it.
 
 **`tw_` tool windows: 2 of 17 converted** — function keys (2026-08-22) and the
 band map (2026-08-23). Measured by counting `WndProcAdr := @` in `MainUnit.pas`:

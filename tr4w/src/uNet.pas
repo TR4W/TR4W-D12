@@ -140,7 +140,7 @@ procedure AddNewClient(ClientID: integer);
 procedure ConnectThread;
 procedure DisplayClientStatus(Index: integer);
 procedure DisplayMessageStatus(Index: integer; Msg: TMessageState);
-procedure EnableNetworkMenuItem(uEnable: Cardinal);
+procedure EnableNetworkMenuItem(const aEnabled: boolean);
 procedure NetDisconnect;
 procedure ProcessServerLogInfo(s: PLogFileInformation);
 procedure SetStatusByte;
@@ -853,7 +853,7 @@ begin
      end;
   GNetPending := nil;
   ServerSerialNumber := 0;
-  EnableNetworkMenuItem(MF_GRAYED + MF_BYPOSITION);
+  EnableNetworkMenuItem(False);
   FillChar(MF, SizeOf(MultsFrequencies), 0);
 //  DisplayMultsFrequencies;
 end;
@@ -1141,7 +1141,7 @@ begin
      ServerMessage.smMessage := SM_GETSTATUS_MESSAGE;
      SendToNet(ServerMessage, SizeOf(ServerMessage));
  //    SendStationStatus;
-     EnableNetworkMenuItem(MF_ENABLED + MF_BYPOSITION);
+     EnableNetworkMenuItem(True);
      ShowConnectionStatus(TC_CONNECTEDTO);
      if FConnectLogState <> nclsConnected then
         begin
@@ -1310,15 +1310,29 @@ end;
   why this was EnableMenuItem(handle, 7, ...) with MF_BYPOSITION rather than by
   id. TopLevelMenuItem(7) is the same row.
 
-  DrawMenuBar goes with it: the LCL redraws the bar when an item changes. *)
-procedure EnableNetworkMenuItem(uEnable: Cardinal);
+  DrawMenuBar goes with it: the LCL redraws the bar when an item changes.
+
+  IT TAKES A BOOLEAN NOW (2026-09-08). The parameter was a Cardinal carrying
+  Win32 MENU FLAGS -- callers wrote `MF_GRAYED + MF_BYPOSITION` and the body
+  did `(uEnable and MF_GRAYED) = 0` -- which is a Win32 calling convention
+  surviving inside a routine whose entire body is already `item.Enabled := ...`.
+
+  MF_BYPOSITION was the giveaway. It told EnableMenuItem how to INTERPRET its
+  second argument, and there has been no second argument since TopLevelMenuItem
+  replaced it; every caller still passed it, and the body never looked at it.
+  A flag word that no longer means anything reads as though it does, which is
+  the whole reason to remove it rather than add LCLType to the uses clause.
+
+  All three call sites passed a constant, so this is a rename of a value, not
+  a change of behaviour. *)
+procedure EnableNetworkMenuItem(const aEnabled: boolean);
 var
    item: TMenuItem;
 begin
    item := TopLevelMenuItem(7);
    if item <> nil then
       begin
-      item.Enabled := (uEnable and MF_GRAYED) = 0;
+      item.Enabled := aEnabled;
       end;
 end;
 

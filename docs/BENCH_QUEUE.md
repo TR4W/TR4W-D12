@@ -3195,111 +3195,59 @@ Nothing here is a bench test. They need an answer, not a radio.
   from the frequency across the keyer API, so it is a refactor with real reach,
   not a deletion. Not started.
 
-- [x] **LPT: STAYS ON WINDOWS, ADDED FOR LINUX, NOT APPLICABLE ON MAC.
-  DECIDED 2026-09-08 -- and I asked twice, which was once too many.**
+- [x] **LPT: WINDOWS-GATED TODAY ON inpout32. LINUX IS A FUTURE RELEASE,
+  inpout64 GOES WITH THE 64-BIT CHANGE. SCHEDULED 2026-09-08.**
 
-  NY4I: *"LPT stays on windows and added for linux. not applicable on mac."*
+  NY4I: *"windows gate LPT support today. Use inpout32. We will address as an
+  incremental release for linux/lpt in the future. inpout64 will be with the
+  64 bit change."*
 
-  He had already answered the substance earlier -- *"If we can talk to the
-  port, I see no reason to remove that functionality from the program"* -- and
-  I reopened the whole question after reading a later correction (*"i never
-  gave a final decision on supporting LPT ports"*) as being about the FEATURE.
-  It was about my having written the WORK up as scheduled. A conditional keep
-  is still a keep; the condition just had to be checked, and it held.
+  **THAT CLOSES THE QUESTION AND SPLITS THE WORK INTO TWO RELEASES**, which is
+  the useful part -- neither half is now a decision, and neither blocks
+  anything.
 
-  **THIS IS NOT A BENCH TEST AND NOT A DECISION ANY MORE.** It is left here,
-  ticked, because the three-platform answer is the useful part and the code
-  now points at it.
+  **TODAY, AND IT IS ALREADY TRUE:** `uIO` and `uLPTPortEnumerator` are both
+  `{$IFDEF WINDOWS}`-gated, and `uLPTPortEnumerator` compiles for x86_64-linux
+  as it stands. `uIO` is blocked only behind `MainUnit`'s `TLVItem`, not by
+  anything of its own. `'inpout32.dll'` stays hardcoded and is CORRECT for a
+  32-bit build -- see below.
 
-  **THE WORK, in priority order:**
+  **WITH THE 64-BIT CHANGE: the driver name, and nothing else.** The x64 build
+  is `InpOutx64.dll`, and **the choice is by BUILD BITNESS, not by OS** -- a
+  32-bit application must use `InpOut32.dll` even on 64-bit Windows, because
+  that DLL carries both drivers and picks at runtime. So the guards nest:
 
-  1. **THE x64 DRIVER NAME -- a 64-bit blocker on its own, AND THE ANSWER IS
-     ALREADY WRITTEN DOWN.** NY4I supplied
-     [`docs/inpOut32-64_Info.md`](inpOut32-64_Info.md) (the driver author's
-     own notes) on 2026-09-08. Read it before starting; it settles three
-     things I had listed as unknowns:
+  ```pascal
+  {$IFDEF WINDOWS}
+     {$IFDEF CPU64}  INPOUT_LIB = 'InpOutx64.dll';
+     {$ELSE}         INPOUT_LIB = 'inpout32.dll';
+     {$ENDIF}
+  {$ENDIF}
+  ```
 
-     - **The name is `InpOutx64.dll`**, and *"everything else is the same as
-       the 32bit (InpOut32) DLL"* -- so the exports (`Out32`, `Inp32`,
-       `IsInpOutDriverOpen`) carry over and `LoadInpOut32` needs the name
-       swapped, not rewriting.
-     - **THE TWO GUARDS NEST -- WINDOWS OUTSIDE, BITNESS INSIDE** (NY4I:
-       *"I think the guard is IFDEF WINDOWS then under it a choice of IFDEF
-       CPU64 or CPU32. It is only WIndows in either case."*). I first called
-       it per-OS, then over-corrected to per-bitness *instead of* per-OS.
-       Both are real and neither replaces the other:
+  The exports are unchanged between the two -- the driver author's notes say
+  *"everything else is the same as the 32bit (InpOut32) DLL"* -- so this is a
+  name, not a rewrite. Details: [`inpOut32-64_Info.md`](inpOut32-64_Info.md).
+  **Read the name and exports off a real x64 build rather than inferring
+  them.**
 
-       ```pascal
-       {$IFDEF WINDOWS}
-          {$IFDEF CPU64}
-          INPOUT_LIB = 'InpOutx64.dll';
-          {$ELSE}
-          INPOUT_LIB = 'inpout32.dll';
-          {$ENDIF}
-       {$ENDIF}
-       ```
+  **AS A LATER INCREMENTAL RELEASE: the Linux back end**, behind `uIO`'s
+  existing surface so no caller changes. What is NOT established, and should
+  be checked before it is budgeted:
 
-       The inner `{$ELSE}` is not a legacy fallback: a 32-bit application
-       **must** use `InpOut32.dll` even on 64-bit Windows, because that DLL
-       carries BOTH drivers and picks at runtime. TR4W is 32-bit today, so
-       **nothing changes until the 64-bit move itself.**
-     - **THE FIRST LOAD INSTALLS A KERNEL DRIVER AND NEEDS ELEVATION** on
-       Vista and later. That is an operational fact about LPT users, not a
-       code change, and it belongs in whatever release note covers LPT.
-
-     Binaries for both: https://github.com/ellysh/InpOut32/tree/master/bin
-  2. **THE LINUX BACK END -- WANTED, BUT NOT YET SHOWN TO BE POSSIBLE.**
-
-     NY4I: *"It seems like you are assuming it works on Linux."* He is right,
-     and I had drifted into exactly that. **What is actually verified is one
-     sentence of the FreePascal wiki**: unit `ports` gives the `port[$378]`
-     syntax with `fpioperm` from unit `x86` granting access first (Linux
-     x86/x86_64, FreeBSD) -- and *"the program must be run as root."*
-
-     **EVERYTHING ELSE I WROTE HERE WAS ASSERTION.** "ppdev, ioctls on
-     /dev/parport0, needs no special privilege" came from general knowledge,
-     not from anything checked. The FIRST draft of this entry said so
-     honestly -- *"is NOT on that page, so it needs its own look before
-     anyone budgets it"* -- and later edits quietly hardened it into "ppdev
-     first". That is how an unknown becomes a plan without anyone deciding
-     it should.
-
-     **FOUR THINGS MUST HOLD, AND NONE IS ESTABLISHED:**
-
-     a. **FPC can drive ppdev at all.** No ppdev bindings are in the RTL as
-        far as I have looked; it would mean writing the ioctls (PPCLAIM,
-        PPWDATA, PPRDATA) by hand.
-     b. **Permissions are workable.** ppdev is not root, but `/dev/parport0`
-        normally wants membership of `lp`. "Not root" is not "no setup".
-     c. **THE TIMING HOLDS -- AND THIS IS THE REAL BLOCKER.** LPT keying
-        bit-bangs PTT and CW element edges. **TR4W's CW element clock off
-        Windows is ALREADY A PLACEHOLDER**: `logk1ea.tCWSleep`'s non-Windows
-        arm is a plain `Sleep`, and CLAUDE.md says outright it *"will not key
-        a contest"*. Toggling a pin accurately is pointless if nothing can
-        time the elements, so **an LPT back end is DOWNSTREAM of the HPTimer
-        work**, not independent of it. An ioctl-per-edge path also needs its
-        jitter measured, not assumed.
-     d. **The hardware is on the target machine.** Parallel ports are largely
-        gone from modern PCs, and a USB "parallel" adapter is not an LPT port
-        -- this code cannot drive one on any platform.
-
-     **HONEST STATUS: NY4I WANTS IT; WHETHER IT CAN WORK IS OPEN**, and the
-     answer starts at (c). The cheap first step is not code -- it is
-     confirming on a real Linux box with a real parallel port that a pin can
-     be toggled at CW element rates at all.
-  3. **macOS is FINISHED, not pending.** There is no parallel port to talk
-     to, so the existing no-op is the correct and final answer there. Worth
-     stating because a bare `{$IFDEF WINDOWS}` reads like an unfinished port
-     to the next person.
-
-  **Context that shapes how much either is worth:** inpout32.dll stopped
-  being bundled because antivirus flagged its driver, so an LPT operator
-  today is already installing it by hand -- and a USB "parallel" adapter
-  cannot be driven by this code at all.
-
-  **Nothing blocks.** `uIO` is gated and compiles as-is.
-  `DLPortIO.pas:270`'s `Windows.lstrcat` is the one remaining ungated
-  `Windows.` reference in this area and goes with item 1.
+  - **ppdev** (ioctls on `/dev/parport0`) needs no root but has **no FPC
+    bindings I have found** -- it means hand-written `PPCLAIM` / `PPWDATA`
+    ioctls. The FreePascal wiki's alternative (`ports` + `fpioperm`) DOES
+    exist in the RTL and **wants root**, which is the real objection to it.
+  - **THE TIMING IS THE ACTUAL BLOCKER.** LPT keying bit-bangs PTT and CW
+    element edges, and TR4W's CW element clock off Windows is ALREADY a
+    placeholder -- `logk1ea.tCWSleep`'s non-Windows arm is a plain `Sleep`,
+    which CLAUDE.md says outright *"will not key a contest"*. **So Linux LPT
+    is downstream of the HPTimer work**, and the cheap first step is not code:
+    confirm on a real Linux box with a real parallel port that a pin can be
+    toggled at CW element rates at all.
+  - **macOS: not applicable.** No parallel port, so the existing no-op is the
+    finished answer rather than a gap.
 
 - [x] **The legacy CAT port -- DELETED 2026-09-08.**
   NY4I: *"delete any unused legacy code including the CAT port."* Done:

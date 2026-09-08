@@ -2775,7 +2775,7 @@ procedure SaveBandMap;
 var
   i                                     : integer;
   Spot                                  : TSpotRecord;
-  h                                     : THandle;   (* A FILE handle, not a window. *)
+  h                                     : TFileHandle;   (* utils_file's -- see TFileHandle *)
 begin
   if not tOpenFileForWrite(h, TR4W_BANDMAPBIN_FILENAME) then Exit;
   if SpotsList.Count > 0 then
@@ -2803,7 +2803,7 @@ var
   i                                     : integer;
   c                                     : integer;
   Spot                                  : TSpotRecord;
-  h                                     : THandle;   (* A FILE handle, not a window. *)
+  h                                     : TFileHandle;   (* utils_file's -- see TFileHandle *)
   (* SIGNED, and that is the point of the change. Windows.ReadFile reported
     the count through a Cardinal var parameter and failure through its
     boolean result; FileRead RETURNS the count and gives -1 on error. Left as

@@ -1376,7 +1376,7 @@ declarations bound to a library:
 | `user32` | 15 | Win32 API |
 | `comdlg32` | 10 | Win32 API -- and the LCL has dialogs for all of it |
 | `setupapi` | 10 | Win32 API -- device enumeration |
-| `InpOut32.dll` | 3 | **LPT KEYING STAYS ON WINDOWS, GAINS LINUX, N/A ON MAC** (NY4I, 2026-09-08). This row was once cited as proof that LPT is Windows by nature; it is not. **The guards NEST**: `{$IFDEF WINDOWS}` outside -- inpout is Windows-only either way -- and the DLL name by bitness inside it, `InpOutx64.dll` for 64-bit and `inpout32.dll` for 32-bit. The inner branch is not a legacy fallback: a 32-bit app must use `InpOut32.dll` even on 64-bit Windows. So the hardcoded name is correct until the 64-bit move and wrong the day after; exports are unchanged. **LINUX IS WANTED BUT UNPROVEN** -- the only verified route needs root, ppdev is unchecked, and the real blocker is that the CW element clock off Windows is already a placeholder that CLAUDE.md says will not key a contest. Notes: [`docs/inpOut32-64_Info.md`](docs/inpOut32-64_Info.md) |
+| `InpOut32.dll` | 3 | **LPT KEYING STAYS ON WINDOWS, GAINS LINUX, N/A ON MAC** (NY4I, 2026-09-08). This row was once cited as proof that LPT is Windows by nature; it is not. **The guards NEST**: `{$IFDEF WINDOWS}` outside -- inpout is Windows-only either way -- and the DLL name by bitness inside it, `InpOutx64.dll` for 64-bit and `inpout32.dll` for 32-bit. The inner branch is not a legacy fallback: a 32-bit app must use `InpOut32.dll` even on 64-bit Windows. So the hardcoded name is correct until the 64-bit move and wrong the day after; exports are unchanged. **SCHEDULED, NOT OPEN** (NY4I, 2026-09-08): Windows-gated on inpout32 today -- and the hardcoded name is CORRECT for a 32-bit build; the x64 name goes with the 64-bit change; Linux is a later incremental release, still downstream of the HPTimer work because the CW element clock off Windows is a placeholder that will not key a contest. Notes: [`docs/inpOut32-64_Info.md`](docs/inpOut32-64_Info.md) |
 | `hid` | 2 | Win32 API |
 | `kernel32`, `comctl32`, `ws2_32`, `shlwapi`, `msvcrt` | 7 | Win32 API |
 | `Plugins/tr4wSortLog.dll` | 1 | a TR4W plugin |
@@ -1439,7 +1439,12 @@ is that the answer is in one file rather than at 274 declarations.
 | | |
 |---|---|
 | `PChar`/`PAnsiChar`/`PWideChar` outside the Win32 API headers | **920 mentions across 112 units** |
-| inside `uCommctrl`, `MMSystem`, `HtmlHelp` | 234, and inherent -- those units DECLARE the Win32 API |
+| inside the hand-written Win32 headers | was 234, and inherent -- those units DECLARED the Win32 API |
+
+**THAT SECOND ROW IS NOW ZERO: `uCommctrl.pas` and `MMSystem.pas` ARE DELETED**
+(2026-09-07/08), so 234 of the 920 went with them and none of the remainder is
+inherent. `HtmlHelp` is the only such header left. Re-measure before quoting the
+first row -- it was taken while both units were still here.
 
 That is the work, and it is not a sweep: each one is either a genuine transport
 boundary that keeps its `PChar` and gains a comment saying why, or it is a

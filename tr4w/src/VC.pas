@@ -157,6 +157,36 @@ type
   EntryPointerListType = array[0..15000] of Pointer;
   EntryPointerListPtr = ^EntryPointerListType;
 
+  (* AN LPT BASE ADDRESS IS NOT A HANDLE (2026-09-08).
+
+    These values -- $378, $278, $3BC -- are x86 I/O PORT ADDRESSES. They are
+    not opened, not closed, and are never returned by the operating system.
+    They were nonetheless declared `THandle` at every one of their eight
+    declaration sites, in exactly the way VC's own LogHandle comment describes
+    for a file handle typed HWND: the type said one thing while the code said
+    another, and nothing objected because on Win32 both are 32-bit.
+
+    IT STOPPED BEING HARMLESS THE MOMENT A SECOND TARGET EXISTED, and it took a
+    Linux compile to show it. `THandle` resolved DIFFERENTLY DEPENDING ON THE
+    USES CLAUSE: logradio names LCLType after SysUtils, and LCLType redeclares
+    `THandle = type PtrUInt` -- carrying, in Lazarus's own source, the
+    deprecation note "Use TLCLHandle instead of this redefined THandle". So
+    logradio's fields were 64-bit while uIO's OpenLPT parameter was the RTL's
+    32-bit LongInt, and `Call by var for arg no. 1 has to match exactly` was
+    the first anyone heard of it.
+
+    THE SAME DIVERGENCE IS WAITING FOR THE 64-BIT WINDOWS BUILD. There it is
+    not a compile error at a var parameter but a silently widened sentinel:
+    THandle(-1) is $FFFFFFFF in one unit and $FFFFFFFFFFFFFFFF in another, so
+    `if Base = feInvalidHandle` stops matching and TR4W drives a port it
+    believes is closed.
+
+    Cardinal, not Word, deliberately: uIO.LPTBaseAA is an array of Cardinal and
+    uCFG takes its ADDRESS with crType ctInteger, so narrowing the element
+    would have the config loader write four bytes into two. GetPortByte takes a
+    Word and narrows at the call, which is where the 16-bit truth belongs. *)
+  TLPTBaseAddress = Cardinal;
+
   PortType =
     (NoPort,
     Serial1,
@@ -241,6 +271,18 @@ const
 
   // Use this instead of writing [Serial1..SerialN] at call sites.
   SerialPorts = [Serial1..Serial64];
+
+  (* NO LPT PORT IS OPEN. Replaces feInvalidHandle / INVALID_HANDLE_VALUE /
+    THandle(-1) on the LPT base addresses -- three spellings of the same
+    sentinel across four units, none of which is a handle. The VALUE is
+    unchanged from what those produced in a 32-bit build, deliberately: this
+    fixes a TYPE, and a changed sentinel would be a behaviour change riding
+    along with it. See TLPTBaseAddress above. *)
+  (* UNTYPED ON PURPOSE. A typed constant cannot initialise another typed
+    constant in FPC, and logk1ea declares four of these as
+    `: TLPTBaseAddress = LPT_NO_PORT`. Untyped, it is a compile-time integer
+    and works both as an initialiser and in a comparison. *)
+  LPT_NO_PORT = $FFFFFFFF;
 
 type
 

@@ -57,25 +57,31 @@ uses
     THE PLATFORM ANSWER, DECIDED 2026-09-08 (NY4I): "LPT stays on windows
     and added for linux. not applicable on mac."
 
-      Windows  keeps inpout32, at BOTH bitnesses -- the guards NEST rather
-               than compete. This {$IFDEF WINDOWS} is the outer one and
-               stays; inside it the DLL NAME depends on the build:
-               InpOutx64.dll for 64-bit, inpout32.dll for 32-bit. That inner
-               branch is not a legacy fallback -- a 32-bit application MUST
-               use InpOut32.dll even on 64-bit Windows, since that DLL
-               carries both drivers and picks at runtime. TR4W is 32-bit, so
-               the hardcoded name below is correct TODAY and becomes wrong
-               the day the 64-bit move happens, not before.
+      Windows  keeps inpout32, and THE HARDCODED NAME BELOW IS CORRECT AS
+               IT STANDS -- do not "fix" it. TR4W is a 32-bit build, and a
+               32-bit application MUST use InpOut32.dll even on 64-bit
+               Windows: that DLL carries BOTH drivers and picks at runtime.
+
+               THE x64 NAME GOES WITH THE 64-BIT CHANGE (NY4I, 2026-09-08),
+               not before, and the guards NEST rather than compete -- this
+               {$IFDEF WINDOWS} is the outer one and stays, with the name
+               chosen inside it by {$IFDEF CPU64}: InpOutx64.dll for a 64-bit
+               build, inpout32.dll for a 32-bit one. The exports are
+               identical between the two, so it is a name and not a rewrite.
                Driver author's notes: docs/inpOut32-64_Info.md
-      Linux    WANTED, NOT YET SHOWN TO BE POSSIBLE -- and do not let this
-               comment tell you otherwise. It used to say Linux "gets a back
-               end, ppdev first", which was an assumption dressed as a plan.
-               What is verified is only that the FPC wiki offers a
-               ROOT-requiring route (`ports` + `fpioperm`); ppdev is
-               unchecked, and the real blocker is TIMING -- tCWSleep's
+      Linux    A FUTURE INCREMENTAL RELEASE (NY4I, 2026-09-08) -- not this
+               one, and not blocked on anything here. It goes behind the
+               surface below, so no caller changes when it arrives.
+
+               Do not let an earlier version of this comment mislead you: it
+               once said Linux "gets a back end, ppdev first", which was an
+               assumption dressed as a plan. WHAT IS VERIFIED is only that
+               the FPC wiki offers a ROOT-requiring route (`ports` +
+               `fpioperm`). ppdev needs no root but has no FPC bindings
+               found, and THE REAL BLOCKER IS TIMING -- tCWSleep's
                non-Windows arm is a plain Sleep that CLAUDE.md says will not
-               key a contest. LPT on Linux is downstream of that clock.
-               BENCH_QUEUE.md lists the four things that must hold.
+               key a contest, so this is downstream of the HPTimer work.
+               BENCH_QUEUE.md has the detail.
       macOS    NOT APPLICABLE. No parallel port to talk to, so the no-op
                below is the finished answer there, not a placeholder.
 
@@ -157,7 +163,7 @@ procedure DriverCreate;
 procedure DriverDestroy;
 procedure NoInpOut32Message;
 procedure DriverBitOperation(var TempByte: Byte; BitToSet: TBitSet; Operation: TBitOperation);
-function OpenLPT(var PortHandle: THandle; LPT: PortType): boolean;
+function OpenLPT(var PortAddress: TLPTBaseAddress; LPT: PortType): boolean;
 
 
 
@@ -184,6 +190,29 @@ begin
       end;
    inpout32LoadAttempted := True;
 
+   (* THE LOAD IS THE ONLY WINDOWS-ONLY PART, SO IT IS THE ONLY THING GATED
+     (NY4I, 2026-09-08: "windows gate LPT support today. Use inpout32").
+
+     Everything else in this unit -- the port arithmetic, the bit operations,
+     OpenLPT -- is plain Pascal over three function POINTERS, and off Windows
+     those simply stay nil. DriverIsLoaded then answers False, every caller
+     takes its existing not-loaded path, and the LPT surface still COMPILES
+     everywhere. Gating the whole unit instead would make `uses uIO` itself
+     conditional and push the gate out into logk1ea, LogCfg and MainUnit.
+
+     THE FUNCTION IS LoadLibraryW AND IT WANTS A WIDE STRING, which is why the
+     literal is not simply passed along: this file has no `W` suffix by
+     accident. Left as-is rather than "fixed" to LoadLibraryA -- see the note
+     in the uses clause on why the DLL name is correct as written for a 32-bit
+     build.
+
+     WHY NOT dynlibs, WHICH WOULD NEED NO GATE AT ALL: because it would make
+     this unit look ready for a Linux back end that does not exist and has not
+     been shown to be possible -- the timing blocker is in BENCH_QUEUE.md. A
+     gate states the position honestly; a portable loader pointing at a
+     Windows DLL name would state a false one. When the Linux back end is
+     scheduled, dynlibs is the shape to move to. *)
+{$IFDEF WINDOWS}
    IOPlugin := LoadLibraryW('inpout32.dll');
    if (IOPlugin <> 0) then
       begin
@@ -195,14 +224,27 @@ begin
       begin
       NoInpOut32Message;
       end;
+{$ELSE}
+   (* No LPT support off Windows, and it says so once rather than never --
+     "my parallel-port keyer does nothing" is otherwise unanswerable. The
+     inpout32LoadAttempted guard above means this is logged a single time. *)
+   logger.Info('[LPT] parallel-port support is Windows-only in this build; ' +
+               'LPT keying, band output and the relay are disabled.');
+{$ENDIF}
 end;
 
 procedure DriverDestroy;
 begin
+{$IFDEF WINDOWS}
+  (* Paired with the gated LoadLibraryW in DriverCreate. Off Windows nothing
+    was ever loaded, so DriverIsLoaded is False and there is nothing to free --
+    but the CALL still has to disappear, because FreeLibrary does not exist
+    there either. *)
   if DriverIsLoaded then
      begin
      FreeLibrary(IOPlugin);
      end;
+{$ENDIF}
   IOPlugin := 0;
   DlWriteByte := nil;
   DlReadByte := nil;
@@ -280,7 +322,7 @@ begin
 end;
 
 
-function OpenLPT(var PortHandle: THandle; LPT: PortType): boolean;
+function OpenLPT(var PortAddress: TLPTBaseAddress; LPT: PortType): boolean;
 begin
   Result := False;
   if not DriverIsLoaded() then
@@ -288,7 +330,7 @@ begin
      DriverCreate;
      end;
   if not DriverIsLoaded() then Exit;
-  PortHandle := LPTBaseAA[LPT];
+  PortAddress := LPTBaseAA[LPT];
   Result := True;
 end;
 

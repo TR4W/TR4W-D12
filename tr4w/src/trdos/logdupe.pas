@@ -1471,7 +1471,11 @@ procedure DupeAndMultSheet.SaveRestartFile;
 var
  // Band                                  : BandType;
  // Mode                                  : ModeType;
-  FileWrite                             : THandle;
+   (* TFileHandle (utils_file), NOT a bare THandle: this unit names LCLType,
+     which redeclares THandle as a distinct type its own source marks
+     deprecated. Identical width on 32-bit Windows, different on every
+     64-bit target. See the note on TFileHandle in utils_file. *)
+  FileWrite                             : TFileHandle;
  // Block, Result{, NumberBlocks}           : integer;
 
 begin
@@ -1547,7 +1551,7 @@ var
  // Mode                                  : ModeType;
   RestartVersion                        : Str10;
   NameOfContest                         : Str80;
-  h                                     : THandle;   (* A FILE handle, not a window. *)
+  h                                     : TFileHandle;   (* utils_file's -- see TFileHandle *)
 begin
   DisposeOfMemoryAndZeroTotals;
 

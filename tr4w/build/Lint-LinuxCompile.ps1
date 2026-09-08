@@ -92,6 +92,33 @@ $UNITS = @(
    @{ Unit = 'utils' + [char]92 + 'uAudio.pas'; Since = '2026-09-08' }
    @{ Unit = 'GetWinVersionInfo.pas'; Since = '2026-09-08' }
 
+   # MainUnit, ADDED 2026-09-08, AND IT IS NOT ONE UNIT.
+   #
+   # It is the top of the app's dependency graph, so this single entry compiles
+   # most of src for x86_64-linux: TRDOS, the radio and rotator factories, the
+   # LCL forms, the domain layer, Indy. Every other row above is reachable from
+   # it. That makes this pin SLOW -- it is the whole tree, not a leaf -- and it
+   # is worth it, because it is the only entry that can catch a regression in a
+   # unit nobody thought to pin.
+   #
+   # WHAT IT TOOK, all of it invisible to a grep for `Windows.`:
+   #   * TLVItem in the log-row builder -- a comctl32 struct used as a carrier
+   #     for two values, replaced by the two values
+   #   * THandle meaning two different types depending on uses-clause ORDER
+   #     (LCLType redeclares it), which is why utils_file now names
+   #     TFileHandle and VC names TLPTBaseAddress
+   #   * a menu routine still taking Win32 MF_* flags although its body had
+   #     been `item.Enabled := ...` for weeks
+   #   * SetThreadPriority/CloseHandle on threads, where the RTL reaches the
+   #     same Win32 call anyway
+   #   * the plugin loader and the inpout32 load, both GATED rather than
+   #     ported, because both are open product decisions
+   #
+   # IF THIS ROW FAILS, DO NOT DELETE IT. The failure is the finding. It means
+   # a Windows dependency has been added somewhere in the tree, and the error
+   # names the unit and the identifier.
+   @{ Unit = 'MainUnit.pas';          Since = '2026-09-08' }
+
 )
 
 if (-not (Test-Path $fpc))

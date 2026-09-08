@@ -213,7 +213,7 @@ begin
      CATWTR^.tKeyerSerialPort := nil;
      FreeAndNil(CPUKeyer.SerialPortObject[CATWTR^.tKeyerPort]);
      end;
-  CATWTR^.tKeyerPortHandle := INVALID_HANDLE_VALUE;
+  CATWTR^.tKeyerPortHandle := LPT_NO_PORT;   (* an LPT address, not a handle *)
 
   //  if (RadioToClose^.tr4w_KeyerPort >= Parallel1) and (RadioToClose^.tr4w_KeyerPort <= Parallel3) then    DestroyDlPortio;
 

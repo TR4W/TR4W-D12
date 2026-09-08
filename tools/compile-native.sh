@@ -11,12 +11,28 @@
 #   ./tools/compile-native.sh uctydat.pas       one unit
 #   ./tools/compile-native.sh utils/utils_file.pas
 #   ./tools/compile-native.sh --all             the pinned list
+#   ./tools/compile-native.sh --tree            MainUnit and everything it
+#                                               needs, in ONE pass -- start here
 #   ./tools/compile-native.sh --every           EVERY unit under src, as a
 #                                               census: how far is the tree?
 #
-# Exit status is the compiler's for a single unit; for --all it is 0 only when
-# every pinned unit built.  --every always exits 0: it is a measurement, not a
-# gate, and a tree that does not fully build yet is the expected answer.
+# Exit status is the compiler's for a single unit; for --all and --tree it is
+# the compiler's too.  --every always exits 0: it is a measurement, not a gate,
+# and a tree that does not fully build yet is the expected answer.
+#
+# --tree IS THE ONE TO REACH FOR, and --every is almost never what you want.
+# FPC already resolves dependencies: pointed at MainUnit it compiles every unit
+# MainUnit needs, in order, reusing each .ppu -- ONE walk of the tree.  --every
+# asks each of ~1000 units to compile ON ITS OWN with the cache cleared in
+# between, so it walks the shared dependencies ~1000 times.  That is minutes
+# versus hours, and it is why --every prints progress: it is not hung, it is
+# doing something quadratic on purpose.
+#
+# WHAT --every BUYS FOR THAT PRICE, and it is not nothing: it finds units that
+# NOTHING REACHES.  A unit no longer in any uses clause is invisible to --tree
+# by definition, and a dead unit that stopped compiling years ago is exactly
+# the sort of thing worth knowing before someone reaches for it again.  Run it
+# when you want the census; run --tree when you want the answer.
 #
 # WHY THE PATHS ARE SPELLED OUT.  A glob over every package directory made the
 # command line long enough that the compiler stopped finding the RTL at all,
@@ -84,9 +100,34 @@ if [ -d "$LAZUTILS" ]; then
    FU="$FU -Fu$LAZUTILS"
 fi
 
+# datetimectrls: uEditQSOForm uses TDateTimePicker, an ordinary LCL component
+# that is NOT part of the LCL package itself.  Distro and fpcupdeluxe layouts
+# differ, so take the compiled units if they are there and fall back to the
+# source, which the compiler can build itself.
+for d in "$LAZROOT"/*/components/datetimectrls/lib/"$ARCH" \
+         "$LAZROOT"/components/datetimectrls/lib/"$ARCH" \
+         "$LAZROOT"/*/components/datetimectrls \
+         "$LAZROOT"/components/datetimectrls; do
+   if [ -d "$d" ]; then
+      FU="$FU -Fu$d"
+      break
+   fi
+done
+
+# EVERY SOURCE DIRECTORY, and this list had drifted from the cross-compile
+# probe's (2026-09-08).  It was missing src/lang, src/contestFactory and all
+# three vendored Indy directories, so a native run of MainUnit died on
+# "Can't find unit IdException used by uFactoryRadioBase" -- which reads as a
+# portability finding and is nothing of the sort.  A search-path gap and a real
+# Windows dependency produce the SAME message; only the unit name differs, and
+# only if you already know which units are ours.
 FU="$FU -Fu$SRC -Fu$SRC/utils -Fu$SRC/trdos -Fu$SRC/radioFactory"
 FU="$FU -Fu$SRC/rotatorFactory -Fu$SRC/domain -Fu$SRC/ui/lcl"
+FU="$FU -Fu$SRC/lang -Fu$SRC/contestFactory"
+# The vendored Indy 10.6.3.3 -- the same three directories the app build uses.
 FU="$FU -Fu$REPO/tr4w/include"
+FU="$FU -Fu$REPO/tr4w/include/Core -Fu$REPO/tr4w/include/System"
+FU="$FU -Fu$REPO/tr4w/include/Protocols"
 
 mkdir -p "$OUT"
 
@@ -108,31 +149,51 @@ first_error() {
       sed 's|.*/||' | cut -c1-78
 }
 
-# The pinned list mirrors tr4w/build/Lint-LinuxCompile.ps1.
-ALL="uWindowSnap.pas
-uAppPaths.pas
-uRussiaOblasts.pas
-uCRC32.pas
-uAccelerators.pas
-uBandLookup.pas
-uADIF.pas
-utils/utils_file.pas
-VC.pas
-cty.pas
-uctydat.pas
-uCallSignRoutines.pas
-ComPortEnumerator.pas
-uSerialPort.pas
-uYCCCSO2R.pas"
+# THE PINNED LIST IS READ FROM THE LINT, NOT COPIED FROM IT.
+#
+# It used to be a literal here under the comment "mirrors
+# tr4w/build/Lint-LinuxCompile.ps1", and by 2026-09-08 it did not: the lint had
+# eighteen units and this had fifteen, missing uStickyKeys, utils/uAudio and
+# GetWinVersionInfo.  Nothing reported that, because a list that is short only
+# runs FEWER checks -- it passes.  A drifting copy whose failure mode is a
+# quieter pass is the worst kind, so there is one list now and this reads it.
+#
+# The lint's rows look like
+#     @{ Unit = 'uBandLookup.pas'; Since = '2026-09-06' }
+# except one, which spells its separator as [char]92 to keep a backslash out of
+# a PowerShell string:
+#     @{ Unit = 'utils' + [char]92 + 'uAudio.pas'; Since = '2026-09-08' }
+#
+# SO IT IS NORMALISED FIRST, THEN EXTRACTED ONCE.  Trying to do both with two
+# alternative patterns in one sed script does not work and fails QUIETLY: the
+# general pattern also matches the [char]92 line and yields a bare 'utils',
+# which is then reported as a MISSING UNIT rather than as a parsing bug.  One
+# pattern, applied to text that has been made uniform, has no such arm.
+LINT="$REPO/tr4w/build/Lint-LinuxCompile.ps1"
+read_pinned() {
+   if [ ! -f "$LINT" ]; then
+      echo "No $LINT -- cannot read the pinned unit list." >&2
+      return 2
+   fi
+   sed "s/' *+ *\[char\]92 *+ *'/\\\\/g" "$LINT" |
+      sed -n "s/.*Unit *= *'\([^']*\)'.*/\1/p" |
+      tr '\\' '/'
+}
 
 if [ $# -eq 0 ]; then
-   echo "usage: $0 <unit.pas> | --all | --every" >&2
+   echo "usage: $0 <unit.pas> | --all | --tree | --every" >&2
    exit 2
 fi
 
 case "$1" in
    --all)
       ok=0; bad=0
+      ALL=$(read_pinned) || exit 2
+      if [ -z "$ALL" ]; then
+         echo "The pinned list came back EMPTY -- the lint's format changed." >&2
+         echo "Refusing to report success on nothing." >&2
+         exit 2
+      fi
       for u in $ALL; do
          if compile_one "$u"; then
             ok=$((ok + 1)); echo "  OK       $u"
@@ -146,6 +207,26 @@ case "$1" in
       exit $?
       ;;
 
+   --tree)
+      # ONE dependency walk, which is what the compiler is for.  The output
+      # directory is NOT cleared between units here -- reuse is the whole
+      # point, and the false-failure trap the header describes applies to
+      # INDEPENDENT compiles, not to a single graph the compiler is ordering
+      # itself.
+      rm -rf "$OUT"
+      mkdir -p "$OUT"
+      echo "compile-native ($ARCH): MainUnit.pas and everything it needs..."
+      # shellcheck disable=SC2086
+      "$FPC" -Mdelphi -Sc -T$TARGET -P$CPU -FU"$OUT" -Fi"$SRC" $FU \
+             "$SRC/MainUnit.pas"
+      status=$?
+      if [ "$status" -eq 0 ]; then
+         echo
+         echo "COMPILES: MainUnit and its whole dependency graph, for $ARCH."
+      fi
+      exit $status
+      ;;
+
    --every)
       # A CENSUS, not a gate. Prints the blocking reason for each failure,
       # collapsed and counted, because the same missing unit accounts for
@@ -153,9 +234,20 @@ case "$1" in
       ok=0; bad=0
       reasons="$OUT.reasons"
       : > "$reasons"
-      for u in $(cd "$SRC" && find . -name '*.pas' \
-                  ! -path './backup/*' ! -path './graphify-out/*' \
-                  | sed 's|^\./||' | sort); do
+      list=$(cd "$SRC" && find . -name '*.pas' \
+              ! -path './backup/*' ! -path './graphify-out/*' \
+              | sed 's|^\./||' | sort)
+      total=$(printf '%s\n' "$list" | wc -l | tr -d ' ')
+      n=0
+      echo "compile-native ($ARCH) CENSUS: $total unit(s), each compiled ON ITS"
+      echo "OWN with the cache cleared between them. This is SLOW BY DESIGN --"
+      echo "use --tree if you want the answer rather than the census."
+      echo
+      for u in $list; do
+         n=$((n + 1))
+         # Progress on ONE line to stderr, so a redirected stdout still holds
+         # nothing but the result. Without this the run looks hung for an hour.
+         printf '\r  [%d/%d] %-46s' "$n" "$total" "$u" >&2
          if compile_one "$u"; then
             ok=$((ok + 1))
          else
@@ -163,6 +255,7 @@ case "$1" in
             first_error >> "$reasons"
          fi
       done
+      printf '\r%-70s\r' '' >&2
       echo "compile-native ($ARCH) CENSUS: $ok compiled, $bad failed"
       echo
       echo "top blocking reasons:"

@@ -254,7 +254,11 @@ type
       // every reader needs converting.
       StatusVersion: cardinal;
       BandOutputPort:  PortType;
-      tBandOutputPortBaseAddress: THandle;
+      (* TLPTBaseAddress -- an I/O port address, never a handle. This field
+        and tKeyerPortHandle below were the two that made the mistyping
+        VISIBLE, because logradio names LCLType and so got a 64-bit THandle
+        where uIO had a 32-bit one. See the type's note in VC.pas. *)
+      tBandOutputPortBaseAddress: TLPTBaseAddress;
       FrequencyAdder:  longint;
       FT1000MPCWReverse: boolean;
       CWByCAT:         boolean;                    // ny4i 4.44.5
@@ -325,7 +329,11 @@ type
         meant two unrelated things depending on tKeyerPort -- an LPT port
         address for the parallel arms and a file handle for the serial ones. A
         serial keyer's port is tKeyerSerialPort below. *)
-      tKeyerPortHandle: THandle;
+      (* NOT A HANDLE EITHER, despite the name -- it holds LPTBaseAA[port].
+        The name is left alone on purpose: renaming it touches MainUnit's
+        keying paths and logk1ea, and that is a separate change from fixing
+        the width. *)
+      tKeyerPortHandle: TLPTBaseAddress;
 
       (* THE SERIAL KEYER'S PORT, nil unless tKeyerPort is a serial one.
 
@@ -2574,7 +2582,7 @@ begin
       TempRadio.RadioNumberBits := 8;
       TempRadio.RadioStopBits  := 2;
 
-      TempRadio.tKeyerPortHandle := INVALID_HANDLE_VALUE;
+      TempRadio.tKeyerPortHandle := LPT_NO_PORT;
       TempRadio.tKeyerSerialPort := nil;
       TempRadio.tr4w_keyer_rts_state := RtsDtr_PTT;
       TempRadio.tr4w_keyer_DTR_state := RtsDtr_CW;

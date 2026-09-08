@@ -18,8 +18,10 @@
    was invisible until someone read the text.
 
    THE SIGNATURE IS NARROW ON PURPOSE. A tab followed by a letter is far too
-   broad here: the lang files align comment tables with tabs, uCommctrl carries
-   pasted MSDN tables, and full.nsi indents with them. What is unambiguous is a
+   broad here: the lang files align comment tables with tabs, full.nsi indents
+   with them, and the hand-written Win32 headers used to carry pasted MSDN
+   tables full of them (those units are deleted now, but the reasoning holds --
+   pasted reference material is what makes a bare tab ambiguous). What is unambiguous is a
    tab followed by the tail of a path this project actually uses -- every path in
    TR4W contains tr4w, target or tools, so \t before one of those is the
    corruption and nothing else. Measured 2026-08-21: this pattern matched

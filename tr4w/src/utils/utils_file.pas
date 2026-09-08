@@ -20,16 +20,43 @@ interface
 
 uses SysUtils;
 
+(* THE FILE-HANDLE TYPE, NAMED HERE BECAUSE `THandle` IS AMBIGUOUS (2026-09-08).
+
+  There are TWO types spelled THandle reachable from ordinary TR4W code, and
+  which one a unit gets depends on the ORDER of its uses clause:
+
+     System.THandle    the RTL's, what SysUtils' FileOpen/FileRead/FileClose
+                       take, and what every routine below actually wants
+     LCLType.THandle   `type PtrUInt`, a distinct type that Lazarus's own
+                       source marks `deprecated 'Use TLCLHandle instead of
+                       this redefined THandle'`
+
+  A unit that names LCLType after SysUtils silently gets the second one. On
+  32-bit Windows both are 32 bits and every call still compiles, so the tree
+  carried the mix for as long as there was one target. Compiling for
+  x86_64-linux produced `Call by var for arg no. 1 has to match exactly: Got
+  "THandle" expected "LongInt"` in unit after unit -- six sites in postunit
+  alone -- and THE SAME DIVERGENCE IS WAITING FOR 64-BIT WINDOWS.
+
+  Naming it here rather than qualifying at 49 declaration sites has one
+  concrete advantage: every caller of these routines ALREADY imports this unit
+  in order to call them, so the type arrives with no uses-clause change and no
+  chance of picking up the wrong THandle on the way in. It also says what the
+  value IS, which `THandle` never did -- a window, a thread, a mutex and a file
+  were all the same word. *)
+type
+  TFileHandle = System.THandle;
+
 function FileExists(FileName: PAnsiChar): boolean;
 
-function sWriteFile(hFile: THandle; const Buffer; nNumberOfBytesToWrite: DWORD): boolean;
-function sWriteFileFromString(hFile: THandle; sBuffer: AnsiString): boolean;
-function tWriteFile(hFile: THandle; const Buffer; nNumberOfBytesToWrite: DWORD; var lpNumberOfBytesWritten: DWORD): boolean;
-function sReadFile(hFile: THandle; var Buffer; nNumberOfBytesToRead: DWORD): boolean;
+function sWriteFile(hFile: TFileHandle; const Buffer; nNumberOfBytesToWrite: DWORD): boolean;
+function sWriteFileFromString(hFile: TFileHandle; sBuffer: AnsiString): boolean;
+function tWriteFile(hFile: TFileHandle; const Buffer; nNumberOfBytesToWrite: DWORD; var lpNumberOfBytesWritten: DWORD): boolean;
+function sReadFile(hFile: TFileHandle; var Buffer; nNumberOfBytesToRead: DWORD): boolean;
 { How many bytes the open file holds, WITHOUT moving the read position. }
-function sFileSize(hFile: THandle): Int64;
+function sFileSize(hFile: TFileHandle): Int64;
 
-function tOpenFileForWrite(var h: THandle; FileName: PAnsiChar): boolean;
+function tOpenFileForWrite(var h: TFileHandle; FileName: PAnsiChar): boolean;
 function OpenFileForWrite(var FileHandle: Text; FileName: string): boolean;
 
 implementation
@@ -53,7 +80,7 @@ begin
   Result := FileGetAttr(AnsiString(FileName)) <> -1;
 end;
 
-function tWriteFile(hFile: THandle; const Buffer; nNumberOfBytesToWrite: DWORD; var lpNumberOfBytesWritten: DWORD): boolean;
+function tWriteFile(hFile: TFileHandle; const Buffer; nNumberOfBytesToWrite: DWORD; var lpNumberOfBytesWritten: DWORD): boolean;
 var
   written: LongInt;
 begin
@@ -82,7 +109,7 @@ end;
   size and then reading the index array from the current position.
 
   So this saves the position, seeks to the end, and puts it back. *)
-function sFileSize(hFile: THandle): Int64;
+function sFileSize(hFile: TFileHandle): Int64;
 var
   saved: Int64;
 begin
@@ -91,7 +118,7 @@ begin
   FileSeek(hFile, saved, fsFromBeginning);
 end;
 
-function sReadFile(hFile: THandle; var Buffer; nNumberOfBytesToRead: DWORD): boolean;
+function sReadFile(hFile: TFileHandle; var Buffer; nNumberOfBytesToRead: DWORD): boolean;
 begin
   (* A read of zero bytes at end of file is SUCCESS, exactly as ReadFile
     reported it -- the count was already discarded here, so callers have
@@ -99,12 +126,12 @@ begin
   Result := FileRead(hFile, Buffer, nNumberOfBytesToRead) >= 0;
 end;
 
-function sWriteFile(hFile: THandle; const Buffer; nNumberOfBytesToWrite: DWORD): boolean;
+function sWriteFile(hFile: TFileHandle; const Buffer; nNumberOfBytesToWrite: DWORD): boolean;
 begin
   Result := FileWrite(hFile, Buffer, nNumberOfBytesToWrite) >= 0;
 end;
 
-function sWriteFileFromString(hFile: THandle; sBuffer: AnsiString): boolean;
+function sWriteFileFromString(hFile: TFileHandle; sBuffer: AnsiString): boolean;
 // Write the entire string to hFile.  Bug history: prior versions copied
 // sBuffer into a fixed 256-byte stack buffer via StrLCopy and then asked
 // WriteFile to write length(sBuffer) bytes -- which read random stack
@@ -122,7 +149,7 @@ begin
    Result := FileWrite(hFile, sBuffer[1], Length(sBuffer)) >= 0;
 end;
 
-function tOpenFileForWrite(var h: THandle; FileName: PAnsiChar): boolean;
+function tOpenFileForWrite(var h: TFileHandle; FileName: PAnsiChar): boolean;
 begin
   (* FileCreate IS CREATE_ALWAYS: it makes the file, or truncates one that is
     already there, and opens it read/write -- which is what the flags this

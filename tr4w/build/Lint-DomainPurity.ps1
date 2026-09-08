@@ -33,7 +33,10 @@ if (-not (Test-Path $SourceDir)) {
 $forbiddenUnits = @(
    'Forms', 'Controls', 'Graphics', 'StdCtrls', 'ExtCtrls', 'ComCtrls',
    'Grids', 'Dialogs', 'Menus', 'Buttons', 'LCLType', 'LCLIntf', 'LMessages',
-   'Windows', 'Messages', 'CommCtrl', 'uCommctrl', 'ShellAPI'
+   'Windows', 'Messages', 'CommCtrl', 'ShellAPI'
+   # 'uCommctrl' stood in this list and was removed 2026-09-08: the unit is
+   # deleted, so the entry could never fire.  FPC's own 'CommCtrl' stays --
+   # that one still exists and is still forbidden in domain code.
 )
 
 # Identifiers that mean the same thing even without a uses clause.

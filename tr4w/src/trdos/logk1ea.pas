@@ -268,10 +268,14 @@ var
     the two names exists off Windows, and these four INITIALISERS were what
     stopped this unit compiling for Linux. That in turn blocked MainUnit, so
     the compiler could not be asked what MainUnit itself still needs. *)
-  tPaddlePortBaseAddress                : THandle = feInvalidHandle;
-  tFootSwitchPortBaseAddress            : THandle = feInvalidHandle;
-  tRelayControlPortBaseAddress          : THandle = feInvalidHandle;
-  tActiveStereoPortBaseAddress          : THandle = feInvalidHandle;
+  (* TLPTBaseAddress, NOT THandle -- see the type's note in VC.pas. These are
+    I/O port addresses, and the handle typing resolved to two DIFFERENT widths
+    depending on whether a unit named LCLType. LPT_NO_PORT keeps the exact bit
+    pattern feInvalidHandle had on Win32, so no comparison changes value. *)
+  tPaddlePortBaseAddress                : TLPTBaseAddress = LPT_NO_PORT;
+  tFootSwitchPortBaseAddress            : TLPTBaseAddress = LPT_NO_PORT;
+  tRelayControlPortBaseAddress          : TLPTBaseAddress = LPT_NO_PORT;
+  tActiveStereoPortBaseAddress          : TLPTBaseAddress = LPT_NO_PORT;
 
   tUseControlPort                       : boolean;
 
@@ -401,7 +405,7 @@ procedure DoABeep(TypeOfBeep: BeepType);
 procedure DVKEnableWrite;
 procedure DVKDisableWrite;
 function DVKMessagePlaying: boolean;
-procedure OutputBandInfo(BaseAddress: THandle {ParallelPort: PortType}; Band: BandType; Mode: ModeType);
+procedure OutputBandInfo(BaseAddress: TLPTBaseAddress {ParallelPort: PortType}; Band: BandType; Mode: ModeType);
 procedure SetDVKDelay(Delay: integer);
 procedure SetRelayForActiveRadio(Radio: RadioType);
 procedure SetStereoPin(PinNumber: integer; PinSet: boolean); {KK1L: 6.71}
@@ -618,7 +622,7 @@ var
   TempByte                              : Byte;
   Mask                                  : TBitSet;
 begin
-  if tActiveStereoPortBaseAddress = feInvalidHandle then Exit;
+  if tActiveStereoPortBaseAddress = LPT_NO_PORT then Exit;
 
   case PinNumber of
     5: Mask := bsBIT3; { Pin five, bit 3 }
@@ -698,7 +702,7 @@ begin
 
     if ActiveRadioPtr.tKeyerPort in [Parallel1..Parallel3] then
        begin
-       if ActiveRadioPtr.tKeyerPortHandle = feInvalidHandle then Exit;
+       if ActiveRadioPtr.tKeyerPortHandle = LPT_NO_PORT then Exit;
        TempByte := GetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl);
        DriverBitOperation(TempByte, CW_SIGNAL, boSet1);
          {17PIN}
@@ -815,7 +819,7 @@ begin
     if ActiveRadioPtr.tr4w_KeyerPortHandle = feInvalidHandle then Exit;
     SetPortByte(ActiveRadioPtr.tr4w_KeyerPortHandle + 2, LPTTempByte);
   }
-  if tRelayControlPortBaseAddress = feInvalidHandle then Exit;
+  if tRelayControlPortBaseAddress = LPT_NO_PORT then Exit;
 
   TempRadio := Radio;
 
@@ -1687,10 +1691,22 @@ begin
   logger.Info('Calling tCreateThread from DoABeep');
   TR4W_BeepThread := tCreateThread(@tDoABeep, TR4W_BeepThreadID);
   logger.Info('Created Beep thread with threadid of %d',[TR4W_BeepThreadID] );
-  // Issue #997: asm SetThreadPriority -> Pascal call. The old `push eax` pushed a
-  // stale handle (clobbered by the preceding logger.Info), so this never applied;
-  // now set it on the real handle. BEHAVIOR CHANGE: beep thread now runs IDLE.
-  SetThreadPriority(TR4W_BeepThread, THREAD_PRIORITY_IDLE);
+  (* Issue #997: asm SetThreadPriority -> Pascal call. The old `push eax` pushed
+    a stale handle (clobbered by the preceding logger.Info), so this never
+    applied; now set it on the real handle. BEHAVIOR CHANGE: beep thread now
+    runs IDLE.
+
+    ThreadSetPriority IS THE RTL'S, AND ON WINDOWS IT IS THE SAME CALL
+    (2026-09-08). FPC's SysThreadSetPriority passes the handle straight to
+    SetThreadPriority -- rtl/win/systhrd.inc:334 -- so this is byte-identical
+    here, and it exists on every target instead of one.
+
+    -15 IS THREAD_PRIORITY_IDLE. The RTL documents its range as {-15..+15,
+    0=normal}, which is the Win32 scale unchanged, so the value is the constant
+    rather than a translation of it. Off Windows the call may simply fail
+    without privileges; a beep that runs at normal priority is the right
+    outcome there, and it is not worth a gate. *)
+  ThreadSetPriority(TR4W_BeepThread, -15);
 
 end;
 
@@ -1880,7 +1896,7 @@ begin
 
 end;
 
-procedure OutputBandInfo(BaseAddress: THandle; Band: BandType; Mode: ModeType);
+procedure OutputBandInfo(BaseAddress: TLPTBaseAddress; Band: BandType; Mode: ModeType);
 
 { Outputs the appropriate bits to the parallel port }
 
@@ -1890,7 +1906,7 @@ var
 const
    BandInfoArray                         : array[BandType] of Byte = ($01, $20, $21, $41, $61, $81, $40, $60, $80, $A0, $A1, $C0, $C1, $E0, $E1, $00, $00, $00, $00, $00, $00, $00, $00);
 begin
-  if BaseAddress = feInvalidHandle then Exit;
+  if BaseAddress = LPT_NO_PORT then Exit;
   Image := BandInfoArray[Band];
   if Mode = Phone then
      begin
@@ -2094,7 +2110,11 @@ begin
   timeEndPeriod(1);
 {$ENDIF}
 
-  if not CloseHandle(CWThreadHandle) then
+  (* CloseThread, NOT CloseHandle -- the RTL's own name for exactly this, and
+    on Windows it reaches the same API. It returns a dword rather than a
+    boolean, hence the <> 0 test: the RTL follows CloseHandle's convention of
+    non-zero for success. *)
+  if CloseThread(CWThreadHandle) = 0 then
      begin
      ShowSysErrorMessage('CW');
      end;
@@ -2414,7 +2434,7 @@ begin
        DahContact := False;
        if not tUseControlPort then
           begin
-          if tPaddlePortBaseAddress <> feInvalidHandle then
+          if tPaddlePortBaseAddress <> LPT_NO_PORT then
              begin
              TempByte := GetPortByte(tPaddlePortBaseAddress, otState);
    //          Windows.SetWindowTextA(wh[mweUserInfo], inttopchar(TempByte));

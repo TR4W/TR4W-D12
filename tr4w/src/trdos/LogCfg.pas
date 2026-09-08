@@ -260,25 +260,25 @@ begin
  //      Exit;
        end;
 
-  tRelayControlPortBaseAddress := THandle(-1);
+  tRelayControlPortBaseAddress := LPT_NO_PORT;
   if tGetPortType(RelayControlPort) = ParallelInterface then
      begin
      OpenLPT(tRelayControlPortBaseAddress, RelayControlPort);
      end;
 
-  tActiveStereoPortBaseAddress := THandle(-1);
+  tActiveStereoPortBaseAddress := LPT_NO_PORT;
   if tGetPortType(ActiveStereoPort) = ParallelInterface then
      begin
      OpenLPT(tActiveStereoPortBaseAddress, ActiveStereoPort);
      end;
 
-  Radio1.tBandOutputPortBaseAddress := THandle(-1);
+  Radio1.tBandOutputPortBaseAddress := LPT_NO_PORT;
   if tGetPortType(Radio1.BandOutputPort) = ParallelInterface then
      begin
      OpenLPT(Radio1.tBandOutputPortBaseAddress, Radio1.BandOutputPort);
      end;
 
-  Radio2.tBandOutputPortBaseAddress := THandle(-1);
+  Radio2.tBandOutputPortBaseAddress := LPT_NO_PORT;
   if tGetPortType(Radio2.BandOutputPort) = ParallelInterface then
      begin
      OpenLPT(Radio2.tBandOutputPortBaseAddress, Radio2.BandOutputPort);

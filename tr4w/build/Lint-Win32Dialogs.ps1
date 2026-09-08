@@ -192,22 +192,24 @@ $platformPatterns = [ordered]@{
    'mmtty.WindowMsg'   = '\bRegisterWindowMessage[AW]?\s*\('
 }
 
-# FILES A GIVEN KIND DOES NOT APPLY TO.
+# FILES A GIVEN KIND DOES NOT APPLY TO.  Empty, and that is the finished state.
 #
-# Only type.HWND needs this, and only for the two units that are TRANSLATIONS OF
-# THE WINDOWS API rather than TR4W code: uCommctrl.pas is commctrl.h and
-# MMSystem.pas is mmsystem.h.  Their HWNDs are the API declaring its own
-# signatures -- PFNPROPSHEETCALLBACK takes an HWND because Windows says so --
-# and no amount of LCL work removes one.  They go when the last consumer does,
-# whole.
+# It held one entry, excluding uCommctrl.pas and MMSystem.pas from type.HWND
+# because those two units were TRANSLATIONS OF THE WINDOWS API rather than TR4W
+# code -- hand-written commctrl.h and mmsystem.h, whose HWNDs were the API
+# declaring its own signatures.  They were 899 of the 1543 HWND references, so
+# counting them made the ratchet 58% inert.
 #
-# It matters because they are 899 of the 1543: counting them makes the ratchet
-# 58% inert, so a real reduction of twenty in TR4W's own code would round to
-# nothing.  Excluded, the number is what it claims to be -- TR4W's own use of a
-# handle that cannot exist on GTK or Cocoa.
-$patternFileExclusions = @{
-   'type.HWND' = '(?i)\\(uCommctrl|MMSystem)\.pas$'
-}
+# BOTH UNITS ARE DELETED (2026-09-07/08; MMSystem duplicated the RTL's, and
+# uCommctrl's last consumer went when the log windows became LCL grids), which
+# is why the ratchet now reads 11 rather than four figures.  The exclusion was
+# matching no file at all, and a rule that names a deleted file reads as though
+# the file is still here -- it cost a wrong answer in MainUnit's uses clause,
+# where a comment kept insisting uCommctrl was imported months after it was not.
+#
+# Removing it is a no-op by measurement, not by argument: type.HWND counted 11
+# with the exclusion and 11 without it.
+$patternFileExclusions = @{ }
 
 $patternGroups = [ordered]@{
    'ui'       = $patterns

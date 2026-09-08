@@ -283,7 +283,18 @@ procedure TfrmEditMessage.btnEditWavClick(Sender: TObject);
 var
   msg: string;
   path: AnsiString;
-  h: THandle;
+  (* System.THandle, QUALIFIED, and it has to be (2026-09-08).
+
+    This unit names LCLType, which REDECLARES `THandle = type PtrUInt` -- with
+    Lazarus's own deprecation note, "Use TLCLHandle instead of this redefined
+    THandle". LCLType sits after SysUtils in the clause above, so a bare
+    THandle here is the LCL's, while utils_file.tOpenFileForWrite takes the
+    RTL's. Same spelling, different type, and on 32-bit Windows the same width,
+    so nothing said a word until an x86_64 target did.
+
+    This one IS a file handle -- tOpenFileForWrite / sWriteFile / FileClose --
+    so the RTL's is the type that is actually wanted. *)
+  h: TFileHandle;
   cmd: array[0..511] of AnsiChar;
 begin
    msg := edtMessage.Text;
