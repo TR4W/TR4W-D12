@@ -20,7 +20,7 @@ unit uSuperCheckPartialFileUpload;
 interface
 
 
-uses Classes, SysUtils, IdSSLOpenSSLHeaders, IdHashSHA, IdHttp, IdGlobal, Log4D, uLogConfig,
+uses Classes, SysUtils, IdSSLOpenSSLHeaders, IdHashSHA, IdHTTP, IdGlobal, Log4D, uLogConfig,
      IdCoderMIME, IdSSLOpenSSL, IdIOHandler, IdIOHandlerSocket, IdLogFile, DateUtils;
 
 

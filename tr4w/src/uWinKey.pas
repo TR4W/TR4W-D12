@@ -305,7 +305,7 @@ uses
   LogWind,
   LogCW,
   LogK1EA,
-  CFGCMD,
+  CfgCmd,
   MainUnit;
 
 (* FORWARD, because the port helpers are defined beside wkOpenPort at the

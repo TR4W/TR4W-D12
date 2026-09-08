@@ -17,7 +17,7 @@
      Public License along with TR4W.  If not, see
  <http: www.gnu.org/licenses/>.
  }
-unit LOGSend;
+unit LogSend;
 {$I ..\tr4w.inc}
 
 {$IMPORTEDDATA OFF}

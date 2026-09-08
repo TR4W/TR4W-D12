@@ -445,7 +445,7 @@
 
   TC_CLEANSWEEPCONGRATULATIONS          = 'FELICITARI !! o reusita meritata !!';
 
-  {CFGCMD}
+  {CfgCmd}
 
   TC_NETWORKTEST                        = 'Testarea retelei';
   TC_MAXIMUMNUMBEROFREMINDERSEXCEEDED   = 'Depasit numarul maxim de atentionari !!';

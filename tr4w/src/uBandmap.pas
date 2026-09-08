@@ -32,7 +32,7 @@ uses
   TF,
   VC,
   uTelnet,
-  uWinkey,
+  uWinKey,
 (* Windows: named but used nowhere in this unit (2026-09-08). *)
   LogCW,
   LogEdit,

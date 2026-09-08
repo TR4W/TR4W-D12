@@ -85,7 +85,7 @@ uses
   LogStuff,            // DupeInfoCall, SCPMinimumLetters
   LogEdit,             // VisibleLog
   LogRadio,            // InActiveRadioPtr
-  uDupeSheet,          // ClearAltD
+  uDupesheet,          // ClearAltD
   LogWind,
   MainUnit,            // tClearDupeInfoCall, logger
   Log4D;

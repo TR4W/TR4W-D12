@@ -28,7 +28,7 @@ uses
   uCFG,
   TF,
   VC,
-  CFGCMD,
+  CfgCmd,
   LogK1EA,
   uIO,
   LogWind,

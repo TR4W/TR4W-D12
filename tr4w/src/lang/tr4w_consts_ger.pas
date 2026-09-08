@@ -438,7 +438,7 @@
 
   TC_CLEANSWEEPCONGRATULATIONS          = 'CLEAN SWEEP!! GRATULATION!!';
 
-  {CFGCMD}
+  {CfgCmd}
 
   TC_NETWORKTEST                        = 'Netzwerktest';
   TC_MAXIMUMNUMBEROFREMINDERSEXCEEDED   = 'Maximale Zahl von Erinnerungen erreicht!!';

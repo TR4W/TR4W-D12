@@ -368,7 +368,7 @@ const
   TC_ISQRVFOR                           = '%s %s руу бэлэн байна уу?';
   {UREMMULTS}
   TC_CLEANSWEEPCONGRATULATIONS          = 'Бvрэн ЯЛАЛТ!! Баяр хvргэе!!';
-  {CFGCMD}
+  {CfgCmd}
   TC_NETWORKTEST                        = 'Сvлжээгээ шалгах';
   TC_MAXIMUMNUMBEROFREMINDERSEXCEEDED   = 'Сануулах vгийн хэмжээ их байна!!';
   TC_INVALIDREMINDERTIME                = 'Сануулах цаг буруу байна!!';

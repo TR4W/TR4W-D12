@@ -58,7 +58,7 @@ uses
   uMMTTY,
   utils_text,
   uCallSignRoutines,
-  uCallSigns,
+  uCallsigns,
   uCTYDAT,
   uBMCF,
   uIO,
@@ -725,7 +725,7 @@ uses
   LogCW,
   uCWKeyerBase,     // ActiveCWKeyer -- autosend routing (B2)
   uCT1BOH,
-  CFGCMD,
+  CfgCmd,
   CFGDEF,
   // Country9,
   FCONTEST,

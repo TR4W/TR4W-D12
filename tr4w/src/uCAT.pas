@@ -33,7 +33,7 @@ uses
   LCLType,
   LogRadio,
   LogCW,
-  CFGCMD,
+  CfgCmd,
   LogWind,
   LogK1EA,
   Tree,

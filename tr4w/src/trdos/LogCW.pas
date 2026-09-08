@@ -186,7 +186,7 @@ uses
   uFreqTimeFormat,   { FormatHourMinute -- see TimeString }
   LogStuff,
   uTelnet,
-  CFGCMD,
+  CfgCmd,
   uNet,
   // CW keyer factory: the four adapters are listed so their initialization
   // sections run (they self-install into the KeyerXXX slots).  This unit is

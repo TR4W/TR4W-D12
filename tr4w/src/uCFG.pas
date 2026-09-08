@@ -47,7 +47,7 @@ uses
    ZoneCont,
    utils_text,
    //Country9,
-   CFGCMD,
+   CfgCmd,
    LCLType,   // MAXWORD, in the crMax column of the command table
    LogStuff,
    LogK1EA,
@@ -65,8 +65,8 @@ uses
    uFunctionKeys,
    Tree,
    VC,
-   idUDPClient,
-   idGlobal,
+   IdUDPClient,
+   IdGlobal,
    Log4D,
    uExternalLoggerBase
    ,

@@ -28,7 +28,7 @@ uses
   uWinKey,
   uAltD,
   uCTYDAT,
-  uDupeSheet,  // 4.53.7
+  uDupesheet,  // 4.53.7
 //  uStack,
   uStations,
   uCallsigns,
@@ -40,8 +40,8 @@ uses
   VC,
   //TR,
   uSpots,
-  idUDPClient,
-  idGlobal,
+  IdUDPClient,
+  IdGlobal,
   PostUnit,
   uCabrilloFormat,  // tCabrilloFreqString moved here from PostUnit (extracted for unit testing)
   uTotal,
@@ -53,7 +53,7 @@ uses
   Math,  // ny4i 4.44.9
   {JCtrl1,}
   {JCtrl2,}
-  CFGCMD,
+  CfgCmd,
   LogCfg,
   LogCW,
   LogDom,
@@ -68,7 +68,7 @@ uses
   LogNet,
   LogPack,
   LogRadio, { Currently not an overlay }
-  LOGSend,
+  LogSend,
   LogSCP,
   LogStuff,
   uMults,

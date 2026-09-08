@@ -31,7 +31,7 @@ uses
   VC,
   TF,
   Tree,
-  LOGSend,
+  LogSend,
   LogCW,
   uCWKeyerBase,   // KeyerCPU -- CPU-keyer-only flush (B3)
   LogWind,

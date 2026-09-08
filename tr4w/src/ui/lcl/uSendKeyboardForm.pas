@@ -85,7 +85,7 @@ uses
   Tree,           // RemoveFirstString, GetRidOfPrecedingSpaces
   uConfigValues,  // Config.CWTone, Config.DVKEnable
   LogCW,          // AddStringToBuffer, tAutoSendMode, CWStillBeingSent
-  LOGSend,        // SendCrypticDVPString
+  LogSend,        // SendCrypticDVPString
   LogWind,
   LogK1EA,
   uCWKeyerBase,   // KeyerCPU / KeyerWinKey -- the targeted flush

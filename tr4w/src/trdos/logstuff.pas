@@ -53,8 +53,8 @@ uses {Dos, Printer,}Tree,
   LogRadio,
   (* Messages declared nothing here. MAXWORD is the only Win32 name left and
     LCLType -- already in this clause -- has it, same value (2026-09-08). *)
-  idUDPClient, // ny4i 4.44.9
-  idGlobal, // ny4i 4.44.9
+  IdUDPClient, // ny4i 4.44.9
+  IdGlobal, // ny4i 4.44.9
   SysUtils, // ny4i 4.44.9
   StrUtils, // 4.90.11
   uRegex,

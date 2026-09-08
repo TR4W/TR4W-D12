@@ -30,8 +30,8 @@ uses
   VC,
   uIO,
   utils_text,
-  idUDPClient,
-  idGlobal,
+  IdUDPClient,
+  IdGlobal,
   LogStuff,
   (* Windows was here for lstrcatA, Sleep and INVALID_HANDLE_VALUE.
     uAnsiStr.StrLCopy and SysUtils answer the first two; the third is
@@ -57,7 +57,7 @@ uses
   LogPack,
   LogK1EA, {DOS,}
 //  Help,
-  CFGCMD,
+  CfgCmd,
   {SlowTree,}Tree, {Crt,}
 //  LOGMENU,
   LogNet,

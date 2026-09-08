@@ -34,7 +34,7 @@ uses
    Tree,
    LogRadio,
    LogEdit,
-   uDupeSheet, // 4.53.7
+   uDupesheet, // 4.53.7
    uFunctionKeys,
    utils_file,
    uHostName,   (* LocalComputerName -- the <StationName> element *)
@@ -43,8 +43,8 @@ uses
    LogWind,
    LogStuff,
    LogK1EA,
-   idUDPClient, // ny4i 4.44.9
-   idGlobal, // ny4i 4.44.9
+   IdUDPClient, // ny4i 4.44.9
+   IdGlobal, // ny4i 4.44.9
    LCLType,
    StrUtils,
    Math,

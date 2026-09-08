@@ -41,7 +41,7 @@ uses
   uSpots,
   uLogCompare,
   uIntercom,
-  CFGCMD,
+  CfgCmd,
   //Country9,
   LogSCP,
   LogPack,

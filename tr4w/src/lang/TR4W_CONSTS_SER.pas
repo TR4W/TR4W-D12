@@ -448,7 +448,7 @@ const
 
   TC_CLEANSWEEPCONGRATULATIONS          = 'Cista pobeda! Cestitamo!!';
 
-  {CFGCMD}
+  {CfgCmd}
 
   TC_NETWORKTEST                        = 'Provera mreze';
   TC_MAXIMUMNUMBEROFREMINDERSEXCEEDED   = 'Maksimalni broj podsetnika je iskoriscen!!';

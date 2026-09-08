@@ -17,7 +17,7 @@
      Public License along with TR4W.  If not, see
  <http: www.gnu.org/licenses/>.
  }
-unit CFGCMD;
+unit CfgCmd;
 {$I ..\tr4w.inc}
 
 {$IMPORTEDDATA OFF}

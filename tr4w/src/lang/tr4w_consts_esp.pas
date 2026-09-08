@@ -473,7 +473,7 @@
 
   TC_CLEANSWEEPCONGRATULATIONS          = '¡¡BARRIDO COMPLETO!! ¡¡FELICITACIONES!!';
 
-  {CFGCMD}
+  {CfgCmd}
 
   TC_NETWORKTEST                        = 'Prueba Network';
   TC_MAXIMUMNUMBEROFREMINDERSEXCEEDED   = '¡¡Se excedió el número máximo de recordatorios!!';

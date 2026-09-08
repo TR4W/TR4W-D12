@@ -51,7 +51,7 @@ utils_text,
   LogCW,
   uCWKeyerBase,   // KeyerWinKey -- tune is pinned to the WinKeyer (B4)
   LogK1EA,
-  CFGCMD,
+  CfgCmd,
   LogStuff,
   SysUtils,
   uTR4WStrings;

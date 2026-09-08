@@ -510,7 +510,7 @@ TC_TELNET                             = 'Connect'#0'Disconnect'#0'Commands'#0'Fr
   {DLPORTIO}
   TC_DLPORTIODRIVERISNOTINSTALLED       = 'Драйвер DLPortIO не встановлений.';
 
-  {CFGCMD}
+  {CfgCmd}
 
   TC_NETWORKTEST                        = 'Режим тестування мережі';
   TC_MAXIMUMNUMBEROFREMINDERSEXCEEDED   = 'Максимальне число нагадувань вичерпано!!';

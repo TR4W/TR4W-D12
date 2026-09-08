@@ -426,7 +426,7 @@ resourcestring
    // UREMMULTS
    TC_CLEANSWEEPCONGRATULATIONS          = 'CLEAN SWEEP!! CONGRATULATIONS!!';
 
-   // CFGCMD
+   // CfgCmd
    TC_NETWORKTEST                        = 'Network Test';
    TC_MAXIMUMNUMBEROFREMINDERSEXCEEDED   = 'Maximum number of reminders exceeded!!';
    TC_INVALIDREMINDERTIME                = 'Invalid reminder time!!';

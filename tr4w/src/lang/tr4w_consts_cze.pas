@@ -445,7 +445,7 @@ const
 
   TC_CLEANSWEEPCONGRATULATIONS          = 'UKLIZENO! BLAHOPŘEJEME!';
 
-  {CFGCMD}
+  {CfgCmd}
 
   TC_NETWORKTEST                        = 'Kontrola sítě';
   TC_MAXIMUMNUMBEROFREMINDERSEXCEEDED   = 'Překročen maximální počet připomínek!';

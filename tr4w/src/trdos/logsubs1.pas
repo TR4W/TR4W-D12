@@ -38,7 +38,7 @@ uses
   SysUtils,
   //Country9,
   FCONTEST,
-  CFGCMD,
+  CfgCmd,
   uTotal,
   LogCfg,
   LogCW,
@@ -54,7 +54,7 @@ uses
   LogNet,
   LogPack,
   LogRadio, { Currently not an overlay }
-  LOGSend,
+  LogSend,
   LogSCP,
   LogStuff,
   LOGWAE,

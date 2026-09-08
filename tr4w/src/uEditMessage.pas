@@ -25,7 +25,7 @@ interface
 //
 uses
   uMessagesList,
-  CFGCMD,
+  CfgCmd,
   TF,
   VC,
   utils_file,

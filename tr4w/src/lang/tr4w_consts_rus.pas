@@ -508,7 +508,7 @@ const
   {DLPORTIO}
   TC_DLPORTIODRIVERISNOTINSTALLED       = 'Драйвер DLPortIO не установлен.';
 
-  {CFGCMD}
+  {CfgCmd}
 
   TC_NETWORKTEST                        = 'Режим тестирования сети';
   TC_MAXIMUMNUMBEROFREMINDERSEXCEEDED   = 'Максимальное число напоминаний исчерпано!!';
