@@ -36,7 +36,21 @@ uses
   LogWind,
   Tree;
 
+{$IFDEF WINDOWS}
 type
+  (* A RICHED32 STRUCT, GATED WITH THE ONLY THING THAT CAN USE IT.
+
+    This is the layout SendMessage(EM_SETCHARFORMAT) expects, so it means
+    nothing where there is no RICHED32 -- and its single field of interest,
+    mmttyCF, is already inside {$IFDEF WINDOWS} below. Declaring it
+    unconditionally was the last thing stopping this unit compiling for
+    Linux; nothing off Windows could have used it.
+
+    NOT ALIASED TO LCLType INSTEAD, deliberately, even though LCLType does
+    declare UINT, TColorRef and LF_FACESIZE (checked: lcltype.pp lines 65,
+    1676 and 1437). Making a Win32 API struct compile on a platform that has
+    no Win32 API buys a green compile and no capability, and it would leave a
+    reader thinking the pane might work there. *)
   TCharFormatA = record
     cbSize: UINT;
     dwMask: LONGINT;
@@ -48,6 +62,7 @@ type
     bPitchAndFamily: Byte;
     szFaceName: array[0..LF_FACESIZE - 1] of AnsiChar;
   end;
+{$ENDIF}
 
 const
   EM_SETCHARFORMAT                      = WM_USER + 68;
@@ -197,21 +212,28 @@ implementation
   unresolved identifier degrades to a string of its own name instead of
   erroring -- so it would evaluate quietly and wrongly.
 
-  WHAT STILL BLOCKS A NON-WINDOWS COMPILE OF THIS UNIT, written down rather
-  than guessed at because THERE IS NO CROSS TARGET INSTALLED HERE (FPC has
-  i386-win32 and nothing else, so the other branch cannot be compiled even
-  once):
+  NOTHING BLOCKS A NON-WINDOWS COMPILE OF THIS UNIT ANY MORE (2026-09-08).
 
-    * the INTERFACE's `uses Windows, Messages` -- HWND, UINT, WPARAM/LPARAM,
-      TColorRef, LF_FACESIZE, WM_USER. LCLType declares the handle and message
-      types for every widget set and is the likely answer; EM_SETCHARFORMAT is
-      WM_USER + 68 and can be the number.
-    * MMTTYObject's HWND fields, which about twenty other units read.
+  The note that stood here listed what it thought was blocking and said it
+  could not be checked, because "THERE IS NO CROSS TARGET INSTALLED HERE (FPC
+  has i386-win32 and nothing else)". THAT PREMISE IS NO LONGER TRUE -- an
+  x86_64-linux cross compiler is installed and tools/Compile-Linux.ps1 drives
+  it -- so the guess has been replaced by a measurement, and the guess was
+  BIGGER THAN THE TRUTH.
 
-  Those are TYPE declarations. An empty procedure body is safe to write without
-  a compiler; a type alias chosen from memory is not, and writing one would be
-  the same class of mistake as the unverified library file name CLAUDE.md
-  records under the HamLib note. *)
+  It listed HWND, UINT, WPARAM/LPARAM, TColorRef, LF_FACESIZE and WM_USER,
+  plus "MMTTYObject's HWND fields, which about twenty other units read".
+  ONLY THREE OF THOSE ACTUALLY BLOCKED: UINT, TColorRef and LF_FACESIZE, all
+  three inside the TCharFormatA record below -- and that record is now gated,
+  which is the honest answer for a RICHED32 struct. HWND and the rest already
+  resolved.
+
+  WHY A "Windows." SCAN COULD NEVER HAVE FOUND THIS, and it is the general
+  lesson: "cbSize: UINT" names no unit. A text search for QUALIFIED Windows
+  references sees nothing in that record, because the dependency is a BARE
+  TYPE NAME that happens to exist only on Windows. "No ungated Windows. references" and
+  "compiles off Windows" are different claims, and only a compiler targeting
+  the other platform can settle the second. *)
 
 {$IFDEF WINDOWS}
 

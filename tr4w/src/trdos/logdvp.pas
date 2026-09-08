@@ -30,9 +30,19 @@ uses
   LogK1EA,
 utils_text,
 utils_file,
-  Windows,      // still raw Win32 throughout -- a SEPARATE sweep, see below
 {$IFDEF WINDOWS}
-  MMSystem,     // sndPlaySoundA + timeSetEvent, the two gated calls
+  (* THE SWEEP THIS COMMENT DEFERRED IS DONE (2026-09-08). It used to read
+    "still raw Win32 throughout -- a SEPARATE sweep", and the file reads WERE
+    raw: CreateFileA, ReadFile, CloseHandle, GetLastError. Those are the RTL
+    now -- FileOpen/FileCreate, FileRead, FileClose, GetLastOSError.
+
+    WHAT IS LEFT IS AUDIO, AND IT IS GATED AT THE TWO CALLS:
+      sndPlaySoundA   plays the .WAV -- the ONE piece of audio TR4W still
+                      owes off Windows, now that the CW sidetone is deleted
+      timeSetEvent    signals tDVP_Event when the file duration is up, which
+                      is why that event cannot become a SyncObjs.TEvent *)
+  Windows,
+  MMSystem,
 {$ENDIF}
   LogRadio,
   LogWind,
@@ -394,7 +404,11 @@ var
   Head                                  : WavHeader;
   r                                     : REAL;
   h                                     : THandle;   (* A FILE handle, not a window. *)
-  lpNumberOfBytesRead                   : Cardinal;
+  (* SIGNED, because FileRead RETURNS -1 on error where Windows.ReadFile
+    reported failure separately. As a Cardinal that becomes 4294967295, which
+    is > 0 and equal to no size -- so an error would have read as a large
+    successful read. Same trap logwind had. *)
+  lpNumberOfBytesRead                   : Integer;
 begin
   Result := False;
 {
@@ -409,27 +423,26 @@ begin
 }
   if TF.tOpenFileForRead(h, FileName {WAVFileToPlay}) then
      begin
-     if Windows.ReadFile(h, Head, SizeOf(WavHeader), lpNumberOfBytesRead, nil) = True then
+     (* FileRead RETURNS the count, where Windows.ReadFile delivered it
+       through a var parameter and reported failure as a separate boolean.
+       -1 is its error, so the test is "did we get a whole header" -- which is
+       what the old code checked anyway, one step later. *)
+     lpNumberOfBytesRead := FileRead(h, Head, SizeOf(WavHeader));
+     if lpNumberOfBytesRead = SizeOf(WavHeader) then
         begin
-        if lpNumberOfBytesRead = SizeOf(WavHeader) then
-           begin
-           Result := True;
-           r := int64(1000) * Head.BytesFollowing div Head.SampleRate div Head.BytesPerSample;
-           Duration := Trunc(r) + 100;
-           end;
-        end
-     else
-        begin
-        CloseHandle(h);
-        goto 1;
+        Result := True;
+        r := int64(1000) * Head.BytesFollowing div Head.SampleRate div Head.BytesPerSample;
+        Duration := Trunc(r) + 100;
+        FileClose(h);
+        Exit;
         end;
-     CloseHandle(h);
-     Exit;
+     FileClose(h);
      end;
   1:
   if DisplayError then
      begin
-     QuickDisplay(SysUtils.Format('%s : %s', [string(FileName), SysUtils.SysErrorMessage(GetLastError)]));
+     QuickDisplay(SysUtils.Format('%s : %s',
+                  [string(FileName), SysUtils.SysErrorMessage(GetLastOSError)]));
      end;
 end;
 
@@ -589,14 +602,31 @@ label
 var
   TempBuffer                            : array[0..1024 - 1] of AnsiChar;
   h                                     : THandle;   (* A FILE handle, not a window. *)
-  lpNumberOfBytesRead                   : Cardinal;
+  (* SIGNED, because FileRead RETURNS -1 on error where Windows.ReadFile
+    reported failure separately. As a Cardinal that becomes 4294967295, which
+    is > 0 and equal to no size -- so an error would have read as a large
+    successful read. Same trap logwind had. *)
+  lpNumberOfBytesRead                   : Integer;
   p                                     : PAnsiChar;
 begin
   if not tMissCallsFileEnable then Exit;
   if not LooksLikeACallSign(Callsign) then Exit;
   p := GetRealPath(Config.DVKPath, 'FULLCALLSIGNS\MISSINGCALLSIGNS.TXT', nil);
-  h := CreateFileA(p, GENERIC_WRITE or GENERIC_READ, FILE_SHARE_WRITE or FILE_SHARE_READ, nil, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
-  if h = INVALID_HANDLE_VALUE then
+  (* FileOpen/FileCreate, not CreateFileA. OPEN_ALWAYS means "open it, and
+    create it if it is not there", which the RTL splits into two calls. *)
+  (* p is a PAnsiChar and the FileExists in scope here takes one (TF s), so it
+    is passed straight through; the RTL open/create take a string, and
+    AnsiString is the narrow one -- string() would widen to UnicodeString and
+    then narrow back, which the ratchet counts. *)
+  if FileExists(p) then
+     begin
+     h := FileOpen(AnsiString(p), fmOpenReadWrite or fmShareDenyNone);
+     end
+  else
+     begin
+     h := FileCreate(AnsiString(p));
+     end;
+  if h = feInvalidHandle then
      begin
      //    ShowSysErrorMessage(p);
          Exit;
@@ -604,7 +634,7 @@ begin
 
   NextRead:
   FillChar(TempBuffer, SizeOf(TempBuffer), 0);
-  Windows.ReadFile(h, TempBuffer, SizeOf(TempBuffer), lpNumberOfBytesRead, nil);
+  lpNumberOfBytesRead := FileRead(h, TempBuffer, SizeOf(TempBuffer));
   if lpNumberOfBytesRead > 0 then
      begin
      if strpos(TempBuffer, Callsign) <> nil then
@@ -621,7 +651,7 @@ begin
   swriteFile(h, #13#10, 2);
 
   CallsignFound:
-  CloseHandle(h);
+  FileClose(h);
 end;
 
 function tsndPlaySound(lpszSoundName: PAnsiChar): boolean;
@@ -642,7 +672,27 @@ begin
      begin
      PTTOn;
      end;
+{$IFDEF WINDOWS}
   Result := sndPlaySoundA(lpszSoundName {WAVFileToPlay}, SND_ASYNC or SND_NODEFAULT);
+{$ELSE}
+  (* THE VOICE KEYER HAS NO PLAYER OFF WINDOWS YET, and this is the ONE piece
+    of audio TR4W still owes there -- the CW sidetone was deleted on
+    2026-09-08, so this is what is left of the question.
+
+    IT IS A MUCH EASIER PROBLEM THAN THE SIDETONE WAS: a .WAV file played
+    whole, with about half a second of tolerance, rather than a tone that has
+    to start and stop with a CW element. Any of the usual answers would do.
+
+    Returning False is what the caller already handles -- it is the same
+    result as a missing or unreadable file -- so the DVP simply reports that
+    it could not play rather than behaving as though it had. *)
+  Result := False;
+  if logger <> nil then
+     begin
+     logger.Info('[DVP] cannot play %s: no audio backend on this platform',
+                 [string(lpszSoundName)]);
+     end;
+{$ENDIF}
 end;
 
 function PlayWAVFile(f: PAnsiChar; DisplayError: boolean): PlayResult;
@@ -688,7 +738,7 @@ begin
         begin
         if DisplayError then
            begin
-           QuickDisplay(SysErrorMessage(GetLastError));
+           QuickDisplay(SysErrorMessage(GetLastOSError));
            end;
         end
      else
@@ -696,8 +746,18 @@ begin
         (* winmm signals tDVP_Event when the file's own duration is up, and the
           wait is what holds PTT down for exactly as long as the audio lasts.
           The two halves must be replaced together. *)
+{$IFDEF WINDOWS}
         tDVPTimerEventID := timeSetEvent(Duration, 0, TFNTimeCallBack(tDVP_Event), 0, TIME_CALLBACK_EVENT_SET);
         WaitForSingleObject(tDVP_Event, 30000);
+{$ELSE}
+        (* GATED WITH THE PLAYBACK IT WAITS FOR. This is winmm signalling
+          tDVP_Event when the file's duration is up -- the multimedia timer
+          writes the Win32 HANDLE itself, which is why tDVP_Event cannot
+          become a SyncObjs.TEvent the way tNet_Event did.
+
+          Nothing was started above (tsndPlaySound returned False), so there
+          is nothing to wait for and the caller drops PTT immediately. *)
+{$ENDIF}
         if tExitFromDVPThread then Result := prExitThread else Result := prOK;
         end;
      end;
