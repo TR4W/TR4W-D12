@@ -53,7 +53,8 @@
 interface
 
 uses
-  Windows, Classes, SysUtils, SyncObjs, IdHTTP, IdSSLOpenSSL,
+  (* Windows went with the two raw event handles -- see FWake. *)
+  Classes, SysUtils, SyncObjs, IdHTTP, IdSSLOpenSSL,
   uConfigValues,   // Config -- the five HAMSCORE settings live here now
   VC, Log4D, Version;
 
@@ -80,21 +81,28 @@ type
   private
     FQueueLock:    TCriticalSection;
     FPending:      TList;            // FIFO of TRTCContact owned by the uploader
-    // RAW WIN32 EVENT HANDLES, deliberately -- not SyncObjs.TEvent.
-    //
-    // The worker below blocks in WaitForMultipleObjects on BOTH of these at
-    // once, which needs real kernel handles.  Delphi's TEvent.Handle is one;
-    // FPC's is not -- FPC implements TEvent over its own RTL event object, and
-    // WaitForSingleObject on that value returns WAIT_FAILED with
-    // ERROR_INVALID_HANDLE (measured, not assumed).  A THandle() cast would
-    // therefore compile clean and then never wake, never stop and never fail
-    // visibly: the worker would fall through to its FCycleMs timeout every
-    // time and RequestStop would be ignored until the next tick.
-    //
-    // Owning the handles states the actual requirement instead of depending on
-    // an abstraction that only happened to satisfy it on one compiler.
-    FStopEvent:    THandle;          // manual reset
-    FCycleEvent:   THandle;          // auto reset -- PushNow wakes the worker early
+    (* ONE SyncObjs EVENT, WHERE THERE WERE TWO RAW WIN32 HANDLES.
+
+      The note that stood here was correct and is worth keeping, because it
+      records a measurement: FPC's TEvent is NOT a kernel object -- it is the
+      RTL's own event -- so WaitForSingleObject on TEvent.Handle returns
+      WAIT_FAILED with ERROR_INVALID_HANDLE. A THandle() cast would compile
+      clean and then never wake, never stop, and never fail visibly. That is
+      still true and is still a trap.
+
+      What changed is the REQUIREMENT, not the finding. The raw handles existed
+      because the worker blocked in WaitForMultipleObjects on BOTH events at
+      once, and a multi-wait needs kernel handles. It does not need two events:
+      "stop" and "run a cycle now" are both just "wake up", and what to do on
+      waking is answered by TThread.Terminated, which the loop already tests.
+      One auto-reset event and the flag the thread already has express exactly
+      what the two events did -- including the priority, since Terminated is
+      checked before the cycle runs, as WaitForMultipleObjects preferred the
+      lower-indexed stop handle.
+
+      So this is not TEvent papering over a multi-wait; the multi-wait is
+      gone. *)
+    FWake:         TEvent;           { auto-reset: RequestStop and PushNow both signal it }
     FURL:          string;
     FUsername:     string;
     FPassword:     string;
@@ -193,7 +201,7 @@ const
 implementation
 
 uses
-  StrUtils, IdAuthentication, Messages,
+  StrUtils, IdAuthentication,
   LogWind,           // MyCall global
   ZoneCont,          // GetContinentName, ContinentType
   TF,                // CreateButton, CreateStatic
@@ -434,8 +442,7 @@ begin
   FCycleMs    := DEFAULT_CYCLE_MS;
   FQueueLock  := TCriticalSection.Create;
   FPending    := TList.Create;
-  FStopEvent  := Windows.CreateEventW(nil, True,  False, nil);   // manual reset
-  FCycleEvent := Windows.CreateEventW(nil, False, False, nil);   // auto reset
+  FWake       := TEvent.Create(nil, False, False, '');   { auto-reset, unnamed }
   FLogger     := TLogLogger.GetLogger('TR4WDebugLog.HamScore.Uploader');
   FLastCycleStatus := 'Not yet run';
   FLastCycleTime   := 0;
@@ -447,8 +454,7 @@ destructor THamScoreUploader.Destroy;
 begin
   FreeContactList(FPending);
   FPending.Free;
-  Windows.CloseHandle(FStopEvent);
-  Windows.CloseHandle(FCycleEvent);
+  FWake.Free;
   FQueueLock.Free;
   inherited;
 end;
@@ -467,7 +473,10 @@ end;
 
 procedure THamScoreUploader.RequestStop;
 begin
-  Windows.SetEvent(FStopEvent);
+  { Terminate sets the flag the worker loop tests; the event only wakes it so
+    it does not sit out the rest of its FCycleMs before noticing. }
+  Terminate;
+  FWake.SetEvent;
 end;
 
 procedure THamScoreUploader.PushNow;
@@ -475,9 +484,9 @@ begin
   // Manual push from the Phase 4 UI: signal the worker to wake before the
   // 2-minute timer expires.  Auto-reset event so the next post-then-sleep
   // cycle returns to its normal cadence.
-  if FCycleEvent <> 0 then
+  if FWake <> nil then
      begin
-     Windows.SetEvent(FCycleEvent);
+     FWake.SetEvent;
      end;
 end;
 
@@ -857,25 +866,19 @@ begin
 end;
 
 procedure THamScoreUploader.Execute;
-var
-  handles:   array[0..1] of THandle;
-  waitRet:   DWORD;
 begin
   FLogger.Info('[HamScore] Worker thread started');
-  // Wait on TWO events: stop (priority) and cycle-now (push button).
-  // WaitForMultipleObjects returns WAIT_OBJECT_0+i for the signaled handle,
-  // WAIT_TIMEOUT after FCycleMs ms, or WAIT_FAILED on error.  WaitAll = False
-  // means "any of these wakes us".
-  handles[0] := FStopEvent;
-  handles[1] := FCycleEvent;
+  (* ONE WAIT, AND THE ANSWER IS IN Terminated.
+
+    Was WaitForMultipleObjects on a stop event and a cycle-now event. Both of
+    those meant "wake up"; only Terminated says which. Waking early for a push
+    and waking on the FCycleMs timeout have always run the same code, so the
+    wait result is not examined at all -- if we are still running, run a cycle. *)
   try
     while not Terminated do
        begin
-       waitRet := WaitForMultipleObjects(2, @handles, False, Cardinal(FCycleMs));
+       FWake.WaitFor(Cardinal(FCycleMs));
        if Terminated then Break;
-       if waitRet = WAIT_OBJECT_0 then Break;     // FStopEvent
-       // Either FCycleEvent fired (waitRet = WAIT_OBJECT_0+1) or the 2-minute
-       // timer expired (WAIT_TIMEOUT).  Both run a cycle.
        try
          DoCycle;
        except

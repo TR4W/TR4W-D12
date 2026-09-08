@@ -120,7 +120,7 @@ implementation
 {$R *.lfm}
 
 uses
-  Windows,
+  LCLIntf,   (* GetSystemMetrics -- see the width floor *)
   Types,               // TRect / IntersectRect
   uTR4WConfigFile,     // TR4WConfigFileName, Save/LoadWindowLayout
   uWindowLayoutStore,  // TWindowLayoutStore -- the same store the main windows use
@@ -249,7 +249,10 @@ begin
    // floor, not a fixed size (NY4I asked for both).
    frame  := Width - ClientWidth;                        // borders
    needed := needed + (2 * GRID_MARGIN) + frame +
-             Windows.GetSystemMetrics(SM_CXVSCROLL) + GRID_SLACK;
+             { LCLIntf.GetSystemMetrics: the LCL declares it for every widget
+               set and each one answers SM_CXVSCROLL for its own scrollbar,
+               which is more correct here than Windows' number would be. }
+             LCLIntf.GetSystemMetrics(SM_CXVSCROLL) + GRID_SLACK;
 
    Constraints.MinWidth  := needed;
 

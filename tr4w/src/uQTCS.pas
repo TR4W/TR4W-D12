@@ -32,7 +32,10 @@ uses
   LogDupe,
   PostUnit,
   LogStuff,
-  Windows,
+  (* LCLType, not Windows (2026-09-08): Sleep comes from SysUtils, and IDOK /
+    IDNO -- what YesOrNo and the dialogs answer with -- are declared by
+    lcltype.pp with the same values Win32 gives them. *)
+  LCLType,
   Tree,
   LogCW,
   uDialogs,

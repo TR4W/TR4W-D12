@@ -23,7 +23,7 @@ unit uK4Discovery;
 interface
 
 uses
-  Windows, SysUtils, Classes,
+  SysUtils, Classes,
   IdUDPClient, IdGlobal, IdStack,
   Log4D;
 

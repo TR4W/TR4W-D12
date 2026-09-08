@@ -48,7 +48,7 @@ unit uRadioTCI;
 interface
 
 uses
-   Windows, SysUtils, Classes, StrUtils, Math, DateUtils,
+   SysUtils, Classes, StrUtils, Math, DateUtils,
    uFactoryRadioBase, uRadioBand, uRadioRegistry, uWebSocketClient, Log4D, VC,
    uCWFraming,
   uTR4WStrings;

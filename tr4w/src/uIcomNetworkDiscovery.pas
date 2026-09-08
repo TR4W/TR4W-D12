@@ -32,7 +32,7 @@ unit uIcomNetworkDiscovery;
 interface
 
 uses
-  Windows, SysUtils, Classes,
+  SysUtils, Classes,
   IdUDPClient, IdGlobal, IdSocketHandle, IdStack,
   IdUDPServer,
   uIcomNetworkTypes, Log4D;

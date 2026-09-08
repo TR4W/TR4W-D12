@@ -33,12 +33,11 @@ uses
   VC,
   uTelnet,
   uWinkey,
-  Windows,
+(* Windows: named but used nowhere in this unit (2026-09-08). *)
   LogCW,
   LogEdit,
   uGradient,
   uCallsigns,
-  Messages,
   LogStuff,
   LogSubs2,
   LogK1EA,
@@ -58,11 +57,11 @@ const
   bm_hotkey_pause                       = 4;
 }
 
-type
-  TBandMapButtons = record
-    Menu: HMENU;
-    Text: PAnsiChar;
-  end;
+(* TBandMapButtons IS DELETED (2026-09-08). A record of HMENU and PAnsiChar,
+  declared and referenced NOWHERE -- checked with the comment-blanking reader.
+  It described the buttons of the Win32 band map, which is a designed LCL form
+  (uBandMapForm) now, and it was the last thing in this unit that named a
+  Windows type. *)
   {
   const
     BandMapButtonsCount                   = 6;

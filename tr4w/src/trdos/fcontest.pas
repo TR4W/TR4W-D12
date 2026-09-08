@@ -49,7 +49,13 @@ uses
   LogWind,
   LogDupe,
   ZoneCont,
-  Windows;
+  uAnsiStr;   (* StrPLCopy -- was Windows.lstrcatA; see SetUpContest *)
+
+const
+  { TYPED, so appending it to an AnsiString is not a narrowing conversion.
+    A bare '.dom' is a UnicodeString literal in this tree and the ratchet
+    counts every one of those. }
+  DOM_EXTENSION: AnsiString = '.dom';
 //  Help,
 //  Country9;
 
@@ -1661,7 +1667,18 @@ begin
     PCC:
       begin
         ExchangeMemoryEnable := False;
-        SetCursorPos(0, 1);
+        (* SetCursorPos(0, 1) IS DELETED (2026-09-08), and it was doing
+          something absurd rather than nothing.
+
+          In DOS TR that call positioned the TEXT CURSOR at column 0, row 1.
+          Bound against the Windows unit it is a completely different function
+          -- Windows.SetCursorPos MOVES THE MOUSE POINTER -- so selecting the
+          PCC contest yanked the operator's mouse to the top-left corner of the
+          screen. It compiled clean because the signature happens to match.
+
+          The only one in the tree, and nothing replaces it: this window has
+          had no text cursor to position since the DOS port, and the entry
+          fields manage their own caret. *)
         INITIALEXCHANGEOVERWRITE := TRUE;
       end;
 
@@ -1677,8 +1694,14 @@ begin
 
   if TempDomesticQTHDataFileName <> nil then
      begin
-     Windows.lstrcatA(DomQTHDataFileName, TempDomesticQTHDataFileName);
-     Windows.lstrcatA(DomQTHDataFileName, '.dom');
+     (* BUILT AS A STRING AND COPIED ONCE, BOUNDED. Was two Windows.lstrcatA
+       calls, which walk to the NUL and keep writing: DomQTHDataFileName is a
+       FileNameType, MAX_PATH AnsiChars, and nothing checked that the name plus
+       '.dom' fitted. StrPLCopy takes the size. *)
+     uAnsiStr.StrPLCopy(DomQTHDataFileName,
+                        AnsiString(PAnsiChar(@DomQTHDataFileName[0]))
+                        + AnsiString(TempDomesticQTHDataFileName) + DOM_EXTENSION,
+                        SizeOf(DomQTHDataFileName) - 1);
      end;
 
   case ActiveExchange of

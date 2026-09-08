@@ -27,8 +27,8 @@ uses
   TF,
   VC,
   Forms,     (* TCustomForm -- ManageForm is the chosen window *)
-  Windows,
-  Messages;
+(* Windows and Messages: named but used nowhere in this unit (2026-09-08). *)
+  Classes;
 
 {
   THE WINDOW-CONTROL SEAM.  The dialog itself is now an LCL form --
