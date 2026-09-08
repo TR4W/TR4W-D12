@@ -886,7 +886,11 @@ var
 begin
    BeginTest('TestDiagnosisNamesAMissingLibrary');
 
-   msg := DiagnoseSQLiteLoad(TempLogName('nowhere\' + SQLITE_LIBRARY_NAME));
+   (* A DELIBERATELY ABSENT directory -- the point is that the load fails and
+     is DIAGNOSED. PathDelim anyway, so the name is absent for the intended
+     reason on every platform rather than because it is malformed on one. *)
+   msg := DiagnoseSQLiteLoad(TempLogName('nowhere' + PathDelim +
+                                         SQLITE_LIBRARY_NAME));
 
    (* The message has to name the file AND the path, because the operator's next
      action is to go and look there. *)

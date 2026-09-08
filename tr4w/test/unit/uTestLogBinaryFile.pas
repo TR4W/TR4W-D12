@@ -47,7 +47,12 @@ uses
 (* The suite runs from test\unit (ParamStr(0)), and the corpus is its sibling. *)
 function TLogBinaryFileTests.CorpusLog(const aSet: string): string;
 begin
-   Result := ExtractFilePath(ParamStr(0)) + '..\corpus\' + aSet + '\log.trw';
+   (* PathDelim, NOT HARDCODED BACKSLASHES. Found by RUNNING on Linux, which
+     asked to open one file literally named "..\corpus\<set>\log.trw" and
+     reported "No such file or directory". It compiles everywhere; it only
+     fails where the separator is not a backslash. *)
+   Result := ExtractFilePath(ParamStr(0)) + '..' + PathDelim + 'corpus' +
+             PathDelim + aSet + PathDelim + 'log.trw';
 end;
 
 procedure TLogBinaryFileTests.TestOpensARealCorpusLog;

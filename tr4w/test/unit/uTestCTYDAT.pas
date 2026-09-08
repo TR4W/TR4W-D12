@@ -82,7 +82,9 @@ begin
       end;
 
    // test\unit\tr4w_unit_tests.exe -> ..\..\target\cty.dat
-   path := ExtractFilePath(ParamStr(0)) + '..\..\target\cty.dat';
+   (* PathDelim -- see the note in uTestLogBinaryFile. *)
+   path := ExtractFilePath(ParamStr(0)) + '..' + PathDelim + '..' +
+           PathDelim + 'target' + PathDelim + 'cty.dat';
    CheckTrue(FileExists(path), 'cty.dat present at ' + path);
    if not FileExists(path) then
       begin
