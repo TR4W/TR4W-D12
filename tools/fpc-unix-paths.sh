@@ -105,5 +105,22 @@ fpc_darwin_link_flags() {
    # the flag through FPC to ld, and it takes ONE argument, so the framework
    # name needs its own -k.
    printf ' -k-framework -kUserNotifications'
+
+   # THE CLASSIC LINKER, because FPC 3.2.2 predates Apple's new one.
+   #
+   #     ld: malformed method list atom 'ltmp5'
+   #         (.../lcl/units/aarch64-darwin/cocoa/cocoawsextctrls.o),
+   #         fixups found beyond the number of method entries
+   #
+   # That is the Xcode 15+ linker rejecting Objective-C metadata that FPC
+   # 3.2.2 -- released in 2021 -- still emits in the older layout. It is not a
+   # corrupt object file and not a Lazarus bug; the same .o links fine under
+   # the previous linker, which Apple still ships as -ld_classic.
+   #
+   # THIS IS A DATED WORKAROUND AND SHOULD BE REVISITED. Apple has deprecated
+   # -ld_classic and will eventually drop it, at which point the answer becomes
+   # a newer FPC (3.3.1 fixed the metadata layout) rather than an older linker.
+   # Written down here so that when it stops working the cause is not a mystery.
+   printf ' -k-ld_classic'
    return 0
 }
