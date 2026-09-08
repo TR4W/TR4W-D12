@@ -28,7 +28,7 @@ interface
 uses
 
   VC,
-  uSSL,
+  uSortedStringList,
   uCallSignRoutines,
   uCTYDAT,
   //Country9,
@@ -48,8 +48,8 @@ type
   MultsObject = object
     DXMultsArray: array[0..MaxCountries - 1] of TDupesArray;
     ZoneMultsArray: array[0..ZoneMultArraySize] of TDupesArray;
-    PrfList: TSSL;
-    DomList: TSSL;
+    PrfList: TSortedStringList;
+    DomList: TSortedStringList;
 
     MTotals: array[BandType, CW..Both, RemainingMultiplierType] of Word;
 
@@ -142,14 +142,14 @@ end;
 procedure MultsObject.SetPxMult(const Prfx: string; Band: BandType; Mode: ModeType);
 begin
   // (dropped the ShortString null-terminator Prfx[Ord(Prfx[0])+1]:=#0 -- a native
-  //  string carries its own length, and uSSL.AddString now takes a string.)
+  //  string carries its own length, and uSortedStringList.AddString now takes a string.)
   PrfList.AddString(Prfx, Band, Mode, False);
   IncrementTotals(Band, Mode, rmPrefix);
 end;
 
 procedure MultsObject.SetDmMult(const Dom: string; Band: BandType; Mode: ModeType);
 begin
-  // (dropped the ShortString null-terminator; native string + uSSL.AddString(string).)
+  // (dropped the ShortString null-terminator; native string + uSortedStringList.AddString(string).)
   DomList.AddString(Dom, Band, Mode, False);
   IncrementTotals(Band, Mode, rmDomestic);
 end;
@@ -286,7 +286,7 @@ begin
   logger := TLogLogger.GetLogger('uMults');   // Issue #1034: own logger (was MainUnit.logger)
   mo.PrfList.Init;
   mo.DomList.Init;
-//  mo.PrfList := TSSL.Create;
-//  mo.DomList := TSSL.Create;
+//  mo.PrfList := TSortedStringList.Create;
+//  mo.DomList := TSortedStringList.Create;
 end.
 

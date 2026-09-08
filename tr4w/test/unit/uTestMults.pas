@@ -24,7 +24,7 @@ unit uTestMults;
   Conventions (docs/tr4w-migration-strategy.md): cast Word/enum to
   Integer before CheckEquals.
 
-  Note: uMults + uSSL were decoupled from MainUnit/TF as part of this
+  Note: uMults + uSortedStringList were decoupled from MainUnit/TF as part of this
   issue so the multiplier logic links into the dependency-light test EXE.
   This suite also depends on the uCTYDAT/uCallSignRoutines decouple (#1033).
 }
@@ -57,7 +57,7 @@ uses
    VC, uMults;
 
 // Module-level instance: MultsObject embeds large fixed arrays, so keep it
-// off the test stack. Its TSSL sub-lists are Init'd once; ClearAllMults gives
+// off the test stack. Its TSortedStringList sub-lists are Init'd once; ClearAllMults gives
 // each test a clean slate (and is itself under test).
 var
    mo: MultsObject;

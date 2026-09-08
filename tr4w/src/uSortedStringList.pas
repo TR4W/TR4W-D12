@@ -18,7 +18,24 @@
 If not, ref: 
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
-unit uSSL;
+unit uSortedStringList;
+
+(* RENAMED FROM uSSL / TSSL ON 2026-09-07, AND THE OLD NAME COST REAL TIME.
+
+  This is a SORTED STRING LIST -- a hand-rolled sorted array of
+  (multiplier, per-band/mode dupe flags, alternate name), with a binary search
+  over it. It is the multiplier and dupe store, and it has nothing whatever to
+  do with TLS.
+
+  "uSSL" reads as OpenSSL, and it misled NY4I in the very session that renamed
+  it: he read a report that this unit still named Windows and answered "uSSL
+  should strictly use Indy". A reasonable inference from the name, and wrong --
+  the Windows reference was CompareStringA in CompareStrings, the ordering key
+  for the binary search. There ARE SSL units in this tree; they are Indy's
+  IdSSLOpenSSL* under include/Protocols, and their types really are TSSL_CTX_*.
+
+  NY4I: "It is terribly misnamed. USortedStringList.pas would avoid repeating
+  this mistake." *)
 {$I tr4w.inc}
 {$IMPORTEDDATA OFF}
 interface
@@ -26,9 +43,9 @@ interface
 uses
   VC,
   // Issue #1034: dropped 'TF' (unused here) -- it pulled TF -> MainUnit -> LogStuff,
-  // which blocked uSSL (and its uMults consumer) from linking into the test EXE.
+  // which blocked uSortedStringList (and its uMults consumer) from linking into the test EXE.
   //Country9,
-  SysUtils,   (* CompareText -- see TSSL.CompareStrings *)
+  SysUtils,   (* CompareText -- see TSortedStringList.CompareStrings *)
   Messages;
 
 type
@@ -44,7 +61,7 @@ type
   PStringItemList = ^TStringItemList;
   TStringItemList = array[0..10000] of TStringItem;
 
-  TSSL = object {class}
+  TSortedStringList = object {class}
   private
     FCount: integer;
     FCapacity: integer;
@@ -75,13 +92,13 @@ type
 
 implementation
 
-constructor TSSL.Init;
+constructor TSortedStringList.Init;
 begin
   Grow;
 end;
 
 {
-destructor TSSL.Destroy;
+destructor TSortedStringList.Destroy;
 begin
   inherited Destroy;
   if FCount <> 0 then Finalize(FList^[0], FCount);
@@ -90,7 +107,7 @@ begin
 end;
 }
 
-function TSSL.AddString(const s: string; Band: BandType; Mode: ModeType; JustAdd: boolean): integer;
+function TSortedStringList.AddString(const s: string; Band: BandType; Mode: ModeType; JustAdd: boolean): integer;
 label
   Add;
 var
@@ -118,7 +135,7 @@ begin
   FList^[Result].FArray[Both] := FList^[Result].FArray[Both] or (1 shl Ord(AllBands));
 end;
 
-procedure TSSL.Clear;
+procedure TSortedStringList.Clear;
 begin
   if FCount <> 0 then
      begin
@@ -130,7 +147,7 @@ begin
      end;
 end;
 
-procedure TSSL.Delete(Index: integer);
+procedure TSortedStringList.Delete(Index: integer);
 begin
   if (Index < 0) or (Index >= FCount) then Exit; //Error(@SListIndexError, Index);
  
@@ -141,7 +158,7 @@ begin
      end;
 end;
 
-function TSSL.StringIsDupeByIndex(IndexInList: integer; Band: BandType; Mode: ModeType): boolean;
+function TSortedStringList.StringIsDupeByIndex(IndexInList: integer; Band: BandType; Mode: ModeType): boolean;
 var
   TempMode                              : ModeType;
 begin
@@ -155,7 +172,7 @@ begin
   Result := (FList^[IndexInList].FArray[TempMode] and (1 shl Ord(Band))) <> 0;
 end;
 
-function TSSL.StringIsDupe(const s: string; Band: BandType; Mode: ModeType; var IndexInList: integer): boolean;
+function TSortedStringList.StringIsDupe(const s: string; Band: BandType; Mode: ModeType; var IndexInList: integer): boolean;
 var
   Index                                 : integer;
   TempMode                              : ModeType;
@@ -177,7 +194,7 @@ begin
      end;
 end;
 
-function TSSL.FindMult(const s: string; var Index: integer): boolean;
+function TSortedStringList.FindMult(const s: string; var Index: integer): boolean;
 var
   l, h, i, c                            : integer;
 begin
@@ -201,17 +218,17 @@ begin
   Index := l;
 end;
 
-function TSSL.Get(Index: integer): string;
+function TSortedStringList.Get(Index: integer): string;
 begin
   Result := FList^[Index].FMult;
 end;
 
-function TSSL.GetCapacity: integer;
+function TSortedStringList.GetCapacity: integer;
 begin
   Result := FCapacity;
 end;
 
-procedure TSSL.Grow;
+procedure TSortedStringList.Grow;
 var
   delta                                 : integer;
 begin
@@ -223,7 +240,7 @@ begin
   SetCapacity(FCapacity + delta);
 end;
 
-procedure TSSL.InsertMult(Index: integer; const s: Str10; Band: BandType; Mode: ModeType);
+procedure TSortedStringList.InsertMult(Index: integer; const s: Str10; Band: BandType; Mode: ModeType);
 begin
   if FCount = FCapacity then
      begin
@@ -240,13 +257,13 @@ begin
   inc(FCount);
 end;
 
-procedure TSSL.SetCapacity(NewCapacity: integer);
+procedure TSortedStringList.SetCapacity(NewCapacity: integer);
 begin
   ReallocMem(FList, NewCapacity * SizeOf(TStringItem));
   FCapacity := NewCapacity;
 end;
 
-function TSSL.CompareStrings(const s1, s2: Str10): integer;
+function TSortedStringList.CompareStrings(const s1, s2: Str10): integer;
 begin
   (* CompareText, NOT CompareStringA -- and the Win32 call had a defect of its
     own that is worth recording, because it was invisible.
@@ -275,7 +292,7 @@ begin
   Result := CompareText(s1, s2);
 end;
 
-procedure TSSL.ClearDupes;
+procedure TSortedStringList.ClearDupes;
 var
   Index                                 : integer;
 begin
