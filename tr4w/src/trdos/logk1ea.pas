@@ -279,13 +279,13 @@ var
 
   tUseControlPort                       : boolean;
 
-  TR4W_BeepThread                       : THandle;
-  tPaddleFootSwitchThread               : THandle = feInvalidHandle;
+  TR4W_BeepThread                       : TThreadID;
+  tPaddleFootSwitchThread               : TThreadID = feInvalidHandle;
 
   tExitFromPaddleFootSwitchThread       : boolean;
   tPTTOnCounter                         : Cardinal;
   PaddlePTTOn                           : boolean;
-  TR4W_BeepThreadID                     : Cardinal;
+  TR4W_BeepThreadID                     : TThreadID;
   tPaddleThreadID                       : Cardinal;
   tFlashQDThreadID                      : Cardinal;
 

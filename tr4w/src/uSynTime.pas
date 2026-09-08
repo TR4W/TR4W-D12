@@ -74,7 +74,7 @@ var
 //  ST_saddr                              : sockaddr_in = (sin_family: AF_INET; sin_port: 31488);
   ST_Buffer                             : array[1..48] of Byte;
   Offset                                : int64;
-  NTPStartupThreadID                    : Cardinal;
+  NTPStartupThreadID                    : TThreadID;
 const
   NTP_SERVER                            = 'pool.ntp.org';
 

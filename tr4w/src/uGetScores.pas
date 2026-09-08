@@ -67,8 +67,8 @@ function BuildDynamicResultsXml: AnsiString;
 var
   GetScoresPostingID                    : integer;
   GetScoresBuffer                       : array[0..4096 - 1] of AnsiChar;
-  GetScoresThreadID                     : Cardinal;
-  GetScoresThreadHandle                 : Cardinal;
+  GetScoresThreadID                     : TThreadID;
+  GetScoresThreadHandle                 : TThreadID;
   GetScoresAnswerFileName               : array[0..255] of AnsiChar;
 const
 

@@ -96,7 +96,7 @@ var
   WAVFileToPlay                         : array[0..255] of AnsiChar;
   DVPMessagesArray                      : array[1..DVPArraySize] of Str40;
   DVPMessagesArrayIndex                 : integer = 1;
-  DVPThreadID                           : Cardinal;
+  DVPThreadID                           : TThreadID;
   tMissCallsFileEnable                  : boolean;
 //  MissedCallsignsListInitialized        : boolean;
 //  MissedWAVCallsigns                    : integer = -1;

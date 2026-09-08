@@ -208,7 +208,7 @@ var
   ServerMessage                         : TServerMessage        = (smID: NET_SERVERMESSAGE_ID);//8
 {*)}
   pc                                    : PChar;
-  NetThreadID                           : Cardinal;
+  NetThreadID                           : TThreadID;
   StatusArray                           : array[1..26] of TStationState;
   PosInClientsList                      : array[1..26] of integer;
   ServerAddress                         : str31 = 'LOCALHOST';

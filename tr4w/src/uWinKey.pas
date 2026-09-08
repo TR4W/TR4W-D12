@@ -216,7 +216,7 @@ var
   wkBREAKIN                             : boolean;
   wkXOFF                                : boolean;
 
-  wkThreadID                            : Cardinal;
+  wkThreadID                            : TThreadID;
   wkCWThreadID                          : Cardinal;
 
 //  wkThreadHWND                          : HWND = INVALID_HANDLE_VALUE;

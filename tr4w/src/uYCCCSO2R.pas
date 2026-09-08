@@ -224,10 +224,10 @@ var
    FReadOvl:    OVERLAPPED;
    FWriteOvl:   OVERLAPPED;
 
-   FReadThread:  THandle = 0;
-   FReadThID:    DWORD   = 0;
-   FWriteThread: THandle = 0;
-   FWriteThID:   DWORD   = 0;
+   FReadThread:  TThreadID = 0;
+   FReadThID:    TThreadID   = 0;
+   FWriteThread: TThreadID = 0;
+   FWriteThID:   TThreadID   = 0;
 
    logger: TLogLogger;
 

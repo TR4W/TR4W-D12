@@ -124,8 +124,8 @@ var
   //  NextFirstChar                         : integer;
   OldTelnetFreezeMode: boolean;
   TelnetFreezeMode: boolean;
-  TelThreadID: Cardinal;
-  TelThreadHandle: THandle;     // Issue #23 -- kept so we can join the I/O thread before teardown
+  TelThreadID: TThreadID;
+  TelThreadHandle: TThreadID;     // Issue #23 -- kept so we can join the I/O thread before teardown
   TelnetStopRequested: boolean; // Issue #23 -- set by Disconnect so a thread that is still
                                 // connecting bails out after connect instead of orphaning
   // TelnetSock is GONE -- the socket now lives inside TDXClusterClient, and

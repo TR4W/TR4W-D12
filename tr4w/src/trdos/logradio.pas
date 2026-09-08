@@ -222,8 +222,8 @@ type
       //    ICOM_SET_SPLIT: array[0..7] of Char;
 
 
-      tRadioInterfaceThreadID: cardinal;
-      tRadioInterfaceThreadHandle: THandle;
+      tRadioInterfaceThreadID: TThreadID;
+      tRadioInterfaceThreadHandle: TThreadID;
       PollingStopRequested: Boolean;
       tPollCount: integer;
       (* WHICH RADIO PANEL THIS RIG DRAWS ON: 1, 2, or 0 for none open.

@@ -2925,7 +2925,7 @@ var
   LogFrequencyEnable                    : boolean;
   BoldFont                              : boolean = True;
 //  DateFormat                            : Str10 = 'dd-MM-yy';
-  ImportFromADIFThreadID                : Cardinal;
+  ImportFromADIFThreadID                : TThreadID;
   tMutex                                : Cardinal;
 
   MainWindowEditHeight                  : integer;
@@ -3026,10 +3026,10 @@ var
   tr4w_TempRect                         : TRect;
 
   CWThreadCounter                       : Cardinal;
-  CWThreadID                            : Cardinal;
+  CWThreadID                            : TThreadID;
   (* A THREAD HANDLE, not a window: assigned from tCreateThread, passed to
     SetThreadPriority and CloseHandle. Same mistyping as LogHandle above. *)
-  CWThreadHandle                        : THandle;
+  CWThreadHandle                        : TThreadID;
   BnadmapThreadID                       : Cardinal;
 
   {AutoCQ variables}

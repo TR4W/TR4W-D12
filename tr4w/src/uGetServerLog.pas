@@ -118,7 +118,7 @@ var
   SyncProgressHandler                   : TSyncProgressProc = nil;
   SynQSOTotalArray                      : QSOTotalArray;
   SyncMode                              : boolean;
-  LogSyncThreadID                       : Cardinal;
+  LogSyncThreadID                       : TThreadID;
   showresverlogcontent                  : boolean = True;
   HeadlessSyncMode                      : boolean = False;  // Issue #912 - run sync without any dialog UI
 
