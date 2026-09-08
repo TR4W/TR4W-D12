@@ -32,7 +32,10 @@ utils_text,
   uCallSignRoutines,
   uMults,
   uCallsigns,
-  Windows,
+  (* LCLType, not Windows (2026-09-08): the four CloseHandle calls were every
+    one on a FILE handle -- SysUtils.FileClose -- and MAXBYTE / MAXWORD are
+    LCLType's, with the same values. *)
+  LCLType,
   VC,
   TF,
   LogDom,
@@ -1532,7 +1535,7 @@ begin
 //  BlockWrite(FileWrite, StackArray, SizeOf(StackArray), RESULT);
 //  BlockWrite(FileWrite, StackPointer, SizeOf(StackPointer), RESULT);
 
-  CloseHandle(FileWrite);
+  FileClose(FileWrite);   { a FILE handle }
 end;
 
 function DupeAndMultSheet.ReadInBinFiles {(JustDoIt: boolean)}: boolean;
@@ -1567,7 +1570,7 @@ begin
 
   if RestartVersion <> RestartVersionNumber then
      begin
-     CloseHandle(h);
+     FileClose(h);
 
      TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_DIFVERSION)), _RESTARTBIN, @RestartVersionNumber[1], @RestartVersion[1]);
 
@@ -1584,7 +1587,7 @@ begin
 
   if NameOfContest <> ContestName then
      begin
-     CloseHandle(h);
+     FileClose(h);
      ShowMessage(TC_RESTARTBINISFORADIFFERENTCONTEST);
      Exit;
      end;
@@ -1636,7 +1639,7 @@ begin
 
 //  SetLogColumnsWidth;
 
-  CloseHandle(h);
+  FileClose(h);
 
   ReadInBinFiles := True;
   {CodeSpeed := RadioOneSpeed;}

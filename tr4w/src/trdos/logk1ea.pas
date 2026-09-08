@@ -39,8 +39,18 @@ uses
 {$IFDEF WINDOWS}
   MMSystem,     // the CW element clock -- see tCWSleep
 {$ENDIF}
-  Messages,
+{$IFDEF WINDOWS}
+  (* WHAT IS LEFT, and all of it is gated at the call site:
+       timeBeginPeriod / timeSetEvent   the CW element clock -- there is no
+                                        counterpart, and the {$ELSE} says so
+       WaitForSingleObject              on the event that clock signals
+       AttachThreadInput x2             per-thread input queues, a Win32
+                                        concept with nothing to map to
+     Messages declared nothing. *)
   Windows;
+{$ELSE}
+  SysUtils;   { Sleep -- the placeholder tCWSleep falls back to }
+{$ENDIF}
 //procedure TimerInterrupt(uTimerID, uMessage: UINT; dwUser, dw1, dw2: DWORD) stdcall;
 const
 
@@ -395,7 +405,10 @@ procedure tFootSwitchProcedure;
 function tGetPortType(port: PortType): PortInterface;
 //procedure testF(uTimerID, uMessage: UINT; dwUser, dw1, dw2: DWORD) stdcall;
 procedure BackToInactiveRadioAfterQSO;
-procedure tSetPriorityClass(dwPriorityClass: DWORD);
+(* tSetPriorityClass IS DELETED (2026-09-08). Its ENTIRE BODY was commented
+  out -- Windows.SetPriorityClass behind an `if tHighCWPerformance` that was
+  also commented -- and it had NO CALLER: both call sites are commented out
+  as well. A no-op whose only live content was a DWORD parameter. *)
 
 procedure TurnOnActivePort;
 procedure tStartAutoCQ;
@@ -2064,7 +2077,14 @@ begin
       if tAutoSendMode then
         if ControlAMode = False then
            begin
+           (* WINDOWS-ONLY, AND THERE IS NOTHING FOR AN {$ELSE} TO DO.
+             AttachThreadInput joins two threads' input queues so keyboard
+             state and focus are shared -- a Win32 concept, on a widget set
+             that does not have per-thread input queues at all. Off Windows
+             the auto-send return simply happens without it. *)
+{$IFDEF WINDOWS}
            AttachThreadInput(idAttach, MainThreadID, True);
+{$ENDIF}
            ReturnInCQOpMode;
            Result := True;
            end;
@@ -2234,7 +2254,14 @@ begin
 {$ENDIF}
   if t <> 0 then
      begin
+     (* GATED WITH THE CALL THAT MAKES IT REACHABLE. t is the timeSetEvent
+       handle, which the {$ELSE} above sets to 0 off Windows, so this branch
+       cannot run there -- but it still has to COMPILE, and myEvent is a raw
+       Win32 event handle created in uProgramMain. The Sleep below is what
+       actually happens off Windows, and the note above says what that costs. *)
+{$IFDEF WINDOWS}
      WaitForSingleObject(myEvent, INFINITE);
+{$ENDIF}
      end
   else
      begin
@@ -2528,7 +2555,11 @@ begin
       end;
     QSONormal, FootSwitchControlEnter:
       begin
+{$IFDEF WINDOWS}
+        { See the note on the other AttachThreadInput, in
+          tStartAutoCallTerminate. }
         AttachThreadInput(tPaddleThreadID, MainThreadID, True);
+{$ENDIF}
         if FootSwitchMode = QSONormal then
            begin
            ProcessReturn
@@ -2581,12 +2612,6 @@ begin
 //   if (GetCQMemoryString(InActiveRadioPtr^.ModeMemory, AltF3) <> '') {and (CalledFromCQMode) } then
 //      SendCrypticMessage(ControlA + GetCQMemoryString(InActiveRadioPtr^.ModeMemory, AltF3));
 
-end;
-
-procedure tSetPriorityClass(dwPriorityClass: DWORD);
-begin
-//  if tHighCWPerformance then
-//    Windows.SetPriorityClass(GetCurrentProcess, dwPriorityClass);
 end;
 
 end.

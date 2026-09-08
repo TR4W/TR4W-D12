@@ -36,7 +36,7 @@ uses
   Tree,
   TF,
   VC,
-  Messages,
+  (* Messages: named, used nowhere (2026-09-08). *)
   LogWind,
   LogDupe,
   LogStuff,

@@ -33,7 +33,13 @@ uses
   idUDPClient,
   idGlobal,
   LogStuff,
-  Windows,
+  (* Windows was here for lstrcatA, Sleep and INVALID_HANDLE_VALUE.
+    uAnsiStr.StrLCopy and SysUtils answer the first two; the third is
+    written as THandle(-1), which is the value it always was and is what
+    FileOpen and FileCreate return. Note these particular uses are LPT
+    port BASE ADDRESSES rather than handles -- they borrowed the name for
+    its 'not open' sentinel, and spelling it out makes that visible
+    (2026-09-08). *)
   PostUnit,
   LogSCP,
   LogCW,
@@ -254,25 +260,25 @@ begin
  //      Exit;
        end;
 
-  tRelayControlPortBaseAddress := INVALID_HANDLE_VALUE;
+  tRelayControlPortBaseAddress := THandle(-1);
   if tGetPortType(RelayControlPort) = ParallelInterface then
      begin
      OpenLPT(tRelayControlPortBaseAddress, RelayControlPort);
      end;
 
-  tActiveStereoPortBaseAddress := INVALID_HANDLE_VALUE;
+  tActiveStereoPortBaseAddress := THandle(-1);
   if tGetPortType(ActiveStereoPort) = ParallelInterface then
      begin
      OpenLPT(tActiveStereoPortBaseAddress, ActiveStereoPort);
      end;
 
-  Radio1.tBandOutputPortBaseAddress := INVALID_HANDLE_VALUE;
+  Radio1.tBandOutputPortBaseAddress := THandle(-1);
   if tGetPortType(Radio1.BandOutputPort) = ParallelInterface then
      begin
      OpenLPT(Radio1.tBandOutputPortBaseAddress, Radio1.BandOutputPort);
      end;
 
-  Radio2.tBandOutputPortBaseAddress := INVALID_HANDLE_VALUE;
+  Radio2.tBandOutputPortBaseAddress := THandle(-1);
   if tGetPortType(Radio2.BandOutputPort) = ParallelInterface then
      begin
      OpenLPT(Radio2.tBandOutputPortBaseAddress, Radio2.BandOutputPort);
@@ -284,8 +290,8 @@ begin
 
 (* THE CONTROL-PORT BRANCH IS GONE (2026-09-08), and it never ran.
 
-  It tested `Radio1.tCATPortHandle <> INVALID_HANDLE_VALUE`. That handle was
-  assigned in two places, both to INVALID_HANDLE_VALUE, and nothing ever
+  It tested `Radio1.tCATPortHandle <> THandle(-1)`. That handle was
+  assigned in two places, both to THandle(-1), and nothing ever
   opened it -- so the paddle and foot switch could never come off the radio's
   control port, whatever `USE CONTROL PORT` was set to. The field is deleted;
   see logradio. *)
@@ -429,7 +435,13 @@ begin
          TF.Format(wsprintfBuffer, '%sdom\%s', TR4W_PATH_NAME, DomQTHDataFileName);
          end;
       FillChar(DomQTHDataFileName, SizeOf(DomQTHDataFileName), 0);
-      Windows.lstrcatA(DomQTHDataFileName, wsprintfBuffer);
+      (* Appended with uAnsiStr rather than Win32's lstrcatA, and BOUNDED:
+        lstrcatA walks to the NUL and keeps writing, and
+        DomQTHDataFileName is a FileNameType of MAX_PATH AnsiChars. *)
+      uAnsiStr.StrLCopy(@DomQTHDataFileName[uAnsiStr.StrLen(DomQTHDataFileName)],
+                        wsprintfBuffer,
+                        SizeOf(DomQTHDataFileName) - 1
+                          - uAnsiStr.StrLen(DomQTHDataFileName));
       if not DomQTHTable.LoadInDomQTHFile(DomQTHDataFileName) then
          begin
          halt;
