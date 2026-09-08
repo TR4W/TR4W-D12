@@ -109,6 +109,13 @@ case "$(uname -s)" in
       # grows until the compiler stops finding the RTL, and every unit then
       # fails with "Can't find unit system" -- which reads as a broken install.
       FU="$FU -Fu$UNITS/univint -Fu$UNITS/cocoaint"
+      # The rest of what TR4W and the LCL reach for. fcl-json is
+      # jsonscanner, which Lazarus's Translations unit uses; sqlite is the
+      # contest log; openssl is Indy's TLS; regexpr, paszlib and zlib come
+      # in through lazutils and the LCL.
+      for pkg in fcl-json fcl-db fcl-net fcl-process fcl-xml fcl-image \n                 sqlite openssl regexpr paszlib zlib pthreads \n                 rtl-generics rtl-unicode rtl-console iconvenc; do
+         [ -d "$UNITS/$pkg" ] && FU="$FU -Fu$UNITS/$pkg"
+      done
       LCL="$LAZROOT/lcl/units/$ARCH"
       LAZUTILS="$LAZROOT/components/lazutils/lib/$ARCH"
       ;;
