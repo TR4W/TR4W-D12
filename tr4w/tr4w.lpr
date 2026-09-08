@@ -32,9 +32,6 @@ program tr4w;
 
 //https://groups.google.com/group/tr4w/feeds?hl=ru
 uses
-  Messages,
-  MMSystem,
-  Windows,
   SysUtils,
   MainUnit in 'src\MainUnit.pas',
   BeepUnit in 'src\trdos\BeepUnit.pas',

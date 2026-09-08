@@ -86,7 +86,6 @@ uses
   agrees with them, and the next one to go leaves a shorter list rather than
   changing nothing measurable. *)
 {$IFDEF WINDOWS}
-  Windows,      // still plenty here -- see the routines that name Windows.
   MMSystem,     // sndPlaySound + timeKillEvent, both gated at their call site
 {$ENDIF}
   uCRC32,
@@ -137,6 +136,54 @@ uses
     this entry; see the note in BuildLogRow. *)
   uDialogs,
   uLogSearch,
+  (* WINDOWS STAYS, AND HERE IS THE MEASURED BILL (2026-09-08, by removing the
+    import and reading all 53 errors -- not by grepping). The old note here
+    said only "still plenty here", which is true and useless: it tells the
+    next person to repeat the measurement rather than start from it.
+
+    MOST OF IT IS CONSTANTS LCLType ALREADY DECLARES, which is the good news:
+
+      SW_HIDE, SW_SHOWNORMAL, SWP_NOSIZE, SWP_SHOWWINDOW
+      IDYES, IDNO, IDOK, IDCANCEL
+      VK_CONTROL, VK_MENU
+      MF_GRAYED, MF_BYPOSITION
+      SM_CXSCREEN
+      FW_BOLD, DEFAULT_CHARSET, DEFAULT_PITCH, Default_Quality,
+        OUT_DEFAULT_PRECIS, Clip_Default_Precis
+      BOOL, INVALID_HANDLE_VALUE, LoWord
+      TLVItem, LVIF_TEXT
+      odSelected, odFocused          -- these two are the LCL's own
+                                        TOwnerDrawState, not Windows'
+
+    WHAT IS ACTUALLY A CALL, and therefore actually work:
+
+      ExitProcess            how tr4w_ShutDown leaves. Halt is the portable
+                             one, and the difference is real -- Halt runs
+                             finalization sections, ExitProcess does not.
+                             That makes it a DECISION about shutdown, not a
+                             swap: something may be relying on not running.
+      SetThreadPriority +
+        THREAD_PRIORITY_LOWEST
+                             FPC has ThreadSetPriority, and the value mapping
+                             is not one-for-one.
+      CreateFontW            LCL font creation, and uFontFactory already
+                             exists for exactly this.
+      FindFirstFileA / FindClose
+                             SysUtils.FindFirst / FindClose, straightforward.
+      GetWindowRect          the form's BoundsRect, per the LCL rule already
+                             written in CLAUDE.md.
+      LoadLibrary            one call; DynLibs is the portable form.
+      lstrcatA               uAnsiStr.AppendToBuffer, added today for uCFG's
+                             four.
+      SetEvent               THE SAME FOUR EVENT OBJECTS as uNet and
+                             uProgramMain -- they move together or not at all.
+      EscapeCommFunction     serial line control; uSerialPort's business.
+
+    NOTHING HERE IS BLOCKED. It is a session of its own, and the order that
+    makes it cheap is: LCLType first (which is most of the list and mechanical),
+    then the seven calls, then the four events last because they are shared
+    with two other units. *)
+  Windows,
   Messages,
   LogK1EA,
   BeepUnit,

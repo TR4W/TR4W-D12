@@ -40,7 +40,29 @@ uses
   Dialogs, Controls,
    uAppTimers,   (* StartAppTimer / StopAppTimer -- LCL TTimers, not SetTimer *)
   uSystemWatch, (* RefreshColourDepth -- the one colour-depth probe *)
-  Messages,
+  (* WINDOWS STAYS, AND EVERY REMAINING USE IS A DECISION RATHER THAN A
+    TRANSLATION (measured 2026-09-08 by removing the import and reading the
+    compiler). Messages went with this pass -- it declared nothing this unit
+    used.
+
+      CreateMutex + GetLastError(ERROR_ALREADY_EXISTS)
+                    THE SINGLE-INSTANCE CHECK. A named kernel mutex is how
+                    Windows answers "is another copy running"; the Unix idiom
+                    is a lock file with the pid in it, plus the awkward part
+                    the mutex gives free -- deciding whether the pid in a
+                    stale file is still alive. Not hard, but a DESIGN with
+                    failure modes of its own, not a swap.
+      CreateEvent   x4: tCW_Event, tCWPaddle_Event, tDVP_Event, tNet_Event.
+                    Auto-reset events, waited on by the CW keyer's element
+                    timing (logk1ea's tCWSleep) and by the network reader.
+                    FPC's RTLEventCreate / TEvent is the portable equivalent
+                    and IT IS THE SAME JOB AS uNet's SetEvent -- they are the
+                    same four objects, so both move together or neither does.
+      GetVersionEx  already gated below; feeds only Windows-only consumers.
+
+    None of this blocks: they are all inside a Windows program's startup, and
+    they are named here so the next reader does not have to re-derive which of
+    them are real. *)
   Windows,
   SysUtils,
   { /IMPORTLOG. The unit pulls in the log database and the mapper, which is
