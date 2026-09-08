@@ -30,7 +30,6 @@ uses
   //  shellapi,
   uCTYDAT,
   uStations,
-  WinSock2,
   uNet,
   TF,
   VC,

@@ -27,8 +27,7 @@ uses
   uConfigValues,
 VC,
   TF,
-//  Tree,
-  Windows;
+//  Tree,;
 const
   MAXFEATURES                           = 30;
   BASE                             = 'c:\workspace\';

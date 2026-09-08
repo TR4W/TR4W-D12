@@ -76,7 +76,9 @@ implementation
 
 uses
   uLCLFormHelpers,   // ShowModalOverWin32Parent -- ownership and centring
-  Windows,
+{$IFDEF WINDOWS}
+  Windows,           // FlashWindow, and nothing else -- see FlashSelected
+{$ENDIF}
   VC,              // RC_WINCONTROL2, tr4whandle
   uWinManager,     // ManageForm -- the caller reads it there
   MainUnit,        // logger
@@ -191,7 +193,16 @@ begin
    // carried around as the row's identity.
    if SelectedForm <> nil then
       begin
+{$IFDEF WINDOWS}
       Windows.FlashWindow(SelectedForm.Handle, True);
+{$ELSE}
+      (* NOT AN OVERSIGHT, AND NOT A TODO EITHER.  Flashing is a hint, not a
+        function: the row is already selected and the operator can read the
+        title.  Every other window manager here would need its own answer --
+        a taskbar bounce on macOS, an urgency hint on X11, nothing at all on
+        some -- and inventing one from Windows would be guessing at three
+        platforms to reproduce a nicety.  The list works without it. *)
+{$ENDIF}
       end;
 end;
 

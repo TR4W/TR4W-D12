@@ -1050,12 +1050,18 @@ type
                                             const aCaption: string = '');
       procedure AddHandWiredToSearchIndex(var aN: integer; const aCommand: string;
                                           const aControl: TWinControl);
+      procedure ShowBusyCursor;
+      procedure RestoreCursor;
       procedure SearchListClick(Sender: TObject);
-      { BOTH TYPES QUALIFIED, and that is not pedantry: FPC's Windows unit
-        declares its OWN TOwnerDrawState and TRect, and this unit uses Windows
-        in the implementation section. Unqualified, the declaration and the
-        implementation name different types with identical spellings, and FPC
-        reports a header mismatch printing two signatures that read the same. }
+      (* BOTH TYPES STAY QUALIFIED even though the clash is gone.  FPC's
+        Windows unit declares its own TOwnerDrawState and TRect, and while
+        this unit imported it, an unqualified spelling here named a different
+        type in the declaration and the implementation -- FPC then reported a
+        header mismatch printing two signatures that read identically.  The
+        import went with the Windows-dependency sweep (2026-09-08), so nothing
+        clashes today; the qualification is kept because it costs nothing and
+        the next unit to add `Windows` back would otherwise reintroduce a
+        confusing error a long way from its cause. *)
       procedure SearchListDrawItem(Control: TWinControl; Index: Integer;
                                    ARect: Types.TRect;
                                    State: StdCtrls.TOwnerDrawState);
@@ -1224,7 +1230,9 @@ uses
    Math,                 // Max -- clamping the scroll position
    uLCLTranslate,
    uPrefsSearch,   // PrefsMatchScore -- the ranking, unit tested without a UI
-   Windows,
+{$IFDEF WINDOWS}
+   Windows,   // SetCursor / LoadCursor / IDC_* -- see ShowBusyCursor below
+{$ENDIF}
    IniFiles,
    Generics.Collections,
    Generics.Defaults,
@@ -1526,6 +1534,39 @@ end;
 // The old code also compared TagString against the CAPTION constant, so
 // translating the nav would have broken section switching.  A Tag cannot be
 // translated, which is the point.
+(* THE BUSY CURSOR, AND WHY IT IS NOT TScreen.Cursor.
+
+  crHourGlass through the LCL sets a value that only takes effect when the
+  widget set next processes a message -- and the operations these wrap
+  (loading the cluster server list, applying a radio config) BLOCK without
+  pumping, which is exactly when the operator needs to see it.  The Win32
+  call changes the cursor now, and it survives the whole operation for the
+  same reason: nothing is running that would reset it.  Windows restores it
+  naturally on the first WM_SETCURSOR after the call returns.
+
+  Off Windows this does nothing, deliberately.  A busy cursor is feedback,
+  not function; every widget set has its own answer and guessing at three of
+  them to reproduce a courtesy is not worth a wrong one.  When the blocking
+  work moves off the UI thread -- which is the real fix on every platform --
+  both of these go away.
+
+  NAMED, RATHER THAN {$IFDEF}'d AT FOUR CALL SITES, which is what this unit
+  had: four copies of SetCursor(LoadCursor(0, IDC_WAIT)) and their partners,
+  each with its own comment explaining the same thing. *)
+procedure TPrefsForm.ShowBusyCursor;
+begin
+{$IFDEF WINDOWS}
+   Windows.SetCursor(Windows.LoadCursor(0, IDC_WAIT));
+{$ENDIF}
+end;
+
+procedure TPrefsForm.RestoreCursor;
+begin
+{$IFDEF WINDOWS}
+   Windows.SetCursor(Windows.LoadCursor(0, IDC_ARROW));
+{$ENDIF}
+end;
+
 procedure TPrefsForm.SelectFirstSection;
 var
    wanted: TTreeNode;
@@ -5490,7 +5531,7 @@ begin
    // reset it. That makes the blocked thread work in our favour rather than
    // against us. Windows restores the cursor naturally on the first
    // WM_SETCURSOR after we return.
-   SetCursor(LoadCursor(0, IDC_WAIT));
+   ShowBusyCursor;
    cbxClusterServer.Items.BeginUpdate;
    try
       cbxClusterServer.Clear;
@@ -5541,7 +5582,7 @@ begin
       cbxClusterServer.Items.EndUpdate;
       // In the finally: a directory file that throws mid-load must not leave the
       // operator with a permanent hourglass on a window that is working fine.
-      SetCursor(LoadCursor(0, IDC_ARROW));
+      RestoreCursor;
    end;
 
    // Info, and it names the count: this is the one remaining pause an operator
@@ -7685,10 +7726,10 @@ begin
       // nothing after this point pumps the message that would reset it.  It goes
       // after ProcessMessages so that the pump cannot undo it.  Same reasoning
       // as LoadClusterServerList; see the longer note there.
-      SetCursor(LoadCursor(0, IDC_WAIT));
+      ShowBusyCursor;
       ApplyNow(True);
    finally
-      SetCursor(LoadCursor(0, IDC_ARROW));
+      RestoreCursor;
       btnActivate.Caption    := oldCaption;
       btnActivate.Enabled := True;
    end;

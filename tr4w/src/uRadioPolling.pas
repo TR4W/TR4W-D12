@@ -39,7 +39,6 @@ uses
    utils_file,
    uHostName,   (* LocalComputerName -- the <StationName> element *)
    MainUnit,
-   Messages,
    SysUtils,
    LogWind,
    LogStuff,
