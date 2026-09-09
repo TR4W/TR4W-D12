@@ -198,7 +198,34 @@ end;
 var
    GPreviousExceptProc: TExceptProc = nil;
    GInstalled: boolean = False;
-   GMainThreadId: DWORD = 0;
+   (* TThreadID, NOT DWORD -- AND THE DIFFERENCE WAS A CRASH ON EVERY 64-BIT
+     BUILD.
+
+     A DWORD is four bytes. A TThreadID on 64-bit Linux is eight, and on that
+     platform it is a pthread handle, which is a large address:
+
+         SizeOf(TThreadID) = 8      SizeOf(DWORD) = 4
+         full            = 125286876055360
+         stored in DWORD =      2680031040
+         full = small ?    FALSE
+
+     So the id was truncated on the way in, the comparison promoted the small
+     value back to eight bytes, and OnMainThread could NEVER return True. On
+     32-bit Windows the two types are the same width and nothing showed.
+
+     WHAT THAT ACTUALLY DID, which is worse than a wrong log line: every main
+     window accessor asks OnMainThread before touching a control, and on a
+     False answer marshals itself through Application.QueueAsyncCall. With the
+     answer stuck at False, code already running on the main thread queued
+     itself, ran, asked again, and queued again. At shutdown the async queue is
+     destroyed while that is still going on, QueueAsyncCall raises "already
+     shut down", and the program dies in Application.Destroy -- which is
+     exactly the stack NY4I sent from Linux Mint on 2026-09-09.
+
+     It also filled the log with reports that main-thread code was off the main
+     thread, and those reports are the diagnostic that was supposed to catch
+     precisely this class of defect. It was accusing the innocent. *)
+   GMainThreadId: TThreadID = TThreadID(0);
 
 { The common writer.  Everything that reports a crash goes through here so the
   two hooks cannot drift into producing different-looking records. }
@@ -422,7 +449,7 @@ var
 begin
    // Before InstallCrashLog there is no main thread on record, so every thread
    // would look wrong.  Say nothing rather than say something false.
-   if GMainThreadId = 0 then
+   if GMainThreadId = TThreadID(0) then
       begin
       Exit;
       end;
