@@ -155,7 +155,15 @@ begin
      among them. On Windows both separators open the same file; on Linux
      "DOMrrlsect.dom" is one file with an odd name, in the wrong
      directory, that does not exist. *)
-   Result := StringReplace(Result, '', '/', [rfReplaceAll]);
+   (* SetDirSeparators, not a hand-written replace. It is the RTL's own
+     answer and it takes both separators to whatever PathDelim is here, so
+     no backslash literal appears in this unit at all -- which matters,
+     because the first version of this line WAS a literal replace and my
+     edit script silently ate the backslash, leaving
+     StringReplace(Result, '', '/', ...). It compiled, it did nothing, and
+     the Windows build could not have caught it: this whole block is
+     {$IFNDEF WINDOWS}. A probe run on Linux caught it in one line. *)
+   Result := SetDirSeparators(Result);
    if FileExists(Result) then
       begin
       Exit;
