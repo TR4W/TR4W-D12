@@ -224,8 +224,20 @@ var
 
      It also filled the log with reports that main-thread code was off the main
      thread, and those reports are the diagnostic that was supposed to catch
-     precisely this class of defect. It was accusing the innocent. *)
-   GMainThreadId: TThreadID = TThreadID(0);
+     precisely this class of defect. It was accusing the innocent.
+
+     PtrUInt, NOT TThreadID, AND THAT SECOND CHOICE MATTERED TOO. My first fix
+     used TThreadID, which is right on Windows and Linux and does not compile
+     on macOS: FPC declares TThreadID there as a POINTER (^TThreadRec), so
+     comparing it to what GetCurrentThreadId returns is not a legal operator.
+     Only a Mac compile said so.
+
+     PtrUInt is pointer-sized on all three, so it holds a Darwin pointer id and
+     a Linux integer id equally without truncation -- and it is the idiom this
+     unit already used two hundred lines further down, in GOffThreadSeen. I had
+     invented a second convention beside the one that was already here and
+     already correct. *)
+   GMainThreadId: PtrUInt = 0;
 
 { The common writer.  Everything that reports a crash goes through here so the
   two hooks cannot drift into producing different-looking records. }
@@ -237,7 +249,7 @@ begin
    // MainThreadID does not resolve in this configuration, and recording it
    // ourselves removes the question -- InstallCrashLog runs on the main
    // thread at startup by construction.
-   if GetCurrentThreadId = GMainThreadId then
+   if PtrUInt(GetCurrentThreadId) = GMainThreadId then
       begin
       Result := ' (main)';
       end
@@ -394,7 +406,7 @@ function OnMainThread: boolean;
 begin
    // GMainThreadId, not the RTL's MainThreadID -- see IfMainThread above for
    // why this unit records it itself.
-   Result := GetCurrentThreadId = GMainThreadId;
+   Result := PtrUInt(GetCurrentThreadId) = GMainThreadId;
 end;
 
 var
@@ -449,7 +461,7 @@ var
 begin
    // Before InstallCrashLog there is no main thread on record, so every thread
    // would look wrong.  Say nothing rather than say something false.
-   if GMainThreadId = TThreadID(0) then
+   if GMainThreadId = 0 then
       begin
       Exit;
       end;
@@ -596,7 +608,7 @@ begin
       Exit;
       end;
    GInstalled := True;
-   GMainThreadId := GetCurrentThreadId;
+   GMainThreadId := PtrUInt(GetCurrentThreadId);
 
    GPreviousExceptProc := ExceptProc;
    ExceptProc := @CatchUnhandledException;
