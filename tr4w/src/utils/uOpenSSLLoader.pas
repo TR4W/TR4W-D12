@@ -202,8 +202,14 @@ var
    link: string;
 begin
    link := IncludeTrailingPathDelimiter(aDir) + aBaseName + '.so';
-   fpUnlink(link);
-   Result := fpSymlink(PChar(aTarget), PChar(link)) = 0;
+
+   (* AnsiString, NOT PChar. BaseUnix overloads both of these for strings, and
+     `string` here is UnicodeString -- so PChar() means PWideChar and the call
+     will not compile, which is how the compiler caught the first version of
+     this line. Passing the string is both correct and the thing this tree is
+     moving toward; the overload owns the conversion. *)
+   fpUnlink(AnsiString(link));
+   Result := fpSymlink(AnsiString(aTarget), AnsiString(link)) = 0;
 end;
 {$ENDIF}
 
