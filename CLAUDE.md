@@ -130,9 +130,10 @@ from, inside this repository. It is not D7 heritage and pushing to it would not 
 project. It is simply stale.
 **Toolchain:** **FreePascal 3.2.2 + the Lazarus LCL.** ~~Delphi 12 Athens~~ was left behind on
 2026-08-13 once FPC passed the unit tests, the golden corpus and shipped the
-installer. `tr4w/FullBuild-D12-deprecated.ps1` still exists but **no longer works**: deleting the
-FMX twins on 2026-08-17 removed units its uses clause needs, so a Delphi build can only be
-reproduced by checking out a commit before that. **DCC32 was retired earlier and is long gone.**
+installer. ~~`tr4w/FullBuild-D12-deprecated.ps1` still exists~~ — **it was DELETED on 2026-08-31
+with every other Delphi file** (see [the Delphi section](#delphi-12---gone-and-there-is-nothing-left-to-run));
+it had not worked since the FMX twins went on 2026-08-17, so a Delphi build can only be reproduced
+by checking out a commit before that. **DCC32 was retired earlier and is long gone.**
 **Version:** see `tr4w/src/Version.pas` (`TR4W_CURRENTVERSION_NUMBER`) — `5.0.2`, published as
 a **GitHub release** on 2026-08-30.
 **Website:** https://tr4w.net — **serves D7 (4.x) ONLY.** 5.x is not distributed there yet, so
@@ -143,11 +144,25 @@ from the website today gets 4.x, and that is deliberate until the bench block be
 
 **Definition of done (NY4I):** clone from GitHub onto any PC with FPC and Lazarus installed, run
 `FullBuild.ps1`, get the setup `.exe`. **That passes**, and is re-verifiable with
-`tr4w/build/Test-FreshClone.ps1`. Out of scope, unchanged: 64-bit, SQLite, the contest factory.
+`tr4w/build/Test-FreshClone.ps1`. ~~Out of scope, unchanged: 64-bit, SQLite, the contest
+factory.~~ **SQLITE IS NO LONGER OUT OF SCOPE — IT IS THE LOG** (started 2026-09-01; the binary
+`.TRW` write path is gone and the file is import-only). Read
+[`docs/SQLITE_MIGRATION_TASKS.md`](docs/SQLITE_MIGRATION_TASKS.md) before touching log storage.
+**THE CONTEST FACTORY IS ALSO NO LONGER OUT OF SCOPE** — `tr4w/src/contestFactory/` exists and is
+compiled into `tr4w.lpr`. Read [`docs/ADDING_A_CONTEST.md`](docs/ADDING_A_CONTEST.md), and its
+section 4 before believing a green run: the golden corpus is blind to scoring, and
+`tr4w/test/corpus/test-contest-factory.sh` is the only thing that is not. **Count the units with
+`ls tr4w/src/contestFactory` rather than writing a number here.**
+Still out of scope: 64-bit.
 
-Done: the build system, the lints, the unit tests (10,211/0), the golden corpus, the LCL
-port of all four designed forms, `tr4wserver` (**the 2026-08-23 regression is fixed** — see
+**AND THE BUILD IS NO LONGER WINDOWS-ONLY.** Three platforms build from this tree — Windows i386,
+Linux x86_64 (app + server + tarball) and macOS aarch64 (app + server + `.app` bundle). See
+[Building off Windows](#building-off-windows).
+
+Done: the build system, the lints, the unit tests, the golden corpus, the LCL port of every
+designed form, `tr4wserver` (**the 2026-08-23 regression is fixed** — see
 [Multi-user networking](#6-multi-user-networking)), the NSIS installer, and `release.yml`.
+**No count is written here on purpose** — measure with `tr4w/build/Build-Tests.ps1 -Run`.
 
 **~~Next in line: attaching a `win-ci` runner.~~ DONE, and PROVEN END TO END on 2026-08-30.**
 `windows11-ci-d12` (`[self-hosted, win-ci]`) built, scanned and published **v5.0.2** from a
@@ -198,8 +213,9 @@ build.
 
 **The toolchain is FreePascal 3.2.2 + the Lazarus LCL.** Delphi 12 is behind us (2026-08-13): the
 FPC build passes the unit tests and the golden corpus, runs the LCL UI, and is what
-`FullBuild.ps1` ships. The Delphi script is kept as `FullBuild-D12-deprecated.ps1` for reference —
-**don't run both**, they write the same file names from different compilers.
+`FullBuild.ps1` ships. ~~The Delphi script is kept as `FullBuild-D12-deprecated.ps1` for reference~~
+— **it is gone (2026-08-31), along with every other Delphi project file.** There is no second
+packaging path to confuse it with.
 
 ### Everything at once
 
@@ -244,17 +260,58 @@ units for i386. It lists every location it tried when it fails.
 
 **The unit search paths are defined once**, in `build/Get-SearchPaths.ps1`, for three targets that
 genuinely differ (App / Tests / Server). They previously existed in three copies and had already
-drifted. `Server` deliberately gets no LCL: `tr4wserver` is a console program. **That exclusion is
-also the only thing guarding the boundary**, which is why a unit that quietly grew a `Forms`
-dependency broke the server build and nothing else noticed — see [Multi-user
-networking](#6-multi-user-networking).
+drifted. ~~`Server` deliberately gets no LCL: `tr4wserver` is a console program.~~ **That is no
+longer true — `Get-SearchPaths.ps1` gives the server the LCL paths, because `uServerForm` lives
+there.** The `Forms`-in-a-console-program story below is still worth reading for how the boundary
+broke, but the search path is no longer the guard it describes.
+
+### Building off Windows
+
+**THREE PLATFORMS BUILD FROM THIS TREE**, as of 2026-09-08 — Windows i386, Linux x86_64 and macOS
+aarch64. Anything in this file or in `docs/` that says the port "has not been attempted", or that a
+Linux compile is blocked on `VC.pas`, is stale: `VC.pas` uses `LCLType`, not `Windows`.
+
+```sh
+sh tr4w/build/build-unix.sh            # every stage; build-linux.sh / build-mac.sh wrap it
+sh tr4w/build/build-unix.sh --list     # what the stages are, and stop
+./tools/compile-native.sh --tree       # just the compile, in seconds
+```
+
+```powershell
+.\tools\Compile-Linux.ps1 <unit>.pas   # cross-compile ONE unit from Windows
+```
+
+- **One implementation, two wrappers.** `build-unix.sh` is the Unix counterpart of `FullBuild.ps1`;
+  `build-linux.sh` and `build-mac.sh` are one-line `exec`s into it. The platforms differ in four
+  places — target name, widget set, where Lazarus lives, and what a distributable artifact IS
+  (a tarball, versus a `TR4W.app` bundle). **Do not add behaviour to a wrapper.**
+- **Linux produces the app, `tr4wserver` and a tarball. macOS produces the app, the server and an
+  `.app` bundle** — the bundle is not decoration: Cocoa decides an app is an app by finding an
+  `Info.plist`, and a bare Mach-O launched from Finder gets no Dock icon and no menu bar. It is
+  **not signed or notarized**, and Gatekeeper's message for an unsigned bundle says *damaged*.
+- **NOBODY HAS RUN THE GUI ON EITHER.** Building is not running, and a contest logger is not proven
+  by a compiler. `README.md`'s *"Where this actually stands"* is the honest status; keep it there
+  rather than duplicating it here.
+- **`build-unix.sh` does NOT stop at the first failing stage**, unlike `FullBuild.ps1` — every stage
+  reports its own first error so the summary is a ranked worklist. Its own header still describes an
+  era when nothing linked; read the README, not the header.
+- **The lints and the Edit-QSO round-trip are PowerShell and do not run there.** They are reported
+  as not-run, never as passed. `Lint-LinuxCompile.ps1` pins the units that must keep cross-compiling
+  from Windows, and `tools/compile-native.sh` parses the same list — **add a unit the day it first
+  compiles, never because the `{$IFDEF WINDOWS}` reads well.**
+
+**A Windows-hosted cross-compile is a weaker check than a native one.** It inherits case-insensitive
+unit lookup from its host, which is how `uCTYDAT.PAS` passed `Lint-LinuxCompile` and still broke on
+a real Unix box — see [Naming](#naming).
 
 **`spike/` is gone** (2026-08-13). It answered "can FPC do this", the answer was yes, and its probes
 are in git history. UI harnesses live in `tr4w/test/ui/`.
 
 ### Lints gate the build — from one place
 
-`tr4w/build/Run-Lints.ps1` runs all ten. The list previously lived **only** in `tr4w.dproj`'s
+`tr4w/build/Run-Lints.ps1` runs them all — **and there are far more than the "ten" this line used
+to claim; read the array in that script for the current set.** The list previously lived **only**
+in `tr4w.dproj`'s
 PreBuildEvent, so it gated msbuild and nothing else; an FPC build saw none of them. Add a lint by
 editing that one array.
 
@@ -348,6 +405,11 @@ It links only leaf `src` units, so **the TRDOS contest engine is not unit-covere
 byte-diffs both artifacts — ADIF and Cabrillo — against frozen D7 references (13 sets × 2 = 26
 comparisons).
 
+- **IT EXERCISES THE DATABASE, NOT THE BINARY LOG.** The tracked fixtures are still D7-written
+  `.trw` files — that independence is the whole value of the oracle — but `uLogSource`'s default is
+  `lsDatabase`, so the export path under test reads SQLite. The `.trw` is the fixture format, not
+  the store.
+
 - **Baseline: `24 passed, 0 failed, 2 known-divergence, 0 awaiting-candidate` = GREEN**, and
   **every export run must also exit 0.**
 - **THE EXIT CODE IS PART OF THE RESULT, since 2026-09-06.** The corpus used to discard it, and
@@ -386,8 +448,15 @@ strong net, not a proof.
    counts them on every build) and the CW keyer factory
    (`src/uCWKeyer*.pas`) are genuine OOP subsystems: proper base classes, virtuals, capability sets,
    and self-registration. Both were built with the **strangler pattern** — thin adapters over the
-   existing globals first, prove the seam on hardware, then delete the legacy path. That is the
-   model for how the next subsystem (contest factory) should be built.
+   existing globals first, prove the seam on hardware, then delete the legacy path.
+4. **The contest factory** — `tr4w/src/contestFactory/`, built to the same model
+   (`uContestBase`, `uContestRegistry`, `uContestFactory`, one unit per contest). ~~"the next
+   subsystem … should be built"~~: it IS built, and it is mid-flight, so read
+   [`docs/ADDING_A_CONTEST.md`](docs/ADDING_A_CONTEST.md) before adding to it.
+5. **The contest log is SQLite** — `src/domain/uLogDatabase.pas`, `uLogSchema.pas`,
+   `src/uLogRepository.pas`, `src/uLogSource.pas` (default `lsDatabase`). The binary `.TRW` is
+   **import-only**: `tAddQSOToLog` writes to the database and nowhere else. See
+   [`docs/SQLITE_MIGRATION_TASKS.md`](docs/SQLITE_MIGRATION_TASKS.md).
 
 ### Framework
 
@@ -820,6 +889,15 @@ ready: gate post-connect sends on link *stability*, not presence.
 centralised log, multipliers, dupe checking, serial-number lockout, time sync. Binary packet
 protocol with CRC32 (`src/utils/networkmessageutils.pas`).
 
+**MULTI-OP LOG COMPARISON DOES NOT WORK RIGHT NOW, AND SAYS SO.** It compared a CRC32 of the raw
+`.TRW` bytes at both ends; this station no longer keeps a `.TRW` and `tr4wserver` still does, so
+there is nothing to agree with. `uNet.ProcessServerLogInfo` **refuses rather than guesses** — it
+logs an error once per session and compares nothing. Reporting "identical" would tell an operator
+their log matches when nothing was checked; reporting "different" would resynchronise on every
+connect against a log this build cannot read. *"Are these two logs the same"* belongs to the new
+multi-station protocol, which will ask it over ROWS. This is known-broken during development, not a
+regression to diagnose.
+
 **It is built by `FullBuild.ps1` as a normal step again (2026-08-29).** It had not compiled since
 2026-08-23: `a3c671cc` added a `TF` → `uCrashLog` edge so a fault on a worker thread would not be
 silent, and `uCrashLog` used `Forms`, so the chain
@@ -983,7 +1061,7 @@ reference.
 
 ### 11. Logging framework
 
-Log4D (`src/Log4D.pas`), global `logger: TLogLogger`, rolling file appender to `tr4w.log`, level from
+Log4D (`tr4w/include/Log4D.pas` — **not** under `src/`), global `logger: TLogLogger`, rolling file appender to `tr4w.log`, level from
 `DEBUG LOG LEVEL` in `tr4w.ini` (`NONE`…`TRACE`). Any standalone EXE that links app units must assign
 the `MainUnit` global `logger` or it will AV.
 
@@ -1041,10 +1119,17 @@ Read the specific doc before acting in its area — these are current and this f
 `dom/` (~126 domestic contest configs), `commands_help_*.ini`.
 
 **DLLs:** `libhamlib-4.dll` (+ `libgcc_s_dw2-1.dll`, `libusb-1.0.dll`, `libwinpthread-1.dll`),
-`libeay32.dll` / `ssleay32.dll` (OpenSSL), `inpout32.dll` (LPT keying), `rigctld.exe`.
+`libeay32.dll` / `ssleay32.dll` (OpenSSL), **`sqlite3.dll` (THE CONTEST LOG — the installer ships
+it; FPC binds SQLite dynamically, so a missing DLL is a run-time failure, not a link error)**, and
+`rigctld.exe`. **`inpout32.dll` (LPT keying) is deliberately NOT bundled** — its kernel port-I/O
+driver needs elevation, so an operator who wants LPT keying supplies it themselves next to
+`tr4w.exe`; the reason is written into `tr4w/build/full.nsi`.
 See [`docs/UPDATING_RUNTIME_DLLS.md`](docs/UPDATING_RUNTIME_DLLS.md).
 
-**Created at runtime:** `settings/tr4w.ini`, `settings/tr4w.pos`, contest `.cfg`, binary `.dat` logs.
+**Created at runtime:** `settings/tr4w.json` (and the legacy `settings/tr4w.ini`, read-once —
+see [Configuration](#3-configuration-srcucfgpas-srctrdoscfgcmdpas)), `settings/tr4w.pos`, contest
+`.cfg`, and **the SQLite contest log**. Those paths are relative to the running binary, which in
+this tree means `tr4w/target/`. ~~binary `.dat` logs~~ — the binary log is **import-only** now.
 
 ## Common Development Tasks
 

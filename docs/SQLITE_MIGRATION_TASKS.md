@@ -8,12 +8,48 @@ ORDER and the exit criteria.** It does not restate the schema.
 
 ---
 
-## Where this stands, 2026-09-01
+## Where this stands, 2026-09-08
 
-**PHASE A IS COMPLETE, plus B1.** The crosswalk, the 23 columns it found
+**PHASES A, B, C AND D1 ARE COMPLETE, AND E IS THROUGH E2.** The binary log is
+**IMPORT-ONLY**. The code says so at the one site that matters -- `tAddQSOToLog`
+(`src/trdos/logsubs2.pas`): *"THE QSO GOES TO THE DATABASE, AND NOWHERE ELSE --
+step B5. The .TRW write that stood here is gone."* `uLogShadow` no longer
+exists, and the last binary WRITER of any kind, `MainUnit.MakeTestLog`, was
+deleted in `fc1e907c`. `uLogSource`'s default is `lsDatabase`, so the golden
+corpus exercises the DATABASE.
+
+**NY4I decided on 2026-09-08 that the `.TRW` is import-only AND Windows-only
+going forward.** The three D7-binary test suites are scoped to Windows for that
+reason (`05480bd3`).
+
+**D1 IS DONE**, including the acceptance criterion it was written for:
+`src/ui/lcl/uLogEditForm.pas` and `uLogSearchForm.pas` are LCL forms over
+`TLogGrid`, and an X-QSO or deleted row is drawn from the RECORD
+(`GridFetchRows` sets `Deleted` and `XQSO`), not from a flag smuggled into a
+list item. `uLogEdit.pas` is gone.
+
+**E1 and E2 ARE DONE.** `TLogRepository.LoadContestConfig` is read at log open
+by `uLogStore.LogStoreApplyContestConfig`.
+
+**NEXT: E3** -- the `.cfg` becomes import-only. Its gate already exists as
+`tr4w/test/corpus/test-cfg-not-needed.sh`. **T1 (`sqlTrace`) is designed and
+UNBUILT** -- there is no `sqlite3_trace_v2` anywhere in the tree.
+
+**DO NOT QUOTE A COUNT FROM THIS FILE. MEASURE IT.**
+`tr4w/build/Build-Tests.ps1 -Run` for the unit tests,
+`bash tr4w/test/corpus/export-d12-corpus.sh` for the corpus. On 2026-09-08 they
+read: unit tests **22841/0** on Windows, **19897/1** on Linux, **10756/7** on
+macOS; corpus **24 passed / 0 failed / 2 known-divergence**. Every figure below
+this line is dated where it was written and has since moved.
+
+---
+
+### The record of how it got here -- reasoning, not status
+
+**PHASE A IS COMPLETE, plus B1.** *(2026-09-01)* The crosswalk, the 23 columns it found
 missing, the shared binary reader, the mapper, the exhaustive round-trip test
 over real corpus logs, the importer, and `/IMPORTLOG` to reach it.
-**22,398 unit tests, 0 failures; corpus 22/0/4.**
+**Then: 22,398 unit tests, 0 failures; corpus 22/0/4.**
 
 **It is provable rather than merely built:**
 
@@ -41,22 +77,24 @@ county-line contacts share it, so it cannot be the unique row key.
 **B3 IS GREEN.** `bash tr4w/test/corpus/compare-stores.sh` -- **13 logs, 1,855
 QSOs, 0 differences.** Exported from the database, TR4W produces BYTE-IDENTICAL
 ADIF and Cabrillo to exporting from the binary log, and the golden corpus still
-reads 22/0/4 against the D7 references.
+reads 22/0/4 against the D7 references. *(That corpus figure is the
+2026-09-01 one; C3 closed two divergences and it is 24/0/2 today.)*
 
 **B4 IS DONE.** Every log READ goes through `uLogSource` and the default is the
-database: `tr4w/test/corpus/export-d12-corpus.sh` passes **22/0/4 against the D7
-references while reading from SQLite**, and an export still produces all 101 QSOs
-with the `.TRW` deleted from disk.
+database: `tr4w/test/corpus/export-d12-corpus.sh` passes against the D7
+references while reading from SQLite, and an export still produces all 101 QSOs
+with the `.TRW` deleted from disk. *(It read 22/0/4 when this was written; C3
+has since taken it to 24/0/2.)*
 
-Still on the binary log, deliberately: the eight WRITE sites, and the five
-read-modify-write sites that read a record in order to rewrite it
-(`DeleteLastContact`, `uNet` x2, `uQTCS`, `uEditQSO`, and MainUnit's
-memory-mapped rescore). Flipping only their read half would have them read one
-store and write another. They move at B5.
+*Written at B4, and NO LONGER TRUE:* the eight WRITE sites and the five
+read-modify-write sites were still on the binary log at that point. **They moved
+at B5 and the binary write path is gone** -- see the top of this section.
 
-**B5 IS BLOCKED ON A DECISION ONLY NY4I CAN MAKE, and the blocker is not the
-writes.** They are ready: every mutation already goes to the database beside the
-binary log, and removing the binary half is mechanical.
+**B5 WAS BLOCKED ON A DECISION ONLY NY4I COULD MAKE. HE MADE IT, AND B5 IS
+DONE.** The paragraphs below record what the blocker WAS, because the CRC
+question they describe is still owed by the new multi-station protocol -- see
+*"So B5 is not blocked; the CRC is not a constraint"* further down, which is the
+later and governing text.
 
 **THE LOG CRC32 IS A WIRE VALUE.** Multi-op synchronisation decides whether two
 logs are identical by comparing a CRC32 **of the raw .TRW bytes**, computed
@@ -110,8 +148,9 @@ Cabrillo. So the `.cfg` values are parsed and recorded; they are dropped at
 APPLICATION, because those rows are `csJSON` and therefore inert. The fix is a
 config-layer one and the data to prove it is now in the log.
 
-**Next: E2** -- read them at log open, and decide the precedence against
-`tr4w.ini`.
+**E2 IS NOW DONE** -- the rows are read at log open by
+`uLogStore.LogStoreApplyContestConfig`, which also documents why the contest
+comes from the `contest` TABLE rather than from a captured `CONTEST` row.
 B2 is done (all eight write sites), and C1/C2 with it.
 
 ---
@@ -212,10 +251,11 @@ what `logdump` reads. **No contest-factory work.**
 | # | task |
 |---|---|
 | ~~**B1**~~ | **DONE IN PHASE A** -- `TLogRepository`, `Save` / `Load` over `ContestExchange` as a value type. Moved because the importer needs the field mapping, and writing it twice was the alternative |
-| **B2** | **NEXT, and it is not purely mechanical -- see below** |
+| **B2** | **DONE** -- all eight write sites. Not purely mechanical; see below |
 | **B3** | **THE EQUIVALENCE GATE, and now the pivot of the whole migration** -- export from the DATABASE and diff against the same frozen D7 references. See below |
 
-**Exit:** corpus **22 passed / 0 failed / 4 known** with the log in SQLite.
+**Exit:** corpus **22 passed / 0 failed / 4 known** with the log in SQLite --
+**met**, and C3 has since taken it to 24/0/2.
 **No contest-factory work.**
 
 ### B3 IS THE GATE, AND THE `.TRW` IS A TEST BENCH -- NY4I, 2026-09-01
@@ -254,8 +294,8 @@ available only while both exist.
 
 | # | task |
 |---|---|
-| **B4** | **Flip the readers.** Export, the editable log and search source from the database. The binary log is still written |
-| **B5** | **Stop writing it.** `uLogShadow` is deleted -- it is an adapter with nothing left to adapt -- and with it the drift check, the rebuild-from-binary and the `.TRW` writer |
+| **B4** | **DONE. Flip the readers.** Export, the editable log and search source from the database. *(At B4 the binary log was still written; B5 removed that.)* |
+| **B5** | **DONE. Stop writing it.** `uLogShadow` is deleted -- it was an adapter with nothing left to adapt -- and with it the drift check, the rebuild-from-binary and the `.TRW` writer. `MainUnit.MakeTestLog`, the last writer of any kind, went in `fc1e907c` |
 
 **KEEP THE `.TRW` READER. DELETE EVERYTHING ELSE.** `uLogBinaryFile`'s reader is
 a tested leaf reached by `/IMPORTLOG`, and it is what lets an operator bring a
@@ -544,8 +584,9 @@ three disagree. `LinesInEditableLog` (`VC.pas:2856`) goes with it, along with
 its readers in `LoadinLog`, `LOGSUBS2`'s trim and the window sizing in
 `MainUnit`.
 
-These are the last two hand-built Win32 dialogs and NY4I parked them here on
-purpose: *"I suspect those are so coupled to the sqlite database it would be
+These were the last two hand-built Win32 dialogs -- **both are LCL forms now**
+(`src/ui/lcl/uLogEditForm.pas`, `uLogSearchForm.pas`) -- and NY4I parked them
+here on purpose: *"I suspect those are so coupled to the sqlite database it would be
 better to do those two right after the log is moved to a database."* They fall
 out of a log that has a model rather than being a project of their own.
 
@@ -553,9 +594,9 @@ out of a log that has a model rather than being a project of their own.
 
 | # | task |
 |---|---|
-| **E1** | Write `config` + `message` from the current `.cfg` at log creation |
-| **E2** | Read them at log open |
-| **E3** | `.cfg` becomes **import only** -- the stated goal: *"when done, the .cfg file should not be necessary"* |
+| **E1** | **DONE.** Write `config` + `message` from the current `.cfg` at log creation |
+| **E2** | **DONE.** Read them at log open -- `uLogStore.LogStoreApplyContestConfig` |
+| **E3** | **NEXT.** `.cfg` becomes **import only** -- the stated goal: *"when done, the .cfg file should not be necessary"* |
 | **E4** | **STOP THERE.** Interpretation stays with `fcontest.pas` |
 
 E4 is the whole point of drawing the line here. Storing the contest definition is
@@ -573,7 +614,7 @@ sets `EXCHANGE RECEIVED`, `DOMESTIC MULTIPLIER`, `QSO POINT METHOD`,
 
 | # | task |
 |---|---|
-| **F1** | `ContestExchange` becomes a class. With B1 in place this is a parameter type on the repository, not a rewrite. **BLOCKED ON B5 -- see below** |
+| **F1** | `ContestExchange` becomes a class. With B1 in place this is a parameter type on the repository, not a rewrite. **B5 is done, so this is unblocked** |
 | **F2** | Harvest per-contest initial state out of `fcontest.pas`; the `config` table becomes the factory's input rather than a file |
 | **F3** | `case Contest of` -> the factory: scoring, multipliers, exchange parsing |
 | **F4** | The **sending** half of the rover problem. `MyGrid` is substituted textually into the F-key memories once, at `fcontest.pas:481-482`, so an operator who edits it mid-contest **keeps sending the old grid and exports the new one**. C fixes the export half; only the factory fixes this half |

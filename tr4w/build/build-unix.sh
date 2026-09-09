@@ -14,16 +14,23 @@
 # would have drifted, and the drift would have been invisible: each is exercised
 # on a different machine.
 #
-# IT IS EXPECTED TO FAIL, AND THAT IS ITS JOB TODAY.  TR4W is a Win32 program
-# being made portable one unit at a time; nothing here is going to link an
-# executable this month.  What the script buys is a RANKED LIST rather than a
-# guess: every stage runs, each reports its own first error, and the summary at
-# the end is the remaining Linux work in the order it has to be done.
+# IT LINKS.  This header said "IT IS EXPECTED TO FAIL, AND THAT IS ITS JOB
+# TODAY... nothing here is going to link an executable this month", which was
+# true when it was written and was false by the end of the same day.  Measured
+# 2026-09-08: Linux produces the app, tr4wserver and a tarball; macOS produces
+# the app, tr4wserver and a TR4W.app bundle.
 #
-# SO IT DOES NOT STOP AT THE FIRST FAILURE, unlike FullBuild.ps1.  On Windows an
-# early stop is correct -- a failing unit test must not produce a shippable
-# binary.  Here every stage is known to be red, and stopping at the first one
-# would report the same blocker every run while hiding the three behind it.
+# THAT SENTENCE IS THE REASON IT IS BEING CORRECTED RATHER THAN QUIETLY DELETED.
+# An agent or a developer reading it concludes the port does not build and stops
+# looking -- which is exactly the stale-document failure this project keeps
+# paying for.  What is genuinely unfinished is stated in the README under
+# "Where this actually stands"; the honest short version is that NOBODY HAS RUN
+# THE GUI on either platform, and building is not running.
+#
+# IT STILL DOES NOT STOP AT THE FIRST FAILURE, unlike FullBuild.ps1, and that is
+# still right.  On Windows an early stop is correct -- a failing unit test must
+# not produce a shippable binary.  Here a red stage is a WORKLIST ITEM, and
+# stopping at the first would hide the ones behind it.
 # Nothing shippable is produced either way.
 #
 # AND IT NEVER FAKES A PASS.  No stubbing, no skipping to reach exit 0: a stage

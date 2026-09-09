@@ -10,7 +10,7 @@ restating it.
 
 ---
 
-## Where this stands, 2026-09-01
+## Where this stands — 2026-09-01, RE-MEASURED 2026-09-08
 
 **The order below is a PLAN and has been read as a STATUS at least once.** It
 was written before any of it was built, so the tense is wrong throughout, and
@@ -22,16 +22,23 @@ still to do" when it had finished two days earlier. Measured state:
 | **0. persistent threads** | **partly done, unverified.** `TReadingThread.Execute` now waits through a disconnect rather than exiting, so the common reconnect path no longer tears the thread down. Four `Terminate` / `FreeAndNil(rt)` sites remain in `uFactoryRadioBase` and nobody has established that every reconnect path avoids them |
 | **0. `TThread.Queue` throughout** | **NOT STARTED, and see the correction below** |
 | **1. display state** | **DONE 2026-08-29/30.** `src/domain/` (`uDomainState`, `uRadioState`, `uKeyerState`, `uWSJTXState`), `uStateBridge`, `Lint-DomainPurity` |
-| **2. SQLite** | **STARTED 2026-09-01.** [`SQLITE_LOG_SCHEMA_PLAN.md`](SQLITE_LOG_SCHEMA_PLAN.md) -- schema settled, all eleven questions answered |
-| **3. contest factory** | not started |
+| **2. SQLite** | ~~STARTED 2026-09-01~~ **SQLITE IS THE LOG (2026-09-08).** `uLogSource`'s default is `lsDatabase`, and the binary `.TRW` WRITE path is deleted -- the file is import-only. Order and exit criteria: [`SQLITE_MIGRATION_TASKS.md`](SQLITE_MIGRATION_TASKS.md). The DDL in [`SQLITE_LOG_SCHEMA_PLAN.md`](SQLITE_LOG_SCHEMA_PLAN.md) §4 has diverged from `src/domain/uLogSchema.pas`, which is the schema |
+| **3. contest factory** | ~~not started~~ **STARTED.** `tr4w/src/contestFactory/` -- `uContestBase`, `uContestRegistry`, `uContestFactory` and one unit per contest, compiled into `tr4w.lpr`. See [`ADDING_A_CONTEST.md`](ADDING_A_CONTEST.md) |
+
+**AND THE IRONY IS THE POINT.** The paragraph above this table warns that a plan
+gets read as a status. That is exactly what happened to the table itself: two of
+its five rows were being read as current on 2026-09-08 and both were wrong.
+**Re-measure before quoting any row.**
 
 ### The `TThread.Queue` prescription is contradicted by the tree, and the tree is right
 
 Phase 0 below says *"then `TThread.Queue` throughout"*. **Counted 2026-09-01:
 `TThread.Queue(` has ZERO invocations in this program.** All 29 textual hits are
-prose -- comments in eight units explaining why it is not used. Marshalling is
-62 `Application.QueueAsyncCall` sites across 17 units, plus one
-`TThread.Synchronize`.
+prose -- comments in eight units explaining why it is not used. Marshalling was
+then 62 `Application.QueueAsyncCall` sites across 17 units, plus one
+`TThread.Synchronize`. *(Re-checked 2026-09-08: `TThread.Queue(` is still zero,
+which is the load-bearing half. The `QueueAsyncCall` count has drifted upward --
+count it rather than quoting this line.)*
 
 And the tree has moved AWAY from it deliberately: `a0709317` / `e03e49e9`
 (2026-08-14) are *"post the applies to the main thread instead of
@@ -201,6 +208,9 @@ to keep that oracle working across the change, or the only proof that scoring
 and Cabrillo did not move is gone at exactly the moment it is most needed.
 
 ### 3. Contest factory — needs both
+
+**This section is written in the future tense and the work has STARTED** --
+`tr4w/src/contestFactory/`. Read it for the shape, not for the status.
 
 It wants a log it can query and a display it can update without naming widgets.
 It is also the largest — 120+ contests, `case ActiveExchange` in `PostUnit`,

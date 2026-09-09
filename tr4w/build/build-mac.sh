@@ -19,10 +19,16 @@
 #   download.  Fixing that needs an Apple Developer ID and is a distribution
 #   decision, not a build step.
 #
-#   IT HAS NOT BEEN RUN TO COMPLETION.  As of 2026-09-08 the whole unit graph
-#   COMPILES for aarch64-darwin (tools/compile-native.sh --tree), which is not
-#   the same as linking an application.  Expect this to get somewhere and stop,
-#   and read the first error of each failing stage -- that is the worklist.
+#   IT DOES RUN TO COMPLETION NOW.  This said "IT HAS NOT BEEN RUN TO
+#   COMPLETION... the whole unit graph COMPILES, which is not the same as
+#   linking an application" -- true when written, false a few hours later, and
+#   left behind to tell the next reader the Mac does not build.  Measured
+#   2026-09-08: app, tr4wserver and the TR4W.app bundle all produced.
+#
+#   WHAT IS STILL NOT DONE, so this does not swing too far the other way: the
+#   unit tests RUN on macOS and a handful still fail, and NOBODY HAS RUN THE
+#   GUI.  Building is not running, and a contest logger is not proven by a
+#   linker.
 #
 # See "Building on macOS" in the README.
 

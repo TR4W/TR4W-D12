@@ -1,5 +1,34 @@
 # TR4W — Roadmap
 
+> ## READ THIS BEFORE ANY OTHER LINE. AUDITED 2026-09-08 AND LARGELY STALE.
+>
+> This file was last measured on **2026-08-23**. A staleness audit on
+> **2026-09-08** found it wrong in every row of the "Where we are" table and
+> found four whole sections describing a program that no longer exists.
+> **It has NOT been rewritten** — it is still worth reading for *why* things
+> are shaped as they are. It is **not** a status document any more.
+>
+> **Do not quote a number out of this file. Do not conclude "X is not started"
+> from it.** What the audit established:
+>
+> | this file says | true on 2026-09-08 |
+> |---|---|
+> | §7 "SQLite log storage … not scheduled" | **SQLite IS the log.** `uLogSource`'s default is `lsDatabase` and the binary `.TRW` write path is gone. See [`SQLITE_MIGRATION_TASKS.md`](SQLITE_MIGRATION_TASKS.md) |
+> | §7 "The contest factory … Not started" | **`tr4w/src/contestFactory/` exists** and is compiled into `tr4w.lpr`. See [`ADDING_A_CONTEST.md`](ADDING_A_CONTEST.md) |
+> | §7 "macOS / Linux / ARM … nothing has been attempted" | **Linux x86_64 and macOS aarch64 both build** the app, the server and a distributable artifact. `tr4w/build/build-unix.sh`, `tools/compile-native.sh` |
+> | §2c "`VC.pas` … is the first thing to do" | **Already done.** `VC.pas` uses `LCLType`, not `Windows` |
+> | §2 "`tw_` tool windows converted 2 of 17", the three remaining Win32 dialogs, `uErmak`, `uMissingMults`, `uCommctrl`, `MMSystem`, `uTrayBalloon`, `uHostedFormWindows`, `src/ui/fmx/`, `FullBuild-D12-deprecated.ps1` | **all converted or deleted.** Measure with `.\build\Lint-Win32Dialogs.ps1 -Group ui` |
+> | §2b the main window's subclassed `WindowProc` | **gone.** No `TR4WFormSubclassProc`, no `IsTR4WsOwnMessage`, no `procedure WindowProc` |
+> | §5 "Move the body of `tr4w.lpr` into units" | **done** — `tr4w.lpr` is `begin RunTR4W; end.`; the body is `src/uProgramMain.pas` |
+> | "Version 5.0.0" / `tr4w_setup_5.0.0.exe` | **5.0.2** (`tr4w/src/Version.pas`) |
+> | `Lint-AppMessages` (§2b, §5) | **retired 2026-09-07**; the script no longer exists |
+> | the asm count "2 blocks, both in `uWinKey.pas`" | `uWinKey.pas` has **no asm at all**. Measure with `tr4w/build/Count-LiveAsm.ps1` |
+> | `$NARROW_CEILING` "1,427" | `Build-App.ps1` holds a different figure; read the constant |
+>
+> Items the audit confirmed are **still open**: the editable-log row-count
+> retirement (§`ROW_COUNT_ARRAY`), `tr4wserver`'s missing version resource, and
+> the unit tests linking the LCL transitively through `uCAT` → `uPrefsForm`.
+
 **Updated 2026-08-14.** Supersedes `D12_MIGRATION_ROADMAP.md`, which tracked the migration to
 Delphi 12 — a migration that succeeded and was then left behind. Named for the *job* rather than the
 toolchain, because the last two roadmaps went stale the moment the compiler changed.
@@ -12,9 +41,20 @@ next thing.
 ## 0. Where we are
 
 TR4W builds with **FreePascal 3.2.2 + the Lazarus LCL**, English, one binary, from a clean clone at
-any path on any machine with the toolchain installed. Version 5.0.0.
+any path on any machine with the toolchain installed. Version **5.0.2**.
 
-Measured 2026-08-23, not recalled -- rerun before trusting any of it.
+**MEASURED 2026-08-23, AND EVERY ROW BELOW WAS WRONG BY 2026-09-08.** The table is kept only so
+the shape of what was tracked is visible. **Rerun instead of reading it:**
+
+```powershell
+.\build\Run-Lints.ps1                          # the lint set, and the radio count
+.\build\Lint-Win32Dialogs.ps1 -Group ui        # the Win32 UI figure
+.\build\Build-Tests.ps1 -Run                   # the unit tests
+```
+
+```bash
+bash tr4w/test/corpus/export-d12-corpus.sh     # the golden corpus
+```
 
 | | |
 |---|---|
@@ -1088,16 +1128,29 @@ code review, and it is the reason the FMX twins should not be deleted yet.
 
 ## 7. Explicitly not on this roadmap
 
-- **SQLite log storage.** Decided direction, not scheduled -- but **no longer optional**, and it
+**THE FIRST TWO ITEMS BELOW ARE NO LONGER TRUE — BOTH ARE ON THE ROADMAP AND BOTH ARE BUILT.**
+Kept for the reasoning; see the banner at the top of this file.
+
+- ~~**SQLite log storage.** Decided direction, not scheduled~~ -- **IT IS THE LOG.** Started
+  2026-09-01, and by 2026-09-08 `uLogSource` defaults to `lsDatabase`, the binary `.TRW` write path
+  is deleted and the file is import-only. The rest of this bullet is the reasoning as it stood: it
   has moved from "someday" to "a dependency". Reconfirmed by NY4I 2026-08-22, and section 2 now
   queues **the editable-log form and Get Server Log behind it**: converting that ListView before
   the log has a real model would mean porting ~150 call sites to a shape SQLite then discards.
   Binary `.dat` compatibility is a one-time converter, but the corpus reads 13 such fixtures and
   would have to move with it.
-- **The contest factory.** The radio and CW keyer factories are the model for how it should be built
-  (strangler pattern, prove the seam, then delete the legacy path). Not started.
-- **macOS / Linux / ARM.** Native builds per platform on NY4I's own runners; no cross-toolchain. The
-  LCL makes this reachable in a way FMX did not, but nothing has been attempted.
+- ~~**The contest factory.** … Not started.~~ **STARTED AND SUBSTANTIAL.**
+  `tr4w/src/contestFactory/` holds `uContestBase`, `uContestRegistry`, `uContestFactory` and one
+  unit per contest, and it is compiled into `tr4w.lpr`. It was indeed built to the radio-factory
+  model (strangler pattern, prove the seam, then delete the legacy path). Read
+  [`ADDING_A_CONTEST.md`](ADDING_A_CONTEST.md) -- and its section 4 before believing a green run:
+  the golden corpus is blind to scoring.
+- ~~**macOS / Linux / ARM.** … nothing has been attempted.~~ **LINUX AND macOS BOTH BUILD**
+  (2026-09-08): the app, `tr4wserver` and a distributable artifact -- a tarball on Linux, a
+  `TR4W.app` bundle on macOS. `tr4w/build/build-unix.sh` with `build-linux.sh`/`build-mac.sh`,
+  `tools/compile-native.sh`, and `tools/Compile-Linux.ps1` for a single-unit cross-compile from
+  Windows. **Nobody has run the GUI on either**, and **ARM is still untested**. Native builds per
+  platform, no cross-toolchain, remains the shape.
 
 ---
 

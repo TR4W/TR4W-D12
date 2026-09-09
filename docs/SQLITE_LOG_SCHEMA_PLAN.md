@@ -1,5 +1,59 @@
 # The contest log in SQLite — proposed schema
 
+> ## AUDITED 2026-09-08. THE DDL IN §4 IS A PROPOSAL, NOT THE SHIPPED SCHEMA.
+>
+> **`tr4w/src/domain/uLogSchema.pas` (`LOG_SCHEMA_STATEMENTS`) IS THE SCHEMA.**
+> Read it, not §4. The two have diverged, and §4 is the older of the pair:
+>
+> - `freq_rx_hz` is `NOT NULL` in the shipped schema, with a separate
+>   `is_split` column. §4's "NULL when not split" convention was tried and
+>   rejected.
+> - `rcvd_check`, `rcvd_prefecture` and `rcvd_member_no` ship as `INTEGER`,
+>   not `TEXT` — the `TEXT` form *"crashed the first round-trip test outright"*.
+> - Around thirty shipped columns are absent from §4 (`exchange_id`,
+>   `qso_set_id`, `session_id`, `session_seq`, `computer_id`, `record_kind`,
+>   the four `mult_*` flags, `is_xqso`, `is_skipped`, and more), as are two
+>   indexes and the `config` and `message` DDL.
+>
+> **§13 "What is built so far" is wholesale stale**, and it is the section a
+> reader plans from. It says the mapper, the `.trw` importer and the `.cfg`
+> reader/writer are *"not built, and next"*, and that *"nothing in the running
+> program calls it yet"*. All of them exist: `src/uLogRepository.pas`,
+> `src/uLogImport.pas`, `src/uLogSource.pas` (default `lsDatabase`),
+> `src/uLogStore.pas`, `src/ui/lcl/uLogGrid.pas`, `src/ui/lcl/uLogEditForm.pas`,
+> with tests beside each. **SQLite is the log**; the binary `.TRW` is
+> import-only.
+>
+> Also corrected by the audit:
+>
+> - **§9** says `sqlite3.def` *"is still in `tr4w/include`"*. It is not — and
+>   §11 q10 in this same file already said it was deleted.
+> - **§10 / §12a** quote a 22/0/4 corpus and four known divergences.
+>   `tr4w/test/corpus/known-divergences.txt` holds **one** row; the corpus is
+>   24/0/2.
+> - **§12a's central claim is now false.** `MY ITU ZONE` *is* read by an export
+>   path: `postunit.ZoneSentForThisContest`, called from two places in
+>   `postunit.pas`, and referenced by the contest-factory units.
+> - **§12b** asks for three corrections to `known-divergences.txt`. They were
+>   made (the file carries a "CORRECTED 2026-09-01" block).
+> - **§12c** — the CAPTURE half shipped (`uLogStore.ReadEntryDeclaration` →
+>   `uLogRepository.SetEntryDeclaration`); no export path reads it back, so the
+>   Cabrillo header defect stands. Half the work is already committed.
+> - **§11a** recommends a `TDBGrid` for View/Edit Log. That is **not** what
+>   shipped: `uLogEditForm` uses `TLogGrid`, a `TDrawGrid`. `uLogEdit.pas` is
+>   gone, and `tAddContestExchangeToLog` is deleted.
+> - **§14.1** "Still owed: the reader and writer … nothing populates them yet"
+>   — done (`SaveConfigValue`, `SaveMessage`, `LoadContestConfig`).
+> - **EVERY `file:line` CITATION IN THIS DOCUMENT HAS DRIFTED.** Spot checks
+>   found `uEditQSO.pas:748` now at 773, `logstuff.pas:5405` at 5761,
+>   `uCbrSum.pas:76` at 91, and the `VC.pas` line ranges pointing elsewhere
+>   entirely. Grep the identifier; do not trust a line number here.
+>
+> **Still accurate and worth not re-litigating:** §6 (the backup path is
+> genuinely unbuilt — nothing uses `sqlite3backup`, and `SaveLogFileToFloppy`
+> is still the backup), §4a/§4b/§4d/§4f's reasoning, §14.4's pragma trap, and
+> the `application_id` / `user_version` values.
+
 **Schema settled 2026-08-29. STARTED 2026-09-01 — see [§13](#13-what-is-built-so-far)
 for what exists, and [§14](#14-decisions-taken-2026-09-01) for the four decisions
 NY4I added that day.**
@@ -28,8 +82,9 @@ one is the ORDER, the exit criteria, and where the contest factory does and does
 not enter.
 
 **All eleven open questions were answered by NY4I on 2026-08-29 — see §11.**
-The schema below is therefore a proposal whose decisions are settled; what is
-not settled is the code, of which none is written.
+The schema below is therefore a proposal whose decisions are settled.
+~~what is not settled is the code, of which none is written~~ — **the code is
+written and shipped; see the banner at the top of this file.**
 
 ---
 

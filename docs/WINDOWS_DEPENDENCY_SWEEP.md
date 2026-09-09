@@ -20,7 +20,13 @@ its tests exist -- and then there is nothing obvious to do next, because the
 worklist only ever existed as a path through a graph. **A blocked chain removes
 one unit from the list; it does not end the sweep.** Hence a list.
 
-## Where it stands -- RESOLVED, except one (2026-09-08, later the same day)
+## Where it stands -- RESOLVED (2026-09-08, later the same day, then later again)
+
+> **AUDITED LATER ON 2026-09-08.** Three claims below were already stale when
+> the audit ran, and they are corrected in place: `uProgramMain` **was** gated
+> that evening (`30aed955`, `d678f6e1`), `BeepUnit`'s `\Device\Beep` path
+> **is deleted**, and `uSimProcess.pas` is struck through but **still carries an
+> ungated `uses Windows`**. The rest of the table was spot-checked and holds.
 
 **THE MEASUREMENT IS NO LONGER A GREP. IT IS A COMPILER**, and that changed the
 answer. Every row below was checked by asking `tools/Compile-Linux.ps1` whether
@@ -29,19 +35,24 @@ the only one a text search cannot answer -- a scan for `Windows.` structurally
 cannot see a bare type name (`cbSize: UINT`), and it cannot see that two units
 mean different types by `THandle`.
 
-| Unit             | Status                                                                                                                                                                                                                                                      |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ~~`MainUnit`~~   | **RESOLVED -- compiles for Linux, and is PINNED in `Lint-LinuxCompile`.** That pin is not one unit: MainUnit is the top of the graph, so it drags TRDOS, both factories, the LCL forms, the domain layer and Indy through the cross compiler on every build |
-| ~~`logdvp`~~     | **RESOLVED -- compiles for Linux.** It was listed as *"raw Win32 throughout, and its own sweep"*; that sweep happened                                                                                                                                       |
-| ~~`uNet`~~       | **RESOLVED -- compiles for Linux.** The `SetEvent` went with `tNet_Event` becoming a `SyncObjs.TEvent`; the menu routine that still took Win32 `MF_*` flags takes a boolean                                                                                 |
-| ~~`logsubs2`~~   | **RESOLVED -- compiles for Linux**                                                                                                                                                                                                                          |
-| ~~`uCallsigns`~~ | **RESOLVED -- compiles for Linux.** `CompareStringA` is gone, repointed onto `uStringCompare` with the 416-assertion test NY4I asked for FIRST                                                                                                              |
-| ~~`DLPortIO`~~   | **RESOLVED BY DELETION.** 669 lines superseded by the inpout32 rewrite, in no project file, referenced by nothing                                                                                                                                           |
-| `uProgramMain`   | **THE ONE THAT IS LEFT, and its reason is written at the import**                                                                                                                                                                                           |
+| Unit               | Status                                                                                                                                                                                                                                                                                                                                     |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| ~~`MainUnit`~~     | **RESOLVED -- compiles for Linux, and is PINNED in `Lint-LinuxCompile`.** That pin is not one unit: MainUnit is the top of the graph, so it drags TRDOS, both factories, the LCL forms, the domain layer and Indy through the cross compiler on every build                                                                                |
+| ~~`logdvp`~~       | **RESOLVED -- compiles for Linux.** It was listed as *"raw Win32 throughout, and its own sweep"*; that sweep happened                                                                                                                                                                                                                      |
+| ~~`uNet`~~         | **RESOLVED -- compiles for Linux.** The `SetEvent` went with `tNet_Event` becoming a `SyncObjs.TEvent`; the menu routine that still took Win32 `MF_*` flags takes a boolean                                                                                                                                                                |
+| ~~`logsubs2`~~     | **RESOLVED -- compiles for Linux**                                                                                                                                                                                                                                                                                                         |
+| ~~`uCallsigns`~~   | **RESOLVED -- compiles for Linux.** `CompareStringA` is gone, repointed onto `uStringCompare` with the 416-assertion test NY4I asked for FIRST                                                                                                                                                                                             |
+| ~~`DLPortIO`~~     | **RESOLVED BY DELETION.** 669 lines superseded by the inpout32 rewrite, in no project file, referenced by nothing                                                                                                                                                                                                                          |
+| ~~`uProgramMain`~~ | **RESOLVED the same evening** (`30aed955` *"gate uProgramMain's three CreateEvents -- the last ungated `Windows`"*, `d678f6e1`). `uProgramMain.pas:80` is `{$IFDEF WINDOWS} Windows, {$ENDIF}`, and the reason is at the import: *"This was the LAST ungated `Windows` in the app's unit graph."* The section below is the reasoning, kept |
 
-### The one that is left, and why it is not "not started"
+**IT HAD TO BE, AND THE TABLE COULD NOT HAVE BEEN RIGHT AS WRITTEN**:
+`uProgramMain` is used by `MainUnit`, which the same table says is pinned in
+`Lint-LinuxCompile`. Both cannot be true at once -- a self-check worth making on
+any row of a status table.
 
-`uProgramMain` names `Windows` for three `CreateEvent` calls -- `tCW_Event`,
+### The one that WAS left, and why it was not "not started"
+
+`uProgramMain` named `Windows` for three `CreateEvent` calls -- `tCW_Event`,
 `tCWPaddle_Event`, `tDVP_Event` -- and **that is not a habit, it is a weld.**
 Each handle is passed to winmm's `timeSetEvent` with `TIME_CALLBACK_EVENT_SET`,
 so the multimedia timer signals the HANDLE itself. A `SyncObjs.TEvent` cannot be
@@ -53,14 +64,18 @@ puts them behind the HPTimer work in
 which is exactly how you tell the two cases apart.
 
 **So the stop condition is met for this unit as written**: the reason is at the
-import, in the code, where the next reader meets it.
+import, in the code, where the next reader meets it. It was then gated the same
+evening, which is what that stop condition allows for -- an `{$IFDEF WINDOWS}`
+does not move the `CreateEvent` calls, it stops them blocking every other
+platform.
 
 ### Not counted, deliberately
 
-|                                        |                                                                                                                                                                               |
-| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tr4w/test/uTestMain.pas`              | the Radio Factory Tester, which **does not compile** and is in no build script (`BENCH_QUEUE.md`). An ungated import in a file no compiler reads is not a portability problem |
-| `tr4w/test/unit/uTestCWByCATTimer.pas` | it pumps a Win32 message queue **on purpose**, to prove a timer fires; its own comment says the off-Windows path "does nothing AND THAT IS NOT A STUB"                        |
+|                                         |                                                                                                                                                                                                                                                                                                                               |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tr4w/test/uTestMain.pas`               | the Radio Factory Tester, which **does not compile**. *(Correction 2026-09-08: not in the MAIN build, but not "in no build script" either -- `tr4w/test/RadioFactoryTester.lpr` includes it, and `tr4w/test/CompileRadioTester.ps1` / `.cmd` exist.)* An ungated import in a file no build reads is not a portability problem |
+| `tr4w/test/integration/uSimProcess.pas` | **STRUCK THROUGH IN THE `CALLS` TABLE BELOW, AND THAT IS WRONG.** `uSimProcess.pas:19` is still a bare `uses Windows, SysUtils;` with three `THandle` fields. A bench harness that drives a simulator process, so it is low priority -- but it is not resolved, and a strike-through says it is                               |
+| `tr4w/test/unit/uTestCWByCATTimer.pas`  | it pumps a Win32 message queue **on purpose**, to prove a timer fires; its own comment says the off-Windows path "does nothing AND THAT IS NOT A STUB"                                                                                                                                                                        |
 
 ### What the sweep actually found
 
@@ -203,7 +218,7 @@ the scan found nothing (verify with the compiler -- see step 3).
 | ~~CALLS~~ | ~~`uRadioTCI.pas`~~                                                                | ~~`sendto`~~                                                                                                                                                                                                                                                                                                               | ~~`BOOL`~~                                                                                                    |
 | ~~CALLS~~ | ~~`uSendKeyboardForm.pas`~~                                                        | ~~`SetFocus`~~                                                                                                                                                                                                                                                                                                             | ~~`HANDLE` `BOOL` `VK_`~~                                                                                     |
 | ~~CALLS~~ | ~~`uServerLogForm.pas`~~                                                           | ~~`GetLastError` `CreateFile` `CloseHandle`~~                                                                                                                                                                                                                                                                              | ~~`HANDLE` `BOOL` `INVALID_HANDLE_VALUE`~~                                                                    |
-| ~~CALLS~~ | ~~`uSimProcess.pas`~~                                                              | ~~`GetLastError` `WriteFile` `CloseHandle` `WaitForSingleObject`~~                                                                                                                                                                                                                                                         | ~~`DWORD` `HANDLE` `THandle` `BOOL`~~                                                                         |
+| CALLS     | `uSimProcess.pas` -- **NOT resolved; see "Not counted"**                           | `GetLastError` `WriteFile` `CloseHandle` `WaitForSingleObject`                                                                                                                                                                                                                                                             | `DWORD` `HANDLE` `THandle` `BOOL`                                                                             |
 | ~~CALLS~~ | ~~`uStations.pas`~~                                                                | ~~`wsprintf`~~                                                                                                                                                                                                                                                                                                             | ~~`BOOL`~~                                                                                                    |
 | ~~CALLS~~ | ~~`uSynTime.pas`~~                                                                 | ~~`Sleep` `GetSystemTime`~~                                                                                                                                                                                                                                                                                                | ~~`SYSTEMTIME` `FILETIME`~~                                                                                   |
 | ~~CALLS~~ | ~~`uTCIServer.pas`~~                                                               | ~~`GetTickCount` `SetEvent`~~                                                                                                                                                                                                                                                                                              | ~~`HANDLE` `BOOL`~~                                                                                           |
@@ -240,20 +255,20 @@ Checked 2026-09-08 against NY4I's [AGENT] notes and a reference pass over
 multi-platform FPC/Lazarus siblings. **Three entries that used to be in this
 table are gone, because the reasons were wrong** -- see the section after it.
 
-| Unit                    | Why it stays                                                                                                                                                                                                                                       | Status                                                                                    |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `uWinKey`               | `QueryPerformanceCounter`. There is no RTL equivalent, and `GetTickCount64`'s 1 ms floor would blur the 15/46/122 ms gaps the trace exists to measure. Already gated, with the fallback's cost written down                                        | resolved by `uHPTimer` when it lands; nothing to do here first                            |
-| `BeepUnit`              | the `Device\Beep` IOCTL. **The SIDETONE half is deleted (NY4I, 2026-09-08) -- no program-generated tone at all.** What keeps the unit alive is the WARNING BEEPS, which share the same unreliable path                                             | whether those go too is NY4I's call, in `BENCH_QUEUE.md`; if they do, the unit goes       |
-| `uCallsigns`            | `CompareStringA`. One of three drifted copies, and the tests come before the repoint                                                                                                                                                               | `uStringCompare.pas` exists untracked; needs its test suite                               |
-| `uIO`                   | inpout32.dll, for LPT keying. **STAYS ON WINDOWS, GAINS LINUX, N/A ON MAC** (NY4I, 2026-09-08). Owed: the x64 driver name -- the hardcoded 'inpout32.dll' blocks 64-bit -- and a Linux back end, ppdev first since `ports` + `fpioperm` needs root | scheduled work, not a decision. Nothing blocks on it                                      |
-| `uYCCCSO2R`             | overlapped HID I/O through SetupAPI -- genuine Windows device access                                                                                                                                                                               | its own question                                                                          |
-| `uTestCWByCATTimer`     | pumps a real `WM_TIMER` loop so the LCL `TTimer` under test fires. Off Windows a timer is the widget set's own source, so `Application.ProcessMessages` is a DIFFERENT mechanism, not another spelling                                             | gate with an `{$ELSE}`, and extract the duplicated pump first                             |
-| `uHamLibDirect`         | the library file name, and `PEMachineOf`'s PE read                                                                                                                                                                                                 | one constant per platform, verified ON the platform                                       |
-| `uEmbeddedTranslations` | `RT_RCDATA` only, and only on Windows                                                                                                                                                                                                              | the rest is converted; see below                                                          |
-| `uInputQueryForm`       | `LoadIcon` for the standard dialog icons                                                                                                                                                                                                           | replaceable by `DialogRes.DialogGlyphs`, which also themes and HiDPI-scales; not yet done |
-| `uPanelUpdate`          | --                                                                                                                                                                                                                                                 | **RESOLVED: it was a bug, not a dependency**                                              |
-| `logwind` (timezone)    | --                                                                                                                                                                                                                                                 | **RESOLVED: no timezone database was ever involved**                                      |
-| `tr4wserver.lpr`        | --                                                                                                                                                                                                                                                 | **RESOLVED: the constraint was stale**                                                    |
+| Unit                    | Why it stays                                                                                                                                                                                                                                                                                                                              | Status                                                                                                   |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `uWinKey`               | `QueryPerformanceCounter`. There is no RTL equivalent, and `GetTickCount64`'s 1 ms floor would blur the 15/46/122 ms gaps the trace exists to measure. Already gated, with the fallback's cost written down                                                                                                                               | resolved by `uHPTimer` when it lands; nothing to do here first                                           |
+| ~~`BeepUnit`~~          | **RESOLVED -- the `Device\Beep` path is DELETED.** `ntBeepInit`/`ntBeepClose`/`ntBeep` went with it, and so did the `QueryDosDeviceA`/`DefineDosDeviceA`/`CreateFileA`/`DeviceIoControl` block. `SpeakerBeep` is one call into `uAudio.BeepAlert` now. The sidetone half was deleted first (NY4I, 2026-09-08); the warning beeps followed | done -- `uAudio.pas` is pinned in `Lint-LinuxCompile`                                                    |
+| ~~`uCallsigns`~~        | **RESOLVED.** `CompareStringA` is gone -- `uCallsigns.CompareStrings` calls `uStringCompare.CompareKeyIgnoreCase`                                                                                                                                                                                                                         | `tr4w/src/utils/uStringCompare.pas` is TRACKED, and `tr4w/test/unit/uTestStringCompare.pas` is its suite |
+| `uIO`                   | inpout32.dll, for LPT keying. **STAYS ON WINDOWS, GAINS LINUX, N/A ON MAC** (NY4I, 2026-09-08). Owed: the x64 driver name -- the hardcoded 'inpout32.dll' blocks 64-bit -- and a Linux back end, ppdev first since `ports` + `fpioperm` needs root                                                                                        | scheduled work, not a decision. Nothing blocks on it                                                     |
+| `uYCCCSO2R`             | overlapped HID I/O through SetupAPI -- genuine Windows device access                                                                                                                                                                                                                                                                      | its own question                                                                                         |
+| `uTestCWByCATTimer`     | pumps a real `WM_TIMER` loop so the LCL `TTimer` under test fires. Off Windows a timer is the widget set's own source, so `Application.ProcessMessages` is a DIFFERENT mechanism, not another spelling                                                                                                                                    | gate with an `{$ELSE}`, and extract the duplicated pump first                                            |
+| `uHamLibDirect`         | the library file name, and `PEMachineOf`'s PE read                                                                                                                                                                                                                                                                                        | one constant per platform, verified ON the platform                                                      |
+| `uEmbeddedTranslations` | `RT_RCDATA` only, and only on Windows                                                                                                                                                                                                                                                                                                     | the rest is converted; see below                                                                         |
+| `uInputQueryForm`       | `LoadIcon` for the standard dialog icons                                                                                                                                                                                                                                                                                                  | replaceable by `DialogRes.DialogGlyphs`, which also themes and HiDPI-scales; not yet done                |
+| `uPanelUpdate`          | --                                                                                                                                                                                                                                                                                                                                        | **RESOLVED: it was a bug, not a dependency**                                                             |
+| `logwind` (timezone)    | --                                                                                                                                                                                                                                                                                                                                        | **RESOLVED: no timezone database was ever involved**                                                     |
+| `tr4wserver.lpr`        | --                                                                                                                                                                                                                                                                                                                                        | **RESOLVED: the constraint was stale**                                                                   |
 
 ## HAMLIB IS A BINDING. NOT `rigctld`. (NY4I, 2026-09-08)
 
@@ -355,13 +370,17 @@ written: the program's generated CW sidetone was two `ntBeep` calls in
 fired a `DeviceIoControl` and returned, so `tCWSleep` was always the thing
 timing an element.
 
-**`BeepUnit` SURVIVES, and only just.** Its remaining callers are the WARNING
-BEEPS -- `tDoABeep`, `QuickBeep`, tree's note player -- which reach the same
-`\Device\Beep` path through `SpeakerBeep`, and therefore have the same
-reliability problem NY4I just described. **Whether those go too is in
-`BENCH_QUEUE.md` and is his call**; if they do, this unit and its
-`QueryDosDevice`/`DefineDosDevice`/`DeviceIoControl` block leave the tree
-entirely and this section closes.
+~~**`BeepUnit` SURVIVES, and only just.**~~ **THE QUESTION WAS ANSWERED AND THE
+DEVICE IS GONE (later on 2026-09-08).** The warning beeps -- `tDoABeep`,
+`QuickBeep`, tree's note player -- went the same way as the sidetone.
+`SpeakerBeep` is one call into `uAudio.BeepAlert` now, `uAudio.pas` is pinned in
+`Lint-LinuxCompile`, and the whole
+`QueryDosDevice`/`DefineDosDevice`/`DeviceIoControl` block has left the tree.
+
+**And that path was never worth porting**, which is the part to keep: on Windows
+10/11 `beep.sys` is commonly disabled and most machines have no PC speaker, so
+`CreateFile` failed, the handle stayed invalid, and **every warning beep was
+silent with nothing said.**
 
 Two other things named "sidetone" are NOT this and were deliberately left: the
 WinKeyer's own hardware sidetone (a setting we send to the keyer, neither
@@ -397,6 +416,13 @@ sidetone is required anywhere, so the only audio TR4W still owes off Windows is
 second of tolerance instead of element-accurate timing. That is a materially
 easier problem than the one this section was sizing, and it is the only one
 left.
+
+**AND THE MECHANISM NOW EXISTS -- WHAT IS OWED IS THE CALL SITE.**
+`uAudio.PlayFile` already dispatches to `sndPlaySoundA` on Windows and to
+`aplay` / `paplay` / `afplay` off it. `logdvp.PlayWAVFile` has not been
+repointed onto it, and `logdvp.pas` still gates `Windows, MMSystem` for
+`sndPlaySoundA` plus `timeSetEvent`. So this is a swap, not a dependency
+decision.
 
 ## Timing: EpikTimer, re-checked
 
