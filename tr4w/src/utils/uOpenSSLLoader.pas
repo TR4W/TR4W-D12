@@ -1,0 +1,285 @@
+unit uOpenSSLLoader;
+{$I ..\tr4w.inc}
+(*
+  MAKE FPC'S OpenSSL LOADER FIND THE LIBRARY THIS MACHINE ACTUALLY HAS.
+
+  Call EnsureOpenSSL once before the first HTTPS request.  It returns True when
+  TLS is usable and False when it is not, and it never raises.
+
+  WINDOWS AND macOS NEED NOTHING AND GET NOTHING.  FPC already looks for
+  ssleay32.dll and libeay32.dll, which is exactly what the installer puts
+  beside tr4w.exe -- verified 2026-09-09 by fetching cty.dat with the bundled
+  pair untouched.  macOS is left on the default deliberately: an unverified
+  library name is the mistake this unit exists to fix, not one to add.
+
+  LINUX IS THE PROBLEM, AND IT IS A NAME, NOT AN API.
+
+  FPC 3.2.2 loads OpenSSL by trying `libssl.so` plus each entry of a hardcoded
+  version list.  That list ends at .1.1 (openssl.pas:114) -- it predates
+  OpenSSL 3 -- and the bare `libssl.so` it tries first is a symlink shipped by
+  libssl-DEV, a package no operator installs.  A current distribution has
+
+      libssl.so.3        libcrypto.so.3
+
+  and nothing else, so TR4W could not fetch CTY.DAT on a machine whose SSL was
+  in perfect order (NY4I, Linux Mint, 2026-09-09).
+
+  THE API IS FINE.  Proved on the runner before this unit was written: with the
+  NAME made resolvable and nothing else changed, FPC downloaded cty.dat from
+  country-files.com, all 105,954 bytes of it.  OpenSSL 3 is API-compatible
+  enough with 1.1 for FPC's bindings, so the only thing missing is a name FPC
+  will try.
+
+  SO WE GIVE IT ONE.  Find the real library, symlink it into a directory we own
+  as plain `libssl.so`, and point DLLSSLName there -- FPC's first attempt is
+  `<name>.so`, so it hits on the first try.  No root, no -dev package, no
+  vendored copy of the RTL, and nothing written outside our own settings tree.
+
+  WHY NOT PATCH FPC'S UNIT INSTEAD: DLLVersions is a const, so it cannot be
+  changed at run time, and vendoring five thousand lines of RTL to alter one
+  array is a maintenance burden that outlives the problem -- FPC fixed it
+  upstream after 3.2.2.  When the toolchain moves, EnsureOpenSSL's first
+  attempt simply succeeds and the rest of this unit stops running.
+
+  WHY NOT INDY, which is what this program used before: Indy 10.6.3.3 does not
+  fail to FIND OpenSSL 3, it REFUSES it -- "Unsupported SSL Library version:
+  300000D0" -- with and without the symlink, measured both ways.  That is a
+  hard version gate, and lifting it means Indy PR #529, which is unmerged and
+  replaces the entire 22,000-line headers unit.  Indy keeps every other job it
+  does here; only HTTPS moved.
+*)
+
+interface
+
+(* True when TLS is usable.  Safe to call repeatedly -- the work happens once
+  and the answer is remembered, including a negative one. *)
+function EnsureOpenSSL: boolean;
+
+(* What EnsureOpenSSL did, or could not do -- for the log and for the
+  "Reason:" slot in the download failure dialog.  '' before the first call. *)
+function OpenSSLDiagnostic: string;
+
+implementation
+
+uses
+   SysUtils,
+{$IFDEF UNIX}
+   BaseUnix,
+{$ENDIF}
+   openssl,
+   uAppPaths;
+
+var
+   GTried:      boolean = False;
+   GUsable:     boolean = False;
+   GDiagnostic: string  = '';
+
+function OpenSSLDiagnostic: string;
+begin
+   Result := GDiagnostic;
+end;
+
+{$IFDEF LINUX}
+(* The directories a distribution puts its shared libraries in.  Multiarch
+  first, because that is where Debian and its derivatives keep them.  A wrong
+  guess costs nothing -- a directory that is not there is skipped. *)
+function LibrarySearchDirs: TStringArray;
+begin
+   Result := TStringArray.Create(
+      '/usr/lib/' + {$I %FPCTARGETCPU%} + '-linux-gnu',
+      '/usr/lib64',
+      '/usr/lib',
+      '/lib/' + {$I %FPCTARGETCPU%} + '-linux-gnu',
+      '/lib64',
+      '/lib',
+      '/usr/local/lib');
+end;
+
+(* THE NEWEST ONE, NOT THE FIRST ONE.  A machine can carry several -- a distro
+  libssl.so.3 beside a libssl.so.1.1 left by something older -- and picking by
+  directory order would take whichever the loop happened to reach first.
+
+  Compares the version tail NUMERICALLY, component by component, so .10 ranks
+  above .9 rather than below it on a string compare.  A non-numeric tail
+  (libssl.so.1.0.2k) stops the parse and keeps what was read, which is enough
+  to rank it. *)
+function VersionRank(const aName, aStem: string): int64;
+var
+   tail, part: string;
+   i, parts:   integer;
+begin
+   Result := -1;
+   if Copy(aName, 1, Length(aStem)) <> aStem then
+      begin
+      Exit;
+      end;
+
+   tail := Copy(aName, Length(aStem) + 1, MaxInt);
+   if tail = '' then
+      begin
+      Exit;
+      end;
+
+   Result := 0;
+   parts  := 0;
+   part   := '';
+   for i := 1 to Length(tail) + 1 do
+      begin
+      if (i > Length(tail)) or (tail[i] = '.') then
+         begin
+         if parts >= 3 then
+            begin
+            Break;
+            end;
+         Result := Result * 1000 + StrToIntDef(part, 0);
+         Inc(parts);
+         part := '';
+         end
+      else if (tail[i] >= '0') and (tail[i] <= '9') then
+         begin
+         part := part + tail[i];
+         end
+      else
+         begin
+         Break;
+         end;
+      end;
+
+   (* Pad to a fixed width so '3' outranks '1.1' instead of losing to it on
+     digit count alone. *)
+   while parts < 3 do
+      begin
+      Result := Result * 1000;
+      Inc(parts);
+      end;
+end;
+
+function NewestLibrary(const aBaseName: string): string;
+var
+   dirs: TStringArray;
+   stem: string;
+   rec:  TSearchRec;
+   d:    integer;
+   rank: int64;
+   best: int64;
+begin
+   Result := '';
+   best   := -1;
+   stem   := aBaseName + '.so.';
+   dirs   := LibrarySearchDirs;
+
+   for d := 0 to High(dirs) do
+      begin
+      if not DirectoryExists(dirs[d]) then
+         begin
+         Continue;
+         end;
+
+      if FindFirst(IncludeTrailingPathDelimiter(dirs[d]) + aBaseName + '.so.*',
+                   faAnyFile, rec) = 0 then
+         begin
+         try
+            repeat
+               rank := VersionRank(rec.Name, stem);
+               if rank > best then
+                  begin
+                  best   := rank;
+                  Result := IncludeTrailingPathDelimiter(dirs[d]) + rec.Name;
+                  end;
+            until FindNext(rec) <> 0;
+         finally
+            FindClose(rec);
+            end;
+         end;
+      end;
+end;
+
+(* Point a plain `<dir>/<base>.so` at the real file.  REPLACES an existing link
+  rather than trusting it: the machine may have been upgraded since we last
+  ran, and a symlink to a library that is gone is worse than no link at all. *)
+function LinkInto(const aDir, aBaseName, aTarget: string): boolean;
+var
+   link: string;
+begin
+   link := IncludeTrailingPathDelimiter(aDir) + aBaseName + '.so';
+   fpUnlink(link);
+   Result := fpSymlink(PChar(aTarget), PChar(link)) = 0;
+end;
+{$ENDIF}
+
+function EnsureOpenSSL: boolean;
+{$IFDEF LINUX}
+var
+   sslPath:    string;
+   cryptoPath: string;
+   dir:        string;
+{$ENDIF}
+begin
+   if GTried then
+      begin
+      Result := GUsable;
+      Exit;
+      end;
+   GTried := True;
+
+   (* FIRST, JUST ASK.  On Windows, on macOS, on a Linux box that has the -dev
+     symlink, and on any future FPC whose version list has caught up, this
+     succeeds and nothing below ever runs. *)
+   if InitSSLInterface then
+      begin
+      GUsable     := True;
+      GDiagnostic := 'OpenSSL loaded as ' + DLLSSLName;
+      Result      := True;
+      Exit;
+      end;
+
+{$IFDEF LINUX}
+   sslPath    := NewestLibrary('libssl');
+   cryptoPath := NewestLibrary('libcrypto');
+
+   if (sslPath = '') or (cryptoPath = '') then
+      begin
+      GDiagnostic := 'no OpenSSL library found -- looked for libssl.so.* and '
+                     + 'libcrypto.so.* in the usual library directories';
+      Result := False;
+      Exit;
+      end;
+
+   dir := IncludeTrailingPathDelimiter(SettingsDir) + 'ssl';
+   if not ForceDirectories(dir) then
+      begin
+      GDiagnostic := 'found ' + sslPath + ' but could not create ' + dir;
+      Result := False;
+      Exit;
+      end;
+
+   if not (LinkInto(dir, 'libssl', sslPath) and
+           LinkInto(dir, 'libcrypto', cryptoPath)) then
+      begin
+      GDiagnostic := 'found ' + sslPath + ' but could not link it into ' + dir;
+      Result := False;
+      Exit;
+      end;
+
+   (* FPC appends '.so' to this, so name the STEM and not the file. *)
+   DLLSSLName  := IncludeTrailingPathDelimiter(dir) + 'libssl';
+   DLLUtilName := IncludeTrailingPathDelimiter(dir) + 'libcrypto';
+
+   if InitSSLInterface then
+      begin
+      GUsable     := True;
+      GDiagnostic := 'OpenSSL loaded from ' + sslPath + ' via ' + DLLSSLName;
+      Result      := True;
+      Exit;
+      end;
+
+   GDiagnostic := 'found ' + sslPath + ' and linked it, but OpenSSL still '
+                  + 'would not initialise';
+   Result := False;
+{$ELSE}
+   GDiagnostic := 'OpenSSL could not be initialised (' + DLLSSLName + ')';
+   Result := False;
+{$ENDIF}
+end;
+
+end.

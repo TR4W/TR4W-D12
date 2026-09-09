@@ -67,10 +67,41 @@ implementation
 uses
    SysUtils,
    Classes,
-   IdHTTP,
-   IdSSLOpenSSL,
+   fphttpclient,      (* FPC's own client -- see the note on the transport *)
+   opensslsockets,    (* registers the TLS handler fphttpclient asks for *)
+   uOpenSSLLoader,
    uAppStrings,
    Log4D;
+
+(*
+  THE TRANSPORT IS FPC'S CLIENT, NOT INDY, AND ONLY HERE.
+
+  This unit used TIdHTTP with TIdSSLIOHandlerSocketOpenSSL. On Linux that could
+  not fetch anything over TLS, and the reason is not fixable from here: Indy
+  10.6.3.3 FINDS OpenSSL 3 and then refuses it --
+
+      Unsupported SSL Library version: 300000D0
+
+  -- which is a hard version gate, measured on the runner with and without the
+  library name made resolvable, identical both ways. Lifting it means Indy
+  PR #529: unmerged, and it replaces the whole 22,000-line headers unit.
+
+  Measured on the same box, same URL, same minute:
+
+      Indy, OpenSSL 3                      FAIL, could not load SSL library
+      Indy, name made resolvable           FAIL, same version gate
+      fphttpclient + opensslsockets        OK, 105,954 bytes
+
+  ONE IMPLEMENTATION, NOT A PER-PLATFORM SPLIT. Windows was never broken, but
+  it takes this path too: FPC's loader looks for ssleay32.dll and libeay32.dll,
+  which is exactly the pair the installer already ships, verified 2026-09-09 by
+  fetching the same file with the bundled DLLs untouched. A conditional here
+  would mean a bug found on one platform staying hidden on the other.
+
+  INDY IS NOT BEING REPLACED. It keeps the DX cluster, the multi-op link and
+  every socket it already owns. HTTPS request/response is the only thing that
+  moved, because it is the only thing that was broken.
+*)
 
 var
    // Own logger rather than MainUnit's global, following uRegex: this unit has
@@ -82,8 +113,7 @@ function DownloadFileToPath(const AURL, ATargetFile: string;
                             out AFailReason: string;
                             const AAllowInsecure: boolean = False): boolean;
 var
-   http:    TIdHTTP;
-   ssl:     TIdSSLIOHandlerSocketOpenSSL;
+   http:    TFPHTTPClient;
    fs:      TFileStream;
    tmpFile: string;
    useTLS:  boolean;
@@ -117,21 +147,26 @@ begin
       Exit;
       end;
 
-   ssl  := nil;
-   http := TIdHTTP.Create(nil);
-   try
-      // Only build the OpenSSL handler when it is actually needed. A plain
-      // fetch then works on a machine with no libeay32/ssleay32 at all, and
-      // TIdHTTP supplies its own default stack handler.
-      if useTLS then
-         begin
-         ssl := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
-         ssl.SSLOptions.Method := TIdSSLVersion(sslvTLSv1_2);
-         http.IOHandler        := ssl;
-         end;
+   (* LOAD TLS BEFORE OPENING ANYTHING, and only when the URL needs it -- a
+     plaintext fetch still works on a machine with no OpenSSL at all.
 
-      http.HandleRedirects   := True;
-      http.Request.UserAgent := 'TR4W';
+     Reported rather than left to fail deep in the client: EnsureOpenSSL knows
+     WHICH library it found or could not find, and that sentence is what the
+     operator needs. The failure this replaces said the OpenSSL libraries could
+     not be loaded and then advised checking for two Windows DLLs, on Linux
+     (NY4I, 2026-09-09). *)
+   if useTLS and (not EnsureOpenSSL) then
+      begin
+      logger.Error('[Download] TLS unavailable for %s -- %s',
+                   [AURL, OpenSSLDiagnostic]);
+      AFailReason := SDownloadNoSSLLibrary;
+      Exit;
+      end;
+
+   http := TFPHTTPClient.Create(nil);
+   try
+      http.AllowRedirect := True;
+      http.AddHeader('User-Agent', 'TR4W');
 
       // TIMEOUTS ARE NOT OPTIONAL.  Indy's default is to wait forever, which
       // was merely untidy while every caller was a background thread -- a stuck
@@ -142,8 +177,10 @@ begin
       // the operator nothing and offering no way to cancel.
       //
       // Generous rather than tight: the files fetched here are a few MB.
+      (* FPC names these the same and measures them the same way; its default
+        is likewise no limit. *)
       http.ConnectTimeout := 15000;   // ms
-      http.ReadTimeout    := 30000;   // ms
+      http.IOTimeout      := 30000;   // ms
 
       try
          fs := TFileStream.Create(tmpFile, fmCreate);
@@ -171,11 +208,13 @@ begin
             logger.Error('[Download] %s -> %s failed: %s: %s',
                          [AURL, ATargetFile, E.ClassName, E.Message]);
 
-            { THE ONE FAILURE AN OPERATOR CAN ACT ON, so it gets its own
-              sentence rather than Indy's class name. Everything else reports
-              E.Message: that is the library's own diagnostic, untranslatable,
-              and still far better than the advice this dialog used to give. }
-            if E is EIdOSSLCouldNotLoadSSLLibrary then
+            (* THE ONE FAILURE AN OPERATOR CAN ACT ON keeps its own sentence.
+              It is now caught BEFORE the request, by EnsureOpenSSL above, so
+              this arm is the residue: a TLS failure that only shows itself
+              once bytes are moving. EInOutError is what FPC raises when the
+              library will not initialise. Everything else reports E.Message,
+              which is the library's own diagnostic. *)
+            if (E is EInOutError) and (Pos('OpenSSL', E.Message) > 0) then
                begin
                AFailReason := SDownloadNoSSLLibrary;
                end
@@ -187,9 +226,9 @@ begin
             end;
       end;
    finally
-      // http first: it holds a reference to the handler while it lives.
+      (* One object now: FPC's client owns its own socket handler, so there is
+        no separately-created IOHandler to outlive it. *)
       http.Free;
-      ssl.Free;   // nil for a plaintext fetch; TObject.Free tolerates that
    end;
 end;
 
