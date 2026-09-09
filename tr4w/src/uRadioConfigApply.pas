@@ -2049,7 +2049,17 @@ begin
       // appends a newly-created key at the END of the section, so keys added to
       // TR4W after the operator's ini was first written land away from their
       // radio's block.  This puts them back.
-      GroupRadioIniKeys;
+      (* GroupRadioIniKeys WAS CALLED HERE and is deleted (2026-09-08).
+
+        It re-ordered keys inside tr4w.ini's [Radio] section and SAVED THE FILE
+        BACK -- its own comment called the grouping "cosmetic, never fatal",
+        which is the whole problem: it rewrote a legacy file for tidiness.
+
+        NY4I, 2026-09-08: "we really do not need a tr4w.ini." Settings live in
+        settings\tr4w.json; what is left of the ini is a file READ ONCE per
+        installation to carry an old configuration into the store, and then
+        never again. Something that writes it keeps it alive, and on macOS and
+        Linux -- where no operator has one to import -- it would CREATE one. *)
 
       for slot := 1 to 2 do
          begin

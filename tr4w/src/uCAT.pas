@@ -51,7 +51,6 @@ procedure CloseCATAndKeyerForThisRadio;
 // this afterwards, or newly-created keys stay stranded at the end of the
 // section instead of beside their radio's block.  It was implementation-only
 // while this dialog was the sole writer; it no longer is.
-procedure GroupRadioIniKeys;
 
 // Published for the Preferences window.  Broadcasts for K4, FlexRadio or Icom
 // network radios and appends the IP addresses found.  BLOCKS for the discovery
@@ -219,122 +218,20 @@ begin
 
 end;
 
-// Keep each radio's keys grouped in the ini.  WritePrivateProfileString can
-// only UPDATE a key in place or APPEND a new one at the end of the section --
-// insertion position is fixed at first creation -- so a key added to TR4W
-// after a user's ini was first written lands stranded at the bottom, away
-// from its radio's block (NY4I bench: RADIO ONE SERIAL FORMAT after all the
-// RADIO TWO keys, KEYER RADIO ONE OUTPUT PORT after the RADIO TWO block).
-// This pass moves the known strays back beside their anchors, editing the
-// FILE TEXT so every other line -- including comment lines like
-// '#RADIO ONE TYPE=K4' -- keeps its exact place.
-procedure GroupRadioIniKeys;
-var
-   lines: TStringList;
-   i, sectStart, sectEnd: integer;
-   changed: Boolean;
+(* GroupRadioIniKeys WAS DELETED HERE (2026-09-08) -- it LOADED tr4w.ini,
+  re-ordered the keys in its [Radio] section, and SAVED THE FILE BACK.
 
-   function KeyLine(const key: string; lineIdx: integer): Boolean;
-   begin
-      Result := SameText(Copy(Trim(lines[lineIdx]), 1, Length(key) + 1), key + '=');
-   end;
+  The reordering was cosmetic by its own admission ("grouping is cosmetic,
+  never fatal"). What made it worth removing is the SAVE. Settings live in
+  settings\tr4w.json; what remains of tr4w.ini is a file read ONCE per
+  installation to carry an old configuration into the store and never again,
+  and a routine that writes it keeps it alive.
 
-   // Move `key` to sit directly after (afterAnchor=True) or directly before
-   // (afterAnchor=False) `anchor`.  A missing key or anchor is a no-op.  One
-   // delete + one insert inside the section leaves its length unchanged, so
-   // sectStart/sectEnd stay valid across successive moves.
-   procedure MoveKey(const key, anchor: string; afterAnchor: Boolean);
-   var
-      keyIdx, anchorIdx, j: integer;
-      s: string;
-   begin
-      keyIdx := -1;
-      anchorIdx := -1;
-      for j := sectStart to sectEnd do
-         begin
-         if KeyLine(key, j) then
-            begin
-            keyIdx := j;
-            end;
-         if KeyLine(anchor, j) then
-            begin
-            anchorIdx := j;
-            end;
-         end;
-      if (keyIdx < 0) or (anchorIdx < 0) then
-         begin
-         Exit;
-         end;
-      if (afterAnchor and (keyIdx = anchorIdx + 1)) or
-         ((not afterAnchor) and (keyIdx = anchorIdx - 1)) then
-         begin
-         Exit;   // already in place
-         end;
-      s := lines[keyIdx];
-      lines.Delete(keyIdx);
-      if keyIdx < anchorIdx then
-         begin
-         Dec(anchorIdx);
-         end;
-      if afterAnchor then
-         begin
-         lines.Insert(anchorIdx + 1, s);
-         end
-      else
-         begin
-         lines.Insert(anchorIdx, s);
-         end;
-      changed := True;
-   end;
+  OFF WINDOWS IT WOULD HAVE CREATED ONE, on a platform where no operator has an
+  ini to import -- which is the same shape as the binary log: a Windows
+  migration artifact that should not follow the program to a new platform.
 
-begin
-   lines := TStringList.Create;
-   try
-      try
-         lines.LoadFromFile(string(PAnsiChar(@TR4W_INI_FILENAME)), TEncoding.ANSI);
-      except
-         Exit;   // unreadable ini -- grouping is cosmetic, never fatal
-      end;
-      // Find the [Radio] section bounds.
-      sectStart := -1;
-      sectEnd := lines.Count - 1;
-      for i := 0 to lines.Count - 1 do
-         begin
-         if SameText(Trim(lines[i]), '[Radio]') then
-            begin
-            sectStart := i + 1;
-            end
-         else if (sectStart >= 0) and (Copy(Trim(lines[i]), 1, 1) = '[') then
-            begin
-            sectEnd := i - 1;
-            Break;
-            end;
-         end;
-      if sectStart < 0 then
-         begin
-         Exit;
-         end;
-      changed := False;
-      // SERIAL FORMAT belongs with the port settings, right after the baud.
-      MoveKey('RADIO ONE SERIAL FORMAT', 'RADIO ONE BAUD RATE', True);
-      MoveKey('RADIO TWO SERIAL FORMAT', 'RADIO TWO BAUD RATE', True);
-      // HAMLIB ID follows the serial format (both are per-radio link settings).
-      MoveKey('RADIO ONE HAMLIB ID', 'RADIO ONE SERIAL FORMAT', True);
-      MoveKey('RADIO TWO HAMLIB ID', 'RADIO TWO SERIAL FORMAT', True);
-      // The keyer output port heads its radio's keyer group, mirroring the
-      // dialog's CW/PTT section order (output port, keyer RTS, keyer DTR).
-      MoveKey('KEYER RADIO ONE OUTPUT PORT', 'RADIO ONE KEYER RTS', False);
-      MoveKey('KEYER RADIO TWO OUTPUT PORT', 'RADIO TWO KEYER RTS', False);
-      if changed then
-         begin
-         lines.SaveToFile(string(PAnsiChar(@TR4W_INI_FILENAME)), TEncoding.ANSI);
-         end;
-   finally
-      lines.Free;
-   end;
-end;
-
-
+  NY4I, 2026-09-08: "we really do not need a tr4w.ini." *)
 
 end.
 

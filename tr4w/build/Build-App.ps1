@@ -231,7 +231,7 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # 8-bit strings, tr4w.inc puts our units in UnicodeStrings, and TCaption is an
 # AnsiString. Every other new boundary in the change was typed as TCaption so
 # the conversion happens once, at the control, instead of at each caller.
-$NARROW_CEILING = 1451
+$NARROW_CEILING = 1446
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

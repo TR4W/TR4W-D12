@@ -64,6 +64,22 @@ function SettingsFilePath(const aName: string): string;
 { Writable, possibly large: tr4w.log, contest logs }
 function LogFilePath(const aName: string): string;
 
+(* THE SAME THREE PLACES AS DIRECTORIES, with a trailing separator.
+
+  For the callers that hold a PREFIX rather than build one path -- chiefly
+  TR4W_PATH_NAME, which forty sites append to with TF.Format('%sCTY.DAT', ...).
+  Those cannot use the file accessors without being rewritten one at a time,
+  and pointing the prefix at the right directory fixes them all at once.
+
+  DataDir is the one TR4W_PATH_NAME should be: the forty sites are dominated by
+  READS of shipped data -- CTY.DAT, TRMASTER.DTA, dom\, r150s.dat, rfobl.dat,
+  COMMONMESSAGES.INI. The writes among them are moving to SettingsFilePath and
+  LogFilePath individually, because a write is the case where getting it wrong
+  puts an operator's contest file inside an application bundle. *)
+function DataDir: string;
+function SettingsDir: string;
+function LogDir: string;
+
 implementation
 
 uses SysUtils;
@@ -102,6 +118,10 @@ begin
    Result := AppDir + aName;
 end;
 
+function DataDir: string;     begin Result := AppDir; end;
+function SettingsDir: string; begin Result := EnsureDir(AppDir + 'settings'); end;
+function LogDir: string;      begin Result := AppDir; end;
+
 {$ENDIF}
 
 {$IFDEF DARWIN}
@@ -132,6 +152,10 @@ function LogFilePath(const aName: string): string;
 begin
    Result := EnsureDir(HomeDir + 'Library/Logs/TR4W') + aName;
 end;
+
+function DataDir: string;     begin Result := BundleResources; end;
+function SettingsDir: string; begin Result := EnsureDir(HomeDir + 'Library/Application Support/TR4W'); end;
+function LogDir: string;      begin Result := EnsureDir(HomeDir + 'Library/Logs/TR4W'); end;
 
 {$ENDIF}
 
