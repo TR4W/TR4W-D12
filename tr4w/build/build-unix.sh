@@ -519,8 +519,23 @@ compile() {
    # -gw2 -Xg are NOT carried over: -Xg writes the debug info to a separate file
    # through objcopy, which is a binutils dependency this script has no reason
    # to require before anything links at all.  Revisit when it does.
+   # -gw2 ON DARWIN. -gl alone links FPC's STABS line-info reader, and on
+   # Darwin there are no stabs -- so a crash backtrace prints bare
+   # addresses, which is exactly what the first macOS crash produced:
+   #
+   #     Backtrace:
+   #       $0000000104A4A304
+   #       $0000000104BD1644
+   #
+   # With DWARF requested, -gl links lnfodwrf instead and the same
+   # backtrace names a unit and a line. Linux resolves without it, and
+   # DWARF costs build time and binary size, so it is asked for only
+   # where it buys something.
+   _dbg='-gl'
+   [ "$OS" = darwin ] && _dbg='-gl -gw2'
+
    # shellcheck disable=SC2086
-   ( cd "$workdir" && "$FPC" -Mdelphi -Sc -T$OS -P$CPU -gl \
+   ( cd "$workdir" && "$FPC" -Mdelphi -Sc -T$OS -P$CPU $_dbg \
         -FU"$outdir" -o"$exe" $FI $FU "$@" "$prog" ) > "$log" 2>&1
    rc=$?
 
