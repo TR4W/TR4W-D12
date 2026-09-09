@@ -102,6 +102,7 @@ var
 implementation
 
 uses
+  uAppPaths,     // ResolveDataFileInPlace -- shipped data, whatever case
   uAnsiStr,      // StrComp/StrPLCopy over PAnsiChar (SysUtils variants are PWideChar)
   uCFG,
   MainUnit,
@@ -433,6 +434,8 @@ begin
       else
          begin
          TF.Format(wsprintfBuffer, '%sdom\%s', TR4W_PATH_NAME, DomQTHDataFileName);
+         (* Windows spelling, resolved for this platform -- see fcontest. *)
+         ResolveDataFileInPlace(wsprintfBuffer);
          end;
       FillChar(DomQTHDataFileName, SizeOf(DomQTHDataFileName), 0);
       (* Appended with uAnsiStr rather than Win32's lstrcatA, and BOUNDED:

@@ -90,6 +90,7 @@ var
 implementation
 
 uses
+  uAppPaths,     // ResolveDataFileInPlace -- shipped data, whatever case
   ZoneCont,
   LogWind,
   MainUnit, LogSCP; {KK1L: DEBUG}
@@ -535,6 +536,8 @@ begin
      begin
      TempString := Copy(FileString^, length(incfile) + 2, 200);
      TF.Format(TempFileName, '%sDOM\%s', TR4W_PATH_NAME, @FileString^[length(incfile) + 2]);
+     (* Windows spelling, resolved for this platform -- see fcontest. *)
+     ResolveDataFileInPlace(TempFileName);
      DomQTHTable.ReadDomQTHFile(TempFileName, True);
      end;
 //todo process ;

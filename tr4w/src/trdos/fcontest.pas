@@ -37,6 +37,7 @@ interface
 uses
   VC,
   TF,
+  uAppPaths,      // ResolveDataFileInPlace -- shipped data, whatever case
   utils_text,
   uCallSignRoutines,
   uRussiaOblasts,
@@ -92,6 +93,7 @@ var
 begin
 
   TF.Format(TR4W_POS_FILENAME, '%ssettings\tr4w.pos', TR4W_PATH_NAME);
+  ResolveDataFileInPlace(TR4W_POS_FILENAME);
   TF.Format(TR4W_BANDMAPBIN_FILENAME, '%sbandmap.bin', TR4W_PATH_NAME);
 
   //  asm push offset TR4W_PATH_NAME  end;
@@ -131,6 +133,19 @@ begin
        // n4af issue  # 219  & 212
      end;
 
+  (* ...AND ACCEPT IT SPELLED cty.dat, WHICH IS HOW IT ARRIVES.
+
+    Two ways this name reaches the disk in lower case, and only the first is
+    ours to control: the repository tracks the shipped file as `cty.dat`, and
+    the update an operator downloads from country-files.com is `cty.dat` too.
+    On Windows that has never mattered. On Linux the program found nothing,
+    fell through to its download path, and reported an OpenSSL failure -- an
+    error naming the wrong subsystem entirely (NY4I, Linux Mint, 2026-09-09).
+
+    Costs one directory scan, and only when the exact name was already
+    missing. On Windows it is the FileExists test and nothing more. *)
+  ResolveDataFileInPlace(TR4W_CTY_FILENAME);
+
   TF.Format(CD.ActiveFilename, '%sTRMASTER.DTA', TR4W_LOG_PATH_NAME);
 
   if not FileExists(CD.ActiveFilename) then
@@ -142,6 +157,11 @@ begin
         end;
 
      end;
+
+  (* The call-history file arrives from as many places as the country file --
+    TRMASTER.DTA, trmaster.dta, and MASTER.DTA from older programs. Same
+    tolerance, same reason. *)
+  ResolveDataFileInPlace(CD.ActiveFilename);
 
 {$IF MAKE_DEFAULT_VALUES = false}
 
@@ -1865,6 +1885,13 @@ begin
   InState := False;
   TF.Format(TempFileName, '%sDOM\%s.DOM', TR4W_PATH_NAME,
     ContestsArray[Contest].DF);
+  (* THE PATH IS SPELLED FOR WINDOWS -- separator AND case. Left as written
+    because it is correct on Windows and because 153 literals in this tree
+    spell a path this way; the resolver handles the whole class in one place
+    rather than each literal being edited and re-broken. It converts the
+    backslash and matches DOM/ against the shipped dom/ and .DOM against
+    .dom, none of which differ on Windows. *)
+  ResolveDataFileInPlace(TempFileName);
   if not EnumerateLinesInFile(TempFileName, EnumDOM2, True) then
      begin
      Exit;

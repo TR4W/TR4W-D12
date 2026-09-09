@@ -5452,7 +5452,8 @@ end;
   DataFilePath as the place to do it. }
 function ClusterDirectoryPath: string;
 begin
-   Result := DataFilePath('TRCLUSTER.DAT');
+   (* Case-tolerant: the repository ships this one as trcluster.dat. *)
+   Result := ExistingDataFile(DataFilePath('TRCLUSTER.DAT'));
 end;
 
 { Say beside the drop-down whether there is a directory to drop down.

@@ -232,7 +232,11 @@ const
 implementation
 
 uses
-   uLogSchema, uAppPaths;
+   uLogSchema, uAppPaths
+{$IFNDEF WINDOWS}
+   , sqlite3dyn      // SQLiteDefaultLibrary -- see the initialization section
+{$ENDIF}
+   ;
 
 function LogDatabaseFileName(const aBinaryLogPath: string): string;
 begin
@@ -828,5 +832,36 @@ begin
       q.Free;
    end;
 end;
+
+{$IFNDEF WINDOWS}
+initialization
+   (* THE RUNTIME LIBRARY IS libsqlite3.so.0. THE NAME FPC ASKS FOR IS NOT.
+
+     FPC binds SQLite dynamically and its default name is unversioned --
+     `Sqlite3Lib = 'libsqlite3.' + sharedsuffix` (sqlite3.inc:30), so
+     `libsqlite3.so`. On Debian and its derivatives that bare symlink is
+     shipped by libsqlite3-DEV, a package no operator installs. A normal
+     machine has only:
+
+         libsqlite3.so.0        -> libsqlite3.so.0.8.6
+         libsqlite3.so.0.8.6
+
+     so the load fails on a system that has SQLite perfectly well installed,
+     and TR4W then reports that the contest log cannot be opened. NY4I hit
+     this on Linux Mint (2026-09-09) having installed the `sqlite3` package,
+     which is the COMMAND-LINE TOOL and contains no shared library at all.
+
+     Requiring a -dev package at runtime is not a shippable answer, so ask
+     for the versioned soname that actually exists. This is the same class of
+     defect as the hardcoded 'sqlite3.dll' that CLAUDE.md already calls out:
+     a library NAME that is really a platform assumption.
+
+     macOS is left on the default. Homebrew installs libsqlite3.dylib and the
+     system ships one in /usr/lib, so the unversioned name resolves there --
+     and an unverified name is exactly the mistake this is fixing. *)
+{$IFDEF LINUX}
+   SQLiteDefaultLibrary := 'libsqlite3.so.0';
+{$ENDIF}
+{$ENDIF}
 
 end.

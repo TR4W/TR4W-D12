@@ -80,12 +80,197 @@ function DataDir: string;
 function SettingsDir: string;
 function LogDir: string;
 
+(* THE SAME FILE, WHATEVER CASE IT IS SPELLED IN.
+
+  Returns aPath when it exists. When it does not, and the platform has a
+  case-sensitive filesystem, looks in the same directory for a name that
+  differs from the wanted one only in case and returns THAT. Failing both, it
+  returns aPath unchanged so the caller reports the name the operator expects
+  to see.
+
+  WHY THIS IS AT THE LOOKUP AND NOT IN THE PACKAGING. Two separate things put
+  a differently-cased name on disk, and renaming the shipped files only fixes
+  one of them:
+
+    1. This repository tracks the country file as `cty.dat` while the program
+       opens `CTY.DAT`. On Windows those are one file and it has worked for
+       twenty years. On Linux they are two, so TR4W found nothing, fell
+       through to its download path, and reported an OpenSSL failure -- an
+       error message about the wrong subsystem entirely (NY4I, Linux Mint,
+       2026-09-09).
+
+    2. THE ONE THE PACKAGING CANNOT FIX: the country file an operator
+       downloads from country-files.com is named `cty.dat`. Updating it by
+       hand is the normal way to run a contest station, and on Linux that
+       drops a file the program cannot see -- every time, forever, however
+       the package was built.
+
+  So the durable answer is that the LOOKUP tolerates case. Renaming three
+  files in the repository would have fixed the tarball and left every future
+  cty.dat update broken.
+
+  COST: one directory scan, and only after FileExists has already said no. It
+  is not on any hot path -- these are startup-time lookups of shipped data.
+  On Windows it compiles to the FileExists test alone. *)
+function ExistingDataFile(const aPath: string): string;
+
+(* THE SAME THING FOR THE FIXED CHAR ARRAYS THE PROGRAM STORES PATHS IN.
+
+  TR4W_CTY_FILENAME and its siblings are array[0..MAX_PATH-1] of AnsiChar, so
+  a caller would otherwise have to write string(PAnsiChar(@TheArray)) to ask
+  the question -- a pointer cast, which is the shape we are removing, and one
+  that reads past the NUL if the array is not terminated.
+
+  AN OPEN ARRAY INSTEAD: it carries its own bounds, High() is real, and the
+  reader stops at the NUL because this code stops it. Nothing is dereferenced
+  and nothing is assumed about the caller's declared size. *)
+procedure ResolveDataFileInPlace(var aPath: array of AnsiChar);
+
 implementation
 
-uses SysUtils;
+uses SysUtils, StrUtils;
 
 { Create on first use. Windows does not need it -- the directories ship -- but
   macOS and Linux both write into a home directory that starts empty. }
+function ExistingDataFile(const aPath: string): string;
+{$IFNDEF WINDOWS}
+var
+   parts: TStringArray;
+   built, wanted: string;
+   i: integer;
+   rec: TSearchRec;
+   found: boolean;
+{$ENDIF}
+begin
+   Result := aPath;
+   if FileExists(Result) then
+      begin
+      Exit;
+      end;
+
+{$IFNDEF WINDOWS}
+   (* A BACKSLASH IS A LEGAL FILENAME CHARACTER HERE, so it has to go before
+     anything else can work. This program was written against Win32 and 153
+     of its string literals still spell a path with one -- '%sDOM\%s.DOM'
+     among them. On Windows both separators open the same file; on Linux
+     "DOMrrlsect.dom" is one file with an odd name, in the wrong
+     directory, that does not exist. *)
+   Result := StringReplace(Result, '', '/', [rfReplaceAll]);
+   if FileExists(Result) then
+      begin
+      Exit;
+      end;
+
+   (* THEN EVERY COMPONENT, NOT JUST THE FILE NAME. The country file is the
+     obvious case, but the domestic-multiplier files need the DIRECTORY
+     matched too: the program asks for DOM/ARRLSECT.DOM and the package ships
+     dom/arrlsect.dom, so a resolver that only looked at the last component
+     would search a directory that is not there and find nothing.
+
+     Walks down from the root, replacing each component with the real entry
+     that differs from it only in case. Gives up and returns the original the
+     moment a component has no match, so the caller reports the name the
+     operator expects to see rather than a half-resolved one. *)
+   parts := SplitString(Result, '/');
+   if Length(parts) < 2 then
+      begin
+      Exit;
+      end;
+
+   built := parts[0];
+   if built = '' then
+      begin
+      built := '/';
+      end;
+
+   for i := 1 to High(parts) do
+      begin
+      wanted := parts[i];
+      if wanted = '' then
+         begin
+         Continue;
+         end;
+
+      if FileExists(IncludeTrailingPathDelimiter(built) + wanted) or
+         DirectoryExists(IncludeTrailingPathDelimiter(built) + wanted) then
+         begin
+         built := IncludeTrailingPathDelimiter(built) + wanted;
+         Continue;
+         end;
+
+      found := False;
+      if FindFirst(IncludeTrailingPathDelimiter(built) + '*', faAnyFile, rec) = 0 then
+         begin
+         try
+            repeat
+               if UpperCase(rec.Name) = UpperCase(wanted) then
+                  begin
+                  built := IncludeTrailingPathDelimiter(built) + rec.Name;
+                  found := True;
+                  Break;
+                  end;
+            until FindNext(rec) <> 0;
+         finally
+            FindClose(rec);
+         end;
+         end;
+
+      if not found then
+         begin
+         (* No match at this level: nothing below it can resolve either. *)
+         Result := aPath;
+         Exit;
+         end;
+      end;
+
+   Result := built;
+{$ENDIF}
+end;
+
+procedure ResolveDataFileInPlace(var aPath: array of AnsiChar);
+var
+   i, n: integer;
+   current, resolved: string;
+begin
+   (* Read up to the NUL. High() is the array's own bound, so a caller cannot
+     make this walk off the end by passing the wrong size. *)
+   current := '';
+   for i := Low(aPath) to High(aPath) do
+      begin
+      if aPath[i] = #0 then
+         begin
+         Break;
+         end;
+      current := current + Char(aPath[i]);
+      end;
+
+   if current = '' then
+      begin
+      Exit;
+      end;
+
+   resolved := ExistingDataFile(current);
+   if resolved = current then
+      begin
+      Exit;
+      end;
+
+   (* Write back, NUL-terminated, and never past the caller's last element.
+     A resolved name is the same length as the one we asked for -- only the
+     case differs -- so the truncation guard is a belt, not a scenario. *)
+   n := Length(resolved);
+   if n > High(aPath) then
+      begin
+      n := High(aPath);
+      end;
+
+   for i := 1 to n do
+      begin
+      aPath[i - 1] := AnsiChar(resolved[i]);
+      end;
+   aPath[n] := #0;
+end;
+
 function EnsureDir(const aDir: string): string;
 begin
    Result := IncludeTrailingPathDelimiter(aDir);
