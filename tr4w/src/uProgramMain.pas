@@ -294,6 +294,8 @@ uses
   uHamScore,
   uExchangeBuilder,
   uGridLookup,
+  uAppPaths,  (* LogFilePath -- the log belongs where the PLATFORM puts logs,
+                 not in whatever directory the program was launched from. *)
   Log4D,
   uFactoryRadioBase,
   uSerialPort,
@@ -1005,7 +1007,29 @@ begin
    // ExitProcess in tr4w_ShutDown, so that finally could never have run in
    // normal use -- and HamScoreShutdown is on the shutdown path now, where it
    // does run.
-   appender := TLogRollingFileAppender.Create('name','tr4w.log');
+   (* THE LOG GOES WHERE THE PLATFORM PUTS LOGS, NOT WHERE THE PROGRAM HAPPENS
+     TO BE STANDING.
+
+     This was the bare name 'tr4w.log', which Log4D resolves against the
+     CURRENT DIRECTORY. On Windows that is the program's own folder and has
+     always worked. On macOS a .app launched from Finder starts with its
+     working directory at "/", which is the read-only system volume -- so the
+     first thing TR4W did on a Mac was put up
+
+         Unable to open file "tr4w.log": Read-only file system.
+         Press OK to ignore and risk data corruption.
+
+     NY4I hit that on the first run of the bundle (2026-09-08) and asked the
+     right question: "Are you writing the log relative to the run directory?"
+     Yes, it was.
+
+     uAppPaths already knew the answer for all three -- ~/Library/Logs/TR4W on
+     macOS, the XDG state directory on Linux, the app folder on Windows, each
+     created if missing. Nothing was asking it. The Windows path is unchanged:
+     LogFilePath there is AppDir + the name, which is what this line already
+     produced. *)
+   appender := TLogRollingFileAppender.Create(
+                  'name', LogFilePath('tr4w.log'));
    appender.Layout := CreateTR4WLogLayout;
    TLogBasicConfigurator.Configure(appender);
    logger := TLogLogger.GetLogger('TR4WDebugLog');
