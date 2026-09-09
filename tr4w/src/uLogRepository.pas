@@ -1004,6 +1004,8 @@ end;
   a field surviving creation and vanishing on the first edit. The only
   difference is the guid, which an update must not touch: a row's identity does
   not change when its contents do. *)
+var gBindStep: AnsiString;
+
 procedure TLogRepository.BindInto(aQuery: TSQLQuery;
                                   const aQso: ContestExchange;
                                   const aGuid: AnsiString;
@@ -1017,10 +1019,13 @@ procedure TLogRepository.BindInto(aQuery: TSQLQuery;
    end;
 
 begin
+   gBindStep := '(start)';
    if aInserting then
       begin
+   gBindStep := 'guid'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
       P('guid').AsString := aGuid;
       end;
+   gBindStep := 'exchange_id'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindText(P('exchange_id'), AnsiString(aQso.id));
 
    (* The set this QSO belongs to. FSetIdForNextSave lets a caller put several
@@ -1034,25 +1039,36 @@ begin
       begin
       if FSetIdForNextSave <> '' then
          begin
+   gBindStep := 'qso_set_id'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
          P('qso_set_id').AsString := FSetIdForNextSave;
          end
       else
          begin
+   gBindStep := 'qso_set_id'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
          P('qso_set_id').AsString := aGuid;
          end;
       end;
 
    (* Identity. session_id/session_seq are ceQSOID1/ceQSOID2 -- the pair
      tr4wserver matches on, and how WAE links a QTC to its QSO. *)
+   gBindStep := 'session_id'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    P('session_id').AsLargeInt := aQso.ceQSOID1;
+   gBindStep := 'session_seq'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    P('session_seq').AsLargeInt := aQso.ceQSOID2;
+   gBindStep := 'computer_id'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindText(P('computer_id'), AnsiString(aQso.ceComputerID));
+   gBindStep := 'operator_id'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    P('operator_id').AsInteger := aQso.ceOperatorID;
+   gBindStep := 'record_kind'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    P('record_kind').AsString := RecordKindToken(aQso.ceRecordKind);
 
+   gBindStep := 'qso_at'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    P('qso_at').AsLargeInt := QSOTimeToUnixUTC(aQso.tSysTime);
+   gBindStep := 'callsign'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindText(P('callsign'), AnsiString(aQso.Callsign));
+   gBindStep := 'standard_call'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindText(P('standard_call'), AnsiString(aQso.QTH.StandardCall));
+   gBindStep := 'freq_tx_hz'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    P('freq_tx_hz').AsLargeInt := aQso.Frequency;
 
    (* RX EQUALS TX AND SPLIT IS FALSE, because ContestExchange says nothing
@@ -1062,62 +1078,96 @@ begin
      without every caller having to know about split. Live logging can do
      better, because the radio object knows; that arrives in Phase C with
      the other tier-3 facts. *)
+   gBindStep := 'freq_rx_hz'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    P('freq_rx_hz').AsLargeInt := aQso.Frequency;
+   gBindStep := 'is_split'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    P('is_split').AsInteger := 0;
+   gBindStep := 'band'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindText(P('band'), BandToken(aQso.Band));
+   gBindStep := 'mode'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindText(P('mode'), ModeToken(aQso.Mode));
+   gBindStep := 'submode'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindText(P('submode'), ExtModeToken(aQso.ExtMode));
 
    (* The received exchange as rendered. There is no sent counterpart in the
      record -- crosswalk finding 1. *)
+   gBindStep := 'exchange_received'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindText(P('exchange_received'), AnsiString(aQso.ExchString));
+   gBindStep := 'exchange_sent'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindText(P('exchange_sent'), FSentExchangeForNextSave);
 
+   gBindStep := 'rst_sent'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    P('rst_sent').AsInteger := aQso.RSTSent;
+   gBindStep := 'rst_received'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    P('rst_received').AsInteger := aQso.RSTReceived;
+   gBindStep := 'serial_sent'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindSerial(P('serial_sent'), aQso.NumberSent);
+   gBindStep := 'serial_received'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindSerial(P('serial_received'), aQso.NumberReceived);
 
+   gBindStep := 'rcvd_zone'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindByte(P('rcvd_zone'), aQso.Zone, DUMMYZONE);
+   gBindStep := 'rcvd_name'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindText(P('rcvd_name'), AnsiString(aQso.Name));
+   gBindStep := 'rcvd_age'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    P('rcvd_age').AsInteger := aQso.Age;
+   gBindStep := 'rcvd_check'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    P('rcvd_check').AsInteger := aQso.Check;
+   gBindStep := 'rcvd_precedence'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindText(P('rcvd_precedence'), AnsiString(aQso.Precedence));
+   gBindStep := 'rcvd_class'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindText(P('rcvd_class'), AnsiString(aQso.ceClass));
+   gBindStep := 'rcvd_power'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindText(P('rcvd_power'), AnsiString(aQso.Power));
+   gBindStep := 'rcvd_chapter'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindText(P('rcvd_chapter'), AnsiString(aQso.Chapter));
+   gBindStep := 'rcvd_prefecture'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindByte(P('rcvd_prefecture'), aQso.Prefecture, MAXBYTE);
+   gBindStep := 'rcvd_member_no'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindWord(P('rcvd_member_no'), aQso.TenTenNum, MAXWORD);
 
    (* THE POLYMORPHIC ONE. Stored as the literal it is; the contest factory
      decides later whether it was a grid, a section or a park. *)
+   gBindStep := 'rcvd_qth'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindText(P('rcvd_qth'), AnsiString(aQso.QTHString));
 
+   gBindStep := 'rcvd_random'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindText(P('rcvd_random'), AnsiString(aQso.RandomCharsReceived));
+   gBindStep := 'random_sent'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindText(P('random_sent'), AnsiString(aQso.RandomCharsSent));
 
    (* Kids is overloaded by record kind -- crosswalk. For a QTC it is the call
      inside the traffic, which is not the station in `callsign`. *)
    if aQso.ceRecordKind in [rkQTCR, rkQTCS] then
       begin
+   gBindStep := 'rcvd_kids'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
       P('rcvd_kids').Clear;
+   gBindStep := 'qtc_call'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
       BindText(P('qtc_call'), AnsiString(aQso.Kids));
       end
    else
       begin
+   gBindStep := 'rcvd_kids'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
       BindText(P('rcvd_kids'), AnsiString(aQso.Kids));
+   gBindStep := 'qtc_call'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
       P('qtc_call').Clear;
       end;
 
+   gBindStep := 'domestic_qth'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindText(P('domestic_qth'), AnsiString(aQso.DomesticQTH));
 
    (* CTY.DAT-derived, stored so a later CTY.DAT cannot rewrite history. *)
+   gBindStep := 'dxcc_prefix'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindText(P('dxcc_prefix'), AnsiString(aQso.QTH.Prefix));
+   gBindStep := 'dxcc_entity'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindText(P('dxcc_entity'), AnsiString(aQso.QTH.CountryID));
+   gBindStep := 'dxcc_code'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindWord(P('dxcc_code'), aQso.QTH.Country, UNKNOWN_COUNTRY);
+   gBindStep := 'cty_cq_zone'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindByte(P('cty_cq_zone'), aQso.QTH.Zone, DUMMYZONE);
    if aQso.QTH.Continent = UnknownContinent then
       begin
+   gBindStep := 'cty_continent'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
       P('cty_continent').Clear;
       end
    else
@@ -1134,42 +1184,66 @@ begin
         A STORAGE TOKEN MUST NOT BE A DISPLAY STRING. ContinentTypeSA is the
         stable two-letter code -- 'NA', 'EU' -- which is also exactly what
         GetContinentFromString parses, so the pair round-trips by construction. *)
+   gBindStep := 'cty_continent'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
       P('cty_continent').AsString := AnsiString(ContinentTypeSA[aQso.QTH.Continent]);
       end;
 
    (* The multiplier strings as counted, and the outcome flags. *)
+   gBindStep := 'prefix_mult'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindText(P('prefix_mult'), AnsiString(aQso.Prefix));
+   gBindStep := 'dx_mult'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindText(P('dx_mult'), AnsiString(aQso.DXQTH));
+   gBindStep := 'domestic_mult'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindText(P('domestic_mult'), AnsiString(aQso.DomMultQTH));
+   gBindStep := 'mult_domestic'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindBool(P('mult_domestic'), aQso.DomesticMult);
+   gBindStep := 'mult_dx'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindBool(P('mult_dx'), aQso.DXMult);
+   gBindStep := 'mult_prefix'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindBool(P('mult_prefix'), aQso.PrefixMult);
+   gBindStep := 'mult_zone'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindBool(P('mult_zone'), aQso.ZoneMult);
+   gBindStep := 'inhibit_mults'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindBool(P('inhibit_mults'), aQso.InhibitMults);
 
+   gBindStep := 'qso_points'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    P('qso_points').AsInteger := aQso.QSOPoints;
+   gBindStep := 'is_dupe'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindBool(P('is_dupe'), aQso.ceDupe);
 
    (* INVERTED. is_run is the opposite of ceSearchAndPounce, and a straight copy
      would be wrong in a way nothing reports. *)
+   gBindStep := 'is_run'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindBool(P('is_run'), not aQso.ceSearchAndPounce);
 
+   gBindStep := 'is_xqso'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindBool(P('is_xqso'), aQso.ceXQSO);
    (* is_skipped IS WRITTEN AS FALSE AND NEVER READ BACK INTO ITS OWN FIELD.
      The column stays because dropping it is a schema migration for a fact
      nothing consumes; what it MEANT is now ceQSO_Deleted, and the reader folds
      any historical 1 into that. See ceQSO_Skiped in VC.pas. *)
+   gBindStep := 'is_skipped'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindBool(P('is_skipped'), False);
+   gBindStep := 'sent_in_qtc'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindBool(P('sent_in_qtc'), aQso.ceWasSendInQTC);
+   gBindStep := 'name_sent'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindBool(P('name_sent'), aQso.NameSent);
+   gBindStep := 'mp3_recorded'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindBool(P('mp3_recorded'), aQso.MP3Record);
+   gBindStep := 'clear_dupe_sheet'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindBool(P('clear_dupe_sheet'), aQso.ceClearDupeSheet);
+   gBindStep := 'clear_mult_sheet'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindBool(P('clear_mult_sheet'), aQso.ceClearMultSheet);
 
+   gBindStep := 'radio_nr'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    P('radio_nr').AsInteger := Ord(aQso.ceRadio);
+   gBindStep := 'operator_call'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindText(P('operator_call'), CharArrayToAnsi(aQso.ceOperator));
+   gBindStep := 'deleted'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindBool(P('deleted'), aQso.ceQSO_Deleted);
+   gBindStep := 'sent_to_server'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindBool(P('sent_to_server'), aQso.ceSendToServer);
+   gBindStep := 'server_dirty'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindBool(P('server_dirty'), aQso.ceNeedSendToServerAE);
 end;
 
