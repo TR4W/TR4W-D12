@@ -1165,6 +1165,8 @@ begin
    BindWord(P('dxcc_code'), aQso.QTH.Country, UNKNOWN_COUNTRY);
    gBindStep := 'cty_cq_zone'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
    BindByte(P('cty_cq_zone'), aQso.QTH.Zone, DUMMYZONE);
+   WriteLn('TRACE4: Continent ordinal = ', Ord(aQso.QTH.Continent),
+           '  valid range 0..', Ord(High(ContinentType))); Flush(Output);
    if aQso.QTH.Continent = UnknownContinent then
       begin
    gBindStep := 'cty_continent'; WriteLn('TRACE3: ', gBindStep); Flush(Output);
