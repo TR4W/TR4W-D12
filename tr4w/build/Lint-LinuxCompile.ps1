@@ -54,6 +54,19 @@ $UNITS = @(
    # vendored serial merge had given SerBreak the Windows default (250) in an
    # interface whose Unix body declares 0, which no Windows build could see.
    @{ Unit = 'uAppPaths.pas';         Since = '2026-09-07' }
+   # Added 2026-09-09. These two are the reason the list matters: BOTH of
+   # them compiled clean on Windows while being broken on Linux, because the
+   # code that was wrong sits inside {$IFDEF LINUX} and {$IFNDEF WINDOWS}.
+   #
+   #   uAppPaths      a literal-eating edit left StringReplace(s, '', '/'),
+   #                  an empty search string. Compiled, did nothing.
+   #   uOpenSSLLoader fpSymlink got PChar, which is PWideChar in this
+   #                  program's string mode, twice over.
+   #
+   # 22,841 passing Windows tests said nothing about either. A Linux compile
+   # found both in one run each.
+   @{ Unit = 'utils\uOpenSSLLoader.pas';    Since = '2026-09-09' }
+   @{ Unit = 'utils\uHTTPDownload.pas';     Since = '2026-09-09' }
    @{ Unit = 'ComPortEnumerator.pas'; Since = '2026-09-07' }
    @{ Unit = 'uSerialPort.pas';       Since = '2026-09-07' }
    @{ Unit = 'uYCCCSO2R.pas';         Since = '2026-09-07' }
