@@ -3046,6 +3046,25 @@ end;
 
 function YesOrNo(const Text: string): integer;
 begin
+   (* THE BUTTON ORDER IS THE DESKTOP'S TO DECIDE, NOT OURS -- DO NOT "FIX" IT.
+
+     On Windows this shows [Yes] [No]; on GTK it shows [No] [Yes]. That is not
+     a defect and it is not a difference in this code: Windows convention puts
+     the affirmative action first, GNOME puts it last, and QuestionDlg follows
+     whichever widget set the program was built against. NY4I noticed the
+     reversal on Linux Mint and the decision (2026-09-09) is to keep the native
+     order: "sticking with the desktop environment standard is better".
+
+     Matching Windows on both platforms would mean building this dialog by
+     hand, because the LCL defers to the platform deliberately.
+
+     WHAT WOULD ACTUALLY BE A BUG is reading the ANSWER by position. This does
+     not -- it compares the RESULT (mrYes), which is the same whichever side of
+     the dialog the button is drawn on. Anything added here must do the same.
+
+     'IsDefault' binds to the button BEFORE it, so mrNo is the default. That is
+     deliberate for a question that closes the program, and it is the same on
+     both platforms. *)
    if QuestionDlg('TR4W', Text, mtConfirmation,
                   [mrYes, mrNo, 'IsDefault'], 0) = mrYes then
       begin
