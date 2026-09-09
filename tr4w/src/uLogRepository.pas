@@ -122,6 +122,11 @@ type
    private
       FDatabase: TLogDatabase;
       FInsert: TSQLQuery;
+      (* Fields that arrived from disk outside their type's range and were
+        stored as NULL. Non-zero means the record did not decode correctly --
+        see TestTheRecordHasTheSameFIELD_OFFSETSEverywhere, which is the test
+        that says WHY on a platform where it happens. *)
+      FDecodeAnomalies: integer;
       FSelect: TSQLQuery;
       FLastGuid: AnsiString;
       FLastSetId: AnsiString;
@@ -183,6 +188,11 @@ type
       (* The guid the last SaveQSO stored, for anything that wants the durable
         identity rather than the row handle. *)
       property LastGuid: AnsiString read FLastGuid;
+
+      (* Fields that arrived outside their type's range and were stored as
+        NULL. NON-ZERO MEANS THE RECORD DID NOT DECODE CORRECTLY -- an
+        importer should report this rather than claim a clean import. *)
+      property DecodeAnomalies: integer read FDecodeAnomalies;
 
       (* PUT THE NEXT SAVED QSO IN THIS SET -- a county line, a POTA n-fer.
 
@@ -1116,8 +1126,41 @@ begin
    BindText(P('dxcc_entity'), AnsiString(aQso.QTH.CountryID));
    BindWord(P('dxcc_code'), aQso.QTH.Country, UNKNOWN_COUNTRY);
    BindByte(P('cty_cq_zone'), aQso.QTH.Zone, DUMMYZONE);
-   if aQso.QTH.Continent = UnknownContinent then
+   (* THE INDEX IS CHECKED, NOT ASSUMED, AND THIS WAS A REAL CRASH.
+
+     ContinentTypeSA is `array[ContinentType] of PAnsiChar` -- a POINTER table
+     -- and the value indexing it arrives from a record read off disk. The
+     guard below tested only for UnknownContinent, so ANY other out-of-range
+     byte indexed past the end of the array, and AnsiString() then dereferenced
+     whatever pointer-shaped bytes were there.
+
+     Measured 2026-09-08: the same corpus QSO gives Continent = 1 on
+     x86_64-linux and 86 on aarch64-darwin -- 86 being ASCII 'V', a
+     neighbouring field's byte. On Linux and Windows index 86 landed in mapped
+     memory and produced a wrong string in silence; on macOS it hit an unmapped
+     page and took an EAccessViolation.
+
+     SO THE UNDERLYING DEFECT IS THE RECORD LAYOUT, not this line -- see
+     TestTheRecordHasTheSameFIELD_OFFSETSEverywhere. But a lookup table indexed
+     by unvalidated file data should never have been unguarded on any platform:
+     the silent wrong answer is the worse of the two outcomes, because a QSO
+     stored with a garbage continent is a scoring error nobody sees.
+
+     Out of range is stored as NULL -- the same as unknown, which is what it
+     is -- and reported once so it cannot be mistaken for a clean import. *)
+   if (aQso.QTH.Continent = UnknownContinent) or
+      (Ord(aQso.QTH.Continent) > Ord(High(ContinentType))) then
       begin
+      if aQso.QTH.Continent <> UnknownContinent then
+         begin
+         (* COUNTED, NOT LOGGED, because this unit has NO LOGGER ON PURPOSE --
+           it links into the test binary and must not drag MainUnit's globals
+           in behind it. Reporting UPWARD keeps that property: the importer
+           reads DecodeAnomalies when it finishes and says so once, with a
+           count, instead of this unit either going silent or gaining a
+           dependency it was designed without. *)
+         Inc(FDecodeAnomalies);
+         end;
       P('cty_continent').Clear;
       end
    else

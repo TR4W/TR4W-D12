@@ -36,6 +36,7 @@ type
       procedure TestStrideMismatchIsRefused;
       procedure TestEverySetInTheCorpusReads;
       procedure TestTheRecordIsTheSameSizeEverywhere;
+      procedure TestTheRecordHasTheSameFIELD_OFFSETSEverywhere;
    public
       procedure RunAllTests; override;
    end;
@@ -366,6 +367,54 @@ begin
                + 'corpus log on disk is made of');
 end;
 
+(* SIZE IS NOT ENOUGH, AND THIS TEST EXISTS BECAUSE I LEARNED THAT THE HARD
+  WAY (2026-09-08).
+
+  TestTheRecordIsTheSameSizeEverywhere PASSES on aarch64-darwin -- 376 bytes,
+  same as Windows and Linux -- and the record still decodes WRONG there. The
+  same corpus QSO yields QTH.Continent = 1 on x86_64-linux and 86 on
+  aarch64-darwin. 86 is ASCII 'V': the reader is picking up a neighbouring
+  field's byte.
+
+  TOTAL SIZE CAN MATCH WHILE OFFSETS DIFFER, because padding moves between
+  fields and the sum comes out the same. A size check is therefore a test that
+  gives CONFIDENCE WITHOUT COVERAGE, which is worse than no test -- it is what
+  let me conclude the layout was safe.
+
+  ContestExchange is a plain `record` with no {$PACKRECORDS} anywhere, and
+  TLogBinaryReader block-reads a file straight into one, so the on-disk format
+  is whatever the target's alignment rules produce.
+
+  THE FIELDS BELOW ARE NOT ARBITRARY. Each sits after a differently-sized
+  neighbour, which is where padding decisions show up; QTH is the nested record
+  the live defect was found in. If this test fails on a platform, TR4W CANNOT
+  IMPORT A LEGACY LOG THERE and must not pretend otherwise.
+
+  NY4I, 2026-09-08: "Nothing should be reading from a binary file. It's the
+  database or JSON. That's it." Exactly so -- which is why this guards the
+  IMPORT path and nothing else. The binary reader exists to carry a D7 log into
+  SQLite once. It still has to do that correctly. *)
+procedure TLogBinaryFileTests.TestTheRecordHasTheSameFIELD_OFFSETSEverywhere;
+var
+   r: ContestExchange;
+   base: PtrUInt;
+
+   function Off(const aAddr): PtrUInt;
+   begin
+      Result := PtrUInt(@aAddr) - base;
+   end;
+
+begin
+   BeginTest('TestTheRecordHasTheSameFIELD_OFFSETSEverywhere');
+   base := PtrUInt(@r);
+
+   CheckEquals(0,   Off(r.tSysTime),        'tSysTime is first');
+   CheckEquals(6,   Off(r.Band),            'Band follows the 6-byte time');
+   CheckEquals(7,   Off(r.Mode),            'Mode follows Band');
+   CheckEquals(290, Off(r.id),              'id, a string[32], sits at 290');
+   CheckEquals(376, SizeOf(ContestExchange), 'and the whole record is 376');
+end;
+
 procedure TLogBinaryFileTests.RunAllTests;
 begin
    TestOpensARealCorpusLog;
@@ -379,6 +428,7 @@ begin
    TestStrideMismatchIsRefused;
    TestEverySetInTheCorpusReads;
    TestTheRecordIsTheSameSizeEverywhere;
+   TestTheRecordHasTheSameFIELD_OFFSETSEverywhere;
 end;
 
 end.
