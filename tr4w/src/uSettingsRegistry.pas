@@ -154,6 +154,7 @@ type
       FNeedsRestart: boolean;
       FHasSideEffects: boolean;
       FReadOnly: boolean;
+      FBroadcast: boolean;
       FOnApply: TSettingApplyProc;
       { A cell this setting created for itself, or nil.  See TBoolCell. }
       FOwnedCell: TObject;
@@ -243,6 +244,25 @@ type
         worked example: a contest's .cfg sets them, the operator does not, and
         the scoring code reads them every QSO. }
       property ReadOnly: boolean read FReadOnly write FReadOnly;
+
+      { TRUE WHEN A CHANGE MUST REACH THE OTHER OPERATING POSITIONS.
+
+        crNetwork, lifted. 341 of the 517 rows carry it and 166 do not, and
+        until now nothing outside the legacy adapter could tell which -- the
+        send side read the byte straight off the CFGCA row.
+
+        THIS IS THE LAST OF THE THREE PREREQUISITES the TR4QT settings review
+        named, after ReadOnly (crJ 2 and 3) and HasSideEffects (crP and crA).
+        It matters more than the other two because its failure is SILENT AND
+        REMOTE: an applier that stopped broadcasting would leave the second
+        position quietly running different settings, and nobody finds out
+        until two operators disagree mid-contest.
+
+        WHAT IT DOES NOT DO YET is carry the send. uNet still reads the row,
+        and it should, because CheckCommand is still the applier. This makes
+        the FACT expressible in the registry so the applier can move without
+        losing it -- which is the whole point of a prerequisite. }
+      property Broadcast: boolean read FBroadcast write FBroadcast;
    end;
 
    TBoolSetting = class(TSettingBase)
@@ -276,6 +296,8 @@ type
       FSet: TIntSetter;
       FMin, FMax: integer;
       FAllowed: TArray<integer>;
+      FSentinel: integer;
+      FHasSentinel: boolean;
    public
       { aMin/aMax bound a RANGE.  For a setting that accepts only particular
         values, pass them to Allowed instead -- that is the old ckArray, made
@@ -293,6 +315,22 @@ type
 
       { Restrict to a fixed set.  Returns Self so it reads as one declaration. }
       function Allowed(const aValues: array of integer): TIntSetting;
+
+      { ONE VALUE ACCEPTED OUTSIDE THE RANGE, MEANING "NOT SET".
+
+        The shape turns up repeatedly in this program and the old table could
+        not say it: MINITOUR DURATION is 5..60 minutes OR ZERO for "no
+        minitour", and MainUnit reads exactly `if TourDuration <> 0`. Widening
+        the range to 0..60 would have admitted 1..4, which are not durations
+        anybody wants; refusing 0 leaves the setting unable to hold the value
+        it actually has.
+
+        So the sentinel is DECLARED rather than smuggled in by relaxing a
+        bound. It is offered in AllowedValues too, because a control that
+        cannot represent "off" is the same defect one step later.
+
+        Returns Self so it reads as one declaration. }
+      function Sentinel(const aValue: integer): TIntSetting;
 
       { Self-storing -- see TBoolSetting.Own. }
       class function Own(const aKey, aCaption: string; const aDefault: integer;
@@ -569,6 +607,13 @@ begin
       aMin, aMax);
 end;
 
+function TIntSetting.Sentinel(const aValue: integer): TIntSetting;
+begin
+   FSentinel := aValue;
+   FHasSentinel := True;
+   Result := Self;
+end;
+
 function TIntSetting.Allowed(const aValues: array of integer): TIntSetting;
 var
    i: integer;
@@ -643,9 +688,27 @@ begin
       Exit;
       end;
 
+   (* The sentinel is accepted OUTSIDE the range, deliberately -- see
+     Sentinel. Checked before the range so that "0 or 5..60" needs no gap in
+     the bounds and 1..4 stay refused. *)
+   if FHasSentinel and (n = FSentinel) then
+      begin
+      SetValue(n);
+      Result := True;
+      Exit;
+      end;
+
    if (n < FMin) or (n > FMax) then
       begin
-      aError := Format('%d is outside %d..%d', [n, FMin, FMax]);
+      if FHasSentinel then
+         begin
+         aError := Format('%d is outside %d..%d, and is not %d',
+                          [n, FMin, FMax, FSentinel]);
+         end
+      else
+         begin
+         aError := Format('%d is outside %d..%d', [n, FMin, FMax]);
+         end;
       Exit;
       end;
 

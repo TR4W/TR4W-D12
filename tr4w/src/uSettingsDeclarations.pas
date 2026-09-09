@@ -84,6 +84,8 @@ type
      global at all -- waits on the scoring code that reads these directly. *)
    TQSOPointsAccess = class(TObject)
    public
+      function  GetTourDuration: integer;
+      procedure SetTourDuration(aValue: integer);
       function  GetDomesticCw: integer;
       procedure SetDomesticCw(aValue: integer);
       function  GetDomesticPhone: integer;
@@ -98,6 +100,8 @@ var
    GDeclared: boolean = False;
    GQSOPoints: TQSOPointsAccess = nil;
 
+function  TQSOPointsAccess.GetTourDuration: integer;    begin Result := TourDuration;           end;
+procedure TQSOPointsAccess.SetTourDuration(aValue: integer); begin TourDuration := aValue;      end;
 function  TQSOPointsAccess.GetDomesticCw: integer;      begin Result := QSOPointsDomesticCW;    end;
 procedure TQSOPointsAccess.SetDomesticCw(aValue: integer); begin QSOPointsDomesticCW := aValue; end;
 function  TQSOPointsAccess.GetDomesticPhone: integer;   begin Result := QSOPointsDomesticPhone; end;
@@ -422,8 +426,27 @@ begin
                           RS_CONTEST_LOOKFORRSTSENT);
    RegisterStoredSetting('contest.messageEnable',       'MESSAGE ENABLE',
                           RS_CONTEST_MESSAGEENABLE);
-   RegisterStoredSetting('contest.minitourDuration',    'MINITOUR DURATION',
-                          RS_CONTEST_MINITOURDURATION);
+   (* GRADUATED, AND IT NAMED A CONCEPT THE OLD TABLE HAD NO WORD FOR.
+
+     The row said 5..60 minutes. The variable defaults to 0, and MainUnit:4344
+     reads exactly `if TourDuration <> 0` -- so zero means "no minitour", and
+     the setting could not hold its own value.
+
+     Unlike the QSO-point rows, WIDENING THE RANGE WOULD HAVE BEEN WRONG: 0..60
+     admits 1, 2, 3 and 4, which are not durations anybody wants. The value is
+     not at the edge of the range, it is outside it and means something else.
+
+     So TIntSetting gained Sentinel: one value accepted beside the range and
+     offered in AllowedValues, rather than a bound relaxed until the sentinel
+     slips through. That is the general shape -- "off, or a real value" -- and
+     it is what a typed setting can say and a Word-bounded table row cannot.
+
+     Read-only from crJ:2, like the QSO-point rows: a contest sets it. *)
+   RegisterSetting(TIntSetting.Create('contest.minitourDuration',
+      RS_CONTEST_MINITOURDURATION,
+      GQSOPoints.GetTourDuration, GQSOPoints.SetTourDuration,
+      5, 60).Sentinel(0)).ReadOnly := True;
+
    RegisterStoredSetting('contest.multByBand',          'MULT BY BAND',
                           RS_CONTEST_MULTBYBAND);
    RegisterStoredSetting('contest.multByMode',          'MULT BY MODE',

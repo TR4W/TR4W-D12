@@ -166,6 +166,10 @@ begin
    (* crJ 2 is read-only and 3 is a read-only message. See
      TSettingBase.ReadOnly. *)
    ReadOnly := (CFGCA[idx].crJ = 2) or (CFGCA[idx].crJ = 3);
+
+   (* crNetwork 1 means "send this change to the other positions". See
+     TSettingBase.Broadcast. *)
+   Broadcast := (CFGCA[idx].crNetwork = 1);
 end;
 
 procedure TLegacySetting.AfterApplied;

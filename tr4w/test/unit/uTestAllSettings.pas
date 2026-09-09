@@ -64,47 +64,43 @@ uses
    uSettingsDeclarations;
 
 const
-   (* SETTINGS THAT CANNOT ROUND-TRIP THEIR OWN VALUE TODAY.
+   (* SETTINGS THAT CANNOT ROUND-TRIP THEIR OWN VALUE. THE LIST IS EMPTY.
 
-     A COUNTDOWN, NOT AN EXCUSE LIST. The test fails if a setting NOT named
-     here breaks, and it also fails if one named here starts working -- so the
-     list cannot quietly grow, and a fix is not finished until the name is
-     removed. Ten on 2026-09-09, the day the walk was first written.
+     A COUNTDOWN, AND IT REACHED ZERO. Ten on 2026-09-09, the day this walk was
+     first written; none by the end of the same day. The test fails if a
+     setting breaks, if a listed one starts working, AND if a listed one is
+     never exercised -- that last guard was added after two entries went stale
+     unnoticed when HasSideEffects began skipping the rows they named.
 
-     They fall into three groups, and all three are the same shape: a setting
-     whose CURRENT value its OWN validator rejects. Preferences reads with one
-     and writes with the other, so saving a form can change a setting the
-     operator never touched.
+     HOW THE TEN CLEARED, because "we fixed them" would misrepresent it:
 
-       FOUR REFUSED OUTRIGHT -- 'DUMMY CONTEST' is the no-contest-loaded
-       sentinel and is not in the contest allow-list; minitourDuration holds 0
-       against a range that excludes it; two more hold '' where empty is not
-       an accepted spelling.
+       FOUR were the QSO-point rows holding -1 for "this contest sets no fixed
+       value". CFGCA's crMin/crMax are Word -- UNSIGNED -- so the table could
+       not declare a negative bound at all. They graduated onto TIntSetting,
+       whose bounds are signed.
 
-     None of these is a regression. They have been true for as long as the
-     rows have existed and nothing was ever in a position to notice.
+       ONE was MINITOUR DURATION holding 0 for "no minitour" against a range of
+       5..60. Widening to 0..60 would have admitted 1..4, which are not
+       durations. It graduated too, and named a concept the table had no word
+       for: TIntSetting.Sentinel, one value accepted beside the range.
 
-     EIGHT ON 2026-09-09, FOUR THE SAME DAY. The four qsoPoints settings were
-     the first off the list, and not by relaxing anything: they hold -1 for
-     "this contest sets no fixed point value", the CFGCA range fields are
-     Word and so cannot express a negative bound at all, and the fix was to
-     graduate them onto TIntSetting, whose bounds are signed. The table could
-     not describe a setting the program legitimately had.
+       TWO were access violations, and were never TR4W's fault in the way the
+       list implied: appearance.ctrlj.insertMode and
+       operating.autoQSONumberDecrement carry a crP redraw handler, and running
+       it with no main window is what faulted. They are skipped now, like every
+       side-effecting row. Whether they round-trip is still unknown and needs a
+       harness with a window.
 
-     TWO MORE WERE FOUND AND ARE NOT LISTED HERE, because they are not
-     reachable by this test: appearance.ctrlj.insertMode and
-     operating.autoQSONumberDecrement took an ACCESS VIOLATION when written.
-     They carry a crP redraw handler, and running it with no main window is
-     what faulted -- so the fault is the test's environment, not proof that
-     the setting is broken. They are skipped now like every other
-     side-effecting row (see HasSideEffects, which had to be added to the
-     registry before this test could tell). Whether they round-trip is an open
-     question that needs a harness with a window. *)
-   KNOWN_NO_ROUND_TRIP: array[0..3] of string = (
-      'bandmap.ctrlj.bandMapCutoffFrequency',
-      'contest.contest',
-      'contest.minitourDuration',
-      'operating.ctrlj.frequencyMemory');
+       THREE were skipped for the same reason once HasSideEffects existed --
+       they carry a crA hook -- so their entries were stale rather than fixed,
+       and the guard now says so out loud.
+
+     KEEP THE ARRAY AND THE MACHINERY. An empty countdown is the point: the
+     next setting that cannot hold its own value fails this test by name on the
+     day it is written, instead of reaching an operator. Add the key here only
+     with a reason, and only as a step towards removing it again. *)
+   KNOWN_NO_ROUND_TRIP: array[0..0] of string = (
+      '');
 
 var
    GStore: TRadioConfigStore = nil;
@@ -116,6 +112,12 @@ begin
    Result := False;
    for i := Low(KNOWN_NO_ROUND_TRIP) to High(KNOWN_NO_ROUND_TRIP) do
       begin
+      (* Pascal has no zero-length constant array, so an empty countdown is one
+        empty string. It matches no key and is not a stale entry. *)
+      if KNOWN_NO_ROUND_TRIP[i] = '' then
+         begin
+         Continue;
+         end;
       if SameText(KNOWN_NO_ROUND_TRIP[i], aKey) then
          begin
          Result := True;
@@ -388,6 +390,8 @@ var
    ok:      boolean;
    skipped: integer;
    done:    integer;
+   seen:    array[Low(KNOWN_NO_ROUND_TRIP)..High(KNOWN_NO_ROUND_TRIP)] of boolean;
+   k:       integer;
 begin
    (* THE PROPERTY THE WHOLE MIGRATION RESTS ON: a setting must accept the text
      it just produced, and be unchanged afterwards.
@@ -404,6 +408,10 @@ begin
    all := AllSettings;
    skipped := 0;
    done := 0;
+   for k := Low(seen) to High(seen) do
+      begin
+      seen[k] := False;
+      end;
 
    for i := 0 to High(all) do
       begin
@@ -452,6 +460,13 @@ begin
         cannot rot. See KNOWN_NO_ROUND_TRIP. *)
       if KnownNoRoundTrip(all[i].Key) then
          begin
+         for k := Low(seen) to High(seen) do
+            begin
+            if SameText(KNOWN_NO_ROUND_TRIP[k], all[i].Key) then
+               begin
+               seen[k] := True;
+               end;
+            end;
          CheckTrue(not ok,
                    all[i].Key + ' now round-trips -- remove it from '
                    + 'KNOWN_NO_ROUND_TRIP');
@@ -467,6 +482,26 @@ begin
          begin
          Inc(done);
          end;
+      end;
+
+   (* A NAME THAT WAS NEVER TRIED IS A STALE ENTRY, and the ratchet has to say
+     so or it rots exactly the way the first version did. A setting can leave
+     this loop without being exercised -- it gained a crA or crP hook, or it
+     was withdrawn -- and a list that silently tolerates that stops meaning
+     anything.
+
+     This is the second time the same lesson has been paid for: two entries had
+     already gone stale when HasSideEffects started skipping the rows that
+     faulted, and nothing noticed until I read the list by hand. *)
+   for k := Low(seen) to High(seen) do
+      begin
+      if KNOWN_NO_ROUND_TRIP[k] = '' then
+         begin
+         Continue;
+         end;
+      CheckTrue(seen[k],
+                'KNOWN_NO_ROUND_TRIP names "' + KNOWN_NO_ROUND_TRIP[k]
+                + '", which this test never exercised -- it is stale, remove it');
       end;
 
    Check(done > 0, IntToStr(done) + ' settings round-tripped, '
