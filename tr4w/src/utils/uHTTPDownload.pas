@@ -62,6 +62,67 @@ function DownloadFileToPath(const AURL, ATargetFile: string;
 // AFailReason is a SENTENCE FRAGMENT for a "Reason: %s" slot, not a class
 // name, and it is '' when the function returns True.
 
+
+function HttpGetText(const AURL: string;
+                     out AText: string;
+                     out AFailReason: string;
+                     const AUserAgent: string = 'TR4W';
+                     const AConnectMs: integer = 15000;
+                     const AIOMs: integer = 30000): boolean;
+// A GET whose answer is a DOCUMENT, not a file: the version JSON, the CTY
+// release feed.  Same rules as the download above -- https only unless the
+// scheme says otherwise, same reason string, never raises.
+//
+// THE TIMEOUTS ARE A PARAMETER BECAUSE ONE CALLER IS ON THE STARTUP PATH.
+// The version check ran on 5 seconds deliberately, so a slow or black-holed
+// server delays the program by five seconds and not by thirty.  Folding these
+// callers onto a shared routine with a generous default would have quietly
+// made startup six times more patient, which is the kind of regression that
+// never shows up in a test and shows up in a contest.
+
+type
+   THttpPost = class
+   (* ONE POST, DESCRIBED BY AN OBJECT RATHER THAN BY NINE PARAMETERS.
+
+     The three POST callers in this program want overlapping but different
+     things -- a status code, a response body, HTTP basic authentication, an
+     Accept-Encoding, and in one case permission to use plain http:// because
+     the operator configured a custom server that way. As parameters that is a
+     signature nobody can read and every caller has to pass defaults through.
+     As fields, each caller sets the two or three it cares about.
+
+     WHY THESE LIVE HERE AND NOT IN EACH CALLER, which is where they were until
+     2026-09-09: five units each built their own TIdHTTP and their own TLS
+     handler, with their own timeouts and their own idea of what to do when it
+     failed. That is five copies of a transport, and copies drift -- when Indy
+     turned out to be unable to speak to OpenSSL 3, five separate places had to
+     be found and fixed rather than one. The header of this unit already stated
+     the rule ("It knows no URLs"); the rule was simply not being followed.
+
+     USE: set what you need, call Send, read Response / StatusCode /
+     FailReason. Send never raises. *)
+   public
+      (* the request *)
+      URL:            string;
+      Body:           string;
+      ContentType:    string;
+      UserAgent:      string;
+      Username:       string;   (* basic auth is sent when this is not '' *)
+      Password:       string;
+      AcceptEncoding: string;
+      AllowInsecure:  boolean;  (* the caller accepts an http:// URL *)
+      ConnectMs:      integer;
+      IOMs:           integer;
+
+      (* the answer *)
+      Response:       string;
+      StatusCode:     integer;
+      FailReason:     string;   (* '' when Send returned True *)
+
+      constructor Create(const aURL: string);
+      function Send: boolean;
+   end;
+
 implementation
 
 uses
@@ -109,6 +170,99 @@ var
    // not assign that global.
    logger: TLogLogger;
 
+(* HTTP IS BYTES; THIS PROGRAM'S `string` IS UTF-16. Every crossing between
+  them is spelled out here rather than left to an implicit conversion, which
+  the compiler rightly warns about: an implicit narrowing drops anything
+  outside the ANSI codepage silently, and a callsign database or a score
+  comment is exactly the kind of payload that carries one.
+
+  UTF-8 IS THE ANSWER FOR BOTH DIRECTIONS. It is what every server in this
+  program's world speaks, it is lossless, and for the ASCII that URLs and
+  header names actually contain it is byte-identical to the naive cast -- so
+  nothing changes in the common case and the uncommon case stops being wrong. *)
+function ToWire(const aText: string): RawByteString;
+begin
+   Result := UTF8Encode(aText);
+end;
+
+function FromWire(const aBytes: RawByteString): string;
+begin
+   Result := UTF8Decode(aBytes);
+end;
+
+
+(* ONE PLACE THAT DECIDES WHETHER A URL MAY BE FETCHED, shared by all three
+  verbs.  Returns True and sets AUseTLS when the request may proceed. *)
+function CheckScheme(const AURL: string;
+                     const AAllowInsecure: boolean;
+                     out AUseTLS: boolean;
+                     out AFailReason: string): boolean;
+begin
+   Result      := False;
+   AUseTLS     := False;
+   AFailReason := '';
+
+   if SameText(Copy(AURL, 1, 8), 'https://') then
+      begin
+      AUseTLS := True;
+      end
+   else if SameText(Copy(AURL, 1, 7), 'http://') then
+      begin
+      if not AAllowInsecure then
+         begin
+         logger.Error('[Download] refusing plaintext %s -- the caller must pass '
+                      + 'AAllowInsecure to accept an http:// URL', [AURL]);
+         AFailReason := SDownloadCouldNotStart;
+         Exit;
+         end;
+      logger.Warn('[Download] %s is PLAINTEXT (caller allowed it)', [AURL]);
+      end
+   else
+      begin
+      logger.Error('[Download] %s has no http:// or https:// scheme', [AURL]);
+      AFailReason := SDownloadCouldNotStart;
+      Exit;
+      end;
+
+   if AUseTLS and (not EnsureOpenSSL) then
+      begin
+      logger.Error('[Download] TLS unavailable for %s -- %s',
+                   [AURL, OpenSSLDiagnostic]);
+      AFailReason := SDownloadNoSSLLibrary;
+      Exit;
+      end;
+
+   Result := True;
+end;
+
+(* The timeouts, in one place rather than five. Generous rather than tight:
+  these are small documents, and the hazard being guarded is a connection that
+  is accepted and then black-holed, not a slow one. *)
+procedure ApplyDefaults(aHTTP: TFPHTTPClient;
+                        const aUserAgent: string;
+                        const aConnectMs: integer;
+                        const aIOMs: integer);
+begin
+   aHTTP.AllowRedirect := True;
+   aHTTP.AddHeader('User-Agent', ToWire(aUserAgent));
+   aHTTP.ConnectTimeout := aConnectMs;
+   aHTTP.IOTimeout      := aIOMs;
+end;
+
+function DescribeFailure(aE: Exception): string;
+begin
+   (* The one failure an operator can act on keeps its own sentence; everything
+     else reports the library's own diagnostic. *)
+   if (aE is EInOutError) and (Pos('OpenSSL', aE.Message) > 0) then
+      begin
+      Result := SDownloadNoSSLLibrary;
+      end
+   else
+      begin
+      Result := aE.Message;
+      end;
+end;
+
 function DownloadFileToPath(const AURL, ATargetFile: string;
                             out AFailReason: string;
                             const AAllowInsecure: boolean = False): boolean;
@@ -122,44 +276,22 @@ begin
    AFailReason := '';
    tmpFile     := ATargetFile + '.tmp';
 
-   // Scheme first, and refuse before opening anything: the .tmp file must not
-   // be created for a request that is never going to be made.
-   if SameText(Copy(AURL, 1, 8), 'https://') then
-      begin
-      useTLS := True;
-      end
-   else if SameText(Copy(AURL, 1, 7), 'http://') then
-      begin
-      useTLS := False;
-      if not AAllowInsecure then
-         begin
-         logger.Error('[Download] refusing plaintext %s -- the caller must pass ' +
-                      'AAllowInsecure to accept an http:// URL', [AURL]);
-         AFailReason := SDownloadCouldNotStart;
-         Exit;
-         end;
-      logger.Warn('[Download] %s is PLAINTEXT (caller allowed it)', [AURL]);
-      end
-   else
-      begin
-      logger.Error('[Download] %s has no http:// or https:// scheme', [AURL]);
-      AFailReason := SDownloadCouldNotStart;
-      Exit;
-      end;
+   (* SCHEME FIRST, AND REFUSE BEFORE OPENING ANYTHING: the .tmp file must not
+     be created for a request that is never going to be made.
 
-   (* LOAD TLS BEFORE OPENING ANYTHING, and only when the URL needs it -- a
-     plaintext fetch still works on a machine with no OpenSSL at all.
+     THIS USED TO BE WRITTEN OUT HERE, and when the GET and POST verbs arrived
+     I copied it rather than calling it -- which is the mistake this file's own
+     header warns about, made while adding the routine that fixes it. One
+     scheme rule, one place, three verbs.
 
-     Reported rather than left to fail deep in the client: EnsureOpenSSL knows
+     CheckScheme also loads TLS, because "may this request be made" and "can it
+     be made" are the same question at the same moment: EnsureOpenSSL knows
      WHICH library it found or could not find, and that sentence is what the
      operator needs. The failure this replaces said the OpenSSL libraries could
      not be loaded and then advised checking for two Windows DLLs, on Linux
      (NY4I, 2026-09-09). *)
-   if useTLS and (not EnsureOpenSSL) then
+   if not CheckScheme(AURL, AAllowInsecure, useTLS, AFailReason) then
       begin
-      logger.Error('[Download] TLS unavailable for %s -- %s',
-                   [AURL, OpenSSLDiagnostic]);
-      AFailReason := SDownloadNoSSLLibrary;
       Exit;
       end;
 
@@ -185,7 +317,7 @@ begin
       try
          fs := TFileStream.Create(tmpFile, fmCreate);
          try
-            http.Get(AURL, fs);
+            http.Get(ToWire(AURL), fs);
          finally
             fs.Free;
          end;
@@ -228,6 +360,126 @@ begin
    finally
       (* One object now: FPC's client owns its own socket handler, so there is
         no separately-created IOHandler to outlive it. *)
+      http.Free;
+   end;
+end;
+
+function HttpGetText(const AURL: string;
+                     out AText: string;
+                     out AFailReason: string;
+                     const AUserAgent: string = 'TR4W';
+                     const AConnectMs: integer = 15000;
+                     const AIOMs: integer = 30000): boolean;
+var
+   http:   TFPHTTPClient;
+   useTLS: boolean;
+begin
+   Result := False;
+   AText  := '';
+
+   if not CheckScheme(AURL, False, useTLS, AFailReason) then
+      begin
+      Exit;
+      end;
+
+   http := TFPHTTPClient.Create(nil);
+   try
+      ApplyDefaults(http, AUserAgent, AConnectMs, AIOMs);
+      try
+         AText  := FromWire(http.Get(ToWire(AURL)));
+         Result := True;
+      except
+         on E: Exception do
+            begin
+            logger.Error('[Download] GET %s failed: %s: %s',
+                         [AURL, E.ClassName, E.Message]);
+            AFailReason := DescribeFailure(E);
+            end;
+      end;
+   finally
+      http.Free;
+   end;
+end;
+
+constructor THttpPost.Create(const aURL: string);
+begin
+   inherited Create;
+   URL         := aURL;
+   ContentType := 'application/x-www-form-urlencoded';
+   UserAgent   := 'TR4W';
+   ConnectMs   := 15000;
+   IOMs        := 30000;
+   StatusCode  := 0;
+end;
+
+function THttpPost.Send: boolean;
+var
+   http:    TFPHTTPClient;
+   useTLS:  boolean;
+   bodyIn:  TStringStream;
+   bodyOut: TStringStream;
+begin
+   Result     := False;
+   Response   := '';
+   FailReason := '';
+   StatusCode := 0;
+
+   if not CheckScheme(URL, AllowInsecure, useTLS, FailReason) then
+      begin
+      Exit;
+      end;
+
+   http := TFPHTTPClient.Create(nil);
+   try
+      ApplyDefaults(http, UserAgent, ConnectMs, IOMs);
+
+      if ContentType <> '' then
+         begin
+         http.AddHeader('Content-Type', ToWire(ContentType));
+         end;
+      if AcceptEncoding <> '' then
+         begin
+         http.AddHeader('Accept-Encoding', ToWire(AcceptEncoding));
+         end;
+      if Username <> '' then
+         begin
+         (* FPC sends basic auth from these two, the same as Indy's
+           Request.BasicAuthentication did. *)
+         http.UserName := ToWire(Username);
+         http.Password := ToWire(Password);
+         end;
+
+      bodyIn  := TStringStream.Create(ToWire(Body));
+      bodyOut := TStringStream.Create('');
+      try
+         try
+            http.RequestBody := bodyIn;
+            http.Post(ToWire(URL), bodyOut);
+            Response   := FromWire(bodyOut.DataString);
+            StatusCode := http.ResponseStatusCode;
+            Result     := True;
+         except
+            on E: Exception do
+               begin
+               (* A NON-2xx IS AN EXCEPTION HERE, unlike Indy, which returned
+                 and left ResponseCode to be read. The status is still
+                 recorded, so a caller that wants to distinguish "the server
+                 said no" from "the server was not there" can, and the two
+                 callers that checked for 200 keep working. *)
+               StatusCode := http.ResponseStatusCode;
+               logger.Error('[Download] POST %s failed: %s: %s',
+                            [URL, E.ClassName, E.Message]);
+               FailReason := DescribeFailure(E);
+               end;
+         end;
+      finally
+         (* Clear the reference before the stream dies: the client does not own
+           what it was handed. *)
+         http.RequestBody := nil;
+         bodyOut.Free;
+         bodyIn.Free;
+      end;
+   finally
       http.Free;
    end;
 end;

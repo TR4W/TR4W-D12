@@ -54,7 +54,7 @@ interface
 
 uses
   (* Windows went with the two raw event handles -- see FWake. *)
-  Classes, SysUtils, SyncObjs, IdHTTP, IdSSLOpenSSL,
+  Classes, SysUtils, SyncObjs, uHTTPDownload,
   uConfigValues,   // Config -- the five HAMSCORE settings live here now
   VC, Log4D, Version;
 
@@ -647,10 +647,7 @@ end;
 
 function THamScoreUploader.PostToServer(const xml: AnsiString; out responseBody: string): Integer;
 var
-  http: TIdHTTP;
-  ssl:  TIdSSLIOHandlerSocketOpenSSL;
-  body: TStringStream;
-  resp: TStringStream;
+  post: THttpPost;
   effectiveUser: string;
 begin
   Result := 0;
@@ -666,50 +663,48 @@ begin
      effectiveUser := string(MyCall);
      end;
 
-  http := TIdHTTP.Create(nil);
-  ssl  := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
-  body := TStringStream.Create(string(xml));
-  resp := TStringStream.Create('');
+  (* THE TRANSPORT IS uHTTPDownload'S (2026-09-09), like the other four units
+    that each carried their own TIdHTTP and TLS handler. Indy cannot speak to
+    OpenSSL 3 -- it finds the library and refuses it -- so a copy of the
+    transport in five units meant five places to fix instead of one.
+
+    THE HTTP BASIC CREDENTIALS AND THE Accept-Encoding ARE WHY THttpPost IS AN
+    OBJECT rather than another function with nine parameters: this caller needs
+    both and the other two need neither. *)
+  post := THttpPost.Create(FURL);
   try
-    if AnsiStartsText('https://', FURL) then
+    post.Body           := string(xml);
+    post.ContentType    := 'application/xml';
+    post.UserAgent      := 'TR4W RTC ' + string(TR4W_CURRENTVERSION_NUMBER);
+    post.Username       := effectiveUser;
+    post.Password       := FPassword;
+    post.AcceptEncoding := 'gzip,deflate';
+
+    if FLogger.IsTraceEnabled then
        begin
-       ssl.SSLOptions.Method := sslvTLSv1_2;
-       http.IOHandler := ssl;
+       FLogger.Trace('[HamScore] POST %s user=%s payload=%s',
+          [FURL, effectiveUser, string(xml)]);
        end;
 
-    http.HandleRedirects        := True;
-    http.Request.UserAgent      := 'TR4W RTC ' + string(TR4W_CURRENTVERSION_NUMBER);
-    http.Request.ContentType    := 'application/xml';
-    http.Request.BasicAuthentication := True;
-    http.Request.Username       := effectiveUser;
-    http.Request.Password       := FPassword;
-    http.Request.AcceptEncoding := 'gzip,deflate';
-    http.ConnectTimeout         := 15000;
-    http.ReadTimeout            := 30000;
-
-    try
-      if FLogger.IsTraceEnabled then
-         begin
-         FLogger.Trace('[HamScore] POST %s user=%s payload=%s',
-            [FURL, effectiveUser, string(xml)]);
-         end;
-      http.Post(FURL, body, resp);
-      Result := http.ResponseCode;
-      responseBody := resp.DataString;
-      FLogger.Debug('[HamScore] POST %s -> %d, body=%s',
-        [FURL, Result, responseBody]);
-    except
-      on E: Exception do
-         begin
-         FLogger.Warn('[HamScore] POST %s failed: %s', [FURL, E.Message]);
-         Result := 0;
-         end;
-    end;
+    if post.Send then
+       begin
+       Result       := post.StatusCode;
+       responseBody := post.Response;
+       FLogger.Debug('[HamScore] POST %s -> %d, body=%s',
+         [FURL, Result, responseBody]);
+       end
+    else
+       begin
+       (* ZERO STILL MEANS "no answer", the same as before -- the callers read
+         Result as an HTTP status and nothing else. The status is reported
+         separately when the server did answer with a refusal, so a 401 no
+         longer looks identical to an unreachable host in the log. *)
+       FLogger.Warn('[HamScore] POST %s failed: %s (status %d)',
+         [FURL, post.FailReason, post.StatusCode]);
+       Result := 0;
+       end;
   finally
-    body.Free;
-    resp.Free;
-    http.Free;
-    ssl.Free;
+    post.Free;
   end;
 end;
 

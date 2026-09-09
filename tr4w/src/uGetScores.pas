@@ -42,8 +42,7 @@ uses
   utils_file,
   Classes,
   SysUtils,
-  IdHTTP,
-  IdSSLOpenSSL,
+  uHTTPDownload,
   uCTYDAT,              // Issue #930 -- ctyGetCountryID / ctyGetCQZone / ctyGetITUZone (native Pascal, no cty.dll)
   LogGrid,              // Issue #930 -- MyGrid
   Tree
@@ -105,9 +104,7 @@ end;
 
 procedure CreateConnectionAndSendReportToGetScores;
 var
-   http : TIdHTTP;
-   ssl  : TIdSSLIOHandlerSocketOpenSSL;
-   PostBody  : TStringStream;
+   post      : THttpPost;
    sURL      : string;
    (* A FILE handle -- tOpenFileForWrite, sWriteFile, CloseHandle. Not a
      window, and never was. *)
@@ -118,31 +115,26 @@ begin
 
    sURL := string(Config.GetScoresSeverPostingAddress);
 
-   http := TIdHTTP.Create(nil);
-   ssl  := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
+   (* THE TRANSPORT IS uHTTPDownload'S (2026-09-09). This built its own
+     TIdHTTP and TLS handler, as four other units did; Indy cannot speak to
+     OpenSSL 3, so all five had to be found and fixed rather than one.
+
+     PLAINTEXT IS STILL ALLOWED HERE, DELIBERATELY. The posting address is an
+     operator setting and a club server on plain http:// is a legitimate
+     configuration, which is why AllowInsecure is set -- the shared unit
+     refuses http:// unless a caller says otherwise, and this caller says so.
+     It is logged as plaintext either way. *)
+   post := THttpPost.Create(sURL);
    try
-      // Attach SSL handler only for https:// URLs so plain http:// custom
-      // URLs (if configured by the operator) still work without TLS.
-      if (Length(sURL) >= 8) and
-         (LowerCase(Copy(sURL, 1, 8)) = 'https://') then
-         begin
-         ssl.SSLOptions.Method := TIdSSLVersion(sslvTLSv1_2);
-         http.IOHandler := ssl;
-         end;
+      post.UserAgent     := TR4W_CURRENTVERSION;
+      post.ContentType   := 'application/x-www-form-urlencoded';
+      post.AllowInsecure := True;
+      post.Body          := string(PAnsiChar(@GetScoresBuffer));
 
-      http.HandleRedirects := True;
-      http.Request.UserAgent    := TR4W_CURRENTVERSION;
-      http.Request.ContentType  := 'application/x-www-form-urlencoded';
+      logger.Debug('Score post: URL = %s', [sURL]);
+      post.Send;
 
-      PostBody := TStringStream.Create(string(PAnsiChar(@GetScoresBuffer)));
-      try
-         logger.Debug('Score post: URL = %s', [sURL]);
-         http.Post(sURL, PostBody);
-      finally
-         PostBody.Free;
-      end;
-
-      if http.ResponseCode = 200 then
+      if post.StatusCode = 200 then
          begin
          // Save the server response for diagnostics
          if tOpenFileForWrite(h, GetScoresAnswerFileName) then
@@ -154,7 +146,7 @@ begin
          end
       else
          begin
-         logger.Warn('Score post: server returned %d for %s', [http.ResponseCode, sURL]);
+         logger.Warn('Score post: server returned %d for %s', [post.StatusCode, sURL]);
          ShowGetScoresStatus(TC_FAILEDTOCONNECTTOGETSCORESORG);
          end;
 
@@ -166,8 +158,7 @@ begin
          end;
    end;
 
-   http.Free;
-   ssl.Free;
+   post.Free;
    ClearThread(GetScoresThreadID);
    { CloseThread, not CloseHandle: tCreateThread is FPC's BeginThread, so
      what this holds is a TThreadID and the RTL has the matching pair. }

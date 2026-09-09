@@ -19,7 +19,7 @@ unit uCTYUpdate;
 interface
 
 uses
-   LCLType, Classes, SysUtils, IdHTTP, IdSSLOpenSSL;
+   LCLType, Classes, SysUtils;
 
 type
    (* Both raised ON THE MAIN THREAD -- see the note in the implementation.
@@ -277,61 +277,46 @@ end;
 
 procedure TCTYVersionCheckThread.Execute;
 var
-   http:          TIdHTTP;
-   ssl:           TIdSSLIOHandlerSocketOpenSSL;
    rssXml:        string;
+   why:           string;
    latestDate:    integer;
    numericBuild:  integer;
    installedDate: integer;
 begin
-   http := TIdHTTP.Create(nil);
-   ssl  := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
-   try
-      ssl.SSLOptions.Method  := TIdSSLVersion(sslvTLSv1_2);
-      http.IOHandler         := ssl;
-      http.HandleRedirects   := True;
-      http.Request.UserAgent := 'TR4W';
-
-      // Same reasoning as uHTTPDownload's timeouts, less urgently: this one is
-      // always on a background thread. But a thread wedged forever in a socket
-      // read is still a leaked thread for the life of the process, and this
-      // check runs on every startup.  (This is a plain GET of a small feed into
-      // a string, not a file fetch, so it does not go through that unit.)
-      http.ConnectTimeout := 15000;   // ms
-      http.ReadTimeout    := 30000;   // ms
-
-      try
-         rssXml := http.Get(CTY_RSS_URL);
-         if ParseCTYRSS(rssXml, latestDate, numericBuild) then
-            begin
-            installedDate := GetInstalledCTYVersion;
-            logger.Info('[CTYUpdate] Installed CTY version: %d', [installedDate]);
-            logger.Info('[CTYUpdate] Latest CTY version available: %d (CTY-%d)',
-               [latestDate, numericBuild]);
-            if latestDate > installedDate then
-               begin
-               logger.Info('[CTYUpdate] Update available — notifying user');
-               FLatestDate := latestDate;
-               end
-            else
-               begin
-               logger.Info('[CTYUpdate] CTY is up to date');
-               end;
-            end
-         else
-            begin
-            logger.Warn('[CTYUpdate] Failed to parse RSS feed');
-            end;
-      except
-         on E: Exception do
-            begin
-            logger.Error('[CTYUpdate] Version check failed: %s', [E.Message]);
-            end;
+   (* THROUGH uHTTPDownload NOW (2026-09-09). The comment that stood here said
+     this "does not go through that unit" because it is a GET into a string
+     rather than a file fetch -- true of the unit as it was, and the wrong
+     conclusion to draw. The answer was to give the shared unit the verb, not
+     to keep a second transport in this one; the shared unit is where the
+     timeouts, the scheme check and the TLS loading live. It gained HttpGetText
+     the day Indy turned out to be unable to speak to OpenSSL 3, which had to
+     be fixed in five separate copies instead of one. *)
+   if not HttpGetText(CTY_RSS_URL, rssXml, why) then
+      begin
+      logger.Error('[CTYUpdate] Version check failed: %s', [why]);
+      Exit;
       end;
-   finally
-      http.Free;
-      ssl.Free;
-   end;
+
+   if ParseCTYRSS(rssXml, latestDate, numericBuild) then
+      begin
+      installedDate := GetInstalledCTYVersion;
+      logger.Info('[CTYUpdate] Installed CTY version: %d', [installedDate]);
+      logger.Info('[CTYUpdate] Latest CTY version available: %d (CTY-%d)',
+         [latestDate, numericBuild]);
+      if latestDate > installedDate then
+         begin
+         logger.Info('[CTYUpdate] Update available — notifying user');
+         FLatestDate := latestDate;
+         end
+      else
+         begin
+         logger.Info('[CTYUpdate] CTY is up to date');
+         end;
+      end
+   else
+      begin
+      logger.Warn('[CTYUpdate] Failed to parse RSS feed');
+      end;
 end;
 
 // ---------------------------------------------------------------------------

@@ -106,6 +106,29 @@ begin
       Self.m_timestamp := '2022-04-01 00:01:02';
       m_production := false;
       end;
+   (* STILL ON INDY, AND THEREFORE STILL BROKEN ON LINUX (2026-09-09).
+
+     The other four HTTPS users moved to uHTTPDownload because Indy 10.6.3.3
+     cannot speak to OpenSSL 3 -- it finds the library and refuses it,
+     "Unsupported SSL Library version: 300000D0". This upload will fail the
+     same way on any current Linux, and that is a known gap, not an oversight.
+
+     IT WAS LEFT DELIBERATELY BECAUSE TWO THINGS HERE ARE NOT A TRANSPORT
+     DETAIL:
+
+       sslOpts.SSLOptions.VerifyMode := [sslvrfPeer] with OnVerifyPeer --
+       this is the only HTTPS caller in the program that verifies the server's
+       certificate and inspects the result itself. Moving it without working
+       out the equivalent would mean quietly downgrading certificate checking
+       on an upload that carries a shared secret, which is exactly the silent
+       downgrade this codebase treats as a defect.
+
+       TIdLogFile as an Intercept -- the wire log this unit writes when tracing
+       is on has no direct counterpart in FPC's client.
+
+     So this needs a decision about verification behaviour, not a search and
+     replace. Until then it works on Windows, which is where SCP uploads are
+     actually done, and reports a TLS failure on Linux. *)
    http := TIdHttp.Create(nil);
    http.HandleRedirects := true;
    http.Request.ContentType := 'application/json';

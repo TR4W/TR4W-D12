@@ -62,8 +62,7 @@ implementation
 uses
   SysUtils,
   Classes,
-  IdHTTP,
-  IdSSLOpenSSL,
+  uHTTPDownload,
   IdComponent,
   fpjson,
   LCLType,        // IDYES -- what YesOrNo answers with
@@ -89,38 +88,32 @@ const
 { The body of VERSION_URL, or '' with the reason logged. }
 function FetchVersionDocument: string;
 var
-   http : TIdHTTP;
-   ssl  : TIdSSLIOHandlerSocketOpenSSL;
+   why: string;
 begin
-   Result := '';
-   http := TIdHTTP.Create(nil);
-   ssl  := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
-   try
-      try
-         ssl.SSLOptions.Method := TIdSSLVersion(sslvTLSv1_2);
-         http.IOHandler        := ssl;
-         http.HandleRedirects  := True;
-         http.ConnectTimeout   := CONNECT_TIMEOUT_MS;
-         http.ReadTimeout      := READ_TIMEOUT_MS;
-         http.Request.UserAgent := 'TR4W ' + string(TR4W_CURRENTVERSION_NUMBER);
+   (* THE TRANSPORT IS uHTTPDownload'S, NOT THIS UNIT'S (2026-09-09).
 
-         logger.Debug('[VersionCheck] GET %s', [VERSION_URL]);
-         Result := http.Get(VERSION_URL);
-      except
-         (* EVERY failure ends here and goes to the log: no network, no DNS, a
-           TLS refusal, a 404, a timeout. The operator is told nothing, which
-           is the instruction and also the right answer -- see the header. *)
-         on E: Exception do
-            begin
-            logger.Error('[VersionCheck] %s could not be read (%s: %s)',
-                         [VERSION_URL, E.ClassName, E.Message]);
-            Result := '';
-            end;
+     This built its own TIdHTTP and its own TLS handler, as four other units
+     also did. That is five copies of a transport, and it cost exactly what a
+     copy always costs: when Indy turned out to be unable to speak to OpenSSL 3
+     -- it finds the library and refuses it -- there were five places to find
+     rather than one.
+
+     EVERY failure still ends in the log and nowhere else: no network, no DNS,
+     a TLS refusal, a 404, a timeout. The operator is told nothing, which is
+     the instruction and also the right answer -- see the header. *)
+   logger.Debug('[VersionCheck] GET %s', [VERSION_URL]);
+
+   (* FIVE SECONDS, NOT THE SHARED DEFAULT: this runs at startup, and the
+     program should not wait thirty seconds on a server that is not answering
+     before it shows the operator a window. *)
+   if not HttpGetText(VERSION_URL, Result, why,
+                      'TR4W ' + string(TR4W_CURRENTVERSION_NUMBER),
+                      CONNECT_TIMEOUT_MS, READ_TIMEOUT_MS) then
+      begin
+      logger.Error('[VersionCheck] %s could not be read (%s)',
+                   [VERSION_URL, why]);
+      Result := '';
       end;
-   finally
-      http.Free;
-      ssl.Free;
-   end;
 end;
 
 (* The one field, or '' with the reason logged.
