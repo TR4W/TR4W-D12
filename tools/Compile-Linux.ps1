@@ -138,9 +138,37 @@ if ((-not (Test-Path $stamp)) -or ((Get-Content -LiteralPath $stamp -Raw) -ne $w
    Set-Content -LiteralPath $stamp -Value $want -NoNewline
 }
 
+# RUN THE COMPILER WITHOUT LETTING ITS STDERR BECOME A TERMINATING ERROR.
+#
+# This script sets $ErrorActionPreference = 'Stop', and under WINDOWS POWERSHELL
+# 5.1 that turns a native command's stderr output into a terminating
+# NativeCommandError. FPC writes nothing to stderr on a normal failure -- it
+# reports errors on stdout -- so this was invisible until the day the compiler
+# CRASHED, which is exactly the day the retry below needed to run.
+#
+# The symptom was a lint that failed a clean tree while the same script passed
+# by hand: Lint-LinuxCompile invokes `& powershell`, which is 5.1, and I tested
+# with pwsh 7, where stderr does not throw. The two hosts disagreed and the
+# script only worked in the one I was using.
+#
+# Preference restored immediately, so every other statement keeps Stop.
+function Invoke-Fpc {
+   param([string[]] $Arguments)
+   $prev = $ErrorActionPreference
+   $ErrorActionPreference = 'Continue'
+   try {
+      $out = & $fpc @Arguments 2>&1
+      $script:LastFpcExit = $LASTEXITCODE
+      return $out
+   }
+   finally {
+      $ErrorActionPreference = $prev
+   }
+}
+
 $env:PATH = "$shim;$env:PATH"
-$output = & $fpc @a $src 2>&1
-$fpcExit = $LASTEXITCODE
+$output = Invoke-Fpc (@() + $a + $src)
+$fpcExit = $script:LastFpcExit
 
 # "COMPILATION RAISED EXCEPTION INTERNALLY" IS A STALE-CACHE ARTEFACT, AND IT
 # COSTS A FALSE BUILD FAILURE.
@@ -151,19 +179,25 @@ $fpcExit = $LASTEXITCODE
 # on was rebuilt differently; the compiler then faults inside itself rather than
 # reporting a mismatch.
 #
+# TWO WORDINGS, ONE FAULT. FPC reports this either as the Fatal
+# "Compilation raised exception internally" or as the compiler's own crash,
+# "An unhandled exception occurred at $...", depending on where it dies. The
+# first version of this retry matched only the first, and Run-Lints failed a
+# clean tree the very next time with the second -- so both are matched.
+#
 # RETRIED ONCE, AND LOUDLY. A silent retry would hide a compiler that genuinely
 # crashes on our code -- the retry says what it did, so a REPEATING internal
 # error still reads as one. Only this exact message is retried; every other
 # failure is reported as it stands.
 if ($fpcExit -ne 0 -and
-    ($output | Select-String -Quiet 'Compilation raised exception internally')) {
+    ($output | Select-String -Quiet 'Compilation raised exception internally|An unhandled exception occurred at')) {
    Write-Host "Compile-Linux: internal compiler error on $Unit -- this is the" -ForegroundColor DarkYellow
    Write-Host "  stale-unit artefact, not a source problem. Clearing $out and retrying ONCE." -ForegroundColor DarkYellow
    Remove-Item -Recurse -Force -LiteralPath $out -ErrorAction SilentlyContinue
    New-Item -ItemType Directory -Force -Path $out | Out-Null
    Set-Content -LiteralPath $stamp -Value $want -NoNewline
-   $output = & $fpc @a $src 2>&1
-   $fpcExit = $LASTEXITCODE
+   $output = Invoke-Fpc (@() + $a + $src)
+   $fpcExit = $script:LastFpcExit
    if ($fpcExit -eq 0) {
       Write-Host "  the retry succeeded -- it was the cache." -ForegroundColor DarkYellow
    }

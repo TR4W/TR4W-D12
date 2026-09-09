@@ -90,6 +90,12 @@ procedure LogStoreUpdateQSOAtIndex(aRecordIndex: Int64; const aQso: ContestExcha
   found one. The scan is gone; the answer has to come from here. *)
 function LogStoreUpdateQSOBySessionIds(const aQso: ContestExchange): boolean;
 
+(* EMPTY THE LOG. False if there was no usable store to empty, so a caller can
+  tell "cleared" from "could not".
+
+  The contest row survives -- see TLogRepository.DeleteAllQSOs. *)
+function LogStoreClearAllQSOs: boolean;
+
 (* Closes it, if it was ever opened.  Safe to call when it was not. *)
 procedure LogStoreClose;
 
@@ -731,6 +737,37 @@ begin
          begin
          Disable('opening the log', E);
          Result := False;
+         end;
+   end;
+end;
+
+function LogStoreClearAllQSOs: boolean;
+var
+   rebuilt: boolean;
+begin
+   Result := False;
+   if GDisabled then
+      begin
+      Exit;
+      end;
+
+   try
+      (* False: no append is in flight, so the store is expected to be exactly
+        in step rather than one record behind. *)
+      if not EnsureOpen(rebuilt, False) then
+         begin
+         Exit;
+         end;
+      GRepository.DeleteAllQSOs;
+      GRepository.Commit;
+      Result := True;
+   except
+      on E: Exception do
+         begin
+         (* Disabled rather than raised: failing to clear must not take the
+           program down mid-contest, and Disable is how every other failure in
+           this unit reports itself. The caller sees False. *)
+         Disable('LogStoreClearAllQSOs', E);
          end;
    end;
 end;

@@ -8952,23 +8952,85 @@ begin
                    end;
 end;
 
+(* CLEAR THE LOG -- WHICH IS THE DATABASE, AND WAS NOT BEING CLEARED AT ALL.
+
+  THIS WAS BROKEN. The body truncated the binary .TRW and never touched SQLite.
+  Since B4 every read comes from the database, so "Clear Log" emptied a file
+  nothing reads, left every QSO in the actual log, and then LoadinLog put them
+  all straight back. Found 2026-09-08 while scoping the store cut.
+
+  TWO DECISIONS, BOTH NY4I's (2026-09-08):
+
+  DELETE THE ROWS, DO NOT RECREATE THE FILE. The contest row carries the
+  contest type, the operator's call and the entry declaration, and the settings
+  live beside it. Recreating the database would take those with the QSOs, so
+  "clear the log" would quietly mean "set the whole station up again" -- which
+  is not what the operator pressing it means.
+
+  RENAME THE .TRW, DO NOT TRUNCATE IT. That file is import-only now: the log is
+  SQLite, and the .TRW exists so a 4.x operator can carry an old log forward on
+  Windows. Truncating it DESTROYS the pre-migration original -- the one copy of
+  data this program did not create. Renamed to .imported instead, which also
+  stops the importer offering it again, and a numbered suffix is used rather
+  than overwriting an existing .imported: this path must not be able to lose an
+  operator's log. *)
 procedure ClearLog;
+var
+   (* AnsiString, NOT string. The name originates as BYTES -- StrPas of the
+     TR4W_LOG_FILENAME buffer -- and every routine it is handed to
+     (FileExists, ChangeFileExt, RenameFile) has a byte-string overload.
+     Declaring it UnicodeString made the round trip narrow twice for no
+     gain. *)
+   trw: AnsiString;
+   dest: AnsiString;
+   n: integer;
 begin
   // Windows.CopyFileA(NewLogFileName, 'NewLogFileName', False);
   ReplaceLogByServerLog(False);
-  if not OpenLogFile then
+
+  (* THE LOG ITSELF. If this fails the store has disabled itself and said so;
+    carrying on would clear the display over a log that is still full, so the
+    binary file is left alone too and the operator sees an unchanged log. *)
+  if not LogStoreClearAllQSOs then
      begin
+     logger.Error('[ClearLog] the contest log could not be emptied -- nothing '
+                  + 'has been changed. See the errors above.');
      Exit;
      end;
 
   FillChar(tRestartInfo, SizeOf(tRestartInfo), 0);
-  ReadVersionBlock;
-  (* FileTruncate, not SetEndOfFile. SetEndOfFile cuts the file at the
-    CURRENT position, which ReadVersionBlock just set to the end of the
-    header; FileTruncate takes an absolute size, so the position has to be
-    named rather than implied. Same result, and it says what it does. *)
-  FileTruncate(LogHandle, tSetFilePointer(0, fsFromCurrent));
-  CloseLogFile;
+
+  (* AND THE OLD BINARY LOG, IF ONE IS STILL BESIDE IT -- moved aside, never
+    destroyed. *)
+  trw := StrPas(TR4W_LOG_FILENAME);
+  if FileExists(trw) then
+     begin
+     (* The literal is cast so the overload is unambiguous: ChangeFileExt
+       has both a byte-string and a UnicodeString form, and an untyped
+       literal matches neither better than the other. *)
+     dest := ChangeFileExt(trw, AnsiString('.imported'));
+     n := 1;
+     while FileExists(dest) do
+        begin
+        (* The cast is EXPLICIT, so nothing narrows silently: IntToStr
+          returns a UnicodeString and everything here is bytes. *)
+        dest := ChangeFileExt(trw, AnsiString('.imported' + IntToStr(n)));
+        Inc(n);
+        end;
+     if RenameFile(trw, dest) then
+        begin
+        logger.Info('[ClearLog] the binary log was moved aside to %s -- it is '
+                    + 'import-only now and is never deleted.', [dest]);
+        end
+     else
+        begin
+        (* Not fatal: the log IS cleared, and this file is not read. Reported
+          because a stale .TRW beside a cleared log is confusing later. *)
+        logger.Warn('[ClearLog] could not rename %s to %s (%s). The log is '
+                    + 'cleared; the old binary file is still there.',
+                    [trw, dest, SysErrorMessage(GetLastOSError)]);
+        end;
+     end;
 
   LoadinLog;
   if tr4w_WindowsArray[tw_STATIONS_INDEX].WndForm <> nil then

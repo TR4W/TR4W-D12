@@ -423,6 +423,9 @@ type
         log that contains a deleted QSO. *)
       function RecordCount: Int64;
 
+      (* Empties the qso table and keeps the contest row -- see the
+        implementation for why that distinction matters. The caller commits. *)
+      procedure DeleteAllQSOs;
       procedure Commit;
 
       property Database: TLogDatabase read FDatabase;
@@ -2083,6 +2086,23 @@ begin
    finally
       q.Free;
    end;
+end;
+
+(* EMPTY THE LOG, KEEPING THE CONTEST ROW.
+
+  NY4I chose DELETE over recreating the file (2026-09-08). The distinction is
+  not cosmetic: the contest row carries the contest type, the operator's call
+  and the entry declaration, and the settings live beside it. Recreating the
+  database would take those with the QSOs and make "clear the log" mean "start
+  the whole station again", which is not what an operator pressing it means.
+
+  DELETE FROM with no WHERE, so SQLite empties the table; the caller commits.
+  Nothing cascades from qso that we want kept, and anything that does cascade
+  is qso data by definition. *)
+procedure TLogRepository.DeleteAllQSOs;
+begin
+   FDatabase.Connection.ExecuteDirect('DELETE FROM qso');
+   InvalidateRecordCount;
 end;
 
 procedure TLogRepository.Commit;
