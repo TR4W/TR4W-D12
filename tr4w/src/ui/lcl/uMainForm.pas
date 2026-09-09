@@ -880,6 +880,24 @@ begin
    ReportOffMainThread(aSite, aCaller);
 end;
 
+(* A PANEL WHOSE CAPTION WILL NOT FIT AT ANY READABLE SIZE.
+
+  Names the panel, what it holds, the font actually in use, and the two widths
+  -- because "text is touching the border" is a symptom and "needs 214px, has
+  180px, font Liberation Sans" is a diagnosis.
+
+  THE FONT NAME IS THE INTERESTING PART. TR4W asks for 'Arial' (VC.pas), which
+  a typical Linux box does not have, so fontconfig substitutes something whose
+  metrics differ from every width this program computed on Windows. If the
+  reports name a substituted font, that is where to look first. *)
+procedure ReportElementOverflow(const aPanel, aCaption, aFont: string;
+                                const aWanted, aAvailable: integer);
+begin
+   logger.Warn('[Layout] %s cannot fit its caption: needs %dpx, has %dpx, '
+               + 'font "%s", text "%s"',
+               [aPanel, aWanted, aAvailable, aFont, aCaption]);
+end;
+
 procedure BindMainElements;
 var
    i: integer;
@@ -2735,6 +2753,7 @@ begin
      link -- see TElementOffThreadReport. *)
    ElementOffThreadReport := @ReportElementOffThread;
    ElementCaptionChanged  := @RequestElementColourRefresh;
+   ElementOverflowReport  := @ReportElementOverflow;
 
    (* FORCE THE WINDOW INTO EXISTENCE, and say so.
 

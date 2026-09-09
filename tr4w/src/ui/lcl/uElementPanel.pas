@@ -96,6 +96,9 @@ type
    TElementPanel = class(TPanel)
    private
       FBaseFontHeight: integer;
+      (* Set when a caption could not be shrunk far enough to fit; cleared on
+        resize so a wider window is measured afresh. See FitCaption. *)
+      FOverflowReported: boolean;
       procedure FitCaption;
    protected
       procedure RealSetText(const aValue: TCaption); override;
@@ -109,12 +112,30 @@ type
       property BaseFontHeight: integer read FBaseFontHeight write FBaseFontHeight;
    end;
 
+type
+   (* A CAPTION THAT WOULD NOT FIT EVEN AT THE SMALLEST FONT.
+
+     Reported rather than logged here so this unit keeps no logger of its own,
+     the same arrangement as TElementOffThreadReport above. uMainForm supplies
+     the sink.
+
+     aWanted and aAvailable are pixels, and the difference is the whole point:
+     "it does not fit" is not actionable, "it needs 214 and has 180" says
+     whether the panel is too narrow or the content too long. aFont is named
+     because the likely cause is font substitution -- 'Arial' is not installed
+     on a typical Linux box. *)
+   TElementOverflowReport = procedure(const aPanel, aCaption, aFont: string;
+                                      const aWanted, aAvailable: integer);
+
 var
    (* Set by uMainForm to uCrashLog's reporter. See TElementOffThreadReport. *)
    ElementOffThreadReport: TElementOffThreadReport = nil;
 
    (* Set by uMainForm. See TElementCaptionChanged. *)
    ElementCaptionChanged: TElementCaptionChanged = nil;
+
+   (* Set by uMainForm to a log line. See TElementOverflowReport. *)
+   ElementOverflowReport: TElementOverflowReport = nil;
 
 implementation
 
@@ -199,6 +220,36 @@ begin
          Break;
          end;
       Dec(height);
+      end;
+
+   (* SAY WHEN THE SHRINK RAN OUT OF ROOM, because the visible result is text
+     touching or crossing the border and nothing else reports it.
+
+     The loop stops at MIN_FONT_HEIGHT whether or not the caption fits, which
+     is right -- unreadably small text is not an improvement -- but it means an
+     overflow is drawn silently. On Windows that essentially never happened, so
+     nobody noticed the gap. On Linux it does: the main window font is 'Arial'
+     (VC.pas), which is not installed on a typical Linux box, so fontconfig
+     substitutes something with different metrics and every width computed from
+     it changes. NY4I, Linux Mint 2026-09-09: text in the needs panel hitting
+     the border.
+
+     ONCE PER PANEL, not once per repaint: captions change at contest rates and
+     a per-paint message would be a flood. FOverflowReported is cleared when
+     the panel is resized, so a window the operator makes wider reports again
+     if it still does not fit.
+
+     This is a DIAGNOSTIC, not the fix. What the fix should be -- a metric
+     compatible default font on Linux, or narrower content, or a wider panel --
+     depends on which panels report and by how much, and that is exactly what
+     was not known. *)
+   if (height <= MIN_FONT_HEIGHT) and (not FOverflowReported) and
+      (GMeasure.Canvas.TextWidth(Caption) > avail) and
+      Assigned(ElementOverflowReport) then
+      begin
+      FOverflowReported := True;
+      ElementOverflowReport(Name, Caption, Font.Name,
+                            GMeasure.Canvas.TextWidth(Caption), avail);
       end;
 
    if Font.Height <> -height then
