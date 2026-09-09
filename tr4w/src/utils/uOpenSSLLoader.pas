@@ -92,43 +92,10 @@ begin
    Result := GDiagnostic;
 end;
 
-{$IFDEF DARWIN}
-(* WHERE A MAC KEEPS AN OpenSSL SOMEONE ELSE INSTALLED.  Homebrew on Apple
-  Silicon lives under /opt/homebrew and on Intel under /usr/local, and it
-  already provides the unversioned libssl.dylib symlink that FPC's loader
-  wants -- so unlike Linux there is nothing to link, only a directory to name.
-  MacPorts is included because it is the other common answer.
-
-  Each of these was checked on a real machine or is the documented prefix of
-  its package manager.  A directory that is not there is skipped. *)
-function DarwinSSLDirs: TStringArray;
-begin
-   Result := TStringArray.Create(
-      '/opt/homebrew/opt/openssl@3/lib',
-      '/opt/homebrew/opt/openssl/lib',
-      '/opt/homebrew/lib',
-      '/usr/local/opt/openssl@3/lib',
-      '/usr/local/opt/openssl/lib',
-      '/usr/local/lib',
-      '/opt/local/lib');
-end;
-{$ENDIF}
-
-{$IFDEF LINUX}
-(* The directories a distribution puts its shared libraries in.  Multiarch
-  first, because that is where Debian and its derivatives keep them.  A wrong
-  guess costs nothing -- a directory that is not there is skipped. *)
-function LibrarySearchDirs: TStringArray;
-begin
-   Result := TStringArray.Create(
-      '/usr/lib/' + {$I %FPCTARGETCPU%} + '-linux-gnu',
-      '/usr/lib64',
-      '/usr/lib',
-      '/lib/' + {$I %FPCTARGETCPU%} + '-linux-gnu',
-      '/lib64',
-      '/lib',
-      '/usr/local/lib');
-end;
+{$IFDEF UNIX}
+(* SHARED BY BOTH UNIXES. These were written for Linux and then needed by the
+  macOS arm too -- so they live above both rather than being copied, which is
+  the whole reason this file has one loader and not two. *)
 
 (* THE NEWEST ONE, NOT THE FIRST ONE.  A machine can carry several -- a distro
   libssl.so.3 beside a libssl.so.1.1 left by something older -- and picking by
@@ -187,6 +154,98 @@ begin
       Result := Result * 1000;
       Inc(parts);
       end;
+end;
+
+(* Link under an EXACT name, for the macOS case where the name FPC will try
+  is not <base>.so. *)
+function LinkAs(const aDir, aLinkName, aTarget: string): boolean;
+var
+   link:      string;
+   linkBytes: AnsiString;
+   destBytes: AnsiString;
+begin
+   link      := IncludeTrailingPathDelimiter(aDir) + aLinkName;
+   linkBytes := AnsiString(link);
+   destBytes := AnsiString(aTarget);
+   fpUnlink(linkBytes);
+   Result := fpSymlink(PAnsiChar(destBytes), PAnsiChar(linkBytes)) = 0;
+end;
+
+{$ENDIF}
+
+{$IFDEF DARWIN}
+(* WHERE A MAC KEEPS AN OpenSSL SOMEONE ELSE INSTALLED.  Homebrew on Apple
+  Silicon lives under /opt/homebrew and on Intel under /usr/local, and it
+  already provides the unversioned libssl.dylib symlink that FPC's loader
+  wants -- so unlike Linux there is nothing to link, only a directory to name.
+  MacPorts is included because it is the other common answer.
+
+  Each of these was checked on a real machine or is the documented prefix of
+  its package manager.  A directory that is not there is skipped. *)
+function DarwinSSLDirs: TStringArray;
+begin
+   Result := TStringArray.Create(
+      '/opt/homebrew/opt/openssl@3/lib',
+      '/opt/homebrew/opt/openssl/lib',
+      '/opt/homebrew/lib',
+      '/usr/local/opt/openssl@3/lib',
+      '/usr/local/opt/openssl/lib',
+      '/usr/local/lib',
+      '/opt/local/lib');
+end;
+
+(* The newest <base>.N.dylib in one directory, or '' -- Homebrew names them
+  libssl.3.dylib. Ranked the same way as the Linux arm so a machine carrying
+  both 1.1 and 3 gets 3. *)
+function NewestDylib(const aDir, aBaseName: string): string;
+var
+   rec:  TSearchRec;
+   rank: int64;
+   best: int64;
+begin
+   Result := '';
+   best   := -1;
+   if not DirectoryExists(aDir) then
+      begin
+      Exit;
+      end;
+
+   if FindFirst(IncludeTrailingPathDelimiter(aDir) + aBaseName + '.*.dylib',
+                faAnyFile, rec) = 0 then
+      begin
+      try
+         repeat
+            (* Reuse the shared ranker by handing it the same shape it expects:
+              the stem it strips is "<base>." and the tail here ends '.dylib',
+              which stops the numeric parse exactly as a letter suffix does. *)
+            rank := VersionRank(rec.Name, aBaseName + '.');
+            if rank > best then
+               begin
+               best   := rank;
+               Result := IncludeTrailingPathDelimiter(aDir) + rec.Name;
+               end;
+         until FindNext(rec) <> 0;
+      finally
+         FindClose(rec);
+      end;
+      end;
+end;
+{$ENDIF}
+
+{$IFDEF LINUX}
+(* The directories a distribution puts its shared libraries in.  Multiarch
+  first, because that is where Debian and its derivatives keep them.  A wrong
+  guess costs nothing -- a directory that is not there is skipped. *)
+function LibrarySearchDirs: TStringArray;
+begin
+   Result := TStringArray.Create(
+      '/usr/lib/' + {$I %FPCTARGETCPU%} + '-linux-gnu',
+      '/usr/lib64',
+      '/usr/lib',
+      '/lib/' + {$I %FPCTARGETCPU%} + '-linux-gnu',
+      '/lib64',
+      '/lib',
+      '/usr/local/lib');
 end;
 
 function NewestLibrary(const aBaseName: string): string;
@@ -270,8 +329,11 @@ var
 {$ENDIF}
 {$IFDEF DARWIN}
 var
-   dir: string;
-   i:   integer;
+   dir:        string;
+   linkDir:    string;
+   sslPath:    string;
+   cryptoPath: string;
+   i:          integer;
 {$ENDIF}
 begin
    if GTried then
@@ -337,22 +399,59 @@ begin
    Result := False;
 {$ELSE}
 {$IFDEF DARWIN}
-   (* NAME THE DIRECTORY, NOT THE FILE: FPC appends '.dylib', and Homebrew
-     already provides libssl.dylib as a symlink onto the versioned one. So
-     unlike the Linux arm there is nothing to create -- only somewhere else to
-     look. *)
+   (* THE LINK IS NAMED .1.1 ON PURPOSE, AND IT IS NOT A MISTAKE.
+
+     FPC will not try the unversioned name on this platform. LoadLibraries
+     does this before it looks for anything (openssl.pas:5620):
+
+         {$IFDEF DARWIN}
+           // Mac OS no longer allows you to load the unversioned one.
+           DLLVERSIONS[1]:=DLLVERSIONS[2];
+         {$ENDIF}
+
+     -- it OVERWRITES the empty first entry with '.1.1'. So on macOS the names
+     FPC ever attempts are libssl.1.1.dylib, .11, .10, .1.0.2 and older. Plain
+     libssl.dylib is deliberately skipped, and .3 is not in the list at all,
+     because the list predates OpenSSL 3.
+
+     Homebrew ships exactly the two forms FPC will not try: libssl.dylib and
+     libssl.3.dylib. That is why a Mac with a perfectly good OpenSSL installed
+     still had no TLS -- measured on an Apple Silicon Mac, 2026-09-09, where
+     FPC's own LoadLibrary opened the file happily when handed the full name.
+
+     So we hand it a name it WILL try. The link says 1.1 and points at
+     OpenSSL 3; nothing reads that number as a version -- it is a file name
+     FPC's search happens to attempt first, and the library reports its real
+     version once loaded. Renaming a library to be found is ugly. Shipping our
+     own copy inside TR4W.app is the answer that removes the need, and that is
+     packaging work with notarization consequences. *)
    for i := 0 to High(DarwinSSLDirs) do
       begin
       dir := DarwinSSLDirs[i];
-      if FileExists(IncludeTrailingPathDelimiter(dir) + 'libssl.dylib') and
-         FileExists(IncludeTrailingPathDelimiter(dir) + 'libcrypto.dylib') then
+      sslPath    := NewestDylib(dir, 'libssl');
+      cryptoPath := NewestDylib(dir, 'libcrypto');
+      if (sslPath = '') or (cryptoPath = '') then
          begin
-         DLLSSLName  := IncludeTrailingPathDelimiter(dir) + 'libssl';
-         DLLUtilName := IncludeTrailingPathDelimiter(dir) + 'libcrypto';
+         Continue;
+         end;
+
+      linkDir := IncludeTrailingPathDelimiter(SettingsDir) + 'ssl';
+      if not ForceDirectories(linkDir) then
+         begin
+         GDiagnostic := 'found ' + sslPath + ' but could not create ' + linkDir;
+         Result := False;
+         Exit;
+         end;
+
+      if LinkAs(linkDir, 'libssl.1.1.dylib', sslPath) and
+         LinkAs(linkDir, 'libcrypto.1.1.dylib', cryptoPath) then
+         begin
+         DLLSSLName  := IncludeTrailingPathDelimiter(linkDir) + 'libssl';
+         DLLUtilName := IncludeTrailingPathDelimiter(linkDir) + 'libcrypto';
          if InitSSLInterface then
             begin
             GUsable     := True;
-            GDiagnostic := 'OpenSSL loaded from ' + dir;
+            GDiagnostic := 'OpenSSL loaded from ' + sslPath + ' via ' + DLLSSLName;
             Result      := True;
             Exit;
             end;
