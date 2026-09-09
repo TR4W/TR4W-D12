@@ -47,6 +47,7 @@ type
       procedure Test_AnAllowListContainsTheCurrentValue;
       procedure Test_KeysAreUniqueAndWellFormed;
       procedure Test_EverySettingHasACaption;
+      procedure Test_ReadOnlyAndSideEffectsAreVisible;
       procedure Test_ValuesSurviveATextRoundTrip;
       procedure Test_NonsenseIsRefusedAndChangesNothing;
    public
@@ -75,11 +76,6 @@ const
      and writes with the other, so saving a form can change a setting the
      operator never touched.
 
-       FOUR SENTINELS OUTSIDE THEIR RANGE -- the four qsoPoints rows hold -1,
-       which means "not set for this contest", while their declared range
-       starts at 0. The value is legitimate and the RANGE is what is wrong,
-       which is why this needs a decision rather than a clamp.
-
        FOUR REFUSED OUTRIGHT -- 'DUMMY CONTEST' is the no-contest-loaded
        sentinel and is not in the contest allow-list; minitourDuration holds 0
        against a range that excludes it; two more hold '' where empty is not
@@ -87,6 +83,13 @@ const
 
      None of these is a regression. They have been true for as long as the
      rows have existed and nothing was ever in a position to notice.
+
+     EIGHT ON 2026-09-09, FOUR THE SAME DAY. The four qsoPoints settings were
+     the first off the list, and not by relaxing anything: they hold -1 for
+     "this contest sets no fixed point value", the CFGCA range fields are
+     Word and so cannot express a negative bound at all, and the fix was to
+     graduate them onto TIntSetting, whose bounds are signed. The table could
+     not describe a setting the program legitimately had.
 
      TWO MORE WERE FOUND AND ARE NOT LISTED HERE, because they are not
      reachable by this test: appearance.ctrlj.insertMode and
@@ -97,14 +100,10 @@ const
      side-effecting row (see HasSideEffects, which had to be added to the
      registry before this test could tell). Whether they round-trip is an open
      question that needs a harness with a window. *)
-   KNOWN_NO_ROUND_TRIP: array[0..7] of string = (
+   KNOWN_NO_ROUND_TRIP: array[0..3] of string = (
       'bandmap.ctrlj.bandMapCutoffFrequency',
       'contest.contest',
       'contest.minitourDuration',
-      'contest.qsoPointsDomesticCw',
-      'contest.qsoPointsDomesticPhone',
-      'contest.qsoPointsDxCw',
-      'contest.qsoPointsDxPhone',
       'operating.ctrlj.frequencyMemory');
 
 var
@@ -322,6 +321,64 @@ begin
       end;
 end;
 
+procedure TAllSettingsTests.Test_ReadOnlyAndSideEffectsAreVisible;
+var
+   all:        TArray<TSettingBase>;
+   i:          integer;
+   readOnly:   integer;
+   sideEffect: integer;
+   s:          TSettingBase;
+begin
+   (* THE TWO FACTS THE REGISTRY COULD NOT STATE UNTIL 2026-09-09, and both
+     were named as blockers to retiring CFGCA.
+
+     ReadOnly lifts crJ's states 2 and 3. Without it a generated panel offers
+     an editable control for a value the program will not honour.
+
+     HasSideEffects lifts crP and crA. Without it nothing outside the legacy
+     adapter can tell that writing a setting repaints a window or reopens a
+     port -- which cost this very suite a run, when two such rows faulted
+     headless and killed it.
+
+     Pinned rather than assumed: a floor on each, so a change that stopped
+     mapping them would show up here and not as a panel behaving oddly. *)
+   BeginTest('read-only and side-effecting settings can be identified');
+   Declared;
+   all := AllSettings;
+   readOnly := 0;
+   sideEffect := 0;
+
+   for i := 0 to High(all) do
+      begin
+      if all[i].ReadOnly then
+         begin
+         Inc(readOnly);
+         end;
+      if all[i].HasSideEffects then
+         begin
+         Inc(sideEffect);
+         end;
+      end;
+
+   CheckTrue(readOnly > 20,
+             'only ' + IntToStr(readOnly) + ' settings are marked read-only; '
+             + 'crJ 2 and 3 cover 88 rows');
+   CheckTrue(sideEffect > 10,
+             'only ' + IntToStr(sideEffect) + ' settings report side effects; '
+             + 'about thirty rows carry a crP handler');
+
+   (* A NAMED ONE, so the count above cannot be satisfied by the wrong rows.
+     The QSO-point settings are set by a contest's .cfg and never by the
+     operator, which is what crJ:2 said on the rows they replaced. *)
+   s := FindSetting('contest.qsoPointsDomesticCw');
+   CheckTrue(s <> nil, 'contest.qsoPointsDomesticCw is registered');
+   if s <> nil then
+      begin
+      CheckTrue(s.ReadOnly,
+                'contest.qsoPointsDomesticCw lost its read-only marking');
+      end;
+end;
+
 procedure TAllSettingsTests.Test_ValuesSurviveATextRoundTrip;
 var
    all:     TArray<TSettingBase>;
@@ -483,6 +540,7 @@ begin
    Test_AnAllowListContainsTheCurrentValue;
    Test_KeysAreUniqueAndWellFormed;
    Test_EverySettingHasACaption;
+   Test_ReadOnlyAndSideEffectsAreVisible;
    Test_ValuesSurviveATextRoundTrip;
    Test_NonsenseIsRefusedAndChangesNothing;
 

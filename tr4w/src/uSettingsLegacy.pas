@@ -162,6 +162,10 @@ begin
      means writing this row runs code. See TSettingBase.HasSideEffects for why
      that has to be visible from outside. *)
    HasSideEffects := (CFGCA[idx].crP <> 0) or (CFGCA[idx].crA <> 0);
+
+   (* crJ 2 is read-only and 3 is a read-only message. See
+     TSettingBase.ReadOnly. *)
+   ReadOnly := (CFGCA[idx].crJ = 2) or (CFGCA[idx].crJ = 3);
 end;
 
 procedure TLegacySetting.AfterApplied;

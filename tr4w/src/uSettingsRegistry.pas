@@ -153,6 +153,7 @@ type
       FLegacyCommand: string;
       FNeedsRestart: boolean;
       FHasSideEffects: boolean;
+      FReadOnly: boolean;
       FOnApply: TSettingApplyProc;
       { A cell this setting created for itself, or nil.  See TBoolCell. }
       FOwnedCell: TObject;
@@ -225,6 +226,23 @@ type
         reproduce what the table does until the registry can say what the table
         knows. }
       property HasSideEffects: boolean read FHasSideEffects write FHasSideEffects;
+
+      { TRUE WHEN THE OPERATOR MAY SEE THIS BUT NOT EDIT IT.
+
+        crJ's four states are 0 edit, 1 edit-and-restart, 2 read-only and
+        3 message. NeedsRestart above lifted state 1; this lifts 2 and 3, which
+        had no equivalent at all -- the gap the TR4QT settings review named as
+        a blocking prerequisite for retiring CFGCA.
+
+        WITHOUT IT A GENERATED PANEL OFFERS AN EDITABLE CONTROL FOR A VALUE THE
+        PROGRAM WILL NOT HONOUR. Eighty-eight rows are one of those two states:
+        sixty-four read-only and twenty-four message.
+
+        The value still SAVES and LOADS -- read-only is about who may change
+        it, not about whether it persists. The four QSO-point settings are the
+        worked example: a contest's .cfg sets them, the operator does not, and
+        the scoring code reads them every QSO. }
+      property ReadOnly: boolean read FReadOnly write FReadOnly;
    end;
 
    TBoolSetting = class(TSettingBase)

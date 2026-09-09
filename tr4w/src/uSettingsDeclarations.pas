@@ -67,12 +67,45 @@ implementation
 
 uses
   uConfigValues,
+   LogWind,           // the four QSO-point globals -- see TQSOPointsAccess
    uSettingsRegistry,
    uSettingsLegacy,   // RegisterLegacySetting -- no FMX
    uSettingsCaptions;  // RS_* -- the translatable setting labels
 
+type
+   (* A HOST FOR FOUR GETTER/SETTER PAIRS, because a typed closure is a method
+     pointer and a method needs an object. It holds no state; the values live
+     where they always have, in LogWind's globals.
+
+     THESE ARE THE FIRST SETTINGS IN THE TREE TO GRADUATE OFF CFGCA, and the
+     shape is the one this unit's header describes as step two of three: a
+     typed closure over the global it actually lives in. No crAddress, no
+     crType, no pointer. Step three -- the registry holding the value with no
+     global at all -- waits on the scoring code that reads these directly. *)
+   TQSOPointsAccess = class(TObject)
+   public
+      function  GetDomesticCw: integer;
+      procedure SetDomesticCw(aValue: integer);
+      function  GetDomesticPhone: integer;
+      procedure SetDomesticPhone(aValue: integer);
+      function  GetDxCw: integer;
+      procedure SetDxCw(aValue: integer);
+      function  GetDxPhone: integer;
+      procedure SetDxPhone(aValue: integer);
+   end;
+
 var
    GDeclared: boolean = False;
+   GQSOPoints: TQSOPointsAccess = nil;
+
+function  TQSOPointsAccess.GetDomesticCw: integer;      begin Result := QSOPointsDomesticCW;    end;
+procedure TQSOPointsAccess.SetDomesticCw(aValue: integer); begin QSOPointsDomesticCW := aValue; end;
+function  TQSOPointsAccess.GetDomesticPhone: integer;   begin Result := QSOPointsDomesticPhone; end;
+procedure TQSOPointsAccess.SetDomesticPhone(aValue: integer); begin QSOPointsDomesticPhone := aValue; end;
+function  TQSOPointsAccess.GetDxCw: integer;            begin Result := QSOPointsDXCW;          end;
+procedure TQSOPointsAccess.SetDxCw(aValue: integer);    begin QSOPointsDXCW := aValue;          end;
+function  TQSOPointsAccess.GetDxPhone: integer;         begin Result := QSOPointsDXPhone;       end;
+procedure TQSOPointsAccess.SetDxPhone(aValue: integer); begin QSOPointsDXPhone := aValue;       end;
 
 procedure DeclareAllSettings;
 begin
@@ -415,14 +448,65 @@ begin
                           RS_CONTEST_QSONUMBERBYBAND);
    RegisterStoredSetting('contest.qsoPointMethod',      'QSO POINT METHOD',
                           RS_CONTEST_QSOPOINTMETHOD);
-   RegisterStoredSetting('contest.qsoPointsDomesticCw', 'QSO POINTS DOMESTIC CW',
-                          RS_CONTEST_QSOPOINTSDOMESTICCW);
-   RegisterStoredSetting('contest.qsoPointsDomesticPhone','QSO POINTS DOMESTIC PHONE',
-                          RS_CONTEST_QSOPOINTSDOMESTICPHONE);
-   RegisterStoredSetting('contest.qsoPointsDxCw',       'QSO POINTS DX CW',
-                          RS_CONTEST_QSOPOINTSDXCW);
-   RegisterStoredSetting('contest.qsoPointsDxPhone',    'QSO POINTS DX PHONE',
-                          RS_CONTEST_QSOPOINTSDXPHONE);
+   (* GRADUATED OFF CFGCA (2026-09-09) -- AND THE TABLE IS WHY.
+
+     These four hold -1 when the contest sets no fixed point value; the scoring
+     code says so directly, `if (QSOPointsDomesticCW >= 0) then` in
+     logstuff:6450. The value is legitimate and load-bearing.
+
+     THE CFGCA ROW COULD NOT DECLARE IT. crMin and crMax are Word -- UNSIGNED --
+     so the table cannot express a negative bound at all, and the rows said
+     0..MAXWORD while the variables sat at -1. Every one of the four therefore
+     held a value its own declared range rejected, which uTestAllSettings found
+     the day it was written.
+
+     That is not a bug to patch in the table. It is the table being unable to
+     describe a setting the program legitimately has, and the fix is to stop
+     asking it to: TIntSetting's bounds are signed integers, so -1 is simply in
+     range and says what it means.
+
+     READ-ONLY, from crJ:2 on the rows they replace. A contest's .cfg sets
+     these; the operator does not, and a panel must not offer a control that
+     edits them. That is the crJ gap the TR4QT settings review called a
+     blocking prerequisite -- see TSettingBase.ReadOnly.
+
+     THE CFGCA ROWS STAY FULLY ACTIVE, AND THAT IS NOT AN OVERSIGHT. A first
+     draft of this comment said they would be retired to csRem. That would have
+     been a scoring bug: csRem means CheckCommand recognises a command and does
+     NOT apply it, and these four are set BY THE CONTEST'S .cfg FILE --
+     "QSO POINTS DOMESTIC CW = 2" is how a contest declares its points. Retiring
+     the row would leave every such contest scoring on -1.
+
+     So this is the migration state the header calls step two, exactly: the
+     registry now owns how the setting is READ, WRITTEN AND VALIDATED by
+     Preferences, while the .cfg loader keeps writing the same global through
+     the same row. One variable, two writers, which is what a closure over a
+     global means. The row goes when the .cfg loader stops needing it, not
+     before. *)
+   if GQSOPoints = nil then
+      begin
+      GQSOPoints := TQSOPointsAccess.Create;
+      end;
+
+   RegisterSetting(TIntSetting.Create('contest.qsoPointsDomesticCw',
+      RS_CONTEST_QSOPOINTSDOMESTICCW,
+      GQSOPoints.GetDomesticCw, GQSOPoints.SetDomesticCw,
+      -1, High(Word))).ReadOnly := True;
+
+   RegisterSetting(TIntSetting.Create('contest.qsoPointsDomesticPhone',
+      RS_CONTEST_QSOPOINTSDOMESTICPHONE,
+      GQSOPoints.GetDomesticPhone, GQSOPoints.SetDomesticPhone,
+      -1, High(Word))).ReadOnly := True;
+
+   RegisterSetting(TIntSetting.Create('contest.qsoPointsDxCw',
+      RS_CONTEST_QSOPOINTSDXCW,
+      GQSOPoints.GetDxCw, GQSOPoints.SetDxCw,
+      -1, High(Word))).ReadOnly := True;
+
+   RegisterSetting(TIntSetting.Create('contest.qsoPointsDxPhone',
+      RS_CONTEST_QSOPOINTSDXPHONE,
+      GQSOPoints.GetDxPhone, GQSOPoints.SetDxPhone,
+      -1, High(Word))).ReadOnly := True;
    RegisterStoredSetting('contest.qtcEnable',           'QTC ENABLE',
                           RS_CONTEST_QTCENABLE);
    RegisterStoredSetting('contest.qtcExtraSpace',       'QTC EXTRA SPACE',
