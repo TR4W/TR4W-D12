@@ -48,6 +48,10 @@ type
 
 var
   FirstDomesticCountryRecord            : DomesticCountryRecordPointer;
+
+  (* Reset by ClearDomesticCountryList, so a second contest in the same
+    session reports its own state rather than inheriting the first one's. *)
+  GEmptyDomesticListReported            : boolean = False;
 //  LastLocateCall                        : CallString;
   LastLocateQTH                         : QTHRecord;
   tAddDomesticCountryString             : CallString;
@@ -69,7 +73,8 @@ function IndonesianDistrict(QTH: QTHRecord): string;
 function EuropeanCountriesAndWAECallRegions(QTH: QTHRecord): string;
 
 implementation
-uses LogWind;
+uses LogWind,
+     MainUnit;   // the logger global
 
 function GetVEInitialExchange(Call: CallString): string;
 
@@ -188,8 +193,33 @@ var
 begin
   ActiveRecord := FirstDomesticCountryRecord;
 
+  (* AN EMPTY LIST IS NOT AN ANSWER, IT IS A MISSING INPUT -- SAY SO.
+
+    This returned False silently, and False here means "this callsign is DX".
+    So when the domestic-country list fails to load, EVERY station in the
+    contest becomes DX: a US callsign in ARRL Field Day is asked for a DX
+    exchange, scores as DX, and takes no section multiplier.
+
+    That is what NY4I saw on Linux (2026-09-09), and the cause was two steps
+    away -- arrlsect.dom had not loaded, because a path built with a Windows
+    separator was not recognised as absolute. NOTHING connected the two. The
+    program had the information and did not report it, which is the silent
+    fallback this codebase treats as a defect in its own right.
+
+    ONCE PER SESSION, not once per callsign: this is called for every entry
+    and a per-call message would be a flood rather than a diagnosis. The
+    condition cannot come and go within a contest -- the list is loaded when
+    the contest is set up -- so one line carries the whole story. *)
   if ActiveRecord = nil then
      begin
+     if not GEmptyDomesticListReported then
+        begin
+        GEmptyDomesticListReported := True;
+        logger.Error('[Domestic] The domestic country list is EMPTY, so every '
+                     + 'callsign will be treated as DX. The contest'
+                     + #39 + 's .dom file did not load -- check the log above '
+                     + 'for the file it tried to open.');
+        end;
      DomesticCountryCall := False;
      Exit;
      end;
@@ -226,6 +256,7 @@ begin
      ActiveRecord := NextRecord;
      end;
   FirstDomesticCountryRecord := nil;
+  GEmptyDomesticListReported := False;
 end;
 
 function EuropeanCountriesAndWAECallRegions(QTH: QTHRecord): string;
