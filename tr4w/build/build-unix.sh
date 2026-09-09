@@ -659,7 +659,7 @@ stage_server() {
 #
 # THE PAYLOAD IS TAKEN FROM full.nsi, minus what Windows owns:
 #
-#   shipped      tr4w, tr4wserver, cty.dat, TRMASTER.DTA, dom/,
+#   shipped      tr4w, tr4wserver, cty.dat, TRMASTER.DTA, cacert.pem, dom/,
 #                commands_help_eng.ini, r150s.dat, rfobl.dat,
 #                cluster_commands.txt, i18n help catalogues
 #   NOT shipped  every .dll.  libhamlib, sqlite3 and OpenSSL are PACKAGES on
@@ -692,8 +692,11 @@ stage_package() {
    mkdir -p "$stage"
 
    missing=''
+   # cacert.pem is the trusted root bundle. It is not optional decoration:
+   # without it no server certificate can be verified, on any platform, and
+   # FPC does not fall back to a system trust store -- see uTLSTrust.pas.
    for f in cty.dat TRMASTER.DTA commands_help_eng.ini r150s.dat rfobl.dat \
-            cluster_commands.txt; do
+            cluster_commands.txt cacert.pem; do
       if [ -f "$TARGET/$f" ]; then
          cp "$TARGET/$f" "$stage/"
       else

@@ -131,6 +131,8 @@ uses
    fphttpclient,      (* FPC's own client -- see the note on the transport *)
    opensslsockets,    (* registers the TLS handler fphttpclient asks for *)
    uOpenSSLLoader,
+   uTLSTrust,
+   uSettingsRegistry,
    uAppStrings,
    Log4D;
 
@@ -235,6 +237,59 @@ begin
    Result := True;
 end;
 
+(* VERIFY THE SERVER, IN ONE PLACE FOR ALL THREE VERBS.
+
+  Until 2026-09-09 this program verified NOTHING: Indy's default VerifyMode is
+  an empty set, which is SSL_VERIFY_NONE, and FPC's VerifyPeerCert defaults to
+  False. Every HTTPS connection accepted whatever certificate was presented --
+  including the HamScore upload, which sends the operator's password.
+
+  Both checks live in uTLSTrust: the chain against the shipped root bundle,
+  and the host name against the certificate. See that unit for why the second
+  one is not optional.
+
+  A FAILURE TO SET IT UP IS REPORTED AND THEN PROCEEDS, which needs saying
+  plainly. The alternative -- refusing to connect when the bundle is missing --
+  would turn a packaging mistake into a dead CTY download on an operator's
+  machine, and would be a REGRESSION against the behaviour of every release so
+  far, which connected unverified without comment. Reported-and-connect is
+  where this starts; refuse-by-default is a decision for once the bundle has
+  been shipping for a while.
+
+  The operator can turn checking off entirely -- see
+  network.verifyServerCertificates in uSettingsDeclarations for why that
+  escape hatch exists. *)
+procedure ApplyTLSVerification(aHTTP: TFPHTTPClient; const aURL: string);
+var
+   why:     string;
+   setting: TSettingBase;
+   wanted:  boolean;
+begin
+   wanted  := True;
+   setting := FindSetting('network.verifyServerCertificates');
+   if setting <> nil then
+      begin
+      (* NO CAST. AsText is already the byte string SameText takes -- my
+        first attempt wrapped it in string(), which converted UTF-16 back
+        DOWN at the call and turned a safe widening into a narrowing the
+        build counts. The compiler was right and I was tidying. *)
+      wanted := (UpperCase(setting.AsText) = 'TRUE') or (setting.AsText = '1');
+      end;
+
+   if not wanted then
+      begin
+      logger.Warn('[Download] server certificate checking is OFF by setting -- '
+                  + '%s is not being verified', [aURL]);
+      Exit;
+      end;
+
+   if not UseVerifiedTLS(aHTTP, why) then
+      begin
+      logger.Error('[Download] cannot verify server certificates (%s) -- '
+                   + 'continuing UNVERIFIED for %s', [why, aURL]);
+      end;
+end;
+
 (* The timeouts, in one place rather than five. Generous rather than tight:
   these are small documents, and the hazard being guarded is a connection that
   is accepted and then black-holed, not a slow one. *)
@@ -299,6 +354,10 @@ begin
    try
       http.AllowRedirect := True;
       http.AddHeader('User-Agent', 'TR4W');
+      if useTLS then
+         begin
+         ApplyTLSVerification(http, AURL);
+         end;
 
       // TIMEOUTS ARE NOT OPTIONAL.  Indy's default is to wait forever, which
       // was merely untidy while every caller was a background thread -- a stuck
@@ -385,6 +444,10 @@ begin
    http := TFPHTTPClient.Create(nil);
    try
       ApplyDefaults(http, AUserAgent, AConnectMs, AIOMs);
+      if useTLS then
+         begin
+         ApplyTLSVerification(http, AURL);
+         end;
       try
          AText  := FromWire(http.Get(ToWire(AURL)));
          Result := True;
@@ -432,6 +495,10 @@ begin
    http := TFPHTTPClient.Create(nil);
    try
       ApplyDefaults(http, UserAgent, ConnectMs, IOMs);
+      if useTLS then
+         begin
+         ApplyTLSVerification(http, URL);
+         end;
 
       if ContentType <> '' then
          begin

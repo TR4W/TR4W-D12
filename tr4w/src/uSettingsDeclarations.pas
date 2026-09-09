@@ -635,6 +635,30 @@ begin
                           RS_BANDMAP_CTRLJ_BANDMAPSPLITMODE);
 
    // --- Network (2) ----------------------------------
+
+   (* THE FIRST FULLY-MODERN SETTING IN THE TREE -- TBoolSetting.Own, so the
+     registry holds the value, there is no global, and CFGCA knows nothing
+     about it. See the three registration forms in this unit's header; this is
+     the third, and the shape every new setting should take.
+
+     WHAT IT CONTROLS. On by default: server certificates are checked against
+     the shipped root bundle, and the certificate must belong to the host we
+     asked for. Off means TR4W connects anyway and says so in the log.
+
+     WHY IT CAN BE TURNED OFF AT ALL, given that the point of the change was
+     to start verifying: until 2026-09-09 nothing was verified anywhere, so
+     turning it on is a behaviour change that could break a download or an
+     upload that works today -- a server with a misconfigured chain, a
+     corporate middlebox, a root newer than our bundle. Discovering that
+     during a contest with no way through would be worse than the exposure.
+
+     It is deliberately NOT reachable from a dialog yet. An operator who needs
+     it edits settings\tr4w.json, which is friction on purpose: this should
+     be a considered act, not a checkbox to click past when something fails. *)
+   RegisterSetting(TBoolSetting.Own('network.verifyServerCertificates',
+                   'Verify server certificates for downloads and uploads',
+                   True));
+
    RegisterStoredSetting('network.ctrlj.computerName',        'COMPUTER NAME',
                           RS_NETWORK_CTRLJ_COMPUTERNAME);
    RegisterStoredSetting('network.ctrlj.netStatusUpdateInterval','NET STATUS UPDATE INTERVAL',

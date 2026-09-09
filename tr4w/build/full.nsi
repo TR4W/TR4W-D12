@@ -139,6 +139,12 @@ Section "tr4w.exe" secexe
 	; configured, and runs fine without it otherwise. See uIO.pas.
 	File ..\target\libeay32.dll
 	File ..\target\ssleay32.dll
+	; The trusted root certificates those two are checked against. Without it
+	; TR4W cannot verify any server it downloads from or uploads to, and says
+	; so in the log rather than failing -- see src\utils\uTLSTrust.pas.
+	; Refresh from https://curl.se/ca/cacert.pem at each release; the checksum
+	; is published beside it and MUST be checked.
+	File ..\target\cacert.pem
 	File ..\target\libhamlib-4.dll
 	File ..\target\libgcc_s_dw2-1.dll
 	File ..\target\libusb-1.0.dll

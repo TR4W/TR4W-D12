@@ -80,6 +80,11 @@ tr4w/target/*
 !tr4w/target/dom
 !tr4w/target/trcluster.dat
 !tr4w/target/commands*.ini
+# The trusted root bundle, tracked so a fresh clone can verify a server it
+# talks to. UNLIKE cty.dat above, nothing rewrites this at run time -- it
+# changes only when someone deliberately refreshes it from
+# https://curl.se/ca/cacert.pem, checksum first. See tr4w/src/utils/uTLSTrust.pas.
+!tr4w/target/cacert.pem
 tr4w/tr4w.cfg
 tr4w/tr4w.dof
 # Generated each build by FullBuild.ps1 Write-VersionInfoResource: a

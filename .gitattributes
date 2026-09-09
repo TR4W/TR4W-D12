@@ -78,6 +78,14 @@
 # artifact -- on the oracle whose entire job is to be trustworthy.
 status_trace_baseline.jsonl  -text
 
+# The trusted root bundle. Its whole value is that it is the file the curl
+# project published, and that claim is checked with the SHA-256 they publish
+# beside it. EOL conversion changes the bytes and therefore the checksum, which
+# would leave nobody able to confirm what we are shipping. `-text` so it is
+# stored and checked out exactly as downloaded. OpenSSL would parse it either
+# way; the integrity story is what needs the bytes intact.
+cacert.pem                   -text
+
 # ---------------------------------------------------------------------------
 # Binary.  Marked explicitly rather than left to git's NUL-byte heuristic --
 # TRMASTER.DTA and the .trw logs are the regression suite's inputs, and a
