@@ -142,6 +142,33 @@ $env:PATH = "$shim;$env:PATH"
 $output = & $fpc @a $src 2>&1
 $fpcExit = $LASTEXITCODE
 
+# "COMPILATION RAISED EXCEPTION INTERNALLY" IS A STALE-CACHE ARTEFACT, AND IT
+# COSTS A FALSE BUILD FAILURE.
+#
+# Seen twice on 2026-09-08, both times on MainUnit, and both times a wipe of
+# the scratch unit directory fixed it with no source change. FPC reuses a .ppu
+# whose source has not changed and cannot always tell that something it depends
+# on was rebuilt differently; the compiler then faults inside itself rather than
+# reporting a mismatch.
+#
+# RETRIED ONCE, AND LOUDLY. A silent retry would hide a compiler that genuinely
+# crashes on our code -- the retry says what it did, so a REPEATING internal
+# error still reads as one. Only this exact message is retried; every other
+# failure is reported as it stands.
+if ($fpcExit -ne 0 -and
+    ($output | Select-String -Quiet 'Compilation raised exception internally')) {
+   Write-Host "Compile-Linux: internal compiler error on $Unit -- this is the" -ForegroundColor DarkYellow
+   Write-Host "  stale-unit artefact, not a source problem. Clearing $out and retrying ONCE." -ForegroundColor DarkYellow
+   Remove-Item -Recurse -Force -LiteralPath $out -ErrorAction SilentlyContinue
+   New-Item -ItemType Directory -Force -Path $out | Out-Null
+   Set-Content -LiteralPath $stamp -Value $want -NoNewline
+   $output = & $fpc @a $src 2>&1
+   $fpcExit = $LASTEXITCODE
+   if ($fpcExit -eq 0) {
+      Write-Host "  the retry succeeded -- it was the cache." -ForegroundColor DarkYellow
+   }
+}
+
 # THE COMPILER'S EXIT CODE DECIDES. TEXT ONLY EXPLAINS.
 #
 # This used to grep $output for 'Error:|Fatal:' and call anything else a pass,
