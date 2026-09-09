@@ -440,16 +440,52 @@ begin
    RegisterSuite(TWindowLayoutStoreTests.Create('WindowLayoutStore'));
    RegisterSuite(TComputerIDTests.Create('ComputerID'));
 
-   if RunAllSuites then
-      begin
-      WriteLn('');
-      WriteLn('All tests passed.');
-      ExitCode := 0;
-      end
-   else
-      begin
-      WriteLn('');
-      WriteLn('FAILURES detected — see above.');
-      ExitCode := 1;
-      end;
+   (* A CRASHING TEST USED TO REPORT AN ADDRESS AND NOTHING ELSE.
+
+     FPC's default handler prints SExceptionErrorMessage -- literally
+     "Exception at %p: %s" -- and no backtrace, so a suite that faults gives
+
+         Exception at 0000000100E2A3A4: EAccessViolation:
+         Access violation.
+
+     and the reader is left with a runtime address from an ASLR'd binary. That
+     is barely more useful than nothing, and it is worst exactly where it
+     matters most: on a platform you cannot attach a debugger to. macOS refuses
+     lldb over ssh without DevToolsSecurity, and that needs a password.
+
+     BOTH BUILDS ALREADY PASS -gl, so the line-info unit is linked and the
+     addresses CAN be resolved to file and line -- nothing was asking. This
+     asks. DumpExceptionBackTrace walks the frames the exception was raised
+     through and prints each as unit, line and address.
+
+     THE EXIT CODE IS STILL 1 AND THE MESSAGE STILL SAYS FAILURE. A crash is a
+     failure; this only makes it a legible one. *)
+   try
+      if RunAllSuites then
+         begin
+         WriteLn('');
+         WriteLn('All tests passed.');
+         ExitCode := 0;
+         end
+      else
+         begin
+         WriteLn('');
+         WriteLn('FAILURES detected — see above.');
+         ExitCode := 1;
+         end;
+   except
+      on E: Exception do
+         begin
+         WriteLn('');
+         WriteLn('CRASHED: ', E.ClassName, ': ', E.Message);
+         WriteLn('  The suite that was running is the last one named above,');
+         WriteLn('  and the test is the one after its last [PASS].');
+         WriteLn('');
+         WriteLn('Backtrace:');
+         DumpExceptionBackTrace(Output);
+         WriteLn('');
+         WriteLn('FAILURES detected — see above.');
+         ExitCode := 1;
+         end;
+   end;
 end.
