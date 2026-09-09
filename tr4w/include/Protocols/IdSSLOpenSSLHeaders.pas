@@ -19572,7 +19572,21 @@ const
   where the symbolic link libbsl.so and libcrypto.so do not exist}
   SSL_DLL_name         = 'libssl'; {Do not localize}
   SSLCLIB_DLL_name     = 'libcrypto'; {Do not localize}
-  SSLDLLVers : array [0..10] of string = (
+  (* TR4W VENDOR PATCH 2026-09-09 -- OpenSSL 3 and 1.1 added.
+
+    Indy 10.6.3.3 predates both, so this list stopped at .1.0.2 and the
+    loader could not name the library any current Linux actually ships. On
+    Linux Mint that is libssl.so.3, so TR4W reported "the OpenSSL libraries
+    could not be loaded" on a machine with a perfectly good OpenSSL -- and
+    then gave Windows advice about libeay32.dll (NY4I, 2026-09-09).
+
+    NEWEST FIRST: the loader takes the first suffix that resolves, so a box
+    with both 3 and 1.1 installed gets 3.
+
+    A PATCH TO THE VENDORED TREE, NOT A FORK: two array entries and a
+    bound. CLAUDE.md records why the vendored Indy stays. *)
+  SSLDLLVers : array [0..12] of string = (
+    '.3','.1.1',
     '.10',
     '.1.0.2','.1.0.1',
     // TODO: IFDEF the following for OSX only?
