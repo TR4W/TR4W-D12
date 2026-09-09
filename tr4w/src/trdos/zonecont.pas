@@ -200,11 +200,20 @@ begin
     contest becomes DX: a US callsign in ARRL Field Day is asked for a DX
     exchange, scores as DX, and takes no section multiplier.
 
-    That is what NY4I saw on Linux (2026-09-09), and the cause was two steps
-    away -- arrlsect.dom had not loaded, because a path built with a Windows
-    separator was not recognised as absolute. NOTHING connected the two. The
-    program had the information and did not report it, which is the silent
-    fallback this codebase treats as a defect in its own right.
+    That is what NY4I saw on Linux (2026-09-09), and the cause was FIVE steps
+    away: SetUpFileNames split the chosen contest path by scanning back for a
+    backslash, found none on Unix, and truncated the path to nonsense -- so the
+    log database opened as the wrong file, so the contest was never loaded, so
+    CONTEST never reached FoundContest, so the domestic countries were never
+    added. NOTHING connected the two ends. The program had the information and
+    did not report it, which is the silent fallback this codebase treats as a
+    defect in its own right.
+
+    THE FIRST VERSION OF THIS MESSAGE BLAMED THE .dom FILE, and that was wrong.
+    The .dom supplies the SECTION list; the domestic COUNTRY list is built in
+    code by fcontest's AddARRLSectionDomesticCountries. A diagnostic that names
+    the wrong file sends the next person to check something that is fine, which
+    is worse than saying less -- so it now says what it actually knows.
 
     ONCE PER SESSION, not once per callsign: this is called for every entry
     and a per-call message would be a flood rather than a diagnosis. The
@@ -216,9 +225,9 @@ begin
         begin
         GEmptyDomesticListReported := True;
         logger.Error('[Domestic] The domestic country list is EMPTY, so every '
-                     + 'callsign will be treated as DX. The contest'
-                     + #39 + 's .dom file did not load -- check the log above '
-                     + 'for the file it tried to open.');
+                     + 'callsign will be treated as DX. The contest was not '
+                     + 'set up -- check that a CONTEST value was applied and '
+                     + 'that the contest file above is the one you chose.');
         end;
      DomesticCountryCall := False;
      Exit;

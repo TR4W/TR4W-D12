@@ -82,6 +82,7 @@ var
 implementation
 
 uses
+   SysUtils,      // ExtractFilePath/ExtractFileName -- see SetUpFileNames
    uConfigValues, LogGrid,
   LogStuff,
   MainUnit,
@@ -90,6 +91,11 @@ uses
 procedure SetUpFileNames;
 var
   i: integer;
+  chosenPath: string;
+  chosenDir:  string;
+  chosenName: string;
+  chosenStem: string;
+  dotPos:     integer;
 begin
 
   TF.Format(TR4W_POS_FILENAME, '%ssettings\tr4w.pos', TR4W_PATH_NAME);
@@ -103,22 +109,51 @@ begin
   TF.Format(TR4W_COMM_HELP_FILENAME, '%scommands_help_' + LANG + '.ini',
     TR4W_PATH_NAME);
 
-  Move(TR4W_CFG_FILENAME, TR4W_LOG_PATH_NAME, SizeOf(TR4W_LOG_PATH_NAME));
-  for i := SizeOf(TR4W_LOG_PATH_NAME) - 1 downto 0 do
-     begin
-     if TR4W_LOG_PATH_NAME[i] = '\' then
-        begin
-        TR4W_LOG_PATH_NAME[i + 1] := #0;
-        Break;
-        end;
-     if TR4W_LOG_PATH_NAME[i] = '.' then
-        begin
-        TR4W_LOG_PATH_NAME[i] := #0;
+  (* SPLIT THE CHOSEN CONTEST FILE INTO ITS DIRECTORY AND ITS STEM.
 
-        TF.Format(TR4W_LOG_FILENAME, '%s.TRW', TR4W_LOG_PATH_NAME);
-        TF.Format(TR4W_RST_FILENAME, '%s.RST', TR4W_LOG_PATH_NAME);
-        TF.Format(TR4W_DOM_FILENAME, '%s.DOM', TR4W_LOG_PATH_NAME); // 4.100.2
-        end;
+    THIS WAS A BACKWARD WALK LOOKING FOR A BACKSLASH, and it is the single
+    defect behind "every US callsign is DX" on Linux (NY4I, 2026-09-09). The
+    loop scanned back through the path stopping at '\' for the directory
+    boundary and truncating at '.' for the extension. On Unix there is no
+    backslash, so it NEVER STOPPED: it chewed backwards through the whole
+    path, truncating at every dot it met, and the leftmost one won.
+
+        chosen  /home/toms/Desktop/TR4W/tr4w-5.0.2-x86_64-linux/ARRL-FD ... .db
+        became  /home/toms/Desktop/TR4W/tr4w-5
+
+    Everything downstream followed it off a cliff. The log database opened as
+    tr4w-5.db instead of the contest the operator picked, so the contest was
+    never loaded, so CONTEST = ARRL-FD never reached FoundContest, so
+    AddARRLSectionDomesticCountries never ran, so the domestic country list was
+    empty -- and DomesticCountryCall answers "not domestic" for an empty list,
+    which MEANS DX. A path separator produced a scoring failure five steps
+    away, and the only visible symptom was an exchange prompt.
+
+    ExtractFilePath and ExtractFileName are the platform's own answer and
+    accept either separator on Windows, so the Windows behaviour is unchanged.
+
+    THE FIRST DOT, NOT THE LAST, IS DELIBERATE. The old loop did not stop after
+    stripping an extension, so a name with several dots was cut back to the
+    first one. ChangeFileExt would cut back to the last, which is more
+    sensible and would ALSO RENAME THE LOG of any existing contest whose file
+    name contains more than one dot -- orphaning it. Matching the old rule
+    keeps every log on disk findable; changing it is a migration, not a fix. *)
+  chosenPath := string(AnsiString(PAnsiChar(@TR4W_CFG_FILENAME[0])));
+  chosenDir  := ExtractFilePath(chosenPath);
+  chosenName := ExtractFileName(chosenPath);
+
+  uAnsiStr.StrPLCopy(TR4W_LOG_PATH_NAME, AnsiString(chosenDir),
+                     SizeOf(TR4W_LOG_PATH_NAME) - 1);
+
+  dotPos := Pos('.', chosenName);
+  if dotPos > 0 then
+     begin
+     (* Only when there IS an extension, as before: a name without one left
+       these three untouched and still does. *)
+     chosenStem := chosenDir + Copy(chosenName, 1, dotPos - 1);
+     TF.Format(TR4W_LOG_FILENAME, '%s.TRW', PAnsiChar(AnsiString(chosenStem)));
+     TF.Format(TR4W_RST_FILENAME, '%s.RST', PAnsiChar(AnsiString(chosenStem)));
+     TF.Format(TR4W_DOM_FILENAME, '%s.DOM', PAnsiChar(AnsiString(chosenStem)));
      end;
 
   TF.Format(TR4W_SYN_FILENAME, '%sSERVERLOG.TMP', TR4W_LOG_PATH_NAME);
