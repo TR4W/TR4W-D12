@@ -756,10 +756,31 @@ procedure ReadInConfigFile(ConfigFileName: TCFGType);
   correctly without a second-pass workaround. }
 
 begin
-  if ConfigFileName = cfgCFG then
-     begin
-     ClearDomesticCountryList;
-     end;
+  (* THE RESETS USED TO BE HERE, AND THAT IS WHAT MADE EVERY US CALLSIGN DX.
+
+    ClearDomesticCountryList ran at the top of this routine, before ANY of the
+    early exits below -- before the "this is a .db, not a text .cfg" exit, and
+    before the file is known to exist at all. A contest opened as a DATABASE
+    therefore had its domestic country list emptied by a read THAT NEVER
+    HAPPENED, and nothing repopulated it.
+
+    The New Contest dialog applies CONTEST before startup gets here
+    (uNewContest:592), and that is what calls FoundContest and adds K, VE, KH6
+    and KL. This routine then wiped them a fraction of a second later.
+
+    NY4I, Linux Mint 2026-09-09, on a contest created by the dialog:
+
+        [Config] ... is a log database, not a text .cfg
+        [Domestic] The domestic country list is EMPTY
+
+    NOT A LINUX BUG. It happens wherever a contest is a .db, which is the
+    normal case since phase E2 -- Linux is simply where a fresh contest got
+    created and looked at. A .cfg contest still works because the read really
+    does follow and repopulates.
+
+    A RESET BELONGS WITH THE THING IT PREPARES FOR. Both moved to immediately
+    before the parse, so "clear and rebuild" is one operation rather than two
+    separated by four early exits. *)
   LineNumberInConfigFile := 0;
   gRawLineNumber := 0;
   CurrentConfigFile := ConfigFileName;
@@ -769,13 +790,6 @@ begin
      SetLength(gSeenINICmds, 0);
      end;
 
-  // Reset the contest-override tracker per contest .cfg load, so switching
-  // contests re-decides which commands that contest claims rather than
-  // accumulating them across every contest opened this session.
-  if ConfigFileName = cfgCFG then
-     begin
-     ClearContestCFGCommands;
-     end;
   (* A CONTEST FILE THAT IS A DATABASE IS NOT PARSED AS TEXT.
 
     The operator can now choose a .db in the New Contest dialog -- it is the
@@ -838,6 +852,21 @@ begin
                  'contest configuration comes from the log itself',
                  [CFGFilesArray[ConfigFileName]]);
      Exit;
+     end;
+
+  (* CLEARED HERE, WHERE THE REBUILD IMMEDIATELY FOLLOWS -- see the note at the
+    top of this routine for what happened when these ran before the exits.
+
+    ClearDomesticCountryList: the file about to be parsed is the authority on
+    which countries are domestic, so the old set goes first.
+
+    ClearContestCFGCommands: the override tracker is per contest .cfg load, so
+    switching contests re-decides which commands that contest claims rather
+    than accumulating them across every contest opened this session. *)
+  if ConfigFileName = cfgCFG then
+     begin
+     ClearDomesticCountryList;
+     ClearContestCFGCommands;
      end;
 
   logger.Info('[Config] Loading %s', [CFGFilesArray[ConfigFileName]]);
