@@ -998,10 +998,47 @@ begin
      string; it would have left a stale tail on any second call with a shorter
      path.  IncludeTrailingPathDelimiter does the separator properly, and
      StrPLCopy terminates what it copies. *)
+   (* TR4W_PATH_NAME IS THE DATA DIRECTORY, NOT THE WORKING DIRECTORY.
+
+     It was IncludeTrailingPathDelimiter(GetCurrentDir), and forty sites append
+     to it -- CTY.DAT, TRMASTER.DTA, dom\, r150s.dat, rfobl.dat,
+     COMMONMESSAGES.INI. On Windows the two are the same directory and nothing
+     changes. On macOS a .app launched from Finder starts with its working
+     directory at "/", so every one of those forty resolved under the root of
+     the read-only system volume. NY4I hit the first symptom on the first run
+     of the bundle -- "Unable to open file tr4w.log: Read-only file system" --
+     and the log was one of forty, not a special case.
+
+     uAppPaths.DataDir answers it per platform: the working directory on
+     Windows, Contents/Resources inside the bundle on macOS (which is where the
+     packaging already puts cty.dat and dom/), and /usr/share/tr4w or the
+     binary's own directory on Linux.
+
+     THE FORTY SITES ARE DOMINATED BY READS, which is why pointing the prefix
+     fixes them wholesale. The WRITES among them move individually to
+     SettingsFilePath and LogFilePath -- a write is the case where getting it
+     wrong puts an operator's contest file inside an application bundle, so
+     each one is worth naming rather than sweeping. *)
    uAnsiStr.StrPLCopy(TR4W_PATH_NAME,
-                      AnsiString(IncludeTrailingPathDelimiter(GetCurrentDir)),
+                      AnsiString(DataDir),
                       SizeOf(TR4W_PATH_NAME) - 1);
-   Format(TR4W_INI_FILENAME, '%ssettings\tr4w.ini', TR4W_PATH_NAME);
+
+   (* AND THE INI IS THE FIRST OF THOSE WRITES TO MOVE -- to the per-operator
+     settings directory, not beside the data.
+
+     It also loses its hardcoded backslash, which was a separator this program
+     had no business choosing: SettingsFilePath returns a path the platform
+     agrees with.
+
+     NOTHING CREATES THIS FILE ANY MORE (NY4I, 2026-09-08: "we really do not
+     need a tr4w.ini"). The name is still built because the file is read ONCE
+     per installation to carry an old Windows configuration into tr4w.json --
+     see uLegacyIniPrompt. On a machine that never had one, this path names a
+     file that will never exist, which is the correct outcome rather than a
+     missing one. *)
+   uAnsiStr.StrPLCopy(TR4W_INI_FILENAME,
+                      AnsiString(SettingsFilePath('tr4w.ini')),
+                      SizeOf(TR4W_INI_FILENAME) - 1);
    // The `try` that opened here had its `finally HamScoreShutdown` at the very
    // bottom, after the message loop.  Both are gone: TR4W exits through
    // ExitProcess in tr4w_ShutDown, so that finally could never have run in
@@ -1146,8 +1183,11 @@ begin
     string; it would have left a stale tail on any second call with a shorter
     path.  IncludeTrailingPathDelimiter does the separator properly, and
     StrPLCopy terminates what it copies. *)
+  (* THE SAME AS THE OTHER STARTUP PATH -- see the long note there. This is a
+    SECOND COPY of these two statements, which is how one of them gets fixed
+    and the other does not; both are changed together for that reason. *)
   uAnsiStr.StrPLCopy(TR4W_PATH_NAME,
-                     AnsiString(IncludeTrailingPathDelimiter(GetCurrentDir)),
+                     AnsiString(DataDir),
                      SizeOf(TR4W_PATH_NAME) - 1);
 
   { LOAD THE UI LANGUAGE, IF THERE IS ONE.
@@ -1210,7 +1250,9 @@ begin
   uNet.InitializeNetworkColumnTitles;
   uMenu.InitializeMenuText;
 
- Format(TR4W_INI_FILENAME, '%ssettings\tr4w.ini', TR4W_PATH_NAME);
+  uAnsiStr.StrPLCopy(TR4W_INI_FILENAME,
+                     AnsiString(SettingsFilePath('tr4w.ini')),
+                     SizeOf(TR4W_INI_FILENAME) - 1);
   (* THE PRIVATE FONT IS A WINDOWS FACILITY, and LuconSZLoadded staying False
     off Windows is the RIGHT answer, not a degraded one: the font genuinely is
     not loaded there. Its three readers -- MainUnit twice and logsubs2 once --
