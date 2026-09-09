@@ -134,7 +134,29 @@ procedure UnableToFindFileMessage(FileName: string);
 function DeleteSlashes(p: PAnsiChar): PAnsiChar;
 function SetParameterInArray(ArrayPtr: PInteger; ArrayLength: integer; aVar: PInteger; ValueToSet: integer): boolean;
 function GetGUID: string;
-function GetValueFromArray(PCharArrayAddress: PAnsiChar; ArraySize: Byte; const CMD: AnsiString): Byte;
+(* A CONFIG SPELLING TABLE, and the type that makes indexing one safe.
+
+  Fifty-four enumerated settings are written by NAME in the config file --
+  RATE DISPLAY = QSO POINTS, DUPE CHECK SOUND = ..., every port and category.
+  Each has an `array[SomeEnum] of PAnsiChar` of its spellings, and uCFG's
+  ListParamArray holds the address of each one in an UNTYPED Pointer.
+
+  TYPED HERE SO THE COMPILER COMPUTES THE STRIDE. Three sites reached into
+  those tables by hand, and one of them stepped by a hardcoded 4 -- a live
+  crash on every 64-bit target. Indexing a typed array pointer cannot get an
+  element size wrong, because no programmer is computing it.
+
+  THE UPPER BOUND IS A TYPE, NOT A LIMIT: the caller passes the real high
+  index, which is what lpLength stores. It is deliberately larger than any of
+  the fifty-four tables; the largest enum here has well under 256 members.
+
+  THIS IS NOT THE SHAPE WE WOULD CHOOSE. See the note above ListParamArray in
+  uCFG for what a settings model would look like instead and what blocks it. *)
+type
+   TCfgSpellings = array[0..255] of PAnsiChar;
+   PCfgSpellings = ^TCfgSpellings;
+
+function GetValueFromArray(aSpellings: PCfgSpellings; aHighIndex: Byte; const CMD: AnsiString): Byte;
 function GetNumberFromCharBuffer(p: PAnsiChar): integer;
 procedure tLoadKeyboardLayout;
 function GetContestFromString(ContestString: ShortString): ContestType;
@@ -708,7 +730,7 @@ end;
 // StrPos removed (D12): callers use uAnsiStr.StrPos directly -- the
 // TF -> uStrSearch -> RTL forwarding was asm-eradication scaffolding, obsolete now.
 
-function GetValueFromArray(PCharArrayAddress: PAnsiChar; ArraySize: Byte; const CMD: AnsiString): Byte;
+function GetValueFromArray(aSpellings: PCfgSpellings; aHighIndex: Byte; const CMD: AnsiString): Byte;
 var
   b                                     : Byte;
   p                                     : Pointer;
@@ -719,10 +741,43 @@ begin
   // caller's buffer -- a side effect on an argument nothing declared as var.
   // Every caller held a ShortString and passed its address.  Taking the value
   // instead deletes the length-byte walk, the @CMD[1] offset, and the mutation.
-  for b := 0 to ArraySize {- 1} do
+  for b := 0 to aHighIndex do
      begin
-     p := PCharArrayAddress + (b * 4);
-     p := Pointer(p^);
+     (* INDEXED, NOT WALKED -- AND THE WALK WAS A CRASH, NOT AN UNTIDINESS.
+
+       This read `p := PCharArrayAddress + (b * 4); p := Pointer(p^)`. The
+       tables are arrays of PAnsiChar, so the step between entries is the size
+       of a POINTER: 4 on 32-bit Windows, where it had always been right, and 8
+       on every 64-bit target. At 4 the walk lands halfway through each pointer,
+       reads half of one entry and half of the next, and StrIComp dereferences
+       the result.
+
+       Found by NY4I on Linux Mint (2026-09-09), typing a callsign into the New
+       Contest dialog:
+
+           MAIN CALLSIGN = NY4I
+           EAccessViolation
+             STRICOMP            uAnsiStr.pas:206
+             GETVALUEFROMARRAY   TF.pas:743
+             CHECKCOMMAND        uCFG.pas:1871
+             APPLYNEWCONTESTCOMMAND / SAVENEWCONTEST / SHOWNEWCONTEST
+
+       THIS IS NOT A LINUX BUG. It is a 64-bit bug that Linux happened to be the
+       first 64-bit build to run, and it was waiting for the Windows 64-bit move
+       as well -- forty spelling tables reached through this one function, which
+       is every enumerated config value the program has.
+
+       THE FIX IS NOT A CORRECTED STRIDE. `b * SizeOf(Pointer)` is right and
+       still leaves a programmer computing an element size, which is the thing
+       that was wrong -- NY4I: "explain why we are dealing with pointers in the
+       new code." Indexing a typed array pointer leaves no arithmetic to get
+       wrong, on any platform, and none to review.
+
+       THE BOUND IS A HIGH INDEX, NOT A COUNT, and the parameter is now named
+       for that: it arrives as Byte(High(SomeEnum)) from ListParamArray, so
+       `0 to aHighIndex` is the whole array. The `{- 1}` that used to sit here
+       invited exactly the wrong correction. *)
+     p := aSpellings^[b];
  //    showmessage(p);
      // CASE-INSENSITIVE, and this is a FIX rather than a loosening.
      //

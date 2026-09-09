@@ -396,6 +396,43 @@ const
       );
 
    {List}
+(* FIFTY-FOUR ENUMERATED SETTINGS, EACH POINTING AT ITS SPELLINGS AND AT A
+  GLOBAL VARIABLE. NO, WE WOULD NOT BUILD IT THIS WAY FROM SCRATCH.
+
+  NY4I asked exactly that (2026-09-09): "I am confused why we have an array at
+  all. It seems you would have a settings CLASS and the program accesses the
+  properties. No pointers involved at all." He is right, and it is worth
+  writing down WHY the shape is what it is and what actually blocks changing
+  it, because the answer is not inertia.
+
+  WHAT IT WOULD BE. One class per setting kind -- the radio factory's shape --
+  each knowing its own config spelling, its own allowed values, and how to
+  parse and render itself. No untyped Pointer, no parallel lpLength, no
+  ordinal cast into crAddress as an index into this table, and nothing for a
+  drop-down to enumerate by hand.
+
+  FPC'S RTTI GETS YOU PART OF THE WAY AND NOT ALL OF IT: GetEnumName would
+  replace a table whose spellings are the identifiers, but these are not.
+  RateDisplayType is (QSOs, Points, BandQSOs) and its spellings are 'QSOS',
+  'QSO POINTS', 'BAND QSOS'. The config file's vocabulary is a deliberate,
+  operator-facing one, so the mapping is real data and has to live somewhere.
+  In a class it lives in the class.
+
+  WHAT BLOCKS IT IS lpVar, NOT lpArray. Each row's third field is the address
+  of a GLOBAL -- @RateDisplay, @CD.PossibleCallAction, @Radio2.tKeyerPort. The
+  setting does not own its value; it writes into a variable the rest of the
+  program reads directly. A settings object cannot own a property whose
+  storage is a global that forty units assign to, so the class model is
+  downstream of those globals stopping being the source of truth. That is the
+  config-to-JSON work in docs/CFG_MIGRATION_PLAN.md, and it is the real
+  prerequisite -- not this table.
+
+  SO THE POINTERS HERE ARE A SYMPTOM. What was removed (2026-09-09) is the
+  ARITHMETIC on them: three sites reached into lpArray by hand and one stepped
+  by a hardcoded 4, which crashed every 64-bit build. All three now index
+  TF.PCfgSpellings and let the compiler compute the stride. The untyped
+  Pointer in the record stays until the setting owns its own value, and it is
+  cast in exactly one place per site rather than walked. *)
    ListParamArray: array[0..53] of ListParamRecord =
       (
     {(*}
@@ -1221,9 +1258,8 @@ begin
       listIdx := integer(CFGCA[idx].crAddress);
       if (listIdx >= Low(ListParamArray)) and (listIdx <= High(ListParamArray)) then
          begin
-         p := PAnsiChar(ListParamArray[listIdx].lpArray) +
-              (ListParamArray[listIdx].lpVar^ * SizeOf(Pointer));
-         Result := string(PPAnsiChar(p)^);
+         Result := string(PCfgSpellings(ListParamArray[listIdx].lpArray)^
+                             [ListParamArray[listIdx].lpVar^]);
          end;
       Exit;
       end;
@@ -1393,7 +1429,7 @@ var
    idx, arrIdx, i: integer;
    values: PInteger;
    listIdx: integer;
-   base: PAnsiChar;
+   base: PCfgSpellings;
 begin
    Result := nil;
    idx := FindCFGCommand(aCommand);
@@ -1421,7 +1457,7 @@ begin
          Exit;
          end;
 
-      base := PAnsiChar(ListParamArray[listIdx].lpArray);
+      base := PCfgSpellings(ListParamArray[listIdx].lpArray);
       if base = nil then
          begin
          Exit;
@@ -1432,7 +1468,7 @@ begin
       SetLength(Result, ListParamArray[listIdx].lpLength + 1);
       for i := 0 to ListParamArray[listIdx].lpLength do
          begin
-         Result[i] := string(PPAnsiChar(base + (i * SizeOf(Pointer)))^);
+         Result[i] := string(base^[i]);
          end;
       Exit;
       end;
