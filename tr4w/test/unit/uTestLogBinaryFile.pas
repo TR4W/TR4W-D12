@@ -35,6 +35,7 @@ type
       procedure TestMissingFileReportsRatherThanRaises;
       procedure TestStrideMismatchIsRefused;
       procedure TestEverySetInTheCorpusReads;
+      procedure TestTheRecordIsTheSameSizeEverywhere;
    public
       procedure RunAllTests; override;
    end;
@@ -336,6 +337,35 @@ begin
       end;
 end;
 
+(* THE ON-DISK FORMAT IS THE IN-MEMORY LAYOUT, SO ITS SIZE IS A CONTRACT.
+
+  ContestExchange is a plain `record` -- not `packed` -- and TLogBinaryReader
+  fills one with a single FStream.Read of SizeOf(aRecord) straight into it. The
+  file format therefore IS whatever the compiler chose to lay the record out
+  as, which is the DOS/Win32 idiom CLAUDE.md describes: the in-memory layout WAS
+  the serialization.
+
+  THAT IS FINE UNTIL THERE IS A SECOND ARCHITECTURE. Field offsets and total
+  size come from the target's alignment rules, and nothing in this tree pins
+  them -- there is no {$PACKRECORDS} directive anywhere. If aarch64 aligns one
+  field differently from i386, the same bytes decode into different fields and
+  the failure is SILENT: a QSO reads back with a plausible-looking wrong value.
+
+  376 IS NOT A NUMBER CHOSEN HERE. It is what D7 wrote, what every corpus log
+  on disk is made of, and what MainUnit's offset arithmetic assumes -- record k
+  begins at (k + 1) * 376. Deployed logs have it; it cannot be changed without
+  a format migration.
+
+  SO THIS TEST IS A PORTABILITY GATE, not a tautology. On a platform where it
+  fails, TR4W cannot read an existing log correctly and must not pretend to. *)
+procedure TLogBinaryFileTests.TestTheRecordIsTheSameSizeEverywhere;
+begin
+   BeginTest('TestTheRecordIsTheSameSizeEverywhere');
+   CheckEquals(376, SizeOf(ContestExchange),
+               'ContestExchange is 376 bytes -- the size D7 wrote and every '
+               + 'corpus log on disk is made of');
+end;
+
 procedure TLogBinaryFileTests.RunAllTests;
 begin
    TestOpensARealCorpusLog;
@@ -348,6 +378,7 @@ begin
    TestMissingFileReportsRatherThanRaises;
    TestStrideMismatchIsRefused;
    TestEverySetInTheCorpusReads;
+   TestTheRecordIsTheSameSizeEverywhere;
 end;
 
 end.
