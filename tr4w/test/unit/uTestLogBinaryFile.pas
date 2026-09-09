@@ -413,6 +413,27 @@ begin
    CheckEquals(7,   Off(r.Mode),            'Mode follows Band');
    CheckEquals(290, Off(r.id),              'id, a string[32], sits at 290');
    CheckEquals(376, SizeOf(ContestExchange), 'and the whole record is 376');
+
+   (* INSIDE THE NESTED RECORD, which is where the live defect was: the
+     four offsets above all match on aarch64-darwin and QTH.Continent
+     still decodes as 86 there. Its own annotations claim
+     6+1+1+7+1+14+2 = 32 bytes, so each field's offset is stated by the
+     type and can be checked. *)
+   CheckEquals(32, SizeOf(QTHRecord),        'QTHRecord is 32 bytes');
+   (* Absolute, unlike the rest: QTH itself sits at 114 in the outer
+     record, and every check below is RELATIVE to this field so the two
+     questions -- where is QTH, and how is QTH laid out -- fail
+     separately and say which. *)
+   CheckEquals(114, Off(r.QTH.CountryID),    'QTH starts at 114');
+   CheckEquals(6,  Off(r.QTH.Zone) - Off(r.QTH.CountryID),  'Zone at +6');
+   CheckEquals(8,  Off(r.QTH.Prefix) - Off(r.QTH.CountryID),'Prefix at +8');
+   CheckEquals(15, Off(r.QTH.Continent) - Off(r.QTH.CountryID),
+               'Continent at +15');
+   CheckEquals(16, Off(r.QTH.StandardCall) - Off(r.QTH.CountryID),
+               'StandardCall at +16');
+   CheckEquals(30, Off(r.QTH.Country) - Off(r.QTH.CountryID),
+               'Country at +30');
+   CheckEquals(1,  SizeOf(ContinentType),    'ContinentType is ONE byte');
 end;
 
 procedure TLogBinaryFileTests.RunAllTests;
