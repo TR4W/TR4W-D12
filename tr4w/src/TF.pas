@@ -45,6 +45,34 @@ uses
   SysUtils,
   uTR4WStrings;
 
+(* A CONFIG SPELLING TABLE, and the type that makes indexing one safe.
+
+  Fifty-four enumerated settings are written by NAME in the config file --
+  RATE DISPLAY = QSO POINTS, DUPE CHECK SOUND = ..., every port and category.
+  Each has an `array[SomeEnum] of PAnsiChar` of its spellings, and uCFG's
+  ListParamArray holds the address of each one in an UNTYPED Pointer.
+
+  TYPED HERE SO THE COMPILER COMPUTES THE STRIDE. Three sites reached into
+  those tables by hand, and one of them stepped by a hardcoded 4 -- a live
+  crash on every 64-bit target. Indexing a typed array pointer cannot get an
+  element size wrong, because no programmer is computing it.
+
+  THE UPPER BOUND IS A TYPE, NOT A LIMIT: the caller passes the real high
+  index, which is what lpLength stores. It is deliberately larger than any of
+  the fifty-four tables; the largest enum here has well under 256 members.
+
+  THIS IS NOT THE SHAPE WE WOULD CHOOSE. See the note above ListParamArray in
+  uCFG for what a settings model would look like instead and what blocks it. *)
+type
+   TCfgSpellings = array[0..255] of PAnsiChar;
+   PCfgSpellings = ^TCfgSpellings;
+
+   (* AND ITS SIBLING: a ckArray setting is a DISCRETE ALLOW-LIST of integers
+     rather than a set of spellings -- the legal row counts, the legal CW speed
+     increments. Same table shape, same reason to be typed. *)
+   TCfgAllowedInts = array[0..255] of Integer;
+   PCfgAllowedInts = ^TCfgAllowedInts;
+
 type
   MYDLGTEMPLATE = packed record
    {04}Style: DWORD;
@@ -132,29 +160,8 @@ function EnumerateLinesInFile(FileName: PAnsiChar; Func: TEnumLinesFunc; UpperCa
 function tGetDateFormat(DT: TQSOTime): PAnsiChar; //assembler;
 procedure UnableToFindFileMessage(FileName: string);
 function DeleteSlashes(p: PAnsiChar): PAnsiChar;
-function SetParameterInArray(ArrayPtr: PInteger; ArrayLength: integer; aVar: PInteger; ValueToSet: integer): boolean;
+function SetParameterInArray(aAllowed: PCfgAllowedInts; aHighIndex: integer; aVar: PInteger; ValueToSet: integer): boolean;
 function GetGUID: string;
-(* A CONFIG SPELLING TABLE, and the type that makes indexing one safe.
-
-  Fifty-four enumerated settings are written by NAME in the config file --
-  RATE DISPLAY = QSO POINTS, DUPE CHECK SOUND = ..., every port and category.
-  Each has an `array[SomeEnum] of PAnsiChar` of its spellings, and uCFG's
-  ListParamArray holds the address of each one in an UNTYPED Pointer.
-
-  TYPED HERE SO THE COMPILER COMPUTES THE STRIDE. Three sites reached into
-  those tables by hand, and one of them stepped by a hardcoded 4 -- a live
-  crash on every 64-bit target. Indexing a typed array pointer cannot get an
-  element size wrong, because no programmer is computing it.
-
-  THE UPPER BOUND IS A TYPE, NOT A LIMIT: the caller passes the real high
-  index, which is what lpLength stores. It is deliberately larger than any of
-  the fifty-four tables; the largest enum here has well under 256 members.
-
-  THIS IS NOT THE SHAPE WE WOULD CHOOSE. See the note above ListParamArray in
-  uCFG for what a settings model would look like instead and what blocks it. *)
-type
-   TCfgSpellings = array[0..255] of PAnsiChar;
-   PCfgSpellings = ^TCfgSpellings;
 
 function GetValueFromArray(aSpellings: PCfgSpellings; aHighIndex: Byte; const CMD: AnsiString): Byte;
 function GetNumberFromCharBuffer(p: PAnsiChar): integer;
@@ -804,16 +811,27 @@ begin
   Result := UNKNOWNTYPE;
 end;
 
-function SetParameterInArray(ArrayPtr: PInteger; ArrayLength: integer; aVar: PInteger; ValueToSet: integer): boolean;
+function SetParameterInArray(aAllowed: PCfgAllowedInts; aHighIndex: integer; aVar: PInteger; ValueToSet: integer): boolean;
 var
   b                                     : integer;
 begin
   Result := False;
 
-  for b := 0 to ArrayLength do
-     begin
+  (* INDEXED, NOT WALKED -- the same change as GetValueFromArray above, made at
+    the same time for the same reason even though this one was not a crash.
 
-     if PInteger(PAnsiChar(ArrayPtr) + (b * 4))^ = ValueToSet then
+    It read `PInteger(PAnsiChar(ArrayPtr) + (b * 4))^`. Four IS the size of an
+    Integer on every target FPC builds this program for, so unlike the spelling
+    walk it was not wrong on 64-bit -- it was wrong in the same WAY, one
+    element-type change away from being a silent memory bug, and written so
+    that a reader has to know the element size to check it. Indexing a typed
+    array pointer needs no such check.
+
+    aHighIndex, not ArrayLength: it arrives as high(SomeArray) from
+    ArrayRecordArray, so `0 to aHighIndex` is the whole allow-list. *)
+  for b := 0 to aHighIndex do
+     begin
+     if aAllowed^[b] = ValueToSet then
         begin
         aVar^ := ValueToSet;
         Result := True;

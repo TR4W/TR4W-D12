@@ -74,7 +74,9 @@ uses
 
 type
    ArrayRecord = record
-      arArrayPtr: PInteger;
+      (* TYPED, so both readers index it instead of computing an offset --
+        see TF.PCfgAllowedInts. *)
+      arArrayPtr: PCfgAllowedInts;
       arArrayLength: integer;
       arVar: PInteger;
    end;
@@ -1427,7 +1429,7 @@ end;
 function CFGCommandAllowedValues(const aCommand: string): TArray<string>;
 var
    idx, arrIdx, i: integer;
-   values: PInteger;
+   values: PCfgAllowedInts;
    listIdx: integer;
    base: PCfgSpellings;
 begin
@@ -1494,7 +1496,7 @@ begin
    SetLength(Result, ArrayRecordArray[arrIdx].arArrayLength + 1);
    for i := 0 to ArrayRecordArray[arrIdx].arArrayLength do
       begin
-      Result[i] := IntToStr(PIntegerArray(values)^[i]);
+      Result[i] := IntToStr(values^[i]);
       end;
 end;
 
