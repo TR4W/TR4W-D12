@@ -20,7 +20,7 @@ unit uSuperCheckPartialFileUpload;
 interface
 
 
-uses Classes, SysUtils, IdSSLOpenSSLHeaders, IdHashSHA, IdHTTP, IdGlobal, Log4D, uLogConfig,
+uses Classes, SysUtils, IdSSLOpenSSLHeaders, uSHA256, IdHTTP, IdGlobal, Log4D, uLogConfig,
      IdCoderMIME, IdSSLOpenSSL, IdIOHandler, IdIOHandlerSocket, IdLogFile, DateUtils;
 
 
@@ -196,13 +196,13 @@ begin
       self.m_errorResult := 'Request log file to send does not exist [' + _filename + ']';
       Exit;
       end;
-   // Check that SHA256 is available
-   if not TIdHashSHA256.IsAvailable then
-      begin
-      Result := false;
-      Self.m_errorResult := 'SHA256 is not available to this instance of Indy - CheckOpenSSL dlls are available';
-      Exit;
-      end;
+   (* THE AVAILABILITY GATE IS GONE WITH THE DEPENDENCY IT GUARDED.
+
+     It asked TIdHashSHA256.IsAvailable, which answers "has Indy loaded
+     OpenSSL", and refused the whole upload when it had not. That is the
+     dialog NY4I saw on Linux after writing a Cabrillo file. uSHA256 needs
+     nothing loaded, so there is no longer a question to ask. *)
+
    // Store the hash of the CAB file
    Self.m_cabHash := Self.GetHashSHA256File(_filename);
 
@@ -284,41 +284,45 @@ begin
       end;
 end;
 
+(* THE HASH IS OURS NOW, NOT OpenSSL'S -- AND IT FIXES THREE THINGS.
+
+  These called Indy's TIdHashSHA256, which is not a hash implementation at all:
+  it is a call into OpenSSL, and IsAvailable is False unless Indy has managed
+  to load it. Indy 10.6.3.3 cannot load OpenSSL 3, so on any current Linux
+  writing a Cabrillo file produced
+
+      SHA256 is not available to this instance of Indy - CheckOpenSSL dlls
+      are available
+
+  (NY4I, Linux Mint, 2026-09-08). A digest over some bytes has no business
+  depending on whether a TLS library will load; that coupling was the defect.
+  uSHA256 is FIPS 180-4 written out, pinned against the standard's own vectors
+  plus independently computed block-boundary cases, and depends on nothing.
+
+  SECOND: WHEN IsAvailable WAS FALSE, THESE RETURNED AN EMPTY STRING. The
+  `if` guarded the whole body, so a failed hash was indistinguishable from a
+  hash OF NOTHING -- and an empty string is a perfectly well-formed value to
+  put in the JSON and send. Now there is no availability question to get
+  wrong.
+
+  THIRD, AND IT WAS A CRASH: GetHashSHA256File had its two try/finally blocks
+  crossed. The INNER finally freed `sha` and the OUTER freed `fs`, so if
+  TFileStream.Create raised -- a Cabrillo file that is missing or locked --
+  the outer block called Free on an unassigned `fs`. One `try` per object, in
+  the order they were created, and the stream helper in uSHA256 owns both.
+
+  ENCODING: the strings hashed here are a hex digest, a base64 payload and a
+  timestamp, so they are ASCII and UTF-8 encodes them byte for byte the same
+  as Indy's default did. The hash the server sees is unchanged. *)
 function TSCPUpload.GetHashSHA256File(_filename: string): string;
-var
-   sha: TIdHashSHA256;
-   fs: TFileStream;
 begin
-   if TIdHashSHA256.IsAvailable then
-      begin
-      sha:= TIdHashSHA256.Create;
-      try
-         fs:= TFileStream.Create(_filename, fmOpenRead);
-         try
-            Result:= sha.HashStreamAsHex(fs);
-         finally
-            sha.Free;
-         end;
-      finally
-         fs.Free;
-      end;
-      end;
+   Result := SHA256OfFile(_filename);
 end;
 
 function TSCPUpload.GetHashSHA256(_string: string): string;
-  var
-   sha: TIdHashSHA256;
-  begin
-   if TIdHashSHA256.IsAvailable then
-      begin
-      sha:= TIdHashSHA256.Create;
-      try
-       Result:= sha.HashStringAsHex(_string);
-      finally
-       sha.Free;
-      end;
-      end;
-  end;
+begin
+   Result := SHA256OfBytes(UTF8Encode(_string));
+end;
 
 function TSCPUpload.SSLIOHandlerVerifyPeer(ThePeerCert: TIdX509; AOk: Boolean; ADepth, AError: Integer): Boolean;
 var sTemp: string;

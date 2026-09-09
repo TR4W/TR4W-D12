@@ -65,6 +65,7 @@ $UNITS = @(
    #
    # 22,841 passing Windows tests said nothing about either. A Linux compile
    # found both in one run each.
+   @{ Unit = 'utils\uSHA256.pas';           Since = '2026-09-09' }
    @{ Unit = 'utils\uOpenSSLLoader.pas';    Since = '2026-09-09' }
    @{ Unit = 'utils\uHTTPDownload.pas';     Since = '2026-09-09' }
    @{ Unit = 'ComPortEnumerator.pas'; Since = '2026-09-07' }

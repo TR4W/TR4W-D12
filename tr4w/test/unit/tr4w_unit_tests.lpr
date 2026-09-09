@@ -220,6 +220,8 @@ uses
    uTestPrefsSearch in 'uTestPrefsSearch.pas',
    uAccelerators in '..\..\src\uAccelerators.pas',
    uTestAccelerators in 'uTestAccelerators.pas',
+   uSHA256 in '..\..\src\utils\uSHA256.pas',
+   uTestSHA256 in 'uTestSHA256.pas',
    uTestCWFraming in 'uTestCWFraming.pas',
    // Pins the radio-status change detector.  LOGRADIO itself is not listed
    // here -- it arrives through the search path, the same way uTestIcomRegistry
@@ -408,6 +410,7 @@ begin
    RegisterSuite(TConfigDefaultsTests.Create('ConfigDefaults'));
    RegisterSuite(THamLibIDTests.Create('HamLibIDs'));
    RegisterSuite(TCWKeyerTests.Create('CWKeyer'));
+   RegisterSuite(TSHA256Tests.Create('SHA256'));
    RegisterSuite(TCWFramingTests.Create('CWFraming'));
    RegisterSuite(TAcceleratorTests.Create('Accelerators'));
    RegisterSuite(TPrefsSearchTests.Create('PrefsSearch'));
