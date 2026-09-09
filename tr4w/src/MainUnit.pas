@@ -452,7 +452,6 @@ procedure QuickQSLProcedure(Key: Char);
 procedure StartSendingNow(FromKeyBoard: boolean);
 procedure ClearLog;
 procedure ReadVersionBlock;
-procedure MakeTestLog;
 //function TryToCheckTheLatestVersion: boolean;
 procedure tGetSystemTime;
 procedure SystemTimeChanging;
@@ -9012,38 +9011,16 @@ begin
   tSetFilePointer(SizeOfTLogHeader, fsFromBeginning);
 end;
 
-procedure MakeTestLog;
-var
-  h: THandle;
-  i: integer;
-begin
+(* MakeTestLog WAS DELETED HERE (2026-09-08). It wrote 30,000 random QSOs
+  into a hardcoded C:	est.trw with sWriteFile -- a developer scratch routine
+  that no code called, declared in the interface, and the last thing in this
+  unit that WROTE a binary log.
 
-  if not tOpenFileForWrite(h, 'C:\test.trw') then
-     begin
-     Exit;
-     end;
-  sWriteFile(h, LogHeader, SizeOfTLogHeader);
-
-  for i := 1 to 30000 do
-     begin
-
-     ClearContestExchange(TempRXData);
-     tGetQSOSystemTime(TempRXData.tSysTime);
-     TempRXData.Band := Band40;
-     TempRXData.Band := BandType(Random(6));
-     TempRXData.Mode := ModeType(Random(2));
-     SetExtendedModeFromMode(TempRXData);
-     TempRXData.Callsign := CD.GetRandomCall;
-     TempRXData.NumberSent := i;
-     ctyLocateCall(TempRXData.Callsign, TempRXData.QTH);
-     TempRXData.DXQTH := TempRXData.QTH.CountryID;
-     TempRXData.Zone := ctyGetCQZone(TempRXData.Callsign);
-     TempRXData.NumberSent := i;
-     TempRXData.NumberReceived := i + 100;
-     sWriteFile(h, TempRXData, SizeOf(ContestExchange));
-     end;
-  FileClose(h);   { a FILE handle -- sWriteFile above }
-end;
+  It goes with the store decision (NY4I, 2026-09-08): the log is SQLite, and
+  the only binary capability worth keeping is IMPORT on Windows. A generator
+  for a format nothing writes any more has no reader to serve -- and its
+  hardcoded drive letter would not have run anywhere but one machine in any
+  case. *)
 
 procedure CompleteCallsign;
 var
