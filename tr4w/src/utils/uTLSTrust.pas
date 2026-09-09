@@ -56,6 +56,63 @@ unit uTLSTrust;
   verification could be set up and leaves refusing or proceeding to the caller,
   so that "the operator turned checking off" and "the bundle is missing" are
   distinguishable in a log rather than both appearing as a failed download.
+
+  ---------------------------------------------------------------------------
+  THE INTENDED macOS END STATE: NSURLSession, NOT OpenSSL AT ALL.
+  ---------------------------------------------------------------------------
+
+  Everything above assumes OpenSSL. On Windows that is fair -- the installer
+  ships it. On Linux it is fair -- the distribution has it. ON macOS IT IS NOT:
+  Apple ships no libssl.dylib, so TR4W currently depends on the operator having
+  installed Homebrew, and a Mac without it has no TLS whatsoever. Not degraded:
+  the country-file download, the version check and the score post simply do not
+  work.
+
+  Apple's own answer is NSURLSession -- HTTP and HTTPS through the system
+  stack, verified against the user's Keychain. NY4I raised it (2026-09-09,
+  citing wiki.lazarus.freepascal.org/macOS_NSURLSession) and it is the right
+  end state for that platform, for three reasons:
+
+    NO THIRD-PARTY INSTALL. The dependency on Homebrew disappears, and with it
+    the support answer "run brew install openssl@3 before TR4W will fetch
+    CTY.DAT", which no operator should ever be told.
+
+    THE KEYCHAIN IS A BETTER TRUST SOURCE THAN OUR BUNDLE. cacert.pem is a
+    snapshot we refresh at release time and that goes stale between releases;
+    the Keychain is what that Mac already trusts, kept current by the OS.
+
+    IT DELETES THE UGLIEST THING IN uOpenSSLLoader. That unit currently
+    symlinks libssl.3.dylib under the name libssl.1.1.dylib, because FPC on
+    Darwin will not attempt any filename a Mac actually has. Renaming a library
+    so a search finds it is a hack, and it is labelled as one where it lives.
+
+  THE BINDINGS ARE ALREADY PRESENT -- NSURLSession.inc ships in the cocoaint
+  package this build already links (verified on the Mac mini, 2026-09-09), so
+  this costs no new dependency.
+
+  WHAT IT COSTS, so nobody starts it believing it is a swap:
+
+    IT IS NOT A SOCKET HANDLER. NSURLSession is a separate API, not something
+    UseVerifiedTLS can configure, so it REPLACES the client on macOS rather
+    than adjusting it. That is a third implementation behind the same
+    interface.
+
+    IT IS ASYNCHRONOUS -- completion handlers and delegates -- while the three
+    verbs in uHTTPDownload are synchronous. Bridging wants a semaphore or a
+    run-loop pump, and doing that on the main thread is the exact deadlock
+    shape this program has already been bitten by (see uCrashLog's
+    main-thread notes).
+
+    APP TRANSPORT SECURITY MAY REFUSE PLAIN http://, which the contest-score
+    post deliberately allows for club servers. That needs an Info.plist
+    exception or a stated limitation.
+
+  WHY IT IS CHEAP LATER RATHER THAN NOW: uHTTPDownload's three verbs are
+  already the seam. A macOS implementation slots in behind them with NO CALLER
+  CHANGING -- which is the payoff from folding five copies of the transport
+  into one unit. Sequenced deliberately AFTER someone has actually run the GUI
+  on a Mac: if that turns out to be the real problem, the networking question
+  gets reconsidered alongside it rather than solved first.
 *)
 
 interface

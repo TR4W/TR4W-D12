@@ -422,9 +422,18 @@ begin
      So we hand it a name it WILL try. The link says 1.1 and points at
      OpenSSL 3; nothing reads that number as a version -- it is a file name
      FPC's search happens to attempt first, and the library reports its real
-     version once loaded. Renaming a library to be found is ugly. Shipping our
-     own copy inside TR4W.app is the answer that removes the need, and that is
-     packaging work with notarization consequences. *)
+     version once loaded. Renaming a library to be found is ugly, and two
+     answers remove the need. The second is the better one:
+
+       ship our own OpenSSL inside TR4W.app, the way the Windows installer
+       ships the DLLs -- packaging work, with notarization consequences;
+
+       or stop using OpenSSL on this platform at all and go through
+       NSURLSession, Apple's own HTTPS, which verifies against the Keychain.
+       THAT IS THE INTENDED END STATE -- see the long note at the foot of
+       uTLSTrust's header for what it buys, what it costs, and why it waits
+       until the Mac GUI has actually been run. When it lands, this whole
+       Darwin arm goes with it. *)
    for i := 0 to High(DarwinSSLDirs) do
       begin
       dir := DarwinSSLDirs[i];
