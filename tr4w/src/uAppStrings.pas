@@ -88,6 +88,11 @@ resourcestring
    SDownloadCouldNotStart = 'the download was refused before it began (bad URL).';
    SDownloadRenameFailed  = 'the file downloaded but could not be saved under its final name.';
 
+   (* Shown INSTEAD of an OS error code when the file is simply absent -- see
+     TF.UnableToFindFileMessage for why an errno is the wrong thing to print
+     in that case. *)
+   SFileNotFoundThere = 'TR4W could not find this file:';
+
    SCtyDownloadFailed =
       'Could not download CTY.DAT to:' + sLineBreak + sLineBreak +
       '    %s' + sLineBreak + sLineBreak +

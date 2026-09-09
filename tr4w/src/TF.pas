@@ -329,6 +329,7 @@ uses Log4D, uFreqTimeFormat, uStrSearch, uAnsiStr, uCFormat,   // Issue #997: fr
        the LCL, which all three programs -- the app, tr4wserver and the unit
        tests -- link already. *)
      Dialogs,
+     uAppStrings,   // SFileNotFoundThere
      uMainThread;
 
 // Own Log4D logger (initialized at the foot of this unit), replacing the former
@@ -870,12 +871,34 @@ end;
 
 procedure UnableToFindFileMessage(FileName: string);
 begin
-  // SysUtils.SysErrorMessage returns a (trimmed) string directly -- no cast.
-  // (TF's own SysErrorMessage shadows it here and returns PAnsiChar untrimmed.)
-  // GetLastOSError, not Windows' GetLastError: SysUtils declares it for every
-  // platform and returns the same code the message lookup below expects.
-  showwarning(SysUtils.Format('%s'#13#13'%s',
-              [SysUtils.SysErrorMessage(SysUtils.GetLastOSError), FileName]));
+  (* SAY WHICH IT IS, RATHER THAN REPORTING WHATEVER errno HAPPENED TO BE SET.
+
+    This showed SysErrorMessage(GetLastOSError) unconditionally, and the errno
+    is only meaningful if the most recent system call is the one that failed.
+    It usually is not: a missing domestic-multiplier file was reported to NY4I
+    as "Bad file number" (2026-09-09), which is errno 9, EBADF, left over from
+    something else entirely. The operator is then sent to diagnose a file
+    handle when the file simply was not where the program looked.
+
+    The common case by far is that the file is not there, and that is worth
+    stating plainly with the full path so it can be checked. The OS message is
+    still shown when the file DOES exist, because then something really did go
+    wrong opening it and the errno is likely to be about that.
+
+    SysUtils.SysErrorMessage returns a trimmed string directly -- no cast; TF's
+    own SysErrorMessage shadows it here and returns PAnsiChar untrimmed.
+    GetLastOSError, not Windows' GetLastError: SysUtils declares it for every
+    platform. *)
+  if not FileExists(FileName) then
+     begin
+     showwarning(SysUtils.Format('%s'#13#13'%s',
+                 [SFileNotFoundThere, FileName]));
+     end
+  else
+     begin
+     showwarning(SysUtils.Format('%s'#13#13'%s',
+                 [SysUtils.SysErrorMessage(SysUtils.GetLastOSError), FileName]));
+     end;
 end;
 
 function DeleteSlashes(p: PAnsiChar): PAnsiChar;
@@ -1052,7 +1075,25 @@ begin
   (* THE SAME THREE CANDIDATE PATHS as before -- as given, then under the log
     directory, then under the program directory -- but asked of the file
     system rather than of three open attempts. *)
-  if strpos(FileName, '\') <> nil then
+  (* "DOES THIS NAME ALREADY CARRY A DIRECTORY", asked of the PLATFORM.
+
+    This was `strpos(FileName, '\') <> nil` -- a name with a backslash in
+    it was taken as already-qualified and used as given, and anything else had
+    a directory prepended. On Windows that is right. On Linux there is no
+    backslash in any path, so a fully-qualified name such as
+
+        /home/toms/Desktop/TR4W/tr4w-5.0.2-x86_64-linux/dom/arrlsect.dom
+
+    was treated as a bare filename and had another directory glued to the
+    front of it, producing a path that cannot exist (NY4I, 2026-09-09).
+
+    The failure was reported as "Bad file number", which is errno 9 and had
+    nothing to do with it -- see UnableToFindFileMessage.
+
+    ExtractFilePath is the platform's own answer: on Windows it accepts either
+    separator, so the Windows behaviour is unchanged, and on Unix it
+    recognises the one that is actually used there. *)
+  if ExtractFilePath(string(AnsiString(FileName))) <> '' then
      begin
      Format(TempBuffer, '%s', FileName);
      end
