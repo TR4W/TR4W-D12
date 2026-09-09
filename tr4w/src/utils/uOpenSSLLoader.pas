@@ -6,11 +6,24 @@ unit uOpenSSLLoader;
   Call EnsureOpenSSL once before the first HTTPS request.  It returns True when
   TLS is usable and False when it is not, and it never raises.
 
-  WINDOWS AND macOS NEED NOTHING AND GET NOTHING.  FPC already looks for
-  ssleay32.dll and libeay32.dll, which is exactly what the installer puts
-  beside tr4w.exe -- verified 2026-09-09 by fetching cty.dat with the bundled
-  pair untouched.  macOS is left on the default deliberately: an unverified
-  library name is the mistake this unit exists to fix, not one to add.
+  WINDOWS NEEDS NOTHING AND GETS NOTHING.  FPC already looks for ssleay32.dll
+  and libeay32.dll, which is exactly what the installer puts beside tr4w.exe --
+  verified 2026-09-09 by fetching cty.dat with the bundled pair untouched.
+
+  macOS HAS NO OpenSSL AT ALL, WHICH IS WORSE THAN A WRONG NAME.  Apple removed
+  the shipped libssl years ago and there is no replacement in /usr/lib; the
+  system's own TLS is LibreSSL reached through Security.framework, which FPC
+  does not use.  Measured on an Apple Silicon Mac, 2026-09-09:
+
+      ls /usr/lib/libssl*.dylib      no matches
+      openssl version                LibreSSL 3.3.6   (the CLI, not a dylib)
+
+  So FPC's default finds nothing and TR4W has no TLS on that platform at all.
+  The Homebrew package supplies one, at a path this unit now looks in --
+  measured, not guessed, which is the standard this unit was written to.  A Mac
+  WITHOUT Homebrew still has no TLS: the durable answer is to ship the dylibs
+  inside TR4W.app the way the Windows installer ships the DLLs, and that is a
+  packaging decision rather than something to slip in here.
 
   LINUX IS THE PROBLEM, AND IT IS A NAME, NOT AN API.
 
@@ -78,6 +91,28 @@ function OpenSSLDiagnostic: string;
 begin
    Result := GDiagnostic;
 end;
+
+{$IFDEF DARWIN}
+(* WHERE A MAC KEEPS AN OpenSSL SOMEONE ELSE INSTALLED.  Homebrew on Apple
+  Silicon lives under /opt/homebrew and on Intel under /usr/local, and it
+  already provides the unversioned libssl.dylib symlink that FPC's loader
+  wants -- so unlike Linux there is nothing to link, only a directory to name.
+  MacPorts is included because it is the other common answer.
+
+  Each of these was checked on a real machine or is the documented prefix of
+  its package manager.  A directory that is not there is skipped. *)
+function DarwinSSLDirs: TStringArray;
+begin
+   Result := TStringArray.Create(
+      '/opt/homebrew/opt/openssl@3/lib',
+      '/opt/homebrew/opt/openssl/lib',
+      '/opt/homebrew/lib',
+      '/usr/local/opt/openssl@3/lib',
+      '/usr/local/opt/openssl/lib',
+      '/usr/local/lib',
+      '/opt/local/lib');
+end;
+{$ENDIF}
 
 {$IFDEF LINUX}
 (* The directories a distribution puts its shared libraries in.  Multiarch
@@ -233,6 +268,11 @@ var
    cryptoPath: string;
    dir:        string;
 {$ENDIF}
+{$IFDEF DARWIN}
+var
+   dir: string;
+   i:   integer;
+{$ENDIF}
 begin
    if GTried then
       begin
@@ -296,8 +336,37 @@ begin
                   + 'would not initialise';
    Result := False;
 {$ELSE}
+{$IFDEF DARWIN}
+   (* NAME THE DIRECTORY, NOT THE FILE: FPC appends '.dylib', and Homebrew
+     already provides libssl.dylib as a symlink onto the versioned one. So
+     unlike the Linux arm there is nothing to create -- only somewhere else to
+     look. *)
+   for i := 0 to High(DarwinSSLDirs) do
+      begin
+      dir := DarwinSSLDirs[i];
+      if FileExists(IncludeTrailingPathDelimiter(dir) + 'libssl.dylib') and
+         FileExists(IncludeTrailingPathDelimiter(dir) + 'libcrypto.dylib') then
+         begin
+         DLLSSLName  := IncludeTrailingPathDelimiter(dir) + 'libssl';
+         DLLUtilName := IncludeTrailingPathDelimiter(dir) + 'libcrypto';
+         if InitSSLInterface then
+            begin
+            GUsable     := True;
+            GDiagnostic := 'OpenSSL loaded from ' + dir;
+            Result      := True;
+            Exit;
+            end;
+         end;
+      end;
+
+   GDiagnostic := 'no OpenSSL found. macOS does not ship one -- install it '
+                  + 'with "brew install openssl@3", or use a TR4W.app that '
+                  + 'carries its own copy.';
+   Result := False;
+{$ELSE}
    GDiagnostic := 'OpenSSL could not be initialised (' + DLLSSLName + ')';
    Result := False;
+{$ENDIF}
 {$ENDIF}
 end;
 
