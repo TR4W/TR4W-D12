@@ -664,11 +664,27 @@ begin
    RegisterStoredSetting('network.ctrlj.netStatusUpdateInterval','NET STATUS UPDATE INTERVAL',
                           RS_NETWORK_CTRLJ_NETSTATUSUPDATEINTERVAL);
 
-   // --- Voice/DVK (2) --------------------------------
-   RegisterStoredSetting('voice.ctrlj.mp3RecorderBitrate',    'MP3 RECORDER BITRATE',
-                          RS_VOICE_CTRLJ_MP3RECORDERBITRATE);
-   RegisterStoredSetting('voice.ctrlj.mp3RecorderDuration',   'MP3 RECORDER DURATION',
-                          RS_VOICE_CTRLJ_MP3RECORDERDURATION);
+   // --- Voice/DVK -----------------------------------
+   (* THE MP3 RECORDER SETTINGS ARE GONE, retired 2026-09-09 to match the
+     comment that has stood above their rows in uCFG since the recorder itself
+     was deleted on 2026-09-07: "their COMMANDS are marked csRem". One of the
+     four -- SAMPLERATE -- actually was. Bitrate and duration were not, so they
+     stayed live, stored, and offered in Preferences for a feature with no
+     code behind it.
+
+     FOUND BY uTestAllSettings, which is the point of that suite: bitrate's
+     value was 0 while its own allow-list is (8,16,24,32,40,48,56,64), so
+     Preferences would have shown a drop-down that could not represent the
+     current value -- and saving the form would have changed a setting the
+     operator never touched. Nothing else in the tree was ever going to notice.
+
+     The DECLARATIONS in uCFG stay: ListParamArray's lpVar is dereferenced with
+     no nil check, so a blanked row is a latent access violation rather than a
+     tidy hole. Retiring the COMMAND is the mechanism this tree already uses.
+
+     MP3 RECORDER ENABLE is deliberately left alone. It is equally dead, but it
+     has a designed checkbox in Preferences (chkMP3RecorderEnable), so removing
+     it is a change to a form and NY4I should see it rather than find it. *)
 
    // --- Advanced (2) ---------------------------------
    RegisterStoredSetting('advanced.handLogMode',        'HAND LOG MODE',

@@ -152,6 +152,7 @@ type
       FCaption: string;
       FLegacyCommand: string;
       FNeedsRestart: boolean;
+      FHasSideEffects: boolean;
       FOnApply: TSettingApplyProc;
       { A cell this setting created for itself, or nil.  See TBoolCell. }
       FOwnedCell: TObject;
@@ -204,6 +205,26 @@ type
         server.  Replaces crA and crP, and unlike them it is written next to the
         setting rather than in a numbered array. }
       property OnApply: TSettingApplyProc read FOnApply write FOnApply;
+
+      { TRUE WHEN WRITING THIS SETTING DOES SOMETHING BESIDES STORE A VALUE.
+
+        A modern setting says so by carrying an OnApply. A LEGACY one says so
+        in crP and crA -- a numbered redraw handler and an "additional proc" --
+        and until now nothing outside the legacy adapter could see that. So a
+        caller enumerating settings had no way to tell which of them would
+        repaint a window or reopen a port when written.
+
+        THAT GAP HAD A COST. uTestAllSettings writes every setting to check it
+        round-trips, and skipped the ones with an OnApply for exactly this
+        reason -- but two legacy rows carrying crP slipped through, ran their
+        redraw handlers with no main window, and took an access violation that
+        killed the whole run.
+
+        It is also a prerequisite for retiring CFGCA, alongside crNetwork and
+        crJ's read-only states: an applier built on the registry cannot
+        reproduce what the table does until the registry can say what the table
+        knows. }
+      property HasSideEffects: boolean read FHasSideEffects write FHasSideEffects;
    end;
 
    TBoolSetting = class(TSettingBase)

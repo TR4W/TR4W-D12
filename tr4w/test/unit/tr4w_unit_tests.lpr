@@ -222,6 +222,7 @@ uses
    uTestAccelerators in 'uTestAccelerators.pas',
    uSHA256 in '..\..\src\utils\uSHA256.pas',
    uTestSHA256 in 'uTestSHA256.pas',
+   uTestAllSettings in 'uTestAllSettings.pas',
    uTestCWFraming in 'uTestCWFraming.pas',
    // Pins the radio-status change detector.  LOGRADIO itself is not listed
    // here -- it arrives through the search path, the same way uTestIcomRegistry
@@ -418,6 +419,7 @@ begin
    RegisterSuite(TElecraftIFTests.Create('ElecraftIF'));
    RegisterSuite(TAutoInfoTests.Create('AutoInfo'));
    RegisterSuite(TSettingsRegistryTests.Create('SettingsRegistry'));
+   RegisterSuite(TAllSettingsTests.Create('AllSettings'));
    RegisterSuite(TRotatorFactoryTests.Create('RotatorFactory'));
    RegisterSuite(TDXClusterClientTests.Create('DXClusterClient'));
    RegisterSuite(TDXSpotParseTests.Create('DXSpotParse'));

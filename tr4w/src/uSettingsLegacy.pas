@@ -157,6 +157,11 @@ begin
    // means a UI can say so without every panel hard-coding which of its fields
    // are which.
    NeedsRestart := (CFGCA[idx].crJ = 1);
+
+   (* crP is a numbered redraw handler and crA an "additional proc"; either
+     means writing this row runs code. See TSettingBase.HasSideEffects for why
+     that has to be visible from outside. *)
+   HasSideEffects := (CFGCA[idx].crP <> 0) or (CFGCA[idx].crA <> 0);
 end;
 
 procedure TLegacySetting.AfterApplied;
