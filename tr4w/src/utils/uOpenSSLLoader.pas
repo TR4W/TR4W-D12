@@ -199,17 +199,30 @@ end;
   ran, and a symlink to a library that is gone is worse than no link at all. *)
 function LinkInto(const aDir, aBaseName, aTarget: string): boolean;
 var
-   link: string;
+   link:      string;
+   linkBytes: AnsiString;
+   destBytes: AnsiString;
 begin
    link := IncludeTrailingPathDelimiter(aDir) + aBaseName + '.so';
 
-   (* AnsiString, NOT PChar. BaseUnix overloads both of these for strings, and
-     `string` here is UnicodeString -- so PChar() means PWideChar and the call
-     will not compile, which is how the compiler caught the first version of
-     this line. Passing the string is both correct and the thing this tree is
-     moving toward; the overload owns the conversion. *)
-   fpUnlink(AnsiString(link));
-   Result := fpSymlink(AnsiString(aTarget), AnsiString(link)) = 0;
+   (* A REAL C BOUNDARY, so PAnsiChar here is the justified kind -- fpSymlink
+     is a thin wrapper over the symlink(2) system call and takes NUL-terminated
+     bytes by definition. Two things about it are not obvious:
+
+     PChar WOULD BE WRONG. `string` in this program is UnicodeString, so PChar
+     means PWideChar, and the compiler says so:
+
+         Incompatible type for arg no. 2: Got "PWideChar", expected "PChar"
+
+     NAMED LOCALS, NOT PAnsiChar(AnsiString(expr)). A pointer taken from a
+     temporary is valid only until the compiler decides the temporary is dead,
+     which this tree has been bitten by before. Holding the AnsiString in a
+     variable makes the lifetime the variable's, which outlives the call. *)
+   linkBytes := AnsiString(link);
+   destBytes := AnsiString(aTarget);
+
+   fpUnlink(linkBytes);
+   Result := fpSymlink(PAnsiChar(destBytes), PAnsiChar(linkBytes)) = 0;
 end;
 {$ENDIF}
 
