@@ -1532,7 +1532,17 @@ begin
     on the shared buffer GetTimeString used to hand out. }
 
   TimeString[3] := '-';
-  StrPCopy(wsprintfBuffer, SysUtils.Format('%sDXCluster\dxcluster %s %s.txt',
+  (* PathDelim, NOT a backslash. A WRITE path cannot be repaired after the
+    fact the way a read path can -- uAppPaths.ExistingDataFile resolves a file
+    that is already there, and there is nothing to resolve when the program is
+    the one creating it. On Linux this produced a FILE whose name contains a
+    backslash, sitting beside the directory it was supposed to go in:
+
+        DXCluster\dxcluster 09-09-26 18-44.txt
+
+    Seen on NY4I's Mint box, 2026-09-09, next to an empty dxcluster/ that
+    something else had made correctly. *)
+  StrPCopy(wsprintfBuffer, SysUtils.Format('%sDXCluster' + PathDelim + 'dxcluster %s %s.txt',
     [string(PAnsiChar(@TR4W_PATH_NAME)), string(GetDateString), string(TimeString)]));
 
   (* CREATE_NEW MEANT "FAIL IF IT ALREADY EXISTS", and FileCreate does not --

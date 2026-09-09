@@ -98,7 +98,11 @@ var
   dotPos:     integer;
 begin
 
-  TF.Format(TR4W_POS_FILENAME, '%ssettings\tr4w.pos', TR4W_PATH_NAME);
+  (* PathDelim: this file is WRITTEN as well as read, so the separator has to
+    be right when the name is built. Resolving it afterwards only helps a file
+    that already exists -- see the note in uTelnet. *)
+  TF.Format(TR4W_POS_FILENAME, '%ssettings' + PathDelim + 'tr4w.pos',
+    TR4W_PATH_NAME);
   ResolveDataFileInPlace(TR4W_POS_FILENAME);
   TF.Format(TR4W_BANDMAPBIN_FILENAME, '%sbandmap.bin', TR4W_PATH_NAME);
 
