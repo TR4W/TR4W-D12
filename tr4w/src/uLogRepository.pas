@@ -1337,9 +1337,7 @@ end;
 
 function TLogRepository.SaveQSO(const aQso: ContestExchange): Int64;
 begin
-   WriteLn('TRACE2: SaveQSO entry'); Flush(Output);
    FLastGuid := NewRowGuid(aQso);
-   WriteLn('TRACE2: after NewRowGuid = ', FLastGuid); Flush(Output);
 
    if FSetIdForNextSave <> '' then
       begin
@@ -1351,13 +1349,9 @@ begin
       FLastSetId := FLastGuid;
       end;
 
-   WriteLn('TRACE2: before BindRecord'); Flush(Output);
    BindRecord(aQso, FLastGuid);
-   WriteLn('TRACE2: before ExecSQL'); Flush(Output);
    FInsert.ExecSQL;
-   WriteLn('TRACE2: after ExecSQL'); Flush(Output);
    InvalidateRecordCount;
-   WriteLn('TRACE2: after InvalidateRecordCount'); Flush(Output);
 
    (* CLEARED IMMEDIATELY, BOTH OF THEM. A sticky set id would quietly pull the next
      unrelated QSO into this contact, and an ADIF export would then merge two
