@@ -238,19 +238,28 @@ begin
       reader.Free;
    end;
 
+   WriteLn('TRACE: before TLogDatabase.Create'); Flush(Output);
    db := TLogDatabase.Create;
    try
+      WriteLn('TRACE: before CreateNew'); Flush(Output);
       db.CreateNew(fn);
+      WriteLn('TRACE: before TLogRepository.Create'); Flush(Output);
       repo := TLogRepository.Create(db);
       try
          (* The contest lives on the contest row, so it has to be set before a
            QSO can round-trip completely -- which is what the importer does
            from the first record it reads. *)
+         WriteLn('TRACE: before SetContest, ceContest=', Ord(before.ceContest)); Flush(Output);
          repo.SetContest(before.ceContest);
+         WriteLn('TRACE: before SaveQSO'); Flush(Output);
          rowId := repo.SaveQSO(before);
+         WriteLn('TRACE: before Commit'); Flush(Output);
          repo.Commit;
+         WriteLn('TRACE: before LoadQSO'); Flush(Output);
          CheckTrue(repo.LoadQSO(rowId, after), 'the saved QSO reads back');
+         WriteLn('TRACE: before CompareQSO'); Flush(Output);
          CompareQSO(before, after, 'cqww first QSO');
+         WriteLn('TRACE: test body done'); Flush(Output);
       finally
          repo.Free;
       end;
