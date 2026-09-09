@@ -195,6 +195,31 @@ begin
    Result := XdgDir('XDG_STATE_HOME', '.local/state') + aName;
 end;
 
+(* THE SAME THREE, AS DIRECTORIES. I added these to the Windows and Darwin arms
+  and forgot this one, which no Windows build could report -- the unit simply
+  stopped compiling for Linux and Lint-LinuxCompile caught it. That lint is the
+  only thing standing between a per-platform block and a missing arm. *)
+function DataDir: string;
+begin
+   Result := '/usr/share/tr4w/';
+   if not DirectoryExists(Result) then
+      begin
+      (* Not installed to a prefix -- run from a build or an unpacked tarball,
+        which is how the tarball we ship is used. Same rule as DataFilePath. *)
+      Result := ExtractFilePath(ParamStr(0));
+      end;
+end;
+
+function SettingsDir: string;
+begin
+   Result := XdgDir('XDG_CONFIG_HOME', '.config');
+end;
+
+function LogDir: string;
+begin
+   Result := XdgDir('XDG_STATE_HOME', '.local/state');
+end;
+
 {$IFEND}
 
 end.
