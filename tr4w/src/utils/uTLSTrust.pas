@@ -109,10 +109,18 @@ type
    TX509CheckHost = function(aCert: pointer; aName: PAnsiChar; aLen: PtrUInt;
                              aFlags: LongWord; aPeerName: pointer): integer; cdecl;
 
+   (* X509 *SSL_get1_peer_certificate(const SSL *ssl);
+
+     Returns a certificate whose reference count has been INCREMENTED, so the
+     caller frees it. Both spellings behave identically in that respect. *)
+   TSSLGetPeerCert = function(aSSL: pointer): pointer; cdecl;
+
 var
-   GCheckHost:   TX509CheckHost = nil;
-   GCheckLoaded: boolean = False;
-   GLastFailure: string = '';
+   GCheckHost:      TX509CheckHost = nil;
+   GCheckLoaded:    boolean = False;
+   GGetPeerCert:    TSSLGetPeerCert = nil;
+   GPeerCertLoaded: boolean = False;
+   GLastFailure:    string = '';
 
 function TrustBundlePath: string;
 begin
@@ -139,6 +147,62 @@ begin
          end;
       end;
    Result := Assigned(GCheckHost);
+end;
+
+(* THE PEER CERTIFICATE, UNDER WHICHEVER NAME THIS OpenSSL USES.
+
+  FPC 3.2.2's TSSL.PeerCertificate binds SSL_get_peer_certificate, and OpenSSL
+  3 DOES NOT EXPORT THAT NAME. It was renamed to SSL_get1_peer_certificate and
+  the old spelling survives only as a macro in the C headers, which does
+  nothing for a library loaded at run time:
+
+      nm -D --defined-only libssl.so.3 | grep peer_certificate
+      SSL_get1_peer_certificate@@OPENSSL_3.0.0
+
+  So on any current Linux, FPC hands back nil -- and so do PeerName,
+  PeerSubject and PeerNameHash, which all go through it. FPC's certificate
+  inspection is entirely blind against OpenSSL 3.
+
+  Found by running the badssl probe on the Linux runner after it passed on
+  Windows: every site was rejected with "the server presented no certificate",
+  including the ones that must succeed. Failing closed is the right way round
+  to have that bug, but it would have broken every download on Linux.
+
+  Both names are tried, new one first, through the libssl handle FPC itself
+  publishes. TSSL.FSSL is public, so this uses FPC's own surface rather than
+  reaching around it.
+
+  This is a SECOND new symbol on top of X509_check_host, and it deserves the
+  same justification: nothing extra is loaded, and the alternative is that
+  hostname verification cannot work at all on the platform that needed it. *)
+function PeerCertificateOf(aSSL: pointer): pointer;
+begin
+   Result := nil;
+   if aSSL = nil then
+      begin
+      Exit;
+      end;
+
+   if not GPeerCertLoaded then
+      begin
+      GPeerCertLoaded := True;
+      if SSLLibHandle <> 0 then
+         begin
+         GGetPeerCert := TSSLGetPeerCert(GetProcedureAddress(SSLLibHandle,
+                                         'SSL_get1_peer_certificate'));
+         if not Assigned(GGetPeerCert) then
+            begin
+            (* OpenSSL 1.x, where the old spelling is the real symbol. *)
+            GGetPeerCert := TSSLGetPeerCert(GetProcedureAddress(SSLLibHandle,
+                                            'SSL_get_peer_certificate'));
+            end;
+         end;
+      end;
+
+   if Assigned(GGetPeerCert) then
+      begin
+      Result := GGetPeerCert(aSSL);
+      end;
 end;
 
 type
@@ -207,7 +271,9 @@ begin
       Exit;
       end;
 
-   cert := handler.SSL.PeerCertificate;
+   (* NOT handler.SSL.PeerCertificate -- see PeerCertificateOf for why that
+     returns nil on OpenSSL 3. *)
+   cert := PeerCertificateOf(handler.SSL.FSSL);
    if cert = nil then
       begin
       GLastFailure := 'TLS verification failed: the server presented no certificate';
