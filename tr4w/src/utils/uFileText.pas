@@ -103,14 +103,58 @@ begin
    Result := UTF8ToString(raw);
 end;
 
+(* WRITTEN BESIDE, THEN SWAPPED IN. NEVER STRAIGHT OVER THE TARGET.
+
+  This opened the destination with fmCreate, which TRUNCATES IT TO ZERO BYTES
+  before writing any. Every byte of the operator's configuration was destroyed
+  at the start of each save, and only restored if the write then completed. A
+  crash, a power cut or a full disk in that window left settings\tr4w.json
+  empty or half-written -- the station's entire configuration, radios, keyers,
+  messages and all, gone with nothing to recover from.
+
+  It is not a hypothetical: this is the file TR4W rewrites every time a
+  preference changes, so the window opens many times in a session.
+
+  THE SEQUENCE KEEPS A COMPLETE COPY AT EVERY INSTANT:
+
+      write   <file>.new     the new content, complete and closed
+      rename  <file>     ->  <file>.bak
+      rename  <file>.new ->  <file>
+      delete  <file>.bak
+
+  Interrupt it anywhere and a whole file exists as one of the three names.
+  Compare with the old behaviour, where the interesting instant had a
+  zero-byte file and nothing else.
+
+  WHY NOT ONE rename OVER THE TOP, which is atomic on POSIX: it is not on
+  Windows, where MoveFile refuses an existing destination and the atomic form
+  is a Win32 call this program is trying to stop making. Two renames behave
+  the same on all three platforms and need no conditional.
+
+  THE .bak IS LEFT BEHIND IF THE SECOND RENAME FAILS, deliberately, and the
+  exception names it. A stray file the operator can copy back beats a tidy
+  directory with no configuration in it.
+
+  This does not make the write transactional -- SQLite would, and that is the
+  argument for the contest log. It removes the window in which a save destroys
+  what it is replacing, which is the part that costs an operator their
+  station. *)
 procedure WriteAllTextUTF8(const aFileName: string; const aText: string);
 var
-   stream : TFileStream;
-   raw    : RawByteString;
+   stream  : TFileStream;
+   raw     : RawByteString;
+   newName : string;
+   bakName : string;
 begin
-   raw := UTF8Encode(aText);
+   raw     := UTF8Encode(aText);
+   newName := aFileName + '.new';
+   bakName := aFileName + '.bak';
 
-   stream := TFileStream.Create(aFileName, fmCreate);
+   (* A .new left by an earlier failure is not evidence of anything -- the
+     content it holds was superseded by whatever is in the target now. *)
+   DeleteFileIfExists(newName);
+
+   stream := TFileStream.Create(newName, fmCreate);
    try
       if Length(raw) > 0 then
          begin
@@ -118,8 +162,30 @@ begin
          stream.WriteBuffer(raw[1], Length(raw));
          end;
    finally
+      (* Closed BEFORE the rename: the bytes must be handed to the filesystem
+        while the old file is still the one on disk. *)
       stream.Free;
    end;
+
+   if FileExists(aFileName) then
+      begin
+      DeleteFileIfExists(bakName);
+      if not RenameFile(aFileName, bakName) then
+         begin
+         raise EInOutError.CreateFmt(
+            'Could not set aside "%s" before replacing it. The new content is '
+            + 'in "%s" and nothing has been lost.', [aFileName, newName]);
+         end;
+      end;
+
+   if not RenameFile(newName, aFileName) then
+      begin
+      raise EInOutError.CreateFmt(
+         'Could not put "%s" into place. The previous version is in "%s" and '
+         + 'the new content is in "%s".', [aFileName, bakName, newName]);
+      end;
+
+   DeleteFileIfExists(bakName);
 end;
 
 function ReadAllBytesFile(const aFileName: string): TBytes;
