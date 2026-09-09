@@ -53,7 +53,7 @@ fpc_unix_package_paths() {
    #             FPReadJPEG" is what their absence looks like.
    for _p in rtl rtl-objpas rtl-extra rtl-generics rtl-unicode rtl-console \
              fcl-base hash univint cocoaint chm \
-             fcl-json fcl-db fcl-net fcl-process fcl-xml fcl-image \
+             fcl-json fcl-db fcl-net fcl-web fcl-process fcl-xml fcl-image \
              pasjpeg libpng hermes \
              sqlite openssl regexpr paszlib zlib pthreads iconvenc; do
       [ -d "$_units/$_p" ] && printf ' -Fu%s' "$_units/$_p"
