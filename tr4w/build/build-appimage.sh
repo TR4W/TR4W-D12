@@ -46,12 +46,17 @@ TR4W="$here/.."
 REPO=$(cd "$TR4W/.." && pwd)
 OUTROOT="$REPO/build-out"
 
+# TWO NAMES, AND THEY ARE NOT THE SAME. build-unix.sh stages under the full
+# target triple (x86_64-linux, matching the tarball name); appimagetool wants
+# the CPU alone in its ARCH variable. Conflating them looks for a stage
+# directory that does not exist -- which is exactly what the first run did.
+TARGET=x86_64-linux
 ARCH=x86_64
 VER=$(sed -n "s/.*TR4W_CURRENTVERSION_NUMBER[^']*'\([^']*\)'.*/\1/p" \
         "$TR4W/src/Version.pas" | head -1)
 [ -n "$VER" ] || { echo "cannot read the version from src/Version.pas"; exit 2; }
 
-STAGE="$OUTROOT/dist/tr4w-$VER-$ARCH"
+STAGE="$OUTROOT/dist/tr4w-$VER-$TARGET"
 APPDIR="$OUTROOT/appimage/TR4W.AppDir"
 OUT="$OUTROOT/dist/TR4W-$VER-$ARCH.AppImage"
 
