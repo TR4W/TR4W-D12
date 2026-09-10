@@ -371,6 +371,22 @@ begin
    Color      := tr4wColorsArray[trWhite];
    Font.Color := tr4wColorsArray[trBlack];
 
+   (* A TINT, NOT A SYSTEM COLOUR. It has to say "this row is current" while
+     remaining obviously part of the log, and it has to do that against black,
+     red (deleted) and grey (X-QSO) text, which is why the row keeps its own
+     font colour and only the background moves.
+
+     NOT clHighlight and NOT clBtnFace. The first is a saturated selection
+     colour meant for a control with the keyboard, and this one never has it;
+     the second is window chrome and produced a bar that read as a scroll-bar
+     trough on gtk2. A fixed light blue is neither, on any theme.
+
+     FadeUnfocusedSelection OFF so the LCL leaves the choice alone: its own
+     unfocused path substitutes clBtnFace, which is the colour this is
+     avoiding. *)
+   SelectedColor           := $00FFDEC5;   (* BGR: a pale blue *)
+   FadeUnfocusedSelection  := False;
+
    (* THE FONT IS THE MAIN WINDOW'S, applied by the owner through
      MainUnit.ApplyMainFontTo -- the operator chooses it, and a log in a
      different typeface from the rest of the window is exactly what the first
@@ -1229,15 +1245,31 @@ begin
      meanings to signal one. DrawMatchIn's note makes the same argument. *)
    if gdSelected in aState then
       begin
-      if Focused then
-         begin
-         Canvas.Brush.Color := clHighlight;
-         Canvas.Font.Color  := clHighlightText;
-         end
-      else
-         begin
-         Canvas.Brush.Color := clBtnFace;
-         end;
+      (* THE GRID'S OWN SelectedColor, WHICHEVER WAY THE FOCUS HAPPENS TO BE.
+
+        THIS LINE WAS clBtnFace WHEN UNFOCUSED, AND clBtnFace IS WINDOW CHROME.
+        On Windows it is F0F0F0, near enough to white that a muted selection
+        reads as a selection. On NY4I's gtk2 theme it is (220,218,213) -- and
+        since ScrollToEnd keeps the newest QSO selected, and this grid never
+        has the keyboard during a contest, the result was a FULL-WIDTH GREY BAR
+        ONE ROW HIGH, permanently, immediately under the last contact.
+
+        THAT IS THE "horizontal scroll bar with a thumb" HE REPORTED SEVEN
+        TIMES. Captured with xwd and measured off the pixels: white above,
+        white below, 19 grey rows between -- exactly one DefaultRowHeight, at
+        the row ScrollToEnd had selected. Nothing was a scroll bar and nothing
+        was dead space; a row was being painted the colour of a trough.
+
+        I INTRODUCED IT the same day, replacing a saturated blue he had called
+        hard to read. The complaint was right and so was muting it; borrowing
+        a system chrome colour to do it was not.
+
+        SelectedColor is a published grid property, so the colour is stated
+        once in the constructor instead of being decided per paint, and
+        FadeUnfocusedSelection is off so the LCL never swaps in clBtnFace on
+        its own account -- which its PrepareCanvas does, with a comment naming
+        the same two colours this went wrong on. *)
+      Canvas.Brush.Color := SelectedColor;
       end;
 
    Canvas.FillRect(aRect);
