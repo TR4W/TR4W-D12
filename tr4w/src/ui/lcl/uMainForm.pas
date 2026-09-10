@@ -1208,6 +1208,15 @@ begin
                       (TR4WEditableLog.RowCount * TR4WEditableLog.DefaultRowHeight)]);
       end;
 
+   if TR4WEditableLog <> nil then
+      begin
+      logger.Debug('[EditableLog] Paint saw: calls=%d client=%d rowH=%d ' +
+                   'rows=%d gridHeight=%d drawn=%d',
+                   [TR4WEditableLog.PaintCount, TR4WEditableLog.PaintClient,
+                    TR4WEditableLog.PaintRowH, TR4WEditableLog.PaintRows,
+                    TR4WEditableLog.PaintGrid, TR4WEditableLog.PaintDrawn]);
+      end;
+
    logger.Debug('[Layout] --- end children ---');
 end;
 
