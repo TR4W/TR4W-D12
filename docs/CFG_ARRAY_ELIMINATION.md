@@ -330,6 +330,11 @@ This is the choke point everything in stage B flows through.
 
 ## 4. Stage B -- the port rows. PLANNED, NOT STARTED
 
+> **The port work is planned in full in
+> [`PORT_IDENTITY_PLAN.md`](PORT_IDENTITY_PLAN.md)**, which covers the
+> enumerator and the naming as well as these rows. What follows is the CFGCA
+> half; read that document for the order of work and how it gets proven.
+
 This is the slice NY4I's `SERIAL n` decision authorises, and it is deliberately
 **not** started without review: it touches the profile applier and the radio
 open path, which is the most bench-sensitive code in the program and the part
