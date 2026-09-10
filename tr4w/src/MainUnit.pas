@@ -294,7 +294,6 @@ var
   Inact_Band: BandType;
   so2r_swap: boolean = false;
 
-function ConvertPortTypeToCOMString(port: PortType): string;
 procedure CheckNumber;
 procedure RunPlugin(PluginNumber: integer);
 procedure LoadInPlugins();
@@ -11476,23 +11475,17 @@ end;
 // enum -- exactly the kind of coupling that breaks when someone widens the range.
 // (It was also already wrong at the top end: it claimed 22..25 were LPT1..LPT4,
 // but only Parallel1..Parallel3 exist, so ordinal 25 was unreachable.)
-function ConvertPortTypeToCOMString(port: PortType): string;
-begin
-  Result := '';
-  if port in SerialPorts then
-     begin
-     // Serial1 is ordinal 1, so the COM number IS the ordinal.
-     Result := 'COM' + IntToStr(Ord(port));
-     end
-  else if port = Network then
-     begin
-     Result := 'socket';
-     end
-  else if port in [Parallel1, Parallel2, Parallel3] then
-     begin
-     Result := 'LPT' + IntToStr(Ord(port) - Ord(Parallel1) + 1);
-     end;
-end;
+(* ConvertPortTypeToCOMString MOVED, 2026-09-10, and narrowed on the way.
+
+  It is uPortAddress.SerialDeviceName now -- the one place that turns a
+  configured port into the name an operating system answers to.  It lived here
+  because MainUnit is where the Win32 UI lived, which meant the four other
+  units that needed the same rule could not reach it without dragging the whole
+  main window in.  All four wrote their own copy instead.
+
+  NARROWED because the other two arms were dead: its single caller, in
+  LOGRADIO, used it only inside an `in SerialPorts` test, so the 'socket' and
+  'LPTn' spellings had no reader. *)
 begin
 // The {$IF tDebugMode} SetNewMemMgr call that stood here went with the custom
 // memory manager -- see the note where those hooks used to be defined.

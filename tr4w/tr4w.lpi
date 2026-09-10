@@ -42,7 +42,7 @@
         <PackageName Value="LCL"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="408">
+    <Units Count="409">
       <Unit0>
         <Filename Value="tr4w.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -1797,6 +1797,10 @@
         <Filename Value="src/ui/lcl/uMainGrids.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit407>
+      <Unit408>
+        <Filename Value="src/uPortAddress.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit408>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

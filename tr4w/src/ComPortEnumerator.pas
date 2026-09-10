@@ -78,29 +78,23 @@ uses
    VC;   // for MAX_SERIAL_PORT -- see below
 
 const
-   (* ENUMERATION IS WINDOWS-ONLY, AND THE CALLER CAN ASK.
+   (* ENUMERATION IS PER-PLATFORM, AND THE CALLER CAN ASK.
 
-     Everything below that FINDS a port is SetupAPI plus the SERIALCOMM registry
-     map, and neither exists off Windows.  The portable half of this unit -- the
-     records, the name parsing, and matching a remembered port against a list --
-     is not gated, so the shape of the answer is the same everywhere; only the
-     source of the list is missing.
+     Windows is SetupAPI plus the SERIALCOMM registry map; Linux is sysfs (see
+     the Linux section in the implementation).  macOS has NEITHER and is still
+     unimplemented -- it asks IOKit for IOSerialBSDClient, a third mechanism,
+     and wants a Mac with an adapter on it to test against.  The portable half
+     of this unit -- the records, the name parsing, the ordering, and matching
+     a remembered port against a list -- is not gated, so the shape of the
+     answer is the same everywhere; only the source of the list differs.
 
      On a platform with no implementation Refresh yields an EMPTY list, which is
      indistinguishable from "this machine has no serial ports".  That is exactly
      the silent downgrade this tree keeps being bitten by, so ASK THIS CONSTANT
      and tell the operator the list is unavailable instead of showing them
-     nothing and letting them conclude their adapter is broken.
-
-     What the implementation will be, when it is written: POSIX has no
-     enumeration API at all.  Linux reads /sys/class/tty/ (each entry with a
-     `device` symlink is real, and the USB ones carry vendor strings a few
-     directories up), and macOS asks IOKit for IOSerialBSDClient, giving
-     /dev/cu.usbserial-* plus a friendly name.  Two different mechanisms, both
-     of them a day's work with hardware to test against -- which is why this is
-     a gate and not a stub pretending to be a port. *)
+     nothing and letting them conclude their adapter is broken. *)
    ComPortEnumerationSupported =
-      {$IFDEF WINDOWS} True {$ELSE} False {$ENDIF};
+      {$IF DEFINED(WINDOWS) OR DEFINED(LINUX)} True {$ELSE} False {$IFEND};
 
    // Highest COM number TR4W can address, taken from the PortType enum itself
    // rather than restated here.  A second copy of this number is precisely the
@@ -111,8 +105,12 @@ const
 
 type
    TComPortInfo = record
-      PortName: string;       // 'COM14' exactly as Windows reports it
-      PortNumber: Integer;    // 14, or 0 when the name does not parse
+      // The name the OPERATING SYSTEM uses: 'COM14' on Windows, '/dev/ttyUSB0'
+      // on Linux.  A COM number is a Windows idea and an operator on Linux has
+      // never seen one, so the device node is what is shown and what is
+      // matched (NY4I, 2026-09-10).
+      PortName: string;
+      PortNumber: Integer;    // 14, or 0 when the name is not a COM name
       FriendlyName: string;   // 'Silicon Labs CP210x USB to UART Bridge (COM14)'
       DeviceDesc: string;     // 'USB Serial Port' -- fallback when no friendly name
       InstanceID: string;     // stable-ish device identity, e.g. 'FTDIBUS\VID_0403...'
@@ -170,9 +168,17 @@ type
       property Ports: TComPortInfoArray read FPorts;
    end;
 
-// Parses 'COM14' -> 14.  Returns 0 for anything that is not a COM name, which is
-// what makes a port unaddressable rather than accidentally selectable.
+// Parses 'COM14' -> 14.  Returns 0 for anything that is not a COM name -- a
+// Linux device node included -- which is what makes a port unaddressable rather
+// than accidentally selectable.
 function ComPortNumber(const APortName: string): Integer;
+
+(* Orders a list the way the operator reads it: by COM number where there is
+  one, and otherwise by name with any trailing number compared NUMERICALLY, so
+  COM2 precedes COM10 and /dev/ttyUSB2 precedes /dev/ttyUSB10.  Exported
+  because it is the one part of the platform bodies that is pure and therefore
+  the one part a test can reach; both Refresh implementations call it. *)
+procedure SortPorts(var aPorts: TComPortInfoArray);
 
 // ---------------------------------------------------------------------------
 // Serial-port arrival/removal notification.  WINDOWS ONLY -- it is a WM_
@@ -344,18 +350,116 @@ end;
 { TComPortInfo }
 
 function TComPortInfo.Describe: string;
+var
+   detail: string;
 begin
-   if FriendlyName <> '' then
+   (* Windows folds the port into its friendly name already -- 'Silicon Labs
+     CP210x USB to UART Bridge (COM14)' -- and repeating it would read badly.
+     A Linux description names the ADAPTER only ('FTDI FT232R USB UART'), so
+     there the device node has to be prefixed or the entry does not say which
+     port it is.  Testing the text rather than the platform keeps one rule. *)
+   detail := FriendlyName;
+   if detail = '' then
       begin
-      Result := FriendlyName;
+      detail := DeviceDesc;
+      end;
+
+   if detail = '' then
+      begin
+      Result := PortName;
       end
-   else if DeviceDesc <> '' then
+   else if Pos(UpperCase(PortName), UpperCase(detail)) > 0 then
       begin
-      Result := PortName + ' - ' + DeviceDesc;
+      Result := detail;
       end
    else
       begin
-      Result := PortName;
+      Result := PortName + ' - ' + detail;
+      end;
+end;
+
+(* Splits a trailing run of digits off a port name, so COM2 sorts before COM10
+  and /dev/ttyUSB2 before /dev/ttyUSB10.  Plain string order gets both wrong.
+  aNumber is -1 when there is no trailing number at all. *)
+procedure SplitTrailingNumber(const aName: string;
+                              out aStem: string; out aNumber: Int64);
+const
+   // Longer than this is not a port number, and is refused rather than
+   // overflowed.  Ten digits already exceeds every tty index a kernel emits.
+   MAX_PORT_DIGITS = 9;
+var
+   i: Integer;
+   firstDigit: Integer;
+begin
+   i := Length(aName);
+   while (i > 0) and (aName[i] >= '0') and (aName[i] <= '9') do
+      begin
+      Dec(i);
+      end;
+   aStem      := Copy(aName, 1, i);
+   aNumber    := -1;
+   firstDigit := i + 1;
+
+   if (Length(aName) - i = 0) or (Length(aName) - i > MAX_PORT_DIGITS) then
+      begin
+      Exit;
+      end;
+
+   (* Accumulated here rather than through StrToInt64Def.  SysUtils is compiled
+     with String = AnsiString and this unit is UnicodeString, so every RTL
+     string call from here narrows its argument -- which the build counts, and
+     rightly.  The digits are already located; there is nothing left to parse. *)
+   aNumber := 0;
+   for i := firstDigit to Length(aName) do
+      begin
+      aNumber := (aNumber * 10) + (Ord(aName[i]) - Ord('0'));
+      end;
+end;
+
+// Ordering as the operator reads it, on either platform.
+function PortInfoBefore(const aLeft, aRight: TComPortInfo): Boolean;
+var
+   leftStem, rightStem: string;
+   leftNumber, rightNumber: Int64;
+begin
+   (* A COM number, where both entries have one, IS the answer: it is what the
+     dialog shows and what Windows renumbers. *)
+   if (aLeft.PortNumber > 0) and (aRight.PortNumber > 0) then
+      begin
+      Result := aLeft.PortNumber < aRight.PortNumber;
+      Exit;
+      end;
+
+   SplitTrailingNumber(aLeft.PortName,  leftStem,  leftNumber);
+   SplitTrailingNumber(aRight.PortName, rightStem, rightNumber);
+   if not UnicodeSameText(leftStem, rightStem) then
+      begin
+      Result := UnicodeCompareText(leftStem, rightStem) < 0;
+      Exit;
+      end;
+   Result := leftNumber < rightNumber;
+end;
+
+(* Insertion sort -- this list is a handful of entries, never worth anything
+  cleverer.  ONE sorter for every platform: it was written inline in the
+  Windows body, and a second copy in the Linux one would be a copy that
+  drifts. *)
+procedure SortPorts(var aPorts: TComPortInfoArray);
+var
+   i: Integer;
+   j: Integer;
+   swap: TComPortInfo;
+begin
+   for i := 1 to High(aPorts) do
+      begin
+      swap := aPorts[i];
+      j := i - 1;
+      while (j >= 0) and PortInfoBefore(swap, aPorts[j]) do
+         begin
+         aPorts[j + 1] := aPorts[j];
+         Dec(j);
+         end;
+      aPorts[j + 1] := swap;
       end;
 end;
 
@@ -543,8 +647,6 @@ var
    info: TComPortInfo;
    used: Integer;
    i: Integer;
-   j: Integer;
-   swap: TComPortInfo;
    presentPorts: TPortNumberSet;   // port numbers reported by the DIGCF_PRESENT pass
 begin
    SetLength(FPorts, 0);
@@ -632,35 +734,305 @@ begin
    AddDeviceMapPorts(found, used, presentPorts);
 
    SetLength(found, used);
+   SortPorts(found);
+   FPorts := found;
+end;
 
-   // Sort by port NUMBER, not by name: COM2 must precede COM10.  Insertion sort
-   // -- this list is a handful of entries, never worth anything cleverer.
-   for i := 1 to High(found) do
+{$ELSE}
+{$IFDEF LINUX}
+
+(* ------------------------------------------------------------------ LINUX --
+
+  LINUX HAS NO ENUMERATION API, SO THE LIST COMES FROM sysfs.  /sys/class/tty
+  holds an entry for every tty the kernel knows, the large majority of which
+  are virtual consoles and 8250 slots no cable will ever reach.  Two tests
+  separate the real ones, and both were checked on the bench machine (Linux
+  Mint, an FTDI FT232R on /dev/ttyUSB0, 2026-09-10):
+
+    * a `device` symlink must be present -- a virtual console has none;
+    * where a `type` attribute exists it must not be 0.  That is the 8250
+      driver's PORT_UNKNOWN, which a PC reports for the 32 ttyS slots it
+      registers whether or not the hardware is there.  On that machine every
+      one of ttyS0..ttyS31 read 0, and ttyUSB0 has no `type` attribute at all,
+      which is the USB and ACM case and is real.
+
+  THE NAME IS THE DEVICE NODE -- /dev/ttyUSB0, not 'SERIAL 1' (NY4I).
+
+  IDENTITY COMES FROM /dev/serial/by-id, the closest thing Linux has to a
+  Windows device instance id: udev builds that name from the adapter's own USB
+  descriptors, serial number included, so it survives a replug that moves
+  ttyUSB0 to ttyUSB1.  That is exactly what MatchRemembered wants, and it is
+  why the by-id directory is read rather than ignored as decoration.
+
+  NOTHING HERE IS A RAW SYSCALL, which is the standing rule.  A directory is
+  FindFirst/FindNext, a symlink is SysUtils.FileGetSymLinkTarget, and an
+  attribute is a TFileStream.  The one place a real path would normally have to
+  be resolved -- walking from the tty up to the USB device carrying the vendor
+  strings -- does not need to be, because the kernel resolves the '..' segments
+  itself: FileExists on 'device/../../product' reaches the right directory. *)
+
+const
+   SYS_CLASS_TTY    = '/sys/class/tty/';
+   DEV_SERIAL_BY_ID = '/dev/serial/by-id/';
+
+   // How far above the tty to look for the USB descriptors.  The bench adapter
+   // needs two ('device' is the tty itself, its parent the interface, and the
+   // grandparent the device); the extra headroom costs four FileExists calls
+   // and covers a hub or composite device putting them further up.
+   USB_PARENT_LEVELS = 6;
+
+(* One sysfs attribute.  These are single-line text files, and '' is returned
+  for anything unreadable -- every caller treats that as "not stated".
+
+  NOT TStringList.LoadFromFile, WHICH CANNOT READ sysfs.  A sysfs attribute
+  stats as 4096 bytes and returns however many it actually has, and
+  TStrings.LoadFromStream sizes its buffer from Stream.Size and then calls
+  ReadBuffer, which raises EReadError on the short read.  Reading with
+  TFileStream.Read and believing its return value is the whole difference. *)
+function SysAttr(const aPath: string): string;
+var
+   stream: TFileStream;
+   data: TBytes;
+   got: LongInt;
+   lineEnd: Integer;
+begin
+   Result := '';
+   if not FileExists(aPath) then
       begin
-      swap := found[i];
-      j := i - 1;
-      while (j >= 0) and (found[j].PortNumber > swap.PortNumber) do
-         begin
-         found[j + 1] := found[j];
-         Dec(j);
-         end;
-      found[j + 1] := swap;
+      Exit;
       end;
 
+   try
+      stream := TFileStream.Create(aPath, fmOpenRead or fmShareDenyNone);
+   except
+      (* An attribute a driver publishes and then refuses to read is normal;
+        so is one that needs privilege.  A port with no friendly name is still
+        a port. *)
+      Exit;
+   end;
+   try
+      SetLength(data, 512);
+      got := stream.Read(data[0], Length(data));
+      if got <= 0 then
+         begin
+         Exit;
+         end;
+      SetLength(data, got);
+      Result := TEncoding.UTF8.GetString(data);
+   finally
+      stream.Free;
+   end;
+
+   lineEnd := Pos(#10, Result);
+   if lineEnd > 0 then
+      begin
+      Result := Copy(Result, 1, lineEnd - 1);
+      end;
+   Result := Trim(Result);
+end;
+
+// The last component of a symlink's target: 'ftdi_sio' from device/driver,
+// 'ttyUSB0' from a /dev/serial/by-id entry.
+function LinkTargetName(const aLink: string): string;
+var
+   target: RawByteString;
+begin
+   Result := '';
+   if FileGetSymLinkTarget(RawByteString(aLink), target) then
+      begin
+      Result := ExtractFileName(ExcludeTrailingPathDelimiter(Trim(string(target))));
+      end;
+end;
+
+// Is this /sys/class/tty entry a port a cable can reach?  See the block
+// comment above for why these two tests and not others.
+function IsRealSerialTTY(const aClassDir: string): Boolean;
+var
+   portKind: string;
+begin
+   Result := False;
+   if not DirectoryExists(aClassDir + 'device') then
+      begin
+      Exit;
+      end;
+
+   portKind := SysAttr(aClassDir + 'type');
+   if portKind = '0' then
+      begin
+      Exit;
+      end;
+   Result := True;
+end;
+
+(* The adapter's own description, from the USB device a few levels above the
+  tty.  Returns '' for a port that is not on USB -- a motherboard UART has no
+  descriptors and its caller falls back to the driver name. *)
+function UsbDescription(const aClassDir: string; out aSerial: string): string;
+var
+   up: string;
+   i: Integer;
+begin
+   Result  := '';
+   aSerial := '';
+   up := aClassDir + 'device/';
+   for i := 1 to USB_PARENT_LEVELS do
+      begin
+      up := up + '../';
+      if FileExists(up + 'product') then
+         begin
+         aSerial := SysAttr(up + 'serial');
+         Result  := Trim(SysAttr(up + 'manufacturer') + ' ' + SysAttr(up + 'product'));
+         Exit;
+         end;
+      end;
+end;
+
+(* node basename -> the /dev/serial/by-id name pointing at it.  The directory
+  is absent on a machine with no USB serial adapter, which is not an error. *)
+procedure LoadSerialByIdMap(const aMap: TStringList);
+var
+   rec: TSearchRec;
+   entryName: string;
+   node: string;
+begin
+   aMap.Clear;
+   if FindFirst(DEV_SERIAL_BY_ID + '*', faAnyFile, rec) <> 0 then
+      begin
+      Exit;
+      end;
+   try
+      repeat
+         (* CONVERTED ONCE, EXPLICITLY.  TSearchRec.Name is a RawByteString on
+           a target whose String is UnicodeString, which this one is, so every
+           use of it would otherwise widen implicitly and silently.  A udev
+           by-id name is ASCII, so there is nothing to lose -- but the
+           conversion is written down rather than left to the compiler. *)
+         entryName := string(rec.Name);
+         if (entryName = '.') or (entryName = '..') then
+            begin
+            Continue;
+            end;
+
+         node := LinkTargetName(DEV_SERIAL_BY_ID + entryName);
+         if node <> '' then
+            begin
+            aMap.Values[node] := entryName;
+            end;
+      until FindNext(rec) <> 0;
+   finally
+      FindClose(rec);
+   end;
+end;
+
+procedure TComPortEnumerator.Refresh;
+var
+   rec: TSearchRec;
+   byId: TStringList;
+   found: TComPortInfoArray;
+   used: Integer;
+   info: TComPortInfo;
+   entryName: string;
+   classDir: string;
+   node: string;
+   usbSerial: string;
+   driver: string;
+begin
+   SetLength(FPorts, 0);
+   SetLength(found, 0);
+   used := 0;
+
+   byId := TStringList.Create;
+   try
+      LoadSerialByIdMap(byId);
+
+      if FindFirst(SYS_CLASS_TTY + '*', faAnyFile, rec) <> 0 then
+         begin
+         Exit;
+         end;
+      try
+         repeat
+            // Converted once -- see the note in LoadSerialByIdMap.
+            entryName := string(rec.Name);
+            if (entryName = '.') or (entryName = '..') then
+               begin
+               Continue;
+               end;
+
+            classDir := SYS_CLASS_TTY + entryName + '/';
+            if not IsRealSerialTTY(classDir) then
+               begin
+               Continue;
+               end;
+
+            (* The kernel can list a tty whose node was never created.
+              Offering it would produce an open that cannot succeed. *)
+            node := '/dev/' + entryName;
+            if not FileExists(node) then
+               begin
+               Continue;
+               end;
+
+            info := Default(TComPortInfo);
+            info.PortName     := node;
+            info.PortNumber   := 0;   // there is no COM number -- see Addressable
+            info.FriendlyName := UsbDescription(classDir, usbSerial);
+            info.InstanceID   := byId.Values[entryName];
+            if info.InstanceID = '' then
+               begin
+               info.InstanceID := usbSerial;
+               end;
+
+            driver := LinkTargetName(classDir + 'device/driver');
+            info.DeviceDesc := driver;
+            if info.FriendlyName = '' then
+               begin
+               info.FriendlyName := driver;
+               end;
+
+            (* NOT ADDRESSABLE, AND THAT IS NOT A PROPERTY OF THE PORT.
+              Addressable asks whether TR4W's CONFIG VOCABULARY can name this
+              port, and today it cannot: a port travels through the settings as
+              'SERIAL n', which PortTypeSA turns into a PortType ordinal and
+              MainUnit.ConvertPortTypeToCOMString turns back into 'COMn'.  No
+              ordinal means /dev/ttyUSB0.  So the port is listed WITH the
+              reason rather than hidden -- note 1 at the top of this unit --
+              and lifting this is a change to the config plumbing, not to the
+              enumerator. *)
+            info.Addressable := False;
+            info.Present     := True;
+
+            if used = Length(found) then
+               begin
+               SetLength(found, used + 16);
+               end;
+            found[used] := info;
+            Inc(used);
+         until FindNext(rec) <> 0;
+      finally
+         FindClose(rec);
+      end;
+   finally
+      byId.Free;
+   end;
+
+   SetLength(found, used);
+   SortPorts(found);
    FPorts := found;
 end;
 
 {$ELSE}
 
-(* No enumeration off Windows -- see ComPortEnumerationSupported above for what
-  the implementation would be and why it is not guessed at here.  Refresh is
-  still a legal call and still leaves the object in a consistent state; a caller
-  that shows this list without testing the constant will show an empty one. *)
+(* No enumeration on this platform -- macOS is the one that reaches here.  See
+  ComPortEnumerationSupported above: a caller that shows this list without
+  testing that constant shows an empty one, which reads as "no serial ports"
+  rather than "not implemented".  Refresh is still a legal call and still
+  leaves the object in a consistent state. *)
 procedure TComPortEnumerator.Refresh;
 begin
    SetLength(FPorts, 0);
 end;
 
+{$ENDIF}
 {$ENDIF}
 
 function TComPortEnumerator.Count: Integer;

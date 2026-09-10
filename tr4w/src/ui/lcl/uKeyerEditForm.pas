@@ -195,30 +195,11 @@ end;
 procedure TfrmKeyerEdit.PopulatePortCombo;
 var
    enumerator: TComPortEnumerator;
-   names: TArray<string>;
-   info: TComPortInfo;
-   i: integer;
-   caption: string;
 begin
-   cbxPort.Clear;
-   AddComboItem(cbxPort, TC_PREFS_NONE, PORT_NONE);
-
    enumerator := TComPortEnumerator.Create;
    try
       enumerator.Refresh;
-      names := enumerator.PortNames;
-      for i := 0 to High(names) do
-         begin
-         caption := names[i];
-         if enumerator.PortByName(names[i], info) and (info.FriendlyName <> '') then
-            begin
-            caption := names[i] + ' - ' + info.FriendlyName;
-            end;
-         // Friendly name SHOWN, config value in the tag -- storing the display
-         // text would put 'COM17 - Silicon Labs CP210x' into the settings file,
-         // which is the corruption the legacy dialog had to be fixed for.
-         AddComboItem(cbxPort, caption, ComNameToPortValue(names[i]));
-         end;
+      FillSerialPortCombo(cbxPort, enumerator);
    finally
       enumerator.Free;
    end;

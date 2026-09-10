@@ -721,6 +721,7 @@ implementation
 
 
 uses
+   uPortAddress,   // SerialDeviceName -- the one port-name rule
    LogK1EA,
    LogWind,
    MainUnit, uRadioPolling,
@@ -1725,7 +1726,7 @@ begin
                else if tCATPortType in SerialPorts then
                   begin
                   // Serial connection
-                  COMPortName := ConvertPortTypeToCOMString(Self.tCATPortType);
+                  COMPortName := SerialDeviceName(Self.tCATPortType);
                   BaudRate := Self.RadioBaudRate;
                   logger.Info('[%s] HamLib via serial: %s at %d baud',
                               [Self.RadioName, COMPortName, BaudRate]);

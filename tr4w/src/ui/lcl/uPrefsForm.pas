@@ -6065,9 +6065,6 @@ var
    id: string;
    keep, active: integer;
    enumerator: TComPortEnumerator;
-   names: TArray<string>;
-   info: TComPortInfo;
-   caption: string;
 begin
    // THE TYPE LIST COMES FROM THE REGISTRY, never from the designer.  Same rule
    // as the log level and the external-logger list: a combo populated in the
@@ -6097,22 +6094,10 @@ begin
    // be fixed for.
    cbxRotatorPort.Items.BeginUpdate;
    try
-      ClearComboItems(cbxRotatorPort);
-      AddComboItem(cbxRotatorPort, TC_PREFS_NONE, PORT_NONE);
-
       enumerator := TComPortEnumerator.Create;
       try
          enumerator.Refresh;
-         names := enumerator.PortNames;
-         for i := 0 to High(names) do
-            begin
-            caption := names[i];
-            if enumerator.PortByName(names[i], info) and (info.FriendlyName <> '') then
-               begin
-               caption := names[i] + ' - ' + info.FriendlyName;
-               end;
-            AddComboItem(cbxRotatorPort, caption, ComNameToPortValue(names[i]));
-            end;
+         FillSerialPortCombo(cbxRotatorPort, enumerator);
       finally
          enumerator.Free;
       end;

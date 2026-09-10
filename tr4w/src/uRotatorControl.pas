@@ -78,6 +78,7 @@ function LiveRotatorCount: integer;
 implementation
 
 uses
+   uPortAddress,   // SerialDeviceName -- the one port-name rule
    VC,
    Tree,
    uSerialPort,  // TSerialPort -- the one serial transport, no Win32 here
@@ -478,13 +479,23 @@ begin
       Exit;
       end;
 
+   (* A DRIVER THAT USES A SERIAL PORT MUST HAVE ONE.  The guard above tests
+     `<> NoPort`, which a port configured as NETWORK satisfies, and the name
+     formatter would then have produced 'COM65'.  Refusing and saying so beats
+     opening whatever answers to that. *)
+   if not (aLive.Port in SerialPorts) then
+      begin
+      logger.Error('[Rotator] "%s" needs a serial port and is configured for %s',
+                   [aLive.Name, string(PortTypeSA[aLive.Port])]);
+      Exit;
+      end;
+
    if aLive.Link = nil then
       begin
-      (* Ord(PortType) IS the COM number -- Serial1 = 1 -- the same rule the
-        radio factory, the WinKeyer and the CW keyer all use. The object
-        outlives any one open: it is created once and reopened as the
-        controller comes and goes. *)
-      aLive.Link := TSerialPort.Create(Format('COM%d', [Ord(aLive.Port)]));
+      (* One rule, one place -- uPortAddress.  The object outlives any one
+        open: it is created once and reopened as the controller comes and
+        goes. *)
+      aLive.Link := TSerialPort.Create(SerialDeviceName(aLive.Port));
       end;
    port := aLive.Link;
 

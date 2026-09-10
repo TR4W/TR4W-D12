@@ -567,35 +567,14 @@ end;
 procedure TRadioEditForm.PopulatePortCombos;
 var
    enumerator: TComPortEnumerator;
-   names: TArray<string>;
-   info: TComPortInfo;
-   i: integer;
-   caption: string;
 begin
-   ClearComboItems(cbxPort);
-   ClearComboItems(cbxKeyerPort);
-
-   AddComboItem(cbxPort,      TC_PREFS_NONE, PORT_NONE);
-   AddComboItem(cbxKeyerPort, TC_PREFS_NONE, PORT_NONE);
-
+   // One enumerator for both combos -- on Windows a Refresh is three SetupAPI
+   // passes, and the two lists are the same list.
    enumerator := TComPortEnumerator.Create;
    try
       enumerator.Refresh;
-      names := enumerator.PortNames;
-      for i := 0 to High(names) do
-         begin
-         caption := names[i];
-         if enumerator.PortByName(names[i], info) and (info.FriendlyName <> '') then
-            begin
-            caption := names[i] + ' - ' + info.FriendlyName;
-            end;
-         // The friendly name is shown; the CONFIG VALUE is what travels in the
-         // tag.  Storing the displayed text would put 'COM17 - Silicon Labs
-         // CP210x' into the ini, which is exactly the corruption the legacy
-         // dialog had to be fixed for.
-         AddComboItem(cbxPort,      caption, ComNameToPortValue(names[i]));
-         AddComboItem(cbxKeyerPort, caption, ComNameToPortValue(names[i]));
-         end;
+      FillSerialPortCombo(cbxPort,      enumerator);
+      FillSerialPortCombo(cbxKeyerPort, enumerator);
    finally
       enumerator.Free;
    end;

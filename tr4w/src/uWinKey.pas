@@ -294,6 +294,7 @@ implementation
 
 
 uses
+   uPortAddress,   // SerialDeviceName -- the one port-name rule
    uAppTimers,   (* StartAppTimer / StopAppTimer -- LCL TTimers, not SetTimer *)
   uMainForm,   { the main window's elements are LCL controls }
   uKeyerState, { the keyer's state. This unit runs on read threads and must not
@@ -1109,14 +1110,23 @@ var
 begin
   Result := False;
 
+  (* A WINKEYER IS A SERIAL DEVICE.  The caller's guard is `= NoPort`, which
+    a port configured as NETWORK passes, and the name formatter would then
+    have produced 'COM65'. *)
+  if not (WinKeySettings.wksWinKey2Port in SerialPorts) then
+     begin
+     logger.Error('[WinKey] the keyer needs a serial port and is configured for %s',
+                  [string(PortTypeSA[WinKeySettings.wksWinKey2Port])]);
+     Exit;
+     end;
+
   if WinKeyPort = nil then
      begin
-     (* Ord(PortType) IS the COM number -- the same rule the radio factory and
-       the rotators use. This used to build the name with TF.Format into
-       wkREADBuffer, which is also the READ buffer, so the device name and the
-       first reply shared one array. *)
+     (* One rule, one place -- uPortAddress.  This used to build the name with
+       TF.Format into wkREADBuffer, which is also the READ buffer, so the
+       device name and the first reply shared one array. *)
      WinKeyPort := TSerialPort.Create(
-        Format('COM%d', [Ord(WinKeySettings.wksWinKey2Port)]));
+        SerialDeviceName(WinKeySettings.wksWinKey2Port));
      end;
 
   try

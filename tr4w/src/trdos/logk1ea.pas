@@ -448,6 +448,7 @@ var
 implementation
 
 uses
+   uPortAddress,   // SerialDeviceName -- the one port-name rule
    uAppTimers,   (* StartAppTimer / StopAppTimer -- LCL TTimers, not SetTimer *)
   (* FIRST IN THE CLAUSE, deliberately. Every other unit here then takes
     precedence over it, so adding SysUtils to a unit this old cannot quietly
@@ -1774,9 +1775,9 @@ begin
 
      if port = nil then
         begin
-        (* Ord(PortType) IS the COM number, the same rule the radios, the
-          rotators and the WinKeyer all use. *)
-        port := TSerialPort.Create(SysUtils.Format('COM%d', [Ord(aRadio^.tKeyerPort)]));
+        (* One rule, one place -- uPortAddress.  This was a copy of it, and
+          the comment that used to sit here named the three other copies. *)
+        port := TSerialPort.Create(SerialDeviceName(aRadio^.tKeyerPort));
         CPUKeyer.SerialPortObject[aRadio^.tKeyerPort] := port;
         end;
 

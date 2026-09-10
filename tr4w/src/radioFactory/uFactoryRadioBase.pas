@@ -25,6 +25,9 @@ uses
    uSpectrumTypes,  // TSpectrumFrame / TSpectrumFrameProc -- the panadapter seam
    IdTCPClient, IdComponent, IdTCPConnection, IdThreadComponent, IdExceptionCore,
    SysUtils,
+   uPortAddress,   // SerialDeviceName -- the one port-name rule.  A leaf
+                   // over VC, which this unit already names, so it adds
+                   // no graph.
   uTR4WStrings;
 
 Type TProcessMsgRef = procedure (sMessage: string) of Object;
@@ -1523,16 +1526,16 @@ end;
 function TFactoryRadioBase.Connect: integer;
 var
    comPortName: string;
-   portNum: Integer;
 begin
    Result := 0;
 
-   // Check if this is a serial or network connection
-   if Self.serialPort <> NoPort then
+   (* IN SerialPorts, NOT merely <> NoPort.  The old test let a port
+     configured as NETWORK -- ordinal 65 -- through to a name formatter that
+     would have produced 'COM65'.  The network arm below is the one that
+     should take that case, and now does. *)
+   if Self.serialPort in SerialPorts then
       begin
-      // Serial connection
-      portNum := Ord(Self.serialPort);  // Serial1=1, Serial2=2, etc.
-      comPortName := Format('COM%d', [portNum]);
+      comPortName := SerialDeviceName(Self.serialPort);
 
       logger.Info('[TFactoryRadioBase.Connect] Connecting to serial radio on %s', [comPortName]);
 

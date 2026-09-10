@@ -48,6 +48,7 @@ uses
    Forms,      // TCustomForm -- see ShowModalOverWin32Parent
    LCLType,    // HWND
    Dialogs,    // InputQuery -- see AskForText
+   ComPortEnumerator,   // TComPortEnumerator -- see FillSerialPortCombo
   uTR4WStrings;
 
 resourcestring
@@ -73,6 +74,13 @@ resourcestring
    TC_PREFS_RADIO1           = 'Radio 1';
    TC_PREFS_RADIO2           = 'Radio 2';
    TC_PREFS_NONE             = '(none)';
+   // Shown INSTEAD of a port list, on a platform whose enumeration is not
+   // written yet -- see ComPortEnumerationSupported.  An empty drop-down would
+   // read as "this machine has no serial ports", which is a different claim.
+   TC_PREFS_PORTS_UNAVAILABLE = '(port list not available on this platform)';
+   // Shown AFTER a port that exists but that the settings file has no spelling
+   // for.  See FillSerialPortCombo.
+   TC_PREFS_PORT_UNSUPPORTED = '(not selectable yet)';
    TC_PREFS_ACTIVELABEL      = 'Active profile: ';
 
    // Named for what they DO.  'OK' and 'Apply' gave no clue that they save,
@@ -358,6 +366,8 @@ type
    end;
 
 function ComNameToPortValue(const aComName: string): string;
+procedure FillSerialPortCombo(const aCombo: TComboBox;
+                              const aEnumerator: TComPortEnumerator);
 function IsIcomRadio(const aRegistryId: string): boolean;
 // The role each serial control line performs, spelled EXACTLY as
 // tr4w_RTSDTRTypeSA does (logradio.pas:100).  The vocabulary is reproduced here
@@ -486,7 +496,6 @@ uses
    Log4D,
    uRadioConfigStore,
    uRadioRegistry,
-   ComPortEnumerator,
    VC;
 
 procedure ShowWithoutTakingFocus(const aForm: TCustomForm);
@@ -996,6 +1005,59 @@ begin
    else
       begin
       Result := PORT_NONE;
+      end;
+end;
+
+(* ONE FILLER FOR EVERY SERIAL-PORT DROP-DOWN.  There were three copies of this
+  loop -- the radio editor filling two combos, the keyer editor, and the rotator
+  list in Preferences -- and they had already begun to differ: one cleared with
+  TComboBox.Clear, which leaves AddComboItem's parallel tag list behind and
+  desyncs it.
+
+  THE CAPTION IS FOR THE OPERATOR, THE TAG IS THE CONFIG VALUE.  Storing what is
+  displayed would put 'COM17 - Silicon Labs CP210x' into the settings file,
+  which is the corruption the legacy dialog had to be fixed for.
+
+  A PORT THAT CANNOT BE SELECTED IS LISTED AND SAYS SO.  Two things reach that
+  arm: a COM number above what PortType can represent, and -- today -- every
+  port on Linux, where the settings file has no spelling for a device node at
+  all.  Both get PORT_NONE as their tag and a caption that says why, because
+  dropping them silently turns "TR4W cannot address my port yet" into "TR4W
+  cannot see my adapter", and only one of those is true.  It is also the rule
+  ComPortEnumerator's own header lays down (note 1). *)
+procedure FillSerialPortCombo(const aCombo: TComboBox;
+                              const aEnumerator: TComPortEnumerator);
+var
+   i: integer;
+   info: TComPortInfo;
+begin
+   ClearComboItems(aCombo);
+   AddComboItem(aCombo, TC_PREFS_NONE, PORT_NONE);
+
+   if not ComPortEnumerationSupported then
+      begin
+      AddComboItem(aCombo, TC_PREFS_PORTS_UNAVAILABLE, PORT_NONE);
+      Exit;
+      end;
+
+   if aEnumerator = nil then
+      begin
+      Exit;
+      end;
+
+   for i := 0 to aEnumerator.Count - 1 do
+      begin
+      info := aEnumerator.Ports[i];
+      if info.Addressable then
+         begin
+         AddComboItem(aCombo, info.Describe, ComNameToPortValue(info.PortName));
+         end
+      else
+         begin
+         AddComboItem(aCombo,
+                      info.Describe + '  ' + TC_PREFS_PORT_UNSUPPORTED,
+                      PORT_NONE);
+         end;
       end;
 end;
 

@@ -46,9 +46,16 @@ $UNITS = @(
    @{ Unit = 'uCRC32.pas';      Since = '2026-09-06' }
    @{ Unit = 'uADIF.pas';       Since = '2026-09-06' }
    # Added 2026-09-07, the day the Windows gates went in.  Each of these was
-   # Windows-only that morning: ComPortEnumerator is SetupAPI, uSerialPort is
-   # the vendored FPC serial unit, uYCCCSO2R is HID.  They are here because
-   # they COMPILED, not because the gate looked right.
+   # Windows-only that morning: ComPortEnumerator was SetupAPI and nothing
+   # else, uSerialPort is the vendored FPC serial unit, uYCCCSO2R is HID.
+   # They are here because they COMPILED, not because the gate looked right.
+   #
+   # ComPortEnumerator has since GROWN a Linux body -- sysfs, 2026-09-10 -- so
+   # this check no longer merely proves its gate is shaped right; it is the
+   # only compiler on this machine that reads that body at all.  It is still
+   # the weaker check: a Windows-hosted cross compile inherits case-insensitive
+   # unit lookup, and it cannot run what it builds.  Whether that body finds a
+   # real adapter is a question only the bench box answers.
    #
    # That distinction earned itself immediately: this check found that the
    # vendored serial merge had given SerBreak the Windows default (250) in an
