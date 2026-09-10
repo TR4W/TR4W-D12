@@ -3427,6 +3427,24 @@ end;
 var
    GPossibleCount: integer = 0;
 
+(* NIL IS THE ONLY THING THAT DISQUALIFIES THIS CONTROL -- NOT ControlUsable.
+
+  AND THAT DISTINCTION BROKE THE FEATURE FOR ONE BUILD. ControlUsable tests
+  HandleAllocated, and the LCL creates a control's window LAZILY AND ONLY FOR
+  A VISIBLE CONTROL. The moment the strip learned to hide itself when empty,
+  every accessor that guarded with ControlUsable started returning early on a
+  hidden strip -- so AddPossibleCall never added a column, and the possible
+  calls stopped appearing at all. NY4I, 2026-09-10: "regression. Now the
+  possible calls do not work. They worked before this change."
+
+  ControlUsable IS RIGHT WHERE IT IS USED, and its own comment says why: the
+  entry fields need a real window for SelStart, SelLength and SetFocus, and
+  dropping the handle test there crashed TR4W on startup once already.
+
+  NOTHING THIS STRIP DOES NEEDS A WINDOW. ColCount, Col, Visible, Font and
+  Invalidate are all LCL-side properties that work on a control that has never
+  been shown -- and Visible is the one that CREATES the handle, so demanding a
+  handle before setting it is backwards. *)
 function PossibleCallListBox: TDrawGrid;
 begin
    Result := nil;
@@ -3444,7 +3462,7 @@ begin
    GPossibleCount := 0;
 
    lb := PossibleCallListBox;
-   if not ControlUsable(lb) then
+   if lb = nil then
       begin
       Exit;
       end;
@@ -3483,7 +3501,7 @@ var
 begin
    Result := -1;
    lb := PossibleCallListBox;
-   if not ControlUsable(lb) then
+   if lb = nil then
       begin
       Exit;
       end;
@@ -3509,7 +3527,7 @@ var
 begin
    Result := -1;
    lb := PossibleCallListBox;
-   if not ControlUsable(lb) or (GPossibleCount = 0) then
+   if (lb = nil) or (GPossibleCount = 0) then
       begin
       Exit;
       end;
@@ -3545,7 +3563,7 @@ var
    lb: TDrawGrid;
 begin
    lb := PossibleCallListBox;
-   if not ControlUsable(lb) then
+   if lb = nil then
       begin
       Exit;
       end;
@@ -3558,7 +3576,7 @@ var
    lb: TDrawGrid;
 begin
    lb := PossibleCallListBox;
-   if not ControlUsable(lb) then
+   if lb = nil then
       begin
       Exit;
       end;
@@ -3581,7 +3599,7 @@ var
    lb: TDrawGrid;
 begin
    lb := PossibleCallListBox;
-   if not ControlUsable(lb) then
+   if lb = nil then
       begin
       Exit;
       end;
