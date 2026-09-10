@@ -389,13 +389,32 @@ begin
    {$IFEND}
 end;
 
-(* DataFilePath, not SettingsFilePath or LogFilePath: sqlite3.dll is SHIPPED and
-  read-only.  On Windows all three are the same directory and the choice looks
-  cosmetic; on macOS and Linux they are three different places, which is why
-  Lint-AppPaths refuses a hand-rolled ExtractFilePath(ParamStr(0)) here. *)
+(* WHERE THE LIBRARY SHOULD BE -- ON WINDOWS.  '' EVERYWHERE ELSE, AND THAT
+  EMPTY STRING IS THE WHOLE POINT.
+
+  On Windows a DLL ships beside the executable and asking FileExists about it
+  is a real question with a useful answer.
+
+  OFF WINDOWS THERE IS NO SUCH PATH.  A shared library is resolved by the
+  dynamic loader from a soname, across LD_LIBRARY_PATH, /etc/ld.so.conf and the
+  system directories -- it is NOT a file next to the binary, and it is not
+  supposed to be.
+
+  NY4I, 2026-09-10, ran the AppImage on a machine with no SQLite installed and
+  was told the library was missing.  IT WAS NOT.  The AppImage bundles it at
+  usr/lib/libsqlite3.so.0 and AppRun puts that directory on LD_LIBRARY_PATH, so
+  it loaded perfectly -- but this function looked in usr/bin, beside the
+  binary, found nothing, and the diagnosis said so.
+
+  That is the SAME defect as the hardcoded 'sqlite3.dll' one layer along: not a
+  wrong file name this time, but a wrong idea of how libraries are found. *)
 function SQLiteLibraryPath: string;
 begin
+   {$IFDEF WINDOWS}
    Result := DataFilePath(SQLITE_LIBRARY_NAME);
+   {$ELSE}
+   Result := '';
+   {$ENDIF}
 end;
 
 (* CAN THIS PROGRAM CREATE A FILE IN THAT DIRECTORY?
@@ -537,10 +556,28 @@ begin
          end;
 
       (* The directory is fine and the file is not there, which is the one case
-        where the library IS worth mentioning. *)
-      Result := Format('The directory "%s" is writable, so the failure is not ' +
-                       'a permission problem. %s',
-                       [dir, DiagnoseSQLiteLoad(SQLiteLibraryPath)]);
+        where the library is worth mentioning at all. *)
+      if SQLiteLibraryPath <> '' then
+         begin
+         Result := Format('The directory "%s" is writable, so the failure is ' +
+                          'not a permission problem. %s',
+                          [dir, DiagnoseSQLiteLoad(SQLiteLibraryPath)]);
+         Exit;
+         end;
+
+      (* OFF WINDOWS, SAY NOTHING ABOUT A PATH WE CANNOT KNOW.  See
+        SQLiteLibraryPath: the loader resolves %s by soname and it is not a
+        file beside the binary, so a "not found" here would be wrong on every
+        working machine -- which is exactly what it was.
+
+        And reaching this point means SQLite RAISED, so it is loaded.  The
+        honest answer is that the failure is neither the directory nor the
+        library, and to name where to look instead. *)
+      Result := Format('The directory "%s" is writable and %s is loaded -- ' +
+                       'this error came from SQLite itself. Check the file ' +
+                       'name for characters the file system will not accept, ' +
+                       'and the free space on that volume.',
+                       [dir, SQLITE_LIBRARY_NAME]);
    except
       (* A DIAGNOSIS MUST NEVER REPLACE THE ERROR IT EXPLAINS, and it must
         never become one. Same rule as DescribePEArchitecture above. *)
