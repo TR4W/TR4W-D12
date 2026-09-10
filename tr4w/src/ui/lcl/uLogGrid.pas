@@ -280,16 +280,45 @@ const
   to disagree with the first. *)
 procedure TLogGrid.Paint;
 var
-   rest: TRect;
+   rest:  TRect;
+   drawn: integer;
 begin
    inherited Paint;
 
-   if GridHeight >= ClientHeight then
+   if DefaultRowHeight <= 0 then
       begin
       Exit;
       end;
 
-   rest := Rect(0, GridHeight, ClientWidth, ClientHeight);
+   (* HOW FAR DOWN THE GRID ACTUALLY DREW, WHICH IS NOT GridHeight.
+
+     THE FIRST VERSION OF THIS USED GridHeight AND FIXED NOTHING FOR AN
+     OPERATOR, because GridHeight is the sum of ALL rows -- and the moment the
+     log holds more QSOs than fit, that is LARGER than the client. The guard
+     `if GridHeight >= ClientHeight then Exit` then skipped the fill in exactly
+     the case every real contest is in.
+
+     It looked right here because a fresh contest has no QSOs: GridHeight was
+     one header row, smaller than the client, the fill ran, and the strip went.
+     NY4I's log had fifteen. Same defect as the snap before it -- a fix
+     validated on the one state that does not exhibit the problem.
+
+     THE GRID DRAWS WHOLE ROWS AND STOPS. So the painted extent is the largest
+     multiple of the row height that fits, capped by however many rows exist.
+     Both terms are needed: the first covers a scrolling log, the second an
+     almost-empty one. *)
+   drawn := (ClientHeight div DefaultRowHeight) * DefaultRowHeight;
+   if GridHeight < drawn then
+      begin
+      drawn := GridHeight;
+      end;
+
+   if drawn >= ClientHeight then
+      begin
+      Exit;
+      end;
+
+   rest := Rect(0, drawn, ClientWidth, ClientHeight);
    Canvas.Brush.Color := Color;
    Canvas.Brush.Style := bsSolid;
    Canvas.FillRect(rest);
