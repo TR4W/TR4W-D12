@@ -148,6 +148,9 @@ type
    protected
       (* Fills the strip below the last row. See the body. *)
       procedure Paint; override;
+      (* Tells the widget set the horizontal bar is off, which the LCL
+        never does by itself. See the body. *)
+      procedure CreateWnd; override;
       procedure DrawCell(aCol, aRow: integer; aRect: TRect;
                          aState: TGridDrawState); override;
       procedure DoOnResize; override;
@@ -353,6 +356,48 @@ begin
    Canvas.Brush.Color := Color;
    Canvas.Brush.Style := bsSolid;
    Canvas.FillRect(rest);
+end;
+
+(* SAY IT OUT LOUD: THERE IS NO HORIZONTAL SCROLL BAR.
+
+  NY4I, 2026-09-10: "can we fix the implementation in Laz on linux to
+  accurately set the horzscrollbar to false (as opposed to your just checking
+  it)?" Yes, and this is that -- and his scepticism about my last explanation
+  was better founded than my explanation was. A gap between two controls does
+  not have a thumb in it.
+
+  THE LCL NEVER TELLS THE WIDGET SET. TCustomGrid.UpdateHorzScrollBar is the
+  only thing that would, and it is guarded:
+
+      NeedUpdate := FHSbVisible <> Ord(AVisible);
+      if NeedUpdate then ScrollBarShow(SB_HORZ, aVisible);
+
+  FHSbVisible starts at 0, and for ssAutoVertical GetSBVisibility computes
+  HsbVisible = False. They agree, so ScrollBarShow is NEVER CALLED, and
+  whatever state the widget set created the control in is what the operator
+  gets. On Win32 that is nothing; the LCL's own belief and the screen happen to
+  match. On gtk2 they need not, and nothing in the LCL ever reconciles them.
+
+  ScrollBarIsVisible does not help either -- it reads the same cache
+  (grids.pas:3531), with a comment explaining that asking the widget set
+  directly is unsafe on Gtk2. So the LCL cannot even see the disagreement.
+
+  CreateWnd IS THE RIGHT MOMENT: the handle exists, so the call reaches the
+  widget set, and it runs again if the handle is ever recreated. ScrollBarShow
+  is TCustomGrid's own protected method, so this is the LCL's API rather than a
+  raw platform call -- which is what CLAUDE.md asks for.
+
+  IF THIS IS NOT THE BAND, IT IS STILL CORRECT. Stating a property the program
+  actually holds, rather than assuming a default, is right whatever it turns
+  out to fix. *)
+procedure TLogGrid.CreateWnd;
+begin
+   inherited CreateWnd;
+
+   if HandleAllocated then
+      begin
+      ScrollBarShow(SB_HORZ, False);
+      end;
 end;
 
 constructor TLogGrid.Create(aOwner: TComponent);
