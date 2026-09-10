@@ -347,15 +347,44 @@ begin
 {$ENDIF}
 
 {$IFDEF DARWIN}
+   (* SQLite carries no such restriction -- the rule Apple enforces is
+     specific to the crypto libraries. Verified by this probe completing. *)
    ProbeLibraryName(aReport, 'libs.sqlite3',
                     ['libsqlite3.dylib', 'libsqlite3.0.dylib',
                      '/usr/lib/libsqlite3.dylib']);
    ProbeLibraryName(aReport, 'libs.hamlib',
                     ['libhamlib.dylib', 'libhamlib.4.dylib',
                      '/opt/homebrew/lib/libhamlib.dylib']);
+   (* NO BARE OpenSSL NAME ON macOS. IT KILLS THE PROCESS.
+
+     Asking for 'libssl.dylib' resolves to Apple's own shim, and the moment it
+     is dlopened directly the system aborts the program with
+
+         WARNING: <path> is loading libcrypto in an unsafe way
+
+     -- not an exception, not a nil handle, not something a try/except can see.
+     The probe run on mac-ci died at that line on 2026-09-09, having already
+     produced every earlier answer and written none of them.
+
+     THIS IS WHY THE PROBE PROGRAM'S OWN ROBUSTNESS IS A DESIGN CONCERN. A
+     conformance suite is asked, by definition, to do things nobody has
+     verified are safe here; the one failure mode it cannot survive is being
+     killed before it reports. A candidate list that CANNOT be attempted is
+     therefore part of the result, not an omission from it.
+
+     Only explicit paths are tried, and they are Homebrew's -- Apple Silicon
+     first, then Intel. TR4W reaches OpenSSL through uOpenSSLLoader, which
+     already knows not to go near the system copy. *)
+   aReport.Note('libs.ssl.bare_name_forbidden', 'True',
+                'macOS ABORTS a process that dlopens the system libssl or ' +
+                'libcrypto directly -- unsurvivable, so bare names are not ' +
+                'attempted here and must not be attempted by TR4W either');
+
    ProbeLibraryName(aReport, 'libs.ssl',
-                    ['libssl.dylib', 'libssl.3.dylib', 'libssl.1.1.dylib',
-                     '/opt/homebrew/opt/openssl@3/lib/libssl.dylib']);
+                    ['/opt/homebrew/opt/openssl@3/lib/libssl.dylib',
+                     '/opt/homebrew/lib/libssl.dylib',
+                     '/usr/local/opt/openssl@3/lib/libssl.dylib',
+                     '/usr/local/lib/libssl.dylib']);
 {$ENDIF}
 end;
 
