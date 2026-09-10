@@ -666,6 +666,7 @@ const
 implementation
 
 uses
+  uAppPaths,   // ContestDir -- where an operator's contest files live
    uAppTimers,   (* StartAppTimer / StopAppTimer -- LCL TTimers, not SetTimer *)
   Menus,              // TMenuItem -- the menu is a TMainMenu now
    uWindowTable,   { tr4w_WindowsArray, tWindowsExist -- moved out of VC/TF }
@@ -5484,7 +5485,16 @@ begin
     menu_download_latest_cty_dat:
       begin
       QuickDisplay(PAnsiChar(TC_DOWNLOADINGCTYDAT));
-      DownloadCTYAsync(string(PAnsiChar(@TR4W_CTY_FILENAME)),
+      (* DOWNLOAD INTO THE CONTEST DIRECTORY, not over whatever
+        TR4W_CTY_FILENAME happens to point at.
+
+        That name is the file TR4W READ, and on a fresh install it is the
+        SHIPPED copy under DataDir -- read-only on Linux and macOS, which is
+        how this failed with "Read-only file system" on an AppImage (NY4I,
+        2026-09-10).  FCONTEST's lookup already prefers a CTY.DAT in the
+        contest directory, so writing there is also what makes the new file
+        the one used.  On Windows the two are the same directory. *)
+      DownloadCTYAsync(ContestFilePath('CTY.DAT'),
         BackgroundEvents.CTYDownloadFinished);
       end;
 

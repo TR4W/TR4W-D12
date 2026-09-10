@@ -80,6 +80,33 @@ function DataDir: string;
 function SettingsDir: string;
 function LogDir: string;
 
+(* WHERE AN OPERATOR'S OWN CONTEST FILES GO -- the .cfg, the SQLite log, the
+  .RST and .DOM beside it, and a downloaded CTY.DAT.
+
+  THE FOURTH ROOT, AND ITS ABSENCE WAS A REAL DEFECT.  This unit had a
+  read-only DATA root, a writable CONFIG root and a writable STATE root, and
+  nowhere for the files the operator CREATES.  Contest files were therefore
+  composed from TR4W_PATH_NAME, which is DataDir -- read-only on any Linux or
+  macOS install worth the name.
+
+  NY4I hit it on a fresh Debian 13 running the AppImage (2026-09-10).  An
+  AppImage mounts itself read-only, so the contest log was being created at
+  /tmp/.mount_XXXX/usr/bin/ and QSOs were not saved.  A cty.dat download in the
+  same session failed with "Read-only file system", which is the same defect
+  wearing different words.  It is NOT AppImage-specific: a tarball installed
+  to /usr/share, or a .app bundle, is read-only in exactly the same way.
+
+  ~/tr4w OFF WINDOWS, and VISIBLE ON PURPOSE (NY4I's call, 2026-09-10).  The
+  XDG data home, ~/.local/share, is where the specification would put it and is
+  hidden -- and a contest log is a document an operator has to find at
+  submission time, mail to a robot, and hand to an adjudicator.  A settings
+  file is not, which is why config and state stay under XDG.
+
+  WINDOWS IS UNCHANGED and must be: contest files live beside the binary there
+  and twenty years of operators know it. *)
+function ContestDir: string;
+function ContestFilePath(const aName: string): string;
+
 (* THE SAME FILE, WHATEVER CASE IT IS SPELLED IN.
 
   Returns aPath when it exists. When it does not, and the platform has a
@@ -314,6 +341,12 @@ end;
 function DataDir: string;     begin Result := AppDir; end;
 function SettingsDir: string; begin Result := EnsureDir(AppDir + 'settings'); end;
 function LogDir: string;      begin Result := AppDir; end;
+// Beside the binary, exactly as it has always been. See the interface note.
+function ContestDir: string;  begin Result := AppDir; end;
+function ContestFilePath(const aName: string): string;
+begin
+   Result := ContestDir + aName;
+end;
 
 {$ENDIF}
 
@@ -348,6 +381,24 @@ end;
 
 function DataDir: string;     begin Result := BundleResources; end;
 function SettingsDir: string; begin Result := EnsureDir(HomeDir + 'Library/Application Support/TR4W'); end;
+
+(* ~/tr4w, VISIBLE, and the same answer on both platforms.
+
+  A .app bundle is read-only exactly as an AppImage is, so macOS had the same
+  defect for the same reason. Putting contest files in the operator's home
+  rather than under Library/Application Support is deliberate: what lives there
+  is application state, and a contest log is a document that gets found,
+  mailed and submitted. *)
+function ContestDir: string;
+begin
+   Result := EnsureDir(HomeDir + 'tr4w');
+end;
+
+function ContestFilePath(const aName: string): string;
+begin
+   Result := ContestDir + aName;
+end;
+
 function LogDir: string;      begin Result := EnsureDir(HomeDir + 'Library/Logs/TR4W'); end;
 
 {$ENDIF}
@@ -411,6 +462,22 @@ end;
 function LogDir: string;
 begin
    Result := XdgDir('XDG_STATE_HOME', '.local/state');
+end;
+
+(* ~/tr4w -- see the interface note. VISIBLE on purpose: XDG would say
+  ~/.local/share and that is hidden, and a contest log has to be found at
+  submission time. HOME is used directly rather than through XdgDir because
+  this is not an XDG root and pretending it is would invite someone to
+  "correct" it later. *)
+function ContestDir: string;
+begin
+   Result := EnsureDir(IncludeTrailingPathDelimiter(
+                          GetEnvironmentVariable('HOME')) + 'tr4w');
+end;
+
+function ContestFilePath(const aName: string): string;
+begin
+   Result := ContestDir + aName;
 end;
 
 {$IFEND}

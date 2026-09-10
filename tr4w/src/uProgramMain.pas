@@ -583,6 +583,12 @@ begin
      Exit;
      end;
 
+  (* THE SAME RULE AS THE MENU ITEM: read from wherever it was found, but
+    WRITE into the contest directory, which is writable by definition.  ctyPath
+    up to here is what TR4W LOOKED FOR, which on a fresh Linux or macOS install
+    is the shipped, read-only copy. *)
+  ctyPath := ContestFilePath('CTY.DAT');
+
   logger.Info('CTY.DAT not loaded; downloading to ' + ctyPath);
 
   if not DownloadCTYFile(ctyPath, failReason) then
@@ -596,6 +602,12 @@ begin
      logger.Fatal('CTY.DAT download failed; cannot continue');
      Exit;
      end;
+
+  (* LOAD THE FILE JUST WRITTEN, not the one that was looked for and was not
+    there.  TR4W_CTY_FILENAME still names the place TR4W searched, so loading
+    it would report the same failure the download has just fixed. *)
+  uAnsiStr.StrPLCopy(TR4W_CTY_FILENAME, AnsiString(ctyPath),
+                     SizeOf(TR4W_CTY_FILENAME) - 1);
 
   // VERIFY, DO NOT ASSUME. A download can report success and still leave a
   // file the parser rejects -- a captive-portal HTML page saved as cty.dat is

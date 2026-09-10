@@ -73,6 +73,7 @@ procedure ShowNewContest;
 
 implementation
 uses
+  uAppPaths,   // ContestDir -- where an operator's contest files live
   SysUtils,            // Format, Trim, FreeAndNil -- the RTL, not TF shims
   Controls,            // mrOk -- the modal results
   uNewContestForm,     // the designed form this unit now drives
@@ -544,9 +545,22 @@ begin
        needs no special case -- it was the general rule, arriving early. *)
   end;
 
-  { THE LOG FILE. Named by uLogNaming, where the rule and its tests live; this
-    supplies the three facts and nothing else. }
-  TF.Format(TR4W_CFG_FILENAME, '%s%s', TR4W_PATH_NAME,
+  (* THE LOG FILE. Named by uLogNaming, where the rule and its tests live; this
+    supplies the three facts and nothing else.
+
+    ContestDir, NOT TR4W_PATH_NAME, AND THAT IS THE WHOLE FIX FOR A CLASS OF
+    BUG.  TR4W_PATH_NAME is uAppPaths.DataDir -- where SHIPPED, READ-ONLY data
+    lives.  Everything about a contest is composed from THIS ONE PATH: FCONTEST
+    derives TR4W_LOG_FILENAME, the .RST, the .DOM, the server log and the
+    preferred CTY.DAT from the directory of the .cfg, so pointing it at a
+    read-only place put every one of them there.
+
+    NY4I hit it on a fresh Debian 13 running the AppImage, which mounts itself
+    read-only: the contest log could not be created and QSOs were not saved
+    (2026-09-10).  On Windows ContestDir IS the binary's directory, so nothing
+    changes there. *)
+  TF.Format(TR4W_CFG_FILENAME, '%s%s',
+            PAnsiChar(AnsiString(ContestDir)),
             PAnsiChar(AnsiString(ContestLogFileName(frmNewContest.ContestName,
                                                  Now,
                                                  frmNewContest.MyCall))));
