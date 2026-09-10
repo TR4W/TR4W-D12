@@ -92,6 +92,26 @@ function RunWindowsUtility(const aCommandLine: string;
   silent-fallback failure CLAUDE.md treats as a defect in its own right. *)
 function OpenWithDesktopHandler(const aPath: string): boolean;
 
+(* OPEN A FILE IN A TEXT EDITOR -- NOT IN WHATEVER THE DESKTOP THINKS IT IS.
+
+  THE MENU ITEM SAYS "Open in text editor" AND THAT IS A PROMISE ABOUT THE
+  PROGRAM, NOT ABOUT THE FILE. Handing the path to the desktop's generic
+  handler answers a different question -- "what is this file" -- and the
+  desktop gets that wrong for ham radio data, because nothing has ever
+  registered a MIME type for it. Measured on NY4I's Mint box, 2026-09-09:
+
+      $ xdg-mime query filetype CQ-WW-SSB 2026-09-09 NY4I.ADI
+      audio/aac
+
+  So an ADIF log opened in a VIDEO PLAYER, which then reported "Playback was
+  terminated abnormally. Reason: unrecognized file format." Every word of that
+  is true and none of it is the operator's problem.
+
+  A Cabrillo file has the same shape of trouble and a .cfg would too. Guessing
+  by extension is the wrong mechanism for a menu item that already knows what
+  it wants. *)
+function OpenTextFileInEditor(const aPath: string): boolean;
+
 implementation
 
 uses
@@ -112,6 +132,63 @@ begin
       end;
    Result := logger;
 end;
+
+function OpenTextFileInEditor(const aPath: string): boolean;
+{$IFDEF WINDOWS}
+begin
+   Result := False;
+   Log.Warn('[Process] OpenTextFileInEditor is not the Windows route -- the '
+            + 'registered .txt association names the editor there (%s)',
+            [aPath]);
+end;
+{$ELSE}
+{$IFDEF DARWIN}
+begin
+   (* -t IS THE WHOLE POINT: `open -t` opens the file in the DEFAULT TEXT
+     EDITOR, which is the question being asked, where a bare `open` would ask
+     the type question and get the same wrong answer Linux gave. *)
+   Result := RunProgram('open', ['-t', aPath]);
+   if not Result then
+      begin
+      Log.Error('[Process] `open -t` would not start for %s', [aPath]);
+      end;
+end;
+{$ELSE}
+var
+   i: integer;
+const
+   (* GUI EDITORS ONLY, AND IN THE ORDER A DESKTOP IS LIKELY TO HAVE THEM.
+     xed is Mint's, gnome-text-editor and gedit are GNOME's, kate and kwrite
+     are KDE's, mousepad is XFCE's, pluma is MATE's.
+
+     NOT $EDITOR AND NOT $VISUAL. Both name a TERMINAL editor by convention,
+     and launching vi with no terminal from a GUI program starts a process the
+     operator can neither see nor quit. *)
+   EDITORS: array[0..8] of string = (
+      'xed', 'gnome-text-editor', 'gedit', 'kate', 'kwrite',
+      'mousepad', 'pluma', 'geany', 'leafpad');
+begin
+   Result := False;
+
+   for i := Low(EDITORS) to High(EDITORS) do
+      begin
+      if RunProgram(EDITORS[i], [aPath]) then
+         begin
+         Result := True;
+         Exit;
+         end;
+      end;
+
+   (* LAST RESORT, AND IT MAY WELL OPEN THE WRONG PROGRAM -- see the note on
+     this function. Better than nothing on a desktop none of the above is
+     installed on, and the caller reports either way. *)
+   Log.Warn('[Process] no known text editor found; falling back to the '
+            + 'desktop handler for %s, which may not be a text editor',
+            [aPath]);
+   Result := OpenWithDesktopHandler(aPath);
+end;
+{$ENDIF}
+{$ENDIF}
 
 function OpenWithDesktopHandler(const aPath: string): boolean;
 {$IFDEF WINDOWS}

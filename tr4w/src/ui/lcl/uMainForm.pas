@@ -1091,6 +1091,11 @@ end;
   Written as a diagnostic on purpose: what the fix is -- a wider window,
   narrower content, or a font that measures like the one this program was
   designed against -- depends on which controls report and by how much. *)
+(* Last reported state, so the report above fires on a CHANGE rather than
+  every two seconds. *)
+var
+   GLastHorzScroll: boolean = False;
+
 procedure ReportMainWindowOverhang;
 var
    i:       integer;
@@ -1130,6 +1135,87 @@ begin
    logger.Info('[Layout] %d of %d child control(s) extend past the client ' +
                'area (%dx%d)',
                [found, TR4WMainForm.ControlCount, cw, ch]);
+end;
+
+(* WHERE IS THE HORIZONTAL SCROLL BAR COMING FROM.
+
+  NY4I has reported one four times -- "still have a horizontal scroll bar for
+  no reason" -- and I have now been wrong about it twice, which is why this is
+  a probe rather than another change.
+
+  WHAT HAS ALREADY BEEN RULED OUT, so nobody re-checks it:
+
+    * A child hanging off the client area. ReportMainWindowOverhang says 0 of
+      118, measured on the Mint box.
+    * The editable log and the B4 list. Both are TLogGrid with ssAutoVertical,
+      and TCustomGrid.GetSBVisibility (grids.pas:5329) can only raise a
+      horizontal bar when FScrollBars is ssHorizontal, ssBoth or ssAutoBoth.
+    * The possible-call strip. It was a TListBox and is now a TDrawGrid with
+      ScrollBars = ssNone.
+
+  SO ASK THE FORM ITSELF, EVERY TICK, AND REPORT ONLY WHEN THE ANSWER CHANGES.
+  A TForm with AutoScroll on grows a bar when its content is wider than its
+  client, and that content can arrive LONG after the layout ran -- a control
+  created on first use, or one moved by a later resize -- which is exactly the
+  window ReportMainWindowOverhang, running once at startup, cannot see.
+
+  The widest child is named, because "there is a scroll bar" is not a
+  diagnosis and "pnlWhatever ends at 812 in a 782 client" is. *)
+procedure ReportHorizontalScroll;
+var
+   i:       integer;
+   c:       TControl;
+   right:   integer;
+   widest:  integer;
+   name_:   string;
+   visible: boolean;
+begin
+   if (TR4WMainForm = nil) or (logger = nil) then
+      begin
+      Exit;
+      end;
+
+   visible := TR4WMainForm.HorzScrollBar.IsScrollBarVisible;
+
+   if visible = GLastHorzScroll then
+      begin
+      Exit;
+      end;
+   GLastHorzScroll := visible;
+
+   if not visible then
+      begin
+      logger.Info('[Layout] the main window''s horizontal scroll bar is gone.');
+      Exit;
+      end;
+
+   widest := 0;
+   name_  := '(none)';
+
+   for i := 0 to TR4WMainForm.ControlCount - 1 do
+      begin
+      c := TR4WMainForm.Controls[i];
+      if not c.Visible then
+         begin
+         Continue;
+         end;
+
+      right := c.Left + c.Width;
+      if right > widest then
+         begin
+         widest := right;
+         name_  := c.ClassName + ' "' + c.Name + '"';
+         end;
+      end;
+
+   logger.Warn('[Layout] the main window has a HORIZONTAL SCROLL BAR: ' +
+               'range %d, page %d, client %d. Widest child is %s, ending at ' +
+               '%d. AutoScroll=%s',
+               [TR4WMainForm.HorzScrollBar.Range,
+                TR4WMainForm.HorzScrollBar.Page,
+                TR4WMainForm.ClientWidth,
+                name_, widest,
+                BoolToStr(TR4WMainForm.AutoScroll, True)]);
 end;
 
 procedure MakeMainWindowResizeable(const aClientWidth, aClientHeight: integer);
@@ -2100,6 +2186,9 @@ end;
 
 procedure TTR4WMainForm.SystemWatchTick(Sender: TObject);
 begin
+   (* Cheap: two property reads unless the answer has changed. *)
+   ReportHorizontalScroll;
+
    if SystemClockJumped then
       begin
       (* WAS THE WM_TIMECHANGE ARM. GetSystemTime first, exactly as it did:

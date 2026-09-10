@@ -10408,11 +10408,19 @@ end;
   have managed. A file the operator asked to see, that does not appear, with
   no message, is indistinguishable from a broken menu. *)
 begin
-  if not OpenWithDesktopHandler(string(FileName)) then
+  (* A TEXT EDITOR, NOT THE DESKTOP'S HANDLER FOR THIS FILE TYPE.
+
+    The first version of this called OpenWithDesktopHandler, which asks "what
+    is this file" -- and the desktop answers `audio/aac` for an ADIF log,
+    because nothing has ever registered a MIME type for one. NY4I got a video
+    player complaining that playback had terminated abnormally.
+
+    This menu item already knows what it wants. See OpenTextFileInEditor. *)
+  if not OpenTextFileInEditor(string(FileName)) then
      begin
      ShowMessage(SysUtils.Format(
-        'Could not open %s -- this desktop has no handler TR4W can start ' +
-        '(it looks for xdg-open, then gio).', [string(FileName)]));
+        'Could not open %s -- no text editor TR4W knows how to start is ' +
+        'installed.', [string(FileName)]));
      end;
 end;
 {$ENDIF}
