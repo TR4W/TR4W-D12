@@ -527,7 +527,8 @@ var
    WSJTXSendColorization: boolean = true;
    WSJTXEnabled: boolean = true;
    WSJTXRadioControlEnabled: boolean = false;
-   SpotCollectorEnabled: boolean = false;
+   (* SpotCollectorEnabled MOVED, 2026-09-10 -- Settings.SpotCollector.Enabled
+     in uSettingsModel.  Its default moved into that class's constructor. *)
    CTYUpdateCheckOnStartup: boolean = true;
 
 const
@@ -944,7 +945,8 @@ const
  (crCommand: 'QZB RANDOM OFFSET ENABLE';      crAddress: @QZBRandomOffsetEnable;          crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'R150S MODE';                    crAddress: @CTY.ctyR150SMode;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'RFOBL MODE';                    crAddress: @CTY.ctyRFOBLMode;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'RADIO TCP SERVER PORT';         crAddress: @RadioServerTCPPort;             crMin:1;  crMax:65535;   crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 0),   // ny4i
+  (* WITHDRAWN 2026-09-10: it is Settings.Radio.TcpServerPort now. *)
+ (crCommand: 'RADIO TCP SERVER PORT';         crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 0),   // ny4i
  (crCommand: 'RADIO ONE BAND OUTPUT PORT';    crAddress: @Radio1.BandOutputPort;          crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfRadio1; crType: ctPortLPT; crNetwork: 0),
  (crCommand: 'RADIO ONE BAUD RATE';           crAddress: pointer(11);                     crMin:0;  crMax:57600;   crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckArray; cfFunc: cfRadio1; crType: ctInteger; crNetwork: 0),
  (crCommand: 'RADIO ONE CAT DTR';             crAddress: pointer(29);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList;   cfFunc: cfRadio1; crType: ctOther; crNetwork: 0),
@@ -1067,7 +1069,10 @@ const
  (crCommand: 'SKIP ACTIVE BAND';              crAddress: @Config.SkipActiveBand;                 crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'SLASH MARK CHAR';               crAddress: @SlashMarkChar;                  crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctChar; crNetwork: 1),
  (crCommand: 'SPACE BAR DUPE CHECK ENABLE';   crAddress: @Config.SpaceBarDupeCheckEnable;        crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'SPOT COLLECTOR ENABLED';        crAddress: @SpotCollectorEnabled;           crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
+  (* WITHDRAWN 2026-09-10: it is Settings.SpotCollector.Enabled now.  csRem
+    rather than deleted, so an old config naming it loads inert instead of
+    stopping the program with "Invalid statement in config file". *)
+ (crCommand: 'SPOT COLLECTOR ENABLED';        crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'SPRINT QSY RULE';               crAddress: @SprintQSYRule;                  crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'START SENDING NOW KEY';         crAddress: @StartSendingNowKey;             crMin:0;  crMax:0;       crS: csJSON; crA: 19;crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctChar; crNetwork: 1),
  (crCommand: 'STATIONS CALLSIGNS MASK';        crAddress: @StationsCallsignsMask;         crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:1 ; crP:12; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctString; crNetwork: 1),

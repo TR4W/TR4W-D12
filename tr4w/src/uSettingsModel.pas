@@ -112,11 +112,35 @@ type
       property Enabled: boolean read FEnabled write FEnabled;
    end;
 
+   (* THE DXLAB SPOT COLLECTOR BRIDGE.  One setting; the group exists because
+     the property PATH is what derives the legacy command name, so
+     SpotCollector.Enabled is what gives 'SPOT COLLECTOR ENABLED'. *)
+   TSpotCollectorSettings = class(TPersistent)
+   private
+      FEnabled: boolean;
+   published
+      property Enabled: boolean read FEnabled write FEnabled;
+   end;
+
+   (* THE TCP SERVER TR4W RUNS FOR RADIO CLIENTS -- not a radio's own port.
+     Radio.TcpServerPort derives 'RADIO TCP SERVER PORT', which is the command
+     an existing config file uses. *)
+   TRadioServerSettings = class(TPersistent)
+   private
+      FTcpServerPort: integer;
+   public
+      constructor Create;
+   published
+      property TcpServerPort: integer read FTcpServerPort write FTcpServerPort;
+   end;
+
    TR4WSettings = class(TPersistent)
    private
       // command name -> property path, built once by walking the RTTI.
       FCommands: TStringList;
       FExternalLogger: TExternalLoggerSettings;
+      FSpotCollector: TSpotCollectorSettings;
+      FRadio: TRadioServerSettings;
       procedure BuildCommandMap;
       function PathForCommand(const aCommand: string): string;
    public
@@ -170,6 +194,8 @@ type
       function CommandNames: TStringList;
    published
       property ExternalLogger: TExternalLoggerSettings read FExternalLogger;
+      property SpotCollector: TSpotCollectorSettings read FSpotCollector;
+      property Radio: TRadioServerSettings read FRadio;
    end;
 
 (* THE ONE INSTANCE.  Created on first use so no unit's initialisation order
@@ -221,10 +247,19 @@ end;
 
 { TR4WSettings }
 
+constructor TRadioServerSettings.Create;
+begin
+   inherited Create;
+   // The value logstuff.pas's typed constant carried.
+   FTcpServerPort := 52002;
+end;
+
 constructor TR4WSettings.Create;
 begin
    inherited Create;
    FExternalLogger := TExternalLoggerSettings.Create;
+   FSpotCollector  := TSpotCollectorSettings.Create;
+   FRadio          := TRadioServerSettings.Create;
 
    FCommands := TStringList.Create;
    FCommands.CaseSensitive := False;
@@ -236,6 +271,8 @@ end;
 destructor TR4WSettings.Destroy;
 begin
    FCommands.Free;
+   FRadio.Free;
+   FSpotCollector.Free;
    FExternalLogger.Free;
    inherited Destroy;
 end;

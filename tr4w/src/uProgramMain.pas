@@ -1671,8 +1671,9 @@ begin
   // that one needs a program restart.  A live object with Start/Stop is what
   // makes the Preferences check box able to take effect without one.
   TCIServer := TTCIServer.Create;
-  logger.debug('[tr4w] SpotCollectorEnabled = %s', [BooleanToStr(SpotCollectorEnabled)]);
-  if SpotCollectorEnabled then
+  logger.debug('[tr4w] SpotCollectorEnabled = %s',
+               [BooleanToStr(Settings.SpotCollector.Enabled)]);
+  if Settings.SpotCollector.Enabled then
      StartDXLabPathfinder;
   if elLogType <> lt_NoExternalLogger then
      begin

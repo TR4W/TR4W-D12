@@ -539,7 +539,8 @@ var
   QuickQSL: QuickQSLKeyType; { to indicate a quick QSL is desired }
   QuickQSLKey1: Char = '\';
   QuickQSLKey2: Char = '=';
-  RadioServerTCPPort: integer = 52002;
+  (* RadioServerTCPPort MOVED, 2026-09-10 -- Settings.Radio.TcpServerPort in
+    uSettingsModel.  Its default moved into that class's constructor. *)
   // Commander Interface (inbound for WSJT-X)
 
   RadioSetFreq: LONGINT;

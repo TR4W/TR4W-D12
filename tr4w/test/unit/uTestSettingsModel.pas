@@ -268,6 +268,14 @@ begin
       CheckTrue(s.OwnsCommand('EXTERNAL LOGGER PORT'),    'port');
       CheckTrue(s.OwnsCommand('EXTERNAL LOGGER ENABLED'), 'enabled');
 
+      (* AND THE GROUPING IS CONSTRAINED BY THESE NAMES, which is the thing to
+        know before adding a setting.  The property PATH derives the command,
+        so SpotCollector.Enabled is not a free choice of grouping -- it is what
+        yields the name an existing config file already uses.  Radio.TcpServerPort
+        likewise, and note it is the server TR4W RUNS, not a radio port. *)
+      CheckTrue(s.OwnsCommand('SPOT COLLECTOR ENABLED'), 'the DXLab bridge');
+      CheckTrue(s.OwnsCommand('RADIO TCP SERVER PORT'),  'the radio TCP server');
+
       // Case-folded, because a config file is read upper-cased and a hand
       // edit is not.
       CheckTrue(s.OwnsCommand('external logger port'), 'lower case');
@@ -279,7 +287,11 @@ begin
         peer's message. *)
       names := s.CommandNames;
       try
-         CheckEquals(3, names.Count, 'one name per migrated setting, no more');
+         (* A RATCHET, AND IT HAS ALREADY EARNED ITS KEEP: it failed the
+           moment two settings were added, which is exactly what it is for --
+           a derived name that invents a command TR4W never had would start
+           claiming a multi-op peer message. *)
+         CheckEquals(5, names.Count, 'one name per migrated setting, no more');
       finally
          names.Free;
       end;
