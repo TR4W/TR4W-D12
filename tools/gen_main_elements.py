@@ -156,6 +156,14 @@ NEED_BANDS = ['160', '80', '40', '20', '15', '10']
 # MainUnit: MainWindowChildsWidth := 46 * ws;  RightTopWidth := 14 * ws.
 NEED_LEFT = (46 - 14) * WS
 
+# How much wider than a band cell the row LABEL is.  ZERO, and it was tried
+# at WS and at WS*2 first: Lint-FormOverlap rejected both, because
+# pnlDupeInfoCall ends at exactly NEED_LEFT and there is no empty space to
+# take.  The labels get a smaller, UNIFORM font instead -- see
+# uMainGrids.MatchNeedLabelFonts.  Kept as a named zero rather than deleted so
+# the next person does not re-derive the same rejection.
+LABEL_EXTRA = 0
+
 
 def totals_blocks(taborder):
     """The score totals grid, from CreateTotalWindows' own arithmetic.
@@ -225,7 +233,14 @@ def needs_blocks(taborder):
                            ('MultNeed', (WS * 4, WS * 5))):
         for row, top in enumerate(row_tops, start=1):
             label = 'pnl%sR%dLabel' % (kind, row)
-            out += panel_block(label, NEED_LEFT, top, w, WS, taborder,
+            # THE LABEL IS WIDER THAN A BAND CELL, AND EXTENDS TO ITS LEFT.
+            # 'Both:' wants 47px at the main window font and a band cell gives
+            # it 30 -- measured on NY4I's Mint box, 2026-09-09, where it
+            # reached the screen as 'oth:'.  It is right-aligned, so the extra
+            # room is taken from the empty space to the LEFT and the labels
+            # still sit hard against the band columns.
+            out += panel_block(label, NEED_LEFT - LABEL_EXTRA, top,
+                               w + LABEL_EXTRA, WS, taborder,
                                sunken=False, alignment='taRightJustify')
             names.append(label)
             taborder += 1

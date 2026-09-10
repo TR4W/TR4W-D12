@@ -187,6 +187,82 @@ begin
    aPanel.Font.Color := tr4wColorsArray[TWindows[aElement].mweColor];
 end;
 
+(* ONE FONT SIZE ACROSS ALL FOUR ROW LABELS.
+
+  THE COMPLAINT WAS NOT THAT THE TEXT WAS SMALL, IT WAS THAT ONE WORD WAS.
+  NY4I, 2026-09-09: "making Both just a tiny font is not the right strategy.
+  That looks strange." He is right, and the strangeness is INCONSISTENCY --
+  'CW:' drawn at full height beside a 'Both:' shrunk to 60% of it reads as a
+  rendering fault, because nothing in the design says those two labels are
+  different kinds of thing. They are the same thing on different rows.
+
+  So the four labels are levelled to whichever of them had to shrink most.
+  FitCaption has already chosen each one's largest fitting height by the time
+  this runs; taking the minimum makes the column deliberate instead of
+  accidental, at the cost of making 'CW:' smaller than it needs to be. That is
+  the right trade: a column that looks designed beats one where three cells
+  are as large as possible and the fourth is not.
+
+  A MITIGATION, AND SAID SO IN THE LOG. The real answer is a wider label cell,
+  which the layout cannot currently give -- see the note in PositionMainGrids.
+  Every shrink is still reported with its pixel figures, so the day the strip
+  is re-laid out the numbers to aim at are already written down.
+
+  CALLED AFTER THE CAPTIONS ARE SET, never before: there is nothing to measure
+  until a panel has text. *)
+procedure MatchNeedLabelFonts(const aLabels: array of TElementPanel);
+var
+   i:       integer;
+   height:  integer;
+   lowest:  integer;
+begin
+   lowest := 0;
+
+   for i := Low(aLabels) to High(aLabels) do
+      begin
+      if (aLabels[i] = nil) or (not aLabels[i].Visible) then
+         begin
+         Continue;
+         end;
+
+      (* Magnitude only. A TFont height carries its convention in its sign and
+        these panels use the positive one; comparing signed values would pick
+        the LARGEST font when the sign is negative. *)
+      height := Abs(aLabels[i].Font.Height);
+      if (height > 0) and ((lowest = 0) or (height < lowest)) then
+         begin
+         lowest := height;
+         end;
+      end;
+
+   if lowest = 0 then
+      begin
+      Exit;
+      end;
+
+   for i := Low(aLabels) to High(aLabels) do
+      begin
+      if (aLabels[i] = nil) or (not aLabels[i].Visible) then
+         begin
+         Continue;
+         end;
+
+      if Abs(aLabels[i].Font.Height) <> lowest then
+         begin
+         (* THE PANEL'S OWN SIGN IS KEPT, so this cannot silently switch a
+           label between cell height and character height. *)
+         if aLabels[i].Font.Height < 0 then
+            begin
+            aLabels[i].Font.Height := -lowest;
+            end
+         else
+            begin
+            aLabels[i].Font.Height := lowest;
+            end;
+         end;
+      end;
+end;
+
 procedure PrepareNeedPanel(const aPanel: TElementPanel;
                           const aElement: TMainWindowElement;
                           const aCaption: TCaption);
@@ -374,6 +450,21 @@ begin
 
    for row := Low(TNeedRow) to High(TNeedRow) do
       begin
+      (* THE ROW LABEL GETS A BAND CELL'S WIDTH AND NO MORE, AND WIDENING IT
+        WAS TRIED FIRST.
+
+        MEASURED, NOT GUESSED: 'Both:' wants 47px at the main window font and
+        a cell offers 30. NY4I saw it on Mint as 'oth:'. My first two attempts
+        at that were a missing resize hook and a negated font height -- both
+        real bugs, neither of them this one. Only the pixel figures said the
+        cell was simply too small.
+
+        SO GIVE IT MORE ROOM. It is right-aligned, so the room would come from
+        the left, and there is none: Lint-FormOverlap rejected an extra ws and
+        an extra ws*2 alike, because pnlDupeInfoCall ends at exactly needLeft.
+
+        The labels take a smaller UNIFORM font instead -- see
+        MatchNeedLabelFonts, and read it before trying the widening again. *)
       Place(GQSONeedLabel[row], needLeft, ws * row, cellWidth, ws);
       Place(GMultNeedLabel[row], needLeft, ws * (row + 3), cellWidth, ws);
 
@@ -411,6 +502,10 @@ procedure ConfigureNeedRows(const aQSOByMode, aMultByMode: boolean);
 
       aLabels[0].Visible := True;
       aLabels[1].Visible := aByMode;
+
+      (* LAST, because it measures what FitCaption has already decided and
+        skips a hidden row. *)
+      MatchNeedLabelFonts(aLabels);
    end;
 
 begin
