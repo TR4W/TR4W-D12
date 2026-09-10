@@ -708,6 +708,24 @@ stage_package() {
    else
       missing="$missing dom/"
    fi
+   # THE INSTALL NOTES TRAVEL WITH THE ARCHIVE, and that is the point of them.
+   #
+   # A tester who unpacks this has no repository and no wiki -- so a dependency
+   # list that lives anywhere else is a dependency list they do not have. The
+   # two things that stop TR4W starting on a stock machine are a glibc older
+   # than 2.34 and a missing GTK 2, and neither produces a message anyone can
+   # act on without being told what it means.
+   #
+   # NOT FATAL IF ABSENT: a build from a tree without docs/ still produces a
+   # working archive, and refusing to package over a missing README would be
+   # the wrong trade.
+   readme="$REPO/docs/INSTALL_$(echo "$OS" | tr '[:lower:]' '[:upper:]').md"
+   if [ -f "$readme" ]; then
+      cp "$readme" "$stage/README-INSTALL.md"
+   else
+      say "  note: no $readme -- the archive ships without install notes."
+   fi
+
    if [ -d "$REPO/i18n" ]; then
       mkdir -p "$stage/help"
       # The help catalogues only; the rest of i18n/ is source for the build.

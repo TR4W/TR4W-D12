@@ -73,6 +73,7 @@ object TR4WMainForm: TTR4WMainForm
     Width = 400
     ColCount = 1
     DefaultColWidth = 100
+    DefaultDrawing = False
     DefaultRowHeight = 18
     FixedCols = 0
     FixedRows = 0
@@ -80,6 +81,7 @@ object TR4WMainForm: TTR4WMainForm
     RowCount = 1
     ScrollBars = ssNone
     TabOrder = 0
+    Visible = False
     OnDrawCell = lstPossibleCallDrawCell
   end
   object pnlAutoSendCount: TElementPanel

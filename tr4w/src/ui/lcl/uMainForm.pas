@@ -1927,7 +1927,12 @@ begin
      grid neither paints nor tracks a selection the way a listbox does, and
      this strip has one row -- "selected" here means "this is the current
      column", which is what SelectPossibleCall sets and what the operator
-     arrows through. *)
+     arrows through.
+
+     DefaultDrawing IS OFF for the same family of reason: with it on the grid
+     fills the cell and draws a focus rectangle BEFORE this handler runs, so
+     an empty strip showed a bordered box even though nothing here painted a
+     pixel. Every pixel in this control is ours. *)
    drawState := [];
    if aCol = lstPossibleCall.Col then
       begin
@@ -3307,6 +3312,26 @@ begin
      into it because the draw handler exits on an index the model does not
      have, which is the same guard it always had. *)
    lb.ColCount := 1;
+
+   (* AND HIDDEN, WHICH IS THE FIX FOR "a horizontal scroll bar for no
+     reason".
+
+     NOTHING HAS EVER HIDDEN THIS STRIP. It sat on the main window at all
+     times, empty for all but a few hundred milliseconds per callsign, and an
+     empty control still paints itself: as a TListBox that was a sunken
+     rectangle the width of the strip, which NY4I reported four times as a
+     horizontal scroll bar, and after the grid conversion it was a bordered
+     cell in the same place. Same defect wearing two widgets.
+
+     WHY WINDOWS NEVER SHOWED IT. There the empty listbox drew in the form's
+     own colour with no visible frame, so it was invisible rather than absent.
+     GTK draws a themed, recessed widget whether or not it has content.
+
+     THE PROBE THAT FOUND IT RULED THE OBVIOUS ANSWER OUT FIRST:
+     TR4WMainForm.HorzScrollBar.IsScrollBarVisible never became True, and no
+     child ever extended past the client area -- 0 of 118 on every tick. It
+     was never a scroll bar at all. *)
+   lb.Visible := False;
    lb.Invalidate;
 end;
 
@@ -3325,6 +3350,9 @@ begin
    Result := GPossibleCount;
    Inc(GPossibleCount);
    lb.ColCount := GPossibleCount;
+
+   (* SHOWN ONLY WHEN IT HAS SOMETHING TO SHOW -- see ClearPossibleCalls. *)
+   lb.Visible := True;
 end;
 
 function PossibleCallCount: integer;
