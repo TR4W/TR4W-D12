@@ -49,6 +49,7 @@ uses
    LCLType,    // HWND
    Dialogs,    // InputQuery -- see AskForText
    ComPortEnumerator,   // TComPortEnumerator -- see FillSerialPortCombo
+   uPortAddress,        // ComPortNumber -- the port-naming rules
   uTR4WStrings;
 
 resourcestring
@@ -990,19 +991,23 @@ begin
    Result.Anchors    := aAnchors;
 end;
 
-// The 'SERIAL n' vocabulary CFGCA expects, from a Windows 'COMn' name.  Kept
-// here rather than in the store: the store holds whatever string the UI chose,
-// and the translation is a presentation concern.
+(* THE VALUE A PORT IS STORED AS: THE NAME THE OPERATING SYSTEM USES.
+
+  It rendered 'SERIAL n' until 2026-09-10.  NY4I: SERIAL n is not an OS name --
+  COM7 and /dev/ttyUSB0 are -- and it cannot spell a device node at all, so a
+  Linux port could be shown and not saved.
+
+  The store field is a free string and always was, so this needed no schema
+  change.  What still expects 'SERIAL n' is the legacy CFGCA bridge, and
+  uPortAddress.SerialTokenFor translates for it at the one place that renders
+  those keys.
+
+  PORT_NONE FOR AN EMPTY NAME, not for an unparseable one: '/dev/ttyUSB0' has
+  no COM number and is a perfectly good port. *)
 function ComNameToPortValue(const aComName: string): string;
-var
-   n: integer;
 begin
-   n := ComPortNumber(aComName);
-   if n > 0 then
-      begin
-      Result := 'SERIAL ' + IntToStr(n);
-      end
-   else
+   Result := Trim(aComName);
+   if Result = '' then
       begin
       Result := PORT_NONE;
       end;

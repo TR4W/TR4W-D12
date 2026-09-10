@@ -52,21 +52,47 @@ $files = Get-ChildItem -Path $SourceDir -Recurse -Include *.pas, *.PAS, *.inc
 
 foreach ($f in $files) {
    $lineNo = 0
-   $inBlockComment = $false
+   # WHICH DELIMITER CLOSES THE COMMENT WE ARE INSIDE: '', '}' or '*)'.
+   #
+   # IT TRACKED ONLY { } UNTIL 2026-09-10, AND CLAUDE.md MANDATES (* *).  So
+   # this lint could see across only the comment style the repository forbids,
+   # and a multi-line (* *) comment was scanned AS CODE.  It fired on the prose
+   # "OFF WINDOWS, SAY NOTHING ABOUT A PATH WE CANNOT KNOW" in uLogDatabase,
+   # because ' WINDOWS,' matches the uses-clause pattern exactly.
+   #
+   # A lint that reads commented text reports work that does not exist and gets
+   # ignored -- which is the one failure mode a guard cannot survive.
+   $blockCloser = ''
 
    foreach ($raw in (Get-Content -LiteralPath $f.FullName)) {
       $lineNo++
       $line = $raw
 
-      # Strip comments before matching. A lint that fires on prose gets ignored,
-      # and this file's own header names every forbidden unit.
-      if ($inBlockComment) {
-         if ($line -match '\}') { $line = $line -replace '^[^}]*\}', ''; $inBlockComment = $false }
+      # Strip comments before matching. This file's own header names every
+      # forbidden unit, so scanning prose would flag the lint itself.
+      if ($blockCloser -ne '') {
+         $at = $line.IndexOf($blockCloser)
+         if ($at -ge 0) {
+            $line = $line.Substring($at + $blockCloser.Length)
+            $blockCloser = ''
+         }
          else { continue }
       }
+
       $line = $line -replace '\{[^}]*\}', ''
       $line = $line -replace '\(\*.*?\*\)', ''
-      if ($line -match '\{') { $line = $line -replace '\{.*$', ''; $inBlockComment = $true }
+
+      # Whichever opener comes FIRST decides, so a '{' inside an unclosed
+      # (* *) does not end it early -- and vice versa.
+      $ob = $line.IndexOf('{')
+      $op = $line.IndexOf('(*')
+      if ($ob -ge 0 -and ($op -lt 0 -or $ob -lt $op)) {
+         $line = $line.Substring(0, $ob); $blockCloser = '}'
+      }
+      elseif ($op -ge 0) {
+         $line = $line.Substring(0, $op); $blockCloser = '*)'
+      }
+
       $line = $line -replace '//.*$', ''
       if ([string]::IsNullOrWhiteSpace($line)) { continue }
 

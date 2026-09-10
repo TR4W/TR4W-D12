@@ -141,6 +141,55 @@ function EffectiveDeviceName(const aConfiguredName: string;
 function PortKindOf(const aConfiguredName: string;
                     const aPort: PortType): TPortKind;
 
+(*
+  'COM14' -> 14.  0 for anything that is not a COM name, a device node
+  included.
+
+  THE INVERSE OF SerialDeviceName, and it lives beside it for that reason.  It
+  was in ComPortEnumerator, where the round trip between the two could only be
+  tested by a unit that imported both -- and a rule drifting apart from its own
+  inverse is precisely what this unit exists to prevent.
+
+  0 IS THE LOAD-BEARING ANSWER: it is what marks a port unaddressable, so a
+  spelling that parsed by accident would make an unstorable port look
+  selectable.
+*)
+function ComPortNumber(const aPortName: string): Integer;
+
+(*
+  'COM7' -> 'SERIAL 7', the spelling CFGCA's PortTypeSA still expects.  '' for
+  a name with no COM number in it -- every Linux device node.
+
+  A TRANSLATION FOR THE LEGACY BRIDGE, NOT A STORAGE FORMAT.  The store holds
+  the device name now; this exists only so the rendered ini key still sets the
+  ORDINAL, which the sites that ask what kind of port this is still read on
+  Windows.  It goes when they stop.
+*)
+function SerialTokenFor(const aDeviceName: string): string;
+
+(*
+  A STORED PORT AS A DEVICE NAME, WHICHEVER WAY IT WAS WRITTEN.
+
+  The store holds the OS name now -- 'COM7', '/dev/ttyUSB0'.  A file written
+  before 2026-09-10 holds 'SERIAL 7', and one an operator has edited may hold
+  either.  Both are read.  Nothing is migrated on disk: the value is rewritten
+  in the new spelling the next time that radio is saved.
+
+  ONLY 'SERIAL n' IS TRANSLATED.  Anything else passes through UNCHANGED, which
+  is what lets a device node work and what stops this mangling a spelling it
+  does not recognise.  Guessing is worse than passing through -- the same rule
+  the settings import follows.
+
+  '' and 'NONE' mean no port and must not become a name.
+
+  IT LIVES HERE, not beside either caller, because BOTH need it and they must
+  agree: uRadioConfigLegacyMap renders the legacy key from it and
+  uRadioConfigApply assigns the radio's name from it.  A test caught them
+  disagreeing -- the renderer produced no key at all for a stored 'SERIAL 5',
+  so a station upgrading would have lost its port on the first run.
+*)
+function DeviceNameFromStoredPort(const aStored: string): string;
+
 implementation
 
 uses
@@ -169,6 +218,75 @@ begin
    (* NO NAME CONFIGURED -- fall back to what the ordinal means.  That is the
      Windows answer and, until the store carries names, the only answer. *)
    Result := SerialDeviceName(aPort);
+end;
+
+function ComPortNumber(const aPortName: string): Integer;
+var
+   trimmed: string;
+begin
+   Result := 0;
+   trimmed := UpperCase(Trim(aPortName));
+   if Copy(trimmed, 1, 3) <> 'COM' then
+      begin
+      Exit;
+      end;
+   (* Past 'COM'; StrToIntDef rejects 'COM3 (Silicon Labs)' by returning 0,
+     which is wanted -- an unparsed name must not look addressable. *)
+   Result := StrToIntDef(Copy(trimmed, 4, MaxInt), 0);
+   if Result < 0 then
+      begin
+      Result := 0;
+      end;
+end;
+
+function SerialTokenFor(const aDeviceName: string): string;
+var
+   n: Integer;
+begin
+   Result := '';
+   n := ComPortNumber(aDeviceName);
+   if (n >= 1) and (n <= MAX_SERIAL_PORT) then
+      begin
+      Result := 'SERIAL ' + IntToStr(n);
+      end;
+end;
+
+function DeviceNameFromStoredPort(const aStored: string): string;
+var
+   n: Integer;
+   rest: string;
+begin
+   Result := Trim(aStored);
+   if (Result = '') or (UpperCase(Result) = 'NONE') then
+      begin
+      (* 'NONE' spelled literally rather than through PORT_NONE: that constant
+        lives in the config stores, and this unit is a leaf over VC on purpose
+        -- every unit that opens a port already depends on it. *)
+      Result := '';
+      Exit;
+      end;
+
+   if UpperCase(Copy(Result, 1, 7)) <> 'SERIAL ' then
+      begin
+      // A device name, and nothing here knows better than the operator.
+      Exit;
+      end;
+
+   rest := Trim(Copy(Result, 8, MaxInt));
+   (* Explicit: StrToIntDef is an AnsiString routine and this unit is
+     UnicodeString.  A port number is digits. *)
+   n := StrToIntDef(AnsiString(rest), 0);
+   if (n >= 1) and (n <= MAX_SERIAL_PORT) then
+      begin
+      // SerialDeviceName, not 'COM' + n written again: one rule, and it is the
+      // same one the open path uses.
+      Result := SerialDeviceName(PortType(n));
+      end
+   else
+      begin
+      // A token this does not recognise is not a port name either.
+      Result := '';
+      end;
 end;
 
 function PortKindOf(const aConfiguredName: string;

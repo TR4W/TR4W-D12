@@ -565,7 +565,7 @@ begin
          Exit;
          end;
 
-      (* OFF WINDOWS, SAY NOTHING ABOUT A PATH WE CANNOT KNOW.  See
+      (* SAY NOTHING ABOUT A PATH WE CANNOT KNOW.  See
         SQLiteLibraryPath: the loader resolves %s by soname and it is not a
         file beside the binary, so a "not found" here would be wrong on every
         working machine -- which is exactly what it was.

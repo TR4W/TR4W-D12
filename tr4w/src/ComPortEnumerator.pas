@@ -75,6 +75,7 @@ uses
    {$ENDIF}
    SysUtils,
    Classes,
+   uPortAddress,   // ComPortNumber, and SerialDeviceName which it inverts
    VC;   // for MAX_SERIAL_PORT -- see below
 
 const
@@ -168,10 +169,11 @@ type
       property Ports: TComPortInfoArray read FPorts;
    end;
 
-// Parses 'COM14' -> 14.  Returns 0 for anything that is not a COM name -- a
-// Linux device node included -- which is what makes a port unaddressable rather
-// than accidentally selectable.
-function ComPortNumber(const APortName: string): Integer;
+(* ComPortNumber MOVED to uPortAddress, 2026-09-10.  It is the INVERSE of
+  SerialDeviceName and the two were being tested as a pair from different
+  units; a rule and its inverse drifting apart is the whole reason that unit
+  exists.  Re-exported here because this unit's callers ask it about the names
+  it reports. *)
 
 (* Orders a list the way the operator reads it: by COM number where there is
   one, and otherwise by name with any trailing number compared NUMERICALLY, so
@@ -327,25 +329,6 @@ begin
 end;
 
 {$ENDIF}
-
-function ComPortNumber(const APortName: string): Integer;
-var
-   trimmed: string;
-begin
-   Result := 0;
-   trimmed := UpperCase(Trim(APortName));
-   if Copy(trimmed, 1, 3) <> 'COM' then
-      begin
-      Exit;
-      end;
-   // Copy past 'COM'; StrToIntDef rejects 'COM3 (something)' by returning 0,
-   // which is what we want -- an unparsed name must not look addressable.
-   Result := StrToIntDef(Copy(trimmed, 4, MaxInt), 0);
-   if Result < 0 then
-      begin
-      Result := 0;
-      end;
-end;
 
 { TComPortInfo }
 

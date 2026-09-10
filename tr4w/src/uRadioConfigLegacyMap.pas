@@ -59,6 +59,7 @@ unit uRadioConfigLegacyMap;
 interface
 
 uses
+   uPortAddress,   // SerialTokenFor / SerialDeviceName -- the port-naming rules
    SysUtils,
    uRadioConfigStore;
 
@@ -440,7 +441,23 @@ begin
       end
    else
       begin
-      Emit(Result, 'RADIO ' + slot + ' CONTROL PORT',  aRadio.ControlPort);
+      (* TRANSLATED FOR CFGCA, WHICH IS THE ONLY THING THAT STILL WANTS IT.
+
+        The store holds the OS device name now.  PortTypeSA -- the spelling
+        table CheckCommand matches against -- knows only 'SERIAL n', so the
+        rendered KEY is translated here and nowhere else.
+
+        '' FOR A DEVICE NODE, AND THAT IS CORRECT RATHER THAN A GAP: no ordinal
+        can express /dev/ttyUSB0, so there is no key to write.  The port still
+        reaches the radio, as a NAME, through ApplyRadioToSlot -- which is why
+        that assignment is not optional. *)
+      (* NORMALISED FIRST, THEN TRANSLATED, and the first half is the upgrade
+        path.  A store written before 2026-09-10 holds 'SERIAL 5', and
+        SerialTokenFor alone would produce NOTHING for it -- so a station would
+        have lost its port on the first run after upgrading.  A test caught
+        that; see DeviceNameFromStoredPort. *)
+      Emit(Result, 'RADIO ' + slot + ' CONTROL PORT',
+           SerialTokenFor(DeviceNameFromStoredPort(aRadio.ControlPort)));
       Emit(Result, 'RADIO ' + slot + ' BAUD RATE',
            BaudRateValue(aRadio.BaudRate, aTypeRendering.DefaultBaudRate));
       Emit(Result, 'RADIO ' + slot + ' SERIAL FORMAT', aRadio.SerialFormat);

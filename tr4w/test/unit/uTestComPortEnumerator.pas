@@ -16,7 +16,7 @@ unit uTestComPortEnumerator;
 interface
 
 uses
-   SysUtils, uTR4WTestFramework, ComPortEnumerator;
+   SysUtils, uTR4WTestFramework, ComPortEnumerator, uPortAddress;
 
 type
    TComPortEnumeratorTests = class(TTestCase)

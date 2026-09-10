@@ -27,6 +27,8 @@ type
       procedure Test_AConfiguredNameWinsOverTheOrdinal;
       procedure Test_EveryPortHasExactlyOneKind;
       procedure Test_ANamedPortIsSerialWhateverTheOrdinalSays;
+      procedure Test_AStoredPortReadsWhicheverWayItWasWritten;
+      procedure Test_TheLegacyTokenIsOnlyForTheBridge;
    public
       procedure RunAllTests; override;
    end;
@@ -181,6 +183,70 @@ begin
    CheckTrue(PortKindOf('', VC.Network) <> pkSerial, 'network stays network');
 end;
 
+procedure TPortAddressTests.Test_AStoredPortReadsWhicheverWayItWasWritten;
+begin
+   (* THE UPGRADE PATH, AND A TEST ALREADY CAUGHT IT ONCE.
+
+     The store holds the OS name now.  A file written before 2026-09-10 holds
+     'SERIAL 7'.  A first version of this change translated only the new
+     spelling, so a store holding 'SERIAL 5' rendered NO legacy key at all --
+     an upgrading station would have come up with no port and no error. *)
+   BeginTest('a stored port reads whichever spelling it was written in');
+   CheckEquals('COM7', DeviceNameFromStoredPort('SERIAL 7'), 'the old spelling');
+   CheckEquals('COM7', DeviceNameFromStoredPort('serial 7'), 'case-folded');
+   CheckEquals('COM7', DeviceNameFromStoredPort('  SERIAL 7  '), 'trimmed');
+   CheckEquals('COM7', DeviceNameFromStoredPort('COM7'), 'the new spelling');
+   CheckEquals('COM64', DeviceNameFromStoredPort('SERIAL 64'), 'the last port');
+
+   (* PASSED THROUGH UNCHANGED, which is what lets a device node work at all
+     and what stops this mangling a spelling it does not recognise. *)
+   BeginTest('anything that is not SERIAL n passes through untouched');
+   CheckEquals('/dev/ttyUSB0', DeviceNameFromStoredPort('/dev/ttyUSB0'),
+               'a Linux device node');
+   CheckEquals('/dev/cu.usbserial-A50285BI',
+               DeviceNameFromStoredPort('/dev/cu.usbserial-A50285BI'),
+               'a macOS device node');
+   CheckEquals('COM23', DeviceNameFromStoredPort('COM23'),
+               'a COM number above what the enum holds');
+
+   (* NO PORT MUST NOT BECOME A NAME, or a cleared slot would read as a
+     configured serial radio -- PortKindOf trusts a name over the ordinal. *)
+   BeginTest('nothing configured stays nothing');
+   CheckEquals('', DeviceNameFromStoredPort(''), 'empty');
+   CheckEquals('', DeviceNameFromStoredPort('   '), 'blanks');
+   CheckEquals('', DeviceNameFromStoredPort('NONE'), 'NONE');
+   CheckEquals('', DeviceNameFromStoredPort('none'), 'none, case-folded');
+   CheckEquals('', DeviceNameFromStoredPort('SERIAL 0'), 'there is no port 0');
+   CheckEquals('', DeviceNameFromStoredPort('SERIAL 65'),
+               'past the last port the enum has');
+   CheckEquals('', DeviceNameFromStoredPort('SERIAL x'), 'not a number');
+end;
+
+procedure TPortAddressTests.Test_TheLegacyTokenIsOnlyForTheBridge;
+begin
+   (* SerialTokenFor exists ONLY so the rendered CFGCA key still sets the
+     ordinal.  It must produce nothing for a port no ordinal can express --
+     that absence is correct, and the NAME is what carries such a port. *)
+   BeginTest('the legacy token renders only what an ordinal can express');
+   CheckEquals('SERIAL 7', SerialTokenFor('COM7'), 'a COM name');
+   CheckEquals('SERIAL 64', SerialTokenFor('COM64'), 'the last one');
+   CheckEquals('', SerialTokenFor('/dev/ttyUSB0'),
+               'a device node has no token, and that is not a failure');
+   CheckEquals('', SerialTokenFor('COM65'), 'past the enum');
+   CheckEquals('', SerialTokenFor(''), 'nothing');
+
+   (* AND THE ROUND TRIP CLOSES: whatever the store held, what the bridge
+     renders and what the port opens agree. *)
+   BeginTest('store, bridge and open path agree on the same port');
+   CheckEquals('SERIAL 7', SerialTokenFor(DeviceNameFromStoredPort('SERIAL 7')),
+               'an old store value survives the trip');
+   CheckEquals('SERIAL 7', SerialTokenFor(DeviceNameFromStoredPort('COM7')),
+               'and so does a new one');
+   CheckEquals('COM7',
+               EffectiveDeviceName(DeviceNameFromStoredPort('SERIAL 7'), NoPort),
+               'the open path gets a name even with no ordinal set');
+end;
+
 procedure TPortAddressTests.RunAllTests;
 begin
    Test_EverySerialPortNamesItself;
@@ -189,6 +255,8 @@ begin
    Test_AConfiguredNameWinsOverTheOrdinal;
    Test_EveryPortHasExactlyOneKind;
    Test_ANamedPortIsSerialWhateverTheOrdinalSays;
+   Test_AStoredPortReadsWhicheverWayItWasWritten;
+   Test_TheLegacyTokenIsOnlyForTheBridge;
 end;
 
 end.

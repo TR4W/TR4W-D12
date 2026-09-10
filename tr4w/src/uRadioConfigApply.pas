@@ -253,6 +253,7 @@ function DescribePortConflicts(const aStore: TRadioConfigStore;
 implementation
 
 uses
+   uPortAddress,   // SerialTokenFor / SerialDeviceName -- the port-naming rules
    // Windows, not Winapi.Windows: the rest of the tree spells it the short way
    // and qualifies calls as Windows.<fn>, which only resolves if the unit is
    // named that way here too.
@@ -1772,6 +1773,44 @@ begin
          end;
       logger.Debug('[ApplyProfile] radio %d auto-info level %d',
                    [aSlot, aRadio.AutoInfoLevel]);
+      end;
+
+   (* THE PORT'S DEVICE NAME, FOR THE SAME REASON AUTO-INFO IS HERE: no legacy
+     reader can hold it.
+
+     PortTypeSA knows only 'SERIAL n', so a device node renders NO key at all
+     -- RenderRadioKeys says so where it translates.  This assignment is
+     therefore not a convenience, it is the ONLY route by which /dev/ttyUSB0
+     reaches the radio.  Without it a Linux station would save a port and come
+     up with none.
+
+     CLEARED FIRST, unconditionally.  A slot being emptied, or a radio moving
+     from serial to network, must not keep the old name -- CATPortKind reads
+     the name BEFORE the ordinal, so a stale one would leave a cleared slot
+     still claiming to be a serial radio. *)
+   if aSlot = 1 then
+      begin
+      Radio1.tCATPortName   := '';
+      Radio1.tKeyerPortName := '';
+      end
+   else
+      begin
+      Radio2.tCATPortName   := '';
+      Radio2.tKeyerPortName := '';
+      end;
+
+   if (aRadio <> nil) and (aRadio.Transport = rtSerial) then
+      begin
+      if aSlot = 1 then
+         begin
+         Radio1.tCATPortName   := DeviceNameFromStoredPort(aRadio.ControlPort);
+         Radio1.tKeyerPortName := DeviceNameFromStoredPort(aRadio.KeyerOutputPort);
+         end
+      else
+         begin
+         Radio2.tCATPortName   := DeviceNameFromStoredPort(aRadio.ControlPort);
+         Radio2.tKeyerPortName := DeviceNameFromStoredPort(aRadio.KeyerOutputPort);
+         end;
       end;
 
    rendered := RenderRadioKeys(aSlot, aRadio, typeRendering, aProfile, aNamesAKeyerDevice);
