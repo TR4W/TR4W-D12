@@ -121,6 +121,120 @@ have left every such contest scoring on -1. **One variable, two writers.** That
 is the general case, not an exception, and it is why "retire the row" is a
 different decision from "graduate the setting".
 
+---
+
+## 2d. What we would do from scratch in an FPC app
+
+NY4I, 2026-09-10: *"confirm this is the way we should do global settings. And
+remember our most important rule is what would we do if we were doing this from
+scratch in a FPC app"*.
+
+**The honest answer: from scratch you would NOT build a registry of getter and
+setter method pointers. You would declare a settings CLASS with published
+properties and let the RTTI streamer persist it.**
+
+```pascal
+   TUdpSettings = class(TPersistent)
+   published
+      property Address: string read FAddress write FAddress;
+      property PortScore: integer read FPortScore write FPortScore;
+   end;
+```
+
+The property NAME is the key. The property TYPE is the type. There is no table,
+no `crAddress`, no `crType`, no `crKind`, and no closure pair -- because the
+compiler already emits all of that as RTTI, and `fpjsonrtti` already reads it.
+
+### Proven in this toolchain, not assumed
+
+A probe compiled with TR4W's own mode -- `{$MODE Delphi}` plus
+`{$MODESWITCH UnicodeStrings}`, which is where this program's string surprises
+live -- streamed and re-read a nested settings object:
+
+```
+{ "CodeSpeed" : 34, "CwMode" : 1, "MyCall" : "NY4I", "QsoPointsDomesticCw" : -1,
+  "SayHi" : true, "Udp" : { "Address" : "192.168.1.255",
+  "BroadcastAllQsos" : true, "PortScore" : 12060 } }
+
+ROUND TRIP OK
+partial update: MyCall=W1AW CodeSpeed=99 (CodeSpeed must still be 99)
+```
+
+Four of those results matter:
+
+| result | why it matters |
+|---|---|
+| `QsoPointsDomesticCw : -1` | this is the exact value `CFGCA` **structurally cannot hold**, because `crMin`/`crMax` are `Word`. RTTI does not care |
+| the nested `Udp` object | settings GROUP. One object per area, not 500 flat keys |
+| the enum | `CwMode` round-trips as an ordinal with no spelling table, which is the whole of section 2c |
+| the partial update | a key the file does not carry leaves the property alone, so an OLDER settings file is safe by construction rather than by a migration step |
+
+**No new dependency.** `fcl-json` is already on the build's search path for
+`uJSON`, and `fpjsonrtti` ships in it. `typinfo` is in the RTL.
+
+### So why does the registry exist, and is it wrong?
+
+**It is the right MIGRATION device and the wrong DESTINATION**, and those are
+not in conflict.
+
+You cannot put a `published property` on a global variable, and TR4W has ~500 of
+them read from 446 files. The registry's getter/setter pair is the only thing
+that can put a typed, key-addressable façade in front of storage it does not
+own. That is exactly what it was built for and it does that job well.
+
+But it is a hand-built reflection layer, and FPC already has reflection. Every
+column it replaces -- `crType`, `crKind`, `crMin`/`crMax` -- is a fact the
+compiler knows and would emit for free.
+
+### The blocker is `Config` being a RECORD, and the array is why
+
+`TR4WConfig` is a `record`, initialised as a typed constant. That is not a style
+choice; the reason is recorded in the agent memory for this project:
+
+> `CFGCA` holds the ADDRESS of each setting's storage, and `CheckCommand` writes
+> through it. `@Config.Field` works because the offset is known at link time.
+> **The address of an object's field does not exist at compile time.**
+
+So the record shape is a CONSEQUENCE of the array. And a record has no published
+properties and no RTTI, so it cannot be streamed this way. **The array is
+forcing the very shape that blocks the native answer.**
+
+It is also already against this repository's standing rule -- CLAUDE.md prefers a
+class to a record and grants exactly one automatic exemption, a layout defined by
+something outside this code. `TR4WConfig` is not that.
+
+**Retire the array and the record constraint dies with it.** That is the
+strongest argument yet for the order of work.
+
+### What RTTI does not give you, honestly
+
+| the registry has | the native answer |
+|---|---|
+| declared `Min`/`Max` per setting | a property setter, which is ordinary Pascal the compiler checks |
+| a declared allow-list | an enum IS the allow-list; where it is not, a setter |
+| `ReadOnly` | a property with no `write` clause. The compiler enforces it |
+| `Broadcast`, `HasSideEffects`, `OnApply` | a real method on the settings object |
+| a stable key independent of the identifier | the property path IS the key, so a rename is a file-format change -- the one genuine cost, and it is the same cost every RTTI-persisted app pays |
+
+The old text commands still need a home, and this is the array's one honest
+remaining job: `'MY CALL'` has to reach `Settings.Station.MyCall`. That is a
+small alias map from command text to property path, driven through
+`typinfo.SetPropValue` -- **not** 500 rows carrying a pointer and four tag bytes.
+
+### What this changes about the plan
+
+Nothing about the batches in 2b, and everything about where they land.
+
+1. The ~85 cheap settings still move first, for the same reason.
+2. They should land on **published properties of a settings class**, not on
+   fields of the `Config` record.
+3. `Config` becomes a class when the last `@Config.Field` row leaves `CFGCA`.
+4. The registry stays as the façade over whatever has NOT moved, and shrinks to
+   nothing rather than being deleted.
+
+**This is a proposal awaiting NY4I's ruling**, and it is the third open item
+below. Nothing in stages A or B depends on it.
+
 ## 2b. How big the hop-removal actually is
 
 Measured 2026-09-10: every textual reference under `tr4w/src` to the 270 globals
@@ -315,10 +429,15 @@ local file.
    prefers a class to a record, but `RadioObject` is an old-style `object` held in
    globals, so an object-typed field there is a lifetime question rather than a
    style one.
-3. **Which stage the 270 bare globals move in, and in what themed batches.** They
+3. **Is the settings REGISTRY the destination, or a settings CLASS with
+   published properties?** See 2d: the native FPC answer is proven to work
+   in this toolchain, needs no new dependency, and handles the one value
+   `CFGCA` structurally cannot. The registry is the right migration device
+   either way. **NY4I's call.**
+4. **Which stage the 270 bare globals move in, and in what themed batches.** They
    are the bulk of the work and none of it is urgent; the port slice is urgent
    because it blocks a platform.
-4. ~~**Whether `GetValueFromArray` and the 40 spelling tables get a guard now.**~~
+5. ~~**Whether `GetValueFromArray` and the 40 spelling tables get a guard now.**~~
    **HALF-CLOSED 2026-09-10.** `Lint-SpellingTables` gates the build and fails
    on a duplicate or blank spelling, which is the part that makes an enum value
    unreachable by name. 39 tables, 685 spellings, clean. The 40th,
