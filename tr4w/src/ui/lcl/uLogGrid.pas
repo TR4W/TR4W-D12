@@ -107,12 +107,6 @@ type
 
       (* WHAT THE OPERATOR TYPED, SHOWN WHERE IT MATCHED. Empty means no
         highlighting, which is every window except the search. *)
-      FPaintCount:  integer;
-      FPaintClient: integer;
-      FPaintRowH:   integer;
-      FPaintRows:   integer;
-      FPaintGrid:   integer;
-      FPaintDrawn:  integer;
       FMatchText:      string;
       FMatchColumn:    LogColumnsType;
       FMatchColor:     TColor;
@@ -165,13 +159,6 @@ type
         see the body. *)
       procedure AutoAdjustColumn(aCol: integer); override;
    public
-      (* What the last Paint measured. See Paint. *)
-      property PaintCount:  integer read FPaintCount;
-      property PaintClient: integer read FPaintClient;
-      property PaintRowH:   integer read FPaintRowH;
-      property PaintRows:   integer read FPaintRows;
-      property PaintGrid:   integer read FPaintGrid;
-      property PaintDrawn:  integer read FPaintDrawn;
       constructor Create(aOwner: TComponent); override;
 
       (* Rebuild the visible columns from ColumnsArray and distribute the
@@ -328,24 +315,6 @@ begin
       begin
       drawn := GridHeight;
       end;
-
-   (* RECORDED FOR WHOEVER LOGS, RATHER THAN LOGGED FROM HERE.
-
-     Two sources have disagreed about this control for two days: the bounds
-     dump says the grid and the status panels meet exactly, and a magnified
-     screen capture shows a band between them. The numbers this routine
-     actually sees will say which is wrong -- including whether it runs at all,
-     which nothing so far has established.
-
-     THIS UNIT HAS NO LOGGER AND IS NOT GETTING ONE for a probe. It publishes
-     what it saw; uMainForm's child dump prints it, which is also the only
-     place that already knows how to reach this control. *)
-   Inc(FPaintCount);
-   FPaintClient := ClientHeight;
-   FPaintRowH   := DefaultRowHeight;
-   FPaintRows   := RowCount;
-   FPaintGrid   := GridHeight;
-   FPaintDrawn  := drawn;
 
    if drawn >= ClientHeight then
       begin
