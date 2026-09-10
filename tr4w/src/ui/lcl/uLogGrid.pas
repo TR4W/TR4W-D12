@@ -360,7 +360,32 @@ begin
    FixedRows     := 1;
    ColCount      := 1;
    RowCount      := 1;
-   ScrollBars    := ssAutoVertical;
+   (* ssVertical, NOT ssAutoVertical.
+
+     THE BAND UNDER THE LAST ROW IS A REAL HORIZONTAL SCROLL BAR WITH A THUMB.
+     Seen at last by capturing NY4I's actual screen with xwd and cropping the
+     window: a grey trough with a lighter thumb at the left, full width,
+     immediately below the last QSO. Seven reports, and every earlier answer of
+     mine was reasoning rather than looking.
+
+     WHY AN AUTO STYLE DOES NOT SUPPRESS IT. TCustomGrid.GetSBVisibility does
+     compute HsbVisible := False for ssAutoVertical -- I checked that, and it
+     is true, and it is not enough. UpdateHorzScrollBar only calls
+     ScrollBarShow when its cached FHSbVisible DISAGREES with the new value:
+
+         NeedUpdate := FHSbVisible <> Ord(AVisible);
+         if NeedUpdate then ScrollBarShow(SB_HORZ, aVisible);
+
+     FHSbVisible starts at 0 and the computed value is also False, so they
+     agree, so ScrollBarShow is NEVER CALLED -- and whatever the widget set
+     created the control with stays. On Win32 that is nothing. On gtk2 it is a
+     visible bar.
+
+     THE CACHE IS THE BUG, AND IT IS NOT OURS TO FIX. Naming the vertical bar
+     explicitly takes the horizontal one out of that machinery altogether. A
+     log that scrolls always wants its vertical bar, so a permanent one costs
+     nothing. *)
+   ScrollBars    := ssVertical;
    BorderStyle   := bsSingle;
    (* THE SAME HEIGHT THE REST OF THE WINDOW IS LAID OUT WITH.
      CheckEditableWindowHeight sizes this control as
