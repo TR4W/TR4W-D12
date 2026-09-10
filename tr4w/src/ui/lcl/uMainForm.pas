@@ -1249,7 +1249,30 @@ begin
       Exit;
       end;
 
-   visible := TR4WMainForm.HorzScrollBar.IsScrollBarVisible;
+   (* IsScrollBarVisible IS A WIN32 AND QT ANSWER ONLY, AND THIS PROBE WAS
+     BLIND FOR IT.
+
+     It asks the widget set through GetScrollbarVisible, and the base
+     implementation is
+
+         function TWidgetSet.GetScrollbarVisible(...): boolean;
+         begin
+           Result := false;
+         end;
+
+     -- intfbaselcl.inc:430. win32, qt, qt5, qt6 and customdrawn override it.
+     GTK DOES NOT. So on gtk2 this returned False whatever was on screen, and a
+     probe written to answer "is there a scroll bar" answered "no" six times
+     while NY4I was looking at one. The LCL knows the call is trouble there:
+     grids.pas:3529 says "Don't use GetScrollbarvisible from the widgetset --
+     it sends WM_PAINT message (Gtk2). Issue #30160".
+
+     THE LCL-SIDE VALUES ARE READABLE EVERYWHERE, so ask those instead: Visible
+     is the switch, and a non-zero Range wider than the Page is what raises a
+     bar. That is the state the program controls and can be held to. *)
+   visible := TR4WMainForm.HorzScrollBar.Visible and
+              (TR4WMainForm.HorzScrollBar.Range >
+               TR4WMainForm.HorzScrollBar.Page);
 
    if visible = GLastHorzScroll then
       begin
@@ -1282,10 +1305,11 @@ begin
          end;
       end;
 
-   logger.Warn('[Layout] the main window has a HORIZONTAL SCROLL BAR: ' +
-               'range %d, page %d, client %d. Widest child is %s, ending at ' +
-               '%d. AutoScroll=%s',
-               [TR4WMainForm.HorzScrollBar.Range,
+   logger.Warn('[Layout] the main window WANTS A HORIZONTAL SCROLL BAR: ' +
+               'visible=%s range %d, page %d, client %d. Widest child is %s, ' +
+               'ending at %d. AutoScroll=%s',
+               [BoolToStr(TR4WMainForm.HorzScrollBar.Visible, True),
+                TR4WMainForm.HorzScrollBar.Range,
                 TR4WMainForm.HorzScrollBar.Page,
                 TR4WMainForm.ClientWidth,
                 name_, widest,
@@ -1357,6 +1381,30 @@ begin
      controls the layout computed is a correctness one. *)
    TR4WMainForm.ClientWidth := aClientWidth;
    TR4WMainForm.ClientHeight := aClientHeight;
+
+   (* THIS FORM SCROLLS NOTHING, SO IT GETS NO SCROLL BARS.
+
+     NY4I asked the right question after six reports of a horizontal bar I
+     could not find: "setting HorzScrollBar Visible to false -- default is true
+     according to the Laz documentation -- would not force it to not appear?"
+     It would, and it does.
+
+     TScrollingWinControl publishes both bars with Visible defaulting TRUE.
+     That is the correct default for a TScrollBox and wrong for this window:
+     every control on it is positioned absolutely from ws, nothing here scrolls
+     or ever has, and the vertical resize moves the log's rows rather than a
+     viewport. A bar that appears on this form is always spurious.
+
+     AutoScroll is already False (the LCL's own default for this class), which
+     stops the RANGE being computed from the children -- but Visible is a
+     separate switch and a range set from anywhere else still raises a bar.
+
+     BOTH, NOT JUST THE HORIZONTAL ONE. Only the horizontal was reported, and
+     the vertical would be exactly as wrong for exactly the same reason;
+     leaving it armed would be waiting for the same bug to be found again from
+     the other axis. *)
+   TR4WMainForm.HorzScrollBar.Visible := False;
+   TR4WMainForm.VertScrollBar.Visible := False;
 
    (* MEASURED AND REPORTED, because this is the number a screenshot cannot
      give you. A client narrower than what the layout asked for means the right
