@@ -93,7 +93,14 @@ should be corrected rather than left to contradict the plan. It currently reads:
 That was the right scope for building the registry. It is no longer the scope of
 the project: the separate, much larger job **is** the job.
 
-### The successor already exists and is further along than this document assumed
+### The successor exists, and is UNDER REVIEW rather than settled
+
+**NY4I interrupted the session that built this, deliberately, to review it
+(2026-09-10).** So read the table below as *what was built*, not as *what is
+agreed*. Nothing in this document depends on it -- the measurements in 1, 2 and
+2b are of `uCFG.pas` itself and stand either way -- but the STAGING does: if the
+registry's shape changes, the batches in 2b are still the batches, and only
+their destination moves.
 
 Work in the 24 hours before this was written, in another session:
 
