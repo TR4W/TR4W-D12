@@ -88,6 +88,25 @@ uses
 *)
 function SerialDeviceName(const aPort: PortType): string;
 
+(*
+  THE NAME TO ACTUALLY OPEN: the one that was CONFIGURED, if there is one, and
+  otherwise the one the ordinal implies.
+
+  This is the widen half of widen-then-narrow -- step 1 of
+  docs\PORT_IDENTITY_PLAN.md.  Every caller asks this instead of
+  SerialDeviceName, and every name is empty today, so the answer is unchanged
+  until the store starts supplying one.  When it does, no call site changes
+  again.
+
+  WHY A NAME BEATS AN ORDINAL, in one line: /dev/ttyUSB0 cannot be computed
+  from a number, and COM7 no longer has to be.
+
+  TRIMMED, because a name arrives from a settings file an operator can edit,
+  and ' COM7 ' is a port they meant.
+*)
+function EffectiveDeviceName(const aConfiguredName: string;
+                             const aPort: PortType): string;
+
 implementation
 
 uses
@@ -102,6 +121,20 @@ begin
       end;
 
    Result := 'COM' + IntToStr(Ord(aPort));
+end;
+
+function EffectiveDeviceName(const aConfiguredName: string;
+                             const aPort: PortType): string;
+begin
+   Result := Trim(aConfiguredName);
+   if Result <> '' then
+      begin
+      Exit;
+      end;
+
+   (* NO NAME CONFIGURED -- fall back to what the ordinal means.  That is the
+     Windows answer and, until the store carries names, the only answer. *)
+   Result := SerialDeviceName(aPort);
 end;
 
 end.

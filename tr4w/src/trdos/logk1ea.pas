@@ -1777,7 +1777,9 @@ begin
         begin
         (* One rule, one place -- uPortAddress.  This was a copy of it, and
           the comment that used to sit here named the three other copies. *)
-        port := TSerialPort.Create(SerialDeviceName(aRadio^.tKeyerPort));
+        port := TSerialPort.Create(
+                   EffectiveDeviceName(aRadio^.tKeyerPortName,
+                                       aRadio^.tKeyerPort));
         CPUKeyer.SerialPortObject[aRadio^.tKeyerPort] := port;
         end;
 

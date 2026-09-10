@@ -24,6 +24,7 @@ type
       procedure Test_EverySerialPortNamesItself;
       procedure Test_NothingButASerialPortGetsAName;
       procedure Test_TheNameParsesBackToTheSamePort;
+      procedure Test_AConfiguredNameWinsOverTheOrdinal;
    public
       procedure RunAllTests; override;
    end;
@@ -83,11 +84,44 @@ begin
                'an unnamed port is not port zero');
 end;
 
+procedure TPortAddressTests.Test_AConfiguredNameWinsOverTheOrdinal;
+begin
+   (* THE WIDEN STEP, AND ITS WHOLE SAFETY PROPERTY IS THE FALLBACK.
+
+     Every configured name is empty today, so EffectiveDeviceName must return
+     exactly what SerialDeviceName returned, or step 1 has changed behaviour on
+     every Windows station while claiming not to. *)
+   BeginTest('an empty name falls through to the ordinal, unchanged');
+   CheckEquals(SerialDeviceName(Serial7), EffectiveDeviceName('', Serial7),
+               'empty gives the ordinal answer');
+   CheckEquals('COM7', EffectiveDeviceName('', Serial7), 'and that is COM7');
+   CheckEquals('', EffectiveDeviceName('', Network),
+               'a network port still has no device name');
+   CheckEquals('', EffectiveDeviceName('', NoPort), 'nor does no port');
+
+   (* AND A NAME THE ORDINAL COULD NEVER PRODUCE IS THE POINT.  No arithmetic
+     on an ordinal yields a device node, so this is the only way one can ever
+     reach TSerialPort. *)
+   BeginTest('a configured name wins, including one no ordinal could produce');
+   CheckEquals('/dev/ttyUSB0', EffectiveDeviceName('/dev/ttyUSB0', NoPort),
+               'a device node, with no ordinal at all');
+   CheckEquals('/dev/ttyUSB0', EffectiveDeviceName('/dev/ttyUSB0', Serial7),
+               'the name beats a disagreeing ordinal');
+   CheckEquals('COM23', EffectiveDeviceName('COM23', Serial7),
+               'a COM number above what this enum could hold');
+
+   // A name arrives from a file an operator can edit.
+   CheckEquals('COM7', EffectiveDeviceName('  COM7  ', NoPort), 'trimmed');
+   CheckEquals('COM7', EffectiveDeviceName('   ', Serial7),
+               'blanks are not a name, so the ordinal still answers');
+end;
+
 procedure TPortAddressTests.RunAllTests;
 begin
    Test_EverySerialPortNamesItself;
    Test_NothingButASerialPortGetsAName;
    Test_TheNameParsesBackToTheSamePort;
+   Test_AConfiguredNameWinsOverTheOrdinal;
 end;
 
 end.

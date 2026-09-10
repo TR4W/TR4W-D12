@@ -322,7 +322,20 @@ type
 
       tCATPortType:   PortType;
 
+      (* THE CAT PORT'S DEVICE NAME -- 'COM7', '/dev/ttyUSB0' -- or '' when
+        nothing has supplied one, which is every station until the store does.
+
+        IT SITS BESIDE THE ORDINAL RATHER THAN REPLACING IT, deliberately:
+        43 sites ask tCATPortType only WHAT KIND of port this is, and those
+        keep working unchanged.  Only the four sites that ask WHICH port read
+        this, through uPortAddress.EffectiveDeviceName.  Step 1 of
+        docs\PORT_IDENTITY_PLAN.md; the ordinal goes at step 6. *)
+      tCATPortName:   string;
+
       tKeyerPort:       PortType;
+
+      // The CW keyer's port, same rule as tCATPortName above.
+      tKeyerPortName:   string;
       (* THE LPT BASE ADDRESS, and since 2026-09-07 only that.
 
         It used to hold a COM handle as well, for a serial keyer, so one field
@@ -1581,6 +1594,14 @@ begin
    // The transverter offset, for the same reason everything else is handed over
    // here rather than at a construction site. Zero for every radio without one.
    Self.tFactoryObject.FrequencyOffset := Self.FrequencyAdder;
+
+   (* THE CAT PORT'S DEVICE NAME, and this routine is why it is one line.
+     Adopt runs before Connect at every construction site, and Connect is
+     where the name is read -- so handing it over here reaches all five
+     without four factory entry points growing a parameter that is empty at
+     every call today.  Empty until the store supplies one; see
+     docs/PORT_IDENTITY_PLAN.md step 1. *)
+   Self.tFactoryObject.serialPortName := Self.tCATPortName;
 end;
 
 procedure RadioObject.ShutDownRadioInterface;
@@ -1726,7 +1747,8 @@ begin
                else if tCATPortType in SerialPorts then
                   begin
                   // Serial connection
-                  COMPortName := SerialDeviceName(Self.tCATPortType);
+                  COMPortName := EffectiveDeviceName(Self.tCATPortName,
+                                                    Self.tCATPortType);
                   BaudRate := Self.RadioBaudRate;
                   logger.Info('[%s] HamLib via serial: %s at %d baud',
                               [Self.RadioName, COMPortName, BaudRate]);

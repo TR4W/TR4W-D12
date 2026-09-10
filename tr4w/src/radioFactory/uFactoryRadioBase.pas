@@ -333,6 +333,9 @@ Type TFactoryRadioBase = class(TObject)
       localAddress: string;
       localPort: integer;
       localSerialPort: portType;
+      // The CAT port DEVICE NAME, beside the ordinal it will replace.
+      // See the serialPortName property.
+      localSerialPortName: string;
       rt: TReadingThread;
       baseProcMsg: TProcessMsgRef;
       SocketLock: TCriticalSection;
@@ -756,6 +759,24 @@ Type TFactoryRadioBase = class(TObject)
       property radioPort: integer read GetRadioPort write SetRadioPort;
       property radioAddress: string read GetRadioAddress write SetRadioAddress;
       property serialPort: portType read GetSerialPort write SetSerialPort;
+
+      (* THE DEVICE NAME TO OPEN, when the ordinal cannot express it.
+
+        A plain field rather than a property: there is nothing to compute and
+        nothing to notify.  Empty means "use the ordinal", which is every
+        station until the store supplies a name -- see
+        docs\PORT_IDENTITY_PLAN.md step 1.
+
+        SET BY THE CALLER AFTER CONSTRUCTION, not passed to CreateRadioSerial:
+        four factory entry points would otherwise grow a parameter that is
+        empty at every call site today.  RadioObject.AdoptFactoryObject is the
+        one place that does it, which is what that routine exists for.
+
+        A PROPERTY OVER A PRIVATE FIELD rather than a bare field, because a
+        field cannot follow a property in the same visibility section and
+        opening a new one here would put it somewhere a reader does not look
+        for it. *)
+      property serialPortName: string read localSerialPortName write localSerialPortName;
       property PTTviaCAT: boolean read GetPTTviaCAT write SetPTTviaCAT;
       property CWSpeed: integer read GetCWSpeed;
       { CONNECT MAY RETURN BEFORE THE RADIO IS USABLE, and for every network
@@ -1535,7 +1556,7 @@ begin
      should take that case, and now does. *)
    if Self.serialPort in SerialPorts then
       begin
-      comPortName := SerialDeviceName(Self.serialPort);
+      comPortName := EffectiveDeviceName(Self.serialPortName, Self.serialPort);
 
       logger.Info('[TFactoryRadioBase.Connect] Connecting to serial radio on %s', [comPortName]);
 
