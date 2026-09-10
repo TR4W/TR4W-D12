@@ -65,7 +65,8 @@ uses
    uRadioConfigStore,
    uKeyerConfigStore,
    uUDPBroadcastConfig,
-   uWindowLayoutStore;
+   uWindowLayoutStore,
+   uSettingsModel;
 
 const
    // The keyer library's section. The radio store's keys stay private to it;
@@ -78,6 +79,14 @@ const
    // Where each TR4W window was left. An object keyed by window name -- see
    // uWindowLayoutStore for why it is not the array of records it replaced.
    JSONKEY_WINDOWS = 'windows';
+
+   (* THE SETTINGS OBJECT -- the destination CFGCA rows move to.
+
+     A NESTED object, unlike every section above it: uSettingsModel groups by
+     area, so this key holds { "ExternalLogger": { "Port": 52001, ... }, ... }
+     rather than a flat list of names.  The nesting is the property tree, which
+     is also what makes the JSON readable without a key list beside it. *)
+   JSONKEY_SETTINGS = 'settings';
 
    // Where an existing file goes when it will not parse and is about to be
    // replaced. See ReadRootOrEmpty.
@@ -101,6 +110,35 @@ procedure SaveConfig(const aFileName: string;
                      const aKeyers: TKeyerConfigStore;
                      const aUDP: TUDPBroadcastConfig = nil;
                      const aWindows: TWindowLayoutStore = nil);
+
+(* THE SETTINGS OBJECT ON ITS OWN.
+
+  Named rather than a SaveConfig call with four nils, for the same reason
+  SaveWindowLayout is: the callers that save settings have no radio or keyer
+  store in hand, and four nils of ceremony makes a reader wonder which of them
+  mattered.
+
+  It goes through SaveConfig, so the one-writer rule is intact -- every other
+  section is preserved. *)
+procedure SaveSettings(const aFileName: string;
+                       const aSettings: TR4WSettings);
+
+(* THE SETTINGS AS THEY SHOULD STAND AT STARTUP.
+
+  Returns True when the file already carried a `settings` section, which is
+  every start after the first.
+
+  Returns FALSE having SEEDED aSettings from the legacy `commands` keys, which
+  happens exactly once per installation.  NY4I, 2026-09-10: "Old settings are
+  migrated once and never used again."  So this is not a fallback consulted at
+  every start -- that is the arrangement where two stores disagree and nobody
+  can say which is in force.  The caller SAVES on a False result, and from then
+  on the legacy keys are dead.
+
+  Modelled on LoadUDPForStartup, which is the same one-time migration for the
+  broadcast settings. *)
+function LoadSettingsForStartup(const aFileName: string;
+                                const aSettings: TR4WSettings): boolean;
 
 // The window layout on its own -- what ExitProgram calls.
 //
@@ -282,6 +320,73 @@ begin
 
       // See the unit header: formatted, and no BOM.
       WriteAllTextUTF8(aFileName, root.Format(2));
+   finally
+      root.Free;
+   end;
+end;
+
+procedure SaveSettings(const aFileName: string;
+                       const aSettings: TR4WSettings);
+var
+   root: TJSONObject;
+   dir: string;
+begin
+   if aSettings = nil then
+      begin
+      Exit;
+      end;
+
+   dir := ExtractFilePath(aFileName);
+   if (dir <> '') and (not DirectoryExists(dir)) then
+      begin
+      ForceDirectories(dir);
+      end;
+
+   // Read-modify-write, exactly as SaveConfig does: every other section is
+   // preserved. See the one-writer note in the unit header.
+   root := ReadRootOrEmpty(aFileName);
+   try
+      JSONSetSection(root, JSONKEY_SETTINGS, aSettings.ToJSON);
+      WriteAllTextUTF8(aFileName, root.Format(2));
+   finally
+      root.Free;
+   end;
+end;
+
+function LoadSettingsForStartup(const aFileName: string;
+                                const aSettings: TR4WSettings): boolean;
+var
+   root: TJSONObject;
+   section: TJSONValue;
+   commands: TJSONValue;
+begin
+   Result := False;
+   if aSettings = nil then
+      begin
+      Exit;
+      end;
+
+   root := ReadRootOrEmpty(aFileName);
+   try
+      section := root.FindValue(JSONKEY_SETTINGS);
+      if section is TJSONObject then
+         begin
+         aSettings.FromJSON(TJSONObject(section));
+         Result := True;
+         Exit;
+         end;
+
+      (* NO SECTION: this installation has not been migrated yet.  Seed from
+        the legacy keys and tell the caller to save.
+
+        An absent `commands` section is not an error either -- it is a brand
+        new installation, and the settings object keeps the defaults its
+        constructor set. *)
+      commands := root.FindValue('commands');
+      if commands is TJSONObject then
+         begin
+         aSettings.ImportLegacyCommands(TJSONObject(commands));
+         end;
    finally
       root.Free;
    end;

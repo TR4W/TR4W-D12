@@ -262,7 +262,6 @@ procedure UpdateDebugLogLevel;
 function F_UpdateWSJTXSendColorizations : boolean;
 function F_UpdateWSJTXEnabled: boolean;
 function F_UpdateWSJTXMulticastGroup: boolean;
-function F_UpdateExternalLoggerEnabled: boolean;
 //function F_SETPARALLELPORT: boolean;
 
 const
@@ -379,7 +378,11 @@ const
       @F_MY_ZONE,
       @F_MY_CONTINENT,
       @F_UpdateWSJTXEnabled,
-      //@F_UpdateExternalLoggerEnabled,
+      (* //@F_UpdateExternalLoggerEnabled WAS HERE and is deleted with the
+        function, 2026-09-10.  Commenting it out is what left EXTERNAL LOGGER
+        ENABLED's crA:23 pointing at F_UpdateWSJTXEnabled above -- see the note
+        on those rows.  Its body had itself been commented out to a bare
+        `Result := true`, so it had done nothing for a long time either. *)
       @F_UpdateWSJTXSendColorizations,
       @F_UpdateWSJTXMulticastGroup   // Issue 443 index 25
       //@F_SETPARALLELPORT
@@ -714,9 +717,30 @@ const
  (crCommand: 'EXTERNAL LOGGER';               crAddress: pointer(53);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:2; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 0),
 
 
- (crCommand: 'EXTERNAL LOGGER ADDRESS';       crAddress: @ExternalLoggerAddress;          crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 0),
- (crCommand: 'EXTERNAL LOGGER ENABLED';       crAddress: @ExternalLoggerEnabled;          crMin:0;  crMax:0;         crS: csOwned; crA: 23; crC:0; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
- (crCommand: 'EXTERNAL LOGGER PORT';          crAddress: @ExternalLoggerPort;             crMin:1;  crMax:65535;   crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
+ (* THE EXTERNAL LOGGER'S THREE ROWS ARE WITHDRAWN, 2026-09-10.
+
+   Their settings are published properties of uSettingsModel now, seeded once
+   from the `commands` section and never read from here again.  csRem rather
+   than deleted, so an old .cfg or ini naming them loads inert instead of
+   failing with "Invalid statement in config file" on every start.
+
+   crAddress is nil because the variables they pointed at NO LONGER EXIST.
+
+   AND crA:23 ON THE 'ENABLED' ROW WAS A LIVE DEFECT -- worth recording,
+   because it is the exact hazard the note on slot 3 above describes, already
+   happened.  AdditionalProcsArray is POSITIONAL. Someone commented
+   `//@F_UpdateExternalLoggerEnabled,` out of it, which shifted nothing that
+   was renumbered but left this row's index pointing one entry earlier than it
+   meant to: slot 23 is F_UpdateWSJTXEnabled.
+
+   So applying EXTERNAL LOGGER ENABLED started or stopped the WSJT-X SERVER
+   and repainted the WSJT-X indicator. Every other crA in that neighbourhood
+   -- MY CONTINENT 22, the two WSJT-X ENABLED rows 23, SEND HIGHLIGHTS 24,
+   MULTICAST GROUP 25 -- is correct, so this row was the only stale one and
+   nothing pointed at it. Retiring the row removes the misfire. *)
+ (crCommand: 'EXTERNAL LOGGER ADDRESS';       crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 0),
+ (crCommand: 'EXTERNAL LOGGER ENABLED';       crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
+ (crCommand: 'EXTERNAL LOGGER PORT';          crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
  (crCommand: 'FARNSWORTH ENABLE';             crAddress: @Config.FarnsworthEnable;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'FARNSWORTH SPEED';              crAddress: @Config.FarnsworthSpeed;                crMin:0;  crMax:99;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'FONT SIZE';                     crAddress: @fontsize;                       crMin:0;  crMax:2;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
@@ -2588,28 +2612,6 @@ begin
    // Also set root logger so all named loggers (transport, radio, etc.) inherit the level
    TLogLogger.GetRootLogger.Level := logger.Level;
 
-end;
-
-function F_UpdateExternalLoggerEnabled: boolean;
-begin
-   Result := true;
-  { if assigned(externalLogger) then
-      begin
-      if ExternalLoggerEnabled then
-         begin
-         externalLogger.Start;
-         end
-      else
-         begin
-         externalLogger.Stop;
-         end;
-      end
-   else
-      begin
-      if Assigned(logger) then
-         logger.Error('In F_UpdateExternalLoggerEnabled, externalLogger variable was not assigned');
-      end;
-      }
 end;
 
 function F_UpdateWSJTXEnabled: boolean;

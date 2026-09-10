@@ -443,10 +443,22 @@ var
   ExchangeErrorToken: Str40;   // Issue #1010: the offending exchange token, so the caller can place the caret right after it
   ExchangeMemoryFileEnable: boolean;
   ExchangeWindowString: Str40;
-  ExternalLoggerAddress: string[255] = '127.0.0.1';
-  ExternalLoggerEnabled: boolean = false;
-  ExternalLoggerPort: integer = 52001;
-  // In DXKeeper case, it is 52000 base port + 1
+  (* THE EXTERNAL LOGGER'S THREE SETTINGS MOVED, 2026-09-10.
+
+    They are Settings.ExternalLogger.Address / .Port / .Enabled in
+    uSettingsModel -- published properties of a class, streamed by RTTI, which
+    is what an FPC application would have done from the start.  The defaults
+    these typed constants carried moved with them, into that class's
+    constructor.
+
+    THIS WAS THE SMALLEST COMPLETE CASE IN THE TREE, which is why it went
+    first: three settings, no competing structured store, no contest .cfg
+    writes them, no multi-op peer sync, and exactly two reading sites.  The UDP
+    and WinKeyer groups look similar by reference count and are not -- both
+    already have a structured store of their own, so moving them is a merge of
+    two models rather than a migration of one.
+
+    See docs\CFG_ARRAY_ELIMINATION.md. *)
 
   FakePacket: boolean;
   FakeBandMap: boolean;

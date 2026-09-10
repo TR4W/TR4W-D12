@@ -172,6 +172,7 @@ function ConvertBandTypeToUDPContactBand(band: BandType): string;
 implementation
 
 uses
+  uSettingsModel,     // Settings.ExternalLogger -- see the note in logstuff
   uMainForm,          // the editable log is an LCL virtual list
   uLogSearchForm,     // LogSearchRefreshIfOpen -- Search is non-modal
   uProcessCommand,
@@ -1688,7 +1689,7 @@ begin
         begin
         LogContactToUDP(RXData);
         end;
-     if ExternalLoggerEnabled then
+     if Settings.ExternalLogger.Enabled then
         begin
         if Assigned(externalLogger) then
            begin

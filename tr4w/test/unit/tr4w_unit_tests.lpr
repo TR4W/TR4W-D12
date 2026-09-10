@@ -214,6 +214,7 @@ uses
    uLPTPortEnumerator in '..\..\src\uLPTPortEnumerator.pas',
    ComPortEnumerator in '..\..\src\ComPortEnumerator.pas',
    uPortAddress in '..\..\src\uPortAddress.pas',
+   uSettingsModel in '..\..\src\uSettingsModel.pas',
    uPrefsSearch in '..\..\src\uPrefsSearch.pas',
    uCWFraming in '..\..\src\radioFactory\uCWFraming.pas',
    uRadioKYBase in '..\..\src\radioFactory\uRadioKYBase.pas',
@@ -290,6 +291,7 @@ uses
    uTestLPTPortEnumerator in 'uTestLPTPortEnumerator.pas',
    uTestComPortEnumerator in 'uTestComPortEnumerator.pas',
    uTestPortAddress in 'uTestPortAddress.pas',
+   uTestSettingsModel in 'uTestSettingsModel.pas',
    uTestConfigDefaults in 'uTestConfigDefaults.pas',
    uTestTransverterOffset in 'uTestTransverterOffset.pas',
    uTestRadioSupportsCaps in 'uTestRadioSupportsCaps.pas',
@@ -414,6 +416,7 @@ begin
    RegisterSuite(TLPTPortEnumeratorTests.Create('LPTPortEnumerator'));
    RegisterSuite(TComPortEnumeratorTests.Create('ComPortEnumerator'));
    RegisterSuite(TPortAddressTests.Create('PortAddress'));
+   RegisterSuite(TSettingsModelTests.Create('SettingsModel'));
    RegisterSuite(TConfigDefaultsTests.Create('ConfigDefaults'));
    RegisterSuite(THamLibIDTests.Create('HamLibIDs'));
    RegisterSuite(TCWKeyerTests.Create('CWKeyer'));

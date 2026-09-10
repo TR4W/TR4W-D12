@@ -180,6 +180,7 @@ uses
   uUDPBroadcaster,
   uWindowLayoutStore,
   uTR4WConfigFile,
+  uSettingsModel,   // Settings -- where retired CFGCA rows now live
   uRadioConfigLegacyMap,
   uRadioConfigApply,
   // The FMX twins were DELETED 2026-08-17, at the start of the Win32-to-LCL
@@ -1550,6 +1551,23 @@ begin
   {Temporary - Feb 2010}
 
 
+  (* THE SETTINGS OBJECT, BEFORE ANYTHING READS IT.
+
+    NY4I, 2026-09-10: "Old settings are migrated once and never used again."
+    So this is not a fallback consulted at every start.  The `settings` section
+    is read when it is there, which is every start after the first; when it is
+    absent the legacy `commands` keys seed it ONCE and it is written, and from
+    then on those keys are dead.
+
+    It sits above ReadInConfigFile deliberately.  Nothing here depends on the
+    ini, and putting it first means a reader of a migrated setting cannot run
+    before the object holding it exists. *)
+  if not LoadSettingsForStartup(TR4WConfigFileName, Settings) then
+     begin
+     SaveSettings(TR4WConfigFileName, Settings);
+     logger.Info('[Settings] no settings section -- seeded once from the legacy keys and saved');
+     end;
+
   ReadInConfigFile(cfgINI);
 
   ReadInConfigFile(cfgCFG);          //n4af 4.31.5
@@ -1647,8 +1665,8 @@ begin
   if elLogType <> lt_NoExternalLogger then
      begin
      externalLogger := TExternalLogger.Create(elLogType);
-     externalLogger.loggerPort := externalLoggerPort;
-     externalLogger.loggerAddress := externalLoggerAddress;
+     externalLogger.loggerPort := Settings.ExternalLogger.Port;
+     externalLogger.loggerAddress := Settings.ExternalLogger.Address;
      end;
   // Issue #783 -- start the HamScore RTC uploader if HAMSCORE ENABLE = TRUE.
   // No-op if disabled or password is empty.
