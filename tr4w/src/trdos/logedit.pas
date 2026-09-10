@@ -130,12 +130,12 @@ type
 
     //    procedure SetUpEditableLog;
     procedure ShowDomesticMultiplierStatus(DomesticQTH: Str10); // Gav 4.44.8
-    procedure ShowMultiplierStatus(Call: CallPtr {CallString});
+    procedure ShowMultiplierStatus(const Call: CallString);
     procedure ShowRemainingMultipliers;
     procedure ShowRemMultsInWindow(Window: WindowsType; rmt:
       RemainingMultiplierType);
     //    procedure ShowRemainingMultipliers2;
-    procedure ShowQSOStatus(Call: CallPtr); overload;
+    procedure ShowQSOStatus(const Call: CallString); overload;
     procedure ShowQSOStatus(Call: string); overload;
     //    procedure SuperCheckPartial(Call: CallString; Automatic: boolean; Radio: RadioType); {KK1L: 6.73 Added Radio for SO2R}
     function SuperCheckPartial(Call: CallString; Automatic: boolean; Radio:
@@ -176,7 +176,7 @@ procedure MoveGridMap(Key: Char);
 function QuickEditResponseWithPartials(Prompt: Str80; MaxInputLength: integer):
   Str80;
 procedure Send88Message;
-procedure ShowStationInformation(Call: CallPtr {CallString});
+procedure ShowStationInformation(const Call: CallString);
 function TotalContacts: integer;
 function NextSerialToSend: integer;  { Issue #954: next serial to send = highest sent + 1 }
 procedure UpdateMaxSerialSent(Band: BandType; SerialNum: integer);  { Issue #954 }
@@ -863,22 +863,45 @@ begin
   logger.debug('[ShowDomesticMultiplierStatus] MultStatus set to DomesticQTH of %s',[DomesticQTH]);
 end;
 
-procedure EditableLog.ShowMultiplierStatus(Call: CallPtr {CallString});
+(* A CallString, NOT A CallPtr -- 2026-09-09.
+
+  NY4I, on finding PAnsiChar(integer(Call) + 1) two routines away: "I am not a
+  fan of this. Why are we doing this type of access with a call that should be
+  a string?"
+
+  CallPtr is `^CallString` and it is DOS heritage: passing the address avoided
+  copying the string on a 16-bit machine, where that mattered. It buys nothing
+  now, and it cost a real defect -- the cast above pointed at a ShortString's
+  characters, which have no terminator, so a printf read on into the previous
+  callsign and the header named a station that had never been on the air.
+
+  THE PARAMETER IS READ-ONLY IN ALL FOUR ROUTINES, so const says what is true
+  and the caller stops writing an @.
+
+  WHY NOT AnsiString, WHICH IS THE REAL DESTINATION. Because these bodies hand
+  the value to a dozen TRDOS routines that take ShortStrings, and widening only
+  the parameter would convert on the way in and narrow again at every one of
+  them -- a pile of narrowing warnings for no change in behaviour, in the units
+  where ShortString is still the currency. The pointer is the part that was
+  indefensible; the string type is a separate migration with its own ceiling to
+  move. *)
+procedure EditableLog.ShowMultiplierStatus(const Call: CallString);
 begin
-  if length(Call^) < 2 then
+  if length(Call) < 2 then
      begin
-     logger.warn('ShowDomesticMultiplierStatus called with DomesticQTH length < 2 %s   Exiting...',[Call^]);
+     logger.warn('ShowDomesticMultiplierStatus called with DomesticQTH length < 2 %s   Exiting...',[Call]);
      Exit;
      end;
   (* THE DELETED ASSEMBLY THAT USED TO STAND HERE IS WHERE THE DEFECT CAME
     FROM -- it pushed `Call + 1`, the address of a ShortString's first
     character, for a DOS printf. The Pascal cast that replaced it kept the
     address and lost nothing else, including the fact that there is no
-    terminator at the other end. See NeedsCaption. *)
-  logger.debug('[ShowMultiplierStatus] MultNeedsHeader field set to %s',[Call^]);
+    terminator at the other end. See NeedsCaption -- and the pointer itself is
+    gone now, see the note on this routine's header. *)
+  logger.debug('[ShowMultiplierStatus] MultNeedsHeader field set to %s',[Call]);
   TR4WMainForm.pnlMultNeedsHeader.Caption :=
-     NeedsCaption(TC_MULTNEEDSFOR, string(Call^));
-  SetMultStatus(Call^, '');
+     NeedsCaption(TC_MULTNEEDSFOR, string(Call));
+  SetMultStatus(Call, '');
 end;
 
 function EditableLog.GetMultArray(Call: CallString; Mode: ModeType; TempMult:
@@ -1218,7 +1241,7 @@ begin
 
 end;
 
-procedure EditableLog.ShowQSOStatus(Call: CallPtr);
+procedure EditableLog.ShowQSOStatus(const Call: CallString);
 
 { This procedure will display the QSO status for the call specified.
   It will look at any dupe sheets it can find in memory.              }
@@ -1228,27 +1251,27 @@ var
   Band: BandType;
 begin
 
-  if length(Call^) < 3 then
+  if length(Call) < 3 then
      begin
      Exit;
      end;
 
   TR4WMainForm.pnlQSONeedsHeader.Caption :=
-     NeedsCaption(TC_QSONEEDSFOR, string(Call^));
+     NeedsCaption(TC_QSONEEDSFOR, string(Call));
   //  tSetWindowText(QIHeaderWindowHandle, ' QSO needs for ' + Call);
 
   if QSOByMode then
      begin
-     CreateModeSpecificQSOInfo(Call^, CW, OutputString);
+     CreateModeSpecificQSOInfo(Call, CW, OutputString);
      SetQSONeedBands(CW, OutputString);
 
-     CreateModeSpecificQSOInfo(Call^, Phone, OutputString);
+     CreateModeSpecificQSOInfo(Call, Phone, OutputString);
      SetQSONeedBands(Phone, OutputString);
 
      end
   else
      begin
-     CreateModeSpecificQSOInfo(Call^, Both, OutputString);
+     CreateModeSpecificQSOInfo(Call, Both, OutputString);
      SetQSONeedBands(Both, OutputString);
      end;
 
@@ -2067,7 +2090,7 @@ begin
   UpdateTimeAndRateDisplays(True, False);
 end;
 
-procedure ShowStationInformation(Call: CallPtr {CallString});
+procedure ShowStationInformation(const Call: CallString);
 var
   TempString: ShortString;
   TempExchange: Str14;
@@ -2078,22 +2101,22 @@ begin
     on a different band?  I put it back in in 6.72 - and clared
     StationInformationCall when logging a QSO }
 
-  if Call^ = StationInformationCall then   // This is a flag to show we have been here before ny4i
+  if Call = StationInformationCall then   // This is a flag to show we have been here before ny4i
      begin
      logger.debug('[ShowStationInformation] Exiting early because Call^ = StationInformationCall (%s)',[StationInformationCall]);
      Exit;
      end;
 
-  logger.debug('>>> Entering ShowStationInformation with call of %s',[Call^]);
-  StationInformationCall := Call^;
+  logger.debug('>>> Entering ShowStationInformation with call of %s',[Call]);
+  StationInformationCall := Call;
 
   //  if Copy(Call, 1, 3) = 'CQ-' then Exit;
 
-  ShowName(Call^);
+  ShowName(Call);
 
   if QTCsEnabled then
      begin
-     DisplayQTCNumber(NumberQTCsThisStation(StandardCallFormat(Call^, False)));
+     DisplayQTCNumber(NumberQTCsThisStation(StandardCallFormat(Call, False)));
      end;
 
   if Contest <> GENERALQSO then
@@ -2101,7 +2124,7 @@ begin
      begin
      if DoingDomesticMults then
         begin
-        TempString := Call^;
+        TempString := Call;
         if TempString <> '' then
            begin
            TempExchange := CallsignsList.GetIniitialExchange(TempString);
@@ -2127,9 +2150,9 @@ begin
         end;
      end;
 
-  DisplayUserInfo(Call^);
-  DisplayBeamHeading(Call^, '');
-  DisplayCountryName(Call^);
+  DisplayUserInfo(Call);
+  DisplayBeamHeading(Call, '');
+  DisplayCountryName(Call);
 
 end;
 

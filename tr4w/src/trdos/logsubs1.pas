@@ -1052,8 +1052,8 @@ begin
 
   CallWindowString := Packet.PacketMemory[Address].Call;
 
-  VisibleLog.ShowQSOStatus(@CallWindowString);
-  VisibleLog.ShowMultiplierStatus(@CallWindowString);
+  VisibleLog.ShowQSOStatus(CallWindowString);
+  VisibleLog.ShowMultiplierStatus(CallWindowString);
   DisplayBeamHeading(CallWindowString, '');
 end;
 

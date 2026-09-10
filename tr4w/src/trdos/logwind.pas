@@ -2396,8 +2396,8 @@ begin
 
        if Contest <> GENERALQSO then
           begin
-          VisibleLog.ShowMultiplierStatus(@CallWindowString);
-          VisibleLog.ShowQSOStatus(@CallWindowString);
+          VisibleLog.ShowMultiplierStatus(CallWindowString);
+          VisibleLog.ShowQSOStatus(CallWindowString);
           end;
          //      FRM.CallWindowChange(nil);
          //      CallAlreadySent := False;

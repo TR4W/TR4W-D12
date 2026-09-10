@@ -224,6 +224,7 @@ uses
    VC,                { tw_TELNETWINDOW_INDEX, tr4wColorsArray }
    uTR4WStrings,      { TC_CONFIGURE_ELLIPSIS, TC_NODXCLUSTERSDEFINED }
    MainUnit,          { CloseTR4WWindow }
+   uPlatformFonts,    { MonospaceFontName -- see HandleShow }
    uLCLFormHelpers;   { OwnFormByMainWindow -- the LCL way to parent a tool window }
 
 var
@@ -348,6 +349,25 @@ begin
      either. }
    btnConfigure.Caption  := TC_CONFIGURE_ELLIPSIS;
    lblNoClusters.Caption := TC_NODXCLUSTERSDEFINED;
+
+   (* A FIXED-PITCH FAMILY THAT EXISTS ON THIS MACHINE.
+
+     The .lfm asks for 'Lucida Console', which ships with Windows and exists
+     on no Linux box. fontconfig substituted Noto Sans -- PROPORTIONAL -- so a
+     window whose whole purpose is column-aligned text was drawn in a
+     variable-pitch face with taller line metrics. NY4I read the result as a
+     data fault: "The dx cluster seems to be adding an extra CR or LF at the
+     end of each line" (2026-09-09). The wire was clean; telnet debug showed
+     one spot per line, length 75, with no blank lines between them.
+
+     Font.Pitch = fpFixed is already set in the .lfm and did not help. It is a
+     hint the widget set may ignore, and gtk2 does.
+
+     HERE RATHER THAN IN THE .lfm, because the right name is a property of the
+     MACHINE and a designer file can hold only one string. Assigned before the
+     fit below, which measures the font to choose a row height -- measuring
+     the wrong face would set the wrong height. *)
+   lstConsole.Font.Name := MonospaceFontName;
 
    if Assigned(TelnetFormOnShow) then
       begin

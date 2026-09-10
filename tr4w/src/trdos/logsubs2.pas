@@ -159,7 +159,7 @@ procedure DoAltZ({var WindowString: string { VAR KeyChar: CHAR});
 function WindowDupeCheck: boolean;
 function SearchAndPounce: boolean;
 function FoundCommand(var SendString: Str160): boolean;
-procedure ShowPartialCallMults(WindowString: CallPtr {CallString});
+procedure ShowPartialCallMults(const WindowString: CallString);
 procedure DupeCheckOnInactiveRadio(Tune: boolean);
 function GotExchange: boolean;
 procedure ProcessExchangeFunctionKey(ExtendedKey: Char);
@@ -294,7 +294,7 @@ begin
      //      if DupeCheckSound <> DupeCheckNoSound then DoABeep(ThreeHarmonics);
            MarkTime(RememberTime);
            if KeyRecentlyPressed(F1, 200) then FlushCWBufferAndClearPTT; { Withing two seconds }
-           ShowStationInformation(@CallWindowString);
+           ShowStationInformation(CallWindowString);
            DisplayGridSquareStatus(CallWindowString);
 
            VisibleLog.DoPossibleCalls(CallWindowString);
@@ -316,7 +316,7 @@ begin
   else
      begin
      StationInformationCall := '';
-     ShowStationInformation(@CallWindowString);
+     ShowStationInformation(CallWindowString);
      DisplayGridSquareStatus(CallWindowString);
       
      if DupeCheckSound = DupeCheckGratsIfMult then
@@ -368,7 +368,7 @@ begin
            //{WLI}                Write (ExchangeWindowString);
   //         GoToXY (1,1);
           begin
-          ShowStationInformation(@CallWindowString);
+          ShowStationInformation(CallWindowString);
           end;
        DisplayGridSquareStatus(CallWindowString);
        GoodCallPutUp := True;
@@ -499,7 +499,7 @@ begin
   if (DupeInfoCall <> '') {and (DupeInfoCall <> EscapeKey)} then
      begin
      DisplayGridSquareStatus(CallWindowString);
-     ShowStationInformation(@DupeInfoCall);                                          //gav 4.44.8
+     ShowStationInformation(DupeInfoCall);                                          //gav 4.44.8
      isDupe := VisibleLog.CallIsADupe(DupeInfoCall, InActiveRadioPtr.BandMemory, InActiveRadioPtr.ModeMemory);
      if not Tune then
         begin
@@ -1271,7 +1271,29 @@ begin
   //  RemoveAndRestorePreviousWindow;
   AutoCQResume(False);
 end;
-procedure ShowPartialCallMults(WindowString: CallPtr {CallString});
+(* A CallString, NOT A CallPtr -- 2026-09-09.
+
+  NY4I, on finding PAnsiChar(integer(Call) + 1) two routines away: "I am not a
+  fan of this. Why are we doing this type of access with a call that should be
+  a string?"
+
+  CallPtr is `^CallString` and it is DOS heritage: passing the address avoided
+  copying the string on a 16-bit machine, where that mattered. It buys nothing
+  now, and it cost a real defect -- the cast above pointed at a ShortString's
+  characters, which have no terminator, so a printf read on into the previous
+  callsign and the header named a station that had never been on the air.
+
+  THE PARAMETER IS READ-ONLY IN ALL FOUR ROUTINES, so const says what is true
+  and the caller stops writing an @.
+
+  WHY NOT AnsiString, WHICH IS THE REAL DESTINATION. Because these bodies hand
+  the value to a dozen TRDOS routines that take ShortStrings, and widening only
+  the parameter would convert on the way in and narrow again at every one of
+  them -- a pile of narrowing warnings for no change in behaviour, in the units
+  where ShortString is still the currency. The pointer is the part that was
+  indefensible; the string type is a separate migration with its own ceiling to
+  move. *)
+procedure ShowPartialCallMults(const WindowString: CallString);
 var
   TestString                            : ShortString;
   //  TestString1                           : string;
@@ -1281,14 +1303,14 @@ var
 begin
 //  if not PartialCallMultsEnable then Exit;
   if ActiveMainWindow <> awCallWindow then if ActiveDomesticMult <> GridSquares then Exit;          
-  if length(WindowString^) < 2 then Exit;
-  if length(WindowString^) < 3 then
+  if length(WindowString) < 2 then Exit;
+  if length(WindowString) < 3 then
      begin
      DispalayNewMult(SW_HIDE);
      end;
   if DoingDomesticMults then
      begin                                           // Gav 4.44.8      Uncommented this section
-     TempString := WindowString^;
+     TempString := WindowString;
      while TempString <> '' do
         begin
         TestString := RemoveFirstString(TempString);
@@ -1380,7 +1402,7 @@ procedure DoAltZ({var WindowString: string {; VAR KeyChar: CHAR});
 begin
   tSetExchWindInitExchangeEntry;
   CheckAndSetInitialExchangeCursorPos;
-  ShowStationInformation(@CallWindowString);
+  ShowStationInformation(CallWindowString);
 
 end;
 procedure WindowEditor(var WindowString: string;
@@ -1523,7 +1545,7 @@ begin
       if ExtendedKey = AltF10 then
          begin
          CallsignICameBackTo := CallWindowString;
-         ShowStationInformation(@CallWindowString);
+         ShowStationInformation(CallWindowString);
          end;
     end;
   end;
@@ -1737,7 +1759,7 @@ begin
   if MyComputer then
     if not TailEnding then
        begin
-       //      ShowStationInformation(@RXData.Callsign);
+       //      ShowStationInformation(RXData.Callsign);
              UpdateStationStatus(RXData.Callsign, -1);
        end;
   if DoingDomesticMults and                                         // Gav 4.44.8   uncommented section
@@ -2139,7 +2161,7 @@ begin
                     CallWindowString := DupeInfoCall; {KK1L: 6.73 NOTE Why are these three lines here?. I know}
                         //                  ResetSavedWindowListAndPutUpCallWindow; {                it puts a call in the window. Does it  }
                     Write(CallWindowString); {                cover the on deck call case???         }
-                    ShowStationInformation(@CallWindowString);
+                    ShowStationInformation(CallWindowString);
                     DisplayGridSquareStatus(CallWindowString);
                     VisibleLog.DoPossibleCalls(CallWindowString);
                     if (length(CallWindowString) >= 3) and (ExchangeWindowString = '') then
@@ -2481,8 +2503,8 @@ var
          end;
       if Contest <> GENERALQSO then
          begin
-         VisibleLog.ShowMultiplierStatus(@CallsignICameBackTo);
-         VisibleLog.ShowQSOStatus(@CallsignICameBackTo);
+         VisibleLog.ShowMultiplierStatus(CallsignICameBackTo);
+         VisibleLog.ShowQSOStatus(CallsignICameBackTo);
          end;
       DisplayUserInfo(CallsignICameBackTo);
       DisplayBeamHeading(CallsignICameBackTo, '');
@@ -2505,8 +2527,8 @@ var
           end;
        if Contest <> GENERALQSO then
           begin
-          VisibleLog.ShowMultiplierStatus(@CallWindowString);
-          VisibleLog.ShowQSOStatus(@CallWindowString);
+          VisibleLog.ShowMultiplierStatus(CallWindowString);
+          VisibleLog.ShowQSOStatus(CallWindowString);
           end;
        VisibleLog.DoPossibleCalls(CallWindowString);
        if TailEnding then

@@ -500,7 +500,7 @@ begin
                CallsignICameBackTo := CallWindowString;
                end;
 
-            ShowStationInformation(@CallsignICameBackTo);
+            ShowStationInformation(CallsignICameBackTo);
           end;
 
         ControlLeftBracket: CommandMode := True;

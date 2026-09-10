@@ -1085,7 +1085,7 @@ begin
       tElapsedTimeFromLastQSO := GetTickCount64;
       UpdateWindows;
     // It is not clear to me why we would call SHowStationInformation again.
-      ShowStationInformation(@ReceivedData.Callsign);
+      ShowStationInformation(ReceivedData.Callsign);
       ClearContestExchange(ReceivedData);
       LastTwoLettersCrunchedOn := '';
       CallAlreadySent := False;
@@ -1342,7 +1342,7 @@ begin
      SwapRadios;
      SetOpMode(SearchAndPounceOpMode);
      PutCallToCallWindow(DupeInfoCall);
-     ShowStationInformation(@DupeInfoCall);
+     ShowStationInformation(DupeInfoCall);
      if Config.TwoRadioMode then
         begin
         Send_DE;
@@ -1353,7 +1353,7 @@ begin
            CheckAndSetInitialExchangeCursorPos;
            end;
         end;
-     ShowStationInformation(@CallWindowString);
+     ShowStationInformation(CallWindowString);
      DisplayGridSquareStatus(CallWindowString);
      end
   else
@@ -1439,7 +1439,7 @@ begin
      if TwoRadioState <> CallReady then
         begin
         SetOpMode(SearchAndPounceOpMode);
-        ShowStationInformation(@CallWindowString);
+        ShowStationInformation(CallWindowString);
         DisplayGridSquareStatus(CallWindowString);
         VisibleLog.DoPossibleCalls(CallWindowString);
 
@@ -1746,7 +1746,7 @@ begin
 
   if Contest <> GENERALQSO then
      begin
-     ShowStationInformation(@CallWindowString); //gav 4.44.8
+     ShowStationInformation(CallWindowString); //gav 4.44.8
      VisibleLog.DoPossibleCalls(CallWindowString);
      end;
 
@@ -1871,7 +1871,7 @@ begin
         begin
         // ReceivedData.ceSearchAndPounce := False;
         TryLogContact;
-        ShowStationInformation(@ReceivedData.Callsign);
+        ShowStationInformation(ReceivedData.Callsign);
         UpdateTotals2;
 
         //{WLI}
@@ -1972,7 +1972,7 @@ begin
      end;
 
   DisplayGridSquareStatus(CallWindowString);
-  ShowStationInformation(@CallWindowString);
+  ShowStationInformation(CallWindowString);
 
   if (ExchangeWindowString = '') {and (ExchangeMemoryEnable)} then // 4.84.1
      begin
@@ -4063,7 +4063,7 @@ begin
   CallsignIsPastedFromBandMap := False;
 
   CallWindowKeyUpProc;
-  ShowPartialCallMults(@CallWindowString);
+  ShowPartialCallMults(CallWindowString);
   // if VHFBandsEnabled then ShowBeamAndHeadingInVHFContest(CallWindowString);
 
   if CallWindowString = '' then
@@ -4687,7 +4687,7 @@ procedure RedoPossibleCallsAndTurnRotor(longPath: boolean);
 var
    heading: integer;
 begin
-   ShowStationInformation(@CallWindowString);
+   ShowStationInformation(CallWindowString);
    DisplayGridSquareStatus(CallWindowString);
    VisibleLog.DoPossibleCalls(CallWindowString);
 
@@ -5014,7 +5014,7 @@ begin
         ToggleModes;
         DisplayAutoSendCharacterCount;
         ShowInformation;
-        VisibleLog.ShowQSOStatus(@CallWindowString);
+        VisibleLog.ShowQSOStatus(CallWindowString);
         ShowFMessages(0);
       end;
 
