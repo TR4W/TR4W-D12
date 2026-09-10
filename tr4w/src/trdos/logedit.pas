@@ -1318,14 +1318,24 @@ begin
      Exit;
      end;
 
+  (* THE CALLSIGN GOES INTO THE CONTROL.
+
+    It used to add an EMPTY row and leave the text here, for a paint handler
+    in another unit to find by item position. See
+    uMainForm.lstPossibleCallPrepareCanvas for the four defects that followed
+    from a control that held no data. *)
   for TempIndex := 0 to PossibleCallList.NumberPossibleCalls - 1 do
      begin
-     AddPossibleCall;   // the row's DATA is PossibleCallList[TempIndex]
+     AddPossibleCall(string(PossibleCallList.List[TempIndex].Call),
+                     PossibleCallList.List[TempIndex].Dupe);
      end;
   SelectPossibleCall(0);
 
-  // The rows are all empty strings, so the list cannot know the model moved.
-  PossibleCallsUpdated;
+  (* A CELL THAT CHANGES INVALIDATES ITSELF, so the forced repaint that used
+    to be here is gone. It existed because every row held the same empty
+    string, so the control could not tell its content had moved -- which is
+    the defect NY4I reported on 2026-08-24 as "scp updated the first time but
+    subsequent calls did not change from the prior values". *)
   //  FlagDupesInPossibleCallList(ActiveBand, ActiveMode, PossibleCallList);
   //  DisplayPossibleCalls{(PossibleCallList)};
 end;

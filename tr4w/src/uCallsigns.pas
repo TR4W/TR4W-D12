@@ -515,7 +515,11 @@ begin
               PossibleCallList.List[Result].Dupe :=
                 CallsignIsDupe(FList^[Index].FCall, ActiveBand, ActiveMode, TempIndex);
         //      (FList^[Index].FDupesArray[TempMode] and (1 shl Ord(ActiveBand))) <> 0;
-              AddPossibleCall;   // the row's DATA is PossibleCallList[Result]
+              (* THE CALLSIGN GOES INTO THE CONTROL, not just into the model.
+                See uMainForm.lstPossibleCallPrepareCanvas for why a strip that
+                held no data cost four separate defects. *)
+              AddPossibleCall(string(PossibleCallList.List[Result].Call),
+                              PossibleCallList.List[Result].Dupe);
               inc(Result);
               if Result = MaxCallsignsInPossibleCallsList then
                  begin

@@ -325,9 +325,6 @@ procedure OpenInDefaultTextEditor(FileName: PAnsiChar);   // Issue #986
   A CLASS because OnDrawItem is a METHOD pointer -- the same reason
   TTR4WEntryEvents exists for the entry fields' key handlers.  One instance, no
   state; it exists to give the handler an implicit Self. }
-procedure PossibleCallsDrawItem(aCanvas: TCanvas; Index: integer;
-                                ARect: Types.TRect; State: TOwnerDrawState);
-
 procedure RunOptionsDialog(f: CFGFunc);
 // A STRING, NOT A PChar.  The declaration was PChar, which binds to PWideChar
 // in this unit, while every interesting caller holds an ANSI buffer -- so the
@@ -4371,10 +4368,13 @@ begin
   SetPossibleCallFont(string(MainFontName),
                       ws - 2 + FontSize, BoldFont);
 
-  // The drawing is attached HERE, not in uMainForm: it reads PossibleCallList
-  // and the colour table, which that unit has no business knowing about.
-  // The form's OnDrawItem is wired in uMainForm.lfm and delegates to this.
-  PossibleCallDrawProc := @PossibleCallsDrawItem;
+  (* THE DRAWING USED TO BE ATTACHED HERE, through a procedure variable, with
+    a comment arguing that uMainForm "has no business knowing about" the
+    colour table. That argument was inherited from the Win32 shape rather than
+    chosen: the strip is a TStringGrid now, it holds its own callsigns, and
+    the LCL's own OnPrepareCanvas sets the colours -- from the same table this
+    unit was reaching for, in the unit that owns the control. There is nothing
+    left to attach. *)
 
 
   (* THE CONTEST'S NAME IN TWO MENU CAPTIONS. Was ModifyMenuA, which rewrites
@@ -7216,84 +7216,22 @@ end;
   FLAG, set during an ordinary repaint of the focused row, so honouring it the
   old way drew a rectangle around nothing and returned -- the focused entry
   rendered as an empty box. Faithful line, wrong axis; kept fixed. *)
-(* THE CANVAS IS HANDED IN NOW, NOT FISHED OUT OF A CONTROL.
+(* PossibleCallsDrawItem IS DELETED (2026-09-10).
 
-  This took a TWinControl and cast it to TListBox to reach .Canvas -- which
-  made a routine that only draws a picture depend on which WIDGET was showing
-  it, and the widget changed on 2026-09-09 (see lstPossibleCallDrawCell for
-  why). Nothing else about the drawing moved. *)
-procedure PossibleCallsDrawItem(aCanvas: TCanvas; Index: integer;
-                                ARect: Types.TRect; State: TOwnerDrawState);
-const
-  nWidth = 2;
-var
-  cv: TCanvas;
-  r: TRect;
-  style: TTextStyle;
-begin
-  (* THE INDEX IS A COLUMN NOW AND THE GUARD IS UNCHANGED, which is the point:
-    a grid asks for every cell it can see, including ones past the end of the
-    model, exactly as an over-long listbox would have. *)
-  if (Index < 0) or (Index > High(PossibleCallList.List)) then
-     begin
-     Exit;
-     end;
+  It was ~50 lines of canvas work -- a red selection rectangle drawn with a
+  pen, a brush swap for a dupe, a hand-built TTextStyle, a TextRect and a
+  focus rect -- reproducing what a Win32 owner-drawn listbox did in answer to
+  WM_DRAWITEM.
 
-  cv := aCanvas;
-  r  := ARect;
+  ALL OF IT IS NOW EITHER FREE OR FOUR LINES. A TStringGrid draws its own
+  Cells; the colours are set in uMainForm.lstPossibleCallPrepareCanvas, which
+  is the hook the LCL provides for exactly this and which runs in the unit
+  that owns the control. The selection is a bold font instead of a hand-drawn
+  rectangle.
 
-  if odSelected in State then
-     begin
-     cv.Pen.Color   := clRed;
-     cv.Pen.Width   := nWidth;
-     cv.Pen.Style   := psSolid;
-     (* bsClear so Rectangle draws the BORDER ONLY. The GDI original got that
-       from whatever brush the DC happened to hold; saying it is the point. *)
-     cv.Brush.Style := bsClear;
-     cv.Rectangle(r.Left + 1, r.Top + 1, r.Right, r.Bottom);
-
-     r.Top    := r.Top + nWidth;
-     r.Left   := r.Left + nWidth;
-     r.Right  := r.Right - nWidth;
-     r.Bottom := r.Bottom - nWidth;
-     end;
-
-  if PossibleCallList.List[Index].Dupe then
-     begin
-     cv.Brush.Color := clRed;
-     cv.Font.Color  := clWhite;
-     end
-  else
-     begin
-     cv.Brush.Color := tr4wColorsArray[TWindows[mwePossibleCall].mweBackG];
-     cv.Font.Color  := tr4wColorsArray[TWindows[mwePossibleCall].mweColor];
-     end;
-
-  cv.Brush.Style := bsSolid;
-  cv.FillRect(r);
-
-  FillChar(style, SizeOf(style), 0);
-  style.Alignment   := taCenter;     // DT_CENTER
-  style.Layout      := tlCenter;     // DT_VCENTER
-  style.SingleLine  := True;         // DT_SINGLELINE
-  style.EndEllipsis := True;         // DT_END_ELLIPSIS
-  style.Clipping    := True;
-  style.Opaque      := False;        // the fill above already painted it
-
-  (* LclText, not a plain cast: TCanvas.TextRect takes the LCL's AnsiString,
-    which holds UTF-8, and this unit's `string` is UTF-16. Stating the
-    conversion at the boundary is what CLAUDE.md asks for and what keeps the
-    narrowing ceiling meaningful. *)
-  cv.TextRect(r, r.Left, r.Top,
-              LclText(PossibleCallList.List[Index].Call), style);
-
-  { OVER the finished item, and over the WHOLE item: ARect, not the r that
-    the selection border shrank. }
-  if odFocused in State then
-     begin
-     cv.DrawFocusRect(ARect);
-     end;
-end;
+  NY4I, 2026-09-10: "if you touch a piece of code, validate if the code is
+  doing things as a native LCL app would do it. If not, change it to such.
+  The way the program did it before is immaterial." *)
 
 //procedure PossibleCallsProc(PCDRAWITEMSTRUCT: PDrawItemStruct);
 //label

@@ -102,6 +102,68 @@ which is why the rule above, not the hook, is the control. `.gitattributes` pins
 **LF**: a CRLF shebang gives `bad interpreter: /bin/sh^M` and a hook that silently never runs, the
 one place in this tree where CRLF is the wrong answer.
 
+## MANDATORY: IF YOU TOUCH IT, IT LEAVES NATIVE
+
+NY4I, 2026-09-10, after a week of Win32 artifacts surfacing one at a time on
+Linux:
+
+> *"The simple rule from now on is as follows: if you touch a piece of code,
+> validate if the code is doing things as a native LCL app would do it. If not,
+> change it to such. Use whatever technique you need to enforce that rule. The
+> way the program did it before is immaterial and any references to handles
+> require immediate evaluation."*
+
+**"IT IS NOT THE LCL WAY" IS A COMPLETE REASON ON ITS OWN.** It needs no second
+justification, and NY4I said so explicitly when one was offered: testability is
+*also* a reason, and citing it must never imply that the native-way argument was
+insufficient without it.
+
+**"THE WAY THE PROGRAM DID IT BEFORE IS IMMATERIAL."** Faithfulness to the Win32
+original is not a defence. It was the right instinct during the conversion, when
+the goal was to change no behaviour, and it is finished: the shapes it preserved
+are now defects that arrive one bench session at a time.
+
+### What this means in practice
+
+| if you find | write instead |
+|---|---|
+| an owner-draw handler | the control's own drawing, plus the LCL's colour hook (`OnPrepareCanvas`) |
+| a control holding empty items, with the data in a global | the data IN the control -- `Cells`, `Items`, `Caption` |
+| a shadow counter beside a control | ask the control |
+| a forced `Invalidate` after a data change | put the data in the control; it invalidates itself |
+| `Objects[]` or a pointer carrying an identity | a typed field the view owns |
+| a `Handle`, an `HWND`, or a `SendMessage` | the property or method the LCL provides |
+| a procedure variable passed a `TCanvas` between units | the event the control already raises |
+
+**A HANDLE IS THE LOUDEST SIGNAL AND GETS EVALUATED ON SIGHT.** Not "left for
+the sweep" -- looked at when you are already in the file. Some are legitimate:
+a real Win32 API boundary behind `{$IFDEF WINDOWS}`, or byte-exact serial I/O.
+Those keep their handle and gain a comment saying why. Everything else goes.
+
+### Why the rule pays, in one worked example
+
+`lstPossibleCall`, the strip of partial-call candidates, was a faithful
+translation of an owner-drawn `LBS_OWNERDRAWFIXED` listbox: N EMPTY STRINGS in
+the control, the callsigns in a global, and a paint handler in *another unit*
+indexing that global by item position. Every defect it produced followed from
+the control holding no data:
+
+| | |
+|---|---|
+| the control could not tell its content changed | forced `Invalidate` -- NY4I, 2026-08-24 |
+| its item count could not be trusted | a shadow counter |
+| every pixel was ours | `DefaultDrawing := False` |
+| hiding it dropped its window handle | accessors gating on `HandleAllocated` stopped working, and the feature broke outright |
+
+It is a `TStringGrid` now. `Cells[i, 0]` holds the callsign, `ColCount` is the
+count, `OnPrepareCanvas` sets the colours, and roughly fifty lines of canvas
+work in `MainUnit` are deleted. **None of those four failures can recur**,
+because each of them required a control that did not hold its own data.
+
+**AND IT BECAME TESTABLE**, which the old one was not: a strip holding N empty
+strings has nothing an assertion can read. That is a consequence of doing it
+natively, not a precondition for bothering.
+
 ## MANDATORY: Development Philosophy
 
 This is a port. We want to do this once. Refactoring is not as important a factor as getting the
