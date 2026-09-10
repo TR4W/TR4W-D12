@@ -781,6 +781,68 @@ begin
      end;
 end;
 
+(* THE "needs for <call>" CAPTION, BUILT IN ONE PLACE.
+
+  IT WAS BUILT IN FOUR, AND TWO OF THEM PRINTED THE WRONG CALLSIGN. The two
+  taking a CallPtr did this:
+
+      TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_MULTNEEDSFOR)),
+                PAnsiChar(integer(Call) + 1));
+
+  -- a pointer to a ShortString's CHARACTERS. A ShortString carries its length
+  in byte 0 and has NO TERMINATOR, so a printf-alike reads past the end until
+  it meets a zero byte that belongs to something else. What follows in that
+  buffer is the tail of whatever longer value was there before.
+
+  NY4I, Linux Mint 2026-09-09, with a screenshot: he had worked WA2NYC, then
+  typed N6T, and the header read
+
+      Mult needs for N6TNYC :
+
+  N6T overwrote the first three characters and NYC was left standing. The
+  callsign shown was one that has never been on the air.
+
+  NOT A LINUX DEFECT -- it has been true on every platform since the cast was
+  written, and it appears only when a SHORTER call follows a longer one, which
+  is why it survived so long. The commented-out inline assembly still sitting
+  above one of the call sites is where the cast came from: it pushed the same
+  address for a DOS printf, in an era when that was how a ShortString was
+  passed.
+
+  ONE FUNCTION, TAKING A string, AND NO POINTER OF ANY KIND. The conversion
+  from ShortString happens at the call site by plain assignment, which is what
+  CLAUDE.md's string rules ask for and which terminates correctly because there
+  is nothing to terminate.
+
+  LclText ON THE TEMPLATE ONLY. The template is translated and may carry
+  non-ASCII; a callsign is ASCII by definition, so converting it would be
+  ceremony. *)
+function NeedsCaption(const aTemplate, aCall: string): AnsiString;
+var
+   utf8Template: AnsiString;
+   utf8Call:     AnsiString;
+begin
+   (* FORMATTED FIRST, THEN CONVERTED ONCE, AND THE ORDER IS THE POINT.
+
+     SysUtils.Format returns a UnicodeString here, and a caption is an
+     AnsiString holding UTF-8. Assigning one to the other lets the compiler
+     narrow it silently -- which is exactly what CLAUDE.md asks not to happen,
+     and what the narrowing ceiling exists to keep visible. Doing it at four
+     call sites instead of one would have cost four.
+
+     LclText IS the explicit conversion: UTF-16 to UTF-8 loses nothing, and it
+     says so where it happens rather than leaving the assignment to decide. *)
+   utf8Template := AnsiString(LclText(aTemplate));
+   utf8Call     := AnsiString(LclText(aCall));
+
+   (* BOTH ARGUMENTS TYPED AnsiString so the AnsiString overload of Format is
+     the one chosen. Formatting first and converting afterwards looks tidier
+     and is wrong: Format would return a UnicodeString and LclText would take
+     it as a narrowing parameter conversion, which is the very thing being
+     avoided, moved one line inward where it is harder to see. *)
+   Result := SysUtils.Format(utf8Template, [utf8Call]);
+end;
+
 procedure EditableLog.ShowDomesticMultiplierStatus(DomesticQTH: Str10);
   //Gav 4.44.8  New procedure to display Domestic Mult Status
 var
@@ -794,10 +856,9 @@ begin
      end;
   DomesticQTHtemp := DomesticQTH;
 
-  TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_MULTNEEDSFOR)), PAnsiChar(LclText(DomesticQTHtemp)));
-
   logger.debug('[ShowDomesticMultiplierStatus] MultNeedsHeader field set to %s',[DomesticQTHtemp]);
-  TR4WMainForm.pnlMultNeedsHeader.Caption := wsprintfBuffer;
+  TR4WMainForm.pnlMultNeedsHeader.Caption :=
+     NeedsCaption(TC_MULTNEEDSFOR, DomesticQTHtemp);
   SetMultStatus('', DomesticQTH);
   logger.debug('[ShowDomesticMultiplierStatus] MultStatus set to DomesticQTH of %s',[DomesticQTH]);
 end;
@@ -809,17 +870,14 @@ begin
      logger.warn('ShowDomesticMultiplierStatus called with DomesticQTH length < 2 %s   Exiting...',[Call^]);
      Exit;
      end;
-  //  tLB_RESETCONTENT(MultiplierInformationWindowHandle);
-  {
-    asm
-      mov eax, Call
-      inc eax
-      push eax
-    end;
-  }
-  TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_MULTNEEDSFOR)), PAnsiChar(integer(Call) + 1));
+  (* THE DELETED ASSEMBLY THAT USED TO STAND HERE IS WHERE THE DEFECT CAME
+    FROM -- it pushed `Call + 1`, the address of a ShortString's first
+    character, for a DOS printf. The Pascal cast that replaced it kept the
+    address and lost nothing else, including the fact that there is no
+    terminator at the other end. See NeedsCaption. *)
   logger.debug('[ShowMultiplierStatus] MultNeedsHeader field set to %s',[Call^]);
-  TR4WMainForm.pnlMultNeedsHeader.Caption := wsprintfBuffer;
+  TR4WMainForm.pnlMultNeedsHeader.Caption :=
+     NeedsCaption(TC_MULTNEEDSFOR, string(Call^));
   SetMultStatus(Call^, '');
 end;
 
@@ -1139,8 +1197,7 @@ begin
      Exit;
      end;
 
-  TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_QSONEEDSFOR)), PAnsiChar(LclText(Call)));
-  TR4WMainForm.pnlQSONeedsHeader.Caption := wsprintfBuffer;
+  TR4WMainForm.pnlQSONeedsHeader.Caption := NeedsCaption(TC_QSONEEDSFOR, Call);
   //  tSetWindowText(QIHeaderWindowHandle, ' QSO needs for ' + Call);
 
   if QSOByMode then
@@ -1176,8 +1233,8 @@ begin
      Exit;
      end;
 
-  TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_QSONEEDSFOR)), PAnsiChar(integer(Call) + 1));
-  TR4WMainForm.pnlQSONeedsHeader.Caption := wsprintfBuffer;
+  TR4WMainForm.pnlQSONeedsHeader.Caption :=
+     NeedsCaption(TC_QSONEEDSFOR, string(Call^));
   //  tSetWindowText(QIHeaderWindowHandle, ' QSO needs for ' + Call);
 
   if QSOByMode then

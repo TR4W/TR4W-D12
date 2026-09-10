@@ -10351,9 +10351,9 @@ end;
 // Falls back to Notepad if no .txt association can be resolved or the editor
 // fails to launch, so the behavior never regresses on a misconfigured system.
 procedure OpenInDefaultTextEditor(FileName: PAnsiChar);
+{$IFDEF WINDOWS}
 var
   editor   : array[0..1023] of AnsiChar;
-  cmdBuf   : array[0..1279] of AnsiChar;   // local: caller may pass wsprintfBuffer
   len      : DWORD;
   launched : boolean;
 begin
@@ -10379,6 +10379,34 @@ begin
      RunWindowsUtility(SysUtils.Format('Notepad %s', [string(FileName)]));
      end;
 end;
+{$ELSE}
+(* THE DESKTOP'S OWN HANDLER, AND A REPORT WHEN THERE IS NONE.
+
+  THIS MENU ITEM DID NOTHING AT ALL ON LINUX. NY4I, 2026-09-09: "Open in Text
+  editor does not do anything here on linux on a cabrillo or adif file". The
+  reason was two steps back: AssocQueryStringA is a Windows import, so off
+  Windows it returns a failure by design and the caller took its fallback --
+  and the fallback was Notepad, which is not there. Nothing failed loudly
+  because RunWindowsUtility declines off Windows with a log line nobody was
+  reading, so the menu item simply had no effect.
+
+  A KNOWN GAP THAT WAS WRITTEN DOWN AND LEFT OPEN. The note above
+  AssocQueryStringA said so in as many words -- "this is a KNOWN GAP, not a
+  solved problem. The portable answer is xdg-open / open". Writing the gap
+  down did not stop an operator finding it; it is closed now.
+
+  REPORTED WHEN IT CANNOT BE DONE, which is the part the old shape could never
+  have managed. A file the operator asked to see, that does not appear, with
+  no message, is indistinguishable from a broken menu. *)
+begin
+  if not OpenWithDesktopHandler(string(FileName)) then
+     begin
+     ShowMessage(SysUtils.Format(
+        'Could not open %s -- this desktop has no handler TR4W can start ' +
+        '(it looks for xdg-open, then gio).', [string(FileName)]));
+     end;
+end;
+{$ENDIF}
 
 // CTRL-J NOW OPENS PREFERENCES (NY4I, 2026-08-16).
 //

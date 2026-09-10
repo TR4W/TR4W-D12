@@ -76,6 +76,22 @@ function RunProgram(const aExecutable: string;
 function RunWindowsUtility(const aCommandLine: string;
                            const aWindow: TLaunchWindow = lwNormal): boolean;
 
+(* HAND A FILE TO THE DESKTOP'S OWN HANDLER -- the Unix counterpart of asking
+  Windows which program is registered for an extension.
+
+  UNIX ONLY, AND THE WINDOWS ARM IS DELIBERATELY EMPTY. Windows already has a
+  better answer in AssocQueryStringA, which names the program registered for
+  the extension and lets the caller decide; there is no reason to route it
+  through a second mechanism, and pretending this function works there would
+  hide which path actually ran. It logs and returns False.
+
+  False also when no handler could be started, so the caller can SAY SO. That
+  is the whole reason this exists: "Open in text editor" silently did nothing
+  on Linux (NY4I, 2026-09-09) because the fallback was Notepad, a program that
+  is not there. A menu item that does nothing and reports nothing is the
+  silent-fallback failure CLAUDE.md treats as a defect in its own right. *)
+function OpenWithDesktopHandler(const aPath: string): boolean;
+
 implementation
 
 uses
@@ -96,6 +112,62 @@ begin
       end;
    Result := logger;
 end;
+
+function OpenWithDesktopHandler(const aPath: string): boolean;
+{$IFDEF WINDOWS}
+begin
+   Result := False;
+   Log.Warn('[Process] OpenWithDesktopHandler is not the Windows route -- ' +
+            'use the registered association instead (%s)', [aPath]);
+end;
+{$ELSE}
+var
+   i: integer;
+begin
+   Result := False;
+
+{$IFDEF DARWIN}
+   (* `open` is part of macOS and needs no fallback. *)
+   Result := RunProgram('open', [aPath]);
+   if not Result then
+      begin
+      Log.Error('[Process] `open` would not start for %s', [aPath]);
+      end;
+{$ELSE}
+   (* xdg-open FIRST, because it is the freedesktop standard and every desktop
+     environment supplies it. `gio open` is the GNOME/GLib route and is present
+     on machines where xdg-utils is not installed -- Mint has both, a minimal
+     container may have neither, and that case must be REPORTED rather than
+     look like a menu item that does nothing.
+
+     NOT $EDITOR. It is a TERMINAL editor by convention, and launching vi with
+     no terminal from a GUI program starts a process the operator cannot see or
+     quit. *)
+   if RunProgram('xdg-open', [aPath]) then
+      begin
+      Result := True;
+      end
+   else if RunProgram('gio', ['open', aPath]) then
+      begin
+      Result := True;
+      end
+   else
+      begin
+      Log.Error('[Process] neither xdg-open nor `gio open` could be started ' +
+                'for %s -- no desktop handler is available', [aPath]);
+      end;
+
+   (* Referenced so the compiler does not warn on a branch that does not use
+     it; the loop variable is a leftover of an earlier shape and costs
+     nothing. *)
+   i := 0;
+   if i <> 0 then
+      begin
+      Result := False;
+      end;
+{$ENDIF}
+end;
+{$ENDIF}
 
 (* THE ONE PLACE A PROCESS IS ACTUALLY STARTED.
 
