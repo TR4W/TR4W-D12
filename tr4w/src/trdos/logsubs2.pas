@@ -172,6 +172,7 @@ function ConvertBandTypeToUDPContactBand(band: BandType): string;
 implementation
 
 uses
+   uPortAddress,   // TPortKind -- see the radio port kind accessors
   uSettingsModel,     // Settings.ExternalLogger -- see the note in logstuff
   uMainForm,          // the editable log is an LCL virtual list
   uLogSearchForm,     // LogSearchRefreshIfOpen -- Search is non-modal
@@ -438,12 +439,12 @@ begin
        );
      DisplayCodeSpeed;
        {KK1L: 6.73 This gets done in UpdateTimeAndRateDisplay. Only do if no radio connected.}
-      if ((ActiveRadio = RadioOne)  and ((Radio1.tCATPortType <> NoPort)) or (not Radio1.PollingEnable))  then
+      if ((ActiveRadio = RadioOne)  and ((Radio1.CATPortKind <> pkNone)) or (not Radio1.PollingEnable))  then
          begin
          Radio1.ModeMemory {ModeMemory[RadioOne]} := ActiveMode
          end
      else
-       if (ActiveRadio = RadioTwo) and ((Radio2.tCATPortType = NoPort) or (not Radio2.PollingEnable)) then
+       if (ActiveRadio = RadioTwo) and ((Radio2.CATPortKind = pkNone) or (not Radio2.PollingEnable)) then
           begin
           Radio2.ModeMemory {ModeMemory[RadioTwo]} := ActiveMode;
           end;

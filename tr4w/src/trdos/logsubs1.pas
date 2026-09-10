@@ -80,6 +80,7 @@ procedure SwapRadios;
 implementation
 
 uses
+   uPortAddress,   // TPortKind -- see the radio port kind accessors
   uMainForm,   { the main window's elements are LCL controls }
   uRadioPanelForm,   { RadioPanelsRefreshActive -- the panels are forms }
   uRadioPolling,
@@ -1259,14 +1260,14 @@ begin
               begin
                 if Config.SwapPacketSpotRadios then
                    begin
-                   if Radio1.tCATPortType <> NoPort then
+                   if Radio1.CATPortKind <> pkNone then
                       begin
                       SetUpRadioFromPacketSpot(RadioOne, PacketAddress, Spot);
                       PacketMemoryRequest := True;
                       Exit;
                       end;
                    end
-                else if Radio2.tCATPortType <> NoPort then
+                else if Radio2.CATPortKind <> pkNone then
                    begin
                    PacketMemoryRequest := True;
                    SetUpRadioFromPacketSpot(RadioTwo, PacketAddress, Spot);
@@ -1283,14 +1284,14 @@ begin
               begin
                 if Config.SwapPacketSpotRadios then
                    begin
-                   if Radio2.tCATPortType <> NoPort then
+                   if Radio2.CATPortKind <> pkNone then
                       begin
                       SetUpRadioFromPacketSpot(RadioTwo, PacketAddress, Spot);
                       PacketMemoryRequest := True;
                       Exit;
                       end;
                    end
-                else if Radio1.tCATPortType <> NoPort then
+                else if Radio1.CATPortKind <> pkNone then
                    begin
                    PacketMemoryRequest := True;
                    SetUpRadioFromPacketSpot(RadioOne, PacketAddress, Spot);

@@ -32,6 +32,10 @@ interface
 
 uses
   uConfigValues,
+   (* TPortKind and the port-name rules. In the INTERFACE clause
+     because CATPortKind and KeyerPortKind below return TPortKind.
+     A leaf over VC, which this unit already names. *)
+   uPortAddress,
    Classes,
    Math,
    SysUtils,
@@ -395,6 +399,15 @@ type
         The one identity: see the note on RadioModel/FactoryId above. }
       function RadioId: string;
       procedure AdoptFactoryObject;
+
+      (* WHAT KIND OF PORT EACH LINK IS ON -- ask these, not the ordinal.
+
+        `CATPortKind = pkSerial` is FALSE for a radio on /dev/ttyUSB0,
+        because a device node has no ordinal.  These consider the name as
+        well, so a real port is never reported as absent.  See
+        uPortAddress.PortKindOf and docs/PORT_IDENTITY_PLAN.md. *)
+      function CATPortKind: TPortKind;
+      function KeyerPortKind: TPortKind;
       procedure SetUpRadioInterface;
       // Stops the polling thread and frees the factory object, leaving the slot
       // genuinely empty.  Split out of SetUpRadioInterface because CLEARING a
@@ -734,7 +747,6 @@ implementation
 
 
 uses
-   uPortAddress,   // SerialDeviceName -- the one port-name rule
    LogK1EA,
    LogWind,
    MainUnit, uRadioPolling,
@@ -1274,11 +1286,11 @@ begin
       begin
       how := Format('HamLib (rig_model %d)', [Self.HamLibID]);
       end
-   else if Self.tCATPortType = Network then
+   else if Self.CATPortKind = pkNetwork then
       begin
       how := Format('network %s:%d', [string(Self.IPAddress), Self.RadioTCPPort]);
       end
-   else if Self.tCATPortType = NoPort then
+   else if Self.CATPortKind = pkNone then
       begin
       how := 'NO PORT SET';
       end
@@ -1568,6 +1580,16 @@ begin
       end;
 end;
 
+function RadioObject.CATPortKind: TPortKind;
+begin
+   Result := PortKindOf(Self.tCATPortName, Self.tCATPortType);
+end;
+
+function RadioObject.KeyerPortKind: TPortKind;
+begin
+   Result := PortKindOf(Self.tKeyerPortName, Self.tKeyerPort);
+end;
+
 procedure RadioObject.AdoptFactoryObject;
 begin
    // Five construction sites (HamLib, serial x2, network x2) all need the same
@@ -1735,7 +1757,7 @@ begin
                   end;
 
                // Check if using network or serial connection
-               if tCATPortType = Network then
+               if CATPortKind = pkNetwork then
                   begin
                   // Network connection
                   logger.Info('[%s] HamLib via network: %s:%d',
@@ -1744,7 +1766,7 @@ begin
                   IPAddress := Self.IPAddress;
                   IPPort := Self.RadioTCPPort;
                   end
-               else if tCATPortType in SerialPorts then
+               else if CATPortKind = pkSerial then
                   begin
                   // Serial connection
                   COMPortName := EffectiveDeviceName(Self.tCATPortName,
@@ -1771,7 +1793,7 @@ begin
          logger.error('[%s.SetUpRadioInterface] Failed to create HamLib Direct radio', [Self.RadioName]);
          end;
       end
-   else if tCATPortType in SerialPorts then
+   else if CATPortKind = pkSerial then
       begin
       // Check if we should use modern radio class (e.g., K4, Icom) or legacy serial code
       // A string-id factory radio (no InterfacedRadioType member) takes precedence.
@@ -1914,7 +1936,7 @@ begin
          QuickDisplayError('Radio "' + string(Self.RadioName) + '" is not a serial radio -- not connected. Check its configuration.');
          end;
       end
-   else if tCATPortType = Network then
+   else if CATPortKind = pkNetwork then
       begin
       // Non-HamLib network radio (e.g., K4, Icom with native network protocol)
       logger.Info('[%s.SetUpRadioInterface] Setting up non-HamLib network radio: IP=%s, Port=%d',

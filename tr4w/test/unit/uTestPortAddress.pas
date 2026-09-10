@@ -25,6 +25,8 @@ type
       procedure Test_NothingButASerialPortGetsAName;
       procedure Test_TheNameParsesBackToTheSamePort;
       procedure Test_AConfiguredNameWinsOverTheOrdinal;
+      procedure Test_EveryPortHasExactlyOneKind;
+      procedure Test_ANamedPortIsSerialWhateverTheOrdinalSays;
    public
       procedure RunAllTests; override;
    end;
@@ -57,7 +59,7 @@ begin
      caller refuse instead. *)
    BeginTest('a port that is not serial has no device name');
    CheckEquals('', SerialDeviceName(NoPort),    'nothing configured');
-   CheckEquals('', SerialDeviceName(Network),   'a network port is not a COM port');
+   CheckEquals('', SerialDeviceName(VC.Network),   'a network port is not a COM port');
    CheckEquals('', SerialDeviceName(Parallel1), 'LPT1');
    CheckEquals('', SerialDeviceName(Parallel2), 'LPT2');
    CheckEquals('', SerialDeviceName(Parallel3), 'LPT3');
@@ -80,7 +82,7 @@ begin
 
    (* And the empty name must NOT parse to a port, or refusing to name a
      network port would quietly become port zero somewhere downstream. *)
-   CheckEquals(0, ComPortNumber(SerialDeviceName(Network)),
+   CheckEquals(0, ComPortNumber(SerialDeviceName(VC.Network)),
                'an unnamed port is not port zero');
 end;
 
@@ -95,7 +97,7 @@ begin
    CheckEquals(SerialDeviceName(Serial7), EffectiveDeviceName('', Serial7),
                'empty gives the ordinal answer');
    CheckEquals('COM7', EffectiveDeviceName('', Serial7), 'and that is COM7');
-   CheckEquals('', EffectiveDeviceName('', Network),
+   CheckEquals('', EffectiveDeviceName('', VC.Network),
                'a network port still has no device name');
    CheckEquals('', EffectiveDeviceName('', NoPort), 'nor does no port');
 
@@ -116,12 +118,77 @@ begin
                'blanks are not a name, so the ordinal still answers');
 end;
 
+procedure TPortAddressTests.Test_EveryPortHasExactlyOneKind;
+var
+   p: PortType;
+   kind: TPortKind;
+   serial, network, parallel, none: integer;
+begin
+   (* EXHAUSTIVE OVER THE ENUM, because a mis-mapped arm reads as a legal kind
+     and no compiler will say so.  This replaces `in SerialPorts`, `= Network`
+     and the LPT range test at eighteen sites on the radio path, and getting
+     one wrong sends a radio down the wrong transport. *)
+   BeginTest('every member of PortType classifies, and the counts are exact');
+   serial := 0; network := 0; parallel := 0; none := 0;
+   for p := Low(PortType) to High(PortType) do
+      begin
+      kind := PortKindOf('', p);
+      case kind of
+         pkSerial:   Inc(serial);
+         pkNetwork:  Inc(network);
+         pkParallel: Inc(parallel);
+         pkNone:     Inc(none);
+      end;
+      end;
+
+   CheckEquals(MAX_SERIAL_PORT, serial, 'one serial kind per serial member');
+   CheckEquals(1, network,  'exactly one network member');
+   CheckEquals(3, parallel, 'LPT1..LPT3');
+   CheckEquals(1, none,     'only NoPort is nothing');
+   CheckEquals(Ord(High(PortType)) + 1, serial + network + parallel + none,
+               'every member accounted for, none counted twice');
+
+   // And the individual answers, so a count that is right by accident fails.
+   CheckTrue(PortKindOf('', NoPort)    = pkNone,     'NoPort');
+   CheckTrue(PortKindOf('', Serial1)   = pkSerial,   'the first serial');
+   CheckTrue(PortKindOf('', Serial64)  = pkSerial,   'the last serial');
+   CheckTrue(PortKindOf('', VC.Network)   = pkNetwork,  'Network');
+   CheckTrue(PortKindOf('', Parallel1) = pkParallel, 'LPT1');
+   CheckTrue(PortKindOf('', Parallel3) = pkParallel, 'LPT3');
+end;
+
+procedure TPortAddressTests.Test_ANamedPortIsSerialWhateverTheOrdinalSays;
+begin
+   (* THE REASON THIS TYPE EXISTS.  A device node has no ordinal, so a Linux
+     radio's enum is NoPort while its port is perfectly real.  Asking the
+     ordinal would call it unconfigured, the serial arm would never run, and
+     the name would never be read -- a radio that is set up and invisible. *)
+   BeginTest('a configured name is serial even with no ordinal at all');
+   CheckTrue(PortKindOf('/dev/ttyUSB0', NoPort) = pkSerial,
+             'a device node with the enum at NoPort');
+   CheckTrue(PortKindOf('/dev/cu.usbserial-A50285BI', NoPort) = pkSerial,
+             'a macOS device node');
+   CheckTrue(PortKindOf('COM23', NoPort) = pkSerial,
+             'a COM number above what the enum can hold');
+
+   // Blanks are not a name, so the ordinal still decides.
+   CheckTrue(PortKindOf('   ', VC.Network) = pkNetwork, 'blanks do not make it serial');
+   CheckTrue(PortKindOf('', VC.Network) = pkNetwork,   'nor does an empty name');
+
+   (* A NETWORK RADIO CANNOT BE SWALLOWED BY THE NAME ARM, because it is
+     configured with an address and a port number and never with a device
+     name.  If that ever changes, this test is where it will be noticed. *)
+   CheckTrue(PortKindOf('', VC.Network) <> pkSerial, 'network stays network');
+end;
+
 procedure TPortAddressTests.RunAllTests;
 begin
    Test_EverySerialPortNamesItself;
    Test_NothingButASerialPortGetsAName;
    Test_TheNameParsesBackToTheSamePort;
    Test_AConfiguredNameWinsOverTheOrdinal;
+   Test_EveryPortHasExactlyOneKind;
+   Test_ANamedPortIsSerialWhateverTheOrdinalSays;
 end;
 
 end.

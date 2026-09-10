@@ -102,6 +102,7 @@ var
 implementation
 
 uses
+   uPortAddress,   // TPortKind -- see the radio port kind accessors
   uAppPaths,     // ResolveDataFileInPlace -- shipped data, whatever case
   uAnsiStr,      // StrComp/StrPLCopy over PAnsiChar (SysUtils variants are PWideChar)
   uCFG,
@@ -336,12 +337,34 @@ begin
   // RADIO TWO's CAT is disabled for this session, and the operator is told
   // which port collided.  (The radio dialog also warns at Apply time --
   // uCAT.WarnIfPortConflict -- so this only fires for configs edited by hand.)
-  if (Radio1.tCATPortType in SerialPorts) and
-     (Radio1.tCATPortType = Radio2.tCATPortType) then
+  (* COMPARED BY DEVICE NAME, NOT BY ORDINAL, and that is not tidiness.
+
+    An ordinal comparison is wrong in BOTH directions once a port can be named
+    by a device node.  Two radios on /dev/ttyUSB0 and /dev/ttyUSB1 both have
+    the ordinal NoPort, so it would declare a conflict that does not exist and
+    silently disable the second radio.  And two radios genuinely on the same
+    node would compare equal only by accident.
+
+    EffectiveDeviceName is the same rule the open path uses, so what is
+    compared here is exactly what would be opened. *)
+  if (Radio1.CATPortKind = pkSerial) and
+     (Radio2.CATPortKind = pkSerial) and
+     (* UnicodeSameText, not SameText: SysUtils is compiled with String =
+       AnsiString and this unit is UnicodeString, so the plain one narrows both
+       arguments and the build counts that.  A device name is ASCII either
+       way -- written down rather than left to the compiler. *)
+     UnicodeSameText(EffectiveDeviceName(Radio1.tCATPortName, Radio1.tCATPortType),
+                     EffectiveDeviceName(Radio2.tCATPortName, Radio2.tCATPortType)) then
      begin
      showwarning(SysUtils.Format(TC_PORT_CONFLICT_STARTUP,
-        [string(AnsiString(PortTypeSA[Radio1.tCATPortType]))]));
+        [EffectiveDeviceName(Radio1.tCATPortName, Radio1.tCATPortType)]));
+
+     (* BOTH FIELDS, or the radio is not disabled.  Clearing the ordinal alone
+       leaves the NAME set, and CATPortKind reads the name first -- so radio
+       two would still be serial, still open the port, and the warning would
+       have told the operator it had been turned off. *)
      Radio2.tCATPortType := NoPort;
+     Radio2.tCATPortName := '';
      end;
 
   Radio1.CheckAndInitializePorts_ForThisRadio;

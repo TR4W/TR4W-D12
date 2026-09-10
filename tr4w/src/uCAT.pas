@@ -68,6 +68,7 @@ var
 implementation
 
 uses
+   uPortAddress,   // TPortKind -- see the radio port kind accessors
   uRadioPolling,
   uRadioFactory,   // Issue #1028 -- network metadata (port / is-network / discoverable)
   uRadioRegistry,  // string-id factory radios in the drop-down
@@ -207,7 +208,7 @@ begin
     see the note in logradio. *)
 
   {Close Keyer Port}
-  if CATWTR^.tKeyerPort in SerialPorts then
+  if CATWTR^.KeyerPortKind = pkSerial then
      begin
      CATWTR^.tKeyerSerialPort := nil;
      FreeAndNil(CPUKeyer.SerialPortObject[CATWTR^.tKeyerPort]);

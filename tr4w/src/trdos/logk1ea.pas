@@ -699,7 +699,7 @@ procedure TurnOffActivePort;
 var
   TempByte                              : Byte;
 begin
-   if ActiveRadioPtr.tKeyerPort in SerialPorts then
+   if ActiveRadioPtr.KeyerPortKind = pkSerial then
       begin
       DriveCWLine(ActiveRadioPtr, False);
       end
@@ -784,7 +784,7 @@ var
   { PTT will always be on if Config.PTTEnable. }
   TempByte                              : Byte;
 begin
-  if ActiveRadioPtr.tKeyerPort in SerialPorts then
+  if ActiveRadioPtr.KeyerPortKind = pkSerial then
      begin
      DriveCWLine(ActiveRadioPtr, True);
      end
@@ -1755,7 +1755,7 @@ var
   port: TSerialPort;
   stopBits: Byte;
 begin
-  if (aRadio = nil) or (not (aRadio^.tKeyerPort in SerialPorts)) then
+  if (aRadio = nil) or (not (aRadio^.KeyerPortKind = pkSerial)) then
      begin
      Exit;
      end;

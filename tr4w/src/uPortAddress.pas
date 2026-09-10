@@ -70,6 +70,20 @@ interface
 uses
    VC;   // PortType, SerialPorts
 
+type
+   (*
+     WHAT KIND OF PORT THIS IS, and the only one of PortType's three jobs that
+     genuinely wants an enumeration.
+
+     Nearly every site that touches a configured port asks only this -- on the
+     radio path alone, 25 of them -- through `= NoPort`, `= Network`,
+     `in SerialPorts` or an LPT range test.  None of them cares WHICH port.
+
+     FOUR VALUES, NOT SIXTY-EIGHT.  PortType has 64 serial members because it
+     was also carrying the address; that is what this splits off.
+   *)
+   TPortKind = (pkNone, pkSerial, pkNetwork, pkParallel);
+
 (*
   The device name the operating system answers to, for a configured port.
 
@@ -107,6 +121,26 @@ function SerialDeviceName(const aPort: PortType): string;
 function EffectiveDeviceName(const aConfiguredName: string;
                              const aPort: PortType): string;
 
+(*
+  WHAT KIND OF PORT A CONFIGURED PAIR DESCRIBES.
+
+  A NAME IS ALWAYS SERIAL, AND THAT IS WHY THIS EXISTS.  '/dev/ttyUSB0' has no
+  ordinal -- none can be computed -- so on Linux the enum is NoPort while the
+  port is perfectly real.  Every `in SerialPorts` test would say the radio is
+  not serial, the serial arm would never run, and the name would never be read.
+
+  THIS IS WHY THE STEPS IN docs\PORT_IDENTITY_PLAN.md WERE REORDERED.  That
+  document had the store move to device names BEFORE the kind was separable.
+  Doing step 1 showed it cannot: a store holding a device node, with the kind
+  still derived from an ordinal, produces a radio that is configured and
+  invisible.  The kind has to come out first.
+
+  A network port has an address and a port number, never a device name, so the
+  name arm cannot swallow one.
+*)
+function PortKindOf(const aConfiguredName: string;
+                    const aPort: PortType): TPortKind;
+
 implementation
 
 uses
@@ -135,6 +169,39 @@ begin
    (* NO NAME CONFIGURED -- fall back to what the ordinal means.  That is the
      Windows answer and, until the store carries names, the only answer. *)
    Result := SerialDeviceName(aPort);
+end;
+
+function PortKindOf(const aConfiguredName: string;
+                    const aPort: PortType): TPortKind;
+begin
+   (* THE NAME DECIDES, WHEN THERE IS ONE.  See the note on the declaration:
+     a device node has no ordinal, so asking the ordinal would call a real
+     port "not configured". *)
+   if Trim(aConfiguredName) <> '' then
+      begin
+      Result := pkSerial;
+      Exit;
+      end;
+
+   if aPort in SerialPorts then
+      begin
+      Result := pkSerial;
+      end
+   else if aPort = Network then
+      begin
+      Result := pkNetwork;
+      end
+   else if aPort in [Parallel1, Parallel2, Parallel3] then
+      begin
+      Result := pkParallel;
+      end
+   else
+      begin
+      (* NoPort, and anything the enum grows that this does not know about.
+        Defaulting to "nothing configured" is the safe answer: it opens no
+        transport, where guessing serial would open the wrong one. *)
+      Result := pkNone;
+      end;
 end;
 
 end.
