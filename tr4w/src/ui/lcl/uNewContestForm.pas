@@ -113,6 +113,7 @@ type
     procedure ApplyMinimumSize;
     procedure LayoutLatestButton;
     function  WrappedTextHeight(const aText: TCaption; const aWidth: integer): integer;
+    function  WidestLine(const aText: TCaption): integer;
     function  GetRowCount: integer;
   public
     { Population -- what WM_INITDIALOG used to do with CreateWindow calls. }
@@ -511,6 +512,56 @@ begin
    end;
 end;
 
+{ THE WIDEST LINE IN A CAPTION, IN PIXELS.
+
+  A COMPANION TO WrappedTextHeight, AND THE HALF THAT WAS MISSING. That routine
+  answers "how tall would this be IF IT WRAPPED", and the eliding loop below
+  used its answer alone -- so a caption was shortened only when it was too TALL
+  for the space, never when a single line was too WIDE for the button.
+
+  ON WINDOWS THAT WAS ENOUGH, BECAUSE THE BUTTON REALLY DOES WRAP.
+  TWin32WSButton adds BS_MULTILINE (win32wsstdctrls.pp:2152), so a long line
+  becomes two and the height check catches it. GTK has no counterpart: a
+  GtkButton's label does not wrap, so the line simply runs out of the button.
+  NY4I, Linux Mint 2026-09-09, with a screenshot: "Notice how we overran the
+  button with the text instead of wrapping."
+
+  So the width is measured directly and the loop below tests both. A TBitmap
+  canvas rather than the form's: it needs no handle and no parent, and it
+  cannot be affected by whatever the form last painted with.
+
+  LINE BY LINE, because the caption is deliberately two lines -- a label and a
+  path -- and the width of the whole string is not a number that means
+  anything. }
+function TfrmNewContest.WidestLine(const aText: TCaption): integer;
+var
+   probe: TBitmap;
+   lines: TStringList;
+   i, w:  integer;
+begin
+   Result := 0;
+
+   probe := TBitmap.Create;
+   lines := TStringList.Create;
+   try
+      probe.SetSize(1, 1);
+      probe.Canvas.Font := btnLatest.Font;
+
+      lines.Text := aText;
+      for i := 0 to lines.Count - 1 do
+         begin
+         w := probe.Canvas.TextWidth(lines[i]);
+         if w > Result then
+            begin
+            Result := w;
+            end;
+         end;
+   finally
+      lines.Free;
+      probe.Free;
+   end;
+end;
+
 { THE FORM MAY NOT SHRINK PAST ITS LAST CATEGORY ROW.
 
   The nine rows are built in code, akTop-anchored, so they do NOT move when the
@@ -608,7 +659,17 @@ var
      narrows it back on the way into text -- three warnings for three dots. }
    dots: TCaption;
    avail, needed, capHeight, bottom, keep, brk: integer;
+   inner, widest: integer;
 begin
+   (* INITIALISED, because the debug line at the bottom reads both whatever
+     branch ran, and the "no latest file" branch sets neither. NY4I's log
+     carried `needed=1587725264` -- a stack value formatted as a measurement,
+     which is worse than no figure at all: it looks like an answer. *)
+   needed := 0;
+   avail  := 0;
+   widest := 0;
+   inner  := 0;
+
    CaptureGeometry;
 
    bottom := gbExisting.ClientHeight - FLatestMargin;
@@ -624,7 +685,9 @@ begin
                       - lstFiles.Top - MIN_LIST;
 
       text   := btnLatest.Caption;
-      needed := WrappedTextHeight(text, btnLatest.Width - TEXT_INSET) + TEXT_INSET;
+      inner  := btnLatest.Width - TEXT_INSET;
+      needed := WrappedTextHeight(text, inner) + TEXT_INSET;
+      widest := WidestLine(text);
       if logger.IsDebugEnabled then
          begin
          logger.Debug('[NewContest] measured "%s" at width %d: %d px',
@@ -648,12 +711,19 @@ begin
       label_ := Copy(text, 1, brk);
       path   := Copy(text, brk + 1, MaxInt);
       keep   := Length(path);
-      while (needed > avail) and (keep > Length(ELIDE) + 8) do
+
+      (* TOO TALL *OR* TOO WIDE. The height test alone was a Windows test: a
+        button there wraps, so an over-long path became a second line and grew
+        the height. Nothing wraps on GTK, so the line ran off the end of the
+        button and the height never noticed. *)
+      while ((needed > avail) or (widest > inner)) and
+            (keep > Length(ELIDE) + 8) do
          begin
          keep := keep div 2;
          text := label_ + Copy(path, 1, keep div 2) + dots +
                  Copy(path, Length(path) - (keep - keep div 2) + 1, MaxInt);
-         needed := WrappedTextHeight(text, btnLatest.Width - TEXT_INSET) + TEXT_INSET;
+         needed := WrappedTextHeight(text, inner) + TEXT_INSET;
+         widest := WidestLine(text);
          end;
       if text <> btnLatest.Caption then
          begin
@@ -684,8 +754,10 @@ begin
    if logger.IsDebugEnabled then
       begin
       logger.Debug('[NewContest] latest button: client=%d bottom=%d needed=%d ' +
-                   'avail=%d -> Top=%d Height=%d (browse Top=%d, list Height=%d)',
+                   'avail=%d widest=%d inner=%d -> Top=%d Height=%d ' +
+                   '(browse Top=%d, list Height=%d)',
                    [gbExisting.ClientHeight, bottom, needed, avail,
+                    widest, inner,
                     btnLatest.Top, btnLatest.Height, btnBrowse.Top,
                     lstFiles.Height]);
       end;
