@@ -2358,6 +2358,19 @@ begin
    (* Cheap: two property reads unless the answer has changed. *)
    ReportHorizontalScroll;
 
+   (* THE PAINT NUMBERS, ON THE TIMER RATHER THAN AT LAYOUT. The child dump
+     runs once, while the form is being built and before anything has been
+     drawn, so it reports calls=0 whatever the truth is. Reading them here is
+     what makes the count mean something. *)
+   if (TR4WEditableLog <> nil) and (logger <> nil) then
+      begin
+      logger.Debug('[EditableLog] Paint tick: calls=%d client=%d rowH=%d ' +
+                   'rows=%d gridHeight=%d drawn=%d',
+                   [TR4WEditableLog.PaintCount, TR4WEditableLog.PaintClient,
+                    TR4WEditableLog.PaintRowH, TR4WEditableLog.PaintRows,
+                    TR4WEditableLog.PaintGrid, TR4WEditableLog.PaintDrawn]);
+      end;
+
    if SystemClockJumped then
       begin
       (* WAS THE WM_TIMECHANGE ARM. GetSystemTime first, exactly as it did:
