@@ -282,7 +282,6 @@ begin
   row := ResolveFunctionKeyRow(aKey);
   if row < 0 then Exit;
   InitialAltPSelection := row;
-//tDialogBox(72, @MemoryProgramDlgProc);
   OpenListOfMessages;
   FrmSetFocus;   // see note in ShowFunctionKeyContextMenu
 end;

@@ -591,7 +591,6 @@ end;
 
 procedure EnumMISSINGCALLSIGNSTXT(FileString: PShortString);
 begin
-//  tLB_ADDSTRING(MissedWAVCallsignsListbox, @FileString^[1]);
 //  MissedCallsignsList.AddString(FileString^, NoBand, NoMode, True);
 //  inc(MissedWAVCallsigns);
 end;

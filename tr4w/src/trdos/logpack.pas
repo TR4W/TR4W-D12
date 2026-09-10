@@ -1045,7 +1045,6 @@ begin
         //wli            if PacketBeep then Write(Beep);
 
 //      QuickDisplay(SourceCall + ' says ' + Call + ' is on ' + FrequencyString + '  ' + Notes);
-//      SendMessage(QuickCommandWindowHandle, SB_SETTEXT, 1, lParam(PAnsiChar(WinAnsi(SourceCall + ' says ' + Call + ' is on ' + FrequencyString + '  ' + Notes))));
 
         //            ReminderPostedCount := 60;
     end;

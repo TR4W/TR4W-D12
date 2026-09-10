@@ -1221,7 +1221,6 @@ begin
      end;
 
   TR4WMainForm.pnlQSONeedsHeader.Caption := NeedsCaption(TC_QSONEEDSFOR, Call);
-  //  tSetWindowText(QIHeaderWindowHandle, ' QSO needs for ' + Call);
 
   if QSOByMode then
      begin
@@ -1258,7 +1257,6 @@ begin
 
   TR4WMainForm.pnlQSONeedsHeader.Caption :=
      NeedsCaption(TC_QSONEEDSFOR, string(Call));
-  //  tSetWindowText(QIHeaderWindowHandle, ' QSO needs for ' + Call);
 
   if QSOByMode then
      begin

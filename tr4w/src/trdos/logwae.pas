@@ -192,7 +192,6 @@ begin
           end;
           if not DetermineQTCNumberAndQuanity(QTCHeaderString, QTCNumber, NumberMessagesToBeSent) then Exit;
       }
-//    tDialogBox(62, @QTCRDlgProc);
       ShowQTCReceive;
 
       //    ClearWindow(EditableLogwindow);
@@ -237,7 +236,6 @@ begin
      TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_ISQRVFOR)), @QTCCallsign[1], @QRVString[1]);
 
      if YesOrNo2(string(wsprintfBuffer)) <> IDOK then Exit;
-     //tDialogBox(63, @QTCSDlgProc);
      ShowQTCSend;
 
      end;

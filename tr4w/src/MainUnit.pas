@@ -3518,7 +3518,6 @@ end;
 //
 // TALKS TO THE CONTROL, NOT TO A WINDOW.  It used to ask Windows:
 //
-//     Value := GetDlgItemInt(tr4whandle, EXCHANGEWINDOWID, lpTranslated, False);
 //     SetEntryText(TR4WExchangeEdit, ...);
 //
 // -- three Win32 calls addressing an LCL TEdit by dialog-item id and by HWND.
@@ -4224,7 +4223,6 @@ begin
        handle for each element meant CreateMainElement had to CREATE one --
        touching TWinControl.Handle constructs the window -- so 110 windows were
        forced into existence at startup to fill an array nobody consults. *)
-     //  wh[e] := CreateMainElement(   //AGENT_DEPRECATED
      CreateMainElement(
        e,
        TWindows[e].mweiStyle and (not (Cardinal(Config.NoBorder) * SS_SUNKEN)),
@@ -4815,7 +4813,6 @@ begin
       RunOptionsDialog(cfAll);
 
     // menu_bandplan:
-    // tDialogBox(44, @BMCFDlgProc);
 
     menu_appearance:
       RunOptionsDialog(cfAppearance);
@@ -4823,8 +4820,6 @@ begin
     menu_colors:
       RunOptionsDialog(cfCol);
 
-    // tDialogBox(61, @SettingsDlgProc2);
-    // DialogBoxParam(hInstance, MAKEINTRESOURCE(61), tr4whandle, @SettingsDlgProc2, integer(cfAll));
 
     menu_messages: //tDialogBox(71, @MESDlgProc);
       ShowProgramMessage;
@@ -4861,7 +4856,6 @@ begin
 
     menu_lpt:
       ShowLPTDialog;
-    // tDialogBox(64, @LPTDlgProc);
 
     (* The old per-slot WinKeyer settings dialog was deleted 2026-09-05. It
       had no launcher -- this line, commented out -- and Preferences had
@@ -4920,7 +4914,6 @@ begin
     menu_alt_p: OpenListOfMessages;
     menu_alt_killcw: ToggleCW(True);
     menu_alt_searchlog:
-      // tDialogBox(47, @LogSearchDlgProc);
       ShowLogSearch;
 
     menu_alt_transfreq: tr4w_alt_n_transmit_frequency;
@@ -4931,7 +4924,6 @@ begin
       begin
         // if ActiveMode = CW then
         if tAutoCQMode = False then
-          // tDialogBox(70, @AutoCQDlgProc);
            begin
            ShowAutoCQ;
            end;
@@ -5064,7 +5056,6 @@ begin
           BOTH QTC windows are LCL forms now, so ShowModalOverWin32Parent's
           Screen.DisableForms covers them and there is no raw HWND left to name
           -- the main window is the only parent this call has. }
-        // DialogBox(hInstance, MAKEINTRESOURCE(60), tCardinal, @SendKeyboardCWDlgProc);
         ShowSendKeyboardCW;
         { focus.SetFocus, not Screen.ActiveControl := -- that property is
           read-only in the LCL; the control focuses itself. }
@@ -5073,13 +5064,11 @@ begin
            focus.SetFocus;
            end;
       end;
-    // tDialogBox(60, @SendKeyboardCWDlgProc);
 
     menu_ctrl_cleardupesheet:
       tClearDupesheet_Ctrl_K;
 
     menu_ctrl_viewlogdat:
-      // tDialogBox(74, @LogEditDlgProc);
       (* The LCL form, not the Win32 dialog -- see uLogEditForm. *)
       ShowLogEditForm;
 
@@ -5213,7 +5202,6 @@ begin
 
     menu_ctrl_sendspot:
       // if TelnetSock <> 0 then
-      // tDialogBox(59, @SendSpotDlgProc);
       ShowSendSpot;
 
     menu_ctrl_clearmultsheet:
@@ -5235,7 +5223,6 @@ begin
       end;
 
     menu_ctrl_ct1bohscreen:
-      // tDialogBox(40, @ct1bohDlgProc);
       ShowCT1BOHInfo;
 
     menu_ctrl_PlaceHolder: AddBandMapPlaceHolder;
@@ -5310,20 +5297,15 @@ begin
     // w32tm /stripchart /computer:pool.ntp.org /dataonly /samples:1
 
     menu_beaconsmonitor:
-      // tDialogBox(49, @BeaconsMonitorDlgProc);
       ShowBeaconsMonitor;
 
     // menu_COAX_Length_Calculator:
-    // tDialogBox(51, @COAX_Length_CalculatorDlgProc);
 
     // menu_Distance:
-    // tDialogBox(53, @DistanceDlgProc);
 
     // menu_Grid:
-    // tDialogBox(55, @GridDlgProc);
 
     // menu_lc:
-    // tDialogBox(56, @LCDlgProc);
 
     item_calculator: RunWindowsUtility('calc.exe');
 
@@ -5372,7 +5354,6 @@ begin
 
     menu_windowsmanager:
       begin
-        //tDialogBox(57, @WindowsManagerDlgProc);
         ShowWindowsManager;
         if ManageForm = nil then
            begin
@@ -5603,7 +5584,6 @@ begin
 
     menu_getserverlog:
       SendToNet(NET_LOGINFO_MESSAGE, SizeOf(NET_LOGINFO_MESSAGE));
-    // tDialogBox(73, @GetServerLogDlgProc);
 
     menu_clearserverlog:
       begin
@@ -6229,7 +6209,6 @@ begin
      resourcestring rather than a conversion. Here the WideString() made it a
      real conversion, so it worked; it is going because the Win32 call it fed
      is going, not because it was broken. *)
-   //Windows.SetWindowTextW(tr4w_WindowsArray[ID].WndHandle, PWideChar(WideString(radioCaption))); //AGENT_DEPRECATED
    lclForm := LclFormFor(ID);
    if lclForm <> nil then
       begin

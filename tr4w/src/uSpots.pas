@@ -363,8 +363,6 @@ begin
           Continue;
           end;
 
-     // SendMessage(BandMapListBox, LB_ADDSTRING, 0, integer(i));         //GAV original message send
-
      if FList^[i].FFrequency = FCurrentCursorFreq then
         begin
         aCursorRow := NumberEntriesDisplayed;

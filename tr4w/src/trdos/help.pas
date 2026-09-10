@@ -916,7 +916,6 @@ begin
              //          if WhereX > 1 then WriteLn;
              //          Write(FileString);
              //          SendDlgItemMessage(tr4w_WindowsArray[tr4w_LAST5WINDOW_INDEX].tr4w_WndHandle, 101, LB_ADDSTRING, 0, integer(PAnsiChar(WinAnsi(FileString))));
-             //          SendMessage(_EditableLogWindow, LB_ADDSTRING, 0, integer(PAnsiChar(WinAnsi(FileString))));
              inc(WhereY);
              end;
 

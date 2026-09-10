@@ -2022,8 +2022,6 @@ begin
      TelnetCallsignAlertList.Clear;
      end;
 
-  //  TelnetCallsignAlertList := CreateWindowA('LISTBOX', ...);  //AGENT_DEPRECATED
-  //  tLB_ADDSTRING(TelnetCallsignAlertList, @FileString^[1]);   //AGENT_DEPRECATED
   TelnetCallsignAlertList.Add(AnsiString(FileString^));
   telnet_callsign_alert_list_loaded := True;
 end;

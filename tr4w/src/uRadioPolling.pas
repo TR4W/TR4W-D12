@@ -1165,7 +1165,6 @@ begin
    if rig.CurrentStatus.PrevRITFreq <> rig.CurrentStatus.RITFreq then
       begin
       { $ R A NGECHECKS OFF}
-          //SetDlgItemInt(h, 120, Cardinal(rig.CurrentStatus.RITFreq), rig.CurrentStatus.RITFreq < 0);
       if h <> 0 then
          begin
          PostPanelText(h, 120, string(RITFreqToPchar(rig.CurrentStatus.RITFreq)));

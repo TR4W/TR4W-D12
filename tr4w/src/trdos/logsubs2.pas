@@ -491,7 +491,6 @@ begin
   else
      begin
      if not Tune then
-  //    tDialogBox(54, @AltDDlgProc);
         begin
         ShowAltD;
         end;

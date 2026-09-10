@@ -1256,7 +1256,6 @@ begin
      if tBeamHeadingPrevState = HisGrid then Exit;
      tBeamHeadingPrevState := HisGrid;
 
- //    tSetWindowText(LocatorWindowHandle, 'string(HisGrid)');
      DispalyGrid(HisGrid);
      if Call = MyCall then
         begin
@@ -1482,7 +1481,6 @@ begin
 
   //  end;
 
-  //  tSetWindowText(CodeSpeedWindowHandle, TempString);
   //end;
   //procedure DisplayFreeMemory;
 
@@ -1651,7 +1649,6 @@ begin
   if not AlarmSet then
      begin
 
-     //    tSetWindowText(RateWindowHandle, 'Rate = ' + IntToStr(Rate));
 
    TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_RATE)), Rate);
 
@@ -1682,7 +1679,6 @@ begin
   TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_PTS)), Score);
   TR4WMainForm.pnlTotalScore.Caption := wsprintfBuffer;
 
-  //  tSetWindowText(TotalScoreWindowHandle, IntToStr(Score) + ' Pts');
 
   if NumberTotalScoreMessages > 0 then
      begin
@@ -2387,7 +2383,6 @@ begin
           end;
          //      Frm.CallWindow . SetFocus;
        tCallWindowSetFocus;
-         //        SendMessage(CallWindowHandle, EM_SETSEL, 16, 16);
        SetEntrySel(TR4WCallEdit, Length(EntryText(TR4WCallEdit)), 0);
        DisplayCountryName(CallWindowString);
        DisplayBeamHeading(CallWindowString, '');
@@ -3457,7 +3452,6 @@ begin
      begin
      DoABeep(ThreeHarmonics);
      end;
-//  SendMessage(wh[mweCall], EM_SETSEL, 0, -1);
 //  EscapeDeletedCallEntry := CallWindowString;
   tCleareCallWindow;
 end;
@@ -3615,7 +3609,6 @@ var
 begin
    TempSpot.FBand := NoBand;
               BMp := 0;
-  //            tLB_SETCURSEL(BandMapListBox, 0);
   // THE MODEL'S COUNT, not the control's.  This asked the list box how many
   // items it held and then indexed SpotsList.Get with the answer -- two
   // different lists whenever a filter was active or the display limit had
@@ -3631,11 +3624,6 @@ begin
           Band := ActiveRadioptr.BandMemory;
           end;
 
-  //k := Windows.SendMessage(BandMapListBox, LB_GETCURSEL, 0, 0);   // K contains real cursor displacement from top (0)
- //  i := GetBMSelItemData; //SendMessage(BandMapListBox, LB_GETITEMDATA, tLB_GETCURSEL(BandMapListBox), 0);
-//  if k = LB_ERR then Exit;
-
-//  Spot := SpotsList.Get(j);
 
 
 

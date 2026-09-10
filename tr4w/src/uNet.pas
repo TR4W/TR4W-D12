@@ -1202,8 +1202,6 @@ const
 begin
   i := PosInClientsList[Index] - 1;
   CurrentDisplayedRow := Index;
-  //  elvi.Mask := LVIF_TEXT;      //AGENT_DEPRECATED
-  //  h := wh[mweNetwork];         //AGENT_DEPRECATED  -- never assigned; always 0
 
   if StatusArray[Index].ssComputerID = #0 then
      begin
@@ -1256,7 +1254,6 @@ begin
         SetClientCell(i, 6 - 1, string(PTTStatusString[PTTStatusType((StatusArray[Index].ssStatusByte and (1 shl 0)) <> 0)]));
         (* A TListView repaints an item when its text changes; this forced
           a repaint on a Win32 handle that is always 0. *)
-        //ListView_RedrawItems(h, i, i);   //AGENT_DEPRECATED
       end;
 
     sstOpMode:
@@ -1275,8 +1272,6 @@ begin
       SetClientCell(i, 9, string(StatusArray[Index].ssOperator));
   end;
 
-  //  ListView_SetItemText(h, I, 8, inttopchar(StatusArray[Index].ssCWElements));
-  //  ListView_SetItemText(h, I, 9, StatusArray[Index].ssCWMessage);
 end;
 
 function FindAndUpdateQSOInLog(var RXData: ContestExchange): boolean;
@@ -1430,7 +1425,6 @@ begin
              end;
           end
        else
- //      DialogBoxParam(hInstance, MAKEINTRESOURCE(75), tr4whandle, @LogCompareDlgProc, integer(s))
           begin
           ShowLogCompare(integer(s));
           end;
@@ -1453,10 +1447,6 @@ end;
   has drawn it. *)
 procedure AddNewClient(ClientID: integer);
 begin
-  //  elvi.Mask := LVIF_PARAM;                        //AGENT_DEPRECATED
-  //  elvi.iItem := TotalClients;                     //AGENT_DEPRECATED
-  //  elvi.iSubItem := 0;                             //AGENT_DEPRECATED
-  //  ListView_InsertItem(wh[mweNetwork], elvi);      //AGENT_DEPRECATED
   inc(TotalClients);
   PosInClientsList[ClientID] := TotalClients;
 end;
@@ -1476,8 +1466,6 @@ end;
   buffer, no WinAnsi round trip, no pointer into a ShortString's first byte. *)
 procedure ShowConnectionStatus(Operation: string);
 begin
-  //TF.Format(@NetBuffer, PAnsiChar(WinAnsi(TC_NETWORK)), PAnsiChar(WinAnsi(Operation)), @ServerAddress[1], ServerPort); //AGENT_DEPRECATED
-  //Windows.SetWindowTextA(tr4w_WindowsArray[tw_NETWINDOW_INDEX].WndHandle, @NetBuffer); //AGENT_DEPRECATED
   if TR4WNetworkForm <> nil then
      begin
      TR4WNetworkForm.Caption := TCaption(Format(TC_NETWORK,
@@ -1508,8 +1496,6 @@ begin
      end;
   ProgressBarArray[ProgressBarPos] := #0;
   i := PosInClientsList[Index] - 1;
-  //  elvi.Mask := LVIF_TEXT;      //AGENT_DEPRECATED
-  //  h := wh[mweNetwork];         //AGENT_DEPRECATED  -- never assigned; always 0
   SetClientCell(i, 10, string(PAnsiChar(@ProgressBarArray)));
   SetClientCell(i, 11, string(Msg.msCWMessage));
 end;
