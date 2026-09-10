@@ -236,9 +236,10 @@ end;
 
 procedure TElementPanel.FitCaption;
 var
-   avail:  integer;
-   height: integer;
-   sign:   integer;
+   avail:        integer;
+   height:       integer;
+   sign:         integer;
+   wantedAtBase: integer;
 begin
    if (Caption = '') or (FBaseFontHeight = 0) then
       begin
@@ -276,6 +277,14 @@ begin
       end;
 
    height := Abs(FBaseFontHeight);
+
+   (* THE WIDTH AT FULL SIZE, MEASURED BEFORE ANY SHRINKING, because that is
+     the number that says HOW BADLY it did not fit. "It was reduced" is not
+     actionable; "it wanted 61 pixels and had 30" says the cell is half the
+     size it needs to be and no font choice will rescue it. *)
+   GMeasure.Canvas.Font.Height := sign * height;
+   wantedAtBase := GMeasure.Canvas.TextWidth(Caption);
+
    while height > MIN_FONT_HEIGHT do
       begin
       GMeasure.Canvas.Font.Height := sign * height;
@@ -309,13 +318,22 @@ begin
      compatible default font on Linux, or narrower content, or a wider panel --
      depends on which panels report and by how much, and that is exactly what
      was not known. *)
-   if (height <= MIN_FONT_HEIGHT) and (not FOverflowReported) and
-      (GMeasure.Canvas.TextWidth(Caption) > avail) and
+   (* REPORTED ON ANY SHRINK, NOT ONLY AT THE FLOOR -- widened 2026-09-09.
+
+     The floor-only condition answered "is this illegible" and the question
+     that actually needed answering was "is this cell the right size". NY4I,
+     seeing a need label reduced far enough to fit: "making Both just a tiny
+     font is not the right strategy. That looks strange." He is right, and the
+     shrink is a MITIGATION for a layout that is wrong -- so the layout has to
+     be told, in pixels, every time it happens.
+
+     A caption that fits at full size costs nothing here; only one that had to
+     be reduced says anything. Still once per panel until the next resize. *)
+   if (height < Abs(FBaseFontHeight)) and (not FOverflowReported) and
       Assigned(ElementOverflowReport) then
       begin
       FOverflowReported := True;
-      ElementOverflowReport(Name, Caption, Font.Name,
-                            GMeasure.Canvas.TextWidth(Caption), avail);
+      ElementOverflowReport(Name, Caption, Font.Name, wantedAtBase, avail);
       end;
 
    if Font.Height <> sign * height then

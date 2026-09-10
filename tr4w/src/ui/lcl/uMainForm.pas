@@ -896,8 +896,12 @@ end;
 procedure ReportElementOverflow(const aPanel, aCaption, aFont: string;
                                 const aWanted, aAvailable: integer);
 begin
-   logger.Warn('[Layout] %s cannot fit its caption: needs %dpx, has %dpx, '
-               + 'font "%s", text "%s"',
+   (* THE TWO NUMBERS ARE THE DIAGNOSIS. "needs 61px, has 30px" says the cell
+     is half the width its text requires, which no font substitution and no
+     shrinking will fix -- and it distinguishes that from "needs 32, has 30",
+     which a couple of pixels of padding would solve. *)
+   logger.Warn('[Layout] %s had to shrink to fit: wants %dpx at full size, '
+               + 'has %dpx, font "%s", text "%s"',
                [aPanel, aWanted, aAvailable, aFont, aCaption]);
 end;
 
