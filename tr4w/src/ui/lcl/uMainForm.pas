@@ -2595,6 +2595,52 @@ begin
    TR4WEditableLog.RecordCount := aCount;
 end;
 
+(* ROUND THE LOG GRID DOWN TO A WHOLE NUMBER OF ROWS.
+
+  Reports what it removed, because a layout that silently adjusts itself is
+  one nobody can check against a screenshot. Logged once per resize, not per
+  paint. *)
+procedure SnapEditableLogToWholeRows;
+var
+   rowH:     integer;
+   leftover: integer;
+begin
+   if TR4WEditableLog = nil then
+      begin
+      Exit;
+      end;
+
+   rowH := TR4WEditableLog.DefaultRowHeight;
+   if rowH <= 0 then
+      begin
+      Exit;
+      end;
+
+   leftover := TR4WEditableLog.ClientHeight mod rowH;
+   if leftover = 0 then
+      begin
+      Exit;
+      end;
+
+   (* AT LEAST ONE ROW HAS TO SURVIVE. A grid asked for a height smaller than
+     a single row would otherwise be shrunk to nothing, and an invisible log
+     is a worse defect than a grey strip. *)
+   if TR4WEditableLog.ClientHeight <= rowH then
+      begin
+      Exit;
+      end;
+
+   TR4WEditableLog.Height := TR4WEditableLog.Height - leftover;
+
+   if logger <> nil then
+      begin
+      logger.Debug('[EditableLog] snapped to whole rows: removed %d px ' +
+                   '(row height %d), now H=%d client=%d',
+                   [leftover, rowH, TR4WEditableLog.Height,
+                    TR4WEditableLog.ClientHeight]);
+      end;
+end;
+
 procedure TR4WEditableLogSetBounds(const aLeft, aTop, aWidth, aHeight: integer);
 begin
    if TR4WEditableLog = nil then
@@ -2605,6 +2651,35 @@ begin
    (* THROUGH THE LCL, and there is no other way now: the grid has no window
      handle for anything to reposition behind its back. *)
    TR4WEditableLog.SetBounds(aLeft, aTop, aWidth, aHeight);
+
+   (* AND THEN SNAPPED TO A WHOLE NUMBER OF ROWS, WHICH IS THE BAND NY4I HAS
+     BEEN POINTING AT SINCE 2026-09-09.
+
+     A grid draws whole rows and leaves whatever is over. Measured on his Mint
+     box: the grid was 125 pixels of client with a row height of 19, so six
+     rows filled 114 and ELEVEN PIXELS AT THE BOTTOM belonged to no row. gtk2
+     paints that strip in the theme's own background rather than the grid's
+     colour, so a grey band ran the full width of the window immediately below
+     the last QSO -- indistinguishable from a scroll-bar trough, which is
+     exactly what it was reported as, five times.
+
+     THE HEIGHT IT WAS GIVEN CAME FROM WIN32 ARITHMETIC. The caller asks for
+     `30 + LinesInEditableLog * (ws + 2)`, where 30 was an allowance for a
+     list view's header and border. This grid's header is a REAL ROW of
+     DefaultRowHeight, so the allowance is 19 here and 30 leaves a remainder.
+
+     FIXED HERE RATHER THAN AT THE CALLER, and that is deliberate: the caller
+     would have to know the row height, the fixed-row count and the border
+     inset, and the border inset is a widget-set answer -- 0 on gtk2, non-zero
+     on Win32. The control knows all three. Asking it to round DOWN to a whole
+     number of rows is correct on every platform without anyone having to know
+     which one they are on.
+
+     NOTHING BELOW MOVES OUT OF PLACE. MainUnit reads EditableLogHeight back
+     from this control immediately afterwards and positions every row of status
+     panels relative to it, so the window closes up by the leftover instead of
+     opening a gap. *)
+   SnapEditableLogToWholeRows;
 end;
 
 procedure TR4WEditableLogScrollToEnd;
