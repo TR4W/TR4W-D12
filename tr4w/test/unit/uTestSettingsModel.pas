@@ -29,7 +29,7 @@ unit uTestSettingsModel;
 interface
 
 uses
-   SysUtils, uTR4WTestFramework, uJSON, uSettingsModel;
+   SysUtils, Classes, uTR4WTestFramework, uJSON, uSettingsModel;
 
 type
    TSettingsModelTests = class(TTestCase)
@@ -39,6 +39,9 @@ type
       procedure Test_AnAbsentKeyLeavesThePropertyAlone;
       procedure Test_LegacyImportReadsTheOldCommandSpellings;
       procedure Test_LegacyImportKeepsWhatItCannotRead;
+      procedure Test_CommandNamesDeriveFromThePropertyPaths;
+      procedure Test_SetAndGetByCommandName;
+      procedure Test_AnUnknownCommandIsRefused;
    public
       procedure RunAllTests; override;
    end;
@@ -246,6 +249,116 @@ begin
    end;
 end;
 
+procedure TSettingsModelTests.Test_CommandNamesDeriveFromThePropertyPaths;
+var
+   s: TR4WSettings;
+   names: TStringList;
+begin
+   (* THE DERIVATION IS THE WHOLE MAPPING, so it is the thing to pin.
+
+     Every setting that moves here has to keep answering to the name a config
+     file, a contest .cfg and a multi-op peer already use.  There is no table
+     to review -- the name comes from the property path -- so this test IS the
+     review, and it must name the legacy spellings literally rather than
+     recomputing them, or it would agree with any rule at all. *)
+   BeginTest('each property answers to the legacy command name');
+   s := TR4WSettings.Create;
+   try
+      CheckTrue(s.OwnsCommand('EXTERNAL LOGGER ADDRESS'), 'address');
+      CheckTrue(s.OwnsCommand('EXTERNAL LOGGER PORT'),    'port');
+      CheckTrue(s.OwnsCommand('EXTERNAL LOGGER ENABLED'), 'enabled');
+
+      // Case-folded, because a config file is read upper-cased and a hand
+      // edit is not.
+      CheckTrue(s.OwnsCommand('external logger port'), 'lower case');
+      CheckTrue(s.OwnsCommand('  EXTERNAL LOGGER PORT  '), 'surrounding blanks');
+
+      (* AND THE LIST IS EXACTLY THE MIGRATED SETTINGS.  A name appearing that
+        nothing migrated would mean the derivation invented a command TR4W
+        never had, which is worse than missing one: it would start claiming a
+        peer's message. *)
+      names := s.CommandNames;
+      try
+         CheckEquals(3, names.Count, 'one name per migrated setting, no more');
+      finally
+         names.Free;
+      end;
+   finally
+      s.Free;
+   end;
+end;
+
+procedure TSettingsModelTests.Test_SetAndGetByCommandName;
+var
+   s: TR4WSettings;
+   value: string;
+begin
+   (* THIS IS WHAT MULTI-OP PEER SYNC NEEDS.  A change made at one position
+     travels as command TEXT plus a value; the receiving position applies it by
+     name. A setting that moved here and could not be reached by name would
+     leave the other position silently stale, which is the failure uNet already
+     had for seventeen rows. *)
+   BeginTest('a setting can be set and read back by its command name');
+   s := TR4WSettings.Create;
+   try
+      CheckTrue(s.TrySetByCommand('EXTERNAL LOGGER PORT', '52020'), 'set a number');
+      CheckEquals(52020, s.ExternalLogger.Port, 'the property took it');
+
+      CheckTrue(s.TrySetByCommand('EXTERNAL LOGGER ENABLED', 'TRUE'), 'set a boolean');
+      CheckTrue(s.ExternalLogger.Enabled, 'the property took it');
+
+      CheckTrue(s.TrySetByCommand('EXTERNAL LOGGER ADDRESS', '10.1.2.3'), 'set a string');
+      CheckEquals('10.1.2.3', s.ExternalLogger.Address, 'the property took it');
+
+      // Rendered back in the spelling BA uses, so what a peer receives is what
+      // the old parser would have accepted.
+      CheckTrue(s.TryGetByCommand('EXTERNAL LOGGER PORT', value), 'read a number');
+      CheckEquals('52020', value, 'number');
+      CheckTrue(s.TryGetByCommand('EXTERNAL LOGGER ENABLED', value), 'read a boolean');
+      CheckEquals('TRUE', value, 'boolean renders as TRUE, not -1 or 1');
+      CheckTrue(s.TryGetByCommand('EXTERNAL LOGGER ADDRESS', value), 'read a string');
+      CheckEquals('10.1.2.3', value, 'string');
+   finally
+      s.Free;
+   end;
+end;
+
+procedure TSettingsModelTests.Test_AnUnknownCommandIsRefused;
+var
+   s: TR4WSettings;
+   value: string;
+begin
+   (* REFUSED, NOT SILENTLY IGNORED.  The caller uses the answer to decide
+     whether some OTHER mechanism still owns the command -- CFGCA, for the
+     hundreds that have not moved -- so a settings object that swallowed an
+     unknown name would make those settings stop working with no diagnostic. *)
+   BeginTest('a command this object does not own is refused');
+   s := TR4WSettings.Create;
+   try
+      CheckFalse(s.OwnsCommand('MY CALL'), 'a setting that has not migrated');
+      CheckFalse(s.TrySetByCommand('MY CALL', 'NY4I'), 'setting it is refused');
+      CheckFalse(s.TryGetByCommand('MY CALL', value), 'reading it is refused');
+      CheckEquals('', value, 'and yields nothing to send');
+
+      CheckFalse(s.OwnsCommand(''), 'an empty command name');
+
+      (* A VALUE THE TYPE CANNOT TAKE IS REFUSED AND CHANGES NOTHING -- the
+        rule CheckCommand had, and it matters more here because the one-time
+        import gets no second chance to ask. *)
+      s.ExternalLogger.Port := 52001;
+      CheckFalse(s.TrySetByCommand('EXTERNAL LOGGER PORT', 'not a number'),
+                 'an unparseable number is refused');
+      CheckEquals(52001, s.ExternalLogger.Port, 'and the property is untouched');
+
+      s.ExternalLogger.Enabled := True;
+      CheckFalse(s.TrySetByCommand('EXTERNAL LOGGER ENABLED', 'perhaps'),
+                 'a word that is neither T nor F is refused');
+      CheckTrue(s.ExternalLogger.Enabled, 'and the property is untouched');
+   finally
+      s.Free;
+   end;
+end;
+
 procedure TSettingsModelTests.RunAllTests;
 begin
    Test_DefaultsAreTheOnesTheGlobalsHad;
@@ -253,6 +366,9 @@ begin
    Test_AnAbsentKeyLeavesThePropertyAlone;
    Test_LegacyImportReadsTheOldCommandSpellings;
    Test_LegacyImportKeepsWhatItCannotRead;
+   Test_CommandNamesDeriveFromThePropertyPaths;
+   Test_SetAndGetByCommandName;
+   Test_AnUnknownCommandIsRefused;
 end;
 
 end.

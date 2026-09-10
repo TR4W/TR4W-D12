@@ -265,6 +265,7 @@ uses
    uRadioRegistry,
    uKeyerConfigApply,   // resolve a named keyer device and configure it
    uTR4WConfigFile,     // LoadConfig -- both libraries live in the one file
+   uSettingsModel,      // Settings.OwnsCommand -- a setting that left CFGCA
    uUDPBroadcastConfig, // round-tripped by ApplyPeerCommand so its section survives
    LOGRADIO,
    LOGK1EA,    // ActiveRadio
@@ -1327,6 +1328,38 @@ var
    ini: TIniFile;
 begin
    Result := False;
+
+   (* A SETTING THAT HAS LEFT CFGCA, FIRST.
+
+     It has to be first, and it has to exist at all, because a peer's change
+     arrives as COMMAND TEXT and there is no row left to route it.  Without
+     this arm the command would fall through to the un-migrated branch below,
+     find no row, and be reported as "applied but not persisted" -- or worse,
+     apply nothing while the station that made the change saw it take effect.
+     That is precisely the failure uNet already had for seventeen rows.
+
+     The settings object answers by name because its command names are derived
+     from its property paths, so this arm needs no edit as more settings move.
+
+     PERSISTED IMMEDIATELY, like the migrated branch below: startup reads the
+     section, so a peer change left only in memory would be gone on restart --
+     which is the failure this whole routine exists to remove. *)
+   if Settings.OwnsCommand(aCommand) then
+      begin
+      Result := Settings.TrySetByCommand(aCommand, aValue);
+      if Result then
+         begin
+         SaveSettings(TR4WConfigFileName, Settings);
+         end
+      else if logger <> nil then
+         begin
+         // A value the property's type refuses. Reported, not swallowed: the
+         // two positions now disagree and only a log line can say so.
+         logger.Error('[ApplyPeerCommand] "%s" = "%s" refused by the settings object',
+                      [aCommand, aValue]);
+         end;
+      Exit;
+      end;
 
    if not CommandIsJSONOwned(aCommand) then
       begin

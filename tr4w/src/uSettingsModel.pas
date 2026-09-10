@@ -114,7 +114,11 @@ type
 
    TR4WSettings = class(TPersistent)
    private
+      // command name -> property path, built once by walking the RTTI.
+      FCommands: TStringList;
       FExternalLogger: TExternalLoggerSettings;
+      procedure BuildCommandMap;
+      function PathForCommand(const aCommand: string): string;
    public
       constructor Create;
       destructor Destroy; override;
@@ -129,10 +133,41 @@ type
 
       (* SEED FROM THE OLD KEYS, ONCE.  aCommands is the legacy `commands`
         section: flat keys spelled the way a config command is spelled,
-        'EXTERNAL LOGGER PORT'.  Only properties the caller has not already
-        loaded should be seeded, which is why this takes the commands object
-        and not the whole file -- see uSettingsMigrate for the policy. *)
+        'EXTERNAL LOGGER PORT'.
+
+        It walks THIS OBJECT rather than a list of settings to look for, so a
+        property added later is imported with no edit here. *)
       procedure ImportLegacyCommands(const aCommands: TJSONObject);
+
+      (* ---------------------------------------------------------------
+        ANSWERING TO A CONFIG COMMAND NAME.
+
+        Three callers need it and all three are why CFGCA still exists:
+
+          * the one-time import above;
+          * MULTI-OP PEER SYNC.  A change made at one position travels as
+            COMMAND TEXT plus a value, and the receiving position applies it
+            by name.  A setting that moved here and could not be reached by
+            name would leave the other position silently stale, which is the
+            failure mode uNet already had for seventeen rows;
+          * the contest .cfg, which is a live input format and is not going
+            away with the ini.
+
+        THE NAME IS DERIVED FROM THE PROPERTY PATH, not declared in a table.
+        'ExternalLogger.Port' gives 'EXTERNAL LOGGER PORT' -- a space at each
+        word boundary, upper-cased.  That is the whole mapping for every
+        setting migrated so far, so adding one costs no line anywhere, and a
+        table that has to be edited from far away is the thing that drifts.
+
+        Where a legacy name genuinely does not derive, BuildCommandMap carries
+        an explicit exception.  Keep that list short: a long one means the
+        derivation rule is wrong. *)
+      function OwnsCommand(const aCommand: string): boolean;
+      function TrySetByCommand(const aCommand, aValue: string): boolean;
+      function TryGetByCommand(const aCommand: string; out aValue: string): boolean;
+
+      // Every command name this object answers to. Caller owns the result.
+      function CommandNames: TStringList;
    published
       property ExternalLogger: TExternalLoggerSettings read FExternalLogger;
    end;
@@ -151,7 +186,8 @@ implementation
 
 uses
    fpjson,
-   fpjsonrtti;
+   fpjsonrtti,
+   TypInfo;   // the property walk -- see the note on OwnsCommand
 
 var
    GSettings: TR4WSettings = nil;
@@ -189,12 +225,323 @@ constructor TR4WSettings.Create;
 begin
    inherited Create;
    FExternalLogger := TExternalLoggerSettings.Create;
+
+   FCommands := TStringList.Create;
+   FCommands.CaseSensitive := False;
+   FCommands.Sorted := True;
+   FCommands.Duplicates := dupError;   // two properties claiming one command name
+   BuildCommandMap;
 end;
 
 destructor TR4WSettings.Destroy;
 begin
+   FCommands.Free;
    FExternalLogger.Free;
    inherited Destroy;
+end;
+
+(* 'ExternalLogger.Port' -> 'EXTERNAL LOGGER PORT'.
+
+  A space at each word boundary -- a capital that follows a lower-case letter
+  or a digit, and every dot between groups -- then upper-cased.  A RUN of
+  capitals is one word, so a property named UDPPort gives 'UDPPORT' rather
+  than 'U D P PORT'; where that is not the legacy spelling, the exception
+  belongs in BuildCommandMap. *)
+function CommandNameOf(const aPath: string): string;
+var
+   i: integer;
+   c: char;
+   prev: char;
+begin
+   Result := '';
+   for i := 1 to Length(aPath) do
+      begin
+      c := aPath[i];
+      if c = '.' then
+         begin
+         if (Result <> '') and (Result[Length(Result)] <> ' ') then
+            begin
+            Result := Result + ' ';
+            end;
+         Continue;
+         end;
+
+      if i > 1 then
+         begin
+         prev := aPath[i - 1];
+         if (c >= 'A') and (c <= 'Z') and
+            (not ((prev >= 'A') and (prev <= 'Z'))) and
+            (Result <> '') and (Result[Length(Result)] <> ' ') then
+            begin
+            Result := Result + ' ';
+            end;
+         end;
+
+      Result := Result + c;
+      end;
+   Result := UpperCase(Result);
+end;
+
+(* EXPLICIT AT THE RTTI BOUNDARY, EVERY CROSSING.
+
+  TypInfo and TStringList are compiled with String = AnsiString and this unit
+  is UnicodeString, so every name and value that crosses converts.  The build
+  counts implicit ones and it is right to: a silent narrowing is how a
+  non-ASCII value loses characters.
+
+  NOTHING HERE CAN LOSE ANYTHING.  A Pascal property identifier is ASCII by the
+  language's own rules, and a config command name is ASCII by TR4W's.  The one
+  crossing that carries operator text -- a string property's VALUE, in
+  SetStrProp and GetStrProp -- is the reason this is written down rather than
+  waved away: if a setting ever holds a call sign or a name outside the ANSI
+  code page, this is the line that would drop it, and it should be found by
+  reading rather than by a bug report. *)
+
+(* The object that owns the leaf named by a dotted path, and the leaf itself.
+  False for a path that does not resolve, which is what makes an unknown
+  command a refusal rather than a silent no-op somewhere later. *)
+function ResolvePath(const aRoot: TObject; const aPath: string;
+                     out aOwner: TObject; out aInfo: PPropInfo): boolean;
+var
+   rest, head: string;
+   dot: integer;
+begin
+   Result := False;
+   aOwner := aRoot;
+   aInfo  := nil;
+   rest   := aPath;
+
+   while rest <> '' do
+      begin
+      dot := Pos('.', rest);
+      if dot = 0 then
+         begin
+         aInfo  := GetPropInfo(aOwner, AnsiString(rest));
+         Result := aInfo <> nil;
+         Exit;
+         end;
+
+      head := Copy(rest, 1, dot - 1);
+      rest := Copy(rest, dot + 1, MaxInt);
+      aInfo := GetPropInfo(aOwner, AnsiString(head));
+      if (aInfo = nil) or (aInfo^.PropType^.Kind <> tkClass) then
+         begin
+         Exit;
+         end;
+      aOwner := GetObjectProp(aOwner, aInfo);
+      if aOwner = nil then
+         begin
+         Exit;
+         end;
+      end;
+end;
+
+procedure TR4WSettings.BuildCommandMap;
+
+   procedure Walk(const aObj: TObject; const aPrefix: string);
+   var
+      props: PPropList;
+      count: integer;
+      i: integer;
+      info: PPropInfo;
+      child: TObject;
+      path: string;
+   begin
+      count := GetPropList(aObj.ClassInfo, props);
+      if count = 0 then
+         begin
+         Exit;
+         end;
+      try
+         for i := 0 to count - 1 do
+            begin
+            info := props^[i];
+            path := aPrefix + string(info^.Name);
+
+            if info^.PropType^.Kind = tkClass then
+               begin
+               child := GetObjectProp(aObj, info);
+               if child <> nil then
+                  begin
+                  Walk(child, path + '.');
+                  end;
+               end
+            else
+               begin
+               // dupError on the list turns two properties claiming one legacy
+               // name into a startup failure rather than a silent shadowing.
+               FCommands.Values[AnsiString(CommandNameOf(path))] := AnsiString(path);
+               end;
+            end;
+      finally
+         FreeMem(props);
+      end;
+   end;
+
+begin
+   FCommands.Clear;
+   Walk(Self, '');
+
+   (* THE EXCEPTIONS, where a legacy command name does not derive from the
+     property path.  There are none yet: every setting migrated so far derives
+     exactly.  Keep this short -- a long list means the rule above is wrong,
+     not that the settings are irregular. *)
+end;
+
+function TR4WSettings.PathForCommand(const aCommand: string): string;
+begin
+   Result := string(FCommands.Values[AnsiString(Trim(aCommand))]);
+end;
+
+function TR4WSettings.OwnsCommand(const aCommand: string): boolean;
+begin
+   Result := PathForCommand(aCommand) <> '';
+end;
+
+function TR4WSettings.CommandNames: TStringList;
+var
+   i: integer;
+begin
+   Result := TStringList.Create;
+   for i := 0 to FCommands.Count - 1 do
+      begin
+      Result.Add(FCommands.Names[i]);
+      end;
+end;
+
+function TR4WSettings.TrySetByCommand(const aCommand, aValue: string): boolean;
+var
+   path: string;
+   owner: TObject;
+   info: PPropInfo;
+   n: integer;
+   code: integer;
+   text: string;
+begin
+   Result := False;
+   path := PathForCommand(aCommand);
+   if path = '' then
+      begin
+      Exit;
+      end;
+   if not ResolvePath(Self, path, owner, info) then
+      begin
+      Exit;
+      end;
+
+   text := Trim(aValue);
+
+   (* A VALUE THIS CANNOT READ LEAVES THE PROPERTY ALONE, on every arm.  That
+     is the rule the old parser had -- CheckCommand exits without assigning --
+     and it matters more here than it did there, because the one-time import
+     gets no second chance to ask. *)
+   case info^.PropType^.Kind of
+      tkInteger:
+         begin
+         Val(text, n, code);
+         if code <> 0 then
+            begin
+            Exit;
+            end;
+         SetOrdProp(owner, info, n);
+         Result := True;
+         end;
+
+      tkBool:
+         begin
+         (* EXACTLY WHAT CheckCommand ACCEPTED. Its ctBoolean arm is
+           `if not (CustomCMD[1] in ['T','F']) then Exit`, so a leading T or F
+           decided it and every other word -- 'ON', 'YES', '1' -- was refused.
+           Case is folded, which is safe: the value was written as TRUE or
+           FALSE by CFGCommandValueAsString. *)
+         if text = '' then
+            begin
+            Exit;
+            end;
+         if UpCase(text[1]) = 'T' then
+            begin
+            SetOrdProp(owner, info, 1);
+            end
+         else if UpCase(text[1]) = 'F' then
+            begin
+            SetOrdProp(owner, info, 0);
+            end
+         else
+            begin
+            Exit;
+            end;
+         Result := True;
+         end;
+
+      tkEnumeration:
+         begin
+         n := GetEnumValue(info^.PropType, AnsiString(text));
+         if n < 0 then
+            begin
+            Exit;
+            end;
+         SetOrdProp(owner, info, n);
+         Result := True;
+         end;
+
+      tkString, tkLString, tkAString, tkUString, tkWString:
+         begin
+         SetStrProp(owner, info, AnsiString(aValue));
+         Result := True;
+         end;
+   end;
+end;
+
+function TR4WSettings.TryGetByCommand(const aCommand: string;
+                                      out aValue: string): boolean;
+var
+   path: string;
+   owner: TObject;
+   info: PPropInfo;
+begin
+   Result := False;
+   aValue := '';
+   path := PathForCommand(aCommand);
+   if path = '' then
+      begin
+      Exit;
+      end;
+   if not ResolvePath(Self, path, owner, info) then
+      begin
+      Exit;
+      end;
+
+   case info^.PropType^.Kind of
+      tkInteger:
+         begin
+         aValue := string(IntToStr(GetOrdProp(owner, info)));
+         Result := True;
+         end;
+      tkBool:
+         begin
+         // The spelling BA uses, so a rendered value is one CheckCommand and
+         // a peer both still read.
+         if GetOrdProp(owner, info) <> 0 then
+            begin
+            aValue := 'TRUE';
+            end
+         else
+            begin
+            aValue := 'FALSE';
+            end;
+         Result := True;
+         end;
+      tkEnumeration:
+         begin
+         aValue := string(GetEnumName(info^.PropType, GetOrdProp(owner, info)));
+         Result := True;
+         end;
+      tkString, tkLString, tkAString, tkUString, tkWString:
+         begin
+         aValue := string(GetStrProp(owner, info));
+         Result := True;
+         end;
+   end;
 end;
 
 function TR4WSettings.ToJSON: TJSONObject;
@@ -233,81 +580,44 @@ begin
 end;
 
 procedure TR4WSettings.ImportLegacyCommands(const aCommands: TJSONObject);
-
-   (* The legacy section stores every value as TEXT, whatever its type, because
-     it is a rendering of config-file lines.  '' is absent, not empty. *)
-   function Text(const aKey: string; const aDefault: string): string;
-   var
-      v: TJSONData;
-   begin
-      Result := aDefault;
-      if aCommands = nil then
-         begin
-         Exit;
-         end;
-      (* EXPLICIT AT THE DOM BOUNDARY.  fpjson is built with UTF8String and
-        this unit is UnicodeString, so both directions convert; written down
-        rather than left to the compiler, which is the rule the build counts.
-        A config command key is ASCII, so there is nothing to lose. *)
-      v := aCommands.FindPath(UTF8String(aKey));
-      if v = nil then
-         begin
-         Exit;
-         end;
-      Result := string(v.AsString);
-   end;
-
-   function Num(const aKey: string; const aDefault: integer): integer;
-   begin
-      // StrToIntDef is an AnsiString routine; the text is a decimal number.
-      Result := StrToIntDef(AnsiString(Trim(Text(aKey, ''))), aDefault);
-   end;
-
-   function Flag(const aKey: string; const aDefault: boolean): boolean;
-   var
-      s: string;
-   begin
-      Result := aDefault;
-      s := UpperCase(Trim(Text(aKey, '')));
-      if s = '' then
-         begin
-         Exit;
-         end;
-
-      (* EXACTLY WHAT CheckCommand ACCEPTED, AND NOTHING MORE.  Its ctBoolean
-        arm is one test -- `if not (CustomCMD[1] in ['T','F']) then Exit` --
-        so a leading T or F decided it and EVERY OTHER WORD WAS REJECTED, the
-        setting left untouched.  'ON', 'YES' and '1' were never accepted.
-
-        A first draft of this accepted all three, which reads as generosity and
-        is not: this import runs ONCE per installation and gets no second
-        chance to ask, so inventing an acceptance the old parser never had
-        would turn a value TR4W had always ignored into one that now changes a
-        station's configuration.  uTestSettingsModel is what caught it.
-
-        Case-folded, though, which IS safe: the value being read was written by
-        CFGCommandValueAsString from BA, so it is 'TRUE' or 'FALSE' already,
-        and folding cannot accept anything a case-sensitive test would refuse
-        except the same two words differently typed. *)
-      if s[1] = 'T' then
-         begin
-         Result := True;
-         end
-      else if s[1] = 'F' then
-         begin
-         Result := False;
-         end;
-   end;
-
+var
+   names: TStringList;
+   i: integer;
+   key: string;
+   value: TJSONValue;
 begin
    if aCommands = nil then
       begin
       Exit;
       end;
 
-   ExternalLogger.Address := Text('EXTERNAL LOGGER ADDRESS', ExternalLogger.Address);
-   ExternalLogger.Port    := Num('EXTERNAL LOGGER PORT',     ExternalLogger.Port);
-   ExternalLogger.Enabled := Flag('EXTERNAL LOGGER ENABLED', ExternalLogger.Enabled);
+   (* WALKS THIS OBJECT, NOT A LIST OF SETTINGS TO LOOK FOR.  A property added
+     later is imported with no edit here, which is the whole reason the command
+     name is derived rather than declared.
+
+     THE LEGACY SECTION STORES EVERY VALUE AS TEXT whatever its type, because it
+     is a rendering of config-file lines -- so TrySetByCommand's parsing is
+     exactly what is wanted, including its refusals.
+
+     A KEY THAT IS ABSENT, OR A VALUE THAT WILL NOT PARSE, LEAVES THE PROPERTY
+     AT ITS DEFAULT.  Not an error: a station that never set a value has no key
+     for it, and this import gets no second chance to ask about one it cannot
+     read. *)
+   names := CommandNames;
+   try
+      for i := 0 to names.Count - 1 do
+         begin
+         key := names[i];
+         value := aCommands.FindPath(UTF8String(key));
+         if value = nil then
+            begin
+            Continue;
+            end;
+         TrySetByCommand(key, string(value.AsString));
+         end;
+   finally
+      names.Free;
+   end;
 end;
 
 (* FREED WITH THE UNIT, not left to a caller.  A settings object outlives every
