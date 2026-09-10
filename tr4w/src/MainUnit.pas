@@ -325,7 +325,7 @@ procedure OpenInDefaultTextEditor(FileName: PAnsiChar);   // Issue #986
   A CLASS because OnDrawItem is a METHOD pointer -- the same reason
   TTR4WEntryEvents exists for the entry fields' key handlers.  One instance, no
   state; it exists to give the handler an implicit Self. }
-procedure PossibleCallsDrawItem(Control: TWinControl; Index: integer;
+procedure PossibleCallsDrawItem(aCanvas: TCanvas; Index: integer;
                                 ARect: Types.TRect; State: TOwnerDrawState);
 
 procedure RunOptionsDialog(f: CFGFunc);
@@ -7216,7 +7216,13 @@ end;
   FLAG, set during an ordinary repaint of the focused row, so honouring it the
   old way drew a rectangle around nothing and returned -- the focused entry
   rendered as an empty box. Faithful line, wrong axis; kept fixed. *)
-procedure PossibleCallsDrawItem(Control: TWinControl; Index: integer;
+(* THE CANVAS IS HANDED IN NOW, NOT FISHED OUT OF A CONTROL.
+
+  This took a TWinControl and cast it to TListBox to reach .Canvas -- which
+  made a routine that only draws a picture depend on which WIDGET was showing
+  it, and the widget changed on 2026-09-09 (see lstPossibleCallDrawCell for
+  why). Nothing else about the drawing moved. *)
+procedure PossibleCallsDrawItem(aCanvas: TCanvas; Index: integer;
                                 ARect: Types.TRect; State: TOwnerDrawState);
 const
   nWidth = 2;
@@ -7225,12 +7231,15 @@ var
   r: TRect;
   style: TTextStyle;
 begin
+  (* THE INDEX IS A COLUMN NOW AND THE GUARD IS UNCHANGED, which is the point:
+    a grid asks for every cell it can see, including ones past the end of the
+    model, exactly as an over-long listbox would have. *)
   if (Index < 0) or (Index > High(PossibleCallList.List)) then
      begin
      Exit;
      end;
 
-  cv := TListBox(Control).Canvas;
+  cv := aCanvas;
   r  := ARect;
 
   if odSelected in State then

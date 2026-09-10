@@ -52,6 +52,7 @@ uses
   Windows,
 {$ENDIF}
   Classes, Forms, Controls, Graphics, StdCtrls, ExtCtrls, ComCtrls,
+  Grids,             // TDrawGrid, TGridDrawState -- the possible-call strip
   LCLType,
   LMessages,
   uElementPanel,     // TElementPanel -- the 43 status readouts
@@ -84,7 +85,7 @@ type
     { PUBLISHED so the streaming loader finds it in uMainForm.lfm, and so
       Lint-FormFields can check the two agree.  Declared in the designer,
       REPOSITIONED at run time -- see CreateTR4WPossibleCallList. }
-    lstPossibleCall: TListBox;
+    lstPossibleCall: TDrawGrid;
 
     { BEGIN GENERATED MAIN-WINDOW ELEMENT FIELDS -- tools/gen_main_elements.py }
     { DESIGNED, in uMainForm.lfm, so pressing F12 in Lazarus shows them.
@@ -147,8 +148,8 @@ type
       signature written there has to name which TRect and which TOwnerDrawState
       it means -- and getting that wrong produces a type error that reads as if
       the signatures were identical, because printed out they are. }
-    procedure lstPossibleCallDrawItem(Control: TWinControl; Index: integer;
-                                      ARect: TRect; State: TOwnerDrawState);
+    procedure lstPossibleCallDrawCell(Sender: TObject; aCol, aRow: integer;
+                                      aRect: TRect; aState: TGridDrawState);
     (* WIRED IN uMainForm.lfm, so they live in the IMPLICIT PUBLISHED REGION --
       everything above the first visibility keyword. The streaming loader
       resolves a handler by NAME through RTTI, and method RTTI exists only for
@@ -289,7 +290,11 @@ type
 type
   { The drawing itself, as a PLAIN procedure so the unit that owns the knowledge
     does not have to build a class to satisfy a method pointer. }
-  TPossibleCallDrawProc = procedure(Control: TWinControl; Index: integer;
+  (* THE CANVAS, NOT THE CONTROL, and that is what made the control
+    replaceable. The drawing only ever wanted somewhere to paint; taking a
+    TWinControl meant the unit that owns the picture also had to know which
+    widget class it was and cast to reach .Canvas. *)
+  TPossibleCallDrawProc = procedure(aCanvas: TCanvas; Index: integer;
                                     ARect: TRect; State: TOwnerDrawState);
 
 var
@@ -615,7 +620,9 @@ uses
    uGetServerLog,      // the headless-sync state
    SysUtils,           // UpperCase
    uCrashLog,          // OnMainThread / ReportOffMainThread / LogCaughtException
-   Grids,              // TGridOptions -- see TR4WEditableLogSetGridLines
+   (* Grids moved to the INTERFACE clause -- lstPossibleCall is a TDrawGrid
+      and a published field's type has to be visible there. It was here
+      for TGridOptions (TR4WEditableLogSetGridLines). *)
    uMainThreadWork,    // RequestMainThreadJob -- the colour sweep, coalesced
    uLogSource,         // the virtual log list reads through the seam
    uConfigValues,      // Config.ShowGridLines
@@ -1791,14 +1798,57 @@ end;
   callback is undefined behaviour; and the rule that TR4W got first refusal
   on every message, which is what made the LCL deaf to its own controls. *)
 
-procedure TTR4WMainForm.lstPossibleCallDrawItem(Control: TWinControl;
-                                                Index: integer; ARect: TRect;
-                                                State: TOwnerDrawState);
+(* ONE CELL OF THE POSSIBLE-CALL STRIP.
+
+  A GRID, NOT A MULTI-COLUMN LISTBOX, SINCE 2026-09-09 -- and the reason is a
+  property that works on exactly one widget set.
+
+  TListBox.Columns lays items out in vertical columns and is what gave this
+  strip its side-by-side callsigns. TWin32WSCustomListBox implements
+  SetColumnCount; NO OTHER WIDGET SET DOES. On gtk2 a TListBox is a GtkTreeView
+  and the property is silently ignored, so every item took the FULL WIDTH and
+  they stacked downwards -- inside a control 18 pixels tall, which shows
+  exactly one.
+
+  NY4I, Linux Mint 2026-09-09: "Still have a single red bar along the bottom
+  even though I entered W2 so we should have showed both the W2 calls I worked.
+  And not in a continuous red bar spanning the entire bottom."
+
+  BOTH HALVES OF THAT ARE ONE DEFECT, which is the part worth stating: the bar
+  spans the window because a single item IS the full width, and the second
+  callsign is missing because it is stacked below the only visible row. Nothing
+  was lost and nothing failed -- the model held both calls throughout.
+
+  A GRID GIVES THE WIN32 SEMANTICS EVERYWHERE: a fixed column width, one row,
+  laid out horizontally, painted by us. Selection is the current COLUMN rather
+  than ItemIndex, which is the same idea under a different name.
+
+  The rows still carry no data. PossibleCallList is the model and the column
+  index addresses it, exactly as the item position did. *)
+procedure TTR4WMainForm.lstPossibleCallDrawCell(Sender: TObject;
+                                                aCol, aRow: integer;
+                                                aRect: TRect;
+                                                aState: TGridDrawState);
+var
+   drawState: TOwnerDrawState;
 begin
-   if Assigned(PossibleCallDrawProc) then
+   if not Assigned(PossibleCallDrawProc) then
       begin
-      PossibleCallDrawProc(Control, Index, ARect, State);
+      Exit;
       end;
+
+   (* THE GRID'S OWN gdSelected IS NOT THE ANSWER. Options is empty, so the
+     grid neither paints nor tracks a selection the way a listbox does, and
+     this strip has one row -- "selected" here means "this is the current
+     column", which is what SelectPossibleCall sets and what the operator
+     arrows through. *)
+   drawState := [];
+   if aCol = lstPossibleCall.Col then
+      begin
+      Include(drawState, odSelected);
+      end;
+
+   PossibleCallDrawProc(lstPossibleCall.Canvas, aCol, aRect, drawState);
 end;
 
 var
@@ -2508,14 +2558,23 @@ begin
       // WM_MEASUREITEM, which the main window proc used to answer with
       // `itemHeight := ws` for this one control id.  A property, and that arm is
       // deleted.
-      ItemHeight := aItemHeight;
+      DefaultRowHeight := aItemHeight;
 
-      // LB_SETCOLUMNWIDTH set the column width directly; the LCL says how MANY
-      // columns and divides the client width.  Derived from the same two
-      // numbers, so the operator sees the width they always have.
-      if (aColumnWidth > 0) and (aWidth > aColumnWidth) then
+      (* LB_SETCOLUMNWIDTH IS BACK, LITERALLY.
+
+        This briefly went through TListBox.Columns -- "the LCL says how MANY
+        columns and divides the client width" -- which was a faithful reading
+        of the LCL documentation and worked on exactly one widget set.
+        TWin32WSCustomListBox implements SetColumnCount; gtk2 does not declare
+        it, gtk3 declares it with an EMPTY body, and Qt declares it with the
+        body commented out under a {$note implement} pragma. Only Win32 has
+        ever laid a TListBox out in columns.
+
+        A TDrawGrid takes the column width directly, which is what the Win32
+        message did, so the arithmetic is gone rather than reproduced. *)
+      if aColumnWidth > 0 then
          begin
-         Columns := aWidth div aColumnWidth;
+         DefaultColWidth := aColumnWidth;
          end;
 
       SetBounds(aLeft, aTop, aWidth, aHeight);
@@ -3118,7 +3177,22 @@ end;
   therefore the faithful translation, not a shortcut.
   --------------------------------------------------------------------------- }
 
-function PossibleCallListBox: TListBox;
+(* HOW MANY CALLS THE STRIP IS SHOWING.
+
+  A GRID HAS NO Items.Count, and its ColCount cannot answer this: a TDrawGrid
+  has a minimum of one column whether or not anything is in it, so an empty
+  strip and a strip holding one call are indistinguishable from the control.
+  The listbox could answer because zero items is a legal state for it.
+
+  Kept beside the accessors that maintain it rather than derived, because the
+  alternative -- asking PossibleCallList.NumberPossibleCalls -- would make the
+  control and the model agree by ACCIDENT. They are filled by two different
+  routines and the whole point of AddPossibleCall's return value is that the
+  caller is told where its row landed. *)
+var
+   GPossibleCount: integer = 0;
+
+function PossibleCallListBox: TDrawGrid;
 begin
    Result := nil;
    if TR4WMainForm = nil then
@@ -3130,20 +3204,27 @@ end;
 
 procedure ClearPossibleCalls;
 var
-   lb: TListBox;
+   lb: TDrawGrid;
 begin
+   GPossibleCount := 0;
+
    lb := PossibleCallListBox;
    if not ControlUsable(lb) then
       begin
       Exit;
       end;
-   lb.Items.Clear;
+
+   (* ONE COLUMN, NOT ZERO -- the grid will not accept zero. Nothing is drawn
+     into it because the draw handler exits on an index the model does not
+     have, which is the same guard it always had. *)
+   lb.ColCount := 1;
+   lb.Invalidate;
 end;
 
-{ Appends one row and returns its index, or -1 when there is no list. }
+{ Appends one column and returns its index, or -1 when there is no strip. }
 function AddPossibleCall: integer;
 var
-   lb: TListBox;
+   lb: TDrawGrid;
 begin
    Result := -1;
    lb := PossibleCallListBox;
@@ -3151,35 +3232,35 @@ begin
       begin
       Exit;
       end;
-   Result := lb.Items.Add('');
+
+   Result := GPossibleCount;
+   Inc(GPossibleCount);
+   lb.ColCount := GPossibleCount;
 end;
 
 function PossibleCallCount: integer;
-var
-   lb: TListBox;
 begin
-   Result := 0;
-   lb := PossibleCallListBox;
-   if not ControlUsable(lb) then
-      begin
-      Exit;
-      end;
-   Result := lb.Items.Count;
+   Result := GPossibleCount;
 end;
 
 { -1 when nothing is selected -- the same value LB_GETCURSEL returned as
   LB_ERR, so callers that test for it are unchanged. }
 function SelectedPossibleCall: integer;
 var
-   lb: TListBox;
+   lb: TDrawGrid;
 begin
    Result := -1;
    lb := PossibleCallListBox;
-   if not ControlUsable(lb) then
+   if not ControlUsable(lb) or (GPossibleCount = 0) then
       begin
       Exit;
       end;
-   Result := lb.ItemIndex;
+
+   (* THE GRID ALWAYS HAS A CURRENT COLUMN and a listbox did not always have a
+     current item, so the empty case is answered above rather than by the
+     control. Without that, an empty strip would report column 0 as selected
+     and a caller would read a callsign out of a list that has none. *)
+   Result := lb.Col;
 end;
 
 { CALL THIS AFTER REBUILDING THE LIST, AND IT IS NOT OPTIONAL.
@@ -3203,7 +3284,7 @@ end;
   keeps PossibleCallList as the single source of truth. }
 procedure PossibleCallsUpdated;
 var
-   lb: TListBox;
+   lb: TDrawGrid;
 begin
    lb := PossibleCallListBox;
    if not ControlUsable(lb) then
@@ -3216,7 +3297,7 @@ end;
 procedure SetPossibleCallFont(const aName: string; const aHeight: integer;
                               const aBold: boolean);
 var
-   lb: TListBox;
+   lb: TDrawGrid;
 begin
    lb := PossibleCallListBox;
    if not ControlUsable(lb) then
@@ -3239,7 +3320,7 @@ end;
 
 procedure SelectPossibleCall(const aIndex: integer);
 var
-   lb: TListBox;
+   lb: TDrawGrid;
 begin
    lb := PossibleCallListBox;
    if not ControlUsable(lb) then
@@ -3247,11 +3328,16 @@ begin
       Exit;
       end;
 
-   // Out of range is not an error here: LB_SETCURSEL simply failed, and the
-   // arrow-key handlers walk off both ends of the list by design.
-   if (aIndex >= -1) and (aIndex < lb.Items.Count) then
+   (* Out of range is not an error here: LB_SETCURSEL simply failed, and the
+     arrow-key handlers walk off both ends of the list by design.
+
+     -1 IS DROPPED, and that is a real difference from the listbox. It meant
+     "nothing selected", which a grid cannot represent -- there is always a
+     current cell. The strip is rebuilt and re-selected from index 0 on every
+     keystroke, so the state -1 described never survives a repaint anyway. *)
+   if (aIndex >= 0) and (aIndex < GPossibleCount) then
       begin
-      lb.ItemIndex := aIndex;
+      lb.Col := aIndex;
       end;
 end;
 

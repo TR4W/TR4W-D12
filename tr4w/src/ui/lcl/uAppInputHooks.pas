@@ -52,6 +52,7 @@ uses
   uConfigValues,    { Config.KeypadCWMemories }
   uCrashLog,        { LogCaughtException }
   uFunctionKeys,    { ShowFMessages -- the F-key labels }
+  uMainForm,        { TR4WMainForm -- which form the accelerators belong to }
   VC,
   MainUnit;
 
@@ -241,6 +242,49 @@ begin
                     '(visible=%s). Key=%d.',
                     [Screen.ActiveCustomForm.Name,
                      BoolToStr(Screen.ActiveCustomForm.Visible, True), Key]);
+        end;
+     Exit;
+     end;
+
+  { TAB AND ESCAPE BELONG TO WHATEVER FORM HAS THE KEYBOARD, NOT TO US.
+
+    THE MODAL GUARD ABOVE IS NOT ENOUGH, and the radio editor is why. It is a
+    DIALOG in every sense an operator cares about -- a Name field, a type
+    combo, Save and Cancel -- and it is shown with Show, not ShowModal, so
+    fsModal is never set and that guard never fires. Tab therefore matched
+    menu_spmode_ortab, was posted to the main window, and was blanked here, so
+    the dialog never saw it. NY4I, 2026-09-09: "When I hit tab in this name
+    field, the form closes."
+
+    fsModal ASKS THE WRONG QUESTION. It asks how a form was SHOWN, and what
+    matters is whether the keystroke is one the focused control needs. A
+    non-modal dialog needs Tab exactly as much as a modal one does; so does a
+    tool window with more than one control on it.
+
+    ONLY THESE TWO, AND ONLY UNMODIFIED. Tab is focus navigation and Escape is
+    cancel -- on any form, in any toolkit, they belong to the thing that has
+    focus. Every other accelerator still reaches the main window from a tool
+    window, which is the capability the LCL conversion gained and which the
+    note above is right to protect. Ctrl+Tab and Shift+Tab are untouched,
+    because those are accelerators an operator pressed on purpose.
+
+    ENTER IS DELIBERATELY NOT IN THIS LIST. It is id 10651, the keystroke that
+    LOGS A QSO, and the guard above already records what happens when
+    something stops it reaching the main window: logging dies silently for the
+    rest of the session. Enter on a secondary form is a real question and it
+    is not this defect; leaving it alone keeps a fix from becoming a
+    regression. }
+  if (Screen.ActiveCustomForm <> nil) and
+     (Screen.ActiveCustomForm <> TCustomForm(TR4WMainForm)) and
+     (Shift * [ssCtrl, ssAlt, ssShift] = []) and
+     ((Key = VK_TAB) or (Key = VK_ESCAPE)) then
+     begin
+     if logger <> nil then
+        begin
+        logger.Trace('[InputHooks] %s left to %s -- navigation belongs to the '
+                     + 'focused form',
+                     [IfThen(Key = VK_TAB, 'Tab', 'Escape'),
+                      Screen.ActiveCustomForm.Name]);
         end;
      Exit;
      end;

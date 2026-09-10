@@ -66,16 +66,21 @@ object TR4WMainForm: TTR4WMainForm
     TabOrder = 203
     Visible = False
   end
-  object lstPossibleCall: TListBox
+  object lstPossibleCall: TDrawGrid
     Left = 0
     Height = 18
     Top = 160
     Width = 400
-    Columns = 4
-    ItemHeight = 18
-    Style = lbOwnerDrawFixed
+    ColCount = 1
+    DefaultColWidth = 100
+    DefaultRowHeight = 18
+    FixedCols = 0
+    FixedRows = 0
+    Options = []
+    RowCount = 1
+    ScrollBars = ssNone
     TabOrder = 0
-    OnDrawItem = lstPossibleCallDrawItem
+    OnDrawCell = lstPossibleCallDrawCell
   end
   object pnlAutoSendCount: TElementPanel
     Left = 272
