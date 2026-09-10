@@ -203,7 +203,20 @@ local file.
 3. **Which stage the 270 bare globals move in, and in what themed batches.** They
    are the bulk of the work and none of it is urgent; the port slice is urgent
    because it blocks a platform.
-4. **Whether `GetValueFromArray` and the 40 spelling tables get a guard now.**
-   Nothing checks a table against its enum, and the failure mode is silent
-   selection of the wrong thing. A generated table, or a startup assertion on
-   length, would close it independently of everything above.
+4. ~~**Whether `GetValueFromArray` and the 40 spelling tables get a guard now.**~~
+   **HALF-CLOSED 2026-09-10.** `Lint-SpellingTables` gates the build and fails
+   on a duplicate or blank spelling, which is the part that makes an enum value
+   unreachable by name. 39 tables, 685 spellings, clean. The 40th,
+   `RadioTypeTokensA`, is filled from the enum by the registry and has nothing
+   to check -- which is the shape the other 39 should end up as.
+
+   **What the lint CANNOT check, and no lint can:** that each spelling means
+   what its ordinal means. That is the second definition problem itself, and the
+   only real fix is generating the table from the enum.
+
+   It surfaced one thing needing a ruling: **`QSOPointMethodArray` spells
+   `ONY` at ordinals 29 and 85.** The second is commented
+   `OldNewYearQSOPointMethod` and is the one unreachable; the first carries no
+   provenance comment at all. Already noted in `TF.pas`, baselined in the lint,
+   and deliberately not touched: which ordinal `ONY` selects decides which
+   scoring rule a contest runs under, and the golden corpus is blind to scoring.
