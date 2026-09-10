@@ -519,8 +519,11 @@ procedure SetElementFont(const aElement: TMainWindowElement;
 procedure RestoreMainWindowBounds(const aSaved: TRect);
 
 (* Let the operator resize the main window vertically. Width is pinned:
-  see the note at the call site. *)
-procedure MakeMainWindowResizeable(const aOuterWidth, aClientHeight: integer);
+  see the note at the call site.
+
+  BOTH FIGURES ARE CLIENT SIZES. The width was an OUTER size until 2026-09-09;
+  see the body for what that cost. *)
+procedure MakeMainWindowResizeable(const aClientWidth, aClientHeight: integer);
 
 procedure AnchorMainWindowControls;
 
@@ -1060,7 +1063,7 @@ begin
    TR4WMainForm.BoundsRect := r;
 end;
 
-procedure MakeMainWindowResizeable(const aOuterWidth, aClientHeight: integer);
+procedure MakeMainWindowResizeable(const aClientWidth, aClientHeight: integer);
 begin
    if TR4WMainForm = nil then
       begin
@@ -1098,11 +1101,45 @@ begin
      actually wanted is what is passed here. Same geometry as before, and it
      stays right whatever the border is.
 
-     The WIDTH is still set as an OUTER width, deliberately: that is what the
-     original did, and changing it to a client width would make the window
-     about sixteen pixels wider than every previous version. *)
-   TR4WMainForm.Width := aOuterWidth;
+     THE WIDTH IS A CLIENT WIDTH TOO, SINCE 2026-09-09. It was an OUTER width,
+     and the note that stood here defended it: "that is what the original did,
+     and changing it to a client width would make the window about sixteen
+     pixels wider than every previous version".
+
+     THAT REASONING PRESERVED A WIN32 MEASUREMENT AND BROKE THE LAYOUT. Every
+     control on this window is placed in CLIENT coordinates spanning
+     0 .. MainWindowChildsWidth, and the caller passes exactly that number --
+     ws * 46. Handing it to Width makes the CLIENT that much narrower than the
+     controls it has to hold, by however thick the frame is. The rightmost
+     column loses its last few pixels: on Windows a bsSingle frame is thin
+     enough that nobody looked twice; on gtk2 it is not.
+
+     NY4I, Linux Mint 2026-09-09, with a screenshot: the QSO/multiplier need
+     strips -- which are anchored to the RIGHT edge, so they take the whole
+     error -- ran into the window border, and so did the text in the top right.
+
+     IT WAS NEVER RIGHT ON WINDOWS EITHER, only invisible. The same reasoning
+     already appears three paragraphs above for the HEIGHT: "the caller knows
+     how much room the controls need, and how thick the frame is is the widget
+     set's business". The width was the half that did not get the argument
+     applied to it.
+
+     Matching an older release's outer size is a cosmetic goal; holding the
+     controls the layout computed is a correctness one. *)
+   TR4WMainForm.ClientWidth := aClientWidth;
    TR4WMainForm.ClientHeight := aClientHeight;
+
+   (* MEASURED AND REPORTED, because this is the number a screenshot cannot
+     give you. A client narrower than what the layout asked for means the right
+     edge is being clipped, and until this line the only evidence was text
+     touching a border in a photograph. *)
+   if logger <> nil then
+      begin
+      logger.Info('[Layout] main window: client %dx%d, outer %dx%d, layout ' +
+                  'asked for %d wide',
+                  [TR4WMainForm.ClientWidth, TR4WMainForm.ClientHeight,
+                   TR4WMainForm.Width, TR4WMainForm.Height, aClientWidth]);
+      end;
 
    (* Measured after sizing rather than computed, so the floor is exactly the
      height the layout just took. *)
