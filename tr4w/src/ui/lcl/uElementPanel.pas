@@ -110,7 +110,21 @@ type
         shrank for a long value returns to the common size when a short one
         arrives -- without it, a panel could only ever get smaller.
 
-        Zero means "no font has been chosen yet" and nothing is fitted. *)
+        SIGNED, EXACTLY AS TFont.Height IS SIGNED, and that is a correction
+        made on 2026-09-09. It used to mean "a positive magnitude, applied as
+        a negative height", which worked only as long as every caller used the
+        LCL's negative CHARACTER-height convention. The need strips do not:
+        they take ApplyMainFontTo, which assigns a POSITIVE CELL height, and
+        uMainGrids stored the negation of that -- so BaseFontHeight came out
+        NEGATIVE and FitCaption's `<= 0` guard exited on the first line.
+
+        FITTING HAD THEREFORE NEVER RUN FOR ANY NEED PANEL. That is why the
+        Resize override alone did not fix NY4I's clipped 'Both:' label: the
+        re-measure it added called a routine that returns immediately.
+
+        Carrying the sign means a panel keeps whichever convention its font
+        was given and simply gains the shrink. Zero still means "no font has
+        been chosen yet" and nothing is fitted. *)
       property BaseFontHeight: integer read FBaseFontHeight write FBaseFontHeight;
    end;
 
@@ -224,8 +238,9 @@ procedure TElementPanel.FitCaption;
 var
    avail:  integer;
    height: integer;
+   sign:   integer;
 begin
-   if (Caption = '') or (FBaseFontHeight <= 0) then
+   if (Caption = '') or (FBaseFontHeight = 0) then
       begin
       Exit;
       end;
@@ -247,10 +262,23 @@ begin
    GMeasure.Canvas.Font.Name  := Font.Name;
    GMeasure.Canvas.Font.Style := Font.Style;
 
-   height := FBaseFontHeight;
+   (* THE MAGNITUDE SHRINKS; THE SIGN IS THE FONT'S OWN. A negative TFont
+     height is a character height and a positive one is a cell height, and
+     which of the two a panel uses is settled by whoever configured it -- not
+     by this routine, whose only job is to make the text fit. *)
+   if FBaseFontHeight < 0 then
+      begin
+      sign := -1;
+      end
+   else
+      begin
+      sign := 1;
+      end;
+
+   height := Abs(FBaseFontHeight);
    while height > MIN_FONT_HEIGHT do
       begin
-      GMeasure.Canvas.Font.Height := -height;
+      GMeasure.Canvas.Font.Height := sign * height;
       if GMeasure.Canvas.TextWidth(Caption) <= avail then
          begin
          Break;
@@ -290,9 +318,9 @@ begin
                             GMeasure.Canvas.TextWidth(Caption), avail);
       end;
 
-   if Font.Height <> -height then
+   if Font.Height <> sign * height then
       begin
-      Font.Height := -height;
+      Font.Height := sign * height;
       end;
 end;
 

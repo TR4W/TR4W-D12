@@ -1063,6 +1063,64 @@ begin
    TR4WMainForm.BoundsRect := r;
 end;
 
+(* EVERY CHILD THAT STICKS OUT OF THE CLIENT AREA, NAMED AND MEASURED.
+
+  TWO SYMPTOMS ON NY4I'S MINT BOX POINT AT THE SAME QUESTION and neither can be
+  answered from a screenshot: content running into the window border, and a
+  horizontal scroll bar appearing "for no apparent reason". A form with
+  AutoScroll on grows one the moment a child extends past the client area, so
+  the scroll bar is not a separate defect to chase -- it is the layout
+  reporting an overhang in the only way a widget set can.
+
+  WHICH CHILD, AND BY HOW MANY PIXELS, is the thing nobody knows. This walks
+  the form's immediate children once, after the layout is built, and names any
+  whose right or bottom edge is outside the client rectangle.
+
+  ONE LINE PER OFFENDER AND A COUNT, so a clean window costs a single line.
+  Written as a diagnostic on purpose: what the fix is -- a wider window,
+  narrower content, or a font that measures like the one this program was
+  designed against -- depends on which controls report and by how much. *)
+procedure ReportMainWindowOverhang;
+var
+   i:       integer;
+   c:       TControl;
+   cw, ch:  integer;
+   found:   integer;
+begin
+   if (TR4WMainForm = nil) or (logger = nil) then
+      begin
+      Exit;
+      end;
+
+   cw := TR4WMainForm.ClientWidth;
+   ch := TR4WMainForm.ClientHeight;
+   found := 0;
+
+   for i := 0 to TR4WMainForm.ControlCount - 1 do
+      begin
+      c := TR4WMainForm.Controls[i];
+
+      if not c.Visible then
+         begin
+         Continue;
+         end;
+
+      if ((c.Left + c.Width) > cw) or ((c.Top + c.Height) > ch) then
+         begin
+         Inc(found);
+         logger.Warn('[Layout] %s "%s" is outside the client area: ' +
+                     'right %d of %d, bottom %d of %d',
+                     [c.ClassName, c.Name,
+                      c.Left + c.Width, cw,
+                      c.Top + c.Height, ch]);
+         end;
+      end;
+
+   logger.Info('[Layout] %d of %d child control(s) extend past the client ' +
+               'area (%dx%d)',
+               [found, TR4WMainForm.ControlCount, cw, ch]);
+end;
+
 procedure MakeMainWindowResizeable(const aClientWidth, aClientHeight: integer);
 begin
    if TR4WMainForm = nil then
@@ -1140,6 +1198,8 @@ begin
                   [TR4WMainForm.ClientWidth, TR4WMainForm.ClientHeight,
                    TR4WMainForm.Width, TR4WMainForm.Height, aClientWidth]);
       end;
+
+   ReportMainWindowOverhang;
 
    (* Measured after sizing rather than computed, so the floor is exactly the
      height the layout just took. *)
@@ -1386,10 +1446,10 @@ begin
    GElements[aElement].Font.Name := aName;
    GElements[aElement].Font.Height := -aHeight;
 
-   (* THE HEIGHT THIS ELEMENT WAS ASKED FOR. The panel keeps it so it has
-     something to shrink FROM and something to return to -- see
-     TElementPanel.BaseFontHeight. *)
-   GElements[aElement].BaseFontHeight := aHeight;
+   (* THE HEIGHT THIS ELEMENT WAS ASKED FOR, WITH THE SIGN IT WAS APPLIED
+     WITH. The panel keeps it so it has something to shrink FROM and something
+     to return to -- see TElementPanel.BaseFontHeight, which is signed. *)
+   GElements[aElement].BaseFontHeight := -aHeight;
    if aBold then
       begin
       GElements[aElement].Font.Style := [fsBold];

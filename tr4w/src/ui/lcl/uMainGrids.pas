@@ -197,7 +197,21 @@ begin
       end;
 
    ApplyMainFontTo(aPanel.Font);
-   aPanel.BaseFontHeight := -aPanel.Font.Height;
+
+   (* THE FONT'S OWN HEIGHT, SIGN INCLUDED -- not its negation.
+
+     ApplyMainFontTo assigns a POSITIVE height (MainFontCellHeight), so the
+     negation stored a NEGATIVE value here, and FitCaption's guard read that as
+     "no font chosen yet" and did nothing. Every need panel therefore rendered
+     its caption at full size whatever the panel's width, which is how a label
+     reading 'Both:' in a cell two units wide reached the screen as 'oth:'
+     (NY4I, Linux Mint 2026-09-09).
+
+     THE NEGATION WAS NOT ARBITRARY: BaseFontHeight used to mean "a positive
+     magnitude, applied as a negative height", which is the convention
+     SetElementFont uses. It is signed now, so both callers say what they mean
+     and neither has to know about the other. *)
+   aPanel.BaseFontHeight := aPanel.Font.Height;
    ApplyElementColors(aPanel, aElement);
    aPanel.Caption := aCaption;
 end;

@@ -1127,11 +1127,40 @@ begin
    (* THE SELECTED ROW. clHighlight/clHighlightText rather than a colour from
      tr4wColorsArray, because that palette names COLOURS and has no role for a
      selection -- see docs/COLOR_ROLES_DESIGN.md. They are also the colours an
-     operator's high-contrast theme changes. *)
+     operator's high-contrast theme changes.
+
+     ONLY AT FULL STRENGTH WHILE THIS GRID HAS THE KEYBOARD, and in a contest
+     it essentially never does -- the operator is typing in the callsign field,
+     and this grid is selected only because ScrollToEnd sets Row to keep the
+     newest QSO in view. So the newest contact was painted in solid focus blue
+     for the whole contest, with the callsign, the exchange and the multiplier
+     flags reversed out of it.
+
+     NY4I, Linux Mint 2026-09-09: "it highlights the entire dupe line and it is
+     hard to read". He was looking at the newest row, not at a match -- the
+     partial-call swatch DrawMatchIn paints was underneath it and unreadable
+     for the same reason.
+
+     WHY IT LOOKED FINE ON WINDOWS. Win32 draws an unfocused selection in a
+     muted grey by convention, so the same code produced a subtle band there
+     and a saturated one on gtk2. This makes the intent explicit rather than
+     inheriting whichever answer the platform happens to give -- and it is the
+     desktop convention on both.
+
+     THE FONT COLOUR IS LEFT ALONE when unfocused, deliberately: red means
+     deleted and grey means X-QSO, and reversing them out would delete two
+     meanings to signal one. DrawMatchIn's note makes the same argument. *)
    if gdSelected in aState then
       begin
-      Canvas.Brush.Color := clHighlight;
-      Canvas.Font.Color  := clHighlightText;
+      if Focused then
+         begin
+         Canvas.Brush.Color := clHighlight;
+         Canvas.Font.Color  := clHighlightText;
+         end
+      else
+         begin
+         Canvas.Brush.Color := clBtnFace;
+         end;
       end;
 
    Canvas.FillRect(aRect);
