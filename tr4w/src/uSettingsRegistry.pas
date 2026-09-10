@@ -65,14 +65,35 @@ unit uSettingsRegistry;
   belongs to, and nothing else.  A central table is the thing that has to be
   edited from far away and therefore drifts.
 
-  ON THE GLOBALS.  This does NOT try to abolish TR4W's global variables; they
-  are read from thousands of places and that is a separate, much larger job.
-  The registry sits in FRONT of them: the store persists by key, the UI binds by
-  key, and the setter is the one place that knows WHERE a given setting lives.
-  When that storage moves, only the closure changes -- which is exactly what
-  happened to this unit's own example: SayHiEnable is no longer a global at all,
-  it is Config.SayHiEnable in uConfigValues, and nothing outside the closure
-  above had to know.
+  ON THE GLOBALS.  ~~This does NOT try to abolish TR4W's global variables; they
+  are read from thousands of places and that is a separate, much larger job.~~
+
+  THAT SCOPE WAS OVERRIDDEN ON 2026-09-10.  NY4I:
+
+      "every caller of a parameter in the array should just reference the
+       config registry.  So rather than reading from json into the registry
+       then setting CFG array items to those values callers just access
+       Registry.variable name.  That way the array can be retired."
+
+  So the separate, much larger job IS the job.  The hop this unit was built to
+  sit in front of -- JSON, registry, CheckCommand, a global, callers -- loses
+  its middle: JSON, registry, callers.  The registry is not a facade over the
+  globals any more; it is where the value lives.
+
+  It is still true that the registry is what makes that possible, and true that
+  the setter is the one place that knows WHERE a setting lives today.  When
+  storage moves, only the closure changes -- exactly what happened to this
+  unit's own example: SayHiEnable is no longer a global at all, it is
+  Config.SayHiEnable in uConfigValues, and nothing outside the closure above had
+  to know.  The change is that this is now the DESTINATION for all of them
+  rather than a convenience for some.
+
+  SIZED, so nobody has to guess at "thousands": 270 CFGCA rows still point at a
+  bare global, and there are 4,663 textual references to them across 446 files.
+  The distribution is what makes it tractable -- 85 of those settings have five
+  references or fewer, and twelve have over sixty.  See
+  docs\CFG_ARRAY_ELIMINATION.md, which also records why CODE SPEED and
+  MY QTH / MY STATE are not simply large versions of the same move.
 
   ON CFGCA.  It stays as the READER FOR OLD INI FILES, which is a job it does
   well and which nothing else can do.  A setting that moves here has its CFGCA

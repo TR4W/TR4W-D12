@@ -67,7 +67,99 @@ is reachable by name, typed by the compiler, and needs no text at all. The
 remaining 270 are bare globals, and moving one is the five-step operation
 recorded in agent memory, two of whose steps are silent data loss when skipped.
 
-### The spelling tables
+---
+
+## 2a. The destination, in NY4I's words
+
+> *"every caller of a parameter in the array should just reference the config
+> registry. So rather than reading from json into the registry then setting CFG
+> array items to those values callers just access Registry.variable name. That
+> way the array can be retired."* -- NY4I, 2026-09-10
+
+So the target is not "move the storage". It is **remove the hop**:
+
+```
+   today       JSON  ->  registry  ->  CheckCommand  ->  a global  ->  callers
+   target      JSON  ->  registry  ->  callers
+```
+
+**THIS OVERRIDES WHAT `uSettingsRegistry`'s OWN HEADER SAYS**, and the header
+should be corrected rather than left to contradict the plan. It currently reads:
+
+> *ON THE GLOBALS. This does NOT try to abolish TR4W's global variables; they
+> are read from thousands of places and that is a separate, much larger job.
+> The registry sits in FRONT of them.*
+
+That was the right scope for building the registry. It is no longer the scope of
+the project: the separate, much larger job **is** the job.
+
+### The successor already exists and is further along than this document assumed
+
+Work in the 24 hours before this was written, in another session:
+
+| | |
+|---|---|
+| `uSettingsRegistry` | a setting is a typed getter/setter pair, not an address plus a tag saying how to dereference it |
+| the three blocking prerequisites | **closed** -- `ReadOnly` lifts `crJ` 2 and 3, `HasSideEffects` lifts `crP` and `crA`, `Broadcast` lifts `crNetwork` |
+| `uTestAllSettings` | walks every real setting, ~1500 assertions, and holds each to the contract a config file and a panel depend on |
+| settings actually graduated | **4** -- the QSO-point rows, and they went first because `CFGCA` structurally **could not hold them**: `crMin`/`crMax` are `Word`, so a table row cannot express the -1 those variables legitimately carry |
+
+**That last row is the strongest argument in the whole file.** The table was not
+merely inconvenient for those four settings. It could not describe them, and had
+been declaring a range its own variables violated.
+
+Note what did NOT happen to those four: their `CFGCA` rows stayed **fully
+active**, because a contest `.cfg` sets QSO points and retiring the row would
+have left every such contest scoring on -1. **One variable, two writers.** That
+is the general case, not an exception, and it is why "retire the row" is a
+different decision from "graduate the setting".
+
+## 2b. How big the hop-removal actually is
+
+Measured 2026-09-10: every textual reference under `tr4w/src` to the 270 globals
+still on a bare `crAddress`, folded for case, 446 files scanned.
+
+| | |
+|---|---|
+| total references | **4,663** |
+| upper bound, because | it counts the declaration and the `CFGCA` row itself |
+
+**The distribution is the useful part, because it says how to batch this:**
+
+| references to that global | settings |
+|---|---:|
+| 1 to 5 | **85** |
+| 6 to 20 | 117 |
+| 21 to 60 | 56 |
+| over 60 | 12 |
+
+**Eighty-five settings are nearly free.** Five references or fewer means the
+global is read where it is set and almost nowhere else, so moving it is a local
+change a test can cover. That is a third of the remaining work available in
+small, low-risk batches.
+
+The twelve at the other end are the identity fields, and they are expensive for
+an obvious reason:
+
+| setting | global | references | units |
+|---|---|---:|---:|
+| `MY CALL` | `MyCall` | 169 | 32 |
+| `MY COUNTRY` | `MyCountry` | 146 | 15 |
+| `MY STATE` / `MY QTH` | `MyState` | 146 | 24 |
+| `RADIO ONE`/`TWO NAME` | `RadioN.RadioName` | 112 | 15 |
+| `CODE SPEED` | `CodeSpeed` | 109 | 17 |
+| `MY GRID` | `MyGrid` | 104 | 16 |
+
+**`MY STATE` and `MY QTH` are one variable under two names**, the same shape as
+the `ORION PORT` alias just retired -- and this one is already known to be
+harder, because QTH is a contest-dependent catch-all rather than a town.
+**`CODE SPEED` is not a setting at all** in the sense the others are: it is live
+shared state that every keyer mutates during a contest, so it must not be
+repointed into a config object without a decision about that.
+
+---
+
+## 2c. The spelling tables
 
 The 66 indexed rows resolve through **54 `ListParamArray` entries over 40
 distinct spelling tables**. Two tables carry most of the reuse:
@@ -229,6 +321,12 @@ local file.
    **What the lint CANNOT check, and no lint can:** that each spelling means
    what its ordinal means. That is the second definition problem itself, and the
    only real fix is generating the table from the enum.
+
+   **It does not duplicate `uTestAllSettings`, and the difference matters.**
+   That suite round-trips each setting's *current* value, so it catches a
+   shadowed spelling only when a station happens to be sitting on the shadowed
+   ordinal. The lint is static and exhaustive over every ordinal in every table,
+   including the ~490 settings the registry has not adopted yet.
 
    It surfaced one thing needing a ruling: **`QSOPointMethodArray` spells
    `ONY` at ordinals 29 and 85.** The second is commented
