@@ -193,16 +193,37 @@ begin
      scored as DX. A path separator produced a scoring failure five steps away
      and the only visible symptom was an exchange prompt.
 
-     ASSERTED, because code in this tree depends on the answer: on Windows a
-     backslash IS a separator and on Unix it is an ordinary filename
-     character. Both are correct and they are not interchangeable. *)
-{$IFDEF WINDOWS}
+     ASSERTED WITH NO CONDITIONAL, AND THE FIRST VERSION OF THIS PROBE HAD ONE.
+
+     THE PROBE WAS WRONG AND THE PLATFORM WAS RIGHT, WHICH IS THE POINT OF
+     RUNNING IT. It expected '' on Unix, reasoning that a backslash is an
+     ordinary filename character there. Linux answered 'C:\logs\' and failed
+     the run on the very first execution, 2026-09-09.
+
+     FPC DECLARES THE SEPARATOR SET THE SAME WAY EVERYWHERE:
+
+         AllowDirectorySeparators : set of char = ['\\','/'];
+
+     -- rtl/unix/sysunixh.inc:35, character for character what
+     rtl/win/syswinh.inc:23 says. So ExtractFilePath splits on a backslash on
+     Linux and macOS too, and this is a CROSS-PLATFORM INVARIANT rather than a
+     per-platform answer. Pinned as one, because pinning it is stronger: TR4W
+     now depends on it, and it would break silently if a future RTL narrowed
+     the set on Unix.
+
+     IT MAKES THE fcontest FIX BETTER THAN IT WAS DESCRIBED AS BEING. A contest
+     path written on Windows and opened on Linux splits correctly, which the
+     backward-scanning loop it replaced could never have managed in reverse.
+
+     THE ASYMMETRY IS REAL AND IS NOT TESTED HERE. The RTL's PARSING accepts a
+     backslash on Unix; the FILE SYSTEM does not treat it as a separator, so a
+     Unix file may legitimately have one in its name and this function will
+     mis-split it. TR4W produced exactly such a file before it was fixed --
+     'DXCluster\dxcluster ....txt', a single file sitting beside the directory
+     it was meant to go in, because a WRITE path was built with a literal
+     separator. Reading is forgiving; writing is not. *)
    aReport.Expect('paths.extractfilepath.backslash',
                   ExtractFilePath('C:\logs\ARRL-FD.db'), 'C:\logs\');
-{$ELSE}
-   aReport.Expect('paths.extractfilepath.backslash',
-                  ExtractFilePath('C:\logs\ARRL-FD.db'), '');
-{$ENDIF}
 
    (* And forward slash, which every platform here accepts. *)
    aReport.Expect('paths.extractfilepath.forwardslash',
