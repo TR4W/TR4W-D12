@@ -782,6 +782,19 @@ begin
          (Contest <> DUMMYCONTEST) then
          begin
          GRepository.SetContest(Contest);
+         (* COMMITTED, AND THE FIRST VERSION WAS NOT.
+
+           SetContest runs its INSERT and stops; every other caller commits
+           afterwards as part of the larger thing it was doing, so the missing
+           Commit here was invisible in the source and visible only in the
+           file. Measured on the Mint box before this line existed: the log
+           said "stamped the new log as contest ARRL-FD" and the contest table
+           held no row -- the write sat in the write-ahead log and was rolled
+           back when the process ended.
+
+           A REPORT THAT NAMES A WRITE THAT DID NOT HAPPEN IS WORSE THAN NO
+           REPORT, because the log becomes evidence for the wrong conclusion. *)
+         GRepository.Commit;
          if logger <> nil then
             begin
             logger.Info('[LogStore] stamped the new log as contest %s',
@@ -1177,6 +1190,9 @@ begin
                  (Contest <> DUMMYCONTEST) then
             begin
             GRepository.SetContest(Contest);
+            (* See the note beside the stamp in EnsureOpen: SetContest does not
+              commit, and an uncommitted write is rolled back at exit. *)
+            GRepository.Commit;
             if logger <> nil then
                begin
                logger.Info('[LogStore] this log carried no contest -- ' +
