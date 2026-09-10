@@ -350,7 +350,7 @@ begin
       end;
 
    rest := Rect(0, drawn, ClientWidth, ClientHeight);
-   Canvas.Brush.Color := Color;
+   Canvas.Brush.Color := clFuchsia;   (* TEMPORARY PROBE *)
    Canvas.Brush.Style := bsSolid;
    Canvas.FillRect(rest);
 end;
