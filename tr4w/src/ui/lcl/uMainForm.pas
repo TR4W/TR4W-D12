@@ -2636,51 +2636,28 @@ begin
    TR4WEditableLog.RecordCount := aCount;
 end;
 
-(* ROUND THE LOG GRID DOWN TO A WHOLE NUMBER OF ROWS.
+(* SnapEditableLogToWholeRows IS DELETED, AND IT WAS THE WRONG LAYER.
 
-  Reports what it removed, because a layout that silently adjusts itself is
-  one nobody can check against a screenshot. Logged once per resize, not per
-  paint. *)
-procedure SnapEditableLogToWholeRows;
-var
-   rowH:     integer;
-   leftover: integer;
-begin
-   if TR4WEditableLog = nil then
-      begin
-      Exit;
-      end;
+  It rounded the grid's height down to a whole number of rows, which removed
+  the dead strip at creation and did nothing at all in the case that mattered:
+  TR4WEditableLog is anchored [akLeft, akTop, akRight, akBottom], so when the
+  form is restored to its saved height the LCL STRETCHES the grid by the
+  anchor, never going near the setter. The leftover came straight back, at an
+  arbitrary size, and no amount of snapping at creation could reach it.
 
-   rowH := TR4WEditableLog.DefaultRowHeight;
-   if rowH <= 0 then
-      begin
-      Exit;
-      end;
+  THAT IS ALSO WHY IT LOOKED FIXED FROM HERE. A headless run has no saved
+  window position to restore, so the grid kept its snapped height and the band
+  was genuinely gone -- on a machine whose window was the wrong size to show
+  the defect. NY4I's was not.
 
-   leftover := TR4WEditableLog.ClientHeight mod rowH;
-   if leftover = 0 then
-      begin
-      Exit;
-      end;
+  IT ALSO ARGUED WITH A DECISION ALREADY RECORDED. CheckEditableWindowHeight
+  says, of the loop that used to make whole rows fit: "THE QUESTION ITSELF IS
+  RETIRED. The list scrolls now, so there is no reason to make a whole number
+  of rows fit." That is right. The grid is allowed a fractional height; what it
+  is not allowed to do is leave the remainder unpainted.
 
-   (* AT LEAST ONE ROW HAS TO SURVIVE. A grid asked for a height smaller than
-     a single row would otherwise be shrunk to nothing, and an invisible log
-     is a worse defect than a grey strip. *)
-   if TR4WEditableLog.ClientHeight <= rowH then
-      begin
-      Exit;
-      end;
-
-   TR4WEditableLog.Height := TR4WEditableLog.Height - leftover;
-
-   if logger <> nil then
-      begin
-      logger.Debug('[EditableLog] snapped to whole rows: removed %d px ' +
-                   '(row height %d), now H=%d client=%d',
-                   [leftover, rowH, TR4WEditableLog.Height,
-                    TR4WEditableLog.ClientHeight]);
-      end;
-end;
+  TLogGrid.Paint fills it now -- see there. One mechanism, at the layer that
+  cannot be bypassed. *)
 
 procedure TR4WEditableLogSetBounds(const aLeft, aTop, aWidth, aHeight: integer);
 begin
@@ -2720,7 +2697,6 @@ begin
      from this control immediately afterwards and positions every row of status
      panels relative to it, so the window closes up by the leftover instead of
      opening a gap. *)
-   SnapEditableLogToWholeRows;
 end;
 
 procedure TR4WEditableLogScrollToEnd;

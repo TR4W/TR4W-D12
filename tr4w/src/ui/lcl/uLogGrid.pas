@@ -140,6 +140,8 @@ type
       function  GetSelectedRecord: Int64;
       procedure SetSelectedRecord(const aValue: Int64);
    protected
+      (* Fills the strip below the last row. See the body. *)
+      procedure Paint; override;
       procedure DrawCell(aCol, aRow: integer; aRect: TRect;
                          aState: TGridDrawState); override;
       procedure DoOnResize; override;
@@ -246,6 +248,52 @@ const
    (* No column narrower than this, whatever the table says -- a zero-width
      column is invisible and cannot be dragged back. *)
    MIN_COLUMN_WIDTH = 8;
+
+(* THE STRIP BELOW THE LAST ROW IS OURS TO PAINT.
+
+  A grid draws whole rows. When its height is not a multiple of the row height
+  the remainder belongs to no row, and the LCL leaves it alone -- so the widget
+  set's own background shows through. On Win32 that is close enough to the
+  grid's white to pass unnoticed; gtk2 paints a themed, recessed grey, which is
+  indistinguishable from a scroll-bar trough.
+
+  NY4I reported it six times across two days, as a horizontal scroll bar with a
+  thumb, and I named the wrong control three times before measuring. The bounds
+  dump put the grid at T=119 H=125 and the status panels at T=244 -- meeting
+  exactly, which left nowhere else for the band to be. The arithmetic finished
+  it: 125 is six rows of 19 plus ELEVEN PIXELS.
+
+  WHY NOT ROUND THE HEIGHT INSTEAD. That was tried first and it is the wrong
+  layer. This grid is anchored [akLeft, akTop, akRight, akBottom], so the LCL
+  stretches it whenever the form is restored to a saved size, without passing
+  through any setter -- a height fixed at creation is undone by the first
+  resize. And a machine with no saved window position never sees that happen,
+  which is precisely how the snap came to look like a fix from here while
+  NY4I still had the band.
+
+  CheckEditableWindowHeight had already settled the principle: "The list
+  scrolls now, so there is no reason to make a whole number of rows fit." A
+  fractional height is fine. An unpainted remainder is not.
+
+  GridHeight is the LCL's own sum of the row heights, so this asks the control
+  what it drew rather than recomputing it -- there is no second arithmetic here
+  to disagree with the first. *)
+procedure TLogGrid.Paint;
+var
+   rest: TRect;
+begin
+   inherited Paint;
+
+   if GridHeight >= ClientHeight then
+      begin
+      Exit;
+      end;
+
+   rest := Rect(0, GridHeight, ClientWidth, ClientHeight);
+   Canvas.Brush.Color := Color;
+   Canvas.Brush.Style := bsSolid;
+   Canvas.FillRect(rest);
+end;
 
 constructor TLogGrid.Create(aOwner: TComponent);
 begin
