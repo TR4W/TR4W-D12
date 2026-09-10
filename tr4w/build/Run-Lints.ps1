@@ -54,6 +54,11 @@ $lints = @(
    # Bans a hand-typed table indexed by a radio enum. Two of them drifted from
    # VC.pas and four Kenwoods selected the wrong driver -- see the script.
    @{ Name = 'Lint-NoRadioTables'; Arg = $src;     NeedsFpc = $false }
+   # The SAME defect one layer down. A config spelling table is bounded by its
+   # enum, so its LENGTH is enforced and its CONTENTS are not -- and a repeated
+   # word means GetValueFromArray hands back the FIRST ordinal and the second
+   # can never be chosen. 39 tables, 685 spellings.
+   @{ Name = 'Lint-SpellingTables'; Arg = $src;     NeedsFpc = $false }
    @{ Name = 'Lint-PollRadioState';  Arg = $src;     NeedsFpc = $false }
    @{ Name = 'Lint-PCharAnsi';       Arg = $src;     NeedsFpc = $false }
    # WHERE FILES LIVE STAYS IN ONE UNIT. ExtractFilePath(ParamStr(0)) is the
