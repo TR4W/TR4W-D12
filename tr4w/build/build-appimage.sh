@@ -156,14 +156,33 @@ echo "  bundled $(ls -1 "$APPDIR/usr/lib" | wc -l) library file(s)"
 # ABSOLUTE PATHS. Copy the loaders without regenerating the cache and GTK
 # silently loads none of them -- no icons, and on some themes no window at all.
 # ---------------------------------------------------------------------------
+# NEITHER OF THESE IS WHERE THE OBVIOUS ANSWER SAYS.
+#
+# pkg-config --variable=gdk_pixbuf_moduledir needs the -dev package, which an
+# operator's machine and this builder both lack, and it fails EMPTY rather than
+# loudly. And gdk-pixbuf-query-loaders is NOT ON PATH on Debian -- it lives
+# beside the loaders it queries. Both were found by asking the machine after
+# the first run reported "not found" for something that was plainly installed.
 PIXBUF_DIR=$(pkg-config --variable=gdk_pixbuf_moduledir gdk-pixbuf-2.0 2>/dev/null || true)
+if [ -z "$PIXBUF_DIR" ] || [ ! -d "$PIXBUF_DIR" ]; then
+   PIXBUF_DIR=$(ls -d /usr/lib/*/gdk-pixbuf-2.0/*/loaders /usr/lib64/gdk-pixbuf-2.0/*/loaders \
+                  2>/dev/null | head -1)
+fi
+
+PIXBUF_QUERY=$(command -v gdk-pixbuf-query-loaders 2>/dev/null || true)
+if [ -z "$PIXBUF_QUERY" ]; then
+   PIXBUF_QUERY=$(ls /usr/lib/*/gdk-pixbuf-2.0/gdk-pixbuf-query-loaders \
+                     /usr/lib64/gdk-pixbuf-2.0/gdk-pixbuf-query-loaders \
+                     2>/dev/null | head -1)
+fi
+
 if [ -n "$PIXBUF_DIR" ] && [ -d "$PIXBUF_DIR" ]; then
    mkdir -p "$APPDIR/usr/lib/gdk-pixbuf-2.0/loaders"
    cp -L "$PIXBUF_DIR"/*.so "$APPDIR/usr/lib/gdk-pixbuf-2.0/loaders/" 2>/dev/null || true
-   if command -v gdk-pixbuf-query-loaders >/dev/null 2>&1; then
+   if [ -n "$PIXBUF_QUERY" ] && [ -x "$PIXBUF_QUERY" ]; then
       ( cd "$APPDIR" && \
         GDK_PIXBUF_MODULEDIR="$APPDIR/usr/lib/gdk-pixbuf-2.0/loaders" \
-        gdk-pixbuf-query-loaders \
+        "$PIXBUF_QUERY" \
           > "$APPDIR/usr/lib/gdk-pixbuf-2.0/loaders.cache" ) || true
       # The cache holds absolute build-host paths; make them relative to the
       # mount point so AppRun can point at them wherever it lands.
@@ -172,7 +191,8 @@ if [ -n "$PIXBUF_DIR" ] && [ -d "$PIXBUF_DIR" ]; then
       echo "  pixbuf loaders: $(ls -1 "$APPDIR/usr/lib/gdk-pixbuf-2.0/loaders" | wc -l)"
    else
       echo "  WARNING: gdk-pixbuf-query-loaders not found -- no loader cache."
-      echo "           Icons will not render. Install libgdk-pixbuf2.0-dev."
+      echo "           Icons will not render. It ships with libgdk-pixbuf-2.0-0"
+      echo "           and lives beside the loaders, not on PATH."
    fi
 else
    echo "  WARNING: gdk-pixbuf module dir not found -- loaders not bundled."
@@ -217,21 +237,39 @@ DESKTOP
 if [ -f "$TR4W/res/tr4w.png" ]; then
    cp "$TR4W/res/tr4w.png" "$APPDIR/tr4w.png"
 else
-   python3 - "$APPDIR/tr4w.png" <<'PY' 2>/dev/null || true
-import sys
-try:
-    from PIL import Image, ImageDraw
-except ImportError:
-    sys.exit(1)
-im = Image.new('RGBA', (256, 256), (20, 40, 80, 255))
-d = ImageDraw.Draw(im)
-d.text((60, 110), 'TR4W', fill=(255, 255, 255, 255))
-im.save(sys.argv[1])
+   # PURE PYTHON, NO PIL. The builder has no imaging library and installing
+   # one to draw a placeholder square would be a dependency added for a
+   # placeholder. zlib is in the standard library and a PNG is a header, one
+   # deflated IDAT and an IEND -- forty lines, and no reason for it ever to
+   # fail on a machine that can run the rest of this script.
+   python3 - "$APPDIR/tr4w.png" <<'PY'
+import struct, sys, zlib
+
+W = H = 256
+BG = (20, 40, 80)
+
+rows = b''
+for y in range(H):
+    rows += b'\x00' + bytes(BG) * W          # filter 0, then RGB per pixel
+
+
+def chunk(tag, data):
+    return (struct.pack('>I', len(data)) + tag + data
+            + struct.pack('>I', zlib.crc32(tag + data) & 0xFFFFFFFF))
+
+
+png = (b'\x89PNG\r\n\x1a\n'
+       + chunk(b'IHDR', struct.pack('>IIBBBBB', W, H, 8, 2, 0, 0, 0))
+       + chunk(b'IDAT', zlib.compress(rows, 9))
+       + chunk(b'IEND', b''))
+
+open(sys.argv[1], 'wb').write(png)
 PY
    [ -f "$APPDIR/tr4w.png" ] || {
-      echo "  no icon and no PIL to make one -- add tr4w/res/tr4w.png"
+      echo "  could not generate an icon -- add tr4w/res/tr4w.png"
       exit 2
    }
+   echo "  icon: a generated placeholder. Real artwork goes in tr4w/res/tr4w.png."
 fi
 
 echo ""
