@@ -168,7 +168,10 @@ uses
    Tree,
    (* MyPark, which is not a Cabrillo tag: it is a per-log fact TR4W keeps as
       its own global. *)
-   LOGWIND;
+   LOGWIND,
+   (* Contest -- the live contest the program is running. Stamped onto a log at
+      the moment that log is created; see StampContestOnNewLog. *)
+   postunit;
 
 var
    GDatabase: TLogDatabase = nil;
@@ -731,6 +734,61 @@ begin
          CaptureConfiguration;
          end;
 
+      (* AND THE CONTEST ITSELF, WHICH NOTHING WROTE.
+
+        THIS IS WHY EVERY US CALLSIGN CAME UP DX ON A CONTEST CREATED BY THE
+        NEW CONTEST DIALOG. SetContest had exactly two callers -- the binary
+        import, and the QSO append -- so a log made by the dialog carried no
+        contest row until its FIRST QSO was logged. Reopening it before then
+        left GRepository.LogContest = DUMMYCONTEST, LogStoreApplyContestConfig
+        skipped its "apply the contest first" arm, FoundContest never ran, the
+        domestic country list stayed empty, and DomesticCountryCall answers
+        "not domestic" for an empty list -- which MEANS DX.
+
+        AND IT COULD NOT HEAL ITSELF, because the one thing that would have
+        written the row is logging a QSO, which is the thing a contest with no
+        contest cannot do. NY4I, Linux Mint 2026-09-09: AF4O scored as DX in
+        ARRL Field Day, on a log whose config table held 404 rows and whose
+        contest table held none.
+
+        THE CONFIG TABLE CANNOT COVER FOR IT. CaptureConfiguration SKIPS the
+        CONTEST command deliberately -- see the note there -- because a
+        captured row is a fact about a SESSION and one bad session poisoned it
+        permanently. The contest row is a fact about the LOG. That division is
+        right; what was missing is that nothing wrote the second one.
+
+        WHY HERE. This is the one place entitled to decide a log is new, and it
+        sits beside the capture that already runs on exactly the same
+        condition -- "the configuration is captured when the log is made, and
+        only then". The contest is part of that configuration in every sense
+        except which table it lands in.
+
+        THREE GUARDS, and each rules out a way of writing something false:
+
+          isNewLog only -- NOT aRebuilt. An imported log was stamped by
+          ImportBinaryLog from its first record, which is a fact about the
+          file. The running program's Contest is a fact about this session and
+          must not overwrite it.
+
+          LogContest = DUMMYCONTEST -- belt and braces. If anything already
+          answered, it stays.
+
+          Contest <> DUMMYCONTEST -- the poisoning guard. A log opened with no
+          contest must not have "no contest" written into it as though that
+          were the answer. Better an empty row than a wrong one: an empty row
+          is still fixable by the dialog. *)
+      if isNewLog and
+         (GRepository.LogContest = DUMMYCONTEST) and
+         (Contest <> DUMMYCONTEST) then
+         begin
+         GRepository.SetContest(Contest);
+         if logger <> nil then
+            begin
+            logger.Info('[LogStore] stamped the new log as contest %s',
+                        [ContestTypeSA[Contest]]);
+            end;
+         end;
+
       Result := True;
    except
       on E: Exception do
@@ -1089,6 +1147,44 @@ begin
                begin
                logger.Error('[LogStore] the log names contest "%s" and this ' +
                             'build did not accept it.', [string(valName)]);
+               end;
+            end
+         (* A LOG THAT HAS NO CONTEST ROW, AND A SESSION THAT KNOWS THE ANSWER.
+
+           EnsureOpen stamps the contest when a log is CREATED. Every log made
+           by the New Contest dialog before that existed has no contest row at
+           all, and could not acquire one: the only other writer is the QSO
+           append, and a contest with no contest cannot log a QSO. Left alone
+           they score every US callsign as DX, for good.
+
+           So repair them -- but ONLY from something the program already
+           believes, never from a guess. Contest is non-DUMMY here in exactly
+           one case: the operator has just been through the New Contest dialog
+           this session, which applied CONTEST a moment ago. That is the same
+           information the running program is scoring with; writing it down
+           makes the NEXT open work.
+
+           NOT A HEURISTIC, and it was tempting to make one. The config table
+           carries CONTEST NAME = 'ARRL-FD', which for this contest happens to
+           equal the internal token -- and for others does not, because that
+           row is the CABRILLO name. Recovering from it would be right often
+           enough to be believed and wrong quietly. The file name is the same
+           trap. Neither is used.
+
+           NOTHING IS OVERWRITTEN. The arm above owns the case where the table
+           already answered; this one runs only when it did not. *)
+         else if (GRepository.LogContest = DUMMYCONTEST) and
+                 (Contest <> DUMMYCONTEST) then
+            begin
+            GRepository.SetContest(Contest);
+            if logger <> nil then
+               begin
+               logger.Info('[LogStore] this log carried no contest -- ' +
+                           'recorded it as %s, from the contest now open. ' +
+                           'It was made before the log stored its own ' +
+                           'contest, and would have scored every domestic ' +
+                           'callsign as DX on its next open.',
+                           [ContestTypeSA[Contest]]);
                end;
             end;
 
