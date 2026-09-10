@@ -1182,6 +1182,23 @@ begin
                     BoolToStr(c.Visible, True)]);
       end;
 
+   (* AND THE LOG GRID'S INTERNALS, because the band NY4I is pointing at is
+     INSIDE it: the grid bottom and the status-panel row below meet exactly,
+     at y=244 on his machine, so there is no gap between them to show. A grid
+     whose client height is not a whole number of rows has dead space at the
+     bottom, and that is the only place left for it to be. *)
+   if TR4WEditableLog <> nil then
+      begin
+      logger.Debug('[Layout]   editable log: H=%d client=%d rowH=%d rows=%d ' +
+                   'fixed=%d -> content=%d, leftover=%d',
+                   [TR4WEditableLog.Height, TR4WEditableLog.ClientHeight,
+                    TR4WEditableLog.DefaultRowHeight,
+                    TR4WEditableLog.RowCount, TR4WEditableLog.FixedRows,
+                    TR4WEditableLog.RowCount * TR4WEditableLog.DefaultRowHeight,
+                    TR4WEditableLog.ClientHeight -
+                      (TR4WEditableLog.RowCount * TR4WEditableLog.DefaultRowHeight)]);
+      end;
+
    logger.Debug('[Layout] --- end children ---');
 end;
 
