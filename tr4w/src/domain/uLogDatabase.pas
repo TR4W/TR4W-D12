@@ -225,8 +225,39 @@ function DiagnoseSQLiteLoad(const aLibraryPath: string): string;
   about one path rather than each working it out. *)
 function SQLiteLibraryPath: string;
 
+(* WHY A LOG COULD NOT BE OPENED, in a sentence for a human.
+
+  IT IS NOT "DiagnoseSQLiteLoad" ANY MORE, and the rename is the fix.  That
+  routine assumed every open failure was a failure to LOAD SQLITE, so it
+  reported the library as missing whatever had actually gone wrong -- and on
+  Linux it reported a file called sqlite3.dll, which cannot exist there.
+
+  THE ASSUMPTION IS BACKWARDS.  An ESQLDatabaseError saying "unable to open
+  database file" is raised BY SQLITE, so reaching it proves the library loaded.
+  The cause is almost always the PATH: a directory that does not exist, or one
+  that cannot be written.
+
+  NY4I hit exactly that on a fresh Debian 13 running the AppImage (2026-09-10).
+  The real cause was in the same log four lines further down -- a cty.dat
+  download failing with "Read-only file system" -- because an AppImage mounts
+  itself read-only and the contest log was being created beside the binary.
+  The message sent him to install a library that was already there.
+
+  Never raises. *)
+function DiagnoseLogOpenFailure(const aFileName: string): string;
+
 const
-   SQLITE_LIBRARY_NAME = 'sqlite3.dll';
+   (* THE NAME THIS PLATFORM'S LOADER ACTUALLY ASKS FOR.  A hardcoded
+     'sqlite3.dll' is the exact class of defect CLAUDE.md calls out: a library
+     NAME that is really an assumption about the operating system.  The Linux
+     spelling is the versioned soname because the bare symlink ships only in
+     the -dev package -- see the initialization section, which sets the same
+     name on FPC's own binding. *)
+   SQLITE_LIBRARY_NAME =
+      {$IF DEFINED(WINDOWS)} 'sqlite3.dll'
+      {$ELSEIF DEFINED(DARWIN)} 'libsqlite3.dylib'
+      {$ELSE} 'libsqlite3.so.0'
+      {$IFEND};
 
 
 implementation
@@ -367,6 +398,45 @@ begin
    Result := DataFilePath(SQLITE_LIBRARY_NAME);
 end;
 
+(* CAN THIS PROGRAM CREATE A FILE IN THAT DIRECTORY?
+
+  Asked by DOING IT, not by reading permission bits.  A read-only mount, a
+  directory owned by root, a full disk and a container's restrictions all
+  produce the same answer to the operator -- "you cannot write here" -- and
+  only an attempt covers all four.  An AppImage is the case that matters: its
+  own mount is read-only however the bits read.
+
+  Never raises: every failure IS the answer. *)
+function DirectoryIsWritable(const aDir: string): boolean;
+var
+   probe: string;
+   f: THandle;
+begin
+   Result := False;
+   if aDir = '' then
+      begin
+      Exit;
+      end;
+
+   probe := IncludeTrailingPathDelimiter(aDir) +
+            '.tr4w-write-probe-' + IntToStr(GetProcessID);
+   try
+      f := FileCreate(probe);
+      if f = THandle(-1) then
+         begin
+         Exit;
+         end;
+      FileClose(f);
+      DeleteFile(probe);
+      Result := True;
+   except
+      on E: Exception do
+         begin
+         Result := False;
+         end;
+   end;
+end;
+
 function DiagnoseSQLiteLoad(const aLibraryPath: string): string;
 var
    dllPath: string;
@@ -420,6 +490,65 @@ begin
 
    Result := Format('%s is present and is the right architecture (%s), so the ' +
                     'failure is not the library itself.', [dllPath, dllArch]);
+end;
+
+function DiagnoseLogOpenFailure(const aFileName: string): string;
+var
+   dir: string;
+begin
+   Result := '';
+   try
+      dir := ExtractFilePath(aFileName);
+
+      (* THE PATH FIRST, BECAUSE THE PATH IS ALMOST ALWAYS IT.  Reaching this
+        routine means SQLite raised, which means SQLite is loaded -- see the
+        note on the declaration. *)
+      if dir = '' then
+         begin
+         Result := 'TR4W was given no directory for the contest log.';
+         Exit;
+         end;
+
+      if not DirectoryExists(dir) then
+         begin
+         Result := Format('The directory "%s" does not exist, so the contest ' +
+                          'log cannot be created in it.', [dir]);
+         Exit;
+         end;
+
+      if not DirectoryIsWritable(dir) then
+         begin
+         Result := Format('TR4W CANNOT WRITE TO "%s". The contest log has to ' +
+                          'be created there and that directory is read-only ' +
+                          'to this program. On Linux this is what an AppImage ' +
+                          'looks like: it mounts itself read-only, so nothing ' +
+                          'beside the program can be written. Choose a ' +
+                          'contest directory in your home folder.', [dir]);
+         Exit;
+         end;
+
+      if FileExists(aFileName) then
+         begin
+         Result := Format('"%s" exists and the directory is writable, so the ' +
+                          'file itself is the problem -- it may be open in ' +
+                          'another program, or not be a SQLite database.',
+                          [aFileName]);
+         Exit;
+         end;
+
+      (* The directory is fine and the file is not there, which is the one case
+        where the library IS worth mentioning. *)
+      Result := Format('The directory "%s" is writable, so the failure is not ' +
+                       'a permission problem. %s',
+                       [dir, DiagnoseSQLiteLoad(SQLiteLibraryPath)]);
+   except
+      (* A DIAGNOSIS MUST NEVER REPLACE THE ERROR IT EXPLAINS, and it must
+        never become one. Same rule as DescribePEArchitecture above. *)
+      on E: Exception do
+         begin
+         Result := '';
+         end;
+   end;
 end;
 
 (* ---------------------------------------------------------------------------
@@ -727,7 +856,7 @@ begin
          raise ELogDatabaseError.CreateFmt(
             'Could not open the contest log "%s". %s: %s'#13#10#13#10'%s',
             [aFileName, E.ClassName, E.Message,
-             DiagnoseSQLiteLoad(SQLiteLibraryPath)]);
+             DiagnoseLogOpenFailure(aFileName)]);
          end;
    end;
    FFileName := aFileName;
