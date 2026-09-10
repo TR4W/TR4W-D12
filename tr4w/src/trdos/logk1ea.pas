@@ -2116,12 +2116,43 @@ begin
 
   (* CloseThread, NOT CloseHandle -- the RTL's own name for exactly this, and
     on Windows it reaches the same API. It returns a dword rather than a
-    boolean, hence the <> 0 test: the RTL follows CloseHandle's convention of
-    non-zero for success. *)
+    boolean, hence the = 0 test: the RTL follows CloseHandle's convention of
+    non-zero for success.
+
+    WINDOWS ONLY, AND THE TEST IS MEANINGLESS ANYWHERE ELSE. FPC's Unix thread
+    manager implements this as
+
+        function CCloseThread (threadHandle : TThreadID) : dword;
+          begin
+            result:=0;
+          end;
+
+    (cthreads.pp:451) -- a no-op that ALWAYS returns zero. A handle is not a
+    thing pthreads has to close, so there is nothing to report.
+
+    Read through the Windows convention that is zero-means-failure, so the
+    check fired after EVERY CW message. ShowSysErrorMessage then formatted
+    errno, which was 0, so a MODAL DIALOG reading "CW: Success" appeared each
+    time and had to be dismissed. NY4I, Linux Mint 2026-09-09, with a
+    screenshot -- and in a contest that is not a blemish, it is unusable.
+
+    THE FAILURE MODE IS THE INTERESTING PART: a success being reported as an
+    error, in an error reporter, using an error code that says success. Nothing
+    about the source reads wrong. Only the platform's answer to the question
+    is different, which is the shape most of this sweep takes.
+
+    Gated rather than deleted: on Windows the call really can fail, and a
+    handle leak per CW message is worth knowing about. *)
+{$IFDEF WINDOWS}
   if CloseThread(CWThreadHandle) = 0 then
      begin
      ShowSysErrorMessage('CW');
      end;
+{$ELSE}
+  (* Called for its side effect only -- see above. Its result carries no
+    information on this platform, so nothing is tested. *)
+  CloseThread(CWThreadHandle);
+{$ENDIF}
 
   ClearThread(CWThreadID);
 

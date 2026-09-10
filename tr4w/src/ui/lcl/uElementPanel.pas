@@ -102,6 +102,8 @@ type
       procedure FitCaption;
    protected
       procedure RealSetText(const aValue: TCaption); override;
+      (* Re-measure the caption when the panel changes size. *)
+      procedure Resize; override;
    public
       (* THE HEIGHT THE CAPTION WOULD LIKE TO BE, which is not always the
         height it gets. FitCaption always measures from here, so a panel that
@@ -184,6 +186,40 @@ begin
       end;
 end;
 
+(* A CAPTION IS MEASURED WHEN IT IS ASSIGNED. IT HAS TO BE MEASURED AGAIN WHEN
+  THE PANEL CHANGES SIZE, AND UNTIL 2026-09-09 IT WAS NOT.
+
+  FitCaption ran from RealSetText only, so a panel whose caption was set BEFORE
+  its final width kept a font chosen for the wrong width for the rest of the
+  session. That is the normal order for the need strips: ConfigureNeedRows
+  assigns 'Both:' while the panels are still at their design-time size, and
+  PositionMainGrids narrows them to ws * 2 afterwards. Nothing re-measured.
+
+  ON WINDOWS IT FIT ANYWAY, so nothing showed. NY4I, Linux Mint 2026-09-09:
+  the label read "oth:". TR4W asks for 'Arial' (VC.pas), which a typical Linux
+  box does not have, so fontconfig substitutes a face whose metrics differ from
+  every width this program computed -- and the shrink that would have absorbed
+  the difference never ran.
+
+  IT ALSO EXPLAINS THE MISSING DIAGNOSTIC. The overflow report fires from
+  FitCaption, so a clipped caption that was measured at the wrong width is
+  clipped SILENTLY: the log carried no complaint about a panel that was
+  visibly cutting a letter off. A check that cannot run is not a check.
+
+  THE COMMENT ABOVE ALREADY CLAIMED THIS EXISTED -- "FOverflowReported is
+  cleared when the panel is resized". It was describing an override that was
+  never written, which is the worst kind of stale note: it answers the question
+  and stops anyone looking. *)
+procedure TElementPanel.Resize;
+begin
+   inherited Resize;
+
+   (* A WIDER PANEL DESERVES A FRESH VERDICT. FitCaption always starts from
+     FBaseFontHeight, so the font grows back as well as shrinking. *)
+   FOverflowReported := False;
+   FitCaption;
+end;
+
 procedure TElementPanel.FitCaption;
 var
    avail:  integer;
@@ -235,9 +271,11 @@ begin
      the border.
 
      ONCE PER PANEL, not once per repaint: captions change at contest rates and
-     a per-paint message would be a flood. FOverflowReported is cleared when
-     the panel is resized, so a window the operator makes wider reports again
-     if it still does not fit.
+     a per-paint message would be a flood. Resize clears FOverflowReported, so
+     a panel that is made wider reports again if it still does not fit.
+
+     THAT SENTENCE WAS FALSE UNTIL 2026-09-09 -- it described a Resize override
+     that did not exist. See the one below for what it cost.
 
      This is a DIAGNOSTIC, not the fix. What the fix should be -- a metric
      compatible default font on Linux, or narrower content, or a wider panel --
