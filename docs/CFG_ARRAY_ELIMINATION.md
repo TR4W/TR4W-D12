@@ -23,8 +23,8 @@ Measured 2026-09-10 over `tr4w/src/uCFG.pas`, live rows only, comments excluded:
 | `crS` | rows |
 |---|---:|
 | `csJSON` | 313 |
-| `csOwned` | 95 |
-| `csRem` | 83 |
+| `csOwned` | 94 |
+| `csRem` | 84 |
 | `csOld` / `csNew` | **0** |
 
 **Reading that as "done" would be the mistake this document exists to prevent.**
@@ -41,7 +41,10 @@ So Preferences, the multi-op peer sync, and the profile applier all still drive
 settings **as text commands through this array**. The store moved. The applier
 did not.
 
-**408 live rows still apply.** That, not 0, is the size of the thing.
+**407 live rows still apply.** That, not 0, is the size of the thing.
+
+> It was 408 the day this was written. `ORION PORT` was retired on
+> 2026-09-10, and that is the unit of progress here: one row at a time.
 
 ---
 
@@ -130,11 +133,24 @@ Seven `CFGCA` rows resolve through six `ListParamArray` entries over `PortTypeSA
 | `KEYER RADIO ONE OUTPUT PORT` | `csOwned` | `Radio1.tKeyerPort` |
 | `KEYER RADIO TWO OUTPUT PORT` | `csOwned` | `Radio2.tKeyerPort` |
 | `ROTATOR PORT` | `csOwned` | `ActiveRotatorPort` |
-| `ORION PORT` | `csOwned` | `ActiveRotatorPort` -- **the same variable** |
+| ~~`ORION PORT`~~ | **`csRem` 2026-09-10** | ~~`ActiveRotatorPort`~~ -- retired, see below |
 | `WK PORT` | `csJSON` | `WinKeySettings.wksWinKey2Port` |
 
-`ORION PORT` and `ROTATOR PORT` are two commands writing one variable. That is
-worth a ruling of its own before either moves.
+~~`ORION PORT` and `ROTATOR PORT` are two commands writing one variable.~~
+**RULED 2026-09-10.** NY4I: *"Drop Orion port. It covered by the general port
+as a type Orion in settings".* It was shorthand for "the rotator is an Orion,
+on COM5" -- a second spelling of two other settings, in the same family as
+MY QTH being MY STATE -- and its `crA` hook did nothing but set the rotator
+type.
+
+It is `csRem`, **not deleted**, and that difference matters to an operator
+upgrading from 4.x: a withdrawn row is still RECOGNISED, so an existing `.cfg`
+naming it loads inert instead of erroring on every start. Its hook is deleted
+and its slot in `AdditionalProcsArray` is `nil` rather than removed, because
+that table is positional and dropping an entry would shift every `crA` above
+it and repoint twenty-one rows at the wrong hook.
+
+So the port rows are **six**, over five `ListParamArray` entries.
 
 ### The chain, and why it has four spellings of one fact
 
@@ -194,8 +210,8 @@ local file.
 
 ## 5. Open, and needing a ruling
 
-1. **`ORION PORT` and `ROTATOR PORT` write the same variable.** Is one a
-   deprecated alias that should be `csRem`?
+1. ~~**`ORION PORT` and `ROTATOR PORT` write the same variable.**~~ **CLOSED
+   2026-09-10** -- dropped. See stage B.
 2. **Does the kind stay an enum, or become a property of a port class?** CLAUDE.md
    prefers a class to a record, but `RadioObject` is an old-style `object` held in
    globals, so an object-typed field there is a lifetime question rather than a

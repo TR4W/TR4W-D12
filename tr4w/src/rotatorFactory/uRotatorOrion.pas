@@ -28,16 +28,20 @@ unit uRotatorOrion;
   PORTED EXACTLY from LOGSTUFF.RotorControl: '#%03u'#$D.
 
   THE LEGACY ALIAS THIS REPLACES is worth recording, because it looks like a
-  setting and is not.  'ORION PORT' in CommandsArray shares list index 40 with
-  'ROTATOR PORT', so both write ActiveRotatorPort, and its crA hook
-  F_ORION_PORT does nothing but
+  setting and is not.  'ORION PORT' in CommandsArray shared list index 40 with
+  'ROTATOR PORT', so both wrote ActiveRotatorPort, and its crA hook
+  F_ORION_PORT did nothing but
 
       ActiveRotatorType := OrionRotator;
 
   So 'ORION PORT = COM5' was shorthand for "the rotator is an Orion, on COM5" --
   a second spelling of two other settings, in the same family as MY QTH being
-  MY STATE.  With a rotator library that shorthand has nowhere to live, so the
-  row is deleted rather than migrated.
+  MY STATE.  With a rotator library that shorthand has nowhere to live.
+
+  RETIRED 2026-09-10, NY4I: "Drop Orion port. It covered by the general port as
+  a type Orion in settings".  The row is csRem rather than gone, so an existing
+  .cfg naming it still loads instead of erroring on every start; the hook is
+  deleted and its slot in AdditionalProcsArray is nil.
 }
 
 interface

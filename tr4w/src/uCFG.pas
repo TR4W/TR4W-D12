@@ -252,7 +252,6 @@ function F_FREQUENCY_MEMORY: boolean;
 //function F_ICOM_RESPONSE_TIMEOUT: boolean;
 function F_KEYER_RADIO_ONE_OUTPUT_PORT: boolean;
 function F_KEYER_RADIO_TWO_OUTPUT_PORT: boolean;
-function F_ORION_PORT: boolean;
 function F_MY_CONTINENT: boolean;
 function F_MY_COUNTRY: boolean;
 function F_MY_ZONE: boolean;
@@ -353,7 +352,13 @@ const
       (
       @F_CONTEST,
       @F_ZONE_MULTIPLIER,
-      @F_ORION_PORT,
+      (* SLOT 3 IS FREE.  F_ORION_PORT set ActiveRotatorType and its only
+        caller, the ORION PORT row, was retired on 2026-09-10.  nil rather
+        than a renumbering: this table is POSITIONAL, so removing an entry
+        would shift every crA above it and silently repoint twenty-one rows
+        at the wrong hook.  The dispatcher already handles nil -- it tests
+        Assigned and logs the command that asked. *)
+      nil,
       @F_CLEAR_DUPE_SHEET,
       @F_BAND_MAP_DECAY_TIME,
       @F_AUTO_QSL_INTERVAL,
@@ -824,7 +829,25 @@ const
  (crCommand: 'NO COLUMN HEADER';              crAddress: @Config.NoColumnHeader;                 crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAppearance; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'NO LOG';                        crAddress: @NoLog;                          crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'NO POLL DURING PTT';            crAddress: @Config.NoPollDuringPTT;                crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'ORION PORT';                    crAddress: pointer(40);                     crMin:0;  crMax:0;       crS: csOwned; crA: 3; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 0),
+ (* ORION PORT RETIRED 2026-09-10 (NY4I): "Drop Orion port. It covered by the
+     general port as a type Orion in settings".
+
+     It shared list index 40 -- and therefore ActiveRotatorPort -- with
+     ROTATOR PORT, and its crA hook did nothing but set ActiveRotatorType to
+     OrionRotator.  So 'ORION PORT = COM5' was shorthand for "the rotator is
+     an Orion, on COM5": a second spelling of two other settings, in the same
+     family as MY QTH being MY STATE.  With a rotator library that shorthand
+     has nowhere to live.
+
+     csRem, NOT DELETED, and the difference matters to an operator upgrading
+     from 4.x.  A withdrawn row is still RECOGNISED, so an existing .cfg
+     naming it loads without "Invalid statement in config file" -- it is
+     simply inert, and hidden from Ctrl-J.  Deleting the row would turn a
+     stale config line into an error on every start.
+
+     crA is 0 now.  CheckCommand exits on csRem before it reaches the hook,
+     so leaving the index would have pointed at code that could not run. *)
+    (crCommand: 'ORION PORT';                    crAddress: pointer(40);                     crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 0),
  (crCommand: 'PACKET ADD LF';                 crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'PACKET AUTO CR';                crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'PACKET BAND SPOTS';             crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
@@ -2198,12 +2221,6 @@ end;
 function F_KEYER_RADIO_TWO_OUTPUT_PORT: boolean;
 begin
    Radio2SerialInvert := StringHas(CMD, 'INVERT');
-   Result := True;
-end;
-
-function F_ORION_PORT: boolean;
-begin
-   ActiveRotatorType := OrionRotator;
    Result := True;
 end;
 
