@@ -1137,6 +1137,54 @@ begin
                [found, TR4WMainForm.ControlCount, cw, ch]);
 end;
 
+(* EVERY VISIBLE CHILD, WITH ITS CLASS AND ITS BOUNDS, ONCE.
+
+  BECAUSE A SCREENSHOT GIVES A POSITION AND NOTHING ELSE. NY4I has pointed at
+  the same artifact five times -- a scroll-bar-shaped band directly under the
+  editable log -- and I have now named the wrong control for it TWICE,
+  including one he had already corrected: "That is absolutely not. The
+  possible calls are under the exchange window. That is the second time you
+  have made that assumption in so many days."
+
+  He is right, and the arithmetic says so: CreateTR4WPossibleCallList is
+  placed at EditableLogHeight + ws * 13, which is six rows BELOW the bottom of
+  the log, down among the status panels. Nothing about it is under the log.
+
+  SO STOP READING GEOMETRY OUT OF THE SOURCE AND ASK THE RUNNING PROGRAM. One
+  line per control, at DEBUG so it costs nothing in a contest, listing exactly
+  what a screenshot can be measured against: class, name, left, top, width,
+  height. Whatever is sitting at the log's bottom edge will be in this list
+  with a Top that matches, and there will be no interpretation involved. *)
+procedure DumpMainWindowChildren;
+var
+   i: integer;
+   c: TControl;
+begin
+   if (TR4WMainForm = nil) or (logger = nil) then
+      begin
+      Exit;
+      end;
+
+   if not logger.IsDebugEnabled then
+      begin
+      Exit;
+      end;
+
+   logger.Debug('[Layout] --- main window children, client %dx%d ---',
+                [TR4WMainForm.ClientWidth, TR4WMainForm.ClientHeight]);
+
+   for i := 0 to TR4WMainForm.ControlCount - 1 do
+      begin
+      c := TR4WMainForm.Controls[i];
+
+      logger.Debug('[Layout]   %-18s %-22s L=%4d T=%4d W=%4d H=%4d vis=%s',
+                   [c.ClassName, c.Name, c.Left, c.Top, c.Width, c.Height,
+                    BoolToStr(c.Visible, True)]);
+      end;
+
+   logger.Debug('[Layout] --- end children ---');
+end;
+
 (* WHERE IS THE HORIZONTAL SCROLL BAR COMING FROM.
 
   NY4I has reported one four times -- "still have a horizontal scroll bar for
@@ -1297,6 +1345,7 @@ begin
       end;
 
    ReportMainWindowOverhang;
+   DumpMainWindowChildren;
 
    (* Measured after sizing rather than computed, so the floor is exactly the
      height the layout just took. *)

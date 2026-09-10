@@ -1284,6 +1284,29 @@ begin
 
   PossibleCallList.NumberPossibleCalls := 0;
   PossibleCallList.CursorPosition := 0;
+
+  (* CLEARED FIRST, BEFORE ANY EXIT, AND THAT IS THE WHOLE FIX.
+
+    ClearPossibleCalls used to sit BELOW two early exits -- one for the
+    feature being off, one for "this callsign matched nothing". So the strip
+    was emptied only on the path that was about to REFILL it, and the case it
+    actually matters for could not reach it: type a call with matches, then
+    type one without, and the display keeps the previous callsigns until
+    something else happens to overwrite them.
+
+    It became visible the moment the strip learned to hide itself. The control
+    is shown by AddPossibleCall and hidden by ClearPossibleCalls, so a clear
+    that never runs is a strip that never hides -- NY4I, 2026-09-09, still
+    seeing a scroll-bar-shaped band under the log after the fix that was
+    supposed to remove it, on a binary that was byte-identical to the one that
+    contained it.
+
+    THE SAME SHAPE AS THE CONTEST-CONFIG BUG EARLIER TODAY: a reset placed
+    above the work it prepares for, but below the exits that skip that work.
+    A RESET BELONGS WITH THE THING IT PREPARES FOR, and there is exactly one
+    correct place for it -- first. *)
+  ClearPossibleCalls;
+
   if not Config.PossibleCallEnable then
      begin
      Exit;
@@ -1294,7 +1317,6 @@ begin
      begin
      Exit;
      end;
-  ClearPossibleCalls;
 
   for TempIndex := 0 to PossibleCallList.NumberPossibleCalls - 1 do
      begin
