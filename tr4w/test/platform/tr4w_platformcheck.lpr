@@ -65,6 +65,26 @@ program tr4w_platformcheck;
 {$H+}
 
 uses
+   (* FIRST IN THE CLAUSE, AND IT MUST BE.
+
+     Without it FPC links the single-threaded RTL and the CloseThread probe
+     dies at run time with
+
+         This binary has no thread support compiled in.
+         Recompile the application with a thread-driver in the program uses
+         clause before other units using thread.
+
+     -- runtime error 232, on a program that compiled cleanly. Windows has its
+     thread manager in the RTL and needs no such line, so this is one more
+     thing that is invisible until a Unix box runs the binary. Measured on
+     linux-ci-build, 2026-09-09.
+
+     A PROBE PROGRAM THAT CANNOT START IS WORSE THAN NO PROBE PROGRAM, so this
+     is stated here rather than left to whoever adds the next threading
+     question. *)
+{$IFDEF UNIX}
+   cthreads,
+{$ENDIF}
    SysUtils,
    uProbeReport,
    uPlatformProbes;
