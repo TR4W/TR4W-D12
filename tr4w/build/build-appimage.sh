@@ -25,17 +25,33 @@
 # IT ADDS A DEPENDENCY OF ITS OWN: FUSE 2 on the tester's machine, or they run
 # it with --appimage-extract-and-run.
 #
-# THE PAYLOAD IS READ-ONLY, AND TR4W STILL WRITES TWO THINGS BESIDE ITS DATA:
+# ~~THE PAYLOAD IS READ-ONLY, AND TR4W STILL WRITES TWO THINGS BESIDE ITS
+# DATA~~ -- BOTH ARE FIXED, 2026-09-10, and this note is kept because the
+# second one bit an operator before it was.
 #
-#     settings/tr4w.pos    the window layout, built from TR4W_PATH_NAME
-#     the contest files    New Contest opens in TR4W_PATH_NAME
+#     settings/tr4w.pos    STALE WHEN WRITTEN. That file is READ-ONLY now --
+#                          a one-time seed -- and the window layout is saved
+#                          into settings/tr4w.json, which is under
+#                          ~/.config/tr4w and writable.
 #
-# Settings and the log are already XDG (~/.config/tr4w, ~/.local/state/tr4w)
-# and are fine. These two are not, and inside an AppImage TR4W_PATH_NAME is a
-# read-only squashfs mount. uProgramMain's own note names this hazard: "a write
-# is the case where getting it wrong puts an operator's contest file inside an
-# application bundle". An operator can browse to a writable directory and work
-# normally; the window position will not persist until that write moves.
+#     the contest files    REAL, AND IT COST A BENCH SESSION. NY4I ran this
+#                          AppImage on a fresh Debian 13 and got a dialog
+#                          demanding sqlite3.dll -- a file that cannot exist
+#                          on Linux and was not the problem. The contest log
+#                          was being created at /tmp/.mount_XXXX/usr/bin/ and
+#                          QSOs were not being saved. uAppPaths has a fourth
+#                          root now, ContestDir (~/tr4w off Windows), and New
+#                          Contest composes from it.
+#
+# Settings and the log were already XDG (~/.config/tr4w, ~/.local/state/tr4w)
+# and were always fine.
+#
+# THE LESSON FOR WHOEVER ADDS THE NEXT WRITE: this header named the hazard
+# correctly and in advance, and the program shipped with it anyway. A note is
+# not a guard. uProgramMain's own comment says the same thing -- "a write is
+# the case where getting it wrong puts an operator's contest file inside an
+# application bundle" -- and it, too, was written before the bug rather than
+# after.
 #
 # ============================================================================
 
