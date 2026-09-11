@@ -836,17 +836,66 @@ and the hazard it was written for now lives at the boundary where untrusted
 values actually arrive: `FromJSON` clamps every bounded property in one RTTI
 walk, because the streamer is the only path that bypasses `TrySetByCommand`.
 
-### Still open
+### Where the count stands
 
+| | rows |
+|---|---:|
+| start of the session | 508 |
+| band map filters + HF/VHF/WARC | -11 |
+| every `csRem` row | -98 |
+| band map display limit and item geometry | -4 |
+| push to talk, off the `Config` record | -5 |
+| the paddle, off the `Config` record | -4 |
+| **now** | **386** |
+
+`Config` itself is **71 rows -> 62**.
+
+### Still open, and three of these are QUESTIONS rather than tasks
+
+**Tasks -- known how, just not done:**
+
+* `DVK ENABLE` and `DVK LOCALIZED MESSAGES ENABLE` are two plain booleans with
+  about thirty-five call sites. Mechanical.
 * `BAND MAP DECAY TIME` (`crA: 5`) and `BAND MAP CUTOFF FREQUENCY` (`crA: 17`,
-  `ctFreqList`) carry an additional-proc hook that has to be reproduced before
-  they can move.
+  `ctFreqList`) carry an additional-proc hook that has to be reproduced first.
 * `BAND MAP SPLIT MODE` is a `ckList` reached through a second array -- an
   enum property, not an integer.
-* `BAND MAP GUARD BAND` is **a question, not a task**: its global was declared
-  `: integer; // = 200;` with no initialiser, so the runtime default is **0**
-  while `crMin` is **100**. A subrange type cannot express both. Which is
-  right needs a ruling before it moves.
+
+**Questions for NY4I:**
+
+* **`BAND MAP GUARD BAND`'s default contradicts its minimum.** The global is
+  declared `: integer; // = 200;` with no initialiser, so the runtime default
+  is **0**, while `crMin` is **100** -- so a config file cannot set what the
+  program starts with. A subrange type cannot express both, which is what
+  surfaced it. Which is right?
+
+* **`PADDLE MONITOR TONE` has no live reader.** Searching for the SETTING
+  rather than the field found a config row, a commented-out default in
+  `cfgdef`, and three translated captions -- and no code that reads it. It is
+  stored, editable and broadcast to peers, and used by nothing. Did the paddle
+  sidetone move somewhere else, or did the feature go? It was left exactly as
+  it was: deleting a setting an operator may have set is not a cleanup.
+
+* **The DVK paths are blocked on a `PChar` conversion, not on the settings
+  work.** `Config.DVKPath` and `Config.DVKRecorder` are `FileNameType` --
+  fixed `AnsiChar` arrays -- and their readers use
+  `GetRealPath(Path, FileName, AddFolder: PAnsiChar): PAnsiChar`, plus
+  `Config.DVKRecorder[0] = #0` and `pPos('\\', Config.DVKPath)`.
+
+  Making them `string` properties (which is the right shape, and the move that
+  took two `PChar`s out of the tree when `MMTTY ENGINE` went) means converting
+  `GetRealPath` and its seven callers. That is squarely the `PChar` audit
+  CLAUDE.md already owes, and doing it as a side effect of a settings batch
+  would hide it inside an unrelated commit. **Adding casts at the call sites
+  instead would ADD `PChar`s, which is the wrong direction entirely.**
+
+### Not a blocker, but decide before the end: passwords
+
+`HAMSCORE PASSWORD` is one of the seventy-one `Config` rows, and the agent
+memory already carries *"Password storage in JSON -- BACKLOG: decide before
+the config work ends"*. The HamScore group is otherwise a clean five-setting
+batch whose names all derive (`Hamscore.Enable` gives `HAMSCORE ENABLE`, one
+word, no alias). It is held back only for that.
 
 ---
 

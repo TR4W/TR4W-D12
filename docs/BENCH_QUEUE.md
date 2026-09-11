@@ -23,6 +23,82 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-09-11 (overnight) -- 122 CONFIG ROWS GONE, AND THREE RULINGS OWED
+
+Six commits moved 122 rows out of `CFGCA` (508 -> 386). Everything below is
+green on this machine -- FullBuild, 24,787 unit tests, the corpus at
+24/0/2 -- and **none of it proves a radio keys or a band map redraws**, which
+is what this queue is for.
+
+### To exercise on the bench
+
+1. **The band map filters, from BOTH directions.** The eight display filters
+   (all bands, all modes, dupes, CQ, mults-only, SO2R, call-window, GHz) are
+   properties now and their SETTER asks for the repaint. Previously a config
+   file repainted and a menu toggle only worked because the window remembered
+   to ask.
+
+   - toggle each from the band map's own context menu, and with B / M / D
+   - then change one from Preferences and confirm the map redraws WITHOUT
+     reopening it -- that half is the new behaviour
+   - and from a second position over multi-op, which never repainted before
+
+2. **HF / VHF / WARC band enables.** These are not display filters: they also
+   refuse a band change. Confirm a WARC band is still refused with WARC off,
+   and that selecting a contest still sets them (five contests in `fcontest`
+   assign them).
+
+3. **PTT, on real hardware, and this is the one that matters.** Five settings
+   moved off the `Config` record: PTT ENABLE, PTT LOCKOUT, PTT TURN ON DELAY,
+   PTT VIA COMMANDS, NO POLL DURING PTT. The defaults are pinned by a test,
+   but **nothing here can prove the transmitter keys**. `PTT TURN ON DELAY`
+   defaults to 15 ms and is what stops CW starting before an amplifier is
+   keyed.
+
+4. **The paddle**, same reason: SWAP PADDLES, PADDLE SPEED (0 = follow the
+   keyboard speed), PADDLE PTT HOLD COUNT (13 dit counts -- a 0 here is hot
+   switching on an amplifier).
+
+5. **An OLD config file.** 98 `csRem` rows were deleted and 91 withdrawn
+   command NAMES replace them. Open a `tr4w.ini` or contest `.cfg` from 4.x
+   that names a withdrawn feature and confirm **no "invalid statement in
+   config file" dialog** appears. That dialog is the entire reason those
+   hollow rows existed.
+
+6. **Band map item height / width / size** now refuse an out-of-range value
+   rather than accepting it. They still say "restart required", which is real:
+   the grid geometry is computed once.
+
+### Three rulings owed, and they are questions not tasks
+
+- **`BAND MAP GUARD BAND`'s default contradicts its own minimum.** Declared
+  `: integer; // = 200;` with no initialiser, so it starts at **0** while
+  `crMin` is **100** -- a config file cannot set what the program boots with.
+  A subrange type cannot express both, which is how it surfaced. Which is
+  right?
+
+- **`PADDLE MONITOR TONE` has no live reader.** A config row, a commented-out
+  default, three translated captions, and no code that reads it. Stored,
+  editable, broadcast to peers, used by nothing. Did the sidetone move, or did
+  the feature go? Left untouched -- deleting a setting an operator may have
+  set is not a cleanup.
+
+- **`HAMSCORE PASSWORD` blocks an otherwise clean batch.** The HamScore group
+  is five settings whose names all derive with no alias. It is held back only
+  because the agent memory says password storage in JSON is a decision owed
+  before the config work ends.
+
+### One thing NOT done on purpose
+
+`Config.DVKPath` and `Config.DVKRecorder` are `FileNameType` buffers read
+through `GetRealPath(Path, FileName, AddFolder: PAnsiChar): PAnsiChar`. Making
+them `string` properties is right and is what took two `PChar`s out of the tree
+when `MMTTY ENGINE` moved -- but it means converting `GetRealPath` and its
+seven callers, which is the `PChar` audit, not a settings batch. Casting at the
+call sites instead would ADD `PChar`s.
+
+---
+
 ## Added 2026-09-10 (overnight) -- MULTI-OP: SETTINGS SYNC, AND THE LINUX PORT LIST
 
 Four items. The first needs TWO POSITIONS AND A SERVER, which is the one shape
