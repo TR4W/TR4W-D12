@@ -790,9 +790,7 @@ begin
         // the NEXT outage starts at 5 s again rather than inheriting the
         // 60 s this one may have crept up to.
         CancelTelnetRetry;
-        TF.Format(wsprintfBuffer, '%s%s:%u', PAnsiChar(LclText(TC_CONNECTEDTO)),
-          @PendingTelnetHost[0], PendingTelnetPort);
-        AddStringToTelnetConsole(wsprintfBuffer, tstTR4W);
+        AddStringToTelnetConsole(SysUtils.Format(AnsiString('%s%s:%u'), [PAnsiChar(LclText(TC_CONNECTEDTO)), @PendingTelnetHost[0], PendingTelnetPort]), tstTR4W);
         // (The TelnetBuffer clear that stood here is gone with the buffer
         // -- there is no shared receive state to reset between sessions.)
         // LOG IN.  Until 2026-08-11 this branch sent ConnectionCommand
@@ -847,9 +845,7 @@ begin
         // can no longer cost the teardown.
         Disconnect;
 
-        TF.Format(wsprintfBuffer, '%s%s:%u', PAnsiChar(LclText(TC_FAILEDTOCONNECTTO)),
-          @PendingTelnetHost[0], PendingTelnetPort);
-        AddStringToTelnetConsole(wsprintfBuffer, tstError);
+        AddStringToTelnetConsole(SysUtils.Format(AnsiString('%s%s:%u'), [PAnsiChar(LclText(TC_FAILEDTOCONNECTTO)), @PendingTelnetHost[0], PendingTelnetPort]), tstError);
         // Keep trying, with a longer gap each time.  A failed RETRY comes
         // back through here, which is what makes the backoff advance --
         // and a first connect that fails is retried too, so a TR4W
@@ -1115,9 +1111,7 @@ begin
   // Issue #23 -- immediate visual feedback so connect is not a black box:
   // show the attempt in the window and switch the toolbar to the connected
   // state (grays Connect, enables Disconnect) the instant the user clicks.
-  TF.Format(wsprintfBuffer, '%s%s:%u', PAnsiChar(LclText(TC_CONNECTINGTO)), @PendingTelnetHost[0],
-    PendingTelnetPort);
-  AddStringToTelnetConsole(wsprintfBuffer, tstTR4W);
+  AddStringToTelnetConsole(SysUtils.Format(AnsiString('%s%s:%u'), [PAnsiChar(LclText(TC_CONNECTINGTO)), @PendingTelnetHost[0], PendingTelnetPort]), tstTR4W);
   EnableTelnetToolbatButtons(True);
 
   // Issue #23 -- start each session live: a Freeze left on from a previous
@@ -1162,9 +1156,7 @@ begin
   // suppress the very message the operator most needs to see.
   if TelnetSessionActive then
      begin
-     TF.Format(wsprintfBuffer, '%s%s:%u', PAnsiChar(LclText(TC_DISCONNECTEDFROM)), @PendingTelnetHost[0],
-       PendingTelnetPort);
-     AddStringToTelnetConsole(wsprintfBuffer, tstTR4W);
+     AddStringToTelnetConsole(SysUtils.Format(AnsiString('%s%s:%u'), [PAnsiChar(LclText(TC_DISCONNECTEDFROM)), @PendingTelnetHost[0], PendingTelnetPort]), tstTR4W);
      end;
 
   // Tell a still-connecting thread to bail (it checks this after connect, since
@@ -1916,9 +1908,7 @@ begin
     above is NOT dead and stays: it asks whether the form still exists. *)
 
   // TF.Format is wsprintf-style: positional arguments, not an open array.
-  TF.Format(wsprintfBuffer, 'Reconnecting to %s:%u in %u seconds...',
-         @PendingTelnetHost[0], PendingTelnetPort, TelnetRetryDelay div 1000);
-  AddStringToTelnetConsole(wsprintfBuffer, tstTR4W);
+  AddStringToTelnetConsole(SysUtils.Format(AnsiString('Reconnecting to %s:%u in %u seconds...'), [@PendingTelnetHost[0], PendingTelnetPort, TelnetRetryDelay div 1000]), tstTR4W);
 
   TelnetRetryTimer.Interval := TelnetRetryDelay;
   TelnetRetryTimer.Enabled := True;

@@ -5166,8 +5166,7 @@ begin
       begin
         if CallWindowString <> '' then
            begin
-           TF.Format(wsprintfBuffer, 'Callsign %s', @CallWindowString[1]);
-           ShowMessage(wsprintfBuffer);
+           ShowMessage(SysUtils.Format(AnsiString('Callsign %s'), [@CallWindowString[1]]));
            end
         else
            begin
@@ -5179,23 +5178,19 @@ begin
       begin
         if ActiveMode = CW then
            begin
-           TF.Format(wsprintfBuffer, 'Speed %u', CodeSpeed);
-           ShowMessage(wsprintfBuffer);
+           ShowMessage(SysUtils.Format(AnsiString('Speed %u'), [CodeSpeed]));
            end;
       end;
 
     menu_ctrl_showBand:
       begin
-        TF.Format(wsprintfBuffer, 'Band %s',
-          BandStringsArrayWithOutSpaces[ActiveBand]);
-        ShowMessage(wsprintfBuffer);
+        ShowMessage(SysUtils.Format(AnsiString('Band %s'), [BandStringsArrayWithOutSpaces[ActiveBand]]));
       end;
 
     menu_ctrl_showQSONumber:
       begin
 
-        TF.Format(wsprintfBuffer, 'QSO number %u', TotalContacts);
-        ShowMessage(wsprintfBuffer);
+        ShowMessage(SysUtils.Format(AnsiString('QSO number %u'), [TotalContacts]));
       end;
 
     menu_ctrl_logqsowithoutcw:

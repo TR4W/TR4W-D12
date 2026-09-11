@@ -837,9 +837,7 @@ begin
       DisplayClientStatus(i);
       end;
    ShowConnectionStatus(TC_DISCONNECTEDFROM);
-   TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_CONNECTIONTOTR4WSERVERLOST)),
-             @ServerAddress[1], ServerPort);
-   QuickDisplay(wsprintfBuffer);
+   QuickDisplay(SysUtils.Format(AnsiString(LclText(TC_CONNECTIONTOTR4WSERVERLOST)), [@ServerAddress[1], ServerPort]));
 end;
 
 { ON THE READER THREAD. }

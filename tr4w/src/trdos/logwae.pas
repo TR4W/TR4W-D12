@@ -91,13 +91,15 @@ procedure WAEQTC2;
 function NumberAvailableQTCsForThisCall(Call: CallString): integer;
 
 implementation
-uses uQTCR,
+uses
+   uQTCR,
    (* Which store a log READ comes from -- step B4.  See uLogSource. *)
    uLogSource,
   MainUnit,
    (* SetEntryText / TR4WCallEdit -- the QTC callsign goes into the ENTRY
      FIELD, which is a TEdit and not one of the status panels. *)
-   uMainForm;
+   uMainForm,
+   SysUtils;   // SysUtils.Format -- the shared format buffers are gone
 
 function QTCQuickEditResponse(Prompt: Str80;
   var QTCAction: QTCActionType;
@@ -147,8 +149,7 @@ begin
      DoABeep(Warning);
      p := @QTCCallsign[1];
      // Issue #997: asm wsprintf-push -> TF.Format.
-     TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_SORRYYOUALREADYHAVE10QTCSWITH)), p);
-     QuickDisplay(wsprintfBuffer);
+     QuickDisplay(SysUtils.Format(AnsiString(LclText(TC_SORRYYOUALREADYHAVE10QTCSWITH)), [p]));
      Exit;
      end;
 
