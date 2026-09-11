@@ -754,9 +754,45 @@ const
  (crCommand: 'FREQUENCY POLL RATE';           crAddress: @FreqPollRate;                   crMin:10; crMax:1000;    crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'FT1000MP CW REVERSE';           crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'GRID MAP CENTER';               crAddress: @GridMapCenter;                  crMin:0;  crMax:6;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'HAMLIB DEBUG';                crAddress: @TR4W_HAMLIB_DEBUG;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
-(crCommand: 'HAMLIB ASYNC ONLY';          crAddress: @TR4W_HAMLIB_ASYNC_ONLY;          crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
-(crCommand: 'HAMLIB TRACE';               crAddress: @TR4W_HAMLIB_TRACE;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
+ (* WITHDRAWN 2026-09-11 -- A BRIDGE WITH NOTHING LEFT TO CARRY.
+
+    uRadioConfigStore owns this value; ApplyLoggingSettings and the TCI block in
+    ApplyActiveProfileToConfigAtStartup put it into the global at startup, and
+    Preferences calls the same appliers rather than going through CheckCommand.
+    The row was csJSON, so the ini loader was ALREADY inert for it -- what is
+    left of it is an entry that accepts a command and does nothing with it,
+    which is what csRem says out loud.
+
+    Safe because csRem returns TRUE: anything still naming it -- an old .cfg,
+    ApplyStoredCommands walking the store's `commands` section -- is accepted
+    silently rather than reported as refused. *)
+ (crCommand: 'HAMLIB DEBUG';                crAddress: nil;               crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
+ (* WITHDRAWN 2026-09-11 -- A BRIDGE WITH NOTHING LEFT TO CARRY.
+
+    uRadioConfigStore owns this value; ApplyLoggingSettings and the TCI block in
+    ApplyActiveProfileToConfigAtStartup put it into the global at startup, and
+    Preferences calls the same appliers rather than going through CheckCommand.
+    The row was csJSON, so the ini loader was ALREADY inert for it -- what is
+    left of it is an entry that accepts a command and does nothing with it,
+    which is what csRem says out loud.
+
+    Safe because csRem returns TRUE: anything still naming it -- an old .cfg,
+    ApplyStoredCommands walking the store's `commands` section -- is accepted
+    silently rather than reported as refused. *)
+(crCommand: 'HAMLIB ASYNC ONLY';          crAddress: nil;          crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
+ (* WITHDRAWN 2026-09-11 -- A BRIDGE WITH NOTHING LEFT TO CARRY.
+
+    uRadioConfigStore owns this value; ApplyLoggingSettings and the TCI block in
+    ApplyActiveProfileToConfigAtStartup put it into the global at startup, and
+    Preferences calls the same appliers rather than going through CheckCommand.
+    The row was csJSON, so the ini loader was ALREADY inert for it -- what is
+    left of it is an entry that accepts a command and does nothing with it,
+    which is what csRem says out loud.
+
+    Safe because csRem returns TRUE: anything still naming it -- an old .cfg,
+    ApplyStoredCommands walking the store's `commands` section -- is accepted
+    silently rather than reported as refused. *)
+(crCommand: 'HAMLIB TRACE';               crAddress: nil;               crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'HAMSCORE ENABLE';               crAddress: @Config.HamScoreEnable;                 crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean;       crNetwork: 0),  // Issue #783
  (crCommand: 'HAMSCORE URL';                  crAddress: @Config.HamScoreURL;                    crMin:0;  crMax:200;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctString;        crNetwork: 0),  // Issue #783
  (crCommand: 'HAMSCORE USERNAME';             crAddress: @Config.HamScoreUsername;               crMin:0;  crMax:50;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctCaseSensitive; crNetwork: 0),  // Issue #783 -- empty falls back to MY CALL
@@ -1091,9 +1127,45 @@ const
 // (crCommand: 'TAIL END KEY';                  crAddress: @TailEndKey;                     crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctChar; crNetwork: 1),         // n4af 4.41.5
  //(crCommand: 'TAIL END MESSAGE';              crAddress: @TailEndMessage;                 crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 1),
 // (crCommand: 'TAIL END SSB MESSAGE';          crAddress: @TailEndPhoneMessage;            crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 1),
- (crCommand: 'TELNET DEBUG';                  crAddress: @TR4W_TELNET_DEBUG;              crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),   // Issue #23
- (crCommand: 'TCI DEBUG';                     crAddress: @TR4W_TCI_DEBUG;                 crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
- (crCommand: 'TCI MAX TX SECONDS';            crAddress: @TR4W_TCI_MAX_TX_SECONDS;        crMin:0;  crMax:3600;    crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
+ (* WITHDRAWN 2026-09-11 -- A BRIDGE WITH NOTHING LEFT TO CARRY.
+
+    uRadioConfigStore owns this value; ApplyLoggingSettings and the TCI block in
+    ApplyActiveProfileToConfigAtStartup put it into the global at startup, and
+    Preferences calls the same appliers rather than going through CheckCommand.
+    The row was csJSON, so the ini loader was ALREADY inert for it -- what is
+    left of it is an entry that accepts a command and does nothing with it,
+    which is what csRem says out loud.
+
+    Safe because csRem returns TRUE: anything still naming it -- an old .cfg,
+    ApplyStoredCommands walking the store's `commands` section -- is accepted
+    silently rather than reported as refused. *)
+ (crCommand: 'TELNET DEBUG';                  crAddress: nil;              crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),   // Issue #23
+ (* WITHDRAWN 2026-09-11 -- A BRIDGE WITH NOTHING LEFT TO CARRY.
+
+    uRadioConfigStore owns this value; ApplyLoggingSettings and the TCI block in
+    ApplyActiveProfileToConfigAtStartup put it into the global at startup, and
+    Preferences calls the same appliers rather than going through CheckCommand.
+    The row was csJSON, so the ini loader was ALREADY inert for it -- what is
+    left of it is an entry that accepts a command and does nothing with it,
+    which is what csRem says out loud.
+
+    Safe because csRem returns TRUE: anything still naming it -- an old .cfg,
+    ApplyStoredCommands walking the store's `commands` section -- is accepted
+    silently rather than reported as refused. *)
+ (crCommand: 'TCI DEBUG';                     crAddress: nil;                 crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
+ (* WITHDRAWN 2026-09-11 -- A BRIDGE WITH NOTHING LEFT TO CARRY.
+
+    uRadioConfigStore owns this value; ApplyLoggingSettings and the TCI block in
+    ApplyActiveProfileToConfigAtStartup put it into the global at startup, and
+    Preferences calls the same appliers rather than going through CheckCommand.
+    The row was csJSON, so the ini loader was ALREADY inert for it -- what is
+    left of it is an entry that accepts a command and does nothing with it,
+    which is what csRem says out loud.
+
+    Safe because csRem returns TRUE: anything still naming it -- an old .cfg,
+    ApplyStoredCommands walking the store's `commands` section -- is accepted
+    silently rather than reported as refused. *)
+ (crCommand: 'TCI MAX TX SECONDS';            crAddress: nil;        crMin:0;  crMax:3600;    crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
  (crCommand: 'TELNET SERVER';                 crAddress: @TelnetServer;                   crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'TEN MINUTE RULE';               crAddress: pointer(18);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'TOTAL OFF TIME';                crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
