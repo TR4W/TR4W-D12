@@ -10167,8 +10167,8 @@ var
   idx: integer;
   ownedElsewhere: boolean;
 begin
-  TF.Format(TempBuffer1, PAnsiChar(LclText(TC_SET_VALUE_OF_SET_NOW)), c);
-  if YesOrNo(string(TempBuffer1)) = IDno then
+  if YesOrNo(SysUtils.Format(AnsiString(LclText(TC_SET_VALUE_OF_SET_NOW)),
+                             [c])) = IDno then
      begin
      Exit;
      end;
@@ -10514,6 +10514,11 @@ var
   MakeRescore, ReLoadLog: boolean;
   module: THandle;
   TempFunc: Tmain;
+  (* THE PATH AS A STRING, with the pointer taken only at the API call.
+    LoadLibraryA is a real Win32 boundary and keeps its PAnsiChar -- but of a
+    NAMED LOCAL, never of a temporary, and no longer of a global shared with
+    forty other call sites. *)
+  dllPath: AnsiString;
 {$ENDIF}
 begin
 {$IFNDEF WINDOWS}
@@ -10539,10 +10544,10 @@ begin
      Exit;
      end;
 
-  TF.Format(TempBuffer1, '%sPlugins\%s', TR4W_PATH_NAME, PluginsArray[PluginNumber
-    - 10700]);
+  dllPath := SysUtils.Format(AnsiString('%sPlugins\%s'),
+                             [TR4W_PATH_NAME, PluginsArray[PluginNumber - 10700]]);
 
-  module := LoadLibraryA(TempBuffer1);
+  module := LoadLibraryA(PAnsiChar(dllPath));
   if module = 0 then
      begin
      logger.Error('[Plugin] cannot load %s -- %s',
@@ -10617,6 +10622,8 @@ var
   exitItem:   TMenuItem;   { the Exit row -- the plugins group sits above it }
   pluginMenu: TMenuItem;   { the Plugins popup, once one plugin has loaded }
   pluginItem: TMenuItem;
+  (* See RunPlugin: a string, with PAnsiChar taken at the API call only. *)
+  dllPath: AnsiString;
 const
   MAXLOADEDPLUGINS = 10;
 {$ENDIF}
@@ -10625,9 +10632,9 @@ begin
   { A LOCAL, so it holds rubbish until it is set -- and it is TESTED
     before the first plugin creates it. }
   pluginMenu := nil;
-  TF.Format(TempBuffer1, '%sPlugins\tr4w*.dll', TR4W_PATH_NAME);
+  dllPath := SysUtils.Format(AnsiString('%sPlugins\tr4w*.dll'), [TR4W_PATH_NAME]);
 
-  hFindFile := Windows.FindFirstFileA(TempBuffer1, lpFindFileData);
+  hFindFile := Windows.FindFirstFileA(PAnsiChar(dllPath), lpFindFileData);
   if hFindFile <> INVALID_HANDLE_VALUE then
      begin
      goto 1
@@ -10641,10 +10648,10 @@ begin
   if FindNextFileA(hFindFile, lpFindFileData) then
      begin
      1:
-     TF.Format(TempBuffer1, '%sPlugins\%s', TR4W_PATH_NAME,
-       lpFindFileData.cFileName);
+     dllPath := SysUtils.Format(AnsiString('%sPlugins\%s'),
+                                [TR4W_PATH_NAME, lpFindFileData.cFileName]);
 
-     module := LoadLibraryA(TempBuffer1);
+     module := LoadLibraryA(PAnsiChar(dllPath));
      TempFunc := GetProcAddress(module, 'tr4wGetPlugin');
      if @TempFunc <> nil then
         begin
