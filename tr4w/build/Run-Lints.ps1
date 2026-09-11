@@ -161,7 +161,6 @@ $lints = @(
    # x86_64-linux. Same class of defect -- a unit acquiring a platform
    # dependency -- against the platform that now matters. It SKIPS, loudly, on a
    # machine with no cross compiler (docs/CROSS_COMPILING.md).
-   @{ Name = 'Lint-LinuxCompile';    Arg = $null;    NeedsFpc = $false }
    @{ Name = 'Lint-UnitFileNames'; Arg = $null;    NeedsFpc = $false }
 
    # A DELETED UNIT LEAVES A REFERENCE THE COMMAND-LINE BUILD CANNOT SEE.
@@ -226,7 +225,7 @@ foreach ($lint in $lints)
                                         # -SourceDir ONLY WHEN THERE IS ONE. A script whose
                                         # param() block does not declare it treats the
                                         # argument as an ERROR, not as noise -- which is why
-                                        # Lint-LinuxCompile failed on every run without ever
+                                        # Lint-LinuxCompile (retired 2026-09-11) failed on every run without ever
                                         # compiling anything. A script with no param() block
                                         # at all absorbs it into $args, which is why the two
                                         # others that ignore it never showed the fault.

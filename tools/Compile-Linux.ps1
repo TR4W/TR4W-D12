@@ -147,7 +147,7 @@ if ((-not (Test-Path $stamp)) -or ((Get-Content -LiteralPath $stamp -Raw) -ne $w
 # CRASHED, which is exactly the day the retry below needed to run.
 #
 # The symptom was a lint that failed a clean tree while the same script passed
-# by hand: Lint-LinuxCompile invokes `& powershell`, which is 5.1, and I tested
+# by hand: the retired Lint-LinuxCompile invoked `& powershell`, which is 5.1, and I tested
 # with pwsh 7, where stderr does not throw. The two hosts disagreed and the
 # script only worked in the one I was using.
 #
@@ -212,7 +212,7 @@ if ($fpcExit -ne 0 -and
 # all THIRTEEN of its export runs were dying with an access violation, because
 # it too discarded the exit code.
 #
-# It matters more here than it did there, because Lint-LinuxCompile GATES THE
+# It mattered more here than there, because Lint-LinuxCompile once GATED THE
 # BUILD on this exit code and reports "N unit(s) still compile for
 # x86_64-linux". A wrong answer is not merely missed coverage; it is a green
 # ratchet asserting something nobody checked.

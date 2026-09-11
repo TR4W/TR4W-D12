@@ -26,7 +26,7 @@
 #             LCLType within a minute, and its absence let the uCrashLog ->
 #             Forms edge hide for three days. There is no program left in this
 #             tree without a widget set, so it has nothing left to guard.
-#             Lint-LinuxCompile replaces it -- same class of defect, against
+#             the NATIVE CI builds replace it -- same class of defect,
 #             the platform that now matters.
 #
 #             THE SQLITE EXCLUSION BELOW IS UNTOUCHED and guards a different

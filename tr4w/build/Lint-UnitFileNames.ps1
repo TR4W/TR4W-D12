@@ -52,7 +52,7 @@
    on its own and failed the moment uCallSignRoutines asked for it by name.
 
    AND THE WINDOWS-HOSTED LINUX CROSS-COMPILE CANNOT SEE IT. That compiler runs
-   on Windows and inherits case-insensitive file lookup, so Lint-LinuxCompile
+   on Windows and inherits case-insensitive file lookup, so the retired Lint-LinuxCompile
    passes either way. It took a NATIVE Unix host to surface -- which is what
    this lint now stands in for on the Windows build.
 

@@ -358,13 +358,26 @@ sh tr4w/build/build-unix.sh --list     # what the stages are, and stop
   reports its own first error so the summary is a ranked worklist. Its own header still describes an
   era when nothing linked; read the README, not the header.
 - **The lints and the Edit-QSO round-trip are PowerShell and do not run there.** They are reported
-  as not-run, never as passed. `Lint-LinuxCompile.ps1` pins the units that must keep cross-compiling
-  from Windows, and `tools/compile-native.sh` parses the same list — **add a unit the day it first
-  compiles, never because the `{$IFDEF WINDOWS}` reads well.**
+  as not-run, never as passed.
 
-**A Windows-hosted cross-compile is a weaker check than a native one.** It inherits case-insensitive
-unit lookup from its host, which is how `uCTYDAT.PAS` passed `Lint-LinuxCompile` and still broke on
-a real Unix box — see [Naming](#naming).
+### ~~`Lint-LinuxCompile`~~ — RETIRED 2026-09-11, and cross-compiling is not how this is checked
+
+NY4I: *"we do not cross-compile. we use ssh linux-build-ci and mac-ci to build on a native system."*
+
+**A Windows-hosted cross-compile was always the weaker check**, and this file already recorded why:
+it inherits case-insensitive unit lookup from its host, which is how `uCTYDAT.PAS` passed the lint
+and still broke on a real Unix box — see [Naming](#naming). A check whose failure mode is a quieter
+pass is worth less than no check, because it is believed.
+
+So the lint is **deleted**, along with the hand-maintained list of pinned units it carried and the
+`--all` mode of `tools/compile-native.sh` that read that list out of it. **Nothing is lost.**
+`./tools/compile-native.sh --tree` compiles `MainUnit` and its ENTIRE dependency graph in one walk —
+every unit the program actually links, ordered by the compiler rather than by a list somebody has
+to remember to update. `--all` now says so and points at `--tree` rather than failing obscurely.
+
+`tools/Compile-Linux.ps1` is **kept** and still cross-compiles one unit from Windows. It is a quick
+local convenience now, not a gate, and it carries the same caveat: a green answer from it is weaker
+than a native one.
 
 **`spike/` is gone** (2026-08-13). It answered "can FPC do this", the answer was yes, and its probes
 are in git history. UI harnesses live in `tr4w/test/ui/`.
@@ -377,15 +390,19 @@ in `tr4w.dproj`'s
 PreBuildEvent, so it gated msbuild and nothing else; an FPC build saw none of them. Add a lint by
 editing that one array.
 
-**A WINDOWS GATE IS A GUESS UNTIL A COMPILER DISAGREES.** `tools/Compile-Linux.ps1
-<unit>.pas` builds one unit for x86_64-linux, and `build/Lint-LinuxCompile.ps1`
-pins the set that must keep doing so -- **add a unit the day it first compiles,
-never because the `{$IFDEF WINDOWS}` reads well.** It found a real defect on its
-first use: the vendored `tr4wserial.pas` merge had given `SerBreak` the Windows
-default (`mSec = 250`) in an interface whose Unix body declares `0`, which no
-Windows build could ever see. It is skipped, loudly, where no cross compiler is
-installed. **There is no macOS equivalent yet** -- the Mac mini is reachable as
-`ssh mac-ci` but has no FPC on it.
+**A WINDOWS GATE IS A GUESS UNTIL A COMPILER DISAGREES**, and the compiler that
+settles it is a NATIVE one. Build on `linux-build-ci` and `mac-ci`; that is the
+check (NY4I, 2026-09-11).
+
+`tools/Compile-Linux.ps1 <unit>.pas` still cross-compiles one unit for
+x86_64-linux from Windows and is useful for a quick local answer, but it is no
+longer a gate and never proved as much as it appeared to -- see the retirement
+note above. ~~`build/Lint-LinuxCompile.ps1`~~ is **deleted**.
+
+The cross compiler did earn its keep once, which is why it is kept as a tool:
+it found that the vendored `tr4wserial.pas` merge had given `SerBreak` the
+Windows default (`mSec = 250`) in an interface whose Unix body declares `0`,
+which no Windows build could ever see.
 
 `Lint-LFMProperties` is the odd one out: it compiles a small FPC helper (`build/lintlfm/`) that links
 the LCL and asks the same RTTI the streaming loader uses, because "does this class publish this
@@ -1414,7 +1431,7 @@ the reasoning rather than the mechanics.
   name is used verbatim — which is why `uCTYDAT.PAS` compiled alone and failed
   the moment `uCallSignRoutines` asked for it. **And the Windows-hosted Linux
   cross-compile cannot see it**, because that compiler inherits case-insensitive
-  lookup from its host: `Lint-LinuxCompile` passed throughout. It took a NATIVE
+  lookup from its host: ~~`Lint-LinuxCompile`~~ (RETIRED 2026-09-11) passed throughout. It took a NATIVE
   Unix host to surface. `Lint-UnitFileNames` is the guard on this machine.
 
   A MixedCase *base* name is fine (`uCallSignRoutines.pas`) — the first spelling

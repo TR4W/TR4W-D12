@@ -10,13 +10,12 @@
 #
 #   ./tools/compile-native.sh uctydat.pas       one unit
 #   ./tools/compile-native.sh utils/utils_file.pas
-#   ./tools/compile-native.sh --all             the pinned list
 #   ./tools/compile-native.sh --tree            MainUnit and everything it
 #                                               needs, in ONE pass -- start here
 #   ./tools/compile-native.sh --every           EVERY unit under src, as a
 #                                               census: how far is the tree?
 #
-# Exit status is the compiler's for a single unit; for --all and --tree it is
+# Exit status is the compiler's for a single unit; for --tree it is
 # the compiler's too.  --every always exits 0: it is a measurement, not a gate,
 # and a tree that does not fully build yet is the expected answer.
 #
@@ -253,62 +252,38 @@ first_error() {
       sed 's|.*/||' | cut -c1-78
 }
 
-# THE PINNED LIST IS READ FROM THE LINT, NOT COPIED FROM IT.
+# THE PINNED UNIT LIST IS GONE, AND SO IS --all (2026-09-11).
 #
-# It used to be a literal here under the comment "mirrors
-# tr4w/build/Lint-LinuxCompile.ps1", and by 2026-09-08 it did not: the lint had
-# eighteen units and this had fifteen, missing uStickyKeys, utils/uAudio and
-# GetWinVersionInfo.  Nothing reported that, because a list that is short only
-# runs FEWER checks -- it passes.  A drifting copy whose failure mode is a
-# quieter pass is the worst kind, so there is one list now and this reads it.
+# NY4I: "we do not cross-compile. we use ssh linux-build-ci and mac-ci to build
+# on a native system."
 #
-# The lint's rows look like
-#     @{ Unit = 'uBandLookup.pas'; Since = '2026-09-06' }
-# except one, which spells its separator as [char]92 to keep a backslash out of
-# a PowerShell string:
-#     @{ Unit = 'utils' + [char]92 + 'uAudio.pas'; Since = '2026-09-08' }
+# The list lived in tr4w/build/Lint-LinuxCompile.ps1 and this script read it
+# from there. That lint was a WINDOWS-HOSTED CROSS COMPILE, and it was the
+# weaker check for a reason CLAUDE.md already recorded: it inherits
+# case-insensitive unit lookup from its host, which is how uCTYDAT.PAS passed it
+# and still broke on a real Unix box. It is retired; the native builds are the
+# gate now.
 #
-# SO IT IS NORMALISED FIRST, THEN EXTRACTED ONCE.  Trying to do both with two
-# alternative patterns in one sed script does not work and fails QUIETLY: the
-# general pattern also matches the [char]92 line and yields a bare 'utils',
-# which is then reported as a MISSING UNIT rather than as a parsing bug.  One
-# pattern, applied to text that has been made uniform, has no such arm.
-LINT="$REPO/tr4w/build/Lint-LinuxCompile.ps1"
-read_pinned() {
-   if [ ! -f "$LINT" ]; then
-      echo "No $LINT -- cannot read the pinned unit list." >&2
-      return 2
-   fi
-   sed "s/' *+ *\[char\]92 *+ *'/\\\\/g" "$LINT" |
-      sed -n "s/.*Unit *= *'\([^']*\)'.*/\1/p" |
-      tr '\\' '/'
-}
+# NOTHING IS LOST WITH IT. A pinned subset was only ever a stand-in for
+# compiling the real thing, and --tree below compiles MainUnit and its ENTIRE
+# dependency graph in one walk -- every unit the program actually links,
+# ordered by the compiler rather than by a list somebody has to remember to
+# update.
 
 if [ $# -eq 0 ]; then
-   echo "usage: $0 <unit.pas> | --all | --tree | --every" >&2
+   echo "usage: $0 <unit.pas> | --tree | --every" >&2
    exit 2
 fi
 
 case "$1" in
    --all)
-      ok=0; bad=0
-      ALL=$(read_pinned) || exit 2
-      if [ -z "$ALL" ]; then
-         echo "The pinned list came back EMPTY -- the lint's format changed." >&2
-         echo "Refusing to report success on nothing." >&2
-         exit 2
-      fi
-      for u in $ALL; do
-         if compile_one "$u"; then
-            ok=$((ok + 1)); echo "  OK       $u"
-         else
-            bad=$((bad + 1)); echo "  blocked  $u"; echo "             $(first_error)"
-         fi
-      done
-      echo
-      echo "compile-native ($ARCH): $ok compiled, $bad blocked"
-      [ "$bad" -eq 0 ]
-      exit $?
+      # RETIRED 2026-09-11 with the pinned list it read. Answered rather than
+      # silently dropped, because the flag is in scripts and in muscle memory.
+      echo "--all is retired: it compiled a hand-maintained SUBSET of units," >&2
+      echo "read out of tr4w/build/Lint-LinuxCompile.ps1, which is gone." >&2
+      echo "Use --tree, which compiles MainUnit and its entire dependency" >&2
+      echo "graph -- a superset, ordered by the compiler." >&2
+      exit 2
       ;;
 
    --tree)
