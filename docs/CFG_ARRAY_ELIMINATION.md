@@ -308,6 +308,9 @@ the program has.
 
 ## 2e. What the remaining rows ARE -- and why "400 to go" was the wrong number
 
+> **Counts ROWS only. See 2g: `CheckCommand` accepts 127 more commands that
+> are not rows at all.**
+
 Measured 2026-09-10, after seven settings had migrated, by classifying every
 row that still applies rather than counting them.
 
@@ -367,6 +370,9 @@ left costs either a string-model edit (a fixed `AnsiChar` array becoming a
 
 ## 2f. What has to survive: 37 commands, not 400
 
+> **The 37 is rows only, and is therefore too low -- see 2g. Contest files
+> also use `COLUMN WIDTH` on 73 lines, which is a generated arm.**
+
 The contest `.cfg` is the one text-to-value path that does NOT go away with the
 ini. CLAUDE.md is explicit that it is exempt and heading for SQLite, not JSON.
 So "how big is the parser we can never delete" is the number that decides what
@@ -411,6 +417,49 @@ JSON `commands` section, the spelling tables that serve only them -- goes.
 
 That is a far smaller and more defensible artifact than the 508-row table, and
 it is one whose remaining job is honest: reading a file format contests ship.
+
+---
+
+## 2g. CORRECTION: CheckCommand has THREE families, and a row census sees one
+
+**Written 2026-09-11, correcting sections 2e and 2f, which were written the day
+before and counted only ROWS.**
+
+Chasing the one thing 2f could not account for -- `COLUMN WIDTH CALLSIGN`,
+appearing in up to 17 contest files and matching no row -- turned up a whole
+mechanism the census was blind to. `CheckCommand` dispatches three ways:
+
+| family | how a command is recognised | commands |
+|---|---|---:|
+| `CFGCA` rows | an exact match against 508 declared rows | 508 |
+| `<element> WINDOW COLOR` / `BACKGROUND` | a scan of `TWindows[].mweName`, 50 elements | **100** |
+| `COLUMN WIDTH <token>` | a scan of `ColumnCanonicalName[]`, 27 columns | **27** |
+
+**So the command surface is 635, not 508**, and 127 of those commands are
+GENERATED from a table of window elements and a table of log columns rather
+than declared. A census that greps for `crCommand:` cannot see any of them.
+
+### Why this matters more than the arithmetic
+
+**They would SURVIVE deleting the array**, because they are not in it. Anyone
+who retires the last row and expects `CheckCommand` to go with it will find two
+hand-written arms still sitting there, still needed.
+
+And 2f's "37 commands have to survive" is **wrong as stated**: the shipped
+contest files use `COLUMN WIDTH` on **73 lines**, so the permanent contest-file
+parser is those 37 rows PLUS the column-width arm. No shipped contest file sets
+a window colour, but an operator's own file may.
+
+### The one good thing about them
+
+**Both arms are already GENERATED from a table rather than typed out**, which is
+the shape section 2d argues everything should end up in. Adding a main-window
+element gives you its two colour commands for free; adding a log column gives
+you its width command. Neither can drift from the enum the way a spelling table
+can, because neither is a second list.
+
+So they are not the problem CFGCA is. They are two small parsers over data the
+program already owns, and the honest end state keeps them.
 
 ---
 
