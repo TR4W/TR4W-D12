@@ -463,6 +463,50 @@ program already owns, and the honest end state keeps them.
 
 ---
 
+## 2h. The 100-command window arm is a bridge too -- and it already half-loses
+
+Found 2026-09-11 while looking for more rows of the kind section 2g describes.
+
+`<element> WINDOW COLOR` and `<element> WINDOW BACKGROUND` write
+`TWindows[e].mweColor` and `.mweBackG`. **So does the store**, through
+`ApplyElementColors`, from an `elementColors` section, and Preferences edits
+that section and calls the same applier.
+
+### The ordering, which is the interesting part
+
+| | `uProgramMain` |
+|---|---|
+| the contest `.cfg` is read | line 1585 |
+| the store applies element colours | line 1654, via `ApplyActiveProfileToConfigAtStartup` |
+
+**The store applies SECOND**, so a colour set in a config file is already
+overridden for any element the store has an entry for. The arm therefore
+"works" only for elements the store happens not to know about -- a legacy path
+that half-functions, which is worse for an operator than one that plainly does
+not.
+
+### Why it is NOT retired here
+
+Removing it removes the ability to set a window colour from a config file, and
+that is a capability decision rather than a cleanup. **NY4I's call.** Three
+things worth knowing before making it:
+
+1. **No shipped contest file uses it.** Measured across all 85: zero `WINDOW`
+   lines. Only an operator's own `.cfg` or ini could.
+2. **It is 100 commands** -- 50 elements times two -- which is the largest
+   single block left outside the row table.
+3. **It is GENERATED, not typed**, so unlike a spelling table it cannot drift
+   from the element list. If it stays, it costs nothing to maintain.
+
+### The same question applies to the band plan
+
+`ApplyBandPlan` reads a `bandPlan` section from the store and there is a
+config-file path beside it. It was not examined; it is the next thing to look
+at when this decision is made, because it will have the same shape and should
+get the same answer.
+
+---
+
 ## 3. Stage A -- DONE 2026-09-10
 
 **One rule for turning a configured port into a device name.**
