@@ -23,6 +23,65 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-09-11 -- WHAT NY4I'S "WERE THEY REFERENCED?" QUESTION FOUND
+
+He asked whether each deleted `csRem` row had been checked for references. It
+had not been, individually -- the argument was structural (a `csRem` row
+returned True and exited BEFORE applying, so it could not affect what any code
+read). That argument holds, and `uCFG.pas:2096` is the code that proves it.
+
+**But the search he asked for found a real defect next to them, and a second
+one underneath.** Doing the check was worth it; the reasoning was not a
+substitute.
+
+### FIXED -- Preferences read blank and then saved the blank
+
+Seven hand-wired controls in `uPrefsForm` reach their setting by command NAME:
+external logger address / enabled / port, MMTTY engine, radio TCP server port,
+spot collector enabled, YCCC SO2R enable. They read through
+`CFGCommandValueAsString` and write through `SetCFGCommandValue`.
+
+All seven had moved to `uSettingsModel`. The WRITE path resolved the name; the
+READ path did not, and returned `''`. So the panel showed unchecked or empty
+whatever the setting actually was, and OK stored what the control was showing.
+
+**Broken since 2026-09-10, not by the row deletions** -- those rows had been
+stubs with `crAddress: nil` since then, so the read was already failing.
+
+Fixed, with a test that was verified to FAIL without the fix. **Worth checking
+on the bench anyway**: open Preferences, confirm the external logger and spot
+collector checkboxes show the state the program is actually in, press OK, and
+confirm they are unchanged afterwards.
+
+### OPEN, AND A QUESTION -- `EXCHANGE WINDOW S&P BACKGROUND` sets the wrong field
+
+`EXCHANGE` is a real `TMainWindowElement`, so this command matches the
+generated `<element> WINDOW COLOR/BACKGROUND` arm (`uCFG.pas:1976`) BEFORE the
+row scan -- which is why its `csRem` row had never executed.
+
+The arm tests only `Pos(' WINDOW ', cmd) > 0` and the element name at position
+1, then checks for `' COLOR'`. It has no notion of S&P. So
+**`EXCHANGE WINDOW S&P BACKGROUND` and `EXCHANGE WINDOW BACKGROUND` both write
+`TWindows[EXCHANGE].mweBackG`** -- setting the search-and-pounce colour changes
+the ordinary one.
+
+And there is nowhere else for it to go: `VC.pas:767` gives the element record
+exactly two colour fields, `mweColor` and `mweBackG`. There is no S&P colour.
+
+**The question for NY4I:** was a separate S&P colour ever a feature, or is
+that command a leftover that should join the retired list? Nothing was changed
+-- it behaves today exactly as it did before the deletions.
+
+### ALSO OBSERVED -- the external logger port is read once at startup
+
+`uProgramMain:1682` copies `Settings.ExternalLogger.Port` into the logger
+object when it is created. Changing the port in Preferences mid-session
+updates the setting but not the running object. That predates this work (the
+global was read once too) and is not a regression; it is worth knowing before
+anyone reports "changing the port does nothing".
+
+---
+
 ## Added 2026-09-11 (overnight) -- 122 CONFIG ROWS GONE, AND THREE RULINGS OWED
 
 Six commits moved 122 rows out of `CFGCA` (508 -> 386). Everything below is
