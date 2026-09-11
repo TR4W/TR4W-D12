@@ -365,6 +365,55 @@ left costs either a string-model edit (a fixed `AnsiChar` array becoming a
 
 ---
 
+## 2f. What has to survive: 37 commands, not 400
+
+The contest `.cfg` is the one text-to-value path that does NOT go away with the
+ini. CLAUDE.md is explicit that it is exempt and heading for SQLite, not JSON.
+So "how big is the parser we can never delete" is the number that decides what
+CFGCA reduces to, and it had never been measured.
+
+**Measured 2026-09-10 across the 85 shipped contest files in `target/`:
+37 distinct CFGCA commands.**
+
+Nearly all of them are identity and category, not behaviour:
+
+| what | commands | reach |
+|---|---:|---|
+| the Cabrillo `CATEGORY-*` fields | 6 | 82 of 85 files |
+| `CONTEST` and `MY CALL` | 2 | every file |
+| the other `MY ...` identity rows | 9 | 1 to 29 files each |
+| contest behaviour -- exchanges, multipliers, QSO points | ~20 | mostly 1 file each |
+
+**So the permanent parser is 37 rows wide.** Everything else CFGCA carries is
+there for a file format that is being retired, or for a value some other store
+already owns.
+
+### And the message memories are NOT CFGCA rows
+
+62 lines in those files name something the array does not know, and the two
+groups are worth telling apart:
+
+- **`CQ CW MEMORY F3`, `EX CW MEMORY F4 CAPTION` and friends.** The function-key
+  and CQ/QSL message memories, which CLAUDE.md already records as living in the
+  contest `.cfg` deliberately. They reach the program by a different route and
+  are not part of this at all.
+- **`COLUMN WIDTH CALLSIGN`, `COLUMN WIDTH DATE` and four more**, in up to 17
+  files each. These ARE settings and they are not CFGCA commands under those
+  names -- worth finding out what reads them before the `.cfg` parser is
+  rewritten, because a contest file is setting something and this document
+  cannot say what.
+
+### What this means for the end state
+
+`CFGCA` does not shrink to nothing. It shrinks to a **contest-file parser** of
+about 37 entries, and everything else -- the ini vocabulary, the 243 keys in the
+JSON `commands` section, the spelling tables that serve only them -- goes.
+
+That is a far smaller and more defensible artifact than the 508-row table, and
+it is one whose remaining job is honest: reading a file format contests ship.
+
+---
+
 ## 3. Stage A -- DONE 2026-09-10
 
 **One rule for turning a configured port into a device name.**
