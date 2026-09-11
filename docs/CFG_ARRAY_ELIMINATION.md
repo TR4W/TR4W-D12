@@ -306,6 +306,65 @@ the program has.
 
 ---
 
+## 2e. What the remaining rows ARE -- and why "400 to go" was the wrong number
+
+Measured 2026-09-10, after seven settings had migrated, by classifying every
+row that still applies rather than counting them.
+
+| what the row is | rows | references behind it |
+|---|---:|---:|
+| already adapted by the settings registry | 113 | |
+| belongs to a STRUCTURED STORE (radio, keyer, rotator, UDP, cluster) | 95 | |
+| already a `Config` record field | 71 | |
+| reached through a spelling table or an array index | 42 | |
+| a bare global, over 60 references | 12 | 1,612 |
+| a bare global, 21 to 60 references | 20 | 568 |
+| a bare global, 6 to 20 references | 37 | 418 |
+| a bare global, 1 to 5 references | 10 | 35 |
+
+**279 OF THE 400 ROWS ALREADY HAVE A MODERN OWNER.** The registry, a structured
+store, or the `Config` record holds the value; the row is a BRIDGE to
+`CheckCommand`, not the storage.
+
+That is a different project from the one section 2b described. Migrating 400
+settings and repointing 4,663 references is not the work. **Removing the bridge
+is**, and for 279 rows it touches no reader at all.
+
+### What still needs the bridge, for a row that already has an owner
+
+Three things, and they are the same three the model already answers by name:
+
+1. **the one-time import** of a legacy value;
+2. **multi-op peer sync**, which arrives as command TEXT;
+3. **the contest `.cfg`**, a live input format that is not going away.
+
+`uSettingsModel` handles 1 and 2 today, by deriving the command name from the
+property path. Point 3 is the one that keeps a text-to-value path alive
+permanently, and it is much smaller than CFGCA: the commands a contest `.cfg`
+actually sets, not all 400.
+
+### So the order of work changes
+
+1. **Retire the rows whose owner is a structured store**, once peer sync and
+   the `.cfg` reach that store directly. 95 rows, no reader touched.
+2. **Retire the registry-adapted rows** the same way. 113 rows.
+3. **Move the 71 `Config` fields** onto the settings object, which is a rename
+   at each reader rather than a migration.
+4. **The 79 bare globals are the real remainder**, and the 12 with over 60
+   references each -- `MyCall` at 169 across 32 units -- are each a project.
+5. **The 42 spelling-table rows** go with the tables, and
+   `Lint-SpellingTables` is what holds them still meanwhile.
+
+### The trivial tier is already gone
+
+At five references or fewer, with no second writer, no registry adapter and
+excluding families a structured store owns, the candidate list is **four rows**
+-- and two of those are LPT ports, which keep their enum by decision. Everything
+left costs either a string-model edit (a fixed `AnsiChar` array becoming a
+`string`) or a decision about which of two owners wins.
+
+---
+
 ## 3. Stage A -- DONE 2026-09-10
 
 **One rule for turning a configured port into a device name.**
