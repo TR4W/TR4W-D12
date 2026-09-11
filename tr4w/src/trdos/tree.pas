@@ -2781,15 +2781,19 @@ end;
 
 function OkayToDeleteExistingFile(FileName: PAnsiChar): boolean;
 begin
-  TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_ALREADYEXISTSOKAYTODELETE)), FileName);
-
   (* YES IS THE DEFAULT BUTTON, as it was: MB_YESNO with no MB_DEFBUTTON2
     focuses the first button, and QuestionDlg's 'IsDefault' marker applies to
     the button BEFORE it (LCL promptdialog.inc:900) -- so it goes after mrYes,
     not at the end. That is the opposite of YesOrNo in MainUnit, where No is
     deliberately the default and the marker sits last; getting it wrong here
     would put a delete one reflexive Enter away instead of two. *)
-  Result := QuestionDlg('TR4W', LclText(string(wsprintfBuffer)), mtWarning,
+  (* BOTH LclText CALLS ARE KEPT. The inner one translates the format
+    string and the outer one encodes the result, which is what this did
+    before; collapsing them is a translation question, not a string one. *)
+  Result := QuestionDlg('TR4W',
+                        LclText(string(SysUtils.Format(
+                           AnsiString(LclText(TC_ALREADYEXISTSOKAYTODELETE)),
+                           [FileName]))), mtWarning,
                         [mrYes, 'IsDefault', mrNo], 0) = mrYes;
 end;
 

@@ -622,10 +622,9 @@ begin
   // Composed from TC_DUPESHEET rather than a new literal, so the only English
   // here is still the one that was already translated.
   rn := AnsiString(Radio.RadioName);
-  TF.Format(wsprintfBuffer, PAnsiChar(LclText('%s ' + TC_DUPESHEET)),
-    PAnsiChar(rn), BandStringsArray[Band], ModeStringArray[Mode]);
-//  asm add esp,16  end;
-  frm.Caption := string(PAnsiChar(@wsprintfBuffer));
+  frm.Caption := SysUtils.Format(AnsiString(LclText('%s ' + TC_DUPESHEET)),
+                                 [rn, BandStringsArray[Band],
+                                  ModeStringArray[Mode]]);
 end;
 
 { WHAT WM_INITDIALOG DID.  Reached through the form's OnShow -- see the seam in

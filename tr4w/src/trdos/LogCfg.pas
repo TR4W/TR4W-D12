@@ -406,8 +406,16 @@ begin
 end;
 
 procedure SetUpGlobalsAndInitialize;
-//var
-//FileName : str40;
+var
+  (* A LOCAL buffer, not the shared wsprintfBuffer global.
+
+    This one genuinely needs a CHARACTER BUFFER rather than a string:
+    ResolveDataFileInPlace takes an open array of AnsiChar by reference and
+    rewrites it, and StrLCopy below reads it. That is the open-array shape CLAUDE.md
+    asks for -- it carries its own bounds -- so what was wrong here was the
+    buffer being GLOBAL and shared with forty other call sites, not the
+    buffer existing. *)
+  domPath                               : array[0..MAX_PATH - 1] of AnsiChar;
 begin
 
   { GetTickCount64 -- StartCPU is QWord, see MainUnit. }
@@ -452,20 +460,22 @@ begin
      begin
      if fileexists(TR4W_DOM_FILENAME) then                       // 4.100.2
         begin
-        TF.Format(wsprintfBuffer, '%s', TR4W_DOM_FILENAME)
+        uAnsiStr.StrLCopy(domPath, TR4W_DOM_FILENAME, SizeOf(domPath) - 1)
         end
       else
          begin
-         TF.Format(wsprintfBuffer, '%sdom\%s', TR4W_PATH_NAME, DomQTHDataFileName);
+         uAnsiStr.StrPCopy(domPath,
+            SysUtils.Format(AnsiString('%sdom\%s'),
+                            [TR4W_PATH_NAME, DomQTHDataFileName]));
          (* Windows spelling, resolved for this platform -- see fcontest. *)
-         ResolveDataFileInPlace(wsprintfBuffer);
+         ResolveDataFileInPlace(domPath);
          end;
       FillChar(DomQTHDataFileName, SizeOf(DomQTHDataFileName), 0);
       (* Appended with uAnsiStr rather than Win32's lstrcatA, and BOUNDED:
         lstrcatA walks to the NUL and keeps writing, and
         DomQTHDataFileName is a FileNameType of MAX_PATH AnsiChars. *)
       uAnsiStr.StrLCopy(@DomQTHDataFileName[uAnsiStr.StrLen(DomQTHDataFileName)],
-                        wsprintfBuffer,
+                        domPath,
                         SizeOf(DomQTHDataFileName) - 1
                           - uAnsiStr.StrLen(DomQTHDataFileName));
       if not DomQTHTable.LoadInDomQTHFile(DomQTHDataFileName) then
