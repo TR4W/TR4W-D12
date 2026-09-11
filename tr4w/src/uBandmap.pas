@@ -87,8 +87,6 @@ var
   // These three are OPERATOR SETTINGS (BANDMAP ITEM HEIGHT, BANDMAP ITEM WIDTH,
   // BAND MAP DISPLAY GHZ) and are read from the CFG table by address, so they
   // stay module-level rather than becoming form fields.
-  BandMapItemHeight: integer = 14;
-  BandMapItemWidth: integer = 135;
   PreviousDisplayedBandmapBand: BandType;
 
 implementation

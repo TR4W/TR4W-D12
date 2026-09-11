@@ -743,12 +743,19 @@ begin
    // --- Band Map (5) ---------------------------------
    RegisterStoredSetting('bandmap.ctrlj.bandMapCutoffFrequency','BAND MAP CUTOFF FREQUENCY',
                           RS_BANDMAP_CTRLJ_BANDMAPCUTOFFFREQUENCY);
-   RegisterStoredSetting('bandmap.ctrlj.bandMapItemHeight',   'BAND MAP ITEM HEIGHT',
-                          RS_BANDMAP_CTRLJ_BANDMAPITEMHEIGHT);
-   RegisterStoredSetting('bandmap.ctrlj.bandMapItemWidth',    'BAND MAP ITEM WIDTH',
-                          RS_BANDMAP_CTRLJ_BANDMAPITEMWIDTH);
-   RegisterStoredSetting('bandmap.ctrlj.bandMapSize',         'BAND MAP SIZE',
-                          RS_BANDMAP_CTRLJ_BANDMAPSIZE);
+   (* MOVED TO uSettingsModel 2026-09-11, and they keep crJ:1's meaning --
+     NeedsRestart -- explicitly, because for these three it is true: the band
+     map grid's geometry is computed once in LayOutGrid.
+
+     Their ranges moved with them, from crMin/crMax into SUBRANGE TYPES on the
+     properties, so TrySetByCommand still refuses 51 for an item height
+     without being told which setting that is. *)
+   RegisterModelSetting('bandmap.ctrlj.bandMapItemHeight',   'BAND MAP ITEM HEIGHT',
+                        RS_BANDMAP_CTRLJ_BANDMAPITEMHEIGHT, True, True);
+   RegisterModelSetting('bandmap.ctrlj.bandMapItemWidth',    'BAND MAP ITEM WIDTH',
+                        RS_BANDMAP_CTRLJ_BANDMAPITEMWIDTH, True, True);
+   RegisterModelSetting('bandmap.ctrlj.bandMapSize',         'BAND MAP SIZE',
+                        RS_BANDMAP_CTRLJ_BANDMAPSIZE, True, True);
    RegisterStoredSetting('bandmap.ctrlj.bandMapSplitMode',    'BAND MAP SPLIT MODE',
                           RS_BANDMAP_CTRLJ_BANDMAPSPLITMODE);
 

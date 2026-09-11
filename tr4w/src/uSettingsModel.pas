@@ -113,6 +113,32 @@ type
    TR4WSettings = class;
 
    (*
+     A BOUNDED INTEGER SETTING DECLARES ITS BOUNDS AS ITS TYPE.
+
+     CFGCA carried crMin and crMax per row, and CheckCommand refused anything
+     outside them.  Those two fields have to go somewhere when the row does,
+     and the native FPC answer is not a table and not a validate() method: it
+     is a SUBRANGE TYPE.  The compiler emits MinValue and MaxValue into the
+     property's RTTI, which is the same RTTI the streamer and the command
+     lookup already read -- so TrySetByCommand enforces the range without
+     being told about any particular setting, exactly as it types them without
+     being told.
+
+     This is the unit header's thesis applied to one more field: the property
+     name is the key, the property TYPE is the type -- and the range is part
+     of the type.
+
+     WHAT IT DOES NOT DO.  Range checking is off in this build, so a direct
+     Pascal assignment of an out-of-range value still compiles and stores.
+     The guard is at the boundary where untrusted values arrive -- a config
+     file, an import, a peer -- which is where crMin and crMax guarded too.
+   *)
+   TBandMapDisplayLimit = 30..1000;
+   TBandMapItemHeight   = 12..50;
+   TBandMapItemWidth    = 100..200;
+   TBandMapSize         = 0..8;
+
+   (*
      THE BASE OF EVERY SETTINGS GROUP.
 
      It exists for ONE reason: so that a property setter can perform the side
@@ -263,6 +289,10 @@ type
       FDupeDisplay: boolean;
       FMultsOnly: boolean;
       FSo2rDisplay: boolean;
+      FDisplayLimit: TBandMapDisplayLimit;
+      FItemHeight: TBandMapItemHeight;
+      FItemWidth: TBandMapItemWidth;
+      FSize: TBandMapSize;
       procedure SetAllBands(aValue: boolean);
       procedure SetAllModes(aValue: boolean);
       procedure SetCallWindowEnable(aValue: boolean);
@@ -271,6 +301,7 @@ type
       procedure SetDupeDisplay(aValue: boolean);
       procedure SetMultsOnly(aValue: boolean);
       procedure SetSo2rDisplay(aValue: boolean);
+      procedure SetDisplayLimit(aValue: TBandMapDisplayLimit);
    public
       constructor Create;
    published
@@ -293,6 +324,24 @@ type
       property MultsOnly: boolean read FMultsOnly write SetMultsOnly;
       // Was BandMapSO2RDisplay.
       property So2rDisplay: boolean read FSo2rDisplay write SetSo2rDisplay;
+
+      (* How many spots the map will show.  Was BandMapDisplayLimit, and it
+        carried crP: 1 -- so it redraws, and its setter says so. *)
+      property DisplayLimit: TBandMapDisplayLimit read FDisplayLimit write SetDisplayLimit;
+
+      (* THE THREE BELOW CARRIED crP: 0 AND crJ: 1 -- no redraw, restart
+        required -- so they are plain field writes with no notification.
+
+        That asymmetry is REAL rather than an oversight like HF BAND ENABLE's:
+        the grid's geometry is computed once in LayOutGrid, and a repaint
+        would not re-run it.  Making them take effect live is a UI change, not
+        a settings change, and it is not one to make blind. *)
+      // Was BandMapItemHeight in uBandmap.pas.
+      property ItemHeight: TBandMapItemHeight read FItemHeight write FItemHeight;
+      // Was BandMapItemWidth in uBandmap.pas.
+      property ItemWidth: TBandMapItemWidth read FItemWidth write FItemWidth;
+      // Was BandMapSize in VC.pas.
+      property Size: TBandMapSize read FSize write FSize;
    end;
 
    (*
@@ -375,6 +424,23 @@ type
         It walks THIS OBJECT rather than a list of settings to look for, so a
         property added later is imported with no edit here. *)
       procedure ImportLegacyCommands(const aCommands: TJSONObject);
+
+      (* Force every bounded integer property back inside its own subrange.
+
+        WHY IT IS NEEDED AT ALL.  TrySetByCommand refuses an out-of-range
+        value, so the config, import and peer paths are all guarded.  The
+        STREAMER is not: fpjsonrtti writes whatever ordinal the file carries,
+        so a hand-edited settings\tr4w.json can put 0 into a 12..50 property
+        and every reader downstream believes the type.  One of them divides by
+        it.
+
+        CLAMPED HERE, NOT REFUSED, and that is the opposite of the rule one
+        layer up -- deliberately.  A config LINE is something the operator
+        just typed, so refusing it and saying so is useful.  A stored file is
+        the program's own state arriving at startup: refusing leaves the
+        property at a default that is no closer to their intent, and there is
+        nobody at the keyboard to tell. *)
+      procedure ClampToDeclaredRanges;
 
       (* ---------------------------------------------------------------
         ANSWERING TO A CONFIG COMMAND NAME.
@@ -504,6 +570,13 @@ begin
    FDupeDisplay      := True;
    FMultsOnly        := False;
    FSo2rDisplay      := False;
+   (* The values the globals carried: logwind.pas 164 (GAV, for the centred
+     band map), uBandmap.pas 14 and 135, VC.pas 3.  Every one is inside its
+     own subrange, which the compiler would not check but a reader should. *)
+   FDisplayLimit     := 164;
+   FItemHeight       := 14;
+   FItemWidth        := 135;
+   FSize             := 3;
 end;
 
 (* EIGHT SETTERS THAT DIFFER ONLY IN WHICH FIELD THEY GUARD.
@@ -549,6 +622,16 @@ end;
 procedure TBandMapSettings.SetSo2rDisplay(aValue: boolean);
 begin
    SetBool(FSo2rDisplay, aValue, 'So2rDisplay');
+end;
+
+procedure TBandMapSettings.SetDisplayLimit(aValue: TBandMapDisplayLimit);
+begin
+   if FDisplayLimit = aValue then
+      begin
+      Exit;
+      end;
+   FDisplayLimit := aValue;
+   Changed('DisplayLimit');
 end;
 
 { TBandSettings }
@@ -735,6 +818,60 @@ begin
       end;
 end;
 
+procedure TR4WSettings.ClampToDeclaredRanges;
+
+   procedure Walk(const aObj: TObject);
+   var
+      props: PPropList;
+      count, i, v: integer;
+      info: PPropInfo;
+      child: TObject;
+   begin
+      count := GetPropList(aObj.ClassInfo, props);
+      if count = 0 then
+         begin
+         Exit;
+         end;
+      try
+         for i := 0 to count - 1 do
+            begin
+            info := props^[i];
+            if info^.PropType^.Kind = tkClass then
+               begin
+               child := GetObjectProp(aObj, info);
+               if child <> nil then
+                  begin
+                  Walk(child);
+                  end;
+               end
+            else if info^.PropType^.Kind = tkInteger then
+               begin
+               v := GetOrdProp(aObj, info);
+               with GetTypeData(info^.PropType)^ do
+                  begin
+                  (* A plain Integer property carries the full 32-bit range,
+                    so this cannot fire for one -- no list of "which settings
+                    are bounded" is needed or wanted. *)
+                  if v < MinValue then
+                     begin
+                     SetOrdProp(aObj, info, MinValue);
+                     end
+                  else if v > MaxValue then
+                     begin
+                     SetOrdProp(aObj, info, MaxValue);
+                     end;
+                  end;
+               end;
+            end;
+      finally
+         FreeMem(props);
+      end;
+   end;
+
+begin
+   Walk(Self);
+end;
+
 procedure TR4WSettings.Changed(const aPath: string);
 begin
    if Assigned(FOnChanged) then
@@ -891,6 +1028,25 @@ begin
             begin
             Exit;
             end;
+
+         (* THE RANGE COMES FROM THE PROPERTY'S OWN TYPE, which is what
+           replaced crMin and crMax.  A plain Integer property carries the
+           full 32-bit range here, so this costs nothing where no bound was
+           declared -- and a subrange property is guarded without this code
+           knowing which setting it is looking at.
+
+           REFUSED, NOT CLAMPED.  CheckCommand rejected an out-of-range value
+           and left the setting alone, and a one-time import gets no second
+           chance to ask: silently substituting a nearby number would put a
+           value in the store the operator never typed. *)
+         with GetTypeData(info^.PropType)^ do
+            begin
+            if (n < MinValue) or (n > MaxValue) then
+               begin
+               Exit;
+               end;
+            end;
+
          SetOrdProp(owner, info, n);
          Result := True;
          end;
@@ -1025,6 +1181,11 @@ begin
    finally
       destreamer.Free;
    end;
+   (* THE STREAMER DOES NOT KNOW ABOUT SUBRANGES -- it writes whatever ordinal
+     the file carried.  This is the one place an untrusted value reaches a
+     property without passing TrySetByCommand, so it is the one place the
+     ranges have to be re-imposed. *)
+   ClampToDeclaredRanges;
 end;
 
 procedure TR4WSettings.ImportLegacyCommands(const aCommands: TJSONObject);

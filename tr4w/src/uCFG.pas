@@ -580,6 +580,10 @@ const
      -- CheckCommand resolves those names for real -- and the other 91 are
      names in RETIRED_COMMANDS now instead of twenty-field records. *)
    - 98 {every csRem row -- withdrawn commands are a name list now}
+   (* Bounded integers, and their crMin/crMax went with them -- into
+     SUBRANGE TYPES on the properties, which the compiler emits as RTTI
+     and TrySetByCommand reads.  A range is part of a type. *)
+   - 4 {band map display limit and item geometry -- moved to uSettingsModel}
    ;
 
    // crS (CFGStatus): csNew / csOld = active -- the command's value IS applied.
@@ -616,7 +620,6 @@ const
  (crCommand: 'BAND';                          crAddress: pointer(24);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:1 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctBand; crNetwork: 1),
  (crCommand: 'BAND MAP CUTOFF FREQUENCY';     crAddress: @tBandMapCutoffFrequency;        crMin:0;  crMax:MAXWORD-1; crS: csJSON; crA: 17;crC:0 ; crP:1; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctFreqList; crNetwork: 1),
  (crCommand: 'BAND MAP DECAY TIME';           crAddress: @BandMapDecayTime{BandMapDecayValue};              crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 5; crC:0 ; crP:1; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
- (crCommand: 'BAND MAP DISPLAY LIMIT';        crAddress: @BandMapDisplayLimit;            crMin:30;  crMax:1000;   crS: csJSON; crA: 0; crC:0 ; crP:1; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
 // BAND MAP ENABLE retired 2026-08-22 (NY4I): "if the window is opened, it is
 // enabled".  It stored into the same boolean the band map window wrote from
 // WM_INITDIALOG and WM_DESTROY, so closing the window turned the setting off
@@ -624,9 +627,6 @@ const
 // logwind.pas.  csRem with a nil address, not deleted, so an existing .cfg or
 // tr4w.json that names it still loads and is ignored.
  (crCommand: 'BAND MAP GUARD BAND';           crAddress: @BandMapGuardBand;               crMin:100;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:1; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
- (crCommand: 'BAND MAP ITEM HEIGHT';          crAddress: @BandMapItemHeight;              crMin:12; crMax:50;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
- (crCommand: 'BAND MAP ITEM WIDTH';           crAddress: @BandMapItemWidth;               crMin:100;crMax:200;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
- (crCommand: 'BAND MAP SIZE';                 crAddress: @BandMapSize;                    crMin:0;  crMax:8;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'BAND MAP SPLIT MODE';           crAddress: pointer(14);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:1; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'BEEP ENABLE';                   crAddress: @BeepEnable;                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'BEEP EVERY 10 QSOS';            crAddress: @BeepEvery10QSOs;                crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),

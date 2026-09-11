@@ -8,7 +8,7 @@ unit uBandMapForm;
 
   IT IS A NEWSPAPER LAYOUT, NOT A TABLE, and getting that wrong is the first
   thing a reader will be tempted to "fix".  The Win32 band map was a MULTI-COLUMN
-  list box -- tLB_SETCOLUMNWIDTH(hwnddlg, BandMapItemWidth) -- so spots flow DOWN
+  list box -- tLB_SETCOLUMNWIDTH(hwnddlg, Settings.BandMap.ItemWidth) -- so spots flow DOWN
   a column and then into the NEXT column, and widening the window shows MORE
   SPOTS rather than wider ones.  On a 1280-pixel window that is fifty-odd spots
   at once across eight columns.  A table of fields -- frequency, flags, call,
@@ -16,7 +16,7 @@ unit uBandMapForm;
 
   So the grid here is a LAYOUT grid: ColCount is how many newspaper columns fit,
   RowCount is how many spots fit down one, and cell (c, r) is spot c*RowCount+r.
-  Each cell draws one whole spot inside BandMapItemWidth pixels.
+  Each cell draws one whole spot inside Settings.BandMap.ItemWidth pixels.
 
   WHY A TDrawGrid AT ALL.  The old list box was rebuilt from scratch on every
   update -- LB_RESETCONTENT then one LB_ADDSTRING per row, wrapped in
@@ -259,24 +259,31 @@ procedure TfrmBandMap.LayOutGrid;
 var
    rowsDown, colsAcross: integer;
 begin
-   // BANDMAP ITEM HEIGHT and BANDMAP ITEM WIDTH are operator settings, so they
-   // are floored rather than trusted: a zero would divide by zero below.
-   if BandMapItemHeight < 8 then
-      begin
-      BandMapItemHeight := 8;
-      end;
-   if BandMapItemWidth < 40 then
-      begin
-      BandMapItemWidth := 40;
-      end;
+   (* THE FLOORS THAT USED TO BE HERE ARE GONE, and the compiler is what
+     removed them.
 
-   grdSpots.DefaultRowHeight := BandMapItemHeight;
-   grdSpots.DefaultColWidth  := BandMapItemWidth;
+     They read "BANDMAP ITEM HEIGHT and BANDMAP ITEM WIDTH are operator
+     settings, so they are floored rather than trusted: a zero would divide by
+     zero below", and they clamped to 8 and 40 -- both BELOW the config
+     minimums of 12 and 100.  That is what you write when the value is a plain
+     integer global and anything could have put anything in it.
+
+     The properties are TBandMapItemHeight (12..50) and TBandMapItemWidth
+     (100..200) now, so FPC reports the comparison as ALWAYS FALSE.  It is
+     right, and a guard the compiler can prove unreachable is worse than none:
+     it reads as protection while protecting nothing.
+
+     The hazard was real and is handled where untrusted values actually
+     arrive -- TR4WSettings.FromJSON clamps every bounded property to its own
+     range, once, for all of them. *)
+
+   grdSpots.DefaultRowHeight := Settings.BandMap.ItemHeight;
+   grdSpots.DefaultColWidth  := Settings.BandMap.ItemWidth;
 
    // HOW MANY FIT DOWN, then how many columns those need.  The Win32 list box
    // was told only the column WIDTH and worked the rest out itself; the LCL
    // wants the counts, which is the same arithmetic made explicit.
-   rowsDown := grdSpots.ClientHeight div BandMapItemHeight;
+   rowsDown := grdSpots.ClientHeight div Settings.BandMap.ItemHeight;
    if rowsDown < 1 then
       begin
       rowsDown := 1;

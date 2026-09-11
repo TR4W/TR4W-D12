@@ -50,6 +50,8 @@ type
       procedure Test_AssigningTheSameValueRaisesNothing;
       procedure Test_AWithdrawnCommandIsStillAccepted;
       procedure Test_NoRetiredNameIsAlsoLiveOrOwned;
+      procedure Test_ARangeIsPartOfTheType;
+      procedure Test_AStoredValueOutOfRangeIsClamped;
    public
       procedure RunAllTests; override;
    end;
@@ -318,7 +320,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(18, names.Count, 'one name per migrated setting, no more');
+         CheckEquals(22, names.Count, 'one name per migrated setting, no more');
       finally
          names.Free;
       end;
@@ -659,6 +661,127 @@ begin
    end;
 end;
 
+(* ---------------------------------------------------------------------
+  BOUNDED INTEGERS, 2026-09-11.
+
+  crMin and crMax became SUBRANGE TYPES on the properties.  Nothing in
+  TrySetByCommand names a setting or a bound -- it reads MinValue and MaxValue
+  out of the property's own RTTI -- so these tests are what prove the bounds
+  are actually reaching it.
+  --------------------------------------------------------------------- *)
+
+procedure TSettingsModelTests.Test_ARangeIsPartOfTheType;
+var
+   s: TR4WSettings;
+begin
+   (* WHAT A LOST BOUND WOULD COST.  CheckCommand refused an out-of-range
+     value and left the setting alone.  If that enforcement did not survive
+     the move, a contest .cfg could set BAND MAP ITEM HEIGHT to 0 and the band
+     map would divide by it while laying out its grid. *)
+   BeginTest('an out-of-range value is refused and the property is unchanged');
+   s := TR4WSettings.Create;
+   try
+      // crMin:12, crMax:50 -- now TBandMapItemHeight.
+      CheckEquals(14, s.BandMap.ItemHeight, 'the default to start from');
+
+      CheckFalse(s.TrySetByCommand('BAND MAP ITEM HEIGHT', '51'), 'above the max');
+      CheckEquals(14, s.BandMap.ItemHeight, 'and it did not move');
+
+      CheckFalse(s.TrySetByCommand('BAND MAP ITEM HEIGHT', '11'), 'below the min');
+      CheckEquals(14, s.BandMap.ItemHeight, 'and it did not move');
+
+      CheckFalse(s.TrySetByCommand('BAND MAP ITEM HEIGHT', '0'), 'the zero that divides');
+      CheckEquals(14, s.BandMap.ItemHeight, 'and it did not move');
+
+      // THE BOUNDARIES THEMSELVES ARE LEGAL -- an off-by-one in the type
+      // declaration would otherwise pass every test above.
+      CheckTrue(s.TrySetByCommand('BAND MAP ITEM HEIGHT', '12'), 'the minimum');
+      CheckEquals(12, s.BandMap.ItemHeight, 'applied');
+      CheckTrue(s.TrySetByCommand('BAND MAP ITEM HEIGHT', '50'), 'the maximum');
+      CheckEquals(50, s.BandMap.ItemHeight, 'applied');
+
+      // And the other three carry their own, different, ranges.
+      CheckFalse(s.TrySetByCommand('BAND MAP ITEM WIDTH', '99'),  'width min 100');
+      CheckTrue (s.TrySetByCommand('BAND MAP ITEM WIDTH', '200'), 'width max 200');
+      CheckFalse(s.TrySetByCommand('BAND MAP SIZE', '9'),         'size max 8');
+      CheckTrue (s.TrySetByCommand('BAND MAP SIZE', '0'),         'size min 0');
+      CheckFalse(s.TrySetByCommand('BAND MAP DISPLAY LIMIT', '29'),   'limit min 30');
+      CheckTrue (s.TrySetByCommand('BAND MAP DISPLAY LIMIT', '1000'), 'limit max 1000');
+
+      (* AND AN UNBOUNDED PROPERTY IS STILL UNBOUNDED.  The range check reads
+        the type's RTTI with no list of which settings are bounded, so a plain
+        Integer property must keep accepting ordinary values -- if this fails,
+        the check is reading the wrong thing. *)
+      CheckTrue(s.TrySetByCommand('EXTERNAL LOGGER PORT', '52099'), 'a plain integer');
+   finally
+      s.Free;
+   end;
+end;
+
+procedure TSettingsModelTests.Test_AStoredValueOutOfRangeIsClamped;
+var
+   s: TR4WSettings;
+   obj: TJSONObject;
+begin
+   (* THE STREAMER IS THE ONE PATH THAT BYPASSES THE CHECK ABOVE.  fpjsonrtti
+     writes whatever ordinal the file carries, so a hand-edited tr4w.json can
+     put 0 into a 12..50 property and every reader downstream believes the
+     type.  FromJSON clamps, for every bounded property at once.
+
+     CLAMPED, NOT REFUSED, unlike a config line -- there is nobody at the
+     keyboard at startup to tell, and leaving the property at a default is no
+     closer to the operator's intent than the nearest legal value. *)
+   BeginTest('a stored value outside its range is pulled back in on load');
+   s := TR4WSettings.Create;
+   try
+      (* 250 RATHER THAN SOMETHING ABSURD, and the reason is worth knowing.
+
+        A subrange type bounds the STORAGE as well as the value: FPC gives
+        TBandMapItemWidth (100..200) a single byte, so a stored 9999 does not
+        arrive as 9999 to be clamped down -- it has already wrapped to 15 by
+        the time anything can look at it, and then clamps UP to 100.
+
+        The invariant that actually holds is "the property ends up inside its
+        range", which is what protects the division downstream, and it holds
+        either way.  The first version of this test asserted the DIRECTION of
+        the clamp and was wrong about the mechanism; 250 fits the byte and so
+        exercises the over-maximum path for real. *)
+      obj := TJSONObject(TJSONObject.ParseJSONValue(
+         '{"BandMap":{"ItemHeight":0,"ItemWidth":250,"Size":3}}'));
+      CheckTrue(obj <> nil, 'the fixture must parse');
+      try
+         s.FromJSON(obj);
+      finally
+         obj.Free;
+      end;
+
+      CheckEquals(12, s.BandMap.ItemHeight, 'zero clamped up to the minimum');
+      CheckEquals(200, s.BandMap.ItemWidth, 'above the maximum clamped down');
+      CheckEquals(3, s.BandMap.Size, 'a legal value is left exactly alone');
+
+      (* AND AN ABSURD ONE STILL LANDS SOMEWHERE LEGAL, whichever way the
+        storage wrapped it -- that is the property the band map's grid
+        arithmetic actually depends on. *)
+      obj := TJSONObject(TJSONObject.ParseJSONValue(
+         '{"BandMap":{"ItemHeight":99999,"ItemWidth":-4000}}'));
+      CheckTrue(obj <> nil, 'the second fixture must parse');
+      try
+         s.FromJSON(obj);
+      finally
+         obj.Free;
+      end;
+
+      CheckTrue((s.BandMap.ItemHeight >= Low(TBandMapItemHeight)) and
+                (s.BandMap.ItemHeight <= High(TBandMapItemHeight)),
+                'item height is inside its range whatever was stored');
+      CheckTrue((s.BandMap.ItemWidth >= Low(TBandMapItemWidth)) and
+                (s.BandMap.ItemWidth <= High(TBandMapItemWidth)),
+                'item width is inside its range whatever was stored');
+   finally
+      s.Free;
+   end;
+end;
+
 procedure TSettingsModelTests.RunAllTests;
 begin
    Test_DefaultsAreTheOnesTheGlobalsHad;
@@ -676,6 +799,8 @@ begin
    Test_AssigningTheSameValueRaisesNothing;
    Test_AWithdrawnCommandIsStillAccepted;
    Test_NoRetiredNameIsAlsoLiveOrOwned;
+   Test_ARangeIsPartOfTheType;
+   Test_AStoredValueOutOfRangeIsClamped;
 end;
 
 end.

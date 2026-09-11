@@ -50,12 +50,16 @@ unit uSettingsModelBinding;
   ------------------------------------------------------------------------
 
   They came from the row.  With no row they come from what the settings model
-  IS, and three of the four are the same for every setting in it:
+  IS, and two of the four are the same for every setting in it:
 
-    NeedsRestart    FALSE.  crJ:1 meant "restart required", and a property
-                    setter applies the value and raises its side effect on
-                    the spot.  Needing a restart was a property of assigning
-                    a global that nothing re-read.
+    NeedsRestart    A PARAMETER, defaulting to False.  crJ:1 meant "restart
+                    required", and for most settings that was a property of
+                    assigning a global that nothing re-read -- a setter
+                    applies the value and raises its side effect on the spot.
+                    It is not universal, though, and pretending otherwise
+                    would be a lie the UI repeats to the operator: the band
+                    map's item geometry is computed once in LayOutGrid, so
+                    BAND MAP ITEM HEIGHT really does wait for a restart.
 
     ReadOnly        FALSE.  crJ 2 and 3 marked rows that were displayed but
                     not editable.  A published property is editable; a
@@ -84,7 +88,8 @@ uses
   name the settings object answers to ('HF BAND ENABLE'), aCaption the text
   Preferences shows. *)
 function RegisterModelSetting(const aKey, aCommand, aCaption: string;
-                              const aBroadcast: boolean = True): TSettingBase;
+                              const aBroadcast: boolean = True;
+                              const aNeedsRestart: boolean = False): TSettingBase;
 
 implementation
 
@@ -99,7 +104,7 @@ type
       FCommand: string;
    public
       constructor Create(const aKey, aCommand, aCaption: string;
-                         const aBroadcast: boolean);
+                         const aBroadcast, aNeedsRestart: boolean);
       function AsText: string; override;
       function TrySetText(const aText: string; out aError: string): boolean; override;
       property Command: string read FCommand;
@@ -107,7 +112,7 @@ type
 
 
 constructor TModelSetting.Create(const aKey, aCommand, aCaption: string;
-                                 const aBroadcast: boolean);
+                                 const aBroadcast, aNeedsRestart: boolean);
 begin
    inherited Create(aKey, aCaption);
    FCommand := aCommand;
@@ -124,7 +129,12 @@ begin
          [aKey, aCommand]);
       end;
 
-   NeedsRestart   := False;
+   (* USUALLY False -- a setter applies the value and raises its side effect
+     on the spot, and needing a restart was a property of assigning a global
+     that nothing re-read.  It is a parameter because that is not universal:
+     the band map's item geometry is computed once when the grid is laid out,
+     so changing it really does wait for a restart. *)
+   NeedsRestart   := aNeedsRestart;
    ReadOnly       := False;
    HasSideEffects := True;
    Broadcast      := aBroadcast;
@@ -175,10 +185,11 @@ end;
 
 
 function RegisterModelSetting(const aKey, aCommand, aCaption: string;
-                              const aBroadcast: boolean = True): TSettingBase;
+                              const aBroadcast: boolean = True;
+                              const aNeedsRestart: boolean = False): TSettingBase;
 begin
    Result := RegisterSetting(TModelSetting.Create(aKey, aCommand, aCaption,
-                                                  aBroadcast));
+                                                  aBroadcast, aNeedsRestart));
 end;
 
 end.

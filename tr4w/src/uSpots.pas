@@ -381,7 +381,7 @@ begin
 
   FilteredSpotCount := k;
 
-  if FilteredSpotCount > BandMapDisplayLimit then
+  if FilteredSpotCount > Settings.BandMap.DisplayLimit then
      begin
      // Every endpoint test below must go through aIndex.  The window
      // (bottom..top) indexes the FILTERED list, so asking the UNFILTERED FList
@@ -392,7 +392,7 @@ begin
      if FList^[aIndex[0]].FFrequency >= BandMapCursorFrequency then
         begin
         // Everything on display is at or above the cursor -- show the low end.
-        top := BandMapDisplayLimit - 1;
+        top := Settings.BandMap.DisplayLimit - 1;
         bottom := 0;
         centrefound := true;
         end;
@@ -401,7 +401,7 @@ begin
         begin
         // Everything on display is at or below the cursor -- show the high end.
         top := FilteredSpotCount - 1;
-        bottom := FilteredSpotCount - BandMapDisplayLimit;
+        bottom := FilteredSpotCount - Settings.BandMap.DisplayLimit;
         centrefound := true;
         end;
 
@@ -412,22 +412,22 @@ begin
         if FList^[aIndex[k]].FFrequency > BandMapCursorFrequency then
            begin
            centre := k;
-           if (centre >= (BandMapDisplayLimit div 2)) and (centre <=
-             (FilteredSpotCount - (BandMapDisplayLimit div 2))) then
+           if (centre >= (Settings.BandMap.DisplayLimit div 2)) and (centre <=
+             (FilteredSpotCount - (Settings.BandMap.DisplayLimit div 2))) then
               begin
-              top := centre + ((BandMapDisplayLimit div 2) - 1);
-              bottom := centre - (BandMapDisplayLimit div 2);
+              top := centre + ((Settings.BandMap.DisplayLimit div 2) - 1);
+              bottom := centre - (Settings.BandMap.DisplayLimit div 2);
               centrefound := true;
               end;
-           if centre > (FilteredSpotCount - (BandMapDisplayLimit div 2)) then
+           if centre > (FilteredSpotCount - (Settings.BandMap.DisplayLimit div 2)) then
               begin
               top := FilteredSpotCount - 1;
-              bottom := FilteredSpotCount - BandMapDisplayLimit;
+              bottom := FilteredSpotCount - Settings.BandMap.DisplayLimit;
               centrefound := true;
               end;
-           if centre < (BandMapDisplayLimit div 2) then
+           if centre < (Settings.BandMap.DisplayLimit div 2) then
               begin
-              top := BandMapDisplayLimit - 1;
+              top := Settings.BandMap.DisplayLimit - 1;
               bottom := 0;
               centrefound := true;
               end;
@@ -449,7 +449,7 @@ begin
         // could land below zero.  THAT is the wrong range the clamp below was
         // added to absorb.
         top := FilteredSpotCount - 1;
-        bottom := FilteredSpotCount - BandMapDisplayLimit;
+        bottom := FilteredSpotCount - Settings.BandMap.DisplayLimit;
         end;
      end
 
@@ -476,13 +476,13 @@ begin
   if bottom < 0 then
      begin
      logger.Warn('[BuildVisibleSpots] bottom=%d clamped to 0 (top=%d, filtered=%d, limit=%d)',
-                 [bottom, top, FilteredSpotCount, BandMapDisplayLimit]);
+                 [bottom, top, FilteredSpotCount, Settings.BandMap.DisplayLimit]);
      bottom := 0;
      end;
   if top > FilteredSpotCount - 1 then
      begin
      logger.Warn('[BuildVisibleSpots] top=%d clamped to %d (bottom=%d, limit=%d)',
-                 [top, FilteredSpotCount - 1, bottom, BandMapDisplayLimit]);
+                 [top, FilteredSpotCount - 1, bottom, Settings.BandMap.DisplayLimit]);
      top := FilteredSpotCount - 1;
      end;
   // The caller renders aIndex[bottom..top].  Returning the COUNT and the
@@ -498,7 +498,7 @@ begin
         end;
      end;
   logger.Trace('[BuildVisibleSpots] window: bottom=%d, top=%d, rows=%d, cursorRow=%d, limit=%d',
-    [bottom, top, Result, aCursorRow, BandMapDisplayLimit]);
+    [bottom, top, Result, aCursorRow, Settings.BandMap.DisplayLimit]);
 end;
 
 procedure TDXSpotsList.Clear;
