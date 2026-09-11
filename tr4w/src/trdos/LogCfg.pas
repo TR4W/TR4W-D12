@@ -850,13 +850,33 @@ begin
     the trap uLegacyIniPrompt already describes: a file that looks like
     configuration but is ignored costs the next person an hour.
 
-    WHY THE TEST IS "HAS NO COMMANDS" AND NOT "HAS BEEN MIGRATED". Skipping
-    whenever settings\tr4w.json exists would be the bolder rule and it is NOT
-    safe: SeedMigratedCommandsFromIni runs only when there is no store at all
-    (uRadioConfigApply.pas:2133), so a station that has a store AND a still
-    populated tr4w.ini has this read as the ONLY thing applying its csOwned
-    rows. Skipping a file with nothing in it cannot lose anything; skipping a
-    file with something in it can.
+    WHY THE TEST IS "HAS NO COMMANDS" AND NOT "HAS BEEN MIGRATED".
+
+    ~~SeedMigratedCommandsFromIni runs only when there is no store at all~~
+    THAT IS STALE (re-checked 2026-09-11). It is called from BOTH startup
+    paths -- the no-store one and the ordinary one -- and it is idempotent,
+    skipping any command the store already holds. The gate it describes was
+    fixed on 2026-08-16; the comment outlived the defect.
+
+    SO THE BOLDER RULE IS NEARLY SAFE, AND NY4I ASKED FOR IT (2026-09-11):
+    "do not convert if there is already a json file and a contest .db file of
+    the same contest."
+
+    WHAT STANDS IN THE WAY IS THREE SETTINGS, and Lint-SettingsMigration
+    counts them on every build -- "219 stored, 3 still on the ini". They are
+    the RegisterLegacySetting rows in uSettingsDeclarations:
+
+        SINGLE BAND SCORE    a real setting, and the only one
+        BAND                 an ACTION -- it sets the current band
+        CLEAR DUPE SHEET     an ACTION -- crA:4, it clears the sheet
+
+    Two of the three are commands an operator TYPES, not values a station
+    persists, so they have no business in a settings file and nothing to
+    carry across. **One real setting is between this test and the rule NY4I
+    wants.**
+
+    Until then: skipping a file with nothing in it cannot lose anything;
+    skipping a file with something in it can.
 
     NOTHING ABOUT THE MIGRATION CHANGES HERE -- only the case where there is
     provably nothing to do. *)
