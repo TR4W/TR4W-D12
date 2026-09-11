@@ -775,75 +775,98 @@ range). Supports network synchronisation for multi-station setups.
 `TIniFile`" until 2026-08-21, which had been wrong for months. NY4I: *"We switched to all json a
 while ago. Except for the contest.cfg file we should not be writing ini files."*
 
-**Where it actually stands, measured 2026-08-21** (rerun rather than trusting this):
+### THE `crS` STATUSES ARE OVER. DO NOT REASON FROM THEM.
 
-| | |
+NY4I, 2026-09-11: *"csOwned, csjson, csnew were all migratory steps. Those
+concepts have no meaning any longer."*
+
+**A long table of `csOwned` / `csJSON` / `csOld` counts stood here and is
+deleted.** It had been rewritten twice in September to fix its numbers while
+keeping a model that was already wrong, which is the failure mode this file
+records elsewhere: *a stale REASON is worse than a stale count, because a count
+invites a re-measurement and a reason invites agreement.*
+
+**`csRem` IS GONE ENTIRELY** (2026-09-11). Every one of its rows was deleted.
+A withdrawn command is a NAME in `uCFG.RETIRED_COMMANDS` now -- accepted,
+logged once, and ignored -- rather than a twenty-field `CFGRecord` whose every
+field `CheckCommand` skipped. The name list exists for one reason worth
+knowing: `LogCfg.pas:1262` shows a **modal** *"invalid statement in config
+file"* for a line `CheckCommand` refuses, so an old `tr4w.ini` naming a
+withdrawn feature would otherwise tell an operator their working configuration
+is invalid, once per stale line.
+
+**A commented-out row and a `csRem` row were never the same set**, and a test
+now pins that in both directions -- `K1EA NETWORK ENABLE` is commented out, so
+it has *always* produced that dialog, and listing it would be a behaviour
+change rather than a tidy-up.
+
+### Where a setting actually lives
+
+**MEASURE IT. Neither command takes a minute:**
+
+```bash
+grep -c "crCommand:" tr4w/src/uCFG.pas          # rows still in the array
+```
+
+```powershell
+.\tr4w\build\Build-Tests.ps1 -Run               # the settings tests pin the rest
+```
+
+The **stores** -- radios, keyers, profiles, window layout, UDP -- are all JSON
+in `settings/tr4w.json` and have been since August. **`tr4w.ini` STORES
+NOTHING**; the file on NY4I's station is 67 bytes of sentinel text. It and the
+contest `.cfg` are **read-once-and-convert import formats** (NY4I, 2026-09-11):
+read once, converted, never consulted again. The `.cfg`'s contest parameters go
+to the **contest SQLite database**, not to JSON.
+
+### THE DESTINATION IS `uSettingsModel`, AND IT IS NOT A REGISTRY EITHER
+
+`src/uSettingsModel.pas` holds `TPersistent` classes with **published
+properties**, streamed by `fpjsonrtti`. NY4I's standing question -- *what would
+we do if we were doing this from scratch in an FPC app* -- has one answer here,
+and it is neither a table of pointers nor a registry of closures:
+
+```pascal
+published property Port: integer read FPort write FPort;
+```
+
+**Everything `CFGCA` carried per row is a restatement of something the compiler
+already knows**, and each field has a destination rather than a replacement:
+
+| the row's field | where it went |
 |---|---|
-| The **stores** — radios, keyers, profiles, window layout, UDP | **all JSON**, in `settings/tr4w.json` |
-| Settings graduated to JSON (`csJSON` + `RegisterStoredSetting`) | **77** |
-| Settings still writing `tr4w.ini` (`RegisterLegacySetting`) | **153** |
-| Remaining Win32 ini API call sites outside `tr4wserver` | **26** |
+| `crCommand` | **derived from the property path** -- `BandMap.AllBands` gives `BAND MAP ALL BANDS` |
+| `crAddress`, `crType` | the property itself |
+| `crMin` / `crMax` | a **subrange type** -- `TBandMapItemHeight = 12..50` -- read back out of RTTI, so nothing lists which settings are bounded |
+| `crP` (a redraw index) | **the property's setter**, plus `uSettingsEffects` |
+| `crJ` (restart / read-only) | a parameter on `RegisterModelSetting` |
+| `crS` | nothing. See above |
 
-So the stores moved wholesale; the settings move **one at a time**, and `tr4w.ini` is still read
-at startup for the 153 that have not. The two halves of each move — `crS: csJSON` and
-`RegisterStoredSetting` — **must land in the same commit**, and were verified in sync for all 230
-on 2026-08-21. Flip one without the other and the setting appears to save and is gone on restart.
+**`crP` IS THE ONE WORTH UNDERSTANDING**, because it is why the setters exist.
+NY4I, 2026-09-11: *"a property setter can do the side effect, which is better
+than a hook index."* A `crP` is a hand-typed index into `CommandsProcArray`, so
+a wrong one compiles -- that has happened here, `EXTERNAL LOGGER ENABLED`
+carried `crA: 23`, the WSJT-X hook. And it **only fired when `CheckCommand`
+applied a row**, so a config file repainted the band map and a menu toggle did
+not, which is why `uBandMapForm` grew a `ToggleAndRepaint` helper hand-writing
+the repaint the table would have done. Two spellings of one rule, free to
+disagree. A setter cannot point at the wrong handler, and runs however the
+value was set.
 
-**`csOwned` IS A UI MARKER, NOT A STORAGE ONE** — the single most confusing thing here, and
-it confused NY4I and me on 2026-08-21. `VC.pas:891`: *"STILL APPLIED, but hidden from Options
-because another dialog owns it."* Commit `79d4b6f0` moved **173 settings into Preferences** by
-marking them `csOwned` — that moved their EDITING. Their STORAGE is still `tr4w.ini`. Only
-`csJSON` moves storage.
+**A ROW CAN NOW BE DELETED RATHER THAN HOLLOWED OUT.** `CheckCommand` resolves
+names the settings object owns. That is **not a fallback** -- a migrated
+setting and an unmigrated one are disjoint sets, and each resolves in exactly
+one place. Its scope is the one-time import.
 
-| status | rows | edited in | stored in |
-|---|---:|---|---|
-| `csOld`/`csNew` | 6 | Ctrl-J | — |
-| `csOwned` | 96 | **another dialog** | **JSON — but not the `commands` section** |
-| `csJSON` | 314 | Preferences | `settings\tr4w.json`, `commands` |
-| `csRem` | 91 | — withdrawn | — |
+**Preferences follows through `uSettingsModelBinding`**, not `uSettingsLegacy`:
+the legacy classes take four of their own attributes out of the row's
+`crJ`/`crP`/`crA`/`crNetwork`, so they cannot register a setting whose row is
+gone. The split is deliberate -- the day the last row leaves, `uSettingsLegacy`
+is deleted whole rather than unpicked.
 
-**`tr4w.ini` STORES NOTHING. The "stored in" column above said it did until
-2026-09-02 and that was wrong** — twice over, because the first correction that
-day only refreshed the counts and left the wrong model in place. NY4I: *"You are
-stale on the ini file. Look at the file. It has nothing in it. All those were
-moved to the json file."* He was right; the file on his station is 67 bytes of
-sentinel text.
-
-**The error was reading `csOwned` as a storage answer**, which is the exact
-confusion the bold paragraph above warns about — and then attaching freshly
-measured counts to it, which made a stale claim look verified. `csOwned` is a UI
-marker and says NOTHING about where a value lives.
-
-Measured 2026-09-02 by matching all 508 `crCommand` rows against the keys
-actually present in a real `settings/tr4w.json`:
-
-| where a value actually lives | rows |
-|---|---:|
-| `tr4w.json` → `commands` | 243 keys present |
-| `tr4w.json` → a STRUCTURED store, under a different name | the other 63 `csOwned` |
-| the contest `.cfg` | the function-key and CQ/QSL message memories |
-| `tr4w.ini` | **none** |
-
-The 63 are not missing, they are *renamed*: `RADIO ONE TYPE` → `radios[]`,
-`KEYER RADIO ONE OUTPUT PORT` → `keyers[].port`, `PSTROTATOR IP ADDRESS` →
-`rotators[].ipAddress`. Searching the `commands` section alone under-reports the
-migration badly, which is how the wrong figure survived a re-measurement.
-
-**So why does startup still log `[Config] Loading …tr4w.ini`?** Because
-`ReadInConfigFile(cfgINI)` is unconditional, not because it contributes
-anything. `uLegacyIniPrompt`'s header already states the intended rule — the
-file is *"READ ONCE per installation, to carry an existing configuration into
-the store, and then never again"* — and that startup read is the one place still
-breaking it. It is skipped now when the file is absent or holds no commands.
-Removing it outright is a decision, not a cleanup: on a station that has a
-`tr4w.json` **and** a still-populated `tr4w.ini`, seeding does not re-run (the
-guard in `uRadioConfigApply` fires only when there is no store), so that read is
-the only thing applying its `csOwned` rows.
-
-So a setting can appear in the new Preferences UI and still not persist on a station whose
-`tr4w.ini` is read-only or absent. `SetCFGCommandValue` reports that now instead of losing it
-silently, and `Lint-SettingsMigration.ps1` fails the build if the three halves of a migration
-(`csJSON`, `RegisterStoredSetting`, `MIGRATED_COMMANDS`) ever disagree.
+**`Lint-SettingsMigration.ps1`** still gates the build for the settings that
+have NOT moved yet, checking `RegisterStoredSetting` and `MIGRATED_COMMANDS`
+agree.
 
 **The contest `.cfg` is deliberately exempt**: it is going to an SQLite3 contest file, not to JSON
 (NY4I, 2026-08-21). `tr4wserver.ini` belongs to a different program and is out of scope.

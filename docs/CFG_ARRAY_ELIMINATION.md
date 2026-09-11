@@ -747,6 +747,109 @@ before it is believed, and `Lint-SettingsMigration` was sitting there saying
 
 ---
 
+## 2l. THE SETTER IS THE MECHANISM. 113 ROWS GONE, 2026-09-11
+
+**NY4I:** *"a property setter can do the side effect, which is better than a
+hook index."* And: *"csOwned, csjson, csnew were all migratory steps. Those
+concepts have no meaning any longer. csRem are obsolete that require no
+conversion so they can just be deleted."*
+
+Section 2j concluded the rows are the IMPORTER and retire TOGETHER when the
+legacy read stops. That is still true of the rows that carry a value nothing
+else owns. It was **too strong as a general claim**, and this section is the
+correction: a row can leave the moment (a) something else owns its value and
+(b) its name still resolves. The second condition is what was missing.
+
+### What was actually blocking a deletion, and it was not the value
+
+`LogCfg.pas:1262` shows a **modal** *"invalid statement in config file"* when
+`CheckCommand` refuses a line. So deleting a row did not merely lose a
+setting -- it told an operator their working configuration was invalid, once
+per stale line. **That, and only that, is why 98 hollow `csRem` rows existed.**
+
+Two mechanisms remove it:
+
+| | |
+|---|---|
+| the setting MOVED | `CheckCommand` asks the settings object, which resolves the name and applies the value for real |
+| the feature WENT | the name is in `uCFG.RETIRED_COMMANDS` -- accepted, logged once, ignored |
+
+**Neither is a fallback.** A migrated name, a retired name and a live row are
+three disjoint sets; each resolves in exactly one place. Framing the first as
+a fallback -- which the first draft did -- makes `CFGCA` the authority and the
+settings object the safety net, which is backwards for an array being deleted.
+
+### The count
+
+| | rows |
+|---|---:|
+| start of the session | 508 |
+| band map filters + HF/VHF/WARC, to `uSettingsModel` | -11 |
+| every `csRem` row | -98 |
+| band map display limit and item geometry | -4 |
+| **now** | **395** |
+
+### Where each of the row's twenty fields went
+
+Not "replaced" -- most of them were restating something the compiler already
+knew, which is the whole thesis of `uSettingsModel`:
+
+| field | destination |
+|---|---|
+| `crCommand` | derived from the property path; `BandMap.AllBands` gives `BAND MAP ALL BANDS` |
+| `crAddress`, `crType` | the property |
+| `crMin`/`crMax` | **a subrange type**, read back from RTTI |
+| `crP` | **the setter**, plus one subscriber in `uSettingsEffects` |
+| `crJ` | a parameter on `RegisterModelSetting` |
+| `crNetwork` | a parameter on `RegisterModelSetting` |
+| `crS` | nothing |
+
+### Three things measured on the way that were not obvious
+
+1. **`WARC BAND ENABLE` is not a band map setting, and `crP` cannot tell you
+   that.** It carries `crP: 1` -- the band map redraw -- so by hook index it
+   looks like one. It also refuses a band change at four sites in `logstuff`,
+   and five contests in `fcontest` assign it as a rule of the contest. An
+   index says *redraw the band map* and nothing more, so it actively invites
+   that mis-grouping. This is the clearest argument for the setter, stated
+   against a real row.
+
+2. **A commented-out row is not a `csRem` row.** `K1EA NETWORK ENABLE` is
+   commented out, so `CheckCommand` has never accepted it -- an old config
+   naming it already got the dialog. Adding the commented-out names to the
+   retired list would be a behaviour change, not a tidy-up. A test pins it in
+   both directions.
+
+3. **A subrange type bounds the STORAGE as well as the value.** FPC gives
+   `TBandMapItemWidth = 100..200` a single byte, so a stored `9999` has
+   already wrapped to `15` before anything can clamp it down, and then clamps
+   *up*. The invariant worth asserting is "ends up inside its range", not the
+   direction of the correction.
+
+### What the compiler did for free
+
+`LayOutGrid` floored item height at 8 and item width at 40 -- both *below* the
+config minimums of 12 and 100 -- commented *"operator settings, so they are
+floored rather than trusted"*. Against subrange properties FPC reports the
+comparison as **always false** and the build fails on it. The guard was dead,
+and the hazard it was written for now lives at the boundary where untrusted
+values actually arrive: `FromJSON` clamps every bounded property in one RTTI
+walk, because the streamer is the only path that bypasses `TrySetByCommand`.
+
+### Still open
+
+* `BAND MAP DECAY TIME` (`crA: 5`) and `BAND MAP CUTOFF FREQUENCY` (`crA: 17`,
+  `ctFreqList`) carry an additional-proc hook that has to be reproduced before
+  they can move.
+* `BAND MAP SPLIT MODE` is a `ckList` reached through a second array -- an
+  enum property, not an integer.
+* `BAND MAP GUARD BAND` is **a question, not a task**: its global was declared
+  `: integer; // = 200;` with no initialiser, so the runtime default is **0**
+  while `crMin` is **100**. A subrange type cannot express both. Which is
+  right needs a ruling before it moves.
+
+---
+
 ## 3. Stage A -- DONE 2026-09-10
 
 **One rule for turning a configured port into a device name.**
