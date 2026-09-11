@@ -53,6 +53,8 @@ type
       procedure Test_ARangeIsPartOfTheType;
       procedure Test_AStoredValueOutOfRangeIsClamped;
       procedure Test_TheReadPathAndTheWritePathAgree;
+      procedure Test_AStaleIniCannotOverrideTheStore;
+      procedure Test_AContestFileStillOverridesForItsContest;
    public
       procedure RunAllTests; override;
    end;
@@ -841,6 +843,79 @@ begin
    end;
 end;
 
+(* ---------------------------------------------------------------------
+  WHO IS ALLOWED TO WRITE A MIGRATED SETTING.
+
+  These two exist because a REVIEW found a defect that every other test in
+  this file was blind to (Codex, 2026-09-11). The model tests call
+  TrySetByCommand directly, so they never reproduce the startup ORDER --
+  settings\tr4w.json is loaded and asserted as the source of record, and then
+  ReadInConfigFile(cfgINI) runs a dozen lines later.
+
+  The arm that resolves a migrated name in CheckCommand had no
+  aApplyJSONOwned guard, so a stale ini line overwrote the stored value on
+  every launch and a Preferences change would not survive a restart. The
+  csJSON rows those settings CAME FROM are guarded against exactly that.
+
+  So these assert through CheckCommand with the flag both ways, which is the
+  distinction that was missing, rather than through the settings object.
+  --------------------------------------------------------------------- *)
+
+procedure TSettingsModelTests.Test_AStaleIniCannotOverrideTheStore;
+var
+   cmd: ShortString;
+   val: ShortString;
+   was: boolean;
+begin
+   BeginTest('an untrusted caller cannot apply a migrated setting');
+
+   was := Settings.BandMap.MultsOnly;
+   try
+      Settings.BandMap.MultsOnly := False;
+
+      cmd := ShortString(AnsiString('BAND MAP MULTS ONLY'));
+      val := ShortString(AnsiString('TRUE'));
+
+      (* THE INI LOADER'S CALL: aApplyJSONOwned defaults to False. *)
+      CheckTrue(CheckCommand(@cmd, val),
+                'the line is ACCEPTED -- no "invalid statement" dialog');
+      CheckFalse(Settings.BandMap.MultsOnly,
+                 'but NOT APPLIED: the store is the source of record');
+
+      (* A TRUSTED CALLER -- Preferences, a multi-op peer, a contest .cfg --
+        passes True and the value goes in. *)
+      CheckTrue(CheckCommand(@cmd, val, True), 'a trusted caller is accepted');
+      CheckTrue(Settings.BandMap.MultsOnly, 'and applied');
+   finally
+      Settings.BandMap.MultsOnly := was;
+   end;
+end;
+
+procedure TSettingsModelTests.Test_AContestFileStillOverridesForItsContest;
+begin
+   (* THE OTHER HALF OF THE FIX, and the half that is easy to miss.
+
+     LogCfg decides whether a contest .cfg line may be applied by asking
+     CommandIsJSONOwned, and passes aApplyJSONOwned = True only when the
+     answer is yes. That function scanned CFGCA alone, so a MIGRATED setting
+     -- whose row is deleted -- answered False, and the guard above would then
+     have muted the contest file too.
+
+     A contest .cfg is the one source that is SUPPOSED to win while its
+     contest is loaded. Without this the guard would have fixed the ini
+     problem by breaking that. *)
+   BeginTest('a migrated setting still counts as JSON-owned for a contest .cfg');
+
+   CheckTrue(CommandIsJSONOwned('BAND MAP MULTS ONLY'),
+             'a migrated setting is JSON-owned');
+   CheckTrue(CommandIsJSONOwned('PTT ENABLE'),
+             'so is one that left the Config record');
+
+   (* And a command that never moved still answers from its row. *)
+   CheckTrue(CommandIsJSONOwned('BAND MAP DECAY TIME'),
+             'an unmigrated csJSON row is unaffected');
+end;
+
 procedure TSettingsModelTests.RunAllTests;
 begin
    Test_DefaultsAreTheOnesTheGlobalsHad;
@@ -861,6 +936,8 @@ begin
    Test_ARangeIsPartOfTheType;
    Test_AStoredValueOutOfRangeIsClamped;
    Test_TheReadPathAndTheWritePathAgree;
+   Test_AStaleIniCannotOverrideTheStore;
+   Test_AContestFileStillOverridesForItsContest;
 end;
 
 end.

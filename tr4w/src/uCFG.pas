@@ -1223,6 +1223,25 @@ function CommandIsJSONOwned(const aCommand: string): boolean;
 var
    i: integer;
 begin
+   (* A SETTING THAT HAS LEFT THE ARRAY IS STILL JSON-OWNED, and saying so is
+     what keeps the contest-overrides-station model working for it.
+
+     LogCfg asks this question to decide whether a contest .cfg line may be
+     applied -- it calls CheckCommand with aApplyJSONOwned = True only when
+     the answer is yes (LogCfg.pas:1250). Scanning CFGCA alone answers FALSE
+     for a migrated setting, because its row is gone, so a contest .cfg
+     setting BAND MAP MULTS ONLY would be accepted and silently ignored.
+
+     That is the half of this pair that is easy to miss: the guard added in
+     CheckCommand stops the INI overriding the store, and this stops that
+     guard from also muting the CONTEST FILE, which is the one source that is
+     supposed to win while its contest is loaded. *)
+   if Settings.OwnsCommand(aCommand) then
+      begin
+      Result := True;
+      Exit;
+      end;
+
    Result := False;
    for i := Low(CFGCA) to High(CFGCA) do
       begin
@@ -1953,6 +1972,39 @@ begin
      name resolves for real, the stub has no job. *)
    if Settings.OwnsCommand(string(pshortstring(Command)^)) then
       begin
+      (* AND IT DEPENDS ON WHO IS ASKING, exactly as a csJSON row does.
+
+        THIS GUARD WAS MISSING WHEN THE ARM WAS FIRST WRITTEN, and its absence
+        was a REGRESSION rather than an oversight in new code: every setting
+        that has moved here came FROM a csJSON row, and those rows are
+        protected a few lines below by
+
+            if (CFGCA[i].crS = csJSON) and (not aApplyJSONOwned) then Exit;
+
+        whose note says plainly what it is for -- "to stop a STALE INI FILE
+        overriding settings\tr4w.json, which is the system of record". Moving
+        a setting out of the array must not cost it that.
+
+        WHAT IT LOOKED LIKE WITHOUT THIS: settings\tr4w.json is loaded first
+        and asserted as the source of record, then ReadInConfigFile(cfgINI)
+        runs unconditionally a dozen lines later -- so an old ini line for a
+        migrated setting silently overwrote the stored value on EVERY launch,
+        and a value changed in Preferences would not survive a restart. Two
+        stores disagreeing with nobody able to say which is in force, which is
+        the exact failure uSettingsModel's header exists to prevent.
+
+        Found in review by Codex, 2026-09-11. It was invisible to the settings
+        unit tests because they call TrySetByCommand directly and never
+        reproduce the startup ORDER. *)
+      if not aApplyJSONOwned then
+         begin
+         (* ACCEPTED AND INERT, the same answer a csJSON row gives an
+           untrusted caller: the line is recognised, so no "invalid statement
+           in config file" dialog, and it is not applied. *)
+         Result := True;
+         Exit;
+         end;
+
       Result := Settings.TrySetByCommand(string(pshortstring(Command)^),
                                          string(CustomCMD));
       if (not Result) and (logger <> nil) then
