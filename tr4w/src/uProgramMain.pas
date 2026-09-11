@@ -2119,8 +2119,10 @@ begin
   // setting, so it lives in the store's `general` section beside activeProfile
   // rather than in `commands`, and it is deliberately not registered — nothing
   // in Preferences edits it and it is absent from the search index.
-  Move(TR4W_CFG_FILENAME, TR4W_LATESTCFG_FILENAME, SizeOf(FileNameType));
-  SetLatestConfigFile(string(PAnsiChar(@TR4W_LATESTCFG_FILENAME)));
+  (* STRAIGHT TO THE STORE.  The hop through TR4W_LATESTCFG_FILENAME copied
+    the name into a global so the next line could copy it back out -- a second
+    copy of a value the store owns, kept in step by hand at two sites. *)
+  SetLatestConfigFile(string(PAnsiChar(@TR4W_CFG_FILENAME)));
 {$IFEND}
 
 {$IF NEWER_DEBUG}

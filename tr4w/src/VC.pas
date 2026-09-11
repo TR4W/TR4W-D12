@@ -3070,7 +3070,10 @@ var
 
   TR4W_FLOPPY_FILENAME                  : FileNameType {= 'C:\TR4W\LOGBACK.TRW'};
   TR4W_INITIALEX_FILENAME               : FileNameType {= 'INITIAL.EX'};
-  TR4W_LATESTCFG_FILENAME               : FileNameType;
+  (* TR4W_LATESTCFG_FILENAME DELETED, 2026-09-11.  It was a second copy of
+    uRadioConfigStore.LatestConfigFile, which the store has owned since
+    2026-08-16 -- reachable as GetLatestConfigFile / SetLatestConfigFile.  Its
+    CFGCA row went with it. *)
 
 
   (* TR4W_MMTTYPATH MOVED, 2026-09-10 -- Settings.Mmtty.Engine, and it is a

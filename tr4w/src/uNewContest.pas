@@ -683,10 +683,11 @@ begin
 
    // FROM settings\tr4w.json, not tr4w.ini (NY4I, 2026-08-16). An empty
    // result is the ordinary first-run state and simply hides the button.
+   (* THE STORE IS THE ONLY COPY NOW.  TR4W_LATESTCFG_FILENAME was a second
+     one, kept in step by hand from here and from uProgramMain -- and this very
+     routine already read the STORE rather than the global, which is what gave
+     it away. *)
    latest := GetLatestConfigFile;
-   FillChar(TR4W_LATESTCFG_FILENAME, SizeOf(FileNameType), 0);
-   StrLCopy(TR4W_LATESTCFG_FILENAME, PAnsiChar(AnsiString(latest)),
-                     SizeOf(FileNameType));
 
    if (latest <> '') and FileExists(latest) then
       begin
@@ -741,7 +742,12 @@ begin
          begin
          case frmNewContest.Choice of
             nccOpenSelected: OpenSelectedConfig;
-            nccLatest:       Move(TR4W_LATESTCFG_FILENAME, TR4W_CFG_FILENAME, SizeOf(FileNameType));
+            (* From the store, not from a global copy of it.  StrPLCopy
+              terminates what it writes; Move copied a whole fixed array and
+              relied on the source already being terminated. *)
+            nccLatest:       uAnsiStr.StrPLCopy(TR4W_CFG_FILENAME,
+                                                AnsiString(GetLatestConfigFile),
+                                                SizeOf(TR4W_CFG_FILENAME) - 1);
             nccCreate:       SaveNewContest;
          end;
          end
