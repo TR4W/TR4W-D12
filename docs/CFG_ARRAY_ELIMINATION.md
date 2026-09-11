@@ -899,6 +899,86 @@ word, no alias). It is held back only for that.
 
 ---
 
+## 2m. THE SOURCE DECIDES, NOT THE ROW -- and `csJSON` goes at import
+
+**NY4I, 2026-09-11:** *"I submit that the entire concept of
+`(CFGCA[i].crS = csJSON)` should go away on import since everything
+non-contest related is in json."* And: *"plus CFGCA will be removed too."*
+
+A code review reached the same conclusion from the other direction the same
+day (Codex): *"give config ingestion an explicit source/phase policy... Do not
+let the generic command reader decide this implicitly."*
+
+They are the same point and it is the right one.
+
+### What `aApplyJSONOwned` actually is
+
+It is a boolean parameter on `CheckCommand` that means **"trust me"**. The ini
+loader passes the default `False` and a csJSON row refuses to apply; the
+Preferences form, a multi-op peer and the contest `.cfg` pass `True` and it
+applies.
+
+So a PER-ROW flag (`crS`) plus a PER-CALL flag (`aApplyJSONOwned`) are together
+encoding one question that belongs to neither: **which FILE is being read, and
+what is that file allowed to do?**
+
+### Why that shape produced a real defect
+
+Restoring the guard for migrated settings (see the commit of 2026-09-11) took
+TWO changes, in two units, because the question is spread out:
+
+* `CheckCommand` had to learn that a migrated setting is as protected as the
+  csJSON row it came from;
+* `CommandIsJSONOwned` had to learn that a migrated setting is still
+  JSON-owned, or the same guard would have muted the CONTEST file -- the one
+  source that is supposed to win.
+
+Miss either half and the bug is silent. That is the cost of an implicit
+policy: the rule is not in one place, so it cannot be read, and it cannot be
+tested as a rule.
+
+### The destination
+
+**Each SOURCE gets a stated policy, and the reader applies it.**
+
+| source | what it may do |
+|---|---|
+| `settings\tr4w.json` | the station's settings. Read at startup, written by Preferences. **The source of record.** |
+| `settings\tr4w.ini` | **import only, and only when there is no store.** It holds nothing on a converted station -- NY4I's own file is 67 bytes of sentinel text |
+| the contest `.cfg` | **contest-scoped**, and wins while that contest is loaded. Captured into the contest database when the log is created |
+| Preferences, a multi-op peer | apply and persist |
+
+Nothing in that table needs `crS`, and nothing needs a per-row status at all.
+`csOld`, `csNew`, `csOwned` and `csJSON` were all migratory markers; `csRem`
+is already deleted (§2l). The remaining three go with the array.
+
+### Why this is not done yet
+
+The array is still 369 rows, and until a setting has actually moved, `crS` is
+the only thing standing between a stale ini and the JSON store for it. The
+guard restored on 2026-09-11 is a **stop-gap that buys parity**, not the
+design -- it makes a migrated setting behave exactly like the csJSON row it
+came from, so nothing regresses while the rest of the migration happens.
+
+**The order is: migrate the rows, then delete the statuses, then delete the
+array.** Deleting the statuses first would remove the only protection the
+unmigrated rows have.
+
+### The test that was missing, and the one still owed
+
+Two tests now assert `CheckCommand` with `aApplyJSONOwned` both ways, which is
+the distinction the model tests could not see -- they call `TrySetByCommand`
+directly and never reproduce the startup ORDER.
+
+**Still owed, and the review is right to ask for it:** a startup-configuration
+integration fixture using temporary JSON/ini/cfg files that asserts which
+value wins, for each source, including the first-run case where there is no
+settings section. That is the test that would have caught this without a human
+reading the code, and it is the one that will prove the source policy above
+when it lands.
+
+---
+
 ## 3. Stage A -- DONE 2026-09-10
 
 **One rule for turning a configured port into a device name.**
