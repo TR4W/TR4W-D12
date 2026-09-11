@@ -23,6 +23,83 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-09-10 (overnight) -- MULTI-OP: SETTINGS SYNC, AND THE LINUX PORT LIST
+
+Four items. The first needs TWO POSITIONS AND A SERVER, which is the one shape
+of test nothing here can stand in for.
+
+### 1. A SETTING CHANGED AT ONE POSITION SHOULD NOW REACH THE OTHER
+
+**This was BROKEN and nobody knew** (`41229eec`). Nothing in this build filled a
+`TParameterToNetwork` or put one on the wire; the record was declared, never
+used, and its message id was never set -- and `tr4wserver` discards a message
+with the wrong id without a word.
+
+**The RECEIVE side survived**, which is why it lasted: TR4W has been obeying its
+peers while telling them nothing, so a two-position station drifts in ONE
+DIRECTION ONLY and the operator who made the change sees it take effect.
+
+It is a port regression, not a missing feature -- D7 has all three pieces
+(`JCTRL2.PAS:1817`, `uOption.pas:919`, and `uNet.pas:217` setting the id inside
+the network window's `WM_INITDIALOG`). All three went with the Win32 windows.
+
+**What to try, with two positions connected to `tr4wserver`:**
+
+1. Change a shared setting in Preferences at position A -- `CQ EXCHANGE` and any
+   `MY ...` row are `crNetwork:1`, so those are the ones to use.
+2. Position B should take the change without being touched.
+3. Then the OTHER DIRECTION, because only one direction was ever broken.
+4. With `DEBUG LOG LEVEL = DEBUG`, position A's log should carry
+   `[Net] sent "<command>" = "<value>" to the other positions`, and B's should
+   report the command it applied.
+
+**A value that is REFUSED must not be announced.** Type something the row
+rejects at A; B must not change, and A's log should say it was refused rather
+than sent.
+
+**Single-operator stations cannot be affected either way** -- the send is
+guarded on `NetIsConnected` -- but it is worth one start with no server to
+confirm nothing new appears in the log.
+
+### 2. LINUX: THE PORT DROP-DOWN LISTS THE ADAPTER
+
+`c67f582a`. `/dev/ttyUSB0` and its vendor string should appear in the radio,
+keyer and rotator port lists on the Mint box, marked `(not selectable yet)` --
+that caption is CORRECT for now and goes when the port work reaches step 5.
+
+**Verified already**: the enumerator itself, run natively against the FTDI
+adapter. What is NOT verified is that the LCL drop-downs show it.
+
+**And add yourself to `dialout` first** (`sudo usermod -aG dialout toms`, then
+log out and in), or the port will list and refuse to open.
+
+### 3. LINUX: A NEW CONTEST LANDS IN `~/tr4w`
+
+`969d8a2d`. The AppImage mounted itself read-only and the contest log was being
+created beside the binary, so QSOs were NOT BEING SAVED.
+
+- Create a contest on the Debian box. The `.cfg` and the `.db` should be in
+  `~/tr4w`, not under `/tmp/.mount_...`.
+- Log a QSO, restart, and confirm it is still there.
+- "Download latest cty.dat" should succeed rather than failing with
+  *"Read-only file system"*.
+
+**Existing contests are unaffected** -- they keep pointing wherever their `.cfg`
+already lives. This changes where NEW ones are created.
+
+### 4. WINDOWS: A SERIAL RADIO STILL OPENS
+
+Nothing above is a Windows feature, and that is exactly why this is here. The
+port work moved what the store holds from `SERIAL n` to the device name
+(`269b99ea`), and a careless step there leaves a Windows station whose radio
+silently stops opening.
+
+- One serial rig, from an EXISTING configuration, so the `SERIAL n` a saved
+  station already holds is exercised on the upgrade path.
+- Then change the port in Preferences, restart, and confirm it sticks.
+
+---
+
 ## 2026-09-05 overnight -- the main window has no Win32 children left
 
 **Two commits plus follow-on work.** `839aeb1f` replaced the last sixty-seven raw
