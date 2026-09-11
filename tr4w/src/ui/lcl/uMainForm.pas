@@ -909,9 +909,66 @@ end;
   a typical Linux box does not have, so fontconfig substitutes something whose
   metrics differ from every width this program computed on Windows. If the
   reports name a substituted font, that is where to look first. *)
+(* ONCE PER PANEL AND FONT, NOT ONCE PER REPAINT.
+
+  THE DIAGNOSTIC WAS RIGHT AND THE FREQUENCY WAS NOT. Every panel that
+  overflows reports on EVERY repaint, and the panels that overflow are the
+  clock, the date and the code speed -- the ones whose caption changes
+  constantly. NY4I's log, 2026-09-11: five of these per millisecond, the same
+  five lines over and over.
+
+  That is not a cosmetic problem with the log. A warning that repeats
+  thousands of times per second is one nobody reads, and it buries the entries
+  that matter in the file this program asks operators to send in.
+
+  KEYED ON PANEL AND FONT, DELIBERATELY NOT ON THE TEXT. Keying on the caption
+  would defeat the whole thing -- "08:59 Fri" becomes "09:00 Fri" a minute
+  later and reports again. What an operator needs to know is that a given
+  panel is too narrow in a given font, and that is true once.
+
+  THE SHORTFALL STILL ESCALATES. A panel already reported at two pixels short
+  reports again if it later needs twenty, because those are different
+  problems: a couple of pixels of padding fixes the first and nothing fixes
+  the second. So the worst case always reaches the log, and only the
+  repetition is dropped. *)
+var
+   GOverflowReported: TStringList = nil;
+
 procedure ReportElementOverflow(const aPanel, aCaption, aFont: string;
                                 const aWanted, aAvailable: integer);
+var
+   key: string;
+   shortfall: integer;
+   worst: integer;
 begin
+   shortfall := aWanted - aAvailable;
+   if shortfall <= 0 then
+      begin
+      Exit;
+      end;
+
+   if GOverflowReported = nil then
+      begin
+      GOverflowReported := TStringList.Create;
+      GOverflowReported.CaseSensitive := False;
+      end;
+
+   (* EXPLICIT AT THE TStringList BOUNDARY. Classes is compiled with String =
+     AnsiString and this unit is UnicodeString, so both crossings convert; the
+     build counts implicit ones and is right to. Nothing here can lose a
+     character -- a panel name is a Pascal identifier and a font name is
+     ASCII -- but saying so in a cast is what keeps the count meaningful. *)
+   key := aPanel + '|' + aFont;
+   (* NOT string(...) AROUND THE LOOKUP. Values returns an AnsiString and
+     StrToIntDef takes one, so widening it here only to have the call narrow
+     it straight back is two conversions where the right answer is none. *)
+   worst := StrToIntDef(GOverflowReported.Values[AnsiString(key)], 0);
+   if shortfall <= worst then
+      begin
+      Exit;
+      end;
+   GOverflowReported.Values[AnsiString(key)] := AnsiString(IntToStr(shortfall));
+
    (* THE TWO NUMBERS ARE THE DIAGNOSIS. "needs 61px, has 30px" says the cell
      is half the width its text requires, which no font substitution and no
      shrinking will fix -- and it distinguishes that from "needs 32, has 30",
@@ -3711,5 +3768,7 @@ initialization
 
 finalization
    DoneCriticalSection(GPendingLock);
+   // The overflow de-duplication list -- created on first use, so usually nil.
+   FreeAndNil(GOverflowReported);
 
 end.

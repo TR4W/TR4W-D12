@@ -52,6 +52,7 @@ type
       procedure Test_NoRetiredNameIsAlsoLiveOrOwned;
       procedure Test_ARangeIsPartOfTheType;
       procedure Test_AStoredValueOutOfRangeIsClamped;
+      procedure Test_TheReadPathAndTheWritePathAgree;
    public
       procedure RunAllTests; override;
    end;
@@ -782,6 +783,64 @@ begin
    end;
 end;
 
+procedure TSettingsModelTests.Test_TheReadPathAndTheWritePathAgree;
+var
+   wasEnabled: boolean;
+   wasPort: integer;
+begin
+   (* THE DEFECT THIS PINS, IN THE ORDER IT HAPPENED TO AN OPERATOR.
+
+     uPrefsForm has seven HAND-WIRED controls that reach their setting by
+     command NAME rather than through the settings registry -- external
+     logger address, enabled and port; MMTTY engine; radio TCP server port;
+     spot collector enabled; YCCC SO2R enable.  They READ with
+     CFGCommandValueAsString and WRITE with SetCFGCommandValue.
+
+     Every one of those settings had moved to uSettingsModel.  CheckCommand
+     resolved the name for writing; CFGCommandValueAsString did not resolve it
+     for reading, and returned ''.
+
+     So: open the Preferences page, and the checkbox shows UNCHECKED however
+     the setting is actually set.  Press OK, and the write path faithfully
+     stores what the control was showing.  A setting the operator never
+     touched is turned off by looking at the page it lives on, and nothing
+     reports it.
+
+     A ONE-DIRECTIONAL TEST WOULD NOT HAVE CAUGHT IT.  Reading alone or
+     writing alone both looked fine; only the ROUND TRIP through the two
+     different entry points shows the disagreement.  So this asserts through
+     the same two calls the UI makes, not through the settings object. *)
+   BeginTest('a migrated setting reads back through the CFG layer, not blank');
+
+   wasEnabled := Settings.ExternalLogger.Enabled;
+   wasPort    := Settings.ExternalLogger.Port;
+   try
+      Settings.ExternalLogger.Enabled := True;
+      Settings.ExternalLogger.Port    := 52077;
+
+      (* The renderer the hand-wired controls call.  Before the fix this was
+        '' for every migrated name. *)
+      CheckEquals('TRUE', UpperCase(Trim(
+                     CFGCommandValueAsString('EXTERNAL LOGGER ENABLED'))),
+                  'a boolean reads back, not blank');
+      CheckEquals('52077', Trim(CFGCommandValueAsString('EXTERNAL LOGGER PORT')),
+                  'an integer reads back, not blank');
+
+      Settings.ExternalLogger.Enabled := False;
+      CheckEquals('FALSE', UpperCase(Trim(
+                     CFGCommandValueAsString('EXTERNAL LOGGER ENABLED'))),
+                  'and it tracks a change');
+
+      (* AND A COMMAND THAT NEVER MOVED STILL READS FROM ITS ROW, which is
+        what proves the new arm narrows rather than intercepts. *)
+      CheckTrue(CFGCommandValueAsString('BAND MAP DECAY TIME') <> '',
+                'an unmigrated command still renders from its row');
+   finally
+      Settings.ExternalLogger.Enabled := wasEnabled;
+      Settings.ExternalLogger.Port    := wasPort;
+   end;
+end;
+
 procedure TSettingsModelTests.RunAllTests;
 begin
    Test_DefaultsAreTheOnesTheGlobalsHad;
@@ -801,6 +860,7 @@ begin
    Test_NoRetiredNameIsAlsoLiveOrOwned;
    Test_ARangeIsPartOfTheType;
    Test_AStoredValueOutOfRangeIsClamped;
+   Test_TheReadPathAndTheWritePathAgree;
 end;
 
 end.

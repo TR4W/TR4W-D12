@@ -1281,6 +1281,35 @@ begin
    (* True unless the case below falls through to its else. *)
    aRenderable := True;
    Result := '';
+
+   (* A SETTING THAT HAS LEFT CFGCA -- THE READ HALF.
+     -------------------------------------------------------------------
+     CheckCommand already resolves these names for WRITING.  Without the
+     same arm here the two halves disagree, and the way they disagree is
+     the worst possible: a Preferences panel READS blank or False, the
+     operator presses OK, and the write path faithfully stores what the
+     control was showing.  A setting the operator never touched is turned
+     off by opening the page it lives on.
+
+     THAT IS NOT HYPOTHETICAL -- it is what this build did.  Seven
+     hand-wired controls in uPrefsForm read through here by name
+     (EXTERNAL LOGGER ADDRESS / ENABLED / PORT, MMTTY ENGINE, RADIO TCP
+     SERVER PORT, SPOT COLLECTOR ENABLED, YCCC SO2R ENABLE) and every one
+     of them had moved to uSettingsModel.  Found by NY4I asking whether
+     the deleted rows were still referenced anywhere; the deletion did not
+     cause it -- the rows had been stubs with crAddress: nil since
+     2026-09-10 -- but it is the same defect either way.
+
+     THE RULE, RESTATED: a migrated name and an unmigrated one are
+     disjoint sets, and EVERY path that resolves a command name has to
+     know about both.  There are two: this one reads, CheckCommand
+     writes. *)
+   if Settings.OwnsCommand(aCommand) then
+      begin
+      aRenderable := Settings.TryGetByCommand(aCommand, Result);
+      Exit;
+      end;
+
    idx := FindCFGCommand(aCommand);
    if idx < 0 then
       begin
