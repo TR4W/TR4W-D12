@@ -1391,7 +1391,6 @@ begin
      end;
 
 {$IF tDebugMode}
-  //uHistory.MakeRevisionHistory;
   TR4W_CFG_FILENAME := 'c:\TR4W\debug.cfg';
 {$ELSE}
 
@@ -2091,7 +2090,7 @@ begin
   // WHY AT STARTUP AND NOT ONLY FOR GRID CONTESTS (NY4I, 2026-08-16): MY GRID
   // drives the distance and beam heading to the DX station, so it earns its
   // keep in every contest -- not just the ones that exchange a grid. This
-  // restores behaviour that TR4W documented long ago (uHistory.pas:125) and
+  // restores behaviour that TR4W documented long ago (uHistory.pas:125, a unit DELETED 2026-09-11) and
   // that no longer existed in the code.
   //
   // SetCommand routes it to Preferences with the Station page open and the grid

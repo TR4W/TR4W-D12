@@ -203,7 +203,8 @@ begin
                SysUtils.Format('TEMP_%.2u_%.2u.MP3', [23, 31]),
                'MP3 temp name, two-digit hour and day');
 
-   { uHistory's version date. }
+   { uHistory's version date -- that unit is DELETED (2026-09-11); the date
+     shape is what this pins, not the unit. }
    CheckEquals(Old1i('<i> (%02u-', 7), SysUtils.Format('<i> (%.2u-', [7]),
                'history version date');
 

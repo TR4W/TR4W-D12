@@ -56,7 +56,6 @@ src\uCT1BOH.pas
 src\uEditMessage.pas
 src\uGetScores.pas
 src\uHamScore.pas
-src\uHistory.pas
 src\ui\lcl\uSettingsBinding.pas
 src\uInputQuery.pas
 src\uKeyerConfigStore.pas

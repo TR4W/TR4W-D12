@@ -657,7 +657,7 @@ const
  // RETIRED 2026-08-24.  A DOS-era layout: the manual describes it as being for
  // "VGA mode below the normal operating screen", and documents an auto-revert
  // ("if two columns each contain more than 25 calls...") that NO CODE IN THIS
- // TREE EVER IMPLEMENTED.  Default was FALSE, uHistory has recorded it as "not
+ // TREE EVER IMPLEMENTED.  Default was FALSE, uHistory (DELETED 2026-09-11, release notes already harvested) recorded it as "not
  // processed" since the TR-LOG-style dupesheet went in, and the column path
  // carried an uninitialised read nobody had ever hit.  NY4I: "we can retire the
  // option since it defaulted to FALSE."  csRem, not deleted, so an old config
