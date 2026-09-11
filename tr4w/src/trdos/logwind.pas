@@ -1605,26 +1605,33 @@ end;
 procedure DisplayHour;
 var
   TempInteger                           : integer;
+  (* The caption, built in the case below and shown after it. A local where a
+    4096-byte global used to stand: the three arms differ only in which text
+    and which number they use. *)
+  (* AnsiString, NOT string. SysUtils.Format's ANSI overload returns one and
+    a TCaption is one, so this crosses nothing; declaring it UnicodeString
+    would narrow on the assignment below and the build counts that. *)
+  capt                                  : AnsiString;
 begin
   if AlarmSet then Exit;
   case HourDisplay of
     ThisHour:
       begin
         TempInteger := TotalThisHour;
-        TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_THISHR)), TotalThisHour);
+        capt := SysUtils.Format(AnsiString(LclText(TC_THISHR)), [TotalThisHour]);
       end;
     LastSixtyMins:
       begin
         TempInteger := TotalLastSixty;
-        TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_LAST60)), TotalLastSixty);
+        capt := SysUtils.Format(AnsiString(LclText(TC_LAST60)), [TotalLastSixty]);
       end;
     BandChanges, BandChangesThisComputer:
       begin
         TempInteger := tThisHourBandChanges;
-        TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_BAND_CHANGES)), tThisHourBandChanges);
+        capt := SysUtils.Format(AnsiString(LclText(TC_BAND_CHANGES)), [tThisHourBandChanges]);
       end;
   end;
-  TR4WMainForm.pnlHourRate.Caption := wsprintfBuffer;
+  TR4WMainForm.pnlHourRate.Caption := capt;
   SetProgressPosition(mpbLastHour, TempInteger);
 end;
 
