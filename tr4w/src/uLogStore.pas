@@ -336,7 +336,7 @@ begin
       end;
 end;
 
-procedure CaptureConfiguration;
+procedure CaptureConfiguration(const aWhy: string);
 var
    i: integer;
    cmd: string;
@@ -347,7 +347,9 @@ var
    Column: LogColumnsType;
    key: AnsiChar;
    memText: ShortString;
+   saved: integer;
 begin
+   saved := 0;
    for i := 1 to CommandsArraySize do
       begin
       if CFGCA[i].crS = csRem then
@@ -450,6 +452,7 @@ begin
          end;
 
       GRepository.SaveConfigValue(AnsiString(cmd), value, src);
+      Inc(saved);
       end;
 
    (* THE EDITABLE-LOG COLUMN WIDTHS.
@@ -552,6 +555,20 @@ begin
       end;
 
    GRepository.Commit;
+
+   (* SAY HOW MANY, because this is the other half of the conversion an
+     operator is shown.  A contest .cfg is read once and captured HERE, into
+     the log -- so without a line the .cfg-to-database direction happens in
+     total silence, and the only way to tell it worked was to restart and see
+     whether the contest came back.
+
+     ON CLOSE, so it lands at the end of the run rather than beside the
+     tr4w.ini lines at the start.  That is where it belongs: the capture
+     records what the session ENDED with, not what it read. *)
+   if logger <> nil then
+      begin
+      logger.Info('[Convert] %d configuration row(s) %s', [saved, aWhy]);
+      end;
 end;
 
 function LogStoreFileName: string;
@@ -731,7 +748,11 @@ begin
          see there, and see the limitation it states. *)
       if isNewLog or aRebuilt then
          begin
-         CaptureConfiguration;
+         (* THE REASON IS PART OF THE LINE, because this call and the one at
+           close look identical in a log and mean opposite things. THIS one is
+           the CONVERSION -- it happens once, when the database is created,
+           and it is what carries a contest .cfg into the log. *)
+         CaptureConfiguration('captured from the contest .cfg as the log was created');
          end;
 
       (* AND THE CONTEST ITSELF, WHICH NOTHING WROTE.
@@ -1448,7 +1469,11 @@ begin
       Exit;
       end;
    try
-      CaptureConfiguration;
+      (* AND THIS ONE IS NOT A CONVERSION. It runs on every clean exit of an
+        interactive session and records what the session ENDED with, so an
+        operator checking whether the import re-ran can tell the two apart by
+        the reason rather than by the line number. *)
+      CaptureConfiguration('recorded on exit -- the settings this session ended with');
    except
       on E: Exception do
          begin

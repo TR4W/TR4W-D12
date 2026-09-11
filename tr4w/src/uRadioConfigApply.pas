@@ -662,7 +662,9 @@ var
    i: integer;
    idx: integer;
    value: string;
+   carried: integer;
 begin
+   carried := 0;
    if aStore = nil then
       begin
       Exit;
@@ -703,12 +705,27 @@ begin
             end;
 
          aStore.SetCommand(MIGRATED_COMMANDS[i], value);
-         logger.Info('[SeedMigratedCommands] %s = %s carried over from tr4w.ini',
+         Inc(carried);
+         logger.Info('[Convert] %s = %s carried over from tr4w.ini',
                      [MIGRATED_COMMANDS[i], value]);
          end;
    finally
       ini.Free;
    end;
+
+   (* A TOTAL, because the per-value lines above are only readable if you know
+     how many to expect -- and because ZERO is the interesting answer. It means
+     either there was nothing to convert, or the store already had everything,
+     and the next line says which. *)
+   if carried > 0 then
+      begin
+      logger.Info('[Convert] %d setting(s) carried over from tr4w.ini', [carried]);
+      end
+   else
+      begin
+      logger.Info('[Convert] nothing carried over from tr4w.ini -- either it ' +
+                  'holds no migrated settings, or the store already has them');
+      end;
 
    // DELIBERATELY NOT SAVED HERE, matching SeedLoggingFromIni. Writing
    // settings\tr4w.json during startup would mean the first run after an

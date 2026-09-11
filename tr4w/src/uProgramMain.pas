@@ -224,6 +224,7 @@ uses
   uLogSource,
   (* The log carries its own contest configuration -- phase E2. *)
   uLogStore,
+  uLogDatabase,   // LogDatabaseFileName -- the contest database path
   (* ContestFactoryEnabled -- phase F. *)
   uContestFactory,
   uCFG,
@@ -840,6 +841,90 @@ begin
       mtInformation, [mbOK], 0);
    Result := True;
 end;
+
+(* WHAT CONFIGURATION EXISTS ON DISK, IN ONE PLACE, AT INFO.
+
+  THE QUESTION THIS ANSWERS is "is this run converting an old configuration?"
+  -- which an operator, and NY4I reading their log, can otherwise only infer
+  from the absence of something. It names each source and says whether it will
+  be read, converted, or ignored.
+
+  IT REPORTS, IT DOES NOT DECIDE. Every skip rule lives where the reading
+  happens (ReadInConfigFile for the files, uRadioConfigApply for the seeding);
+  duplicating any of them here would create a second opinion that drifts from
+  the first. This states what is on disk and lets the log line up with what
+  follows. *)
+procedure ReportConfigurationSources;
+var
+   jsonPath: string;
+   iniPath: string;
+   cfgPath: string;
+begin
+   jsonPath := TR4WConfigFileName;
+   (* TR4W_INI_FILENAME IS ALREADY ABSOLUTE. The first version of this line
+     prefixed SettingsDirectory and logged the settings folder TWICE, once as
+     a prefix and once inside the absolute name -- caught by running it rather
+     than by reading it, which is the only way that class of mistake ever
+     shows up. SeedMigratedCommandsFromIni builds the same path the other
+     way, from SettingsDirectory + a leaf name; both resolve to one file. *)
+   iniPath  := string(StrPas(TR4W_INI_FILENAME));
+   cfgPath  := string(StrPas(TR4W_CFG_FILENAME));
+
+   logger.Info('[Convert] --- configuration sources ---');
+   logger.Info('[Convert]   settings JSON : %s (%s)',
+               [jsonPath,
+                BoolToStr(SysUtils.FileExists(jsonPath), 'present', 'ABSENT')]);
+   logger.Info('[Convert]   legacy ini    : %s (%s)',
+               [iniPath,
+                BoolToStr(SysUtils.FileExists(iniPath), 'present', 'absent')]);
+   logger.Info('[Convert]   contest .cfg  : %s (%s)',
+               [cfgPath,
+                BoolToStr(SysUtils.FileExists(cfgPath), 'present', 'absent')]);
+
+   (* THE HEADLINE, so nobody has to read three lines and work it out. The
+     settings file being absent is what makes a run a conversion: everything
+     else is read every time regardless. *)
+   if not SysUtils.FileExists(jsonPath) then
+      begin
+      logger.Info('[Convert] FIRST RUN -- no settings file yet. An existing ' +
+                  'tr4w.ini and contest .cfg will be CONVERTED, and each ' +
+                  'value carried over is logged below.');
+      end;
+end;
+
+
+(* DOES THIS CONTEST ALREADY HAVE A DATABASE?
+
+  Called after the .cfg is read, because until then the log file name is not
+  known, and BEFORE anything opens the database, because opening it creates
+  it -- after which the answer would always be "yes" and the line would be
+  worthless. *)
+procedure ReportContestDatabaseState;
+var
+   dbPath: string;
+begin
+   (* THE EXPORTED RULE, not uLogStore.LogStoreFileName -- that one is
+     implementation-only, and it is a one-line wrapper around this anyway. *)
+   dbPath := LogDatabaseFileName(string(StrPas(TR4W_LOG_FILENAME)));
+   if dbPath = '' then
+      begin
+      Exit;
+      end;
+
+   if SysUtils.FileExists(dbPath) then
+      begin
+      logger.Info('[Convert]   contest database: %s (present) -- the contest ' +
+                  'configuration comes from the log, the .cfg is not ' +
+                  'reconverted', [dbPath]);
+      end
+   else
+      begin
+      logger.Info('[Convert]   contest database: %s (ABSENT) -- it is created ' +
+                  'this run, and the contest .cfg is captured into it as part ' +
+                  'of creating it', [dbPath]);
+      end;
+end;
+
 
 procedure RunTR4W;
 // NoTransMess and TransMess were declared here and never used -- FPC says so
@@ -1575,16 +1660,42 @@ begin
     It sits above ReadInConfigFile deliberately.  Nothing here depends on the
     ini, and putting it first means a reader of a migrated setting cannot run
     before the object holding it exists. *)
+  (* SAY WHICH CONFIGURATION SOURCES EXIST, BEFORE READING ANY OF THEM.
+
+    NY4I, 2026-09-11: a first-time operator points TR4W at an existing .CFG,
+    and the log should say plainly that it is converting an old configuration
+    rather than leaving them to infer it. Most stations have few enough
+    entries that naming each converted value is affordable, and on the NEXT
+    run it is what lets him confirm the import did not happen twice.
+
+    INFO, NOT DEBUG. A support log is normally gathered at info, and "was this
+    a conversion run?" is the first question asked of one. *)
+  ReportConfigurationSources;
+
   if not LoadSettingsForStartup(TR4WConfigFileName, Settings) then
      begin
      SaveSettings(TR4WConfigFileName, Settings);
-     logger.Info('[Settings] no settings section -- seeded once from the legacy keys and saved');
+     logger.Info('[Convert] settings\tr4w.json had no settings section -- ' +
+                 'seeded once from the legacy keys and saved');
+     end
+  else
+     begin
+     logger.Info('[Convert] settings\tr4w.json already holds a settings ' +
+                 'section -- NOT converting, it is the source of record');
      end;
 
   ReadInConfigFile(cfgINI);
 
   ReadInConfigFile(cfgCFG);          //n4af 4.31.5
   ReadInConfigFile(cfgCommMes);      //common messages gets precedence - n4af
+
+  (* WHETHER THE CONTEST DATABASE ALREADY EXISTS, asked HERE and not later.
+
+    The .cfg has just been read, so TR4W_LOG_FILENAME is finally known and the
+    database path can be derived -- and this must come BEFORE
+    LogStoreApplyContestConfig, which opens the database and would create it,
+    making the answer always yes. *)
+  ReportContestDatabaseState;
 
   (* THE LOG'S OWN CONTEST CONFIGURATION WINS -- phase E2.
 
@@ -2149,8 +2260,40 @@ begin
   // others announce themselves either, and the help entry already reads "No
   // longer used due to Windows restrictions on monitoring the serial port."
 
-  if MyGrid = '' then
-    SetCommand('MY GRID');
+  (* THE SECOND MY GRID PROMPT IS GONE, 2026-09-11 (NY4I).
+
+    There were TWO in this one routine. The other -- above, near the startup
+    events -- is the complete one: it honours tSilentExport, it asks ONCE per
+    installation through GridPromptAlreadyShown / MarkGridPromptShown, and it
+    logs which of those two things it did. This was a bare
+
+        if MyGrid = '' then SetCommand('MY GRID');
+
+    with no guard of any kind, so it asked again immediately afterwards.
+
+    WHAT THE OPERATOR SAW: answer the dialog, and the identical dialog comes
+    straight back. NY4I, 2026-09-11, with two screenshots a keystroke apart
+    and the same clock time on both -- which is what made it obvious they were
+    two prompts and not one that failed to close.
+
+    IT ALSO IGNORED tSilentExport, which the guarded site checks -- so a
+    headless run WOULD have prompted had it got this far.
+
+    AN EARLIER VERSION OF THIS NOTE CLAIMED THAT HUNG EVERY HEADLESS EXPORT,
+    AND THAT WAS WRONG. The run it was based on was not headless at all: Git
+    Bash rewrites a leading-slash argument into a path, so `/EXPORT` reached
+    the program as a Windows path and HasHeadlessSwitch correctly said no. The
+    corpus script sets MSYS_NO_PATHCONV=1 for exactly that reason
+    (export-d12-corpus.sh:171) and the test run did not. With it set, the same
+    export exits 0 and never prompts.
+
+    Recorded because the wrong version was more persuasive than the right one:
+    a plausible second symptom, reached by mis-running the test rather than by
+    reading the code.
+
+    NOTHING REPLACES IT. Deleting a duplicate prompt does not lose the
+    question: the guarded site above has already asked it, recorded the
+    answer, and said so in the log. *)
 
 //  Format(wsprintfBuffer, 'cty.dat: "%s" version', CTY.ctyTable[cty.ctyVersion].Name);
 
