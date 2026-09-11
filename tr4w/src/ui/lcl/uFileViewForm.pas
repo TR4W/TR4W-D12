@@ -237,7 +237,7 @@ end;
 procedure TfrmFileView.OpenInEditorClick(Sender: TObject);
 begin
    // Issue #986 -- the system default text editor, not Notepad.
-   OpenInDefaultTextEditor(PreviewFileNameAddress);
+   OpenInDefaultTextEditor(string(PreviewFileNameAddress));
 end;
 
 procedure TfrmFileView.ExploreClick(Sender: TObject);

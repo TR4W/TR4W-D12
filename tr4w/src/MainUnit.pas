@@ -317,7 +317,7 @@ procedure CheckQuestionMark;
   function unnecessary rather than merely uncalled. *)
 procedure InvertBooleanCommand(Command: PBoolean);
 procedure RunExplorer(Command: PAnsiChar);
-procedure OpenInDefaultTextEditor(FileName: PAnsiChar);   // Issue #986
+procedure OpenInDefaultTextEditor(const FileName: string);   // Issue #986
 { THE POSSIBLE-CALL LIST'S OWNER-DRAW, declared here because CreateMainWindow
   assigns it long before the drawing code appears further down.
 
@@ -5449,8 +5449,8 @@ begin
     menu_historytxt:
       begin
         // Issue #986 -- open in the system default text editor, not Notepad.
-        TF.Format(wsprintfBuffer, '%shistory.txt', TR4W_PATH_NAME);
-        OpenInDefaultTextEditor(wsprintfBuffer);
+        OpenInDefaultTextEditor(SysUtils.Format('%shistory.txt',
+                                                [TR4W_PATH_NAME]));
       end;
 
     menu_wiki_rus:
@@ -5686,8 +5686,8 @@ begin
 
         if TempCallstring <> '' then
            begin
-           TF.Format(wsprintfBuffer, 'SH/DX %s 5', @TempCallstring[1]);
-           SendViaTelnetSocket(wsprintfBuffer);
+           SendViaTelnetSocket(SysUtils.Format(AnsiString('SH/DX %s 5'),
+                                               [TempCallstring]));
            end;
       end;
 
@@ -10281,7 +10281,7 @@ end;
 // by every "open in editor" path (the file-preview window, history.txt, ...).
 // Falls back to Notepad if no .txt association can be resolved or the editor
 // fails to launch, so the behavior never regresses on a misconfigured system.
-procedure OpenInDefaultTextEditor(FileName: PAnsiChar);
+procedure OpenInDefaultTextEditor(const FileName: string);
 {$IFDEF WINDOWS}
 var
   editor   : array[0..1023] of AnsiChar;
@@ -10300,14 +10300,14 @@ begin
         // a space in it needs no quotes -- and hand-quoting was the bug this
         // line was written to avoid.
         launched := RunProgram(string(PAnsiChar(@editor[0])),
-                               [string(FileName)]);
+                               [FileName]);
         end;
      end;
 
   if not launched then
      begin
      // Fallback: Notepad. Windows-only by name, hence the utility route.
-     RunWindowsUtility(SysUtils.Format('Notepad %s', [string(FileName)]));
+     RunWindowsUtility(SysUtils.Format('Notepad %s', [FileName]));
      end;
 end;
 {$ELSE}

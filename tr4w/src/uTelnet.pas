@@ -79,7 +79,7 @@ function TelnetThreadProc(Param: Pointer): DWORD; stdcall;   // Issue #23 -- DX 
 procedure StartTelnetConnect;                                // Issue #23 -- main-thread launcher
 procedure Disconnect;
 procedure TelnetConnectionError(wsaErr: integer);            // Issue #23 -- explicit code (marshaled)
-function SendViaTelnetSocket(p: PAnsiChar): integer;
+function SendViaTelnetSocket(const p: AnsiString): integer;
 // Is the DX cluster link up?  Exported because MainUnit asks (it used to test
 // the raw `TelnetSock <> 0`); the client object itself stays private to this
 // unit so nothing outside can drive the socket behind the UI's back.
@@ -729,7 +729,7 @@ begin
 
   (* The same plain cast the unit's other SendViaTelnetSocket calls use.
     Cluster commands are ASCII; re-encoding them was a no-op with a cost. *)
-  SendViaTelnetSocket(PAnsiChar(AnsiString(Text)));
+  SendViaTelnetSocket(AnsiString(Text));
   TelnetRememberCommand(Text);
   TelnetSetCommandText('');
 end;
@@ -754,7 +754,7 @@ begin
      begin
      SetLength(Expanded, 250);
      end;
-  SendViaTelnetSocket(PAnsiChar(Expanded));
+  SendViaTelnetSocket(Expanded);
 end;
 
 { A console line was double-clicked: if it is a spot, tune to it.  Re-decoded
@@ -1208,7 +1208,7 @@ begin
   AddStringToTelnetConsole(msg, tstError);
 end;
 
-function SendViaTelnetSocket(p: PAnsiChar): integer;
+function SendViaTelnetSocket(const p: AnsiString): integer;
 var
   sent: integer;
 begin
@@ -1230,7 +1230,7 @@ begin
   // teardown that used to follow a bad send() lives in the handler below.  Same
   // outcome: report, then drop the dead link.
   try
-    ClusterClient.SendLine(AnsiString(p));
+    ClusterClient.SendLine(p);
   except
     on E: Exception do
        begin
@@ -1298,7 +1298,7 @@ begin
       Exit;
       end;
 
-   SendViaTelnetSocket(PAnsiChar(ClusterPendingConnectCommand));
+   SendViaTelnetSocket(ClusterPendingConnectCommand);
    // Once only: this is reached from two places -- straight after the login when
    // there is no password, and after the password when there is.
    ClusterPendingConnectCommand := '';
@@ -1383,7 +1383,7 @@ begin
       Exit;
       end;
 
-   SendViaTelnetSocket(PAnsiChar(AnsiString(call)));
+   SendViaTelnetSocket(AnsiString(call));
 
    if TelnetPassword <> '' then
       begin

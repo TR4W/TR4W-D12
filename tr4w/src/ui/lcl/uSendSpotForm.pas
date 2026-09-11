@@ -167,7 +167,7 @@ begin
 
    if TelnetIsConnected then
       begin
-      SendViaTelnetSocket(PAnsiChar(spot));
+      SendViaTelnetSocket(spot);
       end
    else
       begin

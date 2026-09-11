@@ -669,7 +669,9 @@ end;
 
 procedure scSENDTOCLUSTER;
 begin
-  uTelnet.SendViaTelnetSocket(@scFileName[1]);
+  (* The ShortString itself. @scFileName[1] was a bare pointer into a value
+    with no NUL, so the send ran past the end of it. *)
+  uTelnet.SendViaTelnetSocket(scFileName);
 end;
 {
 procedure CheckNumber;
