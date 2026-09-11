@@ -861,7 +861,10 @@ begin
   begin
     TempPtr := @CTY.ctyPrefixesTable[iI];
 {$IF tDebugMode}
-    sWriteFile(h, wsprintfBuffer, ctyDbgFmt(wsprintfBuffer, '%.4u %-15s %u'#13#10, iI, @TempPtr^.Prefix, TempPtr.Country));
+    (* Prefix ITSELF -- @TempPtr^.Prefix aimed at the ShortString's LENGTH
+      BYTE, so every debug line began with a control character. *)
+    sWriteFileFromString(h, SysUtils.Format(AnsiString('%.4u %-15s %u'#13#10),
+                         [iI, TempPtr^.Prefix, TempPtr.Country]));
 {$IFEND}
     CTY.ctyIndexArray[TempPtr^.Prefix[0]] := iI;
 

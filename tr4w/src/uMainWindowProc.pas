@@ -619,10 +619,9 @@ begin
       end;
 
    (* A silent startup notice -- no MessageBox, nothing that blocks. *)
-   Format(wsprintfBuffer,
+   QuickDisplay(SysUtils.Format(
       'Newer CTY.DAT available (dated %d). Press Alt-O to download.',
-      aLatestDate);
-   QuickDisplay(wsprintfBuffer);
+      [aLatestDate]));
 end;
 
 procedure TTR4WBackgroundEvents.CTYDownloadFinished(Sender: TObject;

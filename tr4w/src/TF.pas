@@ -115,7 +115,6 @@ var
   EditPChar                             : PChar = 'Edit';
   LISTBOX                               : PChar = 'LISTBOX';
 
-  wsprintfBuffer                        : array[0..4096 - 1] of AnsiChar;
   tempprintfBuffer                      : array[0..4096 - 1] of AnsiChar;   // To use with wsPrintfBuffer Issue 601 ny4i
   MillisecondsBuffer                    : array[0..31] of AnsiChar;
   TempBuffer1                           : array[0..255] of AnsiChar;

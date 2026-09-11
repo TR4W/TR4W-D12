@@ -2644,8 +2644,7 @@ begin
    if not StringIsAllNumbers(TimeString) then
       begin
       // Issue #997 -- replaced wsprintf-push asm with SysUtils.Format
-      SysUtils.StrPCopy(wsprintfBuffer, SysUtils.Format('%s '#13 + TC_INVALIDREMINDERTIME, [TimeString]));
-      ShowMessage(wsprintfBuffer);
+      ShowMessage(SysUtils.Format('%s '#13 + TC_INVALIDREMINDERTIME, [TimeString]));
       //      showmessage(TimeString + #13 + 'Invalid reminder time!!');
       Exit;
       end;

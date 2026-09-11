@@ -1503,6 +1503,7 @@ var
   TimeString: string;
   TelnetLogHandle: THandle;
   Line: AnsiString;
+  logPath: string;   // the spot-log file name -- see where it is built
 begin
   if not tWindowsExist(tw_TELNETWINDOW_INDEX) then
      begin
@@ -1534,20 +1535,24 @@ begin
 
     Seen on NY4I's Mint box, 2026-09-09, next to an empty dxcluster/ that
     something else had made correctly. *)
-  StrPCopy(wsprintfBuffer, SysUtils.Format('%sDXCluster' + PathDelim + 'dxcluster %s %s.txt',
-    [string(PAnsiChar(@TR4W_PATH_NAME)), string(GetDateString), string(TimeString)]));
+  (* A LOCAL STRING. This built the path with SysUtils.Format, copied it into
+    the 4096-byte wsprintfBuffer global, and then converted it back twice
+    below -- a round trip through shared memory for a value that was already
+    a string, and that FileExists and FileCreate both take as one. *)
+  logPath := SysUtils.Format('%sDXCluster' + PathDelim + 'dxcluster %s %s.txt',
+    [string(PAnsiChar(@TR4W_PATH_NAME)), string(GetDateString), string(TimeString)]);
 
   (* CREATE_NEW MEANT "FAIL IF IT ALREADY EXISTS", and FileCreate does not --
     it truncates. So the existence test is explicit here rather than lost in the
     swap. The name carries a date and a time, so a collision means this ran
     twice in the same second and the first file is the one to keep. *)
-  if FileExists(string(PAnsiChar(@wsprintfBuffer))) then
+  if FileExists(logPath) then
      begin
      TelnetLogHandle := THandle(-1);
      end
   else
      begin
-     TelnetLogHandle := FileCreate(string(PAnsiChar(@wsprintfBuffer)));
+     TelnetLogHandle := FileCreate(logPath);
      end;
 
   if TelnetLogHandle <> THandle(-1) then
@@ -1800,9 +1805,8 @@ begin
        begin
        Call[length(Call) + 1] := #0;
        // Issue #997: asm wsprintf -> Format
-       StrPCopy(wsprintfBuffer, SysUtils.Format(TC_FREQUENCYFORCALLINKHZ,
-         [string(Call)]));
-       TempFrequency := QuickEditFreq(wsprintfBuffer, 10);
+       TempFrequency := QuickEditFreq(
+          SysUtils.Format(TC_FREQUENCYFORCALLINKHZ, [string(Call)]), 10);
        end;
   if TempFrequency <= 0 then
      begin
