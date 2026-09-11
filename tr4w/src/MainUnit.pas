@@ -8337,9 +8337,11 @@ begin
         begin
           //if StringHas(InitialExchange, '255 ') then
           // InitialExchange := GetLastString(initialexchange); // 4.90.6
-          nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '%-15s %s'#13#10,
-            @Callsign[1], @InitialExchange[1]);
-          sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
+          (* THE ShortStringS THEMSELVES, not @X[1]. A ShortString has no
+            NUL, so the pointer form read past the end of the value; an array
+            of const takes the string and its length together. *)
+          sWriteFileFromString(h, SysUtils.Format(AnsiString('%-15s %s'#13#10),
+                                                  [Callsign, InitialExchange]));
         end;
 
         end;
