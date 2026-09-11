@@ -146,10 +146,6 @@ type
       AllCWMessagesChainable: boolean;
       TuneWithDits: boolean;
       SendCompleteFourLetterCall: boolean;
-      SwapPaddles: boolean;
-      PaddleSpeed: integer;
-      PaddleMonitorTone: integer;
-      PaddlePTTHoldCount: integer;
 
       { TWO-RADIO AND MULTI-OP, migrated 2026-08-15.
 
@@ -290,10 +286,6 @@ var
       { True, 15, 700 and 13 are NOT arbitrary -- they are the values the typed
         constants in LOGK1EA carried, kept so a station with no settings file
         behaves exactly as it did before. }
-      SwapPaddles: False;
-      PaddleSpeed: 0;
-      PaddleMonitorTone: 700;
-      PaddlePTTHoldCount: 13;
       InBandLock: True;
       QSYInactiveRadio: False;
       SwapRadioRelaySense: False;

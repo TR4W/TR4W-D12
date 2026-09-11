@@ -36,12 +36,12 @@ uses
 type
    TConfigDefaultsTests = class(TTestCase)
    protected
-      procedure Test_KeyingAndPTTDefaults;
+      procedure Test_CWKeyingDefaults;
       procedure Test_NonZeroDefaultsAreNotZero;
       procedure Test_EarlierMigrationsStillHoldTheirDefaults;
       procedure Test_TwoRadioAndNetworkDefaults;
       procedure Test_OperatingAndPTTDefaults;
-      procedure Test_PTTDefaultsSurvivedLeavingTheRecord;
+      procedure Test_PTTAndPaddleDefaultsLeftTheRecord;
       procedure Test_SCPBandMapAndFileDefaults;
       procedure Test_AppearanceAndFKeyDefaults;
       procedure Test_AudioDefaultsAndBufferSizes;
@@ -51,7 +51,7 @@ type
 
 implementation
 
-procedure TConfigDefaultsTests.Test_PTTDefaultsSurvivedLeavingTheRecord;
+procedure TConfigDefaultsTests.Test_PTTAndPaddleDefaultsLeftTheRecord;
 var
    s: TR4WSettings;
 begin
@@ -67,7 +67,7 @@ begin
      ON A FRESH OBJECT, not the singleton.  The running Settings has whatever
      the config load put in it; only a new one shows what the constructor
      carries. *)
-   BeginTest('the PTT defaults survived the move out of the Config record');
+   BeginTest('the PTT and paddle defaults survived the move out of the record');
    s := TR4WSettings.Create;
    try
       CheckTrue (s.Ptt.Enable,        'PTTEnable was a typed constant = True');
@@ -75,28 +75,31 @@ begin
       CheckFalse(s.Ptt.Lockout,       'PTTLockout was False');
       CheckFalse(s.Ptt.NoPollDuring,  'NoPollDuringPTT was False');
       CheckEquals(15, s.Ptt.TurnOnDelay, 'PTTTurnOnDelay was 15');
+
+      (* THE PADDLE WENT THE SAME WAY, and PaddleSpeed 0 is the one to read
+        twice: it is MEANINGFUL, not the zero a record starts with -- it means
+        the paddle follows the keyboard speed.  Pinned so nobody "fixes" it to
+        a plausible 25 WPM. *)
+      CheckFalse(s.Paddle.Swap,               'SwapPaddles was False');
+      CheckEquals(0,   s.Paddle.Speed,        'PaddleSpeed 0 = follow the keyboard speed');
+      CheckEquals(700, s.Paddle.MonitorTone,  'PaddleMonitorTone was 700 Hz');
+      CheckEquals(13,  s.Paddle.PttHoldCount, 'PaddlePTTHoldCount was 13 dit counts');
    finally
       s.Free;
    end;
 end;
 
-procedure TConfigDefaultsTests.Test_KeyingAndPTTDefaults;
+procedure TConfigDefaultsTests.Test_CWKeyingDefaults;
 begin
-   // Migrated 2026-08-14 from typed constants in LOGK1EA and LOGSTUFF.
-   BeginTest('the CW keying, paddle and PTT defaults are the ones the globals had');
+   (* Migrated 2026-08-14 from typed constants in LOGK1EA and LOGSTUFF.
+     THE PADDLE AND PTT ROWS THIS TEST WAS NAMED FOR HAVE LEFT THE RECORD --
+     see Test_PTTAndPaddleDefaultsLeftTheRecord, which is where their
+     assertions went. What remains here is the CW message behaviour. *)
+   BeginTest('the CW keying defaults are the ones the globals had');
 
    CheckFalse(Config.AllCWMessagesChainable,     'AllCWMessagesChainable was False');
    CheckFalse(Config.TuneWithDits,               'TuneWithDits was False');
    CheckFalse(Config.SendCompleteFourLetterCall, 'SendCompleteFourLetterCall was False');
-   CheckFalse(Config.SwapPaddles,                'SwapPaddles was False');
-
-   // PaddleSpeed 0 is MEANINGFUL, not merely the zero a record starts with: it
-   // means the paddle follows the keyboard speed. Pinned so nobody "fixes" it
-   // to a plausible 25 WPM.
-   CheckEquals(0,   Config.PaddleSpeed,       'PaddleSpeed 0 = follow the keyboard speed');
-
-   CheckEquals(700, Config.PaddleMonitorTone, 'PaddleMonitorTone was 700 Hz');
-   CheckEquals(13,  Config.PaddlePTTHoldCount,'PaddlePTTHoldCount was 13 dit counts');
 end;
 
 procedure TConfigDefaultsTests.Test_NonZeroDefaultsAreNotZero;
@@ -113,9 +116,9 @@ begin
 
    CheckTrue(Settings.Ptt.Enable,
              'PTT disabled by default = the radio never transmits');
-   CheckTrue(Config.PaddleMonitorTone > 0,
+   CheckTrue(Settings.Paddle.MonitorTone > 0,
              'a 0 Hz sidetone = the operator hears nothing');
-   CheckTrue(Config.PaddlePTTHoldCount > 0,
+   CheckTrue(Settings.Paddle.PttHoldCount > 0,
              'a 0 hold count = PTT drops between characters');
    CheckTrue(Settings.Ptt.TurnOnDelay > 0,
              'a 0 turn-on delay = CW starts before the amplifier is keyed');
@@ -250,12 +253,12 @@ end;
 
 procedure TConfigDefaultsTests.RunAllTests;
 begin
-   Test_KeyingAndPTTDefaults;
+   Test_CWKeyingDefaults;
    Test_NonZeroDefaultsAreNotZero;
    Test_EarlierMigrationsStillHoldTheirDefaults;
    Test_TwoRadioAndNetworkDefaults;
    Test_OperatingAndPTTDefaults;
-   Test_PTTDefaultsSurvivedLeavingTheRecord;
+   Test_PTTAndPaddleDefaultsLeftTheRecord;
    Test_SCPBandMapAndFileDefaults;
    Test_AppearanceAndFKeyDefaults;
    Test_AudioDefaultsAndBufferSizes;

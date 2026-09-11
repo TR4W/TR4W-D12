@@ -138,6 +138,9 @@ type
    TBandMapItemWidth    = 100..200;
    TBandMapSize         = 0..8;
    TPttTurnOnDelay      = 0..65535;   // was crMin:0, crMax:MAXWORD
+   TPaddleMonitorTone   = 0..65535;   // was crMin:0, crMax:MAXWORD
+   TPaddlePttHoldCount  = 0..65535;   // was crMin:0, crMax:MAXWORD
+   TPaddleSpeed         = 0..99;      // was crMin:0, crMax:99
 
    (*
      THE BASE OF EVERY SETTINGS GROUP.
@@ -439,6 +442,46 @@ type
       property TurnOnDelay: TPttTurnOnDelay read FTurnOnDelay write FTurnOnDelay;
    end;
 
+   (*
+     THE PADDLE -- the operator's own key, as distinct from the keyer that
+     sends messages.
+
+     THREE OF THE FOUR DEFAULTS ARE LOAD-BEARING AND ONE IS A TRAP.
+
+       PaddleSpeed 0 IS MEANINGFUL.  It does not mean "unset" and it is not
+       the zero a record starts with: it means the paddle follows the keyboard
+       speed.  uTestConfigDefaults pins it with the note "so nobody fixes it
+       to a plausible 25 WPM", and that warning travels with it here.
+
+       MonitorTone 0 is silence and PttHoldCount 0 drops PTT between
+       characters, which on an amplifier is hot switching.  Neither is a
+       compile error and neither announces itself.
+
+     SWAP PADDLES IS IN THIS GROUP BUT NOT IN ITS NAME, so it carries an
+     alias.  It belongs here -- it is a property of how the paddle is wired --
+     and the legacy command reads SWAP PADDLES, subject last, which no
+     property path produces.
+   *)
+   TPaddleSettings = class(TSettingsGroup)
+   private
+      FSwap: boolean;
+      FSpeed: TPaddleSpeed;
+      FMonitorTone: TPaddleMonitorTone;
+      FPttHoldCount: TPaddlePttHoldCount;
+   public
+      constructor Create;
+   published
+      // Was Config.SwapPaddles. Answers to SWAP PADDLES -- see BuildCommandMap.
+      property Swap: boolean read FSwap write FSwap;
+      (* Was Config.PaddleSpeed.  ZERO MEANS FOLLOW THE KEYBOARD SPEED and is
+        the default; it is not an unset value. *)
+      property Speed: TPaddleSpeed read FSpeed write FSpeed;
+      // Was Config.PaddleMonitorTone, in Hz.
+      property MonitorTone: TPaddleMonitorTone read FMonitorTone write FMonitorTone;
+      // Was Config.PaddlePTTHoldCount, in dit counts.
+      property PttHoldCount: TPaddlePttHoldCount read FPttHoldCount write FPttHoldCount;
+   end;
+
    TR4WSettings = class(TPersistent)
    private
       // command name -> property path, built once by walking the RTTI.
@@ -452,6 +495,7 @@ type
       FBandMap: TBandMapSettings;
       FBands: TBandSettings;
       FPtt: TPttSettings;
+      FPaddle: TPaddleSettings;
       procedure BuildCommandMap;
       function PathForCommand(const aCommand: string): string;
    public
@@ -538,6 +582,7 @@ type
       property BandMap: TBandMapSettings read FBandMap;
       property Bands: TBandSettings read FBands;
       property Ptt: TPttSettings read FPtt;
+      property Paddle: TPaddleSettings read FPaddle;
    end;
 
 (* THE ONE INSTANCE.  Created on first use so no unit's initialisation order
@@ -684,6 +729,18 @@ begin
    Changed('DisplayLimit');
 end;
 
+{ TPaddleSettings }
+
+constructor TPaddleSettings.Create;
+begin
+   inherited Create;
+   // The values uConfigValues' initialiser carried.
+   FSwap         := False;
+   FSpeed        := 0;     // follow the keyboard speed -- see the note above
+   FMonitorTone  := 700;   // Hz
+   FPttHoldCount := 13;    // dit counts
+end;
+
 { TPttSettings }
 
 constructor TPttSettings.Create;
@@ -765,6 +822,7 @@ begin
    FBandMap        := TBandMapSettings.Create;
    FBands          := TBandSettings.Create;
    FPtt            := TPttSettings.Create;
+   FPaddle         := TPaddleSettings.Create;
 
    FCommands := TStringList.Create;
    FCommands.CaseSensitive := False;
@@ -776,6 +834,7 @@ end;
 destructor TR4WSettings.Destroy;
 begin
    FCommands.Free;
+   FPaddle.Free;
    FPtt.Free;
    FBands.Free;
    FBandMap.Free;
@@ -1051,6 +1110,10 @@ begin
    (* The group goes LAST in this one -- NO POLL DURING PTT -- which no
      property path can produce.  The other four PTT settings derive exactly. *)
    Alias('NO POLL DURING PTT', 'Ptt.NoPollDuring');
+
+   (* SWAP PADDLES, subject last again.  The setting belongs with the paddle;
+     the command name puts the verb first. *)
+   Alias('SWAP PADDLES', 'Paddle.Swap');
 end;
 
 function TR4WSettings.PathForCommand(const aCommand: string): string;

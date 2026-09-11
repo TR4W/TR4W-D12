@@ -448,6 +448,7 @@ var
 implementation
 
 uses
+   uSettingsModel,     // Settings -- the settings that have left CFGCA
    uPortAddress,   // SerialDeviceName -- the one port-name rule
    uAppTimers,   (* StartAppTimer / StopAppTimer -- LCL TTimers, not SetTimer *)
   (* FIRST IN THE CLAUSE, deliberately. Every other unit here then takes
@@ -2521,7 +2522,7 @@ begin
              begin
              CWElementLength := tPaddleElementLength * 3;
              end;
-          if Config.SwapPaddles then
+          if Settings.Paddle.Swap then
              begin
              if DahContact then
                 begin
@@ -2549,7 +2550,7 @@ begin
              inc(tPTTOnCounter);
              end;
           end;
-       if PaddlePTTOn then if tPTTOnCounter = Config.PaddlePTTHoldCount then
+       if PaddlePTTOn then if tPTTOnCounter = Settings.Paddle.PttHoldCount then
                               begin
                               PaddlePTTOn := False;
                               if CWBufferStart = CWBufferEnd then
@@ -2571,7 +2572,7 @@ var
   TempSpeed                             : Cardinal;
 begin
 
-  TempSpeed := Config.PaddleSpeed;
+  TempSpeed := Settings.Paddle.Speed;
   if TempSpeed = 0 then
      begin
      TempSpeed := CodeSpeed;

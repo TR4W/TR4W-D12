@@ -205,13 +205,13 @@ begin
      own. PADDLE PORT is deliberately NOT here -- it is a parallel port, and
      whether TR4W keeps supporting those is an open question (see the Hardware
      panel). Speed and tone are useful regardless of which port carries it. }
-   RegisterStoredSetting('cw.paddle.speed',       'PADDLE SPEED',
+   RegisterModelSetting( 'cw.paddle.speed',       'PADDLE SPEED',
                          RS_CW_PADDLE_SPEED);
-   RegisterStoredSetting('cw.paddle.monitorTone', 'PADDLE MONITOR TONE',
+   RegisterModelSetting( 'cw.paddle.monitorTone', 'PADDLE MONITOR TONE',
                          RS_CW_PADDLE_MONITORTONE);
-   RegisterStoredSetting('cw.paddle.swap',        'SWAP PADDLES',
+   RegisterModelSetting( 'cw.paddle.swap',        'SWAP PADDLES',
                          RS_CW_PADDLE_SWAP);
-   RegisterStoredSetting('cw.paddle.pttHoldCount','PADDLE PTT HOLD COUNT',
+   RegisterModelSetting( 'cw.paddle.pttHoldCount','PADDLE PTT HOLD COUNT',
                          RS_CW_PADDLE_PTTHOLDCOUNT);
 
    { PTT. Not CW-only -- PTT ENABLE keys the transmitter for phone too -- but it
