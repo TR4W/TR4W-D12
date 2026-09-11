@@ -464,7 +464,13 @@ program already owns, and the honest end state keeps them.
 
 ---
 
-## 2h. The 100-command window arm is a bridge too -- and it already half-loses
+## 2h. ~~The 100-command window arm is a bridge too~~ -- IT IS THE IMPORTER
+
+> **CORRECTED 2026-09-11 by NY4I: *"The colors are already written to the
+> json file through the registry. So they are migrated the same way you are
+> doing with the rest of the registry."* He is right, the machinery is
+> already there, and this section had framed it as a decision he needed to
+> make. See the correction at the end.**
 
 Found 2026-09-11 while looking for more rows of the kind section 2g describes.
 
@@ -499,12 +505,41 @@ things worth knowing before making it:
 3. **It is GENERATED, not typed**, so unlike a spelling table it cannot drift
    from the element list. If it stays, it costs nothing to maintain.
 
-### The same question applies to the band plan
+### CORRECTION: there is no decision to make, and the conversion is built
 
-`ApplyBandPlan` reads a `bandPlan` section from the store and there is a
-config-file path beside it. It was not examined; it is the next thing to look
-at when this decision is made, because it will have the same shape and should
-get the same answer.
+`ApplyElementColors` calls **`SeedElementColorsFromGlobals`** first, and that
+routine copies every element's colour out of `TWindows[]` and into the store --
+**once**, guarded on `aStore.ColorCount > 0`.
+
+So the real order is:
+
+1. the ini or `.cfg` is read, and the `WINDOW COLOR` arm writes `TWindows[]`;
+2. `SeedElementColorsFromGlobals` copies that into the store, once;
+3. from then on the store is the owner and applies at every start.
+
+**THE ARM IS THE ONE-TIME IMPORTER.** It is not a bridge competing with the
+store; it is the step that gets a legacy file's colours INTO the store. It
+retires when the legacy files do, along with every other importer -- exactly
+the rule in 2i, and no capability is lost because the value has already been
+converted.
+
+**And it seeds from the GLOBALS rather than re-parsing the file**, which the
+routine's own comment explains: the config loader is section-blind, so by the
+time it runs whatever the file said is already in `TWindows` -- *"no second
+parser, and no chance of the two disagreeing"*. That is the same reasoning that
+makes a derived command name better than a declared one.
+
+**What this section got wrong** is worth keeping: it found a real shape (a
+generated arm writing state a store also owns), drew the right ordering, and
+then reached for the wrong conclusion -- that an operator capability was at
+stake and NY4I had to rule on it. Nothing was at stake. Reading one function
+further up the call chain would have shown that.
+
+### The band plan is the same question
+
+`ApplyBandPlan` reads a `bandPlan` section, and `SeedElementColorsFromGlobals`'s
+own comment says seeding from the globals *"was not an option for the band
+plan"* -- so that one is NOT the same shape and is worth its own look.
 
 ---
 
