@@ -1574,9 +1574,10 @@ begin
      begin
      FileClose(h);
 
-     TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_DIFVERSION)), _RESTARTBIN, @RestartVersionNumber[1], @RestartVersion[1]);
-
-     ShowMessage(wsprintfBuffer);
+     (* The ShortStrings themselves -- @X[1] is a bare pointer into a value
+       with no NUL, so the formatter read past its end. *)
+     ShowMessage(SysUtils.Format(AnsiString(LclText(TC_DIFVERSION)),
+                 [_RESTARTBIN, RestartVersionNumber, RestartVersion]));
      Exit;
      end;
 

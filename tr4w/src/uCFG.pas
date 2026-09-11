@@ -285,7 +285,7 @@ const
       16000, 22050, 44100);
 
    CAT_BAUDRATE_ARRAY: array[0..07] of integer = (1200, 2400, 4800, 9600, 19200,
-      38400, 57600, 115200);
+      38400, 57600, 115200); // [AGENT] Add 230400, 460800, and 921600 when working here.
    DITDAHRATIO_ARRAY: array[0..03] of integer = (3, 4, 5, 6);
    LEADING_ZEROS_ARRAY: array[0..03] of integer = (0, 1, 2, 3);
 

@@ -317,8 +317,8 @@ begin
      end;
   StationsEndUpdate;
 
-  TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_STATIONSINMODE)), ModeStringArray[ActiveMode]);
-  StationsSetCaption(string(PAnsiChar(@wsprintfBuffer)));
+  StationsSetCaption(SysUtils.Format(AnsiString(LclText(TC_STATIONSINMODE)),
+                                     [ModeStringArray[ActiveMode]]));
 end;
 
 procedure UpdateCallsignAfterEditing(Before, After: CallString);

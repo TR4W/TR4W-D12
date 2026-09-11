@@ -1347,9 +1347,7 @@ begin
 
   UpdateTotals2;
 
-  TF.Format(wsprintfBuffer, TWO_STRINGS, BandStringsArray[Band], ModeStringArray[Mode]);
-
-  TR4WMainForm.pnlBandMode.Caption := wsprintfBuffer;
+  TR4WMainForm.pnlBandMode.Caption := SysUtils.Format(AnsiString(TWO_STRINGS), [BandStringsArray[Band], ModeStringArray[Mode]]);
 
   if MultByBand then MultBand := ActiveBand else MultBand := AllBands;
   if MultByMode then MultMode := ActiveMode else MultMode := Both;
@@ -1437,8 +1435,7 @@ begin
         begin
         tPChar := '%u NO CW';
         end;
-     TF.Format(wsprintfBuffer, tPChar, CodeSpeed);
-     TR4WMainForm.pnlCodeSpeed.Caption := wsprintfBuffer;
+     TR4WMainForm.pnlCodeSpeed.Caption := SysUtils.Format(AnsiString(tPChar), [CodeSpeed]);
      ActiveRadioPtr.SpeedMemory := CodeSpeed;
      end;
 
@@ -1546,8 +1543,7 @@ end;
 
 procedure DisplayQTCNumber(QTCNumber: integer);
 begin
-  TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_HAVEQTCS)), QTCNumber);
-  TR4WMainForm.pnlUserInfo.Caption := wsprintfBuffer;
+  TR4WMainForm.pnlUserInfo.Caption := SysUtils.Format(AnsiString(LclText(TC_HAVEQTCS)), [QTCNumber]);
 end;
 
 procedure DisplayCountryName(Call: CallString);
@@ -1601,11 +1597,9 @@ end;
 procedure DisplayQSOsByOpMode;
 begin
 
-  TF.Format(wsprintfBuffer, ' CQ: %u', tRestartInfo.riQSOByOpMode[CQOpMode]);
-  TR4WMainForm.pnlCQQSOCounter.Caption := wsprintfBuffer;
+  TR4WMainForm.pnlCQQSOCounter.Caption := SysUtils.Format(AnsiString(' CQ: %u'), [tRestartInfo.riQSOByOpMode[CQOpMode]]);
 
-  TF.Format(wsprintfBuffer, ' SP: %u', tRestartInfo.riQSOByOpMode[SearchAndPounceOpMode]);
-  TR4WMainForm.pnlSPQSOCounter.Caption := wsprintfBuffer;
+  TR4WMainForm.pnlSPQSOCounter.Caption := SysUtils.Format(AnsiString(' SP: %u'), [tRestartInfo.riQSOByOpMode[SearchAndPounceOpMode]]);
 end;
 
 procedure DisplayHour;
@@ -1642,9 +1636,7 @@ begin
      begin
 
 
-   TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_RATE)), Rate);
-
-   TR4WMainForm.pnlRate.Caption := wsprintfBuffer;
+   TR4WMainForm.pnlRate.Caption := SysUtils.Format(AnsiString(LclText(TC_RATE)), [Rate]);
    SetProgressPosition(mpbRate, Rate);
      end;
 end;
@@ -1667,8 +1659,7 @@ begin
   // note below).  The old code relied on `Score := TotalScore` leaving the value
   // in EAX for the `push eax` -- a fragile Delphi-7 codegen assumption that 64-bit
   // would break.  TC_PTS = '%d Pts'.
-  TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_PTS)), Score);
-  TR4WMainForm.pnlTotalScore.Caption := wsprintfBuffer;
+  TR4WMainForm.pnlTotalScore.Caption := SysUtils.Format(AnsiString(LclText(TC_PTS)), [Score]);
 
 
   if NumberTotalScoreMessages > 0 then
@@ -3788,8 +3779,7 @@ end;
 
 procedure tDisplayCQTotal;
 begin
-  TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_CQTOTAL)), tRestartInfo.riCQTotalCounter);
-  TR4WMainForm.pnlCQTotal.Caption := wsprintfBuffer;
+  TR4WMainForm.pnlCQTotal.Caption := SysUtils.Format(AnsiString(LclText(TC_CQTOTAL)), [tRestartInfo.riCQTotalCounter]);
 end;
 
 function CQLabel(Callsign: CallString): boolean;

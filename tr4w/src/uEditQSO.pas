@@ -841,9 +841,11 @@ end;
 
 procedure ShowNote(CE: ContestExchange);
 begin
-  TF.Format(wsprintfBuffer, PAnsiChar(LclText(RC_NOTE + ' :'#13#10#13#10'%s')),
-    @EditableQSORXData.Prefix);
-  ShowMessage(string(wsprintfBuffer));
+  (* Prefix ITSELF, not @Prefix. With no [1] that pointer aimed at the
+    ShortString'''s LENGTH BYTE, so the note opened with a stray control
+    character; an array of const takes the string and its length together. *)
+  ShowMessage(SysUtils.Format(AnsiString(LclText(RC_NOTE + ' :'#13#10#13#10'%s')),
+                              [EditableQSORXData.Prefix]));
 end;
 
 procedure OpenEditQSOWindow;

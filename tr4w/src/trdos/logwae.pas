@@ -234,9 +234,17 @@ begin
 
      // Issue #997: asm wsprintf-push -> TF.Format. TC_ISQRVFOR = 'Is %s QRV for %s?';
      // cdecl-reverse pushes -> arg1=QTCCallsign, arg2=QRVString.
-     TF.Format(wsprintfBuffer, PAnsiChar(LclText(TC_ISQRVFOR)), @QTCCallsign[1], @QRVString[1]);
+     (* QTCCallsign passes AS ITSELF -- it is a CallString, a ShortString, so
+       the old @QTCCallsign[1] was a bare pointer into a value with no NUL.
 
-     if YesOrNo2(string(wsprintfBuffer)) <> IDOK then Exit;
+       QRVString does NOT, and the difference matters. It is
+       array[0..160] of AnsiChar with its LENGTH in [0] -- a ShortString in
+       everything but its declaration -- so handing the whole array to an
+       array of const would not mean what it means for QTCCallsign. The
+       characters start at [1] and TF.Format NUL-terminated them there, so
+       the pointer is correct and stays. *)
+     if YesOrNo2(SysUtils.Format(AnsiString(LclText(TC_ISQRVFOR)),
+                                 [QTCCallsign, @QRVString[1]])) <> IDOK then Exit;
      ShowQTCSend;
 
      end;
