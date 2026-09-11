@@ -511,11 +511,26 @@ get the same answer.
 ## 2i. CORRECTION: the contest `.cfg` is an IMPORT, so NOTHING has to survive
 
 **NY4I, 2026-09-11:** *"the CFG file is read input only simply to convert to the
-json configuration. Once read, the CFG is never used again."*
+json configuration. Once read, the CFG is never used again."* And, clarifying
+where it lands: *"The same applies for the ini file. For a contest CFG file,
+that data is stored in the contest SQLite database."*
 
 Section 2f concluded that a 37-command parser has to live forever because the
 contest `.cfg` is a permanent input. **That is wrong**, and the machinery that
 makes it wrong is already in the tree.
+
+### TWO import formats, TWO destinations, ONE rule
+
+| read once from | into | already built? |
+|---|---|---|
+| `settings/tr4w.ini` | `settings/tr4w.json` | yes -- `uLegacyIniPrompt`, and `uSettingsModel` for what has migrated |
+| a contest `.cfg` | **the contest SQLite database** | yes -- phase E2, `LogStoreApplyContestConfig` in `uLogStore` |
+
+**The contest half does NOT go to JSON**, and getting that wrong would send
+whoever writes the importer to the wrong store. It agrees with CLAUDE.md, which
+has said since 2026-08-21 that the contest `.cfg` is *"going to an SQLite3
+contest file, not to JSON"*. `LogStoreApplyContestConfig` lives in `uLogStore`,
+which is the SQLite log, so the capture is already landing in the right place.
 
 ### It is phase E2, and it is built
 
