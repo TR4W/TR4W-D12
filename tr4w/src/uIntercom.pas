@@ -38,7 +38,16 @@ uses
   (* Messages: named, and used nowhere (2026-09-08). *)
   Classes;
 
-procedure AddMessageToIntercomWindow(mes: PAnsiChar; Sender: AnsiChar);
+(* A STRING, NOT A POINTER, AND THAT IS A FIX RATHER THAN A TIDY-UP.
+
+  The only caller passes @imMessage[1] -- the LAST FIELD of a packed record
+  overlaid on the network receive buffer (uNet.pas:438).  A Str80 carries no
+  NUL, so scanning for one ran off the end of an 80-character message and into
+  the rest of the buffer, i.e. into bytes that arrived over the wire.  That
+  made it network-reachable.
+
+  The body never wanted a pointer: its only use was AnsiString(mes). *)
+procedure AddMessageToIntercomWindow(const mes: AnsiString; Sender: AnsiChar);
 procedure FlashIntercomListBox;
 procedure EnumINTERCOMTXT(FileString: PShortString);
 
@@ -63,7 +72,7 @@ uses
   uIntercomForm,   { the window is a form -- the list box lives there }
    uConfigValues;
 
-procedure AddMessageToIntercomWindow(mes: PAnsiChar; Sender: AnsiChar);
+procedure AddMessageToIntercomWindow(const mes: AnsiString; Sender: AnsiChar);
 var
   { AnsiString, NOT string.  Every consumer of this line is AnsiString --
     sWriteFileFromString takes one, and the LCL's TStrings.Add takes one -- so a
@@ -85,7 +94,7 @@ begin
   // The shared wsprintfBuffer, the byte count it returned, and the
   // string(AnsiString(PAnsiChar(@wsprintfBuffer))) round trip below all go with
   // it: the line is a string from here on.
-  Line := SysUtils.Format('%s %s :   %s', [GetTimeString, Sender, AnsiString(mes)]);
+  Line := SysUtils.Format('%s %s :   %s', [GetTimeString, Sender, mes]);
 
   if Config.IntercomFileEnable then
      begin

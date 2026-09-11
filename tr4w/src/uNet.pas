@@ -435,7 +435,12 @@ var
           NET_INTERCOMMESSAGE_ID:
             begin
               IntercomMessagePtr := @NetBuffer[Bufindex];
-              AddMessageToIntercomWindow(@IntercomMessagePtr^.imMessage[1], IntercomMessagePtr^.imSender);
+              (* THE SHORTSTRING ITSELF, not the address of its first byte.
+                It carries its own length; the pointer form had to guess one by
+                looking for a NUL that a Str80 does not have, and imMessage is
+                the last field of a packed record sitting on the receive
+                buffer. *)
+              AddMessageToIntercomWindow(IntercomMessagePtr^.imMessage, IntercomMessagePtr^.imSender);
             end;
 
           NET_LOGCOMPARE_ID:

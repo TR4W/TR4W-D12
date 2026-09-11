@@ -2090,7 +2090,18 @@ begin
    //            if WindowsOSversion = 2 then
    //              ShowTrayTips(Reminders^[RecordNumber].RemMessage)
    //            else
-               QuickDisplay(string(PAnsiChar(@Reminders^[RecordNumber].RemMessage[1])));
+               (* A SHORTSTRING HAS NO NUL, so reading it as a C string ran
+                 past the end.  ReminderRecord.RemMessage is a Str80 in a
+                 record allocated by New (uCFG.pas:2636) with no FillChar, and
+                 written by ReadLn -- which sets the length byte and leaves the
+                 tail as heap garbage.  The scan continued into Alarm and the
+                 next record, and any REMINDER line in a config file reached
+                 it.
+
+                 QuickDisplay takes a STRING.  The pointer, the cast and the
+                 over-read were all in aid of converting a value that assigns
+                 directly. *)
+               QuickDisplay(Reminders^[RecordNumber].RemMessage);
                end;
         end;
 
