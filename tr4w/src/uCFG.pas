@@ -576,6 +576,10 @@ const
      command names through the settings object, so no stub row is needed to
      keep an old config file loading. *)
    - 11 {band map display filters, HF/VHF/WARC -- moved to uSettingsModel}
+   (* Every csRem row, gone.  The 7 the settings model owns needed nothing
+     -- CheckCommand resolves those names for real -- and the other 91 are
+     names in RETIRED_COMMANDS now instead of twenty-field records. *)
+   - 98 {every csRem row -- withdrawn commands are a name list now}
    ;
 
    // crS (CFGStatus): csNew / csOld = active -- the command's value IS applied.
@@ -595,7 +599,6 @@ const
  (crCommand: 'ALT-D CQ ENABLE';               crAddress: @Config.AltDCQEnable;                   crMin:0;  crMax:0;        crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'ALWAYS CALL BLIND CQ';          crAddress: @Config.AlwaysCallBlindCQ;              crMin:0;  crMax:0;        crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'ASK FOR FREQUENCIES';           crAddress: @AskForFrequencies;              crMin:0;  crMax:0;        crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'AUTO ALT-D ENABLE';             crAddress: @AutoAltDEnable;                 crMin:0;  crMax:0;        crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'AUTO CALL TERMINATE';           crAddress: @Config.AutoCallTerminate;              crMin:0;  crMax:0;        crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'AUTO DISPLAY DUPE QSO';         crAddress: @AutoDisplayDupeQSO;             crMin:0;  crMax:0;        crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'AUTO DUPE ENABLE CQ';           crAddress: @AutoDupeEnableCQ;               crMin:0;  crMax:0;        crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
@@ -608,7 +611,6 @@ const
  (crCommand: 'AUTO SEND CHARACTER COUNT';     crAddress: pointer(2);                      crMin:0;  crMax:6;        crS: csJSON; crA: 0; crC:0 ; crP:4; crJ: 0; crKind: ckArray; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'AUTO TIME INCREMENT';           crAddress: @AutoTimeIncrementQSOs;          crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'AUTO-CQ DELAY TIME';            crAddress: @AutoCQDelayTime;                crMin:500;crMax:10000;    crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
- (crCommand: 'BACKCOPY ENABLE';               crAddress: @BackCopyEnable;                 crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'BACKUP LOG FILE NAME';          crAddress: @TR4W_FLOPPY_FILENAME;           crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctFileName; crNetwork: 1),   // 4.56.11
  (crCommand: 'BACKUP LOG FREQUENCY';          crAddress: @FloppyFileSaveFrequency;        crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),   // 4.56.11
  (crCommand: 'BAND';                          crAddress: pointer(24);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:1 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctBand; crNetwork: 1),
@@ -621,7 +623,6 @@ const
 // and the next save persisted it -- see the comment on BandMapEnable in
 // logwind.pas.  csRem with a nil address, not deleted, so an existing .cfg or
 // tr4w.json that names it still loads and is ignored.
- (crCommand: 'BAND MAP ENABLE';               crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'BAND MAP GUARD BAND';           crAddress: @BandMapGuardBand;               crMin:100;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:1; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'BAND MAP ITEM HEIGHT';          crAddress: @BandMapItemHeight;              crMin:12; crMax:50;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'BAND MAP ITEM WIDTH';           crAddress: @BandMapItemWidth;               crMin:100;crMax:200;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
@@ -634,7 +635,6 @@ const
  (crCommand: 'CALL OK NOW CW MESSAGE';        crAddress: @CorrectedCallMessage;           crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 1),
  (crCommand: 'CALL OK NOW MESSAGE';           crAddress: @CorrectedCallMessage;           crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 1),
  (crCommand: 'CALL OK NOW SSB MESSAGE';       crAddress: @CorrectedCallPhoneMessage;      crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 1),
- (crCommand: 'CALL WINDOW POSITION';          crAddress: pointer(15);                     crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'CALL WINDOW SHOW ALL SPOTS';    crAddress: @Config.CallWindowShowAllSpots;         crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'CALLSIGN UPDATE ENABLE';        crAddress: @CallsignUpdateEnable;           crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'CATEGORY-ASSISTED';             crAddress: pointer(50);                     crMin:0;  crMax:0;       crS: csJSON; crA:0; crC:1 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),
@@ -657,7 +657,6 @@ const
  // carried an uninitialised read nobody had ever hit.  NY4I: "we can retire the
  // option since it defaulted to FALSE."  csRem, not deleted, so an old config
  // naming it still loads without an error.
- (crCommand: 'COLUMN DUPESHEET ENABLE';        crAddress: @ColumnDupeSheetEnable;          crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'COMPLETE CALLSIGN MASK';        crAddress: @CompleteCallsignMask;           crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'COMPUTER ID';                   crAddress: @ComputerID;                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctAlphaChar; crNetwork: 0),
  (crCommand: 'COMPUTER NAME';                 crAddress: @ComputerName;                   crMin:0;  crMax:8;       crS: csJSON; crA: 0; crC:0 ; crP:6; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 0),
@@ -679,11 +678,9 @@ const
  (crCommand: 'CQ SSB EXCHANGE NAME KNOWN';    crAddress: @CQPhoneExchangeNameKnown;       crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 0),
  (crCommand: 'CQ SSB EXCHANGE';               crAddress: @CQPhoneExchange;                crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 0),
  (crCommand: 'CTY UPDATE CHECK ON STARTUP';   crAddress: @CTYUpdateCheckOnStartup;        crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
- (crCommand: 'CURTIS KEYER MODE';             crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctOther; crNetwork: 1),
 // CUSTOM CARET retired 2026-08-18: TR4W drew a block caret from cursor.bmp into
 // the entry fields, which are LCL TEdits since Phase 3b and carry their own.
 // csRem, not deleted, so an existing .cfg that sets it still loads.
- (crCommand: 'CUSTOM CARET';                  crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'CUSTOM INITIAL EXCHANGE STRING';crAddress: @CustomInitialExchangeString;    crMin:0;  crMax:40;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'CUSTOM USER STRING';            crAddress: @CustomUserString;               crMin:0;  crMax:40;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'CW ENABLE';                     crAddress: @Config.CWEnable;                       crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:7; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
@@ -700,19 +697,15 @@ const
  (crCommand: 'DOMESTIC MULTIPLIER';           crAddress: pointer(13);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctMultiplier; crNetwork: 1),
  (crCommand: 'DUPE CHECK SOUND';              crAddress: pointer(12);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'DUPE SHEET AUTO RESET';         crAddress: @Sheet.tAutoReset;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'DUPE SHEET ENABLE';             crAddress: @Sheet.DupeSheetEnable;          crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
 // (crCommand: 'DVK PORT';                      crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'DVK ENABLE';                    crAddress: @Config.DVKEnable;                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:7; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'DVK LOCALIZED MESSAGES ENABLE'; crAddress: @Config.DVKLocalizedMessagesEnable;     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'DVK PATH';                      crAddress: @Config.DVKPath;                   crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctDirectory; crNetwork: 1),
  (crCommand: 'DVK RECORDER';                  crAddress: @Config.DVKRecorder;     crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctFileName; crNetwork: 1),
  (crCommand: 'DX MULTIPLIER';                 crAddress: pointer(11);                     crMin:0;  crMax:0;       crS: csJSON; crA:20; crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctMultiplier; crNetwork: 1),
- (crCommand: 'EIGHT BIT PACKET PORT';         crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctOther; crNetwork: 0),
  (crCommand: 'ESCAPE EXITS SEARCH AND POUNCE';crAddress: @Config.EscapeExitsSearchAndPounce;     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'EX MENU';                       crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'EXCHANGE MEMORY ENABLE';        crAddress: @ExchangeMemoryEnable;           crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'EXCHANGE RECEIVED';             crAddress: pointer(10);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
- (crCommand: 'EXCHANGE WINDOW S&P BACKGROUND';crAddress: pointer(48);                     crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:10; crJ: 0; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),
 
  (crCommand: 'EXTERNAL LOGGER';               crAddress: pointer(53);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:2; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 0),
 
@@ -738,20 +731,12 @@ const
    -- MY CONTINENT 22, the two WSJT-X ENABLED rows 23, SEND HIGHLIGHTS 24,
    MULTICAST GROUP 25 -- is correct, so this row was the only stale one and
    nothing pointed at it. Retiring the row removes the misfire. *)
- (crCommand: 'EXTERNAL LOGGER ADDRESS';       crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 0),
- (crCommand: 'EXTERNAL LOGGER ENABLED';       crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
- (crCommand: 'EXTERNAL LOGGER PORT';          crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
  (crCommand: 'FARNSWORTH ENABLE';             crAddress: @Config.FarnsworthEnable;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'FARNSWORTH SPEED';              crAddress: @Config.FarnsworthSpeed;                crMin:0;  crMax:99;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'FONT SIZE';                     crAddress: @fontsize;                       crMin:0;  crMax:2;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
- (crCommand: 'FOOT SWITCH MODE';              crAddress: pointer(9);                      crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
- (crCommand: 'FOOT SWITCH PORT';              crAddress: @ActiveFootSwitchPort;           crMin:0;  crMax:0;       crS: csRem; crA:0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctPortLPT; crNetwork: 0),
- (crCommand: 'FREQUENCY ADDER RADIO ONE';     crAddress: @Radio1.FrequencyAdder;          crMin:0;  crMax:MAXWORD-1; crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
- (crCommand: 'FREQUENCY ADDER RADIO TWO';     crAddress: @Radio2.FrequencyAdder;          crMin:0;  crMax:MAXWORD-1; crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
  (crCommand: 'FREQUENCY MEMORY ENABLE';       crAddress: @FrequencyMemoryEnable;          crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'FREQUENCY MEMORY';              crAddress: @tFrequencyMemory;               crMin:0;  crMax:0;       crS: csJSON; crA: 18;crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctFreqList; crNetwork: 1),
  (crCommand: 'FREQUENCY POLL RATE';           crAddress: @FreqPollRate;                   crMin:10; crMax:1000;    crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
- (crCommand: 'FT1000MP CW REVERSE';           crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'GRID MAP CENTER';               crAddress: @GridMapCenter;                  crMin:0;  crMax:6;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (* WITHDRAWN 2026-09-11 -- A BRIDGE WITH NOTHING LEFT TO CARRY.
 
@@ -765,7 +750,6 @@ const
     Safe because csRem returns TRUE: anything still naming it -- an old .cfg,
     ApplyStoredCommands walking the store's `commands` section -- is accepted
     silently rather than reported as refused. *)
- (crCommand: 'HAMLIB DEBUG';                crAddress: nil;               crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  (* WITHDRAWN 2026-09-11 -- A BRIDGE WITH NOTHING LEFT TO CARRY.
 
     uRadioConfigStore owns this value; ApplyLoggingSettings and the TCI block in
@@ -778,7 +762,6 @@ const
     Safe because csRem returns TRUE: anything still naming it -- an old .cfg,
     ApplyStoredCommands walking the store's `commands` section -- is accepted
     silently rather than reported as refused. *)
-(crCommand: 'HAMLIB ASYNC ONLY';          crAddress: nil;          crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  (* WITHDRAWN 2026-09-11 -- A BRIDGE WITH NOTHING LEFT TO CARRY.
 
     uRadioConfigStore owns this value; ApplyLoggingSettings and the TCI block in
@@ -791,7 +774,6 @@ const
     Safe because csRem returns TRUE: anything still naming it -- an old .cfg,
     ApplyStoredCommands walking the store's `commands` section -- is accepted
     silently rather than reported as refused. *)
-(crCommand: 'HAMLIB TRACE';               crAddress: nil;               crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'HAMSCORE ENABLE';               crAddress: @Config.HamScoreEnable;                 crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean;       crNetwork: 0),  // Issue #783
  (crCommand: 'HAMSCORE URL';                  crAddress: @Config.HamScoreURL;                    crMin:0;  crMax:200;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctString;        crNetwork: 0),  // Issue #783
  (crCommand: 'HAMSCORE USERNAME';             crAddress: @Config.HamScoreUsername;               crMin:0;  crMax:50;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctCaseSensitive; crNetwork: 0),  // Issue #783 -- empty falls back to MY CALL
@@ -801,7 +783,6 @@ const
  (crCommand: 'HOUR DISPLAY';                  crAddress: pointer(8);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),
 // (crCommand: 'HOUR OFFSET';                   crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
 // (crCommand: 'ICOM COMMAND PAUSE';            crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
- (crCommand: 'ICOM RESPONSE TIMEOUT';         crAddress: @newIcomResponseTimeout{F_ICOM_RESPONSE_TIMEOUT};        crMin:0;crMax:0;    crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'IE SWITCH';                     crAddress: @ie_switch;                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'IN BAND LOCKOUT';               crAddress: @Config.InBandLock;                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),      // 4.92.1
  (crCommand: 'INCLUDE F-KEY NUMBER';          crAddress: @Config.IncludeFKeyNumber;             crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
@@ -823,12 +804,10 @@ const
   (* WITHDRAWN 2026-09-11.  The value lives in the store's `general` section as
     LatestConfigFile and always did; this row pointed at a GLOBAL COPY of it.
     A bridge, not storage -- the first of the 279 such rows to go. *)
- (crCommand: 'LATEST CONFIG FILE';            crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctFilename; crNetwork: 0),
  (crCommand: 'LEADING ZERO CHARACTER';        crAddress: @Config.LeadingZeroCharacter;           crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctChar; crNetwork: 1),
  (crCommand: 'LEADING ZEROS';                 crAddress: pointer(14);                     crMin:0;  crMax:3;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckArray;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'LEAVE CURSOR IN CALL WINDOW';   crAddress: @Config.LeaveCursorInCallWindow;        crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'LITERAL DOMESTIC QTH';          crAddress: @LiteralDomesticQTH;             crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 1; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'LOG FILE NAME';                 crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctString; crNetwork: 0),
  (crCommand: 'LOG FREQUENCY ENABLE';          crAddress: @LogFrequencyEnable;             crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'LOG RS SENT';                   crAddress: @LogRSSent;                      crMin:11; crMax:59;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctWord; crNetwork: 1),
  (crCommand: 'LOG RST SENT';                  crAddress: @LogRSTSent;                     crMin:111;crMax:599;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctWord; crNetwork: 1),
@@ -844,27 +823,15 @@ const
  (crCommand: 'MINITOUR DURATION';             crAddress: @TourDuration;                   crMin:5;  crMax:60;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'MISSINGCALLSIGNS FILE ENABLE';  crAddress: @tMissCallsFileEnable;           crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
   (* WITHDRAWN 2026-09-10: Settings.Mmtty.Engine. *)
- (crCommand: 'MMTTY ENGINE';                  crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctFileName; crNetwork: 0),
  (crCommand: 'MODE';                          crAddress: pointer(5);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
- (crCommand: 'MODEM PORT BAUD RATE';          crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
- (crCommand: 'MODEM PORT';                    crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctOther; crNetwork: 0),
- (crCommand: 'MOUSE ENABLE';                  crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'MP3 PATH';                      crAddress: @Config.MP3Path;                   crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctDirectory; crNetwork: 1),
  (crCommand: 'MP3 PLAYER';                    crAddress: @Config.MP3Player;       crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctFileName; crNetwork: 1),
- (crCommand: 'MP3 RECORDER BITRATE';          crAddress: pointer(9);                      crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckArray; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
- (crCommand: 'MP3 RECORDER DURATION';         crAddress: pointer(41);                     crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'MP3 RECORDER ENABLE';           crAddress: @Config.MP3RecorderEnable;                 crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'MP3 RECORDER SAMPLERATE';       crAddress: pointer(10);                     crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckArray; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'MULT BY BAND';                  crAddress: @MultByBand;                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'MULT BY MODE';                  crAddress: @MultByMode;                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
 // (crCommand: 'MULTIPLIER ITEM WIDTH';         crAddress: @MultiplierItemWidth;            crMin:0;  crMax:255;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctByte; crNetwork: 1),
  (crCommand: 'MULT REPORT MINIMUM BANDS';     crAddress: pointer(7);                      crMin:2;  crMax:5;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckArray; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
- (crCommand: 'MULTI INFO MESSAGE';            crAddress: @MultiInfoMessage;               crMin:0;  crMax:20;      crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'MULTI MULTS ONLY';              crAddress: @Config.MultiMultsOnly;                 crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'MULTI PORT BAUD RATE';          crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
- (crCommand: 'MULTI PORT';                    crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
- (crCommand: 'MULTI RETRY TIME';              crAddress: @MultiRetryTime;                 crMin:3;  crMax:10;      crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
- (crCommand: 'MULTI UPDATE MULT DISPLAY';     crAddress: @MultiUpdateMultDisplay;         crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'MULTIPLE BANDS';                crAddress: @MultipleBandsEnabled;           crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'MULTIPLE MODES';                crAddress: @MultipleModesEnabled;           crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'MULT SHEET AUTO RESET';         crAddress: @MultReset   ;                   crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
@@ -910,30 +877,11 @@ const
 
      crA is 0 now.  CheckCommand exits on csRem before it reaches the hook,
      so leaving the index would have pointed at code that could not run. *)
-    (crCommand: 'ORION PORT';                    crAddress: pointer(40);                     crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 0),
- (crCommand: 'PACKET ADD LF';                 crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'PACKET AUTO CR';                crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'PACKET BAND SPOTS';             crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'PACKET BAUD RATE';              crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
- (crCommand: 'PACKET BEEP';                   crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'PACKET LOG FILENAME';           crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'PACKET PORT BAUD RATE';         crAddress: nil;                             crMin:0;  crMax:57600;   crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
- (crCommand: 'PACKET PORT';                   crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctOther; crNetwork: 0),
- (crCommand: 'PACKET RETURN PER MINUTE';      crAddress: nil;                             crMin:0;  crMax:MAXWORD; crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
- (crCommand: 'PACKET SPOT COMMENT';           crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'PACKET SPOT DISABLE';           crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'PACKET SPOT EDIT ENABLE';       crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'PACKET SPOT KEY';               crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctChar; crNetwork: 1),
- (crCommand: 'PACKET SPOT PREFIX ONLY';       crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'PACKET SPOTS';                  crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
- (crCommand: 'PADDLE BUG ENABLE';             crAddress: @PaddleBug;                      crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'PADDLE MONITOR TONE';           crAddress: @Config.PaddleMonitorTone;              crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'PADDLE PTT HOLD COUNT';         crAddress: @Config.PaddlePTTHoldCount;             crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'PADDLE SPEED';                  crAddress: @Config.PaddleSpeed;                    crMin:0;  crMax:99;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'PADDLE PORT';                   crAddress: @ActivePaddlePort;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctPortLPT; crNetwork: 1),
  (crCommand: 'PARTIAL CALL ENABLE';           crAddress: @Config.PartialCallEnable;              crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'PARTIAL CALL LOAD LOG ENABLE';  crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'PARTIAL CALL MULT INFO ENABLE'; crAddress: nil{@PartialCallMultsEnable};    crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'POLL RADIO ONE';                crAddress: @Radio1.PollingEnable;           crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'POLL RADIO TWO';                crAddress: @Radio2.PollingEnable;           crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'POSSIBLE CALL ACCEPT KEY';      crAddress: @PossibleCallAcceptKey;          crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctChar; crNetwork: 1),
@@ -942,7 +890,6 @@ const
  (crCommand: 'POSSIBLE CALL RIGHT KEY';       crAddress: @PossibleCallRightKey;           crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctChar; crNetwork: 1),
  (crCommand: 'POSSIBLE CALLS';                crAddress: @Config.PossibleCallEnable;             crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'PREFIX MULTIPLIER';             crAddress: pointer(3);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctMultiplier; crNetwork: 1),
- (crCommand: 'PRINTER ENABLE';                crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'PSTROTATOR IP ADDRESS';         crAddress: @PSTRotatorIPAddress;            crMin:0;  crMax:255;     crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 0),   // Issue #732
  (crCommand: 'PSTROTATOR UDP PORT';           crAddress: @PSTRotatorUDPPort;              crMin:1;  crMax:65535;   crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 0),   // Issue #732
  (crCommand: 'PTT ENABLE';                    crAddress: @Config.PTTEnable;                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
@@ -975,21 +922,17 @@ const
  (crCommand: 'QUICK QSL CW MESSAGE1';         crAddress: @QuickQSLMessage1;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal; cfFunc: cfAll; crType: ctMessage; crNetwork: 1),
  (crCommand: 'QUICK QSL KEY 1';               crAddress: @QuickQSLKey1;                   crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctChar; crNetwork: 1),
  (crCommand: 'QUICK QSL KEY 2';               crAddress: @QuickQSLKey2;                   crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctChar; crNetwork: 1),
- (crCommand: 'QUICK QSL KEY';                 crAddress: @QuickQSLKey1;                   crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctChar; crNetwork: 1),
  (crCommand: 'QUICK QSL MESSAGE 1';           crAddress: @QuickQSLMessage1;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal; cfFunc: cfAll; crType: ctMessage; crNetwork: 1),
  (crCommand: 'QUICK QSL MESSAGE 2';           crAddress: @QuickQSLMessage2;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal; cfFunc: cfAll; crType: ctMessage; crNetwork: 1),
- (crCommand: 'QUICK QSL MESSAGE';             crAddress: @QuickQSLMessage1;               crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal; cfFunc: cfAll; crType: ctMessage; crNetwork: 1),
  (crCommand: 'QUICK QSL SSB MESSAGE';         crAddress: @QuickQSLPhoneMessage;           crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal; cfFunc: cfAll; crType: ctMessage; crNetwork: 1),
  (crCommand: 'QZB RANDOM OFFSET ENABLE';      crAddress: @QZBRandomOffsetEnable;          crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'R150S MODE';                    crAddress: @CTY.ctyR150SMode;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'RFOBL MODE';                    crAddress: @CTY.ctyRFOBLMode;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
   (* WITHDRAWN 2026-09-10: it is Settings.Radio.TcpServerPort now. *)
- (crCommand: 'RADIO TCP SERVER PORT';         crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 0),   // ny4i
  (crCommand: 'RADIO ONE BAND OUTPUT PORT';    crAddress: @Radio1.BandOutputPort;          crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfRadio1; crType: ctPortLPT; crNetwork: 0),
  (crCommand: 'RADIO ONE BAUD RATE';           crAddress: pointer(11);                     crMin:0;  crMax:57600;   crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckArray; cfFunc: cfRadio1; crType: ctInteger; crNetwork: 0),
  (crCommand: 'RADIO ONE CAT DTR';             crAddress: pointer(29);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList;   cfFunc: cfRadio1; crType: ctOther; crNetwork: 0),
  (crCommand: 'RADIO ONE CAT RTS';             crAddress: pointer(28);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList;   cfFunc: cfRadio1; crType: ctOther; crNetwork: 0),
- (crCommand: 'RADIO ONE COMMAND PAUSE';       crAddress: @Radio1.CommandPause;            crMin:0;  crMax:MAXWORD; crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfRadio1; crType: ctInteger; crNetwork: 0),
  (crCommand: 'RADIO ONE CONTROL PORT';        crAddress: pointer(36);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList;  cfFunc: cfRadio1; crType: ctOther; crNetwork: 0),
  (crCommand: 'RADIO ONE CW BY CAT';           crAddress: @Radio1.CWByCAT;                 crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),   // ny4i 4.44.5
  (crCommand: 'RADIO ONE CW SPEED SYNC';       crAddress: @Radio1.CWSpeedSync;             crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
@@ -998,10 +941,7 @@ const
  (crCommand: 'RADIO ONE FT1000MP CW REVERSE'; crAddress: @Radio1.FT1000MPCWReverse;       crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'RADIO ONE HAMLIB ID';           crAddress: @Radio1.HamLibID;                crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfRadio1; crType: ctInteger; crNetwork: 0),
  (crCommand: 'RADIO ONE ICOM FILTER BYTE';    crAddress: pointer(15);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckArray; cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
- (crCommand: 'RADIO ONE ID CHARACTER';        crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctChar; crNetwork: 0),
  (crCommand: 'RADIO ONE IP ADDRESS';          crAddress: @Radio1.IPAddress;               crMin:0;  crMax:50;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfRadio1; crType: ctString; crNetwork: 0),
- (crCommand: 'RADIO ONE ICOM NETWORK USERNAME'; crAddress: @Radio1.NetworkUsername;     crMin:0;  crMax:50;      crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfRadio1; crType: ctCaseSensitive; crNetwork: 0),  // Backward-compat alias for NETWORK USERNAME -- Issue #904
- (crCommand: 'RADIO ONE ICOM NETWORK PASSWORD'; crAddress: @Radio1.NetworkPassword;     crMin:0;  crMax:50;      crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfRadio1; crType: ctPassword;       crNetwork: 0),  // Backward-compat alias for NETWORK PASSWORD -- Issue #904
  (crCommand: 'RADIO ONE NETWORK USERNAME';      crAddress: @Radio1.NetworkUsername;     crMin:0;  crMax:50;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfRadio1; crType: ctCaseSensitive; crNetwork: 0),  // Issue #904 -- canonical generic name
  (crCommand: 'RADIO ONE NETWORK PASSWORD';      crAddress: @Radio1.NetworkPassword;     crMin:0;  crMax:50;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfRadio1; crType: ctPassword;       crNetwork: 0),  // Issue #904 -- canonical generic name
  (crCommand: 'RADIO ONE ICOM DATA MODE ID';    crAddress: @Radio1.IcomDataModeID;        crMin:1;  crMax:3;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
@@ -1010,10 +950,8 @@ const
  (crCommand: 'RADIO ONE KEYER STOP BITS';     crAddress: @Radio1.RadioKeyerStopBits;      crMin:0;  crMax:2;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 0),   // ny4i
  (crCommand: 'RADIO ONE NAME';                crAddress: @Radio1.RadioName;               crMin:0;  crMax:20;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 0),
  (crCommand: 'RADIO ONE RECEIVER ADDRESS';    crAddress: @Radio1.ReceiverAddress;         crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfRadio1; crType: ctInteger; crNetwork: 0),
- (crCommand: 'RADIO ONE TRACKING ENABLE';     crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfRadio1; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'RADIO ONE TCP PORT';            crAddress: @Radio1.RadioTCPPort;            crMin:0;  crMax:65535;   crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfRadio1; crType: ctInteger; crNetwork: 0),   // ny4i
  (crCommand: 'RADIO ONE TYPE';                crAddress: pointer(26);                     crMin:0;  crMax:0;       crS: csOwned; crA: 9; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfRadio1; crType: ctOther; crNetwork: 0),
- (crCommand: 'RADIO ONE UPDATE SECONDS';      crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfRadio1; crType: ctInteger; crNetwork: 0),
  (crCommand: 'RADIO ONE USE HAMLIB';          crAddress: @Radio1.UseHamLib;               crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'RADIO ONE WIDE CW FILTER';      crAddress: @Radio1.WideCWFilter;            crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfRadio1; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'RADIO ONE STARTUP COMMAND';     crAddress: @Radio1.StartupCommand;          crMin:0;  crMax:50;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctString; crNetwork: 0),
@@ -1025,7 +963,6 @@ const
  (crCommand: 'RADIO TWO BAUD RATE';           crAddress: pointer(12);                     crMin:0;  crMax:57600;   crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckArray; cfFunc: cfRadio2; crType: ctInteger; crNetwork: 0),
  (crCommand: 'RADIO TWO CAT DTR';             crAddress: pointer(33);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckList;   cfFunc: cfRadio2; crType: ctOther; crNetwork: 0),
  (crCommand: 'RADIO TWO CAT RTS';             crAddress: pointer(32);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckList;   cfFunc: cfRadio2; crType: ctOther; crNetwork: 0),
- (crCommand: 'RADIO TWO COMMAND PAUSE';       crAddress: @Radio2.CommandPause;            crMin:0;  crMax:MAXWORD; crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
  (crCommand: 'RADIO TWO CONTROL PORT';        crAddress: pointer(37);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckList;  cfFunc: cfRadio2; crType: ctOther; crNetwork: 0),
  (crCommand: 'RADIO TWO CW BY CAT';           crAddress: @Radio2.CWByCAT;                 crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),  // ny4i 4.44.5
  (crCommand: 'RADIO TWO CW SPEED SYNC';       crAddress: @Radio2.CWSpeedSync;             crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),    // ny4i 4.44.5
@@ -1034,10 +971,7 @@ const
  (crCommand: 'RADIO TWO FT1000MP CW REVERSE'; crAddress: @Radio2.FT1000MPCWReverse;       crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'RADIO TWO HAMLIB ID';           crAddress: @Radio2.HamLibID;                crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfRadio1; crType: ctInteger; crNetwork: 0),
  (crCommand: 'RADIO TWO ICOM FILTER BYTE';    crAddress: pointer(16);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckArray; cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
- (crCommand: 'RADIO TWO ID CHARACTER';        crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal; cfFunc: cfAll; crType: ctChar; crNetwork: 0),
  (crCommand: 'RADIO TWO IP ADDRESS';          crAddress: @Radio2.IPAddress;               crMin:0;  crMax:50;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfRadio2; crType: ctString; crNetwork: 0),
- (crCommand: 'RADIO TWO ICOM NETWORK USERNAME'; crAddress: @Radio2.NetworkUsername;     crMin:0;  crMax:50;      crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfRadio2; crType: ctCaseSensitive; crNetwork: 0),  // Backward-compat alias for NETWORK USERNAME -- Issue #904
- (crCommand: 'RADIO TWO ICOM NETWORK PASSWORD'; crAddress: @Radio2.NetworkPassword;     crMin:0;  crMax:50;      crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfRadio2; crType: ctPassword;       crNetwork: 0),  // Backward-compat alias for NETWORK PASSWORD -- Issue #904
  (crCommand: 'RADIO TWO NETWORK USERNAME';      crAddress: @Radio2.NetworkUsername;     crMin:0;  crMax:50;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfRadio2; crType: ctCaseSensitive; crNetwork: 0),  // Issue #904 -- canonical generic name
  (crCommand: 'RADIO TWO NETWORK PASSWORD';      crAddress: @Radio2.NetworkPassword;     crMin:0;  crMax:50;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfRadio2; crType: ctPassword;       crNetwork: 0),  // Issue #904 -- canonical generic name
  (crCommand: 'RADIO TWO ICOM DATA MODE ID';    crAddress: @Radio2.IcomDataModeID;        crMin:1;  crMax:3;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
@@ -1046,10 +980,8 @@ const
  (crCommand: 'RADIO TWO KEYER STOP BITS';     crAddress: @Radio2.RadioKeyerStopBits;      crMin:0;  crMax:2;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 0),   // ny4i
  (crCommand: 'RADIO TWO NAME';                crAddress: @Radio2.RadioName;               crMin:0;  crMax:20;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 0),
  (crCommand: 'RADIO TWO RECEIVER ADDRESS';    crAddress: @Radio2.ReceiverAddress;         crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfRadio2; crType: ctInteger; crNetwork: 0),
- (crCommand: 'RADIO TWO TRACKING ENABLE';     crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'RADIO TWO TCP PORT';            crAddress: @Radio2.RadioTCPPort;            crMin:0;  crMax:65535;   crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfRadio2; crType: ctInteger; crNetwork: 0),   // ny4i
  (crCommand: 'RADIO TWO TYPE';                crAddress: pointer(27);                     crMin:0;  crMax:0;       crS: csOwned; crA: 10;crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfRadio2; crType: ctOther; crNetwork: 0),
- (crCommand: 'RADIO TWO UPDATE SECONDS';      crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
  (crCommand: 'RADIO TWO USE HAMLIB';          crAddress: @Radio2.UseHamLib;               crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'RADIO TWO WIDE CW FILTER';      crAddress: @Radio2.WideCWFilter;            crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfRadio2; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'RADIO TWO STARTUP COMMAND';     crAddress: @Radio2.StartupCommand;          crMin:0;  crMax:50;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctString; crNetwork: 0),
@@ -1067,25 +999,16 @@ const
  (crCommand: 'ROTATOR PORT';                  crAddress: pointer(40);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckList;  cfFunc: cfAll; crType: ctOther; crNetwork: 0),
  (crCommand: 'ROTATOR TYPE';                  crAddress: pointer(17);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 0),
  (crCommand: 'ROW COUNT';                     crAddress: pointer(4);                      crMin:5;  crMax:15;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckArray; cfFunc: cfAppearance; crType: ctInteger; crNetwork: 1),
- (crCommand: 'RTTY PORT';                     crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctOther; crNetwork: 0),
- (crCommand: 'RTTY RECEIVE STRING';           crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'RTTY SEND STRING';              crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'S&P CW EXCHANGE';               crAddress: @SearchAndPounceExchange;        crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 0),
  (crCommand: 'S&P EXCHANGE';                  crAddress: @SearchAndPounceExchange;        crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 0),
  (crCommand: 'S&P SSB EXCHANGE';              crAddress: @SearchAndPouncePhoneExchange;   crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 0),
  (crCommand: 'SAY HI ENABLE';                 crAddress: @Config.SayHiEnable;                    crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'SAY HI RATE CUTOFF';            crAddress: @Config.SayHiRateCutOff;                crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
- (crCommand: 'SCORE POSTING ID';              crAddress: @GetScoresPostingID;             crMin:0;  crMax:MAXWORD; crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'SCORE POSTING URL';             crAddress: @Config.GetScoresSeverPostingAddress;   crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctURL; crNetwork: 1),
  (crCommand: 'SCORE READING URL';             crAddress: @Config.GetScoresSeverReadingAddress;   crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctURL; crNetwork: 1),
  (crCommand: 'SCP COUNTRY STRING';            crAddress: @CD.CountryString;               crMin:0;  crMax:80;      crS: csJSON; crA: 11;crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'SCP MINIMUM LETTERS';           crAddress: pointer(1);                      crMin:0;  crMax:5;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckArray;   cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
- (crCommand: 'SEND ALT-D SPOTS TO PACKET';    crAddress: @SendAltDSpotsToPacket;          crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'SEND COMPLETE FOUR LETTER CALL';crAddress: @Config.SendCompleteFourLetterCall;     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'SEND QSO IMMEDIATELY';          crAddress: @SendQSOImmediately;             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'SERIAL 5 PORT ADDRESS';         crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
- (crCommand: 'SERIAL 6 PORT ADDRESS';         crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
- (crCommand: 'SERIAL PORT DEBUG';             crAddress: nil;                            crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'SERVER ADDRESS';                crAddress: @ServerAddress;                  crMin:0;  crMax:255;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'SERVER AUTO SYNCHRONIZE LOG ON CONNECT'; crAddress: @ServerAutoSynchronizeLogOnConnect; crMin:0; crMax:0; crS: csOwned; crA: 0; crC:0; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),  // Issue #912
  (crCommand: 'SERVER PASSWORD';               crAddress: @ServerPassword;                 crMin:0;  crMax:10;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctPassword; crNetwork: 1),  // Was ctString -- bring under the masking-in-Settings logic (Issue #783)
@@ -1100,9 +1023,7 @@ const
  (crCommand: 'SHOW DOMESTIC MULTIPLIER NAME'; crAddress: @tShowDomesticMultiplierName;    crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:9; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'SHOW FREQUENCY IN LOG';         crAddress: @tShowFrequencyinLog;            crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'SHOW GRIDLINES';                crAddress: @Config.ShowGridlines;                 crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:3; crJ: 0; crKind: ckNormal;   cfFunc: cfAppearance; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'SHOW SEARCH AND POUNCE';        crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'SHOW TYPED CALLSIGN';           crAddress: @tShowTypedCallsign;             crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'SIMULATOR ENABLE';              crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'SINGLE BAND SCORE';             crAddress: pointer(25);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:1 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctBand; crNetwork: 1),
  (crCommand: 'SKIP ACTIVE BAND';              crAddress: @Config.SkipActiveBand;                 crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'SLASH MARK CHAR';               crAddress: @SlashMarkChar;                  crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctChar; crNetwork: 1),
@@ -1110,7 +1031,6 @@ const
   (* WITHDRAWN 2026-09-10: it is Settings.SpotCollector.Enabled now.  csRem
     rather than deleted, so an old config naming it loads inert instead of
     stopping the program with "Invalid statement in config file". *)
- (crCommand: 'SPOT COLLECTOR ENABLED';        crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'SPRINT QSY RULE';               crAddress: @SprintQSYRule;                  crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'START SENDING NOW KEY';         crAddress: @StartSendingNowKey;             crMin:0;  crMax:0;       crS: csJSON; crA: 19;crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctChar; crNetwork: 1),
  (crCommand: 'STATIONS CALLSIGNS MASK';        crAddress: @StationsCallsignsMask;         crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:1 ; crP:12; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctString; crNetwork: 1),
@@ -1120,7 +1040,6 @@ const
  (crCommand: 'SWAP PACKET SPOT RADIOS';       crAddress: @Config.SwapPacketSpotRadios;           crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'SWAP PADDLES';                  crAddress: @Config.SwapPaddles;                    crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'SWAP RADIO RELAY SENSE';        crAddress: @Config.SwapRadioRelaySense;            crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
- (crCommand: 'TAB MODE';                      crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  // (crCommand: 'TAIL END CW MESSAGE';           crAddress: @TailEndMessage;                 crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 1),     //n4af 4.41.5
 // (crCommand: 'TAIL END KEY';                  crAddress: @TailEndKey;                     crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctChar; crNetwork: 1),         // n4af 4.41.5
  //(crCommand: 'TAIL END MESSAGE';              crAddress: @TailEndMessage;                 crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 1),
@@ -1137,7 +1056,6 @@ const
     Safe because csRem returns TRUE: anything still naming it -- an old .cfg,
     ApplyStoredCommands walking the store's `commands` section -- is accepted
     silently rather than reported as refused. *)
- (crCommand: 'TELNET DEBUG';                  crAddress: nil;              crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),   // Issue #23
  (* WITHDRAWN 2026-09-11 -- A BRIDGE WITH NOTHING LEFT TO CARRY.
 
     uRadioConfigStore owns this value; ApplyLoggingSettings and the TCI block in
@@ -1150,7 +1068,6 @@ const
     Safe because csRem returns TRUE: anything still naming it -- an old .cfg,
     ApplyStoredCommands walking the store's `commands` section -- is accepted
     silently rather than reported as refused. *)
- (crCommand: 'TCI DEBUG';                     crAddress: nil;                 crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  (* WITHDRAWN 2026-09-11 -- A BRIDGE WITH NOTHING LEFT TO CARRY.
 
     uRadioConfigStore owns this value; ApplyLoggingSettings and the TCI block in
@@ -1163,11 +1080,8 @@ const
     Safe because csRem returns TRUE: anything still naming it -- an old .cfg,
     ApplyStoredCommands walking the store's `commands` section -- is accepted
     silently rather than reported as refused. *)
- (crCommand: 'TCI MAX TX SECONDS';            crAddress: nil;        crMin:0;  crMax:3600;    crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
  (crCommand: 'TELNET SERVER';                 crAddress: @TelnetServer;                   crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'TEN MINUTE RULE';               crAddress: pointer(18);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
- (crCommand: 'TOTAL OFF TIME';                crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
- (crCommand: 'TOTAL SCORE MESSAGE';           crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'TUNE ALT-D ENABLE';             crAddress: @TuneDupeCheckEnable;            crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'TUNE WITH DITS';                crAddress: @Config.TuneWithDits;                   crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'TWO RADIO MODE';                crAddress: @Config.TwoRadioMode;                   crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
@@ -1177,7 +1091,6 @@ const
  (crCommand: 'UDP BROADCAST ROTOR';           crAddress: @UDPBroadcastRotor;              crMin:0;  crMax:0;       crS: csJSON;   crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),  // ny4i 4.44.9
  (crCommand: 'UDP BROADCAST SCORE';           crAddress: @UDPBroadcastScore;              crMin:0;  crMax:0;       crS: csJSON;   crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),  // ny4i Issue 304
  (crCommand: 'UDP BROADCAST LOOKUP INFO';     crAddress: @UDPBroadcastLookup;             crMin:0;  crMax:0;       crS: csJSON;   crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),  // ny4i Issue 612
- (crCommand: 'UDP BROADCAST PORT';            crAddress: @UDPBroadcastPort;               crMin:1;  crMax:65535;   crS: csRem;    crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),   // ny4i 4.44.9
  (crCommand: 'UDP BROADCAST PORT APP INFO';   crAddress: @UDPBroadcastPortApp;            crMin:1;  crMax:65535;   crS: csJSON;   crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),   // ny4i Issue 590
  (crCommand: 'UDP BROADCAST PORT CONTACT';    crAddress: @UDPBroadcastPortContact;        crMin:1;  crMax:65535;   crS: csJSON;   crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),   // ny4i Issue 590
  (crCommand: 'UDP BROADCAST PORT RADIO';      crAddress: @UDPBroadcastPortRadio;          crMin:1;  crMax:65535;   crS: csJSON;   crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),   // ny4i Issue 590
@@ -1189,17 +1102,12 @@ const
  (crCommand: 'UNKNOWN COUNTRY FILE ENABLE';   crAddress: @Config.UnknownCountryFileEnable;       crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'UNKNOWN COUNTRY FILE NAME';     crAddress: @UnknownCountryFileName;         crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'UPDATE RESTART FILE ENABLE';    crAddress: @Config.UpdateRestartFileEnable;        crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'USE BIOS KEY CALLS';            crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'USE CONTROL PORT';              crAddress: @tUseControlPort;                crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'USE IRQS';                      crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'USE RECORDED SIGNS';            crAddress: @Config.UseRecordedSigns;              crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'USER INFO SHOWN';               crAddress: pointer(19);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
- (crCommand: 'VGA DISPLAY ENABLE';            crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
- (crCommand: 'VISIBLE DUPESHEET';             crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'WAIT FOR STRENGTH';             crAddress: @Config.WaitForStrength;                crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'WAKE UP TIME OUT';              crAddress: @WakeUpTimeOut;                  crMin:0;  crMax:MAXBYTE; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'WEIGHT';                        crAddress: @Config.Weight;                                         crMin:5;  crMax:15;        crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctReal; crNetwork: 1),
- (crCommand: 'WIDE FREQUENCY DISPLAY';        crAddress: nil;                                             crMin:0;  crMax:0;         crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'WILDCARD PARTIALS';             crAddress: @Config.WildCardPartials;                               crMin:0;  crMax:0;         crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'WK AUTOSPACE';                  crAddress: @WinKeySettings.wksAutospace;                    crMin:0;  crMax:0;         crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'WK CT SPACING';                 crAddress: @WinKeySettings.wksCTSpacing;                    crMin:0;  crMax:0;         crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 0),
@@ -1224,9 +1132,7 @@ const
  (crCommand: 'WSJT-X ENABLED';                crAddress: @WSJTXEnabled;                                   crMin:0;  crMax:0;         crS: csOwned; crA: 23; crC:0; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),     // ny4i Issue 438
  (crCommand: 'WSJT-X RADIO CONTROL ENABLED';  crAddress: @WSJTXRadioControlEnabled;                       crMin:0;  crMax:0;         crS: csOwned; crA: 23; crC:0; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),     // ny4i Issue 673
  (crCommand: 'WSJT-X SEND HIGHLIGHTS';        crAddress: @WSJTXSendColorization;                          crMin:0;  crMax:0;         crS: csOwned; crA: 24; crC:0;  crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),     // ny4i Issue 438
- (crCommand: 'YAESU RESPONSE TIMEOUT';        crAddress: nil;                                             crMin:0;  crMax:0;         crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
   (* WITHDRAWN 2026-09-10: Settings.Yccc.So2rEnable. *)
- (crCommand: 'YCCC SO2R ENABLE';              crAddress: nil;                                             crMin:0;  crMax:0;         crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),  // Issue 61
  (crCommand: 'ZONE MULTIPLIER';               crAddress: pointer(23);                                     crMin:0;  crMax:0;         crS: csJSON; crA: 2; crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctMultiplier)
     {*)}
       );
@@ -1239,6 +1145,20 @@ function CheckCommand(Command: PAnsiChar; CustomCMD: ShortString;
 // (COLUMN WIDTH, "* WINDOW *", messages) and unknown commands.  Used by the config
 // loader to flag hand-edited duplicate keys.  See uCFG implementation for details.
 function CommandIsSingleValued(Command: PAnsiChar): boolean;
+
+(* True when aCommand names a feature TR4W has withdrawn.  Such a command is
+  ACCEPTED and does nothing, so an old tr4w.ini or contest .cfg that still
+  names it loads without telling the operator their configuration is invalid.
+
+  EXPORTED SO IT CAN BE TESTED.  The list replaced 91 csRem rows, and those
+  rows were the only record that these names were ever TR4W commands -- so the
+  test that they still resolve is now the only thing standing behind them. *)
+function CommandIsRetired(const aCommand: string): boolean;
+
+(* How many withdrawn names are on that list.  For the test's ratchet; there
+  is no other reason to ask. *)
+function RetiredCommandCount: integer;
+
 function ProcessMessage(ID, CMD: ShortString): boolean;
 procedure ProcessReminder(ID, CMD: ShortString);
 procedure ProcessTotalScoreMessage(ID, CMD: ShortString);
@@ -1811,6 +1731,148 @@ begin
       end;
 end;
 
+(*
+  COMMANDS TR4W ONCE HAD AND NO LONGER APPLIES.
+
+  WHAT THIS REPLACES.  Each of these was a csRem row in CFGCA -- a full
+  twenty-field CFGRecord carrying an address, a type, a kind, bounds and four
+  hook indices, every one of them ignored, because CheckCommand exits on csRem
+  before it reads any of them.  The row existed to answer exactly one
+  question: was this once a TR4W command?  That question wants a name, not a
+  record.
+
+  WHY THE ANSWER CANNOT SIMPLY BE "NO".  LogCfg.pas:1262 shows a MODAL
+  "invalid statement in config file" for a line CheckCommand refuses.  An
+  operator whose tr4w.ini or contest .cfg still names a feature withdrawn two
+  versions ago would be told their working configuration is invalid, once per
+  stale line.  Accepting and ignoring is what csRem bought, and it is worth
+  keeping; the twenty ignored fields are not.
+
+  DISTINCT FROM A SETTING THAT MOVED.  EXTERNAL LOGGER PORT and MMTTY ENGINE
+  were also csRem, and they are NOT here: the settings model owns those names
+  and CheckCommand resolves them for real, applying the value.  These have no
+  owner and no value to apply -- the feature is gone.
+
+  ADDING TO THIS LIST IS THE LAST STEP OF REMOVING A FEATURE, not a way to
+  silence a command that still does something.
+*)
+const
+   RETIRED_COMMANDS: array[0..90] of string = (
+      'AUTO ALT-D ENABLE',
+      'BACKCOPY ENABLE',
+      'BAND MAP ENABLE',
+      'CALL WINDOW POSITION',
+      'COLUMN DUPESHEET ENABLE',
+      'CURTIS KEYER MODE',
+      'CUSTOM CARET',
+      'DUPE SHEET ENABLE',
+      'EIGHT BIT PACKET PORT',
+      'EX MENU',
+      'EXCHANGE WINDOW S&P BACKGROUND',
+      'FOOT SWITCH MODE',
+      'FOOT SWITCH PORT',
+      'FREQUENCY ADDER RADIO ONE',
+      'FREQUENCY ADDER RADIO TWO',
+      'FT1000MP CW REVERSE',
+      'HAMLIB ASYNC ONLY',
+      'HAMLIB DEBUG',
+      'HAMLIB TRACE',
+      'ICOM RESPONSE TIMEOUT',
+      'LATEST CONFIG FILE',
+      'LOG FILE NAME',
+      'MODEM PORT',
+      'MODEM PORT BAUD RATE',
+      'MOUSE ENABLE',
+      'MP3 RECORDER BITRATE',
+      'MP3 RECORDER DURATION',
+      'MP3 RECORDER SAMPLERATE',
+      'MULTI INFO MESSAGE',
+      'MULTI PORT',
+      'MULTI PORT BAUD RATE',
+      'MULTI RETRY TIME',
+      'MULTI UPDATE MULT DISPLAY',
+      'ORION PORT',
+      'PACKET ADD LF',
+      'PACKET AUTO CR',
+      'PACKET BAND SPOTS',
+      'PACKET BAUD RATE',
+      'PACKET BEEP',
+      'PACKET LOG FILENAME',
+      'PACKET PORT',
+      'PACKET PORT BAUD RATE',
+      'PACKET RETURN PER MINUTE',
+      'PACKET SPOT COMMENT',
+      'PACKET SPOT DISABLE',
+      'PACKET SPOT EDIT ENABLE',
+      'PACKET SPOT KEY',
+      'PACKET SPOT PREFIX ONLY',
+      'PACKET SPOTS',
+      'PADDLE BUG ENABLE',
+      'PARTIAL CALL LOAD LOG ENABLE',
+      'PARTIAL CALL MULT INFO ENABLE',
+      'PRINTER ENABLE',
+      'QUICK QSL KEY',
+      'QUICK QSL MESSAGE',
+      'RADIO ONE COMMAND PAUSE',
+      'RADIO ONE ICOM NETWORK PASSWORD',
+      'RADIO ONE ICOM NETWORK USERNAME',
+      'RADIO ONE ID CHARACTER',
+      'RADIO ONE TRACKING ENABLE',
+      'RADIO ONE UPDATE SECONDS',
+      'RADIO TWO COMMAND PAUSE',
+      'RADIO TWO ICOM NETWORK PASSWORD',
+      'RADIO TWO ICOM NETWORK USERNAME',
+      'RADIO TWO ID CHARACTER',
+      'RADIO TWO TRACKING ENABLE',
+      'RADIO TWO UPDATE SECONDS',
+      'RTTY PORT',
+      'RTTY RECEIVE STRING',
+      'RTTY SEND STRING',
+      'SCORE POSTING ID',
+      'SEND ALT-D SPOTS TO PACKET',
+      'SEND QSO IMMEDIATELY',
+      'SERIAL 5 PORT ADDRESS',
+      'SERIAL 6 PORT ADDRESS',
+      'SERIAL PORT DEBUG',
+      'SHOW SEARCH AND POUNCE',
+      'SIMULATOR ENABLE',
+      'TAB MODE',
+      'TCI DEBUG',
+      'TCI MAX TX SECONDS',
+      'TELNET DEBUG',
+      'TOTAL OFF TIME',
+      'TOTAL SCORE MESSAGE',
+      'UDP BROADCAST PORT',
+      'USE BIOS KEY CALLS',
+      'USE IRQS',
+      'VGA DISPLAY ENABLE',
+      'VISIBLE DUPESHEET',
+      'WIDE FREQUENCY DISPLAY',
+      'YAESU RESPONSE TIMEOUT'
+      );
+
+function RetiredCommandCount: integer;
+begin
+   Result := Length(RETIRED_COMMANDS);
+end;
+
+(* Linear over ~90 short strings, run once per config line at startup and
+  never afterwards -- a dictionary here would be more code than the problem. *)
+function CommandIsRetired(const aCommand: string): boolean;
+var
+   i: integer;
+begin
+   Result := False;
+   for i := Low(RETIRED_COMMANDS) to High(RETIRED_COMMANDS) do
+      begin
+      if UnicodeSameText(RETIRED_COMMANDS[i], aCommand) then
+         begin
+         Result := True;
+         Exit;
+         end;
+      end;
+end;
+
 function CheckCommand(Command: PAnsiChar; CustomCMD: ShortString;
                       const aApplyJSONOwned: boolean = False): boolean;
 label
@@ -2271,6 +2333,25 @@ begin
          Result := True;
          Break;
          end;
+      end;
+
+   (* A WITHDRAWN COMMAND -- accepted, and deliberately does nothing.
+
+     LAST, AFTER EVERY LIVE HANDLER HAS DECLINED, which is what makes it safe.
+     CheckCommand matches several PATTERN families before it ever scans the
+     rows, and one withdrawn name -- EXCHANGE WINDOW S&P BACKGROUND -- is
+     matched by the generated "<element> WINDOW COLOR/BACKGROUND" family, so
+     it has been reaching the colour handler rather than its own row all
+     along.  Asking this question earlier would silently stop that colour
+     being applied. *)
+   if (not Result) and CommandIsRetired(string(pshortstring(Command)^)) then
+      begin
+      if logger <> nil then
+         begin
+         logger.Info('[Config] %s is a withdrawn command -- accepted and ignored',
+                     [pshortstring(Command)^]);
+         end;
+      Result := True;
       end;
 end;
 

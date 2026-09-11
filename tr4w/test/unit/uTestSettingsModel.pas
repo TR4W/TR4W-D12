@@ -29,7 +29,8 @@ unit uTestSettingsModel;
 interface
 
 uses
-   SysUtils, Classes, uTR4WTestFramework, uJSON, uSettingsModel;
+   SysUtils, Classes, uTR4WTestFramework, uJSON, uSettingsModel,
+   uCFG;   // CommandIsRetired -- the 91 names that replaced the csRem rows
 
 type
    TSettingsModelTests = class(TTestCase)
@@ -47,6 +48,8 @@ type
       procedure Test_TheDerivedNameAnExceptionReplacedIsGone;
       procedure Test_ASetterRaisesTheChange;
       procedure Test_AssigningTheSameValueRaisesNothing;
+      procedure Test_AWithdrawnCommandIsStillAccepted;
+      procedure Test_NoRetiredNameIsAlsoLiveOrOwned;
    public
       procedure RunAllTests; override;
    end;
@@ -564,6 +567,98 @@ begin
    end;
 end;
 
+(* ---------------------------------------------------------------------
+  THE WITHDRAWN COMMANDS, 2026-09-11.
+
+  91 csRem rows were replaced by 91 NAMES in uCFG.RETIRED_COMMANDS.  Those
+  rows were the only record that these had ever been TR4W commands, so these
+  two tests are what stands behind them now.
+  --------------------------------------------------------------------- *)
+
+procedure TSettingsModelTests.Test_AWithdrawnCommandIsStillAccepted;
+begin
+   (* WHY ACCEPTING MATTERS.  LogCfg.pas:1262 puts a MODAL "invalid statement
+     in config file" in front of the operator for a line CheckCommand refuses.
+     A station whose tr4w.ini still names a feature withdrawn two versions ago
+     would get one dialog per stale line, about a configuration that worked
+     the day before. *)
+   BeginTest('a withdrawn command is still recognised, so an old config loads');
+
+   // Withdrawn 2026-08-22 (NY4I): "if the window is opened, it is enabled".
+   CheckTrue(CommandIsRetired('BAND MAP ENABLE'), 'BAND MAP ENABLE');
+   // The DOS-era serial multi link, and two more withdrawn features.
+   CheckTrue(CommandIsRetired('MULTI PORT'), 'MULTI PORT');
+   CheckTrue(CommandIsRetired('MOUSE ENABLE'), 'MOUSE ENABLE');
+   CheckTrue(CommandIsRetired('DUPE SHEET ENABLE'), 'DUPE SHEET ENABLE');
+
+   (* NOT K1EA NETWORK ENABLE, and the first draft of this test asserted that
+     it was -- which is the distinction worth keeping.
+
+     A COMMENTED-OUT ROW AND A csRem ROW ARE DIFFERENT SETS.  K1EA NETWORK
+     ENABLE is commented out in CFGCA, so CheckCommand has never accepted it:
+     an old config naming it ALREADY got the dialog, long before this change.
+     Only the csRem rows were accepted-and-ignored, and only those became
+     names on the list.  Adding the commented-out ones would not be tidying,
+     it would be changing behaviour. *)
+   CheckFalse(CommandIsRetired('K1EA NETWORK ENABLE'),
+              'commented out is not the same as csRem');
+
+   // Case-folded: a config file is read upper-cased, a hand edit is not.
+   CheckTrue(CommandIsRetired('band map enable'), 'lower case');
+
+   // And it must not accept everything -- a typo has to stay a typo, or the
+   // dialog this list protects would never fire for a real mistake.
+   CheckFalse(CommandIsRetired('BAND MAP ENABLF'), 'a typo is not retired');
+   CheckFalse(CommandIsRetired(''), 'nor is an empty command');
+
+   (* A RATCHET. The list only ever grows, as the last step of removing a
+     feature. A fall means rows were dropped without being listed, which is
+     silent: the failure is a dialog on someone else's machine. *)
+   CheckTrue(RetiredCommandCount >= 91, 'the retired list has not shrunk');
+end;
+
+procedure TSettingsModelTests.Test_NoRetiredNameIsAlsoLiveOrOwned;
+var
+   s: TR4WSettings;
+   names: TStringList;
+   i: integer;
+begin
+   (* TWO CONTRADICTIONS THIS CATCHES, and neither would fail a build.
+
+     A name both RETIRED and LIVE in CFGCA would be a command that still does
+     something while being documented as withdrawn.  It could not shadow the
+     live row -- the retired check runs last, after every handler has declined
+     -- so the damage is not a wrong value, it is a wrong belief: the next
+     person to read the list would delete working code.
+
+     A name both RETIRED and OWNED BY THE SETTINGS MODEL is the sharper one.
+     Seven of the 98 csRem rows were settings that had MOVED, not features
+     that had gone, and they were deliberately left off the list because the
+     model resolves them for real.  Putting one on it would be claiming a
+     setting is gone while it is sitting in tr4w.json being used. *)
+   BeginTest('no withdrawn name is also a live command or a live setting');
+   s := TR4WSettings.Create;
+   try
+      names := s.CommandNames;
+      try
+         for i := 0 to names.Count - 1 do
+            begin
+            CheckFalse(CommandIsRetired(names[i]),
+                       names[i] + ' is owned by the model, so it is not retired');
+            end;
+      finally
+         names.Free;
+      end;
+
+      // The seven that moved rather than went, named literally.
+      CheckFalse(CommandIsRetired('EXTERNAL LOGGER PORT'), 'moved, not withdrawn');
+      CheckFalse(CommandIsRetired('MMTTY ENGINE'),         'moved, not withdrawn');
+      CheckFalse(CommandIsRetired('YCCC SO2R ENABLE'),     'moved, not withdrawn');
+   finally
+      s.Free;
+   end;
+end;
+
 procedure TSettingsModelTests.RunAllTests;
 begin
    Test_DefaultsAreTheOnesTheGlobalsHad;
@@ -579,6 +674,8 @@ begin
    Test_TheDerivedNameAnExceptionReplacedIsGone;
    Test_ASetterRaisesTheChange;
    Test_AssigningTheSameValueRaisesNothing;
+   Test_AWithdrawnCommandIsStillAccepted;
+   Test_NoRetiredNameIsAlsoLiveOrOwned;
 end;
 
 end.
