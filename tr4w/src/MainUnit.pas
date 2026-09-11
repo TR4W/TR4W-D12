@@ -9150,7 +9150,26 @@ begin
      inc(tUSQ);
      end;
 
-  tAddQSOToLog(CE);
+  (* THE RESULT ABOVE IS THE NETWORK'S ANSWER, not the log's, which is what
+    the name of this routine says. Both matter and they fail independently:
+    a station off the network still logs, and a station that cannot log must
+    not be told it did.
+
+    So the log failure is reported HERE rather than folded into Result --
+    folding it would tell the caller the QSO was not sent to the server, which
+    is a different and possibly untrue statement, and the two callers use
+    Result only to pace their sends.
+
+    THE ORDER IS WRONG AND IS LEFT ALONE ON PURPOSE. The contact reaches the
+    network BEFORE it reaches the disk, so a multi-op peer can hold a QSO this
+    station failed to keep. Putting the commit first is the right shape and it
+    is a multi-op protocol decision, not a tidy-up -- raised for NY4I rather
+    than made here. *)
+  if not tAddQSOToLog(CE) then
+     begin
+     logger.Error('[Log] %s was sent to the network but did NOT commit to the '
+                  + 'contest log', [CE.Callsign]);
+     end;
 end;
 
 { THE CALL-FIELD FLASH.
@@ -9959,6 +9978,10 @@ var
   sBuffer: string;
   FoundEOH: boolean;
   QSOCounter: integer;
+  (* RECORDS THAT DID NOT COMMIT. An import is exactly where a disk fills up,
+    and until 2026-09-11 the append was fire-and-forget -- so a run that failed
+    halfway still reported every record as imported. *)
+  QSOFailed: integer;
   lpNumberOfBytesWritten: Cardinal;
   // County-line detection during import.  Within a single ImportFromADIF
   // pass we remember the first QTHString seen for each (call|band|mode)
@@ -9978,6 +10001,22 @@ var
   procedure DisplayLoadedQSOs;
   begin
     SetTextInQuickCommandWindow(SysUtils.Format(AnsiString(LclText('%u ' + TC_QSO_IMPORTED)), [QSOCounter]));
+  end;
+
+  (* SAID AT THE END, AND SAID LOUDLY. A count that silently excludes what
+    failed is not better than a count that includes it -- the operator has to
+    know the file and the log now disagree, and by how much. *)
+  procedure ReportAnyThatFailed;
+  begin
+    if QSOFailed > 0 then
+      begin
+      logger.Error('[Import] %d of %d records did NOT commit to the contest log',
+                   [QSOFailed, QSOCounter + QSOFailed]);
+      ShowWarning(AnsiString(SysUtils.Format(
+         AnsiString('%d record(s) in this file did NOT reach the contest log. '
+                    + '%d were imported. See tr4w.log.'),
+         [QSOFailed, QSOCounter])));
+      end;
   end;
 begin
   { This is a total rewrite of the ADIF import processing. - NY4I 2020 Jul 2
@@ -10032,6 +10071,7 @@ begin
   AssignFile(adif, adifFileName);
   //ReWrite(adif);
   QSOCounter := 0;
+  QSOFailed  := 0;
   Reset(adif);
   seenCallBandMode := TStringList.Create;
   try
@@ -10083,9 +10123,21 @@ begin
 
              CalculateQSOPoints(TempRXData);
              (* Into the log -- which is the database. The binary write that
-                followed this is gone with the .TRW. *)
-             LogStoreAppendQSO(TempRXData);
-             inc(QSOCounter);
+                followed this is gone with the .TRW.
+
+                COUNTED ONLY IF IT COMMITTED. The append used to be
+                fire-and-forget, so an import that failed partway still
+                reported every record as loaded -- and an import is precisely
+                where a disk fills up. The count now describes what is in the
+                log, which is what the operator is about to trust. *)
+             if LogStoreAppendQSO(TempRXData) then
+                begin
+                inc(QSOCounter);
+                end
+             else
+                begin
+                inc(QSOFailed);
+                end;
              if QSOCounter mod 100 = 0 then
                 begin
                 DisplayLoadedQSOs;
@@ -10104,6 +10156,7 @@ begin
   tUpdateLog(actRescore);
   LoadinLog;
   DisplayLoadedQSOs;
+  ReportAnyThatFailed;
   ClearThread(ImportFromADIFThreadID);
 
 end; // of ImportFromADIF

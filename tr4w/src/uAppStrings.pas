@@ -115,6 +115,20 @@ resourcestring
       'Reason: %s' + sLineBreak + sLineBreak +
       'tr4w.log records the full detail.';
 
+   { ------------------------------------------------------ the contest log - }
+
+   { THE QSO DID NOT REACH THE DISK, said where the operator is looking.
+
+     The store already reports a failure once, with the reason, in a dialog.
+     That is not enough on its own: the contact that matters is the one in
+     front of the operator RIGHT NOW, and a dialog dismissed an hour ago says
+     nothing about this one. So this line appears per QSO, and it says what to
+     do rather than only what happened -- the contact is still on screen and
+     still workable. }
+   SQsoNotLogged =
+      'NOT LOGGED -- the contest log would not accept this QSO. ' +
+      'See tr4w.log. Do not clear the entry.';
+
    { ------------------------------------------------ multi-op networking - }
 
    // NAMES THE SETTING, because that is what the operator has to change.

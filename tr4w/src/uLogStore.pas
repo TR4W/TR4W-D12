@@ -68,9 +68,27 @@ uses
    VC,
    uLogRepository;   (* TLogRepository -- see LogStoreRepository *)
 
-(* Appends a QSO to the shadow.  Call AFTER the binary record is written.
-  Never raises. *)
-procedure LogStoreAppendQSO(const aQso: ContestExchange);
+(* PUT A QSO IN THE LOG, AND SAY WHETHER IT IS ACTUALLY THERE.
+
+  True ONLY after the SQLite transaction carrying this QSO has committed. That
+  is the persistence boundary and there is no weaker one worth reporting: with
+  synchronous=FULL a committed transaction is on the storage device.
+
+  IT WAS A PROCEDURE AND THAT WAS A DURABILITY HOLE (Codex review,
+  2026-09-11). It caught every exception, disabled the store, and returned
+  normally -- so the caller incremented the QSO count, refreshed the log
+  display and reported success for a contact that reached no disk anywhere.
+  Disk-full, a permission change, a locked file or a failed commit all
+  produced a QSO that existed only in the totals until the program closed.
+
+  And after the first failure the store is disabled, so every SUBSEQUENT QSO
+  returned immediately -- and was acknowledged too. One transient error and the
+  rest of the contest was being logged to nothing.
+
+  The caller's obligation is the whole point of the return value: do not count
+  it, do not draw it, do not tell the network about it and do not clear the
+  entry fields until this says True. Never raises. *)
+function LogStoreAppendQSO(const aQso: ContestExchange): boolean;
 
 (* Rewrites the shadow's newest row -- what the three "seek back one record"
   sites do to the binary log.  Never raises. *)
@@ -273,7 +291,12 @@ begin
          'Writing to the log database failed in ' + aWhere + ':' + #13#10 +
          E.ClassName + ' -- ' + E.Message + #13#10#13#10 +
          'QSOs made from now on are NOT being recorded. Stop and fix this ' +
-         'before working anyone else. The log written so far is intact in ' +
+         (* IT DOES NOT SAY "intact", WHICH IT USED TO. This dialog is now
+           also shown when the log FAILED ITS INTEGRITY CHECK on open, and
+           there "intact" is precisely the claim that is false -- in the one
+           case where the operator most needs to be told to restore a backup.
+           The location is still useful; the reassurance was never checked. *)
+         'before working anyone else. The log written so far is in ' +
          LogDatabaseFileName(string(StrPas(TR4W_LOG_FILENAME))) + '.')));
       end;
 
@@ -654,6 +677,8 @@ var
    (* True only on the open that CREATED this log -- see the capture below. *)
    isNewLog: boolean;
    res: TLogImportResult;
+   integrity: TIntegrityResult;
+   damaged: Exception;
 
    (* Returns False rather than raising: the caller is a try/except that would
      only disable the shadow anyway, and raising here meant constructing an
@@ -753,6 +778,52 @@ begin
       if logger <> nil then
          begin
          logger.Info('[LogStore] log database: %s', [dbName]);
+         end;
+
+      (* LOOK AT IT BEFORE WRITING TO IT.
+
+        CheckIntegrity was implemented and had NO CALLER anywhere in the
+        program (Codex review, 2026-09-11) -- so the one moment it exists for,
+        opening a log after a crash or a bad shutdown, went unchecked and the
+        next QSO was appended to whatever was there.
+
+        A CHECK CANNOT REPAIR ANYTHING. What it can do is decide, once, that
+        this log is not fit to be written to, while the damage is still as
+        small as it is ever going to be. Appending to a damaged database makes
+        recovery harder, and the operator finds out at the end of the contest.
+
+        SO A FAILURE DISABLES THE STORE, which is fail-closed: with the return
+        value of LogStoreAppendQSO now honoured, that means the program refuses
+        to acknowledge QSOs rather than quietly adding them to a broken file.
+        That is a hard stop mid-contest and it is the correct one -- the
+        alternative is an operator logging into rubble for six hours.
+
+        THE COST IS ONE CHECK PER OPEN, not per QSO: integrity_check walks the
+        pages and foreign_key_check walks the references, both at startup on a
+        file that is a few megabytes at the end of a large contest. *)
+      integrity := GDatabase.CheckIntegrity;
+      if not integrity.Ok then
+         begin
+         if logger <> nil then
+            begin
+            logger.Error('[LogStore] %s FAILED its integrity check: %s',
+                         [dbName, integrity.Report]);
+            end;
+         (* OWNED HERE. Disable's parameter is normally the ACTIVE exception,
+           which the runtime owns and frees; this one is manufactured to carry
+           a sentence, so it is freed on the way out. *)
+         damaged := Exception.Create(AnsiString(
+            'The contest log failed its integrity check. It has NOT been '
+            + 'written to. Restore the most recent backup. Details are in '
+            + 'tr4w.log.'));
+         try
+            Disable('checking the log on open', damaged);
+         finally
+            damaged.Free;
+         end;
+
+         Result := False;
+         Exit;
          end;
 
       GRepository := TLogRepository.Create(GDatabase);
@@ -1009,11 +1080,16 @@ begin
    end;
 end;
 
-procedure LogStoreAppendQSO(const aQso: ContestExchange);
+function LogStoreAppendQSO(const aQso: ContestExchange): boolean;
 var
    rebuilt: boolean;
    rowId: Int64;
 begin
+   (* FALSE UNTIL A COMMIT SAYS OTHERWISE. Every exit below that is not a
+     completed commit leaves it here, which is the only default that cannot
+     acknowledge a QSO nobody wrote. *)
+   Result := False;
+
    if GDisabled then
       begin
       Exit;
@@ -1063,6 +1139,14 @@ begin
             GRepository.UpdateQSO(rowId, aQso);
             GRepository.Commit;
             end;
+
+         (* TRUE EITHER WAY, and deliberately. The rebuild imported this QSO
+           from the binary log, so the contact IS in the database -- that is
+           what makes appending it again a duplicate. A failure to attach the
+           sent exchange on top of it loses a field, not a contact, and
+           reporting the QSO as unlogged here would have the operator work it
+           again. *)
+         Result := True;
          Exit;
          end;
 
@@ -1096,10 +1180,16 @@ begin
       GRepository.SaveQSOGroupingByExchangeId(aQso);
 
       (* PER QSO, not batched -- section 9b. An operator who loses power should
-        lose at most the contact in progress, and this is a shadow of a log
-        that has already been written, so a slow commit costs nothing an
-        operator can feel. *)
+        lose at most the contact in progress.
+
+        THE SECOND HALF OF THAT SENTENCE USED TO READ "and this is a shadow of
+        a log that has already been written, so a slow commit costs nothing".
+        It is not a shadow any more -- it is the log, and the .TRW behind that
+        reassurance is gone. The commit is the contact. *)
       GRepository.Commit;
+
+      (* AND ONLY NOW. *)
+      Result := True;
    except
       on E: Exception do
          begin

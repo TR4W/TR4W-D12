@@ -187,9 +187,17 @@ uses
   uUDPBroadcastConfig, // TUDPStream / usContact, usScore, usLookup
   uUDPBroadcaster,
   uPanadapterRestore,   { StopPanadapterRestore -- the start-up retry timer }
-  { The SQLite shadow -- an IMPLEMENTATION-section use, so no interface
-    cycle. It never raises and never blocks logging: see uLogStore. }
-  uLogStore;
+  { THE CONTEST LOG -- an IMPLEMENTATION-section use, so no interface cycle.
+
+    IT NEVER RAISES, AND IT DOES NOW BLOCK LOGGING. This said "never blocks
+    logging" while it was a shadow of the .TRW, and that was the right rule
+    then: a failed shadow must not cost a contact the binary log already had.
+    There is no binary log any more, so the same rule became a durability hole
+    -- a QSO that failed to commit was acknowledged anyway. See
+    LogStoreAppendQSO. }
+  uLogStore,
+  { SQsoNotLogged. }
+  uAppStrings;
 procedure PutContactIntoLogFile(LogString: string {Str80});
 
 begin
@@ -2643,7 +2651,26 @@ begin
      write. It follows the append itself now -- the thing being counted is
      QSOs, and it was only ever expressed in bytes because the store was a
      file. *)
-  LogStoreAppendQSO(RXData);
+  (* NOTHING BELOW HAPPENS UNLESS THE CONTACT IS ON DISK.
+
+    The call used to stand here bare, and the statements after it ran
+    unconditionally -- so a QSO that failed to commit still incremented the
+    record count, still appeared in the log display, and still returned True
+    (Codex review, 2026-09-11). The operator saw a normal, logged QSO and had
+    nothing at all.
+
+    FALSE, NOT A RAISE, because the contact is not lost by being refused: it
+    is still in the entry fields and still workable. What must not happen is
+    the program saying it is safe. *)
+  if not LogStoreAppendQSO(RXData) then
+     begin
+     QuickDisplay(AnsiString(SQsoNotLogged));
+     DoABeep(Warning);
+     logger.Error('[Log] REFUSING to acknowledge %s -- the QSO did not commit',
+                  [RXData.Callsign]);
+     Exit;
+     end;
+
   inc(tRestartInfo.riTotalRecordsInLog);
   (* ONE MORE RECORD, AND SHOW IT.
 

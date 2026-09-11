@@ -539,7 +539,15 @@ var
 
               if NetQSOInfoPtr^.qiInformation.ceRecordKind = rkNote then
                  begin
-                 tAddQSOToLog(NetQSOInfoPtr^.qiInformation);
+                 (* A PEER'S RECORD THAT THIS STATION COULD NOT KEEP. It is
+                   already logged at the station that made it, so this is not
+                   a lost contact -- but this station's copy of the multi-op
+                   log is now incomplete and only the log says so. *)
+                 if not tAddQSOToLog(NetQSOInfoPtr^.qiInformation) then
+                    begin
+                    logger.Error('[Net] a note from the network did NOT commit '
+                                 + 'to the contest log');
+                    end;
                  end;
 
               if NetQSOInfoPtr^.qiInformation.ceRecordKind in [rkQTCR, rkQTCS] then
@@ -549,7 +557,12 @@ var
                     NumberQTCBooksSent := NetQSOInfoPtr^.qiInformation.QSOPoints;
                     end;
                  IncrementQTCCount(NetQSOInfoPtr^.qiInformation.Callsign);
-                 tAddQSOToLog(NetQSOInfoPtr^.qiInformation);
+                 if not tAddQSOToLog(NetQSOInfoPtr^.qiInformation) then
+                    begin
+                    logger.Error('[Net] a QTC record from %s did NOT commit to '
+                                 + 'the contest log',
+                                 [NetQSOInfoPtr^.qiInformation.Callsign]);
+                    end;
                  DisplayTotalScore;
                  UpdateTotals2;
                  end;
