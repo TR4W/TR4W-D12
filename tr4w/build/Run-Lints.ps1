@@ -114,6 +114,7 @@ $lints = @(
    # MIGRATED_COMMANDS -- and each omission fails differently and silently.
    # 153 settings still have to make that move; this is what keeps them honest.
    @{ Name = 'Lint-SettingsMigration'; Arg = $Tr4wDir; NeedsFpc = $false }
+   @{ Name = 'Lint-ConfigArrays';    Arg = $null;    NeedsFpc = $false }
    # A Windows path written through a backslash-interpreting tool loses its
    # backslash-t to
    # a literal TAB: 'settings\tr4w.json' becomes 'settings<TAB>r4w.json'. It
