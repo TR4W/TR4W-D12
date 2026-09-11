@@ -1162,7 +1162,7 @@ begin
          end;
       SkipFirstMessage := False;
         {KK1L: 6.68 From here to REPEAT added to put autoCQ in band map and send multi info message.}
-      if BandMapEnable and (Radio1.LastDisplayedFreq {LastDisplayedFreq[RadioOne]} <> 0) and (OpMode = CQOpMode) and BandMapDisplayCQ then
+      if BandMapEnable and (Radio1.LastDisplayedFreq {LastDisplayedFreq[RadioOne]} <> 0) and (OpMode = CQOpMode) and Settings.BandMap.DisplayCQ then
          begin
          Str(NextSerialToSend, QSONumberString);  // Issue #954
          BandMapCursorFrequency := ActiveRadioPtr.LastDisplayedFreq {LastDisplayedFreq[ActiveRadio]};

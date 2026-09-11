@@ -70,6 +70,7 @@ uses
    LogWind,           // the four QSO-point globals -- see TQSOPointsAccess
    uSettingsRegistry,
    uSettingsLegacy,   // RegisterLegacySetting -- no FMX
+   uSettingsModelBinding,   // RegisterModelSetting -- no CFGCA row
    uSettingsCaptions;  // RS_* -- the translatable setting labels
 
 type
@@ -261,12 +262,22 @@ begin
    // csJSON is safe here rather than csOwned.  (Note the globals are spelled
    // inconsistently -- HFBandEnable but VHFBandsEnabled -- which makes a naive
    // grep under-report.)
-   RegisterStoredSetting('operating.bands.hf',   'HF BAND ENABLE',
-                         RS_OPERATING_BANDS_HF);
-   RegisterStoredSetting('operating.bands.warc', 'WARC BAND ENABLE',
-                         RS_OPERATING_BANDS_WARC);
-   RegisterStoredSetting('operating.bands.vhf',  'VHF BAND ENABLE',
-                         RS_OPERATING_BANDS_VHF);
+   (* MOVED TO uSettingsModel 2026-09-11, and registered through the MODEL
+     binding rather than the stored one.
+
+     Their CFGCA rows are DELETED, not retired -- so RegisterStoredSetting
+     cannot be used here at all: its constructor looks the command up in the
+     array and raises when it is absent.  That raise is correct behaviour for
+     a typo and is what caught this migration, loudly, in the unit tests.
+
+     The keys are UNCHANGED ('operating.bands.hf'), so an existing station's
+     stored value and any Preferences layout that names them still resolve. *)
+   RegisterModelSetting('operating.bands.hf',   'HF BAND ENABLE',
+                        RS_OPERATING_BANDS_HF);
+   RegisterModelSetting('operating.bands.warc', 'WARC BAND ENABLE',
+                        RS_OPERATING_BANDS_WARC);
+   RegisterModelSetting('operating.bands.vhf',  'VHF BAND ENABLE',
+                        RS_OPERATING_BANDS_VHF);
 
    // --- Operating: two radio -----------------------------------------------
    RegisterStoredSetting('operating.tworadio.enable',       'TWO RADIO MODE',

@@ -3895,7 +3895,7 @@ var
 label
   1;
 begin
-  if VHFBandsEnabled then
+  if Settings.Bands.VhfEnabled then
      begin
      1:
      Grid := RemoveFirstString(WindowString);
@@ -3919,7 +3919,7 @@ var
   DQTH: boolean;
 begin
   ExchangeWindowString := ShortString(AnsiString(EntryText(TR4WExchangeEdit)));
-  if VHFBandsEnabled then
+  if Settings.Bands.VhfEnabled then
      begin
      ShowBeamAndHeadingInVHFContest(ExchangeWindowString);
      end;

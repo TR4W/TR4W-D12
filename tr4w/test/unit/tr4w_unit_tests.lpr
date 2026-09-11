@@ -128,6 +128,7 @@ uses
    uTestRotatorFactory in 'uTestRotatorFactory.pas',
    uSettingsRegistry in '..\..\src\uSettingsRegistry.pas',
    uSettingsLegacy in '..\..\src\uSettingsLegacy.pas',
+   uSettingsModelBinding in '..\..\src\uSettingsModelBinding.pas',
    uSettingsDeclarations in '..\..\src\uSettingsDeclarations.pas',
    uTestSettingsRegistry in 'uTestSettingsRegistry.pas',
    uRadioConfigLegacyMap in '..\..\src\uRadioConfigLegacyMap.pas',

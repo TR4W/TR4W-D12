@@ -569,6 +569,13 @@ const
    + 1 {TCI DEBUG}
    + 1 {TCI MAX TX SECONDS}
    + 2 {Radio1 and Radio2 SERIAL FORMAT}  // dialog-exposed data bits / parity / stop bits
+   (* THE FIRST SUBTRACTION THIS EXPRESSION HAS EVER CARRIED, 2026-09-11.
+     Eleven settings left for uSettingsModel: the eight band map display
+     filters and the three band-class enables.  They are properties of
+     Settings.BandMap and Settings.Bands now, and CheckCommand resolves their
+     command names through the settings object, so no stub row is needed to
+     keep an old config file loading. *)
+   - 11 {band map display filters, HF/VHF/WARC -- moved to uSettingsModel}
    ;
 
    // crS (CFGStatus): csNew / csOld = active -- the command's value IS applied.
@@ -605,15 +612,9 @@ const
  (crCommand: 'BACKUP LOG FILE NAME';          crAddress: @TR4W_FLOPPY_FILENAME;           crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctFileName; crNetwork: 1),   // 4.56.11
  (crCommand: 'BACKUP LOG FREQUENCY';          crAddress: @FloppyFileSaveFrequency;        crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),   // 4.56.11
  (crCommand: 'BAND';                          crAddress: pointer(24);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:1 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctBand; crNetwork: 1),
- (crCommand: 'BAND MAP ALL BANDS';            crAddress: @BandMapAllBands;                crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:1; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'BAND MAP ALL MODES';            crAddress: @BandMapAllModes;                crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:1; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'BAND MAP CALL WINDOW ENABLE';   crAddress: @BandMapCallWindowEnable;        crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:1; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'BAND MAP CUTOFF FREQUENCY';     crAddress: @tBandMapCutoffFrequency;        crMin:0;  crMax:MAXWORD-1; crS: csJSON; crA: 17;crC:0 ; crP:1; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctFreqList; crNetwork: 1),
  (crCommand: 'BAND MAP DECAY TIME';           crAddress: @BandMapDecayTime{BandMapDecayValue};              crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 5; crC:0 ; crP:1; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
- (crCommand: 'BAND MAP DISPLAY CQ';           crAddress: @BandMapDisplayCQ;               crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:1; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'BAND MAP DISPLAY LIMIT';        crAddress: @BandMapDisplayLimit;            crMin:30;  crMax:1000;   crS: csJSON; crA: 0; crC:0 ; crP:1; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
- (crCommand: 'BAND MAP DISPLAY GHZ';          crAddress: @BandMapDisplayGhz;              crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:1; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),     // n4af 4.42.8
- (crCommand: 'BAND MAP DUPE DISPLAY';         crAddress: @BandMapDupeDisplay;             crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:1; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
 // BAND MAP ENABLE retired 2026-08-22 (NY4I): "if the window is opened, it is
 // enabled".  It stored into the same boolean the band map window wrote from
 // WM_INITDIALOG and WM_DESTROY, so closing the window turned the setting off
@@ -624,9 +625,7 @@ const
  (crCommand: 'BAND MAP GUARD BAND';           crAddress: @BandMapGuardBand;               crMin:100;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:1; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'BAND MAP ITEM HEIGHT';          crAddress: @BandMapItemHeight;              crMin:12; crMax:50;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'BAND MAP ITEM WIDTH';           crAddress: @BandMapItemWidth;               crMin:100;crMax:200;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
- (crCommand: 'BAND MAP MULTS ONLY';           crAddress: @BandMapMultsOnly;               crMin:0;  crMax:5;       crS: csOwned; crA: 0; crC:0 ; crP:1; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'BAND MAP SIZE';                 crAddress: @BandMapSize;                    crMin:0;  crMax:8;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
- (crCommand: 'BAND MAP SO2R DISPLAY';         crAddress: @BandMapSO2RDisplay;             crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:1; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),  // 4.105.14
  (crCommand: 'BAND MAP SPLIT MODE';           crAddress: pointer(14);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:1; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'BEEP ENABLE';                   crAddress: @BeepEnable;                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'BEEP EVERY 10 QSOS';            crAddress: @BeepEvery10QSOs;                crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
@@ -799,7 +798,6 @@ const
  (crCommand: 'HAMSCORE PASSWORD';             crAddress: @Config.HamScorePassword;               crMin:0;  crMax:50;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctPassword;      crNetwork: 0),  // Issue #783
  (crCommand: 'HAMSCORE SEND CONTACT INFO';    crAddress: @Config.HamScoreSendContactInfo;        crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean;       crNetwork: 0),  // Issue #931 -- per-contest RTC contact-info gating override
  (crCommand: 'HAND LOG MODE';                 crAddress: @tHandLogMode;                   crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 1; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
- (crCommand: 'HF BAND ENABLE';                crAddress: @HFBandEnable;                   crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'HOUR DISPLAY';                  crAddress: pointer(8);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),
 // (crCommand: 'HOUR OFFSET';                   crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
 // (crCommand: 'ICOM COMMAND PAUSE';            crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
@@ -1197,11 +1195,9 @@ const
  (crCommand: 'USE RECORDED SIGNS';            crAddress: @Config.UseRecordedSigns;              crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'USER INFO SHOWN';               crAddress: pointer(19);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'VGA DISPLAY ENABLE';            crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
- (crCommand: 'VHF BAND ENABLE';               crAddress: @VHFBandsEnabled;                crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:1; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'VISIBLE DUPESHEET';             crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'WAIT FOR STRENGTH';             crAddress: @Config.WaitForStrength;                crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'WAKE UP TIME OUT';              crAddress: @WakeUpTimeOut;                  crMin:0;  crMax:MAXBYTE; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
- (crCommand: 'WARC BAND ENABLE';              crAddress: @WARCBandsEnabled;                               crMin:0;  crMax:0;         crS: csJSON; crA: 0; crC:0 ; crP:1; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'WEIGHT';                        crAddress: @Config.Weight;                                         crMin:5;  crMax:15;        crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctReal; crNetwork: 1),
  (crCommand: 'WIDE FREQUENCY DISPLAY';        crAddress: nil;                                             crMin:0;  crMax:0;         crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'WILDCARD PARTIALS';             crAddress: @Config.WildCardPartials;                               crMin:0;  crMax:0;         crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
@@ -1253,6 +1249,7 @@ var
 
 implementation
 uses MainUnit, SysUtils,   // Issue #997 -- SysUtils for Format/StrPCopy (asm-to-Pascal conversion)
+     uSettingsModel,       // Settings -- the commands that have left this array
      uStateBridge;         // RefreshWSJTXIndicator -- the box tracks WSJT-X ENABLED
 
 var
@@ -1847,6 +1844,39 @@ begin
 
    Command[Ord(Command[0]) + 1] := #0;
    Result := False;
+
+   (* A SETTING THAT HAS LEFT CFGCA.
+
+     NOT A FALLBACK, AND THE DISTINCTION IS THE WHOLE POINT.  A migrated
+     setting and an unmigrated one are DISJOINT SETS -- a name that resolves
+     here has no row, and a name with a row is not known here.  Each resolves
+     in exactly one place.  Asking the settings object first is not a safety
+     net in front of the array; it is the array becoming the smaller of two
+     lookups, on its way to being none of them.
+
+     WHAT IT IS ACTUALLY FOR, and the scope is one-time.  The ini and the
+     contest .cfg are read ONCE and converted.  During that read a station
+     upgrading from an older version still names these commands, and without
+     this arm two things happen: the value is silently lost, and
+     LogCfg.pas:1262 puts a modal "invalid statement in config file" dialog in
+     front of the operator, about their own working config.
+
+     IT IS ALSO WHY A ROW CAN BE DELETED RATHER THAN HOLLOWED OUT.  The csRem
+     stubs exist only to return True so that dialog does not appear.  Once the
+     name resolves for real, the stub has no job. *)
+   if Settings.OwnsCommand(string(pshortstring(Command)^)) then
+      begin
+      Result := Settings.TrySetByCommand(string(pshortstring(Command)^),
+                                         string(CustomCMD));
+      if (not Result) and (logger <> nil) then
+         begin
+         (* A value the property's type refuses -- reported, never swallowed.
+           The config file said something this setting cannot be. *)
+         logger.Warn('[CheckCommand] "%s" = "%s" refused by the settings object',
+                     [pshortstring(Command)^, CustomCMD]);
+         end;
+      Exit;
+      end;
    { if pshortstring(Command)^ = 'QSO POINT METHOD' then
      result := false;  }
    if length(pshortstring(Command)^) > 5 then

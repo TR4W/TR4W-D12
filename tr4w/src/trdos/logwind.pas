@@ -522,16 +522,12 @@ var
   AutoTimeIncrementQSOs                 : integer;
   AutoTimeQSOCount                      : Byte;
 
-  BandMapSO2RDisplay                    : boolean;
-  BandMapAllBands                       : boolean;
-  BandMapAllModes                       : boolean;
   BandMapBand                           : BandType {= Band160};
   BandMapMode                           : ModeType {= CW};
   BandMapBlinkingCall                   : CallString;
   BandMapBlinkingCallRecord             : BandMapEntryPointer;
   BandMapCursorData                     : BandMapEntryPointer;
   BandMapCursorFrequency                : LONGINT;
-  BandMapDisplayCQ                      : boolean = True;
   BandMapModeCutoffFrequency            : array[Band160..Band2] of LONGINT =
     (
     1840000,
@@ -550,7 +546,6 @@ var
   BandMapDecayTime                      : integer = 60;
   BandMapDecayValue                     : integer = 60; {KK1L: 6.65}
   BandMapDecayMultiplier                : integer = 1; {KK1L: 6.65}
-  BandMapDupeDisplay                    : boolean = True;
   BandMapEntryInCallWindow              : boolean;
   // '2' since 2026-08-25: TSpotRecord.FSysTime became a TDateTime, which
   // changed SizeOf(TSpotRecord).  LoadBandMap rejects a file whose first byte
@@ -561,7 +556,6 @@ var
   BandMapFirstEntryList                 : array[Band160..NoBand, CW..FM] of BandMapEntryPointer;
   BandMapGuardBand                      : integer; // = 200;
   BandMapDisplayLimit                   : integer = 164;   //GAV added for centred   bandmap
-  BandMapMultsOnly                      : boolean; {KK1L: 6.68}
   BandMapSplitMode                      : BandMapSplitModeType {= ByCutoffFrequency}; {KK1L: 6.64}
   BandMapTotalCalls                     : integer;
   BandMapWindowRY                       : integer;
@@ -847,14 +841,12 @@ var
   UserInfoShown                         : UserInfoType {= NoUserInfo};
 
   //   VGADisplayEnable                : boolean;
-  VHFBandsEnabled                       : boolean;
   VisibleDupeSheetChanged               : boolean = True;
   //   VisibleDupesheetEnable          : boolean;
   VisibleDupeSheetRemoved               : boolean;
 
   WakeUpTimeOut                         : integer;
   WakeUpCount                           : Byte;
-  WARCBandsEnabled                      : boolean;
 //  WideFreqDisplay                  : boolean; {KK1L: 6.73}
 
   DisplayedFreq                         : Str10; {wli}
@@ -1037,6 +1029,7 @@ procedure UpadateAutoSend;
 implementation
 
 uses
+   uSettingsModel,     // Settings.BandMap -- the eight display filters
    uAppTimers,   (* StartAppTimer / StopAppTimer -- LCL TTimers, not SetTimer *)
    uWindowTable,   { tr4w_WindowsArray, tWindowsExist -- moved out of VC/TF }
   uFlasher,    { the quick-display flash is a timer now }
@@ -2430,7 +2423,7 @@ begin
      for Mode := StartMode to StopMode do
         begin
 
-        if (not WARCBandsEnabled) and
+        if (not Settings.Bands.WarcEnabled) and
           ({(Band = Band60) or} (Band =Band30) or (Band = Band17) or (Band = Band12)) then
            begin
            Continue; {KK1L: 6.64 Keep band map within contest limits}
@@ -2515,7 +2508,7 @@ begin
      for Mode := StartMode to StopMode do
         begin
 
-        if (not WARCBandsEnabled) and
+        if (not Settings.Bands.WarcEnabled) and
           ({(Band = Band60) or }(Band = Band30) or (Band = Band17) or (Band = Band12)) then
            begin
            Continue; {KK1L: 6.64 Keep band map within contest limits}
@@ -2896,7 +2889,7 @@ begin
      for Mode := StartMode to StopMode do
         begin
 
-        if (not WARCBandsEnabled) and
+        if (not Settings.Bands.WarcEnabled) and
           ((Band = Band30) or (Band = Band17) or (Band = Band12)) then
            begin
            Continue; {KK1L: 6.64 Keep band map within contest limits}
@@ -2912,7 +2905,7 @@ begin
               //            while ((Entry^.StatusByte and $40) <> 0)
               //              and (Entry <> nil) do Entry := Entry^.NextEntry;
 
-      if BandMapDupeDisplay = False then
+      if Settings.BandMap.DupeDisplay = False then
          begin
          1: if (Entry^.StatusByte and $40) <> 0 then
                begin
@@ -2936,7 +2929,7 @@ begin
 
            else {KK1L: 6.64 not a cursor match. Go to next keeping Entry^ and EntryNumber in synch with display}
               begin
-              if BandMapDupeDisplay = False then
+              if Settings.BandMap.DupeDisplay = False then
                  begin
                  2: if (Entry^.StatusByte and $40) <> 0 then
                        begin
@@ -3564,13 +3557,13 @@ begin
     [Ord(BandMapEnable),
      Ord(tWindowsExist(tw_BANDMAPWINDOW_INDEX)),
      Ord(BandMapBand), Ord(BandMapMode),
-     Ord(BandMapAllBands),
-     Ord(BandMapAllModes),
-     Ord(BandMapDupeDisplay),
-     Ord(BandMapDisplayCQ),
-     Ord(BandMapMultsOnly),
-     Ord(WARCBandsEnabled),
-     Ord(VHFBandsEnabled),
+     Ord(Settings.BandMap.AllBands),
+     Ord(Settings.BandMap.AllModes),
+     Ord(Settings.BandMap.DupeDisplay),
+     Ord(Settings.BandMap.DisplayCQ),
+     Ord(Settings.BandMap.MultsOnly),
+     Ord(Settings.Bands.WarcEnabled),
+     Ord(Settings.Bands.VhfEnabled),
      SpotsList.Count]);
   if not BandMapEnable then
      begin
@@ -3803,9 +3796,9 @@ end;
 
 procedure tSetStartStopBandMode;
 begin
-  if BandMapAllBands then
+  if Settings.BandMap.AllBands then
      begin
-     if VHFBandsEnabled then
+     if Settings.Bands.VhfEnabled then
         begin
         StartBand := Band160;
         StopBand := Band2;
@@ -3822,7 +3815,7 @@ begin
      StopBand := BandMapBand;
      end;
 
-  if BandMapAllModes then
+  if Settings.BandMap.AllModes then
      begin
      StartMode := CW;
      StopMode := Phone;

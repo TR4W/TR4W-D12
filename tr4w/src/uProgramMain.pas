@@ -181,6 +181,7 @@ uses
   uWindowLayoutStore,
   uTR4WConfigFile,
   uSettingsModel,   // Settings -- where retired CFGCA rows now live
+  uSettingsEffects, // InstallSettingsEffects -- the replacement for crP
   uRadioConfigLegacyMap,
   uRadioConfigApply,
   // The FMX twins were DELETED 2026-08-17, at the start of the Win32-to-LCL
@@ -1754,13 +1755,15 @@ begin
 
   tSetupExchangeNumbers;
 
-  if (HFBandEnable = False) and (VHFBandsEnabled = True) then
+  if (Settings.Bands.HfEnabled = False) and (Settings.Bands.VhfEnabled = True) then
      begin
      ActiveBand := Band6;
-     BandMapDisplayGhz := True;    // n4af 4.42.8
+     Settings.BandMap.DisplayGhz := True;    // n4af 4.42.8
      end;
-  if HFBandEnable then
-     BandMapDisplayGhz := False;    // n4af 4.42.8
+  if Settings.Bands.HfEnabled then
+     begin
+     Settings.BandMap.DisplayGhz := False;    // n4af 4.42.8
+     end;
 
   SetWindowSize;
   CreateFonts;
@@ -1798,6 +1801,17 @@ begin
     allocated a Win32 resource, checked it, and dropped it. Keystrokes reach
     commands through uAppInputHooks, reading the same ACCELERATORS table. *)
 
+
+  (* SUBSCRIBE TO SETTING CHANGES -- what crP used to do, in one place.
+
+    AFTER every config read above and BEFORE the windows exist, and both halves
+    of that are deliberate.  After, because the loads assign hundreds of values
+    and each would otherwise raise a change nobody asked to see.  Before,
+    because from here on a setting can be changed by a menu, by Preferences or
+    by a multi-op peer, and all three must repaint -- which is exactly what the
+    hook index could not do, since it only ever fired when CheckCommand applied
+    a row. *)
+  InstallSettingsEffects;
 
   SetUpExchangeInformation(ActiveExchange, ExchangeInformation);
   SetColumnsWidth;

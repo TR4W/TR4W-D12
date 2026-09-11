@@ -82,6 +82,7 @@ var
 implementation
 
 uses
+   uSettingsModel,     // Settings.Bands -- HF / VHF / WARC enables
    SysUtils,      // ExtractFilePath/ExtractFileName -- see SetUpFileNames
    uConfigValues, LogGrid,
   LogStuff,
@@ -359,7 +360,7 @@ begin
      MultByBand := ContestsBooleanArray[Contest] and (1 shl MULT_BY_BAND_BIT) <>
        0;
 
-     VHFBandsEnabled := ContestsBooleanArray[Contest] and (1 shl
+     Settings.Bands.VhfEnabled := ContestsBooleanArray[Contest] and (1 shl
        VHF_BAND_ENABLE_BIT) <> 0;
 
      CTY.ctyZoneMode := ZoneModeType(ContestsBooleanArray[Contest] and (1 shl
@@ -474,7 +475,7 @@ begin
 
     WINTERFIELDDAY:
       begin
-        WARCBandsEnabled := False;
+        Settings.Bands.WarcEnabled := False;
         SetCQMemoryString(CW, F1, 'CQ^WFD \ \ TEST');
         SetCQMemoryString(CW, F2, 'CQ^WFD CQ^WFD \ \ TEST');
         CQExchange := ' ' + MyFDClass + ' ' + MySection;
@@ -488,7 +489,7 @@ begin
       begin
         ActiveDomesticMult := DomesticFile;
         ActiveDXMult := NoDXMults;
-        WARCBandsEnabled := False; // WARC is not allowed during FD ny4i 4.45.3
+        Settings.Bands.WarcEnabled := False; // WARC is not allowed during FD ny4i 4.45.3
         SetCQMemoryString(CW, F1, 'CQ^FD \ \ FD');
         SetCQMemoryString(CW, F2, 'CQ^FD CQ^FD \ \ FD');
         CQExchange := ' ' + MyFDClass + ' ' + MySection;
@@ -668,7 +669,7 @@ begin
         // 160/80 stay clickable; the scoring branch in CalculateQSOPoints
         // awards 0 points and inhibits mults for any QSO outside the
         // 40/20/15/10 + CW/SSB rules.  WARC bands ARE disabled here.
-        WARCBandsEnabled := False;
+        Settings.Bands.WarcEnabled := False;
 
         // CW function-key defaults and SAP exchange strings.
         // Exchange shape: <serial#> <MyGrid> -- e.g. "001 FN20".
@@ -691,7 +692,7 @@ begin
       begin
         ActiveBand := Band6;
         ContestName := 'VHF QSO JUNE';
-        HFBandEnable := False;
+        Settings.Bands.HfEnabled := False;
         //        VHFBandsEnabled := True;
          //         MyState := MyGrid; //Copy(MyGrid, 1, 4);
       end;
@@ -777,7 +778,7 @@ begin
       begin
         ActiveBand := Band2;
         //        ContestName := 'CQ WORLD WIDE VHF Contest';
-        HFBandEnable := False;
+        Settings.Bands.HfEnabled := False;
         //        VHFBandsEnabled := True;
       end;
 
@@ -811,7 +812,7 @@ begin
 
     RADIOVHFFD:
       begin
-        HFBandEnable := False;
+        Settings.Bands.HfEnabled := False;
         ActiveBand := Band2;
         DigitalModeEnable := False;
         ContestName := 'RF-VHF-FD';
@@ -824,7 +825,7 @@ begin
       begin
         ActiveBand := Band6;
         //        ContestName := 'EUROPEAN VHF CONTEST';
-        HFBandEnable := False;
+        Settings.Bands.HfEnabled := False;
         //        VHFBandsEnabled := True;
       end;
 
@@ -836,7 +837,7 @@ begin
         AutoDupeEnableCQ := False;
         AutoDupeEnableSandP := False;
         ContestName := 'General QSOs';
-        WARCBandsEnabled := True;
+        Settings.Bands.WarcEnabled := True;
       end;
 
     HADX:
@@ -1142,7 +1143,7 @@ begin
         AutoDupeEnableCQ := False;
         AutoDupeEnableSandP := False;
         ContestName := 'POTA';
-        WARCBandsEnabled := True;
+        Settings.Bands.WarcEnabled := True;
         SetCQMemoryString(CW, F1, 'CQ^POTA \ \ ');
         SetCQMemoryString(CW, F2, 'CQ^POTA CQ^POTA \ \ FD');
         //CQExchange := ' ' + MyFDClass + ' ' + MySection;

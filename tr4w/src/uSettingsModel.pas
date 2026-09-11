@@ -88,6 +88,85 @@ uses
    uJSON;   // TJSONObject -- the same DOM every other store in the file uses
 
 type
+   (*
+     A SETTING CHANGED, AND SOMETHING HAS TO REDRAW.
+
+     THIS IS WHAT crP WAS.  Thirty CFGCA rows carry a `crP` index into
+     CommandsProcArray, and uCFG's own note says the handler is "the ONLY thing
+     that repaints for a changed setting".  A setting cannot leave the array
+     until its side effect has somewhere else to live, and this is that
+     somewhere.
+
+     A PATH, NOT AN INDEX INTO A TABLE, which is the whole improvement: crP:1
+     means @DisplayBandMap only if you go and read the array, and a row pointing
+     at the wrong index is exactly the defect EXTERNAL LOGGER ENABLED had --
+     crA:23 firing the WSJT-X hook.  'BandMap.AllBands' cannot point at the
+     wrong thing.
+
+     THE MODEL RAISES IT AND KNOWS NOTHING ABOUT WHO LISTENS.  uSettingsModel
+     must not name a form or a window: the band map subscribes, the model does
+     not reach for it.  That is the same layering Lint-DomainPurity enforces one
+     directory down.
+   *)
+   TSettingChanged = procedure (const aPath: string);
+
+   TR4WSettings = class;
+
+   (*
+     THE BASE OF EVERY SETTINGS GROUP.
+
+     It exists for ONE reason: so that a property setter can perform the side
+     effect the change requires.  NY4I, 2026-09-11: "a property setter can do
+     the side effect, which is better than a hook index."
+
+     WHY IT IS BETTER, CONCRETELY.  crP: 1 is an index into CommandsProcArray,
+     and three things about it are wrong that a setter fixes for free:
+
+       * THE INDEX IS TYPED BY HAND AND NOTHING CHECKS IT.  A row pointing at
+         the wrong slot is a legal integer.  That defect has already happened
+         here -- EXTERNAL LOGGER ENABLED carried crA: 23, which fires the
+         WSJT-X colorization hook.
+       * IT ONLY FIRES THROUGH THE ARRAY.  CheckCommand runs the handler;
+         ordinary Pascal assigning the global does not.  So the SAME setting
+         repaints when a config file sets it and silently does not when a menu
+         toggles it -- which is why the band map window had to write its own
+         repaint call by hand, in ToggleAndRepaint.
+       * IT IS REACHABLE ONLY BY LOOKING SOMEWHERE ELSE.  Reading the row tells
+         you a number.
+
+     A setter has none of those properties.  It cannot point at the wrong
+     handler, it runs however the value was set, and it is written beside the
+     field it guards.
+
+     THE GROUP DOES NOT KNOW ITS OWN NAME, AND MUST NOT.  FPath is assigned by
+     the owner's RTTI walk from the PUBLISHED PROPERTY NAME that reaches this
+     object, so 'BandMap' is written exactly once -- as the property -- and a
+     rename cannot leave a stale string behind.  A prefix passed to a
+     constructor would be that second declaration.
+   *)
+   TSettingsGroup = class(TPersistent)
+   private
+      FOwner: TR4WSettings;
+      FPath: string;
+   protected
+      (* Tell the owner that one of this group's properties has taken a new
+        value.  aProperty is the bare property name; the group supplies its own
+        path. *)
+      procedure Changed(const aProperty: string);
+
+      (* Assign and notify, but ONLY IF THE VALUE ACTUALLY CHANGED.
+
+        Setting a property to what it already holds is not a change, and
+        repainting for it is not merely wasted work: every JSON load and every
+        multi-op sync writes every property it carries, so a setter that
+        notified unconditionally would repaint the band map eight times at
+        startup. *)
+      procedure SetBool(var aField: boolean; aValue: boolean; const aProperty: string);
+   public
+      // Called by the owner's walk. Not for anyone else.
+      procedure BindTo(aOwner: TR4WSettings; const aPath: string);
+   end;
+
    (* THE EXTERNAL LOGGER -- the first area to move off CFGCA.
 
      It went first because it is the smallest COMPLETE case in the tree: three
@@ -96,7 +175,7 @@ type
      groups look similar by reference count and are not: both already have a
      structured store of their own, so moving them is a merge of two models
      rather than a migration of one. *)
-   TExternalLoggerSettings = class(TPersistent)
+   TExternalLoggerSettings = class(TSettingsGroup)
    private
       FAddress: string;
       FPort: integer;
@@ -115,7 +194,7 @@ type
    (* THE DXLAB SPOT COLLECTOR BRIDGE.  One setting; the group exists because
      the property PATH is what derives the legacy command name, so
      SpotCollector.Enabled is what gives 'SPOT COLLECTOR ENABLED'. *)
-   TSpotCollectorSettings = class(TPersistent)
+   TSpotCollectorSettings = class(TSettingsGroup)
    private
       FEnabled: boolean;
    published
@@ -125,7 +204,7 @@ type
    (* THE TCP SERVER TR4W RUNS FOR RADIO CLIENTS -- not a radio's own port.
      Radio.TcpServerPort derives 'RADIO TCP SERVER PORT', which is the command
      an existing config file uses. *)
-   TRadioServerSettings = class(TPersistent)
+   TRadioServerSettings = class(TSettingsGroup)
    private
       FTcpServerPort: integer;
    public
@@ -135,7 +214,7 @@ type
    end;
 
    (* THE YCCC SO2R+ BOX.  Yccc.So2rEnable derives 'YCCC SO2R ENABLE'. *)
-   TYcccSettings = class(TPersistent)
+   TYcccSettings = class(TSettingsGroup)
    private
       FSo2rEnable: boolean;
    published
@@ -150,22 +229,131 @@ type
      which is exactly the Win32 string handling CLAUDE.md says the program is
      getting rid of.  Both are now an ordinary comparison and an ordinary
      assignment, and two PChars leave the tree with them. *)
-   TMmttySettings = class(TPersistent)
+   TMmttySettings = class(TSettingsGroup)
    private
       FEngine: string;
    published
       property Engine: string read FEngine write FEngine;
    end;
 
+   (*
+     THE BAND MAP'S DISPLAY FILTERS -- eight booleans that decide what the band
+     map shows, and the first group in this unit whose settings have a SIDE
+     EFFECT.
+
+     ALL EIGHT CARRIED crP: 1 IN CFGCA, which is @DisplayBandMap: changing any
+     of them has to redraw the window or the operator sees the old contents
+     until something else happens to repaint it.  That is what the setters do,
+     and it is why this group went next -- the groups migrated before it are all
+     inert values, so none of them could prove the mechanism.
+
+     THE SETTER REPLACES TWO SEPARATE MECHANISMS, not one.  A config file went
+     through CheckCommand and got the crP handler; the band map's own menu
+     toggles went through ToggleAndRepaint, a helper that took the global by
+     var and called RequestRepaint itself.  Both spellings of "and now redraw"
+     collapse into the property.
+   *)
+   TBandMapSettings = class(TSettingsGroup)
+   private
+      FAllBands: boolean;
+      FAllModes: boolean;
+      FCallWindowEnable: boolean;
+      FDisplayCQ: boolean;
+      FDisplayGhz: boolean;
+      FDupeDisplay: boolean;
+      FMultsOnly: boolean;
+      FSo2rDisplay: boolean;
+      procedure SetAllBands(aValue: boolean);
+      procedure SetAllModes(aValue: boolean);
+      procedure SetCallWindowEnable(aValue: boolean);
+      procedure SetDisplayCQ(aValue: boolean);
+      procedure SetDisplayGhz(aValue: boolean);
+      procedure SetDupeDisplay(aValue: boolean);
+      procedure SetMultsOnly(aValue: boolean);
+      procedure SetSo2rDisplay(aValue: boolean);
+   public
+      constructor Create;
+   published
+      // Was BandMapAllBands in logwind.pas.  Show spots from every band.
+      property AllBands: boolean read FAllBands write SetAllBands;
+      // Was BandMapAllModes.
+      property AllModes: boolean read FAllModes write SetAllModes;
+      (* Was BandMapCallWindowEnable in logstuff.pas -- the one of the eight
+        that did NOT live in logwind.pas, and one of the three whose default
+        is True. *)
+      property CallWindowEnable: boolean read FCallWindowEnable write SetCallWindowEnable;
+      // Was BandMapDisplayCQ.
+      property DisplayCQ: boolean read FDisplayCQ write SetDisplayCQ;
+      (* Was BandMapDisplayGhz in uBandmap.pas.  Renders above 1 GHz in GHz
+        rather than MHz (N4AF, 4.42.8). *)
+      property DisplayGhz: boolean read FDisplayGhz write SetDisplayGhz;
+      // Was BandMapDupeDisplay.
+      property DupeDisplay: boolean read FDupeDisplay write SetDupeDisplay;
+      // Was BandMapMultsOnly.
+      property MultsOnly: boolean read FMultsOnly write SetMultsOnly;
+      // Was BandMapSO2RDisplay.
+      property So2rDisplay: boolean read FSo2rDisplay write SetSo2rDisplay;
+   end;
+
+   (*
+     WHICH CLASSES OF BAND ARE IN PLAY -- HF, the WARC bands (30/17/12m), and
+     VHF and up.
+
+     THESE THREE ARE NOT A DISPLAY FILTER, and the difference is the reason
+     they are their own group rather than more properties on TBandMapSettings.
+     Two of the three carry crP: 1 in CFGCA, the band map redraw, which makes
+     them look like band map settings from the array.  They are not: they also
+     REFUSE A BAND CHANGE (logstuff.pas, at four sites) and decide which band
+     columns the main window shows.  Grouping them by their redraw hook would
+     have filed a rule of the contest under a display filter.
+
+     That is the argument for a setter over a hook index, stated against a real
+     row: the index says only "redraw the band map", so it cannot tell you the
+     setting also refuses a band change, and it therefore invites exactly that
+     mis-grouping.
+
+     THE CONTEST WRITES THEM.  FCONTEST assigns all three when a contest is
+     selected.  An earlier draft of the migration plan held them back for that
+     reason, as "contest properties wearing a settings costume"; that line was
+     withdrawn (NY4I, 2026-08-16) -- every parameter belongs in the registry,
+     and WHO WRITES a value is a separate question from WHERE IT LIVES.
+
+     THE GLOBALS THEY REPLACE WERE SPELLED INCONSISTENTLY -- HFBandEnable but
+     VHFBandsEnabled and WARCBandsEnabled, singular Band against plural Bands.
+     uSettingsDeclarations already carried a note that this makes a naive grep
+     under-report them.  Three properties on one object cannot drift that way.
+   *)
+   TBandSettings = class(TSettingsGroup)
+   private
+      FHfEnabled: boolean;
+      FVhfEnabled: boolean;
+      FWarcEnabled: boolean;
+      procedure SetHfEnabled(aValue: boolean);
+      procedure SetVhfEnabled(aValue: boolean);
+      procedure SetWarcEnabled(aValue: boolean);
+   public
+      constructor Create;
+   published
+      // Was HFBandEnable in logdupe.pas.
+      property HfEnabled: boolean read FHfEnabled write SetHfEnabled;
+      // Was VHFBandsEnabled in logwind.pas.
+      property VhfEnabled: boolean read FVhfEnabled write SetVhfEnabled;
+      // Was WARCBandsEnabled in logwind.pas.
+      property WarcEnabled: boolean read FWarcEnabled write SetWarcEnabled;
+   end;
+
    TR4WSettings = class(TPersistent)
    private
       // command name -> property path, built once by walking the RTTI.
       FCommands: TStringList;
+      FOnChanged: TSettingChanged;
       FExternalLogger: TExternalLoggerSettings;
       FSpotCollector: TSpotCollectorSettings;
       FRadio: TRadioServerSettings;
       FYccc: TYcccSettings;
       FMmtty: TMmttySettings;
+      FBandMap: TBandMapSettings;
+      FBands: TBandSettings;
       procedure BuildCommandMap;
       function PathForCommand(const aCommand: string): string;
    public
@@ -217,12 +405,23 @@ type
 
       // Every command name this object answers to. Caller owns the result.
       function CommandNames: TStringList;
+
+      (* Raised AFTER a property has taken its new value, naming the property
+        path.  A group's setter calls this; nothing else should.
+
+        ONE HANDLER, not a list: there is one main window, the handler
+        dispatches on the path, and a subscriber list would be machinery for a
+        problem this program does not have. *)
+      procedure Changed(const aPath: string);
+      property OnChanged: TSettingChanged read FOnChanged write FOnChanged;
    published
       property ExternalLogger: TExternalLoggerSettings read FExternalLogger;
       property SpotCollector: TSpotCollectorSettings read FSpotCollector;
       property Radio: TRadioServerSettings read FRadio;
       property Yccc: TYcccSettings read FYccc;
       property Mmtty: TMmttySettings read FMmtty;
+      property BandMap: TBandMapSettings read FBandMap;
+      property Bands: TBandSettings read FBands;
    end;
 
 (* THE ONE INSTANCE.  Created on first use so no unit's initialisation order
@@ -259,6 +458,134 @@ begin
    FreeAndNil(GSettings);
 end;
 
+{ TSettingsGroup }
+
+procedure TSettingsGroup.BindTo(aOwner: TR4WSettings; const aPath: string);
+begin
+   FOwner := aOwner;
+   FPath  := aPath;
+end;
+
+procedure TSettingsGroup.Changed(const aProperty: string);
+begin
+   (* FOwner is nil only before the owner's walk has reached this group, which
+     is during TR4WSettings.Create.  A default assigned in a group's own
+     constructor is not a change anyone can have asked to see. *)
+   if FOwner <> nil then
+      begin
+      FOwner.Changed(FPath + '.' + aProperty);
+      end;
+end;
+
+procedure TSettingsGroup.SetBool(var aField: boolean; aValue: boolean;
+                                 const aProperty: string);
+begin
+   if aField = aValue then
+      begin
+      Exit;
+      end;
+   aField := aValue;
+   Changed(aProperty);
+end;
+
+{ TBandMapSettings }
+
+constructor TBandMapSettings.Create;
+begin
+   inherited Create;
+   (* The values the globals carried.  Three of the eight default True and
+     five default False, and that asymmetry is real: logstuff.pas and
+     logwind.pas initialised them individually. *)
+   FAllBands         := False;
+   FAllModes         := False;
+   FCallWindowEnable := True;
+   FDisplayCQ        := True;
+   FDisplayGhz       := False;
+   FDupeDisplay      := True;
+   FMultsOnly        := False;
+   FSo2rDisplay      := False;
+end;
+
+(* EIGHT SETTERS THAT DIFFER ONLY IN WHICH FIELD THEY GUARD.
+
+  They are written out rather than generated because the alternative in Pascal
+  is an index-keyed setter -- SetFlag(BM_ALL_BANDS, aValue) -- and that is the
+  hook index again, one indirection further down. *)
+procedure TBandMapSettings.SetAllBands(aValue: boolean);
+begin
+   SetBool(FAllBands, aValue, 'AllBands');
+end;
+
+procedure TBandMapSettings.SetAllModes(aValue: boolean);
+begin
+   SetBool(FAllModes, aValue, 'AllModes');
+end;
+
+procedure TBandMapSettings.SetCallWindowEnable(aValue: boolean);
+begin
+   SetBool(FCallWindowEnable, aValue, 'CallWindowEnable');
+end;
+
+procedure TBandMapSettings.SetDisplayCQ(aValue: boolean);
+begin
+   SetBool(FDisplayCQ, aValue, 'DisplayCQ');
+end;
+
+procedure TBandMapSettings.SetDisplayGhz(aValue: boolean);
+begin
+   SetBool(FDisplayGhz, aValue, 'DisplayGhz');
+end;
+
+procedure TBandMapSettings.SetDupeDisplay(aValue: boolean);
+begin
+   SetBool(FDupeDisplay, aValue, 'DupeDisplay');
+end;
+
+procedure TBandMapSettings.SetMultsOnly(aValue: boolean);
+begin
+   SetBool(FMultsOnly, aValue, 'MultsOnly');
+end;
+
+procedure TBandMapSettings.SetSo2rDisplay(aValue: boolean);
+begin
+   SetBool(FSo2rDisplay, aValue, 'So2rDisplay');
+end;
+
+{ TBandSettings }
+
+constructor TBandSettings.Create;
+begin
+   inherited Create;
+   (* HF on, the other two off -- the values logdupe.pas and logwind.pas
+     carried.  FCONTEST overwrites all three the moment a contest loads. *)
+   FHfEnabled   := True;
+   FVhfEnabled  := False;
+   FWarcEnabled := False;
+end;
+
+(* ALL THREE NOTIFY, INCLUDING HF, WHICH CARRIED NO crP.
+
+  HF BAND ENABLE has crP: 0 in CFGCA while its two siblings have crP: 1, so
+  changing it repainted nothing.  There is no reason for that asymmetry --
+  all three decide which bands the band map shows -- and it reads as an
+  omission rather than a decision, of exactly the kind a hand-typed index
+  invites.  Notifying is the safe direction: the worst case is one repaint
+  nobody needed. *)
+procedure TBandSettings.SetHfEnabled(aValue: boolean);
+begin
+   SetBool(FHfEnabled, aValue, 'HfEnabled');
+end;
+
+procedure TBandSettings.SetVhfEnabled(aValue: boolean);
+begin
+   SetBool(FVhfEnabled, aValue, 'VhfEnabled');
+end;
+
+procedure TBandSettings.SetWarcEnabled(aValue: boolean);
+begin
+   SetBool(FWarcEnabled, aValue, 'WarcEnabled');
+end;
+
 { TExternalLoggerSettings }
 
 constructor TExternalLoggerSettings.Create;
@@ -289,6 +616,8 @@ begin
    FRadio          := TRadioServerSettings.Create;
    FYccc           := TYcccSettings.Create;
    FMmtty          := TMmttySettings.Create;
+   FBandMap        := TBandMapSettings.Create;
+   FBands          := TBandSettings.Create;
 
    FCommands := TStringList.Create;
    FCommands.CaseSensitive := False;
@@ -300,6 +629,8 @@ end;
 destructor TR4WSettings.Destroy;
 begin
    FCommands.Free;
+   FBands.Free;
+   FBandMap.Free;
    FMmtty.Free;
    FYccc.Free;
    FRadio.Free;
@@ -404,7 +735,34 @@ begin
       end;
 end;
 
+procedure TR4WSettings.Changed(const aPath: string);
+begin
+   if Assigned(FOnChanged) then
+      begin
+      FOnChanged(aPath);
+      end;
+end;
+
 procedure TR4WSettings.BuildCommandMap;
+
+   (* Give one property the legacy command name it actually answers to, and
+     REMOVE the name the derivation invented for it.  Leaving both would put a
+     command TR4W has never had -- 'BANDS WARC ENABLED' -- into CommandNames,
+     where the Preferences list and the multi-op peer sync would both offer
+     it. *)
+   procedure Override(const aCommand, aPath: string);
+   var
+      i: integer;
+   begin
+      for i := FCommands.Count - 1 downto 0 do
+         begin
+         if string(FCommands.ValueFromIndex[i]) = aPath then
+            begin
+            FCommands.Delete(i);
+            end;
+         end;
+      FCommands.Values[AnsiString(aCommand)] := AnsiString(aPath);
+   end;
 
    procedure Walk(const aObj: TObject; const aPrefix: string);
    var
@@ -431,6 +789,14 @@ procedure TR4WSettings.BuildCommandMap;
                child := GetObjectProp(aObj, info);
                if child <> nil then
                   begin
+                  (* THE GROUP LEARNS ITS PATH HERE, from the property name
+                    that reaches it, so 'BandMap' is declared once -- as the
+                    published property -- and a rename carries the change
+                    notification with it automatically. *)
+                  if child is TSettingsGroup then
+                     begin
+                     TSettingsGroup(child).BindTo(Self, path);
+                     end;
                   Walk(child, path + '.');
                   end;
                end
@@ -451,9 +817,23 @@ begin
    Walk(Self, '');
 
    (* THE EXCEPTIONS, where a legacy command name does not derive from the
-     property path.  There are none yet: every setting migrated so far derives
-     exactly.  Keep this short -- a long list means the rule above is wrong,
-     not that the settings are irregular. *)
+     property path.  Keep this short -- a long list means the rule above is
+     wrong, not that the settings are irregular.
+
+     THE BAND CLASS COMMANDS LEAD WITH THE DISCRIMINATOR: 'WARC BAND ENABLE',
+     not 'BAND ENABLE WARC'.  No property path can produce that and still keep
+     the three in one group, because the derivation puts the GROUP first and
+     these names put the band class first.
+
+     The alternative was three one-property groups -- Warc.BandEnable,
+     Vhf.BandEnable, Hf.BandEnable -- which derive with no exception at all.
+     That was rejected because 'Warc' is a prefix, not an area: the settings
+     store already groups these as operating.bands.hf / .warc / .vhf, so
+     splitting them into three objects would disagree with the one grouping
+     this program has already committed to. *)
+   Override('HF BAND ENABLE',   'Bands.HfEnabled');
+   Override('VHF BAND ENABLE',  'Bands.VhfEnabled');
+   Override('WARC BAND ENABLE', 'Bands.WarcEnabled');
 end;
 
 function TR4WSettings.PathForCommand(const aCommand: string): string;

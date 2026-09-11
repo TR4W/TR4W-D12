@@ -89,11 +89,13 @@ var
   // stay module-level rather than becoming form fields.
   BandMapItemHeight: integer = 14;
   BandMapItemWidth: integer = 135;
-  BandMapDisplayGhz: boolean;
   PreviousDisplayedBandmapBand: BandType;
 
 implementation
-uses MainUnit, uDupesheet;
+uses
+   MainUnit,
+   uDupesheet,
+   uSettingsModel;   // Settings.BandMap -- the eight display filters
 
 procedure TuneRadioToSpot(Spot: TSpotRecord; Radio: RadioType);
 var
@@ -124,11 +126,11 @@ begin
      end;
   if ((radio1.filteredstatus.freq = 0) or (radio2.filteredstatus.freq = 0)) then
      begin
-     BandMapSO2RDisplay := False;
+     Settings.BandMap.So2rDisplay := False;
      Config.QSYInactiveRadio := False;
      Config.InBandLock := False;
      end;
-  if BandMapSO2RDisplay then
+  if Settings.BandMap.So2rDisplay then
     // B1: was (not WKBusy).  This is the WIDEST of the B1 substitutions -- CPU,
     // CAT and YCCC keying now also block a same-band SO2R spot tune, where
     // before only the WinKeyer did.  4.105.15

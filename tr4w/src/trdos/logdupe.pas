@@ -268,7 +268,6 @@ var
 
   GridSquareList                        : array[0..MaxGridSquaresInList - 1] of string[4];
 
-  HFBandEnable                          : boolean = True;
 
   //  InitialExchangeList              : InitialExchangeArrayPointer = nil;
 

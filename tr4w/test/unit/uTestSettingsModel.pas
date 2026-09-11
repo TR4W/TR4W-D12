@@ -42,11 +42,33 @@ type
       procedure Test_CommandNamesDeriveFromThePropertyPaths;
       procedure Test_SetAndGetByCommandName;
       procedure Test_AnUnknownCommandIsRefused;
+      procedure Test_BandDefaultsAreTheOnesTheGlobalsHad;
+      procedure Test_TheElevenRetiredRowsStillResolveByName;
+      procedure Test_TheDerivedNameAnExceptionReplacedIsGone;
+      procedure Test_ASetterRaisesTheChange;
+      procedure Test_AssigningTheSameValueRaisesNothing;
    public
       procedure RunAllTests; override;
    end;
 
 implementation
+
+(* THE CHANGE RECORDER.
+
+  A unit-level variable and a plain procedure, because TSettingChanged is a
+  plain procedure type -- the same shape uBandMapView uses for the band map's
+  own seam.  A method would need an object that exists only to hold it. *)
+var
+   GChangedPaths: TStringList = nil;
+
+procedure RecordChange(const aPath: string);
+begin
+   if GChangedPaths <> nil then
+      begin
+      GChangedPaths.Add(aPath);
+      end;
+end;
+
 
 procedure TSettingsModelTests.Test_DefaultsAreTheOnesTheGlobalsHad;
 var
@@ -293,7 +315,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(7, names.Count, 'one name per migrated setting, no more');
+         CheckEquals(18, names.Count, 'one name per migrated setting, no more');
       finally
          names.Free;
       end;
@@ -373,6 +395,175 @@ begin
    end;
 end;
 
+(* ---------------------------------------------------------------------
+  THE BAND MAP AND BAND CLASS GROUPS, 2026-09-11.
+
+  Eleven CFGCA rows were DELETED for these -- not retired to csRem, deleted --
+  so there is no table left to read if one of them stops working.  These are
+  the tests that stand in its place.
+  --------------------------------------------------------------------- *)
+
+procedure TSettingsModelTests.Test_BandDefaultsAreTheOnesTheGlobalsHad;
+var
+   s: TR4WSettings;
+begin
+   (* THE DEFAULTS ARE NOT UNIFORM AND THAT IS THE POINT.  The globals were
+     declared in three different units and five of the eleven defaulted True:
+
+       logstuff.pas   BandMapCallWindowEnable: boolean = True;
+       logwind.pas    BandMapDisplayCQ:        boolean = True;
+       logwind.pas    BandMapDupeDisplay:      boolean = True;
+       logdupe.pas    HFBandEnable:            boolean = True;
+       (the other seven were plain `: boolean`, so False)
+
+     Getting one of these backwards does not fail a build and does not fail a
+     contest either -- it quietly hides dupes, or refuses a band change -- so
+     the pin test is the only thing that can catch it. *)
+   BeginTest('the band settings default to what the globals carried');
+   s := TR4WSettings.Create;
+   try
+      CheckFalse(s.BandMap.AllBands,         'BandMapAllBands');
+      CheckFalse(s.BandMap.AllModes,         'BandMapAllModes');
+      CheckTrue (s.BandMap.CallWindowEnable, 'BandMapCallWindowEnable');
+      CheckTrue (s.BandMap.DisplayCQ,        'BandMapDisplayCQ');
+      CheckFalse(s.BandMap.DisplayGhz,       'BandMapDisplayGhz');
+      CheckTrue (s.BandMap.DupeDisplay,      'BandMapDupeDisplay');
+      CheckFalse(s.BandMap.MultsOnly,        'BandMapMultsOnly');
+      CheckFalse(s.BandMap.So2rDisplay,      'BandMapSO2RDisplay');
+
+      CheckTrue (s.Bands.HfEnabled,          'HFBandEnable');
+      CheckFalse(s.Bands.VhfEnabled,         'VHFBandsEnabled');
+      CheckFalse(s.Bands.WarcEnabled,        'WARCBandsEnabled');
+   finally
+      s.Free;
+   end;
+end;
+
+procedure TSettingsModelTests.Test_TheElevenRetiredRowsStillResolveByName;
+var
+   s: TR4WSettings;
+   i: integer;
+const
+   (* EXACTLY THE ELEVEN crCommand SPELLINGS THAT WERE DELETED FROM CFGCA.
+
+     If one of these stops resolving, the failure is not a compile error and
+     not a crash.  An operator upgrading from an older version opens their
+     contest .cfg, LogCfg.pas reports "invalid statement in config file" in a
+     modal dialog, and the setting is silently lost -- against a config file
+     that was working the day before. *)
+   RETIRED: array[0..10] of string = (
+      'BAND MAP ALL BANDS',
+      'BAND MAP ALL MODES',
+      'BAND MAP CALL WINDOW ENABLE',
+      'BAND MAP DISPLAY CQ',
+      'BAND MAP DISPLAY GHZ',
+      'BAND MAP DUPE DISPLAY',
+      'BAND MAP MULTS ONLY',
+      'BAND MAP SO2R DISPLAY',
+      'HF BAND ENABLE',
+      'VHF BAND ENABLE',
+      'WARC BAND ENABLE');
+begin
+   BeginTest('every deleted CFGCA row still answers to its command name');
+   s := TR4WSettings.Create;
+   try
+      for i := Low(RETIRED) to High(RETIRED) do
+         begin
+         CheckTrue(s.OwnsCommand(RETIRED[i]), RETIRED[i] + ' is owned');
+         // Owning a name and being able to APPLY it are different claims.
+         CheckTrue(s.TrySetByCommand(RETIRED[i], 'TRUE'),
+                   RETIRED[i] + ' accepts a value');
+         end;
+   finally
+      s.Free;
+   end;
+end;
+
+procedure TSettingsModelTests.Test_TheDerivedNameAnExceptionReplacedIsGone;
+var
+   s: TR4WSettings;
+begin
+   (* THE OVERRIDE MUST REMOVE, NOT ONLY ADD.
+
+     'WARC BAND ENABLE' leads with the band class, so the three Bands
+     properties carry explicit exceptions.  The derivation had already put
+     'BANDS WARC ENABLED' into the map, and leaving it would publish a command
+     TR4W has never had -- offered by the Preferences list and accepted from a
+     multi-op peer, under a name no other station would ever send. *)
+   BeginTest('an exception removes the name the derivation invented');
+   s := TR4WSettings.Create;
+   try
+      CheckTrue (s.OwnsCommand('WARC BAND ENABLE'),  'the legacy name resolves');
+      CheckFalse(s.OwnsCommand('BANDS WARC ENABLED'), 'the derived name does not');
+      CheckFalse(s.OwnsCommand('BANDS HF ENABLED'),   'nor the HF one');
+      CheckFalse(s.OwnsCommand('BANDS VHF ENABLED'),  'nor the VHF one');
+   finally
+      s.Free;
+   end;
+end;
+
+procedure TSettingsModelTests.Test_ASetterRaisesTheChange;
+var
+   s: TR4WSettings;
+begin
+   (* THIS IS THE crP REPLACEMENT, AND NOTHING ELSE IN THE TREE TESTS IT.
+
+     A hook index only fired when CheckCommand applied a row, so a menu toggle
+     repainted only because the band map form remembered to ask.  The whole
+     claim of this design is that the SETTER fires however the value was set.
+     An ordinary Pascal assignment is the case that used to do nothing. *)
+   BeginTest('assigning a property raises the change, naming its path');
+   GChangedPaths := TStringList.Create;
+   s := TR4WSettings.Create;
+   try
+      s.OnChanged := @RecordChange;
+
+      s.BandMap.AllBands := True;
+      CheckEquals(1, GChangedPaths.Count, 'one change raised');
+      CheckEquals('BandMap.AllBands', GChangedPaths[0], 'the path');
+
+      s.Bands.WarcEnabled := True;
+      CheckEquals(2, GChangedPaths.Count, 'a second change');
+      CheckEquals('Bands.WarcEnabled', GChangedPaths[1], 'the path');
+
+      (* AND THROUGH THE COMMAND NAME TOO -- the multi-op path.  A peer's
+        change arrives as text, and it must repaint the same way a local menu
+        toggle does. *)
+      CheckTrue(s.TrySetByCommand('BAND MAP DUPE DISPLAY', 'FALSE'), 'applied');
+      CheckEquals(3, GChangedPaths.Count, 'the command name raised it too');
+      CheckEquals('BandMap.DupeDisplay', GChangedPaths[2], 'the path');
+   finally
+      s.Free;
+      FreeAndNil(GChangedPaths);
+   end;
+end;
+
+procedure TSettingsModelTests.Test_AssigningTheSameValueRaisesNothing;
+var
+   s: TR4WSettings;
+begin
+   (* Every JSON load and every peer sync writes EVERY property it carries.
+     A setter that notified unconditionally would repaint the band map eleven
+     times at startup, and the guard against that is one comparison -- easy to
+     drop, and invisible when it is gone. *)
+   BeginTest('assigning the value a property already holds raises nothing');
+   GChangedPaths := TStringList.Create;
+   s := TR4WSettings.Create;
+   try
+      s.OnChanged := @RecordChange;
+
+      // DupeDisplay defaults True, so this is a no-op assignment.
+      s.BandMap.DupeDisplay := True;
+      CheckEquals(0, GChangedPaths.Count, 'no change for the same value');
+
+      s.BandMap.DupeDisplay := False;
+      CheckEquals(1, GChangedPaths.Count, 'but a real change still raises');
+   finally
+      s.Free;
+      FreeAndNil(GChangedPaths);
+   end;
+end;
+
 procedure TSettingsModelTests.RunAllTests;
 begin
    Test_DefaultsAreTheOnesTheGlobalsHad;
@@ -383,6 +574,11 @@ begin
    Test_CommandNamesDeriveFromThePropertyPaths;
    Test_SetAndGetByCommandName;
    Test_AnUnknownCommandIsRefused;
+   Test_BandDefaultsAreTheOnesTheGlobalsHad;
+   Test_TheElevenRetiredRowsStillResolveByName;
+   Test_TheDerivedNameAnExceptionReplacedIsGone;
+   Test_ASetterRaisesTheChange;
+   Test_AssigningTheSameValueRaisesNothing;
 end;
 
 end.

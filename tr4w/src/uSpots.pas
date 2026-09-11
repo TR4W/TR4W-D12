@@ -132,6 +132,7 @@ var
 
 implementation
 uses
+   uSettingsModel,     // Settings.BandMap -- the eight display filters
   uMainForm,   { the call field, named -- wh[] round 3 }
   uSpotAge,   // UTCNow, AgeSeconds -- the leaf the tests can link
   SysUtils,   // Issue #997: Format/StrPCopy
@@ -184,7 +185,7 @@ begin
   // Focus must freeze the VIEW, never the MODEL.  Display still honours the
   // flag, so the rows stay put under the operator's mouse; the spots are now
   // waiting there when focus leaves instead of being lost.
-  if BandMapSO2RDisplay then
+  if Settings.BandMap.So2rDisplay then
     if ((Radio1.FilteredStatus.Freq <> 0) and (Radio2.FilteredStatus.Freq <> 0))
       then
       if ((ActiveBand <> Spot.Fband) and (InactiveRadioptr.BandMemory <>
@@ -196,27 +197,27 @@ begin
      begin
      // 4.102.5 - filter the added spots to match the actual bm display
 
-     if not BandMapAllBands then
+     if not Settings.BandMap.AllBands then
        if FList^[i].FBand <> BandmapBand then
           begin
           Continue; //Gav  ActiveBand changed to BandmapBand
           end;
-     if not BandMapAllModes then
+     if not Settings.BandMap.AllModes then
        if FList^[i].FMode <> BandmapMode then
           begin
           Continue; //Gav  ActiveMode changed to BandmapMode
           end;
-     if not BandMapDupeDisplay then
+     if not Settings.BandMap.DupeDisplay then
        if FList^[i].FDupe then
           begin
           Continue;
           end;
-     if not BandMapDisplayCQ then
+     if not Settings.BandMap.DisplayCQ then
        if FList^[i].FCQ then
           begin
           Continue;
           end;
-     if not WARCBandsEnabled then
+     if not Settings.Bands.WarcEnabled then
        if FList^[i].FWARCBand then
           begin
           Continue;
@@ -227,12 +228,12 @@ begin
         begin
         Continue;
         end;
-     if BandMapMultsOnly then
+     if Settings.BandMap.MultsOnly then
        if not ((FList^[i].FMult) or (FList^[i].FCQ)) then
           begin
           Continue; //Gav added or FCQ to stop CQ spots being trapped by Mult only filter
           end;
-     if not VHFBandsEnabled then
+     if not Settings.Bands.VhfEnabled then
        if (FList^[i].FBand > Band12) then
           begin
           Continue;
@@ -320,43 +321,43 @@ begin
         Inc(rejDupeNext);
         continue;
         end;
-     if not BandMapAllBands then
+     if not Settings.BandMap.AllBands then
        if FList^[i].FBand <> BandmapBand then
           begin
           Inc(rejBand);
           Continue; //Gav  ActiveBand changed to BandmapBand
           end;
-     if not BandMapAllModes then
+     if not Settings.BandMap.AllModes then
        if FList^[i].FMode <> BandmapMode then
           begin
           Inc(rejMode);
           Continue; //Gav  ActiveMode changed to BandmapMode
           end;
-     if not BandMapDupeDisplay then
+     if not Settings.BandMap.DupeDisplay then
        if FList^[i].FDupe then
           begin
           Inc(rejDupeFlag);
           Continue;
           end;
-     if not BandMapDisplayCQ then
+     if not Settings.BandMap.DisplayCQ then
        if FList^[i].FCQ then
           begin
           Inc(rejCQ);
           Continue;
           end;
-     if not WARCBandsEnabled then
+     if not Settings.Bands.WarcEnabled then
        if FList^[i].FWARCBand then
           begin
           Inc(rejWARC);
           Continue;
           end;
-     if BandMapMultsOnly then
+     if Settings.BandMap.MultsOnly then
        if not ((FList^[i].FMult) or (FList^[i].FCQ)) then
           begin
           Inc(rejMultsOnly);
           Continue; //Gav added or FCQ to stop CQ spots being trapped by Mult only filter
           end;
-     if not VHFBandsEnabled then
+     if not Settings.Bands.VhfEnabled then
        if (FList^[i].FBand > Band12) then
           begin
           Inc(rejVHF);
@@ -907,7 +908,7 @@ begin
      begin
      Exit;
      end;
-  if not BandMapCallWindowEnable then
+  if not Settings.BandMap.CallWindowEnable then
      begin
      Exit;
      end;

@@ -400,7 +400,6 @@ var
   AutoQSLInterval: integer;
   AutoSAPEnable: boolean;
 
-  BandMapCallWindowEnable: boolean = True;
   BandMapInfoCall: CallString {= ''};
   BeepEvery10QSOs: boolean;
   BeSilent: boolean;
@@ -785,6 +784,7 @@ function BandIsEnabledForContest(const aBand: BandType): boolean;
 implementation
 
 uses uNet,
+   uSettingsModel,     // Settings.Bands -- HF / VHF / WARC enables
    (* The B4 list is an LCL grid on the main form -- TR4WPreviousDupesSet. *)
    uMainForm,
    (* Which store a log READ comes from -- step B4.  See uLogSource. *)
@@ -867,12 +867,12 @@ begin
          Continue;
          end;
 
-      if BandChangeArray[i].bcWARC and (not WARCBandsEnabled) then
+      if BandChangeArray[i].bcWARC and (not Settings.Bands.WarcEnabled) then
          begin
          Exit;
          end;
 
-      if BandChangeArray[i].bcVHF and (not VHFBandsEnabled) then
+      if BandChangeArray[i].bcVHF and (not Settings.Bands.VhfEnabled) then
          begin
          Exit;
          end;
@@ -998,17 +998,17 @@ begin
      begin
      goto NextBand; //n4af 04.37.11
      end;
-  if (not WarcBandsEnabled) and (BandChangeArray[TempInteger].bcWARC) then
+  if (not Settings.Bands.WarcEnabled) and (BandChangeArray[TempInteger].bcWARC) then
      begin
      goto NextBand; // n4af 04.40.7
      end;
-  if (not VHFBandsEnabled) and (BandChangeArray[TempInteger].bcVHF) then
+  if (not Settings.Bands.VhfEnabled) and (BandChangeArray[TempInteger].bcVHF) then
      begin
      goto NextBand;
      end;
 
-  if VHFBandsEnabled then
-    if (not HFBandEnable) and (not BandChangeArray[TempInteger].bcVHF) then
+  if Settings.Bands.VhfEnabled then
+    if (not Settings.Bands.HfEnabled) and (not BandChangeArray[TempInteger].bcVHF) then
        begin
        goto NextBand;
        end;

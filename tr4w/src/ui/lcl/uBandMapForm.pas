@@ -126,7 +126,6 @@ type
     procedure RememberSelection;
     procedure ShowSelectedSpotInfo;
     function  SelectedSpot(out aSpot: TSpotRecord): boolean;
-    procedure ToggleAndRepaint(var aFlag: boolean);
     procedure DrawSpotCell(const aSpot: TSpotRecord; const aRect: TRect;
                            const aSelected: boolean);
     function  AgeColor(const aSpot: TSpotRecord): TColor;
@@ -147,6 +146,7 @@ implementation
 {$R *.lfm}
 
 uses
+   uSettingsModel,     // Settings.BandMap -- the eight display filters
   SysUtils,
   uLCLFormHelpers,   { OwnFormByMainWindow -- the LCL way to parent a tool window }
   uBandMapView,      { the seam this form fills in }
@@ -776,15 +776,15 @@ begin
          end;
       VK_B:
          begin
-         ToggleAndRepaint(BandMapAllBands);
+         Settings.BandMap.AllBands := not Settings.BandMap.AllBands;
          end;
       VK_M:
          begin
-         ToggleAndRepaint(BandMapAllModes);
+         Settings.BandMap.AllModes := not Settings.BandMap.AllModes;
          end;
       VK_D:
          begin
-         ToggleAndRepaint(BandMapDupeDisplay);
+         Settings.BandMap.DupeDisplay := not Settings.BandMap.DupeDisplay;
          end;
    end;
 end;
@@ -793,51 +793,43 @@ end;
 
 procedure TfrmBandMap.MenuPopup(Sender: TObject);
 begin
-   miAllBands.Checked    := BandMapAllBands;
-   miAllModes.Checked    := BandMapAllModes;
-   miDisplayCQ.Checked   := BandMapDisplayCQ;
-   miDupeDisplay.Checked := BandMapDupeDisplay;
-   miMultsOnly.Checked   := BandMapMultsOnly;
+   miAllBands.Checked    := Settings.BandMap.AllBands;
+   miAllModes.Checked    := Settings.BandMap.AllModes;
+   miDisplayCQ.Checked   := Settings.BandMap.DisplayCQ;
+   miDupeDisplay.Checked := Settings.BandMap.DupeDisplay;
+   miMultsOnly.Checked   := Settings.BandMap.MultsOnly;
 
    // Both SO2R items were only ever meaningful with two radios; the old window
    // expressed that by not ticking them, which is not the same as saying why.
    miQSYInactive.Enabled := Config.TwoRadioMode;
    miSO2RDisplay.Enabled := Config.TwoRadioMode;
    miQSYInactive.Checked := Config.QSYInactiveRadio and Config.TwoRadioMode;
-   miSO2RDisplay.Checked := BandMapSO2RDisplay and Config.TwoRadioMode;
-end;
-
-procedure TfrmBandMap.ToggleAndRepaint(var aFlag: boolean);
-begin
-   aFlag := not aFlag;
-   // A VIEW change: the filter moved, the list did not.  RequestRepaint is what
-   // the coalescing timer watches, so this needs no direct repaint call.
-   SpotsList.RequestRepaint;
+   miSO2RDisplay.Checked := Settings.BandMap.So2rDisplay and Config.TwoRadioMode;
 end;
 
 procedure TfrmBandMap.MenuAllBandsClick(Sender: TObject);
 begin
-   ToggleAndRepaint(BandMapAllBands);
+   Settings.BandMap.AllBands := not Settings.BandMap.AllBands;
 end;
 
 procedure TfrmBandMap.MenuAllModesClick(Sender: TObject);
 begin
-   ToggleAndRepaint(BandMapAllModes);
+   Settings.BandMap.AllModes := not Settings.BandMap.AllModes;
 end;
 
 procedure TfrmBandMap.MenuDisplayCQClick(Sender: TObject);
 begin
-   ToggleAndRepaint(BandMapDisplayCQ);
+   Settings.BandMap.DisplayCQ := not Settings.BandMap.DisplayCQ;
 end;
 
 procedure TfrmBandMap.MenuDupeDisplayClick(Sender: TObject);
 begin
-   ToggleAndRepaint(BandMapDupeDisplay);
+   Settings.BandMap.DupeDisplay := not Settings.BandMap.DupeDisplay;
 end;
 
 procedure TfrmBandMap.MenuMultsOnlyClick(Sender: TObject);
 begin
-   ToggleAndRepaint(BandMapMultsOnly);
+   Settings.BandMap.MultsOnly := not Settings.BandMap.MultsOnly;
 end;
 
 procedure TfrmBandMap.MenuDeleteSpotClick(Sender: TObject);
@@ -869,7 +861,10 @@ procedure TfrmBandMap.MenuQSYInactiveClick(Sender: TObject);
 begin
    if Config.TwoRadioMode then
       begin
-      ToggleAndRepaint(Config.QSYInactiveRadio);
+      (* NOT A SETTING -- a field of the Config record, so there is no setter
+        to raise the change and the repaint is asked for explicitly. *)
+      Config.QSYInactiveRadio := not Config.QSYInactiveRadio;
+      SpotsList.RequestRepaint;
       end;
 end;
 
@@ -877,7 +872,7 @@ procedure TfrmBandMap.MenuSO2RDisplayClick(Sender: TObject);
 begin
    if Config.TwoRadioMode then
       begin
-      ToggleAndRepaint(BandMapSO2RDisplay);
+      Settings.BandMap.So2rDisplay := not Settings.BandMap.So2rDisplay;
       end;
 end;
 
