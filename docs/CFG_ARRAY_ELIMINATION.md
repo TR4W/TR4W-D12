@@ -368,10 +368,11 @@ left costs either a string-model edit (a fixed `AnsiChar` array becoming a
 
 ---
 
-## 2f. What has to survive: 37 commands, not 400
+## 2f. ~~What has to survive: 37 commands, not 400~~
 
-> **The 37 is rows only, and is therefore too low -- see 2g. Contest files
-> also use `COLUMN WIDTH` on 73 lines, which is a generated arm.**
+> **WRONG TWICE OVER -- see 2g and 2i. The 37 counts rows only, and
+> NOTHING has to survive permanently: the contest `.cfg` is an IMPORT
+> format, not a file TR4W reads at every start.**
 
 The contest `.cfg` is the one text-to-value path that does NOT go away with the
 ini. CLAUDE.md is explicit that it is exempt and heading for SQLite, not JSON.
@@ -504,6 +505,58 @@ things worth knowing before making it:
 config-file path beside it. It was not examined; it is the next thing to look
 at when this decision is made, because it will have the same shape and should
 get the same answer.
+
+---
+
+## 2i. CORRECTION: the contest `.cfg` is an IMPORT, so NOTHING has to survive
+
+**NY4I, 2026-09-11:** *"the CFG file is read input only simply to convert to the
+json configuration. Once read, the CFG is never used again."*
+
+Section 2f concluded that a 37-command parser has to live forever because the
+contest `.cfg` is a permanent input. **That is wrong**, and the machinery that
+makes it wrong is already in the tree.
+
+### It is phase E2, and it is built
+
+`uProgramMain` around line 1588 says it plainly:
+
+> *a contest `.cfg` is read once, when the log is created, and captured into the
+> log. From then on the LOG says what the contest is. An operator who deletes
+> the `.cfg`, or opens the log on another machine, gets the same contest.*
+
+`LogStoreApplyContestConfig` applies the log's own captured settings AFTER every
+config file, so the log already has the last word. NY4I's note on that code is
+the same sentence he repeated today: *"when done, the .cfg file should not be
+necessary."*
+
+### Today versus the destination
+
+| | |
+|---|---|
+| **today** | `ReadInConfigFile(cfgCFG)` runs at EVERY start, and the log then overrides it |
+| **destination** | the `.cfg` is read ONCE, at capture, and never again |
+
+So the 37 commands need an IMPORTER, not a resident parser -- and an importer
+does not have to be `CFGCA`, does not have to run at startup, and does not have
+to be fast or complete for settings no contest file contains.
+
+### What that changes
+
+**The array can go entirely.** Every earlier section here was working toward
+shrinking it to a permanent core; there is no permanent core. What remains at
+the end is:
+
+1. a **one-time contest-file importer**, roughly 37 commands wide, living
+   wherever the log capture lives rather than in a settings table;
+2. the **one-time legacy settings import**, which `uSettingsModel` already does;
+3. the two **generated arms** of section 2g -- and 2h shows the window one is a
+   bridge with a modern owner as well, so it is a candidate for the same
+   treatment rather than a survivor.
+
+**This is the same rule twice.** "Old settings are migrated once and never used
+again" and "the CFG is read once and never used again" are one principle, and
+neither leaves a parser resident in the program.
 
 ---
 
