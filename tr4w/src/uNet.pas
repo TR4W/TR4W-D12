@@ -149,6 +149,34 @@ procedure SendMessageStatus;
 procedure TryConnectToNetwork;
 function SendToNet(var buf; Len: integer): integer;
 
+(* TELL THE OTHER POSITIONS A SETTING CHANGED.
+
+  RESTORED 2026-09-10.  IT WAS LOST IN THE LCL CONVERSION, silently, and this
+  is a port regression rather than a feature that never existed -- checked
+  against the D7 tree at C:\TR4W before saying so:
+
+      JCTRL2.PAS:1817  procedure SendParameterToNetwork(Line: MenuEntryType)
+      uOption.pas:919  the Options dialog, reading the value back out of its
+                       Win32 list view with ListView_GetItemText
+      uNet.pas:217     ParameterToNetwork.pnID := NET_PARAMETER_ID, set while
+                       the network WINDOW was being created
+
+  All three went with the windows that held them.  What survived is the
+  RECEIVE side, which still applies an inbound change -- so this build has
+  been obeying its peers while telling them nothing.
+
+  THE CONSEQUENCE IS SILENT AND REMOTE, which is why it lasted: an operator
+  changes a setting at one position, sees it take effect, and the second
+  position quietly keeps running the old value.  Nobody finds out until two
+  operators disagree mid-contest.
+
+  pnID IS SET HERE, not once at startup as D7 did it.  The D7 assignment lived
+  in the network window's WM_INITDIALOG, so a build without that window never
+  set it -- and a message with the wrong id is discarded by the server without
+  a word.  Setting it at the point of sending cannot be skipped by a window
+  that did not open. *)
+procedure SendParameterToNetwork(const aCommand, aValue: string);
+
 { IS THE MULTI-OP LINK UP?  Replaces `NetSocket <> 0`, which three other units
   were reading directly. }
 function NetIsConnected: boolean;
@@ -1498,6 +1526,33 @@ begin
   i := PosInClientsList[Index] - 1;
   SetClientCell(i, 10, string(PAnsiChar(@ProgressBarArray)));
   SetClientCell(i, 11, string(Msg.msCWMessage));
+end;
+
+procedure SendParameterToNetwork(const aCommand, aValue: string);
+begin
+   if not NetIsConnected then
+      begin
+      Exit;
+      end;
+
+   (* ZEROED, because both fields are ShortStrings inside a record that goes
+     out as BYTES: a shorter value written over a longer one would otherwise
+     leave the previous tail on the wire.  D7 zeroed them for the same
+     reason. *)
+   FillChar(ParameterToNetwork.pnCommand, SizeOf(ParameterToNetwork.pnCommand), 0);
+   FillChar(ParameterToNetwork.pnValue, SizeOf(ParameterToNetwork.pnValue), 0);
+
+   ParameterToNetwork.pnID      := NET_PARAMETER_ID;
+   ParameterToNetwork.pnCommand := ShortString(AnsiString(aCommand));
+   ParameterToNetwork.pnValue   := ShortString(AnsiString(aValue));
+
+   SendToNet(ParameterToNetwork, SizeOf(ParameterToNetwork));
+
+   if logger <> nil then
+      begin
+      logger.Debug('[Net] sent "%s" = "%s" to the other positions',
+                   [aCommand, aValue]);
+      end;
 end;
 
 function SendToNet(var buf; Len: integer): integer;

@@ -1579,7 +1579,11 @@ function SetCFGCommandValue(const aCommand, aValue: string): boolean;
 var
    keyShort, valueShort: ShortString;
    idKey, cmdValue: AnsiString;
+   idx: integer;
 begin
+   // The row, for its crNetwork flag. -1 when the command is not one of ours,
+   // which CheckCommand below will refuse anyway.
+   idx := FindCFGCommand(aCommand);
    // VALIDATE FIRST, PERSIST SECOND -- the same order, and for the same reason,
    // as ApplyRadioToSlot: CheckCommand is what moves the value into the live
    // globals AND what runs the row's crA hook and bounds check; the ini write
@@ -1587,10 +1591,18 @@ begin
    // CFGCA rejected into the operator's file, and the next start would stop on
    // it with "Invalid statement in config file".
    //
-   // Going through CheckCommand is also what preserves MULTI-OP SYNC: the send
-   // side reads crNetwork from the row, and uNet's receive side applies an
-   // inbound change by calling this same function.  A settings screen that
-   // assigned the global directly would leave the other positions stale.
+   (* MULTI-OP SYNC, AND THIS COMMENT WAS WRONG UNTIL 2026-09-10.
+
+     It said "the send side reads crNetwork from the row".  THERE WAS NO SEND
+     SIDE.  Nothing in this build filled a TParameterToNetwork or put one on
+     the wire -- the record was declared and never used, and its message id
+     was never even set.  Only the RECEIVE side survived the LCL conversion,
+     so this program has been obeying its peers while telling them nothing.
+
+     D7 sent it from JCTRL2.SendParameterToNetwork and from the Options
+     dialog, both of which went with the Win32 windows that held them.  It is
+     sent from here now -- a routine every settings screen already goes
+     through, rather than from a window that may not be open. *)
    //
    // Fresh AnsiStrings per call, not a reused buffer: the ini write takes
    // @s[1] as a null-terminated PAnsiChar, so a shorter value written over a
@@ -1653,6 +1665,17 @@ begin
          begin
          logger.Warn('[SetCFGCommandValue] "%s" applied but not saved: no ' +
                      'configuration store is available yet.', [aCommand]);
+         end;
+
+      (* AND TELL THE OTHER POSITIONS, if the row says this setting is shared.
+
+        AFTER the apply and the save, deliberately: a value CFGCA refused or
+        the store would not keep must not be announced to a peer as though it
+        had taken.  SendParameterToNetwork is a no-op when the link is down,
+        which is every single-operator station. *)
+      if (idx >= 0) and (CFGCA[idx].crNetwork = 1) then
+         begin
+         SendParameterToNetwork(aCommand, aValue);
          end;
       end;
 
