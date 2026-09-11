@@ -53,6 +53,7 @@ type
       procedure Test_ARangeIsPartOfTheType;
       procedure Test_AStoredValueOutOfRangeIsClamped;
       procedure Test_TheReadPathAndTheWritePathAgree;
+      procedure Test_EveryCommandNameIsTheOneAConfigFileUses;
       procedure Test_AStaleIniCannotOverrideTheStore;
       procedure Test_AContestFileStillOverridesForItsContest;
    public
@@ -880,6 +881,96 @@ end;
   distinction that was missing, rather than through the settings object.
   --------------------------------------------------------------------- *)
 
+(* ---------------------------------------------------------------------
+  THE WHOLE VOCABULARY, FROZEN.
+
+  A COUNT IS NOT ENOUGH, and that is the defect this replaces. The test
+  above asserts how MANY command names the model owns, which catches a name
+  appearing from nowhere. It cannot catch a name CHANGING: drop an Alias
+  line and the derived name silently takes its place, one name goes out and
+  one comes in, and the count is still right. The setting then stops
+  answering to the name in every .cfg an operator has, and nothing says so.
+
+  THE STARTUP CROSS-CHECK COVERS ONLY PART OF THIS. TModelSetting.Create
+  raises when the model does not own the command it names, which is loud and
+  which is what caught the CW batch -- but only 20 of these names have a
+  Preferences registration behind them. The rest had nothing pinning them at
+  all.
+
+  SO THE LIST IS SPELLED OUT. It is deliberately the maintenance cost it
+  looks like: adding a setting means adding its name here, and that is the
+  moment to ask whether the derived name is the one TR4W has always used.
+  A rename that reaches this list by being pasted from the failure message
+  is a rename somebody looked at.
+
+  ORDERED AND JOINED rather than compared element by element, so a failure
+  prints both vocabularies whole and the difference can be read directly.
+  --------------------------------------------------------------------- *)
+
+procedure TSettingsModelTests.Test_EveryCommandNameIsTheOneAConfigFileUses;
+const
+   (* ONE NAME PER LINE, on purpose: a vocabulary change has to be
+     readable in a diff, and a single 900-character line is not. *)
+   EXPECTED = ''
+      + '"ALL CW MESSAGES CHAINABLE",'
+      + '"BAND MAP ALL BANDS",'
+      + '"BAND MAP ALL MODES",'
+      + '"BAND MAP CALL WINDOW ENABLE",'
+      + '"BAND MAP DISPLAY CQ",'
+      + '"BAND MAP DISPLAY GHZ",'
+      + '"BAND MAP DISPLAY LIMIT",'
+      + '"BAND MAP DUPE DISPLAY",'
+      + '"BAND MAP ITEM HEIGHT",'
+      + '"BAND MAP ITEM WIDTH",'
+      + '"BAND MAP MULTS ONLY",'
+      + '"BAND MAP SIZE",'
+      + '"BAND MAP SO2R DISPLAY",'
+      + '"CW SPEED FROM DATABASE",'
+      + '"EXTERNAL LOGGER ADDRESS",'
+      + '"EXTERNAL LOGGER ENABLED",'
+      + '"EXTERNAL LOGGER PORT",'
+      + '"HF BAND ENABLE",'
+      + '"KEYPAD CW MEMORIES",'
+      + '"MMTTY ENGINE",'
+      + '"NO POLL DURING PTT",'
+      + '"PADDLE MONITOR TONE",'
+      + '"PADDLE PTT HOLD COUNT",'
+      + '"PADDLE SPEED",'
+      + '"PTT ENABLE",'
+      + '"PTT LOCKOUT",'
+      + '"PTT TURN ON DELAY",'
+      + '"PTT VIA COMMANDS",'
+      + '"RADIO TCP SERVER PORT",'
+      + '"SEND COMPLETE FOUR LETTER CALL",'
+      + '"SPOT COLLECTOR ENABLED",'
+      + '"SWAP PADDLES",'
+      + '"TUNE WITH DITS",'
+      + '"VHF BAND ENABLE",'
+      + '"WARC BAND ENABLE",'
+      + '"YCCC SO2R ENABLE"';
+var
+   s: TR4WSettings;
+   names: TStringList;
+begin
+   BeginTest('the command names are exactly the ones TR4W has always accepted');
+
+   s := TR4WSettings.Create;
+   try
+      names := s.CommandNames;
+      try
+         names.Sort;
+         CheckEquals(EXPECTED, string(names.CommaText),
+                     'the settings vocabulary changed -- if that is intended, '
+                     + 'paste the actual list here AFTER checking each new name '
+                     + 'is one a config file would really contain');
+      finally
+         names.Free;
+      end;
+   finally
+      s.Free;
+   end;
+end;
+
 procedure TSettingsModelTests.Test_AStaleIniCannotOverrideTheStore;
 var
    cmd: ShortString;
@@ -955,6 +1046,7 @@ begin
    Test_ARangeIsPartOfTheType;
    Test_AStoredValueOutOfRangeIsClamped;
    Test_TheReadPathAndTheWritePathAgree;
+   Test_EveryCommandNameIsTheOneAConfigFileUses;
    Test_AStaleIniCannotOverrideTheStore;
    Test_AContestFileStillOverridesForItsContest;
 end;
