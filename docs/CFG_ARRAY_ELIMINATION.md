@@ -308,8 +308,10 @@ the program has.
 
 ## 2e. What the remaining rows ARE -- and why "400 to go" was the wrong number
 
-> **Counts ROWS only. See 2g: `CheckCommand` accepts 127 more commands that
-> are not rows at all.**
+> **Two corrections: it counts ROWS only (see 2g), and its "279 bridges"
+> framing is WRONG (see 2j). Those rows are not bridges to dismantle one at
+> a time; they are the READER for two legacy file formats, and they retire
+> together.**
 
 Measured 2026-09-10, after seven settings had migrated, by classifying every
 row that still applies rather than counting them.
@@ -607,6 +609,80 @@ the end is:
 **This is the same rule twice.** "Old settings are migrated once and never used
 again" and "the CFG is read once and never used again" are one principle, and
 neither leaves a parser resident in the program.
+
+---
+
+## 2j. THE ROWS ARE NOT BRIDGES. THEY ARE THE IMPORTER, AND THEY RETIRE TOGETHER
+
+**Written 2026-09-11, and it corrects section 2e, which is the framing the last
+several days of work were built on.**
+
+2e said 279 rows "already have a modern owner" and called them bridges to be
+dismantled one at a time. Going looking for them found eight, and then seven of
+the eight turned out not to be bridges at all.
+
+### What a search for bridges actually returns
+
+A bridge is a row whose global a **store applier** already assigns. Not any
+second writer -- `fcontest` sets contest defaults, `cfgdef` the compiled
+defaults, `LogCW` the operator's speed mid-contest, and none of those makes a
+row redundant. Filtered to the four units that read `settings/tr4w.json` and
+put it into force, the answer is **eight rows**. And of those:
+
+| rows | what they really are |
+|---:|---|
+| 7 | the `WK ...` family -- and `SeedKeyerLibraryFromLegacy` seeds the keyer library FROM `WinKeySettings`, so the row is how a legacy WinKeyer configuration gets INTO the store |
+| 1 | `CONNECTION COMMAND`, already recorded in the agent memory as a live two-owners defect, and `crNetwork:1` so a peer can send it |
+
+**So there is essentially nothing to retire one at a time.** The seven are the
+same shape as the window colour arm in 2h: the row writes a global, a seeder
+copies that global into the store once, and the store owns it thereafter.
+
+### The convergence
+
+Three separate investigations arrived at the same answer this week:
+
+- the window colour arm (2h) -- an importer, seeded by `SeedElementColorsFromGlobals`;
+- the `WK` family (here) -- an importer, seeded by `SeedKeyerLibraryFromLegacy`;
+- the contest `.cfg` (2i) -- an importer, captured by `LogStoreApplyContestConfig`.
+
+**`CFGCA` is not a settings table with a few stale entries. It is the READER
+for two legacy file formats**, and nearly every row in it exists to get a value
+out of one of those files and into a modern store exactly once.
+
+### Which makes the task ONE change, not four hundred
+
+The rows do not retire individually, because individually each one is still the
+only way an unconverted station's value arrives. They retire **together**, the
+moment the legacy read stops happening at every start:
+
+```
+   today        ReadInConfigFile(cfgINI) and (cfgCFG) run on EVERY start,
+                and the stores then override what they set
+
+   destination  both run ONCE, at migration, and never again
+```
+
+`uLegacyIniPrompt` already states that rule for the ini -- *"READ ONCE per
+installation, to carry an existing configuration into the store, and then never
+again"* -- and section 2i shows phase E2 already does it for the contest file.
+**The startup read is the one thing still breaking it**, and CLAUDE.md has said
+so since before this work began: *"that startup read is the one place still
+breaking it."*
+
+So the remaining work is not 400 migrations. It is:
+
+1. make the two legacy reads happen once, guarded by a migration marker;
+2. prove every value they carry has a seeder into its store -- colours, keyer,
+   radios, UDP, cluster and contest all have one, and what has NOT got one is
+   the actual gap list;
+3. then delete the array, the ini vocabulary and the spelling tables in one
+   change, because nothing is left reading them.
+
+**Step 2 is the real work and it is a SEARCH, not a refactor.** A row with no
+seeder is a setting that would be silently lost at the moment the legacy read
+stops -- which is the same silent-loss failure this project keeps finding, and
+the reason to look for them before flipping the switch rather than after.
 
 ---
 
