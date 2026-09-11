@@ -7922,10 +7922,16 @@ end;
   RowTextAnsi and FreqAnsi buffers that exist only to keep the text alive --
   a real simplification, and a SEPARATE one, because it changes what each of
   the 36 assignments has to produce. See docs/WIN32_ARTIFACT_SWEEP.md. *)
-procedure EmitCol(const aColumn: Integer; const aText: PAnsiChar;
+(* A STRING, NOT A POINTER.
+
+  The body below is the whole argument: it took a PAnsiChar and immediately
+  made a string of it, so every caller was converting in one direction for
+  this to convert back in the other. What the pointer actually bought was
+  three classes of defect at the call sites -- see the note on elviText. *)
+procedure EmitCol(const aColumn: Integer; const aText: AnsiString;
                   aCollect: PLogRowText);
 begin
-   aCollect^[ColumnAtPos(aColumn)] := string(AnsiString(aText));
+   aCollect^[ColumnAtPos(aColumn)] := string(aText);
 end;
 
 procedure BuildLogRow(RXData: ContestExchange; aCollect: PLogRowText);
@@ -7935,7 +7941,11 @@ var
   (* WAS a single comctl32 list-view item. Two plain locals now -- see
     EmitCol. Named for what they carry: the column POSITION and its text. *)
   elviCol: Integer;
-  elviText: PAnsiChar;
+  (* AnsiString. It was a PAnsiChar, and every assignment below had to
+    manufacture one -- @Field[1] into a ShortString that has no terminator,
+    or inttopchar, which hands back a pointer into ONE SHARED 16-byte global
+    (TF.pas:138) that the next call overwrites. *)
+  elviText: AnsiString;
   Mults: Cardinal;
   MultString: array[0..7] of AnsiChar;
   FreqAnsi: AnsiString;   // D12: persistent buffer for pszText (see freq column below)
@@ -7957,10 +7967,12 @@ begin
 
   if RXData.ceRecordKind = rkNote then
      begin
-     RowTextAnsi := LclText(RC_NOTE);   elviText := PAnsiChar(RowTextAnsi);
+     RowTextAnsi := LclText(RC_NOTE);   elviText := RowTextAnsi;
      EmitCol(elviCol, elviText, aCollect);
      elviCol := ColumnsArray[logColCallsign].pos; //(logColCallsign);
-     elviText := @RXData.Prefix;
+     (* Prefix ITSELF. With no [1] this pointed at the ShortString's LENGTH
+       BYTE, so the column opened with a stray control character. *)
+     elviText := RXData.Prefix;
      EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
      end;
 
@@ -7980,7 +7992,7 @@ begin
 
   if RXData.ceQSO_Deleted then
      begin
-     RowTextAnsi := LclText(RC_DELETED);   elviText := PAnsiChar(RowTextAnsi);
+     RowTextAnsi := LclText(RC_DELETED);   elviText := RowTextAnsi;
      EmitCol(elviCol, elviText, aCollect);
      Exit;
      end;
@@ -7990,39 +8002,24 @@ begin
   // P1 := BandStringsArray[RXData.Band];
   // P2 := ModeString[RXData.Mode];
   // Issue #997: removed empty asm (commented push p1/p2); Format below does it.
-  TF.Format(LogDisplayBuffer, TWO_STRINGS, BandStringsArray[RXData.Band],
-    ModeStringArray[RXData.Mode]);
-
-  elviText := LogDisplayBuffer;
+  elviText := SysUtils.Format(AnsiString(TWO_STRINGS),
+                              [BandStringsArray[RXData.Band],
+                               ModeStringArray[RXData.Mode]]);
   EmitCol(elviCol, elviText, aCollect);
 
-  {
-  aYear := (RXData.tSysTime.qtYear + 2000) mod 100;
-  aMonthString := MonthTags[RXData.tSysTime.qtMonth];
-  asm
-  push aYear
-  push aMonthString
-  movzx eax, RXData.tSysTime.qtDay
-  push eax
-  end;
-  wsprintf(LogDisplayBuffer, '%02d-%s-%02d');
-  asm add esp,20
-  end;
-  }
   elviCol := ColumnsArray[logColDate].pos;
   // elviText := LogDisplayBuffer;
-  elviText := tGetDateFormat(RXData.tSysTime);
+  elviText := StrPas(tGetDateFormat(RXData.tSysTime));
   EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
 
-  TF.Format(LogDisplayBuffer, '%.2d:%.2d', RXData.tSysTime.qtHour,
-    RXData.tSysTime.qtMinute);
   elviCol := ColumnsArray[logColTime].pos; //Ord(logColTime);
-  elviText := LogDisplayBuffer;
+  elviText := SysUtils.Format(AnsiString('%.2d:%.2d'),
+                              [RXData.tSysTime.qtHour, RXData.tSysTime.qtMinute]);
   EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
 
   CID_TWO_BYTES[0] := RXData.ceComputerID;
   elviCol := ColumnsArray[logColComputerID].pos; //Ord(logColComputerID);
-  elviText := @CID_TWO_BYTES;
+  elviText := StrPas(CID_TWO_BYTES);
   EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
 
   if RXData.ceRecordKind = rkNote then
@@ -8032,7 +8029,7 @@ begin
   if RXData.NumberSent <> -1 then
      begin
      elviCol := ColumnsArray[logColNumberSent].pos; //Ord(logColNumberSent);
-     elviText := inttopchar(RXData.NumberSent {+10020});
+     elviText := AnsiString(IntToStr(RXData.NumberSent {+10020}));
      EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
      end;
 
@@ -8040,12 +8037,11 @@ begin
 
   if RXData.ceRecordKind in [rkQTCR, rkQTCS] then
      begin
-     TF.Format(LogDisplayBuffer, 'QTC: %s', @RXData.Callsign[1]);
-     elviText := LogDisplayBuffer;
+     elviText := SysUtils.Format(AnsiString('QTC: %s'), [RXData.Callsign]);
      end
   else
      begin
-     elviText := @RXData.Callsign[1]; //@RXData.Callsign[1];
+     elviText := RXData.Callsign; //@RXData.Callsign[1];
      end;
   EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
 
@@ -8054,19 +8050,19 @@ begin
        begin
        elviCol := ColumnsArray[logColNumberReceive].pos;
        //Ord(logColNumberReceive);
-       elviText := inttopchar(RXData.NumberReceived);
+       elviText := AnsiString(IntToStr(RXData.NumberReceived));
        EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
        end;
 
   if RXData.ceRecordKind in [rkQTCR, rkQTCS] then
      begin
      elviCol := ColumnsArray[logColQTC].pos; //Ord(logColQTC);
-     TF.Format(LogDisplayBuffer, '%.4d %s', RXData.NumberSent, @RXData.Kids[1]);
-     elviText := LogDisplayBuffer;
+     elviText := SysUtils.Format(AnsiString('%.4d %s'),
+                                 [RXData.NumberSent, RXData.Kids]);
      EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
 
      elviCol := ColumnsArray[logColNumberSent].pos; //Ord(logColNumberSent);
-     elviText := @RXData.RandomCharsReceived[1];
+     elviText := RXData.RandomCharsReceived;
      EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
      Exit;
      end;
@@ -8074,14 +8070,14 @@ begin
   if ColumnsArray[logColClass].Enable then
      begin
      elviCol := ColumnsArray[logColClass].pos; //Ord(logColDXMult);
-     elviText := @RXData.ceClass[1];
+     elviText := RXData.ceClass;
      EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
      end;
 
   if ColumnsArray[logColDXMult].Enable then
      begin
      elviCol := ColumnsArray[logColDXMult].pos; //Ord(logColDXMult);
-     elviText := @RXData.DXQTH[1];
+     elviText := RXData.DXQTH;
      EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
      end;
 
@@ -8090,7 +8086,7 @@ begin
      if RXData.Zone <> DUMMYZONE then
         begin
         elviCol := ColumnsArray[logColZoneMult].pos; //Ord(logColZoneMult);
-        elviText := inttopchar(RXData.Zone);
+        elviText := AnsiString(IntToStr(RXData.Zone));
         EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
         end;
      end;
@@ -8101,14 +8097,14 @@ begin
      if RXData.Power <> '' then
         begin
         elviCol := ColumnsArray[logColPower].pos;
-        elviText := @RXData.Power[1];
+        elviText := RXData.Power;
         EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
         end;
      end
   else if (ColumnsArray[logColFOC].Enable) then
      begin
      elviCol := ColumnsArray[logColFOC].pos;
-     elviText := @RXData.Power[1];
+     elviText := RXData.Power;
      EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
 
      end;
@@ -8116,7 +8112,7 @@ begin
   if ColumnsArray[logColPrefixMult].Enable then
      begin
      elviCol := ColumnsArray[logColPrefixMult].pos; //Ord(logColPrefixMult);
-     elviText := @RXData.Prefix[1];
+     elviText := RXData.Prefix;
      EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
      end;
 
@@ -8157,7 +8153,7 @@ begin
      begin
      MultString[Mults] := #0;
      elviCol := ColumnsArray[logColTotalMults].pos; //Ord(logColTotalMults);
-     elviText := MultString; //inttopchar(Mults);
+     elviText := StrPas(MultString);
      EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
      end;
 
@@ -8165,7 +8161,7 @@ begin
      begin
      elviCol := ColumnsArray[logColPrecedence].pos; //rd(logColPrecedence);
      CID_TWO_BYTES[0] := RXData.Precedence;
-     elviText := CID_TWO_BYTES;
+     elviText := StrPas(CID_TWO_BYTES);
      EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
      end;
 
@@ -8174,7 +8170,7 @@ begin
      // if RXData.Check <> 0 then //n4af 4.34.7
      begin
        elviCol := ColumnsArray[logColCheck].pos; //Ord(logColCheck);
-       elviText := inttopchar(RXData.Check);
+       elviText := AnsiString(IntToStr(RXData.Check));
        EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
      end;
      end;
@@ -8184,7 +8180,7 @@ begin
      if RXData.Chapter <> '' then
         begin
         elviCol := ColumnsArray[logColChapter].pos; //Ord(logColCheck);
-        elviText := @RXData.Chapter[1];
+        elviText := RXData.Chapter;
         EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
         end;
      end;
@@ -8196,22 +8192,22 @@ begin
         begin
         if LiteralDomesticQTH then
            begin
-           elviText := @RXData.QTHString[1]
+           elviText := RXData.QTHString
            end
         else
            begin
-           elviText := @RXData.DomesticQTH {DomMultQTH} [1];
+           elviText := RXData.DomesticQTH;
            end;
         end
      else
         begin
-        elviText := @RXData.QTHString[1];
+        elviText := RXData.QTHString;
         end;
      EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
      end;
 
   elviCol := ColumnsArray[logColPoints].pos; //Ord(logColPoints);
-  elviText := inttopchar(RXData.QSOPoints);
+  elviText := AnsiString(IntToStr(RXData.QSOPoints));
   EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
 
   if ColumnsArray[logColAge].Enable then
@@ -8219,7 +8215,7 @@ begin
      // if RXData.Age <> 0 then // 4.99.3
      begin
        elviCol := ColumnsArray[logColAge].pos; //Ord(logColAge);
-       elviText := inttopchar(RXData.Age);
+       elviText := AnsiString(IntToStr(RXData.Age));
        EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
      end;
      end;
@@ -8227,7 +8223,7 @@ begin
   if ColumnsArray[logColKids].Enable then
      begin
      elviCol := ColumnsArray[logColKids].pos; //Ord(logColAge);
-     elviText := @RXData.Kids[1];
+     elviText := RXData.Kids;
      EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
      end;
 
@@ -8236,7 +8232,7 @@ begin
      if RXData.Name <> '' then
         begin
         elviCol := ColumnsArray[logColName].pos; //Ord(logColName);
-        elviText := @RXData.Name[1];
+        elviText := RXData.Name;
         EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
         end;
      end;
@@ -8264,7 +8260,7 @@ begin
      // (FreqToPChar now returns a managed string temporary that dies at statement
      // end).  W-flip tracked with the ListView A->W surface.
      FreqAnsi := AnsiString(FreqToPChar {FreqToPCharWithoutHZ}(RXData.Frequency));
-     elviText := PAnsiChar(FreqAnsi);
+     elviText := FreqAnsi;
      EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
      end;
 

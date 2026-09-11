@@ -134,7 +134,6 @@ var
 
   GETREALPATHBUFFER                     : array[0..255] of AnsiChar;
 
-  LogDisplayBuffer                      : array[0..128 - 1] of AnsiChar;
   IntToPCharBuffer                      : array[0..15] of AnsiChar;
   FreqToPCharBuffer                     : array[0..15] of AnsiChar;
 
