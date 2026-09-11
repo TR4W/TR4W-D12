@@ -2511,55 +2511,70 @@ begin
 
   LooksLikeAGrid := False;
 
-  TestString := UpperCase(GridString);
-  if ((ActiveExchange = RSTAndOrGridExchange) or        // 4.118.1
-      (ActiveExchange = Grid2Exchange) or
-      (ActiveExchange = RSTAndGrid3Exchange) or
-      (ActiveExchange = GridExchange) or
-      (ActiveExchange = RSTQSONumberAndGridSquareExchange) or
-      (ActiveExchange = GridExchange)  or
-      (ActiveExchange = RSTNameAndQTHExchange) or // ny4i - Added for GeneralQSo to check if there is a grid in the exchange
-      (ActiveExchange = RSTAndPOTAPark) or        // ny4i Added so free-form POTA exchange can find a grid.
-      (ActiveExchange = RSTAndGridExchange)) then
+  (* THE CONTEST QUESTION FIRST, BEFORE ANY STRING WORK.
 
+    UpperCase(GridString) used to run above this test, so every call allocated
+    and upper-cased a string even when the contest can never carry a grid and
+    the answer was already known to be False. This is called once per log row
+    per repaint (logwind.pas:3042), which is why NY4I saw it eighty times in a
+    millisecond on 2026-09-11.
+
+    Comparing an enum is free; allocating a string is not. Asking the cheap
+    question first is the whole fix.
+
+    A SET, NOT NINE ORs -- and the rewrite found a duplicate: GridExchange was
+    tested TWICE in the old chain. A set cannot express that mistake. *)
+  if not (ActiveExchange in [RSTAndOrGridExchange,        // 4.118.1
+                             Grid2Exchange,
+                             RSTAndGrid3Exchange,
+                             GridExchange,
+                             RSTQSONumberAndGridSquareExchange,
+                             // ny4i -- GeneralQSO, to find a grid in the exchange
+                             RSTNameAndQTHExchange,
+                             // ny4i -- so the free-form POTA exchange can find a grid
+                             RSTAndPOTAPark,
+                             RSTAndGridExchange]) then
      begin
-     if (length(TestString) <> 4) and (length(TestString) <> 6) then
+     (* NO LOG LINE HERE. "This contest has no grid" is the ordinary answer
+       for most contests, not an anomaly, and it was being written once per
+       row per repaint -- thousands of identical lines that told a reader
+       nothing and buried the entries that matter. *)
+     Exit;
+     end;
+
+  TestString := UpperCase(GridString);
+  if (length(TestString) <> 4) and (length(TestString) <> 6) then
+     begin
+     Exit;
+     end;
+  //   if (TestString[1] < 'A') or (TestString[1] > 'R') then Exit;
+  //   if (TestString[2] < 'A') or (TestString[2] > 'R') then Exit;
+  for i := 1 to 2 do
+     begin
+     if (TestString[i] < 'A') or (TestString[i] > 'R') then
         begin
         Exit;
         end;
-  //   if (TestString[1] < 'A') or (TestString[1] > 'R') then Exit;
-  //   if (TestString[2] < 'A') or (TestString[2] > 'R') then Exit;
-     for i := 1 to 2 do
-        begin
-        if (TestString[i] < 'A') or (TestString[i] > 'R') then
-           begin
-           Exit;
-           end;
-        end;
+     end;
   //if (TestString[3] < '0') or (TestString[3] > '9') then Exit;
   //if (TestString[4] < '0') or (TestString[4] > '9') then Exit;
-     for i := 3 to 4 do
+  for i := 3 to 4 do
+     begin
+     if (TestString[i] < '0') or (TestString[i] > '9') then
         begin
-        if (TestString[i] < '0') or (TestString[i] > '9') then
-           begin
-           Exit;
-           end;
+        Exit;
         end;
+     end;
   //   if GridString[1] > 'Z' then GridString[1] := CHR(Ord(GridString[1]) - Ord('a') + Ord('A'));
   //   if GridString[2] > 'Z' then GridString[2] := CHR(Ord(GridString[2]) - Ord('a') + Ord('A'));
-     for i := 1 to 2 do
-        begin
-        if GridString[i] > 'Z' then
-           begin
-           GridString[i] := AnsiChar(Ord(GridString[i]) - Ord('a') + Ord('A'));
-           end;
-        end;
-     LooksLikeAGrid := True;
-     end
-  else
+  for i := 1 to 2 do
      begin
-     logger.debug('Exiting LooksLikeAGrid because ActiveExchange not related to a grid');
+     if GridString[i] > 'Z' then
+        begin
+        GridString[i] := AnsiChar(Ord(GridString[i]) - Ord('a') + Ord('A'));
+        end;
      end;
+  LooksLikeAGrid := True;
 end;
 
 
