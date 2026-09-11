@@ -134,6 +134,29 @@ type
       property TcpServerPort: integer read FTcpServerPort write FTcpServerPort;
    end;
 
+   (* THE YCCC SO2R+ BOX.  Yccc.So2rEnable derives 'YCCC SO2R ENABLE'. *)
+   TYcccSettings = class(TPersistent)
+   private
+      FSo2rEnable: boolean;
+   published
+      property So2rEnable: boolean read FSo2rEnable write FSo2rEnable;
+   end;
+
+   (* THE MMTTY RTTY ENGINE.
+
+     A STRING, WHERE THE GLOBAL WAS A FileNameType -- a fixed AnsiChar array.
+     That is the point of moving it rather than a side effect: its two readers
+     were `TR4W_MMTTYPATH[0] = #0` and `string(PAnsiChar(TR4W_MMTTYPATH))`,
+     which is exactly the Win32 string handling CLAUDE.md says the program is
+     getting rid of.  Both are now an ordinary comparison and an ordinary
+     assignment, and two PChars leave the tree with them. *)
+   TMmttySettings = class(TPersistent)
+   private
+      FEngine: string;
+   published
+      property Engine: string read FEngine write FEngine;
+   end;
+
    TR4WSettings = class(TPersistent)
    private
       // command name -> property path, built once by walking the RTTI.
@@ -141,6 +164,8 @@ type
       FExternalLogger: TExternalLoggerSettings;
       FSpotCollector: TSpotCollectorSettings;
       FRadio: TRadioServerSettings;
+      FYccc: TYcccSettings;
+      FMmtty: TMmttySettings;
       procedure BuildCommandMap;
       function PathForCommand(const aCommand: string): string;
    public
@@ -196,6 +221,8 @@ type
       property ExternalLogger: TExternalLoggerSettings read FExternalLogger;
       property SpotCollector: TSpotCollectorSettings read FSpotCollector;
       property Radio: TRadioServerSettings read FRadio;
+      property Yccc: TYcccSettings read FYccc;
+      property Mmtty: TMmttySettings read FMmtty;
    end;
 
 (* THE ONE INSTANCE.  Created on first use so no unit's initialisation order
@@ -260,6 +287,8 @@ begin
    FExternalLogger := TExternalLoggerSettings.Create;
    FSpotCollector  := TSpotCollectorSettings.Create;
    FRadio          := TRadioServerSettings.Create;
+   FYccc           := TYcccSettings.Create;
+   FMmtty          := TMmttySettings.Create;
 
    FCommands := TStringList.Create;
    FCommands.CaseSensitive := False;
@@ -271,6 +300,8 @@ end;
 destructor TR4WSettings.Destroy;
 begin
    FCommands.Free;
+   FMmtty.Free;
+   FYccc.Free;
    FRadio.Free;
    FSpotCollector.Free;
    FExternalLogger.Free;

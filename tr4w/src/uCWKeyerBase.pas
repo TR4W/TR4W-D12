@@ -134,6 +134,7 @@ procedure WarnIfKeyerConfigsConflict;
 implementation
 
 uses
+   uSettingsModel,   // Settings -- where retired CFGCA rows live
    SysUtils, Log4D, MainUnit, uWinKey, uYCCCSO2R, LogRadio, uRadioRegistry;
 
 var
@@ -235,7 +236,7 @@ begin
       (Radio2.CWByCAT and Radio2.HasCapability(rcCWByCAT));
 
    Result := catConfigured and
-             (WinKeySettings.wksWinKey2Enable or YCCCSo2rEnable);
+             (WinKeySettings.wksWinKey2Enable or Settings.Yccc.So2rEnable);
 end;
 
 procedure WarnIfKeyerConfigsConflict;
@@ -243,7 +244,7 @@ begin
    // STILL a conflict under a profile: both of these are global enables, only
    // one can key, and YCCC SO2R ENABLE is csNew -- still owned by the ini, not
    // by the keyer library. Revisit when YCCC joins the library.
-   if WinKeySettings.wksWinKey2Enable and YCCCSo2rEnable then
+   if WinKeySettings.wksWinKey2Enable and Settings.Yccc.So2rEnable then
       begin
       logger.Warn('CW keyer config conflict: WINKEYER ENABLE and YCCC SO2R ENABLE are both set. '
                 + 'The WinKeyer wins when it opens; the YCCC box will not key CW.');

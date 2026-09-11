@@ -275,6 +275,8 @@ begin
         likewise, and note it is the server TR4W RUNS, not a radio port. *)
       CheckTrue(s.OwnsCommand('SPOT COLLECTOR ENABLED'), 'the DXLab bridge');
       CheckTrue(s.OwnsCommand('RADIO TCP SERVER PORT'),  'the radio TCP server');
+      CheckTrue(s.OwnsCommand('YCCC SO2R ENABLE'), 'the YCCC SO2R+ box');
+      CheckTrue(s.OwnsCommand('MMTTY ENGINE'),     'the RTTY engine path');
 
       // Case-folded, because a config file is read upper-cased and a hand
       // edit is not.
@@ -291,7 +293,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(5, names.Count, 'one name per migrated setting, no more');
+         CheckEquals(7, names.Count, 'one name per migrated setting, no more');
       finally
          names.Free;
       end;

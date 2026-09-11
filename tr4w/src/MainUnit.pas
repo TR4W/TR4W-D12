@@ -666,6 +666,7 @@ const
 implementation
 
 uses
+   uSettingsModel,   // Settings -- where retired CFGCA rows live
   uAppPaths,   // ContestDir -- where an operator's contest files live
    uAppTimers,   (* StartAppTimer / StopAppTimer -- LCL TTimers, not SetTimer *)
   Menus,              // TMenuItem -- the menu is a TMainMenu now
@@ -6334,7 +6335,7 @@ begin
 
   if ID = tw_MMTTYWINDOW_INDEX then
      begin
-     if TR4W_MMTTYPATH[0] = #0 then
+     if Settings.Mmtty.Engine = '' then
         begin
         SetCommand('MMTTY ENGINE');
         Exit;

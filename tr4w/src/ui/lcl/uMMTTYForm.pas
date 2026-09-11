@@ -83,6 +83,7 @@ implementation
 {$R *.lfm}
 
 uses
+   uSettingsModel,   // Settings -- where retired CFGCA rows live
 {$IFDEF WINDOWS}
    Windows,           { MoveWindow / SendMessage -- the hosted RichEdit.
                         MMTTY is a separate WINDOWS program and RICHED32 is a
@@ -191,7 +192,7 @@ begin
    //   -u  control buttons
    //   -r  control menus in addition to the above
    RunWindowsUtility(SysUtils.Format('"%s" -t -s -u -r',
-                                     [string(PAnsiChar(TR4W_MMTTYPATH))]));
+                                     [Settings.Mmtty.Engine]));
 
 {$IFDEF WINDOWS}
    (* THE OUTPUT PANE IS A RICHED32 CONTROL, AND THAT IS OUR CHOICE, NOT

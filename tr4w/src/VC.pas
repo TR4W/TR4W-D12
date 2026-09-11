@@ -3073,7 +3073,9 @@ var
   TR4W_LATESTCFG_FILENAME               : FileNameType;
 
 
-  TR4W_MMTTYPATH                        : FileNameType;
+  (* TR4W_MMTTYPATH MOVED, 2026-09-10 -- Settings.Mmtty.Engine, and it is a
+    STRING now.  Its two readers indexed a fixed AnsiChar array and cast one to
+    PAnsiChar; both are ordinary string code now. *)
 
   TR4W_HAMLIB_DEBUG                     : boolean;
   TR4W_HAMLIB_ASYNC_ONLY                : boolean;  // Disable heartbeat — async callbacks only (testing)

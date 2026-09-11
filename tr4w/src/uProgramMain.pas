@@ -2085,7 +2085,7 @@ begin
       logger.Info('Created WinKeyer thread with threadid of %d',[wkThreadID] );
       end;
 
-   if YCCCSo2rEnable then
+   if Settings.Yccc.So2rEnable then
       begin
       logger.Info('Opening YCCC SO2R box');
       if not YCCCOpen then

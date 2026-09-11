@@ -62,7 +62,8 @@ interface
 
 { Global enable flag - target of the 'YCCC SO2R ENABLE' config command }
 var
-   YCCCSo2rEnable: boolean = False;
+   (* YCCCSo2rEnable MOVED, 2026-09-10 -- Settings.Yccc.So2rEnable in
+     uSettingsModel. *)
 
 { True once the HID device is open and threads are running }
    ycccActive: boolean = False;
@@ -92,6 +93,7 @@ implementation
 {$IFDEF WINDOWS}
 
 uses
+   uSettingsModel,   // Settings -- where retired CFGCA rows live
    Windows,
    Log4D, SysUtils,
    TF;   { tCreateThread -- guarded worker threads }
