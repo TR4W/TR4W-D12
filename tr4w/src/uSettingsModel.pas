@@ -137,6 +137,10 @@ type
    TBandMapItemHeight   = 12..50;
    TBandMapItemWidth    = 100..200;
    TBandMapSize         = 0..8;
+   (* MINUTES, and the help file is the authority on that -- uSpots and the
+     form both multiply by 60 before comparing. Named here so the unit is
+     attached to the type rather than rediscovered at each reader. *)
+   TBandMapDecayTime    = 0..65535;   // was crMin:0, crMax:MAXWORD
    TPttTurnOnDelay      = 0..65535;   // was crMin:0, crMax:MAXWORD
    TPaddleMonitorTone   = 0..65535;   // was crMin:0, crMax:MAXWORD
    TPaddlePttHoldCount  = 0..65535;   // was crMin:0, crMax:MAXWORD
@@ -295,6 +299,7 @@ type
       FSo2rDisplay: boolean;
       FDisplayLimit: TBandMapDisplayLimit;
       FItemHeight: TBandMapItemHeight;
+      FDecayTime: TBandMapDecayTime;
       FItemWidth: TBandMapItemWidth;
       FSize: TBandMapSize;
       procedure SetAllBands(aValue: boolean);
@@ -342,6 +347,16 @@ type
         a settings change, and it is not one to make blind. *)
       // Was BandMapItemHeight in uBandmap.pas.
       property ItemHeight: TBandMapItemHeight read FItemHeight write FItemHeight;
+      (* Was the global BandMapDecayTime in logwind.pas. BAND MAP DECAY
+        TIME derives exactly, so no alias.
+
+        ITS crA HOOK WAS DEAD. F_BAND_MAP_DECAY_TIME's entire body is
+        commented out and it returns True -- the two lines that once
+        derived a multiplier and divided by it are gone. So this needs no
+        setter side effect, and AdditionalProcsArray entry 5 now has no
+        user. Its crP was 1, the band map redraw, which uSettingsEffects
+        already raises for the whole BandMap group. *)
+      property DecayTime: TBandMapDecayTime read FDecayTime write FDecayTime;
       // Was BandMapItemWidth in uBandmap.pas.
       property ItemWidth: TBandMapItemWidth read FItemWidth write FItemWidth;
       // Was BandMapSize in VC.pas.
@@ -734,6 +749,9 @@ begin
    FItemHeight       := 14;
    FItemWidth        := 135;
    FSize             := 3;
+   (* 60 MINUTES -- the value logwind.pas gave the global. The commented
+     default in cfgdef.pas agreed, which is why this one needed no ruling. *)
+   FDecayTime        := 60;
 end;
 
 (* EIGHT SETTERS THAT DIFFER ONLY IN WHICH FIELD THEY GUARD.

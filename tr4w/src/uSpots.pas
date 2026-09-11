@@ -667,7 +667,7 @@ begin
 
   Difference := SpotAgeSeconds(FList^[i]);
   FList^[i].FAgeSeconds := Difference;
-  if Difference >= BandMapDecayTime * 60 then
+  if Difference >= Settings.BandMap.DecayTime * 60 then
      begin
      Delete(i)
      end

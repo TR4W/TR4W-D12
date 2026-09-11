@@ -543,7 +543,6 @@ var
     144200000
     );
 
-  BandMapDecayTime                      : integer = 60;
   BandMapDecayValue                     : integer = 60; {KK1L: 6.65}
   BandMapDecayMultiplier                : integer = 1; {KK1L: 6.65}
   BandMapEntryInCallWindow              : boolean;
@@ -2855,7 +2854,7 @@ begin
      with BandMapBlinkingCallRecord^ do
         begin
         StatusByte := StatusByte and $C0;
-        StatusByte := (BandMapDecayTime and $3F) or StatusByte;
+        StatusByte := (Settings.BandMap.DecayTime and $3F) or StatusByte;
         end;
      end;
 

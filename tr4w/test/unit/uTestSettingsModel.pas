@@ -343,7 +343,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(36, names.Count, 'one name per migrated setting, no more');
+         CheckEquals(37, names.Count, 'one name per migrated setting, no more');
       finally
          names.Free;
       end;
@@ -916,6 +916,7 @@ const
       + '"BAND MAP ALL BANDS",'
       + '"BAND MAP ALL MODES",'
       + '"BAND MAP CALL WINDOW ENABLE",'
+      + '"BAND MAP DECAY TIME",'
       + '"BAND MAP DISPLAY CQ",'
       + '"BAND MAP DISPLAY GHZ",'
       + '"BAND MAP DISPLAY LIMIT",'
@@ -1022,8 +1023,13 @@ begin
              'so is one that left the Config record');
 
    (* And a command that never moved still answers from its row. *)
+   (* BAND MAP DECAY TIME HAS SINCE MIGRATED TOO, so this no longer proves
+     what it was written to prove -- it now takes the Settings.OwnsCommand
+     arm like the two above it. Kept because the ANSWER still has to be True:
+     the contest .cfg is the one source that must still win, and it decides by
+     asking this. *)
    CheckTrue(CommandIsJSONOwned('BAND MAP DECAY TIME'),
-             'an unmigrated csJSON row is unaffected');
+             'still JSON-owned now that it is a property');
 end;
 
 procedure TSettingsModelTests.RunAllTests;

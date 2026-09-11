@@ -492,7 +492,7 @@ var
    frac: double;
    grey: integer;
 begin
-   life := BandMapDecayTime * 60;
+   life := Settings.BandMap.DecayTime * 60;
    if life <= FRESH_SECONDS then
       begin
       // A decay time inside the fresh band leaves nothing to ramp over.

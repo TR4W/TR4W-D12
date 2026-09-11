@@ -130,7 +130,6 @@ begin
     BandMapModeCutoffFrequency[Band6] := 50100000;
     BandMapModeCutoffFrequency[Band2] := 144200000;
   }
-  //  BandMapDecayTime := 60;
   //  BandMapDecayValue := 60; {KK1L: 6.65}
   //  BandMapDecayMultiplier := 1; {KK1L: 6.65}
   //  BandMapDupeDisplay := True;
