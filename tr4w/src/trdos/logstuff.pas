@@ -5780,8 +5780,17 @@ begin
      Exit;
      end;
 
-  TF.Format(QuickDisplayBuffer, PAnsiChar(LclText(TC_SAVINGTO)), TR4W_LOG_FILENAME, TR4W_FLOPPY_FILENAME);
-  QuickDisplay(QuickDisplayBuffer);
+  (* SysUtils.Format STRAIGHT INTO QuickDisplay, which takes a string.
+
+    TF.Format wrote into QuickDisplayBuffer -- a 256-byte global AnsiChar
+    array -- and QuickDisplay then converted it back. The buffer was never
+    wanted here: it is a leftover from when TF.Format was `external user32
+    name 'wsprintfA'` and the destination had to be memory the API could
+    write. It is pure Pascal now and already builds a string internally, so
+    the round trip through a global bought nothing and capped the result at
+    1023 bytes on the way. *)
+  QuickDisplay(SysUtils.Format(AnsiString(LclText(TC_SAVINGTO)),
+                               [TR4W_LOG_FILENAME, TR4W_FLOPPY_FILENAME]));
 
   (* CopyFile (LazFileUtils), not Windows.CopyFileA. The False was
     bFailIfExists -- overwrite -- which is CopyFile's default. *)
@@ -5792,14 +5801,17 @@ begin
                   AnsiString(TR4W_FLOPPY_FILENAME)) then
      begin
      ErrorMsg := SysUtils.SysErrorMessage(GetLastOSError);
-     TF.Format(QuickDisplayBuffer, '%s: %s', TR4W_FLOPPY_FILENAME, PAnsiChar(ErrorMsg));
-     QuickDisplay(QuickDisplayBuffer);
+     (* AND THE PAnsiChar(ErrorMsg) GOES WITH THE BUFFER. It existed only to
+       satisfy a cdecl varargs signature; an array of const takes the
+       AnsiString itself. *)
+     QuickDisplay(SysUtils.Format(AnsiString('%s: %s'),
+                                  [TR4W_FLOPPY_FILENAME, ErrorMsg]));
      DoABeep(Warning);
      end
   else
      begin
-     TF.Format(QuickDisplayBuffer, PAnsiChar(LclText(TC_FILESAVEDTOSUCCESSFULLY)), TR4W_FLOPPY_FILENAME);
-     QuickDisplay(QuickDisplayBuffer);
+     QuickDisplay(SysUtils.Format(AnsiString(LclText(TC_FILESAVEDTOSUCCESSFULLY)),
+                                  [TR4W_FLOPPY_FILENAME]));
      end;
 end;
 

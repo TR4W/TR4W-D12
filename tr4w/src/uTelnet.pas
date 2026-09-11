@@ -1763,10 +1763,13 @@ begin
        begin
        Stringtype := tstAlert;
 
-       TF.Format(QuickDisplayBuffer,
-         'New DX Cluster spot: %s was spoted by %s on %s', @TempSpot.FCall[1],
-         @TempSpot.FSourceCall[1], TempSpot.FFreqString);
-       QuickDisplay(QuickDisplayBuffer);
+       (* THE ShortStringS THEMSELVES, not @X[1].  Each of those was a bare
+         pointer into a string with no NUL terminator, so the formatter read
+         past the end of the value; an array of const takes the ShortString
+         and its length together. *)
+       QuickDisplay(SysUtils.Format(
+          AnsiString('New DX Cluster spot: %s was spoted by %s on %s'),
+          [TempSpot.FCall, TempSpot.FSourceCall, TempSpot.FFreqString]));
 
        Tree.QuickBeep;
        end;

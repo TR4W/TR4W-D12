@@ -1651,8 +1651,7 @@ end;
 
 procedure DisplayAutoQSLInterval;
 begin
-  TF.Format(QuickDisplayBuffer, 'AUTO QSL INTERVAL = %u', AutoQSLInterval);
-  SetTextInQuickCommandWindow(QuickDisplayBuffer);
+  SetTextInQuickCommandWindow(SysUtils.Format(AnsiString('AUTO QSL INTERVAL = %u'), [AutoQSLInterval]));
 end;
 
 procedure DisplayTotalScore {(Score: LONGINT)};
@@ -3447,10 +3446,11 @@ end;
 
 procedure DispalayDupe;
 begin
-  TF.Format(QuickDisplayBuffer, PAnsiChar(LclText(TC_ISADUPE)), @CallWindowString[1]);
-
 //  DispalayB4(SW_HIDE);
-  QuickDisplay(QuickDisplayBuffer);
+  (* CallWindowString itself, not @CallWindowString[1] -- see the note in
+    uTelnet: the pointer form read past the end of a ShortString. *)
+  QuickDisplay(SysUtils.Format(AnsiString(LclText(TC_ISADUPE)),
+                               [CallWindowString]));
   if DupeCheckSound <> DupeCheckNoSound then
      begin
      DoABeep(ThreeHarmonics);
@@ -3700,8 +3700,7 @@ var
 begin
   FillChar(ID, SizeOf(ID), 0);
   ID := KeyId(AutoCQMemory);
-  TF.Format(QuickDisplayBuffer, PAnsiChar(LclText(TC_REPEATING)), @ID[1], AutoCQDelayTime);
-  SetTextInQuickCommandWindow(QuickDisplayBuffer);
+  SetTextInQuickCommandWindow(SysUtils.Format(AnsiString(LclText(TC_REPEATING)), [@ID[1], AutoCQDelayTime]));
 end;
 
 

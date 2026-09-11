@@ -281,16 +281,6 @@ begin
            tCallWindowSetFocus;
            WindowDupeCheck := True;
            DispalayDupe;
-     {
-      asm
-      lea eax,[CallWindowString+1]
-      push eax
-      end;
-      wsprintf(QuickDisplayBuffer, TC_WASADUPE);
-      asm add esp,12
-      end;
-      QuickDisplay(QuickDisplayBuffer);
-}
      //      DispalayB4(SW_HIDE);
      //      Windows.ShowWindow(B4StatusWindowHandle, SW_HIDE);
      //      if DupeCheckSound <> DupeCheckNoSound then DoABeep(ThreeHarmonics);
@@ -1635,8 +1625,7 @@ begin
                 RXData.QSOPoints := 0;
                       //                              if ReminderPostedCount = 0 then
                 begin
-                  TF.Format(QuickDisplayBuffer, PAnsiChar(LclText(TC_YOUALREADYWORKEDIN)), @RXData.Callsign[1], @RXData.DomMultQTH[1]);
-                  QuickDisplay(QuickDisplayBuffer);
+                  QuickDisplay(SysUtils.Format(AnsiString(LclText(TC_YOUALREADYWORKEDIN)), [@RXData.Callsign[1], @RXData.DomMultQTH[1]]));
                   if DupeCheckSound <> DupeCheckNoSound then
                      begin
                      DoABeep(ThreeHarmonics);
@@ -1651,8 +1640,7 @@ begin
         begin
         //                  if ReminderPostedCount = 0 then
     begin
-      TF.Format(QuickDisplayBuffer, PAnsiChar(LclText(TC_ISADUPEANDWILLBELOGGEDWITHZERO)), @RXData.Callsign[1]);
-      QuickDisplay(QuickDisplayBuffer);
+      QuickDisplay(SysUtils.Format(AnsiString(LclText(TC_ISADUPEANDWILLBELOGGEDWITHZERO)), [@RXData.Callsign[1]]));
       if DupeCheckSound <> DupeCheckNoSound then
          begin
          DoABeep(ThreeHarmonics);
@@ -3192,8 +3180,7 @@ begin
          end;
       CloseLogFile;
       Logger.Info('%d records sent to UDP',[nCount]);
-      TF.Format(QuickDisplayBuffer, '%d log records sent to UDP', nCount);
-      QuickDisplay(QuickDisplayBuffer);
+      QuickDisplay(SysUtils.Format(AnsiString('%d log records sent to UDP'), [nCount]));
    finally
       FormatSettings.DecimalSeparator := SaveDecimalSeparator;
    end;

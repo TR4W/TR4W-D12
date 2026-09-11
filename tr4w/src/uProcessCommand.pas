@@ -275,8 +275,7 @@ begin
               end;
 
            // Issue #997: asm wsprintf-push -> TF.Format.
-           TF.Format(QuickDisplayBuffer, '"%s" command is executed.', PAnsiChar(sCommandsArray[i].caCommand));
-           QuickDisplay(QuickDisplayBuffer);
+           QuickDisplay(SysUtils.Format(AnsiString('"%s" command is executed.'), [PAnsiChar(sCommandsArray[i].caCommand)]));
 
            Break;
 
@@ -727,16 +726,14 @@ begin
        begin
        if CFGCA[i].crType <> ctBoolean then
           begin
-          TF.Format(QuickDisplayBuffer, '%s is not a boolean setting', @scFileName[1]);
-          QuickDisplay(QuickDisplayBuffer);
+          QuickDisplay(SysUtils.Format(AnsiString('%s is not a boolean setting'), [@scFileName[1]]));
           Exit;
           end;
 
        if CommandIsJSONOwned(cmdName) then
           begin
           // CheckCommand would accept and discard this; say so instead.
-          TF.Format(QuickDisplayBuffer, '%s is owned by the JSON settings store', @scFileName[1]);
-          QuickDisplay(QuickDisplayBuffer);
+          QuickDisplay(SysUtils.Format(AnsiString('%s is owned by the JSON settings store'), [@scFileName[1]]));
           Exit;
           end;
 
@@ -746,22 +743,23 @@ begin
        // the crP change-handler), syncs multi-op, and persists.
        if SetCFGCommandValue(cmdName, string(BA[newValue])) then
           begin
-          TF.Format(QuickDisplayBuffer, '%s=%s', @scFileName[1], BA[PBoolean(CFGCA[i].crAddress)^]);
+          (* Reported UNCONDITIONALLY -- this used to sit inside `if crP <> 0`,
+            so every boolean without a change-handler toggled in complete
+            silence.  Said in each arm now that the shared buffer is gone;
+            there is nothing left for the two branches to share. *)
+          QuickDisplay(SysUtils.Format(AnsiString('%s=%s'),
+                       [scFileName, BA[PBoolean(CFGCA[i].crAddress)^]]));
           end
        else
           begin
-          TF.Format(QuickDisplayBuffer, '%s was refused', @scFileName[1]);
+          QuickDisplay(SysUtils.Format(AnsiString('%s was refused'),
+                       [scFileName]));
           end;
-
-       // Reported UNCONDITIONALLY.  This used to sit inside `if crP <> 0`, so
-       // every boolean without a change-handler toggled in complete silence.
-       QuickDisplay(QuickDisplayBuffer);
        Exit;
        end;
     end;
 
-  TF.Format(QuickDisplayBuffer, 'No setting called %s', @scFileName[1]);
-  QuickDisplay(QuickDisplayBuffer);
+  QuickDisplay(SysUtils.Format(AnsiString('No setting called %s'), [@scFileName[1]]));
 end;
 
 procedure scWK_RESET;

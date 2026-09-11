@@ -1692,8 +1692,7 @@ begin
   case ServMess.smMessage of
     SM_SERVERLOG_CHANGED_MESSAGE:
       begin
-        TF.Format(QuickDisplayBuffer, PAnsiChar(LclText(TC_SERVER_LOG_CHANGED)), ServMess.smParam);
-        QuickDisplay(QuickDisplayBuffer);
+        QuickDisplay(SysUtils.Format(AnsiString(LclText(TC_SERVER_LOG_CHANGED)), [ServMess.smParam]));
       end;
     SM_CLEARALLLOGS_MESSAGE: QuickDisplay(TC_ALL_LOGS_NETWORK_CLEARED);
 //    SM_CLEARSERVERLOG_MESSAGE: ShowTrayTips();

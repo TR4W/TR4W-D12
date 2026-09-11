@@ -7028,8 +7028,7 @@ begin
 
   if not IsAGoodCall(RData.Callsign) then
      begin
-     TF.Format(QuickDisplayBuffer, PAnsiChar(LclText(TC_HASIMPROPERSYNTAX)), @RData.Callsign[1]);
-     QuickDisplay(QuickDisplayBuffer);
+     QuickDisplay(SysUtils.Format(AnsiString(LclText(TC_HASIMPROPERSYNTAX)), [@RData.Callsign[1]]));
      DoABeep(Warning);
      Exit;
      end;
@@ -9983,8 +9982,7 @@ var
 
   procedure DisplayLoadedQSOs;
   begin
-    TF.Format(QuickDisplayBuffer, PAnsiChar(LclText('%u ' + TC_QSO_IMPORTED)), QSOCounter);
-    SetTextInQuickCommandWindow(QuickDisplayBuffer);
+    SetTextInQuickCommandWindow(SysUtils.Format(AnsiString(LclText('%u ' + TC_QSO_IMPORTED)), [QSOCounter]));
   end;
 begin
   { This is a total rewrite of the ADIF import processing. - NY4I 2020 Jul 2
