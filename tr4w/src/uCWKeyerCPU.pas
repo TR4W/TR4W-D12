@@ -43,7 +43,7 @@ type
       function DeleteLastChar: boolean; override;
       procedure Flush; override;
       procedure SetSpeed(wpm: integer); override;
-      // No tune: Config.TuneWithDits is functionally dead -- out of scope.
+      // No tune: Settings.Cw.TuneWithDits is functionally dead -- out of scope.
    end;
 
 implementation

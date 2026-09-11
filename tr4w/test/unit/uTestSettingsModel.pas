@@ -308,6 +308,25 @@ begin
       CheckTrue(s.OwnsCommand('YCCC SO2R ENABLE'), 'the YCCC SO2R+ box');
       CheckTrue(s.OwnsCommand('MMTTY ENGINE'),     'the RTTY engine path');
 
+      (* THE FOUR CW ALIASES, named individually because they are the group
+        where the derivation and the legacy names disagree most. Each of these
+        would be silently absent if its Alias line were dropped, and the count
+        below would still pass -- the derived name would simply take its
+        place. *)
+      CheckTrue(s.OwnsCommand('ALL CW MESSAGES CHAINABLE'), 'CW prefix in the middle');
+      CheckTrue(s.OwnsCommand('KEYPAD CW MEMORIES'),        'CW prefix in the middle');
+      CheckTrue(s.OwnsCommand('SEND COMPLETE FOUR LETTER CALL'), 'no CW prefix at all');
+      CheckTrue(s.OwnsCommand('TUNE WITH DITS'),            'no CW prefix at all');
+      (* And the one that derives exactly, so the aliases above are the
+        exception rather than the rule for this group. *)
+      CheckTrue(s.OwnsCommand('CW SPEED FROM DATABASE'), 'derives with no alias');
+
+      (* THE DERIVED NAMES THE ALIASES REPLACED MUST BE GONE. Leaving both
+        would put commands TR4W has never had into CommandNames, where
+        Preferences would offer them and a peer sync would accept them. *)
+      CheckFalse(s.OwnsCommand('CW ALL MESSAGES CHAINABLE'), 'the invented name is not offered');
+      CheckFalse(s.OwnsCommand('CW TUNE WITH DITS'),         'nor this one');
+
       // Case-folded, because a config file is read upper-cased and a hand
       // edit is not.
       CheckTrue(s.OwnsCommand('external logger port'), 'lower case');
@@ -323,7 +342,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(31, names.Count, 'one name per migrated setting, no more');
+         CheckEquals(36, names.Count, 'one name per migrated setting, no more');
       finally
          names.Free;
       end;

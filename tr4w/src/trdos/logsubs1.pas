@@ -86,6 +86,7 @@ uses
   uRadioPolling,
   uRadioRegistry,   // the rc* capability members (re-exported for using units)
   LOGSUBS2,
+  uSettingsModel,   // Settings.Cw -- the CW settings that are not session state
   MainUnit;
 
 procedure PutUpExchangeMenu;
@@ -320,7 +321,7 @@ begin
        //  Esc_Counter := 0; // 4.53.7 reset if function key pressed
        DisplayCodeSpeed {(CodeSpeed, CWEnabled, DVPOn, ActiveMode)};
 
-       if Config.AllCWMessagesChainable then
+       if Settings.Cw.AllMessagesChainable then
           begin
           if CWStillBeingSent then
              begin
@@ -444,7 +445,7 @@ begin
      end
   else
      begin
-     if Config.CWSpeedFromDataBase then
+     if Settings.Cw.SpeedFromDatabase then
         begin
         StationSpeed := CD.GetCodeSpeed(RootCall(CallsignICameBackTo));
 

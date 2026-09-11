@@ -95,8 +95,6 @@ type
       AltDCQEnable: boolean;
       AlwaysCallBlindCQ: boolean;
       SkipActiveBand: boolean;
-      CWSpeedFromDataBase: boolean;
-      KeypadCWMemories: boolean;
       SayHiEnable: boolean;
       SayHiRateCutOff: integer;
       LeadingZeroCharacter: AnsiChar;
@@ -143,9 +141,6 @@ type
         paddle sidetone to 0 Hz and set the PTT hold to nothing -- silently, on
         every station with no settings file, with nothing to report it. The
         initialiser below is the whole safeguard. }
-      AllCWMessagesChainable: boolean;
-      TuneWithDits: boolean;
-      SendCompleteFourLetterCall: boolean;
 
       { TWO-RADIO AND MULTI-OP, migrated 2026-08-15.
 
@@ -260,8 +255,6 @@ var
       AltDCQEnable: False;
       AlwaysCallBlindCQ: False;
       SkipActiveBand: False;
-      CWSpeedFromDataBase: False;
-      KeypadCWMemories: False;
       SayHiEnable: False;
       SayHiRateCutOff: 200;
       LeadingZeroCharacter: 'T';
@@ -280,9 +273,6 @@ var
 
       LeadingZeros: 3;
 
-      AllCWMessagesChainable: False;
-      TuneWithDits: False;
-      SendCompleteFourLetterCall: False;
       { True, 15, 700 and 13 are NOT arbitrary -- they are the values the typed
         constants in LOGK1EA carried, kept so a station with no settings file
         behaves exactly as it did before. }

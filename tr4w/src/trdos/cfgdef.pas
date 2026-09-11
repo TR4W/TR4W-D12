@@ -98,7 +98,6 @@ begin
   //  ActiveRotatorType := NoRotator;
   //  ActiveStereoPort := NoPort;
   //  ActiveZoneMult := NoZoneMults;
-  //  Config.AllCWMessagesChainable := False;
   //  Config.AltDBufferEnable := False;
   //  Config.AlwaysCallBlindCQ := False;
   //  AskForFrequencies := {wli True} False;
@@ -171,7 +170,6 @@ begin
   //  CustomUserString := '';
   //  Config.CWEnable := True;
   //  CWEnabled := True;
-  //  Config.CWSpeedFromDataBase := False;
   //  Config.CWTone := 700;
 
   //  DDXCall1 := '';
@@ -255,7 +253,6 @@ begin
 
     //  K1EANetworkEnable := False;
 //  K5KA.ModeEnabled := False;
-  //  Config.KeypadCWMemories := False;
 
   //  Config.LeaveCursorInCallWindow := False;
   //  Config.LeadingZeros := 0;
@@ -351,7 +348,6 @@ begin
 //  SearchAndPounceExchange := '';
 //  SearchAndPouncePhoneExchange := 'SAPEXCHG.WAV';
 //  SendAltDSpotsToPacket := False;
-//  Config.SendCompleteFourLetterCall := False;
 //  SendQSOImmediately := True;
 
   TR4W_HAMLIB_DEBUG := false;
@@ -480,7 +476,6 @@ begin
   //  TailEndMessage := 'R';
   //  TailEndPhoneMessage := 'TAILEND.WAV';
   //  TenMinuteRule := NoTenMinuteRule;
-  //  Config.TuneWithDits := False;
   //  TuneDupeCheckEnable := False; {KK1L: 6.73}
   //  TwoRadioState := TwoRadiosDisabled;
 

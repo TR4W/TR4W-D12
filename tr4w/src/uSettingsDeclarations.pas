@@ -125,7 +125,7 @@ begin
                          RS_OPERATING_CW_SAYHI);
    RegisterStoredSetting('operating.cw.sayHiRateCutoff',  'SAY HI RATE CUTOFF',
                          RS_OPERATING_CW_SAYHIRATECUTOFF);
-   RegisterStoredSetting('operating.cw.keypadMemories',   'KEYPAD CW MEMORIES',
+   RegisterModelSetting( 'operating.cw.keypadMemories',   'KEYPAD CW MEMORIES',
                          RS_OPERATING_CW_KEYPADMEMORIES);
    RegisterStoredSetting('operating.cw.leadingZeros',     'LEADING ZEROS',
                          RS_OPERATING_CW_LEADINGZEROS);
@@ -148,7 +148,7 @@ begin
    // --- CW Settings (the keyer page) ---------------------------------------
    RegisterStoredSetting('cw.enable',            'CW ENABLE',
                          RS_CW_ENABLE);
-   RegisterStoredSetting('cw.speedFromDatabase', 'CW SPEED FROM DATABASE',
+   RegisterModelSetting( 'cw.speedFromDatabase', 'CW SPEED FROM DATABASE',
                          RS_CW_SPEEDFROMDATABASE);
    // MIGRATED 2026-08-14 -- the first row to graduate.  Stored: writes go to
    // settings\tr4w.json, the CFGCA row is csJSON, and so it no longer appears
@@ -161,12 +161,19 @@ begin
 
    { CW SENDING BEHAVIOUR. These shape what the keyer sends and how, whichever
      keyer is selected -- unlike the serial-keying group above, which only
-     affects CW TR4W generates itself. }
-   RegisterStoredSetting('cw.messagesChainable',  'ALL CW MESSAGES CHAINABLE',
+     affects CW TR4W generates itself.
+
+     RegisterModelSetting, NOT RegisterStoredSetting: these have left CFGCA for
+     TCwSettings. The legacy registrar reads four of its own attributes out of
+     the row (crJ, crP, crA, crNetwork), so it CANNOT register a setting whose
+     row is gone -- it raises "no CFGCA command called ..." at startup. That is
+     the failure this batch hit, and it is the reason the two registrars are
+     separate rather than one with a fallback. }
+   RegisterModelSetting( 'cw.messagesChainable',  'ALL CW MESSAGES CHAINABLE',
                          RS_CW_MESSAGESCHAINABLE);
-   RegisterStoredSetting('cw.tuneWithDits',       'TUNE WITH DITS',
+   RegisterModelSetting( 'cw.tuneWithDits',       'TUNE WITH DITS',
                          RS_CW_TUNEWITHDITS);
-   RegisterStoredSetting('cw.sendFourLetterCall', 'SEND COMPLETE FOUR LETTER CALL',
+   RegisterModelSetting( 'cw.sendFourLetterCall', 'SEND COMPLETE FOUR LETTER CALL',
                          RS_CW_SENDFOURLETTERCALL);
 
    { The F-key button captions, 2026-08-15. }

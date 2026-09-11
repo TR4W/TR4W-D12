@@ -482,6 +482,66 @@ type
       property PttHoldCount: TPaddlePttHoldCount read FPttHoldCount write FPttHoldCount;
    end;
 
+   (*
+     CW -- BUT ONLY THE HALF THE SESSION DOES NOT MUTATE.
+
+     THE CW COMMANDS SPLIT IN TWO, and uConfigValues already said so before
+     this move: "THE SESSION MUTATES THEM... So the stored value is what the
+     session STARTS with; a change made while operating is not written back.
+     That was already true and simply undocumented."
+
+     The five here are ordinary settings -- set them, they stay set.
+
+     THE OTHER FIVE ARE DELIBERATELY LEFT IN CFGCA FOR NOW: CW ENABLE, CW TONE,
+     FARNSWORTH ENABLE, FARNSWORTH SPEED and WEIGHT. Weight, FarnsworthEnable
+     and FarnsworthSpeed are changed by CW-buffer control codes mid-message
+     (LOGK1EA), and CWEnable and CWTone by live keystrokes. A published
+     property is STREAMED, so moving them as they stand would silently start
+     persisting a mid-contest adjustment -- turning "the speed I nudged for one
+     message" into the speed the station starts with tomorrow. That is a
+     behaviour change, not a migration.
+
+     CW ENABLE already shows the shape the other four need: the configured
+     value is Config.CWEnable and the live gate is the separate global
+     CWEnabled, which Alt-K toggles and LogCfg mirrors after each config read.
+     Splitting the remaining four the same way is a decision for NY4I, and it
+     is why this batch is five rather than ten. WEIGHT additionally needs a
+     real-typed property with x10-scaled bounds, which the model has no support
+     for yet.
+
+     NO HOOKS ON ANY OF THE FIVE -- crP, crA, crJ and crC are all zero -- so
+     these are plain field writes, as TPttSettings is.
+   *)
+   TCwSettings = class(TSettingsGroup)
+   private
+      FAllMessagesChainable: boolean;
+      FSpeedFromDatabase: boolean;
+      FKeypadMemories: boolean;
+      FSendCompleteFourLetterCall: boolean;
+      FTuneWithDits: boolean;
+   public
+      constructor Create;
+   published
+      // Was Config.AllCWMessagesChainable. ALL CW MESSAGES CHAINABLE.
+      property AllMessagesChainable: boolean
+         read FAllMessagesChainable write FAllMessagesChainable;
+      (* Was Config.CWSpeedFromDataBase, and the ONE name in this group that
+        derives exactly: CW SPEED FROM DATABASE. *)
+      property SpeedFromDatabase: boolean
+         read FSpeedFromDatabase write FSpeedFromDatabase;
+      // Was Config.KeypadCWMemories. KEYPAD CW MEMORIES.
+      property KeypadMemories: boolean
+         read FKeypadMemories write FKeypadMemories;
+      // Was Config.SendCompleteFourLetterCall.
+      property SendCompleteFourLetterCall: boolean
+         read FSendCompleteFourLetterCall write FSendCompleteFourLetterCall;
+      (* Was Config.TuneWithDits. uCWKeyerCPU records that the CPU keyer has no
+        tune, so this currently reaches no reader -- it is migrated as a
+        setting rather than withdrawn, because withdrawing a command an
+        operator has in a .cfg is a separate decision. *)
+      property TuneWithDits: boolean read FTuneWithDits write FTuneWithDits;
+   end;
+
    TR4WSettings = class(TPersistent)
    private
       // command name -> property path, built once by walking the RTTI.
@@ -496,6 +556,7 @@ type
       FBands: TBandSettings;
       FPtt: TPttSettings;
       FPaddle: TPaddleSettings;
+      FCw: TCwSettings;
       procedure BuildCommandMap;
       function PathForCommand(const aCommand: string): string;
    public
@@ -583,6 +644,7 @@ type
       property Bands: TBandSettings read FBands;
       property Ptt: TPttSettings read FPtt;
       property Paddle: TPaddleSettings read FPaddle;
+      property Cw: TCwSettings read FCw;
    end;
 
 (* THE ONE INSTANCE.  Created on first use so no unit's initialisation order
@@ -811,6 +873,17 @@ begin
    FTcpServerPort := 52002;
 end;
 
+constructor TCwSettings.Create;
+begin
+   inherited Create;
+   // The values uConfigValues' initialiser carried.
+   FAllMessagesChainable      := False;
+   FSpeedFromDatabase         := False;
+   FKeypadMemories            := False;
+   FSendCompleteFourLetterCall := False;
+   FTuneWithDits              := False;
+end;
+
 constructor TR4WSettings.Create;
 begin
    inherited Create;
@@ -823,6 +896,7 @@ begin
    FBands          := TBandSettings.Create;
    FPtt            := TPttSettings.Create;
    FPaddle         := TPaddleSettings.Create;
+   FCw             := TCwSettings.Create;
 
    FCommands := TStringList.Create;
    FCommands.CaseSensitive := False;
@@ -834,6 +908,7 @@ end;
 destructor TR4WSettings.Destroy;
 begin
    FCommands.Free;
+   FCw.Free;
    FPaddle.Free;
    FPtt.Free;
    FBands.Free;
@@ -1114,6 +1189,26 @@ begin
    (* SWAP PADDLES, subject last again.  The setting belongs with the paddle;
      the command name puts the verb first. *)
    Alias('SWAP PADDLES', 'Paddle.Swap');
+
+   (* CW IS THE LARGEST HISTORICALLY-FLAT FAMILY, and four of its five need an
+     alias, which is more than a trickle and worth explaining rather than
+     waving at.
+
+     These names were coined before any grouping existed, so most carry no CW
+     prefix at all (TUNE WITH DITS) and one buries it in the middle (KEYPAD CW
+     MEMORIES, ALL CW MESSAGES CHAINABLE). No property path produces either
+     shape: the derivation puts the group first, once.
+
+     THIS IS NOT EVIDENCE THE RULE IS WRONG. The alternative is a property
+     named AllCwMessagesChainable inside a group called Cw, which derives to
+     CW ALL CW MESSAGES CHAINABLE -- a name nobody has ever typed -- or five
+     one-property groups, which is the shape rejected for the band classes
+     above. The names are the legacy; the model is not obliged to be shaped
+     like them. *)
+   Alias('ALL CW MESSAGES CHAINABLE',      'Cw.AllMessagesChainable');
+   Alias('KEYPAD CW MEMORIES',             'Cw.KeypadMemories');
+   Alias('SEND COMPLETE FOUR LETTER CALL', 'Cw.SendCompleteFourLetterCall');
+   Alias('TUNE WITH DITS',                 'Cw.TuneWithDits');
 end;
 
 function TR4WSettings.PathForCommand(const aCommand: string): string;

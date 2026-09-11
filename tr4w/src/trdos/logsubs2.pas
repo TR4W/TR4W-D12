@@ -1451,7 +1451,7 @@ begin
            begin
              if ActiveMode = CW then
                 begin
-                if not Config.AllCWMessagesChainable then
+                if not Settings.Cw.AllMessagesChainable then
                    begin
                    FlushCWBuffer;
                    end;
@@ -1507,7 +1507,7 @@ begin
            if ActiveMode in [CW, Digital] then
               begin
               if ActiveMode = CW then
-                if not Config.AllCWMessagesChainable then
+                if not Settings.Cw.AllMessagesChainable then
                    begin
                    FlushCWBuffer;
                    end;
@@ -1818,7 +1818,7 @@ begin
        showwarning(TC_LOGFILESIZECHECKFAILED);
          //            ReminderPostedCount := 60;
        end;
-  if Config.CWSpeedFromDataBase and (RememberCWSpeed <> 0) then
+  if Settings.Cw.SpeedFromDatabase and (RememberCWSpeed <> 0) then
      begin
      SetSpeed(RememberCWSpeed);
      RememberCWSpeed := 0;
@@ -2624,7 +2624,7 @@ var
              end;
           end
        else
-         if Config.CWSpeedFromDataBase and (RememberCWSpeed > 0) then
+         if Settings.Cw.SpeedFromDatabase and (RememberCWSpeed > 0) then
             begin
             SetSpeed(RememberCWSpeed);
             RememberCWSpeed := 0;

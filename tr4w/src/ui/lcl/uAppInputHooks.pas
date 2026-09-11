@@ -49,7 +49,7 @@ uses
   uMainThread,      { RunOnMainThread -- the accelerator runs deferred }
   uMainWindowProc,  { DispatchCommandId -- the one command dispatch }
   uAccelerators,    { ACCELERATORS -- the one table }
-  uConfigValues,    { Config.KeypadCWMemories }
+  uSettingsModel,   { Settings.Cw.KeypadMemories }
   uCrashLog,        { LogCaughtException }
   uFunctionKeys,    { ShowFMessages -- the F-key labels }
   uMainForm,        { TR4WMainForm -- which form the accelerators belong to }
@@ -175,7 +175,7 @@ begin
 
   // THE NUMERIC KEYPAD AS CW MEMORIES.  Fires whatever has focus, which is why
   // it was in the loop and is now here rather than on a form.
-  if (Config.KeypadCWMemories)              and
+  if (Settings.Cw.KeypadMemories)           and
      (Key >= VK_NUMPAD0) and (Key <= VK_NUMPAD9) then
      begin
      if Key <> VK_NUMPAD0 then

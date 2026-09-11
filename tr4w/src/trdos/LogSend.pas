@@ -55,6 +55,7 @@ procedure SendDVKMessage(Message: Str20);
 implementation
 
 uses uTelnet,
+  uSettingsModel,   // Settings.Cw.SendCompleteFourLetterCall
   MainUnit;
 
 procedure SendCrypticDVPString(SendString: ShortString);
@@ -418,7 +419,7 @@ begin
 
         '}':
           if StringHas(ReceivedData.Callsign, '/') or
-            ((length(ReceivedData.Callsign) = 4) and Config.SendCompleteFourLetterCall) or
+            ((length(ReceivedData.Callsign) = 4) and Settings.Cw.SendCompleteFourLetterCall) or
             StringHas(CallsignICameBackTo, '/') then
              begin
              AddStringToBuffer(ReceivedData.Callsign, Config.CWTone)

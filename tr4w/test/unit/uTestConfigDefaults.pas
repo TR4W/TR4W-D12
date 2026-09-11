@@ -97,9 +97,20 @@ begin
      assertions went. What remains here is the CW message behaviour. *)
    BeginTest('the CW keying defaults are the ones the globals had');
 
-   CheckFalse(Config.AllCWMessagesChainable,     'AllCWMessagesChainable was False');
-   CheckFalse(Config.TuneWithDits,               'TuneWithDits was False');
-   CheckFalse(Config.SendCompleteFourLetterCall, 'SendCompleteFourLetterCall was False');
+   (* THESE FIVE LEFT THE RECORD TOO, into TCwSettings, and the assertions
+     came with them -- the defaults are the point of this test and they have
+     to be asserted wherever the value now lives.
+
+     THE OTHER FIVE CW COMMANDS DID NOT MOVE, and the reason is worth having
+     beside the ones that did: CW ENABLE, CW TONE, FARNSWORTH ENABLE,
+     FARNSWORTH SPEED and WEIGHT are mutated by the SESSION -- control codes
+     mid-message, and live keystrokes -- so a published property would start
+     persisting a mid-contest adjustment. See TCwSettings. *)
+   CheckFalse(Settings.Cw.AllMessagesChainable,      'AllMessagesChainable was False');
+   CheckFalse(Settings.Cw.TuneWithDits,              'TuneWithDits was False');
+   CheckFalse(Settings.Cw.SendCompleteFourLetterCall, 'SendCompleteFourLetterCall was False');
+   CheckFalse(Settings.Cw.SpeedFromDatabase,         'SpeedFromDatabase was False');
+   CheckFalse(Settings.Cw.KeypadMemories,            'KeypadMemories was False');
 end;
 
 procedure TConfigDefaultsTests.Test_NonZeroDefaultsAreNotZero;
