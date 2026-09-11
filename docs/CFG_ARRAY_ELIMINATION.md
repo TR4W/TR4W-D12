@@ -686,6 +686,67 @@ the reason to look for them before flipping the switch rather than after.
 
 ---
 
+## 2k. THE GAP LIST: 27 settings stand between here and switching the ini off
+
+**NY4I, 2026-09-11:** *"do not convert if there is already a json file and a
+contest .db file of the same contest."*
+
+Section 2j said the remaining work is one switch plus a SEARCH: prove every
+value the legacy read carries has a seeder into a modern store. This is that
+search, done.
+
+### Every live row, by what carries its value across
+
+| | rows |
+|---|---:|
+| seeded by `MIGRATED_COMMANDS` | 245 |
+| owned by a structured store and its own seeder | 89 |
+| read-only, or not an operator setting | 29 |
+| contest-scoped -- captured into the log | 2 |
+| **NO SEEDER** | **28**, less `DEBUG LOG LEVEL` which `SeedLoggingFromIni` covers = **27** |
+
+### The 27, and they group cleanly
+
+| group | settings |
+|---|---|
+| band map display | ALL BANDS, ALL MODES, CALL WINDOW ENABLE, DISPLAY CQ, DISPLAY GHZ, DUPE DISPLAY, MULTS ONLY, SO2R DISPLAY |
+| `MY ...` identity | CHECK, FD CLASS, FOC NUMBER, GRID, IOTA, ITU ZONE, NAME, PARK, POSTAL CODE, PREC, SECTION |
+| WSJT-X | ENABLED, RADIO CONTROL ENABLED, SEND HIGHLIGHTS |
+| the rest | BOLD FONT, CONNECTION COMMAND, POLL RADIO ONE, POLL RADIO TWO, SERVER AUTO SYNCHRONIZE LOG ON CONNECT |
+
+**These are what a station upgrading from 4.x would silently lose** the moment
+the ini read is skipped. That is the whole reason to have looked before
+flipping the switch rather than after.
+
+### Two cautions before anyone bulk-adds them to the seed list
+
+1. **They are `csOwned`, not `csJSON`.** CLAUDE.md records that 63 `csOwned`
+   rows are stored in a STRUCTURED section under a DIFFERENT NAME -- a radio's
+   port is `radios[].controlPort`, not a `commands` key. Seeding such a row into
+   `commands` would create a second copy of a value that already has a home,
+   which is the exact defect this whole effort exists to remove. **Each of the
+   27 needs its storage name checked, not assumed.**
+2. **`CONNECTION COMMAND` is already a known two-owners defect** in the agent
+   memory, and `crNetwork:1`. It wants its own decision rather than a line in a
+   list.
+
+### A measurement error worth recording
+
+The first run of this search reported **154** rows with no seeder. It was
+wrong: the extractor read `MIGRATED_COMMANDS` with a non-greedy regex, and the
+array is `array[0..250]` carrying commented-out entries and parenthesised
+prose, so the match stopped a third of the way in and under-reported the seed
+list by 154 entries.
+
+**An under-reported seed list invents a gap that does not exist**, which is the
+opposite of what the search is for -- and 154 is alarming enough to have
+changed the plan. It reads line by line now. The lesson is the one this
+document keeps relearning: a number produced by a parser needs a second source
+before it is believed, and `Lint-SettingsMigration` was sitting there saying
+"251 seeded" the whole time.
+
+---
+
 ## 3. Stage A -- DONE 2026-09-10
 
 **One rule for turning a configured port into a device name.**
