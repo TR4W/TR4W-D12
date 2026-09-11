@@ -1520,24 +1520,31 @@ end;
 
 procedure DisplayNextQSONumber;
 const
-  QSONumberStringArray                  : array[boolean] of PAnsiChar = ('%d', '*%d');   
+  QSONumberStringArray                  : array[boolean] of PAnsiChar = ('%d', '*%d');
+var
+  (* AnsiString, because SysUtils.Format's ANSI overload returns one and a
+    TCaption is one -- a UnicodeString local would narrow on the assignment
+    below, which the build counts. *)
+  capt                                  : AnsiString;
 begin
   // Issue #954: show the next serial we will actually send (high-water mark of
   // numbers sent + 1), NOT a QSO count.  Count-based display reverted the number
   // whenever a QSO stopped counting (X-QSO, mid-log delete).  NextSerialToSend
   // also returns ServerSerialNumber in networked mode, matching the old value.
-  TF.Format(wsprintfBuffer, QSONumberStringArray[Config.AutoQSONumberDecrement], NextSerialToSend);
+  capt := SysUtils.Format(
+     AnsiString(QSONumberStringArray[Config.AutoQSONumberDecrement]),
+     [NextSerialToSend]);
   if ServerSerialNumber <> 0 then
     if PreviousSerialNumberType = sntReserved then
        begin
-       (* Appended with uAnsiStr rather than Win32's lstrcatA, and BOUNDED
-         where lstrcatA was not: it walks to the NUL and keeps writing.
-         wsprintfBuffer is 4096 bytes and this appends one character, so the
-         old call was safe by luck rather than by rule. *)
-       uAnsiStr.StrPLCopy(@wsprintfBuffer[uAnsiStr.StrLen(wsprintfBuffer)],
-                          'L', SizeOf(wsprintfBuffer) - uAnsiStr.StrLen(wsprintfBuffer) - 1);
+       (* APPENDING TO A STRING, which is what the bounded StrPLCopy here was
+         imitating. That call had to compute a write offset and a remaining
+         length against a 4096-byte global, and its own comment said it was
+         "safe by luck rather than by rule". There is no length to get wrong
+         now. *)
+       capt := capt + 'L';
        end;
-  TR4WMainForm.pnlQSONumber.Caption := wsprintfBuffer;
+  TR4WMainForm.pnlQSONumber.Caption := capt;
 end;
 
 

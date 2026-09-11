@@ -8364,9 +8364,11 @@ begin
      Exit;
      end;
 
-  sWriteFile(h, wsprintfBuffer, TF.Format(wsprintfBuffer,
-    #13#10' %s'#13#10#13#10' Unique callsigns: %u '#13#10, @ContestTitle[1],
-    CallsignsList.GetTotalWorkedStations));
+  (* ContestTitle itself -- @ContestTitle[1] was a bare pointer into a
+    ShortString, which has no NUL for the formatter to stop at. *)
+  sWriteFileFromString(h, SysUtils.Format(
+     AnsiString(#13#10' %s'#13#10#13#10' Unique callsigns: %u '#13#10),
+     [ContestTitle, CallsignsList.GetTotalWorkedStations]));
 
   for QSOs := 20 downto 1 do
      begin
@@ -8380,14 +8382,14 @@ begin
            if WriteHeader then
               begin
 
-              sWriteFile(h, wsprintfBuffer, TF.Format(wsprintfBuffer,
-                #13#10#13#10' %u QSOs:'#13#10' -----------------'#13#10#13#10,
-                QSOs));
+              sWriteFileFromString(h, SysUtils.Format(
+                 AnsiString(#13#10#13#10' %u QSOs:'#13#10' -----------------'#13#10#13#10),
+                 [QSOs]));
               end;
            FillChar(TempCall, SizeOf(TempCall), 0);
            TempCall := CallsignsList.Get(i);
-           sWriteFile(h, wsprintfBuffer, TF.Format(wsprintfBuffer,
-             ' %4u. %s '#13#10, counter, @TempCall[1]));
+           sWriteFileFromString(h, SysUtils.Format(
+              AnsiString(' %4u. %s '#13#10), [counter, TempCall]));
            WriteHeader := False;
            end;
         end;
