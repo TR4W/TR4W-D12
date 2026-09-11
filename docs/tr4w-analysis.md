@@ -626,11 +626,36 @@ QSO log records use `ShortString` and fixed `Char` arrays for on-disk formats. T
 |-----|---------|-----------------|
 | `libhamlib-4.dll` | HamLib radio control | LoadLibrary + ~20 function pointers |
 | `inpout32.dll` | Parallel port I/O (CW keyer) | LoadLibrary + 2 functions |
-| `lame_enc.dll` | MP3 recording | LoadLibrary + LAME API |
-| `ctydll.dll` | Country database lookup | LoadLibrary + lookup functions |
+| ~~`lame_enc.dll`~~ | ~~MP3 recording~~ | **GONE** -- `uMP3Recorder` was deleted, and the binding went with it |
+| ~~`ctydll.dll`~~ | ~~Country database lookup~~ | **NEVER REAL IN THIS TREE** -- see below |
 | `FT8LIB.dll` / `FT4LIB.dll` | FT8/FT4 digital mode decoding | LoadLibrary + decode functions |
 | `RICHED32.DLL` | Rich edit control | LoadLibrary |
 | `shell32.dll` | Shell operations | Late-bound for optional features |
+
+**THE COUNTRY DLL ROW WAS WRONG IN EVERY COLUMN** (corrected 2026-09-11, after
+NY4I asked why `ctyLoadInCountryFile` had two declarations).
+
+It named `ctydll.dll` and a `LoadLibrary` pattern. What actually existed was
+`tr4w/src/cty.pas`, declaring **25 STATIC imports** from `'cty.dll'` -- a
+different file name and the opposite loading mechanism. That unit is now
+**deleted**, and it could never have run:
+
+* **`cty.dll` exists nowhere** -- not in the repo, not in `tr4w/target/`, not
+  in `tr4w/build/full.nsi`, not in `docs/UPDATING_RUNTIME_DLLS.md`.
+* **The unit was never compiled.** `tr4w.lpr` carried it only as a commented-out
+  line, excluded because the unit name `cty` collided with the global variable
+  `CTY` in `uCTYDAT`. Nothing anywhere named it in a `uses` clause.
+* **The imports state no calling convention**, so under `-Mdelphi` they default
+  to `register` -- wrong for a C-exported DLL even if one had shipped.
+* Because they are STATIC imports rather than `LoadLibrary`, linking the unit
+  would have failed the process at load with a missing-DLL error. That it never
+  did is itself proof it was never linked.
+
+**No capability was lost.** All 25 exports have live native equivalents: 23 in
+`uCTYDAT` (including `ctyLoadInCountryFile` itself, a full CTY.DAT parser), and
+`GetPrefix` and `IsAGoodCall` in `uCallSignRoutines` -- the latter two taking a
+plain `string` rather than the DLL's `PChar`, which is the direction this tree
+is moving anyway.
 
 ### 7.3 COM/OLE Automation
 

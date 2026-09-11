@@ -508,7 +508,6 @@ uLogEditForm in 'src\ui\lcl\uLogEditForm.pas',
   uTelnetForm in 'src\ui\lcl\uTelnetForm.pas',
   uMMTTYForm in 'src\ui\lcl\uMMTTYForm.pas',
   uProgramMain in 'src\uProgramMain.pas';
-  //cty in 'src\cty.pas';  // Excluded: unit name 'cty' conflicts with global variable 'CTY' from uCTYDAT
 
 { THE PROJECT RESOURCE -- tr4w.res, written by Lazarus from the .lpi.
 

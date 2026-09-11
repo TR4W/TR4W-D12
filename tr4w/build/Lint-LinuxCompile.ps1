@@ -84,7 +84,6 @@ $UNITS = @(
    # uses clause and is a callsign-prefix lookup table. Proven by compiling,
    # not by reading the uses clause.
    @{ Unit = 'uAccelerators.pas';     Since = '2026-09-07' }
-   @{ Unit = 'cty.pas';               Since = '2026-09-07' }
    @{ Unit = 'uRussiaOblasts.pas';    Since = '2026-09-07' }
 
    # Added 2026-09-07 by CONVERTING the Win32 calls, not by gating them.
