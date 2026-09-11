@@ -293,6 +293,7 @@ uses
    uTestComPortEnumerator in 'uTestComPortEnumerator.pas',
    uTestPortAddress in 'uTestPortAddress.pas',
    uTestSettingsModel in 'uTestSettingsModel.pas',
+   uTestTLSRefusal in 'uTestTLSRefusal.pas',
    uTestConfigDefaults in 'uTestConfigDefaults.pas',
    uTestTransverterOffset in 'uTestTransverterOffset.pas',
    uTestRadioSupportsCaps in 'uTestRadioSupportsCaps.pas',
@@ -308,6 +309,8 @@ uses
    uTestSpotAge         in 'uTestSpotAge.pas',
    uTestWindowSnap      in 'uTestWindowSnap.pas',
    uAppPaths            in '..\..\src\uAppPaths.pas',
+   uTLSTrust            in '..\..\src\utils\uTLSTrust.pas',
+   uHTTPDownload        in '..\..\src\utils\uHTTPDownload.pas',
    uLogBinaryFile       in '..\..\src\uLogBinaryFile.pas',
    uTestLogBinaryFile   in 'uTestLogBinaryFile.pas',
    uLogSchema           in '..\..\src\domain\uLogSchema.pas',
@@ -418,6 +421,7 @@ begin
    RegisterSuite(TComPortEnumeratorTests.Create('ComPortEnumerator'));
    RegisterSuite(TPortAddressTests.Create('PortAddress'));
    RegisterSuite(TSettingsModelTests.Create('SettingsModel'));
+   RegisterSuite(TTLSRefusalTests.Create('TLSRefusal'));
    RegisterSuite(TConfigDefaultsTests.Create('ConfigDefaults'));
    RegisterSuite(THamLibIDTests.Create('HamLibIDs'));
    RegisterSuite(TCWKeyerTests.Create('CWKeyer'));

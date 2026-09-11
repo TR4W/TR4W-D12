@@ -248,23 +248,47 @@ end;
   and the host name against the certificate. See that unit for why the second
   one is not optional.
 
-  A FAILURE TO SET IT UP IS REPORTED AND THEN PROCEEDS, which needs saying
-  plainly. The alternative -- refusing to connect when the bundle is missing --
-  would turn a packaging mistake into a dead CTY download on an operator's
-  machine, and would be a REGRESSION against the behaviour of every release so
-  far, which connected unverified without comment. Reported-and-connect is
-  where this starts; refuse-by-default is a decision for once the bundle has
-  been shipping for a while.
+  A FAILURE TO SET IT UP NOW REFUSES THE REQUEST. This paragraph used to say
+  the opposite -- reported-and-connect, on the argument that refusing would
+  turn a packaging mistake into a dead CTY download and would be a regression
+  against every release so far, which connected unverified without comment.
+  That argument weighs a packaging mistake against a silent trust downgrade
+  and gets the answer backwards: the operator who is hurt by refusing sees a
+  message naming the missing file, and the operator who is hurt by connecting
+  sees nothing at all. "Refuse-by-default once the bundle has been shipping
+  for a while" was a schedule with no date on it.
 
   The operator can turn checking off entirely -- see
   network.verifyServerCertificates in uSettingsDeclarations for why that
   escape hatch exists. *)
-procedure ApplyTLSVerification(aHTTP: TFPHTTPClient; const aURL: string);
+(* CAN THIS REQUEST BE MADE SAFELY? False means DO NOT MAKE IT.
+
+  IT USED TO BE A PROCEDURE AND IT FAILED OPEN. When UseVerifiedTLS could not
+  be configured it logged an error and RETURNED, and the caller went on to
+  make the request anyway -- unverified. Found in review by Codex, 2026-09-11.
+
+  THE CASE THAT MATTERS IS NOT THE OPT-OUT. An operator who turns verification
+  off has made a choice and still gets it. This fired when they had
+  verification ON and something was missing: no CA bundle, an unreadable
+  bundle, or an OpenSSL symbol that would not load. They asked for verified
+  TLS, the program could not provide it, and it connected anyway and said so
+  only in the log.
+
+  THAT IS WORSE THAN THE OLD UNVERIFIED-EVERYWHERE STATE, which is the whole
+  point of the finding: adding a verification setting makes fail-open read as
+  a secure default. It carries credentials -- HamScore posts a username and
+  password -- and also gates CTY downloads, version checks and score posts.
+
+  FAIL CLOSED. The only way to send unverified now is to ask for it. *)
+function ApplyTLSVerification(aHTTP: TFPHTTPClient; const aURL: string;
+                              out aFailReason: string): boolean;
 var
    why:     string;
    setting: TSettingBase;
    wanted:  boolean;
 begin
+   Result      := True;
+   aFailReason := '';
    wanted  := True;
    setting := FindSetting('network.verifyServerCertificates');
    if setting <> nil then
@@ -285,8 +309,17 @@ begin
 
    if not UseVerifiedTLS(aHTTP, why) then
       begin
-      logger.Error('[Download] cannot verify server certificates (%s) -- '
-                   + 'continuing UNVERIFIED for %s', [why, aURL]);
+      (* THE OPERATOR ASKED FOR VERIFICATION AND WE CANNOT PROVIDE IT, so the
+        request does not happen. The reason NAMES THE HOST and the exact setup
+        failure, because "could not verify" without either is not actionable
+        -- the fix is usually a missing CA bundle and the operator needs to be
+        told that, not told to check a setting they already set correctly. *)
+      logger.Error('[Download] REFUSING %s -- server certificates cannot be '
+                   + 'verified (%s). Turn off Preferences > Network > verify '
+                   + 'server certificates to proceed unverified.',
+                   [aURL, why]);
+      aFailReason := SysUtils.Format(SDownloadCannotVerify, [why]);
+      Result      := False;
       end;
 end;
 
@@ -356,7 +389,13 @@ begin
       http.AddHeader('User-Agent', 'TR4W');
       if useTLS then
          begin
-         ApplyTLSVerification(http, AURL);
+         (* REFUSE RATHER THAN SEND UNVERIFIED -- same shape as CheckScheme
+           above: the answer to "may this request be made" decides whether it
+           is made at all. *)
+         if not ApplyTLSVerification(http, AURL, AFailReason) then
+            begin
+            Exit;
+            end;
          end;
 
       // TIMEOUTS ARE NOT OPTIONAL.  Indy's default is to wait forever, which
@@ -446,7 +485,10 @@ begin
       ApplyDefaults(http, AUserAgent, AConnectMs, AIOMs);
       if useTLS then
          begin
-         ApplyTLSVerification(http, AURL);
+         if not ApplyTLSVerification(http, AURL, AFailReason) then
+            begin
+            Exit;
+            end;
          end;
       try
          AText  := FromWire(http.Get(ToWire(AURL)));
@@ -497,7 +539,10 @@ begin
       ApplyDefaults(http, UserAgent, ConnectMs, IOMs);
       if useTLS then
          begin
-         ApplyTLSVerification(http, URL);
+         if not ApplyTLSVerification(http, URL, FailReason) then
+            begin
+            Exit;
+            end;
          end;
 
       if ContentType <> '' then

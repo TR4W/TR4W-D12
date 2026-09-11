@@ -86,6 +86,22 @@ resourcestring
    { The refusal paths. Rare and close to programmer error, but they reach the
      same dialog, so they are text like any other -- not literals. }
    SDownloadCouldNotStart = 'the download was refused before it began (bad URL).';
+
+   { REFUSED, NOT FAILED, and the distinction is the message. The operator
+     asked for verified TLS and the program could not set it up -- usually a
+     missing CA bundle. It used to connect anyway and mention it only in the
+     log, which made a verification setting look like a secure default while
+     behaving like the old unverified-everywhere state.
+
+     The %s carries the exact setup failure, and the sentence names the way
+     out, because the operator's real choice here is "fix the bundle" or
+     "decide you do not want verification" and neither is guessable from
+     "download failed". }
+   SDownloadCannotVerify =
+      'the server''s certificate could not be verified (%s).' + sLineBreak + sLineBreak +
+      'The request was REFUSED rather than sent unverified. Turn off ' +
+      'Preferences > Network > verify server certificates if you want to ' +
+      'proceed without checking.';
    SDownloadRenameFailed  = 'the file downloaded but could not be saved under its final name.';
 
    (* Shown INSTEAD of an OS error code when the file is simply absent -- see

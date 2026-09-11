@@ -114,7 +114,16 @@ $runtimeDlls = @(
    'libgcc_s_dw2-1.dll',   # ...and what it needs in turn
    'libwinpthread-1.dll',
    'libusb-1.0.dll',
-   'sqlite3.dll'           # the contest log; run-time bound, see above
+   'sqlite3.dll',          # the contest log; run-time bound, see above
+
+   # THE OpenSSL PAIR IS HERE SO A TEST CAN REACH THE CASE AFTER IT LOADS.
+   # uTestTLSRefusal pins that an HTTPS request whose verification cannot
+   # be set up is REFUSED rather than sent unverified. Without these,
+   # CheckScheme refuses one step earlier -- 'TLS unavailable' -- and the
+   # test passes without ever running the code it exists for. cacert.pem is
+   # deliberately NOT copied: a missing trusted-root bundle IS the fixture.
+   'libeay32.dll',
+   'ssleay32.dll'
 )
 $dllSrc = Join-Path $PSScriptRoot '..\target'
 $dllDst = Split-Path $exe -Parent
