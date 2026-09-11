@@ -30,6 +30,7 @@ interface
 
 uses
    SysUtils, uTR4WTestFramework, uConfigValues,
+   uSettingsModel,   // TR4WSettings -- the settings that have left the record
    VC;   // FileNameType, for the buffer-size pins
 
 type
@@ -40,6 +41,7 @@ type
       procedure Test_EarlierMigrationsStillHoldTheirDefaults;
       procedure Test_TwoRadioAndNetworkDefaults;
       procedure Test_OperatingAndPTTDefaults;
+      procedure Test_PTTDefaultsSurvivedLeavingTheRecord;
       procedure Test_SCPBandMapAndFileDefaults;
       procedure Test_AppearanceAndFKeyDefaults;
       procedure Test_AudioDefaultsAndBufferSizes;
@@ -49,6 +51,35 @@ type
 
 implementation
 
+procedure TConfigDefaultsTests.Test_PTTDefaultsSurvivedLeavingTheRecord;
+var
+   s: TR4WSettings;
+begin
+   (* THE FIVE PTT SETTINGS LEFT THE Config RECORD ON 2026-09-11, for
+     TPttSettings in uSettingsModel.  These assertions came with them.
+
+     A MOVE IS WHEN A DEFAULT IS EASIEST TO LOSE, which is the whole reason
+     this suite exists: a record field starts at zero and a class field starts
+     at zero, so a default that lived in an initialiser and was not copied into
+     the new constructor becomes False or 0 in silence.  Three of these five
+     were True.
+
+     ON A FRESH OBJECT, not the singleton.  The running Settings has whatever
+     the config load put in it; only a new one shows what the constructor
+     carries. *)
+   BeginTest('the PTT defaults survived the move out of the Config record');
+   s := TR4WSettings.Create;
+   try
+      CheckTrue (s.Ptt.Enable,        'PTTEnable was a typed constant = True');
+      CheckTrue (s.Ptt.ViaCommands,   'PTTViaCommand was True');
+      CheckFalse(s.Ptt.Lockout,       'PTTLockout was False');
+      CheckFalse(s.Ptt.NoPollDuring,  'NoPollDuringPTT was False');
+      CheckEquals(15, s.Ptt.TurnOnDelay, 'PTTTurnOnDelay was 15');
+   finally
+      s.Free;
+   end;
+end;
+
 procedure TConfigDefaultsTests.Test_KeyingAndPTTDefaults;
 begin
    // Migrated 2026-08-14 from typed constants in LOGK1EA and LOGSTUFF.
@@ -57,7 +88,6 @@ begin
    CheckFalse(Config.AllCWMessagesChainable,     'AllCWMessagesChainable was False');
    CheckFalse(Config.TuneWithDits,               'TuneWithDits was False');
    CheckFalse(Config.SendCompleteFourLetterCall, 'SendCompleteFourLetterCall was False');
-   CheckFalse(Config.NoPollDuringPTT,            'NoPollDuringPTT was False');
    CheckFalse(Config.SwapPaddles,                'SwapPaddles was False');
 
    // PaddleSpeed 0 is MEANINGFUL, not merely the zero a record starts with: it
@@ -65,8 +95,6 @@ begin
    // to a plausible 25 WPM.
    CheckEquals(0,   Config.PaddleSpeed,       'PaddleSpeed 0 = follow the keyboard speed');
 
-   CheckTrue(Config.PTTEnable,                'PTTEnable was a typed constant = True');
-   CheckEquals(15,  Config.PTTTurnOnDelay,    'PTTTurnOnDelay was 15');
    CheckEquals(700, Config.PaddleMonitorTone, 'PaddleMonitorTone was 700 Hz');
    CheckEquals(13,  Config.PaddlePTTHoldCount,'PaddlePTTHoldCount was 13 dit counts');
 end;
@@ -83,13 +111,13 @@ begin
    // is hot switching. None of those is a compile error.
    BeginTest('nothing that must not be zero has fallen back to zero');
 
-   CheckTrue(Config.PTTEnable,
+   CheckTrue(Settings.Ptt.Enable,
              'PTT disabled by default = the radio never transmits');
    CheckTrue(Config.PaddleMonitorTone > 0,
              'a 0 Hz sidetone = the operator hears nothing');
    CheckTrue(Config.PaddlePTTHoldCount > 0,
              'a 0 hold count = PTT drops between characters');
-   CheckTrue(Config.PTTTurnOnDelay > 0,
+   CheckTrue(Settings.Ptt.TurnOnDelay > 0,
              'a 0 turn-on delay = CW starts before the amplifier is keyed');
 end;
 
@@ -140,13 +168,11 @@ begin
    // four change how the log behaves under the operator's hands mid-contest.
    BeginTest('the operating and PTT defaults survived the move');
 
-   CheckTrue(Config.PTTViaCommand,             'PTTViaCommand was True');
    CheckTrue(Config.AutoReturnToCQMode,        'AutoReturnToCQMode was True');
    CheckTrue(Config.EscapeExitsSearchAndPounce,'EscapeExitsSearchAndPounce was True');
    CheckTrue(Config.SpaceBarDupeCheckEnable,   'SpaceBarDupeCheckEnable was True');
    CheckTrue(Config.ConfirmEditChanges,        'ConfirmEditChanges was True');
 
-   CheckFalse(Config.PTTLockout,             'PTTLockout was False');
    CheckFalse(Config.AutoCallTerminate,      'AutoCallTerminate was False');
    CheckFalse(Config.LeaveCursorInCallWindow,'LeaveCursorInCallWindow was False');
    CheckFalse(Config.LogWithSingleEnter,     'LogWithSingleEnter was False');
@@ -229,6 +255,7 @@ begin
    Test_EarlierMigrationsStillHoldTheirDefaults;
    Test_TwoRadioAndNetworkDefaults;
    Test_OperatingAndPTTDefaults;
+   Test_PTTDefaultsSurvivedLeavingTheRecord;
    Test_SCPBandMapAndFileDefaults;
    Test_AppearanceAndFKeyDefaults;
    Test_AudioDefaultsAndBufferSizes;

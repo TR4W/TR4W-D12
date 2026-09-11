@@ -216,19 +216,19 @@ begin
 
    { PTT. Not CW-only -- PTT ENABLE keys the transmitter for phone too -- but it
      is grouped with the keyer because that is where an operator changes it. }
-   RegisterStoredSetting('ptt.enable',            'PTT ENABLE',
+   RegisterModelSetting( 'ptt.enable',            'PTT ENABLE',
                          RS_PTT_ENABLE);
-   RegisterStoredSetting('ptt.turnOnDelay',       'PTT TURN ON DELAY',
+   RegisterModelSetting( 'ptt.turnOnDelay',       'PTT TURN ON DELAY',
                          RS_PTT_TURNONDELAY);
-   RegisterStoredSetting('ptt.noPollDuringPTT',   'NO POLL DURING PTT',
+   RegisterModelSetting( 'ptt.noPollDuringPTT',   'NO POLL DURING PTT',
                          RS_PTT_NOPOLLDURINGPTT);
 
    { Operating and PTT, 2026-08-15. Captions follow each command's help entry:
      AUTO CALL TERMINATE stops sending when the call window changes, and
      CONFIRM EDIT CHANGES asks before an edited QSO is written back. }
-   RegisterStoredSetting('ptt.viaCommands',                   'PTT VIA COMMANDS',
+   RegisterModelSetting( 'ptt.viaCommands',                   'PTT VIA COMMANDS',
                          RS_PTT_VIACOMMANDS);
-   RegisterStoredSetting('ptt.lockout',                       'PTT LOCKOUT',
+   RegisterModelSetting( 'ptt.lockout',                       'PTT LOCKOUT',
                          RS_PTT_LOCKOUT);
    RegisterStoredSetting('operating.autoCallTerminate',       'AUTO CALL TERMINATE',
                          RS_OPERATING_AUTOCALLTERMINATE);

@@ -993,6 +993,7 @@ var
 implementation
 
 uses
+   uSettingsModel,     // Settings -- the settings that have left CFGCA
   Dialogs,         (* QuestionDlg -- OkayToDeleteExistingFile, was MessageBoxA *)
   Controls,        (* mrYes / mrNo -- the modal results QuestionDlg answers *)
   uCallCompress,   // pre-migration: extracted callsign-compression primitives (golden-tested)
@@ -4088,7 +4089,7 @@ var
   c                                     : integer;
 begin
   Result := False;
-  if Config.PTTLockout then
+  if Settings.Ptt.Lockout then
     if NetIsConnected then
        begin
        for c := 1 to 26 do

@@ -781,7 +781,7 @@ end;
 procedure TurnOnActivePort;
 
 var
-  { PTT will always be on if Config.PTTEnable. }
+  { PTT will always be on if Settings.Ptt.Enable. }
   TempByte                              : Byte;
 begin
   if ActiveRadioPtr.KeyerPortKind = pkSerial then
@@ -884,7 +884,7 @@ begin
   if not PTTAsserted then
   begin
     PTTAsserted := True;
-    if not PTTForcedOn then PTTDelayCount := Config.PTTTurnOnDelay;
+    if not PTTForcedOn then PTTDelayCount := Settings.Ptt.TurnOnDelay;
     TurnOffActivePort;
   end;
 end;
@@ -928,7 +928,7 @@ begin
   if not PTTAsserted then
   begin
     PTTAsserted := True;
-    PTTDelayCount := Config.PTTTurnOnDelay;
+    PTTDelayCount := Settings.Ptt.TurnOnDelay;
     TurnOffActivePort;
   end;
 }
@@ -944,7 +944,7 @@ begin
   if not PTTAsserted then
   begin
     PTTAsserted := True;
-    PTTDelayCount := Config.PTTTurnOnDelay;
+    PTTDelayCount := Settings.Ptt.TurnOnDelay;
     TurnOffActivePort;
   end;
 }
@@ -966,7 +966,7 @@ begin
   if not PTTAsserted then
   begin
     PTTAsserted := True;
-    PTTDelayCount := Config.PTTTurnOnDelay;
+    PTTDelayCount := Settings.Ptt.TurnOnDelay;
     TurnOffActivePort;
   end;
 }
@@ -983,7 +983,7 @@ begin
   if not PTTAsserted then
   begin
     PTTAsserted := True;
-    PTTDelayCount := Config.PTTTurnOnDelay;
+    PTTDelayCount := Settings.Ptt.TurnOnDelay;
     TurnOffActivePort;
   end;
 }

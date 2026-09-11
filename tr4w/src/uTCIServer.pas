@@ -340,10 +340,11 @@ function ConfiguredRadioCount: integer;
 implementation
 
 uses
+   uSettingsModel,     // Settings -- the settings that have left CFGCA
    MainUnit,          // logger
    tree,              // CodeSpeed
-   LOGK1EA,           // Config.PTTViaCommand
-   uConfigValues,     // Config.NoPollDuringPTT -- named in the refusal
+   LOGK1EA,           // Settings.Ptt.ViaCommands
+   uConfigValues,     // Settings.Ptt.NoPollDuring -- named in the refusal
    uRadioPolling,     // RadioStatusPublished
    uFactoryRadioBase;
 
@@ -667,12 +668,12 @@ begin
       begin
       // Named explicitly, because the operator has to change a setting and
       // "it did not transmit" gives them nothing to act on.
-      if not Config.PTTViaCommand then
+      if not Settings.Ptt.ViaCommands then
          begin
          logger.Warn('[TCI-SRV] PTT refused: "PTT VIA COMMANDS" is FALSE, ' +
                      'so no transmit command is sent to the radio');
          end
-      else if Config.NoPollDuringPTT then
+      else if Settings.Ptt.NoPollDuring then
          begin
          logger.Warn('[TCI-SRV] PTT refused: NO POLL DURING PTT is set');
          end

@@ -320,7 +320,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(22, names.Count, 'one name per migrated setting, no more');
+         CheckEquals(27, names.Count, 'one name per migrated setting, no more');
       finally
          names.Free;
       end;

@@ -131,6 +131,7 @@ const
 implementation
 
 uses
+   uSettingsModel,     // Settings -- the settings that have left CFGCA
   uWSJTXState, { the link state -- uStateBridge decides what it looks like }
   VC // For ContestExchange
   , MainUnit // For ParseADIFRecord
@@ -148,14 +149,14 @@ uses
   , TF // for SetMainWindowText
   , Tree // for LooksLikeAGrid
   , utils_text
-  , LogK1EA // for Config.PTTViaCommand
+  , LogK1EA // for Settings.Ptt.ViaCommands
   , LogDOM // for ActiveDomesticMult
   , uCFG // for WSJTXRadioControlEnabled
   , PostUnit
   , uCabrilloFormat // for tCabrilloFreqString (moved here from PostUnit,
                     // see uCabrilloFormat.pas)
   , IdStack // for GStack.AddMulticastMembership
-  , uConfigValues // for Config.PTTViaCommand
+  , uConfigValues // for Settings.Ptt.ViaCommands
   ;
 
 { THE DISPLAY REFRESH THAT FOLLOWS A WSJT-X QSO, MOVED OFF THE SOCKET THREAD.
@@ -1444,10 +1445,10 @@ begin
           end
        else if fieldValue = 'CmdRX' then // No reply
           begin
-          if not Config.PTTViaCommand then
+          if not Settings.Ptt.ViaCommands then
              begin
              QuickDisplay(TC_PTTVIACOMMANDSCTRLJOPTIONMUSTTRUEW);
-             Config.PTTViaCommand := true;
+             Settings.Ptt.ViaCommands := true;
              end;
           logger.Debug('[uWSJTX] <<<<<<<<<<<<<<<<<<<<< PTT OFF *********************');
           tPTTVIACAT(false);
@@ -1457,11 +1458,11 @@ begin
           end
        else if fieldValue = 'CmdTX' then
           begin
-          if not Config.PTTViaCommand then
+          if not Settings.Ptt.ViaCommands then
              begin
              QuickDisplay(TC_PTTVIACOMMANDSCTRLJOPTIONMUSTTRUEW);
              logger.Info('[uWSJTX] Set tPTTViaCommand for user');
-             Config.PTTViaCommand := true;
+             Settings.Ptt.ViaCommands := true;
              end;
           logger.debug('>>>>>>>>>>>>>>>>>>> PTT ON *********************');
           tPTTVIACAT(true);

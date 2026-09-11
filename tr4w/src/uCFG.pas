@@ -584,6 +584,10 @@ const
      SUBRANGE TYPES on the properties, which the compiler emits as RTTI
      and TrySetByCommand reads.  A range is part of a type. *)
    - 4 {band map display limit and item geometry -- moved to uSettingsModel}
+   (* The first group off the Config RECORD.  That record existed because
+     a const array had to hold @Config.Field, an address known at link
+     time; a published property needs no address at all. *)
+   - 5 {push to talk -- moved to uSettingsModel}
    ;
 
    // crS (CFGStatus): csNew / csOld = active -- the command's value IS applied.
@@ -858,7 +862,6 @@ const
  (crCommand: 'NO CAPTION';                    crAddress: @Config.NoCaption;                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAppearance; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'NO COLUMN HEADER';              crAddress: @Config.NoColumnHeader;                 crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAppearance; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'NO LOG';                        crAddress: @NoLog;                          crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'NO POLL DURING PTT';            crAddress: @Config.NoPollDuringPTT;                crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (* ORION PORT RETIRED 2026-09-10 (NY4I): "Drop Orion port. It covered by the
      general port as a type Orion in settings".
 
@@ -892,10 +895,6 @@ const
  (crCommand: 'PREFIX MULTIPLIER';             crAddress: pointer(3);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctMultiplier; crNetwork: 1),
  (crCommand: 'PSTROTATOR IP ADDRESS';         crAddress: @PSTRotatorIPAddress;            crMin:0;  crMax:255;     crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 0),   // Issue #732
  (crCommand: 'PSTROTATOR UDP PORT';           crAddress: @PSTRotatorUDPPort;              crMin:1;  crMax:65535;   crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 0),   // Issue #732
- (crCommand: 'PTT ENABLE';                    crAddress: @Config.PTTEnable;                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'PTT LOCKOUT';                   crAddress: @Config.PTTLockout;                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'PTT TURN ON DELAY';             crAddress: @Config.PTTTurnOnDelay;                 crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
- (crCommand: 'PTT VIA COMMANDS';              crAddress: @Config.PTTViaCommand;                 crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'QSL CW MESSAGE';                crAddress: @QSLMessage;                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 1),
  (crCommand: 'QSL MESSAGE';                   crAddress: @QSLMessage;                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 1),
  (crCommand: 'QSL MODE';                      crAddress: pointer(2);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),

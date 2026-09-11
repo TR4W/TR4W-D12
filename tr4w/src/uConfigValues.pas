@@ -146,9 +146,6 @@ type
       AllCWMessagesChainable: boolean;
       TuneWithDits: boolean;
       SendCompleteFourLetterCall: boolean;
-      PTTEnable: boolean;
-      PTTTurnOnDelay: integer;
-      NoPollDuringPTT: boolean;
       SwapPaddles: boolean;
       PaddleSpeed: integer;
       PaddleMonitorTone: integer;
@@ -172,8 +169,6 @@ type
         Five of these ten were typed constants = True. A record field defaults to
         zero, so carrying the value across by hand is the whole safeguard, and
         uTestConfigDefaults pins every one in the same commit. }
-      PTTViaCommand: boolean;
-      PTTLockout: boolean;
       AutoCallTerminate: boolean;
       AutoReturnToCQMode: boolean;
       EscapeExitsSearchAndPounce: boolean;
@@ -295,9 +290,6 @@ var
       { True, 15, 700 and 13 are NOT arbitrary -- they are the values the typed
         constants in LOGK1EA carried, kept so a station with no settings file
         behaves exactly as it did before. }
-      PTTEnable: True;
-      PTTTurnOnDelay: 15;
-      NoPollDuringPTT: False;
       SwapPaddles: False;
       PaddleSpeed: 0;
       PaddleMonitorTone: 700;
@@ -308,8 +300,6 @@ var
       WaitForStrength: True;
       MultiMultsOnly: False;
       IntercomFileEnable: False;
-      PTTViaCommand: True;
-      PTTLockout: False;
       AutoCallTerminate: False;
       AutoReturnToCQMode: True;
       EscapeExitsSearchAndPounce: True;

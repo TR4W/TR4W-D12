@@ -183,6 +183,7 @@ var
 implementation
 
 uses
+   uSettingsModel,     // Settings -- the settings that have left CFGCA
   uFreqTimeFormat,   { FormatHourMinute -- see TimeString }
   LogStuff,
   uTelnet,
@@ -266,7 +267,7 @@ begin
   if ActiveMode = Digital then
      begin
          if ActiveRadioPtr.tPTTStatus = PTT_OFF then
-           if Config.PTTEnable then
+           if Settings.Ptt.Enable then
               begin
               logger.debug('Calling PTTOn from AddStringToBuffer');
               PTTOn;

@@ -261,6 +261,7 @@ const
 
 implementation
 uses
+   uSettingsModel,     // Settings -- the settings that have left CFGCA
    uAppTimers,   (* StartAppTimer / StopAppTimer -- LCL TTimers, not SetTimer *)
   Menus,          { TMenuItem -- the Network menu row }
   uMenu,          { TopLevelMenuItem }
@@ -959,7 +960,7 @@ begin
     STATUS_BYTE_BIT_PTT * Byte(ActiveRadioPtr.tPTTStatus) +
     STATUS_BYTE_BIT_OPMODE * Byte(OpMode) +
     STATUS_BYTE_BIT_DUPE * Byte(tCallWindowStringIsDupe) +
-    STATUS_BYTE_BIT_PTT_LOCKOUT * Byte(Config.PTTLockout);
+    STATUS_BYTE_BIT_PTT_LOCKOUT * Byte(Settings.Ptt.Lockout);
 //    + STATUS_BYTE_BIT_MULT * Byte(tNewMultIndicatorPrevState)
   ;
 end;

@@ -747,6 +747,7 @@ implementation
 
 
 uses
+   uSettingsModel,     // Settings -- the settings that have left CFGCA
    LogK1EA,
    LogWind,
    MainUnit, uRadioPolling,
@@ -2510,12 +2511,12 @@ const
 
 begin
    Result := False;
-   if not Config.PTTViaCommand then
+   if not Settings.Ptt.ViaCommands then
       begin
       logger.debug('**** tPTTVIACAT called but tPTTViaCommand is false');
       Exit;
       end;
-   if Config.NoPollDuringPTT then
+   if Settings.Ptt.NoPollDuring then
       begin
       Exit;
       end;

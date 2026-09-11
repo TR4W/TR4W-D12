@@ -137,6 +137,7 @@ type
    TBandMapItemHeight   = 12..50;
    TBandMapItemWidth    = 100..200;
    TBandMapSize         = 0..8;
+   TPttTurnOnDelay      = 0..65535;   // was crMin:0, crMax:MAXWORD
 
    (*
      THE BASE OF EVERY SETTINGS GROUP.
@@ -391,6 +392,53 @@ type
       property WarcEnabled: boolean read FWarcEnabled write SetWarcEnabled;
    end;
 
+   (*
+     PUSH TO TALK.
+
+     THE FIRST GROUP TO COME OFF THE `Config` RECORD, and that record's own
+     header asked for it: "leaves exactly one place to change when the applier
+     stops being CheckCommand.  That last step is what finally removes the
+     address-taking, and it cannot happen until the rows have moved."  This is
+     that step, for five of its seventy-one rows.
+
+     WHY Config HAD TO BE A RECORD, and why it no longer does.  CFGCA is a
+     const array holding the ADDRESS of each setting, so the storage had to be
+     statically addressable -- `@Config.PTTEnable` resolves at link time and
+     `@SomeObject.Property` cannot.  The record was never the design; it was
+     the shape the array forced.  A published property needs no address at
+     all.
+
+     NO HOOKS ON ANY OF THE FIVE -- crP, crA, crJ and crC are all zero -- so
+     these are plain field writes.  A setter that notified would be inventing
+     a side effect none of them ever had.
+   *)
+   TPttSettings = class(TSettingsGroup)
+   private
+      FEnable: boolean;
+      FLockout: boolean;
+      FViaCommands: boolean;
+      FNoPollDuring: boolean;
+      FTurnOnDelay: TPttTurnOnDelay;
+   public
+      constructor Create;
+   published
+      // Was Config.PTTEnable.
+      property Enable: boolean read FEnable write FEnable;
+      // Was Config.PTTLockout.
+      property Lockout: boolean read FLockout write FLockout;
+      (* Was Config.PTTViaCommand -- SINGULAR in the record, while the config
+        command has always been PTT VIA COMMANDS.  The property takes the
+        command's spelling, which is the one an operator has typed and the one
+        another station sends. *)
+      property ViaCommands: boolean read FViaCommands write FViaCommands;
+      (* Was Config.NoPollDuringPTT.  The only one of the five whose legacy
+        name does not derive -- it reads NO POLL DURING PTT, putting the group
+        last -- so it carries an alias.  See BuildCommandMap. *)
+      property NoPollDuring: boolean read FNoPollDuring write FNoPollDuring;
+      // Was Config.PTTTurnOnDelay, in milliseconds.
+      property TurnOnDelay: TPttTurnOnDelay read FTurnOnDelay write FTurnOnDelay;
+   end;
+
    TR4WSettings = class(TPersistent)
    private
       // command name -> property path, built once by walking the RTTI.
@@ -403,6 +451,7 @@ type
       FMmtty: TMmttySettings;
       FBandMap: TBandMapSettings;
       FBands: TBandSettings;
+      FPtt: TPttSettings;
       procedure BuildCommandMap;
       function PathForCommand(const aCommand: string): string;
    public
@@ -488,6 +537,7 @@ type
       property Mmtty: TMmttySettings read FMmtty;
       property BandMap: TBandMapSettings read FBandMap;
       property Bands: TBandSettings read FBands;
+      property Ptt: TPttSettings read FPtt;
    end;
 
 (* THE ONE INSTANCE.  Created on first use so no unit's initialisation order
@@ -634,6 +684,19 @@ begin
    Changed('DisplayLimit');
 end;
 
+{ TPttSettings }
+
+constructor TPttSettings.Create;
+begin
+   inherited Create;
+   // The values uConfigValues' initialiser carried.
+   FEnable       := True;
+   FLockout      := False;
+   FViaCommands  := True;
+   FNoPollDuring := False;
+   FTurnOnDelay  := 15;
+end;
+
 { TBandSettings }
 
 constructor TBandSettings.Create;
@@ -701,6 +764,7 @@ begin
    FMmtty          := TMmttySettings.Create;
    FBandMap        := TBandMapSettings.Create;
    FBands          := TBandSettings.Create;
+   FPtt            := TPttSettings.Create;
 
    FCommands := TStringList.Create;
    FCommands.CaseSensitive := False;
@@ -712,6 +776,7 @@ end;
 destructor TR4WSettings.Destroy;
 begin
    FCommands.Free;
+   FPtt.Free;
    FBands.Free;
    FBandMap.Free;
    FMmtty.Free;
@@ -886,8 +951,19 @@ procedure TR4WSettings.BuildCommandMap;
      REMOVE the name the derivation invented for it.  Leaving both would put a
      command TR4W has never had -- 'BANDS WARC ENABLED' -- into CommandNames,
      where the Preferences list and the multi-op peer sync would both offer
-     it. *)
-   procedure Override(const aCommand, aPath: string);
+     it.
+
+     THIS LIST IS PART OF THE IMPORTER, NOT PART OF THE SETTINGS.  That
+     distinction decides how long it is allowed to get.  The PROPERTIES define
+     the settings; these names exist so that a config file written years ago
+     still reads, and so a peer running an older build is still understood.
+     TR4W's command vocabulary is historically FLAT -- 'NO POLL DURING PTT'
+     puts the subject last -- while a property path necessarily puts the group
+     first, so a steady trickle of these is expected as the flat names meet
+     the grouped model.  It is not evidence the derivation rule is wrong; it
+     is the legacy compatibility layer, and it goes when the legacy formats
+     stop being read. *)
+   procedure Alias(const aCommand, aPath: string);
    var
       i: integer;
    begin
@@ -968,9 +1044,13 @@ begin
      store already groups these as operating.bands.hf / .warc / .vhf, so
      splitting them into three objects would disagree with the one grouping
      this program has already committed to. *)
-   Override('HF BAND ENABLE',   'Bands.HfEnabled');
-   Override('VHF BAND ENABLE',  'Bands.VhfEnabled');
-   Override('WARC BAND ENABLE', 'Bands.WarcEnabled');
+   Alias('HF BAND ENABLE',   'Bands.HfEnabled');
+   Alias('VHF BAND ENABLE',  'Bands.VhfEnabled');
+   Alias('WARC BAND ENABLE', 'Bands.WarcEnabled');
+
+   (* The group goes LAST in this one -- NO POLL DURING PTT -- which no
+     property path can produce.  The other four PTT settings derive exactly. *)
+   Alias('NO POLL DURING PTT', 'Ptt.NoPollDuring');
 end;
 
 function TR4WSettings.PathForCommand(const aCommand: string): string;
