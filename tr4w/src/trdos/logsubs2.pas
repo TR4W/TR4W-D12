@@ -1791,11 +1791,11 @@ begin
      begin
      QuickBeep;
      end;
-  if FloppyFileSaveFrequency > 0 then
+  if BackupLogFrequency > 0 then
     if QSOTotals[AllBands, Both] > 0 then
-      if QSOTotals[AllBands, Both] mod FloppyFileSaveFrequency = 0 then
+      if QSOTotals[AllBands, Both] mod BackupLogFrequency = 0 then
          begin
-         SaveLogFileToFloppy;
+         BackupLogNow;
          end;
   if Config.UpdateRestartFileEnable then
      begin

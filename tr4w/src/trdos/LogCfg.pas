@@ -242,7 +242,7 @@ begin
      Exit;
      end;
 {
-  if FloppyFileSaveFrequency > 0 then
+  if BackupLogFrequency > 0 then
     if FloppyFileSaveName = '' then
     begin
       showwarning(TC_NOFLOPPYFILESAVENAMESPECIFIED);

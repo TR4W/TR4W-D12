@@ -620,8 +620,8 @@ const
  (crCommand: 'AUTO SEND CHARACTER COUNT';     crAddress: pointer(2);                      crMin:0;  crMax:6;        crS: csJSON; crA: 0; crC:0 ; crP:4; crJ: 0; crKind: ckArray; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'AUTO TIME INCREMENT';           crAddress: @AutoTimeIncrementQSOs;          crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'AUTO-CQ DELAY TIME';            crAddress: @AutoCQDelayTime;                crMin:500;crMax:10000;    crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
- (crCommand: 'BACKUP LOG FILE NAME';          crAddress: @TR4W_FLOPPY_FILENAME;           crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctFileName; crNetwork: 1),   // 4.56.11
- (crCommand: 'BACKUP LOG FREQUENCY';          crAddress: @FloppyFileSaveFrequency;        crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),   // 4.56.11
+ (crCommand: 'BACKUP LOG FILE NAME';          crAddress: @TR4W_BACKUP_FILENAME;           crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctFileName; crNetwork: 1),   // 4.56.11
+ (crCommand: 'BACKUP LOG FREQUENCY';          crAddress: @BackupLogFrequency;        crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),   // 4.56.11
  (crCommand: 'BAND';                          crAddress: pointer(24);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:1 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctBand; crNetwork: 1),
  (crCommand: 'BAND MAP CUTOFF FREQUENCY';     crAddress: @tBandMapCutoffFrequency;        crMin:0;  crMax:MAXWORD-1; crS: csJSON; crA: 17;crC:0 ; crP:1; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctFreqList; crNetwork: 1),
  (crCommand: 'BAND MAP DECAY TIME';           crAddress: @BandMapDecayTime{BandMapDecayValue};              crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 5; crC:0 ; crP:1; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
@@ -3050,7 +3050,10 @@ begin
      overrun -- and nothing checked.  AppendToBuffer takes the array and
      reads its own bounds; all four fit, and it says so if one ever stops
      fitting. *)
-   uAnsiStr.AppendToBuffer(TR4W_FLOPPY_FILENAME, 'logback.tr4w'); // 4.56.13
+   (* .db, NOT .tr4w. The backup is a SQLite snapshot of the contest log
+     now, so the old extension named a format it no longer is -- and an
+     operator who needs this file back has to be able to open it. *)
+   uAnsiStr.AppendToBuffer(TR4W_BACKUP_FILENAME, 'logback.db'); // 4.56.13
    uAnsiStr.AppendToBuffer(TR4W_INITIALEX_FILENAME, 'INITIAL.EX');
    uAnsiStr.AppendToBuffer(Config.MP3Path, 'MP3');
    uAnsiStr.AppendToBuffer(Config.DVKPath, 'DVK');

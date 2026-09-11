@@ -4895,7 +4895,7 @@ begin
       end;
 
     menu_alt_savetofloppy:
-      SaveLogFileToFloppy;
+      BackupLogNow;
 
     menu_alt_swapmults:
       SwapMultDisplay;

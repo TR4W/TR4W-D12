@@ -3067,7 +3067,7 @@ var
   TR4W_ADIF_FILENAME                    : FileNameType;
 //  TR4W_IODRIVER_FILENAME                : FileNameType;
 
-  TR4W_FLOPPY_FILENAME                  : FileNameType {= 'C:\TR4W\LOGBACK.TRW'};
+  TR4W_BACKUP_FILENAME                  : FileNameType {= 'C:\TR4W\LOGBACK.TRW'};
   TR4W_INITIALEX_FILENAME               : FileNameType {= 'INITIAL.EX'};
   (* TR4W_LATESTCFG_FILENAME DELETED, 2026-09-11.  It was a second copy of
     uRadioConfigStore.LatestConfigFile, which the store has owned since
@@ -4494,6 +4494,6 @@ begin
   {$IFDEF WINDOWS}
   tr4wColorsArray[trBtnFace] := GetSysColor(COLOR_BTNFACE);
   {$ENDIF}
-//  Windows.CopyMemory(@TR4W_FLOPPY_FILENAME, PChar('LOGBACK.TRW'), 11);
+//  Windows.CopyMemory(@TR4W_BACKUP_FILENAME, PChar('LOGBACK.TRW'), 11);
 //  tr4wColorsArray[trSelected] := GetSysColor(COLOR_ACTIVECAPTION);
 end.

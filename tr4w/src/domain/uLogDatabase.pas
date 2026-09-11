@@ -186,6 +186,29 @@ type
         should be looked at before it is written to. *)
       function CheckIntegrity: TIntegrityResult;
 
+      (* A CONSISTENT COPY OF THE OPEN DATABASE, at aDestination.
+
+        NOT A FILE COPY, and the difference is the whole point. This database
+        runs in WAL mode, so a just-logged QSO can be in the -wal file and not
+        in the .db at all -- copying the .db alone produces a backup that is
+        missing exactly the contacts an operator most wants back. Copying a
+        live .db can also catch it mid-write and yield a torn file that opens
+        and then fails a check.
+
+        VACUUM INTO, not the C backup API. It is one SQL statement through the
+        connection this unit already owns, it takes a read lock for the
+        duration so the result is a point-in-time snapshot INCLUDING committed
+        WAL content, and it needs no new binding to sqlite3.dll -- which is
+        the standing rule here (see CLAUDE.md). SQLite 3.27 and later; the
+        shipped library is 3.53.
+
+        The destination must NOT exist: SQLite refuses rather than overwrite,
+        which is the right default and is why the caller stages to a new name
+        and publishes afterwards.
+
+        Raises ELogDatabaseError with SQLite's own message on failure. *)
+      procedure SnapshotTo(const aDestination: string);
+
       property FileName: string read FFileName;
       (* What journal_mode actually came back -- 'wal' normally, 'delete' when
         SQLite refused WAL (a network share). Worth reading before concluding
@@ -851,6 +874,75 @@ begin
       Result.Ok := False;
       Result.Report := problems;
       end;
+end;
+
+(* SQL STRING LITERAL QUOTING, which is a real hazard here and not pedantry:
+  a contest directory is chosen by the operator and an apostrophe in a path is
+  legal on every platform this runs on. VACUUM INTO takes a literal rather than
+  a parameter, so there is nothing to bind and the doubling has to be done. *)
+(* THE WHOLE STATEMENT, ENCODED ONCE.
+
+  TWO THINGS FORCED THIS SHAPE AND NEITHER IS OBVIOUS.
+
+  SQL STRING LITERAL QUOTING is a real hazard, not pedantry: a contest
+  directory is chosen by the operator and an apostrophe in a path is legal
+  on every platform this runs on. VACUUM INTO takes a literal rather than a
+  parameter, so there is nothing to bind and the doubling has to be done.
+
+  AND THE ENCODE CANNOT BE FOLLOWED BY A CONCATENATION. UTF8Encode is the
+  right conversion at this boundary -- SQLite speaks UTF-8, and an
+  AnsiString CAST would instead DROP every character the machine codepage
+  cannot represent, which for a path means a backup written somewhere other
+  than where the operator asked. But FPC promotes a concatenation involving
+  a UTF8String back to UnicodeString, which then narrows silently at the
+  AnsiString parameter and undoes the whole point. So the statement is
+  assembled first and encoded last. *)
+function VacuumIntoSQL(const aDestination: string): UTF8String;
+var
+   quoted: UnicodeString;
+   i: integer;
+begin
+   (* DOUBLED BY HAND rather than by StringReplace, which has an
+     AnsiString overload and an UnicodeString one -- and the quote
+     patterns are AnsiString literals, so overload resolution picks the
+     Ansi one and NARROWS the path on the way in. That is the exact loss
+     the encode below exists to avoid, reintroduced by a helper. *)
+   quoted := '';
+   for i := 1 to Length(aDestination) do
+      begin
+      quoted := quoted + aDestination[i];
+      if aDestination[i] = '''' then
+         begin
+         quoted := quoted + '''';
+         end;
+      end;
+
+   Result := UTF8Encode('VACUUM INTO ''' + quoted + '''');
+end;
+
+procedure TLogDatabase.SnapshotTo(const aDestination: string);
+begin
+   if not IsOpen then
+      begin
+      raise ELogDatabaseError.Create(
+         'The contest log is not open, so it cannot be backed up.');
+      end;
+
+   if FileExists(aDestination) then
+      begin
+      (* Said here rather than letting SQLite say it, because its own message
+        names only the destination and this one names the cause. *)
+      raise ELogDatabaseError.CreateFmt(
+         'The backup destination "%s" already exists. SQLite will not '
+         + 'overwrite it, so the caller must stage to a new name.',
+         [aDestination]);
+      end;
+
+   (* ExecPragmaRaw, NOT ExecuteDirect. VACUUM cannot run inside a transaction
+     and sqldb starts one on any statement -- the same trap ApplyPragmas
+     documents at length a few routines up. This path goes to the connection's
+     own handle, transaction-free. *)
+   ExecPragmaRaw(VacuumIntoSQL(aDestination));
 end;
 
 constructor TLogDatabase.Create;

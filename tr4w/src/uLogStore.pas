@@ -147,6 +147,36 @@ function LogStoreApplyContestConfig: integer;
   silently read the wrong store. *)
 function LogStoreEnsureOpen: boolean;
 
+(* A VERIFIED BACKUP OF THE CONTEST LOG, at aDestination.
+
+  WHAT THIS REPLACES, AND WHY IT HAD TO. SaveLogFileToFloppy copied
+  TR4W_LOG_FILENAME -- the .TRW -- with CopyFile. QSO appends stopped writing
+  that file when the log became SQLite, so on a new contest the backup failed
+  because there was no such file, and on an upgraded contest it SUCCEEDED while
+  copying a stale log that did not contain a single contact from this session
+  (Codex review, 2026-09-11). A backup that reports success and saves the wrong
+  bytes is worse than one that fails, because nobody looks again.
+
+  THREE THINGS HAVE TO BE TRUE OF A BACKUP AND ALL THREE ARE CHECKED HERE:
+
+    IT IS CONSISTENT. TLogDatabase.SnapshotTo takes a point-in-time copy
+    through SQLite, so committed contacts sitting in the -wal file are in it.
+    A file copy of the .db alone is missing exactly those.
+
+    IT OPENS AND IT IS SOUND. The staged file is opened by a SECOND, separate
+    TLogDatabase and put through integrity_check and foreign_key_check before
+    anything is published. An unverified backup is a belief, not a backup.
+
+    THE PREVIOUS ONE SURVIVES UNTIL THE NEW ONE IS PROVEN. The snapshot is
+    staged as <destination>.new and only renamed over the destination after it
+    verifies; the file it displaces is kept as <destination>.bak. A failure at
+    any point therefore leaves the last good backup exactly where it was.
+
+  aReport is a sentence for the operator -- what happened and to which file --
+  and it is set whether this succeeds or fails, because the failure is the
+  case that has to be visible. Never raises. *)
+function LogStoreBackup(const aDestination: string; out aReport: string): boolean;
+
 implementation
 
 uses
@@ -860,6 +890,121 @@ begin
            program down mid-contest, and Disable is how every other failure in
            this unit reports itself. The caller sees False. *)
          Disable('LogStoreClearAllQSOs', E);
+         end;
+   end;
+end;
+
+(* Open the staged file on its OWN connection and ask SQLite whether it is
+  sound. A second connection is the point: verifying through the connection
+  that wrote it would prove far less, since that one already has the pages in
+  its own cache. *)
+function StagedBackupIsSound(const aPath: string; out aWhy: string): boolean;
+var
+   check: TLogDatabase;
+   verdict: TIntegrityResult;
+begin
+   Result := False;
+   aWhy   := '';
+   check  := TLogDatabase.Create;
+   try
+      try
+         check.Open(aPath);
+         verdict := check.CheckIntegrity;
+         Result  := verdict.Ok;
+         if not Result then
+            begin
+            aWhy := verdict.Report;
+            end;
+      except
+         on E: Exception do
+            begin
+            (* It would not even OPEN, which is the most important failure to
+              report plainly: the snapshot statement said it succeeded. *)
+            aWhy := E.Message;
+            end;
+      end;
+   finally
+      check.Free;
+   end;
+end;
+
+function LogStoreBackup(const aDestination: string; out aReport: string): boolean;
+var
+   staged: string;
+   previous: string;
+   why: string;
+begin
+   Result  := False;
+   aReport := '';
+
+   if Trim(aDestination) = '' then
+      begin
+      aReport := 'No backup file name is set. See BACKUP LOG FILE NAME.';
+      Exit;
+      end;
+
+   if not LogStoreEnsureOpen then
+      begin
+      aReport := 'The contest log could not be opened, so it was not backed up.';
+      Exit;
+      end;
+
+   staged   := aDestination + '.new';
+   previous := aDestination + '.bak';
+
+   try
+      (* A staged file left by an interrupted run would make SnapshotTo refuse,
+        and it is worth nothing -- the whole point of staging is that it is not
+        the backup until it verifies. *)
+      if SysUtils.FileExists(staged) then
+         begin
+         SysUtils.DeleteFile(staged);
+         end;
+
+      GDatabase.SnapshotTo(staged);
+
+      if not StagedBackupIsSound(staged, why) then
+         begin
+         SysUtils.DeleteFile(staged);
+         aReport := SysUtils.Format('The backup of %s failed its integrity check and '
+                           + 'was discarded: %s', [aDestination, why]);
+         Exit;
+         end;
+
+      (* PUBLISH. The previous backup is displaced rather than deleted, so a
+        machine that dies between these two renames still has one good copy
+        under one of the two names. *)
+      if SysUtils.FileExists(aDestination) then
+         begin
+         if SysUtils.FileExists(previous) then
+            begin
+            SysUtils.DeleteFile(previous);
+            end;
+         SysUtils.RenameFile(aDestination, previous);
+         end;
+
+      if not SysUtils.RenameFile(staged, aDestination) then
+         begin
+         aReport := SysUtils.Format('The backup was written and verified but could not '
+                           + 'be renamed to %s. It is at %s.',
+                           [aDestination, staged]);
+         Exit;
+         end;
+
+      aReport := SysUtils.Format('Log backed up to %s.', [aDestination]);
+      Result  := True;
+   except
+      on E: Exception do
+         begin
+         (* NOT Disable. A backup that fails says nothing about whether the log
+           itself is writable, and switching the store off here would turn a
+           full backup volume into a contest that cannot log. *)
+         if SysUtils.FileExists(staged) then
+            begin
+            SysUtils.DeleteFile(staged);
+            end;
+         aReport := SysUtils.Format('The backup to %s failed: %s',
+                           [aDestination, E.Message]);
          end;
    end;
 end;

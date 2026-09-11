@@ -463,7 +463,7 @@ var
   FakeBandMap: boolean;
   FirstHelloRecord: HelloRecPtr;
   FirstMultiMessage: integer;
-  FloppyFileSaveFrequency: integer;
+  BackupLogFrequency: integer;
   //  FloppyFileSaveName                    : ShortString = 'LOGBACK.TRW';
   ForcedEntry: boolean;
   {KK1L: 6.70 switch used in JCTRL2 to add comments to LOGCFG}
@@ -698,7 +698,7 @@ function ProperSalutation(Call: CallString): string;
 procedure ReviewBackCopyFiles;
 procedure RotorControl(Heading: integer);
 
-procedure SaveLogFileToFloppy;
+procedure BackupLogNow;
 procedure SayHello(Call: CallString);
 procedure SayName(Call: CallString);
 procedure SendMultiInfoMessage(Band: BandType; Mode: ModeType; Message: Str80);
@@ -789,6 +789,8 @@ uses uNet,
    uMainForm,
    (* Which store a log READ comes from -- step B4.  See uLogSource. *)
    uLogSource,
+   (* LogStoreBackup -- the verified SQLite snapshot BackupLogNow publishes. *)
+   uLogStore,
    (* The contest factory -- phase F. *)
    uContestFactory,
   PostUnit,
@@ -5771,11 +5773,34 @@ begin
   end;
 end;
 
-procedure SaveLogFileToFloppy;
+(* BACK THE CONTEST LOG UP, NOW.
+
+  IT USED TO COPY THE .TRW AND THAT STOPPED MEANING ANYTHING. This routine was
+  SaveLogFileToFloppy and it did CopyFile(TR4W_LOG_FILENAME, ...) -- the binary
+  log. QSO appends stopped writing that file when the log became SQLite, so on
+  a new contest the copy failed for want of a source, and on a contest upgraded
+  from an older version it SUCCEEDED and saved a stale file containing not one
+  contact from the session in progress (Codex review, 2026-09-11).
+
+  The second case is the dangerous one. A backup that reports success and holds
+  the wrong bytes is worse than one that fails, because the failure is what
+  makes somebody look.
+
+  WHY THE WHOLE BODY MOVED TO uLogStore rather than the file name being
+  swapped: a SQLite database in WAL mode cannot be backed up by copying its
+  .db, because committed QSOs can still be in the -wal. LogStoreBackup takes a
+  consistent snapshot through SQLite, verifies it by opening it separately, and
+  only then publishes it over the previous one. None of that belongs in a TRDOS
+  display routine; what belongs here is showing the operator what happened.
+
+  THE NAME. Floppy disks are not a thing any more, and the config commands have
+  said BACKUP LOG FILE NAME and BACKUP LOG FREQUENCY since 4.56.11 -- only the
+  identifiers were still stuck in 1995. *)
+procedure BackupLogNow;
 var
-  ErrorMsg: AnsiString;
+  report: string;
 begin
-  if TR4W_FLOPPY_FILENAME[0] = #0 then
+  if TR4W_BACKUP_FILENAME[0] = #0 then
      begin
      Exit;
      end;
@@ -5790,28 +5815,20 @@ begin
     the round trip through a global bought nothing and capped the result at
     1023 bytes on the way. *)
   QuickDisplay(SysUtils.Format(AnsiString(LclText(TC_SAVINGTO)),
-                               [TR4W_LOG_FILENAME, TR4W_FLOPPY_FILENAME]));
+                               [TR4W_LOG_FILENAME, TR4W_BACKUP_FILENAME]));
 
-  (* CopyFile (LazFileUtils), not Windows.CopyFileA. The False was
-    bFailIfExists -- overwrite -- which is CopyFile's default. *)
-  (* AnsiString, not string(AnsiString(...)): LazUtils is built without
-    UnicodeStrings, so CopyFile takes an AnsiString and widening here only to
-    have the call narrow it back is a silent round trip the ratchet counts. *)
-  if not CopyFile(AnsiString(TR4W_LOG_FILENAME),
-                  AnsiString(TR4W_FLOPPY_FILENAME)) then
+  (* THE REPORT IS THE ROUTINE'S OUTPUT, success or failure, and it names the
+    file either way -- a periodic backup runs unattended and the only place an
+    operator will ever see it is this line. *)
+  if LogStoreBackup(string(StrPas(TR4W_BACKUP_FILENAME)), report) then
      begin
-     ErrorMsg := SysUtils.SysErrorMessage(GetLastOSError);
-     (* AND THE PAnsiChar(ErrorMsg) GOES WITH THE BUFFER. It existed only to
-       satisfy a cdecl varargs signature; an array of const takes the
-       AnsiString itself. *)
-     QuickDisplay(SysUtils.Format(AnsiString('%s: %s'),
-                                  [TR4W_FLOPPY_FILENAME, ErrorMsg]));
-     DoABeep(Warning);
+     QuickDisplay(AnsiString(report));
      end
   else
      begin
-     QuickDisplay(SysUtils.Format(AnsiString(LclText(TC_FILESAVEDTOSUCCESSFULLY)),
-                                  [TR4W_FLOPPY_FILENAME]));
+     QuickDisplay(AnsiString(report));
+     logger.Error('[Backup] %s', [report]);
+     DoABeep(Warning);
      end;
 end;
 

@@ -216,7 +216,7 @@ begin
 //  Config.FarnsworthSpeed := 25;
 
   //FloppyFileSaveName := 'logback.dat';
-  //  FloppyFileSaveFrequency := 0;
+  //  BackupLogFrequency := 0;
 
   //  FootSwitchMode := FootSwitchDisabled;
 

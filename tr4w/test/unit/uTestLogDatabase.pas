@@ -52,6 +52,11 @@ type
       procedure TestIntegrityPassesOnAFreshLog;
       procedure TestIntegrityReportsAClosedLog;
 
+      (* backup *)
+      procedure TestSnapshotIncludesCommitsStillInTheWAL;
+      procedure TestSnapshotRefusesAnExistingDestination;
+      procedure TestSnapshotRefusesAClosedLog;
+
       (* the leaf helpers *)
       procedure TestPEArchitectureOfTheSQLiteDLL;
       procedure TestPEArchitectureOfSomethingThatIsNotPE;
@@ -902,6 +907,148 @@ end;
 
 (* --------------------------------------------------------------------------- *)
 
+(* ---------------------------------------------------------------------------
+  backup
+
+  THE ONE THAT MATTERS IS THE FIRST. Until 2026-09-11 the Backup Log menu and
+  the every-N-QSOs periodic backup both ran CopyFile over the old binary .TRW,
+  which QSO appends had stopped writing -- so a backup either failed for want
+  of a source or SUCCEEDED while saving a stale file with none of the session's
+  contacts in it (Codex review). The obvious repair, pointing that CopyFile at
+  the .db, would have been wrong in a quieter way: this database runs in WAL
+  mode, so a just-logged QSO can be in the -wal file and not in the .db at all.
+
+  That is what TestSnapshotIncludesCommitsStillInTheWAL pins, and it is written
+  so it would FAIL against a plain file copy: it commits a row, does not
+  checkpoint, snapshots, and then reads the row back out of the snapshot.
+  --------------------------------------------------------------------------- *)
+
+procedure TLogDatabaseTests.TestSnapshotIncludesCommitsStillInTheWAL;
+var
+   db: TLogDatabase;
+   copy: TLogDatabase;
+   fn: string;
+   dest: string;
+   q: TSQLQuery;
+   verdict: TIntegrityResult;
+begin
+   BeginTest('a snapshot contains a commit that is still in the WAL');
+   fn   := TempLogName('snapsrc.db');
+   dest := TempLogName('snapdest.db');
+   Scrub(fn);
+   Scrub(dest);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      CheckEquals('wal', LowerCase(db.JournalMode),
+                  'the fixture needs WAL -- without it this test proves nothing');
+
+      db.Connection.ExecuteDirect(
+         'INSERT INTO config (command, value, source) '
+         + 'VALUES (''BACKUP PROBE'', ''in-the-wal'', ''test'')');
+      db.Transaction.Commit;
+
+      (* NO CHECKPOINT ON PURPOSE. The row is committed and durable, and it is
+        exactly the kind of row a file copy of the .db would miss. *)
+      db.SnapshotTo(dest);
+   finally
+      db.Free;
+   end;
+
+   CheckTrue(FileExists(dest), 'the snapshot exists on disk');
+
+   copy := TLogDatabase.Create;
+   try
+      copy.Open(dest);
+
+      (* It has to be a SOUND database, not merely a file that exists. *)
+      verdict := copy.CheckIntegrity;
+      CheckTrue(verdict.Ok, 'the snapshot passes its integrity check: '
+                            + verdict.Report);
+
+      q := TSQLQuery.Create(nil);
+      try
+         q.DataBase := copy.Connection;
+         q.SQL.Text := 'SELECT value FROM config WHERE command = ''BACKUP PROBE''';
+         q.Open;
+         CheckFalse(q.EOF, 'the committed row is IN the snapshot -- a copy of '
+                           + 'the .db alone would not have it');
+         CheckEquals('in-the-wal', q.Fields[0].AsString, 'and it is the value written');
+         q.Close;
+      finally
+         q.Free;
+      end;
+   finally
+      copy.Free;
+   end;
+
+   Scrub(fn);
+   Scrub(dest);
+end;
+
+procedure TLogDatabaseTests.TestSnapshotRefusesAnExistingDestination;
+var
+   db: TLogDatabase;
+   fn: string;
+   dest: string;
+   raised: boolean;
+begin
+   (* SQLite will not overwrite, and neither will this -- said here so the
+     message names the cause rather than only the file. It is why the caller
+     stages to a new name and publishes afterwards: the previous backup must
+     survive until the new one has been verified. *)
+   BeginTest('a snapshot will not overwrite an existing file');
+   fn   := TempLogName('snapsrc2.db');
+   dest := TempLogName('snapdest2.db');
+   Scrub(fn);
+   Scrub(dest);
+
+   raised := False;
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      db.SnapshotTo(dest);
+      try
+         db.SnapshotTo(dest);
+      except
+         on E: Exception do
+            begin
+            raised := True;
+            end;
+      end;
+   finally
+      db.Free;
+   end;
+
+   CheckTrue(raised, 'the second snapshot to the same name is refused');
+   Scrub(fn);
+   Scrub(dest);
+end;
+
+procedure TLogDatabaseTests.TestSnapshotRefusesAClosedLog;
+var
+   db: TLogDatabase;
+   raised: boolean;
+begin
+   BeginTest('a closed log cannot be backed up');
+   raised := False;
+   db := TLogDatabase.Create;
+   try
+      try
+         db.SnapshotTo(TempLogName('never.db'));
+      except
+         on E: Exception do
+            begin
+            raised := True;
+            end;
+      end;
+   finally
+      db.Free;
+   end;
+   CheckTrue(raised, 'it says so rather than producing an empty file');
+end;
+
 procedure TLogDatabaseTests.RunAllTests;
 begin
    TestCreateNewMakesAFile;
@@ -924,6 +1071,9 @@ begin
 
    TestIntegrityPassesOnAFreshLog;
    TestIntegrityReportsAClosedLog;
+   TestSnapshotIncludesCommitsStillInTheWAL;
+   TestSnapshotRefusesAnExistingDestination;
+   TestSnapshotRefusesAClosedLog;
 
    TestPEArchitectureOfTheSQLiteDLL;
    TestPEArchitectureOfSomethingThatIsNotPE;
