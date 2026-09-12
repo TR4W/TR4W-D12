@@ -141,6 +141,27 @@ type
      form both multiply by 60 before comparing. Named here so the unit is
      attached to the type rather than rediscovered at each reader. *)
    TBandMapDecayTime    = 0..65535;   // was crMin:0, crMax:MAXWORD
+   (* HERTZ, and the LOWER BOUND IS DELIBERATELY 0 WHERE THE ROW SAID 100.
+
+     THE ROW'S MINIMUM AND THE PROGRAM'S DEFAULT CONTRADICTED EACH OTHER.
+     The global was declared `BandMapGuardBand: integer;` with its `= 200`
+     commented out, and cfgdef's assignment was commented out too, so a
+     station that never set the command ran at ZERO -- below a minimum of
+     100 that made zero impossible to type. An older uCFG in the D7 tree
+     carries crMin:0, so the floor was RAISED at some point and stranded
+     the default underneath it.
+
+     MEASURED BEFORE DECIDING, in the D7 tree at C:\TR4W and in a real
+     contest database: D7 has no default either (identical commented-out
+     declaration), and NY4I's own captured station config reads
+     BAND MAP GUARD BAND = 0. So zero is not a porting accident, it is
+     what every station is actually running.
+
+     NY4I ruled on 2026-09-11 to keep 0 and drop the floor: defaulting to
+     200 instead would silently start treating spots within 200 Hz as one
+     frequency on every station that had never set it. A minimum that
+     forbids the value the program itself ships with is the defect. *)
+   TBandMapGuardBand    = 0..65535;   // was crMin:100 -- see above
    TPttTurnOnDelay      = 0..65535;   // was crMin:0, crMax:MAXWORD
    TPaddleMonitorTone   = 0..65535;   // was crMin:0, crMax:MAXWORD
    TPaddlePttHoldCount  = 0..65535;   // was crMin:0, crMax:MAXWORD
@@ -300,6 +321,7 @@ type
       FDisplayLimit: TBandMapDisplayLimit;
       FItemHeight: TBandMapItemHeight;
       FDecayTime: TBandMapDecayTime;
+      FGuardBand: TBandMapGuardBand;
       FItemWidth: TBandMapItemWidth;
       FSize: TBandMapSize;
       procedure SetAllBands(aValue: boolean);
@@ -357,6 +379,12 @@ type
         user. Its crP was 1, the band map redraw, which uSettingsEffects
         already raises for the whole BandMap group. *)
       property DecayTime: TBandMapDecayTime read FDecayTime write FDecayTime;
+      (* Was the global BandMapGuardBand in logwind.pas, in Hz. BAND MAP
+        GUARD BAND derives exactly, so no alias. Zero means no guard band:
+        every 'is this spot near that one' test degenerates to an exact
+        frequency match, which is what the program has always done when
+        nobody set it. *)
+      property GuardBand: TBandMapGuardBand read FGuardBand write FGuardBand;
       // Was BandMapItemWidth in uBandmap.pas.
       property ItemWidth: TBandMapItemWidth read FItemWidth write FItemWidth;
       // Was BandMapSize in VC.pas.
@@ -752,6 +780,9 @@ begin
    (* 60 MINUTES -- the value logwind.pas gave the global. The commented
      default in cfgdef.pas agreed, which is why this one needed no ruling. *)
    FDecayTime        := 60;
+   (* ZERO, and it is the value the global actually had -- NOT the 200 that
+     sits commented out beside its declaration. See the type. *)
+   FGuardBand        := 0;
 end;
 
 (* EIGHT SETTERS THAT DIFFER ONLY IN WHICH FIELD THEY GUARD.

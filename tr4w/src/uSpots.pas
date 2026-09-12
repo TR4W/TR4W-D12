@@ -861,7 +861,7 @@ begin
         begin
         exit;
         end;
-     if (a < BandMapGuardBand) and (PInteger(@FList^[Index].FCall[1])^ <>
+     if (a < Settings.BandMap.GuardBand) and (PInteger(@FList^[Index].FCall[1])^ <>
        tCQAsInteger) then
         begin
         if (a < d) then
@@ -873,7 +873,7 @@ begin
         break; // stop search on match 4.130.1
         end;
      end;
-  if (d >= BandMapGuardBand) or (Pos(MyCall, Flist^[Index2].FCall) > 0) then
+  if (d >= Settings.BandMap.GuardBand) or (Pos(MyCall, Flist^[Index2].FCall) > 0) then
     // 4.57.8  // 4.72.1
      begin
      ClearAltD;
@@ -881,7 +881,7 @@ begin
 
      end;
 
-  if d <= BandMapGuardBand then
+  if d <= Settings.BandMap.GuardBand then
      begin
      {  if not SprintQSYRule then
        begin
@@ -922,9 +922,9 @@ begin
   for Index := 0 to FCount - 1 do
      begin
      a := Abs(FList^[Index].FFrequency - Freq);
-     {logger.debug('[TDXSpotsList.DisplayCallsignOnThisFreq] a = %d, BandMapGuardBand = %d,  PInteger(@FList^[Index].FCall[1])^ = %d, tCQAsInteger = %d',
-                  [a, BandMapGuardBand, PInteger(@FList^[Index].FCall[1])^, tCQAsInteger]);}
-     if (a < BandMapGuardBand) and (PInteger(@FList^[Index].FCall[1])^ <>  tCQAsInteger) then
+     {logger.debug('[TDXSpotsList.DisplayCallsignOnThisFreq] a = %d, Settings.BandMap.GuardBand = %d,  PInteger(@FList^[Index].FCall[1])^ = %d, tCQAsInteger = %d',
+                  [a, Settings.BandMap.GuardBand, PInteger(@FList^[Index].FCall[1])^, tCQAsInteger]);}
+     if (a < Settings.BandMap.GuardBand) and (PInteger(@FList^[Index].FCall[1])^ <>  tCQAsInteger) then
         begin
         if a < d then
            begin
@@ -934,7 +934,7 @@ begin
         end;
      end;
 
-  if d <= BandMapGuardBand then
+  if d <= Settings.BandMap.GuardBand then
      begin
      //if (Pos(MyCall,Flist^[Index2].FCall)>0) then continue;
      if FList^[Index2].FCall <> MyCall then

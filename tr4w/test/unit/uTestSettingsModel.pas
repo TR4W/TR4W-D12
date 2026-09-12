@@ -343,7 +343,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(37, names.Count, 'one name per migrated setting, no more');
+         CheckEquals(38, names.Count, 'one name per migrated setting, no more');
       finally
          names.Free;
       end;
@@ -921,6 +921,7 @@ const
       + '"BAND MAP DISPLAY GHZ",'
       + '"BAND MAP DISPLAY LIMIT",'
       + '"BAND MAP DUPE DISPLAY",'
+      + '"BAND MAP GUARD BAND",'
       + '"BAND MAP ITEM HEIGHT",'
       + '"BAND MAP ITEM WIDTH",'
       + '"BAND MAP MULTS ONLY",'

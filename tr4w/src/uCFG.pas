@@ -597,6 +597,7 @@ const
      TCwSettings. *)
    - 5 {CW settings that are not session state -- moved to uSettingsModel}
    - 1 {BAND MAP DECAY TIME -- moved to uSettingsModel}
+   - 1 {BAND MAP GUARD BAND -- moved to uSettingsModel}
    ;
 
    // crS (CFGStatus): csNew / csOld = active -- the command's value IS applied.
@@ -637,7 +638,6 @@ const
 // and the next save persisted it -- see the comment on BandMapEnable in
 // logwind.pas.  csRem with a nil address, not deleted, so an existing .cfg or
 // tr4w.json that names it still loads and is ignored.
- (crCommand: 'BAND MAP GUARD BAND';           crAddress: @BandMapGuardBand;               crMin:100;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:1; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'BAND MAP SPLIT MODE';           crAddress: pointer(14);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:1; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'BEEP ENABLE';                   crAddress: @BeepEnable;                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'BEEP EVERY 10 QSOS';            crAddress: @BeepEvery10QSOs;                crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),

@@ -133,7 +133,6 @@ begin
   //  BandMapDecayValue := 60; {KK1L: 6.65}
   //  BandMapDecayMultiplier := 1; {KK1L: 6.65}
   //  BandMapDupeDisplay := True;
-  //  BandMapGuardBand := 200;
   //  BeepEnable := True;
   //  BeepEvery10QSOs := False;
   //  �� ����� BigRemainingList := False;

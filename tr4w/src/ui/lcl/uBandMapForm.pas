@@ -579,7 +579,7 @@ begin
    // makes any difference impossible to attribute, and this window is watched
    // constantly during a contest.  Correcting the order is one line once NY4I
    // has decided the red is wanted.
-   if Abs(aSpot.FFrequency - BandMapCursorFrequency) <= BandMapGuardBand then
+   if Abs(aSpot.FFrequency - BandMapCursorFrequency) <= Settings.BandMap.GuardBand then
       begin
       bandColor := clRed;
       end;

@@ -553,7 +553,6 @@ var
   BandMapFileVersion                    : AnsiChar = '2';
   {KK1L: 6.65 Expanded array to cover all cases to keep BM from going whacko when tuning out of band}
   BandMapFirstEntryList                 : array[Band160..NoBand, CW..FM] of BandMapEntryPointer;
-  BandMapGuardBand                      : integer; // = 200;
   BandMapSplitMode                      : BandMapSplitModeType {= ByCutoffFrequency}; {KK1L: 6.64}
   BandMapTotalCalls                     : integer;
   BandMapWindowRY                       : integer;
