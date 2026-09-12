@@ -427,7 +427,6 @@ begin
   //  ShowSearchAndPounce := False;
   //  SingleBand := All;
   //  SingleRadioMode := False;
-  //  Config.SkipActiveBand := False;
   //  Config.SpaceBarDupeCheckEnable := True;
   //  SprintQSYRule := False;
   {
@@ -459,9 +458,7 @@ begin
     StoppingFrequencies[Band6] := 54000000;
     StoppingFrequencies[Band2] := 148000000;
   }
-  //  Config.SwapPacketSpotRadios := False;
   //  Config.SwapPaddles := False;
-  //  Config.SwapRadioRelaySense := False;
 
   //  TabMode := NormalTabMode;
   //  TailEndKey := ']';

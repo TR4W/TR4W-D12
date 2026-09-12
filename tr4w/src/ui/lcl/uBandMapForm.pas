@@ -152,7 +152,7 @@ uses
   uBandMapView,      { the seam this form fills in }
   uSpots,
   uBandmap,          { TuneRadioToSpot }
-  uConfigValues,     { Config.TwoRadioMode, Config.QSYInactiveRadio }
+  uConfigValues,     { Settings.So2r.TwoRadioMode, Settings.So2r.QsyInactiveRadio }
   uCTYDAT,
   uDupesheet,        { ClearAltD }
   TF,                { FreqToPChar2 }
@@ -584,8 +584,8 @@ begin
       bandColor := clRed;
       end;
 
-   if ((aSpot.FBand = InactiveRadioPtr.BandMemory) and Config.TwoRadioMode) or
-      ((aSpot.FBand = BandmapBand) and (not Config.TwoRadioMode)) then
+   if ((aSpot.FBand = InactiveRadioPtr.BandMemory) and Settings.So2r.TwoRadioMode) or
+      ((aSpot.FBand = BandmapBand) and (not Settings.So2r.TwoRadioMode)) then
       begin
       bandColor := clBlue;
       end
@@ -733,7 +733,7 @@ begin
       end;
 
    if ((Radio1.FilteredStatus.Freq <> 0) and (Radio2.FilteredStatus.Freq <> 0)) and
-      Config.QSYInactiveRadio then
+      Settings.So2r.QsyInactiveRadio then
       begin
       InactiveRadioPtr.BandMemory := spot.FBand;
       tClearDupeInfoCall;
@@ -808,10 +808,10 @@ begin
 
    // Both SO2R items were only ever meaningful with two radios; the old window
    // expressed that by not ticking them, which is not the same as saying why.
-   miQSYInactive.Enabled := Config.TwoRadioMode;
-   miSO2RDisplay.Enabled := Config.TwoRadioMode;
-   miQSYInactive.Checked := Config.QSYInactiveRadio and Config.TwoRadioMode;
-   miSO2RDisplay.Checked := Settings.BandMap.So2rDisplay and Config.TwoRadioMode;
+   miQSYInactive.Enabled := Settings.So2r.TwoRadioMode;
+   miSO2RDisplay.Enabled := Settings.So2r.TwoRadioMode;
+   miQSYInactive.Checked := Settings.So2r.QsyInactiveRadio and Settings.So2r.TwoRadioMode;
+   miSO2RDisplay.Checked := Settings.BandMap.So2rDisplay and Settings.So2r.TwoRadioMode;
 end;
 
 procedure TfrmBandMap.MenuAllBandsClick(Sender: TObject);
@@ -866,18 +866,18 @@ end;
 
 procedure TfrmBandMap.MenuQSYInactiveClick(Sender: TObject);
 begin
-   if Config.TwoRadioMode then
+   if Settings.So2r.TwoRadioMode then
       begin
       (* NOT A SETTING -- a field of the Config record, so there is no setter
         to raise the change and the repaint is asked for explicitly. *)
-      Config.QSYInactiveRadio := not Config.QSYInactiveRadio;
+      Settings.So2r.QsyInactiveRadio := not Settings.So2r.QsyInactiveRadio;
       SpotsList.RequestRepaint;
       end;
 end;
 
 procedure TfrmBandMap.MenuSO2RDisplayClick(Sender: TObject);
 begin
-   if Config.TwoRadioMode then
+   if Settings.So2r.TwoRadioMode then
       begin
       Settings.BandMap.So2rDisplay := not Settings.BandMap.So2rDisplay;
       end;

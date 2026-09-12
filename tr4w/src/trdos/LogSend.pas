@@ -382,7 +382,7 @@ begin
 
             //            QuickDisplay('WAITING FOR YOU ENTER STRENGTH OF RST (Single digit)!!');
             //            AddStringToBuffer('5', Config.CWTone);
-            if Config.WaitForStrength then
+            if Settings.So2r.WaitForStrength then
                begin
                i := QuickEditInteger(TC_WAITINGFORYOUENTERSTRENGTHOFRST, 1)
                end

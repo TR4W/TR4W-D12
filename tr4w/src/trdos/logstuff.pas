@@ -928,7 +928,7 @@ begin
      end;
 
   // The walk below is a `goto` loop with no bound: every filter (WARC, VHF,
-  // Config.SkipActiveBand, and now radio coverage) can send it round again, and if
+  // Settings.So2r.SkipActiveBand, and now radio coverage) can send it round again, and if
   // between them they reject EVERY band it never returns.  That was survivable
   // while the filters were all operator settings; one driven by what the radio
   // reports deserves a belt.  Two full cycles is far more than any legitimate
@@ -1011,7 +1011,7 @@ begin
        goto NextBand;
        end;
 
-  if Config.SkipActiveBand then
+  if Settings.So2r.SkipActiveBand then
      begin
      if (Radio1.BandMemory = ActiveBand) then
         begin

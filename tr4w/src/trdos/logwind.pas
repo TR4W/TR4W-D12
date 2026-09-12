@@ -3620,7 +3620,7 @@ begin
   // scrolled.  Get() is indexed against FList, so FList is what to count.
   CC := SpotsList.Count;
     if CC = 0 then Exit;
-     if Config.TwoRadioMode and Config.QSYInactiveRadio then
+     if Settings.So2r.TwoRadioMode and Settings.So2r.QsyInactiveRadio then
         begin
         Band := InactiveRadioptr.BandMemory
         end
@@ -3645,7 +3645,7 @@ if (K = -1) or (k > CC) then
         SetOpMode(SEARCHAndPOUNCEOpMode);
         logger.info('[NEXTBM] CALL = '+ SPOT.FCALL);
         logger.info('Freq = ' + IntToStr(Spot.ffrequency));
-        if (Spot.FBand =  InactiveRadioptr.BandMemory) and (Spot.FMode = ActiveMode) and (Config.QSYInactiveRadio) then
+        if (Spot.FBand =  InactiveRadioptr.BandMemory) and (Spot.FMode = ActiveMode) and (Settings.So2r.QsyInactiveRadio) then
            begin
            logger.Info('Enter NextBandMap INACTIVE-Radio: ' + spot.fcall );
            LOGGER.INFO('Freq = ' + IntToStr(Spot.ffrequency));
@@ -3656,7 +3656,7 @@ if (K = -1) or (k > CC) then
            end
          else
         if (Spot.FBand = ActiveRadioptr.BandMemory) and (Spot.FMode = ActiveMode) then
-        if not (Config.QSYInactiveRadio) then
+        if not (Settings.So2r.QsyInactiveRadio) then
            begin
            logger.info('[NEXTBM-Active] CALL = '+ SPOT.FCALL);
            LOGGER.INFO('Freq = ' + IntToStr(Spot.ffrequency));

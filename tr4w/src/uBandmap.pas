@@ -125,8 +125,8 @@ begin
   if ((radio1.filteredstatus.freq = 0) or (radio2.filteredstatus.freq = 0)) then
      begin
      Settings.BandMap.So2rDisplay := False;
-     Config.QSYInactiveRadio := False;
-     Config.InBandLock := False;
+     Settings.So2r.QsyInactiveRadio := False;
+     Settings.So2r.InBandLockout := False;
      end;
   if Settings.BandMap.So2rDisplay then
     // B1: was (not WKBusy).  This is the WIDEST of the B1 substitutions -- CPU,
@@ -135,23 +135,23 @@ begin
     if (ActiveBand = Spot.FBand) and (not CWStillBeingSent) then
        begin
        Radio := ActiveRadio;
-       Config.QSYInactiveRadio := False;
+       Settings.So2r.QsyInactiveRadio := False;
        end
     else
        begin
-       Config.QSYInactiveRadio := True;
+       Settings.So2r.QsyInactiveRadio := True;
        Radio := InactiveRadio;
        end;
-  if ((Config.InBandLock) and (Config.TwoRadioMode)) then
+  if ((Settings.So2r.InBandLockout) and (Settings.So2r.TwoRadioMode)) then
      begin
-     if Config.QSYInactiveRadio then
+     if Settings.So2r.QsyInactiveRadio then
        if ((InActiveRadioPtr.BandMemory <> EntryBand) and (EntryBand =
          ActiveRadioPtr.BandMemory)) then
           begin
           QuickDisplay(TC_2radio_warn);
           exit;
           end;
-     if not Config.QSYInactiveRadio then
+     if not Settings.So2r.QsyInactiveRadio then
        if ((ActiveBand <> EntryBand) and (EntryBand =
          InActiveRadioPtr.BandMemory)) then // 4.92.1
           begin
@@ -217,7 +217,7 @@ begin
      begin
      Exit;
      end;
-    if not Config.QSYInactiveRadio then
+    if not Settings.So2r.QsyInactiveRadio then
    //  tSetExchWindInitExchangeEntry ; // 4.138.2
        begin
        PutCallToCallWindow(Spot.FCall);

@@ -1626,7 +1626,7 @@ begin
     // Display's filter pass's job, and it re-runs anyway.
 
 {$IFDEF AUTOSPOT}
-    if Config.TwoRadioMode then
+    if Settings.So2r.TwoRadioMode then
        begin
        if first then
           begin

@@ -163,11 +163,16 @@ begin
    // path waiting for a signal report. Neither announces itself.
    BeginTest('the two-radio and multi-op defaults survived the move');
 
-   CheckTrue(Config.InBandLock,       'InBandLock was a typed constant = True');
-   CheckTrue(Config.WaitForStrength,  'WaitForStrength was a typed constant = True');
+   (* MOVED to TSo2rSettings. The two True defaults are the load-bearing
+     ones and the reason this test exists: both were typed constants, so a
+     record that starts zeroed would have silently turned them off. *)
+   CheckTrue(Settings.So2r.InBandLockout,   'InBandLockout was a typed constant = True');
+   CheckTrue(Settings.So2r.WaitForStrength, 'WaitForStrength was a typed constant = True');
 
-   CheckFalse(Config.QSYInactiveRadio,    'QSYInactiveRadio was False');
-   CheckFalse(Config.SwapRadioRelaySense, 'SwapRadioRelaySense was False');
+   CheckFalse(Settings.So2r.QsyInactiveRadio, 'QsyInactiveRadio was False');
+   CheckFalse(Settings.So2r.SwapRelaySense,   'SwapRelaySense was False');
+   CheckFalse(Settings.So2r.TwoRadioMode,     'TwoRadioMode was False');
+   CheckFalse(Settings.So2r.SkipActiveBand,   'SkipActiveBand was False');
    CheckFalse(Config.MultiMultsOnly,      'MultiMultsOnly was False');
    CheckFalse(Config.IntercomFileEnable,  'IntercomFileEnable was False');
 end;
@@ -218,7 +223,7 @@ begin
    CheckTrue(Config.UpdateRestartFileEnable, 'set True by CFGDEF, not by its declaration');
 
    CheckFalse(Config.CallWindowShowAllSpots,  'CallWindowShowAllSpots was False');
-   CheckFalse(Config.SwapPacketSpotRadios,    'SwapPacketSpotRadios was False');
+   CheckFalse(Settings.So2r.SwapPacketSpotRadios, 'SwapPacketSpotRadios was False');
    CheckFalse(Config.CheckLogFileSize,        'CheckLogFileSize was False');
    CheckFalse(Config.UnknownCountryFileEnable,'UnknownCountryFileEnable was False');
 end;

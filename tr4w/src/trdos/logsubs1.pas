@@ -176,7 +176,7 @@ begin // 1
      TempChar := Message[1];
 
      if TempChar = ControlA then
-       if Config.TwoRadioMode then
+       if Settings.So2r.TwoRadioMode then
           begin // 3
           if ActiveRadio = RadioOne then
              begin // 4
@@ -196,7 +196,7 @@ begin // 1
           end; // 2
 
      if TempChar = ControlB then
-       if Config.TwoRadioMode then      
+       if Settings.So2r.TwoRadioMode then      
           begin
           SetUpToSendOnInactiveRadio;
           if autosendenable then
@@ -592,7 +592,7 @@ procedure SwapRadios;
 
 begin
   DebugMsg('>>>>Entering SWAPRADIOS');
-  if not Config.TwoRadioMode then
+  if not Settings.So2r.TwoRadioMode then
      begin
      QuickDisplay(TC_ALTRCOMMANDDISABLED);
      //      Wait(3000); {KK1L: 6.71}
@@ -737,7 +737,7 @@ var
   TimeOut: Byte;
 
 begin
-  if not Config.TwoRadioMode then
+  if not Settings.So2r.TwoRadioMode then
      begin
      TwoRadioState := TwoRadiosDisabled;
      Exit;
@@ -1259,7 +1259,7 @@ begin
 
             LeftArrow:
               begin
-                if Config.SwapPacketSpotRadios then
+                if Settings.So2r.SwapPacketSpotRadios then
                    begin
                    if Radio1.CATPortKind <> pkNone then
                       begin
@@ -1283,7 +1283,7 @@ begin
 
             RightArrow:
               begin
-                if Config.SwapPacketSpotRadios then
+                if Settings.So2r.SwapPacketSpotRadios then
                    begin
                    if Radio2.CATPortKind <> pkNone then
                       begin
@@ -1314,7 +1314,7 @@ end;
 procedure DualingCQs;
 
 begin
-  if not Config.TwoRadioMode then
+  if not Settings.So2r.TwoRadioMode then
      begin
      Exit;
      end;

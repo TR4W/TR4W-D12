@@ -1327,7 +1327,7 @@ begin
      ActiveRadioPtr^.StopSendingCW;
      inActiveRadioPtr^.StopSendingCW;
 
-     if Config.TwoRadioMode then
+     if Settings.So2r.TwoRadioMode then
         begin
         SwitchNext := False; // 4.56.1
         InActiveRadioPtr^.tTwoRadioMode := TR2;
@@ -1341,7 +1341,7 @@ begin
      SetOpMode(SearchAndPounceOpMode);
      PutCallToCallWindow(DupeInfoCall);
      ShowStationInformation(DupeInfoCall);
-     if Config.TwoRadioMode then
+     if Settings.So2r.TwoRadioMode then
         begin
         Send_DE;
         if (length(CallWindowString) >= 3) and (ExchangeWindowString = '') then

@@ -344,7 +344,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(44, names.Count, 'one name per migrated setting, no more');
+         CheckEquals(51, names.Count, 'one name per migrated setting, no more');
       finally
          names.Free;
       end;
@@ -1010,6 +1010,7 @@ const
       + '"EXTERNAL LOGGER ENABLED",'
       + '"EXTERNAL LOGGER PORT",'
       + '"HF BAND ENABLE",'
+      + '"IN BAND LOCKOUT",'
       + '"KEYPAD CW MEMORIES",'
       + '"MMTTY ENGINE",'
       + '"NO POLL DURING PTT",'
@@ -1024,12 +1025,18 @@ const
       + '"PTT LOCKOUT",'
       + '"PTT TURN ON DELAY",'
       + '"PTT VIA COMMANDS",'
+      + '"QSY INACTIVE RADIO",'
       + '"RADIO TCP SERVER PORT",'
       + '"SEND COMPLETE FOUR LETTER CALL",'
+      + '"SKIP ACTIVE BAND",'
       + '"SPOT COLLECTOR ENABLED",'
+      + '"SWAP PACKET SPOT RADIOS",'
       + '"SWAP PADDLES",'
+      + '"SWAP RADIO RELAY SENSE",'
       + '"TUNE WITH DITS",'
+      + '"TWO RADIO MODE",'
       + '"VHF BAND ENABLE",'
+      + '"WAIT FOR STRENGTH",'
       + '"WARC BAND ENABLE",'
       + '"YCCC SO2R ENABLE"';
 var

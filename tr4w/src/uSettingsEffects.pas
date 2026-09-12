@@ -102,6 +102,13 @@ const
      their own group and get their own arm rather than being folded in. *)
    BANDS = 'Bands.';
 
+   (* AN EXACT PATH, NOT A GROUP, and the header above says when to reach
+     for one: where a single setting in a group genuinely differs. QSY
+     INACTIVE RADIO carried crP:1, the band map redraw; the other six SO2R
+     settings repaint nothing, so matching the group would repaint for all
+     of them. *)
+   QSY_INACTIVE_RADIO = 'So2r.QsyInactiveRadio';
+
 
 function InGroup(const aPath, aPrefix: string): boolean;
 begin
@@ -121,7 +128,8 @@ end;
 
 procedure SettingChanged(const aPath: string);
 begin
-   if InGroup(aPath, BAND_MAP) or InGroup(aPath, BANDS) then
+   if InGroup(aPath, BAND_MAP) or InGroup(aPath, BANDS)
+      or UnicodeSameText(aPath, QSY_INACTIVE_RADIO) then
       begin
       (* A VIEW change: the filter moved, the list of spots did not.  The form
         coalesces these, so calling it per property is not per-frame work even

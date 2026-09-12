@@ -829,7 +829,7 @@ begin
 
   TempRadio := Radio;
 
-  if Config.SwapRadioRelaySense then
+  if Settings.So2r.SwapRelaySense then
     if Radio = RadioOne then
        begin
        TempRadio := RadioTwo

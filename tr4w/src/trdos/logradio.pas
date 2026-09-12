@@ -124,8 +124,8 @@ type
 
    TRMode = (
       TR0,
-      TR1, //spacebar Config.TwoRadioMode = false
-      TR2, //spacebar Config.TwoRadioMode = true
+      TR1, //spacebar Settings.So2r.TwoRadioMode = false
+      TR2, //spacebar Settings.So2r.TwoRadioMode = true
       TR3
       );
 

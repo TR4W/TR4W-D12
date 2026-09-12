@@ -707,6 +707,64 @@ type
       property RightKey: Char read FRightKey write FRightKey;
    end;
 
+   (*
+     TWO RADIOS -- SO2R, and everything that only means something when a
+     second radio is in the shack.
+
+     EVERY NAME IN THIS GROUP NEEDS AN ALIAS, which is worth stating rather
+     than hiding: SO2R predates any namespacing in TR4W, so not one of the
+     seven commands carries a common leading word. The derivation puts the
+     group first and these names have no group in them at all.
+
+     THE ALTERNATIVES WERE WORSE. Seven one-property groups is the shape
+     already rejected for the band classes. Publishing them on TR4WSettings
+     itself would derive exactly -- a root property has no prefix -- but it
+     makes the root a bag of ungrouped booleans, and a group is what a
+     contest-scope marker, a change notification and a Preferences page all
+     key off. The aliases are the legacy compatibility layer and they go
+     when the legacy formats stop being read.
+
+     ONE OF THE SEVEN CARRIES A HOOK. QSY INACTIVE RADIO had crP:1, the
+     band map redraw -- see uSettingsEffects, which matches it by exact
+     path rather than by group, because the other six repaint nothing.
+   *)
+   TSo2rSettings = class(TSettingsGroup)
+   private
+      FTwoRadioMode: boolean;
+      FQsyInactiveRadio: boolean;
+      FSkipActiveBand: boolean;
+      FSwapPacketSpotRadios: boolean;
+      FSwapRelaySense: boolean;
+      FInBandLockout: boolean;
+      FWaitForStrength: boolean;
+      procedure SetQsyInactiveRadio(aValue: boolean);
+   public
+      constructor Create;
+   published
+      (* Was Config.TwoRadioMode. uConfigValues calls it "the sole mode
+        knob" -- SINGLE RADIO MODE, its deprecated inverse, was withdrawn
+        in the same commit that said so. *)
+      property TwoRadioMode: boolean read FTwoRadioMode write FTwoRadioMode;
+      (* Was Config.QSYInactiveRadio. THE ONLY ONE WITH A SIDE EFFECT: its
+        row carried crP:1, so changing it repainted the band map. The setter
+        raises that now, however the value was set -- which the hook could
+        not, since it only ran when CheckCommand applied the row. *)
+      property QsyInactiveRadio: boolean
+         read FQsyInactiveRadio write SetQsyInactiveRadio;
+      // Was Config.SkipActiveBand.
+      property SkipActiveBand: boolean read FSkipActiveBand write FSkipActiveBand;
+      // Was Config.SwapPacketSpotRadios.
+      property SwapPacketSpotRadios: boolean
+         read FSwapPacketSpotRadios write FSwapPacketSpotRadios;
+      // Was Config.SwapRadioRelaySense -- SWAP RADIO RELAY SENSE.
+      property SwapRelaySense: boolean read FSwapRelaySense write FSwapRelaySense;
+      (* Was Config.InBandLock, and the command is IN BAND LOCKOUT -- the
+        record field was the only place it was ever called a lock. *)
+      property InBandLockout: boolean read FInBandLockout write FInBandLockout;
+      // Was Config.WaitForStrength.
+      property WaitForStrength: boolean read FWaitForStrength write FWaitForStrength;
+   end;
+
    TR4WSettings = class(TPersistent)
    private
       // command name -> property path, built once by walking the RTTI.
@@ -724,6 +782,7 @@ type
       FCw: TCwSettings;
       FAutoSap: TAutoSapSettings;
       FPossibleCall: TPossibleCallSettings;
+      FSo2r: TSo2rSettings;
       procedure BuildCommandMap;
       function PathForCommand(const aCommand: string): string;
       (* The streamer hook that keeps contest-scoped groups out of the
@@ -823,6 +882,7 @@ type
       property Cw: TCwSettings read FCw;
       property AutoSap: TAutoSapSettings read FAutoSap;
       property PossibleCall: TPossibleCallSettings read FPossibleCall;
+      property So2r: TSo2rSettings read FSo2r;
    end;
 
 (* THE ONE INSTANCE.  Created on first use so no unit's initialisation order
@@ -1069,6 +1129,24 @@ begin
    FTuneWithDits              := False;
 end;
 
+constructor TSo2rSettings.Create;
+begin
+   inherited Create;
+   // The values uConfigValues' initialiser carried.
+   FTwoRadioMode         := False;
+   FQsyInactiveRadio     := False;
+   FSkipActiveBand       := False;
+   FSwapPacketSpotRadios := False;
+   FSwapRelaySense       := False;
+   FInBandLockout        := True;
+   FWaitForStrength      := True;
+end;
+
+procedure TSo2rSettings.SetQsyInactiveRadio(aValue: boolean);
+begin
+   SetBool(FQsyInactiveRadio, aValue, 'QsyInactiveRadio');
+end;
+
 constructor TPossibleCallSettings.Create;
 begin
    inherited Create;
@@ -1108,6 +1186,7 @@ begin
    FCw             := TCwSettings.Create;
    FAutoSap        := TAutoSapSettings.Create;
    FPossibleCall   := TPossibleCallSettings.Create;
+   FSo2r           := TSo2rSettings.Create;
 
    FCommands := TStringList.Create;
    FCommands.CaseSensitive := False;
@@ -1119,6 +1198,7 @@ end;
 destructor TR4WSettings.Destroy;
 begin
    FCommands.Free;
+   FSo2r.Free;
    FPossibleCall.Free;
    FAutoSap.Free;
    FCw.Free;
@@ -1428,6 +1508,16 @@ begin
      attribute. POSSIBLE CALL ENABLE would be the derived spelling and is
      not what any config file says. *)
    Alias('POSSIBLE CALLS', 'PossibleCall.Enable');
+
+   (* THE WHOLE SO2R GROUP -- see TSo2rSettings for why every one of them
+     needs a line here and why that is not evidence the rule is wrong. *)
+   Alias('TWO RADIO MODE',           'So2r.TwoRadioMode');
+   Alias('QSY INACTIVE RADIO',       'So2r.QsyInactiveRadio');
+   Alias('SKIP ACTIVE BAND',         'So2r.SkipActiveBand');
+   Alias('SWAP PACKET SPOT RADIOS',  'So2r.SwapPacketSpotRadios');
+   Alias('SWAP RADIO RELAY SENSE',   'So2r.SwapRelaySense');
+   Alias('IN BAND LOCKOUT',          'So2r.InBandLockout');
+   Alias('WAIT FOR STRENGTH',        'So2r.WaitForStrength');
 
    Alias('AUTO S&P ENABLE',             'AutoSap.Enable');
    Alias('AUTO S&P ENABLE SENSITIVITY', 'AutoSap.Sensitivity');

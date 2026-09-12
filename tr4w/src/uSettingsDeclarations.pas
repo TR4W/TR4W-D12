@@ -287,7 +287,7 @@ begin
                         RS_OPERATING_BANDS_VHF);
 
    // --- Operating: two radio -----------------------------------------------
-   RegisterStoredSetting('operating.tworadio.enable',       'TWO RADIO MODE',
+   RegisterModelSetting( 'operating.tworadio.enable',       'TWO RADIO MODE',
                          RS_OPERATING_TWORADIO_ENABLE);
 
    { Two radio and multi-op, 2026-08-15. Captions from each command's own entry
@@ -295,13 +295,13 @@ begin
      documented as "prevents Band Map selection that would place both radios on
      a single band", and MULTI MULTS ONLY decides whether all QSOs or only new
      multipliers are passed around the network. }
-   RegisterStoredSetting('operating.tworadio.inBandLockout',  'IN BAND LOCKOUT',
+   RegisterModelSetting( 'operating.tworadio.inBandLockout',  'IN BAND LOCKOUT',
                          RS_OPERATING_TWORADIO_INBANDLOCKOUT);
-   RegisterStoredSetting('operating.tworadio.qsyInactive',    'QSY INACTIVE RADIO',
+   RegisterModelSetting( 'operating.tworadio.qsyInactive',    'QSY INACTIVE RADIO',
                          RS_OPERATING_TWORADIO_QSYINACTIVE);
-   RegisterStoredSetting('operating.tworadio.swapRelaySense', 'SWAP RADIO RELAY SENSE',
+   RegisterModelSetting( 'operating.tworadio.swapRelaySense', 'SWAP RADIO RELAY SENSE',
                          RS_OPERATING_TWORADIO_SWAPRELAYSENSE);
-   RegisterStoredSetting('operating.tworadio.waitForStrength', 'WAIT FOR STRENGTH',
+   RegisterModelSetting( 'operating.tworadio.waitForStrength', 'WAIT FOR STRENGTH',
                          RS_OPERATING_TWORADIO_WAITFORSTRENGTH);
    RegisterStoredSetting('network.multiMultsOnly',            'MULTI MULTS ONLY',
                          RS_NETWORK_MULTIMULTSONLY);
@@ -319,7 +319,7 @@ begin
                          RS_SCP_NAMEFLAG);
    RegisterStoredSetting('bandmap.callWindowShowAllSpots',    'CALL WINDOW SHOW ALL SPOTS',
                          RS_BANDMAP_CALLWINDOWSHOWALLSPOTS);
-   RegisterStoredSetting('bandmap.swapPacketSpotRadios',      'SWAP PACKET SPOT RADIOS',
+   RegisterModelSetting( 'bandmap.swapPacketSpotRadios',      'SWAP PACKET SPOT RADIOS',
                          RS_BANDMAP_SWAPPACKETSPOTRADIOS);
    RegisterStoredSetting('logging.checkLogFileSize',          'CHECK LOG FILE SIZE',
                          RS_LOGGING_CHECKLOGFILESIZE);
@@ -333,7 +333,7 @@ begin
                          RS_OPERATING_TWORADIO_ALTDCQ);
    RegisterStoredSetting('operating.tworadio.blindCQ',      'ALWAYS CALL BLIND CQ',
                          RS_OPERATING_TWORADIO_BLINDCQ);
-   RegisterStoredSetting('operating.tworadio.skipActiveBand','SKIP ACTIVE BAND',
+   RegisterModelSetting( 'operating.tworadio.skipActiveBand','SKIP ACTIVE BAND',
                          RS_OPERATING_TWORADIO_SKIPACTIVEBAND);
 
    // --- Operating: online scoring ------------------------------------------

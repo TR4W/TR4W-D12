@@ -94,7 +94,6 @@ type
       AltDBufferEnable: boolean;
       AltDCQEnable: boolean;
       AlwaysCallBlindCQ: boolean;
-      SkipActiveBand: boolean;
       SayHiEnable: boolean;
       SayHiRateCutOff: integer;
       LeadingZeroCharacter: AnsiChar;
@@ -121,7 +120,6 @@ type
 
       { TWO RADio MODE -- the sole mode knob. SINGLE RADIO MODE, its
         deprecated inverse, was withdrawn in the same commit. }
-      TwoRadioMode: boolean;
 
       { LEADING ZEROS -- a CW setting (NY4I), not a contest one: it shapes the
         string the keyer sends. Contest .cfg files DO set it (six of them,
@@ -148,10 +146,6 @@ type
         InBandLock and WaitForStrength were typed constants = True; losing that
         turns the in-band guard off and stops the SO2R code waiting for a signal
         report, neither of which announces itself. }
-      InBandLock: boolean;
-      QSYInactiveRadio: boolean;
-      SwapRadioRelaySense: boolean;
-      WaitForStrength: boolean;
       MultiMultsOnly: boolean;
       IntercomFileEnable: boolean;
 
@@ -182,7 +176,6 @@ type
       WildCardPartials: boolean;
       NameFlagEnable: boolean;
       CallWindowShowAllSpots: boolean;
-      SwapPacketSpotRadios: boolean;
       CheckLogFileSize: boolean;
       UnknownCountryFileEnable: boolean;
       UpdateRestartFileEnable: boolean;
@@ -253,7 +246,6 @@ var
       AltDBufferEnable: False;
       AltDCQEnable: False;
       AlwaysCallBlindCQ: False;
-      SkipActiveBand: False;
       SayHiEnable: False;
       SayHiRateCutOff: 200;
       LeadingZeroCharacter: 'T';
@@ -268,17 +260,12 @@ var
       FarnsworthSpeed: 25;
       Weight: 1.0;
 
-      TwoRadioMode: False;
 
       LeadingZeros: 3;
 
       { True, 15, 700 and 13 are NOT arbitrary -- they are the values the typed
         constants in LOGK1EA carried, kept so a station with no settings file
         behaves exactly as it did before. }
-      InBandLock: True;
-      QSYInactiveRadio: False;
-      SwapRadioRelaySense: False;
-      WaitForStrength: True;
       MultiMultsOnly: False;
       IntercomFileEnable: False;
       AutoCallTerminate: False;
@@ -293,7 +280,6 @@ var
       WildCardPartials: True;
       NameFlagEnable: True;
       CallWindowShowAllSpots: False;
-      SwapPacketSpotRadios: False;
       CheckLogFileSize: False;
       UnknownCountryFileEnable: False;
       UpdateRestartFileEnable: True;

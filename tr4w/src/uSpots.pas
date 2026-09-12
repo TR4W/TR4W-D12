@@ -222,7 +222,7 @@ begin
           begin
           Continue;
           end;
-     //if Config.TwoRadioMode then
+     //if Settings.So2r.TwoRadioMode then
      if ((ActiveBand <> Spot.Fband) and (InactiveRadioptr.BandMemory <>
        Spot.Fband)) then
         begin
