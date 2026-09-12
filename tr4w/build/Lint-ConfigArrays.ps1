@@ -103,12 +103,12 @@ $code = Get-PascalCodeOnlyLines -Path $uCFG
 $measures = @(
    @{ Name    = 'CFGCA rows'
       Pattern = 'crCommand:'
-      Ceiling = 362
+      Ceiling = 360
       Note    = 'config commands still in the array' }
 
    @{ Name    = 'CFGCA rows writing a raw global'
       Pattern = 'crAddress:\s*@'
-      Ceiling = 296
+      Ceiling = 294
       Note    = 'THE REAL REMAINING WORK -- each is a global a table writes through' }
 
    @{ Name    = 'ArrayRecordArray entries'

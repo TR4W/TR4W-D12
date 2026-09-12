@@ -516,7 +516,6 @@ var
   AlarmMinute                           : integer;
   AlarmHour                             : integer;
   AskForFrequencies                     : boolean;
-  AutoSAPEnableRate                     : LONGINT = 500;
   AutoSendCharacterCount                : integer;
   AutoSendEnable                        : boolean;
   AutoTimeIncrementQSOs                 : integer;

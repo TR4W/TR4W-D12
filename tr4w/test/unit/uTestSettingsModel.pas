@@ -343,7 +343,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(38, names.Count, 'one name per migrated setting, no more');
+         CheckEquals(40, names.Count, 'one name per migrated setting, no more');
       finally
          names.Free;
       end;
@@ -913,6 +913,8 @@ const
      readable in a diff, and a single 900-character line is not. *)
    EXPECTED = ''
       + '"ALL CW MESSAGES CHAINABLE",'
+      + '"AUTO S&P ENABLE",'
+      + '"AUTO S&P ENABLE SENSITIVITY",'
       + '"BAND MAP ALL BANDS",'
       + '"BAND MAP ALL MODES",'
       + '"BAND MAP CALL WINDOW ENABLE",'

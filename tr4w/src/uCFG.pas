@@ -598,6 +598,7 @@ const
    - 5 {CW settings that are not session state -- moved to uSettingsModel}
    - 1 {BAND MAP DECAY TIME -- moved to uSettingsModel}
    - 1 {BAND MAP GUARD BAND -- moved to uSettingsModel}
+   - 2 {automatic search and pounce -- moved to uSettingsModel}
    ;
 
    // crS (CFGStatus): csNew / csOld = active -- the command's value IS applied.
@@ -623,8 +624,6 @@ const
  (crCommand: 'AUTO QSL INTERVAL';             crAddress: pointer(3);                      crMin:0;  crMax:6;        crS: csJSON; crA: 6; crC:0 ; crP:0; crJ: 0; crKind: ckArray;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'AUTO QSO NUMBER DECREMENT';     crAddress: @Config.AutoQSONumberDecrement;         crMin:0;  crMax:0;        crS: csJSON; crA: 0; crC:0 ; crP:5; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'AUTO RETURN TO CQ MODE';        crAddress: @Config.AutoReturnToCQMode;             crMin:0;  crMax:0;        crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'AUTO S&P ENABLE SENSITIVITY';   crAddress: @AutoSAPEnableRate;              crMin:10; crMax:10000;    crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
- (crCommand: 'AUTO S&P ENABLE';               crAddress: @AutoSAPEnable;                  crMin:0;  crMax:0;        crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'AUTO SEND CHARACTER COUNT';     crAddress: pointer(2);                      crMin:0;  crMax:6;        crS: csJSON; crA: 0; crC:0 ; crP:4; crJ: 0; crKind: ckArray; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'AUTO TIME INCREMENT';           crAddress: @AutoTimeIncrementQSOs;          crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'AUTO-CQ DELAY TIME';            crAddress: @AutoCQDelayTime;                crMin:500;crMax:10000;    crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),

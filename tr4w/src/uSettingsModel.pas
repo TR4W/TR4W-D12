@@ -162,6 +162,7 @@ type
      frequency on every station that had never set it. A minimum that
      forbids the value the program itself ships with is the defect. *)
    TBandMapGuardBand    = 0..65535;   // was crMin:100 -- see above
+   TAutoSapSensitivity  = 10..10000;  // was crMin:10, crMax:10000
    TPttTurnOnDelay      = 0..65535;   // was crMin:0, crMax:MAXWORD
    TPaddleMonitorTone   = 0..65535;   // was crMin:0, crMax:MAXWORD
    TPaddlePttHoldCount  = 0..65535;   // was crMin:0, crMax:MAXWORD
@@ -585,6 +586,38 @@ type
       property TuneWithDits: boolean read FTuneWithDits write FTuneWithDits;
    end;
 
+   (*
+     AUTOMATIC SEARCH AND POUNCE -- noticing that the operator has tuned.
+
+     TWO SETTINGS, TWO ALIASES, and the reason is a single character: the
+     commands are spelled AUTO S&P ENABLE and AUTO S&P ENABLE SENSITIVITY,
+     and no Pascal identifier yields an ampersand. This is the one case
+     where an alias is not a naming accident but an alphabet limit.
+
+     NEITHER IS CONTEST STATE, which is what made them safe to move while
+     the neighbouring AUTO DUPE ENABLE pair was not: nothing outside the
+     config reader writes these, whereas fcontest.pas assigns
+     AutoDupeEnableCQ and AutoDupeEnableSandP for six different contests.
+
+     No hooks -- crP, crA, crJ and crC are all zero.
+   *)
+   TAutoSapSettings = class(TSettingsGroup)
+   private
+      FEnable: boolean;
+      FSensitivity: TAutoSapSensitivity;
+   public
+      constructor Create;
+   published
+      // Was the global AutoSAPEnable in logstuff.pas. AUTO S&P ENABLE.
+      property Enable: boolean read FEnable write FEnable;
+      (* Was AutoSAPEnableRate in logwind.pas, in Hz: uRadioPolling treats
+        it as how far the VFO must move before the tuning counts as search
+        and pounce. AUTO S&P ENABLE SENSITIVITY -- the legacy name keeps
+        the word ENABLE in the middle, which no property path produces
+        even before the ampersand. *)
+      property Sensitivity: TAutoSapSensitivity read FSensitivity write FSensitivity;
+   end;
+
    TR4WSettings = class(TPersistent)
    private
       // command name -> property path, built once by walking the RTTI.
@@ -600,6 +633,7 @@ type
       FPtt: TPttSettings;
       FPaddle: TPaddleSettings;
       FCw: TCwSettings;
+      FAutoSap: TAutoSapSettings;
       procedure BuildCommandMap;
       function PathForCommand(const aCommand: string): string;
    public
@@ -688,6 +722,7 @@ type
       property Ptt: TPttSettings read FPtt;
       property Paddle: TPaddleSettings read FPaddle;
       property Cw: TCwSettings read FCw;
+      property AutoSap: TAutoSapSettings read FAutoSap;
    end;
 
 (* THE ONE INSTANCE.  Created on first use so no unit's initialisation order
@@ -933,6 +968,17 @@ begin
    FTuneWithDits              := False;
 end;
 
+constructor TAutoSapSettings.Create;
+begin
+   inherited Create;
+   (* The values the globals carried: logstuff.pas declares AutoSAPEnable
+     with no initialiser, and logwind.pas gives AutoSAPEnableRate 500.
+     cfgdef's commented-out line says 1000 and is NOT the live value --
+     the declaration is. *)
+   FEnable      := False;
+   FSensitivity := 500;
+end;
+
 constructor TR4WSettings.Create;
 begin
    inherited Create;
@@ -946,6 +992,7 @@ begin
    FPtt            := TPttSettings.Create;
    FPaddle         := TPaddleSettings.Create;
    FCw             := TCwSettings.Create;
+   FAutoSap        := TAutoSapSettings.Create;
 
    FCommands := TStringList.Create;
    FCommands.CaseSensitive := False;
@@ -957,6 +1004,7 @@ end;
 destructor TR4WSettings.Destroy;
 begin
    FCommands.Free;
+   FAutoSap.Free;
    FCw.Free;
    FPaddle.Free;
    FPtt.Free;
@@ -1258,6 +1306,10 @@ begin
    Alias('KEYPAD CW MEMORIES',             'Cw.KeypadMemories');
    Alias('SEND COMPLETE FOUR LETTER CALL', 'Cw.SendCompleteFourLetterCall');
    Alias('TUNE WITH DITS',                 'Cw.TuneWithDits');
+
+   (* AN ALPHABET LIMIT, not a naming accident: no identifier yields '&'. *)
+   Alias('AUTO S&P ENABLE',             'AutoSap.Enable');
+   Alias('AUTO S&P ENABLE SENSITIVITY', 'AutoSap.Sensitivity');
 end;
 
 function TR4WSettings.PathForCommand(const aCommand: string): string;

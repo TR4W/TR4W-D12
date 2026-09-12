@@ -128,7 +128,8 @@ uses
    uPanelUpdate,    // cross-thread panel writes -- the seam and why, in that unit
    uRadioState,     // PTT as STATE. This unit runs on the polling thread and
                     // must not name a control -- see the note in PTTStatusChanged
-   uMainThreadWork; // the UI work below runs on the MAIN thread -- see MarshalledJobs
+   uMainThreadWork, // the UI work below runs on the MAIN thread -- see MarshalledJobs
+   uSettingsModel;  // Settings.AutoSap -- the tuning threshold that means S&P
 
 { ===========================================================================
   THE UI WORK THAT USED TO RUN ON THIS THREAD.
@@ -925,9 +926,9 @@ begin
    if rig = ActiveRadioPtr then
       begin
       if rig.LastDisplayedFreq <> 0 then
-         if dif > AutoSAPEnableRate then
+         if dif > Settings.AutoSap.Sensitivity then
             if dif <= 10000 then
-               if AutoSAPEnable and
+               if Settings.AutoSap.Enable and
                   // Issue #795 vs bandmap: #795 made a MANUAL dial QSY clear
                   // the call/exchange in S&P.  But a COMMANDED QSY (bandmap
                   // double-click, spot click, typed freq) also moves the VFO
@@ -935,7 +936,7 @@ begin
                   // SetRadioFreq records the commanded VFO-A freq; treat this
                   // as a manual tune (and clear) only if we landed FAR from
                   // the last commanded freq.
-                  (Abs(rig.FilteredStatus.Freq - rig.tCommandedQSYFreq) > AutoSAPEnableRate) then // n4af 4.44.10
+                  (Abs(rig.FilteredStatus.Freq - rig.tCommandedQSYFreq) > Settings.AutoSap.Sensitivity) then // n4af 4.44.10
                  // if OpMode = CQOpMode then    // 4.139.3
                   begin
                   // Was seven statements inline on THIS thread.  See

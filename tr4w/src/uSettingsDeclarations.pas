@@ -602,9 +602,9 @@ begin
                           RS_OPERATING_CTRLJ_AUTODUPEENABLECQ);
    RegisterStoredSetting('operating.ctrlj.autoDupeEnableSAndP','AUTO DUPE ENABLE S AND P',
                           RS_OPERATING_CTRLJ_AUTODUPEENABLESANDP);
-   RegisterStoredSetting('operating.ctrlj.autoSPEnable',      'AUTO S&P ENABLE',
+   RegisterModelSetting( 'operating.ctrlj.autoSPEnable',      'AUTO S&P ENABLE',
                           RS_OPERATING_CTRLJ_AUTOSPENABLE);
-   RegisterStoredSetting('operating.ctrlj.autoSPEnableSensitivity','AUTO S&P ENABLE SENSITIVITY',
+   RegisterModelSetting( 'operating.ctrlj.autoSPEnableSensitivity','AUTO S&P ENABLE SENSITIVITY',
                           RS_OPERATING_CTRLJ_AUTOSPENABLESENSITIVITY);
    RegisterStoredSetting('operating.ctrlj.autoTimeIncrement', 'AUTO TIME INCREMENT',
                           RS_OPERATING_CTRLJ_AUTOTIMEINCREMENT);

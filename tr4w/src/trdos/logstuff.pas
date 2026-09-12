@@ -398,7 +398,6 @@ var
   AutoDisplayDupeQSO: boolean;
   AutoQSLCount: Byte {= 0};
   AutoQSLInterval: integer;
-  AutoSAPEnable: boolean;
 
   BandMapInfoCall: CallString {= ''};
   BeepEvery10QSOs: boolean;

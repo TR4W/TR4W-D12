@@ -107,8 +107,6 @@ begin
   //  AutoDupeEnableSandP := True;
   //  Config.AutoQSONumberDecrement := False;
   //  Config.AutoReturnToCQMode := True;
-  //  AutoSAPEnable := False;
-  //  AutoSAPEnableRate := 1000; {KK1L 6.72}
   //  AutoSendCharacterCount := 0;
   //  AutoTimeIncrementQSOs := 0;
 
