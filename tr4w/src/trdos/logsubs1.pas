@@ -785,12 +785,12 @@ begin
                   end
                else
                   begin
-                  SendStringAndStop(MyCall);
+                  SendStringAndStop(UTF8Encode(Settings.My.Call));
                   end;
                end
             else if ActiveMode = Digital then
                begin
-               SendStringAndStop(CallWindowString + ' DE ' + MyCall + ' KK ')
+               SendStringAndStop(UTF8Encode(CallWindowString + ' DE ' + Settings.My.Call + ' KK '))
                end
             else if Config.DVKEnable then
                begin
@@ -805,7 +805,7 @@ begin
             TwoRadioState := StationCalled;
 
             //                     If during the time we are calling an ESCAPE key
-            //                      is pressed, we will abort sending MyCall on the
+            //                      is pressed, we will abort sending Settings.My.Call on the
             //                      inactive radio and go back to CQing on the Active
             //                      Radio
 
@@ -861,7 +861,7 @@ begin
                   end
                else
                   begin
-                  SendStringAndStop(MyCall);
+                  SendStringAndStop(UTF8Encode(Settings.My.Call));
                   end;
                end
             else

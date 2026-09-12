@@ -57,10 +57,11 @@ function BuildSingleQsoCabrilloLine(const RXData: ContestExchange): AnsiString;
 implementation
 
 uses
+   uSettingsModel,   // Settings.My.Call
    SysUtils,
    uCabrilloFormat,        // FormatCabrilloFreq / FormatCabrilloMode
    uExchangeBuilder,       // BuildSentExchangeText / BuildRxExchangeText
-   LogWind;                // MyCall global
+   LogWind;                // the contest globals this renders from
 
 function BuildSingleQsoCabrilloLine(const RXData: ContestExchange): AnsiString;
 var
@@ -93,7 +94,7 @@ var
        string(sMode),
        RXData.tSysTime.qtYear, RXData.tSysTime.qtMonth, RXData.tSysTime.qtDay,
        RXData.tSysTime.qtHour, RXData.tSysTime.qtMinute,
-       string(MyCall),
+       string(Settings.My.Call),
        sentExch,
        string(RXData.Callsign),
        rcvExch]));

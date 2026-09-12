@@ -222,6 +222,7 @@ var
 implementation
 
 uses
+   uSettingsModel,   // Settings.My.Call
    uPlatformProcess;   // RunProgram / RunWindowsUtility -- the only launchers
 
 function FoundCommand(var SendString: Str160): boolean;
@@ -415,7 +416,7 @@ begin
   ClearDupeSheetCommandGiven := False;
   FirstCommand := False;
   if FileExists(@scFileName[1]) then
-    LoadInSeparateConfigFile(scFileName, FirstCommand, MyCall);
+    LoadInSeparateConfigFile(scFileName, FirstCommand, Settings.My.Call);
   if ClearDupeSheetCommandGiven then tClearDupesheet;
   RunningConfigFile := False;
   }

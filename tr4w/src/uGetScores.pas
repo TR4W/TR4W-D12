@@ -329,7 +329,7 @@ begin
      sContest := ContestsArray[Contest].ADIFName;
      end;
 
-  // <ops> = MyCall (single-op) -- issue #930.  Multi-op operator-list comes
+  // <ops> = Settings.My.Call (single-op) -- issue #930.  Multi-op operator-list comes
   // from the Cabrillo summary _OPERATORS in production use; defer until users
   // request it (the spec accepts a single call here for single-op).
   // <club> + <overlay> come from the Cabrillo summary stored in tr4w.ini
@@ -350,8 +350,8 @@ begin
     '<ops>%s</ops>',
     [TR4W_CURRENTVERSION_NUMBER,
      XmlEscape(sContest),
-     XmlEscape(string(MyCall)),
-     XmlEscape(string(MyCall))]));
+     XmlEscape(string(Settings.My.Call)),
+     XmlEscape(string(Settings.My.Call))]));
 
   if sClub <> '' then
      begin
@@ -371,8 +371,8 @@ begin
   // <qth> block -- emit only sub-elements whose source is set.
   //
   // Sourcing notes:
-  //   <dxcccountry>: CTY.DAT lookup on MyCall (definitive).
-  //   <cqzone>:      CTY.DAT lookup on MyCall.  Do NOT use MY ZONE -- its
+  //   <dxcccountry>: CTY.DAT lookup on Settings.My.Call (definitive).
+  //   <cqzone>:      CTY.DAT lookup on Settings.My.Call.  Do NOT use MY ZONE -- its
   //                  meaning flips per contest (CQ-zone-mode vs ITU-zone-mode
   //                  per ContestsBooleanArray bit 6), so it cannot be trusted
   //                  as a CQ-zone source.
@@ -387,9 +387,9 @@ begin
   //                    subsquare lowercased per Maidenhead convention);
   //                    <grid4> when 4 chars; nothing when empty.
   sDXCC    := '';
-  if MyCall <> '' then
+  if Settings.My.Call <> '' then
      begin
-     sDXCC := ctyGetCountryID(MyCall);
+     sDXCC := ctyGetCountryID(UTF8Encode(Settings.My.Call));
      end;
 
   sSection := Trim(Settings.My.Section);
@@ -405,9 +405,9 @@ begin
      end;
 
   sZone := '';
-  if MyCall <> '' then
+  if Settings.My.Call <> '' then
      begin
-     sZone := IntToStr(ctyGetCQZone(MyCall));
+     sZone := IntToStr(ctyGetCQZone(Settings.My.Call));
      end;
 
   // Grid: emit <grid6> when the operator's grid has the subsquare (6+
@@ -431,9 +431,9 @@ begin
      begin
      qth := qth + '<iaruzone>' + IntToStr(Settings.My.ItuZone) + '</iaruzone>'
      end
-  else if MyCall <> '' then
+  else if Settings.My.Call <> '' then
      begin
-     qth := qth + '<iaruzone>' + IntToStr(ctyGetITUZone(MyCall)) + '</iaruzone>';
+     qth := qth + '<iaruzone>' + IntToStr(ctyGetITUZone(Settings.My.Call)) + '</iaruzone>';
      end;
   if sSection <> '' then
      begin

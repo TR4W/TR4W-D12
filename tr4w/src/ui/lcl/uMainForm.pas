@@ -1964,7 +1964,7 @@ begin
      daPutCall:
         begin
         { The field write half of MainUnit.PutCallToCallWindow, which keeps the
-          decision half (the MyCall check). Text and selection move TOGETHER
+          decision half (the callsign check). Text and selection move TOGETHER
           and that is the whole reason this is one deferred operation rather
           than two deferred accessors: the caret goes to the END of the text,
           so the selection has to be computed AFTER the write lands. Deferring

@@ -379,7 +379,7 @@ begin
      ActivePrefixMult := ContestsArray[Contest].PxM;
 
      //if ActiveZoneMult = ITUZones then
-     RecalculateMyCountryContinentAndZoneNew(MyCall);
+     RecalculateMyCountryContinentAndZoneNew(UTF8Encode(Settings.My.Call));
 
      //TempDomesticQTHDataFileName := nil;
 
@@ -1358,52 +1358,54 @@ begin
           is not a narrowing conversion where a UTF-16 one is. Encoded
           LAST, because concatenating onto the result would promote it
           straight back to UnicodeString. *)
-        CQExchange := UTF8Encode('_# ' + Settings.My.Prec + '  ' + MyCall
+        CQExchange := UTF8Encode('_# ' + Settings.My.Prec + '  ' + Settings.My.Call
                                  + '  ' + Settings.My.Check + ' ' + Settings.My.Section);
 {(*}
         SearchAndPounceExchange       := UTF8Encode('NR # ' + Settings.My.Prec
-           + ' ' + MyCall + ' ' + Settings.My.Check + ' ' + Settings.My.Section);
-        RepeatSearchAndPounceExchange := SearchAndPounceExchange;//'NR # ' + MyPrec + ' ' + MyCall + ' ' + MyCheck + ' ' + MySection;
+           + ' ' + Settings.My.Call + ' ' + Settings.My.Check + ' ' + Settings.My.Section);
+        RepeatSearchAndPounceExchange := SearchAndPounceExchange;//'NR # ' + MyPrec + ' ' + Settings.My.Call + ' ' + MyCheck + ' ' + MySection;
 {*)}
-        QSLMessage := '73 ' + MyCall + ' SS>';
-        QSOBeforeMessage := 'SRI QSO ' + MyCall + ' SS';
+        QSLMessage := UTF8Encode('73 ' + Settings.My.Call + ' SS>');
+        QSOBeforeMessage := UTF8Encode('SRI QSO ' + Settings.My.Call + ' SS');
 
         QuickQSLMessage1 := 'TU>';
 {(*}
-//        SearchAndPounceExchange       := 'NR # ' + MyPrec + ' ' + MyCall + ' ' + MyCheck + ' ' + MySection;
-//        RepeatSearchAndPounceExchange := 'NR # ' + MyPrec + ' ' + MyCall + ' ' + MyCheck + ' ' + MySection;
+//        SearchAndPounceExchange       := 'NR # ' + MyPrec + ' ' + Settings.My.Call + ' ' + MyCheck + ' ' + MySection;
+//        RepeatSearchAndPounceExchange := 'NR # ' + MyPrec + ' ' + Settings.My.Call + ' ' + MyCheck + ' ' + MySection;
 {*)}
         CorrectedCallMessage := '} R';
 
-        SetCQMemoryString(CW, F1, 'SS ' + MyCall + ' SS>');
-        SetCQMemoryString(CW, F2, 'CQ^SS ' + MyCall + ' ' + MyCall + ' SS>');
-        SetCQMemoryString(CW, F3, 'CQ^SS CQ^SS ' + MyCall + ' ' + MyCall +
+        SetCQMemoryString(CW, F1, UTF8Encode('SS ' + Settings.My.Call + ' SS>'));
+        SetCQMemoryString(CW, F2,
+           UTF8Encode('CQ^SS ' + Settings.My.Call + ' ' + Settings.My.Call + ' SS>'));
+        SetCQMemoryString(CW, F3, 'CQ^SS CQ^SS ' + Settings.My.Call + ' ' + Settings.My.Call +
           ' SS>');
-        SetCQMemoryString(CW, F7, '  CQ^SS ' + MyCall + ' SS');
-        SetCQMemoryString(CW, F8, '  CQ^SS CQ^SS ' + MyCall + ' ' + MyCall +
+        SetCQMemoryString(CW, F7, UTF8Encode('  CQ^SS ' + Settings.My.Call + ' SS'));
+        SetCQMemoryString(CW, F8, '  CQ^SS CQ^SS ' + Settings.My.Call + ' ' + Settings.My.Call +
           ' SS');
 
-        SetCQMemoryString(CW, AltF1, 'SS ' + MyCall + ' SS');
-        SetCQMemoryString(CW, AltF2, 'CQ^SS cq^ss ' + MyCall + ' ' + MyCall +
+        SetCQMemoryString(CW, AltF1, UTF8Encode('SS ' + Settings.My.Call + ' SS'));
+        SetCQMemoryString(CW, AltF2, 'CQ^SS cq^ss ' + Settings.My.Call + ' ' + Settings.My.Call +
           ' SS');
-        SetCQMemoryString(CW, AltF3, 'CQ^SS cq^ss ' + MyCall + ' ' + MyCall +
+        SetCQMemoryString(CW, AltF3, 'CQ^SS cq^ss ' + Settings.My.Call + ' ' + Settings.My.Call +
           ' SS');
 
-        SetEXMemoryString(CW, AltF7, ' CQ^SS CQ^SS ' + MyCall + ' ' + MyCall +
+        SetEXMemoryString(CW, AltF7, ' CQ^SS CQ^SS ' + Settings.My.Call + ' ' + Settings.My.Call +
           ' SS');
 
         SetEXMemoryString(CW, F3, 'NR #');
         SetEXMemoryString(CW, F4, UTF8Encode(Settings.My.Prec));
         SetEXMemoryString(CW, F5, UTF8Encode(Settings.My.Check));
         SetEXMemoryString(CW, F6, UTF8Encode(Settings.My.Section));
-        SetEXMemoryString(CW, F7, '  CQ^SS ' + MyCall + ' SS');
-        SetEXMemoryString(CW, F8, '  CQ^SS CQ^SS ' + MyCall + ' SS');
+        SetEXMemoryString(CW, F7, UTF8Encode('  CQ^SS ' + Settings.My.Call + ' SS'));
+        SetEXMemoryString(CW, F8,
+           UTF8Encode('  CQ^SS CQ^SS ' + Settings.My.Call + ' SS'));
 
         SetEXMemoryString(CW, AltF3, 'NR?');
         SetEXMemoryString(CW, AltF4, 'PREC?');
         SetEXMemoryString(CW, AltF5, 'CK?');
         SetEXMemoryString(CW, AltF6, 'SEC?');
-        SetEXMemoryString(CW, AltF7, ' CQ^SS CQ^SS ' + MyCall + ' ' + MyCall +
+        SetEXMemoryString(CW, AltF7, ' CQ^SS CQ^SS ' + Settings.My.Call + ' ' + Settings.My.Call +
           ' SS');
       end;
 
@@ -1609,7 +1611,7 @@ begin
         LiteralDomesticQTH := true;
         if RussianID(Settings.My.Country) then
            begin
-           TempOblast := GetOblast(MyCall);
+           TempOblast := GetOblast(UTF8Encode(Settings.My.Call));
            if not (GetRussiaOblastByTwoChars(Char(TempOblast[1]), Char(TempOblast[2])) in
              [rtUA1A, rtUA1C]) then
               begin
@@ -1648,7 +1650,7 @@ begin
 
     SEVENQP:
       begin
-        //        if (pos('7', MyCall) > 0) or (pos('/7', MyCall) > 0) then
+        //        if (pos('7', Settings.My.Call) > 0) or (pos('/7', Settings.My.Call) > 0) then
         if FoundMyStateInDomFile then
            begin
            //          DomesticQTHDataFileName := '7QP-W7';
@@ -1844,7 +1846,7 @@ begin
   //  CTY.ctyLastCountryCall := '';
   FillChar(CTY.ctyLastLocatedCall, SizeOf(CTY.ctyLastLocatedCall), 0);
   //  CTY.ctyLastLocatedCall := '';
-  ctyLocateCall(MyCall, TempQTH);
+  ctyLocateCall(UTF8Encode(Settings.My.Call), TempQTH);
   Settings.My.Country := TempQTH.CountryID;
   MyContinent := TempQTH.Continent;
   Settings.My.Zone := IntToStr(TempQTH.Zone);
@@ -1896,8 +1898,12 @@ end;
 
 procedure SetContestTitle;
 begin
-  ContestTitle[0] := AnsiChar(TF.Format(@ContestTitle[1], '%s %s %s', GetYearString,
-    @ContestName[1], @MyCall[1]));
+  (* Plain assignment, which converts and bounds itself. This wrote into the
+    ShortString's BODY and then patched its length byte by hand -- the idiom
+    that cannot survive the callsign becoming a property, because there is no
+    body to point at. *)
+  ContestTitle := UTF8Encode(string(GetYearString) + ' '
+                             + string(ContestName) + ' ' + Settings.My.Call);
 end;
 
 procedure EnumDOM2(FileString: PShortString);

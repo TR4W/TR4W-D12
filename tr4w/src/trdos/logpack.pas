@@ -110,7 +110,7 @@ type
       right place.  Note that the PacketDisplay during control-B
       and data the PacketDisplayBuffer is handled by a different
       routine.  It can identify a DX announcmenet, a talk message
-      sent to MyCall or ALL, and responses to a SH/DX command.}
+      sent to Settings.My.Call or ALL, and responses to a SH/DX command.}
 
     procedure CheckPacket;
 
@@ -195,6 +195,7 @@ var
 
 implementation
 uses
+   uSettingsModel,   // Settings.My.Call
   uBandmap,
   uSpots,
   uNet;
@@ -357,7 +358,7 @@ begin
 
   if LastString = '>' then Exit;
 
-  if (FirstString = 'ALL') or StringHas(FirstString, MyCall) then
+  if (FirstString = 'ALL') or StringHas(FirstString, Settings.My.Call) then
      begin
      TalkOrAnnounceMessage := True;
      end;
@@ -729,7 +730,7 @@ procedure PacketObject.AnalyzePacketString(PacketString: ShortString);
   PacketDisplay during control-B and data the PacketDisplayBuffer is
   handled by a different routine.
 
-  It can identify a DX announcmenet, a talk message sent to MyCall or ALL,
+  It can identify a DX announcmenet, a talk message sent to Settings.My.Call or ALL,
   and responses to a SH/DX command.}
 
 var
@@ -989,7 +990,7 @@ begin
   with DXSpot do
      begin
 
-     //         if (Band = Band160) and StringHas(MyCall, 'N6TR') then
+     //         if (Band = Band160) and StringHas(Settings.My.Call, 'N6TR') then
      //            CheckForNewCountryForTreeOn160(Call);
 
               { We ignore dupes, except to put on the band map if enabled.  We
@@ -1024,7 +1025,7 @@ begin
         PushPacketSpot(DXSpot);
         end;
 
-   if Call = MyCall then
+   if Call = Settings.My.Call then
       begin
       DoABeep(Congrats);
       Result := '#';

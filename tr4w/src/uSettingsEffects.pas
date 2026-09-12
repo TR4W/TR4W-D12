@@ -90,7 +90,7 @@ uses
    SysUtils,
    uSettingsModel,
    FContest,       // RecalculateMyCountryContinentAndZoneNew
-   LogWind,        // MyCall -- the callsign the derivation starts from
+   LogWind,        // Settings.My.Call -- the callsign the derivation starts from
    uBandMapView;   // BandMapRefresh -- the band map's own view seam
 
 const
@@ -124,6 +124,10 @@ const
    MY_COUNTRY = 'My.Country';
    MY_ZONE    = 'My.Zone';
 
+   (* THE CALLSIGN IS WHAT THE OTHER THREE ARE DERIVED FROM, so changing it
+     re-runs the same derivation. That was AdditionalProcsArray slot 14. *)
+   MY_CALL    = 'My.Call';
+
 
 function InGroup(const aPath, aPrefix: string): boolean;
 begin
@@ -143,12 +147,13 @@ end;
 
 procedure SettingChanged(const aPath: string);
 begin
-   if UnicodeSameText(aPath, MY_COUNTRY) or UnicodeSameText(aPath, MY_ZONE) then
+   if UnicodeSameText(aPath, MY_COUNTRY) or UnicodeSameText(aPath, MY_ZONE)
+      or UnicodeSameText(aPath, MY_CALL) then
       begin
       (* The routine reads the WasSet flags itself, so a stated value is
         looked up and an unstated one is derived. Passing the callsign is
         what it needs to derive FROM. *)
-      RecalculateMyCountryContinentAndZoneNew(MyCall);
+      RecalculateMyCountryContinentAndZoneNew(UTF8Encode(Settings.My.Call));
       end;
 
    if InGroup(aPath, BAND_MAP) or InGroup(aPath, BANDS)

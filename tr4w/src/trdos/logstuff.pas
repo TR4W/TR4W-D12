@@ -6707,7 +6707,7 @@ begin
          begin
          RXData.QSOPoints := 2
          end
-      else if DomesticCountryCall(MyCall) then
+      else if DomesticCountryCall(UTF8Encode(Settings.My.Call)) then
          begin
          RXData.QSOPoints := 5
          end
@@ -6781,7 +6781,7 @@ begin
         FillChar(TempOblast, SizeOf(TempOblast), 0);
         if RussianID(Settings.My.Country) then
            begin
-           TempOblast := GetOblast(MyCall);
+           TempOblast := GetOblast(UTF8Encode(Settings.My.Call));
            russianRegion1 := GetRussiaOblastByTwoChars(Char(TempOblast[1]),
              Char(TempOblast[2]));
            end;
@@ -9010,7 +9010,7 @@ begin
       begin
         RXData.QSOPoints := 2;
 
-        if GetOblast(MyCall) = '4W' then
+        if GetOblast(Settings.My.Call) = '4W' then
            begin
            if RXData.DomesticQTH <> Settings.My.State then
               begin
@@ -9040,7 +9040,7 @@ begin
                  begin
                  RXData.QSOPoints := 10;
                  end;
-              MyZoneValue := ctyGetCQZone(MyCall);
+              MyZoneValue := ctyGetCQZone(Settings.My.Call);
               if MyZoneValue in [18, 19] then
                  begin
                  if RXData.Band = Band80 then
@@ -9886,11 +9886,11 @@ var
   o1, o2: OkrugType;
 begin
   Result := True;
-  if StringHas(MyCall, '/') then
+  if StringHas(Settings.My.Call, '/') then
      begin
      Exit;
      end;
-  MyOBlast := GetOblast(MyCall);
+  MyOBlast := GetOblast(UTF8Encode(Settings.My.Call));
   if MyOBlast = '' then
      begin
      Exit;
@@ -10198,10 +10198,10 @@ begin
      Oblast := Tree.GetOblast(RXData.Callsign);
      RussianRegionHis := GetRussiaOblastByTwoChars(Char(Oblast[1]), Char(Oblast[2]));
      RXData.DomesticQTH := RXData.QTHString;
-     if (RussianID(MyCall)) then
+     if (RussianID(Settings.My.Call)) then
         begin
         FillChar(Oblast, SizeOf(Oblast), 0);
-        Oblast := Tree.GetOblast(MyCall);
+        Oblast := Tree.GetOblast(UTF8Encode(Settings.My.Call));
         RussianRegionMy := GetRussiaOblastByTwoChars(Char(Oblast[1]), Char(Oblast[2]));
         if not (RussianRegionMy in [rtUA1A, rtUA1C]) then
            begin

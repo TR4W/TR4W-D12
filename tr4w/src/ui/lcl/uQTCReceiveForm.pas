@@ -146,10 +146,11 @@ implementation
 {$R *.lfm}
 
 uses
+   uSettingsModel,   // Settings.My.Call
    Graphics,              { fpFixed, tlCenter }
    LCLType,               { VK_* }
    VC,                    { the menu ids }
-   LogWind,               { MyCall }
+   LogWind,               (* the contest globals this window shows *)
    LOGWAE,                { QTCCallsign, MaxQTCsThisStation }
    LogCW,                 { SendStringAndStop }
    uQTCR,                 { the validation and the save }
@@ -271,7 +272,7 @@ begin
         -- fifty lines away from where the buttons were made. }
       if r = 7 then
          begin
-         btn.Caption := AnsiString('&DE ' + string(MyCall));
+         btn.Caption := AnsiString('&DE ' + string(Settings.My.Call));
          end;
       end;
 end;

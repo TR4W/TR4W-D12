@@ -18,7 +18,7 @@
   - A worker THamScoreUploader thread sleeps on a stop event with a
     120-second timeout.  Every wake builds one POST containing the
     current <dynamicresults> snapshot plus all queued QSO containers,
-    POSTs over HTTPS with HTTP Basic Auth (username = MyCall by default),
+    POSTs over HTTPS with HTTP Basic Auth (username = the callsign by default),
     and parses the JSON-style status response.
   - Reliability per spec: if the server's reply does not contain
     "Status":"CFM" (or "Status":"OK" for posts with no QSO data) the
@@ -201,8 +201,9 @@ const
 implementation
 
 uses
+   uSettingsModel,   // Settings.My.Call
   StrUtils, IdAuthentication,
-  LogWind,           // MyCall global
+  LogWind,           // the contest globals this reports
   ZoneCont,          // GetContinentName, ContinentType
   TF,                // CreateButton, CreateStatic
   MainUnit,          // CloseTR4WWindow, DefTR4WProc, FrmSetFocus (impl/impl cycle is OK)
@@ -653,14 +654,14 @@ begin
   Result := 0;
   responseBody := '';
 
-  // Username defaults to MyCall when the operator left HAMSCORE USERNAME blank.
+  // Username defaults to the callsign when HAMSCORE USERNAME is blank.
   if FUsername <> '' then
      begin
      effectiveUser := FUsername
      end
   else
      begin
-     effectiveUser := string(MyCall);
+     effectiveUser := string(Settings.My.Call);
      end;
 
   (* THE TRANSPORT IS uHTTPDownload'S (2026-09-09), like the other four units
@@ -1008,7 +1009,7 @@ begin
   Result.User  := Uploader.Username;
   if Result.User = '' then
      begin
-     Result.User := string(MyCall) + ' (default; HAMSCORE USERNAME empty)';
+     Result.User := string(Settings.My.Call) + ' (default; HAMSCORE USERNAME empty)';
      end;
   Result.User := 'User: ' + Result.User;
 

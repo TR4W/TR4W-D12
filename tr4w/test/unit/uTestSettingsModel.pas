@@ -344,7 +344,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(88, names.Count,
+         CheckEquals(89, names.Count,
                      'one name per migrated setting, plus the one'
                      + ' setting that has always answered to two --'
                      + ' MY STATE and MY QTH');
@@ -403,9 +403,14 @@ begin
    BeginTest('a command this object does not own is refused');
    s := TR4WSettings.Create;
    try
-      CheckFalse(s.OwnsCommand('MY CALL'), 'a setting that has not migrated');
-      CheckFalse(s.TrySetByCommand('MY CALL', 'NY4I'), 'setting it is refused');
-      CheckFalse(s.TryGetByCommand('MY CALL', value), 'reading it is refused');
+      (* THE EXAMPLE HAS TO BE A COMMAND THAT HAS NOT MIGRATED, so it
+        changes as the migration proceeds -- this was MY CALL until that
+        moved on 2026-09-12. MY CONTINENT is still a CFGCA row and is
+        deliberately staying there for now: it has 71 references in the
+        scoring code and the contest factory has to review it. *)
+      CheckFalse(s.OwnsCommand('MY CONTINENT'), 'a setting that has not migrated');
+      CheckFalse(s.TrySetByCommand('MY CONTINENT', 'NA'), 'setting it is refused');
+      CheckFalse(s.TryGetByCommand('MY CONTINENT', value), 'reading it is refused');
       CheckEquals('', value, 'and yields nothing to send');
 
       CheckFalse(s.OwnsCommand(''), 'an empty command name');
@@ -1029,6 +1034,7 @@ const
       + '"LEAVE CURSOR IN CALL WINDOW",'
       + '"LOG WITH SINGLE ENTER",'
       + '"MMTTY ENGINE",'
+      + '"MY CALL",'
       + '"MY CHECK",'
       + '"MY COUNTRY",'
       + '"MY FD CLASS",'

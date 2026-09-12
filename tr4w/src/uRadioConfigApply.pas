@@ -1471,7 +1471,7 @@ begin
       end;
 
    // BLANK LOGIN MEANS MY CALL, which is what the field's own hint promises.
-   // Left blank HERE and resolved at connect time, because MyCall can change
+   // Left blank HERE and resolved at connect time, because the callsign can change
    // after startup -- a different contest, a different operator -- and baking it
    // in now would log in as whoever was configured when the program booted.
    TelnetLoginCall := Trim(c.LoginCall);

@@ -494,7 +494,7 @@ begin
         end;
      end;    
   { Put the band map on the band/mode of the inactive radio }
-  if (DupeInfoCall = MyCall) then exit;    // issue 158
+  if (DupeInfoCall = Settings.My.Call) then exit;    // issue 158
   if (DupeInfoCall <> '') {and (DupeInfoCall <> EscapeKey)} then
      begin
      DisplayGridSquareStatus(CallWindowString);
@@ -504,7 +504,7 @@ begin
         begin
         tCreateAndAddNewSpot(DupeInfoCall, isDupe, InActiveRadioPtr);
         end;
-     if isDupe and (DupeInfoCall <> MyCall) then   // n4af issue158
+     if isDupe and (DupeInfoCall <> Settings.My.Call) then   // n4af issue158
         begin
         DupeInfoCallWindowState := diDupe;
         (* DupeInfoCall itself: @DupeInfoCall[1] was a bare pointer into a
@@ -1100,7 +1100,7 @@ begin
                begin
                SendChar := TempString[CharacterCount];
                case SendChar of
-                 '\': AddStringToBuffer(MyCall, Config.CWTone);
+                 '\': AddStringToBuffer(UTF8Encode(Settings.My.Call), Config.CWTone);
                  '>': RITClear;
                else AddStringToBuffer(SendChar, Config.CWTone);
                end;
@@ -1172,7 +1172,7 @@ begin
          begin
          Str(NextSerialToSend, QSONumberString);  // Issue #954
          BandMapCursorFrequency := ActiveRadioPtr.LastDisplayedFreq {LastDisplayedFreq[ActiveRadio]};
-             //            NewBandMapEntry('CQ/ ' + QSONumberString, LastDisplayedFreq[ActiveRadio], 0, ActiveMode, False, False, BandMapDecayTime, True, MyCall);
+             //            NewBandMapEntry('CQ/ ' + QSONumberString, LastDisplayedFreq[ActiveRadio], 0, ActiveMode, False, False, BandMapDecayTime, True, Settings.My.Call);
          tCreateAndAddNewSpot('CQ/ ' + QSONumberString, False, ActiveRadioPtr {?});
          LastCQFrequency := ActiveRadioPtr.LastDisplayedFreq {LastDisplayedFreq[ActiveRadio]};
          LastCQMode := ActiveMode;
@@ -1399,7 +1399,7 @@ begin
                    end;
                 if (KeyRecentlyPressed(F1, 600)) or (not DEEnable) then
                    begin
-                   SendCrypticMessage(MyCall)
+                   SendCrypticMessage(UTF8Encode(Settings.My.Call))
                    end
                 else
                    begin
@@ -1413,11 +1413,11 @@ begin
                   begin
                   if DEEnable then     // wli issue 277
                      begin
-                     SendCrypticMessage(CallWindowString + ' DE ' + MyCall + ' ' + MyCall)
+                     SendCrypticMessage(UTF8Encode(CallWindowString + ' DE ' + Settings.My.Call + ' ' + Settings.My.Call))
                      end
                   else
                      begin
-                     SendCrypticMessage(CallWindowString + ' ' + MyCall + ' ' + MyCall);
+                     SendCrypticMessage(UTF8Encode(CallWindowString + ' ' + Settings.My.Call + ' ' + Settings.My.Call));
                      end;
                   end
                else
@@ -2173,13 +2173,13 @@ begin
                             end
                          else
                             begin
-                            SendStringAndStop(MyCall);
+                            SendStringAndStop(UTF8Encode(Settings.My.Call));
                             end;
                          end
                       else
                         if ActiveMode = Digital then
                            begin
-                           SendStringAndStop(CallWindowString + ' DE ' + MyCall + ' KK')
+                           SendStringAndStop(UTF8Encode(CallWindowString + ' DE ' + Settings.My.Call + ' KK'))
                            end
                         else
                               //wli            SendFunctionKeyMessage (F1, SearchAndPounceOpMode);
@@ -2698,7 +2698,7 @@ QSOTotals[TempBand, TempMode] is accurate for the individual bands so just sum t
              #9 + '<soft>TR4W</soft>' + sLineBreak +
              #9 + '<version>' + TR4W_CURRENTVERSION_NUMBER + '</version>' + sLineBreak +
              #9 + '<contest>' + sContestName + '</contest>' +   sLineBreak +
-             #9 + '<call>' + MyCall + '</call>' + sLineBreak +
+             #9 + '<call>' + Settings.My.Call + '</call>' + sLineBreak +
              #9 + '<club>' + ' ' + '</club>' + sLineBreak +
              #9 + '<class ops="' + tCategoryOperatorSA[CategoryOperator] + '" mode="' + tCategoryModeSA[CategoryMode] +
                   '" power="' + tCategoryPowerSA[CategoryPower] + '" bands="' + tCategoryBandSA[CategoryBand] +
@@ -2811,7 +2811,7 @@ var
    sMultiplierFields: AnsiString;
    sTimestamp: AnsiString;
 begin
-   // if operator is blank, use mycall
+   // if operator is blank, use Settings.My.Call
    // Add CR to output
    // Band is in Mhz, not meters.
    // ny4i Issue 82 - Added code to check if there is a radio interfaced and if not,
@@ -2896,7 +2896,7 @@ begin
 
        if CurrentOperator[0] = #0 then
           begin
-          sOperator := MyCall;
+          sOperator := UTF8Encode(Settings.My.Call);
           end
    else
       begin
@@ -2971,7 +2971,7 @@ begin
              {#9 + '<contestname>' + ContestTypeSA[RxData.ceContest] + '</contestname>' + sLineBreak + }
              #9 + '<contestnr>' + IntToStr(Ord(RxData.ceContest)) + '</contestnr>' + sLineBreak +
              #9 + '<timestamp>' + sTimestamp + '</timestamp>' + sLineBreak +
-             #9 + '<mycall>' + MyCall + '</mycall>' + sLineBreak +
+             #9 + '<Settings.My.Call>' + Settings.My.Call + '</Settings.My.Call>' + sLineBreak +
              #9 + '<band>' + ConvertBandTypeToUDPContactBand(RXData.Band) + '</band>' + sLineBreak +
             #9 + '<rxfreq>' + Format('%d',[freq div 10]) + '</rxfreq>' + sLineBreak + // 1420100
             #9 + '<txfreq>' + Format('%d',[txFreq div 10]) + '</txfreq>' + sLineBreak +

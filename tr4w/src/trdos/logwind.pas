@@ -693,8 +693,6 @@ var
   MultipleBandsEnabled                  : boolean = True;
   MultipleModesEnabled                  : boolean = True;
 
-  MyCall                                : CallString;
-  DEPlusMyCall                          : Str160;
   MultiplierItemWidth                   : integer = 40; // 4.91.4
   MyContinent                           : ContinentType {= UnknownContinent};
   MyContinentIsSet                      : boolean;
@@ -834,6 +832,19 @@ var
 
   TourDuration                          : integer;
   //   tUpdateWindow                   : boolean;
+
+(* "DE <callsign>", DERIVED RATHER THAN CACHED.
+
+  This was a Str160 global with exactly ONE writer -- the MY CALL
+  hook in the config array -- and six readers, all of them CW sends.
+  A second copy of a value that is already stored is a copy that can
+  be stale, and this one could be: the hook fired only when
+  CheckCommand applied the row, so a callsign arriving any other way
+  left every one of those six sends keying the PREVIOUS call.
+
+  Computing it on demand removes the question. It is a string
+  concatenation on a path that is about to key CW for seconds. *)
+function DEPlusMyCall: Str160;
 
 procedure ActivateExchangeWindow;
 
@@ -1036,6 +1047,13 @@ uses
   uBandMapView;
 
 
+function DEPlusMyCall: Str160;
+begin
+   (* Encoded once, at the assignment to the ShortString result. *)
+   Result := UTF8Encode('DE ' + Settings.My.Call);
+end;
+
+
 type
   SavedWindow = record
     CursorX: integer;
@@ -1231,7 +1249,7 @@ begin
      tBeamHeadingPrevState := HisGrid;
 
      DispalyGrid(HisGrid);
-     if Call = MyCall then
+     if Call = Settings.My.Call then
         begin
         GetLatLon(Settings.My.Grid, Lat, Lon)
         end

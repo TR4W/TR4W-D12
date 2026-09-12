@@ -360,7 +360,7 @@ begin
           end;
   
         '~': SendSalutation(CallWindowString);
-        '\': AddStringToBuffer(MyCall, Config.CWTone);
+        '\': AddStringToBuffer(UTF8Encode(Settings.My.Call), Config.CWTone);
         '&': AddStringToBuffer(UTF8Encode(Settings.My.State), Config.CWTone);
 
         '|':

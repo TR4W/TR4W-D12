@@ -253,7 +253,6 @@ function F_FREQUENCY_MEMORY: boolean;
 function F_KEYER_RADIO_ONE_OUTPUT_PORT: boolean;
 function F_KEYER_RADIO_TWO_OUTPUT_PORT: boolean;
 function F_MY_CONTINENT: boolean;
-function F_MY_CALL: boolean;
 function F_ZONE_MULTIPLIER: boolean;
 function F_AUTO_SEND_CHARACTER_COUNT: boolean;
 procedure UpdateDebugLogLevel;
@@ -366,7 +365,7 @@ const
       @F_SCP_COUNTRY_STRING,
       @F_KEYER_RADIO_ONE_OUTPUT_PORT,
       @F_KEYER_RADIO_TWO_OUTPUT_PORT,
-      @F_MY_CALL,
+      nil {@F_MY_CALL -- DEPlusMyCall is derived, the rest is a setter},
       nil {@F_MY_GRID},
       @F_ADD_DOMESTIC_COUNTRY,
       @F_BAND_MAP_CUTOFF_FREQUENCY,
@@ -616,6 +615,7 @@ const
    - 1 {MY ZONE -- moved to uSettingsModel}
    - 2 {MY STATE and its older spelling MY QTH -- moved to uSettingsModel}
    - 1 {MY COUNTRY -- moved to uSettingsModel}
+   - 1 {MY CALL -- moved to uSettingsModel}
    ;
 
    // crS (CFGStatus): csNew / csOld = active -- the command's value IS applied.
@@ -846,7 +846,6 @@ const
  (crCommand: 'MULTIPLE BANDS';                crAddress: @MultipleBandsEnabled;           crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'MULTIPLE MODES';                crAddress: @MultipleModesEnabled;           crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'MULT SHEET AUTO RESET';         crAddress: @MultReset   ;                   crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'MY CALL';                       crAddress: @MyCall;                         crMin:0;  crMax:13;      crS: csOwned; crA: 14;crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'MY CONTINENT';                  crAddress: pointer(21);                     crMin:0;  crMax:0;       crS: csOwned; crA: 22;crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'NAME FLAG ENABLE';              crAddress: @Config.NameFlagEnable;                 crMin:0;  crMax: 0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'NET STATUS UPDATE INTERVAL';    crAddress: @tNetStatusUpdateInterval;       crMin:1000;crMax:10000;   crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
@@ -2545,22 +2544,6 @@ begin
 
    ctyLocateCall(ShortString(AnsiString(aValue)), TempQTH);
    Result := UnicodeSameText(aValue, string(TempQTH.CountryID));
-end;
-
-function F_MY_CALL: boolean;
-
-begin
-   DEPlusMyCall := 'DE ' + MyCall;
-   RecalculateMyCountryContinentAndZoneNew(MyCall);
-   {
-     ctyLocateCall(MyCall, TempQTH);
-     Settings.My.Country := TempQTH.CountryID;
-     MyContinent := TempQTH.Continent;
-     Str(TempQTH.Zone, Settings.My.Zone);
-     CountryString := Settings.My.Country;
-     ContinentString := tContinentArray[MyContinent];
-   }
-   Result := True;
 end;
 
 function F_ZONE_MULTIPLIER: boolean;

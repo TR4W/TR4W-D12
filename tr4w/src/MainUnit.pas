@@ -1094,7 +1094,7 @@ begin
       EscapeDeletedCallEntry := CallWindowString;
 
       if (CallWindowString = DupeInfoCall) and 
-         (CallWindowString <> MyCall)      then
+         (CallWindowString <> Settings.My.Call)      then
       // n4af issue 158
          begin
          DupeInfoCallWindowState := diNone;
@@ -1316,7 +1316,7 @@ begin
   if (DupeInfoCall = '') and (CallWindowString = '') and (OpMode = SearchAndPounceOpMode) then // 4.102.3
     if not DEEnable then
        begin
-       SendStringAndStop(MyCall)
+       SendStringAndStop(UTF8Encode(Settings.My.Call))
        end
     else
        begin
@@ -1378,12 +1378,12 @@ begin
                  end
               else
                  begin
-                 SendStringAndStop(MyCall);
+                 SendStringAndStop(UTF8Encode(Settings.My.Call));
                  end;
               end
            else if ActiveMode = Digital then
               begin
-              SendStringAndStop(CallWindowString + ' DE ' + MyCall + ' KK')
+              SendStringAndStop(UTF8Encode(CallWindowString + ' DE ' + Settings.My.Call + ' KK'))
               end
            else
            end;
@@ -1479,12 +1479,12 @@ begin
               end
            else
               begin
-              SendStringAndStop(MyCall);
+              SendStringAndStop(UTF8Encode(Settings.My.Call));
               end;
            end
         else if ActiveMode = Digital then
            begin
-           SendStringAndStop(CallWindowString + ' DE ' + MyCall + ' KK')
+           SendStringAndStop(UTF8Encode(CallWindowString + ' DE ' + Settings.My.Call + ' KK'))
            end
         else
           //wli SendFunctionKeyMessage (F1, SearchAndPounceOpMode);
@@ -2073,9 +2073,9 @@ begin
            end
         else
            begin
-           Result := SendCrypticMessage(MyCall);
+           Result := SendCrypticMessage(UTF8Encode(Settings.My.Call));
            end;
-        // DebugMsg('<<<<SendCrypticMessage(MyCall)');
+        // DebugMsg('<<<<SendCrypticMessage(Settings.My.Call)');
         KeyStamp(F1);
         end;
      Exit;
@@ -2083,8 +2083,8 @@ begin
 
   if ActiveMode = Digital then
      begin
-     SendCrypticMessage(#13#10 + CallWindowString + ' DE ' + MyCall + ' ' +
-       MyCall)
+     SendCrypticMessage(#13#10 + CallWindowString + ' DE ' + Settings.My.Call + ' ' +
+       Settings.My.Call)
      end
 
   else
@@ -4445,7 +4445,7 @@ begin
      end;
   // if ContestsArray[Contest].e <> 0 then
   ErmakSpecification := ((ContestsBooleanArray[Contest] and (1 shl ERMAK_BIT))
-    <> 0) and (RussianID(MyCall));
+    <> 0) and (RussianID(Settings.My.Call));
 
   if ErmakSpecification then
      begin
@@ -9282,15 +9282,15 @@ begin
   logger.debug('[PutCallToCallWindow] Putting %s into main call window',
     [Call]);
   Call[Ord(Call[0]) + 1] := #0;
-  if call = MyCall then
+  if call = Settings.My.Call then
      begin
-     logger.debug('[PutCallToCallWindow] Exiting early because call (%s) = MyCall (%s)', [call, MyCall]);
+     logger.debug('[PutCallToCallWindow] Exiting early because call (%s) = Settings.My.Call (%s)', [call, Settings.My.Call]);
      exit; // n4af issue 158
      end;
   logger.debug('Putting "%s" into the call field', [Call]);
 
   { THE DECISION IS ABOVE, THE FIELD WRITE IS BELOW, AND ONLY THE WRITE HAS A
-    THREAD REQUIREMENT.  The MyCall check is arithmetic on a string and is
+    THREAD REQUIREMENT.  The Settings.My.Call check is arithmetic on a string and is
     correct on any thread; touching a TEdit is not.
 
     THE WSJT-X UDP LISTENER GETS HERE.  Measured, not supposed -- tr4w.log,
@@ -9483,7 +9483,7 @@ begin
   FirstCommand := False;
   if utils_file.FileExists(PAnsiChar(f)) then
      begin
-     LoadInSeparateConfigFile(f, FirstCommand, MyCall);
+     LoadInSeparateConfigFile(f, FirstCommand, UTF8Encode(Settings.My.Call));
      end;
   if ClearDupeSheetCommandGiven then
      begin

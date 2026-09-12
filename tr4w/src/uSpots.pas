@@ -873,7 +873,7 @@ begin
         break; // stop search on match 4.130.1
         end;
      end;
-  if (d >= Settings.BandMap.GuardBand) or (Pos(MyCall, Flist^[Index2].FCall) > 0) then
+  if (d >= Settings.BandMap.GuardBand) or (Pos(UTF8Encode(Settings.My.Call), Flist^[Index2].FCall) > 0) then
     // 4.57.8  // 4.72.1
      begin
      ClearAltD;
@@ -936,8 +936,8 @@ begin
 
   if d <= Settings.BandMap.GuardBand then
      begin
-     //if (Pos(MyCall,Flist^[Index2].FCall)>0) then continue;
-     if FList^[Index2].FCall <> MyCall then
+     //if (Pos(Settings.My.Call,Flist^[Index2].FCall)>0) then continue;
+     if FList^[Index2].FCall <> Settings.My.Call then
        if OpMode = SearchAndPounceOpMode then // n4af 4.45.10
           begin
           tCleareCallWindow;

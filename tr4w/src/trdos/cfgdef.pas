@@ -263,7 +263,6 @@ begin
   //  MultiUpdateMultDisplay := True;
   //  MultReportMinimumBands := 4;
   {
-    MyCall := '';
     MyContinent := UnknownContinent;
   }
   //  Config.NameFlagEnable := True;

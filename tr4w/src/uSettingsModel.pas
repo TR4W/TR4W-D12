@@ -988,8 +988,10 @@ type
       FZoneWasSet: boolean;
       FCountry: string;
       FCountryWasSet: boolean;
+      FCall: string;
       FState: string;
       FItuZone: TMyItuZone;
+      procedure SetCall(const aValue: string);
       procedure SetCountry(const aValue: string);
       procedure SetZone(const aValue: string);
    public
@@ -1066,6 +1068,24 @@ type
         why a value CTY.DAT cannot resolve to itself is REFUSED rather than
         stored -- see the check registered against this path in uCFG. *)
       property Country: string read FCountry write SetCountry;
+      (* Was the global MyCall in LOGWIND -- the callsign being operated.
+
+        IT IS NOT ALWAYS THE STATION'S OWN. NY4I, 2026-09-12: "while my
+        station call is NY4I, there may be a contest where I want to operate
+        it as a club call hence I might use W4AFC in just a specific
+        contest." That already works and keeps working, because of the
+        ORDER the sources are read in: this object is loaded from
+        settings\tr4w.json before any contest file, and the contest .cfg --
+        whose FIRST line must be MY CALL -- is read after it and wins. The
+        station default is not touched by that, because nothing writes the
+        settings file on exit; the contest's own callsign is captured into
+        the contest database, where uLogStore already records it as
+        contest-scoped.
+
+        EVERYTHING DERIVED FROM IT IS OVERRIDABLE. Country, continent and
+        zone are computed from this callsign only where the operator has
+        not stated one -- see CountryWasSet and ZoneWasSet. *)
+      property Call: string read FCall write SetCall;
       (* Was the global MyState in LOGWIND. It is NOT a state: it is the
         contest-dependent catch-all the exchange sends where a US station
         sends its state -- a province, an oblast, a county, a serial number
@@ -1658,10 +1678,16 @@ begin
    FGrid       := '';
    FZone          := '';
    FZoneWasSet    := False;
+   FCall          := '';
    FCountry       := '';
    FCountryWasSet := False;
    FState         := '';
    FItuZone    := 0;
+end;
+
+procedure TMySettings.SetCall(const aValue: string);
+begin
+   SetStr(FCall, aValue, 'Call');
 end;
 
 procedure TMySettings.SetCountry(const aValue: string);

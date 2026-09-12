@@ -345,10 +345,12 @@ function ReadEntryDeclaration: TLogEntryDeclaration;
 begin
    FillChar(Result, SizeOf(Result), 0);
 
-   Result.MyCall := AnsiString(MyCall);
-   (* UTF8Encode, not an AnsiString cast: the declaration field is an
-     AnsiString and the setting is UTF-16, so a cast would be a narrowing
-     conversion the build counts. A POTA reference is ASCII. *)
+   (* UTF8Encode, not an AnsiString cast, on both: these declaration fields
+     are AnsiStrings and the settings are UTF-16. The cast compiles and
+     silently narrows; the encode states the conversion. A callsign and a
+     POTA reference are both ASCII, so nothing changes in the bytes -- what
+     changes is that the build can still count what it is counting. *)
+   Result.MyCall := UTF8Encode(Settings.My.Call);
    Result.MyPark := UTF8Encode(Settings.My.Park);
 
    Result.CategoryOperator    := AnsiString(CabrilloTagText(ctCategoryOperator));

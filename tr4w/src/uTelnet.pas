@@ -345,7 +345,7 @@ var
 // The parser itself now lives in uClusterTokens, which links without the
 // socket, the spot model or this dialog procedure and is therefore under unit
 // test.  What stays here is the part that could never move: knowing that
-// MY_CALL means the MyCall global.
+// MY_CALL means the Settings.My.Call global.
 //
 // Result is False for an unrecognised token so the parser can leave it
 // verbatim.  This is the single source of truth for the token vocabulary.
@@ -359,7 +359,7 @@ begin
 
    if Token = 'MY_CALL' then
       begin
-      Value := string(MyCall)
+      Value := string(Settings.My.Call)
       end
    else if Token = 'MY_STATE' then
       begin
@@ -797,7 +797,7 @@ begin
         // LOG IN.  Until 2026-08-11 this branch sent ConnectionCommand
         // INSTEAD of the callsign when one was configured -- so anybody
         // who set a connection command never logged in at all -- and
-        // otherwise merely PRE-FILLED the input box with MyCall and waited
+        // otherwise merely PRE-FILLED the input box with Settings.My.Call and waited
         // for the operator to press Enter.
         //
         // WAIT FOR THE PROMPT, with a timeout.  The first version of this
@@ -1366,12 +1366,12 @@ begin
    ClusterLoginTimer.Enabled := False;
 
    // BLANK MEANS MY CALL, which is what the Preferences field promises. Resolved
-   // HERE and not at config-apply time, because MyCall can change between
+   // HERE and not at config-apply time, because Settings.My.Call can change between
    // startup and a connect -- a different contest, a different operator.
    call := Trim(TelnetLoginCall);
    if call = '' then
       begin
-      call := Trim(string(MyCall));
+      call := Trim(string(Settings.My.Call));
       end;
 
    if call = '' then
@@ -1734,7 +1734,7 @@ begin
   TempSpot.FSysTime := UTCNow;
   TempSpot.FAgeSeconds := SpotAgeSeconds(TempSpot);
 
-  if TempSpot.FCall = MyCall then
+  if TempSpot.FCall = Settings.My.Call then
      begin
      Stringtype := tstAlert;
      QuickDisplay(TC_YOUARESPOTTEDBYANOTHERSTATION);
@@ -1853,7 +1853,7 @@ begin
   TempSpot.FDupe := Dupe;
   TempSpot.FMult := Mult;
   TempSpot.FAgeSeconds := 0;
-  TempSpot.FSourceCall := MyCall + '-' + ComputerID;
+  TempSpot.FSourceCall := UTF8Encode(Settings.My.Call + '-' + ComputerID);
   TempSpot.FNotes[0] := #0;
   // OUR OWN spot: made now, by definition.
   TempSpot.FSysTime := UTCNow;

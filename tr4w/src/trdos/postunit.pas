@@ -470,7 +470,7 @@ function ZoneSentForThisContest: string;
          Result := IntToStr( Settings.My.ItuZone );
          Exit;
          end;
-      ituFromCty := ctyGetITUZone( string( MyCall ) );
+      ituFromCty := ctyGetITUZone( string( Settings.My.Call ) );
       if ituFromCty > 0 then
          begin
          Result := IntToStr( ituFromCty );
@@ -544,7 +544,10 @@ procedure CreateCabrilloFile;
   begin
 
   SetTransmittersId := False;
-  TF.Format( tReportsFilename, '%s%s.LOG', TR4W_LOG_PATH_NAME, @MyCall[ 1 ] );
+  uAnsiStr.StrPLCopy( tReportsFilename,
+     UTF8Encode( string( PAnsiChar( @TR4W_LOG_PATH_NAME[ 0 ] ) )
+                 + Settings.My.Call + '.LOG' ),
+     High( tReportsFilename ) );
   DeleteSlashes( tReportsFilename );
 
   FillChar(Radio1IDs, SizeOf( Radio1IDs ), 0);
@@ -795,7 +798,7 @@ procedure ExportTo3830Scores;
      powerStr := '';
      end;
 
-  buf := buf + sysutils.Format( 'Call Used: %s'#13#10, [ string( MyCall ) ] );
+  buf := buf + sysutils.Format( 'Call Used: %s'#13#10, [ string( Settings.My.Call ) ] );
   buf := buf + sysutils.Format( 'Operators: %s'#13#10, [ operatorsStr ] );
   buf := buf + sysutils.Format( 'Class:     %s'#13#10, [ classStr ] );
   buf := buf + sysutils.Format( 'Power:     %s'#13#10#13#10, [ powerStr ] );
@@ -993,7 +996,7 @@ procedure WriteTitleBlockToSummarySheet;
      + #13#10#13#10 + '               CONTEST: ' + string( ContestName ) +
      ContestFriendlyParens + #13#10 + '            START DATE: ' +
      string( tGetDateFormat( ContestDates[ 0 ] ) ) + #13#10 +
-     '         CALLSIGN USED: ' + string( MyCall ) + #13#10 +
+     '         CALLSIGN USED: ' + string( Settings.My.Call ) + #13#10 +
      '               LOCATOR: ' + Settings.My.Grid + #13#10#13#10 );
 
   // for i := 147 to 167 - 2 + 2 do
@@ -1485,8 +1488,8 @@ procedure PrintHourTotals;
   // if Header = '' then
   // Header := GetResponse('Enter contest name and callsign : ');
 
-  WriteLnVarCenter( FileWrite, ContestName + ContestFriendlyParens + ' '
-     + MyCall );
+  WriteLnVarCenter( FileWrite, UTF8Encode( ContestName + ContestFriendlyParens
+     + ' ' + Settings.My.Call ) );
   WriteLn( FileWrite );
 
   Write( FileWrite,
@@ -2161,8 +2164,11 @@ procedure ExportToEDIByBand( Band: BandType );
      Exit;
      end;
 
-  TF.Format( tReportsFilename, '%s%s_%s.EDI', TR4W_LOG_PATH_NAME, @MyCall[ 1 ],
-     BandStringsArrayWithOutSpaces[ Band ] );
+  uAnsiStr.StrPLCopy( tReportsFilename,
+     UTF8Encode( string( PAnsiChar( @TR4W_LOG_PATH_NAME[ 0 ] ) )
+                 + Settings.My.Call + '_'
+                 + string( BandStringsArrayWithOutSpaces[ Band ] ) + '.EDI' ),
+     High( tReportsFilename ) );
 
   DeleteSlashes( tReportsFilename );
   if not tOpenFileForWrite( tReportFileWrite, tReportsFilename ) then
@@ -2190,13 +2196,13 @@ procedure ExportToEDIByBand( Band: BandType );
      end;
 
   // Issue #998: asm-push wsprintf -> SysUtils.Format. cdecl arg order is
-  // ContestName, MyCall, grid, BandString, Name, Address, Section, QSOcount.
+  // ContestName, Settings.My.Call, grid, BandString, Name, Address, Section, QSOcount.
   sWriteFileFromString( tReportFileWrite,
      sysutils.Format( '[REG1TEST;1]'#13#10 + 'TName=%s'#13#10 + 'PCall=%s'#13#10
      + 'PWWLo=%s'#13#10 + 'PBand=%s'#13#10 + 'RName=%s'#13#10 + 'PAdr1=%s'#13#10
      + 'PSect=%s'#13#10 + '[QSORecords;%u]'#13#10,
      [ string(ContestName),
-     string(MyCall), Settings.My.Grid,
+     string(Settings.My.Call), Settings.My.Grid,
      string( EDIFBANDSTRINGSARRAY[ Band ] ),
      CabrilloTagText( ctName ),
      AddressLine,
@@ -2266,7 +2272,7 @@ procedure ExportToEDIByBand( Band: BandType );
 // ---------------------------------------------------------------------------
 // Tail emitter callback for uADIF.ExportADIFToString.
 // Emits the contest-specific fields that uADIF.EmitADIFRecord skips because
-// they need access to MainUnit/trdos globals (MyCall, MyFDClass, MySection,
+// they need access to MainUnit/trdos globals (Settings.My.Call, MyFDClass, MySection,
 // MyPark, mo.DomList, ActiveZoneMult, etc.) or are gated on contest-specific
 // reinterpretation of QTHString.  Called once per record.
 // ---------------------------------------------------------------------------
@@ -2490,11 +2496,11 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
             end;
      end;
 
-  // ----- STATION_CALLSIGN (when operator differs from MyCall) -----
-  if ( rec.ceOperator <> '' ) and ( string( rec.ceOperator ) <> string( MyCall ) )
+  // ----- STATION_CALLSIGN (when operator differs from Settings.My.Call) -----
+  if ( rec.ceOperator <> '' ) and ( string( rec.ceOperator ) <> string( Settings.My.Call ) )
   then
      begin
-     Result := Result + EmitADIFField( 'STATION_CALLSIGN', string( MyCall ) );
+     Result := Result + EmitADIFField( 'STATION_CALLSIGN', string( Settings.My.Call ) );
      end;
   end;
 
@@ -2665,7 +2671,7 @@ end;
 
 function tGenerateSummaryPortionOfCabrilloFile: boolean;
   var
-    T2: PAnsiChar;
+    T2: string;
     T3: String;
     TempTag: CabrilloTags;
     TempPchar: PAnsiChar;
@@ -2718,7 +2724,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
          begin
          Exit;
          end;
-      T2 := @MyCall[ 1 ];
+      T2 := Settings.My.Call;
       if length( ContestsArray[ Contest ].CABName ) = 0 then
          begin
          T3 := ContestTypeSA[ Contest ]
@@ -2747,7 +2753,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
          sysutils.Format( 'START-OF-LOG: 3.0'#13#10'CREATED-BY: ' +
          TR4W_CURRENTVERSION + '-D12' + CabrilloLanguageTag +
          #13#10'CALLSIGN: %s'#13#10'CONTEST: %s'#13#10'CLAIMED-SCORE: %d'#13#10,
-         [ string( T2 ), T3, TotalScore ] ) );
+         [ T2, T3, TotalScore ] ) );
 
       for TempTag := Low( CabrilloTags ) to High( CabrilloTags ) do
          begin
@@ -3100,7 +3106,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 { Make First part }
                 // Issue #998: asm-push wsprintf -> SysUtils.Format; the CABRILLO_FIRST_PART
                 // PChar buffer is replaced by the local sFirstPart string.  cdecl arg
-                // order: freq, mode, year, month, day, hour, minute, mycall.  %02d -> %.2d
+                // order: freq, mode, year, month, day, hour, minute, Settings.My.Call.  %02d -> %.2d
                 // (date/time fields are always non-negative).
                 // Issue #750: X-QSO records use the 'X-QSO:' prefix instead of 'QSO:';
                 // only the literal prefix differs (the 2-char-wider prefix shifts later
@@ -3120,7 +3126,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                    TempRXData.tSysTime.qtYear + 2000, TempRXData.tSysTime.qtMonth,
                    TempRXData.tSysTime.qtDay, TempRXData.tSysTime.qtHour,
                    TempRXData.tSysTime.qtMinute,
-                   string(MyCall) ] );
+                   string(Settings.My.Call) ] );
                 {
                 ActiveExchange := RSTQSONumberExchange;
                 nrReceived := StrToIntDef(TempRXData.ceClass, 0);
@@ -3201,17 +3207,17 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 // Issue #998: asm-push wsprintf -> SysUtils.Format + sWriteFileFromString
                 // (last asm block in this unit).  QTC: freq mode date time <call1>
                 // <randomchars> <call2> <sentNr> <kids> <rcvdNr>.  For rkQTCR the
-                // from/to calls are MyCall/HisCallsign; for rkQTCS they swap.
+                // from/to calls are Settings.My.Call/HisCallsign; for rkQTCS they swap.
                 // %02d -> %.2d (date/time), %04u -> %.4u (sent number).
                 if TempRXData.ceRecordKind = rkQTCR then
                    begin
-                   sCall1 := string(MyCall);
+                   sCall1 := string(Settings.My.Call);
                    sCall2 := string( HisCallsign );
                    end
                 else
                    begin
                    sCall1 := string( HisCallsign );
-                   sCall2 := string(MyCall);
+                   sCall2 := string(Settings.My.Call);
                    end;
                 sWriteFileFromString( tReportFileWrite,
                    sysutils.Format

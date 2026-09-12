@@ -54,7 +54,9 @@ var
    firstProcessMessage: boolean = true;
 implementation
 
-Uses MainUnit;
+Uses
+   uSettingsModel,   // Settings.My.Call
+   MainUnit;
 
 Constructor TExternalLogger.Create();
 begin
@@ -295,7 +297,7 @@ This is all we need to send as we DO NOT want to send every contact to any of th
 }
    if CurrentOperator[0] = #0 then
       begin
-      sOperator := MyCall;
+      sOperator := Settings.My.Call;
       end
    else
       begin
@@ -348,7 +350,7 @@ This is all we need to send as we DO NOT want to send every contact to any of th
                                                           [ce.tSysTime.qtHour,
                                                            ce.tSysTime.qtMinute,
                                                            ce.tSysTime.qtSecond]))
-                  + AddADIFField('STATION_CALLSIGN',MyCall)
+                  + AddADIFField('STATION_CALLSIGN',Settings.My.Call)
                   + AddADIFField('OPERATOR',sOperator)
 
                   + AddADIFField('SRX_STRING', ce.ExchString)

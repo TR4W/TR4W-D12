@@ -237,7 +237,7 @@ begin
 
   ConfigurationOkay := False;
 
-  if MyCall = '' then
+  if Settings.My.Call = '' then
      begin
      showwarning(TC_NOCALLSIGNSPECIFIED);
      Exit;
@@ -571,7 +571,10 @@ begin
 
   if CurrentOperator[0] = #0 then  // ny4i Issue #97
      begin
-     uAnsiStr.StrPLCopy(CurrentOperator, MyCall, High(CurrentOperator)); // This copies the string MyCall to char array CurrentOperator (I love mixed types :) ) // ny4i
+     (* The operator defaults to the callsign being used. StrPLCopy fills a
+       fixed AnsiChar array, so the text is encoded on the way in. *)
+     uAnsiStr.StrPLCopy(CurrentOperator, UTF8Encode(Settings.My.Call),
+                        High(CurrentOperator));
      end;
 
   CheckAndInitializeSerialPorts;
@@ -945,7 +948,7 @@ begin
 
   (* THE CONFIGURATION IS NOT COMPLETE HERE, SO IT IS NOT CHECKED HERE.
 
-    This halted the program if MyCall was empty after reading the contest .cfg
+    This halted the program if Settings.My.Call was empty after reading the contest .cfg
     -- halfway through assembling the configuration, with the common messages
     and the log's own settings still to come. That was harmless while the .cfg
     was the last word on a contest. It is not now: the log carries the contest's

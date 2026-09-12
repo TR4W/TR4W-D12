@@ -95,6 +95,10 @@ function GetRandomDomesticQTH(Call: CallString): string;
 
 implementation
 
+uses
+   uSettingsModel;   // Settings.My.Call
+
+
 function RandomRST: Str20;
 
 begin
@@ -1295,7 +1299,7 @@ begin
            sleep(100 + Random(200));
            end;
 
-        DDXAnswerACQ(DDXCall1, DDXTone1, MyCall);
+        DDXAnswerACQ(DDXCall1, DDXTone1, Settings.My.Call);
 
         if DDXState <> CallSentInResponseToACQ then
            begin
@@ -1325,7 +1329,7 @@ begin
 
         if DDXState = CallSentInResponseToACQ then
            begin
-           DDXSendSAndPExchange(DDXCall1, MyCall, DDXTone1);
+           DDXSendSAndPExchange(DDXCall1, Settings.My.Call, DDXTone1);
            end;
       end;
 
@@ -1499,7 +1503,7 @@ begin
             sleep(100 + Random(200));
             end;
 
-         DDXSendSAndPExchange(DDXCall2, MyCall, DDXTone2);
+         DDXSendSAndPExchange(DDXCall2, Settings.My.Call, DDXTone2);
          DDXState := WaitingForYourExchange;
          end;
 

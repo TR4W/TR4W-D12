@@ -266,7 +266,7 @@ begin
      Exit;
      end;
 
-  SendStringAndStop('88 ' + MyCall + ' TEST');
+  SendStringAndStop(UTF8Encode('88 ' + Settings.My.Call + ' TEST'));
 end;
 
 procedure CleanUpDisplay;
