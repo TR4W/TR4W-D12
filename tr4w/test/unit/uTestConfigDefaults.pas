@@ -189,11 +189,11 @@ begin
 
    CheckTrue(Config.AutoReturnToCQMode,        'AutoReturnToCQMode was True');
    CheckTrue(Config.EscapeExitsSearchAndPounce,'EscapeExitsSearchAndPounce was True');
-   CheckTrue(Config.SpaceBarDupeCheckEnable,   'SpaceBarDupeCheckEnable was True');
+   CheckTrue(Settings.CallWindow.SpaceBarDupeCheck, 'SpaceBarDupeCheck was True');
    CheckTrue(Config.ConfirmEditChanges,        'ConfirmEditChanges was True');
 
    CheckFalse(Config.AutoCallTerminate,      'AutoCallTerminate was False');
-   CheckFalse(Config.LeaveCursorInCallWindow,'LeaveCursorInCallWindow was False');
+   CheckFalse(Settings.CallWindow.LeaveCursor, 'LeaveCursor was False');
    CheckFalse(Config.LogWithSingleEnter,     'LogWithSingleEnter was False');
    CheckFalse(Config.AutoQSONumberDecrement, 'AutoQSONumberDecrement was False');
 end;
@@ -217,12 +217,15 @@ begin
    CheckEquals(';', Settings.PossibleCall.AcceptKey, 'accept key');
    CheckEquals(',', Settings.PossibleCall.LeftKey,   'left key');
    CheckEquals('.', Settings.PossibleCall.RightKey,  'right key');
-   CheckTrue(Config.PartialCallEnable,       'PartialCallEnable was True');
-   CheckTrue(Config.WildCardPartials,        'WildCardPartials was True');
+   CheckTrue(Settings.CallWindow.PartialCallEnable, 'PartialCallEnable was True');
+   CheckTrue(Settings.CallWindow.WildcardPartials,  'WildcardPartials was True');
    CheckTrue(Config.NameFlagEnable,          'NameFlagEnable was True');
    CheckTrue(Config.UpdateRestartFileEnable, 'set True by CFGDEF, not by its declaration');
 
-   CheckFalse(Config.CallWindowShowAllSpots,  'CallWindowShowAllSpots was False');
+   CheckFalse(Settings.CallWindow.ShowAllSpots, 'ShowAllSpots was False');
+   (* Alt-D came across in the same commit and was never asserted here. *)
+   CheckFalse(Settings.AltD.BufferEnable, 'AltD.BufferEnable was False');
+   CheckFalse(Settings.AltD.CqEnable,     'AltD.CqEnable was False');
    CheckFalse(Settings.So2r.SwapPacketSpotRadios, 'SwapPacketSpotRadios was False');
    CheckFalse(Config.CheckLogFileSize,        'CheckLogFileSize was False');
    CheckFalse(Config.UnknownCountryFileEnable,'UnknownCountryFileEnable was False');

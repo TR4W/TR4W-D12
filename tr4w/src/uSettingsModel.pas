@@ -765,6 +765,73 @@ type
       property WaitForStrength: boolean read FWaitForStrength write FWaitForStrength;
    end;
 
+   (*
+     ALT-D -- calling a station on the OTHER radio without leaving the one
+     you are on.
+
+     TWO SETTINGS, TWO ALIASES, and the difference is one character: the
+     commands are ALT-D BUFFER ENABLE and ALT-D CQ ENABLE, hyphenated, and
+     no Pascal identifier yields a hyphen. Teaching the derivation about
+     this one punctuation mark was rejected -- a rule bent for one group
+     stops being a rule.
+   *)
+   TAltDSettings = class(TSettingsGroup)
+   private
+      FBufferEnable: boolean;
+      FCqEnable: boolean;
+   public
+      constructor Create;
+   published
+      // Was Config.AltDBufferEnable. ALT-D BUFFER ENABLE.
+      property BufferEnable: boolean read FBufferEnable write FBufferEnable;
+      // Was Config.AltDCQEnable. ALT-D CQ ENABLE.
+      property CqEnable: boolean read FCqEnable write FCqEnable;
+   end;
+
+   (*
+     THE CALL WINDOW -- what the field where a callsign is typed does while
+     it is being typed.
+
+     ONE OF THE FIVE DERIVES EXACTLY -- CALL WINDOW SHOW ALL SPOTS -- which
+     is one more than several groups before it and is worth noting only
+     because it shows the derivation is not arbitrary: where the legacy
+     name happens to lead with its subject, the rule produces it.
+
+     PARTIAL CALLS ARE NOT POSSIBLE CALLS, and the two groups are next to
+     each other in this file, so: a PARTIAL call is matched against the log
+     and Super Check Partial as characters are typed; a POSSIBLE call is an
+     entry in the strip of candidates that TPossibleCallSettings governs.
+     Different features, similar names, and the commands have always
+     distinguished them.
+
+     No hooks on any of the five.
+   *)
+   TCallWindowSettings = class(TSettingsGroup)
+   private
+      FShowAllSpots: boolean;
+      FLeaveCursor: boolean;
+      FSpaceBarDupeCheck: boolean;
+      FPartialCallEnable: boolean;
+      FWildcardPartials: boolean;
+   public
+      constructor Create;
+   published
+      (* Was Config.CallWindowShowAllSpots -- CALL WINDOW SHOW ALL SPOTS,
+        which derives with no alias. *)
+      property ShowAllSpots: boolean read FShowAllSpots write FShowAllSpots;
+      // Was Config.LeaveCursorInCallWindow. LEAVE CURSOR IN CALL WINDOW.
+      property LeaveCursor: boolean read FLeaveCursor write FLeaveCursor;
+      // Was Config.SpaceBarDupeCheckEnable. SPACE BAR DUPE CHECK ENABLE.
+      property SpaceBarDupeCheck: boolean
+         read FSpaceBarDupeCheck write FSpaceBarDupeCheck;
+      // Was Config.PartialCallEnable. PARTIAL CALL ENABLE.
+      property PartialCallEnable: boolean
+         read FPartialCallEnable write FPartialCallEnable;
+      // Was Config.WildCardPartials. WILDCARD PARTIALS -- plural, as ever.
+      property WildcardPartials: boolean
+         read FWildcardPartials write FWildcardPartials;
+   end;
+
    TR4WSettings = class(TPersistent)
    private
       // command name -> property path, built once by walking the RTTI.
@@ -783,6 +850,8 @@ type
       FAutoSap: TAutoSapSettings;
       FPossibleCall: TPossibleCallSettings;
       FSo2r: TSo2rSettings;
+      FAltD: TAltDSettings;
+      FCallWindow: TCallWindowSettings;
       procedure BuildCommandMap;
       function PathForCommand(const aCommand: string): string;
       (* The streamer hook that keeps contest-scoped groups out of the
@@ -883,6 +952,8 @@ type
       property AutoSap: TAutoSapSettings read FAutoSap;
       property PossibleCall: TPossibleCallSettings read FPossibleCall;
       property So2r: TSo2rSettings read FSo2r;
+      property AltD: TAltDSettings read FAltD;
+      property CallWindow: TCallWindowSettings read FCallWindow;
    end;
 
 (* THE ONE INSTANCE.  Created on first use so no unit's initialisation order
@@ -1129,6 +1200,25 @@ begin
    FTuneWithDits              := False;
 end;
 
+constructor TAltDSettings.Create;
+begin
+   inherited Create;
+   FBufferEnable := False;
+   FCqEnable     := False;
+end;
+
+constructor TCallWindowSettings.Create;
+begin
+   inherited Create;
+   (* Three of the five default True. That asymmetry is the values
+     uConfigValues carried, not a guess. *)
+   FShowAllSpots      := False;
+   FLeaveCursor       := False;
+   FSpaceBarDupeCheck := True;
+   FPartialCallEnable := True;
+   FWildcardPartials  := True;
+end;
+
 constructor TSo2rSettings.Create;
 begin
    inherited Create;
@@ -1187,6 +1277,8 @@ begin
    FAutoSap        := TAutoSapSettings.Create;
    FPossibleCall   := TPossibleCallSettings.Create;
    FSo2r           := TSo2rSettings.Create;
+   FAltD           := TAltDSettings.Create;
+   FCallWindow     := TCallWindowSettings.Create;
 
    FCommands := TStringList.Create;
    FCommands.CaseSensitive := False;
@@ -1198,6 +1290,8 @@ end;
 destructor TR4WSettings.Destroy;
 begin
    FCommands.Free;
+   FCallWindow.Free;
+   FAltD.Free;
    FSo2r.Free;
    FPossibleCall.Free;
    FAutoSap.Free;
@@ -1511,6 +1605,16 @@ begin
 
    (* THE WHOLE SO2R GROUP -- see TSo2rSettings for why every one of them
      needs a line here and why that is not evidence the rule is wrong. *)
+   (* A HYPHEN, which no identifier yields. *)
+   Alias('ALT-D BUFFER ENABLE', 'AltD.BufferEnable');
+   Alias('ALT-D CQ ENABLE',     'AltD.CqEnable');
+
+   (* CALL WINDOW SHOW ALL SPOTS is NOT here -- it derives. *)
+   Alias('LEAVE CURSOR IN CALL WINDOW',  'CallWindow.LeaveCursor');
+   Alias('SPACE BAR DUPE CHECK ENABLE',  'CallWindow.SpaceBarDupeCheck');
+   Alias('PARTIAL CALL ENABLE',          'CallWindow.PartialCallEnable');
+   Alias('WILDCARD PARTIALS',            'CallWindow.WildcardPartials');
+
    Alias('TWO RADIO MODE',           'So2r.TwoRadioMode');
    Alias('QSY INACTIVE RADIO',       'So2r.QsyInactiveRadio');
    Alias('SKIP ACTIVE BAND',         'So2r.SkipActiveBand');

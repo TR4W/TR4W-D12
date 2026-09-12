@@ -75,11 +75,12 @@ implementation
 
 uses
   uLCLFormHelpers,   // ShowModalOverWin32Parent -- ownership and centring
+  uSettingsModel,    // Settings.AltD
   LCLType,           // wParam -- the only thing Windows was here for
   VC,
   TF,
   Tree,                // KeyboardCallsignChar
-  uConfigValues,       // Config.AltDBufferEnable
+  uConfigValues,       // Settings.AltD.BufferEnable
   uCallsigns,          // CallsignsList
   uMaster,             // ClearMasterListBox
   LogStuff,            // DupeInfoCall, SCPMinimumLetters
@@ -108,7 +109,7 @@ begin
    // palette entry, so the shade is unchanged.
    edtCall.Color := TColor(tr4wColorsArray[trYellow]);
 
-   if Config.AltDBufferEnable then
+   if Settings.AltD.BufferEnable then
       begin
       edtCall.Text := DupeInfoCall;
       end

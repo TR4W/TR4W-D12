@@ -1020,7 +1020,7 @@ begin
   // Move focus to exchange.  The caller's existing focus-move logic only
   // fires when ExchangeWindowString is empty (which won't be true after
   // we just populated it), so we have to do it ourselves here.
-  if not Config.LeaveCursorInCallWindow then
+  if not Settings.CallWindow.LeaveCursor then
      begin
      tExchangeWindowSetFocus;
      end;
@@ -1356,7 +1356,7 @@ begin
      end
   else
      begin
-     if (OpMode <> SearchAndPounceOpMode) and ((CallWindowString = '') or not Config.SpaceBarDupeCheckEnable) then
+     if (OpMode <> SearchAndPounceOpMode) and ((CallWindowString = '') or not Settings.CallWindow.SpaceBarDupeCheck) then
         begin
         if CWStillBeingSent then
            begin
@@ -1459,7 +1459,7 @@ begin
     { Still a SpaceBar, but not doing DupeInfoCall }
 
   else if ((OpMode <> SearchAndPounceOpMode)                        and 
-          ((CallWindowString = '') or not Config.SpaceBarDupeCheckEnable)) then
+          ((CallWindowString = '') or not Settings.CallWindow.SpaceBarDupeCheck)) then
      begin
 
      FlushCWBufferAndClearPTT; { Clear CW sent on Inactive Radio}
@@ -1799,7 +1799,7 @@ begin
      if (ExchangeWindowString = '') and 
         (ExchangeMemoryEnable)      then // 4.83.3
         begin
-        if not Config.LeaveCursorInCallWindow then
+        if not Settings.CallWindow.LeaveCursor then
            begin
            tExchangeWindowSetFocus;
            end;
@@ -7387,7 +7387,7 @@ begin
   // D12: InitialExchangeEntry + SetMainWindowText are native string now, so the
   // Str80 local, its ZeroMemory, and the @ie[1] ASCIIZ view are all gone.
   SetEntryText(TR4WExchangeEdit, InitialExchangeEntry(CallWindowString));
-  if Config.LeaveCursorInCallWindow then
+  if Settings.CallWindow.LeaveCursor then
      begin
      tCallWindowSetFocus;
      end;

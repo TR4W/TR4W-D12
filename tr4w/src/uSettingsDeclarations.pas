@@ -243,11 +243,11 @@ begin
                          RS_OPERATING_AUTORETURNTOCQ);
    RegisterStoredSetting('operating.escapeExitsSAP',          'ESCAPE EXITS SEARCH AND POUNCE',
                          RS_OPERATING_ESCAPEEXITSSAP);
-   RegisterStoredSetting('operating.leaveCursorInCall',       'LEAVE CURSOR IN CALL WINDOW',
+   RegisterModelSetting( 'operating.leaveCursorInCall',       'LEAVE CURSOR IN CALL WINDOW',
                          RS_OPERATING_LEAVECURSORINCALL);
    RegisterStoredSetting('operating.logWithSingleEnter',      'LOG WITH SINGLE ENTER',
                          RS_OPERATING_LOGWITHSINGLEENTER);
-   RegisterStoredSetting('operating.spaceBarDupeCheck',       'SPACE BAR DUPE CHECK ENABLE',
+   RegisterModelSetting( 'operating.spaceBarDupeCheck',       'SPACE BAR DUPE CHECK ENABLE',
                          RS_OPERATING_SPACEBARDUPECHECK);
    RegisterStoredSetting('operating.confirmEditChanges',      'CONFIRM EDIT CHANGES',
                          RS_OPERATING_CONFIRMEDITCHANGES);
@@ -311,13 +311,13 @@ begin
    { Super Check Partial, band map and log files, 2026-08-15. }
    RegisterModelSetting( 'scp.possibleCalls',                 'POSSIBLE CALLS',
                          RS_SCP_POSSIBLECALLS);
-   RegisterStoredSetting('scp.partialCall',                   'PARTIAL CALL ENABLE',
+   RegisterModelSetting( 'scp.partialCall',                   'PARTIAL CALL ENABLE',
                          RS_SCP_PARTIALCALL);
-   RegisterStoredSetting('scp.wildcardPartials',              'WILDCARD PARTIALS',
+   RegisterModelSetting( 'scp.wildcardPartials',              'WILDCARD PARTIALS',
                          RS_SCP_WILDCARDPARTIALS);
    RegisterStoredSetting('scp.nameFlag',                      'NAME FLAG ENABLE',
                          RS_SCP_NAMEFLAG);
-   RegisterStoredSetting('bandmap.callWindowShowAllSpots',    'CALL WINDOW SHOW ALL SPOTS',
+   RegisterModelSetting( 'bandmap.callWindowShowAllSpots',    'CALL WINDOW SHOW ALL SPOTS',
                          RS_BANDMAP_CALLWINDOWSHOWALLSPOTS);
    RegisterModelSetting( 'bandmap.swapPacketSpotRadios',      'SWAP PACKET SPOT RADIOS',
                          RS_BANDMAP_SWAPPACKETSPOTRADIOS);
@@ -327,9 +327,9 @@ begin
                          RS_LOGGING_UNKNOWNCOUNTRYFILE);
    RegisterStoredSetting('logging.updateRestartFile',         'UPDATE RESTART FILE ENABLE',
                          RS_LOGGING_UPDATERESTARTFILE);
-   RegisterStoredSetting('operating.tworadio.altDBuffer',   'ALT-D BUFFER ENABLE',
+   RegisterModelSetting( 'operating.tworadio.altDBuffer',   'ALT-D BUFFER ENABLE',
                          RS_OPERATING_TWORADIO_ALTDBUFFER);
-   RegisterStoredSetting('operating.tworadio.altDCQ',       'ALT-D CQ ENABLE',
+   RegisterModelSetting( 'operating.tworadio.altDCQ',       'ALT-D CQ ENABLE',
                          RS_OPERATING_TWORADIO_ALTDCQ);
    RegisterStoredSetting('operating.tworadio.blindCQ',      'ALWAYS CALL BLIND CQ',
                          RS_OPERATING_TWORADIO_BLINDCQ);

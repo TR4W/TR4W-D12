@@ -98,7 +98,6 @@ begin
   //  ActiveRotatorType := NoRotator;
   //  ActiveStereoPort := NoPort;
   //  ActiveZoneMult := NoZoneMults;
-  //  Config.AltDBufferEnable := False;
   //  Config.AlwaysCallBlindCQ := False;
   //  AskForFrequencies := {wli True} False;
   //  AskIfContestOver := True;
@@ -138,7 +137,6 @@ begin
 
     CallsignUpdateEnable := False; // 4.63.1
   //  CallWindowPosition := NormalCallWindowPosition;
-  //  Config.CallWindowShowAllSpots := False;
   //  CfgDvpPath := '';
   //  Config.CheckLogFileSize := False;
   //  CodeSpeed := 35;
@@ -250,7 +248,6 @@ begin
     //  K1EANetworkEnable := False;
 //  K5KA.ModeEnabled := False;
 
-  //  Config.LeaveCursorInCallWindow := False;
   //  Config.LeadingZeros := 0;
   //  Config.LeadingZeroCharacter := 'T';
   //  LiteralDomesticQTH := False;
@@ -311,7 +308,6 @@ begin
   //  PaddleBug := False;
   //  Config.PaddleSpeed := 0;
   //  ParameterOkayMode := Standard;
-  //  Config.PartialCallEnable := True;
   //  PartialCallLoadLogEnable := False;
   //  PartialCallMultsEnable := True;
 
@@ -427,7 +423,6 @@ begin
   //  ShowSearchAndPounce := False;
   //  SingleBand := All;
   //  SingleRadioMode := False;
-  //  Config.SpaceBarDupeCheckEnable := True;
   //  SprintQSYRule := False;
   {
     StartingFrequencies[Band160] := 1800000;

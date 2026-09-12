@@ -344,7 +344,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(51, names.Count, 'one name per migrated setting, no more');
+         CheckEquals(58, names.Count, 'one name per migrated setting, no more');
       finally
          names.Free;
       end;
@@ -989,6 +989,8 @@ const
      readable in a diff, and a single 900-character line is not. *)
    EXPECTED = ''
       + '"ALL CW MESSAGES CHAINABLE",'
+      + '"ALT-D BUFFER ENABLE",'
+      + '"ALT-D CQ ENABLE",'
       + '"AUTO S&P ENABLE",'
       + '"AUTO S&P ENABLE SENSITIVITY",'
       + '"BAND MAP ALL BANDS",'
@@ -1005,6 +1007,7 @@ const
       + '"BAND MAP MULTS ONLY",'
       + '"BAND MAP SIZE",'
       + '"BAND MAP SO2R DISPLAY",'
+      + '"CALL WINDOW SHOW ALL SPOTS",'
       + '"CW SPEED FROM DATABASE",'
       + '"EXTERNAL LOGGER ADDRESS",'
       + '"EXTERNAL LOGGER ENABLED",'
@@ -1012,11 +1015,13 @@ const
       + '"HF BAND ENABLE",'
       + '"IN BAND LOCKOUT",'
       + '"KEYPAD CW MEMORIES",'
+      + '"LEAVE CURSOR IN CALL WINDOW",'
       + '"MMTTY ENGINE",'
       + '"NO POLL DURING PTT",'
       + '"PADDLE MONITOR TONE",'
       + '"PADDLE PTT HOLD COUNT",'
       + '"PADDLE SPEED",'
+      + '"PARTIAL CALL ENABLE",'
       + '"POSSIBLE CALL ACCEPT KEY",'
       + '"POSSIBLE CALL LEFT KEY",'
       + '"POSSIBLE CALL RIGHT KEY",'
@@ -1029,6 +1034,7 @@ const
       + '"RADIO TCP SERVER PORT",'
       + '"SEND COMPLETE FOUR LETTER CALL",'
       + '"SKIP ACTIVE BAND",'
+      + '"SPACE BAR DUPE CHECK ENABLE",'
       + '"SPOT COLLECTOR ENABLED",'
       + '"SWAP PACKET SPOT RADIOS",'
       + '"SWAP PADDLES",'
@@ -1038,6 +1044,7 @@ const
       + '"VHF BAND ENABLE",'
       + '"WAIT FOR STRENGTH",'
       + '"WARC BAND ENABLE",'
+      + '"WILDCARD PARTIALS",'
       + '"YCCC SO2R ENABLE"';
 var
    s: TR4WSettings;

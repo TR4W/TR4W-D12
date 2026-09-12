@@ -91,8 +91,6 @@ type
       { SO2R / two-radio, CW and scoreboard settings migrated 2026-08-14.
         Types copied verbatim from the declarations they replace -- CheckCommand
         writes through @Config.<field> and cannot see a mismatch. }
-      AltDBufferEnable: boolean;
-      AltDCQEnable: boolean;
       AlwaysCallBlindCQ: boolean;
       SayHiEnable: boolean;
       SayHiRateCutOff: integer;
@@ -157,9 +155,7 @@ type
       AutoCallTerminate: boolean;
       AutoReturnToCQMode: boolean;
       EscapeExitsSearchAndPounce: boolean;
-      LeaveCursorInCallWindow: boolean;
       LogWithSingleEnter: boolean;
-      SpaceBarDupeCheckEnable: boolean;
       ConfirmEditChanges: boolean;
       AutoQSONumberDecrement: boolean;
 
@@ -172,10 +168,7 @@ type
         checked rather than assumed, because a defaults routine that ran on
         contest change would silently reset the setting instead. The record
         default matches it, and the assignment now writes the same field. }
-      PartialCallEnable: boolean;
-      WildCardPartials: boolean;
       NameFlagEnable: boolean;
-      CallWindowShowAllSpots: boolean;
       CheckLogFileSize: boolean;
       UnknownCountryFileEnable: boolean;
       UpdateRestartFileEnable: boolean;
@@ -243,8 +236,6 @@ var
       HamScorePassword: '';
       HamScoreSendContactInfo: True;
 
-      AltDBufferEnable: False;
-      AltDCQEnable: False;
       AlwaysCallBlindCQ: False;
       SayHiEnable: False;
       SayHiRateCutOff: 200;
@@ -271,15 +262,10 @@ var
       AutoCallTerminate: False;
       AutoReturnToCQMode: True;
       EscapeExitsSearchAndPounce: True;
-      LeaveCursorInCallWindow: False;
       LogWithSingleEnter: False;
-      SpaceBarDupeCheckEnable: True;
       ConfirmEditChanges: True;
       AutoQSONumberDecrement: False;
-      PartialCallEnable: True;
-      WildCardPartials: True;
       NameFlagEnable: True;
-      CallWindowShowAllSpots: False;
       CheckLogFileSize: False;
       UnknownCountryFileEnable: False;
       UpdateRestartFileEnable: True;

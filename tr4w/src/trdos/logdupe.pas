@@ -397,6 +397,7 @@ implementation
 uses
   //  OZCHR,
   uConfigValues,
+  uSettingsModel,   // Settings.CallWindow
   uNet,
   uGetScores,
   PostUnit,
@@ -943,7 +944,7 @@ begin
   { Wildcard partials means the two letters can show up anywhere in the
     callsign. }
 
-  if Config.WildCardPartials then
+  if Settings.CallWindow.WildcardPartials then
      begin
      NumberCallsToCrunch := NumberPartialCalls - LastTwoLetterCrunchedAddress - 1;
 

@@ -1787,10 +1787,10 @@ begin
 
   InputString := '';
 
-  { If Config.AltDBufferEnable - then the initial entry will be either from
+  { If Settings.AltD.BufferEnable - then the initial entry will be either from
     the left over entry from before - or from the bandmap. }
 
-  if (Config.AltDBufferEnable) and (Settings.So2r.TwoRadioMode) then
+  if (Settings.AltD.BufferEnable) and (Settings.So2r.TwoRadioMode) then
      begin
      if DupeInfoCall <> '' then
         begin
@@ -1856,7 +1856,7 @@ begin
              {                    GoToXY (WhereX - 1, WhereY);
                                 ClrEol;
             }
-             if Config.PartialCallEnable then
+             if Settings.CallWindow.PartialCallEnable then
                if Sheet.TwoLetterCrunchProcess(InputString) then
                   begin
                   {
@@ -1913,7 +1913,7 @@ begin
          Write(Key);
          InputString := InputString + Key;
 
-         if Config.PartialCallEnable then
+         if Settings.CallWindow.PartialCallEnable then
            if Sheet.TwoLetterCrunchProcess(InputString) then
               begin
               {

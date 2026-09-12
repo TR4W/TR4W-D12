@@ -2074,7 +2074,7 @@ begin
                    CallWindowString := CallWindowString + TempKey;
                    AddStringToBuffer(TempKey, Config.CWTone);
                    Write(TempKey);
-                   if Config.PartialCallEnable then
+                   if Settings.CallWindow.PartialCallEnable then
                      if Sheet.TwoLetterCrunchProcess(CallWindowString) then
                         begin
                         {
@@ -2216,7 +2216,7 @@ begin
                  end
                   { Still a SpaceBar, but not doing DupeInfoCall }
               else
-                if (CallWindowString = '') or not Config.SpaceBarDupeCheckEnable then
+                if (CallWindowString = '') or not Settings.CallWindow.SpaceBarDupeCheck then
                    begin
                    if CWStillBeingSent then FlushCWBufferAndClearPTT; { Clear CW sent on Inactive Radio}
                    SetUpToSendOnActiveRadio;

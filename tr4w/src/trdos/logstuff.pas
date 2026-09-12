@@ -10504,7 +10504,7 @@ end;
 procedure ProcessPartialCallAndInitialExchange(RXData: ContestExchange);
 
 begin
-  if Config.PartialCallEnable or ExchangeMemoryEnable then // n4af 40.40.1
+  if Settings.CallWindow.PartialCallEnable or ExchangeMemoryEnable then // n4af 40.40.1
     //     AddCallToPartialList(RXData.Callsign, GetInitialExchangeStringFromContestExchange(RXData));
      begin
      GetInitialExchangeStringFromContestExchange(RXData); // n4af 40.40.1       }
