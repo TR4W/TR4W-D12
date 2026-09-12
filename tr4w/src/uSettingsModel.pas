@@ -1453,6 +1453,8 @@ type
       (* Was SprintQSYRule in logwind.pas -- the sprint rule that a station
         calling CQ must move after a QSO.  SPRINT QSY RULE. *)
       property SprintQsyRule: boolean read FSprintQsyRule write FSprintQsyRule;
+   end;
+
    (*
      THE MAIN WINDOW'S FONT -- face, size and weight.
 
