@@ -247,7 +247,7 @@ begin
      begin
      Spot.FWARCBand := True;
      end;
-  if (IE_Switch) then
+  if (Settings.Operating.IeSwitch) then
      begin
      ie_check := True;
      if (InitialExchangeEntry(Spot.FCall) = '') then

@@ -79,7 +79,7 @@ var
   BufLine                               : integer = 0;
   ie_check                              : boolean = false;
   tBandMapCutoffFrequency               : integer;
-  IE_Switch                             : boolean = False;
+  (* IE_Switch is gone (2026-09-12) -- Settings.Operating.IeSwitch. *)
   tBandMapPlaceHolder                   : CallString;
   tB4IndicatorPrevState                 : integer;
   tNewMultIndicatorPrevState            : integer;
@@ -515,10 +515,10 @@ var
   AlarmSet                              : boolean;
   AlarmMinute                           : integer;
   AlarmHour                             : integer;
-  AskForFrequencies                     : boolean;
   AutoSendCharacterCount                : integer;
   AutoSendEnable                        : boolean;
-  AutoTimeIncrementQSOs                 : integer;
+  (* AskForFrequencies and AutoTimeIncrementQSOs are gone (2026-09-12) --
+    Settings.Operating owns both. *)
   AutoTimeQSOCount                      : Byte;
 
   BandMapBand                           : BandType {= Band160};
@@ -640,9 +640,9 @@ var
 
   HourDisplay                           : HourDisplayType {= ThisHour};
 
-  tHandLogMode                          : boolean;
   InactiveSwapRadio                     : boolean;  // n4af 4.41.3
-  IncrementTimeEnable                   : boolean;
+  (* tHandLogMode and IncrementTimeEnable are gone (2026-09-12) --
+    Settings.Operating owns both. *)
   InEditBandMap                         : boolean; {KK1L 6.65}
   InitialExchangeCursorPos              : InitialExchangeCursorPosType { = AtEnd};
 
@@ -805,7 +805,8 @@ var
   TotalScoreMessages                    : array[0..10] of TotalScoreMessageRecord;
   //  TRFree                                : boolean;
   TwoRadioState                         : TwoRadioStates {= TwoRadiosDisabled};
-  TuneDupeCheckEnable                   : boolean; {KK1L: 6.73}
+  (* TuneDupeCheckEnable is gone (2026-09-12) --
+    Settings.Operating.TuneAltDEnable. {KK1L: 6.73} *)
 
   UserInfoShown                         : UserInfoType {= NoUserInfo};
 
@@ -814,7 +815,8 @@ var
   //   VisibleDupesheetEnable          : boolean;
   VisibleDupeSheetRemoved               : boolean;
 
-  WakeUpTimeOut                         : integer;
+  (* WakeUpTimeOut is gone (2026-09-12) --
+    Settings.Operating.WakeUpTimeOut. *)
   WakeUpCount                           : Byte;
 //  WideFreqDisplay                  : boolean; {KK1L: 6.73}
 
@@ -2146,10 +2148,12 @@ begin
            end;
         end;
 
-     if (NumberContactsThisMinute = 0) and (WakeUpTimeOut > 0) then
+     if (NumberContactsThisMinute = 0) and
+        (Settings.Operating.WakeUpTimeOut > 0) then
         begin
         inc(WakeUpCount);
-        if (WakeUpCount >= WakeUpTimeOut) and not AlarmSet then
+        if (WakeUpCount >= Settings.Operating.WakeUpTimeOut) and
+           not AlarmSet then
            begin
            DoABeep(WakeUp);
            end;

@@ -313,7 +313,7 @@ var
   InactiveRadio                         : RadioType = RadioTwo; {KK1L: 6.73}
   ActiveStereoPort                      : PortType {= NoPort}; {KK1L: 6.71}
 
-  BeepEnable                            : boolean = False; //N4AF performance change
+  (* BeepEnable is gone (2026-09-12) -- Settings.Operating.BeepEnable. *)
   BeepFreq                              : integer = 1200;
 
 //  CountsSinceLastCW                     : LONGINT = 0;
@@ -391,7 +391,8 @@ var
   RITEnable                             : boolean = True;
 
   SerialInvert                          : boolean;
-  ShiftKeyEnable                        : boolean = True;
+  (* ShiftKeyEnable is gone (2026-09-12) --
+    Settings.Operating.ShiftKeyEnable. *)
   StereoControlPin                      : integer = 9;
   StereoPinState                        : boolean;
 
@@ -1692,7 +1693,7 @@ end;
 procedure DoABeep(TypeOfBeep: BeepType);
 
 begin
-  if not BeepEnable then Exit;
+  if not Settings.Operating.BeepEnable then Exit;
   ActiveBeep := TypeOfBeep;
   logger.Info('Calling tCreateThread from DoABeep');
   TR4W_BeepThread := tCreateThread(@tDoABeep, TR4W_BeepThreadID);

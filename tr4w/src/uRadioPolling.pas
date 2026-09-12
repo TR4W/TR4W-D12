@@ -1017,7 +1017,7 @@ begin
    else
       begin // Inactive Radio Processing
 
-      if TuneDupeCheckEnable then
+      if Settings.Operating.TuneAltDEnable then
          begin
          SpotsList.TuneDupeCheck(rig.FilteredStatus.Freq);
          end;

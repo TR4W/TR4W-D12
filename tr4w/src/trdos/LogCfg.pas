@@ -505,9 +505,12 @@ begin
 
 //  TotalQSOPoints := 0;
 
-  if AutoTimeIncrementQSOs <> 0 then
+  (* A QSO COUNT WITH NO ENABLE WOULD DO NOTHING, so setting the count
+    raises the flag. This is a derivation, not a second owner: the
+    setting stays operator-settable and this only turns it on. *)
+  if Settings.Operating.AutoTimeIncrement <> 0 then
      begin
-     IncrementTimeEnable := True;
+     Settings.Operating.IncrementTimeEnable := True;
      end;
 
   DoingDomesticMults := ActiveDomesticMult <> NoDomesticMults;

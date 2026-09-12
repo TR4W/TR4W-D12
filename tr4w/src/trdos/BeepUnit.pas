@@ -64,6 +64,7 @@ implementation
 
 uses
   uAudio,   (* every platform decision about sound lives there now *)
+  uSettingsModel,   (* Settings.Operating.BeepEnable *)
   MainUnit,
   LogK1EA,
   LogRadio,
@@ -117,7 +118,7 @@ end;
 
 procedure SpeakerBeep(Tone, Duration: Word);
 begin
-  if not BeepEnable then
+  if not Settings.Operating.BeepEnable then
      begin
      Exit;
      end;

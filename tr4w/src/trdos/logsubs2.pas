@@ -1533,10 +1533,10 @@ begin
   //if Packet.PacketSerialPort <> NoPort then Packet.DeletePacketEntry(RXData.Callsign, RXData.Band, RXData.Mode);
 //  OldTotalScore := TotalScore;
   LastTwoLettersCrunchedOn := '';
-  if AutoTimeIncrementQSOs > 0 then
+  if Settings.Operating.AutoTimeIncrement > 0 then
      begin
      inc(AutoTimeQSOCount);
-     if AutoTimeQSOCount >= AutoTimeIncrementQSOs then
+     if AutoTimeQSOCount >= Settings.Operating.AutoTimeIncrement then
         begin
         IncrementTime(1);
         end;

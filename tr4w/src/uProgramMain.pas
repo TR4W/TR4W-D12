@@ -2294,7 +2294,7 @@ begin
 {$ENDIF}
 
 
-  if not tHandLogMode then
+  if not Settings.Operating.HandLogMode then
      begin
      StartAppTimer(atOneSecond, 1000, @OneSecondTick);
      // The 250 ms band map refresh timer stood here: a SetTimer on the MAIN

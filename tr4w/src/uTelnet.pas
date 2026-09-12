@@ -1802,7 +1802,7 @@ begin
   TempFrequency := Radio^.FilteredStatus.Freq;
   if TempFrequency = 0 then
     //    if OpMode = SearchAndPounceOpMode then
-    if AskForFrequencies then
+    if Settings.Operating.AskForFrequencies then
        begin
        Call[length(Call) + 1] := #0;
        // Issue #997: asm wsprintf -> Format

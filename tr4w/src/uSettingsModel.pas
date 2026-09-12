@@ -178,6 +178,8 @@ type
    TPaddleSpeed         = 0..99;      // was crMin:0, crMax:99
    (* The Network window's refresh timer, in milliseconds. *)
    TNetStatusInterval   = 1000..10000; // was crMin:1000, crMax:10000
+   TAutoTimeIncrement   = 0..65535;   // was crMin:0, crMax:MAXWORD
+   TWakeUpTimeOut       = 0..255;     // was crMin:0, crMax:MAXBYTE
    (* A UDP PORT. 1..65535, which is the port range and not a TR4W rule --
      the old row said crMin:1, crMax:65535 and meant the same thing. *)
    TWsjtxPort           = 1..65535;   // was crMin:1, crMax:65535
@@ -414,6 +416,79 @@ type
         and crMax:10000 went. *)
       property StatusUpdateInterval: TNetStatusInterval
          read FStatusUpdateInterval write FStatusUpdateInterval;
+   end;
+
+   (*
+     HOW THE PROGRAM BEHAVES WHILE AN OPERATOR IS WORKING -- nine flags and
+     counters that belong to no window and no device, which the settings store
+     has grouped as "operating." since before this migration existed.
+
+     EVERY NAME HERE CARRIES AN ALIAS, and that is the cost of the grouping
+     rather than evidence against it. TR4W's vocabulary is flat -- SHIFT KEY
+     ENABLE, WAKE UP TIME OUT -- so a path that says which area a setting
+     belongs to cannot also produce the historic name.
+
+     THE ALTERNATIVE WAS NINE ONE-PROPERTY GROUPS, named so that each derives
+     exactly: ShiftKey.Enable, WakeUp.TimeOut, Ie.Switch. That is how Qzb and
+     Stations were done, and it is right when the group is a REAL area with
+     one setting in it today. It is wrong here: it would put nine sections in
+     settings\tr4w.json for nine unrelated booleans and claim a structure the
+     program does not have.
+   *)
+   TOperatingSettings = class(TSettingsGroup)
+   private
+      FAskForFrequencies: boolean;
+      FAutoTimeIncrement: TAutoTimeIncrement;
+      FBeepEnable: boolean;
+      FHandLogMode: boolean;
+      FIeSwitch: boolean;
+      FIncrementTimeEnable: boolean;
+      FShiftKeyEnable: boolean;
+      FTuneAltDEnable: boolean;
+      FWakeUpTimeOut: TWakeUpTimeOut;
+   public
+      constructor Create;
+   published
+      (* Was AskForFrequencies in logwind -- whether the cluster connection
+        asks for a spot's frequency when one arrives without it. *)
+      property AskForFrequencies: boolean
+         read FAskForFrequencies write FAskForFrequencies;
+      (* Was AutoTimeIncrementQSOs -- advance the clock by a minute every N
+        QSOs, for practice runs. Zero is off, which is why the subrange
+        starts there. *)
+      property AutoTimeIncrement: TAutoTimeIncrement
+         read FAutoTimeIncrement write FAutoTimeIncrement;
+      (* Was BeepEnable in logk1ea -- the audible cue. Declared False there
+        with the note "N4AF performance change". *)
+      property BeepEnable: boolean read FBeepEnable write FBeepEnable;
+      (* Was tHandLogMode -- entering QSOs after the fact rather than as they
+        happen, which suppresses the live timing behaviour. *)
+      property HandLogMode: boolean read FHandLogMode write FHandLogMode;
+      (* Was IE_Switch in logwind, read by uSpots when it decides what an
+        initial exchange contributes. The name is TR4W's own. *)
+      property IeSwitch: boolean read FIeSwitch write FIeSwitch;
+      (* Was IncrementTimeEnable.
+
+        IT IS ALSO DERIVED, and that is deliberate rather than a second
+        writer: LogCfg turns it on when AUTO TIME INCREMENT is non-zero,
+        because a QSO count with no enable would do nothing. The setting
+        remains an operator-settable value; the derivation only raises it. *)
+      property IncrementTimeEnable: boolean
+         read FIncrementTimeEnable write FIncrementTimeEnable;
+      (* Was ShiftKeyEnable in logk1ea, read by the main window's key
+        handling. Declared True. *)
+      property ShiftKeyEnable: boolean
+         read FShiftKeyEnable write FShiftKeyEnable;
+      (* Was TuneDupeCheckEnable -- dupe-check the frequency the radio is
+        tuned to, the way Alt-D does for a typed callsign. The command has a
+        hyphen in it, so this one would need an alias whatever the group were
+        called. *)
+      property TuneAltDEnable: boolean
+         read FTuneAltDEnable write FTuneAltDEnable;
+      (* Was WakeUpTimeOut -- minutes of no QSOs before the alarm sounds.
+        Zero is off. *)
+      property WakeUpTimeOut: TWakeUpTimeOut
+         read FWakeUpTimeOut write FWakeUpTimeOut;
    end;
 
    (* THE EXTERNAL LOGGER -- the first area to move off CFGCA.
@@ -2283,6 +2358,7 @@ type
       FWsjtx: TWsjtxSettings;
       FMainWindow: TMainWindowSettings;
       FNetwork: TNetworkSettings;
+      FOperating: TOperatingSettings;
       FUnknownCountryFile: TUnknownCountryFileSettings;
       FQso: TQsoSettings;
       FMult: TMultSettings;
@@ -2413,6 +2489,7 @@ type
       property Wsjtx: TWsjtxSettings read FWsjtx;
       property MainWindow: TMainWindowSettings read FMainWindow;
       property Network: TNetworkSettings read FNetwork;
+      property Operating: TOperatingSettings read FOperating;
       property UnknownCountryFile: TUnknownCountryFileSettings
          read FUnknownCountryFile;
       property Qso: TQsoSettings read FQso;
@@ -2844,6 +2921,23 @@ begin
    FShowAll := False;
 end;
 
+constructor TOperatingSettings.Create;
+begin
+   inherited Create;
+   (* The values the globals carried. Only ShiftKeyEnable was declared
+     TRUE; the rest had no initialiser at all, which in Pascal is the
+     zero value and is what this says out loud. *)
+   FAskForFrequencies   := False;
+   FAutoTimeIncrement   := 0;
+   FBeepEnable          := False;
+   FHandLogMode         := False;
+   FIeSwitch            := False;
+   FIncrementTimeEnable := False;
+   FShiftKeyEnable      := True;
+   FTuneAltDEnable      := False;
+   FWakeUpTimeOut       := 0;
+end;
+
 constructor TNetworkSettings.Create;
 begin
    inherited Create;
@@ -3239,6 +3333,7 @@ begin
    FWsjtx          := TWsjtxSettings.Create;
    FMainWindow     := TMainWindowSettings.Create;
    FNetwork        := TNetworkSettings.Create;
+   FOperating      := TOperatingSettings.Create;
    FUnknownCountryFile := TUnknownCountryFileSettings.Create;
    FQso            := TQsoSettings.Create;
    FMult           := TMultSettings.Create;
@@ -3619,6 +3714,18 @@ begin
    (* The log's own display of the frequency. The command puts the group
      in the middle -- SHOW FREQUENCY IN LOG -- which no path can do. *)
    Alias('SHOW FREQUENCY IN LOG', 'Log.ShowFrequency');
+
+   (* All nine operating names. See TOperatingSettings for why they are
+     one group with nine aliases rather than nine groups with none. *)
+   Alias('ASK FOR FREQUENCIES',   'Operating.AskForFrequencies');
+   Alias('AUTO TIME INCREMENT',   'Operating.AutoTimeIncrement');
+   Alias('BEEP ENABLE',           'Operating.BeepEnable');
+   Alias('HAND LOG MODE',         'Operating.HandLogMode');
+   Alias('IE SWITCH',             'Operating.IeSwitch');
+   Alias('INCREMENT TIME ENABLE', 'Operating.IncrementTimeEnable');
+   Alias('SHIFT KEY ENABLE',      'Operating.ShiftKeyEnable');
+   Alias('TUNE ALT-D ENABLE',     'Operating.TuneAltDEnable');
+   Alias('WAKE UP TIME OUT',      'Operating.WakeUpTimeOut');
 
    Alias('HF BAND ENABLE',   'Bands.HfEnabled');
    Alias('VHF BAND ENABLE',  'Bands.VhfEnabled');

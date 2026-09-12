@@ -158,7 +158,7 @@ uses
   uCTYDAT,            // ctyLoadInCountryFile, after a CTY.DAT download
   LOGSTUFF,           // CallWindowKeyDownProc, ProcessTAB, SpaceBarProc2, ...
   tree,               // KeyboardCallsignChar
-  LOGK1EA,            // ShiftKeyEnable
+  LOGK1EA,
   LOGRADIO,           // RITBumpUp/Down, VFOBumpUp/Down
   LogCW,              // RepeatLastCWMessage
   uSettingsModel,     // Settings.Message.QuickQslKey*, Settings.Cw.StartSendingNowKey
@@ -415,7 +415,7 @@ begin
       // scan-code test: no LCL cross-platform API distinguishes the two shift
       // keys, so this behaviour needs a per-platform answer whenever a Mac or
       // Linux build is attempted.
-      if ShiftKeyEnable then
+      if Settings.Operating.ShiftKeyEnable then
          begin
          if GetKeyState(VK_LSHIFT) < 0 then
             begin

@@ -652,7 +652,7 @@ begin
                           RS_CONTEST_ZONEMULTIPLIER);
 
    // --- Operating (34) --------------------------------
-   RegisterStoredSetting('operating.ctrlj.askForFrequencies', 'ASK FOR FREQUENCIES',
+   RegisterModelSetting( 'operating.ctrlj.askForFrequencies', 'ASK FOR FREQUENCIES',
                           RS_OPERATING_CTRLJ_ASKFORFREQUENCIES);
    RegisterModelSetting('operating.ctrlj.autoDisplayDupeQso','AUTO DISPLAY DUPE QSO',
                           RS_OPERATING_CTRLJ_AUTODISPLAYDUPEQSO);
@@ -664,7 +664,7 @@ begin
                           RS_OPERATING_CTRLJ_AUTOSPENABLE);
    RegisterModelSetting( 'operating.ctrlj.autoSPEnableSensitivity','AUTO S&P ENABLE SENSITIVITY',
                           RS_OPERATING_CTRLJ_AUTOSPENABLESENSITIVITY);
-   RegisterStoredSetting('operating.ctrlj.autoTimeIncrement', 'AUTO TIME INCREMENT',
+   RegisterModelSetting( 'operating.ctrlj.autoTimeIncrement', 'AUTO TIME INCREMENT',
                           RS_OPERATING_CTRLJ_AUTOTIMEINCREMENT);
    RegisterLegacySetting('operating.ctrlj.band',              'BAND',
                           'Band');
@@ -688,9 +688,9 @@ begin
                           RS_OPERATING_CTRLJ_FREQUENCYMEMORYENABLE);
    RegisterStoredSetting('operating.ctrlj.frequencyPollRate', 'FREQUENCY POLL RATE',
                           RS_OPERATING_CTRLJ_FREQUENCYPOLLRATE);
-   RegisterStoredSetting('operating.ctrlj.ieSwitch',          'IE SWITCH',
+   RegisterModelSetting( 'operating.ctrlj.ieSwitch',          'IE SWITCH',
                           RS_OPERATING_CTRLJ_IESWITCH);
-   RegisterStoredSetting('operating.ctrlj.incrementTimeEnable','INCREMENT TIME ENABLE',
+   RegisterModelSetting( 'operating.ctrlj.incrementTimeEnable','INCREMENT TIME ENABLE',
                           RS_OPERATING_CTRLJ_INCREMENTTIMEENABLE);
    RegisterModelSetting( 'operating.ctrlj.logFrequencyEnable','LOG FREQUENCY ENABLE',
                           RS_OPERATING_CTRLJ_LOGFREQUENCYENABLE);
@@ -714,11 +714,11 @@ begin
                           RS_OPERATING_CTRLJ_QZBRANDOMOFFSETENABLE);
    RegisterStoredSetting('operating.ctrlj.radiusOfEarth',     'RADIUS OF EARTH',
                           RS_OPERATING_CTRLJ_RADIUSOFEARTH);
-   RegisterStoredSetting('operating.ctrlj.shiftKeyEnable',    'SHIFT KEY ENABLE',
+   RegisterModelSetting( 'operating.ctrlj.shiftKeyEnable',    'SHIFT KEY ENABLE',
                           RS_OPERATING_CTRLJ_SHIFTKEYENABLE);
    RegisterModelSetting( 'operating.ctrlj.stationsCallsignsMask','STATIONS CALLSIGNS MASK',
                           RS_OPERATING_CTRLJ_STATIONSCALLSIGNSMASK);
-   RegisterStoredSetting('operating.ctrlj.wakeUpTimeOut',     'WAKE UP TIME OUT',
+   RegisterModelSetting( 'operating.ctrlj.wakeUpTimeOut',     'WAKE UP TIME OUT',
                           RS_OPERATING_CTRLJ_WAKEUPTIMEOUT);
 
    // --- CW (12) ---------------------------------------
@@ -747,13 +747,13 @@ begin
                           RS_CW_CTRLJ_SLASHMARKCHAR);
    RegisterModelSetting('cw.ctrlj.startSendingNowKey',       'START SENDING NOW KEY',
                           RS_CW_CTRLJ_STARTSENDINGNOWKEY);
-   RegisterStoredSetting('cw.ctrlj.tuneAltDEnable',           'TUNE ALT-D ENABLE',
+   RegisterModelSetting( 'cw.ctrlj.tuneAltDEnable',           'TUNE ALT-D ENABLE',
                           RS_CW_CTRLJ_TUNEALTDENABLE);
 
    // --- Appearance (13) -------------------------------
    // customCaret was here until 2026-08-18; the CFG row is csRem now and
    // retired rows are not registered (cf. AUTO ALT-D ENABLE, BACKCOPY ENABLE).
-   RegisterStoredSetting('appearance.ctrlj.beepEnable',       'BEEP ENABLE',
+   RegisterModelSetting( 'appearance.ctrlj.beepEnable',       'BEEP ENABLE',
                           RS_APPEARANCE_CTRLJ_BEEPENABLE);
    RegisterModelSetting( 'appearance.ctrlj.columnAutosize',   'COLUMN AUTOSIZE',
                           RS_APPEARANCE_CTRLJ_COLUMNAUTOSIZE);
@@ -884,7 +884,7 @@ begin
      it is a change to a form and NY4I should see it rather than find it. *)
 
    // --- Advanced (2) ---------------------------------
-   RegisterStoredSetting('advanced.handLogMode',        'HAND LOG MODE',
+   RegisterModelSetting( 'advanced.handLogMode',        'HAND LOG MODE',
                           RS_ADVANCED_HANDLOGMODE);
    RegisterModelSetting('advanced.noLog',              'NO LOG',
                           RS_ADVANCED_NOLOG);

@@ -347,7 +347,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(194, names.Count,
+         CheckEquals(203, names.Count,
                      'one name per migrated setting, plus the ten that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -1069,6 +1069,7 @@ const
       + '"ALT-D BUFFER ENABLE",'
       + '"ALT-D CQ ENABLE",'
       + '"ALWAYS CALL BLIND CQ",'
+      + '"ASK FOR FREQUENCIES",'
       + '"AUTO CALL TERMINATE",'
       + '"AUTO DISPLAY DUPE QSO",'
       + '"AUTO DUPE ENABLE CQ",'
@@ -1076,6 +1077,7 @@ const
       + '"AUTO RETURN TO CQ MODE",'
       + '"AUTO S&P ENABLE",'
       + '"AUTO S&P ENABLE SENSITIVITY",'
+      + '"AUTO TIME INCREMENT",'
       + '"AUTO-CQ DELAY TIME",'
       + '"BACKUP LOG FREQUENCY",'
       + '"BAND MAP ALL BANDS",'
@@ -1092,6 +1094,7 @@ const
       + '"BAND MAP MULTS ONLY",'
       + '"BAND MAP SIZE",'
       + '"BAND MAP SO2R DISPLAY",'
+      + '"BEEP ENABLE",'
       + '"BEEP EVERY 10 QSOS",'
       + '"BOLD FONT",'
       + '"CALL OK NOW CW MESSAGE",'
@@ -1127,8 +1130,11 @@ const
       + '"EXTERNAL LOGGER PORT",'
       + '"FONT SIZE",'
       + '"GRID MAP CENTER",'
+      + '"HAND LOG MODE",'
       + '"HF BAND ENABLE",'
+      + '"IE SWITCH",'
       + '"IN BAND LOCKOUT",'
+      + '"INCREMENT TIME ENABLE",'
       + '"INITIAL EXCHANGE OVERWRITE",'
       + '"INSERT MODE",'
       + '"KEYPAD CW MEMORIES",'
@@ -1223,6 +1229,7 @@ const
       + '"SAY HI ENABLE",'
       + '"SAY HI RATE CUTOFF",'
       + '"SEND COMPLETE FOUR LETTER CALL",'
+      + '"SHIFT KEY ENABLE",'
       + '"SHORT 0",'
       + '"SHORT 1",'
       + '"SHORT 2",'
@@ -1242,6 +1249,7 @@ const
       + '"SWAP PACKET SPOT RADIOS",'
       + '"SWAP PADDLES",'
       + '"SWAP RADIO RELAY SENSE",'
+      + '"TUNE ALT-D ENABLE",'
       + '"TUNE WITH DITS",'
       + '"TWO RADIO MODE",'
       + '"UNKNOWN COUNTRY FILE ENABLE",'
@@ -1250,6 +1258,7 @@ const
       + '"USE RECORDED SIGNS",'
       + '"VHF BAND ENABLE",'
       + '"WAIT FOR STRENGTH",'
+      + '"WAKE UP TIME OUT",'
       + '"WARC BAND ENABLE",'
       + '"WILDCARD PARTIALS",'
       + '"WSJT-X BROADCAST PORT",'

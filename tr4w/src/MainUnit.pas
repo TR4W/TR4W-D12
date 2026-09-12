@@ -9166,7 +9166,7 @@ end;
   tree.GetDayString does. *)
 procedure tGetSystemTime;
 begin
-  if not tHandLogMode then
+  if not Settings.Operating.HandLogMode then
      begin
      TF.FillSystemTimeUTC(UTC);
      end;
@@ -9178,7 +9178,7 @@ end;
 
 procedure SystemTimeChanging;
 begin
-  if not tHandLogMode then
+  if not Settings.Operating.HandLogMode then
      begin
      TF.FillSystemTimeUTC(UTC);   (* see tGetSystemTime *)
      end;
