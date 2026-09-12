@@ -169,6 +169,7 @@ type
      forbids the value the program itself ships with is the defect. *)
    TBandMapGuardBand    = 0..65535;   // was crMin:100 -- see above
    TAutoSapSensitivity  = 10..10000;  // was crMin:10, crMax:10000
+   TAutoCqDelay         = 500..10000; // was crMin:500, crMax:10000 -- ms
    TPttTurnOnDelay      = 0..65535;   // was crMin:0, crMax:MAXWORD
    TPaddleMonitorTone   = 0..65535;   // was crMin:0, crMax:MAXWORD
    TPaddlePttHoldCount  = 0..65535;   // was crMin:0, crMax:MAXWORD
@@ -832,6 +833,45 @@ type
          read FWildcardPartials write FWildcardPartials;
    end;
 
+   (*
+     CALLING CQ, and moving between CQ and search-and-pounce.
+
+     THE DELAY IS MILLISECONDS, which the subrange states and the old row
+     only implied: 500..10000. That matters because a DEAD ROUTINE in
+     logsubs2 wrote SECONDS into the same global -- see the note on that
+     deletion in this commit.
+
+     All four are hook-free; the delay is written through Preferences by
+     uAutoCQForm, which already goes through the settings path rather than
+     at the value.
+   *)
+   TCqSettings = class(TSettingsGroup)
+   private
+      FAlwaysCallBlind: boolean;
+      FAutoCallTerminate: boolean;
+      FAutoReturnToMode: boolean;
+      FEscapeExitsSearchAndPounce: boolean;
+      FAutoDelay: TAutoCqDelay;
+   public
+      constructor Create;
+   published
+      // Was Config.AlwaysCallBlindCQ. ALWAYS CALL BLIND CQ.
+      property AlwaysCallBlind: boolean
+         read FAlwaysCallBlind write FAlwaysCallBlind;
+      // Was Config.AutoCallTerminate. AUTO CALL TERMINATE.
+      property AutoCallTerminate: boolean
+         read FAutoCallTerminate write FAutoCallTerminate;
+      // Was Config.AutoReturnToCQMode. AUTO RETURN TO CQ MODE.
+      property AutoReturnToMode: boolean
+         read FAutoReturnToMode write FAutoReturnToMode;
+      // Was Config.EscapeExitsSearchAndPounce.
+      property EscapeExitsSearchAndPounce: boolean
+         read FEscapeExitsSearchAndPounce write FEscapeExitsSearchAndPounce;
+      (* Was the global AutoCQDelayTime in LogCW.pas, in MILLISECONDS.
+        AUTO-CQ DELAY TIME, hyphenated, so it carries an alias. *)
+      property AutoDelay: TAutoCqDelay read FAutoDelay write FAutoDelay;
+   end;
+
    TR4WSettings = class(TPersistent)
    private
       // command name -> property path, built once by walking the RTTI.
@@ -852,6 +892,7 @@ type
       FSo2r: TSo2rSettings;
       FAltD: TAltDSettings;
       FCallWindow: TCallWindowSettings;
+      FCq: TCqSettings;
       procedure BuildCommandMap;
       function PathForCommand(const aCommand: string): string;
       (* The streamer hook that keeps contest-scoped groups out of the
@@ -954,6 +995,7 @@ type
       property So2r: TSo2rSettings read FSo2r;
       property AltD: TAltDSettings read FAltD;
       property CallWindow: TCallWindowSettings read FCallWindow;
+      property Cq: TCqSettings read FCq;
    end;
 
 (* THE ONE INSTANCE.  Created on first use so no unit's initialisation order
@@ -1200,6 +1242,17 @@ begin
    FTuneWithDits              := False;
 end;
 
+constructor TCqSettings.Create;
+begin
+   inherited Create;
+   // The values uConfigValues and LogCW.pas carried.
+   FAlwaysCallBlind           := False;
+   FAutoCallTerminate         := False;
+   FAutoReturnToMode          := True;
+   FEscapeExitsSearchAndPounce := True;
+   FAutoDelay                 := 3000;   // ms
+end;
+
 constructor TAltDSettings.Create;
 begin
    inherited Create;
@@ -1279,6 +1332,7 @@ begin
    FSo2r           := TSo2rSettings.Create;
    FAltD           := TAltDSettings.Create;
    FCallWindow     := TCallWindowSettings.Create;
+   FCq             := TCqSettings.Create;
 
    FCommands := TStringList.Create;
    FCommands.CaseSensitive := False;
@@ -1290,6 +1344,7 @@ end;
 destructor TR4WSettings.Destroy;
 begin
    FCommands.Free;
+   FCq.Free;
    FCallWindow.Free;
    FAltD.Free;
    FSo2r.Free;
@@ -1605,6 +1660,12 @@ begin
 
    (* THE WHOLE SO2R GROUP -- see TSo2rSettings for why every one of them
      needs a line here and why that is not evidence the rule is wrong. *)
+   Alias('ALWAYS CALL BLIND CQ',           'Cq.AlwaysCallBlind');
+   Alias('AUTO CALL TERMINATE',            'Cq.AutoCallTerminate');
+   Alias('AUTO RETURN TO CQ MODE',         'Cq.AutoReturnToMode');
+   Alias('ESCAPE EXITS SEARCH AND POUNCE', 'Cq.EscapeExitsSearchAndPounce');
+   Alias('AUTO-CQ DELAY TIME',             'Cq.AutoDelay');
+
    (* A HYPHEN, which no identifier yields. *)
    Alias('ALT-D BUFFER ENABLE', 'AltD.BufferEnable');
    Alias('ALT-D CQ ENABLE',     'AltD.CqEnable');

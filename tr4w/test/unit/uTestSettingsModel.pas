@@ -344,7 +344,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(58, names.Count, 'one name per migrated setting, no more');
+         CheckEquals(63, names.Count, 'one name per migrated setting, no more');
       finally
          names.Free;
       end;
@@ -991,8 +991,12 @@ const
       + '"ALL CW MESSAGES CHAINABLE",'
       + '"ALT-D BUFFER ENABLE",'
       + '"ALT-D CQ ENABLE",'
+      + '"ALWAYS CALL BLIND CQ",'
+      + '"AUTO CALL TERMINATE",'
+      + '"AUTO RETURN TO CQ MODE",'
       + '"AUTO S&P ENABLE",'
       + '"AUTO S&P ENABLE SENSITIVITY",'
+      + '"AUTO-CQ DELAY TIME",'
       + '"BAND MAP ALL BANDS",'
       + '"BAND MAP ALL MODES",'
       + '"BAND MAP CALL WINDOW ENABLE",'
@@ -1009,6 +1013,7 @@ const
       + '"BAND MAP SO2R DISPLAY",'
       + '"CALL WINDOW SHOW ALL SPOTS",'
       + '"CW SPEED FROM DATABASE",'
+      + '"ESCAPE EXITS SEARCH AND POUNCE",'
       + '"EXTERNAL LOGGER ADDRESS",'
       + '"EXTERNAL LOGGER ENABLED",'
       + '"EXTERNAL LOGGER PORT",'

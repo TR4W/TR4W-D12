@@ -295,6 +295,7 @@ implementation
 
 uses
    uPortAddress,   // SerialDeviceName -- the one port-name rule
+   uSettingsModel, // Settings.Cq.AutoDelay
    uAppTimers,   (* StartAppTimer / StopAppTimer -- LCL TTimers, not SetTimer *)
   uMainForm,   { the main window's elements are LCL controls }
   uKeyerState, { the keyer's state. This unit runs on read threads and must not
@@ -902,7 +903,7 @@ begin
         if tAutoCQMode = True then
            begin
             
-           StartAppTimer(atAutoCQ, AutoCQDelayTime, @AutoCQTick);
+           StartAppTimer(atAutoCQ, Settings.Cq.AutoDelay, @AutoCQTick);
            end;
       end;
 

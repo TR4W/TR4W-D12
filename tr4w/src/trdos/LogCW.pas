@@ -79,7 +79,6 @@ var
   SearchAndPouncePhoneExchange          : ShortString {= 'SAPEXCHG.WAV'};
   TailEndPhoneMessage                   : ShortString {= 'TAILEND.WAV'};
 
-  AutoCQDelayTime                       : integer = 3000;
   AutoCQMemory                          : Char = CHR(112);
   CWMessageCommand                      : CWMessageCommandType {= NoCWCommand};
   CQMemory                              : FunctionKeyMemoryArray;

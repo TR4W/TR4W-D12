@@ -237,11 +237,11 @@ begin
                          RS_PTT_VIACOMMANDS);
    RegisterModelSetting( 'ptt.lockout',                       'PTT LOCKOUT',
                          RS_PTT_LOCKOUT);
-   RegisterStoredSetting('operating.autoCallTerminate',       'AUTO CALL TERMINATE',
+   RegisterModelSetting( 'operating.autoCallTerminate',       'AUTO CALL TERMINATE',
                          RS_OPERATING_AUTOCALLTERMINATE);
-   RegisterStoredSetting('operating.autoReturnToCQ',          'AUTO RETURN TO CQ MODE',
+   RegisterModelSetting( 'operating.autoReturnToCQ',          'AUTO RETURN TO CQ MODE',
                          RS_OPERATING_AUTORETURNTOCQ);
-   RegisterStoredSetting('operating.escapeExitsSAP',          'ESCAPE EXITS SEARCH AND POUNCE',
+   RegisterModelSetting( 'operating.escapeExitsSAP',          'ESCAPE EXITS SEARCH AND POUNCE',
                          RS_OPERATING_ESCAPEEXITSSAP);
    RegisterModelSetting( 'operating.leaveCursorInCall',       'LEAVE CURSOR IN CALL WINDOW',
                          RS_OPERATING_LEAVECURSORINCALL);
@@ -331,7 +331,7 @@ begin
                          RS_OPERATING_TWORADIO_ALTDBUFFER);
    RegisterModelSetting( 'operating.tworadio.altDCQ',       'ALT-D CQ ENABLE',
                          RS_OPERATING_TWORADIO_ALTDCQ);
-   RegisterStoredSetting('operating.tworadio.blindCQ',      'ALWAYS CALL BLIND CQ',
+   RegisterModelSetting( 'operating.tworadio.blindCQ',      'ALWAYS CALL BLIND CQ',
                          RS_OPERATING_TWORADIO_BLINDCQ);
    RegisterModelSetting( 'operating.tworadio.skipActiveBand','SKIP ACTIVE BAND',
                          RS_OPERATING_TWORADIO_SKIPACTIVEBAND);
@@ -390,7 +390,7 @@ begin
    // --- Contest (68) ----------------------------------
    RegisterStoredSetting('contest.autoQslInterval',     'AUTO QSL INTERVAL',
                           RS_CONTEST_AUTOQSLINTERVAL);
-   RegisterStoredSetting('contest.autoCqDelayTime',     'AUTO-CQ DELAY TIME',
+   RegisterModelSetting( 'contest.autoCQDelayTime',           'AUTO-CQ DELAY TIME',
                           RS_CONTEST_AUTOCQDELAYTIME);
    RegisterStoredSetting('contest.beepEvery10Qsos',     'BEEP EVERY 10 QSOS',
                           RS_CONTEST_BEEPEVERY10QSOS);

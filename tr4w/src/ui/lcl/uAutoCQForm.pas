@@ -92,7 +92,8 @@ uses
   LCLType,     // VK_F1..VK_F12
   VC,          // RC_AUTOCQ2, RC_PRESSMKYWTR, RC_NUMBEROSOLT
   LogCW,       // AutoCQMemory
-  Tree,        // AutoCQDelayTime
+  Tree,
+  uSettingsModel,   // Settings.Cq.AutoDelay
   uCFG,        // SetCFGCommandValue -- the one route to a [COMMANDS] value
   MainUnit,    // RunAutoCQ, logger
   Log4D;
@@ -147,7 +148,7 @@ begin
    // that genuinely has to be code rather than a form property.
    spnDelay.NumbersOnly := True;
 
-   spnDelay.Value := AutoCQDelayTime;
+   spnDelay.Value := Settings.Cq.AutoDelay;
 
    edtHotKey.SetFocus;
 end;
@@ -199,7 +200,7 @@ begin
 
    // Through the registry, never straight at the ini: SetCFGCommandValue runs
    // CheckCommand first, which is what enforces the row's 500..10000 bounds and
-   // assigns AutoCQDelayTime.  See c823c055.
+   // assigns Settings.Cq.AutoDelay.  See c823c055.
    SetCFGCommandValue('AUTO-CQ DELAY TIME', IntToStr(spnDelay.Value));
 
    RunAutoCQ;

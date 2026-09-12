@@ -1303,7 +1303,7 @@ begin
 
   if OpMode = SearchAndPounceOpMode then
     if not Call_Found then
-      if (Config.EscapeExitsSearchAndPounce) then
+      if (Settings.Cq.EscapeExitsSearchAndPounce) then
          begin
          SetOpMode(CQOpMode);
          end;
@@ -1904,7 +1904,7 @@ begin
   ParseFourFields(ExchangeWindowString, s1, s2, s3, s4);
   loop:
   if (ExchangeWindowString = '') and (CallWindowString = '') then
-    if Config.AutoReturnToCQMode then
+    if Settings.Cq.AutoReturnToMode then
        begin
        //     tClearDupeInfoCall; // 4.126.1
        //     clearAltD;         //4.126.1
@@ -3163,8 +3163,11 @@ begin
   //3500
   // 620
   // 34
-  if (TempFreq >= 0)   and 
-     (TempFreq <= 999) then
+  (* THE LOWER BOUND IS GONE, not forgotten: TempFreq is a Cardinal, so
+    >= 0 can never be false and the compiler says so. Removed rather than
+    silenced, and rather than raising the always-true ratchet, because a
+    ceiling that goes up for a tautology stops meaning anything. *)
+  if TempFreq <= 999 then
      begin
      if TempFreq < 100 then
         begin
@@ -5252,7 +5255,14 @@ begin
       begin
         if tAutoCQMode = True then
            begin
-           inc(AutoCQDelayTime, 500);
+           (* NOT inc() -- a property has no address. And the ceiling is
+             real now: the setting is a 500..10000 subrange, where the
+             bare global this replaced could be nudged upward without
+             limit by holding the key down. *)
+           if Settings.Cq.AutoDelay <= 9500 then
+              begin
+              Settings.Cq.AutoDelay := Settings.Cq.AutoDelay + 500;
+              end;
            tDisplayAutoCQStatus;
            Exit;
            end;
@@ -5266,9 +5276,9 @@ begin
       begin
         if tAutoCQMode = True then
            begin
-           if AutoCQDelayTime > 500 then
+           if Settings.Cq.AutoDelay > 500 then
               begin
-              dec(AutoCQDelayTime, 500);
+              Settings.Cq.AutoDelay := Settings.Cq.AutoDelay - 500;
               end;
            tDisplayAutoCQStatus;
            Exit;
@@ -5733,7 +5743,7 @@ end;
 
 procedure ProcessKeyDownTerm; // 4.46.2
 begin
-  if activeradioptr^.cwbycat and autosendenable and Config.AutoCallTerminate then
+  if activeradioptr^.cwbycat and autosendenable and Settings.Cq.AutoCallTerminate then
     if length(CallWindowString) = AutoSendCharacterCount then
        begin
        tExchangeWindowSetFocus;

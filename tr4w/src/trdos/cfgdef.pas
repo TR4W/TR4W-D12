@@ -98,14 +98,11 @@ begin
   //  ActiveRotatorType := NoRotator;
   //  ActiveStereoPort := NoPort;
   //  ActiveZoneMult := NoZoneMults;
-  //  Config.AlwaysCallBlindCQ := False;
   //  AskForFrequencies := {wli True} False;
   //  AskIfContestOver := True;
-  //  Config.AutoCallTerminate := False;
   //  AutoDupeEnableCQ := True;
   //  AutoDupeEnableSandP := True;
   //  Config.AutoQSONumberDecrement := False;
-  //  Config.AutoReturnToCQMode := True;
   //  AutoSendCharacterCount := 0;
   //  AutoTimeIncrementQSOs := 0;
 
@@ -184,7 +181,6 @@ begin
   //   EightBitRTTYPort := False; {KK1L: 6.71}
 
 //  EnableSixDVKMessages := True; {KK1L: 6.72}
-//  Config.EscapeExitsSearchAndPounce := True;
   //   ExchangeFunctionKeyMenu := '';
 
 //  FillChar(ExchangeInformation, sizeof(ExchangeInformation), 0);

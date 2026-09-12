@@ -2321,7 +2321,7 @@ end;
 function RadioObject.CheckAutoCallTerminate: boolean;
 begin
   Result := False;
-  if Config.AutoCallTerminate then
+  if Settings.Cq.AutoCallTerminate then
      begin
      if not ExchangeHasBeenSent then
         if tAutoSendMode then

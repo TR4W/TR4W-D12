@@ -1061,11 +1061,11 @@ begin
      begin
      Exit;
      end;
-  if AutoCQDelayTime > 0 then
+  if Settings.Cq.AutoDelay > 0 then
      begin
            SetSpeed(DisplayedCodeSpeed);   // 4.49.3
     Write('Repeating ', KeyId(AutoCQMemory), '  Listen time = ',
-      (AutoCQDelayTime / 2): 2: 1, ' - PgUp/Dn to adjust or ESCAPE     ');
+      (Settings.Cq.AutoDelay / 2): 2: 1, ' - PgUp/Dn to adjust or ESCAPE     ');
     FlushCWBuffer;   //n4af 4.36.13
     CQMemory := AutoCQMemory;
     repeat
@@ -1206,78 +1206,20 @@ begin
         UpdateTimeAndRateDisplays(True, True);
       Packet.CheckPacket;
         Sleep(4);
-      until TimeElasped >= AutoCQDelayTime;
+      until TimeElasped >= Settings.Cq.AutoDelay;
     until False;
   end;
 end;
-procedure AutoCQ;
-var
-  Time, Result                          : integer;
-   key : Char;
-    TempString                            : Str80;
-begin
-  SetUpToSendOnActiveRadio;
-  //  SaveSetAndClearActiveWindow(QuickCommandWindow);
-  Write('Press the memory key you want to repeat');
-  repeat until NewKeyPressed;
-  Key := UpCase(NewReadKey);
-  if Key <> NullKey then
-     begin
-     //    RemoveAndRestorePreviousWindow;
-   Exit;
-     end;
-  Key := NewReadKey;
-  if not (((Key >= F1) and (Key <= AltF10)) or ((Key >= F11) and (Key <= AltF12))) then
-     begin
-     //    RemoveAndRestorePreviousWindow;
-   Exit;
-     end;
-  AutoCQMemory := Key;
-  repeat
-    //{WLI}         ClrScr;
-    if ActiveMode = Phone then
-      if Config.DVKEnable then {KK1L: 6.72 Now need to differentiate DVP and DVK}
-        {Write ('Number of seconds between start of transmissions : ')}{KK1L: 6.71 fixed this in AutoCQResume}
-         begin
-         Write('Number of seconds of listening time : ') {KK1L: 6.71 fixed this in AutoCQResume}
-         end
-      else
-         begin
-         Write('Number of seconds between start of transmissions : ') {KK1L: 6.72}
-         end
-    else
-       begin
-       Write('Number of seconds of listening time : ');
-       end;
-    TempString := '';
-    repeat
-      repeat until NewKeyPressed;
-      Key := UpCase(NewReadKey);
-      if Key = EscapeKey then
-         begin
-         //        RemoveAndRestorePreviousWindow;
-       Exit;
-         end;
-      if Key = BackSpace then
-        if length(TempString) > 0 then
-           begin
-           TempString[0] := AnsiChar(length(TempString) - 1);
-             //{WLI}                     GoToXY (WhereX - 1, WhereY);
-             //{WLI}                     ClrEol;
-           end;
-      if (Key >= '0') and (Key <= '9') then
-         begin
-         TempString := TempString + Key;
-         Write(Key);
-         end;
-    until (length(TempString) = 2) or (Key = CarriageReturn);
-    Val(TempString, Time, Result);
-    Time := Time * 2;
-  until (Time >= 1) and (Time <= 99);
-  AutoCQDelayTime := Time;
-  //  RemoveAndRestorePreviousWindow;
-  AutoCQResume(False);
-end;
+(* procedure AutoCQ DELETED 2026-09-11. A DOS-era console routine --
+  Write() prompts and NewReadKey -- with NO CALLER anywhere in the tree;
+  the auto-CQ window is ui/lcl/uAutoCQForm.pas and has been for a while.
+
+  IT IS DELETED RATHER THAN REPOINTED because it held the one write that
+  disagreed with the setting it wrote: it read SECONDS from the keyboard
+  (bounded 1..99, doubled) and assigned them to Settings.Cq.AutoDelay, whose
+  config row has always been MILLISECONDS bounded 500..10000. Carrying
+  that forward onto a typed property would have meant writing 2..198 into
+  a 500..10000 subrange -- silently, since range checking is off. *)
 (* A CallString, NOT A CallPtr -- 2026-09-09.
 
   NY4I, on finding PAnsiChar(integer(Call) + 1) two routines away: "I am not a
@@ -1949,7 +1891,7 @@ begin
         if (Key = StartSendingNowKey) and (ActiveWindow = CallWindow) and (length(CallWindowString) >= 1) then
            begin
            //                  if ReminderPostedCount = 0 then
-         if Config.AutoCallTerminate then
+         if Settings.Cq.AutoCallTerminate then
             begin
             QuickDisplay(TC_CONTINUEENTERINGCHARACTERSAUTOTERM)
             end
@@ -1975,7 +1917,7 @@ begin
             repeat
               repeat
                 if (ActiveMode = CW) and CWEnabled {and (not ReadInLog)} and
-                  Config.AutoCallTerminate and not CWStillBeingSent then
+                  Settings.Cq.AutoCallTerminate and not CWStillBeingSent then
                    begin
                    CallAlreadySent := True;
                    CallsignICameBackTo := CallWindowString;
@@ -2362,7 +2304,7 @@ begin
   end;
   { We are now ready to accept input.  The CQ EXCHANGE is being sent,
     all of the windows are setup and we are ready to go }
-  if (ActiveMode = CW) and Config.AlwaysCallBlindCQ then
+  if (ActiveMode = CW) and Settings.Cq.AlwaysCallBlind then
      begin
      SendExchangeKeyWhenCWHasStopped := F7;
      end;

@@ -91,7 +91,6 @@ type
       { SO2R / two-radio, CW and scoreboard settings migrated 2026-08-14.
         Types copied verbatim from the declarations they replace -- CheckCommand
         writes through @Config.<field> and cannot see a mismatch. }
-      AlwaysCallBlindCQ: boolean;
       SayHiEnable: boolean;
       SayHiRateCutOff: integer;
       LeadingZeroCharacter: AnsiChar;
@@ -152,9 +151,6 @@ type
         Five of these ten were typed constants = True. A record field defaults to
         zero, so carrying the value across by hand is the whole safeguard, and
         uTestConfigDefaults pins every one in the same commit. }
-      AutoCallTerminate: boolean;
-      AutoReturnToCQMode: boolean;
-      EscapeExitsSearchAndPounce: boolean;
       LogWithSingleEnter: boolean;
       ConfirmEditChanges: boolean;
       AutoQSONumberDecrement: boolean;
@@ -236,7 +232,6 @@ var
       HamScorePassword: '';
       HamScoreSendContactInfo: True;
 
-      AlwaysCallBlindCQ: False;
       SayHiEnable: False;
       SayHiRateCutOff: 200;
       LeadingZeroCharacter: 'T';
@@ -259,9 +254,6 @@ var
         behaves exactly as it did before. }
       MultiMultsOnly: False;
       IntercomFileEnable: False;
-      AutoCallTerminate: False;
-      AutoReturnToCQMode: True;
-      EscapeExitsSearchAndPounce: True;
       LogWithSingleEnter: False;
       ConfirmEditChanges: True;
       AutoQSONumberDecrement: False;

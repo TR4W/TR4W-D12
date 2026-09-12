@@ -187,12 +187,12 @@ begin
    // four change how the log behaves under the operator's hands mid-contest.
    BeginTest('the operating and PTT defaults survived the move');
 
-   CheckTrue(Config.AutoReturnToCQMode,        'AutoReturnToCQMode was True');
-   CheckTrue(Config.EscapeExitsSearchAndPounce,'EscapeExitsSearchAndPounce was True');
+   CheckTrue(Settings.Cq.AutoReturnToMode,        'AutoReturnToCQMode was True');
+   CheckTrue(Settings.Cq.EscapeExitsSearchAndPounce,'EscapeExitsSearchAndPounce was True');
    CheckTrue(Settings.CallWindow.SpaceBarDupeCheck, 'SpaceBarDupeCheck was True');
    CheckTrue(Config.ConfirmEditChanges,        'ConfirmEditChanges was True');
 
-   CheckFalse(Config.AutoCallTerminate,      'AutoCallTerminate was False');
+   CheckFalse(Settings.Cq.AutoCallTerminate,      'AutoCallTerminate was False');
    CheckFalse(Settings.CallWindow.LeaveCursor, 'LeaveCursor was False');
    CheckFalse(Config.LogWithSingleEnter,     'LogWithSingleEnter was False');
    CheckFalse(Config.AutoQSONumberDecrement, 'AutoQSONumberDecrement was False');

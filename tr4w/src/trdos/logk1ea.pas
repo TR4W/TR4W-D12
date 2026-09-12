@@ -2167,7 +2167,7 @@ end;
 function tStartAutoCallTerminate(idAttach: TThreadID): boolean;
 begin
   Result := False;
-  if Config.AutoCallTerminate = True then
+  if Settings.Cq.AutoCallTerminate = True then
     if ExchangeHasBeenSent = False then
       if tAutoSendMode then
         if ControlAMode = False then
@@ -2193,7 +2193,7 @@ begin
 {$IFEND}
   if tAutoCQMode = True then
      begin
-     StartAppTimer(atAutoCQ, AutoCQDelayTime, @AutoCQTick);
+     StartAppTimer(atAutoCQ, Settings.Cq.AutoDelay, @AutoCQTick);
      end;
 
 end;
