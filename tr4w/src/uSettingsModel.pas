@@ -972,6 +972,7 @@ type
    TMySettings = class(TSettingsGroup)
    private
       FFocNumber: string;
+      FIota: string;
       FPostalCode: string;
       FItuZone: TMyItuZone;
    public
@@ -979,6 +980,13 @@ type
    published
       // Was the global MyFOCNumber in logwind.pas. MY FOC NUMBER.
       property FocNumber: string read FFocNumber write FFocNumber;
+      (* Was MyIOTA in logstuff.pas, and IT HAS NO READER -- the global was
+        declared, initialised to '' and used by nothing but its own config
+        row. Migrated rather than withdrawn on NY4I's instruction
+        (2026-09-12): "migrate my iota too. it is for future use." So the
+        command keeps working, an operator's .cfg keeps being understood,
+        and the value is waiting when an IOTA contest wants it. *)
+      property Iota: string read FIota write FIota;
       // Was MyPostalCode in logwind.pas. MY POSTAL CODE.
       property PostalCode: string read FPostalCode write FPostalCode;
       (* Was MyITUZone in VC.pas, and ZERO IS MEANINGFUL: it means "use the
@@ -1371,6 +1379,7 @@ begin
      cfgdef sets the two strings to '' explicitly and VC leaves the Byte at
      its zero. Zero is the "use CTY.DAT" sentinel, not an unset value. *)
    FFocNumber  := '';
+   FIota       := '';
    FPostalCode := '';
    FItuZone    := 0;
 end;

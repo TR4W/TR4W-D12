@@ -505,7 +505,6 @@ var
   MultiSerialNumber: integer;
   MultiUpdateMultDisplay: boolean = True;
   MultReportMinimumBands: integer = 4;
-  MyIOTA: Str20;
 
   NameCallsignPutUp: CallString;
 

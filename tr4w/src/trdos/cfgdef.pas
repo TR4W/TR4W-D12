@@ -269,7 +269,6 @@ begin
     MyCountry := '';
     MyFDClass := '';
     MyGrid := '';
-    MyIOTA := '';
     MyPrec := '';
     MySection := '';
     MyState := '';

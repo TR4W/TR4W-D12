@@ -344,7 +344,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(72, names.Count, 'one name per migrated setting, no more');
+         CheckEquals(73, names.Count, 'one name per migrated setting, no more');
       finally
          names.Free;
       end;
@@ -1026,6 +1026,7 @@ const
       + '"LOG WITH SINGLE ENTER",'
       + '"MMTTY ENGINE",'
       + '"MY FOC NUMBER",'
+      + '"MY IOTA",'
       + '"MY ITU ZONE",'
       + '"MY POSTAL CODE",'
       + '"NO POLL DURING PTT",'
