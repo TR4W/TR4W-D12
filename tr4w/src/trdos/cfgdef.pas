@@ -448,8 +448,6 @@ begin
   //  TuneDupeCheckEnable := False; {KK1L: 6.73}
   //  TwoRadioState := TwoRadiosDisabled;
 
-  //  Config.UnknownCountryFileEnable := False;
-  //  UnknownCountryFileName := 'UNKNOWN.CTY';
   (* Config.UpdateRestartFileEnable := True DELETED 2026-09-11. It was the
     ONE live assignment left in this routine's UPDATE RESTART FILE block,
     and it is redundant now that TLogSettings' constructor carries the

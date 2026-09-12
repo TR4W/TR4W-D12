@@ -613,6 +613,7 @@ const
    - 1 {MY SECTION -- moved to uSettingsModel}
    - 1 {MY NAME -- moved to uSettingsModel}
    - 2 {the DVK, two of its five -- moved to uSettingsModel}
+   - 2 {the unknown country file -- moved to uSettingsModel}
    ;
 
    // crS (CFGStatus): csNew / csOld = active -- the command's value IS applied.
@@ -1073,8 +1074,6 @@ const
  (crCommand: 'UDP BROADCAST PORT LOOKUP';     crAddress: @UDPBroadcastPortLookup;        crMin:1;  crMax:65535;   crS: csJSON;   crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),   // ny4i Issue 612
  (crCommand: 'UDP BROADCAST ADDRESS';         crAddress: @UDPBroadcastAddress;            crMin:0;  crMax:255;     crS: csJSON;   crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),  // ny4i 4.44.9
  (crCommand: 'UDP BROADCAST ALL QSOS';        crAddress: @UDPBroadcastAllQSOs;            crMin:0;  crMax:0;       crS: csJSON;   crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),  // ny4i Issue 82
- (crCommand: 'UNKNOWN COUNTRY FILE ENABLE';   crAddress: @Config.UnknownCountryFileEnable;       crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'UNKNOWN COUNTRY FILE NAME';     crAddress: @UnknownCountryFileName;         crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'USE CONTROL PORT';              crAddress: @tUseControlPort;                crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'USER INFO SHOWN';               crAddress: pointer(19);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'WAKE UP TIME OUT';              crAddress: @WakeUpTimeOut;                  crMin:0;  crMax:MAXBYTE; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
@@ -2975,7 +2974,12 @@ type
       isPcharString: PAnsiChar;
    end;
 const
-   SAS = 16;
+   (* 15 SINCE 2026-09-12: UnknownCountryFileName left for
+     Settings.UnknownCountryFile.Name, and its default with it. This table
+     is the same shape as the ones being retired -- a hand-typed list of
+     ADDRESSES beside the values they seed -- and it goes the same way as
+     its entries migrate. *)
+   SAS = 15;
    SA: array[1..SAS] of IniStringRecord =
       (
       (isString: @CQPhoneExchange; isPcharString: 'CQEXCHNG.WAV'),
@@ -2993,8 +2997,6 @@ const
          'https://post.contestonlinescore.com/post/'),
       (isString: @Config.GetScoresSeverReadingAddress; isPcharString:
          'https://contestonlinescore.com/scoreboard/'),
-
-      (isString: @UnknownCountryFileName; isPcharString: 'UNKNOWN.CTY'),
 
       (isString: @QSLMessage; isPcharString: 'TU \ TEST'),
       (isString: @QSOBeforeMessage; isPcharString: ' SRI QSO B4 TU \ TEST'),

@@ -344,7 +344,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(81, names.Count, 'one name per migrated setting, no more');
+         CheckEquals(83, names.Count, 'one name per migrated setting, no more');
       finally
          names.Free;
       end;
@@ -1067,6 +1067,8 @@ const
       + '"WAIT FOR STRENGTH",'
       + '"WARC BAND ENABLE",'
       + '"WILDCARD PARTIALS",'
+      + '"UNKNOWN COUNTRY FILE ENABLE",'
+      + '"UNKNOWN COUNTRY FILE NAME",'
       + '"USE RECORDED SIGNS",'
       + '"YCCC SO2R ENABLE"';
 var

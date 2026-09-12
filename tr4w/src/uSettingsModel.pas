@@ -1054,6 +1054,42 @@ type
          read FUseRecordedSigns write FUseRecordedSigns;
    end;
 
+   (*
+     THE UNKNOWN COUNTRY FILE -- a list of callsigns CTY.DAT could not place,
+     written out so an operator can look for missed multipliers afterwards.
+
+     NEITHER SETTING HAS A READER. Both globals are declared and never looked
+     at: nothing in the tree generates this file. They are MIGRATED RATHER
+     THAN WITHDRAWN, following NY4I's ruling on MY IOTA (2026-09-12, "migrate
+     my iota too, it is for future use") -- the command keeps parsing, an
+     existing .cfg keeps being understood, and the value is there when the
+     feature is written.
+
+     BOTH NAMES DERIVE EXACTLY, which is the second group in this file where
+     that is true of every member.
+
+     THE DEFAULT NAME COMES FROM THE HELP FILE, NOT FROM THE DECLARATION. The
+     global's initialiser is commented out, so it ran as an empty string;
+     commands_help_eng.ini says UNKNOWN.CTY and the description explains the
+     file is "by default named UNKNOWN.CTY". With no reader, the live value
+     was not behaviour -- it was an absence -- so the documented intent is the
+     better answer here, where for a setting that IS read the live declaration
+     would win. That distinction has come up three times now and is worth
+     stating rather than re-deciding.
+   *)
+   TUnknownCountryFileSettings = class(TSettingsGroup)
+   private
+      FEnable: boolean;
+      FName: string;
+   public
+      constructor Create;
+   published
+      // Was Config.UnknownCountryFileEnable.
+      property Enable: boolean read FEnable write FEnable;
+      // Was the global UnknownCountryFileName in logwind.pas.
+      property Name: string read FName write FName;
+   end;
+
    TR4WSettings = class(TPersistent)
    private
       // command name -> property path, built once by walking the RTTI.
@@ -1079,6 +1115,7 @@ type
       FSayHi: TSayHiSettings;
       FMy: TMySettings;
       FDvk: TDvkSettings;
+      FUnknownCountryFile: TUnknownCountryFileSettings;
       procedure BuildCommandMap;
       function PathForCommand(const aCommand: string): string;
       (* The streamer hook that keeps contest-scoped groups out of the
@@ -1186,6 +1223,8 @@ type
       property SayHi: TSayHiSettings read FSayHi;
       property My: TMySettings read FMy;
       property Dvk: TDvkSettings read FDvk;
+      property UnknownCountryFile: TUnknownCountryFileSettings
+         read FUnknownCountryFile;
    end;
 
 (* THE ONE INSTANCE.  Created on first use so no unit's initialisation order
@@ -1432,6 +1471,13 @@ begin
    FTuneWithDits              := False;
 end;
 
+constructor TUnknownCountryFileSettings.Create;
+begin
+   inherited Create;
+   FEnable := False;
+   FName   := 'UNKNOWN.CTY';   // see the note on the class
+end;
+
 constructor TDvkSettings.Create;
 begin
    inherited Create;
@@ -1571,6 +1617,7 @@ begin
    FSayHi          := TSayHiSettings.Create;
    FMy             := TMySettings.Create;
    FDvk            := TDvkSettings.Create;
+   FUnknownCountryFile := TUnknownCountryFileSettings.Create;
 
    FCommands := TStringList.Create;
    FCommands.CaseSensitive := False;
@@ -1582,6 +1629,7 @@ end;
 destructor TR4WSettings.Destroy;
 begin
    FCommands.Free;
+   FUnknownCountryFile.Free;
    FDvk.Free;
    FMy.Free;
    FSayHi.Free;

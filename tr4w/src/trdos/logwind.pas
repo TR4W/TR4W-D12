@@ -825,7 +825,6 @@ var
   TwoRadioState                         : TwoRadioStates {= TwoRadiosDisabled};
   TuneDupeCheckEnable                   : boolean; {KK1L: 6.73}
 
-  UnknownCountryFileName                : ShortString {= 'UNKNOWN.CTY'};
   UserInfoShown                         : UserInfoType {= NoUserInfo};
 
   //   VGADisplayEnable                : boolean;

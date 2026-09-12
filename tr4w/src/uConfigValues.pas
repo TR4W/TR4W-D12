@@ -161,7 +161,6 @@ type
         contest change would silently reset the setting instead. The record
         default matches it, and the assignment now writes the same field. }
       NameFlagEnable: boolean;
-      UnknownCountryFileEnable: boolean;
 
       { The function-key button captions, migrated 2026-08-15.
 
@@ -246,7 +245,6 @@ var
       IntercomFileEnable: False;
       AutoQSONumberDecrement: False;
       NameFlagEnable: True;
-      UnknownCountryFileEnable: False;
       IncludeFKeyNumber: False;
       NoBorder: False;
       NoCaption: False;
