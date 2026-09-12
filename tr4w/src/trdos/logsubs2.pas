@@ -284,7 +284,7 @@ begin
   {if not Dupe then }tCreateAndAddNewSpot(CallWindowString, Dupe, ActiveRadioPtr);
   if Dupe then
      begin
-     //    if AutoDupeEnableSandP then //wli
+     //    if Settings.AutoDupe.EnableSAndP then //wli
          begin
            tCallWindowSetFocus;
            WindowDupeCheck := True;
@@ -303,7 +303,7 @@ begin
                         //    RemoveWindow(NameSentWindow);
                         //    RemoveWindow(CountryNameWindow);
          //    DisplayInsertMode(InsertMode);
-     //      if not QTCsEnabled then
+     //      if not Settings.Qtc.Enable then
      //      begin
      //        EscapeDeletedCallEntry := CallWindowString;
                    //      CallWindowString := '';
@@ -420,10 +420,10 @@ end;
 
 procedure ToggleModes;
 begin
-  if (MultipleModesEnabled) or (TotalContacts = 0) then
+  if (Settings.Contest.MultipleModes) or (TotalContacts = 0) then
      begin
      case ActiveMode of
-       CW: if DigitalModeEnable then ActiveMode := Digital else ActiveMode := Phone;
+       CW: if Settings.Contest.DigitalModeEnable then ActiveMode := Digital else ActiveMode := Phone;
        Phone: if ActiveBand >= Band6 then ActiveMode := FM else ActiveMode := CW;
        Digital: ActiveMode := Phone;
      else ActiveMode := CW;
@@ -448,11 +448,11 @@ begin
           end;
      UpdateTotals2;
      CallsignsList.DisplayDupeSheet(ActiveRadioPtr);
-     if QSOByMode then
+     if Settings.Qso.ByMode then
         begin
         VisibleDupeSheetChanged := True;
         end;
-     if MultByMode then
+     if Settings.Mult.ByMode then
         begin
         VisibleLog.ShowRemainingMultipliers;
         VisibleLog.DisplayGridMap(ActiveBand, ActiveMode);
@@ -1710,7 +1710,7 @@ begin
              UpdateStationStatus(RXData.Callsign, -1);
        end;
   if DoingDomesticMults and                                         // Gav 4.44.8   uncommented section
-    (MultByBand or MultByMode) and
+    (Settings.Mult.ByBand or Settings.Mult.ByMode) and
     (RXData.DomesticQTH <> '') then
      begin
      VisibleLog.ShowDomesticMultiplierStatus(RXData.DomMultQTH);
@@ -1840,7 +1840,7 @@ begin
   //    IF KeyRecentlyPressed (F1, 100) THEN DDX (MaybeRespondToMyCall);
   //{WLI}    SearchAndPounce := False;
   { Presumed exit value unless a QSO is finished
-                                  and we aren't using the SprintQSYRule. }
+                                  and we aren't using the sprint QSY rule. }
   SearchAndPounce := True;
 end;
 procedure GetInitialCall;
@@ -2373,7 +2373,7 @@ var
      DualingCQState := DualSendingExchange;
        end;
     {??????? ??????  ??????????? ? returnCQopMode}
-    if AutoDupeEnableCQ and
+    if Settings.AutoDupe.EnableCq and
       VisibleLog.CallIsADupe(CallsignICameBackTo, ActiveBand, ActiveMode) then
        begin
         //            if ReminderPostedCount = 0 then
@@ -2387,12 +2387,12 @@ var
       DisplayUserInfo(CallsignICameBackTo);
       if ActiveMode = CW then
          begin
-         if QTCsEnabled then
+         if Settings.Qtc.Enable then
             begin
             DisplayQTCNumber(NumberQTCsThisStation(StandardCallFormat(CallWindowString, False)));
             if NumberQTCsThisStation(StandardCallFormat(CallWindowString, False)) < 10 then
                begin
-               if QTCsEnabled and (MyContinent = Europe) then
+               if Settings.Qtc.Enable and (MyContinent = Europe) then
                   begin
                   AddStringToBuffer(' B4 ', Config.CWTone);
                             //wli                            WAEQTC (CallWindowString);
@@ -2423,7 +2423,7 @@ var
      Write(' DUPE!!');
      EscapeDeletedCallEntry := CallWindowString;
      CallWindowString := '';
-     if QTCsEnabled then
+     if Settings.Qtc.Enable then
         begin
         DisplayQTCNumber(NumberQTCsThisStation(StandardCallFormat(CallWindowString, False)))
         end
@@ -2468,7 +2468,7 @@ var
        DisplayUserInfo(CallsignICameBackTo);
        DisplayBeamHeading(CallsignICameBackTo, '');
        DisplayCountryName(CallsignICameBackTo);
-       if QTCsEnabled then
+       if Settings.Qtc.Enable then
           begin
           DisplayQTCNumber(NumberQTCsThisStation(CallWindowString));
           end;

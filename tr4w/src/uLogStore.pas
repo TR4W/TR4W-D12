@@ -428,6 +428,9 @@ var
    key: AnsiChar;
    memText: ShortString;
    saved: integer;
+   (* The contest-scoped settings that have left the array -- see below. *)
+   names: TStringList;
+   modelValue: string;
 begin
    saved := 0;
    for i := 1 to CommandsArraySize do
@@ -547,6 +550,50 @@ begin
       GRepository.SaveConfigValue(AnsiString(cmd), value, src);
       Inc(saved);
       end;
+
+   (* A CONTEST-SCOPED SETTING THAT HAS LEFT CFGCA, which the loop above
+     cannot reach: it walks the array, and these have no row in it.
+
+     THIS WAS A HOLE AND IT WAS SILENT. A contest-scoped group is excluded
+     from settings\tr4w.json by design -- that is what TR4WSettings.ToJSON's
+     SkipContestScoped does -- so with no capture here such a setting had
+     NOWHERE to persist at all. The band enables have been in that state
+     since they moved: the arm above that asks Settings.CommandIsContestScoped
+     was written for them and could never fire, because by then their rows
+     were gone.
+
+     It costs nothing while the values are ones fcontest computes -- it
+     recomputes them on every open. It costs an operator their contest's
+     rules the moment one comes from a file: target\dom\Idaho QSO Party.cfg
+     sets MULT BY BAND, MULT BY MODE, MULTIPLE BANDS, MULTIPLE MODES and
+     DOMESTIC FILENAME, and a contest .cfg is read ONCE and converted. Not
+     capturing them means the second open scores the contest differently
+     from the first, with nothing said.
+
+     'contest' WITHOUT ASKING CommandCameFromContestCFG, for the reason the
+     arm above gives: a contest-scoped setting is the contest's whatever file
+     it arrived in, and the .cfg question answers no for a value the program
+     computed. *)
+   names := Settings.CommandNames;
+   try
+      for i := 0 to names.Count - 1 do
+         begin
+         cmd := string(names[i]);
+         if not Settings.CommandIsContestScoped(cmd) then
+            begin
+            Continue;
+            end;
+         if not Settings.TryGetByCommand(cmd, modelValue) then
+            begin
+            Continue;
+            end;
+         GRepository.SaveConfigValue(AnsiString(cmd), AnsiString(modelValue),
+                                     'contest');
+         Inc(saved);
+         end;
+   finally
+      names.Free;
+   end;
 
    (* THE EDITABLE-LOG COLUMN WIDTHS.
 

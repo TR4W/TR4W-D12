@@ -883,7 +883,7 @@ begin
 
   if d <= Settings.BandMap.GuardBand then
      begin
-     {  if not SprintQSYRule then
+     {  if not Settings.Contest.SprintQsyRule then
        begin
         switch := False;    // n4af 4.56.1
         switchnext := False;

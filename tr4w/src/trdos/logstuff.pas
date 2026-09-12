@@ -1042,7 +1042,7 @@ end;
 
   ACCESS VIOLATION SAVING A QTC BOOK (NY4I, 2026-09-01, crash log naming
   IncrementQTCCount <- SaveQTCS <- QTCSendCommand). QTCDataArray is a POINTER
-  and had exactly one allocation site -- `if QTCsEnabled then New(QTCDataArray)`
+  and had exactly one allocation site -- `if Settings.Qtc.Enable then New(QTCDataArray)`
   in LogCfg -- so whether the table exists depended on a config flag read at
   config-load time, while whether it is USED depends on the operator pressing a
   button in a window whose menu item is enabled by the CONTEST alone
@@ -5846,7 +5846,7 @@ begin
 
   TempString := ExchangeString;
 
-  if CallsignUpdateEnable {and StringHas(TempString, ' ')} then
+  if Settings.Contest.CallsignUpdateEnable {and StringHas(TempString, ' ')} then
      begin
      while TempString <> '' do
         begin
@@ -6335,8 +6335,8 @@ begin
   if LogSourceNext( TempRXData ) then
      begin
 
-     if ((Band = TempRXData.Band) or not QSOByBand) and
-       ((Mode = TempRXData.Mode) or not QSOByMode) then
+     if ((Band = TempRXData.Band) or not Settings.Qso.ByBand) and
+       ((Mode = TempRXData.Mode) or not Settings.Qso.ByMode) then
 
        if TempRXData.Callsign = Call then
           begin
@@ -6484,30 +6484,30 @@ begin
   RXData.QSOPoints := 0;
   RXCty := RXData.QTH.CountryID; // 4.67.1
 
-  if (QSOPointsDomesticCW >= 0) and (RXData.Mode = CW) and (RXData.DomesticQTH  <>  '') then
+  if (Settings.Qso.PointsDomesticCw >= 0) and (RXData.Mode = CW) and (RXData.DomesticQTH  <>  '') then
      begin
-     RXData.QSOPoints := QSOPointsDomesticCW;
+     RXData.QSOPoints := Settings.Qso.PointsDomesticCw;
      Exit;
      end;
 
-  if (QSOPointsDXCW >= 0) and (RXData.Mode = CW) and (RXData.DomesticQTH = '')
+  if (Settings.Qso.PointsDxCw >= 0) and (RXData.Mode = CW) and (RXData.DomesticQTH = '')
     then
      begin
-     RXData.QSOPoints := QSOPointsDXCW;
+     RXData.QSOPoints := Settings.Qso.PointsDxCw;
      Exit;
      end;
 
-  if (QSOPointsDomesticPhone >= 0) and (RXData.Mode = Phone) and
+  if (Settings.Qso.PointsDomesticPhone >= 0) and (RXData.Mode = Phone) and
     (RXData.DomesticQTH <> '') then
      begin
-     RXData.QSOPoints := QSOPointsDomesticPhone;
+     RXData.QSOPoints := Settings.Qso.PointsDomesticPhone;
      Exit;
      end;
 
-  if (QSOPointsDXPhone >= 0) and (RXData.Mode = Phone) and (RXData.DomesticQTH =
+  if (Settings.Qso.PointsDxPhone >= 0) and (RXData.Mode = Phone) and (RXData.DomesticQTH =
     '') then
      begin
-     RXData.QSOPoints := QSOPointsDXPhone;
+     RXData.QSOPoints := Settings.Qso.PointsDxPhone;
      Exit;
      end;
 
@@ -10503,7 +10503,7 @@ end;
 procedure ProcessPartialCallAndInitialExchange(RXData: ContestExchange);
 
 begin
-  if Settings.CallWindow.PartialCallEnable or ExchangeMemoryEnable then // n4af 40.40.1
+  if Settings.CallWindow.PartialCallEnable or Settings.Contest.ExchangeMemoryEnable then // n4af 40.40.1
     //     AddCallToPartialList(RXData.Callsign, GetInitialExchangeStringFromContestExchange(RXData));
      begin
      GetInitialExchangeStringFromContestExchange(RXData); // n4af 40.40.1       }

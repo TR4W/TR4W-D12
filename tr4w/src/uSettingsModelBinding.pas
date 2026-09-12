@@ -61,9 +61,21 @@ unit uSettingsModelBinding;
                     map's item geometry is computed once in LayOutGrid, so
                     BAND MAP ITEM HEIGHT really does wait for a restart.
 
-    ReadOnly        FALSE.  crJ 2 and 3 marked rows that were displayed but
-                    not editable.  A published property is editable; a
-                    setting that should not be is not registered here.
+    ReadOnly        FALSE, AND THE CALLER SETS IT OTHERWISE.  crJ 2 and 3
+                    marked rows that were displayed but not editable, and
+                    when this unit was written no such setting had moved --
+                    so the comment here said one never would.  That did not
+                    survive contact with the contest's own rules: MULT BY
+                    BAND, QSO BY BAND, the four QSO POINTS values and
+                    DOMESTIC FILENAME are all crJ: 2, and all belong in the
+                    model.  They are registered exactly like the others and
+                    marked
+
+                        RegisterModelSetting(...).ReadOnly := True;
+
+                    which is the shape uSettingsDeclarations already used for
+                    a graduated setting.  A constructor parameter was the
+                    alternative and says less at the call site.
 
     HasSideEffects  TRUE, always, and this is the one that changed MEANING.
                     crP and crA meant "writing this row happens to run code",

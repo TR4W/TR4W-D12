@@ -176,6 +176,15 @@ type
    TPaddleMonitorTone   = 0..65535;   // was crMin:0, crMax:MAXWORD
    TPaddlePttHoldCount  = 0..65535;   // was crMin:0, crMax:MAXWORD
    TPaddleSpeed         = 0..99;      // was crMin:0, crMax:99
+   (* QSO POINTS, AND -1 IS THE VALUE THAT MATTERS.
+
+     Minus one means "this contest declares no fixed point value", and the
+     scoring code says so directly: `if (QSOPointsDomesticCW >= 0)` in
+     logstuff.  THE CFGCA ROW COULD NOT EXPRESS IT -- crMin and crMax are
+     Word, unsigned -- so all four rows said 0..MAXWORD while all four
+     variables sat at -1, a value their own declared range rejected.  A
+     subrange is signed, so the type simply says what the program means. *)
+   TQsoPoints           = -1..65535;  // was crMin:0, crMax:MAXWORD -- see above
 
    (*
      THE BASE OF EVERY SETTINGS GROUP.
@@ -653,6 +662,10 @@ type
      the neighbouring AUTO DUPE ENABLE pair was not: nothing outside the
      config reader writes these, whereas fcontest.pas assigns
      AutoDupeEnableCQ and AutoDupeEnableSandP for six different contests.
+     (That pair HAS since moved -- see TAutoDupeSettings. What changed is
+     not the reading above but IsContestScoped: being contest state is a
+     reason to keep a setting OUT OF tr4w.json, which is now expressible,
+     rather than a reason to leave it in the array.)
 
      No hooks -- crP, crA, crJ and crC are all zero.
    *)
@@ -1174,6 +1187,227 @@ type
       property Name: string read FName write FName;
    end;
 
+
+   (*
+     ========================================================================
+     THE CONTEST'S OWN RULES -- the five groups below are the CONTEST'S, not
+     the station's, and every one of them overrides IsContestScoped.
+     ========================================================================
+
+     THE TEST APPLIED TO EVERY ROW, one at a time: would this value be
+     different for a different contest at the same station?  For all
+     twenty-one it is, and for most of them the EVIDENCE IS IN THE PROGRAM
+     rather than in an opinion -- fcontest.pas assigns them as a contest
+     loads, from ContestsBooleanArray or from a per-contest arm:
+
+         QSOByBand, QSOByMode, MultByBand, MultByMode and
+         CountDomesticCountries come straight out of the contest's bit mask;
+         AutoDupeEnableCQ/SandP, ExchangeMemoryEnable, SprintQSYRule,
+         DigitalModeEnable, MultipleBandsEnabled, MultipleModesEnabled,
+         CallsignUpdateEnable and QTCsEnabled are each set by name for the
+         contests whose rules require them.
+
+     The three that fcontest does NOT compute -- MULT SHEET AUTO RESET, QTC
+     MINUTES and the four QSO POINTS values -- carried crJ: 2, the table's
+     mark for "displayed, not editable: a contest sets this".  And a shipped
+     contest file proves it for the rest: target\dom\Idaho QSO Party.cfg
+     sets DOMESTIC FILENAME, MULT BY BAND, MULT BY MODE, MULTIPLE BANDS and
+     MULTIPLE MODES in five consecutive lines.
+
+     WHAT CONTEST-SCOPED MEANS HERE, and why it is the whole point of moving
+     these: a contest-scoped group is EXCLUDED from settings\tr4w.json
+     (TR4WSettings.ToJSON) and captured into the contest database instead
+     (uLogStore.CaptureConfiguration).  Without that, Preferences -- which
+     saves the whole settings object on every applied change -- would make
+     whichever contest was last loaded the station's permanent default.
+     That is not a risk being guessed at; it is the measured defect the band
+     enables had, and TBandSettings' header records it.  Here it would mean
+     a sprint's QSY rule, or a QSO worth two points, following the operator
+     into next weekend's contest.
+
+     THE COMMAND NAMES ARE FLAT AND THE PATHS ARE NOT, which is where the
+     aliases come from.  Mult, Qso and Qtc were chosen as group names for
+     exactly that reason: 'Mult.ByBand' derives MULT BY BAND on its own, and
+     twelve of the twenty-one names need no exception at all.  The eight in
+     TContestSettings do, because TR4W spells them with no shared first word
+     to group them by -- DOMESTIC FILENAME and SPRINT QSY RULE have nothing
+     in common but the contest they describe -- and AUTO DUPE ENABLE S AND P
+     makes nine, for an alphabet reason given at its own group.
+   *)
+   TQsoSettings = class(TSettingsGroup)
+   private
+      FByBand: boolean;
+      FByMode: boolean;
+      FPointsDomesticCw: TQsoPoints;
+      FPointsDomesticPhone: TQsoPoints;
+      FPointsDxCw: TQsoPoints;
+      FPointsDxPhone: TQsoPoints;
+   public
+      constructor Create;
+      class function IsContestScoped: boolean; override;
+   published
+      (* Was QSOByBand in logdupe.pas -- whether the same station may be
+        worked again on another band.  QSO BY BAND derives exactly. *)
+      property ByBand: boolean read FByBand write FByBand;
+      // Was QSOByMode in logdupe.pas. QSO BY MODE.
+      property ByMode: boolean read FByMode write FByMode;
+      (* THE FOUR FIXED POINT VALUES, was QSOPointsDomesticCW and its three
+        companions in logwind.pas.  -1 means the contest states no fixed
+        value and the scoring method decides; see TQsoPoints.
+
+        They were already half out of the array -- registered in
+        uSettingsDeclarations through a getter/setter pair over the globals
+        because the row could not declare their range.  This is the rest of
+        that move. *)
+      property PointsDomesticCw: TQsoPoints
+         read FPointsDomesticCw write FPointsDomesticCw;
+      property PointsDomesticPhone: TQsoPoints
+         read FPointsDomesticPhone write FPointsDomesticPhone;
+      property PointsDxCw: TQsoPoints read FPointsDxCw write FPointsDxCw;
+      property PointsDxPhone: TQsoPoints read FPointsDxPhone write FPointsDxPhone;
+   end;
+
+   (*
+     MULTIPLIERS -- how this contest counts them.
+
+     ALL THREE NAMES DERIVE EXACTLY.  MULT SHEET AUTO RESET is the odd
+     member: nothing computes it, its single reader gates on the multiplier
+     sheet's own tAutoReset flag, and it reaches the program only from a
+     contest file.  It is here rather than in a display group because crJ: 2
+     says the same thing its one reader does -- it is a property of the
+     contest being run, not of the operator's screen.
+   *)
+   TMultSettings = class(TSettingsGroup)
+   private
+      FByBand: boolean;
+      FByMode: boolean;
+      FSheetAutoReset: boolean;
+   public
+      constructor Create;
+      class function IsContestScoped: boolean; override;
+   published
+      // Was MultByBand in logdupe.pas. MULT BY BAND.
+      property ByBand: boolean read FByBand write FByBand;
+      // Was MultByMode in logdupe.pas. MULT BY MODE.
+      property ByMode: boolean read FByMode write FByMode;
+      // Was MultReset in logdupe.pas. MULT SHEET AUTO RESET.
+      property SheetAutoReset: boolean read FSheetAutoReset write FSheetAutoReset;
+   end;
+
+   (*
+     QTCs -- the traffic exchanged in the WAE contests, and nowhere else.
+
+     BOTH NAMES DERIVE EXACTLY.  Enable is what fcontest sets for WAEDC;
+     Minutes is a BOOLEAN despite its name -- it chooses whether the QTC
+     serial is sent with the minutes of the hour appended -- and its row
+     said crType: ctBoolean, so the type here is not a narrowing of an
+     integer.
+   *)
+   TQtcSettings = class(TSettingsGroup)
+   private
+      FEnable: boolean;
+      FMinutes: boolean;
+   public
+      constructor Create;
+      class function IsContestScoped: boolean; override;
+   published
+      // Was QTCsEnabled in logwind.pas. QTC ENABLE.
+      property Enable: boolean read FEnable write FEnable;
+      // Was QTCMinutes in logwind.pas. QTC MINUTES.
+      property Minutes: boolean read FMinutes write FMinutes;
+   end;
+
+   (*
+     AUTOMATIC DUPE CHECKING, separately for CQ and for search and pounce.
+
+     THE PAIR TAutoSapSettings' HEADER DELIBERATELY LEFT BEHIND.  It says so:
+     "NEITHER IS CONTEST STATE, which is what made them safe to move while
+     the neighbouring AUTO DUPE ENABLE pair was not: nothing outside the
+     config reader writes these, whereas fcontest.pas assigns
+     AutoDupeEnableCQ and AutoDupeEnableSandP for six different contests."
+     That was the right call at the time and it is what IsContestScoped
+     exists to answer -- the objection was never that the values could not
+     be properties, it was that streaming them into tr4w.json would make one
+     contest's rule the station's default.  A contest-scoped group is not
+     streamed.
+
+     ENABLE S AND P CANNOT DERIVE.  'EnableSAndP' gives ENABLE SAND P,
+     because a capital that follows a capital does not start a word -- and
+     it should not, or UDPPort would be U D P PORT.  So one alias.
+   *)
+   TAutoDupeSettings = class(TSettingsGroup)
+   private
+      FEnableCq: boolean;
+      FEnableSAndP: boolean;
+   public
+      constructor Create;
+      class function IsContestScoped: boolean; override;
+   published
+      // Was AutoDupeEnableCQ in logdupe.pas. AUTO DUPE ENABLE CQ.
+      property EnableCq: boolean read FEnableCq write FEnableCq;
+      (* Was AutoDupeEnableSandP in logdupe.pas.  Answers to
+        AUTO DUPE ENABLE S AND P -- see BuildCommandMap. *)
+      property EnableSAndP: boolean read FEnableSAndP write FEnableSAndP;
+   end;
+
+   (*
+     THE REST OF THE CONTEST'S RULES -- the eight whose legacy names share no
+     first word, so each carries an alias.
+
+     THE DOMESTIC FILE IS THE ONE WITH TEETH.  It was a FileNameType -- a
+     MAX_PATH array of AnsiChar -- appended to with pointer arithmetic in
+     two units, and the bound it needed was the array's.  A string has no
+     bound to get wrong.  The two sites that built it are ordinary
+     concatenation now; see fcontest.pas and LogCfg.pas.
+   *)
+   TContestSettings = class(TSettingsGroup)
+   private
+      FCallsignUpdateEnable: boolean;
+      FCountDomesticCountries: boolean;
+      FDigitalModeEnable: boolean;
+      FDomesticFilename: string;
+      FExchangeMemoryEnable: boolean;
+      FMultipleBands: boolean;
+      FMultipleModes: boolean;
+      FSprintQsyRule: boolean;
+   public
+      constructor Create;
+      class function IsContestScoped: boolean; override;
+   published
+      (* Was CallsignUpdateEnable in logdupe.pas -- update a logged callsign
+        from what was actually sent.  CALLSIGN UPDATE ENABLE. *)
+      property CallsignUpdateEnable: boolean
+         read FCallsignUpdateEnable write FCallsignUpdateEnable;
+      (* Was CountDomesticCountries in logdupe.pas -- whether domestic
+        countries count as country multipliers.  COUNT DOMESTIC COUNTRIES. *)
+      property CountDomesticCountries: boolean
+         read FCountDomesticCountries write FCountDomesticCountries;
+      (* Was DigitalModeEnable in logwind.pas -- whether Digital is a mode
+        this contest has at all.  DIGITAL MODE ENABLE. *)
+      property DigitalModeEnable: boolean
+         read FDigitalModeEnable write FDigitalModeEnable;
+      (* Was DomQTHDataFileName in logdupe.pas -- the .DOM file naming this
+        contest's domestic multipliers.  DOMESTIC FILENAME.
+
+        It holds a BARE NAME while a contest file is being read and a FULL
+        PATH once LogCfg has resolved it, which is how it has always
+        behaved; the resolution is still in LogCfg and is unchanged. *)
+      property DomesticFilename: string
+         read FDomesticFilename write FDomesticFilename;
+      (* Was ExchangeMemoryEnable in logdupe.pas -- offer the exchange this
+        station sent last time.  EXCHANGE MEMORY ENABLE. *)
+      property ExchangeMemoryEnable: boolean
+         read FExchangeMemoryEnable write FExchangeMemoryEnable;
+      (* Was MultipleBandsEnabled in logwind.pas -- whether the contest is
+        worked on more than one band.  MULTIPLE BANDS. *)
+      property MultipleBands: boolean read FMultipleBands write FMultipleBands;
+      (* Was MultipleModesEnabled in logwind.pas.  MULTIPLE MODES. *)
+      property MultipleModes: boolean read FMultipleModes write FMultipleModes;
+      (* Was SprintQSYRule in logwind.pas -- the sprint rule that a station
+        calling CQ must move after a QSO.  SPRINT QSY RULE. *)
+      property SprintQsyRule: boolean read FSprintQsyRule write FSprintQsyRule;
+   end;
+
    TR4WSettings = class(TPersistent)
    private
       // command name -> property path, built once by walking the RTTI.
@@ -1200,6 +1434,11 @@ type
       FMy: TMySettings;
       FDvk: TDvkSettings;
       FUnknownCountryFile: TUnknownCountryFileSettings;
+      FQso: TQsoSettings;
+      FMult: TMultSettings;
+      FQtc: TQtcSettings;
+      FAutoDupe: TAutoDupeSettings;
+      FContest: TContestSettings;
       procedure BuildCommandMap;
       function PathForCommand(const aCommand: string): string;
       (* The streamer hook that keeps contest-scoped groups out of the
@@ -1309,6 +1548,11 @@ type
       property Dvk: TDvkSettings read FDvk;
       property UnknownCountryFile: TUnknownCountryFileSettings
          read FUnknownCountryFile;
+      property Qso: TQsoSettings read FQso;
+      property Mult: TMultSettings read FMult;
+      property Qtc: TQtcSettings read FQtc;
+      property AutoDupe: TAutoDupeSettings read FAutoDupe;
+      property Contest: TContestSettings read FContest;
    end;
 
 (* THE ONE INSTANCE.  Created on first use so no unit's initialisation order
@@ -1798,6 +2042,91 @@ begin
    FSensitivity := 500;
 end;
 
+(* THE DEFAULTS ARE CARRIED ACROSS BY HAND, from each global's own
+  declaration in logdupe.pas or logwind.pas, or from cfgdef where the
+  declaration had none.  A field defaults to zero and a lost `= True`
+  disables a feature in silence, which in this group would be a scoring
+  change nothing reports. *)
+constructor TQsoSettings.Create;
+begin
+   inherited Create;
+   FByBand              := False;
+   FByMode              := False;
+   (* -1, NOT 0.  Zero is a legal fixed value -- "this contest scores no
+     points for that kind of QSO" -- and -1 is the absence of one. *)
+   FPointsDomesticCw    := -1;
+   FPointsDomesticPhone := -1;
+   FPointsDxCw          := -1;
+   FPointsDxPhone       := -1;
+end;
+
+class function TQsoSettings.IsContestScoped: boolean;
+begin
+   Result := True;
+end;
+
+constructor TMultSettings.Create;
+begin
+   inherited Create;
+   FByBand         := False;
+   FByMode         := False;
+   FSheetAutoReset := False;   // was MultReset : boolean = False
+end;
+
+class function TMultSettings.IsContestScoped: boolean;
+begin
+   Result := True;
+end;
+
+constructor TQtcSettings.Create;
+begin
+   inherited Create;
+   FEnable  := False;
+   FMinutes := False;
+end;
+
+class function TQtcSettings.IsContestScoped: boolean;
+begin
+   Result := True;
+end;
+
+constructor TAutoDupeSettings.Create;
+begin
+   inherited Create;
+   (* The two halves ship DIFFERENT: dupe checking is off while calling CQ
+     and on while searching and pouncing.  Both come from the declarations
+     in logdupe.pas. *)
+   FEnableCq    := False;
+   FEnableSAndP := True;
+end;
+
+class function TAutoDupeSettings.IsContestScoped: boolean;
+begin
+   Result := True;
+end;
+
+constructor TContestSettings.Create;
+begin
+   inherited Create;
+   (* CallsignUpdateEnable and DigitalModeEnable had no initialiser on their
+     declarations; both were assigned in cfgdef.SetConfigurationDefaultValues,
+     which runs once at startup before any config is read -- so the value
+     there IS the default and comes here. *)
+   FCallsignUpdateEnable   := False;   // cfgdef, "4.63.1"
+   FCountDomesticCountries := False;
+   FDigitalModeEnable      := True;    // cfgdef
+   FDomesticFilename       := '';
+   FExchangeMemoryEnable   := True;
+   FMultipleBands          := True;
+   FMultipleModes          := True;
+   FSprintQsyRule          := False;
+end;
+
+class function TContestSettings.IsContestScoped: boolean;
+begin
+   Result := True;
+end;
+
 constructor TR4WSettings.Create;
 begin
    inherited Create;
@@ -1822,6 +2151,11 @@ begin
    FMy             := TMySettings.Create;
    FDvk            := TDvkSettings.Create;
    FUnknownCountryFile := TUnknownCountryFileSettings.Create;
+   FQso            := TQsoSettings.Create;
+   FMult           := TMultSettings.Create;
+   FQtc            := TQtcSettings.Create;
+   FAutoDupe       := TAutoDupeSettings.Create;
+   FContest        := TContestSettings.Create;
 
    FCommands := TStringList.Create;
    FCommands.CaseSensitive := False;
@@ -1833,6 +2167,11 @@ end;
 destructor TR4WSettings.Destroy;
 begin
    FCommands.Free;
+   FContest.Free;
+   FAutoDupe.Free;
+   FQtc.Free;
+   FMult.Free;
+   FQso.Free;
    FUnknownCountryFile.Free;
    FDvk.Free;
    FMy.Free;
@@ -2205,6 +2544,21 @@ begin
 
    Alias('AUTO S&P ENABLE',             'AutoSap.Enable');
    Alias('AUTO S&P ENABLE SENSITIVITY', 'AutoSap.Sensitivity');
+
+   (* THE CONTEST'S RULES.  Twelve of the twenty-one derive on their own --
+     every member of Qso, Mult and Qtc, plus AUTO DUPE ENABLE CQ -- and
+     these nine do not, because TR4W's contest vocabulary is flat where a
+     property path is grouped.  See the header above TQsoSettings. *)
+   Alias('AUTO DUPE ENABLE S AND P', 'AutoDupe.EnableSAndP');
+
+   Alias('CALLSIGN UPDATE ENABLE',   'Contest.CallsignUpdateEnable');
+   Alias('COUNT DOMESTIC COUNTRIES', 'Contest.CountDomesticCountries');
+   Alias('DIGITAL MODE ENABLE',      'Contest.DigitalModeEnable');
+   Alias('DOMESTIC FILENAME',        'Contest.DomesticFilename');
+   Alias('EXCHANGE MEMORY ENABLE',   'Contest.ExchangeMemoryEnable');
+   Alias('MULTIPLE BANDS',           'Contest.MultipleBands');
+   Alias('MULTIPLE MODES',           'Contest.MultipleModes');
+   Alias('SPRINT QSY RULE',          'Contest.SprintQsyRule');
 end;
 
 function TR4WSettings.PathForCommand(const aCommand: string): string;

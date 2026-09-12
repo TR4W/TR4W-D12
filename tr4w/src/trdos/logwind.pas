@@ -578,7 +578,6 @@ var
   CWEnabled                             : boolean  = True;
  // CWByCAT                               : boolean  = False;   // ny4i 4.44.5
 
-  DigitalModeEnable                     : boolean;
 
   DisplayBandMapEnable                  : boolean = True; {KK1L: 6.73}
   DisplayedCodeSpeed                    : Byte;
@@ -690,8 +689,6 @@ var
   //  MouseEnable                       : boolean;
   MultiInfoMessage                      : Str20;
 //  MultiStatus                           : array[BandType, ModeType] of MultiMessage;
-  MultipleBandsEnabled                  : boolean = True;
-  MultipleModesEnabled                  : boolean = True;
 
   MultiplierItemWidth                   : integer = 40; // 4.91.4
   MyContinent                           : ContinentType {= UnknownContinent};
@@ -731,14 +728,8 @@ var
 //  PendingQTCArray                  : PendingQTCArrayPtr;
   //  PrefixInfoFileName               : String='';
 
-  QSOPointsDomesticCW                   : integer = -1;
-  QSOPointsDomesticPhone                : integer = -1;
-  QSOPointsDXCW                         : integer = -1;
-  QSOPointsDXPhone                      : integer = -1;
 
   QTCDataArray                          : QTCDataArrayPtr;
-  QTCsEnabled                           : boolean;
-  QTCMinutes                            : boolean;
 
   RadioOnTheMove                        : array[RadioType] of boolean; {KK1L: 6.73 slowly changing over to arrayed radio varibles}
   RadioMovingInBandMode                 : array[RadioType] of boolean; {KK1L: 6.73}
@@ -769,7 +760,6 @@ var
 //  SpeedMemory                 : array[RadioType] of integer; {KK1L: 6.73}
   SpeedString                           : Str10; {KK1L: 6.73}
 
-  SprintQSYRule                         : boolean;
 
   StartingFrequencies                   : array[BandType] of LONGINT =
     (
@@ -1349,8 +1339,8 @@ begin
 
   TR4WMainForm.pnlBandMode.Caption := SysUtils.Format(AnsiString(TWO_STRINGS), [BandStringsArray[Band], ModeStringArray[Mode]]);
 
-  if MultByBand then MultBand := ActiveBand else MultBand := AllBands;
-  if MultByMode then MultMode := ActiveMode else MultMode := Both;
+  if Settings.Mult.ByBand then MultBand := ActiveBand else MultBand := AllBands;
+  if Settings.Mult.ByMode then MultMode := ActiveMode else MultMode := Both;
 
          { Update the band output port for this radio }
 
@@ -3930,7 +3920,7 @@ begin
         begin
         tClearDupesheet;
         end;
-     if (Sheet.tAutoReset and MultReset) then tClearMultsheet; // 4.52.11
+     if (Sheet.tAutoReset and Settings.Mult.SheetAutoReset) then tClearMultsheet; // 4.52.11
      SetProgressMarquee(mpbTourDuration, True);
      end;
 end;

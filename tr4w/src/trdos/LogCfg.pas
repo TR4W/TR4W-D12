@@ -428,7 +428,7 @@ begin
   // against a recording stub instead of a network trace.
   UDPBroadcaster.SetTransport(SendUDPPayload);
   ConfigureUDPBroadcastFromLibrary;
-  if QTCsEnabled then New(QTCDataArray); //LoadQTCDataFile;
+  if Settings.Qtc.Enable then New(QTCDataArray); //LoadQTCDataFile;
 
 //  if TempDomesticQTHDataFileName <> nil then
 //    TF.Format(DomQTHDataFileName, '%sDOM\%s.DOM', TR4W_PATH_NAME, TempDomesticQTHDataFileName);
@@ -457,7 +457,7 @@ begin
      property that MATTERS: correcting one entry must not require upgrading the
      program. A design that only lets the shipped file be replaced by a new
      install has thrown the feature away while appearing to keep it. *)
-  if DomQTHDataFileName[0] <> #0 then
+  if Settings.Contest.DomesticFilename <> '' then
      begin
      if fileexists(TR4W_DOM_FILENAME) then                       // 4.100.2
         begin
@@ -467,19 +467,27 @@ begin
          begin
          uAnsiStr.StrPCopy(domPath,
             SysUtils.Format(AnsiString('%sdom\%s'),
-                            [TR4W_PATH_NAME, DomQTHDataFileName]));
+                            [TR4W_PATH_NAME,
+                             UTF8Encode(Settings.Contest.DomesticFilename)]));
          (* Windows spelling, resolved for this platform -- see fcontest. *)
          ResolveDataFileInPlace(domPath);
          end;
-      FillChar(DomQTHDataFileName, SizeOf(DomQTHDataFileName), 0);
-      (* Appended with uAnsiStr rather than Win32's lstrcatA, and BOUNDED:
-        lstrcatA walks to the NUL and keeps writing, and
-        DomQTHDataFileName is a FileNameType of MAX_PATH AnsiChars. *)
-      uAnsiStr.StrLCopy(@DomQTHDataFileName[uAnsiStr.StrLen(DomQTHDataFileName)],
-                        domPath,
-                        SizeOf(DomQTHDataFileName) - 1
-                          - uAnsiStr.StrLen(DomQTHDataFileName));
-      if not DomQTHTable.LoadInDomQTHFile(DomQTHDataFileName) then
+      (* THE SETTING NOW HOLDS THE RESOLVED PATH, assigned rather than
+        zeroed-then-appended-to.
+
+        The zero-and-append was a copy with extra steps: FillChar made the
+        length zero, so the StrLen terms around the StrLCopy were all zero
+        and what it wrote was domPath at offset zero. It read that way only
+        because the array's bound had to be arithmetic. Assignment converts
+        the AnsiChar buffer up to its NUL.
+
+        LoadInDomQTHFile IS HANDED domPath ITSELF, not a pointer into the
+        setting. It takes a PAnsiChar, and PAnsiChar of a property is the
+        address of a TEMPORARY -- the compiler accepts it and the pointer
+        dangles at the end of the statement. domPath is a local array and
+        holds exactly the same bytes. *)
+      Settings.Contest.DomesticFilename := string(AnsiString(PAnsiChar(domPath)));
+      if not DomQTHTable.LoadInDomQTHFile(domPath) then
          begin
          halt;
          end;
@@ -601,7 +609,7 @@ begin
 {
   if ReadInLog then
   begin
-    AutoDupeEnableCQ := False;
+    Settings.AutoDupe.EnableCq := False;
 
     if Config.CWTone = 0 then
     begin

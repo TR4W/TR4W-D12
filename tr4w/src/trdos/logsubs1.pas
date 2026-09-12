@@ -675,7 +675,7 @@ begin
      DisplayNextQSONumber;
      end;
 
-  if MultByBand then
+  if Settings.Mult.ByBand then
      begin
      VisibleLog.ShowRemainingMultipliers;
      VisibleLog.DisplayGridMap(ActiveBand, ActiveMode);

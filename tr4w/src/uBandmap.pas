@@ -224,7 +224,7 @@ begin
        end;
   
 
-  if not QSOByMode then
+  if not Settings.Qso.ByMode then
      begin
      EntryMode := Both;
      end;

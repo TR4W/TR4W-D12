@@ -136,14 +136,14 @@ begin
 // I wonder if this could be improved to buffer the characters? // 4.44.5
 
   // Issue #1040: key CW only when this is genuinely a CW send (CW mode with CW
-  // enabled) OR an MMTTY/RTTY send (DigitalModeEnable=True -> we want to drive
-  // MMTTY).  Any other state -- notably Digital mode with DigitalModeEnable=
+  // enabled) OR an MMTTY/RTTY send (Settings.Contest.DigitalModeEnable=True -> we want to drive
+  // MMTTY).  Any other state -- notably Digital mode with Settings.Contest.DigitalModeEnable=
   // False (e.g. FT8 via WSJT-X, where the external app transmits) -- must NOT
   // key CW when a call is typed / DE / exchange / a function key fires.
-  // DigitalModeEnable is what makes Digital a real (RTTY) mode here (see the
+  // Settings.Contest.DigitalModeEnable is what makes Digital a real (RTTY) mode here (see the
   // mode-cycle in LOGSUBS2 and the DIG status text in JCtrl1).
   if not (((ActiveMode = CW) and CWEnabled) or
-          DigitalModeEnable)                then
+          Settings.Contest.DigitalModeEnable)                then
      begin
      if (ActiveMode = CW) and (not CWEnabled) then
         begin
@@ -303,7 +303,7 @@ begin
                end
             else
                begin
-               if CallsignUpdateEnable then
+               if Settings.Contest.CallsignUpdateEnable then
                   begin
                   TempString := GetCorrectedCallFromExchangeString(ExchangeWindowString);
 
@@ -323,7 +323,7 @@ begin
 
         '@':
           begin
-            if CallsignUpdateEnable then
+            if Settings.Contest.CallsignUpdateEnable then
                begin
                TempString := ExchangeWindowString;
                TempString := GetCorrectedCallFromExchangeString(TempString);

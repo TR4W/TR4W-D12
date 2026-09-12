@@ -100,8 +100,6 @@ begin
   //  ActiveZoneMult := NoZoneMults;
   //  AskForFrequencies := {wli True} False;
   //  AskIfContestOver := True;
-  //  AutoDupeEnableCQ := True;
-  //  AutoDupeEnableSandP := True;
   //  Config.AutoQSONumberDecrement := False;
   //  AutoSendCharacterCount := 0;
   //  AutoTimeIncrementQSOs := 0;
@@ -132,7 +130,6 @@ begin
   //  �� ����� BigRemainingList := False;
   //  BandMapSplitMode := ByCutoffFrequency; {KK1L: 6.64}
 
-    CallsignUpdateEnable := False; // 4.63.1
   //  CallWindowPosition := NormalCallWindowPosition;
   //  CfgDvpPath := '';
   //  CodeSpeed := 35;
@@ -144,7 +141,6 @@ begin
 //   CorrectedCallMessage := '} OK %';
 
 //   CorrectedCallPhoneMessage := 'CORCALL.WAV';
-  //  CountDomesticCountries := False;
   //  CountryInformationFile := '';
   //  CountryString := '';
   //  CQExchange := '';
@@ -165,7 +161,6 @@ begin
   //  DDXCall2 := '';
   //  DDXState := Off; //ini
   //  DEEnable := True;
-  //  DigitalModeEnable := False;
   //  DistanceMode := NoDistanceDisplay;
 
      //   DoingColors := False;
@@ -196,7 +191,6 @@ begin
  ExchangeInformation.Zone := False;
  ExchangeInformation.ZoneOrSociety := False;
 }
-//  ExchangeMemoryEnable := True;
 
 //  Config.FarnsworthEnable := False;
 //  Config.FarnsworthSpeed := 25;
@@ -256,8 +250,6 @@ begin
      //   ModemPortBaudRate := 4800;
   //  MultiInfoMessage := '';
   //  Config.MultiMultsOnly := False;
-  //  MultipleBandsEnabled := True;
-  //  MultipleModesEnabled := True;
   //  MultiPortBaudRate := 4800;
   //  MultiRetryTime := 30;
   //  MultiUpdateMultDisplay := True;
@@ -366,7 +358,6 @@ begin
   Short0 := '0';
   Short1 := '1';
   Short9 := '9';
-  DigitalModeEnable := True;
 
   for c := F1 to F12 do
      begin
@@ -403,7 +394,6 @@ begin
   //  ShowSearchAndPounce := False;
   //  SingleBand := All;
   //  SingleRadioMode := False;
-  //  SprintQSYRule := False;
   {
     StartingFrequencies[Band160] := 1800000;
     StartingFrequencies[Band80] := 3500000;

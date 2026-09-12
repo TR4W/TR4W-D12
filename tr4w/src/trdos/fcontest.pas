@@ -353,11 +353,11 @@ begin
   //  Contest := GetContestFromString(CMD);
   if Contest <> DUMMYCONTEST then
      begin
-     QSOByMode := ContestsBooleanArray[Contest] and (1 shl QSO_BY_MODE_BIT) <> 0;
-     QSOByBand := ContestsBooleanArray[Contest] and (1 shl QSO_BY_BAND_BIT) <> 0;
-     MultByMode := ContestsBooleanArray[Contest] and (1 shl MULT_BY_MODE_BIT) <>
+     Settings.Qso.ByMode := ContestsBooleanArray[Contest] and (1 shl QSO_BY_MODE_BIT) <> 0;
+     Settings.Qso.ByBand := ContestsBooleanArray[Contest] and (1 shl QSO_BY_BAND_BIT) <> 0;
+     Settings.Mult.ByMode := ContestsBooleanArray[Contest] and (1 shl MULT_BY_MODE_BIT) <>
        0;
-     MultByBand := ContestsBooleanArray[Contest] and (1 shl MULT_BY_BAND_BIT) <>
+     Settings.Mult.ByBand := ContestsBooleanArray[Contest] and (1 shl MULT_BY_BAND_BIT) <>
        0;
 
      Settings.Bands.VhfEnabled := ContestsBooleanArray[Contest] and (1 shl
@@ -366,7 +366,7 @@ begin
      CTY.ctyZoneMode := ZoneModeType(ContestsBooleanArray[Contest] and (1 shl
        CQ_ZONE_MODE_BIT) = 0);
 
-     CountDomesticCountries := ContestsBooleanArray[Contest] and (1 shl CDC_BIT)
+     Settings.Contest.CountDomesticCountries := ContestsBooleanArray[Contest] and (1 shl CDC_BIT)
        <> 0;
 
      ActiveQSOPointMethod := ContestsArray[Contest].QP;
@@ -439,7 +439,7 @@ begin
            end
         else
            begin
-           MultbyBand := False;
+           Settings.Mult.ByBand := False;
            end;
 
       end;
@@ -592,8 +592,8 @@ begin
         //        ActiveExchange := RSTDomesticOrDXQTHExchange;    4.106.6
         ActiveDXMult := ARRLDXCCWithNoARRLSections;
         //        ContestName := 'ARRL Ten Meter Contest';
-         //       ExchangeMemoryEnable := False;      // 4.106.4
-        MultipleBandsEnabled := False;
+         //       Settings.Contest.ExchangeMemoryEnable := False;      // 4.106.4
+        Settings.Contest.MultipleBands := False;
         Add_KVEKH6KL;
         AddDomesticCountry('XE');
       end;
@@ -648,17 +648,17 @@ begin
     //        ActiveExchange := RSTDomesticQTHOrQSONumberExchange;
     //        ActiveQSOPointMethod := OnePointPerQSO;
             ContestName := 'ARRL RTTY ROUNDUP';
-            DigitalModeEnable := True;
+            Settings.Contest.DigitalModeEnable := True;
             //DomesticQTHDataFileName := 'S48P14DC'; //KK1L: 6.72 Used DC file instead per rules
-            //QSOByBand := True;
+            //Settings.Qso.ByBand := True;
             Add_KVE;
           end;
     }
     WWDIGI:
       begin
-        DigitalModeEnable := true;
-        QSOByMode := False;
-        QSOByBand := True;
+        Settings.Contest.DigitalModeEnable := true;
+        Settings.Qso.ByMode := False;
+        Settings.Qso.ByBand := True;
         //     LiteralDomesticQTH := true;    // 4.91.5
       end;
 
@@ -714,9 +714,9 @@ begin
 
     BATAVIA_FT8:
       begin
-        DigitalModeEnable := true;
-        QSOByMode := False;
-        QSOByBand := True;
+        Settings.Contest.DigitalModeEnable := true;
+        Settings.Qso.ByMode := False;
+        Settings.Qso.ByBand := True;
       end;
 
     CALQSOPARTY:
@@ -756,7 +756,7 @@ begin
         //??????, ???????, ????????, ???????????, ???????, ?????????, ??????????, ???????, ???????????,
         // ????????????, ?????????? ? ??????
 
-//        CountDomesticCountries := True;
+//        Settings.Contest.CountDomesticCountries := True;
 //        ContestName := 'CIS DX Contest';
       end;
 
@@ -764,7 +764,7 @@ begin
       begin
         //        CountryTable.ZoneMode := CQZoneMode;
         //        ActiveInitialExchange := ZoneInitialExchange;
-        MultipleBandsEnabled := False;
+        Settings.Contest.MultipleBands := False;
         Add_KVE;
       end;
 
@@ -795,10 +795,10 @@ begin
     //        ActiveQSOPointMethod := CQWWRTTYQSOPointMethod;
             ActiveZoneMult := CQZones;
             ContestName := 'CQ WW RTTY CONTEST';
-            DigitalModeEnable := True;
+            Settings.Contest.DigitalModeEnable := True;
             //DomesticQTHDataFileName := 'S48P13';
-            //MultByBand := True;
-            //QSOByBand := True;
+            //Settings.Mult.ByBand := True;
+            //Settings.Qso.ByBand := True;
             Add_KVE;
           end;
     }
@@ -814,10 +814,10 @@ begin
       begin
         Settings.Bands.HfEnabled := False;
         ActiveBand := Band2;
-        DigitalModeEnable := False;
+        Settings.Contest.DigitalModeEnable := False;
         ContestName := 'RF-VHF-FD';
-        QSOByMode := False;
-        QSOByBand := True;
+        Settings.Qso.ByMode := False;
+        Settings.Qso.ByBand := True;
         QSONumberbyBand := True;
       end;
 
@@ -830,12 +830,12 @@ begin
       end;
 
     FOCMARATHON:
-      ExchangeMemoryEnable := True;
+      Settings.Contest.ExchangeMemoryEnable := True;
 
     GENERALQSO:
       begin
-        AutoDupeEnableCQ := False;
-        AutoDupeEnableSandP := False;
+        Settings.AutoDupe.EnableCq := False;
+        Settings.AutoDupe.EnableSAndP := False;
         ContestName := 'General QSOs';
         Settings.Bands.WarcEnabled := True;
       end;
@@ -848,7 +848,7 @@ begin
     IRTS: // 4.93.1
       begin
         ActiveBand := Band80;
-        DIGITALMODEENABLE := FALSE;
+        Settings.Contest.DigitalModeEnable := FALSE;
         INITIALEXCHANGECURSORPOS := ATSTART;
         if (Settings.My.Country <> 'EI') and (Settings.My.Country <> 'GI') then
            begin
@@ -909,18 +909,18 @@ begin
       begin
         CTY.ctyR150SMode := True;
         ContestName := 'Yuri Gagarin International DX Contest';
-        QSOBYMODE := TRUE;
+        Settings.Qso.ByMode := TRUE;
         INITIALEXCHANGEOVERWRITE := TRUE;
       end;
 
     INTERNETSPRINT:
       begin
         ActiveBand := Band20;
-        AutoDupeEnableCQ := False;
-        AutoDupeEnableSandP := False;
+        Settings.AutoDupe.EnableCq := False;
+        Settings.AutoDupe.EnableSAndP := False;
         //        ContestName := 'Internet SprINT';
-        ExchangeMemoryEnable := False;
-        SprintQSYRule := True;
+        Settings.Contest.ExchangeMemoryEnable := False;
+        Settings.Contest.SprintQsyRule := True;
 
         SearchAndPounceExchange := UTF8Encode('@ #   (   ' + Settings.My.State + ' \');
         RepeatSearchAndPounceExchange := UTF8Encode('@ #   (   ' + Settings.My.State);
@@ -956,7 +956,7 @@ begin
 
     KIDSDAY:
       begin
-        AutoDupeEnableCQ := False;
+        Settings.AutoDupe.EnableCq := False;
       end;
 
     KVP:
@@ -1140,8 +1140,8 @@ begin
     POTA:
       begin
         tAllowDupeQSOs := TRUE;
-        AutoDupeEnableCQ := False;
-        AutoDupeEnableSandP := False;
+        Settings.AutoDupe.EnableCq := False;
+        Settings.AutoDupe.EnableSAndP := False;
         ContestName := 'POTA';
         Settings.Bands.WarcEnabled := True;
         SetCQMemoryString(CW, F1, 'CQ^POTA \ \ ');
@@ -1184,7 +1184,7 @@ begin
       begin
         ActiveBand := Band80;
         //        ContestName := 'UK Rotating Postal Code';
-        MultipleBandsEnabled := False;
+        Settings.Contest.MultipleBands := False;
         CQExchange := '_~ %5NN ('; // + MyPostalCode;
         RepeatSearchAndPounceExchange := '5NN (';
         SearchAndPounceExchange := '~ %5NN (';
@@ -1199,7 +1199,7 @@ begin
     RDA:
       begin
         AddRussianDomesticCountrys;
-        //        CountDomesticCountries := True;
+        //        Settings.Contest.CountDomesticCountries := True;
         if not RussianID(Settings.My.Country) then
            begin
            ActiveDXMult := NoDXMults;
@@ -1215,7 +1215,7 @@ begin
            begin
            Settings.My.State := '';
            end;
-        //        CountDomesticCountries := True;
+        //        Settings.Contest.CountDomesticCountries := True;
         //        ContestName := 'Russian DX Contest';
       end;
 
@@ -1296,8 +1296,8 @@ begin
         SetEXMemoryString(CW, AltF4, 'NAME?');
         SetEXMemoryString(CW, AltF5, 'QTH?');
 
-        //QSOByBand := True;
-        SprintQSYRule := True;
+        //Settings.Qso.ByBand := True;
+        Settings.Contest.SprintQsyRule := True;
         Add_KVE;
 
         AddDomesticCountry('KL');
@@ -1336,8 +1336,8 @@ begin
         SetEXMemoryString(CW, AltF4, 'NAME?');
         SetEXMemoryString(CW, AltF5, 'QTH?');
 
-        //QSOByBand := True;
-        SprintQSYRule := True;
+        //Settings.Qso.ByBand := True;
+        Settings.Contest.SprintQsyRule := True;
         Add_KVEKH6KL;
 
         //     AddDomesticCountry('KL');
@@ -1346,7 +1346,7 @@ begin
     ARRLSSCW, ARRLSSSSB:
       begin
         //        ActiveInitialExchange := CheckSectionInitialExchange;
-        CallsignUpdateEnable := True;
+        Settings.Contest.CallsignUpdateEnable := True;
         //        ContestName := 'ARRL Sweepstakes';
 
         AddARRLSectionDomesticCountries;
@@ -1470,7 +1470,7 @@ begin
       begin
         ActiveBand := Band10;
         AddDomesticCountry('DL');
-        QSOByMode := True;
+        Settings.Qso.ByMode := True;
         if Settings.My.Country = 'DL' then
 
            begin
@@ -1492,7 +1492,7 @@ begin
         //        ActivePrefixMult := Prefix;
         LiteralDomesticQTH := True;
         AddDomesticCountry('DL');
-        SprintQSYRule := True;
+        Settings.Contest.SprintQsyRule := True;
       end;
 
     WAG:
@@ -1528,7 +1528,7 @@ begin
 
         ActiveBand := Band80;
         ContactsPerPage := 40;
-        QTCsEnabled := True;
+        Settings.Qtc.Enable := True;
       end;
     {
         ,QSOPARTY:
@@ -1587,16 +1587,16 @@ begin
     MINITEST, MINI80:
       begin
         ActiveBand := Band80;
-        MultipleBandsEnabled := False;
-        MultipleModesEnabled := False;
+        Settings.Contest.MultipleBands := False;
+        Settings.Contest.MultipleModes := False;
         TourDuration := 10;
       end;
 
     MINI40:
       begin
         ActiveBand := Band40;
-        MultipleBandsEnabled := False;
-        MultipleModesEnabled := False;
+        Settings.Contest.MultipleBands := False;
+        Settings.Contest.MultipleModes := False;
         TourDuration := 10;
       end;
 
@@ -1618,7 +1618,7 @@ begin
               ActiveDXMult := NoDXMults;
               ActiveDomesticMult := RDADistrict;
               TempDomesticQTHDataFileName := nil;
-              MultByBand := false;
+              Settings.Mult.ByBand := false;
               end;
            end;
 
@@ -1627,7 +1627,7 @@ begin
     OLDNEWYEAR:
       begin
         ActiveBand := Band80;
-        ExchangeMemoryEnable := True;
+        Settings.Contest.ExchangeMemoryEnable := True;
       end;
 
     CQWPXRTTY, WRTC:
@@ -1678,14 +1678,14 @@ begin
 
     LQP, NCCCSPRINT:
       begin
-        AutoDupeEnableCQ := True;
-        AutoDupeEnableSandP := True;
+        Settings.AutoDupe.EnableCq := True;
+        Settings.AutoDupe.EnableSAndP := True;
         AddDomesticCountry('KH6');
         Add_KVE;
-        ExchangeMemoryEnable := True;
+        Settings.Contest.ExchangeMemoryEnable := True;
           //(turns on the Exchange Memory for Initial Exchange pre - fill)
         //        ActiveInitialExchange := NameQTHInitialExchange; //(turns on Initial Exchange pre - fill using TRMASTER.DTA)
-        SprintQSYRule := True;
+        Settings.Contest.SprintQsyRule := True;
         tAllowDupeQSOs := False;
       end;
 
@@ -1705,7 +1705,7 @@ begin
     UNDX:
       begin
         AddDomesticCountry('UN');
-        //        CountDomesticCountries := True;
+        //        Settings.Contest.CountDomesticCountries := True;
       end;
 
     KINGOFSPAINCW, KINGOFSPAINSSB:
@@ -1730,11 +1730,11 @@ begin
       QSONumberByBand := True;
 
     //    RADIOMEMORY:
-    //      CallsignUpdateEnable := False;
+    //      Settings.Contest.CallsignUpdateEnable := False;
 
     PCC:
       begin
-        ExchangeMemoryEnable := False;
+        Settings.Contest.ExchangeMemoryEnable := False;
         (* SetCursorPos(0, 1) IS DELETED (2026-09-08), and it was doing
           something absurd rather than nothing.
 
@@ -1752,9 +1752,9 @@ begin
 
     ARRLDIGI:
       begin
-        DigitalModeEnable := true;
-        QSOByMode := False;
-        QSOByBand := True;
+        Settings.Contest.DigitalModeEnable := true;
+        Settings.Qso.ByMode := False;
+        Settings.Qso.ByBand := True;
         //     LiteralDomesticQTH := true;    // 4.91.5
       end;
 
@@ -1762,14 +1762,21 @@ begin
 
   if TempDomesticQTHDataFileName <> nil then
      begin
-     (* BUILT AS A STRING AND COPIED ONCE, BOUNDED. Was two Windows.lstrcatA
-       calls, which walk to the NUL and keep writing: DomQTHDataFileName is a
-       FileNameType, MAX_PATH AnsiChars, and nothing checked that the name plus
-       '.dom' fitted. StrPLCopy takes the size. *)
-     uAnsiStr.StrPLCopy(DomQTHDataFileName,
-                        AnsiString(PAnsiChar(@DomQTHDataFileName[0]))
-                        + AnsiString(TempDomesticQTHDataFileName) + DOM_EXTENSION,
-                        SizeOf(DomQTHDataFileName) - 1);
+     (* PLAIN CONCATENATION, AND THERE IS NO LONGER A BOUND TO GET WRONG.
+
+       This was two Windows.lstrcatA calls that walked to the NUL and kept
+       writing -- the name plus '.dom' could run past a MAX_PATH array of
+       AnsiChar and nothing checked -- and then a StrPLCopy that took the
+       array's size so that it could not. The setting is a string now, so the
+       size argument and the reason it had to be right are both gone.
+
+       APPENDS TO ITSELF, exactly as the lstrcatA pair did: a contest file
+       may already have named a domestic file, and this adds the contest's
+       own default extension to what is there. *)
+     Settings.Contest.DomesticFilename :=
+        Settings.Contest.DomesticFilename
+        + string(AnsiString(TempDomesticQTHDataFileName))
+        + string(DOM_EXTENSION);
      end;
 
   case ActiveExchange of

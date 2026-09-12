@@ -344,7 +344,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(89, names.Count,
+         CheckEquals(110, names.Count,
                      'one name per migrated setting, plus the one'
                      + ' setting that has always answered to two --'
                      + ' MY STATE and MY QTH');
@@ -979,6 +979,29 @@ begin
       CheckTrue(s.CommandIsContestScoped('WARC BAND ENABLE'), 'so is WARC');
       CheckTrue(s.CommandIsContestScoped('VHF BAND ENABLE'),  'so is VHF');
 
+      (* THE CONTEST'S OWN RULES AND SCORING, which are the same claim about
+        four more groups. One name from each, chosen so that a group left
+        without the override would fail here rather than in a contest. *)
+      CheckTrue(s.CommandIsContestScoped('MULT BY BAND'),  'multipliers');
+      CheckTrue(s.CommandIsContestScoped('QSO BY BAND'),   'QSO counting');
+      CheckTrue(s.CommandIsContestScoped('QSO POINTS DOMESTIC CW'),
+                'and what a QSO is worth');
+      CheckTrue(s.CommandIsContestScoped('QTC ENABLE'),    'QTCs');
+      CheckTrue(s.CommandIsContestScoped('AUTO DUPE ENABLE S AND P'),
+                'automatic dupe checking');
+      CheckTrue(s.CommandIsContestScoped('SPRINT QSY RULE'),
+                'and the rest of the contest rules');
+
+      (* AND THEY ARE ABSENT FROM THE FILE, the half that matters: streaming
+        one would make the last contest loaded the station's default. The
+        quotes are the needle again -- a bare Mult matches MultsOnly in the
+        band map group. *)
+      CheckTrue(Pos('"Mult"', text) = 0, 'no Mult group in the json: ' + text);
+      CheckTrue(Pos('"Qso"', text) = 0,  'no Qso group in the json: ' + text);
+      CheckTrue(Pos('"Qtc"', text) = 0,  'no Qtc group in the json: ' + text);
+      CheckTrue(Pos('"AutoDupe"', text) = 0, 'no AutoDupe group: ' + text);
+      CheckTrue(Pos('"Contest"', text) = 0,  'no Contest group: ' + text);
+
       (* A STATION SETTING IS NOT, which is the other direction of the same
         claim -- a marker that answered True for everything would pass every
         assertion above and be useless. *)
@@ -1001,6 +1024,8 @@ const
       + '"ALT-D CQ ENABLE",'
       + '"ALWAYS CALL BLIND CQ",'
       + '"AUTO CALL TERMINATE",'
+      + '"AUTO DUPE ENABLE CQ",'
+      + '"AUTO DUPE ENABLE S AND P",'
       + '"AUTO RETURN TO CQ MODE",'
       + '"AUTO S&P ENABLE",'
       + '"AUTO S&P ENABLE SENSITIVITY",'
@@ -1020,11 +1045,16 @@ const
       + '"BAND MAP SIZE",'
       + '"BAND MAP SO2R DISPLAY",'
       + '"CALL WINDOW SHOW ALL SPOTS",'
+      + '"CALLSIGN UPDATE ENABLE",'
       + '"CHECK LOG FILE SIZE",'
       + '"CONFIRM EDIT CHANGES",'
+      + '"COUNT DOMESTIC COUNTRIES",'
       + '"CW SPEED FROM DATABASE",'
+      + '"DIGITAL MODE ENABLE",'
+      + '"DOMESTIC FILENAME",'
       + '"DVK LOCALIZED MESSAGES ENABLE",'
       + '"ESCAPE EXITS SEARCH AND POUNCE",'
+      + '"EXCHANGE MEMORY ENABLE",'
       + '"EXTERNAL LOGGER ADDRESS",'
       + '"EXTERNAL LOGGER ENABLED",'
       + '"EXTERNAL LOGGER PORT",'
@@ -1034,6 +1064,11 @@ const
       + '"LEAVE CURSOR IN CALL WINDOW",'
       + '"LOG WITH SINGLE ENTER",'
       + '"MMTTY ENGINE",'
+      + '"MULT BY BAND",'
+      + '"MULT BY MODE",'
+      + '"MULT SHEET AUTO RESET",'
+      + '"MULTIPLE BANDS",'
+      + '"MULTIPLE MODES",'
       + '"MY CALL",'
       + '"MY CHECK",'
       + '"MY COUNTRY",'
@@ -1063,7 +1098,15 @@ const
       + '"PTT LOCKOUT",'
       + '"PTT TURN ON DELAY",'
       + '"PTT VIA COMMANDS",'
+      + '"QSO BY BAND",'
+      + '"QSO BY MODE",'
+      + '"QSO POINTS DOMESTIC CW",'
+      + '"QSO POINTS DOMESTIC PHONE",'
+      + '"QSO POINTS DX CW",'
+      + '"QSO POINTS DX PHONE",'
       + '"QSY INACTIVE RADIO",'
+      + '"QTC ENABLE",'
+      + '"QTC MINUTES",'
       + '"RADIO TCP SERVER PORT",'
       + '"SAY HI ENABLE",'
       + '"SAY HI RATE CUTOFF",'
@@ -1071,6 +1114,7 @@ const
       + '"SKIP ACTIVE BAND",'
       + '"SPACE BAR DUPE CHECK ENABLE",'
       + '"SPOT COLLECTOR ENABLED",'
+      + '"SPRINT QSY RULE",'
       + '"SWAP PACKET SPOT RADIOS",'
       + '"SWAP PADDLES",'
       + '"SWAP RADIO RELAY SENSE",'

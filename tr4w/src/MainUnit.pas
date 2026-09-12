@@ -1749,7 +1749,7 @@ begin
      VisibleLog.DoPossibleCalls(CallWindowString);
      end;
 
-  if AutoDupeEnableCQ        and 
+  if Settings.AutoDupe.EnableCq        and 
      tCallWindowStringIsDupe then
      begin
      CallAlreadySent := False;
@@ -1792,13 +1792,13 @@ begin
         AddOnCQExchange;
         end;
 
-     if QTCsEnabled then
+     if Settings.Qtc.Enable then
         begin
         DisplayQTCNumber(NumberQTCsThisStation(CallWindowString));
         end;
 
      if (ExchangeWindowString = '') and 
-        (ExchangeMemoryEnable)      then // 4.83.3
+        (Settings.Contest.ExchangeMemoryEnable)      then // 4.83.3
         begin
         if not Settings.CallWindow.LeaveCursor then
            begin
@@ -1936,7 +1936,7 @@ begin
      begin
      tCreateAndAddNewSpot(CallWindowString, tCallWindowStringIsDupe,
        ActiveRadioPtr);
-     if not AutoDupeEnableSandP then // n4af 4.49.5
+     if not Settings.AutoDupe.EnableSAndP then // n4af 4.49.5
         begin
         tExchangeWindowSetFocus; // n4af issue155 4.47.12
         end;
@@ -1944,7 +1944,7 @@ begin
   if (ExchangeWindowString = '') then
     if (length(CallWindowString) >= 3) and
       ((not tCallWindowStringIsDupe) or
-      (not AutoDupeEnableSandP)) then
+      (not Settings.AutoDupe.EnableSAndP)) then
 
        begin
        // ExchangeHasBeenSent := False;
@@ -1958,12 +1958,12 @@ begin
           end;
        end;
 
-  if QTCsEnabled then
+  if Settings.Qtc.Enable then
      begin
      DisplayQTCNumber(NumberQTCsThisStation(CallWindowString));
      end;
 
-  if tCallWindowStringIsDupe and {not }AutoDupeEnableSandP then
+  if tCallWindowStringIsDupe and {not }Settings.AutoDupe.EnableSAndP then
      begin
      DispalayDupe;
      // if WindowDupeCheck then
@@ -1973,9 +1973,9 @@ begin
   DisplayGridSquareStatus(CallWindowString);
   ShowStationInformation(CallWindowString);
 
-  if (ExchangeWindowString = '') {and (ExchangeMemoryEnable)} then // 4.84.1
+  if (ExchangeWindowString = '') {and (Settings.Contest.ExchangeMemoryEnable)} then // 4.84.1
      begin
-     if ExchangeMemoryEnable then
+     if Settings.Contest.ExchangeMemoryEnable then
         begin
         tSetExchWindInitExchangeEntry;
         end;
@@ -2033,7 +2033,7 @@ begin
         begin
         VisibleLog.DisplayGridMap(ActiveBand, ActiveMode);
         end;
-     if SprintQSYRule then
+     if Settings.Contest.SprintQsyRule then
         begin
         QuickDisplay(TC_SPRINTQSYRULE);
         if OpMode = SearchAndPounceOpMode then
@@ -2112,13 +2112,13 @@ begin
 
   if ActiveMode in [CW, Digital] then //wli issue 276
      begin
-     if QTCsEnabled then
+     if Settings.Qtc.Enable then
         begin
         QTC := NumberQTCsThisStation(StandardCallFormat(CallWindowString, False));
         DisplayQTCNumber(QTC);
         if QTC < 10 then
            begin
-           if QTCsEnabled and (MyContinent = Europe) then
+           if Settings.Qtc.Enable and (MyContinent = Europe) then
               begin
               AddStringToBuffer(' B4 ', Config.CWTone);
               // WAEQTC (CallWindowString);
@@ -2152,7 +2152,7 @@ begin
      // Write (' DUPE!!');
      EscapeDeletedCallEntry := CallWindowString;
 
-     if QTCsEnabled then
+     if Settings.Qtc.Enable then
         begin
         DisplayQTCNumber(NumberQTCsThisStation(StandardCallFormat(CallWindowString, False)))
         end
@@ -6954,8 +6954,8 @@ begin
      Exit;
      end;
   { if length(ExchangeString) > 5 then // 4.96.3
-  CallsignUpdateEnable := False;}
-  if CallsignUpdateEnable then
+  Settings.Contest.CallsignUpdateEnable := False;}
+  if Settings.Contest.CallsignUpdateEnable then
      begin // This looks like the secxond line should be under IF but it was not.
      RData.Callsign := GetCorrectedCallFromExchangeString(ExchangeString);
      RData.Callsign[Ord(RData.Callsign[0]) + 1] := #0;
@@ -9194,7 +9194,7 @@ end;
   -- the sleep being on the MAIN THREAD.  (Written as prose, not as the
   original three statements, so that a grep for call sites or for sleeps does
   not find this comment and count it as code.)  Its one call site (ReturnInCQOpMode, the
-  operator pressing Enter in CQ mode with AutoDupeEnableCQ set) is commented
+  operator pressing Enter in CQ mode with Settings.AutoDupe.EnableCq set) is commented
   out, so it never ran and nothing froze; uncommenting it as written would have
   frozen the UI for 100 ms on EVERY auto-dupe, at the exact moment the operator
   is typing.  A latent hazard is worth fixing when it is found rather than
@@ -9326,7 +9326,7 @@ begin
     QSONumberPrecedenceCheckDomesticQTHExchange;
   ColumnsArray[logColCheck].Enable := ActiveExchange =
     QSONumberPrecedenceCheckDomesticQTHExchange;
-  ColumnsArray[logColQTC].Enable := QTCsEnabled;
+  ColumnsArray[logColQTC].Enable := Settings.Qtc.Enable;
   ColumnsArray[logColAge].Enable := ExchangeInformation.Age;
 
   ColumnsArray[logColQTH].Enable := ExchangeInformation.QTH;

@@ -237,8 +237,8 @@ begin
   if FindCallsign(s, Index) then
      begin
      //    TempMode := Mode;
-         if QSOByMode then TempMode := Mode else TempMode := Both;
-         if QSOByBand then TempBand := Band else TempBand := AllBands;
+         if Settings.Qso.ByMode then TempMode := Mode else TempMode := Both;
+         if Settings.Qso.ByBand then TempBand := Band else TempBand := AllBands;
 
          if TempMode = FM then
             begin
@@ -510,7 +510,7 @@ begin
      begin
      if pos(Call, FList^[Index].FCall) > 0 then
         begin
-        //      if QSOByMode then TempMode := ActiveMode else TempMode := Both;
+        //      if Settings.Qso.ByMode then TempMode := ActiveMode else TempMode := Both;
         //      if TempMode = FM then TempMode := Phone;
               PossibleCallList.List[Result].Call := FList^[Index].FCall;
               PossibleCallList.List[Result].Dupe :=

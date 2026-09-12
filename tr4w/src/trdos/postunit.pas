@@ -695,8 +695,8 @@ procedure ExportTo3830Scores;
   // 3830Scores.com quick-submission report.  Layout adapts to contest rules:
   // - Mode columns (CW Qs / Ph Qs / Dig Qs) appear only for modes that have
   // at least one logged QSO.  Ph = USB+LSB+FM per spec.
-  // - Per-band Mults column appears iff MultByBand = TRUE (CQ-WW, etc).
-  // - Bottom Mults summary: per-mode breakdown if MultByMode = TRUE (FQP,
+  // - Per-band Mults column appears iff Settings.Mult.ByBand = TRUE (CQ-WW, etc).
+  // - Bottom Mults summary: per-mode breakdown if Settings.Mult.ByMode = TRUE (FQP,
   // NAQP); single 'Mults: N' otherwise.
   // - All 8 standard 3830-form bands always rendered (160-2), even when
   // zero.  Extra VHF/UHF rows appended only if they have QSOs.
@@ -729,7 +729,7 @@ procedure ExportTo3830Scores;
       // FM here (compile error: 'Constant expression violates subrange bounds').
       for mm := Low( RemainingMultiplierType )
          to High( RemainingMultiplierType ) do
-        if MultByMode then
+        if Settings.Mult.ByMode then
            begin
            Result := Result + mo.MTotals[ b, CW, mm ] + mo.MTotals
               [ b, Phone, mm ] + mo.MTotals[ b, Digital, mm ]
@@ -817,7 +817,7 @@ procedure ExportTo3830Scores;
      begin
      buf := buf + '   Dig Qs';
      end;
-  if MultByBand then
+  if Settings.Mult.ByBand then
      begin
      buf := buf + '    Mults';
      end;
@@ -849,7 +849,7 @@ procedure ExportTo3830Scores;
         begin
         buf := buf + sysutils.Format( '%9d', [ bandQsDig ] );
         end;
-     if MultByBand then
+     if Settings.Mult.ByBand then
         begin
         bandMults    := CalcBandMults( Band );
         buf          := buf + sysutils.Format( '%9d', [ bandMults ] );
@@ -886,7 +886,7 @@ procedure ExportTo3830Scores;
         begin
         buf := buf + sysutils.Format( '%9d', [ bandQsDig ] );
         end;
-     if MultByBand then
+     if Settings.Mult.ByBand then
         begin
         bandMults    := CalcBandMults( Band );
         buf          := buf + sysutils.Format( '%9d', [ bandMults ] );
@@ -913,14 +913,14 @@ procedure ExportTo3830Scores;
      begin
      buf := buf + sysutils.Format( '%9d', [ sumDig ] );
      end;
-  if MultByBand then
+  if Settings.Mult.ByBand then
      begin
      buf := buf + sysutils.Format( '%9d', [ sumBandMults ] );
      end;
   buf   := buf + #13#10#13#10;
 
   // Mults summary
-  if MultByMode then
+  if Settings.Mult.ByMode then
      begin
      cwMults  := 0;
      phMults  := 0;

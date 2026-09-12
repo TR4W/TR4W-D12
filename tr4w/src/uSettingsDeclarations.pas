@@ -87,27 +87,21 @@ uses
    uSettingsCaptions;  // RS_* -- the translatable setting labels
 
 type
-   (* A HOST FOR FOUR GETTER/SETTER PAIRS, because a typed closure is a method
-     pointer and a method needs an object. It holds no state; the values live
-     where they always have, in LogWind's globals.
+   (* A HOST FOR ONE GETTER/SETTER PAIR, because a typed closure is a method
+     pointer and a method needs an object. It holds no state; TourDuration
+     lives where it always has, in LogWind.
 
-     THESE ARE THE FIRST SETTINGS IN THE TREE TO GRADUATE OFF CFGCA, and the
-     shape is the one this unit's header describes as step two of three: a
-     typed closure over the global it actually lives in. No crAddress, no
-     crType, no pointer. Step three -- the registry holding the value with no
-     global at all -- waits on the scoring code that reads these directly. *)
+     IT HELD FIVE PAIRS UNTIL 2026-09-12. The four QSO-point values were the
+     first settings in the tree to graduate off CFGCA and took step two of
+     the three this unit's header describes -- a typed closure over the
+     global. They have now taken step three: they are properties on
+     uSettingsModel, there is no global and no row, and their registration
+     below names them rather than reaching for them. TourDuration has not
+     moved, so this class has not gone with them. *)
    TQSOPointsAccess = class(TObject)
    public
       function  GetTourDuration: integer;
       procedure SetTourDuration(aValue: integer);
-      function  GetDomesticCw: integer;
-      procedure SetDomesticCw(aValue: integer);
-      function  GetDomesticPhone: integer;
-      procedure SetDomesticPhone(aValue: integer);
-      function  GetDxCw: integer;
-      procedure SetDxCw(aValue: integer);
-      function  GetDxPhone: integer;
-      procedure SetDxPhone(aValue: integer);
    end;
 
 var
@@ -122,14 +116,6 @@ var
 
 function  TQSOPointsAccess.GetTourDuration: integer;    begin Result := TourDuration;           end;
 procedure TQSOPointsAccess.SetTourDuration(aValue: integer); begin TourDuration := aValue;      end;
-function  TQSOPointsAccess.GetDomesticCw: integer;      begin Result := QSOPointsDomesticCW;    end;
-procedure TQSOPointsAccess.SetDomesticCw(aValue: integer); begin QSOPointsDomesticCW := aValue; end;
-function  TQSOPointsAccess.GetDomesticPhone: integer;   begin Result := QSOPointsDomesticPhone; end;
-procedure TQSOPointsAccess.SetDomesticPhone(aValue: integer); begin QSOPointsDomesticPhone := aValue; end;
-function  TQSOPointsAccess.GetDxCw: integer;            begin Result := QSOPointsDXCW;          end;
-procedure TQSOPointsAccess.SetDxCw(aValue: integer);    begin QSOPointsDXCW := aValue;          end;
-function  TQSOPointsAccess.GetDxPhone: integer;         begin Result := QSOPointsDXPhone;       end;
-procedure TQSOPointsAccess.SetDxPhone(aValue: integer); begin QSOPointsDXPhone := aValue;       end;
 
 function SettingsDeclarationsComplete: boolean;
 begin
@@ -452,7 +438,7 @@ begin
                           RS_CONTEST_CONTESTNAME);
    RegisterStoredSetting('contest.contestTitle',        'CONTEST TITLE',
                           RS_CONTEST_CONTESTTITLE);
-   RegisterStoredSetting('contest.countDomesticCountries','COUNT DOMESTIC COUNTRIES',
+   RegisterModelSetting( 'contest.countDomesticCountries','COUNT DOMESTIC COUNTRIES',
                           RS_CONTEST_COUNTDOMESTICCOUNTRIES);
    RegisterStoredSetting('contest.customInitialExchangeString','CUSTOM INITIAL EXCHANGE STRING',
                           RS_CONTEST_CUSTOMINITIALEXCHANGESTRING);
@@ -460,7 +446,7 @@ begin
                           RS_CONTEST_DOMESTICMULTIPLIER);
    RegisterStoredSetting('contest.dxMultiplier',        'DX MULTIPLIER',
                           RS_CONTEST_DXMULTIPLIER);
-   RegisterStoredSetting('contest.exchangeMemoryEnable','EXCHANGE MEMORY ENABLE',
+   RegisterModelSetting( 'contest.exchangeMemoryEnable','EXCHANGE MEMORY ENABLE',
                           RS_CONTEST_EXCHANGEMEMORYENABLE);
    RegisterStoredSetting('contest.exchangeReceived',    'EXCHANGE RECEIVED',
                           RS_CONTEST_EXCHANGERECEIVED);
@@ -498,99 +484,84 @@ begin
      it is what a typed setting can say and a Word-bounded table row cannot.
 
      Read-only from crJ:2, like the QSO-point rows: a contest sets it. *)
-   RegisterSetting(TIntSetting.Create('contest.minitourDuration',
-      RS_CONTEST_MINITOURDURATION,
-      GQSOPoints.GetTourDuration, GQSOPoints.SetTourDuration,
-      5, 60).Sentinel(0)).ReadOnly := True;
+   (* CREATED HERE NOW, AND IT USED TO BE CREATED AFTER THIS LINE.
 
-   RegisterStoredSetting('contest.multByBand',          'MULT BY BAND',
-                          RS_CONTEST_MULTBYBAND);
-   RegisterStoredSetting('contest.multByMode',          'MULT BY MODE',
-                          RS_CONTEST_MULTBYMODE);
-   RegisterStoredSetting('contest.multReportMinimumBands','MULT REPORT MINIMUM BANDS',
-                          RS_CONTEST_MULTREPORTMINIMUMBANDS);
-   RegisterStoredSetting('contest.multSheetAutoReset',  'MULT SHEET AUTO RESET',
-                          RS_CONTEST_MULTSHEETAUTORESET);
-   RegisterStoredSetting('contest.multipleBands',       'MULTIPLE BANDS',
-                          RS_CONTEST_MULTIPLEBANDS);
-   RegisterStoredSetting('contest.multipleModes',       'MULTIPLE MODES',
-                          RS_CONTEST_MULTIPLEMODES);
-   RegisterStoredSetting('contest.prefixMultiplier',    'PREFIX MULTIPLIER',
-                          RS_CONTEST_PREFIXMULTIPLIER);
-   RegisterStoredSetting('contest.qslMode',             'QSL MODE',
-                          RS_CONTEST_QSLMODE);
-   RegisterStoredSetting('contest.qsoByBand',           'QSO BY BAND',
-                          RS_CONTEST_QSOBYBAND);
-   RegisterStoredSetting('contest.qsoByMode',           'QSO BY MODE',
-                          RS_CONTEST_QSOBYMODE);
-   RegisterStoredSetting('contest.qsoNumberByBand',     'QSO NUMBER BY BAND',
-                          RS_CONTEST_QSONUMBERBYBAND);
-   RegisterStoredSetting('contest.qsoPointMethod',      'QSO POINT METHOD',
-                          RS_CONTEST_QSOPOINTMETHOD);
-   (* GRADUATED OFF CFGCA (2026-09-09) -- AND THE TABLE IS WHY.
-
-     These four hold -1 when the contest sets no fixed point value; the scoring
-     code says so directly, `if (QSOPointsDomesticCW >= 0) then` in
-     logstuff:6450. The value is legitimate and load-bearing.
-
-     THE CFGCA ROW COULD NOT DECLARE IT. crMin and crMax are Word -- UNSIGNED --
-     so the table cannot express a negative bound at all, and the rows said
-     0..MAXWORD while the variables sat at -1. Every one of the four therefore
-     held a value its own declared range rejected, which uTestAllSettings found
-     the day it was written.
-
-     That is not a bug to patch in the table. It is the table being unable to
-     describe a setting the program legitimately has, and the fix is to stop
-     asking it to: TIntSetting's bounds are signed integers, so -1 is simply in
-     range and says what it means.
-
-     READ-ONLY, from crJ:2 on the rows they replace. A contest's .cfg sets
-     these; the operator does not, and a panel must not offer a control that
-     edits them. That is the crJ gap the TR4QT settings review called a
-     blocking prerequisite -- see TSettingBase.ReadOnly.
-
-     THE CFGCA ROWS STAY FULLY ACTIVE, AND THAT IS NOT AN OVERSIGHT. A first
-     draft of this comment said they would be retired to csRem. That would have
-     been a scoring bug: csRem means CheckCommand recognises a command and does
-     NOT apply it, and these four are set BY THE CONTEST'S .cfg FILE --
-     "QSO POINTS DOMESTIC CW = 2" is how a contest declares its points. Retiring
-     the row would leave every such contest scoring on -1.
-
-     So this is the migration state the header calls step two, exactly: the
-     registry now owns how the setting is READ, WRITTEN AND VALIDATED by
-     Preferences, while the .cfg loader keeps writing the same global through
-     the same row. One variable, two writers, which is what a closure over a
-     global means. The row goes when the .cfg loader stops needing it, not
-     before. *)
+     The guard sat beside the four QSO-point registrations further down, so
+     the method pointers taken here were built from a NIL instance. It ran
+     only because these methods touch no field: a non-virtual method with a
+     nil Self is a plain call that never dereferences it. The QSO-point
+     registrations have gone to the settings model and taken the guard with
+     them, so it belongs before its first use. *)
    if GQSOPoints = nil then
       begin
       GQSOPoints := TQSOPointsAccess.Create;
       end;
 
-   RegisterSetting(TIntSetting.Create('contest.qsoPointsDomesticCw',
-      RS_CONTEST_QSOPOINTSDOMESTICCW,
-      GQSOPoints.GetDomesticCw, GQSOPoints.SetDomesticCw,
-      -1, High(Word))).ReadOnly := True;
+   RegisterSetting(TIntSetting.Create('contest.minitourDuration',
+      RS_CONTEST_MINITOURDURATION,
+      GQSOPoints.GetTourDuration, GQSOPoints.SetTourDuration,
+      5, 60).Sentinel(0)).ReadOnly := True;
 
-   RegisterSetting(TIntSetting.Create('contest.qsoPointsDomesticPhone',
-      RS_CONTEST_QSOPOINTSDOMESTICPHONE,
-      GQSOPoints.GetDomesticPhone, GQSOPoints.SetDomesticPhone,
-      -1, High(Word))).ReadOnly := True;
+   RegisterModelSetting( 'contest.multByBand',          'MULT BY BAND',
+                          RS_CONTEST_MULTBYBAND).ReadOnly := True;
+   RegisterModelSetting( 'contest.multByMode',          'MULT BY MODE',
+                          RS_CONTEST_MULTBYMODE).ReadOnly := True;
+   RegisterStoredSetting('contest.multReportMinimumBands','MULT REPORT MINIMUM BANDS',
+                          RS_CONTEST_MULTREPORTMINIMUMBANDS);
+   RegisterModelSetting( 'contest.multSheetAutoReset',  'MULT SHEET AUTO RESET',
+                          RS_CONTEST_MULTSHEETAUTORESET).ReadOnly := True;
+   RegisterModelSetting( 'contest.multipleBands',       'MULTIPLE BANDS',
+                          RS_CONTEST_MULTIPLEBANDS);
+   RegisterModelSetting( 'contest.multipleModes',       'MULTIPLE MODES',
+                          RS_CONTEST_MULTIPLEMODES);
+   RegisterStoredSetting('contest.prefixMultiplier',    'PREFIX MULTIPLIER',
+                          RS_CONTEST_PREFIXMULTIPLIER);
+   RegisterStoredSetting('contest.qslMode',             'QSL MODE',
+                          RS_CONTEST_QSLMODE);
+   RegisterModelSetting( 'contest.qsoByBand',           'QSO BY BAND',
+                          RS_CONTEST_QSOBYBAND).ReadOnly := True;
+   RegisterModelSetting( 'contest.qsoByMode',           'QSO BY MODE',
+                          RS_CONTEST_QSOBYMODE).ReadOnly := True;
+   RegisterStoredSetting('contest.qsoNumberByBand',     'QSO NUMBER BY BAND',
+                          RS_CONTEST_QSONUMBERBYBAND);
+   RegisterStoredSetting('contest.qsoPointMethod',      'QSO POINT METHOD',
+                          RS_CONTEST_QSOPOINTMETHOD);
+   (* THE THIRD STEP, TAKEN (2026-09-12): the four QSO-point values are
+     properties on uSettingsModel and there is no global and no CFGCA row
+     left. What stands below is what this unit's header calls a fully
+     migrated setting -- registered by NAME, with the model owning the type,
+     the range and the value.
 
-   RegisterSetting(TIntSetting.Create('contest.qsoPointsDxCw',
-      RS_CONTEST_QSOPOINTSDXCW,
-      GQSOPoints.GetDxCw, GQSOPoints.SetDxCw,
-      -1, High(Word))).ReadOnly := True;
+     WHY THEY WERE HALF-WAY HERE. crMin and crMax are Word -- UNSIGNED -- so
+     the table could not express the -1 that means "this contest sets no
+     fixed point value", and all four rows said 0..MAXWORD while all four
+     variables sat at -1. A getter/setter pair over the globals was the way
+     round that in September. The model states it as a TYPE instead:
+     TQsoPoints = -1..65535, which TrySetByCommand reads out of RTTI.
 
-   RegisterSetting(TIntSetting.Create('contest.qsoPointsDxPhone',
-      RS_CONTEST_QSOPOINTSDXPHONE,
-      GQSOPoints.GetDxPhone, GQSOPoints.SetDxPhone,
-      -1, High(Word))).ReadOnly := True;
-   RegisterStoredSetting('contest.qtcEnable',           'QTC ENABLE',
+     STILL READ-ONLY, from crJ: 2 on the rows they replace. A contest sets
+     these; the operator does not, and a panel must not offer a control that
+     edits them. *)
+   RegisterModelSetting( 'contest.qsoPointsDomesticCw',
+      'QSO POINTS DOMESTIC CW',
+      RS_CONTEST_QSOPOINTSDOMESTICCW).ReadOnly := True;
+
+   RegisterModelSetting( 'contest.qsoPointsDomesticPhone',
+      'QSO POINTS DOMESTIC PHONE',
+      RS_CONTEST_QSOPOINTSDOMESTICPHONE).ReadOnly := True;
+
+   RegisterModelSetting( 'contest.qsoPointsDxCw',
+      'QSO POINTS DX CW',
+      RS_CONTEST_QSOPOINTSDXCW).ReadOnly := True;
+
+   RegisterModelSetting( 'contest.qsoPointsDxPhone',
+      'QSO POINTS DX PHONE',
+      RS_CONTEST_QSOPOINTSDXPHONE).ReadOnly := True;
+   RegisterModelSetting( 'contest.qtcEnable',           'QTC ENABLE',
                           RS_CONTEST_QTCENABLE);
    RegisterStoredSetting('contest.qtcExtraSpace',       'QTC EXTRA SPACE',
                           RS_CONTEST_QTCEXTRASPACE);
-   RegisterStoredSetting('contest.qtcMinutes',          'QTC MINUTES',
+   RegisterModelSetting( 'contest.qtcMinutes',          'QTC MINUTES',
                           RS_CONTEST_QTCMINUTES);
    RegisterStoredSetting('contest.qtcQrs',              'QTC QRS',
                           RS_CONTEST_QTCQRS);
@@ -624,7 +595,7 @@ begin
                           RS_CONTEST_SHOWDOMESTICMULTIPLIERNAME);
    RegisterLegacySetting('contest.singleBandScore',     'SINGLE BAND SCORE',
                           'Single Band Score');
-   RegisterStoredSetting('contest.sprintQsyRule',       'SPRINT QSY RULE',
+   RegisterModelSetting( 'contest.sprintQsyRule',       'SPRINT QSY RULE',
                           RS_CONTEST_SPRINTQSYRULE);
    RegisterStoredSetting('contest.tenMinuteRule',       'TEN MINUTE RULE',
                           RS_CONTEST_TENMINUTERULE);
@@ -636,9 +607,9 @@ begin
                           RS_OPERATING_CTRLJ_ASKFORFREQUENCIES);
    RegisterStoredSetting('operating.ctrlj.autoDisplayDupeQso','AUTO DISPLAY DUPE QSO',
                           RS_OPERATING_CTRLJ_AUTODISPLAYDUPEQSO);
-   RegisterStoredSetting('operating.ctrlj.autoDupeEnableCq',  'AUTO DUPE ENABLE CQ',
+   RegisterModelSetting( 'operating.ctrlj.autoDupeEnableCq',  'AUTO DUPE ENABLE CQ',
                           RS_OPERATING_CTRLJ_AUTODUPEENABLECQ);
-   RegisterStoredSetting('operating.ctrlj.autoDupeEnableSAndP','AUTO DUPE ENABLE S AND P',
+   RegisterModelSetting( 'operating.ctrlj.autoDupeEnableSAndP','AUTO DUPE ENABLE S AND P',
                           RS_OPERATING_CTRLJ_AUTODUPEENABLESANDP);
    RegisterModelSetting( 'operating.ctrlj.autoSPEnable',      'AUTO S&P ENABLE',
                           RS_OPERATING_CTRLJ_AUTOSPENABLE);
@@ -654,7 +625,7 @@ begin
                           RS_OPERATING_CTRLJ_CUSTOMUSERSTRING);
    RegisterStoredSetting('operating.ctrlj.deEnable',          'DE ENABLE',
                           RS_OPERATING_CTRLJ_DEENABLE);
-   RegisterStoredSetting('operating.ctrlj.digitalModeEnable', 'DIGITAL MODE ENABLE',
+   RegisterModelSetting( 'operating.ctrlj.digitalModeEnable', 'DIGITAL MODE ENABLE',
                           RS_OPERATING_CTRLJ_DIGITALMODEENABLE);
    RegisterStoredSetting('operating.ctrlj.distanceMode',      'DISTANCE MODE',
                           RS_OPERATING_CTRLJ_DISTANCEMODE);
@@ -772,14 +743,14 @@ begin
    // --- Files/Updates (7) ----------------------------
    RegisterStoredSetting('files.ctrlj.allowAutoUpdate',       'ALLOW AUTO UPDATE',
                           RS_FILES_CTRLJ_ALLOWAUTOUPDATE);
-   RegisterStoredSetting('files.ctrlj.callsignUpdateEnable',  'CALLSIGN UPDATE ENABLE',
+   RegisterModelSetting( 'files.ctrlj.callsignUpdateEnable',  'CALLSIGN UPDATE ENABLE',
                           RS_FILES_CTRLJ_CALLSIGNUPDATEENABLE);
    RegisterStoredSetting('files.ctrlj.countryInformationFile','COUNTRY INFORMATION FILE',
                           RS_FILES_CTRLJ_COUNTRYINFORMATIONFILE);
    RegisterStoredSetting('files.ctrlj.ctyUpdateCheckOnStartup','CTY UPDATE CHECK ON STARTUP',
                           RS_FILES_CTRLJ_CTYUPDATECHECKONSTARTUP);
-   RegisterStoredSetting('files.ctrlj.domesticFilename',      'DOMESTIC FILENAME',
-                          RS_FILES_CTRLJ_DOMESTICFILENAME);
+   RegisterModelSetting( 'files.ctrlj.domesticFilename',      'DOMESTIC FILENAME',
+                          RS_FILES_CTRLJ_DOMESTICFILENAME).ReadOnly := True;
    RegisterStoredSetting('files.ctrlj.missingcallsignsFileEnable','MISSINGCALLSIGNS FILE ENABLE',
                           RS_FILES_CTRLJ_MISSINGCALLSIGNSFILEENABLE);
    RegisterModelSetting( 'files.ctrlj.unknownCountryFileName','UNKNOWN COUNTRY FILE NAME',

@@ -1994,7 +1994,7 @@ begin
     which rows this contest uses. *)
   BindMainGrids;
   PositionMainGrids;
-  ConfigureNeedRows(QSOByMode, MultByMode);
+  ConfigureNeedRows(Settings.Qso.ByMode, Settings.Mult.ByMode);
 
   SetUpGlobalsAndInitialize;
 

@@ -56,7 +56,8 @@ uses
      THE NOTE BELOW ABOUT NOT DRAGGING IN MainUnit still holds as intent, and
      uMainGrids is deliberately narrow -- but the compiler bug that made it
      urgent was dcc32's, and dcc32 has been gone from this tree since August. *)
-   uMainGrids;
+   uMainGrids,
+   uSettingsModel;   // Settings.Qso / .Mult / .Qtc -- the contest's own rules
 
 var
    // This unit's own reference to the program's log category, rather than
@@ -159,7 +160,7 @@ begin
   Row := -1;
   MultDisplayEnable := True;
 
-  if QSOByMode then
+  if Settings.Qso.ByMode then
      begin
 
      if (ActiveMode = CW) or ((QTotals[AllBands, CW] > 0) and (NumberDifferentMults < 3)) then
@@ -180,12 +181,12 @@ begin
      iTotalTextOut(QTotals[Band, Both]);
      end;
 
-  if MultByMode then TempMode := ActiveMode else TempMode := Both;
+  if Settings.Mult.ByMode then TempMode := ActiveMode else TempMode := Both;
 
-  if (DoingDomesticMults) and (MultByBand or (Band = AllBands)) and MultDisplayEnable then
+  if (DoingDomesticMults) and (Settings.Mult.ByBand or (Band = AllBands)) and MultDisplayEnable then
      begin
      {
-    if MultByMode then
+    if Settings.Mult.ByMode then
       iTotalTextOut(MTotals[Band, ActiveMode].NumberDomesticMults)
     else
       iTotalTextOut(MTotals[Band, Both].NumberDomesticMults);
@@ -193,10 +194,10 @@ begin
          iTotalTextOut(mo.MTotals[Band, TempMode, rmDomestic]);
      end;
 
-  if (DoingDXMults) and (MultByBand or (Band = AllBands)) and MultDisplayEnable {and (ActiveDXMult <> NoCountDXMults)} then
+  if (DoingDXMults) and (Settings.Mult.ByBand or (Band = AllBands)) and MultDisplayEnable {and (ActiveDXMult <> NoCountDXMults)} then
      begin
      {
-    if MultByMode then
+    if Settings.Mult.ByMode then
       iTotalTextOut(MTotals[Band, ActiveMode].NumberDXMults)
     else
       iTotalTextOut(MTotals[Band, Both].NumberDXMults);
@@ -204,10 +205,10 @@ begin
          iTotalTextOut(mo.MTotals[Band, TempMode, rmDX]);
      end;
 
-  if (DoingPrefixMults) and (MultByBand or (Band = AllBands)) and MultDisplayEnable then
+  if (DoingPrefixMults) and (Settings.Mult.ByBand or (Band = AllBands)) and MultDisplayEnable then
      begin
      {
-    if MultByMode then
+    if Settings.Mult.ByMode then
       iTotalTextOut(MTotals[Band, ActiveMode].NumberPrefixMults)
     else
       iTotalTextOut(MTotals[Band, Both].NumberPrefixMults);
@@ -215,7 +216,7 @@ begin
          iTotalTextOut(mo.MTotals[Band, TempMode, rmPrefix]);
      end;
 
-  if (DoingZoneMults) and (MultByBand or (Band = AllBands)) and MultDisplayEnable then
+  if (DoingZoneMults) and (Settings.Mult.ByBand or (Band = AllBands)) and MultDisplayEnable then
      begin
      iTotalTextOut(mo.MTotals[Band, TempMode, rmZone]);
      end;
@@ -259,7 +260,7 @@ begin
 //  CallsignsList.DisplayDupeSheet(@Radio2);
 
   Row := -1;
-  if QSOByMode then
+  if Settings.Qso.ByMode then
      begin
      if Contest = OZCR_O   then      //n4af 04.34.8
      if (QTotals[AllBands,CW] > 0) and (QTotals[AllBands,Phone]> 0)   then
@@ -277,7 +278,7 @@ begin
          goto skip;
         end;
      end;
-  if QSOByMode then
+  if Settings.Qso.ByMode then
      begin
      if (ActiveMode = CW) or ((QTotals[AllBands, CW] > 0) and (NumberDifferentMults < 3)) then
         begin
@@ -299,7 +300,7 @@ begin
   skip:
   if DoingDomesticMults then
      begin
-     if MultByMode then
+     if Settings.Mult.ByMode then
         begin
         if Contest = IARU then
            begin
@@ -346,7 +347,7 @@ begin
 
   if DoingDXMults {and (ActiveDXMult <> NoCountDXMults)} then
      begin
-     if MultByMode then
+     if Settings.Mult.ByMode then
         begin
         if ActiveMode = CW then
            begin
@@ -366,7 +367,7 @@ begin
 
   if DoingPrefixMults then
      begin
-     if MultByMode then
+     if Settings.Mult.ByMode then
         begin
         if ActiveMode = CW then
            begin
@@ -385,7 +386,7 @@ begin
 
   if DoingZoneMults then
      begin
-     if MultByMode then
+     if Settings.Mult.ByMode then
         begin
         if ActiveMode = CW then
            begin
@@ -447,7 +448,7 @@ begin
      end;
    DisplayBandTotals(AllBands);
  //  TotalTextOut('Ratio',column+1,0);
-  if QTCsEnabled then
+  if Settings.Qtc.Enable then
      begin
      WriteLeftColumnText('QTCs');
      TotalTextOut(inttopchar(TotalNumberQTCsProcessed), Column, Row);

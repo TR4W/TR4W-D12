@@ -1269,7 +1269,7 @@ begin
 
   DDXState := SAndPExchangeSent;
 
-  if QTCsEnabled then
+  if Settings.Qtc.Enable then
     if Random(5) = 0 then
        begin
        AddStringToBuffer(' QTC?', Tone);
@@ -1359,7 +1359,7 @@ begin
          end;
 
     NormalContactComplete:
-      if SprintQSYRule then
+      if Settings.Contest.SprintQsyRule then
          begin
          repeat
            if NewKeyPressed then

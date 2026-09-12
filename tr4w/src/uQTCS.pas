@@ -111,6 +111,7 @@ uses
   LOGSUBS2,
   LOGWAE,
   uQTCSendForm,
+  uSettingsModel,   { Settings.Qtc.Minutes }
   MainUnit;
 
 procedure QTCSendCommand(const aCommand: integer);
@@ -219,7 +220,7 @@ var
   TempQTCMinutes                        : boolean;
 const
   FormatArray                           : array[boolean, boolean, boolean] of PAnsiChar =
-//QTCQRS,QTCExtraSpace,QTCMinutes
+//QTCQRS,QTCExtraSpace,QTC MINUTES
 //false,true
   (
     (
@@ -254,10 +255,10 @@ begin
   p := @QTCsToBeSendArray[QTC].qsCall[1];
   Number := QTCsToBeSendArray[QTC].qsNumber;
 
-  TempQTCMinutes := (LastSendedQTCHour = (Time div 100)) and QTCMinutes;
+  TempQTCMinutes := (LastSendedQTCHour = (Time div 100)) and Settings.Qtc.Minutes;
   Format := FormatArray[QTCQRS, QTCExtraSpace, TempQTCMinutes];
 
-  if QTCMinutes then
+  if Settings.Qtc.Minutes then
      begin
      if LastSendedQTCHour = (Time div 100) then
         begin

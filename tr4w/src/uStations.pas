@@ -61,7 +61,8 @@ uses
   Forms,           { Application.QueueAsyncCall -- the marshalling below }
   SyncObjs,
   uCrashLog,       { OnMainThread }
-  uStationsForm;   { the view -- see the model note below }
+  uStationsForm,   { the view -- see the model note below }
+  uSettingsModel;  { Settings.Qso.ByMode }
 
 { ---------------------------------------------------------------------------
   THE ROWS ARE A MODEL NOW, NOT THE CONTROL.
@@ -268,7 +269,7 @@ begin
   if not CallsignsList.FindCallsign(Call, Index) then Exit;
   if not CallsignsList.GetDupesArray(Index, da) then Exit;
 
-  if QSOByMode then TempMode := ActiveMode else TempMode := Both;
+  if Settings.Qso.ByMode then TempMode := ActiveMode else TempMode := Both;
 
   for TempIndex := 0 to 5 { BandType(Ord(StationsStartBand) + 5)} do
      begin

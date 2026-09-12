@@ -247,12 +247,7 @@ var
   // without depending on LogDupe. All users resolve it via VC (universally used).
   ActivePrefixMult                      : PrefixMultType {= NoPrefixMults};
 
-  AutoDupeEnableCQ                      : boolean = False;
-  AutoDupeEnableSandP                   : boolean = True;
 
-
-  CallsignUpdateEnable                  : boolean;
-  CountDomesticCountries                : boolean;
 //  CQP                                   : boolean;
 
   DoingDomesticMults                    : boolean;
@@ -260,10 +255,7 @@ var
   DoingPrefixMults                      : boolean;
   DoingZoneMults                        : boolean;
 
-  DomQTHDataFileName                    : FileNameType;
-
   ExchangeInformation                   : ExchangeInformationRecord;
-  ExchangeMemoryEnable                  : boolean = True;
 
   FirstVDEntry                          : VDEntryPointer;
 
@@ -279,9 +271,6 @@ var
   //  LoadingInLogFile                      : boolean;
   //  LongPartialCallList              : LongPartialCallListPointer = nil;
 
-  MultByBand                            : boolean;
-  MultByMode                            : boolean;
-  MultReset                             : boolean = False;
   MultiplierAlarm                       : boolean;
 
   NumberDifferentMults                  : Byte {= 0};
@@ -297,8 +286,6 @@ var
   //  PartialCallList                  : array[1..MaxPartialCallBlocks] of PartialCallArrayPtr;
   PartialCallLoadLogEnable              : boolean = {false} True;
 
-  QSOByBand                             : boolean;
-  QSOByMode                             : boolean;
   QSOTotals                             : QSOTotalArray; { This may not also be exactly the same as
   DupeList.Totals because of dupes read in }
 
@@ -678,7 +665,7 @@ procedure GetDXQTH(var RXData: ContestExchange);
   //NumberChar                            : Char; {KK1L: 6.70}
 
 begin
-  if not CountDomesticCountries then
+  if not Settings.Contest.CountDomesticCountries then
      begin
      if ActiveDomesticMult = WYSIWYGDomestic then
        if RXData.DomesticQTH <> '' then Exit;
@@ -1241,7 +1228,7 @@ begin
 
 //  FillChar(MultSheet, SizeOf(MultSheet), 0);
 
-  if QTCsEnabled then
+  if Settings.Qtc.Enable then
      begin
      if QTCDataArray <> nil then
         begin
@@ -1373,8 +1360,8 @@ begin
 
       IF Mult = '' THEN Exit;
 
-      IF NOT MultByBand THEN Band := All;
-      IF NOT MultByMode THEN Mode := Both;
+      IF NOT Settings.Mult.ByBand THEN Band := All;
+      IF NOT Settings.Mult.ByMode THEN Mode := Both;
 
       IF DoingDomesticMults THEN
           BEGIN
@@ -1425,8 +1412,8 @@ begin
   RXData.PrefixMult := False;
   RXData.ZoneMult := False;
 
-  if MultByBand then MultBand := RXData.Band else MultBand := AllBands;
-  if MultByMode then MultMode := RXData.Mode else MultMode := Both;
+  if Settings.Mult.ByBand then MultBand := RXData.Band else MultBand := AllBands;
+  if Settings.Mult.ByMode then MultMode := RXData.Mode else MultMode := Both;
 
   if (RXData.DomMultQTH = '') and (RXData.DomesticQTH <> '') then
      begin
@@ -1751,7 +1738,7 @@ end;
 procedure DupeAndMultSheet.SheetInitAndLoad;
 
 { This procedure will load in the LOG.DAT file and fill up all the sheets
-  with the right stuff.  Make sure that QSOByBand, QSOByMode and the
+  with the right stuff.  Make sure that Settings.Qso.ByBand, Settings.Qso.ByMode and the
   active multiplier globals are setup before executing this.         }
 
 begin
@@ -2373,7 +2360,7 @@ var
  // Address                               : integer;
 
 begin
-  if MultByBand then
+  if Settings.Mult.ByBand then
      begin
      StartBand := Band160;
      FinishBand := Band2304;
@@ -2384,7 +2371,7 @@ begin
      FinishBand := AllBands;
      end;
 
-  if MultByMode then
+  if Settings.Mult.ByMode then
      begin
      StartMode := CW;
      FinishMode := Phone;

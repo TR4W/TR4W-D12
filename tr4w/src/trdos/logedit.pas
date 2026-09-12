@@ -370,11 +370,11 @@ end;
 // path (GoToBand) use this so the two stay in sync.
 procedure RefreshAfterBandChange;
 begin
-  if QSOByBand then
+  if Settings.Qso.ByBand then
      begin
      CallsignsList.DisplayDupeSheet(ActiveRadioPtr);
      end;
-  if MultByBand then
+  if Settings.Mult.ByBand then
      begin
      VisibleLog.ShowRemainingMultipliers;
      end;
@@ -398,7 +398,7 @@ begin
      begin
      Exit;
      end;
-  if (not MultipleBandsEnabled) and (TotalContacts <> 0) then
+  if (not Settings.Contest.MultipleBands) and (TotalContacts <> 0) then
      begin
      // Same gate as BandDownOrUp, and the same reason for saying so out loud.
      QuickDisplay(TC_BANDCHANGEDISABLED);
@@ -427,7 +427,7 @@ end;
 procedure BandDownOrUp(Direction: DirectionType);
 begin
 
-  if (not MultipleBandsEnabled) and (TotalContacts <> 0) then
+  if (not Settings.Contest.MultipleBands) and (TotalContacts <> 0) then
      begin
      QuickDisplay(TC_BANDCHANGEDISABLED);
      Exit;
@@ -473,7 +473,7 @@ begin
      Exit;
      end;
 
-  if QSOByMode then
+  if Settings.Qso.ByMode then
      begin
      TempMode := Mode
      end
@@ -481,7 +481,7 @@ begin
      begin
      TempMode := Both;
      end;
-  if QSOByBand then
+  if Settings.Qso.ByBand then
      begin
      TempBand := Band
      end
@@ -502,8 +502,8 @@ var
 
 begin
   for Entry := 1 to NumberEditableLines do
-    if (Band = GetLogEntryBand(LogEntries[Entry])) or not MultByBand then
-      if (Mode = GetLogEntryMode(LogEntries[Entry])) or not MultByMode then
+    if (Band = GetLogEntryBand(LogEntries[Entry])) or not Settings.Mult.ByBand then
+      if (Mode = GetLogEntryMode(LogEntries[Entry])) or not Settings.Mult.ByMode then
       begin
         MultString := UpperCase(Copy(LogEntries[Entry], LogEntryMultAddress, LogEntryMultWidth));
         GetRidOfPostcedingSpaces(MultString);
@@ -695,7 +695,7 @@ var
   TempBand: BandType;
 begin
   OutputValue := 0;
-  if not MultByMode then
+  if not Settings.Mult.ByMode then
      begin
      TempMode := Both
      end
@@ -703,7 +703,7 @@ begin
      begin
      TempMode := Mode;
      end;
-  if not MultByBand then
+  if not Settings.Mult.ByBand then
      begin
      TempBand := AllBands
      end
@@ -728,7 +728,7 @@ begin
 
   //  if Mode <> Both then    OutputString := OutputString + ModeString[Mode] + ': ';
 
-  if MultByBand then
+  if Settings.Mult.ByBand then
      begin
      if ActiveBand <= Band10 then
         begin
@@ -1056,14 +1056,14 @@ begin
 
   OutputString := GetMultArray(Call, Mode, TempMult);
 
-  if MultByMode and (Mode <> ActiveMode) then
+  if Settings.Mult.ByMode and (Mode <> ActiveMode) then
      begin
      Exit;
      end;
 
   nCmndShow := SW_HIDE;
 
-  if MultByBand then
+  if Settings.Mult.ByBand then
      begin
      if (OutputString and (1 shl integer(ActiveBand))) <> 0 then
         begin
@@ -1094,7 +1094,7 @@ begin
      Exit;
      end;
 
-  if MultByMode then
+  if Settings.Mult.ByMode then
      begin
      CreateModeSpecificMultiplierInfo(Call, TempMult, CW, OutputValue);
      SetMultNeedBands(CW, OutputValue);
@@ -1107,7 +1107,7 @@ begin
      begin
      CreateModeSpecificMultiplierInfo(Call, TempMult, Both, OutputValue);
 
-     if not MultByBand then
+     if not Settings.Mult.ByBand then
        if (OutputValue and (1 shl integer(AllBands))) <> 0 then
           begin
           OutputValue := $FFFFFFFF
@@ -1131,7 +1131,7 @@ var
 begin
   //  if Mode <> Both then    OutputString := OutputString + ModeString[Mode] + ': ';
   OutputString := 0;
-  if QSOByBand then
+  if Settings.Qso.ByBand then
      begin
      if ActiveBand <= Band10 then
         begin
@@ -1224,7 +1224,7 @@ begin
 
   TR4WMainForm.pnlQSONeedsHeader.Caption := NeedsCaption(TC_QSONEEDSFOR, Call);
 
-  if QSOByMode then
+  if Settings.Qso.ByMode then
      begin
      CreateModeSpecificQSOInfo(Call, CW, OutputString);
      SetQSONeedBands(CW, OutputString);
@@ -1260,7 +1260,7 @@ begin
   TR4WMainForm.pnlQSONeedsHeader.Caption :=
      NeedsCaption(TC_QSONEEDSFOR, string(Call));
 
-  if QSOByMode then
+  if Settings.Qso.ByMode then
      begin
      CreateModeSpecificQSOInfo(Call, CW, OutputString);
      SetQSONeedBands(CW, OutputString);
@@ -2146,7 +2146,7 @@ begin
 
   ShowName(Call);
 
-  if QTCsEnabled then
+  if Settings.Qtc.Enable then
      begin
      DisplayQTCNumber(NumberQTCsThisStation(StandardCallFormat(Call, False)));
      end;
@@ -3023,7 +3023,7 @@ begin
 
   //  VisibleLog.IncrementQSOPointsWithContentsOfEditableWindow(QPoints);
 
-  if QTCsEnabled then
+  if Settings.Qtc.Enable then
      begin
      QPoints := QPoints + TotalNumberQTCsProcessed;
      end;
