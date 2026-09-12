@@ -91,6 +91,8 @@ uses
    uSettingsModel,
    FContest,       // RecalculateMyCountryContinentAndZoneNew
    LogWind,        // Settings.My.Call -- the callsign the derivation starts from
+   uStations,      // SetStationsCallsignMask -- was CommandsProcArray[12]
+   uRemMults,      // UpdateRemainingMultsWindows -- was CommandsProcArray[9]
    uBandMapView;   // BandMapRefresh -- the band map's own view seam
 
 const
@@ -128,6 +130,19 @@ const
      re-runs the same derivation. That was AdditionalProcsArray slot 14. *)
    MY_CALL    = 'My.Call';
 
+   (* THE TWO crP REDRAWS THAT CAME WITH THE VC.pas SETTINGS.
+
+     Both are exact paths and both are single settings in their group, so
+     there is nothing to match a prefix against: their groups hold one
+     property each.
+
+     NEITHER ASSUMES ITS WINDOW EXISTS. SetStationsCallsignMask returns
+     immediately when the Stations form is nil, and SetRemMultsColumnWidth
+     -- which UpdateRemainingMultsWindows calls -- asks RemMultsForm for the
+     form and does nothing when it gets nil. *)
+   STATIONS_CALLSIGNS_MASK = 'Stations.CallsignsMask';
+   SHOW_DOMESTIC_NAME      = 'RemainingMults.ShowDomesticName';
+
 
 function InGroup(const aPath, aPrefix: string): boolean;
 begin
@@ -154,6 +169,21 @@ begin
         looked up and an unstated one is derived. Passing the callsign is
         what it needs to derive FROM. *)
       RecalculateMyCountryContinentAndZoneNew(UTF8Encode(Settings.My.Call));
+      end;
+
+   if UnicodeSameText(aPath, STATIONS_CALLSIGNS_MASK) then
+      begin
+      (* THE FILTER CHANGED, so the list on screen no longer matches it.
+        This was CommandsProcArray[12], and it rebuilds the column from the
+        callsigns the program holds rather than re-reading anything. *)
+      SetStationsCallsignMask;
+      end;
+
+   if UnicodeSameText(aPath, SHOW_DOMESTIC_NAME) then
+      begin
+      (* A COLUMN WIDTH, not a caption: showing the domestic multiplier's
+        name needs the wider prefix column. This was CommandsProcArray[9]. *)
+      UpdateRemainingMultsWindows;
       end;
 
    if InGroup(aPath, BAND_MAP) or InGroup(aPath, BANDS)

@@ -2411,7 +2411,7 @@ begin
     PChar in the Cabrillo writer surfaced. }
   TempString := '';
 
-    if ((TempString = '') and (not ReverseInitialEx)) then
+    if ((TempString = '') and (not Settings.InitialExchange.Reverse)) then
        begin
        TempString := CallsignsList.GetIniitialExchange(Call);
        end;
@@ -2809,7 +2809,7 @@ begin
              TempString := GetRussiaOblastID(Call);
              end;
           end;
-     if ReverseInitialEx then
+     if Settings.InitialExchange.Reverse then
         begin
         TempString := CallsignsList.GetIniitialExchange(Call)
         end

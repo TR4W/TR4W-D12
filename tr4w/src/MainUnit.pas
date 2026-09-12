@@ -4240,8 +4240,8 @@ begin
      // tWM_SETFONT handed the control an HFONT; an LCL control paints from its
      // own TFont, so the SHAPE goes across instead.  These are the same three
      // numbers tCreateFont was given for MainFont.
-     SetElementFont(e, string(MainFontName),
-                    ws - 2 + FontSize, BoldFont);
+     SetElementFont(e, Settings.Font.Face,
+                    ws - 2 + Settings.Font.Size, Settings.Font.Bold);
 
      SetElementColors(e,
                       tr4wColorsArray[TWindows[e].mweBackG],
@@ -4270,10 +4270,10 @@ begin
     tracks the operator's FONT SIZE setting and the window scale instead of
     being right at one size and wrong at the others.  The floor keeps it
     legible if that arithmetic ever lands somewhere silly. }
-  SetElementFont(mweWSJTX, string(MainFontName),
+  SetElementFont(mweWSJTX, Settings.Font.Face,
                  Max(WSJTX_MIN_FONT_HEIGHT,
-                     Round((ws - 2 + FontSize) * WSJTX_CELLS / WSJTX_CHARS)),
-                 BoldFont);
+                     Round((ws - 2 + Settings.Font.Size) * WSJTX_CELLS / WSJTX_CHARS)),
+                 Settings.Font.Bold);
 
 
   // THE AUTO-SEND ARROW: a real code point in the main font, not byte 175 in
@@ -4368,8 +4368,8 @@ begin
   CreateTR4WPossibleCallList(
     0, EditableLogHeight + ws * 13 {line6}, MainWindowChildsWidth, ws,
     MainWindowPCLID, ws, 5 * ws {the old LB_SETCOLUMNWIDTH});
-  SetPossibleCallFont(string(MainFontName),
-                      ws - 2 + FontSize, BoldFont);
+  SetPossibleCallFont(Settings.Font.Face,
+                      ws - 2 + Settings.Font.Size, Settings.Font.Bold);
 
   (* THE DRAWING USED TO BE ATTACHED HERE, through a procedure variable, with
     a comment arguing that uMainForm "has no business knowing about" the
@@ -4604,7 +4604,7 @@ end;
   which built an HFONT for the Win32 main window; that window is LCL and the
   handle was write-only, so it went on 2026-09-07 along with tCreateFont.
 
-  The arithmetic is kept exactly as it was -- ws + 2*FontSize - 3 -- because it
+  The arithmetic is kept exactly as it was -- ws + 2*Font.Size - 3 -- because it
   is what the operator's chosen font size has always produced, and this is now
   the only place it is written down.
 
@@ -4613,7 +4613,7 @@ end;
   when the main window stopped being a Win32 window. *)
 function MainFontCellHeight: integer;
 begin
-   Result := ws + 2 * FontSize - 3;
+   Result := ws + 2 * Settings.Font.Size - 3;
 end;
 
 (* THE MAIN WINDOW FONT, AS AN LCL FONT.
@@ -4629,10 +4629,10 @@ begin
       Exit;
       end;
 
-   aFont.Name   := string(MainFontName);
+   aFont.Name   := Settings.Font.Face;
    aFont.Height := MainFontCellHeight;
 
-   if BoldFont then
+   if Settings.Font.Bold then
       begin
       aFont.Style := aFont.Style + [fsBold];
       end
@@ -4645,7 +4645,7 @@ end;
 (* SIX FONTS WERE BUILT HERE AND ONE WAS EVER USED.
 
   tCreateFont IS GONE WITH THEM. It wrapped Windows.CreateFontW and added
-  `FontSize - 1` to whatever height it was handed -- an adjustment that existed
+  `Font.Size - 1` to whatever height it was handed -- an adjustment that existed
   for the main window's own text, which the LCL now draws from a TFont. Five of
   its six results were write-only (see the note in VC.pas), so deleting them
   left one call, and a one-caller wrapper that silently alters its argument is
@@ -4663,15 +4663,15 @@ end;
   its consumer, which is what stops this routine reaching for Windows at all
   off the platform.
 
-  `13 + FontSize - 1` is tCreateFont's arithmetic, written out rather than
+  `13 + Font.Size - 1` is tCreateFont's arithmetic, written out rather than
   hidden, so the size the operator sees does not change. *)
 procedure CreateFonts;
 begin
 {$IFDEF WINDOWS}
   LucidaConsoleFont := Windows.CreateFontW(
-    13 + FontSize - 1,
+    13 + Settings.Font.Size - 1,
     0, 0, 0,
-    FW_BOLD * Ord(BoldFont),
+    FW_BOLD * Ord(Settings.Font.Bold),
     0, 0, 0,
     DEFAULT_CHARSET,
     OUT_DEFAULT_PRECIS,
@@ -9052,34 +9052,45 @@ end;
 procedure CompleteCallsign;
 var
   MaskPos: integer;
-  TempCallsign: CallString;
   MaskInserted: boolean;
+  (* BUILT NATIVELY AND NARROWED ONCE, at the call below.  The mask is a
+    property on the settings model now, so it is a native string; reading it
+    into a local also means the two guards and the loop cannot see different
+    values. *)
+  mask: string;
+  built: string;
+  TempCallsign: CallString;
 begin
-  if CompleteCallsignMask = '' then
+  mask := Settings.CallWindow.CompleteCallsignMask;
+  if mask = '' then
      begin
      Exit;
      end;
-  if pos('*', CompleteCallsignMask) = 0 then
+  if pos('*', mask) = 0 then
      begin
      Exit;
      end;
   MaskInserted := False;
-  TempCallsign := '';
-  for MaskPos := 1 to length(CompleteCallsignMask) do
+  built := '';
+  for MaskPos := 1 to length(mask) do
      begin
-     if CompleteCallsignMask[MaskPos] <> '*' then
+     if mask[MaskPos] <> '*' then
         begin
-        TempCallsign := TempCallsign + CompleteCallsignMask[MaskPos];
+        built := built + mask[MaskPos];
         end
      else
         begin
         if MaskInserted = False then
            begin
-           TempCallsign := TempCallsign + CallWindowString;
+           built := built + string(CallWindowString);
            end;
         MaskInserted := True;
         end;
      end;
+  (* ASSIGNED, NOT CAST.  A ShortString typecast of a long string
+    reinterprets its POINTER; the assignment converts and truncates, which
+    is what is wanted at this boundary. *)
+  TempCallsign := UTF8Encode(built);
   PutCallToCallWindow(TempCallsign);
 end;
 
@@ -9734,7 +9745,7 @@ begin
   // 4.71.2 attempt to allow longer column width for long DOM MULTS by setting SHOW DOMESTIC MULTIPLIER NAME to TRUE
   // FillChar(RemMultsColumnWidthArray, sizeof(RemMultsColumnWidthArray), 0);
 
-  if (tShowDomesticMultiplierName) or (DoingPrefixMults) then
+  if (Settings.RemainingMults.ShowDomesticName) or (DoingPrefixMults) then
      begin
      Width := PREFIXCOLUMNWIDTH
      end

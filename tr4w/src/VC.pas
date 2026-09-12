@@ -442,7 +442,6 @@ const
   TR4W_DOWNLOAD_LINK                    : PChar = 'https://tr4w.net/download/?' + TR4W_CURRENTVERSION_NUMBER;
 
   LATEST_CONFIG_FILE                    : PAnsiChar = 'LATEST CONFIG FILE';
-  MAIN_CALLSIGN                         : PAnsiChar = 'MAIN CALLSIGN';
 
  // ' TR4W_DOWNLOAD_LINK_WITH_VER           = 'http://tr4w.net/4.42/tr4w_setup_4_42.1.exe';
 
@@ -898,11 +897,8 @@ var
 
 //  tR150SMode                            : boolean;
 //  OrionWaitTime                         : integer = 50;
-   ReverseInitialex                     : boolean = False;
-   FontSize                             : integer = 2;
 //   BandMapItemWidth                     : integer = 120;
 //   BandMapItemHeight                    : integer = 14;
-  QZBRandomOffsetEnable                 : boolean;
 //  QZBFixedOffset                        : real;
   // Issue #930 -- operator's actual ITU zone for HamScore/COS <iaruzone>.
   // Needed as an explicit CFG because large countries (US, Russia, Canada)
@@ -2865,7 +2861,6 @@ var
   MultMode                              : ModeType;
 //  tNTPServer                            : ShortString = 'pool.ntp.org';
 
-  tShowDomesticMultiplierName           : boolean;
   tRemMultsColumnWidth                  : integer;
   tInputDialogWarning                   : boolean;
   tInputDialogInteger                   : boolean;
@@ -2921,8 +2916,6 @@ var
 
 
 var
-  LogFrequencyEnable                    : boolean;
-  BoldFont                              : boolean = True;
 //  DateFormat                            : Str10 = 'dd-MM-yy';
   ImportFromADIFThreadID                : TThreadID;
   tMutex                                : Cardinal;
@@ -2934,7 +2927,6 @@ var
 
   WindowSize                            : integer = 5;
 
-  ColumnAutoSize                        : boolean = True;
   ColumnWidthOverride                   : array[LogColumnsType] of Integer;
 
   LinesInEditableLog                    : integer = 5;
@@ -2966,8 +2958,6 @@ var
   EditabledLogFocused                   : boolean = False;
 
   UTC                                   : SYSTEMTIME;
-  CompleteCallsignMask                  : CallString;
-  StationsCallsignsMask                 : CallString;
 //  tLV_ITEM                              : TLVItem;
   (* A FILE HANDLE, not a window. It goes to SetFilePointer, ReadFile,
     SetEndOfFile, GetFileSize and CloseHandle. It was declared HWND and
@@ -2986,8 +2976,6 @@ var
 //  tr4w_saddr                            : sockaddr_in = (sin_family: AF_INET);
   {Fonts}
   LuconSZLoadded                        : boolean;
-  MainFontName                          : Str31 = 'Arial';
-  MainCallsign                          : CallString;
 
   (* FIVE HFONTs WERE DELETED HERE ON 2026-09-07 -- MainFont, MainFixedFont,
     MainWindowEditFont, CATWindowFont and TerminalFont -- because every one of
@@ -3010,13 +2998,6 @@ var
 
 
   tLogIndex                             : integer;
-  // SHOW ALL SERIAL PORTS.  The radio dialog's port list normally shows only the
-  // ports Windows is reporting (plus the one already configured, even if absent).
-  // Set this True to list SERIAL 1..MAX_SERIAL_PORT instead, for ports that exist
-  // but do not enumerate -- com0com pairs, Bluetooth SPP that appears only when
-  // the device connects, or configuring a station before the hardware is plugged
-  // in.  Default False: the filtered list is what an operator wants day to day.
-  tShowAllSerialPorts                   : boolean = False;
 
 //  tr4w_CallWindowActive                 : boolean;
 //  tr4w_ExchangeWindowActive             : boolean;

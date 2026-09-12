@@ -104,7 +104,7 @@ uses
 
 const
    { The design cell.  80 is the width the list box was given
-     (tLB_SETCOLUMNWIDTH, 80 + Ord(BoldFont) * 15). }
+     (tLB_SETCOLUMNWIDTH, 80 + Ord(Settings.Font.Bold) * 15). }
    CELL_WIDTH  = 80;
    CELL_HEIGHT = 16;
 

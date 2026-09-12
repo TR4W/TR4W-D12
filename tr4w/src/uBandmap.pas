@@ -165,7 +165,7 @@ begin
     QZBOffset)]);
   SetRadioFreq(Radio, Spot.FFrequency + QZBOffset, EntryMode, 'A');
   PutRadioOutOfSplit(Radio);
-  if (QZBRandomOffsetEnable and (EntryMode = CW)) then
+  if (Settings.Qzb.RandomOffsetEnable and (EntryMode = CW)) then
      begin
      { GetTickCount64: this wants a varying number, so which 32 bits it
        lands on does not matter -- but the Windows call did. }

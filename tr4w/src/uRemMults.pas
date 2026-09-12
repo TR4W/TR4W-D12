@@ -68,6 +68,7 @@ uses
   SysUtils,   { Format -- replaced TF.Format/wsprintfA }
   Tree,
   MainUnit,
+  uSettingsModel,   { Settings.RemainingMults -- was tShowDomesticMultiplierName }
   uRemMultsForm;
 
 var
@@ -103,7 +104,7 @@ begin
 
     rmDomestic:
       begin
-        if tShowDomesticMultiplierName and
+        if Settings.RemainingMults.ShowDomesticName and
            (mo.DomList.FList[Index].FAltName <> '') then
            begin
            TempCall := mo.DomList.FList[Index].FAltName;

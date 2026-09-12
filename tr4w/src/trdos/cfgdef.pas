@@ -246,7 +246,6 @@ begin
   //  Config.LeadingZeroCharacter := 'T';
   //  LiteralDomesticQTH := False;
 
-  //  LogFrequencyEnable := False;
   //  LogRSTSent := '599';
   //  LogRSSent := '59';
   //  LogSubTitle := '';
