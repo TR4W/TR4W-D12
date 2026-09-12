@@ -141,6 +141,30 @@ resourcestring
       'Change COMPUTER ID to a letter no other station is using, then ' +
       'reconnect.';
 
+   { --------------------------------------------------- verification checks - }
+
+   (* Tools -> Run Verification Checks.  The window title names the thing an
+     operator is asking about, not the mechanism. *)
+   SVerifyTitle        = 'Verification checks';
+   SVerifyRun          = '&Run checks';
+   SVerifyClose        = '&Close';
+   SVerifyColumnCheck  = 'Check';
+   SVerifyColumnResult = 'Result';
+   SVerifyPassed       = 'Passed';
+   SVerifyFailed       = 'FAILED';
+
+   (* %d is how many checks are about to run.  Shown before the work starts,
+     because an integrity check walks every page of the contest log and the
+     window must not simply freeze in silence. *)
+   SVerifyRunning      = 'Running %d check(s)...';
+
+   (* %d is the number that ran. *)
+   SVerifyAllPassed    = 'All %d check(s) passed.';
+
+   (* THE FAILURE COUNT COMES FIRST, because it is the number being looked
+     for.  %d of %d. *)
+   SVerifySomeFailed   = '%d of %d check(s) FAILED. Select a row for details.';
+
 implementation
 
 end.

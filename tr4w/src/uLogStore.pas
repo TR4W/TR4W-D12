@@ -195,6 +195,25 @@ function LogStoreEnsureOpen: boolean;
   case that has to be visible. Never raises. *)
 function LogStoreBackup(const aDestination: string; out aReport: string): boolean;
 
+(* IS THE CONTEST LOG SOUND? ASKED ON PURPOSE, RATHER THAN ON THE WAY PAST.
+
+  The same integrity_check and foreign_key_check the open path runs, exposed
+  so an operator can ask. NY4I, 2026-09-11: "it would be handy to have
+  something on the tools menu to essentially say run verification checks ...
+  one of the things that we do right now is just do an integrity verification
+  on the database."
+
+  READ-ONLY, AND IT NEVER DISABLES THE STORE. That is the whole difference
+  from the check in EnsureOpen, which is fail-closed because it stands
+  between a damaged file and the next QSO. This one stands between the
+  operator and an answer, so a failure is REPORTED and the log keeps working
+  -- refusing to log because somebody asked a question would be absurd, and
+  the open-path check has already had its say about writing.
+
+  aReport is a sentence for the operator either way, because "it is sound"
+  is the answer that was asked for. Never raises. *)
+function LogStoreCheckIntegrity(out aReport: string): boolean;
+
 implementation
 
 uses
@@ -1016,6 +1035,55 @@ begin
    finally
       check.Free;
    end;
+end;
+
+function LogStoreCheckIntegrity(out aReport: string): boolean;
+var
+   verdict: TIntegrityResult;
+begin
+   Result := False;
+   aReport := '';
+
+   if not LogStoreEnsureOpen then
+      begin
+      aReport := 'The contest log is not open, so it could not be checked. '
+                 + 'Details are in tr4w.log.';
+      Exit;
+      end;
+
+   try
+      verdict := GDatabase.CheckIntegrity;
+   except
+      (* A CHECK THAT RAISES HAS STILL ANSWERED THE QUESTION, and the answer
+        is no. Swallowing it into a report rather than letting it out keeps
+        a menu item from taking the program down. *)
+      on E: Exception do
+         begin
+         if logger <> nil then
+            begin
+            logger.Error('[LogStore] the on-demand integrity check raised %s: %s',
+                         [AnsiString(E.ClassName), AnsiString(E.Message)]);
+            end;
+         aReport := 'The check could not be completed: ' + E.Message;
+         Exit;
+         end;
+   end;
+
+   Result := verdict.Ok;
+   if Result then
+      begin
+      aReport := LogStoreFileName + ' passed integrity_check and '
+                 + 'foreign_key_check.';
+      end
+   else
+      begin
+      if logger <> nil then
+         begin
+         logger.Error('[LogStore] on-demand integrity check FAILED: %s',
+                      [AnsiString(verdict.Report)]);
+         end;
+      aReport := LogStoreFileName + ' FAILED its integrity check. Stop logging and restore the most recent backup.' + sLineBreak + verdict.Report;
+      end;
 end;
 
 function LogStoreBackup(const aDestination: string; out aReport: string): boolean;

@@ -708,6 +708,7 @@ uses
   uMasterForm,             // CreateTR4WMasterWindow -- the SCP window
   uPostScoresForm,         // CreateTR4WPostScoresWindow
   uHamScoreForm,           // CreateTR4WHamScoreWindow
+  uVerificationForm,       // ShowVerificationChecks -- Tools menu
   uIntercomForm,           // CreateTR4WIntercomWindow
   uRadioPanelForm,         // CreateTR4WRadioPanelWindow -- both radios
   uNetworkForm,            // CreateTR4WNetworkWindow
@@ -5404,6 +5405,11 @@ begin
     menu_summary: OpenStationInformationWindow(SummarySheet);
     menu_3830scores: ExportTo3830Scores;  // Issue: 3830 quick-submission report
     menu_edit_cabrillo_summary: OpenStationInformationWindow(nil);  // Issue #914
+
+    (* "IS EVERYTHING ALL RIGHT?" -- ASKED ON PURPOSE (NY4I, 2026-09-11).
+      The checks are read-only and the window runs them itself, so there is
+      nothing to set up here. *)
+    menu_run_verification_checks: ShowVerificationChecks;
     menu_export_edi: OpenStationInformationWindow(ExportToEDI);
 
     menu_scorebyhour: ScoreByHour;
