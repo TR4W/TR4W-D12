@@ -3041,7 +3041,10 @@ var
   TR4W_DOM_FILENAME                     : FileNameType;   // 4.100.2
   TR4W_CFG_FILENAME                     : FileNameType;
   tSilentExport                         : Boolean = False;   // batch /EXPORT: suppress preview + upload prompts
-  TR4W_RST_FILENAME                     : FileNameType;
+  (* TR4W_RST_FILENAME DELETED 2026-09-12. The restart file is the
+    session_state table in the contest database now; see
+    DupeAndMultSheet.SaveRestartFile for what moved and what turned out to
+    be derivable. *)
   TR4W_SYN_FILENAME                     : FileNameType;
 
   TR4W_DEFMESSAGES_FILENAME             : FileNameType;

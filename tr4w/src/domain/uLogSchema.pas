@@ -176,7 +176,11 @@ const
      step, and read docs\SQLITE_LOG_SCHEMA_PLAN.md section 8 first: an added
      column is ALTER TABLE ADD COLUMN guarded by PRAGMA table_info, not a
      rebuild. *)
-   LOG_SCHEMA_VERSION = 1;
+   (* 2 SINCE 2026-09-12: the session_state table arrived with the removal
+     of the .RST restart file. TLogDatabase.MigrateSchema creates it in an
+     existing log; see there for why an added TABLE is safe to do on open
+     where an added column would want more care. *)
+   LOG_SCHEMA_VERSION = 2;
 
    (* EXECUTED IN ORDER, ONE STATEMENT PER ELEMENT.
 
@@ -190,7 +194,7 @@ const
      the build's narrowing ceiling counts and which would be silently lossy if
      any of this were ever not ASCII.  SQL keywords and our own column names
      are ASCII by construction, so AnsiString is both correct and free. *)
-   LOG_SCHEMA_STATEMENTS: array[0..10] of AnsiString = (
+   LOG_SCHEMA_STATEMENTS: array[0..11] of AnsiString = (
 
       (* ONE ROW.  This is the log's own identity and its entry declaration,
         frozen when the log is created (tier 2). *)
@@ -464,6 +468,40 @@ const
       (* The outbound queues are a WHERE clause, not a data structure. *)
       'CREATE INDEX idx_qso_unsent     ON qso(id) WHERE sent_to_server = 0 OR server_dirty = 1',
       'CREATE INDEX idx_qso_unsent_udp ON qso(id) WHERE sent_udp = 0 OR udp_dirty = 1',
+
+      (* WHERE THE OPERATOR LEFT OFF -- the state a restart has to put back.
+
+        THIS REPLACES THE .RST RESTART FILE, which was a raw dump of fourteen
+        globals written with sWriteFile and read back by offset. Two of its
+        fourteen were the total record count and the QSO counts by operating
+        mode; those are DERIVABLE -- is_run is a qso column -- and a second
+        copy of a count is the two-stores problem the binary log already cost
+        us, so they are not here. One was the contest name, which the contest
+        table already holds for the same reason. One was the file format
+        version, which dies with the file.
+
+        The twelve that remain are genuine session state: nothing else in the
+        program holds them, and losing them means an operator who restarts
+        mid-contest loses both radios band, mode and speed memories, their
+        frequency memories and the current operator.
+
+        KEY/VALUE, AND ONE ROW PER ARRAY ELEMENT. FreqMemory is
+        array[BandType, CW..Phone] of LONGINT, and writing it as one blob is
+        how the restart file earned its version byte: the blob changes shape
+        the day a band is added and the whole record becomes unreadable. A row
+        per element means an added band is an absent row, which reads as a
+        default rather than as corruption.
+
+        TEXT for every value, exactly as the config table does and for the
+        same reason -- one converter, in one place, rather than a typed column
+        per kind of thing. *)
+      'CREATE TABLE session_state ('#10 +
+      '    key       TEXT PRIMARY KEY,'#10 +
+      '    value     TEXT NOT NULL,'#10 +
+      '    -- Unix UTC seconds. So that when this log was last closed can'#10 +
+      '    -- be answered from the file itself.'#10 +
+      '    saved_at  INTEGER'#10 +
+      ')',
 
       (* EVERYTHING THE CONTEST .cfg USED TO CARRY.  When this is populated the
         .cfg is no longer necessary, which is the stated goal. *)

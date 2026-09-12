@@ -328,6 +328,24 @@ type
          station default. uCFG.CommandCameFromContestCFG already knows which is
          which -- this does not re-derive it. *)
       procedure SaveConfigValue(const aCommand, aValue, aSource: AnsiString);
+
+      (* WHERE THE OPERATOR LEFT OFF -- the session_state table.
+
+        DELIBERATELY SEPARATE FROM SaveConfigValue, though the shape is the
+        same. A config row is a SETTING, something the operator chose and
+        that a contest file or the station store can also supply; a session
+        row is a POSITION, meaningful only to the log it sits in and to
+        nobody else. Sharing one table would mean the precedence rules that
+        the source column exists for would start applying to a radio's band
+        memory, which is nonsense.
+
+        AN ABSENT KEY IS NOT AN ERROR. It is a log written before this
+        existed, or a field added since, and both must read as the default
+        the caller passes rather than as a failure -- which is the whole
+        reason this is rows rather than one blob. *)
+      procedure SaveSessionValue(const aKey, aValue: AnsiString);
+      function SessionValue(const aKey: AnsiString;
+                            const aDefault: AnsiString = ''): AnsiString;
       procedure SaveMessage(const aKind, aMode, aKeyId, aText,
                             aCaption: AnsiString);
 
@@ -1506,6 +1524,52 @@ begin
       q.ParamByName('source').AsString := aSource;
       q.ParamByName('set_at').AsLargeInt := DateTimeToUnix(Now);
       q.ExecSQL;
+   finally
+      q.Free;
+   end;
+end;
+
+procedure TLogRepository.SaveSessionValue(const aKey, aValue: AnsiString);
+var
+   q: TSQLQuery;
+begin
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := FDatabase.Connection;
+      (* ON CONFLICT, for the reason SaveConfigValue gives: the key decides,
+        and one statement cannot half-apply. *)
+      q.SQL.Text :=
+         'INSERT INTO session_state (key, value, saved_at) ' +
+         'VALUES (:key, :value, :saved_at) ' +
+         'ON CONFLICT(key) DO UPDATE SET ' +
+         '  value = excluded.value, ' +
+         '  saved_at = excluded.saved_at';
+      q.ParamByName('key').AsString := aKey;
+      q.ParamByName('value').AsString := aValue;
+      q.ParamByName('saved_at').AsLargeInt := DateTimeToUnix(Now);
+      q.ExecSQL;
+   finally
+      q.Free;
+   end;
+end;
+
+function TLogRepository.SessionValue(const aKey: AnsiString;
+                                     const aDefault: AnsiString = ''): AnsiString;
+var
+   q: TSQLQuery;
+begin
+   Result := aDefault;
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := FDatabase.Connection;
+      q.SQL.Text := 'SELECT value FROM session_state WHERE key = :key';
+      q.ParamByName('key').AsString := aKey;
+      q.Open;
+      if not q.EOF then
+         begin
+         Result := q.Fields[0].AsAnsiString;
+         end;
+      q.Close;
    finally
       q.Free;
    end;

@@ -315,7 +315,9 @@ var
 
 //  RemMultMatrix                         : array[Band160..All, CW..Both, RemainingMultiplierType] of RemainingMultListPointer;
 
-  RestartVersionNumber                  : Str10 = '4.7';
+  (* RestartVersionNumber DELETED 2026-09-12. It existed because the .RST
+    file was a raw struct dump whose layout changed whenever a field did.
+    A row per value needs no version: an absent row reads as a default. *)
   SingleBand                            : BandType = AllBands;
   StartHour, StartMinute, StartSecond, StartSec100: Word;
 
@@ -398,6 +400,11 @@ uses
   //  OZCHR,
   uConfigValues,
   uSettingsModel,   // Settings.CallWindow
+  (* The contest database replaced the .RST restart file -- see
+    SaveRestartFile. IMPLEMENTATION-section, so no interface cycle. *)
+  uLogStore,
+  uLogRepository,   // CharArrayToAnsi -- NUL-aware, not a cast
+  TypInfo,          // enum names, so an inserted band cannot shift a value
   uNet,
   uGetScores,
   PostUnit,
@@ -1465,189 +1472,206 @@ begin
      end;
 end;
 
+(* WHERE THE OPERATOR LEFT OFF, INTO THE CONTEST DATABASE.
+
+  THIS WAS A .RST FILE -- fourteen globals written raw with sWriteFile and read
+  back by offset, guarded by a version string because the layout changed every
+  time a field did. NY4I, 2026-09-12: "we should no longer use a restart file
+  since we have a far more reliable database."
+
+  TWO OF THE FOURTEEN ARE NOT HERE BECAUSE THEY ARE DERIVED. tRestartInfo holds
+  the total record count and the QSO counts by operating mode, and LoadinLog
+  rebuilds both by walking the log -- it increments riTotalRecordsInLog per row
+  and AddQSOToSheets increments riQSOByOpMode. Writing them down as well is the
+  two-stores problem the binary log already cost us once.
+
+  ONE MORE IS NOT HERE BECAUSE THE CONTEST TABLE HOLDS IT. The file stored the
+  contest name so the reader could refuse another contest's state. That guard is
+  structural now: this state lives INSIDE the contest's own log, so there is no
+  other contest's state to load by mistake and nothing to compare.
+
+  AND THE VERSION STRING IS GONE WITH THE LAYOUT. A row per value means a field
+  added later is an ABSENT ROW that reads as its default, where a blob meant the
+  whole record became unreadable. That is why FreqMemory is one row per band and
+  mode rather than one encoded array.
+
+  ENUMS GO IN BY NAME, NOT BY ORDINAL. An ordinal is what the binary file
+  stored, and it silently means something else the day a band is inserted into
+  the middle of BandType. A name either resolves or it does not. *)
 procedure DupeAndMultSheet.SaveRestartFile;
 
+   (* KEYS ARE BUILT AS UnicodeString AND ENCODED ONCE, at the call. An
+     AnsiString CAST of an enum name is a NARROWING conversion the build
+     counts, and it would drop anything the machine codepage cannot
+     represent; UTF8Encode converts instead, and an enum name is ASCII by
+     construction so the bytes are identical either way. The encode is
+     LAST because concatenating anything onto a UTF8String promotes the
+     result straight back to UnicodeString. *)
+   procedure PutEnum(const aKey: string; aTypeInfo: PTypeInfo; aValue: integer);
+   begin
+      LogStoreRepository.SaveSessionValue(
+         UTF8Encode(aKey), UTF8Encode(GetEnumName(aTypeInfo, aValue)));
+   end;
+
+   procedure PutInt(const aKey: string; aValue: LONGINT);
+   begin
+      LogStoreRepository.SaveSessionValue(UTF8Encode(aKey),
+                                          UTF8Encode(IntToStr(aValue)));
+   end;
+
 var
- // Band                                  : BandType;
- // Mode                                  : ModeType;
-   (* TFileHandle (utils_file), NOT a bare THandle: this unit names LCLType,
-     which redeclares THandle as a distinct type its own source marks
-     deprecated. Identical width on 32-bit Windows, different on every
-     64-bit target. See the note on TFileHandle in utils_file. *)
-  FileWrite                             : TFileHandle;
- // Block, Result{, NumberBlocks}           : integer;
-
+   b: BandType;
+   m: ModeType;
 begin
+   (* Nil when nothing has opened the log, or when a failure disabled it. The
+     session position is worth exactly nothing without the log it describes, so
+     there is no fallback to reach for. *)
+   if LogStoreRepository = nil then
+      begin
+      Exit;
+      end;
 
-  if not tOpenFileForWrite(FileWrite, TR4W_RST_FILENAME) then Exit;
+   PutEnum('radio1.band', TypeInfo(BandType), Ord(Radio1.BandMemory));
+   PutEnum('radio2.band', TypeInfo(BandType), Ord(Radio2.BandMemory));
+   PutEnum('radio1.mode', TypeInfo(ModeType), Ord(Radio1.ModeMemory));
+   PutEnum('radio2.mode', TypeInfo(ModeType), Ord(Radio2.ModeMemory));
+   PutInt('radio1.speed', Radio1.SpeedMemory);
+   PutInt('radio2.speed', Radio2.SpeedMemory);
 
-//TF.sWriteFile()
+   PutInt('lastCQ.frequency', LastCQFrequency);
+   PutEnum('lastCQ.mode', TypeInfo(ModeType), Ord(LastCQMode));
 
-//  Assign(FileWrite, TR4W_RST_FILENAME);
-//  ReWrite(FileWrite, 1);
+   PutEnum('remainingMultDisplay', TypeInfo(RemainingMultiplierType),
+           Ord(RemainingMultDisplay));
 
-  sWriteFile(FileWrite, RestartVersionNumber, SizeOf(RestartVersionNumber));
-  sWriteFile(FileWrite, ContestName, SizeOf(ContestName));
+   for b := Low(BandType) to High(BandType) do
+      begin
+      for m := CW to Phone do
+         begin
+         PutInt('freqMemory.' + GetEnumName(TypeInfo(BandType), Ord(b))
+                + '.' + GetEnumName(TypeInfo(ModeType), Ord(m)),
+                FreqMemory[b, m]);
+         end;
+      end;
 
-  sWriteFile(FileWrite, Radio1.BandMemory, SizeOf(BandType));
-  sWriteFile(FileWrite, Radio2.BandMemory, SizeOf(BandType));
-  sWriteFile(FileWrite, Radio1.ModeMemory, SizeOf(ModeType));
-  sWriteFile(FileWrite, Radio2.ModeMemory, SizeOf(ModeType));
-  sWriteFile(FileWrite, Radio1.SpeedMemory, SizeOf(integer)); {KK1L: 6.73}
-  sWriteFile(FileWrite, Radio2.SpeedMemory, SizeOf(integer)); {KK1L: 6.73}
-
-//  BlockWrite(FileWrite, QSOTotals, SizeOf(QSOTotals), Result);
-//  BlockWrite(FileWrite, TotalNamesSent, SizeOf(TotalNamesSent), Result);
-//  BlockWrite(FileWrite, TotalQSOPoints, SizeOf(TotalQSOPoints), Result);
-//  BlockWrite(FileWrite, MultByBand, SizeOf(MultByBand), Result);
-//  BlockWrite(FileWrite, MultByMode, SizeOf(MultByMode), Result);
-//  BlockWrite(FileWrite, TakingABreak, SizeOf(TakingABreak), Result);
-//  BlockWrite(FileWrite, TotalOffTime, SizeOf(TotalOffTime), Result);
-//  BlockWrite(FileWrite, OffTimeStart, SizeOf(OffTimeStart), Result);
-
-//  BlockWrite(FileWrite, ContinentQSOCount, SizeOf(ContinentQSOCount), Result);
-//  BlockWrite(FileWrite, TimeSpentByBand, SizeOf(TimeSpentByBand), Result);
-
-  sWriteFile(FileWrite, LastCQFrequency, SizeOf(LastCQFrequency)); {KK1L: 6.68}
-  sWriteFile(FileWrite, LastCQMode, SizeOf(LastCQMode)); {KK1L: 6.68}
-
-  sWriteFile(FileWrite, RemainingMultDisplay, SizeOf(RemainingMultDisplay));
-{
-  with MultSheet do
-  begin
-    BlockWrite(FileWrite, Totals, SizeOf(Totals), RESULT);
-
-    for Band := Band160 to All do
-      for Mode := CW to Both do
-        if (((MultByBand) and (Band <> All)) or
-          ((not MultByBand) and (Band = All))) and
-          (((MultByMode) and (Mode <> Both)) or
-          ((not MultByMode) and (Mode = Both))) then
-        begin
-          if Totals[Band, Mode].NumberDomesticMults > 0 then BlockWrite(FileWrite, DomesticList[Band, Mode]^, SizeOf(DomesticList[Band, Mode]^), RESULT);
-          if Totals[Band, Mode].NumberDXMults > 0 then BlockWrite(FileWrite, DXList[Band, Mode]^, SizeOf(DXList[Band, Mode]^), RESULT);
-          if Totals[Band, Mode].NumberPrefixMults > 0 then BlockWrite(FileWrite, PrefixList[Band, Mode]^, SizeOf(PrefixList[Band, Mode]^), RESULT);
-          if Totals[Band, Mode].NumberZoneMults > 0 then BlockWrite(FileWrite, ZoneList[Band, Mode]^, SizeOf(ZoneList[Band, Mode]^), RESULT);
-        end;
-  end;
-}
-//  for Band := Band160 to Band2 do    for Mode := CW to Phone do      BlockWrite(FileWrite, FreqMemory[Band, Mode], SizeOf(FreqMemory[Band, Mode]), RESULT);
-  sWriteFile(FileWrite, FreqMemory, SizeOf(FreqMemory));
-  sWriteFile(FileWrite, tRestartInfo, SizeOf(RestartInfo));
-  sWriteFile(FileWrite, CurrentOperator, SizeOf(CurrentOperator));
-//  BlockWrite(FileWrite, StackArray, SizeOf(StackArray), RESULT);
-//  BlockWrite(FileWrite, StackPointer, SizeOf(StackPointer), RESULT);
-
-  FileClose(FileWrite);   { a FILE handle }
+   LogStoreRepository.SaveSessionValue('currentOperator',
+                                       CharArrayToAnsi(CurrentOperator));
+   LogStoreRepository.Commit;
 end;
 
+(* PUT BACK WHERE THE OPERATOR LEFT OFF.
+
+  The counterpart of SaveRestartFile, and it keeps that routine's name --
+  ReadInBinFiles -- because SheetInitAndLoad calls it and the name is about
+  when it runs, not what it reads. There are no bin files left.
+
+  EVERY FIELD IS OPTIONAL. An absent row means a log written before this
+  existed, or a field added since, and both must leave the global at whatever
+  the program already put there. That is the property a blob could not have and
+  is why the old reader needed a version string and a contest-name check to
+  refuse a file it could not trust.
+
+  A VALUE THAT WILL NOT PARSE IS LEFT ALONE, not defaulted: the caller cannot
+  tell those apart and "the band memory silently became 160m" is worse than
+  "the band memory did not change". *)
 function DupeAndMultSheet.ReadInBinFiles {(JustDoIt: boolean)}: boolean;
 
+   function TakeEnum(const aKey: string; aTypeInfo: PTypeInfo;
+                     var aOrdinal; aSize: integer): boolean;
+   var
+      text: AnsiString;
+      v: integer;
+   begin
+      Result := False;
+      text := LogStoreRepository.SessionValue(UTF8Encode(aKey));
+      if text = '' then
+         begin
+         Exit;
+         end;
+      (* NO CONVERSION AT ALL. TypInfo is compiled without the Unicode
+        modeswitch, so GetEnumValue takes an AnsiString -- decoding first
+        would only narrow it back at the call. Enum names are ASCII, so the
+        bytes stored are the bytes it wants. *)
+      v := GetEnumValue(aTypeInfo, text);
+      if v < 0 then
+         begin
+         Exit;
+         end;
+      (* The globals are one-byte enums and integers of differing width, so the
+        assignment is by size rather than by a typed parameter -- the
+        alternative is a routine per type for no gain. *)
+      case aSize of
+         1: byte(aOrdinal) := byte(v);
+         2: word(aOrdinal) := word(v);
+      else
+         integer(aOrdinal) := v;
+      end;
+      Result := True;
+   end;
+
+   procedure TakeInt(const aKey: string; var aValue: LONGINT);
+   var
+      text: AnsiString;
+      v: LONGINT;
+      code: integer;
+   begin
+      text := LogStoreRepository.SessionValue(UTF8Encode(aKey));
+      if text = '' then
+         begin
+         Exit;
+         end;
+      Val(UTF8Decode(text), v, code);
+      if code = 0 then
+         begin
+         aValue := v;
+         end;
+   end;
+
 var
-//  FileRead                              : file;
- // Result1, Block, NumberBlocks          : integer;
- // Band                                  : BandType;
- // Mode                                  : ModeType;
-  RestartVersion                        : Str10;
-  NameOfContest                         : Str80;
-  h                                     : TFileHandle;   (* utils_file's -- see TFileHandle *)
+   b: BandType;
+   m: ModeType;
+   op: AnsiString;
 begin
-  DisposeOfMemoryAndZeroTotals;
+   Result := False;
+   if LogStoreRepository = nil then
+      begin
+      Exit;
+      end;
 
-  ReadInBinFiles := False;
-{
-  if not JustDoIt then
-  begin
+   TakeEnum('radio1.band', TypeInfo(BandType), Radio1.BandMemory, SizeOf(BandType));
+   TakeEnum('radio2.band', TypeInfo(BandType), Radio2.BandMemory, SizeOf(BandType));
+   TakeEnum('radio1.mode', TypeInfo(ModeType), Radio1.ModeMemory, SizeOf(ModeType));
+   TakeEnum('radio2.mode', TypeInfo(ModeType), Radio2.ModeMemory, SizeOf(ModeType));
+   TakeInt('radio1.speed', Radio1.SpeedMemory);
+   TakeInt('radio2.speed', Radio2.SpeedMemory);
 
-  end;
-}
-  //    Showmessage ('Reading in restart file...');
+   TakeInt('lastCQ.frequency', LastCQFrequency);
+   TakeEnum('lastCQ.mode', TypeInfo(ModeType), LastCQMode, SizeOf(ModeType));
 
-{$IF MAKE_DEFAULT_VALUES = TRUE}
-  Exit;
-{$IFEND}
+   TakeEnum('remainingMultDisplay', TypeInfo(RemainingMultiplierType),
+            RemainingMultDisplay, SizeOf(RemainingMultiplierType));
 
-  if not tOpenFileForRead(h, TR4W_RST_FILENAME) then Exit;
+   for b := Low(BandType) to High(BandType) do
+      begin
+      for m := CW to Phone do
+         begin
+         TakeInt('freqMemory.' + GetEnumName(TypeInfo(BandType), Ord(b))
+                 + '.' + GetEnumName(TypeInfo(ModeType), Ord(m)),
+                 FreqMemory[b, m]);
+         end;
+      end;
 
-  sReadFile(h, RestartVersion, SizeOf(RestartVersion));
+   op := LogStoreRepository.SessionValue('currentOperator');
+   if op <> '' then
+      begin
+      AnsiToCharArray(CurrentOperator, op);
+      end;
 
-  if RestartVersion <> RestartVersionNumber then
-     begin
-     FileClose(h);
-
-     (* The ShortStrings themselves -- @X[1] is a bare pointer into a value
-       with no NUL, so the formatter read past its end. *)
-     ShowMessage(SysUtils.Format(AnsiString(LclText(TC_DIFVERSION)),
-                 [_RESTARTBIN, RestartVersionNumber, RestartVersion]));
-     Exit;
-     end;
-
-  sReadFile(h, NameOfContest, SizeOf(ContestName));
-
-  if ContestName = '' then
-     begin
-     ContestName := NameOfContest;
-     end;
-
-  if NameOfContest <> ContestName then
-     begin
-     FileClose(h);
-     ShowMessage(TC_RESTARTBINISFORADIFFERENTCONTEST);
-     Exit;
-     end;
-
-  sReadFile(h, Radio1.BandMemory, SizeOf(BandType));
-  sReadFile(h, Radio2.BandMemory, SizeOf(BandType));
-  sReadFile(h, Radio1.ModeMemory, SizeOf(ModeType));
-  sReadFile(h, Radio2.ModeMemory, SizeOf(ModeType));
-  sReadFile(h, Radio1.SpeedMemory, SizeOf(integer)); {KK1L: 6.73}
-  sReadFile(h, Radio2.SpeedMemory, SizeOf(integer)); {KK1L: 6.73}
-
-//  BlockRead(FileRead, QSOTotals, SizeOf(QSOTotals), Result1);
-//  BlockRead(FileRead, TotalNamesSent, SizeOf(TotalNamesSent), Result1);
-//  BlockRead(FileRead, TotalQSOPoints, SizeOf(TotalQSOPoints), Result1);
-
-//  BlockRead(FileRead, MultByBand, SizeOf(MultByBand), Result1);
-//  BlockRead(FileRead, MultByMode, SizeOf(MultByMode), Result1);
-//  BlockRead(FileRead, TakingABreak, SizeOf(TakingABreak), Result1);
-//  BlockRead(FileRead, TotalOffTime, SizeOf(TotalOffTime), Result1);
-//  BlockRead(FileRead, OffTimeStart, SizeOf(OffTimeStart), Result1);
-
-//  BlockRead(FileRead, ContinentQSOCount, SizeOf(ContinentQSOCount), Result1);
-//  BlockRead(FileRead, TimeSpentByBand, SizeOf(TimeSpentByBand), Result1);
-
-  sReadFile(h, LastCQFrequency, SizeOf(LastCQFrequency)); {KK1L: 6.68}
-  sReadFile(h, LastCQMode, SizeOf(LastCQMode)); {KK1L: 6.68}
-
-//  if BandMemory[RadioOne] >= All then BandMemory[RadioOne] := Band160;
-//  if BandMemory[RadioTwo] >= All then BandMemory[RadioTwo] := Band160;
-
-//  if ModeMemory[RadioOne] >= Both then ModeMemory[RadioOne] := CW;
-//  if ModeMemory[RadioTwo] >= Both then ModeMemory[RadioTwo] := CW;
-
-  ActiveBand := Radio1.BandMemory {BandMemory[RadioOne]};
-  ActiveMode := Radio1.ModeMemory {ModeMemory[RadioOne]};
-  BandMapBand := ActiveBand; {KK1L: 6.68 gets BM in sync when no radio connected}
-  BandMapMode := ActiveMode; {KK1L: 6.68 gets BM in sync when no radio connected}
-
-  sReadFile(h, RemainingMultDisplay, SizeOf(RemainingMultDisplay));
-
-//  for Band := Band160 to Band2 do    for Mode := CW to Phone do      BlockRead(FileRead, FreqMemory[Band, Mode], SizeOf(FreqMemory[Band, Mode]), Result1);
-  sReadFile(h, FreqMemory, SizeOf(FreqMemory));
-
-  sReadFile(h, tRestartInfo, SizeOf(RestartInfo));
-  sReadFile(h, CurrentOperator, SizeOf(CurrentOperator));
-
-//  BlockRead(FileRead, StackArray, SizeOf(StackArray), Result1);
-//  BlockRead(FileRead, StackPointer, SizeOf(StackPointer), Result1);
-
-//  SetLogColumnsWidth;
-
-  FileClose(h);
-
-  ReadInBinFiles := True;
-  {CodeSpeed := RadioOneSpeed;}
-  CodeSpeed := Radio1.SpeedMemory; {KK1L: 6.73}
+   (* tRestartInfo IS NOT READ BACK. LoadinLog rebuilds the record count and the
+     per-operating-mode counts by walking the log, which runs immediately after
+     this in SheetInitAndLoad. Restoring them here as well would have them
+     counted twice. *)
+   Result := True;
 end;
 
 procedure DupeAndMultSheet.SheetInitAndLoad;

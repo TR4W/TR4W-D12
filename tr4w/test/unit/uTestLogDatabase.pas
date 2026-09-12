@@ -53,6 +53,7 @@ type
       procedure TestIntegrityReportsAClosedLog;
 
       (* backup *)
+      procedure TestAnOlderLogGainsTheSessionTable;
       procedure TestSnapshotIncludesCommitsStillInTheWAL;
       procedure TestSnapshotRefusesAnExistingDestination;
       procedure TestSnapshotRefusesAClosedLog;
@@ -295,8 +296,13 @@ begin
      suite fails here rather than being noticed a release later. The contest
      .cfg moving into the log (NY4I, 2026-09-01) is why config and message are
      on this list. *)
-   CheckEquals('config contest message qso ', found,
-               'the log holds exactly the four tables the schema declares');
+   (* FIVE SINCE 2026-09-12. session_state arrived with the removal of the
+     .RST restart file -- the twelve fields that are genuine session state
+     and are held nowhere else. This assertion is EXHAUSTIVE on purpose:
+     a table added without a thought here is a table nobody decided to
+     add. *)
+   CheckEquals('config contest message qso session_state ', found,
+               'the log holds exactly the five tables the schema declares');
    Scrub(fn);
 end;
 
@@ -923,6 +929,81 @@ end;
   checkpoint, snapshots, and then reads the row back out of the snapshot.
   --------------------------------------------------------------------------- *)
 
+(* ---------------------------------------------------------------------
+  AN OLD LOG OPENS, AND COMES BACK CURRENT.
+
+  VerifyIdentity has always refused a log from the FUTURE and said an older
+  one "is fine -- that is what a migration is for". There was no migration:
+  the sentence described an intention. session_state is the first schema
+  change to need one, and this is what proves it happens rather than that it
+  is written down.
+
+  THE FIXTURE IS A REAL DOWNGRADE. The log is created at the current schema,
+  closed, and then its session_state table is DROPPED and user_version set
+  back to 1 -- so the file on disk is indistinguishable from one written
+  before this change. Reconstructing an old log by hand would prove only that
+  the reconstruction matches the migration.
+  --------------------------------------------------------------------- *)
+
+procedure TLogDatabaseTests.TestAnOlderLogGainsTheSessionTable;
+var
+   db: TLogDatabase;
+   fn: string;
+   q: TSQLQuery;
+begin
+   BeginTest('a schema-1 log gains session_state when it is opened');
+   fn := TempLogName('migrate.db');
+   Scrub(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      CheckEquals(LOG_SCHEMA_VERSION, db.SchemaVersion, 'created current');
+
+      (* BACK TO SCHEMA 1, on disk. *)
+      db.Connection.ExecuteDirect('DROP TABLE session_state');
+      db.Transaction.Commit;
+      (* user_version IS settable inside a transaction, unlike synchronous
+        and journal_mode -- which is why this goes through ExecuteDirect
+        and does not need the connection-level pragma path. *)
+      db.Connection.ExecuteDirect('PRAGMA user_version = 1');
+      db.Transaction.Commit;
+   finally
+      db.Free;
+   end;
+
+   db := TLogDatabase.Create;
+   try
+      db.Open(fn);
+      CheckEquals(LOG_SCHEMA_VERSION, db.SchemaVersion,
+                  'opening an older log stamps the current schema version');
+
+      q := TSQLQuery.Create(nil);
+      try
+         q.DataBase := db.Connection;
+         q.SQL.Text := 'SELECT name FROM sqlite_master WHERE type = ''table'' AND name = ''session_state''';
+         q.Open;
+         CheckFalse(q.EOF, 'the table the migration adds is there');
+         q.Close;
+      finally
+         q.Free;
+      end;
+   finally
+      db.Free;
+   end;
+
+   (* IDEMPOTENT: opening again must not fail on a table that already exists. *)
+   db := TLogDatabase.Create;
+   try
+      db.Open(fn);
+      CheckTrue(db.IsOpen, 'a second open of an already-migrated log is fine');
+   finally
+      db.Free;
+   end;
+
+   Scrub(fn);
+end;
+
 procedure TLogDatabaseTests.TestSnapshotIncludesCommitsStillInTheWAL;
 var
    db: TLogDatabase;
@@ -1071,6 +1152,7 @@ begin
 
    TestIntegrityPassesOnAFreshLog;
    TestIntegrityReportsAClosedLog;
+   TestAnOlderLogGainsTheSessionTable;
    TestSnapshotIncludesCommitsStillInTheWAL;
    TestSnapshotRefusesAnExistingDestination;
    TestSnapshotRefusesAClosedLog;

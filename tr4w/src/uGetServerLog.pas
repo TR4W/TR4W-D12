@@ -273,12 +273,11 @@ begin
      if FileUtil.CopyFile(AnsiString(TR4W_LOG_FILENAME),
                           AnsiString(TempBuffer2), []) then
         begin
-        StrPCopy(TempBuffer2, AnsiString(SysUtils.Format('%sRSTBACKUP_%.3d.RST',
-                                         [PAnsiChar(@TR4W_LOG_PATH_NAME), counter])));
-        (* False was bFailIfExists -- overwrite -- which is what
-          cffOverwriteFile says.  Same for the SYN copy below. *)
-        FileUtil.CopyFile(AnsiString(TR4W_RST_FILENAME),
-                          AnsiString(TempBuffer2), [cffOverwriteFile]);
+        (* THE .RST COPY IS GONE, 2026-09-12. This backed the restart file up
+          beside the log before replacing the log from the server. Nothing
+          writes a .RST any more -- session state lives in the contest
+          database's session_state table -- so the copy could only ever fail,
+          and its result was never checked. *)
         Break;
         end;
      end;

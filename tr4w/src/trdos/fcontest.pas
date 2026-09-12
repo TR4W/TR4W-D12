@@ -157,7 +157,6 @@ begin
        these three untouched and still does. *)
      chosenStem := chosenDir + Copy(chosenName, 1, dotPos - 1);
      TF.Format(TR4W_LOG_FILENAME, '%s.TRW', PAnsiChar(AnsiString(chosenStem)));
-     TF.Format(TR4W_RST_FILENAME, '%s.RST', PAnsiChar(AnsiString(chosenStem)));
      TF.Format(TR4W_DOM_FILENAME, '%s.DOM', PAnsiChar(AnsiString(chosenStem)));
      end;
 

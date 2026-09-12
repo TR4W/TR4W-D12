@@ -136,6 +136,7 @@ type
 
       procedure OpenConnection(const aFileName: string);
       procedure ApplySchema;
+      procedure MigrateSchema;
       procedure ApplyPragmas;
       procedure StampIdentity;
       procedure VerifyIdentity;
@@ -1047,6 +1048,61 @@ begin
 
    OpenConnection(aFileName);
    VerifyIdentity;
+
+   (* AFTER VerifyIdentity, NEVER BEFORE. Identity decides whether this is
+     our file at all and whether it is from the future; migrating first
+     would mean writing to somebody else's database to find out. *)
+   MigrateSchema;
+end;
+
+(* BRING AN OLDER LOG UP TO THE CURRENT SCHEMA.
+
+  VerifyIdentity refuses a log from the FUTURE and says an older one "is
+  fine -- that is what a migration is for". This is that migration, and it
+  had no implementation until the session_state table needed one.
+
+  ADDING A TABLE IS THE EASY CASE and is why this is safe to do on every
+  open. A new table cannot invalidate a row that already exists, cannot
+  change what an older build reads back, and IF NOT EXISTS makes it
+  idempotent. An added COLUMN wants more care -- guarded by PRAGMA
+  table_info, per the note on LOG_SCHEMA_VERSION -- and a changed column
+  wants a plan, not a line here.
+
+  THE VERSION IS STAMPED LAST. If the CREATE fails the transaction carries
+  the statement away with it and user_version still reads the old number,
+  so the next open tries again rather than believing a migration that did
+  not happen. *)
+procedure TLogDatabase.MigrateSchema;
+var
+   version: integer;
+begin
+   version := PragmaAsInteger('PRAGMA user_version');
+   if version >= LOG_SCHEMA_VERSION then
+      begin
+      Exit;
+      end;
+
+   (* NO LOG LINE HERE. This unit has no logger by design -- it is a leaf
+     that raises rather than reports, so that a standalone tool linking it
+     needs nothing assigned. uLogStore announces the open and is where a
+     migration notice belongs if one is wanted. *)
+   (* v1 -> v2: the session_state table, which replaced the .RST file. *)
+   if version < 2 then
+      begin
+      FConnection.ExecuteDirect(
+         'CREATE TABLE IF NOT EXISTS session_state ('
+         + ' key TEXT PRIMARY KEY,'
+         + ' value TEXT NOT NULL,'
+         + ' saved_at INTEGER)');
+      end;
+
+   FTransaction.Commit;
+   (* The version is a small integer, so its digits are ASCII and UTF8Encode
+     is exact where an AnsiString cast would be a narrowing the build
+     counts. Encoded LAST: concatenating onto the result would promote it
+     back to UnicodeString. *)
+   ExecPragma(UTF8Encode('PRAGMA user_version = '
+                         + IntToStr(LOG_SCHEMA_VERSION)));
 end;
 
 procedure TLogDatabase.Close;
