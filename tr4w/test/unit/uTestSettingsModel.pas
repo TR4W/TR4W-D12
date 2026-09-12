@@ -347,7 +347,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(186, names.Count,
+         CheckEquals(194, names.Count,
                      'one name per migrated setting, plus the ten that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -1065,6 +1065,7 @@ const
      readable in a diff, and a single 900-character line is not. *)
    EXPECTED = ''
       + '"ALL CW MESSAGES CHAINABLE",'
+      + '"ALLOW AUTO UPDATE",'
       + '"ALT-D BUFFER ENABLE",'
       + '"ALT-D CQ ENABLE",'
       + '"ALWAYS CALL BLIND CQ",'
@@ -1112,6 +1113,7 @@ const
       + '"CQ EXCHANGE NAME KNOWN",'
       + '"CQ SSB EXCHANGE",'
       + '"CQ SSB EXCHANGE NAME KNOWN",'
+      + '"CTY UPDATE CHECK ON STARTUP",'
       + '"CW SPEED FROM DATABASE",'
       + '"DE ENABLE",'
       + '"DIGITAL MODE ENABLE",'
@@ -1143,6 +1145,7 @@ const
       + '"MULT BY BAND",'
       + '"MULT BY MODE",'
       + '"MULT SHEET AUTO RESET",'
+      + '"MULTI MULTS ONLY",'
       + '"MULTIPLE BANDS",'
       + '"MULTIPLE MODES",'
       + '"MY CALL",'
@@ -1161,6 +1164,7 @@ const
       + '"MY SECTION",'
       + '"MY STATE",'
       + '"MY ZONE",'
+      + '"NET STATUS UPDATE INTERVAL",'
       + '"NO BORDER",'
       + '"NO CAPTION",'
       + '"NO COLUMN HEADER",'
@@ -1196,7 +1200,9 @@ const
       + '"QSX ENABLE",'
       + '"QSY INACTIVE RADIO",'
       + '"QTC ENABLE",'
+      + '"QTC EXTRA SPACE",'
       + '"QTC MINUTES",'
+      + '"QTC QRS",'
       + '"QUICK QSL CW MESSAGE",'
       + '"QUICK QSL CW MESSAGE1",'
       + '"QUICK QSL KEY 1",'
@@ -1224,7 +1230,9 @@ const
       + '"SHORT INTEGERS",'
       + '"SHOW ALL SERIAL PORTS",'
       + '"SHOW DOMESTIC MULTIPLIER NAME",'
+      + '"SHOW FREQUENCY IN LOG",'
       + '"SHOW GRIDLINES",'
+      + '"SHOW TYPED CALLSIGN",'
       + '"SKIP ACTIVE BAND",'
       + '"SPACE BAR DUPE CHECK ENABLE",'
       + '"SPOT COLLECTOR ENABLED",'

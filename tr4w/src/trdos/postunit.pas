@@ -172,7 +172,8 @@ function GetStateFromSection( section: string ): string;
 // function CorrectContestExchange: boolean;
 
 var
-  tShowFrequencyinLog: boolean = true;
+  (* tShowFrequencyinLog is gone (2026-09-12) --
+    Settings.Log.ShowFrequency. *)
   // Was false but Howie confirmed it should be true de NY4I 9 AUG 2020
   Radio1IDs: Str10;
   // Radio2ID                              : Char = #0;
@@ -2993,7 +2994,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
 
              nrReceived := TempRXData.NumberReceived;
              nrSent     := TempRXData.NumberSent;
-             if tShowFrequencyinLog then
+             if Settings.Log.ShowFrequency then
                 begin
                 if ( TempRXData.Frequency = 0 ) then
                   // Get base frequency from band

@@ -2193,7 +2193,7 @@ begin
 
   // Silent background CTY version check — posts WM_CTY_VERSION_CHECKED when done.
   // Config is already loaded at this point so CTYUpdateCheckOnStartup is valid.
-  if CTYUpdateCheckOnStartup then
+  if Settings.Country.UpdateCheckOnStartup then
      CheckCTYVersionAsync(BackgroundEvents.CTYVersionChecked);
 
   // MY GRID, if it has never been set.

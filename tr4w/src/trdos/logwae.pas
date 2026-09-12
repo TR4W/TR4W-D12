@@ -66,9 +66,9 @@ type
 
 var
   QTCsToBeSendArray                     : array[1..10] of TQTCsToBeSend;
-  QTCExtraSpace                         : boolean = True;
 //  QTCNote                          : Str80;
-  QTCQRS                                : boolean = True;
+  (* QTCExtraSpace and QTCQRS are gone (2026-09-12) --
+    Settings.Qtc.ExtraSpace and Settings.Qtc.Qrs. *)
   QTCNumber                             : integer;
   NumberMessagesToBeSentString {, QTCNumberString}: string;
 

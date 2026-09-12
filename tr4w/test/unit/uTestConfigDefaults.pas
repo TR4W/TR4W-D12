@@ -173,7 +173,7 @@ begin
    CheckFalse(Settings.So2r.SwapRelaySense,   'SwapRelaySense was False');
    CheckFalse(Settings.So2r.TwoRadioMode,     'TwoRadioMode was False');
    CheckFalse(Settings.So2r.SkipActiveBand,   'SkipActiveBand was False');
-   CheckFalse(Config.MultiMultsOnly,      'MultiMultsOnly was False');
+   CheckFalse(Settings.Network.MultiMultsOnly, 'MultiMultsOnly was False');
    CheckFalse(Config.IntercomFileEnable,  'IntercomFileEnable was False');
 end;
 

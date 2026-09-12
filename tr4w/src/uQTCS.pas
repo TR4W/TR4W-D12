@@ -242,13 +242,13 @@ begin
   if not (QTC in [1..10]) then Exit;
 {
   Format := '%04u %s %u';
-  if QTCQRS then
+  if Settings.Qtc.Qrs then
   begin
     Format := ControlS + '%04u %s %u' + ControlF;
-    if QTCExtraSpace then Format := ControlS + '%04u  %s  %u' + ControlF;
+    if Settings.Qtc.ExtraSpace then Format := ControlS + '%04u  %s  %u' + ControlF;
   end
   else
-    if QTCExtraSpace then Format := '%04u  %s  %u';
+    if Settings.Qtc.ExtraSpace then Format := '%04u  %s  %u';
 }
 
   Time := QTCsToBeSendArray[QTC].qsTime;
@@ -256,7 +256,8 @@ begin
   Number := QTCsToBeSendArray[QTC].qsNumber;
 
   TempQTCMinutes := (LastSendedQTCHour = (Time div 100)) and Settings.Qtc.Minutes;
-  Format := FormatArray[QTCQRS, QTCExtraSpace, TempQTCMinutes];
+  Format := FormatArray[Settings.Qtc.Qrs, Settings.Qtc.ExtraSpace,
+                        TempQTCMinutes];
 
   if Settings.Qtc.Minutes then
      begin

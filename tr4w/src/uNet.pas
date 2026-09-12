@@ -208,15 +208,14 @@ var
     argument is ManualReset, so False here means the wait consumes the signal
     exactly as the Win32 one did. *)
   tNet_Event                            : SyncObjs.TEvent;
-  tShowTypedCallsign                    : boolean = True;
   CurrentDisplayedRow                   : integer = 1;
 
   MF                                    : MultsFrequencies;
   tUSQ                                  : Cardinal;
   tUSQE                                 : Cardinal;
 
-  tAllowAutoUpdate                      : boolean = True;
-  tNetStatusUpdateInterval              : integer = 5000;
+  (* tShowTypedCallsign, tAllowAutoUpdate and tNetStatusUpdateInterval are
+    gone (2026-09-12) -- Settings.Network owns all three. *)
   tMessagesExhangeEnable                : boolean = True;
   StationStatusStringBuffer             : array[0..31] of Char;
   STARTTIMEOFTHETR4W                    : Cardinal;
@@ -576,7 +575,7 @@ var
               if NetQSOInfoPtr^.qiComputerID <> NetQSOInfoToSend.qiComputerID then
                  begin
                  if FindAndUpdateQSOInLog(NetQSOInfoPtr^.qiInformation) then
-                   if tAllowAutoUpdate then
+                   if Settings.Network.AllowAutoUpdate then
                       begin
                       tUpdateLog(actRescore);
                       LoadinLog;

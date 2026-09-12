@@ -176,6 +176,8 @@ type
    TPaddleMonitorTone   = 0..65535;   // was crMin:0, crMax:MAXWORD
    TPaddlePttHoldCount  = 0..65535;   // was crMin:0, crMax:MAXWORD
    TPaddleSpeed         = 0..99;      // was crMin:0, crMax:99
+   (* The Network window's refresh timer, in milliseconds. *)
+   TNetStatusInterval   = 1000..10000; // was crMin:1000, crMax:10000
    (* A UDP PORT. 1..65535, which is the port range and not a TR4W rule --
      the old row said crMin:1, crMax:65535 and meant the same thing. *)
    TWsjtxPort           = 1..65535;   // was crMin:1, crMax:65535
@@ -367,6 +369,51 @@ type
         and is an arm in uSettingsEffects now, so it takes effect when it is
         changed rather than at the next start. *)
       property ShowGridlines: boolean read FShowGridlines write FShowGridlines;
+   end;
+
+   (*
+     THE MULTI-OP NETWORK, as this position behaves on it.
+
+     NOT TComputerSettings, which is this position's IDENTITY -- the name and
+     id the other positions see. These four are policy: what arriving traffic
+     is allowed to do to this log, what is announced, and how often.
+
+     ALL FOUR CARRY AN ALIAS, because every one of the legacy names omits the
+     subject or abbreviates it -- ALLOW AUTO UPDATE, NET STATUS UPDATE
+     INTERVAL. A property path has to say which network.
+   *)
+   TNetworkSettings = class(TSettingsGroup)
+   private
+      FAllowAutoUpdate: boolean;
+      FMultiMultsOnly: boolean;
+      FShowTypedCallsign: boolean;
+      FStatusUpdateInterval: TNetStatusInterval;
+   public
+      constructor Create;
+   published
+      (* Was tAllowAutoUpdate in uNet -- whether a correction arriving from
+        another position is applied to a QSO already in this log. Defaults
+        TRUE, which is what a multi-op network is for. *)
+      property AllowAutoUpdate: boolean
+         read FAllowAutoUpdate write FAllowAutoUpdate;
+      (* Was Config.MultiMultsOnly.
+
+        NO LIVE READER IN THIS BUILD, and carried rather than dropped for the
+        reason NO COLUMN HEADER was: an operator can see it in Preferences,
+        so removing a setting is a decision and not a migration's side
+        effect. *)
+      property MultiMultsOnly: boolean
+         read FMultiMultsOnly write FMultiMultsOnly;
+      (* Was tShowTypedCallsign in uNet -- whether each keystroke of a partly
+        typed callsign is announced to the other positions, so they can see
+        who is being worked before the QSO is logged. *)
+      property ShowTypedCallsign: boolean
+         read FShowTypedCallsign write FShowTypedCallsign;
+      (* Was tNetStatusUpdateInterval -- the Network window's refresh timer,
+        in milliseconds. The bound is a subrange, which is where crMin:1000
+        and crMax:10000 went. *)
+      property StatusUpdateInterval: TNetStatusInterval
+         read FStatusUpdateInterval write FStatusUpdateInterval;
    end;
 
    (* THE EXTERNAL LOGGER -- the first area to move off CFGCA.
@@ -1115,6 +1162,7 @@ type
       FBackupFrequency: TBackupLogFrequency;
       FBeepEvery10Qsos: boolean;
       FDisabled: boolean;
+      FShowFrequency: boolean;
    public
       constructor Create;
    published
@@ -1171,6 +1219,11 @@ type
         than translated: `if Settings.Log.Disabled` reads the way the code
         means, and the legacy NO LOG still reaches it by alias. *)
       property Disabled: boolean read FDisabled write FDisabled;
+      (* Was tShowFrequencyinLog in postunit -- whether the frequency is
+        written with each QSO on export. Defaults TRUE, and the golden
+        corpus is what proves it: every reference carries a FREQ. *)
+      property ShowFrequency: boolean
+         read FShowFrequency write FShowFrequency;
    end;
 
    (*
@@ -1563,6 +1616,8 @@ type
    private
       FEnable: boolean;
       FMinutes: boolean;
+      FExtraSpace: boolean;
+      FQrs: boolean;
    public
       constructor Create;
       class function IsContestScoped: boolean; override;
@@ -1571,6 +1626,12 @@ type
       property Enable: boolean read FEnable write FEnable;
       // Was QTCMinutes in logwind.pas. QTC MINUTES.
       property Minutes: boolean read FMinutes write FMinutes;
+      (* Was QTCExtraSpace in logwae.pas -- whether the QTC line is sent
+        with wider spacing. QTC EXTRA SPACE derives exactly. *)
+      property ExtraSpace: boolean read FExtraSpace write FExtraSpace;
+      (* Was QTCQRS -- send the QTC slower than the rest. QTC QRS derives
+        exactly too, which is why this group needs no alias at all. *)
+      property Qrs: boolean read FQrs write FQrs;
    end;
 
    (*
@@ -1730,12 +1791,17 @@ type
    TCountrySettings = class(TSettingsGroup)
    private
       FInformationFile: string;
+      FUpdateCheckOnStartup: boolean;
    public
       constructor Create;
    published
       // Was the global CountryInformationFile in logstuff.pas.
       property InformationFile: string
          read FInformationFile write FInformationFile;
+      (* Was CTYUpdateCheckOnStartup in uCFG -- ask tr4w.net whether a
+        newer CTY.DAT exists, once, at startup. *)
+      property UpdateCheckOnStartup: boolean
+         read FUpdateCheckOnStartup write FUpdateCheckOnStartup;
    end;
 
    (*
@@ -2216,6 +2282,7 @@ type
       FDvk: TDvkSettings;
       FWsjtx: TWsjtxSettings;
       FMainWindow: TMainWindowSettings;
+      FNetwork: TNetworkSettings;
       FUnknownCountryFile: TUnknownCountryFileSettings;
       FQso: TQsoSettings;
       FMult: TMultSettings;
@@ -2345,6 +2412,7 @@ type
       property Dvk: TDvkSettings read FDvk;
       property Wsjtx: TWsjtxSettings read FWsjtx;
       property MainWindow: TMainWindowSettings read FMainWindow;
+      property Network: TNetworkSettings read FNetwork;
       property UnknownCountryFile: TUnknownCountryFileSettings
          read FUnknownCountryFile;
       property Qso: TQsoSettings read FQso;
@@ -2776,6 +2844,16 @@ begin
    FShowAll := False;
 end;
 
+constructor TNetworkSettings.Create;
+begin
+   inherited Create;
+   (* The values the typed constants in uNet and uConfigValues carried. *)
+   FAllowAutoUpdate      := True;
+   FMultiMultsOnly       := False;
+   FShowTypedCallsign    := True;
+   FStatusUpdateInterval := 5000;
+end;
+
 constructor TWsjtxSettings.Create;
 begin
    inherited Create;
@@ -2874,6 +2952,8 @@ begin
    FBackupFrequency    := 0;
    FBeepEvery10Qsos    := False;
    FDisabled           := False;
+   (* tShowFrequencyinLog was declared TRUE in postunit.pas. *)
+   FShowFrequency      := True;
 end;
 
 constructor TCqSettings.Create;
@@ -2998,6 +3078,9 @@ begin
    inherited Create;
    FEnable  := False;
    FMinutes := False;
+   (* Both declared TRUE in logwae.pas. *)
+   FExtraSpace := True;
+   FQrs        := True;
 end;
 
 class function TQtcSettings.IsContestScoped: boolean;
@@ -3052,7 +3135,9 @@ end;
 constructor TCountrySettings.Create;
 begin
    inherited Create;
-   FInformationFile := '';
+   FInformationFile      := '';
+   (* CTYUpdateCheckOnStartup was declared TRUE in uCFG. *)
+   FUpdateCheckOnStartup := True;
 end;
 
 constructor TQsxSettings.Create;
@@ -3153,6 +3238,7 @@ begin
    FDvk            := TDvkSettings.Create;
    FWsjtx          := TWsjtxSettings.Create;
    FMainWindow     := TMainWindowSettings.Create;
+   FNetwork        := TNetworkSettings.Create;
    FUnknownCountryFile := TUnknownCountryFileSettings.Create;
    FQso            := TQsoSettings.Create;
    FMult           := TMultSettings.Create;
@@ -3519,6 +3605,20 @@ begin
    Alias('NO CAPTION',       'MainWindow.NoCaption');
    Alias('NO COLUMN HEADER', 'MainWindow.NoColumnHeader');
    Alias('SHOW GRIDLINES',   'MainWindow.ShowGridlines');
+
+   (* The multi-op network's four, none of which name the network. *)
+   Alias('ALLOW AUTO UPDATE',          'Network.AllowAutoUpdate');
+   Alias('MULTI MULTS ONLY',           'Network.MultiMultsOnly');
+   Alias('SHOW TYPED CALLSIGN',        'Network.ShowTypedCallsign');
+   Alias('NET STATUS UPDATE INTERVAL', 'Network.StatusUpdateInterval');
+
+   (* CTY is what an operator calls the country file; the group is named
+     for the thing rather than for the file extension. *)
+   Alias('CTY UPDATE CHECK ON STARTUP', 'Country.UpdateCheckOnStartup');
+
+   (* The log's own display of the frequency. The command puts the group
+     in the middle -- SHOW FREQUENCY IN LOG -- which no path can do. *)
+   Alias('SHOW FREQUENCY IN LOG', 'Log.ShowFrequency');
 
    Alias('HF BAND ENABLE',   'Bands.HfEnabled');
    Alias('VHF BAND ENABLE',  'Bands.VhfEnabled');

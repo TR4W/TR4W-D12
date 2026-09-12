@@ -141,7 +141,6 @@ type
         InBandLock and WaitForStrength were typed constants = True; losing that
         turns the in-band guard off and stops the SO2R code waiting for a signal
         report, neither of which announces itself. }
-      MultiMultsOnly: boolean;
       IntercomFileEnable: boolean;
 
       { OPERATING AND PTT, migrated 2026-08-15.
@@ -237,7 +236,6 @@ var
       { True, 15, 700 and 13 are NOT arbitrary -- they are the values the typed
         constants in LOGK1EA carried, kept so a station with no settings file
         behaves exactly as it did before. }
-      MultiMultsOnly: False;
       IntercomFileEnable: False;
       AutoQSONumberDecrement: False;
       NameFlagEnable: True;

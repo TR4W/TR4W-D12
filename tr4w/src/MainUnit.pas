@@ -4122,7 +4122,7 @@ begin
      ShowInformation;
      end;
 
-  if tShowTypedCallsign then
+  if Settings.Network.ShowTypedCallsign then
      begin
      SendStationStatus(sstCallsign);
      end;

@@ -521,7 +521,8 @@ var
      uSettingsModel, with the two in logstuff.pas that went with them. *)
    (* SpotCollectorEnabled MOVED, 2026-09-10 -- Settings.SpotCollector.Enabled
      in uSettingsModel.  Its default moved into that class's constructor. *)
-   CTYUpdateCheckOnStartup: boolean = true;
+   (* CTYUpdateCheckOnStartup MOVED, 2026-09-12 --
+     Settings.Country.UpdateCheckOnStartup. *)
 
 const
 
@@ -649,6 +650,10 @@ const
      table falls with the rows. *)
    - 5 {WSJT-X -- moved to uSettingsModel}
    - 4 {the main window's appearance -- moved to uSettingsModel}
+   - 4 {the multi-op network's own policy -- moved to uSettingsModel}
+   - 2 {the two WAE QTC sending options -- moved to uSettingsModel}
+   - 1 {CTY UPDATE CHECK ON STARTUP -- moved to uSettingsModel}
+   - 1 {SHOW FREQUENCY IN LOG -- moved to uSettingsModel}
    ;
 
    // crS (CFGStatus): csNew / csOld = active -- the command's value IS applied.
@@ -662,7 +667,6 @@ const
     {(*}
 
  (crCommand: 'ADD DOMESTIC COUNTRY';          crAddress: @tAddDomesticCountryString;      crMin:0;  crMax:13;       crS: csOwned; crA: 16;crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'ALLOW AUTO UPDATE';             crAddress: @tAllowAutoUpdate;               crMin:0;  crMax:0;        crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'ASK FOR FREQUENCIES';           crAddress: @AskForFrequencies;              crMin:0;  crMax:0;        crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'AUTO QSL INTERVAL';             crAddress: pointer(3);                      crMin:0;  crMax:6;        crS: csJSON; crA: 6; crC:0 ; crP:0; crJ: 0; crKind: ckArray;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'AUTO QSO NUMBER DECREMENT';     crAddress: @Config.AutoQSONumberDecrement;         crMin:0;  crMax:0;        crS: csJSON; crA: 0; crC:0 ; crP:5; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
@@ -706,7 +710,6 @@ const
  (crCommand: 'CONTEST';                       crAddress: pointer(22);                     crMin:0;  crMax:0;       crS: csJSON; crA: 1; crC:0 ; crP:0; crJ: 2; crKind: ckList;  cfFunc: cfAll; crType: ctOther; crNetwork: 1),
 // (crCommand: 'COPY FILES';                    crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctOperation; crNetwork: 1),
 // (crCommand: 'CQ MENU';                       crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'CTY UPDATE CHECK ON STARTUP';   crAddress: @CTYUpdateCheckOnStartup;        crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
 // CUSTOM CARET retired 2026-08-18: TR4W drew a block caret from cursor.bmp into
 // the entry fields, which are LCL TEdits since Phase 3b and carry their own.
 // csRem, not deleted, so an existing .cfg that sets it still loads.
@@ -835,10 +838,8 @@ const
  (crCommand: 'MP3 RECORDER ENABLE';           crAddress: @Config.MP3RecorderEnable;                 crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
 // (crCommand: 'MULTIPLIER ITEM WIDTH';         crAddress: @MultiplierItemWidth;            crMin:0;  crMax:255;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctByte; crNetwork: 1),
  (crCommand: 'MULT REPORT MINIMUM BANDS';     crAddress: pointer(7);                      crMin:2;  crMax:5;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckArray; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
- (crCommand: 'MULTI MULTS ONLY';              crAddress: @Config.MultiMultsOnly;                 crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'MY CONTINENT';                  crAddress: pointer(21);                     crMin:0;  crMax:0;       crS: csOwned; crA: 22;crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'NAME FLAG ENABLE';              crAddress: @Config.NameFlagEnable;                 crMin:0;  crMax: 0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'NET STATUS UPDATE INTERVAL';    crAddress: @tNetStatusUpdateInterval;       crMin:1000;crMax:10000;   crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (* ORION PORT RETIRED 2026-09-10 (NY4I): "Drop Orion port. It covered by the
      general port as a type Orion in settings".
 
@@ -864,8 +865,6 @@ const
  (crCommand: 'PREFIX MULTIPLIER';             crAddress: pointer(3);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctMultiplier; crNetwork: 1),
  (crCommand: 'QSL MODE';                      crAddress: pointer(2);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'QSO POINT METHOD';              crAddress: pointer(1);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),
- (crCommand: 'QTC EXTRA SPACE';               crAddress: @QTCExtraSpace;                  crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'QTC QRS';                       crAddress: @QTCQRS;                         crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'QUESTION MARK CHAR';            crAddress: @QuestionMarkChar;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctChar; crNetwork: 1),
  (crCommand: 'R150S MODE';                    crAddress: @CTY.ctyR150SMode;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'RFOBL MODE';                    crAddress: @CTY.ctyRFOBLMode;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
@@ -944,8 +943,6 @@ const
  (crCommand: 'SERVER PASSWORD';               crAddress: @ServerPassword;                 crMin:0;  crMax:10;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctPassword; crNetwork: 1),  // Was ctString -- bring under the masking-in-Settings logic (Issue #783)
  (crCommand: 'SERVER PORT';                   crAddress: @ServerPort;                     crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'SHIFT KEY ENABLE';              crAddress: @ShiftKeyEnable;                 crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),     // 4.105.6
- (crCommand: 'SHOW FREQUENCY IN LOG';         crAddress: @tShowFrequencyinLog;            crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'SHOW TYPED CALLSIGN';           crAddress: @tShowTypedCallsign;             crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'SINGLE BAND SCORE';             crAddress: pointer(25);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:1 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctBand; crNetwork: 1),
  (crCommand: 'SLASH MARK CHAR';               crAddress: @SlashMarkChar;                  crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctChar; crNetwork: 1),
   (* WITHDRAWN 2026-09-10: it is Settings.SpotCollector.Enabled now.  csRem

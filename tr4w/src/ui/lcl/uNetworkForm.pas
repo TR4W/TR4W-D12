@@ -97,7 +97,7 @@ begin
    // What WM_INITDIALOG did after building the list: try the link, then keep
    // trying on the timer.
    TryConnectToNetwork;
-   tmrStatus.Interval := tNetStatusUpdateInterval;
+   tmrStatus.Interval := Settings.Network.StatusUpdateInterval;
    tmrStatus.Enabled := True;
 end;
 

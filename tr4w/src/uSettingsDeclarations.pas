@@ -327,7 +327,7 @@ begin
                          RS_OPERATING_TWORADIO_SWAPRELAYSENSE);
    RegisterModelSetting( 'operating.tworadio.waitForStrength', 'WAIT FOR STRENGTH',
                          RS_OPERATING_TWORADIO_WAITFORSTRENGTH);
-   RegisterStoredSetting('network.multiMultsOnly',            'MULTI MULTS ONLY',
+   RegisterModelSetting( 'network.multiMultsOnly',            'MULTI MULTS ONLY',
                          RS_NETWORK_MULTIMULTSONLY);
    RegisterStoredSetting('network.intercomFile',              'INTERCOM FILE ENABLE',
                          RS_NETWORK_INTERCOMFILE);
@@ -594,11 +594,11 @@ begin
       RS_CONTEST_QSOPOINTSDXPHONE).ReadOnly := True;
    RegisterModelSetting( 'contest.qtcEnable',           'QTC ENABLE',
                           RS_CONTEST_QTCENABLE);
-   RegisterStoredSetting('contest.qtcExtraSpace',       'QTC EXTRA SPACE',
+   RegisterModelSetting( 'contest.qtcExtraSpace',       'QTC EXTRA SPACE',
                           RS_CONTEST_QTCEXTRASPACE);
    RegisterModelSetting( 'contest.qtcMinutes',          'QTC MINUTES',
                           RS_CONTEST_QTCMINUTES);
-   RegisterStoredSetting('contest.qtcQrs',              'QTC QRS',
+   RegisterModelSetting( 'contest.qtcQrs',              'QTC QRS',
                           RS_CONTEST_QTCQRS);
    { THE QUICK-QSL MESSAGES MOVED TO Settings.Messages, so these are
      RegisterModelSetting -- the legacy registrar reads four of its own
@@ -771,9 +771,9 @@ begin
                           RS_APPEARANCE_CTRLJ_REMINDER);
    RegisterStoredSetting('appearance.layout.rowCount',         'ROW COUNT',
                           RS_APPEARANCE_LAYOUT_ROWCOUNT);
-   RegisterStoredSetting('appearance.ctrlj.showFrequencyInLog','SHOW FREQUENCY IN LOG',
+   RegisterModelSetting( 'appearance.ctrlj.showFrequencyInLog','SHOW FREQUENCY IN LOG',
                           RS_APPEARANCE_CTRLJ_SHOWFREQUENCYINLOG);
-   RegisterStoredSetting('appearance.ctrlj.showTypedCallsign','SHOW TYPED CALLSIGN',
+   RegisterModelSetting( 'appearance.ctrlj.showTypedCallsign','SHOW TYPED CALLSIGN',
                           RS_APPEARANCE_CTRLJ_SHOWTYPEDCALLSIGN);
    RegisterStoredSetting('appearance.ctrlj.userInfoShown',    'USER INFO SHOWN',
                           RS_APPEARANCE_CTRLJ_USERINFOSHOWN);
@@ -793,13 +793,13 @@ begin
                           RS_HARDWARE_CTRLJ_USECONTROLPORT);
 
    // --- Files/Updates (7) ----------------------------
-   RegisterStoredSetting('files.ctrlj.allowAutoUpdate',       'ALLOW AUTO UPDATE',
+   RegisterModelSetting( 'files.ctrlj.allowAutoUpdate',       'ALLOW AUTO UPDATE',
                           RS_FILES_CTRLJ_ALLOWAUTOUPDATE);
    RegisterModelSetting( 'files.ctrlj.callsignUpdateEnable',  'CALLSIGN UPDATE ENABLE',
                           RS_FILES_CTRLJ_CALLSIGNUPDATEENABLE);
    RegisterModelSetting('files.ctrlj.countryInformationFile','COUNTRY INFORMATION FILE',
                           RS_FILES_CTRLJ_COUNTRYINFORMATIONFILE);
-   RegisterStoredSetting('files.ctrlj.ctyUpdateCheckOnStartup','CTY UPDATE CHECK ON STARTUP',
+   RegisterModelSetting( 'files.ctrlj.ctyUpdateCheckOnStartup','CTY UPDATE CHECK ON STARTUP',
                           RS_FILES_CTRLJ_CTYUPDATECHECKONSTARTUP);
    RegisterModelSetting( 'files.ctrlj.domesticFilename',      'DOMESTIC FILENAME',
                           RS_FILES_CTRLJ_DOMESTICFILENAME).ReadOnly := True;
@@ -858,7 +858,7 @@ begin
      with it, which is the opposite of what the setting is for. *)
    RegisterModelSetting('network.ctrlj.computerName',        'COMPUTER NAME',
                           RS_NETWORK_CTRLJ_COMPUTERNAME, False);
-   RegisterStoredSetting('network.ctrlj.netStatusUpdateInterval','NET STATUS UPDATE INTERVAL',
+   RegisterModelSetting( 'network.ctrlj.netStatusUpdateInterval','NET STATUS UPDATE INTERVAL',
                           RS_NETWORK_CTRLJ_NETSTATUSUPDATEINTERVAL);
 
    // --- Voice/DVK -----------------------------------
