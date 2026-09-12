@@ -383,15 +383,15 @@ begin
       end
    else if Token = 'MY_CHECK' then
       begin
-      Value := string(MyCheck)
+      Value := Settings.My.Check
       end
    else if Token = 'MY_PREC' then
       begin
-      Value := string(MyPrec)
+      Value := Settings.My.Prec
       end
    else if Token = 'MY_CLASS' then
       begin
-      Value := string(MyFDClass)
+      Value := Settings.My.FdClass
       end
    else if Token = 'MY_PARK' then
       begin

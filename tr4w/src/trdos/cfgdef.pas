@@ -264,12 +264,9 @@ begin
   //  MultReportMinimumBands := 4;
   {
     MyCall := '';
-    MyCheck := '';
     MyContinent := UnknownContinent;
     MyCountry := '';
-    MyFDClass := '';
     MyGrid := '';
-    MyPrec := '';
     MySection := '';
     MyState := '';
     MyZone := '';

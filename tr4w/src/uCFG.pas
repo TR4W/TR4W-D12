@@ -609,6 +609,7 @@ const
    - 3 {the first of the MY commands -- moved to uSettingsModel}
    - 1 {MY IOTA -- moved to uSettingsModel; kept for future use}
    - 1 {MY PARK -- moved to uSettingsModel}
+   - 3 {MY CHECK, MY PREC, MY FD CLASS -- moved to uSettingsModel}
    ;
 
    // crS (CFGStatus): csNew / csOld = active -- the command's value IS applied.
@@ -841,13 +842,10 @@ const
  (crCommand: 'MULTIPLE MODES';                crAddress: @MultipleModesEnabled;           crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'MULT SHEET AUTO RESET';         crAddress: @MultReset   ;                   crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'MY CALL';                       crAddress: @MyCall;                         crMin:0;  crMax:13;      crS: csOwned; crA: 14;crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'MY CHECK';                      crAddress: @MyCheck;                        crMin:0;  crMax:10;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'MY CONTINENT';                  crAddress: pointer(21);                     crMin:0;  crMax:0;       crS: csOwned; crA: 22;crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'MY COUNTRY';                    crAddress: @MyCountry;                      crMin:0;  crMax:20;      crS: csOwned; crA: 8; crC:0 ; crP:0; crJ: 2; crKind: ckNormal; cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'MY FD CLASS';                   crAddress: @MyFDClass;                      crMin:0;  crMax:10;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'MY GRID';                       crAddress: @MyGrid;                         crMin:0;  crMax:7;        crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'MY NAME';                       crAddress: @MyName;                         crMin:0;  crMax:20;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'MY PREC';                       crAddress: @MyPrec;                         crMin:0;  crMax:10;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'MY QTH';                        crAddress: @MyState;                        crMin:0;  crMax:20;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'MY SECTION';                    crAddress: @MySection;                      crMin:0;  crMax:10;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'MY STATE';                      crAddress: @MyState;                        crMin:0;  crMax:20;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),

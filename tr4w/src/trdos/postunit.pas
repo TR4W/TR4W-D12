@@ -2774,8 +2774,8 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                begin
                sWriteFileFromString( tReportFileWrite,
                   'ARRL-SECTION: ' + TempBuffer2 + #13#10 );
-               sWriteFileFromString( tReportFileWrite, 'X-EXCHANGE: ' + MyFDClass
-                  + #13#10 );
+               sWriteFileFromString( tReportFileWrite,
+                  'X-EXCHANGE: ' + Settings.My.FdClass + #13#10 );
                end;
             end;
          TempPchar := @CabrilloTagsArray[ TempTag ].ctrTag[ 1 ];
@@ -3136,10 +3136,10 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 myStationEx.MyGrid       := string( MyGrid );
                 myStationEx.MyName       := string( MyName );
                 myStationEx.MyZone       := ZoneSentForThisContest;
-                myStationEx.MyFDClass    := string( MyFDClass );
+                myStationEx.MyFDClass    := Settings.My.FdClass;
                 myStationEx.MySection    := string( MySection );
-                myStationEx.MyCheck      := string( MyCheck );
-                myStationEx.MyPrec       := string( MyPrec );
+                myStationEx.MyCheck      := Settings.My.Check;
+                myStationEx.MyPrec       := Settings.My.Prec;
                 myStationEx.MyFOCNumber  := Settings.My.FocNumber;
                 myStationEx.MyPostalCode := Settings.My.PostalCode;
                 FormatCabrilloExchange( ActiveExchange, Contest, ContestTitle,
@@ -3762,10 +3762,10 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       my.MyGrid       := string(MyGrid);
       my.MyName       := string(MyName);
       my.MyZone       := ZoneSentForThisContest;
-      my.MyFDClass    := string(MyFDClass);
+      my.MyFDClass    := Settings.My.FdClass;
       my.MySection    := string(MySection);
-      my.MyCheck      := string(MyCheck);
-      my.MyPrec       := string(MyPrec);
+      my.MyCheck      := Settings.My.Check;
+      my.MyPrec       := Settings.My.Prec;
       my.MyFOCNumber  := Settings.My.FocNumber;
       my.MyPostalCode := Settings.My.PostalCode;
       my.MyPark       := Settings.My.Park;

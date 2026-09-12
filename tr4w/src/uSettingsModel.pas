@@ -974,6 +974,9 @@ type
       FFocNumber: string;
       FIota: string;
       FPark: string;
+      FCheck: string;
+      FPrec: string;
+      FFdClass: string;
       FPostalCode: string;
       FItuZone: TMyItuZone;
    public
@@ -992,6 +995,14 @@ type
         NormalizePOTAPark already took a string, so two of its readers lose
         a widening cast rather than gaining anything. *)
       property Park: string read FPark write FPark;
+      (* Was MyCheck in logwind.pas -- the year first licensed, sent in
+        Sweepstakes. A station fact that only one contest asks for. *)
+      property Check: string read FCheck write FCheck;
+      // Was MyPrec -- the Sweepstakes precedence letter.
+      property Prec: string read FPrec write FPrec;
+      (* Was MyFDClass -- the Field Day class, e.g. 2A. MY FD CLASS derives
+        exactly: FdClass yields FD CLASS. *)
+      property FdClass: string read FFdClass write FFdClass;
       // Was MyPostalCode in logwind.pas. MY POSTAL CODE.
       property PostalCode: string read FPostalCode write FPostalCode;
       (* Was MyITUZone in VC.pas, and ZERO IS MEANINGFUL: it means "use the
@@ -1386,6 +1397,9 @@ begin
    FFocNumber  := '';
    FIota       := '';
    FPark       := '';
+   FCheck      := '';
+   FPrec       := '';
+   FFdClass    := '';
    FPostalCode := '';
    FItuZone    := 0;
 end;
