@@ -267,7 +267,6 @@ begin
     MyContinent := UnknownContinent;
     MyCountry := '';
     MyGrid := '';
-    MySection := '';
     MyState := '';
     MyZone := '';
   }

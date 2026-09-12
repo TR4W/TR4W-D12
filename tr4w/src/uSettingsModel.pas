@@ -977,6 +977,7 @@ type
       FCheck: string;
       FPrec: string;
       FFdClass: string;
+      FSection: string;
       FPostalCode: string;
       FItuZone: TMyItuZone;
    public
@@ -1003,6 +1004,9 @@ type
       (* Was MyFDClass -- the Field Day class, e.g. 2A. MY FD CLASS derives
         exactly: FdClass yields FD CLASS. *)
       property FdClass: string read FFdClass write FFdClass;
+      (* Was MySection in logwind.pas -- the ARRL or RAC section, sent in
+        Field Day, Sweepstakes and the section-based contests. *)
+      property Section: string read FSection write FSection;
       // Was MyPostalCode in logwind.pas. MY POSTAL CODE.
       property PostalCode: string read FPostalCode write FPostalCode;
       (* Was MyITUZone in VC.pas, and ZERO IS MEANINGFUL: it means "use the
@@ -1400,6 +1404,7 @@ begin
    FCheck      := '';
    FPrec       := '';
    FFdClass    := '';
+   FSection    := '';
    FPostalCode := '';
    FItuZone    := 0;
 end;

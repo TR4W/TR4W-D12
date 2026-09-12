@@ -367,7 +367,7 @@ begin
       end
    else if Token = 'MY_SECTION' then
       begin
-      Value := string(MySection)
+      Value := Settings.My.Section
       end
    else if Token = 'MY_NAME' then
       begin

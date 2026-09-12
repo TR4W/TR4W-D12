@@ -708,7 +708,6 @@ var
 
   //MyCounty                              : Str20 = '';
   MyName                                : Str20;
-  MySection                             : Str10; {KK1L: 6.67 Was Str20}
   MyState                               : Str20; {KK1L: 6.67 Was Str20}
 
   NoMultMarineMobile                    : boolean; {KK1L: 6.68 Added for WRTC 2002 as flag to not count /MM or /AM as mults or countries}

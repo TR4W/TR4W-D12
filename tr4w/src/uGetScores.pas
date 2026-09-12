@@ -393,7 +393,7 @@ begin
      sDXCC := ctyGetCountryID(MyCall);
      end;
 
-  sSection := Trim(string(MySection));
+  sSection := Trim(Settings.My.Section);
   if sSection = '' then
      begin
      sSection := ReadCabrilloSummaryField('_LOCATION');

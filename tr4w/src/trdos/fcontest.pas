@@ -477,8 +477,8 @@ begin
         Settings.Bands.WarcEnabled := False;
         SetCQMemoryString(CW, F1, 'CQ^WFD \ \ TEST');
         SetCQMemoryString(CW, F2, 'CQ^WFD CQ^WFD \ \ TEST');
-        CQExchange := UTF8Encode(' ' + Settings.My.FdClass + ' ' + MySection);
-        SearchAndPounceExchange := UTF8Encode(Settings.My.FdClass + ' ' + MySection);
+        CQExchange := UTF8Encode(' ' + Settings.My.FdClass + ' ' + Settings.My.Section);
+        SearchAndPounceExchange := UTF8Encode(Settings.My.FdClass + ' ' + Settings.My.Section);
         QSLMessage := '73 \ WFD';
         ActiveDXMult := ARRLDXCCWithNoARRLSections;
         AddARRLSectionDomesticCountries;
@@ -491,8 +491,8 @@ begin
         Settings.Bands.WarcEnabled := False; // WARC is not allowed during FD ny4i 4.45.3
         SetCQMemoryString(CW, F1, 'CQ^FD \ \ FD');
         SetCQMemoryString(CW, F2, 'CQ^FD CQ^FD \ \ FD');
-        CQExchange := UTF8Encode(' ' + Settings.My.FdClass + ' ' + MySection);
-        SearchAndPounceExchange := UTF8Encode(Settings.My.FdClass + ' ' + MySection);
+        CQExchange := UTF8Encode(' ' + Settings.My.FdClass + ' ' + Settings.My.Section);
+        SearchAndPounceExchange := UTF8Encode(Settings.My.FdClass + ' ' + Settings.My.Section);
         QSLMessage := '73 \ FD';
         AddARRLSectionDomesticCountries;
         LiteralDomesticQTH := True;
@@ -1358,10 +1358,10 @@ begin
           LAST, because concatenating onto the result would promote it
           straight back to UnicodeString. *)
         CQExchange := UTF8Encode('_# ' + Settings.My.Prec + '  ' + MyCall
-                                 + '  ' + Settings.My.Check + ' ' + MySection);
+                                 + '  ' + Settings.My.Check + ' ' + Settings.My.Section);
 {(*}
         SearchAndPounceExchange       := UTF8Encode('NR # ' + Settings.My.Prec
-           + ' ' + MyCall + ' ' + Settings.My.Check + ' ' + MySection);
+           + ' ' + MyCall + ' ' + Settings.My.Check + ' ' + Settings.My.Section);
         RepeatSearchAndPounceExchange := SearchAndPounceExchange;//'NR # ' + MyPrec + ' ' + MyCall + ' ' + MyCheck + ' ' + MySection;
 {*)}
         QSLMessage := '73 ' + MyCall + ' SS>';
@@ -1394,7 +1394,7 @@ begin
         SetEXMemoryString(CW, F3, 'NR #');
         SetEXMemoryString(CW, F4, UTF8Encode(Settings.My.Prec));
         SetEXMemoryString(CW, F5, UTF8Encode(Settings.My.Check));
-        SetEXMemoryString(CW, F6, MySection);
+        SetEXMemoryString(CW, F6, UTF8Encode(Settings.My.Section));
         SetEXMemoryString(CW, F7, '  CQ^SS ' + MyCall + ' SS');
         SetEXMemoryString(CW, F8, '  CQ^SS CQ^SS ' + MyCall + ' SS');
 
