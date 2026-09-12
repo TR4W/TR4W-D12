@@ -618,6 +618,10 @@ type
       FKeypadMemories: boolean;
       FSendCompleteFourLetterCall: boolean;
       FTuneWithDits: boolean;
+      FShort0: AnsiChar;
+      FShort1: AnsiChar;
+      FShort2: AnsiChar;
+      FShort9: AnsiChar;
    public
       constructor Create;
    published
@@ -639,6 +643,35 @@ type
         setting rather than withdrawn, because withdrawing a command an
         operator has in a .cfg is a separate decision. *)
       property TuneWithDits: boolean read FTuneWithDits write FTuneWithDits;
+      (*
+        THE CUT NUMBERS -- what is actually keyed for 0, 1, 2 and 9. An
+        operator sending fast CW sends T for zero and N for nine, because the
+        shorter character is easier to copy at speed.
+
+        A STATION PREFERENCE, NOT A CONTEST PARAMETER, which is the one
+        question worth answering before moving any setting: no contest
+        assigns them -- neither fcontest.pas nor LogCfg mentions them at all
+        -- and the settings store had already filed them under 'cw.ctrlj.'.
+        They are how this operator's fist sounds, and that is the same in
+        every contest.
+
+        AnsiChar, NOT Char, DELIBERATELY. The globals were AnsiChar and the
+        only consumer writes one straight into a ShortString element
+        (LogSend). tr4w.inc sets UnicodeStrings, so a Char here would be two
+        bytes -- the latent width bug TPossibleCallSettings documents -- and
+        nothing these key is outside ASCII.
+
+        THE DEFAULTS ARE THE DIGITS THEMSELVES, so nothing is cut until the
+        operator says so. LogCW declared T, A, 2 and N; cfgdef.pas then
+        overwrote three of them with '0', '1' and '9' at every startup, so
+        the LIVE defaults were the digits and the declarations were dead
+        text. Short2 was never in that block and its declared '2' is already
+        a digit, so all four now agree and none of them changes.
+      *)
+      property Short0: AnsiChar read FShort0 write FShort0;
+      property Short1: AnsiChar read FShort1 write FShort1;
+      property Short2: AnsiChar read FShort2 write FShort2;
+      property Short9: AnsiChar read FShort9 write FShort9;
    end;
 
    (*
@@ -1174,6 +1207,148 @@ type
       property Name: string read FName write FName;
    end;
 
+   (*
+     THE MESSAGE TEMPLATES -- what TR4W sends when it answers a call, confirms
+     a contact, says it has worked somebody before, or repeats an exchange.
+     CW and phone are separate settings, because a phone one names a WAV file
+     rather than holding text.
+
+     THESE ARE CONTEST PARAMETERS, NOT STATION PREFERENCES, which is why this
+     is a group of its own rather than properties added to Cw and Cq. The
+     evidence is not a judgement call:
+
+       FCONTEST ASSIGNS THEM. fcontest.pas writes the CQ exchange, the S&P
+       exchange, the QSL, QSO-before, quick-QSL and call-corrected messages
+       for named contests, and LogCfg.tSetupExchangeNumbers fills whatever is
+       still empty from that contest's own exchange shape. A value a contest
+       computes belongs to the contest.
+
+       A CONTEST .cfg CARRIES THEM, in a section called [Messages].
+       test/corpus/winter_fd_2025_w4ta/log.cfg holds
+       "REPEAT S&P CW EXCHANGE=3I WCF 3I WCF" -- that is Winter Field Day's
+       class and section, and it means nothing in any other contest.
+
+       THE SETTINGS STORE HAD ALREADY FILED THE QUICK QSL MESSAGES UNDER
+       'contest.'. That taxonomy predates this work and agrees with it.
+
+     ASKED THE OTHER WAY -- would this value differ for a different contest at
+     the same station? -- 'TU \ TEST' against '73 \ WFD' settles it.
+
+     SO IsContestScoped IS TRUE, and every one of them stays out of
+     settings\tr4w.json. See TR4WSettings.SkipContestScoped.
+
+     THE CUT NUMBERS WENT THE OTHER WAY and are on TCwSettings: SHORT 0/1/2/9
+     say how this operator sends a digit, which no contest decides.
+
+     EVERY NAME NEEDS AN ALIAS, AND THAT IS NOT EVIDENCE THE DERIVATION RULE
+     IS WRONG. The legacy spellings put the MODE IN THE MIDDLE -- CQ CW
+     EXCHANGE, QSL SSB MESSAGE -- and six contain an ampersand, which no
+     Pascal identifier yields. No property path produces either shape. The
+     grouping is the model's; the names are the legacy's, and they go when the
+     legacy formats stop being read.
+
+     EIGHT OF THEM ANSWER TO MORE THAN ONE NAME. TR4W has always accepted the
+     mode-less spelling -- CQ EXCHANGE, QSL MESSAGE -- as a synonym for the CW
+     one, as two CFGCA rows sharing a single crAddress. Both keep working,
+     through AlsoKnownAs.
+
+     NO HOOKS ON ANY OF THE THIRTY ROWS: crA, crP and crC are zero throughout,
+     so these are plain field writes. And no bounds -- crMin and crMax are zero
+     too. The storage was Str40 for CW and a full ShortString for phone, which
+     is a capacity rather than a rule anybody stated, so nothing here restates
+     it as a length limit.
+
+     THE DEFAULTS DO NOT COME FROM THE DECLARATIONS, and believing they did
+     would have been silent data loss. Every initialiser in LogCW.pas is
+     commented out and so is every line cfgdef.pas has for them, which reads
+     as "these start empty" -- and thirteen of the seventeen do not.
+     uCFG.InitializeStrings holds the real table, and it runs at startup
+     BEFORE any configuration file is read, so its values are the defaults an
+     operator who has configured nothing actually gets: '} OK %' for a
+     corrected call, 'TU \ TEST' for a QSL, and a WAV file name for each of
+     the seven phone messages. Those thirteen entries move into the
+     constructor below and leave that table with two rows.
+
+     THE FOUR THAT REALLY ARE EMPTY are the CW exchanges -- CQ, CQ name
+     known, S&P and repeat S&P. Empty is load-bearing for them:
+     LogCfg.tSetupExchangeNumbers fills each one ONLY IF it is still empty,
+     so a non-empty default would suppress the contest's own exchange.
+   *)
+   TMessageSettings = class(TSettingsGroup)
+   private
+      FCallOkNowCw: string;
+      FCallOkNowSsb: string;
+      FCqExchangeCw: string;
+      FCqExchangeCwNameKnown: string;
+      FCqExchangeSsb: string;
+      FCqExchangeSsbNameKnown: string;
+      FQslCw: string;
+      FQslSsb: string;
+      FQsoBeforeCw: string;
+      FQsoBeforeSsb: string;
+      FQuickQslCw1: string;
+      FQuickQslCw2: string;
+      FQuickQslSsb: string;
+      FRepeatSpExchangeCw: string;
+      FRepeatSpExchangeSsb: string;
+      FSpExchangeCw: string;
+      FSpExchangeSsb: string;
+   public
+      constructor Create;
+      class function IsContestScoped: boolean; override;
+   published
+      (* Was the global CorrectedCallMessage in LogCW.pas -- sent after the
+        operator has fixed a callsign. CALL OK NOW CW MESSAGE, and also CALL
+        OK NOW MESSAGE. *)
+      property CallOkNowCw: string read FCallOkNowCw write FCallOkNowCw;
+      // Was CorrectedCallPhoneMessage. CALL OK NOW SSB MESSAGE.
+      property CallOkNowSsb: string read FCallOkNowSsb write FCallOkNowSsb;
+      (* Was CQExchange -- the exchange sent after answering a CQ, and the
+        template uExchangeBuilder substitutes the serial number into. CQ CW
+        EXCHANGE, and also CQ EXCHANGE. *)
+      property CqExchangeCw: string read FCqExchangeCw write FCqExchangeCw;
+      (* Was CQExchangeNameKnown -- the same exchange when the call is already
+        in the name database and SAY HI is on. *)
+      property CqExchangeCwNameKnown: string
+         read FCqExchangeCwNameKnown write FCqExchangeCwNameKnown;
+      // Was CQPhoneExchange. CQ SSB EXCHANGE.
+      property CqExchangeSsb: string read FCqExchangeSsb write FCqExchangeSsb;
+      // Was CQPhoneExchangeNameKnown. CQ SSB EXCHANGE NAME KNOWN.
+      property CqExchangeSsbNameKnown: string
+         read FCqExchangeSsbNameKnown write FCqExchangeSsbNameKnown;
+      // Was QSLMessage. QSL CW MESSAGE, and also QSL MESSAGE.
+      property QslCw: string read FQslCw write FQslCw;
+      // Was QSLPhoneMessage. QSL SSB MESSAGE.
+      property QslSsb: string read FQslSsb write FQslSsb;
+      (* Was QSOBeforeMessage. QSO BEFORE CW MESSAGE, and also QSO BEFORE
+        MESSAGE. *)
+      property QsoBeforeCw: string read FQsoBeforeCw write FQsoBeforeCw;
+      // Was QSOBeforePhoneMessage. QSO BEFORE SSB MESSAGE.
+      property QsoBeforeSsb: string read FQsoBeforeSsb write FQsoBeforeSsb;
+      (* Was QuickQSLMessage1, and THREE legacy commands write it: QUICK QSL
+        CW MESSAGE, QUICK QSL CW MESSAGE1 and QUICK QSL MESSAGE 1 were three
+        CFGCA rows over one global. All three are kept rather than a spelling
+        chosen, because a .cfg or a multi-op peer may use any of them. *)
+      property QuickQslCw1: string read FQuickQslCw1 write FQuickQslCw1;
+      // Was QuickQSLMessage2. QUICK QSL MESSAGE 2, the second quick-QSL key.
+      property QuickQslCw2: string read FQuickQslCw2 write FQuickQslCw2;
+      // Was QuickQSLPhoneMessage. QUICK QSL SSB MESSAGE.
+      property QuickQslSsb: string read FQuickQslSsb write FQuickQslSsb;
+      (* Was RepeatSearchAndPounceExchange -- sent when the exchange has
+        already gone once. REPEAT S&P CW EXCHANGE, and also REPEAT S&P
+        EXCHANGE. *)
+      property RepeatSpExchangeCw: string
+         read FRepeatSpExchangeCw write FRepeatSpExchangeCw;
+      // Was RepeatSearchAndPouncePhoneExchange. REPEAT S&P SSB EXCHANGE.
+      property RepeatSpExchangeSsb: string
+         read FRepeatSpExchangeSsb write FRepeatSpExchangeSsb;
+      (* Was SearchAndPounceExchange. S&P CW EXCHANGE, and also S&P
+        EXCHANGE. *)
+      property SpExchangeCw: string read FSpExchangeCw write FSpExchangeCw;
+      // Was SearchAndPouncePhoneExchange. S&P SSB EXCHANGE.
+      property SpExchangeSsb: string read FSpExchangeSsb write FSpExchangeSsb;
+   end;
+
    TR4WSettings = class(TPersistent)
    private
       // command name -> property path, built once by walking the RTTI.
@@ -1200,6 +1375,7 @@ type
       FMy: TMySettings;
       FDvk: TDvkSettings;
       FUnknownCountryFile: TUnknownCountryFileSettings;
+      FMessages: TMessageSettings;
       procedure BuildCommandMap;
       function PathForCommand(const aCommand: string): string;
       (* The streamer hook that keeps contest-scoped groups out of the
@@ -1309,6 +1485,7 @@ type
       property Dvk: TDvkSettings read FDvk;
       property UnknownCountryFile: TUnknownCountryFileSettings
          read FUnknownCountryFile;
+      property Messages: TMessageSettings read FMessages;
    end;
 
 (* THE ONE INSTANCE.  Created on first use so no unit's initialisation order
@@ -1643,6 +1820,12 @@ begin
    FKeypadMemories            := False;
    FSendCompleteFourLetterCall := False;
    FTuneWithDits              := False;
+   (* The values cfgdef.pas assigned at every startup -- see the note on the
+     properties. *)
+   FShort0 := '0';
+   FShort1 := '1';
+   FShort2 := '2';
+   FShort9 := '9';
 end;
 
 constructor TUnknownCountryFileSettings.Create;
@@ -1798,6 +1981,37 @@ begin
    FSensitivity := 500;
 end;
 
+constructor TMessageSettings.Create;
+begin
+   inherited Create;
+   (* THIRTEEN OF THESE CAME OUT OF uCFG.InitializeStrings, NOT out of the
+     declarations -- see the note on the class. The four CW exchanges are
+     genuinely empty, and have to stay that way: tSetupExchangeNumbers only
+     fills one that is still empty. *)
+   FCallOkNowCw            := '} OK %';
+   FCallOkNowSsb           := 'CORCALL.WAV';
+   FCqExchangeCw           := '';
+   FCqExchangeCwNameKnown  := '';
+   FCqExchangeSsb          := 'CQEXCHNG.WAV';
+   FCqExchangeSsbNameKnown := 'CQEXNAME.WAV';
+   FQslCw                  := 'TU \ TEST';
+   FQslSsb                 := 'QSL.WAV';
+   FQsoBeforeCw            := ' SRI QSO B4 TU \ TEST';
+   FQsoBeforeSsb           := 'QSOB4.WAV';
+   FQuickQslCw1            := 'TU';
+   FQuickQslCw2            := 'TU';
+   FQuickQslSsb            := 'QUICKQSL.WAV';
+   FRepeatSpExchangeCw     := '';
+   FRepeatSpExchangeSsb    := 'RPTSPEX.WAV';
+   FSpExchangeCw           := '';
+   FSpExchangeSsb          := 'SAPEXCHG.WAV';
+end;
+
+class function TMessageSettings.IsContestScoped: boolean;
+begin
+   Result := True;
+end;
+
 constructor TR4WSettings.Create;
 begin
    inherited Create;
@@ -1822,6 +2036,7 @@ begin
    FMy             := TMySettings.Create;
    FDvk            := TDvkSettings.Create;
    FUnknownCountryFile := TUnknownCountryFileSettings.Create;
+   FMessages       := TMessageSettings.Create;
 
    FCommands := TStringList.Create;
    FCommands.CaseSensitive := False;
@@ -1833,6 +2048,7 @@ end;
 destructor TR4WSettings.Destroy;
 begin
    FCommands.Free;
+   FMessages.Free;
    FUnknownCountryFile.Free;
    FDvk.Free;
    FMy.Free;
@@ -2205,6 +2421,67 @@ begin
 
    Alias('AUTO S&P ENABLE',             'AutoSap.Enable');
    Alias('AUTO S&P ENABLE SENSITIVITY', 'AutoSap.Sensitivity');
+
+   (* THE CUT NUMBERS. A digit cannot follow a space in a Pascal identifier,
+     so 'SHORT 0' cannot derive from any property name; 'CW SHORT0' is what
+     the rule produces and is not a command TR4W has ever had. *)
+   Alias('SHORT 0', 'Cw.Short0');
+   Alias('SHORT 1', 'Cw.Short1');
+   Alias('SHORT 2', 'Cw.Short2');
+   Alias('SHORT 9', 'Cw.Short9');
+
+   (* THE MESSAGE TEMPLATES -- THIRTY NAMES FOR SEVENTEEN SETTINGS, and the
+     longest block in this list by some way. It is worth saying why that is
+     not the derivation rule failing.
+
+     THE MODE IS IN THE MIDDLE OF EVERY ONE OF THEM: CQ *CW* EXCHANGE, QSL
+     *SSB* MESSAGE, REPEAT S&P *CW* EXCHANGE. The derivation puts the group
+     first and once, so no arrangement of properties and groups produces that
+     shape -- and six of the names contain an ampersand, which no identifier
+     yields at all. The alternative is seventeen one-property groups named
+     after fragments of a sentence, which is the shape already rejected for
+     the band classes.
+
+     AND EIGHT OF THEM CARRY A SECOND, OLDER NAME. TR4W has always taken the
+     mode-less spelling as meaning the CW one -- they were two CFGCA rows
+     sharing a crAddress -- so a .cfg written years ago, or a multi-op peer
+     running an older build, still says CQ EXCHANGE. AlsoKnownAs adds; Alias
+     replaces. *)
+   Alias('CALL OK NOW CW MESSAGE',      'Messages.CallOkNowCw');
+   AlsoKnownAs('CALL OK NOW MESSAGE',   'Messages.CallOkNowCw');
+   Alias('CALL OK NOW SSB MESSAGE',     'Messages.CallOkNowSsb');
+
+   Alias('CQ CW EXCHANGE',              'Messages.CqExchangeCw');
+   AlsoKnownAs('CQ EXCHANGE',           'Messages.CqExchangeCw');
+   Alias('CQ CW EXCHANGE NAME KNOWN',   'Messages.CqExchangeCwNameKnown');
+   AlsoKnownAs('CQ EXCHANGE NAME KNOWN', 'Messages.CqExchangeCwNameKnown');
+   Alias('CQ SSB EXCHANGE',             'Messages.CqExchangeSsb');
+   Alias('CQ SSB EXCHANGE NAME KNOWN',  'Messages.CqExchangeSsbNameKnown');
+
+   Alias('QSL CW MESSAGE',              'Messages.QslCw');
+   AlsoKnownAs('QSL MESSAGE',           'Messages.QslCw');
+   Alias('QSL SSB MESSAGE',             'Messages.QslSsb');
+
+   Alias('QSO BEFORE CW MESSAGE',       'Messages.QsoBeforeCw');
+   AlsoKnownAs('QSO BEFORE MESSAGE',    'Messages.QsoBeforeCw');
+   Alias('QSO BEFORE SSB MESSAGE',      'Messages.QsoBeforeSsb');
+
+   (* THREE NAMES, ONE SETTING. These were three CFGCA rows whose crAddress
+     was the same global, and QUICK QSL CW MESSAGE1 has no space before the
+     digit while QUICK QSL MESSAGE 1 does. Both spellings are real. *)
+   Alias('QUICK QSL CW MESSAGE',        'Messages.QuickQslCw1');
+   AlsoKnownAs('QUICK QSL CW MESSAGE1', 'Messages.QuickQslCw1');
+   AlsoKnownAs('QUICK QSL MESSAGE 1',   'Messages.QuickQslCw1');
+   Alias('QUICK QSL MESSAGE 2',         'Messages.QuickQslCw2');
+   Alias('QUICK QSL SSB MESSAGE',       'Messages.QuickQslSsb');
+
+   Alias('REPEAT S&P CW EXCHANGE',      'Messages.RepeatSpExchangeCw');
+   AlsoKnownAs('REPEAT S&P EXCHANGE',   'Messages.RepeatSpExchangeCw');
+   Alias('REPEAT S&P SSB EXCHANGE',     'Messages.RepeatSpExchangeSsb');
+
+   Alias('S&P CW EXCHANGE',             'Messages.SpExchangeCw');
+   AlsoKnownAs('S&P EXCHANGE',          'Messages.SpExchangeCw');
+   Alias('S&P SSB EXCHANGE',            'Messages.SpExchangeSsb');
 end;
 
 function TR4WSettings.PathForCommand(const aCommand: string): string;

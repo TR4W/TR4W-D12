@@ -616,6 +616,8 @@ const
    - 2 {MY STATE and its older spelling MY QTH -- moved to uSettingsModel}
    - 1 {MY COUNTRY -- moved to uSettingsModel}
    - 1 {MY CALL -- moved to uSettingsModel}
+   - 30 {the CW and phone message templates, and the cut numbers
+         -- moved to uSettingsModel}
    ;
 
    // crS (CFGStatus): csNew / csOld = active -- the command's value IS applied.
@@ -653,9 +655,6 @@ const
  (crCommand: 'BEEP EVERY 10 QSOS';            crAddress: @BeepEvery10QSOs;                crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'BOLD FONT';                     crAddress: @BoldFont;                       crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;  cfFunc: cfAppearance; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'BROADCAST ALL PACKET DATA';     crAddress: @Packet.BroadcastAllPacketData;  crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'CALL OK NOW CW MESSAGE';        crAddress: @CorrectedCallMessage;           crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 1),
- (crCommand: 'CALL OK NOW MESSAGE';           crAddress: @CorrectedCallMessage;           crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 1),
- (crCommand: 'CALL OK NOW SSB MESSAGE';       crAddress: @CorrectedCallPhoneMessage;      crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 1),
  (crCommand: 'CALLSIGN UPDATE ENABLE';        crAddress: @CallsignUpdateEnable;           crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'CATEGORY-ASSISTED';             crAddress: pointer(50);                     crMin:0;  crMax:0;       crS: csJSON; crA:0; crC:1 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'CATEGORY-BAND';                 crAddress: pointer(42);                     crMin:0;  crMax:0;       crS: csJSON; crA:0; crC:1 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),
@@ -688,13 +687,7 @@ const
 // (crCommand: 'COPY FILES';                    crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctOperation; crNetwork: 1),
  (crCommand: 'COUNT DOMESTIC COUNTRIES';      crAddress: @CountDomesticCountries;         crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'COUNTRY INFORMATION FILE';      crAddress: @CountryInformationFile;         crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'CQ CW EXCHANGE NAME KNOWN';     crAddress: @CQExchangeNameKnown;            crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 0),
- (crCommand: 'CQ CW EXCHANGE';                crAddress: @CQExchange;                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 0),
- (crCommand: 'CQ EXCHANGE NAME KNOWN';        crAddress: @CQExchangeNameKnown;            crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 0),
- (crCommand: 'CQ EXCHANGE';                   crAddress: @CQExchange;                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 0),
 // (crCommand: 'CQ MENU';                       crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'CQ SSB EXCHANGE NAME KNOWN';    crAddress: @CQPhoneExchangeNameKnown;       crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 0),
- (crCommand: 'CQ SSB EXCHANGE';               crAddress: @CQPhoneExchange;                crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 0),
  (crCommand: 'CTY UPDATE CHECK ON STARTUP';   crAddress: @CTYUpdateCheckOnStartup;        crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
 // CUSTOM CARET retired 2026-08-18: TR4W drew a block caret from cursor.bmp into
 // the entry fields, which are LCL TEdits since Phase 3b and carry their own.
@@ -878,13 +871,7 @@ const
  (crCommand: 'PREFIX MULTIPLIER';             crAddress: pointer(3);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctMultiplier; crNetwork: 1),
  (crCommand: 'PSTROTATOR IP ADDRESS';         crAddress: @PSTRotatorIPAddress;            crMin:0;  crMax:255;     crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 0),   // Issue #732
  (crCommand: 'PSTROTATOR UDP PORT';           crAddress: @PSTRotatorUDPPort;              crMin:1;  crMax:65535;   crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 0),   // Issue #732
- (crCommand: 'QSL CW MESSAGE';                crAddress: @QSLMessage;                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 1),
- (crCommand: 'QSL MESSAGE';                   crAddress: @QSLMessage;                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 1),
  (crCommand: 'QSL MODE';                      crAddress: pointer(2);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
- (crCommand: 'QSL SSB MESSAGE';               crAddress: @QSLPhoneMessage;                crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 1),
- (crCommand: 'QSO BEFORE CW MESSAGE';         crAddress: @QSOBeforeMessage;               crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 1),
- (crCommand: 'QSO BEFORE MESSAGE';            crAddress: @QSOBeforeMessage;               crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 1),
- (crCommand: 'QSO BEFORE SSB MESSAGE';        crAddress: @QSOBeforePhoneMessage;          crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 1),
  (crCommand: 'QSO BY BAND';                   crAddress: @QSOByBand;                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'QSO BY MODE';                   crAddress: @QSOByMode;                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'QSO NUMBER BY BAND';            crAddress: @QSONumberByBand;                crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
@@ -899,13 +886,8 @@ const
  (crCommand: 'QTC MINUTES';                   crAddress: @QTCMinutes;                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'QTC QRS';                       crAddress: @QTCQRS;                         crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'QUESTION MARK CHAR';            crAddress: @QuestionMarkChar;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctChar; crNetwork: 1),
- (crCommand: 'QUICK QSL CW MESSAGE';          crAddress: @QuickQSLMessage1;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal; cfFunc: cfAll; crType: ctMessage; crNetwork: 1),
- (crCommand: 'QUICK QSL CW MESSAGE1';         crAddress: @QuickQSLMessage1;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal; cfFunc: cfAll; crType: ctMessage; crNetwork: 1),
  (crCommand: 'QUICK QSL KEY 1';               crAddress: @QuickQSLKey1;                   crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctChar; crNetwork: 1),
  (crCommand: 'QUICK QSL KEY 2';               crAddress: @QuickQSLKey2;                   crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctChar; crNetwork: 1),
- (crCommand: 'QUICK QSL MESSAGE 1';           crAddress: @QuickQSLMessage1;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal; cfFunc: cfAll; crType: ctMessage; crNetwork: 1),
- (crCommand: 'QUICK QSL MESSAGE 2';           crAddress: @QuickQSLMessage2;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal; cfFunc: cfAll; crType: ctMessage; crNetwork: 1),
- (crCommand: 'QUICK QSL SSB MESSAGE';         crAddress: @QuickQSLPhoneMessage;           crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal; cfFunc: cfAll; crType: ctMessage; crNetwork: 1),
  (crCommand: 'QZB RANDOM OFFSET ENABLE';      crAddress: @QZBRandomOffsetEnable;          crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'R150S MODE';                    crAddress: @CTY.ctyR150SMode;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'RFOBL MODE';                    crAddress: @CTY.ctyRFOBLMode;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
@@ -973,16 +955,10 @@ const
  (crCommand: 'RELAY CONTROL PORT';            crAddress: @RelayControlPort;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfRadio1; crType: ctPortLPT; crNetwork: 0),
  (crCommand: 'REMAINING MULT DISPLAY MODE';   crAddress: pointer(16);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:2; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'REMINDER';                      crAddress: pointer(51);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal; cfFunc: cfAppearance; crType: ctOther; crNetwork: 1),
- (crCommand: 'REPEAT S&P CW EXCHANGE';        crAddress: @RepeatSearchAndPounceExchange;  crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 0),
- (crCommand: 'REPEAT S&P EXCHANGE';           crAddress: @RepeatSearchAndPounceExchange;  crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 0),
- (crCommand: 'REPEAT S&P SSB EXCHANGE';       crAddress: @RepeatSearchAndPouncePhoneExchange; crMin:0;  crMax:0;   crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 0),
  (crCommand: 'REVERSE INITIAL EX';            crAddress: @ReverseInitialEx;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'ROTATOR PORT';                  crAddress: pointer(40);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckList;  cfFunc: cfAll; crType: ctOther; crNetwork: 0),
  (crCommand: 'ROTATOR TYPE';                  crAddress: pointer(17);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 0),
  (crCommand: 'ROW COUNT';                     crAddress: pointer(4);                      crMin:5;  crMax:15;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckArray; cfFunc: cfAppearance; crType: ctInteger; crNetwork: 1),
- (crCommand: 'S&P CW EXCHANGE';               crAddress: @SearchAndPounceExchange;        crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 0),
- (crCommand: 'S&P EXCHANGE';                  crAddress: @SearchAndPounceExchange;        crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 0),
- (crCommand: 'S&P SSB EXCHANGE';              crAddress: @SearchAndPouncePhoneExchange;   crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 0),
  (crCommand: 'SCORE POSTING URL';             crAddress: @Config.GetScoresSeverPostingAddress;   crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctURL; crNetwork: 1),
  (crCommand: 'SCORE READING URL';             crAddress: @Config.GetScoresSeverReadingAddress;   crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctURL; crNetwork: 1),
  (crCommand: 'SCP COUNTRY STRING';            crAddress: @CD.CountryString;               crMin:0;  crMax:80;      crS: csJSON; crA: 11;crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
@@ -992,10 +968,6 @@ const
  (crCommand: 'SERVER PASSWORD';               crAddress: @ServerPassword;                 crMin:0;  crMax:10;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctPassword; crNetwork: 1),  // Was ctString -- bring under the masking-in-Settings logic (Issue #783)
  (crCommand: 'SERVER PORT';                   crAddress: @ServerPort;                     crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'SHIFT KEY ENABLE';              crAddress: @ShiftKeyEnable;                 crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),     // 4.105.6
- (crCommand: 'SHORT 0';                       crAddress: @Short0;                         crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctChar; crNetwork: 1),
- (crCommand: 'SHORT 1';                       crAddress: @Short1;                         crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctChar; crNetwork: 1),
- (crCommand: 'SHORT 2';                       crAddress: @Short2;                         crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctChar; crNetwork: 1),
- (crCommand: 'SHORT 9';                       crAddress: @Short9;                         crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctChar; crNetwork: 1),
  (crCommand: 'SHORT INTEGERS';                crAddress: @ShortIntegers;                  crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'SHOW ALL SERIAL PORTS';         crAddress: @tShowAllSerialPorts;            crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'SHOW DOMESTIC MULTIPLIER NAME'; crAddress: @tShowDomesticMultiplierName;    crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:9; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
@@ -2954,38 +2926,28 @@ type
       isPcharString: PAnsiChar;
    end;
 const
-   (* 15 SINCE 2026-09-12: UnknownCountryFileName left for
-     Settings.UnknownCountryFile.Name, and its default with it. This table
-     is the same shape as the ones being retired -- a hand-typed list of
-     ADDRESSES beside the values they seed -- and it goes the same way as
-     its entries migrate. *)
-   SAS = 15;
+   (* TWO SINCE 2026-09-12, DOWN FROM FIFTEEN: the thirteen message templates
+     left for Settings.Messages, and their defaults went INTO
+     TMessageSettings.Create rather than being dropped.
+
+     THAT IS THE HALF OF THE MOVE THAT WAS EASY TO MISS. Every one of those
+     globals was declared in LogCW.pas with its initialiser COMMENTED OUT, so
+     the declarations say "empty" and this table is where the real values
+     were -- '} OK %', 'TU \ TEST', and a WAV file name for each phone
+     message. A migration that trusted the declarations would have shipped
+     thirteen blank messages, and nothing in a build or a test run would have
+     said so.
+
+     This table is the same shape as the pointer tables being retired -- a
+     hand-typed list of ADDRESSES beside the values they seed -- and it goes
+     the same way as its remaining entries migrate. *)
+   SAS = 2;
    SA: array[1..SAS] of IniStringRecord =
       (
-      (isString: @CQPhoneExchange; isPcharString: 'CQEXCHNG.WAV'),
-      (isString: @CQPhoneExchangeNameKnown; isPcharString: 'CQEXNAME.WAV'),
-      (isString: @CorrectedCallMessage; isPcharString: '} OK %'),
-      (isString: @QSOBeforePhoneMessage; isPcharString: 'QSOB4.WAV'),
-      (isString: @QuickQSLPhoneMessage; isPcharString: 'QUICKQSL.WAV'),
-      (isString: @QSLPhoneMessage; isPcharString: 'QSL.WAV'),
-      (isString: @RepeatSearchAndPouncePhoneExchange; isPcharString:
-         'RPTSPEX.WAV'),
-      (isString: @SearchAndPouncePhoneExchange; isPcharString: 'SAPEXCHG.WAV'),
-      //   (isString: @TailEndPhoneMessage; isPcharString: 'TAILEND.WAV'),
-  
       (isString: @Config.GetScoresSeverPostingAddress; isPcharString:
          'https://post.contestonlinescore.com/post/'),
       (isString: @Config.GetScoresSeverReadingAddress; isPcharString:
-         'https://contestonlinescore.com/scoreboard/'),
-
-      (isString: @QSLMessage; isPcharString: 'TU \ TEST'),
-      (isString: @QSOBeforeMessage; isPcharString: ' SRI QSO B4 TU \ TEST'),
-
-      (isString: @QuickQSLMessage1; isPcharString: 'TU'),
-      (isString: @QuickQSLMessage2; isPcharString: 'TU'), // 4.88.1
-      //  (isString: @TailEndMessage; isPcharString: 'R'),
-
-      (isString: @CorrectedCallPhoneMessage; isPcharString: 'CORCALL.WAV')
+         'https://contestonlinescore.com/scoreboard/')
       );
 var
    i: integer;

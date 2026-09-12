@@ -213,7 +213,7 @@ type
 
          So it is captured HERE, at log time, by the caller that knows --
          uExchangeBuilder.BuildSentExchangeText, which reads the live
-         CQExchange template and substitutes this QSO's serial.
+         CQ exchange template and substitutes this QSO's serial.
 
          AN IMPORT LEAVES IT EMPTY, and must. A binary log does not record what
          was sent, and inventing it from today's globals would be exactly the

@@ -1139,29 +1139,29 @@ begin
 
       end;
   end;
-  CQExchange := tCQExchange;
-  SearchAndPounceExchange := tCQExchange;
-  RepeatSearchAndPounceExchange := tCQExchange;
-  CQExchangeNameKnown := tCQExchange;
+  Settings.Messages.CqExchangeCw := tCQExchange;
+  Settings.Messages.SpExchangeCw := tCQExchange;
+  Settings.Messages.RepeatSpExchangeCw := tCQExchange;
+  Settings.Messages.CqExchangeCwNameKnown := tCQExchange;
   Exit;
 }
 
-  if CQExchange = '' then
+  if Settings.Messages.CqExchangeCw = '' then
      begin
-     CQExchange := tCQExchange;
+     Settings.Messages.CqExchangeCw := tCQExchange;
      end;
 
-  if SearchAndPounceExchange = '' then
-    SearchAndPounceExchange := '_@_' + CQExchange;
+  if Settings.Messages.SpExchangeCw = '' then
+    Settings.Messages.SpExchangeCw := '_@_' + Settings.Messages.CqExchangeCw;
 
-  if RepeatSearchAndPounceExchange = '' then
+  if Settings.Messages.RepeatSpExchangeCw = '' then
      begin
-     RepeatSearchAndPounceExchange := tSPExchange;
+     Settings.Messages.RepeatSpExchangeCw := tSPExchange;
      end;
 
-  if CQExchangeNameKnown = '' then
+  if Settings.Messages.CqExchangeCwNameKnown = '' then
      begin
-     CQExchangeNameKnown := tCQExchange;
+     Settings.Messages.CqExchangeCwNameKnown := tCQExchange;
      end;
 end;
 

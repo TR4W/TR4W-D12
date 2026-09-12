@@ -57,6 +57,8 @@ type
       procedure Test_EveryCommandNameIsTheOneAConfigFileUses;
       procedure Test_AStaleIniCannotOverrideTheStore;
       procedure Test_AContestFileStillOverridesForItsContest;
+      procedure Test_MessageDefaultsAreTheOnesInitializeStringsSeeded;
+      procedure Test_EveryMessageCommandReachesItsOwnProperty;
    public
       procedure RunAllTests; override;
    end;
@@ -344,10 +346,11 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(89, names.Count,
-                     'one name per migrated setting, plus the one'
-                     + ' setting that has always answered to two --'
-                     + ' MY STATE and MY QTH');
+         CheckEquals(119, names.Count,
+                     'one name per migrated setting, plus the ten that'
+                     + ' answer to more than one -- MY STATE/MY QTH, the'
+                     + ' eight mode-less message spellings, and QUICK QSL'
+                     + ' MESSAGE 1, which has three');
       finally
          names.Free;
       end;
@@ -1019,9 +1022,18 @@ const
       + '"BAND MAP MULTS ONLY",'
       + '"BAND MAP SIZE",'
       + '"BAND MAP SO2R DISPLAY",'
+      + '"CALL OK NOW CW MESSAGE",'
+      + '"CALL OK NOW MESSAGE",'
+      + '"CALL OK NOW SSB MESSAGE",'
       + '"CALL WINDOW SHOW ALL SPOTS",'
       + '"CHECK LOG FILE SIZE",'
       + '"CONFIRM EDIT CHANGES",'
+      + '"CQ CW EXCHANGE",'
+      + '"CQ CW EXCHANGE NAME KNOWN",'
+      + '"CQ EXCHANGE",'
+      + '"CQ EXCHANGE NAME KNOWN",'
+      + '"CQ SSB EXCHANGE",'
+      + '"CQ SSB EXCHANGE NAME KNOWN",'
       + '"CW SPEED FROM DATABASE",'
       + '"DVK LOCALIZED MESSAGES ENABLE",'
       + '"ESCAPE EXITS SEARCH AND POUNCE",'
@@ -1063,11 +1075,32 @@ const
       + '"PTT LOCKOUT",'
       + '"PTT TURN ON DELAY",'
       + '"PTT VIA COMMANDS",'
+      + '"QSL CW MESSAGE",'
+      + '"QSL MESSAGE",'
+      + '"QSL SSB MESSAGE",'
+      + '"QSO BEFORE CW MESSAGE",'
+      + '"QSO BEFORE MESSAGE",'
+      + '"QSO BEFORE SSB MESSAGE",'
       + '"QSY INACTIVE RADIO",'
+      + '"QUICK QSL CW MESSAGE",'
+      + '"QUICK QSL CW MESSAGE1",'
+      + '"QUICK QSL MESSAGE 1",'
+      + '"QUICK QSL MESSAGE 2",'
+      + '"QUICK QSL SSB MESSAGE",'
       + '"RADIO TCP SERVER PORT",'
+      + '"REPEAT S&P CW EXCHANGE",'
+      + '"REPEAT S&P EXCHANGE",'
+      + '"REPEAT S&P SSB EXCHANGE",'
+      + '"S&P CW EXCHANGE",'
+      + '"S&P EXCHANGE",'
+      + '"S&P SSB EXCHANGE",'
       + '"SAY HI ENABLE",'
       + '"SAY HI RATE CUTOFF",'
       + '"SEND COMPLETE FOUR LETTER CALL",'
+      + '"SHORT 0",'
+      + '"SHORT 1",'
+      + '"SHORT 2",'
+      + '"SHORT 9",'
       + '"SKIP ACTIVE BAND",'
       + '"SPACE BAR DUPE CHECK ENABLE",'
       + '"SPOT COLLECTOR ENABLED",'
@@ -1168,6 +1201,187 @@ begin
              'still JSON-owned now that it is a property');
 end;
 
+procedure TSettingsModelTests.Test_MessageDefaultsAreTheOnesInitializeStringsSeeded;
+var
+   s: TR4WSettings;
+begin
+   (* THE DECLARATIONS ARE NOT THE DEFAULTS, and this is the test that would
+     have caught believing they were.
+
+     All seventeen globals were declared in LogCW.pas with their initialisers
+     COMMENTED OUT, and every line cfgdef.pas had for them is commented out
+     too -- so reading either file says "these start empty". Thirteen of them
+     do not: uCFG.InitializeStrings seeded them from a table of pointers at
+     startup, BEFORE any configuration file was read, and that is what an
+     operator who has configured nothing actually gets.
+
+     A blank default here is not a build failure and not a test failure
+     anywhere else. It is a station that answers a call by keying nothing. *)
+   BeginTest('the message templates default to what InitializeStrings seeded');
+   s := TR4WSettings.Create;
+   try
+      CheckEquals('} OK %',      s.Messages.CallOkNowCw,  'CorrectedCallMessage');
+      CheckEquals('CORCALL.WAV', s.Messages.CallOkNowSsb, 'CorrectedCallPhoneMessage');
+
+      CheckEquals('CQEXCHNG.WAV', s.Messages.CqExchangeSsb,
+                  'CQPhoneExchange');
+      CheckEquals('CQEXNAME.WAV', s.Messages.CqExchangeSsbNameKnown,
+                  'CQPhoneExchangeNameKnown');
+
+      CheckEquals('TU \ TEST', s.Messages.QslCw,  'QSLMessage');
+      CheckEquals('QSL.WAV',   s.Messages.QslSsb, 'QSLPhoneMessage');
+
+      CheckEquals(' SRI QSO B4 TU \ TEST', s.Messages.QsoBeforeCw,
+                  'QSOBeforeMessage');
+      CheckEquals('QSOB4.WAV', s.Messages.QsoBeforeSsb,
+                  'QSOBeforePhoneMessage');
+
+      CheckEquals('TU',           s.Messages.QuickQslCw1, 'QuickQSLMessage1');
+      CheckEquals('TU',           s.Messages.QuickQslCw2, 'QuickQSLMessage2');
+      CheckEquals('QUICKQSL.WAV', s.Messages.QuickQslSsb, 'QuickQSLPhoneMessage');
+
+      CheckEquals('RPTSPEX.WAV',  s.Messages.RepeatSpExchangeSsb,
+                  'RepeatSearchAndPouncePhoneExchange');
+      CheckEquals('SAPEXCHG.WAV', s.Messages.SpExchangeSsb,
+                  'SearchAndPouncePhoneExchange');
+
+      (* AND THE FOUR THAT REALLY ARE EMPTY. Empty is load-bearing for these:
+        LogCfg.tSetupExchangeNumbers fills each one ONLY IF it is still empty,
+        so a helpful-looking default here would suppress the contest's own
+        exchange for every contest. *)
+      CheckEquals('', s.Messages.CqExchangeCw,          'CQExchange');
+      CheckEquals('', s.Messages.CqExchangeCwNameKnown, 'CQExchangeNameKnown');
+      CheckEquals('', s.Messages.SpExchangeCw,          'SearchAndPounceExchange');
+      CheckEquals('', s.Messages.RepeatSpExchangeCw,
+                  'RepeatSearchAndPounceExchange');
+
+      (* THE CUT NUMBERS, which went to Cw rather than here. cfgdef.pas
+        assigned '0', '1' and '9' at every startup over LogCW's declared T, A
+        and N, so the digits are the live defaults and the letters were dead
+        text. Short2 was in neither list and was declared '2' already. *)
+      CheckEquals('0', s.Cw.Short0, 'Short0');
+      CheckEquals('1', s.Cw.Short1, 'Short1');
+      CheckEquals('2', s.Cw.Short2, 'Short2');
+      CheckEquals('9', s.Cw.Short9, 'Short9');
+   finally
+      s.Free;
+   end;
+end;
+
+procedure TSettingsModelTests.Test_EveryMessageCommandReachesItsOwnProperty;
+var
+   s: TR4WSettings;
+
+   procedure Accepts(const aCommand, aValue: string);
+   begin
+      CheckTrue(s.TrySetByCommand(aCommand, aValue), aCommand + ' is accepted');
+   end;
+
+begin
+   (* THIRTY COMMAND NAMES OVER SEVENTEEN PROPERTIES, every one of them
+     reached through an Alias or an AlsoKnownAs, because not one of these
+     legacy spellings derives from a property path.
+
+     WHAT THIS CATCHES THAT THE VOCABULARY TEST CANNOT: that test checks the
+     NAMES exist. A TRANSPOSED alias -- CQ SSB EXCHANGE pointing at the CW
+     property -- leaves the name list identical and silently makes TR4W key
+     the wrong message in one mode. Nothing else in this tree would notice:
+     the golden corpus exercises ADIF and Cabrillo export and never sends a
+     character of CW.
+
+     EVERY VALUE IS DISTINCT, so a crossed pair cannot coincide, and the
+     writes all happen before any of the reads -- an assertion that read a
+     property as an argument would be evaluating it BEFORE the setter ran.
+     Where three names share one property the LAST write is the one to
+     expect. *)
+   BeginTest('every message command reaches its own property');
+   s := TR4WSettings.Create;
+   try
+      Accepts('CALL OK NOW CW MESSAGE',  'okc');
+      Accepts('CALL OK NOW MESSAGE',     'okc2');
+      Accepts('CALL OK NOW SSB MESSAGE', 'oks');
+
+      Accepts('CQ CW EXCHANGE',             'cqc');
+      Accepts('CQ EXCHANGE',                'cqc2');
+      Accepts('CQ CW EXCHANGE NAME KNOWN',  'cqnc');
+      Accepts('CQ EXCHANGE NAME KNOWN',     'cqn2');
+      Accepts('CQ SSB EXCHANGE',            'cqs');
+      Accepts('CQ SSB EXCHANGE NAME KNOWN', 'cqns');
+
+      Accepts('QSL CW MESSAGE',  'qslc');
+      Accepts('QSL MESSAGE',     'qslc2');
+      Accepts('QSL SSB MESSAGE', 'qsls');
+
+      Accepts('QSO BEFORE CW MESSAGE',  'b4c');
+      Accepts('QSO BEFORE MESSAGE',     'b4c2');
+      Accepts('QSO BEFORE SSB MESSAGE', 'b4s');
+
+      (* THREE NAMES, ONE PROPERTY -- they were three CFGCA rows sharing a
+        crAddress, and QUICK QSL CW MESSAGE1 has no space before its digit
+        while QUICK QSL MESSAGE 1 does. *)
+      Accepts('QUICK QSL CW MESSAGE',  'qq1');
+      Accepts('QUICK QSL CW MESSAGE1', 'qq1b');
+      Accepts('QUICK QSL MESSAGE 1',   'qq1c');
+      Accepts('QUICK QSL MESSAGE 2',   'qq2');
+      Accepts('QUICK QSL SSB MESSAGE', 'qqs');
+
+      Accepts('REPEAT S&P CW EXCHANGE',  'rspc');
+      Accepts('REPEAT S&P EXCHANGE',     'rspc2');
+      Accepts('REPEAT S&P SSB EXCHANGE', 'rsps');
+
+      Accepts('S&P CW EXCHANGE',  'spc');
+      Accepts('S&P EXCHANGE',     'spc2');
+      Accepts('S&P SSB EXCHANGE', 'sps');
+
+      (* ONE CHARACTER, AND NOT TRIMMED: a space is a legal cut character, so
+        trimming would turn a configured space bar into a refusal. *)
+      Accepts('SHORT 0', 'T');
+      Accepts('SHORT 1', 'A');
+      Accepts('SHORT 2', 'U');
+      Accepts('SHORT 9', 'N');
+
+      CheckEquals('okc2', s.Messages.CallOkNowCw,  'CALL OK NOW MESSAGE, written last');
+      CheckEquals('oks',  s.Messages.CallOkNowSsb, 'CALL OK NOW SSB MESSAGE');
+
+      CheckEquals('cqc2', s.Messages.CqExchangeCw,           'CQ EXCHANGE, written last');
+      CheckEquals('cqn2', s.Messages.CqExchangeCwNameKnown,  'CQ EXCHANGE NAME KNOWN');
+      CheckEquals('cqs',  s.Messages.CqExchangeSsb,          'CQ SSB EXCHANGE');
+      CheckEquals('cqns', s.Messages.CqExchangeSsbNameKnown, 'CQ SSB EXCHANGE NAME KNOWN');
+
+      CheckEquals('qslc2', s.Messages.QslCw,  'QSL MESSAGE, written last');
+      CheckEquals('qsls',  s.Messages.QslSsb, 'QSL SSB MESSAGE');
+
+      CheckEquals('b4c2', s.Messages.QsoBeforeCw,  'QSO BEFORE MESSAGE, written last');
+      CheckEquals('b4s',  s.Messages.QsoBeforeSsb, 'QSO BEFORE SSB MESSAGE');
+
+      CheckEquals('qq1c', s.Messages.QuickQslCw1, 'QUICK QSL MESSAGE 1, written last of three');
+      CheckEquals('qq2',  s.Messages.QuickQslCw2, 'QUICK QSL MESSAGE 2');
+      CheckEquals('qqs',  s.Messages.QuickQslSsb, 'QUICK QSL SSB MESSAGE');
+
+      CheckEquals('rspc2', s.Messages.RepeatSpExchangeCw,  'REPEAT S&P EXCHANGE, written last');
+      CheckEquals('rsps',  s.Messages.RepeatSpExchangeSsb, 'REPEAT S&P SSB EXCHANGE');
+
+      CheckEquals('spc2', s.Messages.SpExchangeCw,  'S&P EXCHANGE, written last');
+      CheckEquals('sps',  s.Messages.SpExchangeSsb, 'S&P SSB EXCHANGE');
+
+      CheckEquals('T', s.Cw.Short0, 'SHORT 0');
+      CheckEquals('A', s.Cw.Short1, 'SHORT 1');
+      CheckEquals('U', s.Cw.Short2, 'SHORT 2');
+      CheckEquals('N', s.Cw.Short9, 'SHORT 9');
+
+      (* THE MESSAGES ARE THE CONTEST'S, so they never reach tr4w.json. The
+        cut numbers are the OPERATOR'S, and do. *)
+      CheckTrue(s.CommandIsContestScoped('CQ CW EXCHANGE'),
+                'an exchange is a contest parameter');
+      CheckTrue(s.CommandIsContestScoped('QUICK QSL SSB MESSAGE'),
+                'so is a quick QSL');
+      CheckFalse(s.CommandIsContestScoped('SHORT 0'),
+                 'a cut number is how this operator sends a digit');
+   finally
+      s.Free;
+   end;
+end;
+
 procedure TSettingsModelTests.RunAllTests;
 begin
    Test_DefaultsAreTheOnesTheGlobalsHad;
@@ -1192,6 +1406,8 @@ begin
    Test_EveryCommandNameIsTheOneAConfigFileUses;
    Test_AStaleIniCannotOverrideTheStore;
    Test_AContestFileStillOverridesForItsContest;
+   Test_MessageDefaultsAreTheOnesInitializeStringsSeeded;
+   Test_EveryMessageCommandReachesItsOwnProperty;
 end;
 
 end.

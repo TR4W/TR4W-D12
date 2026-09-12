@@ -102,6 +102,7 @@ implementation
 
 
 uses MainUnit,
+  uSettingsModel,   { Settings.Messages, Settings.Cw -- the message templates }
   uAltPForm;   { the view -- see ShowAltP }
 
 function OtherMessageCommandFormat(aIndex: integer): AnsiString;
@@ -127,28 +128,28 @@ begin
    if aMode = Phone then
       begin
       case aIndex of
-         0: Result := CorrectedCallPhoneMessage;
-         1: Result := CQPhoneExchange;
-         2: Result := CQPhoneExchangeNameKnown;
-         3: Result := QSLPhoneMessage;
-         4: Result := QSOBeforePhoneMessage;
-         5: Result := QuickQSLPhoneMessage;
-         6: Result := RepeatSearchAndPouncePhoneExchange;
-         7: Result := SearchAndPouncePhoneExchange;
+         0: Result := UTF8Encode(Settings.Messages.CallOkNowSsb);
+         1: Result := UTF8Encode(Settings.Messages.CqExchangeSsb);
+         2: Result := UTF8Encode(Settings.Messages.CqExchangeSsbNameKnown);
+         3: Result := UTF8Encode(Settings.Messages.QslSsb);
+         4: Result := UTF8Encode(Settings.Messages.QsoBeforeSsb);
+         5: Result := UTF8Encode(Settings.Messages.QuickQslSsb);
+         6: Result := UTF8Encode(Settings.Messages.RepeatSpExchangeSsb);
+         7: Result := UTF8Encode(Settings.Messages.SpExchangeSsb);
          8: Result := TailEndPhoneMessage;
          end;
       end
    else
       begin
       case aIndex of
-         0: Result := CorrectedCallMessage;
-         1: Result := CQExchange;
-         2: Result := CQExchangeNameKnown;
-         3: Result := QSLMessage;
-         4: Result := QSOBeforeMessage;
-         5: Result := QuickQSLMessage1;
-         6: Result := RepeatSearchAndPounceExchange;
-         7: Result := SearchAndPounceExchange;
+         0: Result := UTF8Encode(Settings.Messages.CallOkNowCw);
+         1: Result := UTF8Encode(Settings.Messages.CqExchangeCw);
+         2: Result := UTF8Encode(Settings.Messages.CqExchangeCwNameKnown);
+         3: Result := UTF8Encode(Settings.Messages.QslCw);
+         4: Result := UTF8Encode(Settings.Messages.QsoBeforeCw);
+         5: Result := UTF8Encode(Settings.Messages.QuickQslCw1);
+         6: Result := UTF8Encode(Settings.Messages.RepeatSpExchangeCw);
+         7: Result := UTF8Encode(Settings.Messages.SpExchangeCw);
          8: Result := TailEndMessage;
          end;
       end;
@@ -168,16 +169,16 @@ end;
 
 (* ONE CHARACTER, AND IT IS A CHARACTER. The table this replaces held a
   PAnsiChar and read osmMessage[0], with a comment explaining it as a
-  ShortString length byte. It was neither: Short0..Short9 are declared
-  AnsiChar, so index zero WAS the character and the comment described a
-  mechanism that was not there. Naming the variable says what is meant. *)
+  ShortString length byte. It was neither: the cut numbers are AnsiChar, so
+  index zero WAS the character and the comment described a mechanism that
+  was not there. Naming the variable says what is meant. *)
 function ShortMessageText(aIndex: integer): AnsiString;
 begin
    case aIndex of
-      0: Result := Short0;
-      1: Result := Short1;
-      2: Result := Short2;
-      3: Result := Short9;
+      0: Result := Settings.Cw.Short0;
+      1: Result := Settings.Cw.Short1;
+      2: Result := Settings.Cw.Short2;
+      3: Result := Settings.Cw.Short9;
    else
       Result := '';
    end;

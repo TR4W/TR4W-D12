@@ -393,7 +393,22 @@ var
 
        So the memory is applied now and saved with the log, and the file that
        used to hold it is not a file this program writes. *)
-     CheckCommand(@k, aCheckValue);
+     (* TRUSTED, so aApplyJSONOwned IS TRUE -- and it has to be as of
+       2026-09-12, when the eight "other message" templates left CFGCA
+       for Settings.Messages.
+
+       CheckCommand's migrated arm ACCEPTS AND IGNORES a value from an
+       untrusted caller, which is the guard that stops a stale tr4w.ini
+       overriding settings/tr4w.json. This dialog is not a stale file --
+       it is the operator typing the message -- so without the flag an
+       Alt-P edit of the CQ exchange would be silently discarded, exactly
+       as Preferences would be without ApplyAndStoreCommand's own True.
+
+       IT ALSO FIXES THE FIVE THAT WERE ALREADY BROKEN: QUICK QSL CW
+       MESSAGE and its four siblings were csJSON rows, and csJSON has
+       carried the same guard for longer -- so editing a quick QSL here
+       has been doing nothing at all. *)
+     CheckCommand(@k, aCheckValue, True);
   end;
 
 begin

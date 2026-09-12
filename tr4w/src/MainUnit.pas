@@ -1851,7 +1851,7 @@ begin
           begin
           if QuickQSL <> NoQuickQSLKey then
              begin
-             SendCrypticMessage(QuickQSLPhoneMessage)
+             SendCrypticMessage(UTF8Encode(Settings.Messages.QuickQslSsb))
              end
           else
              begin
@@ -1999,14 +1999,14 @@ begin
 
      if ActiveMode in [CW, Digital] then
 
-       if not SendCrypticMessage(SearchAndPounceExchange) then
+       if not SendCrypticMessage(UTF8Encode(Settings.Messages.SpExchangeCw)) then
           begin
           Exit;
           end;
 
      if ActiveMode in [Phone, FM] then
         begin
-        SendCrypticMessage(SearchAndPouncePhoneExchange);
+        SendCrypticMessage(UTF8Encode(Settings.Messages.SpExchangeSsb));
         end;
 
      ExchangeHasBeenSent := True;
@@ -2125,19 +2125,19 @@ begin
               end
            else if MessageEnable and not BeSilent then
               begin
-              SendCrypticMessage(CallWindowString + ' ' + QSOBeforeMessage);
+              SendCrypticMessage(UTF8Encode(CallWindowString + ' ' + Settings.Messages.QsoBeforeCw));
               end;
            end;
         // else
         // if MessageEnable and not BeSilent then
-        // SendCrypticMessage(CallWindowString + ' ' + QSOBeforeMessage);
+        // SendCrypticMessage(UTF8Encode(CallWindowString + ' ' + Settings.Messages.QsoBeforeCw));
 
         end
      else if MessageEnable and not BeSilent then
        { if CallAlreadySent = False then
-      SendCrypticMessage(CallWindowString + ' ' + QSOBeforeMessage)
+      SendCrypticMessage(UTF8Encode(CallWindowString + ' ' + Settings.Messages.QsoBeforeCw))
       else
-      SendCrypticMessage(QSOBeforeMessage); }
+      SendCrypticMessage(UTF8Encode(Settings.Messages.QsoBeforeCw)); }
        if DualingCQState <> NoDualingCQs then
           begin
           DualingCQState := SendingDupeMessage;
@@ -2147,7 +2147,7 @@ begin
   if ActiveMode = Phone then
      begin
      //wli
-     SendCrypticMessage(QSOBeforePhoneMessage);
+     SendCrypticMessage(UTF8Encode(Settings.Messages.QsoBeforeSsb));
 
      // Write (' DUPE!!');
      EscapeDeletedCallEntry := CallWindowString;
@@ -8873,16 +8873,16 @@ begin
              begin
              if ActiveMode = Phone then
                 begin
-                SendCrypticMessage(QuickQSLPhoneMessage)
+                SendCrypticMessage(UTF8Encode(Settings.Messages.QuickQslSsb))
                 end
              else
                 begin
-                SendCrypticMessage(QuickQSLMessage1);
+                SendCrypticMessage(UTF8Encode(Settings.Messages.QuickQslCw1));
                 end;
              end;
           if Key = QuickQSLKey2 then
              begin
-             SendCrypticMessage(QuickQSLMessage2);
+             SendCrypticMessage(UTF8Encode(Settings.Messages.QuickQslCw2));
              end;
           end;
        TryLogContact;

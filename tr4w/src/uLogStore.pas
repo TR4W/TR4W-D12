@@ -1256,7 +1256,7 @@ begin
         new value. Two of the four corpus known-divergences are that defect.
 
         BuildSentExchangeText is the canonical builder already used for the UDP
-        broadcast, and it reads the LIVE CQExchange template. Calling it here,
+        broadcast, and it reads the LIVE CQ exchange template. Calling it here,
         at the moment of the QSO, records what actually went out -- including a
         stale grid if the operator changed one mid-contest, because that is
         what was sent. An event source records the event, not today's opinion

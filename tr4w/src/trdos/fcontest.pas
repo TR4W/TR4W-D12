@@ -246,16 +246,16 @@ begin
        Settings.My.Zone := Settings.My.Zone + ' ' + string(Settings.My.State);
        end;
 
-  CQExchange := UTF8Encode(' ' + Code599 + ' ' + Settings.My.Zone);
+  Settings.Messages.CqExchangeCw := UTF8Encode(' ' + Code599 + ' ' + Settings.My.Zone);
   SetCQMemoryString(CW, F3, UTF8Encode(' ' + Code599 + ' ' + Settings.My.Zone));
   SetEXMemoryString(CW, F3, Code599);
   SetEXMemoryString(CW, F4, UTF8Encode(Settings.My.Zone));
   SetEXMemoryString(CW, F5, UTF8Encode('@ DE \ ' + Code599 + ' ' + Settings.My.Zone));
   SetEXMemoryString(CW, AltF3, 'RST?');
   SetEXMemoryString(CW, AltF4, 'NR?');
-  RepeatSearchAndPounceExchange :=
+  Settings.Messages.RepeatSpExchangeCw :=
      UTF8Encode(' ' + Code599 + ' ' + Settings.My.Zone + ' ' + Settings.My.Zone);
-  SearchAndPounceExchange := UTF8Encode(' ' + Code599 + ' ' + Settings.My.Zone);
+  Settings.Messages.SpExchangeCw := UTF8Encode(' ' + Code599 + ' ' + Settings.My.Zone);
 
   if OldMyZone <> '' then
      begin
@@ -265,16 +265,16 @@ end;
 
 procedure SetUpNameAndStateExchange;
 begin
-  CQExchange := UTF8Encode(' ' + Settings.My.Name + ' ' + Settings.My.State);
-  RepeatSearchAndPounceExchange := CQExchange;
-  SearchAndPounceExchange := CQExchange;
+  Settings.Messages.CqExchangeCw := UTF8Encode(' ' + Settings.My.Name + ' ' + Settings.My.State);
+  Settings.Messages.RepeatSpExchangeCw := Settings.Messages.CqExchangeCw;
+  Settings.Messages.SpExchangeCw := Settings.Messages.CqExchangeCw;
 end;
 
 procedure SetUpRSTMyStateExchange;
 begin
-  CQExchange := UTF8Encode(' 5NN ' + Settings.My.State);
-  RepeatSearchAndPounceExchange := UTF8Encode('5NN ' + Settings.My.State);
-  SearchAndPounceExchange := UTF8Encode('~ %5NN ' + Settings.My.State);
+  Settings.Messages.CqExchangeCw := UTF8Encode(' 5NN ' + Settings.My.State);
+  Settings.Messages.RepeatSpExchangeCw := UTF8Encode('5NN ' + Settings.My.State);
+  Settings.Messages.SpExchangeCw := UTF8Encode('~ %5NN ' + Settings.My.State);
 
   SetCQMemoryString(CW, F3, UTF8Encode('5NN ' + Settings.My.State));
 
@@ -287,9 +287,9 @@ end;
 
 procedure SetUpRSTQSONumberExchange;
 begin
-  CQExchange := ' 5NN #';
-  RepeatSearchAndPounceExchange := ' 5NN #';
-  SearchAndPounceExchange := ' 5NN #';
+  Settings.Messages.CqExchangeCw := ' 5NN #';
+  Settings.Messages.RepeatSpExchangeCw := ' 5NN #';
+  Settings.Messages.SpExchangeCw := ' 5NN #';
   SetCQMemoryString(CW, F3, '5NN #');
 
   SetEXMemoryString(CW, F3, '5NN');
@@ -421,18 +421,18 @@ begin
 
         SetCQMemoryString(CW, F1, 'CQ TEST \ \ LABRE');
         SetCQMemoryString(CW, F2, 'CQ TEST \ \ LABRE');
-        CQExchange := UTF8Encode('5NN' + Settings.My.State);
-        SearchAndPounceExchange := UTF8Encode('5NN' + Settings.My.State);
-        QSLMessage := '73 \ ';
+        Settings.Messages.CqExchangeCw := UTF8Encode('5NN' + Settings.My.State);
+        Settings.Messages.SpExchangeCw := UTF8Encode('5NN' + Settings.My.State);
+        Settings.Messages.QslCw := '73 \ ';
       end;
 
     ARIZONAQSOPARTY:
       begin
         SetCQMemoryString(CW, F1, 'CQ AZ \ \ AZ');
         SetCQMemoryString(CW, F2, 'CQ^AZ CQ^AZ \ \ AZQP');
-        CQExchange := UTF8Encode(Settings.My.State);
-        SearchAndPounceExchange := UTF8Encode(Settings.My.State);
-        QSLMessage := '73 \/AZ ';
+        Settings.Messages.CqExchangeCw := UTF8Encode(Settings.My.State);
+        Settings.Messages.SpExchangeCw := UTF8Encode(Settings.My.State);
+        Settings.Messages.QslCw := '73 \/AZ ';
         if not FoundMyStateInDomFile then
            begin
            ActiveExchange := RSTDomesticQTHExchange
@@ -478,9 +478,9 @@ begin
         Settings.Bands.WarcEnabled := False;
         SetCQMemoryString(CW, F1, 'CQ^WFD \ \ TEST');
         SetCQMemoryString(CW, F2, 'CQ^WFD CQ^WFD \ \ TEST');
-        CQExchange := UTF8Encode(' ' + Settings.My.FdClass + ' ' + Settings.My.Section);
-        SearchAndPounceExchange := UTF8Encode(Settings.My.FdClass + ' ' + Settings.My.Section);
-        QSLMessage := '73 \ WFD';
+        Settings.Messages.CqExchangeCw := UTF8Encode(' ' + Settings.My.FdClass + ' ' + Settings.My.Section);
+        Settings.Messages.SpExchangeCw := UTF8Encode(Settings.My.FdClass + ' ' + Settings.My.Section);
+        Settings.Messages.QslCw := '73 \ WFD';
         ActiveDXMult := ARRLDXCCWithNoARRLSections;
         AddARRLSectionDomesticCountries;
       end;
@@ -492,9 +492,9 @@ begin
         Settings.Bands.WarcEnabled := False; // WARC is not allowed during FD ny4i 4.45.3
         SetCQMemoryString(CW, F1, 'CQ^FD \ \ FD');
         SetCQMemoryString(CW, F2, 'CQ^FD CQ^FD \ \ FD');
-        CQExchange := UTF8Encode(' ' + Settings.My.FdClass + ' ' + Settings.My.Section);
-        SearchAndPounceExchange := UTF8Encode(Settings.My.FdClass + ' ' + Settings.My.Section);
-        QSLMessage := '73 \ FD';
+        Settings.Messages.CqExchangeCw := UTF8Encode(' ' + Settings.My.FdClass + ' ' + Settings.My.Section);
+        Settings.Messages.SpExchangeCw := UTF8Encode(Settings.My.FdClass + ' ' + Settings.My.Section);
+        Settings.Messages.QslCw := '73 \ FD';
         AddARRLSectionDomesticCountries;
         LiteralDomesticQTH := True;
       end;
@@ -542,8 +542,8 @@ begin
     STEWPERRY:
       begin
         ContestName := 'STEW-PERRY'; // 4.76.6
-        CQExchange := UTF8Encode(' ' + Settings.My.Grid);
-        SearchAndPounceExchange := UTF8Encode(Settings.My.Grid);
+        Settings.Messages.CqExchangeCw := UTF8Encode(' ' + Settings.My.Grid);
+        Settings.Messages.SpExchangeCw := UTF8Encode(Settings.My.Grid);
         ActiveBand := Band160;
       end;
 
@@ -677,9 +677,9 @@ begin
         // The grid is substituted at FCONTEST init time (same idiom as the zone
         // in SetUpRSTMyZoneExchange); the operator must restart the contest
         // setup if it changes.
-        CQExchange := UTF8Encode(' # ' + Settings.My.Grid);
-        RepeatSearchAndPounceExchange := UTF8Encode(' # ' + Settings.My.Grid);
-        SearchAndPounceExchange := UTF8Encode(' # ' + Settings.My.Grid);
+        Settings.Messages.CqExchangeCw := UTF8Encode(' # ' + Settings.My.Grid);
+        Settings.Messages.RepeatSpExchangeCw := UTF8Encode(' # ' + Settings.My.Grid);
+        Settings.Messages.SpExchangeCw := UTF8Encode(' # ' + Settings.My.Grid);
         SetCQMemoryString(CW, F3, UTF8Encode('# ' + Settings.My.Grid));
         SetEXMemoryString(CW, F4, UTF8Encode('NR # ' + Settings.My.Grid));
         SetEXMemoryString(CW, F5, UTF8Encode('@ DE \ # ' + Settings.My.Grid));
@@ -922,10 +922,10 @@ begin
         ExchangeMemoryEnable := False;
         SprintQSYRule := True;
 
-        SearchAndPounceExchange := UTF8Encode('@ #   (   ' + Settings.My.State + ' \');
-        RepeatSearchAndPounceExchange := UTF8Encode('@ #   (   ' + Settings.My.State);
-        CQExchange := UTF8Encode(' \ #   (   ' + Settings.My.State);
-        QSLMessage := 'EE';
+        Settings.Messages.SpExchangeCw := UTF8Encode('@ #   (   ' + Settings.My.State + ' \');
+        Settings.Messages.RepeatSpExchangeCw := UTF8Encode('@ #   (   ' + Settings.My.State);
+        Settings.Messages.CqExchangeCw := UTF8Encode(' \ #   (   ' + Settings.My.State);
+        Settings.Messages.QslCw := 'EE';
 
         SetCQMemoryString(CW, F1, 'INT \');
         SetCQMemoryString(CW, F2, 'CQ^INT \ \ INT');
@@ -1011,8 +1011,8 @@ begin
         ContestName := 'Slow Speed Test';
         ActiveDomesticMult := DomesticFile;
         Add_KVE;
-        CQExchange := UTF8Encode(' ' + Settings.My.Name + ' ' + Settings.My.State);
-        SearchAndPounceExchange := UTF8Encode(Settings.My.Name + ' ' + Settings.My.State);
+        Settings.Messages.CqExchangeCw := UTF8Encode(' ' + Settings.My.Name + ' ' + Settings.My.State);
+        Settings.Messages.SpExchangeCw := UTF8Encode(Settings.My.Name + ' ' + Settings.My.State);
       end;
 
     NAQSOCW, NAQSOSSB, NAQSORTTY:
@@ -1020,12 +1020,12 @@ begin
         //        ActiveInitialExchange := NameInitialExchange;
         //        ContestName := 'North American QSO Party';
 
-        CQExchange := UTF8Encode(' ' + Settings.My.Name + ' ' + Settings.My.State);
-        QSLMessage := '73 \ NA>';
-        QuickQSLMessage1 := 'TU';
-        QSOBeforeMessage := ' QSO B4 \ NA';
-        SearchAndPounceExchange := UTF8Encode(Settings.My.Name + ' ' + Settings.My.State);
-        CorrectedCallMessage := '} R';
+        Settings.Messages.CqExchangeCw := UTF8Encode(' ' + Settings.My.Name + ' ' + Settings.My.State);
+        Settings.Messages.QslCw := '73 \ NA>';
+        Settings.Messages.QuickQslCw1 := 'TU';
+        Settings.Messages.QsoBeforeCw := ' QSO B4 \ NA';
+        Settings.Messages.SpExchangeCw := UTF8Encode(Settings.My.Name + ' ' + Settings.My.State);
+        Settings.Messages.CallOkNowCw := '} R';
 
         SetCQMemoryString(CW, F1, 'CQ^NA \ \ NA>');
         SetCQMemoryString(CW, F2, 'CQ^NA CQ^NA \ \ NA>');
@@ -1146,9 +1146,9 @@ begin
         Settings.Bands.WarcEnabled := True;
         SetCQMemoryString(CW, F1, 'CQ^POTA \ \ ');
         SetCQMemoryString(CW, F2, 'CQ^POTA CQ^POTA \ \ FD');
-        //CQExchange := ' ' + MyFDClass + ' ' + MySection;
-        //SearchAndPounceExchange := MyFDClass + ' ' + MySection;
-        QSLMessage := '73 \ EE';
+        //Settings.Messages.CqExchangeCw := ' ' + MyFDClass + ' ' + MySection;
+        //Settings.Messages.SpExchangeCw := MyFDClass + ' ' + MySection;
+        Settings.Messages.QslCw := '73 \ EE';
         { Build operator name set from TRMASTER.DTA (lazy — no-op if already done) }
         InitOperatorNameSet;
       end;
@@ -1185,9 +1185,9 @@ begin
         ActiveBand := Band80;
         //        ContestName := 'UK Rotating Postal Code';
         MultipleBandsEnabled := False;
-        CQExchange := '_~ %5NN ('; // + MyPostalCode;
-        RepeatSearchAndPounceExchange := '5NN (';
-        SearchAndPounceExchange := '~ %5NN (';
+        Settings.Messages.CqExchangeCw := '_~ %5NN ('; // + MyPostalCode;
+        Settings.Messages.RepeatSpExchangeCw := '5NN (';
+        Settings.Messages.SpExchangeCw := '~ %5NN (';
         SetCQMemoryString(CW, F3, '5NN (');
         SetEXMemoryString(CW, F3, '5NN');
         SetEXMemoryString(CW, F4, '(');
@@ -1270,13 +1270,13 @@ begin
         //        ContestName := 'North American Sprint';
         SetCQMemoryString(CW, AltF1, 'NA \ NA');
 
-        CQExchange := UTF8Encode('^  \   # ' + Settings.My.Name + ' ' + Settings.My.State);
-        QSLMessage := 'TU';
-        QuickQSLMessage1 := 'EE';
-        QSOBeforeMessage := 'B4 \ NA';
-        SearchAndPounceExchange := UTF8Encode('@ # ' + Settings.My.Name + ' ' + Settings.My.State + '  \ ');
-        RepeatSearchAndPounceExchange := UTF8Encode('# ' + Settings.My.Name + ' ' + Settings.My.State);
-        CorrectedCallMessage := '} R';
+        Settings.Messages.CqExchangeCw := UTF8Encode('^  \   # ' + Settings.My.Name + ' ' + Settings.My.State);
+        Settings.Messages.QslCw := 'TU';
+        Settings.Messages.QuickQslCw1 := 'EE';
+        Settings.Messages.QsoBeforeCw := 'B4 \ NA';
+        Settings.Messages.SpExchangeCw := UTF8Encode('@ # ' + Settings.My.Name + ' ' + Settings.My.State + '  \ ');
+        Settings.Messages.RepeatSpExchangeCw := UTF8Encode('# ' + Settings.My.Name + ' ' + Settings.My.State);
+        Settings.Messages.CallOkNowCw := '} R';
 
         SetCQMemoryString(CW, F1, 'NA \');
         SetCQMemoryString(CW, F2, 'CQ^NA CQ^NA \ \ NA');
@@ -1310,13 +1310,13 @@ begin
         //        ContestName := 'North American Sprint';
         SetCQMemoryString(CW, AltF1, 'NA \ NA');
 
-        CQExchange := UTF8Encode('^  \   # ' + Settings.My.Name + ' ' + Settings.My.State);
-        QSLMessage := 'TU';
-        QuickQSLMessage1 := 'EE';
-        QSOBeforeMessage := 'B4 \ NA';
-        SearchAndPounceExchange := UTF8Encode('@ # ' + Settings.My.Name + ' ' + Settings.My.State + '  \ ');
-        RepeatSearchAndPounceExchange := UTF8Encode('# ' + Settings.My.Name + ' ' + Settings.My.State);
-        CorrectedCallMessage := '} R';
+        Settings.Messages.CqExchangeCw := UTF8Encode('^  \   # ' + Settings.My.Name + ' ' + Settings.My.State);
+        Settings.Messages.QslCw := 'TU';
+        Settings.Messages.QuickQslCw1 := 'EE';
+        Settings.Messages.QsoBeforeCw := 'B4 \ NA';
+        Settings.Messages.SpExchangeCw := UTF8Encode('@ # ' + Settings.My.Name + ' ' + Settings.My.State + '  \ ');
+        Settings.Messages.RepeatSpExchangeCw := UTF8Encode('# ' + Settings.My.Name + ' ' + Settings.My.State);
+        Settings.Messages.CallOkNowCw := '} R';
 
         SetCQMemoryString(CW, F1, 'NA \');
         SetCQMemoryString(CW, F2, 'CQ^NA CQ^NA \ \ NA');
@@ -1353,27 +1353,27 @@ begin
 
         SetCQMemoryString(CW, AltF1, 'CQ^SS \ SS');
 
-        (* UTF8Encode ONCE around the whole expression: CQExchange is a
+        (* UTF8Encode ONCE around the whole expression: Settings.Messages.CqExchangeCw is a
           Str40, and an AnsiString-family value assigned to a ShortString
           is not a narrowing conversion where a UTF-16 one is. Encoded
           LAST, because concatenating onto the result would promote it
           straight back to UnicodeString. *)
-        CQExchange := UTF8Encode('_# ' + Settings.My.Prec + '  ' + Settings.My.Call
+        Settings.Messages.CqExchangeCw := UTF8Encode('_# ' + Settings.My.Prec + '  ' + Settings.My.Call
                                  + '  ' + Settings.My.Check + ' ' + Settings.My.Section);
 {(*}
-        SearchAndPounceExchange       := UTF8Encode('NR # ' + Settings.My.Prec
+        Settings.Messages.SpExchangeCw       := UTF8Encode('NR # ' + Settings.My.Prec
            + ' ' + Settings.My.Call + ' ' + Settings.My.Check + ' ' + Settings.My.Section);
-        RepeatSearchAndPounceExchange := SearchAndPounceExchange;//'NR # ' + MyPrec + ' ' + Settings.My.Call + ' ' + MyCheck + ' ' + MySection;
+        Settings.Messages.RepeatSpExchangeCw := Settings.Messages.SpExchangeCw;//'NR # ' + MyPrec + ' ' + Settings.My.Call + ' ' + MyCheck + ' ' + MySection;
 {*)}
-        QSLMessage := UTF8Encode('73 ' + Settings.My.Call + ' SS>');
-        QSOBeforeMessage := UTF8Encode('SRI QSO ' + Settings.My.Call + ' SS');
+        Settings.Messages.QslCw := UTF8Encode('73 ' + Settings.My.Call + ' SS>');
+        Settings.Messages.QsoBeforeCw := UTF8Encode('SRI QSO ' + Settings.My.Call + ' SS');
 
-        QuickQSLMessage1 := 'TU>';
+        Settings.Messages.QuickQslCw1 := 'TU>';
 {(*}
-//        SearchAndPounceExchange       := 'NR # ' + MyPrec + ' ' + Settings.My.Call + ' ' + MyCheck + ' ' + MySection;
-//        RepeatSearchAndPounceExchange := 'NR # ' + MyPrec + ' ' + Settings.My.Call + ' ' + MyCheck + ' ' + MySection;
+//        Settings.Messages.SpExchangeCw       := 'NR # ' + MyPrec + ' ' + Settings.My.Call + ' ' + MyCheck + ' ' + MySection;
+//        Settings.Messages.RepeatSpExchangeCw := 'NR # ' + MyPrec + ' ' + Settings.My.Call + ' ' + MyCheck + ' ' + MySection;
 {*)}
-        CorrectedCallMessage := '} R';
+        Settings.Messages.CallOkNowCw := '} R';
 
         SetCQMemoryString(CW, F1, UTF8Encode('SS ' + Settings.My.Call + ' SS>'));
         SetCQMemoryString(CW, F2,
