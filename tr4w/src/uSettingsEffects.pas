@@ -185,6 +185,12 @@ const
      no run-time effect at all. *)
    SHOW_GRIDLINES = 'MainWindow.ShowGridlines';
 
+   (* THE NEXT SERIAL NUMBER ON SCREEN, crP: 5. The panel shows what will
+     be sent, and whether an abandoned QSO gives its number back changes
+     that -- so the display has to follow the setting rather than wait
+     for the next QSO. *)
+   AUTO_QSO_NUMBER_DECREMENT = 'Operating.AutoQsoNumberDecrement';
+
 
 function InGroup(const aPath, aPrefix: string): boolean;
 begin
@@ -279,6 +285,11 @@ begin
          begin
          wsjtx.JoinMulticastGroup(Settings.Wsjtx.MulticastGroup);
          end;
+      end;
+
+   if UnicodeSameText(aPath, AUTO_QSO_NUMBER_DECREMENT) then
+      begin
+      DisplayNextQSONumber;
       end;
 
    if UnicodeSameText(aPath, SHOW_GRIDLINES) then

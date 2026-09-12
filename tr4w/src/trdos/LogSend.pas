@@ -76,7 +76,7 @@ begin
      if FileName = '#' then
         begin
         QSONumber := NextSerialToSend;  // Issue #954
-        if Config.AutoQSONumberDecrement then
+        if Settings.Operating.AutoQsoNumberDecrement then
           if (ActiveMainWindow = awCallWindow)
           //if tr4w_CallWindowActive
           and (CallWindowString = '') and (ExchangeWindowString = '') then dec(QSONumber);
@@ -205,7 +205,7 @@ begin
                inc(QSONumber);
                end;
 
-            if Config.AutoQSONumberDecrement then
+            if Settings.Operating.AutoQsoNumberDecrement then
               //              if (ActiveWindow = CallWindow) and
 //              if tr4w_CallWindowActive and
               if (ActiveMainWindow = awCallWindow) and
@@ -245,7 +245,7 @@ begin
 
             while Config.LeadingZeros > length(TempString) do
                begin
-               TempString := Config.LeadingZeroCharacter + TempString;
+               TempString := Settings.Cw.LeadingZeroCharacter + TempString;
                end;
               if Settings.Cw.ShortIntegers then
                  begin

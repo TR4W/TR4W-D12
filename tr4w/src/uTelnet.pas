@@ -649,7 +649,7 @@ begin
 
   // CONNECT ON OPEN, and only when nothing is connected yet -- reshowing the
   // window must not dial a second time.
-  if Config.tConnectionAtStartup and (not TelnetIsConnected) and
+  if Settings.Cluster.ConnectionAtStartup and (not TelnetIsConnected) and
      (not ThreadStarted(TelThreadID)) then
      begin
      StartTelnetConnect;
@@ -1885,7 +1885,7 @@ end;
 // one -- so every attempt is announced in the console.
 procedure ArmTelnetRetry;
 begin
-  if not Config.tConnectionAtStartup then
+  if not Settings.Cluster.ConnectionAtStartup then
      begin
      Exit;   // operator has opted out of TR4W dialling on its own
      end;

@@ -153,7 +153,7 @@ begin
                          RS_OPERATING_CW_KEYPADMEMORIES);
    RegisterStoredSetting('operating.cw.leadingZeros',     'LEADING ZEROS',
                          RS_OPERATING_CW_LEADINGZEROS);
-   RegisterStoredSetting('operating.cw.leadingZeroChar',  'LEADING ZERO CHARACTER',
+   RegisterModelSetting( 'operating.cw.leadingZeroChar',  'LEADING ZERO CHARACTER',
                          RS_OPERATING_CW_LEADINGZEROCHAR);
 
    // Radio serial keying.  These shape only the CW TR4W generates itself by
@@ -201,7 +201,7 @@ begin
                          RS_CW_SENDFOURLETTERCALL);
 
    { The F-key button captions, 2026-08-15. }
-   RegisterStoredSetting('cw.includeFKeyNumber',              'INCLUDE F-KEY NUMBER',
+   RegisterModelSetting( 'cw.includeFKeyNumber',              'INCLUDE F-KEY NUMBER',
                          RS_CW_INCLUDEFKEYNUMBER);
 
    { The old Appearance menu's contents, 2026-08-15. }
@@ -275,7 +275,7 @@ begin
                          RS_OPERATING_SPACEBARDUPECHECK);
    RegisterModelSetting( 'operating.confirmEditChanges',      'CONFIRM EDIT CHANGES',
                          RS_OPERATING_CONFIRMEDITCHANGES);
-   RegisterStoredSetting('operating.autoQSONumberDecrement',  'AUTO QSO NUMBER DECREMENT',
+   RegisterModelSetting( 'operating.autoQSONumberDecrement',  'AUTO QSO NUMBER DECREMENT',
                          RS_OPERATING_AUTOQSONUMBERDECREMENT);
 
    // --- Operating: bands ---------------------------------------------------
@@ -329,7 +329,7 @@ begin
                          RS_OPERATING_TWORADIO_WAITFORSTRENGTH);
    RegisterModelSetting( 'network.multiMultsOnly',            'MULTI MULTS ONLY',
                          RS_NETWORK_MULTIMULTSONLY);
-   RegisterStoredSetting('network.intercomFile',              'INTERCOM FILE ENABLE',
+   RegisterModelSetting( 'network.intercomFile',              'INTERCOM FILE ENABLE',
                          RS_NETWORK_INTERCOMFILE);
 
    { Super Check Partial, band map and log files, 2026-08-15. }
@@ -339,7 +339,7 @@ begin
                          RS_SCP_PARTIALCALL);
    RegisterModelSetting( 'scp.wildcardPartials',              'WILDCARD PARTIALS',
                          RS_SCP_WILDCARDPARTIALS);
-   RegisterStoredSetting('scp.nameFlag',                      'NAME FLAG ENABLE',
+   RegisterModelSetting( 'scp.nameFlag',                      'NAME FLAG ENABLE',
                          RS_SCP_NAMEFLAG);
    RegisterModelSetting( 'bandmap.callWindowShowAllSpots',    'CALL WINDOW SHOW ALL SPOTS',
                          RS_BANDMAP_CALLWINDOWSHOWALLSPOTS);
@@ -377,7 +377,7 @@ begin
                          RS_SCORING_BOARD_READINGURL);
 
    // --- DX cluster ---------------------------------------------------------
-   RegisterStoredSetting('cluster.connectAtStartup', 'CONNECTION AT STARTUP',
+   RegisterModelSetting( 'cluster.connectAtStartup', 'CONNECTION AT STARTUP',
                          RS_CLUSTER_CONNECTATSTARTUP);
    // CONNECTION COMMAND is NOT registered as a flat setting. It belongs to the
    // cluster definition -- one cluster, one connect command -- and the cluster
@@ -670,7 +670,7 @@ begin
                           'Band');
    RegisterLegacySetting('operating.ctrlj.clearDupeSheet',    'CLEAR DUPE SHEET',
                           'Clear Dupe Sheet');
-   RegisterStoredSetting('operating.ctrlj.customUserString',  'CUSTOM USER STRING',
+   RegisterModelSetting( 'operating.ctrlj.customUserString',  'CUSTOM USER STRING',
                           RS_OPERATING_CTRLJ_CUSTOMUSERSTRING);
    RegisterModelSetting('operating.ctrlj.deEnable',          'DE ENABLE',
                           RS_OPERATING_CTRLJ_DEENABLE);
@@ -684,7 +684,7 @@ begin
                           RS_OPERATING_CTRLJ_DUPESHEETAUTORESET);
    RegisterStoredSetting('operating.ctrlj.frequencyMemory',   'FREQUENCY MEMORY',
                           RS_OPERATING_CTRLJ_FREQUENCYMEMORY);
-   RegisterStoredSetting('operating.ctrlj.frequencyMemoryEnable','FREQUENCY MEMORY ENABLE',
+   RegisterModelSetting( 'operating.ctrlj.frequencyMemoryEnable','FREQUENCY MEMORY ENABLE',
                           RS_OPERATING_CTRLJ_FREQUENCYMEMORYENABLE);
    RegisterStoredSetting('operating.ctrlj.frequencyPollRate', 'FREQUENCY POLL RATE',
                           RS_OPERATING_CTRLJ_FREQUENCYPOLLRATE);
@@ -694,7 +694,7 @@ begin
                           RS_OPERATING_CTRLJ_INCREMENTTIMEENABLE);
    RegisterModelSetting( 'operating.ctrlj.logFrequencyEnable','LOG FREQUENCY ENABLE',
                           RS_OPERATING_CTRLJ_LOGFREQUENCYENABLE);
-   RegisterStoredSetting('operating.ctrlj.logSubTitle',       'LOG SUB TITLE',
+   RegisterModelSetting( 'operating.ctrlj.logSubTitle',       'LOG SUB TITLE',
                           RS_OPERATING_CTRLJ_LOGSUBTITLE);
    RegisterModelSetting( 'operating.ctrlj.mainCallsign',      'MAIN CALLSIGN',
                           RS_OPERATING_CTRLJ_MAINCALLSIGN);
@@ -728,7 +728,7 @@ begin
                           RS_CW_CTRLJ_CODESPEED);
    RegisterStoredSetting('cw.ctrlj.paddlePort',               'PADDLE PORT',
                           RS_CW_CTRLJ_PADDLEPORT);
-   RegisterStoredSetting('cw.ctrlj.questionMarkChar',         'QUESTION MARK CHAR',
+   RegisterModelSetting( 'cw.ctrlj.questionMarkChar',         'QUESTION MARK CHAR',
                           RS_CW_CTRLJ_QUESTIONMARKCHAR);
    { THE CUT NUMBERS moved to Settings.Cw, so RegisterModelSetting. The keys
      are unchanged, which is the point of keys being ours: these four still
@@ -743,7 +743,7 @@ begin
                           RS_CW_CTRLJ_SHORT9);
    RegisterModelSetting('cw.ctrlj.shortIntegers',            'SHORT INTEGERS',
                           RS_CW_CTRLJ_SHORTINTEGERS);
-   RegisterStoredSetting('cw.ctrlj.slashMarkChar',            'SLASH MARK CHAR',
+   RegisterModelSetting( 'cw.ctrlj.slashMarkChar',            'SLASH MARK CHAR',
                           RS_CW_CTRLJ_SLASHMARKCHAR);
    RegisterModelSetting('cw.ctrlj.startSendingNowKey',       'START SENDING NOW KEY',
                           RS_CW_CTRLJ_STARTSENDINGNOWKEY);
@@ -890,7 +890,7 @@ begin
                           RS_ADVANCED_NOLOG);
 
    // --- DX Cluster (1) -------------------------------
-   RegisterStoredSetting('cluster.ctrlj.broadcastAllPacketData','BROADCAST ALL PACKET DATA',
+   RegisterModelSetting( 'cluster.ctrlj.broadcastAllPacketData','BROADCAST ALL PACKET DATA',
                           RS_CLUSTER_CTRLJ_BROADCASTALLPACKETDATA);
    // Two rows a case-SENSITIVE type scan missed on 2026-08-16: their crType is
    // spelled 'ctFilename' and 'ctinteger' in CFGCA. Pascal does not care; the

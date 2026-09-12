@@ -70,7 +70,8 @@ uses
   MainUnit,
   uFlasher,    { the intercom flash is a timer now }
   uIntercomForm,   { the window is a form -- the list box lives there }
-   uConfigValues;
+   uConfigValues,
+   uSettingsModel;   (* Settings.Network.IntercomFileEnable *)
 
 procedure AddMessageToIntercomWindow(const mes: AnsiString; Sender: AnsiChar);
 var
@@ -96,7 +97,7 @@ begin
   // it: the line is a string from here on.
   Line := SysUtils.Format('%s %s :   %s', [GetTimeString, Sender, mes]);
 
-  if Config.IntercomFileEnable then
+  if Settings.Network.IntercomFileEnable then
      begin
      (* APPEND, THROUGH THE RTL. Was CreateFileA(..., OPEN_ALWAYS, ...) +
        SetFilePointer(FILE_END) + CloseHandle.

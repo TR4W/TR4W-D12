@@ -574,7 +574,8 @@ var
   ControlBMemory                        : CallString;
   //   CQMenu                          : Str80;
   CustomInitialExchangeString           : Str40; {KK1L: 6.67 was Str80;}
-  CustomUserString                      : Str40; {KK1L: 6.68 shortened from Str80}
+  (* CustomUserString is gone (2026-09-12) --
+    Settings.Operating.CustomUserString. {KK1L: 6.68} *)
   CWEnabled                             : boolean  = True;
  // CWByCAT                               : boolean  = False;   // ny4i 4.44.5
 
@@ -634,7 +635,8 @@ var
     (0000000000, 0, 0000000000)
     );
 
-  FrequencyMemoryEnable                 : boolean = True;
+  (* FrequencyMemoryEnable is gone (2026-09-12) --
+    Settings.Operating.FrequencyMemoryEnable. *)
   FreqPollRate                          : integer = 10; {KK1L: 6.71a Frequency Poll Rate in milliseconds}
   GridSquareListShown                   : boolean;
 
@@ -677,7 +679,8 @@ var
 //  LogFileName                           : string {40};
 
 //  LogRestartFileName          : string;
-  LogSubTitle                           : Str40; {KK1L: 6.68 shortened from Str80}
+  (* LogSubTitle is gone (2026-09-12) --
+    Settings.Operating.LogSubTitle. {KK1L: 6.68} *)
   //  LogTempFileName                       : string {Str40};
 
   MaximumDisplayableRemainingMults      : Byte;
@@ -1534,7 +1537,7 @@ begin
   // whenever a QSO stopped counting (X-QSO, mid-log delete).  NextSerialToSend
   // also returns ServerSerialNumber in networked mode, matching the old value.
   capt := SysUtils.Format(
-     AnsiString(QSONumberStringArray[Config.AutoQSONumberDecrement]),
+     AnsiString(QSONumberStringArray[Settings.Operating.AutoQsoNumberDecrement]),
      [NextSerialToSend]);
   if ServerSerialNumber <> 0 then
     if PreviousSerialNumberType = sntReserved then
@@ -3124,7 +3127,7 @@ begin
     CustomInfo:
       begin
         InfoString := '';
-        CustomString := CustomUserString;
+        CustomString := ShortString(Settings.Operating.CustomUserString);
 
         while CustomString <> '' do
            begin

@@ -70,7 +70,6 @@ type
   end;
 
   PacketObject = object
-    BroadcastAllPacketData: boolean;
 
     PacketBandSpots: boolean;
     PacketBaudRate: integer;

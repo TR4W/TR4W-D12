@@ -91,11 +91,9 @@ type
       { SO2R / two-radio, CW and scoreboard settings migrated 2026-08-14.
         Types copied verbatim from the declarations they replace -- CheckCommand
         writes through @Config.<field> and cannot see a mismatch. }
-      LeadingZeroCharacter: AnsiChar;
       tDitDahRatio: integer;
       GetScoresSeverPostingAddress: ShortString;
       GetScoresSeverReadingAddress: ShortString;
-      tConnectionAtStartup: boolean;
 
       { CW KEYING, migrated 2026-08-14. These five differ from everything above:
         THE SESSION MUTATES THEM. Weight, FarnsworthEnable and FarnsworthSpeed are
@@ -141,14 +139,12 @@ type
         InBandLock and WaitForStrength were typed constants = True; losing that
         turns the in-band guard off and stops the SO2R code waiting for a signal
         report, neither of which announces itself. }
-      IntercomFileEnable: boolean;
 
       { OPERATING AND PTT, migrated 2026-08-15.
 
         Five of these ten were typed constants = True. A record field defaults to
         zero, so carrying the value across by hand is the whole safeguard, and
         uTestConfigDefaults pins every one in the same commit. }
-      AutoQSONumberDecrement: boolean;
 
       { SUPER CHECK PARTIAL, BAND MAP AND LOG FILES, migrated 2026-08-15.
 
@@ -159,7 +155,6 @@ type
         checked rather than assumed, because a defaults routine that ran on
         contest change would silently reset the setting instead. The record
         default matches it, and the assignment now writes the same field. }
-      NameFlagEnable: boolean;
 
       { The function-key button captions, migrated 2026-08-15.
 
@@ -168,7 +163,6 @@ type
         message text); it does not touch the grid the LCL conversion replaces,
         and the page it belongs on -- CW Settings, where those messages are
         configured -- already exists. }
-      IncludeFKeyNumber: boolean;
 
       { The old Appearance menu, migrated 2026-08-15.
 
@@ -218,11 +212,9 @@ var
       HamScorePassword: '';
       HamScoreSendContactInfo: True;
 
-      LeadingZeroCharacter: 'T';
       tDitDahRatio: 3;
       GetScoresSeverPostingAddress: '';
       GetScoresSeverReadingAddress: '';
-      tConnectionAtStartup: False;
 
       CWEnable: True;
       CWTone: 700;
@@ -236,10 +228,6 @@ var
       { True, 15, 700 and 13 are NOT arbitrary -- they are the values the typed
         constants in LOGK1EA carried, kept so a station with no settings file
         behaves exactly as it did before. }
-      IntercomFileEnable: False;
-      AutoQSONumberDecrement: False;
-      NameFlagEnable: True;
-      IncludeFKeyNumber: False;
       MP3RecorderEnable: False;
       MP3Path: '';
       MP3Player: '';

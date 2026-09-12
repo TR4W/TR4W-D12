@@ -707,8 +707,8 @@ var
   CodeSpeed                             : integer = InitialCodeSpeed;
   //  FMMode                           : boolean;
     //  HourOffset                            : integer;
-  QuestionMarkChar                      : Char = '?';
-  SlashMarkChar                         : Char = '/';
+  (* QuestionMarkChar and SlashMarkChar are gone (2026-09-12) --
+    Settings.Cw.QuestionMarkChar and .SlashMarkChar. *)
   //  UseBIOSCOMIO                     : boolean;
     //   UseBIOSKeyCalls                 : boolean;
 
@@ -4184,13 +4184,13 @@ begin
      end;
 
 //  Key := 148;
-  if Key = Ord(QuestionMarkChar) then
+  if Key = Ord(Settings.Cw.QuestionMarkChar) then
      begin
      Key := Ord('?');
      Result := True;
      end;
 
-  if Key = Ord(SlashMarkChar) then
+  if Key = Ord(Settings.Cw.SlashMarkChar) then
      begin
      Key := Ord('/');
      Result := True;

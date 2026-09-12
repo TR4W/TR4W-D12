@@ -390,6 +390,7 @@ type
       FMultiMultsOnly: boolean;
       FShowTypedCallsign: boolean;
       FStatusUpdateInterval: TNetStatusInterval;
+      FIntercomFileEnable: boolean;
    public
       constructor Create;
    published
@@ -416,6 +417,11 @@ type
         and crMax:10000 went. *)
       property StatusUpdateInterval: TNetStatusInterval
          read FStatusUpdateInterval write FStatusUpdateInterval;
+      (* Was Config.IntercomFileEnable -- the intercom writes its
+        messages to a file as well as showing them, so another program
+        on the position can read them. *)
+      property IntercomFileEnable: boolean
+         read FIntercomFileEnable write FIntercomFileEnable;
    end;
 
    (*
@@ -446,6 +452,10 @@ type
       FShiftKeyEnable: boolean;
       FTuneAltDEnable: boolean;
       FWakeUpTimeOut: TWakeUpTimeOut;
+      FAutoQsoNumberDecrement: boolean;
+      FCustomUserString: string;
+      FFrequencyMemoryEnable: boolean;
+      FLogSubTitle: string;
    public
       constructor Create;
    published
@@ -489,6 +499,78 @@ type
         Zero is off. *)
       property WakeUpTimeOut: TWakeUpTimeOut
          read FWakeUpTimeOut write FWakeUpTimeOut;
+      (* Was Config.AutoQSONumberDecrement -- take the serial number back
+        when a QSO is abandoned, so the next one reuses it. It carried
+        crP: 5, the next-number display, which is a setter arm now. *)
+      property AutoQsoNumberDecrement: boolean
+         read FAutoQsoNumberDecrement write FAutoQsoNumberDecrement;
+      (* Was CustomUserString, a Str40 -- text the operator puts in the
+        user-defined field of the log display. *)
+      property CustomUserString: string
+         read FCustomUserString write FCustomUserString;
+      (* Was FrequencyMemoryEnable in logwind, declared True. The memory
+        list itself is FREQUENCY MEMORY, a ctFreqList row that stays
+        where it is: an accumulating list is a different shape from a
+        value and is not part of this move. *)
+      property FrequencyMemoryEnable: boolean
+         read FFrequencyMemoryEnable write FFrequencyMemoryEnable;
+      (* Was LogSubTitle, a Str40 -- the second line of the log window's
+        title. No live reader in this build; carried, not withdrawn. *)
+      property LogSubTitle: string
+         read FLogSubTitle write FLogSubTitle;
+   end;
+
+   (*
+     SUPER CHECK PARTIAL -- the callsign database behind the partial-call
+     strip. One setting today; the group exists because the property PATH is
+     what derives the command name, and because SCP is a real area of the
+     program rather than a convenient bucket.
+   *)
+   TScpSettings = class(TSettingsGroup)
+   private
+      FNameFlagEnable: boolean;
+   public
+      constructor Create;
+   published
+      (* Was Config.NameFlagEnable -- show the operator's name from the
+        database beside a matched callsign.
+
+        NO LIVE READER IN THIS BUILD, and carried rather than dropped on the
+        same ruling as NO COLUMN HEADER: an operator can see it in
+        Preferences, so withdrawing it is a decision. *)
+      property NameFlagEnable: boolean
+         read FNameFlagEnable write FNameFlagEnable;
+   end;
+
+   (*
+     THE DX CLUSTER, as this station connects to it.
+
+     TWO SETTINGS, AND THE THIRD IS DELIBERATELY ABSENT. CONNECTION COMMAND
+     is not here: the cluster LIBRARY owns it -- one cluster, one connect
+     command, written by the cluster editor and applied by
+     ApplyActiveCluster -- so moving it is a merge of two models rather than
+     a migration of one. These two have no such second owner; nothing but
+     the config array ever wrote them.
+   *)
+   TClusterSettings = class(TSettingsGroup)
+   private
+      FConnectionAtStartup: boolean;
+      FBroadcastAllPacketData: boolean;
+   public
+      constructor Create;
+   published
+      (* Was Config.tConnectionAtStartup -- open the cluster connection when
+        the program starts, and the flag uTelnet consults before deciding an
+        automatic reconnect is wanted. *)
+      property ConnectionAtStartup: boolean
+         read FConnectionAtStartup write FConnectionAtStartup;
+      (* Was Packet.BroadcastAllPacketData -- relay every line from the
+        cluster to the other multi-op positions, not only the spots.
+
+        ITS ONE READER IS COMMENTED OUT in logpack, so this reaches nothing
+        in this build. Carried, not withdrawn, for the reason above. *)
+      property BroadcastAllPacketData: boolean
+         read FBroadcastAllPacketData write FBroadcastAllPacketData;
    end;
 
    (* THE EXTERNAL LOGGER -- the first area to move off CFGCA.
@@ -867,6 +949,10 @@ type
       FShort1: AnsiChar;
       FShort2: AnsiChar;
       FShort9: AnsiChar;
+      FLeadingZeroCharacter: AnsiChar;
+      FIncludeFKeyNumber: boolean;
+      FQuestionMarkChar: Char;
+      FSlashMarkChar: Char;
    public
       constructor Create;
    published
@@ -907,6 +993,22 @@ type
         where the slot keeps its place holding nil. *)
       property StartSendingNowKey: Char
          read FStartSendingNowKey write FStartSendingNowKey;
+      (* Was Config.LeadingZeroCharacter -- what is keyed in place of a
+        serial number's leading zero. 'T' by default, the same cut-number
+        idea as Short0 below. *)
+      property LeadingZeroCharacter: AnsiChar
+         read FLeadingZeroCharacter write FLeadingZeroCharacter;
+      (* Was Config.IncludeFKeyNumber -- put the function key's number in
+        its on-screen caption. *)
+      property IncludeFKeyNumber: boolean
+         read FIncludeFKeyNumber write FIncludeFKeyNumber;
+      (* Was QuestionMarkChar in tree.pas -- which key sends a question
+        mark, for a keyboard layout where '?' needs a modifier. *)
+      property QuestionMarkChar: Char
+         read FQuestionMarkChar write FQuestionMarkChar;
+      // Was SlashMarkChar in tree.pas, the same idea for '/'.
+      property SlashMarkChar: Char
+         read FSlashMarkChar write FSlashMarkChar;
       (*
         THE CUT NUMBERS -- what is actually keyed for 0, 1, 2 and 9. An
         operator sending fast CW sends T for zero and N for nine, because the
@@ -2359,6 +2461,8 @@ type
       FMainWindow: TMainWindowSettings;
       FNetwork: TNetworkSettings;
       FOperating: TOperatingSettings;
+      FScp: TScpSettings;
+      FCluster: TClusterSettings;
       FUnknownCountryFile: TUnknownCountryFileSettings;
       FQso: TQsoSettings;
       FMult: TMultSettings;
@@ -2490,6 +2594,8 @@ type
       property MainWindow: TMainWindowSettings read FMainWindow;
       property Network: TNetworkSettings read FNetwork;
       property Operating: TOperatingSettings read FOperating;
+      property Scp: TScpSettings read FScp;
+      property Cluster: TClusterSettings read FCluster;
       property UnknownCountryFile: TUnknownCountryFileSettings
          read FUnknownCountryFile;
       property Qso: TQsoSettings read FQso;
@@ -2857,6 +2963,13 @@ begin
    FShort1 := '1';
    FShort2 := '2';
    FShort9 := '9';
+   (* The values uConfigValues and tree.pas carried. *)
+   (* cfgdef assigned '0' at every startup, which is what the program
+     actually ran with; the record initialiser's 'T' never won. *)
+   FLeadingZeroCharacter := '0';
+   FIncludeFKeyNumber    := False;
+   FQuestionMarkChar     := '?';
+   FSlashMarkChar        := '/';
 end;
 
 constructor TUnknownCountryFileSettings.Create;
@@ -2921,6 +3034,22 @@ begin
    FShowAll := False;
 end;
 
+constructor TScpSettings.Create;
+begin
+   inherited Create;
+   // uConfigValues declared NameFlagEnable True.
+   FNameFlagEnable := True;
+end;
+
+constructor TClusterSettings.Create;
+begin
+   inherited Create;
+   FConnectionAtStartup    := False;
+   (* TRUE, because cfgdef assigned it at every startup -- see the note
+     there. The record initialiser said False and never won. *)
+   FBroadcastAllPacketData := True;
+end;
+
 constructor TOperatingSettings.Create;
 begin
    inherited Create;
@@ -2936,6 +3065,12 @@ begin
    FShiftKeyEnable      := True;
    FTuneAltDEnable      := False;
    FWakeUpTimeOut       := 0;
+   (* FrequencyMemoryEnable was declared True in logwind; the other three
+     had no initialiser. *)
+   FAutoQsoNumberDecrement := False;
+   FCustomUserString       := '';
+   FFrequencyMemoryEnable  := True;
+   FLogSubTitle            := '';
 end;
 
 constructor TNetworkSettings.Create;
@@ -2946,6 +3081,7 @@ begin
    FMultiMultsOnly       := False;
    FShowTypedCallsign    := True;
    FStatusUpdateInterval := 5000;
+   FIntercomFileEnable   := False;
 end;
 
 constructor TWsjtxSettings.Create;
@@ -3334,6 +3470,8 @@ begin
    FMainWindow     := TMainWindowSettings.Create;
    FNetwork        := TNetworkSettings.Create;
    FOperating      := TOperatingSettings.Create;
+   FScp            := TScpSettings.Create;
+   FCluster        := TClusterSettings.Create;
    FUnknownCountryFile := TUnknownCountryFileSettings.Create;
    FQso            := TQsoSettings.Create;
    FMult           := TMultSettings.Create;
@@ -3726,6 +3864,23 @@ begin
    Alias('SHIFT KEY ENABLE',      'Operating.ShiftKeyEnable');
    Alias('TUNE ALT-D ENABLE',     'Operating.TuneAltDEnable');
    Alias('WAKE UP TIME OUT',      'Operating.WakeUpTimeOut');
+   Alias('AUTO QSO NUMBER DECREMENT', 'Operating.AutoQsoNumberDecrement');
+   Alias('CUSTOM USER STRING',        'Operating.CustomUserString');
+   Alias('FREQUENCY MEMORY ENABLE',   'Operating.FrequencyMemoryEnable');
+   Alias('LOG SUB TITLE',             'Operating.LogSubTitle');
+
+   (* The CW group's four new names. LEADING ZERO CHARACTER and the two
+     key characters say nothing about CW; INCLUDE F-KEY NUMBER says
+     nothing about anything. *)
+   Alias('LEADING ZERO CHARACTER', 'Cw.LeadingZeroCharacter');
+   Alias('INCLUDE F-KEY NUMBER',   'Cw.IncludeFKeyNumber');
+   Alias('QUESTION MARK CHAR',     'Cw.QuestionMarkChar');
+   Alias('SLASH MARK CHAR',        'Cw.SlashMarkChar');
+
+   Alias('INTERCOM FILE ENABLE',       'Network.IntercomFileEnable');
+   Alias('NAME FLAG ENABLE',           'Scp.NameFlagEnable');
+   Alias('CONNECTION AT STARTUP',      'Cluster.ConnectionAtStartup');
+   Alias('BROADCAST ALL PACKET DATA',  'Cluster.BroadcastAllPacketData');
 
    Alias('HF BAND ENABLE',   'Bands.HfEnabled');
    Alias('VHF BAND ENABLE',  'Bands.VhfEnabled');

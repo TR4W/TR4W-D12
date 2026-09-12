@@ -174,7 +174,8 @@ begin
    CheckFalse(Settings.So2r.TwoRadioMode,     'TwoRadioMode was False');
    CheckFalse(Settings.So2r.SkipActiveBand,   'SkipActiveBand was False');
    CheckFalse(Settings.Network.MultiMultsOnly, 'MultiMultsOnly was False');
-   CheckFalse(Config.IntercomFileEnable,  'IntercomFileEnable was False');
+   CheckFalse(Settings.Network.IntercomFileEnable,
+              'IntercomFileEnable was False');
 end;
 
 procedure TConfigDefaultsTests.Test_OperatingAndPTTDefaults;
@@ -195,7 +196,8 @@ begin
    CheckFalse(Settings.Cq.AutoCallTerminate,      'AutoCallTerminate was False');
    CheckFalse(Settings.CallWindow.LeaveCursor, 'LeaveCursor was False');
    CheckFalse(Settings.Log.WithSingleEnter,  'WithSingleEnter was False');
-   CheckFalse(Config.AutoQSONumberDecrement, 'AutoQSONumberDecrement was False');
+   CheckFalse(Settings.Operating.AutoQsoNumberDecrement,
+              'AutoQSONumberDecrement was False');
 end;
 
 procedure TConfigDefaultsTests.Test_SCPBandMapAndFileDefaults;
@@ -219,7 +221,7 @@ begin
    CheckEquals('.', Settings.PossibleCall.RightKey,  'right key');
    CheckTrue(Settings.CallWindow.PartialCallEnable, 'PartialCallEnable was True');
    CheckTrue(Settings.CallWindow.WildcardPartials,  'WildcardPartials was True');
-   CheckTrue(Config.NameFlagEnable,          'NameFlagEnable was True');
+   CheckTrue(Settings.Scp.NameFlagEnable,    'NameFlagEnable was True');
    (* THE MESSAGE CHANGED WITH THE VALUE'S HOME. It used to read "set True
      by CFGDEF, not by its declaration" -- and that assignment in
      SetConfigurationDefaultValues is deleted, because a constructor is
@@ -254,7 +256,7 @@ begin
    CheckFalse(Settings.MainWindow.NoCaption,      'NoCaption was False');
    CheckFalse(Settings.MainWindow.NoColumnHeader, 'NoColumnHeader was False');
    CheckFalse(Settings.MainWindow.ShowGridlines,  'ShowGridlines was False');
-   CheckFalse(Config.IncludeFKeyNumber, 'IncludeFKeyNumber was False');
+   CheckFalse(Settings.Cw.IncludeFKeyNumber, 'IncludeFKeyNumber was False');
 end;
 
 procedure TConfigDefaultsTests.Test_AudioDefaultsAndBufferSizes;

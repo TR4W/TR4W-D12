@@ -264,7 +264,9 @@ begin
   Packet.PacketBeep := False;
   Packet.PacketLogFileName := '';
   Packet.PacketSpots := MultSpots;
-  Packet.BroadcastAllPacketData := True;
+  (* BroadcastAllPacketData is Settings.Cluster's constructor default
+    now, and it is TRUE there -- this line, not the record initialiser,
+    was what the program actually ran with. *)
 
   //  Config.PaddleMonitorTone := 700;
   //  PaddleBug := False;
@@ -342,7 +344,9 @@ begin
   SetEXMemoryString(CW, F11, '<03>MM_GRABLASTCALL<04>');
   SetEXCaptionMemoryString(CW, F11, 'GRAB');
 
-  Config.LeadingZeroCharacter := '0';
+  (* LeadingZeroCharacter is Settings.Cw's constructor default now, and
+    it is '0' there for the same reason: this line ran at every startup
+    and overwrote the record initialiser's 'T'. *)
   (* The three cut numbers that stood here are TCwSettings' constructor
     defaults now, and Short2 -- which was never in this block -- with them.
     DigitalModeEnable left the same way, for TContestSettings. *)

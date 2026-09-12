@@ -108,7 +108,7 @@ uses
   Controls,       { Mouse.CursorPos -- where to pop it }
   MainUnit,
   uFunctionKeysForm,   // the panels; this unit supplies what a key press MEANS
-  uConfigValues;   // Config.IncludeFKeyNumber
+  uSettingsModel;   // Settings.Cw.IncludeFKeyNumber
 
 (* FunctionKeysWindowDlgProc IS DELETED (2026-09-01).
 
@@ -208,7 +208,7 @@ begin
         begin
         Insert('&', s, PosOfAmp);
         end;
-     if Config.IncludeFKeyNumber then
+     if Settings.Cw.IncludeFKeyNumber then
         begin
         ButtonsText[i] := 'F' + IntToStr(i - 111) + #13#10 + s
         end
