@@ -74,6 +74,7 @@ function EuropeanCountriesAndWAECallRegions(QTH: QTHRecord): string;
 
 implementation
 uses LogWind,
+     uSettingsModel,   // Settings.My.Country
      MainUnit;   // the logger global
 
 function GetVEInitialExchange(Call: CallString): string;
@@ -315,7 +316,7 @@ function IndonesianDistrict(QTH: QTHRecord): string;        // 4.64.1
 
 begin
   IndonesianDistrict := '';
-  if (IndonesianCountry(QTH.CountryID) or (IndonesianCountry(MyCountry))) then
+  if (IndonesianCountry(QTH.CountryID) or (IndonesianCountry(Settings.My.Country))) then
     IndonesianDistrict := GetPrefix(QTH.StandardCall); ;
 end;
 

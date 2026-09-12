@@ -245,7 +245,7 @@ begin
 
         if ContestName = 'Scandinavian Contest' then
            begin
-           if ScandinavianCountry(MyCountry) then
+           if ScandinavianCountry(Settings.My.Country) then
               begin
               repeat
                 Call := CD.GetRandomCall;

@@ -265,7 +265,6 @@ begin
   {
     MyCall := '';
     MyContinent := UnknownContinent;
-    MyCountry := '';
   }
   //  Config.NameFlagEnable := True;
   //  NoLog := False;

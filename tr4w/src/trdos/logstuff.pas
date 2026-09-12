@@ -6570,7 +6570,7 @@ begin
                 RXData.QSOPoints := 3;
               end;
               end
-           else if MyCountry <> RXCty then
+           else if Settings.My.Country <> RXCty then
               begin
               case RXData.Band of
                 Band160: RXData.QSOPoints := 3;
@@ -6632,7 +6632,7 @@ begin
          begin
          RXData.QSOPoints := 3
          end
-      else if RXCty <> MyCountry then
+      else if RXCty <> Settings.My.Country then
          begin
          RXData.QSOPoints := 1
          end
@@ -6642,8 +6642,8 @@ begin
          end;
 
     ARRLDXQSOPointMethod:
-      if (MyCountry = 'K') or
-        (MyCountry = 'VE') then
+      if (Settings.My.Country = 'K') or
+        (Settings.My.Country = 'VE') then
          begin
          if (RXCty <> 'K') and (RXCty <> 'VE') then
             begin
@@ -6779,7 +6779,7 @@ begin
         russianRegion2 := rtUnknownRegion;
 
         FillChar(TempOblast, SizeOf(TempOblast), 0);
-        if RussianID(MyCountry) then
+        if RussianID(Settings.My.Country) then
            begin
            TempOblast := GetOblast(MyCall);
            russianRegion1 := GetRussiaOblastByTwoChars(Char(TempOblast[1]),
@@ -6829,7 +6829,7 @@ begin
              end;
 
         {
-                if RussianID(MyCountry) then
+                if RussianID(Settings.My.Country) then
                 begin
 
         TempOblast
@@ -6843,7 +6843,7 @@ begin
 
     BalticQSOPointMethod:
       begin
-        if (MyCountry = 'ES') or (MyCountry = 'YL') or (MyCountry = 'LY') then
+        if (Settings.My.Country = 'ES') or (Settings.My.Country = 'YL') or (Settings.My.Country = 'LY') then
            begin
            if RXData.QTH.Continent = Europe then
               begin
@@ -6886,7 +6886,7 @@ begin
       begin
         RXData.QSOPoints := 1;
 
-        if RXCty <> MyCountry then
+        if RXCty <> Settings.My.Country then
            begin
            if RXData.QTH.Continent = MyContinent then
               begin
@@ -6898,7 +6898,7 @@ begin
               end;
            end;
 
-        if not CISCountry(MyCountry) then
+        if not CISCountry(Settings.My.Country) then
           if CISCountry(RXCty) then
              begin
              RXData.QSOPoints := 5;
@@ -6909,12 +6909,12 @@ begin
     CQ160QSOPointMethod: // 4.77.6
       begin
 
-        if RXCty = MyCountry then
+        if RXCty = Settings.My.Country then
 
            begin
            RXData.QSOPoints := 2
            end
-        else if (RXCty <> MyCountry) and (RXData.QTH.Continent = MyContinent)
+        else if (RXCty <> Settings.My.Country) and (RXData.QTH.Continent = MyContinent)
           then
            begin
            RXData.QSOPoints := 5
@@ -6927,7 +6927,7 @@ begin
 
     CQMQSOPointMethod:
       begin
-        if RussianID(MyCountry) then
+        if RussianID(Settings.My.Country) then
            begin
            if not RussianID(RXCty) then
               begin
@@ -6964,7 +6964,7 @@ begin
                  end;
               Exit;
               end;
-           if MyCountry = RXCty then
+           if Settings.My.Country = RXCty then
               begin
               RXData.QSOPoints := 1
               end
@@ -7002,7 +7002,7 @@ begin
 
     HolyLand: // 4.120.3
       begin
-        if MyCountry = '4X' then
+        if Settings.My.Country = '4X' then
            begin
            if RXCTY = '4X' then
               begin
@@ -7020,7 +7020,7 @@ begin
            end
         else // outside of 4X
            begin
-           if MyCountry = RXCTY then // 4x to 4x qso
+           if Settings.My.Country = RXCTY then // 4x to 4x qso
               begin
               RXData.QSOPoints := 1;
               exit;
@@ -7067,7 +7067,7 @@ begin
     CQWPXQSOPointMethod:
       if RXData.QTH.Continent = MyContinent then
          begin
-         if RXCty = MyCountry then
+         if RXCty = Settings.My.Country then
             begin
             RXData.QSOPoints := 1
             end
@@ -7104,7 +7104,7 @@ begin
       begin
         if RXData.QTH.Continent = MyContinent then
            begin
-           if RXCty = MyCountry then
+           if RXCty = Settings.My.Country then
               begin
               RXData.QSOPoints := 1
               end
@@ -7132,13 +7132,13 @@ begin
       QSO with DL-Station by stations outside Europe: 5 additional points
       }
       begin
-        if (MyCountry = '') or (MyContinent = UnknownContinent) then
+        if (Settings.My.Country = '') or (MyContinent = UnknownContinent) then
            begin
            RXData.QSOPoints := 10;
            exit;
            end;
 
-        if MyCountry = RxData.QTH.countryid then
+        if Settings.My.Country = RxData.QTH.countryid then
            begin
            RXData.QSOPoints := 5
            end
@@ -7182,7 +7182,7 @@ begin
          begin
          RXData.QSOPoints := 3
          end
-      else if RXCty <> MyCountry then
+      else if RXCty <> Settings.My.Country then
         if MyContinent <> NorthAmerica then
            begin
            RXData.QSOPoints := 1
@@ -7201,7 +7201,7 @@ begin
          begin
          RXData.QSOPoints := 3
          end
-      else if RXCty <> MyCountry then
+      else if RXCty <> Settings.My.Country then
          begin
          RXData.QSOPoints := 2
          end
@@ -7212,13 +7212,13 @@ begin
 
     CroatianQSOPointMethod:
      begin
-      if (MyCountry = '9A') and (RxData.QTH.countryid = '9A') then
+      if (Settings.My.Country = '9A') and (RxData.QTH.countryid = '9A') then
          begin
          RXData.QSOPoints := 1;
          exit;
          end;
 
-       if MyCountry = '9A' then
+       if Settings.My.Country = '9A' then
           begin
           if RXData.QTH.Continent = Europe then
 
@@ -7248,7 +7248,7 @@ begin
           end;
 
 
-      if (MyCountry <> '9A') and (RXCty = '9A') then
+      if (Settings.My.Country <> '9A') and (RXCty = '9A') then
       
          begin
          case RXData.Band of
@@ -7272,7 +7272,7 @@ begin
         end;
         end;
 
-    if (MyCountry <> '9A') and (MyContinent <> RXData.QTH.Continent) and (RXCTY <> '9A') then
+    if (Settings.My.Country <> '9A') and (MyContinent <> RXData.QTH.Continent) and (RXCTY <> '9A') then
        begin
        case RXData.Band of
          Band160: RXData.QSOPoints := 6;
@@ -7296,11 +7296,11 @@ begin
       begin
         RXData.QSOPoints := 1;
 
-        CountryID := MyCountry;
+        CountryID := UTF8Encode(Settings.My.Country);
 
         if (CountryID = 'F') or (CountryID = 'OE') then
            begin
-           if RXCty = MyCountry then
+           if RXCty = Settings.My.Country then
               begin
               if PortableStation(RXData.Callsign) then
                  begin
@@ -7332,7 +7332,7 @@ begin
 
         if CountryID = 'OZ' then
            begin
-           if RXCty = MyCountry then
+           if RXCty = Settings.My.Country then
               begin
               if PortableStation(RXData.Callsign) then
                  begin
@@ -7657,7 +7657,7 @@ begin
              RXData.DomesticQTH);
            end;
         //n4af 4.36.11
-        if MyCountry = '9A' then
+        if Settings.My.Country = '9A' then
            begin
            if RXData.Band = Band432 then
               begin
@@ -7782,7 +7782,7 @@ begin
 
     XERTTY: // 4.77.5
       begin
-        if MyCountry = 'XE' then
+        if Settings.My.Country = 'XE' then
           if RXCty <> 'XE' then
              begin
              RXData.QSOPoints := 3
@@ -7797,7 +7797,7 @@ begin
            RXData.QSOPoints := 4;
            exit;
            end;
-        if RXData.QTH.CountryID <> MyCountry then
+        if RXData.QTH.CountryID <> Settings.My.Country then
            begin
            RXData.QSOPoints := 3
            end
@@ -7808,7 +7808,7 @@ begin
       end;
 
     YUDXQSOPointMethod: // 4.57.5
-      if (MyCountry <> 'YU') and (RXCty = 'YU') then
+      if (Settings.My.Country <> 'YU') and (RXCty = 'YU') then
          begin
          RXData.QSOPoints := 10
          end
@@ -7816,7 +7816,7 @@ begin
          begin
          RXData.QSOPoints := 4
          end
-      else if RXCty <> MyCountry then
+      else if RXCty <> Settings.My.Country then
          begin
          RXData.QSOPoints := 2
          end
@@ -7843,7 +7843,7 @@ begin
               end;
            end;
 
-        if ((MyContinent = Europe) and (not UKEIStation(MyCountry))) then
+        if ((MyContinent = Europe) and (not UKEIStation(Settings.My.Country))) then
           // if IN Europe
            begin
            if (RxData.QTH.Continent = Europe) and (not
@@ -7857,7 +7857,7 @@ begin
               end;
            end;
 
-        if UKEIStation(MyCountry) then // if IN UK/EI
+        if UKEIStation(Settings.My.Country) then // if IN UK/EI
            begin
            if RxData.QTH.Continent = Europe then
               begin
@@ -8013,7 +8013,7 @@ begin
               TheirID := 'K';
               end;
 
-           if {(MyCounty <> 'K') and}(MyCountry <> 'VE') then
+           if {(MyCounty <> 'K') and}(Settings.My.Country <> 'VE') then
               begin { I am DX }
               if TheirID = 'K' then
                  begin
@@ -8081,7 +8081,7 @@ begin
           Band10: RXData.QSOPoints := 2;
         end;
 
-        if MyCountry = 'JA' then
+        if Settings.My.Country = 'JA' then
            begin
            if RXCty = 'JA' then
               begin
@@ -8103,7 +8103,7 @@ begin
            begin
            RXData.QSOPoints := 0;
            end;
-        if (MyCountry = 'EI') or (MyCountry = 'GI') then
+        if (Settings.My.Country = 'EI') or (Settings.My.Country = 'GI') then
           if (RXCty = 'EI') or (RXCty = 'GI') then
              begin
              RXData.DXQTH := '';
@@ -8124,7 +8124,7 @@ begin
              begin
              RXData.QSOPoints := 1;
              end;
-        if (MyCountry <> 'EI') and (MyCountry <> 'GI') then
+        if (Settings.My.Country <> 'EI') and (Settings.My.Country <> 'GI') then
           if (RXCty <> 'EI') and (RXCty <> 'GI') then
              begin
              RXData.InhibitMults := True;
@@ -8144,7 +8144,7 @@ begin
       end;
 
     KCJQSOPointMethod:
-      if MyCountry = 'JA' then
+      if Settings.My.Country = 'JA' then
          begin
          if (RXCty = 'JA') or (RXCty = 'JD1') then
             begin
@@ -8204,9 +8204,9 @@ begin
 
     OKDXQSOPointMethod:
       begin
-        if OKOMStation(MyCountry) then // I am in okom
+        if OKOMStation(Settings.My.Country) then // I am in okom
            begin
-           if (RXCty <> MyCountry) then
+           if (RXCty <> Settings.My.Country) then
               begin
               RXData.QSOPoints := 3
               end
@@ -8227,13 +8227,13 @@ begin
               end;
            end;
 
-        if not OKOMStation(MyCountry) then // I am not in OK/OM
+        if not OKOMStation(Settings.My.Country) then // I am not in OK/OM
            begin
-           if RXCty = MyCountry then
+           if RXCty = Settings.My.Country then
               begin
               RXData.QSOPoints := 1;
               end;
-           if RXCty <> MyCountry then
+           if RXCty <> Settings.My.Country then
               begin
               RXData.QSOPoints := 3;
               end;
@@ -8250,10 +8250,10 @@ begin
 
     OKOMSSBQSOPointMethod: // 4.80.1
 
-      if OKOMStation(MyCountry) then
+      if OKOMStation(Settings.My.Country) then
          begin
-         if ((MyCountry = 'OK') and (RXData.QTH.CountryID = 'OM')) or
-           ((MyCountry = 'OM') and (RXData.QTH.CountryID = 'OK')) then
+         if ((Settings.My.Country = 'OK') and (RXData.QTH.CountryID = 'OM')) or
+           ((Settings.My.Country = 'OM') and (RXData.QTH.CountryID = 'OK')) then
             begin
             RXdata.QSOPoints := 3
             end
@@ -8274,7 +8274,7 @@ begin
          begin
          RXData.QSOPoints := 10
          end
-      else if RXCTY = MyCountry then
+      else if RXCTY = Settings.My.Country then
          begin
          RXData.QSOPoints := 1
          end
@@ -8332,7 +8332,7 @@ begin
          end;
 
     RSGBQSOPointMethod:
-      if MyCountry = RXCty then
+      if Settings.My.Country = RXCty then
          begin
          RXData.QSOPoints := 0
          end
@@ -8381,7 +8381,7 @@ begin
     RDAQSOPointMethod:
       begin
         RXData.QSOPoints := 0;
-        if RussianID(MyCountry) then
+        if RussianID(Settings.My.Country) then
            begin
            if RussianID(RXCty) then
               begin
@@ -8415,13 +8415,13 @@ begin
     RussianDXQSOPointMethod:
       begin
 
-        if RussianID(MyCountry) then
+        if RussianID(Settings.My.Country) then
            begin
            if RXData.QTH.Continent <> MyContinent then
               begin
               RXData.QSOPoints := 5
               end
-           else if RXCty <> MyCountry then
+           else if RXCty <> Settings.My.Country then
               begin
               RXData.QSOPoints := 3
               end
@@ -8441,7 +8441,7 @@ begin
            begin
            RXData.QSOPoints := 5
            end
-        else if RXCty <> MyCountry then
+        else if RXCty <> Settings.My.Country then
            begin
            RXData.QSOPoints := 3
            end
@@ -8470,7 +8470,7 @@ begin
 
     ScandinavianQSOPointMethod:
       begin
-        if ScandinavianCountry(MyCountry) then
+        if ScandinavianCountry(Settings.My.Country) then
            begin
            if ScandinavianCountry(RXCty) then
               begin
@@ -8510,7 +8510,7 @@ begin
 
     IndonesianQSOPointMethod: // 4.64.1
       begin
-        if IndonesianCountry(MyCountry) then
+        if IndonesianCountry(Settings.My.Country) then
            begin
            if IndonesianCountry(RXCty) then
               begin
@@ -8535,7 +8535,7 @@ begin
               begin
               RXData.QSOPoints := 3
               end
-           else if RXCty <> MyCountry then
+           else if RXCty <> Settings.My.Country then
               begin
               RXData.QSOPoints := 2
               end
@@ -8550,7 +8550,7 @@ begin
     YBFT8QP: // 4.90.7    4.104.4
       begin
 
-        if IndonesianCountry(MyCountry) then
+        if IndonesianCountry(Settings.My.Country) then
            begin
            if IndonesianCountry(RXCty) then
               begin
@@ -8567,7 +8567,7 @@ begin
               begin
               RXData.QSOPoints := 2
               end
-           else if RXCty <> MyCountry then
+           else if RXCty <> Settings.My.Country then
               begin
               RXData.QSOPoints := 1
               end
@@ -8713,13 +8713,13 @@ begin
         {  if RXData.QTHString = 'XXX' then
            begin
             RXData.DomesticMult := False;
-            if MyCountry <> 'ON' then
+            if Settings.My.Country <> 'ON' then
              RXData.QSOPoints := 10
               else
                 RXData.QSOPoints := 1;
               exit;
           end;   }
-        if MyCountry = 'ON' then
+        if Settings.My.Country = 'ON' then
            begin
            if RXCty = 'ON' then
               begin
@@ -8763,7 +8763,7 @@ begin
            begin
            RXData.QSOPoints := 10
            end
-        else if RXCty = MyCountry then
+        else if RXCty = Settings.My.Country then
            begin
            RXData.QSOPoints := 1
            end
@@ -8775,7 +8775,7 @@ begin
            begin
            RXData.QSOPoints := 3;
            end;
-        if MyCountry = 'UR' then
+        if Settings.My.Country = 'UR' then
            begin
            if RXCty = 'UR' then
               begin
@@ -8803,7 +8803,7 @@ begin
          end;
 
     WAGQSOPointMethod:
-      if MyCountry = 'DL' then
+      if Settings.My.Country = 'DL' then
          begin
          if RXCty = 'DL' then
             begin
@@ -8878,7 +8878,7 @@ begin
            begin
            RXData.QSOPoints := 8
            end
-        else if MyCountry <> RXCty then
+        else if Settings.My.Country <> RXCty then
           if RXData.QTH.Continent <> MyContinent then
              begin
              RXData.QSOPoints := 4
@@ -9115,7 +9115,7 @@ begin
            begin
            RXData.QSOPoints := 3
            end
-        else if RXCty <> MyCountry then
+        else if RXCty <> Settings.My.Country then
            begin
            RXData.QSOPoints := 2
            end
@@ -9125,7 +9125,7 @@ begin
            end;
 
         if RXCty = 'JT' then
-          if MyCountry = 'JT' then
+          if Settings.My.Country = 'JT' then
              begin
              RXData.QSOPoints := 0;
              end;
@@ -9139,7 +9139,7 @@ begin
            begin
            RXData.QSOPoints := 5
            end
-        else if RXCty = MyCountry then
+        else if RXCty = Settings.My.Country then
            begin
            RXData.QSOPoints := 1
            end
@@ -9163,7 +9163,7 @@ begin
          end;
         end;
      if RXData.QTH.Continent = MyContinent then
-      if RXCty <> MyCountry then                  // same continent but different countries
+      if RXCty <> Settings.My.Country then                  // same continent but different countries
          begin
          Case RXDATA.Band of
           Band160: RXData.QSOPoints := 4;
@@ -9173,7 +9173,7 @@ begin
             RXData.QSOPoints := 2;
           end;
          end;
-      if RXCty = MyCountry then                   // same country
+      if RXCty = Settings.My.Country then                   // same country
          begin
          Case RXDATA.Band of
           Band160: RXData.QSOPoints := 2;
@@ -9193,7 +9193,7 @@ begin
 
         if RXCty = 'LZ' then
            begin
-           if MyCountry = 'LZ' then
+           if Settings.My.Country = 'LZ' then
               begin
               RXData.QSOPoints := 1
               end
@@ -9303,7 +9303,7 @@ begin
            begin
            RXData.QSOPoints := 3
            end
-        else if RXCty <> MyCountry then
+        else if RXCty <> Settings.My.Country then
            begin
            RXData.QSOPoints := 1
            end
@@ -9378,7 +9378,7 @@ begin
            RXData.QSOPoints := 0;
            end;
         result := length(RXData.QTHString); // found 'M' in recvd nr ?
-        if RXCty <> MyCountry then
+        if RXCty <> Settings.My.Country then
            begin
            RXData.QSOPoints := 2
            end
@@ -9406,7 +9406,7 @@ begin
            begin
            RXData.QSOPoints := 5
            end
-        else if RXCty <> MyCountry then
+        else if RXCty <> Settings.My.Country then
            begin
            RXData.QSOPoints := 3
            end
@@ -9416,7 +9416,7 @@ begin
            end;
 
         if RXCty = 'UN' then
-          if MyCountry <> 'UN' then
+          if Settings.My.Country <> 'UN' then
              begin
              RXData.QSOPoints := 10;
              end;
@@ -9430,7 +9430,7 @@ begin
            end
         else
            begin
-           if SpanishStation(MyCountry) then
+           if SpanishStation(Settings.My.Country) then
               begin
               RXData.QSOPoints := 2
               end
@@ -9448,7 +9448,7 @@ begin
            begin
            RXData.QSOPoints := 4
            end
-        else if RXCty <> MyCountry then
+        else if RXCty <> Settings.My.Country then
            begin
            RXData.QSOPoints := 3
            end
@@ -9489,7 +9489,7 @@ begin
               begin
               RXData.QSOPoints := 3 * PtsMult;
               end
-           else if RXCty <> MyCountry then
+           else if RXCty <> Settings.My.Country then
               begin
               RXData.QSOPoints := 2 * PtsMult
               end
@@ -9567,7 +9567,7 @@ begin
     PortugalDay: // 4.71.4   4.100.11
       begin
 
-        if (MyCountry <> 'CT') or (MyCountry <> 'CT3') or (MyCountry <> 'CU')
+        if (Settings.My.Country <> 'CT') or (Settings.My.Country <> 'CT3') or (Settings.My.Country <> 'CU')
           then
            begin
            if (RXCty = 'CT') or (RXCty = 'CT3') or (RXCty = 'CU') then
@@ -9583,7 +9583,7 @@ begin
               RXData.QSOPoints := 1;
               end;
            end;
-        if (MyCountry = 'CT') or (MyCountry = 'CT3') or (MyCountry = 'CU') then
+        if (Settings.My.Country = 'CT') or (Settings.My.Country = 'CT3') or (Settings.My.Country = 'CU') then
            begin
            if (RXCty = 'CT') or (RXCty = 'CT3') or (RXCty = 'CU') then
               begin
@@ -9662,7 +9662,7 @@ begin
            begin
            RXData.QSOPoints := 4
            end
-        else if (RXCty <> MyCountry) then
+        else if (RXCty <> Settings.My.Country) then
            begin
            RXData.QSOPoints := 3
            end
@@ -9729,7 +9729,7 @@ begin
            begin
            if (RXData.DomMultQTH[4] <> '') then // he is in EU
               begin
-              if (RXCty <> MyCountry) then // Not same country as me
+              if (RXCty <> Settings.My.Country) then // Not same country as me
                  begin
                  RXData.QSOPoints := 10
                  end
@@ -9759,7 +9759,7 @@ begin
              begin
              RXData.QSOPoints := 5
              end
-          else if (RXCty <> MyCountry) then
+          else if (RXCty <> Settings.My.Country) then
              begin
              RXData.QSOPoints := 3
              end

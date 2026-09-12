@@ -227,6 +227,9 @@ type
         notified unconditionally would repaint the band map eight times at
         startup. *)
       procedure SetBool(var aField: boolean; aValue: boolean; const aProperty: string);
+      (* The same, for a string property. Same only-if-changed rule and the
+        same reason for it. *)
+      procedure SetStr(var aField: string; const aValue, aProperty: string);
    public
       // Called by the owner's walk. Not for anyone else.
       procedure BindTo(aOwner: TR4WSettings; const aPath: string);
@@ -983,8 +986,11 @@ type
       FGrid: string;
       FZone: string;
       FZoneWasSet: boolean;
+      FCountry: string;
+      FCountryWasSet: boolean;
       FState: string;
       FItuZone: TMyItuZone;
+      procedure SetCountry(const aValue: string);
       procedure SetZone(const aValue: string);
    public
       constructor Create;
@@ -998,6 +1004,12 @@ type
         so was true only when a config FILE had applied the row; a value
         typed into Preferences left it false. *)
       property ZoneWasSet: boolean read FZoneWasSet;
+      (* DID THE OPERATOR STATE A COUNTRY? Same rule and same reason as
+        ZoneWasSet: FCONTEST derives country, continent and zone from the
+        callsign, and an operator who has named one must not be overruled by
+        the country file. NY4I, 2026-09-12: "the operator needs to be able
+        to override zone and in fact any of the derived settings." *)
+      property CountryWasSet: boolean read FCountryWasSet;
    published
       // Was the global MyFOCNumber in logwind.pas. MY FOC NUMBER.
       property FocNumber: string read FFocNumber write FFocNumber;
@@ -1048,6 +1060,12 @@ type
         and the header of uContestIARU; both are about the VALUE, not about
         where it is stored. *)
       property Zone: string read FZone write SetZone;
+      (* Was the global MyCountry in LOGWIND -- the CTY.DAT PREFIX CODE for
+        the operator's DXCC entity, 'K' for the United States (NY4I,
+        2026-09-12). It is not a country name and not a callsign, which is
+        why a value CTY.DAT cannot resolve to itself is REFUSED rather than
+        stored -- see the check registered against this path in uCFG. *)
+      property Country: string read FCountry write SetCountry;
       (* Was the global MyState in LOGWIND. It is NOT a state: it is the
         contest-dependent catch-all the exchange sends where a US station
         sends its state -- a province, an oblast, a county, a serial number
@@ -1280,6 +1298,32 @@ type
   name" -- and it is the honest shape for a program whose settings ARE global.
   What it replaces is not a smaller thing: it replaces ~500 loose globals with
   one object whose members are typed, grouped and named. *)
+
+(* A VALUE ONLY ANOTHER UNIT CAN JUDGE.
+
+  WHAT IT REPLACES. `MY COUNTRY` carried crA: 8, an AdditionalProcsArray
+  hook whose False return REFUSED the config line -- the one row in the
+  table whose hook was a validator rather than a side effect. Its rule is
+  that the value must be a CTY.DAT prefix that resolves to itself, which is
+  a question this unit cannot answer and must not learn to: putting the
+  country file in the settings model's dependency graph would put it in the
+  unit tests' too.
+
+  A REGISTRY KEYED BY PROPERTY PATH, NOT A CASE IN TrySetByCommand. The
+  association lives with the KNOWLEDGE -- uCFG registers it, because uCFG is
+  what knows about CTY.DAT -- rather than in a table here that would be a
+  second hand-maintained list of which setting means what. That is the same
+  reason the hook index went in the first place.
+
+  IT REFUSES, IT DOES NOT CORRECT. A check returning False leaves the
+  property exactly as it was, which is the rule every other arm of
+  TrySetByCommand already follows. *)
+type
+   TSettingValueCheck = function(const aValue: string): boolean;
+
+procedure RegisterSettingValueCheck(const aPath: string;
+                                    const aCheck: TSettingValueCheck);
+
 function Settings: TR4WSettings;
 procedure FreeSettings;
 
@@ -1293,6 +1337,59 @@ uses
 
 var
    GSettings: TR4WSettings = nil;
+
+type
+   TRegisteredCheck = record
+      Path: string;
+      Check: TSettingValueCheck;
+   end;
+
+var
+   GValueChecks: array of TRegisteredCheck;
+
+procedure RegisterSettingValueCheck(const aPath: string;
+                                    const aCheck: TSettingValueCheck);
+var
+   i: integer;
+begin
+   if not Assigned(aCheck) then
+      begin
+      Exit;
+      end;
+
+   (* REGISTERING A PATH TWICE REPLACES, so a unit re-registering after a
+     reload cannot end up with two checks disagreeing. *)
+   for i := 0 to High(GValueChecks) do
+      begin
+      if UnicodeSameText(GValueChecks[i].Path, aPath) then
+         begin
+         GValueChecks[i].Check := aCheck;
+         Exit;
+         end;
+      end;
+
+   i := Length(GValueChecks);
+   SetLength(GValueChecks, i + 1);
+   GValueChecks[i].Path := aPath;
+   GValueChecks[i].Check := aCheck;
+end;
+
+(* True when nothing objects -- which is the answer for every path that has
+  no check registered, so this costs one walk of an array with one entry. *)
+function ValueIsAcceptable(const aPath, aValue: string): boolean;
+var
+   i: integer;
+begin
+   Result := True;
+   for i := 0 to High(GValueChecks) do
+      begin
+      if UnicodeSameText(GValueChecks[i].Path, aPath) then
+         begin
+         Result := GValueChecks[i].Check(aValue);
+         Exit;
+         end;
+      end;
+end;
 
 function Settings: TR4WSettings;
 begin
@@ -1325,6 +1422,17 @@ begin
       begin
       FOwner.Changed(FPath + '.' + aProperty);
       end;
+end;
+
+procedure TSettingsGroup.SetStr(var aField: string;
+                                const aValue, aProperty: string);
+begin
+   if aField = aValue then
+      begin
+      Exit;
+      end;
+   aField := aValue;
+   Changed(aProperty);
 end;
 
 procedure TSettingsGroup.SetBool(var aField: boolean; aValue: boolean;
@@ -1548,19 +1656,30 @@ begin
    FName       := '';
    FPostalCode := '';
    FGrid       := '';
-   FZone       := '';
-   FZoneWasSet := False;
-   FState      := '';
+   FZone          := '';
+   FZoneWasSet    := False;
+   FCountry       := '';
+   FCountryWasSet := False;
+   FState         := '';
    FItuZone    := 0;
+end;
+
+procedure TMySettings.SetCountry(const aValue: string);
+begin
+   if aValue <> '' then
+      begin
+      FCountryWasSet := True;
+      end;
+   SetStr(FCountry, aValue, 'Country');
 end;
 
 procedure TMySettings.SetZone(const aValue: string);
 begin
-   FZone := aValue;
    if aValue <> '' then
       begin
       FZoneWasSet := True;
       end;
+   SetStr(FZone, aValue, 'Zone');
 end;
 
 constructor TSayHiSettings.Create;
@@ -2126,6 +2245,13 @@ begin
       end;
 
    text := Trim(aValue);
+
+   (* ASKED BEFORE ANY ARM ASSIGNS, so a refusal leaves the property exactly
+     as it was. See RegisterSettingValueCheck. *)
+   if not ValueIsAcceptable(path, text) then
+      begin
+      Exit;
+      end;
 
    (* A VALUE THIS CANNOT READ LEAVES THE PROPERTY ALONE, on every arm.  That
      is the rule the old parser had -- CheckCommand exits without assigning --

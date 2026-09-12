@@ -572,7 +572,6 @@ var
   ContestTitle                          : ShortString;
   ContinentQSOCount                     : array[BandType, ContinentType] of Word;
   ControlBMemory                        : CallString;
-  CountryString                         : Str20;
   //   CQMenu                          : Str80;
   CustomInitialExchangeString           : Str40; {KK1L: 6.67 was Str80;}
   CustomUserString                      : Str40; {KK1L: 6.68 shortened from Str80}
@@ -698,9 +697,7 @@ var
   DEPlusMyCall                          : Str160;
   MultiplierItemWidth                   : integer = 40; // 4.91.4
   MyContinent                           : ContinentType {= UnknownContinent};
-  MyCountry                             : Str20;
   MyContinentIsSet                      : boolean;
-  MyCountryIsSet                        : boolean;
 
 //  MyZoneCustom                          : ZoneMultiplierString;
 

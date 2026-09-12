@@ -81,8 +81,8 @@ uses
    SysUtils,
    (* THE ONE UNIT IN THE FACTORY THAT TOUCHES THE PROGRAM'S GLOBALS.
 
-      LOGWIND holds MyCountry and MyContinent; the zone is on the settings
-      model. Keeping that here rather
+      LOGWIND holds MyContinent; the country and the zone are on the
+      settings model. Keeping that here rather
       than in TContestBase is what lets a contest class -- and anything that
       asks one a question, such as uCabrilloExchange -- stay free of the display
       layer and testable without booting TR4W. *)
@@ -95,7 +95,7 @@ function CurrentStation: TStationContext;
 var
    code: integer;
 begin
-   Result.MyCountry := MyCountry;
+   Result.MyCountry := UTF8Encode(Settings.My.Country);
    Result.MyContinent := MyContinent;
 
    Val(Settings.My.Zone, Result.MyZone, code);

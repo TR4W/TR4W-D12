@@ -3131,7 +3131,7 @@ begin
 
      //      TotalMults := TotalMults + moMTotals[All, Both].NumberDXMults;
 
-     //      if (Contest = RDA) and (not RussianID(MyCountry)) then        TotalMults := TotalMults - MTotals[All, Both].NumberDXMults;
+     //      if (Contest = RDA) and (not RussianID(Settings.My.Country)) then        TotalMults := TotalMults - MTotals[All, Both].NumberDXMults;
 
      //      if Contest <> CUPURAL then        TotalMults := TotalMults + MTotals[All, Both].NumberPrefixMults;
 

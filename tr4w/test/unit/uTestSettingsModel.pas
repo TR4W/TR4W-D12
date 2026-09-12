@@ -344,7 +344,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(87, names.Count,
+         CheckEquals(88, names.Count,
                      'one name per migrated setting, plus the one'
                      + ' setting that has always answered to two --'
                      + ' MY STATE and MY QTH');
@@ -1030,6 +1030,7 @@ const
       + '"LOG WITH SINGLE ENTER",'
       + '"MMTTY ENGINE",'
       + '"MY CHECK",'
+      + '"MY COUNTRY",'
       + '"MY FD CLASS",'
       + '"MY FOC NUMBER",'
       + '"MY GRID",'

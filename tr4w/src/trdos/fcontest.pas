@@ -416,7 +416,7 @@ begin
 
     LABRE:
       begin
-        // if MyCountry <> 'PY' then
+        // if Settings.My.Country <> 'PY' then
           //             activeexchange :=  RSTDomesticQTHExchange;
 
         SetCQMemoryString(CW, F1, 'CQ TEST \ \ LABRE');
@@ -452,7 +452,7 @@ begin
 
     { RSGBDX:
       begin
-       if (myCountry[1] = 'G') or (myCountry[1] = 'M') then
+       if (Settings.My.Country[1] = 'G') or (Settings.My.Country[1] = 'M') then
         begin
          ActiveDXMult :=  CQDXCC;
          ActivePrefixMult := CQNonEuropeanCountriesAndWAECallRegions;
@@ -466,7 +466,7 @@ begin
     BCQP:
       begin
         ActiveDXMult := NoDXMults;
-        if MyCountry = 'VE7' then
+        if Settings.My.Country = 'VE7' then
            begin
            AddDomesticCountry('VE7'); // 4.97.8
            end;
@@ -501,7 +501,7 @@ begin
 
     CROATIAN:
       begin
-        if MyCountry = '9A' then
+        if Settings.My.Country = '9A' then
            begin
            ACTIVEDXMULT := CQDXCC;
            end;
@@ -509,7 +509,7 @@ begin
 
     JIDXSSB, JIDXCW:
       begin
-        if MyCountry = 'JA' then
+        if Settings.My.Country = 'JA' then
            begin
            ActiveDXMult := ARRLDXCC;
            ActiveInitialExchange := ZoneInitialExchange;
@@ -600,7 +600,7 @@ begin
 
     ARRL160:
       begin
-        if ARRLSectionCountry(MyCountry) then
+        if ARRLSectionCountry(Settings.My.Country) then
            begin
            ActiveExchange := RSTDomesticOrDXQTHExchange; {*}
            ActiveDXMult := ARRLDXCCWithNoARRLSections;
@@ -617,7 +617,7 @@ begin
 
     ARRLDXCW, ARRLDXSSB:
       begin
-        if (MyCountry = 'K') or (MyCountry = 'VE') then
+        if (Settings.My.Country = 'K') or (Settings.My.Country = 'VE') then
            begin
            ActiveExchange := RSTPowerExchange; {*}
            ActiveDXMult := ARRLDXCCWithNoUSAOrCanada;
@@ -850,7 +850,7 @@ begin
         ActiveBand := Band80;
         DIGITALMODEENABLE := FALSE;
         INITIALEXCHANGECURSORPOS := ATSTART;
-        if (MyCountry <> 'EI') and (MyCountry <> 'GI') then
+        if (Settings.My.Country <> 'EI') and (Settings.My.Country <> 'GI') then
            begin
            ActiveDXMult := NoDXMults;
            end;
@@ -865,7 +865,7 @@ begin
     YUDX: // 4.57.5
       begin
         AddDomesticCountry('YU');
-        if MyCountry = 'YU' then
+        if Settings.My.Country = 'YU' then
            begin
            ActiveDomesticMult := NoDomesticMults; // 4.57.7
            ActiveDXMult := ARRLDXCC;
@@ -883,7 +883,7 @@ begin
         AddDomesticCountry('GW');
         AddDomesticCountry('GU');
         AddDomesticCountry('EI');
-        if not UKEIStation(mycountry) then
+        if not UKEIStation(Settings.My.Country) then
            begin
            SetUpRSTQSONumberExchange;
            end;
@@ -892,7 +892,7 @@ begin
 
     HELVETIA:
       begin
-        if MyCountry = 'HB' then
+        if Settings.My.Country = 'HB' then
            begin
            ActiveDXMult := ARRLDXCC;
            end;
@@ -1107,7 +1107,7 @@ begin
       begin
         AddDomesticCountry('OK');
         AddDomesticCountry('OM');
-        if not OKOMStation(MyCountry) then
+        if not OKOMStation(Settings.My.Country) then
            begin
            ActiveDomesticMult := DomesticFile;
            TempDomesticQTHDataFileName := 'OKOM';
@@ -1121,7 +1121,7 @@ begin
     PACC:
       begin
 
-        if MyCountry = 'PA' then
+        if Settings.My.Country = 'PA' then
            begin
            ActiveDXMult := PACCCountriesAndPrefixes;
            ActiveExchange := RSTAndQSONumberOrDomesticQTHExchange;
@@ -1170,7 +1170,7 @@ begin
 
     CANADA_DAY, CANADA_WINTER:
       begin
-        if MyCountry <> 'VE' then // 4.82.1
+        if Settings.My.Country <> 'VE' then // 4.82.1
            begin
            Settings.My.State := '';
            end;
@@ -1200,7 +1200,7 @@ begin
       begin
         AddRussianDomesticCountrys;
         //        CountDomesticCountries := True;
-        if not RussianID(MyCountry) then
+        if not RussianID(Settings.My.Country) then
            begin
            ActiveDXMult := NoDXMults;
            end;
@@ -1211,7 +1211,7 @@ begin
       begin
         AddRussianDomesticCountrys;
         AddDomesticCountry('CE9');
-        if not RussianID(MyCountry) then // 4.79.2
+        if not RussianID(Settings.My.Country) then // 4.79.2
            begin
            Settings.My.State := '';
            end;
@@ -1240,7 +1240,7 @@ begin
 
     SACCW, SACSSB:
       begin
-        if ScandinavianCountry(MyCountry) then
+        if ScandinavianCountry(Settings.My.Country) then
            begin
            ActiveDXMult := ARRLDXCC
            end
@@ -1433,7 +1433,7 @@ begin
     UBACW, UBASSB:
       begin
         LiteralDomesticQTH := True;
-        if MyCountry = 'ON' then // 4.96.2
+        if Settings.My.Country = 'ON' then // 4.96.2
            begin
            ActiveDXMult := CQDXCC;
            ActiveDomesticMult := NoDomesticMults;
@@ -1450,7 +1450,7 @@ begin
     UKRAINIAN:
       begin
         AddDomesticCountry('UR');
-        if MyCountry = 'UR' then
+        if Settings.My.Country = 'UR' then
            begin
            ActiveDomesticMult := NoDomesticMults;
            end;
@@ -1469,7 +1469,7 @@ begin
         ActiveBand := Band10;
         AddDomesticCountry('DL');
         QSOByMode := True;
-        if MyCountry = 'DL' then
+        if Settings.My.Country = 'DL' then
 
            begin
            ActiveDXMult := CQDXCC
@@ -1497,7 +1497,7 @@ begin
       begin
         //        CountryTable.ZoneMode := CQZoneMode;
 
-        if MyCountry = 'DL' then
+        if Settings.My.Country = 'DL' then
            begin
            ActiveDXMult := CQDXCC;
            //For the WAG contest - German stations will need to count Germany as a country multiplier manually after the contest.
@@ -1607,7 +1607,7 @@ begin
     ALRS_UA1DZ_CUP:
       begin
         LiteralDomesticQTH := true;
-        if RussianID(MyCountry) then
+        if RussianID(Settings.My.Country) then
            begin
            TempOblast := GetOblast(MyCall);
            if not (GetRussiaOblastByTwoChars(Char(TempOblast[1]), Char(TempOblast[2])) in
@@ -1845,7 +1845,7 @@ begin
   FillChar(CTY.ctyLastLocatedCall, SizeOf(CTY.ctyLastLocatedCall), 0);
   //  CTY.ctyLastLocatedCall := '';
   ctyLocateCall(MyCall, TempQTH);
-  MyCountry := TempQTH.CountryID;
+  Settings.My.Country := TempQTH.CountryID;
   MyContinent := TempQTH.Continent;
   Settings.My.Zone := IntToStr(TempQTH.Zone);
 end;
@@ -1856,22 +1856,24 @@ var
 begin
   FillChar(CTY.ctyLastLocatedCall, SizeOf(CTY.ctyLastLocatedCall), 0);
 
-  if MyCountryIsSet then
+  (* THE OPERATOR'S OWN ANSWER WINS. Same rule as the zone below it: a
+    stated country is looked up, an unstated one is derived from the
+    callsign. *)
+  if Settings.My.CountryWasSet then
      begin
-     ctyLocateCall(MyCountry, TempQTH)
+     ctyLocateCall(ShortString(UTF8Encode(Settings.My.Country)), TempQTH)
      end
   else
      begin
      ctyLocateCall(Call, TempQTH);
      end;
 
-  if not MyCountryIsSet then
+  if not Settings.My.CountryWasSet then
      begin
-     MyCountry := TempQTH.CountryID;
-     CountryString := MyCountry;
+     Settings.My.Country := string(TempQTH.CountryID);
      if MRC = '' then
         begin
-        MRC := MyCountry;
+        MRC := UTF8Encode(Settings.My.Country);
         end;
      end;
 

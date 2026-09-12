@@ -253,7 +253,6 @@ function F_FREQUENCY_MEMORY: boolean;
 function F_KEYER_RADIO_ONE_OUTPUT_PORT: boolean;
 function F_KEYER_RADIO_TWO_OUTPUT_PORT: boolean;
 function F_MY_CONTINENT: boolean;
-function F_MY_COUNTRY: boolean;
 function F_MY_CALL: boolean;
 function F_ZONE_MULTIPLIER: boolean;
 function F_AUTO_SEND_CHARACTER_COUNT: boolean;
@@ -361,7 +360,7 @@ const
       @F_BAND_MAP_DECAY_TIME,
       @F_AUTO_QSL_INTERVAL,
       @F_CONTEST_NAME,
-      @F_MY_COUNTRY,
+      nil {@F_MY_COUNTRY -- a VALIDATOR, now a registered value check},
       @F_RADIO_ONE_TYPE,
       @F_RADIO_TWO_TYPE,
       @F_SCP_COUNTRY_STRING,
@@ -616,6 +615,7 @@ const
    - 1 {MY GRID -- moved to uSettingsModel}
    - 1 {MY ZONE -- moved to uSettingsModel}
    - 2 {MY STATE and its older spelling MY QTH -- moved to uSettingsModel}
+   - 1 {MY COUNTRY -- moved to uSettingsModel}
    ;
 
    // crS (CFGStatus): csNew / csOld = active -- the command's value IS applied.
@@ -848,7 +848,6 @@ const
  (crCommand: 'MULT SHEET AUTO RESET';         crAddress: @MultReset   ;                   crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'MY CALL';                       crAddress: @MyCall;                         crMin:0;  crMax:13;      crS: csOwned; crA: 14;crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'MY CONTINENT';                  crAddress: pointer(21);                     crMin:0;  crMax:0;       crS: csOwned; crA: 22;crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
- (crCommand: 'MY COUNTRY';                    crAddress: @MyCountry;                      crMin:0;  crMax:20;      crS: csOwned; crA: 8; crC:0 ; crP:0; crJ: 2; crKind: ckNormal; cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'NAME FLAG ENABLE';              crAddress: @Config.NameFlagEnable;                 crMin:0;  crMax: 0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'NET STATUS UPDATE INTERVAL';    crAddress: @tNetStatusUpdateInterval;       crMin:1000;crMax:10000;   crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'NO BORDER';                     crAddress: @Config.NoBorder;                       crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAppearance; crType: ctBoolean; crNetwork: 1),
@@ -2517,29 +2516,35 @@ begin
    Result := True;
 end;
 
-function F_MY_COUNTRY: boolean;
+(* IS THIS A COUNTRY CTY.DAT KNOWS?
+
+  MY COUNTRY is the CTY.DAT PREFIX CODE for the operator's DXCC entity --
+  'K' for the United States (NY4I, 2026-09-12) -- so the test is that the
+  country file resolves the value to ITSELF. 'K' resolves to country 'K';
+  'USA' does not resolve to 'USA', and is refused.
+
+  THIS IS WHAT F_MY_COUNTRY DID, minus the two things that were not
+  validation. It raised MyCountryIsSet, which is the property setter's job
+  now, and it assigned CountryString, a global written in five places and
+  READ IN NONE -- deleted rather than carried across.
+
+  It is registered against the property PATH rather than the command name,
+  because the path is what the settings model resolves and what a wrong
+  hook index can no longer be. *)
+function MyCountryIsAKnownPrefix(const aValue: string): boolean;
 var
    TempQTH: QTHRecord;
 begin
-   Result := False;
-   ctyLocateCall(CMD, TempQTH);
-   if MyCountry <> TempQTH.CountryID then
+   (* An empty value is not a claim about a country, so it is accepted and
+     leaves the derivation to the callsign -- CountryWasSet stays False. *)
+   if Trim(aValue) = '' then
       begin
+      Result := True;
       Exit;
       end;
 
-   MyCountryIsSet := True;
-   RecalculateMyCountryContinentAndZoneNew(CMD);
-   CountryString := MyCountry;
-   {
-     ctyLocateCall(CMD, TempQTH);
-     MyCountry := TempQTH.CountryID;
-     MyContinent := TempQTH.Continent;
-     Str(TempQTH.Zone, Settings.My.Zone);
-     CountryString := MyCountry;
-     ContinentString := tContinentArray[MyContinent];
-   }
-   Result := True;
+   ctyLocateCall(ShortString(AnsiString(aValue)), TempQTH);
+   Result := UnicodeSameText(aValue, string(TempQTH.CountryID));
 end;
 
 function F_MY_CALL: boolean;
@@ -2549,10 +2554,10 @@ begin
    RecalculateMyCountryContinentAndZoneNew(MyCall);
    {
      ctyLocateCall(MyCall, TempQTH);
-     MyCountry := TempQTH.CountryID;
+     Settings.My.Country := TempQTH.CountryID;
      MyContinent := TempQTH.Continent;
      Str(TempQTH.Zone, Settings.My.Zone);
-     CountryString := MyCountry;
+     CountryString := Settings.My.Country;
      ContinentString := tContinentArray[MyContinent];
    }
    Result := True;
@@ -3027,5 +3032,14 @@ begin
    uAnsiStr.AppendToBuffer(Config.DVKPath, 'DVK');
 
 end;
+
+(* THE VALIDATOR THAT USED TO BE A HOOK INDEX.
+
+  Registered HERE because this is the unit that knows about CTY.DAT, and
+  the settings model deliberately does not. An initialization section runs
+  before any configuration is read, so the check is in force for the very
+  first MY COUNTRY line of the first file. *)
+initialization
+   RegisterSettingValueCheck('My.Country', @MyCountryIsAKnownPrefix);
 
 end.

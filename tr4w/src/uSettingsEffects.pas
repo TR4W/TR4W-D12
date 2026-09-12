@@ -89,6 +89,8 @@ implementation
 uses
    SysUtils,
    uSettingsModel,
+   FContest,       // RecalculateMyCountryContinentAndZoneNew
+   LogWind,        // MyCall -- the callsign the derivation starts from
    uBandMapView;   // BandMapRefresh -- the band map's own view seam
 
 const
@@ -109,6 +111,19 @@ const
      of them. *)
    QSY_INACTIVE_RADIO = 'So2r.QsyInactiveRadio';
 
+   (* THE DERIVED STATION FACTS. Country, continent and zone are computed
+     from the callsign unless the operator has stated one, and changing any
+     of them has to re-run that -- which is what AdditionalProcsArray slots 8
+     (MY COUNTRY) and 21 (MY ZONE) did.
+
+     STARTUP DOES NOT NEED THIS and deliberately does not get it: this unit
+     is installed after every config file is read, and FCONTEST's own
+     SetUpContest calls the same routine once the contest is known. What is
+     left for here is the case the hook index could never cover properly --
+     a value changed from Preferences, mid-session. *)
+   MY_COUNTRY = 'My.Country';
+   MY_ZONE    = 'My.Zone';
+
 
 function InGroup(const aPath, aPrefix: string): boolean;
 begin
@@ -128,6 +143,14 @@ end;
 
 procedure SettingChanged(const aPath: string);
 begin
+   if UnicodeSameText(aPath, MY_COUNTRY) or UnicodeSameText(aPath, MY_ZONE) then
+      begin
+      (* The routine reads the WasSet flags itself, so a stated value is
+        looked up and an unstated one is derived. Passing the callsign is
+        what it needs to derive FROM. *)
+      RecalculateMyCountryContinentAndZoneNew(MyCall);
+      end;
+
    if InGroup(aPath, BAND_MAP) or InGroup(aPath, BANDS)
       or UnicodeSameText(aPath, QSY_INACTIVE_RADIO) then
       begin

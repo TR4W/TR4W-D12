@@ -7109,7 +7109,7 @@ begin
     IndonesianDistricts:
       begin
         RData.Prefix := IndonesianDistrict(Rdata.QTH); // 4.64.1
-        if (Contest = YBDX) and (IndonesianCountry(MyCountry)) then
+        if (Contest = YBDX) and (IndonesianCountry(Settings.My.Country)) then
            begin
            SetPrefix(RData);
            end;

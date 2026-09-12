@@ -1460,7 +1460,7 @@ begin
    if (RXData.Prefix <> '') and DoingPrefixMults then
       begin        // 4.83.6
       if (contest = PCC) and
-         (RXData.QTH.CountryID = MyCountry) then
+         (RXData.QTH.CountryID = Settings.My.Country) then
          begin
          RXData.PrefixMult := False
          end
