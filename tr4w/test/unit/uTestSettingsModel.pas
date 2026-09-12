@@ -53,6 +53,7 @@ type
       procedure Test_ARangeIsPartOfTheType;
       procedure Test_AStoredValueOutOfRangeIsClamped;
       procedure Test_TheReadPathAndTheWritePathAgree;
+      procedure Test_AContestParameterNeverReachesTheJson;
       procedure Test_EveryCommandNameIsTheOneAConfigFileUses;
       procedure Test_AStaleIniCannotOverrideTheStore;
       procedure Test_AContestFileStillOverridesForItsContest;
@@ -907,6 +908,81 @@ end;
   prints both vocabularies whole and the difference can be read directly.
   --------------------------------------------------------------------- *)
 
+(* ---------------------------------------------------------------------
+  A CONTEST PARAMETER IS NOT A STATION SETTING AND MUST NOT BE SAVED AS ONE.
+
+  THE DEFECT THIS PINS, found while migrating a neighbouring group: the band
+  enables are assigned by FCONTEST the moment a contest loads -- TBandSettings'
+  own constructor comment said so -- yet they were published properties, so
+  they were streamed into settings\tr4w.json like any preference. Preferences
+  saves the WHOLE settings object on every applied change, so loading a
+  contest that enables WARC and then changing any unrelated setting made that
+  contest's choice the station's default, permanently. In the old world the
+  global was re-set per contest every time and nothing stuck.
+
+  NY4I, 2026-09-11: a contest parameter belongs in the contest config in the
+  database and never in the json file.
+
+  THE PROPERTY IS STILL PUBLISHED and that is deliberate: the RTTI walk that
+  derives command names reads published properties, so un-publishing would
+  remove HF BAND ENABLE from the vocabulary as well as from the file. What
+  changes is where the VALUE lives, not whether the command exists -- which is
+  why this asserts BOTH halves.
+  --------------------------------------------------------------------- *)
+
+procedure TSettingsModelTests.Test_AContestParameterNeverReachesTheJson;
+var
+   s: TR4WSettings;
+   doc: TJSONObject;
+   text: string;
+begin
+   BeginTest('a contest parameter is excluded from the settings file');
+
+   s := TR4WSettings.Create;
+   try
+      (* Set them to something a station would notice being carried over. *)
+      s.Bands.WarcEnabled := True;
+      s.Bands.VhfEnabled  := True;
+
+      doc := s.ToJSON;
+      try
+         text := string(doc.AsJSON);
+      finally
+         doc.Free;
+      end;
+
+      (* THE QUOTES ARE PART OF THE NEEDLE. Searching for a bare Bands matches
+        "AllBands" inside the band map group and fails a passing
+        implementation -- which it did, on the first run of this test. *)
+      CheckTrue(Pos('"Bands"', text) = 0,
+                'the Bands group is absent from the json: ' + text);
+
+      (* AND A STATION SETTING IS STILL THERE, so a passing result cannot mean
+        the streamer simply produced nothing. *)
+      CheckTrue(Pos('"Ptt"', text) > 0,
+                'a station group is still written');
+
+      (* THE COMMANDS STILL EXIST. Excluding the value must not withdraw the
+        vocabulary -- a config file naming HF BAND ENABLE still has to be
+        understood, and the contest database is what stores the answer. *)
+      CheckTrue(s.OwnsCommand('HF BAND ENABLE'),  'the command still resolves');
+      CheckTrue(s.CommandIsContestScoped('HF BAND ENABLE'),
+                'and it is marked as the contest''s');
+      CheckTrue(s.CommandIsContestScoped('WARC BAND ENABLE'), 'so is WARC');
+      CheckTrue(s.CommandIsContestScoped('VHF BAND ENABLE'),  'so is VHF');
+
+      (* A STATION SETTING IS NOT, which is the other direction of the same
+        claim -- a marker that answered True for everything would pass every
+        assertion above and be useless. *)
+      CheckFalse(s.CommandIsContestScoped('PTT ENABLE'),
+                 'a station setting is not contest-scoped');
+      CheckFalse(s.CommandIsContestScoped('NO SUCH COMMAND'),
+                 'and an unknown name is simply False, not an error');
+   finally
+      s.Free;
+   end;
+end;
+
 procedure TSettingsModelTests.Test_EveryCommandNameIsTheOneAConfigFileUses;
 const
    (* ONE NAME PER LINE, on purpose: a vocabulary change has to be
@@ -1055,6 +1131,7 @@ begin
    Test_ARangeIsPartOfTheType;
    Test_AStoredValueOutOfRangeIsClamped;
    Test_TheReadPathAndTheWritePathAgree;
+   Test_AContestParameterNeverReachesTheJson;
    Test_EveryCommandNameIsTheOneAConfigFileUses;
    Test_AStaleIniCannotOverrideTheStore;
    Test_AContestFileStillOverridesForItsContest;

@@ -85,7 +85,13 @@ interface
 uses
    Classes,
    SysUtils,
-   uJSON;   // TJSONObject -- the same DOM every other store in the file uses
+   uJSON,   // TJSONObject -- the same DOM every other store in the file uses
+   (* TypInfo for PPropInfo and fpjson for TJSONData: both appear in the
+     signature of the streamer hook that keeps a contest-scoped group out of
+     the file, so they have to be visible in the INTERFACE rather than only
+     where the hook is written. *)
+   TypInfo,
+   fpjson;
 
 type
    (*
@@ -221,6 +227,19 @@ type
    public
       // Called by the owner's walk. Not for anyone else.
       procedure BindTo(aOwner: TR4WSettings; const aPath: string);
+
+      (* IS THIS GROUP THE CONTEST'S, RATHER THAN THE STATION'S?
+
+        False for almost everything. True for a group whose values are
+        assigned by FCONTEST when a contest loads -- band enables today.
+        Such a group is EXCLUDED from settings\tr4w.json and captured into
+        the contest database instead, because a value the contest sets is
+        not a preference the station holds. See TBandSettings for the
+        defect that made this necessary.
+
+        A CLASS FUNCTION so the question can be asked of the type, and so
+        no instance has to exist to answer it. *)
+      class function IsContestScoped: boolean; virtual;
    end;
 
    (* THE EXTERNAL LOGGER -- the first area to move off CFGCA.
@@ -420,6 +439,35 @@ type
      uSettingsDeclarations already carried a note that this makes a naive grep
      under-report them.  Three properties on one object cannot drift that way.
    *)
+   (*
+     BANDS ARE A CONTEST PARAMETER, NOT A STATION SETTING.
+
+     NY4I, 2026-09-11: "it's false by default, but set in the contest
+     config. If the user changes it, that goes into the contest config in
+     the database. So it never actually gets written to the json file?
+     Same for all contest parameters including vhf enabled."
+
+     THIS GROUP'S OWN CONSTRUCTOR ALREADY ADMITTED THE PROBLEM: "FCONTEST
+     overwrites all three the moment a contest loads." So the copy in
+     settings\tr4w.json was never the value in force -- it was a value
+     that got overwritten seconds later, which is harmless until it is
+     written BACK. Preferences saves the whole settings object on every
+     applied change, so loading a contest that enables WARC and then
+     changing any unrelated setting made that contest's choice the
+     station's default, permanently. In the old world the global was
+     re-set per contest every time and nothing stuck.
+
+     A contest-scoped group is EXCLUDED FROM THE JSON ENTIRELY (see
+     TR4WSettings.ToJSON) and captured into the contest database with
+     source 'contest' (see uLogStore.CaptureConfiguration). The contest is
+     where it came from and the contest is where a change to it belongs.
+
+     HF STAYS TRUE BY DEFAULT while the other two are False. The default
+     is nearly unobservable -- FCONTEST assigns all three before anything
+     reads them -- but "nearly" is the wrong thing to gamble a band plan
+     on, and a False HF default would mean no HF bands at all in the
+     window where it IS observable.
+   *)
    TBandSettings = class(TSettingsGroup)
    private
       FHfEnabled: boolean;
@@ -430,6 +478,7 @@ type
       procedure SetWarcEnabled(aValue: boolean);
    public
       constructor Create;
+      class function IsContestScoped: boolean; override;
    published
       // Was HFBandEnable in logdupe.pas.
       property HfEnabled: boolean read FHfEnabled write SetHfEnabled;
@@ -636,6 +685,11 @@ type
       FAutoSap: TAutoSapSettings;
       procedure BuildCommandMap;
       function PathForCommand(const aCommand: string): string;
+      (* The streamer hook that keeps contest-scoped groups out of the
+        file. A method rather than a plain procedure because it has to
+        reach IsContestScoped through the property it is asked about. *)
+      procedure SkipContestScoped(aSender: TObject; aObject: TObject;
+                                  aInfo: PPropInfo; var aResult: TJSONData);
    public
       constructor Create;
       destructor Destroy; override;
@@ -697,6 +751,10 @@ type
         an explicit exception.  Keep that list short: a long one means the
         derivation rule is wrong. *)
       function OwnsCommand(const aCommand: string): boolean;
+      (* Is this command's value the contest's rather than the station's?
+        False for a name the model does not own at all, so a caller can ask
+        about any command. *)
+      function CommandIsContestScoped(const aCommand: string): boolean;
       function TrySetByCommand(const aCommand, aValue: string): boolean;
       function TryGetByCommand(const aCommand: string; out aValue: string): boolean;
 
@@ -738,9 +796,10 @@ procedure FreeSettings;
 implementation
 
 uses
-   fpjson,
-   fpjsonrtti,
-   TypInfo;   // the property walk -- see the note on OwnsCommand
+   (* fpjson and TypInfo moved to the INTERFACE uses -- SkipContestScoped names
+     TJSONData and PPropInfo in its signature. Naming them again here is a
+     duplicate identifier, not a harmless repetition. *)
+   fpjsonrtti;   // the streamer; the property walk is TypInfo, see OwnsCommand
 
 var
    GSettings: TR4WSettings = nil;
@@ -1333,6 +1392,28 @@ begin
       end;
 end;
 
+function TR4WSettings.CommandIsContestScoped(const aCommand: string): boolean;
+var
+   path: string;
+   owner: TObject;
+   info: PPropInfo;
+begin
+   Result := False;
+   path := PathForCommand(aCommand);
+   if path = '' then
+      begin
+      Exit;
+      end;
+   if not ResolvePath(Self, path, owner, info) then
+      begin
+      Exit;
+      end;
+
+   (* The OWNER is the group -- ResolvePath walks down to the object that
+     actually publishes the property, which is what carries the marker. *)
+   Result := (owner is TSettingsGroup) and TSettingsGroup(owner).IsContestScoped;
+end;
+
 function TR4WSettings.TrySetByCommand(const aCommand, aValue: string): boolean;
 var
    path: string;
@@ -1487,12 +1568,56 @@ begin
    end;
 end;
 
+class function TSettingsGroup.IsContestScoped: boolean;
+begin
+   Result := False;
+end;
+
+class function TBandSettings.IsContestScoped: boolean;
+begin
+   (* FCONTEST assigns all three the moment a contest loads. *)
+   Result := True;
+end;
+
+(* DROP A CONTEST-SCOPED GROUP ON THE WAY OUT.
+
+  fpjsonrtti raises this after building each property's JSON and takes the
+  value back by reference; ObjectToJSON then skips a nil, so freeing it and
+  nilling it removes the property cleanly rather than writing an empty
+  object. Verified against fpjsonrtti.pp -- StreamProperty calls the event
+  last, and ObjectToJSON guards with `If (PD<>Nil)`.
+
+  THE GROUP IS STILL PUBLISHED, and must be: the RTTI walk that derives
+  command names reads published properties, so un-publishing it would
+  remove HF BAND ENABLE from the vocabulary as well as from the file. What
+  changes is where the VALUE lives, not whether the command exists. *)
+procedure TR4WSettings.SkipContestScoped(aSender: TObject; aObject: TObject;
+                                         aInfo: PPropInfo; var aResult: TJSONData);
+var
+   child: TObject;
+begin
+   if (aResult = nil) or (aInfo^.PropType^.Kind <> tkClass) then
+      begin
+      Exit;
+      end;
+
+   child := GetObjectProp(aObject, aInfo);
+   if (child is TSettingsGroup) and TSettingsGroup(child).IsContestScoped then
+      begin
+      FreeAndNil(aResult);
+      end;
+end;
+
 function TR4WSettings.ToJSON: TJSONObject;
 var
    streamer: TJSONStreamer;
 begin
    streamer := TJSONStreamer.Create(nil);
    try
+      (* NO @ -- this tree compiles in Delphi mode (forced by Indy), where a
+        method is assigned to an event by name. The address-of form is the
+        objfpc spelling and is a syntax error here. *)
+      streamer.OnStreamProperty := SkipContestScoped;
       (* jsoStreamChildren is what makes the nested objects appear at all --
         without it a child object property is skipped in silence, which reads
         as "that area has no settings" rather than as an error. *)

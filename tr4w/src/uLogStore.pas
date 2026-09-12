@@ -219,7 +219,10 @@ uses
    LOGWIND,
    (* Contest -- the live contest the program is running. Stamped onto a log at
       the moment that log is created; see StampContestOnNewLog. *)
-   postunit;
+   postunit,
+   (* Settings.CommandIsContestScoped -- which commands belong to the contest
+      rather than to the station. See the capture classifier below. *)
+   uSettingsModel;
 
 var
    GDatabase: TLogDatabase = nil;
@@ -458,7 +461,20 @@ begin
          Continue;
          end;
 
-      if CommandCameFromContestCFG(cmd) or (cmd = 'MY CALL') then
+      (* A CONTEST-SCOPED SETTING IS ALWAYS THE CONTEST'S, whatever file it
+        arrived in. The band enables are the case: FCONTEST assigns them when a
+        contest loads, so CommandCameFromContestCFG can say no -- the value was
+        not typed in a .cfg, it was computed -- and they would be recorded as
+        the STATION'S. Measured in a real log before changing anything: HF, VHF
+        and WARC BAND ENABLE all carried source 'station' in
+        target/2026 ARRL-10 NY4I, with WARC TRUE in a ten-metre contest.
+
+        NY4I, 2026-09-11: a contest parameter belongs in the contest config in
+        the database and never in tr4w.json. This is the half that puts it
+        there; TR4WSettings.ToJSON is the half that keeps it out of the file. *)
+      if CommandCameFromContestCFG(cmd)
+         or (cmd = 'MY CALL')
+         or Settings.CommandIsContestScoped(cmd) then
          begin
          (* MY CALL IS A CONTEST SETTING AND HAS TO BE NAMED AS ONE.
 
