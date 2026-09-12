@@ -1485,16 +1485,7 @@ type
      bound to get wrong.  The two sites that built it are ordinary
      concatenation now; see fcontest.pas and LogCfg.pas.
    *)
-   TContestSettings = class(TSettingsGroup)
-   private
-      FCallsignUpdateEnable: boolean;
-      FCountDomesticCountries: boolean;
-      FDigitalModeEnable: boolean;
-      FDomesticFilename: string;
-      FExchangeMemoryEnable: boolean;
-      FMultipleBands: boolean;
-      FMultipleModes: boolean;
-      FSprintQsyRule: boolean;
+   (*
      THIS POSITION'S IDENTITY ON A MULTI-OP NETWORK.
 
      BOTH NAMES DERIVE EXACTLY, and the group exists because they share a
@@ -1710,6 +1701,14 @@ type
    *)
    TContestSettings = class(TSettingsGroup)
    private
+      FCallsignUpdateEnable: boolean;
+      FCountDomesticCountries: boolean;
+      FDigitalModeEnable: boolean;
+      FDomesticFilename: string;
+      FExchangeMemoryEnable: boolean;
+      FMultipleBands: boolean;
+      FMultipleModes: boolean;
+      FSprintQsyRule: boolean;
       FQsoNumberByBand: boolean;
       FInitialExchangeOverwrite: boolean;
    public
@@ -1748,6 +1747,12 @@ type
       (* Was SprintQSYRule in logwind.pas -- the sprint rule that a station
         calling CQ must move after a QSO.  SPRINT QSY RULE. *)
       property SprintQsyRule: boolean read FSprintQsyRule write FSprintQsyRule;
+      // Was the global QSONumberByBand in logstuff.pas.
+      property QsoNumberByBand: boolean
+         read FQsoNumberByBand write FQsoNumberByBand;
+      // Was InitialExchangeOverwrite {KK1L: 6.70}.
+      property InitialExchangeOverwrite: boolean
+         read FInitialExchangeOverwrite write FInitialExchangeOverwrite;
    end;
 
    (*
@@ -1909,12 +1914,6 @@ type
 
         NOTHING IMPLEMENTS THAT. See the class comment above. *)
       property ShowAll: boolean read FShowAll write FShowAll;
-      // Was the global QSONumberByBand in logstuff.pas.
-      property QsoNumberByBand: boolean
-         read FQsoNumberByBand write FQsoNumberByBand;
-      // Was InitialExchangeOverwrite {KK1L: 6.70}.
-      property InitialExchangeOverwrite: boolean
-         read FInitialExchangeOverwrite write FInitialExchangeOverwrite;
    end;
 
    TR4WSettings = class(TPersistent)
@@ -1947,7 +1946,6 @@ type
       FMult: TMultSettings;
       FQtc: TQtcSettings;
       FAutoDupe: TAutoDupeSettings;
-      FContest: TContestSettings;
       FFont: TFontSettings;
       FStations: TStationsSettings;
       FRemainingMults: TRemainingMultsSettings;
@@ -2075,7 +2073,6 @@ type
       property Mult: TMultSettings read FMult;
       property Qtc: TQtcSettings read FQtc;
       property AutoDupe: TAutoDupeSettings read FAutoDupe;
-      property Contest: TContestSettings read FContest;
       property Font: TFontSettings read FFont;
       property Stations: TStationsSettings read FStations;
       property RemainingMults: TRemainingMultsSettings read FRemainingMults;
@@ -2725,6 +2722,8 @@ end;
 class function TAutoDupeSettings.IsContestScoped: boolean;
 begin
    Result := True;
+end;
+
 constructor TComputerSettings.Create;
 begin
    inherited Create;

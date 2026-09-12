@@ -200,6 +200,8 @@ begin
       (* A COLUMN WIDTH, not a caption: showing the domestic multiplier's
         name needs the wider prefix column. This was CommandsProcArray[9]. *)
       UpdateRemainingMultsWindows;
+      end;
+
    if UnicodeSameText(aPath, INSERT_MODE) then
       begin
       DisplayInsertMode;

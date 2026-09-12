@@ -492,26 +492,12 @@ begin
      nil Self is a plain call that never dereferences it. The QSO-point
      registrations have gone to the settings model and taken the guard with
      them, so it belongs before its first use. *)
-   RegisterStoredSetting('contest.multByBand',          'MULT BY BAND',
-                          RS_CONTEST_MULTBYBAND);
-   RegisterStoredSetting('contest.multByMode',          'MULT BY MODE',
-                          RS_CONTEST_MULTBYMODE);
    RegisterStoredSetting('contest.multReportMinimumBands','MULT REPORT MINIMUM BANDS',
                           RS_CONTEST_MULTREPORTMINIMUMBANDS);
-   RegisterStoredSetting('contest.multSheetAutoReset',  'MULT SHEET AUTO RESET',
-                          RS_CONTEST_MULTSHEETAUTORESET);
-   RegisterStoredSetting('contest.multipleBands',       'MULTIPLE BANDS',
-                          RS_CONTEST_MULTIPLEBANDS);
-   RegisterStoredSetting('contest.multipleModes',       'MULTIPLE MODES',
-                          RS_CONTEST_MULTIPLEMODES);
    RegisterStoredSetting('contest.prefixMultiplier',    'PREFIX MULTIPLIER',
                           RS_CONTEST_PREFIXMULTIPLIER);
    RegisterStoredSetting('contest.qslMode',             'QSL MODE',
                           RS_CONTEST_QSLMODE);
-   RegisterStoredSetting('contest.qsoByBand',           'QSO BY BAND',
-                          RS_CONTEST_QSOBYBAND);
-   RegisterStoredSetting('contest.qsoByMode',           'QSO BY MODE',
-                          RS_CONTEST_QSOBYMODE);
    RegisterModelSetting('contest.qsoNumberByBand',     'QSO NUMBER BY BAND',
                           RS_CONTEST_QSONUMBERBYBAND);
    RegisterStoredSetting('contest.qsoPointMethod',      'QSO POINT METHOD',
@@ -565,26 +551,16 @@ begin
                           RS_CONTEST_MULTBYBAND).ReadOnly := True;
    RegisterModelSetting( 'contest.multByMode',          'MULT BY MODE',
                           RS_CONTEST_MULTBYMODE).ReadOnly := True;
-   RegisterStoredSetting('contest.multReportMinimumBands','MULT REPORT MINIMUM BANDS',
-                          RS_CONTEST_MULTREPORTMINIMUMBANDS);
    RegisterModelSetting( 'contest.multSheetAutoReset',  'MULT SHEET AUTO RESET',
                           RS_CONTEST_MULTSHEETAUTORESET).ReadOnly := True;
    RegisterModelSetting( 'contest.multipleBands',       'MULTIPLE BANDS',
                           RS_CONTEST_MULTIPLEBANDS);
    RegisterModelSetting( 'contest.multipleModes',       'MULTIPLE MODES',
                           RS_CONTEST_MULTIPLEMODES);
-   RegisterStoredSetting('contest.prefixMultiplier',    'PREFIX MULTIPLIER',
-                          RS_CONTEST_PREFIXMULTIPLIER);
-   RegisterStoredSetting('contest.qslMode',             'QSL MODE',
-                          RS_CONTEST_QSLMODE);
    RegisterModelSetting( 'contest.qsoByBand',           'QSO BY BAND',
                           RS_CONTEST_QSOBYBAND).ReadOnly := True;
    RegisterModelSetting( 'contest.qsoByMode',           'QSO BY MODE',
                           RS_CONTEST_QSOBYMODE).ReadOnly := True;
-   RegisterStoredSetting('contest.qsoNumberByBand',     'QSO NUMBER BY BAND',
-                          RS_CONTEST_QSONUMBERBYBAND);
-   RegisterStoredSetting('contest.qsoPointMethod',      'QSO POINT METHOD',
-                          RS_CONTEST_QSOPOINTMETHOD);
    (* THE THIRD STEP, TAKEN (2026-09-12): the four QSO-point values are
      properties on uSettingsModel and there is no global and no CFGCA row
      left. What stands below is what this unit's header calls a fully
