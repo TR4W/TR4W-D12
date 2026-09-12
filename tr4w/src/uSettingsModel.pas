@@ -981,9 +981,22 @@ type
       FName: string;
       FPostalCode: string;
       FGrid: string;
+      FZone: string;
+      FZoneWasSet: boolean;
       FItuZone: TMyItuZone;
+      procedure SetZone(const aValue: string);
    public
       constructor Create;
+      (* DID THE OPERATOR STATE A ZONE, or is it ours to derive?
+
+        NOT published, so it is not streamed and has no command name: it is
+        a fact ABOUT the zone, not a second setting. FCONTEST asks it, and
+        derives the zone from CTY.DAT when the answer is no -- which is why
+        an empty string does not count as an answer. This replaces the
+        global MyZoneIsSet, which was set by a hook in the config array and
+        so was true only when a config FILE had applied the row; a value
+        typed into Preferences left it false. *)
+      property ZoneWasSet: boolean read FZoneWasSet;
    published
       // Was the global MyFOCNumber in logwind.pas. MY FOC NUMBER.
       property FocNumber: string read FFocNumber write FFocNumber;
@@ -1024,6 +1037,16 @@ type
         native strings now, which cost nothing because every other caller
         passes a ShortString and widening is silent. *)
       property Grid: string read FGrid write FGrid;
+      (* Was the global MyZone in LOGWIND -- the operator's CQ zone, as
+        TEXT, because several contests send it with a leading zero and one
+        (Russian DX) temporarily appends the oblast to it.
+
+        IT IS ONE GLOBAL DOING TWO JOBS and that is not fixed here: the
+        same value is sent as an ITU zone by the IARU contest, which is a
+        different number. See the note above PostUnit.ZoneSentForThisContest
+        and the header of uContestIARU; both are about the VALUE, not about
+        where it is stored. *)
+      property Zone: string read FZone write SetZone;
       (* Was MyITUZone in VC.pas, and ZERO IS MEANINGFUL: it means "use the
         CTY.DAT default", which is why the row allowed 0 in a range whose
         real zones start at 1. Issue #930 added it so a station in a
@@ -1513,7 +1536,18 @@ begin
    FName       := '';
    FPostalCode := '';
    FGrid       := '';
+   FZone       := '';
+   FZoneWasSet := False;
    FItuZone    := 0;
+end;
+
+procedure TMySettings.SetZone(const aValue: string);
+begin
+   FZone := aValue;
+   if aValue <> '' then
+      begin
+      FZoneWasSet := True;
+      end;
 end;
 
 constructor TSayHiSettings.Create;

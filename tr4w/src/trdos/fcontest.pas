@@ -233,32 +233,33 @@ end;
 
 procedure SetUpRSTMyZoneExchange;
 var
-  OldMyZone: string[31];
+  OldMyZone: string;
 const
   Code599 = '599';
 begin
-  FillChar(OldMyZone, SizeOf(OldMyZone), 0);
+  OldMyZone := '';
 
   if MyState <> '' then
     if ActiveExchange = RSTZoneAndPossibleDomesticQTHExchange then
        begin
-       OldMyZone := MyZone;
-       MyZone := MyZone + ' ' + MyState;
+       OldMyZone := Settings.My.Zone;
+       Settings.My.Zone := Settings.My.Zone + ' ' + string(MyState);
        end;
 
-  CQExchange := ' ' + Code599 + ' ' + MyZone;
-  SetCQMemoryString(CW, F3, ' ' + Code599 + ' ' + MyZone);
+  CQExchange := UTF8Encode(' ' + Code599 + ' ' + Settings.My.Zone);
+  SetCQMemoryString(CW, F3, UTF8Encode(' ' + Code599 + ' ' + Settings.My.Zone));
   SetEXMemoryString(CW, F3, Code599);
-  SetEXMemoryString(CW, F4, MyZone);
-  SetEXMemoryString(CW, F5, '@ DE \ ' + Code599 + ' ' + MyZone);
+  SetEXMemoryString(CW, F4, UTF8Encode(Settings.My.Zone));
+  SetEXMemoryString(CW, F5, UTF8Encode('@ DE \ ' + Code599 + ' ' + Settings.My.Zone));
   SetEXMemoryString(CW, AltF3, 'RST?');
   SetEXMemoryString(CW, AltF4, 'NR?');
-  RepeatSearchAndPounceExchange := ' ' + Code599 + ' ' + MyZone + ' ' + MyZone;
-  SearchAndPounceExchange := ' ' + Code599 + ' ' + MyZone;
+  RepeatSearchAndPounceExchange :=
+     UTF8Encode(' ' + Code599 + ' ' + Settings.My.Zone + ' ' + Settings.My.Zone);
+  SearchAndPounceExchange := UTF8Encode(' ' + Code599 + ' ' + Settings.My.Zone);
 
   if OldMyZone <> '' then
      begin
-     MyZone := OldMyZone;
+     Settings.My.Zone := OldMyZone;
      end;
 end;
 
@@ -673,7 +674,7 @@ begin
         // CW function-key defaults and SAP exchange strings.
         // Exchange shape: <serial#> <grid> -- e.g. "001 FN20".
         // RST is optional per the rules and is not transmitted by default.
-        // The grid is substituted at FCONTEST init time (same idiom as MyZone
+        // The grid is substituted at FCONTEST init time (same idiom as the zone
         // in SetUpRSTMyZoneExchange); the operator must restart the contest
         // setup if it changes.
         CQExchange := UTF8Encode(' # ' + Settings.My.Grid);
@@ -1846,7 +1847,7 @@ begin
   ctyLocateCall(MyCall, TempQTH);
   MyCountry := TempQTH.CountryID;
   MyContinent := TempQTH.Continent;
-  Str(TempQTH.Zone, MyZone);
+  Settings.My.Zone := IntToStr(TempQTH.Zone);
 end;
 
 procedure RecalculateMyCountryContinentAndZoneNew(Call: CallString);
@@ -1874,9 +1875,9 @@ begin
         end;
      end;
 
-  if not MyZoneIsSet then
+  if not Settings.My.ZoneWasSet then
      begin
-     Str({TempQTH.Zone}ctyGetZone(Call), MyZone);
+     Settings.My.Zone := IntToStr(ctyGetZone(Call));
      end;
 
   if not MyContinentIsSet then

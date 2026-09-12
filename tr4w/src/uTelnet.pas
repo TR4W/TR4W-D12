@@ -379,7 +379,7 @@ begin
       end
    else if Token = 'MY_ZONE' then
       begin
-      Value := string(MyZone)
+      Value := Settings.My.Zone
       end
    else if Token = 'MY_CHECK' then
       begin

@@ -699,10 +699,8 @@ var
   MultiplierItemWidth                   : integer = 40; // 4.91.4
   MyContinent                           : ContinentType {= UnknownContinent};
   MyCountry                             : Str20;
-  MyZone                                : Str20; //ZoneMultiplierString;
   MyContinentIsSet                      : boolean;
   MyCountryIsSet                        : boolean;
-  MyZoneIsSet                           : boolean;
 
 //  MyZoneCustom                          : ZoneMultiplierString;
 

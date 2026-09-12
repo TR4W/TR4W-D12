@@ -372,7 +372,7 @@ begin
   //
   // Sourcing notes:
   //   <dxcccountry>: CTY.DAT lookup on MyCall (definitive).
-  //   <cqzone>:      CTY.DAT lookup on MyCall.  Do NOT use MyZone -- its
+  //   <cqzone>:      CTY.DAT lookup on MyCall.  Do NOT use MY ZONE -- its
   //                  meaning flips per contest (CQ-zone-mode vs ITU-zone-mode
   //                  per ContestsBooleanArray bit 6), so it cannot be trusted
   //                  as a CQ-zone source.

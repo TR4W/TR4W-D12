@@ -267,7 +267,6 @@ begin
     MyContinent := UnknownContinent;
     MyCountry := '';
     MyState := '';
-    MyZone := '';
   }
   //  Config.NameFlagEnable := True;
   //  NoLog := False;

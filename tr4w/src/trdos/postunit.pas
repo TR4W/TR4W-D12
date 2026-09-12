@@ -432,7 +432,7 @@ uses
 
 (* THE ZONE THIS CONTEST'S EXCHANGE ACTUALLY CARRIES -- step C3.
 
-  MyZone IS ONE GLOBAL DOING TWO JOBS. It holds the CQ zone, and every exchange
+  MY ZONE IS ONE SETTING DOING TWO JOBS. It holds the CQ zone, and every exchange
   arm that sends "my zone" sends it -- including the contests whose exchange is
   the ITU zone. MY ITU ZONE is a separate config command that, until now, NO
   EXPORT PATH READ: its only consumer was uGetScores.
@@ -458,7 +458,7 @@ CTY.DAT's ITU zone for our own callsign, when they did not. This is what
 makes the fix work for the ordinary operator who never heard of the setting
 -- and it is what makes the corpus reference reproduce.
 
-MyZone, if neither is available, which is exactly today's behaviour. *)
+the CQ zone, if neither is available, which is exactly today's behaviour. *)
 function ZoneSentForThisContest: string;
    var
       ituFromCty: Byte;
@@ -477,7 +477,7 @@ function ZoneSentForThisContest: string;
          Exit;
          end;
       end;
-   Result := string( MyZone );
+   Result := Settings.My.Zone;
    end;
 
 

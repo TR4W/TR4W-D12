@@ -254,7 +254,6 @@ function F_KEYER_RADIO_ONE_OUTPUT_PORT: boolean;
 function F_KEYER_RADIO_TWO_OUTPUT_PORT: boolean;
 function F_MY_CONTINENT: boolean;
 function F_MY_COUNTRY: boolean;
-function F_MY_ZONE: boolean;
 function F_MY_CALL: boolean;
 function F_ZONE_MULTIPLIER: boolean;
 function F_AUTO_SEND_CHARACTER_COUNT: boolean;
@@ -375,7 +374,7 @@ const
       @F_FREQUENCY_MEMORY,
       @F_START_SENDING_NOW_KEY,
       @F_DX_MULTIPLIER,
-      @F_MY_ZONE,
+      nil {@F_MY_ZONE -- the setter raises ZoneWasSet},
       @F_MY_CONTINENT,
       @F_UpdateWSJTXEnabled,
       (* //@F_UpdateExternalLoggerEnabled WAS HERE and is deleted with the
@@ -615,6 +614,7 @@ const
    - 2 {the DVK, two of its five -- moved to uSettingsModel}
    - 2 {the unknown country file -- moved to uSettingsModel}
    - 1 {MY GRID -- moved to uSettingsModel}
+   - 1 {MY ZONE -- moved to uSettingsModel}
    ;
 
    // crS (CFGStatus): csNew / csOld = active -- the command's value IS applied.
@@ -850,7 +850,6 @@ const
  (crCommand: 'MY COUNTRY';                    crAddress: @MyCountry;                      crMin:0;  crMax:20;      crS: csOwned; crA: 8; crC:0 ; crP:0; crJ: 2; crKind: ckNormal; cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'MY QTH';                        crAddress: @MyState;                        crMin:0;  crMax:20;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'MY STATE';                      crAddress: @MyState;                        crMin:0;  crMax:20;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'MY ZONE';                       crAddress: @MyZone;                         crMin:0;  crMax: 6;       crS: csOwned; crA: 21;crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'NAME FLAG ENABLE';              crAddress: @Config.NameFlagEnable;                 crMin:0;  crMax: 0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'NET STATUS UPDATE INTERVAL';    crAddress: @tNetStatusUpdateInterval;       crMin:1000;crMax:10000;   crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'NO BORDER';                     crAddress: @Config.NoBorder;                       crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAppearance; crType: ctBoolean; crNetwork: 1),
@@ -2519,12 +2518,6 @@ begin
    Result := True;
 end;
 
-function F_MY_ZONE: boolean;
-begin
-   MyZoneIsSet := True;
-   Result := True;
-end;
-
 function F_MY_COUNTRY: boolean;
 var
    TempQTH: QTHRecord;
@@ -2543,7 +2536,7 @@ begin
      ctyLocateCall(CMD, TempQTH);
      MyCountry := TempQTH.CountryID;
      MyContinent := TempQTH.Continent;
-     Str(TempQTH.Zone, MyZone);
+     Str(TempQTH.Zone, Settings.My.Zone);
      CountryString := MyCountry;
      ContinentString := tContinentArray[MyContinent];
    }
@@ -2559,7 +2552,7 @@ begin
      ctyLocateCall(MyCall, TempQTH);
      MyCountry := TempQTH.CountryID;
      MyContinent := TempQTH.Continent;
-     Str(TempQTH.Zone, MyZone);
+     Str(TempQTH.Zone, Settings.My.Zone);
      CountryString := MyCountry;
      ContinentString := tContinentArray[MyContinent];
    }

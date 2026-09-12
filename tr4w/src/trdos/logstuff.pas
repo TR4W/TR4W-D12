@@ -7915,7 +7915,7 @@ begin
 
     BSCIQSOPointMethod:
       begin
-        Val(MyZone, MyZoneValue, Result);
+        Val(Settings.My.Zone, MyZoneValue, Result);
         if RXData.Zone = MyZoneValue then
            begin
            RXData.QSOPoints := 1
@@ -7939,7 +7939,7 @@ begin
     SRRQSOPointMethod: // 4.90.4
       if RXData.DomesticQTH = '' then
          begin
-         Val(MyZone, MyZoneValue, Result);
+         Val(Settings.My.Zone, MyZoneValue, Result);
 
          if RXData.Zone = MyZoneValue then
             begin
@@ -7959,7 +7959,7 @@ begin
       if RXData.DomesticQTH = '' then
          begin
          //        Val(RXData.Zone, RXDataZoneValue, RESULT);
-         Val(MyZone, MyZoneValue, Result);
+         Val(Settings.My.Zone, MyZoneValue, Result);
 
          if RXData.Zone = MyZoneValue then
             begin
@@ -7982,7 +7982,7 @@ begin
       if RXData.DomesticQTH = '' then
       begin
         Val(RXData.Zone, RXDataZoneValue, RESULT);
-        Val(MyZone, MyZoneValue, RESULT);
+        Val(Settings.My.Zone, MyZoneValue, RESULT);
 
         if RXDataZoneValue = MyZoneValue then
           RXData.QSOPoints := 1
@@ -8195,7 +8195,7 @@ begin
            RXData.QSOPoints := 10;
            end;
 
-        if RXData.Zone = StrToIntDef(MyZone, 0) then
+        if RXData.Zone = StrToIntDef(Settings.My.Zone, 0) then
            begin
            RXData.ZoneMult := False;
            end;

@@ -1085,7 +1085,7 @@ begin
            end
         else
            begin
-           tCQExchange := ' 5NN ' + MyZone;
+           tCQExchange := UTF8Encode(' 5NN ' + Settings.My.Zone);
            end;
       end;
 
@@ -1102,9 +1102,9 @@ begin
       end;
 
     NZFIELDDAY:
-      tCQExchange := ' 5NN # ' + MyZone;
+      tCQExchange := UTF8Encode(' 5NN # ' + Settings.My.Zone);
 
-//    EUROPEANHFC, CQWWCW, CQWWSSB, GACWWWSACW, GAGARINCUP: tCQExchange := ' 5NN ' + MyZone;
+//    EUROPEANHFC, CQWWCW, CQWWSSB, GACWWWSACW, GAGARINCUP: tCQExchange := ' 5NN ' + Settings.My.Zone;
     {CZECH_ACTIVITY_VHF,}OZHCRVHF, RADIOVHFFD: tCQExchange := UTF8Encode(' 5NN # ' + Settings.My.Grid);
 
     NRAUBALTICCW, NRAUBALTICSSB, RU3AXMEMORIAL, {WWPMC,} UBACW, UBASSB: tCQExchange := ' 5NN # ' + MyState;
@@ -1128,7 +1128,7 @@ begin
   case Contest of
     CQWWRTTY:
       begin
-        tCQExchange := ' 599 ' + MyZone + ' ' + MyZone;
+        tCQExchange := UTF8Encode(' 599 ' + Settings.My.Zone + ' ' + Settings.My.Zone);
       end;
 
     CUPRFDIG:

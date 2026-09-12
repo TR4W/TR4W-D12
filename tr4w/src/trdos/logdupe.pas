@@ -1470,7 +1470,7 @@ begin
          end;
       end;
     if (Contest = NZFIELDDAY) then
-    if (RXData.Zone = StrToIntDef(MyZone, 0)) or (RXData.Zone = 00) then   exit;  //n4af 4.41.6
+    if (RXData.Zone = StrToIntDef(Settings.My.Zone, 0)) or (RXData.Zone = 00) then   exit;  //n4af 4.41.6
 
 
   if (RXData.Zone <> DUMMYZONE) and DoingZoneMults then              // n4af 4.42.1
