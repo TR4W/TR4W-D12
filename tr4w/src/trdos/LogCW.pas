@@ -48,9 +48,29 @@ type
 type
   SendBufferType = array[0..255] of Char;
 
-  MessagePointer = ^ShortString;
+  (* MessagePointer DELETED 2026-09-12. It typed four arrays of pointers
+    to the function-key memories and two tables in the Alt-P editor, and
+    all six are plain strings now. Nothing points at a message. *)
   CharPointer = ^Char;
-  FunctionKeyMemoryArray = array[CW..Phone, F1..AltF12] of MessagePointer;
+  (* STRINGS, NOT POINTERS TO ShortStrings (2026-09-12).
+
+    NY4I: "do not keep any table of pointers", "move to strings".
+
+    WHAT THE POINTERS COST. Every setter had to ask whether the slot was
+    nil and New() one if it was -- ninety-six slots across four arrays,
+    each allocated on first use and never freed -- and every getter had to
+    ask again before dereferencing. A string slot is simply empty until
+    something puts text in it, which is what nil meant anyway.
+
+    AND EACH SETTER WROTE A NUL ONE BYTE PAST THE LENGTH,
+    Memory[m,k]^[Length(s) + 1] := #0, to make a PAnsiChar of the result.
+    At Length 255 that is a write past the end of the ShortString. Nothing
+    reads that NUL any more; the four lines are gone with the pointers.
+
+    AnsiString and not string: the accessors around these take and return
+    ShortString, and an AnsiString assigned to a ShortString is not a
+    narrowing conversion where a UTF-16 one is. *)
+  FunctionKeyMemoryArray = array[CW..Phone, F1..AltF12] of AnsiString;
 
   CWMessageCommandType = (NoCWCommand,
     CWCommandControlEnter,
@@ -1990,10 +2010,9 @@ begin
 
   GetCQMemoryString                                         := '';
   if Mode < Both then
-     if CQMemory[Mode, Key] <> nil then
-        begin
-        GetCQMemoryString                                     := CQMemory[Mode, Key]^;
-        end;
+     begin
+     GetCQMemoryString := CQMemory[Mode, Key];
+     end;
 
     
 end;
@@ -2039,14 +2058,7 @@ begin
      Exit;
      end;
 
-  if EXMemory[Mode, Key] <> nil then
-     begin
-     GetEXMemoryString                                       := EXMemory[Mode, Key]^
-     end
-  else
-     begin
-     GetEXMemoryString                                       := ''
-     end
+  GetEXMemoryString := EXMemory[Mode, Key];
 end;
 
 procedure SetCQCaptionMemoryString(Mode: ModeType; Key: AnsiChar; MemoryString: ShortString);
@@ -2113,12 +2125,7 @@ begin
      Exit;
      end;
 
-  if CQCaptionMemory[Mode, Key] = nil then
-     begin
-     New(CQCaptionMemory[Mode, Key]);
-     end;
-  CQCaptionMemory[Mode, Key]^                               := MemoryString;
-  CQCaptionMemory[Mode, Key]^[length(MemoryString) + 1]     := #0;
+  CQCaptionMemory[Mode, Key] := MemoryString;
 end;
 
 procedure SetEXCaptionMemoryString(Mode: ModeType; Key: AnsiChar; MemoryString: ShortString);
@@ -2184,12 +2191,7 @@ begin
                   [Ord(Mode)]);
      Exit;
      end;
-  if EXCaptionMemory[Mode, Key] = nil then
-     begin
-     New(EXCaptionMemory[Mode, Key]);
-     end;
-  EXCaptionMemory[Mode, Key]^                               := MemoryString;
-  EXCaptionMemory[Mode, Key]^[length(MemoryString) + 1]     := #0;
+  EXCaptionMemory[Mode, Key] := MemoryString;
 end;
 
 procedure SetCQMemoryString(Mode: ModeType; Key: AnsiChar; MemoryString: ShortString {Str80});
@@ -2254,14 +2256,9 @@ begin
      Exit;
      end;
 
-  if CQMemory[Mode, Key] = nil then
-     begin
-     New(CQMemory[Mode, Key]);
-     end;
   {KK1L: 6.72 NOTE This is where I should interpret the string just as if it were being read from LOGCFG.DAT}
   SniffOutControlCharacters(MemoryString); {KK1L: 6.72}
-  CQMemory[Mode, Key]^                                      := MemoryString;
-  CQMemory[Mode, Key]^[length(MemoryString) + 1]            := #0;
+  CQMemory[Mode, Key] := MemoryString;
 end;
 
 procedure SetEXMemoryString(Mode: ModeType; Key: AnsiChar; MemoryString: ShortString {Str80});
@@ -2326,14 +2323,9 @@ begin
      Exit;
      end;
 
-  if EXMemory[Mode, Key] = nil then
-     begin
-     New(EXMemory[Mode, Key]);
-     end;
   {KK1L: 6.72 NOTE This is where I should interpret the string just as if it were being read from LOGCFG.DAT}
   SniffOutControlCharacters(MemoryString); {KK1L: 6.72}
-  EXMemory[Mode, Key]^                                      := MemoryString;
-  EXMemory[Mode, Key]^[length(MemoryString) + 1]            := #0;
+  EXMemory[Mode, Key] := MemoryString;
 end;
 
 procedure InitializeKeyer;

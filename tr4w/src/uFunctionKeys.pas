@@ -181,9 +181,10 @@ begin
      b := CHR(i + plus);
      if OpMode2 {OpMode} = CQOpMode then
         begin
-        if ((CQCaptionMemory[TempMode, b] <> nil) and (CQCaptionMemory[TempMode, b]^ <> '')) then
+        (* One test, not two: the nil check went with the pointers. *)
+        if CQCaptionMemory[TempMode, b] <> '' then
            begin
-           s := CQCaptionMemory[TempMode, b]^
+           s := CQCaptionMemory[TempMode, b]
            end
         else
            begin
@@ -192,9 +193,10 @@ begin
         end
      else
         begin
-        if ((EXCaptionMemory[TempMode, b] <> nil) and (EXCaptionMemory[TempMode, b]^ <> '')) then
+        (* One test, not two: the nil check went with the pointers. *)
+        if EXCaptionMemory[TempMode, b] <> '' then
            begin
-           s := EXCaptionMemory[TempMode, b]^
+           s := EXCaptionMemory[TempMode, b]
            end
         else
            begin

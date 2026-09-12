@@ -214,7 +214,6 @@ var
   ModeString                            : PAnsiChar;
   OpModeString                          : PAnsiChar;
   ButtonString                          : PAnsiChar;
-  TempMessagePointer                    : MessagePointer;
   TempMode                              : ModeType;
 begin
   AltPBeginUpdate;
@@ -342,18 +341,15 @@ begin
   //  TC_F2SETBYSPEXCHANGEANDREPEATSP       = 'F2 - Set by S&P EXCHANGE and REPEAT S&P EXCHANGE';
         end;
      RowMessage := TempString;
+     (* No pointer and no nil test: an unset caption is an empty string,
+       which is what the nil meant. *)
      if mt = CQMsgWin then
         begin
-        TempMessagePointer := CQCaptionMemory[TempMode, Key];
+        RowCaption := CQCaptionMemory[TempMode, Key];
         end;
      if mt = ExMsgWin then
         begin
-        TempMessagePointer := EXCaptionMemory[TempMode, Key];
-        end;
-
-     if TempMessagePointer <> nil then
-        begin
-        RowCaption := TempMessagePointer^;
+        RowCaption := EXCaptionMemory[TempMode, Key];
         end;
 
      AltPAddRow(RowCommand, RowMessage, RowCaption, Ord(Key) - Ord(F1));
