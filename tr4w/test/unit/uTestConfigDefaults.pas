@@ -148,7 +148,7 @@ begin
    CheckEquals(25,  Config.FarnsworthSpeed,    'Farnsworth character speed 25');
    CheckEquals(3,   Config.tDitDahRatio,       'a 0 dit/dah ratio is not sendable');
    CheckEquals(3,   Config.LeadingZeros,       'serial numbers pad to 3');
-   CheckEquals(200, Config.SayHiRateCutOff,    'say-hi cutoff 200');
+   CheckEquals(200, Settings.SayHi.RateCutoff, 'say-hi cutoff 200');
 
    // Weight is REAL and its CFGCA bounds are stored x10 (5..15 = 0.5..1.5), so
    // 1.0 sits in the middle rather than at an edge.
@@ -233,7 +233,9 @@ begin
    CheckFalse(Settings.AltD.CqEnable,     'AltD.CqEnable was False');
    CheckFalse(Settings.So2r.SwapPacketSpotRadios, 'SwapPacketSpotRadios was False');
    CheckFalse(Settings.Log.CheckFileSize,     'CheckFileSize was False');
-   CheckFalse(Config.UnknownCountryFileEnable,'UnknownCountryFileEnable was False');
+   CheckFalse(Settings.UnknownCountryFile.Enable, 'UnknownCountryFile.Enable was False');
+   CheckEquals('UNKNOWN.CTY', Settings.UnknownCountryFile.Name,
+               'the documented default name, which nothing reads yet');
 end;
 
 procedure TConfigDefaultsTests.Test_AppearanceAndFKeyDefaults;
@@ -268,8 +270,8 @@ begin
    BeginTest('the audio defaults, and the path fields are real MAX_PATH buffers');
 
    CheckFalse(Config.DVKEnable,                  'DVKEnable was False');
-   CheckFalse(Config.DVKLocalizedMessagesEnable, 'DVKLocalizedMessagesEnable was False');
-   CheckFalse(Config.UseRecordedSigns,           'UseRecordedSigns was False');
+   CheckFalse(Settings.Dvk.LocalizedMessagesEnable, 'LocalizedMessagesEnable was False');
+   CheckFalse(Settings.Dvk.UseRecordedSigns,           'UseRecordedSigns was False');
    CheckFalse(Config.MP3RecorderEnable,          'MP3RecorderEnable was False');
 
    CheckEquals(SizeOf(FileNameType), SizeOf(Config.MP3Path),     'MP3Path is a FileNameType buffer');

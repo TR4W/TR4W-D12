@@ -87,18 +87,28 @@ SKIP=" "
 # So a missing or blank tag is not a test result, it is an unrunnable test, and
 # it is reported as one -- before 26 exports run and one of them gets blamed.
 #
-# THIS IS A GUARD, NOT THE FIX.  The real fix is for the corpus to own its
-# header tags rather than read the operator's -- see
-# docs/CORPUS_FRESH_CLONE_DEFECT.md.
-SETTINGS="tr4w/target/settings/tr4w.json"
+# THE CORPUS OWNS ITS SETTINGS NOW, 2026-09-12, which is the fix this comment
+# asked for and no longer a guard around somebody else's file.
+#
+# WHY IT MATTERED, MEASURED RATHER THAN ARGUED. This read
+# tr4w/target/settings/tr4w.json -- the OPERATOR'S live configuration, in a
+# gitignored directory. That made the scoring oracle depend on the machine it
+# ran on, and it failed exactly that way: NY4I staged a first-run file there to
+# test conversion, it had no _LOCATION, and the corpus was unrunnable for a day
+# while scoring work waited on it.
+#
+# NY4I, 2026-09-12: "you should have your own json file (make a copy of this
+# one) and feed that one to tr4w as a parameter for the corpus."
+#
+# The fixture is a copy of a real working configuration with every credential
+# blanked -- the values that produce the frozen references, and nothing that
+# should not be in a public repository. tr4w.exe reads it through --settings,
+# which exists for this.
+SETTINGS="tr4w/test/corpus/settings/tr4w.json"
 if [ ! -f "$SETTINGS" ]; then
    echo "ERROR: $SETTINGS is missing."
-   echo "  The corpus reads the Cabrillo LOCATION tag from it, and tr4w/target/*"
-   echo "  is gitignored -- so a fresh clone or worktree has no settings at all."
-   echo "  Winter Field Day and ARRL10 will REFUSE to export, and every other"
-   echo "  Cabrillo will carry a LOCATION that does not match the frozen refs."
-   echo "  Run TR4W once to seed it, or copy one from a working tree."
-   echo "  See docs/CORPUS_FRESH_CLONE_DEFECT.md."
+   echo "  This is the corpus's OWN settings fixture and it is tracked, so it"
+   echo "  should never be absent -- if it is, the checkout is incomplete."
    exit 1
 fi
 if ! grep -q '"_LOCATION"[[:space:]]*:[[:space:]]*"[^"]\+"' "$SETTINGS"; then
@@ -120,6 +130,12 @@ last_app_warning(){
 # /c/foo/bar -> C:\foo\bar  (the app needs a native Windows path)
 towin(){ cygpath -d "$1"; }   # DOS 8.3 short path -- NO spaces, so Git-Bash->exe
                               # arg passing can't split the contest dir name.
+
+# AFTER towin IS DEFINED, and after the guard has proved the fixture is there:
+# cygpath -d needs the file to exist. The export runs from tr4w/target, so the
+# path handed to the app is absolute.
+SETTINGS_WIN="$(towin "$(pwd)/$SETTINGS")"
+
 
 # Fail-loud prep: clear prior candidates so a set whose export aborts/produces
 # nothing can't keep passing on a stale file (run-golden-diff.sh runs below in
@@ -170,7 +186,9 @@ for m in "$here"/*/manifest.json; do
    # run from target/ so the app resolves CTY.DAT + support files as usual
    # MSYS_NO_PATHCONV: stop Git Bash from mangling the /EXPORT flag into a path.
    # per-set timeout: a stray load dialog can't hang the whole run
-   ( cd tr4w/target && MSYS_NO_PATHCONV=1 timeout 45 "./$EXE_NAME" "$(towin "$cfg")" /EXPORT >/dev/null 2>&1 )
+   # --settings: the app reads and writes the corpus's fixture, never the
+   # operator's. The path is absolute because the export runs from tr4w/target.
+   ( cd tr4w/target && MSYS_NO_PATHCONV=1 timeout 45 "./$EXE_NAME" "$(towin "$cfg")" /EXPORT --settings "$SETTINGS_WIN" >/dev/null 2>&1 )
    rc=$?
 
    # THE EXIT CODE IS EVIDENCE AND IT WAS BEING THROWN AWAY.

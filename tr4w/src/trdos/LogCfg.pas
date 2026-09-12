@@ -1279,7 +1279,46 @@ var
         end
      else
         begin
-        showwarning(SysUtils.Format(AnsiString(LclText(TC_INVALIDSTATEMENTINCONFIGFILE)), [CFGFilesArray[CurrentConfigFile], LineNumberInConfigFile, @FileString^[1]]));
+        (* THE THIRD ARGUMENT WAS A POINTER, AND %s CANNOT CONSUME ONE.
+
+          @FileString^[1] is a PAnsiChar into a ShortString -- the Win32
+          habit of making a C string of it -- and an array of const carries
+          it as vtPointer, so SysUtils.Format raised EConvertError
+          ("Invalid argument index") instead of showing the message. The
+          refusal path therefore CRASHED THE PROGRAM rather than telling
+          the operator which line it could not read.
+
+          Latent since the pointer form was written, because it only fires
+          when a config line is actually refused. Found 2026-09-12 by the
+          golden corpus: WINTER FIELD DAY's .cfg carries TAIL END CW
+          MESSAGE, whose CFGCA row is commented out, so that set alone took
+          this path and exited 217.
+
+          AND THE FIRST ARGUMENT IS A POINTER TOO: CFGFilesArray is an
+          array[TCFGType] of PAnsiChar, so %s could not consume that one
+          either. Two pointers on one line, the same habit twice, and the
+          first one kept the crash alive after the third was fixed.
+
+          An array of const takes the strings themselves. *)
+        (* BUILT BY CONCATENATION, NOT BY Format. Two of the three arguments
+          were POINTERS -- CFGFilesArray is an array of PAnsiChar and
+          @FileString^[1] is a PAnsiChar into a ShortString -- which %s
+          cannot consume, so this path raised EConvertError and CRASHED the
+          program instead of naming the line it could not read. Fixing the
+          arguments was not enough; a message with no format string cannot
+          fail this way at all, and there is nothing here a format string
+          was buying.
+
+          AND FileString IS A PShortString HERE -- the routine's PARAMETER,
+          not the ShortString of the same name declared further up this
+          unit. My first attempt replaced @FileString^[1] with FileString
+          and changed nothing, because that is still a pointer. Two
+          variables one name apart, and only the dereference tells them
+          apart. *)
+        showwarning(AnsiString(CFGFilesArray[CurrentConfigFile]) + ':' + #13
+                    + 'Invalid statement in config file.' + #13 + #13
+                    + 'Line ' + AnsiString(IntToStr(LineNumberInConfigFile))
+                    + #13 + FileString^);
  //    halt;
         end;
      end

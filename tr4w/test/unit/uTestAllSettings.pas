@@ -171,6 +171,22 @@ begin
    CheckTrue(SettingCount > 200,
              'DeclareAllSettings registered ' + IntToStr(SettingCount)
              + ' settings; expected the full set');
+
+   (* AND THAT IT FINISHED, which the count above cannot tell you.
+
+     THE FLOOR PASSED WHILE TR4W COULD NOT START. On 2026-09-12 a migrated
+     setting whose Preferences registration had not moved raised partway
+     through DeclareAllSettings. Two hundred-odd settings had already
+     registered, so `> 200` held; the flag that says "declared" was
+     already set, so every later caller returned quietly; and this suite
+     reported 24784 passed while every contest in the golden corpus
+     crashed at startup with exit 217.
+
+     A floor answers "did it run". This answers "did it finish", and they
+     are not the same question. *)
+   CheckTrue(SettingsDeclarationsComplete,
+             'DeclareAllSettings ran to completion -- a registration that '
+             + 'raises leaves a half-built registry that still counts over 200');
 end;
 
 procedure TAllSettingsTests.Test_EverySettingRendersItsValue;

@@ -693,7 +693,12 @@ begin
 
       if (arg <> '') and ((arg[1] = '-') or (arg[1] = '/')) then
          begin
-         if SameText(arg, '--lang') or SameText(arg, '-l') then
+         (* UnicodeSameText on all three, including the two that were here:
+           SysUtils' SameText takes AnsiString, so each call narrows BOTH
+           sides. Adding a third comparison to a line that already paid for
+           two was the moment to stop paying. *)
+         if UnicodeSameText(arg, '--lang') or UnicodeSameText(arg, '-l')
+            or UnicodeSameText(arg, '--settings') then
             begin
             Inc(i);        // the switch consumes the value after it
             end;
@@ -826,6 +831,8 @@ begin
       '  <contest>.cfg      open this contest configuration' + sLineBreak +
       '  --lang <code>      run in this language' + sLineBreak +
       '  --lang=<code>      the same' + sLineBreak +
+      '  --settings <path>  read and write settings at this path' + sLineBreak +
+      '  --settings=<path>  the same' + sLineBreak +
       '  /EXPORT            headless ADIF and Cabrillo export, then exit' + sLineBreak +
       '  /RESCORE           recompute every QSO''s scoring, then exit' + sLineBreak +
       '  /EXPORT /EXPORTDB  the same, forcing the SQLite log as the source' + sLineBreak +

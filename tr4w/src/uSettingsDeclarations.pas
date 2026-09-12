@@ -63,9 +63,22 @@ interface
   entry point appearing later is more likely than not. }
 procedure DeclareAllSettings;
 
+(* DID THE DECLARATIONS FINISH?
+
+  False before they run, and false if any registration RAISED partway. It
+  exists because the obvious test -- count the settings and check there are
+  plenty -- cannot tell a complete run from one that failed near the end,
+  and that is not hypothetical: on 2026-09-12 a migrated setting whose
+  Preferences registration had not moved raised here, crashed TR4W at
+  startup for every contest in the golden corpus, and the unit tests stayed
+  GREEN at 24784 passed because 200-odd settings had registered before the
+  failure and the floor was 200. *)
+function SettingsDeclarationsComplete: boolean;
+
 implementation
 
 uses
+  SysUtils,          // Exception -- see DeclareAllSettings' failure guard
   uConfigValues,
    LogWind,           // the four QSO-point globals -- see TQSOPointsAccess
    uSettingsRegistry,
@@ -99,6 +112,12 @@ type
 
 var
    GDeclared: boolean = False;
+   (* Set only when every registration has run. See
+     SettingsDeclarationsComplete. *)
+   GComplete: boolean = False;
+   (* What went wrong, kept so EVERY later call fails the same way instead
+     of returning quietly on a half-built registry. *)
+   GFailure: string = '';
    GQSOPoints: TQSOPointsAccess = nil;
 
 function  TQSOPointsAccess.GetTourDuration: integer;    begin Result := TourDuration;           end;
@@ -112,13 +131,32 @@ procedure TQSOPointsAccess.SetDxCw(aValue: integer);    begin QSOPointsDXCW := a
 function  TQSOPointsAccess.GetDxPhone: integer;         begin Result := QSOPointsDXPhone;       end;
 procedure TQSOPointsAccess.SetDxPhone(aValue: integer); begin QSOPointsDXPhone := aValue;       end;
 
+function SettingsDeclarationsComplete: boolean;
+begin
+   Result := GComplete;
+end;
+
 procedure DeclareAllSettings;
 begin
+   (* A SECOND CALL AFTER A FAILURE FAILS AGAIN, rather than returning as
+     though the registry were built. The guard below is what made a broken
+     registration survivable enough to reach the corpus: the first caller
+     raised, GDeclared was already True, and every caller after it -- the
+     unit tests included -- saw a half-built registry and no error. *)
    if GDeclared then
       begin
+      if GFailure <> '' then
+         begin
+         raise Exception.Create(GFailure);
+         end;
       Exit;
       end;
+
+   (* Set BEFORE the registrations, not after: a second pass would register
+     every key twice. Re-entrance is the thing this prevents; completion is
+     what GComplete records. *)
    GDeclared := True;
+   try
 
    // --- Operating: CW ------------------------------------------------------
    RegisterModelSetting( 'operating.cw.sayHi',            'SAY HI ENABLE',
@@ -199,13 +237,13 @@ begin
                          RS_AUDIO_MP3_PLAYER);
    RegisterStoredSetting('audio.dvk.enable',                  'DVK ENABLE',
                          RS_AUDIO_DVK_ENABLE);
-   RegisterStoredSetting('audio.dvk.localizedMessages',       'DVK LOCALIZED MESSAGES ENABLE',
+   RegisterModelSetting( 'audio.dvk.localizedMessages',       'DVK LOCALIZED MESSAGES ENABLE',
                          RS_AUDIO_DVK_LOCALIZEDMESSAGES);
    RegisterStoredSetting('audio.dvk.path',                    'DVK PATH',
                          RS_AUDIO_DVK_PATH);
    RegisterStoredSetting('audio.dvk.recorder',                'DVK RECORDER',
                          RS_AUDIO_DVK_RECORDER);
-   RegisterStoredSetting('audio.useRecordedSigns',            'USE RECORDED SIGNS',
+   RegisterModelSetting( 'audio.useRecordedSigns',            'USE RECORDED SIGNS',
                          RS_AUDIO_USERECORDEDSIGNS);
 
    { PADDLE. The paddle keyer TR4W runs itself; a WinKeyer or YCCC box keeps its
@@ -323,7 +361,7 @@ begin
                          RS_BANDMAP_SWAPPACKETSPOTRADIOS);
    RegisterModelSetting( 'logging.checkLogFileSize',          'CHECK LOG FILE SIZE',
                          RS_LOGGING_CHECKLOGFILESIZE);
-   RegisterStoredSetting('logging.unknownCountryFile',        'UNKNOWN COUNTRY FILE ENABLE',
+   RegisterModelSetting( 'logging.unknownCountryFile',        'UNKNOWN COUNTRY FILE ENABLE',
                          RS_LOGGING_UNKNOWNCOUNTRYFILE);
    RegisterModelSetting( 'logging.updateRestartFile',         'UPDATE RESTART FILE ENABLE',
                          RS_LOGGING_UPDATERESTARTFILE);
@@ -744,7 +782,7 @@ begin
                           RS_FILES_CTRLJ_DOMESTICFILENAME);
    RegisterStoredSetting('files.ctrlj.missingcallsignsFileEnable','MISSINGCALLSIGNS FILE ENABLE',
                           RS_FILES_CTRLJ_MISSINGCALLSIGNSFILEENABLE);
-   RegisterStoredSetting('files.ctrlj.unknownCountryFileName','UNKNOWN COUNTRY FILE NAME',
+   RegisterModelSetting( 'files.ctrlj.unknownCountryFileName','UNKNOWN COUNTRY FILE NAME',
                           RS_FILES_CTRLJ_UNKNOWNCOUNTRYFILENAME);
 
    // --- Band Map (5) ---------------------------------
@@ -836,7 +874,14 @@ begin
    RegisterStoredSetting('files.ctrlj.initialExchangeFilename','INITIAL EXCHANGE FILENAME',
                           RS_FILES_CTRLJ_INITIALEXCHANGEFILENAME);
 
-
+      GComplete := True;
+   except
+      on E: Exception do
+         begin
+         GFailure := E.ClassName + ': ' + E.Message;
+         raise;
+         end;
+   end;
 end;
 
 end.

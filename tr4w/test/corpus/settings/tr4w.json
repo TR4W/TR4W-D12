@@ -1,0 +1,1363 @@
+{
+   "settings": {
+      "ExternalLogger": {
+         "Address": "127.0.0.1",
+         "Enabled": false,
+         "Port": 52001
+      }
+   },
+   "version": 1,
+   "general": {
+      "activeProfile": "IC7100 Only",
+      "autoConnect": true,
+      "keepLegacyIni": true,
+      "activeCluster": "NG7M",
+      "activeRotatorId": "FD0F5783-5864-4CF1-B93A-1BA330B09ED6",
+      "activeRotator": "RT-21 SerialV",
+      "latestConfigFile": "C:\\tr4w-d12\\tr4w\\target\\CQ-WW-SSB 2026-09-02 NY4I.db",
+      "gridPromptShown": false
+   },
+   "tci": {
+      "enabled": true,
+      "port": 0,
+      "bindAll": false,
+      "debug": false,
+      "maxTxSeconds": 180
+   },
+   "logging": {
+      "level": "DEBUG",
+      "hamlibDebug": false,
+      "hamlibAsyncOnly": false,
+      "hamlibTrace": false,
+      "telnetDebug": false
+   },
+   "commands": {
+      "advanced": {
+         "HAND LOG MODE": "FALSE",
+         "NO LOG": "FALSE"
+      },
+      "appearance": {
+         "BEEP ENABLE": "FALSE",
+         "COLUMN AUTOSIZE": "TRUE",
+         "COMPLETE CALLSIGN MASK": "",
+         "CONTACTS PER PAGE": "50",
+         "HOUR DISPLAY": "BAND CHANGES ON THIS COMPUTER",
+         "INSERT MODE": "TRUE",
+         "NO BORDER": "FALSE",
+         "NO CAPTION": "FALSE",
+         "NO COLUMN HEADER": "FALSE",
+         "RATE DISPLAY": "QSOS",
+         "ROW COUNT": "5",
+         "SHOW FREQUENCY IN LOG": "TRUE",
+         "SHOW GRIDLINES": "FALSE",
+         "SHOW TYPED CALLSIGN": "TRUE",
+         "USER INFO SHOWN": "NONE",
+         "WINDOW SIZE": "10"
+      },
+      "audio": {
+         "DVK ENABLE": "FALSE",
+         "DVK LOCALIZED MESSAGES ENABLE": "FALSE",
+         "DVK PATH": "DVK",
+         "DVK RECORDER": "C:\\radio\\tr4w\\lame_enc.dll",
+         "MP3 PATH": "C:\\tr4w-d12\\tr4w\\target\\2026 ARRL-10 NY4I\\MP3",
+         "MP3 PLAYER": "",
+         "MP3 RECORDER ENABLE": "FALSE",
+         "USE RECORDED SIGNS": "FALSE"
+      },
+      "cluster": {
+         "BROADCAST ALL PACKET DATA": "TRUE",
+         "CONNECTION AT STARTUP": "TRUE"
+      },
+      "contest": {
+         "AUTO QSL INTERVAL": "0",
+         "AUTO-CQ DELAY TIME": "3000",
+         "BEEP EVERY 10 QSOS": "FALSE",
+         "CATEGORY-ASSISTED": "ASSISTED",
+         "CATEGORY-BAND": "ALL",
+         "CATEGORY-MODE": "SSB",
+         "CATEGORY-OPERATOR": "SINGLE-OP",
+         "CATEGORY-OVERLAY": "ONE",
+         "CATEGORY-POWER": "HIGH",
+         "CATEGORY-TRANSMITTER": "ONE",
+         "COUNT DOMESTIC COUNTRIES": "FALSE",
+         "CUSTOM INITIAL EXCHANGE STRING": "",
+         "EXCHANGE MEMORY ENABLE": "TRUE",
+         "GRID MAP CENTER": "",
+         "INITIAL EXCHANGE CURSOR POS": "AT END",
+         "INITIAL EXCHANGE OVERWRITE": "FALSE",
+         "INITIAL EXCHANGE": "ZONE",
+         "LITERAL DOMESTIC QTH": "FALSE",
+         "LOG RS SENT": "59",
+         "LOG RST SENT": "599",
+         "LOOK FOR RST SENT": "FALSE",
+         "MESSAGE ENABLE": "TRUE",
+         "MULT REPORT MINIMUM BANDS": "4",
+         "MULTIPLE BANDS": "TRUE",
+         "MULTIPLE MODES": "TRUE",
+         "QSL MODE": "STANDARD",
+         "QSO NUMBER BY BAND": "FALSE",
+         "QTC ENABLE": "FALSE",
+         "QTC EXTRA SPACE": "TRUE",
+         "QTC MINUTES": "FALSE",
+         "QTC QRS": "TRUE",
+         "QUICK QSL KEY 1": "\\",
+         "QUICK QSL KEY 2": "=",
+         "RANDOM CQ MODE": "FALSE",
+         "REMAINING MULT DISPLAY MODE": "HILIGHT",
+         "REVERSE INITIAL EX": "FALSE",
+         "SHOW ALL SERIAL PORTS": "FALSE",
+         "SHOW DOMESTIC MULTIPLIER NAME": "FALSE",
+         "SPRINT QSY RULE": "FALSE",
+         "TEN MINUTE RULE": "NONE"
+      },
+      "cw": {
+         "ALL CW MESSAGES CHAINABLE": "FALSE",
+         "AUTO SEND CHARACTER COUNT": "0",
+         "CODE SPEED": "25",
+         "CW ENABLE": "TRUE",
+         "CW SPEED FROM DATABASE": "FALSE",
+         "CW SPEED INCREMENT": "2",
+         "CW TONE": "0",
+         "INCLUDE F-KEY NUMBER": "TRUE",
+         "ptt": {
+            "NO POLL DURING PTT": "FALSE",
+            "PTT ENABLE": "TRUE",
+            "PTT LOCKOUT": "FALSE",
+            "PTT TURN ON DELAY": "15",
+            "PTT VIA COMMANDS": "TRUE"
+         },
+         "PADDLE MONITOR TONE": "700",
+         "PADDLE PORT": "NONE",
+         "PADDLE PTT HOLD COUNT": "13",
+         "PADDLE SPEED": "0",
+         "QUESTION MARK CHAR": "?",
+         "SEND COMPLETE FOUR LETTER CALL": "FALSE",
+         "SHORT INTEGERS": "FALSE",
+         "SLASH MARK CHAR": "/",
+         "START SENDING NOW KEY": "'",
+         "SWAP PADDLES": "FALSE",
+         "TUNE ALT-D ENABLE": "FALSE",
+         "TUNE WITH DITS": "FALSE"
+      },
+      "files": {
+         "ALLOW AUTO UPDATE": "TRUE",
+         "CALLSIGN UPDATE ENABLE": "TRUE",
+         "COUNTRY INFORMATION FILE": "",
+         "CTY UPDATE CHECK ON STARTUP": "TRUE",
+         "INITIAL EXCHANGE FILENAME": "INITIAL.EX",
+         "MISSINGCALLSIGNS FILE ENABLE": "FALSE",
+         "UNKNOWN COUNTRY FILE NAME": "UNKNOWN.CTY"
+      },
+      "hardware": {
+         "STEREO CONTROL PIN": "9",
+         "STEREO PIN HIGH": "FALSE",
+         "USE CONTROL PORT": "FALSE"
+      },
+      "logging": {
+         "CHECK LOG FILE SIZE": "TRUE",
+         "UNKNOWN COUNTRY FILE ENABLE": "TRUE",
+         "UPDATE RESTART FILE ENABLE": "TRUE"
+      },
+      "network": {
+         "COMPUTER NAME": "Radio1",
+         "INTERCOM FILE ENABLE": "FALSE",
+         "MULTI MULTS ONLY": "FALSE",
+         "NET STATUS UPDATE INTERVAL": "5000"
+      },
+      "operating": {
+         "ALT-D BUFFER ENABLE": "FALSE",
+         "ALT-D CQ ENABLE": "TRUE",
+         "ALWAYS CALL BLIND CQ": "FALSE",
+         "ASK FOR FREQUENCIES": "FALSE",
+         "AUTO CALL TERMINATE": "FALSE",
+         "AUTO DISPLAY DUPE QSO": "TRUE",
+         "AUTO DUPE ENABLE CQ": "FALSE",
+         "AUTO DUPE ENABLE S AND P": "TRUE",
+         "AUTO QSO NUMBER DECREMENT": "TRUE",
+         "AUTO RETURN TO CQ MODE": "TRUE",
+         "AUTO S&P ENABLE SENSITIVITY": "500",
+         "AUTO S&P ENABLE": "FALSE",
+         "AUTO TIME INCREMENT": "0",
+         "bandmap": {
+            "BAND MAP ITEM HEIGHT": "14",
+            "BAND MAP ITEM WIDTH": "135",
+            "BAND MAP SIZE": "4",
+            "BAND MAP SPLIT MODE": "BY CUTOFF FREQ",
+            "CALL WINDOW SHOW ALL SPOTS": "FALSE",
+            "SWAP PACKET SPOT RADIOS": "FALSE"
+         },
+         "CONFIRM EDIT CHANGES": "TRUE",
+         "CUSTOM USER STRING": "",
+         "DE ENABLE": "FALSE",
+         "DIGITAL MODE ENABLE": "FALSE",
+         "DISTANCE MODE": "MILES",
+         "DIT DAH RATIO": "3",
+         "DUPE CHECK SOUND": "DUPE BEEP",
+         "DUPE SHEET AUTO RESET": "TRUE",
+         "ESCAPE EXITS SEARCH AND POUNCE": "TRUE",
+         "FARNSWORTH ENABLE": "FALSE",
+         "FARNSWORTH SPEED": "25",
+         "FREQUENCY MEMORY ENABLE": "TRUE",
+         "FREQUENCY POLL RATE": "10",
+         "scoring": {
+            "HAMSCORE ENABLE": "FALSE",
+            "HAMSCORE PASSWORD": "",
+            "HAMSCORE SEND CONTACT INFO": "TRUE",
+            "HAMSCORE URL": "http://scoredistributor.net/",
+            "HAMSCORE USERNAME": "",
+            "SCORE POSTING URL": "https://post.contestonlinescore.com/post/",
+            "SCORE READING URL": "https://contestonlinescore.com/scoreboard/"
+         },
+         "HF BAND ENABLE": "TRUE",
+         "IE SWITCH": "FALSE",
+         "IN BAND LOCKOUT": "FALSE",
+         "INCREMENT TIME ENABLE": "FALSE",
+         "KEYPAD CW MEMORIES": "FALSE",
+         "LEADING ZERO CHARACTER": "0",
+         "LEADING ZEROS": "3",
+         "LEAVE CURSOR IN CALL WINDOW": "FALSE",
+         "LOG FREQUENCY ENABLE": "FALSE",
+         "LOG SUB TITLE": "",
+         "LOG WITH SINGLE ENTER": "FALSE",
+         "MAIN CALLSIGN": "",
+         "MODE": "CW",
+         "POSSIBLE CALL ACCEPT KEY": ";",
+         "POSSIBLE CALL LEFT KEY": ",",
+         "POSSIBLE CALL MODE": "ALL",
+         "POSSIBLE CALL RIGHT KEY": ".",
+         "QSX ENABLE": "TRUE",
+         "QSY INACTIVE RADIO": "FALSE",
+         "QZB RANDOM OFFSET ENABLE": "FALSE",
+         "RADIUS OF EARTH": "0.00",
+         "SAY HI ENABLE": "FALSE",
+         "SAY HI RATE CUTOFF": "200",
+         "SHIFT KEY ENABLE": "TRUE",
+         "SKIP ACTIVE BAND": "FALSE",
+         "SPACE BAR DUPE CHECK ENABLE": "TRUE",
+         "STATIONS CALLSIGNS MASK": "",
+         "SWAP RADIO RELAY SENSE": "FALSE",
+         "TWO RADIO MODE": "FALSE",
+         "VHF BAND ENABLE": "FALSE",
+         "WAIT FOR STRENGTH": "TRUE",
+         "WAKE UP TIME OUT": "0",
+         "WARC BAND ENABLE": "TRUE",
+         "WEIGHT": "1.00"
+      },
+      "other": {
+         "BACKUP LOG FILE NAME": "Z:\\LOGBACK.TR4W",
+         "BACKUP LOG FREQUENCY": "5",
+         "BAND MAP ALL BANDS": "FALSE",
+         "BAND MAP ALL MODES": "FALSE",
+         "BAND MAP CALL WINDOW ENABLE": "TRUE",
+         "BAND MAP DECAY TIME": "1",
+         "BAND MAP DISPLAY CQ": "FALSE",
+         "BAND MAP DISPLAY GHZ": "FALSE",
+         "BAND MAP DISPLAY LIMIT": "499",
+         "BAND MAP DUPE DISPLAY": "FALSE",
+         "BAND MAP ENABLE": "TRUE",
+         "BAND MAP MULTS ONLY": "TRUE",
+         "BAND MAP SO2R DISPLAY": "FALSE",
+         "BOLD FONT": "FALSE",
+         "COLUMN DUPESHEET ENABLE": "FALSE",
+         "COMPUTER ID": "A",
+         "EXTERNAL LOGGER ADDRESS": "127.0.0.1",
+         "EXTERNAL LOGGER ENABLED": "FALSE",
+         "EXTERNAL LOGGER PORT": "52001",
+         "EXTERNAL LOGGER": "DXKEEPER",
+         "FONT SIZE": "2",
+         "MAIN FONT": "Arial",
+         "MMTTY ENGINE": "C:\\Ham\\MMTTY\\mmtty.exe",
+         "MP3 RECORDER BITRATE": "16",
+         "MP3 RECORDER DURATION": "EACH QSO",
+         "MY CALL": "NY4I",
+         "MY CHECK": "",
+         "MY CONTINENT": "NA",
+         "MY COUNTRY": "K",
+         "MY FD CLASS": "",
+         "MY FOC NUMBER": "",
+         "MY GRID": "EL88",
+         "MY IOTA": "",
+         "MY ITU ZONE": "8",
+         "MY NAME": "TOM",
+         "MY PARK": "",
+         "MY POSTAL CODE": "33761",
+         "MY PREC": "",
+         "MY SECTION": "WCF",
+         "MY STATE": "FL",
+         "MY ZONE": "5",
+         "RADIO TCP SERVER PORT": "52002",
+         "SCP COUNTRY STRING": "",
+         "SCP MINIMUM LETTERS": "0",
+         "SERVER ADDRESS": "127.0.0.1",
+         "SERVER AUTO SYNCHRONIZE LOG ON CONNECT": "TRUE",
+         "SERVER PASSWORD": "",
+         "SERVER PORT": "1061",
+         "SPOT COLLECTOR ENABLED": "TRUE",
+         "TELNET SERVER": "dxc.ng7m.com:7373",
+         "WSJT-X BROADCAST PORT": "2237",
+         "WSJT-X ENABLED": "TRUE",
+         "WSJT-X MULTICAST GROUP": "224.0.0.73",
+         "WSJT-X RADIO CONTROL ENABLED": "FALSE",
+         "WSJT-X SEND HIGHLIGHTS": "TRUE",
+         "YCCC SO2R ENABLE": "FALSE"
+      },
+      "scp": {
+         "NAME FLAG ENABLE": "TRUE",
+         "PARTIAL CALL ENABLE": "TRUE",
+         "POSSIBLE CALLS": "TRUE",
+         "WILDCARD PARTIALS": "TRUE"
+      }
+   },
+   "rotators": [
+      {
+         "id": "6BEAB7B4-6A41-4D03-8B97-91F255315AFC",
+         "name": "PSTRotator",
+         "rotatorId": "PSTROTATOR",
+         "controlPort": "NONE",
+         "baudRate": 0,
+         "ipAddress": "127.0.0.1",
+         "udpPort": 12000,
+         "bands": ""
+      },
+      {
+         "id": "FD0F5783-5864-4CF1-B93A-1BA330B09ED6",
+         "name": "RT-21 SerialV",
+         "rotatorId": "DCU1",
+         "controlPort": "SERIAL 3",
+         "baudRate": 0,
+         "ipAddress": "",
+         "udpPort": 0,
+         "bands": "20 17 15 12 10 6"
+      }
+   ],
+   "bandPlan": {},
+   "colors": {
+      "ARROW": {
+         "fg": "RED",
+         "bg": "BTNFACE"
+      },
+      "BAND MODE": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "BEAM HEADING": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "CALL": {
+         "fg": "BLACK",
+         "bg": "WHITE"
+      },
+      "CLOCK": {
+         "fg": "LIGHT RED",
+         "bg": "LIGHT CYAN"
+      },
+      "CODE SPEED": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "COMPUTER ID": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "COUNTRY NAME": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "CQ COUNTER": {
+         "fg": "MAGENTA",
+         "bg": "BTNFACE"
+      },
+      "CQ TOTAL": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "OPERATOR": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "DATE": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "DUPE INFO CALL": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "EDITABLE LOG": {
+         "fg": "BLACK",
+         "bg": "WHITE"
+      },
+      "EXCHANGE": {
+         "fg": "BLACK",
+         "bg": "WHITE"
+      },
+      "FOOT SWITCH": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "FULL TIME": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "GRID LOCATOR": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "HOUR RATE": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "INSERT": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "LAST QSO TIME": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "LOCAL TIME": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "MASTER": {
+         "fg": "WHITE",
+         "bg": "BLUE"
+      },
+      "MULT": {
+         "fg": "BLACK",
+         "bg": "YELLOW"
+      },
+      "MULTIPLIER INFORMATION": {
+         "fg": "BLACK",
+         "bg": "WHITE"
+      },
+      "NAME": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "NETWORK": {
+         "fg": "BLACK",
+         "bg": "WHITE"
+      },
+      "ON AIR TIME": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "OP MODE": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "PADDLE": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "POSSIBLE CALL": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "PREVIOUS QSOS": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "PTT": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "QSO B4": {
+         "fg": "WHITE",
+         "bg": "RED"
+      },
+      "QSO INFORMATION": {
+         "fg": "BLACK",
+         "bg": "WHITE"
+      },
+      "QSO NUMBER": {
+         "fg": "BLACK",
+         "bg": "WHITE"
+      },
+      "QUICK COMMAND": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "RADIO ONE FREQ": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "RADIO ONE NAME": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "RADIO TWO FREQ": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "RADIO TWO NAME": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "RATE": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "S&P COUNTER": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "STATIONS": {
+         "fg": "BLACK",
+         "bg": "WHITE"
+      },
+      "TEN MINUTES": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "TOTAL SCORE": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "USER INFO": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "WHOLE SCREEN": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "WINKEYER": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      },
+      "WSJTX": {
+         "fg": "BLACK",
+         "bg": "BTNFACE"
+      }
+   },
+   "clusters": [
+      {
+         "name": "NG7M",
+         "server": "dxc.ng7m.com:7373",
+         "loginCall": "NY4I-4",
+         "password": "",
+         "connectCommand": ""
+      },
+      {
+         "name": "HamAlert",
+         "server": "hamalert.org:7300",
+         "loginCall": "NY4I",
+         "password": "",
+         "connectCommand": ""
+      },
+      {
+         "name": "MockServer",
+         "server": "127.0.0.1:2323",
+         "loginCall": "",
+         "password": "",
+         "connectCommand": ""
+      }
+   ],
+   "cabrilloHeader": {
+      "_CATEGORY-MODE": "SSB",
+      "_CATEGORY-POWER": "HIGH",
+      "_OPERATORS": "NY4I",
+      "_CLUB": "Florida Contest Group",
+      "_LOCATION": "WCF",
+      "_NAME": "Tom Schaefer",
+      "_ADDRESS": "2836 Meadow HIll Dr N",
+      "_ADDRESS-CITY": "Clearwater",
+      "_ADDRESS-STATE-PROVINCE": "FL",
+      "_ADDRESS-POSTALCODE": "33761",
+      "_ADDRESS-COUNTRY": "USA",
+      "_EMAIL": "ny4i@ny4i.com",
+      "_CATEGORY-TRANSMITTER": "ONE",
+      "_CATEGORY-STATION": "FIXED",
+      "_CATEGORY-TIME": "12-HOURS",
+      "_CATEGORY-OVERLAY": "CLASSIC"
+   },
+   "ermakHeader": {},
+   "radios": [
+      {
+         "id": "30DD01C1-1655-42B9-A17B-D0CF409A24B2",
+         "name": "7100-18V",
+         "registryId": "IC7100",
+         "transport": "SERIAL",
+         "controlPort": "SERIAL 18",
+         "baudRate": 19200,
+         "serialFormat": "8N1",
+         "catRTS": "OFF",
+         "catDTR": "OFF",
+         "ipAddress": "127.0.0.1",
+         "tcpPort": 50001,
+         "networkUsername": "",
+         "networkPassword": "",
+         "keyerOutputPort": "NONE",
+         "keyerRTS": "OFF",
+         "keyerDTR": "CW",
+         "keyerStopBits": 0,
+         "cwByCAT": false,
+         "cwSpeedSync": false,
+         "useHamLib": false,
+         "hamLibID": 0,
+         "receiverAddress": 0,
+         "icomDataModeID": 0,
+         "icomFilterByte": 0,
+         "wideCWFilter": false,
+         "ft1000mpCWReverse": false,
+         "frequencyAdder": 0,
+         "startupCommand": "",
+         "pollingEnable": true,
+         "autoInfoLevel": -1
+      },
+      {
+         "id": "D4D9BBA4-4896-4695-98F3-51E4F82708D1",
+         "name": "Icom 7100",
+         "registryId": "IC7100",
+         "transport": "SERIAL",
+         "controlPort": "SERIAL 18",
+         "baudRate": 19200,
+         "serialFormat": "8N1",
+         "catRTS": "",
+         "catDTR": "",
+         "ipAddress": "",
+         "tcpPort": 0,
+         "networkUsername": "",
+         "networkPassword": "",
+         "keyerOutputPort": "NONE",
+         "keyerRTS": "",
+         "keyerDTR": "",
+         "keyerStopBits": 0,
+         "cwByCAT": false,
+         "cwSpeedSync": false,
+         "useHamLib": false,
+         "hamLibID": 0,
+         "receiverAddress": 136,
+         "icomDataModeID": 0,
+         "icomFilterByte": 0,
+         "wideCWFilter": false,
+         "ft1000mpCWReverse": false,
+         "frequencyAdder": 0,
+         "startupCommand": "",
+         "pollingEnable": true,
+         "autoInfoLevel": 0
+      },
+      {
+         "id": "70772795-BAC1-4E6C-B0BE-D8B861E79430",
+         "name": "K4D-278",
+         "registryId": "K4",
+         "transport": "NETWORK",
+         "controlPort": "NONE",
+         "baudRate": 38400,
+         "serialFormat": "8N1",
+         "catRTS": "NONE",
+         "catDTR": "NONE",
+         "ipAddress": "192.168.73.108",
+         "tcpPort": 9200,
+         "networkUsername": "",
+         "networkPassword": "",
+         "keyerOutputPort": "NONE",
+         "keyerRTS": "NONE",
+         "keyerDTR": "NONE",
+         "keyerStopBits": 0,
+         "cwByCAT": false,
+         "cwSpeedSync": false,
+         "useHamLib": false,
+         "hamLibID": 0,
+         "receiverAddress": 0,
+         "icomDataModeID": 0,
+         "icomFilterByte": 0,
+         "wideCWFilter": false,
+         "ft1000mpCWReverse": false,
+         "frequencyAdder": 0,
+         "startupCommand": "KY <;",
+         "pollingEnable": true,
+         "autoInfoLevel": -1
+      },
+      {
+         "id": "BEE48355-634C-498C-9E53-DE26D6B8DFF2",
+         "name": "K3S",
+         "registryId": "K3",
+         "transport": "SERIAL",
+         "controlPort": "SERIAL 15",
+         "baudRate": 38400,
+         "serialFormat": "8N1",
+         "catRTS": "NONE",
+         "catDTR": "NONE",
+         "ipAddress": "",
+         "tcpPort": 0,
+         "networkUsername": "",
+         "networkPassword": "",
+         "keyerOutputPort": "NONE",
+         "keyerRTS": "NONE",
+         "keyerDTR": "NONE",
+         "keyerStopBits": 0,
+         "cwByCAT": false,
+         "cwSpeedSync": false,
+         "useHamLib": false,
+         "hamLibID": 0,
+         "receiverAddress": 0,
+         "icomDataModeID": 0,
+         "icomFilterByte": 0,
+         "wideCWFilter": false,
+         "ft1000mpCWReverse": false,
+         "frequencyAdder": 0,
+         "startupCommand": "KY <;",
+         "pollingEnable": true,
+         "autoInfoLevel": 0
+      },
+      {
+         "id": "966A1F7A-0928-42C5-B61E-BBB9E4EA6B8D",
+         "name": "FT1000",
+         "registryId": "FT1000MP",
+         "transport": "SERIAL",
+         "controlPort": "SERIAL 14",
+         "baudRate": 4800,
+         "serialFormat": "8N2",
+         "catRTS": "OFF",
+         "catDTR": "ON",
+         "ipAddress": "",
+         "tcpPort": 0,
+         "networkUsername": "",
+         "networkPassword": "",
+         "keyerOutputPort": "NONE",
+         "keyerRTS": "NONE",
+         "keyerDTR": "NONE",
+         "keyerStopBits": 0,
+         "cwByCAT": false,
+         "cwSpeedSync": false,
+         "useHamLib": false,
+         "hamLibID": 0,
+         "receiverAddress": 0,
+         "icomDataModeID": 0,
+         "icomFilterByte": 0,
+         "wideCWFilter": false,
+         "ft1000mpCWReverse": false,
+         "frequencyAdder": 0,
+         "startupCommand": "",
+         "pollingEnable": true,
+         "autoInfoLevel": -1
+      },
+      {
+         "id": "BB9380D2-ECCC-4EA0-A181-E49E8F6D4D9A",
+         "name": "9700-IP",
+         "registryId": "IC9700",
+         "transport": "NETWORK",
+         "controlPort": "NONE",
+         "baudRate": 19200,
+         "serialFormat": "8N1",
+         "catRTS": "NONE",
+         "catDTR": "NONE",
+         "ipAddress": "192.168.73.171",
+         "tcpPort": 50001,
+         "networkUsername": "",
+         "networkPassword": "",
+         "keyerOutputPort": "NONE",
+         "keyerRTS": "NONE",
+         "keyerDTR": "NONE",
+         "keyerStopBits": 0,
+         "cwByCAT": true,
+         "cwSpeedSync": true,
+         "useHamLib": false,
+         "hamLibID": 0,
+         "receiverAddress": 0,
+         "icomDataModeID": 0,
+         "icomFilterByte": 0,
+         "wideCWFilter": false,
+         "ft1000mpCWReverse": false,
+         "frequencyAdder": 0,
+         "startupCommand": "",
+         "pollingEnable": true,
+         "autoInfoLevel": 0
+      },
+      {
+         "id": "D66CA7D7-6170-4B79-A4D6-1CE03EE95CF6",
+         "name": "K40",
+         "registryId": "K4",
+         "transport": "NETWORK",
+         "controlPort": "NONE",
+         "baudRate": 38400,
+         "serialFormat": "8N1",
+         "catRTS": "NONE",
+         "catDTR": "NONE",
+         "ipAddress": "192.168.73.159",
+         "tcpPort": 9200,
+         "networkUsername": "",
+         "networkPassword": "",
+         "keyerOutputPort": "NONE",
+         "keyerRTS": "NONE",
+         "keyerDTR": "NONE",
+         "keyerStopBits": 0,
+         "cwByCAT": true,
+         "cwSpeedSync": true,
+         "useHamLib": false,
+         "hamLibID": 0,
+         "receiverAddress": 0,
+         "icomDataModeID": 0,
+         "icomFilterByte": 0,
+         "wideCWFilter": false,
+         "ft1000mpCWReverse": false,
+         "frequencyAdder": 0,
+         "startupCommand": "",
+         "pollingEnable": true,
+         "autoInfoLevel": -1
+      },
+      {
+         "id": "808E113C-B832-4BD9-9FF7-A979480C1C6C",
+         "name": "IC7760",
+         "registryId": "IC7760",
+         "transport": "NETWORK",
+         "controlPort": "NONE",
+         "baudRate": 19200,
+         "serialFormat": "8N1",
+         "catRTS": "NONE",
+         "catDTR": "NONE",
+         "ipAddress": "192.168.73.196",
+         "tcpPort": 50001,
+         "networkUsername": "",
+         "networkPassword": "",
+         "keyerOutputPort": "NONE",
+         "keyerRTS": "NONE",
+         "keyerDTR": "NONE",
+         "keyerStopBits": 0,
+         "cwByCAT": true,
+         "cwSpeedSync": true,
+         "useHamLib": false,
+         "hamLibID": 0,
+         "receiverAddress": 0,
+         "icomDataModeID": 0,
+         "icomFilterByte": 0,
+         "wideCWFilter": false,
+         "ft1000mpCWReverse": false,
+         "frequencyAdder": 0,
+         "startupCommand": "",
+         "pollingEnable": true,
+         "autoInfoLevel": -1
+      },
+      {
+         "id": "D02DC7BE-2805-489D-9BEA-DE2903DCBA70",
+         "name": "IC-7110",
+         "registryId": "IC7110",
+         "transport": "SERIAL",
+         "controlPort": "NONE",
+         "baudRate": 19200,
+         "serialFormat": "8N1",
+         "catRTS": "NONE",
+         "catDTR": "NONE",
+         "ipAddress": "",
+         "tcpPort": 50001,
+         "networkUsername": "",
+         "networkPassword": "",
+         "keyerOutputPort": "NONE",
+         "keyerRTS": "NONE",
+         "keyerDTR": "NONE",
+         "keyerStopBits": 0,
+         "cwByCAT": false,
+         "cwSpeedSync": false,
+         "useHamLib": false,
+         "hamLibID": 0,
+         "receiverAddress": 0,
+         "icomDataModeID": 0,
+         "icomFilterByte": 0,
+         "wideCWFilter": false,
+         "ft1000mpCWReverse": false,
+         "frequencyAdder": 0,
+         "startupCommand": "",
+         "pollingEnable": true,
+         "autoInfoLevel": -1
+      },
+      {
+         "id": "112CDEB6-9502-46A0-890C-6D5A5A132428",
+         "name": "IC-718",
+         "registryId": "IC718",
+         "transport": "SERIAL",
+         "controlPort": "SERIAL 17",
+         "baudRate": 4800,
+         "serialFormat": "8N1",
+         "catRTS": "NONE",
+         "catDTR": "NONE",
+         "ipAddress": "",
+         "tcpPort": 0,
+         "networkUsername": "",
+         "networkPassword": "",
+         "keyerOutputPort": "NONE",
+         "keyerRTS": "NONE",
+         "keyerDTR": "NONE",
+         "keyerStopBits": 0,
+         "cwByCAT": false,
+         "cwSpeedSync": false,
+         "useHamLib": false,
+         "hamLibID": 0,
+         "receiverAddress": 0,
+         "icomDataModeID": 0,
+         "icomFilterByte": 0,
+         "wideCWFilter": false,
+         "ft1000mpCWReverse": false,
+         "frequencyAdder": 0,
+         "startupCommand": "",
+         "pollingEnable": true,
+         "autoInfoLevel": -1
+      }
+   ],
+   "profiles": [
+      {
+         "name": "Default",
+         "radio1Id": "",
+         "radio2Id": "D66CA7D7-6170-4B79-A4D6-1CE03EE95CF6",
+         "cwOutput1Id": "",
+         "cwOutput2Id": "",
+         "radio1": "",
+         "radio2": "K40",
+         "defaultActiveSlot": 1,
+         "cwOutput1": "NONE",
+         "cwOutput2": "NONE"
+      },
+      {
+         "name": "K4/7100",
+         "radio1Id": "70772795-BAC1-4E6C-B0BE-D8B861E79430",
+         "radio2Id": "30DD01C1-1655-42B9-A17B-D0CF409A24B2",
+         "cwOutput1Id": "",
+         "cwOutput2Id": "",
+         "radio1": "K4D-278",
+         "radio2": "7100-18V",
+         "defaultActiveSlot": 1,
+         "cwOutput1": "CAT",
+         "cwOutput2": "CAT"
+      },
+      {
+         "name": "K4/K3",
+         "radio1Id": "70772795-BAC1-4E6C-B0BE-D8B861E79430",
+         "radio2Id": "BEE48355-634C-498C-9E53-DE26D6B8DFF2",
+         "cwOutput1Id": "",
+         "cwOutput2Id": "",
+         "radio1": "K4D-278",
+         "radio2": "K3S",
+         "defaultActiveSlot": 1,
+         "cwOutput1": "CAT",
+         "cwOutput2": "CAT"
+      },
+      {
+         "name": "K3-7100",
+         "radio1Id": "BEE48355-634C-498C-9E53-DE26D6B8DFF2",
+         "radio2Id": "30DD01C1-1655-42B9-A17B-D0CF409A24B2",
+         "cwOutput1Id": "",
+         "cwOutput2Id": "",
+         "radio1": "K3S",
+         "radio2": "7100-18V",
+         "defaultActiveSlot": 1,
+         "cwOutput1": "CAT",
+         "cwOutput2": "CAT"
+      },
+      {
+         "name": "K4 SO1R",
+         "radio1Id": "70772795-BAC1-4E6C-B0BE-D8B861E79430",
+         "radio2Id": "",
+         "cwOutput1Id": "",
+         "cwOutput2Id": "",
+         "radio1": "K4D-278",
+         "radio2": "",
+         "defaultActiveSlot": 1,
+         "cwOutput1": "CAT",
+         "cwOutput2": "NONE"
+      },
+      {
+         "name": "testSave",
+         "radio1Id": "D4D9BBA4-4896-4695-98F3-51E4F82708D1",
+         "radio2Id": "BB9380D2-ECCC-4EA0-A181-E49E8F6D4D9A",
+         "cwOutput1Id": "",
+         "cwOutput2Id": "",
+         "radio1": "Icom 7100",
+         "radio2": "9700-IP",
+         "defaultActiveSlot": 1,
+         "cwOutput1": "CAT",
+         "cwOutput2": "WinKeyer"
+      },
+      {
+         "name": "9700/7100",
+         "radio1Id": "BB9380D2-ECCC-4EA0-A181-E49E8F6D4D9A",
+         "radio2Id": "30DD01C1-1655-42B9-A17B-D0CF409A24B2",
+         "cwOutput1Id": "",
+         "cwOutput2Id": "",
+         "radio1": "9700-IP",
+         "radio2": "7100-18V",
+         "defaultActiveSlot": 1,
+         "cwOutput1": "CAT",
+         "cwOutput2": "WinKeyer"
+      },
+      {
+         "name": "7100-18/K3",
+         "radio1Id": "30DD01C1-1655-42B9-A17B-D0CF409A24B2",
+         "radio2Id": "BEE48355-634C-498C-9E53-DE26D6B8DFF2",
+         "cwOutput1Id": "",
+         "cwOutput2Id": "",
+         "radio1": "7100-18V",
+         "radio2": "K3S",
+         "defaultActiveSlot": 1,
+         "cwOutput1": "CAT",
+         "cwOutput2": "CAT"
+      },
+      {
+         "name": "FT1000/K3",
+         "radio1Id": "966A1F7A-0928-42C5-B61E-BBB9E4EA6B8D",
+         "radio2Id": "BEE48355-634C-498C-9E53-DE26D6B8DFF2",
+         "cwOutput1Id": "",
+         "cwOutput2Id": "",
+         "radio1": "FT1000",
+         "radio2": "K3S",
+         "defaultActiveSlot": 1,
+         "cwOutput1": "NONE",
+         "cwOutput2": "CAT"
+      },
+      {
+         "name": "K3/FT1000",
+         "radio1Id": "BEE48355-634C-498C-9E53-DE26D6B8DFF2",
+         "radio2Id": "966A1F7A-0928-42C5-B61E-BBB9E4EA6B8D",
+         "cwOutput1Id": "",
+         "cwOutput2Id": "",
+         "radio1": "K3S",
+         "radio2": "FT1000",
+         "defaultActiveSlot": 1,
+         "cwOutput1": "CAT",
+         "cwOutput2": "NONE"
+      },
+      {
+         "name": "K4Z/K3",
+         "radio1Id": "D66CA7D7-6170-4B79-A4D6-1CE03EE95CF6",
+         "radio2Id": "BEE48355-634C-498C-9E53-DE26D6B8DFF2",
+         "cwOutput1Id": "",
+         "cwOutput2Id": "",
+         "radio1": "K40",
+         "radio2": "K3S",
+         "defaultActiveSlot": 1,
+         "cwOutput1": "CAT",
+         "cwOutput2": "CAT"
+      },
+      {
+         "name": "K4D/K40",
+         "radio1Id": "70772795-BAC1-4E6C-B0BE-D8B861E79430",
+         "radio2Id": "D66CA7D7-6170-4B79-A4D6-1CE03EE95CF6",
+         "cwOutput1Id": "",
+         "cwOutput2Id": "",
+         "radio1": "K4D-278",
+         "radio2": "K40",
+         "defaultActiveSlot": 1,
+         "cwOutput1": "CAT",
+         "cwOutput2": "NONE"
+      },
+      {
+         "name": "IC7760/K4D",
+         "radio1Id": "808E113C-B832-4BD9-9FF7-A979480C1C6C",
+         "radio2Id": "70772795-BAC1-4E6C-B0BE-D8B861E79430",
+         "cwOutput1Id": "",
+         "cwOutput2Id": "C1DA88FA-F4EE-4EA0-B9EA-97F82B281B7A",
+         "radio1": "IC7760",
+         "radio2": "K4D-278",
+         "defaultActiveSlot": 1,
+         "cwOutput1": "CAT",
+         "cwOutput2": "WinKeyer"
+      },
+      {
+         "name": "test5",
+         "radio1Id": "",
+         "radio2Id": "",
+         "cwOutput1Id": "",
+         "cwOutput2Id": "",
+         "radio1": "",
+         "radio2": "",
+         "defaultActiveSlot": 1,
+         "cwOutput1": "NONE",
+         "cwOutput2": "NONE"
+      },
+      {
+         "name": "FT1000/K4D",
+         "radio1Id": "966A1F7A-0928-42C5-B61E-BBB9E4EA6B8D",
+         "radio2Id": "70772795-BAC1-4E6C-B0BE-D8B861E79430",
+         "cwOutput1Id": "",
+         "cwOutput2Id": "",
+         "radio1": "FT1000",
+         "radio2": "K4D-278",
+         "defaultActiveSlot": 1,
+         "cwOutput1": "NONE",
+         "cwOutput2": "NONE"
+      },
+      {
+         "name": "IC718/IC7000",
+         "radio1Id": "112CDEB6-9502-46A0-890C-6D5A5A132428",
+         "radio2Id": "30DD01C1-1655-42B9-A17B-D0CF409A24B2",
+         "cwOutput1Id": "",
+         "cwOutput2Id": "",
+         "radio1": "IC-718",
+         "radio2": "7100-18V",
+         "defaultActiveSlot": 1,
+         "cwOutput1": "NONE",
+         "cwOutput2": "NONE"
+      },
+      {
+         "name": "IC7100 Only",
+         "radio1Id": "30DD01C1-1655-42B9-A17B-D0CF409A24B2",
+         "radio2Id": "",
+         "cwOutput1Id": "",
+         "cwOutput2Id": "",
+         "radio1": "7100-18V",
+         "radio2": "",
+         "defaultActiveSlot": 1,
+         "cwOutput1": "CAT",
+         "cwOutput2": "NONE"
+      }
+   ],
+   "keyers": [
+      {
+         "id": "C1DA88FA-F4EE-4EA0-B9EA-97F82B281B7A",
+         "name": "WinKeyer",
+         "kind": "WINKEYER",
+         "port": "SERIAL 20",
+         "wkKeyerMode": "",
+         "wkSidetoneFrequency": "",
+         "wkAutospace": false,
+         "wkCTSpacing": false,
+         "wkIgnoreSpeedPot": false,
+         "wkPaddleOnlySidetone": false,
+         "wkPaddleSwap": false,
+         "wkSidetoneEnable": false,
+         "wkWeight": 0,
+         "wkLeadInTime": 0,
+         "wkTailTime": 0,
+         "wkDitDahRatio": 0,
+         "wkFirstExtension": 0,
+         "wkKeyerCompensation": 0,
+         "wkPaddleSwitchpoint": 0
+      }
+   ],
+   "udpBroadcast": {
+      "allQSOs": false,
+      "enabled": true,
+      "destinations": [
+         {
+            "address": "192.168.73.255",
+            "port": 12060,
+            "streams": [
+               "contact",
+               "lookup"
+            ]
+         },
+         {
+            "address": "192.168.73.255",
+            "port": 12040,
+            "streams": [
+               "rotor"
+            ]
+         },
+         {
+            "address": "pi400",
+            "port": 12062,
+            "streams": [
+               "contact",
+               "lookup"
+            ]
+         },
+         {
+            "address": "127.0.0.1",
+            "port": 12060,
+            "streams": [
+               "contact"
+            ]
+         }
+      ]
+   },
+   "windows": {
+      "Main": {
+         "left": 1832,
+         "top": 244,
+         "right": 2844,
+         "bottom": 906,
+         "visible": true
+      },
+      "BandMap": {
+         "left": 40,
+         "top": 40,
+         "right": 1083,
+         "bottom": 233,
+         "visible": false
+      },
+      "DupeSheet1": {
+         "left": 743,
+         "top": 23,
+         "right": 1179,
+         "bottom": 262,
+         "visible": false
+      },
+      "FunctionKeys": {
+         "left": 1637,
+         "top": 944,
+         "right": 2640,
+         "bottom": 971,
+         "visible": true
+      },
+      "Master": {
+         "left": 1864,
+         "top": 15,
+         "right": 2123,
+         "bottom": 154,
+         "visible": false
+      },
+      "RemMults": {
+         "left": 73,
+         "top": 693,
+         "right": 829,
+         "bottom": 932,
+         "visible": false
+      },
+      "Radio1": {
+         "left": 893,
+         "top": 44,
+         "right": 1531,
+         "bottom": 253,
+         "visible": true
+      },
+      "Radio2": {
+         "left": 1157,
+         "top": 882,
+         "right": 1347,
+         "bottom": 981,
+         "visible": true
+      },
+      "Telnet": {
+         "left": 349,
+         "top": 355,
+         "right": 1519,
+         "bottom": 760,
+         "visible": false
+      },
+      "Network": {
+         "left": 587,
+         "top": 772,
+         "right": 1144,
+         "bottom": 972,
+         "visible": true
+      },
+      "MMTTY": {
+         "left": 300,
+         "top": 400,
+         "right": 664,
+         "bottom": 951,
+         "visible": false
+      },
+      "Intercom": {
+         "left": 330,
+         "top": 400,
+         "right": 550,
+         "bottom": 600,
+         "visible": false
+      },
+      "PostScores": {
+         "left": 459,
+         "top": 378,
+         "right": 695,
+         "bottom": 617,
+         "visible": false
+      },
+      "Stations": {
+         "left": 136,
+         "top": 155,
+         "right": 612,
+         "bottom": 494,
+         "visible": false
+      },
+      "StationsRMDX": {
+         "left": 435,
+         "top": 430,
+         "right": 655,
+         "bottom": 630,
+         "visible": false
+      },
+      "StationsRMDOM": {
+         "left": 279,
+         "top": 146,
+         "right": 499,
+         "bottom": 346,
+         "visible": false
+      },
+      "StationsRMZone": {
+         "left": 578,
+         "top": 158,
+         "right": 798,
+         "bottom": 358,
+         "visible": false
+      },
+      "MP3Recorder": {
+         "left": 510,
+         "top": 400,
+         "right": 730,
+         "bottom": 600,
+         "visible": false
+      },
+      "StationsRMPrefix": {
+         "left": 116,
+         "top": 432,
+         "right": 336,
+         "bottom": 632,
+         "visible": false
+      },
+      "DupeSheet2": {
+         "left": 570,
+         "top": 400,
+         "right": 790,
+         "bottom": 600,
+         "visible": false
+      },
+      "HamScore": {
+         "left": 596,
+         "top": 306,
+         "right": 1290,
+         "bottom": 654,
+         "visible": false
+      },
+      "BandPlan": {
+         "left": 3,
+         "top": 257,
+         "right": 672,
+         "bottom": 580,
+         "visible": true
+      },
+      "Panadapter": {
+         "left": 1731,
+         "top": 25,
+         "right": 2571,
+         "bottom": 405,
+         "visible": true
+      },
+      "Panadapter1": {
+         "left": 446,
+         "top": 24,
+         "right": 1286,
+         "bottom": 404,
+         "visible": false
+      },
+      "Panadapter2": {
+         "left": 2457,
+         "top": 38,
+         "right": 3130,
+         "bottom": 626,
+         "visible": false
+      },
+      "SearchLog": {
+         "left": 2653,
+         "top": 335,
+         "right": 3473,
+         "bottom": 715,
+         "visible": true
+      },
+      "ViewEditLog": {
+         "left": 1973,
+         "top": 218,
+         "right": 2873,
+         "bottom": 678,
+         "visible": false
+      },
+      "Unused17": {
+         "left": 510,
+         "top": 400,
+         "right": 730,
+         "bottom": 600,
+         "visible": false
+      }
+   }
+}
