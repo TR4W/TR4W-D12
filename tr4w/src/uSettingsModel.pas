@@ -949,12 +949,20 @@ type
      derivation puts the group first and these commands already do.
      Settings.My.Call reads oddly for a moment and then stops.
 
-     STRINGS, NOT ShortStrings. The globals are Str10/Str20/CallString, and
-     the instinct is that a string property costs a narrowing conversion at
-     every reader. Measured on MY POSTAL CODE before committing to it: of
-     its four readers, THREE already wrote string(MyPostalCode) to get a
-     real string out. A string property deletes those casts rather than
-     adding any.
+     STRINGS, NOT ShortStrings, AND THAT IS NOT A PREFERENCE -- IT IS THE
+     ONLY OPTION. A ShortString property CANNOT BE PUBLISHED: FPC answers
+     "This kind of property cannot be published", because its RTTI carries
+     no writer for tkSString. Tried on 2026-09-12 precisely because the
+     alternative looked cheaper, and it is not available.
+
+     SO THE COST IS REAL AND IS PAID AT THE BOUNDARY. These globals are
+     concatenated into Str40 exchange templates all over fcontest -- 58
+     such assignments tree-wide -- and a UTF-16 value assigned to a
+     ShortString is a narrowing conversion the build counts. The pattern
+     is to build the whole expression as a string and UTF8Encode ONCE at
+     the assignment: an AnsiString-family value assigned to a ShortString
+     is not a narrowing conversion, and callsigns, zones and sections are
+     ASCII by construction.
 
      MIGRATED IN BATCHES, and this is the first. The seventeen have 778
      references between them -- MY CALL alone has 154 -- so they arrive a

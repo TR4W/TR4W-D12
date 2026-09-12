@@ -35,48 +35,48 @@ uses
   LogWind,
   uTR4WStrings;
 
-type
-  TOtherMessageType = packed record
-    omCommand: PAnsiChar;
-    omCWMessage: MessagePointer;
-    omSSBMessage: MessagePointer;
-  end;
+(* TWO TABLES OF POINTERS DELETED, 2026-09-12.
 
-  TOtherShortMessageType = packed record
-    osmCommand: PAnsiChar;
-    osmMessage: PAnsiChar;
-  end;
+  NY4I: "do not keep any table of pointers" and "move to strings" -- and, of
+  the arrangement that was here: "that was an artifact of prior
+  implementation."
+
+  WHAT WAS HERE. OthermessagesArray held nine rows of
+  (command format, ^ShortString, ^ShortString) -- the address of a message
+  global, dereferenced as omCWMessage^ to read it. OtherShortMessagesArray
+  held four rows of (command, PAnsiChar) into the single-character short
+  memories. Both are CFGCA's shape in miniature: a hand-typed table whose
+  entries the compiler cannot check against what they point at.
+
+  IT HAD ALREADY DRIFTED, which is the argument rather than tidiness. The
+  table lists TAIL END %s MESSAGE, and that command's CFGCA row is COMMENTED
+  OUT -- so the editor offers a message the config vocabulary no longer has.
+  Two tables naming the same nine things, and they disagree. Naming the
+  globals directly means the compiler checks every one.
+
+  AND IT IS WHAT BLOCKS Str40 FROM BECOMING string. MessagePointer is
+  ^ShortString; changing the globals' type with this table in place would
+  either not compile or, worse, still compile. *)
 
 procedure DisplaymessagesList(mt: MesWindowType; MessageMode: ModeType);
 procedure EditMessage;
 
 const
-  NumberOfOtherMessages                 = 9;
-  OthermessagesArray                    : array[0..NumberOfOtherMessages - 1] of TOtherMessageType =
-{(*}
-    (
-    (omCommand: 'CALL OK NOW %s MESSAGE';    omCWMessage: @CorrectedCallMessage;          omSSBMessage: @CorrectedCallPhoneMessage),
-    (omCommand: 'CQ %s EXCHANGE';            omCWMessage: @CQExchange;                    omSSBMessage: @CQPhoneExchange),
-    (omCommand: 'CQ %s EXCHANGE NAME KNOWN'; omCWMessage: @CQExchangeNameKnown;           omSSBMessage: @CQPhoneExchangeNameKnown),
-    (omCommand: 'QSL %s MESSAGE';            omCWMessage: @QSLMessage;                    omSSBMessage: @QSLPhoneMessage),
-    (omCommand: 'QSO BEFORE %s MESSAGE';     omCWMessage: @QSOBeforeMessage;              omSSBMessage: @QSOBeforePhoneMessage),
-    (omCommand: 'QUICK QSL %s MESSAGE';      omCWMessage: @QuickQSLMessage1;              omSSBMessage: @QuickQSLPhoneMessage),
-    (omCommand: 'REPEAT S&P %s EXCHANGE';    omCWMessage: @RepeatSearchAndPounceExchange; omSSBMessage: @RepeatSearchAndPouncePhoneExchange),
-    (omCommand: 'S&P %s EXCHANGE';           omCWMessage: @SearchAndPounceExchange;       omSSBMessage: @SearchAndPouncePhoneExchange),
-    (omCommand: 'TAIL END %s MESSAGE';       omCWMessage: @TailEndMessage;                omSSBMessage: @TailEndPhoneMessage)
-{*)}
-  );
-
+  NumberOfOtherMessages      = 9;
   NumberOfOtherShortMessages = 4;
-  OtherShortMessagesArray: array[0..NumberOfOtherShortMessages - 1] of TOtherShortMessageType =
-{(*}
-    (
-    (osmCommand: 'SHORT 0'; osmMessage: @Short0  ),
-    (osmCommand: 'SHORT 1'; osmMessage: @Short1  ),
-    (osmCommand: 'SHORT 2'; osmMessage: @Short2  ),
-    (osmCommand: 'SHORT 9'; osmMessage: @Short9  )
-{*)}
-);
+
+(* The command NAME is still a table -- it is data, and a format string with
+  one %s in it. What is gone is the table of ADDRESSES beside it. *)
+function OtherMessageCommandFormat(aIndex: integer): AnsiString;
+
+(* The message ITSELF, by index and mode, naming each global directly so the
+  compiler checks the pairing. AnsiString and not string: every one of these
+  globals is a ShortString, so widening here is free where a UTF-16 return
+  would narrow again at the caller. *)
+function OtherMessageText(aIndex: integer; aMode: ModeType): AnsiString;
+
+function ShortMessageCommand(aIndex: integer): AnsiString;
+function ShortMessageText(aIndex: integer): AnsiString;
 
 var
 
@@ -99,8 +99,89 @@ var
 procedure ShowAltP;
 
 implementation
+
+
 uses MainUnit,
   uAltPForm;   { the view -- see ShowAltP }
+
+function OtherMessageCommandFormat(aIndex: integer): AnsiString;
+begin
+   case aIndex of
+      0: Result := 'CALL OK NOW %s MESSAGE';
+      1: Result := 'CQ %s EXCHANGE';
+      2: Result := 'CQ %s EXCHANGE NAME KNOWN';
+      3: Result := 'QSL %s MESSAGE';
+      4: Result := 'QSO BEFORE %s MESSAGE';
+      5: Result := 'QUICK QSL %s MESSAGE';
+      6: Result := 'REPEAT S&P %s EXCHANGE';
+      7: Result := 'S&P %s EXCHANGE';
+      8: Result := 'TAIL END %s MESSAGE';
+   else
+      Result := '';
+   end;
+end;
+
+function OtherMessageText(aIndex: integer; aMode: ModeType): AnsiString;
+begin
+   Result := '';
+   if aMode = Phone then
+      begin
+      case aIndex of
+         0: Result := CorrectedCallPhoneMessage;
+         1: Result := CQPhoneExchange;
+         2: Result := CQPhoneExchangeNameKnown;
+         3: Result := QSLPhoneMessage;
+         4: Result := QSOBeforePhoneMessage;
+         5: Result := QuickQSLPhoneMessage;
+         6: Result := RepeatSearchAndPouncePhoneExchange;
+         7: Result := SearchAndPouncePhoneExchange;
+         8: Result := TailEndPhoneMessage;
+         end;
+      end
+   else
+      begin
+      case aIndex of
+         0: Result := CorrectedCallMessage;
+         1: Result := CQExchange;
+         2: Result := CQExchangeNameKnown;
+         3: Result := QSLMessage;
+         4: Result := QSOBeforeMessage;
+         5: Result := QuickQSLMessage1;
+         6: Result := RepeatSearchAndPounceExchange;
+         7: Result := SearchAndPounceExchange;
+         8: Result := TailEndMessage;
+         end;
+      end;
+end;
+
+function ShortMessageCommand(aIndex: integer): AnsiString;
+begin
+   case aIndex of
+      0: Result := 'SHORT 0';
+      1: Result := 'SHORT 1';
+      2: Result := 'SHORT 2';
+      3: Result := 'SHORT 9';
+   else
+      Result := '';
+   end;
+end;
+
+(* ONE CHARACTER, AND IT IS A CHARACTER. The table this replaces held a
+  PAnsiChar and read osmMessage[0], with a comment explaining it as a
+  ShortString length byte. It was neither: Short0..Short9 are declared
+  AnsiChar, so index zero WAS the character and the comment described a
+  mechanism that was not there. Naming the variable says what is meant. *)
+function ShortMessageText(aIndex: integer): AnsiString;
+begin
+   case aIndex of
+      0: Result := Short0;
+      1: Result := Short1;
+      2: Result := Short2;
+      3: Result := Short9;
+   else
+      Result := '';
+   end;
+end;
 
 const
   CQCWMEMORYF                           = 'CQ CW MEMORY F %u';
@@ -170,21 +251,14 @@ begin
             and carries only %s, which means the same in wsprintf and in
             SysUtils.Format.  See docs and the TF.Format tranches. }
 
-          RowCommand := SysUtils.Format(AnsiString(OthermessagesArray[TempInt].omCommand),
+          RowCommand := SysUtils.Format(OtherMessageCommandFormat(TempInt),
                                                [string(AnsiString(ModeString))]);
 
           { The message memories are ShortStrings.  The Win32 path wrote a #0
             one byte PAST the length into the live memory to make a PAnsiChar
             of them; assigning the ShortString needs none of that. }
 
-          if TempMode = Phone then
-             begin
-             RowMessage := OthermessagesArray[TempInt].omSSBMessage^;
-             end
-          else
-             begin
-             RowMessage := OthermessagesArray[TempInt].omCWMessage^;
-             end;
+          RowMessage := OtherMessageText(TempInt, TempMode);
 
           AltPAddRow(RowCommand, RowMessage, '', -1);
           end;
@@ -198,8 +272,8 @@ begin
                ShortString whose [0] is its length byte, and the Win32 code
                copied that byte as the text.  Preserved exactly. }
 
-             RowCommand := AnsiString(OtherShortMessagesArray[TempInt].osmCommand);
-             RowMessage := AnsiChar(OtherShortMessagesArray[TempInt].osmMessage[0]);
+             RowCommand := ShortMessageCommand(TempInt);
+             RowMessage := ShortMessageText(TempInt);
 
              AltPAddRow(RowCommand, RowMessage, '', -1);
              end;
