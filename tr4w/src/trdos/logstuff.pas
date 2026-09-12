@@ -395,12 +395,10 @@ var
   //  AskIfContestOver                      : boolean = True;
   AutoAltDWindowString: Str20;
   AutoAltDEnable: boolean;
-  AutoDisplayDupeQSO: boolean;
   AutoQSLCount: Byte {= 0};
   AutoQSLInterval: integer;
 
   BandMapInfoCall: CallString {= ''};
-  BeepEvery10QSOs: boolean;
   BeSilent: boolean;
 
   CallAlreadySent: boolean;
@@ -413,13 +411,9 @@ var
   CallsignICameBackTo: CallString;
   ColumnDupeSheetColor: boolean;
   ColumnDupeSheetEnable: boolean = False;
-  ComputerID: AnsiChar { = CHR(0)};
-  ComputerName: Str10 = 'New';
   ControlBreakStatus: boolean;
-  CountryInformationFile: ShortString;
 
   DebugFlag: boolean;
-  DEEnable: boolean = True;
   DefaultRST: Word;
   DisplayRefresh: integer = 1;
   //  DoingRescore                     : boolean; {KK1L: 6.71}
@@ -462,17 +456,13 @@ var
   FakeBandMap: boolean;
   FirstHelloRecord: HelloRecPtr;
   FirstMultiMessage: integer;
-  BackupLogFrequency: integer;
   //  FloppyFileSaveName                    : ShortString = 'LOGBACK.TRW';
   ForcedEntry: boolean;
   {KK1L: 6.70 switch used in JCTRL2 to add comments to LOGCFG}
 
-  GridMapCenter: GridString;
 
   InactiveRigCallingCQ: boolean;
   InitialExchangePutUp: boolean;
-  InitialExchangeOverwrite: boolean; {KK1L: 6.70}
-  InsertMode: boolean = True;
   //  IntercomFileOpen                 : boolean;
   //  IntercomFileWrite                : Text;
 
@@ -490,12 +480,8 @@ var
 
   LogFileRead: Text;
 
-  LogRSSent: Word = 59;
-  LogRSTSent: Word = 599;
-  LookForRSTSent: boolean;
   LookingForCQExchange: boolean;
 
-  MessageEnable: boolean = True;
   //   ModemPortBaudRate               : integer;
   MultiInfoMessageTimeout: TimeRecord;
   MultiplierFileEnable: boolean;
@@ -508,7 +494,6 @@ var
 
   NameCallsignPutUp: CallString;
 
-  NoLog: boolean;
 
   OldCWTone: integer;
 
@@ -527,18 +512,13 @@ var
   ProcessedMultiMessagesStart: integer;
   ProcessedMultiMessagesEnd: integer;
 
-  QSONumberByBand: boolean;
-  QSXEnable: boolean = True;
 
   QuickQSL: QuickQSLKeyType; { to indicate a quick QSL is desired }
-  QuickQSLKey1: Char = '\';
-  QuickQSLKey2: Char = '=';
   (* RadioServerTCPPort MOVED, 2026-09-10 -- Settings.Radio.TcpServerPort in
     uSettingsModel.  Its default moved into that class's constructor. *)
   // Commander Interface (inbound for WSJT-X)
 
   RadioSetFreq: LONGINT;
-  RandomCQMode: boolean;
   RandomNameEnable: boolean;
   ReadInCallsign: CallString;
   ReadInLogComputerID: AnsiChar;
@@ -569,11 +549,13 @@ var
 
   SendExchangeKeyWhenCWHasStopped: Char = NullKey;
 
-  Sheet: DupeAndMultSheet = (tAutoReset: True);
-  ShortIntegers: boolean;
+  (* NO INITIALISER ANY MORE. The only field this one named, tAutoReset,
+    is Settings.DupeSheet.AutoReset, and the constructor there carries the
+    True. DupeSheetEnable was zeroed by the typed constant and is assigned
+    by cfgdef before anything reads it, so it is unchanged. *)
+  Sheet: DupeAndMultSheet;
   ShowQSOStatusCall: CallString;
   //  ShowSearchAndPounce                   : boolean;
-  StartSendingNowKey: Char = '''';
 
   StationInformationCall: CallString;
   SwitchRadioKey: Char;
@@ -608,8 +590,6 @@ var
   // Issue #732 -- PSTRotator native UDP interface (separate from the N1MM
   // broadcast above).  Active when ActiveRotatorType = PSTRotator.  PstRotator
   // listens on its "UDP Control Port" (default 12000) at the configured host.
-  PSTRotatorIPAddress: string[255] = '127.0.0.1';
-  PSTRotatorUDPPort: integer = 12000;
 
 
   WindowDupeCheckCall: CallString;
@@ -10672,7 +10652,7 @@ var
 begin
   GetSentRSTFromExchangeString := 0;
 
-  if not LookForRSTSent then
+  if not Settings.Log.LookForRstSent then
      begin
      Exit;
      end;
@@ -10864,7 +10844,7 @@ var
 begin
   sBuf := '<PST><AZIMUTH>' + SysUtils.Format('%d', [Heading]) + '</AZIMUTH></PST>';
   // THE ENDPOINT IS A PARAMETER, not a global this looks up for itself. Reading
-  // PSTRotatorIPAddress/PSTRotatorUDPPort here made the rotator library's own
+  // Settings.Rotator.IpAddress/Settings.Rotator.UdpPort here made the rotator library's own
   // per-definition address unreachable, and two PstRotator hosts inexpressible.
   // The caller nominates the rotator; the transport only sends.
   logger.Trace('[SendPSTRotorCommand] -> %s:%d %s',   // Issue #989

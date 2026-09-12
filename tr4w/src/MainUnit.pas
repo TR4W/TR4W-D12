@@ -315,7 +315,6 @@ procedure CheckQuestionMark;
   Application.Run -- and TranslateAccelerator appears nowhere in live code. An
   LCL edit control receives its own clipboard keys, which is what made the
   function unnecessary rather than merely uncalled. *)
-procedure InvertBooleanCommand(Command: PBoolean);
 procedure RunExplorer(Command: PAnsiChar);
 procedure OpenInDefaultTextEditor(const FileName: string);   // Issue #986
 { THE POSSIBLE-CALL LIST'S OWNER-DRAW, declared here because CreateMainWindow
@@ -1061,7 +1060,7 @@ begin
                     ReceivedData) then
       begin
       ReceivedData.ceSearchAndPounce := OpMode = SearchAndPounceOpMode;
-      ReceivedData.ceComputerID := ComputerID;
+      ReceivedData.ceComputerID := Settings.Computer.Id;
 
     // Issue #889: when this is a multi-county or multi-park entry, the
     // parser has queued additional refs and ParametersOkay just stamped
@@ -1314,7 +1313,7 @@ end;
 procedure SpaceBarProc2;
 begin
   if (DupeInfoCall = '') and (CallWindowString = '') and (OpMode = SearchAndPounceOpMode) then // 4.102.3
-    if not DEEnable then
+    if not Settings.Message.DeEnable then
        begin
        SendStringAndStop(UTF8Encode(Settings.My.Call))
        end
@@ -1368,11 +1367,11 @@ begin
 
         InactiveRigCallingCQ := False;
 
-        if MessageEnable then
+        if Settings.Message.Enable then
            begin
            if ActiveMode = CW then
               begin
-              if DEEnable then
+              if Settings.Message.DeEnable then
                  begin
                  SendStringAndStop(DEPlusMyCall)
                  end
@@ -1399,7 +1398,7 @@ begin
         end
      else
         begin
-        if (StartSendingNowKey = ' ') and (OpMode = CQOpMode) then
+        if (Settings.Cw.StartSendingNowKey = ' ') and (OpMode = CQOpMode) then
            begin
            StartSendingNow(True)
            end
@@ -1469,11 +1468,11 @@ begin
 
      InactiveRigCallingCQ := False;
 
-     if MessageEnable then
+     if Settings.Message.Enable then
         begin
         if ActiveMode = CW then
            begin
-           if DEEnable then
+           if Settings.Message.DeEnable then
               begin
               SendStringAndStop(DEPlusMyCall)
               end
@@ -1708,7 +1707,7 @@ begin
   if (length(CallWindowString) = 0)     and 
      (length(ExchangeWindowString) = 0) then
      begin
-     if MessageEnable then
+     if Settings.Message.Enable then
         begin
         TryKillAutoCQ;
         SendFunctionKeyMessage(F1, CQOpMode);
@@ -1774,7 +1773,7 @@ begin
      // CheckInactiveRigCallingCQ;
      if not tAutoSendMode then
         begin
-        if MessageEnable then
+        if Settings.Message.Enable then
            begin
            SetSpeed(DisplayedCodeSpeed); // 4.106.1
            if not SendCrypticMessage(CallWindowString) then
@@ -1787,7 +1786,7 @@ begin
      CallAlreadySent := True;
      ExchangeHasBeenSent := True;
      CallsignICameBackTo := CallWindowString;
-     if MessageEnable then
+     if Settings.Message.Enable then
         begin
         AddOnCQExchange;
         end;
@@ -1817,7 +1816,7 @@ begin
   // IF K5KA.ModeEnabled THEN DupeCheckOnInactiveRadio;
 
   if ExchangeHasBeenSent = False then
-    if MessageEnable and not BeSilent then
+    if Settings.Message.Enable and not BeSilent then
       if not (DebugFlag and (Config.CWTone = 0)) then
          begin
          // Frm.ExchangeWindow . SetFocus;
@@ -1846,7 +1845,7 @@ begin
 
      else
        {................phone.....................}
-       if MessageEnable and 
+       if Settings.Message.Enable and 
           not BeSilent then
           begin
           if QuickQSL <> NoQuickQSLKey then
@@ -1919,7 +1918,7 @@ begin
           end;
 
        SetOpMode(CQOpMode);
-       if MessageEnable then
+       if Settings.Message.Enable then
           begin
           SendFunctionKeyMessage(F1, OpMode);
           end;
@@ -1988,8 +1987,8 @@ begin
 
  // if TwoRadioState = StationCalled then CheckTwoRadioState(ReturnPressed)
  // else
-  if MessageEnable and (not ExchangeHasBeenSent) and (not BeSilent) and
-    MessageEnable then
+  if Settings.Message.Enable and (not ExchangeHasBeenSent) and (not BeSilent) and
+    Settings.Message.Enable then
 
      begin
      // Multi-county exchanges (e.g. "DAL/BAY", "DAL BAY") are handled at the
@@ -2065,9 +2064,9 @@ begin
      begin
      // SetSpeed(DisplayedCodeSpeed);
      // InactiveRigCallingCQ := False;
-     if MessageEnable and not BeSilent then
+     if Settings.Message.Enable and not BeSilent then
         begin
-        if DEEnable then
+        if Settings.Message.DeEnable then
            begin
            Result := SendCrypticMessage(DEPlusMyCall)
            end
@@ -2089,7 +2088,7 @@ begin
 
   else
      begin
-     if Config.DVKEnable and MessageEnable and not BeSilent then
+     if Config.DVKEnable and Settings.Message.Enable and not BeSilent then
         begin
         SendFunctionKeyMessage(F1, SearchAndPounceOpMode);
         end;
@@ -2104,7 +2103,7 @@ procedure SendB4;
 var
   QTC: integer;
 begin
-  if AutoDisplayDupeQSO then
+  if Settings.DupeSheet.AutoDisplayQso then
      begin
      ShowPreviousDupeQSOs(CallWindowString, ActiveBand, ActiveMode);
      // EditableLogDisplayed := True;
@@ -2123,17 +2122,17 @@ begin
               AddStringToBuffer(' B4 ', Config.CWTone);
               // WAEQTC (CallWindowString);
               end
-           else if MessageEnable and not BeSilent then
+           else if Settings.Message.Enable and not BeSilent then
               begin
               SendCrypticMessage(CallWindowString + ' ' + QSOBeforeMessage);
               end;
            end;
         // else
-        // if MessageEnable and not BeSilent then
+        // if Settings.Message.Enable and not BeSilent then
         // SendCrypticMessage(CallWindowString + ' ' + QSOBeforeMessage);
 
         end
-     else if MessageEnable and not BeSilent then
+     else if Settings.Message.Enable and not BeSilent then
        { if CallAlreadySent = False then
       SendCrypticMessage(CallWindowString + ' ' + QSOBeforeMessage)
       else
@@ -5211,7 +5210,7 @@ begin
 
     menu_send_message:
       begin
-        NetIntercomMessage.imSender := ComputerID;
+        NetIntercomMessage.imSender := Settings.Computer.Id;
         FillChar(NetIntercomMessage.imMessage, SizeOf(NetIntercomMessage.imMessage), 0);
         tInputDialogLowerCase := True;
         NetIntercomMessage.imMessage :=
@@ -5229,7 +5228,23 @@ begin
 
     menu_mainwindow_setfocus: FrmSetFocus;
 
-    menu_insertmode: InvertBooleanCommand(@InsertMode);
+    menu_insertmode:
+      begin
+        (* TOGGLE, SAVE, TELL THE OTHER POSITION -- the three things
+          InvertBooleanCommand did through the config array, written out
+          because there is no row to look the setting up in any more.
+
+          The REPAINT is the one thing not written here, and deliberately:
+          the property setter raises the change and uSettingsEffects calls
+          DisplayInsertMode. That is the point of the move -- the old hook
+          ran only when CheckCommand applied a row, which is why this menu
+          item had to go round through the array to get the INS/OVR panel
+          redrawn at all. *)
+        Settings.CallWindow.InsertMode := not Settings.CallWindow.InsertMode;
+        SaveSettings(TR4WConfigFileName, Settings);
+        SendParameterToNetwork('INSERT MODE',
+                               string(StrPas(BA[Settings.CallWindow.InsertMode])));
+      end;
 
     menu_ctrl_SplitOff: // n4af 4.47.5
       tr4w_alt_n_transmit_frequency;
@@ -5973,14 +5988,14 @@ begin
   // '=' repeat-last-CW-message is handled centrally in the main message loop
   // (tr4w.lpr WM_CHAR) so it works in both the call and exchange windows.
   // start sending now code
-  if Key = StartSendingNowKey then
+  if Key = Settings.Cw.StartSendingNowKey then
     if tAutoSendMode = False then
       if OpMode = CQOpMode then
         if ActiveMode = CW then
           if CallWindowString <> '' then
             // if (not StringHas(CallWindowString, '/')) then
              begin
-             if MessageEnable then
+             if Settings.Message.Enable then
                 begin
                 CheckInactiveRigCallingCQ;
                 DebugMsg('[CallWindowKeyDownProc] Call AddStringToBuffer with ' +
@@ -6021,7 +6036,7 @@ begin
         end
      else
         begin
-        if Key <> StartSendingNowKey then
+        if Key <> Settings.Cw.StartSendingNowKey then
            begin
            // B2: the three-way keyer branch that stood here (CAT sends the char
            // plus its terminator, WinKeyer sends UpCase'd, CPU buffers the raw
@@ -6044,7 +6059,7 @@ begin
      exit;
      end;
   // CallsignsList.CreatePartialsList(CallWindowString);
-  if not InsertMode then
+  if not Settings.CallWindow.InsertMode then
      begin
      // OVERTYPE: select the character under the caret, so the next keystroke
      // replaces it instead of being inserted before it.  This was
@@ -6336,7 +6351,7 @@ begin
 
 
   if ID = tw_NETWINDOW_INDEX then
-    if not (ComputerID in ['A'..'Z']) then
+    if not (Settings.Computer.Id in ['A'..'Z']) then
        begin
        // showwarning(TC_SETCOMPUTERIDVALUE);
 
@@ -6843,7 +6858,7 @@ begin
      SetEntrySel(TR4WExchangeEdit, 0, 0); // 4.108.8
      end;
 
-  if InitialExchangeOverwrite then
+  if Settings.Contest.InitialExchangeOverwrite then
      begin
      SetEntrySel(TR4WExchangeEdit, 0, -1);
      end;
@@ -6932,7 +6947,7 @@ begin
   ExchangeErrorMessage := '';
   ExchangeErrorToken := '';   // Issue #1010
 
-  if NoLog then
+  if Settings.Log.Disabled then
      begin
      ParametersOkay := False;
      QuickDisplay(TC_SORRYNOLOG);
@@ -7007,11 +7022,11 @@ begin
      if RData.RSTSent = 0 then
        if ActiveMode = Phone then
           begin
-          RData.RSTSent := (LogRSSent)
+          RData.RSTSent := (Settings.Log.RsSent)
           end
        else
           begin
-          RData.RSTSent := (LogRSTSent);
+          RData.RSTSent := (Settings.Log.RstSent);
           end;
 
      // LocateCall(RData.Callsign, RData.QTH, True);
@@ -7068,11 +7083,11 @@ begin
      FillChar(RData.RSTSent, SizeOf(RData.RSTSent), 0);
      if ActiveMode in [Phone, FM] then
         begin
-        RData.RSTSent := LogRSSent;
+        RData.RSTSent := Settings.Log.RsSent;
         end
      else
         begin
-        RData.RSTSent := LogRSTSent;
+        RData.RSTSent := Settings.Log.RstSent;
         end;
      end;
 
@@ -7144,11 +7159,11 @@ begin
   if RData.RSTReceived = 0 then
     if ActiveMode in [Phone, FM] then
        begin
-       RData.RSTReceived := LogRSSent
+       RData.RSTReceived := Settings.Log.RsSent
        end
     else
        begin
-       RData.RSTReceived := LogRSTSent;
+       RData.RSTReceived := Settings.Log.RstSent;
        end;
 
   RData.ExchString := ExchangeString;
@@ -8858,18 +8873,18 @@ begin
      Exit;
      end;
 
-  // if (Key = QuickQSLKey1) or (Key = QuickQSLKey2) then
+  // if (Key = Settings.Message.QuickQslKey1) or (Key = Settings.Message.QuickQslKey2) then
   begin
     if ParametersOkay(CallWindowString, ExchangeWindowString, ActiveBand,
       ActiveMode, ActiveRadioPtr.LastDisplayedFreq, ReceivedData) then
       // if ProcessExchange(ExchangeWindowString, ReceivedData) then
 
        begin
-       if MessageEnable then
+       if Settings.Message.Enable then
           begin
 
           SendCorrectCallIfNeeded;
-          if Key = QuickQSLKey1 then
+          if Key = Settings.Message.QuickQslKey1 then
              begin
              if ActiveMode = Phone then
                 begin
@@ -8880,7 +8895,7 @@ begin
                 SendCrypticMessage(QuickQSLMessage1);
                 end;
              end;
-          if Key = QuickQSLKey2 then
+          if Key = Settings.Message.QuickQslKey2 then
              begin
              SendCrypticMessage(QuickQSLMessage2);
              end;
@@ -8913,7 +8928,7 @@ begin
                         begin
                         Exit;
                         end;
-                   CallWindowKeyDownProc(integer(StartSendingNowKey));
+                   CallWindowKeyDownProc(Ord(Settings.Cw.StartSendingNowKey));
                    end;
 end;
 
@@ -9163,7 +9178,7 @@ function AddRecordToLogAndSendToNetwork(var CE: ContestExchange): boolean;
 begin
   CE.ceQSOID1 := STARTTIMEOFTHETR4W;
   CE.ceQSOID2 := GetTickCount64;
-  CE.ceComputerID := ComputerID;
+  CE.ceComputerID := Settings.Computer.Id;
   CE.ceContest := Contest;
   CE.Band := ActiveBand;
   CE.Mode := ActiveMode;
@@ -9718,7 +9733,7 @@ begin
      if TempBand <> TempRXData.Band then
         begin
         if (HourDisplay = BandChangesThisComputer) and
-           (TempRXData.ceComputerID <> ComputerID) then
+           (TempRXData.ceComputerID <> Settings.Computer.Id) then
            begin
            Continue;
            end;
@@ -10278,22 +10293,13 @@ begin
   ShowMessage(Format(TC_SCANNOTEDITEDHERE, [cmd]));
 end;
 
-procedure InvertBooleanCommand(Command: PBoolean);
-var
-  i: integer;
-begin
-  for i := 1 to CommandsArraySize do
-    if CFGCA[i].crAddress = Command then
-       begin
-       InvertBoolean(Command^);
-       (* THROUGH SetCFGCommandValue, which applies AND persists through the
-         configuration store. The ini write that stood here reached a file
-         nothing reads: INSERT MODE, its only caller'''s row, is csJSON. *)
-       SetCFGCommandValue(string(StrPas(CFGCA[i].crCommand)),
-                          string(StrPas(BA[Command^])));
-       RunCommandRedrawProc(i);
-       end;
-end;
+(* InvertBooleanCommand IS GONE, with the row its only caller looked up.
+
+  It took the ADDRESS of a global and scanned CFGCA for the row whose
+  crAddress matched, which is a lookup that cannot survive the settings model
+  -- a published property has no address. Its one caller was the Alt-menu
+  INSERT MODE item, which now toggles the property, saves, and announces the
+  change itself; see menu_insertmode above. *)
 
 (* ShowHelp IS GONE (2026-09-07), with the CHM help system it drove.
 

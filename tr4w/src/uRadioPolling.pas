@@ -177,7 +177,7 @@ begin
    DisplayAutoSendCharacterCount;
    VisibleLog.ShowRemainingMultipliers; //wli
 
-   if QSONumberByBand then
+   if Settings.Contest.QsoNumberByBand then
       begin
       DisplayNextQSONumber;
       end;

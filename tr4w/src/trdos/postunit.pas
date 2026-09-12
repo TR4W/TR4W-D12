@@ -582,7 +582,7 @@ procedure CreateCabrilloFile;
 
        * it emits t for EVERY multi-op entry, so an M/M log carries a column the
          specification says it should not have; and
-       * it sets t from `TempRXData.ceComputerID = ComputerID`, which is "was
+       * it sets t from `TempRXData.ceComputerID = Settings.Computer.Id`, which is "was
          this QSO logged on the machine doing the export", not "which
          transmitter made it".  With three PCs on transmitter 1 and two on
          transmitter 2 that is simply the wrong split.
@@ -3163,7 +3163,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 CABRILLO_HISEX := UpperCase( CABRILLO_HISEX );
 
                 if CategoryOperator = coMULTIOP then
-                  if TempRXData.cecomputerid = ComputerID then // 4.73.6
+                  if TempRXData.cecomputerid = Settings.Computer.Id then // 4.73.6
 
                      begin
                      T4 := '1'

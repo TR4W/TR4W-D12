@@ -85,6 +85,7 @@ uses
    LOGSTUFF,     // SendPSTRotorCommand -- the UDP socket, reused not rebuilt
    LOGWIND,      // RotatorType / RotatorTypeSA, for the legacy seed
    uRotatorRegistry,
+   uSettingsModel, // Settings.Rotator -- the PstRotator endpoint
    MainUnit;     // logger
 
 type
@@ -103,7 +104,7 @@ type
       LastHeading: integer;
       { THE UDP ENDPOINT, on the rotator rather than in a global.
 
-        It was two globals -- PSTRotatorIPAddress and PSTRotatorUDPPort, fed by
+        It was two globals -- Settings.Rotator.IpAddress and Settings.Rotator.UdpPort, fed by
         the PSTROTATOR IP ADDRESS / UDP PORT rows in tr4w.ini -- while the
         rotator LIBRARY had IPAddress and UDPPort on every definition, edited in
         Preferences and saved to tr4w.json. Two owners, and the one the operator
@@ -333,11 +334,11 @@ begin
    live.BaudRate  := aBaudRate;
    if live.IPAddress = '' then
       begin
-      live.IPAddress := string(PSTRotatorIPAddress);
+      live.IPAddress := string(Settings.Rotator.IpAddress);
       end;
    if live.UDPPort = 0 then
       begin
-      live.UDPPort := PSTRotatorUDPPort;
+      live.UDPPort := Settings.Rotator.UdpPort;
       end;
    if (aIPAddress = '') or (aUDPPort = 0) then
       begin

@@ -302,7 +302,7 @@ begin
 
                         //    RemoveWindow(NameSentWindow);
                         //    RemoveWindow(CountryNameWindow);
-         //    DisplayInsertMode(InsertMode);
+         //    DisplayInsertMode(Settings.CallWindow.InsertMode);
      //      if not Settings.Qtc.Enable then
      //      begin
      //        EscapeDeletedCallEntry := CallWindowString;
@@ -355,7 +355,7 @@ begin
       ExchangeWindowString := InitialExchange;
           //{WLI}                Write (ExchangeWindowString);
                           {TR6.74 - need to do this since IntialExchangeEntry does not }
-      if InitialExchangeOverwrite then
+      if Settings.Contest.InitialExchangeOverwrite then
          begin
          InitialExchangePutUp := ExchangeWindowString <> '';
          end;
@@ -1078,7 +1078,7 @@ begin
          begin
          LastCQFrequency := 0;
          end;
-      if (AutoCQMemory = F1) and RandomCQMode then
+      if (AutoCQMemory = F1) and Settings.Cq.RandomMode then
          begin
          Count := 0;
          repeat
@@ -1397,7 +1397,7 @@ begin
                    begin
                    FlushCWBuffer;
                    end;
-                if (KeyRecentlyPressed(F1, 600)) or (not DEEnable) then
+                if (KeyRecentlyPressed(F1, 600)) or (not Settings.Message.DeEnable) then
                    begin
                    SendCrypticMessage(UTF8Encode(Settings.My.Call))
                    end
@@ -1411,7 +1411,7 @@ begin
              else
                if ActiveMode = Digital then
                   begin
-                  if DEEnable then     // wli issue 277
+                  if Settings.Message.DeEnable then     // wli issue 277
                      begin
                      SendCrypticMessage(UTF8Encode(CallWindowString + ' DE ' + Settings.My.Call + ' ' + Settings.My.Call))
                      end
@@ -1737,13 +1737,13 @@ begin
   //    DisplayTotalScore (TotalScore);
   DisplayNamePercentage({TotalNamesSent + VisibleLog.NumberNamesSentInEditableLog, TotalContacts});
   //  CheckAvailableMemory;
-  if BeepEvery10QSOs and (TotalContacts mod 10 = 0) then
+  if Settings.Log.BeepEvery10Qsos and (TotalContacts mod 10 = 0) then
      begin
      QuickBeep;
      end;
-  if BackupLogFrequency > 0 then
+  if Settings.Log.BackupFrequency > 0 then
     if QSOTotals[AllBands, Both] > 0 then
-      if QSOTotals[AllBands, Both] mod BackupLogFrequency = 0 then
+      if QSOTotals[AllBands, Both] mod Settings.Log.BackupFrequency = 0 then
          begin
          BackupLogNow;
          end;
@@ -1829,7 +1829,7 @@ begin
      //{WLI}//        ClrScr;
      //{WLI}        Write (ExchangeWindowString);
              {TR6.74 - because InitialExchangeEntry no longer does this }
-     //{WLI}        IF InitialExchangeOverwrite THEN
+     //{WLI}        IF Settings.Contest.InitialExchangeOverwrite THEN
      //{WLI}            InitialExchangePutUp := ExchangeWindowString <> '';
      //{WLI}        IF InitialExchangeCursorPos = AtStart THEN
      //{WLI}            GoToXY (1, 1)
@@ -1888,7 +1888,7 @@ begin
 //        WindowEditor(CallWindowString, Key, ExtendedKey)
       else
         //wli                WindowEditor(ExchangeWindowString, Key, ExtendedKey);
-        if (Key = StartSendingNowKey) and (ActiveWindow = CallWindow) and (length(CallWindowString) >= 1) then
+        if (Key = Settings.Cw.StartSendingNowKey) and (ActiveWindow = CallWindow) and (length(CallWindowString) >= 1) then
            begin
            //                  if ReminderPostedCount = 0 then
          if Settings.Cq.AutoCallTerminate then
@@ -1901,7 +1901,7 @@ begin
             end;
          if length(CallWindowString) > 0 then
             begin
-            if MessageEnable then
+            if Settings.Message.Enable then
                begin
                AddStringToBuffer(CallWindowString, Config.CWTone);
                if IsCWByCATActive then
@@ -2118,7 +2118,7 @@ begin
                        //wli                            ClrScr;
                        //wli                            Write (ExchangeWindowString);
                                                    {TR6.74 - need to do this since IntialExchangeEntry does not }
-                 if InitialExchangeOverwrite then
+                 if Settings.Contest.InitialExchangeOverwrite then
                     begin
                     InitialExchangePutUp := ExchangeWindowString <> '';
                     end;
@@ -2163,11 +2163,11 @@ begin
                    if CWStillBeingSent then FlushCWBufferAndClearPTT; { Clear CW sent on Inactive Radio}
                    SetUpToSendOnActiveRadio;
                    InactiveRigCallingCQ := False;
-                   if MessageEnable then
+                   if Settings.Message.Enable then
                       begin
                       if ActiveMode = CW then
                          begin
-                         if DEEnable then
+                         if Settings.Message.DeEnable then
                             begin
                             SendStringAndStop(DEPlusMyCall)
                             end
@@ -2232,7 +2232,7 @@ begin
                    begin
                    InactiveRigCallingCQ := False;
                    SetUpToSendOnActiveRadio;
-                   if MessageEnable and not ((Config.CWTone = 0) and DebugFlag) then
+                   if Settings.Message.Enable and not ((Config.CWTone = 0) and DebugFlag) then
                        //wli                                SendFunctionKeyMessage (F1, CQOpMode);
                                                    { This is where the initial CQ gets sent if you
                                                     are in debug mode! }
@@ -2358,7 +2358,7 @@ var
        end;
     if (ActiveMode = CW) and (not TailEnding) and (not CallAlreadySent) then
        begin
-       if MessageEnable and not BeSilent then
+       if Settings.Message.Enable and not BeSilent then
          if not (DebugFlag and (Config.CWTone = 0)) then
             begin
             AddStringToBuffer(CallsignICameBackTo, Config.CWTone);
@@ -2398,15 +2398,15 @@ var
                             //wli                            WAEQTC (CallWindowString);
                   end
                else
-                 if MessageEnable and not BeSilent then
+                 if Settings.Message.Enable and not BeSilent then
                            //wli                                SendCrypticMessage (QSOBeforeMessage);
                end
             else
-              if MessageEnable and not BeSilent then
+              if Settings.Message.Enable and not BeSilent then
                       //wli                            SendCrypticMessage (QSOBeforeMessage);
             end
          else
-           if MessageEnable and not BeSilent then
+           if Settings.Message.Enable and not BeSilent then
                  //wli                        SendCrypticMessage (QSOBeforeMessage);
              if DualingCQState <> NoDualingCQs then
                 begin
@@ -2437,7 +2437,7 @@ var
               //wli                    ClrScr;
         end;
          end;
-      if AutoDisplayDupeQSO then
+      if Settings.DupeSheet.AutoDisplayQso then
          begin
          ShowPreviousDupeQSOs(CallsignICameBackTo, ActiveBand, ActiveMode);
  //        EditableLogDisplayed := True;
@@ -2458,7 +2458,7 @@ var
     end
     else { not a dupe or not AutoDupeEnable }
        begin
-       if MessageEnable and not BeSilent then
+       if Settings.Message.Enable and not BeSilent then
          if not (DebugFlag and (Config.CWTone = 0)) then
              //wli                    AddOnCQExchange;
             begin
@@ -2491,14 +2491,14 @@ var
              begin
              TailEndCallString := '';
                    //wli                    SendCorrectCallIfNeeded;
-         //    if MessageEnable then AddStringToBuffer(TailEndMessage + ' ', Config.CWTone);
+         //    if Settings.Message.Enable then AddStringToBuffer(TailEndMessage + ' ', Config.CWTone);
              repeat
                repeat until NewKeyPressed;
                TempKey := AnsiChar(UpCase(NewReadKey));
                if TempKey <> CarriageReturn then
                  if ValidCallCharacter(Char(TempKey)) or (TempKey = '?') then
                     begin
-                    if MessageEnable then
+                    if Settings.Message.Enable then
                        begin
                        AddStringToBuffer(TempKey, Config.CWTone);
                        end;
@@ -2520,7 +2520,7 @@ var
                         //wli                        SendCorrectCallIfNeeded;
                 if not (DebugFlag and (Config.CWTone = 0)) then
                    begin
-                   if MessageEnable and not (BeSilent or TailEnding) then
+                   if Settings.Message.Enable and not (BeSilent or TailEnding) then
                      if QuickQSL <> NoQuickQSLKey then
                         begin
                         if QuickQSL = QuickKey1 then
@@ -2546,7 +2546,7 @@ var
                    end;
                 end
              else
-               if MessageEnable and not BeSilent then
+               if Settings.Message.Enable and not BeSilent then
                   begin
                   if QuickQSL <> NoQuickQSLKey then
                             //wli                                SendCrypticMessage (QuickQSLPhoneMessage)
@@ -2786,7 +2786,7 @@ begin
              '</timestamp>' + sLineBreak +
              #9 + '<call>' + RXData.Callsign + '</call>' + sLineBreak +
              #9 + '<contestnr>' + IntToStr(Ord(RxData.ceContest)) + '</contestnr>' + sLineBreak +
-             #9 + '<StationName>' +  ComputerName + '</StationName>' + sLineBreak + // Issue 263 NY4I
+             #9 + '<StationName>' +  Settings.Computer.Name + '</StationName>' + sLineBreak + // Issue 263 NY4I
              #9 + '<ID>' + RxData.id + '</ID>' + sLineBreak +
        '</contactdelete>'+ sLineBreak ;
        UDPBroadcaster.Send(usContact, sBuf);
@@ -3024,7 +3024,7 @@ begin
             #9 + '<IsOriginal>True</IsOriginal>' + sLineBreak +
             #9 + '<NetBiosName>' + LocalComputerName + '</NetBiosName>' + sLineBreak +
             #9 + '<IsRunQSO>' + Format('%d',[IfThen(RxData.ceSearchAndPounce,0,1)]) + '</IsRunQSO>' + sLineBreak +
-            #9 + '<StationName>' +  ComputerName + '</StationName>' + sLineBreak + // Issue 263 NY4I
+            #9 + '<StationName>' +  Settings.Computer.Name + '</StationName>' + sLineBreak + // Issue 263 NY4I
             #9 + '<ID>' + RxData.id + '</ID>' + sLineBreak +
             // Issue #750: X-QSO records (kept in the log for NIL
             // protection but not claimed for credit) also report

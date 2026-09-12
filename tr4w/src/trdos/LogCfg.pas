@@ -243,7 +243,7 @@ begin
      Exit;
      end;
 {
-  if BackupLogFrequency > 0 then
+  if Settings.Log.BackupFrequency > 0 then
     if FloppyFileSaveName = '' then
     begin
       showwarning(TC_NOFLOPPYFILESAVENAMESPECIFIED);

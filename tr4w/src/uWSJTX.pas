@@ -990,7 +990,7 @@ begin
                       // unset S&P flag.
                       TempRXData.ceSearchAndPounce := OpMode =
                         SearchAndPounceOpMode;
-                      TempRXData.ceComputerID := ComputerID;
+                      TempRXData.ceComputerID := Settings.Computer.Id;
                       LogContact(TempRXData, True);
                       (* GetTickCount64, and LCLIntf declares it -- as it did
                         GetTickCount, so this was already portable. The point

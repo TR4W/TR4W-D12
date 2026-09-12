@@ -288,7 +288,7 @@ begin
  //    tGetQSOSystemTime(QTCRXData.tSysTime);
  //    QTCRXData.Band := ActiveBand;
  //    QTCRXData.Mode := ActiveMode;
- //    QTCRXData.ceComputerID := ComputerID;
+ //    QTCRXData.ceComputerID := Settings.Computer.Id;
      QTCRXData.Callsign := QTCCallsign;
      {Time}
      QTCRXData.NumberSent := QTCsToBeSendArray[I].qsTime;

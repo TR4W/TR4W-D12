@@ -1853,7 +1853,7 @@ begin
   TempSpot.FDupe := Dupe;
   TempSpot.FMult := Mult;
   TempSpot.FAgeSeconds := 0;
-  TempSpot.FSourceCall := UTF8Encode(Settings.My.Call + '-' + ComputerID);
+  TempSpot.FSourceCall := UTF8Encode(Settings.My.Call + '-' + Settings.Computer.Id);
   TempSpot.FNotes[0] := #0;
   // OUR OWN spot: made now, by definition.
   TempSpot.FSysTime := UTCNow;

@@ -818,7 +818,7 @@ begin
         ContestName := 'RF-VHF-FD';
         Settings.Qso.ByMode := False;
         Settings.Qso.ByBand := True;
-        QSONumberbyBand := True;
+        Settings.Contest.QsoNumberByBand := True;
       end;
 
     EUROPEANVHF:
@@ -910,7 +910,7 @@ begin
         CTY.ctyR150SMode := True;
         ContestName := 'Yuri Gagarin International DX Contest';
         Settings.Qso.ByMode := TRUE;
-        INITIALEXCHANGEOVERWRITE := TRUE;
+        Settings.Contest.InitialExchangeOverwrite := TRUE;
       end;
 
     INTERNETSPRINT:
@@ -951,7 +951,7 @@ begin
     KCJ:
       begin
         ActiveInitialExchange := ZoneInitialExchange; // 4.114.1
-        InitialExchangeOverwrite := True;
+        Settings.Contest.InitialExchangeOverwrite := True;
       end;
 
     KIDSDAY:
@@ -1579,7 +1579,7 @@ begin
            ActiveMode := CW;
            end;
         DomesticMultByBand := dmbbAllBand;
-        InitialExchangeOverwrite := True;
+        Settings.Contest.InitialExchangeOverwrite := True;
         //        ActiveZoneMult := RFChampionchipZones;
         //        ActiveInitialExchange := ZoneInitialExchange;
       end;
@@ -1727,7 +1727,7 @@ begin
       end;
 
     OZHCRVHF:
-      QSONumberByBand := True;
+      Settings.Contest.QsoNumberByBand := True;
 
     //    RADIOMEMORY:
     //      Settings.Contest.CallsignUpdateEnable := False;
@@ -1747,7 +1747,7 @@ begin
           The only one in the tree, and nothing replaces it: this window has
           had no text cursor to position since the DOS port, and the entry
           fields manage their own caret. *)
-        INITIALEXCHANGEOVERWRITE := TRUE;
+        Settings.Contest.InitialExchangeOverwrite := TRUE;
       end;
 
     ARRLDIGI:

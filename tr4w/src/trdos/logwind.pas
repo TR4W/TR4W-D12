@@ -1475,9 +1475,19 @@ procedure DisplayInsertMode;
 var
   s: string;
 begin
+  (* THE MAIN WINDOW MAY NOT EXIST. This is a settings effect now -- the
+    property setter raises the change and uSettingsEffects calls here -- and
+    a setting can be applied before any window is created. Ask the thing
+    that would fault; the same guard, for the same reason, as
+    tDisplayBandMap's. *)
+  if TR4WMainForm = nil then
+     begin
+     Exit;
+     end;
+
   // Chosen here rather than in a lookup table: these are resourcestrings now,
   // and a typed constant would fold whichever English the compiler saw.
-  if InsertMode then
+  if Settings.CallWindow.InsertMode then
      begin
      s := TC_INSERT;
      end
@@ -3765,7 +3775,7 @@ end;
 
 procedure tDispalyMyComputerID;
 begin
-  CID_TWO_BYTES[0] := ComputerID;
+  CID_TWO_BYTES[0] := Settings.Computer.Id;
   TR4WMainForm.pnlComputerID.Caption := string(PAnsiChar(@CID_TWO_BYTES));
 end;
 
@@ -3916,11 +3926,11 @@ begin
 
   if IntegerTime = 0 then
      begin
-     if Sheet.tAutoReset then
+     if Settings.DupeSheet.AutoReset then
         begin
         tClearDupesheet;
         end;
-     if (Sheet.tAutoReset and Settings.Mult.SheetAutoReset) then tClearMultsheet; // 4.52.11
+     if (Settings.DupeSheet.AutoReset and Settings.Mult.SheetAutoReset) then tClearMultsheet; // 4.52.11
      SetProgressMarquee(mpbTourDuration, True);
      end;
 end;

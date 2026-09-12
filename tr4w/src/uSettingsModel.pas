@@ -190,6 +190,15 @@ type
      and into a cell width as `ws + 2 * FontSize - 3`. The old row carried
      crMin:0, crMax:2 and said nothing about what the numbers meant. *)
    TMainFontSize        = 0..2;       // was crMin:0, crMax:2
+   (* THE RS AND RST THIS STATION LOGS AS SENT. Two settings, not one: a
+     phone report has two digits and a CW report three, and the ranges the
+     rows carried say so -- 11..59 and 111..599. Writing them as subranges
+     puts that in the type, where CFGCommandValueAsString and the peer sync
+     both read it out of RTTI. *)
+   TLogRsSent           = 11..59;     // was crMin:11,  crMax:59
+   TLogRstSent          = 111..599;   // was crMin:111, crMax:599
+   TBackupLogFrequency  = 0..65535;   // was crMin:0, crMax:MAXWORD -- QSOs
+   TRotatorUdpPort      = 1..65535;   // was crMin:1, crMax:65535
 
    (*
      THE BASE OF EVERY SETTINGS GROUP.
@@ -632,6 +641,8 @@ type
       FKeypadMemories: boolean;
       FSendCompleteFourLetterCall: boolean;
       FTuneWithDits: boolean;
+      FShortIntegers: boolean;
+      FStartSendingNowKey: Char;
    public
       constructor Create;
    published
@@ -653,6 +664,25 @@ type
         setting rather than withdrawn, because withdrawing a command an
         operator has in a .cfg is a separate decision. *)
       property TuneWithDits: boolean read FTuneWithDits write FTuneWithDits;
+      (* Was the global ShortIntegers in logstuff.pas -- send a serial
+        number's zeros and ones as T and N, the CW abbreviations. LogSend is
+        the one reader and it is CW-only, which is why this is here and not
+        in the log group the command name suggests. *)
+      property ShortIntegers: boolean read FShortIntegers write FShortIntegers;
+      (* Was the global StartSendingNowKey in logstuff.pas -- the key that
+        makes the keyer start sending the call being typed.
+
+        A Char, so WideChar in this tree, and that is a fix rather than a
+        translation: the global was declared Char too, but CheckCommand's
+        ctChar arm wrote ONE BYTE through a PAnsiChar into it. It worked only
+        because the high byte happened to be zero from the initialiser.
+
+        crA: 19 pointed at F_START_SENDING_NOW_KEY, whose whole body is a
+        commented-out line and `Result := True`. There is no side effect to
+        carry over, so this needs no setter -- see the hook table in uCFG,
+        where the slot keeps its place holding nil. *)
+      property StartSendingNowKey: Char
+         read FStartSendingNowKey write FStartSendingNowKey;
    end;
 
    (*
@@ -838,6 +868,8 @@ type
       FPartialCallEnable: boolean;
       FWildcardPartials: boolean;
       FCompleteCallsignMask: string;
+      FInsertMode: boolean;
+      procedure SetInsertMode(aValue: boolean);
    public
       constructor Create;
    published
@@ -866,6 +898,17 @@ type
         with two early exits. *)
       property CompleteCallsignMask: string
          read FCompleteCallsignMask write FCompleteCallsignMask;
+      (* Was the global InsertMode in logstuff.pas -- whether typing in the
+        entry fields inserts or overwrites. INSERT MODE names no window, so
+        it carries an alias; it lives here because the call window is where
+        it is observed and where the Insert key is pressed.
+
+        crP: 8 WAS DisplayInsertMode, which repaints the INS/OVR panel, and
+        the setter raises the change for uSettingsEffects to act on. That
+        hook fired only when CheckCommand applied the row, which is why the
+        Alt-menu toggle had to go the long way round through
+        InvertBooleanCommand to get the panel repainted at all. *)
+      property InsertMode: boolean read FInsertMode write SetInsertMode;
    end;
 
    (*
@@ -887,6 +930,7 @@ type
       FAutoReturnToMode: boolean;
       FEscapeExitsSearchAndPounce: boolean;
       FAutoDelay: TAutoCqDelay;
+      FRandomMode: boolean;
    public
       constructor Create;
    published
@@ -905,6 +949,10 @@ type
       (* Was the global AutoCQDelayTime in LogCW.pas, in MILLISECONDS.
         AUTO-CQ DELAY TIME, hyphenated, so it carries an alias. *)
       property AutoDelay: TAutoCqDelay read FAutoDelay write FAutoDelay;
+      (* Was the global RandomCQMode in logstuff.pas -- alternate between the
+        F1 and F2 CQ memories instead of always sending F1. The command puts
+        the subject in the middle, RANDOM CQ MODE, so it carries an alias. *)
+      property RandomMode: boolean read FRandomMode write FRandomMode;
    end;
 
    (*
@@ -930,6 +978,12 @@ type
       FUpdateRestartFile: boolean;
       FFrequencyEnable: boolean;
       FColumnAutoSize: boolean;
+      FRsSent: TLogRsSent;
+      FRstSent: TLogRstSent;
+      FLookForRstSent: boolean;
+      FBackupFrequency: TBackupLogFrequency;
+      FBeepEvery10Qsos: boolean;
+      FDisabled: boolean;
    public
       constructor Create;
    published
@@ -962,6 +1016,30 @@ type
         when this is on. *)
       property ColumnAutoSize: boolean
          read FColumnAutoSize write FColumnAutoSize;
+      (* Was the global LogRSSent in logstuff.pas -- the phone report this
+        station records as sent. LOG RS SENT derives exactly. *)
+      property RsSent: TLogRsSent read FRsSent write FRsSent;
+      // Was LogRSTSent. LOG RST SENT, and it derives exactly too.
+      property RstSent: TLogRstSent read FRstSent write FRstSent;
+      (* Was LookForRSTSent -- whether the exchange parser accepts a report
+        in the received exchange. The command leads with the verb, so it
+        carries an alias. *)
+      property LookForRstSent: boolean
+         read FLookForRstSent write FLookForRstSent;
+      (* Was BackupLogFrequency -- write a backup every N QSOs, 0 for never.
+        The command is BACKUP LOG FREQUENCY, which puts the group second. *)
+      property BackupFrequency: TBackupLogFrequency
+         read FBackupFrequency write FBackupFrequency;
+      (* Was BeepEvery10QSOs. The digits are what stops this deriving: the
+        rule splits at a capital following a lower-case letter and 10 is
+        neither, so the derived name is BEEP EVERY10 QSOS. *)
+      property BeepEvery10Qsos: boolean
+         read FBeepEvery10Qsos write FBeepEvery10Qsos;
+      (* Was the global NoLog -- refuse to log a QSO at all, for a station
+        that is only demonstrating or checking. NAMED FOR WHAT IT DOES rather
+        than translated: `if Settings.Log.Disabled` reads the way the code
+        means, and the legacy NO LOG still reaches it by alias. *)
+      property Disabled: boolean read FDisabled write FDisabled;
    end;
 
    (*
@@ -1417,6 +1495,223 @@ type
       FMultipleBands: boolean;
       FMultipleModes: boolean;
       FSprintQsyRule: boolean;
+     THIS POSITION'S IDENTITY ON A MULTI-OP NETWORK.
+
+     BOTH NAMES DERIVE EXACTLY, and the group exists because they share a
+     subject rather than to make them derive: COMPUTER ID and COMPUTER NAME
+     are what an operator has always typed.
+
+     THE ID IS LOAD-BEARING AND IS NOT A LABEL. TR4WServer indexes station
+     status BY THE LETTER -- uNet turns it into StatusArray[Ord(id) - Ord('A')
+     + 1] -- so two positions sharing one letter overwrite each other's row,
+     which is what the "computer ID already in use" message is about. That is
+     why the row was ctAlphaChar: A..Z, refused outright, rather than any
+     character. The rule survives the move as a registered value check; see
+     RegisterSettingValueCheck and uCFG's registration of it.
+
+     #0 IS THE UNSET VALUE AND HAS TO STAY ONE. MainUnit asks
+     `not (Id in ['A'..'Z'])` before opening the network window and prompts
+     for the setting; a plausible default of 'A' would silently make every
+     un-configured station claim the first slot.
+
+     NEITHER IS BROADCAST. Both rows carried crNetwork: 0, which is the one
+     sensible answer for a setting whose entire purpose is to be different at
+     each position.
+   *)
+   TComputerSettings = class(TSettingsGroup)
+   private
+      FId: AnsiChar;
+      FName: string;
+      procedure SetName(const aValue: string);
+   public
+      constructor Create;
+   published
+      // Was the global ComputerID in logstuff.pas. COMPUTER ID.
+      property Id: AnsiChar read FId write FId;
+      (* Was ComputerName, a Str10. COMPUTER NAME.
+
+        crP: 6 WAS SetComputerName, which tells the other positions the name
+        changed, so the setter raises the change and uSettingsEffects sends
+        it. The old hook ran only from Preferences. *)
+      property Name: string read FName write SetName;
+   end;
+
+   (*
+     THE ROTATOR BRIDGE -- PstRotator, reached over UDP.
+
+     TWO ALIASES FOR ONE REASON: the commands spell the product's name as a
+     single word, PSTROTATOR, and no identifier can produce that without
+     making the group PstRotator and the derived names PST ROTATOR .... The
+     group is named for the JOB rather than the product, because a second
+     rotator bridge would belong in it.
+
+     uRotatorControl is the only reader and already copies both into its own
+     live record, so nothing here is read on a hot path.
+   *)
+   TRotatorSettings = class(TSettingsGroup)
+   private
+      FIpAddress: string;
+      FUdpPort: TRotatorUdpPort;
+   public
+      constructor Create;
+   published
+      // Was the global PSTRotatorIPAddress in logstuff.pas.
+      property IpAddress: string read FIpAddress write FIpAddress;
+      // Was PSTRotatorUDPPort.
+      property UdpPort: TRotatorUdpPort read FUdpPort write FUdpPort;
+   end;
+
+   (*
+     THE DUPE SHEET -- the window listing calls already worked.
+
+     ONE DERIVES AND ONE DOES NOT. DUPE SHEET AUTO RESET derives exactly;
+     AUTO DISPLAY DUPE QSO buries the subject in the middle, which no
+     property path can do.
+
+     AUTO RESET DEFAULTS TRUE, and that is not the zero a record starts
+     with: logstuff declared `Sheet: DupeAndMultSheet = (tAutoReset: True)`,
+     and that typed constant went with the field. Losing the True would
+     leave a stale dupe sheet across a band change with nothing to say why.
+
+     DupeSheetEnable STAYS IN THE RECORD. It is not a config command -- no
+     CFGCA row names it -- so it is not a setting and moving it would be a
+     different change.
+   *)
+   TDupeSheetSettings = class(TSettingsGroup)
+   private
+      FAutoReset: boolean;
+      FAutoDisplayQso: boolean;
+   public
+      constructor Create;
+   published
+      // Was Sheet.tAutoReset in logstuff.pas. DUPE SHEET AUTO RESET.
+      property AutoReset: boolean read FAutoReset write FAutoReset;
+      // Was the global AutoDisplayDupeQSO. AUTO DISPLAY DUPE QSO.
+      property AutoDisplayQso: boolean
+         read FAutoDisplayQso write FAutoDisplayQso;
+   end;
+
+   (*
+     THE COUNTRY DATABASE. One setting, the name of the CTY.DAT file, and
+     Country.InformationFile derives COUNTRY INFORMATION FILE exactly --
+     the same reason TSpotCollectorSettings is a group of one.
+
+     IT HAS NO READER. The global is declared and nothing looks at it; the
+     country file is opened by name elsewhere. Migrated rather than
+     withdrawn, following the ruling on MY IOTA and on the unknown country
+     file: the command keeps parsing and an existing .cfg keeps being
+     understood.
+
+     NOT ctFileName. The row is ctString, so nothing here inherits the open
+     question about what a path setting validates.
+   *)
+   TCountrySettings = class(TSettingsGroup)
+   private
+      FInformationFile: string;
+   public
+      constructor Create;
+   published
+      // Was the global CountryInformationFile in logstuff.pas.
+      property InformationFile: string
+         read FInformationFile write FInformationFile;
+   end;
+
+   (*
+     THE GRID MAP. One setting -- the four-character square at the centre of
+     the map -- and GridMap.Center derives GRID MAP CENTER exactly.
+
+     ITS ONE READER IS UNREACHABLE. MoveGridMap in logedit walks the centre
+     square with the arrow keys and nothing calls it, and
+     EditableLog.DisplayGridMap has an empty body. Migrated for the same
+     reason as the country file above.
+   *)
+   TGridMapSettings = class(TSettingsGroup)
+   private
+      FCenter: string;
+   published
+      // Was the global GridMapCenter in logstuff.pas, a GridString.
+      property Center: string read FCenter write FCenter;
+   end;
+
+   (*
+     QSX -- a DX station listening on a frequency other than its own.
+     Qsx.Enable derives QSX ENABLE, and logpack is the single reader: with
+     it False, a spot's notes are never scanned for a listening frequency.
+   *)
+   TQsxSettings = class(TSettingsGroup)
+   private
+      FEnable: boolean;
+   public
+      constructor Create;
+   published
+      // Was the global QSXEnable in logstuff.pas.
+      property Enable: boolean read FEnable write FEnable;
+   end;
+
+   (*
+     SENDING A MESSAGE -- the memories, however they are keyed.
+
+     MESSAGE ENABLE IS THE GATE FOR ALL OF THEM, CW and voice alike, which
+     is why this is its own group rather than part of TCwSettings: MainUnit
+     tests `Config.DVKEnable and MessageEnable` in the same breath.
+
+     THE OTHER THREE ARE ALIASED, and all three for the same historical
+     reason -- the names predate any grouping. DE ENABLE decides whether a
+     call is sent as "DE <call>"; the two QSL keys fire a memory directly
+     from the entry field.
+
+     THE KEY NUMBERS ARE WHY QUICK QSL KEY 1 CANNOT DERIVE: the rule splits
+     at a capital and a digit is not one, so Key1 stays welded to the word
+     before it.
+
+     BOTH KEYS ARE Char, hence WideChar here, and both were Char globals
+     written one byte at a time through a PAnsiChar. See the note on
+     Cw.StartSendingNowKey, which had the same defect.
+   *)
+   TMessageSettings = class(TSettingsGroup)
+   private
+      FEnable: boolean;
+      FDeEnable: boolean;
+      FQuickQslKey1: Char;
+      FQuickQslKey2: Char;
+   public
+      constructor Create;
+   published
+      // Was the global MessageEnable in logstuff.pas. MESSAGE ENABLE.
+      property Enable: boolean read FEnable write FEnable;
+      // Was DEEnable.
+      property DeEnable: boolean read FDeEnable write FDeEnable;
+      // Was QuickQSLKey1.
+      property QuickQslKey1: Char read FQuickQslKey1 write FQuickQslKey1;
+      // Was QuickQSLKey2.
+      property QuickQslKey2: Char read FQuickQslKey2 write FQuickQslKey2;
+   end;
+
+   (*
+     THE CONTEST'S OWN PARAMETERS -- AND THIS GROUP IS CONTEST-SCOPED.
+
+     BOTH ARE ASSIGNED BY FCONTEST WHEN A CONTEST LOADS, which is the exact
+     signature TBandSettings records: QSO NUMBER BY BAND is set True for two
+     VHF contests, INITIAL EXCHANGE OVERWRITE for four others, and NOTHING
+     EVER SETS EITHER BACK. As station settings they would be written to
+     settings\tr4w.json by the next unrelated Preferences save, and a VHF
+     field day would permanently give a station per-band serial numbers.
+
+     NEITHER IS A PREFERENCE THE STATION HOLDS. A different contest at the
+     same station wants a different answer, which is the question NY4I's
+     rule asks -- a contest parameter belongs in the contest config in the
+     database and never in tr4w.json.
+
+     WHY THEY ARE IN ONE GROUP DESPITE BEING UNRELATED FEATURES: the scope
+     is a property of the GROUP, not of the property, so a contest-scoped
+     setting has to live in a contest-scoped group. Both aliases exist
+     because that group name necessarily leads the derived name with
+     CONTEST.
+   *)
+   TContestSettings = class(TSettingsGroup)
+   private
+      FQsoNumberByBand: boolean;
+      FInitialExchangeOverwrite: boolean;
    public
       constructor Create;
       class function IsContestScoped: boolean; override;
@@ -1614,6 +1909,12 @@ type
 
         NOTHING IMPLEMENTS THAT. See the class comment above. *)
       property ShowAll: boolean read FShowAll write FShowAll;
+      // Was the global QSONumberByBand in logstuff.pas.
+      property QsoNumberByBand: boolean
+         read FQsoNumberByBand write FQsoNumberByBand;
+      // Was InitialExchangeOverwrite {KK1L: 6.70}.
+      property InitialExchangeOverwrite: boolean
+         read FInitialExchangeOverwrite write FInitialExchangeOverwrite;
    end;
 
    TR4WSettings = class(TPersistent)
@@ -1653,6 +1954,14 @@ type
       FInitialExchange: TInitialExchangeSettings;
       FQzb: TQzbSettings;
       FSerialPorts: TSerialPortsSettings;
+      FComputer: TComputerSettings;
+      FRotator: TRotatorSettings;
+      FDupeSheet: TDupeSheetSettings;
+      FCountry: TCountrySettings;
+      FGridMap: TGridMapSettings;
+      FQsx: TQsxSettings;
+      FMessage: TMessageSettings;
+      FContest: TContestSettings;
       procedure BuildCommandMap;
       function PathForCommand(const aCommand: string): string;
       (* The streamer hook that keeps contest-scoped groups out of the
@@ -1773,6 +2082,16 @@ type
       property InitialExchange: TInitialExchangeSettings read FInitialExchange;
       property Qzb: TQzbSettings read FQzb;
       property SerialPorts: TSerialPortsSettings read FSerialPorts;
+      property Computer: TComputerSettings read FComputer;
+      property Rotator: TRotatorSettings read FRotator;
+      property DupeSheet: TDupeSheetSettings read FDupeSheet;
+      property Country: TCountrySettings read FCountry;
+      property GridMap: TGridMapSettings read FGridMap;
+      property Qsx: TQsxSettings read FQsx;
+      property Message: TMessageSettings read FMessage;
+      (* CONTEST-SCOPED: excluded from settings\tr4w.json entirely. See
+        TContestSettings, and TR4WSettings.SkipContestScoped. *)
+      property Contest: TContestSettings read FContest;
    end;
 
 (* THE ONE INSTANCE.  Created on first use so no unit's initialisation order
@@ -2107,6 +2426,10 @@ begin
    FKeypadMemories            := False;
    FSendCompleteFourLetterCall := False;
    FTuneWithDits              := False;
+   (* The values the logstuff globals carried. The apostrophe is the key
+     itself, not a quoting accident -- logstuff declares it as ''''. *)
+   FShortIntegers             := False;
+   FStartSendingNowKey        := '''';
 end;
 
 constructor TUnknownCountryFileSettings.Create;
@@ -2248,6 +2571,16 @@ begin
      initialiser and so was False, ColumnAutoSize was declared = True. *)
    FFrequencyEnable    := False;
    FColumnAutoSize     := True;
+   (* The values the logstuff globals carried. THE TWO REPORTS ARE THE ONLY
+     ONES HERE THAT ARE NOT ZERO OR FALSE, and they matter: 59 and 599 are
+     what every contest sends, and a zero would be refused by the subrange
+     the moment anything tried to write it back. *)
+   FRsSent             := 59;
+   FRstSent            := 599;
+   FLookForRstSent     := False;
+   FBackupFrequency    := 0;
+   FBeepEvery10Qsos    := False;
+   FDisabled           := False;
 end;
 
 constructor TCqSettings.Create;
@@ -2259,6 +2592,7 @@ begin
    FAutoReturnToMode          := True;
    FEscapeExitsSearchAndPounce := True;
    FAutoDelay                 := 3000;   // ms
+   FRandomMode                := False;  // logstuff's declaration
 end;
 
 constructor TAltDSettings.Create;
@@ -2280,6 +2614,12 @@ begin
    FWildcardPartials  := True;
    // CompleteCallsignMask had no initialiser in VC.pas, so it was empty.
    FCompleteCallsignMask := '';
+   FInsertMode        := True;   // logstuff's declaration
+end;
+
+procedure TCallWindowSettings.SetInsertMode(aValue: boolean);
+begin
+   SetBool(FInsertMode, aValue, 'InsertMode');
 end;
 
 constructor TSo2rSettings.Create;
@@ -2385,6 +2725,56 @@ end;
 class function TAutoDupeSettings.IsContestScoped: boolean;
 begin
    Result := True;
+constructor TComputerSettings.Create;
+begin
+   inherited Create;
+   (* #0, which is what the uninitialised AnsiChar global carried and what
+     MainUnit tests for. cfgdef's commented-out line agrees. *)
+   FId   := #0;
+   FName := 'New';   // logstuff's declaration
+end;
+
+procedure TComputerSettings.SetName(const aValue: string);
+begin
+   SetStr(FName, aValue, 'Name');
+end;
+
+constructor TRotatorSettings.Create;
+begin
+   inherited Create;
+   // The values logstuff's declarations carried.
+   FIpAddress := '127.0.0.1';
+   FUdpPort   := 12000;
+end;
+
+constructor TDupeSheetSettings.Create;
+begin
+   inherited Create;
+   FAutoReset      := True;    // Sheet's record initialiser
+   FAutoDisplayQso := False;
+end;
+
+constructor TCountrySettings.Create;
+begin
+   inherited Create;
+   FInformationFile := '';
+end;
+
+constructor TQsxSettings.Create;
+begin
+   inherited Create;
+   FEnable := True;   // logstuff's declaration
+end;
+
+constructor TMessageSettings.Create;
+begin
+   inherited Create;
+   (* All four from logstuff's declarations. The two keys are a backslash
+     and an equals sign; they are not placeholders. *)
+   FEnable       := True;
+   FDeEnable     := True;
+   FQuickQslKey1 := '\';
+   FQuickQslKey2 := '=';
 end;
 
 constructor TContestSettings.Create;
@@ -2402,6 +2792,9 @@ begin
    FMultipleBands          := True;
    FMultipleModes          := True;
    FSprintQsyRule          := False;
+   // Both globals are declared with no initialiser, so both were False.
+   FQsoNumberByBand          := False;
+   FInitialExchangeOverwrite := False;
 end;
 
 class function TContestSettings.IsContestScoped: boolean;
@@ -2444,6 +2837,14 @@ begin
    FInitialExchange := TInitialExchangeSettings.Create;
    FQzb             := TQzbSettings.Create;
    FSerialPorts     := TSerialPortsSettings.Create;
+   FComputer       := TComputerSettings.Create;
+   FRotator        := TRotatorSettings.Create;
+   FDupeSheet      := TDupeSheetSettings.Create;
+   FCountry        := TCountrySettings.Create;
+   FGridMap        := TGridMapSettings.Create;
+   FQsx            := TQsxSettings.Create;
+   FMessage        := TMessageSettings.Create;
+   FContest        := TContestSettings.Create;
 
    FCommands := TStringList.Create;
    FCommands.CaseSensitive := False;
@@ -2466,6 +2867,13 @@ begin
    FRemainingMults.Free;
    FStations.Free;
    FFont.Free;
+   FMessage.Free;
+   FQsx.Free;
+   FGridMap.Free;
+   FCountry.Free;
+   FDupeSheet.Free;
+   FRotator.Free;
+   FComputer.Free;
    FUnknownCountryFile.Free;
    FDvk.Free;
    FMy.Free;
@@ -2868,6 +3276,36 @@ begin
    Alias('MULTIPLE BANDS',           'Contest.MultipleBands');
    Alias('MULTIPLE MODES',           'Contest.MultipleModes');
    Alias('SPRINT QSY RULE',          'Contest.SprintQsyRule');
+   (* THE logstuff STATION SETTINGS. Sixteen of the twenty-five need a line
+     here, and every one of them for a shape the derivation cannot make:
+     the subject in the middle (AUTO DISPLAY DUPE QSO), the group second
+     (BACKUP LOG FREQUENCY), a digit welded to the word before it (QUICK
+     QSL KEY 1, BEEP EVERY 10 QSOS), a product name spelled as one word
+     (PSTROTATOR), or a group that exists for scope rather than for
+     naming (CONTEST). The other nine derive with no line at all. *)
+   Alias('SHORT INTEGERS',        'Cw.ShortIntegers');
+   Alias('START SENDING NOW KEY', 'Cw.StartSendingNowKey');
+
+   Alias('RANDOM CQ MODE', 'Cq.RandomMode');
+
+   Alias('INSERT MODE', 'CallWindow.InsertMode');
+
+   Alias('LOOK FOR RST SENT',   'Log.LookForRstSent');
+   Alias('BACKUP LOG FREQUENCY','Log.BackupFrequency');
+   Alias('BEEP EVERY 10 QSOS',  'Log.BeepEvery10Qsos');
+   Alias('NO LOG',              'Log.Disabled');
+
+   Alias('PSTROTATOR IP ADDRESS', 'Rotator.IpAddress');
+   Alias('PSTROTATOR UDP PORT',   'Rotator.UdpPort');
+
+   Alias('AUTO DISPLAY DUPE QSO', 'DupeSheet.AutoDisplayQso');
+
+   Alias('DE ENABLE',       'Message.DeEnable');
+   Alias('QUICK QSL KEY 1', 'Message.QuickQslKey1');
+   Alias('QUICK QSL KEY 2', 'Message.QuickQslKey2');
+
+   Alias('QSO NUMBER BY BAND',         'Contest.QsoNumberByBand');
+   Alias('INITIAL EXCHANGE OVERWRITE', 'Contest.InitialExchangeOverwrite');
 end;
 
 function TR4WSettings.PathForCommand(const aCommand: string): string;

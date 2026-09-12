@@ -91,8 +91,10 @@ uses
    uSettingsModel,
    FContest,       // RecalculateMyCountryContinentAndZoneNew
    LogWind,        // Settings.My.Call -- the callsign the derivation starts from
+                   // and DisplayInsertMode, the INS/OVR panel
    uStations,      // SetStationsCallsignMask -- was CommandsProcArray[12]
    uRemMults,      // UpdateRemainingMultsWindows -- was CommandsProcArray[9]
+   uNet,           // SetComputerName -- announce the name to the other position
    uBandMapView;   // BandMapRefresh -- the band map's own view seam
 
 const
@@ -142,6 +144,20 @@ const
      form and does nothing when it gets nil. *)
    STATIONS_CALLSIGNS_MASK = 'Stations.CallsignsMask';
    SHOW_DOMESTIC_NAME      = 'RemainingMults.ShowDomesticName';
+   (* INSERT OR OVERWRITE, shown on a panel of the main window. crP: 8,
+     DisplayInsertMode.
+
+     THIS ARM IS WHY THE Alt-MENU TOGGLE USED TO GO THE LONG WAY ROUND. The
+     hook ran only when CheckCommand applied the row, so MainUnit's menu item
+     called InvertBooleanCommand -- a scan of CFGCA for the row whose address
+     matched the global -- purely to get the panel repainted. The setter
+     raises the change however the value arrives, so that routine is gone. *)
+   INSERT_MODE = 'CallWindow.InsertMode';
+
+   (* THIS POSITION'S NAME, which the other positions display. crP: 6,
+     SetComputerName, which sends a station-status packet. It is a no-op on a
+     station with no network link, which is every single-operator one. *)
+   COMPUTER_NAME = 'Computer.Name';
 
 
 function InGroup(const aPath, aPrefix: string): boolean;
@@ -184,6 +200,14 @@ begin
       (* A COLUMN WIDTH, not a caption: showing the domestic multiplier's
         name needs the wider prefix column. This was CommandsProcArray[9]. *)
       UpdateRemainingMultsWindows;
+   if UnicodeSameText(aPath, INSERT_MODE) then
+      begin
+      DisplayInsertMode;
+      end;
+
+   if UnicodeSameText(aPath, COMPUTER_NAME) then
+      begin
+      SetComputerName;
       end;
 
    if InGroup(aPath, BAND_MAP) or InGroup(aPath, BANDS)

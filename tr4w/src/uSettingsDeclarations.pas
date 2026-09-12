@@ -416,7 +416,7 @@ begin
                           RS_CONTEST_AUTOQSLINTERVAL);
    RegisterModelSetting( 'contest.autoCQDelayTime',           'AUTO-CQ DELAY TIME',
                           RS_CONTEST_AUTOCQDELAYTIME);
-   RegisterStoredSetting('contest.beepEvery10Qsos',     'BEEP EVERY 10 QSOS',
+   RegisterModelSetting('contest.beepEvery10Qsos',     'BEEP EVERY 10 QSOS',
                           RS_CONTEST_BEEPEVERY10QSOS);
    RegisterStoredSetting('contest.categoryAssisted',    'CATEGORY-ASSISTED',
                           RS_CONTEST_CATEGORYASSISTED);
@@ -450,23 +450,23 @@ begin
                           RS_CONTEST_EXCHANGEMEMORYENABLE);
    RegisterStoredSetting('contest.exchangeReceived',    'EXCHANGE RECEIVED',
                           RS_CONTEST_EXCHANGERECEIVED);
-   RegisterStoredSetting('contest.gridMapCenter',       'GRID MAP CENTER',
+   RegisterModelSetting('contest.gridMapCenter',       'GRID MAP CENTER',
                           RS_CONTEST_GRIDMAPCENTER);
    RegisterStoredSetting('contest.initialExchange',     'INITIAL EXCHANGE',
                           RS_CONTEST_INITIALEXCHANGE);
    RegisterStoredSetting('contest.initialExchangeCursorPos','INITIAL EXCHANGE CURSOR POS',
                           RS_CONTEST_INITIALEXCHANGECURSORPOS);
-   RegisterStoredSetting('contest.initialExchangeOverwrite','INITIAL EXCHANGE OVERWRITE',
+   RegisterModelSetting('contest.initialExchangeOverwrite','INITIAL EXCHANGE OVERWRITE',
                           RS_CONTEST_INITIALEXCHANGEOVERWRITE);
    RegisterStoredSetting('contest.literalDomesticQth',  'LITERAL DOMESTIC QTH',
                           RS_CONTEST_LITERALDOMESTICQTH);
-   RegisterStoredSetting('contest.logRsSent',           'LOG RS SENT',
+   RegisterModelSetting('contest.logRsSent',           'LOG RS SENT',
                           RS_CONTEST_LOGRSSENT);
-   RegisterStoredSetting('contest.logRstSent',          'LOG RST SENT',
+   RegisterModelSetting('contest.logRstSent',          'LOG RST SENT',
                           RS_CONTEST_LOGRSTSENT);
-   RegisterStoredSetting('contest.lookForRstSent',      'LOOK FOR RST SENT',
+   RegisterModelSetting('contest.lookForRstSent',      'LOOK FOR RST SENT',
                           RS_CONTEST_LOOKFORRSTSENT);
-   RegisterStoredSetting('contest.messageEnable',       'MESSAGE ENABLE',
+   RegisterModelSetting('contest.messageEnable',       'MESSAGE ENABLE',
                           RS_CONTEST_MESSAGEENABLE);
    (* GRADUATED, AND IT NAMED A CONCEPT THE OLD TABLE HAD NO WORD FOR.
 
@@ -492,6 +492,65 @@ begin
      nil Self is a plain call that never dereferences it. The QSO-point
      registrations have gone to the settings model and taken the guard with
      them, so it belongs before its first use. *)
+   RegisterStoredSetting('contest.multByBand',          'MULT BY BAND',
+                          RS_CONTEST_MULTBYBAND);
+   RegisterStoredSetting('contest.multByMode',          'MULT BY MODE',
+                          RS_CONTEST_MULTBYMODE);
+   RegisterStoredSetting('contest.multReportMinimumBands','MULT REPORT MINIMUM BANDS',
+                          RS_CONTEST_MULTREPORTMINIMUMBANDS);
+   RegisterStoredSetting('contest.multSheetAutoReset',  'MULT SHEET AUTO RESET',
+                          RS_CONTEST_MULTSHEETAUTORESET);
+   RegisterStoredSetting('contest.multipleBands',       'MULTIPLE BANDS',
+                          RS_CONTEST_MULTIPLEBANDS);
+   RegisterStoredSetting('contest.multipleModes',       'MULTIPLE MODES',
+                          RS_CONTEST_MULTIPLEMODES);
+   RegisterStoredSetting('contest.prefixMultiplier',    'PREFIX MULTIPLIER',
+                          RS_CONTEST_PREFIXMULTIPLIER);
+   RegisterStoredSetting('contest.qslMode',             'QSL MODE',
+                          RS_CONTEST_QSLMODE);
+   RegisterStoredSetting('contest.qsoByBand',           'QSO BY BAND',
+                          RS_CONTEST_QSOBYBAND);
+   RegisterStoredSetting('contest.qsoByMode',           'QSO BY MODE',
+                          RS_CONTEST_QSOBYMODE);
+   RegisterModelSetting('contest.qsoNumberByBand',     'QSO NUMBER BY BAND',
+                          RS_CONTEST_QSONUMBERBYBAND);
+   RegisterStoredSetting('contest.qsoPointMethod',      'QSO POINT METHOD',
+                          RS_CONTEST_QSOPOINTMETHOD);
+   (* GRADUATED OFF CFGCA (2026-09-09) -- AND THE TABLE IS WHY.
+
+     These four hold -1 when the contest sets no fixed point value; the scoring
+     code says so directly, `if (QSOPointsDomesticCW >= 0) then` in
+     logstuff:6450. The value is legitimate and load-bearing.
+
+     THE CFGCA ROW COULD NOT DECLARE IT. crMin and crMax are Word -- UNSIGNED --
+     so the table cannot express a negative bound at all, and the rows said
+     0..MAXWORD while the variables sat at -1. Every one of the four therefore
+     held a value its own declared range rejected, which uTestAllSettings found
+     the day it was written.
+
+     That is not a bug to patch in the table. It is the table being unable to
+     describe a setting the program legitimately has, and the fix is to stop
+     asking it to: TIntSetting's bounds are signed integers, so -1 is simply in
+     range and says what it means.
+
+     READ-ONLY, from crJ:2 on the rows they replace. A contest's .cfg sets
+     these; the operator does not, and a panel must not offer a control that
+     edits them. That is the crJ gap the TR4QT settings review called a
+     blocking prerequisite -- see TSettingBase.ReadOnly.
+
+     THE CFGCA ROWS STAY FULLY ACTIVE, AND THAT IS NOT AN OVERSIGHT. A first
+     draft of this comment said they would be retired to csRem. That would have
+     been a scoring bug: csRem means CheckCommand recognises a command and does
+     NOT apply it, and these four are set BY THE CONTEST'S .cfg FILE --
+     "QSO POINTS DOMESTIC CW = 2" is how a contest declares its points. Retiring
+     the row would leave every such contest scoring on -1.
+
+     So this is the migration state the header calls step two, exactly: the
+     registry now owns how the setting is READ, WRITTEN AND VALIDATED by
+     Preferences, while the .cfg loader keeps writing the same global through
+     the same row. One variable, two writers, which is what a closure over a
+     global means. The row goes when the .cfg loader stops needing it, not
+     before. *)
    if GQSOPoints = nil then
       begin
       GQSOPoints := TQSOPointsAccess.Create;
@@ -569,9 +628,9 @@ begin
                           RS_CONTEST_QUICKQSLCWMESSAGE);
    RegisterStoredSetting('contest.quickQslCwMessage1',  'QUICK QSL CW MESSAGE1',
                           RS_CONTEST_QUICKQSLCWMESSAGE1);
-   RegisterStoredSetting('contest.quickQslKey1',        'QUICK QSL KEY 1',
+   RegisterModelSetting('contest.quickQslKey1',        'QUICK QSL KEY 1',
                           RS_CONTEST_QUICKQSLKEY1);
-   RegisterStoredSetting('contest.quickQslKey2',        'QUICK QSL KEY 2',
+   RegisterModelSetting('contest.quickQslKey2',        'QUICK QSL KEY 2',
                           RS_CONTEST_QUICKQSLKEY2);
    RegisterStoredSetting('contest.quickQslMessage1',    'QUICK QSL MESSAGE 1',
                           RS_CONTEST_QUICKQSLMESSAGE1);
@@ -581,7 +640,7 @@ begin
                           RS_CONTEST_QUICKQSLSSBMESSAGE);
    RegisterStoredSetting('contest.r150sMode',           'R150S MODE',
                           RS_CONTEST_R150SMODE);
-   RegisterStoredSetting('contest.randomCqMode',        'RANDOM CQ MODE',
+   RegisterModelSetting('contest.randomCqMode',        'RANDOM CQ MODE',
                           RS_CONTEST_RANDOMCQMODE);
    RegisterStoredSetting('contest.remainingMultDisplayMode','REMAINING MULT DISPLAY MODE',
                           RS_CONTEST_REMAININGMULTDISPLAYMODE);
@@ -605,7 +664,7 @@ begin
    // --- Operating (34) --------------------------------
    RegisterStoredSetting('operating.ctrlj.askForFrequencies', 'ASK FOR FREQUENCIES',
                           RS_OPERATING_CTRLJ_ASKFORFREQUENCIES);
-   RegisterStoredSetting('operating.ctrlj.autoDisplayDupeQso','AUTO DISPLAY DUPE QSO',
+   RegisterModelSetting('operating.ctrlj.autoDisplayDupeQso','AUTO DISPLAY DUPE QSO',
                           RS_OPERATING_CTRLJ_AUTODISPLAYDUPEQSO);
    RegisterModelSetting( 'operating.ctrlj.autoDupeEnableCq',  'AUTO DUPE ENABLE CQ',
                           RS_OPERATING_CTRLJ_AUTODUPEENABLECQ);
@@ -623,7 +682,7 @@ begin
                           'Clear Dupe Sheet');
    RegisterStoredSetting('operating.ctrlj.customUserString',  'CUSTOM USER STRING',
                           RS_OPERATING_CTRLJ_CUSTOMUSERSTRING);
-   RegisterStoredSetting('operating.ctrlj.deEnable',          'DE ENABLE',
+   RegisterModelSetting('operating.ctrlj.deEnable',          'DE ENABLE',
                           RS_OPERATING_CTRLJ_DEENABLE);
    RegisterModelSetting( 'operating.ctrlj.digitalModeEnable', 'DIGITAL MODE ENABLE',
                           RS_OPERATING_CTRLJ_DIGITALMODEENABLE);
@@ -631,7 +690,7 @@ begin
                           RS_OPERATING_CTRLJ_DISTANCEMODE);
    RegisterStoredSetting('operating.ctrlj.dupeCheckSound',    'DUPE CHECK SOUND',
                           RS_OPERATING_CTRLJ_DUPECHECKSOUND);
-   RegisterStoredSetting('operating.ctrlj.dupeSheetAutoReset','DUPE SHEET AUTO RESET',
+   RegisterModelSetting('operating.ctrlj.dupeSheetAutoReset','DUPE SHEET AUTO RESET',
                           RS_OPERATING_CTRLJ_DUPESHEETAUTORESET);
    RegisterStoredSetting('operating.ctrlj.frequencyMemory',   'FREQUENCY MEMORY',
                           RS_OPERATING_CTRLJ_FREQUENCYMEMORY);
@@ -659,7 +718,7 @@ begin
                           RS_OPERATING_CTRLJ_POSSIBLECALLMODE);
    RegisterModelSetting( 'operating.ctrlj.possibleCallRightKey','POSSIBLE CALL RIGHT KEY',
                           RS_OPERATING_CTRLJ_POSSIBLECALLRIGHTKEY);
-   RegisterStoredSetting('operating.ctrlj.qsxEnable',         'QSX ENABLE',
+   RegisterModelSetting('operating.ctrlj.qsxEnable',         'QSX ENABLE',
                           RS_OPERATING_CTRLJ_QSXENABLE);
    RegisterModelSetting( 'operating.ctrlj.qzbRandomOffsetEnable','QZB RANDOM OFFSET ENABLE',
                           RS_OPERATING_CTRLJ_QZBRANDOMOFFSETENABLE);
@@ -689,11 +748,11 @@ begin
                           RS_CW_CTRLJ_SHORT2);
    RegisterStoredSetting('cw.ctrlj.short9',                   'SHORT 9',
                           RS_CW_CTRLJ_SHORT9);
-   RegisterStoredSetting('cw.ctrlj.shortIntegers',            'SHORT INTEGERS',
+   RegisterModelSetting('cw.ctrlj.shortIntegers',            'SHORT INTEGERS',
                           RS_CW_CTRLJ_SHORTINTEGERS);
    RegisterStoredSetting('cw.ctrlj.slashMarkChar',            'SLASH MARK CHAR',
                           RS_CW_CTRLJ_SLASHMARKCHAR);
-   RegisterStoredSetting('cw.ctrlj.startSendingNowKey',       'START SENDING NOW KEY',
+   RegisterModelSetting('cw.ctrlj.startSendingNowKey',       'START SENDING NOW KEY',
                           RS_CW_CTRLJ_STARTSENDINGNOWKEY);
    RegisterStoredSetting('cw.ctrlj.tuneAltDEnable',           'TUNE ALT-D ENABLE',
                           RS_CW_CTRLJ_TUNEALTDENABLE);
@@ -711,7 +770,7 @@ begin
                           RS_APPEARANCE_CTRLJ_CONTACTSPERPAGE);
    RegisterStoredSetting('appearance.ctrlj.hourDisplay',      'HOUR DISPLAY',
                           RS_APPEARANCE_CTRLJ_HOURDISPLAY);
-   RegisterStoredSetting('appearance.ctrlj.insertMode',       'INSERT MODE',
+   RegisterModelSetting('appearance.ctrlj.insertMode',       'INSERT MODE',
                           RS_APPEARANCE_CTRLJ_INSERTMODE);
    RegisterStoredSetting('appearance.ctrlj.rateDisplay',      'RATE DISPLAY',
                           RS_APPEARANCE_CTRLJ_RATEDISPLAY);
@@ -745,7 +804,7 @@ begin
                           RS_FILES_CTRLJ_ALLOWAUTOUPDATE);
    RegisterModelSetting( 'files.ctrlj.callsignUpdateEnable',  'CALLSIGN UPDATE ENABLE',
                           RS_FILES_CTRLJ_CALLSIGNUPDATEENABLE);
-   RegisterStoredSetting('files.ctrlj.countryInformationFile','COUNTRY INFORMATION FILE',
+   RegisterModelSetting('files.ctrlj.countryInformationFile','COUNTRY INFORMATION FILE',
                           RS_FILES_CTRLJ_COUNTRYINFORMATIONFILE);
    RegisterStoredSetting('files.ctrlj.ctyUpdateCheckOnStartup','CTY UPDATE CHECK ON STARTUP',
                           RS_FILES_CTRLJ_CTYUPDATECHECKONSTARTUP);
@@ -800,8 +859,12 @@ begin
                    'Verify server certificates for downloads and uploads',
                    True));
 
-   RegisterStoredSetting('network.ctrlj.computerName',        'COMPUTER NAME',
-                          RS_NETWORK_CTRLJ_COMPUTERNAME);
+   (* NOT BROADCAST, which is the one place the model registrar needs
+     telling: its default is True and the row said crNetwork: 0. Sending
+     this position's name to the other positions would overwrite theirs
+     with it, which is the opposite of what the setting is for. *)
+   RegisterModelSetting('network.ctrlj.computerName',        'COMPUTER NAME',
+                          RS_NETWORK_CTRLJ_COMPUTERNAME, False);
    RegisterStoredSetting('network.ctrlj.netStatusUpdateInterval','NET STATUS UPDATE INTERVAL',
                           RS_NETWORK_CTRLJ_NETSTATUSUPDATEINTERVAL);
 
@@ -830,7 +893,7 @@ begin
    // --- Advanced (2) ---------------------------------
    RegisterStoredSetting('advanced.handLogMode',        'HAND LOG MODE',
                           RS_ADVANCED_HANDLOGMODE);
-   RegisterStoredSetting('advanced.noLog',              'NO LOG',
+   RegisterModelSetting('advanced.noLog',              'NO LOG',
                           RS_ADVANCED_NOLOG);
 
    // --- DX Cluster (1) -------------------------------

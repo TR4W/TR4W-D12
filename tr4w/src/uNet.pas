@@ -647,10 +647,10 @@ var
                     FRefusedComputerID := AnsiChar(ServerMessagePtr^.smParam);
                     logger.Warn('[Net] server refused computer ID %s -- ' +
                                 'another station is already using it',
-                                [string(ComputerID)]);
+                                [string(Settings.Computer.Id)]);
                     NetDisconnect;
                     showwarning(SysUtils.Format(SNetComputerIDInUse,
-                                                [string(ComputerID)]));
+                                                [string(Settings.Computer.Id)]));
                   end;
 
                 SM_GETSTATUS_MESSAGE: SendFullStationStatus;
@@ -907,6 +907,8 @@ procedure SendStationStatus(ssType: StationStatusType);
 var
   callAnsi: AnsiString;   { sstCallsign -- see the byte-exact note below }
   callLen: integer;
+  nameAnsi: AnsiString;   { sstComputerNameAndID -- the same boundary }
+  nameLen: integer;
 begin
 //  Exit;
   if not NetIsConnected then Exit;
@@ -916,9 +918,26 @@ begin
   case ssType of
     sstComputerNameAndID:
       begin
+        (* A LOCAL ANSI COPY, AND THE LENGTH CLAMPED TO THE FIELD.
+
+          The name is a property now, so there is no length byte to Move
+          from -- but the clamp is the half worth keeping. ssName is NINE
+          bytes and the old global was a Str10 whose row set no enforced
+          maximum, so a ten-character name moved ten bytes over the top of
+          ssType, the field that says what this packet IS. *)
+        nameAnsi := UTF8Encode(Settings.Computer.Name);
+        nameLen := Length(nameAnsi);
+        if nameLen > SizeOf(MyStationState.ssName) then
+           begin
+           nameLen := SizeOf(MyStationState.ssName);
+           end;
+
         FillChar(MyStationState.ssName, SizeOf(MyStationState.ssName), 0);
-        Move(ComputerName[1], MyStationState.ssName, Ord(ComputerName[0]));
-        MyStationState.ssComputerID := ComputerID;
+        if nameLen > 0 then
+           begin
+           Move(nameAnsi[1], MyStationState.ssName, nameLen);
+           end;
+        MyStationState.ssComputerID := Settings.Computer.Id;
       end;
 
     sstBandModeFreq:
@@ -987,7 +1006,7 @@ var
   i                                     : integer;
 begin
   if not NetIsConnected then Exit;
-  MyMessageState.msComputerId := ComputerID;
+  MyMessageState.msComputerId := Settings.Computer.Id;
   MyMessageState.msID := NET_MESSAGESTATE_ID;
   if CWMessageToNetwork <> '' then
      begin
@@ -1062,7 +1081,7 @@ var
   refuses as out of range rather than aliasing onto some other station. }
 function WireComputerID: AnsiChar;
 begin
-   Result := ComputerIDOrdinal(ComputerID);
+   Result := ComputerIDOrdinal(Settings.Computer.Id);
 end;
 
 procedure TryConnectToNetwork;
@@ -1178,7 +1197,7 @@ begin
     value is only ever used as a distinguishing number. *)
   NetQSOInfoToSend.qiComputerID := Cardinal(GetTickCount64);
 
- //    sCIDMESSAGE[4] := Char(Ord(ComputerID) - Ord('A') + 1);
+ //    sCIDMESSAGE[4] := Char(Ord(Settings.Computer.Id) - Ord('A') + 1);
      ComputerNetID.ciComputerID := WireComputerID;
      SendToNet(ComputerNetID, SizeOf(ComputerNetID));
      SendFullStationStatus;

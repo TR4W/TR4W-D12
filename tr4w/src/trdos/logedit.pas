@@ -302,7 +302,7 @@ begin
      Exit;
      end;
 
-  if QSONumberByBand then
+  if Settings.Contest.QsoNumberByBand then
      begin
      Result := QSOTotals[ActiveBand, Both];
      logger.debug('In TotalContacts, (QSONumberByBand is true) returning ' + IntToStr(Result));
@@ -355,7 +355,7 @@ begin
       Exit;
       end;
 
-   if QSONumberByBand then
+   if Settings.Contest.QsoNumberByBand then
       begin
       Result := MaxSerialSent[ActiveBand] + 1
       end
@@ -383,7 +383,7 @@ begin
   // form, whose refresh updates its own status bar -- the second call was
   // asking a window to do what it had just done.
   DisplayBandMap;
-  if QSONumberByBand then
+  if Settings.Contest.QsoNumberByBand then
      begin
      DisplayNextQSONumber;
      end;
@@ -521,19 +521,37 @@ end;
 
 procedure MoveGridMap(Key: Char);
 
+var
+  g: string;
+
 begin
+  (* A LOCAL COPY, BECAUSE THE CENTRE IS A PROPERTY NOW. A property cannot be
+    indexed, and it cannot be assigned one character at a time; reading it
+    once and writing it once is also what makes this ONE change rather than
+    four for anything listening.
+
+    THE LENGTH GUARD IS NEW AND IS NOT BELT AND BRACES. The old global was a
+    ShortString with no initialiser, so g[4] on an unset value read a byte
+    past a fixed buffer -- harmless by accident. Against a native string that
+    is a read past the end of a heap allocation, and this routine has no
+    caller to have proved the value is set. *)
+  g := Settings.GridMap.Center;
+
+  if Length(g) < 4 then
+     begin
+     Exit;
+     end;
+
   case Key of
     DownArrow:
       begin
-        if GridMapCenter[4] <> '0' then
+        if g[4] <> '0' then
            begin
-           GridMapCenter := Copy(GridMapCenter, 1, 3) + AnsiChar(Ord(GridMapCenter[4])
-             - 1)
+           g := Copy(g, 1, 3) + Chr(Ord(g[4]) - 1);
            end
         else
            begin
-           GridMapCenter := GridMapCenter[1] + AnsiChar(Ord(GridMapCenter[2]) - 1) +
-             GridMapCenter[3] + '9';
+           g := g[1] + Chr(Ord(g[2]) - 1) + g[3] + '9';
            end;
       end;
 
@@ -541,34 +559,30 @@ begin
 
     ControlLeftArrow:
       begin
-        if GridMapCenter[3] <> '0' then
+        if g[3] <> '0' then
            begin
-           GridMapCenter := Copy(GridMapCenter, 1, 2) + AnsiChar(Ord(GridMapCenter[3])
-             - 1) +
-             GridMapCenter[4]
+           g := Copy(g, 1, 2) + Chr(Ord(g[3]) - 1) + g[4];
            end
         else
            begin
-           GridMapCenter := AnsiChar(Ord(GridMapCenter[1]) - 1) + GridMapCenter[2] +
-             '9' + GridMapCenter[4];
+           g := Chr(Ord(g[1]) - 1) + g[2] + '9' + g[4];
            end;
       end;
 
     ControlRightArrow:
       begin
-        if GridMapCenter[3] <> '9' then
+        if g[3] <> '9' then
            begin
-           GridMapCenter := Copy(GridMapCenter, 1, 2) + AnsiChar(Ord(GridMapCenter[3])
-             + 1) +
-             GridMapCenter[4]
+           g := Copy(g, 1, 2) + Chr(Ord(g[3]) + 1) + g[4];
            end
         else
            begin
-           GridMapCenter := AnsiChar(Ord(GridMapCenter[1]) + 1) + GridMapCenter[2] +
-             '0' + GridMapCenter[4];
+           g := Chr(Ord(g[1]) + 1) + g[2] + '0' + g[4];
            end;
       end;
   end;
+
+  Settings.GridMap.Center := g;
 end;
 
 procedure EditableLog.DisplayGridMap(Band: BandType; Mode: ModeType);
@@ -1600,7 +1614,7 @@ begin
         goto ExitLabel;
         end;
      if InMyLog then
-       if TempRXData.ceComputerID <> ComputerID then
+       if TempRXData.ceComputerID <> Settings.Computer.Id then
           begin
           Continue;
           end;
@@ -2564,7 +2578,7 @@ begin
                 InitialExchangeEntry := CallsignsList.GetIniitialExchange(Call);
                 end;
            CheckAndSetInitialExchangeCursorPos;
-           //          if InitialExchangeOverwrite then Windows.SendMessage(ExchangeWindowHandle, EM_SETSEL, 0, -1);
+           //          if Settings.Contest.InitialExchangeOverwrite then Windows.SendMessage(ExchangeWindowHandle, EM_SETSEL, 0, -1);
            //                                      InitialExchangePutUp := True; {KK1L: 6.70 For custom typing any character overwrites the whole exchange.}
            Exit;
          end;
@@ -2820,7 +2834,7 @@ begin
 
        {KK1L: 6.73 Added ' '. K9PG forgets to add it when cursor at start.}
 
-     {        IF InitialExchangeOverwrite THEN
+     {        IF Settings.Contest.InitialExchangeOverwrite THEN
                 InitialExchangePutUp := True; {KK1L: 6.73 Typing any character overwrites the whole exchange.}
 
      end
@@ -2876,7 +2890,7 @@ begin
      {KK1L: 6.73 Typing any character overwrites the whole exchange. Tree
      decided this was a good thing even for rover calls and moved it here }
 
-  {       IF InitialExchangeOverwrite THEN InitialExchangePutUp := True;  }
+  {       IF Settings.Contest.InitialExchangeOverwrite THEN InitialExchangePutUp := True;  }
 
      if not RoverCall(Call) then
         begin
@@ -2897,7 +2911,7 @@ begin
       tExchangeWindowSetFocus;
       end;
 
-     if InitialExchangeOverwrite then
+     if Settings.Contest.InitialExchangeOverwrite then
         begin
         SetEntrySel(TR4WExchangeEdit, 0, -1);     //hh
         InitialExchangePutUp := ExchangeWindowString <> '';

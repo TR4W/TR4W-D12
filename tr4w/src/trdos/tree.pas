@@ -4115,7 +4115,7 @@ begin
          if ((StatusArray[c].ssStatusByte and (1 shl 0)) <> 0) //PTT
            and ((StatusArray[c].ssStatusByte and (1 shl 3)) <> 0) //PTT LOCKOUT
            then
-           if Ord(ComputerID) - 64 <> c then
+           if Ord(Settings.Computer.Id) - 64 <> c then
               begin
               QuickDisplay(TC_PTTLOCKOUTTRUE);
               Result := True;
